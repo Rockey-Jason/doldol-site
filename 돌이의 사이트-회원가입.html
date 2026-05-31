@@ -1,0 +1,263 @@
+<title>돌이 사이트-회원가입</title>
+<html>
+
+
+<script type="module">
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabase = createClient(
+  "https://scttowfhygcpdirrekqm.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+);
+
+window.회원가입 = async function () {
+
+  let name = document.getElementById("name").value;
+  let user_id = document.getElementById("id").value;
+  let email = document.getElementById("email").value;
+  let password = document.getElementById("password").value;
+
+  if (
+    name.trim() === "" ||
+    user_id.trim() === "" ||
+    email.trim() === "" ||
+    password.length < 7
+  ) {
+    alert("입력값 확인");
+    return;
+  }
+
+  const { error } = await supabase
+    .from("users")
+    .insert([
+      {
+        name: name,
+        user_id: user_id,
+        email: email,
+        password: password,
+        doldolcoin: 0,
+        read_dori_news: 0,
+        containing_item: ""
+      }
+    ]);
+
+  if (error) {
+    alert("회원가입 실패: " + error.message);
+    console.log(error);
+  } else {
+    localStorage.setItem("로그인상태", "true");
+    localStorage.setItem("id", user_id);
+    alert("회원가입 성공!");
+  }
+};
+
+
+</script>
+
+
+
+<input id="name"
+placeholder="계정 이름을 입력하세요"
+style="
+position: absolute;
+top: 280px;
+left: 50px;
+width: 200px;
+height: 30px;
+">
+
+
+<input id="id"
+placeholder="아이디를 입력하세요"
+style="
+position: absolute;
+top: 280px;
+left: 400px;
+width: 200px;
+height: 30px;
+">
+
+
+<input id="password"
+type="password"
+placeholder="비밀번호를 입력하세요(7자 이상)"
+style="
+position: absolute;
+top: 280px;
+left: 700px;
+width: 200px;
+height: 30px;
+">
+
+
+
+<input id="email"
+placeholder="이메일을 입력하세요"
+style="
+position: absolute;
+top: 280px;
+left: 1000px;
+width: 200px;
+height: 30px;
+">
+
+
+<body style="
+background: linear-gradient(to right, #000033, #000010);
+">
+
+
+<style>
+
+
+.screen {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #d0e8ff;
+}
+
+.btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+img {
+  transition: 0.1s;
+}
+
+img:active {
+  transform: scale(0.9);
+}
+</style>
+
+
+<!--이 폰트들은 jua, Do Hyeon, Bagel Fat One, Black Han Sans, Gasoek One입니다-->
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Black+Han+Sans&family=Do+Hyeon&family=Gasoek+One&family=Jua&display=swap" rel="stylesheet">
+
+
+<!--여기서 부터 웹 코딩입니다-->
+
+
+<!--제목, 부가 설명-->
+
+
+<h1 style="
+font-size:20px;
+color:#f5f5f5;
+font-family:Black Han Sans;
+margin-top:0;
+margin-bottom:0;
+font-weight:1;
+">ㅤ
+
+
+</h1>
+<p style="
+font-size:20px;
+color:#f5f5f5;
+font-family:jua;
+margin-top:0;
+margin-bottom:0;
+font-weight:1;
+">회원가입-자신의 새로운 개정을 만들고 돌이신문을 정기 구독하세요!</p>
+</body>
+</html>
+
+
+<!--버튼-->
+
+
+<a href="file:///C:/Users/MJay/Desktop/%EB%8F%8C%EC%9D%B4%20%EC%84%B8%EA%B3%84%EA%B4%80/%EB%8F%8C%EC%9D%B4%EC%9D%98%20%EC%9B%B9%EC%82%AC%EC%9D%B4%ED%8A%B8/%EB%8F%8C%EC%9D%B4%20%EC%82%AC%EC%9D%B4%ED%8A%B8.html"
+style="text-decoration:none;">
+  <button style="
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background: none;
+    border: none;
+    color: #f5f5f5;
+    font-family: 'Black Han Sans';
+    font-size: 100px;
+    cursor: pointer;
+  ">돌이 사이트
+
+</button>
+<button style="
+position: absolute;
+top: 200px;
+left: 30px;
+font-size: 50px;
+font-family:jua;
+background:none;
+border:none;
+padding; 10px, 20px;
+color:#f5f5f5;
+
+">
+-계정 이름
+
+
+</button>
+<button style="
+position: absolute;
+top: 200px;
+left: 400px;
+font-size: 50px;
+font-family:jua;
+background:none;
+border:none;
+padding; 10px, 20px;
+color:#f5f5f5;
+
+">
+-아이디
+
+
+</button>
+<button style="
+position: absolute;
+top: 200px;
+left: 700px;
+font-size: 50px;
+font-family:jua;
+background:none;
+border:none;
+padding; 10px, 20px;
+color:#f5f5f5;
+
+">
+-비밀번호
+
+
+</button>
+<button style="
+position: absolute;
+top: 200px;
+left: 1000px;
+font-size: 50px;
+font-family:jua;
+background:none;
+border:none;
+padding; 10px, 20px;
+color:#f5f5f5;
+
+">
+-이메일
+
+
+<button onclick="회원가입()"
+style="
+position: absolute;
+top: 500px;
+left: 600px;
+font-size: 25px;
+font-family:jua;
+">
+회원가입
+</button>
