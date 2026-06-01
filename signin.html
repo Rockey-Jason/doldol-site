@@ -71,6 +71,7 @@ if (authError) {
   } else {
     localStorage.setItem("로그인상태", "true");
     localStorage.setItem("id", user_id);
+    localStorage.setItem("이름", name);
     alert("인증 이메일이 발송되었습니다. 이메일의 링크를 눌러 계정을 활성화하세요.");
   }
 };
