@@ -1,0 +1,218 @@
+<title>돌이 사이트</title>
+<html>
+
+<body style="
+background: linear-gradient(to right, #000033, #000010);
+">
+<style>
+.screen {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  background: #d0e8ff;
+}
+
+.btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+}
+img {
+  transition: 0.1s;
+}
+
+img:active {
+  transform: scale(0.9);
+}
+</style>
+
+
+<!--이 폰트들은 jua, Do Hyeon, Bagel Fat One, Black Han Sans, Gasoek One입니다-->
+
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Black+Han+Sans&family=Do+Hyeon&family=Gasoek+One&family=Jua&display=swap" rel="stylesheet">
+
+
+<!--여기서 부터 웹 코딩입니다-->
+
+
+<!--제목, 부가 설명-->
+
+
+<h1 style="ㅤ
+font-size:130px;
+color:#f5f5f5;
+font-family:Black Han Sans;
+margin-top:0;
+margin-bottom:0;
+font-weight:234;
+">ehfdl</h1>
+
+
+<p style="
+font-size:20px;
+color:#f5f5f5;
+font-family:jua;
+margin-top:100;
+margin-bottom:0;
+font-weight:1;
+">돌이에 대한 여러 정보와 돌이신문, 돌돌코인 수급, 등등... 돌이에 대한 여러 기능을 사용해보세요!</p>
+</body>
+</html>
+
+
+<!--버튼-->
+
+
+<button style="
+position: fixed;
+top: 400px;
+left: 100px;
+top: 200px;
+left: 50px;
+font-size: 50px;
+font-family:jua;
+background:none;
+border:none;
+padding; 10px, 20px;
+color:#f5f5f5;
+
+">
+돌이신문 확인
+
+<button id="돌돌코인 상점" style="
+position: absolute;
+top: 200px;
+left: 500px;
+font-size: 50px;
+font-family:jua;
+background:none;
+border:none;
+color:#f5f5f5;
+">
+돌돌코인 상점
+</button>
+
+
+<a href="file:///C:/Users/MJay/Desktop/%EB%8F%8C%EC%9D%B4%20%EC%84%B8%EA%B3%84%EA%B4%80/%EB%8F%8C%EC%9D%B4%EC%9D%98%20%EC%9B%B9%EC%82%AC%EC%9D%B4%ED%8A%B8/%EB%8F%8C%EC%9D%B4%20%EC%82%AC%EC%9D%B4%ED%8A%B8.html"
+style="text-decoration:none;">
+  <button style="
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    background: none;
+    border: none;
+    color: #f5f5f5;
+    font-family: 'Black Han Sans';
+    font-size: 100px;
+    cursor: pointer;
+  ">
+    돌이 사이트
+
+
+<button style="
+position: absolute;
+top: 200px;
+left: 900px;
+font-size: 50px;
+font-family: jua;
+background: none;
+border: none;
+color: #f5f5f5;
+cursor: pointer;
+">
+돌이와 관련된 설명
+</button>
+
+
+if (로그인상태 == "true"){file:///C:/Users/MJay/Desktop/%EB%8F%8C%EC%9D%B4%20%EC%84%B8%EA%B3%84%EA%B4%80/%EB%8F%8C%EC%9D%B4%EC%9D%98%20%EC%9B%B9%EC%82%AC%EC%9D%B4%ED%8A%B8/%EB%8F%8C%EC%9D%B4%20%EC%82%AC%EC%9D%B4%ED%8A%B8.html;
+로그인상태="";
+계정이름="";
+아이디="";
+비밀번호="";
+localStorage.setItem("계정이름", "");
+localStorage.setItem("아이디", "");
+localStorage.setItem("비밀번호", "");
+localStorage.setItem("로그인상태", "");}
+else{
+<a href="file:///C:/Users/MJay/Desktop/%EB%8F%8C%EC%9D%B4%20%EC%84%B8%EA%B3%84%EA%B4%80/%EB%8F%8C%EC%9D%B4%EC%9D%98%20%EC%9B%B9%EC%82%AC%EC%9D%B4%ED%8A%B8/%EB%8F%8C%EC%9D%B4%EC%9D%98%20%EC%82%AC%EC%9D%B4%ED%8A%B8-%ED%9A%8C%EC%9B%90%EA%B0%80%EC%9E%85.html"}
+style="
+text-decoration:none;
+color:inherit;
+">
+  <button id="회원가입" style="
+position:absolute;
+top:35px;
+left:1830px;
+background:none;
+border:none;
+color:gray;
+font-family:jua;
+font-size:20px;
+cursor:pointer;
+">
+회원가입
+</button>
+<script>
+let 로그인상태 = localStorage.getItem("로그인상태");
+if (로그인상태 == "true") {
+    document.getElementById("회원가입").innerHTML = "로그아웃";
+}
+else {
+    document.getElementById("회원가입").innerHTML = "회원가입";
+}
+</script>
+
+
+<a href="file:///C:/Users/MJay/Desktop/%EB%8F%8C%EC%9D%B4%20%EC%84%B8%EA%B3%84%EA%B4%80/%EB%8F%8C%EC%9D%B4%EC%9D%98%20%EC%9B%B9%EC%82%AC%EC%9D%B4%ED%8A%B8/%EB%8F%8C%EC%9D%B4%20%EC%82%AC%EC%9D%B4%ED%8A%B8.html"
+style="
+text-decoration:none;
+color:inherit;
+">
+  <button style="
+    position: absolute;
+    top: 10px;
+    left: 1850px;
+    background: none;
+    border: none;
+    color: gray;
+    font-family: 'jua';
+    font-size: 20px;
+    cursor: pointer;
+  ">
+    로그인
+  </button>
+</a>
+<!--이미지-->
+
+<a href="https://chatgpt.com/c/6a1a53e7-d518-8324-9936-07ba3a5a33ef">
+<img src="https://i.postimg.cc/Px1nNcJM/1000004603.jpg"
+style="
+position: fixed;
+top: 300px;
+left: 80px;
+width:200px;
+">
+</a>
+
+<a href="https://chatgpt.com/c/6a1a53e7-d518-8324-9936-07ba3a5a33ef">
+<img src="https://i.postimg.cc/TYxW97Ly/1000004605.jpg"
+style="
+position: fixed;
+top: 300px;
+left: 530px;
+width:200px;
+">
+</a>
+
+<a href="https://chatgpt.com/c/6a1a53e7-d518-8324-9936-07ba3a5a33ef">
+<img src="https://i.postimg.cc/8zdzKNWg/dol-i.jpg"
+style="
+position: fixed;
+top: 300px;
+left: 970px;
+width:200px;
+">
+</a>
