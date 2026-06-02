@@ -40,11 +40,15 @@ window.회원가입 = async function () {
     return;
   }
 
-  const { data: authData, error: authError } =
-  await supabase.auth.signUp({
-    email: email,
-    password: password,
-  });
+const { data: authData, error: authError } =
+await supabase.auth.signUp({
+  email: email,
+  password: password,
+  options: {
+    emailRedirectTo:
+      "https://rockey-jason.github.io/doldol-site/signin.html"
+  }
+});
 
 if (authError) {
   alert("회원가입 실패: " + authError.message);
