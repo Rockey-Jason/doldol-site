@@ -199,37 +199,22 @@ cursor:pointer;
 </button>
 
 <script>
-
-let 로그인상태 = localStorage.getItem("로그인상태");
+let 버튼 = document.getElementById("회원가입");
 
 if (로그인상태 == "true") {
-    document.getElementById("회원가입").innerHTML = "로그아웃";
-}
 
-document.getElementById("회원가입").onclick = function() {
+    버튼.style.display = "none";
 
-    let 로그인상태 = localStorage.getItem("로그인상태");
+} else {
 
-    if (로그인상태 == "true") {
+    버튼.style.display = "block";
 
-        localStorage.setItem("계정이름", "");
-        localStorage.setItem("아이디", "");
-        localStorage.setItem("비밀번호", "");
-        localStorage.setItem("로그인상태", "");
-
-        alert("로그아웃 되었습니다.");
-
-        location.reload();
-
-    } else {
-
+    버튼.onclick = function() {
         window.location.href =
         "https://rockey-jason.github.io/doldol-site/signin.html";
+    };
 
-    }
-
-};
-
+}
 </script>
 
 
