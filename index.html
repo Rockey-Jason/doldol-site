@@ -1,10 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
 <title>돌이 사이트</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
+
+<style>
+body{
+    background: linear-gradient(to right, #000033, #000010);
+    margin:0;
+}
+
+img{
+    transition:0.1s;
+}
+
+img:active{
+    transform:scale(0.9);
+}
+</style>
+
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
-  "네 anon key"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
 
 const 로그인상태 = localStorage.getItem("로그인상태");
@@ -24,183 +47,80 @@ if (로그인상태 === "true" && 이름) {
   }
 }
 </script>
-async function 불러오기() {
 
-  const { data, error } = await supabase
-    .from("users")
-    .select("*");
+</head>
 
-}
+<body>
 
-불러오기();
-</script>
-    .from("users")
-    .select("*")
-    .eq("name", 이름);
-
-  if (error) {
-    console.log(error);
-    return;
-  let 계정이름 = data[0].name;
-  let 비밀번호 = data[0].password;
-  let 아이디 = data[0].user_id;
-  let 이메일 = data[0].email;
-  let 돌코 = data[0].doldolcoin;
-  let 읽은돌신 = data[0].read_dori_news;
-  let 가진아이템 = data[0].containing_item;
-  let 레벨 = data[0].user_level;
-  console.log(계정이름);
-  console.log(아이디);
-  console.log(이메일);
-}
-
-<body style="
-background: linear-gradient(to right, #000033, #000010);
-">
-<style>
-.screen {
-  position: relative;
-  width: 100vw;
-  height: 100vh;
-  background: #d0e8ff;
-}
-
-.btn {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-}
-img {
-  transition: 0.1s;
-}
-
-img:active {
-  transform: scale(0.9);
-}
-</style>
-
-
-<!--이 폰트들은 jua, Do Hyeon, Bagel Fat One, Black Han Sans, Gasoek One입니다-->
-
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Black+Han+Sans&family=Do+Hyeon&family=Gasoek+One&family=Jua&display=swap" rel="stylesheet">
-
-
-<!--여기서 부터 웹 코딩입니다-->
-
-
-<!--제목, 부가 설명-->
-
-
-<h1 style="ㅤ
-font-size:50px;
+<a href="https://rockey-jason.github.io/doldol-site/" style="text-decoration:none;">
+<button style="
+position:absolute;
+top:0;
+left:0;
+background:none;
+border:none;
 color:#f5f5f5;
-font-family:Black Han Sans;
-margin-top:0;
-margin-bottom:0;
-font-weight:234;
-"></h1>
-
+font-family:'Black Han Sans';
+font-size:100px;
+cursor:pointer;
+">
+돌이 사이트
+</button>
+</a>
 
 <p style="
 font-size:20px;
 color:#f5f5f5;
 font-family:jua;
-margin-top:100;
-margin-bottom:0;
-font-weight:1;
-">돌이에 대한 여러 정보와 돌이신문, 돌돌코인 수급, 등등... 돌이에 대한 여러 기능을 사용해보세요!</p>
-</body>
-</html>
-
-
-<!--버튼-->
-
+margin-top:120px;
+margin-left:20px;
+">
+돌이에 대한 여러 정보와 돌이신문, 돌돌코인 수급 등을 이용해보세요!
+</p>
 
 <button style="
-position: fixed;
-top: 400px;
-left: 100px;
-top: 200px;
-left: 50px;
-font-size: 50px;
+position:absolute;
+top:200px;
+left:50px;
+font-size:50px;
 font-family:jua;
 background:none;
 border:none;
-padding; 10px, 20px;
 color:#f5f5f5;
-
+cursor:pointer;
 ">
 돌이신문 확인
-  </button>
+</button>
 
-<button id="돌돌코인 상점" style="
-position: absolute;
-top: 200px;
-left: 500px;
-font-size: 50px;
+<button id="돌돌코인상점" style="
+position:absolute;
+top:200px;
+left:500px;
+font-size:50px;
 font-family:jua;
 background:none;
 border:none;
 color:#f5f5f5;
+cursor:pointer;
 ">
 돌돌코인 상점
 </button>
 
-
-<button id="돌이와 관련된 정보" style="
-position: absolute;
-top: 200px;
-left: 900px;
-font-size: 50px;
+<button id="돌이정보" style="
+position:absolute;
+top:200px;
+left:900px;
+font-size:50px;
 font-family:jua;
 background:none;
 border:none;
 color:#f5f5f5;
+cursor:pointer;
 ">
 돌이와 관련된 정보
 </button>
 
-
-<a href="https://rockey-jason.github.io/doldol-site/"
-style="text-decoration:none;">
-  <button style="
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    background: none;
-    border: none;
-    color: #f5f5f5;
-    font-family: 'Black Han Sans';
-    font-size: 100px;
-    cursor: pointer;
-  ">
-    돌이 사이트
-  </button>
-</a>
-
-
-<button id="회원가입"
-style="
-  text-align:left;
-position:absolute;
-top:35px;
-left:1760px;
-background:none;
-border:none;
-color:gray;
-font-family:jua;
-font-size:20px;
-cursor:pointer;
-">
-회원가입
-</button>
-
-<button id="회원가입"
-style="
-text-align:left;
+<button id="회원가입" style="
 position:absolute;
 top:35px;
 left:1760px;
@@ -224,6 +144,8 @@ if (로그인상태 == "true") {
 
 } else {
 
+    버튼.style.display = "block";
+
     버튼.onclick = function() {
         window.location.href =
         "https://rockey-jason.github.io/doldol-site/signin.html";
@@ -232,55 +154,29 @@ if (로그인상태 == "true") {
 }
 </script>
 
-
-<a href="file:///C:/Users/MJay/Desktop/%EB%8F%8C%EC%9D%B4%20%EC%84%B8%EA%B3%84%EA%B4%80/%EB%8F%8C%EC%9D%B4%EC%9D%98%20%EC%9B%B9%EC%82%AC%EC%9D%B4%ED%8A%B8/%EB%8F%8C%EC%9D%B4%20%EC%82%AC%EC%9D%B4%ED%8A%B8.html"
-style="
-text-decoration:none;
-color:inherit;
-">
-  <button style="
-    text-align:left;
-    position: absolute;
-    top: 10px;
-    left: 1760px;
-    background: none;
-    border: none;
-    color: gray;
-    font-family: 'jua';
-    font-size: 20px;
-    cursor: pointer;
-  ">
-    로그인
-  </button>
-</a>
-<!--이미지-->
-
-<a href="https://chatgpt.com/c/6a1a53e7-d518-8324-9936-07ba3a5a33ef">
 <img src="https://i.postimg.cc/Px1nNcJM/1000004603.jpg"
 style="
-position: fixed;
-top: 300px;
-left: 80px;
+position:fixed;
+top:300px;
+left:80px;
 width:200px;
 ">
-</a>
 
-<a href="https://chatgpt.com/c/6a1a53e7-d518-8324-9936-07ba3a5a33ef">
 <img src="https://i.postimg.cc/TYxW97Ly/1000004605.jpg"
 style="
-position: fixed;
-top: 300px;
-left: 530px;
+position:fixed;
+top:300px;
+left:530px;
 width:200px;
 ">
-</a>
 
-<a href="https://chatgpt.com/c/6a1a53e7-d518-8324-9936-07ba3a5a33ef">
 <img src="https://i.postimg.cc/8zdzKNWg/dol-i.jpg"
 style="
-position: fixed;
-top: 300px;
-left: 970px;
+position:fixed;
+top:300px;
+left:970px;
 width:200px;
 ">
-</a>
+
+</body>
+</html>
