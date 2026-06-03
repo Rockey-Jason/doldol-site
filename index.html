@@ -198,7 +198,24 @@ cursor:pointer;
 회원가입
 </button>
 
+<button id="회원가입"
+style="
+text-align:left;
+position:absolute;
+top:35px;
+left:1760px;
+background:none;
+border:none;
+color:gray;
+font-family:jua;
+font-size:20px;
+cursor:pointer;
+">
+회원가입
+</button>
+
 <script>
+let 로그인상태 = localStorage.getItem("로그인상태");
 let 버튼 = document.getElementById("회원가입");
 
 if (로그인상태 == "true") {
@@ -207,10 +224,7 @@ if (로그인상태 == "true") {
 
 } else {
 
-    버튼.style.display = "block";
-
     버튼.onclick = function() {
-          alert("클릭됨");
         window.location.href =
         "https://rockey-jason.github.io/doldol-site/signin.html";
     };
