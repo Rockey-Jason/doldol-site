@@ -154,6 +154,42 @@ if (로그인상태 == "true") {
 }
 </script>
 
+
+    <img id="돌이사진"
+src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
+style="
+position:absolute;
+top:0px;
+left:1700px;
+width:200px;
+cursor:pointer;
+display:none;
+">
+
+<script>
+let 상세설명 = 0;
+let 사진 = document.getElementById("돌이사진");
+
+// 로그인 상태면 보이기
+if (로그인상태 == "true") {
+    사진.style.display = "block";
+} else {
+    사진.style.display = "none";
+}
+
+// 클릭 시 상세설명 0 ↔ 1
+사진.onclick = function() {
+
+    if (상세설명 == 0) {
+        상세설명 = 1;
+    } else {
+        상세설명 = 0;
+    }
+
+    console.log("상세설명 =", 상세설명);
+};
+</script>
+
 <img src="https://i.postimg.cc/Px1nNcJM/1000004603.jpg"
 style="
 position:fixed;
