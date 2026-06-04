@@ -106,6 +106,61 @@ cursor:pointer;
 돌돌코인 상점
 </button>
 
+
+    <button id="설명버튼"
+style="
+position:absolute;
+top:70px;
+left:1780px;
+font-size:30px;
+font-family:jua;
+background:none;
+border:none;
+color:darkred;
+cursor:pointer;
+display:none;
+">
+로그아웃
+</button>
+
+<script>
+let 상세설명 = 0;
+
+function 버튼업데이트() {
+    let 버튼 = document.getElementById("로그아웃");
+
+    if (상세설명 == 1) {
+        버튼.style.display = "block";
+    } else {
+        버튼.style.display = "none";
+    }
+}
+
+버튼업데이트();
+
+document.getElementById("돌이사진").onclick = function() {
+
+    if (상세설명 == 0) {
+        상세설명 = 1;
+    } else {
+        상세설명 = 0;
+    }
+
+    버튼업데이트();
+};
+
+document.getElementById("설명버튼").onclick = function() {
+
+    localStorage.setItem("로그인상태", "false");
+    로그인상태=false;
+
+    window.location.href =
+    "https://rockey-jason.github.io/doldol-site/";
+
+};
+</script>
+    
+
 <button id="돌이정보" style="
 position:absolute;
 top:200px;
