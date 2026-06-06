@@ -62,10 +62,6 @@ if (authError) {
         name: name,
         user_id: user_id,
         email: email,
-        password: password,
-        doldolcoin: 0,
-        read_dori_news: 0,
-        containing_item: ""
       }
     ]);
 
@@ -73,9 +69,6 @@ if (authError) {
     alert("회원가입 실패: " + error.message);
     console.log(error);
   } else {
-    localStorage.setItem("로그인상태", "true");
-    localStorage.setItem("id", user_id);
-    localStorage.setItem("이름", name);
     alert("인증 이메일이 발송되었습니다. 이메일의 링크를 눌러 계정을 활성화하세요.");
   }
 };
