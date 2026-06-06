@@ -34,6 +34,7 @@ window.회원가입 = async function () {
     name.trim() === "" ||
     user_id.trim() === "" ||
     email.trim() === "" ||
+    password.trim() === "" ||
     password.length < 7
   ) {
     alert("입력값 확인");
@@ -62,6 +63,7 @@ if (authError) {
         name: name,
         user_id: user_id,
         email: email,
+        password: password,
       }
     ]);
 
