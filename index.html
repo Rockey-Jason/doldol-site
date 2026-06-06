@@ -241,6 +241,40 @@ if (로그인상태 == "true") {
 </script>
 
 
+    <button id="로그인" style="
+position:absolute;
+top:10px;
+left:1760px;
+background:none;
+border:none;
+color:gray;
+font-family:jua;
+font-size:20px;
+cursor:pointer;
+">
+로그인
+</button>
+
+<script>
+let 버튼 = document.getElementById("로그인");
+
+if (로그인상태 == "true") {
+
+    버튼.style.display = "none";
+
+} else {
+
+    버튼.style.display = "block";
+
+    버튼.onclick = function() {
+        window.location.href =
+        "https://rockey-jason.github.io/doldol-site/signin.html";
+    };
+
+}
+</script>
+
+
     <img id="돌이사진"
 src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
 style="
