@@ -58,6 +58,7 @@ await supabase
 .eq("email", email)
 .eq("name", name)
 .eq("user_id", user_id)
+.eq("password", password)
 .single();
   
     console.log(유저정보);
