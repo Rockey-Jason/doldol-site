@@ -107,7 +107,7 @@ cursor:pointer;
 </button>
 
 
-   <button id="로그아웃"
+<button id="로그아웃"
 style="
 position:absolute;
 top:70px;
@@ -123,6 +123,22 @@ display:none;
 로그아웃
 </button>
 
+<button id="돌돌코인"
+style="
+position:absolute;
+top:90px;
+left:1800px;
+font-size:14px;
+font-family:jua;
+background:none;
+border:none;
+color:#f5f5f5;
+cursor:pointer;
+display:none;
+">
+돌돌코인
+</button>
+
 <img id="돌이사진"
 src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
 style="
@@ -135,36 +151,39 @@ display:none;
 ">
 
 <script>
-// 변수 선언
+
 let 로그인상태 = localStorage.getItem("로그인상태");
 let 상세설명 = 0;
 
-// 요소 가져오기
 let 사진 = document.getElementById("돌이사진");
 let 로그아웃버튼 = document.getElementById("로그아웃");
+let 돌돌코인버튼 = document.getElementById("돌돌코인");
 
-// 로그인 상태면 프로필 사진 보이기
-if (로그인상태 == "true") {
+if (로그인상태 === "true") {
     사진.style.display = "block";
 } else {
     사진.style.display = "none";
 }
 
-// 로그아웃 버튼 표시/숨김
 function 버튼업데이트() {
 
-    if (상세설명 == 1) {
+    if (상세설명 === 1) {
+
         로그아웃버튼.style.display = "block";
+        돌돌코인버튼.style.display = "block";
+
     } else {
+
         로그아웃버튼.style.display = "none";
+        돌돌코인버튼.style.display = "none";
+
     }
 
 }
 
-// 프로필 사진 클릭
 사진.onclick = function() {
 
-    if (상세설명 == 0) {
+    if (상세설명 === 0) {
         상세설명 = 1;
     } else {
         상세설명 = 0;
@@ -172,15 +191,11 @@ function 버튼업데이트() {
 
     버튼업데이트();
 
-    console.log("상세설명 =", 상세설명);
 };
 
-// 로그아웃 버튼 클릭
 로그아웃버튼.onclick = function() {
 
     localStorage.setItem("로그인상태", "false");
-
-    // 필요하면 같이 삭제
     localStorage.removeItem("이름");
     localStorage.removeItem("아이디");
 
@@ -189,7 +204,15 @@ function 버튼업데이트() {
 
 };
 
+돌돌코인버튼.onclick = function() {
+
+    window.location.href =
+    "https://rockey-jason.github.io/doldol-site/doldolcoin.html";
+
+};
+
 버튼업데이트();
+
 </script>
     
 
