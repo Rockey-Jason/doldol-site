@@ -181,15 +181,27 @@ function 버튼업데이트() {
 
 }
 
+let 메뉴 = document.getElementById("메뉴");
+
 사진.onclick = function() {
 
     if (상세설명 === 0) {
-        상세설명 = 1;
-    } else {
-        상세설명 = 0;
-    }
 
-    버튼업데이트();
+        상세설명 = 1;
+
+        로그아웃버튼.style.display = "block";
+        돌돌코인버튼.style.display = "block";
+        메뉴.style.display = "block";
+
+    } else {
+
+        상세설명 = 0;
+
+        로그아웃버튼.style.display = "none";
+        돌돌코인버튼.style.display = "none";
+        메뉴.style.display = "none";
+
+    }
 
 };
 
@@ -278,6 +290,21 @@ cursor:pointer;
 로그인
 </button>
 
+
+    <div id="메뉴"
+style="
+position:absolute;
+top:70px;
+left:1750px;
+width:120px;
+height:80px;
+background:#808080;
+border-radius:15px;
+display:none;
+">
+</div>
+
+
 <script>
 let 로그인 = document.getElementById("로그인");
 
@@ -311,64 +338,6 @@ display:none;
 ">
 
 <script>
-let 상세설명 = 0;
-let 사진 = document.getElementById("돌이사진");
-
-// 로그인 상태면 보이기
-if (로그인상태 == "true") {
-    사진.style.display = "block";
-} else {
-    사진.style.display = "none";
-}
-
-// 클릭 시 상세설명 0 ↔ 1
-사진.onclick = function() {
-
-    if (상세설명 == 0) {
-        상세설명 = 1;
-    } else {
-        상세설명 = 0;
-    }
-
-    console.log("상세설명 =", 상세설명);
-};
-</script>
-
-
-<div id="메뉴"
-style="
-position:absolute;
-top:70px;
-left:1750px;
-width:120px;
-height:80px;
-background:#808080;
-border:none;
-border-radius:15px;
-display:none;
-">
-</div>
-
-<script>
-
-let 메뉴 = document.getElementById("메뉴");
-let 메뉴상태 = 0;
-
-사진.addEventListener("contextmenu", function(e) {
-
-    e.preventDefault();
-
-    if (메뉴상태 == 0) {
-        메뉴상태 = 1;
-        메뉴.style.display = "block";
-    } else {
-        메뉴상태 = 0;
-        메뉴.style.display = "none";
-    }
-
-});
-
-</script>
     
 
 <img src="https://i.postimg.cc/Px1nNcJM/1000004603.jpg"
