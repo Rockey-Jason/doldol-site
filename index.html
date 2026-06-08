@@ -335,7 +335,7 @@ if (로그인상태 == "true") {
 </script>
 
 
-    <div id="메뉴"
+<div id="메뉴"
 style="
 position:absolute;
 top:70px;
@@ -351,18 +351,22 @@ display:none;
 
 <script>
 
-let 사진 = document.getElementById("돌이사진");
 let 메뉴 = document.getElementById("메뉴");
+let 메뉴상태 = 0;
 
-사진.onclick = function() {
+사진.addEventListener("contextmenu", function(e) {
 
-    if (메뉴.style.display === "none") {
+    e.preventDefault();
+
+    if (메뉴상태 == 0) {
+        메뉴상태 = 1;
         메뉴.style.display = "block";
     } else {
+        메뉴상태 = 0;
         메뉴.style.display = "none";
     }
 
-};
+});
 
 </script>
     
