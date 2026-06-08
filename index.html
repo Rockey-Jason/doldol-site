@@ -334,6 +334,39 @@ if (로그인상태 == "true") {
 };
 </script>
 
+
+    <div id="메뉴"
+style="
+position:absolute;
+top:70px;
+left:1750px;
+width:120px;
+height:80px;
+background:#808080;
+border:none;
+border-radius:15px;
+display:none;
+">
+</div>
+
+<script>
+
+let 사진 = document.getElementById("돌이사진");
+let 메뉴 = document.getElementById("메뉴");
+
+사진.onclick = function() {
+
+    if (메뉴.style.display === "none") {
+        메뉴.style.display = "block";
+    } else {
+        메뉴.style.display = "none";
+    }
+
+};
+
+</script>
+    
+
 <img src="https://i.postimg.cc/Px1nNcJM/1000004603.jpg"
 style="
 position:fixed;
