@@ -107,6 +107,81 @@ cursor:pointer;
 </button>
 
 
+<button id="로그인"
+style="
+position:absolute;
+top:15px;
+left:1800px;
+font-size:14px;
+font-family:jua;
+background:none;
+border:none;
+color:gray;
+cursor:pointer;
+display:none;
+">
+로그인
+</button>
+<script>
+let 로그인 = document.getElementById("로그인");
+
+if (localStorage.getItem("로그인상태") !== "true") {
+
+    로그인.style.display = "block";
+
+} else {
+
+    로그인.style.display = "none";
+
+}
+
+로그인.onclick = function() {
+
+    window.location.href =
+    "https://rockey-jason.github.io/doldol-site/login.html";
+
+};
+</script>
+
+
+<button id="회원가입"
+style="
+position:absolute;
+top:35px;
+left:1800px;
+font-size:14px;
+font-family:jua;
+background:none;
+border:none;
+color:gray;
+cursor:pointer;
+display:none;
+">
+회원가입
+</button>
+<script>
+let 회원가입 = document.getElementById("회원가입");
+
+if (localStorage.getItem("로그인상태") !== "true") {
+
+    회원가입.style.display = "block";
+
+} else {
+
+    회원가입.style.display = "none";
+
+}
+
+회원가입.onclick = function() {
+
+    window.location.href =
+    "https://rockey-jason.github.io/doldol-site/signin.html";
+
+};
+</script>
+
+
+
 <button id="돌이와 관련된 정보" style="
 position:absolute;
 top:200px;
