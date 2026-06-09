@@ -15,80 +15,67 @@ background: linear-gradient(to right, #000033, #000010);
 
 
 <script type="module">
-let 로그인상태 = localStorage.getItem("로그인상태");
+import bcrypt from "https://esm.sh/bcryptjs";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+  "YOUR_ANON_KEY"
 );
 
 window.로그인 = async function () {
 
-let name = document.getElementById("name").value;
-let user_id = document.getElementById("id").value;
-let email = document.getElementById("email").value;
-let password = document.getElementById("password").value;
+  let name = document.getElementById("name").value;
+  let user_id = document.getElementById("id").value;
+  let email = document.getElementById("email").value;
+  let password = document.getElementById("password").value;
 
-if (
-name.trim() === "" ||
-user_id.trim() === "" ||
-email.trim() === "" ||
-password.trim() === ""
-) {
-alert("모든 정보를 입력하세요.");
-return;
-}
-
-const { data, error } =
-await supabase.auth.signInWithPassword({
-email: email,
-password: password
-});
-
-if (error) {
-alert("이메일 또는 비밀번호가 틀렸습니다.");
-return;
-}
-
-const { data: 유저정보, error: 유저오류 } =
-await supabase
-.from("users")
-.select("*")
-.eq("email", email)
-.eq("name", name)
-.eq("user_id", user_id)
-.eq("password", password)
-.single();
-  
-    console.log(유저정보);
-console.log(유저오류);
-
-if (유저오류 || !유저정보) {
-
-    await supabase.auth.signOut();
-
-    alert("계정 이름 또는 아이디가 일치하지 않습니다.");
+  if (
+    name.trim() === "" ||
+    user_id.trim() === "" ||
+    email.trim() === "" ||
+    password.trim() === ""
+  ) {
+    alert("모든 정보를 입력하세요.");
     return;
+  }
 
-}
-localStorage.setItem("로그인상태", "true");
-localStorage.setItem("이름", 유저정보.name);
-localStorage.setItem("아이디", 유저정보.user_id);
-localStorage.setItem("로그인상태", "true");
+  // name, user_id, email 일치하는 사용자 찾기
+  const { data: 유저정보, error: 유저오류 } =
+    await supabase
+      .from("users")
+      .select("*")
+      .eq("name", name)
+      .eq("user_id", user_id)
+      .eq("email", email)
+      .single();
 
-console.log(
-localStorage.getItem("로그인상태")
-);
-alert("로그인 성공!");
+  // 사용자 없음
+  if (유저오류 || !유저정보) {
+    alert("이름, 아이디, 이메일을 확인하세요.");
+    return;
+  }
 
-window.location.href =
-"https://rockey-jason.github.io/doldol-site/";
+  // 암호화된 비밀번호 비교
+  const 비밀번호일치 =
+    await bcrypt.compare(password, 유저정보.password);
+
+  if (!비밀번호일치) {
+    alert("비밀번호를 확인하세요.");
+    return;
+  }
+
+  // 로그인 성공
+  localStorage.setItem("로그인상태", "true");
+  localStorage.setItem("이름", 유저정보.name);
+  localStorage.setItem("아이디", 유저정보.user_id);
+
+  alert("로그인 성공!");
+
+  window.location.href =
+    "https://rockey-jason.github.io/doldol-site/";
 };
-
-
 </script>
-
 
 
 
