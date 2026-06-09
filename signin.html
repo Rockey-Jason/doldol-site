@@ -58,6 +58,7 @@ if (authError) {
 }
 
 const 해시 = await bcrypt.hash(password, 14);
+
 const { error } = await supabase
   .from("users")
   .insert([
@@ -68,15 +69,17 @@ const { error } = await supabase
       password: 해시
     }
   ]);
-</script>
 
 if (error) {
   alert("회원가입 실패: " + error.message);
   console.log(error);
 } else {
-  alert("인증 이메일이 발송되었습니다. 이메일의 링크를 눌러 계정을 활성화하세요.");
+  alert("인증 이메일이 발송되었습니다. 보내진 이메일의 링크를 클릭해 회원가입을 완료하세요");
 }
 
+}; // 회원가입 함수 끝
+
+</script>
 
 
 <input id="name"
