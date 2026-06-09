@@ -57,9 +57,9 @@ if (authError) {
   return;
 }
 
+const 해시 = await bcrypt.hash(password, 14);
 const { error } = await supabase
   .from("users")
-const 해시 = await bcrypt.hash(password, 14);
   .insert([
     {
       name: name,
