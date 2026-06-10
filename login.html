@@ -69,7 +69,29 @@ window.로그인 = async function () {
   localStorage.setItem("로그인상태", "true");
   localStorage.setItem("이름", 유저정보.name);
   localStorage.setItem("아이디", 유저정보.user_id);
+const { data, error } = await supabase
+  .from("users")
+  .select("*")
+  .eq("name", name)
+  .eq("user_id", user_id)
+  .eq("email", email)
+  .single();
 
+let user_number = null;
+
+if (!error && data) {
+
+  const 비밀번호일치 =
+    await bcrypt.compare(password, data.password);
+
+  if (비밀번호일치) {
+    user_number = data.user_number;
+  }
+
+}
+  localStorage.setItem("유저번호", user_number);
+console.log(user_number);
+  
   alert("로그인 성공!");
 
   window.location.href =
