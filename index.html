@@ -3,6 +3,9 @@
 <head>
 <title>돌이 사이트</title>
 
+  let 유저번호 =
+  Number(localStorage.getItem("유저번호"));
+
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -10,6 +13,31 @@ const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
+
+
+  let 유저번호 = localStorage.getItem("유저번호");
+
+const { data, error } = await supabase
+  .from("users")
+  .select("doldolcoin")
+  .eq("user_number", Number(유저번호))
+  .single();
+
+if (!error && data) {
+  let 돌돌코인 = data.doldolcoin;
+  console.log(돌돌코인);
+}
+  
+const { data, error } = await supabase
+  .from("users")
+  .select("user_level")
+  .eq("user_number", Number(유저번호))
+  .single();
+
+if (!error && data) {
+  let 레벨 = data.user_number;
+  console.log(레벨);
+  
 
 const {
   data: { session }
@@ -233,6 +261,29 @@ z-index:2;
 ">
 로그아웃
 </button>
+
+
+<button id="레벨"
+style="
+position:absolute;
+top:15px;
+left:1700px;
+font-size:20px;
+font-family:jua;
+background:none;
+border:none;
+color:darkred;
+cursor:pointer;
+display:none;
+font-weight:150;
+z-index:2;
+">
+현재 레벨: 0
+</button>
+  <script>
+    document.getElementById("레벨").textContent =
+  "현재 레벨: " + 레벨;
+  </script>
         
 
 <button id="돌돌코인"
