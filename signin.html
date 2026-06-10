@@ -74,6 +74,28 @@ if (error) {
   alert("회원가입 실패: " + error.message);
   console.log(error);
 } else {
+  const { data, error } = await supabase
+  .from("users")
+  .select("*")
+  .eq("name", name)
+  .eq("user_id", user_id)
+  .eq("email", email)
+  .single();
+
+let user_number = null;
+
+if (!error && data) {
+
+  const 비밀번호일치 =
+    await bcrypt.compare(password, data.password);
+
+  if (비밀번호일치) {
+    user_number = data.user_number;
+  }
+
+}
+  localStorage.setItem("유저번호", user_number);
+console.log(user_number);
   alert("인증 이메일이 발송되었습니다. 보내진 이메일의 링크를 클릭해 회원가입을 완료하세요");
 }
 
