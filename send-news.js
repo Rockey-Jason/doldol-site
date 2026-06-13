@@ -10,6 +10,25 @@ const resend = new Resend(
   process.env.RESEND_API_KEY
 );
 
+
+<button onclick="신문발송()">
+신문 발송
+</button>
+<script>
+  async function 신문발송() {
+
+  await supabase
+    .from("settings")
+    .update({
+      run_now: true
+    })
+    .eq("id", 1);
+
+}
+  </script>
+
+
+
 const 레벨주기 = {
   "일반": 7,
   "프리미엄": 6,
