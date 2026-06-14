@@ -15,6 +15,11 @@ const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
+ let 레벨 = 0;
+
+// 다른 script에서도 사용 가능하게
+window.레벨 = 0;
+window.supabase = supabase;
 
 
 const { data: 코인데이터, error: 코인에러 } =
@@ -38,19 +43,19 @@ await supabase
 
 if (!레벨에러 && 레벨데이터) {
   레벨 = 레벨데이터.user_level;
+
+  window.레벨 = 레벨;
+
   console.log(레벨);
 }
-  
 
 const {
   data: { session }
 } = await supabase.auth.getSession();
 
-if (session) {
-  localStorage.setItem("로그인상태", "true");
-
+if (!session) {
   window.location.href =
-    "https://rockey-jason.github.io/doldol-site/";
+    "login.html";
 }
   </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -78,7 +83,7 @@ const 이름 = localStorage.getItem("이름");
 
 if (로그인상태 === "true" && 이름) {
 
-  const { data, error } = await supabase
+const { data, error } = await window.supabase
     .from("users")
     .select("*")
     .eq("name", 이름);
@@ -276,10 +281,6 @@ z-index:2;
 ">
 현재 레벨: 0
 </button>
-  <script>
-    document.getElementById("레벨").textContent =
-  "현재 레벨: " + 레벨;
-  </script>
         
 
 <button id="돌돌코인"
@@ -351,14 +352,8 @@ display:none;
 </div>
 
 
-<script>
+<script type="module">
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const supabase = createClient(
-  "https://scttowfhygcpdirrekqm.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
-);
 let 상세설명 = 0;
 let 로그인상태 =
 localStorage.getItem("로그인상태");
@@ -367,8 +362,11 @@ let 로그아웃버튼 = document.getElementById("로그아웃");
 let 돌돌코인버튼 = document.getElementById("돌돌코인");
 let 메뉴 = document.getElementById("메뉴");
 let 메뉴2 = document.getElementById("메뉴2");
-let 레벨 = document.getElementById("레벨");
+let 레벨버튼 =
+document.getElementById("레벨");
 
+레벨버튼.textContent =
+"현재 레벨: " + window.레벨;
   
 if (로그인상태 === "true") {
     사진.style.display = "block";
@@ -386,7 +384,7 @@ if (로그인상태 === "true") {
         돌돌코인버튼.style.display = "block";
         메뉴.style.display = "block";
         메뉴2.style.display = "block";
-        레벨.style.display = "block";
+        레벨버튼.style.display = "block";
 
     } else {
 
@@ -396,7 +394,7 @@ if (로그인상태 === "true") {
         돌돌코인버튼.style.display = "none";
         메뉴.style.display = "none";
         메뉴2.style.display = "none";
-        레벨.style.display = "none";
+        레벨버튼.style.display = "none";
     }
 
 };
