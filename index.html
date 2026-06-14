@@ -3,6 +3,8 @@
 <head>
 <title>돌이 사이트</title>
 
+  
+<script type="module">
   let 유저번호 =
   Number(localStorage.getItem("유저번호"));
 
@@ -15,28 +17,29 @@ const supabase = createClient(
 );
 
 
-  let 유저번호 = localStorage.getItem("유저번호");
-
-const { data, error } = await supabase
+const { data: 코인데이터, error: 코인에러 } =
+await supabase
   .from("users")
   .select("doldolcoin")
-  .eq("user_number", Number(유저번호))
+  .eq("user_number", 유저번호)
   .single();
 
-if (!error && data) {
-  let 돌돌코인 = data.doldolcoin;
+if (!코인에러 && 코인데이터) {
+  let 돌돌코인 = 코인데이터.doldolcoin;
   console.log(돌돌코인);
 }
   
-const { data, error } = await supabase
+const { data: 레벨데이터, error: 레벨에러 } =
+await supabase
   .from("users")
   .select("user_level")
-  .eq("user_number", Number(유저번호))
+  .eq("user_number", 유저번호)
   .single();
 
-if (!error && data) {
-  let 레벨 = data.user_number;
+if (!레벨에러 && 레벨데이터) {
+  레벨 = 레벨데이터.user_level;
   console.log(레벨);
+}
   
 
 const {
@@ -49,11 +52,10 @@ if (session) {
   window.location.href =
     "https://rockey-jason.github.io/doldol-site/";
 }
-
+  </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
-
 <style>
 body{
     background: linear-gradient(to right, #000033, #000010);
@@ -70,12 +72,6 @@ img:active{
 </style>
 
 <script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const supabase = createClient(
-  "https://scttowfhygcpdirrekqm.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
-);
 
 const 로그인상태 = localStorage.getItem("로그인상태");
 const 이름 = localStorage.getItem("이름");
@@ -357,9 +353,9 @@ display:none;
 
 <script>
 
-let 로그인상태 = localStorage.getItem("로그인상태");
 let 상세설명 = 0;
-
+let 로그인상태 =
+localStorage.getItem("로그인상태");
 let 사진 = document.getElementById("돌이사진");
 let 로그아웃버튼 = document.getElementById("로그아웃");
 let 돌돌코인버튼 = document.getElementById("돌돌코인");
