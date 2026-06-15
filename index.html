@@ -13,7 +13,6 @@ const supabase = createClient(
 );
 
 window.addEventListener("DOMContentLoaded", async () => {
-  alert("1");
   const 사진 = document.getElementById("돌이사진");
   const 로그인버튼 = document.getElementById("로그인");
   const 회원가입버튼 = document.getElementById("회원가입");
@@ -29,7 +28,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   } = await supabase.auth.getSession();
 
   if (!session) {
-  alert("2");
     로그인버튼.style.display = "block";
     회원가입버튼.style.display = "block";
 
@@ -37,7 +35,6 @@ window.addEventListener("DOMContentLoaded", async () => {
       location.href =
       "https://rockey-jason.github.io/doldol-site/login.html";
     };
-  alert("3");
     회원가입버튼.onclick = () => {
       location.href =
       "https://rockey-jason.github.io/doldol-site/signin.html";
@@ -46,7 +43,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   사진.style.display = "block";
-  alert("4");
   const {
     data: { user }
   } = await supabase.auth.getUser();
@@ -59,13 +55,13 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   if (error) {
     console.error(error);
-      alert("5");
   }
 
   레벨버튼.textContent =
     `현재 레벨: ${data.user_level}`;
 
   사진.onclick = () => {
+      alert("클릭됨");
 
     상세설명 = !상세설명;
 
