@@ -14,6 +14,18 @@ const supabase = createClient(
 
 window.addEventListener("DOMContentLoaded", async () => {
 
+  const 레벨이름 = {
+  1: "일반",
+  2: "프리미엄",
+  3: "돌프리미엄",
+  4: "돌돌프리미엄",
+  5: "돌돌돌프리미엄",
+  6: "돌돌돌돌프리미엄",
+  7: "돌돌돌돌돌프리미엄",
+  8: "유사돌이",
+  9: "돌이",
+  10: "관리자"
+};
   const 사진 = document.getElementById("돌이사진");
   const 로그인버튼 = document.getElementById("로그인");
   const 회원가입버튼 = document.getElementById("회원가입");
@@ -61,6 +73,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     .select("user_level")
     .eq("email", userEmail)
     .single();
+  const level = Number(data.user_level || 1);
+
+레벨버튼.textContent = `현재 레벨: ${레벨이름[level]}`;
 
   if (!error && data) {
     레벨버튼.textContent = `현재 레벨: ${data.user_level}`;
