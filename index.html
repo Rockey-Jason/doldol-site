@@ -5,59 +5,105 @@
 
   
 <script type="module">
-  let 유저번호 =
-  Number(localStorage.getItem("유저번호"));
-
-
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
- let 레벨 = 0;
 
-// 다른 script에서도 사용 가능하게
-window.레벨 = 0;
-window.supabase = supabase;
+window.addEventListener("DOMContentLoaded", async () => {
+
+  const 로그인버튼 = document.getElementById("로그인");
+  const 회원가입버튼 = document.getElementById("회원가입");
+  const 사진 = document.getElementById("돌이사진");
+  const 로그아웃버튼 = document.getElementById("로그아웃");
+  const 돌돌코인버튼 = document.getElementById("돌돌코인");
+  const 메뉴 = document.getElementById("메뉴");
+  const 메뉴2 = document.getElementById("메뉴2");
+  const 레벨버튼 = document.getElementById("레벨");
+  let 상세설명 = false;
+
+  const {
+    data: { session }
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+
+    로그인버튼.style.display = "block";
+    회원가입버튼.style.display = "block";
+
+    로그인버튼.onclick = () => {
+      location.href =
+      "https://rockey-jason.github.io/doldol-site/login.html";
+    };
+
+    회원가입버튼.onclick = () => {
+      location.href =
+      "https://rockey-jason.github.io/doldol-site/signin.html";
+    };
+
+    return;
+  }
+
+  사진.style.display = "block";
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("user_level,doldolcoin")
+    .eq("email", user.email)
+    .single();
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  레벨버튼.textContent =
+    `현재 레벨: ${data.user_level}`;
+
+  사진.onclick = () => {
+
+    상세설명 = !상세설명;
+
+    로그아웃버튼.style.display =
+      상세설명 ? "block" : "none";
+
+    돌돌코인버튼.style.display =
+      상세설명 ? "block" : "none";
+
+    메뉴.style.display =
+      상세설명 ? "block" : "none";
+
+    메뉴2.style.display =
+      상세설명 ? "block" : "none";
+
+    레벨버튼.style.display =
+      상세설명 ? "block" : "none";
+  };
+
+  로그아웃버튼.onclick = async () => {
+
+    await supabase.auth.signOut();
+
+    location.href =
+    "https://rockey-jason.github.io/doldol-site/";
+  };
+
+  돌돌코인버튼.onclick = () => {
+
+    location.href =
+    "https://rockey-jason.github.io/doldol-site/doldolcoinshop.html";
+  };
+
+});
+</script>
 
 
-const { data: 코인데이터, error: 코인에러 } =
-await supabase
-  .from("users")
-  .select("doldolcoin")
-  .eq("user_number", 유저번호)
-  .single();
-
-if (!코인에러 && 코인데이터) {
-  let 돌돌코인 = 코인데이터.doldolcoin;
-  console.log(돌돌코인);
-}
-  
-const { data: 레벨데이터, error: 레벨에러 } =
-await supabase
-  .from("users")
-  .select("user_level")
-  .eq("user_number", 유저번호)
-  .single();
-
-if (!레벨에러 && 레벨데이터) {
-  레벨 = 레벨데이터.user_level;
-
-  window.레벨 = 레벨;
-
-  console.log(레벨);
-}
-
-const {
-  data: { session }
-} = await supabase.auth.getSession();
-
-if (!session) {
-  window.location.href =
-    "login.html";
-}
-  </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
@@ -75,26 +121,6 @@ img:active{
     transform:scale(0.9);
 }
 </style>
-
-<script type="module">
-
-const 로그인상태 = localStorage.getItem("로그인상태");
-const 이름 = localStorage.getItem("이름");
-
-if (로그인상태 === "true" && 이름) {
-
-const { data, error } = await window.supabase
-    .from("users")
-    .select("*")
-    .eq("name", 이름);
-
-  if (error) {
-    console.log(error);
-  } else if (data.length > 0) {
-    console.log(data[0]);
-  }
-}
-</script>
 
 </head>
 
@@ -170,27 +196,7 @@ display:none;
 ">
 로그인
 </button>
-<script>
-let 로그인 = document.getElementById("로그인");
-
-if (localStorage.getItem("로그인상태") !== "true") {
-
-    로그인.style.display = "block";
-
-} else {
-
-    로그인.style.display = "none";
-
-}
-
-로그인.onclick = function() {
-
-    window.location.href =
-    "https://rockey-jason.github.io/doldol-site/login.html";
-
-};
-</script>
-
+  
 
 <button id="회원가입"
 style="
@@ -207,26 +213,6 @@ display:none;
 ">
 회원가입
 </button>
-<script>
-let 회원가입 = document.getElementById("회원가입");
-
-if (localStorage.getItem("로그인상태") !== "true") {
-
-    회원가입.style.display = "block";
-
-} else {
-
-    회원가입.style.display = "none";
-
-}
-
-회원가입.onclick = function() {
-
-    window.location.href =
-    "https://rockey-jason.github.io/doldol-site/signin.html";
-
-};
-</script>
 
 
 
@@ -300,16 +286,6 @@ display:none;
 ">
 돌돌코인
 </button>
-        <script>
-        let 돌돌코인 = document.getElementById("돌돌코인");
-
-돌돌코인.onclick = function() {
-
-    window.location.href =
-    "https://rockey-jason.github.io/doldol-site/doldolcoinshop.html";
-
-};
-    </script>
 
 <img id="돌이사진"
 src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
@@ -350,74 +326,6 @@ display:none;
     z-index:1;
 ">
 </div>
-
-
-<script type="module">
-
-let 상세설명 = 0;
-let 로그인상태 =
-localStorage.getItem("로그인상태");
-let 사진 = document.getElementById("돌이사진");
-let 로그아웃버튼 = document.getElementById("로그아웃");
-let 돌돌코인버튼 = document.getElementById("돌돌코인");
-let 메뉴 = document.getElementById("메뉴");
-let 메뉴2 = document.getElementById("메뉴2");
-let 레벨버튼 =
-document.getElementById("레벨");
-
-레벨버튼.textContent =
-"현재 레벨: " + window.레벨;
-  
-if (로그인상태 === "true") {
-    사진.style.display = "block";
-} else {
-    사진.style.display = "none";
-}
-
-사진.onclick = function() {
-
-    if (상세설명 === 0) {
-
-        상세설명 = 1;
-
-        로그아웃버튼.style.display = "block";
-        돌돌코인버튼.style.display = "block";
-        메뉴.style.display = "block";
-        메뉴2.style.display = "block";
-        레벨버튼.style.display = "block";
-
-    } else {
-
-        상세설명 = 0;
-
-        로그아웃버튼.style.display = "none";
-        돌돌코인버튼.style.display = "none";
-        메뉴.style.display = "none";
-        메뉴2.style.display = "none";
-        레벨버튼.style.display = "none";
-    }
-
-};
-
-로그아웃버튼.onclick = function() {
-
-    localStorage.setItem("로그인상태", "false");
-    localStorage.removeItem("이름");
-    localStorage.removeItem("아이디");
-
-    window.location.href =
-    "https://rockey-jason.github.io/doldol-site/";
-
-};
-
-돌돌코인버튼.onclick = function() {
-
-    window.location.href =
-    "https://rockey-jason.github.io/doldol-site/doldolcoin.html";
-
-};
-
-</script>
     
 
 <img src="https://i.postimg.cc/Px1nNcJM/1000004603.jpg"
