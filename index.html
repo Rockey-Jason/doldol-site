@@ -14,9 +14,9 @@ const supabase = createClient(
 
 window.addEventListener("DOMContentLoaded", async () => {
 
+  const 사진 = document.getElementById("돌이사진");
   const 로그인버튼 = document.getElementById("로그인");
   const 회원가입버튼 = document.getElementById("회원가입");
-  const 사진 = document.getElementById("돌이사진");
   const 로그아웃버튼 = document.getElementById("로그아웃");
   const 돌돌코인버튼 = document.getElementById("돌돌코인");
   const 메뉴 = document.getElementById("메뉴");
@@ -59,7 +59,6 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   if (error) {
     console.error(error);
-    return;
   }
 
   레벨버튼.textContent =
