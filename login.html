@@ -22,7 +22,35 @@ const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
+const {
+  data: { user }
+} = await supabase.auth.getUser();
 
+if (user) {
+
+  const { data: existingUser } =
+    await supabase
+      .from("users")
+      .select("*")
+      .eq("email", user.email)
+      .maybeSingle();
+
+  if (!existingUser) {
+
+    await supabase
+      .from("users")
+      .insert([
+        {
+          name: user.user_metadata.name,
+          user_id: user.user_metadata.user_id,
+          email: user.email,
+          user_level: 1
+        }
+      ]);
+
+    alert("회원가입이 완료되었습니다!");
+  }
+}
 window.로그인 = async function () {
 
   let name = document.getElementById("name").value;
