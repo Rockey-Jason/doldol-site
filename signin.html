@@ -14,93 +14,79 @@ background: linear-gradient(to right, #000033, #000010);
 ">
 
 
-<script type="module">
-  import bcrypt from "https://esm.sh/bcryptjs";
 
+<script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+ "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
 
 window.회원가입 = async function () {
 
-  let name = document.getElementById("name").value;
-  let user_id = document.getElementById("id").value;
-  let email = document.getElementById("email").value;
-  let password = document.getElementById("password").value;
+  const name =
+    document.getElementById("name").value;
+
+  const user_id =
+    document.getElementById("id").value;
+
+  const email =
+    document.getElementById("email").value;
+
+  const password =
+    document.getElementById("password").value;
 
   if (
     name.trim() === "" ||
     user_id.trim() === "" ||
     email.trim() === "" ||
-    password.trim() === "" ||
-    password.length < 7
+    password.trim() === ""
   ) {
-    alert("입력값 확인");
+    alert("모든 정보를 입력하세요.");
     return;
   }
 
-const { data: authData, error: authError } =
-await supabase.auth.signUp({
-  email: email,
-  password: password,
-  options: {
-    emailRedirectTo:
-      "https://rockey-jason.github.io/doldol-site/signin.html"
+  if (password.length < 7) {
+    alert("비밀번호는 7자 이상이어야 합니다.");
+    return;
   }
-});
 
-if (authError) {
-  alert("회원가입 실패: " + authError.message);
-  return;
-}
+  // 인증 전 임시 저장
+  localStorage.setItem(
+    "signup_name",
+    name
+  );
 
-const 해시 = await bcrypt.hash(password, 14);
+  localStorage.setItem(
+    "signup_user_id",
+    user_id
+  );
 
-const { error } = await supabase
-  .from("users")
-  .insert([
-    {
-      name: name,
-      user_id: user_id,
+  const { error: authError } =
+    await supabase.auth.signUp({
       email: email,
-      password: 해시
-    }
-  ]);
+      password: password,
+      options: {
+        emailRedirectTo:
+          "https://rockey-jason.github.io/doldol-site/signin.html"
+      }
+    });
 
-if (error) {
-  alert("회원가입 실패: " + error.message);
-  console.log(error);
-} else {
-  const { data, error } = await supabase
-  .from("users")
-  .select("*")
-  .eq("name", name)
-  .eq("user_id", user_id)
-  .eq("email", email)
-  .single();
-
-let user_number = null;
-
-if (!error && data) {
-
-  const 비밀번호일치 =
-    await bcrypt.compare(password, data.password);
-
-  if (비밀번호일치) {
-    user_number = data.user_number;
+  if (authError) {
+    alert(
+      "회원가입 실패: " +
+      authError.message
+    );
+    console.error(authError);
+    return;
   }
 
-}
-  localStorage.setItem("유저번호", user_number);
-console.log(user_number);
-  alert("인증 이메일이 발송되었습니다. 보내진 이메일의 링크를 클릭해 회원가입을 완료하세요");
-}
+  alert(
+    "인증 이메일이 발송되었습니다.'이메일 인증하기' 버튼을 눌러 계정을 생성하세요."
+  );
 
-}; // 회원가입 함수 끝
-
+};
 </script>
 
 
