@@ -40,7 +40,7 @@ window.로그인 = async function () {
     return;
   }
 
-  // name, user_id, email 일치하는 사용자 찾기
+  // users 테이블 조회
   const { data: 유저정보, error: 유저오류 } =
     await supabase
       .from("users")
@@ -50,13 +50,12 @@ window.로그인 = async function () {
       .eq("email", email)
       .single();
 
-  // 사용자 없음
   if (유저오류 || !유저정보) {
     alert("이름, 아이디, 이메일을 확인하세요.");
     return;
   }
 
-  // 암호화된 비밀번호 비교
+  // bcrypt 비밀번호 확인
   const 비밀번호일치 =
     await bcrypt.compare(password, 유저정보.password);
 
@@ -65,40 +64,33 @@ window.로그인 = async function () {
     return;
   }
 
-  // 로그인 성공
+  // Supabase Auth 로그인
+  const { error: authError } =
+    await supabase.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+  if (authError) {
+    alert("Supabase 로그인 실패");
+    console.error(authError);
+    return;
+  }
+
+  // localStorage 저장
   localStorage.setItem("로그인상태", "true");
   localStorage.setItem("이름", 유저정보.name);
   localStorage.setItem("아이디", 유저정보.user_id);
-const { data, error } = await supabase
-  .from("users")
-  .select("*")
-  .eq("name", name)
-  .eq("user_id", user_id)
-  .eq("email", email)
-  .single();
+  localStorage.setItem("유저번호", 유저정보.user_number);
 
-let user_number = null;
+  console.log("유저번호:", 유저정보.user_number);
 
-if (!error && data) {
-
-  const 비밀번호일치 =
-    await bcrypt.compare(password, data.password);
-
-  if (비밀번호일치) {
-    user_number = data.user_number;
-  }
-
-}
-  localStorage.setItem("유저번호", user_number);
-console.log(user_number);
-  
   alert("로그인 성공!");
 
   window.location.href =
     "https://rockey-jason.github.io/doldol-site/";
 };
 </script>
-
 
 
 <input id="name"
