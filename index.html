@@ -63,7 +63,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (!user) return;
 
   const userEmail = user.email;
-console.log("여기까지 실행됨");
   // 사진 보이기
   사진.style.display = "block";
 
@@ -74,7 +73,9 @@ console.log("여기까지 실행됨");
     .eq("email", userEmail)
     .single();
   const level = Number(data.user_level || 1);
-
+console.log("로그인 이메일:", userEmail);
+console.log(data);
+console.log(error);
 레벨버튼.textContent = `현재 레벨: ${레벨이름[level]}`;
 
   if (!error && data) {
