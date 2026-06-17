@@ -22,6 +22,16 @@ const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
+
+  
+  const {
+  data: { user }
+} = await supabase.auth.getUser();
+
+console.log(user);
+
+
+  
 const {
   data: { user }
 } = await supabase.auth.getUser();
