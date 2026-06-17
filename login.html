@@ -23,33 +23,25 @@ const supabase = createClient(
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
 
-  
-  const {
-  data: { user }
-} = await supabase.auth.getUser();
+window.addEventListener("DOMContentLoaded", async () => {
 
-console.log(user);
+  // 🔥 로그인된 유저 확인 (한 번만)
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData?.user;
 
+  console.log(user);
 
-  
-const {
-  data: { user }
-} = await supabase.auth.getUser();
+  if (user) {
 
-if (user) {
-
-  const { data: existingUser } =
-    await supabase
+    const { data: existingUser } = await supabase
       .from("users")
       .select("*")
       .eq("email", user.email)
       .maybeSingle();
 
-  if (!existingUser) {
+    if (!existingUser) {
 
-    await supabase
-      .from("users")
-      .insert([
+      await supabase.from("users").insert([
         {
           name: user.user_metadata.name,
           user_id: user.user_metadata.user_id,
@@ -58,29 +50,29 @@ if (user) {
         }
       ]);
 
-    alert("회원가입이 완료되었습니다!");
-  }
-}
-window.로그인 = async function () {
-
-  let name = document.getElementById("name").value;
-  let user_id = document.getElementById("id").value;
-  let email = document.getElementById("email").value;
-  let password = document.getElementById("password").value;
-
-  if (
-    name.trim() === "" ||
-    user_id.trim() === "" ||
-    email.trim() === "" ||
-    password.trim() === ""
-  ) {
-    alert("모든 정보를 입력하세요.");
-    return;
+      alert("회원가입이 완료되었습니다!");
+    }
   }
 
-  // users 테이블 조회
-  const { data: 유저정보, error: 유저오류 } =
-    await supabase
+  // 🔥 로그인 함수
+  window.로그인 = async function () {
+
+    let name = document.getElementById("name").value;
+    let user_id = document.getElementById("id").value;
+    let email = document.getElementById("email").value;
+    let password = document.getElementById("password").value;
+
+    if (
+      !name.trim() ||
+      !user_id.trim() ||
+      !email.trim() ||
+      !password.trim()
+    ) {
+      alert("모든 정보를 입력하세요.");
+      return;
+    }
+
+    const { data: 유저정보, error: 유저오류 } = await supabase
       .from("users")
       .select("*")
       .eq("name", name)
@@ -88,46 +80,44 @@ window.로그인 = async function () {
       .eq("email", email)
       .single();
 
-  if (유저오류 || !유저정보) {
-    alert("이름, 아이디, 이메일을 확인하세요.");
-    return;
-  }
+    if (유저오류 || !유저정보) {
+      alert("이름, 아이디, 이메일을 확인하세요.");
+      return;
+    }
 
-  // bcrypt 비밀번호 확인
-  const 비밀번호일치 =
-    await bcrypt.compare(password, 유저정보.password);
+    const 비밀번호일치 = await bcrypt.compare(
+      password,
+      유저정보.password
+    );
 
-  if (!비밀번호일치) {
-    alert("비밀번호를 확인하세요.");
-    return;
-  }
+    if (!비밀번호일치) {
+      alert("비밀번호를 확인하세요.");
+      return;
+    }
 
-  // Supabase Auth 로그인
-  const { error: authError } =
-    await supabase.auth.signInWithPassword({
-      email: email,
-      password: password
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password
     });
 
-  if (authError) {
-    alert("Supabase 로그인 실패");
-    console.error(authError);
-    return;
-  }
+    if (authError) {
+      alert("Supabase 로그인 실패");
+      console.error(authError);
+      return;
+    }
 
-  // localStorage 저장
-  localStorage.setItem("로그인상태", "true");
-  localStorage.setItem("이름", 유저정보.name);
-  localStorage.setItem("아이디", 유저정보.user_id);
-  localStorage.setItem("유저번호", 유저정보.user_number);
+    localStorage.setItem("로그인상태", "true");
+    localStorage.setItem("이름", 유저정보.name);
+    localStorage.setItem("아이디", 유저정보.user_id);
+    localStorage.setItem("유저번호", 유저정보.user_number);
 
-  console.log("유저번호:", 유저정보.user_number);
+    alert("로그인 성공!");
 
-  alert("로그인 성공!");
+    window.location.href =
+      "https://rockey-jason.github.io/doldol-site/";
+  };
 
-  window.location.href =
-    "https://rockey-jason.github.io/doldol-site/";
-};
+});
 </script>
 
 
