@@ -41,14 +41,16 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     if (!existingUser) {
 
-      await supabase.from("users").insert([
-        {
-          name: user.user_metadata.name,
-          user_id: user.user_metadata.user_id,
-          email: user.email,
-          user_level: 1
-        }
-      ]);
+      await supabase
+  .from("users")
+  .insert([
+    {
+      name: user.user_metadata.name,
+      user_id: user.id,   // auth.uid()와 같은 값
+      email: user.email,
+      user_level: 1
+    }
+  ]);
 
       alert("회원가입이 완료되었습니다!");
       console.log(user);
