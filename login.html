@@ -39,7 +39,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       .eq("email", user.email)
       .maybeSingle();
 
-    console.log(user.user_metadata);
+ console.log(authData.user.user_metadata);
     if (!existingUser) {
 
 const { data, error } =
