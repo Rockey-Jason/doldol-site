@@ -28,7 +28,7 @@ window.회원가입 = async function () {
   const name =
     document.getElementById("name").value;
 
-  const user_id =
+  const login_id =
     document.getElementById("id").value;
 
   const email =
@@ -39,7 +39,7 @@ window.회원가입 = async function () {
 
   if (
     name.trim() === "" ||
-    user_id.trim() === "" ||
+    login_id.trim() === "" ||
     email.trim() === "" ||
     password.trim() === ""
   ) {
@@ -52,31 +52,20 @@ window.회원가입 = async function () {
     return;
   }
 
-  // 인증 전 임시 저장
-  localStorage.setItem(
-    "signup_name",
-    name
-  );
+  const { data: authData, error: authError } =
+  await supabase.auth.signUp({
+    email: email,
+    password: password,
+    options: {
+      emailRedirectTo:
+        "https://rockey-jason.github.io/doldol-site/login.html",
 
-  localStorage.setItem(
-    "signup_user_id",
-    user_id
-  );
-
-const { data: authData, error: authError } =
-await supabase.auth.signUp({
-  email: email,
-  password: password,
-  options: {
-    emailRedirectTo:
-      "https://rockey-jason.github.io/doldol-site/login.html",
-
-    data: {
-      name: name,
-      user_id: user_id
+      data: {
+        name: name,
+        login_id: login_id
+      }
     }
-  }
-});
+  });
 
   if (authError) {
     alert(
@@ -88,7 +77,7 @@ await supabase.auth.signUp({
   }
 
   alert(
-    "인증 이메일이 발송되었습니다.'이메일 인증하기' 버튼을 눌러 계정을 생성하세요."
+    "인증 이메일이 발송되었습니다. 이메일의 '이메일 인증하기' 버튼을 눌러 회원가입을 완료하세요."
   );
 
 };
