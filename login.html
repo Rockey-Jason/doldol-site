@@ -41,24 +41,25 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     if (!existingUser) {
 
- await supabase
+const { data, error } =
+await supabase
 .from("users")
 .insert([
 {
   name: user.user_metadata.name,
-
-  user_id: user.id, // UUID
-
-  login_id:
-    user.user_metadata.user_id, // 사용자가 입력한 아이디
-
+  user_id: user.id,
+  login_id: user.user_metadata.login_id,
   email: user.email,
-
   user_level: 1
 }
 ]);
+
 console.log("DATA:", data);
 console.log("ERROR:", error);
+      if (error) {
+  console.error(error);
+  alert(error.message);
+}
       alert("회원가입이 완료되었습니다!");
       console.log(user);
 console.log(user.user_metadata);
@@ -83,7 +84,10 @@ console.log(user.user_metadata);
       return;
     }
 
-const { data: 유저정보 } =
+const {
+  data: 유저정보,
+  error: 유저오류
+} =
 await supabase
 .from("users")
 .select("*")
@@ -97,26 +101,16 @@ await supabase
       return;
     }
 
-    const 비밀번호일치 = await bcrypt.compare(
-      password,
-      유저정보.password
-    );
+  const { error: authError } =
+await supabase.auth.signInWithPassword({
+  email,
+  password
+});
 
-    if (!비밀번호일치) {
-      alert("비밀번호를 확인하세요.");
-      return;
-    }
-
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-    if (authError) {
-      alert("Supabase 로그인 실패");
-      console.error(authError);
-      return;
-    }
+if (authError) {
+  alert("이메일 또는 비밀번호가 틀렸습니다.");
+  return;
+}
 
     localStorage.setItem("로그인상태", "true");
     localStorage.setItem("이름", 유저정보.name);
