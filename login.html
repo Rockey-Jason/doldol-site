@@ -45,33 +45,31 @@ window.addEventListener("DOMContentLoaded", async () => {
 const loginId =
   user.user_metadata.login_id ||
   user.user_metadata.user_id;
-
-const { data, error } = await supabase
-.from("users")
-.insert([
-  {
-    name: name,
-    user_id: authData.user.id,
-    login_id: login_id,
-    email: email,
-    user_level: 1
-  }
-]);
-
-console.log("DATA:", data);
-console.log("ERROR:", error);
-
-if (error) {
-  console.log("FULL ERROR:", error);
-  alert(JSON.stringify(error, null, 2));
-  return;
-}
-}
-      console.log(user.user_metadata);
-      alert("회원가입이 완료되었습니다!");
-      console.log(user);
 console.log(user.user_metadata);
+if (!existingUser) {
+
+  const { data, error } = await supabase
+  .from("users")
+  .insert([
+    {
+      name: user.user_metadata.name,
+      user_id: authData.user.id,
+      login_id:
+        user.user_metadata.login_id ||
+        user.user_metadata.user_id,
+      email: user.email,
+      user_level: 1
     }
+  ]);
+
+  if (error) {
+    console.log(error);
+    alert(error.message);
+    return;
+  }
+
+  alert("회원가입이 완료되었습니다!");
+}
   }
 
   // 🔥 로그인 함수
