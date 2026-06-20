@@ -12,7 +12,6 @@
 <body style="
 background: linear-gradient(to right, #000033, #000010);
 ">
-console.log(user.user_metadata);
 
 <script type="module">
 import bcrypt from "https://esm.sh/bcryptjs";
@@ -22,7 +21,7 @@ const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
-
+console.log(user.user_metadata);
 window.addEventListener("DOMContentLoaded", async () => {
 
   // 🔥 로그인된 유저 확인 (한 번만)
