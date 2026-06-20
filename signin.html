@@ -51,6 +51,12 @@ window.회원가입 = async function () {
     alert("비밀번호는 7자 이상이어야 합니다.");
     return;
   }
+  const email = document.getElementById("email").value.trim();
+  console.log(email);
+  if (!email.includes("@")) {
+  alert("이메일을 정확히 입력하세요.");
+  return;
+}
 
   const { data: authData, error: authError } =
   await supabase.auth.signUp({
