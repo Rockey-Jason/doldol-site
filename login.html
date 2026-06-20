@@ -42,6 +42,10 @@ window.addEventListener("DOMContentLoaded", async () => {
  console.log(authData.user.user_metadata);
     if (!existingUser) {
 
+const loginId =
+  user.user_metadata.login_id ||
+  user.user_metadata.user_id;
+
 const { data, error } =
 await supabase
 .from("users")
@@ -49,7 +53,7 @@ await supabase
 {
   name: user.user_metadata.name,
   user_id: user.id,
-  login_id: user.user_metadata.login_id,
+  login_id: loginId,
   email: user.email,
   user_level: 1
 }
@@ -57,9 +61,12 @@ await supabase
 
 console.log("DATA:", data);
 console.log("ERROR:", error);
-      if (error) {
+
+if (error) {
   console.error(error);
   alert(error.message);
+  return;
+}
 }
       console.log(user.user_metadata);
       alert("회원가입이 완료되었습니다!");
