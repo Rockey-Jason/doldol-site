@@ -21,7 +21,6 @@ const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
-console.log(user.user_metadata);
 window.addEventListener("DOMContentLoaded", async () => {
 
   // 🔥 로그인된 유저 확인 (한 번만)
@@ -45,10 +44,8 @@ const loginId =
   user.user_metadata.login_id ||
   user.user_metadata.user_id;
 console.log(user.user_metadata);
-if (!existingUser) {
-
   const { data, error } = await supabase
-  .from("users")
+.from("users")
 .insert([
   {
     name: user.user_metadata.name,
@@ -57,17 +54,17 @@ if (!existingUser) {
     email: user.email,
     user_level: 1
   }
-    if (error) {
-    console.log(error);
-    alert(error.message);
-    return;
-  }
-
-  alert("회원가입이 완료되었습니다!");
-}
 ]);
-}
 
+if (error) {
+  console.log(error);
+  alert(error.message);
+  return;
+}
+console.log(user.user_metadata);
+alert("회원가입이 완료되었습니다!");
+} // ← if (!existingUser) 닫기
+} // ← if (user) 닫기
   // 🔥 로그인 함수
   window.로그인 = async function () {
 
