@@ -41,16 +41,22 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     if (!existingUser) {
 
-      await supabase
-  .from("users")
-  .insert([
-    {
-      name: user.user_metadata.name,
-      user_id: user.id,   // auth.uid()와 같은 값
-      email: user.email,
-      user_level: 1
-    }
-  ]);
+ await supabase
+.from("users")
+.insert([
+{
+  name: user.user_metadata.name,
+
+  user_id: user.id, // UUID
+
+  login_id:
+    user.user_metadata.user_id, // 사용자가 입력한 아이디
+
+  email: user.email,
+
+  user_level: 1
+}
+]);
 
       alert("회원가입이 완료되었습니다!");
       console.log(user);
@@ -76,13 +82,14 @@ console.log(user.user_metadata);
       return;
     }
 
-    const { data: 유저정보, error: 유저오류 } = await supabase
-      .from("users")
-      .select("*")
-      .eq("name", name)
-      .eq("user_id", user_id)
-      .eq("email", email)
-      .single();
+const { data: 유저정보 } =
+await supabase
+.from("users")
+.select("*")
+.eq("name", name)
+.eq("login_id", user_id)
+.eq("email", email)
+.single();
 
     if (유저오류 || !유저정보) {
       alert("이름, 아이디, 이메일을 확인하세요.");
