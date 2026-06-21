@@ -19,6 +19,48 @@ window.신문발송 = async function () {
   }
 };
 </script>
+  <style>
+body {
+  background: linear-gradient(to right, #000033, #000010);
+  margin: 0;
+}
+</style>
+
+  
+</head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
+<body>
+
+<a href="https://rockey-jason.github.io/doldol-site/" style="text-decoration:none;">
+<button style="
+position:absolute;
+top:0;
+left:0;
+background:none;
+border:none;
+color:#f5f5f5;
+font-family:'Black Han Sans';
+font-size:100px;
+cursor:pointer;
+">
+돌이 사이트
+</button>
+</a>
+
+<p style="
+font-size:20px;
+color:#f5f5f5;
+font-family:jua;
+margin-top:120px;
+margin-left:20px;
+">
+돌이에 대한 여러 정보와 돌이신문, 돌돌코인 수급 등을 이용해보세요!
+</p>
+
+  
 
 <button onclick="신문발송()">
 신문 발송
