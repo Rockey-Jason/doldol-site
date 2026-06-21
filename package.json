@@ -1,7 +1,8 @@
 {
+  "name": "dori-news-bot",
   "type": "module",
   "dependencies": {
-    "@supabase/supabase-js": "^2",
-    "resend": "^4"
+    "@supabase/supabase-js": "^2.0.0",
+    "nodemailer": "^6.9.0"
   }
 }
