@@ -18,7 +18,7 @@ jobs:
 
       - run: npm install
 
-      - run: node newsJob.js
+      - run: node send-news.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
