@@ -21,12 +21,15 @@ window.신문발송 = async function () {
     console.error("실패:", error);
   } else {
     console.log("트리거 성공");
+      
+const 신문 =
+    document.getElementById("신문").value;
     
 const { data, error } = await supabase
-.from("users")
+.from("rockey_news")
 .insert([
   {
-rockey_news:
+rockey_news: 신문
   }
 ]);
     
