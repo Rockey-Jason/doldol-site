@@ -34,14 +34,34 @@ window.addEventListener("DOMContentLoaded", async () => {
   const 메뉴 = document.getElementById("메뉴");
   const 메뉴2 = document.getElementById("메뉴2");
   const 레벨버튼 = document.getElementById("레벨");
-
+  const 돌돌코인수량 = document.getElementById("돌돌코인수량");
+  
   let 상세설명 = false;
-
   // 로그인 상태 확인
   const {
     data: { session }
   } = await supabase.auth.getSession();
 
+const 유저번호 =
+  Number(localStorage.getItem("유저번호"));
+
+const { data: coinData, error: coinError } =
+await supabase
+  .from("users")
+  .select("doldolcoin")
+  .eq("user_number", 유저번호)
+  .single();
+
+if (coinError) {
+  console.log(coinError);
+}
+
+const 돌돌코인수 =
+  coinData?.doldolcoin || 0;
+
+  돌돌코인수량.textContent =
+  `현재 돌돌코인 수량: ${돌돌코인수}`;
+  
   if (!session) {
     로그인버튼.style.display = "block";
     회원가입버튼.style.display = "block";
@@ -87,10 +107,6 @@ const level = Number(data[0].user_level || 1);
 레벨버튼.textContent =
   `현재 레벨: ${레벨이름[level]}`;
 
-  if (!error && data) {
-    레벨버튼.textContent = `현재 레벨: ${data.user_level}`;
-  }
-
   // 클릭 이벤트
   사진.onclick = async () => {
 console.log("사진 클릭됨");
@@ -101,17 +117,30 @@ console.log("사진 클릭됨");
     메뉴.style.display = 상세설명 ? "block" : "none";
     메뉴2.style.display = 상세설명 ? "block" : "none";
     레벨버튼.style.display = 상세설명 ? "block" : "none";
-
+    돌돌코인수량.style.display = 상세설명 ? "block" : "none";
     // 클릭 시 최신 데이터 가져오기
     const { data, error } = await supabase
       .from("users")
       .select("user_level")
-      .eq("email", userEmail)
+    .eq("user_number", 유저번호)
       .single();
+      const { data: coinData } = await supabase
+    .from("users")
+    .select("doldolcoin")
+    .eq("user_number", 유저번호)
+    .single();
 
-    if (!error && data) {
-      레벨버튼.textContent = `현재 레벨: ${data.user_level}`;
-    }
+  돌돌코인수량.textContent =
+    `현재 돌돌코인 수량: ${coinData.doldolcoin}`;
+
+if (!error && data) {
+
+  const level =
+    Number(data.user_level || 1);
+
+  레벨버튼.textContent =
+    `현재 레벨: ${레벨이름[level]}`;
+}
   };
 
   // 로그아웃
@@ -269,7 +298,7 @@ style="
 position:absolute;
 top:15px;
 left:1700px;
-font-size:10px;
+font-size:14px;
 font-family:jua;
 background:none;
 border:none;
@@ -280,6 +309,24 @@ font-weight:150;
 z-index:2;
 ">
 현재 레벨: 0
+</button>
+
+<button id="돌돌코인수량"
+style="
+position:absolute;
+top:15px;
+left:1700px;
+font-size:14px;
+font-family:jua;
+background:none;
+border:none;
+color:black;
+cursor:pointer;
+display:none;
+font-weight:150;
+z-index:2;
+">
+현제 돌돌코인 수량: 0
 </button>
         
 
