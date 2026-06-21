@@ -15,17 +15,18 @@ const supabase = createClient(
 window.addEventListener("DOMContentLoaded", async () => {
 
   const 레벨이름 = {
-  1: "일반",
-  2: "프리미엄",
-  3: "돌프리미엄",
-  4: "돌돌프리미엄",
-  5: "돌돌돌프리미엄",
-  6: "돌돌돌돌프리미엄",
-  7: "돌돌돌돌돌프리미엄",
-  8: "유사돌이",
-  9: "돌이",
-  10: "관리자"
-};
+    1: "일반",
+    2: "프리미엄",
+    3: "돌프리미엄",
+    4: "돌돌프리미엄",
+    5: "돌돌돌프리미엄",
+    6: "돌돌돌돌프리미엄",
+    7: "돌돌돌돌돌프리미엄",
+    8: "유사돌이",
+    9: "돌이",
+    10: "관리자"
+  };
+
   const 사진 = document.getElementById("돌이사진");
   const 로그인버튼 = document.getElementById("로그인");
   const 회원가입버튼 = document.getElementById("회원가입");
@@ -35,34 +36,16 @@ window.addEventListener("DOMContentLoaded", async () => {
   const 메뉴2 = document.getElementById("메뉴2");
   const 레벨버튼 = document.getElementById("레벨");
   const 돌돌코인수량 = document.getElementById("돌돌코인수량");
-  
+
   let 상세설명 = false;
-  // 로그인 상태 확인
+
+  // 세션 확인
   const {
     data: { session }
   } = await supabase.auth.getSession();
 
-const 유저번호 =
-  Number(localStorage.getItem("유저번호"));
-
-const { data: coinData, error: coinError } =
-await supabase
-  .from("users")
-  .select("doldolcoin")
-  .eq("user_number", 유저번호)
-  .single();
-
-if (coinError) {
-  console.log(coinError);
-}
-
-const 돌돌코인수 =
-  coinData?.doldolcoin || 0;
-
-  돌돌코인수량.textContent =
-  `현재 돌돌코인 수량: ${돌돌코인수}`;
-  
   if (!session) {
+
     로그인버튼.style.display = "block";
     회원가입버튼.style.display = "block";
 
@@ -73,43 +56,44 @@ const 돌돌코인수 =
     회원가입버튼.onclick = () => {
       location.href = "signin.html";
     };
+
+    return;
   }
 
-  // 유저 정보 가져오기 (한 번만)
+  // 로그인 유저
   const {
     data: { user }
   } = await supabase.auth.getUser();
 
   if (!user) return;
 
-  const userEmail = user.email;
-  // 사진 보이기
+  // users 테이블 조회
+  const { data: 유저정보, error: userError } = await supabase
+    .from("users")
+    .select("user_number, user_level, doldolcoin")
+    .eq("user_id", user.id)
+    .single();
+
+  if (userError) {
+    console.error("유저 조회 오류:", userError);
+    return;
+  }
+
+  const 유저번호 = 유저정보.user_number;
+
+  // 프로필 사진 표시
   사진.style.display = "block";
 
-  // 초기 레벨 표시 (처음 1회)
-const { data, error } = await supabase
-  .from("users")
-  .select("user_level")
-  .eq("email", userEmail)
-  .limit(1);
+  // 초기 레벨
+  레벨버튼.textContent =
+    `현재 레벨: ${레벨이름[유저정보.user_level] || "일반"}`;
 
-console.log("로그인 이메일:", userEmail);
-console.log("data =", data);
-console.log("error =", error);
+  // 초기 코인
+  돌돌코인수량.textContent =
+    `현재 돌돌코인 수량: ${유저정보.doldolcoin ?? 0}`;
 
-if (!data || data.length === 0) {
-  console.log("조회 결과 없음");
-  return;
-}
-
-const level = Number(data[0].user_level || 1);
-
-레벨버튼.textContent =
-  `현재 레벨: ${레벨이름[level]}`;
-
-  // 클릭 이벤트
   사진.onclick = async () => {
-console.log("사진 클릭됨");
+
     상세설명 = !상세설명;
 
     로그아웃버튼.style.display = 상세설명 ? "block" : "none";
@@ -118,38 +102,32 @@ console.log("사진 클릭됨");
     메뉴2.style.display = 상세설명 ? "block" : "none";
     레벨버튼.style.display = 상세설명 ? "block" : "none";
     돌돌코인수량.style.display = 상세설명 ? "block" : "none";
-    // 클릭 시 최신 데이터 가져오기
+
+    if (!상세설명) return;
+
     const { data, error } = await supabase
       .from("users")
-      .select("user_level")
-    .eq("user_number", 유저번호)
+      .select("user_level, doldolcoin")
+      .eq("user_number", 유저번호)
       .single();
-      const { data: coinData } = await supabase
-    .from("users")
-    .select("doldolcoin")
-    .eq("user_number", 유저번호)
-    .single();
 
-  돌돌코인수량.textContent =
-    `현재 돌돌코인 수량: ${coinData.doldolcoin}`;
+    if (error) {
+      console.error(error);
+      return;
+    }
 
-if (!error && data) {
+    레벨버튼.textContent =
+      `현재 레벨: ${레벨이름[data.user_level] || "일반"}`;
 
-  const level =
-    Number(data.user_level || 1);
-
-  레벨버튼.textContent =
-    `현재 레벨: ${레벨이름[level]}`;
-}
+    돌돌코인수량.textContent =
+      `현재 돌돌코인 수량: ${data.doldolcoin ?? 0}`;
   };
 
-  // 로그아웃
   로그아웃버튼.onclick = async () => {
     await supabase.auth.signOut();
     location.href = "index.html";
   };
 
-  // 돌돌코인 이동
   돌돌코인버튼.onclick = () => {
     location.href = "doldolcoinshop.html";
   };
