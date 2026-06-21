@@ -1,3 +1,8 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>돌이 사이트-돌이신문 작성</title>
+
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js";
 
