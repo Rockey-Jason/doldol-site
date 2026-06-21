@@ -22,6 +22,14 @@ window.신문발송 = async function () {
   } else {
     console.log("트리거 성공");
     
+const { data, error } = await supabase
+.from("users")
+.insert([
+  {
+rockey_news:
+  }
+]);
+    
   }
 };
 </script>
