@@ -47,13 +47,13 @@ const loginId =
 const { data, error } = await supabase
 .from("users")
 .insert([
-{
-  name: user.user_metadata.name,
-  user_id: authData.user.id,
-  login_id: loginId,
-  email: user.email,
-  user_level: 1
-}
+  {
+    name: user.user_metadata.name,
+    user_id: authData.user.id,
+    login_id: loginId,
+    email: user.email,
+    user_level: 1
+  }
 ]);
 
 if (error) {
