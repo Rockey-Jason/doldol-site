@@ -36,8 +36,22 @@ window.addEventListener("DOMContentLoaded", async () => {
   const 메뉴2 = document.getElementById("메뉴2");
   const 레벨버튼 = document.getElementById("레벨");
   const 돌돌코인수량 = document.getElementById("돌돌코인수량");
+  const 돌신확인 = document.getElementById("돌이신문확인");
+  const 상점 = document.getElementById("돌돌코인상점");
+  const 돌이정보 = document.getElementById("돌이와관련된정보");
 
   let 상세설명 = false;
+
+  //사진 onclick
+    돌신확인.onclick = () => {
+    location.href = "돌이신문확인 사이트";
+  };
+    상점.onclick = () => {
+    location.href = "상점 사이트";
+  };
+    돌이정보.onclick = () => {
+    location.href = "돌이정보 사이트";
+  };
 
   // 세션 확인
   const {
@@ -366,8 +380,8 @@ display:none;
 ">
 </div>
     
-
-<img src="https://i.postimg.cc/Px1nNcJM/1000004603.jpg"
+<img id="돌이신문확인"
+src="https://i.postimg.cc/Px1nNcJM/1000004603.jpg"
 style="
 position:fixed;
 top:300px;
@@ -375,7 +389,8 @@ left:80px;
 width:200px;
 ">
 
-<img src="https://i.postimg.cc/TYxW97Ly/1000004605.jpg"
+  <img id="돌돌코인상점"
+src="https://i.postimg.cc/TYxW97Ly/1000004605.jpg"
 style="
 position:fixed;
 top:300px;
@@ -383,7 +398,8 @@ left:530px;
 width:200px;
 ">
 
-<img src="https://i.postimg.cc/8zdzKNWg/dol-i.jpg"
+<img id="돌이와관련된정보"
+src="https://i.postimg.cc/8zdzKNWg/dol-i.jpg"
 style="
 position:fixed;
 top:300px;
