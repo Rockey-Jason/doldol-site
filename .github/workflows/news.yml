@@ -1,26 +1,30 @@
-name: Send News
+name: Send Dori News Email
 
 on:
   schedule:
-    - cron: '* * * * *'
-
+    - cron: "0 13 * * *"  # 한국시간 밤 10시 = UTC 13시
   workflow_dispatch:
 
 jobs:
-  send:
+  run-news:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 18
 
-      - run: npm install
+      - name: Install dependencies
+        run: npm install
 
-      - run: node send-news.js
+      - name: Run news bot
+        run: node newsJob.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
