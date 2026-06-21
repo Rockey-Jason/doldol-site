@@ -33,7 +33,8 @@ function shouldSend(lastDate, level) {
     (now - new Date(lastDate)) / (1000 * 60 * 60 * 24)
   );
 
-  if (level >= 7) return true;
+const delay = delayMap[level] ?? 7;
+return diff >= delay;
 
   return diff >= delayMap[level];
 }
@@ -48,7 +49,12 @@ async function sendEmail(to, level) {
 }
 
 async function run() {
-  const { data: users } = await supabase.from("users").select("*");
+const { data: users, error } = await supabase.from("users").select("*");
+
+if (error || !users) {
+  console.log(error);
+  return;
+}
 
   for (const user of users) {
     if (!shouldSend(user.last_news_sent, user.user_level)) continue;
