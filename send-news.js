@@ -21,9 +21,21 @@ window.신문발송 = async function () {
     console.error("실패:", error);
   } else {
     console.log("트리거 성공");
+    
   }
 };
 </script>
+
+<input id="신문"
+placeholder="신문내용을 입력하세요"
+style="
+position: absolute;
+top: 280px;
+left: 50px;
+width: 400px;
+height: 700px;
+">
+  
   <style>
 body {
   background: linear-gradient(to right, #000033, #000010);
