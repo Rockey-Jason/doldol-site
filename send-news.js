@@ -48,7 +48,7 @@ async function sendEmail(to, level) {
       <h2>돌이신문이 발행되었습니다!</h2>
       <p>아래 버튼을 눌러 확인하세요.</p>
 
-      <a href="rockeynews.html"
+      <a href="https://rockey-jason.github.io/doldol-site/rockeynews.html"
          style="
            display:inline-block;
            padding:12px 24px;
