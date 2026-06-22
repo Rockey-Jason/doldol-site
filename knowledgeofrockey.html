@@ -2,7 +2,17 @@
 <html>
 <head>
 <title>돌이 사이트-돌이와 관련된 정보</title>
-  
+
+<script type=modle>
+let 클릭상태 = 0;
+
+const 돌이 = document.getElementById("돌이");
+
+돌이.onclick = () => {
+  볼정보 = 1;
+  console.log(클릭상태);
+};
+</script>
 <style>
 body {
   background: linear-gradient(to right, #000033, #000010);
