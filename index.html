@@ -6,7 +6,7 @@
   
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
+window.addEventListener("DOMContentLoaded", async () => {
 const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
@@ -147,6 +147,37 @@ window.addEventListener("DOMContentLoaded", async () => {
   };
 
 });
+
+  document.querySelectorAll("img").forEach(img => {
+
+  img.style.transition = "transform 0.1s ease";
+
+  img.addEventListener("mousedown", () => {
+    img.style.transform = "scale(0.9)";
+  });
+
+  img.addEventListener("mouseup", () => {
+    img.style.transform = "scale(1)";
+  });
+
+  img.addEventListener("mouseleave", () => {
+    img.style.transform = "scale(1)";
+  });
+
+  img.addEventListener("touchstart", () => {
+    img.style.transform = "scale(0.9)";
+  });
+
+  img.addEventListener("touchend", () => {
+    img.style.transform = "scale(1)";
+  });
+
+  img.addEventListener("touchcancel", () => {
+    img.style.transform = "scale(1)";
+  });
+
+});
+}
 </script>
 <style>
 body {
@@ -406,6 +437,6 @@ top:300px;
 left:970px;
 width:200px;
 ">
-
+  
 </body>
 </html>
