@@ -44,7 +44,22 @@ async function sendEmail(to, level) {
     from: `"돌이사이트" <${process.env.GMAIL_USER}>`,
     to,
     subject: "📢 돌이신문 발행 알림",
-    text: `레벨 ${level} 유저에게 돌이신문이 발행되었습니다!`
+    html: `
+      <h2>돌이신문이 발행되었습니다!</h2>
+      <p>아래 버튼을 눌러 확인하세요.</p>
+
+      <a href="https://doldol-site.com"
+         style="
+           display:inline-block;
+           padding:12px 24px;
+           background:#4CAF50;
+           color:white;
+           text-decoration:none;
+           border-radius:8px;
+         ">
+         돌이신문 보러가기
+      </a>
+    `
   });
 }
 
