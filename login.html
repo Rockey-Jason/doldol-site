@@ -55,7 +55,9 @@ const { data, error } = await supabase
     user_level: 1
   }
 ]);
-
+console.log(name);
+console.log(user_id);
+console.log(email);
 if (error) {
   console.log(error);
   alert(error.message);
