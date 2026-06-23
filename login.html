@@ -55,12 +55,7 @@ const { data, error } = await supabase
     user_level: 1
   }
 ]);
-console.log(name);
-console.log(user_id);
-console.log(email);
-alert(name);
-alert(user_id);
-alert(email);
+
 if (error) {
   console.log(error);
   alert(error.message);
@@ -71,6 +66,9 @@ alert("회원가입이 완료되었습니다!");
 } // ← if (!existingUser) 닫기
 } // ← if (user) 닫기
   // 🔥 로그인 함수
+  alert(name);
+alert(user_id);
+alert(email);
   window.로그인 = async function () {
 
     let name = document.getElementById("name").value;
