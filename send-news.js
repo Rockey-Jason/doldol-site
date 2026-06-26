@@ -21,7 +21,11 @@ const delayMap = {
   3: 5,
   4: 4,
   5: 3,
-  6: 2
+  6: 2,
+  7: 1,
+  8: 1,
+  9: 1
+10: 1
 };
 
 function shouldSend(lastDate, level) {
