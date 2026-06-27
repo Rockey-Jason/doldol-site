@@ -65,6 +65,19 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
 });
+const 돌이신문 = document.getElementById("돌이신문");
+
+for (let i = 1; i <= 54; i++) {
+
+    const clone = 돌이신문.cloneNode(true);
+
+    clone.style.display = "block";
+
+    clone.textContent = `제${i}회 돌이신문`;
+
+    document.body.appendChild(clone);
+
+}
 </script>
 
 
