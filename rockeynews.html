@@ -80,6 +80,15 @@ for (let i = 0; i < 54; i++) {
   document.body.appendChild(clone);
 
 }
+  clone.onclick = () => {
+
+    // 몇 회 신문인지 저장
+    localStorage.setItem("rockeynews", i);
+
+    // 읽기 페이지로 이동
+    location.href = "https://rockey-jason.github.io/doldol-site/readingrockeynews.html";
+
+};
 </script>
 
 <button id="돌이신문" style="
