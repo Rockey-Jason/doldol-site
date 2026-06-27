@@ -67,18 +67,32 @@ window.addEventListener("DOMContentLoaded", async () => {
 });
 const 돌이신문 = document.getElementById("돌이신문");
 
-for (let i = 1; i <= 54; i++) {
+for (let i = 0; i < 54; i++) {
 
-    const clone = 돌이신문.cloneNode(true);
+  const clone = 돌이신문.cloneNode(true);
 
-    clone.style.display = "block";
+  clone.id = "news" + (i + 1);
 
-    clone.textContent = `제${i}회 돌이신문`;
+  clone.textContent = `제${i + 1}회 돌이신문`;
 
-    document.body.appendChild(clone);
+  clone.style.top = (210 + i * 50) + "px";
+
+  document.body.appendChild(clone);
 
 }
 </script>
 
-
+<button id="돌이신문" style="
+position:absolute;
+top:0px;
+left:500px;
+font-size:50px;
+font-family:jua;
+background:none;
+border:none;
+color:#f5f5f5;
+cursor:pointer;
+">
+돌이신문
+</button>
 
