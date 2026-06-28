@@ -70,7 +70,7 @@ const 돌이신문 = document.getElementById("돌이신문");
 for (let i = 0; i < 54; i++) {
 
     const clone = 돌이신문.cloneNode(true);
-
+    돌이신문.style.display = "none";
     clone.onclick = () => {
         localStorage.setItem("rockeynews", i + 1);
 
@@ -93,7 +93,6 @@ background:none;
 border:none;
 color:#f5f5f5;
 cursor:pointer;
-display:none;
 ">
 </button>
 
