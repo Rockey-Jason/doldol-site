@@ -79,7 +79,7 @@ if (userInfo.read_dori_news < 신문번호) {
 }
 const { data: news, error } = await supabase
   .from("rockey_news")
-  .select("news_number, rockey_news")
+  .select("rockey_news")
   .eq("news_number", 신문번호)
   .single();
 
