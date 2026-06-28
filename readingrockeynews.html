@@ -79,7 +79,7 @@ if (userInfo.read_dori_news < 신문번호) {
 }
 const { data: news, error } = await supabase
   .from("rockey_news")
-  .select("rockey_news")
+  .select("news_number, rockey_news")
   .eq("news_number", 신문번호)
   .single();
 
@@ -90,7 +90,7 @@ if (error) {
 
 const 돌신 = news.news_number;
 document.getElementById("내용").innerHTML =
-  data.content.replace(/\n/g, "<br>");
+  news.rockey_news.replace(/\n/g, "<br>");
 console.log(돌신);
 console.log(news.rockey_news);
 document.getElementById("내용").textContent = news.rockey_news;
