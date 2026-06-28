@@ -70,7 +70,6 @@ const 돌이신문 = document.getElementById("돌이신문");
 for (let i = 0; i < 54; i++) {
 
     const clone = 돌이신문.cloneNode(true);
-    돌이신문.style.display = "none";
     clone.onclick = () => {
         localStorage.setItem("rockeynews", i + 1);
 
@@ -80,6 +79,8 @@ for (let i = 0; i < 54; i++) {
 
     document.body.appendChild(clone);
 }
+  const 돌이신문 = document.getElementById("돌이신문");
+  돌이신문.style.display = "none";
 </script>
 
 <button id="돌이신문"
