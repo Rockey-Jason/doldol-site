@@ -69,39 +69,31 @@ const 돌이신문 = document.getElementById("돌이신문");
 
 for (let i = 0; i < 54; i++) {
 
-  const clone = 돌이신문.cloneNode(true);
+    const clone = 돌이신문.cloneNode(true);
 
-  clone.id = "news" + (i + 1);
+    clone.onclick = () => {
+        localStorage.setItem("rockeynews", i + 1);
 
-  clone.textContent = `-제${i + 1}회 돌이신문`;
+        location.href =
+        "https://rockey-jason.github.io/doldol-site/readingrockeynews.html";
+    };
 
-  clone.style.top = (210 + i * 50) + "px";
-
-  document.body.appendChild(clone);
-
+    document.body.appendChild(clone);
 }
-  clone.onclick = () => {
-
-    // 몇 회 신문인지 저장
-    localStorage.setItem("rockeynews", i);
-
-    // 읽기 페이지로 이동
-    location.href = "https://rockey-jason.github.io/doldol-site/readingrockeynews.html";
-
-};
 </script>
 
-<button id="돌이신문">
+<button id="돌이신문"
+style="
 position:absolute;
-top:0px;
-left:0px;
+top:210px;
+left:20px;
 font-size:20px;
 font-family:jua;
 background:none;
 border:none;
 color:#f5f5f5;
 cursor:pointer;
+display:none;
 ">
-돌이신문
 </button>
 
