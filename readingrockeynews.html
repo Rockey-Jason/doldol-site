@@ -90,7 +90,7 @@ if (error) {
 
 const 돌신 = news.news_number;
 document.getElementById("내용").innerHTML =
-  news.rockey_news.replace(/\n/g, "<br>");
+  news.rockey_news.replace(/\\n/g, "<br>");
 console.log(돌신);
 console.log(news.rockey_news);
 document.getElementById("내용").textContent = news.rockey_news;
