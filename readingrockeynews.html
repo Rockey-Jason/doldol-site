@@ -63,7 +63,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
   
 const 신문번호 = Number(localStorage.getItem("rockeynews"));
-alert(신문번호);
 const { data: user } = await supabase.auth.getUser();
 
 // 사용자의 레벨 확인
@@ -78,7 +77,23 @@ if (userInfo.read_dori_news < 신문번호) {
   location.href = "rockeynews.html";
   return;
 }
+const { data: news, error } = await supabase
+  .from("rockey_news")
+  .select("news_number, rockey_news")
+  .eq("news_number", 신문번호)
+  .single();
 
+if (error) {
+  console.log(error);
+  return;
+}
+
+const 돌신 = news.news_number;
+
+console.log(돌신);
+console.log(news.rockey_news);
+document.getElementById("내용").textContent = news.rockey_news;
 });
 </script>
-</script>
+
+
