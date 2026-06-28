@@ -67,20 +67,28 @@ window.addEventListener("DOMContentLoaded", async () => {
 });
 const 돌이신문 = document.getElementById("돌이신문");
 
+돌이신문.style.display = "none"; // 원본만 숨김
+
 for (let i = 0; i < 54; i++) {
 
     const clone = 돌이신문.cloneNode(true);
+
+    clone.id = "news" + (i + 1);
+
+    clone.textContent = `-제${i + 1}회 돌이신문`;
+
+    clone.style.display = "block";   // 복제본 보이기
+    clone.style.top = (210 + i * 50) + "px";
+    clone.style.left = "20px";
+
     clone.onclick = () => {
         localStorage.setItem("rockeynews", i + 1);
-
         location.href =
         "https://rockey-jason.github.io/doldol-site/readingrockeynews.html";
     };
 
     document.body.appendChild(clone);
 }
-  const 돌이신문 = document.getElementById("돌이신문");
-  돌이신문.style.display = "none";
 </script>
 
 <button id="돌이신문"
