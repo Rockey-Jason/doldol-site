@@ -20,105 +20,64 @@ const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
+window.로그인 = async function () {
 
-window.addEventListener("DOMContentLoaded", async () => {
+  const name = document.getElementById("name").value.trim();
+  const loginId = document.getElementById("id").value.trim();
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  const password = document.getElementById("password").value;
 
-  // 이미 로그인된 경우 회원가입 처리
-  const { data: authData } = await supabase.auth.getUser();
-  const user = authData.user;
-
-  if (user) {
-
-    const { data: existingUser } = await supabase
-      .from("users")
-      .select("*")
-      .eq("user_id", user.id)
-      .maybeSingle();
-
-    if (!existingUser) {
-
-      const loginId =
-        user.user_metadata.login_id ||
-        user.user_metadata.user_id;
-
-      const { error } = await supabase
-        .from("users")
-        .insert([{
-          name: user.user_metadata.name,
-          user_id: user.id,
-          login_id: loginId,
-          email: user.email,
-          user_level: 1
-        }]);
-
-      if (error) {
-        alert(error.message);
-        return;
-      }
-
-      alert("회원가입이 완료되었습니다!");
-    }
+  if (!name || !loginId || !email || !password) {
+    alert("모든 정보를 입력하세요.");
+    return;
   }
 
-  window.로그인 = async function () {
+  let 틀린항목 = [];
 
-    const email =
-      document.getElementById("email").value
-      .trim()
-      .toLowerCase();
+  // 이메일 조회
+  const { data: userInfo } = await supabase
+    .from("users")
+    .select("*")
+    .eq("email", email)
+    .maybeSingle();
 
-    const password =
-      document.getElementById("password").value;
+  // 이메일이 틀리면 나머지는 비교 불가
+  if (!userInfo) {
+    alert("❌ 이메일이 틀렸습니다.");
+    return;
+  }
 
-    if (!email || !password) {
-      alert("이메일과 비밀번호를 입력하세요.");
-      return;
-    }
+  // 이름 확인
+  if (userInfo.name !== name) {
+    틀린항목.push("계정 이름");
+  }
 
-    // 이메일+비밀번호 로그인
-    const { error: authError } =
-      await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+  // 아이디 확인
+  if (userInfo.login_id !== loginId) {
+    틀린항목.push("아이디");
+  }
 
-    if (authError) {
-      alert("이메일 또는 비밀번호가 틀렸습니다.");
-      return;
-    }
+  // 비밀번호 확인
+  const { error: authError } =
+    await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-    // 로그인된 사용자 가져오기
-    const {
-      data: { user }
-    } = await supabase.auth.getUser();
+  if (authError) {
+    틀린항목.push("비밀번호");
+  }
 
-    // users 테이블 조회
-    const {
-      data: 유저정보,
-      error: 유저오류
-    } = await supabase
-      .from("users")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
+  // 틀린 것이 있으면 모두 출력
+  if (틀린항목.length > 0) {
+    alert("❌ 틀린 항목: " + 틀린항목.join(", "));
+    return;
+  }
 
-    if (유저오류) {
-      alert("사용자 정보를 찾을 수 없습니다.");
-      return;
-    }
+  alert("로그인 성공!");
+  location.href = "https://rockey-jason.github.io/doldol-site/";
+};
 
-    localStorage.setItem("로그인상태", "true");
-    localStorage.setItem("이름", 유저정보.name);
-    localStorage.setItem("아이디", 유저정보.login_id);
-    localStorage.setItem("유저번호", 유저정보.user_number);
-
-    alert("로그인 성공!");
-
-    location.href =
-      "https://rockey-jason.github.io/doldol-site/";
-  };
-
-});
 </script>
 
 <input id="name"
