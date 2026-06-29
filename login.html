@@ -40,7 +40,10 @@ window.로그인 = async function () {
     .select("*")
     .eq("email", email)
     .maybeSingle();
-
+  
+console.log("입력한 이메일:", email);
+console.log("찾은 사용자:", userInfo);
+  
   // 이메일이 틀리면 나머지는 비교 불가
   if (!userInfo) {
     alert("❌ 이메일이 틀렸습니다.");
