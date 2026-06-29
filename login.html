@@ -64,7 +64,26 @@ if (error) {
     return;
   }
 
-  alert("로그인 성공!");
+  if (!data.success) {
+  alert(data.message);
+  return;
+}
+
+// 실제 로그인 (세션 생성)
+const { error: loginError } =
+await supabase.auth.signInWithPassword({
+  email,
+  password
+});
+
+if (loginError) {
+  alert(loginError.message);
+  return;
+}
+
+alert("로그인 성공!");
+
+location.href = "index.html";
 
   location.href =
     "https://rockey-jason.github.io/doldol-site/";
