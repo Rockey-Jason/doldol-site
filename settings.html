@@ -10,7 +10,6 @@ const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
-
 window.addEventListener("DOMContentLoaded", async () => {
 
   const 레벨이름 = {
@@ -33,11 +32,16 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (!user) return;
 
   // users 테이블 조회
-  const { data: 유저정보, error: userError } = await supabase
-    .from("users")
-    .select("user_number, user_level, doldolcoin")
-    .eq("user_id", user.id)
-    .single();
+const { data: 유저정보, error: userError } = await supabase
+  .from("users")
+  .select("user_number, user_level, doldolcoin, profile_image")
+  .eq("user_id", user.id)
+  .single();
+
+  if (유저정보.profile_image) {
+  document.getElementById("돌이사진").src =
+    유저정보.profile_image;
+}
 
   if (userError) {
     console.error("유저 조회 오류:", userError);
