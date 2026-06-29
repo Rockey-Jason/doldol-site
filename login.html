@@ -51,11 +51,13 @@ window.로그인 = async function () {
       }
     });
 
-  if (error) {
-    alert("서버 오류");
-    console.log(error);
-    return;
-  }
+if (error) {
+  console.log(error);
+
+  alert(error.message);
+
+  return;
+}
 
   if (!data.success) {
     alert(data.message);
