@@ -1,1 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>돌이 사이트-설정</title>
 
+  
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const supabase = createClient(
+  "https://scttowfhygcpdirrekqm.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+);
+
+window.addEventListener("DOMContentLoaded", async () => {
+
+  const 레벨이름 = {
+    1: "일반",
+    2: "프리미엄",
+    3: "돌프리미엄",
+    4: "돌돌프리미엄",
+    5: "돌돌돌프리미엄",
+    6: "돌돌돌돌프리미엄",
+    7: "돌돌돌돌돌프리미엄",
+    8: "유사돌이",
+    9: "돌이",
+    10: "관리자"
+  };
