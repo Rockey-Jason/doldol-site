@@ -22,67 +22,51 @@ const supabase = createClient(
 );
 window.로그인 = async function () {
 
-  const name = document.getElementById("name").value.trim();
-  const loginId = document.getElementById("id").value.trim();
-  const email = document.getElementById("email").value.trim().toLowerCase();
-  const password = document.getElementById("password").value;
+  const name =
+    document.getElementById("name").value.trim();
+
+  const loginId =
+    document.getElementById("id").value.trim();
+
+  const email =
+    document.getElementById("email").value
+      .trim()
+      .toLowerCase();
+
+  const password =
+    document.getElementById("password").value;
 
   if (!name || !loginId || !email || !password) {
     alert("모든 정보를 입력하세요.");
     return;
   }
 
-  let 틀린항목 = [];
+  const { data, error } =
+    await supabase.functions.invoke("login", {
+      body: {
+        name,
+        loginId,
+        email,
+        password
+      }
+    });
 
-  // 이메일 조회
- const { data: userInfo, error } = await supabase
-  .from("users")
-  .select("*")
-  .eq("email", email)
-  .maybeSingle();
-
-console.log("입력 이메일:", email);
-console.log("조회 결과:", userInfo);
-console.log("에러:", error);
-  
-  // 이메일이 틀리면 나머지는 비교 불가
-  if (!userInfo) {
-    alert("❌ 이메일이 틀렸습니다.");
+  if (error) {
+    alert("서버 오류");
+    console.log(error);
     return;
   }
 
-  // 이름 확인
-  if (userInfo.name !== name) {
-    틀린항목.push("계정 이름");
-  }
-
-  // 아이디 확인
-  if (userInfo.login_id !== loginId) {
-    틀린항목.push("아이디");
-  }
-
-  // 비밀번호 확인
-  const { error: authError } =
-    await supabase.auth.signInWithPassword({
-      email,
-      password
-    });
-
-  if (authError) {
-    틀린항목.push("비밀번호");
-  }
-
-  // 틀린 것이 있으면 모두 출력
-  if (틀린항목.length > 0) {
-    alert("❌ 틀린 항목: " + 틀린항목.join(", "));
+  if (!data.success) {
+    alert(data.message);
     return;
   }
 
   alert("로그인 성공!");
-  location.href = "https://rockey-jason.github.io/doldol-site/";
-};
 
-</script>
+  location.href =
+    "https://rockey-jason.github.io/doldol-site/";
+};</script>
 
 <input id="name"
 placeholder="계정 이름을 입력하세요"
