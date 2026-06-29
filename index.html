@@ -38,6 +38,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const 돌신확인 = document.getElementById("돌이신문확인");
   const 상점 = document.getElementById("돌돌코인상점!!!");
   const 돌이정보 = document.getElementById("돌이와관련된정보!");
+  const 설정 = document.getElementById("설정");
 
   let 상세설명 = false;
 
@@ -50,6 +51,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   };
     돌이정보.onclick = () => {
     location.href = "knowledgeofrockey.html";
+  };
+      설정.onclick = () => {
+    location.href = "settings.html";
   };
 
   // 세션 확인
@@ -115,6 +119,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     메뉴2.style.display = 상세설명 ? "block" : "none";
     레벨버튼.style.display = 상세설명 ? "block" : "none";
     돌돌코인수량.style.display = 상세설명 ? "block" : "none";
+    설정.style.display = 상세설명 ? "block" : "none";
 
     if (!상세설명) return;
 
@@ -265,10 +270,29 @@ cursor:pointer;
 </button>    
 
 
-<button id="로그아웃"
+<button id="설정"
 style="
 position:absolute;
 top:90px;
+left:1770px;
+font-size:20px;
+font-family:jua;
+background:none;
+border:none;
+color:white;
+cursor:pointer;
+display:none;
+font-weight:150;
+z-index:2;
+">
+설정
+</button>
+
+
+<button id="로그아웃"
+style="
+position:absolute;
+top:110px;
 left:1770px;
 font-size:20px;
 font-family:jua;
