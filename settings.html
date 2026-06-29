@@ -25,3 +25,98 @@ window.addEventListener("DOMContentLoaded", async () => {
     9: "돌이",
     10: "관리자"
   };
+ // 로그인 유저
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  // users 테이블 조회
+  const { data: 유저정보, error: userError } = await supabase
+    .from("users")
+    .select("user_number, user_level, doldolcoin")
+    .eq("user_id", user.id)
+    .single();
+
+  if (userError) {
+    console.error("유저 조회 오류:", userError);
+    return;
+  }
+
+  const 유저번호 = 유저정보.user_number;
+async function 프로필업로드(){
+
+const file =
+document.getElementById("profileUpload").files[0];
+
+if(!file){
+alert("사진을 선택하세요.");
+return;
+}
+
+const {
+data:{user}
+}
+=await supabase.auth.getUser();
+
+if(!user){
+alert("로그인 필요");
+return;
+}
+
+const fileName =
+user.id+"."+file.name.split(".").pop();
+
+const {error:uploadError}
+=
+await supabase.storage
+.from("profile-images")
+.upload(fileName,file,{
+upsert:true
+});
+
+if(uploadError){
+alert(uploadError.message);
+return;
+}
+
+const {data:urlData}
+=
+supabase.storage
+.from("profile-images")
+.getPublicUrl(fileName);
+
+const imageUrl=
+urlData.publicUrl;
+
+const {error:updateError}
+=
+await supabase
+.from("users")
+.update({
+profile_image:imageUrl
+})
+.eq("user_id",user.id);
+
+if(updateError){
+alert(updateError.message);
+return;
+}
+
+alert("프로필 변경 완료");
+
+location.reload();
+
+}
+</script>
+
+
+<input type="file" id="profileUpload" accept="image/*">
+
+<button onclick="프로필업로드()">
+프로필 사진 변경
+</button>
+
+<img id="돌이사진"
+src="https://기본사진.png">
