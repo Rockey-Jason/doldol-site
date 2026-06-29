@@ -35,12 +35,12 @@ window.로그인 = async function () {
   let 틀린항목 = [];
 
   // 이메일 조회
-  const { data: userInfo } = await supabase
-    .from("users")
-    .select("*")
-    .eq("email", email)
-    .maybeSingle();
-  
+ const { data: userInfo, error } = await supabase
+  .from("users")
+  .select("*")
+  .eq("email", email)
+  .maybeSingle();
+
 console.log("입력 이메일:", email);
 console.log("조회 결과:", userInfo);
 console.log("에러:", error);
