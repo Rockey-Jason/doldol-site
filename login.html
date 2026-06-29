@@ -42,7 +42,7 @@ window.로그인 = async function () {
   }
 
   const { data, error } =
-    await supabase.functions.invoke("login-check", {
+    await supabase.functions.invoke("super-worker", {
       body: {
         name,
         loginId,
