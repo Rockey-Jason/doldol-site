@@ -13,66 +13,14 @@
 background: linear-gradient(to right, #000033, #000010);
 ">
 
-<script type=module>
+<script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+  "YOUR_ANON_KEY"
 );
-  const {
-  data: { session }
-} = await supabase.auth.getSession();
 
-if (session) {
-
-  const { data, error } =
-    await supabase.functions.invoke("create-user");
-
-  if (!error && data.success) {
-
-    if (data.already) {
-      alert("이미 가입된 계정입니다.");
-    } else {
-      alert("회원가입이 완료되었습니다!");
-    }
-
-  }
-
-}
-window.addEventListener("DOMContentLoaded", async ()=>{
-
-    const {
-
-        data:{session}
-
-    }=await supabase.auth.getSession();
-
-    if(!session) return;
-
-    const { data,error }=
-
-    await supabase.functions.invoke(
-
-        "create-user"
-
-    );
-
-    if(error){
-
-        console.log(error);
-
-        return;
-
-    }
-
-    if(!data.already){
-
-        alert("회원가입에 성공하였습니다!");
-
-    }
-
-});
 window.로그인 = async function () {
 
   const name =
@@ -94,6 +42,7 @@ window.로그인 = async function () {
     return;
   }
 
+  // 입력 정보 확인
   const { data, error } =
     await supabase.functions.invoke("super-worker", {
       body: {
@@ -104,44 +53,54 @@ window.로그인 = async function () {
       }
     });
 
-if (error) {
-  console.log(error);
-
-  alert(error.message);
-
-  return;
-}
+  if (error) {
+    console.error(error);
+    alert(error.message);
+    return;
+  }
 
   if (!data.success) {
     alert(data.message);
     return;
   }
 
-  if (!data.success) {
-  alert(data.message);
-  return;
-}
+  // Auth 로그인
+  const {
+    data: loginData,
+    error: loginError
+  } = await supabase.auth.signInWithPassword({
+    email,
+    password
+  });
 
-// 실제 로그인 (세션 생성)
-const { error: loginError } =
-await supabase.auth.signInWithPassword({
-  email,
-  password
-});
+  if (loginError) {
+    alert(loginError.message);
+    return;
+  }
 
-if (loginError) {
-  alert(loginError.message);
-  return;
-}
+  // users 테이블 생성
+  const {
+    data: createData,
+    error: createError
+  } = await supabase.functions.invoke("create-user");
 
-alert("로그인 성공!");
+  if (createError) {
+    console.error(createError);
+    alert(createError.message);
+    return;
+  }
 
-location.href = "index.html";
+  if (!createData.already) {
+    alert("회원가입이 완료되었습니다!");
+  }
+
+  alert("로그인 성공!");
 
   location.href =
     "https://rockey-jason.github.io/doldol-site/";
-};</script>
 
+};
+</script>
 <input id="name"
 placeholder="계정 이름을 입력하세요"
 style="
