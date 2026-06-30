@@ -20,6 +20,39 @@ const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
+window.addEventListener("DOMContentLoaded", async ()=>{
+
+    const {
+
+        data:{session}
+
+    }=await supabase.auth.getSession();
+
+    if(!session) return;
+
+    const { data,error }=
+
+    await supabase.functions.invoke(
+
+        "create-user"
+
+    );
+
+    if(error){
+
+        console.log(error);
+
+        return;
+
+    }
+
+    if(!data.already){
+
+        alert("회원가입에 성공하였습니다!");
+
+    }
+
+});
 window.로그인 = async function () {
 
   const name =
