@@ -58,21 +58,21 @@ window.회원가입 = async function () {
 }
 console.log(email);
 console.log(JSON.stringify(email));
-  const { data: authData, error: authError } =
+const { data: authData, error: authError } =
 await supabase.auth.signUp({
-  email: email,
-  password: password,
-options: {
-  emailRedirectTo:
-    "https://rockey-jason.github.io/doldol-site/login.html",
+  email,
+  password,
+  options:{
+    emailRedirectTo:
+      "https://rockey-jason.github.io/doldol-site/login.html",
 
-  data: {
-    name: name,
-    login_id: login_id
+    data:{
+      name:name,
+      login_id:login_id
+    }
   }
-}
 });
-
+  
   if (authError) {
     alert(
       "회원가입 실패: " +
