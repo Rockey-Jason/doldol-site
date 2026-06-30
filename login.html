@@ -16,88 +16,128 @@ background: linear-gradient(to right, #000033, #000010);
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const supabase = createClient(
-  "https://scttowfhygcpdirrekqm.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+const supabase=createClient(
+"https://scttowfhygcpdirrekqm.supabase.co",
+"YOUR_ANON_KEY"
 );
 
-window.로그인 = async function () {
+// 이메일 인증 후 들어온 경우
+window.addEventListener("DOMContentLoaded",async()=>{
 
-  const name =
-    document.getElementById("name").value.trim();
+    // URL의 access_token 처리
+    await supabase.auth.getSession();
 
-  const loginId =
-    document.getElementById("id").value.trim();
+    const{
+        data:{session}
+    }=await supabase.auth.getSession();
 
-  const email =
-    document.getElementById("email").value
-      .trim()
-      .toLowerCase();
+    if(session){
 
-  const password =
-    document.getElementById("password").value;
+        const {data,error}=
 
-  if (!name || !loginId || !email || !password) {
-    alert("모든 정보를 입력하세요.");
-    return;
-  }
+        await supabase.functions.invoke("create-user");
 
-  // 입력 정보 확인
-  const { data, error } =
-    await supabase.functions.invoke("super-worker", {
-      body: {
-        name,
-        loginId,
-        email,
-        password
-      }
-    });
+        if(!error){
 
-  if (error) {
-    console.error(error);
-    alert(error.message);
-    return;
-  }
+            if(!data.already){
 
-  if (!data.success) {
-    alert(data.message);
-    return;
-  }
+                alert("회원가입이 완료되었습니다!");
 
-  // Auth 로그인
-  const {
-    data: loginData,
-    error: loginError
-  } = await supabase.auth.signInWithPassword({
-    email,
-    password
-  });
+            }
 
-  if (loginError) {
-    alert(loginError.message);
-    return;
-  }
+        }
 
-  // users 테이블 생성
-  const {
-    data: createData,
-    error: createError
-  } = await supabase.functions.invoke("create-user");
+    }
 
-  if (createError) {
-    console.error(createError);
-    alert(createError.message);
-    return;
-  }
+});
 
-  if (!createData.already) {
-    alert("회원가입이 완료되었습니다!");
-  }
+window.로그인=async()=>{
 
-  alert("로그인 성공!");
+const name=document.getElementById("name").value.trim();
 
-  location.href =
-    "https://rockey-jason.github.io/doldol-site/";
+const loginId=document.getElementById("id").value.trim();
+
+const email=document.getElementById("email").value.trim().toLowerCase();
+
+const password=document.getElementById("password").value;
+
+if(!name||!loginId||!email||!password){
+
+alert("모든 정보를 입력하세요.");
+
+return;
+
+}
+
+const {data,error}
+
+=
+
+await supabase.functions.invoke(
+
+"super-worker",
+
+{
+
+body:{
+
+name,
+
+loginId,
+
+email,
+
+password
+
+}
+
+}
+
+);
+
+if(error){
+
+alert(error.message);
+
+return;
+
+}
+
+if(!data.success){
+
+alert(data.message);
+
+return;
+
+}
+
+const{
+
+error:loginError
+
+}
+
+=
+
+await supabase.auth.signInWithPassword({
+
+email,
+
+password
+
+});
+
+if(loginError){
+
+alert(loginError.message);
+
+return;
+
+}
+
+alert("로그인 성공!");
+
+location.href="index.html";
 
 };
 </script>
