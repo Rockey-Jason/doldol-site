@@ -91,6 +91,18 @@ const { data: 유저정보, error: userError } = await supabase
   const 유저번호 = 유저정보.user_number;
 });
 
+  // 초기 레벨
+  레벨버튼.textContent =
+    `${레벨이름[유저정보.user_level] || "일반"} 회원`;
+
+  // 초기 코인
+  돌돌코인수량.textContent =
+    `${유저정보.doldolcoin ?? 0} 돌돌코인`;
+
+    // 이름
+  이름.textContent =
+    `${유저정보.name ?? 0}`;
+
 window.프로필업로드 = async function () {
 
 const file =
@@ -194,7 +206,7 @@ border:2px solid black;
 style="
 position:absolute;
 top:15px;
-left:1610px;
+left:150px;
 font-size:14px;
 font-family:jua;
 background:none;
@@ -213,7 +225,7 @@ z-index:2;
 style="
 position:absolute;
 top:30px;
-left:1610px;
+left:150px;
 font-size:14px;
 font-family:jua;
 background:none;
@@ -226,6 +238,24 @@ z-index:2;
   white-space: nowrap;
 ">
 현제 돌돌코인 수량: 0
+</button>
+
+<button id="이름"
+style="
+position:absolute;
+top:200px;
+left:100px;
+font-size:50px;
+font-family:jua;
+background:none;
+border:none;
+color:white;
+cursor:pointer;
+font-weight:150;
+z-index:2;
+  white-space: nowrap;
+">
+이름
 </button>
 
 </body>
