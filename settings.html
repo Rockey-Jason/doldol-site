@@ -44,10 +44,15 @@ margin-left:20px;
   
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
+
+// =============================
+// 페이지 로드
+// =============================
 window.addEventListener("DOMContentLoaded", async () => {
 
   const 레벨이름 = {
@@ -62,111 +67,136 @@ window.addEventListener("DOMContentLoaded", async () => {
     9: "돌이",
     10: "관리자"
   };
-  const 레벨버튼 = document.getElementById("레벨");
-  const 돌돌코인수량 = document.getElementById("돌돌코인수량");
- // 로그인 유저
+
   const {
     data: { user }
   } = await supabase.auth.getUser();
 
-  if (!user) return;
-
-  // users 테이블 조회
-const { data: 유저정보, error: userError } = await supabase
-  .from("users")
-  .select("user_number, user_level, doldolcoin, profile_image, name")
-  .eq("user_id", user.id)
-  .single();
-
-  if (유저정보.profile_image) {
-  document.getElementById("돌이사진").src =
-    유저정보.profile_image;
-}
-
-  if (userError) {
-    console.error("유저 조회 오류:", userError);
+  if (!user) {
+    alert("로그인이 필요합니다.");
+    location.href="login.html";
     return;
   }
 
-  const 유저번호 = 유저정보.user_number;
+  const { data: 유저정보, error } = await supabase
+    .from("users")
+    .select(`
+      user_number,
+      user_level,
+      doldolcoin,
+      profile_image,
+      name
+    `)
+    .eq("user_id", user.id)
+    .single();
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  // -------------------------
+  // 프로필 사진
+  // -------------------------
+  if (유저정보.profile_image) {
+    document.getElementById("돌이사진").src =
+      유저정보.profile_image;
+  }
+
+  // -------------------------
+  // 이름
+  // -------------------------
+  document.getElementById("이름").textContent =
+    유저정보.name;
+
+  // -------------------------
+  // 레벨
+  // -------------------------
+  document.getElementById("레벨").textContent =
+    "현재 레벨 : " +
+    (레벨이름[유저정보.user_level] || "일반");
+
+  // -------------------------
+  // 돌돌코인
+  // -------------------------
+  document.getElementById("돌돌코인수량").textContent =
+    "현재 돌돌코인 : " +
+    (유저정보.doldolcoin ?? 0);
+
 });
 
-  // 초기 레벨
-  레벨버튼.textContent =
-    `${레벨이름[유저정보.user_level] || "일반"} 회원`;
-
-  // 초기 코인
-  돌돌코인수량.textContent =
-    `${유저정보.doldolcoin ?? 0} 돌돌코인`;
-
-    // 이름
-  이름.textContent =
-    `${유저정보.name ?? 0}`;
-
+// =============================
+// 프로필 사진 변경
+// =============================
 window.프로필업로드 = async function () {
 
-const file =
-document.getElementById("profileUpload").files[0];
+  const file =
+    document.getElementById("profileUpload").files[0];
 
-if(!file){
-alert("사진을 선택하세요.");
-return;
-}
+  if (!file) {
+    alert("사진을 선택하세요.");
+    return;
+  }
 
-const {
-data:{user}
-}
-=await supabase.auth.getUser();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
 
-if(!user){
-alert("로그인 필요");
-return;
-}
+  if (!user) {
+    alert("로그인이 필요합니다.");
+    return;
+  }
 
-const fileName =
-user.id+"."+file.name.split(".").pop();
+  const ext =
+    file.name.split(".").pop();
 
-const {error:uploadError}
-=
-await supabase.storage
-.from("profile-images")
-.upload(fileName,file,{
-upsert:true
-});
+  const fileName =
+    `${user.id}.${ext}`;
 
-if(uploadError){
-alert(uploadError.message);
-return;
-}
+  // 업로드
+  const { error: uploadError } =
+    await supabase.storage
+      .from("profile-images")
+      .upload(fileName, file, {
+        upsert: true
+      });
 
-const {data:urlData}
-=
-supabase.storage
-.from("profile-images")
-.getPublicUrl(fileName);
+  if (uploadError) {
+    alert(uploadError.message);
+    console.error(uploadError);
+    return;
+  }
 
-const imageUrl=
-urlData.publicUrl;
+  // URL 얻기
+  const { data } =
+    supabase.storage
+      .from("profile-images")
+      .getPublicUrl(fileName);
 
-const {error:updateError}
-=
-await supabase
-.from("users")
-.update({
-profile_image:imageUrl
-})
-.eq("user_id",user.id);
+  const imageUrl =
+    data.publicUrl;
 
-if(updateError){
-alert(updateError.message);
-return;
-}
+  // users 테이블 업데이트
+  const { error: updateError } =
+    await supabase
+      .from("users")
+      .update({
+        profile_image: imageUrl
+      })
+      .eq("user_id", user.id);
 
-alert("프로필 변경 완료");
+  if (updateError) {
+    alert(updateError.message);
+    console.error(updateError);
+    return;
+  }
 
-location.reload();
+  // 화면 즉시 변경
+  document.getElementById("돌이사진").src =
+    imageUrl + "?t=" + Date.now();
 
-}
+  alert("프로필 사진이 변경되었습니다.");
+};
 </script>
 
 
