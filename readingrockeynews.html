@@ -88,23 +88,23 @@ window.addEventListener("DOMContentLoaded", async () => {
     data: { session }
   } = await supabase.auth.getSession();
 
+  console.log("session:", session);
+
   if (!session) {
     alert("로그인이 필요합니다.");
+    location.href = "login.html";
     return;
   }
-console.log("session:", session);
 
-const {
-  data: { user }
-} = await supabase.auth.getUser();
-
-console.log("user:", user);
-  // 로그인 유저
+  // 로그인 유저 (한 번만 가져옴)
   const {
     data: { user }
   } = await supabase.auth.getUser();
 
+  console.log("user:", user);
+
   if (!user) {
+    location.href = "login.html";
     return;
   }
 
@@ -151,7 +151,7 @@ console.log("user:", user);
 
   const 마지막신문번호 = lastNews.news_number;
 
-  // 읽을 수 있는지 확인
+  // 읽을 수 있는 신문인지 확인
   if (신문번호 > userInfo.read_dori_news) {
     alert("아직 읽을 수 없는 돌이신문입니다.");
     location.href = "rockeynews.html";
@@ -179,69 +179,52 @@ console.log("user:", user);
     `제${신문번호}회 돌이신문`;
 
   // 내용
-  document.getElementById("내용").innerHTML =
-    news.rockey_news.replace(/\n/g, "<br>");
-
   const 내용 = document.getElementById("내용");
+  내용.innerHTML = news.rockey_news.replace(/\n/g, "<br>");
+
   const 이전버튼 = document.getElementById("이전");
   const 다음버튼 = document.getElementById("다음");
 
+  // 버튼 숨기기
+  if (신문번호 <= 1) {
+    이전버튼.style.display = "none";
+  }
+
+  if (
+    신문번호 >= 마지막신문번호 ||
+    신문번호 + 1 > userInfo.read_dori_news
+  ) {
+    다음버튼.style.display = "none";
+  }
+
   // 버튼 위치를 내용 아래로 이동
   requestAnimationFrame(() => {
-
-    const 버튼위치 =
-      내용.offsetTop +
-      내용.offsetHeight +
-      40;
+    const 버튼위치 = 내용.offsetTop + 내용.offsetHeight + 40;
 
     이전버튼.style.top = 버튼위치 + "px";
     다음버튼.style.top = 버튼위치 + "px";
-
-    // 첫 번째 신문
-    if (신문번호 <= 1) {
-      이전버튼.style.display = "none";
-    }
-
-    // 마지막 신문 또는 아직 읽지 못한 다음 신문
-    if (
-      신문번호 >= 마지막신문번호 ||
-      신문번호 + 1 > userInfo.read_dori_news
-    ) {
-      다음버튼.style.display = "none";
-    }
-
   });
 
 });
 
 // 이전 신문
 window.이전신문 = function () {
+  let 번호 = Number(localStorage.getItem("rockeynews"));
 
-  let 번호 =
-    Number(localStorage.getItem("rockeynews"));
-
-  번호--;
-
-  if (번호 < 1) 번호 = 1;
+  번호 = Math.max(1, 번호 - 1);
 
   localStorage.setItem("rockeynews", 번호);
-
   location.reload();
-
 };
 
 // 다음 신문
 window.다음신문 = function () {
-
-  let 번호 =
-    Number(localStorage.getItem("rockeynews"));
+  let 번호 = Number(localStorage.getItem("rockeynews"));
 
   번호++;
 
   localStorage.setItem("rockeynews", 번호);
-
   location.reload();
-
 };
 </script>
 
