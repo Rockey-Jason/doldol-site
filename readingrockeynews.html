@@ -92,7 +92,13 @@ window.addEventListener("DOMContentLoaded", async () => {
     alert("로그인이 필요합니다.");
     return;
   }
+console.log("session:", session);
 
+const {
+  data: { user }
+} = await supabase.auth.getUser();
+
+console.log("user:", user);
   // 로그인 유저
   const {
     data: { user }
