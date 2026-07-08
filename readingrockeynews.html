@@ -89,7 +89,8 @@ await supabase
 .order("news_number",{ascending:false})
 .limit(1)
 .single();
-
+console.log(news);
+console.log(error);
 if(lastError){
     console.log(lastError);
     return;
