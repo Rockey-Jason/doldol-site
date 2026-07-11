@@ -8,6 +8,21 @@ body {
   background: linear-gradient(to right, #000033, #000010);
   margin: 0;
 }
+.newsButton{
+    width:250px;
+    height:50px;
+    margin:10px;
+
+    background:none;
+    border:2px solid white;
+    border-radius:10px;
+
+    color:white;
+    font-family:jua;
+    font-size:25px;
+
+    cursor:pointer;
+}
 </style>
 </head>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,6 +31,32 @@ body {
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
 <body>
 
+<script type=module>
+const 버튼이름 = [
+    "돌이",
+    "돌식",
+    "돌삼",
+    "돌사",
+    "돌오"
+];
+
+const 복사본 = document.getElementById("버튼복사본");
+const 목록 = document.getElementById("버튼목록");
+
+버튼이름.forEach((이름) => {
+
+    // 복사본 복제
+    const 새버튼 = 복사본.content.cloneNode(true);
+
+    // 글자만 변경
+    새버튼.querySelector("button").textContent = 이름;
+
+    // 화면에 추가
+    목록.appendChild(새버튼);
+
+});
+</script>
+  
 <a href="https://rockey-jason.github.io/doldol-site/" style="text-decoration:none;">
 <button style="
 position:absolute;
@@ -41,3 +82,9 @@ margin-left:20px;
 ">
 돌돌코인 상점-돌돌코인으로 여러 가지 상품들을 구매하세요!
 </p>
+
+<template id="버튼복사본">
+  <button class="newsButton"></button>
+</template>
+
+<div id="버튼목록"></div>
