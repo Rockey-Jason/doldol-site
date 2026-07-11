@@ -41,6 +41,20 @@ body {
     border:none;
 }
 }
+.buyButton{
+    width:100px;
+    height:40px;
+
+    background:#00aaff;
+    border:none;
+    border-radius:8px;
+
+    color:white;
+    font-family:jua;
+    font-size:20px;
+
+    cursor:pointer;
+}
 </style>
 </head>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -81,7 +95,21 @@ margin-left:20px;
 
 <div id="버튼목록"></div>
 
+
+<template id="구매버튼복사본">
+  <button class="buyButton">구매</button>
+</template>
+
+  
 <script type=module>
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabase = createClient(
+  "YOUR_SUPABASE_URL",
+  "YOUR_SUPABASE_ANON_KEY"
+);
+
+// 상품 이름
 const 버튼이름 = [
     "돌이",
     "돌식",
@@ -90,19 +118,139 @@ const 버튼이름 = [
     "돌오"
 ];
 
-const 복사본 = document.getElementById("버튼복사본");
-const 목록 = document.getElementById("버튼목록");
+// 각 상품 가격
+const 가격 = [
+    100,
+    200,
+    500,
+    1000,
+    5000
+];
 
-버튼이름.forEach((이름) => {
+window.addEventListener("DOMContentLoaded", async () => {
 
-    // 복사본 복제
-    const 새버튼 = 복사본.content.cloneNode(true);
+    // 로그인 확인
+    const {
+        data: { session }
+    } = await supabase.auth.getSession();
 
-    // 글자만 변경
-    새버튼.querySelector("button").textContent = 이름;
+    if (!session) {
+        alert("로그인이 필요합니다.");
+        return;
+    }
 
-    // 화면에 추가
-    목록.appendChild(새버튼);
+    const {
+        data: { user }
+    } = await supabase.auth.getUser();
+
+    // 현재 돌돌코인 가져오기
+    const {
+        data: userInfo,
+        error
+    } = await supabase
+        .from("users")
+        .select("doldolcoin")
+        .eq("user_id", user.id)
+        .single();
+
+    if (error) {
+        console.log(error);
+        return;
+    }
+
+    const 복사본 = document.getElementById("버튼복사본");
+    const 구매복사본 = document.getElementById("구매버튼복사본");
+    const 목록 = document.getElementById("버튼목록");
+
+    버튼이름.forEach((이름, 번호) => {
+
+        const 줄 = document.createElement("div");
+        줄.style.display = "flex";
+        줄.style.alignItems = "center";
+        줄.style.gap = "10px";
+
+        // 이름 버튼
+        const 새버튼 = 복사본.content.cloneNode(true);
+        새버튼.querySelector("button").textContent = 이름;
+
+        // 구매 버튼
+        const 구매버튼 = 구매복사본.content.cloneNode(true);
+
+        구매버튼.querySelector("button").onclick = async function () {
+
+            const 필요코인 = 가격[번호];
+
+            // 최신 돌돌코인 다시 가져오기
+            const {
+                data: 최신정보
+            } = await supabase
+                .from("users")
+                .select("doldolcoin")
+                .eq("user_id", user.id)
+                .single();
+
+            const 현재코인 = 최신정보.doldolcoin;
+
+            if (현재코인 < 필요코인) {
+                alert("돌돌코인이 부족합니다.");
+                return;
+            }
+
+            const 남은코인 = 현재코인 - 필요코인;
+
+            const {
+                error: updateError
+            } = await supabase
+                .from("users")
+                .update({
+                    doldolcoin: 남은코인
+                })
+                .eq("user_id", user.id);
+
+            if (updateError) {
+                console.log(updateError);
+                alert("구매에 실패했습니다.");
+                return;
+            }
+
+            alert(`${이름}을(를) 구매했습니다!\n남은 돌돌코인 : ${남은코인}`);
+
+            // ↓↓↓ 여기부터 상품별 효과 ↓↓↓
+
+            if (번호 === 0) {
+
+                // 첫 번째 상품
+
+            }
+            else if (번호 === 1) {
+
+                // 두 번째 상품
+
+            }
+            else if (번호 === 2) {
+
+                // 세 번째 상품
+
+            }
+            else if (번호 === 3) {
+
+                // 네 번째 상품
+
+            }
+            else if (번호 === 4) {
+
+                // 다섯 번째 상품
+
+            }
+
+        };
+
+        줄.appendChild(새버튼);
+        줄.appendChild(구매버튼);
+
+        목록.appendChild(줄);
+
+    });
 
 });
 </script>
