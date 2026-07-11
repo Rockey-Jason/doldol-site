@@ -33,15 +33,66 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="lib/chess.js"></script>
 <script src="lib/chessboard.js"></script>
-<script>const game = new Chess();
+<script>
+const game = new Chess();
 
-const board = Chessboard("board",{
+const board = Chessboard("board", {
 
-    position:"start",
+    position: "start",
 
-    draggable:true
+    draggable: true,
 
-});</script>
+    pieceTheme: "pieces/{piece}.png",
+
+    onDragStart: onDragStart,
+
+    onDrop: onDrop,
+
+    onSnapEnd: onSnapEnd
+
+});
+
+// 자신의 턴의 말만 움직이기
+function onDragStart(source, piece) {
+
+    if (game.isGameOver()) return false;
+
+    if (
+        (game.turn() === "w" && piece.startsWith("b")) ||
+        (game.turn() === "b" && piece.startsWith("w"))
+    ) {
+        return false;
+    }
+
+}
+
+// 말 놓기
+function onDrop(source, target) {
+
+    const move = game.move({
+
+        from: source,
+
+        to: target,
+
+        promotion: "q"
+
+    });
+
+    // 불가능한 수
+    if (move === null) {
+        return "snapback";
+    }
+
+}
+
+// 이동 후 체스판 새로고침
+function onSnapEnd() {
+
+    board.position(game.fen());
+
+}
+</script>
   
 </body>
 </html>
