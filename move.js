@@ -465,7 +465,34 @@ selectedSquare.dataset.square==="e8"){
             selectedSquare.textContent="";
             delete selectedSquare.dataset.piece;
 
-            turn=turn==="w"?"b":"w";
+            // ===== 프로모션 =====
+
+const piece=square.dataset.piece;
+
+if(piece==="wp" && square.dataset.square[1]==="8"){
+
+    promotionSquare=square;
+
+    document.getElementById("promotionMenu").style.display="block";
+
+    return;
+
+}
+
+if(piece==="bp" && square.dataset.square[1]==="1"){
+
+    promotionSquare=square;
+
+    document.getElementById("promotionMenu").style.display="block";
+
+    return;
+
+}
+
+turn=turn==="w"?"b":"w";
+
+document.getElementById("turn").textContent=
+turn==="w"?"White":"Black";
 
             document.getElementById("turn").textContent=
                 turn==="w"?"White":"Black";
@@ -477,5 +504,50 @@ selectedSquare.dataset.square==="e8"){
         clearHighlights();
 
     });
+
+});
+document
+.querySelectorAll(".promo")
+.forEach(button=>{
+
+button.onclick=function(){
+
+const type=button.dataset.piece;
+
+const color=
+promotionSquare.dataset.piece[0];
+
+promotionSquare.dataset.piece=
+color+type;
+
+const unicode={
+
+wq:"♕",
+wr:"♖",
+wb:"♗",
+wn:"♘",
+
+bq:"♛",
+br:"♜",
+bb:"♝",
+bn:"♞"
+
+};
+
+promotionSquare.textContent=
+unicode[color+type];
+
+promotionSquare=null;
+
+document.getElementById(
+"promotionMenu"
+).style.display="none";
+
+turn=turn==="w"?"b":"w";
+
+document.getElementById("turn").textContent=
+turn==="w"?"White":"Black";
+
+};
 
 });
