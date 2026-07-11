@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>돌이 사이트 - 체스</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<header>
+
+<h1>♟ 돌이 체스</h1>
+
+</header>
+
+<div id="game">
+
+<div id="board"></div>
+
+<div id="rightPanel">
+
+<h2 id="botName">봇 선택</h2>
+
+<div id="botButtons">
+
+<button class="bot">Talc Rockey</button>
+
+<button class="bot">Sleeping Rockey</button>
+
+<button class="bot">Rockey's Fur</button>
+
+<button class="bot">Rockey</button>
+
+<button class="bot">Rockey Army</button>
+
+<button class="bot">Doronum</button>
+
+<button class="bot">Brilliant Rockey</button>
+
+</div>
+
+<div id="status">
+
+현재 턴 :
+<span id="turn">White</span>
+
+</div>
+
+<div id="controls">
+
+<button id="undo">
+Undo
+</button>
+
+<button id="restart">
+Restart
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<script src="board.js"></script>
+<script src="pieces.js"></script>
+<script src="move.js"></script>
+<script src="game.js"></script>
+<script src="animation.js"></script>
+
+</body>
+</html>
