@@ -121,7 +121,7 @@ const 버튼이름 = [
     "돌이 쿠폰 - 1000000000000돌돌코인"
 ];
 
-// 각 상품 가격
+// 가격
 const 가격 = [
     100000,
     1000000,
@@ -131,6 +131,18 @@ const 가격 = [
     10000000000,
     100000000000,
     1000000000000
+];
+
+// 구매 후 변경될 레벨
+const 레벨 = [
+    2, // 프리미엄
+    3, // 돌프리미엄
+    4, // 돌돌프리미엄
+    5, // 돌돌돌프리미엄
+    6, // 돌돌돌돌프리미엄
+    7, // 돌돌돌돌돌프리미엄
+    8, // 유사돌이
+    9  // 돌이
 ];
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -149,13 +161,12 @@ window.addEventListener("DOMContentLoaded", async () => {
         data: { user }
     } = await supabase.auth.getUser();
 
-    // 현재 돌돌코인 가져오기
     const {
         data: userInfo,
         error
     } = await supabase
         .from("users")
-        .select("doldolcoin")
+        .select("doldolcoin,user_level")
         .eq("user_id", user.id)
         .single();
 
@@ -175,41 +186,52 @@ window.addEventListener("DOMContentLoaded", async () => {
         줄.style.alignItems = "center";
         줄.style.gap = "10px";
 
-        // 이름 버튼
+        // 이름
         const 새버튼 = 복사본.content.cloneNode(true);
         새버튼.querySelector("button").textContent = 이름;
 
         // 구매 버튼
         const 구매버튼 = 구매복사본.content.cloneNode(true);
 
-        구매버튼.querySelector("button").onclick = async function () {
+        구매버튼.querySelector("button").onclick = async () => {
 
-            const 필요코인 = 가격[번호];
-
-            // 최신 돌돌코인 다시 가져오기
+            // 최신 정보
             const {
-                data: 최신정보
+                data: 최신정보,
+                error: 최신오류
             } = await supabase
                 .from("users")
-                .select("doldolcoin")
+                .select("doldolcoin,user_level")
                 .eq("user_id", user.id)
                 .single();
 
+            if (최신오류) {
+                console.log(최신오류);
+                return;
+            }
+
             const 현재코인 = 최신정보.doldolcoin;
+            const 현재레벨 = 최신정보.user_level;
+            const 필요코인 = 가격[번호];
+            const 목표레벨 = 레벨[번호];
 
             if (현재코인 < 필요코인) {
                 alert("돌돌코인이 부족합니다.");
                 return;
             }
 
+            if (현재레벨 >= 목표레벨) {
+                alert("이미 보유하고 있는 쿠폰입니다.");
+                return;
+            }
+
             const 남은코인 = 현재코인 - 필요코인;
 
-            const {
-                error: updateError
-            } = await supabase
+            const { error: updateError } = await supabase
                 .from("users")
                 .update({
-                    doldolcoin: 남은코인
+                    doldolcoin: 남은코인,
+                    user_level: 목표레벨
                 })
                 .eq("user_id", user.id);
 
@@ -219,104 +241,10 @@ window.addEventListener("DOMContentLoaded", async () => {
                 return;
             }
 
-            alert(`${이름}을(를) 구매했습니다!\n남은 돌돌코인 : ${남은코인}`);
+            alert(
+                `${이름} 구매 완료!\n남은 돌돌코인 : ${남은코인}`
+            );
 
-            // ↓↓↓ 여기부터 상품별 효과 ↓↓↓
-
-            if (번호 === 0) {
-
-                // 첫 번째 상품
-            const {
-                error: updateError
-            } = await supabase
-                .from("users")
-                .update({
-                    user_level: 1
-                })
-                .eq("user_id", user.id);
-            }
-            else if (번호 === 1) {
-
-                // 두 번째 상품
-            const {
-                error: updateError
-            } = await supabase
-                .from("users")
-                .update({
-                    user_level: 2
-                })
-                .eq("user_id", user.id);
-            }
-            else if (번호 === 2) {
-
-                // 세 번째 상품
-            const {
-                error: updateError
-            } = await supabase
-                .from("users")
-                .update({
-                    user_level: 3
-                })
-                .eq("user_id", user.id);
-            }
-            else if (번호 === 3) {
-
-                // 네 번째 상품
-            const {
-                error: updateError
-            } = await supabase
-                .from("users")
-                .update({
-                    user_level: 4
-                })
-                .eq("user_id", user.id);
-            }
-            else if (번호 === 4) {
-
-                // 다섯 번째 상품
-            const {
-                error: updateError
-            } = await supabase
-                .from("users")
-                .update({
-                    user_level: 5
-                })
-                .eq("user_id", user.id);
-            }
-            else if (번호 === 5) {
-
-                // 여섯 번째 상품
-            const {
-                error: updateError
-            } = await supabase
-                .from("users")
-                .update({
-                    user_level: 6
-                })
-                .eq("user_id", user.id);
-            }
-            else if (번호 === 6) {
-
-                // 일곱 번째 상품
-            const {
-                error: updateError
-            } = await supabase
-                .from("users")
-                .update({
-                    user_level: 7
-                })
-                .eq("user_id", user.id);
-            }
-                // 여덟 번째 상품
-            const {
-                error: updateError
-            } = await supabase
-                .from("users")
-                .update({
-                    user_level: 8
-                })
-                .eq("user_id", user.id);
-            }
         };
 
         줄.appendChild(새버튼);
