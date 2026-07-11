@@ -1,3 +1,4 @@
+let promotionSquare=null;
 let selectedSquare = null;
 let turn = "w";
 let moved = {
