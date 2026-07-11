@@ -1,5 +1,17 @@
 let selectedSquare = null;
 let turn = "w";
+let moved = {
+
+    wk:false,
+    bk:false,
+
+    wa1:false,
+    wh1:false,
+
+    ba8:false,
+    bh8:false
+
+};
 
 // 말의 이동 방향
 const knightMoves = [
@@ -151,7 +163,59 @@ function getMoves(square){
             }
 
         }
+// ===== 캐슬링 =====
+if(color==="w"&&!moved.wk){
 
+    // 킹사이드
+
+    if(
+        !moved.wh1 &&
+        !getSquare("f1").dataset.piece &&
+        !getSquare("g1").dataset.piece
+    ){
+
+        moves.push("g1");
+
+    }
+
+    // 퀸사이드
+
+    if(
+        !moved.wa1 &&
+        !getSquare("b1").dataset.piece &&
+        !getSquare("c1").dataset.piece &&
+        !getSquare("d1").dataset.piece
+    ){
+
+        moves.push("c1");
+
+    }
+
+}
+if(color==="b"&&!moved.bk){
+
+    if(
+        !moved.bh8 &&
+        !getSquare("f8").dataset.piece &&
+        !getSquare("g8").dataset.piece
+    ){
+
+        moves.push("g8");
+
+    }
+
+    if(
+        !moved.ba8 &&
+        !getSquare("b8").dataset.piece &&
+        !getSquare("c8").dataset.piece &&
+        !getSquare("d8").dataset.piece
+    ){
+
+        moves.push("c8");
+
+    }
+
+}
     }
 
     return moves;
@@ -330,7 +394,73 @@ squares.forEach(square=>{
 
             square.dataset.piece=
                 selectedSquare.dataset.piece;
+            const movedPiece = square.dataset.piece;
 
+if(movedPiece==="wk") moved.wk=true;
+if(movedPiece==="bk") moved.bk=true;
+
+if(selectedSquare.dataset.square==="a1") moved.wa1=true;
+if(selectedSquare.dataset.square==="h1") moved.wh1=true;
+
+if(selectedSquare.dataset.square==="a8") moved.ba8=true;
+if(selectedSquare.dataset.square==="h8") moved.bh8=true;
+// ===== 캐슬링 실제 이동 =====
+
+if(square.dataset.square==="g1" &&
+selectedSquare.dataset.square==="e1"){
+
+    const rook=getSquare("h1");
+    const target=getSquare("f1");
+
+    target.textContent=rook.textContent;
+    target.dataset.piece=rook.dataset.piece;
+
+    rook.textContent="";
+    delete rook.dataset.piece;
+
+}
+
+if(square.dataset.square==="c1" &&
+selectedSquare.dataset.square==="e1"){
+
+    const rook=getSquare("a1");
+    const target=getSquare("d1");
+
+    target.textContent=rook.textContent;
+    target.dataset.piece=rook.dataset.piece;
+
+    rook.textContent="";
+    delete rook.dataset.piece;
+
+}
+
+if(square.dataset.square==="g8" &&
+selectedSquare.dataset.square==="e8"){
+
+    const rook=getSquare("h8");
+    const target=getSquare("f8");
+
+    target.textContent=rook.textContent;
+    target.dataset.piece=rook.dataset.piece;
+
+    rook.textContent="";
+    delete rook.dataset.piece;
+
+}
+
+if(square.dataset.square==="c8" &&
+selectedSquare.dataset.square==="e8"){
+
+    const rook=getSquare("a8");
+    const target=getSquare("d8");
+
+    target.textContent=rook.textContent;
+    target.dataset.piece=rook.dataset.piece;
+
+    rook.textContent="";
+    delete rook.dataset.piece;
+
+}
             selectedSquare.textContent="";
             delete selectedSquare.dataset.piece;
 
