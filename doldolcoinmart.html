@@ -40,32 +40,6 @@ body {
 
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
 <body>
-
-<script type=module>
-const 버튼이름 = [
-    "돌이",
-    "돌식",
-    "돌삼",
-    "돌사",
-    "돌오"
-];
-
-const 복사본 = document.getElementById("버튼복사본");
-const 목록 = document.getElementById("버튼목록");
-
-버튼이름.forEach((이름) => {
-
-    // 복사본 복제
-    const 새버튼 = 복사본.content.cloneNode(true);
-
-    // 글자만 변경
-    새버튼.querySelector("button").textContent = 이름;
-
-    // 화면에 추가
-    목록.appendChild(새버튼);
-
-});
-</script>
   
 <a href="https://rockey-jason.github.io/doldol-site/" style="text-decoration:none;">
 <button style="
@@ -98,3 +72,29 @@ margin-left:20px;
 </template>
 
 <div id="버튼목록"></div>
+
+<script type=module>
+const 버튼이름 = [
+    "돌이",
+    "돌식",
+    "돌삼",
+    "돌사",
+    "돌오"
+];
+
+const 복사본 = document.getElementById("버튼복사본");
+const 목록 = document.getElementById("버튼목록");
+
+버튼이름.forEach((이름) => {
+
+    // 복사본 복제
+    const 새버튼 = 복사본.content.cloneNode(true);
+
+    // 글자만 변경
+    새버튼.querySelector("button").textContent = 이름;
+
+    // 화면에 추가
+    목록.appendChild(새버튼);
+
+});
+</script>
