@@ -1,1 +1,50 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
 
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Rockey Chess</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+
+<style>
+#board{
+    width:700px;
+    max-width:90vw;
+    margin:100px auto;
+}
+</style>
+
+  
+<link rel="stylesheet"
+href="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.css">
+
+  
+</head>
+
+  
+<body>
+  
+
+<div id="board"></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://unpkg.com/chess.js@1.0.0/dist/cjs/chess.js"></script>
+<script src="https://unpkg.com/@chrisoakman/chessboardjs@1.0.0/dist/chessboard-1.0.0.min.js"></script>
+<script>const game = new Chess();
+
+const board = Chessboard("board",{
+
+    position:"start",
+
+    draggable:true
+
+});</script>
+  
+</body>
+</html>
