@@ -226,29 +226,97 @@ window.addEventListener("DOMContentLoaded", async () => {
             if (번호 === 0) {
 
                 // 첫 번째 상품
-
+            const {
+                error: updateError
+            } = await supabase
+                .from("users")
+                .update({
+                    user_level: 1
+                })
+                .eq("user_id", user.id);
             }
             else if (번호 === 1) {
 
                 // 두 번째 상품
-
+            const {
+                error: updateError
+            } = await supabase
+                .from("users")
+                .update({
+                    user_level: 2
+                })
+                .eq("user_id", user.id);
             }
             else if (번호 === 2) {
 
                 // 세 번째 상품
-
+            const {
+                error: updateError
+            } = await supabase
+                .from("users")
+                .update({
+                    user_level: 3
+                })
+                .eq("user_id", user.id);
             }
             else if (번호 === 3) {
 
                 // 네 번째 상품
-
+            const {
+                error: updateError
+            } = await supabase
+                .from("users")
+                .update({
+                    user_level: 4
+                })
+                .eq("user_id", user.id);
             }
             else if (번호 === 4) {
 
                 // 다섯 번째 상품
-
+            const {
+                error: updateError
+            } = await supabase
+                .from("users")
+                .update({
+                    user_level: 5
+                })
+                .eq("user_id", user.id);
             }
+            else if (번호 === 5) {
 
+                // 여섯 번째 상품
+            const {
+                error: updateError
+            } = await supabase
+                .from("users")
+                .update({
+                    user_level: 6
+                })
+                .eq("user_id", user.id);
+            }
+            else if (번호 === 6) {
+
+                // 일곱 번째 상품
+            const {
+                error: updateError
+            } = await supabase
+                .from("users")
+                .update({
+                    user_level: 7
+                })
+                .eq("user_id", user.id);
+            }
+                // 여덟 번째 상품
+            const {
+                error: updateError
+            } = await supabase
+                .from("users")
+                .update({
+                    user_level: 8
+                })
+                .eq("user_id", user.id);
+            }
         };
 
         줄.appendChild(새버튼);
