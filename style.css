@@ -1,0 +1,310 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+
+    font-family:'Jua',sans-serif;
+
+    background:linear-gradient(to right,#000033,#000010);
+
+    color:white;
+
+    overflow-x:hidden;
+
+}
+
+/* ===== 상단 ===== */
+
+header{
+
+    width:100%;
+
+    height:90px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+}
+
+header h1{
+
+    font-size:55px;
+
+    color:white;
+
+}
+
+/* ===== 전체 ===== */
+
+#game{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:flex-start;
+
+    gap:50px;
+
+    margin-top:20px;
+
+}
+
+/* ===== 체스판 ===== */
+
+#board{
+
+    width:640px;
+
+    height:640px;
+
+    display:grid;
+
+    grid-template-columns:repeat(8,1fr);
+
+    grid-template-rows:repeat(8,1fr);
+
+    border:5px solid white;
+
+    border-radius:15px;
+
+    overflow:hidden;
+
+    box-shadow:
+    0px 0px 25px rgba(255,255,255,.15);
+
+}
+
+/* ===== 오른쪽 ===== */
+
+#rightPanel{
+
+    width:320px;
+
+    background:rgba(255,255,255,.08);
+
+    border-radius:20px;
+
+    padding:20px;
+
+}
+
+#rightPanel h2{
+
+    text-align:center;
+
+    margin-bottom:15px;
+
+}
+
+/* ===== 봇 버튼 ===== */
+
+.bot{
+
+    width:100%;
+
+    height:48px;
+
+    margin-bottom:10px;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-family:'Jua';
+
+    font-size:22px;
+
+    background:#0077ff;
+
+    color:white;
+
+    transition:.25s;
+
+}
+
+.bot:hover{
+
+    background:#3399ff;
+
+    transform:scale(1.03);
+
+}
+
+/* ===== 상태 ===== */
+
+#status{
+
+    margin-top:25px;
+
+    font-size:28px;
+
+    text-align:center;
+
+}
+
+/* ===== 컨트롤 ===== */
+
+#controls{
+
+    margin-top:30px;
+
+    display:flex;
+
+    justify-content:space-between;
+
+}
+
+#controls button{
+
+    width:130px;
+
+    height:45px;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-family:'Jua';
+
+    font-size:22px;
+
+    background:#444;
+
+    color:white;
+
+    transition:.2s;
+
+}
+
+#controls button:hover{
+
+    background:#666;
+
+}
+
+/* ===== 체스칸 ===== */
+
+.square{
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    font-size:56px;
+
+    user-select:none;
+
+    cursor:pointer;
+
+    transition:.15s;
+
+}
+
+/* 흰칸 */
+
+.light{
+
+    background:#f0d9b5;
+
+}
+
+/* 검은칸 */
+
+.dark{
+
+    background:#b58863;
+
+}
+
+/* 선택 */
+
+.selected{
+
+    outline:5px solid yellow;
+
+}
+
+/* 이동 가능 */
+
+.move{
+
+    position:relative;
+
+}
+
+.move::after{
+
+    content:"";
+
+    width:18px;
+
+    height:18px;
+
+    border-radius:50%;
+
+    background:rgba(30,144,255,.8);
+
+    position:absolute;
+
+}
+
+/* 마지막 이동 */
+
+.lastMove{
+
+    box-shadow:inset 0 0 0 5px rgba(0,255,0,.5);
+
+}
+
+/* ===== 모바일 ===== */
+
+@media(max-width:1200px){
+
+#game{
+
+    flex-direction:column;
+
+    align-items:center;
+
+}
+
+#board{
+
+    width:90vw;
+
+    height:90vw;
+
+    max-width:640px;
+
+    max-height:640px;
+
+}
+
+#rightPanel{
+
+    width:90vw;
+
+    max-width:640px;
+
+}
+
+header h1{
+
+    font-size:40px;
+
+}
+
+}
