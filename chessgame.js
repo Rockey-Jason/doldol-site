@@ -1,5 +1,57 @@
 let selectedSquare = null;
 let highlightedSquares = [];
+function removeHighlights(){
+
+    highlightedSquares.forEach(square=>{
+
+        $(".square-"+square).removeClass("highlight");
+
+    });
+
+    highlightedSquares=[];
+
+}
+
+function highlightMoves(square){
+
+    removeHighlights();
+
+    const moves=game.moves({
+
+        square:square,
+
+        verbose:true
+
+    });
+
+    moves.forEach(move=>{
+
+        $(".square-"+move.to).addClass("highlight");
+
+        highlightedSquares.push(move.to);
+
+    });
+
+}
+function onMouseoverSquare(square){
+
+    if(selectedSquare==null){
+
+        highlightMoves(square);
+
+    }
+
+}
+
+function onMouseoutSquare(){
+
+    if(selectedSquare==null){
+
+        removeHighlights();
+
+    }
+
+}
 // 체스 게임 생성
 const game = new Chess();
 
@@ -11,9 +63,19 @@ const board = Chessboard("board", {
 
     onDragStart: onDragStart,
     onDrop: onDrop,
-    onSnapEnd: onSnapEnd
+    onSnapEnd: onSnapEnd,
+    onMouseoverSquare:onMouseoverSquare,
+onMouseoutSquare:onMouseoutSquare
 });
+$("#board").on("click",".square-55d63",function(){
 
+    const square=$(this).attr("data-square");
+
+    if(!square) return;
+
+    squareClicked(square);
+
+});
 // ----------------------------
 // 말을 집을 수 있는지 확인
 // ----------------------------
@@ -36,18 +98,29 @@ function onDragStart(source, piece) {
 // ----------------------------
 function onDrop(source, target) {
 
-    const move = game.move({
-        from: source,
-        to: target,
-        promotion: "q"   // 일단 자동 퀸 승격
-    });
+const move = game.move({
 
-    // 잘못된 수
-    if (move === null) {
-        return "snapback";
-    }
+    from:source,
 
-    updateStatus();
+    to:target,
+
+    promotion:"q"
+
+});
+
+if(move===null){
+
+    return "snapback";
+
+}
+
+$(".lastMove").removeClass("lastMove");
+
+$(".square-"+move.from).addClass("lastMove");
+
+$(".square-"+move.to).addClass("lastMove");
+
+updateStatus();
 }
 
 // ----------------------------
@@ -66,13 +139,13 @@ function updateStatus() {
 
     if (game.in_checkmate()) {
 
-        status = "체크메이트!";
+        status = "checkmate";
 
     }
 
     else if (game.in_draw()) {
 
-        status = "무승부";
+        status = "draw";
 
     }
 
@@ -84,7 +157,7 @@ function updateStatus() {
                 : "흑 차례";
 
         if (game.in_check()) {
-            status += " (체크)";
+            status += " (check)";
         }
 
     }
@@ -114,3 +187,72 @@ document.getElementById("restartButton").onclick = function(){
 
 // 처음 상태 표시
 updateStatus();
+function squareClicked(square){
+
+    if(selectedSquare==null){
+
+        const piece=game.get(square);
+
+        if(piece==null) return;
+
+        if(piece.color!==game.turn()) return;
+
+        selectedSquare=square;
+
+        highlightLegalMoves(square);
+
+        return;
+
+    }
+
+    const move=game.move({
+
+        from:selectedSquare,
+
+        to:square,
+
+        promotion:"q"
+
+    });
+
+    removeHighlights();
+
+    selectedSquare=null;
+
+    if(move==null){
+
+        board.position(game.fen());
+
+        return;
+
+    }
+
+    board.position(game.fen());
+
+    updateStatus();
+
+}
+function highlightLegalMoves(square){
+
+    removeHighlights();
+
+    const moves=game.moves({
+
+        square:square,
+
+        verbose:true
+
+    });
+
+    moves.forEach(move=>{
+
+        $(".square-"+move.to).addClass("highlight");
+
+    });
+
+}
+function removeHighlights(){
+
+    $(".highlight").removeClass("highlight");
+
+}
