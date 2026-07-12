@@ -226,3 +226,14 @@ body{
     }
 
 }
+.highlight{
+
+    box-shadow:inset 0 0 3px 3px yellow;
+
+}
+
+.lastMove{
+
+    box-shadow:inset 0 0 5px 5px rgba(0,255,255,.6);
+
+}
