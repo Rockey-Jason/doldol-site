@@ -1,3 +1,5 @@
+let selectedSquare = null;
+let highlightedSquares = [];
 // 체스 게임 생성
 const game = new Chess();
 
