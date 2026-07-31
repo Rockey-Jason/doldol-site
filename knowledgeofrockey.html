@@ -4,50 +4,108 @@
 <title>돌이 사이트-돌이와 관련된 정보</title>
 
 <script type="module">
-let 클릭상태 = 0;
+document.addEventListener("DOMContentLoaded", () => {
 
-const 돌이 = document.getElementById("돌이");
+let 볼정보 = 0;
 
-돌이.onclick = () => {
-  볼정보 = 1;
-  console.log(볼정보);
+const 정보창 = document.getElementById("정보창");
+
+const 내용 = {
+  1: `
+  <h1>🐶 돌이</h1>
+  돌이는 귀여운 웰시코기 강아지입니다.<br>
+  좋아하는 것은 산책과 맛있는 간식입니다.
+  `,
+
+  2: `
+  <h1>🐕 돌이의 친구들</h1>
+  돌이에게는 여러 친구들이 있습니다.<br>
+  바게트, 윈터 등 다양한 친구들이 있습니다.
+  `,
+
+  3: `
+  <h1>📰 돌이신문</h1>
+  돌이 세계의 최신 소식을 전달하는 신문입니다.
+  `,
+
+  4: `
+  <h1>💎 도로늄</h1>
+  푸른빛으로 빛나는 특별한 광물입니다.
+  `,
+
+  5: `
+  <h1>🦠 돌돌바이러스</h1>
+  돌돌행성에서 발견된 신비한 바이러스입니다.
+  `,
+
+  6: `
+  <h1>🏭 돌이의 기지들</h1>
+  돌이가 만든 여러 기지에 대한 정보입니다.
+  `,
+
+  7: `
+  <h1>🔐 돌이 암호</h1>
+  돌이 세계에서 사용하는 암호입니다.
+  `,
+
+  8: `
+  <h1>🎢 로키랜드</h1>
+  돌이 세계 최고의 놀이공원입니다.
+  `,
+
+  9: `
+  <h1>🌐 돌이 사이트</h1>
+  돌이와 관련된 모든 정보를 볼 수 있는 사이트입니다.
+  `
 };
-  
-돌이의 친구들.onclick = () => {
-  볼정보 = 2;
-  console.log(볼정보);
+
+
+function 정보보기(번호){
+  볼정보 = 번호;
+  정보창.innerHTML = 내용[볼정보];
+}
+
+
+// 버튼 연결
+
+document.getElementById("돌이").onclick = () => {
+  정보보기(1);
 };
-돌이신문.onclick = () => {
-  볼정보 = 3;
-  console.log(볼정보);
+
+document.getElementById("돌이의 친구들").onclick = () => {
+  정보보기(2);
 };
-  
-도로늄.onclick = () => {
-  볼정보 = 4;
-  console.log(볼정보);
+
+document.getElementById("돌이신문").onclick = () => {
+  정보보기(3);
 };
-돌돌바이러스.onclick = () => {
-  볼정보 = 5;
-  console.log(볼정보);
+
+document.getElementById("도로늄").onclick = () => {
+  정보보기(4);
 };
-  
-돌이의 기지들.onclick = () => {
-  볼정보 = 6;
-  console.log(볼정보);
+
+document.getElementById("돌돌바이러스").onclick = () => {
+  정보보기(5);
 };
-돌이 암호.onclick = () => {
-  볼정보 = 7;
-  console.log(볼정보);
+
+document.getElementById("돌이의 기지들").onclick = () => {
+  정보보기(6);
 };
-  
-로키랜드.onclick = () => {
-  볼정보 = 8;
-  console.log(볼정보);
+
+document.getElementById("돌이 암호").onclick = () => {
+  정보보기(7);
 };
-돌이 사이트.onclick = () => {
-  볼정보 = 9;
-  console.log(볼정보);
+
+document.getElementById("로키랜드").onclick = () => {
+  정보보기(8);
 };
+
+document.getElementById("돌이 사이트").onclick = () => {
+  정보보기(9);
+};
+
+
+});
 </script>
 <style>
 body {
@@ -224,3 +282,20 @@ cursor:pointer;
 ">
 -돌이 사이트
 </button>
+
+<div id="정보창"
+style="
+position:absolute;
+top:160px;
+left:300px;
+width:600px;
+min-height:300px;
+background:#111133;
+border-radius:20px;
+padding:30px;
+color:white;
+font-family:jua;
+font-size:25px;
+">
+정보를 선택하세요!
+</div>
