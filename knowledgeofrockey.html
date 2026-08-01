@@ -84,6 +84,19 @@ function 정보보기(번호){
   정보창.innerHTML = 내용[볼정보];
 }
 
+//글씨 특수 효과
+  document.getElementById("도로늄").onclick = () => {
+  볼정보 = 4;
+};
+
+  document.getElementById("로키랜드").onclick = () => {
+  볼정보 = 8;
+};
+
+  document.getElementById("돌이신문").onclick = () => {
+  볼정보 = 3;
+};
+
 
 // 버튼 연결
 
@@ -127,20 +140,6 @@ document.getElementById("돌이 사이트").onclick = () => {
 });
 </script>
 <style>
-//글씨 특수 효과
-  document.getElementById("도로늄").onclick = () => {
-  볼정보 = 4;
-};
-
-  document.getElementById("로키랜드").onclick = () => {
-  볼정보 = 8;
-};
-
-  document.getElementById("돌이신문").onclick = () => {
-  볼정보 = 3;
-};
-  
-
   
 //글씨 크기 및 색깔 효과
   .제목 {
