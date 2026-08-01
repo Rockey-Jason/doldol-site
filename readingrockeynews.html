@@ -159,14 +159,24 @@ window.addEventListener("DOMContentLoaded", async () => {
   }
 
   // 신문 가져오기
-  const {
-    data: news,
-    error: newsError
-  } = await supabase
-    .from("rockey_news")
-    .select("news_number, rockey_news")
-    .eq("news_number", 신문번호)
-    .single();
+const {
+  data: news,
+  error: newsError
+} = await supabase
+  .from("rockey_news")
+  .select(`
+    news_number,
+    rockey_news,
+    question,
+    choice1,
+    choice2,
+    choice3,
+    choice4,
+    choice5,
+    answer
+  `)
+  .eq("news_number", 신문번호)
+  .single();
 
   if (newsError) {
     console.log(newsError);
@@ -181,6 +191,20 @@ window.addEventListener("DOMContentLoaded", async () => {
   // 내용
   const 내용 = document.getElementById("내용");
   내용.innerHTML = news.rockey_news.replace(/\n/g, "<br>");
+
+  if (news.question) {
+
+  document.getElementById("퀴즈").style.display = "block";
+
+  document.getElementById("문제").textContent = news.question;
+
+  document.getElementById("보기1").textContent = news.choice1;
+  document.getElementById("보기2").textContent = news.choice2;
+  document.getElementById("보기3").textContent = news.choice3;
+  document.getElementById("보기4").textContent = news.choice4;
+  document.getElementById("보기5").textContent = news.choice5;
+
+}
 
   const 이전버튼 = document.getElementById("이전");
   const 다음버튼 = document.getElementById("다음");
@@ -287,6 +311,31 @@ white-space:pre-wrap;
 overflow-wrap:anywhere;
 word-break:break-word;
 ">
+</div>
+
+<div id="퀴즈"
+style="
+margin-top:40px;
+padding:20px;
+background:#111133;
+border-radius:20px;
+display:none;
+">
+  <h2 id="문제"></h2>
+
+  <label><input type="radio" name="quiz" value="1"> <span id="보기1"></span></label><br><br>
+
+  <label><input type="radio" name="quiz" value="2"> <span id="보기2"></span></label><br><br>
+
+  <label><input type="radio" name="quiz" value="3"> <span id="보기3"></span></label><br><br>
+
+  <label><input type="radio" name="quiz" value="4"> <span id="보기4"></span></label><br><br>
+
+  <label><input type="radio" name="quiz" value="5"> <span id="보기5"></span></label><br><br>
+
+  <button id="제출">제출</button>
+
+  <p id="결과"></p>
 </div>
 </body>
 </html>
