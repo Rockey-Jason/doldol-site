@@ -192,9 +192,11 @@ const {
   const 내용 = document.getElementById("내용");
   내용.innerHTML = news.rockey_news.replace(/\n/g, "<br>");
 
-  if (news.question) {
+if (news.question) {
 
-  document.getElementById("퀴즈").style.display = "block";
+  const 퀴즈 = document.getElementById("퀴즈");
+
+  퀴즈.style.display = "block";
 
   document.getElementById("문제").textContent = news.question;
 
@@ -203,6 +205,25 @@ const {
   document.getElementById("보기3").textContent = news.choice3;
   document.getElementById("보기4").textContent = news.choice4;
   document.getElementById("보기5").textContent = news.choice5;
+
+
+  // 신문 내용 아래에 퀴즈 배치
+  requestAnimationFrame(() => {
+
+    const 내용 = document.getElementById("내용");
+
+    const 퀴즈위치 =
+      내용.offsetTop +
+      내용.offsetHeight +
+      50;
+
+
+    퀴즈.style.position = "absolute";
+    퀴즈.style.top = 퀴즈위치 + "px";
+    퀴즈.style.left = "20px";
+    퀴즈.style.width = "600px";
+
+  });
 
 }
 
@@ -308,7 +329,16 @@ const 결과 = document.getElementById("결과");
 
   // 버튼 위치를 내용 아래로 이동
   requestAnimationFrame(() => {
-    const 버튼위치 = 내용.offsetTop + 내용.offsetHeight + 40;
+    const 퀴즈 = document.getElementById("퀴즈");
+
+let 버튼위치;
+
+if(퀴즈.style.display === "block"){
+  버튼위치 = 퀴즈.offsetTop + 퀴즈.offsetHeight + 40;
+}
+else{
+  버튼위치 = 내용.offsetTop + 내용.offsetHeight + 40;
+}
 
     이전버튼.style.top = 버튼위치 + "px";
     다음버튼.style.top = 버튼위치 + "px";
@@ -400,11 +430,12 @@ word-break:break-word;
 
 <div id="퀴즈"
 style="
-margin-top:40px;
 padding:20px;
 background:#111133;
 border-radius:20px;
 display:none;
+font-family:jua;
+color:white;
 ">
   <h2 id="문제"></h2>
 
