@@ -79,23 +79,25 @@ Rockey Party(로키 파티)를 열어서 Rockey Party에 같이 있는 사람들
 };
 
 
-function 정보보기(번호){
+function 정보보기(번호) {
   볼정보 = 번호;
-  정보창.innerHTML = 내용[볼정보];
+  정보창.innerHTML = 내용[번호];
+
+  const 도로늄 = 정보창.querySelector(".도로늄정보");
+  if (도로늄) {
+    도로늄.onclick = () => 정보보기(4);
+  }
+
+  const 로키랜드 = 정보창.querySelector(".로키랜드정보");
+  if (로키랜드) {
+    로키랜드.onclick = () => 정보보기(8);
+  }
+
+  const 돌이신문 = 정보창.querySelector(".돌이신문정보");
+  if (돌이신문) {
+    돌이신문.onclick = () => 정보보기(3);
+  }
 }
-
-
-  document.getElementById("도로늄정보").onclick = () => {
-  볼정보 = 4;
-};
-
-  document.getElementById("로키랜드정보").onclick = () => {
-  볼정보 = 8;
-};
-
-  document.getElementById("돌이신문정보").onclick = () => {
-  볼정보 = 3;
-};
 
 
 
