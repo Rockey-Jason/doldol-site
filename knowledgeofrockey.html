@@ -13,11 +13,11 @@ const 정보창 = document.getElementById("정보창");
 const 내용 = {
   1: `
   <h1>★ 돌이</h1>
--개요<br>
+<span class="큰글씨">-개요<br></span>
 돌이는 펨브로크 웰시코기이다. 돌이의 생일은 2021년 10월 3일이다. (그외 추가할 내용들)<br>
--생김새<br>
+<span class="큰글씨">-생김새<br></span>
 돌이는 짧을 다리를 가지고 있으며 짧은 꼬리를 가지고 있다. 돌이는 발, 배, 입주변, 목, 가슴 쪽에는 흰색 털을 가지고, 나머지 곳들은 주로 황갈색 털을 가진다. 돌이의 신장은 약 17cm 정도로 일반 웰시코기의 신장인 25~32cm에 비해 매우 작은 편이다. (그외 추가할 내용들)<br>
--성격<br>
+<span class="큰글씨">-성격<br></span>
 돌이는 잠시도 가만히 있지 못할 정도로 매우 활동적이고 활발하다. <del>근데 너무 활발해서 정신 사납기 까지 한 정도다</del>. 활동적인 돌이는 'Rockey Party come on, come on. Rockey Party (Rockey Party!)'라는 가사가 반복되는 노래를 반복적으로 부르고 듣는 Rockey Party(로키 파티)를 열어서 Rockey Party에 같이 있는 사람들 또한 활발하게 만든다.  돌이는 설정상 수능에 나오는 4짜리 문제를 공부하지 않고도 맞출수 있을 정도로 영리하다.
   `,
 
@@ -113,6 +113,9 @@ document.getElementById("돌이 사이트").onclick = () => {
 });
 </script>
 <style>
+  .제목 {
+  font-size:25px;
+}
   del {
   color: #777;
 }
@@ -303,7 +306,7 @@ border-radius:20px;
 padding:30px;
 color:white;
 font-family:jua;
-font-size:25px;
+font-size:20px;
 ">
 정보를 선택하세요!
 </div>
