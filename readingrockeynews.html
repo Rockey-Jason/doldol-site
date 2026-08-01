@@ -206,6 +206,91 @@ const {
 
 }
 
+// 퀴즈 제출 기능
+const 제출버튼 = document.getElementById("제출");
+const 결과 = document.getElementById("결과");
+
+
+제출버튼.onclick = async () => {
+
+
+  // 이미 푼 문제인지 확인
+  const {
+    data: 현재유저
+  } = await supabase
+    .from("users")
+    .select("quiz_answered, quiz_news_number")
+    .eq("user_id", user.id)
+    .single();
+
+
+  if (
+    현재유저.quiz_answered === true &&
+    현재유저.quiz_news_number === 신문번호
+  ) {
+
+    결과.textContent = "이미 이 돌이신문 문제를 풀었습니다.";
+    return;
+
+  }
+
+
+
+  // 선택한 답 가져오기
+  const 선택 = document.querySelector(
+    'input[name="quiz"]:checked'
+  );
+
+
+  if (!선택) {
+
+    결과.textContent = "답을 선택해주세요.";
+    return;
+
+  }
+
+
+
+  const 선택한답 = Number(선택.value);
+
+
+  let 정답여부 = false;
+
+
+  if (선택한답 === news.answer) {
+
+    정답여부 = true;
+
+  }
+
+
+
+  // users 업데이트
+
+  const {
+    error:updateError
+  } = await supabase
+    .from("users")
+    .update({
+
+      quiz_right: 정답여부,
+      quiz_news_number: 신문번호,
+      quiz_answered: true
+
+    })
+    .eq("user_id", user.id);
+
+
+
+  if(updateError){
+
+    console.log(updateError);
+    결과.textContent="저장 실패";
+    return;
+
+  }
+};
+
   const 이전버튼 = document.getElementById("이전");
   const 다음버튼 = document.getElementById("다음");
 
