@@ -90,6 +90,38 @@ if (error || !users) {
 
     console.log("sent:", user.email);
   }
+
+// 퀴즈 정답자 돌돌코인 지급
+
+for (const user of users) {
+
+  if(user.quiz_right === true){
+
+    await supabase
+      .from("users")
+      .update({
+
+        doldolcoin:
+          (user.doldolcoin || 0) + 5000,
+
+        quiz_right:null,
+        quiz_news_number:null,
+        quiz_answered:false
+
+      })
+      .eq(
+        "user_id",
+        user.user_id
+      );
+
+    console.log(
+      "퀴즈 보상 지급:",
+      user.email
+    );
+
+  }
+
+}
 }
 
 run();
