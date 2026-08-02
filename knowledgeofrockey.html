@@ -184,11 +184,14 @@ document.getElementById("돌이 사이트").onclick = () => {
     font-family:jua;
     font-size:20px;
     cursor:pointer;
-    transition:all 0.25s ease;
+    transform:scale(1);
+    transition:
+        color 0.25s ease,
+        transform 0.25s ease;
 }
 
 .메뉴버튼.선택{
-    color: yellow;
+    color:yellow;
     transform:scale(1.1);
 }
 
@@ -265,7 +268,7 @@ z-index:2;
 -돌이의 친구들
 </button>
 
-<button id="돌이신문"
+<button id="돌이신문" class="메뉴버튼"
 style="
 position:absolute;
 top:220px;
