@@ -106,6 +106,21 @@ function 정보보기(번호){
     정보창.innerHTML = 내용[번호];
 
     버튼선택(번호);
+  // 내용 안의 링크 이벤트 연결
+const 도로늄 = 정보창.querySelector(".도로늄정보");
+if (도로늄) {
+  도로늄.onclick = () => 정보보기(4);
+}
+
+const 로키랜드 = 정보창.querySelector(".로키랜드정보");
+if (로키랜드) {
+  로키랜드.onclick = () => 정보보기(8);
+}
+
+const 돌이신문 = 정보창.querySelector(".돌이신문정보");
+if (돌이신문) {
+  돌이신문.onclick = () => 정보보기(3);
+}
 }
 
 
