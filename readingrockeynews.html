@@ -192,6 +192,15 @@ const {
   const 내용 = document.getElementById("내용");
   내용.innerHTML = news.rockey_news.replace(/\n/g, "<br>");
 
+  const {
+data:저장답
+}=await supabase
+.from("users")
+.select("quiz_answers")
+.eq("user_id",user.id)
+.single();
+
+  
 if (news.question) {
 
   const 퀴즈 = document.getElementById("퀴즈");
@@ -205,15 +214,6 @@ if (news.question) {
   document.getElementById("보기3").textContent = news.choice3;
   document.getElementById("보기4").textContent = news.choice4;
   document.getElementById("보기5").textContent = news.choice5;
-
-  const {
-data:저장답
-}=await supabase
-.from("users")
-.select("quiz_answers")
-.eq("user_id",user.id)
-.single();
-
 
   // 신문 내용 아래에 퀴즈 배치
   requestAnimationFrame(() => {
