@@ -78,25 +78,34 @@ Rockey Party(로키 파티)를 열어서 Rockey Party에 같이 있는 사람들
   `
 };
 
+function 버튼선택(번호){
 
-function 정보보기(번호) {
-  볼정보 = 번호;
-  정보창.innerHTML = 내용[번호];
+    document
+        .querySelectorAll(".메뉴버튼")
+        .forEach(btn => btn.classList.remove("선택"));
 
-  const 도로늄 = 정보창.querySelector(".도로늄정보");
-  if (도로늄) {
-    도로늄.onclick = () => 정보보기(4);
-  }
+    const 버튼목록 = {
+        1: "돌이",
+        2: "돌이의 친구들",
+        3: "돌이신문",
+        4: "도로늄",
+        5: "돌돌바이러스",
+        6: "돌이의 기지들",
+        7: "돌이 암호",
+        8: "로키랜드",
+        9: "돌이 사이트"
+    };
 
-  const 로키랜드 = 정보창.querySelector(".로키랜드정보");
-  if (로키랜드) {
-    로키랜드.onclick = () => 정보보기(8);
-  }
+    document
+        .getElementById(버튼목록[번호])
+        ?.classList.add("선택");
+}
+  
+function 정보보기(번호){
+    볼정보 = 번호;
+    정보창.innerHTML = 내용[번호];
 
-  const 돌이신문 = 정보창.querySelector(".돌이신문정보");
-  if (돌이신문) {
-    돌이신문.onclick = () => 정보보기(3);
-  }
+    버튼선택(번호);
 }
 
 
@@ -168,7 +177,22 @@ document.getElementById("돌이 사이트").onclick = () => {
     color:#9fe3ff;
 }
   
+.메뉴버튼{
+    background:none;
+    border:none;
+    color:white;
+    font-family:jua;
+    font-size:20px;
+    cursor:pointer;
+    transition:all 0.25s ease;
+}
 
+.메뉴버튼.선택{
+    color:#66ccff;
+    transform:scale(1.2);
+}
+
+  
 body {
   background: linear-gradient(to right, #000033, #000010);
   margin: 0;
@@ -209,7 +233,7 @@ margin-left:20px;
 
 
 
-<button id="돌이"
+<button id="돌이" class="메뉴버튼"
 style="
 position:absolute;
 top:160px;
@@ -225,7 +249,7 @@ z-index:2;
 -돌이
 </button>
 
-<button id="돌이의 친구들"
+<button id="돌이의 친구들" class="메뉴버튼"
 style="
 position:absolute;
 top:190px;
@@ -257,7 +281,7 @@ z-index:2;
 -돌이 신문
 </button>
 
-<button id="도로늄"
+<button id="도로늄" class="메뉴버튼"
 style="
 position:absolute;
 top:250px;
@@ -273,7 +297,7 @@ z-index:2;
 -도로늄
 </button>
 
-<button id="돌돌바이러스"
+<button id="돌돌바이러스" class="메뉴버튼"
 style="
 position:absolute;
 top:280px;
@@ -289,7 +313,7 @@ z-index:2;
 -돌돌바이러스
 </button>
 
-<button id="돌이의 기지들"
+<button id="돌이의 기지들" class="메뉴버튼"
 style="
 position:absolute;
 top:310px;
@@ -305,7 +329,7 @@ z-index:2;
 -돌이의 기지들
 </button>
 
-<button id="돌이 암호"
+<button id="돌이 암호" class="메뉴버튼"
 style="
 position:absolute;
 top:340px;
@@ -321,7 +345,7 @@ z-index:2;
 -돌이 암호
 </button>
 
-<button id="로키랜드"
+<button id="로키랜드" class="메뉴버튼"
 style="
 position:absolute;
 top:370px;
@@ -337,7 +361,7 @@ z-index:2;
 -로키랜드
 </button>
 
-<button id="돌이 사이트"
+<button id="돌이 사이트" class="메뉴버튼"
 style="
 position:absolute;
 top:400px;
