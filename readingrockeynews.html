@@ -206,6 +206,33 @@ if (news.question) {
   document.getElementById("보기4").textContent = news.choice4;
   document.getElementById("보기5").textContent = news.choice5;
 
+  const {
+data:저장답
+}=await supabase
+.from("users")
+.select("quiz_answers")
+.eq("user_id",user.id)
+.single();
+
+
+const 이전답 =
+저장답.quiz_answers?.[신문번호];
+
+
+
+if(이전답){
+
+ document.querySelector(
+ `input[name="quiz"][value="${이전답}"]`
+ ).checked=true;
+
+
+ 제출버튼.textContent="제출됨";
+
+ 제출버튼.disabled=true;
+
+}
+
 
   // 신문 내용 아래에 퀴즈 배치
   requestAnimationFrame(() => {
@@ -235,91 +262,112 @@ const 결과 = document.getElementById("결과");
 제출버튼.onclick = async () => {
 
 
-  // 이미 푼 문제인지 확인
-  const {
-    data: 현재유저
-  } = await supabase
-    .from("users")
-    .select("quiz_answered, quiz_news_number")
-    .eq("user_id", user.id)
-    .single();
+const 선택 = document.querySelector(
+  'input[name="quiz"]:checked'
+);
 
 
-  if (
-    현재유저.quiz_answered === true &&
-    현재유저.quiz_news_number === 신문번호
-  ) {
+if(!선택){
 
-    결과.textContent = "이미 이 돌이신문 문제를 풀었습니다.";
-    return;
-
-  }
-
-
-
-  // 선택한 답 가져오기
-  const 선택 = document.querySelector(
-    'input[name="quiz"]:checked'
-  );
-
-
-  if (!선택) {
-
-    결과.textContent = "답을 선택해주세요.";
-    return;
-
-  }
-
-
-
-  const 선택한답 = Number(선택.value);
-
-
-  let 정답여부 = false;
-
-
-  if (선택한답 === news.answer) {
-
-    정답여부 = true;
-
-  }
-
-
-
-  // users 업데이트
-
-  const {
-    error:updateError
-  } = await supabase
-    .from("users")
-    .update({
-
-      quiz_right: 정답여부,
-      quiz_news_number: 신문번호,
-      quiz_answered: true
-
-    })
-    .eq("user_id", user.id);
-
-
-
-  if(updateError){
-
-    console.log(updateError);
-    결과.textContent="저장 실패";
-    return;
-
-    if(정답여부){
-
-  결과.textContent = "정답이 제출 되었습니다! 다음 돌이신문 발행 시 결과가 발표됩니다!";
-
-}else{
-
-  결과.textContent = "정답이 제출 되었습니다! 다음 돌이신문 발행 시 결과가 발표됩니다!";
+  결과.textContent="답을 선택해주세요.";
+  return;
 
 }
 
-  }
+
+const 선택한답 = Number(선택.value);
+
+
+
+/*
+ 기존 답 가져오기
+*/
+
+const {
+ data:현재유저,
+ error
+}=await supabase
+.from("users")
+.select("quiz_answers")
+.eq("user_id",user.id)
+.single();
+
+
+
+if(error){
+
+ console.log(error);
+ return;
+
+}
+
+
+
+/*
+ JSON 데이터 준비
+*/
+
+let 답목록 = 현재유저.quiz_answers || {};
+
+
+
+/*
+ 현재 신문 답 추가
+*/
+
+답목록[신문번호]=선택한답;
+
+
+
+/*
+ 정답 확인
+*/
+
+const 정답여부 =
+선택한답 === news.answer;
+
+
+
+/*
+ 저장
+*/
+
+const {
+error:updateError
+}=await supabase
+.from("users")
+.update({
+
+ quiz_right:정답여부,
+
+ quiz_news_number:신문번호,
+
+ quiz_answered:true,
+
+ quiz_answers:답목록
+
+})
+.eq("user_id",user.id);
+
+
+
+if(updateError){
+
+ console.log(updateError);
+ 결과.textContent="저장 실패";
+ return;
+
+}
+
+
+
+결과.textContent="제출됨";
+
+제출버튼.textContent="제출됨";
+
+제출버튼.disabled=true;
+
+
 };
 
   const 이전버튼 = document.getElementById("이전");
