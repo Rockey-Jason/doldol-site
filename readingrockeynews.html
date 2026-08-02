@@ -215,25 +215,6 @@ data:저장답
 .single();
 
 
-const 이전답 =
-저장답.quiz_answers?.[신문번호];
-
-
-
-if(이전답){
-
- document.querySelector(
- `input[name="quiz"][value="${이전답}"]`
- ).checked=true;
-
-
- 제출버튼.textContent="제출됨";
-
- 제출버튼.disabled=true;
-
-}
-
-
   // 신문 내용 아래에 퀴즈 배치
   requestAnimationFrame(() => {
 
@@ -257,6 +238,24 @@ if(이전답){
 // 퀴즈 제출 기능
 const 제출버튼 = document.getElementById("제출");
 const 결과 = document.getElementById("결과");
+
+const 이전답 =
+저장답.quiz_answers?.[신문번호];
+
+
+
+if(이전답){
+
+ document.querySelector(
+ `input[name="quiz"][value="${이전답}"]`
+ ).checked=true;
+
+
+ 제출버튼.textContent="제출됨";
+
+ 제출버튼.disabled=true;
+
+}
 
 
 제출버튼.onclick = async () => {
