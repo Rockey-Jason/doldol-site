@@ -244,16 +244,19 @@ const 이전답 =
 
 
 
-if(이전답){
+if (이전답) {
 
- document.querySelector(
- `input[name="quiz"][value="${이전답}"]`
- ).checked=true;
+    document.querySelector(
+        `input[name="quiz"][value="${이전답}"]`
+    ).checked = true;
 
+    제출버튼.textContent = "제출됨";
+    제출버튼.disabled = true;
 
- 제출버튼.textContent="제출됨";
-
- 제출버튼.disabled=true;
+    // 객관식도 수정 불가
+    document.querySelectorAll('input[name="quiz"]').forEach(radio => {
+        radio.disabled = true;
+    });
 
 }
 
@@ -366,7 +369,15 @@ if(updateError){
 
 제출버튼.disabled=true;
 
+결과.textContent = "제출됨";
 
+제출버튼.textContent = "제출됨";
+제출버튼.disabled = true;
+
+// 객관식 수정 불가
+document.querySelectorAll('input[name="quiz"]').forEach(radio => {
+    radio.disabled = true;
+});
 };
 
   const 이전버튼 = document.getElementById("이전");
