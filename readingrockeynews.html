@@ -246,18 +246,21 @@ const 이전답 =
 
 if (이전답) {
 
-    document.querySelector(
+    const 선택된 = document.querySelector(
         `input[name="quiz"][value="${이전답}"]`
-    ).checked = true;
+    );
+
+    선택된.checked = true;
 
     제출버튼.textContent = "제출됨";
     제출버튼.disabled = true;
 
-    // 객관식도 수정 불가
     document.querySelectorAll('input[name="quiz"]').forEach(radio => {
         radio.disabled = true;
     });
 
+    document.getElementById("내답").textContent =
+        `내가 제출한 답 : ${이전답}번`;
 }
 
 
@@ -373,6 +376,9 @@ if(updateError){
 
 제출버튼.textContent = "제출됨";
 제출버튼.disabled = true;
+
+document.getElementById("내답").textContent =
+    `내가 제출한 답 : ${선택한답}번`;
 
 // 객관식 수정 불가
 document.querySelectorAll('input[name="quiz"]').forEach(radio => {
@@ -517,7 +523,13 @@ color:white;
 
   <label><input type="radio" name="quiz" value="5"> <span id="보기5"></span></label><br><br>
 
-  <button id="제출">제출</button>
+  <button id="제출">제출<br><br>
+  
+  <p id="내답" style="
+margin-top:15px;
+font-size:18px;
+color:#6ec8ff;
+"></p></button>
 
   <p id="결과"></p>
 </div>
