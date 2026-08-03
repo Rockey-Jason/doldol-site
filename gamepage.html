@@ -112,69 +112,67 @@ cursor:pointer;
 
 #캐러셀{
 
-position:relative;
+    position:relative;
 
-width:900px;
+    width:900px;
 
-height:330px;
+    height:340px;
 
-margin:40px auto;
+    margin:40px auto;
 
-overflow:hidden;
+    overflow:hidden;
 
 }
 
-#왼쪽사진,
-#가운데사진,
-#오른쪽사진{
+.캐러셀사진{
 
-position:absolute;
+    position:absolute;
 
-width:240px;
+    width:240px;
 
-border-radius:20px;
+    border-radius:20px;
 
-transition:
-transform .35s ease,
-opacity .35s ease;
+    transition:.45s;
 
-box-shadow:0 10px 25px rgba(0,0,0,.5);
+    user-select:none;
 
 }
 
 #왼쪽사진{
 
-left:20px;
+    left:70px;
 
-top:35px;
+    top:40px;
 
-opacity:.45;
+    transform:scale(.8);
 
-transform:scale(.8);
+    opacity:.45;
 
 }
 
 #가운데사진{
 
-left:330px;
+    left:330px;
 
-top:0;
+    top:0;
 
-transform:scale(1);
+    transform:scale(1);
 
-z-index:5;
+    opacity:1;
+
+    z-index:2;
 
 }
 
 #오른쪽사진{
 
-right:20px;
+    left:590px;
 
-top:35px;
+    top:40px;
 
-opacity:.45;
+    transform:scale(.8);
 
-transform:scale(.8);
+    opacity:.45;
 
 }
 </style>
@@ -238,7 +236,27 @@ const 게임목록 = [
 }
 ];
 
+const 왼쪽번호 =
+    Math.max(현재게임-1,0);
+
+const 오른쪽번호 =
+    Math.min(
+        현재게임+1,
+        게임목록.length-1
+    );
+
+document.getElementById("왼쪽사진").src =
+    게임목록[왼쪽번호].이미지;
+
+document.getElementById("가운데사진").src =
+    게임.이미지;
+
+document.getElementById("오른쪽사진").src =
+    게임목록[오른쪽번호].이미지;
+
 let 현재게임 = 0;
+
+let 애니메이션중 = false;
 
 function 화면갱신(방향 = 1){
 
@@ -288,6 +306,58 @@ const 다음번호 =
 
     },350);
 
+function 슬라이드(방향){
+
+    if(애니메이션중) return;
+
+    애니메이션중 = true;
+
+    const 왼쪽 = document.getElementById("왼쪽사진");
+    const 가운데 = document.getElementById("가운데사진");
+    const 오른쪽 = document.getElementById("오른쪽사진");
+
+    if(방향===1){
+
+        // 오른쪽으로 넘기기
+        왼쪽.style.transform="translateX(-260px) scale(.6)";
+        왼쪽.style.opacity="0";
+
+        가운데.style.transform="translateX(-260px) scale(.8)";
+        가운데.style.opacity=".45";
+
+        오른쪽.style.transform="translateX(-260px) scale(1)";
+        오른쪽.style.opacity="1";
+
+    }else{
+
+        // 왼쪽으로 넘기기
+        오른쪽.style.transform="translateX(260px) scale(.6)";
+        오른쪽.style.opacity="0";
+
+        가운데.style.transform="translateX(260px) scale(.8)";
+        가운데.style.opacity=".45";
+
+        왼쪽.style.transform="translateX(260px) scale(1)";
+        왼쪽.style.opacity="1";
+
+    }
+
+    setTimeout(()=>{
+
+        현재게임 += 방향;
+
+        화면갱신();
+
+        document.getElementById("왼쪽사진").style.transform="";
+        document.getElementById("가운데사진").style.transform="";
+        document.getElementById("오른쪽사진").style.transform="";
+
+        애니메이션중=false;
+
+    },450);
+
+}
+
     document.getElementById("왼쪽").disabled =
         현재게임===0;
 
@@ -302,20 +372,22 @@ location.href =
 
 };
 
-document.getElementById("왼쪽").onclick = ()=>{
+document.getElementById("왼쪽").onclick=()=>{
 
     if(현재게임>0){
-        현재게임--;
-        화면갱신(-1);
+
+        슬라이드(-1);
+
     }
 
 };
 
-document.getElementById("오른쪽").onclick = ()=>{
+document.getElementById("오른쪽").onclick=()=>{
 
     if(현재게임<게임목록.length-1){
-        현재게임++;
-        화면갱신(1);
+
+        슬라이드(1);
+
     }
 
 };
@@ -337,11 +409,9 @@ location.href=
 
 <div id="캐러셀">
 
-    <img id="왼쪽사진">
-
-    <img id="가운데사진">
-
-    <img id="오른쪽사진">
+    <img id="왼쪽사진" class="캐러셀사진">
+    <img id="가운데사진" class="캐러셀사진">
+    <img id="오른쪽사진" class="캐러셀사진">
 
 </div>
 
