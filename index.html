@@ -38,6 +38,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const 돌신확인 = document.getElementById("돌이신문확인");
   const 상점 = document.getElementById("돌돌코인상점!!!");
   const 돌이정보 = document.getElementById("돌이와관련된정보!");
+  const 돌이게임 = document.getElementById("돌이게임사진");
   const 설정 = document.getElementById("설정");
 
   let 상세설명 = false;
@@ -51,6 +52,9 @@ window.addEventListener("DOMContentLoaded", async () => {
   };
     돌이정보.onclick = () => {
     location.href = "knowledgeofrockey.html";
+  };
+      돌이게임.onclick = () => {
+    location.href = "gamepage.html";
   };
       설정.onclick = () => {
     location.href = "settings.html";
@@ -277,6 +281,22 @@ cursor:pointer;
 </button>    
 
 
+<button id="돌이게임" style="
+position:absolute;
+top:200px;
+left:900px;
+font-size:50px;
+font-family:jua;
+background:none;
+border:none;
+color:#f5f5f5;
+cursor:pointer;
+  white-space: nowrap;
+">
+돌이게임
+</button>  
+
+
 <button id="설정"
 style="
 position:absolute;
@@ -381,6 +401,23 @@ style="
 position:absolute;
 top:10px;
 left:1800px;
+width:50px;
+height:50px;
+border-radius:50%;
+object-fit:cover;
+object-position:center;
+cursor:pointer;
+display:none;
+z-index:2;
+border:2px solid white;
+">
+
+<img id="돌이게임사진"
+src="https://i.postimg.cc/MHcHs0w1/rockeychess.png"
+style="
+position:absolute;
+top:10px;
+left:2200px;
 width:50px;
 height:50px;
 border-radius:50%;
