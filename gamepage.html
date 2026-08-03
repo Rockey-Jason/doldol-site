@@ -109,6 +109,74 @@ border-radius:50%;
 cursor:pointer;
 
 }
+
+#캐러셀{
+
+position:relative;
+
+width:900px;
+
+height:330px;
+
+margin:40px auto;
+
+overflow:hidden;
+
+}
+
+#왼쪽사진,
+#가운데사진,
+#오른쪽사진{
+
+position:absolute;
+
+width:240px;
+
+border-radius:20px;
+
+transition:
+transform .35s ease,
+opacity .35s ease;
+
+box-shadow:0 10px 25px rgba(0,0,0,.5);
+
+}
+
+#왼쪽사진{
+
+left:20px;
+
+top:35px;
+
+opacity:.45;
+
+transform:scale(.8);
+
+}
+
+#가운데사진{
+
+left:330px;
+
+top:0;
+
+transform:scale(1);
+
+z-index:5;
+
+}
+
+#오른쪽사진{
+
+right:20px;
+
+top:35px;
+
+opacity:.45;
+
+transform:scale(.8);
+
+}
 </style>
 </head>
   
@@ -175,17 +243,26 @@ let 현재게임 = 0;
 function 화면갱신(방향 = 1){
 
     const 게임 = 게임목록[현재게임];
-    const 이미지 = document.getElementById("게임사진");
+const 왼쪽 = document.getElementById("왼쪽사진");
+const 가운데 = document.getElementById("가운데사진");
+const 오른쪽 = document.getElementById("오른쪽사진");
 
-    // 먼저 현재 이미지를 밀어냄
-    이미지.style.transform =
-        `translateX(${-120 * 방향}px)`;
+const 이전번호 =
+현재게임 > 0 ? 현재게임 - 1 : 0;
 
-    이미지.style.opacity = 0;
+const 다음번호 =
+현재게임 < 게임목록.length - 1
+? 현재게임 + 1
+: 게임목록.length - 1;
 
-    setTimeout(()=>{
+왼쪽.src =
+게임목록[이전번호].이미지;
 
-        이미지.src = 게임.이미지;
+가운데.src =
+게임목록[현재게임].이미지;
+
+오른쪽.src =
+게임목록[다음번호].이미지;
 
         document.getElementById("게임이름").textContent =
             게임.이름;
@@ -258,14 +335,15 @@ location.href=
 
 </script>
 
-<img id="게임사진"
-src="https://i.postimg.cc/FsHqfPpX/rockeychess.png"
-style="
-position:fixed;
-top:300px;
-left:400px;
-width:200px;
-">
+<div id="캐러셀">
+
+    <img id="왼쪽사진">
+
+    <img id="가운데사진">
+
+    <img id="오른쪽사진">
+
+</div>
 
 <p id="번호"></p>
 
