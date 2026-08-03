@@ -8,6 +8,12 @@ body {
   background: linear-gradient(to right, #000033, #000010);
   margin: 0;
 }
+
+#게임사진{
+
+transition:opacity .2s;
+
+}
 </style>
 </head>
   
@@ -42,10 +48,70 @@ margin-left:20px;
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
 
 <script type=module>
+const 게임목록 = [
+{
+    이름: "돌이체스",
+    설명: "체스를 즐길 수 있는 게임입니다.",
+    이미지: "https://i.postimg.cc/FsHqfPpX/rockeychess.png",
+    링크: "https://rockey-jason.github.io/doldol-chess/"
+},
+{
+    이름: "도로늄 공장",
+    설명: "도로늄을 만들고 공장을 키우는 게임입니다.",
+    이미지: "이미지주소",
+    링크: "https://..."
+},
+{
+    이름: "돌이 RPG",
+    설명: "돌이와 모험을 떠나는 게임입니다.",
+    이미지: "이미지주소",
+    링크: "https://..."
+}
+];
+
+let 현재게임 = 0;
+
+function 화면갱신(){
+
+const 게임 = 게임목록[현재게임];
+
+const 이미지 = document.getElementById("게임사진");
+
+이미지.style.opacity = 0;
+
+setTimeout(()=>{
+
+이미지.src = 게임.이미지;
+
+document.getElementById("게임이름").textContent = 게임.이름;
+
+document.getElementById("게임설명").textContent = 게임.설명;
+
+이미지.style.opacity = 1;
+
+},200);
+
+document.getElementById("왼쪽").disabled =
+현재게임===0;
+
+document.getElementById("오른쪽").disabled =
+현재게임===게임목록.length-1;
+
+}
+  
 const 돌이게임 = document.getElementById("돌이게임사진");
+
+document.getElementById("시작").onclick=()=>{
+
+location.href =
+게임목록[현재게임].링크;
+
+};
       돌이게임.onclick = () => {
     location.href = "https://rockey-jason.github.io/doldol-chess/";
   };
+
+
 </script>
 
 <img id="돌이게임사진"
