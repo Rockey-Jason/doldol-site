@@ -236,24 +236,6 @@ const 게임목록 = [
 }
 ];
 
-const 왼쪽번호 =
-    Math.max(현재게임-1,0);
-
-const 오른쪽번호 =
-    Math.min(
-        현재게임+1,
-        게임목록.length-1
-    );
-
-document.getElementById("왼쪽사진").src =
-    게임목록[왼쪽번호].이미지;
-
-document.getElementById("가운데사진").src =
-    게임.이미지;
-
-document.getElementById("오른쪽사진").src =
-    게임목록[오른쪽번호].이미지;
-
 let 현재게임 = 0;
 
 let 애니메이션중 = false;
@@ -288,23 +270,7 @@ const 다음번호 =
         document.getElementById("게임설명").textContent =
             게임.설명;
 
-        // 새 이미지를 반대쪽에서 시작
-        이미지.style.transition = "none";
 
-        이미지.style.transform =
-            `translateX(${120 * 방향}px)`;
-
-        requestAnimationFrame(()=>{
-
-            이미지.style.transition =
-                "transform .35s ease, opacity .35s ease";
-
-            이미지.style.opacity = 1;
-            이미지.style.transform = "translateX(0)";
-
-        });
-
-    },350);
 
 function 슬라이드(방향){
 
@@ -400,9 +366,7 @@ location.href=
 };
 
 화면갱신();
-      돌이게임.onclick = () => {
-    location.href = "https://rockey-jason.github.io/doldol-chess/";
-  };
+
 
 
 </script>
