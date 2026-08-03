@@ -10,9 +10,11 @@ body {
 }
 
 #게임사진{
+    transition:
+        transform .35s ease,
+        opacity .35s ease;
 
-transition:opacity .2s;
-
+    opacity:1;
 }
 
 #게임사진{
@@ -155,7 +157,7 @@ const 게임목록 = [
     장르:"공장 시뮬레이션",
     상태:"🔴 출시 예정",
     설명:"광물을 채굴하고 자동 공장을 만들어 도로늄을 생산하는 게임입니다.",
-    이미지:"https://via.placeholder.com/300x300",
+    이미지:"https://i.postimg.cc/rp1XX0mS/1000005291.jpg",
     링크:"#"
 },
 {
@@ -163,60 +165,57 @@ const 게임목록 = [
     장르:"RPG",
     상태:"🔴 출시 예정",
     설명:"돌이와 함께 여러 지역을 탐험하는 RPG 게임입니다.",
-    이미지:"https://via.placeholder.com/300x300",
+    이미지:"https://i.postimg.cc/rp1XX0mS/1000005291.jpg",
     링크:"#"
 }
 ];
 
 let 현재게임 = 0;
 
-function 화면갱신(){
+function 화면갱신(방향 = 1){
 
-const 게임 = 게임목록[현재게임];
+    const 게임 = 게임목록[현재게임];
+    const 이미지 = document.getElementById("게임사진");
 
-const 이미지 = document.getElementById("게임사진");
+    // 먼저 현재 이미지를 밀어냄
+    이미지.style.transform =
+        `translateX(${-120 * 방향}px)`;
 
-이미지.style.opacity=0;
+    이미지.style.opacity = 0;
 
-setTimeout(()=>{
+    setTimeout(()=>{
 
-이미지.src=게임.이미지;
+        이미지.src = 게임.이미지;
 
-document.getElementById("게임이름").textContent=게임.이름;
+        document.getElementById("게임이름").textContent =
+            게임.이름;
 
-document.getElementById("장르").textContent=
-"🎮 "+게임.장르;
+        document.getElementById("게임설명").textContent =
+            게임.설명;
 
-document.getElementById("상태").textContent=
-게임.상태;
+        // 새 이미지를 반대쪽에서 시작
+        이미지.style.transition = "none";
 
-document.getElementById("게임설명").textContent=
-게임.설명;
+        이미지.style.transform =
+            `translateX(${120 * 방향}px)`;
 
-document.getElementById("번호").textContent=
-`${현재게임+1} / ${게임목록.length}`;
+        requestAnimationFrame(()=>{
 
-let dots="";
+            이미지.style.transition =
+                "transform .35s ease, opacity .35s ease";
 
-for(let i=0;i<게임목록.length;i++){
+            이미지.style.opacity = 1;
+            이미지.style.transform = "translateX(0)";
 
-dots+=
-i===현재게임?"⚫":"⚪";
+        });
 
-}
+    },350);
 
-document.getElementById("점").textContent=dots;
+    document.getElementById("왼쪽").disabled =
+        현재게임===0;
 
-이미지.style.opacity=1;
-
-},200);
-
-document.getElementById("왼쪽").disabled=
-현재게임===0;
-
-document.getElementById("오른쪽").disabled=
-현재게임===게임목록.length-1;
-
+    document.getElementById("오른쪽").disabled =
+        현재게임===게임목록.length-1;
 }
 
 document.getElementById("시작").onclick=()=>{
@@ -226,27 +225,21 @@ location.href =
 
 };
 
-document.getElementById("왼쪽").onclick=()=>{
+document.getElementById("왼쪽").onclick = ()=>{
 
-if(현재게임>0){
-
-현재게임--;
-
-화면갱신();
-
-}
+    if(현재게임>0){
+        현재게임--;
+        화면갱신(-1);
+    }
 
 };
 
-document.getElementById("오른쪽").onclick=()=>{
+document.getElementById("오른쪽").onclick = ()=>{
 
-if(현재게임<게임목록.length-1){
-
-현재게임++;
-
-화면갱신();
-
-}
+    if(현재게임<게임목록.length-1){
+        현재게임++;
+        화면갱신(1);
+    }
 
 };
 
