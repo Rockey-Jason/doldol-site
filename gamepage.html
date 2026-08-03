@@ -14,6 +14,99 @@ body {
 transition:opacity .2s;
 
 }
+
+#게임사진{
+
+width:260px;
+transition:.25s;
+border-radius:20px;
+
+}
+
+#게임이름{
+
+color:white;
+font-family:jua;
+font-size:40px;
+text-align:center;
+
+}
+
+#게임설명{
+
+color:white;
+font-family:jua;
+font-size:22px;
+text-align:center;
+
+}
+
+#장르{
+
+color:#87cefa;
+font-family:jua;
+text-align:center;
+
+}
+
+#상태{
+
+font-family:jua;
+color:#7CFC00;
+text-align:center;
+
+}
+
+#번호{
+
+font-family:jua;
+color:white;
+font-size:25px;
+text-align:center;
+
+}
+
+#점{
+
+font-size:30px;
+color:white;
+text-align:center;
+
+}
+
+#시작{
+
+padding:15px 40px;
+font-size:25px;
+font-family:jua;
+border:none;
+border-radius:15px;
+cursor:pointer;
+
+transition:.2s;
+
+}
+
+#시작:hover{
+
+transform:scale(1.08);
+
+}
+
+#왼쪽,
+#오른쪽{
+
+font-size:40px;
+
+width:70px;
+
+height:70px;
+
+border-radius:50%;
+
+cursor:pointer;
+
+}
 </style>
 </head>
   
@@ -50,22 +143,28 @@ margin-left:20px;
 <script type=module>
 const 게임목록 = [
 {
-    이름: "돌이체스",
-    설명: "체스를 즐길 수 있는 게임입니다.",
-    이미지: "https://i.postimg.cc/FsHqfPpX/rockeychess.png",
-    링크: "https://rockey-jason.github.io/doldol-chess/"
+    이름:"돌이체스",
+    장르:"전략",
+    상태:"🟡 개발중",
+    설명:"Stockfish AI와 대결하며 레이팅을 올리는 체스 게임입니다.",
+    이미지:"https://i.postimg.cc/FsHqfPpX/rockeychess.png",
+    링크:"https://rockey-jason.github.io/doldol-chess/"
 },
 {
-    이름: "도로늄 공장",
-    설명: "도로늄을 만들고 공장을 키우는 게임입니다.",
-    이미지: "이미지주소",
-    링크: "https://..."
+    이름:"도로늄 공장",
+    장르:"공장 시뮬레이션",
+    상태:"🔴 출시 예정",
+    설명:"광물을 채굴하고 자동 공장을 만들어 도로늄을 생산하는 게임입니다.",
+    이미지:"https://via.placeholder.com/300x300",
+    링크:"#"
 },
 {
-    이름: "돌이 RPG",
-    설명: "돌이와 모험을 떠나는 게임입니다.",
-    이미지: "이미지주소",
-    링크: "https://..."
+    이름:"돌이 RPG",
+    장르:"RPG",
+    상태:"🔴 출시 예정",
+    설명:"돌이와 함께 여러 지역을 탐험하는 RPG 게임입니다.",
+    이미지:"https://via.placeholder.com/300x300",
+    링크:"#"
 }
 ];
 
@@ -77,29 +176,48 @@ const 게임 = 게임목록[현재게임];
 
 const 이미지 = document.getElementById("게임사진");
 
-이미지.style.opacity = 0;
+이미지.style.opacity=0;
 
 setTimeout(()=>{
 
-이미지.src = 게임.이미지;
+이미지.src=게임.이미지;
 
-document.getElementById("게임이름").textContent = 게임.이름;
+document.getElementById("게임이름").textContent=게임.이름;
 
-document.getElementById("게임설명").textContent = 게임.설명;
+document.getElementById("장르").textContent=
+"🎮 "+게임.장르;
 
-이미지.style.opacity = 1;
+document.getElementById("상태").textContent=
+게임.상태;
+
+document.getElementById("게임설명").textContent=
+게임.설명;
+
+document.getElementById("번호").textContent=
+`${현재게임+1} / ${게임목록.length}`;
+
+let dots="";
+
+for(let i=0;i<게임목록.length;i++){
+
+dots+=
+i===현재게임?"⚫":"⚪";
+
+}
+
+document.getElementById("점").textContent=dots;
+
+이미지.style.opacity=1;
 
 },200);
 
-document.getElementById("왼쪽").disabled =
+document.getElementById("왼쪽").disabled=
 현재게임===0;
 
-document.getElementById("오른쪽").disabled =
+document.getElementById("오른쪽").disabled=
 현재게임===게임목록.length-1;
 
 }
-  
-const 돌이게임 = document.getElementById("돌이게임사진");
 
 document.getElementById("시작").onclick=()=>{
 
@@ -107,6 +225,39 @@ location.href =
 게임목록[현재게임].링크;
 
 };
+
+document.getElementById("왼쪽").onclick=()=>{
+
+if(현재게임>0){
+
+현재게임--;
+
+화면갱신();
+
+}
+
+};
+
+document.getElementById("오른쪽").onclick=()=>{
+
+if(현재게임<게임목록.length-1){
+
+현재게임++;
+
+화면갱신();
+
+}
+
+};
+
+document.getElementById("시작").onclick=()=>{
+
+location.href=
+게임목록[현재게임].링크;
+
+};
+
+화면갱신();
       돌이게임.onclick = () => {
     location.href = "https://rockey-jason.github.io/doldol-chess/";
   };
@@ -114,7 +265,7 @@ location.href =
 
 </script>
 
-<img id="돌이게임사진"
+<img id="돌이게임"
 src="https://i.postimg.cc/FsHqfPpX/rockeychess.png"
 style="
 position:fixed;
@@ -122,6 +273,26 @@ top:300px;
 left:400px;
 width:200px;
 ">
+
+<p id="번호"></p>
+
+<div id="점"></div>
+
+<h1 id="게임이름"></h1>
+
+<p id="장르"></p>
+
+<p id="상태"></p>
+
+<p id="게임설명"></p>
+
+<button id="시작">
+게임 시작
+</button>
+
+<button id="왼쪽">◀</button>
+
+<button id="오른쪽">▶</button>
   
 </body>
 </html>
