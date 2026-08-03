@@ -129,10 +129,17 @@ cursor:pointer;
     position:absolute;
 
     width:240px;
+    height:240px;
+
+    object-fit:cover;
 
     border-radius:20px;
 
-    transition:.45s;
+    transition:
+        left .45s ease,
+        top .45s ease,
+        transform .45s ease,
+        opacity .45s ease;
 
     user-select:none;
 
@@ -271,7 +278,28 @@ const 다음번호 =
             게임.설명;
 }
 
+function 위치설정(){
 
+    const 왼쪽=document.getElementById("왼쪽사진");
+    const 가운데=document.getElementById("가운데사진");
+    const 오른쪽=document.getElementById("오른쪽사진");
+
+    왼쪽.style.left="70px";
+    왼쪽.style.top="40px";
+    왼쪽.style.transform="scale(.8)";
+    왼쪽.style.opacity=".45";
+
+    가운데.style.left="330px";
+    가운데.style.top="0";
+    가운데.style.transform="scale(1)";
+    가운데.style.opacity="1";
+
+    오른쪽.style.left="590px";
+    오른쪽.style.top="40px";
+    오른쪽.style.transform="scale(.8)";
+    오른쪽.style.opacity=".45";
+
+}
 
 function 슬라이드(방향){
 
@@ -283,31 +311,31 @@ function 슬라이드(방향){
     const 가운데 = document.getElementById("가운데사진");
     const 오른쪽 = document.getElementById("오른쪽사진");
 
-    if(방향===1){
+if(방향===1){
 
-        // 오른쪽으로 넘기기
-        왼쪽.style.transform="translateX(-260px) scale(.6)";
-        왼쪽.style.opacity="0";
+    왼쪽.style.left="-220px";
 
-        가운데.style.transform="translateX(-260px) scale(.8)";
-        가운데.style.opacity=".45";
+    가운데.style.left="70px";
+    가운데.style.top="40px";
+    가운데.style.transform="scale(.8)";
 
-        오른쪽.style.transform="translateX(-260px) scale(1)";
-        오른쪽.style.opacity="1";
+    오른쪽.style.left="330px";
+    오른쪽.style.top="0";
+    오른쪽.style.transform="scale(1)";
 
-    }else{
+}else{
 
-        // 왼쪽으로 넘기기
-        오른쪽.style.transform="translateX(260px) scale(.6)";
-        오른쪽.style.opacity="0";
+    오른쪽.style.left="900px";
 
-        가운데.style.transform="translateX(260px) scale(.8)";
-        가운데.style.opacity=".45";
+    가운데.style.left="590px";
+    가운데.style.top="40px";
+    가운데.style.transform="scale(.8)";
 
-        왼쪽.style.transform="translateX(260px) scale(1)";
-        왼쪽.style.opacity="1";
+    왼쪽.style.left="330px";
+    왼쪽.style.top="0";
+    왼쪽.style.transform="scale(1)";
 
-    }
+}
 
     setTimeout(()=>{
 
@@ -367,6 +395,8 @@ location.href=
 };
 
 화면갱신();
+
+위치설정();
 
 
 
