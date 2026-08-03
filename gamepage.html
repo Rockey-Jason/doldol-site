@@ -276,6 +276,14 @@ const 다음번호 =
 
         document.getElementById("게임설명").textContent =
             게임.설명;
+  document.getElementById("장르").textContent =
+게임.장르;
+
+document.getElementById("상태").textContent =
+게임.상태;
+
+document.getElementById("번호").textContent =
+`${현재게임+1} / ${게임목록.length}`;
 }
 
 function 위치설정(){
@@ -298,6 +306,12 @@ function 위치설정(){
     오른쪽.style.top="40px";
     오른쪽.style.transform="scale(.8)";
     오른쪽.style.opacity=".45";
+
+  document.getElementById("왼쪽").disabled =
+현재게임==0;
+
+document.getElementById("오른쪽").disabled =
+현재게임==게임목록.length-1;
 
 }
 
@@ -337,19 +351,22 @@ if(방향===1){
 
 }
 
-    setTimeout(()=>{
+setTimeout(()=>{
 
-        현재게임 += 방향;
+    현재게임 += 방향;
 
-        화면갱신();
+    if(현재게임<0) 현재게임=0;
 
-        document.getElementById("왼쪽사진").style.transform="";
-        document.getElementById("가운데사진").style.transform="";
-        document.getElementById("오른쪽사진").style.transform="";
+    if(현재게임>=게임목록.length)
+        현재게임=게임목록.length-1;
 
-        애니메이션중=false;
+    위치설정();
 
-    },450);
+    화면갱신();
+
+    애니메이션중=false;
+
+},450);
 
 }
 
