@@ -101,21 +101,6 @@ transform:scale(1.08);
 
 }
 
-#왼쪽,
-#오른쪽{
-
-font-size:40px;
-
-width:70px;
-
-height:70px;
-
-border-radius:50%;
-
-cursor:pointer;
-
-}
-
 #캐러셀{
 
     position:relative;
@@ -355,57 +340,27 @@ function 위치설정(){
 
 }
 
-const 캐러셀 = document.getElementById("캐러셀");
-
 function 슬라이드(방향){
 
     if(애니메이션중) return;
 
     애니메이션중 = true;
 
-if(방향===1){
+    현재게임 += 방향;
 
-    왼쪽.style.left="-220px";
+    if(현재게임<0)
+        현재게임 = 게임목록.length-1;
 
-    가운데.style.left="70px";
-    가운데.style.top="40px";
-    가운데.style.transform="scale(.8)";
-
-    오른쪽.style.left="330px";
-    오른쪽.style.top="0";
-    오른쪽.style.transform="scale(1)";
-
-}else{
-
-    오른쪽.style.left="900px";
-
-    가운데.style.left="590px";
-    가운데.style.top="40px";
-    가운데.style.transform="scale(.8)";
-
-    왼쪽.style.left="330px";
-    왼쪽.style.top="0";
-    왼쪽.style.transform="scale(1)";
-
-}
-
-setTimeout(()=>{
-
-현재게임 += 방향;
-
-if(현재게임<0)
-현재게임=게임목록.length-1;
-
-if(현재게임>=게임목록.length)
-현재게임=0;
-
-    위치설정();
+    if(현재게임>=게임목록.length)
+        현재게임 = 0;
 
     화면갱신();
 
-    애니메이션중=false;
+    setTimeout(()=>{
 
-},450);
+        애니메이션중=false;
+
+    },450);
 
 }
 
@@ -478,10 +433,6 @@ location.href=
 };
 
 화면갱신();
-
-위치설정();
-
-
 
 </script>
 
