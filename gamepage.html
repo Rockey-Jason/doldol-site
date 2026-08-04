@@ -243,6 +243,22 @@ const 게임목록 = [
 }
 ];
 
+const 캐러셀 = document.getElementById("캐러셀");
+
+게임목록.forEach((게임, i)=>{
+
+    const 카드 = document.createElement("img");
+
+    카드.src = 게임.이미지;
+
+    카드.className = "캐러셀사진";
+
+    카드.dataset.index = i;
+
+    캐러셀.appendChild(카드);
+
+});
+
 let 현재게임 = 0;
 
 let 애니메이션중 = false;
@@ -288,30 +304,61 @@ document.getElementById("번호").textContent =
 
 function 위치설정(){
 
-    const 왼쪽=document.getElementById("왼쪽사진");
-    const 가운데=document.getElementById("가운데사진");
-    const 오른쪽=document.getElementById("오른쪽사진");
+    const 카드들 =
+    document.querySelectorAll(".캐러셀사진");
 
-    왼쪽.style.left="70px";
-    왼쪽.style.top="40px";
-    왼쪽.style.transform="scale(.8)";
-    왼쪽.style.opacity=".45";
+    카드들.forEach((카드,i)=>{
 
-    가운데.style.left="330px";
-    가운데.style.top="0";
-    가운데.style.transform="scale(1)";
-    가운데.style.opacity="1";
+        let 차이 =
+        i-현재게임;
 
-    오른쪽.style.left="590px";
-    오른쪽.style.top="40px";
-    오른쪽.style.transform="scale(.8)";
-    오른쪽.style.opacity=".45";
+        if(차이<-1)
+            차이+=게임목록.length;
 
-  document.getElementById("왼쪽").disabled =
-현재게임==0;
+        if(차이>1)
+            차이-=게임목록.length;
 
-document.getElementById("오른쪽").disabled =
-현재게임==게임목록.length-1;
+        if(차이==-1){
+
+            카드.style.left="70px";
+            카드.style.top="40px";
+            카드.style.transform="scale(.8)";
+            카드.style.opacity=".45";
+            카드.style.zIndex="1";
+
+        }
+
+        else if(차이==0){
+
+            카드.style.left="330px";
+            카드.style.top="0";
+            카드.style.transform="scale(1)";
+            카드.style.opacity="1";
+            카드.style.zIndex="2";
+
+        }
+
+        else if(차이==1){
+
+            카드.style.left="590px";
+            카드.style.top="40px";
+            카드.style.transform="scale(.8)";
+            카드.style.opacity=".45";
+            카드.style.zIndex="1";
+
+        }
+
+        else{
+
+            카드.style.left="330px";
+            카드.style.top="0";
+            카드.style.opacity="0";
+            카드.style.transform="scale(.6)";
+            카드.style.zIndex="0";
+
+        }
+
+    });
 
 }
 
@@ -320,10 +367,6 @@ function 슬라이드(방향){
     if(애니메이션중) return;
 
     애니메이션중 = true;
-
-    const 왼쪽 = document.getElementById("왼쪽사진");
-    const 가운데 = document.getElementById("가운데사진");
-    const 오른쪽 = document.getElementById("오른쪽사진");
 
 if(방향===1){
 
@@ -406,13 +449,7 @@ location.href=
 
 </script>
 
-<div id="캐러셀">
-
-    <img id="왼쪽사진" class="캐러셀사진">
-    <img id="가운데사진" class="캐러셀사진">
-    <img id="오른쪽사진" class="캐러셀사진">
-
-</div>
+<div id="캐러셀"></div>
 
 <p id="번호"></p>
 
