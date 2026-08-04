@@ -255,12 +255,12 @@ const 가운데 = document.getElementById("가운데사진");
 const 오른쪽 = document.getElementById("오른쪽사진");
 
 const 이전번호 =
-현재게임 > 0 ? 현재게임 - 1 : 0;
+(현재게임-1+게임목록.length)
+%게임목록.length;
 
 const 다음번호 =
-현재게임 < 게임목록.length - 1
-? 현재게임 + 1
-: 게임목록.length - 1;
+(현재게임+1)
+%게임목록.length;
 
 왼쪽.src =
 게임목록[이전번호].이미지;
@@ -353,12 +353,13 @@ if(방향===1){
 
 setTimeout(()=>{
 
-    현재게임 += 방향;
+현재게임 += 방향;
 
-    if(현재게임<0) 현재게임=0;
+if(현재게임<0)
+현재게임=게임목록.length-1;
 
-    if(현재게임>=게임목록.length)
-        현재게임=게임목록.length-1;
+if(현재게임>=게임목록.length)
+현재게임=0;
 
     위치설정();
 
@@ -370,12 +371,6 @@ setTimeout(()=>{
 
 }
 
-    document.getElementById("왼쪽").disabled =
-        현재게임===0;
-
-    document.getElementById("오른쪽").disabled =
-        현재게임===게임목록.length-1;
-
 
 document.getElementById("시작").onclick=()=>{
 
@@ -386,21 +381,13 @@ location.href =
 
 document.getElementById("왼쪽").onclick=()=>{
 
-    if(현재게임>0){
-
-        슬라이드(-1);
-
-    }
+    슬라이드(-1);
 
 };
 
 document.getElementById("오른쪽").onclick=()=>{
 
-    if(현재게임<게임목록.length-1){
-
-        슬라이드(1);
-
-    }
+    슬라이드(1);
 
 };
 
