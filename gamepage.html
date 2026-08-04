@@ -59,6 +59,12 @@ text-align:center;
 
 }
 
+#캐러셀{
+
+    cursor:grab;
+
+}
+
 #번호{
 
 font-family:jua;
@@ -216,6 +222,9 @@ margin-left:20px;
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
 
 <script type=module>
+  let 시작X = 0;
+let 드래그중 = false;
+  
 const 게임목록 = [
 {
     이름:"돌이체스",
@@ -346,6 +355,8 @@ function 위치설정(){
 
 }
 
+const 캐러셀 = document.getElementById("캐러셀");
+
 function 슬라이드(방향){
 
     if(애니메이션중) return;
@@ -417,6 +428,47 @@ document.getElementById("오른쪽").onclick=()=>{
     슬라이드(1);
 
 };
+
+캐러셀.addEventListener("mousedown",(e)=>{
+
+    드래그중 = true;
+    시작X = e.clientX;
+
+});
+
+document.addEventListener("mouseup",(e)=>{
+
+    if(!드래그중) return;
+
+    드래그중 = false;
+
+    const 이동거리 = e.clientX - 시작X;
+
+    if(이동거리 > 80){
+
+        슬라이드(-1);
+
+    }
+
+    else if(이동거리 < -80){
+
+        슬라이드(1);
+
+    }
+
+});
+
+캐러셀.addEventListener("mousedown",()=>{
+
+    캐러셀.style.cursor="grabbing";
+
+});
+
+document.addEventListener("mouseup",()=>{
+
+    캐러셀.style.cursor="grab";
+
+});
 
 document.getElementById("시작").onclick=()=>{
 
