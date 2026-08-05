@@ -13,6 +13,24 @@ const supabase = createClient(
 
 window.addEventListener("DOMContentLoaded", async () => {
 
+  const 업적 = {
+
+    첫로그인: "첫 로그인",
+    첫체스: "체스 첫 승리",
+    체스10승: "체스 10승",
+    신문읽기: "신문 읽기",
+    퀴즈정답: "돌이 신문 퀴즈 정답",
+    활석: "체스에서 활석 돌이 이기기"
+    잠: "체스에서 자고 있는 돌이 이기기"
+    털: "체스에서 돌이털 이기기"
+    돌이: "체스에서 돌이 이기기"
+    군대: "체스에서 돌이 군대 이기기"
+    도로늄봇: "체스에서 도로늄 이기기"
+    훌륭한: "체스에서 훌륭한 돌이 이기기"
+    
+
+};
+
   const 레벨이름 = {
     1: "일반",
     2: "프리미엄",
@@ -42,6 +60,66 @@ window.addEventListener("DOMContentLoaded", async () => {
   const 설정 = document.getElementById("설정");
 
   let 상세설명 = false;
+
+
+  //업적 달성
+  async function 업적획득(업적이름){
+
+    const {
+        data:{user}
+    } = await supabase.auth.getUser();
+
+    if(!user) return;
+
+    const {data} =
+    await supabase
+    .from("users")
+    .select("user_achievement")
+    .eq("id",user.id)
+    .single();
+
+    let achievements =
+    data.user_achievement || {};
+
+    // 이미 얻었으면 종료
+    if(achievements[업적이름]) return;
+
+    achievements[업적이름]={
+
+        time:new Date().toISOString()
+
+    };
+
+    await supabase
+    .from("users")
+    .update({
+
+        user_achievement:achievements
+
+    })
+    .eq("id",user.id);
+
+    업적알림(업적이름);
+
+}
+
+function 업적알림(업적이름){
+
+    const popup =
+    document.getElementById("achievementPopup");
+
+    popup.innerHTML =
+    `🏆 업적 달성!<br>${업적이름}`;
+
+    popup.style.top="30px";
+
+    setTimeout(()=>{
+
+        popup.style.top="-120px";
+
+    },3000);
+
+}
 
   //사진 onclick
     돌신확인.onclick = () => {
@@ -161,6 +239,37 @@ window.addEventListener("DOMContentLoaded", async () => {
 });
 </script>
 <style>
+
+#achievementPopup{
+
+position:fixed;
+
+top:-120px;
+
+left:50%;
+
+transform:translateX(-50%);
+
+padding:20px 35px;
+
+background:#202020;
+
+color:white;
+
+font-size:26px;
+
+border-radius:15px;
+
+transition:.5s;
+
+font-family:Jua;
+
+z-index:99999;
+
+box-shadow:0 0 20px black;
+
+}
+  
 body {
   background: linear-gradient(to right, #000033, #000010);
   margin: 0;
@@ -315,6 +424,8 @@ z-index:2;
 ">
 설정
 </button>
+
+<div id="achievementPopup"></div>
 
 
 <button id="로그아웃"
