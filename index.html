@@ -71,12 +71,16 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     if(!user) return;
 
-    const {data} =
-    await supabase
-    .from("users")
-    .select("user_achievement")
-    .eq("id",user.id)
-    .single();
+const { data, error } = await supabase
+  .from("users")
+  .select("user_achievement")
+  .eq("user_id", user.id)
+  .single();
+
+if (error) {
+    console.error(error);
+    return;
+}
 
     let achievements =
     data.user_achievement || {};
@@ -90,14 +94,12 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     };
 
-    await supabase
-    .from("users")
-    .update({
-
-        user_achievement:achievements
-
-    })
-    .eq("id",user.id);
+await supabase
+  .from("users")
+  .update({
+      user_achievement: achievements
+  })
+  .eq("user_id", user.id);
 
     업적알림(업적이름);
 
