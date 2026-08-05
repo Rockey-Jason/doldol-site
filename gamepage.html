@@ -61,6 +61,8 @@ text-align:center;
 
 #캐러셀{
 
+  touch-action:pan-y;
+
     cursor:grab;
 
 }
@@ -98,6 +100,13 @@ transition:.2s;
 #시작:hover{
 
 transform:scale(1.08);
+
+}
+
+.캐러셀사진{
+
+    -webkit-user-drag:none;
+    user-select:none;
 
 }
 
@@ -209,6 +218,7 @@ margin-left:20px;
 <script type=module>
   let 시작X = 0;
 let 드래그중 = false;
+  let 터치시작X = 0;
   
 const 게임목록 = [
 {
@@ -384,6 +394,22 @@ document.getElementById("오른쪽").onclick=()=>{
 
 };
 
+document.addEventListener("keydown",(e)=>{
+
+    if(e.key==="ArrowLeft"){
+
+        슬라이드(-1);
+
+    }
+
+    if(e.key==="ArrowRight"){
+
+        슬라이드(1);
+
+    }
+
+});
+
 캐러셀.addEventListener("mousedown",(e)=>{
 
     드래그중 = true;
@@ -422,6 +448,32 @@ document.addEventListener("mouseup",(e)=>{
 document.addEventListener("mouseup",()=>{
 
     캐러셀.style.cursor="grab";
+
+});
+
+캐러셀.addEventListener("touchstart",(e)=>{
+
+    터치시작X = e.touches[0].clientX;
+
+});
+
+캐러셀.addEventListener("touchend",(e)=>{
+
+    const 끝X = e.changedTouches[0].clientX;
+
+    const 이동거리 = 끝X - 터치시작X;
+
+    if(이동거리 > 80){
+
+        슬라이드(-1);
+
+    }
+
+    else if(이동거리 < -80){
+
+        슬라이드(1);
+
+    }
 
 });
 
