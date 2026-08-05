@@ -288,6 +288,54 @@ function 화면갱신(){
     document.getElementById("번호").textContent =
         `${현재게임+1} / ${게임목록.length}`;
 
+  점업데이트();
+
+}
+
+function 점업데이트(){
+
+    const 점 = document.getElementById("점");
+
+    점.innerHTML = "";
+
+    게임목록.forEach((게임,i)=>{
+
+        const 동그라미 =
+        document.createElement("span");
+
+        동그라미.textContent = "●";
+
+        동그라미.style.fontSize = "22px";
+        동그라미.style.margin = "0 6px";
+        동그라미.style.cursor = "pointer";
+
+        if(i==현재게임){
+
+            동그라미.style.color = "#00bfff";
+
+        }
+
+        else{
+
+            동그라미.style.color = "#777";
+
+        }
+
+        동그라미.onclick=()=>{
+
+            if(i==현재게임) return;
+
+            if(i>현재게임)
+                슬라이드(1);
+            else
+                슬라이드(-1);
+
+        };
+
+        점.appendChild(동그라미);
+
+    });
+
 }
 
 function 위치설정(){
@@ -345,7 +393,29 @@ function 위치설정(){
             카드.style.zIndex="0";
 
         }
+카드.onclick = ()=>{
 
+    let 차이 = i - 현재게임;
+
+    if(차이 < -1)
+        차이 += 게임목록.length;
+
+    if(차이 > 1)
+        차이 -= 게임목록.length;
+
+    if(차이 == -1){
+
+        슬라이드(-1);
+
+    }
+
+    else if(차이 == 1){
+
+        슬라이드(1);
+
+    }
+
+};
     });
 
 }
