@@ -78,9 +78,35 @@ text-align:center;
 
 #점{
 
-font-size:30px;
-color:white;
-text-align:center;
+    display:flex;
+    justify-content:center;
+    gap:14px;
+    margin-top:20px;
+
+}
+
+.dot{
+
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    background:#666;
+
+    cursor:pointer;
+
+    transition:
+        all .35s ease;
+
+}
+
+.dot.active{
+
+    width:22px;
+    background:white;
+
+    transform:scale(1.2);
+
+    box-shadow:0 0 12px white;
 
 }
 
@@ -289,6 +315,48 @@ function 화면갱신(){
         `${현재게임+1} / ${게임목록.length}`;
 
   점업데이트();
+
+  점갱신();
+
+}
+
+function 점갱신(){
+
+    const 점 = document.getElementById("점");
+
+    점.innerHTML = "";
+
+    게임목록.forEach((게임,index)=>{
+
+        const d = document.createElement("div");
+
+        d.className="dot";
+
+        if(index===현재게임){
+
+            d.classList.add("active");
+
+        }
+
+        d.onclick=()=>{
+
+            if(index===현재게임) return;
+
+            if(index>현재게임){
+
+                슬라이드(1);
+
+            }else{
+
+                슬라이드(-1);
+
+            }
+
+        };
+
+        점.appendChild(d);
+
+    });
 
 }
 
