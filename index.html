@@ -258,29 +258,17 @@ async function 업적획득(업적정보){
 
 function 업적알림(업적){
 
-    const popup =
-    document.getElementById("achievementPopup");
+    const popup = document.getElementById("achievementPopup");
 
-popup.innerHTML = `
-🏆 업적 달성!<br><br>
+    popup.innerHTML = `
+        🏆 <b>업적 달성!</b><br><br>
 
-<b style="font-size:26px">
-${업적.이름}
-</b><br>
+        <b>${업적.이름}</b><br>
+        ${업적.설명}<br><br>
 
-${업적.설명}<br><br>
-
-<span style="
-color:${rarityColor[업적.희귀도]};
-font-weight:bold;
-">
-${업적.희귀도}
-</span>
-
-<br>
-
-💰 +${업적.보상.돌돌코인}
-`;
+        ⭐ ${업적.희귀도}<br>
+        💰 +${업적.보상.돌돌코인} 돌돌코인
+    `;
 
     popup.classList.add("show");
 
@@ -410,31 +398,27 @@ ${업적.희귀도}
 <style>
 
 #achievementPopup{
+    position:fixed;
 
-animation:achievementShow .7s ease;
+    left:50%;
+    top:20px;
 
-}
+    transform:translate(-50%,-180%);
+    transition:transform .45s ease;
 
-@keyframes achievementShow{
+    z-index:99999;
 
-0%{
-transform:translate(-50%,-180%);
-}
+    background:#222;
+    color:white;
 
-70%{
-transform:translate(-50%,15px);
-}
+    padding:18px 28px;
+    border-radius:15px;
 
-100%{
-transform:translate(-50%,0);
-}
-
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
 }
 
 #achievementPopup.show{
-
     transform:translate(-50%,0);
-
 }
   
 body {
