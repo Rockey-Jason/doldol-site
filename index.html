@@ -13,21 +13,150 @@ const supabase = createClient(
 
 window.addEventListener("DOMContentLoaded", async () => {
 
-  const 업적 = {
+const 업적 = {
 
-    첫로그인: "첫 로그인",
-    첫체스: "체스 첫 승리",
-    체스10승: "체스 10승",
-    신문읽기: "신문 읽기",
-    퀴즈정답: "돌이 신문 퀴즈 정답",
-    활석: "체스에서 활석 돌이 이기기",
-    잠: "체스에서 자고 있는 돌이 이기기",
-    털: "체스에서 돌이털 이기기",
-    돌이: "체스에서 돌이 이기기",
-    군대: "체스에서 돌이 군대 이기기",
-    도로늄봇: "체스에서 도로늄 이기기",
-    훌륭한: "체스에서 훌륭한 돌이 이기기"
-    
+첫로그인:{
+    id:"first_login",
+    이름:"첫 로그인",
+    설명:"돌이사이트에 처음 로그인했다.",
+    희귀도:"Common",
+    보상:{
+        돌돌코인:100000,
+        경험치:50
+    }
+},
+
+첫체스:{
+    id:"first_chess_win",
+    이름:"체스 첫 승리",
+    설명:"체스를 처음 승리했다.",
+    희귀도:"Common",
+    보상:{
+        돌돌코인:10000,
+        경험치:100
+    }
+},
+
+체스10승:{
+    id:"chess10",
+    이름:"체스 10승",
+    설명:"체스를 10번 승리했다.",
+    희귀도:"Rare",
+    보상:{
+        돌돌코인:30000,
+        경험치:300
+    }
+},
+
+체스100승:{
+    id:"chess10",
+    이름:"체스 100승",
+    설명:"체스를 100번 승리했다.",
+    희귀도:"Epic",
+    보상:{
+        돌돌코인:50000,
+        경험치:300
+    }
+},
+
+활석승:{
+    id:"talcwin",
+    이름:"활석 돌이에게 승리",
+    설명:"체스에서 활석 돌이를 이겼다.",
+    희귀도:"Common",
+    보상:{
+        돌돌코인:1000,
+        경험치:300
+    }
+},
+
+자는승:{
+    id:"sleepingwin",
+    이름:"자는 돌이에게 승리",
+    설명:"체스에서 자는 돌이를 이겼다.",
+    희귀도:"Common",
+    보상:{
+        돌돌코인:3000,
+        경험치:300
+    }
+},
+
+털승:{
+    id:"furwin",
+    이름:"돌이 털에게 승리",
+    설명:"체스에서 돌이 털을 이겼다.",
+    희귀도:"Common",
+    보상:{
+        돌돌코인:7000,
+        경험치:300
+    }
+},
+
+돌이승:{
+    id:"rockeywin",
+    이름:"돌이에게 승리",
+    설명:"체스에서 돌이를 이겼다.",
+    희귀도:"Rare",
+    보상:{
+        돌돌코인:9000,
+        경험치:300
+    }
+},
+
+군대승:{
+    id:"armywin",
+    이름:"돌이 군대에게 승리",
+    설명:"체스에서 돌이 군대를 이겼다.",
+    희귀도:"Rare",
+    보상:{
+        돌돌코인:10000,
+        경험치:300
+    }
+},
+
+도로늄승:{
+    id:"doronumwin",
+    이름:"도로늄에게 승리",
+    설명:"체스에서 도로늄를 이겼다.",
+    희귀도:"Epic",
+    보상:{
+        돌돌코인:20000,
+        경험치:300
+    }
+},
+
+훌륭한승:{
+    id:"brilliantwin",
+    이름:"훌륭한 돌이에게 승리",
+    설명:"체스에서 훌륭한 돌이를 이겼다.",
+    희귀도:"Legendary",
+    보상:{
+        돌돌코인:50000,
+        경험치:300
+    }
+},
+
+신문읽기:{
+    id:"news",
+    이름:"신문 읽기",
+    설명:"돌이신문을 처음 읽었다.",
+    희귀도:"Common",
+    보상:{
+        돌돌코인:10000,
+        경험치:20
+    }
+},
+
+퀴즈정답:{
+    id:"quiz",
+    이름:"퀴즈 정답",
+    설명:"신문 퀴즈를 맞췄다.",
+    희귀도:"Rare",
+    보상:{
+        돌돌코인:30000,
+        경험치:80
+    }
+}
 
 };
 
@@ -63,7 +192,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 
 
   //업적 달성
-  async function 업적획득(업적이름){
+async function 업적획득(업적정보){
 
     const {
         data:{user}
@@ -71,47 +200,69 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     if(!user) return;
 
-const { data, error } = await supabase
-  .from("users")
-  .select("user_achievement")
-  .eq("user_id", user.id)
-  .single();
+    const {data,error}=await supabase
+    .from("users")
+    .select("user_achievement,doldolcoin")
+    .eq("user_id",user.id)
+    .single();
 
-if (error) {
-    console.error(error);
-    return;
-}
+    if(error){
+        console.error(error);
+        return;
+    }
 
     let achievements =
     data.user_achievement || {};
 
-    // 이미 얻었으면 종료
-    if(achievements[업적이름]) return;
+    // 이미 얻었는지 확인
+    if(achievements[업적정보.id]) return;
 
-    achievements[업적이름]={
+    achievements[업적정보.id]={
 
-        time:new Date().toISOString()
+        이름:업적정보.이름,
+
+        설명:업적정보.설명,
+
+        희귀도:업적정보.희귀도,
+
+        보상:업적정보.보상,
+
+        획득시간:new Date().toISOString()
 
     };
 
-await supabase
-  .from("users")
-  .update({
-      user_achievement: achievements
-  })
-  .eq("user_id", user.id);
+    await supabase
+    .from("users")
+    .update({
 
-    업적알림(업적이름);
+        user_achievement:achievements,
+
+        doldolcoin:
+        (data.doldolcoin||0)
+        +업적정보.보상.돌돌코인
+
+    })
+    .eq("user_id",user.id);
+
+    업적알림(업적정보);
 
 }
 
-function 업적알림(업적이름){
+function 업적알림(업적){
 
     const popup =
     document.getElementById("achievementPopup");
 
-    popup.innerHTML =
-    `🏆 업적 달성!<br>${업적이름}`;
+    popup.innerHTML=`
+        🏆 ${업적.이름}<br>
+        <span style="font-size:18px">
+        ${업적.설명}
+        </span><br>
+
+        ⭐ ${업적.희귀도}<br>
+
+        💰 +${업적.보상.돌돌코인} 돌돌코인
+    `;
 
     popup.style.top="30px";
 
