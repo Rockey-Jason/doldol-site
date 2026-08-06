@@ -57,7 +57,7 @@ const 업적 = {
 },
 
 체스100승:{
-    id:"chess10",
+    id:"chess100",
     이름:"체스 100승",
     설명:"체스를 100번 승리했다.",
     희귀도:"Epic",
@@ -399,15 +399,29 @@ function 업적알림(업적){
 
 #achievementPopup{
     position:fixed;
-    left:50%;
-    top:20px;
 
-    transform:translate(-50%,-400px);
-    transition:transform .45s ease;
+    left:50%;
+    top:-220px;
+
+    transform:translateX(-50%);
+    transition:top .45s cubic-bezier(.22,1,.36,1);
+
+    background:#222;
+    color:white;
+
+    padding:18px 28px;
+    border-radius:15px;
+
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+
+    z-index:999999;
+
+    min-width:330px;
+    text-align:center;
 }
 
 #achievementPopup.show{
-    transform:translate(-50%,0);
+    top:20px;
 }
   
 body {
