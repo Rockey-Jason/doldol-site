@@ -13,6 +13,14 @@ const supabase = createClient(
 
 window.addEventListener("DOMContentLoaded", async () => {
 
+const rarityColor = {
+    Common:"#bfbfbf",
+    Rare:"#4aa8ff",
+    Epic:"#b94cff",
+    Legendary:"#ffb300",
+    Doronum:"#ff3b3b"
+};
+  
 const 업적 = {
 
 첫로그인:{
@@ -253,14 +261,26 @@ function 업적알림(업적){
     const popup =
     document.getElementById("achievementPopup");
 
-    popup.innerHTML = `
-        🏆 <b>${업적.이름}</b><br>
-        <span style="font-size:18px">
-        ${업적.설명}
-        </span><br>
-        ⭐ ${업적.희귀도}<br>
-        💰 +${업적.보상.돌돌코인.toLocaleString()} 돌돌코인
-    `;
+popup.innerHTML = `
+🏆 업적 달성!<br><br>
+
+<b style="font-size:26px">
+${업적.이름}
+</b><br>
+
+${업적.설명}<br><br>
+
+<span style="
+color:${rarityColor[업적.희귀도]};
+font-weight:bold;
+">
+${업적.희귀도}
+</span>
+
+<br>
+
+💰 +${업적.보상.돌돌코인}
+`;
 
     popup.classList.add("show");
 
@@ -391,23 +411,24 @@ function 업적알림(업적){
 
 #achievementPopup{
 
-    position:fixed;
+animation:achievementShow .7s ease;
 
-    left:50%;
-    top:20px;
+}
 
-    transform:translate(-50%,-180%);
-    transition:transform .45s ease;
+@keyframes achievementShow{
 
-    background:#222;
-    color:white;
+0%{
+transform:translate(-50%,-180%);
+}
 
-    padding:18px 28px;
-    border-radius:15px;
+70%{
+transform:translate(-50%,15px);
+}
 
-    box-shadow:0 10px 30px rgba(0,0,0,.4);
+100%{
+transform:translate(-50%,0);
+}
 
-    z-index:99999;
 }
 
 #achievementPopup.show{
@@ -419,6 +440,18 @@ function 업적알림(업적){
 body {
   background: linear-gradient(to right, #000033, #000010);
   margin: 0;
+}
+
+img{
+
+transition:.25s;
+
+}
+
+img:hover{
+
+transform:scale(1.08);
+
 }
 </style>
 </head>
