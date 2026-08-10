@@ -190,7 +190,9 @@ const {
 
   // 내용
   const 내용 = document.getElementById("내용");
-  내용.innerHTML = news.rockey_news.replace(/\n/g, "<br>");
+  내용.innerHTML = news.rockey_news
+  .replace(/\\n/g, "<br>")
+  .replace(/\/n/g, "");
 
   const {
 data:저장답
