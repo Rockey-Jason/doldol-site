@@ -78,17 +78,19 @@ window.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  const { data: 유저정보, error } = await supabase
-    .from("users")
-    .select(`
-      user_number,
-      user_level,
-      doldolcoin,
-      profile_image,
-      name
-    `)
-    .eq("user_id", user.id)
-    .single();
+const { data: 유저정보, error } = await supabase
+  .from("users")
+  .select(`
+    user_number,
+    user_id,
+    login_id,
+    user_level,
+    doldolcoin,
+    profile_image,
+    name
+  `)
+  .eq("user_id", user.id)
+  .single();
 
   if (error) {
     console.error(error);
@@ -109,8 +111,8 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("이름").textContent =
     (유저정보.name ?? "이름 없음") +
     "님 환영합니다";
-  document.getElementById("현재아이디").textContent =
-  "현재 아이디 : " + user.email;
+document.getElementById("현재아이디").textContent =
+  "현재 아이디 : " + (유저정보.login_id ?? "없음");
 
   // -------------------------
   // 레벨
@@ -212,7 +214,11 @@ window.개인정보수정 = async function () {
   const 새비밀번호 =
     document.getElementById("새비밀번호").value;
 
-  // 현재 로그인 유저 확인
+
+  // =========================
+  // 현재 로그인 사용자 확인
+  // =========================
+
   const {
     data: { user },
     error: userError
@@ -230,19 +236,48 @@ window.개인정보수정 = async function () {
 
   if (새이름 !== "") {
 
-    const { error } = await supabase
-      .from("users")
-      .update({
-        name: 새이름
-      })
-      .eq("user_id", user.id);
+    // 1. users.name 변경
+    const { error: nameError } =
+      await supabase
+        .from("users")
+        .update({
+          name: 새이름
+        })
+        .eq("user_id", user.id);
 
-    if (error) {
-      console.error(error);
-      alert("이름 변경 실패:\n" + error.message);
+    if (nameError) {
+      console.error(nameError);
+
+      alert(
+        "users의 이름 변경 실패:\n" +
+        nameError.message
+      );
+
       return;
     }
 
+
+    // 2. Supabase Auth Display Name 변경
+    const { error: authNameError } =
+      await supabase.auth.updateUser({
+        data: {
+          display_name: 새이름
+        }
+      });
+
+    if (authNameError) {
+      console.error(authNameError);
+
+      alert(
+        "Auth의 Display Name 변경 실패:\n" +
+        authNameError.message
+      );
+
+      return;
+    }
+
+
+    // 화면 변경
     document.getElementById("이름").textContent =
       새이름 + "님 환영합니다";
   }
@@ -252,28 +287,32 @@ window.개인정보수정 = async function () {
   // 아이디 변경
   // =========================
 
-  if (새아이디 !== "" && 새아이디 !== user.email) {
+  if (새아이디 !== "") {
 
-    const { error } =
-      await supabase.auth.updateUser({
-        email: 새아이디
-      });
+    // users.login_id 변경
+    const { error: loginIdError } =
+      await supabase
+        .from("users")
+        .update({
+          login_id: 새아이디
+        })
+        .eq("user_id", user.id);
 
-    if (error) {
-
-      console.error(error);
+    if (loginIdError) {
+      console.error(loginIdError);
 
       alert(
         "아이디 변경 실패:\n" +
-        error.message
+        loginIdError.message
       );
 
       return;
     }
 
+
     alert(
-      "아이디 변경 요청이 완료되었습니다.\n\n" +
-      "새 이메일 주소로 확인 메일이 전송될 수 있습니다."
+      "아이디가 변경되었습니다.\n\n" +
+      "새 아이디: " + 새아이디
     );
   }
 
@@ -293,28 +332,32 @@ window.개인정보수정 = async function () {
       return;
     }
 
-    const { error } =
+
+    const { error: passwordError } =
       await supabase.auth.updateUser({
         password: 새비밀번호
       });
 
-    if (error) {
 
-      console.error(error);
+    if (passwordError) {
+      console.error(passwordError);
 
       alert(
         "비밀번호 변경 실패:\n" +
-        error.message
+        passwordError.message
       );
 
       return;
     }
 
+
     alert("비밀번호가 변경되었습니다.");
   }
 
 
+  // =========================
   // 입력칸 초기화
+  // =========================
 
   document.getElementById("새이름").value = "";
   document.getElementById("새아이디").value = "";
