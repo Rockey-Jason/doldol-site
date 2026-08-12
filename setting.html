@@ -10,9 +10,10 @@ body {
 }
 </style>
 </head>
-  
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
 <a href="https://rockey-jason.github.io/doldol-site/" style="text-decoration:none;">
 <button style="
 position:absolute;
@@ -35,6 +36,388 @@ color:#f5f5f5;
 font-family:jua;
 margin-top:120px;
 margin-left:20px;
+">
+설정-자신의 정보를 수정해보세요!
+</p>
+
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
+
+
+<script type="module">
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const supabase = createClient(
+  "https://scttowfhygcpdirrekqm.supabase.co",
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+);
+
+
+// =============================
+// 페이지 로드
+// =============================
+window.addEventListener("DOMContentLoaded", async () => {
+
+  const 레벨이름 = {
+    1: "일반",
+    2: "프리미엄",
+    3: "돌프리미엄",
+    4: "돌돌프리미엄",
+    5: "돌돌돌프리미엄",
+    6: "돌돌돌돌프리미엄",
+    7: "돌돌돌돌돌프리미엄",
+    8: "유사돌이",
+    9: "돌이",
+    10: "관리자"
+  };
+
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+
+  if (!user) {
+    alert("로그인이 필요합니다.");
+    location.href = "login.html";
+    return;
+  }
+
+
+  const { data: 유저정보, error } = await supabase
+    .from("users")
+    .select(`
+      user_number,
+      user_id,
+      login_id,
+      user_level,
+      doldolcoin,
+      profile_image,
+      name
+    `)
+    .eq("user_id", user.id)
+    .single();
+
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+
+  // =========================
+  // 프로필 사진
+  // =========================
+  if (유저정보.profile_image) {
+
+    document.getElementById("돌이사진").src =
+      유저정보.profile_image;
+
+  }
+
+
+  // =========================
+  // 이름
+  // =========================
+  document.getElementById("이름").textContent =
+    (유저정보.name ?? "이름 없음") +
+    "님 환영합니다";
+
+
+  // =========================
+  // 현재 아이디
+  // =========================
+  document.getElementById("현재아이디").textContent =
+    "현재 아이디 : " +
+    (유저정보.login_id ?? "없음");
+
+
+  // =========================
+  // 레벨
+  // =========================
+  document.getElementById("레벨").textContent =
+    "현재 레벨 : " +
+    (레벨이름[유저정보.user_level] || "일반");
+
+
+  // =========================
+  // 돌돌코인
+  // =========================
+  document.getElementById("돌돌코인수량").textContent =
+    "현재 돌돌코인 : " +
+    (유저정보.doldolcoin ?? 0);
+
+});
+
+
+// =============================
+// 프로필 사진 변경
+// =============================
+window.프로필업로드 = async function () {
+
+  const file =
+    document.getElementById("profileUpload").files[0];
+
+
+  if (!file) {
+    alert("사진을 선택하세요.");
+    return;
+  }
+
+
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+
+  if (!user) {
+    alert("로그인이 필요합니다.");
+    return;
+  }
+
+
+  const ext =
+    file.name.split(".").pop();
+
+
+  const fileName =
+    `${user.id}.${ext}`;
+
+
+  // =========================
+  // 업로드
+  // =========================
+  const { error: uploadError } =
+    await supabase.storage
+      .from("profile-images")
+      .upload(fileName, file, {
+        upsert: true
+      });
+
+
+  if (uploadError) {
+
+    alert(uploadError.message);
+    console.error(uploadError);
+
+    return;
+  }
+
+
+  // =========================
+  // URL 얻기
+  // =========================
+  const { data } =
+    supabase.storage
+      .from("profile-images")
+      .getPublicUrl(fileName);
+
+
+  const imageUrl =
+    data.publicUrl;
+
+
+  // =========================
+  // users 테이블 업데이트
+  // =========================
+  const { error: updateError } =
+    await supabase
+      .from("users")
+      .update({
+        profile_image: imageUrl
+      })
+      .eq("user_id", user.id);
+
+
+  if (updateError) {
+
+    alert(updateError.message);
+    console.error(updateError);
+
+    return;
+  }
+
+
+  // =========================
+  // 화면 즉시 변경
+  // =========================
+  document.getElementById("돌이사진").src =
+    imageUrl + "?t=" + Date.now();
+
+
+  alert("프로필 사진이 변경되었습니다.");
+
+};
+</script>
+
+
+<!-- =========================
+     프로필 사진 업로드
+========================= -->
+
+<input
+type="file"
+id="profileUpload"
+accept="image/*"
+style="display:none;"
+onchange="프로필업로드()">
+
+
+<button
+onclick="document.getElementById('profileUpload').click()"
+style="
+position:absolute;
+top:410px;
+left:20px;
+width:200px;
+height:40px;
+background:white;
+border:none;
+border-radius:10px;
+font-family:jua;
+font-size:20px;
+cursor:pointer;
+">
+프로필 사진 변경
+</button>
+
+
+<!-- =========================
+     프로필 사진
+========================= -->
+
+<img
+id="돌이사진"
+src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
+style="
+position:absolute;
+top:180px;
+left:20px;
+width:200px;
+height:200px;
+border-radius:50%;
+object-fit:cover;
+object-position:center;
+cursor:pointer;
+z-index:2;
+border:2px solid black;
+">
+
+
+<!-- =========================
+     레벨
+========================= -->
+
+<button
+id="레벨"
+style="
+position:absolute;
+top:280px;
+left:250px;
+font-size:20px;
+font-family:jua;
+background:none;
+border:none;
+color:white;
+cursor:pointer;
+font-weight:150;
+z-index:2;
+white-space:nowrap;
+">
+현재 레벨: 0
+</button>
+
+
+<!-- =========================
+     돌돌코인
+========================= -->
+
+<button
+id="돌돌코인수량"
+style="
+position:absolute;
+top:310px;
+left:250px;
+font-size:20px;
+font-family:jua;
+background:none;
+border:none;
+color:white;
+cursor:pointer;
+font-weight:150;
+z-index:2;
+white-space:nowrap;
+">
+현재 돌돌코인 : 0
+</button>
+
+
+<!-- =========================
+     이름
+========================= -->
+
+<button
+id="이름"
+style="
+position:absolute;
+top:200px;
+left:250px;
+font-size:50px;
+font-family:jua;
+background:none;
+border:none;
+color:white;
+cursor:pointer;
+font-weight:150;
+z-index:2;
+white-space:nowrap;
+">
+이름
+</button>
+
+
+<!-- =========================
+     현재 아이디
+========================= -->
+
+<div
+id="현재아이디"
+style="
+position:absolute;
+top:350px;
+left:250px;
+font-size:20px;
+font-family:jua;
+color:white;
+white-space:nowrap;
+">
+현재 아이디 : -
+</div>
+
+
+<!-- =========================
+     개인정보 수정 버튼
+========================= -->
+
+<button
+onclick="location.href='fixingsettings.html'"
+style="
+position:absolute;
+top:410px;
+left:250px;
+width:300px;
+height:50px;
+font-size:22px;
+font-family:jua;
+border:none;
+border-radius:10px;
+cursor:pointer;
+">
+개인정보 수정
+</button>
+
+
+</body>
+</html>margin-left:20px;
 ">
 설정-자신의 정보를 수정해보세요!
 </p>
