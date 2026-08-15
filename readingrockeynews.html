@@ -386,6 +386,7 @@ document.getElementById("내답").textContent =
 // 객관식 수정 불가
 document.querySelectorAll('input[name="quiz"]').forEach(radio => {
     radio.disabled = true;
+  location.reload();
 });
 };
 
