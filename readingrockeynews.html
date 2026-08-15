@@ -158,6 +158,24 @@ window.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
+// 버튼 위치 업데이트 함수
+function 버튼위치업데이트() {
+
+  const 퀴즈 = document.getElementById("퀴즈");
+
+  let 버튼위치;
+
+  if (퀴즈.style.display === "block") {
+    버튼위치 = 퀴즈.offsetTop + 퀴즈.offsetHeight + 40;
+  }
+  else {
+    버튼위치 = 내용.offsetTop + 내용.offsetHeight + 40;
+  }
+
+  이전버튼.style.top = 버튼위치 + "px";
+  다음버튼.style.top = 버튼위치 + "px";
+}
+  
   // 신문 가져오기
 const {
   data: news,
@@ -386,7 +404,10 @@ document.getElementById("내답").textContent =
 // 객관식 수정 불가
 document.querySelectorAll('input[name="quiz"]').forEach(radio => {
     radio.disabled = true;
-  location.reload();
+});
+// 문제 제출 후 퀴즈 높이가 변경되었으므로 버튼 위치 다시 계산
+requestAnimationFrame(() => {
+    버튼위치업데이트();
 });
 };
 
@@ -405,22 +426,10 @@ document.querySelectorAll('input[name="quiz"]').forEach(radio => {
     다음버튼.style.display = "none";
   }
 
-  // 버튼 위치를 내용 아래로 이동
-  requestAnimationFrame(() => {
-    const 퀴즈 = document.getElementById("퀴즈");
-
-let 버튼위치;
-
-if(퀴즈.style.display === "block"){
-  버튼위치 = 퀴즈.offsetTop + 퀴즈.offsetHeight + 50;
-}
-else{
-  버튼위치 = 내용.offsetTop + 내용.offsetHeight + 50;
-}
-
-    이전버튼.style.top = 버튼위치 + "px";
-    다음버튼.style.top = 버튼위치 + "px";
-  });
+// 처음 페이지를 열었을 때 위치 계산
+requestAnimationFrame(() => {
+  버튼위치업데이트();
+});
 
 });
 
