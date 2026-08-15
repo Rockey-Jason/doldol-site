@@ -8,6 +8,19 @@ body {
   background: linear-gradient(to right, #000033, #000010);
   margin: 0;
 }
+
+* {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
+
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+  
 #버튼목록{
     display:flex;
     flex-direction:column;
