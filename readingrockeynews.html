@@ -96,7 +96,7 @@ window.addEventListener("DOMContentLoaded", async () => {
     return;
   }
 
-  // 로그인 유저 (한 번만 가져옴)
+  // 로그인 유저
   const {
     data: { user }
   } = await supabase.auth.getUser();
@@ -116,13 +116,47 @@ window.addEventListener("DOMContentLoaded", async () => {
     localStorage.setItem("rockeynews", "1");
   }
 
+  // DOM 요소
+  const 내용 = document.getElementById("내용");
+  const 퀴즈 = document.getElementById("퀴즈");
+  const 이전버튼 = document.getElementById("이전");
+  const 다음버튼 = document.getElementById("다음");
+
+  const 제출버튼 = document.getElementById("제출");
+  const 결과 = document.getElementById("결과");
+
+  // 버튼 위치 업데이트
+  function 버튼위치업데이트() {
+
+    let 버튼위치;
+
+    if (퀴즈.style.display === "block") {
+
+      버튼위치 =
+        퀴즈.offsetTop +
+        퀴즈.offsetHeight +
+        40;
+
+    } else {
+
+      버튼위치 =
+        내용.offsetTop +
+        내용.offsetHeight +
+        40;
+
+    }
+
+    이전버튼.style.top = 버튼위치 + "px";
+    다음버튼.style.top = 버튼위치 + "px";
+  }
+
   // 사용자 정보
   const {
     data: userInfo,
     error: userError
   } = await supabase
     .from("users")
-    .select("read_dori_news")
+    .select("read_dori_news, quiz_answers")
     .eq("user_id", user.id)
     .single();
 
@@ -153,52 +187,41 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // 읽을 수 있는 신문인지 확인
   if (신문번호 > userInfo.read_dori_news) {
+
     alert("아직 읽을 수 없는 돌이신문입니다.");
+
     location.href = "rockeynews.html";
+
     return;
   }
 
-// 버튼 위치 업데이트 함수
-function 버튼위치업데이트() {
-
-  const 퀴즈 = document.getElementById("퀴즈");
-
-  let 버튼위치;
-
-  if (퀴즈.style.display === "block") {
-    버튼위치 = 퀴즈.offsetTop + 퀴즈.offsetHeight + 40;
-  }
-  else {
-    버튼위치 = 내용.offsetTop + 내용.offsetHeight + 40;
-  }
-
-  이전버튼.style.top = 버튼위치 + "px";
-  다음버튼.style.top = 버튼위치 + "px";
-}
-  
   // 신문 가져오기
-const {
-  data: news,
-  error: newsError
-} = await supabase
-  .from("rockey_news")
-  .select(`
-    news_number,
-    rockey_news,
-    question,
-    choice1,
-    choice2,
-    choice3,
-    choice4,
-    choice5,
-    answer
-  `)
-  .eq("news_number", 신문번호)
-  .single();
+  const {
+    data: news,
+    error: newsError
+  } = await supabase
+    .from("rockey_news")
+    .select(`
+      news_number,
+      rockey_news,
+      question,
+      question_type,
+      choice1,
+      choice2,
+      choice3,
+      choice4,
+      choice5,
+      answer
+    `)
+    .eq("news_number", 신문번호)
+    .single();
 
   if (newsError) {
+
     console.log(newsError);
+
     alert("신문을 불러오지 못했습니다.");
+
     return;
   }
 
@@ -207,251 +230,431 @@ const {
     `제${신문번호}회 돌이신문`;
 
   // 내용
-  const 내용 = document.getElementById("내용");
   내용.innerHTML = news.rockey_news
-  .replace(/\\n/g, "<br>")
-  .replace(/\/n/g, "");
+    .replace(/\\n/g, "<br>")
+    .replace(/\/n/g, "");
 
-  const {
-data:저장답
-}=await supabase
-.from("users")
-.select("quiz_answers")
-.eq("user_id",user.id)
-.single();
+  // ==================================================
+  // 퀴즈
+  // ==================================================
 
-  
-if (news.question) {
+  if (news.question) {
 
-  const 퀴즈 = document.getElementById("퀴즈");
+    퀴즈.style.display = "block";
 
-  퀴즈.style.display = "block";
+    document.getElementById("문제").textContent =
+      news.question;
 
-  document.getElementById("문제").textContent = news.question;
+    const 객관식 = document.getElementById("객관식");
+    const 주관식 = document.getElementById("주관식");
 
-  document.getElementById("보기1").textContent = news.choice1;
-  document.getElementById("보기2").textContent = news.choice2;
-  document.getElementById("보기3").textContent = news.choice3;
-  document.getElementById("보기4").textContent = news.choice4;
-  document.getElementById("보기5").textContent = news.choice5;
+    // -------------------------
+    // 객관식
+    // -------------------------
 
-  // 신문 내용 아래에 퀴즈 배치
-  requestAnimationFrame(() => {
+    if (news.question_type === "multiple") {
 
-    const 내용 = document.getElementById("내용");
+      객관식.style.display = "block";
+      주관식.style.display = "none";
 
-    const 퀴즈위치 =
-      내용.offsetTop +
-      내용.offsetHeight +
-      50;
+      document.getElementById("보기1").textContent =
+        news.choice1;
 
+      document.getElementById("보기2").textContent =
+        news.choice2;
 
-    퀴즈.style.position = "absolute";
-    퀴즈.style.top = 퀴즈위치 + "px";
-    퀴즈.style.left = "20px";
-    퀴즈.style.width = "600px";
+      document.getElementById("보기3").textContent =
+        news.choice3;
 
-  });
+      document.getElementById("보기4").textContent =
+        news.choice4;
 
-}
+      document.getElementById("보기5").textContent =
+        news.choice5;
+    }
 
-// 퀴즈 제출 기능
-const 제출버튼 = document.getElementById("제출");
-const 결과 = document.getElementById("결과");
+    // -------------------------
+    // 주관식
+    // -------------------------
 
-const 이전답 =
-저장답.quiz_answers?.[신문번호];
+    else if (news.question_type === "subjective") {
 
+      객관식.style.display = "none";
 
+      주관식.style.display = "block";
+    }
 
-if (이전답) {
+    // -------------------------
+    // 알 수 없는 유형
+    // -------------------------
 
-    const 선택된 = document.querySelector(
-        `input[name="quiz"][value="${이전답}"]`
-    );
+    else {
 
-    선택된.checked = true;
+      console.log(
+        "알 수 없는 question_type:",
+        news.question_type
+      );
 
-    제출버튼.textContent = "제출됨";
-    제출버튼.disabled = true;
+      퀴즈.style.display = "none";
+    }
 
-    document.querySelectorAll('input[name="quiz"]').forEach(radio => {
-        radio.disabled = true;
+    // 퀴즈 위치
+    requestAnimationFrame(() => {
+
+      const 퀴즈위치 =
+        내용.offsetTop +
+        내용.offsetHeight +
+        50;
+
+      퀴즈.style.position = "absolute";
+
+      퀴즈.style.top =
+        퀴즈위치 + "px";
+
+      퀴즈.style.left = "20px";
+
+      퀴즈.style.width = "600px";
+
     });
 
-  console.log(document.getElementById("문제"));
-    document.getElementById("내답").textContent =
-        `내가 제출한 답 : ${이전답}번`;
-}
-
-
-제출버튼.onclick = async () => {
-
-
-const 선택 = document.querySelector(
-  'input[name="quiz"]:checked'
-);
-
-
-if(!선택){
-
-  결과.textContent="답을 선택해주세요.";
-  return;
-
-}
-
-
-const 선택한답 = Number(선택.value);
-
-
-
-/*
- 기존 답 가져오기
-*/
-
-const {
- data:현재유저,
- error
-}=await supabase
-.from("users")
-.select("quiz_answers")
-.eq("user_id",user.id)
-.single();
-
-
-
-if(error){
-
- console.log(error);
- return;
-
-}
-
-
-
-/*
- JSON 데이터 준비
-*/
-
-let 답목록 = 현재유저.quiz_answers || {};
-
-
-
-/*
- 현재 신문 답 추가
-*/
-
-답목록[신문번호]=선택한답;
-
-
-
-/*
- 정답 확인
-*/
-
-const 정답여부 =
-선택한답 === news.answer;
-
-
-
-/*
- 저장
-*/
-
-const {
-error:updateError
-}=await supabase
-.from("users")
-.update({
-
- quiz_right:정답여부,
-
- quiz_news_number:신문번호,
-
- quiz_answered:true,
-
- quiz_answers:답목록
-
-})
-.eq("user_id",user.id);
-
-
-
-if(updateError){
-
- console.log(updateError);
- 결과.textContent="저장 실패";
- return;
-
-}
-
-
-
-결과.textContent="제출됨";
-
-제출버튼.textContent="제출됨";
-
-제출버튼.disabled=true;
-
-결과.textContent = "제출됨";
-
-제출버튼.textContent = "제출됨";
-제출버튼.disabled = true;
-
-document.getElementById("내답").textContent =
-    `내가 제출한 답 : ${선택한답}번`;
-
-// 객관식 수정 불가
-document.querySelectorAll('input[name="quiz"]').forEach(radio => {
-    radio.disabled = true;
-});
-// 문제 제출 후 퀴즈 높이가 변경되었으므로 버튼 위치 다시 계산
-requestAnimationFrame(() => {
-    버튼위치업데이트();
-});
-};
-
-  const 이전버튼 = document.getElementById("이전");
-  const 다음버튼 = document.getElementById("다음");
-
-  // 버튼 숨기기
-  if (신문번호 <= 1) {
-    이전버튼.style.display = "none";
   }
 
+  // ==================================================
+  // 이전에 제출한 답 불러오기
+  // ==================================================
+
+  const 이전답 =
+    userInfo.quiz_answers?.[신문번호];
+
+  if (이전답 !== undefined && 이전답 !== null) {
+
+    // -------------------------
+    // 객관식 이전 답
+    // -------------------------
+
+    if (news.question_type === "multiple") {
+
+      const 선택된 = document.querySelector(
+        `input[name="quiz"][value="${이전답}"]`
+      );
+
+      if (선택된) {
+
+        선택된.checked = true;
+
+      }
+
+      document
+        .querySelectorAll('input[name="quiz"]')
+        .forEach(radio => {
+
+          radio.disabled = true;
+
+        });
+
+      document.getElementById("내답").textContent =
+        `내가 제출한 답 : ${이전답}번`;
+
+    }
+
+    // -------------------------
+    // 주관식 이전 답
+    // -------------------------
+
+    else if (news.question_type === "subjective") {
+
+      const 입력 =
+        document.getElementById("주관식답");
+
+      입력.value = 이전답;
+
+      입력.disabled = true;
+
+      document.getElementById("내답").textContent =
+        `내가 제출한 답 : ${이전답}`;
+
+    }
+
+    제출버튼.textContent = "제출됨";
+
+    제출버튼.disabled = true;
+  }
+
+  // ==================================================
+  // 퀴즈 제출
+  // ==================================================
+
+  제출버튼.onclick = async () => {
+
+    let 선택한답;
+
+    // -------------------------
+    // 객관식
+    // -------------------------
+
+    if (news.question_type === "multiple") {
+
+      const 선택 = document.querySelector(
+        'input[name="quiz"]:checked'
+      );
+
+      if (!선택) {
+
+        결과.textContent =
+          "답을 선택해주세요.";
+
+        return;
+      }
+
+      선택한답 = Number(선택.value);
+    }
+
+    // -------------------------
+    // 주관식
+    // -------------------------
+
+    else if (news.question_type === "subjective") {
+
+      const 입력 =
+        document.getElementById("주관식답");
+
+      선택한답 =
+        입력.value.trim();
+
+      if (!선택한답) {
+
+        결과.textContent =
+          "답을 입력해주세요.";
+
+        return;
+      }
+    }
+
+    // -------------------------
+    // 정답 확인
+    // -------------------------
+
+    let 정답여부;
+
+    if (news.question_type === "multiple") {
+
+      정답여부 =
+        선택한답 === Number(news.answer);
+
+    }
+
+    else if (news.question_type === "subjective") {
+
+      정답여부 =
+        String(선택한답)
+          .trim()
+          .toLowerCase()
+        ===
+        String(news.answer)
+          .trim()
+          .toLowerCase();
+
+    }
+
+    // ==================================================
+    // 현재 사용자의 답 가져오기
+    // ==================================================
+
+    const {
+      data: 현재유저,
+      error
+    } = await supabase
+      .from("users")
+      .select("quiz_answers")
+      .eq("user_id", user.id)
+      .single();
+
+    if (error) {
+
+      console.log(error);
+
+      결과.textContent =
+        "사용자 정보를 불러오지 못했습니다.";
+
+      return;
+    }
+
+    // ==================================================
+    // JSON 답 목록
+    // ==================================================
+
+    let 답목록 =
+      현재유저.quiz_answers || {};
+
+    // 현재 신문 답 저장
+    답목록[신문번호] =
+      선택한답;
+
+    // ==================================================
+    // Supabase 저장
+    // ==================================================
+
+    const {
+      error: updateError
+    } = await supabase
+      .from("users")
+      .update({
+
+        quiz_right:
+          정답여부,
+
+        quiz_news_number:
+          신문번호,
+
+        quiz_answered:
+          true,
+
+        quiz_answers:
+          답목록
+
+      })
+      .eq("user_id", user.id);
+
+    if (updateError) {
+
+      console.log(updateError);
+
+      결과.textContent =
+        "저장 실패";
+
+      return;
+    }
+
+    // ==================================================
+    // 제출 완료
+    // ==================================================
+
+    결과.textContent =
+      "제출됨";
+
+    제출버튼.textContent =
+      "제출됨";
+
+    제출버튼.disabled =
+      true;
+
+    // -------------------------
+    // 객관식
+    // -------------------------
+
+    if (news.question_type === "multiple") {
+
+      document.getElementById("내답").textContent =
+        `내가 제출한 답 : ${선택한답}번`;
+
+      document
+        .querySelectorAll('input[name="quiz"]')
+        .forEach(radio => {
+
+          radio.disabled = true;
+
+        });
+
+    }
+
+    // -------------------------
+    // 주관식
+    // -------------------------
+
+    else if (news.question_type === "subjective") {
+
+      document.getElementById("내답").textContent =
+        `내가 제출한 답 : ${선택한답}`;
+
+      document.getElementById("주관식답").disabled =
+        true;
+
+    }
+
+    // 버튼 위치 다시 계산
+    requestAnimationFrame(() => {
+
+      버튼위치업데이트();
+
+    });
+
+  };
+
+  // ==================================================
+  // 이전 / 다음 버튼
+  // ==================================================
+
+  // 첫 번째 신문이면 이전 버튼 숨김
+  if (신문번호 <= 1) {
+
+    이전버튼.style.display =
+      "none";
+
+  }
+
+  // 마지막 신문이거나 아직 다음 신문을 읽을 수 없으면 숨김
   if (
     신문번호 >= 마지막신문번호 ||
     신문번호 + 1 > userInfo.read_dori_news
   ) {
-    다음버튼.style.display = "none";
+
+    다음버튼.style.display =
+      "none";
+
   }
 
-// 처음 페이지를 열었을 때 위치 계산
-requestAnimationFrame(() => {
-  버튼위치업데이트();
-});
+  // 처음 페이지 위치 계산
+  requestAnimationFrame(() => {
+
+    버튼위치업데이트();
+
+  });
 
 });
 
+
+// ==================================================
 // 이전 신문
+// ==================================================
+
 window.이전신문 = function () {
-  let 번호 = Number(localStorage.getItem("rockeynews"));
 
-  번호 = Math.max(1, 번호 - 1);
+  let 번호 =
+    Number(localStorage.getItem("rockeynews"));
 
-  localStorage.setItem("rockeynews", 번호);
+  번호 =
+    Math.max(1, 번호 - 1);
+
+  localStorage.setItem(
+    "rockeynews",
+    번호
+  );
+
   location.reload();
+
 };
 
+
+// ==================================================
 // 다음 신문
+// ==================================================
+
 window.다음신문 = function () {
-  let 번호 = Number(localStorage.getItem("rockeynews"));
+
+  let 번호 =
+    Number(localStorage.getItem("rockeynews"));
 
   번호++;
 
-  localStorage.setItem("rockeynews", 번호);
+  localStorage.setItem(
+    "rockeynews",
+    번호
+  );
+
   location.reload();
+
 };
+
 </script>
 
 <button id="제목"
@@ -464,7 +667,6 @@ border:none;
 color:#f5f5f5;
 cursor:pointer;
   white-space: nowrap;
-">
 ">
 </button>
 
@@ -524,23 +726,46 @@ display:none;
 font-family:jua;
 color:white;
 ">
+
   <h2 id="문제"></h2>
 
-  <label><input type="radio" name="quiz" value="1"> <span id="보기1"></span></label><br><br>
+  <!-- 객관식 -->
+  <div id="객관식">
+    <label><input type="radio" name="quiz" value="1"> <span id="보기1"></span></label><br><br>
 
-  <label><input type="radio" name="quiz" value="2"> <span id="보기2"></span></label><br><br>
+    <label><input type="radio" name="quiz" value="2"> <span id="보기2"></span></label><br><br>
 
-  <label><input type="radio" name="quiz" value="3"> <span id="보기3"></span></label><br><br>
+    <label><input type="radio" name="quiz" value="3"> <span id="보기3"></span></label><br><br>
 
-  <label><input type="radio" name="quiz" value="4"> <span id="보기4"></span></label><br><br>
+    <label><input type="radio" name="quiz" value="4"> <span id="보기4"></span></label><br><br>
 
-  <label><input type="radio" name="quiz" value="5"> <span id="보기5"></span></label><br><br>
+    <label><input type="radio" name="quiz" value="5"> <span id="보기5"></span></label><br><br>
+  </div>
 
-<button id="제출">제출</button>
+  <!-- 주관식 -->
+  <div id="주관식" style="display:none;">
+    <input
+      type="text"
+      id="주관식답"
+      placeholder="답을 입력하세요"
+      style="
+        font-family:jua;
+        font-size:20px;
+        padding:10px;
+        border-radius:10px;
+        border:none;
+        width:400px;
+      "
+    >
+    <br><br>
+  </div>
 
-<p id="내답" style="margin-top:10px;"></p>
+  <button id="제출">제출</button>
 
-<p id="결과"></p>
+  <p id="내답" style="margin-top:10px;"></p>
+
+  <p id="결과"></p>
+
 </div>
 </body>
 </html>
