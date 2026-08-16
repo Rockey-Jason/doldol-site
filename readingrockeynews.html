@@ -362,11 +362,22 @@ await 이벤트확인();
 let 현재이벤트 = null;
 async function 이벤트확인() {
 
+  console.log("===== 이벤트 확인 시작 =====");
+  console.log("현재 신문번호:", 신문번호);
+  console.log("10의 배수인가?", 신문번호 % 10 === 0);
+
   // 10의 배수가 아니면 이벤트 없음
   if (신문번호 % 10 !== 0) {
+
+    console.log("이벤트 회차가 아닙니다.");
+
     이벤트.style.display = "none";
+
     return;
   }
+
+  console.log("10의 배수입니다. 이벤트 검색 시작");
+
 
   const {
     data: event,
@@ -378,42 +389,60 @@ async function 이벤트확인() {
     .eq("enabled", true)
     .maybeSingle();
 
+
+  console.log("이벤트 조회 결과:", event);
+  console.log("이벤트 조회 오류:", eventError);
+
+
   if (eventError) {
 
-    console.log("이벤트 불러오기 오류:", eventError);
-console.log("오류 코드:", eventError?.code);
-console.log("오류 메시지:", eventError?.message);
-console.log("오류 상세:", eventError?.details);
-console.log("오류 힌트:", eventError?.hint);
+    console.error(
+      "이벤트 불러오기 오류:",
+      eventError
+    );
 
     이벤트.style.display = "none";
 
     return;
   }
 
-  // 해당 회차의 이벤트가 없으면 숨김
+
   if (!event) {
 
+    console.log(
+      "현재 신문번호에 해당하는 이벤트가 없습니다."
+    );
+
     이벤트.style.display = "none";
 
     return;
   }
 
+
+  console.log("🎉 이벤트 발견:", event);
+
+
+  // 현재 이벤트 저장
   현재이벤트 = event;
+
 
   // 이벤트 표시
   이벤트.style.display = "block";
 
+
   이벤트제목.textContent =
     "🎉 " + event.event_name;
+
 
   이벤트설명.textContent =
     event.description || "";
 
+
   이벤트보상.textContent =
     Number(event.reward_coins).toLocaleString();
 
-  // 이미 참여했는지 확인
+
+  // 참여 여부 확인
   await 이벤트참여확인(event);
 }
 
