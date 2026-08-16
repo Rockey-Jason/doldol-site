@@ -381,6 +381,10 @@ async function 이벤트확인() {
   if (eventError) {
 
     console.log("이벤트 불러오기 오류:", eventError);
+console.log("오류 코드:", eventError?.code);
+console.log("오류 메시지:", eventError?.message);
+console.log("오류 상세:", eventError?.details);
+console.log("오류 힌트:", eventError?.hint);
 
     이벤트.style.display = "none";
 
