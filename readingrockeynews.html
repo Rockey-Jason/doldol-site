@@ -359,7 +359,7 @@ await 이벤트확인();
 // ==================================================
 // 돌이신문 이벤트
 // ==================================================
-
+let 현재이벤트 = null;
 async function 이벤트확인() {
 
   // 10의 배수가 아니면 이벤트 없음
@@ -394,6 +394,8 @@ async function 이벤트확인() {
 
     return;
   }
+
+  현재이벤트 = event;
 
   // 이벤트 표시
   이벤트.style.display = "block";
@@ -454,88 +456,30 @@ async function 이벤트확인() {
   }
 }
 
-  async function 이벤트참여하기(event) {
+async function 이벤트참여하기(event) {
 
   이벤트참여.disabled = true;
 
   이벤트참여.textContent =
-    "처리 중...";
+    "보상 지급 중...";
 
-  // 이미 참여했는지 다시 확인
-  const {
-    data: existingParticipation,
-    error: checkError
-  } = await supabase
-    .from("event_participations")
-    .select("reward_claimed")
-    .eq("user_id", user.id)
-    .eq("event_id", event.id)
-    .maybeSingle();
+  이벤트결과.textContent = "";
 
-  if (checkError) {
-
-    console.log(checkError);
-
-    이벤트참여.disabled = false;
-    이벤트참여.textContent =
-      "이벤트 참여하기";
-
-    이벤트결과.textContent =
-      "이벤트 참여 확인에 실패했습니다.";
-
-    return;
-  }
-
-  // 이미 보상을 받은 경우
-  if (existingParticipation?.reward_claimed === true) {
-
-    이벤트참여.disabled = true;
-
-    이벤트참여.textContent =
-      "보상 수령 완료";
-
-    이벤트결과.textContent =
-      "이미 보상을 받았습니다.";
-
-    return;
-  }
-
-  // 참여 기록 생성
-  const 참여ID =
-    "participation_" +
-    event.id +
-    "_" +
-    user.id;
 
   const {
-    error: insertError
-  } = await supabase
-    .from("event_participations")
-    .insert({
-      id: 참여ID,
-      user_id: user.id,
-      event_id: event.id,
-      reward_claimed: false,
-      reward_coins: event.reward_coins
-    });
-
-  if (insertError) {
-
-    console.log(insertError);
-
-    // Unique 충돌 등으로 이미 참여한 경우
-    if (insertError.code === "23505") {
-
-      이벤트참여.disabled = true;
-
-      이벤트참여.textContent =
-        "보상 수령 완료";
-
-      이벤트결과.textContent =
-        "이미 이 이벤트에 참여했습니다.";
-
-      return;
+    data,
+    error
+  } = await supabase.rpc(
+    "claim_news_event",
+    {
+      p_event_id: event.id
     }
+  );
+
+
+  if (error) {
+
+    console.error("이벤트 보상 지급 오류:", error);
 
     이벤트참여.disabled = false;
 
@@ -543,25 +487,38 @@ async function 이벤트확인() {
       "이벤트 참여하기";
 
     이벤트결과.textContent =
-      "이벤트 참여에 실패했습니다.";
+      error.message || "보상 지급에 실패했습니다.";
 
     return;
   }
 
-  /*
-   * ==========================================
-   * 여기에서 실제 돌돌코인을 지급해야 함
-   * ==========================================
-   *
-   * 현재는 users의 돌돌코인 컬럼 이름을
-   * 아직 모르기 때문에 여기서는 지급하지 않음.
-   */
 
-  이벤트결과.textContent =
-    "🎉 이벤트 참여가 완료되었습니다!";
+  if (!data || data.success !== true) {
+
+    이벤트참여.disabled = false;
+
+    이벤트참여.textContent =
+      "이벤트 참여하기";
+
+    이벤트결과.textContent =
+      "보상 지급에 실패했습니다.";
+
+    return;
+  }
+
+
+  // =========================================
+  // 보상 지급 성공
+  // =========================================
+
+  이벤트참여.disabled = true;
 
   이벤트참여.textContent =
-    "참여 완료";
+    "보상 수령 완료";
+
+  이벤트결과.textContent =
+    `🎉 ${Number(data.reward_coins).toLocaleString()} 돌돌코인을 받았습니다!`;
+
 }
 
   이벤트참여.onclick = async () => {
@@ -576,15 +533,13 @@ async function 이벤트확인() {
     .eq("enabled", true)
     .single();
 
-  if (error || !event) {
-
+  if (!현재이벤트) {
     이벤트결과.textContent =
       "이벤트 정보를 불러오지 못했습니다.";
-
     return;
   }
 
-  await 이벤트참여하기(event);
+  await 이벤트참여하기(현재이벤트);
 };
   
   // ==================================================
