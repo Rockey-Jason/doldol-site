@@ -158,6 +158,7 @@ const 이벤트설명 = document.getElementById("이벤트설명");
 const 이벤트보상 = document.getElementById("이벤트보상");
 const 이벤트참여 = document.getElementById("이벤트참여");
 const 이벤트결과 = document.getElementById("이벤트결과");
+const 읽음버튼 = document.getElementById("읽음버튼");
 
   // 버튼 위치 업데이트
   function 버튼위치업데이트() {
@@ -184,13 +185,54 @@ const 이벤트결과 = document.getElementById("이벤트결과");
     다음버튼.style.top = 버튼위치 + "px";
   }
 
+  // ==================================================
+// 돌이신문 읽음 버튼 위치 업데이트
+// ==================================================
+
+function 읽음버튼위치업데이트() {
+
+  let 가장아래 =
+
+    내용.offsetTop +
+    내용.offsetHeight;
+
+
+  // 퀴즈가 표시되어 있으면
+  if (퀴즈.style.display === "block") {
+
+    가장아래 = Math.max(
+      가장아래,
+      퀴즈.offsetTop +
+      퀴즈.offsetHeight
+    );
+
+  }
+
+
+  // 이벤트가 표시되어 있으면
+  if (이벤트.style.display === "block") {
+
+    가장아래 = Math.max(
+      가장아래,
+      이벤트.offsetTop +
+      이벤트.offsetHeight
+    );
+
+  }
+
+
+  읽음버튼.style.top =
+    (가장아래 + 60) + "px";
+
+}
+
   // 사용자 정보
   const {
     data: userInfo,
     error: userError
   } = await supabase
     .from("users")
-    .select("read_dori_news, quiz_answers")
+    .select("read_dori_news, read_dori_news_numbers, quiz_answers")
     .eq("user_id", user.id)
     .single();
 
@@ -199,6 +241,42 @@ const 이벤트결과 = document.getElementById("이벤트결과");
     alert("사용자 정보를 불러오지 못했습니다.");
     return;
   }
+
+  // ==================================================
+// 읽은 돌이신문 번호 목록
+// ==================================================
+
+let 읽은신문번호들 =
+  userInfo.read_dori_news_numbers;
+
+
+// JSONB 값이 없거나 배열이 아니면 빈 배열
+if (!Array.isArray(읽은신문번호들)) {
+
+  읽은신문번호들 = [];
+
+}
+
+
+// 혹시 문자열 숫자로 저장되어 있어도
+// 숫자로 변환
+읽은신문번호들 =
+  읽은신문번호들
+    .map(Number)
+    .filter(Number.isInteger);
+
+
+// ==================================================
+// 현재 신문이 이미 읽혔는지 확인
+// ==================================================
+
+function 현재신문읽음확인() {
+
+  return 읽은신문번호들.includes(
+    신문번호
+  );
+
+}
 
   // 마지막 신문 번호
   const {
@@ -351,6 +429,8 @@ await 이벤트확인();
       퀴즈.style.left = "20px";
 
       퀴즈.style.width = "600px";
+
+      읽음버튼위치업데이트();
 
     });
 
@@ -859,10 +939,272 @@ async function 이벤트참여하기(event) {
 
   }
 
+  // ==================================================
+// 돌이신문 읽음 버튼
+// ==================================================
+
+if (현재신문읽음확인()) {
+
+  읽음버튼.textContent =
+    "✅ 읽음";
+
+  읽음버튼.disabled =
+    true;
+
+  읽음버튼.style.cursor =
+    "not-allowed";
+
+  읽음버튼.style.opacity =
+    "0.6";
+
+}
+else {
+
+  읽음버튼.textContent =
+    "📖 돌이신문 읽음";
+
+  읽음버튼.disabled =
+    false;
+
+  읽음버튼.style.cursor =
+    "pointer";
+
+  읽음버튼.style.opacity =
+    "1";
+
+}
+
+
+// ==================================================
+// 읽음 버튼 클릭
+// ==================================================
+
+읽음버튼.onclick = async () => {
+
+  // 이미 읽었다면 중단
+  if (현재신문읽음확인()) {
+
+    return;
+
+  }
+
+
+  // 버튼 비활성화
+  읽음버튼.disabled =
+    true;
+
+  읽음버튼.textContent =
+    "💾 저장 중...";
+
+
+  // ==================================================
+  // 최신 사용자 정보 다시 가져오기
+  // ==================================================
+
+  const {
+
+    data: 최신유저,
+
+    error: 최신유저오류
+
+  } = await supabase
+
+    .from("users")
+
+    .select(
+      "read_dori_news_numbers"
+    )
+
+    .eq(
+      "user_id",
+      user.id
+    )
+
+    .single();
+
+
+  if (최신유저오류) {
+
+    console.error(
+      "읽은 신문 정보 조회 오류:",
+      최신유저오류
+    );
+
+
+    읽음버튼.disabled =
+      false;
+
+    읽음버튼.textContent =
+      "📖 돌이신문 읽음";
+
+    alert(
+      "읽은 신문 정보를 불러오지 못했습니다."
+    );
+
+    return;
+
+  }
+
+
+  // ==================================================
+  // 최신 읽은 신문 목록
+  // ==================================================
+
+  let 최신읽은신문 =
+    최신유저.read_dori_news_numbers;
+
+
+  if (!Array.isArray(최신읽은신문)) {
+
+    최신읽은신문 = [];
+
+  }
+
+
+  최신읽은신문 =
+    최신읽은신문
+      .map(Number)
+      .filter(Number.isInteger);
+
+
+  // ==================================================
+  // 혹시 다른 곳에서 이미 저장했다면
+  // 중복 저장하지 않음
+  // ==================================================
+
+  if (
+    최신읽은신문.includes(
+      신문번호
+    )
+  ) {
+
+    읽은신문번호들 =
+      최신읽은신문;
+
+
+    읽음버튼.textContent =
+      "✅ 읽음";
+
+    읽음버튼.disabled =
+      true;
+
+    읽음버튼.style.cursor =
+      "not-allowed";
+
+    읽음버튼.style.opacity =
+      "0.6";
+
+    return;
+
+  }
+
+
+  // ==================================================
+  // 현재 신문 번호 추가
+  // ==================================================
+
+  최신읽은신문.push(
+    신문번호
+  );
+
+
+  // 번호순으로 정렬
+  최신읽은신문.sort(
+    (a, b) => a - b
+  );
+
+
+  // ==================================================
+  // Supabase 저장
+  // ==================================================
+
+  const {
+
+    error: 저장오류
+
+  } = await supabase
+
+    .from("users")
+
+    .update({
+
+      read_dori_news_numbers:
+        최신읽은신문
+
+    })
+
+    .eq(
+      "user_id",
+      user.id
+    );
+
+
+  // ==================================================
+  // 저장 실패
+  // ==================================================
+
+  if (저장오류) {
+
+    console.error(
+      "읽은 신문 저장 오류:",
+      저장오류
+    );
+
+
+    읽음버튼.disabled =
+      false;
+
+    읽음버튼.textContent =
+      "📖 돌이신문 읽음";
+
+
+    alert(
+      "돌이신문 읽음 저장에 실패했습니다."
+    );
+
+
+    return;
+
+  }
+
+
+  // ==================================================
+  // 저장 성공
+  // ==================================================
+
+  읽은신문번호들 =
+    최신읽은신문;
+
+
+  읽음버튼.textContent =
+    "✅ 읽음";
+
+
+  읽음버튼.disabled =
+    true;
+
+
+  읽음버튼.style.cursor =
+    "not-allowed";
+
+
+  읽음버튼.style.opacity =
+    "0.6";
+
+
+  console.log(
+    "돌이신문 읽음 저장 완료:",
+    신문번호
+  );
+
+};
+
   // 처음 페이지 위치 계산
   requestAnimationFrame(() => {
 
     버튼위치업데이트();
+
+    읽음버튼위치업데이트();
 
   });
 
@@ -1065,5 +1407,24 @@ box-sizing:border-box;
   <p id="이벤트결과"></p>
 
 </div>
+  
+<button
+  id="읽음버튼"
+  style="
+    position:absolute;
+    left:20px;
+    font-family:'HancomMalrangmalrang';
+    font-size:20px;
+    padding:12px 24px;
+    background:#111133;
+    color:#f5f5f5;
+    border:2px solid #555577;
+    border-radius:12px;
+    cursor:pointer;
+  "
+>
+  📖 돌이신문 읽음
+</button>
+  
 </body>
 </html>
