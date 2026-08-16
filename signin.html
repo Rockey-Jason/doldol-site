@@ -13,7 +13,19 @@
 background: linear-gradient(to right, #000033, #000010);
 ">
 
+<style>
+  * {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+}
 
+input,
+textarea {
+  user-select: text;
+  -webkit-user-select: text;
+}
+</style>
 
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
