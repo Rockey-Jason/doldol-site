@@ -198,7 +198,159 @@ const 업적 = {
 
   let 상세설명 = false;
 
+// ================================
+// 경험치 / 레벨 시스템
+// ================================
 
+const 레벨필요경험치 = {
+    1: 0,
+    2: 100,
+    3: 300,
+    4: 600,
+    5: 1000,
+    6: 1500,
+    7: 2100,
+    8: 2800,
+    9: 3600,
+    10: 4500
+};
+
+
+// EXP를 기준으로 현재 레벨 계산
+function 경험치로레벨계산(exp){
+
+    let level = 1;
+
+    for(let i = 10; i >= 1; i--){
+
+        if(exp >= 레벨필요경험치[i]){
+            level = i;
+            break;
+        }
+
+    }
+
+    return level;
+}
+
+
+// 경험치 지급
+async function 경험치획득(amount){
+
+    if(!amount || amount <= 0) return;
+
+    const {
+        data:{user}
+    } = await supabase.auth.getUser();
+
+    if(!user) return;
+
+
+    // 현재 EXP와 레벨 가져오기
+    const {data,error} = await supabase
+        .from("users")
+        .select("exp,user_level")
+        .eq("user_id",user.id)
+        .single();
+
+
+    if(error){
+
+        console.error("경험치 조회 오류:",error);
+
+        return;
+
+    }
+
+
+    const 현재경험치 = data.exp ?? 0;
+
+    const 기존레벨 = data.user_level ?? 1;
+
+    const 새로운경험치 =
+        현재경험치 + amount;
+
+
+    const 새로운레벨 =
+        경험치로레벨계산(새로운경험치);
+
+
+    // DB 저장
+    const {error:updateError} = await supabase
+        .from("users")
+        .update({
+
+            exp:새로운경험치,
+
+            user_level:새로운레벨
+
+        })
+        .eq("user_id",user.id);
+
+
+    if(updateError){
+
+        console.error("경험치 저장 오류:",updateError);
+
+        return;
+
+    }
+
+
+    console.log(
+        `EXP +${amount} (${현재경험치} → ${새로운경험치})`
+    );
+
+
+    // 레벨업
+    if(새로운레벨 > 기존레벨){
+
+        레벨업알림(
+            기존레벨,
+            새로운레벨
+        );
+
+    }
+
+}
+
+
+// 레벨업 알림
+function 레벨업알림(기존레벨,새로운레벨){
+
+    const popup =
+        document.getElementById("achievementPopup");
+
+
+    popup.innerHTML = `
+
+        🎉 <b>레벨 업!</b><br><br>
+
+        Lv.${기존레벨}
+        →
+        Lv.${새로운레벨}
+
+        <br><br>
+
+        <b>
+        ${레벨이름[새로운레벨] || "일반"}
+        </b>
+
+    `;
+
+
+    popup.classList.add("show");
+
+
+    setTimeout(()=>{
+
+        popup.classList.remove("show");
+
+    },4000);
+
+}
+
+  
   //업적 달성
 async function 업적획득(업적정보){
 
@@ -239,41 +391,58 @@ async function 업적획득(업적정보){
 
     };
 
-    await supabase
-    .from("users")
-    .update({
+await supabase
+.from("users")
+.update({
 
-        user_achievement:achievements,
+    user_achievement:achievements,
 
-        doldolcoin:
-        (data.doldolcoin||0)
-        +업적정보.보상.돌돌코인
+    doldolcoin:
+    (data.doldolcoin||0)
+    +업적정보.보상.돌돌코인
 
-    })
-    .eq("user_id",user.id);
+})
+.eq("user_id",user.id);
 
-    업적알림(업적정보);
 
-}
+// 업적 EXP 지급
+await 경험치획득(
+    업적정보.보상.경험치
+);
+
+
+업적알림(업적정보);
 
 function 업적알림(업적){
 
-    const popup = document.getElementById("achievementPopup");
+    const popup =
+        document.getElementById("achievementPopup");
+
 
     popup.innerHTML = `
+
         🏆 <b>업적 달성!</b><br><br>
 
         <b>${업적.이름}</b><br>
+
         ${업적.설명}<br><br>
 
         ⭐ ${업적.희귀도}<br>
-        💰 +${업적.보상.돌돌코인} 돌돌코인
+
+        💰 +${업적.보상.돌돌코인} 돌돌코인<br>
+
+        ✨ +${업적.보상.경험치} EXP
+
     `;
+
 
     popup.classList.add("show");
 
+
     setTimeout(()=>{
+
         popup.classList.remove("show");
+
     },3000);
 
 }
@@ -326,7 +495,7 @@ function 업적알림(업적){
   // users 테이블 조회
   const { data: 유저정보, error: userError } = await supabase
     .from("users")
-    .select("user_number, user_level, doldolcoin, profile_image")
+    .select("user_number, user_level, doldolcoin, exp, profile_image")
     .eq("user_id", user.id)
     .single();
 
@@ -345,8 +514,10 @@ function 업적알림(업적){
   사진.style.display = "block";
 
   // 초기 레벨
-  레벨버튼.textContent =
-    `현재 레벨: ${레벨이름[유저정보.user_level] || "일반"}`;
+레벨버튼.textContent =
+    `Lv.${유저정보.user_level} ${
+        레벨이름[유저정보.user_level] || "일반"
+    } · ${유저정보.exp ?? 0} EXP`;
 
   // 초기 코인
   돌돌코인수량.textContent =
@@ -366,11 +537,11 @@ function 업적알림(업적){
 
     if (!상세설명) return;
 
-    const { data, error } = await supabase
-      .from("users")
-      .select("user_level, doldolcoin")
-      .eq("user_number", 유저번호)
-      .single();
+const { data: 유저정보, error: userError } = await supabase
+    .from("users")
+    .select("user_number, user_level, exp, doldolcoin, profile_image")
+    .eq("user_id", user.id)
+    .single();
 
     if (error) {
       console.error(error);
