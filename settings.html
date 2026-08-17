@@ -156,27 +156,27 @@ body {
 
 <script type="module">
 
-import {
-  createClient
-} from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+
+// ========================================
+// Supabase
+// ========================================
 
 const supabase = createClient(
 
-  "https://scttowfhygcpdirrekqm.supabase.co",
+    "https://scttowfhygcpdirrekqm.supabase.co",
 
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 
 );
 
 
-// =============================
-// 페이지 로드
-// =============================
+// ========================================
+// 레벨 이름
+// ========================================
 
-window.addEventListener("DOMContentLoaded", async () => {
-
-  const 레벨이름 = {
+const 레벨이름 = {
 
     1: "일반",
     2: "프리미엄",
@@ -189,292 +189,746 @@ window.addEventListener("DOMContentLoaded", async () => {
     9: "돌이",
     10: "관리자"
 
-  };
-
-
-  // =========================
-  // 로그인 사용자 확인
-  // =========================
-
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
-
-  if (!user) {
-
-    alert("로그인이 필요합니다.");
-
-    location.href = "login.html";
-
-    return;
-
-  }
-
-
-  // =========================
-  // users 정보 가져오기
-  // =========================
-
-  const {
-    data: 유저정보,
-    error
-  } = await supabase
-
-    .from("users")
-
-    .select(`
-      user_number,
-      user_id,
-      login_id,
-      user_level,
-      doldolcoin,
-      profile_image,
-      name
-    `)
-
-    .eq("user_id", user.id)
-
-    .single();
-
-
-  if (error) {
-
-    console.error(error);
-
-    return;
-
-  }
-
-
-  // =========================
-  // 프로필 사진
-  // =========================
-
-  if (유저정보.profile_image) {
-
-    document.getElementById("돌이사진").src =
-      유저정보.profile_image;
-
-  }
-
-
-  // =========================
-  // 이름
-  // =========================
-
-  document.getElementById("이름").textContent =
-
-    (유저정보.name ?? "이름 없음") +
-    "님 환영합니다";
-
-
-  // =========================
-  // 현재 아이디
-  // =========================
-
-  document.getElementById("현재아이디").textContent =
-
-    "현재 아이디 : " +
-    (유저정보.login_id ?? "없음");
-
-
-  // =========================
-  // 레벨
-  // =========================
-
-  document.getElementById("레벨").textContent =
-
-    "현재 레벨 : " +
-    (레벨이름[유저정보.user_level] || "일반");
-
-
-  // =========================
-  // 돌돌코인
-  // =========================
-
-  document.getElementById("돌돌코인수량").textContent =
-
-    "현재 돌돌코인 : " +
-    (유저정보.doldolcoin ?? 0);
-
-});
-
-
-// =============================
-// 프로필 사진 변경
-// =============================
-
-window.프로필업로드 = async function () {
-
-
-  const file =
-    document.getElementById("profileUpload").files[0];
-
-
-  if (!file) {
-
-    alert("사진을 선택하세요.");
-
-    return;
-
-  }
-
-
-  // =========================
-  // 로그인 사용자 확인
-  // =========================
-
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
-
-
-  if (!user) {
-
-    alert("로그인이 필요합니다.");
-
-    return;
-
-  }
-
-
-  // =========================
-  // 파일 확장자
-  // =========================
-
-  const ext =
-    file.name.split(".").pop();
-
-
-  const fileName =
-    `${user.id}.${ext}`;
-
-
-  // =========================
-  // Storage 업로드
-  // =========================
-
-  const {
-    error: uploadError
-  } = await supabase.storage
-
-    .from("profile-images")
-
-    .upload(
-      fileName,
-      file,
-      {
-        upsert: true
-      }
-    );
-
-
-  if (uploadError) {
-
-    alert(uploadError.message);
-
-    console.error(uploadError);
-
-    return;
-
-  }
-
-
-  // =========================
-  // 공개 URL 가져오기
-  // =========================
-
-  const {
-    data
-  } = supabase.storage
-
-    .from("profile-images")
-
-    .getPublicUrl(fileName);
-
-
-  const imageUrl =
-    data.publicUrl;
-
-
-  // =========================
-  // users 테이블 업데이트
-  // =========================
-
-  const {
-    error: updateError
-  } = await supabase
-
-    .from("users")
-
-    .update({
-
-      profile_image: imageUrl
-
-    })
-
-    .eq("user_id", user.id);
-
-
-  if (updateError) {
-
-    alert(updateError.message);
-
-    console.error(updateError);
-
-    return;
-
-  }
-
-
-  // =========================
-  // 화면 즉시 변경
-  // =========================
-
-  document.getElementById("돌이사진").src =
-
-    imageUrl + "?t=" + Date.now();
-
-
-  alert("프로필 사진이 변경되었습니다.");
+};
+
+
+// ========================================
+// 레벨별 필요한 총 EXP
+// ========================================
+
+const 레벨필요경험치 = {
+
+    1: 0,
+    2: 100,
+    3: 500,
+    4: 1000,
+    5: 5000,
+    6: 10000,
+    7: 20000,
+    8: 30000,
+    9: 40000,
+    10: 50000
 
 };
 
-  import { getMyExp } from "./exp.js";
 
-async function loadExp() {
-    const expInfo = await getMyExp();
+// ========================================
+// EXP → 현재 레벨
+// ========================================
 
-    if (!expInfo) {
-        return;
+function 경험치로레벨계산(exp) {
+
+    let level = 1;
+
+    for (let i = 10; i >= 1; i--) {
+
+        if (exp >= 레벨필요경험치[i]) {
+
+            level = i;
+
+            break;
+
+        }
+
     }
 
-    document.getElementById("user-level").textContent =
-        `Lv.${expInfo.level}`;
+    return level;
 
-    document.getElementById("current-exp").textContent =
-        `${expInfo.currentExp} EXP`;
-
-    document.getElementById("required-exp").textContent =
-        `${expInfo.requiredExp} EXP`;
-
-    document.getElementById("exp-progress-bar").style.width =
-        `${expInfo.progress}%`;
-
-    const remaining =
-        expInfo.requiredExp - expInfo.currentExp;
-
-    if (remaining <= 0) {
-        document.getElementById("next-level-text").textContent =
-            "레벨업!";
-    } else {
-        document.getElementById("next-level-text").textContent =
-            `다음 레벨까지 ${remaining} EXP`;
-    }
 }
 
-loadExp();
+
+// ========================================
+// 다음 레벨까지 필요한 EXP
+// ========================================
+
+function 다음레벨정보(exp, level) {
+
+    // 관리자 레벨
+    if (level >= 10) {
+
+        return {
+
+            nextLevel: 10,
+
+            requiredExp: 레벨필요경험치[10],
+
+            progress: 100,
+
+            remaining: 0,
+
+            maxLevel: true
+
+        };
+
+    }
+
+
+    const 현재레벨필요EXP =
+        레벨필요경험치[level];
+
+    const 다음레벨필요EXP =
+        레벨필요경험치[level + 1];
+
+
+    const 구간EXP =
+        다음레벨필요EXP -
+        현재레벨필요EXP;
+
+
+    const 현재구간EXP =
+        exp -
+        현재레벨필요EXP;
+
+
+    let progress =
+        (현재구간EXP / 구간EXP) * 100;
+
+
+    progress =
+        Math.max(
+            0,
+            Math.min(100, progress)
+        );
+
+
+    return {
+
+        nextLevel: level + 1,
+
+        requiredExp: 다음레벨필요EXP,
+
+        progress: progress,
+
+        remaining:
+            다음레벨필요EXP - exp,
+
+        maxLevel: false
+
+    };
+
+}
+
+
+// ========================================
+// DOM
+// ========================================
+
+const 사진 =
+    document.getElementById("돌이사진");
+
+const 이름 =
+    document.getElementById("이름");
+
+const 레벨 =
+    document.getElementById("레벨");
+
+const 돌돌코인수량 =
+    document.getElementById("돌돌코인수량");
+
+const 현재아이디 =
+    document.getElementById("현재아이디");
+
+const 프로필Upload =
+    document.getElementById("profileUpload");
+
+const userLevel =
+    document.getElementById("user-level");
+
+const currentExp =
+    document.getElementById("current-exp");
+
+const requiredExp =
+    document.getElementById("required-exp");
+
+const progressBar =
+    document.getElementById("exp-progress-bar");
+
+const nextLevelText =
+    document.getElementById("next-level-text");
+
+
+// ========================================
+// 로그인 사용자 정보 가져오기
+// ========================================
+
+async function 현재사용자정보가져오기() {
+
+    const {
+
+        data: { user },
+
+        error: authError
+
+    } = await supabase.auth.getUser();
+
+
+    if (authError) {
+
+        console.error(
+            "Supabase 인증 오류:",
+            authError
+        );
+
+        return null;
+
+    }
+
+
+    if (!user) {
+
+        return null;
+
+    }
+
+
+    return user;
+
+}
+
+
+// ========================================
+// users 테이블에서 정보 가져오기
+// ========================================
+
+async function 유저정보가져오기(userId) {
+
+    const {
+
+        data,
+
+        error
+
+    } = await supabase
+
+        .from("users")
+
+        .select(`
+            user_number,
+            user_id,
+            login_id,
+            user_level,
+            doldolcoin,
+            exp,
+            profile_image,
+            name
+        `)
+
+        .eq("user_id", userId)
+
+        .single();
+
+
+    if (error) {
+
+        console.error(
+            "users 조회 오류:",
+            error
+        );
+
+        return null;
+
+    }
+
+
+    return data;
+
+}
+
+
+// ========================================
+// 화면에 유저 정보 표시
+// ========================================
+
+function 유저정보표시(유저정보) {
+
+    if (!유저정보) return;
+
+
+    // ------------------------------------
+    // 프로필 사진
+    // ------------------------------------
+
+    if (유저정보.profile_image) {
+
+        사진.src =
+            유저정보.profile_image;
+
+    }
+
+
+    // ------------------------------------
+    // 이름
+    // ------------------------------------
+
+    이름.textContent =
+
+        `${유저정보.name ?? "이름 없음"}님 환영합니다`;
+
+
+    // ------------------------------------
+    // 아이디
+    // ------------------------------------
+
+    현재아이디.textContent =
+
+        `현재 아이디 : ${유저정보.login_id ?? "없음"}`;
+
+
+    // ------------------------------------
+    // EXP
+    // ------------------------------------
+
+    const exp =
+        Number(유저정보.exp ?? 0);
+
+
+    // DB의 레벨을 우선 사용
+    // 혹시 user_level이 없으면 EXP로 계산
+
+    const level =
+        Number(
+            유저정보.user_level ??
+            경험치로레벨계산(exp)
+        );
+
+
+    // ------------------------------------
+    // 레벨 표시
+    // ------------------------------------
+
+    레벨.textContent =
+
+        `현재 레벨 : Lv.${level} ${레벨이름[level] || "일반"}`;
+
+
+    // ------------------------------------
+    // 돌돌코인
+    // ------------------------------------
+
+    돌돌코인수량.textContent =
+
+        `현재 돌돌코인 : ${유저정보.doldolcoin ?? 0}`;
+
+
+    // ------------------------------------
+    // EXP UI
+    // ------------------------------------
+
+    userLevel.textContent =
+
+        `Lv.${level} ${레벨이름[level] || "일반"}`;
+
+
+    currentExp.textContent =
+
+        `${exp} EXP`;
+
+
+    // ------------------------------------
+    // 최대 레벨
+    // ------------------------------------
+
+    const 정보 =
+        다음레벨정보(exp, level);
+
+
+    if (정보.maxLevel) {
+
+        requiredExp.textContent =
+            `${레벨필요경험치[10]} EXP`;
+
+        progressBar.style.width =
+            "100%";
+
+        nextLevelText.textContent =
+            "🎉 최고 레벨입니다!";
+
+        return;
+
+    }
+
+
+    // ------------------------------------
+    // 다음 레벨 필요 EXP
+    // ------------------------------------
+
+    requiredExp.textContent =
+
+        `${정보.requiredExp} EXP`;
+
+
+    // ------------------------------------
+    // 진행률
+    // ------------------------------------
+
+    progressBar.style.width =
+
+        `${정보.progress}%`;
+
+
+    // ------------------------------------
+    // 남은 EXP
+    // ------------------------------------
+
+    if (정보.remaining <= 0) {
+
+        nextLevelText.textContent =
+            "🎉 레벨업!";
+
+    }
+
+    else {
+
+        nextLevelText.textContent =
+
+            `다음 레벨까지 ${정보.remaining} EXP`;
+
+    }
+
+}
+
+
+// ========================================
+// 페이지 로드
+// ========================================
+
+window.addEventListener(
+    "DOMContentLoaded",
+    async () => {
+
+        // --------------------------------
+        // 로그인 확인
+        // --------------------------------
+
+        const user =
+            await 현재사용자정보가져오기();
+
+
+        if (!user) {
+
+            alert(
+                "로그인이 필요합니다."
+            );
+
+            location.href =
+                "login.html";
+
+            return;
+
+        }
+
+
+        // --------------------------------
+        // users 조회
+        // --------------------------------
+
+        const 유저정보 =
+            await 유저정보가져오기(
+                user.id
+            );
+
+
+        if (!유저정보) {
+
+            alert(
+                "사용자 정보를 불러오지 못했습니다."
+            );
+
+            return;
+
+        }
+
+
+        // --------------------------------
+        // 화면 표시
+        // --------------------------------
+
+        유저정보표시(
+            유저정보
+        );
+
+    }
+);
+
+
+// ========================================
+// 프로필 사진 업로드
+// ========================================
+
+window.프로필업로드 = async function () {
+
+    const file =
+        프로필Upload.files[0];
+
+
+    if (!file) {
+
+        alert(
+            "사진을 선택하세요."
+        );
+
+        return;
+
+    }
+
+
+    // ------------------------------------
+    // 이미지인지 확인
+    // ------------------------------------
+
+    if (!file.type.startsWith("image/")) {
+
+        alert(
+            "이미지 파일만 업로드할 수 있습니다."
+        );
+
+        프로필Upload.value = "";
+
+        return;
+
+    }
+
+
+    // ------------------------------------
+    // 로그인 사용자
+    // ------------------------------------
+
+    const user =
+        await 현재사용자정보가져오기();
+
+
+    if (!user) {
+
+        alert(
+            "로그인이 필요합니다."
+        );
+
+        return;
+
+    }
+
+
+    // ------------------------------------
+    // 확장자
+    // ------------------------------------
+
+    let ext =
+        file.name
+            .split(".")
+            .pop()
+            .toLowerCase();
+
+
+    // ------------------------------------
+    // 허용 확장자
+    // ------------------------------------
+
+    const 허용확장자 = [
+
+        "jpg",
+        "jpeg",
+        "png",
+        "webp",
+        "gif"
+
+    ];
+
+
+    if (!허용확장자.includes(ext)) {
+
+        alert(
+            "JPG, PNG, WEBP, GIF 이미지만 사용할 수 있습니다."
+        );
+
+        return;
+
+    }
+
+
+    // ------------------------------------
+    // 파일 경로
+    // ------------------------------------
+
+    const fileName =
+        `${user.id}/profile.${ext}`;
+
+
+    console.log(
+        "프로필 업로드:",
+        fileName
+    );
+
+
+    // ------------------------------------
+    // Storage 업로드
+    // ------------------------------------
+
+    const {
+
+        error: uploadError
+
+    } = await supabase.storage
+
+        .from("profile-images")
+
+        .upload(
+
+            fileName,
+
+            file,
+
+            {
+
+                cacheControl: "3600",
+
+                upsert: true,
+
+                contentType: file.type
+
+            }
+
+        );
+
+
+    if (uploadError) {
+
+        console.error(
+            "프로필 사진 업로드 오류:",
+            uploadError
+        );
+
+
+        // 401 / 권한 오류
+        if (
+            uploadError.statusCode === "401" ||
+            uploadError.statusCode === 401
+        ) {
+
+            alert(
+                "프로필 사진 업로드 권한이 없습니다.\n\n" +
+                "Supabase Storage의 profile-images 버킷 정책을 확인해야 합니다."
+            );
+
+        }
+
+        else {
+
+            alert(
+                "사진 업로드 실패:\n" +
+                uploadError.message
+            );
+
+        }
+
+        return;
+
+    }
+
+
+    // ------------------------------------
+    // 공개 URL
+    // ------------------------------------
+
+    const {
+
+        data: publicUrlData
+
+    } = supabase.storage
+
+        .from("profile-images")
+
+        .getPublicUrl(
+            fileName
+        );
+
+
+    const imageUrl =
+        publicUrlData.publicUrl;
+
+
+    console.log(
+        "프로필 이미지 URL:",
+        imageUrl
+    );
+
+
+    // ------------------------------------
+    // users 테이블 저장
+    // ------------------------------------
+
+    const {
+
+        error: updateError
+
+    } = await supabase
+
+        .from("users")
+
+        .update({
+
+            profile_image:
+                imageUrl
+
+        })
+
+        .eq(
+            "user_id",
+            user.id
+        );
+
+
+    if (updateError) {
+
+        console.error(
+            "프로필 URL 저장 오류:",
+            updateError
+        );
+
+        alert(
+            "프로필 사진 URL 저장 실패:\n" +
+            updateError.message
+        );
+
+        return;
+
+    }
+
+
+    // ------------------------------------
+    // 화면 즉시 변경
+    // ------------------------------------
+
+    사진.src =
+        imageUrl +
+        "?t=" +
+        Date.now();
+
+
+    // ------------------------------------
+    // 파일 선택 초기화
+    // ------------------------------------
+
+    프로필Upload.value = "";
+
+
+    alert(
+        "프로필 사진이 변경되었습니다! 🐶"
+    );
+
+};
+
+
+// ========================================
+// 개인정보 수정
+// ========================================
+
+window.개인정보수정 = function () {
+
+    location.href =
+        "fixingsettings.html";
+
+};
+
 
 </script>
 
