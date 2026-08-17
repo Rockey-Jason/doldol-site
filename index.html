@@ -6,9 +6,10 @@
   
 <script type="module">
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
 const supabase = createClient(
   "https://scttowfhygcpdirrekqm.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
 
 window.addEventListener("DOMContentLoaded", async () => {
@@ -20,7 +21,12 @@ const rarityColor = {
     Legendary:"#ffb300",
     Doronum:"#ff3b3b"
 };
-  
+
+
+// ========================================
+// 업적
+// ========================================
+
 const 업적 = {
 
 첫로그인:{
@@ -81,7 +87,7 @@ const 업적 = {
 자는승:{
     id:"sleepingwin",
     이름:"자는 돌이에게 승리",
-    설명:"체스에서 자는 돌이를 이겼다.",
+    설명:"체스에서 자는 돌이에게 승리했다.",
     희귀도:"Common",
     보상:{
         돌돌코인:3000,
@@ -92,7 +98,7 @@ const 업적 = {
 털승:{
     id:"furwin",
     이름:"돌이 털에게 승리",
-    설명:"체스에서 돌이 털을 이겼다.",
+    설명:"체스에서 돌이 털에게 승리했다.",
     희귀도:"Common",
     보상:{
         돌돌코인:7000,
@@ -125,7 +131,7 @@ const 업적 = {
 도로늄승:{
     id:"doronumwin",
     이름:"도로늄에게 승리",
-    설명:"체스에서 도로늄를 이겼다.",
+    설명:"체스에서 도로늄을 이겼다.",
     희귀도:"Epic",
     보상:{
         돌돌코인:20000,
@@ -168,55 +174,102 @@ const 업적 = {
 
 };
 
-  const 레벨이름 = {
-    1: "일반",
-    2: "프리미엄",
-    3: "돌프리미엄",
-    4: "돌돌프리미엄",
-    5: "돌돌돌프리미엄",
-    6: "돌돌돌돌프리미엄",
-    7: "돌돌돌돌돌프리미엄",
-    8: "유사돌이",
-    9: "돌이",
-    10: "관리자"
-  };
 
-  const 사진 = document.getElementById("돌이사진");
-  const 로그인버튼 = document.getElementById("로그인");
-  const 회원가입버튼 = document.getElementById("회원가입");
-  const 로그아웃버튼 = document.getElementById("로그아웃");
-  const 돌돌코인버튼 = document.getElementById("돌돌코인");
-  const 메뉴 = document.getElementById("메뉴");
-  const 메뉴2 = document.getElementById("메뉴2");
-  const 레벨버튼 = document.getElementById("레벨");
-  const 돌돌코인수량 = document.getElementById("돌돌코인수량");
-  const 돌신확인 = document.getElementById("돌이신문확인");
-  const 상점 = document.getElementById("돌돌코인상점!!!");
-  const 돌이정보 = document.getElementById("돌이와관련된정보!");
-  const 돌이게임 = document.getElementById("돌이게임사진");
-  const 설정 = document.getElementById("설정");
+// ========================================
+// 레벨 이름
+// ========================================
 
-  let 상세설명 = false;
+const 레벨이름 = {
 
-// ================================
-// 경험치 / 레벨 시스템
-// ================================
+    1:"일반",
+    2:"프리미엄",
+    3:"돌프리미엄",
+    4:"돌돌프리미엄",
+    5:"돌돌돌프리미엄",
+    6:"돌돌돌돌프리미엄",
+    7:"돌돌돌돌돌프리미엄",
+    8:"유사돌이",
+    9:"돌이",
+    10:"관리자"
 
-const 레벨필요경험치 = {
-    1: 0,
-    2: 100,
-    3: 300,
-    4: 600,
-    5: 1000,
-    6: 1500,
-    7: 2100,
-    8: 2800,
-    9: 3600,
-    10: 4500
 };
 
 
-// EXP를 기준으로 현재 레벨 계산
+// ========================================
+// 레벨별 필요 EXP
+// ========================================
+
+const 레벨필요경험치 = {
+
+    1:0,
+    2:100,
+    3:500,
+    4:1000,
+    5:5000,
+    6:10000,
+    7:20000,
+    8:30000,
+    9:40000,
+    10:50000,
+    11:100000,
+
+};
+
+
+// ========================================
+// DOM
+// ========================================
+
+const 사진 =
+    document.getElementById("돌이사진");
+
+const 로그인버튼 =
+    document.getElementById("로그인");
+
+const 회원가입버튼 =
+    document.getElementById("회원가입");
+
+const 로그아웃버튼 =
+    document.getElementById("로그아웃");
+
+const 돌돌코인버튼 =
+    document.getElementById("돌돌코인");
+
+const 메뉴 =
+    document.getElementById("메뉴");
+
+const 메뉴2 =
+    document.getElementById("메뉴2");
+
+const 레벨버튼 =
+    document.getElementById("레벨");
+
+const 돌돌코인수량 =
+    document.getElementById("돌돌코인수량");
+
+const 돌신확인 =
+    document.getElementById("돌이신문확인");
+
+const 상점 =
+    document.getElementById("돌돌코인상점!!!");
+
+const 돌이정보 =
+    document.getElementById("돌이와관련된정보!");
+
+const 돌이게임 =
+    document.getElementById("돌이게임사진");
+
+const 설정 =
+    document.getElementById("설정");
+
+
+let 상세설명 = false;
+
+
+// ========================================
+// EXP → 레벨 계산
+// ========================================
+
 function 경험치로레벨계산(exp){
 
     let level = 1;
@@ -224,60 +277,109 @@ function 경험치로레벨계산(exp){
     for(let i = 10; i >= 1; i--){
 
         if(exp >= 레벨필요경험치[i]){
+
             level = i;
+
             break;
+
         }
 
     }
 
     return level;
+
 }
 
 
-// 경험치 지급
+// ========================================
+// EXP 획득
+// ========================================
+
 async function 경험치획득(amount){
 
-    if(!amount || amount <= 0) return;
+    if(!amount || amount <= 0){
+
+        return {
+            success:false
+        };
+
+    }
+
 
     const {
+
         data:{user}
+
     } = await supabase.auth.getUser();
 
-    if(!user) return;
+
+    if(!user){
+
+        return {
+            success:false
+        };
+
+    }
 
 
-    // 현재 EXP와 레벨 가져오기
-    const {data,error} = await supabase
+    // 현재 정보 조회
+    const {
+
+        data,
+        error
+
+    } = await supabase
+
         .from("users")
+
         .select("exp,user_level")
+
         .eq("user_id",user.id)
+
         .single();
 
 
     if(error){
 
-        console.error("경험치 조회 오류:",error);
+        console.error(
+            "경험치 조회 오류:",
+            error
+        );
 
-        return;
+        return {
+            success:false
+        };
 
     }
 
 
-    const 현재경험치 = data.exp ?? 0;
+    const 현재경험치 =
+        data.exp ?? 0;
 
-    const 기존레벨 = data.user_level ?? 1;
+
+    const 기존레벨 =
+        data.user_level ?? 1;
+
 
     const 새로운경험치 =
         현재경험치 + amount;
 
 
     const 새로운레벨 =
-        경험치로레벨계산(새로운경험치);
+        경험치로레벨계산(
+            새로운경험치
+        );
 
 
-    // DB 저장
-    const {error:updateError} = await supabase
+    // DB 업데이트
+    const {
+
+        error:updateError
+
+    } = await supabase
+
         .from("users")
+
         .update({
 
             exp:새로운경험치,
@@ -285,20 +387,27 @@ async function 경험치획득(amount){
             user_level:새로운레벨
 
         })
+
         .eq("user_id",user.id);
 
 
     if(updateError){
 
-        console.error("경험치 저장 오류:",updateError);
+        console.error(
+            "경험치 저장 오류:",
+            updateError
+        );
 
-        return;
+        return {
+            success:false
+        };
 
     }
 
 
     console.log(
-        `EXP +${amount} (${현재경험치} → ${새로운경험치})`
+        `EXP +${amount}`,
+        `(${현재경험치} → ${새로운경험치})`
     );
 
 
@@ -312,22 +421,48 @@ async function 경험치획득(amount){
 
     }
 
+
+    return {
+
+        success:true,
+
+        exp:새로운경험치,
+
+        level:새로운레벨,
+
+        levelUp:
+            새로운레벨 > 기존레벨
+
+    };
+
 }
 
 
+// ========================================
 // 레벨업 알림
-function 레벨업알림(기존레벨,새로운레벨){
+// ========================================
+
+function 레벨업알림(
+    기존레벨,
+    새로운레벨
+){
 
     const popup =
-        document.getElementById("achievementPopup");
+        document.getElementById(
+            "achievementPopup"
+        );
 
 
     popup.innerHTML = `
 
-        🎉 <b>레벨 업!</b><br><br>
+        🎉 <b>레벨 업!</b>
+
+        <br><br>
 
         Lv.${기존레벨}
+
         →
+
         Lv.${새로운레벨}
 
         <br><br>
@@ -342,7 +477,7 @@ function 레벨업알림(기존레벨,새로운레벨){
     popup.classList.add("show");
 
 
-    setTimeout(()=>{
+    setTimeout(() => {
 
         popup.classList.remove("show");
 
@@ -350,88 +485,44 @@ function 레벨업알림(기존레벨,새로운레벨){
 
 }
 
-  
-  //업적 달성
-async function 업적획득(업적정보){
 
-    const {
-        data:{user}
-    } = await supabase.auth.getUser();
-
-    if(!user) return;
-
-    const {data,error}=await supabase
-    .from("users")
-    .select("user_achievement,doldolcoin")
-    .eq("user_id",user.id)
-    .single();
-
-    if(error){
-        console.error(error);
-        return;
-    }
-
-    let achievements =
-    data.user_achievement || {};
-
-    // 이미 얻었는지 확인
-    if(achievements[업적정보.id]) return;
-
-    achievements[업적정보.id]={
-
-        이름:업적정보.이름,
-
-        설명:업적정보.설명,
-
-        희귀도:업적정보.희귀도,
-
-        보상:업적정보.보상,
-
-        획득시간:new Date().toISOString()
-
-    };
-
-await supabase
-.from("users")
-.update({
-
-    user_achievement:achievements,
-
-    doldolcoin:
-    (data.doldolcoin||0)
-    +업적정보.보상.돌돌코인
-
-})
-.eq("user_id",user.id);
-
-
-// 업적 EXP 지급
-await 경험치획득(
-    업적정보.보상.경험치
-);
-
-
-업적알림(업적정보);
+// ========================================
+// 업적 알림
+// ========================================
 
 function 업적알림(업적){
 
     const popup =
-        document.getElementById("achievementPopup");
+        document.getElementById(
+            "achievementPopup"
+        );
 
 
     popup.innerHTML = `
 
-        🏆 <b>업적 달성!</b><br><br>
+        🏆 <b>업적 달성!</b>
 
-        <b>${업적.이름}</b><br>
+        <br><br>
 
-        ${업적.설명}<br><br>
+        <b>${업적.이름}</b>
 
-        ⭐ ${업적.희귀도}<br>
+        <br>
 
-        💰 +${업적.보상.돌돌코인} 돌돌코인<br>
+        ${업적.설명}
 
-        ✨ +${업적.보상.경험치} EXP
+        <br><br>
+
+        ⭐ ${업적.희귀도}
+
+        <br>
+
+        💰 +${업적.보상.돌돌코인}
+        돌돌코인
+
+        <br>
+
+        ✨ +${업적.보상.경험치}
+        EXP
 
     `;
 
@@ -439,7 +530,7 @@ function 업적알림(업적){
     popup.classList.add("show");
 
 
-    setTimeout(()=>{
+    setTimeout(() => {
 
         popup.classList.remove("show");
 
@@ -447,123 +538,444 @@ function 업적알림(업적){
 
 }
 
-  //사진 onclick
-    돌신확인.onclick = () => {
-    location.href = "rockeynews.html";
-  };
-    상점.onclick = () => {
-    location.href = "doldolcoinmart.html";
-  };
-    돌이정보.onclick = () => {
-    location.href = "knowledgeofrockey.html";
-  };
-      돌이게임.onclick = () => {
-    location.href = "gamepage.html";
-  };
-      설정.onclick = () => {
-    location.href = "settings.html";
-  };
 
-  // 세션 확인
-  const {
-    data: { session }
-  } = await supabase.auth.getSession();
+// ========================================
+// 업적 획득
+// ========================================
 
-  if (!session) {
+async function 업적획득(업적정보){
 
-    로그인버튼.style.display = "block";
-    회원가입버튼.style.display = "block";
+    const {
 
-    로그인버튼.onclick = () => {
-      location.href = "login.html";
-    };
+        data:{user}
 
-    회원가입버튼.onclick = () => {
-      location.href = "signin.html";
-    };
+    } = await supabase.auth.getUser();
 
-    return;
-  }
 
-  // 로그인 유저
-  const {
-    data: { user }
-  } = await supabase.auth.getUser();
+    if(!user) return;
 
-  if (!user) return;
 
-  // users 테이블 조회
-  const { data: 유저정보, error: userError } = await supabase
-    .from("users")
-    .select("user_number, user_level, doldolcoin, exp, profile_image")
-    .eq("user_id", user.id)
-    .single();
+    const {
 
-  if (userError) {
-    console.error("유저 조회 오류:", userError);
-    return;
-  }
+        data,
+        error
 
-  if (유저정보.profile_image) {
-  사진.src = 유저정보.profile_image;
-}
-  
-  const 유저번호 = 유저정보.user_number;
+    } = await supabase
 
-  // 프로필 사진 표시
-  사진.style.display = "block";
+        .from("users")
 
-  // 초기 레벨
-레벨버튼.textContent =
-    `Lv.${유저정보.user_level} ${
-        레벨이름[유저정보.user_level] || "일반"
-    } · ${유저정보.exp ?? 0} EXP`;
+        .select(
+            "user_achievement,doldolcoin"
+        )
 
-  // 초기 코인
-  돌돌코인수량.textContent =
-    `현재 돌돌코인 수량: ${유저정보.doldolcoin ?? 0}`;
+        .eq("user_id",user.id)
 
-  사진.onclick = async () => {
+        .single();
 
-    상세설명 = !상세설명;
 
-    로그아웃버튼.style.display = 상세설명 ? "block" : "none";
-    돌돌코인버튼.style.display = 상세설명 ? "block" : "none";
-    메뉴.style.display = 상세설명 ? "block" : "none";
-    메뉴2.style.display = 상세설명 ? "block" : "none";
-    레벨버튼.style.display = 상세설명 ? "block" : "none";
-    돌돌코인수량.style.display = 상세설명 ? "block" : "none";
-    설정.style.display = 상세설명 ? "block" : "none";
+    if(error){
 
-    if (!상세설명) return;
+        console.error(
+            "업적 조회 오류:",
+            error
+        );
 
-const { data: 유저정보, error: userError } = await supabase
-    .from("users")
-    .select("user_number, user_level, exp, doldolcoin, profile_image")
-    .eq("user_id", user.id)
-    .single();
+        return;
 
-    if (error) {
-      console.error(error);
-      return;
     }
 
+
+    let achievements =
+        data.user_achievement || {};
+
+
+    // 이미 획득했다면 종료
+    if(
+        achievements[
+            업적정보.id
+        ]
+    ){
+
+        return;
+
+    }
+
+
+    // 업적 저장
+    achievements[
+        업적정보.id
+    ] = {
+
+        이름:
+            업적정보.이름,
+
+        설명:
+            업적정보.설명,
+
+        희귀도:
+            업적정보.희귀도,
+
+        보상:
+            업적정보.보상,
+
+        획득시간:
+            new Date().toISOString()
+
+    };
+
+
+    // 코인 지급 + 업적 저장
+    const {
+
+        error:updateError
+
+    } = await supabase
+
+        .from("users")
+
+        .update({
+
+            user_achievement:
+                achievements,
+
+            doldolcoin:
+                (data.doldolcoin || 0)
+                +
+                업적정보.보상.돌돌코인
+
+        })
+
+        .eq("user_id",user.id);
+
+
+    if(updateError){
+
+        console.error(
+            "업적 저장 오류:",
+            updateError
+        );
+
+        return;
+
+    }
+
+
+    // EXP 지급
+    await 경험치획득(
+        업적정보.보상.경험치
+    );
+
+
+    // 업적 알림
+    업적알림(
+        업적정보
+    );
+
+}
+
+
+// ========================================
+// 이동
+// ========================================
+
+돌신확인.onclick = () => {
+
+    location.href =
+        "rockeynews.html";
+
+};
+
+
+상점.onclick = () => {
+
+    location.href =
+        "doldolcoinmart.html";
+
+};
+
+
+돌이정보.onclick = () => {
+
+    location.href =
+        "knowledgeofrockey.html";
+
+};
+
+
+돌이게임.onclick = () => {
+
+    location.href =
+        "gamepage.html";
+
+};
+
+
+설정.onclick = () => {
+
+    location.href =
+        "settings.html";
+
+};
+
+
+// ========================================
+// 세션 확인
+// ========================================
+
+const {
+
+    data:{session}
+
+} = await supabase.auth.getSession();
+
+
+if(!session){
+
+    로그인버튼.style.display =
+        "block";
+
+    회원가입버튼.style.display =
+        "block";
+
+
+    로그인버튼.onclick = () => {
+
+        location.href =
+            "login.html";
+
+    };
+
+
+    회원가입버튼.onclick = () => {
+
+        location.href =
+            "signin.html";
+
+    };
+
+
+    return;
+
+}
+
+
+// ========================================
+// 로그인 사용자
+// ========================================
+
+const {
+
+    data:{user}
+
+} = await supabase.auth.getUser();
+
+
+if(!user) return;
+
+
+// ========================================
+// users 조회
+// ========================================
+
+const {
+
+    data:유저정보,
+
+    error:userError
+
+} = await supabase
+
+    .from("users")
+
+    .select(
+        "user_number,user_level,doldolcoin,exp,profile_image"
+    )
+
+    .eq("user_id",user.id)
+
+    .single();
+
+
+if(userError){
+
+    console.error(
+        "유저 조회 오류:",
+        userError
+    );
+
+    return;
+
+}
+
+
+if(유저정보.profile_image){
+
+    사진.src =
+        유저정보.profile_image;
+
+}
+
+
+const 유저번호 =
+    유저정보.user_number;
+
+
+// 프로필 사진
+사진.style.display =
+    "block";
+
+
+// ========================================
+// 레벨 표시
+// ========================================
+
+레벨버튼.textContent =
+
+    `Lv.${유저정보.user_level} ` +
+
+    `${레벨이름[유저정보.user_level] || "일반"} ` +
+
+    `· ${유저정보.exp ?? 0} EXP`;
+
+
+// ========================================
+// 코인 표시
+// ========================================
+
+돌돌코인수량.textContent =
+
+    `현재 돌돌코인 수량: ` +
+
+    `${유저정보.doldolcoin ?? 0}`;
+
+
+// ========================================
+// 프로필 클릭
+// ========================================
+
+사진.onclick = async () => {
+
+    상세설명 =
+        !상세설명;
+
+
+    로그아웃버튼.style.display =
+        상세설명 ? "block" : "none";
+
+    돌돌코인버튼.style.display =
+        상세설명 ? "block" : "none";
+
+    메뉴.style.display =
+        상세설명 ? "block" : "none";
+
+    메뉴2.style.display =
+        상세설명 ? "block" : "none";
+
+    레벨버튼.style.display =
+        상세설명 ? "block" : "none";
+
+    돌돌코인수량.style.display =
+        상세설명 ? "block" : "none";
+
+    설정.style.display =
+        상세설명 ? "block" : "none";
+
+
+    if(!상세설명){
+
+        return;
+
+    }
+
+
+    // 최신 데이터 다시 조회
+    const {
+
+        data,
+        error
+
+    } = await supabase
+
+        .from("users")
+
+        .select(
+            "user_level,exp,doldolcoin"
+        )
+
+        .eq(
+            "user_number",
+            유저번호
+        )
+
+        .single();
+
+
+    if(error){
+
+        console.error(
+            "프로필 정보 조회 오류:",
+            error
+        );
+
+        return;
+
+    }
+
+
+    // 최신 레벨
     레벨버튼.textContent =
-      `현재 레벨: ${레벨이름[data.user_level] || "일반"}`;
 
+        `Lv.${data.user_level} ` +
+
+        `${레벨이름[data.user_level] || "일반"} ` +
+
+        `· ${data.exp ?? 0} EXP`;
+
+
+    // 최신 코인
     돌돌코인수량.textContent =
-      `현재 돌돌코인 수량: ${data.doldolcoin ?? 0}`;
-  };
 
-  로그아웃버튼.onclick = async () => {
+        `현재 돌돌코인 수량: ` +
+
+        `${data.doldolcoin ?? 0}`;
+
+};
+
+
+// ========================================
+// 로그아웃
+// ========================================
+
+로그아웃버튼.onclick = async () => {
+
     await supabase.auth.signOut();
-    location.href = "index.html";
-  };
 
-  돌돌코인버튼.onclick = () => {
-    location.href = "doldolcoinshop.html";
-  };
-업적획득(업적.첫로그인);
+    location.href =
+        "index.html";
+
+};
+
+
+// ========================================
+// 돌돌코인
+// ========================================
+
+돌돌코인버튼.onclick = () => {
+
+    location.href =
+        "doldolcoinshop.html";
+
+};
+
+
+// ========================================
+// 첫 로그인 업적
+// ========================================
+
+await 업적획득(
+    업적.첫로그인
+);
+
 });
 </script>
 <style>
