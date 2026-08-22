@@ -1,43 +1,73 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <title>돌이 사이트-설정</title>
 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
 <style>
 
+/* =====================================================
+   EXP 박스
+===================================================== */
+
 .exp-box {
+
     position: absolute;
 
     top: 420px;
     left: 20px;
 
     width: 500px;
-    max-width: 500px;
+    max-width: calc(100vw - 40px);
 
     padding: 20px;
+
     box-sizing: border-box;
 
     border-radius: 18px;
+
     background: rgba(255, 255, 255, 0.08);
 
     margin: 0;
+
 }
 
+
+/* =====================================================
+   EXP 제목
+===================================================== */
+
 .exp-title {
+
     display: flex;
+
     justify-content: space-between;
+
     align-items: center;
-  color:white;
+
+    color: white;
 
     font-size: 20px;
+
     font-weight: bold;
 
     margin-bottom: 15px;
+
 }
 
+
+/* =====================================================
+   EXP 진행바
+===================================================== */
+
 .exp-progress {
+
     width: 100%;
+
     height: 14px;
 
     background: rgba(255, 255, 255, 0.15);
@@ -45,10 +75,14 @@
     border-radius: 999px;
 
     overflow: hidden;
+
 }
 
+
 #exp-progress-bar {
+
     width: 0%;
+
     height: 100%;
 
     border-radius: 999px;
@@ -60,57 +94,58 @@
     );
 
     transition: width 0.5s ease;
+
 }
 
+
+/* =====================================================
+   EXP 텍스트
+===================================================== */
+
 .exp-text {
+
     display: flex;
+
     justify-content: space-between;
 
     margin-top: 8px;
-color:white;
+
+    color: white;
+
     font-size: 14px;
+
 }
 
+
 #next-level-text {
+
     margin-top: 10px;
-color:white;
+
+    color: white;
+
     text-align: center;
 
     font-size: 14px;
+
     opacity: 0.7;
+
 }
 
-@font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
 
-@font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
-
-body {
-  background: linear-gradient(to right, #000033, #000010);
-  margin: 0;
-}
-
-    /* =====================================================
-   상태 정보 영역
+/* =====================================================
+   상태 정보 박스
 ===================================================== */
 
 .status-box {
+
     position: absolute;
 
     top: 680px;
     left: 20px;
 
     width: 500px;
-    max-width: 500px;
+
+    max-width: calc(100vw - 40px);
 
     padding: 20px;
 
@@ -123,23 +158,27 @@ body {
     color: white;
 
     font-family: 'HancomMalrangmalrang';
+
 }
 
 
 /* =====================================================
-   상태 탭 버튼
+   탭
 ===================================================== */
 
 .status-tabs {
+
     display: flex;
 
     gap: 10px;
 
     margin-bottom: 20px;
+
 }
 
 
 .status-tab-button {
+
     flex: 1;
 
     height: 45px;
@@ -159,18 +198,23 @@ body {
     cursor: pointer;
 
     transition: 0.2s;
+
 }
 
 
 .status-tab-button:hover {
+
     background: rgba(255, 255, 255, 0.22);
+
 }
 
 
 .status-tab-button.active {
+
     background: white;
 
     color: #000033;
+
 }
 
 
@@ -179,32 +223,49 @@ body {
 ===================================================== */
 
 .status-content {
+
     min-height: 150px;
+
 }
 
 
+/* =====================================================
+   상세 상태
+===================================================== */
+
 .status-item {
+
     display: flex;
 
     justify-content: space-between;
 
     align-items: center;
 
-    padding: 10px 0;
+    padding: 11px 0;
 
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: 1px solid rgba(
+        255,
+        255,
+        255,
+        0.1
+    );
 
     font-size: 17px;
+
 }
 
 
 .status-item:last-child {
+
     border-bottom: none;
+
 }
 
 
 .status-value {
+
     font-weight: bold;
+
 }
 
 
@@ -214,13 +275,18 @@ body {
 
 .achievement-item {
 
-    padding: 12px;
+    padding: 14px;
 
     margin-bottom: 10px;
 
     border-radius: 12px;
 
-    background: rgba(255,255,255,0.07);
+    background: rgba(
+        255,
+        255,
+        255,
+        0.07
+    );
 
 }
 
@@ -236,89 +302,669 @@ body {
 
 .achievement-description {
 
-    margin-top: 4px;
+    margin-top: 5px;
 
     font-size: 14px;
 
     opacity: 0.75;
+
+    line-height: 1.5;
 
 }
 
 
 .achievement-status {
 
-    margin-top: 5px;
+    margin-top: 7px;
 
     font-size: 14px;
 
 }
-    
+
+
+.achievement-reward {
+
+    margin-top: 7px;
+
+    font-size: 13px;
+
+    opacity: 0.8;
+
+}
+
+
+.achievement-time {
+
+    margin-top: 5px;
+
+    font-size: 12px;
+
+    opacity: 0.6;
+
+}
+
+
+/* =====================================================
+   모바일
+===================================================== */
+
+@media (max-width: 600px) {
+
+    .exp-box {
+
+        width: calc(100vw - 40px);
+
+    }
+
+
+    .status-box {
+
+        width: calc(100vw - 40px);
+
+    }
+
+}
+
+
+/* =====================================================
+   폰트
+===================================================== */
+
+@font-face {
+
+    font-family: 'HancomMalrangmalrang';
+
+    src:
+        url(
+            'https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2'
+        )
+        format('woff2');
+
+    font-weight: 400;
+
+    font-display: swap;
+
+}
+
+
+@font-face {
+
+    font-family: 'HancomMalrangmalrang';
+
+    src:
+        url(
+            'https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2'
+        )
+        format('woff2');
+
+    font-weight: 700;
+
+    font-display: swap;
+
+}
+
+
+/* =====================================================
+   BODY
+===================================================== */
+
+body {
+
+    background:
+        linear-gradient(
+            to right,
+            #000033,
+            #000010
+        );
+
+    margin: 0;
+
+    min-height: 1100px;
+
+}
+
 </style>
+
+
+<link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+>
+
+
+<link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+>
+
+
+<link
+    href="
+        https://fonts.googleapis.com/css2
+        ?family=Jua
+        &family=Black+Han+Sans
+        &display=swap
+    "
+    rel="stylesheet"
+>
 
 </head>
 
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-<link
-  href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap"
-  rel="stylesheet"
->
+<body>
 
 
-<!-- =========================
+<!-- =====================================================
      돌이 사이트 제목
-========================= -->
+===================================================== -->
 
 <a
-  href="https://rockey-jason.github.io/doldol-site/"
-  style="text-decoration:none;"
+    href="https://rockey-jason.github.io/doldol-site/"
+    style="
+        text-decoration:none;
+    "
 >
 
 <button
-  style="
-  position:absolute;
-  top:0;
-  left:0;
-  background:none;
-  border:none;
-  color:#f5f5f5;
-  font-family:'Black Han Sans';
-  font-size:100px;
-  cursor:pointer;
-    user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
-  user-drag: none;
-  "
+    style="
+        position:absolute;
+
+        top:0;
+        left:0;
+
+        background:none;
+
+        border:none;
+
+        color:#f5f5f5;
+
+        font-family:'Black Han Sans';
+
+        font-size:100px;
+
+        cursor:pointer;
+
+        user-select:none;
+
+        -webkit-user-select:none;
+
+        -webkit-user-drag:none;
+    "
 >
+
 돌이 사이트
+
 </button>
 
 </a>
 
 
+<!-- =====================================================
+     설명
+===================================================== -->
+
 <p
-  style="
-  font-size:20px;
-  color:#f5f5f5;
-  font-family: 'HancomMalrangmalrang';
-  margin-top:120px;
-  margin-left:20px;
-    user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
-  user-drag: none;
-  "
+    style="
+        font-size:20px;
+
+        color:#f5f5f5;
+
+        font-family:'HancomMalrangmalrang';
+
+        margin-top:120px;
+
+        margin-left:20px;
+
+        user-select:none;
+
+        -webkit-user-select:none;
+    "
 >
+
 설정-자신의 정보를 수정해보세요!
+
 </p>
+
+
+<!-- =====================================================
+     프로필 사진 업로드
+===================================================== -->
+
+<input
+
+    type="file"
+
+    id="profileUpload"
+
+    accept="image/*"
+
+    style="display:none;"
+
+    onchange="프로필업로드()"
+
+>
+
+
+<!-- =====================================================
+     프로필 사진
+===================================================== -->
+
+<img
+
+    id="돌이사진"
+
+    src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
+
+    style="
+        position:absolute;
+
+        top:180px;
+        left:20px;
+
+        width:200px;
+        height:200px;
+
+        border-radius:50%;
+
+        object-fit:cover;
+
+        object-position:center;
+
+        cursor:pointer;
+
+        z-index:2;
+
+        border:2px solid black;
+
+        user-select:none;
+
+        -webkit-user-select:none;
+
+        -webkit-user-drag:none;
+    "
+
+>
+
+
+<!-- =====================================================
+     이름
+===================================================== -->
+
+<button
+
+    id="이름"
+
+    style="
+        position:absolute;
+
+        top:200px;
+        left:250px;
+
+        font-size:50px;
+
+        font-family:'HancomMalrangmalrang';
+
+        background:none;
+
+        border:none;
+
+        color:white;
+
+        cursor:pointer;
+
+        font-weight:700;
+
+        z-index:2;
+
+        white-space:nowrap;
+
+        user-select:none;
+
+        -webkit-user-select:none;
+    "
+
+>
+
+이름
+
+</button>
+
+
+<!-- =====================================================
+     회원 레벨
+===================================================== -->
+
+<button
+
+    id="레벨"
+
+    style="
+        position:absolute;
+
+        top:280px;
+        left:250px;
+
+        font-size:20px;
+
+        font-family:'HancomMalrangmalrang';
+
+        background:none;
+
+        border:none;
+
+        color:white;
+
+        cursor:pointer;
+
+        font-weight:700;
+
+        z-index:2;
+
+        white-space:nowrap;
+
+        user-select:none;
+
+        -webkit-user-select:none;
+    "
+
+>
+
+현재 회원 등급 : 일반
+
+</button>
+
+
+<!-- =====================================================
+     돌돌코인
+===================================================== -->
+
+<button
+
+    id="돌돌코인수량"
+
+    style="
+        position:absolute;
+
+        top:310px;
+        left:250px;
+
+        font-size:20px;
+
+        font-family:'HancomMalrangmalrang';
+
+        background:none;
+
+        border:none;
+
+        color:white;
+
+        cursor:pointer;
+
+        font-weight:700;
+
+        z-index:2;
+
+        white-space:nowrap;
+
+        user-select:none;
+
+        -webkit-user-select:none;
+    "
+
+>
+
+현재 돌돌코인 : 0
+
+</button>
+
+
+<!-- =====================================================
+     현재 아이디
+===================================================== -->
+
+<div
+
+    id="현재아이디"
+
+    style="
+        position:absolute;
+
+        top:350px;
+        left:250px;
+
+        font-size:20px;
+
+        font-family:'HancomMalrangmalrang';
+
+        color:white;
+
+        white-space:nowrap;
+
+        user-select:none;
+
+        -webkit-user-select:none;
+    "
+
+>
+
+현재 아이디 : -
+
+</div>
+
+
+<!-- =====================================================
+     프로필 사진 변경
+===================================================== -->
+
+<button
+
+    onclick="
+        document
+        .getElementById('profileUpload')
+        .click()
+    "
+
+    style="
+        position:absolute;
+
+        top:600px;
+        left:20px;
+
+        width:250px;
+        height:50px;
+
+        background:white;
+
+        border:none;
+
+        border-radius:10px;
+
+        font-family:'HancomMalrangmalrang';
+
+        font-size:20px;
+
+        cursor:pointer;
+
+        user-select:none;
+
+        -webkit-user-select:none;
+
+        -webkit-user-drag:none;
+    "
+
+>
+
+프로필 사진 변경
+
+</button>
+
+
+<!-- =====================================================
+     개인정보 수정
+===================================================== -->
+
+<button
+
+    onclick="
+        location.href='fixingsettings.html'
+    "
+
+    style="
+        position:absolute;
+
+        top:600px;
+        left:250px;
+
+        width:200px;
+        height:50px;
+
+        font-size:22px;
+
+        font-family:'HancomMalrangmalrang';
+
+        border:none;
+
+        border-radius:10px;
+
+        cursor:pointer;
+
+        user-select:none;
+
+        -webkit-user-select:none;
+    "
+
+>
+
+개인정보 수정
+
+</button>
+
+
+<!-- =====================================================
+     EXP 박스
+===================================================== -->
+
+<div class="exp-box">
+
+
+    <div class="exp-title">
+
+        <span>
+            🐶 돌이 레벨
+        </span>
+
+
+        <span id="user-level">
+
+            Lv.1
+
+        </span>
+
+    </div>
+
+
+    <div class="exp-progress">
+
+        <div id="exp-progress-bar"></div>
+
+    </div>
+
+
+    <div class="exp-text">
+
+        <span id="current-exp">
+
+            0 EXP
+
+        </span>
+
+
+        <span id="required-exp">
+
+            100 EXP
+
+        </span>
+
+    </div>
+
+
+    <div id="next-level-text">
+
+        다음 레벨까지 100 EXP
+
+    </div>
+
+</div>
+
+
+<!-- =====================================================
+     상태 박스
+===================================================== -->
+
+<div class="status-box">
+
+
+    <!-- 탭 버튼 -->
+
+    <div class="status-tabs">
+
+
+        <button
+
+            id="업적버튼"
+
+            class="status-tab-button active"
+
+            onclick="
+                상태탭변경('업적')
+            "
+
+        >
+
+            🏆 업적
+
+        </button>
+
+
+        <button
+
+            id="상세설명버튼"
+
+            class="status-tab-button"
+
+            onclick="
+                상태탭변경('상세설명')
+            "
+
+        >
+
+            📊 상세설명
+
+        </button>
+
+    </div>
+
+
+    <!-- 내용 -->
+
+    <div
+        id="status-content"
+        class="status-content"
+    >
+
+    </div>
+
+</div>
 
 
 <script type="module">
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+import {
+    createClient
+}
+from
+"https://esm.sh/@supabase/supabase-js@2";
 
 
 // =====================================================
@@ -328,416 +974,24 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const SUPABASE_URL =
     "https://scttowfhygcpdirrekqm.supabase.co";
 
+
 const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IkpXVCJ9";
 
 
 const supabase =
+
     createClient(
         SUPABASE_URL,
         SUPABASE_ANON_KEY
     );
 
-    // =====================================================
-// 현재 상태 탭
-//
-// 업적
-// 상세설명
-// =====================================================
 
-let 현재상태탭 = "업적";
-
-
-// =====================================================
-// 현재 사용자 정보 저장
-// =====================================================
-
-let 현재유저정보 = null;
-
-    // =====================================================
-// 업적 목록
-// =====================================================
-
-const 업적목록 = [
-
-    {
-        id: "첫로그인",
-        이름: "첫 로그인",
-        설명: "돌이 사이트에 처음 로그인했습니다.",
-        보상코인: 100,
-        보상EXP: 50
-    },
-
-    {
-        id: "첫체스",
-        이름: "첫 체스",
-        설명: "첫 번째 체스 게임을 플레이했습니다.",
-        보상코인: 200,
-        보상EXP: 100
-    },
-
-    {
-        id: "체스10승",
-        이름: "체스 10승",
-        설명: "체스에서 10번 승리했습니다.",
-        보상코인: 500,
-        보상EXP: 300
-    },
-
-    {
-        id: "체스100승",
-        이름: "체스 100승",
-        설명: "체스에서 100번 승리했습니다.",
-        보상코인: 5000,
-        보상EXP: 2000
-    },
-
-    {
-        id: "신문읽기",
-        이름: "신문 읽기",
-        설명: "돌이신문을 읽었습니다.",
-        보상코인: 100,
-        보상EXP: 50
-    },
-
-    {
-        id: "퀴즈정답",
-        이름: "퀴즈 정답",
-        설명: "돌이신문 퀴즈를 맞혔습니다.",
-        보상코인: 5000,
-        보상EXP: 500
-    }
-
-];
-
-    // =====================================================
-// 상태 탭 변경
-// =====================================================
-
-window.상태탭변경 = function(탭) {
-
-    현재상태탭 = 탭;
-
-
-    // =================================================
-    // 버튼 상태 변경
-    // =================================================
-
-    const 업적버튼 =
-        document.getElementById("업적버튼");
-
-    const 상세설명버튼 =
-        document.getElementById("상세설명버튼");
-
-
-    if (업적버튼) {
-
-        업적버튼.classList.toggle(
-            "active",
-            탭 === "업적"
-        );
-
-    }
-
-
-    if (상세설명버튼) {
-
-        상세설명버튼.classList.toggle(
-            "active",
-            탭 === "상세설명"
-        );
-
-    }
-
-
-    // =================================================
-    // 내용 변경
-    // =================================================
-
-    상태화면업데이트();
-
-};
-
-    // =====================================================
-// 업적 화면
-// =====================================================
-
-function 업적화면표시() {
-
-    const 내용 =
-        document.getElementById("status-content");
-
-
-    if (!내용) return;
-
-
-    const 획득업적 =
-        현재유저정보?.user_achievement ?? {};
-
-
-    let html = "";
-
-
-    for (const 업적 of 업적목록) {
-
-        const 획득여부 =
-            획득업적[업적.id];
-
-
-        const 획득 =
-            Boolean(획득여부);
-
-
-        html += `
-
-            <div class="achievement-item">
-
-                <div class="achievement-name">
-
-                    ${획득 ? "🏆" : "🔒"}
-
-                    ${업적.이름}
-
-                </div>
-
-
-                <div class="achievement-description">
-
-                    ${업적.설명}
-
-                </div>
-
-
-                <div class="achievement-status">
-
-                    ${
-                        획득
-                        ? "✅ 획득 완료"
-                        : "🔒 아직 획득하지 않음"
-                    }
-
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-
-    if (!html) {
-
-        html = `
-
-            <div style="
-                text-align:center;
-                opacity:0.7;
-                padding:30px;
-            ">
-
-                업적이 없습니다.
-
-            </div>
-
-        `;
-
-    }
-
-
-    내용.innerHTML = html;
-
-}
-
-    // =====================================================
-// 상세 설명 화면
-// =====================================================
-
-function 상세설명화면표시() {
-
-    const 내용 =
-        document.getElementById("status-content");
-
-
-    if (!내용) return;
-
-
-    const 유저 =
-        현재유저정보;
-
-
-    if (!유저) {
-
-        내용.innerHTML = `
-
-            <div style="
-                text-align:center;
-                padding:30px;
-            ">
-
-                사용자 정보를 불러오는 중입니다...
-
-            </div>
-
-        `;
-
-        return;
-
-    }
-
-
-    const exp =
-        Number(
-            유저.exp ?? 0
-        );
-
-
-    const expLevel =
-        경험치로레벨계산(exp);
-
-
-    const userLevel =
-        Number(
-            유저.user_level ?? 1
-        );
-
-
-    const 회원등급 =
-        회원레벨이름[userLevel]
-        ?? "일반";
-
-
-    const coin =
-        Number(
-            유저.doldolcoin ?? 0
-        );
-
-
-    const 업적수 =
-        Object.keys(
-            유저.user_achievement ?? {}
-        ).length;
-
-
-    const 획득업적수 =
-        업적목록.filter(
-            업적 =>
-                Boolean(
-                    (유저.user_achievement ?? {})[
-                        업적.id
-                    ]
-                )
-        ).length;
-
-
-    내용.innerHTML = `
-
-        <div class="status-item">
-
-            <span>🐶 EXP 레벨</span>
-
-            <span class="status-value">
-
-                Lv.${expLevel}
-
-            </span>
-
-        </div>
-
-
-        <div class="status-item">
-
-            <span>⭐ 현재 EXP</span>
-
-            <span class="status-value">
-
-                ${exp} EXP
-
-            </span>
-
-        </div>
-
-
-        <div class="status-item">
-
-            <span>👑 회원 등급</span>
-
-            <span class="status-value">
-
-                ${회원등급}
-
-            </span>
-
-        </div>
-
-
-        <div class="status-item">
-
-            <span>🪙 돌돌코인</span>
-
-            <span class="status-value">
-
-                ${coin}
-
-            </span>
-
-        </div>
-
-
-        <div class="status-item">
-
-            <span>🏆 획득 업적</span>
-
-            <span class="status-value">
-
-                ${획득업적수} / ${업적목록.length}
-
-            </span>
-
-        </div>
-
-
-        <div class="status-item">
-
-            <span>🆔 사용자 번호</span>
-
-            <span class="status-value">
-
-                ${유저.user_number ?? "-"}
-
-            </span>
-
-        </div>
-
-    `;
-
-}
-
-// =====================================================
-// 상태 화면 업데이트
-// =====================================================
-
-function 상태화면업데이트() {
-
-    if (현재상태탭 === "업적") {
-
-        업적화면표시();
-
-    }
-
-    else if (현재상태탭 === "상세설명") {
-
-        상세설명화면표시();
-
-    }
-
-}
-    
 // =====================================================
 // 회원 레벨 이름
 //
 // ⭐ user_level
 // ⭐ 돌돌코인으로 구매하는 회원 등급
-// ⭐ EXP와 완전히 독립
 // =====================================================
 
 const 회원레벨이름 = {
@@ -766,10 +1020,10 @@ const 회원레벨이름 = {
 
 
 // =====================================================
-// EXP 레벨 필요 EXP
+// EXP 레벨
 //
 // ⭐ exp → exp_level
-// ⭐ user_level과 완전히 독립
+// ⭐ user_level과 독립
 // =====================================================
 
 const EXP레벨필요경험치 = {
@@ -800,59 +1054,229 @@ const EXP레벨필요경험치 = {
 
 
 // =====================================================
-// DOM 안전하게 가져오기
+// 업적 정의
+// =====================================================
+
+const 업적목록 = {
+
+    first_login: {
+
+        이름:
+            "첫 로그인",
+
+        설명:
+            "돌이사이트에 처음 로그인했다.",
+
+        희귀도:
+            "Common",
+
+        보상: {
+
+            경험치:
+                50,
+
+            돌돌코인:
+                100000
+
+        }
+
+    },
+
+
+    first_chess: {
+
+        이름:
+            "첫 체스",
+
+        설명:
+            "첫 번째 체스 게임을 플레이했다.",
+
+        희귀도:
+            "Common",
+
+        보상: {
+
+            경험치:
+                100,
+
+            돌돌코인:
+                500
+
+        }
+
+    },
+
+
+    chess_10_win: {
+
+        이름:
+            "체스 10승",
+
+        설명:
+            "체스에서 10번 승리했다.",
+
+        희귀도:
+            "Rare",
+
+        보상: {
+
+            경험치:
+                300,
+
+            돌돌코인:
+                1000
+
+        }
+
+    },
+
+
+    chess_100_win: {
+
+        이름:
+            "체스 100승",
+
+        설명:
+            "체스에서 100번 승리했다.",
+
+        희귀도:
+            "Epic",
+
+        보상: {
+
+            경험치:
+                2000,
+
+            돌돌코인:
+                5000
+
+        }
+
+    },
+
+
+    read_news: {
+
+        이름:
+            "신문 읽기",
+
+        설명:
+            "돌이신문을 읽었다.",
+
+        희귀도:
+            "Common",
+
+        보상: {
+
+            경험치:
+                50,
+
+            돌돌코인:
+                100
+
+        }
+
+    },
+
+
+    quiz_correct: {
+
+        이름:
+            "퀴즈 정답",
+
+        설명:
+            "돌이신문 퀴즈를 맞혔다.",
+
+        희귀도:
+            "Rare",
+
+        보상: {
+
+            경험치:
+                500,
+
+            돌돌코인:
+                5000
+
+        }
+
+    }
+
+};
+
+
+// =====================================================
+// 현재 상태
+// =====================================================
+
+let 현재상태탭 = "업적";
+
+
+let 현재유저정보 = null;
+
+
+// =====================================================
+// DOM
 // =====================================================
 
 const 이름요소 =
     document.getElementById("이름");
 
+
 const 현재아이디요소 =
     document.getElementById("현재아이디");
+
 
 const 레벨요소 =
     document.getElementById("레벨");
 
+
 const 돌돌코인수량요소 =
     document.getElementById("돌돌코인수량");
+
 
 const 사진요소 =
     document.getElementById("돌이사진");
 
+
 const 업로드요소 =
     document.getElementById("profileUpload");
+
 
 const EXP레벨요소 =
     document.getElementById("user-level");
 
+
 const 현재EXP요소 =
     document.getElementById("current-exp");
+
 
 const 필요EXP요소 =
     document.getElementById("required-exp");
 
+
 const EXP진행바 =
     document.getElementById("exp-progress-bar");
+
 
 const 다음레벨텍스트 =
     document.getElementById("next-level-text");
 
 
-// =====================================================
-// 오류 메시지
-// =====================================================
+const 상태내용요소 =
+    document.getElementById("status-content");
 
-function 오류메시지(제목, 내용) {
 
-    console.error(
-        `[돌이 사이트] ${제목}`,
-        내용
-    );
+const 업적버튼 =
+    document.getElementById("업적버튼");
 
-}
+
+const 상세설명버튼 =
+    document.getElementById("상세설명버튼");
 
 
 // =====================================================
-// 로그인 페이지 이동
+// 로그인 페이지
 // =====================================================
 
 function 로그인페이지로이동() {
@@ -868,13 +1292,14 @@ function 로그인페이지로이동() {
 
 
 // =====================================================
-// EXP → 레벨 계산
+// EXP → 레벨
 // =====================================================
 
 function 경험치로레벨계산(exp) {
 
     exp =
         Number(exp ?? 0);
+
 
     if (
         !Number.isFinite(exp) ||
@@ -915,7 +1340,7 @@ function 경험치로레벨계산(exp) {
 
 
 // =====================================================
-// EXP 진행도 계산
+// EXP 정보
 // =====================================================
 
 function 경험치정보계산(exp) {
@@ -938,10 +1363,6 @@ function 경험치정보계산(exp) {
         경험치로레벨계산(exp);
 
 
-    // =================================================
-    // 최고 레벨
-    // =================================================
-
     if (level >= 11) {
 
         return {
@@ -961,54 +1382,37 @@ function 경험치정보계산(exp) {
     }
 
 
-    // =================================================
-    // 현재 레벨 시작 EXP
-    // =================================================
-
     const 현재레벨필요EXP =
         EXP레벨필요경험치[level];
 
 
-    // =================================================
-    // 다음 레벨 필요 EXP
-    // =================================================
-
     const 다음레벨필요EXP =
         EXP레벨필요경험치[level + 1];
 
-
-    // =================================================
-    // 현재 레벨 구간에서 획득한 EXP
-    // =================================================
 
     const 현재구간EXP =
         exp -
         현재레벨필요EXP;
 
 
-    // =================================================
-    // 다음 레벨까지 필요한 구간 EXP
-    // =================================================
-
     const 구간필요EXP =
         다음레벨필요EXP -
         현재레벨필요EXP;
 
 
-    // =================================================
-    // 진행률
-    // =================================================
-
     let progress = 0;
 
 
-    if (구간필요EXP > 0) {
+    if (
+        구간필요EXP > 0
+    ) {
 
         progress =
             (
                 현재구간EXP /
                 구간필요EXP
-            ) * 100;
+            ) *
+            100;
 
     }
 
@@ -1022,10 +1426,6 @@ function 경험치정보계산(exp) {
             )
         );
 
-
-    // =================================================
-    // 다음 레벨까지 남은 EXP
-    // =================================================
 
     const remaining =
         Math.max(
@@ -1055,7 +1455,7 @@ function 경험치정보계산(exp) {
 
 
 // =====================================================
-// EXP UI 업데이트
+// EXP UI
 // =====================================================
 
 function EXP화면업데이트(exp) {
@@ -1063,10 +1463,6 @@ function EXP화면업데이트(exp) {
     const 정보 =
         경험치정보계산(exp);
 
-
-    // =================================================
-    // EXP 레벨
-    // =================================================
 
     if (EXP레벨요소) {
 
@@ -1076,10 +1472,6 @@ function EXP화면업데이트(exp) {
     }
 
 
-    // =================================================
-    // 현재 구간 EXP
-    // =================================================
-
     if (현재EXP요소) {
 
         현재EXP요소.textContent =
@@ -1087,10 +1479,6 @@ function EXP화면업데이트(exp) {
 
     }
 
-
-    // =================================================
-    // 다음 레벨 필요 EXP
-    // =================================================
 
     if (필요EXP요소) {
 
@@ -1100,10 +1488,6 @@ function EXP화면업데이트(exp) {
     }
 
 
-    // =================================================
-    // 진행 바
-    // =================================================
-
     if (EXP진행바) {
 
         EXP진행바.style.width =
@@ -1112,18 +1496,17 @@ function EXP화면업데이트(exp) {
     }
 
 
-    // =================================================
-    // 다음 레벨 텍스트
-    // =================================================
-
     if (다음레벨텍스트) {
 
-        if (정보.remaining <= 0) {
+        if (
+            정보.remaining <= 0
+        ) {
 
             다음레벨텍스트.textContent =
                 "✨ 최고 레벨!";
 
         }
+
         else {
 
             다음레벨텍스트.textContent =
@@ -1137,14 +1520,478 @@ function EXP화면업데이트(exp) {
 
 
 // =====================================================
-// 기본 사용자 화면 업데이트
+// JSON 업적 안전 처리
+// =====================================================
+
+function 업적데이터정리(data) {
+
+    if (
+        !data ||
+        typeof data !== "object" ||
+        Array.isArray(data)
+    ) {
+
+        return {};
+
+    }
+
+
+    return data;
+
+}
+
+
+// =====================================================
+// 업적 화면
+// =====================================================
+
+function 업적화면표시() {
+
+    if (!상태내용요소) {
+
+        return;
+
+    }
+
+
+    const 획득업적 =
+        업적데이터정리(
+            현재유저정보?.user_achievement
+        );
+
+
+    let html = "";
+
+
+    for (
+        const [업적ID, 업적] of
+        Object.entries(업적목록)
+    ) {
+
+        const 획득정보 =
+            획득업적[업적ID];
+
+
+        const 획득 =
+            Boolean(획득정보);
+
+
+        html += `
+
+            <div
+                class="achievement-item"
+            >
+
+                <div
+                    class="achievement-name"
+                >
+
+                    ${
+                        획득
+                            ? "🏆"
+                            : "🔒"
+                    }
+
+                    ${업적.이름}
+
+                </div>
+
+
+                <div
+                    class="achievement-description"
+                >
+
+                    ${업적.설명}
+
+                </div>
+
+
+                <div
+                    class="achievement-description"
+                >
+
+                    희귀도:
+                    ${업적.희귀도}
+
+                </div>
+
+
+                <div
+                    class="achievement-reward"
+                >
+
+                    🎁 보상:
+
+                    ${업적.보상.경험치}
+                    EXP
+
+                    /
+
+                    ${업적.보상.돌돌코인}
+                    돌돌코인
+
+                </div>
+
+
+                ${
+                    획득
+
+                    ?
+
+                    `
+
+                    <div
+                        class="achievement-status"
+                    >
+
+                        ✅ 획득 완료
+
+                    </div>
+
+
+                    <div
+                        class="achievement-time"
+                    >
+
+                        🕐 획득시간:
+
+                        ${획득정보.획득시간
+                            ? new Date(
+                                획득정보.획득시간
+                            ).toLocaleString(
+                                "ko-KR"
+                            )
+                            : "-"
+                        }
+
+                    </div>
+
+                    `
+
+                    :
+
+                    `
+
+                    <div
+                        class="achievement-status"
+                    >
+
+                        🔒 아직 획득하지 않음
+
+                    </div>
+
+                    `
+
+                }
+
+            </div>
+
+        `;
+
+    }
+
+
+    if (!html) {
+
+        html = `
+
+            <div
+                style="
+                    text-align:center;
+                    padding:30px;
+                    opacity:0.7;
+                "
+            >
+
+                업적이 없습니다.
+
+            </div>
+
+        `;
+
+    }
+
+
+    상태내용요소.innerHTML =
+        html;
+
+}
+
+
+// =====================================================
+// 상세설명
+// =====================================================
+
+function 상세설명화면표시() {
+
+    if (!상태내용요소) {
+
+        return;
+
+    }
+
+
+    const 유저 =
+        현재유저정보;
+
+
+    if (!유저) {
+
+        상태내용요소.innerHTML =
+
+            `
+
+            <div
+                style="
+                    text-align:center;
+                    padding:30px;
+                "
+            >
+
+                사용자 정보를 불러오는 중입니다...
+
+            </div>
+
+            `;
+
+        return;
+
+    }
+
+
+    const exp =
+        Number(
+            유저.exp ?? 0
+        );
+
+
+    const expLevel =
+        경험치로레벨계산(exp);
+
+
+    const userLevel =
+        Number(
+            유저.user_level ?? 1
+        );
+
+
+    const 회원등급 =
+        회원레벨이름[userLevel]
+        ??
+        "일반";
+
+
+    const coin =
+        Number(
+            유저.doldolcoin ?? 0
+        );
+
+
+    const 획득업적 =
+        업적데이터정리(
+            유저.user_achievement
+        );
+
+
+    const 획득업적수 =
+        Object.keys(
+            획득업적
+        ).length;
+
+
+    const 전체업적수 =
+        Object.keys(
+            업적목록
+        ).length;
+
+
+    상태내용요소.innerHTML =
+
+        `
+
+        <div class="status-item">
+
+            <span>
+                🐶 EXP 레벨
+            </span>
+
+            <span class="status-value">
+                Lv.${expLevel}
+            </span>
+
+        </div>
+
+
+        <div class="status-item">
+
+            <span>
+                ⭐ 총 EXP
+            </span>
+
+            <span class="status-value">
+                ${exp} EXP
+            </span>
+
+        </div>
+
+
+        <div class="status-item">
+
+            <span>
+                👑 회원 등급
+            </span>
+
+            <span class="status-value">
+                ${회원등급}
+            </span>
+
+        </div>
+
+
+        <div class="status-item">
+
+            <span>
+                🪙 돌돌코인
+            </span>
+
+            <span class="status-value">
+                ${coin.toLocaleString()}
+            </span>
+
+        </div>
+
+
+        <div class="status-item">
+
+            <span>
+                🏆 획득 업적
+            </span>
+
+            <span class="status-value">
+
+                ${획득업적수}
+                /
+                ${전체업적수}
+
+            </span>
+
+        </div>
+
+
+        <div class="status-item">
+
+            <span>
+                🆔 사용자 번호
+            </span>
+
+            <span class="status-value">
+
+                ${유저.user_number ?? "-"}
+
+            </span>
+
+        </div>
+
+
+        <div class="status-item">
+
+            <span>
+                📧 로그인 아이디
+            </span>
+
+            <span class="status-value">
+
+                ${유저.login_id ?? "-"}
+
+            </span>
+
+        </div>
+
+        `;
+
+}
+
+
+// =====================================================
+// 상태 화면
+// =====================================================
+
+function 상태화면업데이트() {
+
+    if (
+        현재상태탭 ===
+        "업적"
+    ) {
+
+        업적화면표시();
+
+    }
+
+    else if (
+        현재상태탭 ===
+        "상세설명"
+    ) {
+
+        상세설명화면표시();
+
+    }
+
+}
+
+
+// =====================================================
+// 탭 변경
+// =====================================================
+
+window.상태탭변경 = function(탭) {
+
+    현재상태탭 =
+        탭;
+
+
+    if (업적버튼) {
+
+        업적버튼.classList.toggle(
+
+            "active",
+
+            탭 === "업적"
+
+        );
+
+    }
+
+
+    if (상세설명버튼) {
+
+        상세설명버튼.classList.toggle(
+
+            "active",
+
+            탭 === "상세설명"
+
+        );
+
+    }
+
+
+    상태화면업데이트();
+
+};
+
+
+// =====================================================
+// 사용자 화면
 // =====================================================
 
 function 사용자화면업데이트(유저정보) {
 
+    현재유저정보 =
+        유저정보;
+
 
     // =================================================
-    // 프로필 사진
+    // 프로필
     // =================================================
 
     if (
@@ -1167,7 +2014,8 @@ function 사용자화면업데이트(유저정보) {
         이름요소.textContent =
 
             (
-                유저정보.name ??
+                유저정보.name
+                ??
                 "이름 없음"
             )
             +
@@ -1177,7 +2025,7 @@ function 사용자화면업데이트(유저정보) {
 
 
     // =================================================
-    // 로그인 아이디
+    // 아이디
     // =================================================
 
     if (현재아이디요소) {
@@ -1187,7 +2035,8 @@ function 사용자화면업데이트(유저정보) {
             "현재 아이디 : " +
 
             (
-                유저정보.login_id ??
+                유저정보.login_id
+                ??
                 "없음"
             );
 
@@ -1195,9 +2044,9 @@ function 사용자화면업데이트(유저정보) {
 
 
     // =================================================
-    // ⭐ 회원 등급
+    // 회원 등급
     //
-    // user_level만 사용
+    // user_level
     // =================================================
 
     const userLevel =
@@ -1237,15 +2086,13 @@ function 사용자화면업데이트(유저정보) {
 
             "현재 돌돌코인 : " +
 
-            coin;
+            coin.toLocaleString();
 
     }
 
 
     // =================================================
-    // ⭐ EXP
-    //
-    // exp만으로 실제 EXP 레벨 계산
+    // EXP
     // =================================================
 
     const exp =
@@ -1257,10 +2104,6 @@ function 사용자화면업데이트(유저정보) {
     const 계산된EXP레벨 =
         경험치로레벨계산(exp);
 
-
-    // =================================================
-    // DB의 exp_level이 실제 계산값과 다르면 보정
-    // =================================================
 
     const DBEXP레벨 =
         Number(
@@ -1274,37 +2117,38 @@ function 사용자화면업데이트(유저정보) {
     ) {
 
         console.warn(
-            "exp_level 값이 실제 EXP와 달라 자동 보정합니다.",
+
+            "exp_level 값이 실제 EXP와 다릅니다.",
+
             {
                 exp,
+
                 DBEXP레벨,
+
                 계산된EXP레벨
             }
+
         );
-
-
-        // 화면은 즉시 올바른 값 사용
-        if (EXP레벨요소) {
-
-            EXP레벨요소.textContent =
-                `Lv.${계산된EXP레벨}`;
-
-        }
 
     }
 
 
+    EXP화면업데이트(
+        exp
+    );
+
+
     // =================================================
-    // EXP UI
+    // 상태 화면
     // =================================================
 
-    EXP화면업데이트(exp);
+    상태화면업데이트();
 
 }
 
 
 // =====================================================
-// 사용자 정보 조회
+// 사용자 정보 가져오기
 // =====================================================
 
 async function 사용자정보가져오기(user) {
@@ -1331,14 +2175,23 @@ async function 사용자정보가져오기(user) {
         .select(`
 
             user_number,
+
             user_id,
+
             login_id,
+
             user_level,
+
             exp,
+
             exp_level,
+
             doldolcoin,
+
             profile_image,
+
             name,
+
             user_achievement
 
         `)
@@ -1361,7 +2214,9 @@ async function 사용자정보가져오기(user) {
     if (!유저정보) {
 
         throw new Error(
+
             "users 테이블에서 사용자 정보를 찾을 수 없습니다."
+
         );
 
     }
@@ -1373,10 +2228,18 @@ async function 사용자정보가져오기(user) {
 
 
 // =====================================================
-// exp_level DB 자동 보정
+// exp_level DB 보정
 // =====================================================
 
-async function EXP레벨DB보정(user, exp, 기존EXP레벨) {
+async function EXP레벨DB보정(
+
+    user,
+
+    exp,
+
+    기존EXP레벨
+
+) {
 
     const 계산된EXP레벨 =
         경험치로레벨계산(exp);
@@ -1399,17 +2262,20 @@ async function EXP레벨DB보정(user, exp, 기존EXP레벨) {
 
 
     console.log(
+
         "EXP 레벨 자동 보정:",
+
         DBEXP레벨,
+
         "→",
+
         계산된EXP레벨
+
     );
 
 
     const {
-
         error
-
     } = await supabase
 
         .from("users")
@@ -1430,8 +2296,11 @@ async function EXP레벨DB보정(user, exp, 기존EXP레벨) {
     if (error) {
 
         console.error(
+
             "exp_level 자동 보정 오류:",
+
             error
+
         );
 
         return false;
@@ -1445,23 +2314,14 @@ async function EXP레벨DB보정(user, exp, 기존EXP레벨) {
 
 
 // =====================================================
-// 프로필 사진 업로드
+// 프로필 업로드
 // =====================================================
 
 async function 프로필업로드처리() {
 
     try {
 
-
-        // =================================================
-        // 파일 확인
-        // =================================================
-
         if (!업로드요소) {
-
-            console.error(
-                "profileUpload 요소를 찾을 수 없습니다."
-            );
 
             return;
 
@@ -1483,10 +2343,6 @@ async function 프로필업로드처리() {
         }
 
 
-        // =================================================
-        // 파일 형식 검사
-        // =================================================
-
         if (
             !file.type.startsWith(
                 "image/"
@@ -1497,18 +2353,13 @@ async function 프로필업로드처리() {
                 "이미지 파일만 업로드할 수 있습니다."
             );
 
-            업로드요소.value = "";
+            업로드요소.value =
+                "";
 
             return;
 
         }
 
-
-        // =================================================
-        // 파일 크기 검사
-        //
-        // 10MB 제한
-        // =================================================
 
         const 최대크기 =
             10 * 1024 * 1024;
@@ -1520,23 +2371,24 @@ async function 프로필업로드처리() {
         ) {
 
             alert(
+
                 "프로필 사진은 10MB 이하만 업로드할 수 있습니다."
+
             );
 
-            업로드요소.value = "";
+            업로드요소.value =
+                "";
 
             return;
 
         }
 
 
-        // =================================================
-        // 로그인 사용자 확인
-        // =================================================
-
         const {
 
-            data: { user },
+            data: {
+                user
+            },
 
             error: authError
 
@@ -1547,29 +2399,12 @@ async function 프로필업로드처리() {
         if (authError) {
 
             console.error(
-                "프로필 업로드 인증 오류:",
                 authError
             );
 
-
-            if (
-                authError.message
-                    ?.toLowerCase()
-                    .includes("invalid api key")
-            ) {
-
-                alert(
-                    "Supabase API Key가 올바르지 않습니다."
-                );
-
-            }
-            else {
-
-                alert(
-                    "로그인 정보를 확인할 수 없습니다."
-                );
-
-            }
+            alert(
+                "로그인 정보를 확인할 수 없습니다."
+            );
 
             return;
 
@@ -1587,69 +2422,53 @@ async function 프로필업로드처리() {
         }
 
 
-        // =================================================
-        // 확장자
-        // =================================================
-
-        let ext =
+        const ext =
             file.name
                 .split(".")
                 .pop()
                 .toLowerCase();
 
 
-        // =================================================
-        // 허용 확장자
-        // =================================================
-
         const 허용확장자 = [
 
             "jpg",
+
             "jpeg",
+
             "png",
+
             "gif",
+
             "webp"
 
         ];
 
 
         if (
-            !허용확장자.includes(ext)
+            !허용확장자.includes(
+                ext
+            )
         ) {
 
             alert(
+
                 "JPG, PNG, GIF, WEBP 이미지만 사용할 수 있습니다."
+
             );
 
-            업로드요소.value = "";
+            업로드요소.value =
+                "";
 
             return;
 
         }
 
 
-        // =================================================
-        // 파일명
-        //
-        // ⭐ user.id 사용
-        // =================================================
-
         const fileName =
             `${user.id}.${ext}`;
 
 
-        console.log(
-            "프로필 업로드 시작:",
-            fileName
-        );
-
-
-        // =================================================
-        // Storage 업로드
-        // =================================================
-
         const {
-
             error: uploadError
 
         } =
@@ -1667,7 +2486,7 @@ async function 프로필업로드처리() {
 
                     {
 
-                        upsert: true,
+                        upsert:true,
 
                         contentType:
                             file.type,
@@ -1683,24 +2502,21 @@ async function 프로필업로드처리() {
         if (uploadError) {
 
             console.error(
-                "프로필 Storage 업로드 오류:",
                 uploadError
             );
 
-
             alert(
+
                 "프로필 사진 업로드에 실패했습니다.\n\n" +
+
                 uploadError.message
+
             );
 
             return;
 
         }
 
-
-        // =================================================
-        // 공개 URL
-        // =================================================
 
         const {
 
@@ -1725,24 +2541,13 @@ async function 프로필업로드처리() {
         if (!imageUrl) {
 
             throw new Error(
+
                 "프로필 이미지 URL을 가져오지 못했습니다."
+
             );
 
         }
 
-
-        console.log(
-            "프로필 이미지 URL:",
-            imageUrl
-        );
-
-
-        // =================================================
-        // users 테이블 업데이트
-        //
-        // ⭐ user_id 기준
-        // ⭐ ID가 다른 구조는 그대로 유지
-        // =================================================
 
         const {
 
@@ -1769,25 +2574,21 @@ async function 프로필업로드처리() {
         if (updateError) {
 
             console.error(
-                "프로필 DB 저장 오류:",
                 updateError
             );
 
-
             alert(
-                "프로필 사진은 업로드되었지만 " +
-                "사용자 정보 저장에 실패했습니다.\n\n" +
+
+                "프로필 사진은 업로드되었지만 사용자 정보 저장에 실패했습니다.\n\n" +
+
                 updateError.message
+
             );
 
             return;
 
         }
 
-
-        // =================================================
-        // 화면 즉시 변경
-        // =================================================
 
         if (사진요소) {
 
@@ -1804,25 +2605,28 @@ async function 프로필업로드처리() {
         );
 
 
-        // 파일 선택 초기화
-        업로드요소.value = "";
-
+        업로드요소.value =
+            "";
 
     }
+
     catch (error) {
 
         console.error(
-            "프로필 업로드 처리 중 예상하지 못한 오류:",
+            "프로필 업로드 오류:",
             error
         );
 
 
         alert(
+
             "프로필 사진 변경 중 오류가 발생했습니다.\n\n" +
+
             (
                 error?.message ??
                 "알 수 없는 오류"
             )
+
         );
 
     }
@@ -1831,7 +2635,7 @@ async function 프로필업로드처리() {
 
 
 // =====================================================
-// HTML onchange에서 호출할 수 있도록 등록
+// HTML에서 호출 가능하게 등록
 // =====================================================
 
 window.프로필업로드 =
@@ -1846,19 +2650,20 @@ async function 페이지초기화() {
 
     try {
 
-
         console.log(
             "돌이 사이트 설정 페이지 시작"
         );
 
 
         // =================================================
-        // Supabase 세션 확인
+        // 세션
         // =================================================
 
         const {
 
-            data: { session },
+            data: {
+                session
+            },
 
             error: sessionError
 
@@ -1869,46 +2674,21 @@ async function 페이지초기화() {
         if (sessionError) {
 
             console.error(
-                "Supabase 세션 확인 오류:",
                 sessionError
             );
 
+            alert(
 
-            const 메시지 =
-                sessionError.message ??
-                "";
+                "로그인 상태를 확인하는 중 오류가 발생했습니다.\n\n" +
 
+                sessionError.message
 
-            if (
-                메시지
-                    .toLowerCase()
-                    .includes("invalid api key")
-            ) {
-
-                alert(
-                    "Supabase API Key가 잘못되었습니다.\n\n" +
-                    "SUPABASE_ANON_KEY를 확인하세요."
-                );
-
-            }
-            else {
-
-                alert(
-                    "로그인 상태를 확인하는 중 오류가 발생했습니다.\n\n" +
-                    메시지
-                );
-
-            }
-
+            );
 
             return;
 
         }
 
-
-        // =================================================
-        // 로그인하지 않은 경우
-        // =================================================
 
         if (!session) {
 
@@ -1920,12 +2700,14 @@ async function 페이지초기화() {
 
 
         // =================================================
-        // 현재 사용자 확인
+        // 사용자
         // =================================================
 
         const {
 
-            data: { user },
+            data: {
+                user
+            },
 
             error: userError
 
@@ -1936,36 +2718,16 @@ async function 페이지초기화() {
         if (userError) {
 
             console.error(
-                "로그인 사용자 확인 오류:",
                 userError
             );
 
+            alert(
 
-            const 메시지 =
-                userError.message ??
-                "";
+                "로그인 사용자 정보를 확인하지 못했습니다.\n\n" +
 
+                userError.message
 
-            if (
-                메시지
-                    .toLowerCase()
-                    .includes("invalid api key")
-            ) {
-
-                alert(
-                    "Supabase API Key가 올바르지 않습니다."
-                );
-
-            }
-            else {
-
-                alert(
-                    "로그인 사용자 정보를 확인하지 못했습니다.\n\n" +
-                    메시지
-                );
-
-            }
-
+            );
 
             return;
 
@@ -1988,7 +2750,7 @@ async function 페이지초기화() {
 
 
         // =================================================
-        // users 테이블 정보 조회
+        // users 조회
         // =================================================
 
         let 유저정보;
@@ -2002,11 +2764,15 @@ async function 페이지초기화() {
                 );
 
         }
+
         catch (error) {
 
-            오류메시지(
+            console.error(
+
                 "users 테이블 조회 오류:",
+
                 error
+
             );
 
 
@@ -2015,31 +2781,37 @@ async function 페이지초기화() {
                 "";
 
 
-            // RLS 가능성
             if (
+
                 메시지
                     .toLowerCase()
-                    .includes("row-level security")
+                    .includes(
+                        "row-level security"
+                    )
+
             ) {
 
                 alert(
+
                     "사용자 정보를 읽을 권한이 없습니다.\n\n" +
-                    "Supabase의 users 테이블 RLS 정책을 확인하세요."
+
+                    "Supabase users 테이블 RLS 정책을 확인하세요."
+
                 );
 
             }
 
-            // 사용자 없음
             else if (
-                메시지
-                    .toLowerCase()
-                    .includes("0 rows")
-                ||
-                error?.code === "PGRST116"
+
+                error?.code ===
+                "PGRST116"
+
             ) {
 
                 alert(
+
                     "users 테이블에서 현재 사용자의 정보를 찾을 수 없습니다."
+
                 );
 
             }
@@ -2047,8 +2819,11 @@ async function 페이지초기화() {
             else {
 
                 alert(
+
                     "사용자 정보를 불러오지 못했습니다.\n\n" +
+
                     메시지
+
                 );
 
             }
@@ -2059,14 +2834,8 @@ async function 페이지초기화() {
         }
 
 
-        console.log(
-            "현재 사용자 정보:",
-            유저정보
-        );
-
-
         // =================================================
-        // EXP 값 정리
+        // EXP 정리
         // =================================================
 
         const exp =
@@ -2082,7 +2851,7 @@ async function 페이지초기화() {
 
 
         // =================================================
-        // EXP 레벨 자동 보정
+        // EXP 레벨 보정
         // =================================================
 
         await EXP레벨DB보정(
@@ -2097,7 +2866,7 @@ async function 페이지초기화() {
 
 
         // =================================================
-        // 화면 업데이트
+        // 화면
         // =================================================
 
         사용자화면업데이트(
@@ -2106,25 +2875,31 @@ async function 페이지초기화() {
 
 
         console.log(
-            "돌이 사이트 설정 페이지 정상 실행"
+            "설정 페이지 정상 실행"
         );
 
-
     }
+
     catch (error) {
 
         console.error(
-            "설정 페이지 초기화 중 예상하지 못한 오류:",
+
+            "설정 페이지 초기화 오류:",
+
             error
+
         );
 
 
         alert(
+
             "페이지를 불러오는 중 오류가 발생했습니다.\n\n" +
+
             (
                 error?.message ??
                 "알 수 없는 오류"
             )
+
         );
 
     }
@@ -2142,11 +2917,15 @@ if (
 ) {
 
     document.addEventListener(
+
         "DOMContentLoaded",
+
         페이지초기화
+
     );
 
 }
+
 else {
 
     페이지초기화();
@@ -2155,15 +2934,22 @@ else {
 
 
 // =====================================================
-// Supabase 인증 상태 변경 감시
+// 인증 상태 감시
 // =====================================================
 
 supabase.auth.onAuthStateChange(
-    async (event, session) => {
+
+    async (
+        event,
+        session
+    ) => {
 
         console.log(
+
             "Auth 상태 변경:",
+
             event
+
         );
 
 
@@ -2178,329 +2964,12 @@ supabase.auth.onAuthStateChange(
         }
 
     }
+
 );
 
 </script>
 
-<!-- =========================
-     프로필 사진 업로드
-========================= -->
-
-<input
-
-  type="file"
-
-  id="profileUpload"
-
-  accept="image/*"
-
-  style="display:none;"
-
-  onchange="프로필업로드()"
-
->
-
-
-<!-- =========================
-     프로필 사진 변경 버튼
-========================= -->
-
-<button
-
-  onclick="
-    document.getElementById('profileUpload').click()
-  "
-
-  style="
-  position:absolute;
-  top:600px;
-  left:20px;
-  width:250px;
-  height:50px;
-  background:white;
-  border:none;
-  border-radius:10px;
-  font-family: 'HancomMalrangmalrang';
-  font-size:20px;
-  cursor:pointer;
-    user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
-  user-drag: none;
-  "
-
->
-
-프로필 사진 변경
-
-</button>
-
-
-<!-- =========================
-     프로필 사진
-========================= -->
-
-<img
-
-  id="돌이사진"
-
-  src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
-
-  style="
-  position:absolute;
-  top:180px;
-  left:20px;
-  width:200px;
-  height:200px;
-  border-radius:50%;
-  object-fit:cover;
-  object-position:center;
-  cursor:pointer;
-  z-index:2;
-  border:2px solid black;
-    user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
-  user-drag: none;
-  "
-
->
-
-
-<!-- =========================
-     이름
-========================= -->
-
-<button
-
-  id="이름"
-
-  style="
-  position:absolute;
-  top:200px;
-  left:250px;
-  font-size:50px;
-  font-family: 'HancomMalrangmalrang';
-  background:none;
-  border:none;
-  color:white;
-  cursor:pointer;
-  font-weight:700;
-  z-index:2;
-  white-space:nowrap;
-    user-select: none;
-  -webkit-user-select: none;
-  "
-
->
-
-이름
-
-</button>
-
-
-<!-- =========================
-     레벨
-========================= -->
-
-<button
-
-  id="레벨"
-
-  style="
-  position:absolute;
-  top:280px;
-  left:250px;
-  font-size:20px;
-  font-family: 'HancomMalrangmalrang';
-  background:none;
-  border:none;
-  color:white;
-  cursor:pointer;
-  font-weight:700;
-  z-index:2;
-  white-space:nowrap;
-    user-select: none;
-  -webkit-user-select: none;
-  "
-
->
-
-현재 레벨: 0
-
-</button>
-
-
-<!-- =========================
-     돌돌코인
-========================= -->
-
-<button
-
-  id="돌돌코인수량"
-
-  style="
-  position:absolute;
-  top:310px;
-  left:250px;
-  font-size:20px;
-  font-family: 'HancomMalrangmalrang';
-  background:none;
-  border:none;
-  color:white;
-  cursor:pointer;
-  font-weight:700;
-  z-index:2;
-  white-space:nowrap;
-    user-select: none;
-  -webkit-user-select: none;
-  "
-
->
-
-현재 돌돌코인 : 0
-
-</button>
-
-
-<!-- =========================
-     현재 아이디
-========================= -->
-
-<div
-
-  id="현재아이디"
-
-  style="
-  position:absolute;
-  top:350px;
-  left:250px;
-  font-size:20px;
-  font-family: 'HancomMalrangmalrang';
-  color:white;
-  white-space:nowrap;
-    user-select: none;
-  -webkit-user-select: none;
-  "
-
->
-
-현재 아이디 : -
-
-</div>
-
-
-<!-- =========================
-     개인정보 수정 버튼
-========================= -->
-
-<button
-
-  onclick="
-    location.href='fixingsettings.html'
-  "
-
-  style="
-  position:absolute;
-  top:600px;
-  left:250px;
-  width:200px;
-  height:50px;
-  font-size:22px;
-  font-family: 'HancomMalrangmalrang';
-  border:none;
-  border-radius:10px;
-  cursor:pointer;
-    user-select: none;
-  -webkit-user-select: none;
-  "
-
->
-
-개인정보 수정
-
-</button>
-
-<div class="exp-box">
-
-    <div class="exp-title">
-
-        <span>🐶 돌이 레벨</span>
-
-        <span id="user-level">
-            Lv.1
-        </span>
-
-    </div>
-
-
-    <div class="exp-progress">
-
-        <div id="exp-progress-bar"></div>
-
-    </div>
-
-
-    <div class="exp-text">
-
-        <span id="current-exp">
-            0 EXP
-        </span>
-
-        <span id="required-exp">
-            100 EXP
-        </span>
-
-    </div>
-
-
-    <div id="next-level-text">
-        다음 레벨까지 100 EXP
-    </div>
-
-</div>
-
-    <!-- =====================================================
-     상태 정보
-===================================================== -->
-
-<div class="status-box">
-
-    <!-- 탭 버튼 -->
-
-    <div class="status-tabs">
-
-        <button
-            id="업적버튼"
-            class="status-tab-button active"
-            onclick="상태탭변경('업적')"
-        >
-            🏆 업적
-        </button>
-
-
-        <button
-            id="상세설명버튼"
-            class="status-tab-button"
-            onclick="상태탭변경('상세설명')"
-        >
-            📊 상세설명
-        </button>
-
-    </div>
-
-
-    <!-- 상태 내용 -->
-
-    <div
-        id="status-content"
-        class="status-content"
-    >
-
-    </div>
-
-</div>
-
 
 </body>
+
 </html>
