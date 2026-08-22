@@ -957,30 +957,27 @@ body {
 </div>
 
 
+```html
 <script type="module">
-
 
 import {
     createClient
-}
-from
-"https://esm.sh/@supabase/supabase-js@2";
+} from "https://esm.sh/@supabase/supabase-js@2";
 
 
 // =====================================================
 // Supabase
+//
+// ⚠️ 이 부분은 기존 코드 그대로 유지
 // =====================================================
 
 const SUPABASE_URL =
     "https://scttowfhygcpdirrekqm.supabase.co";
 
-
 const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IkpXVCJ9";
-
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm91LmNjb20iLCJyZWYiOiJpc3N0b3BwZGlycmVrbSJ9";
 
 const supabase =
-
     createClient(
         SUPABASE_URL,
         SUPABASE_ANON_KEY
@@ -988,10 +985,10 @@ const supabase =
 
 
 // =====================================================
-// 회원 레벨 이름
+// 회원 레벨
 //
-// ⭐ user_level
-// ⭐ 돌돌코인으로 구매하는 회원 등급
+// user_level
+// = 돌돌코인으로 구매하는 회원 등급
 // =====================================================
 
 const 회원레벨이름 = {
@@ -1022,8 +1019,9 @@ const 회원레벨이름 = {
 // =====================================================
 // EXP 레벨
 //
-// ⭐ exp → exp_level
-// ⭐ user_level과 독립
+// exp → exp_level
+//
+// user_level과 완전히 독립
 // =====================================================
 
 const EXP레벨필요경험치 = {
@@ -1054,7 +1052,7 @@ const EXP레벨필요경험치 = {
 
 
 // =====================================================
-// 업적 정의
+// 업적
 // =====================================================
 
 const 업적목록 = {
@@ -1211,7 +1209,6 @@ const 업적목록 = {
 
 let 현재상태탭 = "업적";
 
-
 let 현재유저정보 = null;
 
 
@@ -1222,57 +1219,96 @@ let 현재유저정보 = null;
 const 이름요소 =
     document.getElementById("이름");
 
-
 const 현재아이디요소 =
     document.getElementById("현재아이디");
-
 
 const 레벨요소 =
     document.getElementById("레벨");
 
-
 const 돌돌코인수량요소 =
     document.getElementById("돌돌코인수량");
-
 
 const 사진요소 =
     document.getElementById("돌이사진");
 
-
 const 업로드요소 =
     document.getElementById("profileUpload");
-
 
 const EXP레벨요소 =
     document.getElementById("user-level");
 
-
 const 현재EXP요소 =
     document.getElementById("current-exp");
-
 
 const 필요EXP요소 =
     document.getElementById("required-exp");
 
-
 const EXP진행바 =
     document.getElementById("exp-progress-bar");
-
 
 const 다음레벨텍스트 =
     document.getElementById("next-level-text");
 
-
 const 상태내용요소 =
     document.getElementById("status-content");
-
 
 const 업적버튼 =
     document.getElementById("업적버튼");
 
-
 const 상세설명버튼 =
     document.getElementById("상세설명버튼");
+
+
+// =====================================================
+// 숫자 안전 처리
+// =====================================================
+
+function 숫자정리(value, 기본값 = 0) {
+
+    const number =
+        Number(value);
+
+    if (
+        !Number.isFinite(number)
+    ) {
+
+        return 기본값;
+
+    }
+
+    return number;
+
+}
+
+
+// =====================================================
+// HTML 안전 처리
+// =====================================================
+
+function HTML이스케이프(value) {
+
+    if (
+        value === null ||
+        value === undefined
+    ) {
+
+        return "";
+
+    }
+
+    return String(value)
+
+        .replaceAll("&", "&amp;")
+
+        .replaceAll("<", "&lt;")
+
+        .replaceAll(">", "&gt;")
+
+        .replaceAll('"', "&quot;")
+
+        .replaceAll("'", "&#039;");
+
+}
 
 
 // =====================================================
@@ -1292,40 +1328,50 @@ function 로그인페이지로이동() {
 
 
 // =====================================================
-// EXP → 레벨
+// EXP → 레벨 계산
 // =====================================================
 
 function 경험치로레벨계산(exp) {
 
     exp =
-        Number(exp ?? 0);
+        숫자정리(
+            exp,
+            0
+        );
 
 
-    if (
-        !Number.isFinite(exp) ||
-        exp < 0
-    ) {
-
-        exp = 0;
-
-    }
+    exp =
+        Math.max(
+            0,
+            exp
+        );
 
 
     let level = 1;
 
 
+    const 레벨목록 =
+        Object.keys(
+            EXP레벨필요경험치
+        )
+        .map(Number)
+        .sort(
+            (a, b) => b - a
+        );
+
+
     for (
-        let i = 11;
-        i >= 1;
-        i--
+        const 레벨 of
+        레벨목록
     ) {
 
         if (
             exp >=
-            EXP레벨필요경험치[i]
+            EXP레벨필요경험치[레벨]
         ) {
 
-            level = i;
+            level =
+                레벨;
 
             break;
 
@@ -1340,42 +1386,80 @@ function 경험치로레벨계산(exp) {
 
 
 // =====================================================
-// EXP 정보
+// EXP 정보 계산
 // =====================================================
 
 function 경험치정보계산(exp) {
 
     exp =
-        Number(exp ?? 0);
+        숫자정리(
+            exp,
+            0
+        );
 
 
-    if (
-        !Number.isFinite(exp) ||
-        exp < 0
-    ) {
-
-        exp = 0;
-
-    }
+    exp =
+        Math.max(
+            0,
+            exp
+        );
 
 
     const level =
-        경험치로레벨계산(exp);
+        경험치로레벨계산(
+            exp
+        );
 
 
-    if (level >= 11) {
+    const 최고레벨 =
+        Math.max(
+            ...Object.keys(
+                EXP레벨필요경험치
+            ).map(Number)
+        );
+
+
+    // =================================================
+    // 최고 레벨
+    // =================================================
+
+    if (
+        level >=
+        최고레벨
+    ) {
+
+        const 최고레벨필요EXP =
+            EXP레벨필요경험치[
+                최고레벨
+            ];
+
 
         return {
 
-            level: 11,
+            level:
+                최고레벨,
 
-            currentExp: exp,
+            totalExp:
+                exp,
 
-            requiredExp: exp,
+            currentExp:
+                Math.max(
+                    0,
+                    exp -
+                    최고레벨필요EXP
+                ),
 
-            progress: 100,
+            requiredExp:
+                0,
 
-            remaining: 0
+            progress:
+                100,
+
+            remaining:
+                0,
+
+            maxLevel:
+                true
 
         };
 
@@ -1383,21 +1467,31 @@ function 경험치정보계산(exp) {
 
 
     const 현재레벨필요EXP =
-        EXP레벨필요경험치[level];
+        EXP레벨필요경험치[
+            level
+        ];
 
 
     const 다음레벨필요EXP =
-        EXP레벨필요경험치[level + 1];
+        EXP레벨필요경험치[
+            level + 1
+        ];
 
 
     const 현재구간EXP =
-        exp -
-        현재레벨필요EXP;
+        Math.max(
+            0,
+            exp -
+            현재레벨필요EXP
+        );
 
 
     const 구간필요EXP =
-        다음레벨필요EXP -
-        현재레벨필요EXP;
+        Math.max(
+            0,
+            다음레벨필요EXP -
+            현재레벨필요EXP
+        );
 
 
     let progress = 0;
@@ -1439,6 +1533,9 @@ function 경험치정보계산(exp) {
 
         level,
 
+        totalExp:
+            exp,
+
         currentExp:
             현재구간EXP,
 
@@ -1447,7 +1544,10 @@ function 경험치정보계산(exp) {
 
         progress,
 
-        remaining
+        remaining,
+
+        maxLevel:
+            false
 
     };
 
@@ -1455,13 +1555,15 @@ function 경험치정보계산(exp) {
 
 
 // =====================================================
-// EXP UI
+// EXP 화면 업데이트
 // =====================================================
 
 function EXP화면업데이트(exp) {
 
     const 정보 =
-        경험치정보계산(exp);
+        경험치정보계산(
+            exp
+        );
 
 
     if (EXP레벨요소) {
@@ -1475,15 +1577,28 @@ function EXP화면업데이트(exp) {
     if (현재EXP요소) {
 
         현재EXP요소.textContent =
-            `${정보.currentExp} EXP`;
+            `${정보.currentExp.toLocaleString()} EXP`;
 
     }
 
 
     if (필요EXP요소) {
 
-        필요EXP요소.textContent =
-            `${정보.requiredExp} EXP`;
+        if (
+            정보.maxLevel
+        ) {
+
+            필요EXP요소.textContent =
+                "MAX";
+
+        }
+
+        else {
+
+            필요EXP요소.textContent =
+                `${정보.requiredExp.toLocaleString()} EXP`;
+
+        }
 
     }
 
@@ -1499,7 +1614,7 @@ function EXP화면업데이트(exp) {
     if (다음레벨텍스트) {
 
         if (
-            정보.remaining <= 0
+            정보.maxLevel
         ) {
 
             다음레벨텍스트.textContent =
@@ -1510,7 +1625,7 @@ function EXP화면업데이트(exp) {
         else {
 
             다음레벨텍스트.textContent =
-                `다음 레벨까지 ${정보.remaining} EXP`;
+                `다음 레벨까지 ${정보.remaining.toLocaleString()} EXP`;
 
         }
 
@@ -1520,7 +1635,7 @@ function EXP화면업데이트(exp) {
 
 
 // =====================================================
-// JSON 업적 안전 처리
+// 업적 데이터 정리
 // =====================================================
 
 function 업적데이터정리(data) {
@@ -1564,16 +1679,135 @@ function 업적화면표시() {
 
 
     for (
-        const [업적ID, 업적] of
-        Object.entries(업적목록)
+        const [
+            업적ID,
+            업적
+        ] of Object.entries(
+            업적목록
+        )
     ) {
 
         const 획득정보 =
-            획득업적[업적ID];
+            획득업적[
+                업적ID
+            ];
 
 
         const 획득 =
-            Boolean(획득정보);
+            Boolean(
+                획득정보
+            );
+
+
+        const 이름 =
+            HTML이스케이프(
+                업적.이름
+            );
+
+
+        const 설명 =
+            HTML이스케이프(
+                업적.설명
+            );
+
+
+        const 희귀도 =
+            HTML이스케이프(
+                업적.희귀도
+            );
+
+
+        const 경험치 =
+            숫자정리(
+                업적.보상?.경험치,
+                0
+            );
+
+
+        const 돌돌코인 =
+            숫자정리(
+                업적.보상?.돌돌코인,
+                0
+            );
+
+
+        let 획득부분 = "";
+
+
+        if (획득) {
+
+            let 시간 = "-";
+
+
+            if (
+                획득정보 &&
+                획득정보.획득시간
+            ) {
+
+                const 날짜 =
+                    new Date(
+                        획득정보.획득시간
+                    );
+
+
+                if (
+                    !Number.isNaN(
+                        날짜.getTime()
+                    )
+                ) {
+
+                    시간 =
+                        날짜.toLocaleString(
+                            "ko-KR"
+                        );
+
+                }
+
+            }
+
+
+            획득부분 = `
+
+                <div
+                    class="achievement-status"
+                >
+
+                    ✅ 획득 완료
+
+                </div>
+
+
+                <div
+                    class="achievement-time"
+                >
+
+                    🕐 획득시간:
+
+                    ${HTML이스케이프(
+                        시간
+                    )}
+
+                </div>
+
+            `;
+
+        }
+
+        else {
+
+            획득부분 = `
+
+                <div
+                    class="achievement-status"
+                >
+
+                    🔒 아직 획득하지 않음
+
+                </div>
+
+            `;
+
+        }
 
 
         html += `
@@ -1592,7 +1826,7 @@ function 업적화면표시() {
                             : "🔒"
                     }
 
-                    ${업적.이름}
+                    ${이름}
 
                 </div>
 
@@ -1601,7 +1835,7 @@ function 업적화면표시() {
                     class="achievement-description"
                 >
 
-                    ${업적.설명}
+                    ${설명}
 
                 </div>
 
@@ -1611,7 +1845,7 @@ function 업적화면표시() {
                 >
 
                     희귀도:
-                    ${업적.희귀도}
+                    ${희귀도}
 
                 </div>
 
@@ -1622,67 +1856,18 @@ function 업적화면표시() {
 
                     🎁 보상:
 
-                    ${업적.보상.경험치}
+                    ${경험치.toLocaleString()}
                     EXP
 
                     /
 
-                    ${업적.보상.돌돌코인}
+                    ${돌돌코인.toLocaleString()}
                     돌돌코인
 
                 </div>
 
 
-                ${
-                    획득
-
-                    ?
-
-                    `
-
-                    <div
-                        class="achievement-status"
-                    >
-
-                        ✅ 획득 완료
-
-                    </div>
-
-
-                    <div
-                        class="achievement-time"
-                    >
-
-                        🕐 획득시간:
-
-                        ${획득정보.획득시간
-                            ? new Date(
-                                획득정보.획득시간
-                            ).toLocaleString(
-                                "ko-KR"
-                            )
-                            : "-"
-                        }
-
-                    </div>
-
-                    `
-
-                    :
-
-                    `
-
-                    <div
-                        class="achievement-status"
-                    >
-
-                        🔒 아직 획득하지 않음
-
-                    </div>
-
-                    `
-
-                }
+                ${획득부분}
 
             </div>
 
@@ -1719,7 +1904,7 @@ function 업적화면표시() {
 
 
 // =====================================================
-// 상세설명
+// 상세 설명
 // =====================================================
 
 function 상세설명화면표시() {
@@ -1737,9 +1922,7 @@ function 상세설명화면표시() {
 
     if (!유저) {
 
-        상태내용요소.innerHTML =
-
-            `
+        상태내용요소.innerHTML = `
 
             <div
                 style="
@@ -1752,7 +1935,7 @@ function 상세설명화면표시() {
 
             </div>
 
-            `;
+        `;
 
         return;
 
@@ -1760,30 +1943,37 @@ function 상세설명화면표시() {
 
 
     const exp =
-        Number(
-            유저.exp ?? 0
+        숫자정리(
+            유저.exp,
+            0
         );
 
 
     const expLevel =
-        경험치로레벨계산(exp);
+        경험치로레벨계산(
+            exp
+        );
 
 
     const userLevel =
-        Number(
-            유저.user_level ?? 1
+        숫자정리(
+            유저.user_level,
+            1
         );
 
 
     const 회원등급 =
-        회원레벨이름[userLevel]
+        회원레벨이름[
+            userLevel
+        ]
         ??
         "일반";
 
 
     const coin =
-        Number(
-            유저.doldolcoin ?? 0
+        숫자정리(
+            유저.doldolcoin,
+            0
         );
 
 
@@ -1796,7 +1986,12 @@ function 상세설명화면표시() {
     const 획득업적수 =
         Object.keys(
             획득업적
-        ).length;
+        )
+        .filter(
+            id =>
+                업적목록[id]
+        )
+        .length;
 
 
     const 전체업적수 =
@@ -1805,9 +2000,7 @@ function 상세설명화면표시() {
         ).length;
 
 
-    상태내용요소.innerHTML =
-
-        `
+    상태내용요소.innerHTML = `
 
         <div class="status-item">
 
@@ -1816,7 +2009,9 @@ function 상세설명화면표시() {
             </span>
 
             <span class="status-value">
+
                 Lv.${expLevel}
+
             </span>
 
         </div>
@@ -1829,7 +2024,10 @@ function 상세설명화면표시() {
             </span>
 
             <span class="status-value">
-                ${exp} EXP
+
+                ${exp.toLocaleString()}
+                EXP
+
             </span>
 
         </div>
@@ -1842,7 +2040,11 @@ function 상세설명화면표시() {
             </span>
 
             <span class="status-value">
-                ${회원등급}
+
+                ${HTML이스케이프(
+                    회원등급
+                )}
+
             </span>
 
         </div>
@@ -1855,7 +2057,9 @@ function 상세설명화면표시() {
             </span>
 
             <span class="status-value">
+
                 ${coin.toLocaleString()}
+
             </span>
 
         </div>
@@ -1886,7 +2090,9 @@ function 상세설명화면표시() {
 
             <span class="status-value">
 
-                ${유저.user_number ?? "-"}
+                ${HTML이스케이프(
+                    유저.user_number ?? "-"
+                )}
 
             </span>
 
@@ -1901,19 +2107,21 @@ function 상세설명화면표시() {
 
             <span class="status-value">
 
-                ${유저.login_id ?? "-"}
+                ${HTML이스케이프(
+                    유저.login_id ?? "-"
+                )}
 
             </span>
 
         </div>
 
-        `;
+    `;
 
 }
 
 
 // =====================================================
-// 상태 화면
+// 상태 화면 업데이트
 // =====================================================
 
 function 상태화면업데이트() {
@@ -1943,48 +2151,55 @@ function 상태화면업데이트() {
 // 탭 변경
 // =====================================================
 
-window.상태탭변경 = function(탭) {
+window.상태탭변경 =
+    function(탭) {
 
-    현재상태탭 =
-        탭;
+        if (
+            탭 !== "업적" &&
+            탭 !== "상세설명"
+        ) {
 
+            return;
 
-    if (업적버튼) {
-
-        업적버튼.classList.toggle(
-
-            "active",
-
-            탭 === "업적"
-
-        );
-
-    }
+        }
 
 
-    if (상세설명버튼) {
-
-        상세설명버튼.classList.toggle(
-
-            "active",
-
-            탭 === "상세설명"
-
-        );
-
-    }
+        현재상태탭 =
+            탭;
 
 
-    상태화면업데이트();
+        if (업적버튼) {
 
-};
+            업적버튼.classList.toggle(
+                "active",
+                탭 === "업적"
+            );
+
+        }
+
+
+        if (상세설명버튼) {
+
+            상세설명버튼.classList.toggle(
+                "active",
+                탭 === "상세설명"
+            );
+
+        }
+
+
+        상태화면업데이트();
+
+    };
 
 
 // =====================================================
-// 사용자 화면
+// 사용자 화면 업데이트
 // =====================================================
 
-function 사용자화면업데이트(유저정보) {
+function 사용자화면업데이트(
+    유저정보
+) {
 
     현재유저정보 =
         유저정보;
@@ -2011,29 +2226,26 @@ function 사용자화면업데이트(유저정보) {
 
     if (이름요소) {
 
-        이름요소.textContent =
+        const 이름 =
+            유저정보.name
+            ??
+            "이름 없음";
 
-            (
-                유저정보.name
-                ??
-                "이름 없음"
-            )
-            +
-            "님 환영합니다";
+
+        이름요소.textContent =
+            `${이름}님 환영합니다`;
 
     }
 
 
     // =================================================
-    // 아이디
+    // 로그인 아이디
     // =================================================
 
     if (현재아이디요소) {
 
         현재아이디요소.textContent =
-
             "현재 아이디 : " +
-
             (
                 유저정보.login_id
                 ??
@@ -2050,19 +2262,20 @@ function 사용자화면업데이트(유저정보) {
     // =================================================
 
     const userLevel =
-        Number(
-            유저정보.user_level ?? 1
+        숫자정리(
+            유저정보.user_level,
+            1
         );
 
 
     if (레벨요소) {
 
         레벨요소.textContent =
-
             "현재 회원 등급 : " +
-
             (
-                회원레벨이름[userLevel]
+                회원레벨이름[
+                    userLevel
+                ]
                 ??
                 "일반"
             );
@@ -2077,15 +2290,14 @@ function 사용자화면업데이트(유저정보) {
     if (돌돌코인수량요소) {
 
         const coin =
-            Number(
-                유저정보.doldolcoin ?? 0
+            숫자정리(
+                유저정보.doldolcoin,
+                0
             );
 
 
         돌돌코인수량요소.textContent =
-
             "현재 돌돌코인 : " +
-
             coin.toLocaleString();
 
     }
@@ -2093,21 +2305,27 @@ function 사용자화면업데이트(유저정보) {
 
     // =================================================
     // EXP
+    //
+    // exp → exp_level
     // =================================================
 
     const exp =
-        Number(
-            유저정보.exp ?? 0
+        숫자정리(
+            유저정보.exp,
+            0
         );
 
 
     const 계산된EXP레벨 =
-        경험치로레벨계산(exp);
+        경험치로레벨계산(
+            exp
+        );
 
 
     const DBEXP레벨 =
-        Number(
-            유저정보.exp_level ?? 1
+        숫자정리(
+            유저정보.exp_level,
+            1
         );
 
 
@@ -2117,17 +2335,12 @@ function 사용자화면업데이트(유저정보) {
     ) {
 
         console.warn(
-
             "exp_level 값이 실제 EXP와 다릅니다.",
-
             {
                 exp,
-
                 DBEXP레벨,
-
                 계산된EXP레벨
             }
-
         );
 
     }
@@ -2139,7 +2352,7 @@ function 사용자화면업데이트(유저정보) {
 
 
     // =================================================
-    // 상태 화면
+    // 상태
     // =================================================
 
     상태화면업데이트();
@@ -2151,7 +2364,9 @@ function 사용자화면업데이트(유저정보) {
 // 사용자 정보 가져오기
 // =====================================================
 
-async function 사용자정보가져오기(user) {
+async function 사용자정보가져오기(
+    user
+) {
 
     if (!user) {
 
@@ -2168,40 +2383,32 @@ async function 사용자정보가져오기(user) {
 
         error
 
-    } = await supabase
+    } =
+        await supabase
 
-        .from("users")
+            .from("users")
 
-        .select(`
+            .select(`
 
-            user_number,
+                user_number,
+                user_id,
+                login_id,
+                user_level,
+                exp,
+                exp_level,
+                doldolcoin,
+                profile_image,
+                name,
+                user_achievement
 
-            user_id,
+            `)
 
-            login_id,
+            .eq(
+                "user_id",
+                user.id
+            )
 
-            user_level,
-
-            exp,
-
-            exp_level,
-
-            doldolcoin,
-
-            profile_image,
-
-            name,
-
-            user_achievement
-
-        `)
-
-        .eq(
-            "user_id",
-            user.id
-        )
-
-        .single();
+            .single();
 
 
     if (error) {
@@ -2214,9 +2421,7 @@ async function 사용자정보가져오기(user) {
     if (!유저정보) {
 
         throw new Error(
-
             "users 테이블에서 사용자 정보를 찾을 수 없습니다."
-
         );
 
     }
@@ -2232,22 +2437,21 @@ async function 사용자정보가져오기(user) {
 // =====================================================
 
 async function EXP레벨DB보정(
-
     user,
-
     exp,
-
     기존EXP레벨
-
 ) {
 
     const 계산된EXP레벨 =
-        경험치로레벨계산(exp);
+        경험치로레벨계산(
+            exp
+        );
 
 
     const DBEXP레벨 =
-        Number(
-            기존EXP레벨 ?? 1
+        숫자정리(
+            기존EXP레벨,
+            1
         );
 
 
@@ -2262,45 +2466,38 @@ async function EXP레벨DB보정(
 
 
     console.log(
-
         "EXP 레벨 자동 보정:",
-
         DBEXP레벨,
-
         "→",
-
         계산된EXP레벨
-
     );
 
 
     const {
         error
-    } = await supabase
+    } =
+        await supabase
 
-        .from("users")
+            .from("users")
 
-        .update({
+            .update({
 
-            exp_level:
-                계산된EXP레벨
+                exp_level:
+                    계산된EXP레벨
 
-        })
+            })
 
-        .eq(
-            "user_id",
-            user.id
-        );
+            .eq(
+                "user_id",
+                user.id
+            );
 
 
     if (error) {
 
         console.error(
-
             "exp_level 자동 보정 오류:",
-
             error
-
         );
 
         return false;
@@ -2371,9 +2568,7 @@ async function 프로필업로드처리() {
         ) {
 
             alert(
-
                 "프로필 사진은 10MB 이하만 업로드할 수 있습니다."
-
             );
 
             업로드요소.value =
@@ -2413,9 +2608,7 @@ async function 프로필업로드처리() {
 
         if (!user) {
 
-            alert(
-                "로그인이 필요합니다."
-            );
+            로그인페이지로이동();
 
             return;
 
@@ -2432,13 +2625,9 @@ async function 프로필업로드처리() {
         const 허용확장자 = [
 
             "jpg",
-
             "jpeg",
-
             "png",
-
             "gif",
-
             "webp"
 
         ];
@@ -2451,9 +2640,7 @@ async function 프로필업로드처리() {
         ) {
 
             alert(
-
                 "JPG, PNG, GIF, WEBP 이미지만 사용할 수 있습니다."
-
             );
 
             업로드요소.value =
@@ -2470,7 +2657,6 @@ async function 프로필업로드처리() {
 
         const {
             error: uploadError
-
         } =
             await supabase.storage
 
@@ -2486,7 +2672,8 @@ async function 프로필업로드처리() {
 
                     {
 
-                        upsert:true,
+                        upsert:
+                            true,
 
                         contentType:
                             file.type,
@@ -2506,11 +2693,8 @@ async function 프로필업로드처리() {
             );
 
             alert(
-
                 "프로필 사진 업로드에 실패했습니다.\n\n" +
-
                 uploadError.message
-
             );
 
             return;
@@ -2519,9 +2703,7 @@ async function 프로필업로드처리() {
 
 
         const {
-
             data
-
         } =
             supabase.storage
 
@@ -2541,18 +2723,14 @@ async function 프로필업로드처리() {
         if (!imageUrl) {
 
             throw new Error(
-
                 "프로필 이미지 URL을 가져오지 못했습니다."
-
             );
 
         }
 
 
         const {
-
             error: updateError
-
         } =
             await supabase
 
@@ -2578,11 +2756,8 @@ async function 프로필업로드처리() {
             );
 
             alert(
-
                 "프로필 사진은 업로드되었지만 사용자 정보 저장에 실패했습니다.\n\n" +
-
                 updateError.message
-
             );
 
             return;
@@ -2596,6 +2771,14 @@ async function 프로필업로드처리() {
                 imageUrl +
                 "?t=" +
                 Date.now();
+
+        }
+
+
+        if (현재유저정보) {
+
+            현재유저정보.profile_image =
+                imageUrl;
 
         }
 
@@ -2619,14 +2802,11 @@ async function 프로필업로드처리() {
 
 
         alert(
-
             "프로필 사진 변경 중 오류가 발생했습니다.\n\n" +
-
             (
                 error?.message ??
                 "알 수 없는 오류"
             )
-
         );
 
     }
@@ -2635,7 +2815,7 @@ async function 프로필업로드처리() {
 
 
 // =====================================================
-// HTML에서 호출 가능하게 등록
+// HTML에서 호출
 // =====================================================
 
 window.프로필업로드 =
@@ -2651,12 +2831,12 @@ async function 페이지초기화() {
     try {
 
         console.log(
-            "돌이 사이트 설정 페이지 시작"
+            "🐶 돌이 사이트 설정 페이지 시작"
         );
 
 
         // =================================================
-        // 세션
+        // Session
         // =================================================
 
         const {
@@ -2678,11 +2858,8 @@ async function 페이지초기화() {
             );
 
             alert(
-
                 "로그인 상태를 확인하는 중 오류가 발생했습니다.\n\n" +
-
                 sessionError.message
-
             );
 
             return;
@@ -2700,7 +2877,7 @@ async function 페이지초기화() {
 
 
         // =================================================
-        // 사용자
+        // Auth User
         // =================================================
 
         const {
@@ -2722,11 +2899,8 @@ async function 페이지초기화() {
             );
 
             alert(
-
                 "로그인 사용자 정보를 확인하지 못했습니다.\n\n" +
-
                 userError.message
-
             );
 
             return;
@@ -2768,11 +2942,8 @@ async function 페이지초기화() {
         catch (error) {
 
             console.error(
-
                 "users 테이블 조회 오류:",
-
                 error
-
             );
 
 
@@ -2781,37 +2952,33 @@ async function 페이지초기화() {
                 "";
 
 
+            const 소문자메시지 =
+                메시지.toLowerCase();
+
+
             if (
-
-                메시지
-                    .toLowerCase()
-                    .includes(
-                        "row-level security"
-                    )
-
+                소문자메시지.includes(
+                    "row-level security"
+                ) ||
+                소문자메시지.includes(
+                    "permission denied"
+                )
             ) {
 
                 alert(
-
                     "사용자 정보를 읽을 권한이 없습니다.\n\n" +
-
                     "Supabase users 테이블 RLS 정책을 확인하세요."
-
                 );
 
             }
 
             else if (
-
                 error?.code ===
                 "PGRST116"
-
             ) {
 
                 alert(
-
                     "users 테이블에서 현재 사용자의 정보를 찾을 수 없습니다."
-
                 );
 
             }
@@ -2819,11 +2986,8 @@ async function 페이지초기화() {
             else {
 
                 alert(
-
                     "사용자 정보를 불러오지 못했습니다.\n\n" +
-
                     메시지
-
                 );
 
             }
@@ -2835,38 +2999,51 @@ async function 페이지초기화() {
 
 
         // =================================================
-        // EXP 정리
+        // EXP
         // =================================================
 
         const exp =
-            Number(
-                유저정보.exp ?? 0
+            숫자정리(
+                유저정보.exp,
+                0
             );
 
 
         const DBEXP레벨 =
-            Number(
-                유저정보.exp_level ?? 1
+            숫자정리(
+                유저정보.exp_level,
+                1
             );
 
 
         // =================================================
-        // EXP 레벨 보정
+        // exp_level 자동 보정
         // =================================================
 
-        await EXP레벨DB보정(
+        const 보정성공 =
+            await EXP레벨DB보정(
 
-            user,
+                user,
 
-            exp,
+                exp,
 
-            DBEXP레벨
+                DBEXP레벨
 
-        );
+            );
+
+
+        if (보정성공) {
+
+            유저정보.exp_level =
+                경험치로레벨계산(
+                    exp
+                );
+
+        }
 
 
         // =================================================
-        // 화면
+        // 화면 업데이트
         // =================================================
 
         사용자화면업데이트(
@@ -2875,7 +3052,7 @@ async function 페이지초기화() {
 
 
         console.log(
-            "설정 페이지 정상 실행"
+            "✅ 설정 페이지 정상 실행"
         );
 
     }
@@ -2883,23 +3060,17 @@ async function 페이지초기화() {
     catch (error) {
 
         console.error(
-
             "설정 페이지 초기화 오류:",
-
             error
-
         );
 
 
         alert(
-
             "페이지를 불러오는 중 오류가 발생했습니다.\n\n" +
-
             (
                 error?.message ??
                 "알 수 없는 오류"
             )
-
         );
 
     }
@@ -2934,7 +3105,7 @@ else {
 
 
 // =====================================================
-// 인증 상태 감시
+// Auth 상태 감시
 // =====================================================
 
 supabase.auth.onAuthStateChange(
@@ -2945,11 +3116,8 @@ supabase.auth.onAuthStateChange(
     ) => {
 
         console.log(
-
             "Auth 상태 변경:",
-
             event
-
         );
 
 
@@ -2968,8 +3136,7 @@ supabase.auth.onAuthStateChange(
 );
 
 </script>
-
-
+   
 </body>
 
 </html>
