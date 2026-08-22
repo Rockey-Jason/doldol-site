@@ -98,6 +98,161 @@ body {
   background: linear-gradient(to right, #000033, #000010);
   margin: 0;
 }
+
+    /* =====================================================
+   상태 정보 영역
+===================================================== */
+
+.status-box {
+    position: absolute;
+
+    top: 680px;
+    left: 20px;
+
+    width: 500px;
+    max-width: 500px;
+
+    padding: 20px;
+
+    box-sizing: border-box;
+
+    border-radius: 18px;
+
+    background: rgba(255, 255, 255, 0.08);
+
+    color: white;
+
+    font-family: 'HancomMalrangmalrang';
+}
+
+
+/* =====================================================
+   상태 탭 버튼
+===================================================== */
+
+.status-tabs {
+    display: flex;
+
+    gap: 10px;
+
+    margin-bottom: 20px;
+}
+
+
+.status-tab-button {
+    flex: 1;
+
+    height: 45px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: rgba(255, 255, 255, 0.12);
+
+    color: white;
+
+    font-family: 'HancomMalrangmalrang';
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    transition: 0.2s;
+}
+
+
+.status-tab-button:hover {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+
+.status-tab-button.active {
+    background: white;
+
+    color: #000033;
+}
+
+
+/* =====================================================
+   상태 내용
+===================================================== */
+
+.status-content {
+    min-height: 150px;
+}
+
+
+.status-item {
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    padding: 10px 0;
+
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+
+    font-size: 17px;
+}
+
+
+.status-item:last-child {
+    border-bottom: none;
+}
+
+
+.status-value {
+    font-weight: bold;
+}
+
+
+/* =====================================================
+   업적
+===================================================== */
+
+.achievement-item {
+
+    padding: 12px;
+
+    margin-bottom: 10px;
+
+    border-radius: 12px;
+
+    background: rgba(255,255,255,0.07);
+
+}
+
+
+.achievement-name {
+
+    font-size: 18px;
+
+    font-weight: bold;
+
+}
+
+
+.achievement-description {
+
+    margin-top: 4px;
+
+    font-size: 14px;
+
+    opacity: 0.75;
+
+}
+
+
+.achievement-status {
+
+    margin-top: 5px;
+
+    font-size: 14px;
+
+}
+    
 </style>
 
 </head>
@@ -183,7 +338,400 @@ const supabase =
         SUPABASE_ANON_KEY
     );
 
+    // =====================================================
+// 현재 상태 탭
+//
+// 업적
+// 상세설명
+// =====================================================
 
+let 현재상태탭 = "업적";
+
+
+// =====================================================
+// 현재 사용자 정보 저장
+// =====================================================
+
+let 현재유저정보 = null;
+
+    // =====================================================
+// 업적 목록
+// =====================================================
+
+const 업적목록 = [
+
+    {
+        id: "첫로그인",
+        이름: "첫 로그인",
+        설명: "돌이 사이트에 처음 로그인했습니다.",
+        보상코인: 100,
+        보상EXP: 50
+    },
+
+    {
+        id: "첫체스",
+        이름: "첫 체스",
+        설명: "첫 번째 체스 게임을 플레이했습니다.",
+        보상코인: 200,
+        보상EXP: 100
+    },
+
+    {
+        id: "체스10승",
+        이름: "체스 10승",
+        설명: "체스에서 10번 승리했습니다.",
+        보상코인: 500,
+        보상EXP: 300
+    },
+
+    {
+        id: "체스100승",
+        이름: "체스 100승",
+        설명: "체스에서 100번 승리했습니다.",
+        보상코인: 5000,
+        보상EXP: 2000
+    },
+
+    {
+        id: "신문읽기",
+        이름: "신문 읽기",
+        설명: "돌이신문을 읽었습니다.",
+        보상코인: 100,
+        보상EXP: 50
+    },
+
+    {
+        id: "퀴즈정답",
+        이름: "퀴즈 정답",
+        설명: "돌이신문 퀴즈를 맞혔습니다.",
+        보상코인: 5000,
+        보상EXP: 500
+    }
+
+];
+
+    // =====================================================
+// 상태 탭 변경
+// =====================================================
+
+window.상태탭변경 = function(탭) {
+
+    현재상태탭 = 탭;
+
+
+    // =================================================
+    // 버튼 상태 변경
+    // =================================================
+
+    const 업적버튼 =
+        document.getElementById("업적버튼");
+
+    const 상세설명버튼 =
+        document.getElementById("상세설명버튼");
+
+
+    if (업적버튼) {
+
+        업적버튼.classList.toggle(
+            "active",
+            탭 === "업적"
+        );
+
+    }
+
+
+    if (상세설명버튼) {
+
+        상세설명버튼.classList.toggle(
+            "active",
+            탭 === "상세설명"
+        );
+
+    }
+
+
+    // =================================================
+    // 내용 변경
+    // =================================================
+
+    상태화면업데이트();
+
+};
+
+    // =====================================================
+// 업적 화면
+// =====================================================
+
+function 업적화면표시() {
+
+    const 내용 =
+        document.getElementById("status-content");
+
+
+    if (!내용) return;
+
+
+    const 획득업적 =
+        현재유저정보?.user_achievement ?? {};
+
+
+    let html = "";
+
+
+    for (const 업적 of 업적목록) {
+
+        const 획득여부 =
+            획득업적[업적.id];
+
+
+        const 획득 =
+            Boolean(획득여부);
+
+
+        html += `
+
+            <div class="achievement-item">
+
+                <div class="achievement-name">
+
+                    ${획득 ? "🏆" : "🔒"}
+
+                    ${업적.이름}
+
+                </div>
+
+
+                <div class="achievement-description">
+
+                    ${업적.설명}
+
+                </div>
+
+
+                <div class="achievement-status">
+
+                    ${
+                        획득
+                        ? "✅ 획득 완료"
+                        : "🔒 아직 획득하지 않음"
+                    }
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    if (!html) {
+
+        html = `
+
+            <div style="
+                text-align:center;
+                opacity:0.7;
+                padding:30px;
+            ">
+
+                업적이 없습니다.
+
+            </div>
+
+        `;
+
+    }
+
+
+    내용.innerHTML = html;
+
+}
+
+    // =====================================================
+// 상세 설명 화면
+// =====================================================
+
+function 상세설명화면표시() {
+
+    const 내용 =
+        document.getElementById("status-content");
+
+
+    if (!내용) return;
+
+
+    const 유저 =
+        현재유저정보;
+
+
+    if (!유저) {
+
+        내용.innerHTML = `
+
+            <div style="
+                text-align:center;
+                padding:30px;
+            ">
+
+                사용자 정보를 불러오는 중입니다...
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    const exp =
+        Number(
+            유저.exp ?? 0
+        );
+
+
+    const expLevel =
+        경험치로레벨계산(exp);
+
+
+    const userLevel =
+        Number(
+            유저.user_level ?? 1
+        );
+
+
+    const 회원등급 =
+        회원레벨이름[userLevel]
+        ?? "일반";
+
+
+    const coin =
+        Number(
+            유저.doldolcoin ?? 0
+        );
+
+
+    const 업적수 =
+        Object.keys(
+            유저.user_achievement ?? {}
+        ).length;
+
+
+    const 획득업적수 =
+        업적목록.filter(
+            업적 =>
+                Boolean(
+                    (유저.user_achievement ?? {})[
+                        업적.id
+                    ]
+                )
+        ).length;
+
+
+    내용.innerHTML = `
+
+        <div class="status-item">
+
+            <span>🐶 EXP 레벨</span>
+
+            <span class="status-value">
+
+                Lv.${expLevel}
+
+            </span>
+
+        </div>
+
+
+        <div class="status-item">
+
+            <span>⭐ 현재 EXP</span>
+
+            <span class="status-value">
+
+                ${exp} EXP
+
+            </span>
+
+        </div>
+
+
+        <div class="status-item">
+
+            <span>👑 회원 등급</span>
+
+            <span class="status-value">
+
+                ${회원등급}
+
+            </span>
+
+        </div>
+
+
+        <div class="status-item">
+
+            <span>🪙 돌돌코인</span>
+
+            <span class="status-value">
+
+                ${coin}
+
+            </span>
+
+        </div>
+
+
+        <div class="status-item">
+
+            <span>🏆 획득 업적</span>
+
+            <span class="status-value">
+
+                ${획득업적수} / ${업적목록.length}
+
+            </span>
+
+        </div>
+
+
+        <div class="status-item">
+
+            <span>🆔 사용자 번호</span>
+
+            <span class="status-value">
+
+                ${유저.user_number ?? "-"}
+
+            </span>
+
+        </div>
+
+    `;
+
+}
+
+// =====================================================
+// 상태 화면 업데이트
+// =====================================================
+
+function 상태화면업데이트() {
+
+    if (현재상태탭 === "업적") {
+
+        업적화면표시();
+
+    }
+
+    else if (현재상태탭 === "상세설명") {
+
+        상세설명화면표시();
+
+    }
+
+}
+    
 // =====================================================
 // 회원 레벨 이름
 //
@@ -790,7 +1338,8 @@ async function 사용자정보가져오기(user) {
             exp_level,
             doldolcoin,
             profile_image,
-            name
+            name,
+            user_achievement
 
         `)
 
@@ -1907,6 +2456,47 @@ supabase.auth.onAuthStateChange(
 
     <div id="next-level-text">
         다음 레벨까지 100 EXP
+    </div>
+
+</div>
+
+    <!-- =====================================================
+     상태 정보
+===================================================== -->
+
+<div class="status-box">
+
+    <!-- 탭 버튼 -->
+
+    <div class="status-tabs">
+
+        <button
+            id="업적버튼"
+            class="status-tab-button active"
+            onclick="상태탭변경('업적')"
+        >
+            🏆 업적
+        </button>
+
+
+        <button
+            id="상세설명버튼"
+            class="status-tab-button"
+            onclick="상태탭변경('상세설명')"
+        >
+            📊 상세설명
+        </button>
+
+    </div>
+
+
+    <!-- 상태 내용 -->
+
+    <div
+        id="status-content"
+        class="status-content"
+    >
+
     </div>
 
 </div>
