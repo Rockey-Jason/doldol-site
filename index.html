@@ -665,32 +665,64 @@ img:hover {
 }
 
 
+```css
 /* =====================================================
    반응형
 ===================================================== */
 
 
-    .프로필상태표시 {
+/* =====================================================
+   PC
+   901px 이상
+===================================================== */
 
-        top:
-            70px;
+@media (min-width: 901px) {
 
-        right:
-            20px;
+    /* 사이트 제목 */
 
-        text-align:
-            right;
+    .사이트제목 {
+
+        position: absolute !important;
+
+        top: 15px !important;
+        left: 20px !important;
 
     }
 
 
-    #프로필메뉴 {
+    /* 설명 */
 
-        right:
-            15px;
+    #사이트 > p {
 
-        width:
-            220px;
+        margin-top: 105px !important;
+        margin-left: 20px !important;
+
+    }
+
+
+    /* 메뉴 버튼 영역 */
+
+    [data-page="news"],
+    #돌돌코인상점,
+    #돌이와\ 관련된\ 정보,
+    #돌이게임 {
+
+        position: absolute;
+
+    }
+
+
+    /* 프로필 */
+
+    #돌이사진 {
+
+        position: absolute !important;
+
+        top: 15px !important;
+        right: 25px !important;
+
+        width: 50px !important;
+        height: 50px !important;
 
     }
 
@@ -698,42 +730,446 @@ img:hover {
 
 
 /* =====================================================
-   모바일 상단 제목
+   태블릿
+   601px ~ 1200px
+===================================================== */
+
+@media (min-width: 601px) and (max-width: 1200px) {
+
+    /* 제목 */
+
+    .사이트제목 {
+
+        top: 15px !important;
+        left: 20px !important;
+
+        font-size: 58px !important;
+
+    }
+
+
+    /* 설명 */
+
+    #사이트 > p {
+
+        margin-top: 95px !important;
+        margin-left: 20px !important;
+
+        width: calc(100% - 40px);
+
+        font-size: 18px !important;
+
+    }
+
+
+    /* -------------------------------
+       메뉴 버튼
+    ------------------------------- */
+
+    [data-page="news"],
+    #돌돌코인상점,
+    #돌이와\ 관련된\ 정보,
+    #돌이게임 {
+
+        position: absolute !important;
+
+        width: calc(50% - 30px);
+
+        text-align: center;
+
+        font-size: 36px !important;
+
+        white-space: nowrap;
+
+    }
+
+
+    [data-page="news"] {
+
+        top: 190px !important;
+        left: 20px !important;
+
+    }
+
+
+    #돌돌코인상점 {
+
+        top: 190px !important;
+        left: calc(50% + 10px) !important;
+
+    }
+
+
+    #돌이와\ 관련된\ 정보 {
+
+        top: 430px !important;
+        left: 20px !important;
+
+    }
+
+
+    #돌이게임 {
+
+        top: 430px !important;
+        left: calc(50% + 10px) !important;
+
+    }
+
+
+    /* -------------------------------
+       이미지
+    ------------------------------- */
+
+    #돌이신문확인,
+    #돌돌코인상점\!\!\!,
+    #돌이와관련된정보\!,
+    #돌이게임사진 {
+
+        position: absolute !important;
+
+        width: 160px !important;
+
+        top: auto !important;
+
+    }
+
+
+    #돌이신문확인 {
+
+        top: 275px !important;
+        left: calc(25% - 80px) !important;
+
+    }
+
+
+    #돌돌코인상점\!\!\! {
+
+        top: 275px !important;
+        left: calc(75% - 80px) !important;
+
+    }
+
+
+    #돌이와관련된정보\! {
+
+        top: 515px !important;
+        left: calc(25% - 80px) !important;
+
+    }
+
+
+    #돌이게임사진 {
+
+        top: 515px !important;
+        left: calc(75% - 80px) !important;
+
+    }
+
+
+    /* -------------------------------
+       프로필
+    ------------------------------- */
+
+    #돌이사진 {
+
+        top: 15px !important;
+        right: 20px !important;
+
+        width: 48px !important;
+        height: 48px !important;
+
+    }
+
+
+    #로그인,
+    #회원가입 {
+
+        right: 85px !important;
+
+    }
+
+}
+
+
+/* =====================================================
+   모바일
+   600px 이하
 ===================================================== */
 
 @media (max-width: 600px) {
 
+    /* -------------------------------
+       사이트 전체
+    ------------------------------- */
+
+    #사이트 {
+
+        min-height: 100vh;
+
+        padding-bottom: 50px;
+
+    }
+
+
+    /* -------------------------------
+       제목
+    ------------------------------- */
+
     .사이트제목 {
 
-        top:
-            15px !important;
+        position: absolute !important;
 
-        left:
-            15px !important;
+        top: 15px !important;
+        left: 15px !important;
 
-        font-size:
-            48px !important;
+        font-size: 42px !important;
+
+        white-space: nowrap;
+
+    }
+
+
+    /* -------------------------------
+       설명
+    ------------------------------- */
+
+    #사이트 > p {
+
+        margin-top: 80px !important;
+        margin-left: 15px !important;
+        margin-right: 15px !important;
+
+        font-size: 16px !important;
+
+        line-height: 1.5;
+
+    }
+
+
+    /* -------------------------------
+       메뉴 버튼
+    ------------------------------- */
+
+    [data-page="news"],
+    #돌돌코인상점,
+    #돌이와\ 관련된\ 정보,
+    #돌이게임 {
+
+        position: absolute !important;
+
+        left: 15px !important;
+
+        width: calc(100% - 30px) !important;
+
+        font-size: 27px !important;
+
+        text-align: center;
+
+        white-space: nowrap;
+
+    }
+
+
+    [data-page="news"] {
+
+        top: 155px !important;
+
+    }
+
+
+    #돌돌코인상점 {
+
+        top: 275px !important;
+
+    }
+
+
+    #돌이와\ 관련된\ 정보 {
+
+        top: 395px !important;
+
+    }
+
+
+    #돌이게임 {
+
+        top: 515px !important;
+
+    }
+
+
+    /* -------------------------------
+       이미지
+    ------------------------------- */
+
+    #돌이신문확인,
+    #돌돌코인상점\!\!\!,
+    #돌이와관련된정보\!,
+    #돌이게임사진 {
+
+        position: absolute !important;
+
+        width: 140px !important;
+
+        left: 50% !important;
+
+        transform: translateX(-50%);
+
+    }
+
+
+    #돌이신문확인 {
+
+        top: 205px !important;
+
+    }
+
+
+    #돌돌코인상점\!\!\! {
+
+        top: 325px !important;
+
+    }
+
+
+    #돌이와관련된정보\! {
+
+        top: 445px !important;
+
+    }
+
+
+    #돌이게임사진 {
+
+        top: 565px !important;
+
+    }
+
+
+    /* -------------------------------
+       프로필 사진
+    ------------------------------- */
+
+    #돌이사진 {
+
+        position: absolute !important;
+
+        top: 15px !important;
+        right: 15px !important;
+
+        width: 45px !important;
+        height: 45px !important;
+
+    }
+
+
+    /* -------------------------------
+       로그인 / 회원가입
+    ------------------------------- */
+
+    #로그인 {
+
+        top: 15px !important;
+        right: 70px !important;
+
+        font-size: 16px !important;
+
+    }
+
+
+    #회원가입 {
+
+        top: 40px !important;
+        right: 70px !important;
+
+        font-size: 16px !important;
+
+    }
+
+
+    /* -------------------------------
+       프로필 메뉴
+    ------------------------------- */
+
+    #프로필메뉴 {
+
+        top: 70px;
+
+        right: 15px;
+
+        width: min(230px, calc(100vw - 30px));
+
+    }
+
+
+    /* -------------------------------
+       프로필 상태
+    ------------------------------- */
+
+    .프로필상태표시 {
+
+        top: 70px;
+
+        right: 15px;
+
+    }
+
+}
+
+
+/* =====================================================
+   아주 작은 모바일
+   400px 이하
+===================================================== */
+
+@media (max-width: 400px) {
+
+    .사이트제목 {
+
+        font-size: 36px !important;
+
+    }
+
+
+    #사이트 > p {
+
+        font-size: 14px !important;
+
+    }
+
+
+    [data-page="news"],
+    #돌돌코인상점,
+    #돌이와\ 관련된\ 정보,
+    #돌이게임 {
+
+        font-size: 23px !important;
+
+    }
+
+
+    #돌이신문확인,
+    #돌돌코인상점\!\!\!,
+    #돌이와관련된정보\!,
+    #돌이게임사진 {
+
+        width: 120px !important;
 
     }
 
 
     #돌이사진 {
 
-        top:
-            15px !important;
+        width: 40px !important;
+        height: 40px !important;
 
-        right:
-            15px !important;
-
-        width:
-            45px !important;
-
-        height:
-            45px !important;
+        right: 12px !important;
 
     }
 
 }
+```
+
 
 </style>
 
