@@ -714,6 +714,45 @@ img:hover {
 
 }
 
+
+/* =====================================================
+   모바일 상단 제목
+===================================================== */
+
+@media (max-width: 600px) {
+
+    .사이트제목 {
+
+        top:
+            15px !important;
+
+        left:
+            15px !important;
+
+        font-size:
+            48px !important;
+
+    }
+
+
+    #돌이사진 {
+
+        top:
+            15px !important;
+
+        right:
+            15px !important;
+
+        width:
+            45px !important;
+
+        height:
+            45px !important;
+
+    }
+
+}
+
 </style>
 
 <!-- =====================================================
@@ -729,6 +768,10 @@ from
 "https://esm.sh/@supabase/supabase-js@2";
 
 
+// =====================================================
+// Supabase
+// =====================================================
+
 const supabase =
     createClient(
 
@@ -738,6 +781,10 @@ const supabase =
     );
 
 
+// =====================================================
+// 상태
+// =====================================================
+
 let 초기화완료 = false;
 
 let 현재사용자 = null;
@@ -746,6 +793,10 @@ let 현재유저정보 = null;
 
 let 프로필열림 = false;
 
+
+// =====================================================
+// 회원 레벨
+// =====================================================
 
 const 회원레벨이름 = {
 
@@ -771,6 +822,10 @@ const 회원레벨이름 = {
 
 };
 
+
+// =====================================================
+// EXP 레벨
+// =====================================================
 
 const EXP레벨필요경험치 = {
 
@@ -799,12 +854,17 @@ const EXP레벨필요경험치 = {
 };
 
 
+// =====================================================
+// EXP 레벨 계산
+// =====================================================
+
 function 경험치로레벨계산(exp) {
 
     const 숫자 =
         Number(exp) || 0;
 
     let level = 1;
+
 
     for (
         let i = 11;
@@ -825,16 +885,25 @@ function 경험치로레벨계산(exp) {
 
     }
 
+
     return level;
 
 }
 
+
+// =====================================================
+// DOM
+// =====================================================
 
 document.addEventListener(
     "DOMContentLoaded",
     초기화
 );
 
+
+// =====================================================
+// 초기화
+// =====================================================
 
 async function 초기화() {
 
@@ -844,15 +913,20 @@ async function 초기화() {
 
     }
 
+
     초기화완료 = true;
+
 
     console.log(
         "🐶 돌이사이트 초기화 시작"
     );
 
+
     이벤트설정();
 
+
     await 로그인상태처리();
+
 
     console.log(
         "🐶 돌이사이트 초기화 완료"
@@ -861,6 +935,10 @@ async function 초기화() {
 }
 
 
+// =====================================================
+// DOM 가져오기
+// =====================================================
+
 function el(id) {
 
     return document.getElementById(id);
@@ -868,12 +946,22 @@ function el(id) {
 }
 
 
+// =====================================================
+// 이벤트
+// =====================================================
+
 function 이벤트설정() {
+
+
+    /* --------------------------------------------------
+       돌이신문
+    -------------------------------------------------- */
 
     const 신문버튼 =
         document.querySelector(
             '[data-page="news"]'
         );
+
 
     const 신문이미지 =
         el("돌이신문확인");
@@ -903,8 +991,13 @@ function 이벤트설정() {
     }
 
 
+    /* --------------------------------------------------
+       돌돌코인 상점
+    -------------------------------------------------- */
+
     const 상점버튼 =
         el("돌돌코인상점");
+
 
     const 상점이미지 =
         el("돌돌코인상점!!!");
@@ -934,8 +1027,13 @@ function 이벤트설정() {
     }
 
 
+    /* --------------------------------------------------
+       돌이 관련 정보
+    -------------------------------------------------- */
+
     const 정보버튼 =
         el("돌이와 관련된 정보");
+
 
     const 정보이미지 =
         el("돌이와관련된정보!");
@@ -965,8 +1063,13 @@ function 이벤트설정() {
     }
 
 
+    /* --------------------------------------------------
+       게임
+    -------------------------------------------------- */
+
     const 게임버튼 =
         el("돌이게임");
+
 
     const 게임이미지 =
         el("돌이게임사진");
@@ -996,6 +1099,10 @@ function 이벤트설정() {
     }
 
 
+    /* --------------------------------------------------
+       로그인
+    -------------------------------------------------- */
+
     const 로그인 =
         el("로그인");
 
@@ -1012,6 +1119,10 @@ function 이벤트설정() {
 
     }
 
+
+    /* --------------------------------------------------
+       회원가입
+    -------------------------------------------------- */
 
     const 회원가입 =
         el("회원가입");
@@ -1030,6 +1141,10 @@ function 이벤트설정() {
     }
 
 
+    /* --------------------------------------------------
+       설정
+    -------------------------------------------------- */
+
     const 설정 =
         el("설정");
 
@@ -1046,6 +1161,10 @@ function 이벤트설정() {
 
     }
 
+
+    /* --------------------------------------------------
+       프로필
+    -------------------------------------------------- */
 
     const 사진 =
         el("돌이사진");
@@ -1067,6 +1186,10 @@ function 이벤트설정() {
     }
 
 
+    /* --------------------------------------------------
+       프로필 상점
+    -------------------------------------------------- */
+
     const 프로필상점 =
         el("돌돌코인");
 
@@ -1084,6 +1207,10 @@ function 이벤트설정() {
     }
 
 
+    /* --------------------------------------------------
+       로그아웃
+    -------------------------------------------------- */
+
     const 로그아웃 =
         el("로그아웃");
 
@@ -1096,12 +1223,17 @@ function 이벤트설정() {
     }
 
 
+    /* --------------------------------------------------
+       메뉴 바깥 클릭
+    -------------------------------------------------- */
+
     document.addEventListener(
         "click",
         (event) => {
 
             const 메뉴 =
                 el("프로필메뉴");
+
 
             const 사진 =
                 el("돌이사진");
@@ -1129,6 +1261,10 @@ function 이벤트설정() {
 }
 
 
+// =====================================================
+// 로그인 상태
+// =====================================================
+
 async function 로그인상태처리() {
 
     try {
@@ -1146,6 +1282,7 @@ async function 로그인상태처리() {
                 "세션 확인 오류:",
                 error
             );
+
 
             비로그인화면();
 
@@ -1178,6 +1315,7 @@ async function 로그인상태처리() {
             error
         );
 
+
         비로그인화면();
 
     }
@@ -1185,13 +1323,19 @@ async function 로그인상태처리() {
 }
 
 
+// =====================================================
+// 비로그인 화면
+// =====================================================
+
 function 비로그인화면() {
 
     const 로그인 =
         el("로그인");
 
+
     const 회원가입 =
         el("회원가입");
+
 
     const 사진 =
         el("돌이사진");
@@ -1226,13 +1370,19 @@ function 비로그인화면() {
 }
 
 
+// =====================================================
+// 로그인 화면
+// =====================================================
+
 async function 로그인화면() {
 
     const 로그인 =
         el("로그인");
 
+
     const 회원가입 =
         el("회원가입");
+
 
     const 사진 =
         el("돌이사진");
@@ -1266,6 +1416,10 @@ async function 로그인화면() {
 
 }
 
+
+// =====================================================
+// 사용자 정보
+// =====================================================
 
 async function 사용자정보불러오기() {
 
@@ -1347,6 +1501,10 @@ async function 사용자정보불러오기() {
 
 }
 
+
+// =====================================================
+// 사용자 정보 표시
+// =====================================================
 
 function 사용자정보표시() {
 
@@ -1451,6 +1609,10 @@ function 사용자정보표시() {
 }
 
 
+// =====================================================
+// 프로필 메뉴 토글
+// =====================================================
+
 function 프로필메뉴토글() {
 
     if (!현재사용자) {
@@ -1462,6 +1624,7 @@ function 프로필메뉴토글() {
 
     const 메뉴 =
         el("프로필메뉴");
+
 
     const 상태 =
         el("프로필상태");
@@ -1504,6 +1667,10 @@ function 프로필메뉴토글() {
 }
 
 
+// =====================================================
+// 프로필 닫기
+// =====================================================
+
 function 프로필닫기() {
 
     프로필열림 =
@@ -1512,6 +1679,7 @@ function 프로필닫기() {
 
     const 메뉴 =
         el("프로필메뉴");
+
 
     const 상태 =
         el("프로필상태");
@@ -1537,6 +1705,10 @@ function 프로필닫기() {
 }
 
 
+// =====================================================
+// 로그아웃
+// =====================================================
+
 async function 로그아웃처리() {
 
     try {
@@ -1554,9 +1726,11 @@ async function 로그아웃처리() {
                 error
             );
 
+
             alert(
                 "로그아웃에 실패했습니다."
             );
+
 
             return;
 
@@ -1566,10 +1740,13 @@ async function 로그아웃처리() {
         현재사용자 =
             null;
 
+
         현재유저정보 =
             null;
 
+
         프로필닫기();
+
 
         location.href =
             "index.html";
@@ -1587,6 +1764,10 @@ async function 로그아웃처리() {
 
 }
 
+
+// =====================================================
+// 콘솔
+// =====================================================
 
 console.log(
     "🐶 돌이사이트 메인 스크립트 준비 완료"
@@ -1614,11 +1795,12 @@ text-decoration:none;
 
 <button
 class="사이트제목"
-style="
-position:absolute;
 
-```
-    top:20px;
+ 
+style="
+    position:absolute;
+
+    top:15px;
     left:20px;
 
     background:none;
@@ -1628,19 +1810,18 @@ position:absolute;
 
     font-family:'Black Han Sans';
 
-    font-size:70px;
+    font-size:72px;
 
     line-height:1;
 
-    padding:0;
-
-    margin:0;
-
     cursor:pointer;
 
-    z-index:1000;
+    padding:0;
+    margin:0;
+
+    z-index:100;
 "
-```
+ 
 
 >
 
@@ -1658,18 +1839,22 @@ position:absolute;
     style="
         font-size:20px;
 
-```
+ 
     color:#f5f5f5;
 
     font-family:'HancomMalrangmalrang';
 
-    margin-top:120px;
+    margin-top:105px;
+
+    margin-left:20px;
+
+    margin-bottom:0;
 
     font-weight:700;
 
-    margin-left:20px;
+    line-height:1.5;
 "
-```
+ 
 
 >
 
@@ -1684,85 +1869,139 @@ position:absolute;
 
 <button
 data-page="news"
+
+ 
 class="메인메뉴버튼"
+
 style="
-position:absolute;
-top:200px;
-left:50px;
-font-size:50px;
-font-family:'HancomMalrangmalrang';
-background:none;
-border:none;
-color:#f5f5f5;
-cursor:pointer;
-font-weight:700;
+    position:absolute;
+
+    top:200px;
+    left:50px;
+
+    font-size:50px;
+
+    font-family:'HancomMalrangmalrang';
+
+    background:none;
+    border:none;
+
+    color:#f5f5f5;
+
+    cursor:pointer;
+
+    font-weight:700;
 "
+ 
 
 >
 
-돌이신문 확인 </button>
+돌이신문 확인
+
+</button>
 
 <button
 id="돌돌코인상점"
+
+ 
 class="메인메뉴버튼"
+
 style="
-position:absolute;
-top:200px;
-left:500px;
-font-size:50px;
-font-family:'HancomMalrangmalrang';
-background:none;
-border:none;
-color:#f5f5f5;
-cursor:pointer;
-font-weight:700;
+    position:absolute;
+
+    top:200px;
+    left:500px;
+
+    font-size:50px;
+
+    font-family:'HancomMalrangmalrang';
+
+    background:none;
+    border:none;
+
+    color:#f5f5f5;
+
+    cursor:pointer;
+
+    font-weight:700;
 "
+ 
 
 >
 
-돌돌코인 상점 </button>
+돌돌코인 상점
+
+</button>
 
 <button
 id="돌이와 관련된 정보"
+
+ 
 class="메인메뉴버튼"
+
 style="
-position:absolute;
-top:200px;
-left:900px;
-font-size:50px;
-font-family:'HancomMalrangmalrang';
-background:none;
-border:none;
-color:#f5f5f5;
-cursor:pointer;
-white-space:nowrap;
-font-weight:700;
+    position:absolute;
+
+    top:200px;
+    left:900px;
+
+    font-size:50px;
+
+    font-family:'HancomMalrangmalrang';
+
+    background:none;
+    border:none;
+
+    color:#f5f5f5;
+
+    cursor:pointer;
+
+    white-space:nowrap;
+
+    font-weight:700;
 "
+ 
 
 >
 
-돌이와 관련된 정보 </button>
+돌이와 관련된 정보
+
+</button>
 
 <button
 id="돌이게임"
+
+ 
 class="메인메뉴버튼"
+
 style="
-position:absolute;
-top:200px;
-left:1400px;
-font-size:50px;
-font-family:'HancomMalrangmalrang';
-background:none;
-border:none;
-color:#f5f5f5;
-cursor:pointer;
-white-space:nowrap;
-font-weight:700;
+    position:absolute;
+
+    top:200px;
+    left:1400px;
+
+    font-size:50px;
+
+    font-family:'HancomMalrangmalrang';
+
+    background:none;
+    border:none;
+
+    color:#f5f5f5;
+
+    cursor:pointer;
+
+    white-space:nowrap;
+
+    font-weight:700;
 "
+ 
 
 >
 
-돌이게임 </button>
+돌이게임
+
+</button>
 
 <!-- =====================================================
      로그인 / 회원가입
@@ -1770,11 +2009,12 @@ font-weight:700;
 
 <button
 id="로그인"
-style="
-position:absolute;
 
-```
-    top:25px;
+ 
+style="
+    position:absolute;
+
+    top:15px;
     right:100px;
 
     font-size:20px;
@@ -1793,22 +2033,23 @@ position:absolute;
     white-space:nowrap;
 
     font-weight:700;
-
-    z-index:1000;
 "
-```
+ 
 
 >
 
-로그인 </button>
+로그인
+
+</button>
 
 <button
 id="회원가입"
-style="
-position:absolute;
 
-```
-    top:55px;
+ 
+style="
+    position:absolute;
+
+    top:45px;
     right:100px;
 
     font-size:20px;
@@ -1827,14 +2068,14 @@ position:absolute;
     white-space:nowrap;
 
     font-weight:700;
-
-    z-index:1000;
 "
-```
+ 
 
 >
 
-회원가입 </button>
+회원가입
+
+</button>
 
 <!-- =====================================================
      프로필 사진
@@ -1843,13 +2084,13 @@ position:absolute;
 <img
 id="돌이사진"
 
-```
+ 
 src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
 
 style="
     position:absolute;
 
-    top:20px;
+    top:15px;
     right:25px;
 
     width:50px;
@@ -1867,7 +2108,7 @@ style="
 
     border:2px solid white;
 "
-```
+ 
 
 >
 
@@ -1877,7 +2118,9 @@ style="
 
 <div id="프로필메뉴">
 
-```
+ 
+<!-- 회원 정보 -->
+
 <div id="프로필상태">
 
     <div class="프로필상태제목">
@@ -1915,29 +2158,41 @@ style="
 </div>
 
 
+<!-- 상점 -->
+
 <button
     class="프로필메뉴버튼"
     id="돌돌코인"
 >
+
     🪙 돌돌코인 상점
+
 </button>
 
+
+<!-- 설정 -->
 
 <button
     class="프로필메뉴버튼"
     id="설정"
 >
+
     ⚙️ 설정
+
 </button>
 
+
+<!-- 로그아웃 -->
 
 <button
     class="프로필메뉴버튼"
     id="로그아웃"
 >
+
     🚪 로그아웃
+
 </button>
-```
+ 
 
 </div>
 
@@ -1947,57 +2202,89 @@ style="
 
 <img
 id="돌이신문확인"
+
+ 
 class="메뉴이미지"
+
 src="https://i.postimg.cc/Px1nNcJM/1000004603.jpg"
+
 style="
-position:absolute;
-top:300px;
-left:80px;
-width:200px;
-cursor:pointer;
+    position:absolute;
+
+    top:300px;
+    left:80px;
+
+    width:200px;
+
+    cursor:pointer;
 "
+ 
 
 >
 
 <img
 id="돌돌코인상점!!!"
+
+ 
 class="메뉴이미지"
+
 src="https://i.postimg.cc/TYxW97Ly/1000004605.jpg"
+
 style="
-position:absolute;
-top:300px;
-left:530px;
-width:200px;
-cursor:pointer;
+    position:absolute;
+
+    top:300px;
+    left:530px;
+
+    width:200px;
+
+    cursor:pointer;
 "
+ 
 
 >
 
 <img
 id="돌이와관련된정보!"
+
+ 
 class="메뉴이미지"
+
 src="https://i.postimg.cc/8zdzKNWg/dol-i.jpg"
+
 style="
-position:absolute;
-top:300px;
-left:970px;
-width:200px;
-cursor:pointer;
+    position:absolute;
+
+    top:300px;
+    left:970px;
+
+    width:200px;
+
+    cursor:pointer;
 "
+ 
 
 >
 
 <img
 id="돌이게임사진"
+
+ 
 class="메뉴이미지"
+
 src="https://i.postimg.cc/FsHqfPpX/rockeychess.png"
+
 style="
-position:absolute;
-top:300px;
-left:1400px;
-width:200px;
-cursor:pointer;
+    position:absolute;
+
+    top:300px;
+    left:1400px;
+
+    width:200px;
+
+    cursor:pointer;
 "
+ 
 
 >
 
