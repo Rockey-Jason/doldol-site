@@ -1568,6 +1568,7 @@ async function 업적정보가져오기() {
                 reward_doldolcoin,
                 icon,
                 enabled,
+                title,
                 created_at
             `)
 
@@ -1673,6 +1674,10 @@ function 업적화면표시() {
             현재유저정보?.user_achievement
         );
 
+   const 칭호 =
+    업적.title ??
+    null;
+
 
     if (
         업적목록.length === 0
@@ -1689,6 +1694,16 @@ function 업적화면표시() {
             </div>
 
         `;
+
+       ${칭호
+    ? `
+        <div class="achievement-reward">
+            🏷️ 칭호:
+            ${HTML이스케이프(칭호)}
+        </div>
+      `
+    : ""
+}
 
         return;
 
