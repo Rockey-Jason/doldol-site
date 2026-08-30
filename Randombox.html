@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -862,773 +862,277 @@ button:active {
 
 
 
-<script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script>
 /* ==================================================
-   🎰 돌이 뽑기 시스템
+   🎰 돌이 뽑기 - Supabase 연동 버전
+   코인은 Supabase users.doldolcoin에서 읽습니다.
 ================================================== */
 
+const SUPABASE_URL = "여기에_SUPABASE_PROJECT_URL";
+const SUPABASE_ANON_KEY = "여기에_SUPABASE_ANON_KEY";
 
-/* -------------------------
-   설정
-------------------------- */
+const { createClient } = window.supabase;
+const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const GACHA_PRICE = 1000;
 
-const STARTING_COINS = 10000;
-
-
-/* -------------------------
-   뽑기 아이템
-------------------------- */
-
 const items = [
-
-    {
-        id: "coin500",
-        name: "500 돌돌코인",
-        icon: "🪙",
-        rarity: "일반",
-        probability: 35,
-        type: "coin",
-        reward: 500
-    },
-
-    {
-        id: "coin1000",
-        name: "1,000 돌돌코인",
-        icon: "🪙",
-        rarity: "일반",
-        probability: 25,
-        type: "coin",
-        reward: 1000
-    },
-
-    {
-        id: "doriHat",
-        name: "돌이 모자",
-        icon: "🎩",
-        rarity: "희귀",
-        probability: 15,
-        type: "item",
-        reward: 0
-    },
-
-    {
-        id: "doriGlasses",
-        name: "돌이 안경",
-        icon: "👓",
-        rarity: "희귀",
-        probability: 10,
-        type: "item",
-        reward: 0
-    },
-
-    {
-        id: "specialTitle",
-        name: "특별 칭호",
-        icon: "🏷️",
-        rarity: "영웅",
-        probability: 7,
-        type: "item",
-        reward: 0
-    },
-
-    {
-        id: "rareBackground",
-        name: "희귀 배경",
-        icon: "🌌",
-        rarity: "전설",
-        probability: 5,
-        type: "item",
-        reward: 0
-    },
-
-    {
-        id: "legendarySkin",
-        name: "전설 돌이 스킨",
-        icon: "🐶",
-        rarity: "신화",
-        probability: 3,
-        type: "item",
-        reward: 0
-    }
-
+    { id: "coin500", name: "500 돌돌코인", icon: "🪙", rarity: "일반", probability: 35, type: "coin", reward: 500 },
+    { id: "coin1000", name: "1,000 돌돌코인", icon: "🪙", rarity: "일반", probability: 25, type: "coin", reward: 1000 },
+    { id: "doriHat", name: "돌이 모자", icon: "🎩", rarity: "희귀", probability: 15, type: "item", reward: 0 },
+    { id: "doriGlasses", name: "돌이 안경", icon: "👓", rarity: "희귀", probability: 10, type: "item", reward: 0 },
+    { id: "specialTitle", name: "특별 칭호", icon: "🏷️", rarity: "영웅", probability: 7, type: "item", reward: 0 },
+    { id: "rareBackground", name: "희귀 배경", icon: "🌌", rarity: "전설", probability: 5, type: "item", reward: 0 },
+    { id: "legendarySkin", name: "전설 돌이 스킨", icon: "🐶", rarity: "신화", probability: 3, type: "item", reward: 0 }
 ];
 
+let inventory = JSON.parse(localStorage.getItem("doriInventory") || "{}");
+let history = JSON.parse(localStorage.getItem("doriGachaHistory") || "[]");
+let currentUser = null;
+let coins = 0;
 
-/* -------------------------
-   데이터 불러오기
-------------------------- */
-
-let coins =
-    Number(
-        localStorage.getItem(
-            "doriCoins"
-        )
-    );
-
-if (
-    !Number.isFinite(coins)
-) {
-
-    coins =
-        STARTING_COINS;
-}
-
-
-let inventory =
-    JSON.parse(
-        localStorage.getItem(
-            "doriInventory"
-        )
-    ) || {};
-
-
-let history =
-    JSON.parse(
-        localStorage.getItem(
-            "doriGachaHistory"
-        )
-    ) || [];
-
-
-
-/* -------------------------
-   HTML 요소
-------------------------- */
-
-const coinElement =
-    document.getElementById(
-        "coin"
-    );
-
-const box =
-    document.getElementById(
-        "gachaBox"
-    );
-
-const drawButton =
-    document.getElementById(
-        "drawButton"
-    );
-
-const inventoryElement =
-    document.getElementById(
-        "inventory"
-    );
-
-const historyElement =
-    document.getElementById(
-        "history"
-    );
-
-
-/* 결과 */
-
-const resultModal =
-    document.getElementById(
-        "resultModal"
-    );
-
-const resultIcon =
-    document.getElementById(
-        "resultIcon"
-    );
-
-const resultRarity =
-    document.getElementById(
-        "resultRarity"
-    );
-
-const resultName =
-    document.getElementById(
-        "resultName"
-    );
-
-const resultReward =
-    document.getElementById(
-        "resultReward"
-    );
-
-
-/* 확률 */
-
-const probabilityModal =
-    document.getElementById(
-        "probabilityModal"
-    );
-
-const probabilityList =
-    document.getElementById(
-        "probabilityList"
-    );
-
-
-
-/* -------------------------
-   코인 표시
-------------------------- */
+const coinElement = document.getElementById("coin");
+const box = document.getElementById("gachaBox");
+const drawButton = document.getElementById("drawButton");
+const inventoryElement = document.getElementById("inventory");
+const historyElement = document.getElementById("history");
+const resultModal = document.getElementById("resultModal");
+const resultIcon = document.getElementById("resultIcon");
+const resultRarity = document.getElementById("resultRarity");
+const resultName = document.getElementById("resultName");
+const resultReward = document.getElementById("resultReward");
+const probabilityModal = document.getElementById("probabilityModal");
+const probabilityList = document.getElementById("probabilityList");
 
 function updateCoins() {
-
-    coinElement.textContent =
-        coins.toLocaleString();
-
-    localStorage.setItem(
-        "doriCoins",
-        coins
-    );
+    coinElement.textContent = Number(coins || 0).toLocaleString();
 }
 
-
-/* -------------------------
-   저장
-------------------------- */
-
-function saveData() {
-
-    localStorage.setItem(
-        "doriCoins",
-        coins
-    );
-
-    localStorage.setItem(
-        "doriInventory",
-        JSON.stringify(
-            inventory
-        )
-    );
-
-    localStorage.setItem(
-        "doriGachaHistory",
-        JSON.stringify(
-            history
-        )
-    );
+function saveLocalData() {
+    localStorage.setItem("doriInventory", JSON.stringify(inventory));
+    localStorage.setItem("doriGachaHistory", JSON.stringify(history));
 }
 
+async function loadUserAndCoins() {
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser();
 
-/* -------------------------
-   랜덤 아이템
-------------------------- */
-
-function drawRandomItem() {
-
-    const random =
-        Math.random() * 100;
-
-    let current = 0;
-
-    for (
-        const item of items
-    ) {
-
-        current +=
-            item.probability;
-
-        if (
-            random <= current
-        ) {
-
-            return item;
-        }
-
+    if (authError) {
+        console.error("Supabase 로그인 확인 오류:", authError);
+        alert("로그인 정보를 확인하지 못했습니다.");
+        drawButton.disabled = true;
+        return false;
     }
 
-    return items[
-        items.length - 1
-    ];
-}
-
-
-/* -------------------------
-   뽑기
-------------------------- */
-
-function drawGacha() {
-
-    if (
-        coins < GACHA_PRICE
-    ) {
-
-        alert(
-            "🪙 돌돌코인이 부족합니다!"
-        );
-
-        return;
+    if (!user) {
+        coinElement.textContent = "로그인 필요";
+        drawButton.disabled = true;
+        alert("먼저 사이트에 로그인해주세요.");
+        return false;
     }
 
+    currentUser = user;
 
-    /* 코인 차감 */
+    const { data, error } = await supabaseClient
+        .from("users")
+        .select("doldolcoin")
+        .eq("id", user.id)
+        .single();
 
-    coins -=
-        GACHA_PRICE;
+    if (error) {
+        console.error("doldolcoin 조회 오류:", error);
+        alert("돌돌코인 정보를 불러오지 못했습니다. users 테이블의 id와 doldolcoin을 확인해주세요.");
+        drawButton.disabled = true;
+        return false;
+    }
 
+    coins = Number(data.doldolcoin ?? 0);
+    if (!Number.isFinite(coins)) coins = 0;
     updateCoins();
-
-
-    /* 버튼 잠금 */
-
-    drawButton.disabled =
-        true;
-
-
-    /* 상자 애니메이션 */
-
-    box.classList.add(
-        "shake"
-    );
-
-
-    /* 결과 */
-
-    setTimeout(() => {
-
-        box.classList.remove(
-            "shake"
-        );
-
-
-        const item =
-            drawRandomItem();
-
-
-        /* 보상 */
-
-        if (
-            item.type === "coin"
-        ) {
-
-            coins +=
-                item.reward;
-
-        }
-        else {
-
-            if (
-                !inventory[
-                    item.id
-                ]
-            ) {
-
-                inventory[
-                    item.id
-                ] = 0;
-
-            }
-
-            inventory[
-                item.id
-            ]++;
-        }
-
-
-        /* 기록 */
-
-        history.unshift({
-
-            id:
-                item.id,
-
-            name:
-                item.name,
-
-            icon:
-                item.icon,
-
-            rarity:
-                item.rarity,
-
-            time:
-                new Date()
-                    .toLocaleString(
-                        "ko-KR"
-                    )
-
-        });
-
-
-        /* 최대 20개 */
-
-        history =
-            history.slice(
-                0,
-                20
-            );
-
-
-        saveData();
-
-        updateCoins();
-
-        renderInventory();
-
-        renderHistory();
-
-        showResult(
-            item
-        );
-
-
-        drawButton.disabled =
-            false;
-
-    }, 1400);
-
+    drawButton.disabled = false;
+    return true;
 }
 
+function showResult(item) {
+    resultIcon.textContent = item.icon;
+    resultRarity.textContent = item.rarity;
+    resultName.textContent = item.name;
 
-/* -------------------------
-   결과 표시
-------------------------- */
-
-function showResult(
-    item
-) {
-
-    resultIcon.textContent =
-        item.icon;
-
-    resultRarity.textContent =
-        item.rarity;
-
-    resultName.textContent =
-        item.name;
-
-
-    if (
-        item.type === "coin"
-    ) {
-
-        resultReward.textContent =
-            `🪙 +${item.reward.toLocaleString()} 돌돌코인`;
-
-    }
-    else {
-
-        resultReward.textContent =
-            "🎒 보관함에 추가되었습니다!";
-
+    if (item.type === "coin") {
+        resultReward.textContent = `🪙 +${Number(item.reward).toLocaleString()} 돌돌코인`;
+    } else {
+        resultReward.textContent = "🎒 보관함에 추가되었습니다!";
     }
 
-
-    resultModal.classList.add(
-        "show"
-    );
-
+    resultModal.classList.add("show");
 }
-
-
-/* -------------------------
-   보관함
-------------------------- */
 
 function renderInventory() {
+    inventoryElement.innerHTML = "";
 
-    inventoryElement.innerHTML =
-        "";
+    const owned = items.filter(item => item.type === "item" && inventory[item.id] > 0);
 
-
-    const owned =
-        items.filter(
-            item =>
-                item.type === "item" &&
-                inventory[item.id] > 0
-        );
-
-
-    if (
-        owned.length === 0
-    ) {
-
-        inventoryElement.innerHTML =
-
-            `<div style="
-                grid-column:1/-1;
-                text-align:center;
-                color:#777;
-                padding:30px;
-            ">
-                아직 획득한 아이템이 없습니다 🐶
-            </div>`;
-
+    if (owned.length === 0) {
+        inventoryElement.innerHTML = `<div style="grid-column:1/-1;text-align:center;color:#777;padding:30px;">아직 획득한 아이템이 없습니다 🐶</div>`;
         return;
     }
 
-
-    owned.forEach(
-        item => {
-
-            const div =
-                document.createElement(
-                    "div"
-                );
-
-            div.className =
-                "item";
-
-            div.innerHTML = `
-
-                <div class="item-icon">
-                    ${item.icon}
-                </div>
-
-                <div class="item-name">
-                    ${item.name}
-                </div>
-
-                <div class="item-rarity">
-                    ${item.rarity}
-                </div>
-
-                <div class="item-count">
-                    × ${inventory[item.id]}
-                </div>
-
-            `;
-
-            inventoryElement.appendChild(
-                div
-            );
-
-        }
-    );
-
+    owned.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+            <div class="item-icon">${item.icon}</div>
+            <div class="item-name">${item.name}</div>
+            <div class="item-rarity">${item.rarity}</div>
+            <div class="item-count">× ${inventory[item.id]}</div>
+        `;
+        inventoryElement.appendChild(div);
+    });
 }
-
-
-/* -------------------------
-   기록
-------------------------- */
 
 function renderHistory() {
+    historyElement.innerHTML = "";
 
-    historyElement.innerHTML =
-        "";
-
-
-    if (
-        history.length === 0
-    ) {
-
-        historyElement.innerHTML =
-
-            `<div style="
-                text-align:center;
-                color:#777;
-                padding:30px;
-            ">
-                아직 뽑기 기록이 없습니다 🎰
-            </div>`;
-
+    if (history.length === 0) {
+        historyElement.innerHTML = `<div style="text-align:center;color:#777;padding:30px;">아직 뽑기 기록이 없습니다 🎰</div>`;
         return;
     }
 
-
-    history.forEach(
-        item => {
-
-            const div =
-                document.createElement(
-                    "div"
-                );
-
-            div.className =
-                "history-item";
-
-            div.innerHTML = `
-
-                <div class="history-left">
-
-                    <div class="history-icon">
-                        ${item.icon}
-                    </div>
-
-                    <div>
-
-                        <div>
-                            ${item.name}
-                        </div>
-
-                        <div class="history-time">
-                            ${item.time}
-                        </div>
-
-                    </div>
-
-                </div>
-
+    history.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "history-item";
+        div.innerHTML = `
+            <div class="history-left">
+                <div class="history-icon">${item.icon}</div>
                 <div>
-                    ${item.rarity}
+                    <div>${item.name}</div>
+                    <div class="history-time">${item.time}</div>
                 </div>
-
-            `;
-
-            historyElement.appendChild(
-                div
-            );
-
-        }
-    );
-
+            </div>
+            <div>${item.rarity}</div>
+        `;
+        historyElement.appendChild(div);
+    });
 }
-
-
-/* -------------------------
-   확률표
-------------------------- */
 
 function renderProbability() {
-
-    probabilityList.innerHTML =
-        "";
-
-
-    items.forEach(
-        item => {
-
-            const div =
-                document.createElement(
-                    "div"
-                );
-
-            div.className =
-                "probability";
-
-            div.innerHTML = `
-
-                <span>
-                    ${item.icon}
-                    ${item.name}
-                </span>
-
-                <strong>
-                    ${item.probability}%
-                </strong>
-
-            `;
-
-            probabilityList.appendChild(
-                div
-            );
-
-        }
-    );
-
+    probabilityList.innerHTML = "";
+    items.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "probability";
+        div.innerHTML = `<span>${item.icon} ${item.name}</span><strong>${item.probability}%</strong>`;
+        probabilityList.appendChild(div);
+    });
 }
 
+async function drawGacha() {
+    if (!currentUser) {
+        alert("먼저 로그인해주세요.");
+        return;
+    }
 
-/* -------------------------
-   결과 닫기
-------------------------- */
+    if (drawButton.disabled) return;
 
-document
-    .getElementById(
-        "closeModal"
-    )
-    .onclick = () => {
+    drawButton.disabled = true;
+    box.classList.add("shake");
 
-        resultModal.classList.remove(
-            "show"
-        );
+    try {
+        /*
+          서버 RPC에서 실제 뽑기와 코인 차감을 한 번에 처리합니다.
+          따라서 브라우저의 coins 값을 조작해도 무료 뽑기가 되지 않습니다.
+        */
+        const { data, error } = await supabaseClient.rpc("open_dori_gacha");
 
-    };
+        if (error) throw error;
 
+        const result = Array.isArray(data) ? data[0] : data;
 
-/* -------------------------
-   확률 열기
-------------------------- */
+        if (!result) {
+            throw new Error("뽑기 결과가 없습니다.");
+        }
 
-document
-    .getElementById(
-        "probabilityButton"
-    )
-    .onclick = () => {
+        const item = items.find(x => x.id === result.item_id);
 
-        renderProbability();
+        if (!item) {
+            throw new Error("서버에서 알 수 없는 아이템이 반환되었습니다: " + result.item_id);
+        }
 
-        probabilityModal.classList.add(
-            "show"
-        );
+        coins = Number(result.new_balance);
+        updateCoins();
 
-    };
+        if (item.type === "item") {
+            inventory[item.id] = (inventory[item.id] || 0) + 1;
+        }
 
+        history.unshift({
+            id: item.id,
+            name: item.name,
+            icon: item.icon,
+            rarity: item.rarity,
+            time: new Date().toLocaleString("ko-KR")
+        });
 
-/* -------------------------
-   확률 닫기
-------------------------- */
+        history = history.slice(0, 20);
+        saveLocalData();
+        renderInventory();
+        renderHistory();
 
-document
-    .getElementById(
-        "closeProbability"
-    )
-    .onclick = () => {
+        await new Promise(resolve => setTimeout(resolve, 1400));
+        box.classList.remove("shake");
+        showResult(item);
 
-        probabilityModal.classList.remove(
-            "show"
-        );
+    } catch (error) {
+        console.error("뽑기 오류:", error);
+        box.classList.remove("shake");
 
-    };
+        if (error.message && error.message.includes("INSUFFICIENT_COINS")) {
+            alert("🪙 돌돌코인이 부족합니다!");
+        } else if (error.message && error.message.includes("NOT_AUTHENTICATED")) {
+            alert("로그인이 필요합니다.");
+        } else {
+            alert("뽑기에 실패했습니다. 콘솔(F12)을 확인해주세요.");
+        }
 
+        await loadUserAndCoins();
+    } finally {
+        drawButton.disabled = false;
+    }
+}
 
-/* -------------------------
-   뽑기 버튼
-------------------------- */
+document.getElementById("closeModal").onclick = () => {
+    resultModal.classList.remove("show");
+};
 
-drawButton.onclick =
-    drawGacha;
+document.getElementById("probabilityButton").onclick = () => {
+    renderProbability();
+    probabilityModal.classList.add("show");
+};
 
+document.getElementById("closeProbability").onclick = () => {
+    probabilityModal.classList.remove("show");
+};
 
-/* -------------------------
-   초기화
-------------------------- */
+drawButton.onclick = drawGacha;
 
-document
-    .getElementById(
-        "resetButton"
-    )
-    .onclick = () => {
+/* 기존의 '데이터 초기화'는 Supabase 코인을 초기화하면 안 되므로
+   로컬 보관함/기록만 삭제하도록 변경합니다. */
+document.getElementById("resetButton").onclick = () => {
+    const yes = confirm("로컬 보관함과 뽑기 기록만 초기화할까요?\nSupabase의 돌돌코인은 변경되지 않습니다.");
+    if (!yes) return;
 
-        const yes =
-            confirm(
-                "정말 모든 뽑기 데이터를 초기화할까요?"
-            );
-
-        if (!yes)
-            return;
-
-
-        localStorage.removeItem(
-            "doriCoins"
-        );
-
-        localStorage.removeItem(
-            "doriInventory"
-        );
-
-        localStorage.removeItem(
-            "doriGachaHistory"
-        );
-
-
-        location.reload();
-
-    };
-
-
-/* -------------------------
-   시작
-------------------------- */
-
-updateCoins();
+    localStorage.removeItem("doriInventory");
+    localStorage.removeItem("doriGachaHistory");
+    inventory = {};
+    history = [];
+    renderInventory();
+    renderHistory();
+};
 
 renderInventory();
-
 renderHistory();
-
+loadUserAndCoins();
 </script>
 
 </body>
 </html>
-```
