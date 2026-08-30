@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="ko">
 
 <head>
@@ -7,12 +6,13 @@
 <meta charset="UTF-8">
 
 <meta name="viewport"
-   content="width=device-width, initial-scale=1.0">
+      content="width=device-width, initial-scale=1.0">
 
-<title>돌이 사이트</title>
+<title>돌이 랜덤 박스</title>
+
 
 <!-- =====================================================
-     Google Font
+     Google Fonts
 ===================================================== -->
 
 <link rel="preconnect"
@@ -25,45 +25,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap"
       rel="stylesheet">
 
-<!-- =====================================================
-     Font
-===================================================== -->
 
 <style>
-
-@font-face {
-
-    font-family: "HancomMalrangmalrang";
-
-    src:
-        url(
-            "https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2"
-        )
-        format("woff2");
-
-    font-weight: 400;
-
-    font-display: swap;
-
-}
-
-
-@font-face {
-
-    font-family: "HancomMalrangmalrang";
-
-    src:
-        url(
-            "https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2"
-        )
-        format("woff2");
-
-    font-weight: 700;
-
-    font-display: swap;
-
-}
-
 
 /* =====================================================
    기본
@@ -75,20 +38,6 @@
 
     user-select: none;
 
-    -webkit-user-select: none;
-
-    -webkit-user-drag: none;
-
-}
-
-
-input,
-textarea {
-
-    user-select: text;
-
-    -webkit-user-select: text;
-
 }
 
 
@@ -96,11 +45,9 @@ html,
 body {
 
     margin: 0;
-
     padding: 0;
 
     width: 100%;
-
     min-height: 100%;
 
 }
@@ -108,26 +55,31 @@ body {
 
 body {
 
+    color: white;
+
+    font-family:
+        "Jua",
+        sans-serif;
+
     background:
+
         radial-gradient(
-            circle at 15% 20%,
-            rgba(30,50,130,.18),
-            transparent 30%
+            circle at 20% 20%,
+            rgba(70,90,180,.18),
+            transparent 32%
         ),
 
         radial-gradient(
-            circle at 85% 80%,
-            rgba(40,20,120,.12),
+            circle at 80% 80%,
+            rgba(80,40,150,.15),
             transparent 35%
         ),
 
         linear-gradient(
-            to right,
+            135deg,
             #000033,
             #000010
         );
-
-    color: white;
 
     overflow-x: hidden;
 
@@ -135,265 +87,199 @@ body {
 
 
 /* =====================================================
-   메인
+   전체
 ===================================================== */
 
 #사이트 {
 
-    position: relative;
-
-    width: 100%;
-
     min-height: 100vh;
 
     padding:
-        20px 25px 100px 25px;
+        35px 40px 80px;
 
 }
 
 
 /* =====================================================
-   상단 영역
+   상단
 ===================================================== */
 
-.상단영역 {
-
-    position: relative;
-
-    width: 100%;
-
-    min-height: 145px;
-
-}
-
-
-/* =====================================================
-   사이트 제목
-===================================================== */
-
-.사이트제목링크 {
-
-    display: inline-block;
-
-    text-decoration: none;
-
-}
-
-
-.사이트제목 {
-
-    position: relative;
-
-    top: 0;
-
-    left: 0;
-
-    margin: 0;
-
-    padding: 0;
-
-    border: none;
-
-    background: none;
-
-    color: #f5f5f5;
-
-    font-family:
-        "Black Han Sans";
-
-    font-size: 90px;
-
-    line-height: 1;
-
-    cursor: pointer;
-
-    transition:
-        text-shadow .25s ease,
-        transform .25s ease;
-
-}
-
-
-.사이트제목:hover {
-
-    text-shadow:
-        0 0 15px rgba(255,255,255,.18);
-
-    transform:
-        translateX(3px);
-
-}
-
-
-/* =====================================================
-   로그인 / 회원가입
-===================================================== */
-
-#로그인영역 {
-
-    position: fixed;
-
-    top: 18px;
-
-    right: 30px;
+.상단 {
 
     display: flex;
 
-    flex-direction: column;
+    align-items: center;
 
-    align-items: flex-end;
+    justify-content: space-between;
 
-    gap: 3px;
+    max-width: 1200px;
 
-    z-index: 5000;
+    margin:
+        0 auto 35px;
 
 }
 
 
-.로그인버튼 {
+.제목 {
 
-    padding: 0;
-
-    border: none;
-
-    background: none;
-
-    color: gray;
+    margin: 0;
 
     font-family:
-        "HancomMalrangmalrang";
+        "Black Han Sans",
+        sans-serif;
 
-    font-size: 20px;
+    font-size: 55px;
 
-    font-weight: 700;
-
-    cursor: pointer;
-
-    white-space: nowrap;
-
-    transition:
-        color .2s ease,
-        transform .2s ease;
+    letter-spacing: -2px;
 
 }
 
 
-.로그인버튼:hover {
+.뒤로가기 {
+
+    border:
+        1px solid rgba(255,255,255,.12);
+
+    background:
+        rgba(255,255,255,.06);
 
     color: white;
 
-    transform:
-        translateX(-2px);
+    border-radius: 12px;
 
-}
+    padding:
+        10px 18px;
 
+    font-family:
+        "Jua",
+        sans-serif;
 
-/* =====================================================
-   프로필 사진
-===================================================== */
-
-#돌이사진 {
-
-    position: fixed;
-
-    top: 18px;
-
-    right: 25px;
-
-    width: 55px;
-
-    height: 55px;
-
-    border-radius: 50%;
-
-    object-fit: cover;
+    font-size: 17px;
 
     cursor: pointer;
 
-    display: none;
-
-    z-index: 5001;
-
-    border:
-        2px solid white;
-
     transition:
-        transform .25s ease,
-        box-shadow .25s ease,
-        border-color .25s ease;
+        .2s ease;
 
 }
 
 
-#돌이사진:hover {
+.뒤로가기:hover {
+
+    background:
+        rgba(255,255,255,.12);
 
     transform:
-        scale(1.08);
-
-    border-color:
-        #ffd700;
-
-    box-shadow:
-        0 0 0 4px rgba(255,215,0,.08),
-        0 8px 25px rgba(0,0,0,.35);
+        translateY(-2px);
 
 }
 
 
 /* =====================================================
-   설명
+   코인 표시
 ===================================================== */
 
-.사이트설명 {
+.코인상자 {
+
+    max-width: 1200px;
 
     margin:
-        15px 0 0 5px;
+        0 auto 25px;
+
+    padding:
+        18px 24px;
+
+    border:
+        1px solid rgba(255,255,255,.1);
+
+    border-radius: 18px;
+
+    background:
+        rgba(255,255,255,.045);
+
+    box-shadow:
+        0 15px 45px rgba(0,0,0,.25);
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+}
+
+
+.코인설명 {
 
     color:
-        #f5f5f5;
+        rgba(255,255,255,.65);
 
-    font-family:
-        "HancomMalrangmalrang";
+    font-size: 15px;
 
-    font-size:
-        20px;
+}
 
-    font-weight:
-        700;
 
-    line-height:
-        1.5;
+#코인 {
+
+    color:
+        #ffe48a;
+
+    font-size: 28px;
+
+    font-weight: bold;
 
 }
 
 
 /* =====================================================
-   메인 메뉴
+   메인 박스
 ===================================================== */
 
-.메뉴영역 {
+.메인 {
 
-    width: 100%;
+    max-width: 1200px;
+
+    margin: 0 auto;
 
     display: grid;
 
     grid-template-columns:
-        repeat(4, minmax(180px, 1fr));
+        1fr 1fr;
 
-    gap:
-        35px;
+    gap: 25px;
 
-    margin-top:
-        35px;
+}
+
+
+.패널 {
+
+    border:
+        1px solid rgba(255,255,255,.1);
+
+    border-radius: 25px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(35,38,65,.65),
+            rgba(10,12,30,.72)
+        );
+
+    box-shadow:
+        0 25px 70px rgba(0,0,0,.35);
+
+    padding: 30px;
 
 }
 
 
 /* =====================================================
-   메뉴 카드
+   랜덤 박스
 ===================================================== */
 
-.메뉴카드 {
+.랜덤박스영역 {
+
+    min-height: 460px;
 
     display: flex;
 
@@ -401,338 +287,195 @@ body {
 
     align-items: center;
 
-    min-width: 0;
+    justify-content: center;
 
 }
 
 
-/* =====================================================
-   메뉴 버튼
-===================================================== */
+.랜덤박스 {
 
-.메인메뉴버튼 {
+    width: 240px;
+    height: 240px;
 
-    width: 100%;
+    border-radius: 35px;
 
-    padding:
-        0;
+    display: flex;
 
-    border:
-        none;
+    align-items: center;
+
+    justify-content: center;
+
+    flex-direction: column;
 
     background:
-        none;
 
-    color:
-        #f5f5f5;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        clamp(28px, 3vw, 50px);
-
-    font-weight:
-        700;
-
-    cursor:
-        pointer;
-
-    white-space:
-        nowrap;
-
-    transition:
-        transform .22s ease,
-        color .22s ease,
-        text-shadow .22s ease;
-
-}
-
-
-.메인메뉴버튼:hover {
-
-    transform:
-        translateY(-3px);
-
-    color:
-        #ffffff;
-
-    text-shadow:
-        0 0 16px rgba(255,255,255,.22);
-
-}
-
-
-.메인메뉴버튼:active {
-
-    transform:
-        translateY(0)
-        scale(.98);
-
-}
-
-
-/* =====================================================
-   메뉴 이미지
-===================================================== */
-
-.메뉴이미지 {
-
-    display: block;
-
-    width: min(200px, 80%);
-
-    height: auto;
-
-    margin-top:
-        25px;
-
-    border-radius:
-        16px;
+        linear-gradient(
+            145deg,
+            #3d4a96,
+            #18205d
+        );
 
     border:
-        1px solid rgba(255,255,255,.08);
+        3px solid rgba(255,255,255,.18);
 
     box-shadow:
-        0 12px 35px rgba(0,0,0,.35);
 
-    cursor:
-        pointer;
+        0 25px 60px rgba(0,0,0,.45),
+
+        inset 0 2px 0
+        rgba(255,255,255,.16);
 
     transition:
         transform .25s ease,
-        filter .25s ease,
         box-shadow .25s ease;
 
 }
 
 
-.메뉴이미지:hover {
+.랜덤박스:hover {
 
     transform:
-        scale(1.045);
-
-    filter:
-        brightness(1.08);
+        translateY(-8px)
+        scale(1.02);
 
     box-shadow:
-        0 18px 45px rgba(0,0,0,.48),
-        0 0 0 1px rgba(255,255,255,.12);
+
+        0 35px 80px rgba(0,0,0,.55),
+
+        0 0 35px
+        rgba(100,120,255,.12);
+
+}
+
+
+.상자아이콘 {
+
+    font-size: 90px;
+
+    line-height: 1;
+
+}
+
+
+.상자텍스트 {
+
+    margin-top: 15px;
+
+    font-size: 24px;
+
+    font-weight: bold;
+
+}
+
+
+.가격 {
+
+    margin-top: 18px;
+
+    color:
+        #ffe48a;
+
+    font-size: 20px;
 
 }
 
 
 /* =====================================================
-   프로필 메뉴
+   뽑기 버튼
 ===================================================== */
 
-#프로필메뉴 {
+#뽑기버튼 {
 
-    position: fixed;
+    margin-top: 25px;
 
-    top: 85px;
+    border: none;
 
-    right: 25px;
+    border-radius: 16px;
 
-    width: 230px;
+    padding:
+        15px 45px;
+
+    font-family:
+        "Jua",
+        sans-serif;
+
+    font-size: 23px;
+
+    color: white;
 
     background:
         linear-gradient(
-            145deg,
-            rgba(35,38,60,.98),
-            rgba(18,20,38,.98)
+            135deg,
+            #5968d8,
+            #3747a4
         );
 
-    border:
-        1px solid rgba(255,255,255,.12);
+    box-shadow:
+        0 12px 30px rgba(0,0,0,.35);
 
-    border-radius:
-        18px;
+    cursor: pointer;
 
-    padding:
-        14px;
+    transition:
+        .2s ease;
+
+}
+
+
+#뽑기버튼:hover {
+
+    transform:
+        translateY(-3px)
+        scale(1.03);
 
     box-shadow:
-        0 20px 55px rgba(0,0,0,.55),
-        inset 0 1px 0 rgba(255,255,255,.05);
+        0 17px 38px rgba(0,0,0,.45);
 
-    backdrop-filter:
-        blur(18px);
+}
 
-    -webkit-backdrop-filter:
-        blur(18px);
 
-    z-index:
-        5000;
+#뽑기버튼:active {
 
-    display:
+    transform:
+        scale(.97);
+
+}
+
+
+#뽑기버튼:disabled {
+
+    opacity: .45;
+
+    cursor:
+        not-allowed;
+
+    transform:
         none;
-
-    animation:
-        프로필메뉴등장 .18s ease;
-
-}
-
-
-#프로필메뉴.show {
-
-    display:
-        block;
-
-}
-
-
-@keyframes 프로필메뉴등장 {
-
-    from {
-
-        opacity: 0;
-
-        transform:
-            translateY(-8px)
-            scale(.97);
-
-    }
-
-    to {
-
-        opacity: 1;
-
-        transform:
-            translateY(0)
-            scale(1);
-
-    }
 
 }
 
 
 /* =====================================================
-   프로필 정보
+   결과
 ===================================================== */
 
-#프로필상태 {
+#결과 {
 
-    display:
-        none;
+    min-height: 70px;
 
-    margin-bottom:
-        10px;
+    margin-top: 22px;
 
-    padding:
-        12px;
+    text-align: center;
 
-    border-radius:
-        13px;
-
-    background:
-        rgba(255,255,255,.055);
-
-    border:
-        1px solid rgba(255,255,255,.07);
+    font-size: 20px;
 
 }
 
 
-#프로필상태.show {
+.결과강조 {
 
-    display:
-        block;
+    font-size: 28px;
 
-}
-
-
-.프로필상태제목 {
-
-    color:
-        #ffffff;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        16px;
-
-    font-weight:
-        700;
-
-    margin-bottom:
-        8px;
-
-}
-
-
-.프로필상태항목 {
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        13px;
-
-    color:
-        rgba(255,255,255,.76);
-
-    margin:
-        4px 0;
-
-    white-space:
-        nowrap;
-
-}
-
-
-/* =====================================================
-   상태 항목
-===================================================== */
-
-#레벨,
-#돌돌코인수량,
-#EXP정보,
-#현재칭호 {
-
-    position:
-        static !important;
-
-    display:
-        block !important;
-
-    background:
-        none;
-
-    border:
-        none;
-
-    margin:
-        0 0 3px 0;
-
-    padding:
-        0;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    white-space:
-        nowrap;
-
-}
-
-
-#레벨 {
-
-    font-size:
-        14px;
-
-    color:
-        white;
-
-}
-
-
-#돌돌코인수량 {
-
-    font-size:
-        14px;
+    font-weight: bold;
 
     color:
         #ffe48a;
@@ -740,239 +483,431 @@ body {
 }
 
 
-#EXP정보 {
-
-    font-size:
-        14px;
-
-    color:
-        #a9d7ff;
-
-}
-
-
-#현재칭호 {
-
-    font-size:
-        14px;
-
-    color:
-        #ffd700;
-
-}
-
-
 /* =====================================================
-   프로필 메뉴 버튼
+   흔들림
 ===================================================== */
 
-.프로필메뉴버튼 {
+@keyframes 상자흔들림 {
 
-    width:
-        100%;
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
 
-    padding:
-        11px 12px;
+    15% {
+        transform: rotate(-8deg) scale(1.05);
+    }
 
-    margin:
-        3px 0;
+    30% {
+        transform: rotate(8deg) scale(1.08);
+    }
 
-    border:
-        1px solid transparent;
+    45% {
+        transform: rotate(-8deg) scale(1.1);
+    }
 
-    border-radius:
-        11px;
+    60% {
+        transform: rotate(8deg) scale(1.08);
+    }
 
-    background:
-        transparent;
+    75% {
+        transform: rotate(-4deg) scale(1.04);
+    }
 
-    color:
-        white;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        17px;
-
-    cursor:
-        pointer;
-
-    text-align:
-        left;
-
-    transition:
-        background .2s ease,
-        transform .2s ease,
-        border-color .2s ease;
-
-}
-
-
-.프로필메뉴버튼:hover {
-
-    background:
-        rgba(255,255,255,.09);
-
-    border-color:
-        rgba(255,255,255,.07);
-
-    transform:
-        translateX(2px);
-
-}
-
-
-.프로필메뉴버튼:active {
-
-    transform:
-        translateX(2px)
-        scale(.98);
-
-}
-
-
-/* =====================================================
-   로그아웃
-===================================================== */
-
-#로그아웃 {
-
-    color:
-        #ff8585;
-
-}
-
-
-#로그아웃:hover {
-
-    background:
-        rgba(255,90,90,.09);
-
-}
-
-
-/* =====================================================
-   모바일
-===================================================== */
-
-@media (max-width: 1100px) {
-
-    .메뉴영역 {
-
-        grid-template-columns:
-            repeat(2, minmax(180px, 1fr));
-
+    100% {
+        transform: rotate(0deg) scale(1);
     }
 
 }
 
 
-@media (max-width: 650px) {
+.상자흔들림 {
+
+    animation:
+        상자흔들림 .8s ease;
+
+}
+
+
+/* =====================================================
+   오른쪽
+===================================================== */
+
+.패널제목 {
+
+    margin-top: 0;
+
+    font-size: 27px;
+
+}
+
+
+/* =====================================================
+   확률 목록
+===================================================== */
+
+.확률목록 {
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 10px;
+
+}
+
+
+.확률항목 {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding:
+        13px 15px;
+
+    border-radius: 12px;
+
+    background:
+        rgba(255,255,255,.045);
+
+    border:
+        1px solid rgba(255,255,255,.06);
+
+}
+
+
+.아이템이름 {
+
+    display: flex;
+
+    gap: 10px;
+
+    align-items: center;
+
+}
+
+
+.확률 {
+
+    color:
+        rgba(255,255,255,.7);
+
+}
+
+
+/* =====================================================
+   인벤토리
+===================================================== */
+
+.인벤토리 {
+
+    margin-top: 25px;
+
+}
+
+
+.아이템그리드 {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, 1fr);
+
+    gap: 10px;
+
+}
+
+
+.인벤토리아이템 {
+
+    padding: 13px;
+
+    border-radius: 12px;
+
+    background:
+        rgba(255,255,255,.045);
+
+    border:
+        1px solid rgba(255,255,255,.06);
+
+}
+
+
+.아이템수량 {
+
+    float: right;
+
+    color:
+        #ffe48a;
+
+}
+
+
+/* =====================================================
+   기록
+===================================================== */
+
+.기록 {
+
+    max-width: 1200px;
+
+    margin:
+        25px auto 0;
+
+}
+
+
+.기록목록 {
+
+    max-height: 250px;
+
+    overflow-y: auto;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+
+}
+
+
+.기록항목 {
+
+    padding:
+        11px 14px;
+
+    border-radius: 10px;
+
+    background:
+        rgba(255,255,255,.04);
+
+    color:
+        rgba(255,255,255,.75);
+
+    font-size: 14px;
+
+}
+
+
+.기록항목 strong {
+
+    color: #ffe48a;
+
+}
+
+
+/* =====================================================
+   하단 버튼
+===================================================== */
+
+.하단버튼 {
+
+    max-width: 1200px;
+
+    margin:
+        20px auto 0;
+
+    display: flex;
+
+    justify-content: flex-end;
+
+}
+
+
+#초기화버튼 {
+
+    border:
+        1px solid rgba(255,100,100,.25);
+
+    background:
+        rgba(255,80,80,.06);
+
+    color:
+        #ff9999;
+
+    border-radius: 10px;
+
+    padding:
+        9px 15px;
+
+    font-family:
+        "Jua",
+        sans-serif;
+
+    cursor: pointer;
+
+}
+
+
+#초기화버튼:hover {
+
+    background:
+        rgba(255,80,80,.12);
+
+}
+
+
+/* =====================================================
+   모달
+===================================================== */
+
+#확률모달 {
+
+    position: fixed;
+
+    inset: 0;
+
+    background:
+        rgba(0,0,0,.7);
+
+    backdrop-filter:
+        blur(8px);
+
+    display: none;
+
+    align-items: center;
+
+    justify-content: center;
+
+    z-index: 9999;
+
+}
+
+
+#확률모달.show {
+
+    display: flex;
+
+}
+
+
+.모달 {
+
+    width:
+        min(500px, 90vw);
+
+    padding: 30px;
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #25283d,
+            #121427
+        );
+
+    border:
+        1px solid rgba(255,255,255,.12);
+
+    box-shadow:
+        0 30px 100px rgba(0,0,0,.6);
+
+}
+
+
+.모달 h2 {
+
+    margin-top: 0;
+
+}
+
+
+#모달닫기 {
+
+    width: 100%;
+
+    margin-top: 20px;
+
+    padding: 12px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background:
+        rgba(255,255,255,.08);
+
+    color: white;
+
+    font-family:
+        "Jua",
+        sans-serif;
+
+    font-size: 17px;
+
+    cursor: pointer;
+
+}
+
+
+/* =====================================================
+   반응형
+===================================================== */
+
+@media (max-width: 850px) {
 
     #사이트 {
 
         padding:
-            15px 15px 80px 15px;
+            20px 15px 50px;
 
     }
 
 
-    .상단영역 {
+    .상단 {
 
-        min-height:
-            125px;
+        align-items: flex-start;
 
-    }
-
-
-    .사이트제목 {
-
-        font-size:
-            55px;
+        gap: 15px;
 
     }
 
 
-    .사이트설명 {
+    .제목 {
 
-        margin-top:
-            12px;
-
-        font-size:
-            16px;
+        font-size: 38px;
 
     }
 
 
-    #로그인영역 {
-
-        top:
-            15px;
-
-        right:
-            15px;
-
-    }
-
-
-    #돌이사진 {
-
-        top:
-            15px;
-
-        right:
-            15px;
-
-        width:
-            50px;
-
-        height:
-            50px;
-
-    }
-
-
-    .메뉴영역 {
+    .메인 {
 
         grid-template-columns:
             1fr;
 
-        gap:
-            45px;
+    }
 
-        margin-top:
-            30px;
+
+    .랜덤박스영역 {
+
+        min-height: 400px;
+
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .코인상자 {
+
+        flex-direction: column;
+
+        align-items: flex-start;
+
+        gap: 8px;
 
     }
 
 
-    .메인메뉴버튼 {
+    .아이템그리드 {
 
-        font-size:
-            35px;
-
-    }
-
-
-    .메뉴이미지 {
-
-        width:
-            200px;
-
-    }
-
-
-    #프로필메뉴 {
-
-        top:
-            75px;
-
-        right:
-            15px;
-
-        width:
-            min(230px, calc(100vw - 30px));
+        grid-template-columns:
+            1fr;
 
     }
 
@@ -980,139 +915,410 @@ body {
 
 </style>
 
+</head>
+
+
+<body>
+
+
+<div id="사이트">
+
+
 <!-- =====================================================
-     Supabase
+     상단
 ===================================================== -->
 
-<script type="module">
+<header class="상단">
 
-import {
-    createClient
-}
-from
-"https://esm.sh/@supabase/supabase-js@2";
+    <h1 class="제목">
+        🎁 돌이 랜덤 박스
+    </h1>
+
+
+    <button
+        class="뒤로가기"
+        id="뒤로가기"
+    >
+
+        ← 돌이 사이트
+
+    </button>
+
+</header>
+
+
+<!-- =====================================================
+     코인
+===================================================== -->
+
+<div class="코인상자">
+
+    <div>
+
+        <div class="코인설명">
+            현재 보유한 돌돌코인
+        </div>
+
+        <div id="코인">
+            🪙 10,000
+        </div>
+
+    </div>
+
+
+    <button
+        class="뒤로가기"
+        id="확률보기"
+    >
+
+        🎲 확률 보기
+
+    </button>
+
+</div>
+
+
+<!-- =====================================================
+     메인
+===================================================== -->
+
+<div class="메인">
+
+
+    <!-- 랜덤 박스 -->
+
+    <section class="패널 랜덤박스영역">
+
+
+        <div
+            class="랜덤박스"
+            id="랜덤박스"
+        >
+
+            <div class="상자아이콘">
+                🎁
+            </div>
+
+            <div class="상자텍스트">
+                돌이 랜덤 박스
+            </div>
+
+            <div class="가격">
+                🪙 1,000
+            </div>
+
+        </div>
+
+
+        <button
+            id="뽑기버튼"
+        >
+
+            🎁 랜덤 박스 열기
+
+        </button>
+
+
+        <div id="결과">
+
+            랜덤 박스를 열어보세요!
+
+        </div>
+
+
+    </section>
+
+
+    <!-- 정보 -->
+
+    <section class="패널">
+
+
+        <h2 class="패널제목">
+            🎲 보상 확률
+        </h2>
+
+
+        <div
+            class="확률목록"
+            id="확률목록"
+        ></div>
+
+
+        <div class="인벤토리">
+
+            <h2 class="패널제목">
+                🎒 내 아이템
+            </h2>
+
+
+            <div
+                class="아이템그리드"
+                id="아이템그리드"
+            ></div>
+
+        </div>
+
+
+    </section>
+
+
+</div>
+
+
+<!-- =====================================================
+     기록
+===================================================== -->
+
+<section class="패널 기록">
+
+
+    <h2 class="패널제목">
+        📜 최근 뽑기 기록
+    </h2>
+
+
+    <div
+        class="기록목록"
+        id="기록목록"
+    >
+
+        <div class="기록항목">
+            아직 뽑기 기록이 없습니다.
+        </div>
+
+    </div>
+
+
+</section>
+
+
+<!-- =====================================================
+     초기화
+===================================================== -->
+
+<div class="하단버튼">
+
+    <button id="초기화버튼">
+        데이터 초기화
+    </button>
+
+</div>
+
+
+</div>
+
+
+<!-- =====================================================
+     확률 모달
+===================================================== -->
+
+<div id="확률모달">
+
+    <div class="모달">
+
+        <h2>
+            🎲 돌이 랜덤 박스 확률
+        </h2>
+
+
+        <div
+            class="확률목록"
+            id="모달확률목록"
+        ></div>
+
+
+        <button id="모달닫기">
+            닫기
+        </button>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   설정
+===================================================== */
+
+const 뽑기가격 = 1000;
 
 
 /* =====================================================
-   Supabase
+   보상
 ===================================================== */
 
-const supabase =
-    createClient(
+const 보상목록 = [
 
-        "https://scttowfhygcpdirrekqm.supabase.co",
+    {
+        id: "coins500",
+        이름: "500 돌돌코인",
+        아이콘: "🪙",
+        확률: 35,
+        종류: "coin",
+        값: 500
+    },
 
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sIjoiYW5vbiIsImlhdCI6MTc4MDE5ODQyNiwiZXhwIjoyMDk1Nzc0NDI2fQ.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+    {
+        id: "coins1000",
+        이름: "1,000 돌돌코인",
+        아이콘: "🪙",
+        확률: 25,
+        종류: "coin",
+        값: 1000
+    },
 
-    );
+    {
+        id: "rockeyHat",
+        이름: "돌이 모자",
+        아이콘: "🎩",
+        확률: 15,
+        종류: "item"
+    },
+
+    {
+        id: "rockeyGlasses",
+        이름: "돌이 안경",
+        아이콘: "🕶️",
+        확률: 10,
+        종류: "item"
+    },
+
+    {
+        id: "specialTitle",
+        이름: "특별 칭호",
+        아이콘: "🏅",
+        확률: 7,
+        종류: "title"
+    },
+
+    {
+        id: "rareBackground",
+        이름: "희귀 배경",
+        아이콘: "🌌",
+        확률: 5,
+        종류: "background"
+    },
+
+    {
+        id: "legendarySkin",
+        이름: "전설 돌이 스킨",
+        아이콘: "🐶",
+        확률: 3,
+        종류: "skin"
+    }
+
+];
 
 
 /* =====================================================
-   상태
+   localStorage 키
 ===================================================== */
 
-let 초기화완료 = false;
-
-let 현재사용자 = null;
-
-let 현재유저정보 = null;
-
-let 프로필열림 = false;
+const 저장키 =
+    "돌이랜덤박스데이터";
 
 
 /* =====================================================
-   회원 레벨
+   기본 데이터
 ===================================================== */
 
-const 회원레벨이름 = {
+const 기본데이터 = {
 
-    1: "일반",
+    coins: 10000,
 
-    2: "프리미엄",
+    inventory: {},
 
-    3: "돌프리미엄",
-
-    4: "돌돌프리미엄",
-
-    5: "돌돌돌프리미엄",
-
-    6: "돌돌돌돌프리미엄",
-
-    7: "돌돌돌돌돌프리미엄",
-
-    8: "유사돌이",
-
-    9: "돌이",
-
-    10: "관리자"
+    history: []
 
 };
 
 
 /* =====================================================
-   EXP 레벨
+   데이터 불러오기
 ===================================================== */
 
-const EXP레벨필요경험치 = {
+function 데이터불러오기() {
 
-    1: 0,
+    try {
 
-    2: 100,
-
-    3: 500,
-
-    4: 1000,
-
-    5: 5000,
-
-    6: 10000,
-
-    7: 20000,
-
-    8: 30000,
-
-    9: 40000,
-
-    10: 50000,
-
-    11: 100000
-
-};
+        const 저장된값 =
+            localStorage.getItem(저장키);
 
 
-/* =====================================================
-   EXP 레벨 계산
-===================================================== */
+        if (!저장된값) {
 
-function 경험치로레벨계산(exp) {
-
-    const 숫자 =
-        Number(exp) || 0;
-
-    let level = 1;
-
-
-    for (
-        let i = 11;
-        i >= 1;
-        i--
-    ) {
-
-        if (
-            숫자 >=
-            EXP레벨필요경험치[i]
-        ) {
-
-            level = i;
-
-            break;
+            return {
+                ...기본데이터,
+                inventory: {},
+                history: []
+            };
 
         }
 
+
+        const data =
+            JSON.parse(저장된값);
+
+
+        return {
+
+            coins:
+                Number(data.coins)
+                || 0,
+
+            inventory:
+                data.inventory
+                || {},
+
+            history:
+                Array.isArray(data.history)
+                ? data.history
+                : []
+
+        };
+
     }
 
+    catch (error) {
 
-    return level;
+        console.error(
+            "랜덤 박스 데이터 불러오기 오류:",
+            error
+        );
+
+
+        return {
+            ...기본데이터,
+            inventory: {},
+            history: []
+        };
+
+    }
+
+}
+
+
+/* =====================================================
+   현재 데이터
+===================================================== */
+
+let 데이터 =
+    데이터불러오기();
+
+
+/* =====================================================
+   저장
+===================================================== */
+
+function 데이터저장() {
+
+    localStorage.setItem(
+        저장키,
+        JSON.stringify(데이터)
+    );
 
 }
 
@@ -1121,9 +1327,521 @@ function 경험치로레벨계산(exp) {
    DOM
 ===================================================== */
 
-document.addEventListener(
-    "DOMContentLoaded",
-    초기화
+const 코인 =
+    document.getElementById("코인");
+
+const 뽑기버튼 =
+    document.getElementById("뽑기버튼");
+
+const 랜덤박스 =
+    document.getElementById("랜덤박스");
+
+const 결과 =
+    document.getElementById("결과");
+
+const 확률목록 =
+    document.getElementById("확률목록");
+
+const 아이템그리드 =
+    document.getElementById("아이템그리드");
+
+const 기록목록 =
+    document.getElementById("기록목록");
+
+const 확률보기 =
+    document.getElementById("확률보기");
+
+const 확률모달 =
+    document.getElementById("확률모달");
+
+const 모달확률목록 =
+    document.getElementById("모달확률목록");
+
+const 모달닫기 =
+    document.getElementById("모달닫기");
+
+const 초기화버튼 =
+    document.getElementById("초기화버튼");
+
+const 뒤로가기 =
+    document.getElementById("뒤로가기");
+
+
+/* =====================================================
+   코인 표시
+===================================================== */
+
+function 코인표시() {
+
+    코인.textContent =
+        `🪙 ${데이터.coins.toLocaleString("ko-KR")}`;
+
+    뽑기버튼.disabled =
+        데이터.coins < 뽑기가격;
+
+}
+
+
+/* =====================================================
+   확률 목록 생성
+===================================================== */
+
+function 확률목록표시() {
+
+    확률목록.innerHTML = "";
+
+    모달확률목록.innerHTML = "";
+
+
+    보상목록.forEach(
+        보상 => {
+
+            const 항목 =
+                document.createElement("div");
+
+            항목.className =
+                "확률항목";
+
+
+            항목.innerHTML = `
+
+                <div class="아이템이름">
+
+                    <span>
+                        ${보상.아이콘}
+                    </span>
+
+                    <span>
+                        ${보상.이름}
+                    </span>
+
+                </div>
+
+                <span class="확률">
+                    ${보상.확률}%
+                </span>
+
+            `;
+
+
+            확률목록.appendChild(
+                항목.cloneNode(true)
+            );
+
+
+            모달확률목록.appendChild(
+                항목
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   인벤토리
+===================================================== */
+
+function 인벤토리표시() {
+
+    아이템그리드.innerHTML = "";
+
+
+    const 획득아이템 =
+        보상목록.filter(
+            보상 =>
+                보상.종류 !== "coin"
+                &&
+                (데이터.inventory[보상.id] || 0) > 0
+        );
+
+
+    if (획득아이템.length === 0) {
+
+        아이템그리드.innerHTML = `
+
+            <div class="인벤토리아이템">
+                아직 획득한 아이템이 없습니다.
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    획득아이템.forEach(
+        보상 => {
+
+            const 항목 =
+                document.createElement("div");
+
+
+            항목.className =
+                "인벤토리아이템";
+
+
+            const 수량 =
+                데이터.inventory[보상.id]
+                || 0;
+
+
+            항목.innerHTML = `
+
+                ${보상.아이콘}
+                ${보상.이름}
+
+                <span class="아이템수량">
+                    ×${수량}
+                </span>
+
+            `;
+
+
+            아이템그리드.appendChild(
+                항목
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================================
+   기록 표시
+===================================================== */
+
+function 기록표시() {
+
+    기록목록.innerHTML = "";
+
+
+    if (데이터.history.length === 0) {
+
+        기록목록.innerHTML = `
+
+            <div class="기록항목">
+                아직 뽑기 기록이 없습니다.
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    데이터.history
+        .slice()
+        .reverse()
+        .forEach(
+            기록 => {
+
+                const 항목 =
+                    document.createElement("div");
+
+
+                항목.className =
+                    "기록항목";
+
+
+                항목.innerHTML = `
+
+                    ${기록시간표시(
+                        기록.time
+                    )}
+
+                    ·
+
+                    <strong>
+                        ${기록.reward}
+                    </strong>
+
+                `;
+
+
+                기록목록.appendChild(
+                    항목
+                );
+
+            }
+        );
+
+}
+
+
+/* =====================================================
+   시간
+===================================================== */
+
+function 기록시간표시(time) {
+
+    const date =
+        new Date(time);
+
+
+    return date.toLocaleString(
+        "ko-KR"
+    );
+
+}
+
+
+/* =====================================================
+   랜덤 보상
+===================================================== */
+
+function 보상뽑기() {
+
+    const 랜덤 =
+        Math.random() * 100;
+
+
+    let 누적확률 = 0;
+
+
+    for (
+        const 보상 of 보상목록
+    ) {
+
+        누적확률 +=
+            보상.확률;
+
+
+        if (
+            랜덤 < 누적확률
+        ) {
+
+            return 보상;
+
+        }
+
+    }
+
+
+    return 보상목록[
+        보상목록.length - 1
+    ];
+
+}
+
+
+/* =====================================================
+   보상 지급
+===================================================== */
+
+function 보상지급(보상) {
+
+    if (
+        보상.종류 === "coin"
+    ) {
+
+        데이터.coins +=
+            보상.값;
+
+    }
+
+    else {
+
+        if (
+            !데이터.inventory[
+                보상.id
+            ]
+        ) {
+
+            데이터.inventory[
+                보상.id
+            ] = 0;
+
+        }
+
+
+        데이터.inventory[
+            보상.id
+        ] += 1;
+
+    }
+
+}
+
+
+/* =====================================================
+   뽑기
+===================================================== */
+
+function 뽑기() {
+
+    if (
+        데이터.coins <
+        뽑기가격
+    ) {
+
+        결과.innerHTML = `
+
+            <span style="color:#ff8585">
+                돌돌코인이 부족합니다.
+            </span>
+
+        `;
+
+        return;
+
+    }
+
+
+    뽑기버튼.disabled =
+        true;
+
+
+    데이터.coins -=
+        뽑기가격;
+
+
+    결과.innerHTML = `
+        상자를 여는 중... 🎁
+    `;
+
+
+    랜덤박스.classList.remove(
+        "상자흔들림"
+    );
+
+
+    void 랜덤박스.offsetWidth;
+
+
+    랜덤박스.classList.add(
+        "상자흔들림"
+    );
+
+
+    const 보상 =
+        보상뽑기();
+
+
+    setTimeout(
+        () => {
+
+            보상지급(
+                보상
+            );
+
+
+            const 보상문구 =
+                `${보상.아이콘} ${보상.이름}`;
+
+
+            데이터.history.push({
+
+                time:
+                    new Date().toISOString(),
+
+                reward:
+                    보상문구
+
+            });
+
+
+            if (
+                데이터.history.length > 50
+            ) {
+
+                데이터.history =
+                    데이터.history.slice(-50);
+
+            }
+
+
+            데이터저장();
+
+
+            결과.innerHTML = `
+
+                🎉 획득!
+
+                <br>
+
+                <span class="결과강조">
+                    ${보상문구}
+                </span>
+
+            `;
+
+
+            코인표시();
+
+            인벤토리표시();
+
+            기록표시();
+
+
+            뽑기버튼.disabled =
+                데이터.coins < 뽑기가격;
+
+        },
+        850
+    );
+
+}
+
+
+/* =====================================================
+   확률 모달
+===================================================== */
+
+확률보기.addEventListener(
+    "click",
+    () => {
+
+        확률모달.classList.add(
+            "show"
+        );
+
+    }
+);
+
+
+모달닫기.addEventListener(
+    "click",
+    () => {
+
+        확률모달.classList.remove(
+            "show"
+        );
+
+    }
+);
+
+
+확률모달.addEventListener(
+    "click",
+    event => {
+
+        if (
+            event.target ===
+            확률모달
+        ) {
+
+            확률모달.classList.remove(
+                "show"
+            );
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   뽑기 버튼
+===================================================== */
+
+뽑기버튼.addEventListener(
+    "click",
+    뽑기
 );
 
 
@@ -1131,1211 +1849,106 @@ document.addEventListener(
    초기화
 ===================================================== */
 
-async function 초기화() {
-
-    if (초기화완료) {
-
-        return;
-
-    }
-
-
-    초기화완료 = true;
-
-
-    console.log(
-        "🐶 돌이사이트 초기화 시작"
-    );
-
-
-    이벤트설정();
-
-
-    await 로그인상태처리();
-
-
-    console.log(
-        "🐶 돌이사이트 초기화 완료"
-    );
-
-}
-
-
-/* =====================================================
-   DOM 가져오기
-===================================================== */
-
-function el(id) {
-
-    return document.getElementById(id);
-
-}
-
-
-/* =====================================================
-   이벤트
-===================================================== */
-
-function 이벤트설정() {
-
-
-    /* --------------------------------------------------
-       돌이신문
-    -------------------------------------------------- */
-
-    const 신문버튼 =
-        document.querySelector(
-            '[data-page="news"]'
-        );
-
-
-    const 신문이미지 =
-        el("돌이신문확인");
-
-
-    function 신문이동() {
-
-        location.href =
-            "rockeynews.html";
-
-    }
-
-
-    if (신문버튼) {
-
-        신문버튼.onclick =
-            신문이동;
-
-    }
-
-
-    if (신문이미지) {
-
-        신문이미지.onclick =
-            신문이동;
-
-    }
-
-
-    /* --------------------------------------------------
-       돌돌코인 상점
-    -------------------------------------------------- */
-
-    const 상점버튼 =
-        el("돌돌코인상점");
-
-
-    const 상점이미지 =
-        el("돌돌코인상점!!!");
-
-
-    function 상점이동() {
-
-        location.href =
-            "doldolcoinmart.html";
-
-    }
-
-
-    if (상점버튼) {
-
-        상점버튼.onclick =
-            상점이동;
-
-    }
-
-
-    if (상점이미지) {
-
-        상점이미지.onclick =
-            상점이동;
-
-    }
-
-
-    /* --------------------------------------------------
-       돌이 관련 정보
-    -------------------------------------------------- */
-
-    const 정보버튼 =
-        el("돌이와 관련된 정보");
-
-
-    const 정보이미지 =
-        el("돌이와관련된정보!");
-
-
-    function 정보이동() {
-
-        location.href =
-            "knowledgeofrockey.html";
-
-    }
-
-
-    if (정보버튼) {
-
-        정보버튼.onclick =
-            정보이동;
-
-    }
-
-
-    if (정보이미지) {
-
-        정보이미지.onclick =
-            정보이동;
-
-    }
-
-
-    /* --------------------------------------------------
-       게임
-    -------------------------------------------------- */
-
-    const 게임버튼 =
-        el("돌이게임");
-
-
-    const 게임이미지 =
-        el("돌이게임사진");
-
-
-    function 게임이동() {
-
-        location.href =
-            "gamepage.html";
-
-    }
-
-
-    if (게임버튼) {
-
-        게임버튼.onclick =
-            게임이동;
-
-    }
-
-
-    if (게임이미지) {
-
-        게임이미지.onclick =
-            게임이동;
-
-    }
-
-
-    /* --------------------------------------------------
-       로그인
-    -------------------------------------------------- */
-
-    const 로그인 =
-        el("로그인");
-
-
-    if (로그인) {
-
-        로그인.onclick =
-            () => {
-
-                location.href =
-                    "login.html";
-
-            };
-
-    }
-
-
-    /* --------------------------------------------------
-       회원가입
-    -------------------------------------------------- */
-
-    const 회원가입 =
-        el("회원가입");
-
-
-    if (회원가입) {
-
-        회원가입.onclick =
-            () => {
-
-                location.href =
-                    "signin.html";
-
-            };
-
-    }
-
-
-    /* --------------------------------------------------
-       설정
-    -------------------------------------------------- */
-
-    const 설정 =
-        el("설정");
-
-
-    if (설정) {
-
-        설정.onclick =
-            () => {
-
-                location.href =
-                    "settings.html";
-
-            };
-
-    }
-
-
-    /* --------------------------------------------------
-       프로필
-    -------------------------------------------------- */
-
-    const 사진 =
-        el("돌이사진");
-
-
-    if (사진) {
-
-        사진.addEventListener(
-            "click",
-            (event) => {
-
-                event.stopPropagation();
-
-                프로필메뉴토글();
-
-            }
-        );
-
-    }
-
-
-    /* --------------------------------------------------
-       프로필 상점
-    -------------------------------------------------- */
-
-    const 프로필상점 =
-        el("돌돌코인");
-
-
-    if (프로필상점) {
-
-        프로필상점.onclick =
-            () => {
-
-                location.href =
-                    "doldolcoinmart.html";
-
-            };
-
-    }
-
-
-    /* --------------------------------------------------
-       로그아웃
-    -------------------------------------------------- */
-
-    const 로그아웃 =
-        el("로그아웃");
-
-
-    if (로그아웃) {
-
-        로그아웃.onclick =
-            로그아웃처리;
-
-    }
-
-
-    /* --------------------------------------------------
-       메뉴 바깥 클릭
-    -------------------------------------------------- */
-
-    document.addEventListener(
-        "click",
-        (event) => {
-
-            const 메뉴 =
-                el("프로필메뉴");
-
-
-            const 사진 =
-                el("돌이사진");
-
-
-            if (!메뉴 || !사진) {
-
-                return;
-
-            }
-
-
-            if (
-                !메뉴.contains(event.target) &&
-                event.target !== 사진
-            ) {
-
-                프로필닫기();
-
-            }
-
-        }
-    );
-
-}
-
-
-/* =====================================================
-   로그인 상태
-===================================================== */
-
-async function 로그인상태처리() {
-
-    try {
-
-        const {
-            data,
-            error
-        } =
-            await supabase.auth.getSession();
-
-
-        if (error) {
-
-            console.error(
-                "세션 확인 오류:",
-                error
+초기화버튼.addEventListener(
+    "click",
+    () => {
+
+        const 확인 =
+            confirm(
+                "랜덤 박스 데이터를 모두 초기화할까요?\n\n코인은 10,000으로 돌아갑니다."
             );
 
 
-            비로그인화면();
+        if (!확인) {
 
             return;
 
         }
 
 
-        if (!data.session) {
+        데이터 = {
 
-            비로그인화면();
+            coins: 10000,
 
-            return;
+            inventory: {},
 
-        }
+            history: []
 
-
-        현재사용자 =
-            data.session.user;
+        };
 
 
-        await 로그인화면();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "로그인 처리 오류:",
-            error
-        );
+        데이터저장();
 
 
-        비로그인화면();
+        결과.innerHTML =
+            "데이터가 초기화되었습니다.";
+
+
+        코인표시();
+
+        인벤토리표시();
+
+        기록표시();
 
     }
-
-}
+);
 
 
 /* =====================================================
-   비로그인 화면
+   뒤로가기
 ===================================================== */
 
-function 비로그인화면() {
+뒤로가기.addEventListener(
+    "click",
+    () => {
 
-    const 로그인 =
-        el("로그인");
-
-
-    const 회원가입 =
-        el("회원가입");
-
-
-    const 사진 =
-        el("돌이사진");
-
-
-    if (로그인) {
-
-        로그인.style.display =
-            "block";
+        location.href =
+            "index.html";
 
     }
-
-
-    if (회원가입) {
-
-        회원가입.style.display =
-            "block";
-
-    }
-
-
-    if (사진) {
-
-        사진.style.display =
-            "none";
-
-    }
-
-
-    프로필닫기();
-
-}
+);
 
 
 /* =====================================================
-   로그인 화면
+   ESC
 ===================================================== */
 
-async function 로그인화면() {
-
-    const 로그인 =
-        el("로그인");
-
-
-    const 회원가입 =
-        el("회원가입");
-
-
-    const 사진 =
-        el("돌이사진");
-
-
-    if (로그인) {
-
-        로그인.style.display =
-            "none";
-
-    }
-
-
-    if (회원가입) {
-
-        회원가입.style.display =
-            "none";
-
-    }
-
-
-    if (사진) {
-
-        사진.style.display =
-            "block";
-
-    }
-
-
-    await 사용자정보불러오기();
-
-}
-
-
-/* =====================================================
-   사용자 정보
-===================================================== */
-
-async function 사용자정보불러오기() {
-
-    if (!현재사용자) {
-
-        return;
-
-    }
-
-
-    try {
-
-        const {
-            data,
-            error
-        } =
-            await supabase
-
-                .from("users")
-
-                .select(`
-                    user_id,
-                    user_number,
-                    user_level,
-                    doldolcoin,
-                    exp,
-                    exp_level,
-                    profile_image,
-                    equipped_title
-                `)
-
-                .eq(
-                    "user_id",
-                    현재사용자.id
-                )
-
-                .maybeSingle();
-
-
-        if (error) {
-
-            console.error(
-                "users 조회 오류:",
-                error
-            );
-
-            return;
-
-        }
-
-
-        if (!data) {
-
-            console.warn(
-                "users에 현재 사용자가 없습니다."
-            );
-
-            return;
-
-        }
-
-
-        현재유저정보 =
-            data;
-
-
-        사용자정보표시();
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "사용자 정보 처리 오류:",
-            error
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   사용자 정보 표시
-===================================================== */
-
-function 사용자정보표시() {
-
-    if (!현재유저정보) {
-
-        return;
-
-    }
-
-
-    const 사진 =
-        el("돌이사진");
-
-
-    if (
-        사진 &&
-        현재유저정보.profile_image
-    ) {
-
-        사진.src =
-            현재유저정보.profile_image;
-
-    }
-
-
-    const 회원레벨 =
-        Number(
-            현재유저정보.user_level
-        ) || 1;
-
-
-    const exp =
-        Number(
-            현재유저정보.exp
-        ) || 0;
-
-
-    const expLevel =
-        Number(
-            현재유저정보.exp_level
-        )
-        ||
-        경험치로레벨계산(exp);
-
-
-    const 레벨 =
-        el("레벨");
-
-
-    if (레벨) {
-
-        레벨.textContent =
-            `회원등급: ${
-                회원레벨이름[회원레벨]
-                || "일반"
-            }`;
-
-    }
-
-
-    const 코인 =
-        el("돌돌코인수량");
-
-
-    if (코인) {
-
-        코인.textContent =
-            `돌돌코인: ${
-                Number(
-                    현재유저정보.doldolcoin
-                ) || 0
-            }`;
-
-    }
-
-
-    const EXP =
-        el("EXP정보");
-
-
-    if (EXP) {
-
-        EXP.textContent =
-            `EXP Lv.${expLevel} · ${exp} EXP`;
-
-    }
-
-
-    const 칭호 =
-        el("현재칭호");
-
-
-    if (칭호) {
-
-        칭호.textContent =
-            현재유저정보.equipped_title
-            ||
-            "칭호 없음";
-
-    }
-
-}
-
-
-/* =====================================================
-   프로필 메뉴 토글
-===================================================== */
-
-function 프로필메뉴토글() {
-
-    if (!현재사용자) {
-
-        return;
-
-    }
-
-
-    const 메뉴 =
-        el("프로필메뉴");
-
-
-    const 상태 =
-        el("프로필상태");
-
-
-    if (!메뉴) {
-
-        return;
-
-    }
-
-
-    프로필열림 =
-        !프로필열림;
-
-
-    if (프로필열림) {
-
-        메뉴.classList.add(
-            "show"
-        );
-
-
-        if (상태) {
-
-            상태.classList.add(
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            확률모달.classList.remove(
                 "show"
             );
 
         }
 
     }
-
-    else {
-
-        프로필닫기();
-
-    }
-
-}
+);
 
 
 /* =====================================================
-   프로필 닫기
+   시작
 ===================================================== */
 
-function 프로필닫기() {
+확률목록표시();
 
-    프로필열림 =
-        false;
+코인표시();
 
+인벤토리표시();
 
-    const 메뉴 =
-        el("프로필메뉴");
+기록표시();
 
-
-    const 상태 =
-        el("프로필상태");
-
-
-    if (메뉴) {
-
-        메뉴.classList.remove(
-            "show"
-        );
-
-    }
-
-
-    if (상태) {
-
-        상태.classList.remove(
-            "show"
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   로그아웃
-===================================================== */
-
-async function 로그아웃처리() {
-
-    try {
-
-        const {
-            error
-        } =
-            await supabase.auth.signOut();
-
-
-        if (error) {
-
-            console.error(
-                "로그아웃 오류:",
-                error
-            );
-
-
-            alert(
-                "로그아웃에 실패했습니다."
-            );
-
-
-            return;
-
-        }
-
-
-        현재사용자 =
-            null;
-
-
-        현재유저정보 =
-            null;
-
-
-        프로필닫기();
-
-
-        location.href =
-            "index.html";
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "로그아웃 예외:",
-            error
-        );
-
-    }
-
-}
-
-
-/* =====================================================
-   콘솔
-===================================================== */
 
 console.log(
-    "🐶 돌이사이트 메인 스크립트 준비 완료"
+    "🎁 돌이 랜덤 박스 준비 완료"
 );
 
 </script>
-
-</head>
-
-<body>
-
-<div id="사이트">
-
-<!-- =====================================================
-     상단 영역
-===================================================== -->
-
-<header class="상단영역">
-
-```
-<!-- 사이트 제목 -->
-
-<a
-    class="사이트제목링크"
-    href="https://rockey-jason.github.io/doldol-site/"
->
-
-    <button
-        type="button"
-        class="사이트제목"
-    >
-
-        돌이 사이트
-
-    </button>
-
-</a>
-
-
-<!-- 설명 -->
-
-<p class="사이트설명">
-
-    돌이에 대한 여러 정보와 돌이신문,
-    돌돌코인 수급 등을 이용해보세요!
-
-</p>
-```
-
-</header>
-
-<!-- =====================================================
-     로그인 / 회원가입
-===================================================== -->
-
-<div id="로그인영역">
-
-```
-<button
-    id="로그인"
-    class="로그인버튼"
-    type="button"
->
-
-    로그인
-
-</button>
-
-
-<button
-    id="회원가입"
-    class="로그인버튼"
-    type="button"
->
-
-    회원가입
-
-</button>
-```
-
-</div>
-
-<!-- =====================================================
-     프로필 사진
-===================================================== -->
-
-<img
-id="돌이사진"
-
-```
-src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
-
-alt="돌이 프로필"
-```
-
->
-
-<!-- =====================================================
-     프로필 메뉴
-===================================================== -->
-
-<div id="프로필메뉴">
-
-```
-<!-- 회원 정보 -->
-
-<div id="프로필상태">
-
-
-    <div class="프로필상태제목">
-
-        👤 내 정보
-
-    </div>
-
-
-    <div
-        class="프로필상태항목"
-        id="레벨"
-    >
-
-        회원등급: 일반
-
-    </div>
-
-
-    <div
-        class="프로필상태항목"
-        id="돌돌코인수량"
-    >
-
-        돌돌코인: 0
-
-    </div>
-
-
-    <div
-        class="프로필상태항목"
-        id="EXP정보"
-    >
-
-        EXP Lv.1 · 0 EXP
-
-    </div>
-
-
-    <div
-        class="프로필상태항목"
-        id="현재칭호"
-    >
-
-        칭호 없음
-
-    </div>
-
-
-</div>
-
-
-<!-- 상점 -->
-
-<button
-    class="프로필메뉴버튼"
-    id="돌돌코인"
-    type="button"
->
-
-    🪙 돌돌코인 상점
-
-</button>
-
-
-<!-- 설정 -->
-
-<button
-    class="프로필메뉴버튼"
-    id="설정"
-    type="button"
->
-
-    ⚙️ 설정
-
-</button>
-
-
-<!-- 로그아웃 -->
-
-<button
-    class="프로필메뉴버튼"
-    id="로그아웃"
-    type="button"
->
-
-    🚪 로그아웃
-
-</button>
-```
-
-</div>
-
-<!-- =====================================================
-     메인 메뉴
-===================================================== -->
-
-<main class="메뉴영역">
-
-```
-<!-- -------------------------------------------------
-     돌이신문
--------------------------------------------------- -->
-
-<div class="메뉴카드">
-
-
-    <button
-        data-page="news"
-        class="메인메뉴버튼"
-        type="button"
-    >
-
-        돌이신문 확인
-
-    </button>
-
-
-    <img
-        id="돌이신문확인"
-
-        class="메뉴이미지"
-
-        src="https://i.postimg.cc/Px1nNcJM/1000004603.jpg"
-
-        alt="돌이신문 확인"
-
-    >
-
-
-</div>
-
-
-<!-- -------------------------------------------------
-     돌돌코인 상점
--------------------------------------------------- -->
-
-<div class="메뉴카드">
-
-
-    <button
-        id="돌돌코인상점"
-        class="메인메뉴버튼"
-        type="button"
-    >
-
-        돌돌코인 상점
-
-    </button>
-
-
-    <img
-        id="돌돌코인상점!!!"
-
-        class="메뉴이미지"
-
-        src="https://i.postimg.cc/TYxW97Ly/1000004605.jpg"
-
-        alt="돌돌코인 상점"
-
-    >
-
-
-</div>
-
-
-<!-- -------------------------------------------------
-     돌이 관련 정보
--------------------------------------------------- -->
-
-<div class="메뉴카드">
-
-
-    <button
-        id="돌이와 관련된 정보"
-        class="메인메뉴버튼"
-        type="button"
-    >
-
-        돌이와 관련된 정보
-
-    </button>
-
-
-    <img
-        id="돌이와관련된정보!"
-
-        class="메뉴이미지"
-
-        src="https://i.postimg.cc/8zdzKNWg/dol-i.jpg"
-
-        alt="돌이와 관련된 정보"
-
-    >
-
-
-</div>
-
-
-<!-- -------------------------------------------------
-     게임
--------------------------------------------------- -->
-
-<div class="메뉴카드">
-
-
-    <button
-        id="돌이게임"
-        class="메인메뉴버튼"
-        type="button"
-    >
-
-        돌이게임
-
-    </button>
-
-
-    <img
-        id="돌이게임사진"
-
-        class="메뉴이미지"
-
-        src="https://i.postimg.cc/FsHqfPpX/rockeychess.png"
-
-        alt="돌이게임"
-
-    >
-
-
-</div>
-```
-
-</main>
-
-</div>
 
 </body>
 
