@@ -1,40 +1,520 @@
-<!DOCTYPE html>
+<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8"><meta name="viewport"
+content="width=device-width, initial-scale=1.0">
 
-<html lang="ko">
-
-<head>
-
-<meta charset="UTF-8">
-
-<meta name="viewport"
-   content="width=device-width, initial-scale=1.0">
-
-<title>돌이 사이트</title>
-
-<!-- =====================================================
-     Google Font
-===================================================== -->
-
-<link rel="preconnect"
-      href="https://fonts.googleapis.com">
-
-<link rel="preconnect"
+<title>돌이 사이트</title><!-- Google Font --><link rel="preconnect"
+      href="https://fonts.googleapis.com"><link rel="preconnect"
       href="https://fonts.gstatic.com"
-      crossorigin>
+      crossorigin><link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap"
+      rel="stylesheet"><style>
 
-<link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap"
-      rel="stylesheet">
+/* =====================================================
+   기본
+===================================================== */
 
-<!-- =====================================================
-     Font
-===================================================== -->
+* {
 
-<style>
+    box-sizing: border-box;
 
-@font-face {
+    margin: 0;
 
-    font-family: "HancomMalrangmalrang";
+    padding: 0;
 
+    user-select: none;
+
+    -webkit-user-select: none;
+
+    -webkit-user-drag: none;
+
+}
+
+
+html,
+body {
+
+    width: 100%;
+
+    min-height: 100%;
+
+}
+
+
+body {
+
+    min-height: 100vh;
+
+    background:
+        radial-gradient(
+            circle at 15% 20%,
+            rgba(30,50,130,.18),
+            transparent 30%
+        ),
+
+        radial-gradient(
+            circle at 85% 80%,
+            rgba(40,20,120,.12),
+            transparent 35%
+        ),
+
+        linear-gradient(
+            to right,
+            #000033,
+            #000010
+        );
+
+    color: white;
+
+    font-family:
+        "Jua",
+        sans-serif;
+
+    overflow-x: hidden;
+
+}
+
+
+/* =====================================================
+   전체 사이트
+===================================================== */
+
+#사이트 {
+
+    width: 100%;
+
+    min-height: 100vh;
+
+    padding:
+        30px 20px 80px;
+
+}
+
+
+/* =====================================================
+   제목
+===================================================== */
+
+.사이트제목 {
+
+    text-align: center;
+
+    font-family:
+        "Black Han Sans",
+        sans-serif;
+
+    font-size: 42px;
+
+    margin-bottom: 10px;
+
+    text-shadow:
+        0 0 20px rgba(100,120,255,.25);
+
+}
+
+
+.사이트설명 {
+
+    text-align: center;
+
+    color:
+        rgba(255,255,255,.7);
+
+    font-size: 17px;
+
+    margin-bottom: 45px;
+
+}
+
+
+/* =====================================================
+   랜덤박스 영역
+===================================================== */
+
+.랜덤박스영역 {
+
+    width: 100%;
+
+    display: flex;
+
+    justify-content: center;
+
+    align-items: center;
+
+}
+
+
+/* =====================================================
+   랜덤박스 카드
+===================================================== */
+
+.랜덤박스카드 {
+
+    position: relative;
+
+    width: min(700px, 92vw);
+
+    border-radius: 25px;
+
+    overflow: hidden;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 20px 60px rgba(0,0,0,.55);
+
+    transition:
+        transform .28s ease,
+        box-shadow .28s ease;
+
+}
+
+
+/* 이미지 */
+
+.랜덤박스이미지 {
+
+    display: block;
+
+    width: 100%;
+
+    height: auto;
+
+    border-radius: 25px;
+
+    transition:
+        transform .28s ease,
+        filter .28s ease;
+
+}
+
+
+/* =====================================================
+   이미지 위 어두운 효과
+===================================================== */
+
+.랜덤박스카드::after {
+
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        linear-gradient(
+            to top,
+            rgba(0,0,20,.65),
+            rgba(0,0,0,0) 55%
+        );
+
+    pointer-events: none;
+
+    border-radius: 25px;
+
+}
+
+
+/* =====================================================
+   마우스를 카드에 올렸을 때
+===================================================== */
+
+.랜덤박스카드:hover {
+
+    transform:
+        scale(1.035);
+
+    box-shadow:
+        0 28px 75px rgba(0,0,0,.7),
+        0 0 0 2px rgba(255,255,255,.12);
+
+}
+
+
+.랜덤박스카드:hover .랜덤박스이미지 {
+
+    filter:
+        brightness(1.08);
+
+}
+
+
+/* =====================================================
+   버튼 영역
+===================================================== */
+
+.랜덤박스버튼영역 {
+
+    position: absolute;
+
+    left: 0;
+
+    right: 0;
+
+    bottom: 28px;
+
+    z-index: 10;
+
+    display: flex;
+
+    justify-content: center;
+
+    pointer-events: none;
+
+}
+
+
+/* =====================================================
+   랜덤박스 버튼
+===================================================== */
+
+.랜덤박스버튼 {
+
+    pointer-events: auto;
+
+    border: none;
+
+    border-radius: 999px;
+
+    padding:
+        14px 35px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ffffff,
+            #dfe5ff
+        );
+
+    color:
+        #000033;
+
+    font-family:
+        "Jua",
+        sans-serif;
+
+    font-size: 23px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 8px 25px rgba(0,0,0,.4);
+
+    transition:
+        transform .22s ease,
+        box-shadow .22s ease,
+        filter .22s ease;
+
+}
+
+
+/* =====================================================
+   버튼에 마우스를 올렸을 때
+===================================================== */
+
+.랜덤박스버튼:hover {
+
+    transform:
+        scale(1.10);
+
+    filter:
+        brightness(1.08);
+
+    box-shadow:
+        0 12px 35px rgba(0,0,0,.55);
+
+}
+
+
+/* =====================================================
+   버튼 클릭
+===================================================== */
+
+.랜덤박스버튼:active {
+
+    transform:
+        scale(.96);
+
+}
+
+
+/* =====================================================
+   안내 문구
+===================================================== */
+
+.안내문구 {
+
+    text-align: center;
+
+    margin-top: 25px;
+
+    color:
+        rgba(255,255,255,.55);
+
+    font-size: 15px;
+
+}
+
+
+/* =====================================================
+   모바일
+===================================================== */
+
+@media (max-width: 600px) {
+
+    #사이트 {
+
+        padding:
+            25px 12px 60px;
+
+    }
+
+
+    .사이트제목 {
+
+        font-size: 32px;
+
+    }
+
+
+    .사이트설명 {
+
+        font-size: 15px;
+
+        margin-bottom: 30px;
+
+    }
+
+
+    .랜덤박스카드 {
+
+        width: 94vw;
+
+        border-radius: 18px;
+
+    }
+
+
+    .랜덤박스이미지 {
+
+        border-radius: 18px;
+
+    }
+
+
+    .랜덤박스버튼영역 {
+
+        bottom: 18px;
+
+    }
+
+
+    .랜덤박스버튼 {
+
+        font-size: 18px;
+
+        padding:
+            11px 25px;
+
+    }
+
+}
+
+
+/* =====================================================
+   터치 기기
+===================================================== */
+
+@media (hover: none) {
+
+    .랜덤박스카드:active {
+
+        transform:
+            scale(.98);
+
+    }
+
+
+    .랜덤박스버튼:active {
+
+        transform:
+            scale(.94);
+
+    }
+
+}
+
+</style></head><body><div id="사이트"><!-- =================================================
+     제목
+================================================== -->
+
+<h1 class="사이트제목">
+    돌이 사이트
+</h1>
+
+
+<p class="사이트설명">
+    돌이 랜덤 박스를 만나보세요! 🎁
+</p>
+
+
+<!-- =================================================
+     랜덤박스
+================================================== -->
+
+<div class="랜덤박스영역">
+
+    <div
+        class="랜덤박스카드"
+        onclick="랜덤박스이동()"
+    >
+
+
+        <!-- 이미지 -->
+
+        <img
+            class="랜덤박스이미지"
+            src="https://i.postimg.cc/tJ26qLNR/Screenshot-20260901-081622-Chrome.jpg"
+            alt="돌이 랜덤 박스"
+        >
+
+
+        <!-- 이미지 위 버튼 -->
+
+        <div class="랜덤박스버튼영역">
+
+            <button
+                class="랜덤박스버튼"
+                onclick="event.stopPropagation(); 랜덤박스이동();"
+            >
+                🎁 돌이 랜덤 박스
+            </button>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+<p class="안내문구">
+    이미지를 클릭하거나 버튼을 눌러 랜덤박스로 이동하세요!
+</p>
+
+</div><script>
+
+/* =====================================================
+   랜덤박스 페이지 이동
+===================================================== */
+
+function 랜덤박스이동() {
+
+    window.location.href =
+        "https://rockey-jason.github.io/doldol-site/Randombox";
+
+}
+
+</script></body></html>
     src:
         url(
             "https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2"
