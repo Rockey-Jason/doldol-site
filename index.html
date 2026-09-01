@@ -1,65 +1,60 @@
 <!DOCTYPE html>
-
 <html lang="ko">
 
 <head>
 
 <meta charset="UTF-8">
 
-<meta name="viewport"
-   content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>돌이 사이트</title>
 
-<!-- =====================================================
-     Google Font
-===================================================== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
 
-<link rel="preconnect"
-      href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-<link rel="preconnect"
-      href="https://fonts.gstatic.com"
-      crossorigin>
-
-<link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap"
-      rel="stylesheet">
-
-<!-- =====================================================
-     Font
-===================================================== -->
+<link
+    href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap"
+    rel="stylesheet"
+>
 
 <style>
 
+/* =====================================================
+   폰트
+===================================================== */
+
 @font-face {
 
-    font-family: "HancomMalrangmalrang";
+    font-family: 'HancomMalrangmalrang';
 
     src:
         url(
-            "https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2"
+            'https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2'
         )
-        format("woff2");
+        format('woff2');
 
     font-weight: 400;
 
     font-display: swap;
+
 }
 
 
 @font-face {
 
-    font-family: "HancomMalrangmalrang";
+    font-family: 'HancomMalrangmalrang';
 
     src:
         url(
-            "https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2"
+            'https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2'
         )
-        format("woff2");
+        format('woff2');
 
     font-weight: 700;
 
     font-display: swap;
+
 }
 
 
@@ -90,44 +85,18 @@ textarea {
 }
 
 
-html,
 body {
 
     margin: 0;
 
-    padding: 0;
-
-    width: 100%;
-
-    min-height: 100%;
-
-}
-
-
-body {
+    min-height: 100vh;
 
     background:
-        radial-gradient(
-            circle at 15% 20%,
-            rgba(30,50,130,.18),
-            transparent 30%
-        ),
-
-        radial-gradient(
-            circle at 85% 80%,
-            rgba(40,20,120,.12),
-            transparent 35%
-        ),
-
         linear-gradient(
             to right,
             #000033,
             #000010
         );
-
-    color: white;
-
-    overflow-x: hidden;
 
 }
 
@@ -144,93 +113,212 @@ body {
 
     min-height: 100vh;
 
-    padding-bottom: 80px;
+}
+
+
+/* =====================================================
+   로고
+===================================================== */
+
+#사이트로고 {
+
+    position: absolute;
+
+    top: 0;
+
+    left: 0;
+
+    background: none;
+
+    border: none;
+
+    color: #f5f5f5;
+
+    font-family: 'Black Han Sans';
+
+    font-size: 100px;
+
+    cursor: pointer;
 
 }
 
 
 /* =====================================================
-   이미지
+   설명
 ===================================================== */
 
-img {
+#사이트설명 {
 
-    transition:
-        transform .25s ease,
-        filter .25s ease,
-        box-shadow .25s ease;
+    position: absolute;
 
-}
+    top: 105px;
 
+    left: 20px;
 
-img:hover {
+    font-size: 20px;
 
-    transform:
-        scale(1.045);
+    color: #f5f5f5;
 
-    filter:
-        brightness(1.08);
+    font-family: 'HancomMalrangmalrang';
+
+    font-weight: 700;
 
 }
 
 
 /* =====================================================
-   상단 제목
+   메인 메뉴
 ===================================================== */
 
-.사이트제목 {
+.메인버튼 {
 
-    transition:
-        text-shadow .25s ease,
-        transform .25s ease;
+    position: absolute;
+
+    top: 200px;
+
+    font-size: 50px;
+
+    font-family: 'HancomMalrangmalrang';
+
+    background: none;
+
+    border: none;
+
+    color: #f5f5f5;
+
+    cursor: pointer;
+
+    font-weight: 700;
+
+    white-space: nowrap;
 
 }
 
 
-.사이트제목:hover {
+#신문버튼 {
 
-    text-shadow:
-        0 0 15px rgba(255,255,255,.18);
+    left: 50px;
 
-    transform:
-        translateX(3px);
+}
+
+
+#상점버튼 {
+
+    left: 500px;
+
+}
+
+
+#정보버튼 {
+
+    left: 900px;
+
+}
+
+
+#게임버튼 {
+
+    left: 1400px;
 
 }
 
 
 /* =====================================================
-   메인 메뉴 버튼
+   카드 이미지
 ===================================================== */
 
-.메인메뉴버튼 {
+.메인이미지 {
 
-    transition:
-        transform .22s ease,
-        color .22s ease,
-        text-shadow .22s ease;
+    position: absolute;
 
-}
+    top: 300px;
 
+    width: 200px;
 
-.메인메뉴버튼:hover {
+    cursor: pointer;
 
-    transform:
-        translateY(-3px);
-
-    color:
-        #ffffff;
-
-    text-shadow:
-        0 0 16px rgba(255,255,255,.22);
+    transition: .25s;
 
 }
 
 
-.메인메뉴버튼:active {
+.메인이미지:hover {
 
-    transform:
-        translateY(0)
-        scale(.98);
+    transform: scale(1.08);
+
+}
+
+
+#신문이미지 {
+
+    left: 80px;
+
+}
+
+
+#상점이미지 {
+
+    left: 530px;
+
+}
+
+
+#정보이미지 {
+
+    left: 970px;
+
+}
+
+
+#게임이미지 {
+
+    left: 1400px;
+
+}
+
+
+/* =====================================================
+   로그인 / 회원가입
+===================================================== */
+
+#로그인,
+#회원가입 {
+
+    position: absolute;
+
+    left: 1800px;
+
+    font-size: 20px;
+
+    font-family: 'HancomMalrangmalrang';
+
+    background: none;
+
+    border: none;
+
+    color: gray;
+
+    cursor: pointer;
+
+    white-space: nowrap;
+
+    font-weight: 700;
+
+    display: none;
+
+}
+
+
+#로그인 {
+
+    top: 15px;
+
+}
+
+
+#회원가입 {
+
+    top: 37px;
 
 }
 
@@ -241,25 +329,38 @@ img:hover {
 
 #돌이사진 {
 
-    transition:
-        transform .25s ease,
-        box-shadow .25s ease,
-        border-color .25s ease;
+    position: absolute;
+
+    top: 10px;
+
+    left: 1800px;
+
+    width: 50px;
+
+    height: 50px;
+
+    border-radius: 50%;
+
+    object-fit: cover;
+
+    object-position: center;
+
+    cursor: pointer;
+
+    display: none;
+
+    z-index: 20;
+
+    border: 2px solid white;
+
+    transition: .25s;
 
 }
 
 
 #돌이사진:hover {
 
-    transform:
-        scale(1.08);
-
-    border-color:
-        #ffd700 !important;
-
-    box-shadow:
-        0 0 0 4px rgba(255,215,0,.08),
-        0 8px 25px rgba(0,0,0,.35);
+    transform: scale(1.08);
 
 }
 
@@ -268,158 +369,50 @@ img:hover {
    프로필 메뉴
 ===================================================== */
 
-#프로필메뉴 {
+#메뉴 {
 
-    position: fixed;
+    position: absolute;
 
-    top: 70px;
+    top: 65px;
 
-    right: 20px;
+    left: 1740px;
 
-    width: 230px;
+    width: 160px;
 
-    background:
-        linear-gradient(
-            145deg,
-            rgba(35,38,60,.98),
-            rgba(18,20,38,.98)
-        );
+    min-height: 150px;
 
-    border:
-        1px solid rgba(255,255,255,.12);
+    background: rgba(80, 80, 80, .95);
 
-    border-radius:
-        18px;
+    border-radius: 15px;
 
-    padding:
-        14px;
+    display: none;
 
-    box-shadow:
-        0 20px 55px rgba(0,0,0,.55),
-        inset 0 1px 0 rgba(255,255,255,.05);
+    z-index: 10;
 
-    backdrop-filter:
-        blur(18px);
-
-    -webkit-backdrop-filter:
-        blur(18px);
-
-    z-index:
-        5000;
-
-    display:
-        none;
-
-    animation:
-        프로필메뉴등장 .18s ease;
+    padding-top: 5px;
 
 }
 
 
-#프로필메뉴.show {
+#메뉴2 {
 
-    display:
-        block;
+    position: absolute;
 
-}
+    top: 10px;
 
+    left: 1590px;
 
-@keyframes 프로필메뉴등장 {
+    width: 240px;
 
-    from {
+    min-height: 50px;
 
-        opacity: 0;
+    background: rgba(80, 80, 80, .95);
 
-        transform:
-            translateY(-8px)
-            scale(.97);
+    border-radius: 15px;
 
-    }
+    display: none;
 
-    to {
-
-        opacity: 1;
-
-        transform:
-            translateY(0)
-            scale(1);
-
-    }
-
-}
-
-
-/* =====================================================
-   프로필 정보 영역
-===================================================== */
-
-#프로필상태 {
-
-    display:
-        none;
-
-    margin-bottom:
-        10px;
-
-    padding:
-        12px;
-
-    border-radius:
-        13px;
-
-    background:
-        rgba(255,255,255,.055);
-
-    border:
-        1px solid rgba(255,255,255,.07);
-
-}
-
-
-#프로필상태.show {
-
-    display:
-        block;
-
-}
-
-
-.프로필상태제목 {
-
-    color:
-        #ffffff;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        16px;
-
-    font-weight:
-        700;
-
-    margin-bottom:
-        8px;
-
-}
-
-
-.프로필상태항목 {
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        13px;
-
-    color:
-        rgba(255,255,255,.76);
-
-    margin:
-        4px 0;
-
-    white-space:
-        nowrap;
+    z-index: 10;
 
 }
 
@@ -428,318 +421,3050 @@ img:hover {
    프로필 메뉴 버튼
 ===================================================== */
 
-.프로필메뉴버튼 {
+.프로필버튼 {
 
-    width:
-        100%;
+    position: relative;
 
-    padding:
-        11px 12px;
+    display: block;
 
-    margin:
-        3px 0;
+    width: 100%;
 
-    border:
-        1px solid transparent;
+    background: none;
 
-    border-radius:
-        11px;
+    border: none;
 
-    background:
-        transparent;
+    font-family: 'HancomMalrangmalrang';
 
-    color:
-        white;
+    font-size: 17px;
 
-    font-family:
-        "HancomMalrangmalrang";
+    color: white;
 
-    font-size:
-        17px;
+    cursor: pointer;
 
-    cursor:
-        pointer;
+    padding: 8px;
 
-    text-align:
-        left;
-
-    transition:
-        background .2s ease,
-        transform .2s ease,
-        border-color .2s ease;
+    text-align: center;
 
 }
 
 
-.프로필메뉴버튼:hover {
+.프로필버튼:hover {
 
-    background:
-        rgba(255,255,255,.09);
-
-    border-color:
-        rgba(255,255,255,.07);
-
-    transform:
-        translateX(2px);
-
-}
-
-
-.프로필메뉴버튼:active {
-
-    transform:
-        translateX(2px)
-        scale(.98);
+    background: rgba(255,255,255,.12);
 
 }
 
 
 /* =====================================================
-   로그아웃
+   회원 레벨
 ===================================================== */
-
-#로그아웃 {
-
-    color:
-        #ff8585;
-
-}
-
-
-#로그아웃:hover {
-
-    background:
-        rgba(255,90,90,.09);
-
-}
-
-
-/* =====================================================
-   프로필 상태 표시
-===================================================== */
-
-.프로필상태표시 {
-
-    display:
-        none;
-
-    position:
-        fixed;
-
-    top:
-        70px;
-
-    right:
-        270px;
-
-    z-index:
-        4000;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    color:
-        white;
-
-    text-align:
-        right;
-
-    pointer-events:
-        none;
-
-}
-
-
-.프로필상태표시.show {
-
-    display:
-        block;
-
-}
-
-
-/* =====================================================
-   상태 항목
-===================================================== */
-
-#레벨,
-#돌돌코인수량,
-#EXP정보,
-#현재칭호 {
-
-    position:
-        static !important;
-
-    display:
-        block !important;
-
-    background:
-        none;
-
-    border:
-        none;
-
-    margin:
-        0 0 3px 0;
-
-    padding:
-        0;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    white-space:
-        nowrap;
-
-}
-
 
 #레벨 {
 
-    font-size:
-        14px;
+    position: absolute;
 
-    color:
-        white;
+    top: 15px;
+
+    left: 1600px;
+
+    font-size: 14px;
+
+    font-family: 'HancomMalrangmalrang';
+
+    background: none;
+
+    border: none;
+
+    color: white;
+
+    cursor: pointer;
+
+    display: none;
+
+    z-index: 21;
+
+    white-space: nowrap;
 
 }
 
 
-#돌돌코인수량 {
-
-    font-size:
-        14px;
-
-    color:
-        #ffe48a;
-
-}
-
+/* =====================================================
+   EXP
+===================================================== */
 
 #EXP정보 {
 
-    font-size:
-        14px;
+    position: absolute;
 
-    color:
-        #a9d7ff;
+    top: 32px;
+
+    left: 1600px;
+
+    font-size: 13px;
+
+    font-family: 'HancomMalrangmalrang';
+
+    color: white;
+
+    display: none;
+
+    z-index: 21;
+
+    white-space: nowrap;
 
 }
 
+
+/* =====================================================
+   돌돌코인
+===================================================== */
+
+#돌돌코인수량 {
+
+    position: absolute;
+
+    top: 49px;
+
+    left: 1600px;
+
+    font-size: 13px;
+
+    font-family: 'HancomMalrangmalrang';
+
+    color: white;
+
+    display: none;
+
+    z-index: 21;
+
+    white-space: nowrap;
+
+}
+
+
+/* =====================================================
+   장착 칭호
+===================================================== */
 
 #현재칭호 {
 
-    font-size:
-        14px;
+    position: absolute;
 
-    color:
-        #ffd700;
+    top: 66px;
+
+    left: 1600px;
+
+    font-size: 14px;
+
+    font-family: 'HancomMalrangmalrang';
+
+    color: #ffd84d;
+
+    display: none;
+
+    z-index: 21;
+
+    white-space: nowrap;
 
 }
 
 
 /* =====================================================
-   이미지 카드
+   업적 / 칭호 팝업
 ===================================================== */
 
-.메뉴이미지 {
+#패널 {
 
-    border-radius:
-        16px;
+    position: fixed;
 
-    border:
-        1px solid rgba(255,255,255,.08);
+    top: 50%;
+
+    left: 50%;
+
+    transform:
+        translate(-50%, -50%)
+        scale(.95);
+
+    width: 650px;
+
+    max-width: calc(100vw - 40px);
+
+    max-height: 80vh;
+
+    overflow-y: auto;
+
+    background:
+        linear-gradient(
+            145deg,
+            #11113d,
+            #080820
+        );
+
+    border: 1px solid rgba(255,255,255,.2);
+
+    border-radius: 20px;
 
     box-shadow:
-        0 12px 35px rgba(0,0,0,.35);
+        0 20px 80px rgba(0,0,0,.7);
+
+    padding: 25px;
+
+    z-index: 99998;
+
+    display: none;
+
+    color: white;
+
+    font-family: 'HancomMalrangmalrang';
 
 }
 
 
-.메뉴이미지:hover {
+#패널.show {
+
+    display: block;
+
+    animation:
+        패널등장 .25s ease;
+
+}
+
+
+@keyframes 패널등장 {
+
+    from {
+
+        opacity: 0;
+
+        transform:
+            translate(-50%, -50%)
+            scale(.9);
+
+    }
+
+    to {
+
+        opacity: 1;
+
+        transform:
+            translate(-50%, -50%)
+            scale(1);
+
+    }
+
+}
+
+
+#패널배경 {
+
+    position: fixed;
+
+    inset: 0;
+
+    background: rgba(0,0,0,.65);
+
+    z-index: 99997;
+
+    display: none;
+
+}
+
+
+#패널배경.show {
+
+    display: block;
+
+}
+
+
+/* =====================================================
+   패널 헤더
+===================================================== */
+
+#패널제목 {
+
+    font-size: 32px;
+
+    font-weight: 700;
+
+    margin-bottom: 20px;
+
+}
+
+
+#패널닫기 {
+
+    position: absolute;
+
+    top: 15px;
+
+    right: 20px;
+
+    background: none;
+
+    border: none;
+
+    color: white;
+
+    font-size: 25px;
+
+    cursor: pointer;
+
+}
+
+
+/* =====================================================
+   탭
+===================================================== */
+
+.탭 {
+
+    display: flex;
+
+    gap: 10px;
+
+    margin-bottom: 20px;
+
+}
+
+
+.탭버튼 {
+
+    flex: 1;
+
+    padding: 12px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #25255c;
+
+    color: white;
+
+    font-family: 'HancomMalrangmalrang';
+
+    font-size: 17px;
+
+    cursor: pointer;
+
+}
+
+
+.탭버튼.active {
+
+    background: #5050a0;
+
+}
+
+
+/* =====================================================
+   업적 카드
+===================================================== */
+
+.업적카드 {
+
+    padding: 15px;
+
+    margin-bottom: 12px;
+
+    border-radius: 15px;
+
+    background: rgba(255,255,255,.07);
+
+    border: 1px solid rgba(255,255,255,.1);
+
+}
+
+
+.업적카드.미획득 {
+
+    opacity: .45;
+
+}
+
+
+.업적이름 {
+
+    font-size: 21px;
+
+    font-weight: 700;
+
+}
+
+
+.업적설명 {
+
+    margin-top: 5px;
+
+    color: #ccc;
+
+}
+
+
+.업적정보 {
+
+    margin-top: 8px;
+
+    font-size: 14px;
+
+}
+
+
+.칭호태그 {
+
+    display: inline-block;
+
+    margin-top: 8px;
+
+    padding: 5px 10px;
+
+    border-radius: 20px;
+
+    background: #554b00;
+
+    color: #ffe75e;
+
+}
+
+
+/* =====================================================
+   칭호 카드
+===================================================== */
+
+.칭호카드 {
+
+    padding: 18px;
+
+    margin-bottom: 12px;
+
+    border-radius: 15px;
+
+    background: rgba(255,255,255,.07);
+
+    border: 1px solid rgba(255,255,255,.1);
+
+}
+
+
+.칭호이름 {
+
+    font-size: 23px;
+
+    color: #ffd84d;
+
+    font-weight: 700;
+
+}
+
+
+.칭호상태 {
+
+    margin-top: 5px;
+
+    color: #aaa;
+
+}
+
+
+.칭호선택 {
+
+    margin-top: 12px;
+
+    width: 100%;
+
+    padding: 10px;
+
+    border: none;
+
+    border-radius: 10px;
+
+    background: #383878;
+
+    color: white;
+
+    font-family: 'HancomMalrangmalrang';
+
+    cursor: pointer;
+
+}
+
+
+.칭호선택.장착중 {
+
+    background: #806b00;
+
+}
+
+
+/* =====================================================
+   저장 버튼
+===================================================== */
+
+#칭호저장 {
+
+    width: 100%;
+
+    padding: 14px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: #d5af00;
+
+    color: #111;
+
+    font-family: 'HancomMalrangmalrang';
+
+    font-size: 18px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+    margin-top: 10px;
+
+}
+
+
+#칭호저장:hover {
+
+    background: #f0cb19;
+
+}
+
+
+/* =====================================================
+   업적 팝업
+===================================================== */
+
+#achievementPopup {
+
+    position: fixed;
+
+    left: 50%;
+
+    top: -250px;
+
+    transform: translateX(-50%);
+
+    transition:
+        top .45s cubic-bezier(.22,1,.36,1);
+
+    background: #222;
+
+    color: white;
+
+    font-family: 'Jua', sans-serif;
+
+    padding: 18px 28px;
+
+    border-radius: 15px;
 
     box-shadow:
-        0 18px 45px rgba(0,0,0,.48),
-        0 0 0 1px rgba(255,255,255,.12);
+        0 10px 30px rgba(0,0,0,.5);
+
+    z-index: 999999;
+
+    min-width: 330px;
+
+    max-width: 90vw;
+
+    text-align: center;
 
 }
 
 
-```css
-/* =====================================================
-   반응형
-===================================================== */
+#achievementPopup.show {
 
-
-/* =====================================================
-   PC
-   901px 이상
-===================================================== */
-
-@media (min-width: 901px) {
-
-    /* 사이트 제목 */
-
-    .사이트제목 {
-
-        position: absolute !important;
-
-        top: 15px !important;
-        left: 20px !important;
-
-    }
-
-
-    /* 설명 */
-
-    #사이트 > p {
-
-        margin-top: 105px !important;
-        margin-left: 20px !important;
-
-    }
-
-
-    /* 메뉴 버튼 영역 */
-
-    [data-page="news"],
-    #돌돌코인상점,
-    #돌이와\ 관련된\ 정보,
-    #돌이게임 {
-
-        position: absolute;
-
-    }
-
-
-    /* 프로필 */
-
-    #돌이사진 {
-
-        position: absolute !important;
-
-        top: 15px !important;
-        right: 25px !important;
-
-        width: 50px !important;
-        height: 50px !important;
-
-    }
+    top: 20px;
 
 }
 
 
 /* =====================================================
-   태블릿
-   601px ~ 1200px
+   스크롤바
 ===================================================== */
 
-@media (min-width: 601px) and (max-width: 1200px) {
+#패널::-webkit-scrollbar {
 
-    /* 제목 */
+    width: 8px;
 
-    .사이트제목 {
+}
 
-        top: 15px !important;
-        left: 20px !important;
 
+#패널::-webkit-scrollbar-thumb {
+
+    background: #555;
+
+    border-radius: 10px;
+
+}
+
+</style>
+
+
+<style id="responsive-layout-fix">
+/* ===== 돌이사이트 반응형 레이아웃 ===== */
+html { overflow-x: hidden; }
+body {
+  width: 100%;
+  max-width: 100vw;
+  min-height: 100vh;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+*, *::before, *::after { box-sizing: border-box; }
+img { max-width: 100%; height: auto; }
+
+/* PC */
+@media (min-width: 1025px) {
+  #사이트로고 { font-size: clamp(64px, 7vw, 100px) !important; }
+  .메인버튼 { max-width: 420px; }
+  .메인이미지 { max-width: 520px; }
+}
+
+/* 태블릿 */
+@media (min-width: 601px) and (max-width: 1024px) {
+  #사이트로고 { font-size: clamp(56px, 10vw, 82px) !important; }
+  #사이트설명 { font-size: clamp(16px, 2.4vw, 22px) !important; }
+  .메인버튼 { width: min(80vw, 380px) !important; }
+  .메인이미지 { width: min(78vw, 460px) !important; }
+}
+
+/* 휴대폰 */
+@media (max-width: 600px) {
+  body { padding: 12px !important; }
+  #사이트 {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+    min-height: 100vh !important;
+    padding-top: 8px !important;
+  }
+  #사이트로고 {
+    font-size: clamp(42px, 17vw, 68px) !important;
+    line-height: 1.05 !important;
+    margin: 10px auto !important;
+    width: 100% !important;
+  }
+  #사이트설명 {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    width: 94% !important;
+    font-size: clamp(13px, 3.8vw, 18px) !important;
+    line-height: 1.55 !important;
+    margin: 8px auto 18px !important;
+  }
+  #로그인버튼, #회원가입버튼 {
+    width: min(44vw, 180px) !important;
+    min-width: 0 !important;
+    font-size: clamp(13px, 3.7vw, 17px) !important;
+    padding: 10px 8px !important;
+  }
+  .메인버튼 {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    width: min(92vw, 380px) !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 52px !important;
+    font-size: clamp(15px, 4.2vw, 20px) !important;
+    padding: 12px 14px !important;
+    margin: 8px auto !important;
+  }
+  .메인이미지 {
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    display: block !important;
+    width: min(92vw, 430px) !important;
+    max-width: 100% !important;
+    height: auto !important;
+    margin: 10px auto !important;
+  }
+  #로그인, #회원가입 {
+    position: fixed !important;
+    left: auto !important;
+    right: 12px !important;
+    z-index: 50 !important;
+  }
+  #로그인 { top: 12px !important; }
+  #회원가입 { top: 44px !important; }
+  #돌이사진 {
+    position: fixed !important;
+    top: 12px !important;
+    left: auto !important;
+    right: 12px !important;
+    max-width: 30vw !important;
+    width: 100px !important;
+    height: 100px !important;
+    object-fit: contain !important;
+  }
+  #메뉴, #메뉴2 {
+    position: fixed !important;
+    top: 72px !important;
+    max-width: calc(100vw - 24px) !important;
+    width: min(92vw, 360px) !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+  #메뉴 button, #메뉴2 button {
+    max-width: 100% !important;
+    font-size: clamp(13px, 3.8vw, 17px) !important;
+  }
+  #레벨, #경험치, #돌돌코인, #칭호 {
+    max-width: 94vw !important;
+    overflow-wrap: anywhere !important;
+  }
+}
+
+/* 아주 작은 휴대폰 */
+@media (max-width: 360px) {
+  body { padding: 8px !important; }
+  #사이트로고 { font-size: 40px !important; }
+  .메인버튼 { width: 96vw !important; }
+  .메인이미지 { width: 96vw !important; }
+  #로그인버튼, #회원가입버튼 { width: 46vw !important; }
+}
+</style>
+</head>
+
+
+<body>
+
+
+<div id="사이트">
+
+
+<!-- =================================================
+     로고
+================================================= -->
+
+<a
+    href="https://rockey-jason.github.io/doldol-site/"
+    style="text-decoration:none;"
+>
+
+<button id="사이트로고">
+
+돌이 사이트
+
+</button>
+
+</a>
+
+
+<p id="사이트설명">
+
+돌이에 대한 여러 정보와 돌이신문, 돌돌코인 수급 등을 이용해보세요!
+
+</p>
+
+
+<!-- =================================================
+     메인 메뉴
+================================================= -->
+
+<button
+    id="신문버튼"
+    class="메인버튼"
+>
+
+돌이신문 확인
+
+</button>
+
+
+<button
+    id="상점버튼"
+    class="메인버튼"
+>
+
+돌돌코인 상점
+
+</button>
+
+
+<button
+    id="정보버튼"
+    class="메인버튼"
+>
+
+돌이와 관련된 정보
+
+</button>
+
+
+<button
+    id="게임버튼"
+    class="메인버튼"
+>
+
+돌이게임
+
+</button>
+
+
+<!-- =================================================
+     로그인
+================================================= -->
+
+<button id="로그인">
+
+로그인
+
+</button>
+
+
+<button id="회원가입">
+
+회원가입
+
+</button>
+
+
+<!-- =================================================
+     프로필
+================================================= -->
+
+<img
+    id="돌이사진"
+    src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
+    alt="돌이 프로필"
+>
+
+
+<div id="메뉴">
+
+
+<button
+    id="업적버튼"
+    class="프로필버튼"
+>
+
+🏆 업적
+
+</button>
+
+
+<button
+    id="칭호버튼"
+    class="프로필버튼"
+>
+
+🏷️ 칭호
+
+</button>
+
+
+<button
+    id="설정"
+    class="프로필버튼"
+>
+
+⚙️ 설정
+
+</button>
+
+
+<button
+    id="로그아웃"
+    class="프로필버튼"
+>
+
+🚪 로그아웃
+
+</button>
+
+
+</div>
+
+
+<div id="메뉴2"></div>
+
+
+<button id="레벨">
+
+회원등급: 일반
+
+</button>
+
+
+<div id="EXP정보">
+
+EXP Lv.1 · 0 EXP
+
+</div>
+
+
+<div id="돌돌코인수량">
+
+돌돌코인: 0
+
+</div>
+
+
+<div id="현재칭호">
+
+칭호 없음
+
+</div>
+
+
+<!-- =================================================
+     메인 이미지
+================================================= -->
+
+<img
+    id="신문이미지"
+    class="메인이미지"
+    src="https://i.postimg.cc/Px1nNcJM/1000004603.jpg"
+    alt="돌이신문"
+>
+
+
+<img
+    id="상점이미지"
+    class="메인이미지"
+    src="https://i.postimg.cc/TYxW97Ly/1000004605.jpg"
+    alt="돌돌코인 상점"
+>
+
+
+<img
+    id="정보이미지"
+    class="메인이미지"
+    src="https://i.postimg.cc/8zdzKNWg/dol-i.jpg"
+    alt="돌이 정보"
+>
+
+
+<img
+    id="게임이미지"
+    class="메인이미지"
+    src="https://i.postimg.cc/FsHqfPpX/rockeychess.png"
+    alt="돌이 게임"
+>
+
+
+</div>
+
+
+<!-- =================================================
+     팝업 배경
+================================================= -->
+
+<div id="패널배경"></div>
+
+
+<!-- =================================================
+     업적 / 칭호 패널
+================================================= -->
+
+<div id="패널">
+
+<button id="패널닫기">
+
+✕
+
+</button>
+
+
+<div id="패널제목">
+
+🏆 업적
+
+</div>
+
+
+<div class="탭">
+
+
+<button
+    id="업적탭"
+    class="탭버튼 active"
+>
+
+🏆 업적
+
+</button>
+
+
+<button
+    id="칭호탭"
+    class="탭버튼"
+>
+
+🏷️ 칭호
+
+</button>
+
+
+</div>
+
+
+<div id="패널내용"></div>
+
+
+</div>
+
+
+<!-- =================================================
+     업적 알림
+================================================= -->
+
+<div id="achievementPopup"></div>
+
+
+<!-- =================================================
+     Supabase
+================================================= -->
+
+<script type="module">
+
+import {
+    createClient
+}
+from
+"https://esm.sh/@supabase/supabase-js@2";
+
+
+// =====================================================
+// Supabase
+// =====================================================
+
+const supabase = createClient(
+
+    "https://scttowfhygcpdirrekqm.supabase.co",
+
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+
+);
+
+
+// =====================================================
+// 회원 레벨 이름
+// =====================================================
+
+const 회원레벨이름 = {
+
+    1: "일반",
+
+    2: "프리미엄",
+
+    3: "돌프리미엄",
+
+    4: "돌돌프리미엄",
+
+    5: "돌돌돌프리미엄",
+
+    6: "돌돌돌돌프리미엄",
+
+    7: "돌돌돌돌돌프리미엄",
+
+    8: "유사돌이",
+
+    9: "돌이",
+
+    10: "관리자"
+
+};
+
+
+// =====================================================
+// EXP 레벨
+// =====================================================
+
+const EXP레벨필요경험치 = {
+
+    1: 0,
+
+    2: 100,
+
+    3: 500,
+
+    4: 1000,
+
+    5: 5000,
+
+    6: 10000,
+
+    7: 20000,
+
+    8: 30000,
+
+    9: 40000,
+
+    10: 50000,
+
+    11: 100000
+
+};
+
+
+// =====================================================
+// DOM
+// =====================================================
+
+const 사진 =
+    document.getElementById("돌이사진");
+
+const 로그인버튼 =
+    document.getElementById("로그인");
+
+const 회원가입버튼 =
+    document.getElementById("회원가입");
+
+const 로그아웃버튼 =
+    document.getElementById("로그아웃");
+
+const 설정버튼 =
+    document.getElementById("설정");
+
+const 메뉴 =
+    document.getElementById("메뉴");
+
+const 레벨버튼 =
+    document.getElementById("레벨");
+
+const EXP정보 =
+    document.getElementById("EXP정보");
+
+const 돌돌코인수량 =
+    document.getElementById("돌돌코인수량");
+
+const 현재칭호 =
+    document.getElementById("현재칭호");
+
+const 업적버튼 =
+    document.getElementById("업적버튼");
+
+const 칭호버튼 =
+    document.getElementById("칭호버튼");
+
+const 패널 =
+    document.getElementById("패널");
+
+const 패널배경 =
+    document.getElementById("패널배경");
+
+const 패널제목 =
+    document.getElementById("패널제목");
+
+const 패널내용 =
+    document.getElementById("패널내용");
+
+const 업적탭 =
+    document.getElementById("업적탭");
+
+const 칭호탭 =
+    document.getElementById("칭호탭");
+
+const 칭호저장버튼 =
+    document.getElementById("칭호저장");
+
+
+// =====================================================
+// 현재 상태
+// =====================================================
+
+let 현재사용자 = null;
+
+let 현재유저정보 = null;
+
+let 업적목록 = [];
+
+let 획득업적 = {};
+
+let 선택한칭호 = null;
+
+
+// =====================================================
+// 팝업
+// =====================================================
+
+let 팝업타이머 = null;
+
+
+function 팝업열기(
+    내용,
+    시간 = 3000
+) {
+
+    const popup =
+        document.getElementById(
+            "achievementPopup"
+        );
+
+    if (!popup) {
+
+        return;
+
+    }
+
+
+    if (팝업타이머) {
+
+        clearTimeout(
+            팝업타이머
+        );
+
+    }
+
+
+    popup.innerHTML =
+        내용;
+
+
+    popup.classList.add(
+        "show"
+    );
+
+
+    팝업타이머 =
+        setTimeout(
+
+            () => {
+
+                popup.classList.remove(
+                    "show"
+                );
+
+            },
+
+            시간
+
+        );
+
+}
+
+
+// =====================================================
+// EXP → 레벨
+// =====================================================
+
+function 경험치로레벨계산(
+    exp
+) {
+
+    exp =
+        Number(exp) || 0;
+
+
+    let level = 1;
+
+
+    for (
+        let i = 11;
+        i >= 1;
+        i--
+    ) {
+
+        if (
+            exp >=
+            EXP레벨필요경험치[i]
+        ) {
+
+            level = i;
+
+            break;
+
+        }
+
+    }
+
+
+    return level;
+
+}
+
+
+// =====================================================
+// 업적 데이터 정규화
+//
+// Supabase 컬럼명이 조금 달라도
+// 가능한 범위에서 자동 대응
+// =====================================================
+
+function 업적정규화(
+    row
+) {
+
+    if (!row) {
+
+        return null;
+
+    }
+
+
+    const id =
+        row.id ??
+        row.achievement_id ??
+        row.code ??
+        row.key;
+
+
+    const 이름 =
+        row.name ??
+        row.이름 ??
+        row.title_name ??
+        row.achievement_name ??
+        id;
+
+
+    const 설명 =
+        row.description ??
+        row.설명 ??
+        row.desc ??
+        "";
+
+
+    const 희귀도 =
+        row.rarity ??
+        row.희귀도 ??
+        "Common";
+
+
+    const 코인 =
+        Number(
+            row.reward_coins ??
+            row.reward_coin ??
+            row.doldolcoin ??
+            row.보상_돌돌코인 ??
+            row.coins ??
+            0
+        );
+
+
+    const 경험치 =
+        Number(
+            row.reward_exp ??
+            row.exp_reward ??
+            row.experience ??
+            row.경험치 ??
+            0
+        );
+
+
+    // =================================================
+    // 칭호
+    // =================================================
+
+    const 칭호 =
+        row.title ??
+        row.reward_title ??
+        row.칭호 ??
+        row.title_name ??
+        null;
+
+
+    return {
+
+        ...row,
+
+        id: String(id),
+
+        이름: String(이름),
+
+        설명: String(설명),
+
+        희귀도: String(희귀도),
+
+        보상: {
+
+            돌돌코인: 코인,
+
+            경험치: 경험치
+
+        },
+
+        칭호:
+            칭호 === null ||
+            칭호 === undefined ||
+            String(칭호).trim() === ""
+
+                ? null
+
+                : String(칭호)
+
+    };
+
+}
+
+
+// =====================================================
+// Supabase 업적 불러오기
+// =====================================================
+
+async function 업적불러오기() {
+
+    const {
+
+        data,
+
+        error
+
+    } = await supabase
+
+        .from("achievements")
+
+        .select("*");
+
+
+    if (error) {
+
+        console.error(
+            "Supabase 업적 조회 오류:",
+            error
+        );
+
+        팝업열기(
+            "⚠️ 업적 정보를 불러오지 못했습니다.",
+            4000
+        );
+
+        return [];
+
+    }
+
+
+    return (data || [])
+
+        .map(업적정규화)
+
+        .filter(Boolean);
+
+}
+
+
+// =====================================================
+// user_achievement JSON 처리
+// =====================================================
+
+function 획득업적정리(
+    value
+) {
+
+    if (!value) {
+
+        return {};
+
+    }
+
+
+    if (
+        typeof value ===
+        "object"
+    ) {
+
+        return value;
+
+    }
+
+
+    if (
+        typeof value ===
+        "string"
+    ) {
+
+        try {
+
+            const parsed =
+                JSON.parse(value);
+
+            if (
+                parsed &&
+                typeof parsed ===
+                "object"
+            ) {
+
+                return parsed;
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "user_achievement JSON 오류:",
+                error
+            );
+
+        }
+
+    }
+
+
+    return {};
+
+}
+
+
+// =====================================================
+// 업적 ID가 획득되었는지
+// =====================================================
+
+function 업적획득여부(
+    id
+) {
+
+    return Boolean(
+        획득업적[id]
+    );
+
+}
+
+
+// =====================================================
+// 업적 하나 획득
+// =====================================================
+
+async function 업적획득(
+    achievement
+) {
+
+    if (
+        !현재사용자 ||
+        !achievement
+    ) {
+
+        return false;
+
+    }
+
+
+    const id =
+        achievement.id;
+
+
+    if (
+        업적획득여부(id)
+    ) {
+
+        return false;
+
+    }
+
+
+    // 최신 users 정보
+    const {
+
+        data,
+        error
+
+    } = await supabase
+
+        .from("users")
+
+        .select("*")
+
+        .eq(
+            "user_id",
+            현재사용자.id
+        )
+
+        .single();
+
+
+    if (error) {
+
+        console.error(
+            "업적 지급 사용자 조회 오류:",
+            error
+        );
+
+        return false;
+
+    }
+
+
+    const 기존업적 =
+        획득업적정리(
+            data.user_achievement
+        );
+
+
+    if (
+        기존업적[id]
+    ) {
+
+        획득업적 =
+            기존업적;
+
+        return false;
+
+    }
+
+
+    // =================================================
+    // 업적 저장
+    // =================================================
+
+    기존업적[id] = {
+
+        id: id,
+
+        이름:
+            achievement.이름,
+
+        설명:
+            achievement.설명,
+
+        희귀도:
+            achievement.희귀도,
+
+        보상:
+            achievement.보상,
+
+        칭호:
+            achievement.칭호,
+
+        획득시간:
+            new Date().toISOString()
+
+    };
+
+
+    const 기존코인 =
+        Number(
+            data.doldolcoin ?? 0
+        );
+
+
+    const 기존EXP =
+        Number(
+            data.exp ?? 0
+        );
+
+
+    const 보상코인 =
+        Number(
+            achievement.보상.돌돌코인 ?? 0
+        );
+
+
+    const 보상EXP =
+        Number(
+            achievement.보상.경험치 ?? 0
+        );
+
+
+    const 새로운코인 =
+        기존코인 +
+        보상코인;
+
+
+    const 새로운EXP =
+        기존EXP +
+        보상EXP;
+
+
+    const 기존EXP레벨 =
+        Number(
+            data.exp_level ?? 1
+        );
+
+
+    const 새로운EXP레벨 =
+        경험치로레벨계산(
+            새로운EXP
+        );
+
+
+    // =================================================
+    // 저장
+    // =================================================
+
+    const 업데이트 = {
+
+        user_achievement:
+            기존업적,
+
+        doldolcoin:
+            새로운코인,
+
+        exp:
+            새로운EXP,
+
+        exp_level:
+            새로운EXP레벨
+
+    };
+
+
+    const {
+
+        error: updateError
+
+    } = await supabase
+
+        .from("users")
+
+        .update(
+            업데이트
+        )
+
+        .eq(
+            "user_id",
+            현재사용자.id
+        );
+
+
+    if (updateError) {
+
+        console.error(
+            "업적 저장 오류:",
+            updateError
+        );
+
+        return false;
+
+    }
+
+
+    // =================================================
+    // 메모리 업데이트
+    // =================================================
+
+    획득업적 =
+        기존업적;
+
+
+    현재유저정보.doldolcoin =
+        새로운코인;
+
+    현재유저정보.exp =
+        새로운EXP;
+
+    현재유저정보.exp_level =
+        새로운EXP레벨;
+
+
+    // =================================================
+    // 알림
+    // =================================================
+
+    팝업열기(`
+
+        🏆 <b>업적 달성!</b>
+
+        <br><br>
+
+        <b>${achievement.이름}</b>
+
+        <br>
+
+        ${achievement.설명}
+
+        <br><br>
+
+        ⭐ ${achievement.희귀도}
+
+        <br>
+
+        💰 +${보상코인.toLocaleString()}
+        돌돌코인
+
+        <br>
+
+        ✨ +${보상EXP.toLocaleString()}
+        EXP
+
+        ${
+            achievement.칭호
+                ? `<br><br>🏷️ 칭호 획득: <b>${achievement.칭호}</b>`
+                : ""
+        }
+
+    `, 5000);
+
+
+    // =================================================
+    // 레벨업
+    // =================================================
+
+    if (
+        새로운EXP레벨 >
+        기존EXP레벨
+    ) {
+
+        setTimeout(
+
+            () => {
+
+                팝업열기(`
+
+                    ✨ <b>EXP 레벨 업!</b>
+
+                    <br><br>
+
+                    Lv.${기존EXP레벨}
+
+                    →
+
+                    Lv.${새로운EXP레벨}
+
+                `, 4000);
+
+            },
+
+            1500
+
+        );
+
+    }
+
+
+    화면업데이트();
+
+    return true;
+
+}
+
+
+// =====================================================
+// users 최신 정보
+// =====================================================
+
+async function 유저정보불러오기() {
+
+    if (!현재사용자) {
+
+        return null;
+
+    }
+
+
+    const {
+
+        data,
+
+        error
+
+    } = await supabase
+
+        .from("users")
+
+        .select("*")
+
+        .eq(
+            "user_id",
+            현재사용자.id
+        )
+
+        .single();
+
+
+    if (error) {
+
+        console.error(
+            "유저 정보 조회 오류:",
+            error
+        );
+
+        return null;
+
+    }
+
+
+    현재유저정보 =
+        data;
+
+
+    획득업적 =
+        획득업적정리(
+            data.user_achievement
+        );
+
+
+    return data;
+
+}
+
+
+// =====================================================
+// 화면 업데이트
+// =====================================================
+
+function 화면업데이트() {
+
+    if (
+        !현재유저정보
+    ) {
+
+        return;
+
+    }
+
+
+    // 프로필
+    if (
+        사진 &&
+        현재유저정보.profile_image
+    ) {
+
+        사진.src =
+            현재유저정보.profile_image;
+
+    }
+
+
+    // 회원 레벨
+    const 회원레벨 =
+        Number(
+            현재유저정보.user_level ?? 1
+        );
+
+
+    if (레벨버튼) {
+
+        레벨버튼.textContent =
+            `회원등급: ${
+                회원레벨이름[회원레벨]
+                || "일반"
+            }`;
+
+    }
+
+
+    // EXP
+    const exp =
+        Number(
+            현재유저정보.exp ?? 0
+        );
+
+
+    const expLevel =
+        Number(
+            현재유저정보.exp_level
+            ??
+            경험치로레벨계산(exp)
+        );
+
+
+    if (EXP정보) {
+
+        EXP정보.textContent =
+            `EXP Lv.${expLevel} · ${exp.toLocaleString()} EXP`;
+
+    }
+
+
+    // 코인
+    if (돌돌코인수량) {
+
+        const coin =
+            Number(
+                현재유저정보.doldolcoin ?? 0
+            );
+
+
+        돌돌코인수량.textContent =
+            `돌돌코인: ${coin.toLocaleString()}`;
+
+    }
+
+
+    // =================================================
+    // 현재 칭호
+    // =================================================
+
+    const 장착칭호 =
+        현재유저정보.equipped_title;
+
+
+    if (현재칭호) {
+
+        if (
+            장착칭호 &&
+            String(장착칭호).trim()
+        ) {
+
+            현재칭호.textContent =
+                `🏷️ ${장착칭호}`;
+
+        } else {
+
+            현재칭호.textContent =
+                "🏷️ 칭호 없음";
+
+        }
+
+    }
+
+}
+
+
+// =====================================================
+// 프로필 메뉴 열기
+// =====================================================
+
+function 프로필메뉴열기() {
+
+    const 표시 =
+        메뉴.style.display !== "block";
+
+
+    메뉴.style.display =
+        표시
+            ? "block"
+            : "none";
+
+
+    레벨버튼.style.display =
+        표시
+            ? "block"
+            : "none";
+
+
+    EXP정보.style.display =
+        표시
+            ? "block"
+            : "none";
+
+
+    돌돌코인수량.style.display =
+        표시
+            ? "block"
+            : "none";
+
+
+    현재칭호.style.display =
+        표시
+            ? "block"
+            : "none";
+
+}
+
+
+// =====================================================
+// 패널 열기
+// =====================================================
+
+function 패널열기(
+    mode
+) {
+
+    패널.classList.add(
+        "show"
+    );
+
+    패널배경.classList.add(
+        "show"
+    );
+
+
+    if (
+        mode === "titles"
+    ) {
+
+        칭호탭.click();
+
+    } else {
+
+        업적탭.click();
+
+    }
+
+}
+
+
+// =====================================================
+// 패널 닫기
+// =====================================================
+
+function 패널닫기() {
+
+    패널.classList.remove(
+        "show"
+    );
+
+    패널배경.classList.remove(
+        "show"
+    );
+
+}
+
+
+// =====================================================
+// 업적 화면
+// =====================================================
+
+function 업적화면표시() {
+
+    패널제목.textContent =
+        "🏆 업적";
+
+
+    업적탭.classList.add(
+        "active"
+    );
+
+    칭호탭.classList.remove(
+        "active"
+    );
+
+
+    if (
+        업적목록.length === 0
+    ) {
+
+        패널내용.innerHTML = `
+
+            <div style="
+                text-align:center;
+                padding:40px;
+                color:#aaa;
+            ">
+
+                업적이 없습니다.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    const 획득수 =
+        업적목록.filter(
+            a => 업적획득여부(a.id)
+        ).length;
+
+
+    let html = `
+
+        <div style="
+            margin-bottom:20px;
+            color:#aaa;
+        ">
+
+            ${획득수} / ${업적목록.length}
+            업적 획득
+
+        </div>
+
+    `;
+
+
+    for (
+        const achievement
+        of 업적목록
+    ) {
+
+        const 획득 =
+            업적획득여부(
+                achievement.id
+            );
+
+
+        html += `
+
+            <div class="
+                업적카드
+                ${획득 ? "" : "미획득"}
+            ">
+
+                <div class="업적이름">
+
+                    ${
+                        획득
+                            ? "🏆"
+                            : "🔒"
+                    }
+
+                    ${achievement.이름}
+
+                </div>
+
+
+                <div class="업적설명">
+
+                    ${achievement.설명}
+
+                </div>
+
+
+                <div class="업적정보">
+
+                    ⭐ ${achievement.희귀도}
+
+                    <br>
+
+                    💰
+                    ${Number(
+                        achievement.보상.돌돌코인
+                    ).toLocaleString()}
+                    돌돌코인
+
+                    <br>
+
+                    ✨
+                    ${Number(
+                        achievement.보상.경험치
+                    ).toLocaleString()}
+                    EXP
+
+                    ${
+                        achievement.칭호
+                            ? `
+                                <br>
+
+                                <span class="칭호태그">
+
+                                    🏷️
+                                    ${achievement.칭호}
+
+                                </span>
+                            `
+                            : ""
+                    }
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    패널내용.innerHTML =
+        html;
+
+}
+
+
+// =====================================================
+// 보유 칭호 가져오기
+// =====================================================
+
+function 보유칭호목록() {
+
+    const 결과 = [];
+
+    const 중복방지 = new Set();
+
+
+    for (
+        const achievement
+        of 업적목록
+    ) {
+
+        if (
+            !achievement.칭호
+        ) {
+
+            continue;
+
+        }
+
+
+        if (
+            !업적획득여부(
+                achievement.id
+            )
+        ) {
+
+            continue;
+
+        }
+
+
+        const title =
+            achievement.칭호;
+
+
+        if (
+            중복방지.has(title)
+        ) {
+
+            continue;
+
+        }
+
+
+        중복방지.add(
+            title
+        );
+
+
+        결과.push({
+
+            title: title,
+
+            achievement:
+                achievement
+
+        });
+
+    }
+
+
+    return 결과;
+
+}
+
+
+// =====================================================
+// 칭호 화면
+// =====================================================
+
+function 칭호화면표시() {
+
+    패널제목.textContent =
+        "🏷️ 칭호";
+
+
+    칭호탭.classList.add(
+        "active"
+    );
+
+    업적탭.classList.remove(
+        "active"
+    );
+
+
+    const 칭호목록 =
+        보유칭호목록();
+
+
+    선택한칭호 =
+        현재유저정보
+            ?.equipped_title
+            ?? null;
+
+
+    if (
+        칭호목록.length === 0
+    ) {
+
+        패널내용.innerHTML = `
+
+            <div style="
+                text-align:center;
+                padding:50px 20px;
+                color:#aaa;
+            ">
+
+                <div style="
+                    font-size:50px;
+                ">
+                    🏷️
+                </div>
+
+                <br>
+
+                아직 획득한 칭호가 없습니다.
+
+                <br><br>
+
+                칭호가 있는 업적을 획득하면
+                이곳에서 장착할 수 있습니다.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    let html = `
+
+        <div style="
+            margin-bottom:20px;
+            color:#aaa;
+        ">
+
+            획득한 칭호
+            ${칭호목록.length}개
+
+        </div>
+
+    `;
+
+
+    for (
+        const item
+        of 칭호목록
+    ) {
+
+        const 장착중 =
+            선택한칭호 ===
+            item.title;
+
+
+        html += `
+
+            <div class="칭호카드">
+
+                <div class="칭호이름">
+
+                    🏷️ ${item.title}
+
+                </div>
+
+
+                <div class="칭호상태">
+
+                    업적:
+                    ${item.achievement.이름}
+
+                </div>
+
+
+                <button
+
+                    class="
+                        칭호선택
+                        ${장착중 ? "장착중" : ""}
+                    "
+
+                    data-title="${escapeHTML(
+                        item.title
+                    )}"
+
+                >
+
+                    ${
+                        장착중
+                            ? "✓ 현재 장착 중"
+                            : "이 칭호 장착하기"
+                    }
+
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+
+    html += `
+
+        <button
+            id="칭호저장"
+        >
+
+            💾 칭호 저장
+
+        </button>
+
+    `;
+
+
+    패널내용.innerHTML =
+        html;
+
+
+    // =================================================
+    // 선택 버튼
+    // =================================================
+
+    document
+        .querySelectorAll(".칭호선택")
+        .forEach(
+
+            button => {
+
+                button.onclick =
+                    () => {
+
+                        선택한칭호 =
+                            button.dataset.title;
+
+
+                        칭호화면표시();
+
+                    };
+
+            }
+
+        );
+
+
+    // 저장
+    const 저장 =
+        document.getElementById(
+            "칭호저장"
+        );
+
+
+    if (저장) {
+
+        저장.onclick =
+            칭호저장;
+
+    }
+
+}
+
+
+// =====================================================
+// HTML escape
+// =====================================================
+
+function escapeHTML(
+    value
+) {
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+// =====================================================
+// 칭호 저장
+// =====================================================
+
+async function 칭호저장() {
+
+    if (
+        !현재사용자
+    ) {
+
+        return;
+
+    }
+
+
+    // =================================================
+    // null = 칭호 해제
+    // =================================================
+
+    const {
+
+        error
+
+    } = await supabase
+
+        .from("users")
+
+        .update({
+
+            equipped_title:
+                선택한칭호
+
+        })
+
+        .eq(
+            "user_id",
+            현재사용자.id
+        );
+
+
+    if (error) {
+
+        console.error(
+            "칭호 저장 오류:",
+            error
+        );
+
+
+        팝업열기(`
+
+            ❌ 칭호 저장 실패
+
+            <br><br>
+
+            ${error.message}
+
+        `, 5000);
+
+        return;
+
+    }
+
+
+    현재유저정보.equipped_title =
+        선택한칭호;
+
+
+    화면업데이트();
+
+
+    팝업열기(`
+
+        🏷️ <b>칭호 변경 완료!</b>
+
+        <br><br>
+
+        ${
+            선택한칭호
+                ? `현재 칭호: <b>${선택한칭호}</b>`
+                : "칭호를 해제했습니다."
+        }
+
+    `, 3000);
+
+
+    칭호화면표시();
+
+}
+
+
+// =====================================================
+// 첫 로그인 업적
+// =====================================================
+
+async function 첫로그인업적확인() {
+
+    const 첫로그인 =
+        업적목록.find(
+
+            achievement =>
+
+                achievement.id ===
+                "first_login"
+
+        );
+
+
+    if (!첫로그인) {
+
+        console.warn(
+            "achievements 테이블에서 first_login을 찾지 못했습니다."
+        );
+
+        return;
+
+    }
+
+
+    await 업적획득(
+        첫로그인
+    );
+
+}
+
+
+// =====================================================
+// 페이지 이동
+// =====================================================
+
+function 페이지이동(
+    url
+) {
+
+    location.href =
+        url;
+
+}
+
+
+document
+    .getElementById("신문버튼")
+    .onclick =
+
+    () => 페이지이동(
+        "rockeynews.html"
+    );
+
+
+document
+    .getElementById("신문이미지")
+    .onclick =
+
+    () => 페이지이동(
+        "rockeynews.html"
+    );
+
+
+document
+    .getElementById("상점버튼")
+    .onclick =
+
+    () => 페이지이동(
+        "doldolcoinmart.html"
+    );
+
+
+document
+    .getElementById("상점이미지")
+    .onclick =
+
+    () => 페이지이동(
+        "doldolcoinmart.html"
+    );
+
+
+document
+    .getElementById("정보버튼")
+    .onclick =
+
+    () => 페이지이동(
+        "knowledgeofrockey.html"
+    );
+
+
+document
+    .getElementById("정보이미지")
+    .onclick =
+
+    () => 페이지이동(
+        "knowledgeofrockey.html"
+    );
+
+
+document
+    .getElementById("게임버튼")
+    .onclick =
+
+    () => 페이지이동(
+        "gamepage.html"
+    );
+
+
+document
+    .getElementById("게임이미지")
+    .onclick =
+
+    () => 페이지이동(
+        "gamepage.html"
+    );
+
+
+설정버튼.onclick =
+
+    () => 페이지이동(
+        "settings.html"
+    );
+
+
+// =====================================================
+// 프로필 클릭
+// =====================================================
+
+사진.onclick =
+    프로필메뉴열기;
+
+
+// =====================================================
+// 업적 버튼
+// =====================================================
+
+업적버튼.onclick =
+    () => {
+
+        패널열기(
+            "achievements"
+        );
+
+    };
+
+
+// =====================================================
+// 칭호 버튼
+// =====================================================
+
+칭호버튼.onclick =
+    () => {
+
+        패널열기(
+            "titles"
+        );
+
+    };
+
+
+// =====================================================
+// 탭
+// =====================================================
+
+업적탭.onclick =
+    업적화면표시;
+
+
+칭호탭.onclick =
+    칭호화면표시;
+
+
+// =====================================================
+// 닫기
+// =====================================================
+
+document
+    .getElementById("패널닫기")
+    .onclick =
+    패널닫기;
+
+
+패널배경.onclick =
+    패널닫기;
+
+
+// =====================================================
+// 로그아웃
+// =====================================================
+
+로그아웃버튼.onclick =
+
+    async () => {
+
+        const {
+            error
+        } =
+            await supabase.auth.signOut();
+
+
+        if (error) {
+
+            console.error(
+                "로그아웃 오류:",
+                error
+            );
+
+            return;
+
+        }
+
+
+        location.reload();
+
+    };
+
+
+// =====================================================
+// 로그인 상태
+// =====================================================
+
+async function 시작() {
+
+    console.log(
+        "돌이 사이트 시작"
+    );
+
+
+    // =================================================
+    // 업적 먼저 불러오기
+    // =================================================
+
+    업적목록 =
+        await 업적불러오기();
+
+
+    console.log(
+        "Supabase 업적:",
+        업적목록
+    );
+
+
+    // =================================================
+    // 로그인 확인
+    // =================================================
+
+    const {
+
+        data,
+        error
+
+    } =
+        await supabase.auth.getSession();
+
+
+    if (error) {
+
+        console.error(
+            "세션 확인 오류:",
+            error
+        );
+
+    }
+
+
+    const session =
+        data?.session;
+
+
+    // =================================================
+    // 로그아웃 상태
+    // =================================================
+
+    if (!session) {
+
+        로그인버튼.style.display =
+            "block";
+
+
+        회원가입버튼.style.display =
+            "block";
+
+
+        return;
+
+    }
+
+
+    // =================================================
+    // 로그인 상태
+    // =================================================
+
+    현재사용자 =
+        session.user;
+
+
+    // 프로필 표시
+    사진.style.display =
+        "block";
+
+
+    // =================================================
+    // 사용자 정보
+    // =================================================
+
+    const 유저정보 =
+        await 유저정보불러오기();
+
+
+    if (!유저정보) {
+
+        return;
+
+    }
+
+
+    화면업데이트();
+
+
+    // =================================================
+    // 업적
+    // =================================================
+
+    await 첫로그인업적확인();
+
+
+    // 최신 정보 다시 가져오기
+    await 유저정보불러오기();
+
+
+    화면업데이트();
+
+
+    console.log(
+        "로그인 사용자:",
+        현재사용자
+    );
+
+    console.log(
+        "현재 유저 정보:",
+        현재유저정보
+    );
+
+    console.log(
+        "획득 업적:",
+        획득업적
+    );
+
+}
+
+
+// =====================================================
+// Auth 상태 변화
+// =====================================================
+
+supabase.auth.onAuthStateChange(
+
+    async (
+        event,
+        session
+    ) => {
+
+        console.log(
+            "Auth:",
+            event
+        );
+
+
+        if (
+            event ===
+            "SIGNED_IN"
+        ) {
+
+            location.reload();
+
+        }
+
+
+        if (
+            event ===
+            "SIGNED_OUT"
+        ) {
+
+            location.reload();
+
+        }
+
+    }
+
+);
+
+
+// =====================================================
+// 시작
+// =====================================================
+
+await 시작();
+
+
+// =====================================================
+// 디버깅
+// =====================================================
+
+console.log(
+    "================================"
+);
+
+console.log(
+    "돌이 사이트 Supabase 시스템 정상 실행"
+);
+
+console.log(
+    "업적 수:",
+    업적목록.length
+);
+
+console.log(
+    "================================"
+);
+
+</script>
+
+
+</body>
+
+</html>
