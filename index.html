@@ -3398,39 +3398,32 @@ async function 시작() {
 // =====================================================
 
 supabase.auth.onAuthStateChange(
+    (event, session) => {
 
-    async (
-        event,
-        session
-    ) => {
+        console.log("Auth:", event);
 
-        console.log(
-            "Auth:",
-            event
-        );
+        if (event === "SIGNED_IN" && session) {
+            현재사용자 = session.user;
 
-
-        if (
-            event ===
-            "SIGNED_IN"
-        ) {
-
-            location.reload();
-
+            시작();
         }
 
+        if (event === "SIGNED_OUT") {
+            현재사용자 = null;
+            현재유저정보 = null;
+            획득업적 = {};
 
-        if (
-            event ===
-            "SIGNED_OUT"
-        ) {
+            사진.style.display = "none";
+            레벨버튼.style.display = "none";
+            EXP정보.style.display = "none";
+            돌돌코인수량.style.display = "none";
+            현재칭호.style.display = "none";
 
-            location.reload();
-
+            로그인버튼.style.display = "block";
+            회원가입버튼.style.display = "block";
         }
 
     }
-
 );
 
 
