@@ -8,174 +8,34 @@
 
 <style>
 
-@font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
-
-body {
-
-  background: linear-gradient(
-    to right,
-    #000033,
-    #000010
-  );
-
-  margin: 0;
-
-  min-height: 100vh;
-
-}
-
-* {
-
-  user-select: none;
-
-  -webkit-user-select: none;
-
-  -webkit-user-drag: none;
-
-}
-
-input,
-textarea {
-
-  user-select: text;
-
-  -webkit-user-select: text;
-
-}
-
-
-/* ==================================================
-   신문 버튼
-   ================================================== */
-
-.신문 {
-
-  position: absolute;
-
-  left: 20px;
-
-  font-size: 20px;
-
-  font-family: 'HancomMalrangmalrang';
-
-  background: none;
-
-  border: none;
-
-  padding: 0;
-
-  cursor: pointer;
-
-  white-space: nowrap;
-
-  text-align: left;
-
-}
-
-
-/* ==================================================
-   신문 제목
-   ================================================== */
-
-.신문제목 {
-
-  display: inline-block;
-
-}
-
-
-/* ==================================================
-   상태
-   ================================================== */
-
-.신문상태 {
-
-  display: inline-block;
-
-  margin-left: 15px;
-
-  font-size: 17px;
-
-}
-
-
-/* ==================================================
-   읽음
-   ================================================== */
-
-.읽음 {
-
-  color: #4ade80;
-
-}
-
-
-/* ==================================================
-   읽기 가능
-   ================================================== */
-
-.읽기가능 {
-
-  color: #f5f5f5;
-
-}
-
-
-/* ==================================================
-   최근 발행
-   ================================================== */
-
-.최근발행 {
-
-  color: #ffd43b;
-
-}
-
-
-/* ==================================================
-   잠금
-   ================================================== */
-
-.잠금 {
-
-  color: #777777;
-
-  cursor: not-allowed;
-
-}
-
-
-/* ==================================================
-   안내 문구
-   ================================================== */
-
-#상태안내 {
-
-  position: absolute;
-
-  top: 165px;
-
-  left: 20px;
-
-  font-family: 'HancomMalrangmalrang';
-
-  font-size: 16px;
-
-  color: #cccccc;
-
-}
+@font-face{font-family:Hancom;src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+@font-face{font-family:Hancom;src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2') format('woff2');font-weight:700;font-display:swap}
+:root{--bg:#050718;--panel:rgba(15,20,45,.72);--line:rgba(255,255,255,.11);--text:#f7f8ff;--muted:#aeb5cf;--green:#55e89a;--yellow:#ffd85a;--blue:#77a8ff}
+*{box-sizing:border-box;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+input,textarea{user-select:text;-webkit-user-select:text}
+html{min-height:100%;background:var(--bg)}
+body{margin:0;min-height:100vh;color:var(--text);font-family:Hancom,system-ui,sans-serif;background:radial-gradient(circle at 15% 0%,#18245b 0,transparent 38%),radial-gradient(circle at 90% 20%,#10284d 0,transparent 34%),linear-gradient(135deg,#050718,#03030d 70%);overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;background:linear-gradient(120deg,rgba(255,255,255,.025),transparent 35%,rgba(110,150,255,.025));z-index:-1}
+.신문{position:absolute;left:clamp(16px,4vw,56px);width:min(900px,calc(100% - 32px));min-height:64px;padding:18px 24px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(135deg,rgba(20,28,60,.82),rgba(10,13,32,.72));box-shadow:0 14px 40px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.07);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);color:var(--text);font-size:clamp(17px,2.2vw,21px);text-align:left;cursor:pointer;white-space:normal;transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s, border-color .35s, opacity .35s}
+.신문:hover:not(:disabled){transform:translateY(-4px) scale(1.012);box-shadow:0 22px 55px rgba(0,0,0,.36),0 0 30px rgba(100,140,255,.08);border-color:rgba(119,168,255,.3)}
+.신문:active:not(:disabled){transform:scale(.985)}
+.신문제목{font-weight:700;letter-spacing:.01em}
+.신문상태{display:inline-block;margin-left:14px;font-size:.88em;font-weight:700}
+.읽음{color:var(--green)}
+.읽기가능{color:#f5f7ff}
+.최근발행{color:var(--yellow);border-color:rgba(255,216,90,.28);box-shadow:0 0 28px rgba(255,216,90,.08)}
+.잠금{color:#6e748b;cursor:not-allowed;filter:saturate(.45);opacity:.7}
+#상태안내{position:absolute;top:clamp(145px,18vw,190px);left:clamp(16px,4vw,56px);display:flex;flex-wrap:wrap;gap:10px 18px;width:min(900px,calc(100% - 32px));padding:14px 18px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.035);color:var(--muted);font-size:14px;box-shadow:0 10px 30px rgba(0,0,0,.16)}
+#상태안내 span{white-space:nowrap}
+a{color:inherit}
+body>a:first-of-type{display:block;position:relative;width:max-content;max-width:90%;margin:0;padding:20px 0 0 clamp(16px,4vw,56px);text-decoration:none}
+body>a:first-of-type button{position:static!important;background:linear-gradient(135deg,#fff,#bfc9ff);-webkit-background-clip:text;background-clip:text;color:transparent!important;border:0!important;font-family:'Black Han Sans',Hancom,sans-serif!important;font-size:clamp(48px,9vw,100px)!important;line-height:1;cursor:pointer;transition:filter .35s,transform .35s}
+body>a:first-of-type:hover button{filter:drop-shadow(0 0 18px rgba(120,150,255,.25));transform:translateX(5px)}
+body p{font-size:clamp(17px,2.5vw,22px)!important;color:#e8ebf8!important;margin:32px 16px 0 clamp(16px,4vw,56px)!important;white-space:normal!important;max-width:850px;line-height:1.65}
+@keyframes rise{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.신문{animation:rise .65s both;animation-delay:calc(var(--i,0)*.055s)}
+@media(max-width:700px){.신문{min-height:58px;padding:15px 17px;border-radius:16px}.신문상태{display:block;margin:5px 0 0;font-size:13px}#상태안내{top:155px;line-height:1.4}body p{margin-top:25px!important}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 
 </style>
 
@@ -606,6 +466,8 @@ window.addEventListener(
         clone.style.display =
           "block";
 
+
+        clone.style.setProperty("--i", String(index));
 
         clone.style.top =
           (
