@@ -1,727 +1,1141 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-<title>돌이 사이트-돌이게임</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>돌이 사이트 - 돌이게임</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
 
 <style>
-
-    @font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');
-  font-weight: 700;
+@font-face {
+  font-family: "HancomMalrangmalrang";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2")
+       format("woff2");
+  font-weight: 400;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2') format('woff2');
+  font-family: "HancomMalrangmalrang";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2")
+       format("woff2");
   font-weight: 700;
   font-display: swap;
 }
 
-body {
-  background: linear-gradient(to right, #000033, #000010);
-  margin: 0;
+:root {
+  --background: #03031b;
+  --background-light: #09092e;
+  --panel: rgba(20, 22, 65, 0.78);
+  --panel-light: rgba(40, 44, 100, 0.65);
+  --border: rgba(137, 157, 255, 0.22);
+  --border-hover: rgba(105, 210, 255, 0.75);
+  --text: #ffffff;
+  --subtext: #aeb7dc;
+  --blue: #6d8dff;
+  --cyan: #5edbff;
+  --purple: #a66cff;
+  --green: #6ff0b5;
 }
 
 * {
+  box-sizing: border-box;
   user-select: none;
   -webkit-user-select: none;
   -webkit-user-drag: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-input,
-textarea {
-  user-select: text;
-  -webkit-user-select: text;
-}
-  
-#게임사진{
-    transition:
-        transform .35s ease,
-        opacity .35s ease;
-
-    opacity:1;
+html {
+  scroll-behavior: smooth;
 }
 
-#게임사진{
-
-width:260px;
-transition:.25s;
-border-radius:20px;
-
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: "HancomMalrangmalrang", sans-serif;
+  background:
+    radial-gradient(
+      circle at 15% 0%,
+      rgba(62, 91, 255, 0.2),
+      transparent 32%
+    ),
+    radial-gradient(
+      circle at 90% 35%,
+      rgba(150, 75, 255, 0.17),
+      transparent 35%
+    ),
+    linear-gradient(135deg, var(--background-light), var(--background));
+  overflow-x: hidden;
 }
 
-#게임이름{
-
-color:white;
-font-family: 'HancomMalrangmalrang';
-font-size:40px;
-text-align:center;
-
+button,
+a {
+  font-family: inherit;
 }
 
-#게임설명{
-
-color:white;
-font-family: 'HancomMalrangmalrang';
-font-size:22px;
-text-align:center;
-
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 4px;
 }
 
-#장르{
+/* 배경 장식 */
 
-color:#87cefa;
-font-family: 'HancomMalrangmalrang';
-text-align:center;
-
+.background-orb {
+  position: fixed;
+  z-index: -1;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.18;
+  pointer-events: none;
 }
 
-#상태{
-
-font-family: 'HancomMalrangmalrang';
-color:#7CFC00;
-text-align:center;
-
+.orb-left {
+  top: 20%;
+  left: -170px;
+  background: #526eff;
 }
 
-#캐러셀{
-
-  touch-action:pan-y;
-
-    cursor:grab;
-
+.orb-right {
+  right: -170px;
+  bottom: 5%;
+  background: #a45dff;
 }
 
-#번호{
+/* 전체 */
 
-font-family: 'HancomMalrangmalrang';
-color:white;
-font-size:25px;
-text-align:center;
-
+.page {
+  width: min(1280px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 28px 0 70px;
 }
 
-#점{
+/* 상단 */
 
-    display:flex;
-    justify-content:center;
-    gap:14px;
-    margin-top:20px;
-
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 50px;
+  animation: fadeDown 0.7s ease both;
 }
 
-.dot{
-
-    width:12px;
-    height:12px;
-
-    min-width:12px;
-    min-height:12px;
-
-    border-radius:50%;
-
-    background:#666;
-
-    cursor:pointer;
-
-    flex-shrink:0;
-
-    transform:scale(1);
-
-    transition:
-        transform .35s cubic-bezier(.22,1,.36,1),
-        background-color .35s,
-        box-shadow .35s;
-
+.logo {
+  color: white;
+  text-decoration: none;
+  font-family: "Black Han Sans", sans-serif;
+  font-size: clamp(32px, 5vw, 62px);
+  letter-spacing: -3px;
+  text-shadow:
+    0 0 20px rgba(108, 141, 255, 0.45),
+    0 0 45px rgba(166, 108, 255, 0.2);
+  transition: 0.3s;
 }
 
-.dot.active{
-
-    background:white;
-
-    transform:scale(1.6);
-
-    box-shadow:0 0 14px white;
-
+.logo:hover {
+  transform: translateY(-3px);
+  text-shadow:
+    0 0 25px rgba(94, 219, 255, 0.8),
+    0 0 45px rgba(166, 108, 255, 0.4);
 }
 
-#시작{
-
-padding:15px 40px;
-font-size:25px;
-font-family: 'HancomMalrangmalrang';
-border:none;
-border-radius:15px;
-cursor:pointer;
-
-transition:.2s;
-
+.home-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 21px;
+  color: #e8edff;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+  backdrop-filter: blur(14px);
+  transition: 0.25s;
+  white-space: nowrap;
 }
 
-#시작:hover{
-
-transform:scale(1.08);
-
+.home-button:hover {
+  color: white;
+  border-color: var(--border-hover);
+  background: rgba(87, 132, 255, 0.16);
+  transform: translateY(-2px);
 }
 
-.캐러셀사진{
+/* 소개 */
 
-    -webkit-user-drag:none;
-    user-select:none;
-
+.intro {
+  margin-bottom: 32px;
+  animation: fadeUp 0.7s 0.1s ease both;
 }
 
-#캐러셀{
-
-    position:relative;
-
-    width:900px;
-
-    height:340px;
-
-    margin:40px auto;
-
-    overflow:hidden;
-
+.intro-label {
+  display: inline-block;
+  margin-bottom: 14px;
+  color: var(--cyan);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 3px;
 }
 
-.캐러셀사진{
-
-    position:absolute;
-
-    width:240px;
-    height:240px;
-
-    object-fit:cover;
-
-    border-radius:20px;
-
-    transition:
-        left .45s ease,
-        top .45s ease,
-        transform .45s ease,
-        opacity .45s ease;
-
-    user-select:none;
-
+.intro h1 {
+  margin: 0;
+  font-size: clamp(36px, 5vw, 62px);
+  line-height: 1.12;
+  letter-spacing: -2px;
 }
 
-#왼쪽사진{
-
-    left:70px;
-
-    top:40px;
-
-    transform:scale(.8);
-
-    opacity:.45;
-
+.intro h1 span {
+  background: linear-gradient(90deg, #ffffff, #9adfff, #c5a5ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
-#가운데사진{
-
-    left:330px;
-
-    top:0;
-
-    transform:scale(1);
-
-    opacity:1;
-
-    z-index:2;
-
+.intro p {
+  margin: 17px 0 0;
+  color: var(--subtext);
+  font-size: 18px;
+  line-height: 1.7;
 }
 
-#오른쪽사진{
+/* 게임 영역 */
 
-    left:590px;
+.game-shell {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(20px, 4vw, 42px);
+  border: 1px solid var(--border);
+  border-radius: 34px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(31, 35, 91, 0.85),
+      rgba(11, 12, 42, 0.92)
+    );
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  animation: fadeUp 0.7s 0.2s ease both;
+}
 
-    top:40px;
+.game-shell::before {
+  content: "";
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  top: -250px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgba(77, 131, 255, 0.16);
+  filter: blur(35px);
+  pointer-events: none;
+}
 
-    transform:scale(.8);
+.game-shell::after {
+  content: "";
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  right: -120px;
+  bottom: -120px;
+  border-radius: 50%;
+  background: rgba(166, 108, 255, 0.12);
+  filter: blur(30px);
+  pointer-events: none;
+}
 
-    opacity:.45;
+/* 캐러셀 */
 
+.carousel-area {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+#캐러셀 {
+  position: relative;
+  width: 100%;
+  height: 370px;
+  overflow: hidden;
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+#캐러셀.grabbing {
+  cursor: grabbing;
+}
+
+.캐러셀사진 {
+  position: absolute;
+  top: 60px;
+  left: 50%;
+  width: 270px;
+  height: 270px;
+  object-fit: cover;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 28px;
+  opacity: 0;
+  transform: translateX(-50%) scale(0.65);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  transition:
+    left 0.55s cubic-bezier(.22, 1, .36, 1),
+    top 0.55s cubic-bezier(.22, 1, .36, 1),
+    transform 0.55s cubic-bezier(.22, 1, .36, 1),
+    opacity 0.55s ease,
+    filter 0.55s ease;
+  pointer-events: none;
+}
+
+.캐러셀사진.왼쪽 {
+  left: 20%;
+  top: 65px;
+  opacity: 0.38;
+  transform: translateX(-50%) scale(0.76);
+  filter: brightness(0.65) saturate(0.7);
+  z-index: 1;
+}
+
+.캐러셀사진.가운데 {
+  left: 50%;
+  top: 0;
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+  filter: brightness(1) saturate(1);
+  border-color: rgba(111, 207, 255, 0.65);
+  box-shadow:
+    0 0 0 1px rgba(111, 207, 255, 0.15),
+    0 25px 65px rgba(0, 0, 0, 0.45),
+    0 0 40px rgba(86, 153, 255, 0.15);
+  z-index: 3;
+}
+
+.캐러셀사진.오른쪽 {
+  left: 80%;
+  top: 65px;
+  opacity: 0.38;
+  transform: translateX(-50%) scale(0.76);
+  filter: brightness(0.65) saturate(0.7);
+  z-index: 1;
+}
+
+.캐러셀사진.숨김 {
+  left: 50%;
+  top: 80px;
+  opacity: 0;
+  transform: translateX(-50%) scale(0.55);
+  z-index: 0;
+}
+
+/* 중앙 이미지 빛 효과 */
+
+.carousel-area::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 5px;
+  width: 230px;
+  height: 25px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgba(76, 147, 255, 0.35);
+  filter: blur(25px);
+  pointer-events: none;
+}
+
+/* 번호와 점 */
+
+.carousel-bottom {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-top: 8px;
+}
+
+#번호 {
+  margin: 0;
+  color: #c3ccf1;
+  font-family: "Jua", sans-serif;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+#점 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+  min-height: 18px;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: #565b86;
+  cursor: pointer;
+  transition:
+    width 0.35s ease,
+    background 0.35s ease,
+    box-shadow 0.35s ease,
+    transform 0.35s ease;
+}
+
+.dot:hover {
+  transform: scale(1.3);
+  background: #9da8df;
+}
+
+.dot.active {
+  width: 28px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--cyan), var(--blue));
+  box-shadow: 0 0 15px rgba(94, 219, 255, 0.55);
+}
+
+/* 게임 정보 */
+
+.game-information {
+  position: relative;
+  z-index: 1;
+  max-width: 800px;
+  margin: 30px auto 0;
+  padding-top: 28px;
+  text-align: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.game-information.change {
+  animation: informationChange 0.45s ease both;
+}
+
+#게임이름 {
+  margin: 0;
+  color: white;
+  font-size: clamp(31px, 5vw, 50px);
+  line-height: 1.2;
+  letter-spacing: -1px;
+}
+
+.game-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 17px;
+}
+
+.meta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 14px;
+  border: 1px solid rgba(108, 140, 255, 0.25);
+  border-radius: 999px;
+  color: #cbd6ff;
+  background: rgba(108, 140, 255, 0.12);
+  font-size: 15px;
+}
+
+.meta-tag.status {
+  color: var(--green);
+  border-color: rgba(111, 240, 181, 0.25);
+  background: rgba(111, 240, 181, 0.08);
+}
+
+#게임설명 {
+  max-width: 650px;
+  margin: 20px auto 0;
+  color: var(--subtext);
+  font-size: 18px;
+  line-height: 1.8;
+}
+
+/* 버튼 */
+
+.action-area {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  gap: 13px;
+  margin-top: 30px;
+}
+
+#시작,
+.arrow-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  border: none;
+  border-radius: 15px;
+  cursor: pointer;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+
+#시작 {
+  min-width: 190px;
+  padding: 13px 30px;
+  color: white;
+  background: linear-gradient(100deg, #557cff, #925cff);
+  box-shadow: 0 10px 25px rgba(93, 99, 255, 0.25);
+  font-size: 20px;
+  font-weight: 700;
+}
+
+#시작:hover {
+  transform: translateY(-4px);
+  background: linear-gradient(100deg, #6c8dff, #a16eff);
+  box-shadow:
+    0 14px 32px rgba(93, 99, 255, 0.4),
+    0 0 20px rgba(111, 132, 255, 0.12);
+}
+
+#시작:active {
+  transform: scale(0.95);
+}
+
+.arrow-button {
+  width: 52px;
+  color: #dfe6ff;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border);
+  font-size: 23px;
+}
+
+.arrow-button:hover {
+  color: white;
+  border-color: var(--border-hover);
+  background: rgba(96, 140, 255, 0.2);
+  transform: translateY(-3px);
+}
+
+.arrow-button:active {
+  transform: scale(0.92);
+}
+
+/* 안내 */
+
+.game-notice {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  margin-top: 25px;
+  color: #777fa8;
+  font-size: 14px;
+  text-align: center;
+}
+
+.game-notice span {
+  color: var(--cyan);
+}
+
+/* 애니메이션 */
+
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-22px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes informationChange {
+  from {
+    opacity: 0;
+    transform: translateY(13px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 태블릿 */
+
+@media (max-width: 800px) {
+  .page {
+    width: min(100% - 28px, 620px);
+  }
+
+  .game-shell {
+    padding: 20px;
+    border-radius: 27px;
+  }
+
+  #캐러셀 {
+    height: 320px;
+  }
+
+  .캐러셀사진 {
+    width: 235px;
+    height: 235px;
+  }
+
+  .캐러셀사진.왼쪽 {
+    left: 8%;
+    top: 55px;
+  }
+
+  .캐러셀사진.가운데 {
+    left: 50%;
+  }
+
+  .캐러셀사진.오른쪽 {
+    left: 92%;
+    top: 55px;
+  }
+
+  #게임설명 {
+    font-size: 17px;
+  }
+}
+
+/* 모바일 */
+
+@media (max-width: 520px) {
+  .page {
+    width: calc(100% - 22px);
+    padding-top: 18px;
+  }
+
+  .topbar {
+    margin-bottom: 35px;
+  }
+
+  .logo {
+    font-size: 31px;
+    letter-spacing: -2px;
+  }
+
+  .home-button {
+    padding: 10px 13px;
+    font-size: 14px;
+  }
+
+  .intro h1 {
+    font-size: 37px;
+  }
+
+  .intro p {
+    font-size: 16px;
+  }
+
+  .game-shell {
+    padding: 15px;
+    border-radius: 24px;
+  }
+
+  #캐러셀 {
+    height: 270px;
+  }
+
+  .캐러셀사진 {
+    width: 190px;
+    height: 190px;
+    border-radius: 22px;
+  }
+
+  .캐러셀사진.왼쪽 {
+    left: -8%;
+    top: 42px;
+    opacity: 0.25;
+  }
+
+  .캐러셀사진.가운데 {
+    left: 50%;
+    top: 0;
+  }
+
+  .캐러셀사진.오른쪽 {
+    left: 108%;
+    top: 42px;
+    opacity: 0.25;
+  }
+
+  .carousel-bottom {
+    margin-top: 8px;
+  }
+
+  .game-information {
+    margin-top: 24px;
+    padding-top: 24px;
+  }
+
+  #게임이름 {
+    font-size: 32px;
+  }
+
+  #게임설명 {
+    font-size: 16px;
+    line-height: 1.7;
+  }
+
+  .meta-tag {
+    padding: 7px 11px;
+    font-size: 14px;
+  }
+
+  .action-area {
+    gap: 8px;
+  }
+
+  #시작 {
+    min-width: 150px;
+    padding: 12px 18px;
+    font-size: 17px;
+  }
+
+  .arrow-button {
+    width: 45px;
+    min-height: 48px;
+    font-size: 20px;
+  }
+
+  .game-notice {
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 </style>
 </head>
-  
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<a href="https://rockey-jason.github.io/doldol-site/" style="text-decoration:none;">
-<button style="
-position:absolute;
-top:0;
-left:0;
-background:none;
-border:none;
-color:#f5f5f5;
-font-family:'Black Han Sans';
-font-size:100px;
-cursor:pointer;
-">
-돌이 사이트
-</button>
-</a>
 
-<p style="
-font-size:20px;
-color:#f5f5f5;
-font-family: 'HancomMalrangmalrang';
-margin-top:120px;
-margin-left:20px;
-">
-돌이게임-돌이와 관련된 게임들을 이용해 놀수 있습니다!
-</p>
+<body>
 
-<link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
+<div class="background-orb orb-left"></div>
+<div class="background-orb orb-right"></div>
 
-<script type=module>
+<main class="page">
+
+  <header class="topbar">
+    <a
+      class="logo"
+      href="https://rockey-jason.github.io/doldol-site/"
+    >
+      돌이 사이트
+    </a>
+
+    <a
+      class="home-button"
+      href="https://rockey-jason.github.io/doldol-site/"
+    >
+      ← 메인으로
+    </a>
+  </header>
+
+  <section class="intro">
+    <span class="intro-label">DORI GAME CENTER</span>
+
+    <h1>
+      돌이와 함께하는<br>
+      <span>게임 세계</span>
+    </h1>
+
+    <p>
+      돌이와 관련된 다양한 게임을 만나보고
+      새로운 모험을 시작해 보세요.
+    </p>
+  </section>
+
+  <section class="game-shell">
+
+    <div class="carousel-area">
+
+      <div id="캐러셀"></div>
+
+      <div class="carousel-bottom">
+        <p id="번호">1 / 3</p>
+        <div id="점"></div>
+      </div>
+
+    </div>
+
+    <section class="game-information" id="게임정보">
+
+      <h2 id="게임이름">돌이체스</h2>
+
+      <div class="game-meta">
+        <span class="meta-tag" id="장르">전략</span>
+        <span class="meta-tag status" id="상태">🟢 플레이 가능</span>
+      </div>
+
+      <p id="게임설명">
+        Stockfish AI와 대결하며 레이팅을 올리는 체스 게임입니다.
+      </p>
+
+    </section>
+
+    <div class="action-area">
+      <button
+        id="왼쪽"
+        class="arrow-button"
+        type="button"
+        aria-label="이전 게임"
+      >
+        ◀
+      </button>
+
+      <button id="시작" type="button">
+        게임 시작
+      </button>
+
+      <button
+        id="오른쪽"
+        class="arrow-button"
+        type="button"
+        aria-label="다음 게임"
+      >
+        ▶
+      </button>
+    </div>
+
+    <div class="game-notice">
+      <span>✦</span>
+      <span>카드를 클릭하거나 좌우로 밀어서 다른 게임을 확인하세요.</span>
+    </div>
+
+  </section>
+
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const 게임목록 = [
+    {
+      이름: "돌이체스",
+      장르: "전략",
+      상태: "🟢 플레이 가능",
+      설명: "Stockfish AI와 대결하며 레이팅을 올리는 체스 게임입니다.",
+      이미지: "https://i.postimg.cc/FsHqfPpX/rockeychess.png",
+      링크: "https://rockey-jason.github.io/rockey-chess/"
+    },
+    {
+      이름: "도로늄 공장",
+      장르: "공장 시뮬레이션",
+      상태: "🔴 출시 예정",
+      설명: "광물을 채굴하고 자동 공장을 만들어 도로늄을 생산하는 게임입니다.",
+      이미지: "https://i.postimg.cc/rp1XX0mS/1000005291.jpg",
+      링크: "#"
+    },
+    {
+      이름: "돌이 RPG",
+      장르: "RPG",
+      상태: "🔴 출시 예정",
+      설명: "돌이와 함께 여러 지역을 탐험하는 RPG 게임입니다.",
+      이미지: "https://i.postimg.cc/rp1XX0mS/1000005291.jpg",
+      링크: "#"
+    }
+  ];
+
+  const 캐러셀 = document.getElementById("캐러셀");
+  const 게임정보 = document.getElementById("게임정보");
+  const 시작버튼 = document.getElementById("시작");
+  const 왼쪽버튼 = document.getElementById("왼쪽");
+  const 오른쪽버튼 = document.getElementById("오른쪽");
+
+  let 현재게임 = 0;
+  let 애니메이션중 = false;
+  let 드래그중 = false;
   let 시작X = 0;
-let 드래그중 = false;
   let 터치시작X = 0;
-  
-const 게임목록 = [
-{
-    이름:"돌이체스",
-    장르:"전략",
-    상태:"🟢플레이 가능",
-    설명:"Stockfish AI와 대결하며 레이팅을 올리는 체스 게임입니다.",
-    이미지:"https://i.postimg.cc/FsHqfPpX/rockeychess.png",
-    링크:"https://rockey-jason.github.io/rockey-chess/"
-},
-{
-    이름:"도로늄 공장",
-    장르:"공장 시뮬레이션",
-    상태:"🔴 출시 예정",
-    설명:"광물을 채굴하고 자동 공장을 만들어 도로늄을 생산하는 게임입니다.",
-    이미지:"https://i.postimg.cc/rp1XX0mS/1000005291.jpg",
-    링크:"#"
-},
-{
-    이름:"돌이 RPG",
-    장르:"RPG",
-    상태:"🔴 출시 예정",
-    설명:"돌이와 함께 여러 지역을 탐험하는 RPG 게임입니다.",
-    이미지:"https://i.postimg.cc/rp1XX0mS/1000005291.jpg",
-    링크:"#"
-}
-];
 
-const 캐러셀 = document.getElementById("캐러셀");
+  // 이미지 생성
+  게임목록.forEach((게임, index) => {
+    const 이미지 = document.createElement("img");
 
-게임목록.forEach((게임, i)=>{
+    이미지.src = 게임.이미지;
+    이미지.alt = `${게임.이름} 게임 이미지`;
+    이미지.className = "캐러셀사진";
+    이미지.dataset.index = index;
+    이미지.draggable = false;
 
-    const 카드 = document.createElement("img");
+    이미지.addEventListener("click", () => {
+      if (애니메이션중) return;
 
-    카드.src = 게임.이미지;
+      const 차이 = 상대위치(index);
 
-    카드.className = "캐러셀사진";
+      if (차이 === -1) {
+        슬라이드(-1);
+      } else if (차이 === 1) {
+        슬라이드(1);
+      }
+    });
 
-    카드.dataset.index = i;
+    캐러셀.appendChild(이미지);
+  });
 
-    캐러셀.appendChild(카드);
+  function 상대위치(index) {
+    let 차이 = index - 현재게임;
+    const 전체 = 게임목록.length;
 
-});
+    if (차이 > 전체 / 2) {
+      차이 -= 전체;
+    }
 
-let 현재게임 = 0;
+    if (차이 < -전체 / 2) {
+      차이 += 전체;
+    }
 
-let 애니메이션중 = false;
+    return 차이;
+  }
 
-function 화면갱신(){
+  function 위치설정() {
+    const 카드들 = document.querySelectorAll(".캐러셀사진");
 
-    위치설정();
+    카드들.forEach((카드, index) => {
+      const 차이 = 상대위치(index);
 
+      카드.classList.remove(
+        "왼쪽",
+        "가운데",
+        "오른쪽",
+        "숨김"
+      );
+
+      if (차이 === -1) {
+        카드.classList.add("왼쪽");
+      } else if (차이 === 0) {
+        카드.classList.add("가운데");
+      } else if (차이 === 1) {
+        카드.classList.add("오른쪽");
+      } else {
+        카드.classList.add("숨김");
+      }
+    });
+  }
+
+  function 점갱신() {
+    const 점영역 = document.getElementById("점");
+
+    점영역.innerHTML = "";
+
+    게임목록.forEach((게임, index) => {
+      const 점 = document.createElement("button");
+
+      점.type = "button";
+      점.className = "dot";
+      점.setAttribute("aria-label", `${게임.이름} 선택`);
+
+      if (index === 현재게임) {
+        점.classList.add("active");
+      }
+
+      점.addEventListener("click", () => {
+        if (index === 현재게임 || 애니메이션중) return;
+
+        이동(index);
+      });
+
+      점영역.appendChild(점);
+    });
+  }
+
+  function 정보갱신() {
     const 게임 = 게임목록[현재게임];
 
-    document.getElementById("게임이름").textContent =
-        게임.이름;
-
-    document.getElementById("게임설명").textContent =
-        게임.설명;
-
-    document.getElementById("장르").textContent =
-        게임.장르;
-
-    document.getElementById("상태").textContent =
-        게임.상태;
-
+    document.getElementById("게임이름").textContent = 게임.이름;
+    document.getElementById("게임설명").textContent = 게임.설명;
+    document.getElementById("장르").textContent = 게임.장르;
+    document.getElementById("상태").textContent = 게임.상태;
     document.getElementById("번호").textContent =
-        `${현재게임+1} / ${게임목록.length}`;
+      `${현재게임 + 1} / ${게임목록.length}`;
 
-  점업데이트();
+    게임정보.classList.remove("change");
 
-  점갱신();
+    void 게임정보.offsetWidth;
 
-}
+    게임정보.classList.add("change");
+  }
 
-function 점갱신(){
+  function 화면갱신() {
+    위치설정();
+    점갱신();
+    정보갱신();
+  }
 
-    const 점 = document.getElementById("점");
-
-    점.innerHTML = "";
-
-    게임목록.forEach((게임,index)=>{
-
-        const d = document.createElement("div");
-
-        d.className="dot";
-
-requestAnimationFrame(()=>{
-
-    if(index===현재게임){
-
-        d.classList.add("active");
-
-    }
-
-});
-
-d.onclick=()=>{
-
-    if(index===현재게임) return;
-
-    이동(index);
-
-};
-
-        점.appendChild(d);
-
-    });
-
-}
-
-function 점업데이트(){
-
-    const 점 = document.getElementById("점");
-
-    점.innerHTML = "";
-
-    게임목록.forEach((게임,i)=>{
-
-        const 동그라미 =
-        document.createElement("span");
-
-        동그라미.textContent = "●";
-
-        동그라미.style.fontSize = "22px";
-        동그라미.style.margin = "0 6px";
-        동그라미.style.cursor = "pointer";
-
-        if(i==현재게임){
-
-            동그라미.style.color = "#00bfff";
-
-        }
-
-        else{
-
-            동그라미.style.color = "#777";
-
-        }
-
-        동그라미.onclick=()=>{
-
-            if(i==현재게임) return;
-
-            if(i>현재게임)
-                슬라이드(1);
-            else
-                슬라이드(-1);
-
-        };
-
-        점.appendChild(동그라미);
-
-    });
-
-}
-
-function 위치설정(){
-
-    const 카드들 =
-    document.querySelectorAll(".캐러셀사진");
-
-    카드들.forEach((카드,i)=>{
-
-        let 차이 =
-        i-현재게임;
-
-        if(차이<-1)
-            차이+=게임목록.length;
-
-        if(차이>1)
-            차이-=게임목록.length;
-
-        if(차이==-1){
-
-            카드.style.left="70px";
-            카드.style.top="40px";
-            카드.style.transform="scale(.8)";
-            카드.style.opacity=".45";
-            카드.style.zIndex="1";
-
-        }
-
-        else if(차이==0){
-
-            카드.style.left="330px";
-            카드.style.top="0";
-            카드.style.transform="scale(1)";
-            카드.style.opacity="1";
-            카드.style.zIndex="2";
-
-        }
-
-        else if(차이==1){
-
-            카드.style.left="590px";
-            카드.style.top="40px";
-            카드.style.transform="scale(.8)";
-            카드.style.opacity=".45";
-            카드.style.zIndex="1";
-
-        }
-
-        else{
-
-            카드.style.left="330px";
-            카드.style.top="0";
-            카드.style.opacity="0";
-            카드.style.transform="scale(.6)";
-            카드.style.zIndex="0";
-
-        }
-카드.onclick = ()=>{
-
-    let 차이 = i - 현재게임;
-
-    if(차이 < -1)
-        차이 += 게임목록.length;
-
-    if(차이 > 1)
-        차이 -= 게임목록.length;
-
-    if(차이 == -1){
-
-        슬라이드(-1);
-
-    }
-
-    else if(차이 == 1){
-
-        슬라이드(1);
-
-    }
-
-};
-    });
-
-}
-
-function 슬라이드(방향){
-
-    if(애니메이션중) return;
+  function 슬라이드(방향) {
+    if (애니메이션중) return;
 
     애니메이션중 = true;
 
     현재게임 += 방향;
 
-    if(현재게임<0)
-        현재게임 = 게임목록.length-1;
+    if (현재게임 < 0) {
+      현재게임 = 게임목록.length - 1;
+    }
 
-    if(현재게임>=게임목록.length)
-        현재게임 = 0;
+    if (현재게임 >= 게임목록.length) {
+      현재게임 = 0;
+    }
 
     화면갱신();
 
-    setTimeout(()=>{
+    setTimeout(() => {
+      애니메이션중 = false;
+    }, 560);
+  }
 
-        애니메이션중=false;
+  function 이동(목표) {
+    if (애니메이션중) return;
 
-    },450);
-
-}
-
-function 이동(목표){
-
-    if(애니메이션중) return;
-
-    const 차이 =
-        (목표-현재게임+게임목록.length)
-        %게임목록.length;
+    const 전체 = 게임목록.length;
+    let 차이 = (목표 - 현재게임 + 전체) % 전체;
 
     let 방향;
-
     let 횟수;
 
-    if(차이<=게임목록.length/2){
-
-        방향=1;
-        횟수=차이;
-
-    }else{
-
-        방향=-1;
-        횟수=게임목록.length-차이;
-
+    if (차이 <= 전체 / 2) {
+      방향 = 1;
+      횟수 = 차이;
+    } else {
+      방향 = -1;
+      횟수 = 전체 - 차이;
     }
 
-    let i=0;
+    let 진행횟수 = 0;
 
-    function 다음(){
+    function 다음() {
+      if (진행횟수 >= 횟수) return;
 
-        if(i>=횟수) return;
+      슬라이드(방향);
+      진행횟수++;
 
-        슬라이드(방향);
-
-        i++;
-
-        setTimeout(다음,470);
-
+      setTimeout(다음, 590);
     }
 
     다음();
+  }
 
-}
+  function 게임시작() {
+    const 게임 = 게임목록[현재게임];
 
+    if (게임.링크 === "#") {
+      alert("이 게임은 아직 출시되지 않았습니다.");
+      return;
+    }
 
-document.getElementById("시작").onclick=()=>{
+    window.location.href = 게임.링크;
+  }
 
-location.href =
-게임목록[현재게임].링크;
+  시작버튼.addEventListener("click", 게임시작);
 
-};
-
-document.getElementById("왼쪽").onclick=()=>{
-
+  왼쪽버튼.addEventListener("click", () => {
     슬라이드(-1);
+  });
 
-};
-
-document.getElementById("오른쪽").onclick=()=>{
-
+  오른쪽버튼.addEventListener("click", () => {
     슬라이드(1);
+  });
 
-};
-
-document.addEventListener("keydown",(e)=>{
-
-    if(e.key==="ArrowLeft"){
-
-        슬라이드(-1);
-
+  // 키보드 조작
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "ArrowLeft") {
+      슬라이드(-1);
     }
 
-    if(e.key==="ArrowRight"){
-
-        슬라이드(1);
-
+    if (event.key === "ArrowRight") {
+      슬라이드(1);
     }
 
-});
+    if (event.key === "Enter") {
+      게임시작();
+    }
+  });
 
-캐러셀.addEventListener("mousedown",(e)=>{
-
+  // 마우스 드래그
+  캐러셀.addEventListener("mousedown", (event) => {
     드래그중 = true;
-    시작X = e.clientX;
+    시작X = event.clientX;
+    캐러셀.classList.add("grabbing");
+  });
 
-});
-
-document.addEventListener("mouseup",(e)=>{
-
-    if(!드래그중) return;
+  document.addEventListener("mouseup", (event) => {
+    if (!드래그중) return;
 
     드래그중 = false;
+    캐러셀.classList.remove("grabbing");
 
-    const 이동거리 = e.clientX - 시작X;
+    const 이동거리 = event.clientX - 시작X;
 
-    if(이동거리 > 80){
-
-        슬라이드(-1);
-
+    if (이동거리 > 70) {
+      슬라이드(-1);
+    } else if (이동거리 < -70) {
+      슬라이드(1);
     }
+  });
 
-    else if(이동거리 < -80){
+  // 모바일 터치
+  캐러셀.addEventListener("touchstart", (event) => {
+    터치시작X = event.touches[0].clientX;
+  }, { passive: true });
 
-        슬라이드(1);
-
-    }
-
-});
-
-캐러셀.addEventListener("mousedown",()=>{
-
-    캐러셀.style.cursor="grabbing";
-
-});
-
-document.addEventListener("mouseup",()=>{
-
-    캐러셀.style.cursor="grab";
-
-});
-
-캐러셀.addEventListener("touchstart",(e)=>{
-
-    터치시작X = e.touches[0].clientX;
-
-});
-
-캐러셀.addEventListener("touchend",(e)=>{
-
-    const 끝X = e.changedTouches[0].clientX;
-
+  캐러셀.addEventListener("touchend", (event) => {
+    const 끝X = event.changedTouches[0].clientX;
     const 이동거리 = 끝X - 터치시작X;
 
-    if(이동거리 > 80){
-
-        슬라이드(-1);
-
+    if (이동거리 > 70) {
+      슬라이드(-1);
+    } else if (이동거리 < -70) {
+      슬라이드(1);
     }
+  }, { passive: true });
 
-    else if(이동거리 < -80){
-
-        슬라이드(1);
-
-    }
+  // 초기 화면
+  화면갱신();
 
 });
-
-document.getElementById("시작").onclick=()=>{
-
-location.href=
-게임목록[현재게임].링크;
-
-};
-
-화면갱신();
-
 </script>
 
-<div id="캐러셀"></div>
-
-<p id="번호"></p>
-
-<div id="점"></div>
-
-<h1 id="게임이름"></h1>
-
-<p id="장르"></p>
-
-<p id="상태"></p>
-
-<p id="게임설명"></p>
-
-<button id="시작">
-게임 시작
-</button>
-
-<button id="왼쪽">◀</button>
-
-<button id="오른쪽">▶</button>
-  
 </body>
 </html>
