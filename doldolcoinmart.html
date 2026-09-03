@@ -1,828 +1,1026 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-
-<title>돌이 사이트-돌이신문</title>
-
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<style>
+<title>돌이 사이트 - 돌돌코인 상점</title>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&display=swap" rel="stylesheet">
+
+<style>
 @font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');
+  font-family: "HancomMalrangmalrang";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2")
+       format("woff2");
   font-weight: 400;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2') format('woff2');
+  font-family: "HancomMalrangmalrang";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2")
+       format("woff2");
   font-weight: 700;
   font-display: swap;
 }
 
-body {
-
-  background: linear-gradient(
-    to right,
-    #000033,
-    #000010
-  );
-
-  margin: 0;
-
-  min-height: 100vh;
-
+:root {
+  --background: #03031b;
+  --surface: rgba(18, 18, 57, 0.78);
+  --surface-light: rgba(37, 37, 89, 0.72);
+  --border: rgba(145, 145, 255, 0.22);
+  --text: #ffffff;
+  --subtext: #b7b8e8;
+  --blue: #6c8cff;
+  --cyan: #48d9ff;
+  --purple: #a66cff;
+  --pink: #ff6ccf;
 }
 
 * {
-
+  box-sizing: border-box;
   user-select: none;
-
   -webkit-user-select: none;
-
-  -webkit-user-drag: none;
-
+  -webkit-tap-highlight-color: transparent;
 }
 
-input,
-textarea {
-
-  user-select: text;
-
-  -webkit-user-select: text;
-
+html {
+  scroll-behavior: smooth;
 }
 
-
-/* ==================================================
-   신문 버튼
-   ================================================== */
-
-.신문 {
-
-  position: absolute;
-
-  left: 20px;
-
-  font-size: 20px;
-
-  font-family: 'HancomMalrangmalrang';
-
-  background: none;
-
-  border: none;
-
-  padding: 0;
-
-  cursor: pointer;
-
-  white-space: nowrap;
-
-  text-align: left;
-
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: "HancomMalrangmalrang", sans-serif;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(76, 91, 255, 0.2), transparent 30%),
+    radial-gradient(circle at 90% 20%, rgba(157, 73, 255, 0.16), transparent 30%),
+    linear-gradient(135deg, #05052b 0%, #03031b 48%, #00000d 100%);
+  overflow-x: hidden;
 }
 
-
-/* ==================================================
-   신문 제목
-   ================================================== */
-
-.신문제목 {
-
-  display: inline-block;
-
+button {
+  font-family: inherit;
 }
 
+button:focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 4px;
+}
 
-/* ==================================================
-   상태
-   ================================================== */
+.page {
+  width: min(1180px, calc(100% - 36px));
+  margin: 0 auto;
+  padding: 28px 0 70px;
+}
 
-.신문상태 {
+/* 상단 네비게이션 */
 
-  display: inline-block;
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 55px;
+}
 
-  margin-left: 15px;
+.logo {
+  color: white;
+  text-decoration: none;
+  font-family: "Black Han Sans", sans-serif;
+  font-size: clamp(28px, 5vw, 52px);
+  letter-spacing: -2px;
+  text-shadow:
+    0 0 18px rgba(108, 140, 255, 0.5),
+    0 0 35px rgba(166, 108, 255, 0.2);
+  transition: 0.25s;
+}
 
+.logo:hover {
+  transform: translateY(-2px);
+  text-shadow:
+    0 0 22px rgba(72, 217, 255, 0.8),
+    0 0 40px rgba(166, 108, 255, 0.4);
+}
+
+.home-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  color: white;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border);
+  border-radius: 999px;
   font-size: 17px;
-
+  transition: 0.25s;
+  backdrop-filter: blur(12px);
 }
 
-
-/* ==================================================
-   읽음
-   ================================================== */
-
-.읽음 {
-
-  color: #4ade80;
-
+.home-button:hover {
+  background: rgba(108, 140, 255, 0.2);
+  border-color: rgba(108, 140, 255, 0.7);
+  transform: translateY(-2px);
 }
 
+/* 히어로 */
 
-/* ==================================================
-   읽기 가능
-   ================================================== */
-
-.읽기가능 {
-
-  color: #f5f5f5;
-
+.hero {
+  display: grid;
+  grid-template-columns: 1.25fr 0.75fr;
+  gap: 25px;
+  align-items: stretch;
+  margin-bottom: 70px;
 }
 
-
-/* ==================================================
-   최근 발행
-   ================================================== */
-
-.최근발행 {
-
-  color: #ffd43b;
-
+.hero-content {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(28px, 5vw, 58px);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  background:
+    linear-gradient(135deg, rgba(47, 57, 135, 0.48), rgba(19, 19, 62, 0.78)),
+    var(--surface);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.28);
+  animation: fadeUp 0.7s ease both;
 }
 
-
-/* ==================================================
-   잠금
-   ================================================== */
-
-.잠금 {
-
-  color: #777777;
-
-  cursor: not-allowed;
-
-}
-
-
-/* ==================================================
-   안내 문구
-   ================================================== */
-
-#상태안내 {
-
+.hero-content::before {
+  content: "";
   position: absolute;
-
-  top: 165px;
-
-  left: 20px;
-
-  font-family: 'HancomMalrangmalrang';
-
-  font-size: 16px;
-
-  color: #cccccc;
-
+  width: 260px;
+  height: 260px;
+  right: -100px;
+  top: -120px;
+  border-radius: 50%;
+  background: rgba(72, 217, 255, 0.18);
+  filter: blur(15px);
 }
 
+.hero-content::after {
+  content: "";
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  left: -80px;
+  bottom: -100px;
+  border-radius: 50%;
+  background: rgba(166, 108, 255, 0.2);
+  filter: blur(20px);
+}
+
+.eyebrow {
+  position: relative;
+  z-index: 1;
+  display: inline-block;
+  margin-bottom: 18px;
+  color: var(--cyan);
+  font-size: 15px;
+  letter-spacing: 3px;
+  font-weight: 700;
+}
+
+.hero h1 {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 18px;
+  font-size: clamp(34px, 5vw, 65px);
+  line-height: 1.1;
+  letter-spacing: -2px;
+}
+
+.hero h1 span {
+  background: linear-gradient(90deg, #ffffff, #8cceff, #c09aff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero-description {
+  position: relative;
+  z-index: 1;
+  max-width: 550px;
+  margin: 0;
+  color: var(--subtext);
+  font-size: clamp(16px, 2vw, 20px);
+  line-height: 1.8;
+}
+
+/* 코인 카드 */
+
+.wallet-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 290px;
+  padding: 30px;
+  border: 1px solid rgba(72, 217, 255, 0.25);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at 90% 10%, rgba(72, 217, 255, 0.18), transparent 38%),
+    linear-gradient(145deg, rgba(26, 42, 88, 0.9), rgba(18, 18, 53, 0.9));
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+  animation: fadeUp 0.7s 0.12s ease both;
+}
+
+.wallet-label {
+  color: var(--subtext);
+  font-size: 16px;
+}
+
+.coin-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  margin: 22px 0 12px;
+  border-radius: 50%;
+  color: #fff4a6;
+  font-size: 32px;
+  background: linear-gradient(145deg, #ffe477, #ffad27);
+  box-shadow:
+    0 0 0 7px rgba(255, 205, 69, 0.1),
+    0 0 35px rgba(255, 194, 45, 0.25);
+}
+
+.coin-value {
+  margin: 0;
+  font-family: "Jua", sans-serif;
+  font-size: clamp(30px, 4vw, 48px);
+  letter-spacing: 1px;
+  word-break: break-word;
+}
+
+.coin-unit {
+  margin-left: 5px;
+  color: #ffe477;
+  font-size: 18px;
+}
+
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 7px;
+  margin-top: 22px;
+  padding: 9px 15px;
+  color: #dce7ff;
+  border: 1px solid rgba(108, 140, 255, 0.35);
+  border-radius: 999px;
+  background: rgba(108, 140, 255, 0.15);
+  font-size: 16px;
+}
+
+/* 상품 영역 */
+
+.section-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 25px;
+  animation: fadeUp 0.7s 0.2s ease both;
+}
+
+.section-heading h2 {
+  margin: 0;
+  font-size: clamp(27px, 4vw, 40px);
+  letter-spacing: -1px;
+}
+
+.section-heading p {
+  margin: 0;
+  color: var(--subtext);
+  font-size: 16px;
+}
+
+.product-list {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.product-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 300px;
+  padding: 24px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  background: linear-gradient(145deg, rgba(28, 28, 75, 0.92), rgba(12, 12, 40, 0.92));
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.16);
+  opacity: 0;
+  animation: productAppear 0.65s ease forwards;
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.product-card::before {
+  content: "";
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  right: -80px;
+  top: -80px;
+  border-radius: 50%;
+  background: rgba(108, 140, 255, 0.14);
+  transition: 0.35s;
+}
+
+.product-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(108, 140, 255, 0.65);
+  box-shadow:
+    0 20px 45px rgba(0, 0, 0, 0.3),
+    0 0 25px rgba(108, 140, 255, 0.08);
+}
+
+.product-card:hover::before {
+  transform: scale(1.5);
+  background: rgba(72, 217, 255, 0.12);
+}
+
+.product-number {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 20px;
+  border-radius: 12px;
+  color: #cbd7ff;
+  background: rgba(108, 140, 255, 0.15);
+  border: 1px solid rgba(108, 140, 255, 0.2);
+  font-family: "Jua", sans-serif;
+  font-size: 19px;
+}
+
+.product-title {
+  position: relative;
+  z-index: 1;
+  min-height: 65px;
+  margin: 0 0 22px;
+  color: white;
+  font-size: 21px;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.product-price {
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+  margin-bottom: 20px;
+  color: #ffe477;
+  font-family: "Jua", sans-serif;
+  font-size: 22px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.product-price small {
+  color: #b7b8e8;
+  font-family: "HancomMalrangmalrang", sans-serif;
+  font-size: 13px;
+}
+
+.buy-button {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 48px;
+  border: 0;
+  border-radius: 14px;
+  color: white;
+  background: linear-gradient(100deg, #5575ff, #8b5cff);
+  box-shadow: 0 8px 20px rgba(91, 91, 255, 0.2);
+  font-size: 18px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+
+.buy-button:hover {
+  background: linear-gradient(100deg, #6684ff, #a06fff);
+  box-shadow: 0 10px 28px rgba(91, 91, 255, 0.38);
+  transform: translateY(-2px);
+}
+
+.buy-button:active {
+  transform: scale(0.96);
+}
+
+.buy-button:disabled {
+  cursor: not-allowed;
+  color: #aaaed0;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  transform: none;
+}
+
+.product-card.owned {
+  border-color: rgba(81, 220, 171, 0.45);
+}
+
+.product-card.owned .product-number {
+  color: #7ff0c6;
+  background: rgba(81, 220, 171, 0.13);
+  border-color: rgba(81, 220, 171, 0.25);
+}
+
+/* 안내 */
+
+.notice {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-top: 28px;
+  padding: 20px 22px;
+  color: var(--subtext);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.035);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* 로딩 */
+
+.loading-screen {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #03031b;
+  transition: opacity 0.45s, visibility 0.45s;
+}
+
+.loading-screen.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.loader-box {
+  text-align: center;
+}
+
+.loader {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 20px;
+  border: 4px solid rgba(255, 255, 255, 0.12);
+  border-top-color: var(--cyan);
+  border-right-color: var(--purple);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+.loader-box p {
+  margin: 0;
+  color: var(--subtext);
+  font-size: 17px;
+}
+
+/* 토스트 */
+
+.toast {
+  position: fixed;
+  z-index: 1100;
+  right: 25px;
+  bottom: 25px;
+  max-width: min(420px, calc(100% - 50px));
+  padding: 17px 22px;
+  color: white;
+  border: 1px solid rgba(108, 140, 255, 0.45);
+  border-radius: 16px;
+  background: rgba(22, 22, 63, 0.95);
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(18px);
+  opacity: 0;
+  transform: translateY(20px);
+  pointer-events: none;
+  transition: 0.3s;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.toast.success {
+  border-color: rgba(81, 220, 171, 0.55);
+}
+
+.toast.error {
+  border-color: rgba(255, 108, 145, 0.55);
+}
+
+/* 애니메이션 */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes productAppear {
+  from {
+    opacity: 0;
+    transform: translateY(25px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 반응형 */
+
+@media (max-width: 1050px) {
+  .product-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 780px) {
+  .page {
+    width: min(100% - 28px, 600px);
+    padding-top: 20px;
+  }
+
+  .topbar {
+    margin-bottom: 35px;
+  }
+
+  .hero {
+    grid-template-columns: 1fr;
+    margin-bottom: 50px;
+  }
+
+  .hero-content {
+    padding: 32px 25px;
+  }
+
+  .wallet-card {
+    min-height: auto;
+    padding: 25px;
+  }
+
+  .product-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .product-card {
+    min-height: 285px;
+    padding: 19px;
+  }
+
+  .product-title {
+    font-size: 18px;
+  }
+
+  .product-price {
+    font-size: 19px;
+  }
+}
+
+@media (max-width: 480px) {
+  .topbar {
+    align-items: flex-start;
+  }
+
+  .logo {
+    font-size: 30px;
+  }
+
+  .home-button {
+    padding: 9px 13px;
+    font-size: 14px;
+  }
+
+  .hero h1 {
+    font-size: 38px;
+  }
+
+  .hero-description {
+    font-size: 16px;
+  }
+
+  .section-heading {
+    display: block;
+  }
+
+  .section-heading h2 {
+    margin-bottom: 8px;
+  }
+
+  .product-list {
+    grid-template-columns: 1fr;
+  }
+
+  .product-card {
+    min-height: 0;
+  }
+
+  .product-title {
+    min-height: 0;
+  }
+
+  .toast {
+    right: 14px;
+    bottom: 14px;
+    max-width: calc(100% - 28px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
 </style>
-
 </head>
-
-
-<link
-  rel="preconnect"
-  href="https://fonts.googleapis.com"
->
-
-<link
-  rel="preconnect"
-  href="https://fonts.gstatic.com"
->
-
-<link
-  href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap"
-  rel="stylesheet"
->
-
 
 <body>
 
-
-<!-- ==================================================
-     사이트 홈 버튼
-     ================================================== -->
-
-<a
-  href="https://rockey-jason.github.io/doldol-site/"
-  style="text-decoration:none;"
->
-
-<button
-  style="
-    position:absolute;
-    top:0;
-    left:0;
-    background:none;
-    border:none;
-    color:#f5f5f5;
-    font-family:'Black Han Sans';
-    font-size:100px;
-    cursor:pointer;
-    white-space:nowrap;
-  "
->
-  돌이 사이트
-</button>
-
-</a>
-
-
-<!-- ==================================================
-     설명
-     ================================================== -->
-
-<p
-  style="
-    font-size:20px;
-    color:#f5f5f5;
-    font-family:'HancomMalrangmalrang';
-    margin-top:120px;
-    margin-left:20px;
-    white-space:nowrap;
-  "
->
-  돌이신문 확인-돌이와 관련된 이야기를 읽어보세요!
-</p>
-
-
-<!-- ==================================================
-     상태 안내
-     ================================================== -->
-
-<div id="상태안내">
-
-  <span style="color:#4ade80;">
-    ● 읽음
-  </span>
-
-  &nbsp;&nbsp;
-
-  <span style="color:#f5f5f5;">
-    ● 읽기 가능
-  </span>
-
-  &nbsp;&nbsp;
-
-  <span style="color:#ffd43b;">
-    ● 최근 발행 돌이신문
-  </span>
-
-  &nbsp;&nbsp;
-
-  <span style="color:#777777;">
-    ● 잠금
-  </span>
-
+<div class="loading-screen" id="loadingScreen">
+  <div class="loader-box">
+    <div class="loader"></div>
+    <p>돌돌코인 상점을 불러오는 중...</p>
+  </div>
 </div>
 
+<main class="page">
 
-<!-- ==================================================
-     신문 복제용 원본
-     ================================================== -->
+  <header class="topbar">
+    <a
+      class="logo"
+      href="https://rockey-jason.github.io/doldol-site/"
+    >
+      돌이 사이트
+    </a>
 
-<button
-  id="돌이신문"
-  class="신문"
-  style="display:none;"
->
-</button>
+    <a
+      class="home-button"
+      href="https://rockey-jason.github.io/doldol-site/"
+    >
+      ← 메인으로
+    </a>
+  </header>
 
+  <section class="hero">
+
+    <div class="hero-content">
+      <span class="eyebrow">DOLDOL COIN MART</span>
+
+      <h1>
+        돌돌코인으로<br>
+        <span>새로운 등급을 만나보세요.</span>
+      </h1>
+
+      <p class="hero-description">
+        돌돌코인을 사용해 다양한 프리미엄 쿠폰을 구매하고
+        돌이 사이트의 새로운 등급을 잠금 해제하세요!
+      </p>
+    </div>
+
+    <aside class="wallet-card">
+      <div>
+        <div class="wallet-label">현재 보유한 돌돌코인</div>
+        <div class="coin-icon">₿</div>
+
+        <p class="coin-value">
+          <span id="coinDisplay">확인 중...</span>
+          <span class="coin-unit">돌돌코인</span>
+        </p>
+      </div>
+
+      <div class="level-badge">
+        ✦ 현재 등급:
+        <strong id="levelDisplay">확인 중</strong>
+      </div>
+    </aside>
+
+  </section>
+
+  <section>
+    <div class="section-heading">
+      <div>
+        <h2>프리미엄 상품</h2>
+        <p>원하는 등급의 쿠폰을 선택해 보세요.</p>
+      </div>
+    </div>
+
+    <div class="product-list" id="productList"></div>
+
+    <div class="notice">
+      <span>ⓘ</span>
+      <span>
+        구매한 쿠폰은 현재 계정의 등급에 바로 적용됩니다.
+        이미 구매한 등급보다 낮거나 같은 쿠폰은 구매할 수 없습니다.
+      </span>
+    </div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
 
 <script type="module">
-
-import {
-  createClient
-}
-from "https://esm.sh/@supabase/supabase-js@2";
-
-
-/* ==================================================
-   Supabase
-   ================================================== */
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const supabase = createClient(
-
   "https://scttowfhygcpdirrekqm.supabase.co",
-
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
-
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
 );
 
-
-/* ==================================================
-   페이지 시작
-   ================================================== */
-
-window.addEventListener(
-  "DOMContentLoaded",
-  async () => {
-
-
-    /* ==================================================
-       로그인 확인
-       ================================================== */
-
-    const {
-
-      data: {
-        session
-      }
-
-    } = await supabase.auth.getSession();
-
-
-    if (!session) {
-
-      alert(
-        "로그인을 하지 않아 이 기능을 사용할 수 없습니다. 먼저 로그인을 완료해주세요."
-      );
-
-      location.href = "login.html";
-
-      return;
-
-    }
-
-
-    /* ==================================================
-       로그인한 사용자 가져오기
-       ================================================== */
-
-    const {
-
-      data: {
-        user
-      },
-
-      error: userError
-
-    } = await supabase.auth.getUser();
-
-
-    if (userError || !user) {
-
-      console.error(
-        "사용자 확인 오류:",
-        userError
-      );
-
-      alert(
-        "사용자 정보를 확인할 수 없습니다."
-      );
-
-      location.href = "login.html";
-
-      return;
-
-    }
-
-
-    /* ==================================================
-       users에서 사용자 정보 가져오기
-       
-       read_dori_news
-       → 현재 사용자가 읽을 수 있는 마지막 신문 번호
-
-       read_dori_news_numbers
-       → 실제로 읽은 신문 번호들
-       ================================================== */
-
-    const {
-
-      data: userInfo,
-
-      error: userInfoError
-
-    } = await supabase
-
-      .from("users")
-
-      .select(
-        "read_dori_news, read_dori_news_numbers"
-      )
-
-      .eq(
-        "user_id",
-        user.id
-      )
-
-      .single();
-
-
-    if (userInfoError) {
-
-      console.error(
-        "사용자 정보 조회 오류:",
-        userInfoError
-      );
-
-      alert(
-        "사용자 정보를 불러오지 못했습니다."
-      );
-
-      return;
-
-    }
-
-
-    /* ==================================================
-       읽을 수 있는 마지막 신문
-       ================================================== */
-
-    const 읽을수있는신문 =
-      Number(
-        userInfo.read_dori_news
-      ) || 0;
-
-
-    /* ==================================================
-       읽은 신문 번호 가져오기
-       
-       JSONB 예:
-       
-       [1, 2, 3, 5, 7]
-       
-       ================================================== */
-
-    let 읽은신문 =
-      userInfo.read_dori_news_numbers;
-
-
-    /* ==================================================
-       JSONB가 null이거나 배열이 아닐 경우
-       ================================================== */
-
-    if (!Array.isArray(읽은신문)) {
-
-      읽은신문 = [];
-
-    }
-
-
-    /* ==================================================
-       숫자로 변환
-       
-       ["1", "2", "3"]
-       같은 값이 들어와 있어도
-       
-       [1, 2, 3]
-       
-       으로 처리
-       ================================================== */
-
-    읽은신문 =
-      읽은신문
-
-        .map(
-          번호 => Number(번호)
-        )
-
-        .filter(
-          번호 => Number.isInteger(번호)
-        );
-
-
-    /* ==================================================
-       현재 DB에 존재하는 모든 신문 가져오기
-       ================================================== */
-
-    const {
-
-      data: 신문목록,
-
-      error: newsError
-
-    } = await supabase
-
-      .from("rockey_news")
-
-      .select("news_number")
-
-      .order(
-        "news_number",
-        {
-          ascending: true
-        }
-      );
-
-
-    if (newsError) {
-
-      console.error(
-        "신문 목록 조회 오류:",
-        newsError
-      );
-
-      alert(
-        "돌이신문 목록을 불러오지 못했습니다."
-      );
-
-      return;
-
-    }
-
-
-    if (
-      !신문목록 ||
-      신문목록.length === 0
-    ) {
-
-      alert(
-        "등록된 돌이신문이 없습니다."
-      );
-
-      return;
-
-    }
-
-
-    /* ==================================================
-       가장 최근 발행된 신문 번호
-       ================================================== */
-
-    const 최근신문번호 =
-      Math.max(
-        ...신문목록.map(
-          신문 =>
-            Number(
-              신문.news_number
-            )
-        )
-      );
-
-
-    /* ==================================================
-       원본 버튼
-       ================================================== */
-
-    const 원본 =
-      document.getElementById(
-        "돌이신문"
-      );
-
-
-    if (!원본) {
-
-      console.error(
-        "신문 원본 버튼을 찾을 수 없습니다."
-      );
-
-      return;
-
-    }
-
-
-    /* ==================================================
-       신문 목록 생성
-       ================================================== */
-
-    신문목록.forEach(
-      (신문, index) => {
-
-
-        const 번호 =
-          Number(
-            신문.news_number
-          );
-
-
-        /* ==================================================
-           복제
-           ================================================== */
-
-        const clone =
-          원본.cloneNode(
-            true
-          );
-
-
-        clone.id =
-          "news" + 번호;
-
-
-        clone.style.display =
-          "block";
-
-
-        clone.style.top =
-          (
-            210 +
-            index * 50
-          ) + "px";
-
-
-        clone.style.left =
-          "20px";
-
-
-        /* ==================================================
-           제목
-           ================================================== */
-
-        const 제목 =
-          document.createElement(
-            "span"
-          );
-
-
-        제목.className =
-          "신문제목";
-
-
-        제목.textContent =
-          `-제${번호}회 돌이신문`;
-
-
-        clone.appendChild(
-          제목
-        );
-
-
-        /* ==================================================
-           상태
-           ================================================== */
-
-        const 상태 =
-          document.createElement(
-            "span"
-          );
-
-
-        상태.className =
-          "신문상태";
-
-
-        /* ==================================================
-           이미 읽은 신문
-           ================================================== */
-
-        if (
-          읽은신문.includes(
-            번호
-          )
-        ) {
-
-
-          clone.classList.add(
-            "읽음"
-          );
-
-
-          상태.textContent =
-            "✅ 읽음";
-
-
-        }
-
-
-        /* ==================================================
-           아직 읽을 수 없는 신문
-           ================================================== */
-
-        else if (
-          번호 >
-          읽을수있는신문
-        ) {
-
-
-          clone.classList.add(
-            "잠금"
-          );
-
-
-          상태.textContent =
-            "🔒 잠금";
-
-
-          clone.disabled =
-            true;
-
-
-        }
-
-
-        /* ==================================================
-           아직 읽지 않은 신문
-           ================================================== */
-
-        else {
-
-
-          /* ================================================
-             가장 최근 발행된 신문
-             ================================================ */
-
-          if (
-            번호 ===
-            최근신문번호
-          ) {
-
-
-            clone.classList.add(
-              "최근발행"
-            );
-
-
-            상태.textContent =
-              "🆕 최근 발행 돌이신문";
-
-
-          }
-
-
-          /* ================================================
-             일반적으로 읽을 수 있는 신문
-             ================================================ */
-
-          else {
-
-
-            clone.classList.add(
-              "읽기가능"
-            );
-
-
-            상태.textContent =
-              "📖 읽기 가능";
-
-
-          }
-
-        }
-
-
-        /* ==================================================
-           상태 추가
-           ================================================== */
-
-        clone.appendChild(
-          상태
-        );
-
-
-        /* ==================================================
-           클릭 이벤트
-           ================================================== */
-
-        clone.onclick =
-          () => {
-
-
-            /* ==============================================
-               잠긴 신문
-               ============================================== */
-
-            if (
-              번호 >
-              읽을수있는신문
-            ) {
-
-              return;
-
-            }
-
-
-            /* ==============================================
-               현재 신문 번호 저장
-               ============================================== */
-
-            localStorage.setItem(
-              "rockeynews",
-              String(번호)
-            );
-
-
-            /* ==============================================
-               읽기 페이지 이동
-               ============================================== */
-
-            location.href =
-              "readingrockeynews.html";
-
-          };
-
-
-        /* ==================================================
-           페이지에 추가
-           ================================================== */
-
-        document.body.appendChild(
-          clone
-        );
-
-      }
-
-    );
-
+const 상품목록 = [
+  {
+    name: "프리미엄 쿠폰",
+    price: 100000,
+    level: 2,
+    levelName: "프리미엄"
+  },
+  {
+    name: "돌프리미엄 쿠폰",
+    price: 1000000,
+    level: 3,
+    levelName: "돌프리미엄"
+  },
+  {
+    name: "돌돌프리미엄 쿠폰",
+    price: 10000000,
+    level: 4,
+    levelName: "돌돌프리미엄"
+  },
+  {
+    name: "돌돌돌프리미엄 쿠폰",
+    price: 100000000,
+    level: 5,
+    levelName: "돌돌돌프리미엄"
+  },
+  {
+    name: "돌돌돌돌프리미엄 쿠폰",
+    price: 1000000000,
+    level: 6,
+    levelName: "돌돌돌돌프리미엄"
+  },
+  {
+    name: "돌돌돌돌돌프리미엄 쿠폰",
+    price: 10000000000,
+    level: 7,
+    levelName: "돌돌돌돌돌프리미엄"
+  },
+  {
+    name: "유사돌이 쿠폰",
+    price: 100000000000,
+    level: 8,
+    levelName: "유사돌이"
+  },
+  {
+    name: "돌이 쿠폰",
+    price: 1000000000000,
+    level: 9,
+    levelName: "돌이"
+  }
+];
+
+const 등급이름 = {
+  1: "일반",
+  2: "프리미엄",
+  3: "돌프리미엄",
+  4: "돌돌프리미엄",
+  5: "돌돌돌프리미엄",
+  6: "돌돌돌돌프리미엄",
+  7: "돌돌돌돌돌프리미엄",
+  8: "유사돌이",
+  9: "돌이",
+  10: "관리자"
+};
+
+const loadingScreen = document.getElementById("loadingScreen");
+const productList = document.getElementById("productList");
+const coinDisplay = document.getElementById("coinDisplay");
+const levelDisplay = document.getElementById("levelDisplay");
+const toast = document.getElementById("toast");
+
+let 현재사용자 = null;
+let 토스트타이머 = null;
+
+function 숫자표시(value) {
+  return Number(value || 0).toLocaleString("ko-KR");
+}
+
+function 토스트메시지(message, type = "success") {
+  clearTimeout(토스트타이머);
+
+  toast.textContent = message;
+  toast.className = `toast show ${type}`;
+
+  토스트타이머 = setTimeout(() => {
+    toast.classList.remove("show");
+  }, 3500);
+}
+
+function 상품카드생성(상품, index, 현재레벨) {
+  const card = document.createElement("article");
+  card.className = "product-card";
+  card.style.animationDelay = `${index * 0.07}s`;
+
+  const 이미보유 = 현재레벨 >= 상품.level;
+
+  if (이미보유) {
+    card.classList.add("owned");
   }
 
-);
+  card.innerHTML = `
+    <div class="product-number">${index + 1}</div>
 
+    <h3 class="product-title">
+      ${상품.name}
+    </h3>
+
+    <div class="product-price">
+      ${숫자표시(상품.price)} 돌돌코인
+      <br>
+      <small>구매 후 등급: ${상품.levelName}</small>
+    </div>
+
+    <button
+      class="buy-button"
+      type="button"
+      ${이미보유 ? "disabled" : ""}
+    >
+      ${이미보유 ? "✓ 보유 중" : "구매하기"}
+    </button>
+  `;
+
+  const buyButton = card.querySelector(".buy-button");
+
+  if (!이미보유) {
+    buyButton.addEventListener("click", () => 상품구매(상품, buyButton));
+  }
+
+  productList.appendChild(card);
+}
+
+async function 사용자정보가져오기(userId) {
+  const { data, error } = await supabase
+    .from("users")
+    .select("doldolcoin,user_level")
+    .eq("user_id", userId)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
+}
+
+function 화면갱신(userInfo) {
+  const 현재코인 = Number(userInfo.doldolcoin || 0);
+  const 현재레벨 = Number(userInfo.user_level || 1);
+
+  coinDisplay.textContent = 숫자표시(현재코인);
+  levelDisplay.textContent = 등급이름[현재레벨] || `레벨 ${현재레벨}`;
+
+  productList.innerHTML = "";
+
+  상품목록.forEach((상품, index) => {
+    상품카드생성(상품, index, 현재레벨);
+  });
+}
+
+async function 상품구매(상품, buyButton) {
+  if (!현재사용자) {
+    토스트메시지("로그인이 필요합니다.", "error");
+    return;
+  }
+
+  buyButton.disabled = true;
+  buyButton.textContent = "구매 중...";
+
+  try {
+    const 최신정보 = await 사용자정보가져오기(현재사용자.id);
+
+    const 현재코인 = Number(최신정보.doldolcoin || 0);
+    const 현재레벨 = Number(최신정보.user_level || 1);
+
+    if (현재코인 < 상품.price) {
+      토스트메시지("돌돌코인이 부족합니다.", "error");
+      buyButton.disabled = false;
+      buyButton.textContent = "구매하기";
+      return;
+    }
+
+    if (현재레벨 >= 상품.level) {
+      토스트메시지("이미 보유하고 있는 쿠폰입니다.", "error");
+      화면갱신(최신정보);
+      return;
+    }
+
+    const 남은코인 = 현재코인 - 상품.price;
+
+    const { error: updateError } = await supabase
+      .from("users")
+      .update({
+        doldolcoin: 남은코인,
+        user_level: 상품.level
+      })
+      .eq("user_id", 현재사용자.id);
+
+    if (updateError) {
+      throw updateError;
+    }
+
+    const 변경된정보 = {
+      doldolcoin: 남은코인,
+      user_level: 상품.level
+    };
+
+    화면갱신(변경된정보);
+
+    토스트메시지(
+      `${상품.name} 구매 완료! 남은 돌돌코인: ${숫자표시(남은코인)}`,
+      "success"
+    );
+
+  } catch (error) {
+    console.error("상품 구매 오류:", error);
+    토스트메시지("구매에 실패했습니다. 잠시 후 다시 시도해 주세요.", "error");
+
+    buyButton.disabled = false;
+    buyButton.textContent = "구매하기";
+  }
+}
+
+async function 시작하기() {
+  try {
+    const {
+      data: { session }
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      alert("로그인이 필요합니다.");
+      location.href = "https://rockey-jason.github.io/doldol-site/";
+      return;
+    }
+
+    현재사용자 = session.user;
+
+    const userInfo = await 사용자정보가져오기(현재사용자.id);
+
+    화면갱신(userInfo);
+
+  } catch (error) {
+    console.error("상점 로딩 오류:", error);
+    토스트메시지("사용자 정보를 불러오지 못했습니다.", "error");
+  } finally {
+    setTimeout(() => {
+      loadingScreen.classList.add("hidden");
+    }, 350);
+  }
+}
+
+시작하기();
 </script>
-
 
 </body>
 </html>
