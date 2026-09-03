@@ -1,494 +1,917 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-<title>돌이 사이트-돌이와 관련된 정보</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<script type="module">
-document.addEventListener("DOMContentLoaded", () => {
+<title>돌이 사이트 - 돌이와 관련된 정보</title>
 
-let 볼정보 = 0;
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
 
-const 정보창 = document.getElementById("정보창");
-
-const 내용 = {
-  1: `
-  <h1>★ 돌이</h1>
-<span class="제목">-개요<br></span>
-돌이는 펨브로크 웰시코기이다. 돌이의 생일은 2021년 10월 3일이다. (그외 추가할 내용들)<br>
-
-<span class="제목">-생김새<br></span>
-돌이는 짧을 다리를 가지고 있으며 짧은 꼬리를 가지고 있다. 
-돌이는 발, 배, 입주변, 목, 가슴 쪽에는 흰색 털을 가지고, 나머지 곳들은 주로 황갈색 털을 가진다. 돌이의 신장은 약 17cm 정도로 
-일반 웰시코기의 신장인 25~32cm에 비해 매우 작은 편이다. 
-(그외 추가할 내용들)<br>
-
-<span class="제목">-성격<br></span>
-돌이는 잠시도 가만히 있지 못할 정도로 매우 활동적이고 활발하다. 
-<del>근데 너무 활발해서 정신 사납기 까지 한 정도다</del>. 
-활동적인 돌이는 'Rockey Party come on, come on. Rockey Party (Rockey Party!)'라는 가사가 반복되는 노래를 반복적으로 부르고 듣는 
-Rockey Party(로키 파티)를 열어서 Rockey Party에 같이 있는 사람들 또한 활발하게 만든다. 
-또한 돌이는 친화적이다. 처음 보는 사람과도 잘 놀수 있고, 금세 친해질수 있다.
-하지만 돌이는 스스로가 가장 완벽한 존재라고 생각하고 그것을 자랑스럽게 여기며 이상한 짓들을 하여 사람들에게 인식이 좋지는 않다.
-(그외 추가할 내용들)<br>
-
-<span class="제목">-업적</span><br>
-돌이의 업적으로는 돌이가 만든 여러 발명품들이 있다. 돌이가 만든 발명품 들에서는 <span class="도로늄정보">도로늄</span>, 
-<span class="로키랜드정보">로키랜드</span>, <span class="돌이신문정보">돌이신문</span> 등이 있다.
-돌이는 자신의 지식을 바탕으로 로스쿨을 무려 2일 만에 졸업해 결국 변호사, 판사 자격을 모두 얻게 됬다. 
-<span class="돌이판사정보">돌이 판사</span>라는 부가 설명도 얻게 되었다.
-  `,
-
-  2: `
-  <h1>★ 돌이의 친구들</h1>
-  돌이에게는 여러 친구들이 있습니다.<br>
-  바게트, 윈터 등 다양한 친구들이 있습니다.
-  `,
-
-  3: `
-  <h1>★ 돌이신문</h1>
-  돌이 세계의 최신 소식을 전달하는 신문입니다.
-  `,
-
-  4: `
-  <h1>★ 도로늄</h1>
-  푸른빛으로 빛나는 특별한 광물입니다.
-  `,
-
-  5: `
-  <h1>★ 돌돌바이러스</h1>
-  돌돌행성에서 발견된 신비한 바이러스입니다.
-  돌이다!
-  `,
-
-  6: `
-  <h1>★ 돌이의 기지들</h1>
-  돌이가 만든 여러 기지에 대한 정보입니다.
-  `,
-
-  7: `
-  <h1>★ 돌이 암호</h1>
-  돌이 세계에서 사용하는 암호입니다.
-  `,
-
-  8: `
-  <h1>★ 로키랜드</h1>
-  돌이 세계 최고의 놀이공원입니다.
-  `,
-
-  9: `
-  <h1>★ 돌이 사이트</h1>
-  돌이와 관련된 모든 정보를 볼 수 있는 사이트입니다.
-  `,
-  10: `
-  <h1>★ 돌이 판사</h1>
-  돌이와 관련된 모든 정보를 볼 수 있는 사이트입니다.
-  `
-};
-
-function 버튼선택(번호){
-
-    document
-        .querySelectorAll(".메뉴버튼")
-        .forEach(btn => btn.classList.remove("선택"));
-
-    const 버튼목록 = {
-        1: "돌이",
-        2: "돌이의 친구들",
-        3: "돌이신문",
-        4: "도로늄",
-        5: "돌돌바이러스",
-        6: "돌이의 기지들",
-        7: "돌이 암호",
-        8: "로키랜드",
-        9: "돌이 사이트",
-       10: "돌이판사"
-    };
-
-    document
-        .getElementById(버튼목록[번호])
-        ?.classList.add("선택");
-}
-  
-function 정보보기(번호){
-    볼정보 = 번호;
-    정보창.innerHTML = 내용[번호];
-
-    버튼선택(번호);
-  // 내용 안의 링크 이벤트 연결
-const 도로늄 = 정보창.querySelector(".도로늄정보");
-if (도로늄) {
-  도로늄.onclick = () => 정보보기(4);
-}
-
-const 로키랜드 = 정보창.querySelector(".로키랜드정보");
-if (로키랜드) {
-  로키랜드.onclick = () => 정보보기(8);
-}
-
-const 돌이신문 = 정보창.querySelector(".돌이신문정보");
-if (돌이신문) {
-  돌이신문.onclick = () => 정보보기(3);
-}
-
-const 돌이판사 = 정보창.querySelector(".돌이판사정보");
-if (돌이판사) {
-  돌이판사.onclick = () => 정보보기(10);
-}
-}
-
-
-
-
-document.getElementById("돌이").onclick = () => {
-  정보보기(1);
-};
-
-document.getElementById("돌이의 친구들").onclick = () => {
-  정보보기(2);
-};
-
-document.getElementById("돌이신문").onclick = () => {
-  정보보기(3);
-};
-
-document.getElementById("도로늄").onclick = () => {
-  정보보기(4);
-};
-
-document.getElementById("돌돌바이러스").onclick = () => {
-  정보보기(5);
-};
-
-document.getElementById("돌이의 기지들").onclick = () => {
-  정보보기(6);
-};
-
-document.getElementById("돌이 암호").onclick = () => {
-  정보보기(7);
-};
-
-document.getElementById("로키랜드").onclick = () => {
-  정보보기(8);
-};
-
-document.getElementById("돌이 사이트").onclick = () => {
-  정보보기(9);
-};
-
-document.getElementById("돌이판사").onclick = () => {
-  정보보기(10);
-};
-
-
-});
-</script>
 <style>
-
-
 @font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');
-  font-weight: 700;
+  font-family: "HancomMalrangmalrang";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2")
+       format("woff2");
+  font-weight: 400;
   font-display: swap;
 }
 
 @font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2') format('woff2');
+  font-family: "HancomMalrangmalrang";
+  src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2")
+       format("woff2");
   font-weight: 700;
   font-display: swap;
 }
-  
 
-  .제목 {
-  font-size:30px;
-}
-  
-  del {
-  color: #777;
-}
-
-.도로늄정보,
-.로키랜드정보,
-.돌이신문정보,
-.돌이판사정보{
-    color:#6ec8ff;
-    cursor:pointer;
-    display:inline-block;
-    transition:transform 0.2s ease, color 0.2s ease;
+:root {
+  --bg: #03031b;
+  --bg2: #07072b;
+  --panel: rgba(20, 21, 63, 0.78);
+  --panel-light: rgba(40, 43, 96, 0.72);
+  --border: rgba(142, 154, 255, 0.2);
+  --border-hover: rgba(116, 190, 255, 0.65);
+  --text: #f8f9ff;
+  --subtext: #aeb4d8;
+  --blue: #6ca8ff;
+  --cyan: #62dcff;
+  --purple: #a77bff;
+  --yellow: #ffe47c;
 }
 
-.도로늄정보:hover,
-.로키랜드정보:hover,
-.돌이신문정보:hover,
-.돌이판사정보:hover{
-    transform:scale(1.1);
-    color:#9fe3ff;
-}
-  
-.메뉴버튼{
-    background:none;
-    border:none;
-    color:white;
-    font-family: 'HancomMalrangmalrang';
-    font-size:20px;
-    cursor:pointer;
-    transform:scale(1);
-    transition:
-        color 0.25s ease,
-        transform 0.25s ease;
-}
-
-.메뉴버튼.선택{
-    color:yellow !important;
-    transform:scale(1.1);
-}
-
-  
-body {
-  background: linear-gradient(to right, #000033, #000010);
-  margin: 0;
-}
-
-  * {
+* {
+  box-sizing: border-box;
   user-select: none;
   -webkit-user-select: none;
   -webkit-user-drag: none;
 }
 
-input,
-textarea {
-  user-select: text;
-  -webkit-user-select: text;
+html {
+  scroll-behavior: smooth;
 }
-  
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--text);
+  font-family: "HancomMalrangmalrang", sans-serif;
+  background:
+    radial-gradient(
+      circle at 12% 5%,
+      rgba(69, 91, 255, 0.22),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 90% 35%,
+      rgba(141, 75, 255, 0.17),
+      transparent 32%
+    ),
+    linear-gradient(135deg, var(--bg2), var(--bg));
+  overflow-x: hidden;
+}
+
+button,
+a {
+  font-family: inherit;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--cyan);
+  outline-offset: 4px;
+}
+
+/* 배경 장식 */
+
+.background-orb {
+  position: fixed;
+  z-index: -1;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  opacity: 0.22;
+}
+
+.orb-one {
+  top: 15%;
+  left: -150px;
+  background: #4d65ff;
+}
+
+.orb-two {
+  right: -150px;
+  bottom: 5%;
+  background: #a25cff;
+}
+
+/* 전체 레이아웃 */
+
+.page {
+  width: min(1320px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 28px 0 70px;
+}
+
+/* 상단 */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 25px;
+  margin-bottom: 48px;
+  animation: fadeDown 0.7s ease both;
+}
+
+.logo {
+  color: white;
+  text-decoration: none;
+  font-family: "Black Han Sans", sans-serif;
+  font-size: clamp(32px, 5vw, 62px);
+  letter-spacing: -3px;
+  text-shadow:
+    0 0 20px rgba(103, 148, 255, 0.45),
+    0 0 45px rgba(139, 91, 255, 0.18);
+  transition: 0.3s;
+}
+
+.logo:hover {
+  transform: translateY(-3px);
+  text-shadow:
+    0 0 25px rgba(98, 220, 255, 0.8),
+    0 0 45px rgba(167, 123, 255, 0.4);
+}
+
+.home-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 21px;
+  color: #e8edff;
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.055);
+  backdrop-filter: blur(14px);
+  transition: 0.25s;
+  white-space: nowrap;
+}
+
+.home-button:hover {
+  color: white;
+  border-color: var(--border-hover);
+  background: rgba(87, 132, 255, 0.16);
+  transform: translateY(-2px);
+}
+
+/* 소개 영역 */
+
+.intro {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 35px;
+  animation: fadeUp 0.7s 0.1s ease both;
+}
+
+.intro-label {
+  display: inline-block;
+  margin-bottom: 13px;
+  color: var(--cyan);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 3px;
+}
+
+.intro h1 {
+  margin: 0;
+  font-size: clamp(34px, 5vw, 58px);
+  line-height: 1.15;
+  letter-spacing: -2px;
+}
+
+.intro h1 span {
+  background: linear-gradient(90deg, #ffffff, #9bdcff, #c2a2ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.intro p {
+  max-width: 570px;
+  margin: 16px 0 0;
+  color: var(--subtext);
+  font-size: 18px;
+  line-height: 1.75;
+}
+
+/* 본문 */
+
+.content-layout {
+  display: grid;
+  grid-template-columns: 245px minmax(0, 1fr);
+  gap: 25px;
+  align-items: start;
+}
+
+/* 사이드바 */
+
+.sidebar {
+  position: sticky;
+  top: 22px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 25px;
+  background: rgba(14, 15, 48, 0.75);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 20px 55px rgba(0, 0, 0, 0.2);
+  animation: fadeUp 0.7s 0.2s ease both;
+}
+
+.sidebar-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 18px;
+  padding: 0 5px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  color: #dfe5ff;
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.sidebar-title::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan);
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.메뉴버튼 {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 43px;
+  padding: 10px 13px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  color: #aeb6df;
+  background: transparent;
+  font-size: 17px;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    color 0.25s ease,
+    background 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.메뉴버튼::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  margin-right: 11px;
+  border-radius: 50%;
+  background: #68709f;
+  transition: 0.25s;
+}
+
+.메뉴버튼:hover {
+  color: white;
+  background: rgba(104, 139, 255, 0.1);
+  border-color: rgba(108, 150, 255, 0.14);
+  transform: translateX(4px);
+}
+
+.메뉴버튼:hover::before {
+  background: var(--cyan);
+}
+
+.메뉴버튼.선택 {
+  color: white;
+  background:
+    linear-gradient(
+      100deg,
+      rgba(87, 125, 255, 0.3),
+      rgba(132, 91, 255, 0.16)
+    );
+  border-color: rgba(108, 150, 255, 0.3);
+  box-shadow: inset 3px 0 0 var(--cyan);
+}
+
+.메뉴버튼.선택::before {
+  background: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan);
+}
+
+/* 정보 카드 */
+
+.info-panel {
+  position: relative;
+  min-height: 560px;
+  overflow: hidden;
+  padding: clamp(25px, 4vw, 48px);
+  border: 1px solid var(--border);
+  border-radius: 30px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(30, 32, 83, 0.9),
+      rgba(12, 13, 43, 0.94)
+    );
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  animation: fadeUp 0.7s 0.28s ease both;
+}
+
+.info-panel::before {
+  content: "";
+  position: absolute;
+  top: -150px;
+  right: -130px;
+  width: 330px;
+  height: 330px;
+  border-radius: 50%;
+  background: rgba(91, 125, 255, 0.12);
+  filter: blur(25px);
+  pointer-events: none;
+}
+
+.info-panel::after {
+  content: "";
+  position: absolute;
+  bottom: -170px;
+  left: -130px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: rgba(160, 91, 255, 0.1);
+  filter: blur(30px);
+  pointer-events: none;
+}
+
+.info-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 30px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+}
+
+.info-category {
+  color: var(--cyan);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.info-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid rgba(108, 140, 255, 0.25);
+  border-radius: 12px;
+  color: #cdd7ff;
+  background: rgba(108, 140, 255, 0.12);
+  font-family: "Jua", sans-serif;
+  font-size: 18px;
+}
+
+#정보창 {
+  position: relative;
+  z-index: 1;
+  color: #e9ecff;
+  font-size: 19px;
+  line-height: 1.9;
+  animation: contentIn 0.45s ease both;
+}
+
+#정보창 h1 {
+  margin: 0 0 30px;
+  color: white;
+  font-size: clamp(30px, 4vw, 43px);
+  line-height: 1.2;
+  letter-spacing: -1px;
+}
+
+#정보창 h1::after {
+  content: "";
+  display: block;
+  width: 65px;
+  height: 4px;
+  margin-top: 17px;
+  border-radius: 10px;
+  background: linear-gradient(90deg, var(--cyan), var(--purple));
+}
+
+#정보창 .제목 {
+  display: inline-block;
+  margin-top: 20px;
+  margin-bottom: 3px;
+  color: #bcd7ff;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+#정보창 .제목:first-of-type {
+  margin-top: 0;
+}
+
+#정보창 del {
+  color: #686d91;
+}
+
+.도로늄정보,
+.로키랜드정보,
+.돌이신문정보,
+.돌이판사정보 {
+  display: inline-block;
+  color: var(--cyan);
+  cursor: pointer;
+  font-weight: 700;
+  transition:
+    color 0.2s ease,
+    transform 0.2s ease,
+    text-shadow 0.2s ease;
+}
+
+.도로늄정보:hover,
+.로키랜드정보:hover,
+.돌이신문정보:hover,
+.돌이판사정보:hover {
+  color: #b8efff;
+  transform: translateY(-2px);
+  text-shadow: 0 0 15px rgba(98, 220, 255, 0.45);
+}
+
+/* 안내 문구 */
+
+.info-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 25px;
+  color: #7e87b3;
+  font-size: 14px;
+}
+
+.info-footer span {
+  color: var(--cyan);
+}
+
+/* 등장 애니메이션 */
+
+@keyframes fadeDown {
+  from {
+    opacity: 0;
+    transform: translateY(-22px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes contentIn {
+  from {
+    opacity: 0;
+    transform: translateY(13px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 모바일 */
+
+@media (max-width: 900px) {
+  .content-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+  }
+
+  .menu-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .info-panel {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .page {
+    width: min(100% - 24px, 520px);
+    padding-top: 18px;
+  }
+
+  .topbar {
+    margin-bottom: 35px;
+  }
+
+  .logo {
+    font-size: 31px;
+    letter-spacing: -2px;
+  }
+
+  .home-button {
+    padding: 10px 13px;
+    font-size: 14px;
+  }
+
+  .intro {
+    display: block;
+    margin-bottom: 25px;
+  }
+
+  .intro h1 {
+    font-size: 37px;
+  }
+
+  .intro p {
+    font-size: 16px;
+  }
+
+  .sidebar {
+    padding: 15px;
+    border-radius: 21px;
+  }
+
+  .menu-list {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .메뉴버튼 {
+    min-height: 40px;
+    padding: 9px 10px;
+    font-size: 15px;
+  }
+
+  .메뉴버튼::before {
+    margin-right: 7px;
+  }
+
+  .info-panel {
+    padding: 25px 21px;
+    border-radius: 24px;
+  }
+
+  #정보창 {
+    font-size: 17px;
+    line-height: 1.8;
+  }
+
+  #정보창 h1 {
+    font-size: 32px;
+  }
+
+  #정보창 .제목 {
+    font-size: 23px;
+  }
+
+  .info-top {
+    margin-bottom: 24px;
+  }
+}
+
+@media (max-width: 380px) {
+  .topbar {
+    align-items: flex-start;
+  }
+
+  .home-button {
+    font-size: 13px;
+  }
+
+  .menu-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
 </style>
 </head>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-<link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
 <body>
 
-<a href="https://rockey-jason.github.io/doldol-site/" style="text-decoration:none;">
-<button style="
-position:absolute;
-top:0;
-left:0;
-background:none;
-border:none;
-color:#f5f5f5;
-font-family:'Black Han Sans';
-font-size:100px;
-cursor:pointer;
-">
-돌이 사이트
-</button>
-</a>
+<div class="background-orb orb-one"></div>
+<div class="background-orb orb-two"></div>
 
-<p style="
-font-size:20px;
-color:#f5f5f5;
-font-family: 'HancomMalrangmalrang';
-margin-top:120px;
-margin-left:20px;
-">
-돌이와 관련된 정보-돌이에 대해 알아보세요!
-</p>
+<main class="page">
 
+  <header class="topbar">
+    <a
+      class="logo"
+      href="https://rockey-jason.github.io/doldol-site/"
+    >
+      돌이 사이트
+    </a>
 
+    <a
+      class="home-button"
+      href="https://rockey-jason.github.io/doldol-site/"
+    >
+      ← 메인으로
+    </a>
+  </header>
 
-<button id="돌이" class="메뉴버튼"
-style="
-position:absolute;
-top:160px;
-left:0px;
-font-size:20px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-color:white;
-cursor:pointer;
-z-index:2;
-">
--돌이
-</button>
+  <section class="intro">
+    <div>
+      <span class="intro-label">DORI ENCYCLOPEDIA</span>
 
-<button id="돌이의 친구들" class="메뉴버튼"
-style="
-position:absolute;
-top:190px;
-left:0px;
-font-size:20px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-color:white;
-cursor:pointer;
-z-index:2;
-">
--돌이의 친구들
-</button>
+      <h1>
+        돌이와 관련된<br>
+        <span>정보를 알아보세요.</span>
+      </h1>
 
-<button id="돌이신문" class="메뉴버튼"
-style="
-position:absolute;
-top:220px;
-left:0px;
-font-size:20px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-color:white;
-cursor:pointer;
-z-index:2;
-">
--돌이신문
-</button>
+      <p>
+        돌이 세계의 인물, 발명품, 장소와 사건에 대한
+        다양한 정보를 한곳에서 확인할 수 있습니다.
+      </p>
+    </div>
+  </section>
 
-<button id="도로늄" class="메뉴버튼"
-style="
-position:absolute;
-top:250px;
-left:0px;
-font-size:20px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-color:white;
-cursor:pointer;
-z-index:2;
-">
--도로늄
-</button>
+  <section class="content-layout">
 
-<button id="돌돌바이러스" class="메뉴버튼"
-style="
-position:absolute;
-top:280px;
-left:0px;
-font-size:20px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-color:white;
-cursor:pointer;
-z-index:2;
-">
--돌돌바이러스
-</button>
+    <aside class="sidebar">
+      <h2 class="sidebar-title">정보 목록</h2>
 
-<button id="돌이의 기지들" class="메뉴버튼"
-style="
-position:absolute;
-top:310px;
-left:0px;
-font-size:20px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-color:white;
-cursor:pointer;
-z-index:2;
-">
--돌이의 기지들
-</button>
+      <nav class="menu-list">
+        <button id="돌이" class="메뉴버튼">돌이</button>
+        <button id="돌이의 친구들" class="메뉴버튼">돌이의 친구들</button>
+        <button id="돌이신문" class="메뉴버튼">돌이신문</button>
+        <button id="도로늄" class="메뉴버튼">도로늄</button>
+        <button id="돌돌바이러스" class="메뉴버튼">돌돌바이러스</button>
+        <button id="돌이의 기지들" class="메뉴버튼">돌이의 기지들</button>
+        <button id="돌이 암호" class="메뉴버튼">돌이 암호</button>
+        <button id="로키랜드" class="메뉴버튼">로키랜드</button>
+        <button id="돌이 사이트" class="메뉴버튼">돌이 사이트</button>
+        <button id="돌이판사" class="메뉴버튼">돌이 판사</button>
+      </nav>
+    </aside>
 
-<button id="돌이 암호" class="메뉴버튼"
-style="
-position:absolute;
-top:340px;
-left:0px;
-font-size:20px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-color:white;
-cursor:pointer;
-z-index:2;
-">
--돌이 암호
-</button>
+    <section class="info-panel">
 
-<button id="로키랜드" class="메뉴버튼"
-style="
-position:absolute;
-top:370px;
-left:0px;
-font-size:20px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-color:white;
-cursor:pointer;
-z-index:2;
-">
--로키랜드
-</button>
+      <div class="info-top">
+        <span class="info-category">DORI INFORMATION</span>
+        <span class="info-number" id="정보번호">—</span>
+      </div>
 
-<button id="돌이 사이트" class="메뉴버튼"
-style="
-position:absolute;
-top:400px;
-left:0px;
-font-size:20px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-color:white;
-cursor:pointer;
-z-index:2;
-">
--돌이 사이트
-</button>
+      <div id="정보창">
+        <h1>정보를 선택하세요!</h1>
+        <p>
+          왼쪽 메뉴에서 항목을 선택하면
+          돌이와 관련된 정보를 확인할 수 있습니다.
+        </p>
+      </div>
 
-<button id="돌이판사" class="메뉴버튼"
-style="
-position:absolute;
-top:430px;
-left:0px;
-font-size:20px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-color:white;
-cursor:pointer;
-z-index:2;
-">
--돌이 판사
-</button>
+      <div class="info-footer">
+        <span>✦</span>
+        <span>돌이 세계관 정보 데이터베이스</span>
+      </div>
 
-<div id="정보창"
-style="
-position:absolute;
-top:160px;
-left:300px;
-width:600px;
-min-height:300px;
-background:#111133;
-border-radius:20px;
-padding:30px;
-color:white;
-font-family: 'HancomMalrangmalrang';
-font-size:20px;
-">
-정보를 선택하세요!
-</div>
+    </section>
 
-<div id="옆에 창"
-style="
-position:absolute;
-top:153px;
-left:0px;
-width:100px;
-min-height:250px;
-background:gray;
-border-radius:20px;
-padding:30px;
-color:white;
-font-family: 'HancomMalrangmalrang';
-font-size:20px;
-z-index:1;
-">
+  </section>
 
-</div>
+</main>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  let 볼정보 = 0;
+
+  const 정보창 = document.getElementById("정보창");
+  const 정보번호 = document.getElementById("정보번호");
+
+  const 내용 = {
+    1: `
+      <h1>★ 돌이</h1>
+
+      <span class="제목">-개요<br></span>
+      돌이는 펨브로크 웰시코기이다.
+      돌이의 생일은 2021년 10월 3일이다.
+      (그외 추가할 내용들)<br>
+
+      <span class="제목">-생김새<br></span>
+      돌이는 짧을 다리를 가지고 있으며 짧은 꼬리를 가지고 있다.
+      돌이는 발, 배, 입주변, 목, 가슴 쪽에는 흰색 털을 가지고,
+      나머지 곳들은 주로 황갈색 털을 가진다.
+      돌이의 신장은 약 17cm 정도로
+      일반 웰시코기의 신장인 25~32cm에 비해 매우 작은 편이다.
+      (그외 추가할 내용들)<br>
+
+      <span class="제목">-성격<br></span>
+      돌이는 잠시도 가만히 있지 못할 정도로 매우 활동적이고 활발하다.
+      <del>근데 너무 활발해서 정신 사납기 까지 한 정도다</del>.
+      활동적인 돌이는
+      'Rockey Party come on, come on. Rockey Party (Rockey Party!)'
+      라는 가사가 반복되는 노래를 반복적으로 부르고 듣는
+      Rockey Party(로키 파티)를 열어서 Rockey Party에 같이 있는 사람들 또한
+      활발하게 만든다.
+      또한 돌이는 친화적이다. 처음 보는 사람과도 잘 놀수 있고,
+      금세 친해질수 있다.
+      하지만 돌이는 스스로가 가장 완벽한 존재라고 생각하고
+      그것을 자랑스럽게 여기며 이상한 짓들을 하여
+      사람들에게 인식이 좋지는 않다.
+      (그외 추가할 내용들)<br>
+
+      <span class="제목">-업적</span><br>
+      돌이의 업적으로는 돌이가 만든 여러 발명품들이 있다.
+      돌이가 만든 발명품들에서는
+      <span class="도로늄정보">도로늄</span>,
+      <span class="로키랜드정보">로키랜드</span>,
+      <span class="돌이신문정보">돌이신문</span> 등이 있다.
+
+      돌이는 자신의 지식을 바탕으로 로스쿨을 무려 2일 만에 졸업해
+      결국 변호사, 판사 자격을 모두 얻게 됬다.
+      <span class="돌이판사정보">돌이 판사</span>라는 부가 설명도 얻게 되었다.
+    `,
+
+    2: `
+      <h1>★ 돌이의 친구들</h1>
+      돌이에게는 여러 친구들이 있습니다.<br>
+      바게트, 윈터 등 다양한 친구들이 있습니다.
+    `,
+
+    3: `
+      <h1>★ 돌이신문</h1>
+      돌이 세계의 최신 소식을 전달하는 신문입니다.
+    `,
+
+    4: `
+      <h1>★ 도로늄</h1>
+      푸른빛으로 빛나는 특별한 광물입니다.
+    `,
+
+    5: `
+      <h1>★ 돌돌바이러스</h1>
+      돌돌행성에서 발견된 신비한 바이러스입니다.<br>
+      돌이다!
+    `,
+
+    6: `
+      <h1>★ 돌이의 기지들</h1>
+      돌이가 만든 여러 기지에 대한 정보입니다.
+    `,
+
+    7: `
+      <h1>★ 돌이 암호</h1>
+      돌이 세계에서 사용하는 암호입니다.
+    `,
+
+    8: `
+      <h1>★ 로키랜드</h1>
+      돌이 세계 최고의 놀이공원입니다.
+    `,
+
+    9: `
+      <h1>★ 돌이 사이트</h1>
+      돌이와 관련된 모든 정보를 볼 수 있는 사이트입니다.
+    `,
+
+    10: `
+      <h1>★ 돌이 판사</h1>
+      돌이와 관련된 모든 정보를 볼 수 있는 사이트입니다.
+    `
+  };
+
+  const 버튼목록 = {
+    1: "돌이",
+    2: "돌이의 친구들",
+    3: "돌이신문",
+    4: "도로늄",
+    5: "돌돌바이러스",
+    6: "돌이의 기지들",
+    7: "돌이 암호",
+    8: "로키랜드",
+    9: "돌이 사이트",
+    10: "돌이판사"
+  };
+
+  const 메뉴번호 = {
+    "돌이": 1,
+    "돌이의 친구들": 2,
+    "돌이신문": 3,
+    "도로늄": 4,
+    "돌돌바이러스": 5,
+    "돌이의 기지들": 6,
+    "돌이 암호": 7,
+    "로키랜드": 8,
+    "돌이 사이트": 9,
+    "돌이판사": 10
+  };
+
+  function 버튼선택(번호) {
+    document
+      .querySelectorAll(".메뉴버튼")
+      .forEach(btn => btn.classList.remove("선택"));
+
+    document
+      .getElementById(버튼목록[번호])
+      ?.classList.add("선택");
+  }
+
+  function 링크이벤트연결() {
+    const 링크목록 = {
+      ".도로늄정보": 4,
+      ".로키랜드정보": 8,
+      ".돌이신문정보": 3,
+      ".돌이판사정보": 10
+    };
+
+    Object.entries(링크목록).forEach(([선택자, 번호]) => {
+      const 링크 = 정보창.querySelector(선택자);
+
+      if (링크) {
+        링크.addEventListener("click", () => 정보보기(번호));
+      }
+    });
+  }
+
+  function 정보보기(번호) {
+    if (!내용[번호]) return;
+
+    볼정보 = 번호;
+
+    정보창.style.animation = "none";
+    void 정보창.offsetWidth;
+    정보창.style.animation = "contentIn 0.45s ease both";
+
+    정보창.innerHTML = 내용[번호];
+    정보번호.textContent = String(번호).padStart(2, "0");
+
+    버튼선택(번호);
+    링크이벤트연결();
+  }
+
+  Object.entries(메뉴번호).forEach(([이름, 번호]) => {
+    const 버튼 = document.getElementById(이름);
+
+    if (버튼) {
+      버튼.addEventListener("click", () => 정보보기(번호));
+    }
+  });
+
+  // 처음 페이지를 열었을 때 돌이 정보 표시
+  정보보기(1);
+
+});
+</script>
+
+</body>
+</html>
