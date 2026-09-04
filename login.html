@@ -1,345 +1,1376 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 
 <head>
-<title>돌이 사이트-로그인</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>돌이 사이트 - 로그인</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+  <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Black+Han+Sans&family=Do+Hyeon&family=Gasoek+One&family=Jua&display=swap" rel="stylesheet">
+
+  <style>
+    @font-face {
+      font-family: 'HancomMalrangmalrang';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');
+      font-weight: 400;
+      font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'HancomMalrangmalrang';
+      src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2') format('woff2');
+      font-weight: 700;
+      font-display: swap;
+    }
+
+    :root {
+      --background: #050716;
+      --panel: rgba(17, 25, 63, 0.78);
+      --panel-dark: rgba(7, 11, 33, 0.86);
+      --border: rgba(150, 170, 255, 0.16);
+      --text: #f7f8ff;
+      --muted: #9ca8d0;
+      --accent: #8297ff;
+      --accent-light: #b9c5ff;
+      --shadow: 0 30px 80px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-user-drag: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      min-height: 100%;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      font-family: 'HancomMalrangmalrang', sans-serif;
+      background:
+        radial-gradient(
+          circle at 12% 8%,
+          rgba(73, 92, 255, 0.18),
+          transparent 28rem
+        ),
+        radial-gradient(
+          circle at 88% 90%,
+          rgba(110, 55, 255, 0.15),
+          transparent 25rem
+        ),
+        linear-gradient(135deg, #070b22 0%, #03040e 100%);
+      overflow-x: hidden;
+    }
+
+    input,
+    textarea {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    button,
+    input,
+    a {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    /* =========================
+       배경 애니메이션
+    ========================= */
+
+    .background-glow {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .glow {
+      position: absolute;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      filter: blur(95px);
+      opacity: 0.15;
+      animation: floatingGlow 14s ease-in-out infinite alternate;
+    }
+
+    .glow-one {
+      top: -150px;
+      left: -110px;
+      background: #536dff;
+    }
+
+    .glow-two {
+      right: -140px;
+      bottom: -160px;
+      background: #7b45ff;
+      animation-delay: -5s;
+    }
+
+    .glow-three {
+      top: 45%;
+      left: 42%;
+      width: 220px;
+      height: 220px;
+      background: #234caa;
+      opacity: 0.1;
+      animation-delay: -9s;
+    }
+
+    @keyframes floatingGlow {
+      from {
+        transform: translate3d(0, 0, 0) scale(1);
+      }
+
+      to {
+        transform: translate3d(35px, -25px, 0) scale(1.12);
+      }
+    }
+
+    /* =========================
+       상단 바
+    ========================= */
+
+    .topbar {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 24px 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      animation: fadeDown 0.7s ease both;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: white;
+      text-decoration: none;
+      transition: transform 0.25s ease;
+    }
+
+    .brand:hover {
+      transform: translateY(-2px);
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(170, 185, 255, 0.25);
+      border-radius: 15px;
+      background: linear-gradient(145deg, #34478e, #151d4b);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.12),
+        0 8px 25px rgba(34, 51, 130, 0.25);
+      font-family: 'Bagel Fat One', cursive;
+      font-size: 22px;
+    }
+
+    .brand-name {
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 25px;
+      letter-spacing: -1px;
+    }
+
+    .brand-subtitle {
+      color: #8e9ac4;
+      font-size: 12px;
+      margin-top: 2px;
+    }
+
+    .topbar-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 15px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      color: #b9c5ed;
+      background: rgba(255, 255, 255, 0.035);
+      font-size: 13px;
+      backdrop-filter: blur(12px);
+    }
+
+    .online-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #79e5ae;
+      box-shadow: 0 0 12px #79e5ae;
+      animation: softPulse 2s ease-in-out infinite;
+    }
+
+    /* =========================
+       전체 페이지
+    ========================= */
+
+    .page {
+      width: min(1180px, calc(100% - 40px));
+      margin: 0 auto;
+      padding: 42px 0 70px;
+    }
+
+    .intro {
+      max-width: 760px;
+      margin: 0 auto 34px;
+      text-align: center;
+      animation: fadeUp 0.8s 0.1s ease both;
+    }
+
+    .intro-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      margin-bottom: 18px;
+      color: #c2ccff;
+      border: 1px solid rgba(130, 151, 255, 0.22);
+      border-radius: 999px;
+      background: rgba(93, 112, 255, 0.08);
+      font-size: 13px;
+    }
+
+    .intro-label::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    .intro h1 {
+      margin: 0;
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: clamp(45px, 6vw, 78px);
+      font-weight: 400;
+      letter-spacing: -3px;
+      line-height: 1.08;
+      background: linear-gradient(
+        120deg,
+        #ffffff 20%,
+        #aabaff 55%,
+        #7b8fff 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .intro p {
+      margin: 18px 0 0;
+      color: var(--muted);
+      font-size: clamp(15px, 2vw, 19px);
+      line-height: 1.7;
+    }
+
+    .intro p strong {
+      color: #dce2ff;
+      font-weight: 700;
+    }
+
+    /* =========================
+       로그인 레이아웃
+    ========================= */
+
+    .login-layout {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    .card {
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      background:
+        linear-gradient(
+          145deg,
+          rgba(23, 32, 78, 0.78),
+          rgba(8, 12, 34, 0.84)
+        );
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 12%;
+      right: 12%;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(190, 202, 255, 0.45),
+        transparent
+      );
+    }
+
+    /* =========================
+       왼쪽 소개 카드
+    ========================= */
+
+    .welcome-card {
+      padding: 38px;
+      min-height: 570px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+
+    .card-eyebrow {
+      color: #8297ff;
+      font-family: 'Do Hyeon', sans-serif;
+      font-size: 17px;
+      letter-spacing: 1px;
+    }
+
+    .welcome-card h2 {
+      margin: 16px 0 12px;
+      font-family: 'Black Han Sans', sans-serif;
+      font-weight: 400;
+      font-size: clamp(29px, 3vw, 42px);
+      line-height: 1.25;
+      letter-spacing: -1.5px;
+    }
+
+    .welcome-description {
+      margin: 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.8;
+    }
+
+    .welcome-visual {
+      position: relative;
+      width: 155px;
+      height: 155px;
+      margin: 32px auto;
+      display: grid;
+      place-items: center;
+    }
+
+    .visual-ring {
+      position: absolute;
+      inset: 0;
+      border: 1px solid rgba(130, 151, 255, 0.28);
+      border-radius: 50%;
+      animation: rotateRing 18s linear infinite;
+    }
+
+    .visual-ring::before,
+    .visual-ring::after {
+      content: '';
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #9cabff;
+      box-shadow: 0 0 18px #8297ff;
+    }
+
+    .visual-ring::before {
+      top: 12px;
+      left: 28px;
+    }
+
+    .visual-ring::after {
+      right: 18px;
+      bottom: 28px;
+    }
+
+    .visual-circle {
+      width: 112px;
+      height: 112px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(190, 202, 255, 0.25);
+      border-radius: 50%;
+      background:
+        radial-gradient(
+          circle at 35% 25%,
+          rgba(150, 170, 255, 0.35),
+          transparent 45%
+        ),
+        linear-gradient(145deg, #344b9a, #151d4c);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        0 20px 45px rgba(27, 42, 116, 0.3);
+      font-family: 'Bagel Fat One', cursive;
+      font-size: 58px;
+      color: #f1f4ff;
+      animation: gentleFloat 4s ease-in-out infinite;
+    }
+
+    .welcome-points {
+      display: grid;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .welcome-point {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #b4c0e8;
+      font-size: 14px;
+    }
+
+    .point-check {
+      width: 26px;
+      height: 26px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 26px;
+      border-radius: 9px;
+      color: #bfcaff;
+      background: rgba(130, 151, 255, 0.12);
+      border: 1px solid rgba(130, 151, 255, 0.18);
+      font-size: 13px;
+    }
+
+    .quote {
+      padding-top: 25px;
+      border-top: 1px solid rgba(150, 170, 255, 0.1);
+      color: #7785b3;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+
+    /* =========================
+       로그인 폼 카드
+    ========================= */
+
+    .form-card {
+      padding: 38px;
+      animation: fadeUp 0.8s 0.3s ease both;
+    }
+
+    .form-heading {
+      margin-bottom: 28px;
+    }
+
+    .form-heading h2 {
+      margin: 0 0 8px;
+      font-family: 'Black Han Sans', sans-serif;
+      font-size: 31px;
+      font-weight: 400;
+      letter-spacing: -1px;
+    }
+
+    .form-heading p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 19px;
+    }
+
+    .form-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 9px;
+      color: #dce2ff;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .form-label small {
+      color: #65729d;
+      font-size: 11px;
+      font-weight: 400;
+    }
+
+    .input-wrap {
+      position: relative;
+    }
+
+    .input-icon {
+      position: absolute;
+      left: 17px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #7180b4;
+      font-size: 17px;
+      pointer-events: none;
+      transition: color 0.25s ease;
+    }
+
+    .form-input {
+      width: 100%;
+      height: 58px;
+      padding: 0 18px 0 49px;
+      border: 1px solid rgba(144, 161, 235, 0.14);
+      border-radius: 16px;
+      outline: none;
+      color: #f4f6ff;
+      background: rgba(3, 7, 24, 0.46);
+      font-size: 15px;
+      transition:
+        border-color 0.3s ease,
+        background 0.3s ease,
+        box-shadow 0.3s ease,
+        transform 0.3s ease;
+    }
+
+    .form-input::placeholder {
+      color: #5d688e;
+    }
+
+    .form-input:hover {
+      border-color: rgba(144, 161, 235, 0.28);
+    }
+
+    .form-input:focus {
+      border-color: #8297ff;
+      background: rgba(13, 20, 53, 0.78);
+      box-shadow:
+        0 0 0 4px rgba(130, 151, 255, 0.08),
+        0 8px 25px rgba(26, 41, 112, 0.15);
+      transform: translateY(-1px);
+    }
+
+    .input-wrap:focus-within .input-icon {
+      color: #aabaff;
+    }
+
+    .password-toggle {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      border-radius: 11px;
+      color: #7583b3;
+      background: transparent;
+      transition:
+        color 0.25s ease,
+        background 0.25s ease;
+    }
+
+    .password-toggle:hover {
+      color: #c4ceff;
+      background: rgba(130, 151, 255, 0.1);
+    }
+
+    .password-input {
+      padding-right: 55px;
+    }
+
+    /* =========================
+       로그인 버튼
+    ========================= */
+
+    .login-button {
+      position: relative;
+      width: 100%;
+      height: 60px;
+      margin-top: 10px;
+      border: 1px solid rgba(184, 196, 255, 0.3);
+      border-radius: 17px;
+      color: white;
+      background: linear-gradient(135deg, #6078e8, #7b5cdb);
+      box-shadow:
+        0 12px 28px rgba(76, 83, 190, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.22);
+      font-size: 18px;
+      font-weight: 700;
+      overflow: hidden;
+      transition:
+        transform 0.3s ease,
+        box-shadow 0.3s ease,
+        filter 0.3s ease;
+    }
+
+    .login-button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 70%;
+      height: 100%;
+      background: linear-gradient(
+        100deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+      );
+      transform: skewX(-20deg);
+      transition: left 0.7s ease;
+    }
+
+    .login-button:hover {
+      transform: translateY(-3px);
+      filter: brightness(1.08);
+      box-shadow:
+        0 18px 38px rgba(76, 83, 190, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    }
+
+    .login-button:hover::before {
+      left: 140%;
+    }
+
+    .login-button:active {
+      transform: translateY(0) scale(0.985);
+    }
+
+    .login-button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+      transform: none;
+    }
+
+    .button-content {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .loading-spinner {
+      display: none;
+      width: 17px;
+      height: 17px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .login-button.loading .loading-spinner {
+      display: block;
+    }
+
+    .login-button.loading .button-text {
+      opacity: 0.8;
+    }
+
+    .form-footer {
+      margin-top: 24px;
+      text-align: center;
+      color: #64719b;
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .form-footer a {
+      color: #9eafff;
+      text-decoration: none;
+      transition: color 0.25s ease;
+    }
+
+    .form-footer a:hover {
+      color: white;
+    }
+
+    .register-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 19px;
+      width: 100%;
+      height: 48px;
+      border: 1px solid rgba(144, 161, 235, 0.14);
+      border-radius: 14px;
+      color: #aebbf0;
+      background: rgba(255, 255, 255, 0.025);
+      text-decoration: none;
+      font-size: 14px;
+      transition:
+        background 0.25s ease,
+        border-color 0.25s ease,
+        transform 0.25s ease;
+    }
+
+    .register-link:hover {
+      transform: translateY(-2px);
+      border-color: rgba(130, 151, 255, 0.3);
+      background: rgba(130, 151, 255, 0.08);
+    }
+
+    .bottom-note {
+      margin-top: 28px;
+      text-align: center;
+      color: #58658e;
+      font-size: 12px;
+      animation: fadeUp 0.8s 0.4s ease both;
+    }
+
+    .bottom-note span {
+      color: #7e8bb6;
+    }
+
+    /* =========================
+       애니메이션
+    ========================= */
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(22px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeDown {
+      from {
+        opacity: 0;
+        transform: translateY(-18px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes gentleFloat {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    @keyframes rotateRing {
+      from {
+        transform: rotate(0deg);
+      }
+
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes softPulse {
+      0%,
+      100% {
+        opacity: 0.65;
+        transform: scale(0.9);
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.15);
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* =========================
+       접근성
+    ========================= */
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible {
+      outline: 3px solid rgba(130, 151, 255, 0.6);
+      outline-offset: 3px;
+    }
+
+    /* =========================
+       태블릿
+    ========================= */
+
+    @media (max-width: 900px) {
+      .login-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .welcome-card {
+        min-height: auto;
+      }
+
+      .welcome-visual {
+        margin: 25px auto;
+      }
+    }
+
+    /* =========================
+       모바일
+    ========================= */
+
+    @media (max-width: 600px) {
+      .topbar,
+      .page {
+        width: min(100% - 28px, 520px);
+      }
+
+      .topbar {
+        padding: 17px 0;
+      }
+
+      .brand-mark {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        font-size: 19px;
+      }
+
+      .brand-name {
+        font-size: 21px;
+      }
+
+      .brand-subtitle {
+        display: none;
+      }
+
+      .topbar-badge {
+        padding: 8px 11px;
+        font-size: 11px;
+      }
+
+      .page {
+        padding-top: 30px;
+        padding-bottom: 45px;
+      }
+
+      .intro {
+        margin-bottom: 25px;
+      }
+
+      .intro h1 {
+        font-size: clamp(42px, 13vw, 60px);
+        letter-spacing: -2px;
+      }
+
+      .intro p {
+        font-size: 14px;
+        line-height: 1.65;
+      }
+
+      .card {
+        border-radius: 24px;
+      }
+
+      .welcome-card,
+      .form-card {
+        padding: 26px 21px;
+      }
+
+      .welcome-card h2 {
+        font-size: 29px;
+      }
+
+      .welcome-visual {
+        width: 130px;
+        height: 130px;
+      }
+
+      .visual-circle {
+        width: 94px;
+        height: 94px;
+        font-size: 48px;
+      }
+
+      .form-heading h2 {
+        font-size: 27px;
+      }
+
+      .form-input {
+        height: 55px;
+        font-size: 14px;
+      }
+
+      .login-button {
+        height: 57px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .topbar-badge {
+        display: none;
+      }
+
+      .intro h1 {
+        font-size: 39px;
+      }
+
+      .welcome-card,
+      .form-card {
+        padding: 23px 17px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
 </head>
 
+<body>
 
-<!--이 폰트들은 jua, Do Hyeon, Bagel Fat One, Black Han Sans, Gasoek One입니다--> <link rel="preconnect" href="https://fonts.googleapis.com"> <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Black+Han+Sans&family=Do+Hyeon&family=Gasoek+One&family=Jua&display=swap" rel="stylesheet">
+  <div class="background-glow" aria-hidden="true">
+    <div class="glow glow-one"></div>
+    <div class="glow glow-two"></div>
+    <div class="glow glow-three"></div>
+  </div>
 
+  <header class="topbar">
 
-<body style="
-background: linear-gradient(to right, #000033, #000010);
-">
+    <a
+      class="brand"
+      href="https://rockey-jason.github.io/doldol-site/"
+      aria-label="돌이 사이트 홈으로 이동"
+    >
+      <div class="brand-mark">돌</div>
 
-<style>* {
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
-}
+      <div>
+        <div class="brand-name">돌이 사이트</div>
+        <div class="brand-subtitle">DORI COMMUNITY</div>
+      </div>
+    </a>
 
-input,
-textarea {
-  user-select: text;
-  -webkit-user-select: text;
-}
+    <div class="topbar-badge">
+      <span class="online-dot"></span>
+      회원 로그인
+    </div>
 
-@font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
+  </header>
 
-@font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
+  <main class="page">
 
-</style>
-    
-<script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+    <section class="intro">
 
-const supabase=createClient(
-"https://scttowfhygcpdirrekqm.supabase.co",
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
-);
+      <div class="intro-label">DORI ACCOUNT</div>
 
-// 이메일 인증 후 들어온 경우
-window.addEventListener("DOMContentLoaded",async()=>{
+      <h1>로그인</h1>
 
-    // URL의 access_token 처리
-    await supabase.auth.getSession();
+      <p>
+        다시 돌아오신 것을 환영해요.<br>
+        <strong>돌이 사이트의 다양한 기능</strong>을 이용해보세요.
+      </p>
 
-    const{
-        data:{session}
-    }=await supabase.auth.getSession();
+    </section>
 
-    if(session){
+    <section class="login-layout">
 
-        const {data,error}=
+      <!-- 왼쪽 소개 카드 -->
 
-        await supabase.functions.invoke("create-user");
+      <article class="card welcome-card">
 
-        if(!error){
+        <div>
 
-            if(!data.already){
+          <div class="card-eyebrow">WELCOME BACK</div>
 
-                alert("회원가입이 완료되었습니다!");
+          <h2>
+            돌이 사이트에<br>
+            다시 오신 걸 환영해요
+          </h2>
 
-            }
+          <p class="welcome-description">
+            로그인하고 돌이신문, 돌돌코인,
+            업적과 다양한 사이트 기능을 계속 이용해보세요.
+          </p>
+
+          <div class="welcome-visual">
+            <div class="visual-ring"></div>
+            <div class="visual-circle">돌</div>
+          </div>
+
+          <div class="welcome-points">
+
+            <div class="welcome-point">
+              <div class="point-check">✓</div>
+              <span>나만의 계정으로 안전하게 이용</span>
+            </div>
+
+            <div class="welcome-point">
+              <div class="point-check">✓</div>
+              <span>돌이신문과 사이트 활동 이어가기</span>
+            </div>
+
+            <div class="welcome-point">
+              <div class="point-check">✓</div>
+              <span>돌돌코인과 업적 기록 유지</span>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="quote">
+          “오늘도 돌이 사이트에서 즐거운 시간을 보내세요.”<br>
+          <span>— 돌이 사이트</span>
+        </div>
+
+      </article>
+
+      <!-- 로그인 폼 -->
+
+      <article class="card form-card">
+
+        <div class="form-heading">
+          <h2>계정 로그인</h2>
+          <p>가입한 계정 정보를 입력해주세요.</p>
+        </div>
+
+        <form
+          id="loginForm"
+          onsubmit="event.preventDefault(); 로그인();"
+        >
+
+          <div class="form-group">
+
+            <label class="form-label" for="name">
+              계정 이름
+              <small>가입할 때 입력한 이름</small>
+            </label>
+
+            <div class="input-wrap">
+
+              <span class="input-icon">👤</span>
+
+              <input
+                class="form-input"
+                id="name"
+                type="text"
+                placeholder="계정 이름을 입력하세요"
+                autocomplete="name"
+                maxlength="30"
+                required
+              >
+
+            </div>
+
+          </div>
+
+          <div class="form-group">
+
+            <label class="form-label" for="id">
+              아이디
+              <small>로그인 아이디</small>
+            </label>
+
+            <div class="input-wrap">
+
+              <span class="input-icon">🪪</span>
+
+              <input
+                class="form-input"
+                id="id"
+                type="text"
+                placeholder="아이디를 입력하세요"
+                autocomplete="username"
+                maxlength="30"
+                required
+              >
+
+            </div>
+
+          </div>
+
+          <div class="form-group">
+
+            <label class="form-label" for="password">
+              비밀번호
+              <small>가입한 비밀번호</small>
+            </label>
+
+            <div class="input-wrap">
+
+              <span class="input-icon">🔒</span>
+
+              <input
+                class="form-input password-input"
+                id="password"
+                type="password"
+                placeholder="비밀번호를 입력하세요"
+                autocomplete="current-password"
+                required
+              >
+
+              <button
+                class="password-toggle"
+                id="passwordToggle"
+                type="button"
+                aria-label="비밀번호 표시"
+              >
+                👁
+              </button>
+
+            </div>
+
+          </div>
+
+          <div class="form-group">
+
+            <label class="form-label" for="email">
+              이메일
+              <small>인증한 이메일</small>
+            </label>
+
+            <div class="input-wrap">
+
+              <span class="input-icon">✉️</span>
+
+              <input
+                class="form-input"
+                id="email"
+                type="email"
+                placeholder="이메일을 입력하세요"
+                autocomplete="email"
+                required
+              >
+
+            </div>
+
+          </div>
+
+          <button
+            id="로그인버튼"
+            class="login-button"
+            type="submit"
+          >
+            <span class="button-content">
+              <span class="loading-spinner"></span>
+              <span class="button-text">로그인하기 →</span>
+            </span>
+          </button>
+
+        </form>
+
+        <div class="form-footer">
+          아직 계정이 없으신가요?
+        </div>
+
+        <a
+          class="register-link"
+          href="signup.html"
+        >
+          새 계정 만들기
+          <span>→</span>
+        </a>
+
+      </article>
+
+    </section>
+
+    <div class="bottom-note">
+      <span>©</span> 2026 돌이 사이트 · DORI COMMUNITY
+    </div>
+
+  </main>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const supabase = createClient(
+      "https://scttowfhygcpdirrekqm.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+    );
+
+    /*
+      이메일 인증 후 들어온 경우
+    */
+
+    window.addEventListener("DOMContentLoaded", async () => {
+
+      await supabase.auth.getSession();
+
+      const {
+        data: { session }
+      } = await supabase.auth.getSession();
+
+      if (session) {
+
+        const { data, error } =
+          await supabase.functions.invoke("create-user");
+
+        if (!error) {
+
+          if (!data.already) {
+            alert("회원가입이 완료되었습니다!");
+          }
 
         }
 
-    }
+      }
 
-});
+    });
 
-window.로그인=async()=>{
+    /*
+      비밀번호 표시 / 숨기기
+    */
 
-const name=document.getElementById("name").value.trim();
+    const passwordInput =
+      document.getElementById("password");
 
-const loginId=document.getElementById("id").value.trim();
+    const passwordToggle =
+      document.getElementById("passwordToggle");
 
-const email=document.getElementById("email").value.trim().toLowerCase();
+    passwordToggle.addEventListener("click", () => {
 
-const password=document.getElementById("password").value;
+      const isPassword =
+        passwordInput.type === "password";
 
-if(!name||!loginId||!email||!password){
+      passwordInput.type =
+        isPassword ? "text" : "password";
 
-alert("모든 정보를 입력하세요.");
+      passwordToggle.textContent =
+        isPassword ? "🙈" : "👁";
 
-return;
+      passwordToggle.setAttribute(
+        "aria-label",
+        isPassword
+          ? "비밀번호 숨기기"
+          : "비밀번호 표시"
+      );
 
-}
+    });
 
-const {data,error}
+    /*
+      로그인
+    */
 
-=
+    window.로그인 = async () => {
 
-await supabase.functions.invoke(
+      const name =
+        document.getElementById("name").value.trim();
 
-"super-worker",
+      const loginId =
+        document.getElementById("id").value.trim();
 
-{
+      const email =
+        document.getElementById("email").value.trim().toLowerCase();
 
-body:{
+      const password =
+        document.getElementById("password").value;
 
-name,
+      const loginButton =
+        document.getElementById("로그인버튼");
 
-loginId,
+      const buttonText =
+        loginButton.querySelector(".button-text");
 
-email,
+      if (!name || !loginId || !email || !password) {
 
-password
+        alert("모든 정보를 입력하세요.");
 
-}
+        return;
 
-}
+      }
 
-);
+      loginButton.disabled = true;
+      loginButton.classList.add("loading");
+      buttonText.textContent = "로그인 중...";
 
-if(error){
+      const { data, error } =
+        await supabase.functions.invoke(
+          "super-worker",
+          {
+            body: {
+              name,
+              loginId,
+              email,
+              password
+            }
+          }
+        );
 
-alert(error.message);
+      if (error) {
 
-return;
+        alert(error.message);
 
-}
+        loginButton.disabled = false;
+        loginButton.classList.remove("loading");
+        buttonText.textContent = "로그인하기 →";
 
-if(!data.success){
+        return;
 
-alert(data.message);
+      }
 
-return;
+      if (!data.success) {
 
-}
+        alert(data.message);
 
-const{
+        loginButton.disabled = false;
+        loginButton.classList.remove("loading");
+        buttonText.textContent = "로그인하기 →";
 
-error:loginError
+        return;
 
-}
+      }
 
-=
+      const {
+        error: loginError
+      } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
 
-await supabase.auth.signInWithPassword({
+      if (loginError) {
 
-email,
+        alert(loginError.message);
 
-password
+        loginButton.disabled = false;
+        loginButton.classList.remove("loading");
+        buttonText.textContent = "로그인하기 →";
 
-});
+        return;
 
-if(loginError){
+      }
 
-alert(loginError.message);
+      alert("로그인 성공!");
 
-return;
+      location.href = "index.html";
 
-}
+    };
 
-alert("로그인 성공!");
-
-location.href="index.html";
-
-};
-</script>
-<input id="name"
-placeholder="계정 이름을 입력하세요"
-style="
-position: absolute;
-top: 280px;
-left: 50px;
-width: 200px;
-height: 30px;
-">
-
-
-<input id="id"
-placeholder="아이디를 입력하세요"
-style="
-position: absolute;
-top: 280px;
-left: 400px;
-width: 200px;
-height: 30px;
-">
-
-
-<input id="password"
-type="password"
-placeholder="비밀번호를 입력하세요(7자 이상)"
-style="
-position: absolute;
-top: 280px;
-left: 700px;
-width: 200px;
-height: 30px;
-">
-
-
-
-<input id="email"
-placeholder="이메일을 입력하세요"
-style="
-position: absolute;
-top: 280px;
-left: 1000px;
-width: 200px;
-height: 30px;
-">
-
-
-
-<!-- ⭐ 여기부터 100% 그대로 유지 (폰트 포함) -->
-
-
-
-<h1 style="
-font-size:70px;
-color:#f5f5f5;
-font-family:Black Han Sans;
-margin-top:0;
-margin-bottom:0;
-font-weight:1;
-">ㅤ
-</h1>
-
-<p style="
-font-size:20px;
-color:#f5f5f5;
-font-family: 'HancomMalrangmalrang';
-margin-top:0;
-margin-bottom:0;
-font-weight:400;
-">
-로그인-이미 만든 계정에 가입해 돌이사이트의 기능들을 이용해보세요!
-</p>
-
-
-
-<!-- ⭐ 버튼 100% 그대로 유지 -->
-
-<a href="https://rockey-jason.github.io/doldol-site/"
-style="text-decoration:none;">
-
-<button style="
-position: absolute;
-top: 0px;
-left: 0px;
-background: none;
-border: none;
-color: #f5f5f5;
-font-family: 'Black Han Sans';
-font-size: 100px;
-cursor: pointer;
-">돌이 사이트</button>
-
-</a>
-
-
-
-<button style="
-position: absolute;
-top: 200px;
-left: 30px;
-font-size: 50px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-padding: 10px 20px;
-color:#f5f5f5;
-">
--계정 이름
-</button>
-
-
-
-<button style="
-position: absolute;
-top: 200px;
-left: 400px;
-font-size: 50px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-padding: 10px 20px;
-color:#f5f5f5;
-">
--아이디
-</button>
-
-
-
-<button style="
-position: absolute;
-top: 200px;
-left: 700px;
-font-size: 50px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-padding: 10px 20px;
-color:#f5f5f5;
-">
--비밀번호
-</button>
-
-
-
-<button style="
-position: absolute;
-top: 200px;
-left: 1000px;
-font-size: 50px;
-font-family: 'HancomMalrangmalrang';
-background:none;
-border:none;
-padding: 10px 20px;
-color:#f5f5f5;
-">
--이메일
-</button>
-
-
-  <button id="로그인버튼"
-onclick="로그인()"
-style="
-position: absolute;
-top: 500px;
-left: 600px;
-font-size: 25px;
-font-family: 'HancomMalrangmalrang';
-">
-로그인
-</button>
-
-
+  </script>
 
 </body>
 </html>
