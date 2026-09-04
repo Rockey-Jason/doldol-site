@@ -515,6 +515,132 @@ button:focus-visible{
     transition-duration:.01ms!important;
   }
 }
+    /* =====================================================
+   로그인 / 회원가입 상태 UI
+===================================================== */
+
+#로그인,
+#회원가입 {
+    position: fixed;
+    left: auto;
+    right: 28px;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 112px;
+    height: 42px;
+
+    padding: 0 18px;
+
+    border: 1px solid rgba(150, 170, 255, 0.22);
+    border-radius: 14px;
+
+    color: #dce3ff;
+    background: rgba(19, 27, 67, 0.72);
+
+    font-family: 'HancomMalrangmalrang', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        background 0.3s ease,
+        border-color 0.3s ease;
+}
+
+#로그인 {
+    top: 24px;
+}
+
+#회원가입 {
+    top: 76px;
+}
+
+#로그인:hover,
+#회원가입:hover {
+    transform: translateY(-3px);
+    border-color: rgba(150, 170, 255, 0.45);
+    background: rgba(48, 62, 135, 0.8);
+    box-shadow:
+        0 12px 30px rgba(35, 50, 130, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+#로그인:active,
+#회원가입:active {
+    transform: translateY(-1px) scale(0.97);
+}
+
+/* 로그인하지 않은 상태에서만 버튼 표시 */
+body.로그아웃상태 #로그인,
+body.로그아웃상태 #회원가입 {
+    display: flex;
+    animation: 로그인버튼등장 0.45s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+body.로그아웃상태 #회원가입 {
+    animation-delay: 0.06s;
+}
+
+@keyframes 로그인버튼등장 {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 로그인 상태에서는 인증 버튼 숨김 */
+body.로그인상태 #로그인,
+body.로그인상태 #회원가입 {
+    display: none !important;
+}
+
+@media (max-width: 700px) {
+    #로그인,
+    #회원가입 {
+        right: 14px;
+        min-width: 96px;
+        height: 38px;
+        padding: 0 13px;
+        font-size: 14px;
+        border-radius: 12px;
+    }
+
+    #로그인 {
+        top: 14px;
+    }
+
+    #회원가입 {
+        top: 60px;
+    }
+}
+
+@media (max-width: 420px) {
+    #로그인,
+    #회원가입 {
+        min-width: 84px;
+        padding: 0 10px;
+        font-size: 13px;
+    }
+}
 </style>
 
 </head>
@@ -775,6 +901,46 @@ const 로그인버튼 =
 
 const 회원가입버튼 =
     document.getElementById("회원가입");
+
+    // =====================================================
+// 로그인 / 로그아웃 상태에 따른 버튼 표시
+// =====================================================
+
+function 로그인상태UI(session) {
+
+    const 로그인됨 = Boolean(session);
+
+    if (로그인됨) {
+
+        // 로그인 상태
+        if (로그인버튼) {
+            로그인버튼.style.display = "none";
+        }
+
+        if (회원가입버튼) {
+            회원가입버튼.style.display = "none";
+        }
+
+        document.body.classList.add("로그인상태");
+        document.body.classList.remove("로그아웃상태");
+
+    } else {
+
+        // 로그아웃 상태
+        if (로그인버튼) {
+            로그인버튼.style.display = "inline-block";
+        }
+
+        if (회원가입버튼) {
+            회원가입버튼.style.display = "inline-block";
+        }
+
+        document.body.classList.add("로그아웃상태");
+        document.body.classList.remove("로그인상태");
+
+    }
+
+}
 
 const 로그아웃버튼 =
     document.getElementById("로그아웃");
@@ -2340,6 +2506,30 @@ function 페이지이동(url) {
     }, 320);
 }
 
+    // =====================================================
+// 로그인 / 회원가입 페이지 이동
+// =====================================================
+
+if (로그인버튼) {
+
+    로그인버튼.onclick = () => {
+
+        페이지이동("login.html");
+
+    };
+
+}
+
+if (회원가입버튼) {
+
+    회원가입버튼.onclick = () => {
+
+        페이지이동("signin.html");
+
+    };
+
+}
+
 
 document
     .getElementById("신문버튼")
@@ -2588,32 +2778,56 @@ async function 시작() {
     // 로그아웃 상태
     // =================================================
 
-    if (!session) {
+if (!session) {
 
-        로그인버튼.style.display =
-            "block";
+    현재사용자 = null;
+    현재유저정보 = null;
+    획득업적 = {};
 
-
-        회원가입버튼.style.display =
-            "block";
-
-
-        return;
-
+    if (사진) {
+        사진.style.display = "none";
     }
+
+    if (메뉴) {
+        메뉴.classList.remove(
+            "menu-show",
+            "menu-hide"
+        );
+    }
+
+    [
+        레벨버튼,
+        EXP정보,
+        돌돌코인수량,
+        현재칭호
+    ].forEach(el => {
+
+        if (el) {
+            el.style.display = "none";
+        }
+
+    });
+
+    로그인상태UI(null);
+
+    return;
+
+}
 
 
     // =================================================
     // 로그인 상태
     // =================================================
 
-    현재사용자 =
-        session.user;
+현재사용자 =
+    session.user;
 
+로그인상태UI(session);
 
-    // 프로필 표시
-    사진.style.display =
-        "block";
+// 프로필 표시
+if (사진) {
+    사진.style.display = "block";
+}
 
 
     // =================================================
@@ -2672,32 +2886,68 @@ async function 시작() {
 
 supabase.auth.onAuthStateChange(
     (event, session) => {
+
         console.log("Auth:", event);
 
-        // SIGNED_IN 때 시작()을 다시 호출하지 않습니다.
-        // 중복 호출로 인한 로딩 반복을 방지합니다.
-        if (event === "SIGNED_IN" && session) {
-            현재사용자 = session.user;
+        // 로그인 상태 UI는 모든 인증 이벤트에서 갱신
+        로그인상태UI(session);
+
+        // 로그인
+        if (
+            event === "SIGNED_IN" &&
+            session
+        ) {
+
+            현재사용자 =
+                session.user;
+
+            if (사진) {
+                사진.style.display = "block";
+            }
+
             return;
+
         }
 
-        if (event === "SIGNED_OUT") {
+        // 로그아웃
+        if (
+            event === "SIGNED_OUT"
+        ) {
+
             현재사용자 = null;
             현재유저정보 = null;
             획득업적 = {};
 
-            if (사진) 사진.style.display = "none";
-            if (메뉴) {
-                메뉴.classList.remove("menu-show", "menu-hide");
+            if (사진) {
+                사진.style.display = "none";
             }
 
-            [레벨버튼, EXP정보, 돌돌코인수량, 현재칭호].forEach(el => {
-                if (el) el.style.display = "none";
+            if (메뉴) {
+
+                메뉴.classList.remove(
+                    "menu-show",
+                    "menu-hide"
+                );
+
+            }
+
+            [
+                레벨버튼,
+                EXP정보,
+                돌돌코인수량,
+                현재칭호
+            ].forEach(el => {
+
+                if (el) {
+                    el.style.display = "none";
+                }
+
             });
 
-            if (로그인버튼) 로그인버튼.style.display = "inline-block";
-            if (회원가입버튼) 회원가입버튼.style.display = "inline-block";
+            로그인상태UI(null);
+
         }
+
     }
 );
 
