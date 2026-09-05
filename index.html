@@ -652,6 +652,17 @@ body.로그인상태 #회원가입 {
   --ai-glow: rgba(141, 140, 255, .28);
 }
 
+    /* 돌이 AI 카드 크기 통일 */
+.돌이AI카드 {
+  width: 100%;
+  min-width: 0;
+}
+
+/* 다른 카드와 동일한 이미지 비율 */
+.돌이AI비주얼 {
+  aspect-ratio: 4 / 3;
+}
+
 /* AI 전용 비주얼 영역 */
 .돌이AI비주얼 {
   position: relative;
@@ -901,8 +912,9 @@ body.로그인상태 #회원가입 {
 /* 모바일 */
 @media (max-width: 650px) {
   .돌이AI비주얼 {
-    aspect-ratio: 16 / 10;
+    aspect-ratio: 4 / 3;
   }
+
 
   .돌이AI아이콘 {
     width: 94px;
