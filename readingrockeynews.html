@@ -2484,6 +2484,144 @@ let 마지막신문번호 =
 let 읽은신문번호들 =
     [];
 
+      /* =====================================================
+   코인 보상 팝업
+===================================================== */
+
+let 보상팝업타이머 =
+    null;
+
+
+/* 코인 떠오르는 효과 */
+
+function 코인파티() {
+
+    const 개수 =
+        12;
+
+    for (
+        let i = 0;
+        i < 개수;
+        i++
+    ) {
+
+        const 코인 =
+            document.createElement("div");
+
+        코인.className =
+            "떠오르는코인";
+
+        코인.textContent =
+            "🪙";
+
+        const x =
+            (Math.random() - 0.5) * 230;
+
+        const delay =
+            Math.random() * 0.25;
+
+        코인.style.setProperty(
+            "--x",
+            `${x}px`
+        );
+
+        코인.style.left =
+            "50%";
+
+        코인.style.top =
+            "50%";
+
+        코인.style.animationDelay =
+            `${delay}s`;
+
+        document.body.appendChild(
+            코인
+        );
+
+        setTimeout(() => {
+
+            코인.remove();
+
+        }, 1500);
+
+    }
+
+}
+
+
+/* 보상 팝업 표시 */
+
+function 코인보상표시(
+    금액,
+    설명
+) {
+
+    const 팝업 =
+        $("코인보상");
+
+    const 금액표시 =
+        $("코인보상금액");
+
+    const 설명표시 =
+        $("코인보상설명");
+
+
+    if (
+        !팝업 ||
+        !금액표시 ||
+        !설명표시
+    ) {
+
+        return;
+
+    }
+
+
+    금액표시.textContent =
+        `+${Number(금액).toLocaleString()}`;
+
+
+    설명표시.textContent =
+        설명;
+
+
+    팝업.classList.remove(
+        "표시"
+    );
+
+
+    /*
+       브라우저가 애니메이션을
+       다시 시작하도록 강제
+    */
+
+    void 팝업.offsetWidth;
+
+
+    팝업.classList.add(
+        "표시"
+    );
+
+
+    코인파티();
+
+
+    clearTimeout(
+        보상팝업타이머
+    );
+
+
+    보상팝업타이머 =
+        setTimeout(() => {
+
+            팝업.classList.remove(
+                "표시"
+            );
+
+        }, 2300);
+
+}
+
 
 /* =====================================================
    DOM
@@ -3060,7 +3198,6 @@ async function 퀴즈제출() {
 
     }
 
-
     else {
 
         const 입력 =
@@ -3086,7 +3223,7 @@ async function 퀴즈제출() {
     제출버튼잠금(true);
 
 
-    /* 현재 신문 다시 조회 */
+    /* 현재 신문 정답 확인 */
 
     const {
 
@@ -3114,6 +3251,7 @@ async function 퀴즈제출() {
     if (newsError) {
 
         console.error(
+            "정답 조회 오류:",
             newsError
         );
 
@@ -3143,7 +3281,6 @@ async function 퀴즈제출() {
             );
 
     }
-
 
     else {
 
@@ -3190,6 +3327,11 @@ async function 퀴즈제출() {
 
     if (userError) {
 
+        console.error(
+            "사용자 정보 조회 오류:",
+            userError
+        );
+
         제출버튼잠금(false);
 
         $("결과").textContent =
@@ -3208,11 +3350,11 @@ async function 퀴즈제출() {
         선택한답;
 
 
-    /* 저장 */
+    /* 답 저장 */
 
     const {
 
-        error
+        error: 저장오류
 
     } =
         await supabase
@@ -3241,11 +3383,11 @@ async function 퀴즈제출() {
             );
 
 
-    if (error) {
+    if (저장오류) {
 
         console.error(
             "퀴즈 저장 오류:",
-            error
+            저장오류
         );
 
         제출버튼잠금(false);
@@ -3281,6 +3423,76 @@ async function 퀴즈제출() {
 
             : `내가 제출한 답 : ${선택한답}`;
 
+
+    /*
+       정답일 때만 서버 보상 요청
+
+       보상 금액은 RPC가 결정하므로
+       클라이언트에서 변경할 수 없음
+    */
+
+    if (정답여부) {
+
+        const {
+
+            data: 보상결과,
+            error: 보상오류
+
+        } =
+            await supabase.rpc(
+
+                "claim_news_reward",
+
+                {
+
+                    p_news_number:
+                        신문번호,
+
+                    p_reward_type:
+                        "quiz_correct"
+
+                }
+
+            );
+
+
+        if (보상오류) {
+
+            console.error(
+                "퀴즈 보상 지급 오류:",
+                보상오류
+            );
+
+            $("결과").textContent +=
+                " 보상 지급 확인 중 문제가 발생했습니다.";
+
+        }
+
+        else if (
+            보상결과?.success === true
+        ) {
+
+            코인보상표시(
+
+                보상결과.amount,
+
+                "퀴즈 정답 보상입니다!"
+
+            );
+
+        }
+
+        else if (
+            보상결과?.already_claimed === true
+        ) {
+
+            console.log(
+                "이미 퀴즈 보상을 받은 신문입니다."
+            );
+
+        }
+
+    }
 
 }
 
@@ -3649,7 +3861,7 @@ function 읽음버튼업데이트() {
 
 
 /* =====================================================
-   읽음 저장
+   읽음 저장 + 1,000 돌돌코인 보상
 ===================================================== */
 
 async function 읽음저장() {
@@ -3673,6 +3885,10 @@ async function 읽음저장() {
     버튼.textContent =
         "💾 저장 중...";
 
+
+    /*
+       먼저 읽음 목록을 가져옴
+    */
 
     const {
 
@@ -3704,7 +3920,11 @@ async function 읽음저장() {
         );
 
 
-        읽음버튼업데이트();
+        $("읽음버튼").disabled =
+            false;
+
+        $("읽음버튼").textContent =
+            "📖 돌이신문 읽음";
 
         return;
 
@@ -3712,6 +3932,7 @@ async function 읽음저장() {
 
 
     let 목록 =
+
         Array.isArray(
             data.read_dori_news_numbers
         )
@@ -3737,10 +3958,14 @@ async function 읽음저장() {
 
 
     목록.sort(
-        (a,b) =>
+        (a, b) =>
             a - b
     );
 
+
+    /*
+       읽음 목록 저장
+    */
 
     const {
 
@@ -3789,6 +4014,77 @@ async function 읽음저장() {
 
 
     읽음버튼업데이트();
+
+
+    /*
+       읽음 보상 RPC 호출
+
+       서버에서 자동으로 1,000 지급
+       중복 지급은 unique 제약으로 차단
+    */
+
+    const {
+
+        data: 보상결과,
+        error: 보상오류
+
+    } =
+        await supabase.rpc(
+
+            "claim_news_reward",
+
+            {
+
+                p_news_number:
+                    신문번호,
+
+                p_reward_type:
+                    "news_read"
+
+            }
+
+        );
+
+
+    if (보상오류) {
+
+        console.error(
+            "읽음 보상 지급 오류:",
+            보상오류
+        );
+
+        alert(
+            "신문은 읽음 처리되었지만 코인 보상 확인에 실패했습니다."
+        );
+
+        return;
+
+    }
+
+
+    if (
+        보상결과?.success === true
+    ) {
+
+        코인보상표시(
+
+            보상결과.amount,
+
+            "돌이신문 읽음 보상입니다!"
+
+        );
+
+    }
+
+    else if (
+        보상결과?.already_claimed === true
+    ) {
+
+        console.log(
+            "이미 읽음 보상을 받은 신문입니다."
+        );
+
+    }
 
 }
 
