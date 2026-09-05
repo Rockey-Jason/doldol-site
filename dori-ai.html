@@ -1,0 +1,815 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>돌이 AI</title>
+
+<style>
+
+/* =====================================================
+   돌이 AI — 기본 설정
+===================================================== */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+
+  background:
+    radial-gradient(
+      circle at 50% -10%,
+      rgba(37, 99, 235, 0.18),
+      transparent 45%
+    ),
+    linear-gradient(
+      180deg,
+      #020617 0%,
+      #050b18 50%,
+      #020617 100%
+    );
+
+  color: #f8fafc;
+
+  font-family:
+    "Noto Sans KR",
+    "Malgun Gothic",
+    sans-serif;
+
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* =====================================================
+   상단 네비게이션
+===================================================== */
+
+.dori-ai-nav {
+  width: 100%;
+  height: 70px;
+
+  display: flex;
+  align-items: center;
+
+  padding: 0 28px;
+
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+
+  background: rgba(2, 6, 23, 0.75);
+
+  backdrop-filter: blur(12px);
+
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.dori-ai-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  font-size: 20px;
+  font-weight: 800;
+
+  letter-spacing: -0.5px;
+}
+
+.dori-ai-brand-icon {
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #1d4ed8
+  );
+
+  border-radius: 13px;
+
+  font-size: 23px;
+
+  box-shadow:
+    0 0 25px rgba(37, 99, 235, 0.25);
+}
+
+.dori-ai-brand-sub {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+
+/* =====================================================
+   메인
+===================================================== */
+
+.dori-ai-main {
+  width: 100%;
+  max-width: 900px;
+
+  margin: 0 auto;
+
+  padding: 70px 20px 30px;
+
+  flex: 1;
+
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* =====================================================
+   환영 화면
+===================================================== */
+
+.dori-ai-welcome {
+  text-align: center;
+
+  margin-bottom: 45px;
+
+  animation: doriAiFadeIn 0.7s ease;
+}
+
+.dori-ai-welcome-icon {
+  width: 78px;
+  height: 78px;
+
+  margin: 0 auto 22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #1e40af
+  );
+
+  border-radius: 25px;
+
+  font-size: 42px;
+
+  box-shadow:
+    0 0 45px rgba(37, 99, 235, 0.22);
+}
+
+.dori-ai-welcome h1 {
+  margin: 0;
+
+  font-size: clamp(28px, 5vw, 42px);
+
+  font-weight: 800;
+
+  letter-spacing: -1.5px;
+
+  background: linear-gradient(
+    135deg,
+    #ffffff,
+    #93c5fd
+  );
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dori-ai-welcome p {
+  margin: 14px 0 0;
+
+  color: #94a3b8;
+
+  font-size: 15px;
+
+  line-height: 1.7;
+}
+
+
+/* =====================================================
+   대화 영역
+===================================================== */
+
+.dori-ai-chat {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 24px;
+
+  padding-bottom: 25px;
+}
+
+
+/* 메시지 */
+
+.dori-ai-message {
+  display: flex;
+  align-items: flex-start;
+
+  gap: 12px;
+
+  max-width: 85%;
+
+  animation: doriAiMessageIn 0.3s ease;
+}
+
+.dori-ai-message.user {
+  margin-left: auto;
+
+  flex-direction: row-reverse;
+}
+
+.dori-ai-avatar {
+  width: 38px;
+  height: 38px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #1e293b;
+
+  border: 1px solid #334155;
+
+  border-radius: 13px;
+
+  font-size: 20px;
+}
+
+.dori-ai-message.bot .dori-ai-avatar {
+  background: linear-gradient(
+    135deg,
+    #2563eb,
+    #1d4ed8
+  );
+
+  border-color: #3b82f6;
+}
+
+.dori-ai-bubble {
+  padding: 14px 17px;
+
+  border-radius: 17px;
+
+  font-size: 14px;
+
+  line-height: 1.75;
+
+  white-space: pre-wrap;
+
+  word-break: break-word;
+
+  background: #111c32;
+
+  border: 1px solid #26354d;
+
+  color: #e2e8f0;
+}
+
+.dori-ai-message.bot .dori-ai-bubble {
+  border-top-left-radius: 5px;
+}
+
+.dori-ai-message.user .dori-ai-bubble {
+  background: #1d4ed8;
+
+  border-color: #2563eb;
+
+  color: #ffffff;
+
+  border-top-right-radius: 5px;
+}
+
+
+/* =====================================================
+   입력 영역
+===================================================== */
+
+.dori-ai-input-wrapper {
+  width: 100%;
+
+  margin-top: auto;
+
+  padding-top: 20px;
+
+  position: sticky;
+  bottom: 0;
+
+  background: linear-gradient(
+    180deg,
+    transparent,
+    #020617 25%
+  );
+}
+
+.dori-ai-input-box {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 10px 10px 10px 18px;
+
+  background: #111c32;
+
+  border: 1px solid #334155;
+
+  border-radius: 18px;
+
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.25);
+
+  transition: 0.2s;
+}
+
+.dori-ai-input-box:focus-within {
+  border-color: #3b82f6;
+
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.12),
+    0 10px 35px rgba(0, 0, 0, 0.25);
+}
+
+.dori-ai-input-box input {
+  flex: 1;
+
+  min-width: 0;
+
+  padding: 10px 0;
+
+  border: none;
+  outline: none;
+
+  background: transparent;
+
+  color: #f8fafc;
+
+  font-size: 14px;
+
+  font-family: inherit;
+}
+
+.dori-ai-input-box input::placeholder {
+  color: #64748b;
+}
+
+.dori-ai-send {
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: #2563eb;
+
+  color: white;
+
+  font-size: 20px;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.dori-ai-send:hover {
+  background: #3b82f6;
+
+  transform: translateY(-1px);
+}
+
+.dori-ai-send:active {
+  transform: scale(0.94);
+}
+
+
+/* =====================================================
+   하단 안내
+===================================================== */
+
+.dori-ai-footer {
+  text-align: center;
+
+  padding: 20px;
+
+  color: #475569;
+
+  font-size: 11px;
+
+  line-height: 1.6;
+}
+
+
+/* =====================================================
+   애니메이션
+===================================================== */
+
+@keyframes doriAiFadeIn {
+
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+}
+
+@keyframes doriAiMessageIn {
+
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+}
+
+
+/* =====================================================
+   모바일
+===================================================== */
+
+@media (max-width: 600px) {
+
+  .dori-ai-nav {
+    height: 62px;
+    padding: 0 16px;
+  }
+
+  .dori-ai-brand {
+    font-size: 18px;
+  }
+
+  .dori-ai-brand-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+
+  .dori-ai-main {
+    padding: 45px 14px 20px;
+  }
+
+  .dori-ai-welcome {
+    margin-bottom: 35px;
+  }
+
+  .dori-ai-welcome-icon {
+    width: 65px;
+    height: 65px;
+    font-size: 34px;
+  }
+
+  .dori-ai-welcome p {
+    font-size: 13px;
+  }
+
+  .dori-ai-message {
+    max-width: 92%;
+  }
+
+  .dori-ai-bubble {
+    font-size: 13px;
+    padding: 12px 14px;
+  }
+
+  .dori-ai-input-box {
+    border-radius: 15px;
+  }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     상단 네비게이션
+===================================================== -->
+
+<header class="dori-ai-nav">
+
+  <div class="dori-ai-brand">
+
+    <div class="dori-ai-brand-icon">
+      🐶
+    </div>
+
+    <div>
+      <div>돌이 AI</div>
+
+      <div class="dori-ai-brand-sub">
+        돌이사이트 전용 AI
+      </div>
+    </div>
+
+  </div>
+
+</header>
+
+
+<!-- =====================================================
+     메인
+===================================================== -->
+
+<main class="dori-ai-main">
+
+
+  <!-- 환영 화면 -->
+
+  <section class="dori-ai-welcome">
+
+    <div class="dori-ai-welcome-icon">
+      🐶
+    </div>
+
+    <h1>무엇을 도와줄까?</h1>
+
+    <p>
+      안녕! 나는 돌이 AI야. 🐶<br>
+      돌이사이트의 새로운 전용 AI를 준비하고 있어.
+    </p>
+
+  </section>
+
+
+  <!-- 대화 영역 -->
+
+  <section
+    class="dori-ai-chat"
+    id="doriAiChat"
+    aria-live="polite"
+  >
+
+    <div class="dori-ai-message bot">
+
+      <div class="dori-ai-avatar">
+        🐶
+      </div>
+
+      <div class="dori-ai-bubble">
+        안녕! 나는 돌이 AI야. 🐶
+        돌이사이트에 대해 궁금한 걸 물어봐!
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- 입력 영역 -->
+
+  <div class="dori-ai-input-wrapper">
+
+    <form
+      class="dori-ai-input-box"
+      id="doriAiForm"
+    >
+
+      <input
+        type="text"
+        id="doriAiInput"
+        placeholder="돌이 AI에게 물어보세요..."
+        autocomplete="off"
+        aria-label="메시지 입력"
+      >
+
+      <button
+        type="submit"
+        class="dori-ai-send"
+        aria-label="메시지 전송"
+      >
+        ➤
+      </button>
+
+    </form>
+
+    <div class="dori-ai-footer">
+      돌이 AI는 현재 개발 중입니다.
+    </div>
+
+  </div>
+
+
+</main>
+
+
+<script>
+
+/* =====================================================
+   돌이 AI — 1단계 대화 기능
+===================================================== */
+
+const doriAiForm =
+  document.getElementById("doriAiForm");
+
+const doriAiInput =
+  document.getElementById("doriAiInput");
+
+const doriAiChat =
+  document.getElementById("doriAiChat");
+
+
+/* =====================================================
+   메시지 추가
+===================================================== */
+
+function addDoriAiMessage(message, type) {
+
+  const messageDiv =
+    document.createElement("div");
+
+  messageDiv.className =
+    "dori-ai-message " + type;
+
+
+  const avatar =
+    document.createElement("div");
+
+  avatar.className =
+    "dori-ai-avatar";
+
+  avatar.textContent =
+    type === "bot" ? "🐶" : "👤";
+
+
+  const bubble =
+    document.createElement("div");
+
+  bubble.className =
+    "dori-ai-bubble";
+
+  // 입력 내용을 HTML로 해석하지 않도록 처리
+  bubble.textContent = message;
+
+
+  messageDiv.appendChild(avatar);
+
+  messageDiv.appendChild(bubble);
+
+  doriAiChat.appendChild(messageDiv);
+
+
+  // 최신 메시지로 스크롤
+  doriAiChat.scrollTop =
+    doriAiChat.scrollHeight;
+
+}
+
+
+/* =====================================================
+   테스트 응답
+===================================================== */
+
+function getDoriAiTestResponse(message) {
+
+  const text = message.toLowerCase();
+
+
+  if (
+    text.includes("안녕") ||
+    text.includes("하이")
+  ) {
+    return "안녕! 돌이 AI에 온 걸 환영해! 🐶";
+  }
+
+
+  if (
+    text.includes("돌이신문") ||
+    text.includes("신문")
+  ) {
+    return "돌이신문은 돌이사이트의 신문 콘텐츠를 모아둔 기능이야! 📰";
+  }
+
+
+  if (
+    text.includes("체스")
+  ) {
+    return "돌이체스라니! ♟️ 나중에는 체스 분석도 도와줄 수 있게 만들 거야.";
+  }
+
+
+  if (
+    text.includes("랜덤박스") ||
+    text.includes("뽑기")
+  ) {
+    return "랜덤박스 기능도 돌이 AI가 이해할 수 있도록 준비할 수 있어! 🎰";
+  }
+
+
+  if (
+    text.includes("돌돌코인") ||
+    text.includes("코인")
+  ) {
+    return "돌돌코인은 돌이사이트의 재미있는 경제 시스템이지! 🪙";
+  }
+
+
+  if (
+    text.includes("도로늄") ||
+    text.includes("공장")
+  ) {
+    return "도로늄 공장 이야기도 나중에 함께할 수 있어! 🏭";
+  }
+
+
+  return "아직 배우는 중이야! 🐶\n하지만 곧 돌이사이트의 전용 AI가 될 거야!";
+}
+
+
+/* =====================================================
+   메시지 전송
+===================================================== */
+
+doriAiForm.addEventListener(
+  "submit",
+  function(event) {
+
+    event.preventDefault();
+
+
+    const message =
+      doriAiInput.value.trim();
+
+
+    if (!message) return;
+
+
+    // 사용자 메시지 표시
+    addDoriAiMessage(message, "user");
+
+
+    // 입력창 초기화
+    doriAiInput.value = "";
+
+
+    // 테스트 응답
+    setTimeout(
+      function() {
+
+        const response =
+          getDoriAiTestResponse(message);
+
+        addDoriAiMessage(response, "bot");
+
+      },
+      500
+    );
+
+  }
+);
+
+
+/* =====================================================
+   페이지 진입 시 입력창에 포커스
+===================================================== */
+
+doriAiInput.focus();
+
+</script>
+
+</body>
+
+</html>
