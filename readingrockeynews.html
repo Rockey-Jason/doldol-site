@@ -1,2092 +1,739 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
-
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta name="viewport"
-      content="width=device-width, initial-scale=1.0">
+<title>돌이신문 읽기</title>
 
-<title>돌이 사이트 - 돌이신문</title>
-
-
-<!-- =====================================================
-     Google Fonts
-===================================================== -->
-
-<link rel="preconnect"
-      href="https://fonts.googleapis.com">
-
-<link rel="preconnect"
-      href="https://fonts.gstatic.com"
-      crossorigin>
-
-<link
-    href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap"
-    rel="stylesheet"
->
-
-
-<!-- =====================================================
-     CSS
-===================================================== -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
 
 <style>
-
-/* =====================================================
-   한컴 말랑말랑
-===================================================== */
-
 @font-face {
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    src:
-        url(
-            "https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2"
-        )
-        format("woff2");
-
-    font-weight:
-        400;
-
-    font-display:
-        swap;
-
+    font-family: "HancomMalrangmalrang";
+    src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2") format("woff2");
+    font-weight: 400;
+    font-display: swap;
 }
 
-
 @font-face {
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    src:
-        url(
-            "https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2"
-        )
-        format("woff2");
-
-    font-weight:
-        700;
-
-    font-display:
-        swap;
-
+    font-family: "HancomMalrangmalrang";
+    src: url("https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2") format("woff2");
+    font-weight: 700;
+    font-display: swap;
 }
-
-
-/* =====================================================
-   기본
-===================================================== */
 
 * {
-
-    box-sizing:
-        border-box;
-
-    user-select:
-        none;
-
-    -webkit-user-select:
-        none;
-
-    -webkit-user-drag:
-        none;
-
+    box-sizing: border-box;
+    -webkit-user-select: none;
+    user-select: none;
 }
-
-
-html {
-
-    margin:
-        0;
-
-    padding:
-        0;
-
-    width:
-        100%;
-
-    min-height:
-        100%;
-
-}
-
-
-body {
-
-    margin:
-        0;
-
-    padding:
-        0;
-
-    width:
-        100%;
-
-    min-height:
-        100vh;
-
-    color:
-        #ffffff;
-
-    overflow-x:
-        hidden;
-
-    background:
-
-        radial-gradient(
-            circle at 10% 10%,
-            rgba(75,90,180,.16),
-            transparent 28%
-        ),
-
-        radial-gradient(
-            circle at 90% 30%,
-            rgba(65,50,150,.13),
-            transparent 30%
-        ),
-
-        radial-gradient(
-            circle at 50% 100%,
-            rgba(25,45,120,.15),
-            transparent 35%
-        ),
-
-        linear-gradient(
-            135deg,
-            #000044 0%,
-            #000025 45%,
-            #000010 100%
-        );
-
-}
-
-
-/* =====================================================
-   입력
-===================================================== */
 
 input,
 textarea {
-
-    user-select:
-        text;
-
-    -webkit-user-select:
-        text;
-
+    -webkit-user-select: text;
+    user-select: text;
 }
 
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    color: #f5f5f5;
+    background:
+        radial-gradient(circle at 15% 10%, rgba(80, 80, 180, .18), transparent 35%),
+        radial-gradient(circle at 85% 85%, rgba(40, 40, 130, .16), transparent 35%),
+        linear-gradient(135deg, #000033, #000010);
+    font-family: "HancomMalrangmalrang", sans-serif;
+    overflow-x: hidden;
+}
+
+button,
+input {
+    font-family: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+button:disabled {
+    cursor: not-allowed;
+    opacity: .55;
+}
 
 /* =====================================================
-   전체 페이지
+   상단
+===================================================== */
+
+#사이트로고 {
+    display: block;
+    width: fit-content;
+    margin: 22px 20px 0;
+    padding: 0;
+    color: #fff;
+    font-family: "Black Han Sans", sans-serif;
+    font-size: clamp(42px, 8vw, 82px);
+    line-height: 1;
+    text-decoration: none;
+    transition: .25s;
+}
+
+#사이트로고:hover {
+    color: #b9b9ff;
+    transform: translateX(4px);
+}
+
+#사이트설명 {
+    margin: 20px auto 0;
+    padding: 0 20px;
+    max-width: 900px;
+    color: #d9d9f5;
+    font-size: clamp(17px, 2.5vw, 22px);
+    font-weight: 700;
+    line-height: 1.6;
+}
+
+/* =====================================================
+   메인
 ===================================================== */
 
 #페이지 {
-
-    position:
-        relative;
-
-    width:
-        100%;
-
-    min-height:
-        100vh;
-
-    padding:
-        35px 30px 100px;
-
+    width: min(100% - 32px, 900px);
+    margin: 30px auto 80px;
 }
 
+#신문헤더 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+#신문번호 {
+    color: #a9a9ff;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+#신문제목 {
+    margin: 0;
+    color: #fff;
+    font-size: clamp(28px, 5vw, 48px);
+    line-height: 1.25;
+    font-weight: 700;
+}
+
+#신문날짜 {
+    color: #aaaad0;
+    font-size: 15px;
+}
 
 /* =====================================================
-   배경 장식
+   기사
 ===================================================== */
 
-#페이지::before {
-
-    content:
-        "";
-
-    position:
-        fixed;
-
-    width:
-        420px;
-
-    height:
-        420px;
-
-    left:
-        -180px;
-
-    top:
-        180px;
-
-    border-radius:
-        50%;
-
+.기사카드 {
+    padding: clamp(22px, 4vw, 38px);
+    border: 1px solid rgba(255,255,255,.13);
+    border-radius: 26px;
     background:
-        rgba(70,80,190,.08);
-
-    filter:
-        blur(80px);
-
-    pointer-events:
-        none;
-
+        linear-gradient(145deg, rgba(35,35,90,.82), rgba(8,8,35,.86));
+    box-shadow: 0 20px 60px rgba(0,0,0,.28);
 }
-
-
-#페이지::after {
-
-    content:
-        "";
-
-    position:
-        fixed;
-
-    width:
-        400px;
-
-    height:
-        400px;
-
-    right:
-        -180px;
-
-    bottom:
-        -120px;
-
-    border-radius:
-        50%;
-
-    background:
-        rgba(50,50,160,.08);
-
-    filter:
-        blur(80px);
-
-    pointer-events:
-        none;
-
-}
-
-
-/* =====================================================
-   상단바
-===================================================== */
-
-.상단바 {
-
-    position:
-        relative;
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    justify-content:
-        space-between;
-
-    width:
-        100%;
-
-    max-width:
-        1450px;
-
-    margin:
-        0 auto;
-
-    padding:
-        0 10px;
-
-}
-
-
-/* =====================================================
-   돌이사이트 제목
-===================================================== */
-
-.사이트제목 {
-
-    display:
-        inline-block;
-
-    color:
-        #f8f8ff;
-
-    text-decoration:
-        none;
-
-    font-family:
-        "Black Han Sans";
-
-    font-size:
-        clamp(42px, 5vw, 78px);
-
-    line-height:
-        1;
-
-    letter-spacing:
-        -2px;
-
-    cursor:
-        pointer;
-
-    transition:
-        transform .3s ease,
-        text-shadow .3s ease,
-        opacity .3s ease;
-
-}
-
-
-.사이트제목:hover {
-
-    transform:
-        translateY(-2px);
-
-    text-shadow:
-        0 0 12px rgba(255,255,255,.15),
-        0 0 35px rgba(100,120,255,.12);
-
-}
-
-
-/* =====================================================
-   설명
-===================================================== */
-
-.신문설명 {
-
-    max-width:
-        1450px;
-
-    margin:
-        22px auto 0;
-
-    padding:
-        0 10px;
-
-    color:
-        rgba(255,255,255,.68);
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        19px;
-
-    font-weight:
-        700;
-
-}
-
-
-/* =====================================================
-   메인 컨테이너
-===================================================== */
-
-.신문컨테이너 {
-
-    position:
-        relative;
-
-    max-width:
-        1100px;
-
-    margin:
-        42px auto 0;
-
-}
-
-
-/* =====================================================
-   신문 헤더 카드
-===================================================== */
-
-.신문헤더 {
-
-    position:
-        relative;
-
-    overflow:
-        hidden;
-
-    padding:
-        34px 38px;
-
-    border:
-        1px solid rgba(255,255,255,.10);
-
-    border-radius:
-        24px;
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(28,31,68,.84),
-            rgba(10,12,34,.78)
-        );
-
-    box-shadow:
-        0 25px 70px rgba(0,0,0,.35),
-        inset 0 1px 0 rgba(255,255,255,.05);
-
-    backdrop-filter:
-        blur(18px);
-
-    -webkit-backdrop-filter:
-        blur(18px);
-
-    animation:
-        카드등장 .65s ease both;
-
-}
-
-
-.신문헤더::before {
-
-    content:
-        "";
-
-    position:
-        absolute;
-
-    width:
-        220px;
-
-    height:
-        220px;
-
-    right:
-        -100px;
-
-    top:
-        -120px;
-
-    border-radius:
-        50%;
-
-    background:
-        rgba(90,100,255,.10);
-
-    filter:
-        blur(35px);
-
-}
-
-
-.신문헤더작은글 {
-
-    position:
-        relative;
-
-    margin:
-        0 0 8px;
-
-    color:
-        #aeb8ff;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        15px;
-
-    font-weight:
-        700;
-
-    letter-spacing:
-        1px;
-
-}
-
-
-#제목 {
-
-    position:
-        relative;
-
-    margin:
-        0;
-
-    color:
-        #ffffff;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        clamp(38px, 5vw, 62px);
-
-    font-weight:
-        700;
-
-    line-height:
-        1.15;
-
-    letter-spacing:
-        -1px;
-
-}
-
-
-/* =====================================================
-   신문 본문 카드
-===================================================== */
-
-.본문카드 {
-
-    position:
-        relative;
-
-    margin-top:
-        18px;
-
-    padding:
-        42px 46px;
-
-    border:
-        1px solid rgba(255,255,255,.08);
-
-    border-radius:
-        24px;
-
-    background:
-        rgba(11,14,39,.76);
-
-    box-shadow:
-        0 22px 65px rgba(0,0,0,.32),
-        inset 0 1px 0 rgba(255,255,255,.035);
-
-    backdrop-filter:
-        blur(16px);
-
-    -webkit-backdrop-filter:
-        blur(16px);
-
-    animation:
-        본문등장 .75s ease .08s both;
-
-}
-
 
 #내용 {
-
-    position:
-        relative;
-
-    margin:
-        0;
-
-    color:
-        rgba(255,255,255,.91);
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        20px;
-
-    font-weight:
-        400;
-
-    line-height:
-        1.9;
-
-    white-space:
-        pre-wrap;
-
-    overflow-wrap:
-        anywhere;
-
-    word-break:
-        break-word;
-
+    color: #f1f1ff;
+    font-size: clamp(17px, 2.5vw, 22px);
+    line-height: 1.9;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
+/* =====================================================
+   버튼
+===================================================== */
+
+.버튼줄 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 25px;
+}
+
+.기본버튼 {
+    border: 1px solid rgba(255,255,255,.16);
+    border-radius: 14px;
+    padding: 13px 20px;
+    color: white;
+    background: rgba(255,255,255,.08);
+    font-size: 17px;
+    font-weight: 700;
+    transition: .2s;
+}
+
+.기본버튼:hover {
+    background: rgba(255,255,255,.16);
+    transform: translateY(-2px);
+}
+
+.주요버튼 {
+    border: none;
+    border-radius: 15px;
+    padding: 15px 25px;
+    color: #11112c;
+    background: linear-gradient(135deg, #d9d9ff, #8d8dff);
+    font-size: 18px;
+    font-weight: 700;
+    box-shadow: 0 8px 25px rgba(120,120,255,.2);
+    transition: .2s;
+}
+
+.주요버튼:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 30px rgba(120,120,255,.3);
+}
 
 /* =====================================================
    퀴즈
 ===================================================== */
 
 #퀴즈 {
-
-    position:
-        relative;
-
-    width:
-        100%;
-
-    margin-top:
-        18px;
-
-    padding:
-        30px 34px;
-
-    border:
-        1px solid rgba(130,145,255,.18);
-
-    border-radius:
-        24px;
-
+    display: none;
+    margin-top: 25px;
+    padding: clamp(22px, 4vw, 35px);
+    border: 1px solid rgba(255,255,255,.13);
+    border-radius: 26px;
     background:
-        linear-gradient(
-            145deg,
-            rgba(29,33,76,.90),
-            rgba(12,15,43,.86)
-        );
-
-    box-shadow:
-        0 20px 60px rgba(0,0,0,.32),
-        inset 0 1px 0 rgba(255,255,255,.04);
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    color:
-        white;
-
-    animation:
-        퀴즈등장 .55s ease both;
-
+        linear-gradient(145deg, rgba(35,35,90,.82), rgba(8,8,35,.86));
+    box-shadow: 0 20px 60px rgba(0,0,0,.25);
 }
 
-
-/* =====================================================
-   문제
-===================================================== */
-
-#문제 {
-
-    margin:
-        0 0 25px;
-
-    color:
-        #ffffff;
-
-    font-size:
-        27px;
-
-    line-height:
-        1.5;
-
+#퀴즈 h2 {
+    margin: 0 0 25px;
+    color: #fff;
+    font-size: clamp(22px, 4vw, 30px);
+    line-height: 1.5;
 }
 
-
-/* =====================================================
-   객관식
-===================================================== */
-
-#객관식 label {
-
-    display:
-        flex;
-
-    align-items:
-        center;
-
-    gap:
-        12px;
-
-    padding:
-        13px 15px;
-
-    border:
-        1px solid rgba(255,255,255,.06);
-
-    border-radius:
-        13px;
-
-    background:
-        rgba(255,255,255,.025);
-
-    cursor:
-        pointer;
-
-    transition:
-        background .2s ease,
-        border-color .2s ease,
-        transform .2s ease;
-
+#객관식 {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 
-
-#객관식 label:hover {
-
-    background:
-        rgba(255,255,255,.065);
-
-    border-color:
-        rgba(150,160,255,.20);
-
-    transform:
-        translateX(3px);
-
+.보기 {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    padding: 14px 16px;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 14px;
+    background: rgba(255,255,255,.05);
+    color: #f5f5f5;
+    font-size: 17px;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: .2s;
 }
 
-
-#객관식 input {
-
-    width:
-        18px;
-
-    height:
-        18px;
-
-    accent-color:
-        #8c9bff;
-
+.보기:hover {
+    background: rgba(255,255,255,.12);
+    transform: translateX(4px);
 }
 
+.보기 input {
+    accent-color: #9292ff;
+    transform: scale(1.2);
+}
 
-/* =====================================================
-   주관식
-===================================================== */
+#주관식 {
+    display: none;
+}
 
 #주관식답 {
-
-    width:
-        min(100%, 500px);
-
-    padding:
-        13px 16px;
-
-    border:
-        1px solid rgba(255,255,255,.12);
-
-    border-radius:
-        13px;
-
-    outline:
-        none;
-
-    background:
-        rgba(0,0,20,.42);
-
-    color:
-        white;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        18px;
-
-    transition:
-        border-color .2s ease,
-        box-shadow .2s ease;
-
+    width: 100%;
+    padding: 14px;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 12px;
+    outline: none;
+    color: white;
+    background: rgba(0,0,0,.25);
+    font-size: 17px;
 }
-
 
 #주관식답:focus {
-
-    border-color:
-        rgba(140,155,255,.55);
-
-    box-shadow:
-        0 0 0 4px rgba(120,135,255,.08);
-
+    border-color: #8888ff;
 }
 
-
-/* =====================================================
-   제출 버튼
-===================================================== */
-
-#제출 {
-
-    margin-top:
-        8px;
-
-    padding:
-        12px 25px;
-
-    border:
-        1px solid rgba(255,255,255,.10);
-
-    border-radius:
-        13px;
-
-    background:
-        linear-gradient(
-            135deg,
-            #6878ff,
-            #4d5ce0
-        );
-
-    color:
-        white;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        18px;
-
-    font-weight:
-        700;
-
-    cursor:
-        pointer;
-
-    box-shadow:
-        0 8px 25px rgba(60,70,200,.22);
-
-    transition:
-        transform .2s ease,
-        box-shadow .2s ease,
-        filter .2s ease;
-
-}
-
-
-#제출:hover {
-
-    transform:
-        translateY(-2px);
-
-    box-shadow:
-        0 12px 32px rgba(60,70,200,.32);
-
-    filter:
-        brightness(1.08);
-
-}
-
-
-#제출:active {
-
-    transform:
-        scale(.97);
-
-}
-
-
-#제출:disabled {
-
-    cursor:
-        not-allowed;
-
-    opacity:
-        .55;
-
-    box-shadow:
-        none;
-
-}
-
-
-/* =====================================================
-   결과
-===================================================== */
-
-#내답 {
-
-    color:
-        rgba(255,255,255,.62);
-
-    font-size:
-        16px;
-
-}
-
-
+#내답,
 #결과 {
-
-    color:
-        #a9d7ff;
-
-    font-size:
-        16px;
-
-    font-weight:
-        700;
-
+    margin: 15px 0 0;
+    font-size: 17px;
+    line-height: 1.6;
 }
 
+#결과.정답 {
+    color: #71e6a3;
+}
+
+#결과.오답 {
+    color: #ff8c9c;
+}
 
 /* =====================================================
-   이벤트
+   읽음 표시
 ===================================================== */
 
-#이벤트 {
-
-    position:
-        relative;
-
-    width:
-        100%;
-
-    margin-top:
-        18px;
-
-    padding:
-        30px 34px;
-
-    border:
-        1px solid rgba(255,190,80,.20);
-
-    border-radius:
-        24px;
-
-    background:
-        linear-gradient(
-            145deg,
-            rgba(66,45,90,.90),
-            rgba(24,20,52,.88)
-        );
-
-    box-shadow:
-        0 20px 65px rgba(0,0,0,.35),
-        inset 0 1px 0 rgba(255,255,255,.05);
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    animation:
-        이벤트등장 .6s ease both;
-
+#읽음상태 {
+    display: none;
+    margin-top: 18px;
+    color: #71e6a3;
+    font-size: 16px;
+    font-weight: 700;
+    text-align: center;
 }
-
-
-#이벤트::before {
-
-    content:
-        "EVENT";
-
-    position:
-        absolute;
-
-    top:
-        18px;
-
-    right:
-        22px;
-
-    padding:
-        5px 10px;
-
-    border:
-        1px solid rgba(255,215,120,.18);
-
-    border-radius:
-        20px;
-
-    color:
-        rgba(255,220,150,.72);
-
-    font-family:
-        Arial,
-        sans-serif;
-
-    font-size:
-        10px;
-
-    font-weight:
-        bold;
-
-    letter-spacing:
-        2px;
-
-}
-
-
-#이벤트제목 {
-
-    margin:
-        0 70px 12px 0;
-
-    font-size:
-        29px;
-
-    color:
-        #ffe3a1;
-
-}
-
-
-#이벤트설명 {
-
-    color:
-        rgba(255,255,255,.76);
-
-    line-height:
-        1.7;
-
-}
-
-
-#이벤트보상 {
-
-    color:
-        #ffe28a;
-
-    font-size:
-        21px;
-
-}
-
-
-#이벤트참여 {
-
-    margin-top:
-        8px;
-
-    padding:
-        12px 22px;
-
-    border:
-        1px solid rgba(255,255,255,.10);
-
-    border-radius:
-        12px;
-
-    background:
-        rgba(255,215,120,.12);
-
-    color:
-        #ffe8b0;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        18px;
-
-    font-weight:
-        700;
-
-    cursor:
-        pointer;
-
-    transition:
-        transform .2s ease,
-        background .2s ease,
-        box-shadow .2s ease;
-
-}
-
-
-#이벤트참여:hover {
-
-    transform:
-        translateY(-2px);
-
-    background:
-        rgba(255,215,120,.19);
-
-    box-shadow:
-        0 8px 25px rgba(255,180,50,.10);
-
-}
-
-
-#이벤트참여:disabled {
-
-    cursor:
-        not-allowed;
-
-    opacity:
-        .55;
-
-}
-
-
-#이벤트결과 {
-
-    color:
-        rgba(255,230,180,.85);
-
-    font-weight:
-        700;
-
-}
-
-
-/* =====================================================
-   하단 네비게이션
-===================================================== */
-
-.신문네비 {
-
-    display:
-        flex;
-
-    justify-content:
-        space-between;
-
-    align-items:
-        center;
-
-    gap:
-        15px;
-
-    margin-top:
-        22px;
-
-}
-
-
-.신문버튼 {
-
-    min-width:
-        210px;
-
-    padding:
-        14px 22px;
-
-    border:
-        1px solid rgba(255,255,255,.09);
-
-    border-radius:
-        14px;
-
-    background:
-        rgba(18,21,50,.80);
-
-    color:
-        rgba(255,255,255,.82);
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        17px;
-
-    font-weight:
-        700;
-
-    cursor:
-        pointer;
-
-    transition:
-        transform .22s ease,
-        background .22s ease,
-        border-color .22s ease,
-        box-shadow .22s ease;
-
-}
-
-
-.신문버튼:hover {
-
-    transform:
-        translateY(-3px);
-
-    background:
-        rgba(35,40,82,.92);
-
-    border-color:
-        rgba(150,160,255,.18);
-
-    box-shadow:
-        0 10px 28px rgba(0,0,0,.25);
-
-}
-
-
-.신문버튼:active {
-
-    transform:
-        translateY(0)
-        scale(.98);
-
-}
-
-
-.신문버튼:disabled {
-
-    opacity:
-        .35;
-
-    cursor:
-        not-allowed;
-
-    transform:
-        none;
-
-}
-
-
-/* =====================================================
-   읽음 버튼
-===================================================== */
-
-#읽음버튼 {
-
-    display:
-        block;
-
-    margin:
-        30px auto 0;
-
-    padding:
-        14px 28px;
-
-    border:
-        1px solid rgba(130,150,255,.25);
-
-    border-radius:
-        15px;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(55,68,145,.95),
-            rgba(31,40,100,.95)
-        );
-
-    color:
-        #ffffff;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-    font-size:
-        19px;
-
-    font-weight:
-        700;
-
-    cursor:
-        pointer;
-
-    box-shadow:
-        0 10px 30px rgba(30,40,130,.18);
-
-    transition:
-        transform .22s ease,
-        box-shadow .22s ease,
-        filter .22s ease,
-        opacity .22s ease;
-
-}
-
-
-#읽음버튼:hover {
-
-    transform:
-        translateY(-3px);
-
-    box-shadow:
-        0 15px 38px rgba(30,40,130,.28);
-
-    filter:
-        brightness(1.08);
-
-}
-
-
-#읽음버튼:active {
-
-    transform:
-        scale(.97);
-
-}
-
-
-#읽음버튼:disabled {
-
-    cursor:
-        not-allowed;
-
-}
-
 
 /* =====================================================
    로딩
 ===================================================== */
 
 #로딩 {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,20,.86);
+    backdrop-filter: blur(8px);
+}
 
-    position:
-        fixed;
+.로딩상자 {
+    text-align: center;
+    color: white;
+}
 
-    inset:
-        0;
+.로딩원 {
+    width: 45px;
+    height: 45px;
+    margin: 0 auto 15px;
+    border: 4px solid rgba(255,255,255,.15);
+    border-top-color: #a4a4ff;
+    border-radius: 50%;
+    animation: 회전 1s linear infinite;
+}
 
-    z-index:
-        99999;
+@keyframes 회전 {
+    to { transform: rotate(360deg); }
+}
 
-    display:
-        flex;
+/* =====================================================
+   보상 모달
+===================================================== */
 
-    align-items:
-        center;
+#보상배경 {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0,0,20,.72);
+    backdrop-filter: blur(12px);
+}
 
-    justify-content:
-        center;
+#보상배경.show {
+    display: flex;
+}
 
+#보상상자 {
+    position: relative;
+    width: min(100%, 430px);
+    padding: 35px 25px 30px;
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 28px;
     background:
-        linear-gradient(
-            135deg,
-            #000044,
-            #000010
-        );
-
-    transition:
-        opacity .5s ease,
-        visibility .5s ease;
-
+        radial-gradient(circle at 50% 0%, rgba(140,140,255,.18), transparent 55%),
+        linear-gradient(145deg, #18184c, #080820);
+    box-shadow: 0 25px 100px rgba(0,0,0,.6);
+    text-align: center;
+    overflow: hidden;
+    animation: 보상등장 .45s cubic-bezier(.22,1,.36,1);
 }
 
-
-#로딩.완료 {
-
-    opacity:
-        0;
-
-    visibility:
-        hidden;
-
-}
-
-
-.로딩내용 {
-
-    text-align:
-        center;
-
-    font-family:
-        "HancomMalrangmalrang";
-
-}
-
-
-.로딩아이콘 {
-
-    font-size:
-        45px;
-
-    animation:
-        로딩점프 1s ease-in-out infinite;
-
-}
-
-
-.로딩텍스트 {
-
-    margin-top:
-        15px;
-
-    color:
-        rgba(255,255,255,.72);
-
-    font-size:
-        17px;
-
-}
-
-
-/* =====================================================
-   애니메이션
-===================================================== */
-
-@keyframes 카드등장 {
-
+@keyframes 보상등장 {
     from {
-
-        opacity:
-            0;
-
-        transform:
-            translateY(18px);
-
+        opacity: 0;
+        transform: scale(.7) translateY(30px);
     }
-
     to {
-
-        opacity:
-            1;
-
-        transform:
-            translateY(0);
-
+        opacity: 1;
+        transform: scale(1) translateY(0);
     }
-
 }
 
-
-@keyframes 본문등장 {
-
-    from {
-
-        opacity:
-            0;
-
-        transform:
-            translateY(15px);
-
-    }
-
-    to {
-
-        opacity:
-            1;
-
-        transform:
-            translateY(0);
-
-    }
-
+#보상닫기 {
+    position: absolute;
+    top: 12px;
+    right: 16px;
+    border: none;
+    background: none;
+    color: #aaa;
+    font-size: 25px;
 }
 
-
-@keyframes 퀴즈등장 {
-
-    from {
-
-        opacity:
-            0;
-
-        transform:
-            translateY(15px)
-            scale(.985);
-
-    }
-
-    to {
-
-        opacity:
-            1;
-
-        transform:
-            translateY(0)
-            scale(1);
-
-    }
-
+#보상아이콘 {
+    position: relative;
+    z-index: 2;
+    font-size: 70px;
+    filter: drop-shadow(0 0 20px rgba(255,215,70,.45));
+    animation: 코인점프 1.2s ease-in-out infinite;
 }
 
-
-@keyframes 이벤트등장 {
-
-    from {
-
-        opacity:
-            0;
-
-        transform:
-            translateY(15px)
-            scale(.985);
-
-    }
-
-    to {
-
-        opacity:
-            1;
-
-        transform:
-            translateY(0)
-            scale(1);
-
-    }
-
+@keyframes 코인점프 {
+    0%,100% { transform: translateY(0) rotate(-5deg); }
+    50% { transform: translateY(-12px) rotate(5deg); }
 }
 
+#보상제목 {
+    margin: 15px 0 8px;
+    color: #fff;
+    font-size: 28px;
+    font-weight: 700;
+}
 
-@keyframes 로딩점프 {
+#보상금액 {
+    margin: 0;
+    color: #ffe477;
+    font-size: 40px;
+    font-weight: 700;
+    text-shadow: 0 0 20px rgba(255,220,100,.35);
+}
 
-    0%,
+#보상설명 {
+    margin: 10px 0 0;
+    color: #bdbddc;
+    font-size: 15px;
+}
+
+#보상잔액 {
+    margin: 20px 0 0;
+    color: #d9d9ff;
+    font-size: 15px;
+}
+
+.코인 {
+    position: absolute;
+    top: 110%;
+    left: 50%;
+    z-index: 1;
+    width: 25px;
+    height: 25px;
+    border: 3px solid #ffe477;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fff2a8, #e8ad27);
+    box-shadow: 0 0 15px rgba(255,215,70,.6);
+    pointer-events: none;
+    animation: 코인상승 2.5s ease-out forwards;
+}
+
+@keyframes 코인상승 {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, 0) rotate(0deg) scale(.5);
+    }
+    15% {
+        opacity: 1;
+    }
     100% {
-
-        transform:
-            translateY(0);
-
+        opacity: 0;
+        transform: translate(
+            calc(-50% + var(--x)),
+            -420px
+        ) rotate(720deg) scale(1.1);
     }
-
-    50% {
-
-        transform:
-            translateY(-8px);
-
-    }
-
 }
 
-
 /* =====================================================
-   모바일
+   반응형
 ===================================================== */
 
-@media (max-width: 700px) {
-
+@media (max-width: 600px) {
     #페이지 {
-
-        padding:
-            24px 15px 70px;
-
+        width: min(100% - 24px, 900px);
+        margin-top: 22px;
     }
 
-
-    .상단바 {
-
-        padding:
-            0;
-
+    #사이트설명 {
+        margin-top: 15px;
+        padding: 0 16px;
     }
 
-
-    .사이트제목 {
-
-        font-size:
-            45px;
-
+    #신문헤더 {
+        gap: 8px;
     }
 
-
-    .신문설명 {
-
-        padding:
-            0;
-
-        font-size:
-            16px;
-
-        line-height:
-            1.6;
-
+    .기사카드,
+    #퀴즈 {
+        border-radius: 20px;
+        padding: 20px;
     }
 
-
-    .신문컨테이너 {
-
-        margin-top:
-            28px;
-
+    .버튼줄 {
+        flex-direction: column;
     }
 
-
-    .신문헤더 {
-
-        padding:
-            27px 23px;
-
-        border-radius:
-            20px;
-
+    .버튼줄 button {
+        width: 100%;
     }
 
-
-    #제목 {
-
-        font-size:
-            39px;
-
+    #보상금액 {
+        font-size: 34px;
     }
-
-
-    .본문카드 {
-
-        padding:
-            27px 23px;
-
-        border-radius:
-            20px;
-
-    }
-
-
-    #내용 {
-
-        font-size:
-            17px;
-
-        line-height:
-            1.8;
-
-    }
-
-
-    #퀴즈,
-    #이벤트 {
-
-        padding:
-            25px 21px;
-
-        border-radius:
-            20px;
-
-    }
-
-
-    #문제 {
-
-        font-size:
-            22px;
-
-    }
-
-
-    .신문네비 {
-
-        flex-direction:
-            column;
-
-    }
-
-
-    .신문버튼 {
-
-        width:
-            100%;
-
-        min-width:
-            0;
-
-    }
-
-
-    #읽음버튼 {
-
-        width:
-            100%;
-
-    }
-
 }
 
-
-/* =====================================================
-   아주 작은 화면
-===================================================== */
-
-@media (max-width: 430px) {
-
-    .사이트제목 {
-
-        font-size:
-            38px;
-
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
     }
-
-
-    #제목 {
-
-        font-size:
-            32px;
-
-    }
-
-
-    #내용 {
-
-        font-size:
-            16px;
-
-    }
-
 }
-
 </style>
-
 </head>
-
 
 <body>
 
+<a
+    id="사이트로고"
+    href="https://rockey-jason.github.io/doldol-site/"
+>
+    돌이 사이트
+</a>
 
-<!-- =====================================================
-     로딩 화면
-===================================================== -->
+<p id="사이트설명">
+    돌이신문 확인 - 돌이와 관련된 이야기를 읽어보세요!
+</p>
 
-<div id="로딩">
+<main id="페이지">
 
-    <div class="로딩내용">
-
-        <div class="로딩아이콘">
-            🐶
+    <section id="신문헤더">
+        <div>
+            <div id="신문번호">돌이신문</div>
+            <h1 id="신문제목">신문을 불러오는 중...</h1>
+            <div id="신문날짜"></div>
         </div>
+    </section>
 
-        <div class="로딩텍스트">
-            돌이신문을 불러오는 중...
-        </div>
+    <article class="기사카드">
+        <div id="내용">신문 내용을 불러오는 중...</div>
 
-    </div>
-
-</div>
-
-
-<!-- =====================================================
-     페이지
-===================================================== -->
-
-<div id="페이지">
-
-
-    <!-- =================================================
-         상단
-    ================================================== -->
-
-    <div class="상단바">
-
-        <a
-            class="사이트제목"
-            href="https://rockey-jason.github.io/doldol-site/"
-        >
-            돌이 사이트
-        </a>
-
-    </div>
-
-
-    <!-- =================================================
-         설명
-    ================================================== -->
-
-    <p class="신문설명">
-
-        돌이신문 확인 · 돌이와 관련된 이야기를 읽어보세요!
-
-    </p>
-
-
-    <!-- =================================================
-         신문
-    ================================================== -->
-
-    <main class="신문컨테이너">
-
-
-        <!-- =============================================
-             제목
-        ============================================== -->
-
-        <section class="신문헤더">
-
-            <p class="신문헤더작은글">
-                DOLDOL NEWS
-            </p>
-
-            <h1 id="제목">
-                돌이신문
-            </h1>
-
-        </section>
-
-
-        <!-- =============================================
-             본문
-        ============================================== -->
-
-        <section class="본문카드">
-
-            <div id="내용">
-
-                돌이신문을 불러오는 중...
-
-            </div>
-
-        </section>
-
-
-        <!-- =============================================
-             퀴즈
-        ============================================== -->
-
-        <div id="퀴즈">
-
-
-            <h2 id="문제">
-                문제
-            </h2>
-
-
-            <!-- 객관식 -->
-
-            <div id="객관식">
-
-
-                <label>
-
-                    <input
-                        type="radio"
-                        name="quiz"
-                        value="1"
-                    >
-
-                    <span id="보기1"></span>
-
-                </label>
-
-
-                <label>
-
-                    <input
-                        type="radio"
-                        name="quiz"
-                        value="2"
-                    >
-
-                    <span id="보기2"></span>
-
-                </label>
-
-
-                <label>
-
-                    <input
-                        type="radio"
-                        name="quiz"
-                        value="3"
-                    >
-
-                    <span id="보기3"></span>
-
-                </label>
-
-
-                <label>
-
-                    <input
-                        type="radio"
-                        name="quiz"
-                        value="4"
-                    >
-
-                    <span id="보기4"></span>
-
-                </label>
-
-
-                <label>
-
-                    <input
-                        type="radio"
-                        name="quiz"
-                        value="5"
-                    >
-
-                    <span id="보기5"></span>
-
-                </label>
-
-
-            </div>
-
-
-            <!-- 주관식 -->
-
-            <div
-                id="주관식"
-                style="display:none;"
-            >
-
-                <input
-                    type="text"
-                    id="주관식답"
-                    placeholder="답을 입력하세요"
-                >
-
-                <br><br>
-
-            </div>
-
-
-            <button id="제출">
-                제출
-            </button>
-
-
-            <p id="내답"></p>
-
-            <p id="결과"></p>
-
-
-        </div>
-
-
-        <!-- =============================================
-             이벤트
-        ============================================== -->
-
-        <div id="이벤트">
-
-
-            <h2 id="이벤트제목">
-                🎉 이벤트
-            </h2>
-
-
-            <p id="이벤트설명"></p>
-
-
-            <p>
-
-                🎁 보상:
-                <strong id="이벤트보상"></strong>
-                돌돌코인
-
-            </p>
-
-
-            <button id="이벤트참여">
-
-                이벤트 참여하기
-
-            </button>
-
-
-            <p id="이벤트결과"></p>
-
-
-        </div>
-
-
-        <!-- =============================================
-             이전 / 다음
-        ============================================== -->
-
-        <div class="신문네비">
-
-
+        <div class="버튼줄">
             <button
                 id="이전"
-                class="신문버튼"
+                class="기본버튼"
+                type="button"
             >
-
-                ← 이전 돌이신문
-
+                ← 이전 신문
             </button>
 
+            <button
+                id="읽음저장버튼"
+                class="주요버튼"
+                type="button"
+            >
+                📖 읽음 저장
+            </button>
 
             <button
                 id="다음"
-                class="신문버튼"
+                class="기본버튼"
+                type="button"
             >
-
-                다음 돌이신문 →
-
+                다음 신문 →
             </button>
+        </div>
 
+        <div id="읽음상태">
+            ✅ 이 신문은 읽음 처리되었습니다.
+        </div>
+    </article>
+
+    <section id="퀴즈">
+
+        <h2 id="문제">퀴즈를 불러오는 중...</h2>
+
+        <div id="객관식">
+
+            <label class="보기">
+                <input type="radio" name="quiz" value="1">
+                <span id="보기1"></span>
+            </label>
+
+            <label class="보기">
+                <input type="radio" name="quiz" value="2">
+                <span id="보기2"></span>
+            </label>
+
+            <label class="보기">
+                <input type="radio" name="quiz" value="3">
+                <span id="보기3"></span>
+            </label>
+
+            <label class="보기">
+                <input type="radio" name="quiz" value="4">
+                <span id="보기4"></span>
+            </label>
+
+            <label class="보기">
+                <input type="radio" name="quiz" value="5">
+                <span id="보기5"></span>
+            </label>
 
         </div>
 
+        <div id="주관식">
+            <input
+                type="text"
+                id="주관식답"
+                placeholder="답을 입력하세요"
+            >
+        </div>
 
-        <!-- =============================================
-             읽음
-        ============================================== -->
+        <div class="버튼줄">
+            <button
+                id="제출"
+                class="주요버튼"
+                type="button"
+            >
+                정답 제출
+            </button>
+        </div>
 
-        <button id="읽음버튼">
+        <p id="내답"></p>
+        <p id="결과"></p>
 
-            📖 돌이신문 읽음
+    </section>
 
+</main>
+
+<!-- 로딩 -->
+<div id="로딩">
+    <div class="로딩상자">
+        <div class="로딩원"></div>
+        <div>돌이신문을 불러오는 중...</div>
+    </div>
+</div>
+
+<!-- 보상 모달 -->
+<div id="보상배경">
+
+    <div id="보상상자">
+
+        <button
+            id="보상닫기"
+            type="button"
+            aria-label="보상 닫기"
+        >
+            ×
         </button>
 
+        <div id="보상아이콘">🪙</div>
 
-    </main>
+        <h2 id="보상제목">보상 획득!</h2>
 
+        <p id="보상금액">+1,000</p>
+
+        <p id="보상설명">
+            돌돌코인이 지급되었습니다!
+        </p>
+
+        <p id="보상잔액"></p>
+
+    </div>
 
 </div>
 
-
-<!-- =====================================================
-     Supabase
-===================================================== -->
-
 <script type="module">
 
-
 import {
-
     createClient
-
-}
-
-from
-
-"https://esm.sh/@supabase/supabase-js@2";
-
+} from "https://esm.sh/@supabase/supabase-js@2";
 
 /* =====================================================
-   Supabase 설정
+   Supabase
 ===================================================== */
 
-const supabase =
-
-    createClient(
-
-        "https://scttowfhygcpdirrekqm.supabase.co",
-
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
-    );
-
+const supabase = createClient(
+    "https://scttowfhygcpdirrekqm.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmUiLCJyb2xlIjoiYW5vbiJ9"
+);
 
 /*
-   ⚠️ 중요
+    위 키는 예시가 아니라 기존에 사용하던
+    Supabase anon key를 그대로 넣어야 합니다.
 
-   위 anon key는 반드시 기존에 사용하던
-   Supabase anon key로 교체하세요.
-
-   아래에는 기존 코드의 키를 그대로 넣으면 됩니다.
+    ⚠️ 주의:
+    실제 anon key가 기존 코드와 다르면
+    기존 코드의 키로 교체하세요.
 */
-
-
-/* =====================================================
-   상태
-===================================================== */
-
-let 현재사용자 =
-    null;
-
-let 현재유저정보 =
-    null;
-
-let 현재이벤트 =
-    null;
-
-let 신문번호 =
-    1;
-
-let 마지막신문번호 =
-    1;
-
-let 읽은신문번호들 =
-    [];
-
 
 /* =====================================================
    DOM
 ===================================================== */
 
-const $ = id =>
-    document.getElementById(id);
+const 로딩 = document.getElementById("로딩");
 
+const 신문번호 = document.getElementById("신문번호");
+const 신문제목 = document.getElementById("신문제목");
+const 신문날짜 = document.getElementById("신문날짜");
+const 내용 = document.getElementById("내용");
+
+const 이전버튼 = document.getElementById("이전");
+const 다음버튼 = document.getElementById("다음");
+const 읽음저장버튼 = document.getElementById("읽음저장버튼");
+const 읽음상태 = document.getElementById("읽음상태");
+
+const 퀴즈 = document.getElementById("퀴즈");
+const 문제 = document.getElementById("문제");
+const 객관식 = document.getElementById("객관식");
+const 주관식 = document.getElementById("주관식");
+const 주관식답 = document.getElementById("주관식답");
+const 제출버튼 = document.getElementById("제출");
+const 내답 = document.getElementById("내답");
+const 결과 = document.getElementById("결과");
+
+const 보상배경 = document.getElementById("보상배경");
+const 보상닫기 = document.getElementById("보상닫기");
+const 보상금액 = document.getElementById("보상금액");
+const 보상설명 = document.getElementById("보상설명");
+const 보상잔액 = document.getElementById("보상잔액");
+const 보상상자 = document.getElementById("보상상자");
 
 /* =====================================================
-   로딩 종료
+   상태
 ===================================================== */
 
-function 로딩종료() {
-
-    const 로딩 =
-        $("로딩");
-
-    if (!로딩) {
-
-        return;
-
-    }
-
-    setTimeout(() => {
-
-        로딩.classList.add("완료");
-
-    }, 250);
-
-}
-
+let 현재신문번호 = 0;
+let 현재신문 = null;
+let 로그인사용자 = null;
+let 현재보상애니메이션 = null;
 
 /* =====================================================
    로그인 확인
@@ -2095,1529 +742,606 @@ function 로딩종료() {
 async function 로그인확인() {
 
     const {
-
-        data,
+        data: {
+            session
+        },
         error
-
-    } =
-        await supabase.auth.getSession();
-
+    } = await supabase.auth.getSession();
 
     if (error) {
-
-        console.error(
-            "세션 확인 오류:",
-            error
-        );
-
-        return false;
-
+        throw error;
     }
 
-
-    if (!data.session) {
-
-        return false;
-
-    }
-
-
-    현재사용자 =
-        data.session.user;
-
-
-    return true;
-
-}
-
-
-/* =====================================================
-   사용자 정보
-===================================================== */
-
-async function 사용자정보불러오기() {
-
-    const {
-
-        data,
-        error
-
-    } =
-        await supabase
-
-            .from("users")
-
-            .select(`
-                read_dori_news,
-                read_dori_news_numbers,
-                quiz_answers
-            `)
-
-            .eq(
-                "user_id",
-                현재사용자.id
-            )
-
-            .single();
-
-
-    if (error) {
-
-        console.error(
-            "사용자 정보 오류:",
-            error
-        );
-
+    if (!session) {
         alert(
-            "사용자 정보를 불러오지 못했습니다."
+            "로그인을 하지 않아 이 기능을 사용할 수 없습니다. 먼저 로그인을 완료해주세요."
         );
 
+        location.href = "https://rockey-jason.github.io/doldol-site/";
         return false;
-
     }
 
-
-    현재유저정보 =
-        data;
-
-
-    읽은신문번호들 =
-        Array.isArray(
-            data.read_dori_news_numbers
-        )
-
-            ? data.read_dori_news_numbers
-                .map(Number)
-                .filter(Number.isInteger)
-
-            : [];
-
+    로그인사용자 = session.user;
 
     return true;
-
 }
-
 
 /* =====================================================
    신문 번호
 ===================================================== */
 
-function 신문번호불러오기() {
+function 신문번호가져오기() {
 
-    const 저장된번호 =
+    const 저장된번호 = localStorage.getItem("rockeynews");
 
-        Number(
-            localStorage.getItem(
-                "rockeynews"
-            )
-        );
+    const 번호 = Number(저장된번호);
 
-
-    if (
-        Number.isInteger(
-            저장된번호
-        )
-        &&
-        저장된번호 >= 1
-    ) {
-
-        신문번호 =
-            저장된번호;
-
+    if (!Number.isInteger(번호) || 번호 <= 0) {
+        return 1;
     }
 
-    else {
-
-        신문번호 =
-            1;
-
-        localStorage.setItem(
-            "rockeynews",
-            "1"
-        );
-
-    }
-
+    return 번호;
 }
 
-
 /* =====================================================
-   마지막 신문
+   신문 불러오기
 ===================================================== */
 
-async function 마지막신문불러오기() {
+async function 신문불러오기(번호) {
 
     const {
-
         data,
         error
-
-    } =
-        await supabase
-
-            .from("rockey_news")
-
-            .select("news_number")
-
-            .order(
-                "news_number",
-                {
-                    ascending:
-                        false
-                }
-            )
-
-            .limit(1)
-            .single();
-
+    } = await supabase
+        .from("rockey_news")
+        .select("*")
+        .eq("news_number", 번호)
+        .maybeSingle();
 
     if (error) {
-
-        console.error(
-            "마지막 신문 조회 오류:",
-            error
-        );
-
-        return false;
-
+        throw error;
     }
 
+    if (!data) {
+        throw new Error("신문을 찾을 수 없습니다.");
+    }
 
-    마지막신문번호 =
-        Number(
-            data.news_number
-        );
-
-
-    return true;
-
+    return data;
 }
 
-
 /* =====================================================
-   현재 신문 가져오기
+   읽은 신문 확인
 ===================================================== */
 
-async function 신문불러오기() {
+async function 읽은신문확인(번호) {
+
+    if (!로그인사용자) {
+        return false;
+    }
 
     const {
-
-        data: news,
+        data,
         error
-
-    } =
-        await supabase
-
-            .from("rockey_news")
-
-            .select(`
-                news_number,
-                rockey_news,
-                question,
-                question_type,
-                choice1,
-                choice2,
-                choice3,
-                choice4,
-                choice5,
-                answer
-            `)
-
-            .eq(
-                "news_number",
-                신문번호
-            )
-
-            .single();
-
+    } = await supabase
+        .from("users")
+        .select("read_dori_news_numbers")
+        .eq("user_id", 로그인사용자.id)
+        .maybeSingle();
 
     if (error) {
-
-        console.error(
-            "신문 조회 오류:",
-            error
-        );
-
-        alert(
-            "신문을 불러오지 못했습니다."
-        );
-
+        console.warn("읽은 신문 확인 오류:", error);
         return false;
-
     }
 
+    const 읽은목록 = Array.isArray(data?.read_dori_news_numbers)
+        ? data.read_dori_news_numbers.map(Number)
+        : [];
 
-    $("제목").textContent =
-        `제${신문번호}회 돌이신문`;
-
-
-    $("내용").innerHTML =
-
-        String(
-            news.rockey_news || ""
-        )
-
-            .replace(
-                /\\n/g,
-                "<br>"
-            )
-
-            .replace(
-                /\/n/g,
-                ""
-            );
-
-
-    퀴즈설정(news);
-
-    return true;
-
+    return 읽은목록.includes(Number(번호));
 }
 
-
 /* =====================================================
-   퀴즈 설정
+   신문 표시
 ===================================================== */
 
-function 퀴즈설정(news) {
+async function 신문표시(신문) {
 
-    const 퀴즈 =
-        $("퀴즈");
+    현재신문 = 신문;
+    현재신문번호 = Number(신문.news_number);
 
+    신문번호.textContent =
+        `제 ${현재신문번호}호`;
 
-    if (!news.question) {
+    신문제목.textContent =
+        신문.title ||
+        신문.news_title ||
+        `돌이신문 ${현재신문번호}호`;
 
-        퀴즈.style.display =
-            "none";
+    신문날짜.textContent =
+        신문.created_at
+            ? new Date(신문.created_at).toLocaleDateString("ko-KR")
+            : "";
 
-        return;
-
-    }
-
+    내용.textContent =
+        신문.rockey_news || "";
 
     퀴즈.style.display =
-        "block";
+        신문.question
+            ? "block"
+            : "none";
 
+    퀴즈초기화();
 
-    $("문제").textContent =
-        news.question;
+    const 이미읽음 =
+        await 읽은신문확인(현재신문번호);
 
+    읽음저장버튼.disabled = 이미읽음;
 
-    const 객관식 =
-        $("객관식");
+    읽음저장버튼.textContent =
+        이미읽음
+            ? "✅ 읽음 처리됨"
+            : "📖 읽음 저장";
 
-    const 주관식 =
-        $("주관식");
+    읽음상태.style.display =
+        이미읽음
+            ? "block"
+            : "none";
 
+    이전버튼.disabled =
+        현재신문번호 <= 1;
 
-    if (
-        news.question_type ===
-        "multiple"
-    ) {
-
-        객관식.style.display =
-            "block";
-
-        주관식.style.display =
-            "none";
-
-
-        $("보기1").textContent =
-            news.choice1 || "";
-
-        $("보기2").textContent =
-            news.choice2 || "";
-
-        $("보기3").textContent =
-            news.choice3 || "";
-
-        $("보기4").textContent =
-            news.choice4 || "";
-
-        $("보기5").textContent =
-            news.choice5 || "";
-
-    }
-
-    else if (
-        news.question_type ===
-        "subjective"
-    ) {
-
-        객관식.style.display =
-            "none";
-
-        주관식.style.display =
-            "block";
-
-    }
-
-    else {
-
-        퀴즈.style.display =
-            "none";
-
-    }
-
-
-    이전답불러오기(news);
-
+    다음버튼.disabled =
+        false;
 }
 
-
 /* =====================================================
-   이전 답
+   퀴즈 초기화
 ===================================================== */
 
-function 이전답불러오기(news) {
+function 퀴즈초기화() {
 
-    const 답목록 =
-        현재유저정보.quiz_answers || {};
+    내답.textContent = "";
+    결과.textContent = "";
+    결과.className = "";
 
+    document
+        .querySelectorAll('input[name="quiz"]')
+        .forEach(input => {
+            input.checked = false;
+        });
 
-    const 이전답 =
-        답목록[신문번호];
+    주관식답.value = "";
 
-
-    const 제출 =
-        $("제출");
-
-
-    const 내답 =
-        $("내답");
-
-
-    if (
-        이전답 === undefined ||
-        이전답 === null
-    ) {
-
-        제출.disabled =
-            false;
-
-        제출.textContent =
-            "제출";
-
+    if (!현재신문?.question) {
         return;
-
     }
 
+    문제.textContent =
+        현재신문.question;
+
+    const 문제종류 =
+        현재신문.question_type || "choice";
 
     if (
-        news.question_type ===
-        "multiple"
+        문제종류 === "subjective" ||
+        문제종류 === "short"
     ) {
 
-        const 선택 =
-            document.querySelector(
-                `input[name="quiz"][value="${이전답}"]`
-            );
+        객관식.style.display = "none";
+        주관식.style.display = "block";
 
+    } else {
 
-        if (선택) {
+        객관식.style.display = "flex";
+        주관식.style.display = "none";
 
-            선택.checked =
-                true;
+        for (let i = 1; i <= 5; i++) {
 
+            const 보기 =
+                document.getElementById(`보기${i}`);
+
+            const 값 =
+                현재신문[`choice${i}`];
+
+            보기.textContent =
+                값 || "";
+
+            보기.parentElement.style.display =
+                값 ? "flex" : "none";
         }
-
-
-        document
-
-            .querySelectorAll(
-                'input[name="quiz"]'
-            )
-
-            .forEach(
-                radio => {
-
-                    radio.disabled =
-                        true;
-
-                }
-            );
-
-
-        내답.textContent =
-            `내가 제출한 답 : ${이전답}번`;
-
     }
-
-
-    else if (
-        news.question_type ===
-        "subjective"
-    ) {
-
-        const 입력 =
-            $("주관식답");
-
-
-        입력.value =
-            이전답;
-
-
-        입력.disabled =
-            true;
-
-
-        내답.textContent =
-            `내가 제출한 답 : ${이전답}`;
-
-    }
-
-
-    제출.textContent =
-        "제출됨";
-
-    제출.disabled =
-        true;
-
 }
 
+/* =====================================================
+   읽음 저장 + 보상
+===================================================== */
+
+async function 읽음저장() {
+
+    if (!로그인사용자) {
+        alert("로그인이 필요합니다.");
+        return;
+    }
+
+    if (!현재신문번호) {
+        return;
+    }
+
+    읽음저장버튼.disabled = true;
+    읽음저장버튼.textContent = "저장 중...";
+
+    try {
+
+        const {
+            data,
+            error
+        } = await supabase.rpc(
+            "claim_news_reward",
+            {
+                p_news_number: 현재신문번호,
+                p_reward_type: "news_read"
+            }
+        );
+
+        if (error) {
+            throw error;
+        }
+
+        읽음저장버튼.textContent =
+            "✅ 읽음 처리됨";
+
+        읽음상태.style.display =
+            "block";
+
+        if (data?.success) {
+
+            보상모달열기(
+                data.amount,
+                data.balance,
+                "신문을 읽고 받은 보상입니다!"
+            );
+
+        } else {
+
+            alert(
+                data?.message ||
+                "이미 지급받은 보상입니다."
+            );
+        }
+
+    } catch (error) {
+
+        console.error("신문 보상 오류:", error);
+
+        alert(
+            "읽음 저장 중 오류가 발생했습니다.\n" +
+            error.message
+        );
+
+        읽음저장버튼.disabled = false;
+
+        읽음저장버튼.textContent =
+            "📖 읽음 저장";
+    }
+}
 
 /* =====================================================
-   퀴즈 제출
+   퀴즈 정답 제출
 ===================================================== */
 
 async function 퀴즈제출() {
 
-    const 퀴즈 =
-        $("퀴즈");
-
-
-    if (
-        퀴즈.style.display !==
-        "block"
-    ) {
-
+    if (!현재신문) {
         return;
-
     }
 
+    제출버튼.disabled = true;
 
-    let 선택한답;
+    let 내답값 = "";
 
-
-    const 객관식 =
-        $("객관식");
-
+    const 문제종류 =
+        현재신문.question_type || "choice";
 
     if (
-        객관식.style.display ===
-        "block"
+        문제종류 === "subjective" ||
+        문제종류 === "short"
     ) {
+
+        내답값 =
+            주관식답.value.trim();
+
+    } else {
 
         const 선택 =
             document.querySelector(
                 'input[name="quiz"]:checked'
             );
 
-
         if (!선택) {
 
-            $("결과").textContent =
-                "답을 선택해주세요.";
+            alert("답을 선택해주세요.");
+
+            제출버튼.disabled = false;
 
             return;
-
         }
 
-
-        선택한답 =
-            Number(
-                선택.value
-            );
-
+        내답값 = 선택.value;
     }
 
+    내답.textContent =
+        `내 답: ${내답값}`;
 
-    else {
+    const 정답 =
+        String(현재신문.answer ?? "").trim();
 
-        const 입력 =
-            $("주관식답");
+    const 맞음 =
+        내답값.toLowerCase() ===
+        정답.toLowerCase();
 
+    if (!맞음) {
 
-        선택한답 =
-            입력.value.trim();
+        결과.textContent =
+            "❌ 아쉽지만 오답입니다.";
 
+        결과.className =
+            "오답";
 
-        if (!선택한답) {
-
-            $("결과").textContent =
-                "답을 입력해주세요.";
-
-            return;
-
-        }
-
-    }
-
-
-    제출버튼잠금(true);
-
-
-    /* 현재 신문 다시 조회 */
-
-    const {
-
-        data: news,
-        error: newsError
-
-    } =
-        await supabase
-
-            .from("rockey_news")
-
-            .select(`
-                question_type,
-                answer
-            `)
-
-            .eq(
-                "news_number",
-                신문번호
-            )
-
-            .single();
-
-
-    if (newsError) {
-
-        console.error(
-            newsError
-        );
-
-        제출버튼잠금(false);
-
-        $("결과").textContent =
-            "신문 정보를 확인하지 못했습니다.";
+        제출버튼.disabled = false;
 
         return;
-
     }
 
+    결과.textContent =
+        "🎉 정답입니다!";
 
-    let 정답여부 =
-        false;
+    결과.className =
+        "정답";
 
+    try {
 
-    if (
-        news.question_type ===
-        "multiple"
-    ) {
-
-        정답여부 =
-            선택한답 ===
-            Number(
-                news.answer
-            );
-
-    }
-
-
-    else {
-
-        정답여부 =
-
-            String(
-                선택한답
-            )
-                .trim()
-                .toLowerCase()
-
-            ===
-
-            String(
-                news.answer
-            )
-                .trim()
-                .toLowerCase();
-
-    }
-
-
-    /* 사용자 답 가져오기 */
-
-    const {
-
-        data: userData,
-        error: userError
-
-    } =
-        await supabase
-
-            .from("users")
-
-            .select("quiz_answers")
-
-            .eq(
-                "user_id",
-                현재사용자.id
-            )
-
-            .single();
-
-
-    if (userError) {
-
-        제출버튼잠금(false);
-
-        $("결과").textContent =
-            "사용자 정보를 불러오지 못했습니다.";
-
-        return;
-
-    }
-
-
-    let 답목록 =
-        userData.quiz_answers || {};
-
-
-    답목록[신문번호] =
-        선택한답;
-
-
-    /* 저장 */
-
-    const {
-
-        error
-
-    } =
-        await supabase
-
-            .from("users")
-
-            .update({
-
-                quiz_right:
-                    정답여부,
-
-                quiz_news_number:
-                    신문번호,
-
-                quiz_answered:
-                    true,
-
-                quiz_answers:
-                    답목록
-
-            })
-
-            .eq(
-                "user_id",
-                현재사용자.id
-            );
-
-
-    if (error) {
-
-        console.error(
-            "퀴즈 저장 오류:",
+        const {
+            data,
             error
-        );
-
-        제출버튼잠금(false);
-
-        $("결과").textContent =
-            "저장에 실패했습니다.";
-
-        return;
-
-    }
-
-
-    현재유저정보.quiz_answers =
-        답목록;
-
-
-    $("결과").textContent =
-        정답여부
-            ? "🎉 정답입니다!"
-            : "😢 아쉽지만 오답입니다.";
-
-
-    $("제출").textContent =
-        "제출됨";
-
-
-    $("내답").textContent =
-
-        news.question_type ===
-        "multiple"
-
-            ? `내가 제출한 답 : ${선택한답}번`
-
-            : `내가 제출한 답 : ${선택한답}`;
-
-
-}
-
-
-/* =====================================================
-   제출 버튼 잠금
-===================================================== */
-
-function 제출버튼잠금(잠금) {
-
-    $("제출").disabled =
-        잠금;
-
-
-    if (잠금) {
-
-        $("제출").textContent =
-            "저장 중...";
-
-    }
-
-}
-
-
-/* =====================================================
-   이벤트 확인
-===================================================== */
-
-async function 이벤트확인() {
-
-    const 이벤트 =
-        $("이벤트");
-
-
-    현재이벤트 =
-        null;
-
-
-    if (
-        신문번호 % 10 !==
-        0
-    ) {
-
-        이벤트.style.display =
-            "none";
-
-        return;
-
-    }
-
-
-    const {
-
-        data,
-        error
-
-    } =
-        await supabase
-
-            .from("rockey_news_events")
-
-            .select("*")
-
-            .eq(
-                "news_number",
-                신문번호
-            )
-
-            .eq(
-                "enabled",
-                true
-            )
-
-            .maybeSingle();
-
-
-    if (error) {
-
-        console.error(
-            "이벤트 조회 오류:",
-            error
-        );
-
-        이벤트.style.display =
-            "none";
-
-        return;
-
-    }
-
-
-    if (!data) {
-
-        이벤트.style.display =
-            "none";
-
-        return;
-
-    }
-
-
-    현재이벤트 =
-        data;
-
-
-    이벤트.style.display =
-        "block";
-
-
-    $("이벤트제목").textContent =
-        "🎉 " + data.event_name;
-
-
-    $("이벤트설명").textContent =
-        data.description || "";
-
-
-    $("이벤트보상").textContent =
-        Number(
-            data.reward_coins || 0
-        ).toLocaleString();
-
-
-    await 이벤트참여상태확인();
-
-}
-
-
-/* =====================================================
-   이벤트 참여 상태
-===================================================== */
-
-async function 이벤트참여상태확인() {
-
-    if (!현재이벤트) {
-
-        return;
-
-    }
-
-
-    const {
-
-        data,
-        error
-
-    } =
-        await supabase
-
-            .from("event_participations")
-
-            .select(
-                "reward_claimed"
-            )
-
-            .eq(
-                "user_id",
-                현재사용자.id
-            )
-
-            .eq(
-                "event_id",
-                현재이벤트.id
-            )
-
-            .maybeSingle();
-
-
-    if (error) {
-
-        $("이벤트결과").textContent =
-            "이벤트 참여 정보를 확인할 수 없습니다.";
-
-        return;
-
-    }
-
-
-    if (
-        data?.reward_claimed ===
-        true
-    ) {
-
-        $("이벤트참여").disabled =
-            true;
-
-        $("이벤트참여").textContent =
-            "보상 수령 완료";
-
-        $("이벤트결과").textContent =
-            "🎉 이미 보상을 받았습니다.";
-
-    }
-
-    else {
-
-        $("이벤트참여").disabled =
-            false;
-
-        $("이벤트참여").textContent =
-            "이벤트 참여하기";
-
-        $("이벤트결과").textContent =
-            "";
-
-    }
-
-}
-
-
-/* =====================================================
-   이벤트 참여
-===================================================== */
-
-async function 이벤트참여하기() {
-
-    if (!현재이벤트) {
-
-        return;
-
-    }
-
-
-    const 버튼 =
-        $("이벤트참여");
-
-
-    버튼.disabled =
-        true;
-
-    버튼.textContent =
-        "보상 지급 중...";
-
-
-    const {
-
-        data,
-        error
-
-    } =
-        await supabase.rpc(
-
-            "claim_news_event",
-
+        } = await supabase.rpc(
+            "claim_news_reward",
             {
-
-                p_event_id:
-                    현재이벤트.id
-
+                p_news_number: 현재신문번호,
+                p_reward_type: "quiz_correct"
             }
-
         );
 
-
-    if (error) {
-
-        console.error(
-            "이벤트 보상 오류:",
-            error
-        );
-
-
-        버튼.disabled =
-            false;
-
-        버튼.textContent =
-            "이벤트 참여하기";
-
-
-        $("이벤트결과").textContent =
-            error.message ||
-            "보상 지급에 실패했습니다.";
-
-        return;
-
-    }
-
-
-    if (
-        !data ||
-        data.success !== true
-    ) {
-
-        버튼.disabled =
-            false;
-
-        버튼.textContent =
-            "이벤트 참여하기";
-
-
-        $("이벤트결과").textContent =
-            "보상 지급에 실패했습니다.";
-
-        return;
-
-    }
-
-
-    버튼.textContent =
-        "보상 수령 완료";
-
-
-    $("이벤트결과").textContent =
-
-        `🎉 ${
-            Number(
-                data.reward_coins
-            ).toLocaleString()
-        } 돌돌코인을 받았습니다!`;
-
-}
-
-
-/* =====================================================
-   읽음 여부
-===================================================== */
-
-function 현재신문읽음확인() {
-
-    return 읽은신문번호들.includes(
-        신문번호
-    );
-
-}
-
-
-/* =====================================================
-   읽음 버튼
-===================================================== */
-
-function 읽음버튼업데이트() {
-
-    const 버튼 =
-        $("읽음버튼");
-
-
-    if (
-        현재신문읽음확인()
-    ) {
-
-        버튼.textContent =
-            "✅ 읽음";
-
-        버튼.disabled =
-            true;
-
-        버튼.style.opacity =
-            ".55";
-
-    }
-
-    else {
-
-        버튼.textContent =
-            "📖 돌이신문 읽음";
-
-        버튼.disabled =
-            false;
-
-        버튼.style.opacity =
-            "1";
-
-    }
-
-}
-
-
-/* =====================================================
-   읽음 저장
-===================================================== */
-
-async function 읽음저장() {
-
-    if (
-        현재신문읽음확인()
-    ) {
-
-        return;
-
-    }
-
-
-    const 버튼 =
-        $("읽음버튼");
-
-
-    버튼.disabled =
-        true;
-
-    버튼.textContent =
-        "💾 저장 중...";
-
-
-    const {
-
-        data,
-        error
-
-    } =
-        await supabase
-
-            .from("users")
-
-            .select(
-                "read_dori_news_numbers"
-            )
-
-            .eq(
-                "user_id",
-                현재사용자.id
-            )
-
-            .single();
-
-
-    if (error) {
-
-        console.error(
-            "읽음 정보 조회 오류:",
-            error
-        );
-
-
-        읽음버튼업데이트();
-
-        return;
-
-    }
-
-
-    let 목록 =
-        Array.isArray(
-            data.read_dori_news_numbers
-        )
-
-            ? data.read_dori_news_numbers
-                .map(Number)
-                .filter(Number.isInteger)
-
-            : [];
-
-
-    if (
-        !목록.includes(
-            신문번호
-        )
-    ) {
-
-        목록.push(
-            신문번호
-        );
-
-    }
-
-
-    목록.sort(
-        (a,b) =>
-            a - b
-    );
-
-
-    const {
-
-        error: 저장오류
-
-    } =
-        await supabase
-
-            .from("users")
-
-            .update({
-
-                read_dori_news_numbers:
-                    목록
-
-            })
-
-            .eq(
-                "user_id",
-                현재사용자.id
+        if (error) {
+            throw error;
+        }
+
+        if (data?.success) {
+
+            보상모달열기(
+                data.amount,
+                data.balance,
+                "퀴즈 정답 보상입니다!"
             );
 
+        } else {
 
-    if (저장오류) {
+            alert(
+                data?.message ||
+                "이미 지급받은 보상입니다."
+            );
+        }
 
-        console.error(
-            "읽음 저장 오류:",
-            저장오류
-        );
+    } catch (error) {
 
+        console.error("퀴즈 보상 오류:", error);
 
         alert(
-            "돌이신문 읽음 저장에 실패했습니다."
+            "퀴즈 보상 처리 중 오류가 발생했습니다.\n" +
+            error.message
         );
 
+    } finally {
 
-        읽음버튼업데이트();
+        제출버튼.disabled = false;
+    }
+}
 
-        return;
+/* =====================================================
+   보상 모달
+===================================================== */
 
+function 보상모달열기(금액, 잔액, 설명) {
+
+    보상금액.textContent =
+        `+${Number(금액).toLocaleString()} 돌돌코인`;
+
+    보상설명.textContent =
+        설명;
+
+    보상잔액.textContent =
+        `현재 잔액: ${Number(잔액).toLocaleString()} 돌돌코인`;
+
+    보상배경.classList.add("show");
+
+    코인애니메이션시작();
+}
+
+function 보상모달닫기() {
+
+    보상배경.classList.remove("show");
+
+    if (현재보상애니메이션) {
+        clearInterval(현재보상애니메이션);
+        현재보상애니메이션 = null;
     }
 
-
-    읽은신문번호들 =
-        목록;
-
-
-    읽음버튼업데이트();
-
+    보상상자
+        .querySelectorAll(".코인")
+        .forEach(코인 => 코인.remove());
 }
 
+function 코인애니메이션시작() {
 
-/* =====================================================
-   이전 / 다음 버튼
-===================================================== */
+    if (현재보상애니메이션) {
+        clearInterval(현재보상애니메이션);
+    }
 
-function 네비게이션설정() {
+    const 생성 = () => {
 
-    const 이전 =
-        $("이전");
+        const 코인 =
+            document.createElement("span");
 
-    const 다음 =
-        $("다음");
+        코인.className = "코인";
 
-
-    이전.disabled =
-        신문번호 <= 1;
-
-
-    다음.disabled =
-
-        신문번호 >=
-        마지막신문번호
-
-        ||
-
-        신문번호 + 1 >
-        Number(
-            현재유저정보.read_dori_news
+        코인.style.setProperty(
+            "--x",
+            `${Math.random() * 320 - 160}px`
         );
 
+        코인.style.left =
+            `${Math.random() * 100}%`;
 
-    이전.onclick = () => {
+        코인.style.animationDelay =
+            `${Math.random() * .5}s`;
 
-        if (
-            신문번호 <= 1
-        ) {
+        보상상자.appendChild(코인);
 
-            return;
-
-        }
-
-
-        신문번호--;
-
-
-        localStorage.setItem(
-            "rockeynews",
-            String(
-                신문번호
-            )
-        );
-
-
-        location.reload();
-
+        setTimeout(() => {
+            코인.remove();
+        }, 3000);
     };
 
+    for (let i = 0; i < 18; i++) {
+        setTimeout(생성, i * 90);
+    }
 
-    다음.onclick = () => {
+    현재보상애니메이션 =
+        setInterval(생성, 280);
+}
 
-        if (
-            다음.disabled
-        ) {
+/* =====================================================
+   이전 / 다음
+===================================================== */
 
-            return;
+async function 이전신문() {
 
+    if (현재신문번호 <= 1) {
+        return;
+    }
+
+    localStorage.setItem(
+        "rockeynews",
+        String(현재신문번호 - 1)
+    );
+
+    location.reload();
+}
+
+async function 다음신문() {
+
+    const 다음번호 =
+        현재신문번호 + 1;
+
+    const 다음신문데이터 =
+        await 신문불러오기(다음번호);
+
+    if (!다음신문데이터) {
+        alert("다음 신문이 아직 발행되지 않았습니다.");
+        return;
+    }
+
+    localStorage.setItem(
+        "rockeynews",
+        String(다음번호)
+    );
+
+    location.reload();
+}
+
+/* =====================================================
+   이벤트
+===================================================== */
+
+읽음저장버튼.addEventListener(
+    "click",
+    읽음저장
+);
+
+제출버튼.addEventListener(
+    "click",
+    퀴즈제출
+);
+
+이전버튼.addEventListener(
+    "click",
+    이전신문
+);
+
+다음버튼.addEventListener(
+    "click",
+    다음신문
+);
+
+보상닫기.addEventListener(
+    "click",
+    보상모달닫기
+);
+
+보상배경.addEventListener(
+    "click",
+    event => {
+
+        if (event.target === 보상배경) {
+            보상모달닫기();
         }
 
-
-        신문번호++;
-
-
-        localStorage.setItem(
-            "rockeynews",
-            String(
-                신문번호
-            )
-        );
-
-
-        location.reload();
-
-    };
-
-}
-
+    }
+);
 
 /* =====================================================
-   버튼 이벤트
+   시작
 ===================================================== */
 
-function 이벤트설정() {
-
-    $("제출").onclick =
-        퀴즈제출;
-
-
-    $("읽음버튼").onclick =
-        읽음저장;
-
-
-    $("이벤트참여").onclick =
-        이벤트참여하기;
-
-}
-
-
-/* =====================================================
-   초기화
-===================================================== */
-
-async function 초기화() {
+async function 시작() {
 
     try {
 
         const 로그인됨 =
             await 로그인확인();
 
-
         if (!로그인됨) {
-
-            alert(
-                "로그인이 필요합니다."
-            );
-
-            location.href =
-                "login.html";
-
             return;
-
         }
 
+        현재신문번호 =
+            신문번호가져오기();
 
-        const 정보불러오기 =
-            await 사용자정보불러오기();
+        const 신문 =
+            await 신문불러오기(현재신문번호);
 
+        await 신문표시(신문);
 
-        if (!정보불러오기) {
+    } catch (error) {
 
-            return;
-
-        }
-
-
-        신문번호불러오기();
-
-
-        /*
-           읽을 수 없는 신문 방지
-        */
-
-        if (
-            신문번호 >
-            Number(
-                현재유저정보.read_dori_news
-            )
-        ) {
-
-            alert(
-                "아직 읽을 수 없는 돌이신문입니다."
-            );
-
-
-            신문번호 =
-                Number(
-                    현재유저정보.read_dori_news
-                )
-                || 1;
-
-
-            localStorage.setItem(
-                "rockeynews",
-                String(
-                    신문번호
-                )
-            );
-
-
-            location.reload();
-
-            return;
-
-        }
-
-
-        const 마지막신문성공 =
-            await 마지막신문불러오기();
-
-
-        if (!마지막신문성공) {
-
-            return;
-
-        }
-
-
-        const 신문성공 =
-            await 신문불러오기();
-
-
-        if (!신문성공) {
-
-            return;
-
-        }
-
-
-        await 이벤트확인();
-
-
-        읽음버튼업데이트();
-
-
-        네비게이션설정();
-
-
-        이벤트설정();
-
-
-        로딩종료();
-
-
-    }
-
-    catch (error) {
-
-        console.error(
-            "돌이신문 초기화 오류:",
-            error
-        );
-
+        console.error("신문 로딩 오류:", error);
 
         alert(
-            "돌이신문을 불러오는 중 문제가 발생했습니다."
+            "신문을 불러오는 중 오류가 발생했습니다.\n" +
+            error.message
         );
 
-    }
+        내용.textContent =
+            "신문을 불러오지 못했습니다.";
 
+    } finally {
+
+        로딩.style.display = "none";
+    }
 }
 
-
-/* =====================================================
-   시작
-===================================================== */
-
-window.addEventListener(
-    "DOMContentLoaded",
-    초기화
-);
-
+시작();
 
 </script>
 
-
 </body>
-
 </html>
- 
