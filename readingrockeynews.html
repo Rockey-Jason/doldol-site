@@ -2426,40 +2426,31 @@ textarea {
 
 <script type="module">
 
-
 import {
-
     createClient
-
-}
-
-from
-
-"https://esm.sh/@supabase/supabase-js@2";
+} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 
 /* =====================================================
    Supabase 설정
 ===================================================== */
 
-const supabase =
+const SUPABASE_URL =
+    "https://scttowfhygcpdirrekqm.supabase.co";
 
-    createClient(
-
-        "https://scttowfhygcpdirrekqm.supabase.co",
-
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
-    );
+const SUPABASE_ANON_KEY =
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
 
 
-/*
-   ⚠️ 중요
+const supabase = createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);
 
-   위 anon key는 반드시 기존에 사용하던
-   Supabase anon key로 교체하세요.
 
-   아래에는 기존 코드의 키를 그대로 넣으면 됩니다.
-*/
+console.log("Supabase 초기화 완료");
+console.log("URL:", SUPABASE_URL);
+console.log("API 키 존재:", Boolean(SUPABASE_ANON_KEY));
 
 
 /* =====================================================
@@ -3433,64 +3424,66 @@ async function 퀴즈제출() {
 
     if (정답여부) {
 
-        const {
+    /*
+       읽음 보상 RPC 호출
 
-            data: 보상결과,
-            error: 보상오류
+       서버에서 자동으로 1,000 지급
+       중복 지급은 unique 제약으로 차단
+    */
 
-        } =
-            await supabase.rpc(
-
-                "claim_news_reward",
-
-                {
-
-                    p_news_number:
-                        신문번호,
-
-                    p_reward_type:
-                        "quiz_correct"
-
-                }
-
-            );
-
-
-        if (보상오류) {
-
-            console.error(
-                "퀴즈 보상 지급 오류:",
-                보상오류
-            );
-
-            $("결과").textContent +=
-                " 보상 지급 확인 중 문제가 발생했습니다.";
-
+    const {
+        data: 보상결과,
+        error: 보상오류
+    } = await supabase.rpc(
+        "claim_news_reward",
+        {
+            p_news_number: Number(신문번호),
+            p_reward_type: "news_read"
         }
+    );
 
-        else if (
-            보상결과?.success === true
-        ) {
 
-            코인보상표시(
+    if (보상오류) {
 
-                보상결과.amount,
+        console.error(
+            "읽음 보상 지급 오류:",
+            {
+                message: 보상오류.message,
+                details: 보상오류.details,
+                hint: 보상오류.hint,
+                code: 보상오류.code
+            }
+        );
 
-                "퀴즈 정답 보상입니다!"
+        alert(
+            "신문은 읽음 처리되었지만 코인 보상 확인에 실패했습니다."
+        );
 
-            );
+        return;
 
-        }
+    }
 
-        else if (
-            보상결과?.already_claimed === true
-        ) {
 
-            console.log(
-                "이미 퀴즈 보상을 받은 신문입니다."
-            );
+    if (
+        보상결과?.success === true
+    ) {
 
-        }
+        코인보상표시(
+            보상결과.amount,
+            "돌이신문 읽음 보상입니다!"
+        );
+
+    }
+
+    else if (
+        보상결과?.already_claimed === true
+    ) {
+
+        console.log(
+            "이미 읽음 보상을 받은 신문입니다."
+        );
+
+    }
 
     }
 
