@@ -639,7 +639,7 @@ body {
 <script>
 
 /* =====================================================
-   돌이 AI — 1단계 대화 기능
+   돌이 AI — 실제 Python 서버 연결
 ===================================================== */
 
 const doriAiForm =
@@ -650,6 +650,9 @@ const doriAiInput =
 
 const doriAiChat =
   document.getElementById("doriAiChat");
+
+const doriAiSend =
+  doriAiForm.querySelector(".dori-ai-send");
 
 
 /* =====================================================
@@ -681,7 +684,7 @@ function addDoriAiMessage(message, type) {
   bubble.className =
     "dori-ai-bubble";
 
-  // 입력 내용을 HTML로 해석하지 않도록 처리
+  // AI 답변도 HTML로 해석하지 않도록 처리
   bubble.textContent = message;
 
 
@@ -693,69 +696,57 @@ function addDoriAiMessage(message, type) {
 
 
   // 최신 메시지로 스크롤
-  doriAiChat.scrollTop =
-    doriAiChat.scrollHeight;
+  window.scrollTo({
+    top: document.body.scrollHeight,
+    behavior: "smooth"
+  });
 
 }
 
 
 /* =====================================================
-   테스트 응답
+   Python AI 서버에 질문 보내기
 ===================================================== */
 
-function getDoriAiTestResponse(message) {
+async function askDoriAI(message) {
 
-  const text = message.toLowerCase();
+  const response = await fetch(
+    "http://127.0.0.1:8000/chat",
+    {
+      method: "POST",
+
+      headers: {
+        "Content-Type": "application/json"
+      },
+
+      body: JSON.stringify({
+        message: message
+      })
+    }
+  );
 
 
-  if (
-    text.includes("안녕") ||
-    text.includes("하이")
-  ) {
-    return "안녕! 돌이 AI에 온 걸 환영해! 🐶";
+  if (!response.ok) {
+
+    throw new Error(
+      "AI 서버 응답 오류: " + response.status
+    );
+
   }
 
 
-  if (
-    text.includes("돌이신문") ||
-    text.includes("신문")
-  ) {
-    return "돌이신문은 돌이사이트의 신문 콘텐츠를 모아둔 기능이야! 📰";
+  const data = await response.json();
+
+
+  if (data.error) {
+
+    throw new Error(data.error);
+
   }
 
 
-  if (
-    text.includes("체스")
-  ) {
-    return "돌이체스라니! ♟️ 나중에는 체스 분석도 도와줄 수 있게 만들 거야.";
-  }
+  return data.answer;
 
-
-  if (
-    text.includes("랜덤박스") ||
-    text.includes("뽑기")
-  ) {
-    return "랜덤박스 기능도 돌이 AI가 이해할 수 있도록 준비할 수 있어! 🎰";
-  }
-
-
-  if (
-    text.includes("돌돌코인") ||
-    text.includes("코인")
-  ) {
-    return "돌돌코인은 돌이사이트의 재미있는 경제 시스템이지! 🪙";
-  }
-
-
-  if (
-    text.includes("도로늄") ||
-    text.includes("공장")
-  ) {
-    return "도로늄 공장 이야기도 나중에 함께할 수 있어! 🏭";
-  }
-
-
-  return "아직 배우는 중이야! 🐶\n하지만 곧 돌이사이트의 전용 AI가 될 거야!";
 }
 
 
@@ -765,7 +756,7 @@ function getDoriAiTestResponse(message) {
 
 doriAiForm.addEventListener(
   "submit",
-  function(event) {
+  async function(event) {
 
     event.preventDefault();
 
@@ -785,18 +776,101 @@ doriAiForm.addEventListener(
     doriAiInput.value = "";
 
 
-    // 테스트 응답
-    setTimeout(
-      function() {
+    // 전송 버튼 비활성화
+    doriAiSend.disabled = true;
 
-        const response =
-          getDoriAiTestResponse(message);
+    doriAiSend.style.opacity = "0.5";
 
-        addDoriAiMessage(response, "bot");
+    doriAiSend.style.cursor = "wait";
 
-      },
-      500
-    );
+
+    // AI 생각 중 메시지
+    const loadingMessage =
+      document.createElement("div");
+
+    loadingMessage.className =
+      "dori-ai-message bot";
+
+
+    const loadingAvatar =
+      document.createElement("div");
+
+    loadingAvatar.className =
+      "dori-ai-avatar";
+
+    loadingAvatar.textContent = "🐶";
+
+
+    const loadingBubble =
+      document.createElement("div");
+
+    loadingBubble.className =
+      "dori-ai-bubble";
+
+    loadingBubble.textContent =
+      "생각하는 중... 🧠";
+
+
+    loadingMessage.appendChild(loadingAvatar);
+
+    loadingMessage.appendChild(loadingBubble);
+
+    doriAiChat.appendChild(loadingMessage);
+
+
+    try {
+
+      // 실제 Python AI 서버 호출
+      const response =
+        await askDoriAI(message);
+
+
+      // 생각 중 메시지 삭제
+      loadingMessage.remove();
+
+
+      // 실제 AI 답변 표시
+      addDoriAiMessage(
+        response,
+        "bot"
+      );
+
+    }
+
+
+    catch (error) {
+
+      // 생각 중 메시지 삭제
+      loadingMessage.remove();
+
+
+      console.error(
+        "돌이 AI 연결 오류:",
+        error
+      );
+
+
+      addDoriAiMessage(
+        "AI 서버에 연결하지 못했어. 🐶\n" +
+        "Python 서버가 실행 중인지 확인해 줘!",
+        "bot"
+      );
+
+    }
+
+
+    finally {
+
+      // 전송 버튼 다시 활성화
+      doriAiSend.disabled = false;
+
+      doriAiSend.style.opacity = "1";
+
+      doriAiSend.style.cursor = "pointer";
+
+      doriAiInput.focus();
+
+    }
 
   }
 );
