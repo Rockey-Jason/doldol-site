@@ -641,6 +641,290 @@ body.로그인상태 #회원가입 {
         font-size: 13px;
     }
 }
+
+    /* =====================================================
+   돌이 AI 카드
+===================================================== */
+
+.돌이AI카드 {
+  --ai-purple: #8d8cff;
+  --ai-blue: #5c8dff;
+  --ai-glow: rgba(141, 140, 255, .28);
+}
+
+/* AI 전용 비주얼 영역 */
+.돌이AI비주얼 {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 21px;
+  border: 1px solid rgba(141, 140, 255, .22);
+
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(141, 140, 255, .18),
+      transparent 42%
+    ),
+    linear-gradient(
+      145deg,
+      rgba(40, 42, 105, .85),
+      rgba(8, 10, 35, .95)
+    );
+
+  isolation: isolate;
+}
+
+/* 은은하게 움직이는 빛 */
+.돌이AI빛 {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+
+  border-radius: 50%;
+  background: rgba(141, 140, 255, .22);
+  filter: blur(35px);
+
+  animation: 돌이AI빛호흡 4s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes 돌이AI빛호흡 {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(.85);
+    opacity: .55;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.18);
+    opacity: 1;
+  }
+}
+
+/* 아이콘 */
+.돌이AI아이콘 {
+  position: absolute;
+  left: 50%;
+  top: 43%;
+  transform: translate(-50%, -50%);
+
+  width: 112px;
+  height: 112px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.16),
+      rgba(255,255,255,.035)
+    );
+
+  border: 1px solid rgba(255,255,255,.2);
+
+  box-shadow:
+    0 0 0 10px rgba(141,140,255,.035),
+    0 0 0 22px rgba(141,140,255,.02),
+    0 18px 50px rgba(0,0,0,.3),
+    inset 0 1px 0 rgba(255,255,255,.15);
+
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+
+  animation: 돌이AI아이콘호흡 4s ease-in-out infinite;
+  z-index: 2;
+}
+
+.돌이AI아이콘 span:first-child {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+
+  color: #c8c7ff;
+  font-size: 19px;
+
+  animation: 돌이AI별빛 2.5s ease-in-out infinite;
+}
+
+.돌이AI아이콘 span:last-child {
+  font-size: 48px;
+  filter: drop-shadow(0 5px 12px rgba(0,0,0,.2));
+}
+
+@keyframes 돌이AI아이콘호흡 {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.045);
+  }
+}
+
+@keyframes 돌이AI별빛 {
+  0%, 100% {
+    opacity: .45;
+    transform: scale(.85) rotate(-10deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(10deg);
+  }
+}
+
+/* 아이콘 주변 파동 */
+.돌이AI파동 {
+  position: absolute;
+  left: 50%;
+  top: 43%;
+
+  width: 112px;
+  height: 112px;
+
+  border: 1px solid rgba(141,140,255,.25);
+  border-radius: 50%;
+
+  transform: translate(-50%, -50%);
+  animation: 돌이AI파동확장 3.5s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes 돌이AI파동확장 {
+  0% {
+    width: 112px;
+    height: 112px;
+    opacity: .7;
+  }
+
+  100% {
+    width: 230px;
+    height: 230px;
+    opacity: 0;
+  }
+}
+
+/* 상태 표시 */
+.돌이AI상태 {
+  position: absolute;
+  left: 50%;
+  bottom: 17px;
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  width: max-content;
+  max-width: calc(100% - 24px);
+
+  padding: 8px 13px;
+
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 999px;
+
+  background: rgba(5,6,25,.48);
+  color: #bfc5e8;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  z-index: 3;
+}
+
+.돌이AI점 {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #7dffb2;
+  box-shadow: 0 0 10px rgba(125,255,178,.8);
+  animation: 돌이AI점깜빡임 2s ease-in-out infinite;
+}
+
+.돌이AI상태구분 {
+  color: #5d6388;
+}
+
+@keyframes 돌이AI점깜빡임 {
+  0%, 100% { opacity: .55; }
+  50% { opacity: 1; }
+}
+
+/* 버튼 */
+.돌이AI카드 .메인버튼 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.돌이AI화살표 {
+  display: inline-block;
+  font-size: 24px;
+  color: #aaaaff;
+
+  transition:
+    transform .35s cubic-bezier(.22,1,.36,1),
+    color .3s ease;
+}
+
+.돌이AI카드:hover .돌이AI화살표 {
+  transform: translateX(6px);
+  color: #ffffff;
+}
+
+/* 카드에 마우스를 올렸을 때 AI 빛 강화 */
+.돌이AI카드:hover .돌이AI빛 {
+  animation-duration: 2.2s;
+  opacity: 1;
+}
+
+.돌이AI카드:hover .돌이AI아이콘 {
+  box-shadow:
+    0 0 0 10px rgba(141,140,255,.055),
+    0 0 0 22px rgba(141,140,255,.035),
+    0 20px 65px rgba(80,75,255,.25),
+    inset 0 1px 0 rgba(255,255,255,.2);
+}
+
+/* 모바일 */
+@media (max-width: 650px) {
+  .돌이AI비주얼 {
+    aspect-ratio: 16 / 10;
+  }
+
+  .돌이AI아이콘 {
+    width: 94px;
+    height: 94px;
+  }
+
+  .돌이AI아이콘 span:last-child {
+    font-size: 40px;
+  }
+
+  .돌이AI파동 {
+    width: 94px;
+    height: 94px;
+  }
+
+  .돌이AI상태 {
+    bottom: 12px;
+    font-size: 11px;
+    padding: 7px 11px;
+  }
+}
+    
 </style>
 
 </head>
@@ -718,6 +1002,47 @@ body.로그인상태 #회원가입 {
     </article>
 
   </div>
+
+    <!-- =====================================================
+     돌이 AI
+===================================================== -->
+
+<article class="메뉴카드 돌이AI카드">
+
+  <div class="돌이AI비주얼">
+
+    <div class="돌이AI빛"></div>
+
+    <div class="돌이AI아이콘">
+      <span>✦</span>
+      <span>🐶</span>
+    </div>
+
+    <div class="돌이AI파동"></div>
+
+    <div class="돌이AI상태">
+      <span class="돌이AI점"></span>
+      <span>돌이 AI</span>
+      <span class="돌이AI상태구분">·</span>
+      <span>대화 준비 완료</span>
+    </div>
+
+  </div>
+
+  <button
+    id="돌이AI버튼"
+    class="메인버튼"
+    type="button"
+  >
+    돌이 AI와 대화하기
+    <span class="돌이AI화살표">→</span>
+  </button>
+
+  <div class="카드설명">
+    궁금한 것을 물어보세요. 돌이 AI가 함께 생각해줄게요.
+  </div>
+
+</article>
 
   <img id="돌이사진"
        src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
@@ -2720,6 +3045,23 @@ document
         // 화면은 SIGNED_OUT 이벤트에서 자연스럽게 갱신됩니다.
 
     };
+
+    // =====================================================
+// 돌이 AI
+// =====================================================
+
+const 돌이AI버튼 =
+    document.getElementById("돌이AI버튼");
+
+if (돌이AI버튼) {
+
+    돌이AI버튼.onclick = () => {
+
+        페이지이동("dori-ai.html");
+
+    };
+
+}
 
 
 // =====================================================
