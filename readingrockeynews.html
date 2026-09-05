@@ -3431,47 +3431,47 @@ async function 퀴즈제출() {
        중복 지급은 unique 제약으로 차단
     */
 
-    const {
-        data: 보상결과,
-        error: 보상오류
-    } = await supabase.rpc(
-        "claim_news_reward",
+const {
+    data: 보상결과,
+    error: 보상오류
+} = await supabase.rpc(
+    "claim_news_reward",
+    {
+        p_news_number: Number(신문번호),
+        p_reward_type: "quiz_correct"
+    }
+);
+
+
+if (보상오류) {
+
+    console.error(
+        "퀴즈 정답 보상 지급 오류:",
         {
-            p_news_number: Number(신문번호),
-            p_reward_type: "news_read"
+            message: 보상오류.message,
+            details: 보상오류.details,
+            hint: 보상오류.hint,
+            code: 보상오류.code
         }
     );
 
+    alert(
+        "퀴즈는 정답 처리되었지만 코인 보상 확인에 실패했습니다."
+    );
 
-    if (보상오류) {
+    return;
 
-        console.error(
-            "읽음 보상 지급 오류:",
-            {
-                message: 보상오류.message,
-                details: 보상오류.details,
-                hint: 보상오류.hint,
-                code: 보상오류.code
-            }
-        );
-
-        alert(
-            "신문은 읽음 처리되었지만 코인 보상 확인에 실패했습니다."
-        );
-
-        return;
-
-    }
+}
 
 
     if (
         보상결과?.success === true
     ) {
 
-        코인보상표시(
-            보상결과.amount,
-            "돌이신문 읽음 보상입니다!"
-        );
+코인보상표시(
+    보상결과.amount,
+    "돌이퀴즈 정답 보상입니다!"
+);
 
     }
 
