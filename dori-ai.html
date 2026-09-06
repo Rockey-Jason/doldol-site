@@ -517,6 +517,144 @@ body {
 
 }
 
+/* =====================================================
+   돌이 AI — 모드 선택
+===================================================== */
+
+.dori-ai-mode-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  margin-bottom: 10px;
+  padding: 0 4px;
+}
+
+.dori-ai-mode {
+  padding: 8px 13px;
+
+  border: 1px solid #334155;
+  border-radius: 10px;
+
+  background: #0f172a;
+  color: #94a3b8;
+
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.dori-ai-mode:hover {
+  border-color: #3b82f6;
+  color: #dbeafe;
+}
+
+.dori-ai-mode.active {
+  background: #1d4ed8;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.dori-ai-mode-description {
+  color: #64748b;
+  font-size: 11px;
+}
+
+
+/* =====================================================
+   중지 버튼
+===================================================== */
+
+.dori-ai-stop {
+  width: 42px;
+  height: 42px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #b91c1c;
+  color: white;
+
+  font-size: 17px;
+  font-weight: 900;
+
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.dori-ai-stop:hover {
+  background: #dc2626;
+}
+
+.dori-ai-stop:active {
+  transform: scale(0.94);
+}
+
+.dori-ai-send:disabled {
+  cursor: wait;
+}
+
+
+/* =====================================================
+   답변 생성 중 표시
+===================================================== */
+
+.dori-ai-generating {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+
+  color: #93c5fd;
+  font-size: 12px;
+}
+
+.dori-ai-generating::before {
+  content: "";
+
+  width: 8px;
+  height: 8px;
+
+  border: 2px solid #3b82f6;
+  border-top-color: transparent;
+
+  border-radius: 50%;
+
+  animation: doriAiSpin 0.8s linear infinite;
+}
+
+@keyframes doriAiSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 600px) {
+
+  .dori-ai-mode-bar {
+    gap: 6px;
+  }
+
+  .dori-ai-mode {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+
+  .dori-ai-mode-description {
+    width: 100%;
+  }
+
+}
+      
 </style>
 
 </head>
@@ -608,6 +746,34 @@ body {
       id="doriAiForm"
     >
 
+          <!-- =====================================================
+     AI 모드 선택
+===================================================== -->
+
+<div class="dori-ai-mode-bar">
+
+  <button
+    type="button"
+    class="dori-ai-mode active"
+    data-mode="fast"
+  >
+    ⚡ 빠른 모드
+  </button>
+
+  <button
+    type="button"
+    class="dori-ai-mode"
+    data-mode="deep"
+  >
+    🧠 고급 모드
+  </button>
+
+  <span class="dori-ai-mode-description" id="doriAiModeDescription">
+    짧고 빠르게 답변해요.
+  </span>
+
+</div>
+
       <input
         type="text"
         id="doriAiInput"
@@ -616,13 +782,24 @@ body {
         aria-label="메시지 입력"
       >
 
-      <button
-        type="submit"
-        class="dori-ai-send"
-        aria-label="메시지 전송"
-      >
-        ➤
-      </button>
+<button
+  type="submit"
+  class="dori-ai-send"
+  id="doriAiSend"
+  aria-label="메시지 전송"
+>
+  ➤
+</button>
+
+<button
+  type="button"
+  class="dori-ai-stop"
+  id="doriAiStop"
+  aria-label="답변 생성 중지"
+  hidden
+>
+  ■
+</button>
 
     </form>
 
@@ -639,7 +816,7 @@ body {
 <script>
 
 /* =====================================================
-   돌이 AI — 실제 Python 서버 연결
+   돌이 AI — 실시간 스트리밍 프론트엔드
 ===================================================== */
 
 const doriAiForm =
@@ -652,7 +829,55 @@ const doriAiChat =
   document.getElementById("doriAiChat");
 
 const doriAiSend =
-  doriAiForm.querySelector(".dori-ai-send");
+  document.getElementById("doriAiSend");
+
+const doriAiStop =
+  document.getElementById("doriAiStop");
+
+const doriAiModeDescription =
+  document.getElementById("doriAiModeDescription");
+
+
+/* =====================================================
+   상태
+===================================================== */
+
+let doriAiMode = "fast";
+
+let doriAiController = null;
+
+let doriAiGenerating = false;
+
+
+/* =====================================================
+   모드 선택
+===================================================== */
+
+document.querySelectorAll(".dori-ai-mode")
+  .forEach(function(button) {
+
+    button.addEventListener("click", function() {
+
+      if (doriAiGenerating) return;
+
+      doriAiMode =
+        button.dataset.mode;
+
+      document.querySelectorAll(".dori-ai-mode")
+        .forEach(function(item) {
+          item.classList.remove("active");
+        });
+
+      button.classList.add("active");
+
+      doriAiModeDescription.textContent =
+        doriAiMode === "fast"
+          ? "짧고 빠르게 답변해요."
+          : "코드와 복잡한 질문을 자세히 분석해요.";
+
+    });
+
+  });
 
 
 /* =====================================================
@@ -684,8 +909,8 @@ function addDoriAiMessage(message, type) {
   bubble.className =
     "dori-ai-bubble";
 
-  // AI 답변도 HTML로 해석하지 않도록 처리
-  bubble.textContent = message;
+  bubble.textContent =
+    message;
 
 
   messageDiv.appendChild(avatar);
@@ -695,59 +920,297 @@ function addDoriAiMessage(message, type) {
   doriAiChat.appendChild(messageDiv);
 
 
-  // 최신 메시지로 스크롤
   window.scrollTo({
     top: document.body.scrollHeight,
     behavior: "smooth"
   });
 
+
+  return {
+    messageDiv,
+    bubble
+  };
+
 }
 
 
 /* =====================================================
-   Python AI 서버에 질문 보내기
+   생성 중 메시지
 ===================================================== */
 
-async function askDoriAI(message) {
+function createStreamingMessage() {
 
-  const response = await fetch(
-    "http://127.0.0.1:8000/chat",
-    {
-      method: "POST",
+  const messageDiv =
+    document.createElement("div");
 
-      headers: {
-        "Content-Type": "application/json"
-      },
+  messageDiv.className =
+    "dori-ai-message bot";
 
-      body: JSON.stringify({
-        message: message
-      })
-    }
-  );
+
+  const avatar =
+    document.createElement("div");
+
+  avatar.className =
+    "dori-ai-avatar";
+
+  avatar.textContent = "🐶";
+
+
+  const bubble =
+    document.createElement("div");
+
+  bubble.className =
+    "dori-ai-bubble";
+
+  bubble.innerHTML =
+    '<span class="dori-ai-generating">돌이가 생각하는 중...</span>';
+
+
+  messageDiv.appendChild(avatar);
+
+  messageDiv.appendChild(bubble);
+
+  doriAiChat.appendChild(messageDiv);
+
+
+  return {
+    messageDiv,
+    bubble
+  };
+
+}
+
+
+/* =====================================================
+   UI 상태 변경
+===================================================== */
+
+function setGeneratingState(generating) {
+
+  doriAiGenerating =
+    generating;
+
+
+  doriAiInput.disabled =
+    generating;
+
+  doriAiSend.disabled =
+    generating;
+
+
+  doriAiSend.hidden =
+    generating;
+
+  doriAiStop.hidden =
+    !generating;
+
+
+  document.querySelectorAll(".dori-ai-mode")
+    .forEach(function(button) {
+      button.disabled = generating;
+    });
+
+
+  if (generating) {
+
+    doriAiInput.placeholder =
+      "돌이가 답변을 생성하고 있어요...";
+
+  } else {
+
+    doriAiInput.placeholder =
+      "돌이 AI에게 물어보세요...";
+
+    doriAiInput.focus();
+
+  }
+
+}
+
+
+/* =====================================================
+   스트리밍 답변 받기
+===================================================== */
+
+async function askDoriAI(message, bubble) {
+
+  doriAiController =
+    new AbortController();
+
+
+  const response =
+    await fetch(
+      "http://127.0.0.1:8000/chat",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          message: message,
+          mode: doriAiMode,
+          stream: true
+        }),
+
+        signal: doriAiController.signal
+
+      }
+    );
 
 
   if (!response.ok) {
 
     throw new Error(
-      "AI 서버 응답 오류: " + response.status
+      "AI 서버 응답 오류: " +
+      response.status
     );
 
   }
 
 
-  const data = await response.json();
+  if (!response.body) {
 
-
-  if (data.error) {
-
-    throw new Error(data.error);
+    throw new Error(
+      "스트리밍 응답을 지원하지 않는 브라우저야."
+    );
 
   }
 
 
-  return data.answer;
+  const reader =
+    response.body.getReader();
+
+
+  const decoder =
+    new TextDecoder("utf-8");
+
+
+  let fullAnswer = "";
+
+  let firstChunk = true;
+
+
+  while (true) {
+
+    const result =
+      await reader.read();
+
+
+    if (result.done) break;
+
+
+    const chunk =
+      decoder.decode(
+        result.value,
+        { stream: true }
+      );
+
+
+    /*
+       Python 서버가 보내는 형식:
+
+       data: {"token":"안녕"}
+
+       data: {"token":"! "}
+    */
+
+    const lines =
+      chunk.split("\n");
+
+
+    for (const line of lines) {
+
+      if (!line.startsWith("data:")) {
+        continue;
+      }
+
+
+      const raw =
+        line.slice(5).trim();
+
+
+      if (!raw) continue;
+
+
+      let data;
+
+      try {
+
+        data =
+          JSON.parse(raw);
+
+      } catch (error) {
+
+        continue;
+
+      }
+
+
+      if (data.error) {
+
+        throw new Error(data.error);
+
+      }
+
+
+      if (data.done) {
+
+        break;
+
+      }
+
+
+      if (data.token) {
+
+        if (firstChunk) {
+
+          bubble.textContent = "";
+
+          firstChunk = false;
+
+        }
+
+
+        fullAnswer +=
+          data.token;
+
+        bubble.textContent =
+          fullAnswer;
+
+
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: "smooth"
+        });
+
+      }
+
+    }
+
+  }
+
+
+  return fullAnswer;
 
 }
+
+
+/* =====================================================
+   중지 버튼
+===================================================== */
+
+doriAiStop.addEventListener(
+  "click",
+  function() {
+
+    if (!doriAiController) return;
+
+    doriAiController.abort();
+
+  }
+);
 
 
 /* =====================================================
@@ -761,6 +1224,9 @@ doriAiForm.addEventListener(
     event.preventDefault();
 
 
+    if (doriAiGenerating) return;
+
+
     const message =
       doriAiInput.value.trim();
 
@@ -769,70 +1235,30 @@ doriAiForm.addEventListener(
 
 
     // 사용자 메시지 표시
-    addDoriAiMessage(message, "user");
+    addDoriAiMessage(
+      message,
+      "user"
+    );
 
 
     // 입력창 초기화
     doriAiInput.value = "";
 
 
-    // 전송 버튼 비활성화
-    doriAiSend.disabled = true;
-
-    doriAiSend.style.opacity = "0.5";
-
-    doriAiSend.style.cursor = "wait";
+    // 생성 중 상태
+    setGeneratingState(true);
 
 
-    // AI 생각 중 메시지
-    const loadingMessage =
-      document.createElement("div");
-
-    loadingMessage.className =
-      "dori-ai-message bot";
-
-
-    const loadingAvatar =
-      document.createElement("div");
-
-    loadingAvatar.className =
-      "dori-ai-avatar";
-
-    loadingAvatar.textContent = "🐶";
-
-
-    const loadingBubble =
-      document.createElement("div");
-
-    loadingBubble.className =
-      "dori-ai-bubble";
-
-    loadingBubble.textContent =
-      "생각하는 중... 🧠";
-
-
-    loadingMessage.appendChild(loadingAvatar);
-
-    loadingMessage.appendChild(loadingBubble);
-
-    doriAiChat.appendChild(loadingMessage);
+    // 스트리밍 메시지 생성
+    const streamingMessage =
+      createStreamingMessage();
 
 
     try {
 
-      // 실제 Python AI 서버 호출
-      const response =
-        await askDoriAI(message);
-
-
-      // 생각 중 메시지 삭제
-      loadingMessage.remove();
-
-
-      // 실제 AI 답변 표시
-      addDoriAiMessage(
-        response,
-        "bot"
+      await askDoriAI(
+        message,
+        streamingMessage.bubble
       );
 
     }
@@ -840,35 +1266,36 @@ doriAiForm.addEventListener(
 
     catch (error) {
 
-      // 생각 중 메시지 삭제
-      loadingMessage.remove();
-
-
       console.error(
-        "돌이 AI 연결 오류:",
+        "돌이 AI 스트리밍 오류:",
         error
       );
 
 
-      addDoriAiMessage(
-        "AI 서버에 연결하지 못했어. 🐶\n" +
-        "Python 서버가 실행 중인지 확인해 줘!",
-        "bot"
-      );
+      if (
+        error.name === "AbortError"
+      ) {
+
+        streamingMessage.bubble.textContent =
+          "답변 생성을 중지했어. 🐶";
+
+      } else {
+
+        streamingMessage.bubble.textContent =
+          "AI 서버에 연결하지 못했어. 🐶\n" +
+          "Python 서버가 실행 중인지 확인해 줘!";
+
+      }
 
     }
 
 
     finally {
 
-      // 전송 버튼 다시 활성화
-      doriAiSend.disabled = false;
+      doriAiController =
+        null;
 
-      doriAiSend.style.opacity = "1";
-
-      doriAiSend.style.cursor = "pointer";
-
-      doriAiInput.focus();
+      setGeneratingState(false);
 
     }
 
@@ -877,7 +1304,7 @@ doriAiForm.addEventListener(
 
 
 /* =====================================================
-   페이지 진입 시 입력창에 포커스
+   페이지 진입 시 포커스
 ===================================================== */
 
 doriAiInput.focus();
