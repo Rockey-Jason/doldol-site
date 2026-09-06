@@ -1082,108 +1082,115 @@ async function askDoriAI(message, bubble) {
   const reader =
     response.body.getReader();
 
-
   const decoder =
     new TextDecoder("utf-8");
-
 
   let fullAnswer = "";
 
   let firstChunk = true;
 
+  // SSE 데이터가 여러 조각으로 나뉘어 도착할 수 있으므로
+  // 이전 조각에서 끝나지 않은 데이터를 임시 저장한다.
+  let buffer = "";
 
   while (true) {
 
     const result =
       await reader.read();
 
-
     if (result.done) break;
 
+    buffer += decoder.decode(
+      result.value,
+      { stream: true }
+    );
 
-    const chunk =
-      decoder.decode(
-        result.value,
-        { stream: true }
-      );
+    // SSE 이벤트는 빈 줄로 구분된다.
+    const events =
+      buffer.split("\n\n");
 
+    // 마지막 조각은 아직 완성되지 않았을 수 있으므로 보관
+    buffer =
+      events.pop() || "";
 
-    /*
-       Python 서버가 보내는 형식:
+    for (const event of events) {
 
-       data: {"token":"안녕"}
+      const lines =
+        event.split("\n");
 
-       data: {"token":"! "}
-    */
+      for (const line of lines) {
 
-    const lines =
-      chunk.split("\n");
+        if (!line.startsWith("data:")) {
+          continue;
+        }
 
+        const raw =
+          line.slice(5).trim();
 
-    for (const line of lines) {
+        if (!raw) continue;
 
-      if (!line.startsWith("data:")) {
-        continue;
-      }
+        let data;
 
+        try {
 
-      const raw =
-        line.slice(5).trim();
+          data =
+            JSON.parse(raw);
 
+        } catch (error) {
 
-      if (!raw) continue;
+          console.warn(
+            "SSE JSON 파싱 오류:",
+            raw
+          );
 
-
-      let data;
-
-      try {
-
-        data =
-          JSON.parse(raw);
-
-      } catch (error) {
-
-        continue;
-
-      }
-
-
-      if (data.error) {
-
-        throw new Error(data.error);
-
-      }
-
-
-      if (data.done) {
-
-        break;
-
-      }
-
-
-      if (data.token) {
-
-        if (firstChunk) {
-
-          bubble.textContent = "";
-
-          firstChunk = false;
+          continue;
 
         }
 
+        // Python 서버의 오류 형식
+        if (data.type === "error" || data.error) {
 
-        fullAnswer +=
-          data.token;
+          throw new Error(
+            data.content ||
+            data.error ||
+            "AI 응답 오류"
+          );
 
-        bubble.textContent =
-          fullAnswer;
+        }
 
+        // Python 서버의 완료 형식
+        if (data.type === "done") {
 
-        window.scrollTo({
-          top: document.body.scrollHeight,
-          behavior: "smooth"
-        });
+          continue;
+
+        }
+
+        // Python 서버의 실제 토큰 형식
+        if (
+          data.type === "token" &&
+          data.content
+        ) {
+
+          if (firstChunk) {
+
+            bubble.textContent = "";
+
+            firstChunk = false;
+
+          }
+
+          fullAnswer +=
+            data.content;
+
+          bubble.textContent =
+            fullAnswer;
+
+          window.scrollTo({
+            top: document.body.scrollHeight,
+            behavior: "smooth"
+          });
+
+        }
 
       }
 
@@ -1191,6 +1198,55 @@ async function askDoriAI(message, bubble) {
 
   }
 
+  // 마지막으로 남아 있는 SSE 조각 처리
+  buffer += decoder.decode();
+
+  if (buffer.trim()) {
+
+    const lines =
+      buffer.split("\n");
+
+    for (const line of lines) {
+
+      if (!line.startsWith("data:")) {
+        continue;
+      }
+
+      const raw =
+        line.slice(5).trim();
+
+      if (!raw) continue;
+
+      try {
+
+        const data =
+          JSON.parse(raw);
+
+        if (
+          data.type === "token" &&
+          data.content
+        ) {
+
+          fullAnswer +=
+            data.content;
+
+          bubble.textContent =
+            fullAnswer;
+
+        }
+
+      } catch (error) {
+
+        console.warn(
+          "마지막 SSE 데이터 파싱 오류:",
+          raw
+        );
+
+      }
+
+    }
+
+  }
 
   return fullAnswer;
 
