@@ -1133,10 +1133,7 @@ button {
 ===================================================== -->
 
 <script type="module">
-import {
-    createClient
-} from "https://esm.sh/@supabase/supabase-js@2";
-
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 /* =====================================================
    Supabase 설정
@@ -1153,78 +1150,42 @@ const supabase = createClient(
     SUPABASE_ANON_KEY
 );
 
-
 /* =====================================================
    기본 설정
 ===================================================== */
 
 const 뽑기가격 = 1000;
-
-const 기록저장키 =
-    "돌이랜덤박스기록";
-
-const 인벤토리저장키 =
-    "돌이랜덤박스인벤토리";
+const 기록저장키 = "돌이랜덤박스기록";
+const 인벤토리저장키 = "돌이랜덤박스인벤토리";
 
 let 현재사용자 = null;
-
 let 사용자정보 = {
     user_id: null,
-    doldolcoin: 0
+    doldolcoin: 0,
+    exp: 0
 };
-
 let 보상목록 = [];
-
 let 인벤토리 = {};
-
 let 기록 = [];
-
 let 뽑는중 = false;
-
 
 /* =====================================================
    DOM
 ===================================================== */
 
-const 코인 =
-    document.getElementById("코인");
-
-const 뽑기버튼 =
-    document.getElementById("뽑기버튼");
-
-const 랜덤박스 =
-    document.getElementById("랜덤박스");
-
-const 결과 =
-    document.getElementById("결과");
-
-const 확률목록 =
-    document.getElementById("확률목록");
-
-const 아이템그리드 =
-    document.getElementById("아이템그리드");
-
-const 기록목록 =
-    document.getElementById("기록목록");
-
-const 확률보기 =
-    document.getElementById("확률보기");
-
-const 확률모달 =
-    document.getElementById("확률모달");
-
-const 모달확률목록 =
-    document.getElementById("모달확률목록");
-
-const 모달닫기 =
-    document.getElementById("모달닫기");
-
-const 초기화버튼 =
-    document.getElementById("초기화버튼");
-
-const 뒤로가기 =
-    document.getElementById("뒤로가기");
-
+const 코인 = document.getElementById("코인");
+const 뽑기버튼 = document.getElementById("뽑기버튼");
+const 랜덤박스 = document.getElementById("랜덤박스");
+const 결과 = document.getElementById("결과");
+const 확률목록 = document.getElementById("확률목록");
+const 아이템그리드 = document.getElementById("아이템그리드");
+const 기록목록 = document.getElementById("기록목록");
+const 확률보기 = document.getElementById("확률보기");
+const 확률모달 = document.getElementById("확률모달");
+const 모달확률목록 = document.getElementById("모달확률목록");
+const 모달닫기 = document.getElementById("모달닫기");
+const 초기화버튼 = document.getElementById("초기화버튼");
+const 뒤로가기 = document.getElementById("뒤로가기");
 
 /* =====================================================
    안전한 HTML 출력
@@ -1239,101 +1200,45 @@ function HTML문자열(value) {
         .replaceAll("'", "&#039;");
 }
 
-
 /* =====================================================
    아이콘 결정
 ===================================================== */
 
 function 아이콘결정(보상) {
-    const 코드 =
-        String(보상.item_code || "").toUpperCase();
+    const 코드 = String(보상?.item_code || "").toUpperCase();
+    const 종류 = String(보상?.item_type || "").toLowerCase();
 
-    const 종류 =
-        String(보상.item_type || "").toLowerCase();
-
-    if (종류 === "coin") {
-        return "🪙";
-    }
-
-    if (종류 === "exp") {
-        return "✨";
-    }
-
-    if (종류 === "background") {
-        return "🌌";
-    }
-
-    if (종류 === "skin") {
-        return "🐶";
-    }
-
-    if (종류 === "title") {
-        return "🏅";
-    }
-
-    if (종류 === "cape") {
-        return "🧥";
-    }
-
-    if (종류 === "clothes") {
-        return "👕";
-    }
-
-    if (종류 === "effect") {
-        return "💫";
-    }
-
-    if (종류 === "multiplier") {
-        return "📈";
-    }
-
-    if (코드.includes("GLASSES")) {
-        return "🕶️";
-    }
-
-    if (코드.includes("HAT")) {
-        return "🎩";
-    }
+    if (종류 === "coin") return "🪙";
+    if (종류 === "exp") return "✨";
+    if (종류 === "background") return "🌌";
+    if (종류 === "skin") return "🐶";
+    if (종류 === "title") return "🏅";
+    if (종류 === "cape") return "🧥";
+    if (종류 === "clothes") return "👕";
+    if (종류 === "effect") return "💫";
+    if (종류 === "multiplier") return "📈";
+    if (코드.includes("GLASSES")) return "🕶️";
+    if (코드.includes("HAT")) return "🎩";
 
     return "🎁";
 }
 
-
 /* =====================================================
-   기록 불러오기
+   로컬 기록
 ===================================================== */
 
 function 기록불러오기() {
     try {
-        const 저장값 =
-            localStorage.getItem(기록저장키);
+        const 저장값 = localStorage.getItem(기록저장키);
+        if (!저장값) return [];
 
-        if (!저장값) {
-            return [];
-        }
-
-        const parsed =
-            JSON.parse(저장값);
-
-        return Array.isArray(parsed)
-            ? parsed
-            : [];
-    }
-
-    catch (error) {
-        console.error(
-            "기록 불러오기 오류:",
-            error
-        );
-
+        const parsed = JSON.parse(저장값);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch (error) {
+        console.error("기록 불러오기 오류:", error);
         return [];
     }
 }
-
-
-/* =====================================================
-   기록 저장
-===================================================== */
 
 function 기록저장() {
     try {
@@ -1341,55 +1246,29 @@ function 기록저장() {
             기록저장키,
             JSON.stringify(기록)
         );
-    }
-
-    catch (error) {
-        console.error(
-            "기록 저장 오류:",
-            error
-        );
+    } catch (error) {
+        console.error("기록 저장 오류:", error);
     }
 }
 
-
 /* =====================================================
-   인벤토리 불러오기
+   로컬 인벤토리
 ===================================================== */
 
 function 인벤토리불러오기() {
     try {
-        const 저장값 =
-            localStorage.getItem(
-                인벤토리저장키
-            );
+        const 저장값 = localStorage.getItem(인벤토리저장키);
+        if (!저장값) return {};
 
-        if (!저장값) {
-            return {};
-        }
-
-        const parsed =
-            JSON.parse(저장값);
-
-        return parsed &&
-            typeof parsed === "object"
+        const parsed = JSON.parse(저장값);
+        return parsed && typeof parsed === "object"
             ? parsed
             : {};
-    }
-
-    catch (error) {
-        console.error(
-            "인벤토리 불러오기 오류:",
-            error
-        );
-
+    } catch (error) {
+        console.error("인벤토리 불러오기 오류:", error);
         return {};
     }
 }
-
-
-/* =====================================================
-   인벤토리 저장
-===================================================== */
 
 function 인벤토리저장() {
     try {
@@ -1397,19 +1276,13 @@ function 인벤토리저장() {
             인벤토리저장키,
             JSON.stringify(인벤토리)
         );
-    }
-
-    catch (error) {
-        console.error(
-            "인벤토리 저장 오류:",
-            error
-        );
+    } catch (error) {
+        console.error("인벤토리 저장 오류:", error);
     }
 }
 
-
 /* =====================================================
-   로그인 실패
+   로그인 상태
 ===================================================== */
 
 function 로그인실패(메시지) {
@@ -1417,16 +1290,13 @@ function 로그인실패(메시지) {
 
     사용자정보 = {
         user_id: null,
-        doldolcoin: 0
+        doldolcoin: 0,
+        exp: 0
     };
 
     뽑기버튼.disabled = true;
-
-    뽑기버튼.textContent =
-        "🔒 로그인 필요";
-
-    코인.textContent =
-        "🪙 로그인 필요";
+    뽑기버튼.textContent = "🔒 로그인 필요";
+    코인.textContent = "🪙 로그인 필요";
 
     결과.innerHTML = `
         <span style="color:#ff9999">
@@ -1435,122 +1305,75 @@ function 로그인실패(메시지) {
     `;
 }
 
-
-/* =====================================================
-   로그인 확인
-===================================================== */
-
 async function 로그인확인() {
     try {
-        const {
-            data,
-            error
-        } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
 
-        if (error) {
-            throw error;
-        }
+        if (error) throw error;
 
         if (!data?.session?.user) {
-            로그인실패(
-                "로그인이 필요합니다."
-            );
-
+            로그인실패("로그인이 필요합니다.");
             return false;
         }
 
-        현재사용자 =
-            data.session.user;
-
+        현재사용자 = data.session.user;
         return true;
-    }
-
-    catch (error) {
-        console.error(
-            "로그인 확인 오류:",
-            error
-        );
-
-        로그인실패(
-            "로그인 상태를 확인할 수 없습니다."
-        );
-
+    } catch (error) {
+        console.error("로그인 확인 오류:", error);
+        로그인실패("로그인 상태를 확인할 수 없습니다.");
         return false;
     }
 }
 
-
 /* =====================================================
-   사용자 코인 불러오기
+   사용자 정보
+   users.user_id가 TEXT이므로 Auth UUID를 문자열로 사용
 ===================================================== */
 
 async function 사용자정보불러오기() {
-    if (!현재사용자) {
-        return false;
-    }
+    if (!현재사용자) return false;
 
     try {
-        const {
-            data,
-            error
-        } = await supabase
+        const authId = String(현재사용자.id);
+
+        const { data, error } = await supabase
             .from("users")
-            .select("user_id, doldolcoin")
-            .eq("user_id", 현재사용자.id)
+            .select("user_id, doldolcoin, exp")
+            .eq("user_id", authId)
             .maybeSingle();
 
-        if (error) {
-            throw error;
-        }
+        if (error) throw error;
 
         if (!data) {
-            throw new Error(
-                "사용자 정보를 찾을 수 없습니다."
-            );
+            throw new Error("사용자 정보를 찾을 수 없습니다.");
         }
 
         사용자정보 = {
             user_id: data.user_id,
-            doldolcoin:
-                Number(data.doldolcoin) || 0
+            doldolcoin: Number(data.doldolcoin) || 0,
+            exp: Number(data.exp) || 0
         };
 
         코인표시();
 
-        if (
-            사용자정보.doldolcoin < 뽑기가격
-        ) {
+        if (사용자정보.doldolcoin < 뽑기가격) {
             결과.innerHTML = `
                 <span style="color:#ff9999">
                     돌돌코인이 부족합니다.
                 </span>
             `;
+        } else {
+            결과.textContent = "랜덤 박스를 열어보세요!";
         }
 
-        else {
-            결과.textContent =
-                "랜덤 박스를 열어보세요!";
-        }
-
-        뽑기버튼.textContent =
-            "🎁 랜덤 박스 열기";
-
+        뽑기버튼.textContent = "🎁 랜덤 박스 열기";
         return true;
-    }
-
-    catch (error) {
-        console.error(
-            "사용자 정보 오류:",
-            error
-        );
+    } catch (error) {
+        console.error("사용자 정보 오류:", error);
 
         뽑기버튼.disabled = true;
-
-        뽑기버튼.textContent =
-            "⚠️ 정보 불러오기 실패";
-
-        코인.textContent =
-            "🪙 불러오기 실패";
+        뽑기버튼.textContent = "⚠️ 정보 불러오기 실패";
+        코인.textContent = "🪙 불러오기 실패";
 
         결과.innerHTML = `
             <span style="color:#ff9999">
@@ -1562,22 +1385,17 @@ async function 사용자정보불러오기() {
     }
 }
 
-
 /* =====================================================
    코인 표시
 ===================================================== */
 
 function 코인표시() {
-    const 금액 =
-        Number(사용자정보.doldolcoin) || 0;
+    const 금액 = Number(사용자정보.doldolcoin) || 0;
 
-    코인.textContent =
-        `🪙 ${금액.toLocaleString("ko-KR")}`;
+    코인.textContent = `🪙 ${금액.toLocaleString("ko-KR")}`;
 
     코인.classList.remove("코인변경");
-
     void 코인.offsetWidth;
-
     코인.classList.add("코인변경");
 
     뽑기버튼.disabled =
@@ -1586,17 +1404,16 @@ function 코인표시() {
         금액 < 뽑기가격;
 }
 
-
 /* =====================================================
-   Supabase 보상 목록 불러오기
+   Supabase 보상 목록
+   현재 dori_box_items 구조:
+   id / item_name / item_type / rarity / probability /
+   reward_coins / reward_exp / item_code / created_at
 ===================================================== */
 
 async function 보상목록불러오기() {
     try {
-        const {
-            data,
-            error
-        } = await supabase
+        const { data, error } = await supabase
             .from("dori_box_items")
             .select(`
                 id,
@@ -1610,84 +1427,55 @@ async function 보상목록불러오기() {
                 created_at
             `)
             .gt("probability", 0)
-            .order("id", {
-                ascending: true
-            });
+            .order("id", { ascending: true });
 
-        if (error) {
-            console.error(
-                "❌ Supabase 보상 목록 오류:",
-                error
-            );
+        if (error) throw error;
 
-            throw error;
-        }
-
-        if (!data || data.length === 0) {
-            throw new Error(
-                "사용 가능한 보상이 없습니다."
-            );
+        if (!Array.isArray(data) || data.length === 0) {
+            throw new Error("사용 가능한 보상이 없습니다.");
         }
 
         보상목록 = data.map(보상 => ({
             ...보상,
-
-            아이콘:
-                아이콘결정(보상),
-
-            이름:
-                보상.item_name,
-
-            확률:
-                Number(보상.probability) || 0,
-
-            reward_coins:
-                Number(보상.reward_coins) || 0,
-
-            reward_exp:
-                Number(보상.reward_exp) || 0
+            아이콘: 아이콘결정(보상),
+            이름: 보상.item_name,
+            확률: Number(보상.probability) || 0,
+            reward_coins: Number(보상.reward_coins) || 0,
+            reward_exp: Number(보상.reward_exp) || 0
         }));
 
-        const 전체확률 =
-            보상목록.reduce(
-                (합계, 보상) =>
-                    합계 + 보상.확률,
-                0
+        const 전체확률 = 보상목록.reduce(
+            (합계, 보상) => 합계 + 보상.확률,
+            0
+        );
+
+        console.log("🎲 불러온 보상 수:", 보상목록.length);
+        console.log("🎲 전체 확률:", 전체확률.toFixed(4) + "%");
+
+        if (Math.abs(전체확률 - 100) > 0.01) {
+            console.warn(
+                "⚠️ 보상 확률 총합이 100%가 아닙니다:",
+                전체확률
             );
-
-        console.log(
-            "🎲 불러온 보상 수:",
-            보상목록.length
-        );
-
-        console.log(
-            "🎲 전체 확률:",
-            전체확률.toFixed(4) + "%"
-        );
+        }
 
         확률목록표시();
-
+        인벤토리표시();
         return true;
-
     } catch (error) {
-
-        console.error(
-            "보상 목록 불러오기 오류:",
-            error
-        );
+        console.error("보상 목록 불러오기 오류:", error);
 
         결과.innerHTML = `
             <span style="color:#ff9999">
-                보상 목록을 불러오지 못했습니다.
+                보상 목록을 불러오지 못했습니다.<br>
+                <small>${HTML문자열(error?.message || "알 수 없는 오류")}</small>
             </span>
         `;
 
         뽑기버튼.disabled = true;
-
         return false;
     }
 }
-
 
 /* =====================================================
    확률 목록 표시
@@ -1698,38 +1486,23 @@ function 확률목록표시() {
     모달확률목록.innerHTML = "";
 
     보상목록.forEach(보상 => {
-        const 항목 =
-            document.createElement("div");
-
-        항목.className =
-            "확률항목";
+        const 항목 = document.createElement("div");
+        항목.className = "확률항목";
 
         항목.innerHTML = `
             <div class="아이템이름">
-                <span>
-                    ${HTML문자열(보상.아이콘)}
-                </span>
-
-                <span>
-                    ${HTML문자열(보상.이름)}
-                </span>
+                <span>${HTML문자열(보상.아이콘)}</span>
+                <span>${HTML문자열(보상.이름)}</span>
             </div>
-
             <span class="확률">
                 ${보상.확률.toFixed(4)}%
             </span>
         `;
 
-        확률목록.appendChild(
-            항목.cloneNode(true)
-        );
-
-        모달확률목록.appendChild(
-            항목
-        );
+        확률목록.appendChild(항목.cloneNode(true));
+        모달확률목록.appendChild(항목);
     });
 }
-
 
 /* =====================================================
    인벤토리 표시
@@ -1738,17 +1511,13 @@ function 확률목록표시() {
 function 인벤토리표시() {
     아이템그리드.innerHTML = "";
 
-    const 획득아이템 =
-        보상목록.filter(보상 => {
-            const 종류 =
-                String(
-                    보상.item_type || ""
-                ).toLowerCase();
+    const 획득아이템 = 보상목록.filter(보상 => {
+        const 종류 = String(보상.item_type || "").toLowerCase();
 
-            return 종류 !== "coin" &&
-                종류 !== "exp" &&
-                (인벤토리[보상.item_code] || 0) > 0;
-        });
+        return 종류 !== "coin" &&
+            종류 !== "exp" &&
+            (인벤토리[보상.item_code] || 0) > 0;
+    });
 
     if (획득아이템.length === 0) {
         아이템그리드.innerHTML = `
@@ -1756,36 +1525,25 @@ function 인벤토리표시() {
                 아직 획득한 아이템이 없습니다.
             </div>
         `;
-
         return;
     }
 
     획득아이템.forEach(보상 => {
-        const 항목 =
-            document.createElement("div");
+        const 항목 = document.createElement("div");
+        항목.className = "인벤토리아이템";
 
-        항목.className =
-            "인벤토리아이템";
-
-        const 코드 =
-            보상.item_code;
-
-        const 수량 =
-            인벤토리[코드] || 0;
+        const 코드 = 보상.item_code;
+        const 수량 = 인벤토리[코드] || 0;
 
         항목.innerHTML = `
             ${HTML문자열(보상.아이콘)}
             ${HTML문자열(보상.이름)}
-
-            <span class="아이템수량">
-                ×${수량}
-            </span>
+            <span class="아이템수량">×${수량}</span>
         `;
 
         아이템그리드.appendChild(항목);
     });
 }
-
 
 /* =====================================================
    기록 표시
@@ -1800,235 +1558,173 @@ function 기록표시() {
                 이 기기에서 뽑은 기록이 없습니다.
             </div>
         `;
-
         return;
     }
 
-    기록
-        .slice()
-        .reverse()
-        .forEach(기록데이터 => {
-            const 항목 =
-                document.createElement("div");
+    기록.slice().reverse().forEach(기록데이터 => {
+        const 항목 = document.createElement("div");
+        항목.className = "기록항목";
 
-            항목.className =
-                "기록항목";
+        항목.innerHTML = `
+            ${HTML문자열(기록시간표시(기록데이터.time))}
+            ·
+            <strong>
+                ${HTML문자열(기록데이터.reward)}
+            </strong>
+        `;
 
-            항목.innerHTML = `
-                ${HTML문자열(
-                    기록시간표시(
-                        기록데이터.time
-                    )
-                )}
-
-                ·
-
-                <strong>
-                    ${HTML문자열(
-                        기록데이터.reward
-                    )}
-                </strong>
-            `;
-
-            기록목록.appendChild(항목);
-        });
+        기록목록.appendChild(항목);
+    });
 }
-
-
-/* =====================================================
-   기록 시간
-===================================================== */
 
 function 기록시간표시(time) {
     const date = new Date(time);
-
-    if (Number.isNaN(date.getTime())) {
-        return "";
-    }
-
+    if (Number.isNaN(date.getTime())) return "";
     return date.toLocaleString("ko-KR");
 }
-
 
 /* =====================================================
    보상 결과 문구
 ===================================================== */
 
 function 보상문구생성(data) {
-
-    const 아이콘 =
-        아이콘결정(data);
-
-    const 이름 =
-        data.item_name || "알 수 없는 보상";
-
-    const 보상코인 =
-        Number(data.reward_coins) || 0;
-
-    const 보상EXP =
-        Number(data.reward_exp) || 0;
-
-    const 보상내용 = [];
+    const 아이콘 = 아이콘결정(data);
+    const 이름 = data.item_name || "알 수 없는 보상";
+    const 보상코인 = Number(data.reward_coins) || 0;
+    const 보상EXP = Number(data.reward_exp) || 0;
+    const 내용 = [];
 
     if (보상코인 > 0) {
-        보상내용.push(
+        내용.push(
             `+${보상코인.toLocaleString("ko-KR")} 돌돌코인`
         );
     }
 
     if (보상EXP > 0) {
-        보상내용.push(
+        내용.push(
             `+${보상EXP.toLocaleString("ko-KR")} EXP`
         );
     }
 
-    if (보상내용.length > 0) {
-        return `${아이콘} ${이름} ${보상내용.join(" · ")}`;
+    if (내용.length > 0) {
+        return `${아이콘} ${이름} ${내용.join(" · ")}`;
     }
 
     return `${아이콘} ${이름}`;
 }
 
-
 /* =====================================================
-   보상 지급 후 인벤토리 반영
+   보상 인벤토리 반영
+   아이템은 현재 사이트 구조상 localStorage에 보관
+   coin / exp는 RPC가 서버에서 직접 지급하므로 중복 반영하지 않음
 ===================================================== */
 
 function 인벤토리반영(data) {
-    const 종류 =
-        String(
-            data.item_type || ""
-        ).toLowerCase();
+    const 종류 = String(data?.item_type || "").toLowerCase();
 
-    if (
-        종류 === "coin" ||
-        종류 === "exp"
-    ) {
+    if (종류 === "coin" || 종류 === "exp") {
         return;
     }
 
-    const 코드 =
-        data.item_code ||
-        data.item_id;
+    const 코드 = data?.item_code || data?.item_id;
+    if (!코드) return;
 
-    if (!코드) {
-        return;
-    }
-
-    인벤토리[코드] =
-        (인벤토리[코드] || 0) + 1;
-
+    인벤토리[코드] = (인벤토리[코드] || 0) + 1;
     인벤토리저장();
 }
 
+/* =====================================================
+   RPC 오류 메시지 정리
+===================================================== */
+
+function 오류메시지추출(error) {
+    if (!error) return "알 수 없는 오류가 발생했습니다.";
+
+    const message =
+        error.message ||
+        error.details ||
+        error.hint ||
+        "알 수 없는 오류가 발생했습니다.";
+
+    return String(message);
+}
 
 /* =====================================================
    실제 뽑기
+   확률 계산/코인 차감/EXP 지급은 RPC가 서버에서 처리
 ===================================================== */
 
 async function 뽑기() {
-    if (뽑는중) {
-        return;
-    }
+    if (뽑는중) return;
 
     if (!현재사용자) {
         alert("로그인 후 이용해주세요.");
         return;
     }
 
-    if (
-        Number(사용자정보.doldolcoin) <
-        뽑기가격
-    ) {
+    if (Number(사용자정보.doldolcoin) < 뽑기가격) {
         결과.innerHTML = `
             <span style="color:#ff8585">
                 돌돌코인이 부족합니다.
             </span>
         `;
-
         return;
     }
 
     뽑는중 = true;
-
     뽑기버튼.disabled = true;
+    뽑기버튼.textContent = "🎁 상자를 여는 중...";
+    결과.textContent = "상자를 여는 중... 🎁";
 
-    뽑기버튼.textContent =
-        "🎁 상자를 여는 중...";
-
-    결과.textContent =
-        "상자를 여는 중... 🎁";
-
-    랜덤박스.classList.remove(
-        "상자흔들림"
-    );
-
-    랜덤박스.classList.remove(
-        "보상성공"
-    );
-
+    랜덤박스.classList.remove("상자흔들림", "보상성공");
     void 랜덤박스.offsetWidth;
-
-    랜덤박스.classList.add(
-        "상자흔들림"
-    );
+    랜덤박스.classList.add("상자흔들림");
 
     try {
-        const {
-            data,
-            error
-        } = await supabase.rpc(
+        const { data, error } = await supabase.rpc(
             "open_dori_box",
             {
                 p_price: 뽑기가격
             }
         );
 
-        if (error) {
-            throw error;
+        if (error) throw error;
+
+        if (!data || data.success !== true) {
+            throw new Error("뽑기 결과가 올바르지 않습니다.");
         }
 
-        if (!data || !data.success) {
-            throw new Error(
-                "뽑기 결과가 올바르지 않습니다."
-            );
-        }
-
-        await new Promise(resolve => {
-            setTimeout(resolve, 850);
-        });
+        await new Promise(resolve => setTimeout(resolve, 850));
 
         사용자정보.doldolcoin =
-            Number(data.remaining_coins) || 0;
+            Number(data.remaining_coins ?? 0);
+
+        if (data.remaining_exp !== undefined) {
+            사용자정보.exp = Number(data.remaining_exp) || 0;
+        } else {
+            사용자정보.exp += Number(data.reward_exp) || 0;
+        }
 
         인벤토리반영(data);
 
-        const 보상문구 =
-            보상문구생성(data);
+        const 보상문구 = 보상문구생성(data);
 
         기록.push({
-            time:
-                new Date().toISOString(),
-            reward:
-                보상문구
+            time: new Date().toISOString(),
+            reward: 보상문구
         });
 
         if (기록.length > 50) {
-            기록 =
-                기록.slice(-50);
+            기록 = 기록.slice(-50);
         }
 
         기록저장();
 
-        랜덤박스.classList.add(
-            "보상성공"
-        );
+        랜덤박스.classList.add("보상성공");
 
         결과.innerHTML = `
             🎉 획득!
-
             <br>
-
             <span class="결과강조">
                 ${HTML문자열(보상문구)}
             </span>
@@ -2037,22 +1733,14 @@ async function 뽑기() {
         코인표시();
         인벤토리표시();
         기록표시();
-    }
 
-    catch (error) {
-        console.error(
-            "❌ 랜덤 박스 오류:",
-            error
-        );
+        console.log("🎁 랜덤 박스 당첨:", data);
+    } catch (error) {
+        console.error("❌ 랜덤 박스 오류:", error);
 
-        const 오류메시지 =
-            String(error?.message || "");
+        const 오류메시지 = 오류메시지추출(error);
 
-        if (
-            오류메시지.includes(
-                "돌돌코인이 부족합니다"
-            )
-        ) {
+        if (오류메시지.includes("돌돌코인이 부족")) {
             await 사용자정보불러오기();
 
             결과.innerHTML = `
@@ -2060,190 +1748,127 @@ async function 뽑기() {
                     돌돌코인이 부족합니다.
                 </span>
             `;
-        }
-
-        else if (
-            오류메시지.includes(
-                "로그인이 필요합니다"
-            )
-        ) {
-            로그인실패(
-                "로그인이 필요합니다."
-            );
-        }
-
-        else {
+        } else if (오류메시지.includes("로그인이 필요")) {
+            로그인실패("로그인이 필요합니다.");
+        } else {
             결과.innerHTML = `
                 <span style="color:#ff8585">
                     랜덤 박스 처리 중 오류가 발생했습니다.
+                    <br>
+                    <small>${HTML문자열(오류메시지)}</small>
                 </span>
             `;
         }
-    }
-
-    finally {
+    } finally {
         뽑는중 = false;
-
-        뽑기버튼.textContent =
-            "🎁 랜덤 박스 열기";
-
+        뽑기버튼.textContent = "🎁 랜덤 박스 열기";
         코인표시();
     }
 }
 
-
 /* =====================================================
-   확률 모달
+   모달
 ===================================================== */
 
-확률보기.addEventListener(
-    "click",
-    () => {
-        확률모달.classList.add("show");
-    }
-);
+확률보기.addEventListener("click", () => {
+    확률모달.classList.add("show");
+});
 
-모달닫기.addEventListener(
-    "click",
-    () => {
+모달닫기.addEventListener("click", () => {
+    확률모달.classList.remove("show");
+});
+
+확률모달.addEventListener("click", event => {
+    if (event.target === 확률모달) {
         확률모달.classList.remove("show");
     }
-);
-
-확률모달.addEventListener(
-    "click",
-    event => {
-        if (event.target === 확률모달) {
-            확률모달.classList.remove("show");
-        }
-    }
-);
-
+});
 
 /* =====================================================
    버튼 이벤트
 ===================================================== */
 
-뽑기버튼.addEventListener(
-    "click",
-    뽑기
-);
+뽑기버튼.addEventListener("click", 뽑기);
 
-초기화버튼.addEventListener(
-    "click",
-    () => {
-        const 확인 =
-            confirm(
-                "이 기기에 저장된 랜덤 박스 기록과 아이템을 초기화할까요?\n\nSupabase의 코인과 실제 계정 데이터는 삭제되지 않습니다."
-            );
+초기화버튼.addEventListener("click", () => {
+    const 확인 = confirm(
+        "이 기기에 저장된 랜덤 박스 기록과 아이템을 초기화할까요?\n\nSupabase의 코인과 실제 계정 데이터는 삭제되지 않습니다."
+    );
 
-        if (!확인) {
-            return;
-        }
+    if (!확인) return;
 
-        기록 = [];
-        인벤토리 = {};
+    기록 = [];
+    인벤토리 = {};
 
-        기록저장();
-        인벤토리저장();
+    기록저장();
+    인벤토리저장();
 
-        결과.textContent =
-            "랜덤 박스 기록과 아이템을 초기화했습니다.";
+    결과.textContent =
+        "랜덤 박스 기록과 아이템을 초기화했습니다.";
 
-        기록표시();
-        인벤토리표시();
-    }
-);
+    기록표시();
+    인벤토리표시();
+});
 
-뒤로가기.addEventListener(
-    "click",
-    () => {
-        location.href = "index.html";
-    }
-);
-
+뒤로가기.addEventListener("click", () => {
+    location.href = "index.html";
+});
 
 /* =====================================================
-   ESC로 모달 닫기
+   ESC
 ===================================================== */
 
-document.addEventListener(
-    "keydown",
-    event => {
-        if (event.key === "Escape") {
-            확률모달.classList.remove("show");
-        }
+document.addEventListener("keydown", event => {
+    if (event.key === "Escape") {
+        확률모달.classList.remove("show");
     }
-);
-
+});
 
 /* =====================================================
-   로그인 상태 변화
+   Auth 상태 변화
 ===================================================== */
 
-supabase.auth.onAuthStateChange(
-    async (event, session) => {
-        console.log(
-            "🔐 Auth 상태 변경:",
-            event
-        );
+supabase.auth.onAuthStateChange((event, session) => {
+    console.log("🔐 Auth 상태 변경:", event);
 
-        if (session?.user) {
-            현재사용자 =
-                session.user;
+    if (session?.user) {
+        현재사용자 = session.user;
 
-            await 사용자정보불러오기();
-        }
-
-        else {
-            로그인실패(
-                "로그인이 필요합니다."
-            );
-        }
+        // Auth 콜백 안에서 무거운 DB 작업을 직접 기다리지 않음
+        setTimeout(() => {
+            사용자정보불러오기();
+        }, 0);
+    } else {
+        로그인실패("로그인이 필요합니다.");
     }
-);
-
+});
 
 /* =====================================================
    시작
 ===================================================== */
 
 async function 시작() {
-    기록 =
-        기록불러오기();
-
-    인벤토리 =
-        인벤토리불러오기();
+    기록 = 기록불러오기();
+    인벤토리 = 인벤토리불러오기();
 
     기록표시();
     인벤토리표시();
 
-    결과.textContent =
-        "데이터를 불러오는 중입니다...";
+    결과.textContent = "데이터를 불러오는 중입니다...";
 
-    const 로그인됨 =
-        await 로그인확인();
+    const 로그인됨 = await 로그인확인();
+    if (!로그인됨) return;
 
-    if (!로그인됨) {
-        return;
-    }
+    const 보상불러오기성공 = await 보상목록불러오기();
+    if (!보상불러오기성공) return;
 
-    const 보상불러오기성공 =
-        await 보상목록불러오기();
-
-    if (!보상불러오기성공) {
-        return;
-    }
-
-    await 사용자정보불러오기();
+    const 사용자불러오기성공 = await 사용자정보불러오기();
+    if (!사용자불러오기성공) return;
 
     인벤토리표시();
-
     기록표시();
 
-    console.log(
-        "🎁 돌이 랜덤 박스 준비 완료"
-    );
+    console.log("🎁 돌이 랜덤 박스 준비 완료");
 }
 
 시작();
