@@ -1605,19 +1605,21 @@ async function 보상목록불러오기() {
                 rarity,
                 probability,
                 reward_coins,
-                multiplier,
-                exp_amount,
+                reward_exp,
                 item_code,
-                icon,
-                is_active
+                created_at
             `)
-            .eq("is_active", true)
             .gt("probability", 0)
             .order("id", {
                 ascending: true
             });
 
         if (error) {
+            console.error(
+                "❌ Supabase 보상 목록 오류:",
+                error
+            );
+
             throw error;
         }
 
@@ -1629,13 +1631,21 @@ async function 보상목록불러오기() {
 
         보상목록 = data.map(보상 => ({
             ...보상,
+
             아이콘:
-                보상.icon ||
                 아이콘결정(보상),
+
             이름:
                 보상.item_name,
+
             확률:
-                Number(보상.probability) || 0
+                Number(보상.probability) || 0,
+
+            reward_coins:
+                Number(보상.reward_coins) || 0,
+
+            reward_exp:
+                Number(보상.reward_exp) || 0
         }));
 
         const 전체확률 =
@@ -1658,9 +1668,9 @@ async function 보상목록불러오기() {
         확률목록표시();
 
         return true;
-    }
 
-    catch (error) {
+    } catch (error) {
+
         console.error(
             "보상 목록 불러오기 오류:",
             error
@@ -1845,6 +1855,7 @@ function 기록시간표시(time) {
 ===================================================== */
 
 function 보상문구생성(data) {
+
     const 아이콘 =
         아이콘결정(data);
 
@@ -1854,8 +1865,25 @@ function 보상문구생성(data) {
     const 보상코인 =
         Number(data.reward_coins) || 0;
 
+    const 보상EXP =
+        Number(data.reward_exp) || 0;
+
+    const 보상내용 = [];
+
     if (보상코인 > 0) {
-        return `${아이콘} ${이름} +${보상코인.toLocaleString("ko-KR")} 돌돌코인`;
+        보상내용.push(
+            `+${보상코인.toLocaleString("ko-KR")} 돌돌코인`
+        );
+    }
+
+    if (보상EXP > 0) {
+        보상내용.push(
+            `+${보상EXP.toLocaleString("ko-KR")} EXP`
+        );
+    }
+
+    if (보상내용.length > 0) {
+        return `${아이콘} ${이름} ${보상내용.join(" · ")}`;
     }
 
     return `${아이콘} ${이름}`;
