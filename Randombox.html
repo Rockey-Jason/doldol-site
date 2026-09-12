@@ -450,13 +450,10 @@ button {
 
 .메인 > .패널:nth-child(2) {
     padding: 30px;
-
     height: 535px;
     min-height: 535px;
-
     display: flex;
     flex-direction: column;
-
     animation: 위로등장 0.8s 0.24s ease both;
 }
 
@@ -468,207 +465,57 @@ button {
     letter-spacing: -0.7px;
 }
 
-/* =====================================================
-   확률 목록 - 독립 스크롤
-===================================================== */
-
 .확률목록 {
     position: relative;
     z-index: 1;
-
     display: flex;
     flex-direction: column;
     gap: 10px;
-
-    /* 확률표가 무한정 길어지지 않도록 제한 */
-    max-height: 430px;
-
-    /* 세로 스크롤 */
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    /* 오른쪽 여백 */
-    padding: 3px 8px 3px 2px;
-
-    /* 부드러운 스크롤 */
-    scroll-behavior: smooth;
-
-    /* 스크롤바가 내용 위에 겹치지 않도록 */
-    scrollbar-gutter: stable;
-
-    /* 자연스러운 등장 */
-    animation: 확률목록등장 0.55s ease both;
 }
 
+#확률목록 {
+    max-height: 380px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 3px 8px 6px 2px;
+    scroll-behavior: smooth;
+    scrollbar-gutter: stable;
+    overscroll-behavior: contain;
+}
 
-/* =====================================================
-   확률표 스크롤바
-===================================================== */
-
-.확률목록::-webkit-scrollbar {
+#확률목록::-webkit-scrollbar {
     width: 7px;
 }
 
-.확률목록::-webkit-scrollbar-track {
+#확률목록::-webkit-scrollbar-track {
     margin: 4px 0;
     border-radius: 20px;
-
-    background:
-        rgba(255, 255, 255, 0.035);
+    background: rgba(255,255,255,0.035);
 }
 
-.확률목록::-webkit-scrollbar-thumb {
+#확률목록::-webkit-scrollbar-thumb {
     border-radius: 20px;
-
-    background:
-        linear-gradient(
-            180deg,
-            rgba(135, 150, 255, 0.75),
-            rgba(91, 105, 220, 0.48)
-        );
-
+    background: linear-gradient(
+        180deg,
+        rgba(135,150,255,0.75),
+        rgba(91,105,220,0.48)
+    );
     border: 1px solid rgba(255,255,255,0.08);
-
-    box-shadow:
-        0 0 12px rgba(105, 120, 255, 0.18);
-
-    transition:
-        background 0.25s ease,
-        box-shadow 0.25s ease;
+    box-shadow: 0 0 12px rgba(105,120,255,0.18);
+    transition: background 0.25s ease, box-shadow 0.25s ease;
 }
 
-.확률목록::-webkit-scrollbar-thumb:hover {
-    background:
-        linear-gradient(
-            180deg,
-            rgba(160, 172, 255, 0.9),
-            rgba(105, 120, 235, 0.7)
-        );
-
-    box-shadow:
-        0 0 18px rgba(105, 120, 255, 0.35);
+#확률목록::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(
+        180deg,
+        rgba(160,172,255,0.9),
+        rgba(105,120,235,0.7)
+    );
+    box-shadow: 0 0 18px rgba(105,120,255,0.35);
 }
 
-
-/* =====================================================
-   확률 항목
-===================================================== */
-
-.확률항목 {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-
+#확률목록 .확률항목 {
     flex-shrink: 0;
-
-    padding: 14px 16px;
-
-    border: 1px solid rgba(255,255,255,0.065);
-    border-radius: 14px;
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(255,255,255,0.055),
-            rgba(255,255,255,0.025)
-        );
-
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.025);
-
-    transition:
-        transform 0.25s cubic-bezier(.2,.8,.2,1),
-        background 0.25s ease,
-        border-color 0.25s ease,
-        box-shadow 0.25s ease;
-
-    animation:
-        확률항목등장 0.45s cubic-bezier(.2,.8,.2,1) both;
-}
-
-
-/* 항목 hover */
-
-.확률항목:hover {
-    transform: translateX(5px);
-
-    border-color:
-        rgba(145,155,255,0.3);
-
-    background:
-        linear-gradient(
-            135deg,
-            rgba(120,135,255,0.11),
-            rgba(255,255,255,0.035)
-        );
-
-    box-shadow:
-        0 8px 25px rgba(0,0,0,0.18),
-        inset 0 1px 0 rgba(255,255,255,0.04);
-}
-
-
-/* =====================================================
-   확률 목록 등장 애니메이션
-===================================================== */
-
-@keyframes 확률목록등장 {
-
-    from {
-        opacity: 0;
-        transform: translateY(10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-}
-
-
-/* =====================================================
-   각각의 확률 항목 등장
-===================================================== */
-
-@keyframes 확률항목등장 {
-
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-
-}
-
-
-/* =====================================================
-   스크롤 영역 위/아래 은은한 페이드
-===================================================== */
-
-.확률목록 {
-    mask-image:
-        linear-gradient(
-            to bottom,
-            transparent 0,
-            black 14px,
-            black calc(100% - 14px),
-            transparent 100%
-        );
-
-    -webkit-mask-image:
-        linear-gradient(
-            to bottom,
-            transparent 0,
-            black 14px,
-            black calc(100% - 14px),
-            transparent 100%
-        );
 }
 
 .확률항목 {
@@ -718,13 +565,9 @@ button {
 .인벤토리 {
     position: relative;
     z-index: 1;
-
-    margin-top: 24px;
+    margin-top: 20px;
     padding-top: 20px;
-
-    border-top:
-        1px solid rgba(255,255,255,0.08);
-
+    border-top: 1px solid rgba(255,255,255,0.08);
     flex-shrink: 0;
 }
 
@@ -1060,28 +903,14 @@ button {
         min-height: 510px;
     }
 
-   
-}
-
-   @media (max-width: 850px) {
-
     .메인 > .패널:nth-child(2) {
         height: auto;
         min-height: 0;
     }
 
-    .확률목록 {
+    #확률목록 {
         max-height: 360px;
     }
-
-}
-
-   @media (max-width: 520px) {
-
-    .확률목록 {
-        max-height: 320px;
-    }
-
 }
 
 @media (max-width: 520px) {
@@ -1122,6 +951,10 @@ button {
     #뽑기버튼 {
         width: 100%;
         min-width: 0;
+    }
+
+    #확률목록 {
+        max-height: 320px;
     }
 }
 
@@ -1373,7 +1206,7 @@ const SUPABASE_URL =
     "https://scttowfhygcpdirrekqm.supabase.co";
 
 const SUPABASE_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdFR0b3dmaHlnY3BkaXJyZWtxbSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
 
 const supabase = createClient(
     SUPABASE_URL,
@@ -1386,7 +1219,7 @@ const supabase = createClient(
 
 const 뽑기가격 = 1000;
 const 기록저장키 = "돌이랜덤박스기록";
-const 인벤토리저장키 = "돌이랜덤박스인벤토리";
+const 인벤토리저장키 = "돌이랜덤박스인벤토리"; // 기존 브라우저 데이터와의 호환용
 
 let 현재사용자 = null;
 let 사용자정보 = {
@@ -1460,17 +1293,10 @@ function 아이콘결정(보상) {
 function 기록불러오기() {
     try {
         const 저장값 = localStorage.getItem(기록저장키);
-
-        if (!저장값) {
-            return [];
-        }
+        if (!저장값) return [];
 
         const parsed = JSON.parse(저장값);
-
-        return Array.isArray(parsed)
-            ? parsed
-            : [];
-
+        return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
         console.error("기록 불러오기 오류:", error);
         return [];
@@ -1483,39 +1309,59 @@ function 기록저장() {
             기록저장키,
             JSON.stringify(기록)
         );
-
     } catch (error) {
         console.error("기록 저장 오류:", error);
     }
 }
 
 /* =====================================================
-   로컬 인벤토리
+   Supabase 인벤토리
+   실제 아이템 보유량은 DB에 저장
 ===================================================== */
-function 인벤토리불러오기() {
-    try {
-        const 저장값 = localStorage.getItem(인벤토리저장키);
-        if (!저장값) return {};
 
-        const parsed = JSON.parse(저장값);
-        return parsed && typeof parsed === "object"
-            ? parsed
-            : {};
+async function 인벤토리불러오기() {
+    if (!현재사용자) {
+        인벤토리 = {};
+        return false;
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from("dori_box_inventory")
+            .select("item_id, item_code, quantity")
+            .eq("user_id", 현재사용자.id)
+            .order("item_id", { ascending: true });
+
+        if (error) throw error;
+
+        인벤토리 = {};
+
+        (data || []).forEach(아이템 => {
+            const 코드 = 아이템.item_code || String(아이템.item_id);
+            const 수량 = Number(아이템.quantity) || 0;
+
+            if (수량 > 0) {
+                인벤토리[코드] = 수량;
+            }
+        });
+
+        인벤토리표시();
+        return true;
     } catch (error) {
-        console.error("인벤토리 불러오기 오류:", error);
-        return {};
+        console.error("Supabase 인벤토리 불러오기 오류:", error);
+        인벤토리 = {};
+        인벤토리표시();
+        return false;
     }
 }
 
+/*
+ * 인벤토리는 랜덤박스 RPC에서 서버가 원자적으로 증가시킵니다.
+ * 따라서 브라우저에서 직접 UPDATE/INSERT하지 않습니다.
+ */
 function 인벤토리저장() {
-    try {
-        localStorage.setItem(
-            인벤토리저장키,
-            JSON.stringify(인벤토리)
-        );
-    } catch (error) {
-        console.error("인벤토리 저장 오류:", error);
-    }
+    // 호환성을 위해 남겨두지만 DB 저장은 RPC가 담당합니다.
+    return true;
 }
 
 /* =====================================================
@@ -1852,8 +1698,8 @@ function 보상문구생성(data) {
 
 /* =====================================================
    보상 인벤토리 반영
-   아이템은 현재 사이트 구조상 localStorage에 보관
-   coin / exp는 RPC가 서버에서 직접 지급하므로 중복 반영하지 않음
+   실제 수량은 Supabase RPC가 저장하고,
+   반환된 수량을 화면에 반영합니다.
 ===================================================== */
 
 function 인벤토리반영(data) {
@@ -1866,8 +1712,19 @@ function 인벤토리반영(data) {
     const 코드 = data?.item_code || data?.item_id;
     if (!코드) return;
 
-    인벤토리[코드] = (인벤토리[코드] || 0) + 1;
-    인벤토리저장();
+    const 서버수량 = Number(
+        data?.inventory_quantity ??
+        data?.quantity ??
+        0
+    );
+
+    if (서버수량 > 0) {
+        인벤토리[코드] = 서버수량;
+    } else {
+        인벤토리[코드] = (인벤토리[코드] || 0) + 1;
+    }
+
+    인벤토리표시();
 }
 
 /* =====================================================
@@ -2072,8 +1929,9 @@ supabase.auth.onAuthStateChange((event, session) => {
         현재사용자 = session.user;
 
         // Auth 콜백 안에서 무거운 DB 작업을 직접 기다리지 않음
-        setTimeout(() => {
-            사용자정보불러오기();
+        setTimeout(async () => {
+            await 사용자정보불러오기();
+            await 인벤토리불러오기();
         }, 0);
     } else {
         로그인실패("로그인이 필요합니다.");
@@ -2086,7 +1944,7 @@ supabase.auth.onAuthStateChange((event, session) => {
 
 async function 시작() {
     기록 = 기록불러오기();
-    인벤토리 = 인벤토리불러오기();
+    인벤토리 = {};
 
     기록표시();
     인벤토리표시();
@@ -2101,6 +1959,8 @@ async function 시작() {
 
     const 사용자불러오기성공 = await 사용자정보불러오기();
     if (!사용자불러오기성공) return;
+
+    await 인벤토리불러오기();
 
     인벤토리표시();
     기록표시();
