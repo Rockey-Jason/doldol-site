@@ -1230,23 +1230,6 @@ function 아이콘결정(보상) {
 function 기록불러오기() {
     try {
         const 저장값 = localStorage.getItem(기록저장키);
-        if (!저장값) return [];
-
-        const parsed = JSON.parse(저장값);
-        return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-        console.error("기록 불러오기 오류:", error);
-        return [];
-    }
-}
-
-/* =====================================================
-   로컬 기록
-===================================================== */
-
-function 기록불러오기() {
-    try {
-        const 저장값 = localStorage.getItem(기록저장키);
 
         if (!저장값) {
             return [];
