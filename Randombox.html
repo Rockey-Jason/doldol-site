@@ -1246,9 +1246,18 @@ function 기록저장() {
             기록저장키,
             JSON.stringify(기록)
         );
-    } catch (error) {
-        console.error("기록 저장 오류:", error);
-    }
+} catch (error) {
+    console.error("❌ 랜덤 박스 오류:", error);
+
+    console.error("📦 RPC 오류 상세:", {
+        name: error?.name,
+        code: error?.code,
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint
+    });
+
+    const 오류메시지 = 오류메시지추출(error);
 }
 
 /* =====================================================
