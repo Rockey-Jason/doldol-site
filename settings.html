@@ -5,7 +5,7 @@
 
 <meta charset="UTF-8">
 
-<title>돌이 사이트-설정</title>
+<title>돌이 사이트 · 설정</title>
 
 <meta
     name="viewport"
@@ -689,6 +689,443 @@ body::before {
     filter: brightness(1.1);
 }
 
+
+/* =====================================================
+   내 아이템 / 돌이 꾸미기
+===================================================== */
+
+.status-tabs {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.inventory-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.inventory-summary {
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.inventory-summary strong {
+    color: #fff;
+}
+
+.inventory-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+}
+
+.inventory-filter button {
+    min-height: 36px;
+    padding: 0 13px;
+    border: 1px solid rgba(255,255,255,.09);
+    border-radius: 999px;
+    color: var(--muted);
+    background: rgba(255,255,255,.045);
+    font-family: inherit;
+    cursor: pointer;
+    transition: .25s ease;
+}
+
+.inventory-filter button:hover {
+    color: #fff;
+    background: rgba(255,255,255,.1);
+    transform: translateY(-2px);
+}
+
+.inventory-filter button.active {
+    color: #080822;
+    background: linear-gradient(135deg,#fff,#d8d4ff);
+    border-color: rgba(255,255,255,.45);
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 13px;
+}
+
+.inventory-card {
+    position: relative;
+    min-height: 185px;
+    padding: 17px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.085);
+    border-radius: 20px;
+    background:
+        radial-gradient(circle at 80% 10%, rgba(146,125,255,.13), transparent 42%),
+        rgba(255,255,255,.045);
+    cursor: pointer;
+    animation: itemReveal .45s cubic-bezier(.22,1,.36,1) both;
+    transition: transform .3s ease, border-color .3s ease, background .3s ease, box-shadow .3s ease;
+}
+
+.inventory-card:nth-child(2n) { animation-delay: .035s; }
+.inventory-card:nth-child(3n) { animation-delay: .07s; }
+.inventory-card:nth-child(4n) { animation-delay: .105s; }
+
+.inventory-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255,255,255,.2);
+    background:
+        radial-gradient(circle at 80% 10%, rgba(146,125,255,.2), transparent 42%),
+        rgba(255,255,255,.075);
+    box-shadow: 0 18px 38px rgba(0,0,0,.22);
+}
+
+.inventory-card.custom-item:hover {
+    box-shadow: 0 18px 45px rgba(105,201,255,.1);
+}
+
+.inventory-icon {
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    margin-bottom: 14px;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 17px;
+    background: rgba(255,255,255,.06);
+    font-size: 28px;
+    box-shadow: inset 0 1px rgba(255,255,255,.12);
+}
+
+.inventory-type {
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .4px;
+}
+
+.inventory-name {
+    margin-top: 4px;
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.inventory-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 12px;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.inventory-quantity {
+    color: #fff;
+    font-weight: 700;
+}
+
+.rarity-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    padding: 0 8px;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 999px;
+    background: rgba(255,255,255,.05);
+}
+
+.inventory-card.selected {
+    border-color: rgba(105,201,255,.7);
+    background:
+        radial-gradient(circle at 80% 10%, rgba(105,201,255,.18), transparent 45%),
+        rgba(105,201,255,.08);
+    box-shadow: 0 0 0 1px rgba(105,201,255,.12), 0 16px 40px rgba(0,0,0,.2);
+}
+
+.inventory-card.equipped::after {
+    content: "장착 중";
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 5px 8px;
+    border-radius: 999px;
+    color: #06121d;
+    background: #9fe7ff;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.inventory-code {
+    margin-top: 7px;
+    color: rgba(255,255,255,.35);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10px;
+    word-break: break-all;
+}
+
+.customization-layout {
+    display: grid;
+    grid-template-columns: minmax(250px,.8fr) minmax(0,1.2fr);
+    gap: 18px;
+    align-items: start;
+}
+
+.custom-preview {
+    position: sticky;
+    top: 18px;
+    min-height: 430px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 26px 20px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 24px;
+    background:
+        radial-gradient(circle at 50% 38%, rgba(105,201,255,.13), transparent 35%),
+        linear-gradient(145deg, rgba(255,255,255,.07), rgba(255,255,255,.025));
+}
+
+.custom-preview::before {
+    content: "";
+    position: absolute;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(146,125,255,.18), transparent 68%);
+    filter: blur(8px);
+    animation: previewGlow 4s ease-in-out infinite;
+}
+
+.preview-stage {
+    position: relative;
+    width: 220px;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+}
+
+.preview-dori {
+    position: relative;
+    width: 190px;
+    height: 190px;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 4px solid rgba(255,255,255,.88);
+    box-shadow: 0 24px 55px rgba(0,0,0,.32), 0 0 35px rgba(105,201,255,.1);
+    background: rgba(255,255,255,.05);
+    transition: transform .45s cubic-bezier(.22,1,.36,1), filter .45s ease;
+}
+
+.preview-dori:hover {
+    transform: translateY(-5px) scale(1.025);
+}
+
+.preview-dori img {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.preview-layer {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 90%;
+    padding: 5px 9px;
+    border: 1px solid rgba(255,255,255,.22);
+    border-radius: 999px;
+    background: rgba(5,5,28,.68);
+    backdrop-filter: blur(8px);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0,0,0,.25);
+    transition: opacity .3s ease, transform .3s ease;
+}
+
+.preview-hat { top: 16px; }
+.preview-glasses { top: 92px; }
+.preview-clothes { bottom: 15px; }
+
+.preview-empty {
+    opacity: .45;
+}
+
+.preview-title {
+    position: relative;
+    z-index: 1;
+    margin-top: 5px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.preview-subtitle {
+    position: relative;
+    z-index: 1;
+    margin-top: 5px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+}
+
+.custom-controls {
+    min-width: 0;
+}
+
+.custom-category {
+    margin-bottom: 15px;
+    padding: 17px;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 20px;
+    background: rgba(255,255,255,.035);
+}
+
+.custom-category-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.custom-category-title {
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.custom-category-count {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.custom-item-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px,1fr));
+    gap: 8px;
+}
+
+.custom-item-button {
+    min-height: 82px;
+    padding: 10px;
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 15px;
+    color: #fff;
+    background: rgba(255,255,255,.04);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: .25s ease;
+}
+
+.custom-item-button:hover {
+    transform: translateY(-3px);
+    background: rgba(255,255,255,.08);
+    border-color: rgba(255,255,255,.16);
+}
+
+.custom-item-button.selected {
+    border-color: rgba(105,201,255,.7);
+    background: rgba(105,201,255,.1);
+    box-shadow: 0 0 0 1px rgba(105,201,255,.08);
+}
+
+.custom-item-emoji {
+    font-size: 21px;
+}
+
+.custom-item-name {
+    margin-top: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+.custom-item-qty {
+    margin-top: 3px;
+    color: var(--muted);
+    font-size: 11px;
+}
+
+.custom-actions {
+    display: flex;
+    gap: 9px;
+    margin-top: 16px;
+}
+
+.custom-save,
+.custom-reset {
+    flex: 1;
+    min-height: 48px;
+    border-radius: 14px;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: .25s ease;
+}
+
+.custom-save {
+    border: 1px solid rgba(105,201,255,.35);
+    color: #06121d;
+    background: linear-gradient(135deg,#9fe7ff,#b8a9ff);
+    box-shadow: 0 10px 30px rgba(105,201,255,.12);
+}
+
+.custom-reset {
+    border: 1px solid rgba(255,255,255,.1);
+    color: var(--muted);
+    background: rgba(255,255,255,.06);
+}
+
+.custom-save:hover,
+.custom-reset:hover {
+    transform: translateY(-3px);
+    filter: brightness(1.06);
+}
+
+.custom-status {
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+}
+
+.inventory-notice {
+    margin-bottom: 16px;
+    padding: 13px 15px;
+    border: 1px solid rgba(105,201,255,.12);
+    border-radius: 15px;
+    background: rgba(105,201,255,.045);
+    color: var(--muted);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.inventory-notice strong { color: #fff; }
+
+@keyframes itemReveal {
+    from { opacity: 0; transform: translateY(12px) scale(.985); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes previewGlow {
+    0%,100% { transform: scale(1); opacity: .7; }
+    50% { transform: scale(1.12); opacity: 1; }
+}
+
 /* 애니메이션 */
 
 @keyframes fadeUp {
@@ -792,6 +1229,10 @@ body::before {
         gap: 6px;
     }
 
+    .status-tabs {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
     .status-tab-button {
         min-height: 44px;
         padding: 0 4px;
@@ -823,6 +1264,23 @@ body::before {
 
     .exp-title {
         font-size: 19px;
+    }
+}
+
+
+@media (max-width: 900px) {
+    .status-tabs {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .customization-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .custom-preview {
+        position: relative;
+        top: auto;
+        min-height: 360px;
     }
 }
 
@@ -1134,6 +1592,22 @@ body::before {
             🏷️ 칭호
         </button>
 
+        <button
+            id="내아이템버튼"
+            class="status-tab-button"
+            data-tab="내아이템"
+        >
+            🎒 내 아이템
+        </button>
+
+        <button
+            id="꾸미기버튼"
+            class="status-tab-button"
+            data-tab="꾸미기"
+        >
+            🎨 돌이 꾸미기
+        </button>
+
     </div>
 
 
@@ -1317,6 +1791,46 @@ const profileButton =
     document.getElementById(
         "profileButton"
     );
+
+
+const 내아이템버튼 =
+    document.getElementById(
+        "내아이템버튼"
+    );
+
+const 꾸미기버튼 =
+    document.getElementById(
+        "꾸미기버튼"
+    );
+
+
+// =====================================================
+// 돌이사이트 아이템 / 꾸미기 상태
+// =====================================================
+
+let 보유아이템목록 = [];
+let 아이템필터 = "전체";
+let 꾸미기상태 = {
+    hat: null,
+    glasses: null,
+    clothes: null,
+    background: null,
+    skin: null,
+    effect: null
+};
+
+const 꾸미기카테고리정보 = {
+    hat: { label: "모자", emoji: "🎩" },
+    glasses: { label: "안경", emoji: "👓" },
+    clothes: { label: "옷", emoji: "👕" },
+    background: { label: "배경", emoji: "🖼️" },
+    skin: { label: "스킨", emoji: "🐶" },
+    effect: { label: "효과", emoji: "✨" }
+};
+
+const 꾸미기저장테이블 = "dori_site_customization";
+
+
 
 
 // =====================================================
@@ -2497,41 +3011,27 @@ async function 칭호저장() {
 
 function 상태탭변경(탭) {
 
-    if (
-        ![
-            "업적",
-            "상세설명",
-            "칭호"
-        ].includes(탭)
-    ) {
+    const 허용탭 = [
+        "업적",
+        "상세설명",
+        "칭호",
+        "내아이템",
+        "꾸미기"
+    ];
 
+    if (!허용탭.includes(탭)) {
         return;
-
     }
 
+    현재상태탭 = 탭;
 
-    현재상태탭 =
-        탭;
-
-
-    업적버튼.classList.toggle(
-        "active",
-        탭 === "업적"
-    );
-
-    상세설명버튼.classList.toggle(
-        "active",
-        탭 === "상세설명"
-    );
-
-    칭호버튼.classList.toggle(
-        "active",
-        탭 === "칭호"
-    );
-
+    업적버튼.classList.toggle("active", 탭 === "업적");
+    상세설명버튼.classList.toggle("active", 탭 === "상세설명");
+    칭호버튼.classList.toggle("active", 탭 === "칭호");
+    내아이템버튼.classList.toggle("active", 탭 === "내아이템");
+    꾸미기버튼.classList.toggle("active", 탭 === "꾸미기");
 
     상태화면업데이트();
-
 }
 
 
@@ -2541,36 +3041,489 @@ function 상태탭변경(탭) {
 
 function 상태화면업데이트() {
 
-    if (
-        현재상태탭 === "업적"
-    ) {
-
+    if (현재상태탭 === "업적") {
         업적화면표시();
-
         return;
-
     }
 
-
-    if (
-        현재상태탭 === "상세설명"
-    ) {
-
+    if (현재상태탭 === "상세설명") {
         상세설명화면표시();
-
         return;
-
     }
 
-
-    if (
-        현재상태탭 === "칭호"
-    ) {
-
+    if (현재상태탭 === "칭호") {
         칭호화면표시();
-
+        return;
     }
 
+    if (현재상태탭 === "내아이템") {
+        내아이템화면표시();
+        return;
+    }
+
+    if (현재상태탭 === "꾸미기") {
+        꾸미기화면표시();
+    }
+}
+
+
+// =====================================================
+// 아이템 카테고리 판별
+// =====================================================
+
+function 아이템꾸미기카테고리(item) {
+    const code = String(item?.item_code ?? "").toUpperCase();
+    const name = String(item?.item_name ?? "");
+    const type = String(item?.item_type ?? "").toLowerCase();
+
+    if (code.startsWith("HAT_") || name.includes("모자")) return "hat";
+    if (code.startsWith("GLASSES_") || name.includes("안경")) return "glasses";
+    if (code.startsWith("CLOTHES_") || name.includes("옷") || type === "clothes") return "clothes";
+    if (code.startsWith("BACKGROUND_") || name.includes("배경") || type === "background") return "background";
+    if (code.startsWith("SKIN_") || name.includes("스킨") || type === "skin") return "skin";
+    if (code.startsWith("EFFECT_") || name.includes("효과") || type === "effect") return "effect";
+
+    return null;
+}
+
+
+function 아이템아이콘(item) {
+    const category = 아이템꾸미기카테고리(item);
+
+    if (category && 꾸미기카테고리정보[category]) {
+        return 꾸미기카테고리정보[category].emoji;
+    }
+
+    const type = String(item?.item_type ?? "").toLowerCase();
+    if (type === "coin" || String(item?.item_code ?? "").toUpperCase().startsWith("COIN_")) return "🪙";
+    if (type === "multiplier" || String(item?.item_code ?? "").toUpperCase().includes("MULTIPLIER")) return "✖️";
+
+    return "🎁";
+}
+
+
+function 아이템용도(item) {
+    const category = 아이템꾸미기카테고리(item);
+    if (category) return `꾸미기 · ${꾸미기카테고리정보[category].label}`;
+
+    const type = String(item?.item_type ?? "").toLowerCase();
+    if (type === "coin" || String(item?.item_code ?? "").toUpperCase().startsWith("COIN_")) return "일반 사이트 · 코인";
+    if (type === "multiplier" || String(item?.item_code ?? "").toUpperCase().includes("MULTIPLIER")) return "일반 사이트 · 배율";
+    return type ? `일반 사이트 · ${type}` : "일반 사이트";
+}
+
+
+function 장착아이템인가(item) {
+    const category = 아이템꾸미기카테고리(item);
+    return Boolean(
+        category &&
+        꾸미기상태[category] &&
+        꾸미기상태[category].item_code === item.item_code
+    );
+}
+
+
+// =====================================================
+// 인벤토리 가져오기
+// =====================================================
+
+async function 인벤토리가져오기(user) {
+    const { data, error } =
+        await supabase
+            .from("dori_box_inventory")
+            .select(`
+                id,
+                user_id,
+                item_id,
+                item_code,
+                item_name,
+                item_type,
+                rarity,
+                quantity,
+                created_at,
+                updated_at
+            `)
+            .eq("user_id", user.id)
+            .gt("quantity", 0)
+            .order("created_at", { ascending: false });
+
+    if (error) {
+        throw error;
+    }
+
+    보유아이템목록 = Array.isArray(data) ? data : [];
+}
+
+
+// =====================================================
+// 꾸미기 저장값
+// =====================================================
+
+function 꾸미기저장키(userId) {
+    return `dori-site-customization-${userId}`;
+}
+
+
+function 꾸미기상태정규화(data) {
+    const result = {
+        hat: null,
+        glasses: null,
+        clothes: null,
+        background: null,
+        skin: null,
+        effect: null
+    };
+
+    for (const category of Object.keys(result)) {
+        const value = data?.[category];
+        if (value && typeof value === "object" && value.item_code) {
+            result[category] = {
+                item_code: value.item_code,
+                item_name: value.item_name ?? value.item_code,
+                rarity: value.rarity ?? "일반"
+            };
+        }
+    }
+
+    return result;
+}
+
+
+async function 꾸미기정보가져오기(user) {
+    let dbLoaded = false;
+
+    try {
+        const { data, error } =
+            await supabase
+                .from(꾸미기저장테이블)
+                .select(`
+                    user_id,
+                    equipped_hat,
+                    equipped_glasses,
+                    equipped_clothes,
+                    equipped_background,
+                    equipped_skin,
+                    equipped_effect
+                `)
+                .eq("user_id", user.id)
+                .maybeSingle();
+
+        if (!error && data) {
+            꾸미기상태 = 꾸미기상태정규화({
+                hat: data.equipped_hat,
+                glasses: data.equipped_glasses,
+                clothes: data.equipped_clothes,
+                background: data.equipped_background,
+                skin: data.equipped_skin,
+                effect: data.equipped_effect
+            });
+            dbLoaded = true;
+        }
+    }
+    catch (error) {
+        console.warn("돌이 꾸미기 DB 조회를 건너뜁니다:", error);
+    }
+
+    if (!dbLoaded) {
+        try {
+            const raw = localStorage.getItem(꾸미기저장키(user.id));
+            if (raw) {
+                꾸미기상태 = 꾸미기상태정규화(JSON.parse(raw));
+            }
+        }
+        catch (error) {
+            console.warn("브라우저 꾸미기 저장값을 읽지 못했습니다:", error);
+        }
+    }
+
+    보유아이템으로꾸미기상태검증();
+}
+
+
+function 보유아이템으로꾸미기상태검증() {
+    for (const category of Object.keys(꾸미기상태)) {
+        const selected = 꾸미기상태[category];
+        if (!selected) continue;
+
+        const owned = 보유아이템목록.some(
+            item =>
+                아이템꾸미기카테고리(item) === category &&
+                item.item_code === selected.item_code &&
+                숫자정리(item.quantity) > 0
+        );
+
+        if (!owned) {
+            꾸미기상태[category] = null;
+        }
+    }
+}
+
+
+async function 꾸미기저장() {
+    if (!현재유저정보) return;
+
+    const userId = 현재유저정보.user_id;
+    const payload = {
+        user_id: userId,
+        equipped_hat: 꾸미기상태.hat,
+        equipped_glasses: 꾸미기상태.glasses,
+        equipped_clothes: 꾸미기상태.clothes,
+        equipped_background: 꾸미기상태.background,
+        equipped_skin: 꾸미기상태.skin,
+        equipped_effect: 꾸미기상태.effect
+    };
+
+    let savedToDb = false;
+
+    try {
+        const { error } =
+            await supabase
+                .from(꾸미기저장테이블)
+                .upsert(payload, { onConflict: "user_id" });
+
+        if (!error) {
+            savedToDb = true;
+        }
+        else {
+            console.warn("돌이 꾸미기 DB 저장 실패:", error);
+        }
+    }
+    catch (error) {
+        console.warn("돌이 꾸미기 DB 저장을 건너뜁니다:", error);
+    }
+
+    localStorage.setItem(
+        꾸미기저장키(userId),
+        JSON.stringify(꾸미기상태)
+    );
+
+    return savedToDb;
+}
+
+
+function 꾸미기상태초기화() {
+    꾸미기상태 = {
+        hat: null,
+        glasses: null,
+        clothes: null,
+        background: null,
+        skin: null,
+        effect: null
+    };
+}
+
+
+// =====================================================
+// 내 아이템 화면
+// =====================================================
+
+function 내아이템화면표시() {
+    const customCount = 보유아이템목록.filter(
+        item => 아이템꾸미기카테고리(item)
+    ).length;
+
+    const filtered = 보유아이템목록.filter(item => {
+        if (아이템필터 === "전체") return true;
+        if (아이템필터 === "꾸미기") return Boolean(아이템꾸미기카테고리(item));
+        return 아이템꾸미기카테고리(item) === 아이템필터;
+    });
+
+    const filterButtons = [
+        ["전체", "전체"],
+        ["꾸미기", "꾸미기"],
+        ["hat", "모자"],
+        ["glasses", "안경"],
+        ["clothes", "옷"],
+        ["background", "배경"],
+        ["skin", "스킨"],
+        ["effect", "효과"]
+    ];
+
+    const filterHTML = filterButtons.map(([value, label]) => `
+        <button class="${아이템필터 === value ? "active" : ""}" data-inventory-filter="${HTML이스케이프(value)}">${HTML이스케이프(label)}</button>
+    `).join("");
+
+    const cards = filtered.length
+        ? filtered.map(item => {
+            const custom = Boolean(아이템꾸미기카테고리(item));
+            const equipped = 장착아이템인가(item);
+            return `
+                <article class="inventory-card ${custom ? "custom-item" : ""} ${equipped ? "equipped" : ""}" data-item-code="${HTML이스케이프(item.item_code)}">
+                    <div class="inventory-icon">${아이템아이콘(item)}</div>
+                    <div class="inventory-type">${HTML이스케이프(아이템용도(item))}</div>
+                    <div class="inventory-name">${HTML이스케이프(item.item_name ?? "이름 없는 아이템")}</div>
+                    <div class="inventory-meta">
+                        <span class="rarity-badge">${HTML이스케이프(item.rarity ?? "일반")}</span>
+                        <span class="inventory-quantity">×${숫자정리(item.quantity).toLocaleString()}</span>
+                    </div>
+                    <div class="inventory-code">${HTML이스케이프(item.item_code ?? "-")}</div>
+                </article>
+            `;
+        }).join("")
+        : `
+            <div class="empty" style="grid-column:1/-1;">
+                🎁 아직 보유한 아이템이 없습니다.<br>
+                랜덤박스에서 새로운 아이템을 획득해보세요!
+            </div>
+        `;
+
+    상태내용요소.innerHTML = `
+        <div class="inventory-notice">
+            <strong>🎒 내 아이템</strong><br>
+            랜덤박스에서 획득한 아이템을 한곳에서 확인할 수 있습니다.
+            꾸미기 아이템은 <strong>🎨 돌이 꾸미기</strong>에서 장착할 수 있습니다.
+        </div>
+        <div class="inventory-toolbar">
+            <div class="inventory-summary">
+                전체 <strong>${보유아이템목록.length}</strong>종 · 꾸미기 <strong>${customCount}</strong>종
+            </div>
+            <div class="inventory-filter">${filterHTML}</div>
+        </div>
+        <div class="inventory-grid">${cards}</div>
+    `;
+
+    상태내용요소.querySelectorAll("[data-inventory-filter]").forEach(button => {
+        button.addEventListener("click", () => {
+            아이템필터 = button.dataset.inventoryFilter;
+            내아이템화면표시();
+        });
+    });
+
+    상태내용요소.querySelectorAll(".inventory-card.custom-item").forEach(card => {
+        card.addEventListener("click", () => {
+            const item = 보유아이템목록.find(
+                value => value.item_code === card.dataset.itemCode
+            );
+            if (!item) return;
+            상태탭변경("꾸미기");
+            setTimeout(() => 꾸미기아이템선택(item), 20);
+        });
+    });
+}
+
+
+// =====================================================
+// 꾸미기 화면
+// =====================================================
+
+function 꾸미기화면표시() {
+    보유아이템으로꾸미기상태검증();
+
+    const categories = Object.keys(꾸미기카테고리정보);
+
+    const categoryHTML = categories.map(category => {
+        const info = 꾸미기카테고리정보[category];
+        const items = 보유아이템목록.filter(
+            item => 아이템꾸미기카테고리(item) === category
+        );
+
+        const selectedCode = 꾸미기상태[category]?.item_code ?? "";
+
+        const itemsHTML = items.length
+            ? items.map(item => `
+                <button
+                    class="custom-item-button ${selectedCode === item.item_code ? "selected" : ""}"
+                    data-custom-code="${HTML이스케이프(item.item_code)}"
+                    data-custom-category="${category}"
+                >
+                    <div class="custom-item-emoji">${info.emoji}</div>
+                    <div class="custom-item-name">${HTML이스케이프(item.item_name ?? "이름 없는 아이템")}</div>
+                    <div class="custom-item-qty">${HTML이스케이프(item.rarity ?? "일반")} · ×${숫자정리(item.quantity).toLocaleString()}</div>
+                </button>
+            `).join("")
+            : `<div class="empty" style="padding:20px;grid-column:1/-1;">아직 보유한 ${info.label}이 없습니다.</div>`;
+
+        return `
+            <section class="custom-category">
+                <div class="custom-category-head">
+                    <div class="custom-category-title">${info.emoji} ${info.label}</div>
+                    <div class="custom-category-count">${items.length}종 보유</div>
+                </div>
+                <div class="custom-item-row">${itemsHTML}</div>
+            </section>
+        `;
+    }).join("");
+
+    const 현재모자 = 꾸미기상태.hat?.item_name ?? "기본 모자";
+    const 현재안경 = 꾸미기상태.glasses?.item_name ?? "기본 안경";
+    const 현재옷 = 꾸미기상태.clothes?.item_name ?? "기본 옷";
+
+    상태내용요소.innerHTML = `
+        <div class="customization-layout">
+            <div class="custom-preview">
+                <div class="preview-stage">
+                    <div class="preview-dori">
+                        <img src="${HTML이스케이프(현재유저정보?.profile_image || "https://i.postimg.cc/qB2wnCCq/1000004618-(2).png")}" alt="돌이 미리보기">
+                        <div class="preview-layer preview-hat ${꾸미기상태.hat ? "" : "preview-empty"}" title="${HTML이스케이프(현재모자)}">${꾸미기상태.hat ? "🎩" : "모자 없음"}</div>
+                        <div class="preview-layer preview-glasses ${꾸미기상태.glasses ? "" : "preview-empty"}" title="${HTML이스케이프(현재안경)}">${꾸미기상태.glasses ? "👓" : "안경 없음"}</div>
+                        <div class="preview-layer preview-clothes ${꾸미기상태.clothes ? "" : "preview-empty"}" title="${HTML이스케이프(현재옷)}">${꾸미기상태.clothes ? "👕" : "옷 없음"}</div>
+                    </div>
+                </div>
+                <div class="preview-title">🐶 돌이 꾸미기</div>
+                <div class="preview-subtitle">보유한 아이템을 선택하면 미리보기에 즉시 반영됩니다.</div>
+                <div class="custom-actions" style="width:100%;max-width:320px;">
+                    <button class="custom-save" id="꾸미기저장버튼">💾 장착 저장</button>
+                    <button class="custom-reset" id="꾸미기초기화버튼">↺ 전체 해제</button>
+                </div>
+                <div class="custom-status" id="꾸미기상태문구">현재 장착 상태를 관리하고 있습니다.</div>
+            </div>
+            <div class="custom-controls">
+                ${categoryHTML}
+            </div>
+        </div>
+    `;
+
+    상태내용요소.querySelectorAll("[data-custom-code]").forEach(button => {
+        button.addEventListener("click", () => {
+            const item = 보유아이템목록.find(
+                value => value.item_code === button.dataset.customCode
+            );
+            if (!item) return;
+            꾸미기아이템선택(item);
+        });
+    });
+
+    document.getElementById("꾸미기저장버튼")?.addEventListener("click", async () => {
+        const button = document.getElementById("꾸미기저장버튼");
+        const status = document.getElementById("꾸미기상태문구");
+        if (button) button.disabled = true;
+        if (status) status.textContent = "저장 중...";
+
+        try {
+            const savedToDb = await 꾸미기저장();
+            if (status) {
+                status.textContent = savedToDb
+                    ? "✓ 계정에 저장되었습니다. 다른 기기에서도 사용할 수 있습니다."
+                    : "✓ 브라우저에 저장되었습니다. DB 테이블을 연결하면 기기 간 동기화가 가능합니다.";
+            }
+        }
+        catch (error) {
+            console.error("꾸미기 저장 오류:", error);
+            if (status) status.textContent = "저장 중 문제가 발생했습니다.";
+        }
+        finally {
+            if (button) button.disabled = false;
+        }
+    });
+
+    document.getElementById("꾸미기초기화버튼")?.addEventListener("click", () => {
+        꾸미기상태초기화();
+        꾸미기화면표시();
+    });
+}
+
+
+function 꾸미기아이템선택(item) {
+    const category = 아이템꾸미기카테고리(item);
+    if (!category) return;
+
+    꾸미기상태[category] = {
+        item_code: item.item_code,
+        item_name: item.item_name ?? item.item_code,
+        rarity: item.rarity ?? "일반"
+    };
+
+    꾸미기화면표시();
 }
 
 
@@ -3040,6 +3993,22 @@ profileButton.addEventListener(
 );
 
 
+내아이템버튼.addEventListener(
+    "click",
+    () => {
+        상태탭변경("내아이템");
+    }
+);
+
+
+꾸미기버튼.addEventListener(
+    "click",
+    () => {
+        상태탭변경("꾸미기");
+    }
+);
+
+
 // =====================================================
 // 페이지 초기화
 // =====================================================
@@ -3102,6 +4071,18 @@ async function 페이지초기화() {
             await 사용자정보가져오기(
                 user
             );
+
+        // 돌이사이트 랜덤박스 인벤토리
+        try {
+            await 인벤토리가져오기(user);
+        }
+        catch (error) {
+            console.error("랜덤박스 인벤토리 조회 오류:", error);
+            보유아이템목록 = [];
+        }
+
+        // 돌이사이트 전용 꾸미기 저장값
+        await 꾸미기정보가져오기(user);
 
 
         // 업적
