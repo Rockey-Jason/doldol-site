@@ -1,0 +1,3772 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
+
+<title>돌돌증권</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="./config.js"></script>
+
+
+<style>
+
+/* =========================================================
+   DOLDOL SECURITIES
+   Premium Dark Financial UI
+========================================================= */
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+
+    margin: 0;
+
+    min-height: 100vh;
+
+    background:
+        radial-gradient(
+            circle at 15% 0%,
+            rgba(39, 92, 180, .17),
+            transparent 32%
+        ),
+        radial-gradient(
+            circle at 90% 85%,
+            rgba(0, 180, 255, .08),
+            transparent 30%
+        ),
+        #000010;
+
+    color: #edf5ff;
+
+    font-family:
+        "Noto Sans KR",
+        "Malgun Gothic",
+        Arial,
+        sans-serif;
+
+    overflow-x: hidden;
+
+    user-select: none;
+}
+
+
+/* =========================================================
+   scrollbar
+========================================================= */
+
+::-webkit-scrollbar {
+    width: 7px;
+}
+
+::-webkit-scrollbar-track {
+    background: #000009;
+}
+
+::-webkit-scrollbar-thumb {
+
+    background:
+        rgba(75, 110, 170, .45);
+
+    border-radius: 10px;
+}
+
+
+/* =========================================================
+   common
+========================================================= */
+
+button,
+input {
+    font: inherit;
+}
+
+button {
+    cursor: pointer;
+}
+
+.hidden {
+    display: none !important;
+}
+
+
+/* =========================================================
+   loading
+========================================================= */
+
+#loading {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 9999;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    background: #000010;
+}
+
+.loadingInner {
+    text-align: center;
+}
+
+.loadingDog {
+
+    font-size: 52px;
+
+    animation:
+        floatDog 1.5s ease-in-out infinite;
+}
+
+.loadingText {
+
+    margin-top: 14px;
+
+    color: #7187a7;
+
+    font-size: 13px;
+}
+
+@keyframes floatDog {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-9px);
+    }
+
+}
+
+
+/* =========================================================
+   top navigation
+========================================================= */
+
+.topbar {
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 100;
+
+    height: 70px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding:
+        0 28px;
+
+    background:
+        rgba(0, 5, 17, .78);
+
+    border-bottom:
+        1px solid rgba(80, 120, 180, .15);
+
+    backdrop-filter:
+        blur(18px);
+}
+
+
+.brand {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+}
+
+.brandLogo {
+
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    background: white;
+
+    border: 2px solid #111;
+
+    box-shadow:
+        0 0 0 3px #e0b52a,
+        0 0 25px rgba(255, 210, 60, .22);
+
+    font-size: 23px;
+}
+
+.brandName {
+
+    font-size: 16px;
+
+    font-weight: 900;
+}
+
+.brandSub {
+
+    margin-top: 2px;
+
+    color: #607694;
+
+    font-size: 10px;
+
+    letter-spacing: 1px;
+}
+
+
+.coinBox {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+
+    padding:
+        8px 12px;
+
+    border:
+        1px solid rgba(80, 130, 210, .18);
+
+    border-radius: 11px;
+
+    background:
+        rgba(14, 31, 60, .55);
+}
+
+.coinIcon {
+    font-size: 16px;
+}
+
+.coinAmount {
+
+    font-size: 13px;
+
+    font-weight: 900;
+
+    color: #f1d56b;
+}
+
+
+/* =========================================================
+   main
+========================================================= */
+
+.container {
+
+    width:
+        min(
+            1450px,
+            calc(100% - 40px)
+        );
+
+    margin:
+        0 auto;
+
+    padding:
+        35px 0 80px;
+}
+
+
+/* =========================================================
+   hero
+========================================================= */
+
+.hero {
+
+    position: relative;
+
+    overflow: hidden;
+
+    padding:
+        35px;
+
+    border:
+        1px solid rgba(75, 120, 190, .18);
+
+    border-radius: 22px;
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(17, 39, 76, .82),
+            rgba(4, 11, 26, .9)
+        );
+
+    box-shadow:
+        0 25px 80px rgba(0,0,0,.3);
+}
+
+.hero::before {
+
+    content: "";
+
+    position: absolute;
+
+    width: 300px;
+    height: 300px;
+
+    right: -100px;
+    top: -130px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(35, 115, 230, .11);
+
+    filter:
+        blur(20px);
+
+    animation:
+        heroGlow 6s ease-in-out infinite;
+}
+
+@keyframes heroGlow {
+
+    0%,
+    100% {
+        transform: scale(1);
+        opacity: .6;
+    }
+
+    50% {
+        transform: scale(1.25);
+        opacity: 1;
+    }
+
+}
+
+.heroTop {
+
+    position: relative;
+
+    display: flex;
+
+    align-items: flex-end;
+
+    justify-content: space-between;
+
+    gap: 30px;
+}
+
+.heroTitle {
+
+    margin: 0;
+
+    font-size:
+        clamp(30px, 5vw, 48px);
+
+    font-weight: 950;
+
+    letter-spacing:
+        -1.5px;
+}
+
+.heroDescription {
+
+    margin-top: 9px;
+
+    color: #7890b2;
+
+    font-size: 13px;
+}
+
+.marketStatus {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding:
+        8px 11px;
+
+    border-radius: 9px;
+
+    background:
+        rgba(35, 160, 105, .09);
+
+    border:
+        1px solid rgba(35, 160, 105, .18);
+
+    color: #69dca1;
+
+    font-size: 11px;
+
+    font-weight: 800;
+}
+
+.statusDot {
+
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #4fdb91;
+
+    box-shadow:
+        0 0 10px #4fdb91;
+
+    animation:
+        statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+
+    0%,
+    100% {
+        opacity: .5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+}
+
+
+/* =========================================================
+   market stats
+========================================================= */
+
+.marketStats {
+
+    position: relative;
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 14px;
+
+    margin-top: 28px;
+}
+
+.marketStat {
+
+    padding: 17px;
+
+    border:
+        1px solid rgba(90, 125, 180, .14);
+
+    border-radius: 13px;
+
+    background:
+        rgba(0, 7, 19, .35);
+}
+
+.marketStatLabel {
+
+    color: #607895;
+
+    font-size: 11px;
+}
+
+.marketStatValue {
+
+    margin-top: 7px;
+
+    font-size: 21px;
+
+    font-weight: 900;
+}
+
+
+/* =========================================================
+   section
+========================================================= */
+
+.section {
+
+    margin-top: 25px;
+}
+
+.sectionHeader {
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    margin-bottom: 13px;
+}
+
+.sectionTitle {
+
+    font-size: 18px;
+
+    font-weight: 900;
+}
+
+.sectionHint {
+
+    color: #607895;
+
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   stocks
+========================================================= */
+
+.stockGrid {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 13px;
+}
+
+.stockCard {
+
+    position: relative;
+
+    overflow: hidden;
+
+    padding: 18px;
+
+    border:
+        1px solid rgba(75, 115, 175, .17);
+
+    border-radius: 16px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(12, 27, 53, .78),
+            rgba(3, 9, 21, .84)
+        );
+
+    transition:
+        transform .22s ease,
+        border-color .22s ease,
+        box-shadow .22s ease;
+
+    animation:
+        cardAppear .45s ease both;
+}
+
+.stockCard:hover {
+
+    transform:
+        translateY(-4px);
+
+    border-color:
+        rgba(75, 140, 225, .4);
+
+    box-shadow:
+        0 18px 50px rgba(0,0,0,.25),
+        0 0 30px rgba(35,100,190,.06);
+}
+
+.stockCard::after {
+
+    content: "";
+
+    position: absolute;
+
+    width: 120px;
+    height: 120px;
+
+    right: -65px;
+    bottom: -65px;
+
+    border-radius: 50%;
+
+    background:
+        rgba(45, 110, 220, .06);
+
+    filter: blur(12px);
+
+    pointer-events: none;
+}
+
+@keyframes cardAppear {
+
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+.stockHeader {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+}
+
+.stockIdentity {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 10px;
+}
+
+.stockIcon {
+
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background:
+        rgba(255,255,255,.045);
+
+    font-size: 20px;
+}
+
+.stockName {
+
+    font-size: 14px;
+
+    font-weight: 850;
+}
+
+.stockSymbol {
+
+    margin-top: 3px;
+
+    color: #5f7695;
+
+    font-size: 9px;
+
+    letter-spacing: .8px;
+}
+
+.stockPrice {
+
+    margin-top: 20px;
+
+    font-size: 25px;
+
+    font-weight: 950;
+
+    letter-spacing: -.5px;
+}
+
+.stockChange {
+
+    margin-top: 5px;
+
+    font-size: 11px;
+
+    font-weight: 800;
+}
+
+.up {
+    color: #55dc96;
+}
+
+.down {
+    color: #ff747a;
+}
+
+.flat {
+    color: #8da1bd;
+}
+
+.stockBottom {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    margin-top: 18px;
+
+    padding-top: 13px;
+
+    border-top:
+        1px solid rgba(90,120,170,.1);
+}
+
+.stockVolume {
+
+    color: #5f7695;
+
+    font-size: 10px;
+}
+
+.detailButton {
+
+    border: 0;
+
+    padding:
+        7px 10px;
+
+    border-radius: 8px;
+
+    background:
+        rgba(35, 85, 160, .18);
+
+    color: #82b7f4;
+
+    font-size: 10px;
+
+    font-weight: 800;
+
+    transition:
+        background .2s ease;
+}
+
+.detailButton:hover {
+    background:
+        rgba(35, 100, 190, .32);
+}
+
+
+/* =========================================================
+   portfolio
+========================================================= */
+
+.portfolioSummary {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 13px;
+
+    margin-bottom: 13px;
+}
+
+.portfolioBox {
+
+    padding: 18px;
+
+    border:
+        1px solid rgba(75,115,175,.14);
+
+    border-radius: 14px;
+
+    background:
+        rgba(7, 17, 35, .65);
+}
+
+.portfolioLabel {
+
+    color: #637b99;
+
+    font-size: 10px;
+}
+
+.portfolioValue {
+
+    margin-top: 7px;
+
+    font-size: 20px;
+
+    font-weight: 900;
+}
+
+.portfolioTable {
+
+    overflow-x: auto;
+
+    border:
+        1px solid rgba(75,115,175,.14);
+
+    border-radius: 15px;
+
+    background:
+        rgba(7, 17, 35, .55);
+}
+
+table {
+
+    width: 100%;
+
+    border-collapse: collapse;
+
+    min-width: 700px;
+}
+
+th {
+
+    padding: 13px 15px;
+
+    color: #607895;
+
+    font-size: 10px;
+
+    font-weight: 700;
+
+    text-align: right;
+
+    border-bottom:
+        1px solid rgba(75,115,175,.12);
+}
+
+th:first-child,
+td:first-child {
+    text-align: left;
+}
+
+td {
+
+    padding: 14px 15px;
+
+    color: #b6c7df;
+
+    font-size: 11px;
+
+    text-align: right;
+
+    border-bottom:
+        1px solid rgba(75,115,175,.07);
+}
+
+tr:last-child td {
+    border-bottom: 0;
+}
+
+.tableStock {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 9px;
+}
+
+.tableIcon {
+
+    width: 30px;
+    height: 30px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 8px;
+
+    background:
+        rgba(255,255,255,.04);
+}
+
+
+/* =========================================================
+   transactions
+========================================================= */
+
+.transactionList {
+
+    display: flex;
+
+    flex-direction: column;
+
+    border:
+        1px solid rgba(75,115,175,.14);
+
+    border-radius: 15px;
+
+    overflow: hidden;
+
+    background:
+        rgba(7,17,35,.5);
+}
+
+.transaction {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr auto auto auto;
+
+    align-items: center;
+
+    gap: 18px;
+
+    padding:
+        15px 18px;
+
+    border-bottom:
+        1px solid rgba(75,115,175,.08);
+}
+
+.transaction:last-child {
+    border-bottom: 0;
+}
+
+.transactionName {
+
+    font-weight: 800;
+
+    font-size: 12px;
+}
+
+.transactionDate {
+
+    margin-top: 4px;
+
+    color: #5e7592;
+
+    font-size: 9px;
+}
+
+.transactionType {
+
+    font-size: 10px;
+
+    font-weight: 900;
+}
+
+.buy {
+    color: #62d99b;
+}
+
+.sell {
+    color: #ff777d;
+}
+
+.transactionNumber {
+
+    color: #b7c9e2;
+
+    font-size: 11px;
+}
+
+.transactionAmount {
+
+    color: #dbe8f8;
+
+    font-size: 11px;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   detail modal
+========================================================= */
+
+.modalOverlay {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 500;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    padding: 20px;
+
+    background:
+        rgba(0,0,10,.72);
+
+    backdrop-filter:
+        blur(12px);
+}
+
+.modal {
+
+    width:
+        min(
+            900px,
+            100%
+        );
+
+    max-height:
+        92vh;
+
+    overflow-y:
+        auto;
+
+    padding: 25px;
+
+    border:
+        1px solid rgba(80,125,200,.25);
+
+    border-radius: 21px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #0d1d38,
+            #040a19
+        );
+
+    box-shadow:
+        0 35px 100px rgba(0,0,0,.65);
+}
+
+.modalHeader {
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: flex-start;
+}
+
+.modalStock {
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 12px;
+}
+
+.modalIcon {
+
+    width: 46px;
+    height: 46px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 13px;
+
+    background:
+        rgba(255,255,255,.05);
+
+    font-size: 24px;
+}
+
+.modalStockName {
+
+    font-size: 21px;
+
+    font-weight: 950;
+}
+
+.modalStockSymbol {
+
+    margin-top: 3px;
+
+    color: #607995;
+
+    font-size: 10px;
+}
+
+.close {
+
+    width: 35px;
+    height: 35px;
+
+    border: 0;
+
+    border-radius: 9px;
+
+    background:
+        rgba(255,255,255,.05);
+
+    color: #91a5c1;
+
+    font-size: 18px;
+}
+
+.close:hover {
+
+    background:
+        rgba(255,255,255,.1);
+
+    color: white;
+}
+
+.modalPrice {
+
+    margin-top: 25px;
+
+    font-size: 38px;
+
+    font-weight: 950;
+}
+
+.modalChange {
+
+    margin-top: 5px;
+
+    font-size: 12px;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   chart
+========================================================= */
+
+.chart {
+
+    position: relative;
+
+    height: 260px;
+
+    margin-top: 22px;
+
+    overflow: hidden;
+
+    border:
+        1px solid rgba(75,115,175,.1);
+
+    border-radius: 14px;
+
+    background:
+        rgba(0,7,18,.45);
+}
+
+.chart canvas {
+
+    width: 100%;
+
+    height: 100%;
+}
+
+
+/* =========================================================
+   stock info
+========================================================= */
+
+.stockInfo {
+
+    display: grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap: 9px;
+
+    margin-top: 14px;
+}
+
+.infoBox {
+
+    padding: 13px;
+
+    border-radius: 11px;
+
+    background:
+        rgba(255,255,255,.025);
+}
+
+.infoLabel {
+
+    color: #607995;
+
+    font-size: 9px;
+}
+
+.infoValue {
+
+    margin-top: 5px;
+
+    color: #d7e5f6;
+
+    font-size: 12px;
+
+    font-weight: 800;
+}
+
+
+/* =========================================================
+   trade panel
+========================================================= */
+
+.tradePanel {
+
+    margin-top: 18px;
+
+    padding: 18px;
+
+    border:
+        1px solid rgba(75,115,175,.13);
+
+    border-radius: 14px;
+
+    background:
+        rgba(0,7,18,.35);
+}
+
+.tradeTitle {
+
+    font-size: 13px;
+
+    font-weight: 900;
+}
+
+.tradeCurrent {
+
+    margin-top: 6px;
+
+    color: #7289a8;
+
+    font-size: 10px;
+}
+
+.tradeRow {
+
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr;
+
+    gap: 9px;
+
+    margin-top: 14px;
+}
+
+.quantityInput {
+
+    width: 100%;
+
+    padding: 12px;
+
+    border:
+        1px solid rgba(75,115,175,.2);
+
+    border-radius: 10px;
+
+    outline: none;
+
+    background:
+        rgba(0,5,15,.7);
+
+    color: white;
+}
+
+.quantityInput:focus {
+
+    border-color:
+        rgba(60,130,225,.5);
+}
+
+.tradeButton {
+
+    padding: 12px;
+
+    border: 0;
+
+    border-radius: 10px;
+
+    color: white;
+
+    font-weight: 900;
+
+    transition:
+        transform .18s ease,
+        filter .18s ease;
+}
+
+.tradeButton:hover {
+
+    transform:
+        translateY(-1px);
+
+    filter:
+        brightness(1.12);
+}
+
+.buyButton {
+
+    background:
+        linear-gradient(
+            135deg,
+            #167a51,
+            #20aa70
+        );
+}
+
+.sellButton {
+
+    background:
+        linear-gradient(
+            135deg,
+            #9a3138,
+            #cf454e
+        );
+}
+
+.tradeTotal {
+
+    margin-top: 10px;
+
+    text-align: right;
+
+    color: #8ba1bf;
+
+    font-size: 11px;
+}
+
+
+/* =========================================================
+   empty
+========================================================= */
+
+.empty {
+
+    padding: 45px 20px;
+
+    text-align: center;
+
+    color: #617894;
+
+    font-size: 12px;
+}
+
+
+/* =========================================================
+   toast
+========================================================= */
+
+#toastContainer {
+
+    position: fixed;
+
+    right: 20px;
+
+    bottom: 20px;
+
+    z-index: 2000;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
+}
+
+.toast {
+
+    min-width: 260px;
+
+    padding: 13px 15px;
+
+    border:
+        1px solid rgba(80,125,190,.25);
+
+    border-radius: 11px;
+
+    background:
+        rgba(8,19,39,.95);
+
+    box-shadow:
+        0 15px 40px rgba(0,0,0,.4);
+
+    color: #e1ecfa;
+
+    font-size: 11px;
+
+    animation:
+        toastIn .22s ease;
+}
+
+@keyframes toastIn {
+
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+}
+
+
+/* =========================================================
+   responsive
+========================================================= */
+
+@media (max-width: 1000px) {
+
+    .stockGrid {
+        grid-template-columns:
+            repeat(2, 1fr);
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .topbar {
+        padding: 0 14px;
+    }
+
+    .container {
+        width:
+            calc(100% - 22px);
+        padding-top: 18px;
+    }
+
+    .hero {
+        padding: 22px;
+    }
+
+    .heroTop {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .marketStats,
+    .portfolioSummary {
+        grid-template-columns:
+            1fr;
+    }
+
+    .stockGrid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .stockInfo {
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+    .transaction {
+        grid-template-columns:
+            1fr auto;
+
+        gap: 8px;
+    }
+
+    .transactionAmount {
+        text-align: right;
+    }
+
+    .tradeRow {
+        grid-template-columns:
+            1fr;
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     loading
+========================================================= -->
+
+<div id="loading">
+
+    <div class="loadingInner">
+
+        <div class="loadingDog">
+            🐶
+        </div>
+
+        <div class="loadingText">
+            돌돌증권을 불러오는 중...
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- =========================================================
+     topbar
+========================================================= -->
+
+<header class="topbar">
+
+    <div class="brand">
+
+        <div class="brandLogo">
+            🐶
+        </div>
+
+        <div>
+
+            <div class="brandName">
+                돌돌증권
+            </div>
+
+            <div class="brandSub">
+                DOLDOL SECURITIES
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="coinBox">
+
+        <span class="coinIcon">
+            🪙
+        </span>
+
+        <span
+            id="coinAmount"
+            class="coinAmount"
+        >
+            - 돌돌코인
+        </span>
+
+    </div>
+
+</header>
+
+
+<!-- =========================================================
+     main
+========================================================= -->
+
+<main class="container">
+
+
+    <!-- =====================================================
+         hero
+    ====================================================== -->
+
+    <section class="hero">
+
+        <div class="heroTop">
+
+            <div>
+
+                <h1 class="heroTitle">
+                    돌돌증권
+                </h1>
+
+                <div class="heroDescription">
+                    돌이 세계의 기업에 투자하고,
+                    나만의 포트폴리오를 만들어보세요.
+                </div>
+
+            </div>
+
+
+            <div class="marketStatus">
+
+                <span class="statusDot"></span>
+
+                <span id="marketStatus">
+                    시장 확인 중
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="marketStats">
+
+            <div class="marketStat">
+
+                <div class="marketStatLabel">
+                    돌돌시장 지수
+                </div>
+
+                <div
+                    id="marketIndex"
+                    class="marketStatValue"
+                >
+                    1,000.00
+                </div>
+
+            </div>
+
+
+            <div class="marketStat">
+
+                <div class="marketStatLabel">
+                    등록 종목
+                </div>
+
+                <div
+                    id="stockCount"
+                    class="marketStatValue"
+                >
+                    -
+                </div>
+
+            </div>
+
+
+            <div class="marketStat">
+
+                <div class="marketStatLabel">
+                    누적 거래대금
+                </div>
+
+                <div
+                    id="tradeValue"
+                    class="marketStatValue"
+                >
+                    -
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         stocks
+    ====================================================== -->
+
+    <section class="section">
+
+        <div class="sectionHeader">
+
+            <div class="sectionTitle">
+                📊 종목
+            </div>
+
+            <div class="sectionHint">
+                종목을 선택하면 상세 정보를 확인할 수 있습니다.
+            </div>
+
+        </div>
+
+
+        <div
+            id="stockGrid"
+            class="stockGrid"
+        >
+
+            <div class="empty">
+                종목을 불러오는 중...
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         portfolio
+    ====================================================== -->
+
+    <section class="section">
+
+        <div class="sectionHeader">
+
+            <div class="sectionTitle">
+                💼 내 포트폴리오
+            </div>
+
+            <div class="sectionHint">
+                현재 보유 주식
+            </div>
+
+        </div>
+
+
+        <div class="portfolioSummary">
+
+            <div class="portfolioBox">
+
+                <div class="portfolioLabel">
+                    주식 평가금액
+                </div>
+
+                <div
+                    id="portfolioValue"
+                    class="portfolioValue"
+                >
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="portfolioBox">
+
+                <div class="portfolioLabel">
+                    투자금액
+                </div>
+
+                <div
+                    id="portfolioInvested"
+                    class="portfolioValue"
+                >
+                    0
+                </div>
+
+            </div>
+
+
+            <div class="portfolioBox">
+
+                <div class="portfolioLabel">
+                    평가손익
+                </div>
+
+                <div
+                    id="portfolioProfit"
+                    class="portfolioValue"
+                >
+                    0
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div class="portfolioTable">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th>
+                            종목
+                        </th>
+
+                        <th>
+                            보유량
+                        </th>
+
+                        <th>
+                            평균매수가
+                        </th>
+
+                        <th>
+                            현재가
+                        </th>
+
+                        <th>
+                            평가금액
+                        </th>
+
+                        <th>
+                            수익률
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody
+                    id="portfolioBody"
+                >
+
+                    <tr>
+
+                        <td
+                            colspan="6"
+                            class="empty"
+                        >
+                            보유 주식을 불러오는 중...
+                        </td>
+
+                    </tr>
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- =====================================================
+         transactions
+    ====================================================== -->
+
+    <section class="section">
+
+        <div class="sectionHeader">
+
+            <div class="sectionTitle">
+                🧾 최근 거래
+            </div>
+
+        </div>
+
+
+        <div
+            id="transactionList"
+            class="transactionList"
+        >
+
+            <div class="empty">
+                거래내역을 불러오는 중...
+            </div>
+
+        </div>
+
+    </section>
+
+
+</main>
+
+
+<!-- =========================================================
+     stock detail modal
+========================================================= -->
+
+<div
+    id="stockModal"
+    class="modalOverlay hidden"
+>
+
+    <div class="modal">
+
+        <div class="modalHeader">
+
+            <div class="modalStock">
+
+                <div
+                    id="modalIcon"
+                    class="modalIcon"
+                >
+                    📈
+                </div>
+
+                <div>
+
+                    <div
+                        id="modalName"
+                        class="modalStockName"
+                    >
+                        종목
+                    </div>
+
+                    <div
+                        id="modalSymbol"
+                        class="modalStockSymbol"
+                    >
+                        SYMBOL
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <button
+                class="close"
+                onclick="closeModal()"
+            >
+                ×
+            </button>
+
+        </div>
+
+
+        <div
+            id="modalPrice"
+            class="modalPrice"
+        >
+            -
+        </div>
+
+
+        <div
+            id="modalChange"
+            class="modalChange"
+        >
+            -
+        </div>
+
+
+        <div class="chart">
+
+            <canvas
+                id="priceChart"
+            ></canvas>
+
+        </div>
+
+
+        <div class="stockInfo">
+
+            <div class="infoBox">
+
+                <div class="infoLabel">
+                    발행주식수
+                </div>
+
+                <div
+                    id="modalShares"
+                    class="infoValue"
+                >
+                    -
+                </div>
+
+            </div>
+
+
+            <div class="infoBox">
+
+                <div class="infoLabel">
+                    거래량
+                </div>
+
+                <div
+                    id="modalVolume"
+                    class="infoValue"
+                >
+                    -
+                </div>
+
+            </div>
+
+
+            <div class="infoBox">
+
+                <div class="infoLabel">
+                    시작 주가
+                </div>
+
+                <div
+                    id="modalStartPrice"
+                    class="infoValue"
+                >
+                    -
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div
+            id="modalDescription"
+            style="
+                margin-top:15px;
+                color:#8aa0be;
+                font-size:11px;
+                line-height:1.7;
+            "
+        >
+        </div>
+
+
+        <div class="tradePanel">
+
+            <div class="tradeTitle">
+                주식 거래
+            </div>
+
+            <div
+                id="tradeCurrent"
+                class="tradeCurrent"
+            >
+                현재가 -
+            </div>
+
+
+            <div class="tradeRow">
+
+                <input
+                    id="quantityInput"
+                    class="quantityInput"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value="1"
+                    placeholder="수량"
+                >
+
+
+                <button
+                    class="tradeButton buyButton"
+                    onclick="buyStock()"
+                >
+                    매수
+                </button>
+
+            </div>
+
+
+            <div class="tradeRow">
+
+                <button
+                    class="tradeButton sellButton"
+                    onclick="sellStock()"
+                >
+                    매도
+                </button>
+
+                <div
+                    id="tradeTotal"
+                    class="tradeTotal"
+                >
+                    예상 거래금액: -
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<div id="toastContainer"></div>
+
+
+<script>
+
+/* =========================================================
+   config
+========================================================= */
+
+const cfg =
+    window.DORI_ADMIN_CONFIG || {};
+
+const SUPABASE_URL =
+    cfg.SUPABASE_URL;
+
+const SUPABASE_ANON_KEY =
+    cfg.SUPABASE_ANON_KEY;
+
+
+if (
+    !SUPABASE_URL ||
+    !SUPABASE_ANON_KEY
+) {
+
+    document
+        .getElementById("loading")
+        .innerHTML = `
+            <div class="loadingInner">
+                <div style="font-size:45px">
+                    ⚠️
+                </div>
+                <div class="loadingText">
+                    Supabase 설정을 찾을 수 없습니다.
+                </div>
+            </div>
+        `;
+
+    throw new Error(
+        "DORI_ADMIN_CONFIG가 없습니다."
+    );
+
+}
+
+
+const sb =
+    supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_ANON_KEY
+    );
+
+
+/* =========================================================
+   state
+========================================================= */
+
+const state = {
+
+    user: null,
+
+    stocks: [],
+
+    portfolio: [],
+
+    transactions: [],
+
+    market: null,
+
+    selectedStock: null
+
+};
+
+
+/* =========================================================
+   helper
+========================================================= */
+
+const $ =
+    selector =>
+        document.querySelector(selector);
+
+
+function number(value) {
+
+    return Number(value || 0);
+
+}
+
+
+function coin(value) {
+
+    return number(value)
+        .toLocaleString("ko-KR")
+        + " 돌돌코인";
+
+}
+
+
+function compact(value) {
+
+    value =
+        number(value);
+
+    if (value >= 1000000000) {
+
+        return (
+            (value / 1000000000)
+            .toFixed(1)
+            + "B"
+        );
+
+    }
+
+    if (value >= 1000000) {
+
+        return (
+            (value / 1000000)
+            .toFixed(1)
+            + "M"
+        );
+
+    }
+
+    if (value >= 1000) {
+
+        return (
+            (value / 1000)
+            .toFixed(1)
+            + "K"
+        );
+
+    }
+
+    return value.toLocaleString();
+
+}
+
+
+function percent(value) {
+
+    value =
+        number(value);
+
+    return (
+        value >= 0 ? "+" : ""
+    )
+    + value.toFixed(2)
+    + "%";
+
+}
+
+
+function changeClass(value) {
+
+    value =
+        number(value);
+
+    if (value > 0)
+        return "up";
+
+    if (value < 0)
+        return "down";
+
+    return "flat";
+
+}
+
+
+function formatDate(value) {
+
+    const date =
+        new Date(value);
+
+    return date.toLocaleString(
+        "ko-KR",
+        {
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
+        }
+    );
+
+}
+
+
+function escapeHTML(value) {
+
+    return String(
+        value ?? ""
+    )
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+}
+
+
+/* =========================================================
+   toast
+========================================================= */
+
+function toast(message) {
+
+    const el =
+        document.createElement("div");
+
+    el.className =
+        "toast";
+
+    el.textContent =
+        message;
+
+    $("#toastContainer")
+        .appendChild(el);
+
+    setTimeout(
+        () => el.remove(),
+        3000
+    );
+
+}
+
+
+/* =========================================================
+   authentication
+========================================================= */
+
+async function loadUser() {
+
+    const {
+        data,
+        error
+    } =
+        await sb.auth.getUser();
+
+
+    if (error || !data.user) {
+
+        location.href =
+            "/doldol-site/login.html";
+
+        return false;
+
+    }
+
+
+    state.user =
+        data.user;
+
+    return true;
+
+}
+
+
+/* =========================================================
+   coin
+========================================================= */
+
+async function loadCoin() {
+
+    const {
+        data,
+        error
+    } =
+        await sb.rpc(
+            "get_my_dori_coin"
+        );
+
+
+    if (error) {
+
+        console.error(error);
+
+        return;
+
+    }
+
+
+    $("#coinAmount")
+        .textContent =
+        coin(data);
+
+}
+
+
+/* =========================================================
+   market
+========================================================= */
+
+async function loadMarket() {
+
+    const {
+        data,
+        error
+    } =
+        await sb.rpc(
+            "get_dori_market"
+        );
+
+
+    if (error) {
+
+        console.error(error);
+
+        toast(
+            "주식시장 정보를 불러오지 못했습니다."
+        );
+
+        return;
+
+    }
+
+
+    state.stocks =
+        data || [];
+
+
+    const {
+        data: market,
+        error: marketError
+    } =
+        await sb
+            .from("dori_market")
+            .select("*")
+            .eq("id", 1)
+            .maybeSingle();
+
+
+    if (!marketError) {
+
+        state.market =
+            market;
+
+    }
+
+
+    renderMarket();
+
+}
+
+
+/* =========================================================
+   market render
+========================================================= */
+
+function renderMarket() {
+
+    $("#stockCount")
+        .textContent =
+        state.stocks.length
+        + "개";
+
+
+    if (state.market) {
+
+        $("#marketIndex")
+            .textContent =
+            number(
+                state.market.market_index
+            ).toLocaleString(
+                "ko-KR",
+                {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }
+            );
+
+
+        $("#tradeValue")
+            .textContent =
+            compact(
+                state.market.total_trade_value
+            );
+
+
+        const open =
+            state.market.market_status === "OPEN";
+
+
+        $("#marketStatus")
+            .textContent =
+            open
+                ? "시장 운영 중"
+                : "시장 휴장";
+
+    }
+
+
+    const grid =
+        $("#stockGrid");
+
+
+    if (!state.stocks.length) {
+
+        grid.innerHTML = `
+            <div class="empty">
+                등록된 종목이 없습니다.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    grid.innerHTML =
+        state.stocks
+            .map(
+                (stock, index) => {
+
+                    const cls =
+                        changeClass(
+                            stock.price_change
+                        );
+
+
+                    return `
+                        <article
+                            class="stockCard"
+                            style="
+                                animation-delay:
+                                ${index * 0.05}s
+                            "
+                        >
+
+                            <div class="stockHeader">
+
+                                <div class="stockIdentity">
+
+                                    <div class="stockIcon">
+                                        ${escapeHTML(stock.icon)}
+                                    </div>
+
+                                    <div>
+
+                                        <div class="stockName">
+                                            ${escapeHTML(stock.company_name)}
+                                        </div>
+
+                                        <div class="stockSymbol">
+                                            ${escapeHTML(stock.symbol)}
+                                        </div>
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+
+                            <div class="stockPrice">
+
+                                ${number(
+                                    stock.current_price
+                                ).toLocaleString()}
+
+                            </div>
+
+
+                            <div
+                                class="
+                                    stockChange
+                                    ${cls}
+                                "
+                            >
+
+                                ${number(
+                                    stock.price_change
+                                ) >= 0 ? "+" : ""}
+
+                                ${number(
+                                    stock.price_change
+                                ).toLocaleString()}
+
+                                ·
+
+                                ${percent(
+                                    stock.price_change_percent
+                                )}
+
+                            </div>
+
+
+                            <div class="stockBottom">
+
+                                <div class="stockVolume">
+
+                                    거래량
+                                    ${compact(
+                                        stock.total_trade_volume
+                                    )}
+
+                                </div>
+
+
+                                <button
+                                    class="detailButton"
+                                    onclick="
+                                        openStock(
+                                            '${stock.id}'
+                                        )
+                                    "
+                                >
+                                    상세보기 →
+                                </button>
+
+                            </div>
+
+                        </article>
+                    `;
+
+                }
+            )
+            .join("");
+
+}
+
+
+/* =========================================================
+   portfolio
+========================================================= */
+
+async function loadPortfolio() {
+
+    const {
+        data,
+        error
+    } =
+        await sb.rpc(
+            "get_my_dori_portfolio"
+        );
+
+
+    if (error) {
+
+        console.error(error);
+
+        return;
+
+    }
+
+
+    state.portfolio =
+        data || [];
+
+
+    renderPortfolio();
+
+}
+
+
+function renderPortfolio() {
+
+    let value = 0;
+
+    let invested = 0;
+
+
+    state.portfolio
+        .forEach(item => {
+
+            value +=
+                number(
+                    item.market_value
+                );
+
+            invested +=
+                number(
+                    item.total_invested
+                );
+
+        });
+
+
+    const profit =
+        value - invested;
+
+
+    $("#portfolioValue")
+        .textContent =
+        coin(value);
+
+
+    $("#portfolioInvested")
+        .textContent =
+        coin(invested);
+
+
+    $("#portfolioProfit")
+        .textContent =
+        (
+            profit >= 0
+                ? "+"
+                : ""
+        )
+        + coin(profit);
+
+
+    $("#portfolioProfit")
+        .className =
+        "portfolioValue " +
+        changeClass(profit);
+
+
+    const body =
+        $("#portfolioBody");
+
+
+    if (!state.portfolio.length) {
+
+        body.innerHTML = `
+            <tr>
+                <td
+                    colspan="6"
+                    class="empty"
+                >
+                    아직 보유한 주식이 없습니다.
+                </td>
+            </tr>
+        `;
+
+        return;
+
+    }
+
+
+    body.innerHTML =
+        state.portfolio
+            .map(item => {
+
+                const cls =
+                    changeClass(
+                        item.profit_loss
+                    );
+
+
+                return `
+                    <tr>
+
+                        <td>
+
+                            <div class="tableStock">
+
+                                <div class="tableIcon">
+                                    ${escapeHTML(item.icon)}
+                                </div>
+
+                                <div>
+                                    ${escapeHTML(
+                                        item.company_name
+                                    )}
+                                </div>
+
+                            </div>
+
+                        </td>
+
+                        <td>
+                            ${number(
+                                item.quantity
+                            ).toLocaleString()}
+                        </td>
+
+                        <td>
+                            ${coin(
+                                item.average_price
+                            )}
+                        </td>
+
+                        <td>
+                            ${coin(
+                                item.current_price
+                            )}
+                        </td>
+
+                        <td>
+                            ${coin(
+                                item.market_value
+                            )}
+                        </td>
+
+                        <td class="${cls}">
+                            ${percent(
+                                item.profit_loss_percent
+                            )}
+                        </td>
+
+                    </tr>
+                `;
+
+            })
+            .join("");
+
+}
+
+
+/* =========================================================
+   transactions
+========================================================= */
+
+async function loadTransactions() {
+
+    const {
+        data,
+        error
+    } =
+        await sb.rpc(
+            "get_my_dori_transactions",
+            {
+                p_limit: 30
+            }
+        );
+
+
+    if (error) {
+
+        console.error(error);
+
+        return;
+
+    }
+
+
+    state.transactions =
+        data || [];
+
+
+    renderTransactions();
+
+}
+
+
+function renderTransactions() {
+
+    const list =
+        $("#transactionList");
+
+
+    if (!state.transactions.length) {
+
+        list.innerHTML = `
+            <div class="empty">
+                아직 거래내역이 없습니다.
+            </div>
+        `;
+
+        return;
+
+    }
+
+
+    list.innerHTML =
+        state.transactions
+            .map(item => {
+
+                const isBuy =
+                    item.transaction_type === "BUY";
+
+
+                return `
+                    <div class="transaction">
+
+                        <div>
+
+                            <div class="transactionName">
+
+                                ${escapeHTML(
+                                    item.icon
+                                )}
+
+                                ${escapeHTML(
+                                    item.company_name
+                                )}
+
+                            </div>
+
+                            <div class="transactionDate">
+
+                                ${formatDate(
+                                    item.created_at
+                                )}
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            class="
+                                transactionType
+                                ${
+                                    isBuy
+                                        ? "buy"
+                                        : "sell"
+                                }
+                            "
+                        >
+                            ${
+                                isBuy
+                                    ? "매수"
+                                    : "매도"
+                            }
+                        </div>
+
+
+                        <div class="transactionNumber">
+
+                            ${number(
+                                item.quantity
+                            ).toLocaleString()}
+                            주
+
+                        </div>
+
+
+                        <div class="transactionAmount">
+
+                            ${coin(
+                                item.total_amount
+                            )}
+
+                        </div>
+
+                    </div>
+                `;
+
+            })
+            .join("");
+
+}
+
+
+/* =========================================================
+   stock modal
+========================================================= */
+
+async function openStock(id) {
+
+    const stock =
+        state.stocks.find(
+            item =>
+                item.id === id
+        );
+
+
+    if (!stock) {
+        return;
+    }
+
+
+    state.selectedStock =
+        stock;
+
+
+    $("#modalIcon")
+        .textContent =
+        stock.icon;
+
+
+    $("#modalName")
+        .textContent =
+        stock.company_name;
+
+
+    $("#modalSymbol")
+        .textContent =
+        stock.symbol;
+
+
+    $("#modalPrice")
+        .textContent =
+        coin(
+            stock.current_price
+        );
+
+
+    $("#modalChange")
+        .textContent =
+        (
+            number(stock.price_change) >= 0
+                ? "+"
+                : ""
+        )
+        +
+        number(
+            stock.price_change
+        ).toLocaleString()
+        +
+        " · "
+        +
+        percent(
+            stock.price_change_percent
+        );
+
+
+    $("#modalChange")
+        .className =
+        "modalChange " +
+        changeClass(
+            stock.price_change
+        );
+
+
+    $("#modalShares")
+        .textContent =
+        number(
+            stock.total_shares
+        ).toLocaleString()
+        + "주";
+
+
+    $("#modalVolume")
+        .textContent =
+        number(
+            stock.total_trade_volume
+        ).toLocaleString()
+        + "주";
+
+
+    $("#modalStartPrice")
+        .textContent =
+        coin(
+            stock.starting_price
+        );
+
+
+    $("#modalDescription")
+        .textContent =
+        stock.description +
+        "\n\n" +
+        stock.characteristics;
+
+
+    $("#tradeCurrent")
+        .textContent =
+        "현재가 "
+        +
+        coin(
+            stock.current_price
+        );
+
+
+    updateTradeTotal();
+
+
+    $("#stockModal")
+        .classList.remove("hidden");
+
+
+    await loadChart(stock.id);
+
+}
+
+
+function closeModal() {
+
+    $("#stockModal")
+        .classList.add("hidden");
+
+    state.selectedStock =
+        null;
+
+}
+
+
+/* =========================================================
+   chart
+========================================================= */
+
+async function loadChart(stockId) {
+
+    const {
+        data,
+        error
+    } =
+        await sb.rpc(
+            "get_dori_stock_chart",
+            {
+                p_stock_id:
+                    stockId,
+
+                p_limit:
+                    80
+            }
+        );
+
+
+    if (error) {
+
+        console.error(error);
+
+        drawChart([]);
+
+        return;
+
+    }
+
+
+    drawChart(
+        [...(data || [])]
+            .reverse()
+    );
+
+}
+
+
+function drawChart(points) {
+
+    const canvas =
+        $("#priceChart");
+
+    const rect =
+        canvas.getBoundingClientRect();
+
+
+    const dpr =
+        window.devicePixelRatio || 1;
+
+
+    canvas.width =
+        rect.width * dpr;
+
+    canvas.height =
+        rect.height * dpr;
+
+
+    const ctx =
+        canvas.getContext("2d");
+
+
+    ctx.scale(
+        dpr,
+        dpr
+    );
+
+
+    const width =
+        rect.width;
+
+    const height =
+        rect.height;
+
+
+    ctx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    if (!points.length) {
+
+        ctx.fillStyle =
+            "rgba(110,140,180,.45)";
+
+        ctx.font =
+            "12px sans-serif";
+
+        ctx.textAlign =
+            "center";
+
+        ctx.fillText(
+            "아직 가격 기록이 없습니다.",
+            width / 2,
+            height / 2
+        );
+
+        return;
+
+    }
+
+
+    const prices =
+        points.map(
+            point =>
+                number(point.price)
+        );
+
+
+    const min =
+        Math.min(...prices);
+
+    const max =
+        Math.max(...prices);
+
+
+    const range =
+        Math.max(
+            max - min,
+            1
+        );
+
+
+    const padding =
+        25;
+
+
+    /* grid */
+
+    ctx.strokeStyle =
+        "rgba(100,130,175,.09)";
+
+    ctx.lineWidth =
+        1;
+
+
+    for (
+        let i = 1;
+        i < 5;
+        i++
+    ) {
+
+        const y =
+            padding +
+            (
+                height -
+                padding * 2
+            )
+            *
+            (
+                i / 5
+            );
+
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            0,
+            y
+        );
+
+        ctx.lineTo(
+            width,
+            y
+        );
+
+        ctx.stroke();
+
+    }
+
+
+    /* line */
+
+    const coordinates =
+        points.map(
+            (point, index) => {
+
+                const x =
+                    points.length === 1
+                        ? width / 2
+                        : (
+                            index /
+                            (points.length - 1)
+                        )
+                        * width;
+
+
+                const y =
+                    height -
+                    padding -
+                    (
+                        (
+                            number(
+                                point.price
+                            ) - min
+                        )
+                        /
+                        range
+                    )
+                    *
+                    (
+                        height -
+                        padding * 2
+                    );
+
+
+                return {
+                    x,
+                    y
+                };
+
+            }
+        );
+
+
+    ctx.beginPath();
+
+
+    coordinates.forEach(
+        (point, index) => {
+
+            if (index === 0) {
+
+                ctx.moveTo(
+                    point.x,
+                    point.y
+                );
+
+            } else {
+
+                ctx.lineTo(
+                    point.x,
+                    point.y
+                );
+
+            }
+
+        }
+    );
+
+
+    ctx.strokeStyle =
+        "#4f9cff";
+
+    ctx.lineWidth =
+        2.2;
+
+    ctx.lineJoin =
+        "round";
+
+    ctx.lineCap =
+        "round";
+
+    ctx.stroke();
+
+
+    /* area */
+
+    ctx.lineTo(
+        coordinates[
+            coordinates.length - 1
+        ].x,
+        height
+    );
+
+    ctx.lineTo(
+        coordinates[0].x,
+        height
+    );
+
+    ctx.closePath();
+
+
+    const gradient =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            height
+        );
+
+
+    gradient.addColorStop(
+        0,
+        "rgba(65,145,255,.18)"
+    );
+
+
+    gradient.addColorStop(
+        1,
+        "rgba(65,145,255,0)"
+    );
+
+
+    ctx.fillStyle =
+        gradient;
+
+    ctx.fill();
+
+
+    /* current point */
+
+    const last =
+        coordinates[
+            coordinates.length - 1
+        ];
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        last.x,
+        last.y,
+        4,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fillStyle =
+        "#77b5ff";
+
+    ctx.shadowBlur =
+        14;
+
+    ctx.shadowColor =
+        "#4f9cff";
+
+    ctx.fill();
+
+    ctx.shadowBlur =
+        0;
+
+}
+
+
+/* =========================================================
+   trade total
+========================================================= */
+
+$("#quantityInput")
+    .addEventListener(
+        "input",
+        updateTradeTotal
+    );
+
+
+function updateTradeTotal() {
+
+    const stock =
+        state.selectedStock;
+
+
+    if (!stock) {
+        return;
+    }
+
+
+    const quantity =
+        Math.max(
+            0,
+            Math.floor(
+                number(
+                    $("#quantityInput")
+                        .value
+                )
+            )
+        );
+
+
+    $("#tradeTotal")
+        .textContent =
+        "예상 거래금액: "
+        +
+        coin(
+            quantity *
+            number(
+                stock.current_price
+            )
+        );
+
+}
+
+
+/* =========================================================
+   buy
+========================================================= */
+
+async function buyStock() {
+
+    const stock =
+        state.selectedStock;
+
+
+    if (!stock) {
+        return;
+    }
+
+
+    const quantity =
+        Math.floor(
+            number(
+                $("#quantityInput")
+                    .value
+            )
+        );
+
+
+    if (
+        !Number.isInteger(quantity) ||
+        quantity <= 0
+    ) {
+
+        toast(
+            "매수 수량을 입력해주세요."
+        );
+
+        return;
+
+    }
+
+
+    const confirmed =
+        confirm(
+            `${stock.company_name} ${quantity.toLocaleString()}주를 매수하시겠습니까?\n\n예상 금액: ${coin(
+                stock.current_price * quantity
+            )}`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await sb.rpc(
+            "buy_dori_stock",
+            {
+                p_stock_id:
+                    stock.id,
+
+                p_quantity:
+                    quantity
+            }
+        );
+
+
+    if (error) {
+
+        console.error(error);
+
+        toast(
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    toast(
+        `🐶 ${quantity.toLocaleString()}주 매수가 완료되었습니다!`
+    );
+
+
+    $("#quantityInput")
+        .value = 1;
+
+
+    await refreshAll();
+
+}
+
+
+/* =========================================================
+   sell
+========================================================= */
+
+async function sellStock() {
+
+    const stock =
+        state.selectedStock;
+
+
+    if (!stock) {
+        return;
+    }
+
+
+    const quantity =
+        Math.floor(
+            number(
+                $("#quantityInput")
+                    .value
+            )
+        );
+
+
+    if (
+        !Number.isInteger(quantity) ||
+        quantity <= 0
+    ) {
+
+        toast(
+            "매도 수량을 입력해주세요."
+        );
+
+        return;
+
+    }
+
+
+    const confirmed =
+        confirm(
+            `${stock.company_name} ${quantity.toLocaleString()}주를 매도하시겠습니까?\n\n예상 금액: ${coin(
+                stock.current_price * quantity
+            )}`
+        );
+
+
+    if (!confirmed) {
+        return;
+    }
+
+
+    const {
+        data,
+        error
+    } =
+        await sb.rpc(
+            "sell_dori_stock",
+            {
+                p_stock_id:
+                    stock.id,
+
+                p_quantity:
+                    quantity
+            }
+        );
+
+
+    if (error) {
+
+        console.error(error);
+
+        toast(
+            error.message
+        );
+
+        return;
+
+    }
+
+
+    toast(
+        `🐶 ${quantity.toLocaleString()}주 매도가 완료되었습니다!`
+    );
+
+
+    $("#quantityInput")
+        .value = 1;
+
+
+    await refreshAll();
+
+}
+
+
+/* =========================================================
+   refresh
+========================================================= */
+
+async function refreshAll() {
+
+    await Promise.all([
+
+        loadCoin(),
+
+        loadMarket(),
+
+        loadPortfolio(),
+
+        loadTransactions()
+
+    ]);
+
+
+    if (state.selectedStock) {
+
+        const updated =
+            state.stocks.find(
+                stock =>
+                    stock.id ===
+                    state.selectedStock.id
+            );
+
+
+        if (updated) {
+
+            state.selectedStock =
+                updated;
+
+            $("#modalPrice")
+                .textContent =
+                coin(
+                    updated.current_price
+                );
+
+            $("#modalChange")
+                .textContent =
+                (
+                    number(
+                        updated.price_change
+                    ) >= 0
+                        ? "+"
+                        : ""
+                )
+                +
+                number(
+                    updated.price_change
+                ).toLocaleString()
+                +
+                " · "
+                +
+                percent(
+                    updated.price_change_percent
+                );
+
+            updateTradeTotal();
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   modal background
+========================================================= */
+
+$("#stockModal")
+    .addEventListener(
+        "click",
+        event => {
+
+            if (
+                event.target ===
+                $("#stockModal")
+            ) {
+
+                closeModal();
+
+            }
+
+        }
+    );
+
+
+document.addEventListener(
+    "keydown",
+    event => {
+
+        if (
+            event.key === "Escape"
+        ) {
+
+            closeModal();
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   auth listener
+========================================================= */
+
+sb.auth.onAuthStateChange(
+    (event, session) => {
+
+        if (!session) {
+
+            location.href =
+                "/doldol-site/login.html";
+
+        }
+
+    }
+);
+
+
+/* =========================================================
+   init
+========================================================= */
+
+async function init() {
+
+    const loggedIn =
+        await loadUser();
+
+
+    if (!loggedIn) {
+        return;
+    }
+
+
+    await refreshAll();
+
+
+    $("#loading")
+        .classList.add("hidden");
+
+}
+
+
+init();
+
+</script>
+
+</body>
+
+</html>
