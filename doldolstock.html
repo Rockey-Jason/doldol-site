@@ -288,6 +288,40 @@ body::before {
     background:
         rgba(90,130,255,0.10);
 
+}
+
+/* =====================================================
+   돌이 이슈 이동 버튼
+===================================================== */
+
+.issue-nav-btn {
+    border-color: rgba(98, 217, 255, 0.20);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(78, 122, 255, 0.10),
+            rgba(72, 202, 255, 0.07)
+        );
+
+    color: #c9e9ff;
+}
+
+.issue-nav-btn:hover {
+    border-color: rgba(98, 217, 255, 0.42);
+
+    background:
+        linear-gradient(
+            135deg,
+            rgba(78, 122, 255, 0.18),
+            rgba(72, 202, 255, 0.12)
+        );
+
+    color: #ffffff;
+
+    transform: translateY(-1px);
+}
+
     transform: translateY(-1px);
 }
 
@@ -1707,6 +1741,15 @@ td {
                 href="./index.html"
             >
                 돌이사이트
+            </a>
+
+
+            <a
+                class="header-btn issue-nav-btn"
+                href="./dori-issues.html"
+                title="돌이 이슈 보기"
+            >
+                📈 돌이 이슈
             </a>
 
 
