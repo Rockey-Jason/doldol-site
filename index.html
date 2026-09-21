@@ -642,6 +642,69 @@ body.로그인상태 #회원가입 {
     }
 }
 
+/* =====================================================
+   돌돌증권 카드
+===================================================== */
+
+.돌돌증권카드 {
+  --stock-blue: #62d9ff;
+}
+
+.돌돌증권비주얼 {
+  position:relative; width:100%; aspect-ratio:4 / 3; overflow:hidden;
+  border-radius:21px; border:1px solid rgba(98,217,255,.20);
+  background:radial-gradient(circle at 50% 42%,rgba(98,217,255,.16),transparent 43%),linear-gradient(145deg,rgba(26,67,105,.84),rgba(7,13,34,.97));
+  isolation:isolate;
+}
+.돌돌증권빛 {
+  position:absolute; width:190px; height:190px; left:50%; top:43%;
+  transform:translate(-50%,-50%); border-radius:50%;
+  background:rgba(98,217,255,.20); filter:blur(38px);
+  animation:돌돌증권빛호흡 4.2s ease-in-out infinite; z-index:-1;
+}
+@keyframes 돌돌증권빛호흡 {
+  0%,100%{transform:translate(-50%,-50%) scale(.84);opacity:.48}
+  50%{transform:translate(-50%,-50%) scale(1.18);opacity:.95}
+}
+.돌돌증권차트 {
+  position:absolute; left:12%; right:12%; bottom:28%; height:36%;
+  display:flex; align-items:flex-end; justify-content:space-between; gap:5px;
+  opacity:.24; transform:skewY(-7deg); pointer-events:none; z-index:1;
+}
+.돌돌증권차트 span {
+  display:block; width:7%; min-height:15%; border-radius:999px 999px 2px 2px;
+  background:linear-gradient(to top,rgba(98,217,255,.18),rgba(114,201,255,.85));
+  box-shadow:0 0 14px rgba(98,217,255,.16); transform-origin:bottom;
+  animation:돌돌증권차트움직임 3.2s ease-in-out infinite;
+}
+.돌돌증권차트 span:nth-child(1){height:22%;animation-delay:-.2s}.돌돌증권차트 span:nth-child(2){height:31%;animation-delay:-.5s}.돌돌증권차트 span:nth-child(3){height:27%;animation-delay:-.8s}.돌돌증권차트 span:nth-child(4){height:44%;animation-delay:-1.1s}.돌돌증권차트 span:nth-child(5){height:39%;animation-delay:-1.4s}.돌돌증권차트 span:nth-child(6){height:53%;animation-delay:-1.7s}.돌돌증권차트 span:nth-child(7){height:47%;animation-delay:-2s}.돌돌증권차트 span:nth-child(8){height:68%;animation-delay:-2.3s}.돌돌증권차트 span:nth-child(9){height:62%;animation-delay:-2.6s}.돌돌증권차트 span:nth-child(10){height:82%;animation-delay:-2.9s}
+@keyframes 돌돌증권차트움직임 {0%,100%{transform:scaleY(.90);opacity:.72}50%{transform:scaleY(1.08);opacity:1}}
+.돌돌증권아이콘 {
+  position:absolute; left:50%; top:43%; transform:translate(-50%,-50%);
+  width:112px;height:112px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%; background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.035));
+  border:1px solid rgba(255,255,255,.19);
+  box-shadow:0 0 0 10px rgba(98,217,255,.035),0 0 0 22px rgba(98,217,255,.018),0 18px 50px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.15);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);
+  animation:돌돌증권아이콘호흡 4.2s ease-in-out infinite; z-index:2;
+}
+.돌돌증권아이콘 span:first-child{font-family:Arial,sans-serif;font-size:45px;font-weight:800;color:#d9f6ff;text-shadow:0 0 22px rgba(98,217,255,.45)}
+.돌돌증권아이콘 span:last-child{position:absolute;right:16px;bottom:15px;font-family:Arial,sans-serif;font-size:27px;font-weight:800;color:#79e0ff;text-shadow:0 0 14px rgba(98,217,255,.7);animation:돌돌증권화살표빛 2.4s ease-in-out infinite}
+@keyframes 돌돌증권아이콘호흡{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.045)}}
+@keyframes 돌돌증권화살표빛{0%,100%{opacity:.55;transform:translate(0,2px)}50%{opacity:1;transform:translate(3px,-3px)}}
+.돌돌증권파동{position:absolute;left:50%;top:43%;width:112px;height:112px;border:1px solid rgba(98,217,255,.25);border-radius:50%;transform:translate(-50%,-50%);animation:돌돌증권파동확장 3.6s ease-out infinite;pointer-events:none}
+@keyframes 돌돌증권파동확장{0%{width:112px;height:112px;opacity:.65}100%{width:235px;height:235px;opacity:0}}
+.돌돌증권상태{position:absolute;left:50%;bottom:17px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;width:max-content;max-width:calc(100% - 24px);padding:8px 13px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(5,10,25,.50);color:#c1d8e7;font-size:12px;font-weight:700;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:3}
+.돌돌증권점{width:6px;height:6px;border-radius:50%;background:#62d9ff;box-shadow:0 0 10px rgba(98,217,255,.85);animation:돌돌증권점깜빡임 2s ease-in-out infinite}
+.돌돌증권상태구분{color:#5f7182}
+@keyframes 돌돌증권점깜빡임{0%,100%{opacity:.55}50%{opacity:1}}
+.돌돌증권카드 .메인버튼{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.돌돌증권화살표{display:inline-block;font-size:24px;color:#79dfff;transition:transform .35s cubic-bezier(.22,1,.36,1),color .3s ease}
+.돌돌증권카드:hover .돌돌증권화살표{transform:translateX(6px);color:#fff}
+.돌돌증권카드:hover .돌돌증권빛{animation-duration:2.2s;opacity:1}
+.돌돌증권카드:hover .돌돌증권아이콘{box-shadow:0 0 0 10px rgba(98,217,255,.055),0 0 0 22px rgba(98,217,255,.032),0 20px 65px rgba(39,176,230,.23),inset 0 1px 0 rgba(255,255,255,.2)}
+@media(max-width:650px){.돌돌증권아이콘{width:94px;height:94px}.돌돌증권아이콘 span:first-child{font-size:39px}.돌돌증권아이콘 span:last-child{right:13px;bottom:12px;font-size:23px}.돌돌증권파동{width:94px;height:94px}.돌돌증권상태{bottom:12px;font-size:11px;padding:7px 11px}.돌돌증권차트{bottom:27%}}
+
     /* =====================================================
    돌이 AI 카드
 ===================================================== */
@@ -1012,6 +1075,42 @@ body.로그인상태 #회원가입 {
       <button id="랜덤박스버튼" class="메인버튼" type="button">돌이 랜덤 박스</button>
       <div class="카드설명">돌돌코인으로 랜덤한 보상을 뽑아보세요!</div>
     </article>
+
+<article class="메뉴카드 돌돌증권카드">
+
+  <div class="돌돌증권비주얼">
+    <div class="돌돌증권빛"></div>
+
+    <div class="돌돌증권차트">
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="돌돌증권아이콘">
+      <span>₩</span>
+      <span>↗</span>
+    </div>
+
+    <div class="돌돌증권파동"></div>
+
+    <div class="돌돌증권상태">
+      <span class="돌돌증권점"></span>
+      <span>돌돌증권</span>
+      <span class="돌돌증권상태구분">·</span>
+      <span>시장 확인 가능</span>
+    </div>
+  </div>
+
+  <button id="돌돌증권버튼" class="메인버튼" type="button">
+    돌돌증권 확인하기
+    <span class="돌돌증권화살표">→</span>
+  </button>
+
+  <div class="카드설명">
+    돌이 세계의 기업과 주가 변동을 확인해보세요.
+  </div>
+
+</article>
 
 <article class="메뉴카드 돌이AI카드">
 
@@ -3059,6 +3158,18 @@ document
     };
 
     // =====================================================
+// 돌돌증권
+// =====================================================
+
+const 돌돌증권버튼 = document.getElementById("돌돌증권버튼");
+
+if (돌돌증권버튼) {
+    돌돌증권버튼.onclick = () => {
+        페이지이동("doldolstock.html");
+    };
+}
+
+// =====================================================
 // 돌이 AI
 // =====================================================
 
