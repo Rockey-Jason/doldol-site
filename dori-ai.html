@@ -1029,6 +1029,15 @@ function setGeneratingState(generating) {
 
 
 /* =====================================================
+   Dori AI 서버 설정
+   Render에 배포된 Dori AI 백엔드와 연결
+===================================================== */
+
+const DORI_AI_API_URL = "https://dori-ai-u3kf.onrender.com";
+const DORI_AI_CHAT_URL = `${DORI_AI_API_URL.replace(/\/$/, "")}/chat`;
+
+
+/* =====================================================
    스트리밍 답변 받기
 ===================================================== */
 
@@ -1040,7 +1049,7 @@ async function askDoriAI(message, bubble) {
 
   const response =
     await fetch(
-      "http://127.0.0.1:8000/chat",
+      DORI_AI_CHAT_URL,
       {
         method: "POST",
 
