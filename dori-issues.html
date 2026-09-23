@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#05091a">
+<title>돌이 이슈 | 돌돌사이트</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+
+:root{
+  --bg:#050817;
+  --bg2:#080d22;
+  --panel:rgba(15,23,55,.78);
+  --panel2:rgba(20,30,68,.74);
+  --panel3:rgba(7,12,31,.88);
+  --border:rgba(130,160,255,.15);
+  --border-hover:rgba(110,160,255,.36);
+  --text:#f5f7ff;
+  --muted:#8993b4;
+  --blue:#4c8dff;
+  --blue2:#7ab0ff;
+  --cyan:#62d9ff;
+  --green:#4fe0a2;
+  --red:#ff6d7d;
+  --yellow:#ffd75e;
+  --shadow:0 20px 60px rgba(0,0,0,.35);
+  --shadow-deep:0 32px 100px rgba(0,0,0,.52);
+  --radius:22px;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;min-height:100vh;color:var(--text);
+  font-family:Pretendard,"Noto Sans KR","Malgun Gothic",Arial,sans-serif;
+  background:
+    radial-gradient(circle at 8% 5%,rgba(48,86,190,.18),transparent 31rem),
+    radial-gradient(circle at 92% 14%,rgba(70,115,255,.12),transparent 30rem),
+    radial-gradient(circle at 52% 100%,rgba(20,90,150,.12),transparent 36rem),
+    linear-gradient(180deg,#040611 0%,#060a1b 50%,#03050d 100%);
+  overflow-x:hidden;
+}
+button,input{font:inherit}
+button{cursor:pointer}
+a{color:inherit;text-decoration:none}
+
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;opacity:.32;
+  background-image:
+    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:42px 42px;
+  mask-image:linear-gradient(to bottom,#000,transparent 92%);
+}
+body::after{
+  content:"";position:fixed;left:0;right:0;top:-30%;height:70%;
+  pointer-events:none;z-index:-1;
+  background:linear-gradient(180deg,transparent,rgba(76,141,255,.045),transparent);
+  transform:translateY(-40%);
+  animation:ambientScan 10s ease-in-out infinite;
+}
+
+.wrap{width:min(1240px,calc(100% - 32px));margin:auto}
+
+/* ───────── Header: 돌돌증권과 동일한 금융 UI ───────── */
+.topbar{
+  position:sticky;top:0;z-index:100;height:76px;
+  border-bottom:1px solid rgba(255,255,255,.055);
+  background:linear-gradient(180deg,rgba(5,8,23,.96),rgba(5,8,23,.72));
+  backdrop-filter:blur(22px);
+}
+.topbar .wrap{height:100%;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.brand{display:flex;align-items:center;gap:14px}
+.logo{
+  width:48px;height:48px;border-radius:15px;display:grid;place-items:center;
+  background:linear-gradient(145deg,#f9dc62,#d9a929);
+  color:#101321;font-size:24px;
+  box-shadow:0 10px 35px rgba(255,210,70,.20);
+  position:relative;
+}
+.logo::after{
+  content:"";position:absolute;inset:-4px;border-radius:18px;
+  border:1px solid rgba(255,215,94,.15);
+  animation:logoPulse 3.2s ease-in-out infinite;
+}
+.brand small{display:block;color:#8993b4;font-size:10px;letter-spacing:1.8px;margin-bottom:3px}
+.brand strong{font-size:20px;font-weight:900;letter-spacing:-.5px}
+.nav{display:flex;align-items:center;gap:8px}
+.nav a{
+  padding:10px 14px;border:1px solid transparent;border-radius:12px;
+  color:#9daac7;font-size:13px;font-weight:700;transition:.22s ease;
+}
+.nav a:hover,.nav a.active{
+  color:#fff;border-color:var(--border);
+  background:rgba(90,130,255,.10);
+  box-shadow:0 8px 24px rgba(0,0,0,.16);
+}
+.nav a.active{color:#dce7ff;border-color:rgba(110,160,255,.25)}
+.nav a.issue-active{
+  color:#fff;background:linear-gradient(135deg,rgba(76,141,255,.16),rgba(98,217,255,.08));
+}
+
+/* ───────── Hero ───────── */
+.hero{padding:74px 0 34px;position:relative}
+.hero::before{
+  content:"";position:absolute;width:520px;height:260px;left:-160px;top:30px;
+  background:radial-gradient(circle,rgba(76,141,255,.12),transparent 68%);
+  filter:blur(12px);pointer-events:none;
+}
+.eyebrow{
+  display:inline-flex;align-items:center;gap:9px;padding:8px 12px;
+  border:1px solid rgba(98,217,255,.20);
+  background:linear-gradient(135deg,rgba(76,141,255,.10),rgba(98,217,255,.045));
+  border-radius:999px;color:#8ddfff;font-size:11px;font-weight:800;
+  letter-spacing:.08em;box-shadow:0 8px 30px rgba(38,116,255,.07);
+  animation:fadeUp .6s both;
+}
+.eyebrow::before{
+  content:"";width:6px;height:6px;border-radius:50%;background:var(--cyan);
+  box-shadow:0 0 12px var(--cyan);animation:liveDot 1.8s ease-in-out infinite;
+}
+.hero h1{
+  font-size:clamp(42px,6vw,72px);line-height:1.02;letter-spacing:-.065em;
+  margin:20px 0 16px;max-width:900px;animation:fadeUp .7s .04s both;
+}
+.hero h1 span{
+  background:linear-gradient(100deg,#fff 12%,#a8c1ff 57%,#69dcff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.hero p{
+  max-width:760px;color:var(--muted);font-size:15px;line-height:1.9;
+  margin:0;animation:fadeUp .7s .1s both;
+}
+
+/* ───────── Market-style status rail ───────── */
+.marketbar{
+  margin-top:32px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  animation:fadeUp .7s .16s both;
+}
+.stat{
+  position:relative;overflow:hidden;padding:18px 19px;
+  border:1px solid var(--border);
+  background:linear-gradient(145deg,rgba(15,23,55,.82),rgba(7,13,31,.72));
+  border-radius:18px;box-shadow:var(--shadow);
+  transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;
+}
+.stat::before{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(110deg,transparent,rgba(126,164,255,.07),transparent);
+  transform:translateX(-120%);transition:transform .7s ease;
+}
+.stat:hover{transform:translateY(-3px);border-color:var(--border-hover);box-shadow:0 24px 70px rgba(0,0,0,.42)}
+.stat:hover::before{transform:translateX(120%)}
+.stat label{display:block;color:#7283a7;font-size:10px;letter-spacing:.08em;margin-bottom:8px}
+.stat strong{font-size:23px;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
+
+
+.market-status{
+  display:flex;align-items:center;gap:9px;margin-top:18px;
+  color:#596a8d;font-size:9px;font-weight:800;letter-spacing:.13em;
+  animation:fadeUp .7s .22s both;
+}
+.market-status i{
+  width:3px;height:3px;border-radius:50%;background:#617cae;
+  box-shadow:0 0 8px rgba(98,217,255,.35);
+}
+
+/* ───────── Section / search ───────── */
+.toolbar{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  margin:34px 0 16px;
+}
+.section-title{
+  display:flex;align-items:center;gap:10px;font-size:20px;font-weight:900;letter-spacing:-.045em;
+}
+.section-title::before{
+  content:"";width:4px;height:19px;border-radius:4px;
+  background:linear-gradient(180deg,var(--blue2),var(--cyan));
+  box-shadow:0 0 16px rgba(98,217,255,.35);
+}
+.search{
+  width:300px;border:1px solid var(--border);
+  background:rgba(8,14,34,.82);color:#fff;border-radius:13px;
+  padding:12px 15px;outline:none;transition:.22s ease;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+.search::placeholder{color:#647493}
+.search:focus{
+  border-color:rgba(95,140,255,.65);
+  box-shadow:0 0 0 4px rgba(95,140,255,.08),0 10px 30px rgba(0,0,0,.18);
+}
+
+/* ───────── Issue cards ───────── */
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:15px;padding-bottom:82px}
+.card{
+  position:relative;overflow:hidden;
+  border:1px solid var(--border);
+  background:linear-gradient(145deg,rgba(15,23,55,.90),rgba(6,12,29,.86));
+  border-radius:22px;padding:23px;box-shadow:var(--shadow);
+  cursor:pointer;transition:transform .32s cubic-bezier(.2,.8,.2,1),border-color .32s,box-shadow .32s;
+  animation:rise .55s both;
+  isolation:isolate;
+}
+.card::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(126,164,255,.55),transparent);
+  opacity:.65;
+}
+.card::after{
+  content:"";position:absolute;width:230px;height:230px;right:-140px;top:-140px;border-radius:50%;
+  background:radial-gradient(circle,rgba(95,140,255,.13),transparent 67%);
+  filter:blur(3px);z-index:-1;transition:transform .5s ease;
+}
+.card:hover{
+  transform:translateY(-6px);
+  border-color:rgba(126,164,255,.40);
+  box-shadow:0 30px 90px rgba(0,0,0,.50),0 0 40px rgba(71,111,223,.08);
+}
+.card:hover::after{transform:scale(1.18)}
+.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.issue-no{font-size:10px;color:#7f91b8;letter-spacing:.15em;font-weight:900}
+.date{font-size:10px;color:#657697}
+.card h2{font-size:22px;letter-spacing:-.045em;margin:10px 0 11px;line-height:1.38}
+.preview{
+  color:#8f9dbc;line-height:1.75;font-size:13px;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:45px;
+}
+.impact-row{display:flex;flex-wrap:wrap;gap:7px;margin-top:19px}
+.pill{
+  padding:7px 10px;border-radius:10px;background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.06);font-size:10px;color:#aebbd6;
+  transition:.2s ease;
+}
+.card:hover .pill{border-color:rgba(126,164,255,.10)}
+.pill b{margin-left:4px;font-variant-numeric:tabular-nums}
+.up{color:var(--green)!important}.down{color:var(--red)!important}.flat{color:#aebbd6!important}
+
+/* ───────── States ───────── */
+.empty,.error{
+  grid-column:1/-1;text-align:center;padding:78px 20px;
+  border:1px dashed var(--border);border-radius:22px;color:#7e8eaf;
+  background:rgba(8,14,34,.35);
+}
+.skeleton{
+  height:205px;border-radius:22px;
+  background:linear-gradient(100deg,rgba(255,255,255,.025),rgba(255,255,255,.075),rgba(255,255,255,.025));
+  background-size:220% 100%;animation:shimmer 1.35s infinite;
+  border:1px solid rgba(255,255,255,.035);
+}
+
+/* ───────── Modal ───────── */
+.modal{
+  position:fixed;inset:0;background:rgba(1,3,13,.76);backdrop-filter:blur(14px);
+  z-index:200;display:none;align-items:center;justify-content:center;padding:20px;
+}
+.modal.open{display:flex;animation:fade .22s ease}
+.dialog{
+  width:min(920px,100%);max-height:min(88vh,920px);overflow:auto;
+  border:1px solid rgba(126,164,255,.25);
+  background:linear-gradient(160deg,#0b1534,#050a1d);
+  border-radius:26px;box-shadow:var(--shadow-deep);
+  animation:dialogIn .32s cubic-bezier(.2,.8,.2,1);
+}
+.dialog::-webkit-scrollbar{width:8px}
+.dialog::-webkit-scrollbar-thumb{background:rgba(126,164,255,.18);border-radius:99px}
+.dialog-head{
+  padding:27px 29px 21px;border-bottom:1px solid var(--border);
+  position:sticky;top:0;background:rgba(8,15,37,.94);
+  backdrop-filter:blur(16px);z-index:2;
+}
+.dialog-head-top{display:flex;justify-content:space-between;gap:12px}
+.close{
+  width:38px;height:38px;border:1px solid var(--border);
+  background:rgba(255,255,255,.04);color:#b9c5df;border-radius:12px;
+  font-size:19px;transition:.2s ease;
+}
+.close:hover{color:#fff;border-color:var(--border-hover);background:rgba(90,130,255,.12);transform:rotate(3deg)}
+.dialog h2{font-size:30px;letter-spacing:-.055em;margin:10px 0 7px}
+.dialog-date{font-size:11px;color:#7082a7}
+.dialog-body{padding:28px 29px 34px}
+.content{white-space:pre-wrap;color:#c2cde2;font-size:15px;line-height:2}
+.impact-title{
+  display:flex;align-items:center;gap:8px;font-size:14px;font-weight:900;margin:32px 0 13px;
+}
+.impact-title::after{content:"";height:1px;flex:1;background:linear-gradient(90deg,var(--border),transparent)}
+.impact-table{border:1px solid var(--border);border-radius:16px;overflow:hidden;background:rgba(4,9,23,.30)}
+.impact-head,.impact-item{
+  display:grid;grid-template-columns:1.2fr .8fr .8fr .8fr;gap:10px;align-items:center;padding:13px 15px;
+}
+.impact-head{font-size:9px;color:#687a9f;background:rgba(255,255,255,.025);text-transform:uppercase;letter-spacing:.08em}
+.impact-item{font-size:12px;border-top:1px solid rgba(126,151,210,.10);transition:.18s ease}
+.impact-item:hover{background:rgba(95,140,255,.045)}
+.price{font-variant-numeric:tabular-nums}
+.spinner{width:24px;height:24px;border:2px solid rgba(255,255,255,.12);border-top-color:#7ea4ff;border-radius:50%;animation:spin .8s linear infinite;margin:auto}
+
+footer{border-top:1px solid var(--border);padding:30px 0 45px;color:#566786;font-size:10px}
+
+/* ───────── Micro animations ───────── */
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes shimmer{to{background-position:-220% 0}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes dialogIn{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes logoPulse{0%,100%{opacity:.25;transform:scale(1)}50%{opacity:.65;transform:scale(1.04)}}
+@keyframes liveDot{0%,100%{opacity:.55;transform:scale(.85)}50%{opacity:1;transform:scale(1.15)}}
+@keyframes ambientScan{0%,100%{transform:translateY(-42%);opacity:.25}50%{transform:translateY(52%);opacity:.55}}
+
+@media(max-width:760px){
+  .wrap{width:min(100% - 24px,1240px)}
+  .topbar{height:68px}
+  .nav{display:none}
+  .hero{padding:55px 0 30px}
+  .hero h1{font-size:45px}
+  .marketbar{grid-template-columns:1fr}
+  .toolbar{align-items:stretch;flex-direction:column}
+  .search{width:100%}
+  .grid{grid-template-columns:1fr}
+  .card{padding:19px}
+  .dialog-head,.dialog-body{padding-left:18px;padding-right:18px}
+  .impact-head,.impact-item{grid-template-columns:1.2fr .8fr .8fr}
+  .impact-head span:nth-child(3),.impact-item span:nth-child(3){display:none}
+}
+@media(max-width:430px){
+  .logo{width:42px;height:42px;font-size:21px;border-radius:13px}
+  .brand strong{font-size:17px}
+  .brand small{font-size:9px}
+  .hero h1{font-size:39px}
+  .stat{padding:16px}
+  .dialog h2{font-size:25px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;animation-iteration-count:1!important;
+    scroll-behavior:auto!important;transition-duration:.01ms!important;
+  }
+}
+
+</style>
+</head>
+<body>
+<div class="noise"></div>
+
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="./">
+      <div class="logo">🐶</div>
+      <div>
+        <small>DOLDOL MARKET · NEWSROOM</small>
+        <strong>돌이 이슈</strong>
+      </div>
+    </a>
+    <nav class="nav">
+      <a href="./">돌이사이트</a>
+      <a class="active issue-active" href="./dori-issues.html">돌이 이슈</a>
+      <a href="./doldolstock.html">돌돌증권</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<section class="hero wrap">
+  <div class="eyebrow">● DORI ISSUE NEWSROOM</div>
+  <h1>돌이의 세계를 움직이는<br><span>중요한 사건들.</span></h1>
+  <p>돌돌사이트에서 발생한 주요 이슈와 그에 따른 돌돌증권의 시장 변화를 한눈에 확인하세요. 이슈 하나가 세상을 움직이고, 시장은 그 변화를 기록합니다.</p>
+
+  <div class="marketbar">
+    <div class="stat"><label>공개된 이슈</label><strong id="issueCount">-</strong></div>
+    <div class="stat"><label>최근 이슈</label><strong id="latestIssue">-</strong></div>
+    <div class="stat"><label>시장 영향 종목</label><strong>6개</strong></div>
+  </div>
+  <div class="market-status" aria-hidden="true">
+    <span>MARKET NEWS FLOW</span>
+    <i></i>
+    <span>6 STOCKS TRACKED</span>
+    <i></i>
+    <span>REAL-TIME ARCHIVE VIEW</span>
+  </div>
+</section>
+
+<section class="wrap">
+  <div class="toolbar">
+    <div class="section-title">최근 돌이 이슈</div>
+    <input id="search" class="search" placeholder="이슈 제목 또는 내용 검색">
+  </div>
+  <div id="list" class="grid">
+    <div class="skeleton"></div><div class="skeleton"></div>
+  </div>
+</section>
+</main>
+
+<footer><div class="wrap">돌돌사이트 · 돌이 이슈 아카이브 · 모든 주식 가격은 돌돌증권의 기록을 기준으로 합니다.</div></footer>
+
+<div id="modal" class="modal" aria-hidden="true">
+  <div class="dialog" role="dialog" aria-modal="true">
+    <div class="dialog-head">
+      <div class="dialog-head-top">
+        <div>
+          <div id="modalNo" class="issue-no">DORI ISSUE</div>
+          <h2 id="modalTitle"></h2>
+          <div id="modalDate" class="dialog-date"></div>
+        </div>
+        <button id="close" class="close" aria-label="닫기">×</button>
+      </div>
+    </div>
+    <div class="dialog-body">
+      <div id="modalContent" class="content"></div>
+      <div class="impact-title">📈 돌돌증권 시장 반응</div>
+      <div class="impact-table">
+        <div class="impact-head"><span>종목</span><span>변동</span><span>이전</span><span>현재</span></div>
+        <div id="impactList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ============================================================
+  // 일반 돌이사이트용 Supabase 설정
+  // anon/publishable key만 사용합니다.
+  // service_role key를 절대로 넣지 마세요.
+  // ============================================================
+  const SUPABASE_URL = "https://scttowfhygcpdirrekqm.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const $ = s => document.querySelector(s);
+  const list = $("#list");
+  const search = $("#search");
+  const modal = $("#modal");
+
+  let issues = [];
+
+  const stocks = {
+    ROCKY:"로키 페이퍼",
+    DORI_SEMI:"돌이 반도체",
+    ROCKY_DORONIUM:"로키 도로늄",
+    DORI_ELECTRONICS:"돌이 전자",
+    ROCKY_FOOD:"로키 푸드",
+    DORI_APPAREL:"돌이 의류"
+  };
+
+  function esc(v){
+    return String(v ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[c]));
+  }
+
+  function date(v){
+    if(!v) return "-";
+    return new Intl.DateTimeFormat("ko-KR", {
+      year:"numeric",month:"2-digit",day:"2-digit",
+      hour:"2-digit",minute:"2-digit"
+    }).format(new Date(v));
+  }
+
+  function money(v){
+    return new Intl.NumberFormat("ko-KR").format(Number(v || 0)) + " 돌돌";
+  }
+
+  function pct(v){
+    const n = Number(v || 0);
+    return `${n > 0 ? "+" : ""}${n.toFixed(2)}%`;
+  }
+
+  function cls(v){
+    const n = Number(v || 0);
+    return n > 0 ? "up" : n < 0 ? "down" : "flat";
+  }
+
+  function render(data){
+    const q = search.value.trim().toLowerCase();
+    const filtered = data.filter(x =>
+      !q ||
+      String(x.title || "").toLowerCase().includes(q) ||
+      String(x.content || "").toLowerCase().includes(q)
+    );
+
+    if(!filtered.length){
+      list.innerHTML = `<div class="empty">표시할 돌이 이슈가 없습니다.</div>`;
+      return;
+    }
+
+    list.innerHTML = filtered.map((x,i) => {
+      const impacts = x.dori_stock_issue_impacts || [];
+      return `
+        <article class="card" style="animation-delay:${Math.min(i,8)*45}ms" data-id="${x.id}">
+          <div class="card-head">
+            <div class="issue-no">DORI ISSUE #${esc(x.issue_number)}</div>
+            <div class="date">${esc(date(x.published_at || x.created_at))}</div>
+          </div>
+          <h2>${esc(x.title)}</h2>
+          <div class="preview">${esc(x.content)}</div>
+          <div class="impact-row">
+            ${impacts.slice(0,6).map(p => `
+              <span class="pill">
+                ${esc(stocks[p.ticker] || p.ticker)}
+                <b class="${cls(p.change_percent)}">${esc(pct(p.change_percent))}</b>
+              </span>
+            `).join("")}
+          </div>
+        </article>
+      `;
+    }).join("");
+
+    list.querySelectorAll(".card").forEach(card => {
+      card.addEventListener("click", () => openIssue(card.dataset.id));
+    });
+  }
+
+  async function loadIssues(){
+    list.innerHTML = `<div class="skeleton"></div><div class="skeleton"></div>`;
+
+    const {data,error} = await sb
+      .from("dori_stock_issues")
+      .select(`
+        id,
+        issue_number,
+        title,
+        content,
+        status,
+        created_at,
+        published_at,
+        dori_stock_issue_impacts(
+          id,
+          stock_id,
+          ticker,
+          change_percent,
+          old_price,
+          new_price
+        )
+      `)
+      .eq("status","published")
+      .order("issue_number",{ascending:false});
+
+    if(error){
+      console.error(error);
+      list.innerHTML = `<div class="error">돌이 이슈를 불러오지 못했습니다.<br><small>${esc(error.message)}</small></div>`;
+      return;
+    }
+
+    issues = data || [];
+    $("#issueCount").textContent = new Intl.NumberFormat("ko-KR").format(issues.length) + "건";
+    $("#latestIssue").textContent = issues[0] ? `#${issues[0].issue_number}` : "-";
+    render(issues);
+  }
+
+  function openIssue(id){
+    const x = issues.find(v => String(v.id) === String(id));
+    if(!x) return;
+
+    $("#modalNo").textContent = `DORI ISSUE #${x.issue_number}`;
+    $("#modalTitle").textContent = x.title;
+    $("#modalDate").textContent = date(x.published_at || x.created_at);
+    $("#modalContent").textContent = x.content;
+
+    const impacts = x.dori_stock_issue_impacts || [];
+    $("#impactList").innerHTML = impacts.map(p => `
+      <div class="impact-item">
+        <span>${esc(stocks[p.ticker] || p.ticker)}</span>
+        <span class="${cls(p.change_percent)}">${esc(pct(p.change_percent))}</span>
+        <span class="price">${money(p.old_price)}</span>
+        <span class="price">${money(p.new_price)}</span>
+      </div>
+    `).join("");
+
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden","false");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeModal(){
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden","true");
+    document.body.style.overflow = "";
+  }
+
+  search.addEventListener("input", () => render(issues));
+  $("#close").addEventListener("click", closeModal);
+  modal.addEventListener("click", e => { if(e.target === modal) closeModal(); });
+  document.addEventListener("keydown", e => { if(e.key === "Escape") closeModal(); });
+
+  loadIssues();
+})();
+</script>
+</body>
+</html>

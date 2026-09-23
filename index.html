@@ -1,0 +1,3453 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>돌이 사이트</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+<link
+    href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap"
+    rel="stylesheet"
+>
+
+
+
+
+
+
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&display=swap');
+
+@font-face{
+  font-family:'HancomMalrangmalrang';
+  src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');
+  font-weight:400;
+  font-display:swap;
+}
+@font-face{
+  font-family:'HancomMalrangmalrang';
+  src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2') format('woff2');
+  font-weight:700;
+  font-display:swap;
+}
+
+:root{
+  --bg1:#03034a;
+  --bg2:#050516;
+  --card:rgba(255,255,255,.075);
+  --card-border:rgba(255,255,255,.12);
+  --text:#f7f8ff;
+  --muted:#aeb5cf;
+  --accent:#8d8cff;
+  --accent2:#6b63ff;
+  --gold:#ffd84d;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+
+*{box-sizing:border-box}
+html{min-height:100%;overflow-x:hidden}
+body{
+  margin:0;
+  min-height:100vh;
+  color:var(--text);
+  font-family:'HancomMalrangmalrang','Jua',sans-serif;
+  background:
+    radial-gradient(circle at 15% 10%,rgba(92,91,255,.20),transparent 28%),
+    radial-gradient(circle at 85% 20%,rgba(0,184,255,.10),transparent 25%),
+    linear-gradient(135deg,var(--bg1),var(--bg2) 70%);
+  overflow-x:hidden;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(255,255,255,.07),transparent 35%),
+    linear-gradient(rgba(255,255,255,.015) 1px,transparent 1px);
+  background-size:auto,100% 5px;
+  mask-image:linear-gradient(to bottom,black,transparent 80%);
+  z-index:-1;
+}
+
+button,img{ -webkit-tap-highlight-color:transparent }
+button{font:inherit}
+button:focus-visible{
+  outline:3px solid rgba(141,140,255,.65);
+  outline-offset:4px;
+}
+
+#사이트{
+  width:min(1440px,100%);
+  min-height:100vh;
+  margin:0 auto;
+  padding:clamp(22px,4vw,58px) clamp(16px,4vw,56px) 70px;
+  position:relative;
+  isolation:isolate;
+}
+
+#사이트::after{
+  content:"";
+  position:absolute;
+  width:520px;height:520px;
+  right:-220px;top:120px;
+  border-radius:50%;
+  background:rgba(99,92,255,.08);
+  filter:blur(20px);
+  pointer-events:none;
+  z-index:-1;
+}
+
+#사이트로고{
+  appearance:none;
+  border:0;
+  background:none;
+  color:#fff;
+  font-family:'Black Han Sans',sans-serif;
+  font-size:clamp(48px,7vw,92px);
+  line-height:1;
+  letter-spacing:-3px;
+  padding:0;
+  cursor:pointer;
+  text-shadow:0 8px 35px rgba(100,95,255,.28);
+  transition:transform .45s var(--ease),text-shadow .45s var(--ease);
+}
+#사이트로고:hover{transform:translateY(-3px) scale(1.015);text-shadow:0 12px 45px rgba(100,95,255,.45)}
+
+#사이트설명{
+  margin:16px 0 0;
+  max-width:720px;
+  color:var(--muted);
+  font-size:clamp(15px,2vw,20px);
+  line-height:1.65;
+  font-weight:700;
+}
+
+.상단영역{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:24px;
+  margin-bottom:clamp(35px,6vw,70px);
+}
+
+.인증영역{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding-top:4px;
+}
+
+#로그인,#회원가입{
+  appearance:none;
+  border:1px solid rgba(255,255,255,.13);
+  background:rgba(255,255,255,.055);
+  color:#e9ebff;
+  border-radius:999px;
+  padding:10px 16px;
+  cursor:pointer;
+  font-weight:700;
+  transition:transform .25s var(--ease),background .25s ease,border-color .25s ease;
+}
+#로그인:hover,#회원가입:hover{
+  transform:translateY(-2px);
+  background:rgba(255,255,255,.11);
+  border-color:rgba(255,255,255,.25);
+}
+
+.메뉴영역{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:clamp(14px,2vw,24px);
+}
+
+.메뉴카드{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  min-width:0;
+  border:1px solid var(--card-border);
+  border-radius:28px;
+  padding:14px 14px 20px;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.095),rgba(255,255,255,.035));
+  box-shadow:0 18px 55px rgba(0,0,0,.22);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  overflow:hidden;
+  opacity:0;
+  transform:translateY(28px);
+  animation:카드등장 .75s var(--ease) forwards;
+  transition:transform .4s var(--ease),border-color .4s ease,box-shadow .4s ease;
+}
+.메뉴카드:nth-child(1){animation-delay:.05s}
+.메뉴카드:nth-child(2){animation-delay:.11s}
+.메뉴카드:nth-child(3){animation-delay:.17s}
+.메뉴카드:nth-child(4){animation-delay:.23s}
+.메뉴카드:nth-child(5){animation-delay:.29s}
+
+.메뉴카드::before{
+  content:"";
+  position:absolute;
+  width:180px;height:180px;
+  right:-85px;top:-90px;
+  border-radius:50%;
+  background:rgba(141,140,255,.13);
+  transition:transform .6s var(--ease);
+}
+.메뉴카드:hover{
+  transform:translateY(-9px);
+  border-color:rgba(170,169,255,.36);
+  box-shadow:0 28px 75px rgba(0,0,0,.34);
+}
+.메뉴카드:hover::before{transform:scale(1.5)}
+
+.메인버튼{
+  width:100%;
+  order:2;
+  border:0;
+  background:none;
+  color:#fff;
+  padding:15px 8px 2px;
+  font-size:clamp(18px,1.8vw,25px);
+  font-weight:700;
+  cursor:pointer;
+  text-align:left;
+  transition:transform .3s var(--ease),color .3s ease;
+}
+.메인버튼:hover{transform:translateX(4px);color:#dcdcff}
+
+.이미지틀{
+  position:relative;
+  width:100%;
+  aspect-ratio:4/3;
+  overflow:hidden;
+  border-radius:21px;
+  background:rgba(0,0,0,.18);
+  border:1px solid rgba(255,255,255,.08);
+}
+.메인이미지{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  cursor:pointer;
+  transition:transform .65s var(--ease),filter .5s ease;
+}
+.메뉴카드:hover .메인이미지{
+  transform:scale(1.065);
+  filter:brightness(1.08);
+}
+
+.카드설명{
+  margin:7px 8px 0;
+  color:#969db8;
+  font-size:13px;
+  line-height:1.5;
+  order:3;
+}
+
+#랜덤박스이미지{
+  background:linear-gradient(135deg,rgba(112,110,255,.14),rgba(255,255,255,.035));
+}
+#랜덤박스이미지::after{
+  content:"IMAGE";
+  display:grid;
+  place-items:center;
+  width:100%;height:100%;
+  color:rgba(255,255,255,.16);
+  font-family:Arial,sans-serif;
+  font-weight:700;
+  letter-spacing:4px;
+}
+
+#돌이사진{
+  position:fixed;
+  top:18px;right:20px;
+  width:58px;height:58px;
+  object-fit:cover;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.75);
+  box-shadow:0 10px 35px rgba(0,0,0,.35);
+  cursor:pointer;
+  display:none;
+  z-index:100;
+  transition:transform .35s var(--ease),box-shadow .35s ease;
+}
+#돌이사진:hover{transform:scale(1.08);box-shadow:0 14px 45px rgba(100,95,255,.32)}
+
+#메뉴{
+  position:fixed;
+  top:88px;right:20px;
+  width:min(290px,calc(100vw - 28px));
+  padding:10px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:22px;
+  background:rgba(13,14,43,.91);
+  box-shadow:0 25px 70px rgba(0,0,0,.45);
+  backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
+  display:none;
+  z-index:99;
+  transform-origin:top right;
+}
+#메뉴.menu-show{display:block;animation:메뉴등장 .35s var(--ease)}
+#메뉴.menu-hide{display:block;animation:메뉴퇴장 .25s var(--ease) forwards}
+
+.프로필버튼{
+  width:100%;
+  border:0;
+  border-radius:14px;
+  background:transparent;
+  color:#fff;
+  padding:13px 14px;
+  text-align:left;
+  cursor:pointer;
+  font-weight:700;
+  transition:transform .25s var(--ease),background .25s ease;
+}
+.프로필버튼:hover{background:rgba(255,255,255,.09);transform:translateX(3px)}
+
+#레벨,#EXP정보,#돌돌코인수량,#현재칭호{
+  position:fixed;
+  right:92px;
+  z-index:100;
+  display:none;
+  max-width:calc(100vw - 180px);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#레벨{top:18px;border:0;background:none;color:#fff;font-weight:700;cursor:pointer}
+#EXP정보{top:44px;color:#aeb5cf;font-size:13px}
+#돌돌코인수량{top:64px;color:#aeb5cf;font-size:13px}
+#현재칭호{top:84px;color:var(--gold);font-size:13px}
+
+#패널배경{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,8,.72);
+  backdrop-filter:blur(7px);
+  -webkit-backdrop-filter:blur(7px);
+  z-index:99997;
+  opacity:0;
+  visibility:hidden;
+  transition:opacity .35s ease,visibility 0s linear .35s;
+}
+#패널배경.show{
+  opacity:1;
+  visibility:visible;
+  transition:opacity .35s ease;
+}
+
+#패널{
+  position:fixed;
+  top:50%;left:50%;
+  width:min(700px,calc(100vw - 28px));
+  max-height:min(82vh,850px);
+  overflow-y:auto;
+  padding:28px;
+  color:#fff;
+  background:linear-gradient(145deg,rgba(20,21,61,.97),rgba(8,8,28,.97));
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:28px;
+  box-shadow:0 35px 110px rgba(0,0,0,.6);
+  z-index:99998;
+  opacity:0;
+  visibility:hidden;
+  transform:translate(-50%,-46%) scale(.94);
+  transition:opacity .35s ease,transform .45s var(--ease),visibility 0s linear .45s;
+}
+#패널.show{
+  opacity:1;
+  visibility:visible;
+  transform:translate(-50%,-50%) scale(1);
+  transition:opacity .35s ease,transform .45s var(--ease);
+}
+#패널::-webkit-scrollbar{width:7px}
+#패널::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:99px}
+
+#패널제목{font-size:30px;font-weight:700;margin-bottom:20px}
+#패널닫기{
+  position:absolute;top:15px;right:18px;
+  width:42px;height:42px;
+  border:0;border-radius:50%;
+  background:rgba(255,255,255,.07);
+  color:#fff;font-size:23px;cursor:pointer;
+  transition:transform .25s ease,background .25s ease;
+}
+#패널닫기:hover{transform:rotate(90deg);background:rgba(255,255,255,.14)}
+
+.탭{display:flex;gap:9px;margin-bottom:20px}
+.탭버튼{
+  flex:1;border:0;border-radius:14px;padding:12px;
+  background:rgba(255,255,255,.07);color:#cdd1e8;
+  cursor:pointer;font-weight:700;
+  transition:.25s ease;
+}
+.탭버튼:hover{background:rgba(255,255,255,.12)}
+.탭버튼.active{background:linear-gradient(135deg,#6964ff,#514bbd);color:#fff}
+
+.업적카드,.칭호카드{
+  padding:17px;
+  margin-bottom:12px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  background:rgba(255,255,255,.045);
+  transition:transform .3s var(--ease),background .3s ease;
+}
+.업적카드:hover,.칭호카드:hover{transform:translateY(-2px);background:rgba(255,255,255,.065)}
+.업적카드.미획득{opacity:.42}
+.업적이름{font-size:20px;font-weight:700}
+.업적설명{margin-top:5px;color:#b7bbd0;line-height:1.5}
+.업적정보{margin-top:9px;color:#d5d8e8;font-size:14px;line-height:1.65}
+.칭호태그{display:inline-block;margin-top:8px;padding:5px 10px;border-radius:999px;background:rgba(128,107,0,.45);color:#ffe75e}
+.칭호이름{font-size:22px;color:var(--gold);font-weight:700}
+.칭호상태{margin-top:5px;color:#9da3bc}
+.칭호선택,#칭호저장{
+  margin-top:12px;width:100%;padding:12px;border:0;border-radius:12px;
+  background:#383878;color:#fff;cursor:pointer;font-weight:700;
+  transition:transform .25s var(--ease),filter .25s ease;
+}
+.칭호선택:hover,#칭호저장:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.칭호선택.장착중{background:#806b00}
+#칭호저장{background:linear-gradient(135deg,#e1bd23,#a98900);color:#171300}
+
+#achievementPopup{
+  position:fixed;
+  left:50%;top:20px;
+  width:min(430px,calc(100vw - 28px));
+  padding:18px 22px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:20px;
+  background:rgba(22,23,53,.94);
+  color:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.5);
+  backdrop-filter:blur(18px);
+  -webkit-backdrop-filter:blur(18px);
+  font-family:'Jua','HancomMalrangmalrang',sans-serif;
+  text-align:center;
+  z-index:999999;
+  opacity:0;
+  visibility:hidden;
+  transform:translate(-50%,-25px) scale(.96);
+  transition:opacity .38s ease,transform .48s var(--ease),visibility 0s linear .48s;
+}
+#achievementPopup.show{
+  opacity:1;
+  visibility:visible;
+  transform:translate(-50%,0) scale(1);
+  transition:opacity .38s ease,transform .48s var(--ease);
+}
+
+#페이지전환{
+  position:fixed;
+  inset:0;
+  z-index:1000000;
+  pointer-events:none;
+  opacity:0;
+  visibility:hidden;
+  background:
+    radial-gradient(circle at center,rgba(105,100,255,.22),transparent 35%),
+    linear-gradient(135deg,#05054a,#02020e);
+  transform:scale(1.05);
+  transition:opacity .35s ease,transform .5s var(--ease),visibility 0s linear .5s;
+}
+#페이지전환.show{
+  opacity:1;
+  visibility:visible;
+  transform:scale(1);
+  transition:opacity .35s ease,transform .5s var(--ease);
+}
+
+@keyframes 카드등장{
+  to{opacity:1;transform:translateY(0)}
+}
+@keyframes 메뉴등장{
+  from{opacity:0;transform:translateY(-8px) scale(.96)}
+  to{opacity:1;transform:translateY(0) scale(1)}
+}
+@keyframes 메뉴퇴장{
+  from{opacity:1;transform:translateY(0) scale(1)}
+  to{opacity:0;transform:translateY(-6px) scale(.97)}
+}
+
+@media(max-width:1100px){
+  .메뉴영역{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:650px){
+  #사이트{padding:20px 14px 50px}
+  .상단영역{display:block;margin-bottom:30px}
+  .인증영역{justify-content:flex-start;margin-top:20px}
+  .메뉴영역{grid-template-columns:1fr;gap:14px}
+  .메뉴카드{border-radius:23px;padding:11px 11px 17px}
+  .메인버튼{font-size:20px;padding-top:13px}
+  .이미지틀{aspect-ratio:16/10}
+  #돌이사진{width:52px;height:52px;right:13px;top:13px}
+  #레벨,#EXP정보,#돌돌코인수량,#현재칭호{right:78px;max-width:calc(100vw - 145px)}
+  #레벨{top:14px}
+  #EXP정보{top:38px}
+  #돌돌코인수량{top:58px}
+  #현재칭호{top:78px}
+  #메뉴{top:76px;right:13px}
+  #패널{padding:23px 17px;border-radius:22px}
+  #패널제목{font-size:25px}
+}
+@media(max-width:380px){
+  .인증영역{width:100%}
+  #로그인,#회원가입{flex:1;padding:10px 8px;font-size:14px}
+  #사이트설명{font-size:14px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    scroll-behavior:auto!important;
+    transition-duration:.01ms!important;
+  }
+}
+    /* =====================================================
+   로그인 / 회원가입 상태 UI
+===================================================== */
+
+#로그인,
+#회원가입 {
+    position: fixed;
+    left: auto;
+    right: 28px;
+
+    display: none;
+
+    align-items: center;
+    justify-content: center;
+
+    min-width: 112px;
+    height: 42px;
+
+    padding: 0 18px;
+
+    border: 1px solid rgba(150, 170, 255, 0.22);
+    border-radius: 14px;
+
+    color: #dce3ff;
+    background: rgba(19, 27, 67, 0.72);
+
+    font-family: 'HancomMalrangmalrang', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+
+    box-shadow:
+        0 8px 24px rgba(0, 0, 0, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        background 0.3s ease,
+        border-color 0.3s ease;
+}
+
+#로그인 {
+    top: 24px;
+}
+
+#회원가입 {
+    top: 76px;
+}
+
+#로그인:hover,
+#회원가입:hover {
+    transform: translateY(-3px);
+    border-color: rgba(150, 170, 255, 0.45);
+    background: rgba(48, 62, 135, 0.8);
+    box-shadow:
+        0 12px 30px rgba(35, 50, 130, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+#로그인:active,
+#회원가입:active {
+    transform: translateY(-1px) scale(0.97);
+}
+
+/* 로그인하지 않은 상태에서만 버튼 표시 */
+body.로그아웃상태 #로그인,
+body.로그아웃상태 #회원가입 {
+    display: flex;
+    animation: 로그인버튼등장 0.45s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+body.로그아웃상태 #회원가입 {
+    animation-delay: 0.06s;
+}
+
+@keyframes 로그인버튼등장 {
+    from {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 로그인 상태에서는 인증 버튼 숨김 */
+body.로그인상태 #로그인,
+body.로그인상태 #회원가입 {
+    display: none !important;
+}
+
+@media (max-width: 700px) {
+    #로그인,
+    #회원가입 {
+        right: 14px;
+        min-width: 96px;
+        height: 38px;
+        padding: 0 13px;
+        font-size: 14px;
+        border-radius: 12px;
+    }
+
+    #로그인 {
+        top: 14px;
+    }
+
+    #회원가입 {
+        top: 60px;
+    }
+}
+
+@media (max-width: 420px) {
+    #로그인,
+    #회원가입 {
+        min-width: 84px;
+        padding: 0 10px;
+        font-size: 13px;
+    }
+}
+
+/* =====================================================
+   돌돌증권 카드
+===================================================== */
+
+.돌돌증권카드 {
+  --stock-blue: #62d9ff;
+}
+
+.돌돌증권비주얼 {
+  position:relative; width:100%; aspect-ratio:4 / 3; overflow:hidden;
+  border-radius:21px; border:1px solid rgba(98,217,255,.20);
+  background:radial-gradient(circle at 50% 42%,rgba(98,217,255,.16),transparent 43%),linear-gradient(145deg,rgba(26,67,105,.84),rgba(7,13,34,.97));
+  isolation:isolate;
+}
+.돌돌증권빛 {
+  position:absolute; width:190px; height:190px; left:50%; top:43%;
+  transform:translate(-50%,-50%); border-radius:50%;
+  background:rgba(98,217,255,.20); filter:blur(38px);
+  animation:돌돌증권빛호흡 4.2s ease-in-out infinite; z-index:-1;
+}
+@keyframes 돌돌증권빛호흡 {
+  0%,100%{transform:translate(-50%,-50%) scale(.84);opacity:.48}
+  50%{transform:translate(-50%,-50%) scale(1.18);opacity:.95}
+}
+.돌돌증권차트 {
+  position:absolute; left:12%; right:12%; bottom:28%; height:36%;
+  display:flex; align-items:flex-end; justify-content:space-between; gap:5px;
+  opacity:.24; transform:skewY(-7deg); pointer-events:none; z-index:1;
+}
+.돌돌증권차트 span {
+  display:block; width:7%; min-height:15%; border-radius:999px 999px 2px 2px;
+  background:linear-gradient(to top,rgba(98,217,255,.18),rgba(114,201,255,.85));
+  box-shadow:0 0 14px rgba(98,217,255,.16); transform-origin:bottom;
+  animation:돌돌증권차트움직임 3.2s ease-in-out infinite;
+}
+.돌돌증권차트 span:nth-child(1){height:22%;animation-delay:-.2s}.돌돌증권차트 span:nth-child(2){height:31%;animation-delay:-.5s}.돌돌증권차트 span:nth-child(3){height:27%;animation-delay:-.8s}.돌돌증권차트 span:nth-child(4){height:44%;animation-delay:-1.1s}.돌돌증권차트 span:nth-child(5){height:39%;animation-delay:-1.4s}.돌돌증권차트 span:nth-child(6){height:53%;animation-delay:-1.7s}.돌돌증권차트 span:nth-child(7){height:47%;animation-delay:-2s}.돌돌증권차트 span:nth-child(8){height:68%;animation-delay:-2.3s}.돌돌증권차트 span:nth-child(9){height:62%;animation-delay:-2.6s}.돌돌증권차트 span:nth-child(10){height:82%;animation-delay:-2.9s}
+@keyframes 돌돌증권차트움직임 {0%,100%{transform:scaleY(.90);opacity:.72}50%{transform:scaleY(1.08);opacity:1}}
+.돌돌증권아이콘 {
+  position:absolute; left:50%; top:43%; transform:translate(-50%,-50%);
+  width:112px;height:112px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%; background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.035));
+  border:1px solid rgba(255,255,255,.19);
+  box-shadow:0 0 0 10px rgba(98,217,255,.035),0 0 0 22px rgba(98,217,255,.018),0 18px 50px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.15);
+  backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);
+  animation:돌돌증권아이콘호흡 4.2s ease-in-out infinite; z-index:2;
+}
+.돌돌증권아이콘 span:first-child{font-family:Arial,sans-serif;font-size:45px;font-weight:800;color:#d9f6ff;text-shadow:0 0 22px rgba(98,217,255,.45)}
+.돌돌증권아이콘 span:last-child{position:absolute;right:16px;bottom:15px;font-family:Arial,sans-serif;font-size:27px;font-weight:800;color:#79e0ff;text-shadow:0 0 14px rgba(98,217,255,.7);animation:돌돌증권화살표빛 2.4s ease-in-out infinite}
+@keyframes 돌돌증권아이콘호흡{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.045)}}
+@keyframes 돌돌증권화살표빛{0%,100%{opacity:.55;transform:translate(0,2px)}50%{opacity:1;transform:translate(3px,-3px)}}
+.돌돌증권파동{position:absolute;left:50%;top:43%;width:112px;height:112px;border:1px solid rgba(98,217,255,.25);border-radius:50%;transform:translate(-50%,-50%);animation:돌돌증권파동확장 3.6s ease-out infinite;pointer-events:none}
+@keyframes 돌돌증권파동확장{0%{width:112px;height:112px;opacity:.65}100%{width:235px;height:235px;opacity:0}}
+.돌돌증권상태{position:absolute;left:50%;bottom:17px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;width:max-content;max-width:calc(100% - 24px);padding:8px 13px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(5,10,25,.50);color:#c1d8e7;font-size:12px;font-weight:700;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);z-index:3}
+.돌돌증권점{width:6px;height:6px;border-radius:50%;background:#62d9ff;box-shadow:0 0 10px rgba(98,217,255,.85);animation:돌돌증권점깜빡임 2s ease-in-out infinite}
+.돌돌증권상태구분{color:#5f7182}
+@keyframes 돌돌증권점깜빡임{0%,100%{opacity:.55}50%{opacity:1}}
+.돌돌증권카드 .메인버튼{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.돌돌증권화살표{display:inline-block;font-size:24px;color:#79dfff;transition:transform .35s cubic-bezier(.22,1,.36,1),color .3s ease}
+.돌돌증권카드:hover .돌돌증권화살표{transform:translateX(6px);color:#fff}
+.돌돌증권카드:hover .돌돌증권빛{animation-duration:2.2s;opacity:1}
+.돌돌증권카드:hover .돌돌증권아이콘{box-shadow:0 0 0 10px rgba(98,217,255,.055),0 0 0 22px rgba(98,217,255,.032),0 20px 65px rgba(39,176,230,.23),inset 0 1px 0 rgba(255,255,255,.2)}
+@media(max-width:650px){.돌돌증권아이콘{width:94px;height:94px}.돌돌증권아이콘 span:first-child{font-size:39px}.돌돌증권아이콘 span:last-child{right:13px;bottom:12px;font-size:23px}.돌돌증권파동{width:94px;height:94px}.돌돌증권상태{bottom:12px;font-size:11px;padding:7px 11px}.돌돌증권차트{bottom:27%}}
+
+    /* =====================================================
+   돌이 AI 카드
+===================================================== */
+
+.돌이AI카드 {
+  --ai-purple: #8d8cff;
+  --ai-blue: #5c8dff;
+  --ai-glow: rgba(141, 140, 255, .28);
+}
+
+    /* 돌이 AI 카드 크기 통일 */
+.돌이AI카드 {
+  width: 100%;
+  min-width: 0;
+}
+
+/* 다른 카드와 동일한 이미지 비율 */
+.돌이AI비주얼 {
+  aspect-ratio: 4 / 3;
+}
+
+/* AI 전용 비주얼 영역 */
+.돌이AI비주얼 {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 21px;
+  border: 1px solid rgba(141, 140, 255, .22);
+
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(141, 140, 255, .18),
+      transparent 42%
+    ),
+    linear-gradient(
+      145deg,
+      rgba(40, 42, 105, .85),
+      rgba(8, 10, 35, .95)
+    );
+
+  isolation: isolate;
+}
+
+/* 은은하게 움직이는 빛 */
+.돌이AI빛 {
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  left: 50%;
+  top: 42%;
+  transform: translate(-50%, -50%);
+
+  border-radius: 50%;
+  background: rgba(141, 140, 255, .22);
+  filter: blur(35px);
+
+  animation: 돌이AI빛호흡 4s ease-in-out infinite;
+  z-index: -1;
+}
+
+@keyframes 돌이AI빛호흡 {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(.85);
+    opacity: .55;
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.18);
+    opacity: 1;
+  }
+}
+
+/* 아이콘 */
+.돌이AI아이콘 {
+  position: absolute;
+  left: 50%;
+  top: 43%;
+  transform: translate(-50%, -50%);
+
+  width: 112px;
+  height: 112px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.16),
+      rgba(255,255,255,.035)
+    );
+
+  border: 1px solid rgba(255,255,255,.2);
+
+  box-shadow:
+    0 0 0 10px rgba(141,140,255,.035),
+    0 0 0 22px rgba(141,140,255,.02),
+    0 18px 50px rgba(0,0,0,.3),
+    inset 0 1px 0 rgba(255,255,255,.15);
+
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+
+  animation: 돌이AI아이콘호흡 4s ease-in-out infinite;
+  z-index: 2;
+}
+
+.돌이AI아이콘 span:first-child {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+
+  color: #c8c7ff;
+  font-size: 19px;
+
+  animation: 돌이AI별빛 2.5s ease-in-out infinite;
+}
+
+.돌이AI아이콘 span:last-child {
+  font-size: 48px;
+  filter: drop-shadow(0 5px 12px rgba(0,0,0,.2));
+}
+
+@keyframes 돌이AI아이콘호흡 {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    transform: translate(-50%, -50%) scale(1.045);
+  }
+}
+
+@keyframes 돌이AI별빛 {
+  0%, 100% {
+    opacity: .45;
+    transform: scale(.85) rotate(-10deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(10deg);
+  }
+}
+
+/* 아이콘 주변 파동 */
+.돌이AI파동 {
+  position: absolute;
+  left: 50%;
+  top: 43%;
+
+  width: 112px;
+  height: 112px;
+
+  border: 1px solid rgba(141,140,255,.25);
+  border-radius: 50%;
+
+  transform: translate(-50%, -50%);
+  animation: 돌이AI파동확장 3.5s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes 돌이AI파동확장 {
+  0% {
+    width: 112px;
+    height: 112px;
+    opacity: .7;
+  }
+
+  100% {
+    width: 230px;
+    height: 230px;
+    opacity: 0;
+  }
+}
+
+/* 상태 표시 */
+.돌이AI상태 {
+  position: absolute;
+  left: 50%;
+  bottom: 17px;
+  transform: translateX(-50%);
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  width: max-content;
+  max-width: calc(100% - 24px);
+
+  padding: 8px 13px;
+
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 999px;
+
+  background: rgba(5,6,25,.48);
+  color: #bfc5e8;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  z-index: 3;
+}
+
+.돌이AI점 {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #7dffb2;
+  box-shadow: 0 0 10px rgba(125,255,178,.8);
+  animation: 돌이AI점깜빡임 2s ease-in-out infinite;
+}
+
+.돌이AI상태구분 {
+  color: #5d6388;
+}
+
+@keyframes 돌이AI점깜빡임 {
+  0%, 100% { opacity: .55; }
+  50% { opacity: 1; }
+}
+
+/* 버튼 */
+.돌이AI카드 .메인버튼 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.돌이AI화살표 {
+  display: inline-block;
+  font-size: 24px;
+  color: #aaaaff;
+
+  transition:
+    transform .35s cubic-bezier(.22,1,.36,1),
+    color .3s ease;
+}
+
+.돌이AI카드:hover .돌이AI화살표 {
+  transform: translateX(6px);
+  color: #ffffff;
+}
+
+/* 카드에 마우스를 올렸을 때 AI 빛 강화 */
+.돌이AI카드:hover .돌이AI빛 {
+  animation-duration: 2.2s;
+  opacity: 1;
+}
+
+.돌이AI카드:hover .돌이AI아이콘 {
+  box-shadow:
+    0 0 0 10px rgba(141,140,255,.055),
+    0 0 0 22px rgba(141,140,255,.035),
+    0 20px 65px rgba(80,75,255,.25),
+    inset 0 1px 0 rgba(255,255,255,.2);
+}
+
+/* 모바일 */
+@media (max-width: 650px) {
+  .돌이AI비주얼 {
+    aspect-ratio: 4 / 3;
+  }
+
+
+  .돌이AI아이콘 {
+    width: 94px;
+    height: 94px;
+  }
+
+  .돌이AI아이콘 span:last-child {
+    font-size: 40px;
+  }
+
+  .돌이AI파동 {
+    width: 94px;
+    height: 94px;
+  }
+
+  .돌이AI상태 {
+    bottom: 12px;
+    font-size: 11px;
+    padding: 7px 11px;
+  }
+}
+    
+</style>
+
+</head>
+
+
+<body>
+<div id="페이지전환" aria-hidden="true"></div>
+
+
+<div id="사이트">
+
+  <div class="상단영역">
+    <div>
+      <a href="https://rockey-jason.github.io/doldol-site/" style="text-decoration:none;">
+        <button id="사이트로고" aria-label="돌이 사이트 홈">돌이 사이트</button>
+      </a>
+      <p id="사이트설명">돌이에 대한 여러 정보와 돌이신문, 돌돌코인 수급 등을 이용해보세요!</p>
+    </div>
+
+    <div class="인증영역">
+      <button id="로그인" type="button">로그인</button>
+      <button id="회원가입" type="button">회원가입</button>
+    </div>
+  </div>
+
+  <div class="메뉴영역">
+
+    <article class="메뉴카드">
+      <div class="이미지틀">
+        <img id="신문이미지" class="메인이미지"
+             src="https://i.postimg.cc/Px1nNcJM/1000004603.jpg"
+             alt="돌이신문">
+      </div>
+      <button id="신문버튼" class="메인버튼" type="button">돌이신문 확인</button>
+      <div class="카드설명">새로운 돌이 소식과 재미있는 이야기를 확인해보세요.</div>
+    </article>
+
+    <article class="메뉴카드">
+      <div class="이미지틀">
+        <img id="상점이미지" class="메인이미지"
+             src="https://i.postimg.cc/TYxW97Ly/1000004605.jpg"
+             alt="돌돌코인 상점">
+      </div>
+      <button id="상점버튼" class="메인버튼" type="button">돌돌코인 상점</button>
+      <div class="카드설명">모은 돌돌코인으로 다양한 아이템을 만나보세요.</div>
+    </article>
+
+    <article class="메뉴카드">
+      <div class="이미지틀">
+        <img id="정보이미지" class="메인이미지"
+             src="https://i.postimg.cc/8zdzKNWg/dol-i.jpg"
+             alt="돌이 정보">
+      </div>
+      <button id="정보버튼" class="메인버튼" type="button">돌이와 관련된 정보</button>
+      <div class="카드설명">돌이에 대해 궁금한 것들을 알아보세요.</div>
+    </article>
+
+    <article class="메뉴카드">
+      <div class="이미지틀">
+        <img id="게임이미지" class="메인이미지"
+             src="https://i.postimg.cc/FsHqfPpX/rockeychess.png"
+             alt="돌이 게임">
+      </div>
+      <button id="게임버튼" class="메인버튼" type="button">돌이게임</button>
+      <div class="카드설명">돌이와 함께 게임을 즐겨보세요.</div>
+    </article>
+
+    <!-- 돌이 랜덤 박스: 이미지는 비워둠 -->
+    <article class="메뉴카드">
+      <div class="이미지틀" id="랜덤박스이미지">
+<img src="https://i.postimg.cc/tJ26qLNR/Screenshot-20260901-081622-Chrome.jpg" alt="랜덤박스이미지">
+      </div>
+      <button id="랜덤박스버튼" class="메인버튼" type="button">돌이 랜덤 박스</button>
+      <div class="카드설명">돌돌코인으로 랜덤한 보상을 뽑아보세요!</div>
+    </article>
+
+<article class="메뉴카드 돌돌증권카드">
+
+  <div class="돌돌증권비주얼">
+    <div class="돌돌증권빛"></div>
+
+    <div class="돌돌증권차트">
+      <span></span><span></span><span></span><span></span><span></span>
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+
+    <div class="돌돌증권아이콘">
+      <span>₩</span>
+      <span>↗</span>
+    </div>
+
+    <div class="돌돌증권파동"></div>
+
+    <div class="돌돌증권상태">
+      <span class="돌돌증권점"></span>
+      <span>돌돌증권</span>
+      <span class="돌돌증권상태구분">·</span>
+      <span>시장 확인 가능</span>
+    </div>
+  </div>
+
+  <button id="돌돌증권버튼" class="메인버튼" type="button">
+    돌돌증권 확인하기
+    <span class="돌돌증권화살표">→</span>
+  </button>
+
+  <div class="카드설명">
+    돌이 세계의 기업과 주가 변동을 확인해보세요.
+  </div>
+
+</article>
+
+<article class="메뉴카드 돌이AI카드">
+
+  <div class="돌이AI비주얼">
+
+    <div class="돌이AI빛"></div>
+
+    <div class="돌이AI아이콘">
+      <span>✦</span>
+      <span>🐶</span>
+    </div>
+
+    <div class="돌이AI파동"></div>
+
+    <div class="돌이AI상태">
+      <span class="돌이AI점"></span>
+      <span>돌이 AI</span>
+      <span class="돌이AI상태구분">·</span>
+      <span>대화 준비 완료</span>
+    </div>
+
+  </div>
+
+  <button
+    id="돌이AI버튼"
+    class="메인버튼"
+    type="button"
+  >
+    돌이 AI와 대화하기
+    <span class="돌이AI화살표">→</span>
+  </button>
+
+  <div class="카드설명">
+    궁금한 것을 물어보세요. 돌이 AI가 함께 생각해줄게요.
+  </div>
+
+</article>
+
+  </div>
+
+    <!-- =====================================================
+     돌이 AI
+===================================================== -->
+
+  <img id="돌이사진"
+       src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
+       alt="돌이 프로필">
+
+  <div id="메뉴">
+    <button id="업적버튼" class="프로필버튼" type="button">🏆 업적</button>
+    <button id="칭호버튼" class="프로필버튼" type="button">🏷️ 칭호</button>
+    <button id="설정" class="프로필버튼" type="button">⚙️ 설정</button>
+    <button id="로그아웃" class="프로필버튼" type="button">🚪 로그아웃</button>
+  </div>
+
+  <button id="레벨" type="button">회원등급: 일반</button>
+  <div id="EXP정보">EXP Lv.1 · 0 EXP</div>
+  <div id="돌돌코인수량">돌돌코인: 0</div>
+  <div id="현재칭호">칭호 없음</div>
+
+</div>
+
+<!-- =================================================
+     팝업 배경
+================================================= -->
+
+<div id="패널배경"></div>
+
+
+<!-- =================================================
+     업적 / 칭호 패널
+================================================= -->
+
+<div id="패널">
+
+<button id="패널닫기">
+
+✕
+
+</button>
+
+
+<div id="패널제목">
+
+🏆 업적
+
+</div>
+
+
+<div class="탭">
+
+
+<button
+    id="업적탭"
+    class="탭버튼 active"
+>
+
+🏆 업적
+
+</button>
+
+
+<button
+    id="칭호탭"
+    class="탭버튼"
+>
+
+🏷️ 칭호
+
+</button>
+
+
+</div>
+
+
+<div id="패널내용"></div>
+
+
+</div>
+
+
+<!-- =================================================
+     업적 알림
+================================================= -->
+
+<div id="achievementPopup"></div>
+
+
+<!-- =================================================
+     Supabase
+================================================= -->
+
+<script type="module">
+
+import {
+    createClient
+}
+from
+"https://esm.sh/@supabase/supabase-js@2";
+
+
+// =====================================================
+// Supabase
+// =====================================================
+
+const supabase = createClient(
+
+    "https://scttowfhygcpdirrekqm.supabase.co",
+
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+
+);
+
+
+// =====================================================
+// 회원 레벨 이름
+// =====================================================
+
+const 회원레벨이름 = {
+
+    1: "일반",
+
+    2: "프리미엄",
+
+    3: "돌프리미엄",
+
+    4: "돌돌프리미엄",
+
+    5: "돌돌돌프리미엄",
+
+    6: "돌돌돌돌프리미엄",
+
+    7: "돌돌돌돌돌프리미엄",
+
+    8: "유사돌이",
+
+    9: "돌이",
+
+    10: "관리자"
+
+};
+
+
+// =====================================================
+// EXP 레벨
+// =====================================================
+
+const EXP레벨필요경험치 = {
+
+    1: 0,
+
+    2: 100,
+
+    3: 500,
+
+    4: 1000,
+
+    5: 5000,
+
+    6: 10000,
+
+    7: 20000,
+
+    8: 30000,
+
+    9: 40000,
+
+    10: 50000,
+
+    11: 100000
+
+};
+
+
+// =====================================================
+// DOM
+// =====================================================
+
+const 사진 =
+    document.getElementById("돌이사진");
+
+const 로그인버튼 =
+    document.getElementById("로그인");
+
+const 회원가입버튼 =
+    document.getElementById("회원가입");
+
+    // =====================================================
+// 로그인 / 로그아웃 상태에 따른 버튼 표시
+// =====================================================
+
+function 로그인상태UI(session) {
+
+    const 로그인됨 = Boolean(session);
+
+    if (로그인됨) {
+
+        // 로그인 상태
+        if (로그인버튼) {
+            로그인버튼.style.display = "none";
+        }
+
+        if (회원가입버튼) {
+            회원가입버튼.style.display = "none";
+        }
+
+        document.body.classList.add("로그인상태");
+        document.body.classList.remove("로그아웃상태");
+
+    } else {
+
+        // 로그아웃 상태
+        if (로그인버튼) {
+            로그인버튼.style.display = "inline-block";
+        }
+
+        if (회원가입버튼) {
+            회원가입버튼.style.display = "inline-block";
+        }
+
+        document.body.classList.add("로그아웃상태");
+        document.body.classList.remove("로그인상태");
+
+    }
+
+}
+
+const 로그아웃버튼 =
+    document.getElementById("로그아웃");
+
+const 설정버튼 =
+    document.getElementById("설정");
+
+const 메뉴 =
+    document.getElementById("메뉴");
+
+const 레벨버튼 =
+    document.getElementById("레벨");
+
+const EXP정보 =
+    document.getElementById("EXP정보");
+
+const 돌돌코인수량 =
+    document.getElementById("돌돌코인수량");
+
+const 현재칭호 =
+    document.getElementById("현재칭호");
+
+const 업적버튼 =
+    document.getElementById("업적버튼");
+
+const 칭호버튼 =
+    document.getElementById("칭호버튼");
+
+const 패널 =
+    document.getElementById("패널");
+
+const 패널배경 =
+    document.getElementById("패널배경");
+
+const 패널제목 =
+    document.getElementById("패널제목");
+
+const 패널내용 =
+    document.getElementById("패널내용");
+
+const 업적탭 =
+    document.getElementById("업적탭");
+
+const 칭호탭 =
+    document.getElementById("칭호탭");
+
+const 칭호저장버튼 =
+    document.getElementById("칭호저장");
+
+
+// =====================================================
+// 현재 상태
+// =====================================================
+
+let 현재사용자 = null;
+
+let 현재유저정보 = null;
+
+let 업적목록 = [];
+
+let 획득업적 = {};
+
+let 선택한칭호 = null;
+
+
+// =====================================================
+// 팝업
+// =====================================================
+
+let 팝업타이머 = null;
+
+
+function 팝업열기(
+    내용,
+    시간 = 3000
+) {
+
+    const popup =
+        document.getElementById(
+            "achievementPopup"
+        );
+
+    if (!popup) {
+
+        return;
+
+    }
+
+
+    if (팝업타이머) {
+
+        clearTimeout(
+            팝업타이머
+        );
+
+    }
+
+
+    popup.innerHTML =
+        내용;
+
+
+    popup.classList.add(
+        "show"
+    );
+
+
+    팝업타이머 =
+        setTimeout(
+
+            () => {
+
+                popup.classList.remove(
+                    "show"
+                );
+
+            },
+
+            시간
+
+        );
+
+}
+
+
+// =====================================================
+// EXP → 레벨
+// =====================================================
+
+function 경험치로레벨계산(
+    exp
+) {
+
+    exp =
+        Number(exp) || 0;
+
+
+    let level = 1;
+
+
+    for (
+        let i = 11;
+        i >= 1;
+        i--
+    ) {
+
+        if (
+            exp >=
+            EXP레벨필요경험치[i]
+        ) {
+
+            level = i;
+
+            break;
+
+        }
+
+    }
+
+
+    return level;
+
+}
+
+
+// =====================================================
+// 업적 데이터 정규화
+//
+// Supabase 컬럼명이 조금 달라도
+// 가능한 범위에서 자동 대응
+// =====================================================
+
+function 업적정규화(
+    row
+) {
+
+    if (!row) {
+
+        return null;
+
+    }
+
+
+    const id =
+        row.id ??
+        row.achievement_id ??
+        row.code ??
+        row.key;
+
+
+    const 이름 =
+        row.name ??
+        row.이름 ??
+        row.title_name ??
+        row.achievement_name ??
+        id;
+
+
+    const 설명 =
+        row.description ??
+        row.설명 ??
+        row.desc ??
+        "";
+
+
+    const 희귀도 =
+        row.rarity ??
+        row.희귀도 ??
+        "Common";
+
+
+    const 코인 =
+        Number(
+            row.reward_coins ??
+            row.reward_coin ??
+            row.doldolcoin ??
+            row.보상_돌돌코인 ??
+            row.coins ??
+            0
+        );
+
+
+    const 경험치 =
+        Number(
+            row.reward_exp ??
+            row.exp_reward ??
+            row.experience ??
+            row.경험치 ??
+            0
+        );
+
+
+    // =================================================
+    // 칭호
+    // =================================================
+
+    const 칭호 =
+        row.title ??
+        row.reward_title ??
+        row.칭호 ??
+        row.title_name ??
+        null;
+
+
+    return {
+
+        ...row,
+
+        id: String(id),
+
+        이름: String(이름),
+
+        설명: String(설명),
+
+        희귀도: String(희귀도),
+
+        보상: {
+
+            돌돌코인: 코인,
+
+            경험치: 경험치
+
+        },
+
+        칭호:
+            칭호 === null ||
+            칭호 === undefined ||
+            String(칭호).trim() === ""
+
+                ? null
+
+                : String(칭호)
+
+    };
+
+}
+
+
+// =====================================================
+// Supabase 업적 불러오기
+// =====================================================
+
+async function 업적불러오기() {
+
+    const {
+
+        data,
+
+        error
+
+    } = await supabase
+
+        .from("achievements")
+
+        .select("*");
+
+
+    if (error) {
+
+        console.error(
+            "Supabase 업적 조회 오류:",
+            error
+        );
+
+        팝업열기(
+            "⚠️ 업적 정보를 불러오지 못했습니다.",
+            4000
+        );
+
+        return [];
+
+    }
+
+
+    return (data || [])
+
+        .map(업적정규화)
+
+        .filter(Boolean);
+
+}
+
+
+// =====================================================
+// user_achievement JSON 처리
+// =====================================================
+
+function 획득업적정리(
+    value
+) {
+
+    if (!value) {
+
+        return {};
+
+    }
+
+
+    if (
+        typeof value ===
+        "object"
+    ) {
+
+        return value;
+
+    }
+
+
+    if (
+        typeof value ===
+        "string"
+    ) {
+
+        try {
+
+            const parsed =
+                JSON.parse(value);
+
+            if (
+                parsed &&
+                typeof parsed ===
+                "object"
+            ) {
+
+                return parsed;
+
+            }
+
+        } catch (error) {
+
+            console.error(
+                "user_achievement JSON 오류:",
+                error
+            );
+
+        }
+
+    }
+
+
+    return {};
+
+}
+
+
+// =====================================================
+// 업적 ID가 획득되었는지
+// =====================================================
+
+function 업적획득여부(
+    id
+) {
+
+    return Boolean(
+        획득업적[id]
+    );
+
+}
+
+
+// =====================================================
+// 업적 하나 획득
+// =====================================================
+
+async function 업적획득(
+    achievement
+) {
+
+    if (
+        !현재사용자 ||
+        !achievement
+    ) {
+
+        return false;
+
+    }
+
+
+    const id =
+        achievement.id;
+
+
+    if (
+        업적획득여부(id)
+    ) {
+
+        return false;
+
+    }
+
+
+    // 최신 users 정보
+    const {
+
+        data,
+        error
+
+    } = await supabase
+
+        .from("users")
+
+        .select("*")
+
+        .eq(
+            "user_id",
+            현재사용자.id
+        )
+
+        .single();
+
+
+    if (error) {
+
+        console.error(
+            "업적 지급 사용자 조회 오류:",
+            error
+        );
+
+        return false;
+
+    }
+
+
+    const 기존업적 =
+        획득업적정리(
+            data.user_achievement
+        );
+
+
+    if (
+        기존업적[id]
+    ) {
+
+        획득업적 =
+            기존업적;
+
+        return false;
+
+    }
+
+
+    // =================================================
+    // 업적 저장
+    // =================================================
+
+    기존업적[id] = {
+
+        id: id,
+
+        이름:
+            achievement.이름,
+
+        설명:
+            achievement.설명,
+
+        희귀도:
+            achievement.희귀도,
+
+        보상:
+            achievement.보상,
+
+        칭호:
+            achievement.칭호,
+
+        획득시간:
+            new Date().toISOString()
+
+    };
+
+
+    const 기존코인 =
+        Number(
+            data.doldolcoin ?? 0
+        );
+
+
+    const 기존EXP =
+        Number(
+            data.exp ?? 0
+        );
+
+
+    const 보상코인 =
+        Number(
+            achievement.보상.돌돌코인 ?? 0
+        );
+
+
+    const 보상EXP =
+        Number(
+            achievement.보상.경험치 ?? 0
+        );
+
+
+    const 새로운코인 =
+        기존코인 +
+        보상코인;
+
+
+    const 새로운EXP =
+        기존EXP +
+        보상EXP;
+
+
+    const 기존EXP레벨 =
+        Number(
+            data.exp_level ?? 1
+        );
+
+
+    const 새로운EXP레벨 =
+        경험치로레벨계산(
+            새로운EXP
+        );
+
+
+    // =================================================
+    // 저장
+    // =================================================
+
+    const 업데이트 = {
+
+        user_achievement:
+            기존업적,
+
+        doldolcoin:
+            새로운코인,
+
+        exp:
+            새로운EXP,
+
+        exp_level:
+            새로운EXP레벨
+
+    };
+
+
+    const {
+
+        error: updateError
+
+    } = await supabase
+
+        .from("users")
+
+        .update(
+            업데이트
+        )
+
+        .eq(
+            "user_id",
+            현재사용자.id
+        );
+
+
+    if (updateError) {
+
+        console.error(
+            "업적 저장 오류:",
+            updateError
+        );
+
+        return false;
+
+    }
+
+
+    // =================================================
+    // 메모리 업데이트
+    // =================================================
+
+    획득업적 =
+        기존업적;
+
+
+    현재유저정보.doldolcoin =
+        새로운코인;
+
+    현재유저정보.exp =
+        새로운EXP;
+
+    현재유저정보.exp_level =
+        새로운EXP레벨;
+
+
+    // =================================================
+    // 알림
+    // =================================================
+
+    팝업열기(`
+
+        🏆 <b>업적 달성!</b>
+
+        <br><br>
+
+        <b>${achievement.이름}</b>
+
+        <br>
+
+        ${achievement.설명}
+
+        <br><br>
+
+        ⭐ ${achievement.희귀도}
+
+        <br>
+
+        💰 +${보상코인.toLocaleString()}
+        돌돌코인
+
+        <br>
+
+        ✨ +${보상EXP.toLocaleString()}
+        EXP
+
+        ${
+            achievement.칭호
+                ? `<br><br>🏷️ 칭호 획득: <b>${achievement.칭호}</b>`
+                : ""
+        }
+
+    `, 5000);
+
+
+    // =================================================
+    // 레벨업
+    // =================================================
+
+    if (
+        새로운EXP레벨 >
+        기존EXP레벨
+    ) {
+
+        setTimeout(
+
+            () => {
+
+                팝업열기(`
+
+                    ✨ <b>EXP 레벨 업!</b>
+
+                    <br><br>
+
+                    Lv.${기존EXP레벨}
+
+                    →
+
+                    Lv.${새로운EXP레벨}
+
+                `, 4000);
+
+            },
+
+            1500
+
+        );
+
+    }
+
+
+    화면업데이트();
+
+    return true;
+
+}
+
+
+// =====================================================
+// users 최신 정보
+// =====================================================
+
+async function 유저정보불러오기() {
+
+    if (!현재사용자) {
+
+        return null;
+
+    }
+
+
+    const {
+
+        data,
+
+        error
+
+    } = await supabase
+
+        .from("users")
+
+        .select("*")
+
+        .eq(
+            "user_id",
+            현재사용자.id
+        )
+
+        .single();
+
+
+    if (error) {
+
+        console.error(
+            "유저 정보 조회 오류:",
+            error
+        );
+
+        return null;
+
+    }
+
+
+    현재유저정보 =
+        data;
+
+
+    획득업적 =
+        획득업적정리(
+            data.user_achievement
+        );
+
+
+    return data;
+
+}
+
+
+// =====================================================
+// 화면 업데이트
+// =====================================================
+
+function 화면업데이트() {
+
+    if (
+        !현재유저정보
+    ) {
+
+        return;
+
+    }
+
+
+    // 프로필
+    if (
+        사진 &&
+        현재유저정보.profile_image
+    ) {
+
+        사진.src =
+            현재유저정보.profile_image;
+
+    }
+
+
+    // 회원 레벨
+    const 회원레벨 =
+        Number(
+            현재유저정보.user_level ?? 1
+        );
+
+
+    if (레벨버튼) {
+
+        레벨버튼.textContent =
+            `회원등급: ${
+                회원레벨이름[회원레벨]
+                || "일반"
+            }`;
+
+    }
+
+
+    // EXP
+    const exp =
+        Number(
+            현재유저정보.exp ?? 0
+        );
+
+
+    const expLevel =
+        Number(
+            현재유저정보.exp_level
+            ??
+            경험치로레벨계산(exp)
+        );
+
+
+    if (EXP정보) {
+
+        EXP정보.textContent =
+            `EXP Lv.${expLevel} · ${exp.toLocaleString()} EXP`;
+
+    }
+
+
+    // 코인
+    if (돌돌코인수량) {
+
+        const coin =
+            Number(
+                현재유저정보.doldolcoin ?? 0
+            );
+
+
+        돌돌코인수량.textContent =
+            `돌돌코인: ${coin.toLocaleString()}`;
+
+    }
+
+
+    // =================================================
+    // 현재 칭호
+    // =================================================
+
+    const 장착칭호 =
+        현재유저정보.equipped_title;
+
+
+    if (현재칭호) {
+
+        if (
+            장착칭호 &&
+            String(장착칭호).trim()
+        ) {
+
+            현재칭호.textContent =
+                `🏷️ ${장착칭호}`;
+
+        } else {
+
+            현재칭호.textContent =
+                "🏷️ 칭호 없음";
+
+        }
+
+    }
+
+}
+
+
+// =====================================================
+// 프로필 메뉴 열기
+// =====================================================
+
+function 프로필메뉴열기() {
+    const 열림 = 메뉴.classList.contains("menu-show");
+
+    if (열림) {
+        메뉴.classList.remove("menu-show");
+        메뉴.classList.add("menu-hide");
+
+        [레벨버튼, EXP정보, 돌돌코인수량, 현재칭호].forEach(el => {
+            if (el) el.style.display = "none";
+        });
+
+        window.setTimeout(() => {
+            메뉴.classList.remove("menu-hide");
+        }, 260);
+        return;
+    }
+
+    메뉴.classList.remove("menu-hide");
+    메뉴.classList.add("menu-show");
+
+    [레벨버튼, EXP정보, 돌돌코인수량, 현재칭호].forEach(el => {
+        if (el) el.style.display = "block";
+    });
+}
+
+
+// =====================================================
+// 패널 열기
+// =====================================================
+
+function 패널열기(
+    mode
+) {
+
+    패널.classList.add(
+        "show"
+    );
+
+    패널배경.classList.add(
+        "show"
+    );
+
+
+    if (
+        mode === "titles"
+    ) {
+
+        칭호탭.click();
+
+    } else {
+
+        업적탭.click();
+
+    }
+
+}
+
+
+// =====================================================
+// 패널 닫기
+// =====================================================
+
+function 패널닫기() {
+
+    패널.classList.remove(
+        "show"
+    );
+
+    패널배경.classList.remove(
+        "show"
+    );
+
+}
+
+
+// =====================================================
+// 업적 화면
+// =====================================================
+
+function 업적화면표시() {
+
+    패널제목.textContent =
+        "🏆 업적";
+
+
+    업적탭.classList.add(
+        "active"
+    );
+
+    칭호탭.classList.remove(
+        "active"
+    );
+
+
+    if (
+        업적목록.length === 0
+    ) {
+
+        패널내용.innerHTML = `
+
+            <div style="
+                text-align:center;
+                padding:40px;
+                color:#aaa;
+            ">
+
+                업적이 없습니다.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    const 획득수 =
+        업적목록.filter(
+            a => 업적획득여부(a.id)
+        ).length;
+
+
+    let html = `
+
+        <div style="
+            margin-bottom:20px;
+            color:#aaa;
+        ">
+
+            ${획득수} / ${업적목록.length}
+            업적 획득
+
+        </div>
+
+    `;
+
+
+    for (
+        const achievement
+        of 업적목록
+    ) {
+
+        const 획득 =
+            업적획득여부(
+                achievement.id
+            );
+
+
+        html += `
+
+            <div class="
+                업적카드
+                ${획득 ? "" : "미획득"}
+            ">
+
+                <div class="업적이름">
+
+                    ${
+                        획득
+                            ? "🏆"
+                            : "🔒"
+                    }
+
+                    ${achievement.이름}
+
+                </div>
+
+
+                <div class="업적설명">
+
+                    ${achievement.설명}
+
+                </div>
+
+
+                <div class="업적정보">
+
+                    ⭐ ${achievement.희귀도}
+
+                    <br>
+
+                    💰
+                    ${Number(
+                        achievement.보상.돌돌코인
+                    ).toLocaleString()}
+                    돌돌코인
+
+                    <br>
+
+                    ✨
+                    ${Number(
+                        achievement.보상.경험치
+                    ).toLocaleString()}
+                    EXP
+
+                    ${
+                        achievement.칭호
+                            ? `
+                                <br>
+
+                                <span class="칭호태그">
+
+                                    🏷️
+                                    ${achievement.칭호}
+
+                                </span>
+                            `
+                            : ""
+                    }
+
+                </div>
+
+            </div>
+
+        `;
+
+    }
+
+
+    패널내용.innerHTML =
+        html;
+
+}
+
+
+// =====================================================
+// 보유 칭호 가져오기
+// =====================================================
+
+function 보유칭호목록() {
+
+    const 결과 = [];
+
+    const 중복방지 = new Set();
+
+
+    for (
+        const achievement
+        of 업적목록
+    ) {
+
+        if (
+            !achievement.칭호
+        ) {
+
+            continue;
+
+        }
+
+
+        if (
+            !업적획득여부(
+                achievement.id
+            )
+        ) {
+
+            continue;
+
+        }
+
+
+        const title =
+            achievement.칭호;
+
+
+        if (
+            중복방지.has(title)
+        ) {
+
+            continue;
+
+        }
+
+
+        중복방지.add(
+            title
+        );
+
+
+        결과.push({
+
+            title: title,
+
+            achievement:
+                achievement
+
+        });
+
+    }
+
+
+    return 결과;
+
+}
+
+
+// =====================================================
+// 칭호 화면
+// =====================================================
+
+function 칭호화면표시() {
+
+    패널제목.textContent =
+        "🏷️ 칭호";
+
+
+    칭호탭.classList.add(
+        "active"
+    );
+
+    업적탭.classList.remove(
+        "active"
+    );
+
+
+    const 칭호목록 =
+        보유칭호목록();
+
+
+    선택한칭호 =
+        현재유저정보
+            ?.equipped_title
+            ?? null;
+
+
+    if (
+        칭호목록.length === 0
+    ) {
+
+        패널내용.innerHTML = `
+
+            <div style="
+                text-align:center;
+                padding:50px 20px;
+                color:#aaa;
+            ">
+
+                <div style="
+                    font-size:50px;
+                ">
+                    🏷️
+                </div>
+
+                <br>
+
+                아직 획득한 칭호가 없습니다.
+
+                <br><br>
+
+                칭호가 있는 업적을 획득하면
+                이곳에서 장착할 수 있습니다.
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    let html = `
+
+        <div style="
+            margin-bottom:20px;
+            color:#aaa;
+        ">
+
+            획득한 칭호
+            ${칭호목록.length}개
+
+        </div>
+
+    `;
+
+
+    for (
+        const item
+        of 칭호목록
+    ) {
+
+        const 장착중 =
+            선택한칭호 ===
+            item.title;
+
+
+        html += `
+
+            <div class="칭호카드">
+
+                <div class="칭호이름">
+
+                    🏷️ ${item.title}
+
+                </div>
+
+
+                <div class="칭호상태">
+
+                    업적:
+                    ${item.achievement.이름}
+
+                </div>
+
+
+                <button
+
+                    class="
+                        칭호선택
+                        ${장착중 ? "장착중" : ""}
+                    "
+
+                    data-title="${escapeHTML(
+                        item.title
+                    )}"
+
+                >
+
+                    ${
+                        장착중
+                            ? "✓ 현재 장착 중"
+                            : "이 칭호 장착하기"
+                    }
+
+                </button>
+
+            </div>
+
+        `;
+
+    }
+
+
+    html += `
+
+        <button
+            id="칭호저장"
+        >
+
+            💾 칭호 저장
+
+        </button>
+
+    `;
+
+
+    패널내용.innerHTML =
+        html;
+
+
+    // =================================================
+    // 선택 버튼
+    // =================================================
+
+    document
+        .querySelectorAll(".칭호선택")
+        .forEach(
+
+            button => {
+
+                button.onclick =
+                    () => {
+
+                        선택한칭호 =
+                            button.dataset.title;
+
+
+                        칭호화면표시();
+
+                    };
+
+            }
+
+        );
+
+
+    // 저장
+    const 저장 =
+        document.getElementById(
+            "칭호저장"
+        );
+
+
+    if (저장) {
+
+        저장.onclick =
+            칭호저장;
+
+    }
+
+}
+
+
+// =====================================================
+// HTML escape
+// =====================================================
+
+function escapeHTML(
+    value
+) {
+
+    return String(value)
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+// =====================================================
+// 칭호 저장
+// =====================================================
+
+async function 칭호저장() {
+
+    if (
+        !현재사용자
+    ) {
+
+        return;
+
+    }
+
+
+    // =================================================
+    // null = 칭호 해제
+    // =================================================
+
+    const {
+
+        error
+
+    } = await supabase
+
+        .from("users")
+
+        .update({
+
+            equipped_title:
+                선택한칭호
+
+        })
+
+        .eq(
+            "user_id",
+            현재사용자.id
+        );
+
+
+    if (error) {
+
+        console.error(
+            "칭호 저장 오류:",
+            error
+        );
+
+
+        팝업열기(`
+
+            ❌ 칭호 저장 실패
+
+            <br><br>
+
+            ${error.message}
+
+        `, 5000);
+
+        return;
+
+    }
+
+
+    현재유저정보.equipped_title =
+        선택한칭호;
+
+
+    화면업데이트();
+
+
+    팝업열기(`
+
+        🏷️ <b>칭호 변경 완료!</b>
+
+        <br><br>
+
+        ${
+            선택한칭호
+                ? `현재 칭호: <b>${선택한칭호}</b>`
+                : "칭호를 해제했습니다."
+        }
+
+    `, 3000);
+
+
+    칭호화면표시();
+
+}
+
+
+// =====================================================
+// 첫 로그인 업적
+// =====================================================
+
+async function 첫로그인업적확인() {
+
+    const 첫로그인 =
+        업적목록.find(
+
+            achievement =>
+
+                achievement.id ===
+                "first_login"
+
+        );
+
+
+    if (!첫로그인) {
+
+        console.warn(
+            "achievements 테이블에서 first_login을 찾지 못했습니다."
+        );
+
+        return;
+
+    }
+
+
+    await 업적획득(
+        첫로그인
+    );
+
+}
+
+
+// =====================================================
+// 페이지 이동
+// =====================================================
+
+let 페이지이동중 = false;
+
+function 페이지이동(url) {
+    if (페이지이동중) return;
+    페이지이동중 = true;
+
+    const 전환 = document.getElementById("페이지전환");
+
+    if (!전환) {
+        location.href = url;
+        return;
+    }
+
+    전환.classList.add("show");
+
+    window.setTimeout(() => {
+        location.href = url;
+    }, 320);
+}
+
+    // =====================================================
+// 로그인 / 회원가입 페이지 이동
+// =====================================================
+
+if (로그인버튼) {
+
+    로그인버튼.onclick = () => {
+
+        페이지이동("login.html");
+
+    };
+
+}
+
+if (회원가입버튼) {
+
+    회원가입버튼.onclick = () => {
+
+        페이지이동("signin.html");
+
+    };
+
+}
+
+
+document
+    .getElementById("신문버튼")
+    .onclick =
+
+    () => 페이지이동(
+        "rockeynews.html"
+    );
+
+
+document
+    .getElementById("신문이미지")
+    .onclick =
+
+    () => 페이지이동(
+        "rockeynews.html"
+    );
+
+
+document
+    .getElementById("상점버튼")
+    .onclick =
+
+    () => 페이지이동(
+        "doldolcoinmart.html"
+    );
+
+
+document
+    .getElementById("상점이미지")
+    .onclick =
+
+    () => 페이지이동(
+        "doldolcoinmart.html"
+    );
+
+
+document
+    .getElementById("정보버튼")
+    .onclick =
+
+    () => 페이지이동(
+        "knowledgeofrockey.html"
+    );
+
+
+document
+    .getElementById("정보이미지")
+    .onclick =
+
+    () => 페이지이동(
+        "knowledgeofrockey.html"
+    );
+
+
+document
+    .getElementById("게임버튼")
+    .onclick =
+
+    () => 페이지이동(
+        "gamepage.html"
+    );
+
+
+document
+    .getElementById("게임이미지")
+    .onclick =
+
+    () => 페이지이동(
+        "gamepage.html"
+    );
+
+// =====================================================
+// 돌이 랜덤 박스
+// 버튼과 이미지 영역 모두 Randombox.html로 이동
+// =====================================================
+
+document
+    .getElementById("랜덤박스버튼")
+    .onclick =
+    () => 페이지이동(
+        "Randombox.html"
+    );
+
+document
+    .getElementById("랜덤박스이미지")
+    .onclick =
+    () => 페이지이동(
+        "Randombox.html"
+    );
+
+
+설정버튼.onclick =
+
+    () => 페이지이동(
+        "settings.html"
+    );
+
+
+// =====================================================
+// 프로필 클릭
+// =====================================================
+
+사진.onclick =
+    프로필메뉴열기;
+
+
+// =====================================================
+// 업적 버튼
+// =====================================================
+
+업적버튼.onclick =
+    () => {
+
+        패널열기(
+            "achievements"
+        );
+
+    };
+
+
+// =====================================================
+// 칭호 버튼
+// =====================================================
+
+칭호버튼.onclick =
+    () => {
+
+        패널열기(
+            "titles"
+        );
+
+    };
+
+
+// =====================================================
+// 탭
+// =====================================================
+
+업적탭.onclick =
+    업적화면표시;
+
+
+칭호탭.onclick =
+    칭호화면표시;
+
+
+// =====================================================
+// 닫기
+// =====================================================
+
+document
+    .getElementById("패널닫기")
+    .onclick =
+    패널닫기;
+
+
+패널배경.onclick =
+    패널닫기;
+
+
+// =====================================================
+// 로그아웃
+// =====================================================
+
+로그아웃버튼.onclick =
+
+    async () => {
+
+        const {
+            error
+        } =
+            await supabase.auth.signOut();
+
+
+        if (error) {
+
+            console.error(
+                "로그아웃 오류:",
+                error
+            );
+
+            return;
+
+        }
+
+
+        // 화면은 SIGNED_OUT 이벤트에서 자연스럽게 갱신됩니다.
+
+    };
+
+    // =====================================================
+// 돌돌증권
+// =====================================================
+
+const 돌돌증권버튼 = document.getElementById("돌돌증권버튼");
+
+if (돌돌증권버튼) {
+    돌돌증권버튼.onclick = () => {
+        페이지이동("doldolstock.html");
+    };
+}
+
+// =====================================================
+// 돌이 AI
+// =====================================================
+
+const 돌이AI버튼 =
+    document.getElementById("돌이AI버튼");
+
+if (돌이AI버튼) {
+
+    돌이AI버튼.onclick = () => {
+
+        페이지이동("dori-ai.html");
+
+    };
+
+}
+
+
+// =====================================================
+// 로그인 상태
+// =====================================================
+
+async function 시작() {
+
+    console.log(
+        "돌이 사이트 시작"
+    );
+
+
+    // =================================================
+    // 업적 먼저 불러오기
+    // =================================================
+
+    업적목록 =
+        await 업적불러오기();
+
+
+    console.log(
+        "Supabase 업적:",
+        업적목록
+    );
+
+
+    // =================================================
+    // 로그인 확인
+    // =================================================
+
+    const {
+
+        data,
+        error
+
+    } =
+        await supabase.auth.getSession();
+
+
+    if (error) {
+
+        console.error(
+            "세션 확인 오류:",
+            error
+        );
+
+    }
+
+
+    const session =
+        data?.session;
+
+
+    // =================================================
+    // 로그아웃 상태
+    // =================================================
+
+if (!session) {
+
+    현재사용자 = null;
+    현재유저정보 = null;
+    획득업적 = {};
+
+    if (사진) {
+        사진.style.display = "none";
+    }
+
+    if (메뉴) {
+        메뉴.classList.remove(
+            "menu-show",
+            "menu-hide"
+        );
+    }
+
+    [
+        레벨버튼,
+        EXP정보,
+        돌돌코인수량,
+        현재칭호
+    ].forEach(el => {
+
+        if (el) {
+            el.style.display = "none";
+        }
+
+    });
+
+    로그인상태UI(null);
+
+    return;
+
+}
+
+
+    // =================================================
+    // 로그인 상태
+    // =================================================
+
+현재사용자 =
+    session.user;
+
+로그인상태UI(session);
+
+// 프로필 표시
+if (사진) {
+    사진.style.display = "block";
+}
+
+
+    // =================================================
+    // 사용자 정보
+    // =================================================
+
+    const 유저정보 =
+        await 유저정보불러오기();
+
+
+    if (!유저정보) {
+
+        return;
+
+    }
+
+
+    화면업데이트();
+
+
+    // =================================================
+    // 업적
+    // =================================================
+
+    await 첫로그인업적확인();
+
+
+    // 최신 정보 다시 가져오기
+    await 유저정보불러오기();
+
+
+    화면업데이트();
+
+
+    console.log(
+        "로그인 사용자:",
+        현재사용자
+    );
+
+    console.log(
+        "현재 유저 정보:",
+        현재유저정보
+    );
+
+    console.log(
+        "획득 업적:",
+        획득업적
+    );
+
+}
+
+
+// =====================================================
+// Auth 상태 변화
+// =====================================================
+
+supabase.auth.onAuthStateChange(
+    (event, session) => {
+
+        console.log("Auth:", event);
+
+        // 로그인 상태 UI는 모든 인증 이벤트에서 갱신
+        로그인상태UI(session);
+
+        // 로그인
+        if (
+            event === "SIGNED_IN" &&
+            session
+        ) {
+
+            현재사용자 =
+                session.user;
+
+            if (사진) {
+                사진.style.display = "block";
+            }
+
+            return;
+
+        }
+
+        // 로그아웃
+        if (
+            event === "SIGNED_OUT"
+        ) {
+
+            현재사용자 = null;
+            현재유저정보 = null;
+            획득업적 = {};
+
+            if (사진) {
+                사진.style.display = "none";
+            }
+
+            if (메뉴) {
+
+                메뉴.classList.remove(
+                    "menu-show",
+                    "menu-hide"
+                );
+
+            }
+
+            [
+                레벨버튼,
+                EXP정보,
+                돌돌코인수량,
+                현재칭호
+            ].forEach(el => {
+
+                if (el) {
+                    el.style.display = "none";
+                }
+
+            });
+
+            로그인상태UI(null);
+
+        }
+
+    }
+);
+
+
+// =====================================================
+// 시작
+// =====================================================
+
+await 시작();
+
+
+// =====================================================
+// 디버깅
+// =====================================================
+
+console.log(
+    "================================"
+);
+
+console.log(
+    "돌이 사이트 Supabase 시스템 정상 실행"
+);
+
+console.log(
+    "업적 수:",
+    업적목록.length
+);
+
+console.log(
+    "================================"
+);
+
+</script>
+
+
+</body>
+
+</html>
