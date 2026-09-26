@@ -537,12 +537,9 @@ async function run() {
 
   if (error || !users) {
 
-    console.error(
-      "❌ 사용자 조회 실패:",
-      error
+    throw new Error(
+      "사용자 조회 실패: " + (error?.message || "users 데이터가 없습니다.")
     );
-
-    return;
 
   }
 
