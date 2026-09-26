@@ -882,6 +882,22 @@ body::before {
     font-weight: 800;
 }
 
+/* =====================================================
+   실시간 시장 수급 UI
+===================================================== */
+.live-market { margin-top:12px; padding:10px 12px; border-radius:12px; background:linear-gradient(135deg,rgba(55,110,255,.07),rgba(70,220,180,.035)); border:1px solid rgba(105,150,255,.08); }
+.live-market-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.live-market-title { color:#7280a4; font-size:9px; font-weight:900; letter-spacing:.7px; }
+.live-market-status { display:inline-flex; align-items:center; gap:5px; font-size:9px; font-weight:900; }
+.live-market-status::before { content:""; width:5px; height:5px; border-radius:50%; background:#4fe0a2; box-shadow:0 0 10px rgba(79,224,162,.75); animation:pulse 1.8s infinite; }
+.live-market-bar { height:5px; margin-top:9px; overflow:hidden; border-radius:999px; background:rgba(255,255,255,.055); }
+.live-market-fill { height:100%; border-radius:inherit; background:linear-gradient(90deg,#ff6d7d,#7f8da9 50%,#4fe0a2); transition:width .45s cubic-bezier(.22,1,.36,1); }
+.live-market-data { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:7px; margin-top:8px; }
+.live-market-data span { color:#647092; font-size:8px; }
+.live-market-data strong { display:block; margin-top:2px; color:#dce5ff; font-size:10px; }
+.stock-card.live-flash { animation:marketFlash .65s ease, fadeUp .55s ease both; }
+@keyframes marketFlash { 0%{box-shadow:0 0 0 0 rgba(95,145,255,0),0 18px 55px rgba(0,0,0,.25)} 35%{box-shadow:0 0 0 4px rgba(95,145,255,.12),0 24px 75px rgba(0,0,0,.42)} 100%{box-shadow:0 0 0 0 rgba(95,145,255,0),0 18px 55px rgba(0,0,0,.25)} }
+
 .stock-actions {
     display: grid;
 
@@ -2387,7 +2403,11 @@ const state = {
 
     tradeType: null,
 
-    loading: false
+    loading: false,
+
+    marketStates: {},
+
+    realtimeChannel: null
 
 };
 
@@ -2671,6 +2691,116 @@ async function loadAccount() {
 
 }
 
+
+/* =========================================================
+   실시간 시장 상태
+========================================================= */
+
+async function loadMarketStates() {
+
+    if (!sb) return;
+
+    const result = await sb
+        .from("dori_stock_market_state")
+        .select("*");
+
+    if (result.error) {
+        console.warn("시장 수급 상태 조회 실패:", result.error);
+        return;
+    }
+
+    state.marketStates = {};
+
+    for (const row of (result.data || [])) {
+        state.marketStates[String(row.stock_id)] = row;
+    }
+
+}
+
+function getMarketState(stockId) {
+
+    return state.marketStates[String(stockId)] || {
+        buy_volume_5m: 0,
+        sell_volume_5m: 0,
+        trade_count_1m: 0,
+        pressure: 0
+    };
+
+}
+
+function renderLiveMarketMeta(stockId) {
+
+    const m = getMarketState(stockId);
+    const buy = Number(m.buy_volume_5m || 0);
+    const sell = Number(m.sell_volume_5m || 0);
+    const pressure = Number(m.pressure || 0);
+    const fill = Math.max(0, Math.min(100, 50 + pressure * 50));
+
+    const text =
+        pressure > 0.08
+            ? "매수 우세"
+            : pressure < -0.08
+                ? "매도 우세"
+                : "균형";
+
+    const color =
+        pressure > 0.08
+            ? "var(--green)"
+            : pressure < -0.08
+                ? "var(--red)"
+                : "#aeb8d2";
+
+    return [
+        '<div class="live-market" data-market-stock-id="',
+        Number(stockId),
+        '">',
+        '<div class="live-market-head">',
+        '<span class="live-market-title">실시간 수급 · 최근 5분</span>',
+        '<span class="live-market-status" style="color:',
+        color,
+        '">',
+        text,
+        '</span>',
+        '</div>',
+        '<div class="live-market-bar"><div class="live-market-fill" style="width:',
+        fill,
+        '%"></div></div>',
+        '<div class="live-market-data">',
+        '<span>매수<strong>',
+        formatNumber(buy),
+        '주</strong></span>',
+        '<span>매도<strong>',
+        formatNumber(sell),
+        '주</strong></span>',
+        '<span>체결<strong>',
+        formatNumber(m.trade_count_1m || 0),
+        '건</strong></span>',
+        '</div>',
+        '</div>'
+    ].join("");
+
+}
+
+function updateLiveMarketCards() {
+
+    for (const stock of state.stocks) {
+
+        const host = document.querySelector(
+            '[data-market-stock-id="' + Number(stock.id) + '"]'
+        );
+
+        if (!host) continue;
+
+        const temp = document.createElement("div");
+        temp.innerHTML = renderLiveMarketMeta(stock.id).trim();
+
+        if (temp.firstElementChild) {
+            host.replaceWith(temp.firstElementChild);
+        }
+
+    }
+
+}
 
 /* =========================================================
    11. 계정 UI
@@ -4504,6 +4634,110 @@ if (sb) {
 
 
 /* =========================================================
+   돌돌증권 실시간 가격/수급 스트리밍
+========================================================= */
+
+function startRealtimeMarket() {
+
+    if (!sb || state.realtimeChannel) return;
+
+    state.realtimeChannel = sb
+        .channel("dori-stock-live-market")
+
+        .on(
+            "postgres_changes",
+            {
+                event: "UPDATE",
+                schema: "public",
+                table: "dori_stocks"
+            },
+            payload => {
+
+                const fresh = payload.new;
+
+                const index =
+                    state.stocks.findIndex(
+                        stock =>
+                            Number(stock.id) ===
+                            Number(fresh.id)
+                    );
+
+                if (index === -1) return;
+
+                const oldPrice =
+                    Number(
+                        state.stocks[index].current_price || 0
+                    );
+
+                state.stocks[index] = {
+                    ...state.stocks[index],
+                    ...fresh
+                };
+
+                renderMarket();
+                renderSummary();
+
+                if (
+                    oldPrice !==
+                    Number(fresh.current_price || 0)
+                ) {
+
+                    const card =
+                        document.querySelector(
+                            ".stock-card:nth-child(" +
+                            (index + 1) +
+                            ")"
+                        );
+
+                    if (card) {
+
+                        card.classList.remove(
+                            "live-flash"
+                        );
+
+                        requestAnimationFrame(
+                            () =>
+                                card.classList.add(
+                                    "live-flash"
+                                )
+                        );
+
+                    }
+
+                }
+
+            }
+        )
+
+        .on(
+            "postgres_changes",
+            {
+                event: "UPDATE",
+                schema: "public",
+                table: "dori_stock_market_state"
+            },
+            payload => {
+
+                state.marketStates[
+                    String(payload.new.stock_id)
+                ] = payload.new;
+
+                updateLiveMarketCards();
+
+            }
+        )
+
+        .subscribe(
+            status =>
+                console.log(
+                    "돌돌증권 실시간 시장 연결:",
+                    status
+                )
+        );
+
+}
+
+/* =========================================================
    34. 초기 실행
 ========================================================= */
 
@@ -4512,6 +4746,7 @@ document.addEventListener(
     () => {
 
         refreshAll();
+        startRealtimeMarket();
 
     }
 );
