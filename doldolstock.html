@@ -2158,6 +2158,48 @@ td {
 
 
 
+<style id="beginner-economy-guide-css">
+.beginner-guide{margin:18px 0 24px;border:1px solid rgba(116,174,255,.16);border-radius:22px;background:linear-gradient(145deg,rgba(18,29,68,.82),rgba(7,12,30,.92));overflow:hidden}
+.beginner-guide-head{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 22px;cursor:pointer}
+.beginner-guide-kicker{font-size:10px;font-weight:900;letter-spacing:.16em;color:#77bfff;text-transform:uppercase}
+.beginner-guide-title{margin:5px 0 0;font-size:20px;color:#fff}
+.beginner-guide-sub{margin:6px 0 0;color:#8f9aba;font-size:12px;line-height:1.6}
+.beginner-guide-toggle{min-width:42px;height:42px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.045);color:#dce8ff;font-size:18px}
+.beginner-guide-body{padding:0 22px 22px}
+.beginner-guide-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.beginner-step{padding:15px;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:rgba(255,255,255,.025)}
+.beginner-step-num{width:27px;height:27px;display:grid;place-items:center;border-radius:9px;background:rgba(98,173,255,.13);color:#8ed0ff;font-weight:900;font-size:12px}
+.beginner-step strong{display:block;margin-top:10px;color:#fff;font-size:13px}
+.beginner-step span{display:block;margin-top:5px;color:#8995b5;font-size:11px;line-height:1.55}
+.beginner-guide-note{margin-top:12px;padding:13px 15px;border-radius:14px;background:rgba(255,208,76,.055);border:1px solid rgba(255,208,76,.11);color:#a9a47f;font-size:11px;line-height:1.6}
+.beginner-guide-links{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.beginner-guide-links button{border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.04);color:#dbe5fb;border-radius:11px;padding:9px 12px;font-size:11px;cursor:pointer}
+.beginner-guide-links button:hover{background:rgba(255,255,255,.075)}
+.beginner-tip{position:relative;margin-top:10px;padding:13px 15px;border-radius:14px;background:rgba(101,129,255,.055);border:1px solid rgba(101,129,255,.1);color:#9aa6c4;font-size:11px;line-height:1.65}
+.beginner-tip b{color:#dce7ff}
+@media(max-width:900px){.beginner-guide-steps{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.beginner-guide-head{padding:17px}.beginner-guide-body{padding:0 17px 17px}.beginner-guide-steps{grid-template-columns:1fr}.beginner-guide-title{font-size:17px}}
+</style><section class="beginner-guide" id="beginnerGuide">
+<div class="beginner-guide-head" id="beginnerGuideHead" role="button" tabindex="0" aria-expanded="true">
+<div><div class="beginner-guide-kicker">DOLDOL SECURITIES · EASY MODE</div><h2 class="beginner-guide-title">🌱 주식이 처음이라면 여기부터!</h2><p class="beginner-guide-sub">어려운 용어는 잠깐 잊어도 괜찮아요. 딱 4단계만 알면 돌돌증권을 시작할 수 있어요.</p></div>
+<button type="button" class="beginner-guide-toggle" id="beginnerGuideToggle" aria-label="초보자 안내 접기">⌃</button>
+</div>
+<div class="beginner-guide-body" id="beginnerGuideBody">
+<div class="beginner-guide-steps">
+<div class="beginner-step"><div class="beginner-step-num">1</div><strong>🔎 회사 구경하기</strong><span>어떤 회사인지, 가격이 얼마인지 먼저 살펴봐요.</span></div>
+<div class="beginner-step"><div class="beginner-step-num">2</div><strong>🛒 사고 싶으면 매수</strong><span>주식을 사면 그 회사의 주주가 돼요. 처음에는 작은 수량으로 시작해도 충분해요.</span></div>
+<div class="beginner-step"><div class="beginner-step-num">3</div><strong>📈 올라가면 팔기</strong><span>산 가격보다 높은 가격에 팔면 차익이 생길 수 있어요. 반대로 내려갈 수도 있어요.</span></div>
+<div class="beginner-step"><div class="beginner-step-num">4</div><strong>💰 배당도 받을 수 있어요</strong><span>배당을 선언한 회사의 기준일 주주라면 주식 수에 따라 배당금을 받을 수 있어요.</span></div>
+</div>
+<div class="beginner-guide-note"><b>⭐ 처음에는 이것만 기억하세요:</b> <b>매수 = 사기</b> · <b>매도 = 팔기</b> · <b>수익 = 싸게 사서 비싸게 팔거나 배당받기</b>. 주가는 내려갈 수도 있으니 모든 돈을 한 곳에 넣을 필요는 없어요.</div>
+<div class="beginner-guide-links">
+<button type="button" data-beginner-scroll="stocks">📊 종목부터 보기</button>
+<button type="button" data-beginner-scroll="orders">🧾 내 주문 보기</button>
+<button type="button" data-beginner-scroll="portfolio">💼 내 주식 보기</button>
+</div>
+<div class="beginner-tip" id="beginnerTip"><b>💡 오늘의 쉬운 팁</b><br>시장가 = 지금 가능한 가격으로 바로 거래하기 · 지정가 = 내가 원하는 가격을 정해서 기다리기</div>
+</div>
+</section>
 <!-- =====================================================
      My Orders
 ===================================================== -->
@@ -5165,5 +5207,43 @@ document.addEventListener(
 
 </script>
 
-</body>
+<script id="beginner-economy-guide-js">
+(function(){
+  const root=document.getElementById("beginnerGuide");
+  if(!root)return;
+  const head=document.getElementById("beginnerGuideHead");
+  const body=document.getElementById("beginnerGuideBody");
+  const toggle=document.getElementById("beginnerGuideToggle");
+  function setOpen(open){
+    body.hidden=!open;
+    head.setAttribute("aria-expanded",String(open));
+    toggle.textContent=open?"⌃":"⌄";
+    toggle.setAttribute("aria-label",open?"초보자 안내 접기":"초보자 안내 펼치기");
+  }
+  function toggleGuide(){setOpen(body.hidden);}
+  head.addEventListener("click",function(e){
+    if(e.target===toggle)return;
+    toggleGuide();
+  });
+  head.addEventListener("keydown",function(e){
+    if(e.key==="Enter"||e.key===" "){e.preventDefault();toggleGuide();}
+  });
+  toggle.addEventListener("click",function(e){e.stopPropagation();toggleGuide();});
+  root.querySelectorAll("[data-beginner-scroll]").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const target=btn.dataset.beginnerScroll==="orders"?"section-orders":btn.dataset.beginnerScroll==="portfolio"?"section-portfolio":"section-stocks";
+      document.getElementById(target)?.scrollIntoView({behavior:"smooth",block:"start"});
+    });
+  });
+  const tips=[
+    "<b>💡 오늘의 쉬운 팁</b><br>시장가 = 지금 가능한 가격으로 바로 거래하기 · 지정가 = 내가 원하는 가격을 정해서 기다리기",
+    "<b>💡 오늘의 쉬운 팁</b><br>주가가 오르면 매수한 주식의 가치가 올라갈 수 있고, 내려가면 가치가 내려갈 수 있어요.",
+    "<b>💡 오늘의 쉬운 팁</b><br>배당은 회사가 주주에게 나눠주는 돈이에요. 모든 회사가 항상 배당하는 것은 아니에요.",
+    "<b>💡 오늘의 쉬운 팁</b><br>처음이라면 한 종목에 전부 투자하기보다 여러 종목을 조금씩 살펴보는 방법도 있어요."
+  ];
+  const tip=document.getElementById("beginnerTip");
+  let i=0;
+  setInterval(()=>{i=(i+1)%tips.length;if(tip)tip.innerHTML=tips[i]},7000);
+})();
+</script></body>
 </html>
