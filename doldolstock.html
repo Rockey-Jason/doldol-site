@@ -1761,6 +1761,61 @@ td {
 .mode-normal .trade-order-type-wrap{display:block!important}
 .mode-advanced .advanced-only{display:block}
 @media(max-width:700px){.stock-mode-box{align-items:stretch;flex-direction:column}.stock-mode-tabs{width:100%;overflow:auto}.stock-mode-tab{flex:1}}
+</style><style id="easy-learning-animation-css">
+/* =====================================================
+   EASY LEARNING · 자연스러운 학습 애니메이션
+===================================================== */
+.easy-learning{
+  position:relative;
+  margin:0 0 22px;
+  padding:24px;
+  overflow:hidden;
+  border:1px solid rgba(112,157,255,.14);
+  border-radius:22px;
+  background:linear-gradient(145deg,rgba(17,27,61,.88),rgba(7,13,32,.82));
+  box-shadow:0 20px 65px rgba(0,0,0,.22);
+}
+.easy-learning::before{
+  content:"";
+  position:absolute;
+  width:260px;height:260px;
+  right:-100px;top:-150px;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(94,146,255,.16),transparent 68%);
+  pointer-events:none;
+}
+.easy-learning-kicker{font-size:9px;letter-spacing:.16em;font-weight:950;color:#739eff}
+.easy-learning h2{margin:6px 0 7px;font-size:21px;letter-spacing:-.04em}
+.easy-learning-lead{margin:0;color:#aab6d2;font-size:12px;line-height:1.8;max-width:760px}
+.easy-learning-path{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:19px}
+.easy-learning-card{
+  position:relative;padding:17px 15px;min-height:158px;
+  border:1px solid rgba(255,255,255,.065);border-radius:17px;
+  background:rgba(255,255,255,.025);
+  transition:transform .38s cubic-bezier(.2,.8,.2,1),border-color .38s,background .38s,box-shadow .38s;
+}
+.easy-learning-card:hover{transform:translateY(-5px);border-color:rgba(113,163,255,.28);background:rgba(79,125,255,.055);box-shadow:0 15px 35px rgba(0,0,0,.22)}
+.easy-learning-number{display:flex;align-items:center;justify-content:center;width:27px;height:27px;border-radius:50%;background:rgba(91,143,255,.13);color:#9fc0ff;font-weight:950;font-size:11px;margin-bottom:12px}
+.easy-learning-card h3{margin:0 0 7px;font-size:13px}
+.easy-learning-card p{margin:0;color:#8e9ab8;font-size:10px;line-height:1.75}
+.easy-learning-example{margin-top:10px;padding:8px 9px;border-radius:9px;background:rgba(0,0,0,.16);color:#bdc9e2;font-size:9px;line-height:1.55}
+.easy-learning-rule{
+  margin-top:15px;padding:13px 15px;border-radius:13px;
+  background:rgba(91,143,255,.055);border:1px solid rgba(91,143,255,.10);
+  color:#aebbd5;font-size:10px;line-height:1.7;
+}
+.easy-learning-rule strong{color:#e5edff}
+.easy-glossary{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px}
+.easy-glossary-item{padding:11px 12px;border-radius:12px;background:rgba(255,255,255,.022);border:1px solid rgba(255,255,255,.05)}
+.easy-glossary-item b{display:block;font-size:10px;color:#dfe8ff;margin-bottom:4px}.easy-glossary-item span{font-size:9px;color:#7e8ba9;line-height:1.55}
+.easy-learning-reveal{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s cubic-bezier(.2,.8,.2,1)}
+.easy-learning-reveal.is-visible{opacity:1;transform:none}
+.easy-learning-card:nth-child(2){transition-delay:.07s}.easy-learning-card:nth-child(3){transition-delay:.14s}.easy-learning-card:nth-child(4){transition-delay:.21s}
+@media(max-width:900px){.easy-learning-path{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.easy-learning{padding:18px}.easy-learning-path,.easy-glossary{grid-template-columns:1fr}.easy-learning h2{font-size:18px}}
+@media(prefers-reduced-motion:reduce){
+ .easy-learning-reveal,.easy-learning-card{transition:none!important;transform:none!important;opacity:1!important}
+}
 </style></style>
 </head>
 
@@ -2200,6 +2255,23 @@ td {
 <button type="button" class="stock-mode-tab" data-stock-mode="normal">📊 일반 모드</button>
 <button type="button" class="stock-mode-tab" data-stock-mode="advanced">🧠 고급 모드</button>
 </div></div>
+<section class="easy-learning easy-learning-reveal" id="easyLearning">
+<div class="easy-learning-kicker">🌱 DOLDOL SECURITIES · 초보자 수업</div>
+<h2>주식, 사실 이것만 알면 시작할 수 있어요.</h2>
+<p class="easy-learning-lead">처음에는 어려운 숫자와 용어가 많아 보여요. 하지만 핵심은 아주 간단합니다. <b>좋은 회사를 골라서 주식을 사고, 가격이 어떻게 변하는지 지켜보는 것</b>부터 시작하면 돼요.</p>
+<div class="easy-learning-path">
+<div class="easy-learning-card easy-learning-reveal"><div class="easy-learning-number">1</div><h3>🏢 주식이 뭐예요?</h3><p>회사를 아주 작은 조각으로 나눈 것이 주식이라고 생각하면 쉬워요. 주식을 가지고 있으면 그 회사의 작은 주주가 됩니다.</p><div class="easy-learning-example">예: 돌이 전자 주식 1주 → 돌이 전자의 작은 지분 1개</div></div>
+<div class="easy-learning-card easy-learning-reveal"><div class="easy-learning-number">2</div><h3>🛒 매수는 뭐예요?</h3><p><b>매수 = 주식을 사는 것</b>이에요. 처음에는 많은 주식을 살 필요가 없어요. 내가 감당할 수 있는 작은 금액으로 시작하면 됩니다.</p><div class="easy-learning-example">10,000코인으로 1주를 샀다면 → 내 주식에 1주가 생겨요.</div></div>
+<div class="easy-learning-card easy-learning-reveal"><div class="easy-learning-number">3</div><h3>📈 가격은 왜 바뀌어요?</h3><p>사려는 사람이 많고 높은 가격에도 사고 싶어 하면 가격이 올라갈 수 있어요. 반대로 팔려는 사람이 많으면 내려갈 수 있어요.</p><div class="easy-learning-example">사고 싶은 사람 ↑ → 가격이 올라갈 수 있음<br>팔고 싶은 사람 ↑ → 가격이 내려갈 수 있음</div></div>
+<div class="easy-learning-card easy-learning-reveal"><div class="easy-learning-number">4</div><h3>💰 어떻게 돈을 벌어요?</h3><p>주식을 산 뒤 가격이 올라서 더 높은 가격에 팔면 차익이 생길 수 있어요. 일부 회사는 주주에게 배당금을 지급하기도 해요.</p><div class="easy-learning-example">10,000 → 12,000코인에 팔면<br>수수료 등을 제외하기 전 2,000코인 차익</div></div>
+</div>
+<div class="easy-learning-rule"><strong>⭐ 가장 중요한 규칙</strong> · 주식 가격은 항상 오르는 것이 아니에요. 산 가격보다 내려갈 수도 있으니, <b>“무조건 돈을 번다”가 아니라 “가격이 오르거나 내려갈 수 있다”</b>고 생각하면 됩니다.</div>
+<div class="easy-glossary">
+<div class="easy-glossary-item"><b>매수</b><span>주식을 사는 것 🛒</span></div>
+<div class="easy-glossary-item"><b>매도</b><span>가지고 있는 주식을 파는 것 💸</span></div>
+<div class="easy-glossary-item"><b>수익</b><span>투자한 금액보다 더 많이 남은 것 📈</span></div>
+</div>
+</section>
 <section class="beginner-guide" id="beginnerGuide">
 <div class="beginner-guide-head" id="beginnerGuideHead" role="button" tabindex="0" aria-expanded="true">
 <div><div class="beginner-guide-kicker">DOLDOL SECURITIES · EASY MODE</div><h2 class="beginner-guide-title">🌱 주식이 처음이라면 여기부터!</h2><p class="beginner-guide-sub">어려운 용어는 잠깐 잊어도 괜찮아요. 딱 4단계만 알면 돌돌증권을 시작할 수 있어요.</p></div>
@@ -5294,6 +5366,30 @@ document.addEventListener("DOMContentLoaded",()=>{
  let saved="easy";try{saved=localStorage.getItem(key)||"easy"}catch(e){}
  applyMode(saved);
 });
+})();
+</script><script id="easy-learning-animation-js">
+(function(){
+function initEasyLearning(){
+ const targets=document.querySelectorAll(".easy-learning-reveal");
+ if(!targets.length)return;
+ if(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+   targets.forEach(el=>el.classList.add("is-visible")); return;
+ }
+ if(!("IntersectionObserver" in window)){
+   targets.forEach(el=>el.classList.add("is-visible")); return;
+ }
+ const io=new IntersectionObserver((entries)=>{
+   entries.forEach(entry=>{
+     if(entry.isIntersecting){
+       entry.target.classList.add("is-visible");
+       io.unobserve(entry.target);
+     }
+   });
+ },{threshold:.12,rootMargin:"0px 0px -35px 0px"});
+ targets.forEach(el=>io.observe(el));
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",initEasyLearning);
+else initEasyLearning();
 })();
 </script></body>
 </html>
