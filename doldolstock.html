@@ -1100,6 +1100,11 @@ body::before {
 
 
 /* =====================================================
+   내 주문 / 예약 주문
+===================================================== */
+.my-orders-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:20px}.orders-list{display:flex;flex-direction:column}.order-row{display:grid;grid-template-columns:1.2fr .8fr .9fr .9fr .9fr;gap:14px;align-items:center;padding:18px 20px;border-bottom:1px solid rgba(255,255,255,.045)}.order-row:last-child{border-bottom:0}.order-main-name{font-weight:900;font-size:13px}.order-main-sub{margin-top:4px;color:#667394;font-size:10px}.order-side{font-size:11px;font-weight:900}.order-side.buy{color:var(--green)}.order-side.sell{color:var(--red)}.order-status{display:inline-flex;width:max-content;padding:5px 8px;border-radius:8px;background:rgba(255,255,255,.045);color:#b7c2df;font-size:9px;font-weight:900}.order-status.open{color:#7ab0ff;background:rgba(76,141,255,.09)}.order-status.partial{color:#ffd75e;background:rgba(255,215,94,.08)}.order-status.filled{color:var(--green);background:rgba(79,224,162,.08)}.order-status.cancelled,.order-status.expired{color:#8993b4}.order-reserve{color:#9ba8c9;font-size:11px;line-height:1.5}.order-reserve strong{display:block;color:#e2e8ff;font-size:12px}@media(max-width:900px){.order-row{grid-template-columns:1fr 1fr 1fr}}@media(max-width:700px){.my-orders-summary{grid-template-columns:1fr}.order-row{grid-template-columns:1fr 1fr;gap:12px}}
+
+/* =====================================================
    Table
 ===================================================== */
 
@@ -1980,6 +1985,13 @@ td {
 
     <button
         class="tab"
+        data-tab="orders"
+    >
+        내 주문
+    </button>
+
+    <button
+        class="tab"
         data-tab="transactions"
     >
         거래내역
@@ -2131,6 +2143,13 @@ td {
     </div>
 
 </section>
+
+
+
+<!-- =====================================================
+     My Orders
+===================================================== -->
+<section class="section" id="section-orders"><div class="section-header"><div><h2 class="section-title">내 주문</h2><p class="section-description">내가 제출한 매수·매도 주문과 현재 예약된 자산을 확인합니다.</p></div></div><div class="my-orders-summary"><div class="summary-card"><div class="summary-label">OPEN ORDERS</div><div class="summary-value" id="openOrderCount">0건</div><div class="summary-description">현재 주문장에서 대기 중</div></div><div class="summary-card"><div class="summary-label">RESERVED CASH</div><div class="summary-value" id="reservedCashTotal">0</div><div class="summary-description">매수 주문에 예약된 돌돌코인</div></div><div class="summary-card"><div class="summary-label">RESERVED SHARES</div><div class="summary-value" id="reservedSharesTotal">0주</div><div class="summary-description">매도 주문에 예약된 주식</div></div></div><div class="panel"><div class="orders-list" id="myOrdersList"><div class="empty"><strong>로그인이 필요합니다.</strong>로그인하면 내가 주문한 주식을 확인할 수 있습니다.</div></div></div></section>
 
 
 
@@ -2488,6 +2507,8 @@ const state = {
     holdings: [],
 
     trades: [],
+
+    myOrders: [],
 
     tradeStock: null,
 
@@ -3227,6 +3248,16 @@ async function loadTrades() {
     }
 
 }
+
+
+/* =========================================================
+   내 주문 / 예약 주문
+========================================================= */
+async function loadMyOrders(){state.myOrders=[];if(!sb||!state.user){renderMyOrders();return}try{const {data,error}=await sb.rpc("get_my_dori_stock_orders",{p_stock_id:null});if(error)throw error;state.myOrders=data||[]}catch(error){console.error("내 주문 조회 실패:",error);state.myOrders=[];toast("내 주문 정보를 불러오지 못했습니다.","error")}renderMyOrders()}
+function orderStatusLabel(status){return({OPEN:"대기",PARTIALLY_FILLED:"부분 체결",FILLED:"체결 완료",CANCELLED:"취소",EXPIRED:"만료"})[status]||status||"-"}
+function orderStatusClass(status){if(status==="OPEN")return"open";if(status==="PARTIALLY_FILLED")return"partial";if(status==="FILLED")return"filled";if(status==="CANCELLED")return"cancelled";return"expired"}
+function formatOrderType(order){return order.order_type==="MARKET"?"시장가":"지정가 "+formatCoin(order.limit_price)}
+function renderMyOrders(){const list=$("#myOrdersList");if(!list)return;const openOrders=state.myOrders.filter(o=>o.status==="OPEN"||o.status==="PARTIALLY_FILLED");const reservedCash=openOrders.reduce((s,o)=>s+Number(o.reserved_cash||0),0);const reservedShares=openOrders.reduce((s,o)=>s+Number(o.reserved_shares||0),0);$("#openOrderCount").textContent=formatNumber(openOrders.length)+"건";$("#reservedCashTotal").textContent=formatCoin(reservedCash);$("#reservedSharesTotal").textContent=formatNumber(reservedShares)+"주";if(!state.user){list.innerHTML='<div class="empty"><strong>로그인이 필요합니다.</strong>로그인하면 내가 주문한 주식을 확인할 수 있습니다.</div>';return}if(!state.myOrders.length){list.innerHTML='<div class="empty"><strong>주문 내역이 없습니다.</strong>아직 제출한 매수·매도 주문이 없습니다.</div>';return}list.innerHTML=state.myOrders.map(order=>{const stock=getStock(order.stock_id),remaining=Number(order.remaining_quantity||0),original=Number(order.original_quantity||0),filled=Math.max(0,original-remaining),date=new Date(order.created_at).toLocaleString("ko-KR"),isBuy=order.side==="BUY",reserved=isBuy?formatCoin(order.reserved_cash||0)+" 예약":formatNumber(order.reserved_shares||0)+"주 예약";return '<div class="order-row"><div><div class="order-main-name">'+escapeHtml(stock?.name||("종목 #"+order.stock_id))+'</div><div class="order-main-sub">'+escapeHtml(stock?.ticker||"")+" · "+escapeHtml(date)+'</div></div><div><div class="data-label">주문</div><div class="order-side '+(isBuy?"buy":"sell")+'">'+(isBuy?"매수":"매도")+" · "+escapeHtml(formatOrderType(order))+'</div></div><div><div class="data-label">수량</div><div class="data-value">'+formatNumber(original)+'주</div><div class="order-main-sub">체결 '+formatNumber(filled)+" · 잔량 "+formatNumber(remaining)+'</div></div><div><div class="data-label">상태</div><div class="order-status '+orderStatusClass(order.status)+'">'+orderStatusLabel(order.status)+'</div></div><div class="order-reserve">예약 자산<strong>'+reserved+'</strong></div></div>'}).join("")}
 
 
 /* =========================================================
@@ -4633,7 +4664,8 @@ async function refreshAll() {
 
             await Promise.all([
                 loadHoldings(),
-                loadTrades()
+                loadTrades(),
+                loadMyOrders()
             ]);
 
         }
@@ -4642,6 +4674,7 @@ async function refreshAll() {
 
             state.holdings = [];
             state.trades = [];
+            state.myOrders = [];
 
         }
 
@@ -4653,6 +4686,7 @@ async function refreshAll() {
         renderHoldings();
 
         renderTransactions();
+        renderMyOrders();
 
 
     } catch (error) {
@@ -4931,6 +4965,8 @@ function startRealtimeMarket() {
                 ) {
                     loadOrderBook(state.tradeStock.id);
                 }
+                const changedUserId=payload.new?.user_id||payload.old?.user_id;
+                if(state.user&&changedUserId===state.user.id) loadMyOrders();
 
             }
         )
