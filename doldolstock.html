@@ -2403,6 +2403,11 @@ td {
 
                 </div>
 
+                <div class="order-line">
+                    <span>예상 수수료 (0.15%)</span>
+                    <strong id="orderFee">-</strong>
+                </div>
+
             </div>
 
 
@@ -4458,6 +4463,12 @@ function updateOrderSummary() {
     const total =
         price * quantity;
 
+    const fee =
+        Math.max(1, Math.ceil(total * 0.0015));
+
+    $("#orderFee")
+        .textContent =
+        formatCoin(fee);
 
     $("#orderQuantity")
         .textContent =
