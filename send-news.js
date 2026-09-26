@@ -16,9 +16,13 @@ const supabase = createClient(
 // Gmail
 // =====================================================
 
+const requiredEnv = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "GMAIL_USER", "GMAIL_APP_PASSWORD"];
+for (const name of requiredEnv) {
+  if (!process.env[name]) throw new Error("필수 환경변수가 없습니다: " + name);
+}
+
 const transporter = nodemailer.createTransport({
   service: "gmail",
-
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_APP_PASSWORD
@@ -500,6 +504,9 @@ async function run() {
     "🚀 돌이신문 이메일 시스템 시작"
   );
 
+  console.log("🔐 Gmail SMTP 연결 확인 중...");
+  await transporter.verify();
+  console.log("✅ Gmail SMTP 인증/연결 성공");
 
   // ===================================================
   // 사용자 가져오기
@@ -544,6 +551,27 @@ async function run() {
     `👥 ${users.length}명의 사용자를 확인했습니다.`
   );
 
+
+  const testEmail = process.env.TEST_EMAIL?.trim();
+
+  if (testEmail) {
+    const { data: latestNews, error: latestNewsError } = await supabase
+      .from("rockey_news")
+      .select("news_number")
+      .order("news_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (latestNewsError) throw new Error("최신 신문 조회 실패: " + latestNewsError.message);
+    if (!latestNews?.news_number) throw new Error("발송할 돌이신문이 없습니다.");
+
+    console.log("🧪 테스트 발송: " + testEmail + " → " + latestNews.news_number + "호");
+    await sendEmail(testEmail, 10, latestNews.news_number);
+    console.log("✅ 테스트 이메일 발송 완료");
+    return;
+  }
+
+  let failedCount = 0;
 
   // ===================================================
   // 사용자별 이메일 발송
@@ -676,6 +704,7 @@ async function run() {
           updateError
         );
 
+        failedCount++;
         continue;
 
       }
@@ -703,6 +732,8 @@ async function run() {
         emailError
       );
 
+      failedCount++;
+
     }
 
   }
@@ -711,6 +742,10 @@ async function run() {
   // ===================================================
   // 종료
   // ===================================================
+
+  if (failedCount > 0) {
+    throw new Error("이메일 처리 중 " + failedCount + "건의 실패가 발생했습니다.");
+  }
 
   console.log(
     "🏁 돌이신문 이메일 시스템 종료"
@@ -729,5 +764,7 @@ run().catch((error) => {
     "🔥 치명적인 오류:",
     error
   );
+
+  process.exitCode = 1;
 
 });
