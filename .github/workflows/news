@@ -2,8 +2,14 @@ name: Send Dori News Email
 
 on:
   schedule:
-    - cron: "0 11 * * *"
+    # 11:00 KST = 02:00 UTC
+    - cron: "0 2 * * *"
   workflow_dispatch:
+    inputs:
+      test_email:
+        description: "테스트 이메일 주소 (입력하면 이 주소 하나로만 테스트 발송)"
+        required: false
+        type: string
 
 jobs:
   run-news:
@@ -24,3 +30,4 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
+          TEST_EMAIL: ${{ inputs.test_email }}
