@@ -3467,6 +3467,8 @@ function renderMarket() {
                             </div>
 
 
+                            ${renderLiveMarketMeta(stock.id)}
+
                             <div class="stock-actions">
 
                                 <button
@@ -4434,7 +4436,8 @@ async function refreshAll() {
 
         await Promise.all([
             loadStocks(),
-            loadPrices()
+            loadPrices(),
+            loadMarketStates()
         ]);
 
 
