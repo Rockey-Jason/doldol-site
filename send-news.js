@@ -72,6 +72,19 @@ const delayMap = {
 // 이메일을 보낼 시기인지 확인
 // =====================================================
 
+function isLocalEightPM(timezone) {
+  try {
+    const hour = Number(new Intl.DateTimeFormat("en-US", {
+      timeZone: timezone || "Asia/Seoul",
+      hour: "2-digit",
+      hour12: false
+    }).format(new Date()));
+    return hour === 20;
+  } catch {
+    return false;
+  }
+}
+
 function shouldSend(lastDate, level) {
 
   const now = new Date();
@@ -527,7 +540,8 @@ async function run() {
       email,
       user_level,
       read_dori_news,
-      last_news_sent
+      last_news_sent,
+      timezone
     `);
 
 
@@ -619,6 +633,19 @@ async function run() {
     const level =
       Number(user.user_level) || 1;
 
+
+    // -------------------------------------------------
+    // 사용자의 현지 시간 20:00인지 확인
+    // -------------------------------------------------
+
+    if (!isLocalEightPM(user.timezone)) {
+      console.log(
+        "⏭️ 현지 20:00이 아님:",
+        user.email,
+        user.timezone || "Asia/Seoul"
+      );
+      continue;
+    }
 
     // -------------------------------------------------
     // 발송 주기 확인
