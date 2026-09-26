@@ -898,6 +898,55 @@ body::before {
 .stock-card.live-flash { animation:marketFlash .65s ease, fadeUp .55s ease both; }
 @keyframes marketFlash { 0%{box-shadow:0 0 0 0 rgba(95,145,255,0),0 18px 55px rgba(0,0,0,.25)} 35%{box-shadow:0 0 0 4px rgba(95,145,255,.12),0 24px 75px rgba(0,0,0,.42)} 100%{box-shadow:0 0 0 0 rgba(95,145,255,0),0 18px 55px rgba(0,0,0,.25)} }
 
+/* =====================================================
+   주문장 UI
+===================================================== */
+.orderbook-panel {
+    margin: 14px 0;
+    padding: 12px;
+    border: 1px solid rgba(255,255,255,.07);
+    border-radius: 14px;
+    background: rgba(4,9,25,.58);
+}
+.orderbook-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:10px;
+    color:#cfd9f4;
+    font-size:10px;
+    font-weight:900;
+}
+.orderbook-head span:last-child { color:#68779a; font-weight:800; }
+.orderbook-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.orderbook-side-title { margin-bottom:5px; font-size:9px; font-weight:900; }
+.orderbook-side-title.ask { color:#ff8797; }
+.orderbook-side-title.bid { color:#65e0ae; }
+.orderbook-row {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:5px;
+    padding:4px 6px;
+    border-radius:6px;
+    font-size:9px;
+    color:#aab6d2;
+}
+.orderbook-row strong { color:#e7edff; text-align:right; }
+.orderbook-empty { padding:8px 4px; color:#53617f; font-size:9px; }
+.order-select {
+    width:100%;
+    box-sizing:border-box;
+    margin-bottom:10px;
+    padding:11px 12px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.08);
+    background:#0a1029;
+    color:#eaf0ff;
+    font-weight:800;
+    outline:none;
+}
+.orderbook-row:hover { background:rgba(100,150,255,.06); }
+
 .stock-actions {
     display: grid;
 
@@ -2207,6 +2256,47 @@ td {
 
             </div>
 
+
+            <div class="orderbook-panel" id="orderBookPanel">
+                <div class="orderbook-head">
+                    <span>실시간 주문장</span>
+                    <span id="orderBookSpread">스프레드 -</span>
+                </div>
+                <div class="orderbook-grid">
+                    <div>
+                        <div class="orderbook-side-title ask">매도호가</div>
+                        <div id="askBook"></div>
+                    </div>
+                    <div>
+                        <div class="orderbook-side-title bid">매수호가</div>
+                        <div id="bidBook"></div>
+                    </div>
+                </div>
+            </div>
+
+            <label class="form-label" for="orderTypeSelect">
+                주문 유형
+            </label>
+
+            <select class="order-select" id="orderTypeSelect">
+                <option value="LIMIT">지정가 주문</option>
+                <option value="MARKET">시장가 주문</option>
+            </select>
+
+            <div id="limitPriceWrap">
+                <label class="form-label" for="limitPriceInput">
+                    주문 가격
+                </label>
+
+                <input
+                    class="quantity-input"
+                    id="limitPriceInput"
+                    type="number"
+                    min="1"
+                    step="1"
+                    value="1"
+                >
+            </div>
 
             <label
                 class="form-label"
@@ -4134,14 +4224,88 @@ function openTrade(
         );
 
 
-    updateOrderSummary();
+    $("#limitPriceInput").value =
+        String(stock.current_price);
 
+    $("#orderTypeSelect").value = "LIMIT";
+    $("#limitPriceWrap").style.display = "";
+
+    updateOrderSummary();
+    loadOrderBook(stock.id);
 
     $("#tradeModal")
         .classList.add("open");
 
 }
 
+
+/* =========================================================
+   실시간 주문장
+========================================================= */
+
+async function loadOrderBook(stockId) {
+
+    if (!sb) return;
+
+    const { data, error } = await sb.rpc(
+        "get_dori_stock_order_book",
+        {
+            p_stock_id: Number(stockId),
+            p_levels: 5
+        }
+    );
+
+    if (error) {
+        console.warn("주문장 조회 실패:", error);
+        return;
+    }
+
+    const rows = data || [];
+
+    const asks = rows
+        .filter(row => row.side === "SELL")
+        .sort((a,b) => Number(a.price) - Number(b.price))
+        .slice(0,5);
+
+    const bids = rows
+        .filter(row => row.side === "BUY")
+        .sort((a,b) => Number(b.price) - Number(a.price))
+        .slice(0,5);
+
+    const askEl = $("#askBook");
+    const bidEl = $("#bidBook");
+
+    if (askEl) {
+        askEl.innerHTML = asks.length
+            ? asks.map(row => `
+                <div class="orderbook-row">
+                    <span>${formatNumber(row.quantity)}주</span>
+                    <strong>${formatCoin(row.price)}</strong>
+                </div>
+            `).join("")
+            : '<div class="orderbook-empty">대기 중인 매도 주문 없음</div>';
+    }
+
+    if (bidEl) {
+        bidEl.innerHTML = bids.length
+            ? bids.map(row => `
+                <div class="orderbook-row">
+                    <span>${formatNumber(row.quantity)}주</span>
+                    <strong>${formatCoin(row.price)}</strong>
+                </div>
+            `).join("")
+            : '<div class="orderbook-empty">대기 중인 매수 주문 없음</div>';
+    }
+
+    const bestAsk = asks.length ? Number(asks[0].price) : null;
+    const bestBid = bids.length ? Number(bids[0].price) : null;
+
+    $("#orderBookSpread").textContent =
+        bestAsk !== null && bestBid !== null
+            ? "스프레드 " + formatCoin(bestAsk - bestBid)
+            : "스프레드 -";
+
+}
 
 /* =========================================================
    26. Order Summary
@@ -4178,11 +4342,13 @@ function updateOrderSummary() {
         Math.floor(quantity);
 
 
-    const price =
-        Number(
-            stock.current_price
-        );
+    const orderType =
+        $("#orderTypeSelect")?.value || "LIMIT";
 
+    const price =
+        orderType === "LIMIT"
+            ? Number($("#limitPriceInput").value || stock.current_price)
+            : Number(stock.current_price);
 
     const total =
         price * quantity;
@@ -4265,28 +4431,37 @@ async function submitTrade() {
      * 여기서 조용하게 안내한다.
      */
 
-    const rpcName =
-        type === "BUY"
-            ? "buy_dori_stock"
-            : "sell_dori_stock";
+    const orderType =
+        $("#orderTypeSelect")?.value || "LIMIT";
 
+    const limitPrice =
+        orderType === "LIMIT"
+            ? Math.floor(Number($("#limitPriceInput").value))
+            : null;
+
+    if (
+        orderType === "LIMIT" &&
+        (!Number.isInteger(limitPrice) || limitPrice <= 0)
+    ) {
+        toast("주문 가격을 올바르게 입력해주세요.", "error");
+        return;
+    }
 
     try {
 
         setLoading(true);
 
-
         const {
             data,
             error
         } = await sb.rpc(
-            rpcName,
+            "place_dori_stock_order",
             {
-                p_stock_id:
-                    Number(stock.id),
-
-                p_quantity:
-                    quantity
+                p_stock_id: Number(stock.id),
+                p_side: type,
+                p_order_type: orderType,
+                p_quantity: quantity,
+                p_limit_price: limitPrice
             }
         );
 
@@ -4341,10 +4516,20 @@ async function submitTrade() {
         );
 
 
+        const filled =
+            Number(data?.filled_quantity || 0);
+
+        const remaining =
+            Number(data?.remaining_quantity || 0);
+
         toast(
-            type === "BUY"
-                ? "매수 주문이 처리되었습니다."
-                : "매도 주문이 처리되었습니다.",
+            filled > 0
+                ? (type === "BUY"
+                    ? `${formatNumber(filled)}주 매수 체결 완료`
+                    : `${formatNumber(filled)}주 매도 체결 완료`)
+                : remaining > 0
+                    ? "주문이 주문장에 등록되었습니다."
+                    : "주문이 처리되었습니다.",
             "success"
         );
 
@@ -4730,6 +4915,48 @@ function startRealtimeMarket() {
             }
         )
 
+        .on(
+            "postgres_changes",
+            {
+                event: "*",
+                schema: "public",
+                table: "dori_stock_orders"
+            },
+            payload => {
+
+                if (
+                    state.tradeStock &&
+                    Number(payload.new?.stock_id || payload.old?.stock_id) ===
+                    Number(state.tradeStock.id)
+                ) {
+                    loadOrderBook(state.tradeStock.id);
+                }
+
+            }
+        )
+
+        .on(
+            "postgres_changes",
+            {
+                event: "INSERT",
+                schema: "public",
+                table: "dori_stock_executions"
+            },
+            payload => {
+
+                if (
+                    state.tradeStock &&
+                    Number(payload.new.stock_id) ===
+                    Number(state.tradeStock.id)
+                ) {
+                    loadOrderBook(state.tradeStock.id);
+                }
+
+                refreshAll();
+
+            }
+        )
+
         .subscribe(
             status =>
                 console.log(
@@ -4738,6 +4965,44 @@ function startRealtimeMarket() {
                 )
         );
 
+}
+
+/* =========================================================
+   주문 입력 이벤트
+========================================================= */
+
+const orderTypeSelect = $("#orderTypeSelect");
+
+if (orderTypeSelect) {
+    orderTypeSelect.addEventListener("change", () => {
+
+        const isLimit =
+            orderTypeSelect.value === "LIMIT";
+
+        $("#limitPriceWrap").style.display =
+            isLimit ? "" : "none";
+
+        updateOrderSummary();
+
+    });
+}
+
+const limitPriceInput = $("#limitPriceInput");
+
+if (limitPriceInput) {
+    limitPriceInput.addEventListener(
+        "input",
+        updateOrderSummary
+    );
+}
+
+const quantityInput = $("#quantityInput");
+
+if (quantityInput) {
+    quantityInput.addEventListener(
+        "input",
+        updateOrderSummary
+    );
 }
 
 /* =========================================================
