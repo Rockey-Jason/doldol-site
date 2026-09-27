@@ -2088,6 +2088,8 @@ textarea {
 
 }
       
+
+#achievementPopup{position:fixed;left:50%;top:22px;width:min(520px,calc(100vw - 28px));padding:0;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:24px;background:linear-gradient(145deg,rgba(20,24,62,.97),rgba(7,9,28,.96));color:#fff;box-shadow:0 28px 85px rgba(0,0,0,.58),inset 0 1px rgba(255,255,255,.1);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);font-family:'HancomMalrangmalrang','Jua',sans-serif;z-index:999999;opacity:0;visibility:hidden;transform:translate(-50%,-35px) scale(.92);transition:opacity .35s ease,transform .62s cubic-bezier(.22,1,.36,1),visibility 0s linear .62s}#achievementPopup.show{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1);transition:opacity .35s ease,transform .62s cubic-bezier(.22,1,.36,1)}.업적알림-inner{position:relative;display:grid;grid-template-columns:82px minmax(0,1fr);gap:17px;align-items:center;padding:18px}.업적알림-inner:before{content:"";position:absolute;width:190px;height:190px;left:-80px;top:-80px;border-radius:50%;background:rgba(113,126,255,.3);filter:blur(35px);animation:업적빛 2.8s ease-in-out infinite}.업적알림아이콘{position:relative;width:82px;height:82px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.22);border-radius:24px;background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.045));box-shadow:0 12px 34px rgba(0,0,0,.3),inset 0 1px rgba(255,255,255,.1);animation:업적아이콘등장 .72s .08s cubic-bezier(.22,1,.36,1) both}.업적알림아이콘 span{font-size:42px;filter:drop-shadow(0 5px 12px rgba(0,0,0,.35));animation:업적아이콘부유 2.4s ease-in-out infinite}.업적알림내용{position:relative;min-width:0}.업적알림라벨{color:#9eafff;font-size:10px;font-weight:800;letter-spacing:2.3px}.업적알림제목{margin-top:2px;font-size:17px;font-weight:800}.업적알림이름{margin-top:3px;font-size:26px;font-weight:800;line-height:1.2}.업적알림설명{margin-top:5px;color:#aeb7dc;font-size:13px;line-height:1.45}.업적알림보상{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.업적알림보상 span{padding:5px 9px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(255,255,255,.055);color:#e4e8ff;font-size:11px;font-weight:700}.업적알림희귀도{margin-top:9px;color:#8bdfff;font-size:11px;font-weight:800}@keyframes 업적아이콘등장{from{opacity:0;transform:scale(.55) rotate(-12deg)}to{opacity:1;transform:scale(1) rotate(0)}}@keyframes 업적아이콘부유{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px) rotate(2deg)}}@keyframes 업적빛{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:.9;transform:scale(1.14)}}@media(max-width:560px){.업적알림-inner{grid-template-columns:60px minmax(0,1fr);gap:11px;padding:14px}.업적알림아이콘{width:60px;height:60px;border-radius:18px}.업적알림아이콘 span{font-size:31px}.업적알림이름{font-size:21px}.업적알림설명{font-size:12px}}@media(prefers-reduced-motion:reduce){.업적알림아이콘,.업적알림아이콘 span,.업적알림-inner:before{animation:none}}
 </style>
 
 </head>
@@ -3400,6 +3402,10 @@ async function 퀴즈제출() {
             ? "🎉 정답입니다!"
             : "😢 아쉽지만 오답입니다.";
 
+    if (정답여부) {
+        await 업적달성알림("quiz_correct");
+    }
+
 
     $("제출").textContent =
         "제출됨";
@@ -4002,6 +4008,8 @@ async function 읽음저장() {
     }
 
 
+    await 업적달성알림("read_news");
+
     읽은신문번호들 =
         목록;
 
@@ -4332,8 +4340,48 @@ window.addEventListener(
 );
 
 
+async function 업적달성알림(업적ID) {
+    if (!현재사용자) return null;
+    const { data, error } = await supabase.rpc("claim_achievement", {
+        p_achievement_id: 업적ID
+    });
+    if (error) {
+        console.error("업적 지급 오류:", error);
+        return null;
+    }
+    if (!data?.success) return data;
+
+    const popup = $("achievementPopup");
+    if (!popup) return data;
+
+    popup.innerHTML = `
+      <div class="업적알림-inner">
+        <div class="업적알림아이콘"><span>${data.icon || "🏆"}</span></div>
+        <div class="업적알림내용">
+          <div class="업적알림라벨">ACHIEVEMENT UNLOCKED</div>
+          <div class="업적알림제목">🏆 업적 달성!</div>
+          <div class="업적알림이름">${data.name}</div>
+          <div class="업적알림설명">${data.description}</div>
+          <div class="업적알림희귀도">${data.rarity}</div>
+          <div class="업적알림보상">
+            ${Number(data.reward_doldolcoin||0)>0?`<span>💰 +${Number(data.reward_doldolcoin).toLocaleString()} 돌돌코인</span>`:""}
+            ${Number(data.reward_exp||0)>0?`<span>✨ +${Number(data.reward_exp).toLocaleString()} EXP</span>`:""}
+            ${data.title?`<span>🏷️ ${data.title}</span>`:""}
+          </div>
+        </div>
+      </div>`;
+    popup.classList.remove("show");
+    void popup.offsetWidth;
+    popup.classList.add("show");
+    clearTimeout(window.__doriAchievementTimer);
+    window.__doriAchievementTimer = setTimeout(() => popup.classList.remove("show"), 6500);
+    return data;
+}
+
 </script>
 
+
+<div id="achievementPopup" aria-live="polite"></div>
 
 </body>
 
