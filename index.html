@@ -422,33 +422,7 @@ button:focus-visible{
 .칭호선택.장착중{background:#806b00}
 #칭호저장{background:linear-gradient(135deg,#e1bd23,#a98900);color:#171300}
 
-#achievementPopup{
-  position:fixed;
-  left:50%;top:20px;
-  width:min(430px,calc(100vw - 28px));
-  padding:18px 22px;
-  border:1px solid rgba(255,255,255,.16);
-  border-radius:20px;
-  background:rgba(22,23,53,.94);
-  color:#fff;
-  box-shadow:0 20px 60px rgba(0,0,0,.5);
-  backdrop-filter:blur(18px);
-  -webkit-backdrop-filter:blur(18px);
-  font-family:'Jua','HancomMalrangmalrang',sans-serif;
-  text-align:center;
-  z-index:999999;
-  opacity:0;
-  visibility:hidden;
-  transform:translate(-50%,-25px) scale(.96);
-  transition:opacity .38s ease,transform .48s var(--ease),visibility 0s linear .48s;
-}
-#achievementPopup.show{
-  opacity:1;
-  visibility:visible;
-  transform:translate(-50%,0) scale(1);
-  transition:opacity .38s ease,transform .48s var(--ease);
-}
-
+#achievementPopup{position:fixed;left:50%;top:22px;width:min(520px,calc(100vw - 28px));padding:0;overflow:hidden;border:1px solid rgba(255,255,255,.18);border-radius:24px;background:linear-gradient(145deg,rgba(20,24,62,.97),rgba(7,9,28,.96));color:#fff;box-shadow:0 28px 85px rgba(0,0,0,.58),inset 0 1px rgba(255,255,255,.1);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);font-family:'HancomMalrangmalrang','Jua',sans-serif;text-align:left;z-index:999999;opacity:0;visibility:hidden;transform:translate(-50%,-35px) scale(.92);transition:opacity .35s ease,transform .62s cubic-bezier(.22,1,.36,1),visibility 0s linear .62s}.achievement-unlock.show{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1);transition:opacity .35s ease,transform .62s cubic-bezier(.22,1,.36,1)}.업적알림-inner{position:relative;display:grid;grid-template-columns:82px minmax(0,1fr);gap:17px;align-items:center;padding:18px}.업적알림-inner::before{content:"";position:absolute;width:190px;height:190px;left:-80px;top:-80px;border-radius:50%;background:rgba(113,126,255,.3);filter:blur(35px);animation:업적빛 2.8s ease-in-out infinite}.업적알림아이콘{position:relative;width:82px;height:82px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.22);border-radius:24px;background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.045));box-shadow:0 12px 34px rgba(0,0,0,.3),inset 0 1px rgba(255,255,255,.1);animation:업적아이콘등장 .72s .08s cubic-bezier(.22,1,.36,1) both}.업적알림아이콘 span{font-size:42px;filter:drop-shadow(0 5px 12px rgba(0,0,0,.35));animation:업적아이콘부유 2.4s ease-in-out infinite}.업적알림내용{position:relative;min-width:0}.업적알림라벨{color:#9eafff;font-size:10px;font-weight:800;letter-spacing:2.3px}.업적알림제목{margin-top:2px;font-size:17px;font-weight:800}.업적알림이름{margin-top:3px;font-size:26px;font-weight:800;line-height:1.2;letter-spacing:-.6px}.업적알림설명{margin-top:5px;color:#aeb7dc;font-size:13px;line-height:1.45}.업적알림보상{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.업적알림보상 span{padding:5px 9px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(255,255,255,.055);color:#e4e8ff;font-size:11px;font-weight:700}.업적알림희귀도{margin-top:9px;color:#8bdfff;font-size:11px;font-weight:800;letter-spacing:.5px}@keyframes 업적아이콘등장{from{opacity:0;transform:scale(.55) rotate(-12deg)}to{opacity:1;transform:scale(1) rotate(0)}}@keyframes 업적아이콘부유{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-4px) rotate(2deg)}}@keyframes 업적빛{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:.9;transform:scale(1.14)}}@media(max-width:560px){.업적알림-inner{grid-template-columns:60px minmax(0,1fr);gap:11px;padding:14px}.업적알림아이콘{width:60px;height:60px;border-radius:18px}.업적알림아이콘 span{font-size:31px}.업적알림이름{font-size:21px}.업적알림설명{font-size:12px}.업적알림라벨{font-size:8px;letter-spacing:1.5px}}@media(prefers-reduced-motion:reduce){.업적알림아이콘,.업적알림아이콘 span,.업적알림-inner::before{animation:none}}
 #페이지전환{
   position:fixed;
   inset:0;
@@ -1781,312 +1755,56 @@ function 업적획득여부(
 // 업적 하나 획득
 // =====================================================
 
-async function 업적획득(
-    achievement
-) {
+async function 업적획득(achievement) {
+    if (!현재사용자 || !achievement || 업적획득여부(achievement.id)) return false;
 
-    if (
-        !현재사용자 ||
-        !achievement
-    ) {
-
-        return false;
-
-    }
-
-
-    const id =
-        achievement.id;
-
-
-    if (
-        업적획득여부(id)
-    ) {
-
-        return false;
-
-    }
-
-
-    // 최신 users 정보
-    const {
-
-        data,
-        error
-
-    } = await supabase
-
-        .from("users")
-
-        .select("*")
-
-        .eq(
-            "user_id",
-            현재사용자.id
-        )
-
-        .single();
-
+    const { data, error } = await supabase.rpc("claim_achievement", {
+        p_achievement_id: achievement.id
+    });
 
     if (error) {
-
-        console.error(
-            "업적 지급 사용자 조회 오류:",
-            error
-        );
-
+        console.error("업적 지급 오류:", error);
         return false;
-
     }
 
-
-    const 기존업적 =
-        획득업적정리(
-            data.user_achievement
-        );
-
-
-    if (
-        기존업적[id]
-    ) {
-
-        획득업적 =
-            기존업적;
-
+    if (!data?.success) {
+        if (data?.already_claimed) await 유저정보불러오기();
         return false;
-
     }
 
-
-    // =================================================
-    // 업적 저장
-    // =================================================
-
-    기존업적[id] = {
-
-        id: id,
-
-        이름:
-            achievement.이름,
-
-        설명:
-            achievement.설명,
-
-        희귀도:
-            achievement.희귀도,
-
-        보상:
-            achievement.보상,
-
-        칭호:
-            achievement.칭호,
-
-        획득시간:
-            new Date().toISOString()
-
+    획득업적[achievement.id] = {
+        id: achievement.id,
+        이름: achievement.이름,
+        설명: achievement.설명,
+        희귀도: achievement.희귀도,
+        보상: { 돌돌코인: Number(data.reward_doldolcoin || 0), 경험치: Number(data.reward_exp || 0) },
+        칭호: achievement.칭호,
+        아이콘: achievement.icon || "🏆",
+        획득시간: new Date().toISOString()
     };
 
+    await 유저정보불러오기();
 
-    const 기존코인 =
-        Number(
-            data.doldolcoin ?? 0
-        );
+    const 보상코인 = Number(data.reward_doldolcoin || 0);
+    const 보상EXP = Number(data.reward_exp || 0);
+    const popup = document.getElementById("achievementPopup");
 
-
-    const 기존EXP =
-        Number(
-            data.exp ?? 0
-        );
-
-
-    const 보상코인 =
-        Number(
-            achievement.보상.돌돌코인 ?? 0
-        );
-
-
-    const 보상EXP =
-        Number(
-            achievement.보상.경험치 ?? 0
-        );
-
-
-    const 새로운코인 =
-        기존코인 +
-        보상코인;
-
-
-    const 새로운EXP =
-        기존EXP +
-        보상EXP;
-
-
-    const 기존EXP레벨 =
-        Number(
-            data.exp_level ?? 1
-        );
-
-
-    const 새로운EXP레벨 =
-        경험치로레벨계산(
-            새로운EXP
-        );
-
-
-    // =================================================
-    // 저장
-    // =================================================
-
-    const 업데이트 = {
-
-        user_achievement:
-            기존업적,
-
-        doldolcoin:
-            새로운코인,
-
-        exp:
-            새로운EXP,
-
-        exp_level:
-            새로운EXP레벨
-
-    };
-
-
-    const {
-
-        error: updateError
-
-    } = await supabase
-
-        .from("users")
-
-        .update(
-            업데이트
-        )
-
-        .eq(
-            "user_id",
-            현재사용자.id
-        );
-
-
-    if (updateError) {
-
-        console.error(
-            "업적 저장 오류:",
-            updateError
-        );
-
-        return false;
-
+    if (popup) {
+        popup.classList.remove("show","achievement-unlock");
+        void popup.offsetWidth;
+        popup.innerHTML = `<div class="업적알림-inner"><div class="업적알림아이콘"><span>${achievement.icon || "🏆"}</span></div><div class="업적알림내용"><div class="업적알림라벨">ACHIEVEMENT UNLOCKED</div><div class="업적알림제목">🏆 업적 달성!</div><div class="업적알림이름">${achievement.이름}</div><div class="업적알림설명">${achievement.설명}</div><div class="업적알림희귀도">${achievement.희귀도}</div><div class="업적알림보상">${보상코인>0?`<span>💰 +${보상코인.toLocaleString()} 돌돌코인</span>`:""}${보상EXP>0?`<span>✨ +${보상EXP.toLocaleString()} EXP</span>`:""}${achievement.칭호?`<span>🏷️ ${achievement.칭호}</span>`:""}</div></div></div>`;
+        popup.classList.add("achievement-unlock","show");
+        clearTimeout(팝업타이머);
+        팝업타이머 = setTimeout(() => popup.classList.remove("show","achievement-unlock"), 6500);
     }
 
-
-    // =================================================
-    // 메모리 업데이트
-    // =================================================
-
-    획득업적 =
-        기존업적;
-
-
-    현재유저정보.doldolcoin =
-        새로운코인;
-
-    현재유저정보.exp =
-        새로운EXP;
-
-    현재유저정보.exp_level =
-        새로운EXP레벨;
-
-
-    // =================================================
-    // 알림
-    // =================================================
-
-    팝업열기(`
-
-        🏆 <b>업적 달성!</b>
-
-        <br><br>
-
-        <b>${achievement.이름}</b>
-
-        <br>
-
-        ${achievement.설명}
-
-        <br><br>
-
-        ⭐ ${achievement.희귀도}
-
-        <br>
-
-        💰 +${보상코인.toLocaleString()}
-        돌돌코인
-
-        <br>
-
-        ✨ +${보상EXP.toLocaleString()}
-        EXP
-
-        ${
-            achievement.칭호
-                ? `<br><br>🏷️ 칭호 획득: <b>${achievement.칭호}</b>`
-                : ""
-        }
-
-    `, 5000);
-
-
-    // =================================================
-    // 레벨업
-    // =================================================
-
-    if (
-        새로운EXP레벨 >
-        기존EXP레벨
-    ) {
-
-        setTimeout(
-
-            () => {
-
-                팝업열기(`
-
-                    ✨ <b>EXP 레벨 업!</b>
-
-                    <br><br>
-
-                    Lv.${기존EXP레벨}
-
-                    →
-
-                    Lv.${새로운EXP레벨}
-
-                `, 4000);
-
-            },
-
-            1500
-
-        );
-
+    if (Number(data.new_level || 1) > Number(data.old_level || 1)) {
+        setTimeout(() => 팝업열기(`✨ <b>EXP 레벨 업!</b><br><br>Lv.${data.old_level} → Lv.${data.new_level}`, 4000), 700);
     }
-
 
     화면업데이트();
-
     return true;
-
 }
-
-
-// =====================================================
-// users 최신 정보
-// =====================================================
 
 async function 유저정보불러오기() {
 
