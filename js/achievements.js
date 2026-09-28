@@ -205,10 +205,12 @@ async function checkSiteAchievements() {
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError || !sessionData?.session?.user) return;
 
-  // users REST 조회가 401이어도 rich 업적은 먼저 서버 RPC로 검사한다.
-  // claim_achievement는 auth.uid()와 DB의 실제 doldolcoin을 직접 확인한다.
-  const richResult = await claim("rich");
-  if (richResult?.success && !richResult?.already_claimed) return;
+  // 돌돌코인 업적은 브라우저의 Number로 금액을 비교하지 않는다.
+  // 특히 1경(10^16)은 JS 안전 정수 범위를 넘으므로 서버가 bigint로 직접 판정한다.
+  // 각 RPC가 users 행을 잠그고 보상을 반영하므로 연속 달성도 안전하다.
+  await claim("rich");
+  await claim("very_rich");
+  await claim("super_rich");
 
   const userId = sessionData.session.user.id;
   const { data: user, error } = await supabase
