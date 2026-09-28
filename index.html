@@ -423,78 +423,92 @@ button:focus-visible{
 #칭호저장{background:linear-gradient(135deg,#e1bd23,#a98900);color:#171300}
 
 
-/* ===== ACHIEVEMENT FULL SITE BACKGROUND EFFECT ===== */
+/* ===== ACHIEVEMENT FULL-SITE BACKGROUND ===== */
+#achievementFullSiteEffect{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  opacity:0;
+  visibility:hidden;
+  overflow:hidden;
+  background:#03034a;
+  transition:opacity .9s ease,visibility 0s linear .9s,background 1.25s ease;
+}
+#achievementFullSiteEffect::before{
+  content:"";
+  position:absolute;
+  inset:-18%;
+  background:
+    radial-gradient(circle at 50% 45%,rgba(255,255,255,.20),transparent 18%),
+    radial-gradient(circle at 14% 15%,rgba(255,255,255,.16),transparent 30%),
+    radial-gradient(circle at 86% 78%,rgba(255,255,255,.12),transparent 34%);
+  filter:blur(8px);
+  transform:scale(1.05);
+  animation:achievementWorldBreath 3.6s ease-in-out infinite;
+}
+#achievementFullSiteEffect::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+    radial-gradient(circle at 50% 50%,transparent 0 35%,rgba(0,0,0,.18) 72%,rgba(0,0,0,.46) 100%);
+  background-size:100% 6px,100% 100%;
+  opacity:.7;
+  mix-blend-mode:screen;
+}
+#achievementFullSiteEffect.show{
+  opacity:1;
+  visibility:visible;
+  transition:opacity .8s ease,background 1.25s ease;
+}
+#achievementFullSiteEffect.rarity-legendary{
+  background:
+    radial-gradient(circle at 50% 40%,rgba(255,248,170,.48),transparent 25%),
+    radial-gradient(circle at 8% 18%,rgba(255,197,45,.42),transparent 34%),
+    radial-gradient(circle at 92% 82%,rgba(255,123,20,.34),transparent 42%),
+    linear-gradient(135deg,#5a3b00 0%,#241500 48%,#100b03 100%);
+}
+#achievementFullSiteEffect.rarity-myth{
+  background:
+    radial-gradient(circle at 50% 40%,rgba(255,70,90,.42),transparent 25%),
+    radial-gradient(circle at 8% 18%,rgba(180,0,38,.48),transparent 35%),
+    radial-gradient(circle at 92% 82%,rgba(90,0,25,.46),transparent 43%),
+    linear-gradient(135deg,#5b071c 0%,#26000b 48%,#0f0207 100%);
+}
+#achievementFullSiteEffect.rarity-doronum{
+  background:
+    radial-gradient(circle at 50% 40%,rgba(220,255,255,.52),transparent 24%),
+    radial-gradient(circle at 8% 18%,rgba(55,235,255,.48),transparent 34%),
+    radial-gradient(circle at 92% 82%,rgba(55,145,255,.44),transparent 42%),
+    linear-gradient(135deg,#07506c 0%,#07304c 45%,#06172f 100%);
+}
 body.achievement-bg-legendary,
 body.achievement-bg-myth,
 body.achievement-bg-doronum{
-  position:relative;
-  isolation:isolate;
-  transition:background 1s ease;
+  background:var(--bg2) !important;
 }
-body.achievement-bg-legendary{
-  background:
-    radial-gradient(circle at 50% 42%,rgba(255,245,165,.38),transparent 25%),
-    radial-gradient(circle at 12% 12%,rgba(255,205,55,.34),transparent 34%),
-    radial-gradient(circle at 88% 78%,rgba(255,145,25,.30),transparent 40%),
-    linear-gradient(135deg,#3d2800,#171000 70%) !important;
-}
-body.achievement-bg-myth{
-  background:
-    radial-gradient(circle at 50% 42%,rgba(255,65,85,.28),transparent 25%),
-    radial-gradient(circle at 12% 15%,rgba(150,8,35,.40),transparent 36%),
-    radial-gradient(circle at 88% 80%,rgba(80,0,22,.46),transparent 42%),
-    linear-gradient(135deg,#4a0618,#160009 70%) !important;
-}
-body.achievement-bg-doronum{
-  background:
-    radial-gradient(circle at 50% 42%,rgba(210,255,255,.38),transparent 24%),
-    radial-gradient(circle at 12% 14%,rgba(60,225,255,.38),transparent 34%),
-    radial-gradient(circle at 88% 80%,rgba(55,145,255,.34),transparent 40%),
-    linear-gradient(135deg,#063b55,#06152d 70%) !important;
-}
-body.achievement-bg-legendary::before,
-body.achievement-bg-myth::before,
-body.achievement-bg-doronum::before{
-  z-index:0;
+body.achievement-bg-legendary #achievementFullSiteEffect,
+body.achievement-bg-myth #achievementFullSiteEffect,
+body.achievement-bg-doronum #achievementFullSiteEffect{
   opacity:1;
-  transition:opacity .7s ease;
+  visibility:visible;
 }
-body.achievement-bg-legendary::before{
-  background:
-    radial-gradient(circle at 50% 50%,rgba(255,240,120,.18),transparent 35%),
-    radial-gradient(circle at 20% 20%,rgba(255,190,40,.20),transparent 35%),
-    linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px);
-  background-size:auto,auto,100% 5px;
-  animation:achievementFullBgPulse 3.8s ease-in-out infinite;
+#사이트{
+  position:relative;
+  z-index:1;
 }
-body.achievement-bg-myth::before{
-  background:
-    radial-gradient(circle at 50% 50%,rgba(255,40,65,.20),transparent 36%),
-    radial-gradient(circle at 80% 25%,rgba(150,0,35,.20),transparent 35%),
-    linear-gradient(rgba(255,255,255,.018) 1px,transparent 1px);
-  background-size:auto,auto,100% 5px;
-  animation:achievementFullBgPulse 3.4s ease-in-out infinite;
-}
-body.achievement-bg-doronum::before{
-  background:
-    radial-gradient(circle at 50% 50%,rgba(115,250,255,.25),transparent 34%),
-    radial-gradient(circle at 15% 20%,rgba(60,170,255,.22),transparent 34%),
-    radial-gradient(circle at 85% 80%,rgba(60,255,220,.18),transparent 36%),
-    linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px);
-  background-size:auto,auto,auto,100% 5px;
-  animation:achievementFullBgPulse 2.8s ease-in-out infinite;
-}
-@keyframes achievementFullBgPulse{
-  0%,100%{filter:saturate(1) brightness(.92)}
-  50%{filter:saturate(1.3) brightness(1.08)}
+@keyframes achievementWorldBreath{
+  0%,100%{transform:scale(1.02) translate3d(0,0,0);filter:blur(8px) brightness(.92) saturate(1)}
+  50%{transform:scale(1.10) translate3d(0,-1.5%,0);filter:blur(5px) brightness(1.16) saturate(1.35)}
 }
 @media(prefers-reduced-motion:reduce){
-  body.achievement-bg-legendary::before,
-  body.achievement-bg-myth::before,
-  body.achievement-bg-doronum::before{animation:none}
+  #achievementFullSiteEffect::before{animation:none}
 }
 
 /* ===== ACHIEVEMENT WORLD CELEBRATION ===== */
+
 #achievementCelebration{
   position:fixed;
   inset:0;
@@ -2099,6 +2113,25 @@ function 업적대형연출(achievement) {
     const rarity = String(achievement?.희귀도 || "Common").trim().toLowerCase();
     if (!["legendary","myth","doronum"].includes(rarity)) return;
 
+    // 기존 body::before/stacking-context에 의존하지 않고,
+    // 사이트 전체 뒤에 독립적인 고정 배경을 직접 만듭니다.
+    let bg = document.getElementById("achievementFullSiteEffect");
+    if (!bg) {
+        bg = document.createElement("div");
+        bg.id = "achievementFullSiteEffect";
+        bg.setAttribute("aria-hidden", "true");
+        document.body.insertBefore(bg, document.body.firstChild);
+    }
+
+    bg.className = `rarity-${rarity} show`;
+
+    document.body.classList.remove(
+        "achievement-bg-legendary",
+        "achievement-bg-myth",
+        "achievement-bg-doronum"
+    );
+    document.body.classList.add(`achievement-bg-${rarity}`);
+
     let layer = document.getElementById("achievementCelebration");
     if (!layer) {
         layer = document.createElement("div");
@@ -2119,35 +2152,27 @@ function 업적대형연출(achievement) {
 
     layer.className = `rarity-${rarity}`;
 
-    // 돌이사이트 전체 body 배경을 희귀도에 맞게 변경합니다.
-    document.body.classList.remove(
-        "achievement-bg-legendary",
-        "achievement-bg-myth",
-        "achievement-bg-doronum"
-    );
-    document.body.classList.add(`achievement-bg-${rarity}`);
-
     const particles = layer.querySelector(".celebration-particles");
     particles.innerHTML = "";
 
-    const count = rarity === "doronum" ? 58 : rarity === "myth" ? 42 : 30;
+    const count = rarity === "doronum" ? 72 : rarity === "myth" ? 52 : 38;
     const palette = rarity === "doronum"
-        ? ["#dfffff","#78f7ff","#4b9cff","#7dffd8","#ffffff"]
+        ? ["#ffffff","#dfffff","#78f7ff","#4b9cff","#7dffd8"]
         : rarity === "myth"
-            ? ["#fff0f3","#ff6278","#ff315c","#ff9aab","#b51f4e"]
-            : ["#fff9cf","#ffe36a","#ffbd45","#fff4a0","#ffffff"];
+            ? ["#ffffff","#fff0f3","#ff6278","#ff315c","#b51f4e"]
+            : ["#ffffff","#fff9cf","#ffe36a","#ffbd45","#fff4a0"];
 
     for (let i = 0; i < count; i++) {
         const p = document.createElement("i");
-        const angle = Math.round((360 / count) * i + (Math.random() * 12 - 6));
+        const angle = Math.round((360 / count) * i + (Math.random() * 14 - 7));
         const distance = Math.round(
-            (rarity === "doronum" ? 280 : rarity === "myth" ? 235 : 210) +
-            Math.random() * (rarity === "doronum" ? 460 : 340)
+            (rarity === "doronum" ? 300 : rarity === "myth" ? 245 : 220) +
+            Math.random() * (rarity === "doronum" ? 520 : 390)
         );
-        const size = (2 + Math.random() * (rarity === "doronum" ? 6 : 4)).toFixed(1) + "px";
-        const delay = (Math.random() * .42).toFixed(2) + "s";
-        const duration = (3.1 + Math.random() * (rarity === "doronum" ? 2.5 : 1.8)).toFixed(2) + "s";
-        const spin = (Math.random() > .5 ? 1 : -1) * (120 + Math.random() * 300);
+        const size = (2 + Math.random() * (rarity === "doronum" ? 6 : 4.5)).toFixed(1) + "px";
+        const delay = (Math.random() * .35).toFixed(2) + "s";
+        const duration = (3.2 + Math.random() * (rarity === "doronum" ? 2.8 : 2.0)).toFixed(2) + "s";
+        const spin = (Math.random() > .5 ? 1 : -1) * (120 + Math.random() * 360);
 
         p.className = "celebration-particle";
         p.style.setProperty("--angle", angle + "deg");
@@ -2158,32 +2183,38 @@ function 업적대형연출(achievement) {
         p.style.setProperty("--spin", spin + "deg");
         p.style.setProperty("--particle", palette[i % palette.length]);
 
-        if (rarity === "doronum" && i % 7 === 0) {
+        if (rarity === "doronum" && i % 6 === 0) {
             p.style.borderRadius = "1px";
             p.style.transform += " rotate(45deg)";
         }
+
         particles.appendChild(p);
     }
 
     layer.classList.add("show");
+
     clearTimeout(window.__doriAchievementCelebrationTimer);
     clearTimeout(window.__doriAchievementBackgroundTimer);
 
-    // 팝업이 사라질 때까지 전체 사이트 배경을 유지합니다.
+    // 팝업이 사라지는 순간까지 배경 효과를 유지합니다.
     const popupDuration = 6500;
 
     window.__doriAchievementCelebrationTimer = setTimeout(() => {
         layer.classList.remove("show");
 
-        // 팝업이 사라진 직후 전체 사이트 배경을 원래 상태로 자연스럽게 복귀합니다.
+        // 팝업 퇴장과 동시에 배경도 부드럽게 원상복귀합니다.
         window.__doriAchievementBackgroundTimer = setTimeout(() => {
+            bg.classList.remove("show");
             document.body.classList.remove(
                 "achievement-bg-legendary",
                 "achievement-bg-myth",
                 "achievement-bg-doronum"
             );
             if (!layer.classList.contains("show")) layer.className = "";
-        }, 900);
+            setTimeout(() => {
+                if (!bg.classList.contains("show")) bg.className = "";
+            }, 1100);
+        }, 850);
     }, popupDuration);
 }
 
