@@ -4090,6 +4090,9 @@ async function 읽음저장() {
 
     await 업적달성알림("read_news");
 
+    // 공통 업적 시스템이 1회/10회 신문 및 1억 코인 조건을 즉시 재검사한다.
+    await window.doriCheckAchievements?.();
+
     읽은신문번호들 =
         목록;
 
