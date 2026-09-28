@@ -22,7 +22,9 @@ const state = {
   initialized: false,
   checkPromise: null,
   authErrorUntil: 0,
-  backgroundTimer: null
+  backgroundTimer: null,
+  backgroundChain: 0,
+  backgroundChainResetTimer: null
 };
 
 function ensureStyles() {
@@ -142,7 +144,71 @@ function ensureStyles() {
 @keyframes doriMythTitle{0%,100%{transform:translateX(0);text-shadow:0 0 12px rgba(255,50,90,.28)}50%{transform:translateX(1px);text-shadow:0 0 18px rgba(255,50,90,.58),0 0 34px rgba(255,50,90,.22)}}
 
 @media(max-width:600px){#dori-achievement-global-popup{top:12px;right:12px;width:calc(100vw - 24px)}.dori-achievement-card{grid-template-columns:58px 1fr;gap:12px;padding:15px}.dori-achievement-icon{width:56px;height:56px;font-size:29px}.dori-achievement-title{font-size:18px}}
-@media(prefers-reduced-motion:reduce){.dori-achievement-card,.dori-achievement-icon,.dori-achievement-shine,.dori-achievement-particles,.dori-achievement-rays,.dori-achievement-sparkles,.dori-achievement-orbit,.dori-achievement-prism{animation:none!important}.dori-achievement-card{opacity:1;transform:none;filter:none}.dori-achievement-card.closing{opacity:0}#dori-achievement-background{transition:none!important}.dori-bg-bloom,.dori-bg-ring,.dori-bg-sheen,.dori-bg-dots{animation:none!important}}`;
+@media(prefers-reduced-motion:reduce){.dori-achievement-card,.dori-achievement-icon,.dori-achievement-shine,.dori-achievement-particles,.dori-achievement-rays,.dori-achievement-sparkles,.dori-achievement-orbit,.dori-achievement-prism{animation:none!important}.dori-achievement-card{opacity:1;transform:none;filter:none}.dori-achievement-card.closing{opacity:0}#dori-achievement-background{transition:none!important}.dori-bg-bloom,.dori-bg-ring,.dori-bg-sheen,.dori-bg-dots{animation:none!important}}
+/* ===== FULL-SITE ACHIEVEMENT WORLD / CHAIN EFFECT ===== */
+#사이트{position:relative!important;z-index:1!important}
+#dori-achievement-background{
+  z-index:0!important;
+  background:
+    radial-gradient(circle at 50% 45%,rgba(255,255,255,.10),transparent 18%),
+    linear-gradient(135deg,#03034a,#050516 72%)!important;
+  opacity:0!important;
+  visibility:hidden!important;
+  transition:opacity .55s ease,background 1.05s ease,filter .8s ease!important;
+}
+#dori-achievement-background.active{opacity:1!important;visibility:visible!important}
+#dori-achievement-background::before{
+  content:"";
+  position:absolute;
+  inset:-12%;
+  background:
+    radial-gradient(circle at 50% 45%,rgba(255,255,255,.16),transparent 20%),
+    radial-gradient(circle at 10% 15%,rgba(255,255,255,.09),transparent 30%),
+    radial-gradient(circle at 90% 85%,rgba(255,255,255,.07),transparent 34%);
+  filter:blur(14px);
+  animation:doriAchievementWorldPulse 1.15s cubic-bezier(.2,.8,.2,1) 2;
+}
+#dori-achievement-background.legendary{
+  background:
+    radial-gradient(circle at 50% 42%,rgba(255,249,184,.62),transparent 22%),
+    radial-gradient(circle at 12% 18%,rgba(255,196,48,.48),transparent 34%),
+    radial-gradient(circle at 88% 82%,rgba(255,116,22,.38),transparent 42%),
+    linear-gradient(135deg,#704800,#2b1900 48%,#0d0802 100%)!important;
+}
+#dori-achievement-background.myth{
+  background:
+    radial-gradient(circle at 50% 42%,rgba(255,92,116,.56),transparent 22%),
+    radial-gradient(circle at 10% 18%,rgba(205,0,47,.55),transparent 35%),
+    radial-gradient(circle at 90% 82%,rgba(104,0,32,.48),transparent 43%),
+    linear-gradient(135deg,#650820,#28000d 48%,#0d0208 100%)!important;
+}
+#dori-achievement-background.doronum{
+  background:
+    radial-gradient(circle at 50% 42%,rgba(225,255,255,.68),transparent 21%),
+    radial-gradient(circle at 10% 18%,rgba(45,241,255,.56),transparent 34%),
+    radial-gradient(circle at 90% 82%,rgba(55,137,255,.52),transparent 42%),
+    linear-gradient(135deg,#08617f,#073a5c 45%,#04152f 100%)!important;
+}
+#dori-achievement-background.chain-2{filter:hue-rotate(12deg) saturate(1.08)}
+#dori-achievement-background.chain-3{filter:hue-rotate(-14deg) saturate(1.12)}
+#dori-achievement-background.chain-4{filter:hue-rotate(26deg) saturate(1.14)}
+#dori-achievement-background.chain-5{filter:hue-rotate(-28deg) saturate(1.16)}
+#dori-achievement-background.chain-6{filter:hue-rotate(42deg) saturate(1.18)}
+#dori-achievement-background.chain-7{filter:hue-rotate(-45deg) saturate(1.2)}
+#dori-achievement-background.chain-8{filter:hue-rotate(60deg) saturate(1.22)}
+#dori-achievement-background.chain-9{filter:hue-rotate(-62deg) saturate(1.24)}
+#dori-achievement-background.chain-10{filter:hue-rotate(78deg) saturate(1.26)}
+#dori-achievement-background.chain-11{filter:hue-rotate(-82deg) saturate(1.28)}
+#dori-achievement-background.chain-12{filter:hue-rotate(98deg) saturate(1.30)}
+@keyframes doriAchievementWorldPulse{
+  0%{transform:scale(.92);opacity:.12}
+  35%{transform:scale(1.08);opacity:.95}
+  100%{transform:scale(1.16);opacity:.18}
+}
+@media(prefers-reduced-motion:reduce){
+  #dori-achievement-background::before{animation:none!important}
+}
+`;
   document.head.appendChild(style);
 }
 function popupElement() {
@@ -170,14 +236,28 @@ function backgroundEffectElement() {
 
 function triggerBackgroundEffect(rarity) {
   if (!["legendary", "myth", "doronum"].includes(rarity)) return;
+
   const bg = backgroundEffectElement();
-  bg.className = "";
-  bg.classList.add(rarity, "active");
-  // 재달성/연속 달성 시에도 애니메이션을 처음부터 다시 시작한다.
-  void bg.offsetWidth;
-  bg.classList.add(rarity, "active");
+
+  // 한 번의 연속 업적 체인을 하나의 시퀀스로 유지합니다.
+  state.backgroundChain = (state.backgroundChain || 0) + 1;
+  const chain = ((state.backgroundChain - 1) % 12) + 1;
+
+  clearTimeout(state.backgroundChainResetTimer);
+  state.backgroundChainResetTimer = setTimeout(() => {
+    state.backgroundChain = 0;
+  }, 9000);
+
   clearTimeout(state.backgroundTimer);
-  state.backgroundTimer = setTimeout(() => bg.classList.remove("active"), 5200);
+
+  bg.className = `${rarity} active chain-${chain}`;
+  void bg.offsetWidth;
+  bg.className = `${rarity} active chain-${chain}`;
+
+  // 다음 업적이 큐에서 나올 때까지 충분히 유지합니다.
+  state.backgroundTimer = setTimeout(() => {
+    bg.classList.remove("active");
+  }, 7000);
 }
 
 function showNext() {
@@ -189,6 +269,7 @@ function showNext() {
   const rawRarity = String(data.rarity || "Common");
   const rarity = /도로늄|doronum/i.test(rawRarity) || /도로늄/.test(String(data.name || "")) ? "doronum" : rawRarity.toLowerCase().replace(/[^a-z]/g, "");
   const rarityLabel = { common: "COMMON", rare: "RARE", epic: "EPIC", legendary: "LEGENDARY", doronum: "DORONUM", myth: "MYTH" }[rarity] || rawRarity.toUpperCase();
+  triggerBackgroundEffect(rarity);
 
   popup.innerHTML = `
     <div class="dori-achievement-card dori-rarity-${rarity}">
@@ -260,7 +341,6 @@ async function claim(id) {
   if (data?.success && !data?.already_claimed) {
     const rawRarity = String(data.rarity || "");
     const rarity = /도로늄|doronum/i.test(rawRarity) || /도로늄/.test(String(data.name || "")) ? "doronum" : rawRarity.toLowerCase().replace(/[^a-z]/g, "");
-    triggerBackgroundEffect(rarity);
     state.queue.push(data);
     showNext();
   }
@@ -286,7 +366,7 @@ async function checkSiteAchievements() {
   const userId = sessionData.session.user.id;
   const { data: user, error } = await supabase
     .from("users")
-    .select("doldolcoin, read_dori_news_numbers, read_dori_news, user_achievement")
+    .select("doldolcoin, read_dori_news, user_achievement")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -298,32 +378,32 @@ async function checkSiteAchievements() {
   const owned = user.user_achievement && typeof user.user_achievement === "object" ? user.user_achievement : {};
   const need = id => !owned[id];
 
-  // bigint가 문자열로 내려오거나 매우 큰 값이어도 안전하게 비교한다.
+  // Supabase bigint/text 값 모두 안전하게 비교할 수 있도록 문자열 기반 정수 비교를 사용합니다.
   const coinValue = (() => {
     const raw = user.doldolcoin;
-    if (typeof raw === "bigint") return raw;
-    if (typeof raw === "number") return Number.isFinite(raw) ? raw : 0;
     const normalized = String(raw ?? "").replace(/,/g, "").trim();
-    if (!normalized) return 0;
-    const n = Number(normalized);
-    return Number.isFinite(n) ? n : 0;
+    if (!normalized) return 0n;
+    try { return BigInt(normalized); } catch { return 0n; }
   })();
 
-  // 서버에 실제 획득 기록이 없는 업적만 요청한다.
+  // 서버의 claim_achievement가 실제 보유 코인을 다시 검증하므로,
+  // 여기서는 직접 보상 금액을 계산하지 않습니다.
+  void coinValue;
+
   if (need("first_login")) await claim("first_login");
 
-  const readNumbers = Array.isArray(user.read_dori_news_numbers)
-    ? user.read_dori_news_numbers.map(Number).filter(Number.isInteger)
-    : [];
+  const readNewsNumber = Number(user.read_dori_news || 0);
 
-  // 최소 1회 읽음.
-  if (readNumbers.length > 0 || Number(user.read_dori_news || 0) >= 1) {
+  // read_dori_news는 현재 읽을 수 있거나 읽은 신문 번호를 나타내므로
+  // 1 이상이면 첫 신문 관련 업적, 10 이상이면 10회 관련 업적을 확인합니다.
+  if (readNewsNumber >= 1) {
     if (need("read_news")) await claim("read_news");
+    if (need("read_1_news")) await claim("read_1_news");
   }
 
-  // 정확히 1회/10회 신문을 읽었는지 서버 저장 목록으로 판정.
-  if (readNumbers.includes(1) && need("read_1_news")) await claim("read_1_news");
-  if (readNumbers.includes(10) && need("read_10_news")) await claim("read_10_news");
+  if (readNewsNumber >= 10 && need("read_10_news")) {
+    await claim("read_10_news");
+  }
 
   // rich는 함수 초반에 이미 서버 검증했다.
   })().finally(() => {
