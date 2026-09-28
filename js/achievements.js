@@ -492,6 +492,7 @@ async function checkSiteAchievements() {
   await claim("rich");
   await claim("very_rich");
   await claim("super_rich");
+  await claim("rockey_7777777");
 
   const userId = sessionData.session.user.id;
   const { data: user, error } = await supabase
