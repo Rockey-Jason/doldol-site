@@ -21,7 +21,8 @@ const state = {
   closeTimer: null,
   initialized: false,
   checkPromise: null,
-  authErrorUntil: 0
+  authErrorUntil: 0,
+  backgroundTimer: null
 };
 
 function ensureStyles() {
@@ -97,8 +98,51 @@ function ensureStyles() {
 @keyframes doriOrbit{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
 @keyframes doriPrism{0%{background-position:220% 0}100%{background-position:-20% 0}}
 @keyframes doriAchievementPulse{0%,100%{filter:brightness(1);transform:scale(1);box-shadow:inset 0 1px rgba(255,255,255,.18),0 0 22px var(--rarity-glow)}50%{filter:brightness(1.16);transform:scale(1.035);box-shadow:inset 0 1px rgba(255,255,255,.27),0 0 42px var(--rarity-glow)}}
+
+/* =========================================================
+   업적 달성 사이트 배경 효과
+   - 팝업과 분리된 전용 레이어
+   - Legendary / Myth / Doronum만 사용
+   - 화면 전체를 뒤덮지 않고 은은한 광원과 느린 파동만 표시
+========================================================= */
+#dori-achievement-background{position:fixed;inset:0;z-index:2147482990;pointer-events:none;overflow:hidden;opacity:0;visibility:hidden;transition:opacity .55s ease,visibility .55s ease}
+#dori-achievement-background.active{opacity:1;visibility:visible}
+#dori-achievement-background .dori-bg-vignette{position:absolute;inset:0;background:radial-gradient(circle at 82% 10%,var(--bg-glow,transparent),transparent 27%),radial-gradient(circle at 14% 88%,var(--bg-glow-soft,transparent),transparent 30%);mix-blend-mode:screen;opacity:.62}
+#dori-achievement-background .dori-bg-bloom{position:absolute;inset:-20%;background:radial-gradient(ellipse at 50% 48%,var(--bg-bloom,transparent) 0%,transparent 35%);filter:blur(28px);opacity:.22;animation:doriBackgroundBloom 4.8s ease-in-out infinite}
+#dori-achievement-background .dori-bg-ring{position:absolute;left:50%;top:50%;width:min(78vw,1050px);height:min(78vw,1050px);transform:translate(-50%,-50%) scale(.78);border:1px solid var(--bg-ring,transparent);border-radius:50%;opacity:0;box-shadow:0 0 70px var(--bg-ring-glow,transparent),inset 0 0 70px var(--bg-ring-glow,transparent);animation:doriBackgroundRing 4.8s cubic-bezier(.2,.8,.2,1) forwards}
+#dori-achievement-background .dori-bg-sheen{position:absolute;inset:-10%;background:linear-gradient(112deg,transparent 35%,var(--bg-sheen,transparent) 50%,transparent 65%);transform:translateX(-110%);opacity:.2;animation:doriBackgroundSheen 3.8s .15s ease-out forwards}
+#dori-achievement-background .dori-bg-dots{position:absolute;inset:0;opacity:.28;background-image:radial-gradient(circle at 18% 22%,var(--bg-dot,transparent) 0 1px,transparent 2px),radial-gradient(circle at 78% 19%,var(--bg-dot,transparent) 0 1px,transparent 2px),radial-gradient(circle at 86% 74%,var(--bg-dot,transparent) 0 1.2px,transparent 2.4px),radial-gradient(circle at 27% 81%,var(--bg-dot,transparent) 0 1px,transparent 2px);animation:doriBackgroundDots 4.8s ease-in-out forwards}
+#dori-achievement-background.legendary{--bg-glow:rgba(255,190,55,.22);--bg-glow-soft:rgba(255,170,40,.12);--bg-bloom:rgba(255,186,46,.24);--bg-ring:rgba(255,210,105,.42);--bg-ring-glow:rgba(255,177,35,.16);--bg-sheen:rgba(255,239,174,.34);--bg-dot:#ffe49a}
+#dori-achievement-background.myth{--bg-glow:rgba(255,48,93,.23);--bg-glow-soft:rgba(230,25,70,.11);--bg-bloom:rgba(255,40,84,.23);--bg-ring:rgba(255,102,130,.38);--bg-ring-glow:rgba(255,35,90,.16);--bg-sheen:rgba(255,196,208,.28);--bg-dot:#ffc0ce}
+#dori-achievement-background.doronum{--bg-glow:rgba(42,232,255,.24);--bg-glow-soft:rgba(68,104,255,.12);--bg-bloom:rgba(35,225,255,.25);--bg-ring:rgba(112,249,255,.5);--bg-ring-glow:rgba(35,225,255,.22);--bg-sheen:rgba(220,255,255,.4);--bg-dot:#bffcff}
+@keyframes doriBackgroundBloom{0%,100%{transform:scale(.9);opacity:.13}45%{transform:scale(1.06);opacity:.28}}
+@keyframes doriBackgroundRing{0%{opacity:0;transform:translate(-50%,-50%) scale(.78)}18%{opacity:.42}100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)}}
+@keyframes doriBackgroundSheen{0%{transform:translateX(-110%)}100%{transform:translateX(110%)}}
+@keyframes doriBackgroundDots{0%{opacity:0;transform:scale(.96)}25%{opacity:.32}75%{opacity:.2}100%{opacity:0;transform:scale(1.03)}}
+
+
+/* 고등급 팝업 전용 고급 연출 */
+.dori-rarity-legendary{transform-origin:90% 10%}
+.dori-rarity-myth{transform-origin:88% 12%;background-image:radial-gradient(circle at 96% 0%,rgba(255,92,125,.24),transparent 30%),radial-gradient(circle at 5% 100%,rgba(125,10,45,.2),transparent 38%),linear-gradient(135deg,var(--rarity-deep),rgba(12,4,20,.98))}
+.dori-rarity-doronum{transform-origin:90% 8%;background-image:radial-gradient(circle at 88% 0%,rgba(84,250,255,.25),transparent 30%),radial-gradient(circle at 5% 100%,rgba(65,95,255,.18),transparent 38%),linear-gradient(135deg,rgba(5,44,65,.99),rgba(3,9,30,.99))}
+.dori-rarity-legendary.show{animation:doriLegendaryIn .9s cubic-bezier(.16,1,.3,1) forwards}
+.dori-rarity-myth.show{animation:doriMythIn 1s cubic-bezier(.16,1,.3,1) forwards}
+.dori-rarity-doronum.show{animation:doriDoronumIn 1.12s cubic-bezier(.12,1,.25,1) forwards}
+.dori-rarity-legendary.closing,.dori-rarity-myth.closing,.dori-rarity-doronum.closing{animation:doriAchievementOut .76s cubic-bezier(.22,1,.36,1) forwards}
+.dori-rarity-legendary .dori-achievement-kicker,.dori-rarity-myth .dori-achievement-kicker,.dori-rarity-doronum .dori-achievement-kicker{letter-spacing:.22em}
+.dori-rarity-legendary .dori-achievement-name{color:#fff4c7}
+.dori-rarity-myth .dori-achievement-name{color:#ffe1e8}
+.dori-rarity-doronum .dori-achievement-name{color:#dfffff}
+.dori-rarity-myth .dori-achievement-title{animation:doriMythTitle 2.2s ease-in-out infinite}
+.dori-rarity-legendary .dori-achievement-icon{animation:doriLegendaryIcon 2.4s ease-in-out 1s infinite}
+@keyframes doriLegendaryIn{0%{opacity:0;transform:translate3d(42px,-18px,0) scale(.78) rotate(2deg);filter:blur(7px) brightness(1.6)}48%{opacity:1;transform:translate3d(-4px,2px,0) scale(1.025) rotate(0);filter:blur(0) brightness(1.18)}100%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:none}}
+@keyframes doriMythIn{0%{opacity:0;transform:translate3d(52px,-22px,0) scale(.7) rotate(3deg);filter:blur(9px) brightness(1.8)}38%{opacity:1;transform:translate3d(-6px,3px,0) scale(1.035) rotate(-.4deg);filter:blur(0) brightness(1.25)}65%{transform:translate3d(2px,-1px,0) scale(.995) rotate(.2deg)}100%{opacity:1;transform:translate3d(0,0,0) scale(1) rotate(0);filter:none}}
+@keyframes doriDoronumIn{0%{opacity:0;transform:translate3d(58px,-28px,0) scale(.62) rotate(4deg);filter:blur(12px) brightness(2)}32%{opacity:1;transform:translate3d(-7px,3px,0) scale(1.045) rotate(-.5deg);filter:blur(0) brightness(1.35)}55%{transform:translate3d(2px,-1px,0) scale(.992)}76%{transform:translate3d(0,0,0) scale(1.008)}100%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:none}}
+@keyframes doriLegendaryIcon{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.07) rotate(-1deg);filter:brightness(1.22) drop-shadow(0 0 12px rgba(255,200,70,.55))}}
+@keyframes doriMythTitle{0%,100%{transform:translateX(0);text-shadow:0 0 12px rgba(255,50,90,.28)}50%{transform:translateX(1px);text-shadow:0 0 18px rgba(255,50,90,.58),0 0 34px rgba(255,50,90,.22)}}
+
 @media(max-width:600px){#dori-achievement-global-popup{top:12px;right:12px;width:calc(100vw - 24px)}.dori-achievement-card{grid-template-columns:58px 1fr;gap:12px;padding:15px}.dori-achievement-icon{width:56px;height:56px;font-size:29px}.dori-achievement-title{font-size:18px}}
-@media(prefers-reduced-motion:reduce){.dori-achievement-card,.dori-achievement-icon,.dori-achievement-shine,.dori-achievement-particles,.dori-achievement-rays,.dori-achievement-sparkles,.dori-achievement-orbit,.dori-achievement-prism{animation:none!important}.dori-achievement-card{opacity:1;transform:none;filter:none}.dori-achievement-card.closing{opacity:0}}`;
+@media(prefers-reduced-motion:reduce){.dori-achievement-card,.dori-achievement-icon,.dori-achievement-shine,.dori-achievement-particles,.dori-achievement-rays,.dori-achievement-sparkles,.dori-achievement-orbit,.dori-achievement-prism{animation:none!important}.dori-achievement-card{opacity:1;transform:none;filter:none}.dori-achievement-card.closing{opacity:0}#dori-achievement-background{transition:none!important}.dori-bg-bloom,.dori-bg-ring,.dori-bg-sheen,.dori-bg-dots{animation:none!important}}`;
   document.head.appendChild(style);
 }
 function popupElement() {
@@ -110,6 +154,30 @@ function popupElement() {
     document.body.appendChild(el);
   }
   return el;
+}
+
+
+function backgroundEffectElement() {
+  let el = document.getElementById("dori-achievement-background");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "dori-achievement-background";
+    el.innerHTML = '<div class="dori-bg-vignette"></div><div class="dori-bg-bloom"></div><div class="dori-bg-ring"></div><div class="dori-bg-sheen"></div><div class="dori-bg-dots"></div>';
+    document.body.appendChild(el);
+  }
+  return el;
+}
+
+function triggerBackgroundEffect(rarity) {
+  if (!["legendary", "myth", "doronum"].includes(rarity)) return;
+  const bg = backgroundEffectElement();
+  bg.className = "";
+  bg.classList.add(rarity, "active");
+  // 재달성/연속 달성 시에도 애니메이션을 처음부터 다시 시작한다.
+  void bg.offsetWidth;
+  bg.classList.add(rarity, "active");
+  clearTimeout(state.backgroundTimer);
+  state.backgroundTimer = setTimeout(() => bg.classList.remove("active"), 5200);
 }
 
 function showNext() {
@@ -190,6 +258,9 @@ async function claim(id) {
   }
 
   if (data?.success && !data?.already_claimed) {
+    const rawRarity = String(data.rarity || "");
+    const rarity = /도로늄|doronum/i.test(rawRarity) || /도로늄/.test(String(data.name || "")) ? "doronum" : rawRarity.toLowerCase().replace(/[^a-z]/g, "");
+    triggerBackgroundEffect(rarity);
     state.queue.push(data);
     showNext();
   }
