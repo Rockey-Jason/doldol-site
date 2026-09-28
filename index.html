@@ -507,6 +507,42 @@ body.achievement-bg-doronum #achievementFullSiteEffect{
   #achievementFullSiteEffect::before{animation:none}
 }
 
+/* ===== ACHIEVEMENT CHAINED BACKGROUND VARIATIONS ===== */
+#achievementFullSiteEffect{
+  --chainHue:0deg;
+  --chainFlash:rgba(255,255,255,.18);
+}
+#achievementFullSiteEffect.chain-1{filter:hue-rotate(0deg)}
+#achievementFullSiteEffect.chain-2{filter:hue-rotate(18deg)}
+#achievementFullSiteEffect.chain-3{filter:hue-rotate(-18deg)}
+#achievementFullSiteEffect.chain-4{filter:hue-rotate(35deg)}
+#achievementFullSiteEffect.chain-5{filter:hue-rotate(-35deg)}
+#achievementFullSiteEffect.chain-6{filter:hue-rotate(55deg)}
+#achievementFullSiteEffect.chain-7{filter:hue-rotate(-55deg)}
+#achievementFullSiteEffect.chain-8{filter:hue-rotate(80deg)}
+#achievementFullSiteEffect.chain-9{filter:hue-rotate(-80deg)}
+#achievementFullSiteEffect.chain-10{filter:hue-rotate(105deg)}
+#achievementFullSiteEffect.chain-11{filter:hue-rotate(-105deg)}
+#achievementFullSiteEffect.chain-12{filter:hue-rotate(135deg)}
+#achievementFullSiteEffect.chain-13{filter:hue-rotate(-135deg)}
+#achievementFullSiteEffect.chain-14{filter:hue-rotate(165deg)}
+#achievementFullSiteEffect.chain-15{filter:hue-rotate(-165deg)}
+#achievementFullSiteEffect.chain-pulse::before{
+  animation:achievementWorldBreath .95s cubic-bezier(.2,.8,.2,1) 2;
+}
+#achievementFullSiteEffect.chain-pulse::after{
+  animation:achievementChainScan .7s ease-out 1;
+}
+@keyframes achievementChainScan{
+  0%{opacity:.15;transform:scaleY(.2)}
+  45%{opacity:.9;transform:scaleY(1)}
+  100%{opacity:.35;transform:scaleY(1)}
+}
+@media(prefers-reduced-motion:reduce){
+  #achievementFullSiteEffect.chain-pulse::before,
+  #achievementFullSiteEffect.chain-pulse::after{animation:none}
+}
+
 /* ===== ACHIEVEMENT WORLD CELEBRATION ===== */
 
 #achievementCelebration{
@@ -2113,8 +2149,6 @@ function 업적대형연출(achievement) {
     const rarity = String(achievement?.희귀도 || "Common").trim().toLowerCase();
     if (!["legendary","myth","doronum"].includes(rarity)) return;
 
-    // 기존 body::before/stacking-context에 의존하지 않고,
-    // 사이트 전체 뒤에 독립적인 고정 배경을 직접 만듭니다.
     let bg = document.getElementById("achievementFullSiteEffect");
     if (!bg) {
         bg = document.createElement("div");
@@ -2123,7 +2157,23 @@ function 업적대형연출(achievement) {
         document.body.insertBefore(bg, document.body.firstChild);
     }
 
-    bg.className = `rarity-${rarity} show`;
+    // 연속 달성마다 1→15로 변하는 체인 단계.
+    // 기존 타이머를 취소하지 않고 같은 배경 레이어를 재사용하므로
+    // 업적이 빠르게 여러 개 해금되어도 이전 효과가 끊기지 않습니다.
+    window.__doriAchievementChain = (window.__doriAchievementChain || 0) + 1;
+    const chain = ((window.__doriAchievementChain - 1) % 15) + 1;
+
+    clearTimeout(window.__doriAchievementChainResetTimer);
+    window.__doriAchievementChainResetTimer = setTimeout(() => {
+        window.__doriAchievementChain = 0;
+    }, 7600);
+
+    bg.className = `rarity-${rarity} show chain-${chain} chain-pulse`;
+    void bg.offsetWidth;
+    bg.className = `rarity-${rarity} show chain-${chain} chain-pulse`;
+    setTimeout(() => {
+        if (bg.classList.contains("show")) bg.classList.remove("chain-pulse");
+    }, 1500);
 
     document.body.classList.remove(
         "achievement-bg-legendary",
@@ -2151,11 +2201,12 @@ function 업적대형연출(achievement) {
     }
 
     layer.className = `rarity-${rarity}`;
-
     const particles = layer.querySelector(".celebration-particles");
     particles.innerHTML = "";
 
-    const count = rarity === "doronum" ? 72 : rarity === "myth" ? 52 : 38;
+    // 체인이 올라갈수록 파티클/속도/확산 범위를 조금씩 강화합니다.
+    const intensity = 1 + Math.min(chain - 1, 14) * 0.035;
+    const count = Math.round((rarity === "doronum" ? 72 : rarity === "myth" ? 52 : 38) * intensity);
     const palette = rarity === "doronum"
         ? ["#ffffff","#dfffff","#78f7ff","#4b9cff","#7dffd8"]
         : rarity === "myth"
@@ -2165,14 +2216,13 @@ function 업적대형연출(achievement) {
     for (let i = 0; i < count; i++) {
         const p = document.createElement("i");
         const angle = Math.round((360 / count) * i + (Math.random() * 14 - 7));
-        const distance = Math.round(
-            (rarity === "doronum" ? 300 : rarity === "myth" ? 245 : 220) +
-            Math.random() * (rarity === "doronum" ? 520 : 390)
-        );
-        const size = (2 + Math.random() * (rarity === "doronum" ? 6 : 4.5)).toFixed(1) + "px";
-        const delay = (Math.random() * .35).toFixed(2) + "s";
-        const duration = (3.2 + Math.random() * (rarity === "doronum" ? 2.8 : 2.0)).toFixed(2) + "s";
-        const spin = (Math.random() > .5 ? 1 : -1) * (120 + Math.random() * 360);
+        const baseDistance = rarity === "doronum" ? 300 : rarity === "myth" ? 245 : 220;
+        const maxDistance = rarity === "doronum" ? 520 : 390;
+        const distance = Math.round((baseDistance + Math.random() * maxDistance) * intensity);
+        const size = (2 + Math.random() * (rarity === "doronum" ? 6 : 4.5) + chain * .08).toFixed(1) + "px";
+        const delay = (Math.random() * .30).toFixed(2) + "s";
+        const duration = (2.9 + Math.random() * (rarity === "doronum" ? 2.5 : 1.8)).toFixed(2) + "s";
+        const spin = (Math.random() > .5 ? 1 : -1) * (120 + Math.random() * 420);
 
         p.className = "celebration-particle";
         p.style.setProperty("--angle", angle + "deg");
@@ -2182,12 +2232,10 @@ function 업적대형연출(achievement) {
         p.style.setProperty("--duration", duration);
         p.style.setProperty("--spin", spin + "deg");
         p.style.setProperty("--particle", palette[i % palette.length]);
-
         if (rarity === "doronum" && i % 6 === 0) {
             p.style.borderRadius = "1px";
             p.style.transform += " rotate(45deg)";
         }
-
         particles.appendChild(p);
     }
 
@@ -2196,13 +2244,9 @@ function 업적대형연출(achievement) {
     clearTimeout(window.__doriAchievementCelebrationTimer);
     clearTimeout(window.__doriAchievementBackgroundTimer);
 
-    // 팝업이 사라지는 순간까지 배경 효과를 유지합니다.
     const popupDuration = 6500;
-
     window.__doriAchievementCelebrationTimer = setTimeout(() => {
         layer.classList.remove("show");
-
-        // 팝업 퇴장과 동시에 배경도 부드럽게 원상복귀합니다.
         window.__doriAchievementBackgroundTimer = setTimeout(() => {
             bg.classList.remove("show");
             document.body.classList.remove(
