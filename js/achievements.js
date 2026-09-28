@@ -167,14 +167,17 @@ async function checkSiteAchievements() {
   const userId = sessionData.session.user.id;
   const { data: user, error } = await supabase
     .from("users")
-    .select("doldolcoin, read_dori_news_numbers, read_dori_news")
+    .select("doldolcoin, read_dori_news_numbers, read_dori_news, user_achievement")
     .eq("user_id", userId)
     .maybeSingle();
 
   if (error || !user) return;
 
-  // 로그인 자체가 조건인 업적. RPC가 중복 획득을 원자적으로 차단한다.
-  await claim("first_login");
+  const owned = user.user_achievement && typeof user.user_achievement === "object" ? user.user_achievement : {};
+  const need = id => !owned[id];
+
+  // 서버에 실제 획득 기록이 없는 업적만 요청한다.
+  if (need("first_login")) await claim("first_login");
 
   const readNumbers = Array.isArray(user.read_dori_news_numbers)
     ? user.read_dori_news_numbers.map(Number).filter(Number.isInteger)
@@ -182,15 +185,15 @@ async function checkSiteAchievements() {
 
   // 최소 1회 읽음.
   if (readNumbers.length > 0 || Number(user.read_dori_news || 0) >= 1) {
-    await claim("read_news");
+    if (need("read_news")) await claim("read_news");
   }
 
   // 정확히 1회/10회 신문을 읽었는지 서버 저장 목록으로 판정.
-  if (readNumbers.includes(1)) await claim("read_1_news");
-  if (readNumbers.includes(10)) await claim("read_10_news");
+  if (readNumbers.includes(1) && need("read_1_news")) await claim("read_1_news");
+  if (readNumbers.includes(10) && need("read_10_news")) await claim("read_10_news");
 
   // 현재 보유 코인이 1억 이상이면 부자 업적.
-  if (Number(user.doldolcoin || 0) >= 100000000) {
+  if (Number(user.doldolcoin || 0) >= 100000000 && need("rich")) {
     await claim("rich");
   }
 }
@@ -210,6 +213,10 @@ if (document.readyState === "loading") {
 } else {
   init();
 }
+
+window.setInterval(() => {
+  if (document.visibilityState === "visible") checkSiteAchievements();
+}, 20000);
 
 supabase.auth.onAuthStateChange((event) => {
   if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
