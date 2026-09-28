@@ -16,7 +16,9 @@ const state = {
   showing: false,
   timer: null,
   closeTimer: null,
-  initialized: false
+  initialized: false,
+  checkPromise: null,
+  authErrorUntil: 0
 };
 
 function ensureStyles() {
@@ -152,12 +154,21 @@ function escapeHtml(value) {
 async function claim(id) {
   if (!id) return null;
 
+  // 401/인증 오류가 난 직후에는 같은 요청을 여러 이벤트가 동시에 반복하지 않는다.
+  if (Date.now() < state.authErrorUntil) return null;
+
   const { data, error } = await supabase.rpc("claim_achievement", {
     p_achievement_id: id
   });
 
   if (error) {
-    console.warn("[Dori Achievement] claim failed:", id, error);
+    const status = Number(error?.status || error?.code || 0);
+    if (status === 401 || /invalid api key|jwt/i.test(String(error?.message || ""))) {
+      state.authErrorUntil = Date.now() + 10000;
+      console.warn("[Dori Achievement] Supabase 인증 오류. 10초 후 재시도합니다.");
+    } else {
+      console.warn("[Dori Achievement] claim failed:", id, error);
+    }
     return null;
   }
 
@@ -170,6 +181,10 @@ async function claim(id) {
 }
 
 async function checkSiteAchievements() {
+  // focus/pageshow/interval/auth 이벤트가 동시에 발생해도 한 번만 검사한다.
+  if (state.checkPromise) return state.checkPromise;
+
+  state.checkPromise = (async () => {
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError || !sessionData?.session?.user) return;
 
@@ -221,6 +236,11 @@ async function checkSiteAchievements() {
   if (readNumbers.includes(10) && need("read_10_news")) await claim("read_10_news");
 
   // rich는 함수 초반에 이미 서버 검증했다.
+  })().finally(() => {
+    state.checkPromise = null;
+  });
+
+  return state.checkPromise;
 }
 
 window.doriClaimAchievement = claim;
