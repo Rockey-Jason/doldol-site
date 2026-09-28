@@ -176,6 +176,17 @@ async function checkSiteAchievements() {
   const owned = user.user_achievement && typeof user.user_achievement === "object" ? user.user_achievement : {};
   const need = id => !owned[id];
 
+  // bigint가 문자열로 내려오거나 매우 큰 값이어도 안전하게 비교한다.
+  const coinValue = (() => {
+    const raw = user.doldolcoin;
+    if (typeof raw === "bigint") return raw;
+    if (typeof raw === "number") return Number.isFinite(raw) ? raw : 0;
+    const normalized = String(raw ?? "").replace(/,/g, "").trim();
+    if (!normalized) return 0;
+    const n = Number(normalized);
+    return Number.isFinite(n) ? n : 0;
+  })();
+
   // 서버에 실제 획득 기록이 없는 업적만 요청한다.
   if (need("first_login")) await claim("first_login");
 
@@ -193,7 +204,9 @@ async function checkSiteAchievements() {
   if (readNumbers.includes(10) && need("read_10_news")) await claim("read_10_news");
 
   // 현재 보유 코인이 1억 이상이면 부자 업적.
-  if (Number(user.doldolcoin || 0) >= 100000000 && need("rich")) {
+  // rich는 클라이언트의 user_achievement 캐시 상태와 관계없이 서버 RPC에
+  // 직접 확인을 맡긴다. 이미 획득했다면 RPC가 already_claimed로 안전하게 거절한다.
+  if (coinValue >= 100000000) {
     await claim("rich");
   }
 }
@@ -217,6 +230,11 @@ if (document.readyState === "loading") {
 window.setInterval(() => {
   if (document.visibilityState === "visible") checkSiteAchievements();
 }, 20000);
+
+// 코인이 다른 페이지/컴포넌트에서 증가한 직후에도 놓치지 않도록 재검사한다.
+window.addEventListener("focus", () => checkSiteAchievements());
+window.addEventListener("pageshow", () => checkSiteAchievements());
+window.addEventListener("dori:coin-changed", () => checkSiteAchievements());
 
 supabase.auth.onAuthStateChange((event) => {
   if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
