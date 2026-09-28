@@ -164,6 +164,11 @@ async function checkSiteAchievements() {
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError || !sessionData?.session?.user) return;
 
+  // users REST 조회가 401이어도 rich 업적은 먼저 서버 RPC로 검사한다.
+  // claim_achievement는 auth.uid()와 DB의 실제 doldolcoin을 직접 확인한다.
+  const richResult = await claim("rich");
+  if (richResult?.success && !richResult?.already_claimed) return;
+
   const userId = sessionData.session.user.id;
   const { data: user, error } = await supabase
     .from("users")
@@ -171,7 +176,10 @@ async function checkSiteAchievements() {
     .eq("user_id", userId)
     .maybeSingle();
 
-  if (error || !user) return;
+  if (error || !user) {
+    console.warn("[Dori Achievement] users 조회 실패:", error || "user row 없음");
+    return;
+  }
 
   const owned = user.user_achievement && typeof user.user_achievement === "object" ? user.user_achievement : {};
   const need = id => !owned[id];
@@ -203,9 +211,7 @@ async function checkSiteAchievements() {
   if (readNumbers.includes(1) && need("read_1_news")) await claim("read_1_news");
   if (readNumbers.includes(10) && need("read_10_news")) await claim("read_10_news");
 
-  // 1억 돌돌코인 업적은 서버 RPC가 실제 DB의 보유 코인을 직접 검증한다.
-  // 클라이언트의 숫자/조회 상태에 의존하지 않으므로 놓칠 수 없다.
-  await claim("rich");
+  // rich는 함수 초반에 이미 서버 검증했다.
 }
 
 window.doriClaimAchievement = claim;
