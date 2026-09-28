@@ -2600,6 +2600,18 @@ function 획득한칭호목록() {
 
     }
 
+    const 특별칭호횟수 = Number(현재유저정보?.special_title_draws || 0);
+
+    if (특별칭호횟수 > 0) {
+        const n = Math.min(Math.max(Math.floor(특별칭호횟수), 1), 1000000);
+
+        결과.push({
+            achievementId: "special_title_rockey",
+            achievementName: "특별 칭호",
+            title: "7".repeat(n) + "ROCKEY" + "7".repeat(n)
+        });
+    }
+
     return 결과;
 
 }
