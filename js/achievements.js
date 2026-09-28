@@ -203,12 +203,9 @@ async function checkSiteAchievements() {
   if (readNumbers.includes(1) && need("read_1_news")) await claim("read_1_news");
   if (readNumbers.includes(10) && need("read_10_news")) await claim("read_10_news");
 
-  // 현재 보유 코인이 1억 이상이면 부자 업적.
-  // rich는 클라이언트의 user_achievement 캐시 상태와 관계없이 서버 RPC에
-  // 직접 확인을 맡긴다. 이미 획득했다면 RPC가 already_claimed로 안전하게 거절한다.
-  if (coinValue >= 100000000) {
-    await claim("rich");
-  }
+  // 1억 돌돌코인 업적은 서버 RPC가 실제 DB의 보유 코인을 직접 검증한다.
+  // 클라이언트의 숫자/조회 상태에 의존하지 않으므로 놓칠 수 없다.
+  await claim("rich");
 }
 
 window.doriClaimAchievement = claim;
