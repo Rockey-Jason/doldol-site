@@ -1676,6 +1676,10 @@ function 기록시간표시(time) {
 function 보상문구생성(data) {
     const 아이콘 = 아이콘결정(data);
     const 이름 = data.item_name || "알 수 없는 보상";
+
+    if (data.item_code === "SPECIAL_TITLE" && data.special_title) {
+        return `🏅 특별 칭호 강화 · ${HTML문자열(data.special_title)}`;
+    }
     const 보상코인 = Number(data.reward_coins) || 0;
     const 보상EXP = Number(data.reward_exp) || 0;
     const 내용 = [];
@@ -1830,6 +1834,10 @@ async function 뽑기() {
         코인표시();
         인벤토리표시();
         기록표시();
+
+        if (typeof window.doriCheckAchievements === "function") {
+            setTimeout(() => window.doriCheckAchievements(), 120);
+        }
 
         console.log("🎁 랜덤 박스 당첨:", data);
     } catch (error) {
