@@ -1318,6 +1318,9 @@ const supabase = createClient(
 
 );
 
+// 업적 모듈과 동일한 인증 세션/클라이언트를 공유
+window.doriSupabase = supabase;
+
 
 // =====================================================
 // 회원 레벨 이름
