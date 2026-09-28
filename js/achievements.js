@@ -526,10 +526,3 @@ supabase.auth.onAuthStateChange((event) => {
     setTimeout(checkSiteAchievements, 120);
   }
 });
-
-/* ===== WAVE-ONLY BACKGROUND OVERRIDE ===== */
-#dori-achievement-background .dori-bg-ring{display:none!important;animation:none!important}
-#dori-achievement-background .dori-bg-rays{display:none!important;animation:none!important}
-@media(prefers-reduced-motion:reduce){
-  #dori-achievement-background .dori-bg-wave{animation:none!important;opacity:.16;transform:translate(-50%,-50%) scale(.9)}
-}
