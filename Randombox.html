@@ -1213,6 +1213,9 @@ const supabase = createClient(
     SUPABASE_ANON_KEY
 );
 
+// 업적 모듈과 동일한 인증 클라이언트 공유
+window.doriSupabase = supabase;
+
 /* =====================================================
    기본 설정
 ===================================================== */
@@ -1971,6 +1974,6 @@ async function 시작() {
 시작();
 </script>
 
-  <script type="module" src="js/achievements.js?v=20260928-5"></script>
+  <script type="module" src="js/achievements.js?v=20260928-9"></script>
 </body>
 </html>
