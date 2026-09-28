@@ -120,6 +120,41 @@ function ensureStyles() {
 #dori-achievement-background .dori-bg-stars{position:absolute;inset:-5%;background-image:radial-gradient(circle at 7% 16%,var(--bg-star,transparent) 0 1.5px,transparent 2.5px),radial-gradient(circle at 24% 34%,var(--bg-star,transparent) 0 1px,transparent 2px),radial-gradient(circle at 49% 12%,var(--bg-star,transparent) 0 1.6px,transparent 2.6px),radial-gradient(circle at 73% 28%,var(--bg-star,transparent) 0 1px,transparent 2px),radial-gradient(circle at 91% 13%,var(--bg-star,transparent) 0 1.4px,transparent 2.4px),radial-gradient(circle at 84% 67%,var(--bg-star,transparent) 0 1.5px,transparent 2.5px),radial-gradient(circle at 16% 79%,var(--bg-star,transparent) 0 1.2px,transparent 2.2px),radial-gradient(circle at 55% 88%,var(--bg-star,transparent) 0 1px,transparent 2px);opacity:0;animation:doriBackgroundStars 4.8s ease-out .1s forwards}
 #dori-achievement-background .dori-bg-rays{position:absolute;left:50%;top:50%;width:180vmax;height:180vmax;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,transparent 0deg,transparent 8deg,var(--bg-ray,transparent) 9deg,transparent 12deg);opacity:0;mix-blend-mode:screen;animation:doriBackgroundRays 7s linear infinite}
 #dori-achievement-background .dori-bg-dots{position:absolute;inset:0;opacity:.28;background-image:radial-gradient(circle at 18% 22%,var(--bg-dot,transparent) 0 1px,transparent 2px),radial-gradient(circle at 78% 19%,var(--bg-dot,transparent) 0 1px,transparent 2px),radial-gradient(circle at 86% 74%,var(--bg-dot,transparent) 0 1.2px,transparent 2.4px),radial-gradient(circle at 27% 81%,var(--bg-dot,transparent) 0 1px,transparent 2px);animation:doriBackgroundDots 4.8s ease-in-out forwards}
+
+#dori-achievement-background .dori-bg-wave{
+  position:absolute;
+  left:50%;
+  top:47%;
+  width:min(34vw,520px);
+  height:min(34vw,520px);
+  border:1px solid var(--bg-wave,transparent);
+  border-radius:50%;
+  transform:translate(-50%,-50%) scale(.18);
+  opacity:0;
+  box-shadow:0 0 26px var(--bg-wave-glow,transparent),inset 0 0 20px var(--bg-wave-inner,transparent);
+  filter:blur(.15px);
+  will-change:transform,opacity;
+  mix-blend-mode:screen;
+  pointer-events:none;
+}
+#dori-achievement-background.active .dori-bg-wave{animation:doriBackgroundWave 5.8s cubic-bezier(.18,.72,.24,1) infinite}
+#dori-achievement-background.active .dori-bg-wave.wave-2{animation-delay:1.35s}
+#dori-achievement-background.active .dori-bg-wave.wave-3{animation-delay:2.7s}
+#dori-achievement-background.active .dori-bg-wave.wave-4{animation-delay:4.05s}
+#dori-achievement-background .dori-bg-wave.wave-2{width:min(44vw,680px);height:min(44vw,680px)}
+#dori-achievement-background .dori-bg-wave.wave-3{width:min(56vw,860px);height:min(56vw,860px)}
+#dori-achievement-background .dori-bg-wave.wave-4{width:min(70vw,1080px);height:min(70vw,1080px)}
+#dori-achievement-background.legendary{--bg-wave:rgba(255,224,130,.62);--bg-wave-glow:rgba(255,188,55,.25);--bg-wave-inner:rgba(255,230,150,.08)}
+#dori-achievement-background.myth{--bg-wave:rgba(255,125,150,.58);--bg-wave-glow:rgba(255,45,90,.25);--bg-wave-inner:rgba(255,120,150,.07)}
+#dori-achievement-background.doronum{--bg-wave:rgba(145,255,255,.72);--bg-wave-glow:rgba(35,232,255,.34);--bg-wave-inner:rgba(110,245,255,.1)}
+@keyframes doriBackgroundWave{
+  0%{opacity:0;transform:translate(-50%,-50%) scale(.18)}
+  12%{opacity:.72}
+  38%{opacity:.46}
+  72%{opacity:.14}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)}
+}
+
 #dori-achievement-background .dori-bg-triangles{position:absolute;inset:0;overflow:hidden;pointer-events:none;perspective:900px;transform:translateZ(0)}
 #dori-achievement-background .dori-bg-triangles i{position:absolute;display:block;width:clamp(28px,4vw,68px);height:clamp(28px,4vw,68px);border:1px solid var(--bg-triangle,rgba(255,255,255,.25));clip-path:polygon(50% 0,100% 100%,0 100%);background:linear-gradient(145deg,var(--bg-triangle-fill,rgba(255,255,255,.025)),transparent 65%);filter:drop-shadow(0 0 10px var(--bg-triangle-glow,transparent));opacity:0;transform-style:preserve-3d;will-change:transform,opacity}
 #dori-achievement-background .dori-bg-triangles i:nth-child(1){left:8%;top:18%;animation:doriTriangleFloat1 6.8s ease-in-out infinite}
@@ -271,7 +306,7 @@ function backgroundEffectElement() {
   if (!el) {
     el = document.createElement("div");
     el.id = "dori-achievement-background";
-    el.innerHTML = '<div class="dori-bg-vignette"></div><div class="dori-bg-bloom"></div><div class="dori-bg-triangles"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="dori-bg-stars"></div><div class="dori-bg-rays"></div><div class="dori-bg-ring"></div><div class="dori-bg-ring"></div><div class="dori-bg-ring"></div><div class="dori-bg-sheen"></div><div class="dori-bg-dots"></div>';
+    el.innerHTML = '<div class="dori-bg-vignette"></div><div class="dori-bg-bloom"></div><div class="dori-bg-triangles"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="dori-bg-stars"></div><div class="dori-bg-rays"></div><div class="dori-bg-wave wave-1"></div><div class="dori-bg-wave wave-2"></div><div class="dori-bg-wave wave-3"></div><div class="dori-bg-wave wave-4"></div><div class="dori-bg-sheen"></div><div class="dori-bg-dots"></div>';
     document.body.appendChild(el);
   }
   return el;
@@ -491,3 +526,10 @@ supabase.auth.onAuthStateChange((event) => {
     setTimeout(checkSiteAchievements, 120);
   }
 });
+
+/* ===== WAVE-ONLY BACKGROUND OVERRIDE ===== */
+#dori-achievement-background .dori-bg-ring{display:none!important;animation:none!important}
+#dori-achievement-background .dori-bg-rays{display:none!important;animation:none!important}
+@media(prefers-reduced-motion:reduce){
+  #dori-achievement-background .dori-bg-wave{animation:none!important;opacity:.16;transform:translate(-50%,-50%) scale(.9)}
+}
