@@ -113,15 +113,19 @@ function showNext() {
 
   const data = state.queue.shift();
   const popup = popupElement();
-  const rarity = String(data.rarity || "Common").toLowerCase().replace(/[^a-z]/g, "");
+  const rawRarity = String(data.rarity || "Common");
+  const rarity = /도로늄|doronum/i.test(rawRarity) || /도로늄/.test(String(data.name || "")) ? "doronum" : rawRarity.toLowerCase().replace(/[^a-z]/g, "");
+  const rarityLabel = { common: "COMMON", rare: "RARE", epic: "EPIC", legendary: "LEGENDARY", doronum: "DORONUM", myth: "MYTHIC" }[rarity] || rawRarity.toUpperCase();
 
   popup.innerHTML = `
     <div class="dori-achievement-card dori-rarity-${rarity}">
       <div class="dori-achievement-shine"></div>
       <div class="dori-achievement-particles"></div>
+      <div class="dori-achievement-rays"></div>
+      <div class="dori-achievement-sparkles"></div>
       <div class="dori-achievement-icon">${data.icon || "🏆"}</div>
       <div class="dori-achievement-copy">
-        <div class="dori-achievement-kicker">ACHIEVEMENT UNLOCKED</div>
+        <div class="dori-achievement-kicker">${rarityLabel} · ACHIEVEMENT UNLOCKED</div>
         <div class="dori-achievement-title">🏆 업적 달성!</div>
         <div class="dori-achievement-name">${escapeHtml(data.name || "새 업적")}</div>
         <div class="dori-achievement-desc">${escapeHtml(data.description || "")}</div>
