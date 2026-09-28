@@ -155,30 +155,77 @@ function ensureStyles() {
   100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)}
 }
 
-#dori-achievement-background .dori-bg-triangles{position:absolute;inset:0;overflow:hidden;pointer-events:none;perspective:900px;transform:translateZ(0)}
-#dori-achievement-background .dori-bg-triangles i{position:absolute;display:block;width:clamp(28px,4vw,68px);height:clamp(28px,4vw,68px);border:1px solid var(--bg-triangle,rgba(255,255,255,.25));clip-path:polygon(50% 0,100% 100%,0 100%);background:linear-gradient(145deg,var(--bg-triangle-fill,rgba(255,255,255,.025)),transparent 65%);filter:drop-shadow(0 0 10px var(--bg-triangle-glow,transparent));opacity:0;transform-style:preserve-3d;will-change:transform,opacity}
-#dori-achievement-background .dori-bg-triangles i:nth-child(1){left:8%;top:18%;animation:doriTriangleFloat1 6.8s ease-in-out infinite}
-#dori-achievement-background .dori-bg-triangles i:nth-child(2){left:23%;top:70%;width:clamp(18px,2.6vw,44px);height:clamp(18px,2.6vw,44px);animation:doriTriangleFloat2 7.5s 0.5s ease-in-out infinite}
-#dori-achievement-background .dori-bg-triangles i:nth-child(3){left:42%;top:10%;width:clamp(22px,3vw,50px);height:clamp(22px,3vw,50px);animation:doriTriangleFloat3 8.2s 0.9s ease-in-out infinite}
-#dori-achievement-background .dori-bg-triangles i:nth-child(4){left:68%;top:23%;width:clamp(34px,4.8vw,78px);height:clamp(34px,4.8vw,78px);animation:doriTriangleFloat4 7.1s 0.2s ease-in-out infinite}
-#dori-achievement-background .dori-bg-triangles i:nth-child(5){left:84%;top:64%;width:clamp(20px,3vw,52px);height:clamp(20px,3vw,52px);animation:doriTriangleFloat5 8.6s 0.7s ease-in-out infinite}
-#dori-achievement-background .dori-bg-triangles i:nth-child(6){left:57%;top:78%;width:clamp(27px,3.7vw,60px);height:clamp(27px,3.7vw,60px);animation:doriTriangleFloat6 7.8s 1.1s ease-in-out infinite}
-#dori-achievement-background .dori-bg-triangles i:nth-child(7){left:3%;top:54%;width:clamp(16px,2.2vw,38px);height:clamp(16px,2.2vw,38px);animation:doriTriangleFloat7 6.9s 0.4s ease-in-out infinite}
-#dori-achievement-background .dori-bg-triangles i:nth-child(8){left:76%;top:88%;width:clamp(14px,2vw,34px);height:clamp(14px,2vw,34px);animation:doriTriangleFloat8 9.1s 0.8s ease-in-out infinite}
+#dori-achievement-background .dori-bg-triangles{position:absolute;inset:0;overflow:hidden;pointer-events:none;perspective:none;z-index:5;transform:translateZ(0)}
+#dori-achievement-background .dori-bg-triangles i{
+  position:absolute;display:block;
+  width:clamp(30px,4.2vw,72px);height:clamp(30px,4.2vw,72px);
+  opacity:0;pointer-events:none;
+  clip-path:polygon(50% 0%,100% 100%,0% 100%);
+  background:linear-gradient(145deg,var(--bg-triangle-fill,rgba(255,255,255,.09)),rgba(255,255,255,.015));
+  filter:drop-shadow(0 0 9px var(--bg-triangle-glow,transparent));
+  transform-origin:50% 55%;
+  will-change:transform,opacity;
+}
+#dori-achievement-background .dori-bg-triangles i::after{
+  content:"";position:absolute;inset:2px;
+  clip-path:polygon(50% 0%,100% 100%,0% 100%);
+  background:linear-gradient(145deg,rgba(255,255,255,.08),transparent 68%);
+  opacity:.8;
+}
+#dori-achievement-background .dori-bg-triangles i:nth-child(1){left:8%;top:18%;animation:doriTriangleFloat1 6.4s ease-in-out infinite}
+#dori-achievement-background .dori-bg-triangles i:nth-child(2){left:23%;top:70%;width:clamp(20px,2.7vw,46px);height:clamp(20px,2.7vw,46px);animation:doriTriangleFloat2 7.2s .45s ease-in-out infinite}
+#dori-achievement-background .dori-bg-triangles i:nth-child(3){left:42%;top:10%;width:clamp(24px,3.1vw,52px);height:clamp(24px,3.1vw,52px);animation:doriTriangleFloat3 7.8s .8s ease-in-out infinite}
+#dori-achievement-background .dori-bg-triangles i:nth-child(4){left:68%;top:23%;width:clamp(36px,4.9vw,80px);height:clamp(36px,4.9vw,80px);animation:doriTriangleFloat4 6.9s .2s ease-in-out infinite}
+#dori-achievement-background .dori-bg-triangles i:nth-child(5){left:84%;top:64%;width:clamp(22px,3vw,54px);height:clamp(22px,3vw,54px);animation:doriTriangleFloat5 8.1s .65s ease-in-out infinite}
+#dori-achievement-background .dori-bg-triangles i:nth-child(6){left:57%;top:78%;width:clamp(28px,3.8vw,62px);height:clamp(28px,3.8vw,62px);animation:doriTriangleFloat6 7.4s 1s ease-in-out infinite}
+#dori-achievement-background .dori-bg-triangles i:nth-child(7){left:3%;top:54%;width:clamp(18px,2.3vw,40px);height:clamp(18px,2.3vw,40px);animation:doriTriangleFloat7 6.7s .35s ease-in-out infinite}
+#dori-achievement-background .dori-bg-triangles i:nth-child(8){left:76%;top:88%;width:clamp(16px,2.1vw,36px);height:clamp(16px,2.1vw,36px);animation:doriTriangleFloat8 8.6s .75s ease-in-out infinite}
 #dori-achievement-background .dori-bg-triangles i:nth-child(1),#dori-achievement-background .dori-bg-triangles i:nth-child(4){--triangle-scale:1.12}
-#dori-achievement-background .dori-bg-triangles i:nth-child(2),#dori-achievement-background .dori-bg-triangles i:nth-child(5),#dori-achievement-background .dori-bg-triangles i:nth-child(8){--triangle-scale:.78}
-@keyframes doriTriangleFloat1{0%,100%{opacity:0;transform:translate3d(-12px,18px,0) rotateX(8deg) rotateY(-18deg) rotateZ(-8deg) scale(.7)}18%{opacity:.72}50%{opacity:.42;transform:translate3d(48px,-30px,45px) rotateX(28deg) rotateY(70deg) rotateZ(22deg) scale(var(--triangle-scale,1))}82%{opacity:.62}100%{opacity:0;transform:translate3d(100px,-72px,-10px) rotateX(54deg) rotateY(145deg) rotateZ(48deg) scale(.45)}}
-@keyframes doriTriangleFloat2{0%,100%{opacity:0;transform:translate3d(8px,-10px,0) rotateX(-12deg) rotateY(22deg) rotateZ(12deg) scale(.55)}22%{opacity:.55}50%{opacity:.3;transform:translate3d(-35px,-55px,65px) rotateX(65deg) rotateY(-80deg) rotateZ(-30deg) scale(var(--triangle-scale,1))}78%{opacity:.5}100%{opacity:0;transform:translate3d(-70px,-105px,10px) rotateX(110deg) rotateY(-150deg) rotateZ(-70deg) scale(.35)}}
-@keyframes doriTriangleFloat3{0%,100%{opacity:0;transform:translate3d(0,20px,0) rotateX(15deg) rotateY(0deg) rotateZ(0deg) scale(.65)}20%{opacity:.62}52%{opacity:.32;transform:translate3d(30px,55px,75px) rotateX(-45deg) rotateY(125deg) rotateZ(35deg) scale(1.08)}80%{opacity:.5}100%{opacity:0;transform:translate3d(72px,95px,-20px) rotateX(-100deg) rotateY(210deg) rotateZ(65deg) scale(.3)}}
-@keyframes doriTriangleFloat4{0%,100%{opacity:0;transform:translate3d(15px,5px,0) rotateX(-5deg) rotateY(30deg) rotateZ(-15deg) scale(.72)}17%{opacity:.78}48%{opacity:.38;transform:translate3d(-70px,35px,85px) rotateX(48deg) rotateY(-110deg) rotateZ(-42deg) scale(var(--triangle-scale,1))}83%{opacity:.58}100%{opacity:0;transform:translate3d(-120px,75px,0) rotateX(95deg) rotateY(-205deg) rotateZ(-75deg) scale(.4)}}
-@keyframes doriTriangleFloat5{0%,100%{opacity:0;transform:translate3d(-8px,0,0) rotateX(20deg) rotateY(-20deg) rotateZ(8deg) scale(.5)}25%{opacity:.52}55%{opacity:.28;transform:translate3d(50px,-42px,55px) rotateX(75deg) rotateY(90deg) rotateZ(55deg) scale(.9)}82%{opacity:.42}100%{opacity:0;transform:translate3d(95px,-78px,0) rotateX(125deg) rotateY(170deg) rotateZ(100deg) scale(.3)}}
-@keyframes doriTriangleFloat6{0%,100%{opacity:0;transform:translate3d(0,12px,0) rotateX(-10deg) rotateY(10deg) rotateZ(-5deg) scale(.6)}20%{opacity:.58}50%{opacity:.3;transform:translate3d(-55px,-28px,90px) rotateX(-70deg) rotateY(100deg) rotateZ(-55deg) scale(1.05)}80%{opacity:.5}100%{opacity:0;transform:translate3d(-95px,-62px,5px) rotateX(-120deg) rotateY(200deg) rotateZ(-100deg) scale(.32)}}
-@keyframes doriTriangleFloat7{0%,100%{opacity:0;transform:translate3d(5px,5px,0) rotateX(10deg) rotateY(-10deg) rotateZ(15deg) scale(.5)}25%{opacity:.48}54%{opacity:.24;transform:translate3d(38px,-40px,45px) rotateX(50deg) rotateY(150deg) rotateZ(70deg) scale(.85)}84%{opacity:.4}100%{opacity:0;transform:translate3d(70px,-70px,0) rotateX(90deg) rotateY(240deg) rotateZ(120deg) scale(.25)}}
-@keyframes doriTriangleFloat8{0%,100%{opacity:0;transform:translate3d(-5px,-4px,0) rotateX(-15deg) rotateY(15deg) rotateZ(-10deg) scale(.48)}20%{opacity:.5}50%{opacity:.26;transform:translate3d(-40px,-52px,70px) rotateX(70deg) rotateY(-120deg) rotateZ(-45deg) scale(.92)}80%{opacity:.4}100%{opacity:0;transform:translate3d(-75px,-98px,0) rotateX(120deg) rotateY(-230deg) rotateZ(-90deg) scale(.28)}}
-#dori-achievement-background.legendary{--bg-triangle:#ffe7a3;--bg-triangle-fill:rgba(255,210,100,.08);--bg-triangle-glow:rgba(255,190,60,.45)}
-#dori-achievement-background.myth{--bg-triangle:#ffb0c2;--bg-triangle-fill:rgba(255,65,100,.08);--bg-triangle-glow:rgba(255,45,90,.5)}
-#dori-achievement-background.doronum{--bg-triangle:#bfffff;--bg-triangle-fill:rgba(55,235,255,.09);--bg-triangle-glow:rgba(45,235,255,.62)}
-@media(prefers-reduced-motion:reduce){#dori-achievement-background .dori-bg-triangles i{animation:none!important;opacity:.16!important;transform:none!important}}
+#dori-achievement-background .dori-bg-triangles i:nth-child(2),#dori-achievement-background .dori-bg-triangles i:nth-child(5),#dori-achievement-background .dori-bg-triangles i:nth-child(8){--triangle-scale:.82}
+@keyframes doriTriangleFloat1{
+  0%{opacity:0;transform:translate3d(-10px,20px,0) rotateZ(-8deg) scale(.72)}
+  18%{opacity:.82} 50%{opacity:.52;transform:translate3d(42px,-28px,0) rotateZ(18deg) scale(var(--triangle-scale,1))}
+  78%{opacity:.7} 100%{opacity:0;transform:translate3d(88px,-64px,0) rotateZ(42deg) scale(.52)}
+}
+@keyframes doriTriangleFloat2{
+  0%{opacity:0;transform:translate3d(8px,-8px,0) rotateZ(12deg) scale(.58)}
+  22%{opacity:.68} 50%{opacity:.4;transform:translate3d(-32px,-50px,0) rotateZ(-26deg) scale(var(--triangle-scale,1))}
+  78%{opacity:.58} 100%{opacity:0;transform:translate3d(-64px,-92px,0) rotateZ(-58deg) scale(.4)}
+}
+@keyframes doriTriangleFloat3{
+  0%{opacity:0;transform:translate3d(0,18px,0) rotateZ(0deg) scale(.68)}
+  20%{opacity:.72} 52%{opacity:.42;transform:translate3d(28px,48px,0) rotateZ(30deg) scale(1.08)}
+  80%{opacity:.6} 100%{opacity:0;transform:translate3d(66px,82px,0) rotateZ(68deg) scale(.38)}
+}
+@keyframes doriTriangleFloat4{
+  0%{opacity:0;transform:translate3d(14px,5px,0) rotateZ(-15deg) scale(.75)}
+  17%{opacity:.88} 48%{opacity:.48;transform:translate3d(-64px,32px,0) rotateZ(-36deg) scale(var(--triangle-scale,1))}
+  82%{opacity:.72} 100%{opacity:0;transform:translate3d(-112px,68px,0) rotateZ(-72deg) scale(.46)}
+}
+@keyframes doriTriangleFloat5{
+  0%{opacity:0;transform:translate3d(-8px,0,0) rotateZ(8deg) scale(.54)}
+  24%{opacity:.64} 55%{opacity:.38;transform:translate3d(46px,-40px,0) rotateZ(38deg) scale(.94)}
+  82%{opacity:.54} 100%{opacity:0;transform:translate3d(88px,-72px,0) rotateZ(78deg) scale(.36)}
+}
+@keyframes doriTriangleFloat6{
+  0%{opacity:0;transform:translate3d(0,12px,0) rotateZ(-5deg) scale(.64)}
+  20%{opacity:.7} 50%{opacity:.4;transform:translate3d(-52px,-26px,0) rotateZ(-42deg) scale(1.05)}
+  80%{opacity:.6} 100%{opacity:0;transform:translate3d(-90px,-58px,0) rotateZ(-86deg) scale(.38)}
+}
+@keyframes doriTriangleFloat7{
+  0%{opacity:0;transform:translate3d(5px,5px,0) rotateZ(15deg) scale(.52)}
+  25%{opacity:.58} 54%{opacity:.34;transform:translate3d(34px,-38px,0) rotateZ(52deg) scale(.88)}
+  84%{opacity:.5} 100%{opacity:0;transform:translate3d(66px,-66px,0) rotateZ(98deg) scale(.3)}
+}
+@keyframes doriTriangleFloat8{
+  0%{opacity:0;transform:translate3d(-5px,-4px,0) rotateZ(-10deg) scale(.5)}
+  20%{opacity:.62} 50%{opacity:.36;transform:translate3d(-38px,-48px,0) rotateZ(-40deg) scale(.94)}
+  80%{opacity:.52} 100%{opacity:0;transform:translate3d(-72px,-90px,0) rotateZ(-82deg) scale(.32)}
+}
+#dori-achievement-background.legendary{--bg-triangle:#ffe7a3;--bg-triangle-fill:rgba(255,210,100,.18);--bg-triangle-glow:rgba(255,190,60,.62)}
+#dori-achievement-background.myth{--bg-triangle:#ffb0c2;--bg-triangle-fill:rgba(255,65,100,.18);--bg-triangle-glow:rgba(255,45,90,.68)}
+#dori-achievement-background.doronum{--bg-triangle:#bfffff;--bg-triangle-fill:rgba(55,235,255,.2);--bg-triangle-glow:rgba(45,235,255,.78)}
+@media(prefers-reduced-motion:reduce){#dori-achievement-background .dori-bg-triangles i{animation:none!important;opacity:.28!important;transform:none!important}}
 #dori-achievement-background .dori-bg-dots::before,#dori-achievement-background .dori-bg-dots::after{content:"";position:absolute;inset:-10%;border-radius:50%;pointer-events:none}
 #dori-achievement-background .dori-bg-dots::before{background:radial-gradient(circle at 22% 34%,var(--bg-dot,transparent) 0 1px,transparent 2.5px),radial-gradient(circle at 58% 72%,var(--bg-dot,transparent) 0 1.2px,transparent 2.7px),radial-gradient(circle at 91% 43%,var(--bg-dot,transparent) 0 1px,transparent 2.4px);animation:doriBackgroundFloat 6.4s ease-in-out infinite}
 #dori-achievement-background .dori-bg-dots::after{background:radial-gradient(ellipse at 50% 50%,transparent 0 35%,var(--bg-flare,transparent) 36%,transparent 52%);filter:blur(18px);opacity:.22;animation:doriBackgroundHalo 5.6s ease-in-out infinite}
