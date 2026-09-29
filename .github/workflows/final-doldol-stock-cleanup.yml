@@ -40,9 +40,12 @@ jobs:
           # Remove old order-type listeners and limit-price listeners.
           s=re.sub(r'\n\s*const orderTypeSelect = \$\("#orderTypeSelect"\);[\s\S]*?\n\s*const quantityInput = \$\("#quantityInput"\);','\nconst quantityInput = $("#quantityInput");',s,count=1)
 
-          # Remove short-position browser function and all short-position reads.
-          s=re.sub(r'\nfunction openShort\(stockId\)[\s\S]*?\n\}\s*\n\s*function closeShortPosition\(positionId\)[\s\S]*?\n\}\s*\n\s*/\* =========================================================\s*\n\s*16\. 종목 찾기','\n/* =========================================================\n   16. 종목 찾기',s,count=1)
-          s=re.sub(r'\n\s*if\(state\.user\)\{const shorts=await sb\.from\("dori_stock_short_positions"\)[\s\S]*?else state\.shortPositions=\[\];','\nstate.shortPositions=[];',s)
+          # Remove every remaining short-selling function, query and rendering block.
+          s=re.sub(r'\nfunction openShort\(stockId\)[\s\S]*?\n\}\s*\nasync function closeShortPosition\(positionId\)[\s\S]*?\n\}\s*\n\s*/\* =========================================================\s*\n\s*16\. 종목 찾기','\n/* =========================================================\n   16. 종목 찾기',s,count=1)
+          s=re.sub(r'\s*if\(state\.user\)\{const shorts=await sb\.from\("dori_stock_short_positions"\)[\s\S]*?else state\.shortPositions=\[\];','\n        state.shortPositions=[];',s)
+          s=re.sub(r',shortList=\$\("#shortPositionsList"\)','',s)
+          s=re.sub(r'\n\s*if\(shortList\)\{[\s\S]*?\n\s*\}\n\s*const feeTotal=', '\n    const feeTotal=', s, count=1)
+          s=re.sub(r'\n\s*<[^>]*short[^>]*>[\s\S]*?</[^>]+>', '', s, flags=re.I)
 
           # Remove old hide/show code referring to deleted controls.
           s=re.sub(r'\$\("#orderBookPanel"\)\.style\.display="none";\$\("#orderTypeSelect"\)\.parentElement\.style\.display="none";\$\("#limitPriceWrap"\)\.style\.display="none";','',s)
