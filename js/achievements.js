@@ -566,6 +566,44 @@ async function checkSiteAchievements() {
     await claim("read_10_news");
   }
 
+  // =====================================================
+  // 돌이 랜덤 박스 업적
+  // dori_box_history에는 실제로 성공한 뽑기 1회당 1개의 기록이 저장됩니다.
+  // 따라서 브라우저에서 임의의 횟수를 만들 수 없고 서버 기록을 기준으로 판정합니다.
+  // =====================================================
+  let boxCount = 0;
+
+  try {
+    const { count, error: boxHistoryError } = await supabase
+      .from("dori_box_history")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+
+    if (boxHistoryError) {
+      console.warn("[Dori Achievement] 랜덤 박스 기록 조회 실패:", boxHistoryError);
+    } else {
+      boxCount = Number(count || 0);
+    }
+  } catch (error) {
+    console.warn("[Dori Achievement] 랜덤 박스 횟수 확인 오류:", error);
+  }
+
+  if (boxCount >= 1 && need("first_box")) {
+    await claim("first_box");
+  }
+
+  if (boxCount >= 10 && need("tenth_box")) {
+    await claim("tenth_box");
+  }
+
+  if (boxCount >= 100 && need("hundred_box")) {
+    await claim("hundred_box");
+  }
+
+  if (boxCount >= 1000 && need("thousand_box")) {
+    await claim("thousand_box");
+  }
+
   // rich는 함수 초반에 이미 서버 검증했다.
   })().finally(() => {
     state.checkPromise = null;
