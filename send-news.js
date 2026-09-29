@@ -70,7 +70,7 @@ const delayMap = {
 // 이메일을 보낼 시기인지 확인
 // =====================================================
 
-function isLocalEightPMOrLater(timezone) {
+function isLocalEightPMToNextMorningEightAM(timezone) {
   try {
     const hour = Number(new Intl.DateTimeFormat("en-US", {
       timeZone: timezone || "Asia/Seoul",
@@ -78,7 +78,8 @@ function isLocalEightPMOrLater(timezone) {
       hour12: false
     }).format(new Date()));
 
-    return hour >= 20;
+    // 20:00 ~ 23:59 또는 00:00 ~ 07:59
+    return hour >= 20 || hour < 8;
   } catch {
     return false;
   }
@@ -408,12 +409,12 @@ async function run() {
 
 
     // -------------------------------------------------
-    // 사용자의 현지 시간이 20:00 이상인지 확인
+    // 사용자의 현지 시간이 20:00 ~ 다음날 08:00인지 확인
     // -------------------------------------------------
 
-    if (!isLocalEightPMOrLater(user.timezone)) {
+    if (!isLocalEightPMToNextMorningEightAM(user.timezone)) {
       console.log(
-        "⏭️ 현지 20:00이 아님:",
+        "⏭️ 이메일 발송 허용 시간이 아님:",
         user.email,
         user.timezone || "Asia/Seoul"
       );
