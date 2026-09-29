@@ -453,19 +453,38 @@ async function claim(id) {
   // 401/인증 오류가 난 직후에는 같은 요청을 여러 이벤트가 동시에 반복하지 않는다.
   if (Date.now() < state.authErrorUntil) return null;
 
-  const { data, error } = await supabase.rpc("claim_achievement", {
+  let { data, error } = await supabase.rpc("claim_achievement", {
     p_achievement_id: id
   });
 
   if (error) {
-    const status = Number(error?.status || error?.code || 0);
-    if (status === 401 || /invalid api key|jwt/i.test(String(error?.message || ""))) {
-      state.authErrorUntil = Date.now() + 10000;
-      console.warn("[Dori Achievement] Supabase 인증 오류. 10초 후 재시도합니다.");
+    const authError = Number(error?.status || error?.code || 0) === 401 ||
+      /invalid api key|jwt|unauthorized/i.test(String(error?.message || ""));
+
+    if (authError) {
+      // 오래된 access token 때문에 401이 발생한 경우 세션을 먼저 갱신한 뒤 한 번만 재시도한다.
+      const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+      if (refreshError || !refreshed?.session) {
+        state.authErrorUntil = Date.now() + 10000;
+        console.warn("[Dori Achievement] Supabase 인증 갱신 실패. 10초 후 재시도합니다.", refreshError || error);
+        return null;
+      }
+
+      ({ data, error } = await supabase.rpc("claim_achievement", {
+        p_achievement_id: id
+      }));
+
+      if (!error) {
+        // 재시도 성공
+      } else {
+        state.authErrorUntil = Date.now() + 10000;
+        console.warn("[Dori Achievement] Supabase 인증 오류. 10초 후 재시도합니다.", error);
+        return null;
+      }
     } else {
       console.warn("[Dori Achievement] claim failed:", id, error);
+      return null;
     }
-    return null;
   }
 
   if (data?.success && !data?.already_claimed) {
@@ -495,11 +514,22 @@ async function checkSiteAchievements() {
   await claim("rockey_7777777");
 
   const userId = sessionData.session.user.id;
-  const { data: user, error } = await supabase
+  let { data: user, error } = await supabase
     .from("users")
     .select("doldolcoin, read_dori_news, user_achievement")
     .eq("user_id", userId)
     .maybeSingle();
+
+  if (error && (Number(error?.status || error?.code || 0) === 401 || /invalid api key|jwt|unauthorized/i.test(String(error?.message || "")))) {
+    const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
+    if (!refreshError && refreshed?.session) {
+      ({ data: user, error } = await supabase
+        .from("users")
+        .select("doldolcoin, read_dori_news, user_achievement")
+        .eq("user_id", userId)
+        .maybeSingle());
+    }
+  }
 
   if (error || !user) {
     console.warn("[Dori Achievement] users 조회 실패:", error || "user row 없음");
