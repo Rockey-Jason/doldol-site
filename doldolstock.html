@@ -4364,6 +4364,80 @@ if (quantityInput) {
     quantityInput.addEventListener("input", updateOrderSummary);
 }
 
+
+/* =========================================================
+   33. 전체 데이터 새로고침
+========================================================= */
+let refreshRunning = false;
+
+async function refreshAll() {
+    if (refreshRunning) return;
+    refreshRunning = true;
+    setLoading(true);
+
+    try {
+        await loadUser();
+
+        await Promise.all([
+            loadStocks(),
+            loadPrices(),
+            loadMarketStates()
+        ]);
+
+        if (state.user) {
+            await Promise.all([
+                loadAccount(),
+                loadHoldings(),
+                loadTrades(),
+                loadEconomicData()
+            ]);
+        } else {
+            state.account = null;
+            state.holdings = [];
+            state.trades = [];
+            state.financials = [];
+            state.dividends = [];
+            state.fees = [];
+            renderAccount();
+        }
+
+        renderMarket();
+        renderSummary();
+        renderHoldings();
+        renderTransactions();
+        renderEconomy();
+        renderMyOrders();
+    } catch (error) {
+        console.error("돌돌증권 새로고침 실패:", error);
+    } finally {
+        setLoading(false);
+        refreshRunning = false;
+    }
+}
+
+/* =========================================================
+   33-1. 즉시 체결 시장 자동 갱신
+========================================================= */
+function startRealtimeMarket() {
+    if (state.realtimeChannel) return;
+
+    state.realtimeChannel = window.setInterval(async () => {
+        try {
+            await Promise.all([
+                loadStocks(),
+                loadPrices(),
+                loadMarketStates()
+            ]);
+
+            renderMarket();
+            renderSummary();
+            renderHoldings();
+        } catch (error) {
+            console.warn("실시간 시장 갱신 실패:", error);
+        }
+    }, 10000);
+}
+
 /* =========================================================
    34. 초기 실행
 ========================================================= */
