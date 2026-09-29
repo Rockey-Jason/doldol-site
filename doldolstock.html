@@ -4329,15 +4329,7 @@ function openTrade(
             "sell",
             type === "SELL"
         );
-
-
-    $("#").value =
-        String(stock.current_price);
-
-    $("#").value = "LIMIT";
-    $("#").style.display = "";
-
-    updateOrderSummary();
+updateOrderSummary();
 
     $("#tradeModal")
         .classList.add("open");
@@ -4346,18 +4338,30 @@ function openTrade(
 
 
 /* =========================================================
-   실시간 즉시 체결 시장
+   즉시 체결 주문 입력
 ========================================================= */
-/* =========================================================
-   주문 입력 이벤트
-========================================================= */
-const quantityInput = $("#quantityInput");
+function updateOrderSummary() {
+    const quantityInput = $("#quantityInput");
+    const quantityEl = $("#orderQuantity");
+    const priceEl = $("#orderPrice");
+    const totalEl = $("#orderTotal");
+    const feeEl = $("#orderFee");
 
+    const quantity = Math.max(1, Math.floor(Number(quantityInput?.value || 1)));
+    const price = Math.max(0, Number(state.tradeStock?.current_price || 0));
+    const total = quantity * price;
+    const fee = Math.floor(total * 0.0015);
+
+    if (quantityInput) quantityInput.value = String(quantity);
+    if (quantityEl) quantityEl.textContent = formatNumber(quantity) + "주";
+    if (priceEl) priceEl.textContent = formatCoin(price);
+    if (totalEl) totalEl.textContent = formatCoin(total);
+    if (feeEl) feeEl.textContent = formatCoin(fee);
+}
+
+const quantityInput = $("#quantityInput");
 if (quantityInput) {
-    quantityInput.addEventListener(
-        "input",
-        updateOrderSummary
-    );
+    quantityInput.addEventListener("input", updateOrderSummary);
 }
 
 /* =========================================================
