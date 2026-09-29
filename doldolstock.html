@@ -3310,7 +3310,7 @@ async function loadMyOrders(){state.myOrders=[];if(!sb||!state.user){renderMyOrd
 function orderStatusLabel(status){return({OPEN:"대기",PARTIALLY_FILLED:"부분 체결",FILLED:"체결 완료",CANCELLED:"취소",EXPIRED:"만료"})[status]||status||"-"}
 function orderStatusClass(status){if(status==="OPEN")return"open";if(status==="PARTIALLY_FILLED")return"partial";if(status==="FILLED")return"filled";if(status==="CANCELLED")return"cancelled";return"expired"}
 function formatOrderType(order){return order.order_type==="MARKET"?"즉시 체결":"즉시 체결 "+formatCoin(order.limit_price)}
-function renderMyOrders(){const list=$("#myOrdersList");if(!list)return;const openOrders=state.myOrders.filter(o=>o.status==="OPEN"||o.status==="PARTIALLY_FILLED");const reservedCash=openOrders.reduce((s,o)=>s+Number(o.reserved_cash||0),0);const reservedShares=openOrders.reduce((s,o)=>s+Number(o.reserved_shares||0),0);$("#openOrderCount").textContent=formatNumber(openOrders.length)+"건";$("#reservedCashTotal").textContent=formatCoin(reservedCash);$("#reservedSharesTotal").textContent=formatNumber(reservedShares)+"주";if(!state.user){list.innerHTML='<div class="empty"><strong>로그인이 필요합니다.</strong>로그인하면 내가 주문한 주식을 확인할 수 있습니다.</div>';return}if(!state.myOrders.length){list.innerHTML='<div class="empty"><strong>주문 내역이 없습니다.</strong>아직 제출한 매수·매도 주문이 없습니다.</div>';return}list.innerHTML=state.myOrders.map(order=>{const stock=getStock(order.stock_id),remaining=Number(order.remaining_quantity||0),original=Number(order.original_quantity||0),filled=Math.max(0,original-remaining),date=new Date(order.created_at).toLocaleString("ko-KR"),isBuy=order.side==="BUY",reserved=isBuy?formatCoin(order.reserved_cash||0)+" 예약":formatNumber(order.reserved_shares||0)+"주 예약";return '<div class="order-row"><div><div class="order-main-name">'+escapeHtml(stock?.name||("종목 #"+order.stock_id))+'</div><div class="order-main-sub">'+escapeHtml(stock?.ticker||"")+" · "+escapeHtml(date)+'</div></div><div><div class="data-label">주문</div><div class="order-side '+(isBuy?"buy":"sell")+'">'+(isBuy?"매수":"매도")+" · "+escapeHtml(formatOrderType(order))+'</div></div><div><div class="data-label">수량</div><div class="data-value">'+formatNumber(original)+'주</div><div class="order-main-sub">체결 '+formatNumber(filled)+" · 잔량 "+formatNumber(remaining)+'</div></div><div><div class="data-label">상태</div><div class="order-status '+orderStatusClass(order.status)+'">'+orderStatusLabel(order.status)+'</div></div><div class="order-reserve">예약 자산<strong>'+reserved+'</strong></div></div>'}).join("")}
+function renderMyOrders(){const list=$("#myOrdersList");if(!list)return;const openOrders=state.myOrders.filter(o=>o.status==="OPEN"||o.status==="PARTIALLY_FILLED");const reservedCash=openOrders.reduce((s,o)=>s+Number(o.reserved_cash||0),0);const reservedShares=openOrders.reduce((s,o)=>s+Number(o.reserved_shares||0),0);$("#openOrderCount").textContent=formatNumber(openOrders.length)+"건";$("#reservedCashTotal").textContent=formatCoin(reservedCash);$("#reservedSharesTotal").textContent=formatNumber(reservedShares)+"주";if(!state.user){list.innerHTML='<div class="empty"><strong>로그인이 필요합니다.</strong>로그인하면 내가 주문한 주식을 확인할 수 있습니다.</div>';return}if(!state.myOrders.length){list.innerHTML='<div class="empty"><strong>주문 내역이 없습니다.</strong>아직 제출한 매수·매도 주문이 없습니다.</div>';return}list.innerHTML=state.myOrders.map(order=>{const stock=getStock(order.stock_id),remaining=Number(order.remaining_quantity||0),original=Number(order.original_quantity||0),filled=Math.max(0,original-remaining),date=new Date(order.created_at).toLocaleString("ko-KR"),isBuy=order.side==="BUY",reserved=isBuy?formatCoin(order.reserved_cash||0)+" 예약":formatNumber(order.reserved_shares||0)+"주 예약";return '<div class="order-row"><div><div class="order-main-name">'+esc(stock?.name||("종목 #"+order.stock_id))+'</div><div class="order-main-sub">'+esc(stock?.ticker||"")+" · "+esc(date)+'</div></div><div><div class="data-label">주문</div><div class="order-side '+(isBuy?"buy":"sell")+'">'+(isBuy?"매수":"매도")+" · "+esc(formatOrderType(order))+'</div></div><div><div class="data-label">수량</div><div class="data-value">'+formatNumber(original)+'주</div><div class="order-main-sub">체결 '+formatNumber(filled)+" · 잔량 "+formatNumber(remaining)+'</div></div><div><div class="data-label">상태</div><div class="order-status '+orderStatusClass(order.status)+'">'+orderStatusLabel(order.status)+'</div></div><div class="order-reserve">예약 자산<strong>'+reserved+'</strong></div></div>'}).join("")}
 
 
 /* =========================================================
@@ -3332,8 +3332,8 @@ async function loadEconomicData(){
 }
 function renderEconomy(){
     const financialList=$("#financialsList"),dividendList=$("#dividendsList");
-    if(financialList){const latest={};state.financials.forEach(row=>{if(!latest[row.stock_id])latest[row.stock_id]=row;});const rows=Object.values(latest);financialList.innerHTML=rows.length?rows.map(row=>{const stock=getStock(row.stock_id),growth=Number(row.profit_growth||0);return '<div class="economy-row"><div><div class="economy-name">'+escapeHtml(stock?.name||("종목 #"+row.stock_id))+'</div><div class="economy-sub">'+escapeHtml(row.period_label||"실적")+' · 순이익 '+formatCompact(row.net_profit)+'</div></div><div class="economy-value">EPS '+Number(row.eps||0).toFixed(2)+'</div><div class="economy-value '+(growth>=0?"economy-positive":"economy-negative")+'">'+(growth>=0?"+":"")+growth.toFixed(1)+'%</div></div>';}).join(""):'<div class="empty"><strong>아직 등록된 기업 실적이 없습니다.</strong>관리자에서 실적을 등록하면 표시됩니다.</div>';}
-    if(dividendList){dividendList.innerHTML=state.dividends.length?state.dividends.slice(0,10).map(row=>{const stock=getStock(row.stock_id),status=row.status==="PAID"?"지급 완료":"지급 예정";return '<div class="economy-row"><div><div class="economy-name">'+escapeHtml(stock?.name||("종목 #"+row.stock_id))+'</div><div class="economy-sub">지급일 '+escapeHtml(row.payment_date||"-")+'</div></div><div class="economy-value economy-positive">'+formatCoin(row.dividend_per_share)+'/주</div><div class="economy-value"><span class="economy-badge">'+status+'</span></div></div>';}).join(""):'<div class="empty"><strong>예정된 배당이 없습니다.</strong>기업이 배당을 선언하면 표시됩니다.</div>';}
+    if(financialList){const latest={};state.financials.forEach(row=>{if(!latest[row.stock_id])latest[row.stock_id]=row;});const rows=Object.values(latest);financialList.innerHTML=rows.length?rows.map(row=>{const stock=getStock(row.stock_id),growth=Number(row.profit_growth||0);return '<div class="economy-row"><div><div class="economy-name">'+esc(stock?.name||("종목 #"+row.stock_id))+'</div><div class="economy-sub">'+esc(row.period_label||"실적")+' · 순이익 '+formatCompact(row.net_profit)+'</div></div><div class="economy-value">EPS '+Number(row.eps||0).toFixed(2)+'</div><div class="economy-value '+(growth>=0?"economy-positive":"economy-negative")+'">'+(growth>=0?"+":"")+growth.toFixed(1)+'%</div></div>';}).join(""):'<div class="empty"><strong>아직 등록된 기업 실적이 없습니다.</strong>관리자에서 실적을 등록하면 표시됩니다.</div>';}
+    if(dividendList){dividendList.innerHTML=state.dividends.length?state.dividends.slice(0,10).map(row=>{const stock=getStock(row.stock_id),status=row.status==="PAID"?"지급 완료":"지급 예정";return '<div class="economy-row"><div><div class="economy-name">'+esc(stock?.name||("종목 #"+row.stock_id))+'</div><div class="economy-sub">지급일 '+esc(row.payment_date||"-")+'</div></div><div class="economy-value economy-positive">'+formatCoin(row.dividend_per_share)+'/주</div><div class="economy-value"><span class="economy-badge">'+status+'</span></div></div>';}).join(""):'<div class="empty"><strong>예정된 배당이 없습니다.</strong>기업이 배당을 선언하면 표시됩니다.</div>';}
     const feeTotal=state.fees.reduce((s,row)=>s+Number(row.fee_amount||0),0);if($("#myFeeTotal"))$("#myFeeTotal").textContent=state.user?formatCoin(feeTotal):"로그인 필요";
     if($("#referenceGap")){const gaps=state.stocks.map(s=>Math.abs(Number(s.reference_price||s.current_price)-Number(s.current_price||0))).filter(Number.isFinite);$("#referenceGap").textContent=gaps.length?formatCoin(gaps.reduce((a,b)=>a+b,0)/gaps.length):"-";}
 }
@@ -3584,11 +3584,11 @@ function renderMarket() {
                                 <div>
 
                                     <div class="stock-symbol">
-                                        ${escapeHtml(stock.ticker)}
+                                        ${esc(stock.ticker)}
                                     </div>
 
                                     <div class="stock-name">
-                                        ${escapeHtml(stock.name)}
+                                        ${esc(stock.name)}
                                     </div>
 
                                 </div>
@@ -3628,7 +3628,7 @@ function renderMarket() {
 
                             <div class="stock-description">
 
-                                ${escapeHtml(
+                                ${esc(
                                     stock.description
                                 )}
 
@@ -3977,11 +3977,11 @@ function renderHoldings() {
                             <div>
 
                                 <div class="holding-name">
-                                    ${escapeHtml(stock.name)}
+                                    ${esc(stock.name)}
                                 </div>
 
                                 <div class="holding-symbol">
-                                    ${escapeHtml(stock.ticker)}
+                                    ${esc(stock.ticker)}
                                 </div>
 
                             </div>
@@ -4183,13 +4183,13 @@ function renderTransactions() {
                                     <tr>
 
                                         <td>
-                                            ${escapeHtml(date)}
+                                            ${esc(date)}
                                         </td>
 
                                         <td>
                                             ${
                                                 stock
-                                                    ? escapeHtml(stock.name)
+                                                    ? esc(stock.name)
                                                     : "알 수 없음"
                                             }
                                         </td>
