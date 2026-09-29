@@ -4208,6 +4208,7 @@ function openTrade(
 
     $("#tradeModal")
         .classList.add("open");
+    $("#tradeModal").setAttribute("aria-hidden", "false");
 
 }
 
@@ -4238,6 +4239,45 @@ const quantityInput = $("#quantityInput");
 if (quantityInput) {
     quantityInput.addEventListener("input", updateOrderSummary);
 }
+
+/* =====================================================
+   거래 모달 닫기
+===================================================== */
+function closeTradeModal() {
+    const modal = $("#tradeModal");
+    if (!modal) return;
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    state.tradeStock = null;
+    state.tradeType = null;
+}
+
+const closeModalButton = $("#closeModal");
+if (closeModalButton) {
+    closeModalButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        closeTradeModal();
+    });
+}
+
+const tradeModalBackdrop = $("#tradeModal");
+if (tradeModalBackdrop) {
+    tradeModalBackdrop.addEventListener("click", (event) => {
+        if (event.target === tradeModalBackdrop) {
+            closeTradeModal();
+        }
+    });
+}
+
+document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+        const modal = $("#tradeModal");
+        if (modal?.classList.contains("open")) {
+            closeTradeModal();
+        }
+    }
+});
 
 const submitTradeButton = $("#submitTrade");
 if (submitTradeButton) {
