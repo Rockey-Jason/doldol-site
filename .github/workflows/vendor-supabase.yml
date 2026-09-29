@@ -1,0 +1,34 @@
+name: Vendor Supabase JS
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  vendor-supabase:
+    if: "!contains(github.event.head_commit.message, 'chore: vendor Supabase JS')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download pinned Supabase JS
+        run: |
+          mkdir -p js
+          curl -fsSL "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.2/dist/umd/supabase.min.js" -o js/supabase.min.js
+          test -s js/supabase.min.js
+
+      - name: Commit vendor file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/supabase.min.js
+          if git diff --cached --quiet; then
+            echo "Supabase JS is already up to date."
+            exit 0
+          fi
+          git commit -m "chore: vendor Supabase JS 2.117.2"
+          git push
