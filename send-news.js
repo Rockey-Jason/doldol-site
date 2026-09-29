@@ -447,6 +447,11 @@ async function run() {
     const newsNumber =
       Number(user.read_dori_news);
 
+    // 이메일 발송 성공 후 +1 되는 값을 미리 계산합니다.
+    // 이메일에는 이 "증가 후" 번호를 표시합니다.
+    const nextReadableNews =
+      newsNumber + 1;
+
 
     // -------------------------------------------------
     // 이메일 발송
@@ -457,7 +462,7 @@ async function run() {
       await sendEmail(
         user.email,
         level,
-        newsNumber
+        nextReadableNews
       );
 
 
