@@ -1,5 +1,8 @@
 name: Stock UI cleanup
 on:
+  push:
+    paths:
+      - '.github/workflows/stock-ui-cleanup.yml'
   workflow_dispatch:
 permissions:
   contents: write
