@@ -2,8 +2,9 @@ name: Send Dori News Email
 
 on:
   schedule:
-    # Run hourly; send-news.js sends only at each user's local 20:00.
-    - cron: "0 * * * *"
+    # 15분마다 확인합니다. 실제 발송 여부는 사용자의 현지 시간
+    # 20:00 ~ 다음날 08:00 및 회원 등급별 발송 주기가 결정합니다.
+    - cron: "*/15 * * * *"
   workflow_dispatch:
     inputs:
       test_email:
