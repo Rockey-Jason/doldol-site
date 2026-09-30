@@ -8,7 +8,7 @@ const supabase = createClient(
 
 const requiredEnv = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "GMAIL_USER", "GMAIL_APP_PASSWORD"];
 for (const name of requiredEnv) {
-  if (!Deno.env.get(name)) throw new Error("필수 환경변수가 없습니다: " + name);
+  if (!process.env[name]) throw new Error("필수 환경변수가 없습니다: " + name);
 }
 
 const transporter = nodemailer.createTransport({
