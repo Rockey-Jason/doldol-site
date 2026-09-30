@@ -1,9 +1,9 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import nodemailer from "npm:nodemailer";
+import { createClient } from "@supabase/supabase-js";
+import nodemailer from "nodemailer";
 
 const supabase = createClient(
-  Deno.env.get("SUPABASE_URL"),
-  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
 const requiredEnv = ["SUPABASE_URL", "SUPABASE_SERVICE_ROLE_KEY", "GMAIL_USER", "GMAIL_APP_PASSWORD"];
@@ -14,8 +14,8 @@ for (const name of requiredEnv) {
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: Deno.env.get("GMAIL_USER"),
-    pass: Deno.env.get("GMAIL_APP_PASSWORD")
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD
   }
 });
 
@@ -66,7 +66,7 @@ async function sendEmail(to, level, newsNumber) {
     `${NEWS_PAGE_URL}?news_number=${encodeURIComponent(safeNewsNumber)}`;
 
   await transporter.sendMail({
-    from: `"돌이사이트" <${Deno.env.get("GMAIL_USER")}>`,
+    from: `"돌이사이트" <${process.env.GMAIL_USER}>`,
     to,
     subject: `📢 제 ${safeNewsNumber}회 돌이신문이 발행되었습니다!`,
     html: `
@@ -127,7 +127,7 @@ async function run() {
 
   console.log(`👥 ${users.length}명의 사용자를 확인했습니다.`);
 
-  const testEmail = Deno.env.get("TEST_EMAIL")?.trim();
+  const testEmail = process.env.TEST_EMAIL?.trim();
 
   if (testEmail) {
     const { data: latestNews, error: latestNewsError } = await supabase
