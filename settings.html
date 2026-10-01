@@ -1296,6 +1296,624 @@ body::before {
         transition-duration: 0.01ms !important;
     }
 }
+
+/* =====================================================
+   ✦ SETTINGS REDESIGN — responsive premium UI
+===================================================== */
+
+:root{
+    --settings-max:1180px;
+    --settings-ease:cubic-bezier(.22,1,.36,1);
+    --settings-glow:rgba(105,201,255,.20);
+}
+
+body{
+    position:relative;
+    isolation:isolate;
+}
+
+body::after{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:-2;
+    background:
+        radial-gradient(circle at 50% -12%,rgba(105,201,255,.12),transparent 34%),
+        radial-gradient(circle at 100% 55%,rgba(146,125,255,.10),transparent 32%),
+        radial-gradient(circle at 0% 80%,rgba(229,154,255,.07),transparent 28%);
+}
+
+.settings-hero{
+    position:relative;
+    min-height:290px;
+    overflow:hidden;
+    border-bottom:1px solid rgba(255,255,255,.08);
+    background:
+        linear-gradient(180deg,rgba(255,255,255,.035),transparent 75%);
+}
+
+.hero-inner{
+    position:relative;
+    z-index:2;
+    width:min(var(--settings-max),calc(100% - 36px));
+    min-height:290px;
+    margin:0 auto;
+    padding:28px 0 38px;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+}
+
+.site-brand{
+    width:max-content;
+    max-width:100%;
+    display:inline-flex;
+    align-items:center;
+    gap:12px;
+    color:#fff;
+    text-decoration:none;
+    transition:transform .4s var(--settings-ease),filter .4s ease;
+}
+
+.site-brand:hover{
+    transform:translateY(-2px);
+    filter:brightness(1.12);
+}
+
+.brand-mark{
+    width:38px;
+    height:38px;
+    display:grid;
+    place-items:center;
+    flex:0 0 auto;
+    border:1px solid rgba(255,255,255,.22);
+    border-radius:12px;
+    background:linear-gradient(145deg,rgba(255,255,255,.16),rgba(255,255,255,.045));
+    box-shadow:0 8px 28px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.18);
+    font-family:'Black Han Sans',sans-serif;
+    font-size:21px;
+}
+
+.brand-text{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-family:'Black Han Sans',sans-serif;
+    font-size:clamp(34px,5.2vw,62px);
+    line-height:1;
+    letter-spacing:-2.8px;
+    text-shadow:0 10px 38px rgba(105,201,255,.16);
+}
+
+.hero-meta{
+    position:absolute;
+    top:34px;
+    right:0;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:rgba(255,255,255,.45);
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:1.7px;
+}
+
+.hero-divider{
+    width:28px;
+    height:1px;
+    background:rgba(255,255,255,.2);
+}
+
+.hero-current{color:rgba(146,125,255,.85)}
+
+.hero-copy{
+    max-width:720px;
+    animation:settingsHeroIn .8s var(--settings-ease) both;
+}
+
+.hero-label,
+.section-eyebrow,
+.profile-eyebrow{
+    display:block;
+    margin-bottom:9px;
+    color:#86d8ff;
+    font-size:10px;
+    font-weight:700;
+    letter-spacing:2.4px;
+}
+
+.hero-copy h1{
+    margin:0;
+    font-family:'Black Han Sans',sans-serif;
+    font-size:clamp(40px,7vw,72px);
+    line-height:1;
+    letter-spacing:-2px;
+    background:linear-gradient(100deg,#fff 15%,#d8d5ff 58%,#9edfff);
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+}
+
+.hero-copy p{
+    margin:13px 0 0;
+    color:rgba(255,255,255,.58);
+    font-size:clamp(13px,2vw,16px);
+    line-height:1.6;
+}
+
+.hero-grid{
+    position:absolute;
+    inset:0;
+    opacity:.22;
+    background-image:
+        linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);
+    background-size:42px 42px;
+    mask-image:linear-gradient(to bottom,black,transparent 90%);
+}
+
+.hero-orb{
+    position:absolute;
+    border-radius:50%;
+    pointer-events:none;
+    filter:blur(3px);
+    animation:heroOrbFloat 8s ease-in-out infinite;
+}
+
+.hero-orb-a{
+    width:340px;
+    height:340px;
+    right:-100px;
+    top:-180px;
+    background:radial-gradient(circle,rgba(105,201,255,.22),transparent 68%);
+}
+
+.hero-orb-b{
+    width:300px;
+    height:300px;
+    left:-130px;
+    bottom:-190px;
+    background:radial-gradient(circle,rgba(146,125,255,.18),transparent 68%);
+    animation-delay:-3.5s;
+}
+
+.settings-main{
+    width:min(var(--settings-max),calc(100% - 36px));
+    margin:0 auto;
+    padding:28px 0 90px;
+    position:relative;
+    z-index:1;
+}
+
+.profile-hero-card{
+    position:relative;
+    min-height:310px;
+    padding:28px;
+    display:grid;
+    grid-template-columns:210px minmax(0,1fr);
+    gap:30px;
+    align-items:center;
+    animation:settingsCardIn .8s .08s var(--settings-ease) both;
+}
+
+.profile-card-glow{
+    position:absolute;
+    width:380px;
+    height:380px;
+    left:-190px;
+    top:-210px;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(105,201,255,.13),transparent 68%);
+    pointer-events:none;
+}
+
+.profile-avatar-column{
+    position:relative;
+    z-index:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+.profile-image-wrapper{
+    width:170px;
+    height:170px;
+    position:relative;
+}
+
+.profile-image-wrapper::after{
+    inset:-9px;
+    border-color:rgba(105,201,255,.45);
+    box-shadow:0 0 30px rgba(105,201,255,.10);
+}
+
+#돌이사진{
+    width:170px !important;
+    height:170px !important;
+    border:3px solid rgba(255,255,255,.86) !important;
+    box-shadow:0 18px 50px rgba(0,0,0,.35),0 0 30px rgba(105,201,255,.10);
+}
+
+.online-dot{
+    position:absolute;
+    right:5px;
+    bottom:7px;
+    width:17px;
+    height:17px;
+    border:3px solid #10102d;
+    border-radius:50%;
+    background:#71e5b0;
+    box-shadow:0 0 16px rgba(113,229,176,.55);
+    z-index:3;
+}
+
+.profile-avatar-column .profile-button{
+    width:170px !important;
+    height:40px !important;
+    margin-top:18px;
+    font-size:13px !important;
+    border-radius:12px !important;
+}
+
+.profile-content{
+    min-width:0;
+    position:relative;
+    z-index:1;
+}
+
+.profile-eyebrow{color:rgba(255,255,255,.38);margin-bottom:7px}
+
+#이름{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+    margin:0 0 22px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-family:'Black Han Sans','HancomMalrangmalrang',sans-serif !important;
+    font-size:clamp(28px,4.2vw,48px) !important;
+    line-height:1.1;
+    letter-spacing:-1.5px;
+}
+
+.profile-stats{
+    display:grid;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:10px;
+}
+
+.profile-stat{
+    min-width:0;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:13px;
+    border:1px solid rgba(255,255,255,.075);
+    border-radius:16px;
+    background:rgba(255,255,255,.035);
+    transition:transform .3s var(--settings-ease),background .3s ease,border-color .3s ease;
+}
+
+.profile-stat:hover{
+    transform:translateY(-3px);
+    background:rgba(255,255,255,.065);
+    border-color:rgba(255,255,255,.14);
+}
+
+.stat-icon{
+    width:31px;
+    height:31px;
+    display:grid;
+    place-items:center;
+    flex:0 0 auto;
+    border:1px solid rgba(105,201,255,.18);
+    border-radius:10px;
+    background:rgba(105,201,255,.07);
+    color:#a7e5ff;
+    font-size:12px;
+    font-weight:700;
+}
+
+.stat-label{
+    display:block;
+    margin-bottom:3px;
+    color:rgba(255,255,255,.36);
+    font-size:10px;
+    letter-spacing:.5px;
+}
+
+.profile-stat .profile-level,
+.profile-stat .profile-coin,
+.profile-stat .profile-id{
+    display:block;
+    max-width:100%;
+    margin:0;
+    color:#e9ebf8;
+    font-size:12px;
+    white-space:nowrap;
+}
+
+.profile-stat > div{
+    min-width:0;
+}
+
+.profile-stat .profile-level,
+.profile-stat .profile-coin,
+.profile-stat .profile-id{
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+
+.profile-content .info-button{
+    height:46px !important;
+    margin-top:12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 16px;
+}
+
+.profile-content .info-button span{
+    color:rgba(255,255,255,.4);
+    font-size:22px;
+    transition:transform .25s var(--settings-ease);
+}
+
+.profile-content .info-button:hover span{transform:translateX(4px)}
+
+.exp-card{
+    margin-top:18px;
+    padding:25px 28px;
+    animation:settingsCardIn .8s .15s var(--settings-ease) both;
+}
+
+.exp-card-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.exp-card-header h2{
+    margin:0;
+    font-size:21px;
+    letter-spacing:-.5px;
+}
+
+.exp-card-header .section-eyebrow{margin-bottom:5px;color:rgba(255,255,255,.34)}
+
+#user-level{
+    flex:0 0 auto;
+    padding:8px 13px;
+    border-color:rgba(105,201,255,.2);
+    background:rgba(105,201,255,.08);
+    color:#aee7ff;
+}
+
+.exp-track-wrap{width:100%}
+
+.exp-track{
+    position:relative;
+    width:100%;
+    height:14px;
+    overflow:hidden;
+    border-radius:999px;
+    background:rgba(255,255,255,.075);
+    box-shadow:inset 0 1px 3px rgba(0,0,0,.3);
+}
+
+#exp-progress-bar{
+    position:relative;
+    z-index:1;
+    min-width:0;
+}
+
+.exp-shimmer{
+    position:absolute;
+    inset:0 auto 0 -35%;
+    width:35%;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.25),transparent);
+    animation:expShimmer 2.8s ease-in-out infinite;
+    pointer-events:none;
+}
+
+.exp-points{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    margin-top:9px;
+    color:rgba(255,255,255,.52);
+    font-size:12px;
+}
+
+#next-level-text{
+    margin-top:18px;
+    padding:13px 15px;
+    text-align:left;
+    border-color:rgba(255,255,255,.075);
+}
+
+@keyframes settingsHeroIn{
+    from{opacity:0;transform:translateY(20px)}
+    to{opacity:1;transform:translateY(0)}
+}
+
+@keyframes settingsCardIn{
+    from{opacity:0;transform:translateY(24px) scale(.985)}
+    to{opacity:1;transform:translateY(0) scale(1)}
+}
+
+@keyframes heroOrbFloat{
+    0%,100%{transform:translate3d(0,0,0) scale(1)}
+    50%{transform:translate3d(0,18px,0) scale(1.06)}
+}
+
+@keyframes expShimmer{
+    0%{left:-35%}
+    45%,100%{left:110%}
+}
+
+@media (max-width:900px){
+    .profile-hero-card{
+        grid-template-columns:170px minmax(0,1fr);
+        gap:22px;
+    }
+
+    .profile-image-wrapper,
+    #돌이사진{
+        width:145px !important;
+        height:145px !important;
+    }
+
+    .profile-avatar-column .profile-button{
+        width:145px !important;
+    }
+
+    .profile-stats{
+        grid-template-columns:1fr;
+    }
+}
+
+@media (max-width:560px){
+    .settings-hero{
+        min-height:255px;
+    }
+
+    .hero-inner{
+        width:calc(100% - 28px);
+        min-height:255px;
+        padding:18px 0 27px;
+    }
+
+    .site-brand{
+        gap:9px;
+        max-width:calc(100% - 8px);
+    }
+
+    .brand-mark{
+        width:31px;
+        height:31px;
+        border-radius:9px;
+        font-size:17px;
+    }
+
+    .brand-text{
+        font-size:clamp(32px,10.5vw,45px);
+        letter-spacing:-2px;
+    }
+
+    .hero-meta{
+        display:none;
+    }
+
+    .hero-copy{
+        max-width:100%;
+    }
+
+    .hero-copy h1{
+        font-size:clamp(42px,14vw,58px);
+    }
+
+    .hero-copy p{
+        max-width:310px;
+        font-size:13px;
+    }
+
+    .settings-main{
+        width:calc(100% - 28px);
+        padding-top:16px;
+        padding-bottom:55px;
+    }
+
+    .profile-hero-card{
+        grid-template-columns:1fr;
+        gap:22px;
+        padding:23px 17px;
+        border-radius:23px;
+        text-align:center;
+    }
+
+    .profile-avatar-column{
+        width:100%;
+    }
+
+    .profile-image-wrapper,
+    #돌이사진{
+        width:132px !important;
+        height:132px !important;
+    }
+
+    .profile-avatar-column .profile-button{
+        width:100% !important;
+        max-width:260px;
+    }
+
+    .profile-content{
+        width:100%;
+    }
+
+    #이름{
+        text-align:center;
+        font-size:clamp(27px,9vw,38px) !important;
+        margin-bottom:18px;
+    }
+
+    .profile-stats{
+        grid-template-columns:1fr;
+        text-align:left;
+    }
+
+    .profile-stat{
+        padding:12px;
+    }
+
+    .profile-stat .profile-level,
+    .profile-stat .profile-coin,
+    .profile-stat .profile-id{
+        font-size:12px;
+    }
+
+    .exp-card{
+        padding:21px 17px;
+        border-radius:23px;
+    }
+
+    .exp-card-header h2{
+        font-size:18px;
+    }
+}
+
+@media (max-width:360px){
+    .hero-inner,
+    .settings-main{
+        width:calc(100% - 22px);
+    }
+
+    .brand-text{
+        font-size:30px;
+        letter-spacing:-1.7px;
+    }
+
+    .hero-copy h1{
+        font-size:40px;
+    }
+
+    .hero-copy p{
+        font-size:12px;
+    }
+}
+
+@media (prefers-reduced-motion:reduce){
+    .hero-orb,
+    .exp-shimmer{
+        animation:none !important;
+    }
+}
+
 </style>
 
 
@@ -1304,261 +1922,148 @@ body::before {
 
 <body>
 
-
 <!-- =====================================================
-     제목
+     설정 페이지 헤더
 ===================================================== -->
 
-<a
-    href="https://rockey-jason.github.io/doldol-site/"
-    style="
-        text-decoration:none;
-    "
->
+<header class="settings-hero">
+    <div class="hero-orb hero-orb-a"></div>
+    <div class="hero-orb hero-orb-b"></div>
+    <div class="hero-grid"></div>
 
-<button
-    style="
-        position:absolute;
-        top:0;
-        left:0;
-        background:none;
-        border:none;
-        color:#f5f5f5;
-        font-family:'Black Han Sans',sans-serif;
-        font-size:100px;
-        cursor:pointer;
-        z-index:5;
-    "
->
+    <div class="hero-inner">
+        <a
+            class="site-brand"
+            href="https://rockey-jason.github.io/doldol-site/"
+            aria-label="돌이사이트 메인으로 이동"
+        >
+            <span class="brand-mark">D</span>
+            <span class="brand-text">돌이사이트</span>
+        </a>
 
-돌이 사이트
+        <div class="hero-meta">
+            <span class="hero-kicker">DOLDOL SYSTEM</span>
+            <span class="hero-divider"></span>
+            <span class="hero-current">SETTINGS</span>
+        </div>
 
-</button>
-
-</a>
-
-
-<!-- =====================================================
-     설명
-===================================================== -->
-
-<p
-    style="
-        font-size:20px;
-        color:#f5f5f5;
-        margin-top:120px;
-        margin-left:20px;
-        user-select:none;
-    "
->
-
-설정-자신의 정보를 수정해보세요!
-
-</p>
-
-
-<!-- =====================================================
-     프로필 업로드
-===================================================== -->
-
-<input
-    type="file"
-    id="profileUpload"
-    accept="image/*"
-    style="display:none;"
->
-
-
-<img
-    id="돌이사진"
-    src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
-    style="
-        position:absolute;
-        top:180px;
-        left:20px;
-        width:200px;
-        height:200px;
-        border-radius:50%;
-        object-fit:cover;
-        cursor:pointer;
-        border:2px solid black;
-        z-index:2;
-    "
->
-
-
-<!-- =====================================================
-     이름
-===================================================== -->
-
-<button
-    id="이름"
-    style="
-        position:absolute;
-        top:200px;
-        left:250px;
-        font-size:50px;
-        font-family:'HancomMalrangmalrang';
-        background:none;
-        border:none;
-        color:white;
-        cursor:pointer;
-        font-weight:700;
-        white-space:nowrap;
-    "
->
-
-이름
-
-</button>
-
-
-<!-- =====================================================
-     회원 레벨
-===================================================== -->
-
-<button
-    id="레벨"
-    style="
-        position:absolute;
-        top:280px;
-        left:250px;
-        font-size:20px;
-        font-family:'HancomMalrangmalrang';
-        background:none;
-        border:none;
-        color:white;
-        font-weight:700;
-        white-space:nowrap;
-    "
->
-
-현재 회원 등급 : 일반
-
-</button>
-
-
-<!-- =====================================================
-     코인
-===================================================== -->
-
-<button
-    id="돌돌코인수량"
-    style="
-        position:absolute;
-        top:310px;
-        left:250px;
-        font-size:20px;
-        font-family:'HancomMalrangmalrang';
-        background:none;
-        border:none;
-        color:white;
-        font-weight:700;
-        white-space:nowrap;
-    "
->
-
-현재 돌돌코인 : 0
-
-</button>
-
-
-<!-- =====================================================
-     아이디
-===================================================== -->
-
-<div
-    id="현재아이디"
-    style="
-        position:absolute;
-        top:350px;
-        left:250px;
-        font-size:20px;
-        color:white;
-        white-space:nowrap;
-    "
->
-
-현재 아이디 : -
-
-</div>
-
-
-<!-- =====================================================
-     프로필 변경
-===================================================== -->
-
-<button
-    class="profile-button"
-    id="profileButton"
->
-
-프로필 사진 변경
-
-</button>
-
-
-<!-- =====================================================
-     개인정보
-===================================================== -->
-
-<button
-    class="info-button"
-    onclick="location.href='fixingsettings.html'"
->
-
-개인정보 수정
-
-</button>
-
-
-<!-- =====================================================
-     EXP
-===================================================== -->
-
-<div class="exp-box">
-
-    <div class="exp-title">
-
-        <span>
-            🐶 돌이 레벨
-        </span>
-
-        <span id="user-level">
-            Lv.1
-        </span>
-
+        <div class="hero-copy">
+            <span class="hero-label">PERSONAL SPACE</span>
+            <h1>설정</h1>
+            <p>나의 프로필과 돌이사이트 정보를 한곳에서 관리하세요.</p>
+        </div>
     </div>
+</header>
 
+<main class="settings-main">
 
-    <div class="exp-progress">
+    <!-- =====================================================
+         사용자 프로필
+    ===================================================== -->
 
-        <div id="exp-progress-bar"></div>
+    <section class="profile-hero-card glass-card">
+        <div class="profile-card-glow"></div>
 
-    </div>
+        <input
+            type="file"
+            id="profileUpload"
+            accept="image/*"
+            style="display:none;"
+        >
 
+        <div class="profile-avatar-column">
+            <div class="profile-image-wrapper">
+                <img
+                    id="돌이사진"
+                    src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
+                    alt="프로필 사진"
+                >
+                <span class="online-dot" aria-hidden="true"></span>
+            </div>
 
-    <div class="exp-text">
+            <button
+                class="profile-button"
+                id="profileButton"
+                type="button"
+            >
+                📷 프로필 사진 변경
+            </button>
+        </div>
 
-        <span id="current-exp">
-            0 EXP
-        </span>
+        <div class="profile-content">
+            <div class="profile-eyebrow">YOUR DOLDOL PROFILE</div>
 
-        <span id="required-exp">
-            100 EXP
-        </span>
+            <button
+                id="이름"
+                type="button"
+                aria-label="현재 사용자 이름"
+            >이름</button>
 
-    </div>
+            <div class="profile-stats">
+                <div class="profile-stat">
+                    <span class="stat-icon">◈</span>
+                    <div>
+                        <span class="stat-label">회원 등급</span>
+                        <span class="profile-level" id="레벨">현재 회원 등급 : 일반</span>
+                    </div>
+                </div>
 
+                <div class="profile-stat">
+                    <span class="stat-icon">◉</span>
+                    <div>
+                        <span class="stat-label">보유 자산</span>
+                        <span class="profile-coin" id="돌돌코인수량">현재 돌돌코인 : 0</span>
+                    </div>
+                </div>
 
-    <div id="next-level-text">
+                <div class="profile-stat">
+                    <span class="stat-icon">ID</span>
+                    <div>
+                        <span class="stat-label">로그인 아이디</span>
+                        <span class="profile-id" id="현재아이디">현재 아이디 : -</span>
+                    </div>
+                </div>
+            </div>
 
-        다음 레벨까지 100 EXP
+            <button
+                class="info-button"
+                type="button"
+                onclick="location.href='fixingsettings.html'"
+            >
+                ⚙️ 개인정보 수정
+                <span>›</span>
+            </button>
+        </div>
+    </section>
 
-    </div>
+    <!-- =====================================================
+         EXP
+    ===================================================== -->
 
-</div>
+    <section class="exp-card glass-card">
+        <div class="exp-card-header">
+            <div>
+                <span class="section-eyebrow">PROGRESS</span>
+                <h2>🐶 돌이 레벨</h2>
+            </div>
+            <span id="user-level">Lv.1</span>
+        </div>
 
+        <div class="exp-track-wrap">
+            <div class="exp-track">
+                <div id="exp-progress-bar"></div>
+                <span class="exp-shimmer"></span>
+            </div>
+            <div class="exp-points">
+                <span id="current-exp">0 EXP</span>
+                <span id="required-exp">100 EXP</span>
+            </div>
+        </div>
+
+        <div id="next-level-text">
+            다음 레벨까지 100 EXP
+        </div>
+    </section>
 
 <!-- =====================================================
      상태
