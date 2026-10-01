@@ -1,100 +1,322 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
 <head>
-
-<title>돌이 사이트-개인정보 수정</title>
-
-<style>
-
-  @font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: 'HancomMalrangmalrang';
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2') format('woff2');
-  font-weight: 700;
-  font-display: swap;
-}
-
-body {
-  background: linear-gradient(to right, #000033, #000010);
-  margin: 0;
-  color: white;
-}
-
-  * {
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-user-drag: none;
-}
-
-input,
-textarea {
-  user-select: text;
-  -webkit-user-select: text;
-}
-
-</style>
-
-</head>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>돌이사이트 · 개인정보 수정</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap" rel="stylesheet">
 
-<link
-href="https://fonts.googleapis.com/css2?family=Jua&family=Black+Han+Sans&display=swap"
-rel="stylesheet">
+<style>
+@font-face{
+  font-family:'HancomMalrangmalrang';
+  src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');
+  font-weight:400;
+  font-display:swap;
+}
+@font-face{
+  font-family:'HancomMalrangmalrang';
+  src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Bold.woff2') format('woff2');
+  font-weight:700;
+  font-display:swap;
+}
 
+:root{
+  --bg:#05051c;
+  --card:rgba(255,255,255,.065);
+  --border:rgba(255,255,255,.12);
+  --muted:rgba(255,255,255,.55);
+  --blue:#69c9ff;
+  --purple:#927dff;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  min-height:100vh;
+  overflow-x:hidden;
+  color:#fff;
+  font-family:'HancomMalrangmalrang',sans-serif;
+  background:
+    radial-gradient(circle at 12% 8%,rgba(82,89,255,.19),transparent 32%),
+    radial-gradient(circle at 88% 20%,rgba(190,93,255,.12),transparent 30%),
+    linear-gradient(135deg,#05051c,#09092b 45%,#02020e);
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background-image:
+    linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,255,255,.018) 1px,transparent 1px);
+  background-size:44px 44px;
+  mask-image:linear-gradient(to bottom,black,transparent 92%);
+}
+button,input{font:inherit}
+button{color:inherit}
+button:focus-visible,input:focus-visible{
+  outline:2px solid rgba(105,201,255,.8);
+  outline-offset:3px;
+}
 
-<!-- =========================
-     제목
-========================= -->
+/* Header */
+.fix-header{
+  position:relative;
+  min-height:285px;
+  overflow:hidden;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.header-inner{
+  width:min(1080px,calc(100% - 36px));
+  min-height:285px;
+  margin:auto;
+  padding:26px 0 38px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  position:relative;
+  z-index:2;
+}
+.brand{
+  display:inline-flex;
+  align-items:center;
+  gap:11px;
+  width:max-content;
+  max-width:100%;
+  text-decoration:none;
+  color:#fff;
+  transition:transform .35s var(--ease),filter .35s;
+}
+.brand:hover{transform:translateY(-2px);filter:brightness(1.12)}
+.brand-mark{
+  width:38px;height:38px;display:grid;place-items:center;
+  border:1px solid rgba(255,255,255,.22);
+  border-radius:12px;
+  background:rgba(255,255,255,.08);
+  font:21px 'Black Han Sans',sans-serif;
+  box-shadow:0 10px 30px rgba(0,0,0,.25),inset 0 1px rgba(255,255,255,.16);
+}
+.brand-text{
+  font:clamp(34px,5vw,58px)/1 'Black Han Sans',sans-serif;
+  letter-spacing:-2.5px;
+  white-space:nowrap;
+}
+.header-meta{
+  position:absolute;right:0;top:32px;
+  color:rgba(255,255,255,.42);
+  font-size:10px;letter-spacing:2px;font-weight:700;
+}
+.header-copy{animation:rise .75s var(--ease) both}
+.eyebrow{
+  color:#86d8ff;font-size:10px;font-weight:700;letter-spacing:2.5px;
+  margin-bottom:9px;
+}
+.header-copy h1{
+  margin:0;
+  font:clamp(40px,7vw,68px)/1 'Black Han Sans',sans-serif;
+  letter-spacing:-2px;
+  background:linear-gradient(100deg,#fff,#d8d5ff,#9edfff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.header-copy p{
+  margin:12px 0 0;color:var(--muted);font-size:14px;line-height:1.6;
+}
+.orb{position:absolute;border-radius:50%;pointer-events:none;filter:blur(3px);animation:float 8s ease-in-out infinite}
+.orb.a{width:360px;height:360px;right:-120px;top:-220px;background:radial-gradient(circle,rgba(105,201,255,.2),transparent 68%)}
+.orb.b{width:300px;height:300px;left:-150px;bottom:-220px;background:radial-gradient(circle,rgba(146,125,255,.17),transparent 68%);animation-delay:-3s}
 
-<a
-href="https://rockey-jason.github.io/doldol-site/"
-style="text-decoration:none;"
->
+/* Form */
+.page{
+  width:min(820px,calc(100% - 36px));
+  margin:0 auto;
+  padding:26px 0 75px;
+}
+.form-card{
+  position:relative;
+  overflow:hidden;
+  padding:32px;
+  border:1px solid var(--border);
+  border-radius:28px;
+  background:var(--card);
+  box-shadow:0 24px 70px rgba(0,0,0,.32);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  animation:rise .8s .08s var(--ease) both;
+}
+.form-card::before{
+  content:"";position:absolute;left:12%;right:12%;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);
+}
+.card-heading{
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  margin-bottom:27px;
+}
+.card-heading h2{margin:0;font-size:25px;letter-spacing:-.7px}
+.lock{
+  width:42px;height:42px;display:grid;place-items:center;
+  border-radius:13px;border:1px solid rgba(105,201,255,.2);
+  background:rgba(105,201,255,.07);font-size:18px;
+  box-shadow:0 0 28px rgba(105,201,255,.08);
+}
+.field{
+  margin-top:17px;
+  animation:fieldIn .6s var(--ease) both;
+}
+.field:nth-of-type(2){animation-delay:.06s}
+.field:nth-of-type(3){animation-delay:.12s}
+.field label{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:8px;color:#e8e9f5;font-size:14px;font-weight:700;
+}
+.field-hint{color:rgba(255,255,255,.34);font-size:11px;font-weight:400}
+.input-wrap{position:relative}
+.input-wrap::after{
+  content:"";position:absolute;left:14px;right:14px;bottom:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--blue),transparent);
+  transform:scaleX(0);transform-origin:center;transition:transform .35s var(--ease);
+}
+.input-wrap:focus-within::after{transform:scaleX(1)}
+.field input{
+  width:100%;height:52px;
+  padding:0 15px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:15px;
+  color:#fff;
+  background:rgba(0,0,20,.34);
+  outline:none;
+  caret-color:var(--blue);
+  transition:border-color .3s,background .3s,box-shadow .3s,transform .3s var(--ease);
+  user-select:text;-webkit-user-select:text;
+}
+.field input::placeholder{color:rgba(255,255,255,.27)}
+.field input:focus{
+  border-color:rgba(105,201,255,.4);
+  background:rgba(0,0,25,.5);
+  box-shadow:0 0 0 4px rgba(105,201,255,.06),0 12px 30px rgba(0,0,0,.18);
+  transform:translateY(-1px);
+}
+.password-note{
+  margin:8px 2px 0;color:rgba(255,255,255,.35);font-size:11px;
+}
+.actions{
+  display:grid;grid-template-columns:1fr 1fr;gap:11px;margin-top:28px;
+}
+.action{
+  height:52px;border:1px solid rgba(255,255,255,.12);border-radius:15px;
+  cursor:pointer;font-weight:700;
+  transition:transform .3s var(--ease),background .3s,border-color .3s,box-shadow .3s;
+}
+.action:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.25);box-shadow:0 14px 35px rgba(0,0,0,.22)}
+.action:active{transform:scale(.975)}
+.action.primary{
+  background:linear-gradient(135deg,rgba(105,201,255,.23),rgba(146,125,255,.25));
+  border-color:rgba(105,201,255,.3);
+}
+.action.primary:hover{background:linear-gradient(135deg,rgba(105,201,255,.3),rgba(146,125,255,.32))}
+.action.secondary{background:rgba(255,255,255,.055)}
+.security-note{
+  display:flex;align-items:center;gap:10px;
+  margin-top:18px;padding:13px 15px;
+  border:1px solid rgba(255,255,255,.065);border-radius:14px;
+  color:rgba(255,255,255,.38);font-size:11px;line-height:1.55;
+  background:rgba(255,255,255,.025);
+}
+.security-icon{color:#8ddcff}
 
-<button
-style="
-position:absolute;
-top:0;
-left:0;
-background:none;
-border:none;
-color:#f5f5f5;
-font-family:'Black Han Sans';
-font-size:70px;
-cursor:pointer;
-"
->
-돌이 사이트
-</button>
+/* Mobile */
+@media(max-width:560px){
+  .fix-header{min-height:250px}
+  .header-inner{width:calc(100% - 28px);min-height:250px;padding:18px 0 28px}
+  .brand-mark{width:31px;height:31px;border-radius:9px;font-size:17px}
+  .brand-text{font-size:clamp(31px,10.5vw,45px);letter-spacing:-2px}
+  .header-meta{display:none}
+  .header-copy h1{font-size:clamp(40px,13.5vw,56px)}
+  .header-copy p{max-width:310px;font-size:13px}
+  .page{width:calc(100% - 28px);padding-top:16px}
+  .form-card{padding:22px 16px;border-radius:23px}
+  .card-heading{margin-bottom:22px}
+  .card-heading h2{font-size:21px}
+  .lock{width:38px;height:38px;border-radius:11px}
+  .field{margin-top:15px}
+  .field input{height:50px;font-size:15px}
+  .actions{grid-template-columns:1fr;margin-top:24px}
+  .action{height:50px}
+}
+@media(max-width:360px){
+  .header-inner,.page{width:calc(100% - 22px)}
+  .brand-text{font-size:30px}
+  .header-copy h1{font-size:39px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+@keyframes rise{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:none}}
+@keyframes fieldIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(16px) scale(1.05)}}
+</style>
+</head>
 
-</a>
+<body>
+<header class="fix-header">
+  <div class="orb a"></div><div class="orb b"></div>
+  <div class="header-inner">
+    <a class="brand" href="https://rockey-jason.github.io/doldol-site/" aria-label="돌이사이트 메인으로">
+      <span class="brand-mark">D</span>
+      <span class="brand-text">돌이사이트</span>
+    </a>
+    <div class="header-meta">DOLDOL SYSTEM · PROFILE</div>
+    <div class="header-copy">
+      <div class="eyebrow">ACCOUNT SETTINGS</div>
+      <h1>개인정보 수정</h1>
+      <p>이름, 아이디, 비밀번호를 안전하게 변경할 수 있습니다.</p>
+    </div>
+  </div>
+</header>
 
+<main class="page">
+  <section class="form-card">
+    <div class="card-heading">
+      <h2>내 계정 정보</h2>
+      <div class="lock" aria-hidden="true">🔐</div>
+    </div>
 
-<!-- =========================
-     설명
-========================= -->
+    <div class="field">
+      <label for="새이름"><span>유저 이름</span><span class="field-hint">선택 사항</span></label>
+      <div class="input-wrap">
+        <input id="새이름" type="text" placeholder="새 이름을 입력하세요" autocomplete="name">
+      </div>
+    </div>
 
-<p
-style="
-font-size:20px;
-color:#f5f5f5;
-font-family: 'HancomMalrangmalrang';
-margin-top:100px;
-margin-left:20px;
-"
->
-개인정보를 수정할 수 있습니다.
-</p>
+    <div class="field">
+      <label for="새아이디"><span>아이디</span><span class="field-hint">선택 사항</span></label>
+      <div class="input-wrap">
+        <input id="새아이디" type="text" placeholder="새 아이디를 입력하세요" autocomplete="username">
+      </div>
+    </div>
 
+    <div class="field">
+      <label for="새비밀번호"><span>새 비밀번호</span><span class="field-hint">최소 6자</span></label>
+      <div class="input-wrap">
+        <input id="새비밀번호" type="password" placeholder="새 비밀번호를 입력하세요" autocomplete="new-password">
+      </div>
+      <div class="password-note">비밀번호를 변경하지 않으려면 비워두세요.</div>
+    </div>
+
+    <div class="actions">
+      <button class="action primary" type="button" onclick="개인정보수정()">✓ 개인정보 저장</button>
+      <button class="action secondary" type="button" onclick="location.href='settings.html'">← 설정으로 돌아가기</button>
+    </div>
+
+    <div class="security-note">
+      <span class="security-icon">✦</span>
+      <span>입력하지 않은 항목은 기존 정보가 그대로 유지됩니다.</span>
+    </div>
+  </section>
+</main>
 
 <script type="module">
 
@@ -309,164 +531,6 @@ window.개인정보수정 = async function () {
 
 </script>
 
-
-<!-- =========================
-     개인정보 수정 영역
-========================= -->
-
-<div
-style="
-position:absolute;
-top:180px;
-left:20px;
-width:500px;
-font-family: 'HancomMalrangmalrang';
-color:white;
-"
->
-
-
-<h1>
-개인정보 수정
-</h1>
-
-
-<!-- =========================
-     이름
-========================= -->
-
-<label>
-유저 이름
-</label>
-
-<br>
-
-
-<input
-id="새이름"
-type="text"
-placeholder="새 이름"
-style="
-width:300px;
-height:35px;
-font-size:18px;
-font-family: 'HancomMalrangmalrang';
-margin-top:5px;
-border-radius:8px;
-border:none;
-padding-left:10px;
-">
-
-
-<br><br>
-
-
-<!-- =========================
-     아이디
-========================= -->
-
-<label>
-아이디
-</label>
-
-<br>
-
-
-<input
-id="새아이디"
-type="email"
-placeholder="새 아이디"
-style="
-width:300px;
-height:35px;
-font-size:18px;
-font-family: 'HancomMalrangmalrang';
-margin-top:5px;
-border-radius:8px;
-border:none;
-padding-left:10px;
-">
-
-
-<br><br>
-
-
-<!-- =========================
-     비밀번호
-========================= -->
-
-<label>
-새 비밀번호
-</label>
-
-<br>
-
-
-<input
-id="새비밀번호"
-type="password"
-placeholder="새 비밀번호"
-style="
-width:300px;
-height:35px;
-font-size:18px;
-font-family: 'HancomMalrangmalrang';
-margin-top:5px;
-border-radius:8px;
-border:none;
-padding-left:10px;
-">
-
-
-<br><br>
-
-
-<!-- =========================
-     저장 버튼
-========================= -->
-
-<button
-onclick="개인정보수정()"
-style="
-width:320px;
-height:45px;
-font-size:20px;
-font-family: 'HancomMalrangmalrang';
-border:none;
-border-radius:10px;
-cursor:pointer;
-"
->
-개인정보 저장
-</button>
-
-
-<br><br>
-
-
-<!-- =========================
-     돌아가기
-========================= -->
-
-<button
-onclick="location.href='settings.html'"
-style="
-width:320px;
-height:45px;
-font-size:20px;
-font-family: 'HancomMalrangmalrang';
-border:none;
-border-radius:10px;
-cursor:pointer;
-"
->
-설정으로 돌아가기
-</button>
-
-
-</div>
-
-
-  <script type="module" src="js/achievements.js?v=20260928-11"></script>
+<script type="module" src="js/achievements.js?v=20260928-11"></script>
 </body>
 </html>
