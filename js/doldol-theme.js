@@ -1,33 +1,37 @@
-/* DORI SITE — Unified Motion Engine v1.0 */
+/* DORI SITE FINAL MOTION ENGINE v2 */
 (()=>{"use strict";
- const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
- const q=(s)=>document.querySelector(s);
- const world=document.createElement("div");world.className="dori-world";world.innerHTML="<i class='a'></i><i class='b'></i><i class='c'></i>";document.body.prepend(world);
- const sheen=document.createElement("div");sheen.className="dori-sheen";document.body.append(sheen);
- const transition=document.createElement("div");transition.className="dori-page-transition";document.body.append(transition);
- document.documentElement.classList.add("dori-system");
- document.body.classList.add("dori-page");
- if(!reduce) requestAnimationFrame(()=>document.body.classList.add("dori-ready"));
- const mark=document.querySelector("main")||document.querySelector("#사이트")||document.body.firstElementChild;
- if(mark && !mark.classList.contains("dori-enter")) mark.classList.add("dori-enter");
- document.querySelectorAll("main section,main article,.card,.메뉴카드,.패널").forEach((el,i)=>{
-   if(i<12 && !el.classList.contains("dori-enter")){el.style.animationDelay=(Math.min(i,8)*.045)+"s";el.classList.add("dori-enter")}
- });
- const leave=(url)=>{
-   if(reduce){location.href=url;return}
-   transition.classList.add("leaving");sheen.classList.add("show");
-   setTimeout(()=>location.href=url,430);
- };
- document.addEventListener("click",(e)=>{
-   const a=e.target.closest("a[href]");
-   if(!a||e.defaultPrevented||a.target==="_blank"||a.hasAttribute("download"))return;
-   const raw=a.getAttribute("href");if(!raw||raw.startsWith("#")||raw.startsWith("javascript:"))return;
-   let u;try{u=new URL(raw,location.href)}catch{return}
-   if(u.origin!==location.origin)return;
-   const same=u.pathname===location.pathname&&u.search===location.search;if(same)return;
-   e.preventDefault();leave(u.href);
- },true);
- window.addEventListener("pageshow",()=>{transition.classList.remove("leaving");sheen.classList.remove("show")});
- window.addEventListener("pagehide",()=>{});
- document.addEventListener("keydown",(e)=>{if(e.key==="Escape")document.body.classList.add("dori-escape")});
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $=(s)=>document.querySelector(s);
+const world=document.createElement("div");world.className="dori-world";world.innerHTML="<i class=a></i><i class=b></i><i class=c></i>";document.body.prepend(world);
+const sheen=document.createElement("div");sheen.className="dori-sheen";document.body.append(sheen);
+const transition=document.createElement("div");transition.className="dori-page-transition";document.body.append(transition);
+const loader=document.createElement("div");loader.className="dori-loader";loader.innerHTML='<div class="dori-loader-core"><div class="dori-loader-mark">D</div><div class="dori-loader-name">돌이사이트</div><div class="dori-loader-sub">DOLDOL SYSTEM</div><div class="dori-loader-bar"><i></i></div></div>';document.body.append(loader);
+document.documentElement.classList.add("dori-system");document.body.classList.add("dori-page");
+const root=document.querySelector("main")||document.querySelector("#사이트")||document.body.firstElementChild;
+if(root&&!root.classList.contains("dori-enter"))root.classList.add("dori-enter");
+const targets=document.querySelectorAll("main section,main article,.card,.메뉴카드,.패널,[class*='card'],[class*='카드']");
+targets.forEach((el,i)=>{if(i<18&&!el.classList.contains("dori-enter")){el.style.animationDelay=(.04+Math.min(i,12)*.035)+"s";el.classList.add("dori-enter")}});
+if(!reduce){const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){e.target.classList.add("dori-visible");io.unobserve(e.target)}}),{threshold:.08});document.querySelectorAll("section,article").forEach(e=>{if(!e.classList.contains("dori-enter"))io.observe(e)})}
+const finish=()=>setTimeout(()=>loader.classList.add("done"),reduce?80:Math.min(900,Math.max(420,(performance.now?.()||600))));
+if(document.readyState==="complete")finish();else addEventListener("load",finish,{once:true});
+const leave=url=>{if(reduce){location.href=url;return}transition.classList.add("leaving");sheen.classList.add("show");setTimeout(()=>location.href=url,480)};
+document.addEventListener("click",e=>{
+ const a=e.target.closest("a[href]");if(!a||e.defaultPrevented||a.target==="_blank"||a.hasAttribute("download"))return;
+ const raw=a.getAttribute("href");if(!raw||raw[0]==="#"||raw.startsWith("javascript:"))return;
+ let u;try{u=new URL(raw,location.href)}catch{return}
+ if(u.origin!==location.origin||u.pathname===location.pathname&&u.search===location.search)return;
+ e.preventDefault();leave(u.href);
+},true);
+document.addEventListener("click",e=>{
+ const b=e.target.closest("button");if(!b||b.disabled)return;
+ b.animate([{transform:"scale(1)"},{transform:"scale(.965)"},{transform:"scale(1)"}],{duration:230,easing:"cubic-bezier(.2,.8,.2,1)"});
+});
+document.addEventListener("pointermove",e=>{
+ const card=e.target.closest(".dori-glass,[class*='card'],[class*='카드']");if(!card||innerWidth<800)return;
+ const r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;
+ if(Math.abs(x)>.5||Math.abs(y)>.5)return;
+ card.style.transform="perspective(900px) rotateX("+(-y*1.6)+"deg) rotateY("+(x*1.6)+"deg) translateY(-2px)";
+},{passive:true});
+document.addEventListener("pointerout",e=>{const c=e.target.closest(".dori-glass,[class*='card'],[class*='카드']");if(c)c.style.transform=""});
+addEventListener("pageshow",()=>{transition.classList.remove("leaving");sheen.classList.remove("show")});
 })();
