@@ -6,6 +6,41 @@ const world=document.createElement("div");world.className="dori-world";world.inn
 const sheen=document.createElement("div");sheen.className="dori-sheen";document.body.append(sheen);
 const transition=document.createElement("div");transition.className="dori-page-transition";document.body.append(transition);
 const loader=document.createElement("div");loader.className="dori-loader";loader.innerHTML='<div class="dori-loader-core"><div class="dori-loader-mark">D</div><div class="dori-loader-name">돌이사이트</div><div class="dori-loader-sub">DOLDOL SYSTEM</div><div class="dori-loader-bar"><i></i></div></div>';document.body.append(loader);
+
+// Unified Dori site home navigation
+const HOME_URL="https://rockey-jason.github.io/doldol-site/";
+const isHomeHref=(raw)=>{
+  if(!raw)return false;
+  try{
+    const u=new URL(raw,location.href);
+    return u.origin===location.origin && (u.pathname.endsWith("/index.html")||u.pathname.endsWith("/")) ||
+      u.href===HOME_URL || u.href===HOME_URL+"index.html";
+  }catch{return false}
+};
+const homeLinks=[...document.querySelectorAll("a[href]")].filter(a=>isHomeHref(a.getAttribute("href")));
+homeLinks.forEach(a=>{
+  a.classList.add("dori-home-button");
+  if(!a.querySelector(".dori-home-label")){
+    const text=(a.textContent||"").trim();
+    if(text) a.innerHTML='<span class="dori-home-label">돌이사이트</span>';
+  }
+  a.setAttribute("aria-label","돌이사이트 메인으로 이동");
+});
+const legacyHomeButtons=[document.getElementById("뒤로가기")].filter(Boolean);
+legacyHomeButtons.forEach(b=>{
+  b.classList.add("dori-home-button");
+  b.innerHTML='<span class="dori-home-label">돌이사이트</span>';
+  b.setAttribute("aria-label","돌이사이트 메인으로 이동");
+});
+if(location.pathname.endsWith("/index.html")||location.pathname.endsWith("/")){}
+else if(!homeLinks.length&&!legacyHomeButtons.length){
+  const home=document.createElement("a");
+  home.href=HOME_URL;
+  home.className="dori-home-button dori-home-float";
+  home.innerHTML='<span class="dori-home-label">돌이사이트</span>';
+  home.setAttribute("aria-label","돌이사이트 메인으로 이동");
+  document.body.append(home);
+}
 document.documentElement.classList.add("dori-system");document.body.classList.add("dori-page");
 const root=document.querySelector("main")||document.querySelector("#사이트")||document.body.firstElementChild;
 if(root&&!root.classList.contains("dori-enter"))root.classList.add("dori-enter");
