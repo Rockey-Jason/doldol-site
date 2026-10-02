@@ -2,15 +2,21 @@ name: Send Dori News Email
 
 on:
   schedule:
-    # 15분마다 확인합니다. 실제 발송 여부는 사용자의 현지 시간
-    # 20:00 ~ 다음날 08:00 및 회원 등급별 발송 주기가 결정합니다.
-    - cron: "*/15 * * * *"
+    # GitHub Actions 정각 부하를 피하기 위해 정각을 피해서 15분마다 확인합니다.
+    # 실제 발송 여부는 사용자의 현지 시간 20:00 ~ 다음날 08:00
+    # 및 회원 등급별 발송 주기가 결정합니다.
+    - cron: "7,22,37,52 * * * *"
   workflow_dispatch:
     inputs:
       test_email:
         description: "테스트 이메일 주소 (입력하면 이 주소 하나로만 테스트 발송)"
         required: false
         type: string
+  # 이 커밋으로 실제 Gmail SMTP 발송을 검증하기 위한 1회성 트리거입니다.
+  # 테스트 후 이 push 트리거는 제거합니다.
+  push:
+    branches:
+      - main
 
 jobs:
   run-news:
@@ -25,10 +31,13 @@ jobs:
 
       - run: npm install
 
-      - run: node send-news.js
+      - name: Run Dori News Email
+        run: node send-news.js
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
-          TEST_EMAIL: ${{ inputs.test_email }}
+          # push 테스트에서는 실제 SMTP 계정의 Gmail로만 테스트 메일을 보냅니다.
+          # 예약 실행/수동 실행에서는 기존 동작을 그대로 유지합니다.
+          TEST_EMAIL: ${{ github.event_name == 'push' && secrets.GMAIL_USER || inputs.test_email }}
