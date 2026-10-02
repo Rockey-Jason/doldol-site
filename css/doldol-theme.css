@@ -46,3 +46,16 @@ img{transition:transform .5s var(--d-ease),filter .5s ease}
 @keyframes dEnter{to{opacity:1;transform:none}}@keyframes dFloat{0%,100%{transform:translate3d(0,0,0) scale(.96)}50%{transform:translate3d(38px,-25px,0) scale(1.08)}}@keyframes dLoaderIn{to{opacity:1;transform:none}}@keyframes dLoaderPulse{50%{transform:translateY(-3px);box-shadow:0 28px 75px rgba(74,88,255,.48),inset 0 1px rgba(255,255,255,.35)}}@keyframes dLoaderBar{0%{transform:translateX(-180%)}100%{transform:translateX(400%)}}
 @media(max-width:700px){body::before{background-size:46px 46px}.dori-world i{filter:blur(48px);opacity:.12}.dori-loader-mark{width:60px;height:60px}.dori-loader-name{font-size:18px}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+/* DORI CONTENT PROTECTION — text/image selection disabled site-wide */
+html,body,body *{
+  -webkit-user-select:none!important;
+  -moz-user-select:none!important;
+  user-select:none!important;
+  -webkit-touch-callout:none!important;
+}
+img,svg,video,canvas{
+  -webkit-user-drag:none!important;
+  user-drag:none!important;
+  pointer-events:auto;
+}
