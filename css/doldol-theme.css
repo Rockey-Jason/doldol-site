@@ -179,3 +179,75 @@ img,svg,video,canvas{
   .dori-home-button{min-width:148px!important;min-height:45px!important;padding:0 12px!important;border-radius:14px!important}
   .dori-home-symbol{width:26px;height:26px;flex-basis:26px;border-radius:8px}
 }
+
+/* DORI HOME BUTTON — balanced universal size */
+.dori-home-button{
+  min-width:132px!important;
+  width:auto!important;
+  min-height:40px!important;
+  height:40px!important;
+  padding:0 12px!important;
+  gap:8px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(145,165,255,.24)!important;
+  background:
+    linear-gradient(145deg,rgba(42,55,132,.78),rgba(12,18,54,.9))!important;
+  box-shadow:
+    0 9px 26px rgba(0,0,0,.22),
+    inset 0 1px rgba(255,255,255,.13)!important;
+  backdrop-filter:blur(16px)!important;
+  -webkit-backdrop-filter:blur(16px)!important;
+  font:700 13px/1 Arial,sans-serif!important;
+  letter-spacing:-.25px!important;
+}
+.dori-home-symbol{
+  width:23px!important;
+  height:23px!important;
+  flex:0 0 23px!important;
+  border-radius:7px!important;
+  font-size:11px!important;
+  box-shadow:0 5px 15px rgba(91,101,255,.25),inset 0 1px rgba(255,255,255,.28)!important;
+}
+.dori-home-label{top:0!important}
+.dori-home-arrow{
+  margin-left:1px!important;
+  font-size:13px!important;
+  color:rgba(220,226,255,.52)!important;
+}
+.dori-home-button::before{
+  inset:-80%!important;
+  background:linear-gradient(110deg,transparent 43%,rgba(255,255,255,.1) 50%,transparent 57%)!important;
+}
+.dori-home-button:hover{
+  transform:translateY(-2px) scale(1.01)!important;
+  box-shadow:0 14px 34px rgba(35,54,180,.24),inset 0 1px rgba(255,255,255,.16)!important;
+}
+.dori-home-button:hover .dori-home-symbol{
+  transform:scale(1.05)!important;
+}
+.dori-home-button:hover .dori-home-arrow{
+  transform:translate(2px,-1px)!important;
+}
+.dori-home-button:active{transform:translateY(0) scale(.97)!important}
+.dori-home-float{
+  top:20px!important;
+  left:20px!important;
+}
+@media(max-width:700px){
+  .dori-home-button{
+    min-width:124px!important;
+    min-height:38px!important;
+    height:38px!important;
+    padding:0 10px!important;
+    gap:7px!important;
+    border-radius:11px!important;
+    font-size:12px!important;
+  }
+  .dori-home-symbol{
+    width:22px!important;
+    height:22px!important;
+    flex-basis:22px!important;
+    border-radius:6px!important;
+  }
+  .dori-home-float{top:14px!important;left:14px!important}
+}
