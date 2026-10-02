@@ -120,3 +120,62 @@ img,svg,video,canvas{
   .dori-home-button{min-height:40px!important;padding:0 14px!important;border-radius:12px!important}
   .dori-home-float{top:14px!important;left:14px!important}
 }
+
+/* DORI HOME BUTTON — premium final polish */
+.dori-home-button{
+  min-width:164px!important;
+  min-height:50px!important;
+  padding:0 15px!important;
+  gap:10px!important;
+  border-radius:16px!important;
+  border:1px solid rgba(155,173,255,.25)!important;
+  background:
+    radial-gradient(circle at 18% 0%,rgba(126,145,255,.22),transparent 42%),
+    linear-gradient(145deg,rgba(28,39,98,.86),rgba(7,12,38,.9))!important;
+  box-shadow:
+    0 16px 45px rgba(0,0,0,.28),
+    0 0 0 1px rgba(255,255,255,.025) inset,
+    0 1px 0 rgba(255,255,255,.13) inset!important;
+  font-weight:800!important;
+  letter-spacing:.1px!important;
+  overflow:hidden!important;
+  isolation:isolate!important;
+}
+.dori-home-symbol{
+  width:29px;height:29px;flex:0 0 29px;
+  display:grid;place-items:center;
+  border-radius:9px;
+  color:#fff;
+  font:900 13px/1 Arial,sans-serif;
+  background:linear-gradient(145deg,#8195ff,#5d45c5);
+  box-shadow:0 7px 20px rgba(91,101,255,.32),inset 0 1px rgba(255,255,255,.3);
+  transition:transform .45s var(--d-ease),box-shadow .45s ease;
+}
+.dori-home-label{position:relative;top:1px}
+.dori-home-arrow{
+  margin-left:auto;
+  color:rgba(214,222,255,.55);
+  font:700 15px/1 Arial,sans-serif;
+  transition:transform .45s var(--d-ease),color .3s ease;
+}
+.dori-home-button::before{
+  content:"";position:absolute;inset:-60%;
+  z-index:-1;
+  background:linear-gradient(110deg,transparent 42%,rgba(255,255,255,.12) 50%,transparent 58%);
+  transform:translateX(-38%) rotate(8deg);
+  transition:transform .85s var(--d-ease);
+}
+.dori-home-button:hover{
+  transform:translateY(-4px) scale(1.015)!important;
+  border-color:rgba(155,173,255,.58)!important;
+  box-shadow:0 23px 58px rgba(35,54,180,.3),0 0 34px rgba(87,108,255,.12),inset 0 1px rgba(255,255,255,.17)!important;
+}
+.dori-home-button:hover::before{transform:translateX(48%) rotate(8deg)}
+.dori-home-button:hover .dori-home-symbol{transform:rotate(-4deg) scale(1.08);box-shadow:0 9px 26px rgba(91,101,255,.48),inset 0 1px rgba(255,255,255,.35)}
+.dori-home-button:hover .dori-home-arrow{transform:translate(3px,-2px);color:#fff}
+.dori-home-button:active{transform:translateY(-1px) scale(.965)!important}
+.dori-home-button:focus-visible{box-shadow:0 0 0 3px rgba(113,133,255,.2),0 18px 48px rgba(35,54,180,.3)!important}
+@media(max-width:700px){
+  .dori-home-button{min-width:148px!important;min-height:45px!important;padding:0 12px!important;border-radius:14px!important}
+  .dori-home-symbol{width:26px;height:26px;flex-basis:26px;border-radius:8px}
+}
