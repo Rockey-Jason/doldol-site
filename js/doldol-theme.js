@@ -7,37 +7,43 @@ const sheen=document.createElement("div");sheen.className="dori-sheen";document.
 const transition=document.createElement("div");transition.className="dori-page-transition";document.body.append(transition);
 const loader=document.createElement("div");loader.className="dori-loader";loader.innerHTML='<div class="dori-loader-core"><div class="dori-loader-mark">D</div><div class="dori-loader-name">돌이사이트</div><div class="dori-loader-sub">DOLDOL SYSTEM</div><div class="dori-loader-bar"><i></i></div></div>';document.body.append(loader);
 
-// Unified Dori site home navigation
+// Unified Dori site home navigation — single canonical button
 const HOME_URL="https://rockey-jason.github.io/doldol-site/";
 const isHomeHref=(raw)=>{
   if(!raw)return false;
   try{
     const u=new URL(raw,location.href);
-    return u.origin===location.origin && (u.pathname.endsWith("/index.html")||u.pathname.endsWith("/")) ||
+    const sameOrigin=u.origin===location.origin;
+    return (sameOrigin&&(u.pathname.endsWith("/index.html")||u.pathname.endsWith("/"))) ||
       u.href===HOME_URL || u.href===HOME_URL+"index.html";
   }catch{return false}
 };
-const homeLinks=[...document.querySelectorAll("a[href]")].filter(a=>isHomeHref(a.getAttribute("href")));
-homeLinks.forEach(a=>{
+const normalizeHomeButton=(a)=>{
   a.classList.add("dori-home-button");
-  if(!a.querySelector(".dori-home-label")){
-    const text=(a.textContent||"").trim();
-    if(text) a.innerHTML='<span class="dori-home-label">돌이사이트</span>';
-  }
+  a.classList.remove("dori-home-float");
+  a.dataset.doriHome="true";
   a.setAttribute("aria-label","돌이사이트 메인으로 이동");
-});
-const legacyHomeButtons=[document.getElementById("뒤로가기")].filter(Boolean);
-legacyHomeButtons.forEach(b=>{
-  b.classList.add("dori-home-button");
-  b.innerHTML='<span class="dori-home-label">돌이사이트</span>';
-  b.setAttribute("aria-label","돌이사이트 메인으로 이동");
-});
-if(location.pathname.endsWith("/index.html")||location.pathname.endsWith("/")){}
-else if(!homeLinks.length&&!legacyHomeButtons.length){
+  a.href=HOME_URL;
+  a.innerHTML='<span class="dori-home-symbol" aria-hidden="true">D</span><span class="dori-home-label">돌이사이트</span><span class="dori-home-arrow" aria-hidden="true">↗</span>';
+};
+const candidates=[...document.querySelectorAll("a[href]")].filter(a=>isHomeHref(a.getAttribute("href")));
+const legacy=document.getElementById("뒤로가기");
+if(legacy&&!candidates.includes(legacy))candidates.push(legacy);
+let canonical=candidates.find(a=>a.offsetWidth>0&&a.offsetHeight>0)||candidates[0]||null;
+if(canonical){
+  normalizeHomeButton(canonical);
+  candidates.filter(a=>a!==canonical).forEach(a=>{
+    a.classList.remove("dori-home-button","dori-home-float");
+    a.dataset.doriHomeDuplicate="true";
+    a.setAttribute("aria-hidden","true");
+    a.style.display="none";
+  });
+}else if(!(location.pathname.endsWith("/index.html")||location.pathname.endsWith("/"))){
   const home=document.createElement("a");
   home.href=HOME_URL;
   home.className="dori-home-button dori-home-float";
-  home.innerHTML='<span class="dori-home-label">돌이사이트</span>';
+  home.dataset.doriHome="true";
+  home.innerHTML='<span class="dori-home-symbol" aria-hidden="true">D</span><span class="dori-home-label">돌이사이트</span><span class="dori-home-arrow" aria-hidden="true">↗</span>';
   home.setAttribute("aria-label","돌이사이트 메인으로 이동");
   document.body.append(home);
 }
