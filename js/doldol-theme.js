@@ -76,3 +76,26 @@ document.addEventListener("pointermove",e=>{
 document.addEventListener("pointerout",e=>{const c=e.target.closest(".dori-glass,[class*='card'],[class*='카드']");if(c)c.style.transform=""});
 addEventListener("pageshow",()=>{transition.classList.remove("leaving");sheen.classList.remove("show")});
 })();
+
+// DOLDOL SECURITIES TAB NAVIGATION
+// doldolstock.html의 data-tab 버튼과 section-* 영역을 연결한다.
+if (document.querySelector(".tabs .tab[data-tab]")) {
+  const activateDoldolTab = (tabName) => {
+    document.querySelectorAll(".tabs .tab[data-tab]").forEach((tab) => {
+      tab.classList.toggle("active", tab.dataset.tab === tabName);
+    });
+    document.querySelectorAll(".section[id^='section-']").forEach((section) => {
+      section.classList.toggle("active", section.id === "section-" + tabName);
+    });
+  };
+
+  document.querySelectorAll(".tabs .tab[data-tab]").forEach((tab) => {
+    if (tab.dataset.doldolTabBound === "true") return;
+    tab.dataset.doldolTabBound = "true";
+    tab.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      activateDoldolTab(tab.dataset.tab);
+    });
+  });
+}
