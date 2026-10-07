@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#02062b"/><stop offset=".48" stop-color="#071d59"/><stop offset="1" stop-color="#020818"/></linearGradient>
+  <radialGradient id="glow"><stop stop-color="#56dfff" stop-opacity=".9"/><stop offset="1" stop-color="#56dfff" stop-opacity="0"/></radialGradient>
+  <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff4a0"/><stop offset=".45" stop-color="#ffd84d"/><stop offset="1" stop-color="#d99313"/></linearGradient>
+  <linearGradient id="fur" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#ffeaa0"/><stop offset="1" stop-color="#e5ad48"/></linearGradient>
+  <filter id="shadow"><feGaussianBlur stdDeviation="8"/></filter>
+  <filter id="soft"><feGaussianBlur stdDeviation="18"/></filter>
+</defs>
+<rect width="512" height="512" rx="64" fill="url(#sky)"/>
+<circle cx="256" cy="190" r="170" fill="url(#glow)" opacity=".48"/>
+<g fill="none" stroke="#7be9ff" stroke-opacity=".42">
+ <circle cx="256" cy="190" r="124" stroke-width="2"/>
+ <circle cx="256" cy="190" r="154" stroke-width="1"/>
+</g>
+<g fill="#42dfff" opacity=".8">
+ <path d="M72 145l18-32 18 32-18 25z"/><path d="M414 116l13-25 14 25-14 20z"/>
+ <path d="M52 300l17-30 18 30-18 25z"/><path d="M448 292l18-32 18 32-18 25z"/>
+</g>
+<g fill="#07152d" stroke="#17385f" stroke-width="5">
+ <path d="M18 390l78-65 65 24 36 53H18z"/><path d="M320 402l45-72 65-24 82 84H320z"/>
+</g>
+<g fill="#48dcff" opacity=".7">
+ <path d="M82 345l20-48 24 48-22 31z"/><path d="M399 344l22-51 25 51-23 31z"/>
+</g>
+<path d="M105 377 Q256 335 407 377 L430 450H82z" fill="#071326" stroke="#203b64" stroke-width="6"/>
+<ellipse cx="256" cy="438" rx="175" ry="34" fill="#000" opacity=".48" filter="url(#soft)"/>
+
+<!-- Dori mascot -->
+<g stroke="#111" stroke-width="11" stroke-linejoin="round" stroke-linecap="round">
+ <path d="M151 296L130 105Q128 76 151 64L198 126L226 111L316 113L342 72Q352 55 371 68L384 180L365 303Z" fill="url(#fur)"/>
+ <path d="M147 187Q177 146 220 153Q257 130 296 154Q337 144 367 184L356 307Q315 337 256 337Q196 337 153 307Z" fill="#fff"/>
+ <path d="M181 198Q203 176 224 190Q240 202 229 222Q215 243 191 232Q171 222 181 198Z" fill="url(#fur)"/>
+ <circle cx="210" cy="196" r="7" fill="#111" stroke="none"/>
+ <circle cx="306" cy="196" r="7" fill="#111" stroke="none"/>
+ <ellipse cx="256" cy="229" rx="19" ry="14" fill="#111" stroke="none"/>
+ <path d="M241 247Q256 261 271 247" fill="none"/>
+ <path d="M158 307Q137 334 146 371Q157 386 190 377L203 346" fill="#fff"/>
+ <path d="M354 307Q376 334 367 371Q356 386 323 377L310 346" fill="#fff"/>
+</g>
+<circle cx="256" cy="96" r="7" fill="#fff"/>
+<path d="M252 55l4-18 4 18 18 4-18 4-4 18-4-18-18-4z" fill="#fff4a0"/>
+
+<!-- brand -->
+<g transform="translate(256 417)" text-anchor="middle">
+ <text y="0" font-family="Arial,sans-serif" font-size="49" font-weight="900" letter-spacing="-2" fill="#000" opacity=".85">RockeySite</text>
+ <text y="-5" font-family="Arial,sans-serif" font-size="49" font-weight="900" letter-spacing="-2" fill="url(#gold)" stroke="#fff1a0" stroke-width="1.5" paint-order="stroke">RockeySite</text>
+ <path d="M-151 13Q0 36 151 13" fill="none" stroke="#ffd84d" stroke-width="5" stroke-linecap="round"/>
+</g>
+<rect x="5" y="5" width="502" height="502" rx="60" fill="none" stroke="#ffd84d" stroke-width="7"/>
+<rect x="13" y="13" width="486" height="486" rx="54" fill="none" stroke="#fff3ae" stroke-opacity=".38" stroke-width="2"/>
+</svg>
