@@ -8,16 +8,19 @@
   "start_url": "/doldol-site/",
   "scope": "/doldol-site/",
   "display": "standalone",
-  "display_override": ["window-controls-overlay", "standalone"],
+  "display_override": [
+    "window-controls-overlay",
+    "standalone"
+  ],
   "orientation": "portrait-primary",
   "background_color": "#000033",
   "theme_color": "#000033",
   "icons": [
     {
-      "src": "/doldol-site/favicon.svg",
-      "sizes": "any",
+      "src": "/doldol-site/rockeysite-icon.svg",
+      "sizes": "512x512",
       "type": "image/svg+xml",
-      "purpose": "any"
+      "purpose": "any maskable"
     }
   ]
 }
