@@ -1,4 +1,30 @@
 import{createClient}from"https://esm.sh/@supabase/supabase-js@2";const supabasePromise=fetch("index.html").then(r=>r.text()).then(html=>{const k=html.match(/scttowfhygcpdirrekqm[.]supabase[.]co",\s*"([^"]+)"/)?.[1];if(!k)throw new Error("Supabase config missing");return createClient("https://scttowfhygcpdirrekqm.supabase.co",k)});const defs={visit_site:"🏠",play_chess:"♟️",play_card_war:"🃏",open_randombox:"🎁"};const today=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul"}).format(new Date());async function load(){const supabase=await supabasePromise;const{data:{session}}=await supabase.auth.getSession();if(!session){document.getElementById("missions").innerHTML='<div style="padding:45px;text-align:center;color:#aeb5cf">일일 미션은 로그인 후 이용할 수 있습니다.<br><br><a class="back" href="login.html">로그인하기</a></div>';return}const{data:ds,error:e1}=await supabase.from("daily_mission_definitions").select("*").eq("active",true).order("sort_order");const{data:rs,error:e2}=await supabase.from("user_daily_missions").select("mission_key,completed_at").eq("user_id",session.user.id).eq("mission_date",today());if(e1||e2){console.error(e1||e2);return}const map=new Map((rs||[]).map(x=>[x.mission_key,x]));const base=ds.filter(x=>x.mission_key!=="all_complete");const done=base.filter(x=>map.get(x.mission_key)?.completed_at).length;const p=Math.round(done/base.length*100);document.getElementById("progressText").textContent=done+" / "+base.length+" 미션 완료";document.getElementById("percent").textContent=p+"%";document.getElementById("ring").style.setProperty("--p",p);document.getElementById("missions").innerHTML=base.map(m=>{const ok=!!map.get(m.mission_key)?.completed_at;return '<article class="mission '+(ok?"done":"")+'"><div class="icon">'+defs[m.mission_key]+'</div><div><div class="name">'+m.title+'</div><div class="desc">'+m.description+'</div><span class="state">'+(ok?"완료됨":"오늘 아직 완료되지 않았습니다.")+'</span></div><div class="reward">+'+Number(m.reward_coins).toLocaleString()+" 🪙 <span class="check">"+(ok?"✓":"")+"</span></div></article>"}).join("")}export async function completeDailyMission(key){const supabase=await supabasePromise;const{data,error}=await supabase.rpc("complete_daily_mission",{p_mission_key:key});if(error){console.error(error);return null}window.dispatchEvent(new CustomEvent("dori:daily-mission-completed",{detail:data}));return data}
 export async function claimDailyMissionReward(key){const supabase=await supabasePromise;const{data,error}=await supabase.rpc("claim_daily_mission_reward",{p_mission_key:key});if(error){console.error(error);return null}window.dispatchEvent(new CustomEvent("dori:daily-mission-reward-claimed",{detail:data}));return data}
 window.doriCompleteDailyMission=completeDailyMission;
-window.doriClaimDailyMissionReward=claimDailyMissionReward;if(document.getElementById("missions")){load()}else{supabasePromise.then(s=>s.auth.getSession()).then(({data})=>{if(data?.session) completeDailyMission("visit_site")})}
+window.doriClaimDailyMissionReward=claimDailyMissionReward;
+
+async function 접속미션즉시달성(){
+  try{
+    const supabase=await supabasePromise;
+    const {data:{session}}=await supabase.auth.getSession();
+    if(session && !document.getElementById("missions")){
+      await completeDailyMission("visit_site");
+    }
+  }catch(error){
+    console.error("접속 미션 자동 달성 오류:",error);
+  }
+}
+
+supabasePromise.then(async supabase=>{
+  await 접속미션즉시달성();
+
+  supabase.auth.onAuthStateChange((event,session)=>{
+    if(event==="SIGNED_IN" && session && !document.getElementById("missions")){
+      window.setTimeout(()=>completeDailyMission("visit_site"),0);
+    }
+  });
+}).catch(error=>console.error("일일 미션 인증 초기화 오류:",error));
+
+if(document.getElementById("missions")){
+  load();
+}
