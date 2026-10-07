@@ -1,12 +1,11 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-const supabasePromise = fetch("index.html")
-  .then((r) => r.text())
-  .then((html) => {
-    const match = html.match(/scttowfhygcpdirrekqm[.]supabase[.]co",\\s*"([^"]+)"/);
-    if (!match) throw new Error("Supabase config missing");
-    return createClient("https://scttowfhygcpdirrekqm.supabase.co", match[1]);
-  });
+const SUPABASE_URL = "https://scttowfhygcpdirrekqm.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
+
+const supabasePromise = Promise.resolve(
+  createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+);
 
 const missionIcons = {
   visit_site: "🏠",
