@@ -1,0 +1,23 @@
+{
+  "id": "/doldol-site/",
+  "name": "돌이사이트",
+  "short_name": "돌이사이트",
+  "description": "돌이 세계관과 게임, 돌돌증권, 돌이 AI를 한곳에서 즐기는 돌이사이트",
+  "lang": "ko-KR",
+  "dir": "ltr",
+  "start_url": "/doldol-site/",
+  "scope": "/doldol-site/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "orientation": "portrait-primary",
+  "background_color": "#000033",
+  "theme_color": "#000033",
+  "icons": [
+    {
+      "src": "/doldol-site/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
