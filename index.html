@@ -130,6 +130,8 @@ button:focus-visible{
   transition:transform .45s var(--ease),text-shadow .45s var(--ease);
 }
 #사이트로고:hover{transform:translateY(-3px) scale(1.015);text-shadow:0 12px 45px rgba(100,95,255,.45)}
+#사이트로고 .사이트로고이미지{display:block;width:clamp(96px,16vw,180px);height:auto;aspect-ratio:1;object-fit:cover;border-radius:28px;box-shadow:0 14px 45px rgba(0,0,0,.35),0 0 34px rgba(64,210,255,.22),0 0 18px rgba(255,216,77,.12);transition:transform .45s var(--ease),filter .45s ease,box-shadow .45s ease}
+#사이트로고:hover .사이트로고이미지{transform:translateY(-3px) scale(1.025);filter:brightness(1.08) saturate(1.08);box-shadow:0 18px 55px rgba(0,0,0,.42),0 0 48px rgba(64,210,255,.32),0 0 25px rgba(255,216,77,.18)}
 
 #사이트설명{
   margin:16px 0 0;
