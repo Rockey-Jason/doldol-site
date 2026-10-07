@@ -3,7 +3,6 @@ const APP_SHELL = [
   "/doldol-site/",
   "/doldol-site/index.html",
   "/doldol-site/rockeysite-icon.jpg",
-  "/doldol-site/rockeysite-icon.jpg",
   "/doldol-site/manifest.json"
 ];
 
