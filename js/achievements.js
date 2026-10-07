@@ -5,7 +5,7 @@
    - 신문/코인 조건은 페이지를 열 때마다 서버 상태를 확인
 ========================================================= */
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 const SUPABASE_URL = "https://scttowfhygcpdirrekqm.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
