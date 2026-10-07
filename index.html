@@ -1614,6 +1614,7 @@ body.로그인상태 #회원가입 {
     <button id="업적버튼" class="프로필버튼" type="button">🏆 업적</button>
     <button id="칭호버튼" class="프로필버튼" type="button">🏷️ 칭호</button>
     <button id="설정" class="프로필버튼" type="button">⚙️ 설정</button>
+    <button id="일일미션버튼" class="프로필버튼 일일미션프로필버튼" type="button"><span>🎯 일일 미션</span><span class="일일미션메뉴화살표">›</span></button>
     <button id="로그아웃" class="프로필버튼" type="button">🚪 로그아웃</button>
   </div>
 
@@ -2593,6 +2594,26 @@ function 프로필메뉴열기() {
 // =====================================================
 // 패널 열기
 // =====================================================
+
+const 일일미션버튼=document.getElementById("일일미션버튼");
+const 프로필정보탭=document.getElementById("프로필정보탭");
+const 일일미션아이콘={visit_site:"🏠",play_chess:"♟️",play_card_war:"🃏",open_randombox:"🎁"};
+const 오늘날짜=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul"}).format(new Date());
+const 일일HTML안전=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+async function 일일미션화면표시(){
+ 패널제목.textContent="🎯 일일 미션";프로필정보탭?.classList.add("숨김");
+ 패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션로딩2"><span class="일일미션스피너"></span>오늘의 미션을 준비하고 있습니다...</div></div>';
+ try{const{data:{session}}=await supabase.auth.getSession();if(!session){패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션오류2">로그인이 필요한 기능입니다.</div></div>';return}
+ const[{data:defs,error:e1},{data:rows,error:e2}]=await Promise.all([supabase.from("daily_mission_definitions").select("mission_key,title,description,reward_coins,sort_order,active").eq("active",true).order("sort_order"),supabase.from("user_daily_missions").select("mission_key,completed_at,reward_claimed").eq("user_id",session.user.id).eq("mission_date",오늘날짜())]);if(e1||e2)throw(e1||e2);
+ const base=(defs||[]).filter(x=>x.mission_key!=="all_complete"),map=new Map((rows||[]).map(x=>[x.mission_key,x])),done=base.filter(x=>map.get(x.mission_key)?.completed_at).length,pct=base.length?Math.round(done/base.length*100):0,allDone=done===base.length&&base.length>0,allClaimed=!!map.get("all_complete")?.reward_claimed;
+ const cards=base.map(m=>{const row=map.get(m.mission_key),complete=!!row?.completed_at,received=!!row?.reward_claimed;const action=received?'<span class="일일미션받음">✓ 보상 수령 완료</span>':complete?'<button class="일일미션받기" data-claim="'+일일HTML안전(m.mission_key)+'">보상 받기</button>':'<button class="일일미션받기" disabled>미션 진행 필요</button>';return '<article class="일일미션아이템 '+(complete?"완료":"")+'"><div class="일일미션아이콘2">'+(일일미션아이콘[m.mission_key]||"🎯")+'</div><div><div class="일일미션이름2">'+일일HTML안전(m.title)+'</div><div class="일일미션설명2">'+일일HTML안전(m.description||"오늘의 미션")+'</div><div class="일일미션상태2">'+(received?"보상을 이미 수령했습니다.":complete?"미션 완료 · 보상을 받을 수 있습니다.":"아직 완료되지 않았습니다.")+'</div></div><div class="일일미션보상영역"><div class="일일미션코인">+'+Number(m.reward_coins||0).toLocaleString()+" 🪙</div>"+action+"</div></article>"}).join("");
+ const bonus=allClaimed?'<span class="일일미션받음">✓ 보너스 수령 완료</span>':allDone?'<button class="일일미션받기" data-claim="all_complete">보너스 받기</button>':'<button class="일일미션받기" disabled>모든 미션 완료 필요</button>';
+ 패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션헤더"><div><div class="일일미션배지2">DAILY REWARD</div><h2>오늘의 미션</h2><p>미션을 완료한 뒤 직접 보상을 받아보세요.</p></div><div class="일일미션헤더통계"><strong>'+done+'/'+base.length+'</strong><span>미션 완료</span></div></div><div class="일일미션프로그레스"><span style="width:'+pct+'%"></span></div><div class="일일미션리스트">'+cards+'</div><div class="일일미션보너스2"><div><strong>🏆 ALL CLEAR BONUS</strong><small>오늘의 4개 미션을 모두 완료하면 추가 보상</small></div><div><div class="보너스코인">+30,000 🪙</div>'+bonus+'</div></div></div>';
+ 패널내용.querySelectorAll("[data-claim]").forEach(btn=>btn.addEventListener("click",async()=>{btn.disabled=true;btn.textContent="수령 중…";const result=window.doriClaimDailyMissionReward?await window.doriClaimDailyMissionReward(btn.dataset.claim):null;if(!result?.reward_claimed){btn.disabled=false;btn.textContent=btn.dataset.claim==="all_complete"?"보너스 받기":"보상 받기";팝업열기("❌ 보상을 받지 못했습니다. 잠시 후 다시 시도해주세요.",3500);return}팝업열기("🎉 <b>"+Number(result.reward_coins||0).toLocaleString()+" 돌돌코인</b>을 받았습니다!",3000);await 일일미션화면표시()}));
+ }catch(err){console.error("일일 미션 패널 오류:",err);패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션오류2">일일 미션을 불러오지 못했습니다.<br><small>잠시 후 다시 시도해주세요.</small></div></div>'}
+}
+if(일일미션버튼)일일미션버튼.onclick=()=>{메뉴.classList.remove("menu-show");메뉴.classList.add("menu-hide");window.setTimeout(()=>메뉴.classList.remove("menu-hide"),260);패널열기("daily")};
+window.addEventListener("dori:daily-mission-completed",()=>{if(패널.classList.contains("show")&&패널내용.querySelector("#일일미션화면"))일일미션화면표시()});
 
 function 패널열기(
     mode
