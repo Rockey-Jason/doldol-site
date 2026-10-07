@@ -2,6 +2,8 @@ plugins {
     id 'com.android.application'
 }
 
+def releaseKeystore = file(System.getenv("DOLDOL_KEYSTORE_FILE") ?: "doldol-upload-keystore.jks")
+
 android {
     namespace 'com.rockey.doldolsite'
     compileSdk 36
@@ -17,6 +19,26 @@ android {
         targetSdk 36
         versionCode 1
         versionName '1.0.0'
+    }
+
+    signingConfigs {
+        release {
+            if (releaseKeystore.exists()) {
+                storeFile releaseKeystore
+                storePassword System.getenv("DOLDOL_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("DOLDOL_KEY_ALIAS")
+                keyPassword System.getenv("DOLDOL_KEY_PASSWORD")
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            if (releaseKeystore.exists()) {
+                signingConfig signingConfigs.release
+            }
+            minifyEnabled false
+        }
     }
 }
 
