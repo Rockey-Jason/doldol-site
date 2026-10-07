@@ -1078,7 +1078,7 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = 게임.링크;
   }
 
-  시작버튼.addEventListener("click", 게임시작);
+  시작버튼.addEventListener("click", () => { const 게임=게임목록[현재게임]; if(게임.이름==="돌이체스" && window.doriCompleteDailyMission) window.doriCompleteDailyMission("play_chess"); 게임시작(); });
 
   왼쪽버튼.addEventListener("click", () => {
     슬라이드(-1);
@@ -1150,5 +1150,6 @@ document.addEventListener("DOMContentLoaded", () => {
   <script type="module" src="js/achievements.js"></script>
 <script src="js/doldol-theme.js?v=20261002"></script>
 <script src="js/doldol-theme.js?v=20261002"></script>
+<script type="module" src="js/daily-missions.js?v=20261007"></script>
 </body>
 </html>
