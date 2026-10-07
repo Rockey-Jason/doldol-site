@@ -497,8 +497,7 @@ button {
     border-radius: 20px;
     background: linear-gradient(
         180deg,
-        rgba(135,150,255,0.75),        rgba(91,105,220,0.48)
-    );
+        rgba(135,150,255,0.75),        rgba(91,105,220,0.48)    );
     border: 1px solid rgba(255,255,255,0.08);
     box-shadow: 0 0 12px rgba(105,120,255,0.18);
     transition: background 0.25s ease, box-shadow 0.25s ease;
@@ -997,8 +996,7 @@ button {
     }
 
     #뽑기버튼 {        width: 100%;
-        min-width: 0;
-    }
+        min-width: 0;    }
 
     #확률목록 {
         max-height: 320px;
@@ -1497,8 +1495,7 @@ async function 사용자정보불러오기() {
 
     try {        const authId = String(현재사용자.id);
 
-        const { data, error } = await supabase
-            .from("users")
+        const { data, error } = await supabase            .from("users")
             .select("user_id, doldolcoin, exp")
             .eq("user_id", authId)
             .maybeSingle();
@@ -1910,7 +1907,9 @@ async function 뽑기() {
         인벤토리표시();
         기록표시();
 
-        if (window.doriCompleteDailyMission) { await window.doriCompleteDailyMission("open_randombox"); }\n\n        if (typeof window.doriCheckAchievements === "function") {
+        if (window.doriCompleteDailyMission) { await window.doriCompleteDailyMission("open_randombox"); }
+
+        if (typeof window.doriCheckAchievements === "function") {
             setTimeout(() => window.doriCheckAchievements(), 120);
         }
 
@@ -1998,7 +1997,6 @@ document.addEventListener("keydown", event => {    if (event.key === "Escape") {
         확률모달.classList.remove("show");
     }
 });
-
 /* =====================================================
    Auth 상태 변화
 ===================================================== */
