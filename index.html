@@ -1375,6 +1375,81 @@ body.로그인상태 #회원가입 {
 
 <link rel="stylesheet" href="css/doldol-theme.css?v=20261002">
 <link rel="stylesheet" href="css/doldol-theme.css?v=20261002">
+<style>
+/* ===== PROFILE DAILY MISSION ===== */
+.일일미션프로필버튼{
+  display:flex!important;align-items:center;justify-content:space-between;
+  background:linear-gradient(90deg,rgba(95,105,255,.11),rgba(82,207,255,.055));
+  border:1px solid rgba(116,151,255,.12);
+}
+.일일미션프로필버튼:hover{
+  background:linear-gradient(90deg,rgba(95,105,255,.22),rgba(82,207,255,.11));
+  border-color:rgba(110,180,255,.28);
+}
+.일일미션메뉴화살표{font-size:22px;color:#8fdbff;transition:transform .3s var(--ease)}
+.일일미션프로필버튼:hover .일일미션메뉴화살표{transform:translateX(4px)}
+#프로필정보탭.숨김{display:none}
+#일일미션화면{animation:일일미션화면등장 .45s var(--ease)}
+.일일미션헤더{
+  position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:18px;
+  padding:6px 0 20px;border-bottom:1px solid rgba(255,255,255,.08);margin-bottom:16px;
+}
+.일일미션헤더::after{content:"";position:absolute;left:0;bottom:-1px;width:90px;height:1px;background:linear-gradient(90deg,#62ddff,transparent)}
+.일일미션배지2{font-size:10px;letter-spacing:3px;color:#63dcff;font-weight:800;margin-bottom:7px}
+.일일미션헤더 h2{margin:0;font-size:30px;letter-spacing:-1.4px}
+.일일미션헤더 p{margin:6px 0 0;color:#9099b8;font-size:13px}
+.일일미션헤더통계{text-align:right;min-width:88px}
+.일일미션헤더통계 strong{display:block;font-size:27px;color:#73e3ff;line-height:1}
+.일일미션헤더통계 span{font-size:11px;color:#858eaa}
+.일일미션프로그레스{height:6px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin:16px 0 18px}
+.일일미션프로그레스 span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#54dfff,#7775ff,#b08cff);box-shadow:0 0 18px rgba(84,223,255,.28);transition:width .7s var(--ease)}
+.일일미션리스트{display:grid;gap:10px}
+.일일미션아이템{
+  position:relative;display:grid;grid-template-columns:50px minmax(0,1fr) auto;align-items:center;gap:13px;
+  padding:13px;border:1px solid rgba(255,255,255,.075);border-radius:19px;
+  background:linear-gradient(145deg,rgba(255,255,255,.052),rgba(255,255,255,.022));
+  overflow:hidden;transition:transform .35s var(--ease),border-color .35s ease,background .35s ease,box-shadow .35s ease;
+}
+.일일미션아이템::before{content:"";position:absolute;inset:0;background:linear-gradient(100deg,rgba(99,221,255,.08),transparent 45%);opacity:0;transition:opacity .35s ease;pointer-events:none}
+.일일미션아이템:hover{transform:translateY(-2px);border-color:rgba(103,220,255,.22);box-shadow:0 12px 30px rgba(0,0,0,.18)}
+.일일미션아이템:hover::before{opacity:1}
+.일일미션아이템.완료{border-color:rgba(88,232,166,.22);background:linear-gradient(145deg,rgba(88,232,166,.075),rgba(255,255,255,.025))}
+.일일미션아이콘2{width:50px;height:50px;display:grid;place-items:center;border-radius:15px;background:rgba(101,112,255,.12);border:1px solid rgba(255,255,255,.07);font-size:23px;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.일일미션아이템.완료 .일일미션아이콘2{background:rgba(88,232,166,.11)}
+.일일미션이름2{font-size:15px;font-weight:800}.일일미션설명2{margin-top:3px;color:#858eaa;font-size:11px;line-height:1.4}
+.일일미션상태2{margin-top:5px;font-size:10px;color:#69738e}
+.일일미션아이템.완료 .일일미션상태2{color:#6ce6ae}
+.일일미션보상영역{text-align:right;min-width:132px}
+.일일미션코인{color:#ffd866;font-size:13px;font-weight:900;margin-bottom:6px;white-space:nowrap}
+.일일미션받기{
+  border:1px solid rgba(255,216,102,.25);border-radius:10px;padding:7px 11px;
+  background:linear-gradient(135deg,rgba(255,216,102,.17),rgba(255,177,52,.08));
+  color:#ffe28b;font-size:11px;font-weight:800;cursor:pointer;
+  transition:transform .25s var(--ease),background .25s ease,box-shadow .25s ease,opacity .25s ease;
+}
+.일일미션받기:hover{transform:translateY(-2px);background:linear-gradient(135deg,rgba(255,216,102,.28),rgba(255,177,52,.14));box-shadow:0 7px 22px rgba(255,190,70,.11)}
+.일일미션받기:active{transform:scale(.96)}
+.일일미션받기:disabled{cursor:default;opacity:.48;transform:none;box-shadow:none}
+.일일미션받음{color:#69e8af;font-size:11px;font-weight:800;padding:7px 11px}
+.일일미션보너스2{
+  margin-top:12px;padding:15px;border-radius:18px;border:1px solid rgba(255,216,102,.18);
+  background:radial-gradient(circle at 85% 20%,rgba(255,216,102,.10),transparent 35%),rgba(255,216,102,.035);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+}
+.일일미션보너스2 strong{display:block;font-size:13px}.일일미션보너스2 small{display:block;margin-top:4px;color:#858eaa;font-size:10px}
+.일일미션보너스2 .보너스코인{color:#ffd866;font-weight:900;white-space:nowrap}
+.일일미션로딩2{text-align:center;padding:50px;color:#8992ad}.일일미션스피너{display:inline-block;width:17px;height:17px;border:2px solid rgba(255,255,255,.12);border-top-color:#61dcff;border-radius:50%;vertical-align:-4px;margin-right:8px;animation:일일미션스핀 .8s linear infinite}
+.일일미션오류2{text-align:center;padding:40px;color:#ff9f9f}
+@keyframes 일일미션스핀{to{transform:rotate(360deg)}}
+@keyframes 일일미션화면등장{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
+@media(max-width:600px){
+ .일일미션헤더 h2{font-size:25px}.일일미션헤더통계 strong{font-size:22px}
+ .일일미션아이템{grid-template-columns:43px 1fr;gap:10px}.일일미션아이콘2{width:43px;height:43px}
+ .일일미션보상영역{grid-column:2;text-align:left;min-width:0;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+ .일일미션코인{margin:0}.일일미션보너스2{align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){#일일미션화면,.일일미션프로그레스 span,.일일미션아이템{animation:none;transition:none}.일일미션스피너{animation:none}}
+</style>
 </head>
 
 
@@ -1626,30 +1701,7 @@ body.로그인상태 #회원가입 {
 
 <div id="achievementPopup"></div>
 
-<!-- =================================================
-     일일 미션 팝업
-================================================= -->
-<div id="일일미션배경" class="일일미션모달배경" aria-hidden="true">
-  <section id="일일미션팝업" class="일일미션팝업" role="dialog" aria-modal="true" aria-labelledby="일일미션팝업제목">
-    <button id="일일미션닫기" class="일일미션닫기" type="button" aria-label="일일 미션 닫기">×</button>
-    <div class="일일미션팝업상단">
-      <div>
-        <div class="일일미션배지">DAILY MISSION</div>
-        <h2 id="일일미션팝업제목">🎯 일일 미션</h2>
-        <p id="일일미션진행">오늘의 미션을 완료하고 최대 <b>49,000</b> 돌돌코인을 받아보세요.</p>
-      </div>
-      <div id="일일미션퍼센트" class="일일미션퍼센트">0%</div>
-    </div>
-    <div class="일일미션진행바"><span id="일일미션진행채움"></span></div>
-    <div id="일일미션목록" class="일일미션목록">
-      <div class="일일미션로딩"><span></span> 미션 정보를 불러오는 중...</div>
-    </div>
-    <div id="일일미션보너스" class="일일미션보너스">
-      <div><strong>🏆 모든 미션 완료 보너스</strong><small>5개 미션을 모두 완료하면 추가 보상</small></div>
-      <b>+30,000 🪙</b>
-    </div>
-  </section>
-</div>
+
 
 
 <!-- =================================================
@@ -3700,59 +3752,6 @@ if ("serviceWorker" in navigator) {
 </script>
 
 <script type="module" src="js/daily-missions.js?v=20261007"></script>
-<script type="module">
-(() => {
-  const openBtn=document.getElementById("일일미션열기");
-  const bg=document.getElementById("일일미션배경");
-  const closeBtn=document.getElementById("일일미션닫기");
-  const list=document.getElementById("일일미션목록");
-  const percent=document.getElementById("일일미션퍼센트");
-  const progress=document.getElementById("일일미션진행채움");
-  const progressText=document.getElementById("일일미션진행");
-  if(!openBtn||!bg) return;
-  const icons={visit_site:"🏠",play_chess:"♟️",play_card_war:"🃏",open_randombox:"🎁"};
-  const money=n=>Number(n||0).toLocaleString("ko-KR");
-  const today=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul"}).format(new Date());
-  let loading=false;
-  async function loadMissions(){
-    if(loading) return; loading=true;
-    try{
-      const sb=window.doriSupabase;
-      if(!sb) throw new Error("Supabase client unavailable");
-      const {data:{session}}=await sb.auth.getSession();
-      if(!session){
-        list.innerHTML='<div class="일일미션로그인">로그인하면 오늘의 미션과 진행 상황을 확인할 수 있습니다.<br><a href="login.html">로그인하기</a></div>';
-        percent.textContent="—"; progress.style.width="0%";
-        progressText.innerHTML="로그인 후 일일 미션을 이용할 수 있습니다.";
-        return;
-      }
-      const [{data:defs,error:e1},{data:rows,error:e2}]=await Promise.all([
-        sb.from("daily_mission_definitions").select("mission_key,title,description,reward_coins,sort_order,active").eq("active",true).order("sort_order"),
-        sb.from("user_daily_missions").select("mission_key,completed_at").eq("user_id",session.user.id).eq("mission_date",today())
-      ]);
-      if(e1||e2) throw(e1||e2);
-      const base=(defs||[]).filter(x=>x.mission_key!=="all_complete");
-      const map=new Map((rows||[]).map(x=>[x.mission_key,x]));
-      const done=base.filter(x=>map.get(x.mission_key)?.completed_at).length;
-      const pct=base.length?Math.round(done/base.length*100):0;
-      percent.textContent=pct+"%"; progress.style.width=pct+"%";
-      progressText.innerHTML="<b>"+done+" / "+base.length+"</b> 미션 완료 · 최대 <b>49,000</b> 돌돌코인";
-      list.innerHTML=base.map(m=>{
-        const ok=!!map.get(m.mission_key)?.completed_at;
-        return '<article class="일일미션항목 '+(ok?"done":"")+'"><div class="일일미션아이콘">'+(icons[m.mission_key]||"🎯")+'</div><div><div class="일일미션이름">'+m.title+'</div><div class="일일미션설명">'+(m.description||"오늘의 미션")+'</div></div><div class="일일미션보상">+'+money(m.reward_coins)+' 🪙 '+(ok?'<span class="일일미션체크">✓</span>':"")+'</div></article>';
-      }).join("");
-    }catch(err){
-      console.error("일일 미션 팝업 오류:",err);
-      list.innerHTML='<div class="일일미션오류">일일 미션 정보를 불러오지 못했습니다.<br><small>잠시 후 다시 열어주세요.</small></div>';
-    }finally{loading=false}
-  }
-  function open(){bg.classList.add("show");bg.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";loadMissions();setTimeout(()=>closeBtn.focus(),80)}
-  function close(){bg.classList.remove("show");bg.setAttribute("aria-hidden","true");document.body.style.overflow="";openBtn.focus()}
-  openBtn.addEventListener("click",open); closeBtn.addEventListener("click",close);
-  bg.addEventListener("click",e=>{if(e.target===bg)close()});
-  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&bg.classList.contains("show"))close()});
-  window.addEventListener("dori:daily-mission-completed",()=>{if(bg.classList.contains("show"))loadMissions()});
-})();
-</script>
+
 </body>
 </html>
