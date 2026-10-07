@@ -1368,6 +1368,33 @@ function 기록저장() {
     }
 }
 
+async function 서버기록불러오기() {
+    if (!현재사용자) return false;
+
+    try {
+        const { data, error } = await supabase
+            .from("dori_box_history")
+            .select("item_code,item_name,item_type,reward_coins,reward_exp,created_at")
+            .eq("user_id", 현재사용자.id)
+            .order("created_at", { ascending: false })
+            .limit(50);
+
+        if (error) throw error;
+
+        기록 = (data || []).map(항목 => ({
+            time: 항목.created_at,
+            reward: 보상문구생성(항목)
+        }));
+
+        기록표시();
+        기록저장();
+        return true;
+    } catch (error) {
+        console.error("서버 랜덤박스 기록 불러오기 오류:", error);
+        return false;
+    }
+}
+
 /* =====================================================
    Supabase 인벤토리
    실제 아이템 보유량은 DB에 저장
@@ -1948,22 +1975,18 @@ async function 뽑기() {
 
 초기화버튼.addEventListener("click", () => {
     const 확인 = confirm(
-        "이 기기에 저장된 랜덤 박스 기록과 아이템을 초기화할까요?\n\nSupabase의 코인과 실제 계정 데이터는 삭제되지 않습니다."
+        "이 기기에 저장된 랜덤 박스 기록을 초기화할까요?\n\n계정의 아이템과 코인, 서버의 뽑기 기록은 삭제되지 않습니다."
     );
 
     if (!확인) return;
 
     기록 = [];
-    인벤토리 = {};
-
     기록저장();
-    인벤토리저장();
 
     결과.textContent =
-        "랜덤 박스 기록과 아이템을 초기화했습니다.";
+        "이 기기에 저장된 랜덤 박스 표시 기록을 초기화했습니다.";
 
     기록표시();
-    인벤토리표시();
 });
 
 뒤로가기.addEventListener("click", () => {
@@ -2023,6 +2046,7 @@ async function 시작() {
     if (!사용자불러오기성공) return;
 
     await 인벤토리불러오기();
+    await 서버기록불러오기();
 
     인벤토리표시();
     기록표시();
