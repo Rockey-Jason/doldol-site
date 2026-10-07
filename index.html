@@ -1651,7 +1651,7 @@ body.로그인상태 #회원가입 {
 </div>
 
 
-<div class="탭">
+<div class="탭" id="프로필정보탭">
 
 
 <button
@@ -2607,17 +2607,7 @@ function 패널열기(
     );
 
 
-    if (
-        mode === "titles"
-    ) {
-
-        칭호탭.click();
-
-    } else {
-
-        업적탭.click();
-
-    }
+    if(mode==="daily"){일일미션화면표시();}else if(mode==="titles"){프로필정보탭?.classList.remove("숨김");칭호탭.click();}else{프로필정보탭?.classList.remove("숨김");업적탭.click();}
 
 }
 
