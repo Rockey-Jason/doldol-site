@@ -497,8 +497,7 @@ button {
     border-radius: 20px;
     background: linear-gradient(
         180deg,
-        rgba(135,150,255,0.75),
-        rgba(91,105,220,0.48)
+        rgba(135,150,255,0.75),        rgba(91,105,220,0.48)
     );
     border: 1px solid rgba(255,255,255,0.08);
     box-shadow: 0 0 12px rgba(105,120,255,0.18);
@@ -997,8 +996,7 @@ button {
         padding-right: 6px;
     }
 
-    #뽑기버튼 {
-        width: 100%;
+    #뽑기버튼 {        width: 100%;
         min-width: 0;
     }
 
@@ -1247,7 +1245,7 @@ button {
 ===================================================== -->
 
 <script type="module">
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
 /* =====================================================
    Supabase 설정
@@ -1497,8 +1495,7 @@ async function 로그인확인() {
 async function 사용자정보불러오기() {
     if (!현재사용자) return false;
 
-    try {
-        const authId = String(현재사용자.id);
+    try {        const authId = String(현재사용자.id);
 
         const { data, error } = await supabase
             .from("users")
@@ -1997,8 +1994,7 @@ async function 뽑기() {
    ESC
 ===================================================== */
 
-document.addEventListener("keydown", event => {
-    if (event.key === "Escape") {
+document.addEventListener("keydown", event => {    if (event.key === "Escape") {
         확률모달.classList.remove("show");
     }
 });
