@@ -6,6 +6,11 @@ android {
     namespace 'com.rockey.doldolsite'
     compileSdk 36
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
     defaultConfig {
         applicationId 'com.rockey.doldolsite'
         minSdk 23
