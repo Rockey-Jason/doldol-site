@@ -1401,7 +1401,17 @@ body.로그인상태 #회원가입 {
   </div>
 
   <div class="메뉴영역">
-<article class="메뉴카드" style="animation-delay:.35s"><div class="이미지틀" style="background:radial-gradient(circle at 50% 42%,rgba(94,219,255,.2),transparent 45%),linear-gradient(145deg,rgba(31,45,100,.95),rgba(8,10,32,.98));display:grid;place-items:center"><div style="font-size:78px;filter:drop-shadow(0 0 28px rgba(94,219,255,.35));animation:아이콘호흡 3s ease-in-out infinite">🎯</div></div><button class="메인버튼" type="button" onclick="페이지이동('daily-missions.html')">일일 미션 <span style="float:right;color:#5edbff">→</span></button><div class="카드설명">매일 미션을 완료하고 돌돌코인을 획득하세요.</div></article>
+<article class="메뉴카드 일일미션카드" style="animation-delay:.35s">
+  <div class="이미지틀" style="background:radial-gradient(circle at 50% 42%,rgba(94,219,255,.2),transparent 45%),linear-gradient(145deg,rgba(31,45,100,.95),rgba(8,10,32,.98));display:grid;place-items:center">
+    <div style="font-size:78px;filter:drop-shadow(0 0 28px rgba(94,219,255,.35));animation:아이콘호흡 3s ease-in-out infinite">🎯</div>
+    <button id="일일미션열기" class="일일미션작은버튼" type="button" aria-label="일일 미션 열기" title="일일 미션 열기">↗</button>
+  </div>
+  <div class="일일미션제목줄">
+    <span class="일일미션제목">일일 미션</span>
+    <span class="일일미션힌트">오늘의 보상</span>
+  </div>
+  <div class="카드설명">매일 미션을 완료하고 돌돌코인을 획득하세요.</div>
+</article>
 
     <article class="메뉴카드">
       <div class="이미지틀">
@@ -1613,6 +1623,31 @@ body.로그인상태 #회원가입 {
 ================================================= -->
 
 <div id="achievementPopup"></div>
+
+<!-- =================================================
+     일일 미션 팝업
+================================================= -->
+<div id="일일미션배경" class="일일미션모달배경" aria-hidden="true">
+  <section id="일일미션팝업" class="일일미션팝업" role="dialog" aria-modal="true" aria-labelledby="일일미션팝업제목">
+    <button id="일일미션닫기" class="일일미션닫기" type="button" aria-label="일일 미션 닫기">×</button>
+    <div class="일일미션팝업상단">
+      <div>
+        <div class="일일미션배지">DAILY MISSION</div>
+        <h2 id="일일미션팝업제목">🎯 일일 미션</h2>
+        <p id="일일미션진행">오늘의 미션을 완료하고 최대 <b>49,000</b> 돌돌코인을 받아보세요.</p>
+      </div>
+      <div id="일일미션퍼센트" class="일일미션퍼센트">0%</div>
+    </div>
+    <div class="일일미션진행바"><span id="일일미션진행채움"></span></div>
+    <div id="일일미션목록" class="일일미션목록">
+      <div class="일일미션로딩"><span></span> 미션 정보를 불러오는 중...</div>
+    </div>
+    <div id="일일미션보너스" class="일일미션보너스">
+      <div><strong>🏆 모든 미션 완료 보너스</strong><small>5개 미션을 모두 완료하면 추가 보상</small></div>
+      <b>+30,000 🪙</b>
+    </div>
+  </section>
+</div>
 
 
 <!-- =================================================
@@ -3663,5 +3698,59 @@ if ("serviceWorker" in navigator) {
 </script>
 
 <script type="module" src="js/daily-missions.js?v=20261007"></script>
+<script type="module">
+(() => {
+  const openBtn=document.getElementById("일일미션열기");
+  const bg=document.getElementById("일일미션배경");
+  const closeBtn=document.getElementById("일일미션닫기");
+  const list=document.getElementById("일일미션목록");
+  const percent=document.getElementById("일일미션퍼센트");
+  const progress=document.getElementById("일일미션진행채움");
+  const progressText=document.getElementById("일일미션진행");
+  if(!openBtn||!bg) return;
+  const icons={visit_site:"🏠",play_chess:"♟️",play_card_war:"🃏",open_randombox:"🎁"};
+  const money=n=>Number(n||0).toLocaleString("ko-KR");
+  const today=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul"}).format(new Date());
+  let loading=false;
+  async function loadMissions(){
+    if(loading) return; loading=true;
+    try{
+      const sb=window.doriSupabase;
+      if(!sb) throw new Error("Supabase client unavailable");
+      const {data:{session}}=await sb.auth.getSession();
+      if(!session){
+        list.innerHTML='<div class="일일미션로그인">로그인하면 오늘의 미션과 진행 상황을 확인할 수 있습니다.<br><a href="login.html">로그인하기</a></div>';
+        percent.textContent="—"; progress.style.width="0%";
+        progressText.innerHTML="로그인 후 일일 미션을 이용할 수 있습니다.";
+        return;
+      }
+      const [{data:defs,error:e1},{data:rows,error:e2}]=await Promise.all([
+        sb.from("daily_mission_definitions").select("mission_key,title,description,reward_coins,sort_order,active").eq("active",true).order("sort_order"),
+        sb.from("user_daily_missions").select("mission_key,completed_at").eq("user_id",session.user.id).eq("mission_date",today())
+      ]);
+      if(e1||e2) throw(e1||e2);
+      const base=(defs||[]).filter(x=>x.mission_key!=="all_complete");
+      const map=new Map((rows||[]).map(x=>[x.mission_key,x]));
+      const done=base.filter(x=>map.get(x.mission_key)?.completed_at).length;
+      const pct=base.length?Math.round(done/base.length*100):0;
+      percent.textContent=pct+"%"; progress.style.width=pct+"%";
+      progressText.innerHTML="<b>"+done+" / "+base.length+"</b> 미션 완료 · 최대 <b>49,000</b> 돌돌코인";
+      list.innerHTML=base.map(m=>{
+        const ok=!!map.get(m.mission_key)?.completed_at;
+        return '<article class="일일미션항목 '+(ok?"done":"")+'"><div class="일일미션아이콘">'+(icons[m.mission_key]||"🎯")+'</div><div><div class="일일미션이름">'+m.title+'</div><div class="일일미션설명">'+(m.description||"오늘의 미션")+'</div></div><div class="일일미션보상">+'+money(m.reward_coins)+' 🪙 '+(ok?'<span class="일일미션체크">✓</span>':"")+'</div></article>';
+      }).join("");
+    }catch(err){
+      console.error("일일 미션 팝업 오류:",err);
+      list.innerHTML='<div class="일일미션오류">일일 미션 정보를 불러오지 못했습니다.<br><small>잠시 후 다시 열어주세요.</small></div>';
+    }finally{loading=false}
+  }
+  function open(){bg.classList.add("show");bg.setAttribute("aria-hidden","false");document.body.style.overflow="hidden";loadMissions();setTimeout(()=>closeBtn.focus(),80)}
+  function close(){bg.classList.remove("show");bg.setAttribute("aria-hidden","true");document.body.style.overflow="";openBtn.focus()}
+  openBtn.addEventListener("click",open); closeBtn.addEventListener("click",close);
+  bg.addEventListener("click",e=>{if(e.target===bg)close()});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape"&&bg.classList.contains("show"))close()});
+  window.addEventListener("dori:daily-mission-completed",()=>{if(bg.classList.contains("show"))loadMissions()});
+})();
+</script>
 </body>
 </html>
