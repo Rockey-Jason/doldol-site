@@ -11,6 +11,11 @@
 
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="favicon.svg">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000033">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 
@@ -3642,5 +3647,15 @@ console.log(
   <script type="module" src="js/achievements.js?v=20260929-1"></script>
 <script src="js/doldol-theme.js?v=20261002"></script>
 <script src="js/doldol-theme.js?v=20261002"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js", { scope: "./" })
+      .then(() => console.log("돌이사이트 PWA 서비스 워커 등록 완료"))
+      .catch((error) => console.error("돌이사이트 PWA 서비스 워커 등록 실패:", error));
+  });
+}
+</script>
+
 </body>
 </html>
