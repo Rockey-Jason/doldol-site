@@ -41,12 +41,7 @@
 <circle cx="256" cy="96" r="7" fill="#fff"/>
 <path d="M252 55l4-18 4 18 18 4-18 4-4 18-4-18-18-4z" fill="#fff4a0"/>
 
-<!-- brand -->
-<g transform="translate(256 417)" text-anchor="middle">
- <text y="0" font-family="Arial,sans-serif" font-size="49" font-weight="900" letter-spacing="-2" fill="#000" opacity=".85">RockeySite</text>
- <text y="-5" font-family="Arial,sans-serif" font-size="49" font-weight="900" letter-spacing="-2" fill="url(#gold)" stroke="#fff1a0" stroke-width="1.5" paint-order="stroke">RockeySite</text>
- <path d="M-151 13Q0 36 151 13" fill="none" stroke="#ffd84d" stroke-width="5" stroke-linecap="round"/>
-</g>
+<!-- brand text removed -->
 <rect x="5" y="5" width="502" height="502" rx="60" fill="none" stroke="#ffd84d" stroke-width="7"/>
 <rect x="13" y="13" width="486" height="486" rx="54" fill="none" stroke="#fff3ae" stroke-opacity=".38" stroke-width="2"/>
 </svg>
