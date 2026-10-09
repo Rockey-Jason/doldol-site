@@ -5,7 +5,7 @@
 
     <application
         android:allowBackup="false"
-        android:icon="@drawable/rockeysite_icon"
+        android:icon="@drawable/ic_rockeysite"
         android:label="@string/app_name"
         android:theme="@style/Theme.DoldolSite">
 
@@ -32,7 +32,7 @@
 
             <meta-data
                 android:name="android.support.customtabs.trusted.SPLASH_IMAGE_DRAWABLE"
-                android:resource="@drawable/rockeysite_icon" />
+                android:resource="@drawable/ic_rockeysite" />
 
             <meta-data
                 android:name="android.support.customtabs.trusted.SPLASH_SCREEN_BACKGROUND_COLOR"
