@@ -3829,6 +3829,7 @@ if ("serviceWorker" in navigator) {
         '<div class="포털상태"><span class="포털점"></span><span>'+p.status+'</span></div>'+
       '</div>';
     frame.id=p.id;
+    frame.onclick=()=>article.querySelector(".메인버튼")?.click();
     frame.setAttribute("role","button");
     frame.setAttribute("tabindex","0");
     frame.setAttribute("aria-label",article.querySelector(".메인버튼")?.textContent.trim()||p.status);
