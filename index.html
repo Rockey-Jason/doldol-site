@@ -1420,6 +1420,33 @@ body.로그인상태 #회원가입 {
 @media(max-width:650px){.포털아이콘{width:94px}.포털상태{bottom:12px;font-size:10px;padding:7px 10px}.포털미니텍스트{top:15px;left:15px;font-size:8px}}
 @media(prefers-reduced-motion:reduce){.포털빛,.포털링,.포털아이콘,.포털아이콘::after,.포털미니텍스트,.포털장식,.포털점,.메뉴카드:not(.돌돌증권카드):not(.돌이AI카드) .이미지틀::before{animation:none!important}.메뉴카드,.포털화살표{transition:none!important}}
 
+
+/* ===== PORTAL SIZE / TEXT COLLISION FIX ===== */
+.메뉴카드:not(.돌돌증권카드):not(.돌이AI카드) .이미지틀{min-width:0;box-sizing:border-box}
+.포털비주얼,.포털비주얼 *{box-sizing:border-box}
+.포털아이콘{width:clamp(58px,5.6vw,82px);font-size:clamp(30px,3.2vw,43px);flex-shrink:0}
+.포털아이콘::after{inset:-5px}
+.포털미니텍스트{left:14px;right:42px;top:14px;max-width:calc(100% - 56px);font-size:clamp(7px,.62vw,9px);letter-spacing:clamp(.7px,.12vw,1.5px);line-height:1.35;overflow-wrap:anywhere}
+.포털장식{right:13px;top:12px;font-size:17px}
+.포털상태{width:max-content;max-width:calc(100% - 20px);min-width:0;white-space:normal;text-align:center;justify-content:center;flex-wrap:wrap;gap:5px;padding:6px 9px;font-size:clamp(9px,.72vw,10px);line-height:1.25;overflow-wrap:anywhere}
+.포털상태 span:last-child{min-width:0}
+@media(max-width:1100px){
+ .포털아이콘{width:clamp(56px,7vw,76px);font-size:clamp(29px,4vw,39px)}
+ .포털미니텍스트{left:11px;right:34px;max-width:calc(100% - 48px);letter-spacing:.7px}
+ .포털상태{max-width:calc(100% - 14px);padding:6px 8px;font-size:9px}
+}
+@media(max-width:650px){
+ .포털아이콘{width:76px;font-size:36px}
+ .포털미니텍스트{left:14px;right:38px;top:13px;max-width:calc(100% - 52px);font-size:8px;letter-spacing:1px}
+ .포털장식{right:13px;top:11px;font-size:16px}
+ .포털상태{max-width:calc(100% - 24px);font-size:10px;padding:6px 10px}
+}
+@media(max-width:360px){
+ .포털아이콘{width:66px;font-size:31px}
+ .포털미니텍스트{font-size:7px;letter-spacing:.45px}
+ .포털상태{font-size:9px;gap:4px}
+}
+
 </style>
 
 <link rel="stylesheet" href="css/doldol-theme.css?v=20261002">
