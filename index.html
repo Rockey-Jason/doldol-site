@@ -1797,6 +1797,34 @@ body.로그인상태 #회원가입 {
 }
 </style>
 
+
+<!-- Daily mission completion popup: increase vertical breathing room -->
+<style id="daily-mission-popup-height-fix">
+  #achievementPopup { min-height: 190px; }
+  #achievementPopup .업적알림-inner {
+    min-height: 188px;
+    box-sizing: border-box;
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+  @media (max-width: 560px) {
+    #achievementPopup { min-height: 176px; }
+    #achievementPopup .업적알림-inner {
+      min-height: 174px;
+      padding-top: 23px;
+      padding-bottom: 23px;
+    }
+  }
+  @media (max-height: 520px) and (orientation: landscape) {
+    #achievementPopup { min-height: 0; }
+    #achievementPopup .업적알림-inner {
+      min-height: 0;
+      padding-top: 12px;
+      padding-bottom: 12px;
+    }
+  }
+</style>
+
 </head>
 
 
