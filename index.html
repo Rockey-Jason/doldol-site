@@ -1421,6 +1421,18 @@ body.로그인상태 #회원가입 {
 @media(prefers-reduced-motion:reduce){.포털빛,.포털링,.포털아이콘,.포털아이콘::after,.포털미니텍스트,.포털장식,.포털점,.메뉴카드:not(.돌돌증권카드):not(.돌이AI카드) .이미지틀::before{animation:none!important}.메뉴카드,.포털화살표{transition:none!important}}
 
 
+
+/* Shared portal theme colors: all seven main cards use one visual system. */
+.portal-news .포털비주얼{--portal-glow:rgba(80,170,255,.34);--portal-border:rgba(100,190,255,.34);--portal-dot:#69d6ff;--portal-icon:#e8f8ff}
+.portal-shop .포털비주얼{--portal-glow:rgba(255,197,85,.30);--portal-border:rgba(255,205,105,.34);--portal-dot:#ffd36b;--portal-icon:#fff4cf}
+.portal-info .포털비주얼{--portal-glow:rgba(73,220,190,.30);--portal-border:rgba(91,235,207,.32);--portal-dot:#5ce4c4;--portal-icon:#e7fff9}
+.portal-games .포털비주얼{--portal-glow:rgba(164,112,255,.34);--portal-border:rgba(178,133,255,.34);--portal-dot:#b58bff;--portal-icon:#f5edff}
+.portal-random .포털비주얼{--portal-glow:rgba(255,105,185,.32);--portal-border:rgba(255,130,200,.34);--portal-dot:#ff8bc8;--portal-icon:#fff0f8}
+.portal-stock .포ტal-visual{--portal-glow:rgba(98,217,255,.30)}
+.portal-stock .포털비주얼{--portal-glow:rgba(98,217,255,.30);--portal-border:rgba(98,217,255,.34);--portal-dot:#62d9ff;--portal-icon:#e9fbff}
+.portal-ai .포털비주얼{--portal-glow:rgba(141,140,255,.32);--portal-border:rgba(141,140,255,.36);--portal-dot:#67e8bd;--portal-icon:#f1efff}
+.portal-stock .이미지틀,.portal-ai .이미지틀{cursor:pointer}
+
 /* ===== PORTAL SIZE / TEXT COLLISION FIX ===== */
 .메뉴카드:not(.돌돌증권카드):not(.돌이AI카드) .이미지틀{min-width:0;box-sizing:border-box}
 .포털비주얼,.포털비주얼 *{box-sizing:border-box}
@@ -1686,76 +1698,25 @@ body.로그인상태 #회원가입 {
     </article>
 
 <article class="메뉴카드 돌돌증권카드">
-
-  <div class="돌돌증권비주얼">
-    <div class="돌돌증권빛"></div>
-
-    <div class="돌돌증권차트">
-      <span></span><span></span><span></span><span></span><span></span>
-      <span></span><span></span><span></span><span></span><span></span>
-    </div>
-
-    <div class="돌돌증권아이콘">
-      <span>₩</span>
-      <span>↗</span>
-    </div>
-
-    <div class="돌돌증권파동"></div>
-
-    <div class="돌돌증권상태">
-      <span class="돌돌증권점"></span>
-      <span>돌돌증권</span>
-      <span class="돌돌증권상태구분">·</span>
-      <span>시장 확인 가능</span>
-    </div>
+  <div class="이미지틀">
+    <img id="돌돌증권이미지" class="메인이미지" src="" alt="돌돌증권">
   </div>
-
   <button id="돌돌증권버튼" class="메인버튼" type="button">
     돌돌증권 확인하기
     <span class="돌돌증권화살표">→</span>
   </button>
-
-  <div class="카드설명">
-    돌이 세계의 기업과 주가 변동을 확인해보세요.
-  </div>
-
+  <div class="카드설명">돌이 세계의 기업과 주가 변동을 확인해보세요.</div>
 </article>
 
 <article class="메뉴카드 돌이AI카드">
-
-  <div class="돌이AI비주얼">
-
-    <div class="돌이AI빛"></div>
-
-    <div class="돌이AI아이콘">
-      <span>✦</span>
-      <span>🐶</span>
-    </div>
-
-    <div class="돌이AI파동"></div>
-
-    <div class="돌이AI상태">
-      <span class="돌이AI점"></span>
-      <span>돌이 AI</span>
-      <span class="돌이AI상태구분">·</span>
-      <span>대화 준비 완료</span>
-    </div>
-
+  <div class="이미지틀">
+    <img id="돌이AI이미지" class="메인이미지" src="" alt="돌이 AI">
   </div>
-
-  <button
-    id="돌이AI버튼"
-    class="메인버튼"
-    type="button"
-  >
+  <button id="돌이AI버튼" class="메인버튼" type="button">
     돌이 AI와 대화하기
     <span class="돌이AI화살표">→</span>
   </button>
-
-  <div class="카드설명">
-    궁금한 것을 물어보세요. 돌이 AI가 함께 생각해줄게요.
-  </div>
-
+  <div class="카드설명">궁금한 것을 물어보세요. 돌이 AI가 함께 생각해줄게요.</div>
 </article>
 
   </div>
@@ -3920,9 +3881,10 @@ if ("serviceWorker" in navigator) {
     {id:"상점이미지",card:"portal-shop",icon:"◈",label:"DOLDOL MARKET",status:"아이템 상점",spark:"✧"},
     {id:"정보이미지",card:"portal-info",icon:"✧",label:"DORI ENCYCLOPEDIA",status:"정보 탐색",spark:"⌘"},
     {id:"게임이미지",card:"portal-games",icon:"♟",label:"DORI ARCADE",status:"플레이 준비 완료",spark:"✦"},
-    {id:"랜덤박스이미지",card:"portal-random",icon:"✧",label:"LUCKY DROP",status:"행운을 열어보세요",spark:"✦"}
-  ];
-  portals.forEach((p,index)=>{
+    {id:"랜덤박스이미지",card:"portal-random",icon:"✧",label:"LUCKY DROP",status:"행운을 열어보세요",spark:"✦"},
+    {id:"돌돌증권이미지",card:"portal-stock",icon:"₩",label:"DOLDOL SECURITIES",status:"시장 확인 가능",spark:"↗"},
+    {id:"돌이AI이미지",card:"portal-ai",icon:"🐶",label:"DORI AI",status:"대화 준비 완료",spark:"✦"}
+  ];  portals.forEach((p,index)=>{
     const old=document.getElementById(p.id);
     if(!old) return;
     const frame=old.closest(".이미지틀");
