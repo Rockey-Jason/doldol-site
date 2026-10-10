@@ -3859,31 +3859,30 @@ async function 이벤트참여하기() {
         data.success !== true
     ) {
 
-        버튼.disabled =
-            false;
+        if (data?.already_claimed === true) {
+            버튼.disabled = true;
+            버튼.textContent = "보상 수령 완료";
+            $("이벤트결과").textContent =
+                "🎉 이미 보상을 받았습니다.";
+            return;
+        }
 
-        버튼.textContent =
-            "이벤트 참여하기";
-
+        버튼.disabled = false;
+        버튼.textContent = "이벤트 참여하기";
 
         $("이벤트결과").textContent =
-            "보상 지급에 실패했습니다.";
+            data?.message || "보상 지급에 실패했습니다.";
 
         return;
 
     }
 
-
-    버튼.textContent =
-        "보상 수령 완료";
-
+    버튼.disabled = true;
+    버튼.textContent = "보상 수령 완료";
 
     $("이벤트결과").textContent =
-
         `🎉 ${
-            Number(
-                data.reward_coins
-            ).toLocaleString()
+            Number(data.reward_coins).toLocaleString()
         } 돌돌코인을 받았습니다!`;
 
 }
