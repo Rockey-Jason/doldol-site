@@ -1798,33 +1798,411 @@ body.로그인상태 #회원가입 {
 </style>
 
 
-<!-- Daily mission completion popup: increase vertical breathing room -->
-<style id="daily-mission-popup-height-fix">
-  #achievementPopup { min-height: 190px; }
-  #achievementPopup .업적알림-inner {
-    min-height: 188px;
-    box-sizing: border-box;
-    padding-top: 28px;
-    padding-bottom: 28px;
-  }
-  @media (max-width: 560px) {
-    #achievementPopup { min-height: 176px; }
-    #achievementPopup .업적알림-inner {
-      min-height: 174px;
-      padding-top: 23px;
-      padding-bottom: 23px;
-    }
-  }
-  @media (max-height: 520px) and (orientation: landscape) {
-    #achievementPopup { min-height: 0; }
-    #achievementPopup .업적알림-inner {
-      min-height: 0;
-      padding-top: 12px;
-      padding-bottom: 12px;
-    }
-  }
-</style>
 
+
+<style id="daily-mission-news-style">
+/* =====================================================
+   돌돌코인 보상 애니메이션
+===================================================== */
+
+#dailyMissionRewardPopup {
+
+    position: fixed;
+
+    inset: 0;
+
+    z-index: 100000;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    pointer-events: none;
+
+    opacity: 0;
+
+    visibility: hidden;
+
+    transition:
+        opacity .25s ease,
+        visibility .25s ease;
+
+}
+
+
+#dailyMissionRewardPopup.표시 {
+
+    opacity: 1;
+
+    visibility: visible;
+
+}
+
+
+.코인보상배경 {
+
+    position: absolute;
+
+    inset: 0;
+
+    background:
+        radial-gradient(
+            circle,
+            rgba(255,210,90,.14),
+            transparent 42%
+        );
+
+    animation:
+        보상배경등장 .7s ease both;
+
+}
+
+
+.코인보상내용 {
+
+    position: relative;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    min-width: 270px;
+
+    padding: 34px 38px;
+
+    border: 1px solid rgba(255,220,120,.28);
+
+    border-radius: 28px;
+
+    background:
+        linear-gradient(
+            145deg,
+            rgba(61,48,105,.96),
+            rgba(18,18,52,.96)
+        );
+
+    box-shadow:
+        0 25px 90px rgba(0,0,0,.55),
+        0 0 55px rgba(255,190,70,.12),
+        inset 0 1px 0 rgba(255,255,255,.08);
+
+    backdrop-filter: blur(20px);
+
+    -webkit-backdrop-filter: blur(20px);
+
+    transform: translateY(25px) scale(.75);
+
+    opacity: 0;
+
+}
+
+
+#dailyMissionRewardPopup.표시 .코인보상내용 {
+
+    animation:
+        코인보상등장 .65s cubic-bezier(.2,.85,.25,1.2) forwards;
+
+}
+
+
+.코인보상코인 {
+
+    position: relative;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    width: 94px;
+
+    height: 94px;
+
+    margin-bottom: 15px;
+
+    border: 5px solid #ffe38b;
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(
+            circle at 35% 28%,
+            #fff4b2 0%,
+            #ffd85d 35%,
+            #e99b20 72%,
+            #a85b0b 100%
+        );
+
+    color: #8b4d08;
+
+    font-family: Arial, sans-serif;
+
+    font-size: 42px;
+
+    font-weight: 900;
+
+    text-shadow:
+        0 1px 0 rgba(255,255,255,.5);
+
+    box-shadow:
+        0 8px 0 #a96213,
+        0 14px 30px rgba(255,190,50,.28),
+        inset 0 4px 5px rgba(255,255,255,.55),
+        inset 0 -7px 10px rgba(120,55,0,.25);
+
+    animation:
+        코인회전 1.8s ease-in-out infinite;
+
+}
+
+
+.코인보상코인::before {
+
+    content: "";
+
+    position: absolute;
+
+    width: 22px;
+
+    height: 22px;
+
+    top: 13px;
+
+    left: 18px;
+
+    border-radius: 50%;
+
+    background: rgba(255,255,255,.65);
+
+    filter: blur(3px);
+
+}
+
+
+.코인보상제목 {
+
+    margin: 0;
+
+    color: #fff3bd;
+
+    font-family: "HancomMalrangmalrang";
+
+    font-size: 25px;
+
+    font-weight: 700;
+
+    text-align: center;
+
+}
+
+
+.코인보상금액 {
+
+    margin-top: 7px;
+
+    color: #ffd866;
+
+    font-family: "HancomMalrangmalrang";
+
+    font-size: 30px;
+
+    font-weight: 700;
+
+    text-align: center;
+
+    text-shadow:
+        0 0 18px rgba(255,205,90,.25);
+
+}
+
+
+.코인보상설명 {
+
+    margin: 8px 0 0;
+
+    color: rgba(255,255,255,.68);
+
+    font-family: "HancomMalrangmalrang";
+
+    font-size: 15px;
+
+    text-align: center;
+
+}
+
+
+.떠오르는코인 {
+
+    position: fixed;
+
+    z-index: 100001;
+
+    pointer-events: none;
+
+    color: #ffd85c;
+
+    font-size: 26px;
+
+    filter:
+        drop-shadow(0 0 8px rgba(255,200,60,.5));
+
+    animation:
+        코인떠오름 1.1s cubic-bezier(.2,.8,.3,1) forwards;
+
+}
+
+
+@keyframes 코인보상등장 {
+
+    0% {
+
+        opacity: 0;
+
+        transform:
+            translateY(35px)
+            scale(.65)
+            rotate(-5deg);
+
+    }
+
+    55% {
+
+        opacity: 1;
+
+        transform:
+            translateY(-7px)
+            scale(1.05)
+            rotate(2deg);
+
+    }
+
+    100% {
+
+        opacity: 1;
+
+        transform:
+            translateY(0)
+            scale(1)
+            rotate(0);
+
+    }
+
+}
+
+
+@keyframes 코인회전 {
+
+    0%,
+    100% {
+
+        transform:
+            rotateY(0deg)
+            translateY(0);
+
+    }
+
+    50% {
+
+        transform:
+            rotateY(18deg)
+            translateY(-5px);
+
+    }
+
+}
+
+
+@keyframes 보상배경등장 {
+
+    from {
+
+        opacity: 0;
+
+    }
+
+    to {
+
+        opacity: 1;
+
+    }
+
+}
+
+
+@keyframes 코인떠오름 {
+
+    0% {
+
+        opacity: 0;
+
+        transform:
+            translate(0, 20px)
+            scale(.5)
+            rotate(0deg);
+
+    }
+
+    20% {
+
+        opacity: 1;
+
+    }
+
+    100% {
+
+        opacity: 0;
+
+        transform:
+            translate(
+                var(--x),
+                -145px
+            )
+            scale(1.25)
+            rotate(360deg);
+
+    }
+
+}
+
+
+@media (max-width: 430px) {
+
+    .코인보상내용 {
+
+        min-width: 235px;
+
+        padding: 28px 25px;
+
+    }
+
+    .코인보상코인 {
+
+        width: 78px;
+
+        height: 78px;
+
+        font-size: 34px;
+
+    }
+
+    .코인보상금액 {
+
+        font-size: 25px;
+
+    }
+
+}
+      
+
+/* ===== 6-TIER ACHIEVEMENT RARITY SYSTEM ===== */
+</style>
 </head>
 
 
@@ -2011,6 +2389,17 @@ body.로그인상태 #회원가입 {
 ================================================= -->
 
 <div id="achievementPopup"></div>
+
+<!-- Daily mission popup reuses the exact coin-reward design from readingrockeynews.html -->
+<div id="dailyMissionRewardPopup" aria-live="polite">
+  <div class="코인보상배경"></div>
+  <div class="코인보상내용">
+    <div class="코인보상코인">🪙</div>
+    <h2 class="코인보상제목" id="dailyMissionRewardTitle">일일 미션 완료!</h2>
+    <div class="코인보상금액" id="dailyMissionRewardAmount">완료!</div>
+    <p class="코인보상설명" id="dailyMissionRewardDescription">미션을 완료했어요.</p>
+  </div>
+</div>
 
 
 
@@ -2282,6 +2671,35 @@ function 팝업열기(
 
 
 // =====================================================
+// 일일 미션 팝업: 돌이신문 읽음 보상과 동일한 비업적형 코인 팝업 디자인
+let 일일미션팝업타이머 = null;
+function 일일미션보상팝업표시({title="일일 미션 완료!", amountText="완료!", description="미션을 완료했어요."}={}) {
+  const popup=document.getElementById("dailyMissionRewardPopup");
+  const titleEl=document.getElementById("dailyMissionRewardTitle");
+  const amountEl=document.getElementById("dailyMissionRewardAmount");
+  const descriptionEl=document.getElementById("dailyMissionRewardDescription");
+  if(!popup||!titleEl||!amountEl||!descriptionEl)return;
+  titleEl.textContent=title;
+  amountEl.textContent=amountText;
+  descriptionEl.textContent=description;
+  popup.classList.remove("표시");
+  void popup.offsetWidth;
+  popup.classList.add("표시");
+  for(let i=0;i<12;i++){
+    const coin=document.createElement("div");
+    coin.className="떠오르는코인";
+    coin.textContent="🪙";
+    coin.style.setProperty("--x",((Math.random()-.5)*230)+"px");
+    coin.style.left="50%";
+    coin.style.top="50%";
+    coin.style.animationDelay=(Math.random()*.25)+"s";
+    document.body.appendChild(coin);
+    setTimeout(()=>coin.remove(),1500);
+  }
+  clearTimeout(일일미션팝업타이머);
+  일일미션팝업타이머=setTimeout(()=>popup.classList.remove("표시"),2300);
+}
+
 // EXP → 레벨
 // =====================================================
 
@@ -2931,11 +3349,11 @@ async function 일일미션화면표시(){
  const cards=base.map(m=>{const row=map.get(m.mission_key),complete=!!row?.completed_at,received=!!row?.reward_claimed;const action=received?'<span class="일일미션받음">✓ 보상 수령 완료</span>':complete?'<button class="일일미션받기" data-claim="'+일일HTML안전(m.mission_key)+'">보상 받기</button>':'<button class="일일미션받기" disabled>미션 진행 필요</button>';return '<article class="일일미션아이템 '+(complete?"완료":"")+'"><div class="일일미션아이콘2">'+(일일미션아이콘[m.mission_key]||"🎯")+'</div><div><div class="일일미션이름2">'+일일HTML안전(m.title)+'</div><div class="일일미션설명2">'+일일HTML안전(m.description||"오늘의 미션")+'</div><div class="일일미션상태2">'+(received?"보상을 이미 수령했습니다.":complete?"미션 완료 · 보상을 받을 수 있습니다.":"아직 완료되지 않았습니다.")+'</div></div><div class="일일미션보상영역"><div class="일일미션코인">+'+Number(m.reward_coins||0).toLocaleString()+" 🪙</div>"+action+"</div></article>"}).join("");
  const bonus=allClaimed?'<span class="일일미션받음">✓ 보너스 수령 완료</span>':allDone?'<button class="일일미션받기" data-claim="all_complete">보너스 받기</button>':'<button class="일일미션받기" disabled>모든 미션 완료 필요</button>';
  패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션헤더"><div><div class="일일미션배지2">DAILY REWARD</div><h2>오늘의 미션</h2><p>미션을 완료한 뒤 직접 보상을 받아보세요.</p></div><div class="일일미션헤더통계"><strong>'+done+'/'+base.length+'</strong><span>미션 완료</span></div></div><div class="일일미션프로그레스"><span style="width:'+pct+'%"></span></div><div class="일일미션리스트">'+cards+'</div><div class="일일미션보너스2"><div><strong>🏆 ALL CLEAR BONUS</strong><small>오늘의 4개 미션을 모두 완료하면 추가 보상</small></div><div><div class="보너스코인">+30,000 🪙</div>'+bonus+'</div></div></div>';
- 패널내용.querySelectorAll("[data-claim]").forEach(btn=>btn.addEventListener("click",async()=>{btn.disabled=true;btn.textContent="수령 중…";const result=window.doriClaimDailyMissionReward?await window.doriClaimDailyMissionReward(btn.dataset.claim):null;if(!result?.reward_claimed){btn.disabled=false;btn.textContent=btn.dataset.claim==="all_complete"?"보너스 받기":"보상 받기";팝업열기("❌ 보상을 받지 못했습니다. 잠시 후 다시 시도해주세요.",3500);return}팝업열기("🎉 <b>"+Number(result.reward_coins||0).toLocaleString()+" 돌돌코인</b>을 받았습니다!",3000);await 일일미션화면표시()}));
+ 패널내용.querySelectorAll("[data-claim]").forEach(btn=>btn.addEventListener("click",async()=>{btn.disabled=true;btn.textContent="수령 중…";const result=window.doriClaimDailyMissionReward?await window.doriClaimDailyMissionReward(btn.dataset.claim):null;if(!result?.reward_claimed){btn.disabled=false;btn.textContent=btn.dataset.claim==="all_complete"?"보너스 받기":"보상 받기";팝업열기("❌ 보상을 받지 못했습니다. 잠시 후 다시 시도해주세요.",3500);return}일일미션보상팝업표시({title:"일일 미션 보상 획득!",amountText:"+"+Number(result.reward_coins||0).toLocaleString(),description:"일일 미션 보상입니다!"});await 일일미션화면표시()}));
  }catch(err){console.error("일일 미션 패널 오류:",err);패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션오류2">일일 미션을 불러오지 못했습니다.<br><small>잠시 후 다시 시도해주세요.</small></div></div>'}
 }
 if(일일미션버튼)일일미션버튼.onclick=()=>{메뉴.classList.remove("menu-show");메뉴.classList.add("menu-hide");window.setTimeout(()=>메뉴.classList.remove("menu-hide"),260);패널열기("daily")};
-window.addEventListener("dori:daily-mission-completed",()=>{if(패널.classList.contains("show")&&패널내용.querySelector("#일일미션화면"))일일미션화면표시()});
+window.addEventListener("dori:daily-mission-completed",(event)=>{const detail=event.detail||{};if(detail.already_completed!==true&&detail.already_claimed!==true){일일미션보상팝업표시({title:"일일 미션 완료!",amountText:"완료!",description:"미션 달성! 보상 받기에서 돌돌코인을 수령하세요."})}if(패널.classList.contains("show")&&패널내용.querySelector("#일일미션화면"))일일미션화면표시()});
 
 function 패널열기(
     mode
