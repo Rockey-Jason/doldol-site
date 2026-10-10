@@ -1447,6 +1447,56 @@ body.로그인상태 #회원가입 {
  .포털상태{font-size:9px;gap:4px}
 }
 
+
+/* ===== AI / STOCK PORTAL CONSISTENCY ===== */
+/* Keep Dori AI and Doldol Securities aligned with the other destination cards. */
+.돌돌증권카드,
+.돌이AI카드{
+  width:100%;
+  min-width:0;
+  height:100%;
+}
+.돌돌증권카드 .돌돌증권비주얼,
+.돌이AI카드 .돌이AI비주얼{
+  display:block;
+  width:100%;
+  aspect-ratio:4 / 3;
+  flex:0 0 auto;
+  cursor:pointer;
+  transition:filter .45s ease, border-color .45s ease;
+}
+.돌돌증권카드:hover .돌돌증권비주얼,
+.돌이AI카드:hover .돌이AI비주얼{
+  filter:brightness(1.08) saturate(1.05);
+}
+.돌돌증권카드 .메인버튼,
+.돌이AI카드 .메인버튼{
+  width:100%;
+  min-width:0;
+  min-height:54px;
+  padding:15px 8px 2px;
+  text-align:left;
+  font-size:clamp(18px,1.8vw,25px);
+  line-height:1.35;
+}
+.돌돌증권카드 .카드설명,
+.돌이AI카드 .카드설명{
+  min-width:0;
+  overflow-wrap:anywhere;
+}
+.돌돌증권비주얼:focus-visible,
+.돌이AI비주얼:focus-visible{
+  outline:3px solid rgba(141,140,255,.75);
+  outline-offset:4px;
+}
+@media(max-width:650px){
+  .돌돌증권카드 .메인버튼,
+  .돌이AI카드 .메인버튼{
+    min-height:48px;
+    font-size:clamp(17px,4.4vw,22px);
+  }
+}
+
 </style>
 
 <link rel="stylesheet" href="css/doldol-theme.css?v=20261002">
@@ -3862,6 +3912,32 @@ if ("serviceWorker" in navigator) {
     frame.setAttribute("aria-label",article.querySelector(".메인버튼")?.textContent.trim()||p.status);
     frame.addEventListener("keydown",event=>{
       if(event.key==="Enter"||event.key===" "){event.preventDefault();frame.click();}
+    });
+  });
+})();
+</script>
+
+
+<script>
+/* Match the image-card navigation behavior for Dori AI and Doldol Securities. */
+(function(){
+  const destinations = [
+    {selector:".돌돌증권비주얼",buttonId:"돌돌증권버튼",label:"돌돌증권 확인하기"},
+    {selector:".돌이AI비주얼",buttonId:"돌이AI버튼",label:"돌이 AI와 대화하기"}
+  ];
+  destinations.forEach(item=>{
+    const visual=document.querySelector(item.selector);
+    const button=document.getElementById(item.buttonId);
+    if(!visual||!button) return;
+    visual.setAttribute("role","button");
+    visual.setAttribute("tabindex","0");
+    visual.setAttribute("aria-label",item.label);
+    visual.addEventListener("click",()=>button.click());
+    visual.addEventListener("keydown",event=>{
+      if(event.key==="Enter"||event.key===" "){
+        event.preventDefault();
+        button.click();
+      }
     });
   });
 })();
