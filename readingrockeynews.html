@@ -3851,6 +3851,14 @@ async function 이벤트참여하기() {
                 : "🎉 정답! " + paid.toLocaleString() + " 돌돌코인을 받았어요!";
         }
         $("이벤트기회").textContent = "도전 기회: " + Number(data.attempts_left || 0) + "회 남음";
+        // 실제 지급된 이벤트 코인을 돌이신문과 같은 팝업으로 표시한다.
+        // reward_coins는 서버가 버프를 반영해 반환한 실제 지급량을 사용한다.
+        if (data.reward_type !== "coin_multiplier" && Number(data.reward_coins || 0) > 0) {
+            const paidCoins = Math.max(0, Number(data.reward_coins) || 0);
+            const baseCoins = Math.max(0, Number(data.base_reward_coins ?? paidCoins) || 0);
+            const activeMultiplier = Math.max(1, Number(data.multiplier) || (baseCoins > 0 ? paidCoins / baseCoins : 1));
+            코인보상표시(paidCoins, "이벤트 보상입니다!", { base_amount: baseCoins, multiplier: activeMultiplier });
+        }
         return;
     }
     $("이벤트결과").textContent = data?.message || "정답이 아닙니다.";
