@@ -3839,9 +3839,16 @@ async function 이벤트참여하기() {
         버튼.textContent = "이벤트 보상 획득 완료";
         if (data.reward_type === "coin_multiplier") {
             const until = data.expires_at ? new Date(data.expires_at).toLocaleString("ko-KR") : "";
-            $("이벤트결과").textContent = "🎉 정답! 돌돌코인 수급량 " + data.multiplier + "배 효과 획득! 종료 시각: " + until;
+            $("이벤트결과").textContent = "🎉 정답! 돌돌코인 수급량 " + data.multiplier + "배 효과 획득! 보상마다 기본량보다 " + Math.round((Number(data.multiplier) - 1) * 100) + "% 더 지급됩니다. 종료 시각: " + until;
+        } else if (data.reward_type === "balance_multiplier") {
+            $("이벤트결과").textContent = "🎉 정답! 보유 코인 " + Number(data.base_balance || 0).toLocaleString() + " × " + Number(data.multiplier || 1) + "배 기준으로 추가 " + Number(data.reward_coins || 0).toLocaleString() + " 돌돌코인을 받았어요!";
         } else {
-            $("이벤트결과").textContent = "🎉 정답! " + Number(data.reward_coins || 0).toLocaleString() + " 돌돌코인을 받았어요!";
+            const paid = Number(data.reward_coins || 0);
+            const base = Number(data.base_reward_coins ?? paid);
+            const extra = Math.max(0, paid - base);
+            $("이벤트결과").textContent = extra > 0
+                ? "🎉 정답! 기본 " + base.toLocaleString() + " + 버프 추가 " + extra.toLocaleString() + " = 총 " + paid.toLocaleString() + " 돌돌코인을 받았어요!"
+                : "🎉 정답! " + paid.toLocaleString() + " 돌돌코인을 받았어요!";
         }
         $("이벤트기회").textContent = "도전 기회: " + Number(data.attempts_left || 0) + "회 남음";
         return;
