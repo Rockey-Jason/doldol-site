@@ -3119,6 +3119,7 @@ async function 업적획득(achievement) {
             };
             await 유저정보불러오기();
             화면업데이트();
+            일일미션보상팝업표시({title:"업적 보상 획득!",amountText:"+"+Number(data.reward_doldolcoin||0).toLocaleString(),description:achievement.이름+" 업적 보상으로 돌돌코인을 받았어요!"});
             return true;
         }
 
@@ -3353,7 +3354,7 @@ async function 일일미션화면표시(){
  }catch(err){console.error("일일 미션 패널 오류:",err);패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션오류2">일일 미션을 불러오지 못했습니다.<br><small>잠시 후 다시 시도해주세요.</small></div></div>'}
 }
 if(일일미션버튼)일일미션버튼.onclick=()=>{메뉴.classList.remove("menu-show");메뉴.classList.add("menu-hide");window.setTimeout(()=>메뉴.classList.remove("menu-hide"),260);패널열기("daily")};
-window.addEventListener("dori:daily-mission-completed",(event)=>{const detail=event.detail||{};if(detail.already_completed!==true&&detail.already_claimed!==true){일일미션보상팝업표시({title:"일일 미션 완료!",amountText:"완료!",description:"미션 달성! 보상 받기에서 돌돌코인을 수령하세요."})}if(패널.classList.contains("show")&&패널내용.querySelector("#일일미션화면"))일일미션화면표시()});
+window.addEventListener("dori:daily-mission-completed",()=>{if(패널.classList.contains("show")&&패널내용.querySelector("#일일미션화면"))일일미션화면표시()});
 
 function 패널열기(
     mode
