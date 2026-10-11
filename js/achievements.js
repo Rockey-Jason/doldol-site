@@ -416,7 +416,7 @@ function showNext() {
         <div class="dori-achievement-name">${escapeHtml(data.name || "새 업적")}</div>
         <div class="dori-achievement-desc">${escapeHtml(data.description || "")}</div>
         <div class="dori-achievement-rewards">
-          ${Number(data.reward_doldolcoin || 0) > 0 ? `<span>💰 +${Number(data.reward_doldolcoin).toLocaleString()} 돌돌코인</span>` : ""}
+          ${Number(data.reward_doldolcoin || 0) > 0 ? `<span>💰 +${Number(data.reward_doldolcoin).toLocaleString()} 돌돌코인</span>${Number(data.reward_doldolcoin || 0) > Number(data.base_reward_doldolcoin || 0) ? `<span>⚡ 버프 추가 +${(Number(data.reward_doldolcoin)-Number(data.base_reward_doldolcoin)).toLocaleString()} (${Number(data.coin_multiplier || 1)}배)</span>` : ""}` : ""}
           ${Number(data.reward_exp || 0) > 0 ? `<span>✨ +${Number(data.reward_exp).toLocaleString()} EXP</span>` : ""}
           ${data.title ? `<span>🏷️ ${escapeHtml(data.title)}</span>` : ""}
         </div>
