@@ -36,10 +36,12 @@ background-size:56px 56px;transform:perspective(700px) rotateX(55deg) translateY
 @keyframes gridMove{to{transform:perspective(700px) rotateX(55deg) translateY(31%)}}
 @keyframes orbFloat{50%{transform:translate3d(18px,-24px,0) scale(1.08)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes welcomeOut{to{opacity:0;transform:translateY(-16px) scale(.985);filter:blur(5px)}}
 @keyframes pop{from{opacity:0;transform:translateY(10px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes pulse{50%{box-shadow:0 0 0 9px rgba(59,130,246,0)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes shimmer{to{background-position:-200% 0}}
+.hero.leaving,.message.leaving{animation:welcomeOut .28s cubic-bezier(.2,.75,.25,1) forwards;pointer-events:none}
 
 .app{min-height:100svh;display:flex;flex-direction:column}
 .nav{position:sticky;top:0;z-index:50;height:72px;display:flex;align-items:center;justify-content:space-between;
@@ -92,11 +94,12 @@ background:rgba(9,18,36,.9);border:1px solid rgba(148,163,184,.18);box-shadow:va
 .input-shell:focus-within{border-color:rgba(96,165,250,.55);box-shadow:0 0 0 4px rgba(59,130,246,.08),var(--shadow)}
 .input{flex:1;min-width:0;max-height:150px;resize:none;border:0;outline:0;background:transparent;color:#f8fafc;padding:9px 0;font-size:14px;line-height:1.55}
 .input::placeholder{color:#64748b}
-.send,.stop{width:43px;height:43px;flex:0 0 43px;border-radius:13px;display:grid;place-items:center;color:#fff;cursor:pointer;transition:.2s}
-.send{background:linear-gradient(145deg,#3b82f6,#1d4ed8);box-shadow:0 8px 25px rgba(37,99,235,.22);font-size:19px}
-.send:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(37,99,235,.32)}.send:active,.stop:active{transform:scale(.94)}
-.stop{background:#991b1b;font-size:15px}.stop:hover{background:#b91c1c}
-.send:disabled{opacity:.55;cursor:wait}.fineprint{text-align:center;color:#475569;font-size:9px;margin-top:7px}
+.send{width:44px;height:44px;flex:0 0 44px;border-radius:14px;display:grid;place-items:center;color:#fff;cursor:pointer;background:linear-gradient(145deg,#60a5fa,#2563eb 58%,#1d4ed8);border:1px solid rgba(147,197,253,.4);box-shadow:0 8px 25px rgba(37,99,235,.25),inset 0 1px rgba(255,255,255,.2);font-size:19px;transition:background .24s ease,box-shadow .24s ease,transform .24s cubic-bezier(.2,.8,.2,1),border-radius .24s ease}
+.send:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(37,99,235,.35)}.send:active{transform:scale(.94)}
+.send.is-stop{background:linear-gradient(145deg,#fb7185,#dc2626 65%,#991b1b);border-color:rgba(252,165,165,.45);box-shadow:0 8px 25px rgba(220,38,38,.23),inset 0 1px rgba(255,255,255,.17)}
+.send.is-stop:hover{background:linear-gradient(145deg,#fda4af,#ef4444 65%,#b91c1c)}
+.send .button-icon{display:inline-block;transition:transform .22s ease}.send:hover .button-icon{transform:scale(1.08)}
+.send:focus-visible{outline:3px solid rgba(147,197,253,.8);outline-offset:3px}.send:disabled{opacity:.55;cursor:wait}.fineprint{text-align:center;color:#475569;font-size:9px;margin-top:7px}
 
 @media(max-width:700px){
  .nav{height:64px;padding:0 14px}.brand-icon{width:37px;height:37px;border-radius:12px;font-size:20px}.brand-name{font-size:16px}.status{padding:7px 9px}
@@ -152,8 +155,7 @@ background:rgba(9,18,36,.9);border:1px solid rgba(148,163,184,.18);box-shadow:va
     </div>
     <form class="input-shell" id="doriAiForm">
       <textarea class="input" id="doriAiInput" rows="1" maxlength="2000" placeholder="돌이 AI에게 물어보세요..." autocomplete="off" aria-label="메시지 입력"></textarea>
-      <button type="submit" class="send" id="doriAiSend" aria-label="전송">➤</button>
-      <button type="button" class="stop" id="doriAiStop" aria-label="생성 중지" hidden>■</button>
+      <button type="submit" class="send" id="doriAiSend" aria-label="메시지 전송" title="메시지 전송"><span class="button-icon" aria-hidden="true">➤</span></button>
     </form>
     <div class="fineprint">돌이 AI는 돌이사이트의 전용 AI입니다.</div>
   </div>
@@ -182,7 +184,8 @@ const chat = $("#doriAiChat");
 const form = $("#doriAiForm");
 const input = $("#doriAiInput");
 const send = $("#doriAiSend");
-const stop = $("#doriAiStop");
+const welcome = $("#welcome");
+let conversationStarted = false;
 const statusBox = $("#connectionStatus");
 const statusText = $("#statusText");
 const modeDesc = $("#modeDesc");
@@ -311,10 +314,30 @@ async function updateConnectionStatus() {
 function setGeneratingState(value) {
   generating = value;
   input.disabled = value;
-  send.hidden = value;
-  stop.hidden = !value;
+  // 전송과 취소를 같은 버튼에서 전환한다. 생성 중에도 버튼은 활성 상태다.
+  send.disabled = false;
+  send.classList.toggle("is-stop", value);
+  send.innerHTML = value
+    ? '<span class="button-icon" aria-hidden="true">■</span>'
+    : '<span class="button-icon" aria-hidden="true">➤</span>';
+  send.setAttribute("aria-label", value ? "답변 생성 취소" : "메시지 전송");
+  send.setAttribute("title", value ? "답변 생성 취소" : "메시지 전송");
   document.querySelectorAll(".mode").forEach(b => b.disabled = value);
   input.placeholder = value ? "돌이가 답변을 생성하고 있어요..." : "돌이 AI에게 물어보세요...";
+}
+
+function dismissWelcomeOnFirstMessage() {
+  if (conversationStarted) return;
+  conversationStarted = true;
+  if (welcome) {
+    welcome.classList.add("leaving");
+    window.setTimeout(() => welcome.remove(), 300);
+  }
+  const greeting = chat.querySelector(".message.bot");
+  if (greeting) {
+    greeting.classList.add("leaving");
+    window.setTimeout(() => greeting.remove(), 300);
+  }
 }
 
 function scrollToBottom(smooth = true) {
@@ -561,7 +584,11 @@ async function askDoriAI(message, bubble) {
   return fullAnswer;
 }
 
-stop.addEventListener("click", () => {
+// 하나의 전송 버튼은 생성 중 취소 버튼 역할을 한다.
+send.addEventListener("click", (event) => {
+  if (!generating) return;
+  event.preventDefault();
+  event.stopPropagation();
   if (controller) controller.abort();
 });
 
@@ -573,6 +600,7 @@ form.addEventListener("submit", async (event) => {
   const message = input.value.trim();
   if (!message) return;
 
+  dismissWelcomeOnFirstMessage();
   addMessage(message, "user");
   input.value = "";
   autoResize();
