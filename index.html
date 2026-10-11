@@ -794,6 +794,50 @@ body.achievement-bg-doronum #achievementFullSiteEffect{
   .포털비주얼 *,.포털비주얼 *::before,.포털비주얼 *::after{animation:none!important;transition:none!important}
 }
 
+/* ===== SCROLL JANK FIX: MOBILE BACKGROUND PAINT + CARD COMPOSITING ===== */
+/* A full-viewport fixed masked overlay can be repainted during every scroll on mobile.
+   Keep the dark navy atmosphere, but make this decorative layer viewport-static and cheap. */
+body::before{
+  background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.045),transparent 42%) !important;
+  background-size:auto !important;
+  mask-image:none !important;
+  -webkit-mask-image:none !important;
+}
+#사이트::after{
+  filter:none !important;
+  background:radial-gradient(circle,rgba(99,92,255,.055) 0%,transparent 72%) !important;
+}
+@media(max-width:768px){
+  html,body{scroll-behavior:auto !important}
+  body::before{
+    position:absolute !important;
+    inset:0 0 auto 0 !important;
+    height:100vh !important;
+    background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.035),transparent 48%) !important;
+    mask-image:none !important;
+    -webkit-mask-image:none !important;
+  }
+  #사이트::after{display:none !important}
+  #사이트{isolation:auto !important}
+  .메뉴영역{contain:layout style}
+  .메뉴카드{
+    contain:layout paint;
+    box-shadow:0 5px 14px rgba(0,0,0,.16) !important;
+    background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025)) !important;
+  }
+  .메뉴카드::before{display:none !important}
+  .메뉴카드 .이미지틀,
+  .메뉴카드 .이미지틀:hover{
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.07) !important;
+  }
+  .포털빛{opacity:.55 !important}
+  .포털아이콘{box-shadow:0 5px 12px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.12) !important}
+  .메뉴카드:hover{transform:none !important}
+}
+@media(max-width:420px){
+  .메뉴카드{border-radius:18px !important}
+}
+
 /* ===== DEEP MOBILE/LOW-END DEVICE PERFORMANCE FIX ===== */
 /* Preserve the existing card art/colors while removing continuous GPU-heavy painting. */
 .메뉴카드{
