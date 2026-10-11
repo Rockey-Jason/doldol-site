@@ -103,6 +103,20 @@ async function load() {
       return;
     }
 
+    const { data: boostUser, error: boostError } = await supabase
+      .from("users")
+      .select("doldolcoin_multiplier, doldolcoin_multiplier_expires_at")
+      .eq("user_id", session.user.id)
+      .maybeSingle();
+
+    const boostExpiry = boostUser?.doldolcoin_multiplier_expires_at
+      ? new Date(boostUser.doldolcoin_multiplier_expires_at)
+      : null;
+    const boostActive = !boostError && boostExpiry && boostExpiry.getTime() > Date.now();
+    const activeMultiplier = boostActive
+      ? Math.max(1, Number(boostUser.doldolcoin_multiplier) || 1)
+      : 1;
+
     const { data: definitions, error: definitionsError } = await supabase
       .from("daily_mission_definitions")
       .select("*")
@@ -145,7 +159,11 @@ async function load() {
     if (percentText) percentText.textContent = percent + "%";
     if (ring) ring.style.setProperty("--p", percent);
 
-    container.innerHTML = missions
+    const boostBanner = activeMultiplier > 1
+      ? '<div role="status" style="margin:0 0 16px;padding:14px 16px;border:1px solid rgba(94,221,255,.42);border-radius:16px;background:linear-gradient(120deg,rgba(20,96,145,.24),rgba(19,36,83,.65));color:#eafaff;box-shadow:0 0 24px rgba(45,190,255,.10)"><strong style="display:block;font-size:15px">⚡ 돌돌코인 ' + activeMultiplier + '배 버프 활성화</strong><span style="display:block;margin-top:5px;font-size:12px;color:#b8d7ef">일일 미션 보상도 ' + activeMultiplier + '배로 지급됩니다 · 종료: ' + boostExpiry.toLocaleString("ko-KR") + '</span></div>'
+      : '';
+
+    container.innerHTML = boostBanner + missions
       .map((mission) => {
         const row = map.get(mission.mission_key);
         const completed = !!row?.completed_at;
@@ -174,8 +192,10 @@ async function load() {
           "</span>" +
           "</div>" +
           '<div class="reward">+' +
-          Number(mission.reward_coins || 0).toLocaleString() +
-          ' 🪙 <span class="check">' +
+          Math.floor(Number(mission.reward_coins || 0) * activeMultiplier).toLocaleString() +
+          ' 🪙' +
+          (activeMultiplier > 1 ? '<small style="display:block;margin-top:3px;color:#8ee9ff;font-size:11px;font-weight:800">⚡ ' + activeMultiplier + '배 적용</small>' : '') +
+          ' <span class="check">' +
           (claimed ? "✓" : "") +
           "</span></div>" +
           "</article>"
