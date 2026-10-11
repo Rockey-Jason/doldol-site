@@ -1753,12 +1753,17 @@ function 보상문구생성(data) {
         return `🏅 특별 칭호 강화 · ${HTML문자열(data.special_title)}`;
     }
     const 보상코인 = Number(data.reward_coins) || 0;
+    const 기본보상코인 = Number(data.base_reward_coins ?? 보상코인) || 0;
+    const 추가보상코인 = Math.max(0, 보상코인 - 기본보상코인);
+    const 배수 = Math.max(1, Number(data.coin_multiplier) || 1);
     const 보상EXP = Number(data.reward_exp) || 0;
     const 내용 = [];
 
     if (보상코인 > 0) {
         내용.push(
-            `+${보상코인.toLocaleString("ko-KR")} 돌돌코인`
+            추가보상코인 > 0
+              ? `+${보상코인.toLocaleString("ko-KR")} 돌돌코인 (기본 ${기본보상코인.toLocaleString("ko-KR")} + 버프 ${추가보상코인.toLocaleString("ko-KR")}, ${배수}배)`
+              : `+${보상코인.toLocaleString("ko-KR")} 돌돌코인`
         );
     }
 
