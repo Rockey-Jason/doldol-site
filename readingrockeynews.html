@@ -3677,10 +3677,31 @@ async function 이벤트확인() {
     이벤트.style.display = "block";
     $("이벤트제목").textContent = "🎉 " + data.event_name;
     $("이벤트설명").textContent = data.description || "";
-    const multiplierEvent = ["coin_multiplier","multiplier","coin_boost"].includes(data.event_type) || Number(data.reward_multiplier || 1) > 1;
-    $("이벤트보상").textContent = multiplierEvent
-        ? "🎁 보상: 돌돌코인 수급량 " + Number(data.reward_multiplier || 2) + "배 · " + Number(data.reward_duration_minutes || 60) + "분 지속"
-        : "🎁 보상: " + Number(data.reward_coins || 0).toLocaleString() + " 돌돌코인";
+    const multiplierEvent = ["coin_multiplier","multiplier","coin_boost"].includes(data.event_type);
+    let activeCoinMultiplier = 1;
+    let boostExpiresAt = null;
+    try {
+        const { data: boostInfo } = await supabase
+            .from("users")
+            .select("doldolcoin_multiplier,doldolcoin_multiplier_expires_at")
+            .eq("user_id", 현재사용자.id)
+            .maybeSingle();
+        boostExpiresAt = boostInfo?.doldolcoin_multiplier_expires_at || null;
+        if (boostExpiresAt && new Date(boostExpiresAt).getTime() > Date.now()) {
+            activeCoinMultiplier = Math.max(1, Number(boostInfo.doldolcoin_multiplier) || 1);
+        }
+    } catch (boostError) {
+        console.warn("돌돌코인 버프 상태 확인 오류:", boostError);
+    }
+    if (multiplierEvent) {
+        $("이벤트보상").textContent = "🎁 보상: 돌돌코인 수급량 " + Number(data.reward_multiplier || 2) + "배 · " + Number(data.reward_duration_minutes || 60) + "분 지속";
+    } else {
+        const baseReward = Math.max(0, Number(data.reward_coins) || 0);
+        const shownReward = Math.floor(baseReward * activeCoinMultiplier);
+        $("이벤트보상").textContent = activeCoinMultiplier > 1
+            ? "🎁 보상: " + shownReward.toLocaleString() + " 돌돌코인 (" + baseReward.toLocaleString() + " × " + activeCoinMultiplier + "배 버프)"
+            : "🎁 보상: " + baseReward.toLocaleString() + " 돌돌코인";
+    }
     $("이벤트문제").textContent = data.quiz_question || "특별 이벤트 퀴즈";
     const options = Array.isArray(data.quiz_options) ? data.quiz_options : [];
     const optionBox = $("이벤트선택지");
@@ -3760,7 +3781,7 @@ async function 이벤트참여상태확인() {
     }
     const used = Number(data.attempts_used || 0);
     const left = Number(data.attempts_left || 0);
-    $("이벤트기회").textContent = "도전 기회: " + left + "회 남음 (사용 " + used + "/5회)";
+    $("이벤트기회").textContent = "도전 기회: " + left + "회 남음 (사용 " + used + "/2회)";
     if (data.completed) {
         $("이벤트참여").disabled = true;
         $("이벤트참여").textContent = "이벤트 보상 획득 완료";
@@ -3768,7 +3789,7 @@ async function 이벤트참여상태확인() {
     } else if (left <= 0) {
         $("이벤트참여").disabled = true;
         $("이벤트참여").textContent = "도전 기회 소진";
-        $("이벤트결과").textContent = "도전 기회 5회를 모두 사용했어요.";
+        $("이벤트결과").textContent = "도전 기회 2회를 모두 사용했어요.";
     } else {
         $("이벤트참여").disabled = false;
         $("이벤트참여").textContent = "정답 제출하기";
@@ -3815,7 +3836,7 @@ async function 이벤트참여하기() {
     if (data?.already_completed || data?.out_of_attempts) {
         await 이벤트참여상태확인();
     } else {
-        $("이벤트기회").textContent = "도전 기회: " + Number(data?.attempts_left ?? 0) + "회 남음 (사용 " + Number(data?.attempts_used ?? 0) + "/5회)";
+        $("이벤트기회").textContent = "도전 기회: " + Number(data?.attempts_left ?? 0) + "회 남음 (사용 " + Number(data?.attempts_used ?? 0) + "/2회)";
         if (Number(data?.attempts_left || 0) <= 0) {
             버튼.disabled = true;
             버튼.textContent = "도전 기회 소진";
