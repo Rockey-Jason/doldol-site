@@ -739,6 +739,61 @@ body.achievement-bg-doronum #achievementFullSiteEffect{
   #achievementCelebration,#achievementCelebration *{animation:none!important;transition:opacity .2s ease!important}
 }
 
+/* ===== PORTAL CARD PERFORMANCE OPTIMIZATION ===== */
+/* Keep the same premium colors and layout, but avoid continuously repainting blurred/glowing layers. */
+.포털빛{
+  filter:none !important;
+  animation:none !important;
+  opacity:.78;
+  transform:none !important;
+  background:radial-gradient(circle, var(--portal-glow,rgba(105,120,255,.28)) 0%, transparent 72%) !important;
+}
+.포털링{
+  animation:none !important;
+  box-shadow:0 0 10px color-mix(in srgb,var(--portal-glow,rgba(105,120,255,.18)) 55%,transparent) !important;
+  transform:scale(1.12);
+  opacity:.34;
+}
+.포털링.두번째{
+  transform:scale(1.62);
+  opacity:.14;
+}
+.포털아이콘{
+  animation:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  box-shadow:0 12px 26px rgba(0,0,0,.25), inset 0 1px rgba(255,255,255,.18) !important;
+}
+.포털아이콘::after,
+.포털점,
+.포털장식{
+  animation:none !important;
+}
+.포털점{box-shadow:0 0 5px var(--portal-dot,#8cddff) !important}
+.메뉴카드:not(.돌돌증권카드):not(.돌이AI카드) .이미지틀::before{
+  animation:none !important;
+  transform:translateX(-120%);
+}
+.메뉴카드:not(.돌돌증권카드):not(.돌이AI카드) .이미지틀::after{
+  transition:opacity .2s ease !important;
+}
+.메뉴카드 .이미지틀{
+  contain:paint;
+}
+@media(max-width:650px){
+  .포털상태{
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+    background:rgba(4,7,24,.88) !important;
+  }
+  .메뉴카드 .이미지틀{
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.08),0 0 10px color-mix(in srgb,var(--portal-glow,transparent) 55%,transparent) !important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .포털비주얼 *,.포털비주얼 *::before,.포털비주얼 *::after{animation:none!important;transition:none!important}
+}
+
 /* ===== 6-TIER ACHIEVEMENT RARITY SYSTEM ===== */
 #achievementPopup{--rarity:#c9d2e7;--rarity2:#7f8ba7;--rarity-soft:rgba(201,210,231,.17);--rarity-border:rgba(201,210,231,.4);--rarity-text:#edf2ff;--rarity-shadow:rgba(144,162,199,.2);position:fixed;left:50%;top:22px;width:min(540px,calc(100vw - 28px));padding:0;overflow:hidden;border:1px solid var(--rarity-border);border-radius:26px;background:linear-gradient(145deg,rgba(20,24,62,.98),rgba(7,9,28,.97));color:#fff;font-family:'HancomMalrangmalrang','Jua',sans-serif;text-align:left;z-index:999999;opacity:0;visibility:hidden;transform:translate(-50%,-42px) scale(.9);box-shadow:0 28px 90px rgba(0,0,0,.62),0 0 42px var(--rarity-shadow),inset 0 1px rgba(255,255,255,.12);backdrop-filter:blur(26px);-webkit-backdrop-filter:blur(26px);transition:opacity .38s ease,transform .7s cubic-bezier(.22,1,.36,1),visibility 0s linear .7s}
 #achievementPopup.show{opacity:1;visibility:visible;transform:translate(-50%,0) scale(1);transition:opacity .38s ease,transform .7s cubic-bezier(.22,1,.36,1)}
