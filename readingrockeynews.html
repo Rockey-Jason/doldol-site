@@ -3678,6 +3678,7 @@ async function 이벤트확인() {
     $("이벤트제목").textContent = "🎉 " + data.event_name;
     $("이벤트설명").textContent = data.description || "";
     const multiplierEvent = ["coin_multiplier","multiplier","coin_boost"].includes(data.event_type);
+    const balanceMultiplierEvent = data.event_type === "balance_multiplier";
     let activeCoinMultiplier = 1;
     let boostExpiresAt = null;
     try {
@@ -3695,6 +3696,8 @@ async function 이벤트확인() {
     }
     if (multiplierEvent) {
         $("이벤트보상").textContent = "🎁 보상: 돌돌코인 수급량 " + Number(data.reward_multiplier || 2) + "배 · " + Number(data.reward_duration_minutes || 60) + "분 지속";
+    } else if (balanceMultiplierEvent) {
+        $("이벤트보상").textContent = "🎁 보상: 정답 제출 시 현재 보유 돌돌코인 × " + Number(data.reward_multiplier || 1) + "배 (1회 지급)";
     } else {
         const baseReward = Math.max(0, Number(data.reward_coins) || 0);
         const shownReward = Math.floor(baseReward * activeCoinMultiplier);
