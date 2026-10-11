@@ -194,7 +194,7 @@ async function load() {
           '<div class="reward">+' +
           Math.floor(Number(mission.reward_coins || 0) * activeMultiplier).toLocaleString() +
           ' 🪙' +
-          (activeMultiplier > 1 ? '<small style="display:block;margin-top:3px;color:#8ee9ff;font-size:11px;font-weight:800">⚡ ' + activeMultiplier + '배 적용</small>' : '') +
+          (activeMultiplier > 1 ? '<small style="display:block;margin-top:3px;color:#8ee9ff;font-size:11px;font-weight:800">⚡ 버프 추가 +' + Math.floor(Number(mission.reward_coins || 0) * (activeMultiplier - 1)).toLocaleString() + ' (' + activeMultiplier + '배)</small>' : '') +
           ' <span class="check">' +
           (claimed ? "✓" : "") +
           "</span></div>" +
