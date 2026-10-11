@@ -4727,5 +4727,32 @@ if ("serviceWorker" in navigator) {
 })();
 </script>
 
+
+<style id="dori-natural-card-hover">
+/* Natural, lightweight lift on desktop pointer hover */
+@media (hover: hover) and (pointer: fine) and (min-width: 769px) {
+  .메뉴카드 {
+    transform: translateY(0) scale(1) !important;
+    transition:
+      transform 280ms cubic-bezier(.22, 1, .36, 1),
+      box-shadow 280ms ease,
+      border-color 220ms ease !important;
+  }
+  .메뉴카드:hover,
+  .메뉴카드:focus-visible {
+    transform: translateY(-6px) scale(1.012) !important;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, .28) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .메뉴카드,
+  .메뉴카드:hover,
+  .메뉴카드:focus-visible {
+    transition: none !important;
+    transform: none !important;
+  }
+}
+</style>
+
 </body>
 </html>
