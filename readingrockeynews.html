@@ -1112,6 +1112,26 @@ textarea {
 
 }
 
+#이벤트퀴즈 {
+    margin-top: 22px;
+    padding: 20px;
+    border: 1px solid rgba(255,215,120,.16);
+    border-radius: 18px;
+    background: rgba(8,8,30,.34);
+}
+#이벤트퀴즈 h3 { margin: 0 0 12px; color: #ffe3a1; font-size: 22px; }
+#이벤트문제 { font-size: 18px; line-height: 1.65; }
+#이벤트선택지 { display: grid; gap: 10px; margin: 16px 0; }
+#이벤트선택지 label {
+    display: flex; align-items: center; gap: 10px; padding: 12px 14px;
+    border: 1px solid rgba(255,255,255,.10); border-radius: 12px;
+    background: rgba(255,255,255,.035); cursor: pointer;
+}
+#이벤트선택지 label:has(input:checked) { border-color: rgba(255,215,120,.6); background: rgba(255,215,120,.10); }
+#이벤트선택지 input { accent-color: #ffd778; }
+#이벤트기회 { color: rgba(255,230,180,.78); font-size: 14px; }
+
+
 
 /* =====================================================
    하단 네비게이션
@@ -2394,35 +2414,17 @@ textarea {
         ============================================== -->
 
         <div id="이벤트">
-
-
-            <h2 id="이벤트제목">
-                🎉 이벤트
-            </h2>
-
-
+            <h2 id="이벤트제목">🎉 이벤트</h2>
             <p id="이벤트설명"></p>
-
-
-            <p>
-
-                🎁 보상:
-                <strong id="이벤트보상"></strong>
-                돌돌코인
-
-            </p>
-
-
-            <button id="이벤트참여">
-
-                이벤트 참여하기
-
-            </button>
-
-
-            <p id="이벤트결과"></p>
-
-
+            <p id="이벤트보상"></p>
+            <div id="이벤트퀴즈" class="이벤트퀴즈">
+                <h3>💎 특별 이벤트 퀴즈</h3>
+                <p id="이벤트문제"></p>
+                <div id="이벤트선택지"></div>
+                <p id="이벤트기회">도전 기회: 5회</p>
+                <button id="이벤트참여" type="button">정답 제출하기</button>
+            </div>
+            <p id="이벤트결과" aria-live="polite"></p>
         </div>
 
 
@@ -3605,286 +3607,124 @@ function 제출버튼잠금(잠금) {
 ===================================================== */
 
 async function 이벤트확인() {
-
-    const 이벤트 =
-        $("이벤트");
-
-
-    현재이벤트 =
-        null;
-
-
-    if (
-        신문번호 % 10 !==
-        0
-    ) {
-
-        이벤트.style.display =
-            "none";
-
+    const 이벤트 = $("이벤트");
+    현재이벤트 = null;
+    if (신문번호 % 10 !== 0) {
+        이벤트.style.display = "none";
         return;
-
     }
-
-
-    const {
-
-        data,
-        error
-
-    } =
-        await supabase
-
-            .from("rockey_news_events")
-
-            .select("*")
-
-            .eq(
-                "news_number",
-                신문번호
-            )
-
-            .eq(
-                "enabled",
-                true
-            )
-
-            .maybeSingle();
-
-
-    if (error) {
-
-        console.error(
-            "이벤트 조회 오류:",
-            error
-        );
-
-        이벤트.style.display =
-            "none";
-
+    const { data, error } = await supabase
+        .from("rockey_news_events")
+        .select("id,news_number,event_name,description,event_type,reward_coins,reward_multiplier,reward_duration_minutes,quiz_question,quiz_options,max_attempts,enabled")
+        .eq("news_number", 신문번호)
+        .eq("enabled", true)
+        .maybeSingle();
+    if (error || !data) {
+        if (error) console.error("이벤트 조회 오류:", error);
+        이벤트.style.display = "none";
         return;
-
     }
-
-
-    if (!data) {
-
-        이벤트.style.display =
-            "none";
-
-        return;
-
-    }
-
-
-    현재이벤트 =
-        data;
-
-
-    이벤트.style.display =
-        "block";
-
-
-    $("이벤트제목").textContent =
-        "🎉 " + data.event_name;
-
-
-    $("이벤트설명").textContent =
-        data.description || "";
-
-
-    $("이벤트보상").textContent =
-        Number(
-            data.reward_coins || 0
-        ).toLocaleString();
-
-
+    현재이벤트 = data;
+    이벤트.style.display = "block";
+    $("이벤트제목").textContent = "🎉 " + data.event_name;
+    $("이벤트설명").textContent = data.description || "";
+    const multiplierEvent = ["coin_multiplier","multiplier","coin_boost"].includes(data.event_type) || Number(data.reward_multiplier || 1) > 1;
+    $("이벤트보상").textContent = multiplierEvent
+        ? "🎁 보상: 돌돌코인 수급량 " + Number(data.reward_multiplier || 2) + "배 · " + Number(data.reward_duration_minutes || 60) + "분 지속"
+        : "🎁 보상: " + Number(data.reward_coins || 0).toLocaleString() + " 돌돌코인";
+    $("이벤트문제").textContent = data.quiz_question || "특별 이벤트 퀴즈";
+    const options = Array.isArray(data.quiz_options) ? data.quiz_options : [];
+    const optionBox = $("이벤트선택지");
+    optionBox.replaceChildren();
+    options.forEach((option, index) => {
+        const label = document.createElement("label");
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "이벤트정답";
+        radio.value = String(option.value ?? option.label ?? index);
+        radio.required = true;
+        const span = document.createElement("span");
+        span.textContent = String(option.label ?? option.value ?? "");
+        label.append(radio, span);
+        optionBox.appendChild(label);
+    });
     await 이벤트참여상태확인();
-
 }
 
-
-/* =====================================================
-   이벤트 참여 상태
-===================================================== */
-
+/* 이벤트 퀴즈 진행 상태와 남은 기회를 서버에서 확인 */
 async function 이벤트참여상태확인() {
-
-    if (!현재이벤트) {
-
+    if (!현재이벤트) return;
+    const { data, error } = await supabase.rpc("get_news_event_quiz_status", { p_event_id: 현재이벤트.id });
+    if (error || !data?.success) {
+        $("이벤트결과").textContent = error?.message || data?.message || "퀴즈 상태를 확인할 수 없습니다.";
         return;
-
     }
-
-
-    const {
-
-        data,
-        error
-
-    } =
-        await supabase
-
-            .from("event_participations")
-
-            .select(
-                "reward_claimed"
-            )
-
-            .eq(
-                "user_id",
-                현재사용자.id
-            )
-
-            .eq(
-                "event_id",
-                현재이벤트.id
-            )
-
-            .maybeSingle();
-
-
-    if (error) {
-
-        $("이벤트결과").textContent =
-            "이벤트 참여 정보를 확인할 수 없습니다.";
-
-        return;
-
+    const used = Number(data.attempts_used || 0);
+    const left = Number(data.attempts_left || 0);
+    $("이벤트기회").textContent = "도전 기회: " + left + "회 남음 (사용 " + used + "/5회)";
+    if (data.completed) {
+        $("이벤트참여").disabled = true;
+        $("이벤트참여").textContent = "이벤트 보상 획득 완료";
+        $("이벤트결과").textContent = "🎉 이미 퀴즈를 완료하고 보상을 획득했어요!";
+    } else if (left <= 0) {
+        $("이벤트참여").disabled = true;
+        $("이벤트참여").textContent = "도전 기회 소진";
+        $("이벤트결과").textContent = "도전 기회 5회를 모두 사용했어요.";
+    } else {
+        $("이벤트참여").disabled = false;
+        $("이벤트참여").textContent = "정답 제출하기";
+        $("이벤트결과").textContent = data.multiplier > 1
+            ? "⚡ 현재 돌돌코인 수급량 " + data.multiplier + "배 효과가 적용 중입니다."
+            : "";
     }
-
-
-    if (
-        data?.reward_claimed ===
-        true
-    ) {
-
-        $("이벤트참여").disabled =
-            true;
-
-        $("이벤트참여").textContent =
-            "보상 수령 완료";
-
-        $("이벤트결과").textContent =
-            "🎉 이미 보상을 받았습니다.";
-
-    }
-
-    else {
-
-        $("이벤트참여").disabled =
-            false;
-
-        $("이벤트참여").textContent =
-            "이벤트 참여하기";
-
-        $("이벤트결과").textContent =
-            "";
-
-    }
-
 }
 
-
-/* =====================================================
-   이벤트 참여
-===================================================== */
-
+/* 정답 검증과 보상 지급은 Supabase RPC에서 원자적으로 처리 */
 async function 이벤트참여하기() {
-
-    if (!현재이벤트) {
-
+    if (!현재이벤트) return;
+    const 선택 = document.querySelector('input[name="이벤트정답"]:checked');
+    if (!선택) {
+        $("이벤트결과").textContent = "먼저 특별 퀴즈의 답을 선택해 주세요.";
         return;
-
     }
-
-
-    const 버튼 =
-        $("이벤트참여");
-
-
-    버튼.disabled =
-        true;
-
-    버튼.textContent =
-        "보상 지급 중...";
-
-
-    const {
-
-        data,
-        error
-
-    } =
-        await supabase.rpc(
-
-            "claim_news_event",
-
-            {
-
-                p_event_id:
-                    현재이벤트.id
-
-            }
-
-        );
-
-
-    if (error) {
-
-        console.error(
-            "이벤트 보상 오류:",
-            error
-        );
-
-
-        버튼.disabled =
-            false;
-
-        버튼.textContent =
-            "이벤트 참여하기";
-
-
-        $("이벤트결과").textContent =
-            error.message ||
-            "보상 지급에 실패했습니다.";
-
-        return;
-
-    }
-
-
-    if (
-        !data ||
-        data.success !== true
-    ) {
-
-        if (data?.already_claimed === true) {
-            버튼.disabled = true;
-            버튼.textContent = "보상 수령 완료";
-            $("이벤트결과").textContent =
-                "🎉 이미 보상을 받았습니다.";
-            return;
-        }
-
-        버튼.disabled = false;
-        버튼.textContent = "이벤트 참여하기";
-
-        $("이벤트결과").textContent =
-            data?.message || "보상 지급에 실패했습니다.";
-
-        return;
-
-    }
-
+    const 버튼 = $("이벤트참여");
     버튼.disabled = true;
-    버튼.textContent = "보상 수령 완료";
-
-    $("이벤트결과").textContent =
-        `🎉 ${
-            Number(data.reward_coins).toLocaleString()
-        } 돌돌코인을 받았습니다!`;
-
+    버튼.textContent = "정답 확인 중...";
+    const { data, error } = await supabase.rpc("submit_news_event_quiz", {
+        p_event_id: 현재이벤트.id,
+        p_answer: 선택.value
+    });
+    if (error) {
+        console.error("이벤트 퀴즈 제출 오류:", error);
+        $("이벤트결과").textContent = error.message || "답안을 제출하지 못했습니다.";
+        await 이벤트참여상태확인();
+        return;
+    }
+    if (data?.success && data.correct) {
+        버튼.disabled = true;
+        버튼.textContent = "이벤트 보상 획득 완료";
+        if (data.reward_type === "coin_multiplier") {
+            const until = data.expires_at ? new Date(data.expires_at).toLocaleString("ko-KR") : "";
+            $("이벤트결과").textContent = "🎉 정답! 돌돌코인 수급량 " + data.multiplier + "배 효과 획득! 종료 시각: " + until;
+        } else {
+            $("이벤트결과").textContent = "🎉 정답! " + Number(data.reward_coins || 0).toLocaleString() + " 돌돌코인을 받았어요!";
+        }
+        $("이벤트기회").textContent = "도전 기회: " + Number(data.attempts_left || 0) + "회 남음";
+        return;
+    }
+    $("이벤트결과").textContent = data?.message || "정답이 아닙니다.";
+    if (data?.already_completed || data?.out_of_attempts) {
+        await 이벤트참여상태확인();
+    } else {
+        $("이벤트기회").textContent = "도전 기회: " + Number(data?.attempts_left ?? 0) + "회 남음 (사용 " + Number(data?.attempts_used ?? 0) + "/5회)";
+        if (Number(data?.attempts_left || 0) <= 0) {
+            버튼.disabled = true;
+            버튼.textContent = "도전 기회 소진";
+        } else {
+            버튼.disabled = false;
+            버튼.textContent = "다시 도전하기";
+        }
+    }
 }
 
 
