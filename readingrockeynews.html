@@ -1112,6 +1112,15 @@ textarea {
 
 }
 
+
+.이벤트관리 { margin-top:22px; padding:20px; border:1px solid rgba(120,170,255,.28); border-radius:16px; background:rgba(10,22,55,.48); }
+.이벤트관리 h3 { margin:0 0 14px; color:#cbd8ff; }
+.이벤트관리 label { display:grid; gap:7px; margin:12px 0; color:#dfe5ff; font-size:14px; }
+.이벤트관리 input,.이벤트관리 textarea,.이벤트관리 select { width:100%; padding:10px 12px; border:1px solid rgba(255,255,255,.16); border-radius:10px; color:#fff; background:#111333; font:inherit; }
+.이벤트관리선택지 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+#이벤트설정저장 { width:100%; margin-top:8px; padding:12px; border:0; border-radius:11px; color:#10122a; background:linear-gradient(135deg,#d6ddff,#8f9eff); font-weight:700; cursor:pointer; }
+.이벤트관리도움말 { color:#aeb8db; font-size:12px; line-height:1.5; }
+@media(max-width:600px){ .이벤트관리선택지{grid-template-columns:1fr;} }
 #이벤트퀴즈 {
     margin-top: 22px;
     padding: 20px;
@@ -2425,6 +2434,44 @@ textarea {
                 <button id="이벤트참여" type="button">정답 제출하기</button>
             </div>
             <p id="이벤트결과" aria-live="polite"></p>
+            <div id="이벤트관리" class="이벤트관리" style="display:none">
+                <h3>🛠️ 관리자 이벤트 설정</h3>
+                <label>보상 종류
+                    <select id="이벤트보상종류">
+                        <option value="coin">돌돌코인 고정 보상</option>
+                        <option value="coin_multiplier">돌돌코인 수급량 배수</option>
+                    </select>
+                </label>
+                <label>고정 보상 돌돌코인
+                    <input id="이벤트코인보상" type="number" min="0" step="100" value="10000">
+                </label>
+                <label>수급량 배수
+                    <select id="이벤트배수">
+                        <option value="2">2배</option>
+                        <option value="5">5배</option>
+                    </select>
+                </label>
+                <label>효과 지속 시간 (분)
+                    <input id="이벤트지속시간" type="number" min="1" max="525600" value="60">
+                </label>
+                <label>특별 퀴즈 문제
+                    <textarea id="이벤트관리문제" rows="2"></textarea>
+                </label>
+                <div class="이벤트관리선택지">
+                    <label>A 선택지 <input id="이벤트선택A" type="text"></label>
+                    <label>B 선택지 <input id="이벤트선택B" type="text"></label>
+                    <label>C 선택지 <input id="이벤트선택C" type="text"></label>
+                    <label>D 선택지 <input id="이벤트선택D" type="text"></label>
+                </div>
+                <label>정답
+                    <select id="이벤트관리정답">
+                        <option value="A">A</option><option value="B">B</option>
+                        <option value="C">C</option><option value="D">D</option>
+                    </select>
+                </label>
+                <button id="이벤트설정저장" type="button">이벤트 설정 저장</button>
+                <p class="이벤트관리도움말">퀴즈 도전 기회는 보안상 5회로 고정됩니다. 배수 보상은 만료 시 자동으로 1배가 됩니다.</p>
+            </div>
         </div>
 
 
@@ -2796,7 +2843,9 @@ async function 사용자정보불러오기() {
             .select(`
                 read_dori_news,
                 read_dori_news_numbers,
-                quiz_answers
+                quiz_answers,
+                is_admin,
+                user_level
             `)
 
             .eq(
@@ -3649,6 +3698,56 @@ async function 이벤트확인() {
         optionBox.appendChild(label);
     });
     await 이벤트참여상태확인();
+    이벤트관리폼표시();
+}
+
+/* 관리자는 이벤트 종류, 배수, 지속 시간, 퀴즈와 정답을 설정할 수 있음 */
+function 이벤트관리폼표시() {
+    const 관리 = $("이벤트관리");
+    const admin = 현재유저정보?.is_admin === true && Number(현재유저정보?.user_level || 0) >= 10;
+    관리.style.display = admin ? "block" : "none";
+    if (!admin || !현재이벤트) return;
+    $("이벤트보상종류").value = ["coin_multiplier","multiplier","coin_boost"].includes(현재이벤트.event_type) || Number(현재이벤트.reward_multiplier || 1)>1 ? "coin_multiplier" : "coin";
+    $("이벤트코인보상").value = Number(현재이벤트.reward_coins || 10000);
+    $("이벤트배수").value = String(Number(현재이벤트.reward_multiplier || 2) === 5 ? 5 : 2);
+    $("이벤트지속시간").value = Number(현재이벤트.reward_duration_minutes || 60);
+    $("이벤트관리문제").value = currentEventText(현재이벤트.quiz_question);
+    const options = Array.isArray(현재이벤트.quiz_options) ? 현재이벤트.quiz_options : [];
+    ["A","B","C","D"].forEach((key,index) => {
+        const option = options.find(item => String(item.value) === key) || options[index] || {};
+        $("이벤트선택"+key).value = String(option.label || "");
+    });
+}
+function currentEventText(value) { return String(value || ""); }
+
+async function 이벤트설정저장하기() {
+    if (!현재이벤트) return;
+    const button = $("이벤트설정저장");
+    const options = ["A","B","C","D"].map(key => ({value:key,label:$("이벤트선택"+key).value.trim()}));
+    if (!$("이벤트관리문제").value.trim() || options.some(option => !option.label)) {
+        alert("퀴즈 문제와 A~D 선택지를 모두 입력해 주세요.");
+        return;
+    }
+    button.disabled = true;
+    button.textContent = "저장 중...";
+    const {data,error} = await supabase.rpc("admin_configure_news_event", {
+        p_event_id:현재이벤트.id,
+        p_event_type:$("이벤트보상종류").value,
+        p_reward_coins:Math.max(0,Number($("이벤트코인보상").value)||0),
+        p_reward_multiplier:Number($("이벤트배수").value),
+        p_duration_minutes:Number($("이벤트지속시간").value),
+        p_question:$("이벤트관리문제").value.trim(),
+        p_options:options,
+        p_answer:$("이벤트관리정답").value
+    });
+    button.disabled = false;
+    button.textContent = "이벤트 설정 저장";
+    if (error || !data?.success) {
+        alert(error?.message || data?.message || "이벤트 설정을 저장하지 못했습니다.");
+        return;
+    }
+    alert("이벤트 설정을 저장했어요! 이미 보상을 받은 사용자에게는 새 보상이 중복 지급되지 않습니다.");
+    await 이벤트확인();
 }
 
 /* 이벤트 퀴즈 진행 상태와 남은 기회를 서버에서 확인 */
@@ -4118,6 +4217,9 @@ function 이벤트설정() {
 
     $("이벤트참여").onclick =
         이벤트참여하기;
+
+    $("이벤트설정저장").onclick =
+        이벤트설정저장하기;
 
 }
 
