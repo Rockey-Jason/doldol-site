@@ -132,8 +132,14 @@ text-decoration:none;font-size:12px;font-weight:800;white-space:nowrap;transitio
 .github-link:active{transform:scale(.97)}
 .github-link svg{width:17px;height:17px;flex:0 0 17px;fill:currentColor}
 .nav-actions{display:flex;align-items:center;gap:10px}
-@media(max-width:700px){.nav-actions{gap:7px}.github-link{min-height:35px;padding:0 9px;font-size:11px;gap:5px}.github-link svg{width:15px;height:15px;flex-basis:15px}.status{font-size:10px}}
-@media(max-width:390px){.github-link .github-label{display:none}.github-link{width:35px;padding:0}}
+.render-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 13px;
+border:1px solid rgba(52,211,153,.25);border-radius:12px;background:rgba(6,78,59,.22);color:#d1fae5;
+text-decoration:none;font-size:12px;font-weight:800;white-space:nowrap;transition:background .22s ease,border-color .22s ease,transform .22s ease,box-shadow .22s ease}
+.render-link:hover{transform:translateY(-1px);background:rgba(6,78,59,.4);border-color:rgba(52,211,153,.55);box-shadow:0 8px 24px rgba(0,0,0,.2);color:#fff}
+.render-link:active{transform:scale(.97)}
+.render-link svg{width:17px;height:17px;flex:0 0 17px;fill:currentColor}
+@media(max-width:700px){.nav-actions{gap:6px}.github-link,.render-link{min-height:35px;padding:0 8px;font-size:11px;gap:5px}.github-link svg,.render-link svg{width:15px;height:15px;flex-basis:15px}.status{font-size:10px}}
+@media(max-width:390px){.github-link .github-label,.render-link .render-label{display:none}.github-link,.render-link{width:35px;padding:0}}
 
 </style>
 <link rel="stylesheet" href="css/doldol-theme.css?v=20261002">
@@ -152,6 +158,10 @@ text-decoration:none;font-size:12px;font-weight:800;white-space:nowrap;transitio
     <a class="github-link" id="doriAiGithubLink" href="https://github.com/Rockey-Jason/dori-ai" target="_blank" rel="noopener noreferrer" aria-label="돌이 AI GitHub 저장소 열기" title="돌이 AI GitHub 저장소">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.1c-3.1.67-3.75-1.32-3.75-1.32-.51-1.29-1.24-1.63-1.24-1.63-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.71 2.62 1.22 3.26.93.1-.72.39-1.22.71-1.5-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.21 1.15-2.99-.12-.28-.5-1.42.11-2.95 0 0 .94-.3 3.05 1.14a10.6 10.6 0 0 1 5.55 0c2.11-1.44 3.05-1.14 3.05-1.14.61 1.53.23 2.67.11 2.95.72.78 1.15 1.77 1.15 2.99 0 4.29-2.62 5.24-5.11 5.51.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/></svg>
       <span class="github-label">GitHub</span>
+    </a>
+    <a class="render-link" id="doriAiRenderLink" href="https://dashboard.render.com/" target="_blank" rel="noopener noreferrer" aria-label="Render 대시보드 열기" title="돌이 AI Render 대시보드">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h6.4a4.6 4.6 0 0 1 0 9.2H4V3Zm0 11.8h6.4a4.6 4.6 0 0 1 0 9.2H4v-9.2Zm11-11.8h5v5h-5V3Z"/></svg>
+      <span class="render-label">Render</span>
     </a>
     <div class="status" id="connectionStatus"><span class="status-dot"></span><span id="statusText">연결 준비 중</span></div>
   </div>
