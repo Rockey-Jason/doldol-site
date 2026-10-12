@@ -281,7 +281,20 @@ async function getAuthState() {
   try {
     // getSession()은 브라우저에 저장된 Supabase 세션을 읽는다.
     const sessionResult = await client.auth.getSession();
-    const session = sessionResult?.data?.session || null;
+    let session = sessionResult?.data?.session || null;
+
+    // This page may be left open in the background long enough for a JWT to
+    // expire. Refresh it before sending requests so the backend can verify the
+    // user and apply the correct Dori News read limit.
+    if (session?.refresh_token) {
+      const expiresAt = Number(session.expires_at || 0);
+      if (expiresAt && expiresAt * 1000 <= Date.now() + 60_000) {
+        const refreshed = await client.auth.refreshSession();
+        if (!refreshed?.error && refreshed?.data?.session) {
+          session = refreshed.data.session;
+        }
+      }
+    }
 
     if (session?.user?.id && session?.access_token) {
       return {
