@@ -417,12 +417,19 @@ function createStreamingMessage() {
   activity.textContent = "질문을 확인하고 있어요.";
 
   panel.append(loading, activity);
-  bubble.appendChild(panel);
+
+  const answer = document.createElement("div");
+  answer.className = "answer-content";
+  answer.style.opacity = "0";
+  answer.style.transform = "translateY(4px)";
+  answer.style.transition = "opacity .24s ease,transform .28s cubic-bezier(.2,.8,.2,1)";
+
+  bubble.append(panel, answer);
   row.append(avatar, bubble);
   chat.appendChild(row);
   scrollToBottom(true);
 
-  return { row, bubble, panel, activity };
+  return { row, bubble, panel, activity, answer };
 }
 
 function updateThinkingActivity(activity, text) {
@@ -473,7 +480,7 @@ document.querySelectorAll(".chip").forEach(chip => {
  * user_id는 로그인한 Supabase 사용자의 실제 id를 사용한다.
  * 로그인하지 않았다면 null을 보낸다.
  */
-async function askDoriAI(message, bubble, activity) {
+async function askDoriAI(message, bubble, activity, answerElement) {
   controller = new AbortController();
   updateThinkingActivity(activity, "로그인 상태와 요청 정보를 확인하고 있어요.");
 
@@ -601,12 +608,16 @@ async function askDoriAI(message, bubble, activity) {
             requestAnimationFrame(() => { panel.style.maxHeight = "0"; panel.style.margin = "0"; });
             window.setTimeout(() => panel.remove(), 260);
           }
-          bubble.textContent = "";
+          if (answerElement) {
+            answerElement.style.opacity = "1";
+            answerElement.style.transform = "translateY(0)";
+          }
           firstChunk = false;
         }
 
         fullAnswer += data.content;
-        bubble.textContent = fullAnswer;
+        if (answerElement) answerElement.textContent = fullAnswer;
+        else bubble.textContent = fullAnswer;
         scrollToBottom(true);
       }
     }
@@ -667,7 +678,7 @@ form.addEventListener("submit", async (event) => {
   const streaming = createStreamingMessage();
 
   try {
-    await askDoriAI(message, streaming.bubble, streaming.activity);
+    await askDoriAI(message, streaming.bubble, streaming.activity, streaming.answer);
   } catch (error) {
     if (error.name === "AbortError") {
       streaming.bubble.textContent = "답변 생성을 중지했어. 🐶";
