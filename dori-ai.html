@@ -124,6 +124,17 @@ background:rgba(9,18,36,.9);border:1px solid rgba(148,163,184,.18);box-shadow:va
 }
 @media(min-width:1400px){.main{padding-top:76px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition:none!important}}
+
+.github-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 13px;
+border:1px solid rgba(148,163,184,.22);border-radius:12px;background:rgba(15,23,42,.72);color:#e2e8f0;
+text-decoration:none;font-size:12px;font-weight:800;white-space:nowrap;transition:background .22s ease,border-color .22s ease,transform .22s ease,box-shadow .22s ease}
+.github-link:hover{transform:translateY(-1px);background:rgba(30,41,59,.94);border-color:rgba(96,165,250,.5);box-shadow:0 8px 24px rgba(0,0,0,.2);color:#fff}
+.github-link:active{transform:scale(.97)}
+.github-link svg{width:17px;height:17px;flex:0 0 17px;fill:currentColor}
+.nav-actions{display:flex;align-items:center;gap:10px}
+@media(max-width:700px){.nav-actions{gap:7px}.github-link{min-height:35px;padding:0 9px;font-size:11px;gap:5px}.github-link svg{width:15px;height:15px;flex-basis:15px}.status{font-size:10px}}
+@media(max-width:390px){.github-link .github-label{display:none}.github-link{width:35px;padding:0}}
+
 </style>
 <link rel="stylesheet" href="css/doldol-theme.css?v=20261002">
 <link rel="stylesheet" href="css/doldol-theme.css?v=20261002">
@@ -137,7 +148,13 @@ background:rgba(9,18,36,.9);border:1px solid rgba(148,163,184,.18);box-shadow:va
     <div class="brand-icon">🐶</div>
     <div><div class="brand-name">돌이 AI</div><div class="brand-sub">돌이사이트 전용 AI</div></div>
   </div>
-  <div class="status" id="connectionStatus"><span class="status-dot"></span><span id="statusText">연결 준비 중</span></div>
+  <div class="nav-actions">
+    <a class="github-link" id="doriAiGithubLink" href="https://github.com/Rockey-Jason/dori-ai" target="_blank" rel="noopener noreferrer" aria-label="돌이 AI GitHub 저장소 열기" title="돌이 AI GitHub 저장소">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .9a11.1 11.1 0 0 0-3.51 21.63c.56.1.76-.24.76-.54v-2.1c-3.1.67-3.75-1.32-3.75-1.32-.51-1.29-1.24-1.63-1.24-1.63-1.01-.69.08-.68.08-.68 1.12.08 1.71 1.15 1.71 1.15 1 1.71 2.62 1.22 3.26.93.1-.72.39-1.22.71-1.5-2.48-.28-5.09-1.24-5.09-5.52 0-1.22.44-2.21 1.15-2.99-.12-.28-.5-1.42.11-2.95 0 0 .94-.3 3.05 1.14a10.6 10.6 0 0 1 5.55 0c2.11-1.44 3.05-1.14 3.05-1.14.61 1.53.23 2.67.11 2.95.72.78 1.15 1.77 1.15 2.99 0 4.29-2.62 5.24-5.11 5.51.4.35.76 1.03.76 2.08v3.08c0 .3.2.65.77.54A11.1 11.1 0 0 0 12 .9Z"/></svg>
+      <span class="github-label">GitHub</span>
+    </a>
+    <div class="status" id="connectionStatus"><span class="status-dot"></span><span id="statusText">연결 준비 중</span></div>
+  </div>
 </header>
 
 <main class="main">
