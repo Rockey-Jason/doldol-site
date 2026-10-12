@@ -961,23 +961,28 @@ async function 상품구매(상품, buyButton) {
       return;
     }
 
-    const 남은코인 = 현재코인 - 상품.price;
+    // The server verifies the current balance and level, then charges atomically.
+    const { data: purchaseResult, error: purchaseError } = await supabase
+      .rpc("purchase_membership_level", {
+        p_target_level: 상품.level
+      });
 
-    const { error: updateError } = await supabase
-      .from("users")
-      .update({
-        doldolcoin: 남은코인,
-        user_level: 상품.level
-      })
-      .eq("user_id", 현재사용자.id);
-
-    if (updateError) {
-      throw updateError;
+    if (purchaseError) {
+      throw purchaseError;
     }
 
+    const result = Array.isArray(purchaseResult)
+      ? purchaseResult[0]
+      : purchaseResult;
+
+    if (!result?.success) {
+      throw new Error("회원 등급 구매를 완료하지 못했습니다.");
+    }
+
+    const 남은코인 = Number(result.doldolcoin);
     const 변경된정보 = {
       doldolcoin: 남은코인,
-      user_level: 상품.level
+      user_level: Number(result.user_level)
     };
 
     화면갱신(변경된정보);
