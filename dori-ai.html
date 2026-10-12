@@ -518,6 +518,7 @@ async function askDoriAI(message, bubble, activity, answerElement) {
 
   // Render Free 서비스가 잠들었거나 프록시가 일시적으로 502/503/504를
   // 반환할 수 있으므로, 네트워크 계열 오류를 포함해 최대 3회 재시도한다.
+  updateThinkingActivity(activity, "돌이 AI 서버에 질문을 보내고 응답을 기다리고 있어요.");
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       response = await fetch(DORI_AI_CHAT_URL, {
