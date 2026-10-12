@@ -83,7 +83,13 @@ background:rgba(15,23,42,.9);border:1px solid rgba(148,163,184,.17);box-shadow:0
 box-shadow:0 12px 38px rgba(0,0,0,.16);color:#e2e8f0;font-size:14px;line-height:1.78;white-space:pre-wrap;word-break:break-word}
 .bot .bubble{border-top-left-radius:6px}.user .bubble{background:linear-gradient(135deg,#2563eb,#1d4ed8);border-color:rgba(96,165,250,.4);color:#fff;border-top-right-radius:6px;box-shadow:0 14px 40px rgba(29,78,216,.2)}
 .bubble a{color:#93c5fd}
-.generating{display:inline-flex;align-items:center;gap:8px;color:#93c5fd}.generating i{width:8px;height:8px;border:2px solid #60a5fa;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+.generating{display:flex;align-items:center;gap:8px;color:#93c5fd;font-weight:750}.generating i{width:8px;height:8px;flex:0 0 8px;border:2px solid #60a5fa;border-top-color:transparent;border-radius:50%;animation:spin .8s linear infinite}
+.thinking-panel{display:flex;flex-direction:column;gap:7px;min-width:0;padding:2px 0}
+.thinking-activity{display:flex;align-items:flex-start;gap:7px;padding-left:16px;color:#94a3b8;font-size:12px;line-height:1.55;animation:activityIn .28s ease both}
+.thinking-activity:before{content:"";width:5px;height:5px;flex:0 0 5px;margin-top:6px;border-radius:50%;background:#60a5fa;box-shadow:0 0 10px rgba(96,165,250,.7)}
+.thinking-activity.changing{animation:activityIn .28s ease both}
+@keyframes activityIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){.thinking-activity,.thinking-activity.changing{animation:none!important}}
 
 .composer-wrap{position:fixed;left:0;right:0;bottom:0;z-index:40;padding:16px max(16px,calc((100vw - 1040px)/2));
 padding-bottom:max(16px,env(safe-area-inset-bottom));background:linear-gradient(180deg,transparent,rgba(2,6,23,.86) 30%,rgba(2,6,23,.96))}
@@ -398,16 +404,34 @@ function createStreamingMessage() {
   const bubble = document.createElement("div");
   bubble.className = "bubble";
 
-  const loading = document.createElement("span");
-  loading.className = "generating";
-  loading.innerHTML = '<i></i><span>돌이가 생각하는 중...</span>';
+  const panel = document.createElement("div");
+  panel.className = "thinking-panel";
 
-  bubble.appendChild(loading);
+  const loading = document.createElement("div");
+  loading.className = "generating";
+  loading.innerHTML = '<i aria-hidden="true"></i><span>돌이가 생각하는 중...</span>';
+
+  const activity = document.createElement("div");
+  activity.className = "thinking-activity";
+  activity.setAttribute("aria-live", "polite");
+  activity.textContent = "질문을 확인하고 있어요.";
+
+  panel.append(loading, activity);
+  bubble.appendChild(panel);
   row.append(avatar, bubble);
   chat.appendChild(row);
   scrollToBottom(true);
 
-  return { row, bubble };
+  return { row, bubble, panel, activity };
+}
+
+function updateThinkingActivity(activity, text) {
+  if (!activity || activity.textContent === text) return;
+  activity.classList.remove("changing");
+  // Reflow restarts the short entrance transition when the activity changes.
+  void activity.offsetWidth;
+  activity.textContent = text;
+  activity.classList.add("changing");
 }
 
 function autoResize() {
@@ -449,8 +473,9 @@ document.querySelectorAll(".chip").forEach(chip => {
  * user_id는 로그인한 Supabase 사용자의 실제 id를 사용한다.
  * 로그인하지 않았다면 null을 보낸다.
  */
-async function askDoriAI(message, bubble) {
+async function askDoriAI(message, bubble, activity) {
   controller = new AbortController();
+  updateThinkingActivity(activity, "로그인 상태와 요청 정보를 확인하고 있어요.");
 
   const auth = await getAuthState();
   const user = auth.user;
@@ -507,6 +532,7 @@ async function askDoriAI(message, bubble) {
     if (attempt < 3) {
       statusBox.classList.add("loading");
       statusText.textContent = "AI 서버 깨우는 중 (" + attempt + "/3)";
+      updateThinkingActivity(activity, "AI 서버가 응답할 수 있도록 다시 연결하고 있어요. (" + attempt + "/3)");
       await new Promise(resolve => setTimeout(resolve, attempt * 2000));
     }
   }
@@ -523,6 +549,8 @@ async function askDoriAI(message, bubble) {
     } catch (_) {}
     throw new Error(`AI 서버 응답 오류: ${response.status}${detail}`);
   }
+
+  updateThinkingActivity(activity, "서버에 연결됐어요. 첫 답변 내용을 기다리고 있어요.");
 
   if (!response.body) {
     throw new Error("이 브라우저에서는 스트리밍 응답을 지원하지 않아.");
@@ -562,6 +590,17 @@ async function askDoriAI(message, bubble) {
 
       if (data.type === "token" && data.content) {
         if (firstChunk) {
+          // 답변이 도착하면 생각 중 표시를 부드럽게 접고 실제 답변으로 전환한다.
+          const panel = bubble.querySelector(".thinking-panel");
+          if (panel) {
+            panel.style.opacity = "0";
+            panel.style.transform = "translateY(-5px)";
+            panel.style.maxHeight = panel.scrollHeight + "px";
+            panel.style.overflow = "hidden";
+            panel.style.transition = "opacity .2s ease,transform .24s ease,max-height .24s ease,margin .24s ease";
+            requestAnimationFrame(() => { panel.style.maxHeight = "0"; panel.style.margin = "0"; });
+            window.setTimeout(() => panel.remove(), 260);
+          }
           bubble.textContent = "";
           firstChunk = false;
         }
@@ -628,7 +667,7 @@ form.addEventListener("submit", async (event) => {
   const streaming = createStreamingMessage();
 
   try {
-    await askDoriAI(message, streaming.bubble);
+    await askDoriAI(message, streaming.bubble, streaming.activity);
   } catch (error) {
     if (error.name === "AbortError") {
       streaming.bubble.textContent = "답변 생성을 중지했어. 🐶";
