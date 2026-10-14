@@ -690,6 +690,82 @@ body::before {
 }
 
 
+
+/* 읽기 편한 글자 굵기 + 업적 상태 구분 */
+body {
+    font-weight: 400;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+p, li, label, input, textarea, select, button,
+.header-description, .page-heading p,
+.achievement-description, .achievement-reward,
+.achievement-time, .title-item-achievement {
+    font-weight: 400;
+}
+.status-value, .inventory-summary strong {
+    font-weight: 500;
+}
+.achievement-name {
+    font-weight: 500;
+    letter-spacing: -0.25px;
+}
+.achievement-item {
+    position: relative;
+    border-left: 3px solid rgba(255,255,255,.22);
+}
+.achievement-item.is-completed {
+    border-color: rgba(75, 222, 151, .72);
+    border-left-color: #4bde97;
+    background: linear-gradient(110deg, rgba(40, 190, 122, .14), rgba(255,255,255,.035) 72%);
+    box-shadow: inset 0 0 0 1px rgba(75,222,151,.08);
+}
+.achievement-item.is-locked {
+    border-left-color: rgba(170,180,205,.55);
+    background: linear-gradient(110deg, rgba(130,145,175,.075), rgba(255,255,255,.025) 72%);
+}
+.achievement-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin-top: 14px;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+.achievement-item.is-completed .achievement-status {
+    color: #8df5bd;
+    border-color: rgba(75,222,151,.42);
+    background: rgba(35,180,112,.15);
+}
+.achievement-item.is-locked .achievement-status {
+    color: #c2c9d8;
+    border-color: rgba(170,180,205,.22);
+    background: rgba(120,135,165,.10);
+}
+.achievement-item.is-completed .achievement-name::after {
+    content: "획득";
+    display: inline-block;
+    margin-left: 8px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    color: #082417;
+    background: #8df5bd;
+    font-size: 11px;
+    font-weight: 500;
+    vertical-align: middle;
+}
+@media (prefers-reduced-motion: reduce) {
+    .achievement-item, .achievement-item:hover {
+        animation: none;
+        transition: none;
+        transform: none;
+    }
+}
+
 /* =====================================================
    내 아이템 / 돌이 꾸미기
 ===================================================== */
@@ -2819,7 +2895,7 @@ const rawTime =
 
         html += `
 
-            <div class="achievement-item">
+            <div class="achievement-item ${획득 ? "is-completed" : "is-locked"}">
 
                 <div class="achievement-name">
 
