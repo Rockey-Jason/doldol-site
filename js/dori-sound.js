@@ -79,5 +79,5 @@ const p=w.querySelector('#dori-sound-panel'),b=w.querySelector('#dori-sound-togg
 function ui(){if(!w.isConnected)return;en.checked=S.enabled;vol.value=S.volume;vol.disabled=!S.enabled;val.textContent=S.volume+'%';lab.textContent=S.enabled?'효과음 켜짐':'효과음 꺼짐';w.dataset.off=String(!S.enabled)}
 b.addEventListener('click',()=>{p.hidden=!p.hidden;b.setAttribute('aria-expanded',String(!p.hidden));if(!p.hidden)play('menuOpen');else play('menuClose')});en.addEventListener('change',()=>{S.enabled=en.checked;save();if(S.enabled)play('toggle')});vol.addEventListener('input',()=>{S.volume=Number(vol.value);save()});w.querySelector('#dori-sound-test').addEventListener('click',()=>{if(!S.enabled)S.enabled=true;save();play('success')});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!p.hidden){p.hidden=true;b.setAttribute('aria-expanded','false')}});ui();
 window.DoriSound=Object.freeze({play,setEnabled(v){S.enabled=!!v;save()},setVolume(v){S.volume=Math.max(0,Math.min(100,Number(v)||0));save()},getSettings(){return {...S}}});
-})();
 }
+})();
