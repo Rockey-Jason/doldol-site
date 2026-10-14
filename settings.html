@@ -159,8 +159,6 @@ body::before {
     margin: 0;
     font-size: clamp(28px, 5vw, 48px);
     letter-spacing: -1.5px;
-    font-family: 'HancomMalrangmalrang', sans-serif;
-    font-weight: 400;
 }
 
 .page-heading p {
@@ -1636,8 +1634,7 @@ body::after{
     overflow:hidden;
     text-overflow:ellipsis;
     white-space:nowrap;
-    font-family:'HancomMalrangmalrang',sans-serif !important;
-    font-weight:400 !important;
+    font-family:'Black Han Sans','HancomMalrangmalrang',sans-serif !important;
     font-size:clamp(28px,4.2vw,48px) !important;
     line-height:1.1;
     letter-spacing:-1.5px;
@@ -1978,6 +1975,17 @@ body::after{
     }
 }
 
+
+
+/* 요청한 두 제목은 기존 글꼴을 유지하고 굵기만 낮춤 */
+.page-heading h1 {
+    font-weight: 400 !important;
+    -webkit-text-stroke: 0 !important;
+}
+#이름 {
+    font-weight: 400 !important;
+    -webkit-text-stroke: 0 !important;
+}
 
 </style>
 
