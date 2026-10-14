@@ -691,24 +691,9 @@ body::before {
 
 
 
-/* 읽기 편한 글자 굵기 + 업적 상태 구분 */
-body {
-    font-weight: 400;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-}
-p, li, label, input, textarea, select, button,
-.header-description, .page-heading p,
-.achievement-description, .achievement-reward,
-.achievement-time, .title-item-achievement {
-    font-weight: 400;
-}
-.status-value, .inventory-summary strong {
-    font-weight: 500;
-}
+/* 꼭 필요한 업적 이름만 살짝 가볍게 조정 */
 .achievement-name {
     font-weight: 500;
-    letter-spacing: -0.25px;
 }
 .achievement-item {
     position: relative;
@@ -1990,16 +1975,6 @@ body::after{
     }
 }
 
-
-/* 설정 페이지 전체 글꼴을 가볍고 읽기 편하게 통일 */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500&display=swap');
-html body,
-html body * {
-    font-family: 'Noto Sans KR', sans-serif !important;
-    font-weight: 400 !important;
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-}
 
 </style>
 
