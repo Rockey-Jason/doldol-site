@@ -47,6 +47,21 @@ function ensureStyles() {
 .dori-achievement-desc{margin-top:5px;font-size:12px;line-height:1.45;color:rgba(235,240,255,.68)}
 .dori-achievement-rewards{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
 .dori-achievement-rewards span{font-size:10px;font-weight:800;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.065);border:1px solid rgba(255,255,255,.055);color:#eaf0ff}
+
+.dori-achievement-rewards .dori-title-reward{position:relative;isolation:isolate;overflow:hidden;display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:6px 10px;border-color:color-mix(in srgb,var(--title-color) 48%,transparent);color:var(--title-text);background:linear-gradient(135deg,var(--title-bg),rgba(8,12,32,.82));box-shadow:0 0 12px var(--title-glow),inset 0 1px rgba(255,255,255,.13);text-shadow:0 0 10px var(--title-glow);transition:transform .3s ease,box-shadow .3s ease}
+.dori-achievement-rewards .dori-title-reward::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,.24) 50%,transparent 72%);transform:translateX(-130%);animation:doriTitleShimmer 4.5s ease-in-out infinite}
+.dori-title-common{--title-color:#d4deee;--title-text:#f4f7ff;--title-bg:rgba(120,140,170,.13);--title-glow:rgba(190,205,230,.12)}
+.dori-title-rare{--title-color:#66b8ff;--title-text:#d9f2ff;--title-bg:rgba(30,110,190,.18);--title-glow:rgba(42,145,255,.25)}
+.dori-title-epic{--title-color:#c58aff;--title-text:#f0dfff;--title-bg:rgba(115,45,185,.2);--title-glow:rgba(155,65,255,.3)}
+.dori-title-legendary{--title-color:#ffd66b;--title-text:#fff1b8;--title-bg:rgba(150,95,10,.24);--title-glow:rgba(255,180,35,.42);border-width:1px!important;box-shadow:0 0 16px var(--title-glow),inset 0 0 12px rgba(255,205,80,.08)!important;animation:doriTitleGoldPulse 2.6s ease-in-out infinite}
+.dori-title-myth{--title-color:#ff5e83;--title-text:#ffdce5;--title-bg:rgba(150,10,42,.26);--title-glow:rgba(255,35,90,.5);border-width:1px!important;box-shadow:0 0 19px var(--title-glow),inset 0 0 13px rgba(255,55,95,.12)!important;animation:doriTitleMythPulse 2.1s ease-in-out infinite}
+.dori-title-doronum{--title-color:#69f7ff;--title-text:#e4ffff;--title-bg:rgba(0,105,145,.3);--title-glow:rgba(28,232,255,.68);border-width:1px!important;box-shadow:0 0 22px var(--title-glow),0 0 38px rgba(65,120,255,.22),inset 0 0 16px rgba(60,235,255,.14)!important;animation:doriTitleDoronumPulse 1.8s ease-in-out infinite}
+@keyframes doriTitleShimmer{0%,72%{transform:translateX(-130%)}90%,100%{transform:translateX(130%)}}
+@keyframes doriTitleGoldPulse{0%,100%{filter:brightness(1);transform:translateY(0)}50%{filter:brightness(1.16);transform:translateY(-1px)}}
+@keyframes doriTitleMythPulse{0%,100%{filter:brightness(1);text-shadow:0 0 8px var(--title-glow)}50%{filter:brightness(1.22);text-shadow:0 0 15px var(--title-glow),0 0 26px rgba(255,35,90,.25)}}
+@keyframes doriTitleDoronumPulse{0%,100%{filter:brightness(1);transform:translateY(0);text-shadow:0 0 9px var(--title-glow)}50%{filter:brightness(1.25);transform:translateY(-1px);text-shadow:0 0 16px var(--title-glow),0 0 30px rgba(65,120,255,.3)}}
+@media(prefers-reduced-motion:reduce){.dori-achievement-rewards .dori-title-reward,.dori-achievement-rewards .dori-title-reward::after{animation:none!important}}
+
 .dori-achievement-shine,.dori-achievement-particles,.dori-achievement-rays,.dori-achievement-sparkles,.dori-achievement-orbit,.dori-achievement-prism{position:absolute;inset:0;pointer-events:none}
 .dori-achievement-shine{z-index:3;background:linear-gradient(110deg,transparent 24%,rgba(255,255,255,.13) 47%,transparent 66%);transform:translateX(-125%);animation:doriAchievementShine 4.8s .45s ease-in-out infinite}
 .dori-achievement-particles{z-index:2;opacity:.55;background-image:radial-gradient(circle at 8% 32%,var(--rarity-color) 0 1px,transparent 2px),radial-gradient(circle at 19% 78%,var(--rarity-accent) 0 1px,transparent 2px),radial-gradient(circle at 42% 14%,var(--rarity-color) 0 1px,transparent 2px),radial-gradient(circle at 76% 23%,var(--rarity-accent) 0 1px,transparent 2px),radial-gradient(circle at 92% 72%,var(--rarity-color) 0 1.2px,transparent 2.4px),radial-gradient(circle at 67% 90%,var(--rarity-color) 0 1px,transparent 2px);animation:doriAchievementParticles calc(4.2s / var(--rarity-speed)) ease-in-out infinite}
@@ -418,7 +433,7 @@ function showNext() {
         <div class="dori-achievement-rewards">
           ${Number(data.reward_doldolcoin || 0) > 0 ? `<span>💰 +${Number(data.reward_doldolcoin).toLocaleString()} 돌돌코인</span>${Number(data.reward_doldolcoin || 0) > Number(data.base_reward_doldolcoin || 0) ? `<span>⚡ 버프 추가 +${(Number(data.reward_doldolcoin)-Number(data.base_reward_doldolcoin)).toLocaleString()} (${Number(data.coin_multiplier || 1)}배)</span>` : ""}` : ""}
           ${Number(data.reward_exp || 0) > 0 ? `<span>✨ +${Number(data.reward_exp).toLocaleString()} EXP</span>` : ""}
-          ${data.title ? `<span>🏷️ ${escapeHtml(data.title)}</span>` : ""}
+          ${data.title ? `<span class="dori-title-reward dori-title-${rarity}">🏷️ ${escapeHtml(data.title)}</span>` : ""}
         </div>
       </div>
     </div>`;
