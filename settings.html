@@ -597,6 +597,32 @@ body::before {
     font-weight: 500;
 }
 
+/* 업적 등급별 칭호 효과: Common < Rare < Epic < Legendary < Myth < Doronum */
+.title-current-name,
+.title-item-name,
+.achievement-title {
+    --title-color:#d4deee;
+    --title-glow:rgba(190,205,230,.12);
+    transition:color .35s ease,text-shadow .35s ease,filter .35s ease,box-shadow .35s ease;
+}
+.title-rarity-common .title-current-name,.title-rarity-common .title-item-name{color:#f4f7ff}
+.title-rarity-rare .title-current-name,.title-rarity-rare .title-item-name{color:#8fd0ff;text-shadow:0 0 10px rgba(65,165,255,.28)}
+.title-rarity-epic .title-current-name,.title-rarity-epic .title-item-name{color:#d8a6ff;text-shadow:0 0 12px rgba(175,90,255,.35)}
+.title-rarity-legendary .title-current-name,.title-rarity-legendary .title-item-name{color:#ffd66b;text-shadow:0 0 10px rgba(255,190,45,.5),0 0 24px rgba(255,170,25,.24);animation:titleGoldGlow 2.8s ease-in-out infinite}
+.title-rarity-myth .title-current-name,.title-rarity-myth .title-item-name{color:#ff5e83;text-shadow:0 0 12px rgba(255,35,90,.62),0 0 28px rgba(255,35,90,.25);animation:titleMythGlow 2.2s ease-in-out infinite}
+.title-rarity-doronum .title-current-name,.title-rarity-doronum .title-item-name{color:#69f7ff;text-shadow:0 0 12px rgba(28,232,255,.72),0 0 28px rgba(45,130,255,.38),0 0 48px rgba(45,220,255,.2);animation:titleDoronumGlow 1.8s ease-in-out infinite}
+.title-item.title-rarity-legendary{border-color:rgba(255,205,80,.42);background:linear-gradient(120deg,rgba(130,85,8,.17),rgba(255,255,255,.035))}
+.title-item.title-rarity-myth{border-color:rgba(255,65,105,.5);background:linear-gradient(120deg,rgba(135,5,38,.2),rgba(255,255,255,.025))}
+.title-item.title-rarity-doronum{border-color:rgba(75,235,255,.62);background:linear-gradient(120deg,rgba(0,105,145,.24),rgba(70,105,255,.07));box-shadow:0 0 24px rgba(35,210,255,.12),inset 0 0 18px rgba(40,220,255,.06)}
+.achievement-title.title-rarity-legendary{color:#ffe08a;border-color:rgba(255,195,45,.5);background:rgba(180,120,10,.15);text-shadow:0 0 10px rgba(255,180,30,.35)}
+.achievement-title.title-rarity-myth{color:#ff7898;border-color:rgba(255,50,90,.55);background:rgba(160,10,45,.18);text-shadow:0 0 12px rgba(255,35,90,.42)}
+.achievement-title.title-rarity-doronum{color:#8afaff;border-color:rgba(60,235,255,.65);background:rgba(0,125,160,.2);text-shadow:0 0 12px rgba(30,225,255,.55)}
+@keyframes titleGoldGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
+@keyframes titleMythGlow{0%,100%{filter:brightness(1);text-shadow:0 0 10px rgba(255,35,90,.45)}50%{filter:brightness(1.2);text-shadow:0 0 18px rgba(255,35,90,.75),0 0 34px rgba(255,35,90,.28)}}
+@keyframes titleDoronumGlow{0%,100%{filter:brightness(1);transform:translateY(0)}50%{filter:brightness(1.22);transform:translateY(-1px)}}
+@media(prefers-reduced-motion:reduce){.title-rarity-legendary .title-current-name,.title-rarity-legendary .title-item-name,.title-rarity-myth .title-current-name,.title-rarity-myth .title-item-name,.title-rarity-doronum .title-current-name,.title-rarity-doronum .title-item-name{animation:none!important}}
+
+
 .title-list {
     display: none;
     margin-top: 15px;
@@ -3169,7 +3195,10 @@ function 획득한칭호목록() {
                 "업적",
 
             title:
-                업적.title
+                업적.title,
+
+            rarity:
+                String(업적.rarity ?? 업적.grade ?? "Common")
 
         });
 
@@ -3220,6 +3249,12 @@ function 칭호화면표시() {
         유저.equipped_title ??
         null;
 
+    const 현재칭호정보 = 칭호목록.find(항목 => 항목.title === 현재칭호);
+    const 칭호등급클래스 = 등급 => {
+        const 정규화 = String(등급 || "Common").toLowerCase().replace(/[^a-z]/g, "");
+        return "title-rarity-" + (["common","rare","epic","legendary","myth","doronum"].includes(정규화) ? 정규화 : "common");
+    };
+
     선택된칭호 =
         현재칭호;
 
@@ -3259,7 +3294,7 @@ function 칭호화면표시() {
             목록HTML += `
 
                 <div
-                    class="title-item
+                    class="title-item ${칭호등급클래스(칭호.rarity)}
                     ${선택됨 ? "selected" : ""}"
                     data-title="${HTML이스케이프(
                         칭호.title
@@ -3304,7 +3339,7 @@ function 칭호화면표시() {
             </div>
 
             <div
-                class="title-current-name"
+                class="title-current-name ${현재칭호정보 ? 칭호등급클래스(현재칭호정보.rarity) : ""}"
                 id="현재칭호표시"
             >
 
