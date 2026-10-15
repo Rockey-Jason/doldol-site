@@ -605,12 +605,12 @@ body::before {
     --title-glow:rgba(190,205,230,.12);
     transition:color .35s ease,text-shadow .35s ease,filter .35s ease,box-shadow .35s ease;
 }
-.title-rarity-common .title-current-name,.title-rarity-common .title-item-name{color:#f4f7ff}
-.title-rarity-rare .title-current-name,.title-rarity-rare .title-item-name{color:#8fd0ff;text-shadow:0 0 10px rgba(65,165,255,.28)}
-.title-rarity-epic .title-current-name,.title-rarity-epic .title-item-name{color:#d8a6ff;text-shadow:0 0 12px rgba(175,90,255,.35)}
-.title-rarity-legendary .title-current-name,.title-rarity-legendary .title-item-name{color:#ffd66b;text-shadow:0 0 10px rgba(255,190,45,.5),0 0 24px rgba(255,170,25,.24);animation:titleGoldGlow 2.8s ease-in-out infinite}
-.title-rarity-myth .title-current-name,.title-rarity-myth .title-item-name{color:#ff5e83;text-shadow:0 0 12px rgba(255,35,90,.62),0 0 28px rgba(255,35,90,.25);animation:titleMythGlow 2.2s ease-in-out infinite}
-.title-rarity-doronum .title-current-name,.title-rarity-doronum .title-item-name{color:#69f7ff;text-shadow:0 0 12px rgba(28,232,255,.72),0 0 28px rgba(45,130,255,.38),0 0 48px rgba(45,220,255,.2);animation:titleDoronumGlow 1.8s ease-in-out infinite}
+.title-current-name.title-rarity-common,.title-rarity-common .title-item-name{color:#f4f7ff}
+.title-current-name.title-rarity-rare,.title-rarity-rare .title-item-name{color:#8fd0ff;text-shadow:0 0 10px rgba(65,165,255,.28)}
+.title-current-name.title-rarity-epic,.title-rarity-epic .title-item-name{color:#d8a6ff;text-shadow:0 0 12px rgba(175,90,255,.35)}
+.title-current-name.title-rarity-legendary,.title-rarity-legendary .title-item-name{color:#ffd66b;text-shadow:0 0 10px rgba(255,190,45,.5),0 0 24px rgba(255,170,25,.24);animation:titleGoldGlow 2.8s ease-in-out infinite}
+.title-current-name.title-rarity-myth,.title-rarity-myth .title-item-name{color:#ff5e83;text-shadow:0 0 12px rgba(255,35,90,.62),0 0 28px rgba(255,35,90,.25);animation:titleMythGlow 2.2s ease-in-out infinite}
+.title-current-name.title-rarity-doronum,.title-rarity-doronum .title-item-name{color:#69f7ff;text-shadow:0 0 12px rgba(28,232,255,.72),0 0 28px rgba(45,130,255,.38),0 0 48px rgba(45,220,255,.2);animation:titleDoronumGlow 1.8s ease-in-out infinite}
 .title-item.title-rarity-legendary{border-color:rgba(255,205,80,.42);background:linear-gradient(120deg,rgba(130,85,8,.17),rgba(255,255,255,.035))}
 .title-item.title-rarity-myth{border-color:rgba(255,65,105,.5);background:linear-gradient(120deg,rgba(135,5,38,.2),rgba(255,255,255,.025))}
 .title-item.title-rarity-doronum{border-color:rgba(75,235,255,.62);background:linear-gradient(120deg,rgba(0,105,145,.24),rgba(70,105,255,.07));box-shadow:0 0 24px rgba(35,210,255,.12),inset 0 0 18px rgba(40,220,255,.06)}
@@ -620,7 +620,7 @@ body::before {
 @keyframes titleGoldGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
 @keyframes titleMythGlow{0%,100%{filter:brightness(1);text-shadow:0 0 10px rgba(255,35,90,.45)}50%{filter:brightness(1.2);text-shadow:0 0 18px rgba(255,35,90,.75),0 0 34px rgba(255,35,90,.28)}}
 @keyframes titleDoronumGlow{0%,100%{filter:brightness(1);transform:translateY(0)}50%{filter:brightness(1.22);transform:translateY(-1px)}}
-@media(prefers-reduced-motion:reduce){.title-rarity-legendary .title-current-name,.title-rarity-legendary .title-item-name,.title-rarity-myth .title-current-name,.title-rarity-myth .title-item-name,.title-rarity-doronum .title-current-name,.title-rarity-doronum .title-item-name{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.title-current-name.title-rarity-legendary,.title-rarity-legendary .title-item-name,.title-current-name.title-rarity-myth,.title-rarity-myth .title-item-name,.title-current-name.title-rarity-doronum,.title-rarity-doronum .title-item-name{animation:none!important}}
 
 
 .title-list {
