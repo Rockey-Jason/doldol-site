@@ -2500,6 +2500,7 @@ small, .meta, .caption, .hint, .secondary-text {
     <button id="칭호버튼" class="프로필버튼" type="button">🏷️ 칭호</button>
     <button id="설정" class="프로필버튼" type="button">⚙️ 설정</button>
     <button id="일일미션버튼" class="프로필버튼 일일미션프로필버튼" type="button"><span>🎯 일일 미션</span><span class="일일미션메뉴화살표">›</span></button>
+    <button id="출석체크버튼" class="프로필버튼 일일미션프로필버튼 출석체크프로필버튼" type="button"><span>🗓️ 출석 체크</span><span class="일일미션메뉴화살표">›</span></button>
     <button id="로그아웃" class="프로필버튼" type="button">🚪 로그아웃</button>
   </div>
 
@@ -3539,6 +3540,8 @@ async function 일일미션화면표시(){
  }catch(err){console.error("일일 미션 패널 오류:",err);패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션오류2">일일 미션을 불러오지 못했습니다.<br><small>잠시 후 다시 시도해주세요.</small></div></div>'}
 }
 if(일일미션버튼)일일미션버튼.onclick=()=>{메뉴.classList.remove("menu-show");메뉴.classList.add("menu-hide");window.setTimeout(()=>메뉴.classList.remove("menu-hide"),260);패널열기("daily")};
+const 출석체크버튼=document.getElementById("출석체크버튼");
+if(출석체크버튼)출석체크버튼.onclick=()=>{메뉴.classList.remove("menu-show");메뉴.classList.add("menu-hide");window.setTimeout(()=>메뉴.classList.remove("menu-hide"),260);if(window.doriOpenAttendanceCalendar)window.doriOpenAttendanceCalendar();else window.dispatchEvent(new CustomEvent("dori:open-attendance-calendar"))};
 window.addEventListener("dori:daily-mission-completed",()=>{if(패널.classList.contains("show")&&패널내용.querySelector("#일일미션화면"))일일미션화면표시()});
 
 function 패널열기(
@@ -4664,7 +4667,7 @@ console.log(
 
 
   <script type="module" src="js/achievements.js?v=20261011-coinboost-1"></script>
-<script src="js/doldol-theme.js?v=20261017-attendance-2"></script>
+<script src="js/doldol-theme.js?v=20261017-attendance-calendar-1"></script>
 <script>
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
