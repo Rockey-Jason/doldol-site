@@ -99,3 +99,14 @@ if (document.querySelector(".tabs .tab[data-tab]")) {
     });
   });
 }
+
+
+// DAILY ATTENDANCE — load on pages using the shared Dori theme
+(() => {
+  if (document.querySelector('script[data-dori-daily-attendance]')) return;
+  const attendanceScript = document.createElement("script");
+  attendanceScript.src = "https://rockey-jason.github.io/doldol-site/js/daily-attendance.js?v=20261017-1";
+  attendanceScript.dataset.doriDailyAttendance = "true";
+  attendanceScript.async = true;
+  (document.head || document.documentElement).appendChild(attendanceScript);
+})();
