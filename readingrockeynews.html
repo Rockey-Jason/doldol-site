@@ -3403,76 +3403,34 @@ async function 퀴즈제출() {
     }
 
 
-    let 정답여부 =
-        false;
-
-
-    if (
-        news.question_type ===
-        "multiple"
-    ) {
-
-        정답여부 =
-            선택한답 ===
-            Number(
-                news.answer
-            );
-
-    }
-
-    else {
-
-        정답여부 =
-
-            String(
-                선택한답
-            )
-                .trim()
-                .toLowerCase()
-
-            ===
-
-            String(
-                news.answer
-            )
-                .trim()
-                .toLowerCase();
-
-    }
-
-
-    /* 사용자 답 가져오기 */
-
+    /* 정답 판정과 답 저장은 서버 RPC에서 처리합니다. */
     const {
+        data: 제출결과,
+        error: 저장오류
+    } = await supabase.rpc("submit_news_quiz", {
+        p_news_number: Number(신문번호),
+        p_answer: String(선택한답)
+    });
 
-        data: userData,
-        error: userError
-
-    } =
-        await supabase
-
-            .from("users")
-
-            .select("quiz_answers")
-
-            .eq(
-                "user_id",
-                현재사용자.id
-            )
-
-            .single();
-
-
-    if (userError) {
-
-        console.error(
-            "사용자 정보 조회 오류:",
-            userError
-        );
-
+    if (저장오류 || !제출결과?.success) {
+        console.error("퀴즈 제출 오류:", 저장오류 || 제출결과);
         제출버튼잠금(false);
-
         $("결과").textContent =
+            제출결과?.message || "답안을 저장하지 못했습니다. 다시 시도해주세요.";
+        return;
+    }
+
+    const 정답여부 = 제출결과.correct === true;
+    const 답목록 = {
+        ...(현재유저정보.quiz_answers || {}),
+        [신문번호]: 선택한답
+    };
+    현재유저정보.quiz_answers = 답목록;
+    현재유저정보.quiz_right = 정답여부;
+    현재유저정보.quiz_news_number = Number(신문번호);
+    현재유저정보.quiz_answered = true;
+
+    $("결과").textContent =
             "사용자 정보를 불러오지 못했습니다.";
 
         return;
