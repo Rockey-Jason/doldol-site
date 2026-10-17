@@ -2405,6 +2405,7 @@ small, .meta, .caption, .hint, .secondary-text {
     * { scroll-behavior: auto !important; }
 }
 </style>
+  <script src="js/supabase.min.js?v=2.117.2"></script>
 </head>
 
 
@@ -2613,11 +2614,7 @@ small, .meta, .caption, .hint, .secondary-text {
 
 <script type="module">
 
-import {
-    createClient
-}
-from
-"https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+const { createClient } = window.supabase;
 
 
 // =====================================================
