@@ -105,7 +105,7 @@ if (document.querySelector(".tabs .tab[data-tab]")) {
 (() => {
   if (document.querySelector('script[data-dori-daily-attendance]')) return;
   const attendanceScript = document.createElement("script");
-  attendanceScript.src = "https://rockey-jason.github.io/doldol-site/js/daily-attendance.js?v=20261017-calendar-1";
+  attendanceScript.src = "https://rockey-jason.github.io/doldol-site/js/daily-attendance.js?v=20261017-rewards-2";
   attendanceScript.dataset.doriDailyAttendance = "true";
   attendanceScript.async = true;
   (document.head || document.documentElement).appendChild(attendanceScript);
