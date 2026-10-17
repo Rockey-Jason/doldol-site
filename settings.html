@@ -2071,6 +2071,7 @@ body::after{
 @media(min-width:520px){.achievement-progress-head{grid-template-columns:minmax(0,1fr) auto;align-items:start}.achievement-progress-value{text-align:right;overflow-wrap:anywhere}}
 @media(prefers-reduced-motion:reduce){.achievement-progress-fill{animation:none}}
 
+.업적바로가기버튼{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(105,217,255,.28);background:rgba(105,217,255,.1);color:#c8f4ff;text-decoration:none;font-size:12px;font-weight:700}.업적바로가기버튼:hover{background:rgba(105,217,255,.2)}
 </style>
 
 
@@ -2424,8 +2425,19 @@ function 업적진행도값계산(achievementId, unlocked, user) {
     const u = user || {}, activity = 업적진행활동;
     let current = 0, target = 1, label = "조건 달성", known = true;
     const games = activity.chessGames || [];
-    // 현재 저장된 체스 기록에서 흰색 플레이어가 이긴 결과(1-0)를 승리로 집계합니다.
-    const wins = games.filter(game => String(game.result || "").trim() === "1-0");
+    const isPlayerWin = game => {
+        const result = String(game.result || "").trim().toLowerCase();
+        const summary = game.summary && typeof game.summary === "object" ? game.summary : {};
+        const white = String(summary.white || "").toLowerCase();
+        const black = String(summary.black || "").toLowerCase();
+        const playerNames = ["player", "user", "you", "human", "플레이어", "사용자"];
+        const whiteIsPlayer = playerNames.some(name => white === name || white.includes(name));
+        const blackIsPlayer = playerNames.some(name => black === name || black.includes(name));
+        if (result === "1-0") return !blackIsPlayer;
+        if (result === "0-1") return blackIsPlayer;
+        return ["win", "won", "victory", "승리", "승"].includes(result);
+    };
+    const wins = games.filter(isPlayerWin);
     const botWins = botId => wins.filter(game => String(game.bot_id || "").toLowerCase() === botId).length;
     const sharesBought = stockId => (activity.stockBuys || [])
         .filter(trade => Number(trade.stock_id) === stockId)
@@ -2974,6 +2986,22 @@ async function 업적정보가져오기() {
 
 
 
+function 업적바로가기URL(id) {
+ const routes = {
+ first_chess:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_10_win:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_100_win:"https://rockey-jason.github.io/doldol-site/rockeychess.html",
+ chess_win_army:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_win_brilliant:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_win_doronum:"https://rockey-jason.github.io/doldol-site/rockeychess.html",
+ chess_win_fur:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_win_rockey:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_win_sleeping:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_win_talc:"https://rockey-jason.github.io/doldol-site/rockeychess.html",
+ first_box:"https://rockey-jason.github.io/doldol-site/Randombox",tenth_box:"https://rockey-jason.github.io/doldol-site/Randombox",hundred_box:"https://rockey-jason.github.io/doldol-site/Randombox",thousand_box:"https://rockey-jason.github.io/doldol-site/Randombox",
+ first_stock:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_bandoche:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_food:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_rockeycloth:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_rockeypaper:"https://rockey-jason.github.io/doldol-site/doldolstock.html",
+ read_news:"https://rockey-jason.github.io/doldol-site/rockeynews.html",read_1_news:"https://rockey-jason.github.io/doldol-site/rockeynews.html",read_10_news:"https://rockey-jason.github.io/doldol-site/rockeynews.html",quiz_correct:"https://rockey-jason.github.io/doldol-site/rockeynews.html",
+ rich:"https://rockey-jason.github.io/doldol-site/Randombox",very_rich:"https://rockey-jason.github.io/doldol-site/Randombox",super_rich:"https://rockey-jason.github.io/doldol-site/Randombox",rockey_7777777:"https://rockey-jason.github.io/doldol-site/Randombox",first_login:"https://rockey-jason.github.io/doldol-site/"
+ };
+ return routes[String(id||"").toLowerCase()] || "https://rockey-jason.github.io/doldol-site/";
+}
+function 업적바로가기버튼HTML(id, unlocked) {
+ return unlocked ? "" : '<a class="업적바로가기버튼" href="' + 업적바로가기URL(id) + '">바로가기 ↗</a>';
+}
+
 function 업적진행도계산(업적, 획득) {
     return 업적진행도값계산(업적?.id, 획득, 현재유저정보);
 }
@@ -2983,7 +3011,7 @@ function 업적진행도HTML(업적, 획득) {
     const percent = p.known ? p.percent : 0;
     const amount = p.known ? p.current.toLocaleString() + " / " + p.target.toLocaleString() : "기록 조회 실패";
     const note = p.known ? p.label + " · " + p.note : p.note;
-    return '<div class="achievement-progress"><div class="achievement-progress-head"><span>진행도 · ' + p.label + '</span><span class="achievement-progress-value">' + amount + ' (' + percent + '%)</span></div><div class="achievement-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + percent + '"><div class="achievement-progress-fill" style="--progress:' + percent + '%"></div></div><div class="achievement-progress-note">' + note + '</div></div>';
+    return '<div class="achievement-progress"><div class="achievement-progress-head"><span>진행도 · ' + p.label + '</span><span class="achievement-progress-value">' + amount + ' (' + percent + '%)</span></div><div class="achievement-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + percent + '"><div class="achievement-progress-fill" style="--progress:' + percent + '%"></div></div><div class="achievement-progress-note">' + note + '</div>' + 업적바로가기버튼HTML(업적?.id, 획득) + '</div>';
 }
 
 function 업적화면표시() {
