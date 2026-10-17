@@ -204,6 +204,8 @@ text-decoration:none;font-size:12px;font-weight:800;white-space:nowrap;transitio
 </div>
 </div>
 
+<script src="js/supabase.min.js?v=2.117.2"></script>
+
 <script>
 /* =========================================================
    돌이 AI — 프리미엄 프론트엔드
@@ -273,8 +275,11 @@ async function getSupabaseClient() {
   // dori-ai.html은 index.html의 module scope를 공유하지 않으므로
   // 여기서 같은 Supabase 프로젝트의 client를 직접 만든다.
   if (!supabaseLoadPromise) {
-    supabaseLoadPromise = import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm")
-      .then(({ createClient }) => {
+    supabaseLoadPromise = Promise.resolve().then(() => {
+        if (!window.supabase || typeof window.supabase.createClient !== "function") {
+          throw new Error("로컬 Supabase 라이브러리를 불러오지 못했습니다.");
+        }
+        const createClient = window.supabase.createClient;
         supabaseClient = createClient(
           DORI_SUPABASE_URL,
           DORI_SUPABASE_ANON_KEY,
