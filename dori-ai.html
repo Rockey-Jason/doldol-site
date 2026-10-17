@@ -273,7 +273,7 @@ async function getSupabaseClient() {
   // dori-ai.html은 index.html의 module scope를 공유하지 않으므로
   // 여기서 같은 Supabase 프로젝트의 client를 직접 만든다.
   if (!supabaseLoadPromise) {
-    supabaseLoadPromise = import("https://esm.sh/@supabase/supabase-js@2")
+    supabaseLoadPromise = import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm")
       .then(({ createClient }) => {
         supabaseClient = createClient(
           DORI_SUPABASE_URL,
