@@ -47,3 +47,49 @@ html,body,body *{-webkit-user-select:none!important;-moz-user-select:none!import
  .dori-home-arrow{font-size:19px!important}
  .dori-home-float{top:14px!important;left:14px!important}
 }
+
+
+/* Responsive dialog safety: keep native dialogs and modal content inside the viewport. */
+dialog,
+[role="dialog"] {
+  box-sizing: border-box;
+  max-width: calc(100vw - 20px);
+  max-height: calc(100dvh - 20px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.modal-content,
+.popup-content,
+.modal-box,
+.popup-box,
+.modal-inner,
+.popup-inner,
+.모달내용,
+.팝업내용 {
+  box-sizing: border-box;
+  max-height: calc(100dvh - 28px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 700px) {
+  dialog,
+  [role="dialog"] {
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 16px);
+    margin: 8px;
+  }
+  .modal-content,
+  .popup-content,
+  .modal-box,
+  .popup-box,
+  .modal-inner,
+  .popup-inner,
+  .모달내용,
+  .팝업내용 {
+    max-height: calc(100dvh - 24px);
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
