@@ -118,7 +118,7 @@
 
   async function run() {
     try {
-      const { createClient } = await import("https://esm.sh/@supabase/supabase-js@2");
+      const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
       const client = window.doriSupabase || window.supabaseClient || window.sb || createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       const { data: sessionData, error: sessionError } = await client.auth.getSession();
       if (sessionError || !sessionData?.session?.user?.id) return;
