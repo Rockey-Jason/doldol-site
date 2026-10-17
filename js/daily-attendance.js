@@ -5,7 +5,7 @@
   window.__DORI_DAILY_ATTENDANCE__ = true;
 
   const SUPABASE_URL = "https://scttowfhygcpdirrekqm.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+  const SUPABASE_ANON_KEY = "sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
   const REWARDS = [1000, 1500, 2000, 2500, 3500, 5000, 12000];
   const money = n => Number(n || 0).toLocaleString("ko-KR");
 
