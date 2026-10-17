@@ -2837,7 +2837,7 @@ async function 업적진행활동가져오기(userId) {
 
     const [chess, box, stocks] = await Promise.all([
         업적페이지별기록조회(() => supabase.from("chess_games")
-            .select("bot_id,result,mode").eq("user_id", id).order("created_at", { ascending: true })),
+            .select("bot_id,result,mode,summary").eq("user_id", id).order("created_at", { ascending: true })),
         (async () => {
             try {
                 const { count, error } = await supabase.from("dori_box_history")
