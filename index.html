@@ -1855,6 +1855,8 @@ body.로그인상태 #회원가입 {
     0 0 28px color-mix(in srgb,var(--portal-glow) 85%,transparent) !important;
 }
 
+
+.업적진행도{margin-top:14px;padding:12px 13px;border:1px solid rgba(133,150,255,.2);border-radius:14px;background:linear-gradient(120deg,rgba(92,104,255,.11),rgba(255,255,255,.025))}.업적진행도헤더{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:8px;color:#c7cdec;font-size:12px}.업적진행도수치{color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap}.업적진행도트랙{height:7px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.1)}.업적진행도채움{height:100%;width:var(--progress,0%);border-radius:inherit;background:linear-gradient(90deg,#7778ff,#68d9ff);box-shadow:0 0 14px rgba(105,160,255,.35);transform-origin:left;animation:profileAchievementProgress .9s cubic-bezier(.22,1,.36,1) both}.업적카드.is-completed .업적진행도채움{background:linear-gradient(90deg,#4bde97,#a7ffd3)}.업적진행도안내{margin-top:7px;color:rgba(220,226,255,.55);font-size:11px;line-height:1.45}@keyframes profileAchievementProgress{from{transform:scaleX(0);opacity:.45}to{transform:scaleX(1);opacity:1}}@media(prefers-reduced-motion:reduce){.업적진행도채움{animation:none}}
 </style>
 
 <link rel="stylesheet" href="css/doldol-theme.css?v=20261002">
@@ -3583,6 +3585,9 @@ function 패널닫기() {
 // 업적 화면
 // =====================================================
 
+
+function 프로필업적진행도HTML(achievement, unlocked) {const id=String(achievement?.id||"").toLowerCase(),u=현재유저정보||{};if(unlocked)return '<div class="업적진행도"><div class="업적진행도헤더"><span>진행도 · 완료</span><span class="업적진행도수치">1 / 1 (100%)</span></div><div class="업적진행도트랙" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div class="업적진행도채움" style="--progress:100%"></div></div><div class="업적진행도안내">업적을 획득했습니다!</div></div>';let current=0,target=1,label="진행 중",known=true;if(["rich","very_rich","super_rich"].includes(id)){current=Math.max(0,Number(u.doldolcoin||0));target=id==="rich"?100000000:id==="very_rich"?1000000000000:10000000000000000;label="보유 돌돌코인";}else if(id==="read_10_news"){const nums=Array.isArray(u.read_dori_news_numbers)?u.read_dori_news_numbers:[];current=Math.max(Number(u.read_dori_news||0),nums.length);target=10;label="신문 읽기";}else if(["read_news","read_1_news"].includes(id)){const nums=Array.isArray(u.read_dori_news_numbers)?u.read_dori_news_numbers:[];current=(Number(u.read_dori_news||0)>0||nums.length>0)?1:0;target=1;label="신문 읽기";}else if(id==="rockey_7777777"){current=Math.max(0,Number(u.special_title_draws||0));target=7;label="특별 칭호 뽑기";}else known=false;current=Math.min(Math.max(0,current),target);const percent=known?Math.round(current/target*100):0,amount=known?current.toLocaleString()+" / "+target.toLocaleString():"아직 달성 전",note=known?label+" 기준 · 목표까지 "+Math.max(0,target-current).toLocaleString()+" 남음":"업적 달성 조건을 만족하면 자동으로 완료됩니다.";return '<div class="업적진행도"><div class="업적진행도헤더"><span>진행도 · '+label+'</span><span class="업적진행도수치">'+amount+' ('+percent+'%)</span></div><div class="업적진행도트랙" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+percent+'"><div class="업적진행도채움" style="--progress:'+percent+'%"></div></div><div class="업적진행도안내">'+note+'</div></div>';}
+
 function 업적화면표시() {
 
     패널제목.textContent =
@@ -3679,6 +3684,8 @@ function 업적화면표시() {
 
                 </div>
 
+
+                ${프로필업적진행도HTML(achievement, 획득)}
 
                 <div class="업적정보">
 
