@@ -3844,128 +3844,30 @@ async function 읽음저장() {
         "💾 저장 중...";
 
 
-    /*
-       먼저 읽음 목록을 가져옴
-    */
-
+    /* 읽음 기록은 서버 RPC만 변경할 수 있습니다. */
     const {
-
-        data,
-        error
-
-    } =
-        await supabase
-
-            .from("users")
-
-            .select(
-                "read_dori_news_numbers"
-            )
-
-            .eq(
-                "user_id",
-                현재사용자.id
-            )
-
-            .single();
-
-
-    if (error) {
-
-        console.error(
-            "읽음 정보 조회 오류:",
-            error
-        );
-
-
-        $("읽음버튼").disabled =
-            false;
-
-        $("읽음버튼").textContent =
-            "📖 돌이신문 읽음";
-
-        return;
-
-    }
-
-
-    let 목록 =
-
-        Array.isArray(
-            data.read_dori_news_numbers
-        )
-
-            ? data.read_dori_news_numbers
-                .map(Number)
-                .filter(Number.isInteger)
-
-            : [];
-
-
-    if (
-        !목록.includes(
-            신문번호
-        )
-    ) {
-
-        목록.push(
-            신문번호
-        );
-
-    }
-
-
-    목록.sort(
-        (a, b) =>
-            a - b
-    );
-
-
-    /*
-       읽음 목록 저장
-    */
-
-    const {
-
+        data: 읽음결과,
         error: 저장오류
+    } = await supabase.rpc("mark_news_read", {
+        p_news_number: Number(신문번호)
+    });
 
-    } =
-        await supabase
-
-            .from("users")
-
-            .update({
-
-                read_dori_news_numbers:
-                    목록
-
-            })
-
-            .eq(
-                "user_id",
-                현재사용자.id
-            );
-
-
-    if (저장오류) {
-
-        console.error(
-            "읽음 저장 오류:",
-            저장오류
-        );
-
-
-        alert(
-            "돌이신문 읽음 저장에 실패했습니다."
-        );
-
-
-        읽음버튼업데이트();
-
+    if (저장오류 || !읽음결과?.success) {
+        console.error("읽음 저장 오류:", 저장오류 || 읽음결과);
+        $("읽음버튼").disabled = false;
+        $("읽음버튼").textContent = "📖 돌이신문 읽음";
+        alert(읽음결과?.message || "돌이신문 읽음 저장에 실패했습니다.");
         return;
-
     }
 
+    const 목록 = Array.isArray(현재유저정보.read_dori_news_numbers)
+        ? 현재유저정보.read_dori_news_numbers.map(Number).filter(Number.isInteger)
+        : [];
+    if (!목록.includes(Number(신문번호))) 목록.push(Number(신문번호));
+    목록.sort((a, b) => a - b);
+    현재유저정보.read_dori_news_numbers = 목록;
+    읽은신문번호들 = 목록;
+    읽음버튼업데이트();
 
     await 업적달성알림("read_news");
 
