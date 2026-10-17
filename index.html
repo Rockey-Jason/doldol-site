@@ -3541,7 +3541,7 @@ async function 일일미션화면표시(){
 }
 if(일일미션버튼)일일미션버튼.onclick=()=>{메뉴.classList.remove("menu-show");메뉴.classList.add("menu-hide");window.setTimeout(()=>메뉴.classList.remove("menu-hide"),260);패널열기("daily")};
 const 출석체크버튼=document.getElementById("출석체크버튼");
-if(출석체크버튼)출석체크버튼.onclick=()=>{메뉴.classList.remove("menu-show");메뉴.classList.add("menu-hide");window.setTimeout(()=>메뉴.classList.remove("menu-hide"),260);if(window.doriOpenAttendanceCalendar)window.doriOpenAttendanceCalendar();else window.dispatchEvent(new CustomEvent("dori:open-attendance-calendar"))};
+if(출석체크버튼)출석체크버튼.onclick=()=>{메뉴.classList.remove("menu-show");메뉴.classList.add("menu-hide");window.setTimeout(()=>메뉴.classList.remove("menu-hide"),260);let tries=0;const openCalendar=()=>{if(window.doriOpenAttendanceCalendar){window.doriOpenAttendanceCalendar();return}if(tries++<25)window.setTimeout(openCalendar,120);else window.alert("출석 달력을 불러오지 못했습니다. 페이지를 새로고침한 뒤 다시 눌러주세요.")};openCalendar()};
 window.addEventListener("dori:daily-mission-completed",()=>{if(패널.classList.contains("show")&&패널내용.querySelector("#일일미션화면"))일일미션화면표시()});
 
 function 패널열기(
