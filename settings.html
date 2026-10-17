@@ -2353,6 +2353,148 @@ let 현재유저정보 = null;
 
 let 업적목록 = [];
 
+
+/* 업적 진행도는 실제 Supabase 활동 기록을 기준으로 계산합니다. */
+let 업적진행활동 = {
+    userId: null, updatedAt: 0, chessGames: [], boxCount: 0, stockBuys: [],
+    chessReady: false, boxReady: false, stockReady: false
+};
+
+async function 업적페이지별기록조회(queryFactory) {
+    const rows = [];
+    let offset = 0;
+    try {
+        while (true) {
+            const { data, error } = await queryFactory().range(offset, offset + 999);
+            if (error) return { data: rows, error };
+            const page = Array.isArray(data) ? data : [];
+            rows.push(...page);
+            if (page.length < 1000) return { data: rows, error: null };
+            offset += 1000;
+        }
+    } catch (error) { return { data: rows, error }; }
+}
+
+async function 업적진행활동가져오기(userId) {
+    const id = String(userId || "");
+    if (!id) return;
+    if (업적진행활동.userId === id && Date.now() - 업적진행활동.updatedAt < 15000) return;
+
+    const [chess, box, stocks] = await Promise.all([
+        업적페이지별기록조회(() => supabase.from("chess_games")
+            .select("bot_id,result,mode").eq("user_id", id).order("created_at", { ascending: true })),
+        (async () => {
+            try {
+                const { count, error } = await supabase.from("dori_box_history")
+                    .select("id", { count: "exact", head: true }).eq("user_id", id);
+                return { count: Number(count || 0), error };
+            } catch (error) { return { count: 0, error }; }
+        })(),
+        업적페이지별기록조회(() => supabase.from("dori_stock_trades")
+            .select("stock_id,trade_type,quantity").eq("user_id", id).eq("trade_type", "BUY")
+            .order("id", { ascending: true }))
+    ]);
+
+    업적진행활동 = {
+        userId: id, updatedAt: Date.now(),
+        chessGames: chess.data || [], boxCount: Number(box.count || 0),
+        stockBuys: (stocks.data || []).filter(row => String(row.trade_type || "").toUpperCase() === "BUY"),
+        chessReady: !chess.error, boxReady: !box.error, stockReady: !stocks.error
+    };
+    if (chess.error) console.warn("업적 진행도: 체스 기록 조회 실패", chess.error);
+    if (box.error) console.warn("업적 진행도: 랜덤 박스 기록 조회 실패", box.error);
+    if (stocks.error) console.warn("업적 진행도: 주식 매수 기록 조회 실패", stocks.error);
+}
+
+function 업적진행도값계산(achievementId, unlocked, user) {
+    const id = String(achievementId || "").toLowerCase();
+    const u = user || {}, activity = 업적진행활동;
+    let current = 0, target = 1, label = "조건 달성", known = true;
+    const games = activity.chessGames || [];
+    // 현재 저장된 체스 기록에서 흰색 플레이어가 이긴 결과(1-0)를 승리로 집계합니다.
+    const wins = games.filter(game => String(game.result || "").trim() === "1-0");
+    const botWins = botId => wins.filter(game => String(game.bot_id || "").toLowerCase() === botId).length;
+    const sharesBought = stockId => (activity.stockBuys || [])
+        .filter(trade => Number(trade.stock_id) === stockId)
+        .reduce((sum, trade) => sum + Math.max(0, Number(trade.quantity || 0)), 0);
+
+    let newsNumbers = [];
+    const rawNewsNumbers = u.read_dori_news_numbers;
+    if (Array.isArray(rawNewsNumbers)) {
+        newsNumbers = rawNewsNumbers.map(Number).filter(Number.isFinite);
+    } else if (typeof rawNewsNumbers === "string" && rawNewsNumbers.trim()) {
+        try {
+            const parsed = JSON.parse(rawNewsNumbers);
+            if (Array.isArray(parsed)) newsNumbers = parsed.map(Number).filter(Number.isFinite);
+            else if (parsed && typeof parsed === "object") newsNumbers = Object.keys(parsed).filter(key => parsed[key]).map(Number).filter(Number.isFinite);
+        } catch (_) {}
+    } else if (rawNewsNumbers && typeof rawNewsNumbers === "object") {
+        newsNumbers = Object.keys(rawNewsNumbers).filter(key => rawNewsNumbers[key]).map(Number).filter(Number.isFinite);
+    }
+    const hasReadHistory = Array.isArray(rawNewsNumbers) ||
+        (typeof rawNewsNumbers === "string" && rawNewsNumbers.trim() !== "") ||
+        (rawNewsNumbers && typeof rawNewsNumbers === "object");
+    const fallbackNewsNumber = Math.max(0, Number(u.read_dori_news || 0));
+    const hasReadNews = hasReadHistory ? newsNumbers.length > 0 : fallbackNewsNumber > 0;
+    const readIssue = issue => hasReadHistory ? newsNumbers.includes(issue) : fallbackNewsNumber >= issue;
+
+    if (["rich", "very_rich", "super_rich"].includes(id)) {
+        current = Math.max(0, Number(u.doldolcoin || 0));
+        target = id === "rich" ? 100000000 : id === "very_rich" ? 1000000000000 : 10000000000000000;
+        label = "현재 보유 돌돌코인";
+    } else if (id === "read_news") {
+        current = hasReadNews ? 1 : 0; label = "돌이신문 읽기 여부";
+    } else if (id === "read_1_news") {
+        current = readIssue(1) ? 1 : 0; label = "제 1회 돌이신문 읽기";
+    } else if (id === "read_10_news") {
+        current = readIssue(10) ? 1 : 0; label = "제 10회 돌이신문 읽기";
+    } else if (id === "rockey_7777777") {
+        current = Math.max(0, Number(u.special_title_draws || 0)); target = 7; label = "특별 칭호 뽑기 횟수";
+    } else if (["first_box", "tenth_box", "hundred_box", "thousand_box"].includes(id)) {
+        if (!activity.boxReady) known = false;
+        current = Number(activity.boxCount || 0);
+        target = id === "first_box" ? 1 : id === "tenth_box" ? 10 : id === "hundred_box" ? 100 : 1000;
+        label = "실제 랜덤 박스 뽑기 횟수";
+    } else if (["first_chess", "chess_10_win", "chess_100_win", "chess_win_army", "chess_win_brilliant", "chess_win_doronum", "chess_win_fur", "chess_win_rockey", "chess_win_sleeping", "chess_win_talc"].includes(id)) {
+        if (!activity.chessReady) known = false;
+        if (id === "first_chess") { current = games.length; target = 1; label = "실제 체스 경기 수"; }
+        else if (id === "chess_10_win") { current = wins.length; target = 10; label = "실제 체스 승리 수"; }
+        else if (id === "chess_100_win") { current = wins.length; target = 100; label = "실제 체스 승리 수"; }
+        else {
+            const bots = { chess_win_army: "army", chess_win_brilliant: "brilliant", chess_win_doronum: "doronum", chess_win_fur: "fur", chess_win_rockey: "rockey", chess_win_sleeping: "sleeping", chess_win_talc: "talc" };
+            current = botWins(bots[id]); label = "해당 체스 상대를 이긴 횟수";
+        }
+    } else if (["first_stock", "first_bandoche", "first_food", "first_rockeycloth", "first_rockeypaper"].includes(id)) {
+        if (!activity.stockReady) known = false;
+        const stockIds = { first_bandoche: 2, first_food: 5, first_rockeycloth: 6, first_rockeypaper: 1 };
+        current = id === "first_stock"
+            ? (activity.stockBuys || []).reduce((sum, trade) => sum + Math.max(0, Number(trade.quantity || 0)), 0)
+            : sharesBought(stockIds[id]);
+        target = 1;
+        label = id === "first_stock" ? "실제 매수 주식 수" :
+            id === "first_bandoche" ? "돌이 반도체 매수 주식 수" :
+            id === "first_food" ? "로키 푸드 매수 주식 수" :
+            id === "first_rockeycloth" ? "돌이 의류 매수 주식 수" : "로키 페이퍼 매수 주식 수";
+    } else if (id === "quiz_correct") {
+        current = u.quiz_right === true ? 1 : 0; label = "저장된 퀴즈 정답 상태";
+    } else if (id === "first_login") {
+        current = u.user_id ? 1 : 0; label = "로그인 기록";
+    } else {
+        known = false;
+    }
+
+    if (unlocked) { current = target; known = true; }
+    current = Math.max(0, Math.min(Number(current) || 0, target));
+    const percent = known && target > 0 ? Math.round(current / target * 100) : 0;
+    return {
+        current, target, percent, label, known,
+        note: known
+            ? (current >= target ? "조건 달성 기준을 충족했습니다." : "목표까지 " + Math.max(0, target - current).toLocaleString() + " 남음")
+            : "Supabase 기록을 가져오지 못했습니다. 새로고침 후 다시 확인해 주세요."
+    };
+}
+
+
 let 선택된칭호 = null;
 
 let 칭호변경중 = false;
@@ -2818,8 +2960,18 @@ async function 업적정보가져오기() {
 // =====================================================
 
 
-function 업적진행도계산(업적, 획득) { const id=String(업적.id||"").toLowerCase(),u=현재유저정보||{}; if(획득)return {current:1,target:1,percent:100,label:"완료",known:true}; let current=0,target=1,label="진행 중",known=true; if(["rich","very_rich","super_rich"].includes(id)){current=Math.max(0,Number(u.doldolcoin||0));target=id==="rich"?100000000:id==="very_rich"?1000000000000:10000000000000000;label="보유 돌돌코인";}else if(id==="read_10_news"){const nums=Array.isArray(u.read_dori_news_numbers)?u.read_dori_news_numbers:[];current=Math.max(Number(u.read_dori_news||0),nums.length);target=10;label="신문 읽기";}else if(["read_news","read_1_news"].includes(id)){const nums=Array.isArray(u.read_dori_news_numbers)?u.read_dori_news_numbers:[];current=(Number(u.read_dori_news||0)>0||nums.length>0)?1:0;target=1;label="신문 읽기";}else if(id==="rockey_7777777"){current=Math.max(0,Number(u.special_title_draws||0));target=7;label="특별 칭호 뽑기";}else known=false;current=Math.min(Math.max(0,current),target);return {current,target,percent:Math.round(current/target*100),label,known};}
-function 업적진행도HTML(업적, 획득) {const p=업적진행도계산(업적,획득),percent=p.known?p.percent:0,amount=p.known?p.current.toLocaleString()+" / "+p.target.toLocaleString():(획득?"1 / 1":"아직 달성 전"),note=p.known?p.label+" 기준 · 목표까지 "+Math.max(0,p.target-p.current).toLocaleString()+" 남음":"업적 달성 조건을 만족하면 자동으로 완료됩니다.";return '<div class="achievement-progress"><div class="achievement-progress-head"><span>진행도 · '+HTML이스케이프(p.label)+'</span><span class="achievement-progress-value">'+amount+' ('+percent+'%)</span></div><div class="achievement-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="'+percent+'"><div class="achievement-progress-fill" style="--progress:'+percent+'%"></div></div><div class="achievement-progress-note">'+HTML이스케이프(note)+'</div></div>';}
+
+function 업적진행도계산(업적, 획득) {
+    return 업적진행도값계산(업적?.id, 획득, 현재유저정보);
+}
+
+function 업적진행도HTML(업적, 획득) {
+    const p = 업적진행도계산(업적, 획득);
+    const percent = p.known ? p.percent : 0;
+    const amount = p.known ? p.current.toLocaleString() + " / " + p.target.toLocaleString() : "기록 조회 실패";
+    const note = p.known ? p.label + " · " + p.note : p.note;
+    return '<div class="achievement-progress"><div class="achievement-progress-head"><span>진행도 · ' + p.label + '</span><span class="achievement-progress-value">' + amount + ' (' + percent + '%)</span></div><div class="achievement-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + percent + '"><div class="achievement-progress-fill" style="--progress:' + percent + '%"></div></div><div class="achievement-progress-note">' + note + '</div></div>';
+}
 
 function 업적화면표시() {
 
@@ -4311,6 +4463,7 @@ async function 사용자정보가져오기(
                 profile_image,
                 name,
                 user_achievement,
+                quiz_right,
                 read_dori_news,
                 read_dori_news_numbers,
                 doldolcoin,
@@ -4755,6 +4908,9 @@ async function 페이지초기화() {
             await 사용자정보가져오기(
                 user
             );
+
+        현재유저정보 = 유저정보;
+        await 업적진행활동가져오기(user.id);
 
         // 돌이사이트 랜덤박스 인벤토리
         try {
