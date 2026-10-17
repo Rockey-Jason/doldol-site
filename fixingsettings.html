@@ -260,6 +260,7 @@ button:focus-visible,input:focus-visible{
 </style>
 <link rel="stylesheet" href="css/doldol-theme.css?v=20261002">
 <link rel="stylesheet" href="css/doldol-theme.css?v=20261002">
+  <script src="js/supabase.min.js?v=2.117.2"></script>
 </head>
 
 <body>
@@ -322,9 +323,7 @@ button:focus-visible,input:focus-visible{
 
 <script type="module">
 
-import {
-  createClient
-} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+const { createClient } = window.supabase;
 
 
 const supabase = createClient(
