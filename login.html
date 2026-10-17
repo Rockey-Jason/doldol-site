@@ -1154,6 +1154,7 @@
       }
     }
   </style><link rel="stylesheet" href="css/doldol-theme.css?v=20261002">
+  <script src="js/supabase.min.js?v=2.117.2"></script>
 </head><body>  <div class="background-glow" aria-hidden="true">
     <div class="glow glow-one"></div>
     <div class="glow glow-two"></div>
@@ -1409,9 +1410,7 @@
 
   </main>  <script type="module">
 
-    import {
-      createClient
-    } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+    const { createClient } = window.supabase;
 
 
     const supabase =
