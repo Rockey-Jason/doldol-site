@@ -36,3 +36,21 @@ dialog,[role="dialog"]{box-sizing:border-box;max-width:calc(100vw - 20px);max-he
 @keyframes doriEnter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes doriFloat{0%,100%{transform:translate3d(0,0,0) scale(.97)}50%{transform:translate3d(24px,-17px,0) scale(1.04)}}@keyframes doriLoaderIn{to{opacity:1;transform:none}}@keyframes doriLoaderBar{0%{transform:translateX(-180%)}100%{transform:translateX(360%)}}
 @media(max-width:700px){body::before{background-size:46px 46px;opacity:.11}.dori-world i{filter:blur(45px);opacity:.1}.dori-loader-mark{width:56px;height:56px}.dori-loader-name{font-size:16px}dialog,[role="dialog"]{max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px);margin:8px}.modal-content,.popup-content,.modal-box,.popup-box,.modal-inner,.popup-inner,.모달내용,.팝업내용{max-height:calc(100dvh - 24px);padding-bottom:max(12px,env(safe-area-inset-bottom))}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}.dori-world{display:none}.dori-enter,.dori-reveal{opacity:1!important;transform:none!important}}
+
+
+/* Keep the main navigation control aligned on narrower newsroom layouts. */
+@media(max-width:700px) {
+  body .topbar { height:auto!important; min-height:76px; }
+  body .topbar .wrap {
+    height:auto!important; min-height:76px; display:flex; flex-wrap:wrap;
+    align-items:center; gap:8px!important; padding-top:10px; padding-bottom:10px;
+  }
+  body .topbar .wrap > .brand { flex:1 1 100%; min-width:0; }
+  body .topbar .wrap > nav.nav {
+    flex:1 1 100%; min-width:0; justify-content:flex-end; flex-wrap:wrap; gap:6px;
+  }
+  body .topbar .wrap > nav.nav > a { padding:8px 8px; font-size:12px; }
+  body .topbar .wrap > nav.nav > a.dori-main-site-button {
+    min-width:152px!important; height:40px!important; min-height:40px!important;
+  }
+}
