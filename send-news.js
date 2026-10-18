@@ -26,26 +26,83 @@ const delayMap = {
   6: 2, 7: 1, 8: 1, 9: 1, 10: 1
 };
 
-function isLocalEightPMToNextMorningEightAM(timezone) {
-  try {
-    const hour = Number(new Intl.DateTimeFormat("en-US", {
-      timeZone: timezone || "Asia/Seoul",
-      hour: "2-digit",
-      hour12: false
-    }).format(new Date()));
+const DEFAULT_TIMEZONE = "Asia/Seoul";
 
-    return hour >= 20 || hour < 8;
+function safeTimezone(timezone) {
+  const candidate = typeof timezone === "string" && timezone.trim()
+    ? timezone.trim()
+    : DEFAULT_TIMEZONE;
+
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: candidate }).format(new Date());
+    return candidate;
   } catch {
-    return false;
+    // A bad saved timezone must not permanently suppress a member's emails.
+    return DEFAULT_TIMEZONE;
   }
 }
 
-function shouldSend(lastDate, level) {
+function localDayNumber(date, timezone) {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: safeTimezone(timezone),
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  }).formatToParts(date);
+
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return Math.floor(Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day)) / 86400000);
+}
+
+function isLocalEightPMToNextMorningEightAM(timezone, now = new Date()) {
+  const hour = Number(new Intl.DateTimeFormat("en-US", {
+    timeZone: safeTimezone(timezone),
+    hour: "2-digit",
+    hourCycle: "h23"
+  }).format(now));
+
+  return hour >= 20 || hour < 8;
+}
+
+function shouldSend(lastDate, level, timezone, now = new Date()) {
   if (!lastDate) return true;
 
   const last = new Date(lastDate);
-  const diff = Math.floor((new Date() - last) / (1000 * 60 * 60 * 24));
-  return diff >= (delayMap[level] ?? 7);
+  if (Number.isNaN(last.getTime())) {
+    console.warn("⚠️ last_news_sent 값이 올바르지 않아 발송 대상으로 처리합니다:", lastDate);
+    return true;
+  }
+
+  // Local calendar-day comparison avoids accumulating cron/job-start delays.
+  const localDaysPassed = localDayNumber(now, timezone) - localDayNumber(last, timezone);
+  return localDaysPassed >= (delayMap[level] ?? 7);
+}
+
+async function withRetry(operation, label, maxAttempts = 3) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      const code = String(error?.code || "").toUpperCase();
+      const responseCode = Number(error?.responseCode || 0);
+      const permanent = ["EAUTH", "EENVELOPE", "EINVALID", "EINVALIDMSG", "EINVALIDHELO"].includes(code)
+        || (responseCode >= 500 && responseCode < 600);
+
+      if (permanent || attempt === maxAttempts) {
+        console.error("❌ " + label + " 실패 (" + attempt + "/" + maxAttempts + ")", error);
+        throw error;
+      }
+
+      const waitMs = 1000 * attempt;
+      console.warn("⚠️ " + label + " 실패 (" + attempt + "/" + maxAttempts + "). " + waitMs + "ms 후 재시도합니다.");
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+    }
+  }
+
+  throw lastError;
 }
 
 function escapeHtml(value) {
@@ -65,7 +122,7 @@ async function sendEmail(to, level, newsNumber) {
   const newsUrl =
     `${NEWS_PAGE_URL}?news_number=${encodeURIComponent(safeNewsNumber)}`;
 
-  await transporter.sendMail({
+  await withRetry(() => transporter.sendMail({
     from: `"돌이사이트" <${process.env.GMAIL_USER}>`,
     to,
     subject: `📢 제 ${safeNewsNumber}회 돌이신문이 발행되었습니다!`,
@@ -101,13 +158,13 @@ async function sendEmail(to, level, newsNumber) {
 </body>
 </html>
 `
-  });
+  }), `이메일 발송: ${to}`);
 }
 
 async function run() {
   console.log("🚀 돌이신문 이메일 시스템 시작");
   console.log("🔐 Gmail SMTP 연결 확인 중...");
-  await transporter.verify();
+  await withRetry(() => transporter.verify(), "Gmail SMTP 연결 확인");
   console.log("✅ Gmail SMTP 인증/연결 성공");
 
   const { data: users, error } = await supabase
@@ -176,7 +233,7 @@ async function run() {
       continue;
     }
 
-    if (!shouldSend(user.last_news_sent, level)) {
+    if (!shouldSend(user.last_news_sent, level, user.timezone)) {
       console.log("⏭️ 아직 발송 시기가 아님:", user.email);
       continue;
     }

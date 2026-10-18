@@ -13,9 +13,15 @@ on:
         required: false
         type: string
 
+# Prevent scheduled/manual runs from sending to the same users concurrently.
+concurrency:
+  group: send-dori-news-email
+  cancel-in-progress: false
+
 jobs:
   run-news:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - uses: actions/checkout@v4
