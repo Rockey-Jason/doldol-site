@@ -144,6 +144,15 @@
         hideLegacyBackControl(button);
       }
     });
+
+    // Remove a duplicate, non-clickable generic site wordmark from the header.
+    // Real product names such as "돌이 AI" and "돌돌증권" are intentionally kept.
+    Array.from(document.querySelectorAll("header .brand,header .site-brand,header .site-title,.상단바 .brand,.top .brand"))
+      .forEach((brand) => {
+        if (brand === primary || brand.querySelector("a,button")) return;
+        const label = (brand.innerText || brand.textContent || "").replace(/\s+/g, " ").trim();
+        if (/^(?:돌이\s*사이트|돌이사이트)$/i.test(label)) brand.remove();
+      });
   };
   normalizeMainSiteButtons();
   if ("MutationObserver" in window) {
