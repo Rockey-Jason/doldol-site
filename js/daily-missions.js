@@ -16,7 +16,7 @@ const missionIcons = {
 
 const missionDestinations = {
   visit_site: { href: "index.html", label: "메인 페이지로 이동" },
-  play_chess: { href: "gamepage.html", label: "게임 페이지로 이동" },
+  play_chess: { href: "https://rockey-jason.github.io/rockey-chess/", label: "체스 하러 가기" },
   play_card_war: { href: "https://rockey-jason.github.io/rockeywar-card/", label: "돌이전쟁: 카드 열기" },
   open_randombox: { href: "Randombox.html", label: "랜덤 박스 열기" }
 };

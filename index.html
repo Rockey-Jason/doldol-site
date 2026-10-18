@@ -3267,7 +3267,7 @@ function 프로필메뉴열기() {
 const 일일미션버튼=document.getElementById("일일미션버튼");
 const 프로필정보탭=document.getElementById("프로필정보탭");
 const 일일미션아이콘={visit_site:"🏠",play_chess:"♟️",play_card_war:"🃏",open_randombox:"🎁"};
-const 일일미션바로가기URL={visit_site:"https://rockey-jason.github.io/doldol-site/",play_chess:"https://rockey-jason.github.io/doldol-site/rockeychess.html",play_card_war:"https://rockey-jason.github.io/rockeywar-card/",open_randombox:"https://rockey-jason.github.io/doldol-site/Randombox"};
+const 일일미션바로가기URL={visit_site:"https://rockey-jason.github.io/doldol-site/",play_chess:"https://rockey-jason.github.io/rockey-chess/",play_card_war:"https://rockey-jason.github.io/rockeywar-card/",open_randombox:"https://rockey-jason.github.io/doldol-site/Randombox.html"};
 const 오늘날짜=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul"}).format(new Date());
 const 일일HTML안전=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
 async function 일일미션화면표시(){
@@ -3330,13 +3330,13 @@ function 패널닫기() {
 
 function 업적바로가기URL(id) {
  const routes = {
- first_chess:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_10_win:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_100_win:"https://rockey-jason.github.io/doldol-site/rockeychess.html",
- chess_win_army:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_win_brilliant:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_win_doronum:"https://rockey-jason.github.io/doldol-site/rockeychess.html",
- chess_win_fur:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_win_rockey:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_win_sleeping:"https://rockey-jason.github.io/doldol-site/rockeychess.html",chess_win_talc:"https://rockey-jason.github.io/doldol-site/rockeychess.html",
- first_box:"https://rockey-jason.github.io/doldol-site/Randombox",tenth_box:"https://rockey-jason.github.io/doldol-site/Randombox",hundred_box:"https://rockey-jason.github.io/doldol-site/Randombox",thousand_box:"https://rockey-jason.github.io/doldol-site/Randombox",
+ first_chess:"https://rockey-jason.github.io/rockey-chess/",chess_10_win:"https://rockey-jason.github.io/rockey-chess/",chess_100_win:"https://rockey-jason.github.io/rockey-chess/",
+ chess_win_army:"https://rockey-jason.github.io/rockey-chess/",chess_win_brilliant:"https://rockey-jason.github.io/rockey-chess/",chess_win_doronum:"https://rockey-jason.github.io/rockey-chess/",
+ chess_win_fur:"https://rockey-jason.github.io/rockey-chess/",chess_win_rockey:"https://rockey-jason.github.io/rockey-chess/",chess_win_sleeping:"https://rockey-jason.github.io/rockey-chess/",chess_win_talc:"https://rockey-jason.github.io/rockey-chess/",
+ first_box:"https://rockey-jason.github.io/doldol-site/Randombox.html",tenth_box:"https://rockey-jason.github.io/doldol-site/Randombox.html",hundred_box:"https://rockey-jason.github.io/doldol-site/Randombox.html",thousand_box:"https://rockey-jason.github.io/doldol-site/Randombox.html",
  first_stock:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_bandoche:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_food:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_rockeycloth:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_rockeypaper:"https://rockey-jason.github.io/doldol-site/doldolstock.html",
  read_news:"https://rockey-jason.github.io/doldol-site/rockeynews.html",read_1_news:"https://rockey-jason.github.io/doldol-site/rockeynews.html",read_10_news:"https://rockey-jason.github.io/doldol-site/rockeynews.html",quiz_correct:"https://rockey-jason.github.io/doldol-site/rockeynews.html",
- rich:"https://rockey-jason.github.io/doldol-site/Randombox",very_rich:"https://rockey-jason.github.io/doldol-site/Randombox",super_rich:"https://rockey-jason.github.io/doldol-site/Randombox",rockey_7777777:"https://rockey-jason.github.io/doldol-site/Randombox",first_login:"https://rockey-jason.github.io/doldol-site/"
+ rich:"https://rockey-jason.github.io/doldol-site/Randombox.html",very_rich:"https://rockey-jason.github.io/doldol-site/Randombox.html",super_rich:"https://rockey-jason.github.io/doldol-site/Randombox.html",rockey_7777777:"https://rockey-jason.github.io/doldol-site/Randombox.html",first_login:"https://rockey-jason.github.io/doldol-site/"
  };
  return routes[String(id||"").toLowerCase()] || "https://rockey-jason.github.io/doldol-site/";
 }
