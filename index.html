@@ -386,6 +386,17 @@ button:focus-visible{
 #패널::-webkit-scrollbar{width:7px}
 #패널::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:99px}
 
+
+/* ===== Profile summary inside popup ===== */
+#프로필요약카드{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 48px 24px 0;padding:14px;border:1px solid rgba(143,170,255,.2);border-radius:18px;background:linear-gradient(135deg,rgba(65,83,155,.24),rgba(20,27,65,.48));box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
+.프로필요약항목{display:flex;align-items:center;gap:10px;min-width:0;padding:7px 8px;border-radius:12px;background:rgba(255,255,255,.035)}
+.프로필요약아이콘{display:grid;place-items:center;flex:0 0 36px;width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,.07);font-size:18px}
+.프로필요약항목>div{display:flex;flex-direction:column;gap:5px;min-width:0}
+.프로필요약라벨{color:#aeb9d9;font-size:11px;line-height:1.3;letter-spacing:.02em}
+.프로필요약항목 strong{color:#fff;font-size:14px;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.프로필요약코인 strong{color:#ffe29a}.프로필요약경험치 strong{color:#b9d5ff}.프로필요약칭호 strong{color:#e5d2ff}
+#레벨,#EXP정보,#돌돌코인수량,#현재칭호{display:none!important}
+@media(max-width:560px){#프로필요약카드{grid-template-columns:1fr;gap:7px;margin:0 38px 20px 0;padding:10px}.프로필요약항목{padding:6px 8px}.프로필요약아이콘{width:32px;height:32px;flex-basis:32px;font-size:16px}.프로필요약항목>div{gap:3px}.프로필요약항목 strong{font-size:13px}.프로필요약라벨{font-size:10px}}
 #패널제목{font-size:30px;font-weight:700;margin-bottom:20px}
 #패널닫기{
   position:absolute;top:15px;right:18px;
@@ -2013,6 +2024,12 @@ body.로그인상태 #회원가입 {
 
 <div id="패널">
 
+<div id="프로필요약카드" aria-label="내 프로필 요약">
+  <div class="프로필요약항목 프로필요약코인"><span class="프로필요약아이콘">🪙</span><div><span class="프로필요약라벨">보유 돌돌코인</span><strong id="프로필요약코인값">0</strong></div></div>
+  <div class="프로필요약항목 프로필요약경험치"><span class="프로필요약아이콘">✨</span><div><span class="프로필요약라벨">현재 EXP</span><strong id="프로필요약EXP값">EXP Lv.1 · 0 EXP</strong></div></div>
+  <div class="프로필요약항목 프로필요약칭호"><span class="프로필요약아이콘">🏷️</span><div><span class="프로필요약라벨">장착 중인 칭호</span><strong id="프로필요약칭호값">칭호 없음</strong></div></div>
+</div>
+
 <button id="패널닫기">
 
 ✕
@@ -3079,6 +3096,8 @@ function 화면업데이트() {
 
         EXP정보.textContent =
             `EXP Lv.${expLevel} · ${exp.toLocaleString()} EXP`;
+        const 프로필요약EXP값 = document.getElementById("프로필요약EXP값");
+        if (프로필요약EXP값) 프로필요약EXP값.textContent = EXP정보.textContent;
 
     }
 
@@ -3094,6 +3113,8 @@ function 화면업데이트() {
 
         돌돌코인수량.textContent =
             `돌돌코인: ${coin.toLocaleString()}`;
+        const 프로필요약코인값 = document.getElementById("프로필요약코인값");
+        if (프로필요약코인값) 프로필요약코인값.textContent = coin.toLocaleString();
 
     }
 
@@ -3115,11 +3136,15 @@ function 화면업데이트() {
 
             현재칭호.textContent =
                 `🏷️ ${장착칭호}`;
+            const 프로필요약칭호값 = document.getElementById("프로필요약칭호값");
+            if (프로필요약칭호값) 프로필요약칭호값.textContent = 장착칭호;
 
         } else {
 
             현재칭호.textContent =
                 "🏷️ 칭호 없음";
+            const 프로필요약칭호값 = document.getElementById("프로필요약칭호값");
+            if (프로필요약칭호값) 프로필요약칭호값.textContent = "칭호 없음";
 
         }
 
@@ -3139,10 +3164,6 @@ function 프로필메뉴열기() {
         메뉴.classList.remove("menu-show");
         메뉴.classList.add("menu-hide");
 
-        [레벨버튼, EXP정보, 돌돌코인수량, 현재칭호].forEach(el => {
-            if (el) el.style.display = "none";
-        });
-
         window.setTimeout(() => {
             메뉴.classList.remove("menu-hide");
         }, 260);
@@ -3152,9 +3173,6 @@ function 프로필메뉴열기() {
     메뉴.classList.remove("menu-hide");
     메뉴.classList.add("menu-show");
 
-    [레벨버튼, EXP정보, 돌돌코인수량, 현재칭호].forEach(el => {
-        if (el) el.style.display = "block";
-    });
 }
 
 
