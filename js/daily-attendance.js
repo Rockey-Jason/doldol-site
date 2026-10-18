@@ -93,7 +93,7 @@
     return { overlay, close };
   }
 
-  function showClaimPopup(data) {
+  function showClaimPopup(data, client) {
     const { overlay, close } = makeOverlay("claim");
     const streak = Number(data.streak_count || 1);
     const reward = Number(data.reward || 0);
@@ -110,9 +110,59 @@
     if (milestone.includes("three_months")) notes.push("⚡ 3개월 개근 달성 · 코인 수급량 5배 버프");
     if (milestone.includes("six_months")) notes.push("💎 6개월 개근 달성 · 코인 수급량 10배 버프");
     if (milestone.includes("year")) notes.push("👑 1년 개근 달성 · 코인 수급량 100배 버프");
-    overlay.innerHTML = '<section class="da-modal"><button class="da-close" type="button" aria-label="닫기">×</button><div class="da-eyebrow">✦ DOLDOL ATTENDANCE SYSTEM</div><div class="da-orb">🗓️</div><h2 class="da-title">'+streak+'일 '+(streak>1?'연속 ':'')+'출석 완료!</h2><p class="da-subtitle">오늘의 출석이 기록되었어요. 하루하루 쌓인 기록이 특별한 보상으로 이어집니다.</p><div class="da-stats"><div class="da-stat"><strong>'+streak+'일</strong><span>연속 출석</span></div><div class="da-stat"><strong>'+money(data.total_days)+'일</strong><span>누적 출석</span></div><div class="da-stat"><strong>'+Number(data.multiplier||1)+'배</strong><span>현재 코인 버프</span></div></div><div class="da-reward"><div class="da-reward-label">TODAY’S ATTENDANCE REWARD</div><div class="da-reward-amount">+ '+money(reward)+' <span style="font-size:.42em">돌돌코인</span></div><div class="da-reward-note">'+(bonus>0?'추가 특별 보상 +'+money(bonus)+' 코인까지 지급했어요.':'매일 기본 출석 보상 3,000 코인이 지급되었어요.')+'</div>'+(notes.length?'<div class="da-reward-note" style="margin-top:9px;color:#ffe69b">'+notes.join('<br>')+'</div>':'')+'</div><div class="da-track-title"><span>7일 연속 출석 보상</span><span>7일마다 반복</span></div><div class="da-track">'+rewardTrack+'</div><div class="da-track-title"><span>현재 잔액</span><span>'+money(data.balance)+' 돌돌코인</span></div><button class="da-continue" type="button">확인하고 계속하기</button></section>';
+    overlay.innerHTML = '<section class="da-modal"><button class="da-close" type="button" aria-label="닫기">×</button><div class="da-eyebrow">✦ DOLDOL ATTENDANCE SYSTEM</div><div class="da-orb">🗓️</div><h2 class="da-title">'+streak+'일 '+(streak>1?'연속 ':'')+'출석 완료!</h2><p class="da-subtitle">오늘의 출석이 기록되었어요. 하루하루 쌓인 기록이 특별한 보상으로 이어집니다.</p><div class="da-stats"><div class="da-stat"><strong>'+streak+'일</strong><span>연속 출석</span></div><div class="da-stat"><strong>'+money(data.total_days)+'일</strong><span>누적 출석</span></div><div class="da-stat"><strong>'+Number(data.multiplier||1)+'배</strong><span>현재 코인 버프</span></div></div><div class="da-reward"><div class="da-reward-label">TODAY’S ATTENDANCE REWARD</div><div class="da-reward-amount">+ '+money(reward)+' <span style="font-size:.42em">돌돌코인</span></div><div class="da-reward-note">'+(bonus>0?'추가 특별 보상 +'+money(bonus)+' 코인까지 지급했어요.':'매일 기본 출석 보상 3,000 코인이 지급되었어요.')+'</div>'+(notes.length?'<div class="da-reward-note" style="margin-top:9px;color:#ffe69b">'+notes.join('<br>')+'</div>':'')+'</div><div class="da-track-title"><span>7일 연속 출석 보상</span><span>7일마다 반복</span></div><div class="da-track">'+rewardTrack+'</div><div class="da-claim-calendar"><div class="da-track-title"><span>이번 달 출석 달력</span><span>날짜별 기록</span></div><div id="da-claim-calendar-content" class="da-error">출석 달력을 불러오는 중...</div></div><div class="da-track-title"><span>현재 잔액</span><span>'+money(data.balance)+' 돌돌코인</span></div><button class="da-continue" type="button">확인하고 계속하기</button></section>';
     overlay.querySelector(".da-close").addEventListener("click",close);
     overlay.querySelector(".da-continue").addEventListener("click",close);
+    renderInlineCalendar(overlay.querySelector("#da-claim-calendar-content"), client).catch(err => {
+      console.error("[돌이 출석] 출석 완료 팝업 달력 로딩 실패:", err);
+      const host = overlay.querySelector("#da-claim-calendar-content");
+      if (host) host.innerHTML = '<div class="da-error">달력을 표시하지 못했어요. 출석 기록은 정상적으로 저장되었습니다.</div>';
+    });
+  }
+
+  async function renderInlineCalendar(host, client) {
+    const now = todaySeoul().split("-").map(Number);
+    let year = now[0], month = now[1];
+    const maxYear = Math.max(now[0] + 1, year);
+    async function render() {
+      if (!host || !host.isConnected) return;
+      host.innerHTML = '<div class="da-error">출석 기록을 불러오는 중...</div>';
+      const { data, error } = await client.rpc("get_my_attendance_month", { p_year: year, p_month: month });
+      if (!host || !host.isConnected) return;
+      if (error || !data) {
+        host.innerHTML = '<div class="da-error">출석 달력을 불러오지 못했어요. 잠시 후 다시 시도해 주세요.<br><small>' + String(error?.message || "").replace(/[<>]/g, "") + '</small></div>';
+        return;
+      }
+      const days = Array.isArray(data.days) ? data.days : [];
+      const byDate = new Map(days.map(d => [String(d.day_date).slice(0, 10), d.status]));
+      const first = new Date(Date.UTC(year, month - 1, 1)).getUTCDay();
+      const count = new Date(Date.UTC(year, month, 0)).getUTCDate();
+      const today = String(data.today || todaySeoul()).slice(0, 10);
+      let attended = 0, missed = 0, future = 0, cells = "";
+      for (let i = 0; i < first; i++) cells += '<div class="da-date empty"></div>';
+      for (let day = 1; day <= count; day++) {
+        const date = year + "-" + String(month).padStart(2, "0") + "-" + String(day).padStart(2, "0");
+        const status = byDate.get(date) || (date > today ? "future" : "missed");
+        if (status === "attended") attended++;
+        else if (status === "future") future++;
+        else missed++;
+        cells += '<div class="da-date ' + status + (date === today ? " today" : "") + '" title="' + date + ' · ' + (status === "attended" ? "출석 완료" : status === "missed" ? "미출석" : "아직 오지 않은 날짜") + '"><span>' + day + '</span><em>' + (status === "attended" ? "출석" : status === "missed" ? "미출석" : "예정") + '</em></div>';
+      }
+      const yearOptions = Array.from({ length: Math.max(1, maxYear - 2019) }, (_, i) => 2020 + i).map(y => '<option value="' + y + '" ' + (y === year ? "selected" : "") + '>' + y + "년</option>").join("");
+      const monthOptions = Array.from({ length: 12 }, (_, i) => i + 1).map(m => '<option value="' + m + '" ' + (m === month ? "selected" : "") + '>' + m + "월</option>").join("");
+      host.innerHTML = '<div class="da-calendar-head"><div class="da-month-label">' + year + "년 " + month + '월</div><div class="da-month-controls"><button type="button" data-inline-step="-1" aria-label="이전 달">‹</button><select id="da-inline-year" aria-label="연도">' + yearOptions + '</select><select id="da-inline-month" aria-label="월">' + monthOptions + '</select><button type="button" data-inline-step="1" aria-label="다음 달">›</button></div></div><div class="da-legend"><span><i class="da-dot" style="background:#35d98a"></i>출석 완료</span><span><i class="da-dot" style="background:#ff667b"></i>미출석</span><span><i class="da-dot" style="background:#68748e"></i>미래 날짜</span></div><div class="da-calendar">' + ["일", "월", "화", "수", "목", "금", "토"].map(d => '<div class="da-weekday">' + d + '</div>').join("") + cells + '</div><div class="da-calendar-summary"><div class="da-summary"><strong>' + attended + '일</strong><span>출석 완료</span></div><div class="da-summary"><strong>' + missed + '일</strong><span>미출석</span></div><div class="da-summary"><strong>' + future + '일</strong><span>미래 날짜</span></div></div>';
+      host.querySelector("#da-inline-year").addEventListener("change", e => { year = Number(e.target.value); render(); });
+      host.querySelector("#da-inline-month").addEventListener("change", e => { month = Number(e.target.value); render(); });
+      host.querySelectorAll("[data-inline-step]").forEach(button => button.addEventListener("click", () => {
+        month += Number(button.dataset.inlineStep);
+        if (month < 1) { month = 12; year--; }
+        if (month > 12) { month = 1; year++; }
+        if (year < 2020) year = 2020;
+        if (year > maxYear) { year = maxYear; month = now[1]; }
+        render();
+      }));
+    }
+    await render();
   }
 
   async function openCalendar(initialDate) {
@@ -171,7 +221,7 @@
       const {data,error}=await client.rpc("claim_daily_attendance");
       if(error){console.error("[돌이 출석] 출석 처리 실패:",error.message);return}
       if(data&&data.already_claimed===false&&Number(data.reward)>0){
-        showClaimPopup(data);
+        showClaimPopup(data, client);
         window.dispatchEvent(new CustomEvent("dori:attendance-claimed",{detail:data}));
       }
     } catch(error) { console.error("[돌이 출석] 초기화 실패:",error); }
