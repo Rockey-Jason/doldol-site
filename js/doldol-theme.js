@@ -28,11 +28,69 @@
     body.append(loader);
   }
   /* Ordinary brand/back links keep their original label, size and position. */
-  document.querySelectorAll('#뒤로가기,a.dori-home-button,a[data-dori-home="true"]').forEach((link) => {
-    link.classList.add("dori-home-button");
-    if (link.id === "뒤로가기") link.href = HOME_URL;
-    if (!link.hasAttribute("aria-label")) link.setAttribute("aria-label", "돌이사이트 메인으로 이동");
-  });
+  const homeUrl = new URL(HOME_URL);
+  const homePath = homeUrl.pathname.endsWith("/") ? homeUrl.pathname.slice(0, -1) : homeUrl.pathname;
+  const trimPath = (path) => path.length > 1 && path.endsWith("/") ? path.slice(0, -1) : path;
+  const isSiteHomePage = () => {
+    const current = new URL(window.location.href);
+    const currentPath = trimPath(current.pathname);
+    return current.origin === homeUrl.origin &&
+      (currentPath === homePath || currentPath === homePath + "/index.html");
+  };
+  const isMainSiteDestination = (rawHref) => {
+    if (!rawHref) return false;
+    try {
+      const target = new URL(rawHref, window.location.href);
+      const targetPath = trimPath(target.pathname);
+      return target.origin === homeUrl.origin &&
+        (targetPath === homePath || targetPath === homePath + "/index.html");
+    } catch (_) { return false; }
+  };
+  const isBrandLink = (link) => {
+    if (link.matches("#사이트로고,.사이트제목,.사이트로고이미지,.logo,.brand,.site-brand,.site-logo,.사이트브랜드")) return true;
+    return Boolean(link.closest(".brand,.site-brand,.site-logo,.사이트브랜드"));
+  };
+  const renderMainButton = (element, kind) => {
+    if (!element || element.dataset.doriMainHomeNormalized === "true") return;
+    element.classList.add("dori-main-site-button");
+    element.dataset.doriMainHome = "true";
+    element.dataset.doriMainHomeNormalized = "true";
+    element.setAttribute("aria-label", "돌이사이트 메인으로 이동");
+    element.setAttribute("title", "돌이사이트 메인으로 이동");
+    if (kind === "link") element.href = HOME_URL;
+    if (kind === "button") element.type = "button";
+    element.innerHTML =
+      '<span class="dori-main-home-mark" aria-hidden="true">D</span>' +
+      '<span class="dori-main-home-label">돌이사이트 메인</span>' +
+      '<span class="dori-main-home-arrow" aria-hidden="true">↗</span>';
+  };
+  const normalizeMainSiteButtons = (root = document) => {
+    if (isSiteHomePage()) return;
+    const directLink = root.matches && root.matches("a[href]") ? [root] : [];
+    directLink.concat(Array.from(root.querySelectorAll("a[href]"))).forEach((link) => {
+      if (!isMainSiteDestination(link.getAttribute("href")) || isBrandLink(link)) return;
+      renderMainButton(link, "link");
+    });
+    const directButton = root.matches && root.matches("button") ? [root] : [];
+    directButton.concat(Array.from(root.querySelectorAll("button"))).forEach((button) => {
+      if (button.dataset.doriMainHomeNormalized === "true") return;
+      const label = (button.innerText || button.textContent || "").trim().split(" ").filter(Boolean).join(" ").toLowerCase();
+      const dedicatedHomeButton =
+        (button.id === "뒤로가기" || button.classList.contains("뒤로가기")) &&
+        (label.includes("돌이사이트") || label.includes("돌이 사이트") || label.includes("메인"));
+      if (dedicatedHomeButton) renderMainButton(button, "button");
+    });
+  };
+  normalizeMainSiteButtons();
+  if ("MutationObserver" in window) {
+    const homeLinkObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => mutation.addedNodes.forEach((node) => {
+        if (node instanceof Element) normalizeMainSiteButtons(node);
+      }));
+    });
+    homeLinkObserver.observe(body, { childList: true, subtree: true });
+  }
+
   document.documentElement.classList.add("dori-system"); body.classList.add("dori-page");
   const pageRoot = document.querySelector("[data-dori-page-root]") || document.querySelector("main") || document.getElementById("사이트") || document.querySelector(".page");
   if (pageRoot && !reduceMotion && !pageRoot.hasAttribute("data-no-page-intro")) pageRoot.classList.add("dori-enter");
