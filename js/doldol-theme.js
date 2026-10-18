@@ -46,39 +46,103 @@
         (targetPath === homePath || targetPath === homePath + "/index.html");
     } catch (_) { return false; }
   };
-  const isBrandLink = (link) => {
-    if (link.matches("#사이트로고,.사이트제목,.사이트로고이미지,.logo,.brand,.site-brand,.site-logo,.사이트브랜드")) return true;
-    return Boolean(link.closest(".brand,.site-brand,.site-logo,.사이트브랜드"));
-  };
   const renderMainButton = (element, kind) => {
     if (!element || element.dataset.doriMainHomeNormalized === "true") return;
+    ["logo","brand","site-brand","site-logo","home-button","back-button","header-btn","뒤로가기","사이트제목","사이트브랜드"].forEach((name) => element.classList.remove(name));
     element.classList.add("dori-main-site-button");
     element.dataset.doriMainHome = "true";
     element.dataset.doriMainHomeNormalized = "true";
     element.setAttribute("aria-label", "돌이사이트 메인으로 이동");
     element.setAttribute("title", "돌이사이트 메인으로 이동");
-    if (kind === "link") element.href = HOME_URL;
+    if (kind === "link") {
+      element.href = HOME_URL;
+      element.removeAttribute("target");
+    }
     if (kind === "button") element.type = "button";
     element.innerHTML =
       '<span class="dori-main-home-mark" aria-hidden="true">D</span>' +
       '<span class="dori-main-home-label">돌이사이트 메인</span>' +
       '<span class="dori-main-home-arrow" aria-hidden="true">↗</span>';
   };
+  const cleanupEmptyWrapper = (parent) => {
+    if (!parent || parent === body || parent.children.length || parent.textContent.trim()) return;
+    if (parent.matches(".brand,.logo,.site-brand,.site-logo,.사이트브랜드,.header-brand,.brand-area")) parent.remove();
+  };
+  const navigationContainer = (seed) => {
+    const header = seed && seed.closest ? seed.closest("header") : document.querySelector("header");
+    if (header) return header.querySelector(".wrap,.header-inner,.topbar-inner,.header-container,.container,.inner") || header;
+    return document.querySelector(".상단바,.상단영역,.상단,.topbar,.top") || body;
+  };
+  const hideLegacyBackControl = (element) => {
+    if (!element || element.dataset.doriMainHomeNormalized === "true") return;
+    element.classList.add("dori-obsolete-home-control");
+    element.setAttribute("aria-hidden", "true");
+    element.setAttribute("tabindex", "-1");
+  };
+  const removeDuplicateHomeLink = (link) => {
+    if (!link || link.dataset.doriMainHomeNormalized === "true") return;
+    const parent = link.parentElement;
+    link.remove();
+    cleanupEmptyWrapper(parent);
+  };
   const normalizeMainSiteButtons = (root = document) => {
-    if (isSiteHomePage()) return;
-    const directLink = root.matches && root.matches("a[href]") ? [root] : [];
-    directLink.concat(Array.from(root.querySelectorAll("a[href]"))).forEach((link) => {
-      if (!isMainSiteDestination(link.getAttribute("href")) || isBrandLink(link)) return;
-      renderMainButton(link, "link");
+    if (isSiteHomePage()) {
+      const logo = document.getElementById("사이트로고");
+      const logoLink = logo && logo.closest("a[href]");
+      if (logoLink) {
+        logoLink.id = "사이트로고";
+        renderMainButton(logoLink, "link");
+      }
+      document.querySelectorAll("a[href]").forEach((link) => {
+        if (link.id !== "사이트로고" && isMainSiteDestination(link.getAttribute("href"))) removeDuplicateHomeLink(link);
+      });
+      return;
+    }
+
+    const allHomeLinks = Array.from(document.querySelectorAll("a[href]"))
+      .filter((link) => isMainSiteDestination(link.getAttribute("href")));
+    let primary = allHomeLinks.find((link) => link.dataset.doriMainHomeNormalized === "true") || allHomeLinks[0] || null;
+
+    // If the page has no homepage link, reuse the existing header back button to
+    // preserve event listeners already attached by the page's original scripts.
+    if (!primary) {
+      primary = Array.from(document.querySelectorAll("button"))
+        .find((button) => button.id === "뒤로가기" || button.classList.contains("뒤로가기") ||
+          button.classList.contains("back-button") || button.dataset.doriMainHomeNormalized === "true") || null;
+    }
+
+    if (!primary) {
+      primary = document.createElement("a");
+      primary.href = HOME_URL;
+      primary.dataset.doriMainHomeCreated = "true";
+      const container = navigationContainer(null);
+      container.insertBefore(primary, container.firstChild);
+      renderMainButton(primary, "link");
+    } else {
+      const kind = primary.tagName === "A" ? "link" : "button";
+      const container = navigationContainer(primary);
+      const oldParent = primary.parentElement;
+      if (container && primary.parentElement !== container) container.insertBefore(primary, container.firstChild);
+      else if (container && primary !== container.firstElementChild) container.insertBefore(primary, container.firstChild);
+      if (oldParent && oldParent !== container) cleanupEmptyWrapper(oldParent);
+      renderMainButton(primary, kind);
+    }
+
+    Array.from(document.querySelectorAll("a[href]")).forEach((link) => {
+      if (link !== primary && isMainSiteDestination(link.getAttribute("href"))) removeDuplicateHomeLink(link);
     });
-    const directButton = root.matches && root.matches("button") ? [root] : [];
-    directButton.concat(Array.from(root.querySelectorAll("button"))).forEach((button) => {
-      if (button.dataset.doriMainHomeNormalized === "true") return;
-      const label = (button.innerText || button.textContent || "").trim().split(" ").filter(Boolean).join(" ").toLowerCase();
-      const dedicatedHomeButton =
-        (button.id === "뒤로가기" || button.classList.contains("뒤로가기")) &&
-        (label.includes("돌이사이트") || label.includes("돌이 사이트") || label.includes("메인"));
-      if (dedicatedHomeButton) renderMainButton(button, "button");
+
+    // Keep hidden nodes where legacy code binds handlers, but remove them from the UI.
+    Array.from(document.querySelectorAll("button#뒤로가기,button.뒤로가기,a.back-button,button.back-button"))
+      .forEach((element) => { if (element !== primary) hideLegacyBackControl(element); });
+
+    Array.from(document.querySelectorAll("button")).forEach((button) => {
+      if (button === primary || button.dataset.doriMainHomeNormalized === "true") return;
+      const label = (button.innerText || button.textContent || "").replace(/\s+/g, " ").trim();
+      const legacyLabel = /^(?:←\s*)?(?:돌이\s*사이트|돌이사이트|메인으로|홈으로|뒤로가기)(?:\s*↗)?$/i.test(label);
+      if (legacyLabel && (button.closest("header,.topbar,.top,.상단바,.상단영역,.상단") || button.id === "뒤로가기")) {
+        hideLegacyBackControl(button);
+      }
     });
   };
   normalizeMainSiteButtons();
@@ -90,7 +154,6 @@
     });
     homeLinkObserver.observe(body, { childList: true, subtree: true });
   }
-
   document.documentElement.classList.add("dori-system"); body.classList.add("dori-page");
   const pageRoot = document.querySelector("[data-dori-page-root]") || document.querySelector("main") || document.getElementById("사이트") || document.querySelector(".page");
   if (pageRoot && !reduceMotion && !pageRoot.hasAttribute("data-no-page-intro")) pageRoot.classList.add("dori-enter");
