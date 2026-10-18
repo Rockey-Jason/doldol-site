@@ -4542,6 +4542,66 @@ if ("serviceWorker" in navigator) {
     transform: none !important;
   }
 }
+
+/* ===== Daily missions: premium interaction system ===== */
+#일일미션화면{--미션선:#8da7ff;--미션글자:#f4f6ff;color:#f4f6ff;animation:미션화면등장 .42s cubic-bezier(.2,.75,.25,1) both}
+#일일미션화면 *{box-sizing:border-box}
+.일일미션헤더{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:0 0 16px;padding:22px;border:1px solid rgba(150,170,255,.18);border-radius:22px;background:radial-gradient(ellipse at 95% 0,rgba(103,126,255,.18),transparent 45%),linear-gradient(140deg,rgba(29,37,83,.9),rgba(12,16,39,.94));box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 14px 38px rgba(0,0,0,.16)}
+.일일미션배지2{display:inline-flex;align-items:center;gap:7px;margin-bottom:9px;color:#a9c7ff;font-size:10px;font-weight:800;letter-spacing:.17em}
+.일일미션배지2::before{content:"";width:6px;height:6px;border-radius:50%;background:#8ab9ff;box-shadow:0 0 12px rgba(138,185,255,.75)}
+.일일미션헤더 h2{margin:0;color:#fff;font-size:clamp(21px,3vw,27px);font-weight:750;letter-spacing:-.035em}
+.일일미션헤더 p{margin:7px 0 0;color:#aab5d5;font-size:13px;line-height:1.55}
+.일일미션헤더통계{display:flex;flex:0 0 auto;flex-direction:column;align-items:center;justify-content:center;min-width:78px;min-height:78px;padding:12px;border:1px solid rgba(153,177,255,.24);border-radius:19px;background:linear-gradient(145deg,rgba(117,143,255,.17),rgba(67,87,163,.07));box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+.일일미션헤더통계 strong{color:#f4f7ff;font-size:25px;line-height:1.1;font-variant-numeric:tabular-nums}
+.일일미션헤더통계 span{margin-top:5px;color:#aebbe0;font-size:10px;white-space:nowrap}
+.일일미션프로그레스{height:6px;margin:0 2px 20px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.075);box-shadow:inset 0 1px 2px rgba(0,0,0,.25)}
+.일일미션프로그레스 span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#6f79ff,#77caff 60%,#a3f2ff);box-shadow:0 0 14px rgba(104,174,255,.45);transition:width .7s cubic-bezier(.2,.8,.2,1)}
+.일일미션리스트{display:grid;gap:11px}
+.일일미션아이템{position:relative;display:grid;grid-template-columns:46px minmax(0,1fr) minmax(130px,auto);align-items:center;gap:14px;min-width:0;padding:16px;border:1px solid rgba(153,169,223,.13);border-radius:18px;background:linear-gradient(125deg,rgba(29,35,73,.72),rgba(13,17,40,.82));box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 7px 20px rgba(0,0,0,.09);transition:transform .24s cubic-bezier(.2,.8,.2,1),border-color .24s ease,background .24s ease,box-shadow .24s ease;animation:미션카드등장 .42s cubic-bezier(.2,.75,.25,1) both}
+.일일미션아이템:nth-child(2){animation-delay:.045s}.일일미션아이템:nth-child(3){animation-delay:.09s}.일일미션아이템:nth-child(4){animation-delay:.135s}
+.일일미션아이템:hover{transform:translateY(-2px);border-color:rgba(142,171,255,.3);background:linear-gradient(125deg,rgba(36,45,91,.8),rgba(15,21,48,.9));box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 13px 28px rgba(0,0,0,.18)}
+.일일미션아이템.완료{border-color:rgba(92,211,174,.2);background:linear-gradient(125deg,rgba(22,65,65,.25),rgba(13,20,41,.84))}
+.일일미션아이콘2{display:grid;place-items:center;width:46px;height:46px;border:1px solid rgba(153,174,255,.16);border-radius:15px;background:linear-gradient(145deg,rgba(115,139,255,.17),rgba(85,107,192,.07));font-size:22px;box-shadow:inset 0 1px 0 rgba(255,255,255,.06);transition:transform .25s ease,filter .25s ease}
+.일일미션아이템:hover .일일미션아이콘2{transform:translateY(-2px) rotate(-3deg);filter:brightness(1.15)}
+.일일미션아이템.완료 .일일미션아이콘2{border-color:rgba(92,211,174,.23);background:linear-gradient(145deg,rgba(76,213,172,.15),rgba(40,121,116,.07))}
+.일일미션이름2{color:#f3f5ff;font-size:15px;font-weight:750;letter-spacing:-.015em;line-height:1.4}
+.일일미션설명2{margin-top:5px;color:#b2bddb;font-size:12px;line-height:1.55;overflow-wrap:anywhere}
+.일일미션상태2{display:flex;align-items:center;gap:6px;margin-top:8px;color:#8f9cbd;font-size:11px;line-height:1.45}
+.일일미션아이템.완료 .일일미션상태2{color:#91e4c9}
+.일일미션보상영역{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:7px;min-width:0}
+.일일미션보상영역 .보상금액,.일일미션보상영역 .미션보상금액,.일일미션보상영역 .일일미션보상금액{color:#ffe4a2;font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.일일미션바로가기,.일일미션받기{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:38px;width:100%;margin:0;padding:9px 12px;overflow:hidden;border:1px solid rgba(137,171,255,.28);border-radius:11px;background:linear-gradient(135deg,rgba(98,126,255,.18),rgba(78,101,198,.1));color:#d9e7ff;text-decoration:none;text-align:center;font:700 12px/1.2 inherit;letter-spacing:.01em;white-space:normal;cursor:pointer;isolation:isolate;box-shadow:inset 0 1px 0 rgba(255,255,255,.055);transition:transform .2s cubic-bezier(.2,.8,.2,1),background .22s ease,border-color .22s ease,box-shadow .22s ease,color .22s ease}
+.일일미션바로가기::before,.일일미션받기:not(:disabled)::before{content:"";position:absolute;z-index:-1;inset:0;transform:translateX(-120%);background:linear-gradient(105deg,transparent 25%,rgba(255,255,255,.14) 48%,transparent 70%);transition:transform .55s ease}
+.일일미션바로가기:hover,.일일미션받기:not(:disabled):hover{transform:translateY(-2px);border-color:rgba(151,190,255,.56);background:linear-gradient(135deg,rgba(104,139,255,.3),rgba(82,116,220,.19));color:#fff;box-shadow:0 7px 18px rgba(69,105,220,.16),inset 0 1px 0 rgba(255,255,255,.09)}
+.일일미션바로가기:hover::before,.일일미션받기:not(:disabled):hover::before{transform:translateX(120%)}
+.일일미션바로가기:active,.일일미션받기:not(:disabled):active{transform:translateY(0) scale(.975)}
+.일일미션받기:not(:disabled){border-color:rgba(113,177,255,.38);background:linear-gradient(135deg,#526ce1,#3b52b4);color:#fff;box-shadow:0 5px 14px rgba(56,80,180,.18),inset 0 1px 0 rgba(255,255,255,.14)}
+.일일미션받기:not(:disabled):hover{background:linear-gradient(135deg,#6b85ff,#4d68d6);box-shadow:0 8px 20px rgba(75,105,225,.26),inset 0 1px 0 rgba(255,255,255,.18)}
+.일일미션받기:disabled{border-color:rgba(255,255,255,.065);background:rgba(255,255,255,.035);color:#727e9e;cursor:not-allowed;box-shadow:none}
+.일일미션받기:focus-visible,.일일미션바로가기:focus-visible{outline:2px solid #a9c9ff;outline-offset:3px}
+.일일미션받음{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:36px;padding:8px 10px;border:1px solid rgba(94,218,174,.2);border-radius:11px;background:rgba(51,177,136,.09);color:#8ce3c4;text-align:center;font-size:11px;font-weight:750;line-height:1.4}
+.일일미션보너스2{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:16px;padding:19px;border:1px solid rgba(229,190,105,.2);border-radius:19px;background:radial-gradient(ellipse at 0 0,rgba(232,181,80,.09),transparent 60%),linear-gradient(130deg,rgba(60,49,38,.4),rgba(21,23,42,.88));box-shadow:inset 0 1px 0 rgba(255,255,255,.045)}
+.일일미션보너스2>div{min-width:0}.일일미션보너스2 strong{display:block;color:#ffe3a4;font-size:13px;letter-spacing:.04em}.일일미션보너스2 small{display:block;margin-top:6px;color:#b4b4c7;font-size:11px;line-height:1.5}
+.일일미션보너스2>div:last-child{display:flex;flex-direction:column;align-items:stretch;gap:8px;min-width:145px}
+.일일미션보너스2 .보너스코인{color:#ffe4a2;font-size:16px;font-weight:850;white-space:nowrap}
+.일일미션로딩2,.일일미션오류2{display:flex;align-items:center;justify-content:center;gap:12px;min-height:130px;padding:24px;border:1px solid rgba(151,170,231,.15);border-radius:18px;background:rgba(20,26,57,.6);color:#b8c5e6;text-align:center;line-height:1.6}
+.일일미션스피너{width:20px;height:20px;flex:0 0 20px;border:2px solid rgba(146,177,255,.2);border-top-color:#9bc4ff;border-radius:50%;animation:미션회전 .8s linear infinite}
+@keyframes 미션회전{to{transform:rotate(360deg)}}
+@keyframes 미션화면등장{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes 미션카드등장{from{opacity:0;transform:translateY(9px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:620px){
+ .일일미션헤더{padding:17px;border-radius:18px;gap:10px}.일일미션헤더통계{min-width:67px;min-height:67px;padding:9px;border-radius:16px}.일일미션헤더통계 strong{font-size:22px}.일일미션헤더 h2{font-size:22px}.일일미션헤더 p{font-size:12px}
+ .일일미션아이템{grid-template-columns:40px minmax(0,1fr);gap:11px;padding:13px;border-radius:16px}.일일미션아이콘2{width:40px;height:40px;border-radius:13px;font-size:20px}.일일미션아이템>div:nth-child(2){min-width:0}.일일미션보상영역{grid-column:2;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:center;gap:7px;width:100%;margin-top:1px}.일일미션보상영역 .보상금액,.일일미션보상영역 .미션보상금액,.일일미션보상영역 .일일미션보상금액{grid-column:1/-1}.일일미션보상영역 .일일미션받기:disabled,.일일미션보상영역 .일일미션받음{grid-column:1/-1}
+ .일일미션바로가기,.일일미션받기{min-height:40px;padding:10px 8px;font-size:12px}
+ .일일미션보너스2{align-items:stretch;flex-direction:column;gap:14px;padding:16px;border-radius:17px}.일일미션보너스2>div:last-child{min-width:0}.일일미션보너스2 .보너스코인{font-size:15px}
+}
+@media(prefers-reduced-motion:reduce){
+ #일일미션화면,.일일미션아이템{animation:none}
+ .일일미션아이템,.일일미션아이콘2,.일일미션바로가기,.일일미션받기,.일일미션프로그레스 span{transition:none}
+ .일일미션바로가기::before,.일일미션받기::before{display:none}
+ .일일미션스피너{animation:none}
+}
+
 </style>
 
 
