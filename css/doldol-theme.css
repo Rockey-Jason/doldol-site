@@ -60,3 +60,14 @@ dialog,[role="dialog"]{box-sizing:border-box;max-width:calc(100vw - 20px);max-he
 .dori-obsolete-home-control{display:none!important;visibility:hidden!important;pointer-events:none!important;width:0!important;height:0!important;min-width:0!important;min-height:0!important;margin:0!important;padding:0!important;border:0!important;overflow:hidden!important}
 #사이트로고.dori-main-site-button{position:relative!important;min-width:166px!important;height:46px!important;min-height:46px!important;padding:7px 10px!important}
 @media(max-width:560px){#사이트로고.dori-main-site-button{min-width:152px!important;height:43px!important;min-height:43px!important}}
+
+/* Responsive alignment when a header had no homepage link and received the shared control. */
+@media(max-width:1000px){
+  body header.nav:has(> .dori-main-site-button){height:auto!important;min-height:64px!important;flex-wrap:wrap!important;justify-content:flex-start!important;gap:8px!important;padding-top:10px!important;padding-bottom:10px!important}
+  body header.nav:has(> .dori-main-site-button)>.brand{flex:0 1 150px!important;min-width:0!important}
+  body header.nav:has(> .dori-main-site-button)>.nav-actions{margin-left:auto!important}
+}
+@media(max-width:700px){
+  body header.nav:has(> .dori-main-site-button){padding-left:14px!important;padding-right:14px!important}
+  body header.nav:has(> .dori-main-site-button)>.brand{flex:1 1 145px!important}
+}
