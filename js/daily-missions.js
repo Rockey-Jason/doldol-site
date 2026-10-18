@@ -14,6 +14,13 @@ const missionIcons = {
   open_randombox: "🎁"
 };
 
+const missionDestinations = {
+  visit_site: { href: "index.html", label: "메인 페이지로 이동" },
+  play_chess: { href: "gamepage.html", label: "게임 페이지로 이동" },
+  play_card_war: { href: "https://rockey-jason.github.io/rockeywar-card/", label: "돌이전쟁: 카드 열기" },
+  open_randombox: { href: "Randombox.html", label: "랜덤 박스 열기" }
+};
+
 function today() {
   return new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Seoul"
@@ -131,6 +138,12 @@ async function load() {
 
     if (definitionsError || rowsError) {
       console.error(definitionsError || rowsError);
+      container.innerHTML = '<div class="mission-error" role="alert">오늘의 미션을 불러오지 못했어요.<br>연결 상태를 확인한 뒤 다시 시도해 주세요.<br><button type="button" class="mission-retry">다시 시도</button></div>';
+      const retry = container.querySelector(".mission-retry");
+      if (retry) retry.addEventListener("click", () => {
+        container.innerHTML = '<div style="padding:24px;text-align:center;color:#aeb5cf" role="status">미션을 다시 불러오는 중…</div>';
+        load();
+      }, { once: true });
       return;
     }
 
@@ -168,6 +181,10 @@ async function load() {
         const row = map.get(mission.mission_key);
         const completed = !!row?.completed_at;
         const claimed = !!row?.reward_claimed;
+        const destination = !completed && !claimed ? missionDestinations[mission.mission_key] : null;
+        const shortcutHtml = destination
+          ? '<a class="mission-shortcut" href="' + destination.href + '" aria-label="' + destination.label + '"><span>바로 가기</span><span aria-hidden="true">↗</span></a>'
+          : '';
 
         return (
           '<article class="mission ' +
@@ -190,8 +207,9 @@ async function load() {
               ? "완료됨 · 보상 받기"
               : "오늘 아직 완료되지 않았습니다.") +
           "</span>" +
+          shortcutHtml +
           "</div>" +
-          '<div class="reward">+' +
+          '<div class="reward">+'
           Math.floor(Number(mission.reward_coins || 0) * activeMultiplier).toLocaleString() +
           ' 🪙' +
           (activeMultiplier > 1 ? '<small style="display:block;margin-top:3px;color:#8ee9ff;font-size:11px;font-weight:800">⚡ 버프 추가 +' + Math.floor(Number(mission.reward_coins || 0) * (activeMultiplier - 1)).toLocaleString() + ' (' + activeMultiplier + '배)</small>' : '') +
@@ -204,6 +222,12 @@ async function load() {
       .join("");
   } catch (error) {
     console.error("일일 미션 불러오기 오류:", error);
+    container.innerHTML = '<div class="mission-error" role="alert">미션 정보를 불러오는 중 문제가 발생했어요.<br>잠시 후 다시 시도해 주세요.<br><button type="button" class="mission-retry">다시 시도</button></div>';
+    const retry = container.querySelector(".mission-retry");
+    if (retry) retry.addEventListener("click", () => {
+      container.innerHTML = '<div style="padding:24px;text-align:center;color:#aeb5cf" role="status">미션을 다시 불러오는 중…</div>';
+      load();
+    }, { once: true });
   }
 }
 
