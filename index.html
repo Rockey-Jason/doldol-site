@@ -387,6 +387,20 @@ button:focus-visible{
 #패널::-webkit-scrollbar-thumb{background:rgba(255,255,255,.18);border-radius:99px}
 
 
+
+/* ===== Premium account status popup ===== */
+#계정상태배경{position:fixed;inset:0;z-index:100000;background:rgba(2,4,18,.76);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);opacity:0;visibility:hidden;transition:opacity .28s ease,visibility 0s linear .28s}
+#계정상태배경.show{opacity:1;visibility:visible;transition:opacity .28s ease}
+#계정상태팝업{position:fixed;z-index:100001;left:50%;top:50%;width:min(620px,calc(100vw - 28px));padding:34px 28px 28px;box-sizing:border-box;color:#fff;text-align:center;border:1px solid rgba(155,177,255,.27);border-radius:28px;background:radial-gradient(ellipse at 50% 0%,rgba(85,104,211,.23),transparent 52%),linear-gradient(145deg,rgba(19,24,65,.99),rgba(6,8,27,.99));box-shadow:0 35px 100px rgba(0,0,0,.68),inset 0 1px 0 rgba(255,255,255,.07);opacity:0;visibility:hidden;transform:translate(-50%,-46%) scale(.94);transition:opacity .28s ease,transform .34s cubic-bezier(.2,.8,.2,1),visibility 0s linear .34s}
+#계정상태팝업.show{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1);transition:opacity .28s ease,transform .34s cubic-bezier(.2,.8,.2,1)}
+#계정상태닫기{position:absolute;top:14px;right:14px;width:38px;height:38px;border:1px solid rgba(255,255,255,.1);border-radius:13px;color:#e8ecff;background:rgba(255,255,255,.06);font-size:18px;cursor:pointer;transition:background .2s,transform .2s}
+#계정상태닫기:hover{background:rgba(255,255,255,.13);transform:rotate(90deg)}
+.계정상태상단아이콘{display:grid;place-items:center;width:48px;height:48px;margin:0 auto 13px;border:1px solid rgba(170,190,255,.25);border-radius:16px;background:linear-gradient(135deg,rgba(105,100,255,.3),rgba(70,130,255,.12));color:#dce5ff;font-size:25px;box-shadow:0 0 28px rgba(100,120,255,.16)}
+#계정상태제목{font-size:26px;font-weight:750;letter-spacing:-.035em}
+.계정상태설명{margin:8px 0 23px;color:#aeb9d9;font-size:13px;line-height:1.6}
+#계정상태팝업 #프로필요약카드{margin:0;padding:12px;background:rgba(255,255,255,.025);border-color:rgba(143,170,255,.18);text-align:left}
+@media(max-width:560px){#계정상태팝업{padding:30px 16px 18px;border-radius:23px}#계정상태제목{font-size:23px}.계정상태설명{font-size:12px;margin-bottom:17px}}
+
 /* ===== Profile summary inside popup ===== */
 #프로필요약카드{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 48px 24px 0;padding:14px;border:1px solid rgba(143,170,255,.2);border-radius:18px;background:linear-gradient(135deg,rgba(65,83,155,.24),rgba(20,27,65,.48));box-shadow:inset 0 1px 0 rgba(255,255,255,.035)}
 .프로필요약항목{display:flex;align-items:center;gap:10px;min-width:0;padding:7px 8px;border-radius:12px;background:rgba(255,255,255,.035)}
@@ -1998,6 +2012,7 @@ body.로그인상태 #회원가입 {
   <div id="메뉴">
     <button id="업적버튼" class="프로필버튼" type="button">🏆 업적</button>
     <button id="칭호버튼" class="프로필버튼" type="button">🏷️ 칭호</button>
+    <button id="계정상태버튼" class="프로필버튼" type="button">📊 내 계정 상태</button>
     <button id="설정" class="프로필버튼" type="button">⚙️ 설정</button>
     <button id="일일미션버튼" class="프로필버튼" type="button">🎯 일일 미션</button>
     <button id="출석체크버튼" class="프로필버튼" type="button">🗓️ 출석 체크</button>
@@ -2024,11 +2039,7 @@ body.로그인상태 #회원가입 {
 
 <div id="패널">
 
-<div id="프로필요약카드" aria-label="내 프로필 요약">
-  <div class="프로필요약항목 프로필요약코인"><span class="프로필요약아이콘">🪙</span><div><span class="프로필요약라벨">보유 돌돌코인</span><strong id="프로필요약코인값">0</strong></div></div>
-  <div class="프로필요약항목 프로필요약경험치"><span class="프로필요약아이콘">✨</span><div><span class="프로필요약라벨">현재 EXP</span><strong id="프로필요약EXP값">EXP Lv.1 · 0 EXP</strong></div></div>
-  <div class="프로필요약항목 프로필요약칭호"><span class="프로필요약아이콘">🏷️</span><div><span class="프로필요약라벨">장착 중인 칭호</span><strong id="프로필요약칭호값">칭호 없음</strong></div></div>
-</div>
+
 
 <button id="패널닫기">
 
@@ -2075,6 +2086,20 @@ body.로그인상태 #회원가입 {
 
 </div>
 
+
+
+<div id="계정상태배경" aria-hidden="true"></div>
+<section id="계정상태팝업" role="dialog" aria-modal="true" aria-labelledby="계정상태제목" aria-hidden="true">
+  <button id="계정상태닫기" type="button" aria-label="계정 상태 팝업 닫기">✕</button>
+  <div class="계정상태상단아이콘">✦</div>
+  <div id="계정상태제목">내 계정 상태</div>
+  <p class="계정상태설명">돌이사이트에서의 나의 현재 상태를 확인해 보세요.</p>
+  <div id="프로필요약카드" aria-label="내 프로필 요약">
+  <div class="프로필요약항목 프로필요약코인"><span class="프로필요약아이콘">🪙</span><div><span class="프로필요약라벨">보유 돌돌코인</span><strong id="프로필요약코인값">0</strong></div></div>
+  <div class="프로필요약항목 프로필요약경험치"><span class="프로필요약아이콘">✨</span><div><span class="프로필요약라벨">현재 EXP</span><strong id="프로필요약EXP값">EXP Lv.1 · 0 EXP</strong></div></div>
+  <div class="프로필요약항목 프로필요약칭호"><span class="프로필요약아이콘">🏷️</span><div><span class="프로필요약라벨">장착 중인 칭호</span><strong id="프로필요약칭호값">칭호 없음</strong></div></div>
+</div>
+</section>
 
 <!-- =================================================
      업적 알림
@@ -3175,6 +3200,26 @@ function 프로필메뉴열기() {
 
 }
 
+
+
+/* 내 계정 상태는 일일 미션 패널과 분리된 전용 팝업으로 표시 */
+const 계정상태버튼=document.getElementById("계정상태버튼");
+const 계정상태팝업=document.getElementById("계정상태팝업");
+const 계정상태배경=document.getElementById("계정상태배경");
+function 계정상태팝업열기(){
+  메뉴.classList.remove("menu-show");메뉴.classList.add("menu-hide");
+  window.setTimeout(()=>메뉴.classList.remove("menu-hide"),260);
+  계정상태팝업?.classList.add("show");계정상태배경?.classList.add("show");
+  계정상태팝업?.setAttribute("aria-hidden","false");계정상태배경?.setAttribute("aria-hidden","false");
+}
+function 계정상태팝업닫기(){
+  계정상태팝업?.classList.remove("show");계정상태배경?.classList.remove("show");
+  계정상태팝업?.setAttribute("aria-hidden","true");계정상태배경?.setAttribute("aria-hidden","true");
+}
+계정상태버튼?.addEventListener("click",계정상태팝업열기);
+document.getElementById("계정상태닫기")?.addEventListener("click",계정상태팝업닫기);
+계정상태배경?.addEventListener("click",계정상태팝업닫기);
+document.addEventListener("keydown",e=>{if(e.key==="Escape")계정상태팝업닫기()});
 
 // =====================================================
 // 패널 열기
