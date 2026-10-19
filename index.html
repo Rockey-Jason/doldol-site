@@ -2398,10 +2398,10 @@ async function 업적페이지별기록조회(queryFactory) {
     } catch (error) { return { data: rows, error }; }
 }
 
-async function 업적진행활동가져오기(userId) {
+async function 업적진행활동가져오기(userId, force = false) {
     const id = String(userId || "");
     if (!id) return;
-    if (업적진행활동.userId === id && Date.now() - 업적진행활동.updatedAt < 15000) return;
+    if (!force && 업적진행활동.userId === id && Date.now() - 업적진행활동.updatedAt < 15000) return;
 
     const [chess, box, stocks] = await Promise.all([
         업적페이지별기록조회(() => supabase.from("chess_games")
@@ -2435,16 +2435,20 @@ function 업적진행도값계산(achievementId, unlocked, user) {
     let current = 0, target = 1, label = "조건 달성", known = true;
     const games = activity.chessGames || [];
     const isPlayerWin = game => {
-        const result = String(game.result || "").trim().toLowerCase();
         const summary = game.summary && typeof game.summary === "object" ? game.summary : {};
-        const white = String(summary.white || "").toLowerCase();
-        const black = String(summary.black || "").toLowerCase();
+        const result = String(game.result || summary.result || "").trim().toLowerCase();
+        const white = String(summary.white || "").trim().toLowerCase();
+        const black = String(summary.black || "").trim().toLowerCase();
         const playerNames = ["player", "user", "you", "human", "플레이어", "사용자"];
-        const whiteIsPlayer = playerNames.some(name => white === name || white.includes(name));
-        const blackIsPlayer = playerNames.some(name => black === name || black.includes(name));
-        if (result === "1-0") return !blackIsPlayer;
-        if (result === "0-1") return blackIsPlayer;
-        return ["win", "won", "victory", "승리", "승"].includes(result);
+        const isPlayerName = name => playerNames.some(candidate => name === candidate || name.includes(candidate));
+        const whiteIsPlayer = isPlayerName(white);
+        const blackIsPlayer = isPlayerName(black);
+
+        // Rockey Chess always makes the human White, but preserve compatibility with
+        // archived records that explicitly identify the human as Black.
+        if (whiteIsPlayer) return ["1-0", "white_win", "win", "won", "victory", "승리", "승"].includes(result);
+        if (blackIsPlayer) return ["0-1", "black_win"].includes(result);
+        return ["1-0", "white_win", "win", "won", "victory", "승리", "승"].includes(result);
     };
     const wins = games.filter(isPlayerWin);
     const botWins = botId => wins.filter(game => String(game.bot_id || "").toLowerCase() === botId).length;
@@ -2495,7 +2499,7 @@ function 업적진행도값계산(achievementId, unlocked, user) {
         else if (id === "chess_10_win") { current = wins.length; target = 10; label = "실제 체스 승리 수"; }
         else if (id === "chess_100_win") { current = wins.length; target = 100; label = "실제 체스 승리 수"; }
         else {
-            const bots = { chess_win_army: "army", chess_win_brilliant: "brilliant", chess_win_doronum: "doronum", chess_win_fur: "fur", chess_win_rockey: "rockey", chess_win_sleeping: "sleeping", chess_win_talc: "talc" };
+            const bots = { chess_win_army: "army", chess_win_brilliant: "brilliant", chess_win_doronum: "doronum", chess_win_fur: "fur", chess_win_rockey: "rockey", chess_win_sleeping: "sleep", chess_win_talc: "talc" };
             current = botWins(bots[id]); label = "해당 체스 상대를 이긴 횟수";
         }
     } else if (["first_stock", "first_bandoche", "first_food", "first_rockeycloth", "first_rockeypaper"].includes(id)) {
@@ -3502,6 +3506,26 @@ function 업적바로가기URL(id) {
 function 업적바로가기버튼HTML(id, unlocked) {
  return unlocked ? "" : '<a class="업적바로가기버튼" href="' + 업적바로가기URL(id) + '">바로가기 ↗</a>';
 }
+
+
+/* 체스 사이트에서 돌아오거나 화면이 다시 활성화되면 최신 업적 기록을 다시 읽습니다. */
+let 마지막업적기록새로고침 = 0;
+async function 업적기록새로고침() {
+    const userId = String(현재사용자?.id || "").trim();
+    if (!userId || Date.now() - 마지막업적기록새로고침 < 1200) return;
+    마지막업적기록새로고침 = Date.now();
+    try {
+        await 업적진행활동가져오기(userId, true);
+        if (패널?.classList.contains("show") && 업적탭?.classList.contains("active")) 업적화면표시();
+    } catch (error) {
+        console.warn("업적 진행도 새로고침 실패:", error);
+    }
+}
+window.addEventListener("pageshow", () => window.setTimeout(업적기록새로고침, 350));
+window.addEventListener("focus", 업적기록새로고침);
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") 업적기록새로고침();
+});
 
 function 프로필업적진행도HTML(achievement, unlocked) {
     const p = 업적진행도값계산(achievement?.id, unlocked, 현재유저정보);
