@@ -3271,16 +3271,175 @@ const 일일미션바로가기URL={visit_site:"https://rockey-jason.github.io/do
 const 오늘날짜=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul"}).format(new Date());
 const 일일HTML안전=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
 async function 일일미션화면표시(){
- 패널제목.textContent="🎯 일일 미션";프로필정보탭?.classList.add("숨김");
+ 패널제목.textContent="🎯 일일 미션";
+ 프로필정보탭?.classList.add("숨김");
  패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션로딩2"><span class="일일미션스피너"></span>오늘의 미션을 준비하고 있습니다...</div></div>';
- try{const{data:{session}}=await supabase.auth.getSession();if(!session){패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션오류2">로그인이 필요한 기능입니다.</div></div>';return}
- const[{data:defs,error:e1},{data:rows,error:e2},{data:boost,error:e3}]=await Promise.all([supabase.from("daily_mission_definitions").select("mission_key,title,description,reward_coins,sort_order,active").eq("active",true).order("sort_order"),supabase.from("user_daily_missions").select("mission_key,completed_at,reward_claimed").eq("user_id",session.user.id).eq("mission_date",오늘날짜()),supabase.from("users").select("doldolcoin_multiplier,doldolcoin_multiplier_expires_at").eq("user_id",session.user.id).maybeSingle()]);if(e1||e2)throw(e1||e2);const boostExpiry=boost?.doldolcoin_multiplier_expires_at?new Date(boost.doldolcoin_multiplier_expires_at):null;const activeMultiplier=!e3&&boostExpiry&&boostExpiry.getTime()>Date.now()?Math.max(1,Number(boost?.doldolcoin_multiplier)||1):1;const showReward=(base)=>{const amount=Math.max(0,Number(base)||0),total=Math.floor(amount*activeMultiplier),extra=total-amount;return '<div class="일일미션코인">+'+total.toLocaleString()+' 🪙</div>'+(extra>0?'<small style="display:block;color:#79e5ff;font-size:11px;font-weight:800;margin-top:-3px;margin-bottom:5px">⚡ 버프 +'+extra.toLocaleString()+' ('+activeMultiplier+'배)</small>':'')};
- const base=(defs||[]).filter(x=>x.mission_key!=="all_complete"),map=new Map((rows||[]).map(x=>[x.mission_key,x])),done=base.filter(x=>map.get(x.mission_key)?.completed_at).length,pct=base.length?Math.round(done/base.length*100):0,allDone=done===base.length&&base.length>0,allClaimed=!!map.get("all_complete")?.reward_claimed;
- const cards=base.map(m=>{const row=map.get(m.mission_key),complete=!!row?.completed_at,received=!!row?.reward_claimed;const goURL=일일미션바로가기URL[m.mission_key]||"https://rockey-jason.github.io/doldol-site/";const goButton=complete?'':'<a class="일일미션바로가기" href="'+goURL+'">바로가기 ↗</a>';const action=received?'<span class="일일미션받음">✓ 보상 수령 완료</span>':complete?'<button class="일일미션받기" data-claim="'+일일HTML안전(m.mission_key)+'">보상 받기</button>':'<button class="일일미션받기" disabled>미션 진행 필요</button>';return '<article class="일일미션아이템 '+(complete?"완료":"")+'"><div class="일일미션아이콘2">'+(일일미션아이콘[m.mission_key]||"🎯")+'</div><div><div class="일일미션이름2">'+일일HTML안전(m.title)+'</div><div class="일일미션설명2">'+일일HTML안전(m.description||"오늘의 미션")+'</div><div class="일일미션상태2">'+(received?"보상을 이미 수령했습니다.":complete?"미션 완료 · 보상을 받을 수 있습니다.":"아직 완료되지 않았습니다.")+'</div></div><div class="일일미션보상영역">'+showReward(m.reward_coins)+goButton+action+"</div></article>"}).join("");
- const bonus=allClaimed?'<span class="일일미션받음">✓ 보너스 수령 완료</span>':allDone?'<button class="일일미션받기" data-claim="all_complete">보너스 받기</button>':'<button class="일일미션받기" disabled>모든 미션 완료 필요</button>';
- 패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션헤더"><div><div class="일일미션배지2">DAILY REWARD</div><h2>오늘의 미션</h2><p>미션을 완료한 뒤 직접 보상을 받아보세요.</p></div><div class="일일미션헤더통계"><strong>'+done+'/'+base.length+'</strong><span>미션 완료</span></div></div><div class="일일미션프로그레스"><span style="width:'+pct+'%"></span></div><div class="일일미션리스트">'+cards+'</div><div class="일일미션보너스2"><div><strong>🏆 ALL CLEAR BONUS</strong><small>오늘의 4개 미션을 모두 완료하면 추가 보상</small></div><div><div class="보너스코인">+'+Math.floor(30000*activeMultiplier).toLocaleString()+' 🪙</div>'+(activeMultiplier>1?'<small style="display:block;color:#79e5ff;font-size:11px;font-weight:800;margin-top:3px">⚡ 버프 +'+Math.floor(30000*(activeMultiplier-1)).toLocaleString()+' ('+activeMultiplier+'배)</small>':'')+''+bonus+'</div></div></div>';
- 패널내용.querySelectorAll("[data-claim]").forEach(btn=>btn.addEventListener("click",async()=>{btn.disabled=true;btn.textContent="수령 중…";const result=window.doriClaimDailyMissionReward?await window.doriClaimDailyMissionReward(btn.dataset.claim):null;if(!result?.reward_claimed){btn.disabled=false;btn.textContent=btn.dataset.claim==="all_complete"?"보너스 받기":"보상 받기";팝업열기("❌ 보상을 받지 못했습니다. 잠시 후 다시 시도해주세요.",3500);return}const baseAmount=Number(result.base_reward_coins??result.reward_coins??0),paidAmount=Number(result.reward_coins||0),extraAmount=Math.max(0,paidAmount-baseAmount);일일미션보상팝업표시({title:"일일 미션 보상 획득!",amountText:"+"+paidAmount.toLocaleString(),description:extraAmount>0?"기본 "+baseAmount.toLocaleString()+" + 버프 추가 "+extraAmount.toLocaleString()+" ("+Number(result.multiplier||1)+"배 적용)":"일일 미션 보상입니다!"});await 일일미션화면표시()}));
- }catch(err){console.error("일일 미션 패널 오류:",err);패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션오류2">일일 미션을 불러오지 못했습니다.<br><small>잠시 후 다시 시도해주세요.</small></div></div>'}
+
+ try {
+  const {data:{session}}=await supabase.auth.getSession();
+  if(!session){
+   패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션오류2">로그인이 필요한 기능입니다.</div></div>';
+   return;
+  }
+
+  const [
+   {data:defs,error:e1},
+   {data:rows,error:e2},
+   {data:boost,error:e3},
+   {data:streakInfo,error:e4}
+  ]=await Promise.all([
+   supabase.from("daily_mission_definitions")
+    .select("mission_key,title,description,reward_coins,sort_order,active")
+    .eq("active",true).order("sort_order"),
+   supabase.from("user_daily_missions")
+    .select("mission_key,completed_at,reward_claimed")
+    .eq("user_id",session.user.id).eq("mission_date",오늘날짜()),
+   supabase.from("users")
+    .select("doldolcoin_multiplier,doldolcoin_multiplier_expires_at")
+    .eq("user_id",session.user.id).maybeSingle(),
+   supabase.rpc("get_daily_mission_streak")
+  ]);
+
+  if(e1||e2||e4) throw(e1||e2||e4);
+
+  const boostExpiry=boost?.doldolcoin_multiplier_expires_at
+   ?new Date(boost.doldolcoin_multiplier_expires_at):null;
+  const activeMultiplier=!e3&&boostExpiry&&boostExpiry.getTime()>Date.now()
+   ?Math.max(1,Number(boost?.doldolcoin_multiplier)||1):1;
+
+  const showReward=(base)=>{
+   const amount=Math.max(0,Number(base)||0);
+   const total=Math.floor(amount*activeMultiplier);
+   const extra=total-amount;
+   return '<div class="일일미션코인">+'+total.toLocaleString()+' 🪙</div>'+
+    (extra>0?'<small style="display:block;color:#79e5ff;font-size:11px;font-weight:800;margin-top:-3px;margin-bottom:5px">⚡ 버프 +'+extra.toLocaleString()+' ('+activeMultiplier+'배)</small>':'');
+  };
+
+  const definitions=defs||[];
+  const map=new Map((rows||[]).map(x=>[x.mission_key,x]));
+  const base=definitions.filter(x=>x.mission_key!=="all_complete");
+  const allDefinition=definitions.find(x=>x.mission_key==="all_complete");
+  const done=base.filter(x=>map.get(x.mission_key)?.completed_at).length;
+  const pct=base.length?Math.round(done/base.length*100):0;
+  const allDone=done===base.length&&base.length>0;
+  const allClaimed=!!map.get("all_complete")?.reward_claimed;
+
+  const streakDays=Math.max(0,Number(streakInfo?.streak_days)||0);
+  const completedAllToday=!!(map.get("all_complete")?.completed_at||streakInfo?.completed_today);
+  const nextStreakDays=completedAllToday?Math.max(1,streakDays):Math.max(1,Number(streakInfo?.next_streak_days)||1);
+  const streakBonus=Math.max(0,nextStreakDays-1)*1000;
+  const baseAllReward=Math.max(0,Number(allDefinition?.reward_coins??30000)||0);
+  const allReward=Math.floor((baseAllReward+streakBonus)*activeMultiplier);
+
+  const streakTitle=completedAllToday
+   ?"🔥 "+streakDays.toLocaleString()+"일 연속 성공"
+   :streakDays>0
+    ?"🔥 "+streakDays.toLocaleString()+"일 연속 성공 중"
+    :"🔥 연속 성공을 시작해 보세요";
+  const streakDetail=completedAllToday
+   ?"오늘의 모든 미션을 완료했어요. 다음 목표는 "+(streakDays+1).toLocaleString()+"일 연속 성공입니다."
+   :streakDays>0
+    ?"오늘 모두 완료하면 "+nextStreakDays.toLocaleString()+"일 연속 성공! 연속 보너스 +"+streakBonus.toLocaleString()+" 돌돌코인"
+    :"오늘 모든 미션을 완료하면 1일 연속 성공부터 시작합니다.";
+  const streakHtml=
+   '<div class="일일미션연속카드" role="status">'+
+    '<div class="일일미션연속문구"><strong>'+streakTitle+'</strong><small>'+streakDetail+'</small></div>'+
+    '<div class="일일미션연속숫자"><strong>'+streakDays.toLocaleString()+'</strong><span>STREAK DAYS</span></div>'+
+   '</div>';
+
+  const progressText=document.getElementById("progressText");
+  const percentText=document.getElementById("percent");
+  const ring=document.getElementById("ring");
+  if(progressText) progressText.textContent=done+" / "+base.length+" 미션 완료";
+  if(percentText) percentText.textContent=pct+"%";
+  if(ring) ring.style.setProperty("--p",pct);
+
+  const cards=base.map(m=>{
+   const row=map.get(m.mission_key);
+   const complete=!!row?.completed_at;
+   const received=!!row?.reward_claimed;
+   const goURL=일일미션바로가기URL[m.mission_key]||"https://rockey-jason.github.io/doldol-site/";
+   const goButton=complete?'':'<a class="일일미션바로가기" href="'+goURL+'">바로가기 ↗</a>';
+   const action=received
+    ?'<span class="일일미션받음">✓ 보상 수령 완료</span>'
+    :complete
+     ?'<button class="일일미션받기" data-claim="'+일일HTML안전(m.mission_key)+'">보상 받기</button>'
+     :'<button class="일일미션받기" disabled>미션 진행 필요</button>';
+
+   return '<article class="일일미션아이템 '+(complete?"완료":"")+'">'+
+    '<div class="일일미션아이콘2">'+(일일미션아이콘[m.mission_key]||"🎯")+'</div>'+
+    '<div><div class="일일미션이름2">'+일일HTML안전(m.title)+'</div>'+
+    '<div class="일일미션설명2">'+일일HTML안전(m.description||"오늘의 미션")+'</div>'+
+    '<div class="일일미션상태2">'+(received?"보상을 이미 수령했습니다.":complete?"미션 완료 · 보상을 받을 수 있습니다.":"아직 완료되지 않았습니다.")+'</div></div>'+
+    '<div class="일일미션보상영역">'+showReward(m.reward_coins)+goButton+action+'</div></article>';
+  }).join("");
+
+  const bonus=allClaimed
+   ?'<span class="일일미션받음">✓ 보너스 수령 완료</span>'
+   :allDone
+    ?'<button class="일일미션받기" data-claim="all_complete">보너스 받기</button>'
+    :'<button class="일일미션받기" disabled>모든 미션 완료 필요</button>';
+
+  const bonusDetails=[];
+  bonusDetails.push("기본 보상 "+baseAllReward.toLocaleString());
+  if(streakBonus>0) bonusDetails.push("연속 성공 보너스 +"+streakBonus.toLocaleString()+" ("+nextStreakDays+"일째)");
+  else bonusDetails.push("1일째는 추가 연속 보너스 없음");
+  if(activeMultiplier>1) bonusDetails.push("⚡ "+activeMultiplier+"배 버프 적용");
+  const bonusDetailHtml='<small class="일일미션보너스상세">'+일일HTML안전(bonusDetails.join(" · "))+'</small>';
+
+  패널내용.innerHTML=
+   '<div id="일일미션화면">'+
+    '<div class="일일미션헤더"><div><div class="일일미션배지2">DAILY REWARD</div><h2>오늘의 미션</h2><p>미션을 완료한 뒤 직접 보상을 받아보세요.</p></div>'+
+    '<div class="일일미션헤더통계"><strong>'+done+'/'+base.length+'</strong><span>미션 완료</span></div></div>'+
+    '<div class="일일미션프로그레스"><span style="width:'+pct+'%"></span></div>'+
+    streakHtml+
+    '<div class="일일미션리스트">'+cards+'</div>'+
+    '<div class="일일미션보너스2"><div><strong>🏆 ALL CLEAR BONUS</strong><small>오늘의 4개 미션을 모두 완료하면 추가 보상</small></div>'+
+    '<div><div class="보너스코인">+'+allReward.toLocaleString()+' 🪙</div>'+bonusDetailHtml+bonus+'</div></div>'+
+   '</div>';
+
+  패널내용.querySelectorAll("[data-claim]").forEach(btn=>btn.addEventListener("click",async()=>{
+   btn.disabled=true;
+   btn.textContent="수령 중…";
+   const claimKey=btn.dataset.claim;
+   const result=window.doriClaimDailyMissionReward
+    ?await window.doriClaimDailyMissionReward(claimKey):null;
+   if(!result?.reward_claimed){
+    btn.disabled=false;
+    btn.textContent=claimKey==="all_complete"?"보너스 받기":"보상 받기";
+    팝업열기("❌ 보상을 받지 못했습니다. 잠시 후 다시 시도해주세요.",3500);
+    return;
+   }
+
+   const baseAmount=Number(result.base_reward_coins??result.reward_coins??0);
+   const paidAmount=Number(result.reward_coins||0);
+   const streakBonusAmount=Number(result.streak_bonus_coins||0);
+   const rewardMultiplier=Number(result.multiplier||1);
+   let description="일일 미션 보상입니다!";
+   if(claimKey==="all_complete"){
+    const details=["기본 "+baseAmount.toLocaleString()];
+    if(streakBonusAmount>0){
+     details.push(Number(result.streak_days||1)+"일 연속 성공 보너스 +"+streakBonusAmount.toLocaleString());
+    }else{
+     details.push("첫날은 기본 보상 그대로 지급");
+    }
+    if(rewardMultiplier>1) details.push(rewardMultiplier+"배 버프 적용");
+    description=details.join(" · ");
+   }else if(rewardMultiplier>1){
+    description="돌돌코인 "+rewardMultiplier+"배 버프가 적용되었습니다.";
+   }
+
+   일일미션보상팝업표시({
+    title:"일일 미션 보상 획득!",
+    amountText:"+"+paidAmount.toLocaleString(),
+    description
+   });
+   await 일일미션화면표시();
+  }));
+ }catch(err){
+  console.error("일일 미션 패널 오류:",err);
+  패널내용.innerHTML='<div id="일일미션화면"><div class="일일미션오류2">일일 미션을 불러오지 못했습니다.<br><small>잠시 후 다시 시도해주세요.</small></div></div>';
+ }
 }
 if(일일미션버튼)일일미션버튼.onclick=()=>{메뉴.classList.remove("menu-show");메뉴.classList.add("menu-hide");window.setTimeout(()=>메뉴.classList.remove("menu-hide"),260);패널열기("daily")};
 const 출석체크버튼=document.getElementById("출석체크버튼");
@@ -4600,6 +4759,30 @@ if ("serviceWorker" in navigator) {
  .일일미션아이템,.일일미션아이콘2,.일일미션바로가기,.일일미션받기,.일일미션프로그레스 span{transition:none}
  .일일미션바로가기::before,.일일미션받기::before{display:none}
  .일일미션스피너{animation:none}
+}
+
+/* Consecutive all-missions success indicator */
+.일일미션연속카드{
+ display:flex;align-items:center;justify-content:space-between;gap:14px;
+ margin:0 0 16px;padding:15px 18px;min-width:0;
+ border:1px solid rgba(112,181,255,.24);border-radius:18px;
+ background:radial-gradient(ellipse at 0 0,rgba(68,166,255,.13),transparent 57%),linear-gradient(130deg,rgba(24,47,83,.67),rgba(13,20,43,.88));
+ box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 8px 24px rgba(0,0,0,.12);
+}
+.일일미션연속문구{min-width:0}
+.일일미션연속문구 strong{display:block;color:#e4efff;font-size:14px;font-weight:800;line-height:1.4}
+.일일미션연속문구 small{display:block;margin-top:5px;color:#aebfdf;font-size:11px;line-height:1.55}
+.일일미션연속숫자{display:flex;flex:0 0 auto;flex-direction:column;align-items:center;justify-content:center;min-width:76px;padding:7px 10px;border:1px solid rgba(112,181,255,.2);border-radius:14px;background:rgba(74,141,226,.09)}
+.일일미션연속숫자 strong{color:#8fd2ff;font-size:24px;line-height:1.05;font-variant-numeric:tabular-nums;text-shadow:0 0 18px rgba(90,184,255,.22)}
+.일일미션연속숫자 span{margin-top:5px;color:#93a9ce;font-size:8px;font-weight:800;letter-spacing:.12em;white-space:nowrap}
+.일일미션보너스상세{display:block;margin:-2px 0 2px;color:#c1c8dc;font-size:10px;line-height:1.55}
+@media(max-width:620px){
+ .일일미션연속카드{gap:10px;padding:13px;border-radius:16px}
+ .일일미션연속문구 strong{font-size:13px}
+ .일일미션연속문구 small{font-size:10px}
+ .일일미션연속숫자{min-width:64px;padding:7px 8px;border-radius:12px}
+ .일일미션연속숫자 strong{font-size:21px}
+ .일일미션보너스상세{font-size:10px}
 }
 
 </style>
