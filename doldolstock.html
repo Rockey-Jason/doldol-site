@@ -929,6 +929,61 @@ body::before {
 .issue-impact-change{flex:0 0 auto;font-size:12px;font-weight:900;font-variant-numeric:tabular-nums;}
 .issue-impact-change.up{color:var(--green)!important}.issue-impact-change.down{color:var(--red)!important}.issue-impact-change.flat{color:#aeb8d2!important}
 .stock-chart circle{filter:drop-shadow(0 0 4px rgba(255,215,94,.48));}
+.chart-detail-btn{width:100%;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-7px 0 14px;padding:10px 12px;border:1px solid rgba(126,164,255,.13);border-radius:11px;background:linear-gradient(110deg,rgba(76,141,255,.075),rgba(98,217,255,.025));color:#b9caff;font:inherit;font-size:11px;font-weight:800;text-align:left;cursor:pointer;transition:transform .22s ease,border-color .22s ease,background .22s ease;}
+.chart-detail-btn:hover{transform:translateY(-1px);border-color:rgba(126,164,255,.36);background:linear-gradient(110deg,rgba(76,141,255,.15),rgba(98,217,255,.06));color:#fff}
+.chart-detail-btn:active{transform:scale(.99)}
+.chart-detail-btn span:last-child{color:#7f97c6;font-size:15px}
+.price-history-modal{width:min(1100px,100%);max-height:min(94vh,1100px);display:flex;flex-direction:column;overflow:hidden}
+.price-history-modal .modal-head{flex:0 0 auto;padding:18px 22px}
+.price-history-title-wrap{min-width:0;display:flex;flex-direction:column;gap:5px}
+.price-history-title-wrap .modal-title{font-size:20px}
+.history-stock-meta{color:#8294bd;font-size:10px;letter-spacing:.06em}
+.price-history-body{padding:16px 20px 22px;overflow:auto;min-height:0}
+.history-quote{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:16px 18px;border:1px solid rgba(126,164,255,.15);border-radius:16px;background:linear-gradient(135deg,rgba(29,48,99,.45),rgba(8,14,34,.72));}
+.history-quote-main{display:flex;flex-direction:column;gap:6px}
+.history-quote-label{color:#8191b6;font-size:10px;font-weight:800;letter-spacing:.08em}
+.history-quote-price{font-size:clamp(24px,4vw,34px);font-weight:950;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.history-quote-foot{margin-top:3px;color:#7182a7;font-size:10px;line-height:1.6}
+.history-quote-change{font-size:12px;font-weight:900}
+.history-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:16px 0 10px}
+.history-periods{display:flex;gap:5px;flex-wrap:wrap;padding:4px;border:1px solid rgba(126,164,255,.12);border-radius:12px;background:rgba(6,11,28,.75)}
+.history-period-btn{border:0;border-radius:8px;padding:8px 12px;background:transparent;color:#7f90b5;font:inherit;font-size:10px;font-weight:900;cursor:pointer;transition:.2s ease}
+.history-period-btn:hover{color:#fff;background:rgba(255,255,255,.06)}
+.history-period-btn.active{color:#fff;background:linear-gradient(135deg,rgba(76,141,255,.35),rgba(98,217,255,.13));box-shadow:inset 0 0 0 1px rgba(126,164,255,.16)}
+.history-date-range{display:flex;gap:8px;flex-wrap:wrap}
+.history-date-range label{display:flex;align-items:center;gap:7px;color:#7182a7;font-size:9px;font-weight:800}
+.history-date-range input{width:132px;min-width:0;padding:8px 9px;border:1px solid rgba(126,164,255,.15);border-radius:9px;background:#080e23;color:#e5ebff;font:inherit;font-size:10px;color-scheme:dark}
+.history-chart-wrap{position:relative;width:100%;height:clamp(230px,38vw,360px);overflow:hidden;border:1px solid rgba(126,164,255,.11);border-radius:15px;background:linear-gradient(180deg,rgba(10,17,41,.95),rgba(5,9,24,.96))}
+#historySvg{display:block;width:100%;height:100%;touch-action:pan-y;user-select:none}
+#historySvg text{font-family:inherit;fill:#7080a4;font-size:12px}
+.history-chart-caption{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:8px 2px 0;color:#6c7da3;font-size:9px}
+.history-legend{display:inline-flex;align-items:center;gap:7px}
+.history-legend-dot{width:8px;height:8px;border-radius:50%;background:#ffd75e;box-shadow:0 0 10px rgba(255,215,94,.45)}
+.history-selected{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:9px;margin-top:13px}
+.history-selected-card{min-width:0;padding:12px;border:1px solid rgba(126,164,255,.10);border-radius:12px;background:rgba(13,21,48,.65)}
+.history-selected-card small{display:block;color:#7182a7;font-size:9px;font-weight:800}
+.history-selected-card strong{display:block;margin-top:6px;color:#eaf0ff;font-size:12px;font-weight:850;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.history-selected-card.primary strong{color:#fff;font-size:18px}
+.history-selected-reason{grid-column:1/-1}
+.history-selected-reason strong{font-size:11px;font-weight:600;color:#aebbd7}
+.history-table-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:22px 0 10px}
+.history-table-head h3{margin:0;color:#e7edff;font-size:14px}
+.history-table-head p{margin:5px 0 0;color:#7282a5;font-size:10px;line-height:1.6}
+.history-record-count{color:#8496bc;font-size:10px;font-weight:850;white-space:nowrap}
+.history-table-wrap{max-height:340px;overflow:auto;border:1px solid rgba(126,164,255,.12);border-radius:13px}
+.history-table{width:100%;min-width:850px;border-collapse:separate;border-spacing:0}
+.history-table th{position:sticky;top:0;z-index:1;background:#101a38;color:#7183a9;font-size:9px;white-space:nowrap}
+.history-table th,.history-table td{padding:11px 12px;border-bottom:1px solid rgba(255,255,255,.045);font-size:10px}
+.history-table td{color:#cbd5ef;white-space:nowrap;font-variant-numeric:tabular-nums}
+.history-table tbody tr{cursor:pointer;transition:background .15s ease}
+.history-table tbody tr:hover{background:rgba(76,141,255,.075)}
+.history-table tbody tr.selected{background:rgba(76,141,255,.14);box-shadow:inset 3px 0 #7ab0ff}
+.history-table tbody tr:last-child td{border-bottom:0}
+.history-table .history-reason{max-width:300px;overflow:hidden;text-overflow:ellipsis}
+.history-empty{padding:40px 16px;text-align:center;color:#8090b1;font-size:12px;line-height:1.8}
+.history-status{margin:9px 2px 0;color:#6f7fa2;font-size:9px;line-height:1.7}
+@media(max-width:620px){.price-history-body{padding:12px}.price-history-modal .modal-head{padding:15px}.history-date-range{width:100%}.history-date-range label{flex:1;justify-content:space-between}.history-date-range input{width:125px}.history-selected{grid-template-columns:1fr 1fr}.history-selected-card:first-child{grid-column:1/-1}.history-chart-wrap{height:260px}.history-quote{padding:13px}.history-period-btn{padding:8px 10px}}
+@media(prefers-reduced-motion:reduce){.chart-detail-btn,.history-period-btn{transition:none}}
 @keyframes marketFlash { 0%{box-shadow:0 0 0 0 rgba(95,145,255,0),0 18px 55px rgba(0,0,0,.25)} 35%{box-shadow:0 0 0 4px rgba(95,145,255,.12),0 24px 75px rgba(0,0,0,.42)} 100%{box-shadow:0 0 0 0 rgba(95,145,255,0),0 18px 55px rgba(0,0,0,.25)} }
 
 /* =====================================================
@@ -2319,6 +2374,86 @@ td {
 
 
 <!-- =====================================================
+     Exact price history modal
+===================================================== -->
+<div class="modal-backdrop" id="priceHistoryModal" aria-hidden="true">
+  <section class="modal price-history-modal" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
+    <header class="modal-head">
+      <div class="price-history-title-wrap">
+        <div class="modal-title" id="historyTitle">주가 이력</div>
+        <div class="history-stock-meta" id="historyTicker">DOLDOL MARKET / PRICE HISTORY</div>
+      </div>
+      <button type="button" class="close-btn" id="closePriceHistory" aria-label="주가 기록 닫기">×</button>
+    </header>
+    <div class="modal-body price-history-body">
+      <div class="history-quote">
+        <div class="history-quote-main">
+          <span class="history-quote-label">현재 표시 가격</span>
+          <strong class="history-quote-price" id="historyCurrentPrice">-</strong>
+          <span class="history-quote-foot" id="historyCurrentTime">최신 가격 기록을 확인하는 중…</span>
+        </div>
+        <div>
+          <span class="history-quote-label">조회 기간 등락</span>
+          <div class="history-quote-change flat" id="historyPeriodChange">-</div>
+        </div>
+      </div>
+
+      <div class="history-toolbar">
+        <div class="history-periods" aria-label="가격 기록 조회 기간">
+          <button type="button" class="history-period-btn" data-history-period="1D">1일</button>
+          <button type="button" class="history-period-btn" data-history-period="1W">1주</button>
+          <button type="button" class="history-period-btn" data-history-period="1M">1개월</button>
+          <button type="button" class="history-period-btn" data-history-period="3M">3개월</button>
+          <button type="button" class="history-period-btn active" data-history-period="ALL">전체</button>
+        </div>
+        <div class="history-date-range">
+          <label>시작일 <input id="historyStartDate" type="date" aria-label="조회 시작일"></label>
+          <label>종료일 <input id="historyEndDate" type="date" aria-label="조회 종료일"></label>
+        </div>
+      </div>
+
+      <div class="history-chart-wrap" id="historyChartWrap">
+        <svg id="historySvg" viewBox="0 0 1000 340" preserveAspectRatio="none" role="img" aria-label="주가의 시간별 변동 그래프">
+          <text x="500" y="170" text-anchor="middle">가격 기록을 불러오는 중…</text>
+        </svg>
+      </div>
+      <div class="history-chart-caption">
+        <span>그래프의 점을 누르거나 움직이면 해당 기록의 정확한 시각과 가격을 확인할 수 있어.</span>
+        <span class="history-legend"><i class="history-legend-dot"></i> 돌이 이슈 반영</span>
+      </div>
+
+      <div class="history-selected">
+        <div class="history-selected-card primary">
+          <small>선택한 기록의 가격</small>
+          <strong id="historySelectedPrice">-</strong>
+        </div>
+        <div class="history-selected-card">
+          <small>정확한 기록 시각 (KST)</small>
+          <strong id="historySelectedTime">-</strong>
+        </div>
+        <div class="history-selected-card">
+          <small>직전 기록 대비 변동</small>
+          <strong id="historySelectedChange">-</strong>
+        </div>
+        <div class="history-selected-card history-selected-reason">
+          <small>변동 사유</small>
+          <strong id="historySelectedReason">기록을 선택하세요.</strong>
+        </div>
+      </div>
+
+      <div class="history-table-head">
+        <div><h3>날짜·시간별 가격 기록</h3><p>최근 기록부터 표시해. 시각은 한국 표준시(KST)이며, 저장된 가격만 보여주고 없는 시각의 가격은 만들어내지 않아.</p></div>
+        <span class="history-record-count" id="historyRecordCount">0개</span>
+      </div>
+      <div class="history-table-wrap" id="historyTableWrap">
+        <div class="history-empty">주가 이력을 불러오는 중…</div>
+      </div>
+      <p class="history-status" id="historyStatus">이슈 발행이나 거래로 실제 가격이 변경되면 시간과 함께 기록돼.</p>
+    </div>
+  </section>
+</div>
+
+<!-- =====================================================
      Toast
 ===================================================== -->
 
@@ -3368,6 +3503,392 @@ function renderLatestIssueImpact(stockId) {
 }
 
 
+// ============================================================
+// 정확한 날짜·시각별 주가 이력
+// DB의 실제 recorded price points를 조회한다. 시간대는 KST로 표시.
+// ============================================================
+const priceHistoryUI = {
+    stock: null,
+    records: [],
+    filtered: [],
+    coords: [],
+    period: "ALL",
+    selectedIndex: -1,
+    truncated: false
+};
+
+function formatExactKst(value) {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) return "-";
+    const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Seoul",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hourCycle: "h23"
+    }).formatToParts(date).reduce((obj, part) => {
+        if (part.type !== "literal") obj[part.type] = part.value;
+        return obj;
+    }, {});
+    const raw = String(value);
+    const fractionMatch = raw.match(/\.(\d+)(?=Z|[+-]\d{2}(?::?\d{2})?$)/);
+    const microseconds = fractionMatch
+        ? fractionMatch[1].padEnd(6, "0").slice(0, 6)
+        : "000000";
+    return `${parts.year}-${parts.month}-${parts.day} ${parts.hour}:${parts.minute}:${parts.second}.${microseconds} KST`;
+}
+
+function formatPriceChange(value, percent = false) {
+    const amount = Number(value || 0);
+    const sign = amount > 0 ? "+" : "";
+    return percent
+        ? `${sign}${amount.toFixed(2)}%`
+        : `${sign}${formatNumber(amount)} 돌돌`;
+}
+
+async function openPriceHistory(stockId) {
+    const stock = getStock(stockId);
+    if (!stock) {
+        toast("주가 정보를 찾을 수 없습니다.", "error");
+        return;
+    }
+
+    priceHistoryUI.stock = stock;
+    priceHistoryUI.records = [];
+    priceHistoryUI.filtered = [];
+    priceHistoryUI.coords = [];
+    priceHistoryUI.period = "ALL";
+    priceHistoryUI.selectedIndex = -1;
+    priceHistoryUI.truncated = false;
+
+    const modal = $("#priceHistoryModal");
+    modal.classList.add("open");
+    modal.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+
+    $("#historyTitle").textContent = stock.name + " · 주가 기록";
+    $("#historyTicker").textContent = `${stock.ticker} / DOLDOL SECURITIES PRICE HISTORY`;
+    $("#historyCurrentPrice").textContent = formatCoin(stock.current_price);
+    $("#historyCurrentTime").textContent = "정확한 가격 기록을 불러오는 중…";
+    $("#historyPeriodChange").textContent = "-";
+    $("#historySelectedPrice").textContent = "-";
+    $("#historySelectedTime").textContent = "-";
+    $("#historySelectedChange").textContent = "-";
+    $("#historySelectedReason").textContent = "기록을 불러오는 중…";
+    $("#historySvg").innerHTML = '<text x="500" y="170" text-anchor="middle">가격 이력을 불러오는 중…</text>';
+    $("#historyTableWrap").innerHTML = '<div class="history-empty">시간별 가격 기록을 불러오는 중…</div>';
+    $("#historyRecordCount").textContent = "조회 중";
+    $("#historyStatus").textContent = "종목별 저장 기록을 읽는 중…";
+    $("#historyStartDate").value = "";
+    $("#historyEndDate").value = "";
+    $("#priceHistoryModal [data-history-period]").forEach(button => {
+        button.classList.toggle("active", button.dataset.historyPeriod === "ALL");
+    });
+
+    try {
+        const rows = [];
+        const pageSize = 1000;
+        const maxRows = 20000;
+        for (let offset = 0; offset < maxRows; offset += pageSize) {
+            const end = Math.min(offset + pageSize, maxRows) - 1;
+            const { data, error } = await sb
+                .from("dori_stock_prices")
+                .select("id,stock_id,price,previous_price,change_amount,change_percent,reason,created_at")
+                .eq("stock_id", stock.id)
+                .order("created_at", { ascending: true })
+                .order("id", { ascending: true })
+                .range(offset, end);
+            if (error) throw error;
+            rows.push(...(data || []));
+            if (!data || data.length < pageSize) break;
+            if (rows.length >= maxRows) priceHistoryUI.truncated = true;
+        }
+
+        if (priceHistoryUI.stock?.id !== stock.id || !modal.classList.contains("open")) return;
+        priceHistoryUI.records = rows;
+        $("#historyCurrentPrice").textContent = formatCoin(stock.current_price);
+        const last = rows[rows.length - 1];
+        $("#historyCurrentTime").textContent = last
+            ? `마지막 가격 기록: ${formatExactKst(last.created_at)}`
+            : "아직 저장된 가격 기록이 없습니다.";
+        $("#historyStatus").textContent = priceHistoryUI.truncated
+            ? "표시 가능한 최신 20,000개 기록을 불러왔어. 더 오래된 기록은 추가 페이지 조회가 필요해."
+            : "가격은 실제 주가 변경 시점마다 저장돼. 과거에 기록되지 않았던 시각의 가격은 추정하지 않아.";
+        renderPriceHistoryByPeriod();
+    } catch (error) {
+        console.error("주가 이력 조회 실패:", error);
+        $("#historySvg").innerHTML = '<text x="500" y="170" text-anchor="middle">주가 기록을 불러오지 못했습니다.</text>';
+        $("#historyTableWrap").innerHTML = `<div class="history-empty">주가 기록을 불러오지 못했습니다.<br>${doriEscapeHtml(error.message || "알 수 없는 오류")}</div>`;
+        $("#historyStatus").textContent = "연결 또는 권한을 확인한 뒤 다시 열어 주세요.";
+    }
+}
+
+function closePriceHistory() {
+    const modal = $("#priceHistoryModal");
+    if (!modal) return;
+    modal.classList.remove("open");
+    modal.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    priceHistoryUI.stock = null;
+}
+
+function getKstDateBoundary(dateValue, endOfDay = false) {
+    if (!dateValue) return null;
+    const date = new Date(`${dateValue}T${endOfDay ? "23:59:59.999" : "00:00:00"}+09:00`);
+    return Number.isFinite(date.getTime()) ? date.getTime() : null;
+}
+
+function renderPriceHistoryByPeriod() {
+    const all = priceHistoryUI.records;
+    const period = priceHistoryUI.period;
+    const startValue = $("#historyStartDate").value;
+    const endValue = $("#historyEndDate").value;
+    let from = null;
+    let to = null;
+
+    if (period === "CUSTOM" || startValue || endValue) {
+        from = getKstDateBoundary(startValue, false);
+        to = getKstDateBoundary(endValue, true);
+    } else if (period !== "ALL") {
+        const duration = { "1D": 86400000, "1W": 7 * 86400000, "1M": 30 * 86400000, "3M": 90 * 86400000 }[period] || 0;
+        from = Date.now() - duration;
+        to = Date.now();
+    }
+
+    const invalidRange = from !== null && to !== null && from > to;
+    priceHistoryUI.filtered = invalidRange ? [] : all.filter(record => {
+        const timestamp = new Date(record.created_at).getTime();
+        return (from === null || timestamp >= from) && (to === null || timestamp <= to);
+    });
+
+    $("#priceHistoryModal [data-history-period]").forEach(button => {
+        button.classList.toggle("active", !startValue && !endValue && button.dataset.historyPeriod === period);
+    });
+
+    renderPriceHistoryChart();
+    renderPriceHistoryTable();
+
+    const filtered = priceHistoryUI.filtered;
+    if (filtered.length) {
+        const first = filtered[0];
+        const last = filtered[filtered.length - 1];
+        const delta = Number(last.price) - Number(first.price);
+        const percent = Number(first.price) ? delta / Number(first.price) * 100 : 0;
+        const node = $("#historyPeriodChange");
+        node.textContent = `${formatPriceChange(delta)} (${formatPriceChange(percent, true)})`;
+        node.className = `history-quote-change ${delta > 0 ? "up" : delta < 0 ? "down" : "flat"}`;
+        selectHistoryPoint(filtered.length - 1);
+    } else {
+        $("#historyPeriodChange").textContent = "기록 없음";
+        $("#historyPeriodChange").className = "history-quote-change flat";
+        priceHistoryUI.selectedIndex = -1;
+        $("#historySelectedPrice").textContent = "-";
+        $("#historySelectedTime").textContent = "-";
+        $("#historySelectedChange").textContent = "-";
+        $("#historySelectedReason").textContent = invalidRange
+            ? "시작일은 종료일보다 늦을 수 없습니다."
+            : "선택한 기간에 가격 기록이 없습니다.";
+    }
+}
+
+function renderPriceHistoryChart() {
+    const svg = $("#historySvg");
+    const records = priceHistoryUI.filtered;
+    priceHistoryUI.coords = [];
+
+    if (!records.length) {
+        svg.innerHTML = '<text x="500" y="170" text-anchor="middle">선택한 기간에 가격 기록이 없습니다.</text>';
+        return;
+    }
+
+    const W = 1000, H = 340, left = 78, right = 24, top = 24, bottom = 34;
+    const plotW = W - left - right, plotH = H - top - bottom;
+    const values = records.map(row => Number(row.price));
+    const min = Math.min(...values), max = Math.max(...values);
+    const range = Math.max(1, max - min);
+    const times = records.map(row => new Date(row.created_at).getTime());
+    const minTime = Math.min(...times), maxTime = Math.max(...times);
+    const timeRange = Math.max(1, maxTime - minTime);
+
+    const grid = [];
+    for (let tick = 0; tick <= 4; tick++) {
+        const value = max - range * tick / 4;
+        const y = top + plotH * tick / 4;
+        grid.push(`<line x1="${left}" y1="${y}" x2="${W-right}" y2="${y}" stroke="rgba(136,160,213,.13)" stroke-width="1"/>`);
+        grid.push(`<text x="${left-12}" y="${y+4}" text-anchor="end">${doriEscapeHtml(formatNumber(Math.round(value)))}</text>`);
+    }
+
+    priceHistoryUI.coords = records.map((row, index) => {
+        const x = records.length === 1
+            ? left + plotW / 2
+            : left + ((times[index] - minTime) / timeRange) * plotW;
+        const y = top + plotH - ((Number(row.price) - min) / range) * plotH;
+        return { x, y, index, timestamp: times[index] };
+    });
+
+    const points = priceHistoryUI.coords.map(point => `${point.x},${point.y}`).join(" ");
+    const markers = priceHistoryUI.coords.map(point => {
+        const row = records[point.index];
+        const isIssue = /^DORI ISSUE/i.test(String(row.reason || ""));
+        const markerFill = isIssue ? "#ffd75e" : "#9ac5ff";
+        const title = `${formatExactKst(row.created_at)} · ${formatCoin(row.price)} · ${row.reason || "가격 변경"}`;
+        return `<circle class="history-point" data-history-index="${point.index}" cx="${point.x}" cy="${point.y}" r="${isIssue ? 4.5 : 3.2}" fill="${markerFill}" stroke="#0b1430" stroke-width="1.5"><title>${doriEscapeHtml(title)}</title></circle>`;
+    }).join("");
+
+    const firstLabel = records[0].created_at ? formatExactKst(records[0].created_at).slice(0, 16) : "";
+    const lastLabel = records[records.length - 1].created_at ? formatExactKst(records[records.length - 1].created_at).slice(0, 16) : "";
+    svg.innerHTML = `
+      <g>${grid.join("")}</g>
+      <polyline points="${points}" fill="none" stroke="#78a9ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".92"/>
+      <g>${markers}</g>
+      <line id="historyCrosshair" x1="${left}" y1="${top}" x2="${left}" y2="${top+plotH}" stroke="#ffd75e" stroke-width="1.2" stroke-dasharray="4 5" opacity=".85" visibility="hidden"/>
+      <circle id="historyActivePoint" cx="${left}" cy="${top}" r="8" fill="rgba(255,215,94,.12)" stroke="#ffd75e" stroke-width="2" visibility="hidden"/>
+      <text x="${left}" y="${H-10}" text-anchor="start">${doriEscapeHtml(firstLabel)}</text>
+      <text x="${W-right}" y="${H-10}" text-anchor="end">${doriEscapeHtml(lastLabel)}</text>
+    `;
+    svg.setAttribute("aria-label", `${priceHistoryUI.stock?.name || "종목"} 가격 이력, ${records.length}개 기록`);
+}
+
+function renderPriceHistoryTable() {
+    const records = priceHistoryUI.filtered;
+    $("#historyRecordCount").textContent = `${formatNumber(records.length)}개 기록`;
+
+    if (!records.length) {
+        $("#historyTableWrap").innerHTML = '<div class="history-empty">해당 기간의 주가 기록이 없어. 기간을 넓히거나 다른 날짜를 선택해 줘.</div>';
+        return;
+    }
+
+    const rows = records.map((row, index) => ({ row, index })).reverse();
+    $("#historyTableWrap").innerHTML = `
+      <table class="history-table">
+        <thead><tr><th>정확한 시각 (KST)</th><th>가격</th><th>이전 가격</th><th>변동</th><th>등락률</th><th>변동 사유</th></tr></thead>
+        <tbody>
+          ${rows.map(({row,index}) => {
+            const change = Number(row.change_amount ?? (Number(row.price) - Number(row.previous_price)) ?? 0);
+            const changeClass = change > 0 ? "up" : change < 0 ? "down" : "flat";
+            return `<tr tabindex="0" role="button" data-history-index="${index}">
+              <td>${doriEscapeHtml(formatExactKst(row.created_at))}</td>
+              <td><strong>${doriEscapeHtml(formatNumber(row.price))}</strong></td>
+              <td>${doriEscapeHtml(formatNumber(row.previous_price))}</td>
+              <td class="${changeClass}">${doriEscapeHtml(formatPriceChange(change))}</td>
+              <td class="${changeClass}">${doriEscapeHtml(formatPriceChange(row.change_percent, true))}</td>
+              <td class="history-reason" title="${doriEscapeHtml(row.reason || "")}">${doriEscapeHtml(row.reason || "가격 변경")}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>`;
+    $("#historyTableWrap").querySelectorAll("[data-history-index]").forEach(row => {
+        row.addEventListener("click", () => selectHistoryPoint(Number(row.dataset.historyIndex)));
+        row.addEventListener("keydown", event => {
+            if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                selectHistoryPoint(Number(row.dataset.historyIndex));
+            }
+        });
+    });
+}
+
+function selectHistoryPoint(index) {
+    const row = priceHistoryUI.filtered[index];
+    const point = priceHistoryUI.coords[index];
+    if (!row || !point) return;
+    priceHistoryUI.selectedIndex = index;
+
+    $("#historySelectedPrice").textContent = formatCoin(row.price);
+    $("#historySelectedTime").textContent = formatExactKst(row.created_at);
+    const change = Number(row.change_amount ?? (Number(row.price) - Number(row.previous_price)) ?? 0);
+    const changeNode = $("#historySelectedChange");
+    changeNode.textContent = `${formatPriceChange(change)} · ${formatPriceChange(row.change_percent, true)}`;
+    changeNode.style.color = change > 0 ? "var(--green)" : change < 0 ? "var(--red)" : "#cbd5ef";
+    $("#historySelectedReason").textContent = row.reason || "가격 변경";
+
+    const crosshair = $("#historyCrosshair");
+    const activePoint = $("#historyActivePoint");
+    if (crosshair) {
+        crosshair.setAttribute("x1", point.x);
+        crosshair.setAttribute("x2", point.x);
+        crosshair.setAttribute("visibility", "visible");
+    }
+    if (activePoint) {
+        activePoint.setAttribute("cx", point.x);
+        activePoint.setAttribute("cy", point.y);
+        activePoint.setAttribute("visibility", "visible");
+    }
+    $("#historySvg").querySelectorAll(".history-point").forEach(marker => {
+        const selected = Number(marker.dataset.historyIndex) === index;
+        marker.setAttribute("r", selected ? "6.5" : ( /^DORI ISSUE/i.test(String(priceHistoryUI.filtered[Number(marker.dataset.historyIndex)]?.reason || "")) ? "4.5" : "3.2"));
+        marker.setAttribute("stroke", selected ? "#ffd75e" : "#0b1430");
+        marker.setAttribute("stroke-width", selected ? "2.2" : "1.5");
+    });
+    $("#historyTableWrap").querySelectorAll("tr[data-history-index]").forEach(tr => {
+        tr.classList.toggle("selected", Number(tr.dataset.historyIndex) === index);
+    });
+    const selectedRow = $("#historyTableWrap").querySelector(`tr[data-history-index="${index}"]`);
+    if (selectedRow && !selectedRow.getBoundingClientRect().height === 0) {
+        // Keep the current scroll position unless the row is already visible.
+    }
+}
+
+function installPriceHistoryInteractions() {
+    $("#closePriceHistory")?.addEventListener("click", closePriceHistory);
+    $("#priceHistoryModal")?.addEventListener("click", event => {
+        if (event.target === $("#priceHistoryModal")) closePriceHistory();
+    });
+    $("#priceHistoryModal [data-history-period]").forEach(button => {
+        button.addEventListener("click", () => {
+            priceHistoryUI.period = button.dataset.historyPeriod;
+            $("#historyStartDate").value = "";
+            $("#historyEndDate").value = "";
+            renderPriceHistoryByPeriod();
+        });
+    });
+    $("#historyStartDate")?.addEventListener("change", () => {
+        priceHistoryUI.period = "CUSTOM";
+        renderPriceHistoryByPeriod();
+    });
+    $("#historyEndDate")?.addEventListener("change", () => {
+        priceHistoryUI.period = "CUSTOM";
+        renderPriceHistoryByPeriod();
+    });
+
+    $("#historySvg")?.addEventListener("pointermove", event => {
+        const svg = $("#historySvg");
+        const rect = svg.getBoundingClientRect();
+        if (!rect.width || !rect.height || !priceHistoryUI.coords.length) return;
+        const x = (event.clientX - rect.left) / rect.width * 1000;
+        const y = (event.clientY - rect.top) / rect.height * 340;
+        let bestIndex = 0, bestDistance = Infinity;
+        for (const point of priceHistoryUI.coords) {
+            const dx = (point.x - x) * rect.width / 1000;
+            const dy = (point.y - y) * rect.height / 340;
+            const distance = dx * dx + dy * dy;
+            if (distance < bestDistance) {
+                bestDistance = distance;
+                bestIndex = point.index;
+            }
+        }
+        if (bestDistance < 80 * 80 || event.pointerType === "touch") {
+            selectHistoryPoint(bestIndex);
+        }
+    });
+    $("#historySvg")?.addEventListener("click", event => {
+        const marker = event.target.closest?.("[data-history-index]");
+        if (marker) selectHistoryPoint(Number(marker.dataset.historyIndex));
+    });
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && $("#priceHistoryModal")?.classList.contains("open")) {
+            closePriceHistory();
+        }
+    });
+}
+
+installPriceHistoryInteractions();
+
+
 /* =========================================================
    20. 시장 UI
 ========================================================= */
@@ -3495,6 +4016,10 @@ function renderMarket() {
 
                             </div>
 
+                            <button type="button" class="chart-detail-btn" onclick="openPriceHistory(${Number(stock.id)})" aria-label="${doriEscapeHtml(stock.name)} 날짜별 주가 기록 보기">
+                                <span>📊 날짜·시간별 주가 기록 보기</span>
+                                <span aria-hidden="true">↗</span>
+                            </button>
 
                             ${renderLatestIssueImpact(stock.id)}
 
