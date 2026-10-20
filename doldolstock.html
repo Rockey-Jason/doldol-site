@@ -3295,7 +3295,7 @@ function getChange(stock) {
 ========================================================= */
 
 function isDoriIssuePriceRecord(item) {
-    return /^DORI ISSUE #\\d+:/i.test(String(item?.reason || ""));
+    return /^DORI ISSUE #\d+:/i.test(String(item?.reason || ""));
 }
 
 function createChart(stockId) {
@@ -3350,7 +3350,7 @@ function renderLatestIssueImpact(stockId) {
 
     if (!record) return "";
 
-    const reason = String(record.reason || "").replace(/^DORI ISSUE #\\d+:\\s*/i, "");
+    const reason = String(record.reason || "").replace(/^DORI ISSUE #\d+:\s*/i, "");
     const change = Number(record.change_percent || 0);
     const changeClass = change > 0 ? "up" : change < 0 ? "down" : "flat";
     const changeText = `${change > 0 ? "+" : ""}${change.toFixed(2)}%`;
