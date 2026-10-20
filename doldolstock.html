@@ -921,6 +921,14 @@ body::before {
 .live-market-data span { color:#647092; font-size:8px; }
 .live-market-data strong { display:block; margin-top:2px; color:#dce5ff; font-size:10px; }
 .stock-card.live-flash { animation:marketFlash .65s ease, fadeUp .55s ease both; }
+.issue-impact-note{display:flex;align-items:center;gap:10px;min-width:0;margin-top:10px;padding:10px 11px;border:1px solid rgba(255,215,94,.15);border-radius:12px;background:linear-gradient(115deg,rgba(255,215,94,.065),rgba(76,141,255,.035));}
+.issue-impact-icon{display:grid;place-items:center;flex:0 0 30px;width:30px;height:30px;border-radius:9px;background:rgba(255,215,94,.09);font-size:14px;}
+.issue-impact-copy{display:flex;flex:1;flex-direction:column;gap:3px;min-width:0;}
+.issue-impact-copy small{color:#a4aecb;font-size:9px;font-weight:800;letter-spacing:.04em;}
+.issue-impact-copy strong{overflow:hidden;color:#e5eaff;font-size:11px;font-weight:700;text-overflow:ellipsis;white-space:nowrap;}
+.issue-impact-change{flex:0 0 auto;font-size:12px;font-weight:900;font-variant-numeric:tabular-nums;}
+.issue-impact-change.up{color:var(--green)!important}.issue-impact-change.down{color:var(--red)!important}.issue-impact-change.flat{color:#aeb8d2!important}
+.stock-chart circle{filter:drop-shadow(0 0 4px rgba(255,215,94,.48));}
 @keyframes marketFlash { 0%{box-shadow:0 0 0 0 rgba(95,145,255,0),0 18px 55px rgba(0,0,0,.25)} 35%{box-shadow:0 0 0 4px rgba(95,145,255,.12),0 24px 75px rgba(0,0,0,.42)} 100%{box-shadow:0 0 0 0 rgba(95,145,255,0),0 18px 55px rgba(0,0,0,.25)} }
 
 /* =====================================================
@@ -3012,7 +3020,7 @@ async function loadPrices() {
             .order(
                 "created_at",
                 {
-                    ascending: true
+                    ascending: false
                 }
             )
             .limit(500);
@@ -3025,8 +3033,9 @@ async function loadPrices() {
         }
 
 
+        // Fetch the newest 500 records, then restore chronological order for chart drawing.
         state.prices =
-            data || [];
+            (data || []).reverse();
 
 
     } catch (error) {
@@ -3285,97 +3294,77 @@ function getChange(stock) {
    19. Chart
 ========================================================= */
 
+function isDoriIssuePriceRecord(item) {
+    return /^DORI ISSUE #\\d+:/i.test(String(item?.reason || ""));
+}
+
 function createChart(stockId) {
-
-    const values =
-        state.prices
-            .filter(
-                item =>
-                    Number(item.stock_id) ===
-                    Number(stockId)
-            )
-            .map(
-                item =>
-                    Number(item.price)
-            );
-
+    // Use only recent points so the sparkline remains readable as trading history grows.
+    const records = state.prices
+        .filter(item => Number(item.stock_id) === Number(stockId))
+        .slice(-60);
+    const values = records.map(item => Number(item.price));
 
     if (!values.length) {
-
         return `
-            <svg viewBox="0 0 500 100"
-                 preserveAspectRatio="none">
-                <line
-                    x1="0"
-                    y1="50"
-                    x2="500"
-                    y2="50"
-                    stroke="rgba(120,150,255,.18)"
-                    stroke-width="2"
-                />
+            <svg viewBox="0 0 500 100" preserveAspectRatio="none" role="img" aria-label="가격 기록 없음">
+                <line x1="0" y1="50" x2="500" y2="50" stroke="rgba(120,150,255,.18)" stroke-width="2" />
             </svg>
         `;
-
     }
-
 
     const width = 500;
     const height = 100;
-
-    const min =
-        Math.min(...values);
-
-    const max =
-        Math.max(...values);
-
-    const range =
-        max - min || 1;
-
-
-    const points =
-        values.map(
-            (value, index) => {
-
-                const x =
-                    values.length === 1
-                        ? width / 2
-                        : index /
-                          (values.length - 1) *
-                          width;
-
-                const y =
-                    height -
-                    (
-                        (value - min) /
-                        range
-                    ) *
-                    70 -
-                    15;
-
-                return `${x},${y}`;
-
-            }
-        ).join(" ");
-
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    const range = max - min || 1;
+    const coordinates = records.map((item, index) => {
+        const x = records.length === 1 ? width / 2 : index / (records.length - 1) * width;
+        const y = height - ((Number(item.price) - min) / range) * 70 - 15;
+        return { item, x, y };
+    });
+    const points = coordinates.map(p => `${p.x},${p.y}`).join(" ");
+    const issueMarkers = coordinates
+        .filter(p => isDoriIssuePriceRecord(p.item))
+        .map(p => {
+            const label = `${p.item.reason || "돌이 이슈"} · ${formatCoin(p.item.price)}`;
+            return `<circle cx="${p.x}" cy="${p.y}" r="5" fill="#ffd75e" stroke="#101a38" stroke-width="2"><title>${doriEscapeHtml(label)}</title></circle>`;
+        })
+        .join("");
 
     return `
-        <svg
-            viewBox="0 0 500 100"
-            preserveAspectRatio="none"
-        >
-
-            <polyline
-                points="${points}"
-                fill="none"
-                stroke="#5b91ff"
-                stroke-width="4"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-            />
-
+        <svg viewBox="0 0 500 100" preserveAspectRatio="none" role="img" aria-label="최근 주가 그래프. 노란 점은 돌이 이슈로 반영된 가격입니다.">
+            <polyline points="${points}" fill="none" stroke="#5b91ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+            ${issueMarkers}
         </svg>
     `;
+}
 
+function renderLatestIssueImpact(stockId) {
+    const record = state.prices
+        .filter(item =>
+            Number(item.stock_id) === Number(stockId) &&
+            isDoriIssuePriceRecord(item)
+        )
+        .slice(-1)[0];
+
+    if (!record) return "";
+
+    const reason = String(record.reason || "").replace(/^DORI ISSUE #\\d+:\\s*/i, "");
+    const change = Number(record.change_percent || 0);
+    const changeClass = change > 0 ? "up" : change < 0 ? "down" : "flat";
+    const changeText = `${change > 0 ? "+" : ""}${change.toFixed(2)}%`;
+
+    return `
+        <div class="issue-impact-note" title="${doriEscapeHtml(record.reason || "")}">
+            <span class="issue-impact-icon" aria-hidden="true">📈</span>
+            <span class="issue-impact-copy">
+                <small>최근 돌이 이슈 반영</small>
+                <strong>${doriEscapeHtml(reason)}</strong>
+            </span>
+            <b class="issue-impact-change ${changeClass}">${changeText}</b>
+        </div>
+    `;
 }
 
 
@@ -3506,6 +3495,8 @@ function renderMarket() {
 
                             </div>
 
+
+                            ${renderLatestIssueImpact(stock.id)}
 
                             <div class="stock-description">
 
