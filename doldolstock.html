@@ -3430,7 +3430,7 @@ function getChange(stock) {
 ========================================================= */
 
 function isDoriIssuePriceRecord(item) {
-    return /^DORI ISSUE #\d+:/i.test(String(item?.reason || ""));
+    return /^(?:DORI ISSUE(?:\s*#\d+)?|돌이 이슈\s*#?\d+)\s*:/i.test(String(item?.reason || ""));
 }
 
 function createChart(stockId) {
@@ -3485,7 +3485,7 @@ function renderLatestIssueImpact(stockId) {
 
     if (!record) return "";
 
-    const reason = String(record.reason || "").replace(/^DORI ISSUE #\d+:\s*/i, "");
+    const reason = String(record.reason || "").replace(/^(?:DORI ISSUE(?:\s*#\d+)?|돌이 이슈\s*#?\d+)\s*:\s*/i, "");
     const change = Number(record.change_percent || 0);
     const changeClass = change > 0 ? "up" : change < 0 ? "down" : "flat";
     const changeText = `${change > 0 ? "+" : ""}${change.toFixed(2)}%`;
@@ -3733,7 +3733,7 @@ function renderPriceHistoryChart() {
     const points = priceHistoryUI.coords.map(point => `${point.x},${point.y}`).join(" ");
     const markers = priceHistoryUI.coords.map(point => {
         const row = records[point.index];
-        const isIssue = /^DORI ISSUE/i.test(String(row.reason || ""));
+        const isIssue = /^(?:DORI ISSUE|돌이 이슈)/i.test(String(row.reason || ""));
         const markerFill = isIssue ? "#ffd75e" : "#9ac5ff";
         const title = `${formatExactKst(row.created_at)} · ${formatCoin(row.price)} · ${row.reason || "가격 변경"}`;
         return `<circle class="history-point" data-history-index="${point.index}" cx="${point.x}" cy="${point.y}" r="${isIssue ? 4.5 : 3.2}" fill="${markerFill}" stroke="#0b1430" stroke-width="1.5"><title>${doriEscapeHtml(title)}</title></circle>`;
@@ -3820,17 +3820,14 @@ function selectHistoryPoint(index) {
     }
     $("#historySvg").querySelectorAll(".history-point").forEach(marker => {
         const selected = Number(marker.dataset.historyIndex) === index;
-        marker.setAttribute("r", selected ? "6.5" : ( /^DORI ISSUE/i.test(String(priceHistoryUI.filtered[Number(marker.dataset.historyIndex)]?.reason || "")) ? "4.5" : "3.2"));
+        marker.setAttribute("r", selected ? "6.5" : (/^(?:DORI ISSUE|돌이 이슈)/i.test(String(priceHistoryUI.filtered[Number(marker.dataset.historyIndex)]?.reason || "")) ? "4.5" : "3.2"));
         marker.setAttribute("stroke", selected ? "#ffd75e" : "#0b1430");
         marker.setAttribute("stroke-width", selected ? "2.2" : "1.5");
     });
     $("#historyTableWrap").querySelectorAll("tr[data-history-index]").forEach(tr => {
         tr.classList.toggle("selected", Number(tr.dataset.historyIndex) === index);
     });
-    const selectedRow = $("#historyTableWrap").querySelector(`tr[data-history-index="${index}"]`);
-    if (selectedRow && !selectedRow.getBoundingClientRect().height === 0) {
-        // Keep the current scroll position unless the row is already visible.
-    }
+    // Keep the current table scroll position; clicking a record never jumps the page.
 }
 
 function installPriceHistoryInteractions() {
