@@ -966,6 +966,18 @@ body::before {
 .history-selected-card.primary strong{color:#fff;font-size:18px}
 .history-selected-reason{grid-column:1/-1}
 .history-selected-reason strong{font-size:11px;font-weight:600;color:#aebbd7}
+.history-exact-lookup{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 16px;align-items:center;margin:12px 0 16px;padding:13px 14px;border:1px solid rgba(126,164,255,.12);border-radius:13px;background:linear-gradient(115deg,rgba(76,141,255,.055),rgba(9,15,36,.72));}
+.history-exact-lookup-copy{display:flex;flex-direction:column;gap:4px;min-width:0}
+.history-exact-lookup-copy strong{color:#dce6ff;font-size:11px}
+.history-exact-lookup-copy small{color:#7383a8;font-size:9px;line-height:1.6}
+.history-lookup-controls{display:flex;gap:7px;align-items:center;flex-wrap:wrap}
+.history-lookup-controls input{min-width:190px;padding:9px 10px;border:1px solid rgba(126,164,255,.15);border-radius:9px;background:#080e23;color:#e5ebff;color-scheme:dark;font:inherit;font-size:10px}
+.history-lookup-controls button{padding:9px 12px;border:1px solid rgba(126,164,255,.24);border-radius:9px;background:rgba(76,141,255,.12);color:#d7e3ff;font:inherit;font-size:10px;font-weight:850;cursor:pointer;transition:.2s ease}
+.history-lookup-controls button:hover{border-color:rgba(126,164,255,.5);background:rgba(76,141,255,.2)}
+.history-lookup-result{grid-column:1/-1;min-height:18px;color:#8c9fc7;font-size:10px;line-height:1.7;overflow-wrap:anywhere}
+.history-lookup-result strong{color:#fff;font-size:12px}
+.history-lookup-result .lookup-price{color:#ffd75e;font-weight:900}
+@media(max-width:720px){.history-exact-lookup{grid-template-columns:1fr}.history-lookup-controls{width:100%}.history-lookup-controls input{flex:1;min-width:0;width:100%}}
 .history-table-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:22px 0 10px}
 .history-table-head h3{margin:0;color:#e7edff;font-size:14px}
 .history-table-head p{margin:5px 0 0;color:#7282a5;font-size:10px;line-height:1.6}
@@ -2412,6 +2424,18 @@ td {
         </div>
       </div>
 
+      <div class="history-exact-lookup">
+        <div class="history-exact-lookup-copy">
+          <strong>특정 날짜·시각의 가격 조회</strong>
+          <small>한국 표준시(KST)를 선택하면 해당 시각까지 마지막으로 기록된 가격을 찾아줘. 기록이 없는 과거 값을 임의로 만들지는 않아.</small>
+        </div>
+        <div class="history-lookup-controls">
+          <input id="historyAtTime" type="datetime-local" step="1" aria-label="조회할 날짜와 시각">
+          <button type="button" id="historyLookupAtTime">이 시각 조회</button>
+        </div>
+        <div class="history-lookup-result" id="historyAtTimeResult" role="status" aria-live="polite">조회할 날짜와 시각을 선택해 줘.</div>
+      </div>
+
       <div class="history-chart-wrap" id="historyChartWrap">
         <svg id="historySvg" viewBox="0 0 1000 340" preserveAspectRatio="none" role="img" aria-label="주가의 시간별 변동 그래프">
           <text x="500" y="170" text-anchor="middle">가격 기록을 불러오는 중…</text>
@@ -3150,14 +3174,12 @@ async function loadPrices() {
                 change_amount,
                 change_percent,
                 reason,
-                created_at
+                created_at,
+                event_order
             `)
-            .order(
-                "created_at",
-                {
-                    ascending: false
-                }
-            )
+            .order("created_at", { ascending: false })
+            .order("event_order", { ascending: false })
+            .order("id", { ascending: false })
             .limit(500);
 
 
@@ -3585,6 +3607,8 @@ async function openPriceHistory(stockId) {
     $("#historyStatus").textContent = "종목별 저장 기록을 읽는 중…";
     $("#historyStartDate").value = "";
     $("#historyEndDate").value = "";
+    $("#historyAtTime").value = formatExactKst(new Date().toISOString()).slice(0, 19).replace(" ", "T");
+    $("#historyAtTimeResult").textContent = "조회할 날짜와 시각을 선택해 줘.";
     $("#priceHistoryModal [data-history-period]").forEach(button => {
         button.classList.toggle("active", button.dataset.historyPeriod === "ALL");
     });
@@ -3597,9 +3621,10 @@ async function openPriceHistory(stockId) {
             const end = Math.min(offset + pageSize, maxRows) - 1;
             const { data, error } = await sb
                 .from("dori_stock_prices")
-                .select("id,stock_id,price,previous_price,change_amount,change_percent,reason,created_at")
+                .select("id,stock_id,price,previous_price,change_amount,change_percent,reason,created_at,event_order")
                 .eq("stock_id", stock.id)
                 .order("created_at", { ascending: true })
+                .order("event_order", { ascending: true })
                 .order("id", { ascending: true })
                 .range(offset, end);
             if (error) throw error;
@@ -3830,8 +3855,54 @@ function selectHistoryPoint(index) {
     // Keep the current table scroll position; clicking a record never jumps the page.
 }
 
+
+function lookupHistoricalPriceAtTime() {
+    const inputValue = $("#historyAtTime")?.value;
+    const output = $("#historyAtTimeResult");
+    if (!inputValue || !output) {
+        if (output) output.textContent = "조회할 날짜와 시각을 선택해 줘.";
+        return;
+    }
+
+    const normalized = inputValue.length === 16 ? inputValue + ":00" : inputValue;
+    const targetTime = new Date(normalized + "+09:00").getTime();
+    if (!Number.isFinite(targetTime)) {
+        output.textContent = "날짜와 시각을 확인해 줘.";
+        return;
+    }
+    if (targetTime > Date.now()) {
+        output.textContent = "아직 도달하지 않은 미래 시각은 조회할 수 없어.";
+        return;
+    }
+
+    let selected = null;
+    for (const event of priceHistoryUI.records) {
+        if (new Date(event.created_at).getTime() <= targetTime) selected = event;
+        else break;
+    }
+
+    if (!selected) {
+        output.textContent = "그 시각 이전의 저장된 가격 기록이 없어. 기록이 없는 과거 가격은 추정하지 않아.";
+        return;
+    }
+
+    output.innerHTML = `
+      <strong>${doriEscapeHtml(formatExactKst(new Date(targetTime).toISOString()))} 기준</strong>
+      · 가격 <span class="lookup-price">${doriEscapeHtml(formatCoin(selected.price))}</span>
+      <br>마지막 가격 기록 시각: ${doriEscapeHtml(formatExactKst(selected.created_at))}
+      · ${doriEscapeHtml(selected.reason || "가격 변경")}
+    `;
+
+    const chartIndex = priceHistoryUI.filtered.findIndex(row => Number(row.id) === Number(selected.id));
+    if (chartIndex >= 0) selectHistoryPoint(chartIndex);
+}
+
 function installPriceHistoryInteractions() {
     $("#closePriceHistory")?.addEventListener("click", closePriceHistory);
+    $("#historyLookupAtTime")?.addEventListener("click", lookupHistoricalPriceAtTime);
+    $("#historyAtTime")?.addEventListener("keydown", event => {
+        if (event.key === "Enter") lookupHistoricalPriceAtTime();
+    });
     $("#priceHistoryModal")?.addEventListener("click", event => {
         if (event.target === $("#priceHistoryModal")) closePriceHistory();
     });
