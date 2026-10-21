@@ -3638,12 +3638,12 @@ async function openPriceHistory(stockId) {
                 .range(offset, end);
             if (error) throw error;
             rows.push(...(data || []));
-            if (!data || data.length < pageSize) break;
             if (rows.length > maxRows) {
                 rows.length = maxRows;
                 priceHistoryUI.truncated = true;
                 break;
             }
+            if (!data || data.length < pageSize) break;
         }
 
         if (priceHistoryUI.stock?.id !== stock.id || !modal.classList.contains("open")) return;
@@ -3931,9 +3931,11 @@ async function lookupHistoricalPriceAtTime() {
             return;
         }
 
+        const requestedLabel = inputValue.replace("T", " ") + " KST";
+        const precisionLabel = includesSeconds ? "선택한 초의 종료 시점까지" : "선택한 분의 종료 시점까지";
         output.innerHTML = `
-          <strong>${doriEscapeHtml(formatExactKst(new Date(targetTime).toISOString()))} 기준</strong>
-          · 해당 분/초 종료 시점까지 마지막으로 기록된 가격
+          <strong>${doriEscapeHtml(requestedLabel)} 기준</strong>
+          · ${precisionLabel} 마지막으로 기록된 가격
           <span class="lookup-price">${doriEscapeHtml(formatCoin(selected.price))}</span>
           <br>실제 가격 기록 시각: ${doriEscapeHtml(formatExactKst(selected.created_at))}
           · ${doriEscapeHtml(selected.reason || "가격 변경")}
