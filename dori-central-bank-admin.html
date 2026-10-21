@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071326"><meta name="description" content="돌이 중앙은행 운영 센터">
+  <title>중앙은행 운영 센터 | 돌이사이트</title>
+  <link rel="icon" href="./rockeysite-icon-3.png" type="image/png">
+  <link rel="stylesheet" href="./css/doldol-theme.css?v=20261019-main-only-4">
+  <link rel="stylesheet" href="./css/dori-central-bank.css?v=20261021-1">
+  <script src="./js/supabase.min.js?v=2.117.2"></script>
+</head>
+<body>
+  <div class="cb-atmosphere" aria-hidden="true"></div>
+  <div class="cb-shell cb-admin-shell">
+    <header class="cb-topbar">
+      <a class="cb-brand" href="./dori-central-bank.html"><span class="cb-brand-mark" aria-hidden="true">D</span><span class="cb-brand-copy"><strong>중앙은행 운영 센터</strong><small>DORI CENTRAL BANK · ADMIN</small></span></a>
+      <nav class="cb-nav"><a class="cb-nav-link" href="./dori-central-bank.html">← 중앙은행 공개 화면</a><a class="cb-nav-link" href="./index.html" data-dori-main-home="true"><span class="cb-nav-d">D</span> 돌이사이트 메인 <span aria-hidden="true">↗</span></a></nav>
+    </header>
+    <main>
+      <section class="cb-admin-hero"><div><span class="cb-kicker">AUTHORIZED CONTROL ROOM</span><h1>정책을 책임 있게 운영합니다.</h1><p>정책 변경과 공식 발표는 관리자 인증 후에만 저장되며 모든 작업은 감사 로그에 기록됩니다.</p></div><div class="cb-admin-seal" aria-hidden="true">CB<span>ADMIN</span></div></section>
+      <section class="cb-admin-gate" id="adminGate"><div class="cb-gate-symbol">◈</div><div><h2 id="gateTitle">관리자 인증 확인 중</h2><p id="gateMessage">검증된 관리자 세션을 확인하고 있습니다.</p></div><a class="cb-button cb-button-quiet" href="./dori-central-bank.html">공개 화면으로 돌아가기</a></section>
+      <div id="adminWorkspace" hidden>
+        <section class="cb-admin-summary">
+          <article class="cb-metric-card"><div class="cb-metric-label">사용자 보유 돌돌코인</div><div class="cb-metric-value" id="adminCoinSupply">—</div></article>
+          <article class="cb-metric-card"><div class="cb-metric-label">등록 사용자</div><div class="cb-metric-value" id="adminUsers">—</div></article>
+          <article class="cb-metric-card"><div class="cb-metric-label">공개 발표</div><div class="cb-metric-value" id="adminPublished">—</div></article>
+          <article class="cb-metric-card"><div class="cb-metric-label">미게시 초안</div><div class="cb-metric-value" id="adminDrafts">—</div></article>
+        </section>
+        <section class="cb-admin-panel" aria-labelledby="policyAdminTitle">
+          <div class="cb-section-heading"><div><span class="cb-kicker">POLICY GOVERNANCE</span><h2 id="policyAdminTitle">통화 정책 설정</h2><p class="cb-section-subtitle">변경 이유는 필수이며 이전 값과 새 값이 보존됩니다.</p></div><span class="cb-pill">관리자 전용</span></div>
+          <form id="policyForm" class="cb-admin-form">
+            <div class="cb-form-grid">
+              <label>기준금리 (%)<input id="baseRateInput" type="number" min="0" max="20" step="0.25" required></label>
+              <label>물가 목표 (%)<input id="inflationTargetInput" type="number" min="0" max="10" step="0.25" required></label>
+              <label>유동성 기조<select id="liquidityInput"><option value="easing">완화</option><option value="neutral">중립</option><option value="tightening">긴축</option></select></label>
+            </div>
+            <label>공개 정책 설명<textarea id="publicNoteInput" maxlength="1000" rows="3" required></textarea></label>
+            <label>변경 사유<textarea id="policyReasonInput" maxlength="500" rows="2" placeholder="예: 경제 안정 및 정책 목표 재검토" required></textarea></label>
+            <div class="cb-form-footer"><p>정책 지표의 변경은 기존 코인 잔액·주가를 직접 수정하지 않습니다.</p><button class="cb-button cb-button-gold" type="submit" id="savePolicyButton">정책 저장 <span aria-hidden="true">↗</span></button></div>
+          </form>
+        </section>
+        <section class="cb-admin-panel" aria-labelledby="announcementAdminTitle">
+          <div class="cb-section-heading"><div><span class="cb-kicker">PUBLIC COMMUNICATION</span><h2 id="announcementAdminTitle">공식 발표 작성</h2><p class="cb-section-subtitle">초안으로 저장하거나 즉시 공개할 수 있습니다.</p></div></div>
+          <form id="announcementForm" class="cb-admin-form">
+            <input type="hidden" id="announcementId">
+            <div class="cb-form-grid cb-announcement-form-grid">
+              <label>분류<select id="announcementCategory"><option value="policy">통화 정책</option><option value="economy">경제 동향</option><option value="market">시장 안내</option><option value="notice">일반 공지</option></select></label>
+              <label class="cb-field-wide">제목<input id="announcementTitle" type="text" minlength="4" maxlength="140" placeholder="공식 발표 제목" required></label>
+            </div>
+            <label>본문<textarea id="announcementContent" minlength="10" maxlength="8000" rows="6" placeholder="정책 결정, 배경 및 적용 범위를 구체적으로 작성해 주세요." required></textarea></label>
+            <div class="cb-form-footer"><label class="cb-publish-toggle"><input id="publishAnnouncement" type="checkbox"> 저장 후 공개하기</label><div class="cb-form-actions"><button class="cb-button cb-button-quiet" type="button" id="resetAnnouncement">새 공지 작성</button><button class="cb-button cb-button-gold" type="submit" id="saveAnnouncementButton">공지 저장 <span aria-hidden="true">↗</span></button></div></div>
+          </form>
+          <div class="cb-admin-list-heading"><h3>공지 및 초안</h3><span id="announcementCount">0개</span></div>
+          <div class="cb-admin-announcement-list" id="adminAnnouncementList"><div class="cb-empty">불러오는 중입니다.</div></div>
+        </section>
+        <section class="cb-admin-panel" aria-labelledby="auditHeading">
+          <div class="cb-section-heading"><div><span class="cb-kicker">SECURITY & TRACEABILITY</span><h2 id="auditHeading">최근 감사 기록</h2><p class="cb-section-subtitle">최근 30건의 관리자 작업 기록</p></div></div>
+          <div class="cb-audit-list" id="auditList"><div class="cb-empty">기록을 불러오는 중입니다.</div></div>
+        </section>
+      </div>
+      <div id="adminToast" class="cb-toast" role="status" aria-live="polite"></div>
+      <div class="cb-page-footer"><span>© DORI CENTRAL BANK · ADMIN</span><span>모든 정책 변경은 감사 기록에 남습니다.</span></div>
+    </main>
+  </div>
+  <script src="./js/dori-central-bank-admin.js?v=20261021-1"></script>
+  <script src="./js/doldol-theme.js?v=20261019-main-only-4"></script>
+  <script src="./js/hancom-weight-normalizer.js?v=20261014-1"></script>
+</body>
+</html>
