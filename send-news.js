@@ -54,14 +54,16 @@ function localDayNumber(date, timezone) {
   return Math.floor(Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day)) / 86400000);
 }
 
-function isLocalEightPMToNextMorningEightAM(timezone, now = new Date()) {
+function isLocalSendTimeReached(timezone, now = new Date()) {
   const hour = Number(new Intl.DateTimeFormat("en-US", {
     timeZone: safeTimezone(timezone),
     hour: "2-digit",
     hourCycle: "h23"
   }).format(now));
 
-  return hour >= 20 || hour < 8;
+  // Use a fixed local-clock schedule. Never send after midnight just because
+  // the local calendar date changed; missed attempts can retry from 20:00 onward.
+  return hour >= 20;
 }
 
 function shouldSend(lastDate, level, timezone, now = new Date()) {
@@ -224,7 +226,7 @@ async function run() {
 
     const level = Number(user.user_level) || 1;
 
-    if (!isLocalEightPMToNextMorningEightAM(user.timezone)) {
+    if (!isLocalSendTimeReached(user.timezone)) {
       console.log(
         "⏭️ 이메일 발송 허용 시간이 아님:",
         user.email,
