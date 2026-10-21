@@ -3,7 +3,14 @@
   const SUPABASE_URL = 'https://scttowfhygcpdirrekqm.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY';
   const $ = id => document.getElementById(id);
-  const fmt = v => Number(v || 0).toLocaleString('ko-KR');
+  const fmt = v => {
+    const raw = String(v ?? '0').trim();
+    if (/^-?\\d+$/.test(raw)) {
+      try { return BigInt(raw).toLocaleString('ko-KR'); } catch (_) {}
+    }
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed.toLocaleString('ko-KR') : '—';
+  };
   const date = v => { const d=new Date(v); return !v || Number.isNaN(d.getTime())?'—':d.toLocaleString('ko-KR',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); };
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const cats = {policy:'통화 정책',economy:'경제 동향',market:'시장 안내',notice:'일반 공지'};
