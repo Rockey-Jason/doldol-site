@@ -5,7 +5,7 @@
   const $ = id => document.getElementById(id);
   const fmt = v => {
     const raw = String(v ?? '0').trim();
-    if (/^-?\\d+$/.test(raw)) {
+    if (/^-?\d+$/.test(raw)) {
       try { return BigInt(raw).toLocaleString('ko-KR'); } catch (_) {}
     }
     const parsed = Number(raw);
