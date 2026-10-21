@@ -981,6 +981,10 @@ body::before {
 .history-table-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:22px 0 10px}
 .history-table-head h3{margin:0;color:#e7edff;font-size:14px}
 .history-table-head p{margin:5px 0 0;color:#7282a5;font-size:10px;line-height:1.6}
+.history-table-actions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.history-export-btn{padding:8px 11px;border:1px solid rgba(126,164,255,.18);border-radius:9px;background:rgba(76,141,255,.08);color:#c6d5ff;font:inherit;font-size:10px;font-weight:900;cursor:pointer;transition:transform .2s ease,border-color .2s ease,background .2s ease}
+.history-export-btn:hover{transform:translateY(-1px);border-color:rgba(126,164,255,.4);background:rgba(76,141,255,.15)}
+.history-export-btn:active{transform:scale(.98)}
 .history-record-count{color:#8496bc;font-size:10px;font-weight:850;white-space:nowrap}
 .history-table-wrap{max-height:340px;overflow:auto;border:1px solid rgba(126,164,255,.12);border-radius:13px}
 .history-table{width:100%;min-width:850px;border-collapse:separate;border-spacing:0}
@@ -2467,7 +2471,10 @@ td {
 
       <div class="history-table-head">
         <div><h3>날짜·시간별 가격 기록</h3><p>최근 기록부터 표시해. 시각은 한국 표준시(KST)이며, 저장된 가격만 보여주고 없는 시각의 가격은 만들어내지 않아.</p></div>
-        <span class="history-record-count" id="historyRecordCount">0개</span>
+        <div class="history-table-actions">
+          <button type="button" class="history-export-btn" id="historyExportCsv">CSV 다운로드</button>
+          <span class="history-record-count" id="historyRecordCount">0개</span>
+        </div>
       </div>
       <div class="history-table-wrap" id="historyTableWrap">
         <div class="history-empty">주가 이력을 불러오는 중…</div>
@@ -3609,7 +3616,7 @@ async function openPriceHistory(stockId) {
     $("#historyEndDate").value = "";
     $("#historyAtTime").value = formatExactKst(new Date().toISOString()).slice(0, 19).replace(" ", "T");
     $("#historyAtTimeResult").textContent = "조회할 날짜와 시각을 선택해 줘.";
-    $("#priceHistoryModal [data-history-period]").forEach(button => {
+    $$("#priceHistoryModal [data-history-period]").forEach(button => {
         button.classList.toggle("active", button.dataset.historyPeriod === "ALL");
     });
 
@@ -3617,32 +3624,38 @@ async function openPriceHistory(stockId) {
         const rows = [];
         const pageSize = 1000;
         const maxRows = 20000;
-        for (let offset = 0; offset < maxRows; offset += pageSize) {
-            const end = Math.min(offset + pageSize, maxRows) - 1;
+
+        // Fetch newest-first so the chart retains recent rows if the safety cap is reached.
+        for (let offset = 0; offset <= maxRows; offset += pageSize) {
+            const end = Math.min(offset + pageSize, maxRows + pageSize) - 1;
             const { data, error } = await sb
                 .from("dori_stock_prices")
                 .select("id,stock_id,price,previous_price,change_amount,change_percent,reason,created_at,event_order")
                 .eq("stock_id", stock.id)
-                .order("created_at", { ascending: true })
-                .order("event_order", { ascending: true })
-                .order("id", { ascending: true })
+                .order("created_at", { ascending: false })
+                .order("event_order", { ascending: false })
+                .order("id", { ascending: false })
                 .range(offset, end);
             if (error) throw error;
             rows.push(...(data || []));
             if (!data || data.length < pageSize) break;
-            if (rows.length >= maxRows) priceHistoryUI.truncated = true;
+            if (rows.length > maxRows) {
+                rows.length = maxRows;
+                priceHistoryUI.truncated = true;
+                break;
+            }
         }
 
         if (priceHistoryUI.stock?.id !== stock.id || !modal.classList.contains("open")) return;
-        priceHistoryUI.records = rows;
+        priceHistoryUI.records = rows.reverse();
         $("#historyCurrentPrice").textContent = formatCoin(stock.current_price);
         const last = rows[rows.length - 1];
         $("#historyCurrentTime").textContent = last
             ? `마지막 가격 기록: ${formatExactKst(last.created_at)}`
             : "아직 저장된 가격 기록이 없습니다.";
         $("#historyStatus").textContent = priceHistoryUI.truncated
-            ? "표시 가능한 최신 20,000개 기록을 불러왔어. 더 오래된 기록은 추가 페이지 조회가 필요해."
-            : "가격은 실제 주가 변경 시점마다 저장돼. 과거에 기록되지 않았던 시각의 가격은 추정하지 않아.";
+            ? "그래프와 표에는 최신 20,000개 기록을 표시해. 특정 과거 시각 조회는 전체 DB 이력에서 직접 검색하며, 기록이 없던 시각의 가격은 추정하지 않아."
+            : "가격은 실제 가격 변경 시점마다 DB에 저장돼. 정확한 시각은 KST로 표시하며, 기록이 없던 시각의 가격은 추정하지 않아.";
         renderPriceHistoryByPeriod();
     } catch (error) {
         console.error("주가 이력 조회 실패:", error);
@@ -3690,7 +3703,7 @@ function renderPriceHistoryByPeriod() {
         return (from === null || timestamp >= from) && (to === null || timestamp <= to);
     });
 
-    $("#priceHistoryModal [data-history-period]").forEach(button => {
+    $$("#priceHistoryModal [data-history-period]").forEach(button => {
         button.classList.toggle("active", !startValue && !endValue && button.dataset.historyPeriod === period);
     });
 
@@ -3730,14 +3743,15 @@ function renderPriceHistoryChart() {
         return;
     }
 
-    const W = 1000, H = 340, left = 78, right = 24, top = 24, bottom = 34;
+    const W = 1000, H = 340, left = 78, right = 24, top = 24, bottom = 48;
     const plotW = W - left - right, plotH = H - top - bottom;
     const values = records.map(row => Number(row.price));
     const min = Math.min(...values), max = Math.max(...values);
     const range = Math.max(1, max - min);
     const times = records.map(row => new Date(row.created_at).getTime());
     const minTime = Math.min(...times), maxTime = Math.max(...times);
-    const timeRange = Math.max(1, maxTime - minTime);
+    const span = maxTime - minTime;
+    const timeRange = Math.max(1, span);
 
     const grid = [];
     for (let tick = 0; tick <= 4; tick++) {
@@ -3745,6 +3759,23 @@ function renderPriceHistoryChart() {
         const y = top + plotH * tick / 4;
         grid.push(`<line x1="${left}" y1="${y}" x2="${W-right}" y2="${y}" stroke="rgba(136,160,213,.13)" stroke-width="1"/>`);
         grid.push(`<text x="${left-12}" y="${y+4}" text-anchor="end">${doriEscapeHtml(formatNumber(Math.round(value)))}</text>`);
+    }
+
+    // Five KST time-axis labels help pinpoint where each price event occurred.
+    for (let tick = 0; tick <= 4; tick++) {
+        const ratio = tick / 4;
+        const x = left + plotW * ratio;
+        const timestamp = minTime + span * ratio;
+        const stamp = formatExactKst(new Date(timestamp).toISOString());
+        const label = span < 60 * 60 * 1000
+            ? stamp.slice(11, 19)
+            : span < 24 * 60 * 60 * 1000
+                ? stamp.slice(11, 16)
+                : `${stamp.slice(5, 10)} ${stamp.slice(11, 16)}`;
+        const anchor = tick === 0 ? "start" : tick === 4 ? "end" : "middle";
+        grid.push(`<line x1="${x}" y1="${top}" x2="${x}" y2="${top+plotH}" stroke="rgba(136,160,213,.07)" stroke-width="1"/>`);
+        grid.push(`<line x1="${x}" y1="${top+plotH}" x2="${x}" y2="${top+plotH+4}" stroke="rgba(136,160,213,.28)" stroke-width="1"/>`);
+        grid.push(`<text x="${x}" y="${H-12}" text-anchor="${anchor}">${doriEscapeHtml(label)}</text>`);
     }
 
     priceHistoryUI.coords = records.map((row, index) => {
@@ -3764,16 +3795,12 @@ function renderPriceHistoryChart() {
         return `<circle class="history-point" data-history-index="${point.index}" cx="${point.x}" cy="${point.y}" r="${isIssue ? 4.5 : 3.2}" fill="${markerFill}" stroke="#0b1430" stroke-width="1.5"><title>${doriEscapeHtml(title)}</title></circle>`;
     }).join("");
 
-    const firstLabel = records[0].created_at ? formatExactKst(records[0].created_at).slice(0, 16) : "";
-    const lastLabel = records[records.length - 1].created_at ? formatExactKst(records[records.length - 1].created_at).slice(0, 16) : "";
     svg.innerHTML = `
       <g>${grid.join("")}</g>
       <polyline points="${points}" fill="none" stroke="#78a9ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".92"/>
       <g>${markers}</g>
       <line id="historyCrosshair" x1="${left}" y1="${top}" x2="${left}" y2="${top+plotH}" stroke="#ffd75e" stroke-width="1.2" stroke-dasharray="4 5" opacity=".85" visibility="hidden"/>
       <circle id="historyActivePoint" cx="${left}" cy="${top}" r="8" fill="rgba(255,215,94,.12)" stroke="#ffd75e" stroke-width="2" visibility="hidden"/>
-      <text x="${left}" y="${H-10}" text-anchor="start">${doriEscapeHtml(firstLabel)}</text>
-      <text x="${W-right}" y="${H-10}" text-anchor="end">${doriEscapeHtml(lastLabel)}</text>
     `;
     svg.setAttribute("aria-label", `${priceHistoryUI.stock?.name || "종목"} 가격 이력, ${records.length}개 기록`);
 }
@@ -3856,15 +3883,19 @@ function selectHistoryPoint(index) {
 }
 
 
-function lookupHistoricalPriceAtTime() {
+async function lookupHistoricalPriceAtTime() {
     const inputValue = $("#historyAtTime")?.value;
     const output = $("#historyAtTimeResult");
-    if (!inputValue || !output) {
-        if (output) output.textContent = "조회할 날짜와 시각을 선택해 줘.";
+    const stock = priceHistoryUI.stock;
+
+    if (!inputValue || !output || !stock) {
+        if (output) output.textContent = "종목과 조회 날짜·시각을 먼저 선택해 줘.";
         return;
     }
 
-    const normalized = inputValue.length === 16 ? inputValue + ":00" : inputValue;
+    // datetime-local is timezone-naive; always interpret selected time as KST.
+    const includesSeconds = inputValue.length >= 19;
+    const normalized = includesSeconds ? inputValue : inputValue + ":00";
     const targetTime = new Date(normalized + "+09:00").getTime();
     if (!Number.isFinite(targetTime)) {
         output.textContent = "날짜와 시각을 확인해 줘.";
@@ -3875,30 +3906,99 @@ function lookupHistoricalPriceAtTime() {
         return;
     }
 
-    let selected = null;
-    for (const event of priceHistoryUI.records) {
-        if (new Date(event.created_at).getTime() <= targetTime) selected = event;
-        else break;
-    }
+    // If seconds are entered, include that second's fractional part; if only
+    // minutes are entered, include the rest of that minute. Never query past now.
+    const precisionWindowMs = includesSeconds ? 999 : 59999;
+    const queryEndTime = Math.min(targetTime + precisionWindowMs, Date.now());
+    output.textContent = "전체 저장 이력에서 해당 시각의 가격을 조회하는 중…";
 
-    if (!selected) {
-        output.textContent = "그 시각 이전의 저장된 가격 기록이 없어. 기록이 없는 과거 가격은 추정하지 않아.";
+    try {
+        const { data: selected, error } = await sb
+            .from("dori_stock_prices")
+            .select("id,stock_id,price,previous_price,change_amount,change_percent,reason,created_at,event_order")
+            .eq("stock_id", stock.id)
+            .lte("created_at", new Date(queryEndTime).toISOString())
+            .order("created_at", { ascending: false })
+            .order("event_order", { ascending: false })
+            .order("id", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (error) throw error;
+
+        if (!selected) {
+            output.textContent = "그 시각 이전의 저장된 가격 기록이 없어. 확인 가능한 기록이 없는 과거 가격은 추정하지 않아.";
+            return;
+        }
+
+        output.innerHTML = `
+          <strong>${doriEscapeHtml(formatExactKst(new Date(targetTime).toISOString()))} 기준</strong>
+          · 해당 분/초 종료 시점까지 마지막으로 기록된 가격
+          <span class="lookup-price">${doriEscapeHtml(formatCoin(selected.price))}</span>
+          <br>실제 가격 기록 시각: ${doriEscapeHtml(formatExactKst(selected.created_at))}
+          · ${doriEscapeHtml(selected.reason || "가격 변경")}
+        `;
+
+        const chartIndex = priceHistoryUI.filtered.findIndex(row => Number(row.id) === Number(selected.id));
+        if (chartIndex >= 0) {
+            selectHistoryPoint(chartIndex);
+        } else if (priceHistoryUI.truncated) {
+            output.innerHTML += "<br>이 기록은 그래프에 표시 중인 최신 20,000개 범위 밖일 수 있지만, 위 가격은 DB의 실제 기록을 조회한 값이야.";
+        }
+    } catch (error) {
+        console.error("특정 시각의 가격 조회 실패:", error);
+        output.textContent = "특정 시각의 가격을 조회하지 못했어. 연결 또는 읽기 권한을 확인해 줘.";
+    }
+}
+
+function downloadPriceHistoryCsv() {
+    const stock = priceHistoryUI.stock;
+    const records = priceHistoryUI.filtered;
+    if (!stock || !records.length) {
+        toast("다운로드할 가격 기록이 없어.", "error");
         return;
     }
 
-    output.innerHTML = `
-      <strong>${doriEscapeHtml(formatExactKst(new Date(targetTime).toISOString()))} 기준</strong>
-      · 가격 <span class="lookup-price">${doriEscapeHtml(formatCoin(selected.price))}</span>
-      <br>마지막 가격 기록 시각: ${doriEscapeHtml(formatExactKst(selected.created_at))}
-      · ${doriEscapeHtml(selected.reason || "가격 변경")}
-    `;
-
-    const chartIndex = priceHistoryUI.filtered.findIndex(row => Number(row.id) === Number(selected.id));
-    if (chartIndex >= 0) selectHistoryPoint(chartIndex);
+    const csvCell = value => '"' + String(value ?? "").replace(/"/g, '""') + '"';
+    const header = [
+        "timestamp_utc",
+        "timestamp_kst",
+        "ticker",
+        "stock_name",
+        "price",
+        "previous_price",
+        "change_amount",
+        "change_percent",
+        "reason"
+    ];
+    const rows = records.map(row => [
+        row.created_at,
+        formatExactKst(row.created_at),
+        stock.ticker,
+        stock.name,
+        row.price,
+        row.previous_price,
+        row.change_amount,
+        row.change_percent,
+        row.reason || ""
+    ]);
+    const csv = "\uFEFF" + [header, ...rows].map(row => row.map(csvCell).join(",")).join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    const dateTag = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    anchor.href = url;
+    anchor.download = `${stock.ticker || "stock"}_price_history_${dateTag}.csv`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast(`${formatNumber(records.length)}개 가격 기록을 CSV로 내보냈어.`, "success");
 }
 
 function installPriceHistoryInteractions() {
     $("#closePriceHistory")?.addEventListener("click", closePriceHistory);
+    $("#historyExportCsv")?.addEventListener("click", downloadPriceHistoryCsv);
     $("#historyLookupAtTime")?.addEventListener("click", lookupHistoricalPriceAtTime);
     $("#historyAtTime")?.addEventListener("keydown", event => {
         if (event.key === "Enter") lookupHistoricalPriceAtTime();
@@ -3906,7 +4006,7 @@ function installPriceHistoryInteractions() {
     $("#priceHistoryModal")?.addEventListener("click", event => {
         if (event.target === $("#priceHistoryModal")) closePriceHistory();
     });
-    $("#priceHistoryModal [data-history-period]").forEach(button => {
+    $$("#priceHistoryModal [data-history-period]").forEach(button => {
         button.addEventListener("click", () => {
             priceHistoryUI.period = button.dataset.historyPeriod;
             $("#historyStartDate").value = "";
