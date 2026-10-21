@@ -2086,6 +2086,7 @@ body.로그인상태 #회원가입 {
     <button id="일일미션버튼" class="프로필버튼" type="button">🎯 일일 미션</button>
     <button id="출석체크버튼" class="프로필버튼" type="button">🗓️ 출석 체크</button>
     <button id="관리자사이트버튼" type="button" aria-label="돌이사이트 관리자 센터 열기"><span class="관리자아이콘">🛡️</span><span class="관리자문구"><strong>관리자 센터</strong><small>돌이사이트 관리 페이지로 이동</small></span><span class="관리자화살표">↗</span></button>
+    <button id="챗지피티바로가기버튼" class="프로필버튼" type="button" style="display:none;border:1px solid rgba(125,211,252,.24);background:linear-gradient(100deg,rgba(16,185,129,.10),rgba(125,211,252,.06));"><span style="display:flex;align-items:center;gap:10px;width:100%"><span style="display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border-radius:10px;background:rgba(125,211,252,.12)">✦</span><span style="display:flex;flex-direction:column;gap:2px"><strong style="font-weight:400;color:#d9f4ff">ChatGPT 열기</strong><small style="font-size:11px;color:#91a9c9">관리자 전용 바로가기</small></span><span style="margin-left:auto;color:#a7e7ff">↗</span></span></button>
     <button id="로그아웃" class="프로필버튼" type="button">🚪 로그아웃</button>
   
 
@@ -2332,6 +2333,8 @@ const 로그아웃버튼 =
 
 const 관리자사이트버튼 =
     document.getElementById("관리자사이트버튼");
+const 챗지피티바로가기버튼 =
+    document.getElementById("챗지피티바로가기버튼");
 
 const 설정버튼 =
     document.getElementById("설정");
@@ -3147,6 +3150,9 @@ function 화면업데이트() {
     );
     if (관리자사이트버튼) {
         관리자사이트버튼.style.display = 관리자권한있음 ? "flex" : "none";
+    }
+    if (챗지피티바로가기버튼) {
+        챗지피티바로가기버튼.style.display = 관리자권한있음 ? "flex" : "none";
     }
 
     if (!현재유저정보) {
@@ -4329,6 +4335,21 @@ if (관리자사이트버튼) {
     };
 }
 
+if (챗지피티바로가기버튼) {
+    챗지피티바로가기버튼.onclick = () => {
+        const 관리자권한있음 = Boolean(
+            현재유저정보 &&
+            현재유저정보.is_admin === true &&
+            Number(현재유저정보.user_level ?? 1) >= 10
+        );
+        if (!관리자권한있음) {
+            챗지피티바로가기버튼.style.display = "none";
+            return;
+        }
+        window.open("https://chatgpt.com/", "_blank", "noopener,noreferrer");
+    };
+}
+
 // =====================================================
 // 로그아웃
 // =====================================================
@@ -4582,6 +4603,7 @@ supabase.auth.onAuthStateChange(
         ) {
 
             if (관리자사이트버튼) 관리자사이트버튼.style.display = "none";
+            if (챗지피티바로가기버튼) 챗지피티바로가기버튼.style.display = "none";
             현재사용자 = null;
             현재유저정보 = null;
             획득업적 = {};
