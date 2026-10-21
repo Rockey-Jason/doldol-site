@@ -3,7 +3,14 @@
   const SUPABASE_URL = 'https://scttowfhygcpdirrekqm.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbGciOiJIUzI1NiIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY';
   const byId = id => document.getElementById(id);
-  const number = value => Number(value || 0).toLocaleString('ko-KR');
+  const number = value => {
+    const raw = String(value ?? '0').trim();
+    if (/^-?\\d+$/.test(raw)) {
+      try { return BigInt(raw).toLocaleString('ko-KR'); } catch (_) {}
+    }
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) ? parsed.toLocaleString('ko-KR') : '—';
+  };
   const date = value => { if(!value) return '—'; const d=new Date(value); return Number.isNaN(d.getTime())?'—':d.toLocaleString('ko-KR',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}); };
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const stance = value => ({easing:'완화',neutral:'중립',tightening:'긴축'}[value] || '중립');
