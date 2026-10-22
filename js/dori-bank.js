@@ -245,9 +245,13 @@
     if(!validInteger(amount)) {toast('송금 금액은 1 이상의 정수로 입력해 주세요.',true);return;}
     if(BigInt(amount)>BigInt(dashboard?.balance || '0')) {toast('사용 가능한 잔액이 부족합니다.',true);return;}
     const payload=JSON.stringify({recipient,amount,memo});
-    if(transferRequestMayHaveBeenProcessed && lastTransferRequestPayload && payload!==lastTransferRequestPayload) {
-      toast('이전 송금의 처리 결과를 확인해야 합니다. 같은 내용으로 다시 확인해 주세요.',true);
-      return;
+    if(pendingTransferRequestId && lastTransferRequestPayload && payload!==lastTransferRequestPayload) {
+      if(transferRequestMayHaveBeenProcessed) {
+        toast('이전 송금의 처리 결과를 확인해야 합니다. 같은 내용으로 다시 확인해 주세요.',true);
+        return;
+      }
+      pendingTransferRequestId=null;
+      lastTransferRequestPayload=null;
     }
     if(!pendingTransferRequestId) {
       pendingTransferRequestId=crypto.randomUUID();
