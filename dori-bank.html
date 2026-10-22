@@ -114,7 +114,7 @@
         <section class="bank-section" id="transactions" aria-labelledby="transactionsHeading">
           <div class="bank-section-heading"><div><span class="bank-kicker">ACCOUNT ACTIVITY</span><h2 id="transactionsHeading">거래 내역</h2><p>송금과 예금 거래를 시간순으로 확인할 수 있어요.</p></div><div class="bank-section-mark">04 <span>/ HISTORY</span></div></div>
           <div class="bank-panel bank-history-panel">
-            <div class="bank-history-toolbar"><div><strong>전체 거래 기록</strong><small id="historyTotal">총 0건</small></div><button type="button" id="refreshHistoryButton" class="bank-button bank-button-outline bank-button-small">내역 새로고침 ↻</button></div>
+            <div class="bank-history-toolbar"><div><strong>전체 거래 기록</strong><small id="historyTotal">총 0건</small></div><div class="bank-history-actions"><button type="button" id="downloadStatementButton" class="bank-button bank-button-outline bank-button-small">CSV 다운로드 ↓</button><button type="button" id="refreshHistoryButton" class="bank-button bank-button-outline bank-button-small">내역 새로고침 ↻</button></div></div>
             <div id="transactionsList" class="bank-transactions-list"><div class="bank-empty-state">거래 내역을 불러오는 중입니다.</div></div>
             <div class="bank-pagination"><span id="historyPageLabel">1페이지</span><div><button id="historyPrev" type="button" class="bank-page-button" disabled>← 이전</button><button id="historyNext" type="button" class="bank-page-button" disabled>다음 →</button></div></div>
           </div>
@@ -129,6 +129,21 @@
     </main>
   </div>
 
+  <dialog id="transferConfirmDialog" class="bank-dialog bank-confirm-dialog">
+    <form method="dialog">
+      <div class="bank-dialog-top"><span class="bank-kicker">REVIEW TRANSFER</span><button type="button" id="closeTransferConfirmDialog" class="bank-dialog-close" aria-label="닫기">×</button></div>
+      <h2>송금 내용을 확인해 주세요.</h2>
+      <p class="bank-dialog-desc">받는 분과 금액이 맞는지 확인한 후 송금을 확정해 주세요.</p>
+      <div class="bank-confirm-card">
+        <div><span>받는 분</span><strong id="transferConfirmRecipient">—</strong></div>
+        <div><span>받는 계좌</span><strong id="transferConfirmAccount">—</strong></div>
+        <div class="bank-confirm-amount"><span>송금 금액</span><strong id="transferConfirmAmount">— D</strong></div>
+        <div><span>메모</span><strong id="transferConfirmMemo">메모 없음</strong></div>
+      </div>
+      <p class="bank-dialog-footnote">송금이 완료되면 받는 분에게 금액이 즉시 반영되며, 은행 화면에서 임의로 취소할 수 없습니다.</p>
+      <div class="bank-dialog-actions"><button type="button" id="cancelTransferConfirmButton" class="bank-button bank-button-outline">다시 확인</button><button type="button" id="confirmTransferButton" class="bank-button bank-button-gold">이 내용으로 송금 ↗</button></div>
+    </form>
+  </dialog>
   <dialog id="depositDialog" class="bank-dialog">
     <form id="depositForm" method="dialog">
       <div class="bank-dialog-top"><span class="bank-kicker">OPEN A DEPOSIT</span><button type="button" id="closeDepositDialog" class="bank-dialog-close" aria-label="닫기">×</button></div>
