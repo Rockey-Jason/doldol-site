@@ -169,7 +169,7 @@ begin
     'products',v_products,'transactions',v_transactions
   );
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.dori_bank_admin_save_product(p_id text, p_name text, p_term_days integer, p_annual_rate_pct numeric, p_min_amount bigint, p_max_amount bigint, p_description text, p_is_active boolean)
@@ -200,7 +200,7 @@ begin
     jsonb_build_object('name',v_row.name,'term_days',v_row.term_days,'annual_rate_pct',v_row.annual_rate_pct::text,'active',v_row.is_active));
   return jsonb_build_object('ok',true,'id',v_row.id,'name',v_row.name);
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.dori_bank_claim_deposit(p_deposit_id uuid)
@@ -239,7 +239,7 @@ begin
   return jsonb_build_object('ok',true,'principal',v_deposit.principal::text,
     'interest_amount',v_deposit.interest_amount::text,'payout',v_payout::text,'balance',v_new_balance::text);
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.dori_bank_create_deposit(p_product_id text, p_amount numeric)
@@ -289,7 +289,7 @@ begin
   return jsonb_build_object('ok',true,'deposit_id',v_deposit.id::text,'principal',v_amount::text,
     'interest_amount',v_interest::text,'maturity_at',v_deposit.maturity_at,'balance',v_balance::text);
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.dori_bank_dashboard()
@@ -340,7 +340,7 @@ begin
     'deposits',v_deposits,'transactions',v_transactions,'products',v_products
   );
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.dori_bank_ensure_account()
@@ -416,7 +416,7 @@ begin
   return jsonb_build_object('account_number',v_account.account_number,'account_name',v_account.account_name,
     'status',v_account.status,'created_at',v_account.created_at,'name',v_name);
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.dori_bank_lookup_recipient(p_account_number text)
@@ -440,7 +440,7 @@ begin
   if v_name is null then v_name:='돌이 사용자'; end if;
   return jsonb_build_object('account_number',v_account_number,'recipient_name',v_name);
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.dori_bank_transactions_page(p_limit integer DEFAULT 25, p_offset integer DEFAULT 0)
@@ -470,7 +470,7 @@ begin
   return jsonb_build_object('transactions',v_rows,'total_count',v_total::text,'offset',p_offset,
     'limit',p_limit,'has_more',(p_offset+p_limit)<v_total);
 end;
-$function$
+$function$;
 
 
 CREATE OR REPLACE FUNCTION public.dori_bank_transfer(p_account_number text, p_amount numeric, p_memo text, p_request_id uuid)
@@ -545,7 +545,7 @@ begin
   return jsonb_build_object('ok',true,'transfer_ref',v_transfer_ref::text,'amount',v_amount::text,
     'balance',v_sender_balance::text,'recipient_name',v_recipient_name,'recipient_account',v_recipient_account.account_number);
 end;
-$function$
+$function$;
 
 
 revoke all on function public.dori_bank_ensure_account() from public,anon,authenticated;
