@@ -83,7 +83,7 @@ begin
   return jsonb_build_object('ok',true,'transfer_ref',v_transfer_ref::text,'amount',v_amount::text,
     'balance',v_sender_balance::text,'recipient_name',v_recipient_name,'recipient_account',v_recipient_account.account_number);
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.dori_bank_transactions_page(p_limit integer DEFAULT 25, p_offset integer DEFAULT 0)
  RETURNS jsonb
@@ -112,7 +112,7 @@ begin
   return jsonb_build_object('transactions',v_rows,'total_count',v_total::text,'offset',p_offset,
     'limit',p_limit,'has_more',(p_offset+p_limit)<v_total);
 end;
-$function$
+$function$;
 
 revoke all on function public.dori_bank_transfer(text,numeric,text,uuid) from public,anon,authenticated;
 grant execute on function public.dori_bank_transfer(text,numeric,text,uuid) to authenticated;
