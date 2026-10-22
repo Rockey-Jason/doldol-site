@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071326"><meta name="description" content="돌이 은행 운영 센터 — 예금 상품 및 거래 모니터링">
+  <title>돌이 은행 운영 센터 | 돌이사이트</title>
+  <link rel="icon" href="./rockeysite-icon-3.png" type="image/png">
+  <link rel="stylesheet" href="./css/doldol-theme.css?v=20261019-main-only-4">
+  <link rel="stylesheet" href="./css/dori-bank.css?v=20261022-1">
+  <script src="./js/supabase.min.js?v=2.117.2"></script>
+</head>
+<body>
+  <div class="bank-atmosphere" aria-hidden="true"><span></span><span></span><span></span></div>
+  <div class="bank-shell bank-admin-shell">
+    <header class="bank-topbar">
+      <a class="bank-brand" href="./dori-bank.html"><span class="bank-brand-mark" aria-hidden="true">D</span><span class="bank-brand-copy"><strong>돌이 은행 운영 센터</strong><small>DORI BANK · ADMIN</small></span></a>
+      <nav class="bank-nav"><a class="bank-home-link" href="./dori-bank.html">← 돌이 은행</a><a class="bank-home-link" href="./index.html" data-dori-main-home="true"><span class="bank-home-d">D</span> 돌이사이트 메인 <span aria-hidden="true">↗</span></a></nav>
+    </header>
+    <main>
+      <section class="bank-admin-hero"><div><span class="bank-kicker">AUTHORIZED BANK OPERATIONS</span><h1>은행을 정교하게,<br><span>안전하게 운영합니다.</span></h1><p>예금 상품과 금리를 관리하고, 은행 거래 흐름을 확인합니다. 저장 작업은 검증된 관리자 세션을 필요로 합니다.</p></div><div class="bank-admin-seal" aria-hidden="true">D<span>BANK</span></div></section>
+      <section class="bank-login-gate" id="adminGate"><div class="bank-gate-icon">◇</div><span class="bank-kicker">SECURE ADMIN ACCESS</span><h2 id="gateTitle">관리자 인증 확인 중</h2><p id="gateMessage">검증된 관리자 세션을 확인하고 있습니다.</p><a class="bank-button bank-button-outline" href="./dori-bank.html">돌이 은행으로 돌아가기</a></section>
+      <div id="adminWorkspace" hidden>
+        <section class="bank-admin-metrics">
+          <article class="bank-admin-metric"><span>활성 계좌</span><strong id="adminAccounts">—</strong><small>개설 완료 계좌</small></article>
+          <article class="bank-admin-metric"><span>오늘 거래</span><strong id="adminTodayTransactions">—</strong><small>오늘 처리된 은행 거래</small></article>
+          <article class="bank-admin-metric"><span>운영 중인 예금</span><strong id="adminActiveDeposits">—</strong><small>현재 미정산 계약</small></article>
+        </section>
+        <section class="bank-admin-panel">
+          <div class="bank-section-heading"><div><span class="bank-kicker">PRODUCT GOVERNANCE</span><h2>정기예금 상품 관리</h2><p>이율·기간 변경은 새 가입에 적용됩니다. 이미 가입한 예금의 약정 조건은 유지됩니다.</p></div></div>
+          <div class="bank-admin-product-layout">
+            <div class="bank-admin-products" id="adminProducts"><div class="bank-empty-state">상품 목록을 불러오는 중입니다.</div></div>
+            <form id="productForm" class="bank-admin-form">
+              <div class="bank-admin-form-heading"><span class="bank-kicker">PRODUCT CONFIGURATION</span><h3 id="productFormHeading">새 예금 상품 등록</h3><p>식별자는 생성 후 변경할 수 없어요.</p></div>
+              <label class="bank-label" for="productId">상품 식별자<input id="productId" type="text" minlength="3" maxlength="40" pattern="[a-z0-9_]+" placeholder="dori_saver_180" required></label>
+              <label class="bank-label" for="productName">상품명<input id="productName" type="text" minlength="2" maxlength="80" placeholder="예: 도토리 성장 예금" required></label>
+              <div class="bank-admin-form-grid"><label class="bank-label" for="productTerm">예치 기간 (일)<input id="productTerm" type="number" min="1" max="365" step="1" required></label><label class="bank-label" for="productRate">연 이율 (%)<input id="productRate" type="number" min="0" max="20" step="0.01" required></label></div>
+              <label class="bank-label" for="productMin">최소 가입액 (D)<input id="productMin" type="text" inputmode="numeric" pattern="[0-9,]+" required></label>
+              <label class="bank-label" for="productMax">최대 가입액 (D)<input id="productMax" type="text" inputmode="numeric" pattern="[0-9,]+" required></label>
+              <label class="bank-label" for="productDescription">상품 설명<textarea id="productDescription" rows="3" maxlength="1000" required></textarea></label>
+              <label class="bank-admin-toggle"><input type="checkbox" id="productActive" checked><span><strong>신규 가입 허용</strong><small>해제하면 기존 계약은 유지하고 신규 가입만 막습니다.</small></span></label>
+              <div class="bank-dialog-actions"><button type="button" id="resetProductButton" class="bank-button bank-button-outline">새 상품</button><button type="submit" id="saveProductButton" class="bank-button bank-button-gold">상품 저장 ↗</button></div>
+            </form>
+          </div>
+        </section>
+        <section class="bank-admin-panel">
+          <div class="bank-section-heading"><div><span class="bank-kicker">TRANSACTION MONITOR</span><h2>최근 은행 거래</h2><p>최근 30건의 처리 기록입니다. 개인 잔액을 직접 수정하는 기능은 제공하지 않습니다.</p></div><button type="button" id="reloadAdminButton" class="bank-button bank-button-outline bank-button-small">새로고침 ↻</button></div>
+          <div class="bank-admin-transaction-list" id="adminTransactions"><div class="bank-empty-state">거래 내역을 불러오는 중입니다.</div></div>
+        </section>
+      </div>
+      <div id="adminToast" class="bank-toast" role="status" aria-live="polite"></div>
+      <footer class="bank-footer"><a href="./dori-bank.html">← 돌이 은행</a><span>© DORI BANK · AUTHORIZED OPERATIONS</span></footer>
+    </main>
+  </div>
+  <script src="./js/dori-bank-admin.js?v=20261022-1"></script>
+  <script src="./js/doldol-theme.js?v=20261019-main-only-4"></script>
+  <script src="./js/hancom-weight-normalizer.js?v=20261014-1"></script>
+</body>
+</html>
