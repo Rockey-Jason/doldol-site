@@ -97,7 +97,7 @@
       toast('예금 상품이 저장되었습니다. 기존 예금 계약의 약정 조건은 변경되지 않습니다.');
       resetForm();await reload();
     }catch(error){console.error(error);toast(friendly(error),true);}
-    finally{setBusy(button,false,'상품 저장 ↗');}
+    finally{setBusy(button,false,$('productId').disabled?'변경 사항 저장 ↗':'상품 저장 ↗');}
   }
   async function toggleProduct(id,button){
     const p=products.find(item=>item.id===id);if(!p)return;
@@ -111,7 +111,7 @@
       toast(p.is_active?'상품 신규 가입을 중지했습니다.':'상품 신규 가입을 다시 허용했습니다.');
       await reload();
     }catch(error){console.error(error);toast(friendly(error),true);}
-    finally{button.disabled=false;}
+    finally{setBusy(button,false,p.is_active?'가입 중지':'가입 허용');}
   }
   function renderTransactions(rows){
     const root=$('adminTransactions');
