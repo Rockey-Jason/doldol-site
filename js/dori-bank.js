@@ -430,10 +430,10 @@
         if(error) throw error;
         rows.push(...(data?.transactions||[]));
       }
-      const csvCell=value=>'"'+String(value??'').replace(/[\\r\\n]+/g,' ').replace(/"/g,'""')+'"';
+      const csvCell=value=>'"'+String(value??'').replace(/[\r\n]+/g,' ').replace(/"/g,'""')+'"';
       const safeText=value=>{
         const s=String(value??'');
-        return /^[\\s]*[=+@-]/.test(s)?"'"+s:s;
+        return /^[\s]*[=+@-]/.test(s)?"'"+s:s;
       };
       const header=['거래 일시','거래 유형','입출금','금액(D)','거래 후 잔액(D)','상대방','상대 계좌','메모','거래 번호'];
       const lines=[header,...rows.map(row=>[
@@ -447,7 +447,7 @@
         safeText(row.description),
         row.transaction_ref
       ])].map(line=>line.map(csvCell).join(','));
-      const blob=new Blob(['\\uFEFF'+lines.join('\\r\\n')],{type:'text/csv;charset=utf-8;'});
+      const blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
       const url=URL.createObjectURL(blob);
       const anchor=document.createElement('a');
       anchor.href=url;
