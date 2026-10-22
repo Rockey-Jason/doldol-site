@@ -317,8 +317,9 @@
       // Retry with the exact same request id after a transport failure: the server de-duplicates commits.
       transferRequestMayHaveBeenProcessed=/fetch|network|timeout|connection|failed to/i.test(String(error?.message||error));
       if(!transferRequestMayHaveBeenProcessed) {
-        pendingTransferRequestId=null;
-        lastTransferRequestPayload=null;
+        // The server returned a definitive failure, so a fresh id can safely retry the same form data.
+        pendingTransferRequestId=crypto.randomUUID();
+        lastTransferRequestPayload=payload;
       }
       toast(message,true);
     } finally {
