@@ -502,10 +502,10 @@
     s.innerHTML='<div class="bank-section-heading"><div><span class="bank-kicker">BORROW RESPONSIBLY</span><h2>돌이 은행 대출</h2><p>신청 즉시 심사봇이 사용자 정보와 상환 위험을 분석해 승인 또는 거절을 자동 판정합니다.</p></div><div class="bank-section-mark">04 <span>/ LOANS</span></div></div>'+
       '<div class="bank-loan-bot-banner"><span class="bank-bot-orb"><i></i><i></i><i></i></span><div class="bank-bot-copy"><strong>돌이 대출 심사봇 <em>ONLINE</em></strong><p>계정 상태 · 보유 코인 · 활동 등급 · 경험치 · 계정 이용 기간 · 상환 이력 · 대출 목적을 종합 분석합니다.</p><small>외부 유료 API 없이 서버 내부 규칙으로 자동 판정하며 점수와 판정 근거를 기록합니다.</small><div id="loanUserSummary" class="bank-loan-user-summary">사용자 정보를 안전하게 확인하고 있어요…</div></div><span class="bank-bot-status"><i></i> 자동 심사 활성</span></div>'+
       '<div id="loanProducts" class="bank-loan-grid"><div class="bank-loan-empty">대출 상품을 불러오는 중입니다.</div></div>'+
-      '<div class="bank-loan-apply"><form id="loanForm" class="bank-panel bank-loan-form"><span class="bank-kicker">LOAN APPLICATION</span><h3>대출 신청</h3><label class="bank-label" for="loanProduct">대출 상품</label><select id="loanProduct" required></select><label class="bank-label" for="loanAmount">신청 금액 (D)</label><input id="loanAmount" inputmode="numeric" maxlength="22" placeholder="예: 100000" required><label class="bank-label" for="loanPurpose">대출 목적</label><textarea id="loanPurpose" minlength="3" maxlength="160" placeholder="대출이 필요한 이유를 구체적으로 입력해 주세요." required></textarea><button class="bank-button bank-button-gold bank-button-full" id="loanSubmit" type="submit"><span class="loan-submit-label">심사봇 자동 심사 신청 ↗</span></button><p class="bank-loan-disclaimer">승인되면 대출금이 즉시 입금됩니다. 거절된 신청은 지급되지 않으며, 사용자에게 점수와 판정 이유를 표시합니다.</p></form><aside class="bank-loan-summary"><span class="bank-kicker">REPAYMENT PREVIEW</span><h3>상환 예정액 미리 보기</h3><div class="bank-loan-summary-row"><span>예상 이자</span><strong id="loanInterest">— D</strong></div><div class="bank-loan-summary-row total"><span>총 상환 예정액</span><strong id="loanTotal">— D</strong></div><div class="bank-loan-summary-row"><span>상환 기간</span><strong id="loanTerm">—</strong></div><p class="bank-loan-disclaimer">단리 기준: 원금 × 연 이율 × 기간 ÷ 365. 이자는 정수 단위로 내림하며 별도 연체료는 없는 가상 경제 시스템입니다.</p></aside></div>'+
+      '<div class="bank-loan-apply"><form id="loanForm" class="bank-panel bank-loan-form" novalidate><span class="bank-kicker">LOAN APPLICATION</span><h3>대출 신청</h3><div id="loanActionStatus" class="bank-loan-action-status" role="status" aria-live="polite">대출 상품과 신청 금액, 목적을 입력한 뒤 심사봇 신청을 눌러 주세요.</div><label class="bank-label" for="loanProduct">대출 상품</label><select id="loanProduct" required></select><label class="bank-label" for="loanAmount">신청 금액 (D)</label><input id="loanAmount" inputmode="numeric" maxlength="22" placeholder="예: 100000" required><label class="bank-label" for="loanPurpose">대출 목적</label><textarea id="loanPurpose" minlength="3" maxlength="160" placeholder="대출이 필요한 이유를 구체적으로 입력해 주세요." required></textarea><button class="bank-button bank-button-gold bank-button-full" id="loanSubmit" type="button"><span class="loan-submit-label">심사봇 자동 심사 신청 ↗</span></button><p class="bank-loan-disclaimer">승인되면 대출금이 즉시 입금됩니다. 거절된 신청은 지급되지 않으며, 사용자에게 점수와 판정 이유를 표시합니다.</p></form><aside class="bank-loan-summary"><span class="bank-kicker">REPAYMENT PREVIEW</span><h3>상환 예정액 미리 보기</h3><div class="bank-loan-summary-row"><span>예상 이자</span><strong id="loanInterest">— D</strong></div><div class="bank-loan-summary-row total"><span>총 상환 예정액</span><strong id="loanTotal">— D</strong></div><div class="bank-loan-summary-row"><span>상환 기간</span><strong id="loanTerm">—</strong></div><p class="bank-loan-disclaimer">단리 기준: 원금 × 연 이율 × 기간 ÷ 365. 이자는 정수 단위로 내림하며 별도 연체료는 없는 가상 경제 시스템입니다.</p></aside></div>'+
       '<div class="bank-section-heading" style="margin-top:34px"><div><span class="bank-kicker">YOUR LOAN PORTFOLIO</span><h2 style="font-size:23px">내 대출 현황</h2><p>봇의 결정, 판정 점수, 사유와 남은 상환액을 투명하게 확인하세요.</p></div><button id="refreshLoans" type="button" class="bank-button bank-button-outline bank-button-small">새로고침 ↻</button></div><div id="myLoans" class="bank-loan-list"><div class="bank-loan-empty">대출 정보를 불러오는 중입니다.</div></div>';
     document.getElementById('transactions').parentNode.insertBefore(s,document.getElementById('transactions'));
-    document.getElementById('loanForm').addEventListener('submit',requestLoan);
+    document.getElementById('loanSubmit').addEventListener('click',()=>requestLoan({preventDefault(){}}));
     document.getElementById('loanProduct').addEventListener('change',loanPreview);
     document.getElementById('loanAmount').addEventListener('input',loanPreview);
     document.getElementById('refreshLoans').addEventListener('click',loadLoans);
@@ -520,6 +520,7 @@
     if(!p||!/^[0-9]+$/.test(a)||BigInt(a)<=0n){document.getElementById('loanInterest').textContent='— D';document.getElementById('loanTotal').textContent='— D';document.getElementById('loanTerm').textContent=p?p.term_days+'일':'—';return}
     const i=loanRate(a,p);document.getElementById('loanInterest').textContent=loanFmt(i)+' D';document.getElementById('loanTotal').textContent=loanFmt(BigInt(a)+i)+' D';document.getElementById('loanTerm').textContent=p.term_days+'일 · 연 '+Number(p.annual_rate_pct).toFixed(2)+'%'
   }
+  function setLoanActionStatus(message,isError=false,isBusy=false){const el=document.getElementById('loanActionStatus');if(el){el.textContent=message;el.classList.toggle('error',!!isError);el.classList.toggle('busy',!!isBusy);el.setAttribute('role',isError?'alert':'status')}}
   function loanDecisionMarkup(l){
     const score=Math.max(0,Math.min(100,Number(l.decision_score||0))),factors=Array.isArray(l.decision_details?.factors)?l.decision_details.factors:[];
     return '<div class="bank-loan-decision"><div class="bank-loan-decision-head"><span>심사봇 판정 점수</span><strong>'+score+'/100</strong></div><div class="bank-loan-score-track"><i style="width:'+score+'%"></i></div><p>'+loanEsc(l.decision_reason||'판정 사유를 확인할 수 없습니다.')+'</p><details><summary>자동 심사 근거 자세히 보기</summary><div class="bank-loan-factor-list">'+(factors.length?factors.map(f=>'<div><span>'+loanEsc(f.label)+'</span><strong>+'+Number(f.points||0)+'점</strong><small>'+loanEsc(f.note)+'</small></div>').join(''):'<small>저장된 근거가 없습니다.</small>')+'</div></details></div>'
@@ -527,7 +528,7 @@
   async function loadLoans(){
     try{
       const {data,error}=await sb.rpc('dori_bank_loans_dashboard');if(error)throw error;
-      if(!data?.user?.name)throw new Error('계정의 사용자 이름을 불러오지 못했습니다. 아래의 사용자 정보 다시 불러오기를 눌러 주세요.');
+      if(!data?.user?.name)throw new Error('계정의 사용자 이름을 불러오지 못했습니다. 새로고침하거나 로그인 상태를 확인해 주세요.');
       loanProducts=data.products||[];
       const userSummary=document.getElementById('loanUserSummary');
       if(userSummary)userSummary.textContent=data.user.name+' · Lv.'+Number(data.user.user_level||1)+' · 경험치 '+loanFmt(data.user.exp||0)+' · 돌돌코인 '+loanFmt(data.balance)+' D';
@@ -540,22 +541,23 @@
         return '<article class="bank-loan-row"><div class="bank-loan-row-title"><strong>'+loanEsc(l.product_name)+'</strong><span class="bank-loan-status '+loanEsc(l.status)+'">'+(labels[l.status]||l.status)+'</span><small>'+l.term_days+'일 · 연 '+Number(l.annual_rate_pct).toFixed(2)+'% · '+(l.due_at?'만기 '+new Date(l.due_at).toLocaleDateString('ko-KR'):'자동 심사 완료')+'</small>'+loanDecisionMarkup(l)+'</div><div class="bank-loan-stat"><span>대출 원금</span><strong>'+loanFmt(l.principal)+' D</strong></div><div class="bank-loan-stat"><span>약정 이자</span><strong>'+loanFmt(l.interest_amount)+' D</strong></div><div class="bank-loan-stat"><span>남은 상환액</span><strong>'+loanFmt(l.remaining_due)+' D</strong></div><div class="bank-loan-actions">'+(ok&&['active','overdue'].includes(l.status)&&BigInt(l.remaining_due)>0n?'<input data-loan-repay-amount="'+loanEsc(l.id)+'" inputmode="numeric" placeholder="상환 금액"><button type="button" class="bank-button bank-button-gold bank-button-small" data-loan-repay="'+loanEsc(l.id)+'">상환하기</button>':'<span class="bank-loan-status '+(l.status==='rejected'?'rejected':'')+'">'+(l.status==='rejected'?'봇 거절 · 지급 없음':l.status==='paid'?'상환 완료':l.status==='pending'?'심사 대기':'상환 완료')+'</span>')+'</div></article>'
       }).join(''):'<div class="bank-loan-empty">신청하거나 이용 중인 대출이 없습니다.</div>';
       document.querySelectorAll('[data-loan-repay]').forEach(b=>b.addEventListener('click',()=>repayLoan(b.dataset.loanRepay,b)));
-    }catch(e){console.error(e);if(typeof toast==='function')toast(e.message||'대출 정보를 불러오지 못했습니다.',true)}
+    }catch(e){console.error('Dori Bank loan dashboard failed:',e);setLoanActionStatus('대출 정보를 불러오지 못했습니다: '+(e.message||'알 수 없는 오류')+' · 페이지를 새로고침한 뒤 다시 시도해 주세요.',true);if(typeof toast==='function')toast(e.message||'대출 정보를 불러오지 못했습니다.',true)}
   }
   async function requestLoan(e){
     e.preventDefault();
     const p=loanProducts.find(x=>x.id===document.getElementById('loanProduct').value),a=String(document.getElementById('loanAmount').value||'').replace(/[\s,]/g,'');
-    if(!p||!/^[0-9]+$/.test(a)||BigInt(a)<BigInt(p.min_amount)||BigInt(a)>BigInt(p.max_amount)){toast('신청 금액이 상품 한도를 벗어났습니다.',true);return}
-    const purpose=document.getElementById('loanPurpose').value.trim();if(purpose.length<3){toast('대출 목적을 3자 이상 입력해 주세요.',true);return}
-    const b=document.getElementById('loanSubmit'),label=b.querySelector('.loan-submit-label');b.disabled=true;b.classList.add('is-thinking');if(label)label.textContent='심사봇이 사용자 정보를 분석 중…';
+    if(!p){setLoanActionStatus('대출 상품 정보를 불러오지 못했습니다. 새로고침 후 다시 시도해 주세요.',true);toast('대출 상품 정보를 불러오지 못했습니다.',true);return}
+    if(!/^[0-9]+$/.test(a)||BigInt(a)<BigInt(p.min_amount)||BigInt(a)>BigInt(p.max_amount)){setLoanActionStatus('신청 금액을 확인해 주세요. 선택한 상품의 한도는 '+loanFmt(p.min_amount)+'–'+loanFmt(p.max_amount)+' D입니다.',true);toast('신청 금액이 상품 한도를 벗어났습니다.',true);return}
+    const purpose=document.getElementById('loanPurpose').value.trim();if(purpose.length<3){setLoanActionStatus('대출 목적을 3자 이상 입력해 주세요.',true);toast('대출 목적을 3자 이상 입력해 주세요.',true);return}
+    const b=document.getElementById('loanSubmit'),label=b.querySelector('.loan-submit-label');b.disabled=true;b.classList.add('is-thinking');if(label)label.textContent='심사봇이 사용자 정보를 분석 중…';setLoanActionStatus('심사봇이 계정 상태, 상환 이력, 신청 목적을 분석하고 있습니다…',false,true);
     try{
       const {data,error}=await sb.rpc('dori_bank_request_loan',{p_product_id:p.id,p_amount:a,p_purpose:purpose});if(error)throw error;
       if(!data?.ok)throw new Error('자동 심사 결과를 확인하지 못했습니다.');
       document.getElementById('loanAmount').value='';document.getElementById('loanPurpose').value='';
       const approved=data.decision==='approved';
-      toast((approved?'심사봇 승인 · ':'심사봇 거절 · ')+(data.decision_score||0)+'점 / 100점 · '+data.decision_reason,!approved);
+      const resultMessage=(approved?'심사봇 승인 · 대출금 지급 완료':'심사봇 거절 · 대출금은 지급되지 않았습니다')+' · '+(data.decision_score||0)+'점 / 100점 · '+data.decision_reason;setLoanActionStatus(resultMessage,!approved);toast(resultMessage,!approved);
       await loadAll();await loadLoans();
-    }catch(e){toast(e.message||'대출 신청에 실패했습니다.',true)}
+    }catch(e){console.error('Dori Bank loan request failed:',e);setLoanActionStatus('심사 요청에 실패했습니다: '+(e.message||'알 수 없는 오류')+' · 로그인 상태와 연결을 확인해 주세요.',true);toast(e.message||'대출 신청에 실패했습니다.',true)}
     finally{b.disabled=false;b.classList.remove('is-thinking');if(label)label.textContent='심사봇 자동 심사 신청 ↗';loanPreview()}
   }
   async function repayLoan(id,b){
