@@ -31,7 +31,9 @@
       transfer_in:{title:'받은 송금',icon:'↓',kind:'in',subtitle:'돌이 은행 계좌이체'},
       transfer_out:{title:'계좌이체',icon:'↗',kind:'out',subtitle:'돌이 은행 계좌이체'},
       deposit_open:{title:'정기예금 가입',icon:'◈',kind:'out',subtitle:'예금으로 자금 이동'},
-      deposit_maturity:{title:'예금 만기 수령',icon:'✦',kind:'maturity',subtitle:'원금 및 약정 이자'}
+      deposit_maturity:{title:'예금 만기 수령',icon:'✦',kind:'maturity',subtitle:'원금 및 약정 이자'},
+      loan_disbursement:{title:'대출금 입금',icon:'↓',kind:'in',subtitle:'돌이 은행 대출 지급'},
+      loan_repayment:{title:'대출 상환',icon:'↗',kind:'out',subtitle:'돌이 은행 대출 상환'}
     };
     return map[row.tx_type] || {title:'계좌 거래',icon:'·',kind:'',subtitle:'돌이 은행'};
   };
