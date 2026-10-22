@@ -73,7 +73,7 @@ begin
   return jsonb_build_object('account_number',v_account.account_number,'account_name',v_account.account_name,
     'status',v_account.status,'created_at',v_account.created_at,'name',v_name);
 end;
-$function$
+$function$;
 
 revoke all on function public.dori_bank_ensure_account() from public,anon,authenticated;
 grant execute on function public.dori_bank_ensure_account() to authenticated;
