@@ -41,6 +41,9 @@
   let verifiedRecipient = null;
   let selectedProduct = null;
   let historyOffset = 0;
+  let pendingTransferRequestId = null;
+  let lastTransferRequestPayload = null;
+  let transferRequestMayHaveBeenProcessed = false;
   const historyPageSize = 10;
   let historyTotal = 0;
   let toastTimer = null;
@@ -107,6 +110,11 @@
     });
     $('lookupRecipientButton').addEventListener('click',lookupRecipient);
     $('transferForm').addEventListener('submit',submitTransfer);
+    $('confirmTransferButton').addEventListener('click',performTransfer);
+    $('cancelTransferConfirmButton').addEventListener('click',cancelTransferConfirmation);
+    $('closeTransferConfirmDialog').addEventListener('click',cancelTransferConfirmation);
+    $('transferConfirmDialog').addEventListener('click',event=>{if(event.target===$('transferConfirmDialog')&&!$('confirmTransferButton').disabled)cancelTransferConfirmation();});
+    $('downloadStatementButton').addEventListener('click',downloadStatement);
     $('maxTransferButton').addEventListener('click',()=>{$('transferAmount').value=formatCoins(dashboard?.balance).replaceAll(',','');});
     $('copyAccountButton').addEventListener('click',copyAccount);
     $('copyAccountIcon').addEventListener('click',copyAccount);
@@ -229,20 +237,71 @@
     event.preventDefault();
     const recipient=$('recipientAccount').value.trim().toUpperCase();
     const amount=cleanInteger($('transferAmount').value);
+    const memo=$('transferMemo').value.trim();
     if(!verifiedRecipient || verifiedRecipient.checkedInput!==recipient) {
-      setRecipientStatus('송금 전에 받는 계좌를 다시 확인해 주세요.',true);return;
+      setRecipientStatus('송금 전에 받는 계좌를 다시 확인해 주세요.',true);
+      return;
     }
     if(!validInteger(amount)) {toast('송금 금액은 1 이상의 정수로 입력해 주세요.',true);return;}
     if(BigInt(amount)>BigInt(dashboard?.balance || '0')) {toast('사용 가능한 잔액이 부족합니다.',true);return;}
-    const button=$('transferSubmit');
-    setBusy(button,true,'송금 중…');
+    const payload=JSON.stringify({recipient,amount,memo});
+    if(transferRequestMayHaveBeenProcessed && lastTransferRequestPayload && payload!==lastTransferRequestPayload) {
+      toast('이전 송금의 처리 결과를 확인해야 합니다. 같은 내용으로 다시 확인해 주세요.',true);
+      return;
+    }
+    if(!pendingTransferRequestId) {
+      pendingTransferRequestId=crypto.randomUUID();
+      lastTransferRequestPayload=payload;
+    }
+    $('transferConfirmRecipient').textContent=verifiedRecipient.recipient_name;
+    $('transferConfirmAccount').textContent=recipient;
+    $('transferConfirmAmount').textContent=formatCoins(amount)+' D';
+    $('transferConfirmMemo').textContent=memo||'메모 없음';
+    $('transferConfirmDialog').showModal();
+  }
+  function cancelTransferConfirmation() {
+    const dialog=$('transferConfirmDialog');
+    if($('confirmTransferButton').disabled) return;
+    if(dialog.open) dialog.close();
+    // Keep the same id when a prior network attempt may have reached the server.
+    if(!transferRequestMayHaveBeenProcessed) {
+      pendingTransferRequestId=null;
+      lastTransferRequestPayload=null;
+    }
+  }
+  async function performTransfer() {
+    const recipient=$('recipientAccount').value.trim().toUpperCase();
+    const amount=cleanInteger($('transferAmount').value);
+    const memo=$('transferMemo').value.trim();
+    const payload=JSON.stringify({recipient,amount,memo});
+    if(!verifiedRecipient || verifiedRecipient.checkedInput!==recipient) {
+      toast('받는 계좌를 다시 확인해 주세요.',true);
+      if($('transferConfirmDialog').open) $('transferConfirmDialog').close();
+      return;
+    }
+    if(!pendingTransferRequestId || !validInteger(amount) || payload!==lastTransferRequestPayload) {
+      toast('송금 정보가 변경되었습니다. 내용을 다시 확인해 주세요.',true);
+      if($('transferConfirmDialog').open) $('transferConfirmDialog').close();
+      pendingTransferRequestId=null;lastTransferRequestPayload=null;transferRequestMayHaveBeenProcessed=false;
+      return;
+    }
+    if(BigInt(amount)>BigInt(dashboard?.balance||'0')) {
+      toast('사용 가능한 잔액이 부족합니다.',true);
+      return;
+    }
+    const button=$('confirmTransferButton');
+    setBusy(button,true,'송금 처리 중…');
+    $('cancelTransferConfirmButton').disabled=true;
+    $('closeTransferConfirmDialog').disabled=true;
     try {
-      const requestId=crypto.randomUUID();
       const {data,error}=await sb.rpc('dori_bank_transfer',{
-        p_account_number:recipient,p_amount:amount,p_memo:$('transferMemo').value.trim(),p_request_id:requestId
+        p_account_number:recipient,p_amount:amount,p_memo:memo,p_request_id:pendingTransferRequestId
       });
       if(error) throw error;
       if(!data?.ok) throw new Error('송금 결과를 확인하지 못했습니다.');
+      transferRequestMayHaveBeenProcessed=false;
+      pendingTransferRequestId=null;lastTransferRequestPayload=null;
+      if($('transferConfirmDialog').open) $('transferConfirmDialog').close();
       $('transferAmount').value='';
       $('transferMemo').value='';
       $('recipientAccount').value='';
@@ -252,8 +311,21 @@
       toast(formatCoins(data.amount)+' D 송금이 완료되었습니다.');
       await loadAll();
       document.getElementById('transactions').scrollIntoView({behavior:'smooth',block:'start'});
-    } catch(error) {console.error(error);toast(friendlyError(error),true);}
-    finally {setBusy(button,false,'받는 분 확인 후 송금 ↗');button.disabled=!verifiedRecipient;}
+    } catch(error) {
+      console.error(error);
+      const message=friendlyError(error);
+      // Retry with the exact same request id after a transport failure: the server de-duplicates commits.
+      transferRequestMayHaveBeenProcessed=/fetch|network|timeout|connection|failed to/i.test(String(error?.message||error));
+      if(!transferRequestMayHaveBeenProcessed) {
+        pendingTransferRequestId=null;
+        lastTransferRequestPayload=null;
+      }
+      toast(message,true);
+    } finally {
+      setBusy(button,false,'이 내용으로 송금 ↗');
+      $('cancelTransferConfirmButton').disabled=false;
+      $('closeTransferConfirmDialog').disabled=false;
+    }
   }
   function openDepositDialog(product) {
     selectedProduct=product;
@@ -341,6 +413,52 @@
       root.innerHTML='<div class="bank-empty-state">거래 내역을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>';
       toast(friendlyError(error),true);
     }
+  }
+  async function downloadStatement() {
+    const button=$('downloadStatementButton');
+    setBusy(button,true,'내역 준비 중…');
+    try {
+      const {data:first,error:firstError}=await sb.rpc('dori_bank_transactions_page',{p_limit:50,p_offset:0});
+      if(firstError) throw firstError;
+      const total=Number(first?.total_count||0);
+      if(!Number.isSafeInteger(total)||total<0||total>1000000) {
+        throw new Error('내역이 너무 많아 한 번에 내려받을 수 없습니다. 페이지를 나누어 확인해 주세요.');
+      }
+      const rows=[...(first?.transactions||[])];
+      for(let offset=50;offset<total;offset+=50) {
+        const {data,error}=await sb.rpc('dori_bank_transactions_page',{p_limit:50,p_offset:offset});
+        if(error) throw error;
+        rows.push(...(data?.transactions||[]));
+      }
+      const csvCell=value=>'"'+String(value??'').replace(/[\\r\\n]+/g,' ').replace(/"/g,'""')+'"';
+      const safeText=value=>{
+        const s=String(value??'');
+        return /^[\\s]*[=+@-]/.test(s)?"'"+s:s;
+      };
+      const header=['거래 일시','거래 유형','입출금','금액(D)','거래 후 잔액(D)','상대방','상대 계좌','메모','거래 번호'];
+      const lines=[header,...rows.map(row=>[
+        row.created_at,
+        transactionInfo(row).title,
+        row.direction==='debit'?'출금':'입금',
+        row.amount,
+        row.balance_after,
+        safeText(row.counterparty_name),
+        safeText(row.counterparty_account),
+        safeText(row.description),
+        row.transaction_ref
+      ])].map(line=>line.map(csvCell).join(','));
+      const blob=new Blob(['\\uFEFF'+lines.join('\\r\\n')],{type:'text/csv;charset=utf-8;'});
+      const url=URL.createObjectURL(blob);
+      const anchor=document.createElement('a');
+      anchor.href=url;
+      anchor.download='dori-bank-statement-'+new Date().toISOString().slice(0,10)+'.csv';
+      document.body.appendChild(anchor);anchor.click();anchor.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1500);
+      toast('거래 내역 '+rows.length.toLocaleString('ko-KR')+'건을 CSV로 내려받았습니다.');
+    } catch(error) {
+      console.error('거래 내역 다운로드 오류:',error);
+      toast(friendlyError(error),true);
+    } finally {setBusy(button,false,'CSV 다운로드 ↓');}
   }
   function renderTransaction(row) {
     const info=transactionInfo(row);
