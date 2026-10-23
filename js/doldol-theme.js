@@ -219,7 +219,7 @@
   }
   if (!document.querySelector('script[data-dori-daily-attendance]')) {
     const attendanceScript = document.createElement("script");
-    attendanceScript.src = "https://rockey-jason.github.io/doldol-site/js/daily-attendance.js?v=20261018-calendar-popup-1";
+    attendanceScript.src = "https://rockey-jason.github.io/doldol-site/js/daily-attendance.js?v=20261023-shared-client-2";
     attendanceScript.dataset.doriDailyAttendance = "true"; attendanceScript.async = true;
     (document.head || document.documentElement).appendChild(attendanceScript);
   }
@@ -227,7 +227,7 @@
   /* Keep the authenticated notification center available across site pages. */
   if (!document.querySelector('script[data-dori-notification-center]')) {
     const notificationScript = document.createElement("script");
-    notificationScript.src = "https://rockey-jason.github.io/doldol-site/js/dori-notification-center.js?v=20261023-notifications-3";
+    notificationScript.src = "https://rockey-jason.github.io/doldol-site/js/dori-notification-center.js?v=20261023-notifications-4";
     notificationScript.dataset.doriNotificationCenter = "true";
     notificationScript.async = true;
     (document.head || document.documentElement).appendChild(notificationScript);
