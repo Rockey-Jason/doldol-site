@@ -1,6 +1,7 @@
 (() => {
   'use strict';
   const SUPABASE_URL = 'https://scttowfhygcpdirrekqm.supabase.co';
+  const DORI_PUSH_PUBLIC_KEY = 'BPU3bUhYuN_Qih2Hd-8KRoi-aQV6Pjy1Y9-570zUS-5cbIG15jZbMPAgttpAnjqv-4Apa25j74axPTq9T--hIkc';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY';
   const $ = id => document.getElementById(id);
   const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -49,6 +50,7 @@
   const historyPageSize = 10;
   let historyTotal = 0;
   let toastTimer = null;
+  let pushedTransactionRef = new URLSearchParams(window.location.search).get('transaction');
   try {
     if (!window.supabase || typeof window.supabase.createClient !== 'function') throw new Error('Supabase 라이브러리를 불러오지 못했습니다.');
     sb = window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
@@ -100,6 +102,8 @@
   }
   function wireEvents() {
     $('refreshButton').addEventListener('click',loadAll);
+    $('pushNotificationsButton')?.addEventListener('click',toggleBankPushNotifications);
+    void refreshPushButtonState();
     $('retryBankLoad')?.addEventListener('click',async()=>{
       const button=$('retryBankLoad');setBusy(button,true,'사용자 정보 다시 확인 중…');
       try {
@@ -147,6 +151,102 @@
     if(/JWT|token|session|auth/i.test(message)) return '로그인 세션을 확인할 수 없습니다. 돌이사이트에서 다시 로그인한 뒤 이용해 주세요.';
     if(/fetch|network|Failed to fetch/i.test(message)) return '서버에 연결하지 못했습니다. 네트워크를 확인한 뒤 다시 시도해 주세요.';
     return message.replace(/^Error:\s*/,'');
+  }
+  function setPushButtonState(label, enabled=false, disabled=false) {
+    const button=$('pushNotificationsButton');
+    if(!button) return;
+    const labelNode=button.querySelector('.bank-push-label');
+    if(labelNode) labelNode.textContent=label;
+    button.title=label;
+    button.setAttribute('aria-label',label);
+    button.dataset.enabled=enabled?'true':'false';
+    button.classList.toggle('is-active',!!enabled);
+    button.disabled=!!disabled;
+  }
+  function pushBase64UrlToBytes(value) {
+    const padded=String(value).replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-String(value).length%4)%4);
+    const raw=atob(padded);
+    return Uint8Array.from(raw,char=>char.charCodeAt(0));
+  }
+  async function refreshPushButtonState() {
+    const button=$('pushNotificationsButton');
+    if(!button) return;
+    const supported='serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+    if(!supported) {setPushButtonState('푸시 미지원',false,true);return;}
+    try {
+      const registration=await navigator.serviceWorker.getRegistration();
+      const subscription=registration ? await registration.pushManager.getSubscription() : null;
+      if(subscription) setPushButtonState('알림 끄기',true,false);
+      else if(Notification.permission==='denied') setPushButtonState('알림 권한 확인',false,false);
+      else setPushButtonState('알림 켜기',false,false);
+    } catch(error) {
+      console.warn('푸시 알림 상태 확인 실패:',error);
+      setPushButtonState('알림 설정',false,false);
+    }
+  }
+  async function toggleBankPushNotifications() {
+    const button=$('pushNotificationsButton');
+    if(!button) return;
+    button.disabled=true;
+    button.classList.add('is-loading');
+    try {
+      if(!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+        toast('현재 브라우저는 푸시 알림을 지원하지 않습니다.',true);
+        return;
+      }
+      const registration=await navigator.serviceWorker.register('./sw.js',{scope:'./'});
+      let subscription=await registration.pushManager.getSubscription();
+      if(subscription) {
+        const saved=subscription.toJSON();
+        const keys=saved.keys||{};
+        const {error:saveError}=await sb.rpc('dori_bank_save_push_subscription',{
+          p_endpoint:saved.endpoint,p_p256dh:keys.p256dh,p_auth:keys.auth
+        });
+        if(saveError) throw saveError;
+        const {error:deleteError}=await sb.rpc('dori_bank_delete_push_subscription',{p_endpoint:subscription.endpoint});
+        if(deleteError) throw deleteError;
+        const unsubscribed=await subscription.unsubscribe();
+        if(!unsubscribed) throw new Error('브라우저에서 푸시 구독을 해제하지 못했습니다. 다시 시도해 주세요.');
+        toast('돌이 은행 푸시 알림을 껐습니다.');
+        return;
+      }
+      if(Notification.permission!=='granted') {
+        if(Notification.permission==='denied') {
+          toast('브라우저 설정에서 돌이사이트의 알림 권한을 허용한 뒤 다시 시도해 주세요.',true);
+          return;
+        }
+        const permission=await Notification.requestPermission();
+        if(permission!=='granted') {
+          toast('알림 권한이 허용되지 않았습니다. 브라우저 알림 설정을 확인해 주세요.',true);
+          return;
+        }
+      }
+      await navigator.serviceWorker.ready;
+      subscription=await registration.pushManager.subscribe({
+        userVisibleOnly:true,
+        applicationServerKey:pushBase64UrlToBytes(DORI_PUSH_PUBLIC_KEY)
+      });
+      const saved=subscription.toJSON();
+      const keys=saved.keys||{};
+      if(!saved.endpoint||!keys.p256dh||!keys.auth) {
+        await subscription.unsubscribe();
+        throw new Error('브라우저 푸시 구독 정보를 가져오지 못했습니다.');
+      }
+      const {data,error}=await sb.rpc('dori_bank_save_push_subscription',{
+        p_endpoint:saved.endpoint,p_p256dh:keys.p256dh,p_auth:keys.auth
+      });
+      if(error||!data?.ok) {
+        await subscription.unsubscribe();
+        throw error||new Error('푸시 알림 설정을 저장하지 못했습니다.');
+      }
+      toast('푸시 알림이 켜졌어요. 이제 송금을 받으면 알림을 보내 드릴게요.');
+    } catch(error) {
+      console.error('돌이 은행 푸시 설정 오류:',error);
+      toast(friendlyError(error),true);
+    } finally {
+      button.classList.remove('is-loading');
+      await refreshPushButtonState();
+    }
   }
   async function loadAll() {
     const refresh=$('refreshButton');
@@ -429,11 +529,28 @@
       $('historyNext').disabled=!data?.has_more;
       if(!rows.length) {root.innerHTML='<div class="bank-empty-state">아직 거래 내역이 없습니다. 첫 송금이나 예금 거래가 여기에 표시됩니다.</div>';return;}
       root.innerHTML=rows.map(renderTransaction).join('');
+      highlightPushedTransaction();
     } catch(error) {
       console.error('거래 내역 조회 오류:',error);
       root.innerHTML='<div class="bank-empty-state">거래 내역을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.</div>';
       toast(friendlyError(error),true);
     }
+  }
+  function highlightPushedTransaction() {
+    if(!pushedTransactionRef) return;
+    const root=$('transactionsList');
+    if(!root) return;
+    const target=Array.from(root.querySelectorAll('[data-transaction-ref]')).find(row=>row.dataset.transactionRef===pushedTransactionRef);
+    if(!target) return;
+    target.classList.add('bank-transaction-highlight');
+    target.setAttribute('tabindex','-1');
+    try {target.focus({preventScroll:true});} catch(_) {}
+    const reduceMotion=window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    target.scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'center'});
+    const url=new URL(window.location.href);
+    url.searchParams.delete('transaction');
+    window.history.replaceState({},'',url.pathname+url.search+url.hash);
+    pushedTransactionRef=null;
   }
   async function downloadStatement() {
     const button=$('downloadStatementButton');
@@ -487,7 +604,7 @@
     const counterparty=row.counterparty_name || (row.tx_type==='deposit_open'||row.tx_type==='deposit_maturity'?'돌이 은행 예금':'돌이 은행');
     const amountPrefix=out?'−':'+';
     const accountHint=row.counterparty_account?row.counterparty_account:'내 예금';
-    return '<article class="bank-transaction-row"><div class="bank-transaction-main"><span class="bank-tx-icon '+info.kind+'">'+info.icon+'</span><div><strong>'+info.title+'</strong><small>'+escapeHtml(info.subtitle)+'</small></div></div>'+
+    return '<article class="bank-transaction-row" data-transaction-ref="'+escapeHtml(row.transaction_ref||'')+'"><div class="bank-transaction-main"><span class="bank-tx-icon '+info.kind+'">'+info.icon+'</span><div><strong>'+info.title+'</strong><small>'+escapeHtml(info.subtitle)+'</small></div></div>'+
       '<div class="bank-tx-counterparty"><span>'+escapeHtml(counterparty)+'</span><small>'+escapeHtml(accountHint)+'</small></div>'+
       '<div class="bank-tx-time"><span>'+escapeHtml(formatDate(row.created_at))+'</span><small>거래 후 잔액 '+formatCoins(row.balance_after)+' D</small></div>'+
       '<div class="bank-tx-amount '+(out?'out':'in')+'">'+amountPrefix+formatCoins(row.amount)+' D<small>'+(out?'출금':'입금')+'</small></div></article>';
