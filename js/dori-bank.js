@@ -212,12 +212,8 @@
       await navigator.serviceWorker.ready;
       let subscription=await registration.pushManager.getSubscription();
       if(subscription) {
-        const saved=subscription.toJSON();
-        const keys=saved.keys||{};
-        const {error:saveError}=await sb.rpc('dori_bank_save_push_subscription',{
-          p_endpoint:saved.endpoint,p_p256dh:keys.p256dh,p_auth:keys.auth
-        });
-        if(saveError) throw saveError;
+        // Do not reassign this endpoint to the current user while turning it off.
+        // Only the authenticated owner can delete their server-side subscription.
         const {error:deleteError}=await sb.rpc('dori_bank_delete_push_subscription',{p_endpoint:subscription.endpoint});
         if(deleteError) throw deleteError;
         const unsubscribed=await subscription.unsubscribe();
