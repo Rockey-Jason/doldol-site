@@ -23,6 +23,11 @@
     activeCleanups.splice(0).forEach(remove => {
       try { remove(); } catch (_) {}
     });
+    if (loadMoreTimer) window.clearTimeout(loadMoreTimer);
+    loadMoreTimer = 0;
+    busy = false;
+    offset = 0;
+    totalRows = 0;
     if (root) root.remove();
     root = null;
     currentUserId = null;
@@ -258,14 +263,17 @@
           result = await retry;
         }
         if (result.error) throw result.error;
+        if (!root || currentUserId !== userId) return;
         const rows = result.data || [];
         if (reset) totalRows = result.count == null ? rows.length : result.count;
         else if (result.count != null) totalRows = result.count;
         offset = reset ? rows.length : offset + rows.length;
         renderRows(list,rows,!reset,moreButton);
       } catch (e) {
-        console.error("[Dori Notifications] 목록 조회 실패:",e);
-        if (reset) showState(list,"알림을 불러오지 못했어요. 연결 상태를 확인한 뒤 다시 열어 주세요.","↻");
+        console.error("[Dori Notifications] 목록 조회 실패:", {
+          message: String(e && e.message || e), code: e && e.code || null, status: e && e.status || null
+        });
+        if (reset && root && currentUserId === userId) showState(list,"알림을 불러오지 못했어요. 연결 상태를 확인한 뒤 다시 열어 주세요.","↻");
         else {moreButton.disabled=false;moreButton.textContent="다시 불러오기 ↻";}
       } finally {busy=false;allRead.disabled=false;if(!moreButton.hidden&&offset>=totalRows)moreButton.hidden=true;moreButton.disabled=moreButton.hidden;}
     }
@@ -275,7 +283,7 @@
         let result = await runCountQuery();
         if (result.error && await refreshSessionAfter401(client, result.error)) result = await runCountQuery();
         if (result.error) throw result.error;
-        if (!root) return;
+        if (!root || currentUserId !== userId) return;
         const count = Number(result.count || 0), badge = root.querySelector(".dn-count");
         badge.textContent = count > 99 ? "99+" : String(count); badge.hidden = count === 0;
         bell.setAttribute("aria-label",count ? "읽지 않은 알림 "+count+"개, 알림 센터 열기" : "알림 센터 열기");
@@ -286,7 +294,11 @@
           window.setTimeout(()=>{toast.classList.remove("show");window.setTimeout(()=>{toast.hidden=true;},250);},4200);
         }
         lastUnread=count;
-      } catch (e) {console.warn("[Dori Notifications] unread count:",e);}
+      } catch (e) {
+        console.warn("[Dori Notifications] 읽지 않은 알림 조회 실패:", {
+          message: String(e && e.message || e), code: e && e.code || null, status: e && e.status || null
+        });
+      }
     }
     const onFocus = () => { void refreshUnread(false); if (!overlay.hidden) void loadList(true); };
     const onVisibility = () => { if (!document.hidden) { void refreshUnread(true); if (!overlay.hidden) void loadList(true); } };
