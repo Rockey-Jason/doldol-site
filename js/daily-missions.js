@@ -3,9 +3,11 @@ import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 const SUPABASE_URL = "https://scttowfhygcpdirrekqm.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
 
-const supabasePromise = Promise.resolve(
-  createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
-);
+// Reuse the page's shared client so auth refresh and notification reads
+// cannot race two GoTrueClient instances with the same storage key.
+const sharedSupabase = window.doriSupabase || createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+if (!window.doriSupabase) window.doriSupabase = sharedSupabase;
+const supabasePromise = Promise.resolve(sharedSupabase);
 
 const missionIcons = {
   visit_site: "🏠",
