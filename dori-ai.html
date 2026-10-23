@@ -280,7 +280,7 @@ async function getSupabaseClient() {
           throw new Error("로컬 Supabase 라이브러리를 불러오지 못했습니다.");
         }
         const createClient = window.supabase.createClient;
-        supabaseClient = createClient(
+        supabaseClient = window.doriSupabase || createClient(
           DORI_SUPABASE_URL,
           DORI_SUPABASE_ANON_KEY,
           {
@@ -292,6 +292,7 @@ async function getSupabaseClient() {
             }
           }
         );
+        if (!window.doriSupabase) window.doriSupabase = supabaseClient;
         return supabaseClient;
       })
       .catch((e) => {
