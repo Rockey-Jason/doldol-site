@@ -53,7 +53,9 @@
   let pushedTransactionRef = new URLSearchParams(window.location.search).get('transaction');
   try {
     if (!window.supabase || typeof window.supabase.createClient !== 'function') throw new Error('Supabase 라이브러리를 불러오지 못했습니다.');
-    sb = window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    sb = window.doriSupabase || window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    // Share the authenticated session with site-wide features such as notifications.
+    if (!window.doriSupabase) window.doriSupabase = sb;
   } catch (error) {
     $('loginGate').hidden = false;
     $('loginGate').querySelector('h2').textContent = '은행 서비스를 준비하지 못했습니다.';
