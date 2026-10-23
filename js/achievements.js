@@ -13,6 +13,7 @@ const SUPABASE_ANON_KEY = "sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
 // 메인 페이지가 이미 인증에 사용 중인 클라이언트를 최우선으로 재사용한다.
 // 이렇게 하면 업적 모듈과 로그인/프로필 시스템이 서로 다른 세션 저장소를 사용하지 않는다.
 const supabase = window.doriSupabase || createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+if (!window.doriSupabase) window.doriSupabase = supabase;
 
 const state = {
   queue: [],
