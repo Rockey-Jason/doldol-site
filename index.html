@@ -2240,7 +2240,7 @@ const { createClient } = window.supabase;
 // Supabase
 // =====================================================
 
-const supabase = createClient(
+const supabase = window.doriSupabase || createClient(
 
     "https://scttowfhygcpdirrekqm.supabase.co",
 
