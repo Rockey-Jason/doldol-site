@@ -326,7 +326,7 @@ button:focus-visible,input:focus-visible{
 const { createClient } = window.supabase;
 
 
-const supabase = createClient(
+const supabase = window.doriSupabase || createClient(
 
   "https://scttowfhygcpdirrekqm.supabase.co",
 
