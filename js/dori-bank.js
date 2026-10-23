@@ -102,6 +102,7 @@
   }
   function wireEvents() {
     $('refreshButton').addEventListener('click',loadAll);
+    if($('pushNotificationsButton')) $('pushNotificationsButton').hidden=false;
     $('pushNotificationsButton')?.addEventListener('click',toggleBankPushNotifications);
     void refreshPushButtonState();
     $('retryBankLoad')?.addEventListener('click',async()=>{
