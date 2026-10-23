@@ -88,16 +88,27 @@
 
   function handleDeepLink() {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("open") === "attendance") {
-      let tries = 0;
-      const attempt = () => {
-        if (typeof window.doriOpenAttendanceCalendar === "function") return window.doriOpenAttendanceCalendar();
-        if (++tries < 40) window.setTimeout(attempt, 150);
-      };
-      attempt();
-      params.delete("open");
-      window.history.replaceState({}, "", window.location.pathname + (params.toString() ? "?" + params.toString() : "") + window.location.hash);
-    }
+    const requested = params.get("open");
+    if (requested !== "attendance" && requested !== "achievements") return;
+
+    let tries = 0;
+    const attempt = () => {
+      if (requested === "attendance" && typeof window.doriOpenAttendanceCalendar === "function") {
+        window.doriOpenAttendanceCalendar();
+        return;
+      }
+      if (requested === "achievements") {
+        const button = document.getElementById("업적버튼");
+        if (button && typeof button.click === "function" && typeof button.onclick === "function") {
+          button.click();
+          return;
+        }
+      }
+      if (++tries < 40) window.setTimeout(attempt, 150);
+    };
+    attempt();
+    params.delete("open");
+    window.history.replaceState({}, "", window.location.pathname + (params.toString() ? "?" + params.toString() : "") + window.location.hash);
   }
 
   function mount(client, userId) {
