@@ -227,7 +227,7 @@
   /* Keep the authenticated notification center available across site pages. */
   if (!document.querySelector('script[data-dori-notification-center]')) {
     const notificationScript = document.createElement("script");
-    notificationScript.src = "https://rockey-jason.github.io/doldol-site/js/dori-notification-center.js?v=20261023-notifications-1";
+    notificationScript.src = "https://rockey-jason.github.io/doldol-site/js/dori-notification-center.js?v=20261023-notifications-2";
     notificationScript.dataset.doriNotificationCenter = "true";
     notificationScript.async = true;
     (document.head || document.documentElement).appendChild(notificationScript);
