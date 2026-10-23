@@ -58,3 +58,15 @@
 .bank-loan-row{overflow:hidden;max-height:1400px;opacity:1;transform:translateY(0) scale(1);transition:opacity .32s ease,transform .42s cubic-bezier(.2,.8,.2,1),max-height .42s ease,padding .42s ease,border-color .32s ease,margin .42s ease}
 .bank-loan-row.is-settling{max-height:0;opacity:0;transform:translateY(-10px) scale(.985);padding-top:0;padding-bottom:0;border-color:transparent;pointer-events:none}
 @media(prefers-reduced-motion:reduce){.bank-loan-row,.bank-loan-row.is-settling{transition:none;transform:none}}
+
+
+/* Dori Bank push toggle and notification deep-link highlight */
+.bank-push-button{min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 12px;border:1px solid var(--bank-border);border-radius:12px;background:rgba(255,255,255,.025);color:#d6e0ed;cursor:pointer;font-size:12px;white-space:nowrap;transition:background .25s,border-color .25s,color .25s,transform .25s}
+.bank-push-button svg{width:16px;height:16px;flex:0 0 auto}
+.bank-push-button:hover:not(:disabled){transform:translateY(-1px);border-color:rgba(228,200,117,.4);color:var(--bank-gold);background:rgba(255,255,255,.05)}
+.bank-push-button.is-active{color:var(--bank-green);border-color:rgba(118,215,178,.38);background:rgba(118,215,178,.055)}
+.bank-push-button:disabled{opacity:.48;cursor:not-allowed}
+.bank-transaction-row.bank-transaction-highlight{position:relative;z-index:1;border-color:rgba(228,200,117,.6);background:linear-gradient(105deg,rgba(228,200,117,.13),rgba(13,29,49,.88) 70%);box-shadow:0 0 0 1px rgba(228,200,117,.16),0 10px 36px rgba(0,0,0,.2);animation:bank-transaction-arrival 3.6s cubic-bezier(.2,.8,.2,1) both}
+@keyframes bank-transaction-arrival{0%{opacity:.35;transform:translateY(10px);box-shadow:0 0 0 0 rgba(228,200,117,0)}18%{opacity:1;transform:translateY(0);box-shadow:0 0 0 5px rgba(228,200,117,.2),0 0 28px rgba(228,200,117,.15)}38%{box-shadow:0 0 0 2px rgba(228,200,117,.11),0 0 12px rgba(228,200,117,.08)}100%{opacity:1;transform:translateY(0);box-shadow:0 0 0 1px rgba(228,200,117,.05),0 10px 36px rgba(0,0,0,.12)}}
+@media(max-width:680px){.bank-push-button{width:36px;height:36px;min-height:36px;padding:0;gap:0;border-radius:12px}.bank-push-button .bank-push-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}}
+@media(prefers-reduced-motion:reduce){.bank-transaction-row.bank-transaction-highlight{animation:none}}
