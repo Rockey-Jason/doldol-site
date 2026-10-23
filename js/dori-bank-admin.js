@@ -11,7 +11,8 @@
   let sb,toastTimer=null,products=[];
   try{
     if(!window.supabase||typeof window.supabase.createClient!=='function')throw new Error('Supabase 라이브러리를 불러오지 못했습니다.');
-    sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    sb=window.doriSupabase||window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
+    if(!window.doriSupabase)window.doriSupabase=sb;
   }catch(error){setGate('서비스 연결 오류',error.message);return;}
   function setGate(title,message){$('gateTitle').textContent=title;$('gateMessage').textContent=message;}
   function toast(message,error=false){
