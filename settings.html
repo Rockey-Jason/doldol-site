@@ -2307,7 +2307,7 @@ const SUPABASE_ANON_KEY =
 
 
 const supabase =
-    createClient(
+    window.doriSupabase || createClient(
         SUPABASE_URL,
         SUPABASE_ANON_KEY
     );
