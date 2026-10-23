@@ -15,15 +15,47 @@
   let clientPromise = null, root = null, currentUserId = null, category = "all";
   let offset = 0, totalRows = 0, busy = false, lastUnread = null, loadMoreTimer = 0;
 
+  function getSharedClient() {
+    return window.doriSupabase || window.supabaseClient || window.sb || null;
+  }
+
   async function getClient() {
+    // The site shell owns the authenticated browser client. Reuse it first;
+    // creating a second GoTrueClient can race token refresh and cause REST 401s.
+    const shared = getSharedClient();
+    if (shared) {
+      window.doriNotificationsSupabase = shared;
+      return shared;
+    }
     if (window.doriNotificationsSupabase) return window.doriNotificationsSupabase;
     if (!clientPromise) clientPromise = (async () => {
+      // Shared page clients are initialized by deferred module scripts. Give
+      // them time to publish window.doriSupabase before falling back.
+      for (let attempt = 0; attempt < 120; attempt++) {
+        const ready = getSharedClient();
+        if (ready) {
+          window.doriNotificationsSupabase = ready;
+          return ready;
+        }
+        await new Promise(resolve => window.setTimeout(resolve, 25));
+      }
+      const ready = getSharedClient();
+      if (ready) {
+        window.doriNotificationsSupabase = ready;
+        return ready;
+      }
+
       let createClient = window.supabase && window.supabase.createClient;
       if (!createClient) {
         const module = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
         createClient = module.createClient;
       }
-      window.doriNotificationsSupabase = createClient(URL, KEY);
+      // Re-check after the dynamic import, since another page module may have
+      // completed initialization while the library was loading.
+      const latest = getSharedClient();
+      const client = latest || createClient(URL, KEY);
+      if (!window.doriSupabase) window.doriSupabase = client;
+      window.doriNotificationsSupabase = window.doriSupabase || client;
       return window.doriNotificationsSupabase;
     })();
     return clientPromise;
