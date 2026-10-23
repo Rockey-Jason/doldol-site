@@ -194,7 +194,22 @@
         toast('현재 브라우저는 푸시 알림을 지원하지 않습니다.',true);
         return;
       }
+
+      // Ask permission directly from the click handler before awaiting registration APIs.
+      if(Notification.permission!=='granted') {
+        if(Notification.permission==='denied') {
+          toast('브라우저 설정에서 돌이사이트의 알림 권한을 허용한 뒤 다시 시도해 주세요.',true);
+          return;
+        }
+        const permission=await Notification.requestPermission();
+        if(permission!=='granted') {
+          toast('알림 권한이 허용되지 않았습니다. 브라우저 알림 설정을 확인해 주세요.',true);
+          return;
+        }
+      }
+
       const registration=await navigator.serviceWorker.register('./sw.js',{scope:'./'});
+      await navigator.serviceWorker.ready;
       let subscription=await registration.pushManager.getSubscription();
       if(subscription) {
         const saved=subscription.toJSON();
@@ -210,18 +225,7 @@
         toast('돌이 은행 푸시 알림을 껐습니다.');
         return;
       }
-      if(Notification.permission!=='granted') {
-        if(Notification.permission==='denied') {
-          toast('브라우저 설정에서 돌이사이트의 알림 권한을 허용한 뒤 다시 시도해 주세요.',true);
-          return;
-        }
-        const permission=await Notification.requestPermission();
-        if(permission!=='granted') {
-          toast('알림 권한이 허용되지 않았습니다. 브라우저 알림 설정을 확인해 주세요.',true);
-          return;
-        }
-      }
-      await navigator.serviceWorker.ready;
+
       subscription=await registration.pushManager.subscribe({
         userVisibleOnly:true,
         applicationServerKey:pushBase64UrlToBytes(DORI_PUSH_PUBLIC_KEY)
