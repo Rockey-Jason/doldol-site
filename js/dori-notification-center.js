@@ -192,7 +192,7 @@
         console.error("[Dori Notifications] 목록 조회 실패:",e);
         if (reset) showState(list,"알림을 불러오지 못했어요. 연결 상태를 확인한 뒤 다시 열어 주세요.","↻");
         else {moreButton.disabled=false;moreButton.textContent="다시 불러오기 ↻";}
-      } finally {busy=false;allRead.disabled=false;if(!moreButton.hidden&&offset>=totalRows)moreButton.hidden=true;}
+      } finally {busy=false;allRead.disabled=false;if(!moreButton.hidden&&offset>=totalRows)moreButton.hidden=true;moreButton.disabled=moreButton.hidden;}
     }
     async function refreshUnread(showToast) {
       try {
