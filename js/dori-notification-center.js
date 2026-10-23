@@ -14,6 +14,32 @@
   const esc = value => String(value == null ? "" : value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   let clientPromise = null, root = null, currentUserId = null, category = "all";
   let offset = 0, totalRows = 0, busy = false, lastUnread = null, loadMoreTimer = 0;
+  let pollTimer = null;
+  let activeCleanups = [];
+
+  function disposeRoot() {
+    if (pollTimer) window.clearInterval(pollTimer);
+    pollTimer = null;
+    activeCleanups.splice(0).forEach(remove => {
+      try { remove(); } catch (_) {}
+    });
+    if (root) root.remove();
+    root = null;
+    currentUserId = null;
+  }
+
+  function isAuthError(error) {
+    return Number(error && error.status) === 401 ||
+      String(error && error.code || "") === "PGRST301" ||
+      /invalid jwt|jwt expired|token expired|unauthorized/i.test(String(error && error.message || ""));
+  }
+
+  async function refreshSessionAfter401(client, error) {
+    if (!isAuthError(error)) return false;
+    const refreshed = await client.auth.refreshSession();
+    if (refreshed.error || !refreshed.data || !refreshed.data.session) return false;
+    return true;
+  }
 
   function getSharedClient() {
     return window.doriSupabase || window.supabaseClient || window.sb || null;
@@ -145,7 +171,7 @@
 
   function mount(client, userId) {
     if (root && currentUserId === userId) return;
-    if (root) root.remove();
+    if (root) disposeRoot();
     currentUserId = userId;
     addStyles();
     root = document.createElement("div");
@@ -224,7 +250,13 @@
         let query = client.from("dori_notifications").select("id,category,title,body,target_url,created_at,read_at",{count:"exact"})
           .eq("user_id",userId).order("created_at",{ascending:false}).range(offset,offset+24);
         if (category !== "all") query = query.eq("category",category);
-        const result = await query;
+        let result = await query;
+        if (result.error && await refreshSessionAfter401(client, result.error)) {
+          let retry = client.from("dori_notifications").select("id,category,title,body,target_url,created_at,read_at",{count:"exact"})
+            .eq("user_id",userId).order("created_at",{ascending:false}).range(reset ? 0 : offset, (reset ? 0 : offset) + 24);
+          if (category !== "all") retry = retry.eq("category",category);
+          result = await retry;
+        }
         if (result.error) throw result.error;
         const rows = result.data || [];
         if (reset) totalRows = result.count == null ? rows.length : result.count;
@@ -239,8 +271,11 @@
     }
     async function refreshUnread(showToast) {
       try {
-        const result = await client.from("dori_notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null);
+        const runCountQuery = () => client.from("dori_notifications").select("id",{count:"exact",head:true}).eq("user_id",userId).is("read_at",null);
+        let result = await runCountQuery();
+        if (result.error && await refreshSessionAfter401(client, result.error)) result = await runCountQuery();
         if (result.error) throw result.error;
+        if (!root) return;
         const count = Number(result.count || 0), badge = root.querySelector(".dn-count");
         badge.textContent = count > 99 ? "99+" : String(count); badge.hidden = count === 0;
         bell.setAttribute("aria-label",count ? "읽지 않은 알림 "+count+"개, 알림 센터 열기" : "알림 센터 열기");
@@ -253,11 +288,23 @@
         lastUnread=count;
       } catch (e) {console.warn("[Dori Notifications] unread count:",e);}
     }
-    window.addEventListener("focus",()=>{void refreshUnread(false);if(!overlay.hidden)void loadList(true);});
-    document.addEventListener("visibilitychange",()=>{if(!document.hidden){void refreshUnread(true);if(!overlay.hidden)void loadList(true);}});
-    ["dori:attendance-claimed","dori:daily-mission-completed","dori:daily-mission-reward-claimed","dori:achievement-claimed"].forEach(name=>window.addEventListener(name,()=>window.setTimeout(()=>{void refreshUnread(true);if(!overlay.hidden)void loadList(true);},700)));
+    const onFocus = () => { void refreshUnread(false); if (!overlay.hidden) void loadList(true); };
+    const onVisibility = () => { if (!document.hidden) { void refreshUnread(true); if (!overlay.hidden) void loadList(true); } };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    activeCleanups.push(() => window.removeEventListener("focus", onFocus));
+    activeCleanups.push(() => document.removeEventListener("visibilitychange", onVisibility));
+    ["dori:attendance-claimed","dori:daily-mission-completed","dori:daily-mission-reward-claimed","dori:achievement-claimed"].forEach(name => {
+      const onActivity = () => window.setTimeout(() => {
+        if (!root) return;
+        void refreshUnread(true);
+        if (!overlay.hidden) void loadList(true);
+      }, 700);
+      window.addEventListener(name, onActivity);
+      activeCleanups.push(() => window.removeEventListener(name, onActivity));
+    });
     void refreshUnread(false);
-    window.setInterval(()=>{if(!document.hidden)void refreshUnread(true);},45000);
+    pollTimer = window.setInterval(() => { if (!document.hidden && root) void refreshUnread(true); }, 45000);
     handleDeepLink();
   }
 
@@ -270,7 +317,7 @@
       client.auth.onAuthStateChange((_event,session)=>{
         window.setTimeout(()=>{
           if(session && session.user && session.user.id) mount(client,session.user.id);
-          else {if(root)root.remove();root=null;currentUserId=null;}
+          else { if (root) disposeRoot(); }
         },0);
       });
     } catch(e) {console.warn("[Dori Notifications] 초기화 실패:",e);}
