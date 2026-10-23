@@ -2579,10 +2579,12 @@ try {
         );
     }
 
-    sb = window.supabase.createClient(
+    // Reuse the same authenticated client as the notification center and attendance UI.
+    sb = window.doriSupabase || window.supabase.createClient(
         SUPABASE_URL,
         SUPABASE_ANON_KEY
     );
+    if (!window.doriSupabase) window.doriSupabase = sb;
 
 } catch (error) {
 
