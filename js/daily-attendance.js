@@ -10,8 +10,17 @@
   const todaySeoul = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul" }).format(new Date());
   let clientPromise;
   const getClient = async () => {
-    if (window.doriSupabase || window.supabaseClient || window.sb) return window.doriSupabase || window.supabaseClient || window.sb;
-    if (!clientPromise) clientPromise = import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm").then(m => m.createClient(URL, KEY));
+    const shared = window.doriSupabase || window.supabaseClient || window.sb;
+    if (shared) return shared;
+    if (!clientPromise) clientPromise = import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm").then(m => {
+      // Publish a single fallback client so the notification center and other
+      // page features can reuse its session instead of creating another auth client.
+      const existing = window.doriSupabase || window.supabaseClient || window.sb;
+      if (existing) return existing;
+      const client = m.createClient(URL, KEY);
+      window.doriSupabase = client;
+      return client;
+    });
     return clientPromise;
   };
 
