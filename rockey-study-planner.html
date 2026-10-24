@@ -457,7 +457,6 @@ function setupEvents(){
 }
 async function init(){
   setupEvents();renderHeaderDate();currentPlan=blankPlan(selectedDate);renderPlan();renderCalendar();renderMonthSummary();
-  cachePlans=readCache();var local=cachePlans[selectedDate];if(local){currentPlan=normalizePlan(local,selectedDate);monthPlans[selectedDate]=currentPlan;renderPlan();}
   setStatus("Supabase 연결 상태를 확인하고 있어.","checking");
   try{
     if(!window.supabase||typeof window.supabase.createClient!=="function")throw new Error("Supabase 클라이언트를 불러오지 못했어.");
@@ -479,7 +478,9 @@ async function init(){
       ready=true;setStatus("Supabase 동기화 완료 · 날짜별 계획이 계정에 저장돼.","connected");
       renderPlan();renderCalendar();renderMonthSummary();
     }else{
-      ready=true;setStatus("로그인하면 Supabase에 저장돼. 지금은 이 기기에 임시 저장 중이야.","local");renderPlan();
+      currentPlan=cachePlans[selectedDate]?normalizePlan(cachePlans[selectedDate],selectedDate):blankPlan(selectedDate);
+      monthPlans[selectedDate]=currentPlan;
+      ready=true;setStatus("로그인하면 Supabase에 저장돼. 지금은 이 기기에 임시 저장 중이야.","local");renderPlan();renderCalendar();renderMonthSummary();
     }
     $("accountLink").hidden=!!currentUser;
   }catch(error){
