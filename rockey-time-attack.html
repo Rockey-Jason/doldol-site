@@ -233,6 +233,16 @@ async function savePreferences(seconds,count){
   var result=await cloudClient.from(PREFERENCES_TABLE).upsert({user_id:currentUser.id,time_limit_seconds:pref.timeLimitSeconds,question_count:pref.questionCount,updated_at:new Date().toISOString()},{onConflict:"user_id"});
   if(result.error)throw result.error;
 }
+function saveCurrentPreferencesIfValid(){
+  try{
+    var seconds=getLimitMs()/1000,count=Number(questionCount.value);
+    if(!Number.isInteger(count)||count<1||count>200)return;
+    savePreferences(seconds,count).catch(function(error){
+      console.error("Rockey Study preferences update failed:",error);
+      if(currentUser)updatePersistenceStatus("설정은 현재 기기에 저장됐어. Supabase 동기화는 다시 시도할게.","error");
+    });
+  }catch(error){}
+}
 async function syncAccountRecords(){
   if(!cloudClient||!currentUser)return;
   var userId=currentUser.id,userCacheKey=USER_CACHE_PREFIX+userId;
@@ -530,7 +540,9 @@ function openHistory(){renderHistory();showOnly(historyPanel);}
 function returnToSetup(){clearTimer();state="idle";showOnly(setupPanel);updateHistoryTeaser();}
 function resetForNew(){clearTimer();state="idle";showOnly(setupPanel);updateHistoryTeaser();}
 
-limitSelect.addEventListener("change",function(){customWrap.hidden=limitSelect.value!=="custom";});
+limitSelect.addEventListener("change",function(){customWrap.hidden=limitSelect.value!=="custom";saveCurrentPreferencesIfValid();});
+customLimit.addEventListener("change",saveCurrentPreferencesIfValid);
+questionCount.addEventListener("change",saveCurrentPreferencesIfValid);
 $("settingsForm").addEventListener("submit",function(event){event.preventDefault();startGame();});
 gameScreen.addEventListener("click",handleTap);
 gameScreen.addEventListener("keydown",function(event){if(event.key===" "||event.key==="Enter"){event.preventDefault();handleTap();}});
