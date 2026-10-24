@@ -42,18 +42,18 @@
     <div class="settings-grid">
       <div class="field">
         <label for="limitSelect">문제당 제한 시간</label>
-        <select id="limitSelect" class="input-control">
+        <select id="limitSelect" class="input-control" disabled>
           <option value="30">30초</option><option value="60" selected>1분</option><option value="90">1분 30초</option><option value="120">2분</option><option value="180">3분</option><option value="300">5분</option><option value="600">10분</option><option value="900">15분</option><option value="custom">직접 입력</option>
         </select>
         <div id="customLimitWrap" class="field field-custom" hidden>
           <label for="customLimit">제한 시간 (초)</label>
-          <input id="customLimit" class="input-control" type="number" min="5" max="3600" step="1" value="60" inputmode="numeric">
+          <input id="customLimit" class="input-control" disabled type="number min="5" max="3600" step="1" value="60" inputmode="numeric">
           <small>5초부터 3,600초(60분)까지 설정할 수 있어.</small>
         </div>
       </div>
       <div class="field">
         <label for="questionCount">총 문제 수</label>
-        <input id="questionCount" class="input-control" type="number" min="1" max="200" step="1" value="10" required inputmode="numeric">
+        <input id="questionCount" class="input-control" disabled type="number min="1" max="200" step="1" value="10" required inputmode="numeric">
         <small>1문제부터 200문제까지 설정할 수 있어.</small>
       </div>
     </div>
@@ -65,7 +65,7 @@
   </form>
   <div class="form-footer" style="border-top:0;margin-top:4px;padding-top:14px">
     <span class="microcopy" id="historyTeaser">아직 저장된 도전 기록이 없어.</span>
-    <button id="openHistoryBtn" type="button" class="button secondary">기록 보기 <span aria-hidden="true">↗</span></button>
+    <button id="openHistoryBtn" type="button" class="button secondary" disabled>기록 보기 <span aria-hidden="true">↗</span></button>
   </div>
 </section>
 
@@ -226,12 +226,18 @@ async function loadPreferences(){
     try{localStorage.setItem(preferenceStorageKey(),JSON.stringify({timeLimitSeconds:Number(response.data.time_limit_seconds),questionCount:Number(response.data.question_count)}));}catch(e){}
   }
 }
-async function savePreferences(seconds,count){
+var preferenceWriteQueue=Promise.resolve();
+function savePreferences(seconds,count){
   var pref={timeLimitSeconds:Number(seconds),questionCount:Number(count)};
   try{localStorage.setItem(preferenceStorageKey(),JSON.stringify(pref));}catch(e){}
-  if(!cloudClient||!currentUser)return;
-  var result=await cloudClient.from(PREFERENCES_TABLE).upsert({user_id:currentUser.id,time_limit_seconds:pref.timeLimitSeconds,question_count:pref.questionCount,updated_at:new Date().toISOString()},{onConflict:"user_id"});
-  if(result.error)throw result.error;
+  if(!cloudClient||!currentUser)return Promise.resolve();
+  var targetUserId=currentUser.id;
+  var payload={user_id:targetUserId,time_limit_seconds:pref.timeLimitSeconds,question_count:pref.questionCount,updated_at:new Date().toISOString()};
+  preferenceWriteQueue=preferenceWriteQueue.catch(function(){}).then(function(){
+    if(!cloudClient)throw new Error("Supabase 클라이언트를 사용할 수 없어.");
+    return cloudClient.from(PREFERENCES_TABLE).upsert(payload,{onConflict:"user_id"});
+  }).then(function(result){if(result.error)throw result.error;});
+  return preferenceWriteQueue;
 }
 function saveCurrentPreferencesIfValid(){
   try{
@@ -306,6 +312,8 @@ async function initializePersistence(){
   }finally{
     persistenceReady=true;
     if(startButton)startButton.disabled=false;
+    limitSelect.disabled=false;customLimit.disabled=false;questionCount.disabled=false;
+    $("openHistoryBtn").disabled=false;
     updateHistoryTeaser();
   }
 }
