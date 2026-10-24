@@ -552,6 +552,18 @@ $("clearHistoryBtn").addEventListener("click",async function(){
 document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible"&&state==="running")updateTimer();});
 updateHistoryTeaser();
 initializePersistence();
+window.addEventListener("online",function(){
+  if(!cloudClient||!currentUser)return;
+  updatePersistenceStatus("인터넷 연결이 복구됐어. Supabase에 기록을 다시 동기화하고 있어.","checking");
+  syncAccountRecords().then(loadPreferences).then(function(){
+    updatePersistenceStatus("Supabase 동기화 완료 · 기록과 설정이 계정에 저장돼.","connected");
+    updateHistoryTeaser();
+    if(!$("summaryPanel").hidden)$("saveStatus").textContent="✓ 저장된 기록이 Supabase와 동기화됐어.";
+  }).catch(function(error){
+    cloudSyncError=error;
+    updatePersistenceStatus("Supabase에 아직 연결하지 못했어. 로컬 기록을 유지하고 다시 시도할게.","error");
+  });
+});
 })();
 </script>
 </body>
