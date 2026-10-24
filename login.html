@@ -879,6 +879,22 @@
       color: white;
     }
 
+    .recovery-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+    .recovery-link { padding: 7px 4px; border: 0; color: #aebcff; background: transparent; font-size: 13px; text-decoration: underline; text-underline-offset: 4px; transition: color .2s ease; }
+    .recovery-link:hover { color: #fff; }
+    .recovery-dialog { width: min(460px, calc(100% - 28px)); padding: 0; overflow: hidden; color: #f7f8ff; border: 1px solid rgba(150,170,255,.24); border-radius: 22px; background: linear-gradient(145deg,#111a43,#070b20 80%); box-shadow: 0 30px 100px rgba(0,0,0,.65); }
+    .recovery-dialog::backdrop { background: rgba(2,4,16,.76); backdrop-filter: blur(8px); }
+    .recovery-dialog-inner { padding: 24px; }
+    .recovery-dialog h3 { margin: 0; font-size: 22px; font-weight: 400; }
+    .recovery-dialog p { color: #9ca8d0; font-size: 13px; line-height: 1.7; margin: 9px 0 18px; }
+    .recovery-field { display: block; width: 100%; height: 52px; padding: 0 15px; border: 1px solid rgba(144,161,235,.2); border-radius: 13px; outline: none; color: #f4f6ff; background: rgba(3,7,24,.55); }
+    .recovery-field:focus { border-color: #8297ff; box-shadow: 0 0 0 4px rgba(130,151,255,.1); }
+    .recovery-submit { width: 100%; min-height: 48px; margin-top: 13px; border: 1px solid rgba(184,196,255,.3); border-radius: 13px; color: white; background: linear-gradient(135deg,#6078e8,#7b5cdb); }
+    .recovery-submit:disabled { opacity: .6; cursor: wait; }
+    .recovery-result { min-height: 20px; margin-top: 12px; color: #aebcff; font-size: 13px; line-height: 1.6; overflow-wrap: anywhere; }
+    .recovery-result.error { color: #f1a7b0; }
+    .recovery-close { display: block; margin: 12px auto 0; padding: 8px 14px; border: 0; color: #9ca8d0; background: transparent; font-size: 13px; }
+    
     .register-link {
       display: inline-flex;
 
@@ -1384,10 +1400,40 @@
 
 
     <div class="form-footer">
-      아이디와 비밀번호를 잊으셨다면
-      <br>
-      관리자 또는 계정 복구 기능을 이용해주세요.
+      아이디 또는 비밀번호를 잊으셨나요?
     </div>
+    <div class="recovery-actions">
+      <button class="recovery-link" type="button" data-recovery-open="findIdDialog">아이디 찾기</button>
+      <button class="recovery-link" type="button" data-recovery-open="resetPasswordDialog">비밀번호 재설정</button>
+    </div>
+
+    <dialog class="recovery-dialog" id="findIdDialog" aria-labelledby="findIdTitle">
+      <div class="recovery-dialog-inner">
+        <h3 id="findIdTitle">아이디 찾기</h3>
+        <p>가입할 때 사용한 이메일 주소를 입력하면, 보안을 위해 일부 가려진 아이디를 확인할 수 있어요.</p>
+        <form id="findIdForm">
+          <label for="findIdEmail" class="sr-only">가입 이메일</label>
+          <input class="recovery-field" id="findIdEmail" type="email" autocomplete="email" placeholder="가입한 이메일 주소" maxlength="254" required>
+          <button class="recovery-submit" id="findIdSubmit" type="submit">아이디 찾기</button>
+          <div class="recovery-result" id="findIdResult" role="status" aria-live="polite"></div>
+        </form>
+        <button class="recovery-close" type="button" data-recovery-close>닫기</button>
+      </div>
+    </dialog>
+
+    <dialog class="recovery-dialog" id="resetPasswordDialog" aria-labelledby="resetPasswordTitle">
+      <div class="recovery-dialog-inner">
+        <h3 id="resetPasswordTitle">비밀번호 재설정</h3>
+        <p>가입 이메일로 비밀번호 재설정 링크를 보내드려요. 메일을 받을 수 있는 이메일 주소를 입력해 주세요.</p>
+        <form id="resetPasswordForm">
+          <label for="resetEmail" class="sr-only">가입 이메일</label>
+          <input class="recovery-field" id="resetEmail" type="email" autocomplete="email" placeholder="가입한 이메일 주소" maxlength="254" required>
+          <button class="recovery-submit" id="resetPasswordSubmit" type="submit">재설정 이메일 보내기</button>
+          <div class="recovery-result" id="resetPasswordResult" role="status" aria-live="polite"></div>
+        </form>
+        <button class="recovery-close" type="button" data-recovery-close>닫기</button>
+      </div>
+    </dialog>
 
 
     <a
@@ -1492,6 +1538,75 @@
       }
     );
 
+
+    /* =========================
+       계정 복구 다이얼로그
+    ========================= */
+    document.querySelectorAll("[data-recovery-open]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const dialog = document.getElementById(button.dataset.recoveryOpen);
+        if (dialog && !dialog.open) dialog.showModal();
+      });
+    });
+    document.querySelectorAll("[data-recovery-close]").forEach((button) => {
+      button.addEventListener("click", () => button.closest("dialog")?.close());
+    });
+    document.querySelectorAll(".recovery-dialog").forEach((dialog) => {
+      dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
+    });
+
+    const findIdForm = document.getElementById("findIdForm");
+    findIdForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = document.getElementById("findIdSubmit");
+      const result = document.getElementById("findIdResult");
+      const email = document.getElementById("findIdEmail").value.trim();
+      button.disabled = true;
+      button.textContent = "확인 중...";
+      result.classList.remove("error");
+      result.textContent = "";
+      try {
+        const { data, error } = await supabase.functions.invoke("find-account-id", { body: { email } });
+        if (error) throw error;
+        if (!data?.success) throw new Error(data?.message || "아이디 찾기에 실패했습니다.");
+        result.textContent = data.found
+          ? "확인된 아이디: " + data.maskedLoginId + " — " + data.message
+          : data.message;
+      } catch (error) {
+        console.error("Find account ID error:", error);
+        result.classList.add("error");
+        result.textContent = "아이디를 찾지 못했어요. 이메일 주소를 확인하거나 사이트 운영자에게 문의해 주세요.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "아이디 찾기";
+      }
+    });
+
+    const resetPasswordForm = document.getElementById("resetPasswordForm");
+    resetPasswordForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = document.getElementById("resetPasswordSubmit");
+      const result = document.getElementById("resetPasswordResult");
+      const email = document.getElementById("resetEmail").value.trim();
+      button.disabled = true;
+      button.textContent = "이메일 요청 중...";
+      result.classList.remove("error");
+      result.textContent = "";
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: "https://rockey-jason.github.io/doldol-site/reset-password.html"
+        });
+        if (error) throw error;
+        result.textContent = "요청을 처리했어요. 이메일함과 스팸함에서 비밀번호 재설정 메일을 확인해 주세요. 메일이 오지 않으면 잠시 후 다시 시도해 주세요.";
+      } catch (error) {
+        console.error("Password reset request error:", error);
+        result.classList.add("error");
+        result.textContent = "재설정 메일을 요청하지 못했어요. 이메일 주소를 확인하고 다시 시도해 주세요.";
+      } finally {
+        button.disabled = false;
+        button.textContent = "재설정 이메일 보내기";
+      }
+    });
 
     /* =========================
        로그인
