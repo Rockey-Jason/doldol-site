@@ -158,7 +158,7 @@
 "use strict";
 var TABLE="rockey_study_planner_days";
 var SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
-var SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbGciOiJIUzI1NiIsInR5cCI6ImV5SnB...dummy";
+var SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
 var GUEST_KEY="rockeyStudy.planner.v1.guest";
 var USER_KEY_PREFIX="rockeyStudy.planner.v1.user.";
 var $=function(id){return document.getElementById(id);};
@@ -406,10 +406,10 @@ function openEdit(task){
   $("editBackdrop").classList.add("open");$("editBackdrop").setAttribute("aria-hidden","false");document.body.style.overflow="hidden";setTimeout(function(){$("editTitle").focus();},100);
 }
 function closeEdit(){editingTaskId=null;$("editBackdrop").classList.remove("open");$("editBackdrop").setAttribute("aria-hidden","true");document.body.style.overflow="";}
-function handleTaskAction(action,id){
+function handleTaskAction(action,id,checkedValue){
   if(!currentPlan)return;
   var index=currentPlan.tasks.findIndex(function(t){return t.id===id;});if(index<0)return;
-  if(action==="toggle"){currentPlan.tasks[index].completed=!!document.querySelector('.task-check[data-id="'+CSS.escape(id)+'"]')?.checked;if(currentPlan.tasks[index].completed)showToast("할 일을 완료했어!");scheduleSave();renderPlan();return;}
+  if(action==="toggle"){currentPlan.tasks[index].completed=typeof checkedValue==="boolean"?checkedValue:!currentPlan.tasks[index].completed;if(currentPlan.tasks[index].completed)showToast("할 일을 완료했어!");scheduleSave();renderPlan();return;}
   if(action==="delete"){var name=currentPlan.tasks[index].title;currentPlan.tasks.splice(index,1);scheduleSave();renderPlan();showToast("‘"+name+"’ 할 일을 삭제했어.");return;}
   if(action==="edit"){openEdit(currentPlan.tasks[index]);return;}
   if(action==="up"&&index>0){var previous=currentPlan.tasks[index-1];currentPlan.tasks[index-1]=currentPlan.tasks[index];currentPlan.tasks[index]=previous;scheduleSave();renderPlan();return;}
@@ -432,8 +432,8 @@ function setupEvents(){
     currentPlan.tasks.push(normalizeTask({id:makeId(),title:title,description:$("taskDescription").value.trim(),subject:$("taskSubject").value,durationMinutes:duration,priority:$("taskPriority").value,completed:false,createdAt:new Date().toISOString()},currentPlan.tasks.length));
     $("taskTitle").value="";$("taskDescription").value="";$("taskTitle").focus();scheduleSave();renderPlan();showToast("새 할 일을 추가했어.");
   });
-  $("taskList").addEventListener("click",function(event){var target=event.target.closest("[data-action]");if(target)handleTaskAction(target.dataset.action,target.dataset.id);});
-  $("taskList").addEventListener("change",function(event){var target=event.target.closest('[data-action="toggle"]');if(target)handleTaskAction("toggle",target.dataset.id);});
+  $("taskList").addEventListener("click",function(event){var target=event.target.closest("[data-action]");if(target&&target.dataset.action!=="toggle")handleTaskAction(target.dataset.action,target.dataset.id);});
+  $("taskList").addEventListener("change",function(event){var target=event.target.closest('[data-action="toggle"]');if(target)handleTaskAction("toggle",target.dataset.id,target.checked);});
   document.querySelectorAll("[data-filter]").forEach(function(button){button.addEventListener("click",function(){filterMode=button.dataset.filter;document.querySelectorAll("[data-filter]").forEach(function(b){b.classList.toggle("active",b===button);});renderTasks();});});
   $("editTaskForm").addEventListener("submit",function(event){
     event.preventDefault();if(!currentPlan||!editingTaskId)return;
