@@ -1562,23 +1562,21 @@
       const result = document.getElementById("findIdResult");
       const email = document.getElementById("findIdEmail").value.trim();
       button.disabled = true;
-      button.textContent = "확인 중...";
+      button.textContent = "이메일 발송 중...";
       result.classList.remove("error");
       result.textContent = "";
       try {
         const { data, error } = await supabase.functions.invoke("find-account-id", { body: { email } });
         if (error) throw error;
         if (!data?.success) throw new Error(data?.message || "아이디 찾기에 실패했습니다.");
-        result.textContent = data.found
-          ? "확인된 아이디: " + data.maskedLoginId + " — " + data.message
-          : data.message;
+        result.textContent = data.message || "요청을 처리했습니다. 받은편지함과 스팸함에서 아이디 안내 이메일을 확인해 주세요.";
       } catch (error) {
         console.error("Find account ID error:", error);
         result.classList.add("error");
-        result.textContent = "아이디를 찾지 못했어요. 이메일 주소를 확인하거나 사이트 운영자에게 문의해 주세요.";
+        result.textContent = "아이디 안내 이메일을 보내지 못했어요. 잠시 후 다시 시도해 주세요.";
       } finally {
         button.disabled = false;
-        button.textContent = "아이디 찾기";
+        button.textContent = "아이디 이메일 받기";
       }
     });
 
