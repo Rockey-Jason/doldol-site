@@ -352,7 +352,7 @@
       var actions=$("detailActions");
       if(!open){actions.innerHTML='<div class="primary-action disabled" aria-disabled="true">🔒 세계 레벨 Lv.'+region.level+' 달성 후 입장</div>'; $("detailFootnote").textContent="해금 전에도 지역 설명을 볼 수 있어요. 기존 사이트 기능은 메인 페이지에서 계속 이용할 수 있습니다."}
       else if(!region.href){actions.innerHTML='<div class="primary-action disabled" aria-disabled="true">⚙️ 도로늄 공장 웹 연결 준비 중</div>'; $("detailFootnote").textContent="도로늄 공장은 웹 실행 주소가 아직 연결되지 않았습니다. 공개 주소가 준비되면 이 입장 버튼에 연결하면 됩니다."}
-      else{actions.innerHTML='<a class="primary-action" href="'+region.href+'" data-enter-region="'+region.id+'" '+(region.external?'target="_blank" rel="noopener noreferrer"':'')+'>'+region.action+' <span aria-hidden="true">↗</span></a>'; $("detailFootnote").textContent=visited?"이 지역은 방문 기록이 저장되어 있어요. 체크리스트는 개인 탐험 기록이며 보상 지급은 기존 시스템을 따릅니다.":"입장하면 지역 탐험 기록이 저장됩니다. 체크리스트 자체로 EXP나 돌돌코인이 추가 지급되지는 않습니다."}
+      else{actions.innerHTML='<a class="primary-action" href="'+region.href+'" data-enter-region="'+region.id+'">'+region.action+' <span aria-hidden="true">↗</span></a>'; $("detailFootnote").textContent=visited?"이 지역은 방문 기록이 저장되어 있어요. 체크리스트는 개인 탐험 기록이며 보상 지급은 기존 시스템을 따릅니다.":"입장하면 지역 탐험 기록이 저장됩니다. 체크리스트 자체로 EXP나 돌돌코인이 추가 지급되지는 않습니다."}
       applyMapState();renderDistrictGrid();setAccountUI();
     }
     async function saveProgress(){
@@ -377,10 +377,10 @@
       if(notify)toast(ok?"탐험 기록을 저장했어요.":"지역은 열 수 있지만 기록 동기화는 실패했어요.");
       return ok;
     }
-    function chooseRegion(id){
+    function chooseRegion(id,shouldScroll){
       if(!regions.some(function(region){return region.id===id}))return;
       selectedRegion=id;renderDetail();
-      if(window.innerWidth<850){var panel=$("districtDetails");if(panel)panel.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"})}
+      if(shouldScroll!==false&&window.innerWidth<850){var panel=$("districtDetails");if(panel)panel.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"nearest"})}
     }
     async function toggleMission(id,checked){
       var before=progress.completed.slice();
@@ -414,12 +414,12 @@
       }
       worldLevel=computeLevel(worldExp);
       if(progress.visited.indexOf("plaza")<0)await recordVisit("plaza",false);
-      setAccountUI();chooseRegion(progress.last||"plaza");renderDistrictGrid();
+      setAccountUI();chooseRegion(progress.last||"plaza",false);renderDistrictGrid();
       if(!session||!session.user){$("worldUserSub").textContent="게스트 모드 · 로그인하면 기록이 계정에 저장됩니다";}
     }
     document.addEventListener("click",function(event){
       var regionButton=event.target.closest("[data-region]");
-      if(regionButton){chooseRegion(regionButton.getAttribute("data-region"));return}
+      if(regionButton){chooseRegion(regionButton.getAttribute("data-region"),true);return}
     });
     document.addEventListener("change",function(event){
       var checkbox=event.target.closest("[data-mission]");
@@ -434,7 +434,6 @@
       if(!entry)return;
       var regionId=entry.getAttribute("data-enter-region"),region=regionById(regionId);
       if(!canEnter(region))return;
-      if(region.external){recordVisit(regionId,true);return}
       event.preventDefault();
       recordVisit(regionId,false).finally(function(){window.location.href=region.href});
     });
