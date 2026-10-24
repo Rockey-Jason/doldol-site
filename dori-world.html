@@ -353,7 +353,7 @@
       var actions=$("detailActions");
       if(!open){actions.innerHTML='<div class="primary-action disabled" aria-disabled="true">🔒 세계 레벨 Lv.'+region.level+' 달성 후 입장</div>'; $("detailFootnote").textContent="해금 전에도 지역 설명을 볼 수 있어요. 기존 사이트 기능은 메인 페이지에서 계속 이용할 수 있습니다."}
       else if(!region.href){actions.innerHTML='<div class="primary-action disabled" aria-disabled="true">⚙️ 도로늄 공장 웹 연결 준비 중</div>'; $("detailFootnote").textContent="도로늄 공장은 웹 실행 주소가 아직 연결되지 않았습니다. 공개 주소가 준비되면 이 입장 버튼에 연결하면 됩니다."}
-      else{actions.innerHTML='<a class="primary-action" href="'+region.href+'" data-enter-region="'+region.id+'">'+region.action+' <span aria-hidden="true">↗</span></a>'; $("detailFootnote").textContent=visited?"이 지역은 방문 기록이 저장되어 있어요. 체크리스트는 개인 탐험 기록이며 보상 지급은 기존 시스템을 따릅니다.":"입장하면 지역 탐험 기록이 저장됩니다. 체크리스트 자체로 EXP나 돌돌코인이 추가 지급되지는 않습니다."}
+      else{actions.innerHTML='<a class="primary-action" href="'+region.href+'" data-enter-region="'+region.id+'" data-no-transition>'+region.action+' <span aria-hidden="true">↗</span></a>'; $("detailFootnote").textContent=visited?"이 지역은 방문 기록이 저장되어 있어요. 체크리스트는 개인 탐험 기록이며 보상 지급은 기존 시스템을 따릅니다.":"입장하면 지역 탐험 기록이 저장됩니다. 체크리스트 자체로 EXP나 돌돌코인이 추가 지급되지는 않습니다."}
       applyMapState();renderDistrictGrid();setAccountUI();
     }
     async function saveProgress(){
