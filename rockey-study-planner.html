@@ -222,6 +222,13 @@ async function loadMonth(){
     var result=await client.from(TABLE).select("plan_date,day_title,notes,focus_goal_minutes,tasks,updated_at").eq("user_id",currentUser.id).gte("plan_date",range.first).lte("plan_date",range.last).order("plan_date",{ascending:true});
     if(result.error)throw result.error;
     if(request!==monthRequest)return;
+    var remoteDateKeys=new Set((result.data||[]).map(function(row){return row.plan_date;}));
+    Object.keys(cachePlans).forEach(function(key){
+      if(key>=range.first&&key<=range.last&&!remoteDateKeys.has(key)&&!(cachePlans[key]&&cachePlans[key].dirty)){
+        delete cachePlans[key];delete monthPlans[key];
+      }
+    });
+    writeCache();
     setCloudRows(result.data||[]);
     var rows=(result.data||[]).map(function(r){return r.plan_date;});
     var dirtyKeys=Object.keys(cachePlans).filter(function(k){return k>=range.first&&k<=range.last&&cachePlans[k]&&cachePlans[k].dirty;});
