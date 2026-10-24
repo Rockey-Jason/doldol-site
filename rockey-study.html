@@ -19,6 +19,15 @@
 .study-cloud-status.error:before{background:#ff8e97}
 .nav-link[hidden]{display:none!important}
 @media(max-width:480px){.study-cloud-status{margin-top:20px;font-size:11px}}
+.planner-feature{display:flex;flex-direction:column;align-items:flex-start;text-decoration:none;border-color:rgba(107,227,239,.2);background:linear-gradient(145deg,rgba(13,45,61,.75),rgba(8,20,37,.88))}
+.planner-feature:hover{border-color:rgba(107,227,239,.42);box-shadow:0 20px 50px rgba(7,24,42,.24),0 0 35px rgba(107,227,239,.035)}
+.planner-feature .available{position:absolute;right:17px;top:18px;padding:6px 9px;border:1px solid rgba(107,227,239,.18);border-radius:999px;color:#a2e8e5;background:rgba(107,227,239,.06);font-size:9px;letter-spacing:.1em}
+.planner-feature .feature-code{padding-right:96px}
+.planner-feature h3{padding-right:8px}
+.planner-card-icon{display:grid;place-items:center;width:47px;height:47px;margin:19px 0 2px;border:1px solid rgba(107,227,239,.19);border-radius:15px;background:rgba(107,227,239,.07);color:#a9e9ee}
+.planner-card-icon svg{width:26px;height:26px}
+.planner-feature .arrow{margin-top:auto;padding-top:15px;color:#a9e9ee}
+@media(max-width:480px){.planner-feature .available{right:14px;top:14px}.planner-card-icon{margin-top:14px}}
 </style>
 </head>
 <body>
@@ -42,6 +51,7 @@
     <p>로키 스터디는 공부에 집중하고, 학습 과정을 기록하며, 스스로 성장하는 학습 공간이야. 첫 번째 도구인 로키 타임 어택으로 문제 풀이 시간을 관리해 봐.</p>
     <div class="hero-actions">
       <a class="button button-primary" href="./rockey-time-attack.html">로키 타임 어택 시작 <span aria-hidden="true">↗</span></a>
+      <a class="button button-secondary" href="./rockey-study-planner.html">플래너 열기 <span aria-hidden="true">↗</span></a>
       <a class="button button-secondary" href="#tools">학습 도구 살펴보기 <span aria-hidden="true">↓</span></a>
     </div>
   </div>
@@ -69,17 +79,22 @@
     <div><span class="feature-code">TOOL 01 · AVAILABLE NOW</span><h3>로키 타임 어택</h3><p>문제당 제한 시간과 전체 문제 수를 정하고, 직접 준비한 문제를 풀며 시간을 재 봐. 문제를 출제하거나 정답을 채점하지 않고 시간 기록과 학습 통계만 관리해.</p><span class="arrow">타임 어택 열기 <span aria-hidden="true">↗</span></span></div>
     <span class="feature-icon"><svg viewBox="0 0 36 36" fill="none" aria-hidden="true"><circle cx="18" cy="20" r="12" stroke="currentColor" stroke-width="1.7"/><path d="M14 3h8M18 3v5M18 13v7l5 3M26.5 10.5l3-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M7 18a11 11 0 0 0 1 7" stroke="#6BE3EF" stroke-width="2" stroke-linecap="round"/></svg></span>
   </a>
+  <a class="feature planner-feature" href="./rockey-study-planner.html">
+    <span class="available">AVAILABLE NOW</span><span class="feature-code">TOOL 02 · DAILY PLANNING</span>
+    <span class="planner-card-icon" aria-hidden="true"><svg viewBox="0 0 36 36" fill="none"><rect x="6" y="8" width="24" height="22" rx="4" stroke="currentColor" stroke-width="1.6"/><path d="M12 5v6M24 5v6M6 14h24M12 19h4M12 24h4M21 19h3M21 24h3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="m20 3 2 2 4-3" stroke="#6BE3EF" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <h3>돌이 스터디 플래너</h3><p>매일의 할 일을 계획하고 체크해 봐. 날짜별 기록과 메모, 완료율을 Supabase에 저장해 나중에도 확인할 수 있어.</p><span class="arrow">플래너 열기 <span aria-hidden="true">↗</span></span>
+  </a>
   <article class="feature">
-    <span class="soon">추가 예정</span><span class="feature-code">TOOL 02</span><h3>학습 노트</h3><p>과목별 핵심 개념과 나만의 공부 메모를 모아 보는 공간.</p>
+    <span class="soon">추가 예정</span><span class="feature-code">TOOL 03</span><h3>학습 노트</h3><p>과목별 핵심 개념과 나만의 공부 메모를 모아 보는 공간.</p>
   </article>
   <article class="feature">
-    <span class="soon">추가 예정</span><span class="feature-code">TOOL 03</span><h3>오답 복습</h3><p>어려웠던 문제와 다시 확인할 내용을 정리하는 복습 도구.</p>
+    <span class="soon">추가 예정</span><span class="feature-code">TOOL 04</span><h3>오답 복습</h3><p>어려웠던 문제와 다시 확인할 내용을 정리하는 복습 도구.</p>
   </article>
   <article class="feature">
-    <span class="soon">추가 예정</span><span class="feature-code">TOOL 04</span><h3>시험 모드</h3><p>실제 시험처럼 전체 시간을 설정하고 집중하는 연습 공간.</p>
+    <span class="soon">추가 예정</span><span class="feature-code">TOOL 05</span><h3>시험 모드</h3><p>실제 시험처럼 전체 시간을 설정하고 집중하는 연습 공간.</p>
   </article>
   <article class="feature">
-    <span class="soon">추가 예정</span><span class="feature-code">TOOL 05</span><h3>성장 기록</h3><p>학습량과 시간 관리 기록을 모아 스스로의 변화를 살펴봐.</p>
+    <span class="soon">추가 예정</span><span class="feature-code">TOOL 06</span><h3>성장 기록</h3><p>학습량과 시간 관리 기록을 모아 스스로의 변화를 살펴봐.</p>
   </article>
 </section>
 
