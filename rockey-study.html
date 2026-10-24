@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#06132b">
+<title>로키 스터디 | Rockey Study</title>
+<link rel="icon" href="./rockeysite-icon-3.png" type="image/png">
+<style>
+@font-face{font-family:HancomMalrangmalrang;src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+:root{color-scheme:dark;--bg:#061020;--panel:rgba(15,30,54,.76);--line:rgba(174,198,236,.16);--text:#f4f7ff;--muted:#9eafca;--blue:#8db5ff;--cyan:#6be3ef;--gold:#ffdc8e;--ease:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box}html{min-height:100%;scroll-behavior:smooth}body{margin:0;min-height:100vh;color:var(--text);font-family:HancomMalrangmalrang,system-ui,sans-serif;font-weight:400;background:radial-gradient(ellipse at 15% -10%,rgba(67,105,203,.25),transparent 42%),radial-gradient(ellipse at 92% 22%,rgba(30,180,197,.10),transparent 34%),linear-gradient(145deg,#07152c,#030916 75%);overflow-x:hidden}a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;-webkit-tap-highlight-color:transparent}button:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}.shell{width:min(1180px,100%);margin:auto;padding:clamp(18px,4vw,44px)}.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:clamp(35px,7vw,82px)}.brand{display:flex;align-items:center;gap:13px;min-width:0}.brand-mark{display:grid;place-items:center;width:46px;height:46px;border:1px solid rgba(141,181,255,.45);border-radius:15px;background:linear-gradient(145deg,rgba(141,181,255,.19),rgba(107,227,239,.06));color:#dbe8ff;font-size:19px;box-shadow:0 8px 26px rgba(0,0,0,.22)}.eyebrow{font-size:11px;letter-spacing:.19em;color:#91b6f8}.brand-name{font-size:19px;letter-spacing:.02em}.nav-actions{display:flex;gap:8px;align-items:center}.nav-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:10px 15px;color:#cedbf2;background:rgba(255,255,255,.025);font-size:13px;transition:background .25s,border-color .25s,transform .25s}.nav-link:hover{transform:translateY(-2px);background:rgba(255,255,255,.07);border-color:rgba(141,181,255,.34)}.hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr);gap:30px;align-items:center;padding:clamp(25px,5vw,56px);border:1px solid rgba(156,187,239,.2);border-radius:30px;background:linear-gradient(120deg,rgba(22,42,75,.88),rgba(9,21,40,.76));box-shadow:0 30px 90px rgba(0,0,0,.27);animation:rise .75s var(--ease) both}.hero:before{content:"";position:absolute;width:420px;height:420px;right:-150px;top:-230px;border-radius:50%;background:rgba(95,132,255,.13);filter:blur(8px);pointer-events:none}.hero-copy{position:relative;z-index:1}.kicker{display:flex;align-items:center;gap:9px;color:#9edce9;font-size:12px;letter-spacing:.15em;text-transform:uppercase}.kicker:before{content:"";width:23px;height:1px;background:var(--cyan)}h1{font-size:clamp(36px,6vw,68px);line-height:1.12;letter-spacing:-.045em;margin:18px 0 16px;font-weight:400}h1 span{color:#9bc1ff}.hero p{max-width:520px;margin:0;color:#b1bfd7;font-size:15px;line-height:1.9}.hero-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:27px}.button{display:inline-flex;justify-content:center;align-items:center;gap:10px;min-height:48px;padding:0 19px;border:1px solid transparent;border-radius:14px;font-size:14px;cursor:pointer;transition:transform .25s var(--ease),box-shadow .25s,background .25s}.button:hover{transform:translateY(-3px)}.button-primary{color:#071326;background:linear-gradient(105deg,#c6dcff,#82d9e9);box-shadow:0 10px 28px rgba(94,178,221,.16)}.button-primary:hover{box-shadow:0 15px 35px rgba(94,178,221,.25)}.button-secondary{border-color:var(--line);background:rgba(255,255,255,.045);color:#e0e9fa}.hero-visual{position:relative;z-index:1;display:grid;place-items:center;min-height:245px}.orbit{position:absolute;width:min(100%,290px);aspect-ratio:1;border:1px solid rgba(143,190,255,.18);border-radius:50%;animation:slow-spin 24s linear infinite}.orbit:before,.orbit:after{content:"";position:absolute;border:1px solid rgba(143,190,255,.14);border-radius:50%;inset:16px;transform:rotate(53deg) scaleX(.62)}.orbit:after{inset:40px;transform:rotate(-35deg) scaleX(.7)}.timer-art{position:relative;width:170px;aspect-ratio:1;display:grid;place-items:center;border:1px solid rgba(173,208,255,.36);border-radius:50%;background:radial-gradient(circle at 32% 23%,rgba(161,218,255,.22),rgba(26,51,89,.84) 60%,#071328);box-shadow:0 0 0 13px rgba(125,171,255,.035),0 0 70px rgba(91,151,255,.16),inset 0 0 40px rgba(118,179,255,.1)}.timer-art svg{width:92px;filter:drop-shadow(0 0 18px rgba(135,207,255,.26))}.orbit-dot{position:absolute;right:12%;top:21%;width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:0 0 18px var(--cyan)}.hero-visual small{position:absolute;bottom:0;color:#728caf;font-size:10px;letter-spacing:.2em}.section-head{display:flex;justify-content:space-between;align-items:end;gap:18px;margin:42px 0 18px}.section-head h2{font-size:21px;font-weight:400;margin:0 0 8px}.section-head p{margin:0;color:var(--muted);font-size:13px;line-height:1.7}.section-tag{font-size:11px;letter-spacing:.12em;color:#859bb9}.feature-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.feature{position:relative;overflow:hidden;min-height:235px;padding:24px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(150deg,rgba(18,35,61,.82),rgba(8,18,34,.76));transition:transform .35s var(--ease),border-color .35s,box-shadow .35s;animation:rise .65s var(--ease) both}.feature:nth-child(2){animation-delay:.08s}.feature:nth-child(3){animation-delay:.16s}.feature:hover{transform:translateY(-5px);border-color:rgba(141,181,255,.32);box-shadow:0 20px 45px rgba(0,0,0,.18)}.feature-main{grid-column:span 2;display:flex;align-items:center;justify-content:space-between;gap:18px;min-height:250px;border-color:rgba(130,182,255,.31);background:linear-gradient(120deg,rgba(23,48,83,.95),rgba(10,23,43,.85))}.feature-code{font-size:10px;letter-spacing:.18em;color:#91b7ff}.feature h3{font-size:21px;font-weight:400;margin:13px 0 10px}.feature p{max-width:410px;color:var(--muted);font-size:13px;line-height:1.8;margin:0}.feature-icon{display:grid;place-items:center;flex:0 0 72px;width:72px;height:72px;border:1px solid rgba(143,190,255,.25);border-radius:23px;background:linear-gradient(145deg,rgba(143,190,255,.17),rgba(143,190,255,.035));color:#bfe4ff}.feature-icon svg{width:34px;height:34px}.feature .arrow{display:inline-flex;align-items:center;gap:8px;margin-top:19px;font-size:13px;color:#b8d5ff}.soon{position:absolute;right:18px;top:18px;padding:6px 9px;border:1px solid rgba(255,255,255,.09);border-radius:999px;color:#8ea0bb;background:rgba(255,255,255,.035);font-size:10px;letter-spacing:.08em}.stats-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;margin-top:27px;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:var(--line)}.metric{padding:21px 23px;background:rgba(6,17,32,.8)}.metric span{display:block;color:var(--muted);font-size:12px;margin-bottom:9px}.metric strong{font-size:24px;font-weight:400;letter-spacing:-.03em}.metric small{font-size:12px;color:#8ea6c9;margin-left:5px}.footnote{color:#70829e;text-align:center;font-size:11px;line-height:1.8;margin:28px 0 8px}@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}@keyframes slow-spin{to{transform:rotate(360deg)}}@media(max-width:760px){.hero{grid-template-columns:1fr;padding:25px}.hero-visual{min-height:210px;grid-row:1}.timer-art{width:134px}.orbit{width:210px}.hero-copy h1{margin-top:13px}.feature-grid{grid-template-columns:1fr 1fr}.feature-main{grid-column:span 2}.feature:not(.feature-main){min-height:210px}.nav-link{padding:9px 11px;font-size:12px}.brand-name{font-size:16px}}@media(max-width:480px){.shell{padding:16px}.topbar{align-items:flex-start;flex-wrap:wrap;margin-bottom:28px}.nav-actions{width:100%;justify-content:flex-start}.brand-mark{width:39px;height:39px;border-radius:13px}.hero{border-radius:24px}.hero-visual{min-height:175px}.timer-art{width:116px}.orbit{width:182px}.hero p{font-size:14px}.feature-grid{grid-template-columns:1fr}.feature-main{grid-column:auto}.feature{min-height:0!important;padding:22px}.feature-main{align-items:flex-start}.feature-icon{flex-basis:57px;width:57px;height:57px;border-radius:18px}.stats-strip{grid-template-columns:1fr}.metric{padding:16px 19px}.section-head{align-items:flex-start;flex-direction:column}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<main class="shell">
+<header class="topbar">
+  <a class="brand" href="./rockey-study.html" aria-label="로키 스터디 홈">
+    <span class="brand-mark">R</span>
+    <span><span class="eyebrow">ROCKEY · LEARNING SPACE</span><br><span class="brand-name">로키 스터디</span></span>
+  </a>
+  <nav class="nav-actions" aria-label="주요 이동">
+    <a class="nav-link" href="./index.html">↖ 돌이사이트 메인</a>
+    <a class="nav-link" href="./rockey-time-attack.html">타임 어택 바로가기 ↗</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-copy">
+    <div class="kicker">FOCUS · PRACTICE · GROW</div>
+    <h1>배움에 몰입하는<br><span>새로운 공간.</span></h1>
+    <p>로키 스터디는 공부에 집중하고, 학습 과정을 기록하며, 스스로 성장하는 학습 공간이야. 첫 번째 도구인 로키 타임 어택으로 문제 풀이 시간을 관리해 봐.</p>
+    <div class="hero-actions">
+      <a class="button button-primary" href="./rockey-time-attack.html">로키 타임 어택 시작 <span aria-hidden="true">↗</span></a>
+      <a class="button button-secondary" href="#tools">학습 도구 살펴보기 <span aria-hidden="true">↓</span></a>
+    </div>
+  </div>
+  <div class="hero-visual" aria-hidden="true">
+    <div class="orbit"></div><span class="orbit-dot"></span>
+    <div class="timer-art">
+      <svg viewBox="0 0 100 100" fill="none">
+        <circle cx="50" cy="54" r="33" stroke="#B8D8FF" stroke-opacity=".72" stroke-width="2.2"/>
+        <path d="M41 12h18M50 12v9M71 25l6-6" stroke="#B8D8FF" stroke-width="3" stroke-linecap="round"/>
+        <path d="M50 32v22l15 9" stroke="#7FE1EE" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M27 34a28 28 0 0 0-6 20" stroke="#7FE1EE" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="50" cy="54" r="3" fill="#E5F6FF"/>
+      </svg>
+    </div><small>TIME IS YOUR TOOL</small>
+  </div>
+</section>
+
+<div class="section-head" id="tools">
+  <div><h2>학습 도구</h2><p>필요한 기능부터 차근차근 확장할 수 있어.</p></div>
+  <span class="section-tag">STUDY TOOLS / 01</span>
+</div>
+<section class="feature-grid" aria-label="학습 도구 목록">
+  <a class="feature feature-main" href="./rockey-time-attack.html">
+    <div><span class="feature-code">TOOL 01 · AVAILABLE NOW</span><h3>로키 타임 어택</h3><p>문제당 제한 시간과 전체 문제 수를 정하고, 직접 준비한 문제를 풀며 시간을 재 봐. 문제를 출제하거나 정답을 채점하지 않고 시간 기록과 학습 통계만 관리해.</p><span class="arrow">타임 어택 열기 <span aria-hidden="true">↗</span></span></div>
+    <span class="feature-icon"><svg viewBox="0 0 36 36" fill="none" aria-hidden="true"><circle cx="18" cy="20" r="12" stroke="currentColor" stroke-width="1.7"/><path d="M14 3h8M18 3v5M18 13v7l5 3M26.5 10.5l3-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M7 18a11 11 0 0 0 1 7" stroke="#6BE3EF" stroke-width="2" stroke-linecap="round"/></svg></span>
+  </a>
+  <article class="feature">
+    <span class="soon">추가 예정</span><span class="feature-code">TOOL 02</span><h3>학습 노트</h3><p>과목별 핵심 개념과 나만의 공부 메모를 모아 보는 공간.</p>
+  </article>
+  <article class="feature">
+    <span class="soon">추가 예정</span><span class="feature-code">TOOL 03</span><h3>오답 복습</h3><p>어려웠던 문제와 다시 확인할 내용을 정리하는 복습 도구.</p>
+  </article>
+  <article class="feature">
+    <span class="soon">추가 예정</span><span class="feature-code">TOOL 04</span><h3>시험 모드</h3><p>실제 시험처럼 전체 시간을 설정하고 집중하는 연습 공간.</p>
+  </article>
+  <article class="feature">
+    <span class="soon">추가 예정</span><span class="feature-code">TOOL 05</span><h3>성장 기록</h3><p>학습량과 시간 관리 기록을 모아 스스로의 변화를 살펴봐.</p>
+  </article>
+</section>
+
+<section class="stats-strip" aria-label="타임 어택 기록 요약">
+  <div class="metric"><span>저장된 세션</span><strong id="sessionCount">0</strong><small>회</small></div>
+  <div class="metric"><span>누적 집중 시간</span><strong id="focusMinutes">0</strong><small>분</small></div>
+  <div class="metric"><span>최근 도전</span><strong id="lastAttempt">—</strong><small id="lastDate"></small></div>
+</section>
+<p class="footnote">현재 타임 어택 기록은 이 브라우저의 로컬 저장소에 보관돼. 다른 기기와는 자동 동기화되지 않아.<br>로키 스터디 · 공부 도구는 하나씩 더해질 예정이야.</p>
+</main>
+<script>
+(function(){
+  "use strict";
+  var KEY="rockeyStudy.timeAttack.records.v1";
+  var fmtDate=function(v){try{return new Intl.DateTimeFormat("ko-KR",{month:"short",day:"numeric"}).format(new Date(v));}catch(e){return "—";}};
+  var records=[];
+  try{var raw=localStorage.getItem(KEY);records=raw?JSON.parse(raw):[];if(!Array.isArray(records))records=[];}catch(e){records=[];}
+  var totalMs=records.reduce(function(sum,r){return sum+(Number(r.totalElapsedMs)||0);},0);
+  document.getElementById("sessionCount").textContent=String(records.length);
+  document.getElementById("focusMinutes").textContent=String(Math.round(totalMs/60000));
+  if(records.length){
+    var last=records.slice().sort(function(a,b){return new Date(b.completedAt)-new Date(a.completedAt);})[0];
+    document.getElementById("lastAttempt").textContent=(Number(last.questionCount)||0)+"문제";
+    document.getElementById("lastDate").textContent=fmtDate(last.completedAt);
+  }
+})();
+</script>
+</body>
+</html>
