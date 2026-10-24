@@ -1,7 +1,9 @@
-const CACHE_NAME = "doldol-site-pwa-v9-20261023-push";
+const CACHE_NAME = "doldol-site-pwa-v10-20261024-rockey-study";
 const APP_SHELL = [
   "/doldol-site/",
   "/doldol-site/index.html",
+  "/doldol-site/rockey-study.html",
+  "/doldol-site/rockey-time-attack.html",
   "/doldol-site/rockeysite-icon-3.png",
   "/doldol-site/manifest.json"
 ];
