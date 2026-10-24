@@ -244,7 +244,7 @@ function appendResult(timedOut,elapsedMs){
 }
 function stopQuestionEarly(){
   var now=Date.now();
-  if(now>=deadline){expireQuestion();return;}
+  if(now>=deadline){expireQuestion();advanceQuestion();return;}
   clearTimer();
   var elapsed=now-questionStartedAt;
   var result=appendResult(false,elapsed);
