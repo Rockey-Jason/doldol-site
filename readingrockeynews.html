@@ -3144,8 +3144,8 @@ function 퀴즈설정(news) {
     }
 
     else if (
-        news.question_type ===
-        "subjective"
+        news.question_type === "subjective" ||
+        news.question_type === "survey"
     ) {
 
         객관식.style.display =
@@ -3249,8 +3249,8 @@ function 이전답불러오기(news) {
 
 
     else if (
-        news.question_type ===
-        "subjective"
+        news.question_type === "subjective" ||
+        news.question_type === "survey"
     ) {
 
         const 입력 =
@@ -3401,6 +3401,30 @@ async function 퀴즈제출() {
 
     }
 
+
+    if (news.question_type === "survey") {
+        const { data: surveyResult, error: surveyError } = await supabase.rpc("submit_news_survey", {
+            p_news_number: Number(신문번호),
+            p_response: String(선택한답)
+        });
+        if (surveyError || !surveyResult?.success) {
+            console.error("설문 제출 오류:", surveyError || surveyResult);
+            제출버튼잠금(false);
+            $("결과").textContent = surveyResult?.message || "설문 답변을 저장하지 못했습니다. 다시 시도해주세요.";
+            return;
+        }
+        현재유저정보.quiz_answers = { ...(현재유저정보.quiz_answers || {}), [신문번호]: String(선택한답) };
+        현재유저정보.quiz_right = true;
+        현재유저정보.quiz_news_number = Number(신문번호);
+        현재유저정보.quiz_answered = true;
+        $("결과").textContent = "🎉 설문이 제출되었습니다! 정답은 없으며, 참여 보상 5,000 돌돌코인을 지급했어요.";
+        $("제출").textContent = "제출됨";
+        $("제출").disabled = true;
+        $("내답").textContent = "내가 제출한 답 : " + String(선택한답);
+        $("주관식답").disabled = true;
+        코인보상표시(surveyResult.reward_coins || 5000, "돌이신문 설문 참여 보상입니다!", surveyResult);
+        return;
+    }
 
     /* 정답 판정과 답 저장은 서버 RPC에서 처리합니다. */
     const {
