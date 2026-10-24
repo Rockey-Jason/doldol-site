@@ -277,7 +277,7 @@
     var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbGciOiJIUzI1NiIsInR5cCI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
     var supabase = null, session = null, account = null, selectedRegion = "plaza", worldExp = 0, worldLevel = 1;
     var progress = {visited:[],completed:[],last:"plaza"};
-    var saving = false, toastTimer = null;
+    var saveQueue = Promise.resolve(), toastTimer = null;
     var thresholds = [0,100,500,1000,5000,10000,20000,30000,40000,50000];
     var levelNames = ["새로운 여행자","호기심 많은 탐험가","월드 길잡이","숙련된 개척자","세계 탐험가","정예 탐험가","월드 수호자","전설의 길잡이","월드 레전드","도로늄 개척자"];
     var allowedMissionIds = ["plaza_profile","news_read","news_quiz","bank_balance","bank_history","finance_chart","finance_trade","shop_inventory","library_read","games_play","war_try","ai_chat","factory_prepare"];
@@ -357,19 +357,25 @@
       applyMapState();renderDistrictGrid();setAccountUI();
     }
     async function saveProgress(){
-      if(saving)return false;saving=true;
       var data={visited_districts:progress.visited.slice(),completed_missions:progress.completed.slice(),last_district:progress.last||"plaza",updated_at:new Date().toISOString()};
       try{
         if(session&&session.user&&supabase){
           data.user_id=session.user.id;
-          var result=await supabase.from("dori_world_progress").upsert(data,{onConflict:"user_id"});
-          if(result.error){console.error("월드 진행도 저장 실패",result.error);toast("월드 기록 저장에 실패했어요. 로그인 상태를 확인해 주세요.");return false}
-        }else{
-          localStorage.setItem("dori-world-progress-guest-v1",JSON.stringify(data));
+          var writeTask=saveQueue.then(async function(){
+            var result=await supabase.from("dori_world_progress").upsert(data,{onConflict:"user_id"});
+            if(result.error)throw result.error;
+            return true;
+          });
+          saveQueue=writeTask.then(function(){return true},function(){return true});
+          return await writeTask;
         }
+        localStorage.setItem("dori-world-progress-guest-v1",JSON.stringify(data));
         return true;
-      }catch(error){console.error(error);toast("기록 저장 중 문제가 발생했어요.");return false}
-      finally{saving=false}
+      }catch(error){
+        console.error("월드 진행도 저장 실패",error);
+        toast("월드 기록 저장에 실패했어요. 로그인 상태와 연결을 확인해 주세요.");
+        return false;
+      }
     }
     async function recordVisit(id,notify){
       if(progress.visited.indexOf(id)<0)progress.visited.push(id);
