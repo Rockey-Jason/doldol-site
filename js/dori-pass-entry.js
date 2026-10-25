@@ -32,12 +32,18 @@ function installStyles(){
  document.head.appendChild(style);
 }
 function installMenuButton(){
- const menu=document.getElementById("메뉴");if(!menu||document.getElementById("돌이패스버튼"))return;
- const b=document.createElement("button");b.id="돌이패스버튼";b.type="button";b.className="프로필버튼 dori-pass-menu-entry";
- b.innerHTML='<span class="pass-entry-icon" aria-hidden="true">✦</span><span class="pass-entry-copy"><strong>돌이 패스</strong><small id="doriPassEntrySub">이번 시즌 보상 확인</small><span class="pass-entry-progress"><span id="doriPassEntryProgress"></span></span></span><span class="pass-entry-arrow" aria-hidden="true">↗</span>';
- b.addEventListener("click",()=>{location.href="dori-pass.html"});
- const missions=document.getElementById("일일미션버튼");
- if(missions&&missions.parentElement===menu)missions.insertAdjacentElement("afterend",b);else menu.prepend(b);
+ const menu=document.getElementById("메뉴");if(!menu)return;
+ let b=document.getElementById("돌이패스버튼");
+ if(!b){
+  b=document.createElement("button");b.id="돌이패스버튼";b.type="button";b.className="프로필버튼 dori-pass-menu-entry";
+  b.innerHTML='<span class="pass-entry-icon" aria-hidden="true">✦</span><span class="pass-entry-copy"><strong>돌이 패스</strong><small id="doriPassEntrySub">이번 시즌 보상 확인</small><span class="pass-entry-progress"><span id="doriPassEntryProgress"></span></span></span><span class="pass-entry-arrow" aria-hidden="true">↗</span>';
+  const missions=document.getElementById("일일미션버튼");
+  if(missions&&missions.parentElement===menu)missions.insertAdjacentElement("afterend",b);else menu.prepend(b);
+ }
+ if(b.dataset.passNavigationBound!=="true"){
+  b.dataset.passNavigationBound="true";
+  b.addEventListener("click",()=>{location.href="dori-pass.html"});
+ }
 }
 function installMainCard(){
  const grid=document.querySelector(".메뉴영역");if(!grid||document.getElementById("돌이패스메인카드"))return;
