@@ -123,7 +123,7 @@
 (function(){
 "use strict";
 var SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
-var SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcmVrekFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+var SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
 var TABLE="rockey_study_exam_records";
 var CACHE_PREFIX="rockeyStudyExamRecords.v1.";
 var $=function(id){return document.getElementById(id);};
@@ -370,7 +370,7 @@ async function saveDraft(){
   var title=$("examTitle").value.trim(),date=$("examDate").value;
   if(!title){$("examTitle").focus();showToast("시험 이름을 입력해 줘.");return;}
   if(title.length>120){showToast("시험 이름은 120자 이내로 입력해 줘.");return;}
-  if(!date||!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)){ $("examDate").focus();showToast("시험 날짜를 확인해 줘.");return;}
+  if(!date||!/^\d{4}-\d{2}-\d{2}$/.test(date)){ $("examDate").focus();showToast("시험 날짜를 확인해 줘.");return;}
   var target=numOrNull($("targetAverage").value,0,100);
   if(target===null){$("targetAverage").focus();showToast("목표 평균은 0~100%로 입력해 줘.");return;}
   var subjects=editorDraft.subjects.map(function(s){
@@ -481,11 +481,11 @@ async function init(){
   $("closeEditorBtn").addEventListener("click",closeEditor);$("cancelEditorBtn").addEventListener("click",closeEditor);
   $("editorBackdrop").addEventListener("click",function(e){if(e.target===$("editorBackdrop"))closeEditor();});
   document.addEventListener("keydown",function(e){if(e.key==="Escape"&&$("editorBackdrop").classList.contains("open"))closeEditor();});
-  $("addSubjectBtn").addEventListener("click",function(){if(!editorDraft)return;if(editorDraft.subjects.length>=60){showToast("과목은 최대 60개까지 추가할 수 있어.");return;}editorDraft.subjects.push(newSubject());renderSubjectEditor();var last=$("editorSubjects").querySelector('input[data-sub-field="name"][data-subject-index="'+(editorDraft.subjects.length-1)+'"]');if(last){last.value="";last.focus();}});
+  $("addSubjectBtn").addEventListener("click",function(){if(!editorDraft)return;if(editorDraft.subjects.length>=60){showToast("과목은 최대 60개까지 추가할 수 있어.");return;}editorDraft.subjects.push(newSubject());editorDraft.subjects[editorDraft.subjects.length-1].name="";renderSubjectEditor();var last=$("editorSubjects").querySelector('input[data-sub-field="name"][data-subject-index="'+(editorDraft.subjects.length-1)+'"]');if(last)last.focus();});
   $("editorSubjects").addEventListener("input",function(e){updateDraftField(e.target);});
   $("editorSubjects").addEventListener("change",function(e){updateDraftField(e.target);});
   $("editorSubjects").addEventListener("click",handleEditorClick);
-  $("examForm").addEventListener("submit",function(e){e.preventDefault();try{saveDraft();}catch(err){showToast(err.message||"입력한 내용을 확인해 줘.");}});
+  $("examForm").addEventListener("submit",function(e){e.preventDefault();saveDraft().catch(function(err){showToast(err.message||"입력한 내용을 확인해 줘.");});});
   $("examList").addEventListener("click",function(e){var el=e.target.closest("[data-action]");if(!el)return;var id=el.dataset.examId;if(el.dataset.action==="edit")openEditor(id);if(el.dataset.action==="delete")deleteExam(id);});
   $("examList").addEventListener("change",function(e){var el=e.target.closest('[data-action="toggle-check"]');if(el)toggleChecklist(el.dataset.examId,el.dataset.subjectId,el.dataset.taskId,el.checked);});
   document.querySelectorAll("[data-filter]").forEach(function(button){button.addEventListener("click",function(){currentFilter=button.dataset.filter;document.querySelectorAll("[data-filter]").forEach(function(b){b.classList.toggle("active",b===button);});renderExams();});});
