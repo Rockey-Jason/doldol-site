@@ -300,6 +300,22 @@ const rand=rng(worldSeed);
 const islandById=id=>islands.find(i=>i.id===id);
 function currentIsland(x,y,margin){return islands.find(i=>{const dx=(x-i.x)/i.rx,dy=(y-i.y)/i.ry;return dx*dx+dy*dy<=1+(margin||0)})||null}
 function landAt(x,y){return !!currentIsland(x,y,-.015)}
+function blockedAt(x,y){
+ for(let idx=0;idx<islands.length;idx++){
+  const i=islands[idx],count=i.id==='harbor'?9:5;
+  for(let j=0;j<count;j++){
+   const a=j*2.17+idx*.8,rx=i.rx*(.22+.47*((j%3)/3)),ry=i.ry*(.25+.48*((j%4)/4));
+   const tx=Math.round(i.x+Math.cos(a)*rx),ty=Math.round(i.y+Math.sin(a)*ry);
+   if(i.id==='harbor'&&Math.hypot(tx-i.x,ty-i.y)<52)continue;
+   if(Math.abs(x-tx)<9&&y>=ty-4&&y<=ty+10)return true;
+  }
+ }
+ if(Math.abs(x-245)<12&&y>=204&&y<=230)return true;
+ if(Math.abs(x-340)<8&&y>=276&&y<=290)return true;
+ if(Math.abs(x-294)<8&&y>=275&&y<=292)return true;
+ return false;
+}
+function canOccupy(x,y){return landAt(x,y)&&!blockedAt(x,y)}
 function objectDistance(x,y,obj){return Math.hypot(x-obj.x,y-obj.y)}
 function itemTotal(id){return inventory[id]||0}
 function addItem(id,q){inventory[id]=(inventory[id]||0)+q}
@@ -315,8 +331,8 @@ function saveKey(n){return 'dogSailerSaveV1Slot'+n}
 function readSave(n){try{const raw=localStorage.getItem(saveKey(n));if(!raw)return null;const d=JSON.parse(raw);if(!d||typeof d!=='object'||d.version!==1||!d.player||!d.boat||!d.inventory||!Array.isArray(d.visited)||!Array.isArray(d.collected)||!Number.isFinite(+d.coins))return null;if(!Number.isFinite(+d.player.x)||!Number.isFinite(+d.player.y)||!Number.isFinite(+d.boat.x)||!Number.isFinite(+d.boat.y))return null;return d}catch(e){return null}}
 function serialize(){return {version:1,worldSeed:worldSeed,player:{x:player.x,y:player.y,vx:player.vx,vy:player.vy,dir:player.dir,boat:player.boat},boat:{x:boat.x,y:boat.y,vx:boat.vx,vy:boat.vy,heading:boat.heading,upgrade:boat.upgrade},inventory:inventory,coins:coins,stage:stage,visited:visited,discovered:discovered,collected:collected,relationships:relationships,crafted:crafted,observed:observed,journal:journal,day:day,minutes:minutes,weather:weather,playSeconds:elapsed}}
 function saveGame(silent){try{localStorage.setItem(saveKey(slot),JSON.stringify(serialize()));lastSlot=slot;updateContinue();lastSaveTime=Date.now();$('saveState').textContent='저장됨 · '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});if(!silent)toast('항해 일지를 안전하게 저장했어요.')}catch(e){$('saveState').textContent='저장 공간 확인 필요';if(!silent)toast('저장에 실패했어요. 브라우저 저장 공간을 확인해 주세요.')}}
-function loadGame(n){const d=readSave(n);if(!d)return false;slot=n;lastSlot=n;worldSeed=d.worldSeed||73219;player=Object.assign({x:327,y:284,vx:0,vy:0,dir:'down',moving:false,boat:false},d.player||{});player.x=clamp(Number.isFinite(+player.x)?+player.x:327,8,WORLD_W-8);player.y=clamp(Number.isFinite(+player.y)?+player.y:284,8,WORLD_H-8);player.vx=clamp(Number.isFinite(+player.vx)?+player.vx:0,-100,100);player.vy=clamp(Number.isFinite(+player.vy)?+player.vy:0,-100,100);if(!['up','down','left','right'].includes(player.dir))player.dir='down';boat=Object.assign({x:416,y:322,vx:0,vy:0,heading:0,upgrade:0},d.boat||{});boat.x=clamp(Number.isFinite(+boat.x)?+boat.x:416,8,WORLD_W-8);boat.y=clamp(Number.isFinite(+boat.y)?+boat.y:322,8,WORLD_H-8);boat.vx=clamp(Number.isFinite(+boat.vx)?+boat.vx:0,-150,150);boat.vy=clamp(Number.isFinite(+boat.vy)?+boat.vy:0,-150,150);inventory=Object.assign(inventory,d.inventory||{});coins=d.coins??40;stage=d.stage||0;visited=d.visited||['harbor'];discovered=d.discovered||[];collected=d.collected||[];relationships=d.relationships||{haesol:0,fox:0,botanist:0};crafted=d.crafted||[];observed=d.observed||[];journal=d.journal||[];day=d.day||1;minutes=d.minutes||490;weather=d.weather||'맑음';elapsed=d.playSeconds||0;fishing=null;return true}
-function startNew(n){slot=n;lastSlot=n;worldSeed=Math.floor(Math.random()*900000)+10000;player={x:327,y:284,vx:0,vy:0,dir:'down',moving:false,boat:false};boat={x:416,y:322,vx:0,vy:0,heading:0,upgrade:0};inventory={driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0};coins=40;stage=0;visited=['harbor'];discovered=[];collected=[];relationships={haesol:0,fox:0,botanist:0};crafted=[];observed=[];journal=['첫 항해의 아침, 오래된 해도 한 장이 배에 떠밀려왔다. 그 위에는 빛을 잃은 여섯 등대가 그려져 있었다.','“빛이 꺼진 등대가 다시 길을 알려줄 수 있도록, 오래된 항해자에게 마음을 전해 주세요.”'];day=1;minutes=490;weather='맑음';elapsed=0;panel=null;state='play';$('titleScreen').classList.add('hide');showDialogue([{name:'항해 일지',text:'첫 항해의 아침. 짧은 다리와 황금빛 털을 가진 작은 선장이 낡은 돛단배 앞에 섰다. 파도가 밀어 준 오래된 해도에는 빛을 잃어가는 여섯 등대에 대한 이야기가 적혀 있었다.'},{name:'해솔 할아버지',text:'어서 오렴, 작은 선장. 이 항구의 등대는 예전엔 멀리서도 반짝였단다. 등대가 다시 빛나면 바다가 길을 잊지 않을 거야. 먼저 등대에 가서 이야기를 들어보렴.'}]);journal.push('첫 항해가 시작되었다. 오래된 항구 등대에서 이야기의 실마리를 찾아보자.');saveGame(true);updateHud()}
+function loadGame(n){const d=readSave(n);if(!d)return false;slot=n;lastSlot=n;worldSeed=d.worldSeed||73219;player=Object.assign({x:327,y:284,vx:0,vy:0,dir:'down',moving:false,boat:false},d.player||{});player.x=clamp(Number.isFinite(+player.x)?+player.x:327,8,WORLD_W-8);player.y=clamp(Number.isFinite(+player.y)?+player.y:284,8,WORLD_H-8);player.vx=clamp(Number.isFinite(+player.vx)?+player.vx:0,-100,100);player.vy=clamp(Number.isFinite(+player.vy)?+player.vy:0,-100,100);if(!['up','down','left','right'].includes(player.dir))player.dir='down';boat=Object.assign({x:416,y:322,vx:0,vy:0,heading:0,upgrade:0},d.boat||{});boat.x=clamp(Number.isFinite(+boat.x)?+boat.x:416,8,WORLD_W-8);boat.y=clamp(Number.isFinite(+boat.y)?+boat.y:322,8,WORLD_H-8);boat.vx=clamp(Number.isFinite(+boat.vx)?+boat.vx:0,-150,150);boat.vy=clamp(Number.isFinite(+boat.vy)?+boat.vy:0,-150,150);inventory=Object.assign(inventory,d.inventory||{});coins=d.coins??40;stage=d.stage||0;visited=d.visited||['harbor'];discovered=d.discovered||[];collected=d.collected||[];relationships=d.relationships||{haesol:0,fox:0,botanist:0};crafted=d.crafted||[];observed=d.observed||[];journal=d.journal||[];day=Number.isFinite(+d.day)?Math.max(1,+d.day):1;minutes=Number.isFinite(+d.minutes)?clamp(+d.minutes,0,1439):490;weather=['맑음','흐림','비','안개','강풍'].includes(d.weather)?d.weather:'맑음';elapsed=Number.isFinite(+d.playSeconds)?Math.max(0,+d.playSeconds):0;fishing=null;keys={};particles=[];player.moving=false;autosaveTimer=0;lastFootstepBeat=-1;return true}
+function startNew(n){slot=n;lastSlot=n;worldSeed=Math.floor(Math.random()*900000)+10000;player={x:327,y:284,vx:0,vy:0,dir:'down',moving:false,boat:false};boat={x:416,y:322,vx:0,vy:0,heading:0,upgrade:0};inventory={driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0};coins=40;stage=0;visited=['harbor'];discovered=[];collected=[];relationships={haesol:0,fox:0,botanist:0};crafted=[];observed=[];journal=['첫 항해의 아침, 오래된 해도 한 장이 배에 떠밀려왔다. 그 위에는 빛을 잃은 여섯 등대가 그려져 있었다.','“빛이 꺼진 등대가 다시 길을 알려줄 수 있도록, 오래된 항해자에게 마음을 전해 주세요.”'];day=1;minutes=490;weather='맑음';elapsed=0;keys={};particles=[];autosaveTimer=0;lastFootstepBeat=-1;panel=null;state='play';$('titleScreen').classList.add('hide');showDialogue([{name:'항해 일지',text:'첫 항해의 아침. 짧은 다리와 황금빛 털을 가진 작은 선장이 낡은 돛단배 앞에 섰다. 파도가 밀어 준 오래된 해도에는 빛을 잃어가는 여섯 등대에 대한 이야기가 적혀 있었다.'},{name:'해솔 할아버지',text:'어서 오렴, 작은 선장. 이 항구의 등대는 예전엔 멀리서도 반짝였단다. 등대가 다시 빛나면 바다가 길을 잊지 않을 거야. 먼저 등대에 가서 이야기를 들어보렴.'}]);journal.push('첫 항해가 시작되었다. 오래된 항구 등대에서 이야기의 실마리를 찾아보자.');saveGame(true);updateHud()}
 function finishIntro(){state='play';saveGame(true);toast('첫 번째 항해를 시작했어요. 바다는 서두르지 않아도 괜찮아요.')}
 function showDialogue(lines,after){dialogueQueue=lines.slice();dialogueAfter=after||null;advanceDialogue()}
 function advanceDialogue(){if(!dialogueQueue.length){$('dialogue').hidden=true;const fn=dialogueAfter;dialogueAfter=null;if(fn)fn();return}const d=dialogueQueue.shift();$('dialogueName').textContent=d.name||'항해 일지';$('dialogueText').textContent=d.text;$('dialogue').hidden=false;soundClick()}
@@ -392,7 +408,7 @@ function pickupEnabled(p){if(p.item==='bottleLetter'&&stage<2)return false;if(p.
 function interact(){
  if($('dialogue').hidden===false){advanceDialogue();return}
  if(panel){closePanel();return}
- if(player.boat){const seaLife=wildlife.filter(w=>w.type==='dolphin'&&objectDistance(boat,w)<INTERACTION_RADIUS).sort((a,b)=>objectDistance(boat,a)-objectDistance(boat,b))[0];if(seaLife){observeCreature(seaLife);return}const island=currentIsland(boat.x,boat.y,.28);if(island){player.boat=false;boat.vx=0;boat.vy=0;player.vx=0;player.vy=0;let dx=island.x-boat.x,dy=island.y-boat.y,L=Math.hypot(dx,dy)||1;player.x=clamp(boat.x+dx/L*25,0,WORLD_W);player.y=clamp(boat.y+dy/L*25,0,WORLD_H);if(!landAt(player.x,player.y)){player.x=island.x;player.y=island.y}markVisited(island.id);toast(island.name+'에 정박했어요.');saveGame(true);return}else{toast('육지가 가까워지면 정박할 수 있어요.');return}}
+ if(player.boat){const seaLife=wildlife.filter(w=>w.type==='dolphin'&&objectDistance(boat,w)<INTERACTION_RADIUS).sort((a,b)=>objectDistance(boat,a)-objectDistance(boat,b))[0];if(seaLife){observeCreature(seaLife);return}const island=currentIsland(boat.x,boat.y,.28);if(island){player.boat=false;boat.vx=0;boat.vy=0;player.vx=0;player.vy=0;let dx=island.x-boat.x,dy=island.y-boat.y,L=Math.hypot(dx,dy)||1;player.x=clamp(boat.x-dx/L*27,0,WORLD_W);player.y=clamp(boat.y-dy/L*27,0,WORLD_H);if(!canOccupy(player.x,player.y)){player.x=island.x;player.y=island.y;player.vx=0;player.vy=0}markVisited(island.id);toast(island.name+'에 정박했어요.');saveGame(true);return}else{toast('육지가 가까워지면 정박할 수 있어요.');return}}
  const candidates=[];
  pickups.filter(p=>!collected.includes(p.id)&&pickupEnabled(p)).forEach(p=>candidates.push({type:'pickup',obj:p,d:objectDistance(player.x,player.y,p),hint:'줍기'}));
  wildlife.forEach(w=>candidates.push({type:'wildlife',obj:w,d:objectDistance(player.x,player.y,w),hint:'관찰하기'}));
@@ -522,8 +538,8 @@ function tick(dt){
    if(speedNow>maxSpeed){player.vx=player.vx/speedNow*maxSpeed;player.vy=player.vy/speedNow*maxSpeed;speedNow=maxSpeed}
    const nx=clamp(player.x+player.vx*dt,8,WORLD_W-8);
    const ny=clamp(player.y+player.vy*dt,8,WORLD_H-8);
-   if(landAt(nx,player.y))player.x=nx;else player.vx=0;
-   if(landAt(player.x,ny))player.y=ny;else player.vy=0;
+   if(canOccupy(nx,player.y))player.x=nx;else player.vx=0;
+   if(canOccupy(player.x,ny))player.y=ny;else player.vy=0;
    speedNow=Math.hypot(player.vx,player.vy);
    player.moving=speedNow>3.2;
    if(player.moving){
