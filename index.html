@@ -2628,15 +2628,24 @@ async function 업적진행활동가져오기(userId, force = false) {
         inventory: inventory.data || [],
         ready: {
             chess: !chess.error,
-            box: !box.error && !boxRare.error && !boxEpic.error && !boxLegendary.error,
+            box: !box.error,
+            boxRarity: !boxRare.error && !boxEpic.error && !boxLegendary.error,
             stock: !trades.error && !dividends.error,
-            attendance: !attendance.error && !attendanceStats.error,
+            attendanceDays: !attendance.error,
+            attendanceStreak: !attendanceStats.error,
             missions: !missions.error,
-            study: !focus.error && !exams.error && !attacks.error,
-            bank: !accounts.error && !bankTransactions.error && !deposits.error && !loans.error,
+            studyFocus: !focus.error,
+            studyExam: !exams.error,
+            studyAttack: !attacks.error,
+            bankAccounts: !accounts.error,
+            bankTransactions: !accounts.error && !bankTransactions.error,
+            bankDeposits: !deposits.error,
+            bankLoans: !loans.error,
             news: !surveys.error,
-            events: !events.error && !eventQuizzes.error,
-            inventory: !inventory.error
+            events: !events.error,
+            eventQuiz: !eventQuizzes.error,
+            inventory: !inventory.error,
+            dividends: !dividends.error
         }
     };
 
@@ -2745,32 +2754,32 @@ function 업적진행도값계산(achievementId, unlocked, user) {
         first_dori_electronics: 4, first_food: 5, first_rockeycloth: 6
     };
 
-    if (thresholdMatch) set(a.attendanceDays, Number(thresholdMatch[1]), "누적 출석 일수", r.attendance, "attendance");
-    else if (streakMatch) set(a.attendanceStreak, Number(streakMatch[1]), "연속 출석 일수", r.attendance, "attendance");
+    if (thresholdMatch) set(a.attendanceDays, Number(thresholdMatch[1]), "누적 출석 일수", r.attendanceDays, "attendanceDays");
+    else if (streakMatch) set(a.attendanceStreak, Number(streakMatch[1]), "연속 출석 일수", r.attendanceStreak, "attendanceStreak");
     else if (missionDaysMatch) set(new Set(missions.map(row => String(row.mission_date || "")).filter(Boolean)).size, Number(missionDaysMatch[1]), "미션 완료 날짜", r.missions, "missions");
     else if (missionCountMatch) set(missions.length, Number(missionCountMatch[1]), "완료한 일일 미션 기록", r.missions, "missions");
-    else if (focusMatch) set(focusSeconds / 3600, Number(focusMatch[1]), "누적 집중 학습 시간(시간)", r.study, "study");
-    else if (sessionMatch) set(focusRows.length, Number(sessionMatch[1]), "집중 학습 기록 수", r.study, "study");
-    else if (examMatch) set(a.examCount, Number(examMatch[1]), "등록한 시험 계획 수", r.study, "study");
+    else if (focusMatch) set(focusSeconds / 3600, Number(focusMatch[1]), "누적 집중 학습 시간(시간)", r.studyFocus, "studyFocus");
+    else if (sessionMatch) set(focusRows.length, Number(sessionMatch[1]), "집중 학습 기록 수", r.studyExam, "studyExam");
+    else if (examMatch) set(a.examCount, Number(examMatch[1]), "등록한 시험 계획 수", r.studyAttack, "studyAttack");
     else if (attackMatch) set(timeAttacks.length, Number(attackMatch[1]), "타임어택 기록 수", r.study, "study");
     else if (questionMatch) set(questionTotal, Number(questionMatch[1]), "타임어택 누적 문제 수", r.study, "study");
-    else if (id === "bank_account_opened") set(a.bankAccounts.some(row => !/closed|deleted/i.test(String(row.status || ""))) ? 1 : 0, 1, "개설 중인 은행 계좌", r.bank, "bank");
-    else if (transferMatch) set(transferCount, Number(transferMatch[1]), "송금 거래 기록 수", r.bank, "bank");
-    else if (bankTransactionMatch) set(bankTransactions.length, Number(bankTransactionMatch[1]), "은행 거래 기록 수", r.bank, "bank");
-    else if (depositMatch) set(deposits.length, Number(depositMatch[1]), "개설한 예금 수", r.bank, "bank");
+    else if (id === "bank_account_opened") set(a.bankAccounts.some(row => !/closed|deleted/i.test(String(row.status || ""))) ? 1 : 0, 1, "개설 중인 은행 계좌", r.bankAccounts, "bankAccounts");
+    else if (transferMatch) set(transferCount, Number(transferMatch[1]), "송금 거래 기록 수", r.bankTransactions, "bankTransactions");
+    else if (bankTransactionMatch) set(bankTransactions.length, Number(bankTransactionMatch[1]), "은행 거래 기록 수", r.bankDeposits, "bankDeposits");
+    else if (depositMatch) set(deposits.length, Number(depositMatch[1]), "개설한 예금 수", r.bankLoans, "bankLoans");
     else if (maturedMatch) set(maturedDeposits, Number(maturedMatch[1] || 1), "만기 정산된 예금 수", r.bank, "bank");
     else if (loanMatch) set(loans.length, Number(loanMatch[1]), "대출 기록 수", r.bank, "bank");
     else if (repaidLoanMatch) set(repaidLoans, Number(repaidLoanMatch[1] || 1), "상환 완료한 대출 수", r.bank, "bank");
     else if (surveyMatch) set(a.surveyCount, Number(surveyMatch[1]), "설문 응답 수", r.news, "news");
-    else if (eventMatch) set(a.eventParticipationCount, Number(eventMatch[1]), "이벤트 참가 기록 수", r.events, "events");
+    else if (eventMatch) set(a.eventParticipationCount, Number(eventMatch[1]), "이벤트 참가 기록 수", r.eventQuiz, "eventQuiz");
     else if (eventQuizMatch) set(a.eventQuizCount, Number(eventQuizMatch[1]), "완료한 이벤트 퀴즈 수", r.events, "events");
     else if (boxTotalMatch) set(a.boxCount, Number(boxTotalMatch[1]), "랜덤 박스 개봉 수", r.box, "box");
     else if (["first_box", "tenth_box", "hundred_box", "thousand_box"].includes(id)) {
         const boxTargets = { first_box: 1, tenth_box: 10, hundred_box: 100, thousand_box: 1000 };
         set(a.boxCount, boxTargets[id], "랜덤 박스 개봉 수", r.box, "box");
-    } else if (["box_rare_reward", "box_rare_10"].includes(id)) set(a.boxRareCount, id === "box_rare_10" ? 10 : 1, "Rare 보상 획득 횟수", r.box, "box");
-    else if (["box_epic_reward", "box_epic_10"].includes(id)) set(a.boxEpicCount, id === "box_epic_10" ? 10 : 1, "Epic 보상 획득 횟수", r.box, "box");
-    else if (["box_legendary_reward", "box_legendary_5"].includes(id)) set(a.boxLegendaryCount, id === "box_legendary_5" ? 5 : 1, "Legendary 보상 획득 횟수", r.box, "box");
+    } else if (["box_rare_reward", "box_rare_10"].includes(id)) set(a.boxRareCount, id === "box_rare_10" ? 10 : 1, "Rare 보상 획득 횟수", r.boxRarity, "boxRarity");
+    else if (["box_epic_reward", "box_epic_10"].includes(id)) set(a.boxEpicCount, id === "box_epic_10" ? 10 : 1, "Epic 보상 획득 횟수", r.boxRarity, "boxRarity");
+    else if (["box_legendary_reward", "box_legendary_5"].includes(id)) set(a.boxLegendaryCount, id === "box_legendary_5" ? 5 : 1, "Legendary 보상 획득 횟수", r.boxRarity, "boxRarity");
     else if (chessPlayMatch) set(games.length, Number(chessPlayMatch[1]), "체스 플레이 기록 수", r.chess, "chess");
     else if (chessWinMatch) set(wins.length, Number(chessWinMatch[1]), "체스 승리 수", r.chess, "chess");
     else if (["first_chess", "chess_win_talc", "chess_win_sleeping", "chess_win_fur", "chess_win_rockey", "chess_win_army", "chess_win_doronum", "chess_win_brilliant"].includes(id)) {
@@ -2801,11 +2810,11 @@ function 업적진행도값계산(achievementId, unlocked, user) {
     else if (id === "stock_volume_1m") set(buyVolume, 1000000, "누적 매수 금액", r.stock, "stock");
     else if (id === "stock_volume_10m") set(buyVolume, 10000000, "누적 매수 금액", r.stock, "stock");
     else if (id === "stock_volume_100m") set(buyVolume, 100000000, "누적 매수 금액", r.stock, "stock");
-    else if (id === "stock_dividend_1") set(dividends.length, 1, "배당 지급 기록 수", r.stock, "stock");
-    else if (id === "stock_dividend_10") set(dividends.length, 10, "배당 지급 기록 수", r.stock, "stock");
-    else if (id === "stock_dividend_100k") set(dividendTotal, 100000, "누적 배당금", r.stock, "stock");
-    else if (id === "stock_dividend_1m") set(dividendTotal, 1000000, "누적 배당금", r.stock, "stock");
-    else if (id === "stock_dividend_10m") set(dividendTotal, 10000000, "누적 배당금", r.stock, "stock");
+    else if (id === "stock_dividend_1") set(dividends.length, 1, "배당 지급 기록 수", r.dividends, "dividends");
+    else if (id === "stock_dividend_10") set(dividends.length, 10, "배당 지급 기록 수", r.dividends, "dividends");
+    else if (id === "stock_dividend_100k") set(dividendTotal, 100000, "누적 배당금", r.dividends, "dividends");
+    else if (id === "stock_dividend_1m") set(dividendTotal, 1000000, "누적 배당금", r.dividends, "dividends");
+    else if (id === "stock_dividend_10m") set(dividendTotal, 10000000, "누적 배당금", r.dividends, "dividends");
     else if (collectionMatch) set(distinctInventory, Number(collectionMatch[1]), "보유 중인 아이템 종류 수", r.inventory, "inventory");
     else if (Object.prototype.hasOwnProperty.call(coinThresholds, id)) set(Math.max(0, Number(u.doldolcoin || 0)), coinThresholds[id], "현재 보유 돌돌코인", true, "coin");
     else if (id === "rockey_7777777") set(Math.max(0, Number(u.special_title_draws || 0)), 7, "특별 칭호 뽑기 횟수", true, "box");
