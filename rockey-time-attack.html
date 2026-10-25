@@ -380,29 +380,50 @@ function playAlarm(){
   var ctx=ensureAudio();
   if(ctx){
     try{
-      var now=ctx.currentTime;
-      // 20초 동안 부드러운 종소리 멜로디를 낮은 음량으로 반복해.
-      var duration=20,cycle=2.5,noteLength=.48,notes=[784,988,1175,988];
-      for(var base=0;base<duration;base+=cycle){
-        for(var j=0;j<notes.length;j++){
-          var offset=base+j*.48;
-          if(offset>=duration)continue;
-          var start=now+offset,osc=ctx.createOscillator(),gain=ctx.createGain();
-          osc.type="sine";
-          osc.frequency.setValueAtTime(notes[j],start);
-          gain.gain.setValueAtTime(.0001,start);
-          gain.gain.exponentialRampToValueAtTime(.12,start+.045);
-          gain.gain.exponentialRampToValueAtTime(.0001,start+noteLength);
-          osc.connect(gain);gain.connect(ctx.destination);
-          osc.start(start);osc.stop(start+noteLength+.02);
-          alarmOscillators.push(osc);
-          osc.onended=function(){var i=alarmOscillators.indexOf(this);if(i!==-1)alarmOscillators.splice(i,1);};
-        }
+      var now=ctx.currentTime,duration=20;
+      // 20초짜리 하나의 곡: 잔잔한 피아노풍 화음으로 시작해 점점 풍성해지고,
+      // 후반부에는 높은 종소리 멜로디가 올라간 뒤 부드럽게 마무리돼.
+      var melody=[
+        [0,523.25,.62,.11],[.38,659.25,.58,.095],[.76,783.99,.8,.105],[1.28,659.25,.55,.085],
+        [1.72,587.33,.65,.09],[2.12,698.46,.6,.09],[2.58,880,.9,.11],[3.18,783.99,.65,.09],
+        [3.62,659.25,.58,.085],[4.02,783.99,.58,.095],[4.42,987.77,.82,.105],[5.02,880,.65,.09],
+        [5.48,698.46,.6,.085],[5.9,880,.62,.095],[6.34,1046.5,.9,.105],[6.98,987.77,.65,.09],
+        [7.42,783.99,.58,.085],[7.82,880,.58,.09],[8.22,1174.66,.86,.105],[8.82,1046.5,.68,.09],
+        [9.3,880,.62,.085],[9.72,987.77,.65,.09],[10.18,1318.51,.9,.1],[10.82,1174.66,.7,.09],
+        [11.3,987.77,.62,.085],[11.72,1174.66,.68,.09],[12.18,1396.91,.95,.1],[12.88,1318.51,.72,.09],
+        [13.36,1046.5,.65,.085],[13.82,1174.66,.68,.09],[14.28,1567.98,1,.095],[14.98,1396.91,.75,.085],
+        [15.5,1174.66,.68,.08],[15.96,1318.51,.72,.085],[16.44,1567.98,1.05,.09],[17.2,1396.91,.78,.08],
+        [17.72,1174.66,.72,.075],[18.22,1046.5,.82,.075],[18.92,783.99,1.05,.07]
+      ];
+      // 화음은 멜로디를 받쳐 주고, 곡 전체를 하나의 음악처럼 연결해 줘.
+      var harmony=[
+        [0,261.63,1.45,.035],[0,392,1.2,.025],[1.55,293.66,1.35,.03],[1.55,440,1.2,.022],
+        [3.25,329.63,1.5,.03],[3.25,493.88,1.25,.022],[5.05,349.23,1.55,.028],[5.05,523.25,1.3,.02],
+        [6.85,392,1.55,.03],[6.85,587.33,1.3,.02],[8.65,440,1.6,.028],[8.65,659.25,1.3,.02],
+        [10.5,349.23,1.55,.027],[10.5,523.25,1.3,.02],[12.3,392,1.6,.027],[12.3,587.33,1.3,.02],
+        [14.15,293.66,1.55,.026],[14.15,440,1.3,.019],[16,329.63,1.6,.025],[16,493.88,1.3,.018],
+        [17.8,261.63,2.0,.024],[17.8,392,1.7,.017]
+      ];
+      function addBell(offset,freq,length,volume,voice){
+        if(offset>=duration)return;
+        var start=now+offset,osc=ctx.createOscillator(),gain=ctx.createGain();
+        osc.type=voice||"sine";
+        osc.frequency.setValueAtTime(freq,start);
+        gain.gain.setValueAtTime(.0001,start);
+        gain.gain.exponentialRampToValueAtTime(Math.max(.001,volume),start+.035);
+        gain.gain.exponentialRampToValueAtTime(.0001,start+length);
+        osc.connect(gain);gain.connect(ctx.destination);
+        osc.start(start);osc.stop(start+length+.025);
+        alarmOscillators.push(osc);
+        osc.onended=function(){var i=alarmOscillators.indexOf(this);if(i!==-1)alarmOscillators.splice(i,1);};
       }
+      melody.forEach(function(n){addBell(n[0],n[1],n[2],n[3],"sine");});
+      harmony.forEach(function(n){addBell(n[0],n[1],n[2],n[3],"sine");});
+      // 마지막 2초는 새 음을 겹치지 않고 여운만 남겨 자연스럽게 끝내.
     }catch(e){}
   }
   if(typeof navigator!=="undefined"&&typeof navigator.vibrate==="function"){
-    try{navigator.vibrate([180,120,180,120,280]);}catch(e){}
+    try{navigator.vibrate([140,180,140,180,220]);}catch(e){}
   }
 }
 function renderRing(remaining){
