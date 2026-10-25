@@ -2762,7 +2762,7 @@ function 업적진행도값계산(achievementId, unlocked, user) {
     else if (examMatch) set(a.examCount, Number(examMatch[1]), "등록한 시험 계획 수", r.studyExam, "studyExam");
     else if (attackMatch) set(timeAttacks.length, Number(attackMatch[1]), "타임어택 기록 수", r.studyAttack, "studyAttack");
     else if (questionMatch) set(questionTotal, Number(questionMatch[1]), "타임어택 누적 문제 수", r.studyAttack, "studyAttack");
-    else if (id === "bank_account_opened") set(a.bankAccounts.some(row => !/closed|deleted/i.test(String(row.status || ""))) ? 1 : 0, 1, "개설 중인 은행 계좌", r.bankAccounts, "bankAccounts");
+    else if (id === "bank_account_opened") set(a.bankAccounts.some(row => !["closed","deleted"].includes(String(row.status || "").trim().toLowerCase())) ? 1 : 0, 1, "개설 중인 은행 계좌", r.bankAccounts, "bankAccounts");
     else if (transferMatch) set(transferCount, Number(transferMatch[1]), "송금 거래 기록 수", r.bankTransactions, "bankTransactions");
     else if (bankTransactionMatch) set(bankTransactions.length, Number(bankTransactionMatch[1]), "은행 거래 기록 수", r.bankTransactions, "bankTransactions");
     else if (depositMatch) set(deposits.length, Number(depositMatch[1]), "개설한 예금 수", r.bankDeposits, "bankDeposits");
@@ -2816,11 +2816,11 @@ function 업적진행도값계산(achievementId, unlocked, user) {
     else if (id === "stock_dividend_10m") set(dividendTotal, 10000000, "누적 배당금", r.dividends, "dividends");
     else if (collectionMatch) set(distinctInventory, Number(collectionMatch[1]), "보유 중인 아이템 종류 수", r.inventory, "inventory");
     else if (Object.prototype.hasOwnProperty.call(coinThresholds, id)) set(Math.max(0, Number(u.doldolcoin || 0)), coinThresholds[id], "현재 보유 돌돌코인", true, "coin");
-    else if (id === "rockey_7777777") set(Math.max(0, Number(u.special_title_draws || 0)), 7, "특별 칭호 뽑기 횟수", true, "box");
-    else if (id === "read_news") set(hasReadNews ? 1 : 0, 1, "돌이신문 읽기 여부", true, "news");
-    else if (id === "read_1_news") set(newsNumbers.length, 1, "돌이신문 읽기 기록", true, "news");
-    else if (id === "read_10_news") set(newsNumbers.length, 10, "읽은 돌이신문 수", true, "news");
-    else if (id === "quiz_correct") set(u.quiz_right === true ? 1 : 0, 1, "저장된 퀴즈 정답 상태", true, "news");
+    else if (id === "rockey_7777777") set(Math.max(0, Number(u.special_title_draws || 0)), 7, "특별 칭호 뽑기 횟수", true, "general");
+    else if (id === "read_news") set(hasReadNews ? 1 : 0, 1, "돌이신문 읽기 여부", true, "general");
+    else if (id === "read_1_news") set(newsNumbers.length, 1, "돌이신문 읽기 기록", true, "general");
+    else if (id === "read_10_news") set(newsNumbers.length, 10, "읽은 돌이신문 수", true, "general");
+    else if (id === "quiz_correct") set(u.quiz_right === true ? 1 : 0, 1, "저장된 퀴즈 정답 상태", true, "general");
     else if (id === "first_login") set(u.user_id ? 1 : 0, 1, "로그인 기록", true, "general");
     else mapped = false;
 
