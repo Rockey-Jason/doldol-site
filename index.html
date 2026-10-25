@@ -1966,6 +1966,13 @@ body.로그인상태 #회원가입 {
 @media(prefers-reduced-motion:reduce){.업적진행도채움{animation:none}}
 
 .업적바로가기버튼{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(105,217,255,.28);background:rgba(105,217,255,.1);color:#c8f4ff;text-decoration:none;font-size:12px;font-weight:700}.업적바로가기버튼:hover{background:rgba(105,217,255,.2)}
+.업적전체요약{margin:0 0 18px;padding:17px;border:1px solid rgba(125,145,255,.24);border-radius:18px;background:linear-gradient(135deg,rgba(76,95,190,.18),rgba(8,14,38,.4))}
+.업적전체요약>div:first-child{display:flex;align-items:baseline;gap:7px;flex-wrap:wrap;color:#cbd4f7;font-size:13px}.업적전체요약 strong{font-size:24px;color:#fff;font-variant-numeric:tabular-nums}.업적전체진행바{height:7px;margin-top:12px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.1)}.업적전체진행바 span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#817aff,#66dcff);transition:width .45s ease}.업적전체안내{margin-top:10px;color:#aab7d7;font-size:12px;line-height:1.55}
+.업적분야탐색{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0 0 24px}.업적분야칩{min-width:0;display:grid;grid-template-columns:30px minmax(0,1fr) auto 12px;align-items:center;gap:6px;text-align:left;padding:10px;border:1px solid rgba(144,160,255,.17);border-radius:13px;background:linear-gradient(145deg,rgba(38,49,93,.68),rgba(8,13,31,.83));color:#eaf0ff;cursor:pointer;transition:transform .2s ease,border-color .2s ease,background .2s ease}.업적분야칩:hover{transform:translateY(-2px);border-color:rgba(107,213,255,.5);background:linear-gradient(145deg,rgba(50,70,125,.78),rgba(8,13,31,.9))}.업적분야칩아이콘{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:rgba(145,164,255,.12);font-size:17px}.업적분야칩텍스트{min-width:0;font-size:11px;font-weight:800;overflow-wrap:anywhere}.업적분야칩수치{font-size:10px;color:#9edcff;font-variant-numeric:tabular-nums;white-space:nowrap}.업적분야칩화살표{color:#8c9cc4;font-size:12px}
+.업적분야섹션{scroll-margin-top:18px;margin:0 0 28px;padding-top:16px;border-top:1px solid rgba(136,154,231,.2)}.업적분야헤더{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}.업적분야헤더주제{display:flex;align-items:center;gap:11px;min-width:0}.업적분야아이콘{width:44px;height:44px;display:grid;place-items:center;flex:0 0 auto;border:1px solid rgba(146,164,255,.22);border-radius:14px;background:linear-gradient(145deg,rgba(102,121,225,.2),rgba(15,25,53,.45));font-size:22px}.업적분야헤더 h3{margin:0;color:#f5f7ff;font-size:17px;font-weight:800}.업적분야헤더 p{margin:5px 0 0;color:#929fbe;font-size:11px;line-height:1.4}.업적분야헤더오른쪽{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.업적분야완료수{color:#b6c5e8;font-size:11px;font-variant-numeric:tabular-nums}.업적분야파트버튼{display:inline-flex;align-items:center;justify-content:center;padding:8px 11px;border:1px solid rgba(107,213,255,.3);border-radius:10px;background:linear-gradient(130deg,rgba(52,165,218,.16),rgba(104,96,255,.13));color:#c8f4ff;text-decoration:none;font-size:11px;font-weight:800;transition:transform .2s ease,background .2s ease}.업적분야파트버튼:hover{transform:translateY(-1px);background:linear-gradient(130deg,rgba(52,165,218,.26),rgba(104,96,255,.22))}
+.업적분야카드목록{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.업적분야카드목록>.업적카드{min-width:0;margin:0}.업적카드.is-completed{opacity:1;border-color:rgba(74,222,151,.35);background:linear-gradient(145deg,rgba(20,70,57,.34),rgba(8,13,31,.78))}.업적카드아이콘{display:inline-grid;place-items:center;flex:0 0 auto;width:29px;height:29px;margin-right:7px;border-radius:9px;background:rgba(255,255,255,.07)}.업적이름{display:flex;align-items:center;gap:5px;min-width:0}.업적이름>span:nth-child(2){overflow-wrap:anywhere}.업적획득태그{margin-left:auto;padding:3px 6px;border-radius:999px;background:rgba(61,210,133,.14);color:#8ff0bd;font-size:10px;white-space:nowrap}
+@media(max-width:560px){.업적분야탐색{grid-template-columns:minmax(0,1fr)}.업적분야카드목록{grid-template-columns:minmax(0,1fr)}.업적분야헤더오른쪽{width:100%;justify-content:space-between}.업적분야완료수{font-size:10px}.업적분야헤더 h3{font-size:15px}}
+
 .일일미션바로가기{display:inline-flex;align-items:center;justify-content:center;margin:0 5px 5px 0;padding:7px 10px;border:1px solid rgba(105,217,255,.25);border-radius:10px;background:rgba(105,217,255,.09);color:#bfefff;text-decoration:none;font-size:11px;font-weight:800;white-space:nowrap}.일일미션바로가기:hover{background:rgba(105,217,255,.17)}
 </style>
 
@@ -3796,21 +3803,27 @@ function 패널닫기() {
 
 
 function 업적바로가기URL(id) {
- const routes = {
- first_chess:"https://rockey-jason.github.io/rockey-chess/",chess_10_win:"https://rockey-jason.github.io/rockey-chess/",chess_100_win:"https://rockey-jason.github.io/rockey-chess/",
- chess_win_army:"https://rockey-jason.github.io/rockey-chess/",chess_win_brilliant:"https://rockey-jason.github.io/rockey-chess/",chess_win_doronum:"https://rockey-jason.github.io/rockey-chess/",
- chess_win_fur:"https://rockey-jason.github.io/rockey-chess/",chess_win_rockey:"https://rockey-jason.github.io/rockey-chess/",chess_win_sleeping:"https://rockey-jason.github.io/rockey-chess/",chess_win_talc:"https://rockey-jason.github.io/rockey-chess/",
- first_box:"https://rockey-jason.github.io/doldol-site/Randombox.html",tenth_box:"https://rockey-jason.github.io/doldol-site/Randombox.html",hundred_box:"https://rockey-jason.github.io/doldol-site/Randombox.html",thousand_box:"https://rockey-jason.github.io/doldol-site/Randombox.html",
- first_stock:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_bandoche:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_food:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_rockeycloth:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_rockeypaper:"https://rockey-jason.github.io/doldol-site/doldolstock.html",
- read_news:"https://rockey-jason.github.io/doldol-site/rockeynews.html",read_1_news:"https://rockey-jason.github.io/doldol-site/rockeynews.html",read_10_news:"https://rockey-jason.github.io/doldol-site/rockeynews.html",quiz_correct:"https://rockey-jason.github.io/doldol-site/rockeynews.html",
- rich:"https://rockey-jason.github.io/doldol-site/Randombox.html",very_rich:"https://rockey-jason.github.io/doldol-site/Randombox.html",super_rich:"https://rockey-jason.github.io/doldol-site/Randombox.html",rockey_7777777:"https://rockey-jason.github.io/doldol-site/Randombox.html",first_login:"https://rockey-jason.github.io/doldol-site/"
- };
- return routes[String(id||"").toLowerCase()] || "https://rockey-jason.github.io/doldol-site/";
+ const value = String(id || "").toLowerCase();
+ const base = "https://rockey-jason.github.io/doldol-site/";
+ if (/^chess_|^first_chess$/.test(value)) return "https://rockey-jason.github.io/rockey-chess/";
+ if (/box|rockey_7777777/.test(value)) return base + "Randombox.html";
+ if (/^stock_|^first_stock$|^first_bandoche$|^first_food$|^first_rockeycloth$|^first_rockeypaper$|^first_dori_electronics$|^first_rockey_doronium$/.test(value)) return base + "doldolstock.html";
+ if (/^bank_/.test(value)) return base + "dori-bank.html";
+ if (/^study_focus_/.test(value)) return base + "rockey-study-focus.html";
+ if (/^study_exam_/.test(value)) return base + "rockey-study-planner.html";
+ if (/^study_time_attack_|^study_questions_/.test(value)) return base + "rockey-time-attack.html";
+ if (/^study_/.test(value)) return base + "rockey-study.html";
+ if (/^mission_/.test(value)) return base + "daily-missions.html";
+ if (/^attendance_/.test(value)) return base + "index.html?open=attendance";
+ if (/^read_|^news_survey_|^quiz_correct$/.test(value)) return base + "rockeynews.html";
+ if (/^event_/.test(value)) return base + "rockeynews.html";
+ if (/^collection_/.test(value)) return base + "doldolcoinmart.html";
+ if (/^coin_|^rich$|^very_rich$|^super_rich$/.test(value)) return base + "doldolcoinmart.html";
+ return base + "index.html";
 }
 function 업적바로가기버튼HTML(id, unlocked) {
- return unlocked ? "" : '<a class="업적바로가기버튼" href="' + 업적바로가기URL(id) + '">바로가기 ↗</a>';
+ return '<a class="업적바로가기버튼" href="' + 업적바로가기URL(id) + '">해당 파트로 가기 ↗</a>';
 }
-
 
 /* 체스 사이트에서 돌아오거나 화면이 다시 활성화되면 최신 업적 기록을 다시 읽습니다. */
 let 마지막업적기록새로고침 = 0;
@@ -3839,152 +3852,95 @@ function 프로필업적진행도HTML(achievement, unlocked) {
     return '<div class="업적진행도"><div class="업적진행도헤더"><span>진행도 · ' + p.label + '</span><span class="업적진행도수치">' + amount + ' (' + percent + '%)</span></div><div class="업적진행도트랙" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + percent + '"><div class="업적진행도채움" style="--progress:' + percent + '%"></div></div><div class="업적진행도안내">' + note + '</div>' + 업적바로가기버튼HTML(achievement?.id, unlocked) + '</div>';
 }
 
+const 업적분야목록 = [
+    { key: "attendance", name: "출석 · 일일 미션", icon: "📅", route: "index.html?open=attendance", description: "출석 기록과 하루하루 미션" },
+    { key: "study", name: "공부 · 시험", icon: "📚", route: "rockey-study.html", description: "집중 학습, 시험 계획, 타임어택" },
+    { key: "bank", name: "돌이 은행", icon: "🏦", route: "dori-bank.html", description: "계좌, 송금, 예금, 대출" },
+    { key: "stock", name: "돌돌증권", icon: "📈", route: "doldolstock.html", description: "주식 매매, 투자, 배당금" },
+    { key: "box", name: "랜덤 박스", icon: "🎁", route: "Randombox.html", description: "박스 개봉과 희귀 보상" },
+    { key: "chess", name: "체스", icon: "♟️", route: "https://rockey-jason.github.io/rockey-chess/", description: "대국, 승리, 상대별 도전" },
+    { key: "news", name: "돌이신문", icon: "📰", route: "rockeynews.html", description: "신문 읽기, 퀴즈, 설문 참여" },
+    { key: "events", name: "이벤트", icon: "🎉", route: "rockeynews.html", description: "이벤트 참가와 이벤트 퀴즈" },
+    { key: "collection", name: "코인 · 아이템 수집", icon: "💎", route: "doldolcoinmart.html", description: "자산 목표와 아이템 컬렉션" },
+    { key: "general", name: "사이트 · 특별 업적", icon: "🌟", route: "index.html", description: "로그인과 특별한 도전" }
+];
+
+function 업적분야키가져오기(id) {
+    const value = String(id || "").toLowerCase();
+    if (/^attendance_|^mission_/.test(value)) return "attendance";
+    if (/^study_/.test(value)) return "study";
+    if (/^bank_/.test(value)) return "bank";
+    if (/^stock_|^first_stock$|^first_bandoche$|^first_food$|^first_rockeycloth$|^first_rockeypaper$|^first_dori_electronics$|^first_rockey_doronium$/.test(value)) return "stock";
+    if (/box|rockey_7777777/.test(value)) return "box";
+    if (/^chess_|^first_chess$/.test(value)) return "chess";
+    if (/^read_|^news_survey_|^quiz_correct$/.test(value)) return "news";
+    if (/^event_/.test(value)) return "events";
+    if (/^collection_|^coin_|^rich$|^very_rich$|^super_rich$/.test(value)) return "collection";
+    return "general";
+}
+
 function 업적화면표시() {
+    패널제목.textContent = "🏆 업적";
+    업적탭.classList.add("active");
+    칭호탭.classList.remove("active");
 
-    패널제목.textContent =
-        "🏆 업적";
-
-
-    업적탭.classList.add(
-        "active"
-    );
-
-    칭호탭.classList.remove(
-        "active"
-    );
-
-
-    if (
-        업적목록.length === 0
-    ) {
-
-        패널내용.innerHTML = `
-
-            <div style="
-                text-align:center;
-                padding:40px;
-                color:#aaa;
-            ">
-
-                업적이 없습니다.
-
-            </div>
-
-        `;
-
+    if (!업적목록.length) {
+        패널내용.innerHTML = '<div style="text-align:center;padding:40px;color:#aaa">업적 정보를 불러오지 못했거나 등록된 업적이 없습니다.</div>';
         return;
-
     }
 
+    const total = 업적목록.length;
+    const unlockedCount = 업적목록.filter(item => 업적획득여부(item.id)).length;
+    const groups = 업적분야목록.map(category => {
+        const items = 업적목록.filter(item => 업적분야키가져오기(item.id) === category.key);
+        return { ...category, items, earned: items.filter(item => 업적획득여부(item.id)).length };
+    }).filter(group => group.items.length > 0);
 
-    const 획득수 =
-        업적목록.filter(
-            a => 업적획득여부(a.id)
-        ).length;
+    let html = '<div class="업적전체요약"><div><strong>' + unlockedCount.toLocaleString() + ' / ' + total.toLocaleString() +
+        '</strong><span>개의 업적을 획득했어요</span></div><div class="업적전체진행바"><span style="width:' +
+        Math.round(unlockedCount / Math.max(1,total) * 100) + '%"></span></div><div class="업적전체안내">분야를 선택해 해당 업적만 모아 보고, 바로가기로 실제 활동 화면으로 이동할 수 있어요.</div></div>';
 
+    html += '<div class="업적분야탐색" aria-label="업적 분야 바로가기">';
+    groups.forEach(group => {
+        html += '<button type="button" class="업적분야칩" data-achievement-jump="' + group.key + '">' +
+            '<span class="업적분야칩아이콘">' + group.icon + '</span><span class="업적분야칩텍스트">' + escapeHTML(group.name) +
+            '</span><span class="업적분야칩수치">' + group.earned + '/' + group.items.length + '</span><span class="업적분야칩화살표">↓</span></button>';
+    });
+    html += '</div>';
 
-    let html = `
+    groups.forEach(group => {
+        html += '<section class="업적분야섹션" id="achievement-section-' + group.key + '"><header class="업적분야헤더">' +
+            '<div class="업적분야헤더주제"><span class="업적분야아이콘">' + group.icon + '</span><div><h3>' + escapeHTML(group.name) +
+            '</h3><p>' + escapeHTML(group.description) + '</p></div></div><div class="업적분야헤더오른쪽"><span class="업적분야완료수">' +
+            group.earned + ' / ' + group.items.length + '개 달성</span><a class="업적분야파트버튼" href="' + group.route +
+            '">파트로 가기 ↗</a></div></header><div class="업적분야카드목록">';
 
-        <div style="
-            margin-bottom:20px;
-            color:#aaa;
-        ">
+        group.items.forEach(achievement => {
+            const earned = 업적획득여부(achievement.id);
+            const icon = achievement.icon || (earned ? "🏆" : "🔒");
+            html += '<article class="업적카드 ' + (earned ? 'is-completed' : '미획득') + '">' +
+                '<div class="업적이름"><span class="업적카드아이콘">' + escapeHTML(icon) + '</span><span>' +
+                escapeHTML(achievement.이름) + '</span>' + (earned ? '<span class="업적획득태그">획득</span>' : '') + '</div>' +
+                '<div class="업적설명">' + escapeHTML(achievement.설명 || '') + '</div>' +
+                프로필업적진행도HTML(achievement, earned) +
+                '<div class="업적정보">⭐ ' + escapeHTML(achievement.희귀도 || "Common") +
+                '<br>💰 ' + Number(achievement.보상?.돌돌코인 || 0).toLocaleString() + ' 돌돌코인' +
+                '<br>✨ ' + Number(achievement.보상?.경험치 || 0).toLocaleString() + ' EXP' +
+                (achievement.칭호 ? '<br><span class="칭호태그">🏷️ ' + escapeHTML(achievement.칭호) + '</span>' : '') +
+                '</div></article>';
+        });
 
-            ${획득수} / ${업적목록.length}
-            업적 획득
+        html += '</div></section>';
+    });
 
-        </div>
-
-    `;
-
-
-    for (
-        const achievement
-        of 업적목록
-    ) {
-
-        const 획득 =
-            업적획득여부(
-                achievement.id
-            );
-
-
-        html += `
-
-            <div class="
-                업적카드
-                ${획득 ? "" : "미획득"}
-            ">
-
-                <div class="업적이름">
-
-                    ${
-                        획득
-                            ? "🏆"
-                            : "🔒"
-                    }
-
-                    ${achievement.이름}
-
-                </div>
-
-
-                <div class="업적설명">
-
-                    ${achievement.설명}
-
-                </div>
-
-
-                ${프로필업적진행도HTML(achievement, 획득)}
-
-                <div class="업적정보">
-
-                    ⭐ ${achievement.희귀도}
-
-                    <br>
-
-                    💰
-                    ${Number(
-                        achievement.보상.돌돌코인
-                    ).toLocaleString()}
-                    돌돌코인
-
-                    <br>
-
-                    ✨
-                    ${Number(
-                        achievement.보상.경험치
-                    ).toLocaleString()}
-                    EXP
-
-                    ${
-                        achievement.칭호
-                            ? `
-                                <br>
-
-                                <span class="칭호태그">
-
-                                    🏷️
-                                    ${achievement.칭호}
-
-                                </span>
-                            `
-                            : ""
-                    }
-
-                </div>
-
-            </div>
-
-        `;
-
-    }
-
-
-    패널내용.innerHTML =
-        html;
-
+    패널내용.innerHTML = html;
+    패널내용.querySelectorAll("[data-achievement-jump]").forEach(button => {
+        button.addEventListener("click", () => {
+            const key = button.getAttribute("data-achievement-jump");
+            const target = document.getElementById("achievement-section-" + key);
+            if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+    });
 }
 
 
