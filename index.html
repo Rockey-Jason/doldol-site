@@ -3997,6 +3997,19 @@ function 보유칭호목록() {
     }
 
 
+    // 돌이 패스에서 획득한 시즌 칭호도 기존 프로필 칭호 목록에 표시한다.
+    for (const passTitle of (window.doriPassCosmetics || [])) {
+        if (passTitle.kind !== "title" || !passTitle.name || 중복방지.has(passTitle.name)) continue;
+        중복방지.add(passTitle.name);
+        결과.push({
+            title: passTitle.name,
+            achievement: {
+                이름: "돌이 패스 · " + (passTitle.season_key || "시즌 보상"),
+                설명: "돌이 패스로 획득한 시즌 한정 칭호"
+            }
+        });
+    }
+
     return 결과;
 
 }
@@ -4299,6 +4312,16 @@ async function 칭호저장() {
 
     }
 
+
+    // 패스 칭호 장착 상태도 동기화해 두 화면의 장착 표시가 어긋나지 않게 한다.
+    try {
+        const passTitleSync = await supabase.rpc("dori_pass_sync_title_selection", {
+            p_title: 선택한칭호
+        });
+        if (passTitleSync.error) console.warn("[돌이 패스] 칭호 상태 동기화 실패:", passTitleSync.error);
+    } catch (passTitleError) {
+        console.warn("[돌이 패스] 칭호 상태 동기화 예외:", passTitleError);
+    }
 
     현재유저정보.equipped_title =
         선택한칭호;
