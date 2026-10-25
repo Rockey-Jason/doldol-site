@@ -187,15 +187,15 @@ function renderMegaMission(data){
  const objectives=Array.isArray(mega.objectives)?mega.objectives:[];
  const claimed=mega.claimed===true,complete=mega.complete===true,claimable=mega.claimable===true;
  host.innerHTML='<div class="mega-mission-card '+(claimed?"is-claimed":"")+'"><div class="mega-card-glow"></div>'+
- '<div class="mega-card-head"><div class="mega-boss-emblem">✦<span>MEGA</span></div><div class="mega-title-copy"><div class="mega-kicker">WEEKLY BOSS · MEGA EXPEDITION</div><h3>메가 돌이 미션</h3><p>여섯 가지 대원정 목표를 모두 달성하고 전설급 보급품을 획득하세요.</p></div><div class="mega-status '+(claimed?"claimed":complete?"complete":"")+'">'+(claimed?"정복 완료":complete?"최종 보상 개방":"주간 도전")+'</div></div>'+
+ '<div class="mega-card-head"><div class="mega-boss-emblem">✦<span>MEGA</span></div><div class="mega-title-copy"><div class="mega-kicker">WEEKLY BOSS · MEGA EXPEDITION</div><h3>메가 돌이 미션</h3><p>여섯 가지 극한 목표를 전부 돌파하고 초희귀 은하 프레임을 쟁취하세요.</p></div><div class="mega-status '+(claimed?"claimed":complete?"complete":"")+'">'+(claimed?"정복 완료":complete?"최종 보상 개방":"주간 도전")+'</div></div>'+
  '<div class="mega-progress-head"><span>메가 미션 진행도</span><strong>'+fmt(mega.completed_objectives||0)+' <i>/ '+fmt(mega.total_objectives||6)+'</i></strong></div><div class="mega-progress-track"><span style="width:'+Math.min(100,(Number(mega.completed_objectives)||0)/Math.max(1,Number(mega.total_objectives)||6)*100)+'%"></span></div>'+
  '<div class="mega-objective-grid">'+objectives.map((o,i)=>'<article class="mega-objective '+(o.complete?"complete":"")+'"><span class="mega-objective-number">'+String(i+1).padStart(2,"0")+'</span><div class="mega-objective-copy"><strong>'+escapeHtml(o.title)+'</strong><p>'+escapeHtml(o.description)+'</p><div class="mega-objective-progress"><span style="width:'+Math.min(100,(Number(o.progress)||0)/Math.max(1,Number(o.target)||1)*100)+'%"></span></div><small>'+fmt(o.progress)+' / '+fmt(o.target)+(o.complete?' · 달성 ✓':'')+'</small></div><span class="mega-objective-check">'+(o.complete?"✓":"✧")+'</span></article>').join("")+'</div>'+
  '<div class="mega-rewards"><div class="mega-reward-heading"><span>✧ FINAL LOOT</span><strong>최종 보상 상자</strong></div><div class="mega-reward-items">'+
  '<div class="mega-reward-item rp"><span>💠</span><div><strong>+8,000 RP</strong><small>로키 포인트 대보급</small></div></div>'+
  '<div class="mega-reward-item coins"><span>🪙</span><div><strong>+'+fmt(mega.display_coin_reward??mega.base_coin_reward)+' 돌돌코인</strong><small>'+(Number(mega.coin_multiplier)>1?'현재 부스트 ×'+Number(mega.coin_multiplier).toLocaleString("ko-KR")+' 적용':'대규모 코인 금고')+'</small></div></div>'+
- '<div class="mega-reward-item title"><span>👑</span><div><strong>메가 미션 정복자</strong><small>MYTH 한정 칭호</small></div></div>'+
+ ''+
  '<div class="mega-reward-item frame"><span>🌌</span><div><strong>메가 은하 프레임</strong><small>LEGENDARY 프로필 프레임</small></div></div></div>'+
- '<div class="mega-reward-footer"><span>매주 월요일 00:00 · 한국 시간 초기화</span><button type="button" class="mega-claim-button" data-claim-mega '+(!claimable?"disabled":"")+'>'+(claimed?"✓ 메가 미션 보상 수령 완료":claimable?"최종 보상 전부 받기 ✦":"6개 목표를 모두 완료하세요")+'</button></div></div></div>';
+ '<div class="mega-reward-footer"><span>매주 월요일 00:00 · 한국 시간 초기화</span><button type="button" class="mega-claim-button" data-claim-mega '+(!claimable?"disabled":"")+'>'+(claimed?"✓ 메가 미션 보상 수령 완료":claimable?"최종 보상 전부 받기 ✦":"극한 목표 6개를 전부 완료하세요")+'</button></div></div></div>';
 }
 function renderChallenges(data){
  const items=Array.isArray(data.challenges)?data.challenges:[];
