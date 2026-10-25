@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#071b2d">
+<title>dog sailer — 작은 강아지, 넓은 바다</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Jua&family=Nunito:wght@400;600;700;800;900&display=swap');
+@font-face{font-family:Hancom;src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+:root{--navy:#071b2d;--deep:#092638;--sea:#267e98;--mint:#b6e7d1;--cream:#fff4d9;--gold:#f6d28a;--muted:#9fb9c7;--panel:rgba(9,31,48,.93);--line:rgba(184,224,235,.17);--ease:cubic-bezier(.22,1,.36,1)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;min-height:100%;background:#061522;color:#f4f8f6;font-family:Hancom,'Jua',sans-serif}
+body{padding:0 16px 24px;background:radial-gradient(ellipse at 50% -15%,#1c5264 0%,#0b2a3b 42%,#061522 100%);overflow-x:hidden}
+button,a{font:inherit}button{color:inherit;cursor:pointer}button:focus-visible,a:focus-visible{outline:2px solid #f6d28a;outline-offset:3px}
+.topbar{width:min(1240px,100%);margin:auto;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:20px 0 14px}
+.back{display:inline-flex;align-items:center;gap:8px;color:#d9ebef;text-decoration:none;font-size:14px;border:1px solid var(--line);border-radius:999px;padding:10px 15px;background:#ffffff08;transition:all .25s var(--ease)}
+.back:hover{background:#ffffff14;transform:translateY(-2px);border-color:#abd8df55}
+.brand{display:flex;align-items:center;gap:10px;font:900 18px Nunito,sans-serif;letter-spacing:.1em;color:#e9f5f0}
+.brand-mark{display:grid;place-items:center;width:32px;height:32px;border:1px solid #b6e7d177;border-radius:10px;background:linear-gradient(145deg,#b6e7d122,#fff2d911);color:var(--mint);font-size:18px}
+.sound-toggle{border:1px solid var(--line);background:#ffffff08;padding:10px 14px;border-radius:999px;color:#c3dce3}
+main{width:min(1240px,100%);margin:auto}
+.intro-line{display:flex;justify-content:space-between;align-items:end;gap:18px;margin:10px 0 16px}
+.eyebrow{font:800 10px Nunito,sans-serif;letter-spacing:.28em;color:#9edbcf;text-transform:uppercase}
+h1{font:900 clamp(28px,5vw,44px)/1.08 Nunito,Hancom,sans-serif;letter-spacing:-.04em;margin:7px 0 8px;color:#f7f4e8}
+.subtitle{color:#a7c0cb;font-size:15px;line-height:1.6;margin:0}
+.status-pill{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid #b6e7d124;border-radius:999px;background:#b6e7d109;color:#b6e7d1;font-size:12px;white-space:nowrap}
+.status-pill i{width:6px;height:6px;border-radius:50%;background:#88d9b9;box-shadow:0 0 12px #88d9b9;animation:pulse 2.8s infinite}
+.game-frame{position:relative;isolation:isolate;overflow:hidden;border:1px solid #a5d6dc2d;border-radius:24px;background:#092b40;box-shadow:0 22px 80px #0005,0 0 0 1px #ffffff05,inset 0 1px #ffffff12}
+.game-frame:before{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;border-radius:inherit;box-shadow:inset 0 0 0 1px #ffffff08,inset 0 -30px 80px #06172420}
+.canvas-wrap{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:#2e8ca2}
+#world{display:block;width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;touch-action:none}
+.hud-top{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:start;gap:8px;pointer-events:none;z-index:3}
+.hud-glass{display:flex;align-items:center;gap:9px;padding:8px 11px;border-radius:12px;border:1px solid #e2f7ed28;background:#0a2938ca;backdrop-filter:blur(8px);box-shadow:0 4px 16px #05162033;font-size:12px;color:#ecf6ef}
+.sun-dot{color:#f8d79a}
+.coin-small{color:#ffe2a3}
+.hud-bottom{position:absolute;left:12px;right:12px;bottom:12px;display:flex;justify-content:space-between;align-items:end;gap:8px;z-index:3;pointer-events:none}
+.objective{max-width:min(370px,70%);padding:10px 13px;border:1px solid #d6f1e12d;border-radius:13px;background:#092738df;backdrop-filter:blur(10px);box-shadow:0 8px 20px #06152029}
+.objective-label{font:800 9px Nunito,sans-serif;letter-spacing:.2em;color:#a5daca;margin-bottom:4px}
+#objectiveText{font-size:12px;color:#f3f5e9;line-height:1.5}
+#toast{position:absolute;z-index:8;left:50%;top:19%;transform:translate(-50%,-8px);opacity:0;pointer-events:none;max-width:80%;padding:10px 15px;border:1px solid #c8f5e45a;border-radius:13px;background:#092a3beF;box-shadow:0 12px 30px #00101a70;color:#f2fff8;font-size:13px;text-align:center;transition:opacity .28s,transform .28s var(--ease)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast:before{content:"✦ ";color:#f7d99c}
+#interactHint{padding:9px 12px;border-radius:12px;background:#082639de;border:1px solid #e5f4ef24;color:#dae9e8;font-size:11px;white-space:nowrap}
+#interactHint b{display:inline-grid;place-items:center;min-width:20px;padding:2px 4px;margin-right:5px;border:1px solid #b7e1d855;border-radius:5px;color:#d1f1e2;background:#ffffff0b}
+.game-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:13px 15px;background:linear-gradient(180deg,#0b2b3d,#082336);border-top:1px solid #a5d6dc21}
+.footer-left,.footer-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.tool-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;padding:8px 12px;border:1px solid #b7dce125;border-radius:10px;background:#ffffff07;color:#d9e9e9;font-size:12px;transition:transform .2s var(--ease),background .2s,border-color .2s}
+.tool-btn:hover{transform:translateY(-2px);background:#ffffff12;border-color:#b6e7d155}
+.tool-btn .key{font:700 9px Nunito,sans-serif;color:#94b8c0;border-left:1px solid #9abac129;padding-left:7px}
+.tool-btn.primary{background:#b6e7d117;border-color:#b6e7d14a;color:#d5f6e6}
+.foot-note{font-size:11px;color:#7e9da8}
+.info-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin-top:15px}
+.info-card{border:1px solid #a5d6dc1d;border-radius:17px;background:linear-gradient(145deg,#0c2c3eab,#071c2bbd);padding:17px 18px}
+.card-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:7px}
+.card-head h2{font:800 13px Nunito,Hancom,sans-serif;letter-spacing:.06em;margin:0;color:#eaf5ee}
+.card-head span{font-size:10px;color:#82b9b6}
+.info-card p{margin:0;color:#9bb7c2;font-size:12px;line-height:1.8}
+.controls-list{display:flex;gap:8px;flex-wrap:wrap;margin-top:11px}
+.key-cap{font:700 10px Nunito,sans-serif;color:#b4d0d7;border:1px solid #9acbd42c;background:#ffffff06;border-radius:6px;padding:5px 7px}
+.modal-backdrop{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;padding:15px;background:#020b12b8;backdrop-filter:blur(9px);opacity:0;transition:opacity .25s}
+.modal-backdrop.open{display:flex}
+.modal-backdrop.visible{opacity:1}
+.modal{position:relative;width:min(620px,100%);max-height:min(82vh,740px);overflow:auto;border:1px solid #bce4e33d;border-radius:22px;background:linear-gradient(145deg,#113449f7,#081c2dfc);box-shadow:0 30px 100px #0009;transform:translateY(14px) scale(.985);transition:transform .35s var(--ease)}
+.modal-backdrop.visible .modal{transform:translateY(0) scale(1)}
+.modal-head{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:12px;padding:19px 20px;background:#0b2839ed;border-bottom:1px solid #bce4e31c;backdrop-filter:blur(15px)}
+.modal-head h2{margin:0;font:900 20px Nunito,Hancom,sans-serif;color:#f5f4e6}
+.close{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;border:1px solid #c6e5e322;background:#ffffff08;color:#d7e9e8;font-size:18px}
+.modal-content{padding:18px 20px 22px}
+.story-cover{border-radius:14px;padding:16px;background:linear-gradient(120deg,#194d60,#102d45);border:1px solid #b6e7d12b;margin-bottom:14px}
+.story-cover .eyebrow{margin-bottom:8px}
+.story-cover p{margin:0;color:#e1efdf;font-size:14px;line-height:1.85}
+.list-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.item-card,.save-card,.quest-card{padding:12px;border:1px solid #b4dfe41e;border-radius:12px;background:#ffffff05;min-width:0}
+.item-card{display:grid;grid-template-columns:36px 1fr auto;gap:9px;align-items:center}
+.item-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:10px;background:#b6e7d10d;border:1px solid #b6e7d11c;font-size:21px}
+.item-name{font-size:12px;color:#eff6ef}
+.item-desc{font-size:10px;line-height:1.55;color:#8eabb6;margin-top:3px}
+.item-count{font:800 12px Nunito,sans-serif;color:#ffe2a5}
+.row-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:15px}
+.action-button{border:1px solid #a8d6d835;border-radius:10px;background:#b6e7d10d;color:#deefe6;padding:10px 13px;font-size:12px;transition:all .2s var(--ease)}
+.action-button:hover{transform:translateY(-2px);background:#b6e7d11b;border-color:#a8d6d880}
+.action-button.emphasis{background:linear-gradient(120deg,#b6e7d123,#f3d79d18);border-color:#b6e7d155;color:#fff0cc}
+.action-button.danger{color:#ffbdb3;border-color:#ffaca52d}
+.quest-card{margin-bottom:9px}
+.quest-card strong{display:block;color:#f2f3e8;font-size:13px;margin-bottom:5px}
+.quest-card p{margin:0;color:#9eb8c1;font-size:12px;line-height:1.8}
+.quest-state{display:inline-block;margin-top:8px;padding:4px 7px;border-radius:6px;color:#b9ead3;background:#b6e7d10b;font-size:10px}
+.map-preview{position:relative;width:100%;aspect-ratio:16/10;overflow:hidden;border:1px solid #8fd1d524;border-radius:14px;background:#1e6b86}
+.map-preview canvas{width:100%;height:100%;image-rendering:pixelated}
+.map-legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;color:#9dbac4;font-size:11px}
+.legend-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px}
+.dialogue-box{position:absolute;left:10%;right:10%;bottom:8%;z-index:9;padding:14px 17px;border:1px solid #f7e6bd77;border-radius:14px;background:#09283cf4;box-shadow:0 15px 35px #06111d8a;animation:dialogueIn .28s var(--ease)}
+.dialogue-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.dialogue-name{font-size:12px;color:#f3d99e}
+.dialogue-next{font-size:10px;color:#92b8bd}
+#dialogueText{font-size:13px;line-height:1.85;color:#eff7eb}
+.dialogue-actions{display:flex;justify-content:end;margin-top:9px}
+.title-screen{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(180deg,#071a2b44,#061521cc);opacity:1;transition:opacity .65s var(--ease)}
+.title-screen.hide{opacity:0;pointer-events:none}
+.title-card{width:min(560px,100%);text-align:center;padding:34px 24px 26px;border:1px solid #d8f4e831;border-radius:27px;background:linear-gradient(150deg,#0e3348ee,#071b2cee);box-shadow:0 28px 90px #0009,inset 0 1px #ffffff12;transform:translateY(0);animation:titleUp .9s var(--ease) both}
+.title-art{position:relative;width:100%;height:128px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;overflow:hidden;border-radius:17px;background:linear-gradient(#9bd6d2 0%,#7bbec2 45%,#317f98 46%,#14516a 100%);border:1px solid #d6f1ef21}
+.title-art:before{content:"";position:absolute;left:0;right:0;bottom:20px;height:23px;background:repeating-linear-gradient(90deg,transparent 0 14px,#d6f2ec55 14px 17px,transparent 17px 32px);opacity:.8;animation:waveSlide 7s linear infinite}
+.title-art:after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent,#fff2 45%,transparent 70%);animation:shine 5s ease-in-out infinite}
+.title-dog{position:relative;z-index:1;width:83px;height:83px;image-rendering:pixelated;filter:drop-shadow(0 8px 0 #0a3949a0);animation:floatDog 3.6s ease-in-out infinite}
+.title-boat{position:absolute;right:18%;bottom:20px;width:90px;height:50px;z-index:1;animation:boatFloat 4s ease-in-out infinite}
+.title-h1{font:900 clamp(35px,8vw,55px)/1 Nunito,Hancom,sans-serif;letter-spacing:-.065em;margin:0;color:#f8f5e6;text-shadow:0 4px 30px #c2f4e51a}
+.title-tag{font:800 9px Nunito,sans-serif;letter-spacing:.3em;color:#a5dbd1;margin:12px 0 8px}
+.title-copy{color:#a4c2cc;font-size:13px;line-height:1.9;margin:0 auto 21px;max-width:380px}
+.title-buttons{display:grid;gap:9px;max-width:330px;margin:auto}
+.title-button{border:1px solid #b9e3dd2c;border-radius:12px;padding:12px 16px;color:#e9f4ef;background:#ffffff07;font-size:13px;transition:all .25s var(--ease)}
+.title-button:hover{transform:translateY(-2px);background:#ffffff10}
+.title-button.primary{background:linear-gradient(115deg,#c0e9d52a,#f4d59b20);border-color:#b8ead37c;color:#fff0c8}
+.title-foot{color:#628896;font:700 9px Nunito,sans-serif;letter-spacing:.16em;margin-top:18px}
+#fadeLayer{position:fixed;inset:0;z-index:40;pointer-events:none;background:#061522;opacity:0;transition:opacity .3s}
+#fadeLayer.on{opacity:1}
+.mobile-controls{display:none}
+@keyframes pulse{50%{opacity:.45;box-shadow:0 0 3px #88d9b9}}
+@keyframes titleUp{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes floatDog{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
+@keyframes boatFloat{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(4px) rotate(1deg)}}
+@keyframes waveSlide{to{background-position:100px 0}}
+@keyframes shine{0%,30%{transform:translateX(-120%)}60%,100%{transform:translateX(120%)}}
+@keyframes dialogueIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(max-width:700px){
+ body{padding:0 9px 18px}.topbar{padding:13px 1px 10px}.brand{font-size:14px}.brand-mark{width:28px;height:28px}.back{font-size:11px;padding:9px 11px}.sound-toggle{font-size:11px;padding:9px 11px}
+ .intro-line{align-items:start;flex-direction:column;margin-top:14px}.intro-line .status-pill{display:none}.subtitle{font-size:13px}
+ .game-frame{border-radius:17px}.hud-top{top:6px;left:6px;right:6px}.hud-glass{font-size:9px;padding:6px 8px;gap:5px;border-radius:8px}.hud-bottom{left:6px;right:6px;bottom:6px}.objective{padding:7px 9px;border-radius:9px;max-width:72%}.objective-label{font-size:7px}#objectiveText{font-size:9px}#interactHint{font-size:8px;padding:7px 8px;border-radius:8px}
+ .game-footer{padding:9px;gap:8px;align-items:start}.tool-btn{min-height:32px;padding:7px 9px;font-size:10px}.tool-btn .key{display:none}.foot-note{display:none}.info-grid{grid-template-columns:1fr;gap:9px}.info-card{padding:13px}.info-card p{font-size:11px}
+ .modal{border-radius:17px}.modal-head{padding:15px}.modal-content{padding:14px}.list-grid{grid-template-columns:1fr}.item-card{grid-template-columns:32px 1fr auto}.item-icon{width:32px;height:32px}.dialogue-box{left:4%;right:4%;bottom:5%;padding:10px 12px}.title-card{padding:24px 15px 19px}.title-art{height:106px}.title-dog{width:68px;height:68px}.title-copy{font-size:12px}
+ .mobile-controls{position:absolute;display:flex;justify-content:space-between;align-items:end;left:10px;right:10px;bottom:53px;z-index:4;pointer-events:none}
+ .dpad{display:grid;grid-template-columns:35px 35px 35px;grid-template-rows:35px 35px 35px;gap:3px;pointer-events:auto}
+ .pad-button,.mobile-action{display:grid;place-items:center;border:1px solid #d8f2e638;border-radius:9px;background:#09283cd9;color:#e8f4e8;backdrop-filter:blur(7px);font-size:15px;touch-action:none}
+ .pad-button[data-dir=up]{grid-column:2;grid-row:1}.pad-button[data-dir=left]{grid-column:1;grid-row:2}.pad-button[data-dir=down]{grid-column:2;grid-row:2}.pad-button[data-dir=right]{grid-column:3;grid-row:2}
+ .pad-button:active,.mobile-action:active{background:#b6e7d14d}
+ .mobile-actions{display:flex;gap:6px;pointer-events:auto;align-items:end}.mobile-action{width:43px;height:43px;font-size:10px}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+ <a class="back" href="../gamepage.html" aria-label="돌이 게임 목록으로 돌아가기">← <span>돌이 게임 목록</span></a>
+ <div class="brand"><span class="brand-mark">✦</span><span>DOG SAILER</span></div>
+ <button id="soundToggle" class="sound-toggle" type="button">♫ 소리 켜짐</button>
+</header>
+<main>
+ <div class="intro-line">
+  <div><div class="eyebrow">A LITTLE DOG · A BIG OCEAN</div><h1>오늘은 어디까지 항해할까?</h1><p class="subtitle">서두를 필요 없는 바다, 천천히 쌓이는 작은 추억들.</p></div>
+  <div class="status-pill"><i></i> 나만의 속도로 항해 중</div>
+ </div>
+ <section class="game-frame" aria-label="dog sailer 게임 화면">
+  <div class="canvas-wrap">
+   <canvas id="world" width="480" height="270" aria-label="픽셀 아트 바다와 강아지 주인공"></canvas>
+   <div class="hud-top">
+    <div class="hud-glass"><span class="sun-dot">☀</span><span id="timeLabel">AM 08:10</span><span>·</span><span id="weatherLabel">맑음</span></div>
+    <div class="hud-glass"><span>✧</span><span id="placeLabel">포근한 항구</span><span class="coin-small">◈ <b id="coinLabel">40</b></span></div>
+   </div>
+   <div id="toast" role="status" aria-live="polite"></div>
+   <div class="hud-bottom">
+    <div class="objective"><div class="objective-label">TODAY'S LITTLE PLAN</div><div id="objectiveText">낡은 등대에 다가가 E를 눌러보세요.</div></div>
+    <div id="interactHint"><b>E</b> 둘러보기</div>
+   </div>
+   <div class="mobile-controls" aria-label="모바일 이동 조작">
+    <div class="dpad">
+     <button class="pad-button" data-dir="up" aria-label="위로 이동">▲</button><button class="pad-button" data-dir="left" aria-label="왼쪽 이동">◀</button><button class="pad-button" data-dir="down" aria-label="아래로 이동">▼</button><button class="pad-button" data-dir="right" aria-label="오른쪽 이동">▶</button>
+    </div>
+    <div class="mobile-actions"><button class="mobile-action" data-action="interact">E<br>조사</button><button class="mobile-action" data-action="fish">낚시</button><button class="mobile-action" data-action="map">지도</button></div>
+   </div>
+   <div id="dialogue" class="dialogue-box" hidden>
+    <div class="dialogue-top"><span id="dialogueName" class="dialogue-name">해솔 할아버지</span><span class="dialogue-next">천천히 읽어도 괜찮아요</span></div>
+    <div id="dialogueText"></div>
+    <div class="dialogue-actions"><button id="dialogueContinue" class="action-button emphasis">다음 이야기 →</button></div>
+   </div>
+  </div>
+  <div class="game-footer">
+   <div class="footer-left">
+    <button class="tool-btn" data-panel="map">⌖ 지도 <span class="key">M</span></button>
+    <button class="tool-btn" data-panel="bag">▣ 가방 <span class="key">I</span></button>
+    <button class="tool-btn" data-panel="journal">✎ 항해 일지 <span class="key">J</span></button>
+    <button class="tool-btn" data-panel="craft">⚒ 제작 <span class="key">C</span></button>
+   </div>
+   <div class="footer-right"><span id="saveState" class="foot-note">항해 기록 준비 완료</span><button id="pauseButton" class="tool-btn primary">Ⅱ 메뉴</button></div>
+  </div>
+ </section>
+ <div class="info-grid">
+  <section class="info-card"><div class="card-head"><h2>천천히 즐기는 항해</h2><span>NO RUSH, JUST WANDER</span></div><p>섬을 찾고, 물고기를 관찰하고, 주운 조개를 배 선실에 놓아보세요. 이 바다에는 시간제한도, 놓치면 사라지는 추억도 없어요. 발견한 모든 것이 당신의 여행 일지가 됩니다.</p><div class="controls-list"><span class="key-cap">WASD / 방향키 이동</span><span class="key-cap">E 상호작용</span><span class="key-cap">SPACE 낚시</span><span class="key-cap">M 지도</span><span class="key-cap">I 가방</span><span class="key-cap">J 일지</span></div></section>
+  <section class="info-card"><div class="card-head"><h2>오늘의 작은 발견</h2><span>FIELD NOTES</span></div><p id="discoveryNote">햇살 조개, 표류목, 바다 유리를 찾아보세요. 낯선 생물 가까이 다가가면 관찰 일지를 남길 수 있어요.</p></section>
+ </div>
+</main>
+<div id="modalBackdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal"><div class="modal-head"><h2 id="modalTitle">항해 일지</h2><button id="modalClose" class="close" aria-label="닫기">×</button></div><div id="modalContent" class="modal-content"></div></div></div>
+<div id="titleScreen" class="title-screen">
+ <div class="title-card">
+  <div class="title-art">
+   <img id="titleDog" class="title-dog" alt="사진을 바탕으로 도트 스타일로 만든 웰시코기 주인공">
+   <svg class="title-boat" viewBox="0 0 100 60" aria-hidden="true" shape-rendering="crispEdges"><path d="M9 42h81L77 55H25Z" fill="#754d3b" stroke="#352c2a" stroke-width="3"/><path d="M48 5v37" stroke="#f0d6a6" stroke-width="3"/><path d="M45 9 17 36h28Z" fill="#fff1cf" stroke="#786e5c" stroke-width="2"/><path d="M52 14 78 38H52Z" fill="#d1e6d6" stroke="#786e5c" stroke-width="2"/><path d="M5 58q18-7 35 0t35 0t20 0" fill="none" stroke="#d4eee2" stroke-width="2"/></svg>
+  </div>
+  <div class="title-tag">A COZY OPEN-OCEAN ADVENTURE</div>
+  <h2 class="title-h1">dog sailer</h2>
+  <p class="title-copy">작은 강아지, 넓은 바다.<br>파도에 실려 온 편지 한 장이 오래된 항해의 비밀을 깨워요.</p>
+  <div class="title-buttons"><button id="newGame" class="title-button primary">✧ 새로운 항해 시작</button><button id="continueGame" class="title-button">↗ 이어서 항해하기</button><button id="saveMenu" class="title-button">▦ 항해 기록 관리</button></div>
+  <div class="title-foot">SAVE ANYTIME · TAKE YOUR TIME</div>
+ </div>
+</div>
+<div id="fadeLayer"></div>
+<script>
+(function(){
+'use strict';
+const canvas=document.getElementById('world'),ctx=canvas.getContext('2d',{alpha:false});
+ctx.imageSmoothingEnabled=false;
+const W=480,H=270,WORLD_W=2400,WORLD_H=1500;
+const sprite=new Image();
+sprite.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAFXUlEQVR42u2Xa2hcZRrHf885c85cktjTYbKTVJNMSLJS2vjFFTUFUbBBooKgBrxXRLzBsruFzZdlF7QgdlmqKIV+URGqIAiiIioqIoqIimhBLW2ta6VOzJhekrmcy3ue/XBmJpUm25n4xQ8+MMzLO/M+z/88l//7P/Bbts2bBnSyNKLdnJksjehof3/HZ2StH8Y2FTUMDGpiAI6dWJRzORsuFLTHTVENItK2zaH5eVkXgNH+fn3gzqu4fCILwI6H3wDgyPG1HU4Ui+obw/5d1wIwMDDA9L1Pc3Rh4f+CsFbbzDg2ANu2T7Ft+xRv7N1BGBjGNhVXTe3unbOasoX9u67l0kuG2LZ9inK53PbTNYBqEP2yHON5Dr95P0E9XNXJk0+/zSt77+LSS4ZIeUMATN10Z0c9kFptM4yi5rcLgJP1wF9CbIuhjXmtNur0ZLKkUjaNMAE1MuS0g7dsuR6sLwMZx2mvndSKk7Rt8/yj1/PxC3/m2IlFee6RGf56zzS9WZeU457dYLa1vimYKBZ1YjTPa/v/kmzUK6gJUDuXoL7wQSynT8wX/1ITGax038qTZD0AdMM4Wy+6ja+Pl7tvwiiOOVauoRvGz3gaFwsQU0PjsLmXI+W4WLEPsd8GCyDlT5k/cWp9JTi6sCBR4HPB+I1th01oiJ1DrDTGX1SIwEonH2iCSHHdbY+zZXoPi/W6rAtAq4F+PHkKSBGTWunXrIfl9AiSXvlz1gMrjappZ6IRmo6mYFUAg56nGdfBfPFP1NT46IOvKF35b8gWYPhW4mBZUR+deAA1Nc6/eI4t03tQO4eq4dV9szz3yAyd0PiqAHzfJ4pj1M4hYjN1eYmfKhX0gpvROMRye8VO58VO5yXKlPB9n9HhjVhE7X7p1FblgZ5MFqOKmBqIjdguB16ew07npZWh95+9j7GZf6BYVD75CTU1iE07+EeH6jTqjXYWDnz3X+kIQD6bVW9DH5+9dEczR2msrXPSuuEGPU9932fihscEHmNsU1GPHJ+X+MuH2+mOm259Y2icWqI363Zeglq9znK1lvR8poS1dU4AosgwXChobzpNb08PGdAMaBgYTFDVuDkNagJk4E/8/T8vii3Cu8/cy+jwRta6olctgeVYuBfvEoA4WFLL7ZNjJxZl0PP0+0pFAIY25jXSGFsEIUb++FCT2RTL7ZPWdQ5w5bZJPv/mrc6b0EWYuWxzG7EJqprMfSJSWvrgh/lvObqwINpyIwqSrA++9TcOv3k/5XKZ9z480L0gGS4U9PtKReKwqmgiSiy3T0xQVUlyA9o8LoLl9EgcLCmAagjfPIHYObZM7wFYk5LXJKKWEtIWxSLEYVUFBW0GFwURUE24oQkyCe4SN0/efcsV3TNhxnWIj+xTO50XxGoHSh5fVo7rSm9Zbp8kCUmEiJgaAdo9DwAs+z7UT56RkhgQmhGae7qyBuJwSTm4F4ggNqidw0XWJ0onikV9fd8OxsbPa1Lw7QkIAVUridsE1eqD+OBTiKnx7dEGI0MOY1fvPaeYXbMEh+bn5ZoHn+XI4dO/uJY1DrHdnsRpqzStvgCuv+9FyuUyqYvmENti987ZrmT9WZMwc9nm9ruB8RfVVN7RQc/TydKITpZG1FTe0ThY0jhY0t07Z3WimAjX3TtntTWy6ypBS5631od/OIhYDpbTJxnQPxQKZ2n/ydKILldrZBybyGhH7wXntHw2q4Oep8Zf1DhMCCkDms9mdbS/X88krEHP0wx0lfJzIpwsjWjl5CkK3gaiwKcRGlKWxc+nT7NYr8ug56mTShFGEb7vd6SCugJwZjkaYUgulyYMDK074Xf7tfY/U2RaiD8JpTYAAAAASUVORK5CYII=';
+document.getElementById('titleDog').src=sprite.src;
+const islands=[
+{id:'harbor',name:'포근한 항구',x:280,y:260,rx:145,ry:108,biome:'grass',tone:'#87b58a',visited:true},
+{id:'green',name:'초록 우편섬',x:645,y:405,rx:112,ry:87,biome:'forest',tone:'#5f9d77'},
+{id:'shell',name:'조개달 섬',x:950,y:205,rx:91,ry:74,biome:'sand',tone:'#9acb9b'},
+{id:'coral',name:'산호 정원',x:1255,y:465,rx:125,ry:93,biome:'coral',tone:'#65a9a0'},
+{id:'mist',name:'안개 등대섬',x:1580,y:225,rx:108,ry:83,biome:'mist',tone:'#709b94'},
+{id:'wind',name:'바람 언덕',x:1805,y:760,rx:138,ry:104,biome:'wind',tone:'#7fac83'},
+{id:'star',name:'별빛 군도',x:2195,y:470,rx:152,ry:114,biome:'star',tone:'#598e8f'}
+];
+const items={
+driftwood:{name:'표류목',icon:'🪵',desc:'파도에 씻겨 매끈해진 작은 나무.',price:4},
+shell:{name:'햇살 조개',icon:'🐚',desc:'안쪽에 아주 작은 분홍빛이 돈다.',price:5},
+fiber:{name:'해초 섬유',icon:'🌿',desc:'튼튼하고 부드러운 초록 섬유.',price:3},
+seaGlass:{name:'바다 유리',icon:'💎',desc:'파도에 깎여 보석처럼 둥글다.',price:10},
+moonHerb:{name:'달빛풀',icon:'🌱',desc:'어두워지면 잎 끝이 은은히 빛난다.',price:12},
+blueFish:{name:'푸른 정어리',icon:'🐟',desc:'은빛 비늘이 햇빛을 받아 반짝인다.',price:8},
+silverFish:{name:'은빛 고등어',icon:'🐠',desc:'빠르고 호기심이 많은 물고기.',price:15},
+moonPearl:{name:'달빛 진주',icon:'🌕',desc:'깊은 물속에서 발견되는 부드러운 빛.',price:40},
+starFragment:{name:'별 조각',icon:'✨',desc:'오래된 별빛 등대의 조각.',price:55},
+bottleLetter:{name:'푸른 우편병',icon:'🫙',desc:'바다 냄새와 오래된 편지가 담겨 있다.',price:0},
+woodPlank:{name:'잘 다듬은 판자',icon:'🪚',desc:'배를 고치거나 가구를 만들 때 쓴다.',price:0},
+sailPatch:{name:'돛 수선 천',icon:'🧵',desc:'바람을 조금 더 잘 받게 해준다.',price:0},
+shellLantern:{name:'조개 등불',icon:'🏮',desc:'밤마다 작은 파도빛을 비춘다.',price:0},
+berry:{name:'바다 딸기',icon:'🍓',desc:'짭짤한 바람 속에서 자라는 달콤한 열매.',price:6},
+herbTea:{name:'달빛 허브차',icon:'🍵',desc:'따뜻한 향이 마음을 편안하게 한다.',price:18}
+};
+const pickups=[
+{id:'wood1',item:'driftwood',qty:1,x:182,y:276,island:'harbor'},
+{id:'wood2',item:'driftwood',qty:1,x:221,y:326,island:'harbor'},
+{id:'wood3',item:'driftwood',qty:1,x:325,y:326,island:'harbor'},
+{id:'shell1',item:'shell',qty:1,x:245,y:335,island:'harbor'},
+{id:'shell2',item:'shell',qty:1,x:294,y:340,island:'harbor'},
+{id:'fiber1',item:'fiber',qty:2,x:322,y:224,island:'harbor'},
+{id:'glass1',item:'seaGlass',qty:1,x:228,y:292,island:'harbor'},
+{id:'berry1',item:'berry',qty:2,x:592,y:423,island:'green'},
+{id:'fiber2',item:'fiber',qty:2,x:670,y:369,island:'green'},
+{id:'wood4',item:'driftwood',qty:2,x:704,y:440,island:'green'},
+{id:'letter1',item:'bottleLetter',qty:1,x:978,y:244,island:'shell'},
+{id:'shell3',item:'shell',qty:2,x:909,y:224,island:'shell'},
+{id:'glass2',item:'seaGlass',qty:1,x:1005,y:181,island:'shell'},
+{id:'herb1',item:'moonHerb',qty:2,x:1218,y:482,island:'coral'},
+{id:'pearl1',item:'moonPearl',qty:1,x:1293,y:501,island:'coral'},
+{id:'fiber3',item:'fiber',qty:3,x:1265,y:430,island:'coral'},
+{id:'glass3',item:'seaGlass',qty:2,x:1545,y:251,island:'mist'},
+{id:'herb2',item:'moonHerb',qty:2,x:1604,y:207,island:'mist'},
+{id:'star1',item:'starFragment',qty:1,x:1785,y:765,island:'wind'},
+{id:'wood5',item:'driftwood',qty:3,x:1853,y:729,island:'wind'},
+{id:'star2',item:'starFragment',qty:1,x:2182,y:444,island:'star'},
+{id:'star3',item:'starFragment',qty:1,x:2227,y:503,island:'star'}
+];
+const wildlife=[
+{id:'turtle',type:'turtle',x:620,y:390,island:'green',name:'초록바다거북'},
+{id:'crab',type:'crab',x:924,y:236,island:'shell',name:'집게 조개게'},
+{id:'butterfly',type:'butterfly',x:678,y:378,island:'green',name:'바람나비'},
+{id:'bird',type:'bird',x:312,y:216,island:'harbor',name:'항구갈매기'},
+{id:'dolphin',type:'dolphin',x:1105,y:335,island:'',name:'푸른돌고래'}
+];
+let state='title',panel=null,slot=1,lastSlot=1,dialogueQueue=[],dialogueAfter=null;
+let player={x:327,y:284,dir:'down',moving:false,boat:false};
+let boat={x:416,y:322,vx:0,vy:0,heading:0,upgrade:0};
+let inventory={driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0};
+let coins=40,stage=0,visited=['harbor'],discovered=[],collected=[],relationships={haesol:0,fox:0,botanist:0},crafted=[],observed=[],journal=['바닷바람을 타고 포근한 항구에 도착했다.'];
+let day=1,minutes=8*60+10,weather='맑음',worldSeed=73219,elapsed=0,walkT=0,fishing=null,muted=false,audio=null,melodyTimer=null,toastTimer=null,autosaveTimer=0,lastSaveTime=0;
+let cam={x:0,y:0},keys={},lastFrame=0,particles=[],sparkles=[],nearObject=null,firstVisit=false;
+const $=id=>document.getElementById(id);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function rng(seed){let s=seed>>>0;return function(){s=(s*1664525+1013904223)>>>0;return s/4294967296}}
+const rand=rng(worldSeed);
+const islandById=id=>islands.find(i=>i.id===id);
+function currentIsland(x,y,margin){return islands.find(i=>{const dx=(x-i.x)/i.rx,dy=(y-i.y)/i.ry;return dx*dx+dy*dy<=1+(margin||0)})||null}
+function landAt(x,y){return !!currentIsland(x,y,-.015)}
+function objectDistance(x,y,obj){return Math.hypot(x-obj.x,y-obj.y)}
+function itemTotal(id){return inventory[id]||0}
+function addItem(id,q){inventory[id]=(inventory[id]||0)+q}
+function useItem(id,q){if(itemTotal(id)<q)return false;inventory[id]-=q;return true}
+function toast(msg){const el=$('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2300)}
+function playTone(freq,duration,volume,wave){if(muted)return;try{if(!audio)audio=new(window.AudioContext||window.webkitAudioContext)();if(audio.state==='suspended')audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.type=wave||'sine';o.frequency.value=freq;g.gain.setValueAtTime(.0001,audio.currentTime);g.gain.exponentialRampToValueAtTime(volume||.025,audio.currentTime+.04);g.gain.exponentialRampToValueAtTime(.0001,audio.currentTime+duration);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+duration+.02)}catch(e){}}
+function soundClick(){playTone(520,.09,.018,'sine')}
+function startMelody(){if(muted||melodyTimer)return;const notes=[392,494,587,494,440,587,659,587,392,494,587,784,659,587,494,440];let n=0;melodyTimer=setInterval(()=>{if(muted||state==='title'&&document.hidden)return;playTone(notes[n%notes.length],1.25,.006,'sine');if(n%4===0)playTone(notes[(n+2)%notes.length]/2,2.1,.004,'triangle');n++},1450)}
+function stopMelody(){if(melodyTimer){clearInterval(melodyTimer);melodyTimer=null}}
+function updateSoundLabel(){$('soundToggle').textContent=muted?'♫ 소리 꺼짐':'♫ 소리 켜짐';if(muted)stopMelody();else startMelody()}
+function newSave(){return {version:1,worldSeed:Math.floor(Math.random()*900000)+10000,player:{x:327,y:284,dir:'down',boat:false},boat:{x:416,y:322,vx:0,vy:0,heading:0,upgrade:0},inventory:{driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0},coins:40,stage:0,visited:['harbor'],discovered:[],collected:[],relationships:{haesol:0,fox:0,botanist:0},crafted:[],observed:[],journal:['바닷바람을 타고 포근한 항구에 도착했다.'],day:1,minutes:490,weather:'맑음',playSeconds:0}}
+function saveKey(n){return 'dogSailerSaveV1Slot'+n}
+function readSave(n){try{const s=localStorage.getItem(saveKey(n));if(!s)return null;const d=JSON.parse(s);if(d.version!==1)return null;return d}catch(e){return null}}
+function serialize(){return {version:1,worldSeed:worldSeed,player:{x:player.x,y:player.y,dir:player.dir,boat:player.boat},boat:{x:boat.x,y:boat.y,vx:boat.vx,vy:boat.vy,heading:boat.heading,upgrade:boat.upgrade},inventory:inventory,coins:coins,stage:stage,visited:visited,discovered:discovered,collected:collected,relationships:relationships,crafted:crafted,observed:observed,journal:journal,day:day,minutes:minutes,weather:weather,playSeconds:elapsed}}
+function saveGame(silent){try{localStorage.setItem(saveKey(slot),JSON.stringify(serialize()));lastSlot=slot;lastSaveTime=Date.now();$('saveState').textContent='저장됨 · '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});if(!silent)toast('항해 일지를 안전하게 저장했어요.')}catch(e){$('saveState').textContent='저장 공간 확인 필요';if(!silent)toast('저장에 실패했어요. 브라우저 저장 공간을 확인해 주세요.')}}
+function loadGame(n){const d=readSave(n);if(!d)return false;slot=n;lastSlot=n;worldSeed=d.worldSeed||73219;player=Object.assign(player,d.player||{});boat=Object.assign(boat,d.boat||{});inventory=Object.assign(inventory,d.inventory||{});coins=d.coins??40;stage=d.stage||0;visited=d.visited||['harbor'];discovered=d.discovered||[];collected=d.collected||[];relationships=d.relationships||{haesol:0,fox:0,botanist:0};crafted=d.crafted||[];observed=d.observed||[];journal=d.journal||[];day=d.day||1;minutes=d.minutes||490;weather=d.weather||'맑음';elapsed=d.playSeconds||0;fishing=null;return true}
+function startNew(n){slot=n;lastSlot=n;worldSeed=Math.floor(Math.random()*900000)+10000;player={x:327,y:284,dir:'down',moving:false,boat:false};boat={x:416,y:322,vx:0,vy:0,heading:0,upgrade:0};inventory={driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0};coins=40;stage=0;visited=['harbor'];discovered=[];collected=[];relationships={haesol:0,fox:0,botanist:0};crafted=[];observed=[];journal=[' 바다 건너에서 푸른 우편병 하나가 떠내려왔다. 병 속에는 등대 그림과 짧은 편지가 들어 있었다.','“빛이 꺼진 등대가 다시 길을 알려줄 수 있도록, 오래된 항해자에게 마음을 전해 주세요.”'];day=1;minutes=490;weather='맑음';elapsed=0;panel=null;state='play';$('titleScreen').classList.add('hide');showDialogue([{name:'항해 일지',text:'첫 항해의 아침. 사진 속 강아지와 닮은 작은 선장이 낡은 돛단배 앞에 섰다. 파도가 밀어 준 푸른 편지에는 빛을 잃어가는 여섯 등대에 대한 이야기가 적혀 있었다.'},{name:'해솔 할아버지',text:'어서 오렴, 작은 선장. 이 항구의 등대는 예전엔 멀리서도 반짝였단다. 등대가 다시 빛나면 바다가 길을 잊지 않을 거야. 먼저 등대에 가서 이야기를 들어보렴.'}]);journal.push('첫 항해가 시작되었다. 오래된 항구 등대에서 이야기의 실마리를 찾아보자.');saveGame(true);updateHud()}
+function finishIntro(){state='play';saveGame(true);toast('첫 번째 항해를 시작했어요. 바다는 서두르지 않아도 괜찮아요.')}
+function showDialogue(lines,after){dialogueQueue=lines.slice();dialogueAfter=after||null;advanceDialogue()}
+function advanceDialogue(){if(!dialogueQueue.length){$('dialogue').hidden=true;const fn=dialogueAfter;dialogueAfter=null;if(fn)fn();return}const d=dialogueQueue.shift();$('dialogueName').textContent=d.name||'항해 일지';$('dialogueText').textContent=d.text;$('dialogue').hidden=false;soundClick()}
+$('dialogueContinue').addEventListener('click',advanceDialogue);
+function openTitle(){state='title';panel=null;$('titleScreen').classList.remove('hide');$('dialogue').hidden=true;closePanel();updateContinue()}
+function updateContinue(){$('continueGame').disabled=!readSave(lastSlot);$('continueGame').style.opacity=readSave(lastSlot)?'1':'.45'}
+function beginTransition(fn){$('fadeLayer').classList.add('on');setTimeout(()=>{fn();requestAnimationFrame(()=>{$('fadeLayer').classList.remove('on')})},280)}
+function openPanel(p){if($('titleScreen').classList.contains('hide')===false&&p!=='saves')return;panel=p;renderPanel();const b=$('modalBackdrop');b.classList.add('open');requestAnimationFrame(()=>b.classList.add('visible'));soundClick()}
+function closePanel(){const b=$('modalBackdrop');b.classList.remove('visible');setTimeout(()=>{if(!b.classList.contains('visible'))b.classList.remove('open')},240);panel=null}
+$('modalClose').addEventListener('click',closePanel);
+$('modalBackdrop').addEventListener('click',e=>{if(e.target===$('modalBackdrop'))closePanel()});
+document.querySelectorAll('[data-panel]').forEach(b=>b.addEventListener('click',()=>openPanel(b.dataset.panel)));
+$('pauseButton').addEventListener('click',()=>openPanel('menu'));
+function slotHTML(n){const d=readSave(n);return '<div class="save-card"><strong>항해 기록 '+n+'</strong><p class="item-desc">'+(d?('제 '+d.day+'일 · '+(d.visited||[]).length+'곳 발견 · 코인 '+d.coins):'아직 기록이 없는 빈 항해 슬롯입니다.')+'</p><div class="row-actions"><button class="action-button emphasis" data-load="'+n+'">'+(d?'이어가기':'새 항해')+'</button>'+(d?'<button class="action-button" data-export="'+n+'">백업</button><button class="action-button danger" data-delete="'+n+'">삭제</button>':'')+'</div></div>'}
+function panelShell(title,body){$('modalTitle').textContent=title;$('modalContent').innerHTML=body}
+function renderPanel(){
+ if(panel==='bag'){
+  let rows='';Object.keys(items).forEach(id=>{const q=itemTotal(id);if(q>0)rows+='<div class="item-card"><div class="item-icon">'+items[id].icon+'</div><div><div class="item-name">'+items[id].name+'</div><div class="item-desc">'+items[id].desc+'</div></div><div class="item-count">×'+q+'</div></div>'});
+  panelShell('가방 · 작은 수집품들','<div class="story-cover"><div class="eyebrow">YOUR POCKET TREASURES</div><p>여행 중 모은 물건은 모두 소중한 추억이에요. 도구와 재료를 차곡차곡 모아 더 먼 바다를 향해 보세요.</p></div><div class="list-grid">'+(rows||'<p>가방이 가벼워요. 해변을 거닐며 작은 물건을 찾아보세요.</p>')+'</div><div class="row-actions"><button class="action-button" data-panel-action="craft">제작대 열기</button><button class="action-button" data-panel-action="sell">판매하기</button></div>');
+ }else if(panel==='journal'){
+  const chapters=[{t:'1장 · 불 꺼진 등대',d:'해솔 할아버지의 이야기를 듣고 첫 등대의 빛을 되찾는다.'},{t:'2장 · 바다에 띄운 편지',d:'조개달 섬에서 오래된 푸른 우편병과 잊힌 편지를 찾는다.'},{t:'3장 · 파도가 기억하는 이름',d:'편지를 항구로 가져오면 여섯 등대와 옛 항해자들의 이야기가 열린다.'},{t:'그 너머의 항해',d:'달빛 진주, 별 조각과 멀리 있는 섬들을 찾아 자신만의 항해를 이어간다.'}];
+  let body='<div class="story-cover"><div class="eyebrow">THE LIGHTHOUSE LETTERS</div><p>“바다는 아무것도 잊지 않아. 다만 우리가 그 소리를 들을 만큼 천천히 걷지 않을 뿐이지.”</p></div>';
+  chapters.forEach((c,i)=>{const done=stage>i+1||(i===0&&stage>=2)||(i===1&&stage>=3)||(i===2&&stage>=4);body+='<div class="quest-card"><strong>'+c.t+'</strong><p>'+c.d+'</p><span class="quest-state">'+(done?'✓ 이야기 기록 완료':(i===Math.min(stage,3)?'진행 중':'아직 열리지 않음'))+'</span></div>'});
+  body+='<h3 style="font-size:13px;color:#dcece7;margin:17px 0 8px">여행 일지</h3><div class="quest-card">'+journal.slice().reverse().slice(0,12).map(x=>'<p style="margin:0 0 7px">✦ '+escapeHTML(x)+'</p>').join('')+'</div>';
+  body+='<p class="item-desc">발견한 생물 '+observed.length+'종 · 방문한 장소 '+visited.length+'곳 · 제작한 물건 '+crafted.length+'개</p>';
+  panelShell('항해 일지',body);
+ }else if(panel==='map'){
+  panelShell('발견한 바다 지도','<div class="map-preview"><canvas id="mapCanvas" width="480" height="300"></canvas></div><div class="map-legend"><span><i class="legend-dot" style="background:#dce6a4"></i>섬</span><span><i class="legend-dot" style="background:#ffe2a5"></i>현재 위치</span><span><i class="legend-dot" style="background:#b6e7d1"></i>발견한 섬</span></div><p class="item-desc" style="margin-top:12px">바다를 건너 섬 가까이 가면 이름과 이야기가 지도에 기록돼요. 아직 발견하지 못한 곳은 흐릿한 실루엣으로 남아 있어요.</p>');
+  drawMap();
+ }else if(panel==='craft'){
+  const recipes=[
+  {id:'woodPlank',name:'잘 다듬은 판자',icon:'🪚',desc:'표류목 2개로 판자 1개 제작',need:{driftwood:2},out:1},
+  {id:'sailPatch',name:'돛 수선 천',icon:'🧵',desc:'해초 섬유 3개로 돛 수선 천 제작',need:{fiber:3},out:1},
+  {id:'shellLantern',name:'조개 등불',icon:'🏮',desc:'햇살 조개 3개 + 바다 유리 1개',need:{shell:3,seaGlass:1},out:1},
+  {id:'herbTea',name:'달빛 허브차',icon:'🍵',desc:'달빛풀 2개와 햇살 조개 1개',need:{moonHerb:2,shell:1},out:1}
+  ];
+  let html='<div class="story-cover"><div class="eyebrow">GENTLE CRAFTING</div><p>만드는 데 걸리는 시간은 없어요. 재료가 있으면 바로 만들고, 없는 날은 그냥 바다를 바라봐도 좋아요.</p></div><div class="list-grid">';
+  recipes.forEach(r=>{const can=Object.keys(r.need).every(id=>itemTotal(id)>=r.need[id]);html+='<div class="item-card"><div class="item-icon">'+r.icon+'</div><div><div class="item-name">'+r.name+'</div><div class="item-desc">'+r.desc+'</div></div><button class="action-button '+(can?'emphasis':'')+'" data-craft="'+r.id+'" '+(!can?'disabled style="opacity:.4"':'')+'>만들기</button></div>'});
+  html+='</div><div class="row-actions"><button class="action-button" data-panel-action="upgrade">배 업그레이드</button></div>';
+  panelShell('작은 제작대',html);
+ }else if(panel==='saves'){
+  panelShell('항해 기록 관리','<div class="story-cover"><div class="eyebrow">THREE LITTLE VOYAGES</div><p>세 개의 독립된 기록을 보관할 수 있어요. 각 항해는 별도로 저장되며, 다른 슬롯을 열어도 덮어쓰지 않습니다.</p></div><div class="list-grid">'+[1,2,3].map(slotHTML).join('')+'</div><div class="row-actions"><button class="action-button" data-panel-action="returnTitle">타이틀로 돌아가기</button><button class="action-button" data-panel-action="save">현재 항해 저장</button></div>');
+ }else if(panel==='menu'){
+  panelShell('잠깐 쉬어 가기','<div class="story-cover"><div class="eyebrow">A QUIET PAUSE</div><p>파도는 계속 흐르지만 당신은 언제든 멈춰 쉴 수 있어요. 현재 위치와 아이템은 자동 저장됩니다.</p></div><div class="row-actions"><button class="action-button emphasis" data-panel-action="resume">계속 항해하기</button><button class="action-button" data-panel-action="save">지금 저장</button><button class="action-button" data-panel-action="saves">세이브 관리</button><button class="action-button" data-panel-action="returnTitle">타이틀 화면</button><button class="action-button" data-panel-action="sound">소리 켜기/끄기</button></div><p class="item-desc">조작: WASD/방향키 이동 · E 상호작용 · SPACE 낚시 · M 지도 · I 가방 · J 일지 · C 제작 · ESC 닫기</p>');
+ }else if(panel==='sell'){
+  const sellable=Object.keys(items).filter(id=>itemTotal(id)>0&&items[id].price>0);
+  panelShell('항구 상점 · 물물교환','<div class="story-cover"><div class="eyebrow">HARBOR TRADING POST</div><p>필요한 물건은 남겨 두고, 여분만 천천히 판매해요. 희귀한 수집품은 팔지 않고 간직해도 괜찮아요.</p></div><div class="list-grid">'+sellable.map(id=>'<div class="item-card"><div class="item-icon">'+items[id].icon+'</div><div><div class="item-name">'+items[id].name+'</div><div class="item-desc">1개당 '+items[id].price+' 코인</div></div><button class="action-button" data-sell="'+id+'">1개 판매</button></div>').join('')+'</div>');
+ }else if(panel==='upgrade'){
+  const can=coins>=80&&itemTotal('woodPlank')>=3;
+  panelShell('배를 조금 더 편안하게','<div class="story-cover"><div class="eyebrow">A LITTLE BOAT, BIG DREAMS</div><p>판자 3개와 코인 80개로 돛과 선체를 튼튼하게 보강해요. 항해 속도가 조금 올라가고, 파도 위에서 더 안정적으로 움직입니다.</p></div><div class="quest-card"><strong>생활형 범선 부품</strong><p>필요 재료: 잘 다듬은 판자 3개 · 코인 80개</p><span class="quest-state">'+(can?'준비 완료':'재료를 모으는 중')+'</span></div><div class="row-actions"><button class="action-button emphasis" data-upgrade="boat" '+(!can?'disabled style="opacity:.4"':'')+'>배 업그레이드</button></div>');
+ }
+ $('modalContent').querySelectorAll('[data-panel-action]').forEach(b=>b.addEventListener('click',()=>panelAction(b.dataset.panelAction)));
+ $('modalContent').querySelectorAll('[data-craft]').forEach(b=>b.addEventListener('click',()=>craftItem(b.dataset.craft)));
+ $('modalContent').querySelectorAll('[data-sell]').forEach(b=>b.addEventListener('click',()=>sellItem(b.dataset.sell)));
+ $('modalContent').querySelectorAll('[data-load]').forEach(b=>b.addEventListener('click',()=>{const n=+b.dataset.load;if(readSave(n)){beginTransition(()=>{loadGame(n);closePanel();$('titleScreen').classList.add('hide');state='play';updateHud();toast('제 '+day+'일의 항해를 이어가요.');})}else{beginTransition(()=>{startNew(n);closePanel();})}}));
+ $('modalContent').querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>{if(confirm('이 항해 기록을 삭제할까요? 백업이 없다면 되돌릴 수 없어요.')){localStorage.removeItem(saveKey(+b.dataset.delete));renderPanel();updateContinue()}}));
+ $('modalContent').querySelectorAll('[data-export]').forEach(b=>b.addEventListener('click',()=>exportSave(+b.dataset.export)));
+ $('modalContent').querySelectorAll('[data-upgrade]').forEach(b=>b.addEventListener('click',upgradeBoat));
+}
+function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function panelAction(a){if(a==='craft'||a==='saves'||a==='upgrade'||a==='sell'){panel=a;renderPanel()}else if(a==='resume'){closePanel()}else if(a==='save'){saveGame(false);renderPanel()}else if(a==='sound'){muted=!muted;updateSoundLabel();renderPanel()}else if(a==='returnTitle'){saveGame(true);closePanel();openTitle()}}
+function craftItem(id){const recipe={woodPlank:{need:{driftwood:2},out:1},sailPatch:{need:{fiber:3},out:1},shellLantern:{need:{shell:3,seaGlass:1},out:1},herbTea:{need:{moonHerb:2,shell:1},out:1}}[id];if(!recipe||!Object.keys(recipe.need).every(k=>itemTotal(k)>=recipe.need[k]))return;Object.keys(recipe.need).forEach(k=>useItem(k,recipe.need[k]));addItem(id,recipe.out);crafted.push(id);journal.push(items[id].name+'을 만들었다.');playTone(700,.22,.025,'triangle');toast(items[id].name+'을 만들었어요.');saveGame(true);renderPanel();updateHud()}
+function sellItem(id){if(itemTotal(id)<=0||!items[id]||items[id].price<=0)return;useItem(id,1);coins+=items[id].price;journal.push(items[id].name+'을 항구에서 교환했다.');playTone(620,.12,.018);saveGame(true);renderPanel();updateHud();toast(items[id].name+' 1개를 '+items[id].price+' 코인에 교환했어요.')}
+function upgradeBoat(){if(coins<80||itemTotal('woodPlank')<3)return;coins-=80;useItem('woodPlank',3);boat.upgrade++;journal.push('배의 돛과 선체를 보강했다.');saveGame(true);playTone(440,.15,.02);playTone(660,.22,.018);toast('배가 한층 튼튼해졌어요. 항해 속도가 조금 빨라집니다.');renderPanel();updateHud()}
+function exportSave(n){const d=readSave(n);if(!d)return;const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='dog-sailer-voyage-'+n+'.json';a.click();URL.revokeObjectURL(url);toast('항해 기록을 백업 파일로 내보냈어요.')}
+function drawMap(){const c=$('mapCanvas');if(!c)return;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.fillStyle='#236e88';g.fillRect(0,0,480,300);for(let y=0;y<300;y+=12)for(let x=0;x<480;x+=12){g.fillStyle=((x*3+y*7)%5===0)?'#38839a':'#28758e';g.fillRect(x,y,12,12);if((x+y)%4===0){g.fillStyle='#7eb7bd55';g.fillRect(x+2,y+5,5,1)}}islands.forEach(i=>{const x=i.x/WORLD_W*460+10,y=i.y/WORLD_H*280+10,rx=i.rx/WORLD_W*460,ry=i.ry/WORLD_H*280;g.fillStyle='#e9d79e';g.beginPath();g.ellipse(x,y,Math.max(6,rx),Math.max(5,ry),0,0,Math.PI*2);g.fill();g.fillStyle=visited.includes(i.id)?'#78b78b':'#7f9c83';g.beginPath();g.ellipse(x,y,Math.max(4,rx-4),Math.max(4,ry-4),0,0,Math.PI*2);g.fill();g.fillStyle=visited.includes(i.id)?'#b6e7d1':'#b6c8b4';g.fillRect(x-2,y-2,4,4);if(visited.includes(i.id)){g.fillStyle='#f7f4e6';g.font='8px sans-serif';g.fillText(i.name,x+rx+2,y)}});const px=player.x/WORLD_W*460+10,py=player.y/WORLD_H*280+10;g.fillStyle='#ffe09c';g.beginPath();g.arc(px,py,4,0,Math.PI*2);g.fill();g.strokeStyle='#fff6d8';g.lineWidth=1;g.stroke();g.fillStyle='#fff6d8';g.font='10px sans-serif';g.fillText('나',px+5,py-5)}
+function updateHud(){const totalMin=(Math.floor(minutes)%1440+1440)%1440,hh=Math.floor(totalMin/60),mm=totalMin%60;$('timeLabel').textContent=(hh<12?'AM ':'PM ')+String(hh%12||12).padStart(2,'0')+':'+String(mm).padStart(2,'0');$('weatherLabel').textContent=weather;$('coinLabel').textContent=coins.toLocaleString('ko-KR');const isl=currentIsland(player.x,player.y,.4);$('placeLabel').textContent=isl?isl.name:(player.boat?'열린 바다':'바닷가');$('objectiveText').textContent=objectiveText();$('interactHint').innerHTML='<b>E</b> '+(nearObject?nearObject.hint:(player.boat?'항구에 정박 / 물고기 관찰':'둘러보기'));$('discoveryNote').textContent=observed.length?'지금까지 '+observed.length+'종의 생물을 관찰했어요. 가까이 다가가 E를 눌러 기록을 남겨보세요.':'햇살 조개, 표류목, 바다 유리를 찾아보세요. 낯선 생물 가까이 다가가면 관찰 일지를 남길 수 있어요.'}
+function objectiveText(){if(stage===0)return '낡은 항구 등대에 다가가 E를 눌러보세요.';if(stage===1)return '표류목 3개와 햇살 조개 2개를 모아 등대를 고쳐요. ('+itemTotal('driftwood')+'/3 · '+itemTotal('shell')+'/2)';if(stage===2)return '조개달 섬에서 파도에 떠밀려 온 푸른 우편병을 찾아요.';if(stage===3)return '푸른 우편병을 포근한 항구의 등대로 가져가요.';if(stage===4)return '안개 등대섬에서 오래된 항해 지도 조각을 찾아요.';if(stage===5)return '별빛 군도의 등대에 별 조각 3개를 가져가요. ('+itemTotal('starFragment')+'/3)';return '오늘의 바다를 자유롭게 탐험하고 다음 추억을 만들어보세요.'}
+function addJournal(s){journal.push(s);if(journal.length>100)journal=journal.slice(-100)}
+function markVisited(id){if(!visited.includes(id)){visited.push(id);const i=islandById(id);if(i){addJournal(i.name+'을 처음 발견했다.');toast('새로운 장소 발견 · '+i.name);particles.push({x:i.x,y:i.y,t:0,type:'discovery'});if(id==='green'&&stage===2)toast('편지가 떠내려왔다는 조개달 섬의 소문이 들려요.');if(id==='mist'&&stage===4){toast('안개 속에서 오래된 지도 조각이 빛나요.')}}saveGame(true)}}
+function interact(){
+ if($('dialogue').hidden===false){advanceDialogue();return}
+ if(panel){closePanel();return}
+ if(player.boat){const island=currentIsland(boat.x,boat.y,.28);if(island){player.boat=false;let dx=island.x-boat.x,dy=island.y-boat.y,L=Math.hypot(dx,dy)||1;player.x=clamp(boat.x+dx/L*25,0,WORLD_W);player.y=clamp(boat.y+dy/L*25,0,WORLD_H);if(!landAt(player.x,player.y)){player.x=island.x;player.y=island.y}markVisited(island.id);toast(island.name+'에 정박했어요.');saveGame(true);return}else{toast('육지가 가까워지면 정박할 수 있어요.');return}}
+ const candidates=[];
+ pickups.filter(p=>!collected.includes(p.id)).forEach(p=>candidates.push({type:'pickup',obj:p,d:objectDistance(player.x,player.y,p),hint:'줍기'}));
+ wildlife.forEach(w=>candidates.push({type:'wildlife',obj:w,d:objectDistance(player.x,player.y,w),hint:'관찰하기'}));
+ const lighthouse={x:245,y:216,id:'harbor-lamp',hint:'등대 살펴보기'};
+ candidates.push({type:'lighthouse',obj:lighthouse,d:objectDistance(player.x,player.y,lighthouse),hint:'등대 살펴보기'});
+ const npc={x:294,y:283,id:'haesol',hint:'대화하기'};candidates.push({type:'npc',obj:npc,d:objectDistance(player.x,player.y,npc),hint:'대화하기'});
+ const craftspot={x:340,y:281,id:'craftspot',hint:'제작하기'};candidates.push({type:'craftspot',obj:craftspot,d:objectDistance(player.x,player.y,craftspot),hint:'제작하기'});
+ const nearest=candidates.filter(o=>o.d<29).sort((a,b)=>a.d-b.d)[0];
+ if(!nearest){if(objectDistance(player.x,player.y,boat)<52){player.boat=true;player.x=boat.x;player.y=boat.y;toast('배에 올라탔어요. 바다로 나가볼까요?');saveGame(true);return}toast('가까이에 살펴볼 것이 없어요. 조금 더 걸어가 보세요.');return}
+ if(nearest.type==='pickup'){
+  const p=nearest.obj;collected.push(p.id);
+  if(p.item==='bottleLetter'){addItem('bottleLetter',1);if(stage===2){stage=3;addJournal('조개달 섬의 모래 위에서 푸른 우편병을 발견했다.');showDialogue([{name:'푸른 우편병',text:'병 안에는 오래된 편지 한 장이 들어 있었다. “빛을 잃은 등대는 길을 잃은 배만 비추는 것이 아니란다. 돌아갈 곳이 있는 사람의 마음도 비추지.”'}]);toast('새 이야기 조각을 찾았어요.');}}
+  else{addItem(p.item,p.qty);toast(items[p.item].name+' '+p.qty+'개를 주웠어요.');if(!discovered.includes(p.item)){discovered.push(p.item);addJournal(items[p.item].name+'을 처음 발견했다.')}}playTone(680,.15,.02,'triangle');saveGame(true);updateHud();return
+ }
+ if(nearest.type==='lighthouse'){doLighthouse();return}
+ if(nearest.type==='npc'){talkHaesol();return}
+ if(nearest.type==='craftspot'){openPanel('craft');return}
+ if(nearest.type==='wildlife'){observeCreature(nearest.obj);return}
+}
+function doLighthouse(){
+ if(stage===0){stage=1;relationships.haesol++;addJournal('해솔 할아버지는 등대의 빛이 꺼진 뒤 배들이 길을 잃기 시작했다고 말했다.');showDialogue([{name:'오래된 등대',text:'등대의 문은 오래 닫혀 있었다. 바람에 닳은 나무판자와 햇살 조개가 있으면 작은 불빛을 되살릴 수 있을 것 같다.'},{name:'항해 일지',text:'표류목 3개와 햇살 조개 2개를 모아보자. 해변의 반짝이는 조각들은 천천히 찾아도 괜찮다.'}]);saveGame(true);updateHud();return}
+ if(stage===1){if(itemTotal('driftwood')>=3&&itemTotal('shell')>=2){useItem('driftwood',3);useItem('shell',2);stage=2;coins+=20;addJournal('첫 등대에 작은 조개 불빛이 돌아왔다. 해솔 할아버지가 고맙다며 코인 20개를 건넸다.');showDialogue([{name:'해솔 할아버지',text:'보렴. 아주 작은 빛도 길을 알려 줄 수 있단다. 이제 조개달 섬으로 가보렴. 오래전 내가 보낸 편지가 아직 그곳 어딘가에 남아 있을 거야.'}]);playTone(660,.3,.025);saveGame(true);updateHud()}else showDialogue([{name:'오래된 등대',text:'아직 조금 더 손봐야 한다. 표류목 '+itemTotal('driftwood')+'/3개, 햇살 조개 '+itemTotal('shell')+'/2개가 필요하다.'}]);return}
+ if(stage===2){showDialogue([{name:'등대의 작은 불빛',text:'불빛이 돌아왔다. 멀리 조개달 섬이 보인다. 그곳의 모래사장에 오래된 편지가 떠밀려왔다는 이야기가 있다.'}]);return}
+ if(stage===3){useItem('bottleLetter',1);stage=4;coins+=35;relationships.haesol+=2;addJournal('푸른 우편병을 해솔 할아버지에게 돌려주었다. 편지에는 사라진 항해 지도와 여섯 등대의 약속이 적혀 있었다.');showDialogue([{name:'해솔 할아버지',text:'이 편지는 내가 아주 오래전 친구에게 쓴 것이란다. 우리는 여섯 등대에 작은 빛을 남기기로 약속했지. 하지만 폭풍 뒤로 서로의 소식을 잃었어.'},{name:'해솔 할아버지',text:'안개 등대섬으로 가 보렴. 오래된 항해 지도 조각이 아직 남아 있을 거야. 나머지 길은 네가 천천히 찾아가면 된다.'}]);saveGame(true);updateHud();return}
+ if(stage===4){showDialogue([{name:'해솔 할아버지',text:'안개 등대섬에서 지도 조각을 찾았니? 바다는 멀리 가는 사람에게도, 집으로 돌아오는 사람에게도 길을 내어 준단다.'}]);return}
+ if(stage===5){if(itemTotal('starFragment')>=3){useItem('starFragment',3);stage=6;coins+=150;boat.upgrade=Math.max(boat.upgrade,1);addJournal('별빛 등대가 다시 켜졌다. 여섯 등대의 이야기는 끝났지만 바다는 여전히 넓다.');showDialogue([{name:'등대지기들의 편지',text:'세 개의 별 조각이 모이자 밤하늘에 길고 푸른 빛이 이어졌다. 멀리 떨어져 살던 항해자들은 서로의 등대를 다시 볼 수 있게 되었다.'},{name:'항해 일지',text:'첫 번째 큰 여정이 끝났다. 그러나 지도에는 아직 빈칸이 많다. 이 바다에서 무엇을 할지는 이제 당신이 정하면 된다.'}]);saveGame(true);updateHud()}else showDialogue([{name:'별빛 등대',text:'아직 별 조각의 빛이 부족하다. 현재 '+itemTotal('starFragment')+'/3개를 모았다. 별빛 군도와 바람 언덕에서 빛나는 조각을 찾아보자.'}]);return}
+ showDialogue([{name:'오래된 등대',text:'불빛은 꺼지지 않고 남아 있다. 오늘은 어디로 항해하고 싶니?'}]);
+}
+function talkHaesol(){if(stage===0){showDialogue([{name:'해솔 할아버지',text:'어서 오렴, 작은 선장. 등대가 다시 빛나면 멀리 있는 섬들도 서로의 존재를 기억할 수 있단다.'}]);return}relationships.haesol++;if(stage===1){showDialogue([{name:'해솔 할아버지',text:'해변의 표류목은 등대 문 옆에 쌓아두렴. 햇살 조개는 불빛을 부드럽게 만드는 데 쓸 수 있어.'}])}else if(stage===3){showDialogue([{name:'해솔 할아버지',text:'푸른 병을 찾았니? 등대로 가져오면 함께 읽어보자꾸나.'}])}else if(stage>=4&&stage<6){showDialogue([{name:'해솔 할아버지',text:'좋은 아침이구나. 네가 바다를 천천히 살펴보는 모습이 참 보기 좋다. 발견한 곳이 있다면 항해 일지에 적어두렴.'}])}else{showDialogue([{name:'해솔 할아버지',text:'바다에는 아직 발견하지 못한 조용한 섬이 많단다. 가끔은 목적지 없이 항해해도 괜찮아.'}])}}
+function observeCreature(w){if(!observed.includes(w.type)){observed.push(w.type);addJournal(w.name+'을 관찰했다. 바다 생물 도감에 작은 기록을 남겼다.');coins+=3;toast(w.name+' 관찰 기록 +3 코인');}else toast(w.name+'이/가 천천히 움직이는 모습을 바라봤어요.');showDialogue([{name:w.name,text:creatureText(w.type)}]);saveGame(true);updateHud()}
+function creatureText(t){return ({turtle:'초록바다거북은 숨을 길게 내쉰 뒤 부드럽게 물속으로 미끄러져 들어갔다. 등껍질 위에 작은 물방울이 반짝인다.',crab:'집게 조개게가 작은 조개를 꼭 끌어안고 모래 위를 옆으로 걸어간다. 가까이 다가가자 한쪽 집게를 들어 인사한다.',butterfly:'바람나비가 꽃 위를 천천히 돌다가 강아지의 귀 가까이에 앉았다. 잠시 쉬고는 다시 바람을 따라 날아간다.',bird:'항구갈매기가 돛대에 앉아 작은 소리를 냈다. 발밑에는 반짝이는 조개껍데기가 하나 놓여 있다.',dolphin:'푸른돌고래가 배 옆에서 물 위로 올라왔다. 잠깐 나란히 헤엄친 뒤 멀리 수평선 쪽으로 돌아갔다.'})[t]||'작은 생물이 조용히 주변을 살펴보고 있다.'}
+function startFishing(){if(state!=='play'||panel||!$('dialogue').hidden===false)return;if(fishing){if(fishing.bite){const id=Math.random()<.22?'silverFish':'blueFish';addItem(id,1);if(!discovered.includes(id)){discovered.push(id);addJournal(items[id].name+'을 처음 낚았다.')}fishing=null;playTone(760,.18,.02,'triangle');toast(items[id].name+'을 낚았어요! 가방에 담았어요.');saveGame(true);updateHud()}else{toast('아직 물고기가 오지 않았어요. 조금만 더 기다려봐요.')}return}if(!player.boat&&!islandById('harbor')||false){}fishing={t:0,bite:false,biteAt:2.5+Math.random()*3};toast('낚싯줄을 조용히 던졌어요. 물결을 바라봐요.');playTone(430,.25,.015,'sine')}
+function onKeyDown(e){const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(panel){closePanel();return}if(!$('dialogue').hidden){$('dialogue').hidden=true;dialogueQueue=[];dialogueAfter=null;return}if(state==='play')openPanel('menu');return}if(!$('dialogue').hidden){if(k==='e'||k==='enter'||k===' '){advanceDialogue()}return}if(panel){if(k==='escape')closePanel();return}if(state!=='play')return;if(k==='e'||k==='enter'){interact();return}if(k===' '){startFishing();return}if(k==='m'){openPanel('map');return}if(k==='i'){openPanel('bag');return}if(k==='j'){openPanel('journal');return}if(k==='c'){openPanel('craft');return}keys[k]=true}
+function onKeyUp(e){keys[e.key.toLowerCase()]=false}
+window.addEventListener('keydown',onKeyDown);window.addEventListener('keyup',onKeyUp);window.addEventListener('blur',()=>{keys={};if(state==='play')saveGame(true)});
+document.querySelectorAll('[data-dir]').forEach(b=>{const k={up:'arrowup',down:'arrowdown',left:'arrowleft',right:'arrowright'}[b.dataset.dir];const start=e=>{e.preventDefault();keys[k]=true};const end=e=>{e.preventDefault();keys[k]=false};b.addEventListener('pointerdown',start);b.addEventListener('pointerup',end);b.addEventListener('pointerleave',end);b.addEventListener('pointercancel',end)});
+document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.action==='interact')interact();if(b.dataset.action==='fish')startFishing();if(b.dataset.action==='map')openPanel('map')}));
+$('newGame').addEventListener('click',()=>{beginTransition(()=>{openPanel('saves');})});
+$('continueGame').addEventListener('click',()=>{let d=readSave(lastSlot);if(!d){for(let n=1;n<=3;n++)if(readSave(n)){d=readSave(n);lastSlot=n;break}}if(!d){openPanel('saves');return}beginTransition(()=>{loadGame(lastSlot);state='play';$('titleScreen').classList.add('hide');updateHud();toast('다시 바다로 돌아왔어요.');})});
+$('saveMenu').addEventListener('click',()=>openPanel('saves'));
+$('soundToggle').addEventListener('click',()=>{muted=!muted;updateSoundLabel();if(!muted){playTone(660,.12,.02);startMelody()}});
+function drawOcean(){ctx.fillStyle='#2a8098';ctx.fillRect(0,0,W,H);const t=elapsed;for(let y=0;y<H;y+=16)for(let x=0;x<W;x+=16){const wx=Math.floor((x+cam.x)/16),wy=Math.floor((y+cam.y)/16),n=(wx*13+wy*7+Math.floor(t/3))%11;ctx.fillStyle=n<3?'#2c849b':n<6?'#287b94':'#2c8199';ctx.fillRect(x,y,16,16);const wave=(wx*5+wy*11)%17;if(wave<4){ctx.fillStyle='#93d0cb66';ctx.fillRect(x+((t*1.6+wave*3)%11),y+4,4,1);ctx.fillStyle='#9fd9d377';ctx.fillRect(x+((t*.8+wave*5)%13),y+11,3,1)}if(wave===5){ctx.fillStyle='#b2e4d955';ctx.fillRect(x+5,y+7,1,1)}}}
+function drawIslands(){islands.forEach((i,idx)=>{const x=Math.floor(i.x-cam.x),y=Math.floor(i.y-cam.y);if(x<-i.rx-20||x>W+i.rx+20||y<-i.ry-20||y>H+i.ry+20)return;
+ctx.fillStyle='#225b64';ctx.beginPath();ctx.ellipse(x+4,y+7,i.rx+2,i.ry+2,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle=i.biome==='sand'?'#e8d4a0':i.biome==='mist'?'#b3c5b0':i.biome==='star'?'#83a9a1':'#d9c99a';ctx.beginPath();ctx.ellipse(x,y,i.rx,i.ry,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle=i.biome==='sand'?'#aad09d':i.biome==='mist'?'#779b8c':i.biome==='star'?'#557f79':i.tone;ctx.beginPath();ctx.ellipse(x-2,y-3,i.rx-8,i.ry-8,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#c7d9a0';for(let j=0;j<32;j++){const a=j*2.399+idx,rad=.6+.34*Math.sin(j*3+idx),px=x+Math.cos(a)*i.rx*rad,py=y+Math.sin(a)*i.ry*rad;if(Math.hypot(px-x,py-y)<Math.min(i.rx,i.ry)*.82){ctx.fillRect(Math.round(px),Math.round(py),2,1);}}
+for(let j=0;j<(i.id==='harbor'?9:5);j++){const a=j*2.17+idx*.8,rx=i.rx*(.22+.47*((j%3)/3)),ry=i.ry*(.25+.48*((j%4)/4)),tx=Math.round(x+Math.cos(a)*rx),ty=Math.round(y+Math.sin(a)*ry);if(i.id==='harbor'&&Math.hypot(tx-x,ty-y)<52)continue;drawTree(tx,ty,j%3===0)}
+if(!visited.includes(i.id)){ctx.fillStyle='#e9f2d8a8';ctx.fillRect(x-2,y-1,4,2);ctx.fillStyle='#e9f2d855';ctx.fillRect(x-4,y-3,8,6)}
+if(i.id==='harbor'){drawDock(392-cam.x,293-cam.y);drawLighthouse(245-cam.x,216-cam.y,true)}
+if(i.id==='mist'){drawLighthouse(i.x-cam.x,i.y-cam.y,stage>=4)}
+if(i.id==='green'){drawFlower(x+11,y-18);drawFlower(x-32,y+9)}
+if(i.id==='coral'){for(let j=0;j<7;j++){ctx.fillStyle=j%2?'#e29b9c':'#eead9e';ctx.fillRect(x-24+j*9,y+18+(j%3)*2,2,5)}}
+if(i.id==='star'&&stage>=5){ctx.fillStyle='#f3dc9c';ctx.fillRect(x-3,y-2,6,4);ctx.fillStyle='#fff1c7';ctx.fillRect(x-1,y-5,2,10)}
+})}
+function drawTree(x,y,tall){ctx.fillStyle='#425f49';ctx.fillRect(Math.floor(x)-2,Math.floor(y),4,7);ctx.fillStyle='#2f775c';ctx.fillRect(Math.floor(x)-6,Math.floor(y)-5,12,6);ctx.fillStyle='#4e996c';ctx.fillRect(Math.floor(x)-5,Math.floor(y)-8,8,5);ctx.fillStyle='#8cc28b';ctx.fillRect(Math.floor(x)-2,Math.floor(y)-8,3,2);if(tall){ctx.fillStyle='#214f49';ctx.fillRect(Math.floor(x)+3,Math.floor(y)-3,3,4)}}
+function drawFlower(x,y){ctx.fillStyle='#f3c6d2';ctx.fillRect(Math.round(x)-1,Math.round(y)-2,3,3);ctx.fillStyle='#fff0c7';ctx.fillRect(Math.round(x),Math.round(y)-1,1,1);ctx.fillStyle='#508862';ctx.fillRect(Math.round(x),Math.round(y)+1,1,3)}
+function drawDock(x,y){x=Math.round(x);y=Math.round(y);ctx.fillStyle='#6e4b36';ctx.fillRect(x-24,y-4,40,7);ctx.fillStyle='#af8257';for(let j=0;j<5;j++){ctx.fillRect(x-21+j*8,y-3,6,5);ctx.fillStyle='#714d38';ctx.fillRect(x-18+j*8,y-3,1,5);ctx.fillStyle='#af8257'}ctx.fillStyle='#4a665f';ctx.fillRect(x+8,y+2,9,3)}
+function drawLighthouse(x,y,lit){x=Math.round(x);y=Math.round(y);ctx.fillStyle='#425d67';ctx.fillRect(x-8,y+1,17,14);ctx.fillStyle='#e4dfc8';ctx.fillRect(x-7,y-9,15,11);ctx.fillStyle='#a85d4c';ctx.fillRect(x-9,y-12,19,4);ctx.fillStyle='#55413d';ctx.fillRect(x-4,y+7,5,8);ctx.fillStyle='#344f5a';ctx.fillRect(x-2,y-6,4,4);ctx.fillStyle=lit?'#ffe4a0':'#9bb7b5';ctx.fillRect(x-3,y-6,2,3);ctx.fillStyle=lit?'#ffeab4':'#5f838b';ctx.fillRect(x-2,y-13,4,2);if(lit){ctx.globalAlpha=.13+.05*Math.sin(elapsed*2);ctx.fillStyle='#ffe6a7';ctx.beginPath();ctx.moveTo(x,y-9);ctx.lineTo(x+40,y+1);ctx.lineTo(x+40,y-18);ctx.closePath();ctx.fill();ctx.globalAlpha=1;ctx.fillStyle='#fff0b1';ctx.fillRect(x-2,y-7,4,4)}}
+function drawPlayer(){const x=Math.round(player.x-cam.x),y=Math.round(player.y-cam.y),bob=player.moving?Math.sin(walkT*15)*1.5:Math.sin(elapsed*2.2)*.7;
+ctx.fillStyle='#163e4b55';ctx.beginPath();ctx.ellipse(x,y+7,10,4,0,0,Math.PI*2);ctx.fill();
+if(sprite.complete&&sprite.naturalWidth){ctx.save();if(player.dir==='left'){ctx.translate(x*2,0);ctx.scale(-1,1);ctx.drawImage(sprite,x*2-24,y*2-25+bob*2,24,24)}else ctx.drawImage(sprite,x*2-12,y*2-25+bob*2,24,24);ctx.restore()}
+else{ctx.fillStyle='#272a29';ctx.fillRect(x-7,y-10,14,14);ctx.fillStyle='#f4d996';ctx.fillRect(x-5,y-9,10,10);ctx.fillStyle='#fff7e5';ctx.fillRect(x-4,y-3,8,6);ctx.fillStyle='#292b2a';ctx.fillRect(x-3,y-4,2,2);ctx.fillRect(x+2,y-4,2,2);ctx.fillRect(x-2,y,4,2)}
+}
+function drawBoat(x,y,scale){x=Math.round(x);y=Math.round(y);scale=scale||1;ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.fillStyle='#133b4b44';ctx.beginPath();ctx.ellipse(0,7,23,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#634635';ctx.fillRect(-19,-2,38,10);ctx.fillStyle='#bd8d5a';ctx.fillRect(-17,-2,34,4);ctx.fillStyle='#855a40';for(let j=-13;j<16;j+=7)ctx.fillRect(j,1,4,5);ctx.fillStyle='#352e2a';ctx.fillRect(-20,4,40,2);ctx.fillStyle='#55463a';ctx.fillRect(-1,-28,2,28);ctx.fillStyle='#fff0ce';ctx.fillRect(1,-26,12,23);ctx.fillStyle='#d3e7d9';ctx.fillRect(-14,-23,-1,19);ctx.fillStyle='#e5d8b8';ctx.fillRect(-15,-24,13,21);ctx.fillStyle='#5b6d66';ctx.fillRect(-13,-22,2,17);ctx.fillStyle='#fff5d6';ctx.fillRect(3,-23,7,2);ctx.restore()}
+function drawPickup(p){const x=Math.round(p.x-cam.x),y=Math.round(p.y-cam.y);if(x<-20||x>W+20||y<-20||y>H+20)return;const pulse=.5+.5*Math.sin(elapsed*3+p.x);ctx.fillStyle='#f6e4ad22';ctx.fillRect(x-7,y-7,14,14);ctx.fillStyle='#f7df9d';if(p.item==='driftwood'){ctx.fillRect(x-4,y-1,9,3);ctx.fillRect(x-3,y-3,3,2);ctx.fillRect(x+2,y+1,3,2)}else if(p.item==='shell'){ctx.fillRect(x-3,y-2,6,4);ctx.fillStyle='#f7b6b8';ctx.fillRect(x-1,y-1,2,2)}else if(p.item==='seaGlass'){ctx.fillRect(x-2,y-3,4,6);ctx.fillStyle='#c9f2dd';ctx.fillRect(x-1,y-2,1,2)}else if(p.item==='moonHerb'||p.item==='fiber'){ctx.fillStyle='#66a982';ctx.fillRect(x-1,y-4,2,8);ctx.fillRect(x-5,y-2,4,2);ctx.fillRect(x+1,y,4,2);if(p.item==='moonHerb'){ctx.fillStyle='#f2edb5';ctx.fillRect(x-1,y-6,3,2)}}else if(p.item==='bottleLetter'){ctx.fillStyle='#b8e7e3';ctx.fillRect(x-3,y-4,6,8);ctx.fillStyle='#fff1d0';ctx.fillRect(x-2,y-2,4,4);ctx.fillStyle='#a8d9d3';ctx.fillRect(x-1,y-5,2,2)}else if(p.item==='starFragment'||p.item==='moonPearl'){ctx.fillStyle=p.item==='starFragment'?'#fff0ae':'#c7f1ed';ctx.fillRect(x-1,y-5,2,10);ctx.fillRect(x-5,y-1,10,2);ctx.fillRect(x-3,y-3,6,6)}else{ctx.fillStyle='#d87d6a';ctx.fillRect(x-3,y-3,6,6)}if(pulse>.85){ctx.fillStyle='#fff5d6';ctx.fillRect(x+5,y-5,1,1);ctx.fillRect(x-6,y+4,1,1)}}
+function drawNPC(){const x=294-cam.x,y=283-cam.y;drawPixelAnimal(x,y,'#cbab75','#8d6048');ctx.fillStyle='#f3dfb3';ctx.fillRect(x-4,y-15,8,3);ctx.fillStyle='#73503a';ctx.fillRect(x-3,y-14,6,1)}
+function drawPixelAnimal(x,y,fur,accent){x=Math.round(x);y=Math.round(y+Math.sin(elapsed*2)*.6);ctx.fillStyle='#173f4a44';ctx.fillRect(x-7,y+6,14,3);ctx.fillStyle='#2b2928';ctx.fillRect(x-6,y-6,12,12);ctx.fillStyle=fur;ctx.fillRect(x-5,y-5,10,9);ctx.fillStyle=accent;ctx.fillRect(x-5,y-7,3,4);ctx.fillRect(x+2,y-7,3,4);ctx.fillStyle='#2c2927';ctx.fillRect(x-3,y-2,2,2);ctx.fillRect(x+2,y-2,2,2);ctx.fillStyle='#f1e7d0';ctx.fillRect(x-3,y+1,6,3)}
+function drawWildlife(w){const bob=Math.sin(elapsed*2+w.x)*1.8,x=Math.round(w.x-cam.x),y=Math.round(w.y-cam.y+bob);if(x<-20||x>W+20||y<-20||y>H+20)return;if(w.type==='turtle'){ctx.fillStyle='#2e574d';ctx.fillRect(x-6,y-3,12,7);ctx.fillStyle='#6a9c72';ctx.fillRect(x-5,y-5,10,8);ctx.fillStyle='#9cc48b';ctx.fillRect(x+5,y-2,4,3);ctx.fillRect(x-4,y+3,3,3);ctx.fillRect(x+2,y+3,3,3);ctx.fillStyle='#263d36';ctx.fillRect(x+7,y-1,1,1)}else if(w.type==='crab'){ctx.fillStyle='#b9675a';ctx.fillRect(x-5,y-3,10,6);ctx.fillRect(x-8,y-5,3,3);ctx.fillRect(x+5,y-5,3,3);ctx.fillStyle='#f7d2a0';ctx.fillRect(x-3,y-2,1,1);ctx.fillRect(x+2,y-2,1,1);ctx.fillStyle='#8f5149';for(let j=-5;j<=5;j+=5){ctx.fillRect(x+j,y+3,1,3)}}else if(w.type==='butterfly'){ctx.fillStyle='#e9b5cf';ctx.fillRect(x-6,y-3,5,5);ctx.fillRect(x+2,y-4,5,5);ctx.fillStyle='#fff0ca';ctx.fillRect(x-1,y-3,3,6);ctx.fillStyle='#aa7c9d';ctx.fillRect(x,y-5,1,3)}else if(w.type==='bird'){ctx.fillStyle='#efe5c8';ctx.fillRect(x-4,y-2,9,5);ctx.fillRect(x-2,y-5,4,4);ctx.fillStyle='#d19f65';ctx.fillRect(x+4,y-1,3,2);ctx.fillStyle='#2d3f43';ctx.fillRect(x,y-4,1,1)}else if(w.type==='dolphin'){ctx.fillStyle='#73c3c6';ctx.fillRect(x-8,y-2,14,4);ctx.fillRect(x+4,y-5,5,5);ctx.fillRect(x-11,y-4,4,3);ctx.fillStyle='#c4e6d9';ctx.fillRect(x-4,y+2,7,1);ctx.fillStyle='#e5f9ed';ctx.fillRect(x+6,y-4,1,1)}}
+function drawWeather(){const t=elapsed;if(weather==='비'){ctx.fillStyle='#b4e6ec3a';for(let i=0;i<35;i++){let x=(i*71+t*38)%W,y=(i*43+t*60)%H;ctx.fillRect(x,y,1,4)}}if(weather==='안개'){ctx.fillStyle='#d7e9df24';ctx.fillRect(0,0,W,H);ctx.fillStyle='#deedea12';for(let i=0;i<5;i++){ctx.fillRect((i*113+Math.sin(t*.1)*30)%W,36+i*41,120,10)}}if(minutes%1440<360||minutes%1440>1110){ctx.fillStyle='#071c3955';ctx.fillRect(0,0,W,H);for(let i=0;i<15;i++){const x=(i*83+17)%W,y=(i*47+11)%100;ctx.fillStyle=(i%4===0)?'#e9efce':'#a7d8d5';ctx.fillRect(x,y,1,1)}}if(weather==='맑음'&&minutes%1440>500&&minutes%1440<1000){ctx.fillStyle='#fff4be0c';ctx.fillRect(0,0,W,H)}}
+function drawFishing(){if(!fishing)return;const x=Math.round((player.boat?boat.x:player.x)-cam.x),y=Math.round((player.boat?boat.y:player.y)-cam.y);ctx.strokeStyle='#e4edda';ctx.beginPath();ctx.moveTo(x+4,y-3);ctx.quadraticCurveTo(x+16,y+1,x+22,y+7+Math.sin(elapsed*5)*2);ctx.stroke();ctx.fillStyle=fishing.bite?'#fff2a4':'#9ad9d7';ctx.fillRect(x+20,y+7,3,3);if(fishing.bite){ctx.fillStyle='#fff0b8';ctx.fillRect(x+16,y+1,2,2);ctx.fillRect(x+25,y+4,2,2)}}
+function render(){ctx.clearRect(0,0,W,H);const target=player.boat?boat:player;cam.x=Math.floor(clamp(target.x-W/2,0,WORLD_W-W));cam.y=Math.floor(clamp(target.y-H/2,0,WORLD_H-H));drawOcean();drawIslands();pickups.forEach(p=>{if(!collected.includes(p.id))drawPickup(p)});wildlife.forEach(drawWildlife);if(!player.boat)drawNPC();drawBoat(boat.x-cam.x,boat.y-cam.y,1+boat.upgrade*.06);drawFishing();drawPlayer();drawWeather();particles=particles.filter(p=>p.t<1.4);particles.forEach(p=>{p.t+=.025;const x=p.x-cam.x,y=p.y-cam.y-p.t*18;ctx.globalAlpha=1-p.t/1.4;ctx.fillStyle='#fff0b5';ctx.fillRect(Math.round(x-p.t*6),Math.round(y),2,2);ctx.fillRect(Math.round(x+p.t*7),Math.round(y-6),2,2);ctx.globalAlpha=1});if(state==='play'&&!panel&&$('dialogue').hidden){ctx.fillStyle='#f3e8be';ctx.fillRect(0,H-2,W,2);ctx.fillStyle='#b7e5dc';ctx.fillRect(0,H-2,(W*((minutes%1440)/1440)),2)}}
+function findNearObject(){if(player.boat){return currentIsland(boat.x,boat.y,.28)?{hint:'정박하기'}: {hint:'바다를 항해 중'}}let candidates=[];pickups.filter(p=>!collected.includes(p.id)).forEach(o=>candidates.push({o,d:objectDistance(player.x,player.y,o),hint:'줍기'}));candidates.push({o:{x:245,y:216},d:objectDistance(player.x,player.y,{x:245,y:216}),hint:'등대 살펴보기'});candidates.push({o:{x:294,y:283},d:objectDistance(player.x,player.y,{x:294,y:283}),hint:'대화하기'});candidates.push({o:boat,d:objectDistance(player.x,player.y,boat),hint:'배에 타기'});const n=candidates.filter(c=>c.d<32).sort((a,b)=>a.d-b.d)[0];return n?{hint:n.hint}:null}
+function tick(dt){elapsed+=dt;autosaveTimer+=dt;if(state==='play'&&panel===null&&$('dialogue').hidden){minutes+=dt*1.15;if(minutes>=1440){minutes-=1440;day++;weather=['맑음','흐림','비','맑음','안개'][Math.floor(Math.random()*5)];addJournal('제 '+day+'일, 오늘의 날씨는 '+weather+'이다.');toast('새로운 아침이 찾아왔어요. 오늘은 '+weather+' 날씨예요.')}
+ if(fishing){fishing.t+=dt;if(!fishing.bite&&fishing.t>=fishing.biteAt){fishing.bite=true;playTone(740,.13,.014,'sine');toast('톡, 낚싯대가 움직여요! SPACE를 눌러 천천히 당겨봐요.')}}const speed=player.boat?95+(boat.upgrade*14):66;let dx=0,dy=0;if(keys.w||keys.arrowup)dy-=1;if(keys.s||keys.arrowdown)dy+=1;if(keys.a||keys.arrowleft)dx-=1;if(keys.d||keys.arrowright)dx+=1;const len=Math.hypot(dx,dy)||1;dx/=len;dy/=len;player.moving=!!(dx||dy);
+ if(player.boat){boat.vx+=(dx*speed-boat.vx)*Math.min(1,dt*2.6);boat.vy+=(dy*speed-boat.vy)*Math.min(1,dt*2.6);let nx=clamp(boat.x+boat.vx*dt,8,WORLD_W-8),ny=clamp(boat.y+boat.vy*dt,8,WORLD_H-8);if(!landAt(nx,ny)){boat.x=nx;boat.y=ny}else{boat.vx*=.25;boat.vy*=.25}player.x=boat.x;player.y=boat.y;if(Math.hypot(boat.vx,boat.vy)>6){boat.heading=Math.atan2(boat.vy,boat.vx);walkT+=dt}}
+ else if(dx||dy){player.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down');const nx=clamp(player.x+dx*speed*dt,8,WORLD_W-8),ny=clamp(player.y+dy*speed*dt,8,WORLD_H-8);if(landAt(nx,player.y))player.x=nx;if(landAt(player.x,ny))player.y=ny;walkT+=dt;const isl=currentIsland(player.x,player.y,0);if(isl)markVisited(isl.id)}
+ nearObject=findNearObject();updateHud();if(autosaveTimer>25){autosaveTimer=0;saveGame(true)}}
+}
+function frame(ts){const dt=Math.min(.05,(ts-lastFrame||16)/1000);lastFrame=ts;tick(dt);render();requestAnimationFrame(frame)}
+function boot(){updateContinue();$('titleScreen').classList.remove('hide');updateSoundLabel();if(readSave(1))lastSlot=1;else if(readSave(2))lastSlot=2;else if(readSave(3))lastSlot=3;updateContinue();updateHud();requestAnimationFrame(frame)}
+window.addEventListener('beforeunload',()=>{if(state==='play')saveGame(true)});
+boot();
+})();
+</script>
+</body>
+</html>
