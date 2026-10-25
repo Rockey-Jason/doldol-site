@@ -676,31 +676,71 @@ async function checkSiteAchievements() {
   }
 
   // =====================================================
-  // 돌돌증권 업적: 체결 완료된 매수 기록만 확인한다.
-  // 거래 기록은 서버 DB를 기준으로 읽고, 코인/업적 보상은 RPC가 처리한다.
+  // 돌돌증권 업적: 체결된 거래 원장 전체를 바탕으로 조건을 계산한다.
+  // 보상 지급 가능 여부는 claim_achievement RPC가 DB에서 다시 검증한다.
+  // 페이지당 1,000행 제한을 넘는 거래도 누락하지 않도록 페이지 단위로 읽는다.
   // =====================================================
   try {
-    const { data: trades, error: tradesError } = await supabase
-      .from("dori_stock_trades")
-      .select("stock_id, quantity, trade_type")
-      .eq("user_id", userId)
-      .gt("quantity", 0);
-    if (tradesError) {
-      console.warn("[Dori Achievement] 주식 거래 기록 조회 실패:", tradesError);
-    } else {
-      const buys = (trades || []).filter(t => /^(buy|purchase|매수)$/i.test(String(t.trade_type || "")));
-      if (buys.some(t => Number(t.quantity) > 0) && need("first_stock")) await claim("first_stock");
-      const stockIds = {
-        1: "first_rockeypaper",
-        2: "first_bandoche",
-        5: "first_food",
-        6: "first_rockeycloth"
-      };
-      for (const [stockId, achievementId] of Object.entries(stockIds)) {
-        if (need(achievementId) && buys.some(t => String(t.stock_id) === stockId && Number(t.quantity) > 0)) {
-          await claim(achievementId);
-        }
+    const trades = [];
+    const pageSize = 1000;
+    for (let offset = 0; ; offset += pageSize) {
+      const { data: page, error: tradesError } = await supabase
+        .from("dori_stock_trades")
+        .select("stock_id, quantity, trade_type, total_amount, created_at")
+        .eq("user_id", userId)
+        .gt("quantity", 0)
+        .order("id", { ascending: true })
+        .range(offset, offset + pageSize - 1);
+      if (tradesError) {
+        console.warn("[Dori Achievement] 주식 거래 기록 조회 실패:", tradesError);
+        break;
       }
+      trades.push(...(page || []));
+      if (!page || page.length < pageSize) break;
+    }
+
+    const buys = trades.filter(t => /^(buy|purchase|매수)$/i.test(String(t.trade_type || "")));
+    const sells = trades.filter(t => /^(sell|sale|매도)$/i.test(String(t.trade_type || "")));
+    const buyShares = buys.reduce((sum, t) => sum + Math.max(0, Number(t.quantity) || 0), 0);
+    const sellShares = sells.reduce((sum, t) => sum + Math.max(0, Number(t.quantity) || 0), 0);
+    const buyVolume = buys.reduce((sum, t) => sum + Math.max(0, Number(t.total_amount) || 0), 0);
+    const boughtStocks = new Set(buys.map(t => String(t.stock_id)));
+    const buyDays = new Set(buys.map(t => String(t.created_at || "").slice(0, 10)).filter(Boolean));
+    const hasRoundTrip = buys.some(b => sells.some(s => String(s.stock_id) === String(b.stock_id)));
+
+    const stockChecks = [
+      ["first_stock", buys.length > 0],
+      ["first_rockeypaper", buys.some(t => String(t.stock_id) === "1")],
+      ["first_bandoche", buys.some(t => String(t.stock_id) === "2")],
+      ["first_rockey_doronium", buys.some(t => String(t.stock_id) === "3")],
+      ["first_dori_electronics", buys.some(t => String(t.stock_id) === "4")],
+      ["first_food", buys.some(t => String(t.stock_id) === "5")],
+      ["first_rockeycloth", buys.some(t => String(t.stock_id) === "6")],
+      ["stock_first_sell", sells.length > 0],
+      ["stock_10_trades", trades.length >= 10],
+      ["stock_50_trades", trades.length >= 50],
+      ["stock_100_trades", trades.length >= 100],
+      ["stock_500_trades", trades.length >= 500],
+      ["stock_buy_10_shares", buyShares >= 10],
+      ["stock_buy_100_shares", buyShares >= 100],
+      ["stock_buy_1000_shares", buyShares >= 1000],
+      ["stock_sell_10_shares", sellShares >= 10],
+      ["stock_sell_100_shares", sellShares >= 100],
+      ["stock_volume_1m", buyVolume >= 1000000],
+      ["stock_volume_10m", buyVolume >= 10000000],
+      ["stock_volume_100m", buyVolume >= 100000000],
+      ["stock_3_companies", boughtStocks.size >= 3],
+      ["stock_6_companies", boughtStocks.size >= 6],
+      ["stock_5_trading_days", buyDays.size >= 5],
+      ["stock_round_trip", hasRoundTrip],
+      ["stock_bulk_buy_100", buys.some(t => Number(t.quantity) >= 100)],
+      ["stock_bulk_buy_1000", buys.some(t => Number(t.quantity) >= 1000)],
+      ["stock_single_trade_1m", buys.some(t => Number(t.total_amount) >= 1000000)],
+      ["stock_single_trade_10m", buys.some(t => Number(t.total_amount) >= 10000000)]
+    ];
+
+    for (const [achievementId, conditionMet] of stockChecks) {
+      if (conditionMet && need(achievementId)) await claim(achievementId);
     }
   } catch (stockError) {
     console.warn("[Dori Achievement] 주식 업적 확인 중 오류:", stockError);
