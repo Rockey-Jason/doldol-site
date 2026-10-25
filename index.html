@@ -2645,8 +2645,7 @@ async function 업적진행활동가져오기(userId, force = false) {
             news: !surveys.error,
             events: !events.error,
             eventQuiz: !eventQuizzes.error,
-            inventory: !inventory.error,
-            dividends: !dividends.error
+            inventory: !inventory.error
         }
     };
 
@@ -2712,7 +2711,7 @@ function 업적진행도값계산(achievementId, unlocked, user) {
         (typeof rawNewsNumbers === "string" && rawNewsNumbers.trim() !== "") ||
         (rawNewsNumbers && typeof rawNewsNumbers === "object");
     const fallbackNewsNumber = Math.max(0, Number(u.read_dori_news || 0));
-    const hasReadNews = hasReadHistory ? newsNumbers.length > 0 : fallbackNewsNumber > 0;
+    const hasReadNews = newsNumbers.length > 0 || fallbackNewsNumber > 0;
     const readIssue = issue => hasReadHistory ? newsNumbers.includes(issue) : fallbackNewsNumber >= issue;
 
     const set = (value, goal, text, ready = true, section = "") => {
@@ -2819,8 +2818,8 @@ function 업적진행도값계산(achievementId, unlocked, user) {
     else if (Object.prototype.hasOwnProperty.call(coinThresholds, id)) set(Math.max(0, Number(u.doldolcoin || 0)), coinThresholds[id], "현재 보유 돌돌코인", true, "coin");
     else if (id === "rockey_7777777") set(Math.max(0, Number(u.special_title_draws || 0)), 7, "특별 칭호 뽑기 횟수", true, "box");
     else if (id === "read_news") set(hasReadNews ? 1 : 0, 1, "돌이신문 읽기 여부", true, "news");
-    else if (id === "read_1_news") set(hasReadNews ? 1 : 0, 1, "돌이신문 읽기 기록", true, "news");
-    else if (id === "read_10_news") set(hasReadHistory ? newsNumbers.length : fallbackNewsNumber, 10, "읽은 돌이신문 수", true, "news");
+    else if (id === "read_1_news") set(newsNumbers.length, 1, "돌이신문 읽기 기록", true, "news");
+    else if (id === "read_10_news") set(newsNumbers.length, 10, "읽은 돌이신문 수", true, "news");
     else if (id === "quiz_correct") set(u.quiz_right === true ? 1 : 0, 1, "저장된 퀴즈 정답 상태", true, "news");
     else if (id === "first_login") set(u.user_id ? 1 : 0, 1, "로그인 기록", true, "general");
     else mapped = false;
