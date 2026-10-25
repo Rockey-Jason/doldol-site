@@ -133,7 +133,7 @@ var startButton=$("startBtn"),statusElement=$("persistenceStatus"),accountLink=$
 var gameScreen=$("gameScreen"),timerRing=$("timerRing"),timerDisplay=$("timerDisplay"),timerStatus=$("timerStatus"),timerSub=$("timerSub");
 var screenEyebrow=$("screenEyebrow"),screenHeading=$("screenHeading"),screenMessage=$("screenMessage"),tapHintText=$("tapHintText");
 var questionCounter=$("questionCounter"),limitBadge=$("limitBadge"),progressFill=$("progressFill"),soundToggle=$("soundToggle"),pauseTimerBtn=$("pauseTimerBtn");
-var intervalId=null,toastId=null,state="idle",audioContext=null,soundEnabled=true;
+var intervalId=null,toastId=null,state="idle",audioContext=null,soundEnabled=true,alarmOscillators=[];
 var limitMs=60000,totalQuestions=10,currentQuestion=1,questionStartedAt=0,deadline=0,results=[],sessionStartedAt=null,sessionLimitSeconds=60,recordSaved=false;
 var pausedRemainingMs=0,elapsedBeforePauseMs=0;
 
@@ -369,21 +369,43 @@ function ensureAudio(){
     return audioContext;
   }catch(e){return null;}
 }
+function stopAlarm(){
+  alarmOscillators.forEach(function(osc){try{osc.stop();}catch(e){}try{osc.disconnect();}catch(e){}});
+  alarmOscillators=[];
+  if(typeof navigator!=="undefined"&&typeof navigator.vibrate==="function"){try{navigator.vibrate(0);}catch(e){}}
+}
 function playAlarm(){
   if(!soundEnabled)return;
+  stopAlarm();
   var ctx=ensureAudio();
   if(ctx){
     try{
       var now=ctx.currentTime;
-      [880,660,880].forEach(function(freq,index){
-        var start=now+index*.22,osc=ctx.createOscillator(),gain=ctx.createGain();
-        osc.type="sine";osc.frequency.setValueAtTime(freq,start);
-        gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(.19,start+.025);gain.gain.exponentialRampToValueAtTime(.0001,start+.16);
-        osc.connect(gain);gain.connect(ctx.destination);osc.start(start);osc.stop(start+.17);
-      });
+      // 20초 동안 반복되는 또렷한 고·저음 3연타 알림. 브라우저/기기 음량은 사용자가 조절해.
+      var duration=20,cycle=1.5,beepOn=.24,beepGap=.13;
+      for(var base=0;base<duration;base+=cycle){
+        for(var j=0;j<3;j++){
+          var offset=base+j*(beepOn+beepGap);
+          if(offset>=duration)continue;
+          var start=now+offset,osc=ctx.createOscillator(),gain=ctx.createGain();
+          var freq=(j===1)?660:1046;
+          osc.type="square";
+          osc.frequency.setValueAtTime(freq,start);
+          gain.gain.setValueAtTime(.0001,start);
+          gain.gain.exponentialRampToValueAtTime(.32,start+.018);
+          gain.gain.setValueAtTime(.32,start+beepOn-.045);
+          gain.gain.exponentialRampToValueAtTime(.0001,start+beepOn);
+          osc.connect(gain);gain.connect(ctx.destination);
+          osc.start(start);osc.stop(start+beepOn+.01);
+          alarmOscillators.push(osc);
+          osc.onended=function(){var i=alarmOscillators.indexOf(this);if(i!==-1)alarmOscillators.splice(i,1);};
+        }
+      }
     }catch(e){}
   }
-  if(typeof navigator!=="undefined"&&typeof navigator.vibrate==="function"){try{navigator.vibrate([120,60,120,60,180]);}catch(e){}}
+  if(typeof navigator!=="undefined"&&typeof navigator.vibrate==="function"){
+    try{navigator.vibrate([350,120,350,120,600,220,350,120,350,120,600]);}catch(e){}
+  }
 }
 function renderRing(remaining){
   var ratio=Math.max(0,Math.min(1,remaining/limitMs));
@@ -626,7 +648,7 @@ $("settingsForm").addEventListener("submit",function(event){event.preventDefault
 gameScreen.addEventListener("click",handleTap);
 gameScreen.addEventListener("keydown",function(event){if(event.key===" "||event.key==="Enter"){event.preventDefault();handleTap();}});
 pauseTimerBtn.addEventListener("click",function(event){event.stopPropagation();if(state==="running"||state==="paused")toggleQuestionPause();});
-soundToggle.addEventListener("click",function(event){event.stopPropagation();soundEnabled=!soundEnabled;soundToggle.setAttribute("aria-pressed",String(soundEnabled));soundToggle.textContent=soundEnabled?"♫ 알림 켜짐":"♩ 알림 꺼짐";if(soundEnabled)ensureAudio();});
+soundToggle.addEventListener("click",function(event){event.stopPropagation();soundEnabled=!soundEnabled;soundToggle.setAttribute("aria-pressed",String(soundEnabled));soundToggle.textContent=soundEnabled?"♫ 알림 켜짐":"♩ 알림 꺼짐";if(soundEnabled)ensureAudio();else stopAlarm();});
 $("quitGameBtn").addEventListener("click",function(){if(window.confirm("이번 도전을 종료할까? 완료한 문제 기록은 최종 통계에 저장되지 않아.")){returnToSetup();}});
 $("openHistoryBtn").addEventListener("click",openHistory);
 $("summaryHistoryBtn").addEventListener("click",openHistory);
