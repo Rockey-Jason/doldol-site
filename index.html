@@ -1995,25 +1995,7 @@ body.로그인상태 #회원가입 {
 .돌이은행카드:hover .돌이은행카드문양{transform:rotate(45deg) translateY(-4px) scale(1.04);box-shadow:inset 0 1px 0 rgba(255,255,255,.16),0 16px 42px rgba(0,0,0,.35),0 0 28px rgba(228,200,117,.1)}
 .돌이은행링크{display:block;text-decoration:none!important}
 .돌이은행링크:hover{color:#f4e2ad!important}
-.돌이월드카드 .돌이월드이미지링크{display:block;text-decoration:none!important}
-.돌이월드이미지틀{position:relative!important;overflow:hidden;background:radial-gradient(ellipse at 50% 45%,rgba(97,158,255,.2),transparent 55%),linear-gradient(145deg,#0b1a3e,#060a22 74%)!important;border-color:rgba(127,176,255,.28)!important}
-.돌이월드아트{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;isolation:isolate;overflow:hidden;color:#e6f2ff;text-align:center;background:radial-gradient(ellipse at 50% 105%,rgba(96,120,255,.13),transparent 58%)}
-.돌이월드아트:before{content:"";position:absolute;inset:0;z-index:-2;background-image:radial-gradient(circle,rgba(194,225,255,.8) 0 1px,transparent 1.4px);background-size:39px 43px;opacity:.22;mask-image:linear-gradient(to bottom,transparent,#000 24%,#000 80%,transparent)}
-.돌이월드궤도{position:absolute;z-index:-1;left:50%;top:41%;width:190px;max-width:74%;aspect-ratio:1;border:1px solid rgba(104,179,255,.22);border-radius:50%;transform:translate(-50%,-50%) rotate(-25deg);box-shadow:0 0 35px rgba(79,127,255,.07);pointer-events:none}
-.돌이월드궤도:after{content:"";position:absolute;left:14%;top:13%;width:7px;height:7px;border-radius:50%;background:#a6eaff;box-shadow:0 0 12px rgba(116,211,255,.75)}
-.돌이월드궤도1{width:150px;transform:translate(-50%,-50%) rotate(28deg);border-color:rgba(145,148,255,.3)}
-.돌이월드궤도2{width:210px;transform:translate(-50%,-50%) rotate(-47deg);border-style:dashed;border-color:rgba(115,192,255,.18)}
-.돌이월드궤도3{width:245px;transform:translate(-50%,-50%) rotate(61deg);border-color:rgba(157,188,255,.1)}
-.돌이월드행성{display:grid;place-items:center;width:94px;max-width:26vw;aspect-ratio:1;filter:drop-shadow(0 0 24px rgba(89,144,255,.2));animation:돌이월드행성부유 5s ease-in-out infinite}
-.돌이월드행성 svg{display:block;width:100%;height:100%}
-.돌이월드영문{display:block;margin-top:2px;color:#92b6ff;font:400 8px/1.2 Arial,sans-serif;letter-spacing:2.2px}
-.돌이월드제목{display:block;color:#f5f9ff;font-family:"HancomMalrangmalrang","Jua",sans-serif!important;font-size:23px;font-weight:400!important;line-height:1.2;text-shadow:0 0 24px rgba(117,175,255,.2)}
-.돌이월드부제{display:block;color:#8298c4;font:400 7px/1.2 Arial,sans-serif;letter-spacing:1.7px}
-.돌이월드CTA{display:block!important;text-decoration:none!important;color:#dceaff!important;border:1px solid rgba(119,171,255,.3)!important;background:linear-gradient(115deg,rgba(53,85,182,.92),rgba(47,40,121,.94))!important;box-shadow:0 10px 26px rgba(37,57,150,.15),inset 0 1px rgba(255,255,255,.11)!important}
-.돌이월드CTA:hover{border-color:rgba(145,220,255,.7)!important;color:#fff!important;box-shadow:0 13px 29px rgba(37,57,150,.25),0 0 24px rgba(98,165,255,.1)!important}
-.돌이월드카드:hover .돌이월드행성{filter:drop-shadow(0 0 30px rgba(89,183,255,.34))}
-@keyframes 돌이월드행성부유{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-@media(prefers-reduced-motion:reduce){.돌이월드행성{animation:none}}
+
 
 @keyframes 돌이은행후광{from{transform:scale(.96);opacity:.6}to{transform:scale(1.06);opacity:1}}
 @media(prefers-reduced-motion:reduce){.돌이은행카드후광{animation:none}.돌이은행카드문양{transition:none}}
@@ -2046,36 +2028,7 @@ body.로그인상태 #회원가입 {
 
   <div class="메뉴영역">
 
-    <article class="메뉴카드 돌이월드카드">
-      <a class="돌이월드이미지링크" href="./dori-world.html" aria-label="돌이 월드 통합 지도 열기">
-        <div class="이미지틀 돌이월드이미지틀">
-          <div class="돌이월드아트" aria-hidden="true">
-            <div class="돌이월드궤도 돌이월드궤도1"></div>
-            <div class="돌이월드궤도 돌이월드궤도2"></div>
-            <div class="돌이월드궤도 돌이월드궤도3"></div>
-            <div class="돌이월드행성">
-              <svg viewBox="0 0 120 120" fill="none">
-                <defs>
-                  <linearGradient id="worldPlanet" x1="15" y1="12" x2="104" y2="108" gradientUnits="userSpaceOnUse"><stop stop-color="#A5E9FF"/><stop offset=".48" stop-color="#6F9DFF"/><stop offset="1" stop-color="#6758D9"/></linearGradient>
-                  <linearGradient id="worldLand" x1="28" y1="25" x2="84" y2="92" gradientUnits="userSpaceOnUse"><stop stop-color="#C4FAE6"/><stop offset="1" stop-color="#67B5D7"/></linearGradient>
-                </defs>
-                <circle cx="60" cy="60" r="40" fill="url(#worldPlanet)" fill-opacity=".94"/>
-                <path d="M32 39 45 28 58 33 60 43 72 47 67 57 53 59 48 69 36 62 31 51 23 48 32 39Z" fill="url(#worldLand)" fill-opacity=".94"/>
-                <path d="M70 67 82 62 94 70 90 82 79 91 67 84 63 75 70 67Z" fill="url(#worldLand)" fill-opacity=".88"/>
-                <path d="M25 48 36 52 42 62 37 72M49 28 47 40 57 47M72 47 78 54 72 63M67 84 76 79 89 82" stroke="#E8FAFF" stroke-opacity=".66" stroke-width="2" stroke-linecap="round"/>
-                <circle cx="45" cy="38" r="2.5" fill="#FFF6D0"/><circle cx="81" cy="69" r="2" fill="#FFF6D0"/>
-                <circle cx="60" cy="60" r="42" stroke="#BCEEFF" stroke-opacity=".6" stroke-width="1.2"/>
-              </svg>
-            </div>
-            <span class="돌이월드영문">DORI WORLD · ATLAS</span>
-            <strong class="돌이월드제목">돌이 월드</strong>
-            <span class="돌이월드부제">ONE WORLD, MANY ADVENTURES</span>
-          </div>
-        </div>
-      </a>
-      <a class="메인버튼 돌이월드CTA" href="./dori-world.html">월드맵 탐험하기 ↗</a>
-      <div class="카드설명">은행·증권·게임·도로늄 공장까지, 돌이사이트의 모든 지역을 하나의 세계에서 탐험해보세요.</div>
-    </article>
+
 
 
 
