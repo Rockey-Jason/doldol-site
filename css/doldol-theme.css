@@ -71,3 +71,50 @@ dialog,[role="dialog"]{box-sizing:border-box;max-width:calc(100vw - 20px);max-he
   body header.nav:has(> .dori-main-site-button){padding-left:14px!important;padding-right:14px!important}
   body header.nav:has(> .dori-main-site-button)>.brand{flex:1 1 145px!important}
 }
+
+
+/* Unified typography, touch behavior, and mobile-safe surfaces (2026-10 refresh). */
+@font-face{
+  font-family:"HancomMalrangmalrang";
+  src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2") format("woff2");
+  font-style:normal;
+  font-weight:400;
+  font-display:swap;
+}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%;scroll-padding-top:clamp(12px,3vh,28px)}
+body,
+body :not(svg):not(path):not([class*="fa-"]):not(.material-icons):not(.material-symbols-outlined):not(.iconify){
+  font-family:"HancomMalrangmalrang",sans-serif!important;
+  font-weight:400!important;
+}
+body{font-synthesis:none}
+button,input,select,textarea{font-family:"HancomMalrangmalrang",sans-serif!important;font-weight:400!important}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[role="button"]:focus-visible,[role="tab"]:focus-visible{
+  outline:2px solid rgba(93,220,255,.92)!important;
+  outline-offset:3px!important;
+}
+button:disabled,[aria-disabled="true"]{cursor:not-allowed!important}
+dialog,[role="dialog"]{
+  box-sizing:border-box;
+  max-width:calc(100vw - 20px);
+  max-height:calc(100vh - 20px);
+  max-height:calc(100dvh - 20px);
+  overflow-x:hidden;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+@media(max-width:700px){
+  html,body{max-width:100%;overflow-x:clip}
+  body{padding-bottom:env(safe-area-inset-bottom,0px)}
+  dialog,[role="dialog"]{max-width:calc(100vw - 16px);max-height:calc(100dvh - 16px)}
+  input,select,textarea{scroll-margin-bottom:24px}
+}
+@media(hover:none){
+  button:not(:disabled):hover,a:hover,[role="button"]:hover{transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto!important}
+  body::before{display:none!important}
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
