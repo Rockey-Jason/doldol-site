@@ -532,7 +532,7 @@ async function checkSiteAchievements() {
   const userId = sessionData.session.user.id;
   let { data: user, error } = await supabase
     .from("users")
-    .select("doldolcoin, read_dori_news, user_achievement")
+    .select("doldolcoin, read_dori_news, user_achievement, quiz_right")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -618,6 +618,97 @@ async function checkSiteAchievements() {
 
   if (boxCount >= 1000 && need("thousand_box")) {
     await claim("thousand_box");
+  }
+
+  // =====================================================
+  // 체스 업적: 서버에 저장된 실제 게임 기록으로 판정
+  // chess_games.result의 1-0은 플레이어 승리(백 기준)로 기록된다.
+  // =====================================================
+  try {
+    const { count: chessCount, error: chessCountError } = await supabase
+      .from("chess_games")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", userId);
+    if (chessCountError) {
+      console.warn("[Dori Achievement] 체스 게임 기록 조회 실패:", chessCountError);
+    } else {
+      const played = Number(chessCount || 0);
+      if (played >= 1 && need("first_chess")) await claim("first_chess");
+
+      const { count: wins, error: winsError } = await supabase
+        .from("chess_games")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", userId)
+        .eq("result", "1-0");
+      if (winsError) {
+        console.warn("[Dori Achievement] 체스 승리 기록 조회 실패:", winsError);
+      } else {
+        const winCount = Number(wins || 0);
+        if (winCount >= 10 && need("chess_10_win")) await claim("chess_10_win");
+        if (winCount >= 100 && need("chess_100_win")) await claim("chess_100_win");
+      }
+
+      const botAchievementIds = {
+        talc: "chess_win_talc",
+        sleep: "chess_win_sleeping",
+        fur: "chess_win_fur",
+        rockey: "chess_win_rockey",
+        army: "chess_win_army",
+        doronum: "chess_win_doronum",
+        brilliant: "chess_win_brilliant"
+      };
+      for (const [botId, achievementId] of Object.entries(botAchievementIds)) {
+        if (need(achievementId)) {
+          const { count: botWins, error: botError } = await supabase
+            .from("chess_games")
+            .select("id", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .eq("mode", "bot")
+            .eq("bot_id", botId)
+            .eq("result", "1-0");
+          if (botError) console.warn("[Dori Achievement] 봇 체스 기록 조회 실패:", botId, botError);
+          else if (Number(botWins || 0) > 0) await claim(achievementId);
+        }
+      }
+    }
+  } catch (chessError) {
+    console.warn("[Dori Achievement] 체스 업적 확인 중 오류:", chessError);
+  }
+
+  // =====================================================
+  // 돌돌증권 업적: 체결 완료된 매수 기록만 확인한다.
+  // 거래 기록은 서버 DB를 기준으로 읽고, 코인/업적 보상은 RPC가 처리한다.
+  // =====================================================
+  try {
+    const { data: trades, error: tradesError } = await supabase
+      .from("dori_stock_trades")
+      .select("stock_id, quantity, trade_type")
+      .eq("user_id", userId)
+      .gt("quantity", 0);
+    if (tradesError) {
+      console.warn("[Dori Achievement] 주식 거래 기록 조회 실패:", tradesError);
+    } else {
+      const buys = (trades || []).filter(t => /^(buy|purchase|매수)$/i.test(String(t.trade_type || "")));
+      if (buys.some(t => Number(t.quantity) > 0) && need("first_stock")) await claim("first_stock");
+      const stockIds = {
+        1: "first_rockeypaper",
+        2: "first_bandoche",
+        5: "first_food",
+        6: "first_rockeycloth"
+      };
+      for (const [stockId, achievementId] of Object.entries(stockIds)) {
+        if (need(achievementId) && buys.some(t => String(t.stock_id) === stockId && Number(t.quantity) > 0)) {
+          await claim(achievementId);
+        }
+      }
+    }
+  } catch (stockError) {
+    console.warn("[Dori Achievement] 주식 업적 확인 중 오류:", stockError);
+  }
+
+  // 퀴즈 정답 업적은 사용자의 서버 저장 정답 상태를 기준으로 판정한다.
+  if (user.quiz_right === true && need("quiz_correct")) {
+    await claim("quiz_correct");
   }
 
   // rich는 함수 초반에 이미 서버 검증했다.
