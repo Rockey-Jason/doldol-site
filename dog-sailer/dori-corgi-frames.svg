@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" shape-rendering="crispEdges">
+<defs>
+  <g id="front">
+    <path d="M3 10V7H5V4H8V2H13V4H15V7H17V7H19V4H21V2H26V4H28V7H30V11H28V16H29V22H27V25H24V28H20V26H17V25H14V27H10V29H7V27H5V24H3V19H4V14H3Z" fill="#292725"/>
+    <path d="M5 10V7H7V4H12V6H14V9H18V9H20V6H25V4H27V7H29V11H27V16H28V22H26V24H23V27H20V25H17V24H14V26H10V28H8V26H6V23H5V19H6V14H5Z" fill="#e9be70"/>
+    <path d="M14 7H17V11H19V13H23V16H25V20H23V23H21V26H18V24H14V26H11V23H9V20H7V16H11V13H14Z" fill="#fff7e5"/>
+    <path d="M9 12H11V14H9Z M21 12H23V14H21Z" fill="#292725"/>
+    <path d="M14 16H18V18H20V20H18V22H15V20H12V18H14Z" fill="#292725"/>
+    <path d="M12 22H15V24H17V22H20V25H18V27H14V26H11Z" fill="#fff7e5"/>
+    <path d="M8 25H11V28H8Z M21 25H24V27H21Z" fill="#f7ebd5"/>
+    <path d="M7 27H11V29H7Z M20 27H24V29H20Z" fill="#292725"/>
+  </g>
+  <g id="back">
+    <path d="M3 10V7H5V4H8V2H13V4H15V7H17V7H19V4H21V2H26V4H28V7H30V11H28V16H29V22H27V25H24V28H20V26H17V25H14V27H10V29H7V27H5V24H3V19H4V14H3Z" fill="#292725"/>
+    <path d="M5 10V7H7V4H12V6H14V9H18V9H20V6H25V4H27V7H29V11H27V16H28V22H26V24H23V27H20V25H17V24H14V26H10V28H8V26H6V23H5V19H6V14H5Z" fill="#e9be70"/>
+    <path d="M14 7H17V10H19V14H22V17H24V20H22V23H20V26H17V24H14V26H11V23H9V20H7V17H10V14H13V10H14Z" fill="#fff7e5"/>
+    <path d="M14 20H18V22H20V25H18V27H14V25H12V22H14Z" fill="#e9be70"/>
+    <path d="M15 22H17V24H15Z" fill="#292725"/>
+    <path d="M7 27H11V29H7Z M20 27H24V29H20Z" fill="#292725"/>
+  </g>
+  <g id="side">
+    <path d="M5 15V10H4V7H6V3H12V2H16V5H18V8H20V10H25V12H28V14H31V17H29V19H27V24H25V27H22V29H18V27H16V24H13V26H11V29H7V27H5V24H3V19H2V16H5Z" fill="#292725"/>
+    <path d="M6 15V10H5V7H7V4H11V3H14V6H16V9H19V11H24V13H27V15H30V17H28V19H26V24H24V27H22V28H20V26H17V23H13V26H11V28H8V26H6V23H4V19H3V17H6Z" fill="#e9be70"/>
+    <path d="M6 15V11H8V7H10V6H13V9H15V12H13V15H10V19H8V22H6V19H4V17H6Z" fill="#fff7e5"/>
+    <path d="M5 13H8V15H5Z M9 16H12V18H9Z" fill="#fff7e5"/>
+    <path d="M7 11H9V13H7Z" fill="#292725"/>
+    <path d="M2 16H6V18H2Z" fill="#fff7e5"/>
+    <path d="M3 16H6V18H3Z" fill="#292725"/>
+    <path d="M24 12H27V13H29V15H27V16H24Z" fill="#e9be70"/>
+    <path d="M27 14H30V16H28V18H26V16H27Z" fill="#292725"/>
+    <path d="M8 26H11V28H8Z M18 26H21V28H18Z M23 26H25V28H23Z" fill="#f7ebd5"/>
+    <path d="M7 28H11V29H7Z M17 28H21V29H17Z M22 28H26V29H22Z" fill="#292725"/>
+    <path d="M15 9H18V11H21V13H18V16H15V13H13V11H15Z" fill="#e9be70"/>
+  </g>
+  <g id="tail">
+    <path d="M25 14H28V12H30V14H29V17H27V18H25Z" fill="#292725"/>
+    <path d="M26 14H28V13H29V15H28V17H26Z" fill="#e9be70"/>
+  </g>
+  <g id="frontStepA">
+    <path d="M7 25H10V28H7Z M20 25H23V28H20Z" fill="#e9be70"/>
+    <path d="M7 27H11V29H7Z M20 27H24V29H20Z" fill="#292725"/>
+  </g>
+  <g id="frontStepB">
+    <path d="M8 25H11V28H8Z M19 25H22V28H19Z" fill="#fff7e5"/>
+    <path d="M8 27H12V29H8Z M19 27H23V29H19Z" fill="#292725"/>
+  </g>
+  <g id="backStepA">
+    <path d="M7 25H10V28H7Z M20 25H23V28H20Z" fill="#fff7e5"/>
+    <path d="M7 27H11V29H7Z M20 27H24V29H20Z" fill="#292725"/>
+  </g>
+  <g id="backStepB">
+    <path d="M8 25H11V28H8Z M19 25H22V28H19Z" fill="#e9be70"/>
+    <path d="M8 27H12V29H8Z M19 27H23V29H19Z" fill="#292725"/>
+  </g>
+  <g id="sideStepA">
+    <path d="M5 24H8V27H5Z M16 23H19V27H16Z M22 24H25V27H22Z" fill="#e9be70"/>
+    <path d="M5 27H10V29H5Z M16 27H21V29H16Z M22 27H26V29H22Z" fill="#292725"/>
+  </g>
+  <g id="sideStepB">
+    <path d="M6 24H9V27H6Z M17 23H20V27H17Z M21 24H24V27H21Z" fill="#fff7e5"/>
+    <path d="M6 27H10V29H6Z M17 27H21V29H17Z M21 27H25V29H21Z" fill="#292725"/>
+  </g>
+</defs>
+<!-- Front-facing walk cycle -->
+<g transform="translate(0 0)"><use href="#front"/><use href="#frontStepA"/></g>
+<g transform="translate(32 0)"><use href="#front"/><use href="#frontStepB"/></g>
+<g transform="translate(64 0)"><use href="#front"/><use href="#frontStepA"/><path d="M7 24H10V27H7Z" fill="#fff7e5"/></g>
+<g transform="translate(96 0)"><use href="#front"/><use href="#frontStepB"/><path d="M20 24H23V27H20Z" fill="#e9be70"/></g>
+<!-- Back-facing walk cycle -->
+<g transform="translate(0 32)"><use href="#back"/><use href="#backStepA"/></g>
+<g transform="translate(32 32)"><use href="#back"/><use href="#backStepB"/></g>
+<g transform="translate(64 32)"><use href="#back"/><use href="#backStepA"/><path d="M8 24H11V27H8Z" fill="#e9be70"/></g>
+<g transform="translate(96 32)"><use href="#back"/><use href="#backStepB"/><path d="M20 24H23V27H20Z" fill="#fff7e5"/></g>
+<!-- Left-facing walk cycle -->
+<g transform="translate(0 64)"><use href="#side"/><use href="#sideStepA"/></g>
+<g transform="translate(32 64)"><use href="#side"/><use href="#sideStepB"/></g>
+<g transform="translate(64 64)"><use href="#side"/><use href="#sideStepA"/><path d="M4 24H8V27H4Z" fill="#fff7e5"/></g>
+<g transform="translate(96 64)"><use href="#side"/><use href="#sideStepB"/><path d="M21 24H25V27H21Z" fill="#e9be70"/></g>
+<!-- Right-facing walk cycle, mirrored from the same silhouette -->
+<g transform="translate(32 96) scale(-1 1)"><use href="#side"/><use href="#tail"/><use href="#sideStepA"/></g>
+<g transform="translate(64 96) scale(-1 1)"><use href="#side"/><use href="#tail"/><use href="#sideStepB"/></g>
+<g transform="translate(96 96) scale(-1 1)"><use href="#side"/><use href="#tail"/><use href="#sideStepA"/></g>
+<g transform="translate(128 96) scale(-1 1)"><use href="#side"/><use href="#tail"/><use href="#sideStepB"/></g>
+</svg>
