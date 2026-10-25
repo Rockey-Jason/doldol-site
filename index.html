@@ -2630,7 +2630,8 @@ async function 업적진행활동가져오기(userId, force = false) {
             chess: !chess.error,
             box: !box.error,
             boxRarity: !boxRare.error && !boxEpic.error && !boxLegendary.error,
-            stock: !trades.error && !dividends.error,
+            stock: !trades.error,
+            dividends: !dividends.error,
             attendanceDays: !attendance.error,
             attendanceStreak: !attendanceStats.error,
             missions: !missions.error,
@@ -2719,7 +2720,6 @@ function 업적진행도값계산(achievementId, unlocked, user) {
         target = Math.max(1, Number(goal) || 1);
         label = text;
         domain = section;
-        if (!ready) mapped = false;
     };
 
     const thresholdMatch = id.match(/^attendance_(\d+)_days$/);
@@ -2759,20 +2759,20 @@ function 업적진행도값계산(achievementId, unlocked, user) {
     else if (missionDaysMatch) set(new Set(missions.map(row => String(row.mission_date || "")).filter(Boolean)).size, Number(missionDaysMatch[1]), "미션 완료 날짜", r.missions, "missions");
     else if (missionCountMatch) set(missions.length, Number(missionCountMatch[1]), "완료한 일일 미션 기록", r.missions, "missions");
     else if (focusMatch) set(focusSeconds / 3600, Number(focusMatch[1]), "누적 집중 학습 시간(시간)", r.studyFocus, "studyFocus");
-    else if (sessionMatch) set(focusRows.length, Number(sessionMatch[1]), "집중 학습 기록 수", r.studyExam, "studyExam");
-    else if (examMatch) set(a.examCount, Number(examMatch[1]), "등록한 시험 계획 수", r.studyAttack, "studyAttack");
-    else if (attackMatch) set(timeAttacks.length, Number(attackMatch[1]), "타임어택 기록 수", r.study, "study");
-    else if (questionMatch) set(questionTotal, Number(questionMatch[1]), "타임어택 누적 문제 수", r.study, "study");
+    else if (sessionMatch) set(focusRows.length, Number(sessionMatch[1]), "집중 학습 기록 수", r.studyFocus, "studyFocus");
+    else if (examMatch) set(a.examCount, Number(examMatch[1]), "등록한 시험 계획 수", r.studyExam, "studyExam");
+    else if (attackMatch) set(timeAttacks.length, Number(attackMatch[1]), "타임어택 기록 수", r.studyAttack, "studyAttack");
+    else if (questionMatch) set(questionTotal, Number(questionMatch[1]), "타임어택 누적 문제 수", r.studyAttack, "studyAttack");
     else if (id === "bank_account_opened") set(a.bankAccounts.some(row => !/closed|deleted/i.test(String(row.status || ""))) ? 1 : 0, 1, "개설 중인 은행 계좌", r.bankAccounts, "bankAccounts");
     else if (transferMatch) set(transferCount, Number(transferMatch[1]), "송금 거래 기록 수", r.bankTransactions, "bankTransactions");
-    else if (bankTransactionMatch) set(bankTransactions.length, Number(bankTransactionMatch[1]), "은행 거래 기록 수", r.bankDeposits, "bankDeposits");
-    else if (depositMatch) set(deposits.length, Number(depositMatch[1]), "개설한 예금 수", r.bankLoans, "bankLoans");
-    else if (maturedMatch) set(maturedDeposits, Number(maturedMatch[1] || 1), "만기 정산된 예금 수", r.bank, "bank");
-    else if (loanMatch) set(loans.length, Number(loanMatch[1]), "대출 기록 수", r.bank, "bank");
-    else if (repaidLoanMatch) set(repaidLoans, Number(repaidLoanMatch[1] || 1), "상환 완료한 대출 수", r.bank, "bank");
+    else if (bankTransactionMatch) set(bankTransactions.length, Number(bankTransactionMatch[1]), "은행 거래 기록 수", r.bankTransactions, "bankTransactions");
+    else if (depositMatch) set(deposits.length, Number(depositMatch[1]), "개설한 예금 수", r.bankDeposits, "bankDeposits");
+    else if (maturedMatch) set(maturedDeposits, Number(maturedMatch[1] || 1), "만기 정산된 예금 수", r.bankDeposits, "bankDeposits");
+    else if (loanMatch) set(loans.length, Number(loanMatch[1]), "대출 기록 수", r.bankLoans, "bankLoans");
+    else if (repaidLoanMatch) set(repaidLoans, Number(repaidLoanMatch[1] || 1), "상환 완료한 대출 수", r.bankLoans, "bankLoans");
     else if (surveyMatch) set(a.surveyCount, Number(surveyMatch[1]), "설문 응답 수", r.news, "news");
-    else if (eventMatch) set(a.eventParticipationCount, Number(eventMatch[1]), "이벤트 참가 기록 수", r.eventQuiz, "eventQuiz");
-    else if (eventQuizMatch) set(a.eventQuizCount, Number(eventQuizMatch[1]), "완료한 이벤트 퀴즈 수", r.events, "events");
+    else if (eventMatch) set(a.eventParticipationCount, Number(eventMatch[1]), "이벤트 참가 기록 수", r.events, "events");
+    else if (eventQuizMatch) set(a.eventQuizCount, Number(eventQuizMatch[1]), "완료한 이벤트 퀴즈 수", r.eventQuiz, "eventQuiz");
     else if (boxTotalMatch) set(a.boxCount, Number(boxTotalMatch[1]), "랜덤 박스 개봉 수", r.box, "box");
     else if (["first_box", "tenth_box", "hundred_box", "thousand_box"].includes(id)) {
         const boxTargets = { first_box: 1, tenth_box: 10, hundred_box: 100, thousand_box: 1000 };
@@ -2826,8 +2826,8 @@ function 업적진행도값계산(achievementId, unlocked, user) {
     else mapped = false;
 
     const ready = domain ? r[domain] !== false : true;
-    const known = mapped && ready;
     if (unlocked) { current = target; }
+    const known = (mapped && ready) || Boolean(unlocked);
     current = Math.max(0, Math.min(Number(current) || 0, target));
     const percent = known && target > 0 ? Math.round(current / target * 100) : 0;
     return {
