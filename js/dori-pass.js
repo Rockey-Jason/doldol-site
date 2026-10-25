@@ -144,7 +144,7 @@ function renderMapNode(tier){
  const colCount=getColCount(),row=Math.floor((level-1)/colCount)+1,offset=(level-1)%colCount;
  const col=(row%2===1)?offset+1:colCount-offset;
  const special=cosmetics.length>0,milestone=level%10===0,chapter=Math.min(10,Math.ceil(level/10));
- const main=cosmetics[0],icon=main&&main.icon?main.icon:(milestone?"✧":"🪙");
+ const main=cosmetics.find(c=>c.kind==="profile_frame"||c.kind==="title")||cosmetics[0],icon=main&&main.icon?main.icon:(milestone?"✧":"🪙");
  const classes=["map-node",claimed?"is-claimed":"",unlocked?"is-unlocked":"",claimable?"is-claimable":"",special?"is-special":"",milestone?"is-milestone":"",level===Number(dashboard&&dashboard.tier)+1?"is-next":"",level===Number(dashboard&&dashboard.tier)?"is-current":""].filter(Boolean).join(" ");
  let status=claimed?"✓":claimable?"✦":unlocked?"○":"⌑";
  const stageCoins=Number(tier.display_coins??tier.coins)||0;
