@@ -381,22 +381,20 @@ function playAlarm(){
   if(ctx){
     try{
       var now=ctx.currentTime;
-      // 20초 동안 반복되는 또렷한 고·저음 3연타 알림. 브라우저/기기 음량은 사용자가 조절해.
-      var duration=20,cycle=1.5,beepOn=.24,beepGap=.13;
+      // 20초 동안 부드러운 종소리 멜로디를 낮은 음량으로 반복해.
+      var duration=20,cycle=2.5,noteLength=.48,notes=[784,988,1175,988];
       for(var base=0;base<duration;base+=cycle){
-        for(var j=0;j<3;j++){
-          var offset=base+j*(beepOn+beepGap);
+        for(var j=0;j<notes.length;j++){
+          var offset=base+j*.48;
           if(offset>=duration)continue;
           var start=now+offset,osc=ctx.createOscillator(),gain=ctx.createGain();
-          var freq=(j===1)?660:1046;
-          osc.type="square";
-          osc.frequency.setValueAtTime(freq,start);
+          osc.type="sine";
+          osc.frequency.setValueAtTime(notes[j],start);
           gain.gain.setValueAtTime(.0001,start);
-          gain.gain.exponentialRampToValueAtTime(.32,start+.018);
-          gain.gain.setValueAtTime(.32,start+beepOn-.045);
-          gain.gain.exponentialRampToValueAtTime(.0001,start+beepOn);
+          gain.gain.exponentialRampToValueAtTime(.12,start+.045);
+          gain.gain.exponentialRampToValueAtTime(.0001,start+noteLength);
           osc.connect(gain);gain.connect(ctx.destination);
-          osc.start(start);osc.stop(start+beepOn+.01);
+          osc.start(start);osc.stop(start+noteLength+.02);
           alarmOscillators.push(osc);
           osc.onended=function(){var i=alarmOscillators.indexOf(this);if(i!==-1)alarmOscillators.splice(i,1);};
         }
@@ -404,7 +402,7 @@ function playAlarm(){
     }catch(e){}
   }
   if(typeof navigator!=="undefined"&&typeof navigator.vibrate==="function"){
-    try{navigator.vibrate([350,120,350,120,600,220,350,120,350,120,600]);}catch(e){}
+    try{navigator.vibrate([180,120,180,120,280]);}catch(e){}
   }
 }
 function renderRing(remaining){
@@ -550,6 +548,8 @@ function stopQuestionAfterTimeout(){
   progressFill.style.width=(results.length/totalQuestions*100)+"%";
 }
 function handleTap(){
+  // 화면을 다시 누르는 즉시 남아 있는 알림 소리와 진동을 멈춰.
+  stopAlarm();
   if(state==="ready"){startQuestionTimer();return;}
   if(state==="running"){
     if(Date.now()>=deadline){expireQuestion();return;}
@@ -663,7 +663,9 @@ $("clearHistoryBtn").addEventListener("click",async function(){
   try{localStorage.removeItem(storageKey());if(!currentUser)localStorage.removeItem(KEY);}catch(e){showToast("기록 저장소에 접근하지 못했어.");return;}
   renderHistory();updateHistoryTeaser();showToast(currentUser?"Supabase와 이 기기의 기록을 삭제했어.":"이 브라우저의 기록을 삭제했어.");
 });
-document.addEventListener("visibilitychange",function(){if(document.visibilityState==="visible"&&state==="running")updateTimer();});
+document.addEventListener("visibilitychange",function(){if(document.visibilityState==="hidden")stopAlarm();else if(state==="running")updateTimer();});
+window.addEventListener("pagehide",stopAlarm);
+window.addEventListener("beforeunload",stopAlarm);
 updateHistoryTeaser();
 initializePersistence();
 window.addEventListener("online",function(){
