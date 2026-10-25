@@ -191,7 +191,7 @@ function renderMegaMission(data){
  '<div class="mega-progress-head"><span>메가 미션 진행도</span><strong>'+fmt(mega.completed_objectives||0)+' <i>/ '+fmt(mega.total_objectives||6)+'</i></strong></div><div class="mega-progress-track"><span style="width:'+Math.min(100,(Number(mega.completed_objectives)||0)/Math.max(1,Number(mega.total_objectives)||6)*100)+'%"></span></div>'+
  '<div class="mega-objective-grid">'+objectives.map((o,i)=>'<article class="mega-objective '+(o.complete?"complete":"")+'"><span class="mega-objective-number">'+String(i+1).padStart(2,"0")+'</span><div class="mega-objective-copy"><strong>'+escapeHtml(o.title)+'</strong><p>'+escapeHtml(o.description)+'</p><div class="mega-objective-progress"><span style="width:'+Math.min(100,(Number(o.progress)||0)/Math.max(1,Number(o.target)||1)*100)+'%"></span></div><small>'+fmt(o.progress)+' / '+fmt(o.target)+(o.complete?' · 달성 ✓':'')+'</small></div><span class="mega-objective-check">'+(o.complete?"✓":"✧")+'</span></article>').join("")+'</div>'+
  '<div class="mega-rewards"><div class="mega-reward-heading"><span>✧ FINAL LOOT</span><strong>최종 보상 상자</strong></div><div class="mega-reward-items">'+
- '<div class="mega-reward-item rp"><span>💠</span><div><strong>+8,000 RP</strong><small>로키 포인트 대보급</small></div></div>'+
+ ''+
  '<div class="mega-reward-item coins"><span>🪙</span><div><strong>+'+fmt(mega.display_coin_reward??mega.base_coin_reward)+' 돌돌코인</strong><small>'+(Number(mega.coin_multiplier)>1?'현재 부스트 ×'+Number(mega.coin_multiplier).toLocaleString("ko-KR")+' 적용':'대규모 코인 금고')+'</small></div></div>'+
  ''+
  '<div class="mega-reward-item frame"><span>🌌</span><div><strong>메가 은하 프레임</strong><small>LEGENDARY 프로필 프레임</small></div></div></div>'+
