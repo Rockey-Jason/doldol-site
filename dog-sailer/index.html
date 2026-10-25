@@ -392,7 +392,7 @@ function pickupEnabled(p){if(p.item==='bottleLetter'&&stage<2)return false;if(p.
 function interact(){
  if($('dialogue').hidden===false){advanceDialogue();return}
  if(panel){closePanel();return}
- if(player.boat){const seaLife=wildlife.filter(w=>w.type==='dolphin'&&objectDistance(boat,w)<32).sort((a,b)=>objectDistance(boat,a)-objectDistance(boat,b))[0];if(seaLife){observeCreature(seaLife);return}const island=currentIsland(boat.x,boat.y,.28);if(island){player.boat=false;let dx=island.x-boat.x,dy=island.y-boat.y,L=Math.hypot(dx,dy)||1;player.x=clamp(boat.x+dx/L*25,0,WORLD_W);player.y=clamp(boat.y+dy/L*25,0,WORLD_H);if(!landAt(player.x,player.y)){player.x=island.x;player.y=island.y}markVisited(island.id);toast(island.name+'에 정박했어요.');saveGame(true);return}else{toast('육지가 가까워지면 정박할 수 있어요.');return}}
+ if(player.boat){const seaLife=wildlife.filter(w=>w.type==='dolphin'&&objectDistance(boat,w)<INTERACTION_RADIUS).sort((a,b)=>objectDistance(boat,a)-objectDistance(boat,b))[0];if(seaLife){observeCreature(seaLife);return}const island=currentIsland(boat.x,boat.y,.28);if(island){player.boat=false;boat.vx=0;boat.vy=0;player.vx=0;player.vy=0;let dx=island.x-boat.x,dy=island.y-boat.y,L=Math.hypot(dx,dy)||1;player.x=clamp(boat.x+dx/L*25,0,WORLD_W);player.y=clamp(boat.y+dy/L*25,0,WORLD_H);if(!landAt(player.x,player.y)){player.x=island.x;player.y=island.y}markVisited(island.id);toast(island.name+'에 정박했어요.');saveGame(true);return}else{toast('육지가 가까워지면 정박할 수 있어요.');return}}
  const candidates=[];
  pickups.filter(p=>!collected.includes(p.id)&&pickupEnabled(p)).forEach(p=>candidates.push({type:'pickup',obj:p,d:objectDistance(player.x,player.y,p),hint:'줍기'}));
  wildlife.forEach(w=>candidates.push({type:'wildlife',obj:w,d:objectDistance(player.x,player.y,w),hint:'관찰하기'}));
@@ -402,7 +402,7 @@ function interact(){
  const npc={x:294,y:283,id:'haesol',hint:'대화하기'};candidates.push({type:'npc',obj:npc,d:objectDistance(player.x,player.y,npc),hint:'대화하기'});
  const craftspot={x:340,y:281,id:'craftspot',hint:'제작하기'};candidates.push({type:'craftspot',obj:craftspot,d:objectDistance(player.x,player.y,craftspot),hint:'제작하기'});
  const nearest=candidates.filter(o=>o.d<INTERACTION_RADIUS).sort((a,b)=>a.d-b.d)[0];
- if(!nearest){if(objectDistance(player.x,player.y,boat)<52){player.boat=true;player.x=boat.x;player.y=boat.y;toast('배에 올라탔어요. 바다로 나가볼까요?');saveGame(true);return}toast('가까이에 살펴볼 것이 없어요. 조금 더 걸어가 보세요.');return}
+ if(!nearest){if(objectDistance(player.x,player.y,boat)<52){player.boat=true;player.x=boat.x;player.y=boat.y;player.vx=boat.vx;player.vy=boat.vy;toast('배에 올라탔어요. 바다로 나가볼까요?');saveGame(true);return}toast('가까이에 살펴볼 것이 없어요. 조금 더 걸어가 보세요.');return}
  if(nearest.type==='pickup'){
   const p=nearest.obj;collected.push(p.id);
   if(p.item==='bottleLetter'){addItem('bottleLetter',1);if(stage===2){stage=3;addJournal('조개달 섬의 모래 위에서 푸른 우편병을 발견했다.');showDialogue([{name:'푸른 우편병',text:'병 안에는 오래된 편지 한 장이 들어 있었다. “빛을 잃은 등대는 길을 잃은 배만 비추는 것이 아니란다. 돌아갈 곳이 있는 사람의 마음도 비추지.”'}]);toast('새 이야기 조각을 찾았어요.');}}
@@ -467,13 +467,81 @@ function drawWeather(){const t=elapsed;if(weather==='비'){ctx.fillStyle='#b4e6e
 function drawFishing(){if(!fishing)return;const x=Math.round((player.boat?boat.x:player.x)-cam.x),y=Math.round((player.boat?boat.y:player.y)-cam.y);ctx.strokeStyle='#e4edda';ctx.beginPath();ctx.moveTo(x+4,y-3);ctx.quadraticCurveTo(x+16,y+1,x+22,y+7+Math.sin(elapsed*5)*2);ctx.stroke();ctx.fillStyle=fishing.bite?'#fff2a4':'#9ad9d7';ctx.fillRect(x+20,y+7,3,3);if(fishing.bite){ctx.fillStyle='#fff0b8';ctx.fillRect(x+16,y+1,2,2);ctx.fillRect(x+25,y+4,2,2)}}
 function render(){ctx.clearRect(0,0,W,H);const target=player.boat?boat:player;cam.x=Math.floor(clamp(target.x-W/2,0,WORLD_W-W));cam.y=Math.floor(clamp(target.y-H/2,0,WORLD_H-H));drawOcean();drawIslands();pickups.forEach(p=>{if(!collected.includes(p.id)&&pickupEnabled(p))drawPickup(p)});wildlife.forEach(drawWildlife);if(!player.boat)drawNPC();drawBoat(boat.x-cam.x,boat.y-cam.y,1+boat.upgrade*.06);drawFishing();drawPlayer();drawWeather();particles=particles.filter(p=>p.t<1.4);particles.forEach(p=>{const x=p.x-cam.x,y=p.y-cam.y-p.t*18;ctx.globalAlpha=1-p.t/1.4;if(p.type==='step'){ctx.fillStyle='#e4d7b0';ctx.fillRect(Math.round(x),Math.round(y+2),2,1);ctx.fillRect(Math.round(x+4),Math.round(y+1),1,1)}else{ctx.fillStyle='#fff0b5';ctx.fillRect(Math.round(x-p.t*6),Math.round(y),2,2);ctx.fillRect(Math.round(x+p.t*7),Math.round(y-6),2,2)}ctx.globalAlpha=1});if(state==='play'&&!panel&&$('dialogue').hidden){ctx.fillStyle='#f3e8be';ctx.fillRect(0,H-2,W,2);ctx.fillStyle='#b7e5dc';ctx.fillRect(0,H-2,(W*((minutes%1440)/1440)),2)}}
 function findNearObject(){if(player.boat){const seaLife=wildlife.find(w=>w.type==='dolphin'&&objectDistance(boat,w)<INTERACTION_RADIUS);if(seaLife)return {hint:'돌고래 관찰하기'};return currentIsland(boat.x,boat.y,.28)?{hint:'정박하기'}: {hint:'바다를 항해 중'}}let candidates=[];pickups.filter(p=>!collected.includes(p.id)&&pickupEnabled(p)).forEach(o=>candidates.push({o,d:objectDistance(player.x,player.y,o),hint:'줍기'}));candidates.push({o:{x:245,y:216},d:objectDistance(player.x,player.y,{x:245,y:216}),hint:'등대 살펴보기'});candidates.push({o:{x:294,y:283},d:objectDistance(player.x,player.y,{x:294,y:283}),hint:'대화하기'});candidates.push({o:{x:2199,y:453},d:objectDistance(player.x,player.y,{x:2199,y:453}),hint:'별빛 등대 살펴보기'});candidates.push({o:{x:340,y:281},d:objectDistance(player.x,player.y,{x:340,y:281}),hint:'제작하기'});candidates.push({o:boat,d:objectDistance(player.x,player.y,boat),hint:'배에 타기'});const n=candidates.filter(c=>c.d<INTERACTION_RADIUS).sort((a,b)=>a.d-b.d)[0];return n?{hint:n.hint}:null}
-function tick(dt){elapsed+=dt;autosaveTimer+=dt;if(state==='play'&&panel===null&&$('dialogue').hidden){minutes+=dt*1.15;if(minutes>=1440){minutes-=1440;day++;weather=['맑음','흐림','비','맑음','안개'][Math.floor(Math.random()*5)];addJournal('제 '+day+'일, 오늘의 날씨는 '+weather+'이다.');toast('새로운 아침이 찾아왔어요. 오늘은 '+weather+' 날씨예요.')}
- if(fishing){fishing.t+=dt;if(!fishing.bite&&fishing.t>=fishing.biteAt){fishing.bite=true;playTone(740,.13,.014,'sine');toast('톡, 낚싯대가 움직여요! SPACE를 눌러 천천히 당겨봐요.')}}const speed=player.boat?95+(boat.upgrade*14):66;let dx=0,dy=0;if(keys.w||keys.arrowup)dy-=1;if(keys.s||keys.arrowdown)dy+=1;if(keys.a||keys.arrowleft)dx-=1;if(keys.d||keys.arrowright)dx+=1;const len=Math.hypot(dx,dy)||1;dx/=len;dy/=len;player.moving=!!(dx||dy);
- if(player.boat){boat.vx+=(dx*speed-boat.vx)*Math.min(1,dt*2.6);boat.vy+=(dy*speed-boat.vy)*Math.min(1,dt*2.6);let nx=clamp(boat.x+boat.vx*dt,8,WORLD_W-8),ny=clamp(boat.y+boat.vy*dt,8,WORLD_H-8);if(!landAt(nx,ny)){boat.x=nx;boat.y=ny}else{boat.vx*=.25;boat.vy*=.25}player.x=boat.x;player.y=boat.y;if(Math.hypot(boat.vx,boat.vy)>6){boat.heading=Math.atan2(boat.vy,boat.vx);walkT+=dt}}
- else if(dx||dy){player.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down');const nx=clamp(player.x+dx*speed*dt,8,WORLD_W-8),ny=clamp(player.y+dy*speed*dt,8,WORLD_H-8);if(landAt(nx,player.y))player.x=nx;if(landAt(player.x,ny))player.y=ny;walkT+=dt;const isl=currentIsland(player.x,player.y,0);if(isl)markVisited(isl.id)}
- nearObject=findNearObject();updateHud();if(autosaveTimer>25){autosaveTimer=0;saveGame(true)}}
-}
-function frame(ts){const dt=Math.min(.05,(ts-lastFrame||16)/1000);lastFrame=ts;tick(dt);render();requestAnimationFrame(frame)}
+function tick(dt){
+ elapsed+=dt;
+ autosaveTimer+=dt;
+ particles.forEach(p=>{p.t+=dt});
+ particles=particles.filter(p=>p.t<1.4);
+ if(state==='play'&&panel===null&&$('dialogue').hidden){
+  minutes+=dt*1.15;
+  if(minutes>=1440){
+   minutes-=1440;day++;
+   weather=['맑음','흐림','비','맑음','안개'][Math.floor(Math.random()*5)];
+   addJournal('제 '+day+'일, 오늘의 날씨는 '+weather+'이다.');
+   toast('새로운 아침이 찾아왔어요. 오늘은 '+weather+' 날씨예요.')
+  }
+  if(fishing){
+   fishing.t+=dt;
+   if(!fishing.bite&&fishing.t>=fishing.biteAt){
+    fishing.bite=true;playTone(740,.13,.014,'sine');
+    toast('톡, 낚싯대가 움직여요! SPACE를 눌러 천천히 당겨봐요.')
+   }
+  }
+  let dx=0,dy=0;
+  if(keys.w||keys.arrowup)dy-=1;
+  if(keys.s||keys.arrowdown)dy+=1;
+  if(keys.a||keys.arrowleft)dx-=1;
+  if(keys.d||keys.arrowright)dx+=1;
+  const inputMag=Math.hypot(dx,dy);
+  if(inputMag>0){
+   dx/=inputMag;dy/=inputMag;
+   player.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down')
+  }
+  if(player.boat){
+   const maxSpeed=95+boat.upgrade*14,accel=245;
+   boat.vx+=dx*accel*dt;boat.vy+=dy*accel*dt;
+   const drag=Math.exp((inputMag>0?-.34:-2.35)*dt);
+   boat.vx*=drag;boat.vy*=drag;
+   let boatSpeed=Math.hypot(boat.vx,boat.vy);
+   if(boatSpeed>maxSpeed){boat.vx=boat.vx/boatSpeed*maxSpeed;boat.vy=boat.vy/boatSpeed*maxSpeed;boatSpeed=maxSpeed}
+   const nx=clamp(boat.x+boat.vx*dt,8,WORLD_W-8);
+   const ny=clamp(boat.y+boat.vy*dt,8,WORLD_H-8);
+   if(!landAt(nx,boat.y))boat.x=nx;else boat.vx*=-.08;
+   if(!landAt(boat.x,ny))boat.y=ny;else boat.vy*=-.08;
+   boatSpeed=Math.hypot(boat.vx,boat.vy);
+   if(boatSpeed>8)boat.heading=Math.atan2(boat.vy,boat.vx);
+   player.x=boat.x;player.y=boat.y;player.vx=boat.vx;player.vy=boat.vy;
+   player.moving=boatSpeed>6;
+   if(player.moving)walkT+=dt*clamp(boatSpeed/maxSpeed,.25,1.1)
+  }else{
+   const maxSpeed=68,accel=230;
+   player.vx+=dx*accel*dt;player.vy+=dy*accel*dt;
+   const drag=Math.exp((inputMag>0?-.72:-4.6)*dt);
+   player.vx*=drag;player.vy*=drag;
+   let speedNow=Math.hypot(player.vx,player.vy);
+   if(speedNow>maxSpeed){player.vx=player.vx/speedNow*maxSpeed;player.vy=player.vy/speedNow*maxSpeed;speedNow=maxSpeed}
+   const nx=clamp(player.x+player.vx*dt,8,WORLD_W-8);
+   const ny=clamp(player.y+player.vy*dt,8,WORLD_H-8);
+   if(landAt(nx,player.y))player.x=nx;else player.vx=0;
+   if(landAt(player.x,ny))player.y=ny;else player.vy=0;
+   speedNow=Math.hypot(player.vx,player.vy);
+   player.moving=speedNow>3.2;
+   if(player.moving){
+    walkT+=dt*clamp(speedNow/32,.35,1.8);
+    const beat=Math.floor(walkT*8.5);
+    if(beat!==lastFootstepBeat){
+     lastFootstepBeat=beat;
+     if((beat%2)===0)particles.push({x:player.x+(Math.random()-.5)*7,y:player.y+5,t:0,type:'step'});
+    }
+   }else{lastFootstepBeat=-1}
+   const isl=currentIsland(player.x,player.y,0);
+   if(isl)markVisited(isl.id)
+  }
+  nearObject=findNearObject();
+  updateHud();
+  if(autosaveTimer>25){autosaveTimer=0;saveGame(true)}
+ }
+}function frame(ts){const dt=Math.min(.05,(ts-lastFrame||16)/1000);lastFrame=ts;tick(dt);render();requestAnimationFrame(frame)}
 function boot(){updateContinue();$('titleScreen').classList.remove('hide');updateSoundLabel();if(readSave(1))lastSlot=1;else if(readSave(2))lastSlot=2;else if(readSave(3))lastSlot=3;updateContinue();updateHud();requestAnimationFrame(frame)}
 window.addEventListener('beforeunload',()=>{if(state==='play')saveGame(true)});
 boot();
