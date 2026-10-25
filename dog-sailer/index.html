@@ -230,7 +230,7 @@ moonHerb:{name:'달빛풀',icon:'🌱',desc:'어두워지면 잎 끝이 은은�
 blueFish:{name:'푸른 정어리',icon:'🐟',desc:'은빛 비늘이 햇빛을 받아 반짝인다.',price:8},
 silverFish:{name:'은빛 고등어',icon:'🐠',desc:'빠르고 호기심이 많은 물고기.',price:15},
 moonPearl:{name:'달빛 진주',icon:'🌕',desc:'깊은 물속에서 발견되는 부드러운 빛.',price:40},
-starFragment:{name:'별 조각',icon:'✨',desc:'오래된 별빛 등대의 조각.',price:55},
+starFragment:{name:'별 조각',icon:'✨',desc:'오래된 별빛 등대의 조각.',price:55},mapFragment:{name:'항해 지도 조각',icon:'🗺️',desc:'안개 등대의 오래된 항로가 새겨져 있다.',price:0},
 bottleLetter:{name:'푸른 우편병',icon:'🫙',desc:'바다 냄새와 오래된 편지가 담겨 있다.',price:0},
 woodPlank:{name:'잘 다듬은 판자',icon:'🪚',desc:'배를 고치거나 가구를 만들 때 쓴다.',price:0},
 sailPatch:{name:'돛 수선 천',icon:'🧵',desc:'바람을 조금 더 잘 받게 해준다.',price:0},
@@ -256,6 +256,7 @@ const pickups=[
 {id:'pearl1',item:'moonPearl',qty:1,x:1293,y:501,island:'coral'},
 {id:'fiber3',item:'fiber',qty:3,x:1265,y:430,island:'coral'},
 {id:'glass3',item:'seaGlass',qty:2,x:1545,y:251,island:'mist'},
+{id:'map1',item:'mapFragment',qty:1,x:1580,y:248,island:'mist'},
 {id:'herb2',item:'moonHerb',qty:2,x:1604,y:207,island:'mist'},
 {id:'star1',item:'starFragment',qty:1,x:1785,y:765,island:'wind'},
 {id:'wood5',item:'driftwood',qty:3,x:1853,y:729,island:'wind'},
@@ -272,7 +273,7 @@ const wildlife=[
 let state='title',panel=null,slot=1,lastSlot=1,dialogueQueue=[],dialogueAfter=null;
 let player={x:327,y:284,dir:'down',moving:false,boat:false};
 let boat={x:416,y:322,vx:0,vy:0,heading:0,upgrade:0};
-let inventory={driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0};
+let inventory={driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,mapFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0};
 let coins=40,stage=0,visited=['harbor'],discovered=[],collected=[],relationships={haesol:0,fox:0,botanist:0},crafted=[],observed=[],journal=['바닷바람을 타고 포근한 항구에 도착했다.'];
 let day=1,minutes=8*60+10,weather='맑음',worldSeed=73219,elapsed=0,walkT=0,fishing=null,muted=false,audio=null,melodyTimer=null,toastTimer=null,autosaveTimer=0,lastSaveTime=0;
 let cam={x:0,y:0},keys={},lastFrame=0,particles=[],sparkles=[],nearObject=null,firstVisit=false;
@@ -294,7 +295,7 @@ function soundClick(){playTone(520,.09,.018,'sine')}
 function startMelody(){if(muted||melodyTimer)return;const notes=[392,494,587,494,440,587,659,587,392,494,587,784,659,587,494,440];let n=0;melodyTimer=setInterval(()=>{if(muted||state==='title'&&document.hidden)return;playTone(notes[n%notes.length],1.25,.006,'sine');if(n%4===0)playTone(notes[(n+2)%notes.length]/2,2.1,.004,'triangle');n++},1450)}
 function stopMelody(){if(melodyTimer){clearInterval(melodyTimer);melodyTimer=null}}
 function updateSoundLabel(){$('soundToggle').textContent=muted?'♫ 소리 꺼짐':'♫ 소리 켜짐';if(muted)stopMelody();else startMelody()}
-function newSave(){return {version:1,worldSeed:Math.floor(Math.random()*900000)+10000,player:{x:327,y:284,dir:'down',boat:false},boat:{x:416,y:322,vx:0,vy:0,heading:0,upgrade:0},inventory:{driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0},coins:40,stage:0,visited:['harbor'],discovered:[],collected:[],relationships:{haesol:0,fox:0,botanist:0},crafted:[],observed:[],journal:['바닷바람을 타고 포근한 항구에 도착했다.'],day:1,minutes:490,weather:'맑음',playSeconds:0}}
+function newSave(){return {version:1,worldSeed:Math.floor(Math.random()*900000)+10000,player:{x:327,y:284,dir:'down',boat:false},boat:{x:416,y:322,vx:0,vy:0,heading:0,upgrade:0},inventory:{driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,mapFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0},coins:40,stage:0,visited:['harbor'],discovered:[],collected:[],relationships:{haesol:0,fox:0,botanist:0},crafted:[],observed:[],journal:['바닷바람을 타고 포근한 항구에 도착했다.'],day:1,minutes:490,weather:'맑음',playSeconds:0}}
 function saveKey(n){return 'dogSailerSaveV1Slot'+n}
 function readSave(n){try{const s=localStorage.getItem(saveKey(n));if(!s)return null;const d=JSON.parse(s);if(d.version!==1)return null;return d}catch(e){return null}}
 function serialize(){return {version:1,worldSeed:worldSeed,player:{x:player.x,y:player.y,dir:player.dir,boat:player.boat},boat:{x:boat.x,y:boat.y,vx:boat.vx,vy:boat.vy,heading:boat.heading,upgrade:boat.upgrade},inventory:inventory,coins:coins,stage:stage,visited:visited,discovered:discovered,collected:collected,relationships:relationships,crafted:crafted,observed:observed,journal:journal,day:day,minutes:minutes,weather:weather,playSeconds:elapsed}}
@@ -380,6 +381,7 @@ function interact(){
  wildlife.forEach(w=>candidates.push({type:'wildlife',obj:w,d:objectDistance(player.x,player.y,w),hint:'관찰하기'}));
  const lighthouse={x:245,y:216,id:'harbor-lamp',hint:'등대 살펴보기'};
  candidates.push({type:'lighthouse',obj:lighthouse,d:objectDistance(player.x,player.y,lighthouse),hint:'등대 살펴보기'});
+ const starLamp={x:2199,y:453,id:'star-lamp',hint:'별빛 등대 살펴보기'};candidates.push({type:'lighthouse',obj:starLamp,d:objectDistance(player.x,player.y,starLamp),hint:'별빛 등대 살펴보기'});
  const npc={x:294,y:283,id:'haesol',hint:'대화하기'};candidates.push({type:'npc',obj:npc,d:objectDistance(player.x,player.y,npc),hint:'대화하기'});
  const craftspot={x:340,y:281,id:'craftspot',hint:'제작하기'};candidates.push({type:'craftspot',obj:craftspot,d:objectDistance(player.x,player.y,craftspot),hint:'제작하기'});
  const nearest=candidates.filter(o=>o.d<29).sort((a,b)=>a.d-b.d)[0];
@@ -387,26 +389,27 @@ function interact(){
  if(nearest.type==='pickup'){
   const p=nearest.obj;collected.push(p.id);
   if(p.item==='bottleLetter'){addItem('bottleLetter',1);if(stage===2){stage=3;addJournal('조개달 섬의 모래 위에서 푸른 우편병을 발견했다.');showDialogue([{name:'푸른 우편병',text:'병 안에는 오래된 편지 한 장이 들어 있었다. “빛을 잃은 등대는 길을 잃은 배만 비추는 것이 아니란다. 돌아갈 곳이 있는 사람의 마음도 비추지.”'}]);toast('새 이야기 조각을 찾았어요.');}}
+  else if(p.item==='mapFragment'){addItem('mapFragment',1);if(stage===4){stage=5;addJournal('안개 등대섬의 오래된 창고에서 항해 지도 조각을 찾았다. 별빛 군도와 바람 언덕에 별 조각이 남아 있다는 표시가 있었다.');showDialogue([{name:'항해 지도 조각',text:'젖은 지도 조각을 펼치자 세 개의 별 표시가 드러났다. 하나는 바람 언덕에, 나머지는 별빛 군도에 있다. 이 조각들이 모이면 마지막 등대에 불을 밝힐 수 있을 것이다.'}]);}else toast('항해 지도 조각을 발견했어요.');}
   else{addItem(p.item,p.qty);toast(items[p.item].name+' '+p.qty+'개를 주웠어요.');if(!discovered.includes(p.item)){discovered.push(p.item);addJournal(items[p.item].name+'을 처음 발견했다.')}}playTone(680,.15,.02,'triangle');saveGame(true);updateHud();return
  }
- if(nearest.type==='lighthouse'){doLighthouse();return}
+ if(nearest.type==='lighthouse'){doLighthouse(nearest.obj.id);return}
  if(nearest.type==='npc'){talkHaesol();return}
  if(nearest.type==='craftspot'){openPanel('craft');return}
  if(nearest.type==='wildlife'){observeCreature(nearest.obj);return}
 }
-function doLighthouse(){
+function doLighthouse(id){
  if(stage===0){stage=1;relationships.haesol++;addJournal('해솔 할아버지는 등대의 빛이 꺼진 뒤 배들이 길을 잃기 시작했다고 말했다.');showDialogue([{name:'오래된 등대',text:'등대의 문은 오래 닫혀 있었다. 바람에 닳은 나무판자와 햇살 조개가 있으면 작은 불빛을 되살릴 수 있을 것 같다.'},{name:'항해 일지',text:'표류목 3개와 햇살 조개 2개를 모아보자. 해변의 반짝이는 조각들은 천천히 찾아도 괜찮다.'}]);saveGame(true);updateHud();return}
  if(stage===1){if(itemTotal('driftwood')>=3&&itemTotal('shell')>=2){useItem('driftwood',3);useItem('shell',2);stage=2;coins+=20;addJournal('첫 등대에 작은 조개 불빛이 돌아왔다. 해솔 할아버지가 고맙다며 코인 20개를 건넸다.');showDialogue([{name:'해솔 할아버지',text:'보렴. 아주 작은 빛도 길을 알려 줄 수 있단다. 이제 조개달 섬으로 가보렴. 오래전 내가 보낸 편지가 아직 그곳 어딘가에 남아 있을 거야.'}]);playTone(660,.3,.025);saveGame(true);updateHud()}else showDialogue([{name:'오래된 등대',text:'아직 조금 더 손봐야 한다. 표류목 '+itemTotal('driftwood')+'/3개, 햇살 조개 '+itemTotal('shell')+'/2개가 필요하다.'}]);return}
  if(stage===2){showDialogue([{name:'등대의 작은 불빛',text:'불빛이 돌아왔다. 멀리 조개달 섬이 보인다. 그곳의 모래사장에 오래된 편지가 떠밀려왔다는 이야기가 있다.'}]);return}
  if(stage===3){useItem('bottleLetter',1);stage=4;coins+=35;relationships.haesol+=2;addJournal('푸른 우편병을 해솔 할아버지에게 돌려주었다. 편지에는 사라진 항해 지도와 여섯 등대의 약속이 적혀 있었다.');showDialogue([{name:'해솔 할아버지',text:'이 편지는 내가 아주 오래전 친구에게 쓴 것이란다. 우리는 여섯 등대에 작은 빛을 남기기로 약속했지. 하지만 폭풍 뒤로 서로의 소식을 잃었어.'},{name:'해솔 할아버지',text:'안개 등대섬으로 가 보렴. 오래된 항해 지도 조각이 아직 남아 있을 거야. 나머지 길은 네가 천천히 찾아가면 된다.'}]);saveGame(true);updateHud();return}
  if(stage===4){showDialogue([{name:'해솔 할아버지',text:'안개 등대섬에서 지도 조각을 찾았니? 바다는 멀리 가는 사람에게도, 집으로 돌아오는 사람에게도 길을 내어 준단다.'}]);return}
- if(stage===5){if(itemTotal('starFragment')>=3){useItem('starFragment',3);stage=6;coins+=150;boat.upgrade=Math.max(boat.upgrade,1);addJournal('별빛 등대가 다시 켜졌다. 여섯 등대의 이야기는 끝났지만 바다는 여전히 넓다.');showDialogue([{name:'등대지기들의 편지',text:'세 개의 별 조각이 모이자 밤하늘에 길고 푸른 빛이 이어졌다. 멀리 떨어져 살던 항해자들은 서로의 등대를 다시 볼 수 있게 되었다.'},{name:'항해 일지',text:'첫 번째 큰 여정이 끝났다. 그러나 지도에는 아직 빈칸이 많다. 이 바다에서 무엇을 할지는 이제 당신이 정하면 된다.'}]);saveGame(true);updateHud()}else showDialogue([{name:'별빛 등대',text:'아직 별 조각의 빛이 부족하다. 현재 '+itemTotal('starFragment')+'/3개를 모았다. 별빛 군도와 바람 언덕에서 빛나는 조각을 찾아보자.'}]);return}
+ if(stage===5){if(id!=='star-lamp'){showDialogue([{name:'항해 일지',text:'별 조각은 포근한 항구의 등대가 아니라, 별빛 군도에 서 있는 여섯 번째 등대에 가져가야 한다.'}]);return}if(itemTotal('starFragment')>=3){useItem('starFragment',3);stage=6;coins+=150;boat.upgrade=Math.max(boat.upgrade,1);addJournal('별빛 등대가 다시 켜졌다. 여섯 등대의 이야기는 끝났지만 바다는 여전히 넓다.');showDialogue([{name:'등대지기들의 편지',text:'세 개의 별 조각이 모이자 밤하늘에 길고 푸른 빛이 이어졌다. 멀리 떨어져 살던 항해자들은 서로의 등대를 다시 볼 수 있게 되었다.'},{name:'항해 일지',text:'첫 번째 큰 여정이 끝났다. 그러나 지도에는 아직 빈칸이 많다. 이 바다에서 무엇을 할지는 이제 당신이 정하면 된다.'}]);saveGame(true);updateHud()}else showDialogue([{name:'별빛 등대',text:'아직 별 조각의 빛이 부족하다. 현재 '+itemTotal('starFragment')+'/3개를 모았다. 별빛 군도와 바람 언덕에서 빛나는 조각을 찾아보자.'}]);return}
  showDialogue([{name:'오래된 등대',text:'불빛은 꺼지지 않고 남아 있다. 오늘은 어디로 항해하고 싶니?'}]);
 }
 function talkHaesol(){if(stage===0){showDialogue([{name:'해솔 할아버지',text:'어서 오렴, 작은 선장. 등대가 다시 빛나면 멀리 있는 섬들도 서로의 존재를 기억할 수 있단다.'}]);return}relationships.haesol++;if(stage===1){showDialogue([{name:'해솔 할아버지',text:'해변의 표류목은 등대 문 옆에 쌓아두렴. 햇살 조개는 불빛을 부드럽게 만드는 데 쓸 수 있어.'}])}else if(stage===3){showDialogue([{name:'해솔 할아버지',text:'푸른 병을 찾았니? 등대로 가져오면 함께 읽어보자꾸나.'}])}else if(stage>=4&&stage<6){showDialogue([{name:'해솔 할아버지',text:'좋은 아침이구나. 네가 바다를 천천히 살펴보는 모습이 참 보기 좋다. 발견한 곳이 있다면 항해 일지에 적어두렴.'}])}else{showDialogue([{name:'해솔 할아버지',text:'바다에는 아직 발견하지 못한 조용한 섬이 많단다. 가끔은 목적지 없이 항해해도 괜찮아.'}])}}
 function observeCreature(w){if(!observed.includes(w.type)){observed.push(w.type);addJournal(w.name+'을 관찰했다. 바다 생물 도감에 작은 기록을 남겼다.');coins+=3;toast(w.name+' 관찰 기록 +3 코인');}else toast(w.name+'이/가 천천히 움직이는 모습을 바라봤어요.');showDialogue([{name:w.name,text:creatureText(w.type)}]);saveGame(true);updateHud()}
 function creatureText(t){return ({turtle:'초록바다거북은 숨을 길게 내쉰 뒤 부드럽게 물속으로 미끄러져 들어갔다. 등껍질 위에 작은 물방울이 반짝인다.',crab:'집게 조개게가 작은 조개를 꼭 끌어안고 모래 위를 옆으로 걸어간다. 가까이 다가가자 한쪽 집게를 들어 인사한다.',butterfly:'바람나비가 꽃 위를 천천히 돌다가 강아지의 귀 가까이에 앉았다. 잠시 쉬고는 다시 바람을 따라 날아간다.',bird:'항구갈매기가 돛대에 앉아 작은 소리를 냈다. 발밑에는 반짝이는 조개껍데기가 하나 놓여 있다.',dolphin:'푸른돌고래가 배 옆에서 물 위로 올라왔다. 잠깐 나란히 헤엄친 뒤 멀리 수평선 쪽으로 돌아갔다.'})[t]||'작은 생물이 조용히 주변을 살펴보고 있다.'}
-function startFishing(){if(state!=='play'||panel||!$('dialogue').hidden===false)return;if(fishing){if(fishing.bite){const id=Math.random()<.22?'silverFish':'blueFish';addItem(id,1);if(!discovered.includes(id)){discovered.push(id);addJournal(items[id].name+'을 처음 낚았다.')}fishing=null;playTone(760,.18,.02,'triangle');toast(items[id].name+'을 낚았어요! 가방에 담았어요.');saveGame(true);updateHud()}else{toast('아직 물고기가 오지 않았어요. 조금만 더 기다려봐요.')}return}if(!player.boat&&!islandById('harbor')||false){}fishing={t:0,bite:false,biteAt:2.5+Math.random()*3};toast('낚싯줄을 조용히 던졌어요. 물결을 바라봐요.');playTone(430,.25,.015,'sine')}
+function startFishing(){if(state!=='play'||panel||!$('dialogue').hidden)return;if(fishing){if(fishing.bite){const id=Math.random()<.22?'silverFish':'blueFish';addItem(id,1);if(!discovered.includes(id)){discovered.push(id);addJournal(items[id].name+'을 처음 낚았다.')}fishing=null;playTone(760,.18,.02,'triangle');toast(items[id].name+'을 낚았어요! 가방에 담았어요.');saveGame(true);updateHud()}else{toast('아직 물고기가 오지 않았어요. 조금만 더 기다려봐요.')}return}fishing={t:0,bite:false,biteAt:2.5+Math.random()*3};toast('낚싯줄을 조용히 던졌어요. 물결을 바라봐요.');playTone(430,.25,.015,'sine')}
 function onKeyDown(e){const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(panel){closePanel();return}if(!$('dialogue').hidden){$('dialogue').hidden=true;dialogueQueue=[];dialogueAfter=null;return}if(state==='play')openPanel('menu');return}if(!$('dialogue').hidden){if(k==='e'||k==='enter'||k===' '){advanceDialogue()}return}if(panel){if(k==='escape')closePanel();return}if(state!=='play')return;if(k==='e'||k==='enter'){interact();return}if(k===' '){startFishing();return}if(k==='m'){openPanel('map');return}if(k==='i'){openPanel('bag');return}if(k==='j'){openPanel('journal');return}if(k==='c'){openPanel('craft');return}keys[k]=true}
 function onKeyUp(e){keys[e.key.toLowerCase()]=false}
 window.addEventListener('keydown',onKeyDown);window.addEventListener('keyup',onKeyUp);window.addEventListener('blur',()=>{keys={};if(state==='play')saveGame(true)});
@@ -428,7 +431,7 @@ if(i.id==='harbor'){drawDock(392-cam.x,293-cam.y);drawLighthouse(245-cam.x,216-c
 if(i.id==='mist'){drawLighthouse(i.x-cam.x,i.y-cam.y,stage>=4)}
 if(i.id==='green'){drawFlower(x+11,y-18);drawFlower(x-32,y+9)}
 if(i.id==='coral'){for(let j=0;j<7;j++){ctx.fillStyle=j%2?'#e29b9c':'#eead9e';ctx.fillRect(x-24+j*9,y+18+(j%3)*2,2,5)}}
-if(i.id==='star'&&stage>=5){ctx.fillStyle='#f3dc9c';ctx.fillRect(x-3,y-2,6,4);ctx.fillStyle='#fff1c7';ctx.fillRect(x-1,y-5,2,10)}
+if(i.id==='star')drawLighthouse(i.x+4-cam.x,i.y-17-cam.y,stage>=6);if(i.id==='star'&&stage>=5){ctx.fillStyle='#f3dc9c';ctx.fillRect(x-3,y-2,6,4);ctx.fillStyle='#fff1c7';ctx.fillRect(x-1,y-5,2,10)}
 })}
 function drawTree(x,y,tall){ctx.fillStyle='#425f49';ctx.fillRect(Math.floor(x)-2,Math.floor(y),4,7);ctx.fillStyle='#2f775c';ctx.fillRect(Math.floor(x)-6,Math.floor(y)-5,12,6);ctx.fillStyle='#4e996c';ctx.fillRect(Math.floor(x)-5,Math.floor(y)-8,8,5);ctx.fillStyle='#8cc28b';ctx.fillRect(Math.floor(x)-2,Math.floor(y)-8,3,2);if(tall){ctx.fillStyle='#214f49';ctx.fillRect(Math.floor(x)+3,Math.floor(y)-3,3,4)}}
 function drawFlower(x,y){ctx.fillStyle='#f3c6d2';ctx.fillRect(Math.round(x)-1,Math.round(y)-2,3,3);ctx.fillStyle='#fff0c7';ctx.fillRect(Math.round(x),Math.round(y)-1,1,1);ctx.fillStyle='#508862';ctx.fillRect(Math.round(x),Math.round(y)+1,1,3)}
@@ -436,7 +439,7 @@ function drawDock(x,y){x=Math.round(x);y=Math.round(y);ctx.fillStyle='#6e4b36';c
 function drawLighthouse(x,y,lit){x=Math.round(x);y=Math.round(y);ctx.fillStyle='#425d67';ctx.fillRect(x-8,y+1,17,14);ctx.fillStyle='#e4dfc8';ctx.fillRect(x-7,y-9,15,11);ctx.fillStyle='#a85d4c';ctx.fillRect(x-9,y-12,19,4);ctx.fillStyle='#55413d';ctx.fillRect(x-4,y+7,5,8);ctx.fillStyle='#344f5a';ctx.fillRect(x-2,y-6,4,4);ctx.fillStyle=lit?'#ffe4a0':'#9bb7b5';ctx.fillRect(x-3,y-6,2,3);ctx.fillStyle=lit?'#ffeab4':'#5f838b';ctx.fillRect(x-2,y-13,4,2);if(lit){ctx.globalAlpha=.13+.05*Math.sin(elapsed*2);ctx.fillStyle='#ffe6a7';ctx.beginPath();ctx.moveTo(x,y-9);ctx.lineTo(x+40,y+1);ctx.lineTo(x+40,y-18);ctx.closePath();ctx.fill();ctx.globalAlpha=1;ctx.fillStyle='#fff0b1';ctx.fillRect(x-2,y-7,4,4)}}
 function drawPlayer(){const x=Math.round(player.x-cam.x),y=Math.round(player.y-cam.y),bob=player.moving?Math.sin(walkT*15)*1.5:Math.sin(elapsed*2.2)*.7;
 ctx.fillStyle='#163e4b55';ctx.beginPath();ctx.ellipse(x,y+7,10,4,0,0,Math.PI*2);ctx.fill();
-if(sprite.complete&&sprite.naturalWidth){ctx.save();if(player.dir==='left'){ctx.translate(x*2,0);ctx.scale(-1,1);ctx.drawImage(sprite,x*2-24,y*2-25+bob*2,24,24)}else ctx.drawImage(sprite,x*2-12,y*2-25+bob*2,24,24);ctx.restore()}
+if(sprite.complete&&sprite.naturalWidth){ctx.save();if(player.dir==='left'){ctx.translate(x*2,0);ctx.scale(-1,1);ctx.drawImage(sprite,-12,y-23+bob,24,24)}else ctx.drawImage(sprite,x-12,y-23+bob,24,24);ctx.restore()}
 else{ctx.fillStyle='#272a29';ctx.fillRect(x-7,y-10,14,14);ctx.fillStyle='#f4d996';ctx.fillRect(x-5,y-9,10,10);ctx.fillStyle='#fff7e5';ctx.fillRect(x-4,y-3,8,6);ctx.fillStyle='#292b2a';ctx.fillRect(x-3,y-4,2,2);ctx.fillRect(x+2,y-4,2,2);ctx.fillRect(x-2,y,4,2)}
 }
 function drawBoat(x,y,scale){x=Math.round(x);y=Math.round(y);scale=scale||1;ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.fillStyle='#133b4b44';ctx.beginPath();ctx.ellipse(0,7,23,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#634635';ctx.fillRect(-19,-2,38,10);ctx.fillStyle='#bd8d5a';ctx.fillRect(-17,-2,34,4);ctx.fillStyle='#855a40';for(let j=-13;j<16;j+=7)ctx.fillRect(j,1,4,5);ctx.fillStyle='#352e2a';ctx.fillRect(-20,4,40,2);ctx.fillStyle='#55463a';ctx.fillRect(-1,-28,2,28);ctx.fillStyle='#fff0ce';ctx.fillRect(1,-26,12,23);ctx.fillStyle='#d3e7d9';ctx.fillRect(-14,-23,-1,19);ctx.fillStyle='#e5d8b8';ctx.fillRect(-15,-24,13,21);ctx.fillStyle='#5b6d66';ctx.fillRect(-13,-22,2,17);ctx.fillStyle='#fff5d6';ctx.fillRect(3,-23,7,2);ctx.restore()}
