@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#071326">
+<meta name="description" content="시험 일정, 과목별 성적, 목표 점수, 시험 범위와 준비 체크리스트를 안전하게 관리하는 로키 스터디 성적·시험 관리실.">
+<title>성적·시험 관리실 | 로키 스터디</title>
+<link rel="icon" href="./rockeysite-icon-3.png" type="image/png">
+<style>
+@font-face{font-family:HancomMalrangmalrang;src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+:root{color-scheme:dark;--bg:#061020;--panel:rgba(13,27,49,.86);--panel2:rgba(18,36,64,.65);--line:rgba(174,198,236,.15);--text:#f3f7ff;--muted:#9eafca;--blue:#9fc3ff;--cyan:#7ae4ec;--green:#8fe0c1;--gold:#ffdf9c;--red:#f6a6b5;--ease:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box}html{min-height:100%;scroll-behavior:smooth}body{margin:0;min-height:100vh;color:var(--text);font-family:HancomMalrangmalrang,system-ui,sans-serif;font-weight:400;background:radial-gradient(ellipse at 8% -12%,rgba(67,105,203,.24),transparent 42%),radial-gradient(ellipse at 95% 24%,rgba(30,180,197,.1),transparent 34%),linear-gradient(145deg,#07152c,#030916 75%);overflow-x:hidden}button,input,textarea,select{font:inherit;color:inherit}button,a{-webkit-tap-highlight-color:transparent}button{cursor:pointer}a{color:inherit;text-decoration:none}button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}button:disabled{opacity:.45;cursor:not-allowed}.shell{width:min(1260px,100%);margin:auto;padding:clamp(16px,3.5vw,42px)}.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:30px}.brand{display:flex;align-items:center;gap:12px;min-width:0}.brand-mark{display:grid;place-items:center;width:45px;height:45px;flex:none;border:1px solid rgba(141,181,255,.45);border-radius:15px;background:linear-gradient(145deg,rgba(141,181,255,.19),rgba(107,227,239,.06));color:#dbe8ff;font-size:18px;box-shadow:0 8px 26px rgba(0,0,0,.22)}.eyebrow{font-size:10px;letter-spacing:.19em;color:#91b6f8}.brand-name{font-size:18px;letter-spacing:.01em}.top-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}.nav-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:40px;padding:9px 14px;border:1px solid var(--line);border-radius:999px;color:#cedbf2;background:rgba(255,255,255,.025);font-size:12px;white-space:nowrap;transition:background .25s,border-color .25s,transform .25s}.nav-link:hover{transform:translateY(-2px);background:rgba(255,255,255,.07);border-color:rgba(141,181,255,.34)}.hero{display:flex;justify-content:space-between;align-items:end;gap:24px;margin:12px 0 22px;animation:rise .6s var(--ease) both}.hero-copy{max-width:750px}.kicker{display:flex;align-items:center;gap:9px;color:#9edce9;font-size:11px;letter-spacing:.16em;text-transform:uppercase}.kicker:before{content:"";width:22px;height:1px;background:var(--cyan)}h1{font-size:clamp(32px,5vw,54px);line-height:1.13;letter-spacing:-.04em;margin:14px 0 12px;font-weight:400}h1 span{color:#9bc1ff}.hero p{max-width:720px;margin:0;color:#b1bfd7;font-size:14px;line-height:1.8}.cloud-state{display:flex;align-items:center;gap:8px;max-width:330px;padding:11px 14px;border:1px solid var(--line);border-radius:14px;background:rgba(10,21,39,.62);color:#a8bad5;font-size:11px;line-height:1.6;flex:none}.cloud-dot{width:7px;height:7px;flex:none;border-radius:50%;background:#8da4c3;box-shadow:0 0 12px currentColor}.cloud-state.connected .cloud-dot{background:var(--green);color:var(--green)}.cloud-state.local .cloud-dot{background:var(--gold);color:var(--gold)}.cloud-state.error .cloud-dot{background:var(--red);color:var(--red)}.button{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:43px;padding:0 15px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.035);color:#d9e5f8;font-size:12px;transition:transform .22s var(--ease),background .22s,border-color .22s}.button:hover:not(:disabled){transform:translateY(-2px);background:rgba(255,255,255,.07);border-color:rgba(141,181,255,.35)}.button.primary{border-color:transparent;background:linear-gradient(110deg,#c4dcff,#80d9e8);color:#071326;box-shadow:0 9px 26px rgba(94,178,221,.12)}.button.primary:hover:not(:disabled){box-shadow:0 14px 32px rgba(94,178,221,.22)}.button.danger{border-color:rgba(255,142,151,.23);color:#ffc8ce;background:rgba(255,142,151,.045)}.button.small{min-height:33px;padding:0 11px;border-radius:10px;font-size:10px}.stats-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:18px}.stat-card{min-width:0;padding:18px 19px;border:1px solid var(--line);border-radius:19px;background:linear-gradient(150deg,rgba(16,33,58,.74),rgba(6,16,30,.7));animation:rise .7s var(--ease) both}.stat-card:nth-child(2){animation-delay:.05s}.stat-card:nth-child(3){animation-delay:.1s}.stat-card:nth-child(4){animation-delay:.15s}.stat-label{font-size:11px;color:#8fa4c3;line-height:1.5}.stat-value{font-size:clamp(20px,2.6vw,29px);font-variant-numeric:tabular-nums;letter-spacing:-.035em;margin-top:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stat-foot{font-size:10px;color:#647d9f;margin-top:6px;line-height:1.5}.layout-grid{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:17px;margin-top:18px;align-items:stretch}.panel{position:relative;min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:23px;background:linear-gradient(150deg,rgba(17,35,62,.84),rgba(7,17,32,.88));box-shadow:0 22px 55px rgba(0,0,0,.15);animation:rise .65s var(--ease) both}.panel-inner{padding:clamp(18px,2.7vw,28px)}.panel-heading{display:flex;align-items:start;justify-content:space-between;gap:14px;margin-bottom:17px}.panel-heading h2{font-size:17px;font-weight:400;margin:0 0 7px}.panel-heading p{font-size:11px;color:#8fa3c1;line-height:1.65;margin:0}.period-label{font-size:10px;color:#8ca5cb;letter-spacing:.09em;white-space:nowrap}.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:11px;color:#8196b6;font-size:10px}.legend span{display:inline-flex;align-items:center;gap:6px}.legend i{display:inline-block;width:13px;height:3px;border-radius:9px;background:#8be0e7}.legend .target i{background:#ffdf9c;opacity:.8}.chart-wrap{width:100%;overflow:hidden}.score-chart{display:block;width:100%;height:auto;min-height:205px}.chart-empty{display:grid;place-items:center;min-height:190px;padding:25px;border:1px dashed rgba(147,176,224,.15);border-radius:15px;text-align:center;color:#8499b8;font-size:11px;line-height:1.75}.chart-empty strong{display:block;color:#dce9fb;font-size:13px;font-weight:400;margin-bottom:5px}.chart-foot{display:flex;justify-content:space-between;gap:12px;padding-top:13px;border-top:1px solid rgba(163,190,231,.09);color:#6f86a5;font-size:10px;line-height:1.6}.target-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border:1px solid rgba(255,223,156,.14);border-radius:14px;background:rgba(255,223,156,.035);margin-bottom:16px}.target-summary span{font-size:11px;color:#aebfda}.target-summary strong{font-size:15px;font-weight:400;color:#ffe6ae}.exam-list{display:grid;gap:13px}.exam-card{position:relative;overflow:hidden;padding:19px;border:1px solid rgba(163,190,231,.13);border-radius:19px;background:linear-gradient(145deg,rgba(14,30,54,.82),rgba(5,15,29,.76));animation:rise .45s var(--ease) both}.exam-card:before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:linear-gradient(180deg,#7de0e5,#8db5ff);opacity:.75}.exam-card.is-past:before{background:linear-gradient(180deg,#9eafca,#667a99)}.exam-card-head{display:flex;align-items:start;justify-content:space-between;gap:14px}.exam-title-line{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.exam-title{font-size:16px;font-weight:400;margin:0;line-height:1.5;overflow-wrap:anywhere}.exam-term{font-size:10px;color:#8299ba;border:1px solid rgba(163,190,231,.13);padding:4px 7px;border-radius:7px}.dday{display:inline-flex;align-items:center;gap:5px;padding:6px 9px;border:1px solid rgba(141,181,255,.19);border-radius:9px;background:rgba(115,160,239,.07);color:#bcd4ff;font-size:10px;white-space:nowrap}.dday.today{border-color:rgba(255,223,156,.24);background:rgba(255,223,156,.07);color:#ffe1a0}.dday.past{border-color:rgba(150,168,199,.15);background:rgba(150,168,199,.035);color:#8da0be}.exam-date{color:#8ea4c4;font-size:11px;margin-top:5px}.exam-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;margin-top:14px}.exam-overview{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:14px}.mini-stat{min-width:0;border:1px solid rgba(163,190,231,.09);background:rgba(255,255,255,.018);border-radius:12px;padding:10px}.mini-stat span{display:block;color:#7188a7;font-size:9px;line-height:1.5}.mini-stat strong{display:block;font-weight:400;color:#dbe8fa;font-size:14px;margin-top:5px;overflow-wrap:anywhere}.mini-stat strong.good{color:#a4ecd1}.mini-stat strong.bad{color:#ffd6a0}.subject-list{display:grid;gap:9px;margin-top:15px}.subject-card{padding:12px;border:1px solid rgba(163,190,231,.095);border-radius:13px;background:rgba(2,10,22,.23)}.subject-head{display:flex;align-items:start;justify-content:space-between;gap:10px}.subject-name{font-size:12px;color:#e1ebfb;font-weight:400;overflow-wrap:anywhere}.subject-score{font-size:11px;color:#a9c8f8;white-space:nowrap;font-variant-numeric:tabular-nums}.subject-subline{font-size:10px;color:#7289a9;margin-top:5px;line-height:1.6}.meter{height:4px;margin-top:9px;border-radius:99px;background:rgba(255,255,255,.055);overflow:hidden}.meter-fill{height:100%;border-radius:inherit;background:linear-gradient(90deg,#8be0e7,#86adff);transition:width .45s var(--ease)}.meter-fill.over{background:linear-gradient(90deg,#8fe0c1,#b6e8c4)}.scope-line{color:#91a6c6;font-size:10px;line-height:1.7;margin-top:8px;white-space:pre-wrap;overflow-wrap:anywhere}.checklist{display:grid;gap:6px;margin-top:10px}.check-item{display:flex;align-items:flex-start;gap:8px;color:#93a8c6;font-size:10px;line-height:1.55}.check-item input{margin:2px 0 0;accent-color:#79d9da;flex:none}.check-item.done span{text-decoration:line-through;color:#5d7899}.check-summary{font-size:9px;color:#657f9f;margin-top:9px}.exam-notes{margin-top:11px;padding-top:10px;border-top:1px solid rgba(163,190,231,.08);color:#8398b7;font-size:10px;line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}.toolbar{display:flex;align-items:center;justify-content:space-between;gap:15px;margin:30px 0 14px}.toolbar h2{font-size:19px;font-weight:400;margin:0 0 6px}.toolbar p{font-size:11px;line-height:1.7;color:#8399b7;margin:0}.toolbar-side{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.filter-group{display:flex;gap:4px;padding:4px;border:1px solid var(--line);border-radius:12px;background:rgba(2,10,22,.32)}.filter-button{min-height:30px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:#8398b7;font-size:10px}.filter-button.active{background:rgba(141,181,255,.13);color:#dbe9ff;box-shadow:inset 0 0 0 1px rgba(141,181,255,.12)}.exam-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.empty-state{display:grid;justify-items:center;text-align:center;padding:36px 18px;border:1px dashed rgba(147,176,224,.16);border-radius:18px;color:#8197b6;line-height:1.75;font-size:11px;grid-column:1/-1}.empty-icon{display:grid;place-items:center;width:48px;height:48px;border:1px solid rgba(142,186,255,.15);border-radius:15px;color:#9fc5ff;background:rgba(111,156,231,.06);font-size:21px;margin-bottom:13px}.empty-state strong{font-size:14px;color:#d8e5fb;font-weight:400;margin-bottom:5px}.empty-state .button{margin-top:13px}.footer{display:flex;justify-content:space-between;gap:14px;padding:25px 4px 4px;color:#617897;font-size:10px;line-height:1.7}.auth-gate{width:min(690px,calc(100% - 28px));margin:7vh auto 10vh;padding:clamp(25px,5vw,44px);border:1px solid rgba(156,187,239,.2);border-radius:27px;background:linear-gradient(125deg,rgba(22,42,75,.88),rgba(7,17,32,.91));box-shadow:0 30px 90px rgba(0,0,0,.24);animation:rise .5s var(--ease) both}.auth-gate[hidden]{display:none!important}.auth-emblem{width:58px;height:58px;display:grid;place-items:center;border:1px solid rgba(141,181,255,.26);border-radius:18px;background:rgba(141,181,255,.08);color:#b9d4ff;font-size:24px;margin-bottom:22px}.auth-gate h1{font-size:clamp(30px,5vw,42px)}.auth-gate p{color:#a4b8d5;font-size:13px;line-height:1.85;max-width:530px}.privacy-list{display:grid;gap:9px;margin:22px 0;color:#b0c2dd;font-size:12px;line-height:1.6}.privacy-list span{display:flex;gap:10px;align-items:start}.privacy-list i{font-style:normal;color:#8fe0c1}.modal-backdrop{position:fixed;z-index:80;inset:0;display:flex;justify-content:center;align-items:stretch;padding:20px;background:rgba(1,6,15,.76);backdrop-filter:blur(13px);opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}.modal-backdrop.open{opacity:1;visibility:visible}.modal{width:min(950px,100%);max-height:100%;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(158,203,252,.25);border-radius:24px;background:linear-gradient(145deg,#102442,#061326);box-shadow:0 30px 100px rgba(0,0,0,.5);transform:translateY(13px) scale(.99);transition:transform .3s var(--ease)}.modal-backdrop.open .modal{transform:translateY(0) scale(1)}.modal-header{display:flex;justify-content:space-between;align-items:start;gap:15px;padding:23px 25px 17px;border-bottom:1px solid rgba(163,190,231,.1)}.modal-header h2{font-size:21px;font-weight:400;margin:0 0 6px}.modal-header p{font-size:11px;color:#8299b8;line-height:1.65;margin:0}.icon-button{width:36px;height:36px;display:grid;place-items:center;flex:none;border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.035);font-size:18px;color:#9fb5d5}.modal-body{overflow:auto;padding:22px 25px 26px;overscroll-behavior:contain}.field-grid{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,.8fr) minmax(0,.9fr) minmax(0,.75fr);gap:11px}.field{display:grid;gap:7px;min-width:0}.field label{font-size:10px;color:#b5c6df}.field input,.field textarea,.field select{width:100%;min-width:0;border:1px solid rgba(163,190,231,.17);border-radius:11px;background:rgba(2,10,22,.48);padding:11px 12px;min-height:42px;color:#eef4ff;outline:none;transition:border-color .2s,box-shadow .2s;font-size:12px}.field textarea{resize:vertical;min-height:74px;line-height:1.65}.field input:focus,.field textarea:focus,.field select:focus{border-color:rgba(129,204,237,.6);box-shadow:0 0 0 3px rgba(97,188,221,.08)}.field input::placeholder,.field textarea::placeholder{color:#5f7797}.section-subhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:24px 0 12px}.section-subhead h3{font-size:14px;font-weight:400;margin:0}.section-subhead p{font-size:10px;color:#7188a8;margin:5px 0 0;line-height:1.6}.editor-subjects{display:grid;gap:13px}.editor-subject{border:1px solid rgba(163,190,231,.14);border-radius:17px;background:rgba(3,12,25,.28);padding:15px;animation:fadeIn .25s ease both}.editor-subject-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.editor-subject-head strong{font-size:12px;font-weight:400;color:#a9c8f8}.subject-fields{display:grid;grid-template-columns:minmax(0,1.45fr) repeat(3,minmax(0,.75fr));gap:9px}.scope-field{margin-top:11px}.scope-field textarea{min-height:62px}.check-editor{display:grid;gap:7px;margin-top:11px}.check-editor-row{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:8px}.check-editor-row input[type=checkbox]{accent-color:#7adadd;margin:0}.check-editor-row input[type=text]{width:100%;min-height:34px;padding:8px 10px;border:1px solid rgba(163,190,231,.13);border-radius:9px;background:rgba(2,10,22,.4);font-size:11px}.check-editor-row .remove-task{border:0;background:transparent;color:#b47e8d;padding:5px 7px;font-size:11px}.add-check-row{display:flex;gap:7px;margin-top:9px}.add-check-row input{flex:1;min-width:0;min-height:35px;padding:8px 10px;border:1px solid rgba(163,190,231,.13);border-radius:9px;background:rgba(2,10,22,.4);font-size:11px}.add-check-row button{min-height:35px;padding:0 11px;border:1px solid rgba(141,181,255,.15);border-radius:9px;background:rgba(141,181,255,.06);color:#b9d2f7;font-size:10px;white-space:nowrap}.notes-editor{margin-top:18px}.modal-footer{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:23px;padding-top:17px;border-top:1px solid rgba(163,190,231,.1)}.modal-footer p{font-size:10px;color:#7188a7;line-height:1.6;margin:0;max-width:450px}.modal-footer-actions{display:flex;gap:8px;justify-content:flex-end;margin-left:auto}.toast{position:fixed;z-index:150;left:50%;bottom:24px;transform:translate(-50%,18px);opacity:0;pointer-events:none;max-width:min(92vw,560px);padding:13px 18px;border:1px solid rgba(149,194,238,.22);border-radius:14px;background:rgba(8,20,38,.96);box-shadow:0 18px 44px rgba(0,0,0,.38);color:#e9f3ff;font-size:12px;text-align:center;transition:opacity .25s,transform .25s}.toast.show{opacity:1;transform:translate(-50%,0)}@keyframes rise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@media(max-width:930px){.hero{align-items:start;flex-direction:column}.cloud-state{max-width:100%}.layout-grid{grid-template-columns:1fr}.exam-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.field-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.subject-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:640px){.shell{padding:17px 13px 25px}.topbar{align-items:start;margin-bottom:23px}.brand-mark{width:40px;height:40px;border-radius:13px}.brand-name{font-size:15px}.eyebrow{font-size:9px}.top-actions{gap:6px}.nav-link{padding:8px 10px;min-height:36px;font-size:10px}.hero{margin-top:0;margin-bottom:17px}h1{font-size:36px}.hero p{font-size:12px}.stats-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:13px}.stat-card{padding:13px;border-radius:15px}.stat-label{font-size:10px}.stat-value{font-size:23px}.stat-foot{font-size:9px}.layout-grid{gap:12px;margin-top:13px}.panel-inner{padding:17px 14px}.toolbar{align-items:start;flex-direction:column}.toolbar-side{width:100%;justify-content:space-between}.exam-grid{grid-template-columns:1fr}.exam-card{padding:15px}.exam-title{font-size:14px}.exam-overview{gap:6px}.mini-stat{padding:9px}.mini-stat strong{font-size:12px}.modal-backdrop{padding:0;align-items:stretch}.modal{width:100%;max-height:100%;border-radius:0;border-left:0;border-right:0}.modal-header{padding:18px 16px 14px}.modal-body{padding:17px 15px 24px}.field-grid{grid-template-columns:1fr 1fr}.field-grid .field:first-child{grid-column:1/-1}.subject-fields{grid-template-columns:1fr 1fr}.editor-subject{padding:11px}.section-subhead{align-items:start}.modal-footer{align-items:start;flex-direction:column}.modal-footer-actions{width:100%;margin-left:0}.modal-footer-actions .button{flex:1}.footer{flex-direction:column;gap:5px;padding-top:20px}.exam-card-head{gap:8px}.dday{font-size:9px;padding:5px 7px}.chart-foot{flex-direction:column;gap:5px}}@media(max-width:380px){.field-grid{grid-template-columns:1fr}.field-grid .field:first-child{grid-column:auto}.subject-fields{grid-template-columns:1fr 1fr}.top-actions .main-link{display:none}.exam-overview{grid-template-columns:1fr 1fr 1fr}.filter-button{padding:0 8px;font-size:9px}}@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="topbar">
+  <a class="brand" href="./rockey-study.html" aria-label="로키 스터디 메인으로">
+    <span class="brand-mark" aria-hidden="true">R</span>
+    <span><span class="eyebrow">ROCKEY STUDY · EXAM ROOM</span><span class="brand-name" style="display:block">성적·시험 관리실</span></span>
+  </a>
+  <nav class="top-actions" aria-label="페이지 이동">
+    <a class="nav-link" href="./rockey-study.html">← 로키 스터디 메인</a>
+    <a class="nav-link" id="accountLink" href="./login.html">로그인 ↗</a>
+    <button class="nav-link" id="signOutBtn" type="button" hidden>로그아웃</button>
+  </nav>
+</header>
+
+<section class="auth-gate" id="authGate" hidden>
+  <div class="auth-emblem" aria-hidden="true">▣</div>
+  <div class="kicker">PRIVATE ACADEMIC SPACE</div>
+  <h1>성적 기록은<br><span>나만 볼 수 있게.</span></h1>
+  <p>성적·시험 관리실은 로그인한 사용자만 이용할 수 있어. 시험 일정, 점수, 시험 범위와 준비 체크리스트는 본인 계정에 연결해 보관하고 다른 계정에는 공개하지 않아.</p>
+  <div class="privacy-list">
+    <span><i>✓</i> 사용자별 개인 저장 공간</span>
+    <span><i>✓</i> 데이터베이스에서 소유자 권한을 확인하는 RLS 보안</span>
+    <span><i>✓</i> 로그아웃 상태에서는 성적 기록을 화면에 표시하지 않음</span>
+  </div>
+  <a class="button primary" href="./login.html">로그인하고 시작하기 ↗</a>
+</section>
+
+<main id="examApp" hidden>
+  <section class="hero">
+    <div class="hero-copy">
+      <div class="kicker">PLAN · PREPARE · IMPROVE</div>
+      <h1>시험을 계획하고,<br><span>성장한 점수를 확인해.</span></h1>
+      <p>시험 날짜부터 과목별 점수, 목표 점수, 시험 범위, 준비 체크리스트까지 직접 관리해. 기록은 계정별로 저장되고, 점수를 입력하면 평균과 목표 차이, 시험별 변화 그래프가 자동으로 계산돼.</p>
+    </div>
+    <div class="cloud-state local" id="cloudStatus" role="status" aria-live="polite"><span class="cloud-dot"></span><span id="cloudStatusText">개인 기록을 불러오는 중…</span></div>
+  </section>
+
+  <section class="stats-grid" aria-label="성적 요약">
+    <article class="stat-card"><span class="stat-label">등록한 시험</span><div class="stat-value" id="statExams">0개</div><div class="stat-foot" id="statUpcoming">다가오는 시험 0개</div></article>
+    <article class="stat-card"><span class="stat-label">내 성적 평균</span><div class="stat-value" id="statAverage">—</div><div class="stat-foot" id="statAverageFoot">점수를 입력하면 계산돼</div></article>
+    <article class="stat-card"><span class="stat-label">목표 평균</span><div class="stat-value" id="statTarget">—</div><div class="stat-foot" id="statGap">시험별 목표와 비교해</div></article>
+    <article class="stat-card"><span class="stat-label">준비 체크 완료</span><div class="stat-value" id="statChecklist">0%</div><div class="stat-foot" id="statChecklistFoot">완료한 준비 항목 비율</div></article>
+  </section>
+
+  <div class="layout-grid">
+    <section class="panel">
+      <div class="panel-inner">
+        <div class="panel-heading"><div><h2>성적 변화 그래프</h2><p>실제 점수를 입력한 시험만 시간순으로 비교해.</p></div><span class="period-label">SCORE TREND</span></div>
+        <div class="chart-wrap" id="chartWrap"><div class="chart-empty"><div><strong>아직 비교할 성적이 없어.</strong>시험을 추가하고 과목 점수를 입력하면 변화 그래프가 나타나.</div></div></div>
+        <div class="legend"><span><i></i> 실제 평균</span><span class="target"><i></i> 해당 시험 목표 평균</span></div>
+        <div class="chart-foot"><span id="chartDescription">성적 기록은 본인 계정에서만 계산돼.</span><span id="chartScale">점수 범위 0–100%</span></div>
+      </div>
+    </section>
+    <section class="panel">
+      <div class="panel-inner">
+        <div class="panel-heading"><div><h2>목표 점수 비교</h2><p>점수와 목표 간 차이를 확인해 다음 학습 계획을 세워 봐.</p></div><span class="period-label">GOAL TRACKER</span></div>
+        <div class="target-summary"><span>점수가 입력된 시험의 평균</span><strong id="goalActual">—</strong></div>
+        <div id="goalList" class="exam-list"></div>
+      </div>
+    </section>
+  </div>
+
+  <div class="toolbar">
+    <div><h2>나의 시험 일정</h2><p>시험별 설정과 체크리스트를 직접 수정할 수 있어.</p></div>
+    <div class="toolbar-side">
+      <div class="filter-group" role="group" aria-label="시험 필터">
+        <button class="filter-button active" type="button" data-filter="all">전체</button>
+        <button class="filter-button" type="button" data-filter="upcoming">다가오는 시험</button>
+        <button class="filter-button" type="button" data-filter="past">지난 시험</button>
+      </div>
+      <button class="button primary" id="addExamBtn" type="button">＋ 시험 추가</button>
+    </div>
+  </div>
+  <section id="examList" class="exam-grid" aria-live="polite"></section>
+  <footer class="footer"><span>ROCKEY STUDY · PRIVATE EXAM ROOM</span><span>내 기록은 내 계정에. 점수는 내 성장의 기록.</span></footer>
+</main>
+</div>
+
+<div class="modal-backdrop" id="editorBackdrop" aria-hidden="true">
+  <section class="modal" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+    <header class="modal-header">
+      <div><h2 id="editorTitle">시험 추가</h2><p>시험 날짜, 목표 평균, 과목 점수와 시험 준비 내용을 직접 입력해.</p></div>
+      <button class="icon-button" id="closeEditorBtn" type="button" aria-label="편집 창 닫기">×</button>
+    </header>
+    <div class="modal-body">
+      <form id="examForm">
+        <div class="field-grid">
+          <div class="field"><label for="examTitle">시험 이름 *</label><input id="examTitle" maxlength="120" required placeholder="예: 2학기 중간고사"></div>
+          <div class="field"><label for="examDate">시험 날짜 *</label><input id="examDate" type="date" required></div>
+          <div class="field"><label for="termLabel">학기·기간 (선택)</label><input id="termLabel" maxlength="100" placeholder="예: 2학년 2학기"></div>
+          <div class="field"><label for="targetAverage">목표 평균 (%)</label><input id="targetAverage" type="number" min="0" max="100" step="0.1" value="90" required></div>
+        </div>
+        <div class="section-subhead"><div><h3>과목별 성적과 준비</h3><p>과목별 점수·만점·목표 점수와 시험 범위, 복습 항목을 설정해.</p></div><button class="button small" id="addSubjectBtn" type="button">＋ 과목 추가</button></div>
+        <div class="editor-subjects" id="editorSubjects"></div>
+        <div class="field notes-editor"><label for="examNotes">시험 메모 (선택)</label><textarea id="examNotes" maxlength="12000" placeholder="시험 관련 메모, 주의할 점, 계획 등을 기록해."></textarea></div>
+        <div class="modal-footer">
+          <p>저장 시 내 계정에 연결된 개인 기록으로 보관돼. 평균은 각 과목의 점수를 만점 대비 백분율로 환산해 계산해.</p>
+          <div class="modal-footer-actions"><button class="button" id="cancelEditorBtn" type="button">취소</button><button class="button primary" id="saveExamBtn" type="submit">시험 저장 ✓</button></div>
+        </div>
+      </form>
+    </div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="./js/supabase.min.js?v=20261025-exam-room"></script>
+<script>
+(function(){
+"use strict";
+var SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
+var SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcmVrekFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+var TABLE="rockey_study_exam_records";
+var CACHE_PREFIX="rockeyStudyExamRecords.v1.";
+var $=function(id){return document.getElementById(id);};
+var client=null,currentUser=null,records=[],editorDraft=null,editingId=null,currentFilter="all",toastTimer=null,saveBusy=false,loaded=false;
+var reduceMotion=!!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+var SVG_NS="http://www.w3.org/2000/svg";
+
+function uuid(){return window.crypto&&window.crypto.randomUUID?window.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){var r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16);});}
+function todayKey(){var d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");}
+function safeKey(){return CACHE_PREFIX+(currentUser?currentUser.id:"no-user");}
+function escapeHtml(v){return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function parseDay(value){if(!value)return new Date(NaN);var p=String(value).slice(0,10).split("-").map(Number);return new Date(p[0],p[1]-1,p[2],12,0,0,0);}
+function dayDiff(dateKey){var a=parseDay(dateKey),b=parseDay(todayKey());return Math.round((a.getTime()-b.getTime())/86400000);}
+function fmtDate(value){var d=parseDay(value);return isNaN(d.getTime())?String(value||"날짜 미정"):new Intl.DateTimeFormat("ko-KR",{year:"numeric",month:"long",day:"numeric",weekday:"short"}).format(d);}
+function fmtShortDate(value){var d=parseDay(value);return isNaN(d.getTime())?"—":new Intl.DateTimeFormat("ko-KR",{month:"numeric",day:"numeric"}).format(d);}
+function fmtPercent(v){return Number.isFinite(Number(v))?Number(v).toLocaleString("ko-KR",{maximumFractionDigits:1,minimumFractionDigits:0})+"%":"—";}
+function fmtNumber(v){return Number(v).toLocaleString("ko-KR",{maximumFractionDigits:1});}
+function showToast(message){$("toast").textContent=message;$("toast").classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(function(){$("toast").classList.remove("show");},2800);}
+function setCloudStatus(message,mode){var el=$("cloudStatus");el.className="cloud-state "+(mode||"local");$("cloudStatusText").textContent=message;}
+function newChecklistItem(text){return{id:uuid(),text:String(text||"").slice(0,180),done:false};}
+function newSubject(){return{id:uuid(),name:"새 과목",score:null,max_score:100,target_score:90,scope:"",checklist:[]};}
+function blankExam(){return{id:uuid(),title:"",exam_date:todayKey(),term_label:"",target_average:90,notes:"",subjects:[newSubject()],created_at:new Date().toISOString(),updated_at:new Date().toISOString(),dirty:true};}
+function numOrNull(value,min,max){if(value===null||value===undefined||String(value).trim()==="")return null;var n=Number(value);if(!Number.isFinite(n)||n<min||n>max)return null;return Math.round(n*100)/100;}
+function normalizeSubject(s){
+  var max=numOrNull(s&&s.max_score,1,10000);if(max===null)max=100;
+  var score=numOrNull(s&&s.score,0,max);
+  var target=numOrNull(s&&s.target_score,0,max);
+  return{id:String(s&&s.id||uuid()),name:String(s&&s.name||"과목").slice(0,100),score:score,max_score:max,target_score:target,scope:String(s&&s.scope||"").slice(0,5000),checklist:Array.isArray(s&&s.checklist)?s.checklist.slice(0,100).map(function(x){return{id:String(x&&x.id||uuid()),text:String(x&&x.text||"").slice(0,180),done:!!(x&&x.done)};}).filter(function(x){return !!x.text.trim();}):[]};
+}
+function normalizeExam(r){
+  return{id:String(r&&r.id||uuid()),user_id:currentUser?currentUser.id:null,title:String(r&&r.title||"새 시험").slice(0,120),exam_date:String(r&&r.exam_date||todayKey()).slice(0,10),term_label:String(r&&r.term_label||"").slice(0,100),target_average:Math.max(0,Math.min(100,Number(r&&r.target_average)||0)),notes:String(r&&r.notes||"").slice(0,12000),subjects:Array.isArray(r&&r.subjects)?r.subjects.slice(0,60).map(normalizeSubject):[],created_at:String(r&&r.created_at||new Date().toISOString()),updated_at:String(r&&r.updated_at||new Date().toISOString()),dirty:!!(r&&r.dirty)};
+}
+function localCacheRead(){if(!currentUser)return[];try{var raw=localStorage.getItem(safeKey());var parsed=raw?JSON.parse(raw):[];return Array.isArray(parsed)?parsed.map(normalizeExam):[];}catch(e){return[];}}
+function cacheWrite(){if(!currentUser)return;try{localStorage.setItem(safeKey(),JSON.stringify(records));}catch(e){setCloudStatus("계정 기록은 화면에 있어. 브라우저 저장 공간을 확인해 줘.","error");}}
+function examAverage(exam){
+  var scored=exam.subjects.filter(function(s){return s.score!==null&&Number.isFinite(Number(s.score))&&Number(s.max_score)>0;});
+  if(!scored.length)return null;
+  return scored.reduce(function(sum,s){return sum+(Number(s.score)/Number(s.max_score))*100;},0)/scored.length;
+}
+function examChecklist(exam){
+  var all=0,done=0;exam.subjects.forEach(function(s){(s.checklist||[]).forEach(function(t){if(t.text&&t.text.trim()){all++;if(t.done)done++;}});});
+  return{all:all,done:done,percent:all?Math.round(done/all*100):0};
+}
+function totalGoals(){
+  var list=records.map(function(e){return{exam:e,avg:examAverage(e)};}).filter(function(x){return x.avg!==null;});
+  return{actual:list.length?list.reduce(function(a,x){return a+x.avg;},0)/list.length:null,target:records.length?records.reduce(function(a,x){return a+Number(x.target_average||0);},0)/records.length:null,gradedExams:list.length};
+}
+function dayLabel(exam){
+  var days=dayDiff(exam.exam_date);
+  if(days===0)return{label:"D-DAY",className:"today"};
+  if(days>0)return{label:"D-"+days,className:""};
+  return{label:"D+"+Math.abs(days),className:"past"};
+}
+function statusGoal(avg,target){
+  if(avg===null)return{text:"점수 입력 대기",className:""};
+  var diff=avg-target;
+  if(diff>=-0.05)return{text:diff>0.05?"목표 초과 +"+fmtNumber(diff)+"%p":"목표 달성",className:"good"};
+  return{text:"목표까지 "+fmtNumber(Math.abs(diff))+"%p",className:"bad"};
+}
+function createSvg(tag,attrs,text){
+  var node=document.createElementNS(SVG_NS,tag);
+  Object.keys(attrs||{}).forEach(function(key){node.setAttribute(key,String(attrs[key]));});
+  if(text!==undefined)node.textContent=String(text);
+  return node;
+}
+function renderChart(){
+  var chartable=records.map(function(e){return{title:e.title,date:e.exam_date,avg:examAverage(e),target:Number(e.target_average)||0};}).filter(function(e){return e.avg!==null;}).sort(function(a,b){return a.date.localeCompare(b.date);});
+  var wrap=$("chartWrap");wrap.textContent="";
+  if(!chartable.length){
+    var empty=document.createElement("div");empty.className="chart-empty";
+    var inner=document.createElement("div"),strong=document.createElement("strong");strong.textContent="아직 비교할 성적이 없어.";
+    inner.appendChild(strong);inner.appendChild(document.createTextNode("시험을 추가하고 과목 점수를 입력하면 변화 그래프가 나타나."));empty.appendChild(inner);wrap.appendChild(empty);
+    $("chartDescription").textContent="성적 기록은 본인 계정에서만 계산돼.";return;
+  }
+  var width=620,height=230,left=38,right=16,top=16,bottom=49,plotW=width-left-right,plotH=height-top-bottom;
+  var svg=createSvg("svg",{viewBox:"0 0 "+width+" "+height,class:"score-chart",role:"img","aria-label":"시험별 실제 평균과 목표 평균 변화 그래프"});
+  [0,25,50,75,100].forEach(function(v){
+    var y=top+plotH*(1-v/100);
+    svg.appendChild(createSvg("line",{x1:left,y1:y,x2:width-right,y2:y,stroke:"rgba(154,181,220,.15)","stroke-width":1}));
+    svg.appendChild(createSvg("text",{x:left-9,y:y+4,"text-anchor":"end",fill:"#7188a8","font-size":10},v));
+  });
+  function xAt(i){return chartable.length===1?left+plotW/2:left+i*(plotW/(chartable.length-1));}
+  function yAt(v){return top+plotH*(1-Math.max(0,Math.min(100,v))/100);}
+  var actualPoints=chartable.map(function(d,i){return xAt(i)+","+yAt(d.avg);}).join(" ");
+  var goalPoints=chartable.map(function(d,i){return xAt(i)+","+yAt(d.target);}).join(" ");
+  svg.appendChild(createSvg("polyline",{points:goalPoints,fill:"none",stroke:"#ffdf9c","stroke-width":1.8,"stroke-dasharray":"5 5","stroke-linecap":"round","stroke-linejoin":"round",opacity:.8}));
+  svg.appendChild(createSvg("polyline",{points:actualPoints,fill:"none",stroke:"#8be0e7","stroke-width":2.7,"stroke-linecap":"round","stroke-linejoin":"round"}));
+  chartable.forEach(function(d,i){
+    var x=xAt(i),y=yAt(d.avg),gy=yAt(d.target);
+    svg.appendChild(createSvg("circle",{cx:x,cy:gy,r:3.4,fill:"#ffdf9c",stroke:"#151e2b","stroke-width":1}));
+    var point=createSvg("circle",{cx:x,cy:y,r:4.5,fill:"#8be0e7",stroke:"#10233a","stroke-width":2});
+    point.appendChild(createSvg("title",{},d.title+" · 실제 "+fmtPercent(d.avg)+" · 목표 "+fmtPercent(d.target)));
+    svg.appendChild(point);
+    var label=d.title.length>9?d.title.slice(0,8)+"…":d.title;
+    svg.appendChild(createSvg("text",{x:x,y:top+plotH+18,"text-anchor":"middle",fill:"#8196b6","font-size":10},label));
+    svg.appendChild(createSvg("text",{x:x,y:Math.max(top+10,y-11),"text-anchor":"middle",fill:"#c7e8f2","font-size":10},fmtNumber(d.avg)));
+  });
+  wrap.appendChild(svg);
+  $("chartDescription").textContent=chartable.length+"개 시험의 성적 변화를 날짜순으로 비교 중.";
+}
+function renderGoalList(){
+  var box=$("goalList");box.textContent="";
+  var list=records.map(function(e){return{exam:e,avg:examAverage(e)};}).sort(function(a,b){return a.exam.exam_date.localeCompare(b.exam.exam_date);});
+  if(!list.length){var empty=document.createElement("div");empty.className="chart-empty";empty.textContent="시험을 추가하면 목표별 비교가 여기에 표시돼.";box.appendChild(empty);return;}
+  list.slice(0,5).forEach(function(x){
+    var row=document.createElement("div");row.className="mini-stat";
+    var head=document.createElement("div");head.style.cssText="display:flex;align-items:start;justify-content:space-between;gap:10px";
+    var name=document.createElement("span");name.textContent=x.exam.title;name.style.cssText="color:#a4b8d5;font-size:11px;overflow-wrap:anywhere";
+    var values=document.createElement("strong");values.textContent=x.avg===null?"미입력":fmtPercent(x.avg);values.style.cssText="font-size:12px;margin:0;color:#e1edff;white-space:nowrap";
+    head.appendChild(name);head.appendChild(values);row.appendChild(head);
+    var target=document.createElement("div");target.className="subject-subline";target.style.marginTop="7px";
+    var goal=statusGoal(x.avg,Number(x.exam.target_average)||0);target.textContent="목표 "+fmtPercent(x.exam.target_average)+" · "+goal.text;target.style.color=goal.className==="good"?"#8fe0c1":goal.className==="bad"?"#ffd6a0":"#7289a9";row.appendChild(target);
+    var meter=document.createElement("div");meter.className="meter";var fill=document.createElement("div");fill.className="meter-fill"+(x.avg!==null&&x.avg>=Number(x.exam.target_average)?" over":"");fill.style.width=(x.avg===null?0:Math.max(0,Math.min(100,x.avg)))+"%";meter.appendChild(fill);row.appendChild(meter);
+    box.appendChild(row);
+  });
+}
+function renderExamCard(exam){
+  var days=dayDiff(exam.exam_date),day=dayLabel(exam),avg=examAverage(exam),check=examChecklist(exam);
+  var card=document.createElement("article");card.className="exam-card"+(days<0?" is-past":"");
+  var head=document.createElement("div");head.className="exam-card-head";
+  var left=document.createElement("div");
+  var titleline=document.createElement("div");titleline.className="exam-title-line";
+  var title=document.createElement("h3");title.className="exam-title";title.textContent=exam.title;titleline.appendChild(title);
+  if(exam.term_label){var term=document.createElement("span");term.className="exam-term";term.textContent=exam.term_label;titleline.appendChild(term);}
+  var date=document.createElement("div");date.className="exam-date";date.textContent=fmtDate(exam.exam_date);
+  left.appendChild(titleline);left.appendChild(date);head.appendChild(left);
+  var dday=document.createElement("span");dday.className="dday"+(day.className?" "+day.className:"");dday.textContent=day.label;head.appendChild(dday);card.appendChild(head);
+  var overview=document.createElement("div");overview.className="exam-overview";
+  function addMini(label,value,cls){var box=document.createElement("div");box.className="mini-stat";var l=document.createElement("span");l.textContent=label;var v=document.createElement("strong");v.textContent=value;if(cls)v.className=cls;box.appendChild(l);box.appendChild(v);overview.appendChild(box);}
+  addMini("실제 평균",avg===null?"미입력":fmtPercent(avg));
+  var goal=statusGoal(avg,Number(exam.target_average)||0);addMini("목표 평균",fmtPercent(exam.target_average));addMini("목표 비교",goal.text,goal.className);
+  card.appendChild(overview);
+  var subjectList=document.createElement("div");subjectList.className="subject-list";
+  if(!exam.subjects.length){var no=document.createElement("div");no.className="subject-subline";no.textContent="등록된 과목이 없어. 수정해서 과목을 추가해.";subjectList.appendChild(no);}
+  exam.subjects.forEach(function(subject,subjectIndex){
+    var sc=document.createElement("div");sc.className="subject-card";
+    var sh=document.createElement("div");sh.className="subject-head";
+    var sn=document.createElement("div");sn.className="subject-name";sn.textContent=subject.name||"과목";
+    var ss=document.createElement("div");ss.className="subject-score";ss.textContent=subject.score===null?"점수 미입력":fmtNumber(subject.score)+" / "+fmtNumber(subject.max_score);
+    sh.appendChild(sn);sh.appendChild(ss);sc.appendChild(sh);
+    if(subject.score!==null){
+      var actual=(Number(subject.score)/Number(subject.max_score))*100;
+      var target=subject.target_score===null?null:(Number(subject.target_score)/Number(subject.max_score))*100;
+      var line=document.createElement("div");line.className="subject-subline";line.textContent=target===null?"만점 대비 "+fmtPercent(actual):"실제 "+fmtPercent(actual)+" · 과목 목표 "+fmtNumber(subject.target_score)+"/"+fmtNumber(subject.max_score)+" ("+fmtPercent(target)+")";sc.appendChild(line);
+      var meter=document.createElement("div");meter.className="meter";var fill=document.createElement("div");fill.className="meter-fill"+(target!==null&&actual>=target?" over":"");fill.style.width=Math.max(0,Math.min(100,actual))+"%";meter.appendChild(fill);sc.appendChild(meter);
+    }else if(subject.target_score!==null){var targetLine=document.createElement("div");targetLine.className="subject-subline";targetLine.textContent="목표 "+fmtNumber(subject.target_score)+" / "+fmtNumber(subject.max_score);sc.appendChild(targetLine);}
+    if(subject.scope){var scope=document.createElement("div");scope.className="scope-line";scope.textContent="시험 범위 · "+subject.scope;sc.appendChild(scope);}
+    if(subject.checklist&&subject.checklist.length){
+      var tasks=document.createElement("div");tasks.className="checklist";
+      subject.checklist.forEach(function(task,taskIndex){
+        var label=document.createElement("label");label.className="check-item"+(task.done?" done":"");
+        var input=document.createElement("input");input.type="checkbox";input.checked=!!task.done;input.setAttribute("aria-label",subject.name+" 준비 항목 "+task.text);input.dataset.action="toggle-check";input.dataset.examId=exam.id;input.dataset.subjectId=subject.id;input.dataset.taskId=task.id;
+        var text=document.createElement("span");text.textContent=task.text;
+        label.appendChild(input);label.appendChild(text);tasks.appendChild(label);
+      });
+      sc.appendChild(tasks);
+    }
+    subjectList.appendChild(sc);
+  });
+  card.appendChild(subjectList);
+  if(exam.notes){var notes=document.createElement("div");notes.className="exam-notes";notes.textContent=exam.notes;card.appendChild(notes);}
+  var summary=document.createElement("div");summary.className="check-summary";summary.textContent=check.all?("준비 체크 "+check.done+" / "+check.all+"개 완료 ("+check.percent+"%)"):"준비 체크리스트가 아직 없어.";card.appendChild(summary);
+  var actions=document.createElement("div");actions.className="exam-actions";
+  var edit=document.createElement("button");edit.className="button small";edit.type="button";edit.dataset.action="edit";edit.dataset.examId=exam.id;edit.textContent="수정·과목 관리";actions.appendChild(edit);
+  var del=document.createElement("button");del.className="button danger small";del.type="button";del.dataset.action="delete";del.dataset.examId=exam.id;del.textContent="시험 삭제";actions.appendChild(del);
+  card.appendChild(actions);return card;
+}
+function renderExams(){
+  var list=$("examList");list.textContent="";
+  var filtered=records.filter(function(e){if(currentFilter==="upcoming")return dayDiff(e.exam_date)>=0;if(currentFilter==="past")return dayDiff(e.exam_date)<0;return true;});
+  filtered.sort(function(a,b){var da=dayDiff(a.exam_date),db=dayDiff(b.exam_date);if(da>=0&&db<0)return-1;if(da<0&&db>=0)return 1;if(da>=0&&db>=0)return a.exam_date.localeCompare(b.exam_date);return b.exam_date.localeCompare(a.exam_date);});
+  if(!filtered.length){
+    var empty=document.createElement("div");empty.className="empty-state";var icon=document.createElement("div");icon.className="empty-icon";icon.textContent="▦";var title=document.createElement("strong");title.textContent=currentFilter==="past"?"지난 시험 기록이 없어.":currentFilter==="upcoming"?"다가오는 시험이 없어.":"첫 시험 일정을 만들어 보자.";
+    var desc=document.createElement("div");desc.textContent=currentFilter==="past"?"시험 날짜를 지난 날짜로 설정하면 지난 시험 목록에서 확인할 수 있어.":"시험 날짜와 과목, 목표 점수를 설정하면 D-Day와 준비 현황을 관리할 수 있어.";
+    empty.appendChild(icon);empty.appendChild(title);empty.appendChild(desc);
+    if(currentFilter==="all"||currentFilter==="upcoming"){var btn=document.createElement("button");btn.className="button primary";btn.type="button";btn.textContent="＋ 시험 추가";btn.addEventListener("click",function(){openEditor(null);});empty.appendChild(btn);}
+    list.appendChild(empty);return;
+  }
+  filtered.forEach(function(exam){list.appendChild(renderExamCard(exam));});
+}
+function renderDashboard(){
+  var upcoming=records.filter(function(e){return dayDiff(e.exam_date)>=0;}).length;
+  var graded=records.map(examAverage).filter(function(x){return x!==null;});
+  var avg=graded.length?graded.reduce(function(a,b){return a+b;},0)/graded.length:null;
+  var target=records.length?records.reduce(function(a,e){return a+Number(e.target_average||0);},0)/records.length:null;
+  var all=0,done=0;records.forEach(function(e){var c=examChecklist(e);all+=c.all;done+=c.done;});
+  $("statExams").textContent=records.length+"개";$("statUpcoming").textContent="다가오는 시험 "+upcoming+"개";
+  $("statAverage").textContent=avg===null?"—":fmtPercent(avg);$("statAverageFoot").textContent=graded.length?graded.length+"개 시험의 입력 점수 평균":"점수를 입력하면 자동 계산돼";
+  $("statTarget").textContent=target===null?"—":fmtPercent(target);$("statGap").textContent=avg===null?"실제 점수를 입력해":(target-avg>0.05?"평균 목표까지 "+fmtNumber(target-avg)+"%p 남았어":target-avg<-.05?"평균 목표를 "+fmtNumber(avg-target)+"%p 넘었어":"평균 목표를 달성했어");
+  $("statChecklist").textContent=(all?Math.round(done/all*100):0)+"%";$("statChecklistFoot").textContent=done+" / "+all+"개 준비 항목 완료";
+  $("goalActual").textContent=avg===null?"점수 입력 전":fmtPercent(avg);
+  renderChart();renderGoalList();renderExams();
+}
+function escapeAttribute(v){return escapeHtml(v);}
+function renderSubjectEditor(){
+  var holder=$("editorSubjects");holder.textContent="";
+  if(!editorDraft||!editorDraft.subjects.length){var empty=document.createElement("div");empty.className="chart-empty";empty.textContent="과목이 없어. 과목 추가 버튼으로 과목을 만들어 줘.";holder.appendChild(empty);return;}
+  editorDraft.subjects.forEach(function(s,i){
+    var card=document.createElement("section");card.className="editor-subject";card.dataset.subjectIndex=String(i);
+    card.innerHTML='<div class="editor-subject-head"><strong>과목 '+(i+1)+'</strong><button type="button" class="button danger small" data-action="remove-subject" data-subject-index="'+i+'">과목 삭제</button></div>'+
+    '<div class="subject-fields">'+
+    '<div class="field"><label>과목 이름 *</label><input data-sub-field="name" data-subject-index="'+i+'" maxlength="100" value="'+escapeAttribute(s.name)+'" placeholder="예: 수학" required></div>'+
+    '<div class="field"><label>실제 점수</label><input data-sub-field="score" data-subject-index="'+i+'" type="number" min="0" max="'+s.max_score+'" step="0.1" value="'+(s.score===null?"":escapeAttribute(s.score))+'" placeholder="미입력"></div>'+
+    '<div class="field"><label>만점</label><input data-sub-field="max_score" data-subject-index="'+i+'" type="number" min="1" max="10000" step="0.1" value="'+escapeAttribute(s.max_score)+'" required></div>'+
+    '<div class="field"><label>목표 점수</label><input data-sub-field="target_score" data-subject-index="'+i+'" type="number" min="0" max="'+s.max_score+'" step="0.1" value="'+(s.target_score===null?"":escapeAttribute(s.target_score))+'" placeholder="선택"></div></div>'+
+    '<div class="field scope-field"><label>시험 범위 · 학습할 내용</label><textarea data-sub-field="scope" data-subject-index="'+i+'" maxlength="5000" placeholder="예: 교과서 3~5단원, 문제집 20~45쪽">'+escapeHtml(s.scope)+'</textarea></div>'+
+    '<div class="section-subhead" style="margin:14px 0 0"><div><h3 style="font-size:11px">준비 체크리스트</h3><p>항목을 추가하고 완료 여부를 체크해.</p></div></div>'+
+    '<div class="check-editor" data-check-list="'+i+'">'+s.checklist.map(function(t,ti){return '<div class="check-editor-row"><input type="checkbox" data-task-done data-subject-index="'+i+'" data-task-index="'+ti+'" '+(t.done?"checked":"")+' aria-label="준비 완료"><input type="text" data-task-text data-subject-index="'+i+'" data-task-index="'+ti+'" maxlength="180" value="'+escapeAttribute(t.text)+'" aria-label="준비 항목"><button type="button" class="remove-task" data-action="remove-task" data-subject-index="'+i+'" data-task-index="'+ti+'" aria-label="준비 항목 삭제">×</button></div>';}).join("")+'</div>'+
+    '<div class="add-check-row"><input type="text" data-task-new="'+i+'" maxlength="180" placeholder="예: 개념 노트 복습하기"><button type="button" data-action="add-task" data-subject-index="'+i+'">＋ 준비 항목</button></div>';
+    holder.appendChild(card);
+  });
+}
+function openEditor(id){
+  editingId=id||null;
+  var existing=id?records.find(function(r){return r.id===id;}):null;
+  editorDraft=existing?JSON.parse(JSON.stringify(existing)):blankExam();
+  $("editorTitle").textContent=existing?"시험 설정 수정":"시험 추가";
+  $("examTitle").value=editorDraft.title;$("examDate").value=editorDraft.exam_date;$("termLabel").value=editorDraft.term_label;$("targetAverage").value=String(editorDraft.target_average);$("examNotes").value=editorDraft.notes;
+  $("saveExamBtn").disabled=false;renderSubjectEditor();
+  $("editorBackdrop").classList.add("open");$("editorBackdrop").setAttribute("aria-hidden","false");document.body.style.overflow="hidden";
+  setTimeout(function(){$("examTitle").focus();},100);
+}
+function closeEditor(){
+  $("editorBackdrop").classList.remove("open");$("editorBackdrop").setAttribute("aria-hidden","true");document.body.style.overflow="";
+  editorDraft=null;editingId=null;
+}
+function upsertLocalRecord(exam){
+  var idx=records.findIndex(function(r){return r.id===exam.id;});
+  if(idx>=0)records[idx]=exam;else records.push(exam);
+  records.sort(function(a,b){return a.exam_date.localeCompare(b.exam_date);});cacheWrite();renderDashboard();
+}
+function cloudRow(exam){
+  return{id:exam.id,user_id:currentUser.id,title:exam.title,exam_date:exam.exam_date,term_label:exam.term_label,target_average:exam.target_average,notes:exam.notes,subjects:exam.subjects,created_at:exam.created_at,updated_at:exam.updated_at};
+}
+async function persistExam(exam){
+  if(!client||!currentUser)throw new Error("로그인이 필요해.");
+  var response=await client.from(TABLE).upsert(cloudRow(exam),{onConflict:"id"});
+  if(response.error)throw response.error;
+  exam.dirty=false;exam.user_id=currentUser.id;cacheWrite();return true;
+}
+async function saveDraft(){
+  if(saveBusy)return;
+  if(!editorDraft||!currentUser)return;
+  var title=$("examTitle").value.trim(),date=$("examDate").value;
+  if(!title){$("examTitle").focus();showToast("시험 이름을 입력해 줘.");return;}
+  if(title.length>120){showToast("시험 이름은 120자 이내로 입력해 줘.");return;}
+  if(!date||!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)){ $("examDate").focus();showToast("시험 날짜를 확인해 줘.");return;}
+  var target=numOrNull($("targetAverage").value,0,100);
+  if(target===null){$("targetAverage").focus();showToast("목표 평균은 0~100%로 입력해 줘.");return;}
+  var subjects=editorDraft.subjects.map(function(s){
+    var name=String(s.name||"").trim();if(!name)throw new Error("모든 과목의 이름을 입력해 줘.");
+    var max=numOrNull(s.max_score,1,10000);if(max===null)throw new Error("과목 만점은 0보다 크고 10,000 이하로 입력해 줘.");
+    var score=s.score===null||s.score===""?null:numOrNull(s.score,0,max);
+    if(s.score!==null&&s.score!==""&&score===null)throw new Error(name+"의 실제 점수는 0~만점 사이로 입력해 줘.");
+    var goal=s.target_score===null||s.target_score===""?null:numOrNull(s.target_score,0,max);
+    if(s.target_score!==null&&s.target_score!==""&&goal===null)throw new Error(name+"의 목표 점수는 0~만점 사이로 입력해 줘.");
+    return{id:s.id,name:name.slice(0,100),score:score,max_score:max,target_score:goal,scope:String(s.scope||"").slice(0,5000),checklist:(s.checklist||[]).slice(0,100).map(function(t){return{id:t.id||uuid(),text:String(t.text||"").trim().slice(0,180),done:!!t.done};}).filter(function(t){return !!t.text;})};
+  });
+  if(subjects.length>60){showToast("시험 하나에 등록할 수 있는 과목은 최대 60개야.");return;}
+  var exam=normalizeExam({id:editorDraft.id,user_id:currentUser.id,title:title,exam_date:date,term_label:$("termLabel").value.trim(),target_average:target,notes:$("examNotes").value,subjects:subjects,created_at:editorDraft.created_at,updated_at:new Date().toISOString(),dirty:true});
+  upsertLocalRecord(exam);closeEditor();
+  setCloudStatus("시험 기록을 Supabase에 저장하고 있어…","local");$("saveExamBtn").disabled=true;
+  try{
+    await persistExam(exam);setCloudStatus("저장 완료 · 내 계정에 시험 기록이 보관돼.","connected");showToast("시험 기록을 안전하게 저장했어.");
+  }catch(error){
+    exam.dirty=true;cacheWrite();setCloudStatus("이 기기에 임시 보관했어. 연결되면 다시 동기화할게.","error");showToast("클라우드 연결이 안 돼 임시 보관했어.");console.warn("Exam record sync pending:",error);
+  }finally{
+    renderDashboard();$("saveExamBtn").disabled=false;
+  }
+}
+function updateDraftField(target){
+  if(!editorDraft)return;
+  var i=Number(target.dataset.subjectIndex);if(!Number.isInteger(i)||!editorDraft.subjects[i])return;
+  var s=editorDraft.subjects[i];
+  if(target.dataset.subField){
+    var f=target.dataset.subField;
+    if(f==="name"||f==="scope")s[f]=target.value;
+    else if(f==="max_score"){s.max_score=target.value===""?null:Number(target.value);var max=Number(s.max_score);var sc=$("editorSubjects").querySelector('input[data-sub-field="score"][data-subject-index="'+i+'"]');var goal=$("editorSubjects").querySelector('input[data-sub-field="target_score"][data-subject-index="'+i+'"]');if(sc)sc.max=String(Number.isFinite(max)&&max>0?max:10000);if(goal)goal.max=String(Number.isFinite(max)&&max>0?max:10000);}
+    else if(f==="score"||f==="target_score")s[f]=target.value===""?null:Number(target.value);
+  }
+  if(target.hasAttribute("data-task-text")){var ti=Number(target.dataset.taskIndex);if(s.checklist[ti])s.checklist[ti].text=target.value;}
+  if(target.hasAttribute("data-task-done")){var tIndex=Number(target.dataset.taskIndex);if(s.checklist[tIndex])s.checklist[tIndex].done=target.checked;}
+}
+function handleEditorClick(event){
+  var button=event.target.closest("[data-action]");if(!button||!editorDraft)return;
+  var action=button.dataset.action,idx=Number(button.dataset.subjectIndex),taskIndex=Number(button.dataset.taskIndex);
+  if(action==="remove-subject"){if(editorDraft.subjects.length<=1){showToast("시험에는 과목을 최소 1개 남겨 줘.");return;}editorDraft.subjects.splice(idx,1);renderSubjectEditor();return;}
+  if(action==="add-task"){
+    if(!editorDraft.subjects[idx])return;
+    var input=$("editorSubjects").querySelector('input[data-task-new="'+idx+'"]'),text=input?input.value.trim():"";
+    if(!text){if(input)input.focus();return;}
+    editorDraft.subjects[idx].checklist.push(newChecklistItem(text));renderSubjectEditor();
+    var next=$("editorSubjects").querySelector('input[data-task-new="'+idx+'"]');if(next)next.focus();return;
+  }
+  if(action==="remove-task"&&editorDraft.subjects[idx]){
+    editorDraft.subjects[idx].checklist.splice(taskIndex,1);renderSubjectEditor();
+  }
+}
+function toggleChecklist(examId,subjectId,taskId,checked){
+  var exam=records.find(function(r){return r.id===examId;});if(!exam)return;
+  var subject=exam.subjects.find(function(s){return s.id===subjectId;});if(!subject)return;
+  var task=subject.checklist.find(function(t){return t.id===taskId;});if(!task)return;
+  task.done=!!checked;exam.updated_at=new Date().toISOString();exam.dirty=true;cacheWrite();renderDashboard();saveChecklistStatus(exam);
+}
+async function saveChecklistStatus(exam){
+  try{await persistExam(exam);setCloudStatus("준비 체크 저장 완료 · 내 계정과 동기화됐어.","connected");}
+  catch(error){exam.dirty=true;cacheWrite();setCloudStatus("체크 상태를 기기에 보관했어. 연결되면 다시 동기화할게.","error");}
+}
+async function deleteExam(id){
+  var exam=records.find(function(r){return r.id===id;});if(!exam)return;
+  if(!window.confirm("‘"+exam.title+"’ 시험과 과목 점수, 준비 체크리스트를 삭제할까? 삭제 후에는 복구할 수 없어."))return;
+  if(!navigator.onLine){showToast("인터넷 연결 후 시험을 삭제해 줘. 안전을 위해 오프라인 삭제는 하지 않았어.");return;}
+  try{
+    var response=await client.from(TABLE).delete().eq("id",id).eq("user_id",currentUser.id);
+    if(response.error)throw response.error;
+    records=records.filter(function(r){return r.id!==id;});cacheWrite();renderDashboard();setCloudStatus("삭제 완료 · 다른 계정의 기록에는 영향이 없어.","connected");showToast("시험 기록을 삭제했어.");
+  }catch(error){showToast("삭제하지 못했어. 연결 상태를 확인해 줘.");console.error("Exam delete failed:",error);}
+}
+function mergeRows(cloudRows,localRows){
+  var map=new Map();
+  cloudRows.forEach(function(row){var x=normalizeExam(row);x.dirty=false;map.set(x.id,x);});
+  localRows.forEach(function(row){var x=normalizeExam(row);if(x.dirty)map.set(x.id,x);});
+  return Array.from(map.values()).sort(function(a,b){return a.exam_date.localeCompare(b.exam_date);});
+}
+async function loadCloudRows(){
+  if(!client||!currentUser)throw new Error("로그인된 Supabase 연결이 없어.");
+  var all=[],offset=0,size=500;
+  while(true){
+    var res=await client.from(TABLE).select("id,user_id,title,exam_date,term_label,target_average,notes,subjects,created_at,updated_at").eq("user_id",currentUser.id).order("exam_date",{ascending:true}).range(offset,offset+size-1);
+    if(res.error)throw res.error;
+    var batch=res.data||[];all=all.concat(batch);if(batch.length<size)break;offset+=size;
+  }
+  return all;
+}
+async function syncDirtyRecords(){
+  var dirty=records.filter(function(r){return r.dirty;});
+  for(var i=0;i<dirty.length;i++){
+    try{await persistExam(dirty[i]);}catch(error){console.warn("Exam record sync still pending:",error);}
+  }
+  cacheWrite();
+}
+async function refreshCloud(){
+  if(!currentUser||!client)return;
+  try{
+    var cloud=await loadCloudRows(),local=localCacheRead();
+    records=mergeRows(cloud,local);cacheWrite();await syncDirtyRecords();
+    setCloudStatus("동기화 완료 · 내 시험 기록 "+records.length+"개를 불러왔어.","connected");renderDashboard();
+  }catch(error){
+    var local=localCacheRead();records=local;renderDashboard();
+    setCloudStatus("계정 기록을 가져오지 못했어. 저장된 기기 기록을 표시하고 재연결을 기다릴게.","error");console.warn("Exam load failed:",error);
+  }
+}
+async function init(){
+  $("addExamBtn").addEventListener("click",function(){openEditor(null);});
+  $("closeEditorBtn").addEventListener("click",closeEditor);$("cancelEditorBtn").addEventListener("click",closeEditor);
+  $("editorBackdrop").addEventListener("click",function(e){if(e.target===$("editorBackdrop"))closeEditor();});
+  document.addEventListener("keydown",function(e){if(e.key==="Escape"&&$("editorBackdrop").classList.contains("open"))closeEditor();});
+  $("addSubjectBtn").addEventListener("click",function(){if(!editorDraft)return;if(editorDraft.subjects.length>=60){showToast("과목은 최대 60개까지 추가할 수 있어.");return;}editorDraft.subjects.push(newSubject());renderSubjectEditor();var last=$("editorSubjects").querySelector('input[data-sub-field="name"][data-subject-index="'+(editorDraft.subjects.length-1)+'"]');if(last){last.value="";last.focus();}});
+  $("editorSubjects").addEventListener("input",function(e){updateDraftField(e.target);});
+  $("editorSubjects").addEventListener("change",function(e){updateDraftField(e.target);});
+  $("editorSubjects").addEventListener("click",handleEditorClick);
+  $("examForm").addEventListener("submit",function(e){e.preventDefault();try{saveDraft();}catch(err){showToast(err.message||"입력한 내용을 확인해 줘.");}});
+  $("examList").addEventListener("click",function(e){var el=e.target.closest("[data-action]");if(!el)return;var id=el.dataset.examId;if(el.dataset.action==="edit")openEditor(id);if(el.dataset.action==="delete")deleteExam(id);});
+  $("examList").addEventListener("change",function(e){var el=e.target.closest('[data-action="toggle-check"]');if(el)toggleChecklist(el.dataset.examId,el.dataset.subjectId,el.dataset.taskId,el.checked);});
+  document.querySelectorAll("[data-filter]").forEach(function(button){button.addEventListener("click",function(){currentFilter=button.dataset.filter;document.querySelectorAll("[data-filter]").forEach(function(b){b.classList.toggle("active",b===button);});renderExams();});});
+  $("signOutBtn").addEventListener("click",async function(){if(!client)return;var result=await client.auth.signOut();if(result.error){showToast("로그아웃하지 못했어. 다시 시도해 줘.");return;}location.href="./login.html";});
+  window.addEventListener("online",function(){if(!currentUser||!client)return;setCloudStatus("인터넷 복구 · 개인 기록을 동기화하고 있어…","local");refreshCloud();});
+  setCloudStatus("로그인 상태를 확인하고 있어…","local");
+  try{
+    if(!window.supabase||typeof window.supabase.createClient!=="function")throw new Error("Supabase 라이브러리를 불러오지 못했어.");
+    client=window.doriSupabase||window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});window.doriSupabase=client;
+    var auth=await client.auth.getSession();if(auth.error)throw auth.error;
+    var user=auth.data&&auth.data.session&&auth.data.session.user;
+    currentUser=user&&!user.is_anonymous?user:null;
+    if(!currentUser){
+      $("examApp").hidden=true;$("authGate").hidden=false;$("accountLink").hidden=false;$("signOutBtn").hidden=true;
+      setCloudStatus("로그인해야 개인 성적에 접근할 수 있어.","local");
+      return;
+    }
+    $("authGate").hidden=true;$("examApp").hidden=false;$("accountLink").hidden=true;$("signOutBtn").hidden=false;
+    records=localCacheRead();renderDashboard();setCloudStatus("내 계정의 시험 기록을 안전하게 불러오는 중…","local");
+    await refreshCloud();loaded=true;
+  }catch(error){
+    currentUser=null;$("examApp").hidden=true;$("authGate").hidden=false;$("accountLink").hidden=false;$("signOutBtn").hidden=true;
+    setCloudStatus("로그인 연결을 확인할 수 없어 성적 화면을 잠갔어.","error");
+    console.warn("Exam room auth initialization failed:",error);
+  }
+}
+init();
+})();
+</script>
+</body>
+</html>
