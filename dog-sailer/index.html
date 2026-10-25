@@ -431,7 +431,7 @@ function interact(){
  if(nearest.type==='wildlife'){observeCreature(nearest.obj);return}
 }
 function doLighthouse(id){
- if(id==='star-lamp'&&stage<5){showDialogue([{name:'별빛 등대',text:'아직은 아주 먼 바다의 끝에서 조용히 잠들어 있다. 먼저 포근한 항구의 등대를 되살리고, 잃어た地の地図を探しに行こう。'}]);return}
+ if(id==='star-lamp'&&stage<5){showDialogue([{name:'별빛 등대',text:'아직은 먼 바다 끝에서 조용히 잠들어 있다. 먼저 포근한 항구의 등대를 되살리고, 잃어버린 항해 지도를 찾아보자.'}]);return}
  if(stage===0){stage=1;relationships.haesol++;addJournal('해솔 할아버지는 등대의 빛이 꺼진 뒤 배들이 길을 잃기 시작했다고 말했다.');showDialogue([{name:'오래된 등대',text:'등대의 문은 오래 닫혀 있었다. 바람에 닳은 나무판자와 햇살 조개가 있으면 작은 불빛을 되살릴 수 있을 것 같다.'},{name:'항해 일지',text:'표류목 3개와 햇살 조개 2개를 모아보자. 해변의 반짝이는 조각들은 천천히 찾아도 괜찮다.'}]);saveGame(true);updateHud();return}
  if(stage===1){if(itemTotal('driftwood')>=3&&itemTotal('shell')>=2){useItem('driftwood',3);useItem('shell',2);stage=2;coins+=20;addJournal('첫 등대에 작은 조개 불빛이 돌아왔다. 해솔 할아버지가 고맙다며 코인 20개를 건넸다.');showDialogue([{name:'해솔 할아버지',text:'보렴. 아주 작은 빛도 길을 알려 줄 수 있단다. 이제 조개달 섬으로 가보렴. 오래전 내가 보낸 편지가 아직 그곳 어딘가에 남아 있을 거야.'}]);playTone(660,.3,.025);saveGame(true);updateHud()}else showDialogue([{name:'오래된 등대',text:'아직 조금 더 손봐야 한다. 표류목 '+itemTotal('driftwood')+'/3개, 햇살 조개 '+itemTotal('shell')+'/2개가 필요하다.'}]);return}
  if(stage===2){showDialogue([{name:'등대의 작은 불빛',text:'불빛이 돌아왔다. 멀리 조개달 섬이 보인다. 그곳의 모래사장에 오래된 편지가 떠밀려왔다는 이야기가 있다.'}]);return}
