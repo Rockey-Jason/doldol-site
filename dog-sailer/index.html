@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#071b2d">
 <title>dog sailer — 작은 강아지, 넓은 바다</title>
 <style>
@@ -457,10 +457,11 @@ $('continueGame').addEventListener('click',()=>{let d=readSave(lastSlot);if(!d){
 $('saveMenu').addEventListener('click',()=>openPanel('saves'));
 $('soundToggle').addEventListener('click',()=>{muted=!muted;try{localStorage.setItem('dogSailerMuted',String(muted))}catch(e){}updateSoundLabel();if(!muted){playTone(660,.12,.02);startMelody()}});
 function drawOcean(){ctx.fillStyle='#2a8098';ctx.fillRect(0,0,W,H);const t=elapsed;for(let y=0;y<H;y+=16)for(let x=0;x<W;x+=16){const wx=Math.floor((x+cam.x)/16),wy=Math.floor((y+cam.y)/16),n=(wx*13+wy*7+Math.floor(t/3))%11;ctx.fillStyle=n<3?'#2c849b':n<6?'#287b94':'#2c8199';ctx.fillRect(x,y,16,16);const wave=(wx*5+wy*11)%17;if(wave<4){ctx.fillStyle='#93d0cb66';ctx.fillRect(x+((t*1.6+wave*3)%11),y+4,4,1);ctx.fillStyle='#9fd9d377';ctx.fillRect(x+((t*.8+wave*5)%13),y+11,3,1)}if(wave===5){ctx.fillStyle='#b2e4d955';ctx.fillRect(x+5,y+7,1,1)}}}
+function drawPixelIslandShape(cx,cy,rx,ry,color,seed){ctx.fillStyle=color;ctx.beginPath();const n=36;for(let k=0;k<n;k++){const a=k/n*Math.PI*2,shape=1+.055*Math.sin(k*1.73+seed*2.1)+.028*Math.cos(k*2.47+seed);const px=Math.round((cx+Math.cos(a)*rx*shape)/4)*4,py=Math.round((cy+Math.sin(a)*ry*shape)/4)*4;if(k===0)ctx.moveTo(px,py);else ctx.lineTo(px,py)}ctx.closePath();ctx.fill()}
 function drawIslands(){islands.forEach((i,idx)=>{const x=Math.floor(i.x-cam.x),y=Math.floor(i.y-cam.y);if(x<-i.rx-20||x>W+i.rx+20||y<-i.ry-20||y>H+i.ry+20)return;
-ctx.fillStyle='#225b64';ctx.beginPath();ctx.ellipse(x+4,y+7,i.rx+2,i.ry+2,0,0,Math.PI*2);ctx.fill();
-ctx.fillStyle=i.biome==='sand'?'#e8d4a0':i.biome==='mist'?'#b3c5b0':i.biome==='star'?'#83a9a1':'#d9c99a';ctx.beginPath();ctx.ellipse(x,y,i.rx,i.ry,0,0,Math.PI*2);ctx.fill();
-ctx.fillStyle=i.biome==='sand'?'#aad09d':i.biome==='mist'?'#779b8c':i.biome==='star'?'#557f79':i.tone;ctx.beginPath();ctx.ellipse(x-2,y-3,i.rx-8,i.ry-8,0,0,Math.PI*2);ctx.fill();
+drawPixelIslandShape(x+4,y+7,i.rx+2,i.ry+2,'#225b64',idx);
+const shoreColor=i.biome==='sand'?'#e8d4a0':i.biome==='mist'?'#b3c5b0':i.biome==='star'?'#83a9a1':'#d9c99a';drawPixelIslandShape(x,y,i.rx,i.ry,shoreColor,idx+2);
+const grassColor=i.biome==='sand'?'#aad09d':i.biome==='mist'?'#779b8c':i.biome==='star'?'#557f79':i.tone;drawPixelIslandShape(x-2,y-3,i.rx-8,i.ry-8,grassColor,idx+5);
 ctx.fillStyle='#c7d9a0';for(let j=0;j<32;j++){const a=j*2.399+idx,rad=.6+.34*Math.sin(j*3+idx),px=x+Math.cos(a)*i.rx*rad,py=y+Math.sin(a)*i.ry*rad;if(Math.hypot(px-x,py-y)<Math.min(i.rx,i.ry)*.82){ctx.fillRect(Math.round(px),Math.round(py),2,1);}}
 for(let j=0;j<(i.id==='harbor'?9:5);j++){const a=j*2.17+idx*.8,rx=i.rx*(.22+.47*((j%3)/3)),ry=i.ry*(.25+.48*((j%4)/4)),tx=Math.round(x+Math.cos(a)*rx),ty=Math.round(y+Math.sin(a)*ry);if(i.id==='harbor'&&Math.hypot(tx-x,ty-y)<52)continue;drawTree(tx,ty,j%3===0)}
 if(!visited.includes(i.id)){ctx.fillStyle='#e9f2d8a8';ctx.fillRect(x-2,y-1,4,2);ctx.fillStyle='#e9f2d855';ctx.fillRect(x-4,y-3,8,6)}
