@@ -76,5 +76,5 @@ async function sync(){
   applyCosmetics(window.doriPassCosmetics);
  }catch(e){console.warn("[돌이 패스] 메인 진행도 동기화 실패:",e)}
 }
-function init(){installStyles();installMenuButton();installMainCard();sync();sb.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_IN"&&session)sync();if(event==="SIGNED_OUT"){window.doriPassCosmetics=[];window.dispatchEvent(new CustomEvent("dori:pass-cosmetics-updated"));applyCosmetics([]);sync()}})}
+function init(){installStyles();installMenuButton();installMainCard();sync();sb.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_IN"&&session)window.setTimeout(()=>sync(),0);if(event==="SIGNED_OUT")window.setTimeout(()=>{window.doriPassCosmetics=[];window.dispatchEvent(new CustomEvent("dori:pass-cosmetics-updated"));applyCosmetics([]);const sub=document.getElementById("doriPassEntrySub"),bar=document.getElementById("doriPassEntryProgress");if(sub)sub.textContent="로그인 후 시즌 보상 확인";if(bar)bar.style.width="0%"},0)})}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
