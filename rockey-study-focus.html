@@ -280,10 +280,6 @@ function showToast(message){
   $("toast").textContent=message;$("toast").classList.add("show");
   clearTimeout(toastTimeout);toastTimeout=setTimeout(function(){$("toast").classList.remove("show");},2800);
 }
-function renderMode(){
-  $("modeFocus")&&$("modeFocus").classList.toggle("active",currentMode==="focus");
-  $("modeBreak")&&$("modeBreak").classList.toggle("active",currentMode==="break");
-}
 function updateModeButtons(){
   document.querySelectorAll("[data-mode]").forEach(function(btn){btn.classList.toggle("active",btn.dataset.mode===currentMode);btn.setAttribute("aria-selected",btn.dataset.mode===currentMode?"true":"false");btn.disabled=!!active;});
   $("focusMinutes").disabled=!!active;$("breakMinutes").disabled=!!active;$("resetSettingsBtn").disabled=!!active;
