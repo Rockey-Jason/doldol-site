@@ -74,6 +74,195 @@ drop trigger if exists trg_dori_pass_stock_execution on public.dori_stock_execut
 drop trigger if exists trg_dori_pass_bank_transaction on public.dori_bank_transactions;
 drop trigger if exists trg_dori_pass_news_read on public.users;
 
+CREATE OR REPLACE FUNCTION public.dori_pass_season_name(p_date date)
+ RETURNS text
+ LANGUAGE sql
+ IMMUTABLE
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+  select case extract(month from p_date)::integer
+    when 1 then '눈꽃 원정'
+    when 2 then '별빛 축제'
+    when 3 then '새싹의 도약'
+    when 4 then '봄비의 비밀'
+    when 5 then '황금 정원'
+    when 6 then '푸른 파도'
+    when 7 then '태양의 왕관'
+    when 8 then '심해 탐험'
+    when 9 then '시간의 유적'
+    when 10 then '은하 항해'
+    when 11 then '오로라 관측'
+    else '도로늄의 겨울'
+  end
+$function$;
+
+CREATE OR REPLACE FUNCTION public.dori_pass_tier_cost(p_tier integer)
+ RETURNS integer
+ LANGUAGE sql
+ IMMUTABLE
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+  select case when p_tier between 1 and 100
+    then 80 + (4*p_tier) + floor((p_tier::numeric*p_tier::numeric)/120)::integer
+    else null end
+$function$;
+
+CREATE OR REPLACE FUNCTION public.dori_pass_tier_total_required(p_tier integer)
+ RETURNS integer
+ LANGUAGE sql
+ IMMUTABLE
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+  select case when p_tier <= 0 then 0
+    when p_tier > 100 then null
+    else coalesce(sum(public.dori_pass_tier_cost(g)),0)::integer
+    end
+  from generate_series(1,least(100,greatest(0,p_tier))) g
+$function$;
+
+CREATE OR REPLACE FUNCTION public.dori_pass_tier_reward(p_season_key text, p_tier integer)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ IMMUTABLE
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+declare
+  v_date date;
+  v_label text;
+  v_cosmetics jsonb := '[]'::jsonb;
+  v_coins bigint;
+  v_icon text;
+  v_rarity text;
+begin
+  if p_tier<1 or p_tier>100 or p_season_key !~ '^[0-9]{4}-[0-9]{2}$' then
+    raise exception 'Invalid pass reward request';
+  end if;
+  v_date:=to_date(p_season_key||'-01','YYYY-MM-DD');
+  v_label:=to_char(v_date,'YYYY.MM')||' '||public.dori_pass_season_name(v_date);
+  -- The pass is designed to be a meaningful ongoing Doldolcoin income source:
+  -- base reward grows with level, plus large landmark bonuses.
+  v_coins:=1500+(p_tier::bigint*1800)+(p_tier::bigint*p_tier::bigint*20);
+  v_coins:=v_coins+case p_tier
+    when 10 then 10000
+    when 25 then 35000
+    when 50 then 100000
+    when 75 then 250000
+    when 100 then 1000000
+    else 0 end;
+
+  v_rarity:=case
+    when p_tier=100 then 'Doronum'
+    when p_tier>=90 then 'Myth'
+    when p_tier>=70 then 'Legendary'
+    when p_tier>=40 then 'Epic'
+    else 'Rare' end;
+
+  -- Every fifth level adds a unique seasonal icon.
+  if p_tier%5=0 then
+    v_icon:=case ((p_tier/5)%10)
+      when 1 then '✦' when 2 then '☄️' when 3 then '💫' when 4 then '🌌'
+      when 5 then '💎' when 6 then '🪐' when 7 then '🧭' when 8 then '🌙'
+      when 9 then '🌠' else '👑' end;
+    v_cosmetics:=v_cosmetics||jsonb_build_array(jsonb_build_object(
+      'key',p_season_key||'-icon-'||p_tier,
+      'kind','special_icon',
+      'name',v_label||' · '||case when p_tier=100 then '은하의 핵'
+        when p_tier>=80 then '초신성 문장 '||p_tier
+        else '성운 문장 '||p_tier end,
+      'rarity',v_rarity,'icon',v_icon
+    ));
+  end if;
+
+  -- Every tenth level grants a collectible season title.
+  if p_tier%10=0 then
+    v_cosmetics:=v_cosmetics||jsonb_build_array(jsonb_build_object(
+      'key',p_season_key||'-title-'||p_tier,
+      'kind','title',
+      'name',v_label||' '||case
+        when p_tier=100 then '시즌 정복자'
+        when p_tier>=80 then '은하의 초월자'
+        when p_tier>=60 then '성운의 수호자'
+        when p_tier>=40 then '별빛의 지배자'
+        when p_tier>=20 then '성간 개척자'
+        else '별의 탐험가' end,
+      'rarity',v_rarity,
+      'icon',case when p_tier=100 then '👑' when p_tier>=70 then '🌠' when p_tier>=40 then '💫' else '✦' end
+    ));
+  end if;
+
+  -- Every twentieth level adds a profile frame, culminating in Doronum.
+  if p_tier%20=0 then
+    v_cosmetics:=v_cosmetics||jsonb_build_array(jsonb_build_object(
+      'key',p_season_key||'-frame-'||p_tier,
+      'kind','profile_frame',
+      'name',v_label||' · '||case when p_tier=100 then '도로늄 왕관 프레임'
+        when p_tier>=80 then '초신성 프레임'
+        when p_tier>=60 then '오로라 프레임'
+        when p_tier>=40 then '성운 프레임'
+        else '탐험가 프레임' end,
+      'rarity',v_rarity,
+      'icon',case when p_tier=100 then '👑' when p_tier>=80 then '🌌' when p_tier>=60 then '🌈' when p_tier>=40 then '💎' else '🪐' end
+    ));
+  end if;
+
+  return jsonb_build_object(
+    'tier',p_tier,
+    'points_cost',public.dori_pass_tier_cost(p_tier),
+    'total_required',public.dori_pass_tier_total_required(p_tier),
+    'coins',v_coins,
+    'cosmetics',v_cosmetics
+  );
+end
+$function$;
+
+CREATE OR REPLACE FUNCTION public.dori_pass_mission_progress(p_uid uuid, p_date date, p_key text)
+ RETURNS integer
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+declare
+  v_count integer:=0;
+  v_start timestamptz:=(p_date::timestamp at time zone 'Asia/Seoul');
+  v_end timestamptz:=((p_date+1)::timestamp at time zone 'Asia/Seoul');
+begin
+  case p_key
+    when 'attendance' then
+      select count(*)::integer into v_count from public.user_attendance_days
+      where user_id=p_uid::text and attendance_date=p_date;
+    when 'daily_mission' then
+      select count(*)::integer into v_count from public.user_daily_missions
+      where user_id=p_uid and mission_date=p_date and completed_at is not null;
+    when 'random_box' then
+      select count(*)::integer into v_count from public.dori_box_history
+      where user_id=p_uid and created_at>=v_start and created_at<v_end;
+    when 'chess_game' then
+      select count(*)::integer into v_count from public.chess_games
+      where user_id=p_uid and created_at>=v_start and created_at<v_end
+        and result is not null and btrim(result) not in ('','*','pending','ongoing');
+    when 'study_focus' then
+      select count(*)::integer into v_count from public.rockey_study_focus_sessions
+      where user_id=p_uid and session_type='focus' and status='completed'
+        and actual_seconds>=300 and ended_at>=v_start and ended_at<v_end;
+    when 'stock_trade' then
+      select count(*)::integer into v_count from public.dori_stock_executions
+      where (buyer_user_id=p_uid or seller_user_id=p_uid)
+        and executed_at>=v_start and executed_at<v_end;
+    when 'bank_transaction' then
+      select count(*)::integer into v_count
+      from public.dori_bank_transactions t
+      join public.dori_bank_accounts a on a.account_number=t.account_number and a.status='active'
+      where a.auth_user_id=p_uid and t.created_at>=v_start and t.created_at<v_end;
+    when 'study_plan' then
+      select count(*)::integer into v_count from public.rockey_study_planner_days
+      where user_id=p_uid and plan_date=p_date;
+    else
+      v_count:=0;
+  end case;
+  return coalesce(v_count,0);
+end
+$function$;
+
 CREATE OR REPLACE FUNCTION public.dori_pass_challenge_progress(p_uid uuid, p_week_start date, p_key text)
  RETURNS integer
  LANGUAGE plpgsql
@@ -112,146 +301,6 @@ begin
     else v_count:=0;
   end case;
   return coalesce(v_count,0);
-end
-$function$;
-
-CREATE OR REPLACE FUNCTION public.dori_pass_claim_achievement(p_achievement_key text)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public', 'pg_temp'
-AS $function$
-declare
-  v_uid uuid:=auth.uid();
-  v_season text:=to_char(timezone('Asia/Seoul',now())::date,'YYYY-MM');
-  v_points integer;
-  v_tier integer;
-  v_progress integer;
-  v_target integer;
-  v_reward bigint;
-  v_domains integer;
-  v_weekly integer;
-begin
-  if v_uid is null then raise exception '로그인이 필요합니다.'; end if;
-  select coalesce(sum(amount),0)::integer into v_points
-  from public.dori_pass_rocky_point_transactions where user_id=v_uid and season_key=v_season;
-  select coalesce(max(g.tier),0)::integer into v_tier
-  from generate_series(1,100) g(tier) where public.dori_pass_tier_total_required(g.tier)<=v_points;
-  select count(*)::integer into v_weekly from public.dori_pass_challenge_claims where user_id=v_uid and season_key=v_season;
-  select count(distinct mission_key)::integer into v_domains from public.dori_pass_daily_missions
-  where user_id=v_uid and mission_date>=date_trunc('month',timezone('Asia/Seoul',now())::date)::date
-    and mission_date<=timezone('Asia/Seoul',now())::date and claimed_at is not null;
-
-  case p_achievement_key
-    when 'first_100' then v_progress:=v_points;v_target:=100;v_reward:=5000;
-    when 'tier_25' then v_progress:=v_tier;v_target:=25;v_reward:=25000;
-    when 'tier_50' then v_progress:=v_tier;v_target:=50;v_reward:=75000;
-    when 'tier_100' then v_progress:=v_tier;v_target:=100;v_reward:=500000;
-    when 'weekly_hero' then v_progress:=v_weekly;v_target:=8;v_reward:=100000;
-    when 'multi_domain' then v_progress:=v_domains;v_target:=4;v_reward:=50000;
-    else return jsonb_build_object('ok',false,'reason','unknown_achievement');
-  end case;
-  if v_progress<v_target then return jsonb_build_object('ok',false,'reason','not_completed','progress',v_progress,'target',v_target); end if;
-  if exists(select 1 from public.dori_pass_achievement_claims where user_id=v_uid and season_key=v_season and achievement_key=p_achievement_key) then
-    return jsonb_build_object('ok',false,'reason','already_claimed');
-  end if;
-
-  insert into public.dori_pass_achievement_claims(user_id,season_key,achievement_key,coin_reward)
-  values(v_uid,v_season,p_achievement_key,v_reward);
-  update public.users set doldolcoin=coalesce(doldolcoin,0)+v_reward where user_id=v_uid::text;
-  if not found then raise exception '사용자 계정 정보를 찾을 수 없습니다.'; end if;
-  return jsonb_build_object('ok',true,'achievement_key',p_achievement_key,'coins',v_reward);
-end
-$function$;
-
-CREATE OR REPLACE FUNCTION public.dori_pass_claim_all_available()
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public', 'pg_temp'
-AS $function$
-declare
-  v_uid uuid:=auth.uid();
-  v_season text:=to_char(timezone('Asia/Seoul',now())::date,'YYYY-MM');
-  v_points integer:=0;
-  v_tier integer;
-  v_reward jsonb;
-  v_count integer:=0;
-  v_coins bigint:=0;
-  v_cosmetics integer:=0;
-begin
-  if v_uid is null then raise exception '로그인이 필요합니다.'; end if;
-  select coalesce(sum(amount),0)::integer into v_points
-  from public.dori_pass_rocky_point_transactions where user_id=v_uid and season_key=v_season;
-  for v_tier in 1..100 loop
-    if public.dori_pass_tier_total_required(v_tier)>v_points then exit; end if;
-    v_reward:=public.dori_pass_claim_tier(v_tier);
-    if coalesce((v_reward->>'ok')::boolean,false) then
-      v_count:=v_count+1;
-      v_coins:=v_coins+coalesce((v_reward->>'coins')::bigint,0);
-      v_cosmetics:=v_cosmetics+jsonb_array_length(coalesce(v_reward->'cosmetics','[]'::jsonb));
-    end if;
-  end loop;
-  return jsonb_build_object('ok',true,'claimed_count',v_count,'coins',v_coins,
-    'cosmetics_count',v_cosmetics,'season_points',v_points);
-end
-$function$;
-
-CREATE OR REPLACE FUNCTION public.dori_pass_claim_challenge(p_challenge_key text)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public', 'pg_temp'
-AS $function$
-declare
-  v_uid uuid:=auth.uid();
-  v_today date:=timezone('Asia/Seoul',now())::date;
-  v_season text:=to_char(timezone('Asia/Seoul',now())::date,'YYYY-MM');
-  v_week_start date:=date_trunc('week',timezone('Asia/Seoul',now())::date::timestamp)::date;
-  v_target integer;
-  v_reward integer;
-  v_progress integer;
-  v_inserted integer;
-  v_balance bigint;
-begin
-  if v_uid is null then raise exception '로그인이 필요합니다.'; end if;
-  select d.target_count,d.reward_points into v_target,v_reward
-  from (values
-    ('daily_missions',10,650),
-    ('collect_points',2500,900),
-    ('lucky_drop',5,600),
-    ('focus_routine',3,800),
-    ('pass_steps',3,700),
-    ('market_maker',2,650)
-  ) d(challenge_key,target_count,reward_points)
-  where d.challenge_key=p_challenge_key;
-  if v_target is null then return jsonb_build_object('ok',false,'reason','unknown_challenge'); end if;
-  perform pg_advisory_xact_lock(hashtextextended(v_uid::text||'|challenge|'||v_season||'|'||v_week_start::text,0));
-  if exists(select 1 from public.dori_pass_challenge_claims where user_id=v_uid and season_key=v_season and week_start=v_week_start and challenge_key=p_challenge_key) then
-    return jsonb_build_object('ok',false,'reason','already_claimed');
-  end if;
-  v_progress:=public.dori_pass_challenge_progress(v_uid,v_week_start,p_challenge_key);
-  if v_progress<v_target then
-    return jsonb_build_object('ok',false,'reason','not_completed','progress',v_progress,'target',v_target);
-  end if;
-
-  insert into public.dori_pass_challenge_claims(user_id,season_key,week_start,challenge_key,rocky_points_reward,xp_reward)
-  values(v_uid,v_season,v_week_start,p_challenge_key,v_reward,v_reward)
-  on conflict(user_id,season_key,week_start,challenge_key) do nothing;
-  get diagnostics v_inserted=row_count;
-  if v_inserted=0 then return jsonb_build_object('ok',false,'reason','already_claimed'); end if;
-
-  insert into public.dori_pass_rocky_point_wallets(user_id,balance) values(v_uid,0) on conflict(user_id) do nothing;
-  insert into public.dori_pass_rocky_point_transactions(user_id,season_key,transaction_type,source_key,amount,mission_date,metadata)
-  values(v_uid,v_season,'weekly_challenge',v_week_start::text||':'||p_challenge_key,v_reward,v_today,
-    jsonb_build_object('challenge_key',p_challenge_key))
-  on conflict(user_id,transaction_type,source_key) do nothing;
-  if not found then raise exception '주간 로키 포인트 기록을 생성하지 못했습니다.'; end if;
-  update public.dori_pass_rocky_point_wallets set balance=balance+v_reward,updated_at=now()
-  where user_id=v_uid returning balance into v_balance;
-
-  return jsonb_build_object('ok',true,'challenge_key',p_challenge_key,
-    'rocky_points_reward',v_reward,'rocky_points',v_balance,'progress',v_progress,'target',v_target);
 end
 $function$;
 
@@ -305,119 +354,6 @@ begin
 
   return jsonb_build_object('ok',true,'slot',p_slot,'reward_points',v_mission.reward_points,
     'rocky_points',v_new_balance,'mission_title',v_mission.title);
-end
-$function$;
-
-CREATE OR REPLACE FUNCTION public.dori_pass_claim_tier(p_tier integer)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public', 'pg_temp'
-AS $function$
-declare
-  v_uid uuid:=auth.uid();
-  v_season text:=to_char(timezone('Asia/Seoul',now())::date,'YYYY-MM');
-  v_points integer:=0;
-  v_required integer;
-  v_reward jsonb;
-  v_cosmetic jsonb;
-  v_coins bigint;
-  v_inserted integer;
-begin
-  if v_uid is null then raise exception '로그인이 필요합니다.'; end if;
-  if p_tier is null or p_tier<1 or p_tier>100 then return jsonb_build_object('ok',false,'reason','invalid_tier'); end if;
-  perform pg_advisory_xact_lock(hashtextextended(v_uid::text||'|pass-reward|'||v_season,0));
-
-  select coalesce(sum(amount),0)::integer into v_points
-  from public.dori_pass_rocky_point_transactions where user_id=v_uid and season_key=v_season;
-  v_required:=public.dori_pass_tier_total_required(p_tier);
-  if v_points<v_required then
-    return jsonb_build_object('ok',false,'reason','not_unlocked','season_points',v_points,'required',v_required);
-  end if;
-  if exists(select 1 from public.dori_pass_tier_claims where user_id=v_uid and season_key=v_season and tier=p_tier) then
-    return jsonb_build_object('ok',false,'reason','already_claimed','tier',p_tier);
-  end if;
-
-  v_reward:=public.dori_pass_tier_reward(v_season,p_tier);
-  v_coins:=(v_reward->>'coins')::bigint;
-  insert into public.dori_pass_tier_claims(user_id,season_key,tier,coin_reward,points_spent)
-  values(v_uid,v_season,p_tier,v_coins,0)
-  on conflict(user_id,season_key,tier) do nothing;
-  get diagnostics v_inserted=row_count;
-  if v_inserted=0 then return jsonb_build_object('ok',false,'reason','already_claimed','tier',p_tier); end if;
-
-  update public.users set doldolcoin=coalesce(doldolcoin,0)+v_coins where user_id=v_uid::text;
-  if not found then raise exception '사용자 계정 정보를 찾을 수 없습니다.'; end if;
-
-  for v_cosmetic in select value from jsonb_array_elements(coalesce(v_reward->'cosmetics','[]'::jsonb)) as x(value)
-  loop
-    insert into public.dori_pass_cosmetics(user_id,season_key,tier,cosmetic_key,kind,display_name,rarity,icon)
-    values(v_uid,v_season,p_tier,v_cosmetic->>'key',v_cosmetic->>'kind',v_cosmetic->>'name',
-      v_cosmetic->>'rarity',coalesce(v_cosmetic->>'icon','✦'))
-    on conflict(user_id,cosmetic_key) do nothing;
-  end loop;
-
-  return jsonb_build_object('ok',true,'tier',p_tier,'coins',v_coins,
-    'points_required',v_required,'cosmetics',coalesce(v_reward->'cosmetics','[]'::jsonb),
-    'season_points',v_points);
-end
-$function$;
-
-CREATE OR REPLACE FUNCTION public.dori_pass_cosmetic_title_grant()
- RETURNS trigger
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public', 'pg_temp'
-AS $function$
-begin
-  if new.kind <> 'title' then return new; end if;
-
-  insert into public.titles(id, name, description, rarity, icon, enabled)
-  values (new.cosmetic_key, new.display_name, '돌이 패스 시즌 한정 칭호', new.rarity, new.icon, true)
-  on conflict (id) do update set
-    name = excluded.name,
-    description = excluded.description,
-    rarity = excluded.rarity,
-    icon = excluded.icon,
-    enabled = true;
-
-  insert into public.user_titles(user_id, title_id)
-  values (new.user_id, new.cosmetic_key)
-  on conflict (user_id, title_id) do nothing;
-
-  return new;
-end
-$function$;
-
-CREATE OR REPLACE FUNCTION public.dori_pass_equip_cosmetic(p_cosmetic_key text)
- RETURNS jsonb
- LANGUAGE plpgsql
- SECURITY DEFINER
- SET search_path TO 'public', 'pg_temp'
-AS $function$
-declare
-  v_uid uuid:=auth.uid();
-  v_item public.dori_pass_cosmetics%rowtype;
-  v_info jsonb;
-begin
-  if v_uid is null then raise exception '로그인이 필요합니다.'; end if;
-  select * into v_item from public.dori_pass_cosmetics where user_id=v_uid and cosmetic_key=p_cosmetic_key;
-  if not found then return jsonb_build_object('ok',false,'reason','not_owned'); end if;
-  update public.dori_pass_cosmetics set is_equipped=false where user_id=v_uid and kind=v_item.kind and is_equipped;
-  update public.dori_pass_cosmetics set is_equipped=true where user_id=v_uid and cosmetic_key=p_cosmetic_key;
-  v_info:=jsonb_build_object('key',v_item.cosmetic_key,'name',v_item.display_name,'kind',v_item.kind,
-    'icon',v_item.icon,'rarity',v_item.rarity,'season_key',v_item.season_key,'tier',v_item.tier);
-  if v_item.kind='title' then
-    update public.users set equipped_title=v_item.display_name where user_id=v_uid::text;
-    if not found then raise exception '사용자 계정 정보를 찾을 수 없습니다.'; end if;
-  end if;
-  insert into public.user_customization(user_id,customization,updated_at)
-  values(v_uid,jsonb_build_object('dori_pass_equipped',jsonb_build_object(v_item.kind,v_info)),now())
-  on conflict(user_id) do update set customization=coalesce(public.user_customization.customization,'{}'::jsonb)
-    ||jsonb_build_object('dori_pass_equipped',
-      coalesce(public.user_customization.customization->'dori_pass_equipped','{}'::jsonb)
-      ||jsonb_build_object(v_item.kind,v_info)),updated_at=now();
-  return jsonb_build_object('ok',true,'equipped',v_info);
 end
 $function$;
 
@@ -621,74 +557,231 @@ begin
 end
 $function$;
 
-CREATE OR REPLACE FUNCTION public.dori_pass_mission_progress(p_uid uuid, p_date date, p_key text)
- RETURNS integer
+CREATE OR REPLACE FUNCTION public.dori_pass_claim_tier(p_tier integer)
+ RETURNS jsonb
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public', 'pg_temp'
 AS $function$
 declare
-  v_count integer:=0;
-  v_start timestamptz:=(p_date::timestamp at time zone 'Asia/Seoul');
-  v_end timestamptz:=((p_date+1)::timestamp at time zone 'Asia/Seoul');
+  v_uid uuid:=auth.uid();
+  v_season text:=to_char(timezone('Asia/Seoul',now())::date,'YYYY-MM');
+  v_points integer:=0;
+  v_required integer;
+  v_reward jsonb;
+  v_cosmetic jsonb;
+  v_coins bigint;
+  v_inserted integer;
 begin
-  case p_key
-    when 'attendance' then
-      select count(*)::integer into v_count from public.user_attendance_days
-      where user_id=p_uid::text and attendance_date=p_date;
-    when 'daily_mission' then
-      select count(*)::integer into v_count from public.user_daily_missions
-      where user_id=p_uid and mission_date=p_date and completed_at is not null;
-    when 'random_box' then
-      select count(*)::integer into v_count from public.dori_box_history
-      where user_id=p_uid and created_at>=v_start and created_at<v_end;
-    when 'chess_game' then
-      select count(*)::integer into v_count from public.chess_games
-      where user_id=p_uid and created_at>=v_start and created_at<v_end
-        and result is not null and btrim(result) not in ('','*','pending','ongoing');
-    when 'study_focus' then
-      select count(*)::integer into v_count from public.rockey_study_focus_sessions
-      where user_id=p_uid and session_type='focus' and status='completed'
-        and actual_seconds>=300 and ended_at>=v_start and ended_at<v_end;
-    when 'stock_trade' then
-      select count(*)::integer into v_count from public.dori_stock_executions
-      where (buyer_user_id=p_uid or seller_user_id=p_uid)
-        and executed_at>=v_start and executed_at<v_end;
-    when 'bank_transaction' then
-      select count(*)::integer into v_count
-      from public.dori_bank_transactions t
-      join public.dori_bank_accounts a on a.account_number=t.account_number and a.status='active'
-      where a.auth_user_id=p_uid and t.created_at>=v_start and t.created_at<v_end;
-    when 'study_plan' then
-      select count(*)::integer into v_count from public.rockey_study_planner_days
-      where user_id=p_uid and plan_date=p_date;
-    else
-      v_count:=0;
-  end case;
-  return coalesce(v_count,0);
+  if v_uid is null then raise exception '로그인이 필요합니다.'; end if;
+  if p_tier is null or p_tier<1 or p_tier>100 then return jsonb_build_object('ok',false,'reason','invalid_tier'); end if;
+  perform pg_advisory_xact_lock(hashtextextended(v_uid::text||'|pass-reward|'||v_season,0));
+
+  select coalesce(sum(amount),0)::integer into v_points
+  from public.dori_pass_rocky_point_transactions where user_id=v_uid and season_key=v_season;
+  v_required:=public.dori_pass_tier_total_required(p_tier);
+  if v_points<v_required then
+    return jsonb_build_object('ok',false,'reason','not_unlocked','season_points',v_points,'required',v_required);
+  end if;
+  if exists(select 1 from public.dori_pass_tier_claims where user_id=v_uid and season_key=v_season and tier=p_tier) then
+    return jsonb_build_object('ok',false,'reason','already_claimed','tier',p_tier);
+  end if;
+
+  v_reward:=public.dori_pass_tier_reward(v_season,p_tier);
+  v_coins:=(v_reward->>'coins')::bigint;
+  insert into public.dori_pass_tier_claims(user_id,season_key,tier,coin_reward,points_spent)
+  values(v_uid,v_season,p_tier,v_coins,0)
+  on conflict(user_id,season_key,tier) do nothing;
+  get diagnostics v_inserted=row_count;
+  if v_inserted=0 then return jsonb_build_object('ok',false,'reason','already_claimed','tier',p_tier); end if;
+
+  update public.users set doldolcoin=coalesce(doldolcoin,0)+v_coins where user_id=v_uid::text;
+  if not found then raise exception '사용자 계정 정보를 찾을 수 없습니다.'; end if;
+
+  for v_cosmetic in select value from jsonb_array_elements(coalesce(v_reward->'cosmetics','[]'::jsonb)) as x(value)
+  loop
+    insert into public.dori_pass_cosmetics(user_id,season_key,tier,cosmetic_key,kind,display_name,rarity,icon)
+    values(v_uid,v_season,p_tier,v_cosmetic->>'key',v_cosmetic->>'kind',v_cosmetic->>'name',
+      v_cosmetic->>'rarity',coalesce(v_cosmetic->>'icon','✦'))
+    on conflict(user_id,cosmetic_key) do nothing;
+  end loop;
+
+  return jsonb_build_object('ok',true,'tier',p_tier,'coins',v_coins,
+    'points_required',v_required,'cosmetics',coalesce(v_reward->'cosmetics','[]'::jsonb),
+    'season_points',v_points);
 end
 $function$;
 
-CREATE OR REPLACE FUNCTION public.dori_pass_season_name(p_date date)
- RETURNS text
- LANGUAGE sql
- IMMUTABLE
+CREATE OR REPLACE FUNCTION public.dori_pass_claim_all_available()
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
  SET search_path TO 'public', 'pg_temp'
 AS $function$
-  select case extract(month from p_date)::integer
-    when 1 then '눈꽃 원정'
-    when 2 then '별빛 축제'
-    when 3 then '새싹의 도약'
-    when 4 then '봄비의 비밀'
-    when 5 then '황금 정원'
-    when 6 then '푸른 파도'
-    when 7 then '태양의 왕관'
-    when 8 then '심해 탐험'
-    when 9 then '시간의 유적'
-    when 10 then '은하 항해'
-    when 11 then '오로라 관측'
-    else '도로늄의 겨울'
-  end
+declare
+  v_uid uuid:=auth.uid();
+  v_season text:=to_char(timezone('Asia/Seoul',now())::date,'YYYY-MM');
+  v_points integer:=0;
+  v_tier integer;
+  v_reward jsonb;
+  v_count integer:=0;
+  v_coins bigint:=0;
+  v_cosmetics integer:=0;
+begin
+  if v_uid is null then raise exception '로그인이 필요합니다.'; end if;
+  select coalesce(sum(amount),0)::integer into v_points
+  from public.dori_pass_rocky_point_transactions where user_id=v_uid and season_key=v_season;
+  for v_tier in 1..100 loop
+    if public.dori_pass_tier_total_required(v_tier)>v_points then exit; end if;
+    v_reward:=public.dori_pass_claim_tier(v_tier);
+    if coalesce((v_reward->>'ok')::boolean,false) then
+      v_count:=v_count+1;
+      v_coins:=v_coins+coalesce((v_reward->>'coins')::bigint,0);
+      v_cosmetics:=v_cosmetics+jsonb_array_length(coalesce(v_reward->'cosmetics','[]'::jsonb));
+    end if;
+  end loop;
+  return jsonb_build_object('ok',true,'claimed_count',v_count,'coins',v_coins,
+    'cosmetics_count',v_cosmetics,'season_points',v_points);
+end
+$function$;
+
+CREATE OR REPLACE FUNCTION public.dori_pass_claim_challenge(p_challenge_key text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+declare
+  v_uid uuid:=auth.uid();
+  v_today date:=timezone('Asia/Seoul',now())::date;
+  v_season text:=to_char(timezone('Asia/Seoul',now())::date,'YYYY-MM');
+  v_week_start date:=date_trunc('week',timezone('Asia/Seoul',now())::date::timestamp)::date;
+  v_target integer;
+  v_reward integer;
+  v_progress integer;
+  v_inserted integer;
+  v_balance bigint;
+begin
+  if v_uid is null then raise exception '로그인이 필요합니다.'; end if;
+  select d.target_count,d.reward_points into v_target,v_reward
+  from (values
+    ('daily_missions',10,650),
+    ('collect_points',2500,900),
+    ('lucky_drop',5,600),
+    ('focus_routine',3,800),
+    ('pass_steps',3,700),
+    ('market_maker',2,650)
+  ) d(challenge_key,target_count,reward_points)
+  where d.challenge_key=p_challenge_key;
+  if v_target is null then return jsonb_build_object('ok',false,'reason','unknown_challenge'); end if;
+  perform pg_advisory_xact_lock(hashtextextended(v_uid::text||'|challenge|'||v_season||'|'||v_week_start::text,0));
+  if exists(select 1 from public.dori_pass_challenge_claims where user_id=v_uid and season_key=v_season and week_start=v_week_start and challenge_key=p_challenge_key) then
+    return jsonb_build_object('ok',false,'reason','already_claimed');
+  end if;
+  v_progress:=public.dori_pass_challenge_progress(v_uid,v_week_start,p_challenge_key);
+  if v_progress<v_target then
+    return jsonb_build_object('ok',false,'reason','not_completed','progress',v_progress,'target',v_target);
+  end if;
+
+  insert into public.dori_pass_challenge_claims(user_id,season_key,week_start,challenge_key,rocky_points_reward,xp_reward)
+  values(v_uid,v_season,v_week_start,p_challenge_key,v_reward,v_reward)
+  on conflict(user_id,season_key,week_start,challenge_key) do nothing;
+  get diagnostics v_inserted=row_count;
+  if v_inserted=0 then return jsonb_build_object('ok',false,'reason','already_claimed'); end if;
+
+  insert into public.dori_pass_rocky_point_wallets(user_id,balance) values(v_uid,0) on conflict(user_id) do nothing;
+  insert into public.dori_pass_rocky_point_transactions(user_id,season_key,transaction_type,source_key,amount,mission_date,metadata)
+  values(v_uid,v_season,'weekly_challenge',v_week_start::text||':'||p_challenge_key,v_reward,v_today,
+    jsonb_build_object('challenge_key',p_challenge_key))
+  on conflict(user_id,transaction_type,source_key) do nothing;
+  if not found then raise exception '주간 로키 포인트 기록을 생성하지 못했습니다.'; end if;
+  update public.dori_pass_rocky_point_wallets set balance=balance+v_reward,updated_at=now()
+  where user_id=v_uid returning balance into v_balance;
+
+  return jsonb_build_object('ok',true,'challenge_key',p_challenge_key,
+    'rocky_points_reward',v_reward,'rocky_points',v_balance,'progress',v_progress,'target',v_target);
+end
+$function$;
+
+CREATE OR REPLACE FUNCTION public.dori_pass_claim_achievement(p_achievement_key text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+declare
+  v_uid uuid:=auth.uid();
+  v_season text:=to_char(timezone('Asia/Seoul',now())::date,'YYYY-MM');
+  v_points integer;
+  v_tier integer;
+  v_progress integer;
+  v_target integer;
+  v_reward bigint;
+  v_domains integer;
+  v_weekly integer;
+begin
+  if v_uid is null then raise exception '로그인이 필요합니다.'; end if;
+  select coalesce(sum(amount),0)::integer into v_points
+  from public.dori_pass_rocky_point_transactions where user_id=v_uid and season_key=v_season;
+  select coalesce(max(g.tier),0)::integer into v_tier
+  from generate_series(1,100) g(tier) where public.dori_pass_tier_total_required(g.tier)<=v_points;
+  select count(*)::integer into v_weekly from public.dori_pass_challenge_claims where user_id=v_uid and season_key=v_season;
+  select count(distinct mission_key)::integer into v_domains from public.dori_pass_daily_missions
+  where user_id=v_uid and mission_date>=date_trunc('month',timezone('Asia/Seoul',now())::date)::date
+    and mission_date<=timezone('Asia/Seoul',now())::date and claimed_at is not null;
+
+  case p_achievement_key
+    when 'first_100' then v_progress:=v_points;v_target:=100;v_reward:=5000;
+    when 'tier_25' then v_progress:=v_tier;v_target:=25;v_reward:=25000;
+    when 'tier_50' then v_progress:=v_tier;v_target:=50;v_reward:=75000;
+    when 'tier_100' then v_progress:=v_tier;v_target:=100;v_reward:=500000;
+    when 'weekly_hero' then v_progress:=v_weekly;v_target:=8;v_reward:=100000;
+    when 'multi_domain' then v_progress:=v_domains;v_target:=4;v_reward:=50000;
+    else return jsonb_build_object('ok',false,'reason','unknown_achievement');
+  end case;
+  if v_progress<v_target then return jsonb_build_object('ok',false,'reason','not_completed','progress',v_progress,'target',v_target); end if;
+  if exists(select 1 from public.dori_pass_achievement_claims where user_id=v_uid and season_key=v_season and achievement_key=p_achievement_key) then
+    return jsonb_build_object('ok',false,'reason','already_claimed');
+  end if;
+
+  insert into public.dori_pass_achievement_claims(user_id,season_key,achievement_key,coin_reward)
+  values(v_uid,v_season,p_achievement_key,v_reward);
+  update public.users set doldolcoin=coalesce(doldolcoin,0)+v_reward where user_id=v_uid::text;
+  if not found then raise exception '사용자 계정 정보를 찾을 수 없습니다.'; end if;
+  return jsonb_build_object('ok',true,'achievement_key',p_achievement_key,'coins',v_reward);
+end
+$function$;
+
+CREATE OR REPLACE FUNCTION public.dori_pass_equip_cosmetic(p_cosmetic_key text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public', 'pg_temp'
+AS $function$
+declare
+  v_uid uuid:=auth.uid();
+  v_item public.dori_pass_cosmetics%rowtype;
+  v_info jsonb;
+begin
+  if v_uid is null then raise exception '로그인이 필요합니다.'; end if;
+  select * into v_item from public.dori_pass_cosmetics where user_id=v_uid and cosmetic_key=p_cosmetic_key;
+  if not found then return jsonb_build_object('ok',false,'reason','not_owned'); end if;
+  update public.dori_pass_cosmetics set is_equipped=false where user_id=v_uid and kind=v_item.kind and is_equipped;
+  update public.dori_pass_cosmetics set is_equipped=true where user_id=v_uid and cosmetic_key=p_cosmetic_key;
+  v_info:=jsonb_build_object('key',v_item.cosmetic_key,'name',v_item.display_name,'kind',v_item.kind,
+    'icon',v_item.icon,'rarity',v_item.rarity,'season_key',v_item.season_key,'tier',v_item.tier);
+  if v_item.kind='title' then
+    update public.users set equipped_title=v_item.display_name where user_id=v_uid::text;
+    if not found then raise exception '사용자 계정 정보를 찾을 수 없습니다.'; end if;
+  end if;
+  insert into public.user_customization(user_id,customization,updated_at)
+  values(v_uid,jsonb_build_object('dori_pass_equipped',jsonb_build_object(v_item.kind,v_info)),now())
+  on conflict(user_id) do update set customization=coalesce(public.user_customization.customization,'{}'::jsonb)
+    ||jsonb_build_object('dori_pass_equipped',
+      coalesce(public.user_customization.customization->'dori_pass_equipped','{}'::jsonb)
+      ||jsonb_build_object(v_item.kind,v_info)),updated_at=now();
+  return jsonb_build_object('ok',true,'equipped',v_info);
+end
 $function$;
 
 CREATE OR REPLACE FUNCTION public.dori_pass_sync_title_selection(p_title text)
@@ -742,123 +835,30 @@ begin
 end
 $function$;
 
-CREATE OR REPLACE FUNCTION public.dori_pass_tier_cost(p_tier integer)
- RETURNS integer
- LANGUAGE sql
- IMMUTABLE
- SET search_path TO 'public', 'pg_temp'
-AS $function$
-  select case when p_tier between 1 and 100
-    then 80 + (4*p_tier) + floor((p_tier::numeric*p_tier::numeric)/120)::integer
-    else null end
-$function$;
-
-CREATE OR REPLACE FUNCTION public.dori_pass_tier_reward(p_season_key text, p_tier integer)
- RETURNS jsonb
+CREATE OR REPLACE FUNCTION public.dori_pass_cosmetic_title_grant()
+ RETURNS trigger
  LANGUAGE plpgsql
- IMMUTABLE
+ SECURITY DEFINER
  SET search_path TO 'public', 'pg_temp'
 AS $function$
-declare
-  v_date date;
-  v_label text;
-  v_cosmetics jsonb := '[]'::jsonb;
-  v_coins bigint;
-  v_icon text;
-  v_rarity text;
 begin
-  if p_tier<1 or p_tier>100 or p_season_key !~ '^[0-9]{4}-[0-9]{2}$' then
-    raise exception 'Invalid pass reward request';
-  end if;
-  v_date:=to_date(p_season_key||'-01','YYYY-MM-DD');
-  v_label:=to_char(v_date,'YYYY.MM')||' '||public.dori_pass_season_name(v_date);
-  -- The pass is designed to be a meaningful ongoing Doldolcoin income source:
-  -- base reward grows with level, plus large landmark bonuses.
-  v_coins:=1500+(p_tier::bigint*1800)+(p_tier::bigint*p_tier::bigint*20);
-  v_coins:=v_coins+case p_tier
-    when 10 then 10000
-    when 25 then 35000
-    when 50 then 100000
-    when 75 then 250000
-    when 100 then 1000000
-    else 0 end;
+  if new.kind <> 'title' then return new; end if;
 
-  v_rarity:=case
-    when p_tier=100 then 'Doronum'
-    when p_tier>=90 then 'Myth'
-    when p_tier>=70 then 'Legendary'
-    when p_tier>=40 then 'Epic'
-    else 'Rare' end;
+  insert into public.titles(id, name, description, rarity, icon, enabled)
+  values (new.cosmetic_key, new.display_name, '돌이 패스 시즌 한정 칭호', new.rarity, new.icon, true)
+  on conflict (id) do update set
+    name = excluded.name,
+    description = excluded.description,
+    rarity = excluded.rarity,
+    icon = excluded.icon,
+    enabled = true;
 
-  -- Every fifth level adds a unique seasonal icon.
-  if p_tier%5=0 then
-    v_icon:=case ((p_tier/5)%10)
-      when 1 then '✦' when 2 then '☄️' when 3 then '💫' when 4 then '🌌'
-      when 5 then '💎' when 6 then '🪐' when 7 then '🧭' when 8 then '🌙'
-      when 9 then '🌠' else '👑' end;
-    v_cosmetics:=v_cosmetics||jsonb_build_array(jsonb_build_object(
-      'key',p_season_key||'-icon-'||p_tier,
-      'kind','special_icon',
-      'name',v_label||' · '||case when p_tier=100 then '은하의 핵'
-        when p_tier>=80 then '초신성 문장 '||p_tier
-        else '성운 문장 '||p_tier end,
-      'rarity',v_rarity,'icon',v_icon
-    ));
-  end if;
+  insert into public.user_titles(user_id, title_id)
+  values (new.user_id, new.cosmetic_key)
+  on conflict (user_id, title_id) do nothing;
 
-  -- Every tenth level grants a collectible season title.
-  if p_tier%10=0 then
-    v_cosmetics:=v_cosmetics||jsonb_build_array(jsonb_build_object(
-      'key',p_season_key||'-title-'||p_tier,
-      'kind','title',
-      'name',v_label||' '||case
-        when p_tier=100 then '시즌 정복자'
-        when p_tier>=80 then '은하의 초월자'
-        when p_tier>=60 then '성운의 수호자'
-        when p_tier>=40 then '별빛의 지배자'
-        when p_tier>=20 then '성간 개척자'
-        else '별의 탐험가' end,
-      'rarity',v_rarity,
-      'icon',case when p_tier=100 then '👑' when p_tier>=70 then '🌠' when p_tier>=40 then '💫' else '✦' end
-    ));
-  end if;
-
-  -- Every twentieth level adds a profile frame, culminating in Doronum.
-  if p_tier%20=0 then
-    v_cosmetics:=v_cosmetics||jsonb_build_array(jsonb_build_object(
-      'key',p_season_key||'-frame-'||p_tier,
-      'kind','profile_frame',
-      'name',v_label||' · '||case when p_tier=100 then '도로늄 왕관 프레임'
-        when p_tier>=80 then '초신성 프레임'
-        when p_tier>=60 then '오로라 프레임'
-        when p_tier>=40 then '성운 프레임'
-        else '탐험가 프레임' end,
-      'rarity',v_rarity,
-      'icon',case when p_tier=100 then '👑' when p_tier>=80 then '🌌' when p_tier>=60 then '🌈' when p_tier>=40 then '💎' else '🪐' end
-    ));
-  end if;
-
-  return jsonb_build_object(
-    'tier',p_tier,
-    'points_cost',public.dori_pass_tier_cost(p_tier),
-    'total_required',public.dori_pass_tier_total_required(p_tier),
-    'coins',v_coins,
-    'cosmetics',v_cosmetics
-  );
+  return new;
 end
-$function$;
-
-CREATE OR REPLACE FUNCTION public.dori_pass_tier_total_required(p_tier integer)
- RETURNS integer
- LANGUAGE sql
- IMMUTABLE
- SET search_path TO 'public', 'pg_temp'
-AS $function$
-  select case when p_tier <= 0 then 0
-    when p_tier > 100 then null
-    else coalesce(sum(public.dori_pass_tier_cost(g)),0)::integer
-    end
-  from generate_series(1,least(100,greatest(0,p_tier))) g
 $function$;
 
 drop trigger if exists trg_dori_pass_cosmetic_title_grant on public.dori_pass_cosmetics;
