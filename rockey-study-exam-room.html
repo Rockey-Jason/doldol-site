@@ -226,7 +226,7 @@ function renderChart(){
 }
 function renderGoalList(){
   var box=$("goalList");box.textContent="";
-  var list=records.map(function(e){return{exam:e,avg:examAverage(e)};}).sort(function(a,b){return a.exam.exam_date.localeCompare(b.exam.exam_date);});
+  var list=records.map(function(e){return{exam:e,avg:examAverage(e)};}).sort(function(a,b){var da=dayDiff(a.exam.exam_date),db=dayDiff(b.exam.exam_date);if(da>=0&&db<0)return-1;if(da<0&&db>=0)return 1;if(da>=0&&db>=0)return a.exam.exam_date.localeCompare(b.exam.exam_date);return b.exam.exam_date.localeCompare(a.exam.exam_date);});
   if(!list.length){var empty=document.createElement("div");empty.className="chart-empty";empty.textContent="시험을 추가하면 목표별 비교가 여기에 표시돼.";box.appendChild(empty);return;}
   list.slice(0,5).forEach(function(x){
     var row=document.createElement("div");row.className="mini-stat";
@@ -459,18 +459,18 @@ async function loadCloudRows(){
   return all;
 }
 async function syncDirtyRecords(){
-  var dirty=records.filter(function(r){return r.dirty;});
+  var dirty=records.filter(function(r){return r.dirty;}),allSynced=true;
   for(var i=0;i<dirty.length;i++){
-    try{await persistExam(dirty[i]);}catch(error){console.warn("Exam record sync still pending:",error);}
+    try{await persistExam(dirty[i]);}catch(error){allSynced=false;console.warn("Exam record sync still pending:",error);}
   }
-  cacheWrite();
+  cacheWrite();return allSynced;
 }
 async function refreshCloud(){
   if(!currentUser||!client)return;
   try{
     var cloud=await loadCloudRows(),local=localCacheRead();
-    records=mergeRows(cloud,local);cacheWrite();await syncDirtyRecords();
-    setCloudStatus("동기화 완료 · 내 시험 기록 "+records.length+"개를 불러왔어.","connected");renderDashboard();
+    records=mergeRows(cloud,local);cacheWrite();var allSynced=await syncDirtyRecords();
+    setCloudStatus(allSynced?"동기화 완료 · 내 시험 기록 "+records.length+"개를 불러왔어.":"연결은 복구됐지만 저장 대기 중인 기록이 있어.",allSynced?"connected":"error");renderDashboard();
   }catch(error){
     var local=localCacheRead();records=local;renderDashboard();
     setCloudStatus("계정 기록을 가져오지 못했어. 저장된 기기 기록을 표시하고 재연결을 기다릴게.","error");console.warn("Exam load failed:",error);
