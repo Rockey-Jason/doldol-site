@@ -463,9 +463,16 @@ begin
   from public.dori_pass_tier_claims where user_id=v_uid and season_key=v_season_key;
   v_tier:=greatest(v_tier,v_claimed_tier);
   if v_tier<100 then
-    v_next_cost:=public.dori_pass_tier_cost(v_tier+1);
     v_next_required:=public.dori_pass_tier_total_required(v_tier+1);
-    v_next_progress:=greatest(0,v_season_points-public.dori_pass_tier_total_required(v_tier));
+    if v_season_points < public.dori_pass_tier_total_required(v_tier) then
+      -- Prior reward claims from the earlier pass version are preserved, but
+      -- do not pretend those legacy claims generated Rocky Points this season.
+      v_next_cost:=v_next_required;
+      v_next_progress:=v_season_points;
+    else
+      v_next_cost:=public.dori_pass_tier_cost(v_tier+1);
+      v_next_progress:=greatest(0,v_season_points-public.dori_pass_tier_total_required(v_tier));
+    end if;
   end if;
 
   select coalesce(jsonb_agg(
