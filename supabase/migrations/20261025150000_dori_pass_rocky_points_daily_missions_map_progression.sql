@@ -484,7 +484,7 @@ begin
 
   select coalesce(jsonb_agg(
     public.dori_pass_tier_reward(v_season_key,g.tier)||
-    jsonb_build_object('display_coins',floor((public.dori_pass_tier_reward(v_season_key,g.tier)->>'coins')::numeric*v_coin_multiplier)::bigint,'coin_multiplier',v_coin_multiplier,'claimed',c.tier is not null,
+    jsonb_build_object('display_coins',case when c.tier is not null then c.coin_reward else floor((public.dori_pass_tier_reward(v_season_key,g.tier)->>'coins')::numeric*v_coin_multiplier)::bigint end,'coin_multiplier',v_coin_multiplier,'claimed',c.tier is not null,
        'unlocked',g.tier<=v_tier,
        'claimable',g.tier<=v_tier and c.tier is null)
     order by g.tier
@@ -526,14 +526,16 @@ begin
   select coalesce(jsonb_agg(jsonb_build_object(
     'key',a.achievement_key,'title',a.title,'description',a.description,
     'progress',least(a.target_value,a.current_value),'raw_progress',a.current_value,
-    'target',a.target_value,'coin_reward',a.coin_reward,'display_coin_reward',floor(a.coin_reward*v_coin_multiplier)::bigint,
+    'target',a.target_value,'coin_reward',a.coin_reward,'display_coin_reward',case when a.is_claimed then coalesce(a.claimed_coin_reward,a.coin_reward) else floor(a.coin_reward*v_coin_multiplier)::bigint end,
     'claimed',a.is_claimed,'claimable',(a.current_value>=a.target_value and not a.is_claimed)
   ) order by a.sort_order),'[]'::jsonb)
   into v_achievements
   from (
     select defs.*,
       exists(select 1 from public.dori_pass_achievement_claims ac
-        where ac.user_id=v_uid and ac.season_key=v_season_key and ac.achievement_key=defs.achievement_key) as is_claimed
+        where ac.user_id=v_uid and ac.season_key=v_season_key and ac.achievement_key=defs.achievement_key) as is_claimed,
+      (select ac.coin_reward from public.dori_pass_achievement_claims ac
+        where ac.user_id=v_uid and ac.season_key=v_season_key and ac.achievement_key=defs.achievement_key limit 1) as claimed_coin_reward
     from (values
       ('first_100','로키 포인트 첫걸음','이번 시즌 로키 포인트 100점을 모으세요.',v_season_points,100,5000::bigint,1),
       ('tier_25','은하의 개척자','패스 25단계에 도달하세요.',v_tier,25,25000::bigint,2),
