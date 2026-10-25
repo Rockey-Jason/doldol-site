@@ -507,6 +507,14 @@ body::before {
     line-height: 1.8;
 }
 
+/* 설정 페이지 업적 분야 탐색 */
+.설정업적전체요약{margin:0 0 18px;padding:20px;border:1px solid rgba(132,151,255,.22);border-radius:20px;background:radial-gradient(circle at 100% 0,rgba(115,130,255,.13),transparent 45%),linear-gradient(145deg,rgba(26,36,76,.72),rgba(8,12,30,.86))}
+.설정업적전체요약상단{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.설정업적전체요약상단 strong{font-size:24px;color:#f4f7ff;font-variant-numeric:tabular-nums}.설정업적전체요약상단 span,.설정업적전체요약 p{color:var(--muted);font-size:13px}.설정업적전체바,.설정업적분야바{height:7px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.09)}.설정업적전체바{margin-top:12px}.설정업적전체바 span,.설정업적분야바 span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#7778ff,#68d9ff);transition:width .45s ease}.설정업적전체요약 p{margin:11px 0 0;line-height:1.55}
+.설정업적분야목록{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.설정업적분야카드{min-width:0;padding:16px;border:1px solid rgba(127,151,255,.2);border-radius:18px;background:radial-gradient(circle at 100% 0,rgba(111,133,255,.09),transparent 45%),linear-gradient(145deg,rgba(27,38,78,.68),rgba(7,12,30,.84));box-shadow:inset 0 1px rgba(255,255,255,.035);transition:transform .22s ease,border-color .22s ease}.설정업적분야카드:hover{transform:translateY(-2px);border-color:rgba(102,215,255,.4)}
+.설정업적분야헤더{display:flex;align-items:flex-start;gap:11px;min-width:0}.설정업적분야헤더>div{min-width:0}.설정업적분야아이콘{display:flex;align-items:center;justify-content:center;flex:0 0 42px;width:42px;height:42px;border:1px solid rgba(153,173,255,.18);border-radius:13px;background:rgba(123,142,255,.1);font-size:22px}.설정업적분야헤더 h3{margin:2px 0 5px;color:#f5f7ff;font-size:15px}.설정업적분야헤더 p{margin:0;color:var(--muted);font-size:11px;line-height:1.55}.설定업적분야진행문구{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:17px 0 7px;color:var(--muted);font-size:11px}.설정업적분야진행문구 strong{color:#eaf6ff;font-size:12px;font-variant-numeric:tabular-nums}.설정업적분야버튼줄{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}.설정업적모아보기,.설정업적파트가기{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:37px;padding:8px 11px;border:1px solid rgba(126,148,255,.28);border-radius:10px;background:linear-gradient(130deg,rgba(101,107,255,.2),rgba(68,167,255,.08));color:#eef2ff;font-family:inherit;font-size:11px;font-weight:700;text-decoration:none;cursor:pointer;transition:transform .2s ease,filter .2s ease}.설정업적파트가기{border-color:rgba(120,207,255,.2);background:rgba(87,170,230,.07)}.설정업적모아보기:hover,.설정업적파트가기:hover{transform:translateY(-1px);filter:brightness(1.16)}
+.설정업적상세상단{margin-bottom:17px;padding:15px;border:1px solid rgba(126,148,255,.2);border-radius:18px;background:linear-gradient(145deg,rgba(24,34,70,.7),rgba(7,12,30,.8))}.설정업적뒤로{display:inline-flex;align-items:center;gap:6px;margin:0 0 15px;padding:8px 11px;border:1px solid rgba(170,185,230,.17);border-radius:10px;background:rgba(255,255,255,.04);color:#d8e1ff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer}.설정업적상세헤더 h3{font-size:18px}.설정업적상세진행문구{margin-top:16px}.설정업적상세파트가기{display:flex;margin-top:12px}.설정업적상세목록 .achievement-item{animation:fadeUp .3s ease both}
+@media(max-width:600px){.설정업적분야목록{grid-template-columns:minmax(0,1fr)}.설정업적분야카드{padding:14px}.설정업적분야버튼줄>*{flex:1}.설정업적전체요약{padding:16px}.설정업적전체요약상단 strong{font-size:21px}}
+
 /* 업적 */
 
 .achievement-item {
@@ -3035,216 +3043,137 @@ function 업적진행도HTML(업적, 획득) {
     return '<div class="achievement-progress"><div class="achievement-progress-head"><span>진행도 · ' + p.label + '</span><span class="achievement-progress-value">' + amount + ' (' + percent + '%)</span></div><div class="achievement-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + percent + '"><div class="achievement-progress-fill" style="--progress:' + percent + '%"></div></div><div class="achievement-progress-note">' + note + '</div>' + 업적바로가기버튼HTML(업적?.id, 획득) + '</div>';
 }
 
-function 업적화면표시() {
+const 설정업적분야목록 = [
+    { key: "attendance", name: "출석 · 일일 미션", icon: "📅", route: "index.html?open=attendance", description: "출석 기록과 하루하루 미션" },
+    { key: "study", name: "공부 · 시험", icon: "📚", route: "rockey-study.html", description: "집중 학습, 시험 계획, 타임어택" },
+    { key: "bank", name: "돌이 은행", icon: "🏦", route: "dori-bank.html", description: "계좌, 송금, 예금, 대출" },
+    { key: "stock", name: "돌돌증권", icon: "📈", route: "doldolstock.html", description: "주식 매매, 투자, 배당금" },
+    { key: "box", name: "랜덤 박스", icon: "🎁", route: "Randombox.html", description: "박스 개봉과 희귀 보상" },
+    { key: "chess", name: "체스", icon: "♟️", route: "https://rockey-jason.github.io/rockey-chess/", description: "대국, 승리, 상대별 도전" },
+    { key: "news", name: "돌이신문", icon: "📰", route: "rockeynews.html", description: "신문 읽기, 퀴즈, 설문 참여" },
+    { key: "events", name: "이벤트", icon: "🎉", route: "rockeynews.html", description: "이벤트 참가와 이벤트 퀴즈" },
+    { key: "collection", name: "코인 · 아이템 수집", icon: "💎", route: "doldolcoinmart.html", description: "자산 목표와 아이템 컬렉션" },
+    { key: "general", name: "사이트 · 특별 업적", icon: "🌟", route: "index.html", description: "로그인과 특별한 도전" }
+];
 
-    const 획득업적 =
-        업적데이터정리(
-            현재유저정보?.user_achievement
-        );
+function 설정업적분야키(id) {
+    const value = String(id || "").toLowerCase();
+    if (/^attendance_|^mission_/.test(value)) return "attendance";
+    if (/^study_/.test(value)) return "study";
+    if (/^bank_/.test(value)) return "bank";
+    if (/^stock_|^first_stock$|^first_bandoche$|^first_food$|^first_rockeycloth$|^first_rockeypaper$|^first_dori_electronics$|^first_rockey_doronium$/.test(value)) return "stock";
+    if (/box|rockey_7777777/.test(value)) return "box";
+    if (/^chess_|^first_chess$/.test(value)) return "chess";
+    if (/^read_|^news_survey_|^quiz_correct$/.test(value)) return "news";
+    if (/^event_/.test(value)) return "events";
+    if (/^collection_|^coin_|^rich$|^very_rich$|^super_rich$/.test(value)) return "collection";
+    return "general";
+}
 
-    if (
-        업적목록.length === 0
-    ) {
+function 업적화면표시(선택분야 = null) {
+    const 획득업적 = 업적데이터정리(현재유저정보?.user_achievement);
 
-        상태내용요소.innerHTML = `
-            <div class="empty">
-                🏆 등록된 업적이 없습니다.
-            </div>
-        `;
-
+    if (업적목록.length === 0) {
+        상태내용요소.innerHTML = '<div class="empty">🏆 등록된 업적이 없습니다.</div>';
         return;
-
     }
 
-    let html = "";
+    const 전체수 = 업적목록.length;
+    const 획득수 = 업적목록.filter(item => 업적획득여부(item.id, 획득업적)).length;
+    const 전체퍼센트 = Math.round(획득수 / Math.max(1, 전체수) * 100);
+    const 분야목록 = 설정업적분야목록.map(분야 => {
+        const 목록 = 업적목록.filter(item => 설정업적분야키(item.id) === 분야.key);
+        return { ...분야, items: 목록, earned: 목록.filter(item => 업적획득여부(item.id, 획득업적)).length };
+    }).filter(분야 => 분야.items.length > 0);
 
-    for (
-        const 업적 of 업적목록
-    ) {
+    let html = '<div class="설정업적전체요약"><div class="설정업적전체요약상단"><strong>' +
+        획득수.toLocaleString() + ' / ' + 전체수.toLocaleString() +
+        '</strong><span>개 업적 획득 · ' + 전체퍼센트 + '%</span></div><div class="설정업적전체바"><span style="width:' +
+        전체퍼센트 + '%"></span></div><p>분야를 선택해 해당 업적과 실제 진행도를 확인하세요.</p></div>';
 
-        const 획득 =
-            업적획득여부(
-                업적.id,
-                획득업적
-            );
+    if (!선택분야) {
+        html += '<div class="설정업적분야목록">';
+        분야목록.forEach(분야 => {
+            const 퍼센트 = Math.round(분야.earned / Math.max(1, 분야.items.length) * 100);
+            html += '<article class="설정업적분야카드"><div class="설정업적분야헤더"><span class="설정업적분야아이콘">' +
+                분야.icon + '</span><div><h3>' + HTML이스케이프(분야.name) + '</h3><p>' +
+                HTML이스케이프(분야.description) + '</p></div></div><div class="설정업적분야진행문구"><span>획득 현황</span><strong>' +
+                분야.earned + ' / ' + 분야.items.length + '</strong></div><div class="설정업적분야바"><span style="width:' +
+                퍼센트 + '%"></span></div><div class="설정업적분야버튼줄"><button type="button" class="설정업적모아보기" data-settings-achievement-category="' +
+                분야.key + '">업적 모아보기 <span>→</span></button><a class="설정업적파트가기" href="' +
+                분야.route + '">파트로 가기 ↗</a></div></article>';
+        });
+        html += '</div>';
+        상태내용요소.innerHTML = html;
+        상태내용요소.querySelectorAll("[data-settings-achievement-category]").forEach(button => {
+            button.addEventListener("click", () => {
+                업적화면표시(button.getAttribute("data-settings-achievement-category"));
+                상태내용요소.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+        });
+        return;
+    }
 
-        const 아이콘 =
-            업적.icon ?? "🏆";
+    const 분야 = 분야목록.find(item => item.key === 선택분야);
+    if (!분야) {
+        업적화면표시(null);
+        return;
+    }
 
-        const 이름 =
-            업적.name ??
-            "이름 없는 업적";
+    const 분야퍼센트 = Math.round(분야.earned / Math.max(1, 분야.items.length) * 100);
+    html += '<div class="설정업적상세상단"><button type="button" class="설정업적뒤로" data-settings-achievement-back>← 모든 분야</button>' +
+        '<div class="설정업적분야헤더 설정업적상세헤더"><span class="설정업적분야아이콘">' + 분야.icon +
+        '</span><div><h3>' + HTML이스케이프(분야.name) + '</h3><p>' + HTML이스케이프(분야.description) +
+        '</p></div></div><div class="설정업적분야진행문구 설정업적상세진행문구"><span>획득 현황</span><strong>' +
+        분야.earned + ' / ' + 분야.items.length + ' · ' + 분야퍼센트 + '%</strong></div><div class="설정업적분야바"><span style="width:' +
+        분야퍼센트 + '%"></span></div><a class="설정업적파트가기 설정업적상세파트가기" href="' + 분야.route +
+        '">실제 기능으로 가기 ↗</a></div><div class="설정업적상세목록">';
 
-        const 설명 =
-            업적.description ??
-            "설명이 없습니다.";
-
-        const 희귀도 =
-            업적.rarity ??
-            "Common";
-
-        const 경험치 =
-            숫자정리(
-                업적.reward_exp
-            );
-
-        const 코인 =
-            숫자정리(
-                업적.reward_doldolcoin
-            );
-
+    for (const 업적 of 분야.items) {
+        const 획득 = 업적획득여부(업적.id, 획득업적);
+        const 아이콘 = 업적.icon ?? "🏆";
+        const 이름 = 업적.name ?? "이름 없는 업적";
+        const 설명 = 업적.description ?? "설명이 없습니다.";
+        const 희귀도 = 업적.rarity ?? "Common";
+        const 경험치 = 숫자정리(업적.reward_exp);
+        const 코인 = 숫자정리(업적.reward_doldolcoin);
         let 획득부분 = "";
 
         if (획득) {
-
             let 시간 = "-";
-
-            const 정보 =
-                획득업적[
-                    업적.id
-                ];
-
-            if (
-                정보 &&
-                typeof 정보 === "object"
-            ) {
-
-const rawTime =
-    정보.획득시간 ??
-    정보.acquired_at ??
-    정보.obtained_at;
-
+            const 정보 = 획득업적[업적.id];
+            if (정보 && typeof 정보 === "object") {
+                const rawTime = 정보.획득시간 ?? 정보.acquired_at ?? 정보.obtained_at;
                 if (rawTime) {
-
-                    const date =
-                        new Date(
-                            rawTime
-                        );
-
-                    if (
-                        !Number.isNaN(
-                            date.getTime()
-                        )
-                    ) {
-
-                        시간 =
-                            date.toLocaleString(
-                                "ko-KR"
-                            );
-
-                    }
-
+                    const date = new Date(rawTime);
+                    if (!Number.isNaN(date.getTime())) 시간 = date.toLocaleString("ko-KR");
                 }
-
             }
-
-            획득부분 = `
-
-                <div class="achievement-status">
-                    ✅ 획득 완료
-                </div>
-
-                <div class="achievement-time">
-                    🕐 획득시간:
-                    ${HTML이스케이프(시간)}
-                </div>
-
-            `;
-
-        }
-        else {
-
-            획득부분 = `
-
-                <div class="achievement-status">
-                    🔒 아직 획득하지 않음
-                </div>
-
-            `;
-
+            획득부분 = '<div class="achievement-status">✅ 획득 완료</div><div class="achievement-time">🕐 획득시간: ' +
+                HTML이스케이프(시간) + '</div>';
+        } else {
+            획득부분 = '<div class="achievement-status">🔒 아직 획득하지 않음</div>';
         }
 
+        const 칭호부분 = 획득 && 업적.title
+            ? '<div class="achievement-title">🏷️ 칭호: ' + HTML이스케이프(업적.title) + '</div>'
+            : "";
 
-        const 칭호부분 =
-            획득 &&
-            업적.title
-                ? `
-                    <div class="achievement-title">
-                        🏷️ 칭호:
-                        ${HTML이스케이프(
-                            업적.title
-                        )}
-                    </div>
-                  `
-                : "";
-
-
-        html += `
-
-            <div class="achievement-item ${획득 ? "is-completed" : "is-locked"}">
-
-                <div class="achievement-name">
-
-                    ${
-                        획득
-                            ? HTML이스케이프(
-                                아이콘
-                            )
-                            : "🔒"
-                    }
-
-                    ${HTML이스케이프(
-                        이름
-                    )}
-
-                </div>
-
-                <div class="achievement-description">
-
-                    ${HTML이스케이프(
-                        설명
-                    )}
-
-                </div>
-
-                <div class="achievement-description">
-
-                    ⭐ 희귀도:
-                    ${HTML이스케이프(
-                        희귀도
-                    )}
-
-                </div>
-
-                <div class="achievement-reward">
-
-                    🎁 보상:
-
-                    ${경험치.toLocaleString()}
-                    EXP
-
-                    /
-
-                    ${코인.toLocaleString()}
-                    돌돌코인
-
-                </div>
-
-                ${칭호부분}
-
-                ${업적진행도HTML(업적, 획득)}
-
-                ${획득부분}
-
-            </div>
-
-        `;
-
+        html += '<div class="achievement-item ' + (획득 ? "is-completed" : "is-locked") + '"><div class="achievement-name">' +
+            (획득 ? HTML이스케이프(아이콘) : "🔒") + ' ' + HTML이스케이프(이름) +
+            '</div><div class="achievement-description">' + HTML이스케이프(설명) +
+            '</div><div class="achievement-description">⭐ 희귀도: ' + HTML이스케이프(희귀도) +
+            '</div><div class="achievement-reward">🎁 보상: ' + 경험치.toLocaleString() + ' EXP / ' +
+            코인.toLocaleString() + ' 돌돌코인</div>' + 칭호부분 + 업적진행도HTML(업적, 획득) + 획득부분 + '</div>';
     }
 
-    상태내용요소.innerHTML =
-        html;
-
+    html += '</div>';
+    상태내용요소.innerHTML = html;
+    const backButton = 상태내용요소.querySelector("[data-settings-achievement-back]");
+    if (backButton) backButton.addEventListener("click", () => {
+        업적화면표시(null);
+        상태내용요소.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
 }
 
 
