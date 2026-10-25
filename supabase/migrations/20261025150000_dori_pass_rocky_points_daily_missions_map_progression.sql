@@ -596,8 +596,8 @@ begin
 
   v_reward:=public.dori_pass_tier_reward(v_season,p_tier);
   v_coins:=(v_reward->>'coins')::bigint;
-  insert into public.dori_pass_tier_claims(user_id,season_key,tier,coin_reward,points_spent)
-  values(v_uid,v_season,p_tier,v_coins,0)
+  insert into public.dori_pass_tier_claims(user_id,season_key,tier,coin_reward)
+  values(v_uid,v_season,p_tier,v_coins)
   on conflict(user_id,season_key,tier) do nothing;
   get diagnostics v_inserted=row_count;
   if v_inserted=0 then return jsonb_build_object('ok',false,'reason','already_claimed','tier',p_tier); end if;
