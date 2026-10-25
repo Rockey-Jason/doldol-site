@@ -710,7 +710,7 @@ begin
 
   insert into public.dori_pass_rocky_point_wallets(user_id,balance) values(v_uid,0) on conflict(user_id) do nothing;
   insert into public.dori_pass_rocky_point_transactions(user_id,season_key,transaction_type,source_key,amount,mission_date,metadata)
-  values(v_uid,v_season,'weekly_challenge',v_week_start::text||':'||p_challenge_key,v_reward,v_today,
+  values(v_uid,v_season,'weekly_challenge',v_season||':'||v_week_start::text||':'||p_challenge_key,v_reward,v_today,
     jsonb_build_object('challenge_key',p_challenge_key))
   on conflict(user_id,transaction_type,source_key) do nothing;
   if not found then raise exception '주간 로키 포인트 기록을 생성하지 못했습니다.'; end if;
