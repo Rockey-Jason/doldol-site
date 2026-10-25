@@ -311,7 +311,7 @@ function blockedAt(x,y){
   }
  }
  if(Math.abs(x-245)<12&&y>=204&&y<=230)return true;
- if(Math.abs(x-340)<8&&y>=276&&y<=290)return true;
+ if(Math.abs(x-354)<8&&y>=277&&y<=291)return true;
  if(Math.abs(x-294)<8&&y>=275&&y<=292)return true;
  return false;
 }
@@ -416,7 +416,7 @@ function interact(){
  candidates.push({type:'lighthouse',obj:lighthouse,d:objectDistance(player.x,player.y,lighthouse),hint:'등대 살펴보기'});
  const starLamp={x:2199,y:453,id:'star-lamp',hint:'별빛 등대 살펴보기'};candidates.push({type:'lighthouse',obj:starLamp,d:objectDistance(player.x,player.y,starLamp),hint:'별빛 등대 살펴보기'});
  const npc={x:294,y:283,id:'haesol',hint:'대화하기'};candidates.push({type:'npc',obj:npc,d:objectDistance(player.x,player.y,npc),hint:'대화하기'});
- const craftspot={x:340,y:281,id:'craftspot',hint:'제작하기'};candidates.push({type:'craftspot',obj:craftspot,d:objectDistance(player.x,player.y,craftspot),hint:'제작하기'});
+ const craftspot={x:354,y:282,id:'craftspot',hint:'제작하기'};candidates.push({type:'craftspot',obj:craftspot,d:objectDistance(player.x,player.y,craftspot),hint:'제작하기'});
  const nearest=candidates.filter(o=>o.d<INTERACTION_RADIUS).sort((a,b)=>a.d-b.d)[0];
  if(!nearest){if(objectDistance(player.x,player.y,boat)<52){player.boat=true;player.x=boat.x;player.y=boat.y;player.vx=boat.vx;player.vy=boat.vy;toast('배에 올라탔어요. 바다로 나가볼까요?');saveGame(true);return}toast('가까이에 살펴볼 것이 없어요. 조금 더 걸어가 보세요.');return}
  if(nearest.type==='pickup'){
@@ -460,7 +460,7 @@ ctx.fillStyle=i.biome==='sand'?'#aad09d':i.biome==='mist'?'#779b8c':i.biome==='s
 ctx.fillStyle='#c7d9a0';for(let j=0;j<32;j++){const a=j*2.399+idx,rad=.6+.34*Math.sin(j*3+idx),px=x+Math.cos(a)*i.rx*rad,py=y+Math.sin(a)*i.ry*rad;if(Math.hypot(px-x,py-y)<Math.min(i.rx,i.ry)*.82){ctx.fillRect(Math.round(px),Math.round(py),2,1);}}
 for(let j=0;j<(i.id==='harbor'?9:5);j++){const a=j*2.17+idx*.8,rx=i.rx*(.22+.47*((j%3)/3)),ry=i.ry*(.25+.48*((j%4)/4)),tx=Math.round(x+Math.cos(a)*rx),ty=Math.round(y+Math.sin(a)*ry);if(i.id==='harbor'&&Math.hypot(tx-x,ty-y)<52)continue;drawTree(tx,ty,j%3===0)}
 if(!visited.includes(i.id)){ctx.fillStyle='#e9f2d8a8';ctx.fillRect(x-2,y-1,4,2);ctx.fillStyle='#e9f2d855';ctx.fillRect(x-4,y-3,8,6)}
-if(i.id==='harbor'){drawDock(392-cam.x,293-cam.y);drawLighthouse(245-cam.x,216-cam.y,stage>=2);drawWorkbench(340-cam.x,281-cam.y)}
+if(i.id==='harbor'){drawDock(392-cam.x,293-cam.y);drawLighthouse(245-cam.x,216-cam.y,stage>=2);drawWorkbench(354-cam.x,282-cam.y)}
 if(i.id==='mist'){drawLighthouse(i.x-cam.x,i.y-cam.y,stage>=4)}
 if(i.id==='green'){drawFlower(x+11,y-18);drawFlower(x-32,y+9)}
 if(i.id==='coral'){for(let j=0;j<7;j++){ctx.fillStyle=j%2?'#e29b9c':'#eead9e';ctx.fillRect(x-24+j*9,y+18+(j%3)*2,2,5)}}
@@ -482,7 +482,7 @@ function drawWildlife(w){const bob=Math.sin(elapsed*2+w.x)*1.8,x=Math.round(w.x-
 function drawWeather(){const t=elapsed;if(weather==='비'){ctx.fillStyle='#b4e6ec3a';for(let i=0;i<35;i++){let x=(i*71+t*38)%W,y=(i*43+t*60)%H;ctx.fillRect(x,y,1,4)}}if(weather==='안개'){ctx.fillStyle='#d7e9df24';ctx.fillRect(0,0,W,H);ctx.fillStyle='#deedea12';for(let i=0;i<5;i++){ctx.fillRect((i*113+Math.sin(t*.1)*30)%W,36+i*41,120,10)}}if(minutes%1440<360||minutes%1440>1110){ctx.fillStyle='#071c3955';ctx.fillRect(0,0,W,H);for(let i=0;i<15;i++){const x=(i*83+17)%W,y=(i*47+11)%100;ctx.fillStyle=(i%4===0)?'#e9efce':'#a7d8d5';ctx.fillRect(x,y,1,1)}}if(weather==='맑음'&&minutes%1440>500&&minutes%1440<1000){ctx.fillStyle='#fff4be0c';ctx.fillRect(0,0,W,H)}}
 function drawFishing(){if(!fishing)return;const x=Math.round((player.boat?boat.x:player.x)-cam.x),y=Math.round((player.boat?boat.y:player.y)-cam.y);ctx.strokeStyle='#e4edda';ctx.beginPath();ctx.moveTo(x+4,y-3);ctx.quadraticCurveTo(x+16,y+1,x+22,y+7+Math.sin(elapsed*5)*2);ctx.stroke();ctx.fillStyle=fishing.bite?'#fff2a4':'#9ad9d7';ctx.fillRect(x+20,y+7,3,3);if(fishing.bite){ctx.fillStyle='#fff0b8';ctx.fillRect(x+16,y+1,2,2);ctx.fillRect(x+25,y+4,2,2)}}
 function render(){ctx.clearRect(0,0,W,H);const target=player.boat?boat:player;cam.x=Math.floor(clamp(target.x-W/2,0,WORLD_W-W));cam.y=Math.floor(clamp(target.y-H/2,0,WORLD_H-H));drawOcean();drawIslands();pickups.forEach(p=>{if(!collected.includes(p.id)&&pickupEnabled(p))drawPickup(p)});wildlife.forEach(drawWildlife);if(!player.boat)drawNPC();drawBoat(boat.x-cam.x,boat.y-cam.y,1+boat.upgrade*.06);drawFishing();drawPlayer();drawWeather();particles=particles.filter(p=>p.t<1.4);particles.forEach(p=>{const x=p.x-cam.x,y=p.y-cam.y-p.t*18;ctx.globalAlpha=1-p.t/1.4;if(p.type==='step'){ctx.fillStyle='#e4d7b0';ctx.fillRect(Math.round(x),Math.round(y+2),2,1);ctx.fillRect(Math.round(x+4),Math.round(y+1),1,1)}else{ctx.fillStyle='#fff0b5';ctx.fillRect(Math.round(x-p.t*6),Math.round(y),2,2);ctx.fillRect(Math.round(x+p.t*7),Math.round(y-6),2,2)}ctx.globalAlpha=1});if(state==='play'&&!panel&&$('dialogue').hidden){ctx.fillStyle='#f3e8be';ctx.fillRect(0,H-2,W,2);ctx.fillStyle='#b7e5dc';ctx.fillRect(0,H-2,(W*((minutes%1440)/1440)),2)}}
-function findNearObject(){if(player.boat){const seaLife=wildlife.find(w=>w.type==='dolphin'&&objectDistance(boat,w)<INTERACTION_RADIUS);if(seaLife)return {hint:'돌고래 관찰하기'};return currentIsland(boat.x,boat.y,.28)?{hint:'정박하기'}: {hint:'바다를 항해 중'}}let candidates=[];pickups.filter(p=>!collected.includes(p.id)&&pickupEnabled(p)).forEach(o=>candidates.push({o,d:objectDistance(player.x,player.y,o),hint:'줍기'}));candidates.push({o:{x:245,y:216},d:objectDistance(player.x,player.y,{x:245,y:216}),hint:'등대 살펴보기'});candidates.push({o:{x:294,y:283},d:objectDistance(player.x,player.y,{x:294,y:283}),hint:'대화하기'});candidates.push({o:{x:2199,y:453},d:objectDistance(player.x,player.y,{x:2199,y:453}),hint:'별빛 등대 살펴보기'});candidates.push({o:{x:340,y:281},d:objectDistance(player.x,player.y,{x:340,y:281}),hint:'제작하기'});candidates.push({o:boat,d:objectDistance(player.x,player.y,boat),hint:'배에 타기'});const n=candidates.filter(c=>c.d<INTERACTION_RADIUS).sort((a,b)=>a.d-b.d)[0];return n?{hint:n.hint}:null}
+function findNearObject(){if(player.boat){const seaLife=wildlife.find(w=>w.type==='dolphin'&&objectDistance(boat,w)<INTERACTION_RADIUS);if(seaLife)return {hint:'돌고래 관찰하기'};return currentIsland(boat.x,boat.y,.28)?{hint:'정박하기'}: {hint:'바다를 항해 중'}}let candidates=[];pickups.filter(p=>!collected.includes(p.id)&&pickupEnabled(p)).forEach(o=>candidates.push({o,d:objectDistance(player.x,player.y,o),hint:'줍기'}));candidates.push({o:{x:245,y:216},d:objectDistance(player.x,player.y,{x:245,y:216}),hint:'등대 살펴보기'});candidates.push({o:{x:294,y:283},d:objectDistance(player.x,player.y,{x:294,y:283}),hint:'대화하기'});candidates.push({o:{x:2199,y:453},d:objectDistance(player.x,player.y,{x:2199,y:453}),hint:'별빛 등대 살펴보기'});candidates.push({o:{x:354,y:282},d:objectDistance(player.x,player.y,{x:354,y:282}),hint:'제작하기'});candidates.push({o:boat,d:objectDistance(player.x,player.y,boat),hint:'배에 타기'});const n=candidates.filter(c=>c.d<INTERACTION_RADIUS).sort((a,b)=>a.d-b.d)[0];return n?{hint:n.hint}:null}
 function tick(dt){
  elapsed+=dt;
  autosaveTimer+=dt;
