@@ -372,6 +372,8 @@ declare
   v_week_start date;
   v_points bigint:=0;
   v_season_points integer:=0;
+  v_coin_multiplier numeric:=1;
+  v_coin_multiplier_expires timestamptz;
   v_tier integer:=0;
   v_claimed_tier integer:=0;
   v_next_cost integer:=0;
@@ -400,7 +402,12 @@ begin
   insert into public.dori_pass_rocky_point_wallets(user_id,balance)
   values(v_uid,0) on conflict(user_id) do nothing;
   select balance into v_points from public.dori_pass_rocky_point_wallets where user_id=v_uid;
-  select name into v_name from public.users where user_id=v_uid::text limit 1;
+  select name,coalesce(doldolcoin_multiplier,1),doldolcoin_multiplier_expires_at
+    into v_name,v_coin_multiplier,v_coin_multiplier_expires
+  from public.users where user_id=v_uid::text limit 1;
+  if v_coin_multiplier_expires is null or v_coin_multiplier_expires<=now() then
+    v_coin_multiplier:=1;
+  end if;
 
   perform pg_advisory_xact_lock(hashtextextended(v_uid::text||'|missions|'||v_today::text,0));
   if not exists(select 1 from public.dori_pass_daily_missions where user_id=v_uid and mission_date=v_today) then
@@ -477,7 +484,7 @@ begin
 
   select coalesce(jsonb_agg(
     public.dori_pass_tier_reward(v_season_key,g.tier)||
-    jsonb_build_object('claimed',c.tier is not null,
+    jsonb_build_object('display_coins',floor((public.dori_pass_tier_reward(v_season_key,g.tier)->>'coins')::numeric*v_coin_multiplier)::bigint,'coin_multiplier',v_coin_multiplier,'claimed',c.tier is not null,
        'unlocked',g.tier<=v_tier,
        'claimable',g.tier<=v_tier and c.tier is null)
     order by g.tier
@@ -519,7 +526,7 @@ begin
   select coalesce(jsonb_agg(jsonb_build_object(
     'key',a.achievement_key,'title',a.title,'description',a.description,
     'progress',least(a.target_value,a.current_value),'raw_progress',a.current_value,
-    'target',a.target_value,'coin_reward',a.coin_reward,
+    'target',a.target_value,'coin_reward',a.coin_reward,'display_coin_reward',floor(a.coin_reward*v_coin_multiplier)::bigint,
     'claimed',a.is_claimed,'claimable',(a.current_value>=a.target_value and not a.is_claimed)
   ) order by a.sort_order),'[]'::jsonb)
   into v_achievements
@@ -549,7 +556,7 @@ begin
       'name',to_char(v_start,'YYYY.MM')||' · '||public.dori_pass_season_name(v_start),
       'start_date',v_start,'end_date',v_end,'days_total',v_end-v_start,
       'day_number',v_today-v_start+1,'days_left',greatest(0,v_end-v_today),'week_start',v_week_start),
-    'rocky_points',v_points,'season_points',v_season_points,
+    'rocky_points',v_points,'season_points',v_season_points,'coin_multiplier',v_coin_multiplier,
     'tier',v_tier,'max_tier',100,
     'next_tier_cost',v_next_cost,'next_tier_required',v_next_required,
     'next_tier_progress',v_next_progress,
@@ -578,6 +585,8 @@ declare
   v_reward jsonb;
   v_cosmetic jsonb;
   v_coins bigint;
+  v_awarded_coins bigint;
+  v_coin_award jsonb;
   v_inserted integer;
 begin
   if v_uid is null then raise exception '로그인이 필요합니다.'; end if;
@@ -602,8 +611,11 @@ begin
   get diagnostics v_inserted=row_count;
   if v_inserted=0 then return jsonb_build_object('ok',false,'reason','already_claimed','tier',p_tier); end if;
 
-  update public.users set doldolcoin=coalesce(doldolcoin,0)+v_coins where user_id=v_uid::text;
-  if not found then raise exception '사용자 계정 정보를 찾을 수 없습니다.'; end if;
+  -- Respect the same active coin multiplier used by other site rewards.
+  v_coin_award:=public.award_doldolcoin(v_coins);
+  v_awarded_coins:=coalesce((v_coin_award->>'awarded_amount')::bigint,v_coins);
+  update public.dori_pass_tier_claims set coin_reward=v_awarded_coins
+  where user_id=v_uid and season_key=v_season and tier=p_tier;
 
   for v_cosmetic in select value from jsonb_array_elements(coalesce(v_reward->'cosmetics','[]'::jsonb)) as x(value)
   loop
@@ -613,7 +625,7 @@ begin
     on conflict(user_id,cosmetic_key) do nothing;
   end loop;
 
-  return jsonb_build_object('ok',true,'tier',p_tier,'coins',v_coins,
+  return jsonb_build_object('ok',true,'tier',p_tier,'coins',v_awarded_coins,'base_coins',v_coins,'multiplier',coalesce((v_coin_award->>'multiplier')::numeric,1),
     'points_required',v_required,'cosmetics',coalesce(v_reward->'cosmetics','[]'::jsonb),
     'season_points',v_points);
 end
@@ -724,6 +736,8 @@ declare
   v_progress integer;
   v_target integer;
   v_reward bigint;
+  v_awarded_reward bigint;
+  v_coin_award jsonb;
   v_domains integer;
   v_weekly integer;
 begin
@@ -753,9 +767,12 @@ begin
 
   insert into public.dori_pass_achievement_claims(user_id,season_key,achievement_key,coin_reward)
   values(v_uid,v_season,p_achievement_key,v_reward);
-  update public.users set doldolcoin=coalesce(doldolcoin,0)+v_reward where user_id=v_uid::text;
-  if not found then raise exception '사용자 계정 정보를 찾을 수 없습니다.'; end if;
-  return jsonb_build_object('ok',true,'achievement_key',p_achievement_key,'coins',v_reward);
+  v_coin_award:=public.award_doldolcoin(v_reward);
+  v_awarded_reward:=coalesce((v_coin_award->>'awarded_amount')::bigint,v_reward);
+  update public.dori_pass_achievement_claims set coin_reward=v_awarded_reward
+  where user_id=v_uid and season_key=v_season and achievement_key=p_achievement_key;
+  return jsonb_build_object('ok',true,'achievement_key',p_achievement_key,
+    'coins',v_awarded_reward,'base_coins',v_reward,'multiplier',coalesce((v_coin_award->>'multiplier')::numeric,1));
 end
 $function$;
 
