@@ -18,7 +18,7 @@ const shortNumber=value=>{
 const missionIcons={attendance:"🗓️",daily_mission:"🎯",random_box:"🎁",chess_game:"♟️",study_focus:"📚",stock_trade:"📈",bank_transaction:"🏦",study_plan:"📝"};
 const achievementIcons={first_100:"✦",tier_25:"🧭",tier_50:"💫",tier_100:"👑",weekly_hero:"🏅",multi_domain:"🌌"};
 const chapters=["출발의 성운","항해의 관문","푸른 성운","별빛 회랑","궤도의 도시","차원의 바다","은하 중심","초신성 지대","도로늄 심연","정복자의 왕좌"];
-let dashboard=null,busy=false,toastTimer=0,resizeObserver=null,routeResizeFrame=0;
+let dashboard=null,busy=false,toastTimer=0,resizeObserver=null,routeResizeFrame=0,lastMapColumns=0;
 
 function toast(message){
  const el=$("#passToast");if(!el)return;
@@ -156,8 +156,9 @@ function renderMapNode(tier){
 function renderTrack(data){
  const tiers=Array.isArray(data.tiers)?data.tiers:[];
  const grid=$("#rewardMapNodes");
- grid.style.setProperty("--map-columns",String(getColCount()));
- grid.style.gridTemplateColumns="repeat("+getColCount()+",minmax(0,1fr))";
+ lastMapColumns=getColCount();
+ grid.style.setProperty("--map-columns",String(lastMapColumns));
+ grid.style.gridTemplateColumns="repeat("+lastMapColumns+",minmax(0,1fr))";
  grid.innerHTML=tiers.map(renderMapNode).join("")||'<div class="loading-card">보상 지도를 준비하지 못했어요.</div>';
  renderChapterStrip();
  scheduleMapRoute();
@@ -285,8 +286,9 @@ if("IntersectionObserver" in window&&sections.length){
  },{rootMargin:"-18% 0px -65% 0px",threshold:[0,.1,.3]});
  sections.forEach(section=>observer.observe(section));
 }
-window.addEventListener("resize",scheduleMapRoute);
-window.addEventListener("orientationchange",scheduleMapRoute);
+function handleMapResize(){if(dashboard&&getColCount()!==lastMapColumns)renderTrack(dashboard);else scheduleMapRoute()}
+window.addEventListener("resize",handleMapResize);
+window.addEventListener("orientationchange",handleMapResize);
 window.addEventListener("focus",()=>{if(!document.hidden&&!busy)loadDashboard({silent:true}).catch(e=>console.warn("[돌이 패스] 복귀 동기화 실패:",e))});
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!busy)loadDashboard({silent:true}).catch(e=>console.warn("[돌이 패스] 화면 복귀 동기화 실패:",e))});
 async function init(){
