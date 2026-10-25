@@ -97,6 +97,11 @@ function updateHero(data){
  $("#heroProgressText").textContent=tier>=100?"100단계 완주":fmt(data.next_tier_progress)+" / "+fmt(data.next_tier_cost)+" RP";
  const percent=tier>=100?100:(Number(data.next_tier_cost)>0?(Number(data.next_tier_progress)||0)/Number(data.next_tier_cost)*100:0);
  setBar($("#heroProgressBar"),percent);
+ const multiplier=Math.max(1,Number(data.coin_multiplier)||1);
+ const multiplierBadge=$("#coinMultiplierBadge");
+ const multiplierLabel=$("#coinMultiplierLabel");
+ if(multiplierBadge)multiplierBadge.hidden=multiplier<=1;
+ if(multiplierLabel)multiplierLabel.textContent="×"+String(multiplier).replace(/\.0$/,"")+" 보상";
  $("#heroProgressCaption").textContent=tier>=100?"최종 노드를 정복했어요! 다음 시즌을 준비해 보세요.":"다음 노드까지 로키 포인트 "+fmt(data.next_tier_remaining)+"점";
  $("#tierCount").innerHTML=fmt(tier)+' <i>/ 100</i>';
  $("#currentChapter").textContent=String(Math.min(10,Math.max(1,Math.ceil(Math.max(1,tier)/10)))).padStart(2,"0")+" · "+chapters[Math.min(9,Math.floor(Math.max(0,tier-1)/10))];
@@ -142,7 +147,7 @@ function renderMapNode(tier){
  const main=cosmetics[0],icon=main&&main.icon?main.icon:(milestone?"✧":"🪙");
  const classes=["map-node",claimed?"is-claimed":"",unlocked?"is-unlocked":"",claimable?"is-claimable":"",special?"is-special":"",milestone?"is-milestone":"",level===Number(dashboard&&dashboard.tier)+1?"is-next":"",level===Number(dashboard&&dashboard.tier)?"is-current":""].filter(Boolean).join(" ");
  let status=claimed?"✓":claimable?"✦":unlocked?"○":"⌑";
- const stageCoins=Number(tier.coins)||0;
+ const stageCoins=Number(tier.display_coins??tier.coins)||0;
  const stageName=main?main.name:"돌돌코인";
  const label=claimed?"보상 수령 완료":claimable?"노드 해금 보상 받기":unlocked?"보상 수령 가능":"로키 포인트 "+fmt(tier.total_required)+"점 필요";
  return '<button type="button" class="'+classes+'" data-tier="'+level+'" data-claim-tier="'+level+'" style="grid-column:'+col+';grid-row:'+row+';animation-delay:'+((level%30)*9)+'ms" '+(!claimable?"disabled":"")+' aria-label="'+escapeHtml("노드 "+level+", "+stageName+", "+fmt(stageCoins)+" 돌돌코인, "+label)+'" title="'+escapeHtml("노드 "+level+" · "+stageName+" · "+fmt(stageCoins)+" 돌돌코인")+'">'+
@@ -190,7 +195,7 @@ function renderAchievements(data){
  const items=Array.isArray(data.achievements)?data.achievements:[];
  $("#seasonAchievementGrid").innerHTML=items.map(item=>{
   const p=Math.max(0,Number(item.progress)||0),target=Math.max(1,Number(item.target)||1),claimed=item.claimed===true,can=item.claimable===true;
-  return '<article class="season-achievement '+(claimed?"done":"")+'"><div class="achievement-emblem">'+(achievementIcons[item.key]||"✦")+'</div><div class="achievement-main"><div class="achievement-top"><h3>'+escapeHtml(item.title)+'</h3><span class="achievement-reward">+'+fmt(item.coin_reward)+' 🪙</span></div><p>'+escapeHtml(item.description)+'</p><div class="achievement-progressline"><span style="width:'+Math.min(100,p/target*100)+'%"></span></div><div class="achievement-bottom"><span>'+(claimed?"수령 완료":fmt(p)+" / "+fmt(target))+'</span><button type="button" class="achievement-action" data-claim-achievement="'+escapeHtml(item.key)+'" '+(!can?"disabled":"")+'>'+(claimed?"✓ 완료":can?"보상 받기":"진행 중")+'</button></div></div></article>';
+  return '<article class="season-achievement '+(claimed?"done":"")+'"><div class="achievement-emblem">'+(achievementIcons[item.key]||"✦")+'</div><div class="achievement-main"><div class="achievement-top"><h3>'+escapeHtml(item.title)+'</h3><span class="achievement-reward">+'+fmt(item.display_coin_reward??item.coin_reward)+' 🪙</span></div><p>'+escapeHtml(item.description)+'</p><div class="achievement-progressline"><span style="width:'+Math.min(100,p/target*100)+'%"></span></div><div class="achievement-bottom"><span>'+(claimed?"수령 완료":fmt(p)+" / "+fmt(target))+'</span><button type="button" class="achievement-action" data-claim-achievement="'+escapeHtml(item.key)+'" '+(!can?"disabled":"")+'>'+(claimed?"✓ 완료":can?"보상 받기":"진행 중")+'</button></div></div></article>';
  }).join("")||'<div class="loading-card">시즌 업적을 불러오지 못했어요.</div>';
 }
 function renderCollection(data){
