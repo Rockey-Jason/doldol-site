@@ -411,7 +411,7 @@ function startGame(){
 }
 function updateQuestionScreen(){
   clearTimer();state="ready";pausedRemainingMs=limitMs;elapsedBeforePauseMs=0;
-  pauseTimerBtn.hidden=true;pauseTimerBtn.textContent="Ⅱ 일시 정지";pauseTimerBtn.setAttribute("aria-pressed","false");
+  pauseTimerBtn.hidden=true;pauseTimerBtn.textContent="Ⅱ 일시 정지";pauseTimerBtn.setAttribute("aria-pressed","false");pauseTimerBtn.setAttribute("aria-label","타이머 일시 정지");
   questionCounter.textContent="문제 "+currentQuestion+" / "+totalQuestions;
   limitBadge.textContent="제한 "+formatClock(limitMs);
   progressFill.style.width=((currentQuestion-1)/totalQuestions*100)+"%";
@@ -474,7 +474,7 @@ function appendResult(timedOut,elapsedMs){
 function stopQuestionEarly(){
   var now=Date.now();
   if(now>=deadline){expireQuestion();advanceQuestion();return;}
-  clearTimer();
+  clearTimer();pauseTimerBtn.hidden=true;pauseTimerBtn.setAttribute("aria-pressed","false");
   var elapsed=elapsedBeforePauseMs+(now-questionStartedAt);
   var result=appendResult(false,elapsed);
   state="result";gameScreen.classList.remove("running");gameScreen.classList.add("result");
@@ -488,7 +488,7 @@ function stopQuestionEarly(){
 }
 function expireQuestion(){
   if(state!=="running")return;
-  clearTimer();var result=appendResult(true,limitMs);
+  clearTimer();pauseTimerBtn.hidden=true;pauseTimerBtn.setAttribute("aria-pressed","false");var result=appendResult(true,limitMs);
   state="expired";gameScreen.classList.remove("running");gameScreen.classList.add("expired");
   timerRing.style.setProperty("--ring","#ff8e97");timerRing.style.setProperty("--progress","0%");
   timerDisplay.textContent="00:00";timerStatus.textContent="시간 종료";timerSub.textContent="제한 시간 도달";
