@@ -67,12 +67,13 @@ function applyCosmetics(items){
 async function sync(){
  try{
   const {data:sd}=await sb.auth.getSession(),session=sd&&sd.session;
-  const sub=document.getElementById("doriPassEntrySub"),bar=document.getElementById("doriPassEntryProgress");
-  if(!session){if(sub)sub.textContent="로그인 후 시즌 보상 확인";if(bar)bar.style.width="0%";return}
+  const sub=document.getElementById("doriPassEntrySub"),bar=document.getElementById("doriPassEntryProgress"),pointsLabel=document.getElementById("프로필요약로키포인트값");
+  if(!session){if(sub)sub.textContent="로그인 후 시즌 보상 확인";if(bar)bar.style.width="0%";if(pointsLabel)pointsLabel.textContent="0 RP";return}
   const {data,error}=await sb.rpc("dori_pass_get_dashboard");if(error)throw error;
   const d=Array.isArray(data)?data[0]:data;if(!d||!d.ok)return;
-  const pct=Math.min(100,(Number(d.season_points)||0)/31019*100);
+  const pct=Math.min(100,(Number(d.season_points)||0)/30984*100);
   if(sub)sub.textContent=(d.season&&d.season.name?d.season.name:"이번 시즌")+" · "+(Number(d.tier)||0)+"/100단계";
+  if(pointsLabel)pointsLabel.textContent=(Number(d.rocky_points)||0).toLocaleString("ko-KR")+" RP";
   if(bar)bar.style.width=pct+"%";
   const season=document.getElementById("doriPassCardSeason"),tier=document.getElementById("doriPassCardTier");
   if(season)season.textContent=(d.season&&d.season.name?d.season.name:"이번 시즌")+" · "+(Number(d.season_points)||0).toLocaleString("ko-KR")+" RP";
@@ -82,5 +83,7 @@ async function sync(){
   applyCosmetics(window.doriPassCosmetics);
  }catch(e){console.warn("[돌이 패스] 메인 진행도 동기화 실패:",e)}
 }
-function init(){installStyles();installMenuButton();installMainCard();sync();sb.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_IN"&&session)window.setTimeout(()=>sync(),0);if(event==="SIGNED_OUT")window.setTimeout(()=>{window.doriPassCosmetics=[];window.dispatchEvent(new CustomEvent("dori:pass-cosmetics-updated"));applyCosmetics([]);const sub=document.getElementById("doriPassEntrySub"),bar=document.getElementById("doriPassEntryProgress");if(sub)sub.textContent="로그인 후 시즌 보상 확인";if(bar)bar.style.width="0%"},0)})}
+function init(){installStyles();installMenuButton();installMainCard();sync();sb.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_IN"&&session)window.setTimeout(()=>sync(),0);if(event==="SIGNED_OUT")window.setTimeout(()=>{window.doriPassCosmetics=[];window.dispatchEvent(new CustomEvent("dori:pass-cosmetics-updated"));applyCosmetics([]);const sub=document.getElementById("doriPassEntrySub"),bar=document.getElementById("doriPassEntryProgress"),pointsLabel=document.getElementById("프로필요약로키포인트값");if(sub)sub.textContent="로그인 후 시즌 보상 확인";if(bar)bar.style.width="0%";if(pointsLabel)pointsLabel.textContent="0 RP"},0)})}
+window.addEventListener("focus",()=>{if(!document.hidden)sync()});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)sync()});
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
