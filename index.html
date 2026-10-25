@@ -2680,8 +2680,7 @@ function 업적진행도값계산(achievementId, unlocked, user) {
     const questionTotal = timeAttacks.reduce((sum, row) => sum + Math.max(0, Number(row.question_count || 0)), 0);
     const transferCount = bankTransactions.filter(row => /transfer|송금/i.test(String(row.tx_type || ""))).length;
     const maturedDeposits = deposits.filter(row => !!row.settled_at).length;
-    const repaidLoans = loans.filter(row => !!row.settled_at || /repaid|paid|settled|completed|상환완료/i.test(String(row.status || "")) ||
-        (Number(row.principal || 0) > 0 && Number(row.repaid_amount || 0) >= Number(row.principal || 0))).length;
+    const repaidLoans = loans.filter(row => !!row.settled_at || /^(repaid|paid|settled|completed|상환완료)$/i.test(String(row.status || "").trim())).length;
     const distinctInventory = new Set((a.inventory || []).map(row => String(row.item_id || "")).filter(Boolean)).size;
     const dividends = a.stockDividends || [];
     const dividendTotal = dividends.reduce((sum, row) => sum + Math.max(0, Number(row.amount || 0)), 0);
@@ -2750,7 +2749,7 @@ function 업적진행도값계산(achievementId, unlocked, user) {
     else if (streakMatch) set(a.attendanceStreak, Number(streakMatch[1]), "연속 출석 일수", r.attendance, "attendance");
     else if (missionDaysMatch) set(new Set(missions.map(row => String(row.mission_date || "")).filter(Boolean)).size, Number(missionDaysMatch[1]), "미션 완료 날짜", r.missions, "missions");
     else if (missionCountMatch) set(missions.length, Number(missionCountMatch[1]), "완료한 일일 미션 기록", r.missions, "missions");
-    else if (focusMatch) set(focusSeconds, Number(focusMatch[1]) * 3600, "누적 집중 학습 시간(초)", r.study, "study");
+    else if (focusMatch) set(focusSeconds / 3600, Number(focusMatch[1]), "누적 집중 학습 시간(시간)", r.study, "study");
     else if (sessionMatch) set(focusRows.length, Number(sessionMatch[1]), "집중 학습 기록 수", r.study, "study");
     else if (examMatch) set(a.examCount, Number(examMatch[1]), "등록한 시험 계획 수", r.study, "study");
     else if (attackMatch) set(timeAttacks.length, Number(attackMatch[1]), "타임어택 기록 수", r.study, "study");
@@ -2811,8 +2810,8 @@ function 업적진행도값계산(achievementId, unlocked, user) {
     else if (Object.prototype.hasOwnProperty.call(coinThresholds, id)) set(Math.max(0, Number(u.doldolcoin || 0)), coinThresholds[id], "현재 보유 돌돌코인", true, "coin");
     else if (id === "rockey_7777777") set(Math.max(0, Number(u.special_title_draws || 0)), 7, "특별 칭호 뽑기 횟수", true, "box");
     else if (id === "read_news") set(hasReadNews ? 1 : 0, 1, "돌이신문 읽기 여부", true, "news");
-    else if (id === "read_1_news") set(readIssue(1) ? 1 : 0, 1, "제1회 돌이신문 읽기", true, "news");
-    else if (id === "read_10_news") set(readIssue(10) ? 1 : 0, 10, "읽은 돌이신문 발행 호수", true, "news");
+    else if (id === "read_1_news") set(hasReadNews ? 1 : 0, 1, "돌이신문 읽기 기록", true, "news");
+    else if (id === "read_10_news") set(hasReadHistory ? newsNumbers.length : fallbackNewsNumber, 10, "읽은 돌이신문 수", true, "news");
     else if (id === "quiz_correct") set(u.quiz_right === true ? 1 : 0, 1, "저장된 퀴즈 정답 상태", true, "news");
     else if (id === "first_login") set(u.user_id ? 1 : 0, 1, "로그인 기록", true, "general");
     else mapped = false;
@@ -4882,6 +4881,13 @@ supabase.auth.onAuthStateChange(
 // =====================================================
 
 await 시작();
+
+// 업적 화면의 출석 분야 바로가기는 출석 달력을 바로 열어 줍니다.
+if (new URLSearchParams(window.location.search).get("open") === "attendance") {
+    window.setTimeout(() => {
+        if (현재사용자 && 출석체크버튼) 출석체크버튼.click();
+    }, 650);
+}
 
 
 // =====================================================
