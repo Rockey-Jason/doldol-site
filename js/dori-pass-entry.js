@@ -71,11 +71,11 @@ async function sync(){
   if(!session){if(sub)sub.textContent="로그인 후 시즌 보상 확인";if(bar)bar.style.width="0%";return}
   const {data,error}=await sb.rpc("dori_pass_get_dashboard");if(error)throw error;
   const d=Array.isArray(data)?data[0]:data;if(!d||!d.ok)return;
-  const pct=Math.min(100,(Number(d.xp)||0)/10000*100);
+  const pct=Math.min(100,(Number(d.season_points)||0)/31019*100);
   if(sub)sub.textContent=(d.season&&d.season.name?d.season.name:"이번 시즌")+" · "+(Number(d.tier)||0)+"/100단계";
   if(bar)bar.style.width=pct+"%";
   const season=document.getElementById("doriPassCardSeason"),tier=document.getElementById("doriPassCardTier");
-  if(season)season.textContent=(d.season&&d.season.name?d.season.name:"이번 시즌")+" · "+(Number(d.xp)||0).toLocaleString("ko-KR")+" XP";
+  if(season)season.textContent=(d.season&&d.season.name?d.season.name:"이번 시즌")+" · "+(Number(d.season_points)||0).toLocaleString("ko-KR")+" RP";
   if(tier)tier.textContent="LEVEL "+(Number(d.tier)||0);
   window.doriPassCosmetics=Array.isArray(d.cosmetics)?d.cosmetics:[];
   window.dispatchEvent(new CustomEvent('dori:pass-cosmetics-updated'));
