@@ -767,7 +767,7 @@ async function checkSiteAchievements() {
       if (error) { console.warn("[Dori Achievement]", table, error); return null; }
       return Number(count || 0);
     };
-    const [attCount, attStats, missions, focus, exams, attacks, accounts, deposits, loans, surveys, events, eventQuizzes, boxes, chessPlayed, chessWins, inventory, dividends] = await Promise.all([
+    const [attCount, attStats, missions, focus, exams, attacks, accounts, deposits, loans, surveys, events, eventQuizzes, boxCount, boxRareCount, boxEpicCount, boxLegendaryCount, chessPlayed, chessWins, inventory, dividends] = await Promise.all([
       countRows("user_attendance_days", [q=>q.eq("user_id",userId)]),
       supabase.from("user_daily_attendance").select("streak_count,total_days").eq("user_id",userId).maybeSingle(),
       allRows("user_daily_missions","mission_date,completed_at",[q=>q.eq("user_id",userId).not("completed_at","is",null)]),
@@ -780,14 +780,17 @@ async function checkSiteAchievements() {
       countRows("rockey_news_survey_responses",[q=>q.eq("user_id",userId)]),
       countRows("event_participations",[q=>q.eq("user_id",userId)]),
       allRows("rockey_news_event_attempts","completed",[q=>q.eq("user_id",userId).eq("completed",true)]),
-      allRows("dori_box_history","rarity",[q=>q.eq("user_id",userId)]),
+      countRows("dori_box_history",[q=>q.eq("user_id",userId)]),
+      countRows("dori_box_history",[q=>q.eq("user_id",userId).ilike("rarity","rare")]),
+      countRows("dori_box_history",[q=>q.eq("user_id",userId).ilike("rarity","epic")]),
+      countRows("dori_box_history",[q=>q.eq("user_id",userId).ilike("rarity","legendary")]),
       countRows("chess_games",[q=>q.eq("user_id",userId)]),
       countRows("chess_games",[q=>q.eq("user_id",userId).eq("result","1-0")]),
       allRows("user_inventory","item_id",[q=>q.eq("user_id",userId)]),
       allRows("dori_stock_dividend_payments","amount",[q=>q.eq("user_id",userId)])
     ]);
     const att = attStats?.data || null, ms = missions || [], fs = focus || [], ta = attacks || [];
-    const ac = accounts || [], dep = deposits || [], loan = loans || [], eq = eventQuizzes || [], bx = boxes || [];
+    const ac = accounts || [], dep = deposits || [], loan = loans || [], eq = eventQuizzes || [];
     const invCount = new Set((inventory||[]).map(x=>String(x.item_id))).size;
     const days = new Set(ms.map(x=>String(x.mission_date||"")).filter(Boolean));
     const seconds = fs.reduce((s,x)=>s+Math.max(0,Number(x.actual_seconds)||0),0);
@@ -797,7 +800,7 @@ async function checkSiteAchievements() {
     if (bankNums.length) txs = (await allRows("dori_bank_transactions","tx_type,account_number",[q=>q.in("account_number",bankNums)])) || [];
     const divs = dividends || [];
     const divTotal = divs.reduce((s,x)=>s+Math.max(0,Number(x.amount)||0),0);
-    const rarity = new Set(bx.map(x=>String(x.rarity||"").toUpperCase()));
+    
     const checks = [
       ["attendance_7_days",attCount>=7],["attendance_30_days",attCount>=30],["attendance_100_days",attCount>=100],
       ["attendance_streak_7",Number(att?.streak_count||0)>=7],["attendance_streak_30",Number(att?.streak_count||0)>=30],
@@ -811,8 +814,8 @@ async function checkSiteAchievements() {
       ["bank_loan_1",loan.length>=1],["bank_loan_repaid_1",loan.some(x=>!!x.settled_at||/repaid|paid|settled|completed|상환완료/i.test(String(x.status||"")))],
       ["news_survey_1",surveys>=1],["news_survey_5",surveys>=5],["news_survey_20",surveys>=20],
       ["event_participation_1",events>=1],["event_participation_10",events>=10],["event_quiz_1",eq.length>=1],["event_quiz_10",eq.length>=10],
-      ["box_rare_reward",rarity.has("RARE")],["box_epic_reward",rarity.has("EPIC")],["box_legendary_reward",rarity.has("LEGENDARY")],
-      ["box_total_500",bx.length>=500],["box_total_5000",bx.length>=5000],
+      ["box_rare_reward",boxRareCount>=1],["box_epic_reward",boxEpicCount>=1],["box_legendary_reward",boxLegendaryCount>=1],
+      ["box_total_500",boxCount>=500],["box_total_5000",boxCount>=5000],
       ["chess_25_win",chessWins>=25],["chess_50_win",chessWins>=50],["chess_250_win",chessWins>=250],["chess_500_win",chessWins>=500],["chess_play_100",chessPlayed>=100],
       ["coin_1m",coinValue>=1000000n],["coin_10m",coinValue>=10000000n],["coin_1b",coinValue>=1000000000n],
       ["collection_5_items",invCount>=5],["collection_10_items",invCount>=10],["collection_25_items",invCount>=25],
