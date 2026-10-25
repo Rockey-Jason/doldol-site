@@ -246,3 +246,15 @@ button,a{font:inherit;-webkit-tap-highlight-color:transparent}button{color:inher
 @media(prefers-reduced-motion:reduce){
  .daily-mission-card,.map-node,.map-node.is-claimable,.map-node.is-claimed,.map-node.is-unlocked,.map-node.is-special{animation:none!important}
 }
+
+
+.coin-multiplier-badge{display:flex;align-items:center;gap:8px;flex:0 0 auto;padding:9px 13px;border:1px solid rgba(255,213,126,.3);border-radius:13px;background:linear-gradient(120deg,rgba(157,112,38,.19),rgba(75,58,104,.15));box-shadow:0 0 22px rgba(255,207,113,.055),inset 0 1px rgba(255,255,255,.04);animation:multiplierGlow 3s ease-in-out infinite}
+.coin-multiplier-badge[hidden]{display:none!important}
+.coin-multiplier-badge>span{display:grid;place-items:center;width:29px;height:29px;border:1px solid rgba(255,220,149,.24);border-radius:10px;background:rgba(255,203,111,.12);color:#ffe9b8;font-size:17px}
+.coin-multiplier-badge>div{display:flex;flex-direction:column;gap:4px}
+.coin-multiplier-badge small{color:#c8b27f;font-size:8px;white-space:nowrap}
+.coin-multiplier-badge strong{font-size:12px;font-weight:400;color:#ffe3a8;white-space:nowrap}
+@keyframes multiplierGlow{0%,100%{box-shadow:0 0 12px rgba(255,207,113,.04),inset 0 1px rgba(255,255,255,.04)}50%{box-shadow:0 0 22px rgba(255,207,113,.13),inset 0 1px rgba(255,255,255,.05)}}
+@media(max-width:1050px){.map-heading{flex-wrap:wrap}.coin-multiplier-badge{margin-left:auto}}
+@media(max-width:420px){.coin-multiplier-badge{padding:6px;gap:5px}.coin-multiplier-badge>span{width:25px;height:25px;font-size:14px}.coin-multiplier-badge small{font-size:7px}.coin-multiplier-badge strong{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.coin-multiplier-badge{animation:none}}
