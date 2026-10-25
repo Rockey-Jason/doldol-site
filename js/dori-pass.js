@@ -1,123 +1,306 @@
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-const URL="https://scttowfhygcpdirrekqm.supabase.co";
-const KEY="sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
-const sb=window.doriSupabase||createClient(URL,KEY); if(!window.doriSupabase)window.doriSupabase=sb;
-const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
-const num=v=>(Number(v)||0).toLocaleString("ko-KR");
-const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-let state=null,busy=false,toTimer=0;
-const challengeIcons={show_up:"🗓️",lucky_drop:"🎁",focus_routine:"📚",chess_strategist:"♟️",market_maker:"📈",daily_goals:"🎯"};
+const SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
+const SUPABASE_KEY="sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
+const supabase=window.doriSupabase||createClient(SUPABASE_URL,SUPABASE_KEY);
+if(!window.doriSupabase)window.doriSupabase=supabase;
+
+const $=(selector,root=document)=>root.querySelector(selector);
+const $$=(selector,root=document)=>Array.from(root.querySelectorAll(selector));
+const fmt=value=>(Number(value)||0).toLocaleString("ko-KR");
+const escapeHtml=value=>String(value==null?"":value).replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+const shortNumber=value=>{
+ const n=Number(value)||0;
+ if(n>=1000000)return (n/1000000).toFixed(n>=10000000?0:1).replace(/\.0$/,"")+"M";
+ if(n>=10000)return (n/1000).toFixed(n>=100000?0:1).replace(/\.0$/,"")+"K";
+ if(n>=1000)return (n/1000).toFixed(1).replace(/\.0$/,"")+"K";
+ return String(n);
+};
+const missionIcons={attendance:"🗓️",daily_mission:"🎯",random_box:"🎁",chess_game:"♟️",study_focus:"📚",stock_trade:"📈",bank_transaction:"🏦",study_plan:"📝"};
 const achievementIcons={first_100:"✦",tier_25:"🧭",tier_50:"💫",tier_100:"👑",weekly_hero:"🏅",multi_domain:"🌌"};
-function toast(message){const el=$("#passToast");if(!el)return;el.textContent=message;el.classList.add("show");clearTimeout(toTimer);toTimer=setTimeout(()=>el.classList.remove("show"),3200)}
-function celebrate(title,detail){$("#celebrationTitle").textContent=title;$("#celebrationDetail").textContent=detail;$("#claimCelebration").classList.add("show");$("#claimCelebration").setAttribute("aria-hidden","false")}
+const chapters=["출발의 성운","항해의 관문","푸른 성운","별빛 회랑","궤도의 도시","차원의 바다","은하 중심","초신성 지대","도로늄 심연","정복자의 왕좌"];
+let dashboard=null,busy=false,toastTimer=0,resizeObserver=null,routeResizeFrame=0;
+
+function toast(message){
+ const el=$("#passToast");if(!el)return;
+ el.textContent=message;el.classList.add("show");clearTimeout(toastTimer);
+ toastTimer=window.setTimeout(()=>el.classList.remove("show"),3300);
+}
+function celebrate(title,detail){
+ $("#celebrationTitle").textContent=title;$("#celebrationDetail").textContent=detail;
+ $("#claimCelebration").classList.add("show");$("#claimCelebration").setAttribute("aria-hidden","false");
+}
 function closeCelebration(){$("#claimCelebration").classList.remove("show");$("#claimCelebration").setAttribute("aria-hidden","true")}
-function obj(v){return Array.isArray(v)?(v[0]||{}):(v||{})}
-function errText(e){const m=String(e&&e.message||"");if(/not unlocked|not_unlocked/i.test(m))return "아직 해제되지 않은 단계예요.";if(/already claimed|already_claimed|duplicate key/i.test(m))return "이미 수령한 보상이에요.";if(/not_completed/i.test(m))return "목표를 달성한 다음 받을 수 있어요.";if(/not_owned/i.test(m))return "보유한 아이템만 장착할 수 있어요.";if(/JWT|auth|login|로그인/i.test(m))return "로그인 상태를 확인한 뒤 다시 시도해 주세요.";return m.replace(/[<>]/g,"").slice(0,160)||"요청을 처리하지 못했어요."}
-function progress(el,p){if(el)el.style.width=Math.max(0,Math.min(100,Number(p)||0))+"%"}
-function renderHero(d){
- const s=d.season||{};
- $("#seasonLabel").textContent=s.name||(s.key||"")+" · 돌이 패스";
- $("#seasonStatus").textContent="시즌 "+(s.key||"");
- $("#seasonDay").innerHTML=num(s.day_number)+' <small>/ '+num(s.days_total)+'일</small>';
- $("#daysLeft").innerHTML=num(s.days_left)+' <small>일</small>';
- $("#heroXp").innerHTML=num(d.xp)+' <small>XP</small>';
- $("#heroProgressText").textContent=num(d.xp)+" / 10,000 XP";
- progress($("#heroProgressBar"),Math.min(100,(Number(d.xp)||0)/10000*100));
- $("#tierCount").innerHTML=num(d.tier)+'<span>/100</span>';
- $("#currentTier").textContent="LV. "+num(d.tier);
- $("#nextTierLabel").textContent=Number(d.tier)>=100?"시즌 패스 완주":"다음 단계까지";
- $("#nextTierXp").textContent=Number(d.tier)>=100?"모든 단계 해제":num(d.next_tier_xp)+" XP 남음";
- progress($("#tierProgressBar"),d.tier_progress);
+function asObject(data){return Array.isArray(data)?(data[0]||{}):(data||{})}
+function setBar(element,value){if(element)element.style.width=Math.max(0,Math.min(100,Number(value)||0))+"%"}
+function prettyError(error){
+ const msg=String(error&&error.message||"");
+ if(/not_unlocked/i.test(msg))return "아직 이 노드의 로키 포인트 조건을 충족하지 못했어요.";
+ if(/already_claimed/i.test(msg))return "이미 수령한 보상이에요.";
+ if(/not_completed/i.test(msg))return "미션을 완료한 다음 로키 포인트를 받을 수 있어요.";
+ if(/mission_not_found/i.test(msg))return "오늘의 미션 목록이 변경되었어요. 새로고침해 주세요.";
+ if(/invalid_mission/i.test(msg))return "유효하지 않은 미션입니다.";
+ if(/JWT|auth|login|로그인/i.test(msg))return "로그인 상태를 확인한 뒤 다시 시도해 주세요.";
+ return msg.replace(/[<>]/g,"").slice(0,180)||"요청을 처리하지 못했어요. 잠시 후 다시 시도해 주세요.";
+}
+function getColCount(){
+ if(window.matchMedia("(max-width:420px)").matches)return 3;
+ if(window.matchMedia("(max-width:720px)").matches)return 4;
+ if(window.matchMedia("(max-width:1050px)").matches)return 6;
+ return 10;
+}
+function refreshMapRoute(){
+ const canvas=$("#rewardMapCanvas"),grid=$("#rewardMapNodes"),svg=$("#mapRouteSvg");
+ if(!canvas||!grid||!svg||!grid.children.length)return;
+ const nodes=$$(".map-node",grid);
+ if(!nodes.length)return;
+ const width=Math.max(1,grid.scrollWidth),height=Math.max(1,grid.scrollHeight);
+ svg.setAttribute("viewBox","0 0 "+width+" "+height);
+ svg.setAttribute("width",String(width));svg.setAttribute("height",String(height));
+ const bounds=grid.getBoundingClientRect();
+ const points=nodes.map(node=>{
+  const r=node.getBoundingClientRect();
+  return {x:r.left-bounds.left+r.width/2,y:r.top-bounds.top+r.height/2};
+ });
+ const pathFor=pts=>{
+  if(!pts.length)return "";
+  let path="M "+pts[0].x.toFixed(1)+" "+pts[0].y.toFixed(1);
+  for(let i=1;i<pts.length;i++){
+   const a=pts[i-1],b=pts[i],dx=b.x-a.x,dy=b.y-a.y;
+   if(Math.abs(dy)<2){
+    path+=" C "+(a.x+dx*.32).toFixed(1)+" "+a.y.toFixed(1)+", "+(b.x-dx*.32).toFixed(1)+" "+b.y.toFixed(1)+", "+b.x.toFixed(1)+" "+b.y.toFixed(1);
+   }else{
+    path+=" C "+a.x.toFixed(1)+" "+(a.y+dy*.45).toFixed(1)+", "+b.x.toFixed(1)+" "+(b.y-dy*.45).toFixed(1)+", "+b.x.toFixed(1)+" "+b.y.toFixed(1);
+   }
+  }
+  return path;
+ };
+ const allPath=pathFor(points);
+ const tier=Math.max(0,Number(dashboard&&dashboard.tier)||0);
+ const active=pathFor(points.slice(0,Math.min(points.length,tier+1)));
+ const underlay=$(".route-underlay",svg),main=$(".route-main",svg),activePath=$(".route-active",svg);
+ if(underlay)underlay.setAttribute("d",allPath);
+ if(main)main.setAttribute("d",allPath);
+ if(activePath)activePath.setAttribute("d",active);
+}
+function scheduleMapRoute(){
+ if(routeResizeFrame)cancelAnimationFrame(routeResizeFrame);
+ routeResizeFrame=requestAnimationFrame(()=>{routeResizeFrame=0;refreshMapRoute()});
+}
+function updateHero(data){
+ const season=data.season||{},tier=Math.max(0,Number(data.tier)||0);
+ $("#seasonLabel").textContent=season.name||((season.key||"")+" · 돌이 패스");
+ $("#seasonStatus").textContent="시즌 "+(season.key||"");
+ $("#rockyPointsWallet").innerHTML=fmt(data.rocky_points)+' <small>RP</small>';
+ $("#seasonPointsTotal").innerHTML=fmt(data.season_points)+' <small>RP</small>';
+ $("#currentTierHero").innerHTML=fmt(tier)+' <small>/ 100</small>';
+ $("#heroNextTier").textContent=tier>=100?"FINAL NODE":"NODE "+String(tier+1).padStart(2,"0");
+ $("#heroProgressText").textContent=tier>=100?"100단계 완주":fmt(data.next_tier_progress)+" / "+fmt(data.next_tier_cost)+" RP";
+ const percent=tier>=100?100:(Number(data.next_tier_cost)>0?(Number(data.next_tier_progress)||0)/Number(data.next_tier_cost)*100:0);
+ setBar($("#heroProgressBar"),percent);
+ $("#heroProgressCaption").textContent=tier>=100?"최종 노드를 정복했어요! 다음 시즌을 준비해 보세요.":"다음 노드까지 로키 포인트 "+fmt(data.next_tier_remaining)+"점";
+ $("#tierCount").innerHTML=fmt(tier)+' <i>/ 100</i>';
+ $("#currentChapter").textContent=String(Math.min(10,Math.max(1,Math.ceil(Math.max(1,tier)/10)))).padStart(2,"0")+" · "+chapters[Math.min(9,Math.floor(Math.max(0,tier-1)/10))];
+ $("#nextTierLabel").textContent=tier>=100?"최종 구역 정복 완료":"다음 목표 노드";
+ $("#nextTierXp").textContent=tier>=100?"100단계 · 은하의 핵":"NODE "+String(tier+1).padStart(2,"0")+" · "+fmt(data.next_tier_required)+" RP";
  $("#weekReset").textContent="다음 월요일 00:00 · 한국 시간";
- $("#achievementCount").textContent=(d.achievements||[]).filter(a=>a.claimed).length+" / "+(d.achievements||[]).length;
- $("#collectionCount").textContent=num((d.cosmetics||[]).length);
+ $("#todayPointsEarned").textContent=fmt(data.today_points_earned)+" RP";
+ $("#achievementCount").textContent=(data.achievements||[]).filter(a=>a.claimed).length+" / "+(data.achievements||[]).length;
+ $("#collectionCount").textContent=fmt((data.cosmetics||[]).length);
  $("#lastUpdated").textContent="동기화 "+new Intl.DateTimeFormat("ko-KR",{timeZone:"Asia/Seoul",hour:"2-digit",minute:"2-digit",hour12:false}).format(new Date());
+ const chapterIndex=Math.min(9,Math.floor(Math.max(0,tier-1)/10));
+ $$(".chapter-pill").forEach((pill,i)=>{pill.classList.toggle("active",i===chapterIndex);pill.classList.toggle("completed",i<chapterIndex)});
 }
-function renderTier(t){
- const level=Number(t.tier)||0, cosmetics=Array.isArray(t.cosmetics)?t.cosmetics:[], c=cosmetics[0];
- const claimed=t.claimed===true, unlocked=t.unlocked===true, special=cosmetics.length>0;
- const classes=["tier-card",claimed?"claimed":"",unlocked?"unlocked":"",special?"special":"",level===Number(state&&state.tier)?"current":""].filter(Boolean).join(" ");
- const name=c?c.name:"시즌 돌돌코인", art=c&&c.icon?c.icon:(level%10===0?"✧":"◈");
- const label=claimed?"✓ 수령 완료":unlocked?"보상 받기":"🔒 잠김";
- return '<article class="'+classes+'" data-tier="'+level+'" style="animation-delay:'+(Math.min(24,level%24)*12)+'ms">'+
- '<div class="tier-top"><span class="tier-number">TIER '+String(level).padStart(2,"0")+'</span><span class="tier-status">'+(claimed?"✓":unlocked?"✦":"⌑")+'</span></div>'+
- '<div class="tier-art" aria-hidden="true">'+esc(art)+'</div><div class="tier-reward-name">'+esc(name)+'</div>'+
- '<div class="tier-coin">+'+num(t.coins)+' 🪙</div><button class="tier-action" type="button" data-claim-tier="'+level+'" '+(!unlocked||claimed?"disabled":"")+'>'+label+'</button></article>';
+function renderDailyMissions(data){
+ const items=Array.isArray(data.daily_missions)?data.daily_missions:[];
+ const claimed=items.filter(item=>item.claimed).length;
+ const completed=items.filter(item=>item.completed).length;
+ const maxPoints=items.reduce((sum,item)=>sum+(Number(item.reward_points)||0),0);
+ $("#dailyMissionCount").textContent=claimed+" / 5 보상 수령";
+ $("#dailyMissionRewardTotal").textContent="오늘의 보상 최대 "+fmt(maxPoints)+" RP";
+ setBar($("#dailyMissionProgressBar"),claimed/5*100);
+ const icons=missionIcons;
+ $("#dailyMissionGrid").innerHTML=items.map((item,index)=>{
+  const p=Math.max(0,Number(item.progress)||0),target=Math.max(1,Number(item.target)||1);
+  const isClaimed=item.claimed===true,complete=item.completed===true,claimable=item.claimable===true;
+  const status=isClaimed?"수령 완료":claimable?"보상 수령 가능":complete?"완료 · 보상 대기":("진행 중 · "+p+"/"+target);
+  const btn=isClaimed?"✓ 포인트 수령 완료":claimable?"로키 포인트 받기":complete?"보상 수령하기":"임무 진행 중";
+  return '<article class="daily-mission-card '+(isClaimed?"is-claimed":claimable?"is-ready":complete?"is-complete":"")+'" style="animation-delay:'+(index*55)+'ms">'+
+   '<div class="daily-mission-card-top"><span class="mission-index">MISSION 0'+(index+1)+'</span><span class="mission-state">'+(isClaimed?"✓":claimable?"✦":complete?"●":"○")+'</span></div>'+
+   '<div class="daily-mission-main"><div class="daily-mission-icon">'+(icons[item.key]||"✦")+'</div><div class="daily-mission-copy"><h3>'+escapeHtml(item.title)+'</h3><p>'+escapeHtml(item.description)+'</p></div></div>'+
+   '<div class="daily-mission-progress-row"><span>'+escapeHtml(status)+'</span><strong>'+fmt(Math.min(p,target))+' / '+fmt(target)+'</strong></div>'+
+   '<div class="daily-mission-progress"><span style="width:'+Math.min(100,p/target*100)+'%"></span></div>'+
+   '<div class="daily-mission-card-bottom"><span class="mission-points">+'+fmt(item.reward_points)+' <i>RP</i></span><button type="button" class="daily-mission-claim" data-claim-daily-mission="'+Number(item.slot)+'" '+(!claimable?"disabled":"")+'>'+btn+'</button></div></article>';
+ }).join("")||'<div class="loading-card">오늘의 임무를 불러오지 못했어요.</div>';
+ $("#todayPointsEarned").textContent=fmt(data.today_points_earned)+" RP";
 }
-function renderChallenges(d){
- const items=Array.isArray(d.challenges)?d.challenges:[];
- $("#weeklyGrid").innerHTML=items.map(item=>{
-  const n=Number(item.progress)||0, target=Math.max(1,Number(item.target)||1), done=n>=target, claimed=item.claimed===true, can=item.claimable===true;
-  const label=claimed?"✓ 경험치 수령 완료":can?"패스 경험치 받기":done?"보상 수령하기":"도전 진행 중";
-  return '<article class="challenge-card '+(claimed?"done":"")+'" data-challenge="'+esc(item.key)+'"><div class="challenge-heading"><div class="challenge-icon">'+(challengeIcons[item.key]||"✦")+'</div><div><h3>'+esc(item.title)+'</h3><p>'+esc(item.description)+'</p></div><div class="challenge-reward">+'+num(item.xp_reward)+' XP</div></div>'+
-  '<div class="challenge-progress-label"><span>'+(claimed?"목표 달성 완료":done?"목표 달성 · 보상 수령 가능":"주간 목표 진행도")+'</span><strong>'+num(n)+' / '+num(target)+'</strong></div>'+
-  '<div class="challenge-progress"><span style="width:'+Math.min(100,n/target*100)+'%"></span></div><button type="button" class="challenge-action" data-claim-challenge="'+esc(item.key)+'" '+(!can?"disabled":"")+'>'+label+'</button></article>';
- }).join("")||'<div class="loading-card">이번 주 도전을 불러오지 못했어요.</div>';
+function renderMapNode(tier){
+ const level=Number(tier.tier)||0,cosmetics=Array.isArray(tier.cosmetics)?tier.cosmetics:[];
+ const claimed=tier.claimed===true,unlocked=tier.unlocked===true,claimable=tier.claimable===true;
+ const colCount=getColCount(),row=Math.floor((level-1)/colCount)+1,offset=(level-1)%colCount;
+ const col=(row%2===1)?offset+1:colCount-offset;
+ const special=cosmetics.length>0,milestone=level%10===0,chapter=Math.min(10,Math.ceil(level/10));
+ const main=cosmetics[0],icon=main&&main.icon?main.icon:(milestone?"✧":"🪙");
+ const classes=["map-node",claimed?"is-claimed":"",unlocked?"is-unlocked":"",claimable?"is-claimable":"",special?"is-special":"",milestone?"is-milestone":"",level===Number(dashboard&&dashboard.tier)+1?"is-next":"",level===Number(dashboard&&dashboard.tier)?"is-current":""].filter(Boolean).join(" ");
+ let status=claimed?"✓":claimable?"✦":unlocked?"○":"⌑";
+ const stageCoins=Number(tier.coins)||0;
+ const stageName=main?main.name:"돌돌코인";
+ const label=claimed?"보상 수령 완료":claimable?"노드 해금 보상 받기":unlocked?"보상 수령 가능":"로키 포인트 "+fmt(tier.total_required)+"점 필요";
+ return '<button type="button" class="'+classes+'" data-tier="'+level+'" data-claim-tier="'+level+'" style="grid-column:'+col+';grid-row:'+row+';animation-delay:'+((level%30)*9)+'ms" '+(!claimable?"disabled":"")+' aria-label="'+escapeHtml("노드 "+level+", "+stageName+", "+fmt(stageCoins)+" 돌돌코인, "+label)+'" title="'+escapeHtml("노드 "+level+" · "+stageName+" · "+fmt(stageCoins)+" 돌돌코인")+'">'+
+   '<span class="map-node-top"><span class="map-node-number">'+String(level).padStart(2,"0")+'</span><span class="map-node-state">'+status+'</span></span>'+
+   '<span class="map-node-icon">'+escapeHtml(icon)+'</span>'+
+   '<span class="map-node-reward">'+shortNumber(stageCoins)+' <i>🪙</i></span>'+
+   (special?'<span class="map-node-prize-tag">'+(cosmetics.length>1?"RARE SET":(main.kind==="title"?"TITLE":main.kind==="profile_frame"?"FRAME":"ICON"))+'</span>':'')+
+   '<span class="map-node-tooltip"><strong>'+escapeHtml(stageName)+'</strong><small>'+label+'</small></span>'+
+   '</button>';
 }
-function renderAchievements(d){
- const items=Array.isArray(d.achievements)?d.achievements:[];
- $("#seasonAchievementGrid").innerHTML=items.map(item=>{
-  const n=Math.max(0,Number(item.progress)||0), target=Math.max(1,Number(item.target)||1), claimed=item.claimed===true, can=item.claimable===true;
-  return '<article class="season-achievement '+(claimed?"done":"")+'" data-achievement="'+esc(item.key)+'"><div class="achievement-emblem">'+(achievementIcons[item.key]||"✦")+'</div><div class="achievement-main"><div class="achievement-top"><h3>'+esc(item.title)+'</h3><span class="achievement-reward">+'+num(item.coin_reward)+' 🪙</span></div><p>'+esc(item.description)+'</p><div class="achievement-progressline"><span style="width:'+Math.min(100,n/target*100)+'%"></span></div><div class="achievement-bottom"><span>'+(claimed?"수령 완료":num(n)+" / "+num(target))+'</span><button type="button" class="achievement-action" data-claim-achievement="'+esc(item.key)+'" '+(!can?"disabled":"")+'>'+(claimed?"✓ 완료":can?"보상 받기":"진행 중")+'</button></div></div></article>';
- }).join("")||'<div class="loading-card">시즌 업적을 불러오지 못했어요.</div>';
+function renderTrack(data){
+ const tiers=Array.isArray(data.tiers)?data.tiers:[];
+ const grid=$("#rewardMapNodes");
+ grid.style.setProperty("--map-columns",String(getColCount()));
+ grid.style.gridTemplateColumns="repeat("+getColCount()+",minmax(0,1fr))";
+ grid.innerHTML=tiers.map(renderMapNode).join("")||'<div class="loading-card">보상 지도를 준비하지 못했어요.</div>';
+ renderChapterStrip();
+ scheduleMapRoute();
+ if(resizeObserver)resizeObserver.disconnect();
+ if("ResizeObserver" in window){resizeObserver=new ResizeObserver(scheduleMapRoute);resizeObserver.observe(grid)}
 }
-function renderCollection(d){
- const items=Array.isArray(d.cosmetics)?d.cosmetics:[];
- if(!items.length){$("#collectionGrid").innerHTML='<div class="empty-collection">아직 보유한 패스 꾸미기 아이템이 없어요.<br>10·20·25단계 등의 주요 보상을 수령해 첫 아이템을 모아 보세요.</div>';return}
- const kinds={title:"칭호",profile_frame:"프로필 프레임",special_icon:"특별 아이콘"};
- $("#collectionGrid").innerHTML=items.map(item=>{
-  const equipped=item.equipped===true, rarity=["Rare","Epic","Legendary","Myth","Doronum"].includes(item.rarity)?item.rarity:"Rare";
-  return '<article class="cosmetic-card '+(equipped?"equipped":"")+'"><div class="cosmetic-icon">'+esc(item.icon||"✦")+'</div><span class="cosmetic-rarity '+rarity+'">'+esc(rarity.toUpperCase())+'</span><h3>'+esc(item.name)+'</h3><span class="cosmetic-detail">'+esc(kinds[item.kind]||"시즌 보상")+' · '+esc(item.season_key||"")+'</span><button class="cosmetic-equip" type="button" data-equip-cosmetic="'+esc(item.key)+'" '+(equipped?"disabled":"")+'>'+(equipped?"✓ 장착 중":"장착하기")+'</button></article>';
+function renderChapterStrip(){
+ const strip=$("#mapChapterStrip");
+ if(!strip)return;
+ strip.innerHTML=chapters.map((name,i)=>{
+  const start=i*10+1,end=(i+1)*10;
+  const t=Number(dashboard&&dashboard.tier)||0;
+  const active=t>=start-1&&t<end,complete=t>=end;
+  return '<span class="chapter-pill '+(active?"active":"")+' '+(complete?"completed":"")+'"><i>'+String(i+1).padStart(2,"0")+'</i> '+escapeHtml(name)+'</span>';
  }).join("");
 }
-function render(input){
- state=obj(input);renderHero(state);
- $("#rewardTrackGrid").innerHTML=(state.tiers||[]).map(renderTier).join("")||'<div class="loading-card">보상 트랙이 아직 준비되지 않았어요.</div>';
- renderChallenges(state);renderAchievements(state);renderCollection(state);
+function renderChallenges(data){
+ const items=Array.isArray(data.challenges)?data.challenges:[];
+ const icons={daily_missions:"🎯",collect_points:"💠",lucky_drop:"🎁",focus_routine:"📚",pass_steps:"🗺️",market_maker:"📈"};
+ $("#weeklyGrid").innerHTML=items.map(item=>{
+  const p=Number(item.progress)||0,target=Math.max(1,Number(item.target)||1),claimed=item.claimed===true,complete=p>=target,can=item.claimable===true;
+  return '<article class="challenge-card '+(claimed?"done":"")+'"><div class="challenge-heading"><div class="challenge-icon">'+(icons[item.key]||"✦")+'</div><div><h3>'+escapeHtml(item.title)+'</h3><p>'+escapeHtml(item.description)+'</p></div><div class="challenge-reward">+'+fmt(item.rocky_points_reward)+' RP</div></div>'+
+   '<div class="challenge-progress-label"><span>'+(claimed?"포인트 수령 완료":complete?"목표 달성 · 보상 수령 가능":"주간 목표 진행도")+'</span><strong>'+fmt(Math.min(p,target))+' / '+fmt(target)+'</strong></div>'+
+   '<div class="challenge-progress"><span style="width:'+Math.min(100,p/target*100)+'%"></span></div>'+
+   '<button type="button" class="challenge-action" data-claim-challenge="'+escapeHtml(item.key)+'" '+(!can?"disabled":"")+'>'+(claimed?"✓ 로키 포인트 수령 완료":can?"로키 포인트 받기":"원정 진행 중")+'</button></article>';
+ }).join("")||'<div class="loading-card">주간 원정을 불러오지 못했어요.</div>';
+}
+function renderAchievements(data){
+ const items=Array.isArray(data.achievements)?data.achievements:[];
+ $("#seasonAchievementGrid").innerHTML=items.map(item=>{
+  const p=Math.max(0,Number(item.progress)||0),target=Math.max(1,Number(item.target)||1),claimed=item.claimed===true,can=item.claimable===true;
+  return '<article class="season-achievement '+(claimed?"done":"")+'"><div class="achievement-emblem">'+(achievementIcons[item.key]||"✦")+'</div><div class="achievement-main"><div class="achievement-top"><h3>'+escapeHtml(item.title)+'</h3><span class="achievement-reward">+'+fmt(item.coin_reward)+' 🪙</span></div><p>'+escapeHtml(item.description)+'</p><div class="achievement-progressline"><span style="width:'+Math.min(100,p/target*100)+'%"></span></div><div class="achievement-bottom"><span>'+(claimed?"수령 완료":fmt(p)+" / "+fmt(target))+'</span><button type="button" class="achievement-action" data-claim-achievement="'+escapeHtml(item.key)+'" '+(!can?"disabled":"")+'>'+(claimed?"✓ 완료":can?"보상 받기":"진행 중")+'</button></div></div></article>';
+ }).join("")||'<div class="loading-card">시즌 업적을 불러오지 못했어요.</div>';
+}
+function renderCollection(data){
+ const items=Array.isArray(data.cosmetics)?data.cosmetics:[];
+ if(!items.length){$("#collectionGrid").innerHTML='<div class="empty-collection">아직 보유한 패스 꾸미기 아이템이 없어요.<br>5단계부터 특별 아이콘, 10단계부터 시즌 칭호, 20단계부터 프로필 프레임을 모을 수 있어요.</div>';return}
+ const kinds={title:"시즌 칭호",profile_frame:"프로필 프레임",special_icon:"특별 아이콘"};
+ $("#collectionGrid").innerHTML=items.map(item=>{
+  const equipped=item.equipped===true,rarity=["Rare","Epic","Legendary","Myth","Doronum"].includes(item.rarity)?item.rarity:"Rare";
+  return '<article class="cosmetic-card '+(equipped?"equipped":"")+'"><div class="cosmetic-icon">'+escapeHtml(item.icon||"✦")+'</div><span class="cosmetic-rarity '+rarity+'">'+escapeHtml(rarity.toUpperCase())+'</span><h3>'+escapeHtml(item.name)+'</h3><span class="cosmetic-detail">'+escapeHtml(kinds[item.kind]||"시즌 보상")+' · '+escapeHtml(item.season_key||"")+'</span><button class="cosmetic-equip" type="button" data-equip-cosmetic="'+escapeHtml(item.key)+'" '+(equipped?"disabled":"")+'>'+(equipped?"✓ 장착 중":"장착하기")+'</button></article>';
+ }).join("");
+}
+function render(data){
+ dashboard=asObject(data);
+ updateHero(dashboard);renderDailyMissions(dashboard);renderTrack(dashboard);
+ renderChallenges(dashboard);renderAchievements(dashboard);renderCollection(dashboard);
  $("#passApp").hidden=false;$("#loginRequired").hidden=true;
 }
-async function load({silent=false}={}){
- if(!silent)$("#rewardTrackGrid").innerHTML='<div class="loading-card"><span class="spinner"></span>보상 트랙을 불러오는 중이에요.</div>';
- const {data:sd,error:se}=await sb.auth.getSession();if(se)throw se;
- if(!sd||!sd.session||!sd.session.user){$("#loginRequired").hidden=false;$("#passApp").hidden=true;$("#seasonStatus").textContent="로그인 필요";return null}
- const {data,error}=await sb.rpc("dori_pass_get_dashboard");if(error)throw error;render(data);return state;
+async function loadDashboard({silent=false}={}){
+ if(!silent)$("#dailyMissionGrid").innerHTML='<div class="loading-card"><span class="spinner"></span>오늘의 임무를 불러오는 중이에요.</div>';
+ const {data:sessionData,error:sessionError}=await supabase.auth.getSession();
+ if(sessionError)throw sessionError;
+ if(!sessionData||!sessionData.session||!sessionData.session.user){
+  $("#loginRequired").hidden=false;$("#passApp").hidden=true;$("#seasonStatus").textContent="로그인 필요";return null;
+ }
+ const {data,error}=await supabase.rpc("dori_pass_get_dashboard");
+ if(error)throw error;
+ render(data);return dashboard;
 }
-async function rpc(name,args,onSuccess){
+async function doRpc(name,args,onSuccess){
  if(busy)return;busy=true;document.body.classList.add("pass-busy");
  try{
-  const {data,error}=await sb.rpc(name,args);if(error)throw error;const result=obj(data);
+  const {data,error}=await supabase.rpc(name,args);
+  if(error)throw error;
+  const result=asObject(data);
   if(result.ok===false){
-   const messages={not_unlocked:"아직 열리지 않은 단계예요.",already_claimed:"이미 수령한 보상이에요.",not_completed:"목표를 달성한 다음 받을 수 있어요.",not_owned:"보유한 아이템만 장착할 수 있어요.",unknown_challenge:"유효하지 않은 도전이에요.",unknown_achievement:"유효하지 않은 업적이에요."};
-   toast(messages[result.reason]||"요청을 처리하지 못했어요.");await load({silent:true});return
+   const messages={not_unlocked:"아직 이 노드의 로키 포인트 조건을 충족하지 못했어요.",already_claimed:"이미 수령한 보상이에요.",not_completed:"목표를 완료한 후 보상을 받을 수 있어요.",mission_not_found:"오늘의 임무 목록을 새로 불러와 주세요.",invalid_mission:"유효하지 않은 임무예요."};
+   toast(messages[result.reason]||"요청을 처리하지 못했어요.");await loadDashboard({silent:true});return;
   }
-  await load({silent:true});if(onSuccess)onSuccess(result)
- }catch(e){console.error("[돌이 패스] "+name+" 오류:",e);toast(errText(e))}
- finally{busy=false;document.body.classList.remove("pass-busy")}
+  await loadDashboard({silent:true});
+  if(onSuccess)onSuccess(result);
+ }catch(error){
+  console.error("[돌이 패스] "+name+" 오류:",error);toast(prettyError(error));
+ }finally{busy=false;document.body.classList.remove("pass-busy")}
 }
-function claimTier(tier){rpc("dori_pass_claim_tier",{p_tier:Number(tier)},r=>{const list=Array.isArray(r.cosmetics)?r.cosmetics:[];celebrate(tier+"단계 보상 획득!","+"+num(r.coins)+" 돌돌코인"+(list.length?" · "+list.map(x=>x.name).join(", "):""))})}
+function claimDailyMission(slot){
+ doRpc("dori_pass_claim_daily_mission",{p_slot:Number(slot)},r=>{
+  celebrate("로키 포인트 획득!",r.mission_title+" · +"+fmt(r.reward_points)+" RP");
+ });
+}
+function claimTier(tier){
+ doRpc("dori_pass_claim_tier",{p_tier:Number(tier)},r=>{
+  const items=Array.isArray(r.cosmetics)?r.cosmetics:[];
+  const extra=items.length?" · "+items.map(x=>x.name).join(" · "):"";
+  celebrate("노드 "+String(tier).padStart(2,"0")+" 정복!", "+"+fmt(r.coins)+" 돌돌코인"+extra);
+ });
+}
 function claimAll(){
- const count=(state&&state.tiers||[]).filter(t=>t.unlocked&&!t.claimed).length;if(!count){toast("지금 받을 수 있는 단계 보상이 없어요.");return}
- rpc("dori_pass_claim_all_available",{},r=>celebrate("보상을 한 번에 획득했어요!",num(r.claimed_count)+"개 단계 · +"+num(r.coins)+" 돌돌코인"))
+ const unlocked=(dashboard&&dashboard.tiers||[]).filter(t=>t.unlocked&&!t.claimed).length;
+ if(!unlocked){toast("지금 받을 수 있는 보상 노드가 없어요. 일일 임무로 로키 포인트를 모아 보세요.");return}
+ doRpc("dori_pass_claim_all_available",{},r=>{
+  celebrate("열린 노드 보상 획득!",fmt(r.claimed_count)+"개 노드 · +"+fmt(r.coins)+" 돌돌코인 · "+fmt(r.cosmetics_count)+"개 꾸미기 아이템");
+ });
 }
-document.addEventListener("click",e=>{
- const tier=e.target.closest("[data-claim-tier]");if(tier&&!tier.disabled){claimTier(tier.dataset.claimTier);return}
- const ch=e.target.closest("[data-claim-challenge]");if(ch&&!ch.disabled){rpc("dori_pass_claim_challenge",{p_challenge_key:ch.dataset.claimChallenge},r=>celebrate("주간 도전 완료!","+"+num(r.xp_reward)+" 패스 경험치를 획득했어요."));return}
- const ac=e.target.closest("[data-claim-achievement]");if(ac&&!ac.disabled){rpc("dori_pass_claim_achievement",{p_achievement_key:ac.dataset.claimAchievement},r=>celebrate("시즌 업적 달성!","+"+num(r.coins)+" 돌돌코인을 획득했어요."));return}
- const eq=e.target.closest("[data-equip-cosmetic]");if(eq&&!eq.disabled){rpc("dori_pass_equip_cosmetic",{p_cosmetic_key:eq.dataset.equipCosmetic},r=>celebrate("꾸미기 아이템 장착 완료",(r.equipped&&r.equipped.name||"아이템")+"을(를) 장착했어요."))}
+document.addEventListener("click",event=>{
+ const daily=event.target.closest("[data-claim-daily-mission]");
+ if(daily&&!daily.disabled){claimDailyMission(daily.dataset.claimDailyMission);return}
+ const tier=event.target.closest("[data-claim-tier]");
+ if(tier&&!tier.disabled){claimTier(tier.dataset.claimTier);return}
+ const challenge=event.target.closest("[data-claim-challenge]");
+ if(challenge&&!challenge.disabled){doRpc("dori_pass_claim_challenge",{p_challenge_key:challenge.dataset.claimChallenge},r=>celebrate("주간 원정 완료!","+"+fmt(r.rocky_points_reward)+" 로키 포인트를 획득했어요."));return}
+ const achievement=event.target.closest("[data-claim-achievement]");
+ if(achievement&&!achievement.disabled){doRpc("dori_pass_claim_achievement",{p_achievement_key:achievement.dataset.claimAchievement},r=>celebrate("시즌 업적 달성!","+"+fmt(r.coins)+" 돌돌코인을 획득했어요."));return}
+ const cosmetic=event.target.closest("[data-equip-cosmetic]");
+ if(cosmetic&&!cosmetic.disabled){doRpc("dori_pass_equip_cosmetic",{p_cosmetic_key:cosmetic.dataset.equipCosmetic},r=>celebrate("꾸미기 아이템 장착 완료!",(r.equipped&&r.equipped.name||"아이템")+"을(를) 장착했어요."))}
 });
-$("#claimAllButton").addEventListener("click",claimAll);$("#claimAllSmall").addEventListener("click",claimAll);
+$("#claimAllButton").addEventListener("click",claimAll);
 $("#jumpCurrent").addEventListener("click",()=>{
- const level=Math.max(1,Number(state&&state.tier)||1),card=$('[data-tier="'+level+'"]');if(!card){toast("현재 단계 카드가 보이지 않아요.");return}
- card.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});card.classList.add("current-pulse");setTimeout(()=>card.classList.remove("current-pulse"),1300)
+ const tier=Math.max(1,Number(dashboard&&dashboard.tier)||0);
+ const node=$('[data-tier="'+(tier>=100?100:tier+1)+'"]');
+ if(!node){toast("현재 위치를 찾지 못했어요.");return}
+ node.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center"});
+ node.classList.add("node-focus-pulse");window.setTimeout(()=>node.classList.remove("node-focus-pulse"),1400);
 });
 $("#celebrationClose").addEventListener("click",closeCelebration);
-$("#claimCelebration").addEventListener("click",e=>{if(e.target===$("#claimCelebration"))closeCelebration()});
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeCelebration()});
+$("#claimCelebration").addEventListener("click",event=>{if(event.target===$("#claimCelebration"))closeCelebration()});
+document.addEventListener("keydown",event=>{if(event.key==="Escape")closeCelebration()});
 $$(".pass-tab").forEach(tab=>tab.addEventListener("click",()=>{$$(".pass-tab").forEach(x=>x.classList.toggle("active",x===tab))}));
 const sections=$$(".section-block[id]");
-if("IntersectionObserver" in window&&sections.length){const observer=new IntersectionObserver(entries=>{const visible=entries.filter(x=>x.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];if(visible)$$(".pass-tab").forEach(tab=>tab.classList.toggle("active",tab.getAttribute("href")==="#"+visible.target.id))},{rootMargin:"-18% 0px -65% 0px",threshold:[0,.1,.3]});sections.forEach(s=>observer.observe(s))}
-async function init(){try{await load()}catch(e){console.error("[돌이 패스] 대시보드 로드 오류:",e);$("#loginRequired").hidden=true;$("#passApp").hidden=false;$("#rewardTrackGrid").innerHTML='<div class="loading-card">패스 정보를 불러오지 못했어요. <button class="small-outline" id="retryPass" type="button">다시 시도</button></div>';$("#retryPass")&&$("#retryPass").addEventListener("click",()=>init(),{once:true});toast(errText(e))}}
-sb.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_IN"&&session)window.setTimeout(()=>load({silent:true}).catch(e=>toast(errText(e))),0);else if(event==="SIGNED_OUT")window.setTimeout(()=>{$("#loginRequired").hidden=false;$("#passApp").hidden=true;$("#seasonStatus").textContent="로그인 필요"},0)});
-window.addEventListener("focus",()=>{if(!document.hidden&&!busy)load({silent:true}).catch(e=>console.warn("[돌이 패스] 복귀 동기화 실패:",e))});
-document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!busy)load({silent:true}).catch(e=>console.warn("[돌이 패스] 화면 복귀 동기화 실패:",e))});
+if("IntersectionObserver" in window&&sections.length){
+ const observer=new IntersectionObserver(entries=>{
+  const visible=entries.filter(e=>e.isIntersecting).sort((a,b)=>b.intersectionRatio-a.intersectionRatio)[0];
+  if(visible)$$(".pass-tab").forEach(tab=>tab.classList.toggle("active",tab.getAttribute("href")==="#"+visible.target.id));
+ },{rootMargin:"-18% 0px -65% 0px",threshold:[0,.1,.3]});
+ sections.forEach(section=>observer.observe(section));
+}
+window.addEventListener("resize",scheduleMapRoute);
+window.addEventListener("orientationchange",scheduleMapRoute);
+window.addEventListener("focus",()=>{if(!document.hidden&&!busy)loadDashboard({silent:true}).catch(e=>console.warn("[돌이 패스] 복귀 동기화 실패:",e))});
+document.addEventListener("visibilitychange",()=>{if(!document.hidden&&!busy)loadDashboard({silent:true}).catch(e=>console.warn("[돌이 패스] 화면 복귀 동기화 실패:",e))});
+async function init(){
+ try{await loadDashboard()}
+ catch(error){
+  console.error("[돌이 패스] 대시보드 로드 오류:",error);
+  $("#loginRequired").hidden=true;$("#passApp").hidden=false;
+  $("#dailyMissionGrid").innerHTML='<div class="loading-card">패스 정보를 불러오지 못했어요. <button class="small-outline" id="retryPass" type="button">다시 시도</button></div>';
+  $("#retryPass")&&$("#retryPass").addEventListener("click",()=>init(),{once:true});
+  toast(prettyError(error));
+ }
+}
+supabase.auth.onAuthStateChange((event,session)=>{
+ if(event==="SIGNED_IN"&&session)window.setTimeout(()=>loadDashboard({silent:true}).catch(e=>toast(prettyError(e))),0);
+ else if(event==="SIGNED_OUT")window.setTimeout(()=>{$("#loginRequired").hidden=false;$("#passApp").hidden=true;$("#seasonStatus").textContent="로그인 필요"},0);
+});
 init();
