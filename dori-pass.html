@@ -4,101 +4,142 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#05091f">
-  <title>돌이 패스 · 돌이사이트</title>
+  <title>돌이 패스 · 은하 탐험 지도</title>
   <link rel="icon" href="rockeysite-icon-3.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/dori-pass.css?v=20261025-1">
+  <link rel="stylesheet" href="css/dori-pass.css?v=20261025-2">
 </head>
 <body class="dori-pass-page">
-  <div class="pass-atmosphere" aria-hidden="true"><span class="orbit orbit-a"></span><span class="orbit orbit-b"></span><span class="pass-star star-a">✦</span><span class="pass-star star-b">·</span><span class="pass-star star-c">✧</span></div>
+  <div class="pass-atmosphere" aria-hidden="true">
+    <span class="orbit orbit-a"></span><span class="orbit orbit-b"></span>
+    <span class="pass-star star-a">✦</span><span class="pass-star star-b">·</span><span class="pass-star star-c">✧</span>
+  </div>
   <header class="pass-topbar">
     <a class="brand-back" href="index.html" aria-label="돌이사이트 메인으로 돌아가기"><span class="back-arrow">←</span><span>돌이사이트 메인</span></a>
-    <div class="pass-brand"><span class="brand-symbol">D</span><span>DORI <i>PASS</i></span></div>
+    <a class="pass-brand" href="#top" aria-label="돌이 패스 맨 위로"><span class="brand-symbol">D</span><span>DORI <i>PASS</i></span></a>
     <div class="pass-season-pill"><span class="live-dot"></span><span id="seasonStatus">시즌 확인 중</span></div>
   </header>
 
-  <main class="pass-shell">
+  <main class="pass-shell" id="top">
     <section class="pass-hero" aria-labelledby="passTitle">
       <div class="hero-copy">
-        <div class="eyebrow"><span class="eyebrow-line"></span> MONTHLY PROGRESSION <span class="eyebrow-line"></span></div>
+        <div class="eyebrow"><span class="eyebrow-line"></span> MONTHLY ADVENTURE PASS <span class="eyebrow-line"></span></div>
         <div class="hero-season" id="seasonLabel">2026.10 · 은하 항해</div>
         <h1 id="passTitle">돌이 패스<span class="title-spark">✦</span></h1>
-        <p class="hero-description">돌이사이트 곳곳에서 활동하고, 이번 시즌의 100개 보상을 모두 개방하세요.</p>
+        <p class="hero-description">오늘의 원정 임무로 로키 포인트를 모으고, 은하를 잇는 100개의 보상 노드를 정복해 보세요.</p>
         <div class="hero-actions">
-          <button id="claimAllButton" class="primary-button" type="button">보상 한 번에 받기 <span>↗</span></button>
-          <a class="quiet-link" href="#weeklyChallenges">이번 주 도전 보기 <span>↓</span></a>
+          <a class="primary-button" href="#dailyMissions">오늘의 임무 시작 <span>↓</span></a>
+          <a class="quiet-link" href="#rewardTrack">탐험 지도 보기 <span>↗</span></a>
         </div>
-        <div class="hero-footnote"><span class="status-check">✓</span> 활동 기록은 자동 반영 · 보상은 원하는 때에 수령</div>
+        <div class="hero-footnote"><span class="status-check">✓</span> 일일 임무는 매일 변경 · 획득한 로키 포인트는 시즌 패스 성장에 반영</div>
       </div>
       <div class="hero-art" aria-hidden="true">
         <div class="art-halo"></div><div class="art-orbit orbit-one"></div><div class="art-orbit orbit-two"></div>
-        <div class="art-diamond"><div class="diamond-inner"><span>✦</span><b>D</b><small>SEASON</small></div></div>
+        <div class="art-diamond"><div class="diamond-inner"><span>✦</span><b>D</b><small>GALACTIC PASS</small></div></div>
         <div class="art-floating floating-one">✧</div><div class="art-floating floating-two">✦</div><div class="art-floating floating-three">·</div>
-        <div class="art-bottom-label"><span>SEASON REWARD</span><strong>01 — 100</strong></div>
+        <div class="art-bottom-label"><span>YOUR NEXT DESTINATION</span><strong id="heroNextTier">NODE 01</strong></div>
       </div>
       <div class="hero-bottom">
-        <div class="hero-stat"><span class="stat-label">시즌 진행</span><strong id="seasonDay">— <small>/ —일</small></strong></div>
+        <div class="hero-stat"><span class="stat-label">보유 로키 포인트</span><strong id="rockyPointsWallet">0 <small>RP</small></strong></div>
         <div class="stat-divider"></div>
-        <div class="hero-stat"><span class="stat-label">남은 기간</span><strong id="daysLeft">— <small>일</small></strong></div>
+        <div class="hero-stat"><span class="stat-label">이번 시즌 획득</span><strong id="seasonPointsTotal">0 <small>RP</small></strong></div>
         <div class="stat-divider"></div>
-        <div class="hero-stat"><span class="stat-label">획득 패스 경험치</span><strong id="heroXp">0 <small>XP</small></strong></div>
-        <div class="hero-progress-wrap"><div class="hero-progress-meta"><span>SEASON PROGRESS</span><strong id="heroProgressText">0 / 10,000 XP</strong></div><div class="hero-progress"><span id="heroProgressBar"></span></div></div>
+        <div class="hero-stat"><span class="stat-label">현재 도달 단계</span><strong id="currentTierHero">0 <small>/ 100</small></strong></div>
+        <div class="hero-progress-wrap">
+          <div class="hero-progress-meta"><span>NEXT NODE PROGRESS</span><strong id="heroProgressText">0 / 84 RP</strong></div>
+          <div class="hero-progress"><span id="heroProgressBar"></span></div>
+          <div class="hero-progress-caption" id="heroProgressCaption">다음 노드까지 로키 포인트를 모아 보세요.</div>
+        </div>
       </div>
     </section>
 
     <section id="loginRequired" class="login-required" hidden>
-      <div class="login-emblem">✦</div><h2>모험 기록을 불러오려면 로그인이 필요해요.</h2><p>로그인하면 활동 진행도와 받을 수 있는 시즌 보상을 확인할 수 있어요.</p><a class="primary-button" href="login.html">로그인하기 <span>↗</span></a>
+      <div class="login-emblem">✦</div><h2>모험 기록을 불러오려면 로그인이 필요해요.</h2>
+      <p>로그인하면 오늘의 미션, 로키 포인트, 시즌 진행도와 받을 수 있는 보상을 확인할 수 있어요.</p>
+      <a class="primary-button" href="login.html">로그인하기 <span>↗</span></a>
     </section>
 
     <section id="passApp" hidden>
       <nav class="pass-tabs" aria-label="돌이 패스 메뉴">
-        <a class="pass-tab active" href="#rewardTrack"><span>01</span> 보상 트랙</a>
-        <a class="pass-tab" href="#weeklyChallenges"><span>02</span> 주간 도전</a>
-        <a class="pass-tab" href="#seasonAchievements"><span>03</span> 시즌 업적</a>
-        <a class="pass-tab" href="#myCollection"><span>04</span> 내 컬렉션</a>
+        <a class="pass-tab active" href="#dailyMissions"><span>01</span> 오늘의 임무</a>
+        <a class="pass-tab" href="#rewardTrack"><span>02</span> 탐험 지도</a>
+        <a class="pass-tab" href="#weeklyChallenges"><span>03</span> 주간 원정</a>
+        <a class="pass-tab" href="#seasonAchievements"><span>04</span> 시즌 업적</a>
+        <a class="pass-tab" href="#myCollection"><span>05</span> 내 컬렉션</a>
       </nav>
 
-      <section class="section-block" id="rewardTrack">
+      <section class="section-block" id="dailyMissions">
         <div class="section-heading">
-          <div><div class="section-kicker">THE REWARD JOURNEY</div><h2>100단계 보상 트랙</h2><p>한 단계마다 보상이 기다려요. 잠금이 해제된 단계는 언제든 수령할 수 있어요.</p></div>
-          <div class="section-side-stat"><strong id="tierCount">0<span>/100</span></strong><small>단계 달성</small></div>
+          <div><div class="section-kicker">DAILY EXPEDITION · RESET EVERY DAY</div><h2>오늘의 원정 임무</h2><p>매일 무작위로 배정되는 5개 임무를 완료하고 로키 포인트를 획득하세요.</p></div>
+          <div class="mission-day-stamp"><span class="mission-stamp-icon">✦</span><div><small>오늘 획득한 포인트</small><strong id="todayPointsEarned">0 RP</strong></div></div>
         </div>
-        <div class="track-summary"><div class="track-current"><div class="current-badge">✦</div><div><span>현재 패스 단계</span><strong id="currentTier">LV. 0</strong></div></div><div class="next-tier-copy"><span id="nextTierLabel">다음 단계까지</span><strong id="nextTierXp">100 XP 남음</strong></div><div class="next-tier-progress"><span id="tierProgressBar"></span></div></div>
-        <div class="track-toolbar"><div class="track-legend"><span><i class="legend-dot unlocked"></i> 해제</span><span><i class="legend-dot claimed"></i> 수령 완료</span><span><i class="legend-dot locked"></i> 잠김</span></div><div class="track-controls"><button id="jumpCurrent" class="small-outline" type="button">현재 단계로 이동</button><button id="claimAllSmall" class="small-primary" type="button">받을 수 있는 보상 받기</button></div></div>
-        <div id="rewardTrackGrid" class="reward-track-grid" aria-live="polite"><div class="loading-card"><span class="spinner"></span>보상 트랙을 불러오는 중이에요.</div></div>
-        <div class="track-footer"><span>✦ 매 시즌마다 보상과 테마가 새롭게 바뀝니다.</span><span>일반 보상은 돌돌코인 · 주요 단계는 한정 꾸미기 아이템</span></div>
+        <div class="daily-mission-summary">
+          <div class="daily-summary-left"><div class="daily-summary-orb">5</div><div><strong id="dailyMissionCount">0 / 5 완료</strong><span>임무 보상 수령 여부가 기록됩니다.</span></div></div>
+          <div class="daily-summary-right"><span id="dailyMissionRewardTotal">오늘의 보상 최대 0 RP</span><div class="daily-summary-track"><span id="dailyMissionProgressBar"></span></div></div>
+        </div>
+        <div id="dailyMissionGrid" class="daily-mission-grid" aria-live="polite"><div class="loading-card"><span class="spinner"></span>오늘의 임무를 불러오는 중이에요.</div></div>
+        <div class="mission-note"><span>ⓘ</span> 미션은 한국 시간 자정에 새로 배정돼요. 완료 후 <b>로키 포인트 받기</b>를 눌러야 포인트가 적립됩니다.</div>
+      </section>
+
+      <section class="section-block map-section" id="rewardTrack">
+        <div class="section-heading map-heading">
+          <div><div class="section-kicker">THE GALACTIC REWARD ROUTE</div><h2>은하 탐험 지도</h2><p>노드와 노드를 잇는 길을 따라가세요. 로키 포인트를 모을수록 더 먼 보상 지역이 열립니다.</p></div>
+          <div class="map-heading-stat"><span class="map-heading-spark">✧</span><div><small>탐험 완료</small><strong id="tierCount">0 <i>/ 100</i></strong></div></div>
+        </div>
+        <div class="map-control-panel">
+          <div class="map-current-area"><span class="map-area-icon">⌖</span><div><small>현재 탐험 구역</small><strong id="currentChapter">01 · 출발의 성운</strong></div></div>
+          <div class="map-next-goal"><small id="nextTierLabel">다음 목표 노드</small><strong id="nextTierXp">NODE 01 · 84 RP</strong></div>
+          <div class="map-legend"><span><i class="legend-dot claimed"></i> 수령 완료</span><span><i class="legend-dot unlocked"></i> 보상 열림</span><span><i class="legend-dot locked"></i> 잠김</span></div>
+        </div>
+        <div class="map-chapter-strip" id="mapChapterStrip" aria-label="탐험 구역">
+          <span class="chapter-pill active">01 출발</span><span class="chapter-pill">02 항해</span><span class="chapter-pill">03 성운</span><span class="chapter-pill">04 별빛</span><span class="chapter-pill">05 궤도</span><span class="chapter-pill">06 차원</span><span class="chapter-pill">07 은하</span><span class="chapter-pill">08 초신성</span><span class="chapter-pill">09 도로늄</span><span class="chapter-pill">10 정복</span>
+        </div>
+        <div id="rewardMap" class="reward-map-wrap">
+          <div class="map-top-label"><span>STELLAR NAVIGATION SYSTEM</span><span>01 <i>—</i> 100</span></div>
+          <div id="rewardMapCanvas" class="reward-map-canvas">
+            <svg id="mapRouteSvg" class="map-route-svg" aria-hidden="true" focusable="false">
+              <defs><linearGradient id="routeGradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#80aaff"/><stop offset="55%" stop-color="#8be4ff"/><stop offset="100%" stop-color="#ba9dff"/></linearGradient><filter id="routeGlow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+              <path class="route-underlay"></path><path class="route-main"></path><path class="route-active"></path>
+            </svg>
+            <div id="rewardMapNodes" class="reward-map-nodes"><div class="loading-card"><span class="spinner"></span>탐험 지도를 구성하는 중이에요.</div></div>
+          </div>
+          <div class="map-endpoint"><span class="endpoint-symbol">✧</span><div><strong>THE DORONUM CORE</strong><small>100단계 최종 보상 · 시즌 정복자</small></div><span class="endpoint-lock">⌑</span></div>
+        </div>
+        <div class="map-bottom-bar"><span><i class="legend-dot active-route"></i> 정복 경로는 진행도에 따라 빛납니다.</span><button id="jumpCurrent" class="small-outline" type="button">현재 위치로 이동 ↗</button></div>
+        <div class="map-reward-callout"><div class="callout-gem">💎</div><div><strong>더 멀리 갈수록, 더 커지는 보상</strong><p>높은 단계는 대량의 돌돌코인과 시즌 칭호를 제공합니다. 5단계마다 특별 아이콘, 20단계마다 프로필 프레임도 획득할 수 있어요.</p></div><div class="callout-final"><small>FINAL NODE</small><strong>+1,000,000 🪙</strong><span>100단계 추가 보너스</span></div></div>
+        <div class="track-toolbar"><div class="track-legend"><span><i class="legend-dot claimed"></i> 수령 완료</span><span><i class="legend-dot unlocked"></i> 수령 가능</span><span><i class="legend-dot locked"></i> 잠김</span></div><div class="track-controls"><button id="claimAllButton" class="small-primary" type="button">열린 보상 전부 받기</button></div></div>
       </section>
 
       <section class="section-block" id="weeklyChallenges">
         <div class="section-heading">
-          <div><div class="section-kicker">WEEKLY MISSIONS</div><h2>이번 주 도전</h2><p>평소처럼 활동하면서 추가 패스 경험치를 얻어 보세요.</p></div>
-          <div class="weekly-reset"><span class="reset-icon">↻</span><div><small>주간 도전 초기화</small><strong id="weekReset">월요일 00:00</strong></div></div>
+          <div><div class="section-kicker">WEEKLY EXPEDITIONS</div><h2>주간 원정</h2><p>일일 임무와 다양한 활동을 이어가면 추가 로키 포인트를 얻을 수 있어요.</p></div>
+          <div class="weekly-reset"><span class="reset-icon">↻</span><div><small>원정 초기화</small><strong id="weekReset">월요일 00:00</strong></div></div>
         </div>
-        <div id="weeklyGrid" class="challenge-grid"><div class="loading-card"><span class="spinner"></span>주간 도전을 불러오는 중이에요.</div></div>
+        <div id="weeklyGrid" class="challenge-grid"><div class="loading-card"><span class="spinner"></span>주간 원정을 불러오는 중이에요.</div></div>
       </section>
 
       <section class="section-block" id="seasonAchievements">
         <div class="section-heading">
-          <div><div class="section-kicker">SEASON MILESTONES</div><h2>시즌 한정 업적</h2><p>이번 시즌에만 기록되는 특별한 목표예요. 달성하면 추가 돌돌코인을 받을 수 있어요.</p></div>
-          <div class="achievement-summary"><strong id="achievementCount">0 / 6</strong><small>업적 수령</small></div>
+          <div><div class="section-kicker">SEASON MILESTONES</div><h2>시즌 한정 업적</h2><p>시즌을 더 깊이 탐험하고, 추가 돌돌코인 보상을 획득하세요.</p></div>
+          <div class="achievement-summary"><strong id="achievementCount">0 / 6</strong><small>업적 보상 수령</small></div>
         </div>
         <div id="seasonAchievementGrid" class="season-achievement-grid"><div class="loading-card"><span class="spinner"></span>시즌 업적을 불러오는 중이에요.</div></div>
       </section>
 
       <section class="section-block collection-block" id="myCollection">
         <div class="section-heading">
-          <div><div class="section-kicker">YOUR RARE FINDS</div><h2>내 패스 컬렉션</h2><p>시즌을 정복하며 모은 칭호, 프로필 프레임, 특별 아이콘을 관리하세요.</p></div>
+          <div><div class="section-kicker">YOUR RARE FINDS</div><h2>내 패스 컬렉션</h2><p>탐험으로 모은 시즌 칭호, 프로필 프레임, 특별 아이콘을 관리하세요.</p></div>
           <div class="collection-count"><strong id="collectionCount">0</strong><small>보유 아이템</small></div>
         </div>
-        <div id="collectionGrid" class="collection-grid"><div class="empty-collection">첫 번째 패스 보상을 수령하면 컬렉션이 여기에 쌓여요.</div></div>
+        <div id="collectionGrid" class="collection-grid"><div class="empty-collection">보상 노드를 해금하고 아이템을 수령하면 여기에 모여요.</div></div>
       </section>
     </section>
-    <footer class="pass-footer"><a href="index.html">돌이사이트 메인</a><span>돌이 패스 · 새로운 달, 새로운 모험</span><span id="lastUpdated">기록을 안전하게 불러오는 중</span></footer>
+    <footer class="pass-footer"><a href="index.html">돌이사이트 메인</a><span>돌이 패스 · 매달 새로운 여정</span><span id="lastUpdated">기록을 불러오는 중</span></footer>
   </main>
   <div id="passToast" class="pass-toast" role="status" aria-live="polite"></div>
-  <div id="claimCelebration" class="claim-celebration" aria-hidden="true"><div class="celebration-glow"></div><div class="celebration-card"><div class="celebration-mark">✦</div><div class="celebration-label">REWARD UNLOCKED</div><h2 id="celebrationTitle">보상을 획득했어요!</h2><p id="celebrationDetail">보상이 컬렉션에 추가되었습니다.</p><button id="celebrationClose" type="button" class="primary-button">계속 탐험하기 <span>✓</span></button></div></div>
-  <script type="module" src="js/dori-pass.js?v=20261025-1"></script>
+  <div id="claimCelebration" class="claim-celebration" aria-hidden="true"><div class="celebration-glow"></div><div class="celebration-card"><div class="celebration-mark">✦</div><div class="celebration-label">REWARD ACQUIRED</div><h2 id="celebrationTitle">보상을 획득했어요!</h2><p id="celebrationDetail">보상이 컬렉션에 추가되었습니다.</p><button id="celebrationClose" type="button" class="primary-button">계속 탐험하기 <span>✓</span></button></div></div>
+  <script type="module" src="js/dori-pass.js?v=20261025-2"></script>
 </body>
 </html>
