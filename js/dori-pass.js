@@ -180,6 +180,23 @@ function renderChapterStrip(){
   return '<span class="chapter-pill '+(active?"active":"")+' '+(complete?"completed":"")+'"><i>'+String(i+1).padStart(2,"0")+'</i> '+escapeHtml(name)+'</span>';
  }).join("");
 }
+function renderMegaMission(data){
+ const host=$("#megaMissionPanel");if(!host)return;
+ const mega=data&&data.mega_mission;
+ if(!mega){host.innerHTML='<div class="loading-card">메가 미션 정보를 불러오지 못했어요.</div>';return}
+ const objectives=Array.isArray(mega.objectives)?mega.objectives:[];
+ const claimed=mega.claimed===true,complete=mega.complete===true,claimable=mega.claimable===true;
+ host.innerHTML='<div class="mega-mission-card '+(claimed?"is-claimed":"")+'"><div class="mega-card-glow"></div>'+
+ '<div class="mega-card-head"><div class="mega-boss-emblem">✦<span>MEGA</span></div><div class="mega-title-copy"><div class="mega-kicker">WEEKLY BOSS · MEGA EXPEDITION</div><h3>메가 돌이 미션</h3><p>여섯 가지 대원정 목표를 모두 달성하고 전설급 보급품을 획득하세요.</p></div><div class="mega-status '+(claimed?"claimed":complete?"complete":"")+'">'+(claimed?"정복 완료":complete?"최종 보상 개방":"주간 도전")+'</div></div>'+
+ '<div class="mega-progress-head"><span>메가 미션 진행도</span><strong>'+fmt(mega.completed_objectives||0)+' <i>/ '+fmt(mega.total_objectives||6)+'</i></strong></div><div class="mega-progress-track"><span style="width:'+Math.min(100,(Number(mega.completed_objectives)||0)/Math.max(1,Number(mega.total_objectives)||6)*100)+'%"></span></div>'+
+ '<div class="mega-objective-grid">'+objectives.map((o,i)=>'<article class="mega-objective '+(o.complete?"complete":"")+'"><span class="mega-objective-number">'+String(i+1).padStart(2,"0")+'</span><div class="mega-objective-copy"><strong>'+escapeHtml(o.title)+'</strong><p>'+escapeHtml(o.description)+'</p><div class="mega-objective-progress"><span style="width:'+Math.min(100,(Number(o.progress)||0)/Math.max(1,Number(o.target)||1)*100)+'%"></span></div><small>'+fmt(o.progress)+' / '+fmt(o.target)+(o.complete?' · 달성 ✓':'')+'</small></div><span class="mega-objective-check">'+(o.complete?"✓":"✧")+'</span></article>').join("")+'</div>'+
+ '<div class="mega-rewards"><div class="mega-reward-heading"><span>✧ FINAL LOOT</span><strong>최종 보상 상자</strong></div><div class="mega-reward-items">'+
+ '<div class="mega-reward-item rp"><span>💠</span><div><strong>+8,000 RP</strong><small>로키 포인트 대보급</small></div></div>'+
+ '<div class="mega-reward-item coins"><span>🪙</span><div><strong>+'+fmt(mega.display_coin_reward??mega.base_coin_reward)+' 돌돌코인</strong><small>'+(Number(mega.coin_multiplier)>1?'현재 부스트 ×'+Number(mega.coin_multiplier).toLocaleString("ko-KR")+' 적용':'대규모 코인 금고')+'</small></div></div>'+
+ '<div class="mega-reward-item title"><span>👑</span><div><strong>메가 미션 정복자</strong><small>MYTH 한정 칭호</small></div></div>'+
+ '<div class="mega-reward-item frame"><span>🌌</span><div><strong>메가 은하 프레임</strong><small>LEGENDARY 프로필 프레임</small></div></div></div>'+
+ '<div class="mega-reward-footer"><span>매주 월요일 00:00 · 한국 시간 초기화</span><button type="button" class="mega-claim-button" data-claim-mega '+(!claimable?"disabled":"")+'>'+(claimed?"✓ 메가 미션 보상 수령 완료":claimable?"최종 보상 전부 받기 ✦":"6개 목표를 모두 완료하세요")+'</button></div></div></div>';
+}
 function renderChallenges(data){
  const items=Array.isArray(data.challenges)?data.challenges:[];
  const icons={daily_missions:"🎯",collect_points:"💠",lucky_drop:"🎁",focus_routine:"📚",pass_steps:"🗺️",market_maker:"📈"};
@@ -210,7 +227,7 @@ function renderCollection(data){
 function render(data){
  dashboard=asObject(data);
  updateHero(dashboard);renderDailyMissions(dashboard);renderTrack(dashboard);
- renderChallenges(dashboard);renderAchievements(dashboard);renderCollection(dashboard);
+ renderChallenges(dashboard);renderMegaMission(dashboard);renderAchievements(dashboard);renderCollection(dashboard);
  $("#passApp").hidden=false;$("#loginRequired").hidden=true;
 }
 async function loadDashboard({silent=false}={}){
@@ -222,7 +239,10 @@ async function loadDashboard({silent=false}={}){
  }
  const {data,error}=await supabase.rpc("dori_pass_get_dashboard");
  if(error)throw error;
- render(data);return dashboard;
+ render(data);
+  const {data:megaData,error:megaError}=await supabase.rpc("dori_pass_get_mega_mission");
+  if(megaError)throw megaError;
+  dashboard.mega_mission=asObject(megaData);renderMegaMission(dashboard);return dashboard;
 }
 async function doRpc(name,args,onSuccess){
  if(busy)return;busy=true;document.body.classList.add("pass-busy");
@@ -266,7 +286,9 @@ document.addEventListener("click",event=>{
  if(tier&&!tier.disabled){claimTier(tier.dataset.claimTier);return}
  const challenge=event.target.closest("[data-claim-challenge]");
  if(challenge&&!challenge.disabled){doRpc("dori_pass_claim_challenge",{p_challenge_key:challenge.dataset.claimChallenge},r=>celebrate("주간 원정 완료!","+"+fmt(r.rocky_points_reward)+" 로키 포인트를 획득했어요."));return}
- const achievement=event.target.closest("[data-claim-achievement]");
+ const mega=event.target.closest("[data-claim-mega]");
+  if(mega&&!mega.disabled){doRpc("dori_pass_claim_mega_mission",{},r=>celebrate("메가 돌이 미션 정복!","+"+fmt(r.rocky_points_reward)+" RP · +"+fmt(r.coins)+" 돌돌코인 · 한정 칭호와 프레임 획득!"));return}
+  const achievement=event.target.closest("[data-claim-achievement]");
  if(achievement&&!achievement.disabled){doRpc("dori_pass_claim_achievement",{p_achievement_key:achievement.dataset.claimAchievement},r=>celebrate("시즌 업적 달성!","+"+fmt(r.coins)+" 돌돌코인을 획득했어요."));return}
  const cosmetic=event.target.closest("[data-equip-cosmetic]");
  if(cosmetic&&!cosmetic.disabled){doRpc("dori_pass_equip_cosmetic",{p_cosmetic_key:cosmetic.dataset.equipCosmetic},r=>celebrate("꾸미기 아이템 장착 완료!",(r.equipped&&r.equipped.name||"아이템")+"을(를) 장착했어요."))}
