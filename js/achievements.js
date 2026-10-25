@@ -746,6 +746,83 @@ async function checkSiteAchievements() {
     console.warn("[Dori Achievement] 주식 업적 확인 중 오류:", stockError);
   }
 
+
+  // 통합 업적: 실제 서버 기록을 읽고, 보상 지급 전에는 RPC가 조건을 재검증한다.
+  try {
+    const allRows = async (table, columns, filters = []) => {
+      const out = [];
+      for (let from = 0; ; from += 1000) {
+        let q = supabase.from(table).select(columns).range(from, from + 999);
+        for (const apply of filters) q = apply(q);
+        const { data, error } = await q;
+        if (error) { console.warn("[Dori Achievement]", table, error); return null; }
+        out.push(...(data || []));
+        if (!data || data.length < 1000) return out;
+      }
+    };
+    const countRows = async (table, filters = []) => {
+      let q = supabase.from(table).select("*", { count: "exact", head: true });
+      for (const apply of filters) q = apply(q);
+      const { count, error } = await q;
+      if (error) { console.warn("[Dori Achievement]", table, error); return null; }
+      return Number(count || 0);
+    };
+    const [attCount, attStats, missions, focus, exams, attacks, accounts, deposits, loans, surveys, events, eventQuizzes, boxes, chessPlayed, chessWins, inventory, dividends] = await Promise.all([
+      countRows("user_attendance_days", [q=>q.eq("user_id",userId)]),
+      supabase.from("user_daily_attendance").select("streak_count,total_days").eq("user_id",userId).maybeSingle(),
+      allRows("user_daily_missions","mission_date,completed_at",[q=>q.eq("user_id",userId).not("completed_at","is",null)]),
+      allRows("rockey_study_focus_sessions","actual_seconds",[q=>q.eq("user_id",userId).gt("actual_seconds",0)]),
+      countRows("rockey_study_exam_records",[q=>q.eq("user_id",userId)]),
+      allRows("rockey_study_time_attack_records","question_count",[q=>q.eq("user_id",userId)]),
+      allRows("dori_bank_accounts","account_number,status",[q=>q.eq("auth_user_id",userId)]),
+      allRows("dori_bank_deposits","status,settled_at",[q=>q.eq("auth_user_id",userId)]),
+      allRows("dori_bank_loans","status,settled_at",[q=>q.eq("auth_user_id",userId)]),
+      countRows("rockey_news_survey_responses",[q=>q.eq("user_id",userId)]),
+      countRows("event_participations",[q=>q.eq("user_id",userId)]),
+      allRows("rockey_news_event_attempts","completed",[q=>q.eq("user_id",userId).eq("completed",true)]),
+      allRows("dori_box_history","rarity",[q=>q.eq("user_id",userId)]),
+      countRows("chess_games",[q=>q.eq("user_id",userId)]),
+      countRows("chess_games",[q=>q.eq("user_id",userId).eq("result","1-0")]),
+      allRows("user_inventory","item_id",[q=>q.eq("user_id",userId)]),
+      allRows("dori_stock_dividend_payments","amount",[q=>q.eq("user_id",userId)])
+    ]);
+    const att = attStats?.data || null, ms = missions || [], fs = focus || [], ta = attacks || [];
+    const ac = accounts || [], dep = deposits || [], loan = loans || [], eq = eventQuizzes || [], bx = boxes || [];
+    const invCount = new Set((inventory||[]).map(x=>String(x.item_id))).size;
+    const days = new Set(ms.map(x=>String(x.mission_date||"")).filter(Boolean));
+    const seconds = fs.reduce((s,x)=>s+Math.max(0,Number(x.actual_seconds)||0),0);
+    const questions = ta.reduce((s,x)=>s+Math.max(0,Number(x.question_count)||0),0);
+    const bankNums = ac.map(x=>x.account_number).filter(Boolean);
+    let txs = [];
+    if (bankNums.length) txs = (await allRows("dori_bank_transactions","tx_type,account_number",[q=>q.in("account_number",bankNums)])) || [];
+    const divs = dividends || [];
+    const divTotal = divs.reduce((s,x)=>s+Math.max(0,Number(x.amount)||0),0);
+    const rarity = new Set(bx.map(x=>String(x.rarity||"").toUpperCase()));
+    const checks = [
+      ["attendance_7_days",attCount>=7],["attendance_30_days",attCount>=30],["attendance_100_days",attCount>=100],
+      ["attendance_streak_7",Number(att?.streak_count||0)>=7],["attendance_streak_30",Number(att?.streak_count||0)>=30],
+      ["mission_10",ms.length>=10],["mission_50",ms.length>=50],["mission_100",ms.length>=100],["mission_7_days",days.size>=7],["mission_30_days",days.size>=30],
+      ["study_focus_1h",seconds>=3600],["study_focus_10h",seconds>=36000],["study_focus_50h",seconds>=180000],
+      ["study_sessions_10",fs.length>=10],["study_sessions_50",fs.length>=50],["study_exam_1",exams>=1],["study_exam_5",exams>=5],
+      ["study_time_attack_10",ta.length>=10],["study_time_attack_50",ta.length>=50],["study_questions_100",questions>=100],
+      ["bank_account_opened",ac.some(x=>!/closed|deleted/i.test(String(x.status||"")))],
+      ["bank_transfer_1",txs.some(x=>/transfer|송금/i.test(String(x.tx_type||"")))],["bank_transactions_10",txs.length>=10],
+      ["bank_deposit_1",dep.length>=1],["bank_deposit_5",dep.length>=5],["bank_deposit_matured",dep.some(x=>!!x.settled_at)],
+      ["bank_loan_1",loan.length>=1],["bank_loan_repaid_1",loan.some(x=>!!x.settled_at||/repaid|paid|settled|completed|상환완료/i.test(String(x.status||"")))],
+      ["news_survey_1",surveys>=1],["news_survey_5",surveys>=5],["news_survey_20",surveys>=20],
+      ["event_participation_1",events>=1],["event_participation_10",events>=10],["event_quiz_1",eq.length>=1],["event_quiz_10",eq.length>=10],
+      ["box_rare_reward",rarity.has("RARE")],["box_epic_reward",rarity.has("EPIC")],["box_legendary_reward",rarity.has("LEGENDARY")],
+      ["box_total_500",bx.length>=500],["box_total_5000",bx.length>=5000],
+      ["chess_25_win",chessWins>=25],["chess_50_win",chessWins>=50],["chess_250_win",chessWins>=250],["chess_500_win",chessWins>=500],["chess_play_100",chessPlayed>=100],
+      ["coin_1m",coinValue>=1000000n],["coin_10m",coinValue>=10000000n],["coin_1b",coinValue>=1000000000n],
+      ["collection_5_items",invCount>=5],["collection_10_items",invCount>=10],["collection_25_items",invCount>=25],
+      ["stock_dividend_1",divs.length>=1],["stock_dividend_100k",divTotal>=100000],["stock_dividend_1m",divTotal>=1000000]
+    ];
+    for (const [id, met] of checks) if (met && need(id)) await claim(id);
+  } catch (integratedAchievementError) {
+    console.warn("[Dori Achievement] 통합 업적 확인 중 오류:", integratedAchievementError);
+  }
+
   // 퀴즈 정답 업적은 사용자의 서버 저장 정답 상태를 기준으로 판정한다.
   if (user.quiz_right === true && need("quiz_correct")) {
     await claim("quiz_correct");
