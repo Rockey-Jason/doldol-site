@@ -186,10 +186,16 @@ function renderMegaMission(data){
  if(!mega){host.innerHTML='<div class="loading-card">메가 미션 정보를 불러오지 못했어요.</div>';return}
  const objectives=Array.isArray(mega.objectives)?mega.objectives:[];
  const claimed=mega.claimed===true,complete=mega.complete===true,claimable=mega.claimable===true;
- const count=Math.max(0,Number(mega.completion_count)||0),next=[25,50,75,100].find(n=>n>count)||100;
- const milestones=[{n:25,name:"일반 프레임",icon:"🖼️",rarity:"RARE"},{n:50,name:"엄청난 프레임",icon:"💠",rarity:"EPIC"},{n:75,name:"최종 프레임",icon:"🌠",rarity:"DORONUM"},{n:100,name:"최종 칭호 + 2,500만 돌돌코인",icon:"👑",rarity:"FINAL"}];
+ const count=Math.max(0,Number(mega.completion_count)||0),next=[1,5,10,20,30].find(n=>n>count)||30;
+ const milestones=[
+  {n:1,name:"100,000 돌돌코인",icon:"🪙",rarity:"FIRST CLEAR"},
+  {n:5,name:"1,000,000 돌돌코인",icon:"💰",rarity:"ELITE"},
+  {n:10,name:"고급진 프레임 · 메가 은하 프레임",icon:"🌌",rarity:"LEGENDARY"},
+  {n:20,name:"5,000,000 돌돌코인",icon:"💎",rarity:"MASTER"},
+  {n:30,name:"도로늄의 절대자 · 도로늄 등급 칭호",icon:"👑",rarity:"DORONUM"}
+ ];
  host.innerHTML='<div class="mega-mission-card '+(claimed?"is-claimed":"")+'"><div class="mega-card-glow"></div>'+
- '<div class="mega-card-head"><div class="mega-boss-emblem">✦<span>MEGA</span></div><div class="mega-title-copy"><div class="mega-kicker">WEEKLY BOSS · MEGA EXPEDITION</div><h3>메가 돌이 미션</h3><p>매주 6개의 극한 목표를 모두 완수하세요. 완료할 때마다 대량의 로키 포인트와 돌돌코인을 받고, 누적 정복 횟수에 따라 특별 보상이 열립니다.</p></div><div class="mega-status '+(claimed?"claimed":complete?"complete":"")+'">'+(claimed?"정복 완료":complete?"최종 보상 개방":"주간 도전")+'</div></div>'+
+ '<div class="mega-card-head"><div class="mega-boss-emblem">✦<span>MEGA</span></div><div class="mega-title-copy"><div class="mega-kicker">WEEKLY BOSS · MEGA EXPEDITION</div><h3>메가 돌이 미션</h3><p>매주 6개의 극한 목표를 모두 완수해 대량의 로키 포인트와 돌돌코인을 획득하세요. 누적 정복 횟수에 따라 특별한 보상이 해금됩니다.</p></div><div class="mega-status '+(claimed?"claimed":complete?"complete":"")+'">'+(claimed?"정복 완료":complete?"최종 보상 개방":"주간 도전")+'</div></div>'+
  '<div class="mega-progress-head"><span>이번 주 메가 미션 진행도</span><strong>'+fmt(mega.completed_objectives||0)+' <i>/ '+fmt(mega.total_objectives||6)+'</i></strong></div><div class="mega-progress-track"><span style="width:'+Math.min(100,(Number(mega.completed_objectives)||0)/Math.max(1,Number(mega.total_objectives)||6)*100)+'%"></span></div>'+
  '<div class="mega-objective-grid">'+objectives.map((o,i)=>'<article class="mega-objective '+(o.complete?"complete":"")+'"><span class="mega-objective-number">'+String(i+1).padStart(2,"0")+'</span><div class="mega-objective-copy"><strong>'+escapeHtml(o.title)+'</strong><p>'+escapeHtml(o.description)+'</p><div class="mega-objective-progress"><span style="width:'+Math.min(100,(Number(o.progress)||0)/Math.max(1,Number(o.target)||1)*100)+'%"></span></div><small>'+fmt(o.progress)+' / '+fmt(o.target)+(o.complete?' · 달성 ✓':'')+'</small></div><span class="mega-objective-check">'+(o.complete?"✓":"✧")+'</span></article>').join('')+'</div>'+
  '<div class="mega-rewards"><div class="mega-reward-heading"><span>✧ WEEKLY LOOT</span><strong>주간 정복 보상</strong></div><div class="mega-reward-items">'+
