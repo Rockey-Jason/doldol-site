@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v18-20261025-settings-achievement-categories";
+const CACHE_NAME = "doldol-site-pwa-v19-20261025-time-attack-overtime";
 const APP_SHELL = [
   "/doldol-site/",
   "/doldol-site/index.html",
