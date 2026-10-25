@@ -71,8 +71,10 @@ async function sync(){
   const season=document.getElementById("doriPassCardSeason"),tier=document.getElementById("doriPassCardTier");
   if(season)season.textContent=(d.season&&d.season.name?d.season.name:"이번 시즌")+" · "+(Number(d.xp)||0).toLocaleString("ko-KR")+" XP";
   if(tier)tier.textContent="LEVEL "+(Number(d.tier)||0);
-  applyCosmetics(d.cosmetics||[]);
+  window.doriPassCosmetics=Array.isArray(d.cosmetics)?d.cosmetics:[];
+  window.dispatchEvent(new CustomEvent('dori:pass-cosmetics-updated'));
+  applyCosmetics(window.doriPassCosmetics);
  }catch(e){console.warn("[돌이 패스] 메인 진행도 동기화 실패:",e)}
 }
-function init(){installStyles();installMenuButton();installMainCard();sync();sb.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_IN"&&session)sync();if(event==="SIGNED_OUT"){applyCosmetics([]);sync()}})}
+function init(){installStyles();installMenuButton();installMainCard();sync();sb.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_IN"&&session)sync();if(event==="SIGNED_OUT"){window.doriPassCosmetics=[];window.dispatchEvent(new CustomEvent("dori:pass-cosmetics-updated"));applyCosmetics([]);sync()}})}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
