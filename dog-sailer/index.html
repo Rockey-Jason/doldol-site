@@ -694,7 +694,7 @@ function drawPlayer(){
   ctx.fillStyle='#fff7e5';ctx.fillRect(x-4,y-3,8,6);ctx.fillStyle='#292b2a';ctx.fillRect(x-3,y-4,2,2);ctx.fillRect(x+2,y-4,2,2);ctx.fillRect(x-2,y,4,2)
  }
 }
-function drawBoat(x,y,scale){x=Math.round(x);y=Math.round(y+Math.sin(elapsed*2.1+x*.025)*1.1);scale=scale||1;ctx.save();ctx.translate(x,y);if(player.boat&&Math.hypot(boat.vx,boat.vy)>8){ctx.rotate(Math.atan2(boat.vy,boat.vx))}ctx.scale(scale,scale);ctx.fillStyle='#133b4b44';ctx.beginPath();ctx.ellipse(0,7,23,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#634635';ctx.fillRect(-19,-2,38,10);ctx.fillStyle='#bd8d5a';ctx.fillRect(-17,-2,34,4);ctx.fillStyle='#855a40';for(let j=-13;j<16;j+=7)ctx.fillRect(j,1,4,5);ctx.fillStyle='#352e2a';ctx.fillRect(-20,4,40,2);ctx.fillStyle='#55463a';ctx.fillRect(-1,-28,2,28);ctx.fillStyle='#fff0ce';ctx.fillRect(1,-26,12,23);ctx.fillStyle='#d3e7d9';ctx.fillRect(-14,-23,1,19);ctx.fillStyle='#e5d8b8';ctx.fillRect(-15,-24,13,21);ctx.fillStyle='#5b6d66';ctx.fillRect(-13,-22,2,17);ctx.fillStyle='#fff5d6';ctx.fillRect(3,-23,7,2);ctx.restore()}
+function drawBoat(x,y,scale){x=Math.round(x);y=Math.round(y+Math.sin(elapsed*2.1+x*.025)*1.1);scale=scale||1;ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.fillStyle='#133b4b44';ctx.beginPath();ctx.ellipse(0,7,23,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#634635';ctx.fillRect(-19,-2,38,10);ctx.fillStyle='#bd8d5a';ctx.fillRect(-17,-2,34,4);ctx.fillStyle='#855a40';for(let j=-13;j<16;j+=7)ctx.fillRect(j,1,4,5);ctx.fillStyle='#352e2a';ctx.fillRect(-20,4,40,2);ctx.fillStyle='#55463a';ctx.fillRect(-1,-28,2,28);ctx.fillStyle='#fff0ce';ctx.fillRect(1,-26,12,23);ctx.fillStyle='#d3e7d9';ctx.fillRect(-14,-23,1,19);ctx.fillStyle='#e5d8b8';ctx.fillRect(-15,-24,13,21);ctx.fillStyle='#5b6d66';ctx.fillRect(-13,-22,2,17);ctx.fillStyle='#fff5d6';ctx.fillRect(3,-23,7,2);ctx.restore()}
 function drawSeaPickup(p){
  const x=Math.round(p.x-cam.x),y=Math.round(p.y-cam.y+Math.sin(elapsed*1.8+p.phase)*1.8);
  if(x<-16||x>W+16||y<-16||y>H+16||seaPickupCollected(p))return;
@@ -781,18 +781,30 @@ function tick(dt){
    player.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down')
   }
   if(player.boat){
-   const windFactor=weather==='강풍'?1.18:weather==='비'?.94:weather==='안개'?.9:weather==='흐림'?.97:1;const maxSpeed=Math.min(320,95+boat.upgrade*6.8)*windFactor,accel=weather==='강풍'?265:245;
-   const engineAccel=accel*(1+boat.upgrade*.015);boat.vx+=dx*engineAccel*dt;boat.vy+=dy*engineAccel*dt;
+   const windFactor=weather==='강풍'?1.18:weather==='비'?.94:weather==='안개'?.9:weather==='흐림'?.97:1;
+   const maxSpeed=Math.min(320,95+boat.upgrade*6.8)*windFactor;
+   const baseAccel=weather==='강풍'?265:245;
+   let boatSpeed=Math.hypot(boat.vx,boat.vy);
+   // Boats turn toward a requested direction over time instead of snapping sideways instantly.
+   if(inputMag>0){
+    const targetHeading=Math.atan2(dy,dx);
+    const angleDifference=Math.atan2(Math.sin(targetHeading-boat.heading),Math.cos(targetHeading-boat.heading));
+    const turnRate=1.55/(1+boatSpeed/175);
+    boat.heading+=clamp(angleDifference,-turnRate*dt,turnRate*dt);
+    const engineAccel=baseAccel*(1+boat.upgrade*.015);
+    boat.vx+=Math.cos(boat.heading)*engineAccel*dt;
+    boat.vy+=Math.sin(boat.heading)*engineAccel*dt;
+   }
+   // Substantial drift remains after the throttle is released.
    const drag=Math.exp((inputMag>0?-.10:-.48)*dt);
    boat.vx*=drag;boat.vy*=drag;
-   let boatSpeed=Math.hypot(boat.vx,boat.vy);
+   boatSpeed=Math.hypot(boat.vx,boat.vy);
    if(boatSpeed>maxSpeed){boat.vx=boat.vx/boatSpeed*maxSpeed;boat.vy=boat.vy/boatSpeed*maxSpeed;boatSpeed=maxSpeed}
    const nx=clamp(boat.x+boat.vx*dt,8,WORLD_W-8);
    const ny=clamp(boat.y+boat.vy*dt,8,WORLD_H-8);
    if(!landAt(nx,boat.y))boat.x=nx;else boat.vx*=-.08;
    if(!landAt(boat.x,ny))boat.y=ny;else boat.vy*=-.08;
    boatSpeed=Math.hypot(boat.vx,boat.vy);
-   if(boatSpeed>8)boat.heading=Math.atan2(boat.vy,boat.vx);
    player.x=boat.x;player.y=boat.y;player.vx=boat.vx;player.vy=boat.vy;
    player.moving=boatSpeed>6;
    if(player.moving)walkT+=dt*clamp(boatSpeed/maxSpeed,.25,1.1)
