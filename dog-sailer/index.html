@@ -735,7 +735,7 @@ function drawFishing(){
   else if(fishing.phase==='waiting'){ctx.fillStyle='#d2fff1';ctx.fillRect(bobX+4,bobY-4,1,2)}
  }
 }
-function render(){ctx.clearRect(0,0,W,H);const target=player.boat?boat:player,desiredX=clamp(target.x-W/2,0,WORLD_W-W),desiredY=clamp(target.y-H/2,0,WORLD_H-H);if(!cam.initialized){cam.x=desiredX;cam.y=desiredY;cam.initialized=true}else{const follow=1-Math.exp(-11*frameDelta);cam.x+=(desiredX-cam.x)*follow;cam.y+=(desiredY-cam.y)*follow}drawOcean();drawIslands();pickups.forEach(p=>{if(!collected.includes(p.id)&&pickupEnabled(p))drawPickup(p)});seaPickups.forEach(drawSeaPickup);visibleWildlife().forEach(drawWildlife);if(!player.boat)drawNPC();drawBoat(boat.x-cam.x,boat.y-cam.y,1+Math.min(boat.upgrade,20)*.025);drawPlayer();drawFishing();drawForegroundTrees();drawWeather();particles=particles.filter(p=>p.t<1.4);particles.forEach(p=>{const x=p.x-cam.x,y=p.y-cam.y-p.t*18;ctx.globalAlpha=1-p.t/1.4;if(p.type==='step'){ctx.fillStyle='#e4d7b0';ctx.fillRect(Math.round(x),Math.round(y+2),2,1);ctx.fillRect(Math.round(x+4),Math.round(y+1),1,1)}else{ctx.fillStyle='#fff0b5';ctx.fillRect(Math.round(x-p.t*6),Math.round(y),2,2);ctx.fillRect(Math.round(x+p.t*7),Math.round(y-6),2,2)}ctx.globalAlpha=1});if(state==='play'&&!panel&&$('dialogue').hidden){ctx.fillStyle='#f3e8be';ctx.fillRect(0,H-2,W,2);ctx.fillStyle='#b7e5dc';ctx.fillRect(0,H-2,(W*((minutes%1440)/1440)),2)}}
+function render(){ctx.clearRect(0,0,W,H);const target=player.boat?boat:player,desiredX=clamp(target.x-W/2,0,WORLD_W-W),desiredY=clamp(target.y-H/2,0,WORLD_H-H);if(!cam.initialized){cam.x=desiredX;cam.y=desiredY;cam.initialized=true}else{const follow=1-Math.exp(-11*frameDelta);cam.x+=(desiredX-cam.x)*follow;cam.y+=(desiredY-cam.y)*follow}drawOcean();drawIslands();pickups.forEach(p=>{if(!collected.includes(p.id)&&pickupEnabled(p))drawPickup(p)});seaPickups.forEach(drawSeaPickup);visibleWildlife().forEach(drawWildlife);if(!player.boat)drawNPC();drawBoat(boat.x-cam.x,boat.y-cam.y,1+Math.min(boat.upgrade,30)*.02);drawPlayer();drawFishing();drawForegroundTrees();drawWeather();particles=particles.filter(p=>p.t<1.4);particles.forEach(p=>{const x=p.x-cam.x,y=p.y-cam.y-p.t*18;ctx.globalAlpha=1-p.t/1.4;if(p.type==='step'){ctx.fillStyle='#e4d7b0';ctx.fillRect(Math.round(x),Math.round(y+2),2,1);ctx.fillRect(Math.round(x+4),Math.round(y+1),1,1)}else{ctx.fillStyle='#fff0b5';ctx.fillRect(Math.round(x-p.t*6),Math.round(y),2,2);ctx.fillRect(Math.round(x+p.t*7),Math.round(y-6),2,2)}ctx.globalAlpha=1});if(state==='play'&&!panel&&$('dialogue').hidden){ctx.fillStyle='#f3e8be';ctx.fillRect(0,H-2,W,2);ctx.fillStyle='#b7e5dc';ctx.fillRect(0,H-2,(W*((minutes%1440)/1440)),2)}}
 function findNearObject(){
  if(player.boat){
   const salvage=seaPickups.filter(p=>!seaPickupCollected(p)&&objectDistance(boat.x,boat.y,p)<INTERACTION_RADIUS).sort((a,b)=>objectDistance(boat.x,boat.y,a)-objectDistance(boat.x,boat.y,b))[0];
@@ -781,8 +781,8 @@ function tick(dt){
    player.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down')
   }
   if(player.boat){
-   const windFactor=weather==='강풍'?1.18:weather==='비'?.94:weather==='안개'?.9:weather==='흐림'?.97:1;const maxSpeed=Math.min(270,95+boat.upgrade*6.8)*windFactor,accel=weather==='강풍'?265:245;
-   boat.vx+=dx*accel*dt;boat.vy+=dy*accel*dt;
+   const windFactor=weather==='강풍'?1.18:weather==='비'?.94:weather==='안개'?.9:weather==='흐림'?.97:1;const maxSpeed=Math.min(320,95+boat.upgrade*6.8)*windFactor,accel=weather==='강풍'?265:245;
+   const engineAccel=accel*(1+boat.upgrade*.015);boat.vx+=dx*engineAccel*dt;boat.vy+=dy*engineAccel*dt;
    const drag=Math.exp((inputMag>0?-.10:-.48)*dt);
    boat.vx*=drag;boat.vy*=drag;
    let boatSpeed=Math.hypot(boat.vx,boat.vy);
