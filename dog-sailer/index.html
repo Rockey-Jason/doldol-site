@@ -179,6 +179,7 @@ h1{font:900 clamp(28px,5vw,44px)/1.08 Nunito,Hancom,sans-serif;letter-spacing:-.
     <button class="tool-btn" data-panel="bag">▣ 가방 <span class="key">I</span></button>
     <button class="tool-btn" data-panel="journal">✎ 항해 일지 <span class="key">J</span></button>
     <button class="tool-btn" data-panel="craft">⚒ 제작 <span class="key">C</span></button>
+    <button class="tool-btn" data-panel="campaign">📜 대항해 <span class="key">72</span></button>
    </div>
    <div class="footer-right"><span id="saveState" class="foot-note">항해 기록 준비 완료</span><button id="pauseButton" class="tool-btn primary">Ⅱ 메뉴</button></div>
   </div>
@@ -302,6 +303,7 @@ let state='title',panel=null,slot=1,lastSlot=1,dialogueQueue=[],dialogueAfter=nu
 let player={x:327,y:284,vx:0,vy:0,dir:'down',moving:false,boat:false};
 let boat={x:416,y:322,vx:0,vy:0,heading:0,upgrade:0};
 let rod={upgrade:0},seaPickups=[],seaCollected=[];
+let campaignState=createCampaignState({visited:['harbor']});
 let inventory={driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,mapFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0,copperOre:0,ironOre:0,coralShard:0,deepCrystal:0,engineCore:0};
 let coins=40,stage=0,visited=['harbor'],discovered=[],collected=[],relationships={haesol:0,fox:0,botanist:0},crafted=[],observed=[],nightDiscoveries=[],journal=['바닷바람을 타고 포근한 항구에 도착했다.'];
 let day=1,minutes=8*60+10,weather='맑음',worldSeed=73219,elapsed=0,walkT=0,fishing=null,muted=false,audio=null,melodyTimer=null,toastTimer=null,autosaveTimer=0,lastSaveTime=0;
@@ -328,6 +330,108 @@ function wildlifeVisible(w){
  return true;
 }
 function visibleWildlife(){return wildlife.filter(wildlifeVisible)}
+
+const campaignChapters=[
+{title:'제1장 · 항구에 남은 두 번째 일지',theme:'작은 시작, 오래된 약속',intro:'해솔 할아버지의 등대가 다시 빛나기 시작하자, 서랍 깊은 곳에서 낡은 항해 일지가 한 권 더 나왔어요. 전 항해자 나루는 섬마다 바다의 기억을 기록했고, 마지막 페이지에는 아직 끝나지 않은 항해가 적혀 있었습니다.',ending:'첫 번째 일지의 빈칸이 채워졌어요. 나루는 가장 작은 항해도 언젠가 먼바다의 길을 바꾼다고 적었습니다. 다음 장에는 조개빛 물결을 따라가라는 표시가 남아 있습니다.',quests:[
+['해변의 첫 재료','gather','driftwood',3,'해변과 표류 자원에서 표류목을 3개 모으세요.',45],
+['햇살을 품은 조개','gather','shell',2,'햇살 조개를 2개 모아 항구의 작은 수집함을 채우세요.',45],
+['초록 우편섬의 발자국','visit','green',1,'배에 올라 초록 우편섬에 처음 발을 디디세요.',60],
+['첫 번째 생물 관찰 기록','observe','any',1,'가까이 다가가 바다 생물 한 종을 관찰하고 기록하세요.',55],
+['바다가 건네는 선물','fish','any',2,'입질 순간 E키를 눌러 물고기나 아이템을 2번 낚으세요.',65],
+['선실에 둘 판자','craft','woodPlank',2,'제작대에서 잘 다듬은 판자를 누적 2개 만드세요.',70,{fiber:2}],
+['작은 교환의 시작','sell','any',1,'항구 상점에서 여분의 물건을 1개 판매하세요.',55],
+['바람을 읽는 선장','sail','any',2000,'배를 조종해 누적 항해 거리 2,000을 기록하세요.',80]
+]},
+{title:'제2장 · 조개빛 물결의 노래',theme:'바다가 부르는 첫 항로',intro:'조개달 섬의 모래 아래에는 파도가 노래할 때만 모습을 드러내는 유리 조각이 있어요. 섬의 게와 해안 생물들은 오래전부터 그 노래를 기억하고 있답니다.',ending:'조개빛 유리와 바다 생물의 기록이 한 페이지에 모였어요. 나루는 유리 조각을 멀리 비추면 안개 속에서도 길을 찾을 수 있다고 적었습니다.',quests:[
+['푸른 유리 조각','gather','seaGlass',3,'바다 유리를 3개 모으세요. 바다 위의 반짝이는 표류 자원도 살펴보세요.',80],
+['조개달 섬의 표식','visit','shell',1,'조개달 섬에 정박해 해안의 표식을 확인하세요.',80],
+['두 번째 낚시 기록','fish','any',6,'지금까지 성공한 낚시 횟수를 누적 6회까지 늘리세요.',90,{fiber:3}],
+['해안 생물 도감','observe','any',3,'서로 다른 바다 생물을 총 3종 관찰하세요.',95],
+['돛을 수선할 섬유','gather','fiber',6,'해초 섬유를 누적 6개 모으세요.',90],
+['조개 등불 제작','craft','shellLantern',1,'햇살 조개와 바다 유리로 조개 등불을 하나 만드세요.',110,{copperOre:1}],
+['산호 정원의 비밀','visit','coral',1,'산호 정원에 정박해 섬을 탐험하세요.',110],
+['정밀 낚싯대 첫 강화','upgradeRod','rod',1,'재료와 코인을 모아 낚싯대를 Lv.1 이상으로 강화하세요.',120,{seaGlass:1}]
+]},
+{title:'제3장 · 달빛에 실린 우편병',theme:'누군가에게 닿아야 할 편지',intro:'밤바다에서 잡은 달빛 진주는 편지의 잉크를 비추었어요. 흐릿한 문장에는 세 번째 등대지기가 안개 등대섬에 숨겨 둔 항로가 있다는 이야기가 남아 있습니다.',ending:'편지의 수신인은 안개 등대섬에 있었어요. 하지만 지도에는 길이 아니라 질문이 그려져 있습니다. 이제 항해자는 밤의 물결과 달빛 아래의 흔적도 읽어야 합니다.',quests:[
+['달빛 온실섬 탐방','visit','garden',1,'달빛 온실섬으로 항해해 숨은 동굴 주변을 둘러보세요.',125],
+['온실에 자라는 달빛풀','gather','moonHerb',4,'달빛풀을 누적 4개 모으세요.',125],
+['밤의 물결에 낚싯줄을','nightFish','any',1,'게임 시간이 밤일 때 낚시에 성공하세요.',140,{moonHerb:1}],
+['은은한 진주의 빛','gather','moonPearl',1,'달빛 진주를 1개 모으세요. 밤 낚시나 비밀 장소를 살펴보세요.',155],
+['항해자의 따뜻한 차','craft','herbTea',2,'달빛풀과 조개로 달빛 허브차를 누적 2개 만드세요.',155],
+['항구 상인의 장부','sell','any',3,'항구 상점에서 여분의 물건을 누적 3개 판매하세요.',150],
+['안개 등대섬으로','visit','mist',1,'멀리 보이는 안개 등대섬에 도착해 주변을 탐험하세요.',175],
+['빛을 반사하는 유리','gather','seaGlass',8,'바다 유리를 누적 8개 모아 다음 항로에 필요한 재료를 확보하세요.',180,{woodPlank:1}]
+]},
+{title:'제4장 · 쇠와 산호의 항로',theme:'먼바다의 뼈대를 세우다',intro:'안개 아래에서 발견한 지도에는 오래된 선박 공방의 표시가 있어요. 이 공방은 구리와 철, 산호를 사용해 멀리 항해할 수 있는 선체를 만들었다고 합니다.',ending:'낡은 공방의 설계도에는 선체를 강하게 만드는 금속의 배합이 남아 있었습니다. 하지만 새 항로는 한 번에 끝나지 않아요. 더 먼 섬으로 갈수록 더 단단한 부품이 필요합니다.',quests:[
+['표류물 만을 찾아서','visit','drift',1,'표류물 만으로 항해해 새로운 해역을 발견하세요.',180],
+['첫 금속 상자','gather','copperOre',5,'구리 광석을 누적 5개 모으세요.',190],
+['긴 항로의 어획','fish','any',12,'낚시 성공 횟수를 누적 12회까지 늘리세요.',190,{woodPlank:2}],
+['판자 창고 채우기','craft','woodPlank',5,'잘 다듬은 판자를 누적 5개 제작하세요.',205],
+['탐험용 범선의 첫 보강','upgradeBoat','boat',1,'배를 Lv.1 이상으로 강화해 선체를 보강하세요.',225,{copperOre:1,ironOre:1}],
+['수평선을 가로지르다','sail','any',9000,'누적 항해 거리를 9,000까지 늘리세요.',220],
+['해초 미로섬','visit','kelp',1,'해초 미로섬의 해안과 숲길을 탐험하세요.',230],
+['철빛으로 단단하게','gather','ironOre',3,'철 광석을 누적 3개 모으세요.',240,{fiber:4}]
+]},
+{title:'제5장 · 잠든 안개 등대',theme:'지도에 없는 바람',intro:'은빛 안개섬에서 오래된 등대지기의 기록을 읽었어요. 바람이 강해지는 날에는 배를 억지로 꺾지 말고, 넓게 돌아야 안전하다고 합니다. 기록의 마지막에는 깊은 산호섬의 이름이 적혀 있어요.',ending:'안개 속 등불이 다시 반짝이며 깊은 산호섬으로 향하는 길을 비췄어요. 해도에는 처음 보는 금속과 산호의 무늬가 나타났고, 이제부터는 배의 성장도 항해의 일부가 됩니다.',quests:[
+['은빛 안개섬의 기록','visit','frost',1,'은빛 안개섬에 도착해 안개 등대의 흔적을 조사하세요.',250],
+['철 광석 더 모으기','gather','ironOre',7,'철 광석을 누적 7개까지 모으세요.',260],
+['생물학자의 관찰 수첩','observe','any',4,'서로 다른 바다 생물 4종을 관찰하세요.',260],
+['돛 수선 천 작업','craft','sailPatch',4,'해초 섬유로 돛 수선 천을 누적 4개 제작하세요.',275,{coralShard:1}],
+['선체 강화 Lv.3','upgradeBoat','boat',3,'배를 Lv.3까지 강화해 더 먼 해역을 준비하세요.',300],
+['낚시 장비 정비','upgradeRod','rod',3,'낚싯대를 Lv.3까지 강화하세요.',290,{seaGlass:2}],
+['깊은 산호섬의 파도','visit','deep',1,'깊은 산호섬에 정박해 바닷속 빛을 살펴보세요.',310],
+['어획 장부의 두 번째 장','fish','any',20,'누적 낚시 성공 횟수 20회를 달성하세요.',320]
+]},
+{title:'제6장 · 산호 기록 보관소',theme:'빛나는 조각을 모으는 이유',intro:'깊은 산호섬의 바위에는 오래된 기록 보관소가 숨겨져 있어요. 기록에는 산호 조각이 단순한 장식이 아니라, 바다의 전류와 오래된 등대의 빛을 이어주는 매개체라고 적혀 있습니다.',ending:'보관소의 문이 열리자 산호 조각들이 하나씩 빛을 냈어요. 기록은 더 먼 무지개 암초섬으로 이어집니다. 그곳에서 들리는 소리는 고래의 노래와 닮았다고 해요.',quests:[
+['바람등불섬의 신호','visit','lantern',1,'바람등불섬에 도착해 바람이 남긴 신호를 확인하세요.',330],
+['빛나는 산호 조각','gather','coralShard',5,'빛나는 산호 조각을 누적 5개 모으세요.',340],
+['은빛 비늘 수집','fish','silverFish',5,'은빛 고등어를 누적 5마리 낚으세요.',350],
+['조개 등불 수리반','craft','shellLantern',3,'조개 등불을 누적 3개 제작해 등대 보수에 보태세요.',360,{coralShard:2}],
+['항구 상인의 큰 장부','sell','any',8,'물건 판매 횟수를 누적 8회까지 늘리세요.',365],
+['정밀 낚싯대 Lv.5','upgradeRod','rod',5,'낚싯대를 Lv.5까지 강화하세요.',390],
+['무지개 암초섬','visit','reef',1,'무지개 암초섬에 도착해 산호초 주변을 살펴보세요.',410],
+['파도에 새긴 거리','sail','any',30000,'누적 항해 거리를 30,000까지 늘리세요.',420,{deepCrystal:1}]
+]},
+{title:'제7장 · 고래 노래의 밤',theme:'깊은 바다도 기억하는 것',intro:'고래 노래섬의 오래된 집에는 밤마다 바다에서 들리는 낮은 노래를 기록한 악보가 있어요. 그 노래는 달빛 진주와 심해 수정이 있는 곳을 알려준다고 전해집니다.',ending:'악보의 마지막 음은 새벽 별섬을 향하고 있었어요. 밤의 바다가 보내는 신호를 모으자 별빛 조각의 위치도 조금씩 드러나기 시작했습니다.',quests:[
+['고래 노래섬의 악보','visit','whale',1,'고래 노래섬을 찾아 오래된 악보를 발견하세요.',440],
+['심해 수정의 첫 기록','gather','deepCrystal',3,'심해 수정을 누적 3개 모으세요.',450],
+['달빛 아래 네 번의 입질','nightFish','any',4,'밤에 낚시를 성공한 횟수를 누적 4회까지 늘리세요.',460,{moonPearl:1}],
+['진주의 노래','gather','moonPearl',3,'달빛 진주를 누적 3개 모으세요.',470],
+['온실의 차 주전자','craft','herbTea',5,'달빛 허브차를 누적 5개 제작하세요.',475,{deepCrystal:1}],
+['범선 강화 Lv.6','upgradeBoat','boat',6,'배를 Lv.6까지 강화해 고급 부품을 실을 준비를 하세요.',500],
+['새벽 별섬의 불빛','visit','dawn',1,'새벽 별섬으로 가서 바다 너머의 별빛을 확인하세요.',520],
+['별 조각 세 개','gather','starFragment',3,'바람 언덕과 별빛 군도 주변에서 별 조각을 누적 3개 모으세요.',550,{engineCore:1}]
+]},
+{title:'제8장 · 심해 엔진의 비밀',theme:'먼 항해자를 위한 심장',intro:'별빛 지도는 심해에 잠든 엔진의 위치를 가리켰어요. 고대 엔진 코어는 오래된 배를 움직이던 심장이며, 충분한 속도만큼이나 방향을 천천히 바꾸는 조종 실력이 중요하다고 합니다.',ending:'엔진의 푸른 빛이 깨어났어요. 이제 바다 끝의 섬들이 같은 별자리를 공유하기 시작합니다. 마지막 항해자 연맹의 문을 열려면 지도에 남은 모든 섬을 방문해야 합니다.',quests:[
+['먼별 군도의 해안','visit','farstar',1,'먼별 군도까지 항해해 새로운 별자리를 확인하세요.',575],
+['고대 엔진 코어 회수','gather','engineCore',1,'먼바다의 표류 자원이나 깊은 바다의 낚시에서 고대 엔진 코어를 구하세요.',600],
+['심해의 긴 어획 기록','fish','any',35,'누적 낚시 성공 횟수 35회를 달성하세요.',620,{engineCore:1}],
+['범선 강화 Lv.9','upgradeBoat','boat',9,'배를 Lv.9까지 강화해 심해 원정을 준비하세요.',650],
+['낚싯대 강화 Lv.9','upgradeRod','rod',9,'낚싯대를 Lv.9까지 강화하세요.',650],
+['큰물결섬의 바위문','visit','tide',1,'큰물결섬을 찾아 바위문 주변을 조사하세요.',675],
+['수평선을 넘어','sail','any',65000,'누적 항해 거리 65,000을 달성하세요.',700],
+['심해 수정의 저장고','gather','deepCrystal',6,'심해 수정을 누적 6개 모아 최종 장비의 재료를 준비하세요.',725,{engineCore:1}]
+]},
+{title:'제9장 · 별빛 항해자 연맹',theme:'끝나지 않는 항해의 시작',intro:'모든 등대의 빛이 이어지자, 오래전 흩어졌던 항해자들의 신호가 돌아왔어요. 이제 마지막 해도에는 목적지 하나만 그려져 있지 않습니다. 이 바다의 섬들을 모두 찾아내고, 자신의 배와 낚싯대를 완성해 연맹의 항해자가 되어야 합니다.',ending:'마지막 등대의 빛이 하늘과 바다를 잇습니다. 나루의 일지는 여기서 끝나지만, 당신의 항해는 끝나지 않아요. 이제는 모든 섬을 다시 방문하고, 장비를 원하는 만큼 다듬고, 매일 새롭게 떠밀려오는 자원을 찾아 자신만의 이야기를 이어갈 수 있습니다.',quests:[
+['심해 유리섬 도착','visit','abyss',1,'심해 유리섬에 도착해 마지막 항로의 표식을 찾으세요.',750],
+['엔진 코어 수집가','gather','engineCore',3,'고대 엔진 코어를 누적 3개 모으세요.',800],
+['전설 항해자의 어획','fish','any',60,'낚시 성공 횟수 누적 60회를 달성하세요.',825],
+['선실 공방의 장인','craft','woodPlank',12,'잘 다듬은 판자를 누적 12개 제작하세요.',850,{deepCrystal:2}],
+['열아홉 곳의 해도','visitCount','any',19,'지도에 표시된 섬 19곳을 모두 방문하세요.',900],
+['연맹 범선 Lv.15','upgradeBoat','boat',15,'배를 Lv.15까지 강화해 연맹의 원양 범선을 완성하세요.',950],
+['연맹 낚싯대 Lv.15','upgradeRod','rod',15,'낚싯대를 Lv.15까지 강화해 정밀한 낚시 기술을 완성하세요.',950],
+['끝을 모르는 바다','sail','any',120000,'누적 항해 거리를 120,000까지 늘려 자신만의 장거리 항해 기록을 남기세요.',1200,{engineCore:2,deepCrystal:2}]
+]}
+].map(chapter=>({...chapter,quests:chapter.quests.map(q=>({title:q[0],type:q[1],key:q[2],goal:q[3],desc:q[4],reward:q[5],gift:q[6]||null}))}));
+const campaignMissions=campaignChapters.flatMap((chapter,chapterIndex)=>chapter.quests.map((q,localIndex)=>({...q,chapterIndex,localIndex,chapterTitle:chapter.title,chapterIntro:chapter.intro,chapterEnding:chapter.ending,number:campaignChapters.slice(0,chapterIndex).reduce((n,c)=>n+c.quests.length,0)+localIndex+1})));
+function createCampaignState(seed){seed=seed&&typeof seed==='object'?seed:{};const inv=seed.inventory&&typeof seed.inventory==='object'?seed.inventory:{};const stats={gathered:{},fished:{},crafted:{},visited:[...new Set(Array.isArray(seed.visited)?seed.visited:[])],observedTypes:[...new Set(Array.isArray(seed.observed)?seed.observed:[])],fishCount:0,nightFish:0,craftCount:Array.isArray(seed.crafted)?seed.crafted.length:0,sells:0,sailDistance:0};for(const id of Object.keys(items)){const amount=Number.isFinite(+inv[id])?Math.max(0,Math.floor(+inv[id])):0;if(amount>0)stats.gathered[id]=amount}for(const id of ['blueFish','silverFish']){const amount=Number.isFinite(+inv[id])?Math.max(0,Math.floor(+inv[id])):0;if(amount>0){stats.fished[id]=amount;stats.fishCount+=amount}}if(Array.isArray(seed.crafted))seed.crafted.forEach(id=>{stats.crafted[id]=(stats.crafted[id]||0)+1});return {index:0,stats}}
+function normalizeCampaignState(raw,saveData){const base=createCampaignState(saveData);if(!raw||typeof raw!=='object'||!raw.stats)return base;const src=raw.stats,cleanMap=value=>Object.fromEntries(Object.entries(value&&typeof value==='object'&&!Array.isArray(value)?value:{}).filter(([k,v])=>Object.prototype.hasOwnProperty.call(items,k)&&Number.isFinite(+v)&&+v>=0).map(([k,v])=>[k,Math.floor(+v)])),cleanArray=(value,allow)=>Array.isArray(value)?[...new Set(value.filter(x=>typeof x==='string'&&(!allow||allow(x))))]:[],stats=base.stats;stats.gathered=cleanMap(src.gathered);stats.fished=cleanMap(src.fished);stats.crafted=cleanMap(src.crafted);stats.visited=cleanArray(src.visited,id=>!!islandById(id));stats.observedTypes=cleanArray(src.observedTypes,id=>wildlife.some(w=>w.type===id));for(const key of ['fishCount','nightFish','craftCount','sells','sailDistance'])stats[key]=Number.isFinite(+src[key])?Math.max(0,+src[key]):0;return {index:clamp(Number.isFinite(+raw.index)?Math.floor(+raw.index):0,0,campaignMissions.length),stats}}
+function campaignProgress(q){const st=campaignState.stats;switch(q.type){case 'gather':return st.gathered[q.key]||0;case 'fish':return q.key==='any'?st.fishCount:(st.fished[q.key]||0);case 'nightFish':return st.nightFish;case 'visit':return st.visited.includes(q.key)?1:0;case 'observe':return q.key==='any'?st.observedTypes.length:(st.observedTypes.includes(q.key)?1:0);case 'craft':return st.crafted[q.key]||0;case 'sell':return st.sells;case 'sail':return Math.floor(st.sailDistance);case 'upgradeBoat':return boat.upgrade||0;case 'upgradeRod':return rod.upgrade||0;case 'visitCount':return st.visited.length;case 'gatherKinds':return Object.values(st.gathered).filter(v=>v>0).length;case 'fishKinds':return Object.values(st.fished).filter(v=>v>0).length;case 'craftCount':return st.craftCount;default:return 0}}
+function campaignProgressLabel(q){const value=campaignProgress(q);if(q.type==='sail')return Math.min(value,q.goal).toLocaleString('ko-KR')+' / '+q.goal.toLocaleString('ko-KR')+' 항해 거리';return Math.min(value,q.goal)+' / '+q.goal}
+function recordCampaignEvent(type,key,amount){const st=campaignState.stats,n=Math.max(1,Math.floor(Number.isFinite(+amount)?+amount:1));if(type==='gather')st.gathered[key]=(st.gathered[key]||0)+n;else if(type==='fish'){st.fished[key]=(st.fished[key]||0)+n;st.fishCount+=n;st.gathered[key]=(st.gathered[key]||0)+n;if(isNight())st.nightFish+=n}else if(type==='craft'){st.crafted[key]=(st.crafted[key]||0)+n;st.craftCount+=n}else if(type==='sell')st.sells+=n;else if(type==='visit'){if(!st.visited.includes(key))st.visited.push(key)}else if(type==='observe'){if(!st.observedTypes.includes(key))st.observedTypes.push(key)}checkCampaignProgress()}
+function checkCampaignProgress(){if(!campaignState||!campaignState.stats)return;let cleared=[],chapterBeat=null,guard=0;while(campaignState.index<campaignMissions.length&&guard++<campaignMissions.length){const q=campaignMissions[campaignState.index];if(campaignProgress(q)<q.goal)break;campaignState.index++;coins+=q.reward;if(q.gift)Object.entries(q.gift).forEach(([id,n])=>{if(Object.prototype.hasOwnProperty.call(items,id))addItem(id,n)});addJournal('장편 항해 의뢰 완료: '+q.title+' · 보상 '+q.reward+' 코인.');cleared.push(q);const next=campaignMissions[campaignState.index];if(!next||next.chapterIndex!==q.chapterIndex)chapterBeat=q}if(!cleared.length)return;if(cleared.length===1)toast('장편 의뢰 완료 · '+cleared[0].title+' · +'+cleared[0].reward+' 코인');else toast('장편 의뢰 '+cleared.length+'개 완료 · 코인 보상을 받았어요!');if(chapterBeat){const next=campaignMissions[campaignState.index];if(next&&!panel&&$('dialogue').hidden)showDialogue([{name:chapterBeat.chapterTitle,text:chapterBeat.chapterEnding},{name:next.chapterTitle,text:next.chapterIntro}]);else addJournal(chapterBeat.chapterTitle+' 이야기 완료: '+chapterBeat.chapterEnding)}saveGame(true);if(panel==='campaign')renderPanel()}
+function renderCampaignPanel(){const total=campaignMissions.length,done=campaignState.index,q=campaignMissions[done];let html='<div class="story-cover"><div class="eyebrow">THE LONG VOYAGE · 5+ HOURS</div><p>해솔 할아버지의 첫 등대 이야기 이후에도 항해는 계속됩니다. 9개 장, '+total+'개의 순차 미션을 따라 섬과 자원을 발견하고, 낚시·제작·판매·장비 강화를 통해 먼바다의 비밀을 밝혀내세요. 각 미션 보상은 코인과 일부 보급품으로 지급되며 진행도는 항해 기록에 저장됩니다.</p><div style="height:6px;background:#183c48;border-radius:99px;overflow:hidden;margin-top:12px"><div style="width:'+Math.round(done/total*100)+'%;height:100%;background:linear-gradient(90deg,#79c3bb,#f1d698)"></div></div><p style="margin-top:7px;font-size:12px;color:#c6e4d9">전체 진행도 · '+done+' / '+total+' 미션 완료 ('+Math.floor(done/total*100)+'%)</p></div>';if(q){const progress=campaignProgress(q),pct=Math.min(100,Math.floor(progress/q.goal*100));html+='<div class="quest-card" style="border:1px solid #a9d9c84d;background:#123c4933"><div class="eyebrow">'+escapeHTML(q.chapterTitle)+' · MISSIONS '+q.number+'/'+total+'</div><strong style="font-size:17px">'+escapeHTML(q.title)+'</strong><p>'+escapeHTML(q.desc)+'</p><div style="height:5px;background:#183c48;border-radius:99px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:#8acbbb"></div></div><p style="margin-top:7px;font-size:12px;color:#d5e9d9">'+escapeHTML(campaignProgressLabel(q))+'</p><p class="quest-state">완료 보상 · '+q.reward.toLocaleString('ko-KR')+' 코인'+(q.gift?' · 보급품 '+Object.entries(q.gift).map(([id,n])=>items[id].name+' ×'+n).join(' · '):'')+'</p></div><div class="story-cover"><div class="eyebrow">CHAPTER STORY</div><p>'+escapeHTML(q.chapterIntro)+'</p></div>'}else html+='<div class="quest-card"><strong>모든 장편 항해 미션 완료!</strong><p>나루의 일지는 마지막 페이지까지 채워졌습니다. 하지만 바다는 매일 새 자원을 보내고, 낚시와 장비 강화는 계속할 수 있어요. 이제 당신만의 전설을 기록하세요.</p></div>';html+='<h3 style="font-size:14px;color:#e4edda;margin:18px 0 10px">전체 항해 일지 · 9개 장 / '+total+'개 미션</h3>';campaignChapters.forEach((chapter,chapterIndex)=>{const first=campaignMissions.findIndex(m=>m.chapterIndex===chapterIndex),last=first+chapter.quests.length-1,chapterDone=done>last,chapterActive=done>=first&&done<=last;html+='<div class="quest-card"><strong>'+escapeHTML(chapter.title)+'</strong><p>'+escapeHTML(chapter.theme)+'</p><p class="item-desc">'+(chapterDone?'✓ 장 완료':chapterActive?'● 진행 중':'🔒 아직 열리지 않음')+' · '+Math.max(0,Math.min(done,last+1)-first)+' / '+chapter.quests.length+' 미션</p>';if(chapterActive)html+='<p>'+escapeHTML(chapter.intro)+'</p>';chapter.quests.forEach((mission,localIndex)=>{const idx=first+localIndex,completed=idx<done,active=idx===done;html+='<div style="display:grid;grid-template-columns:24px minmax(0,1fr);gap:8px;padding:9px 0;border-top:1px solid #b8e6d31a;opacity:'+(completed||active?'1':'.55')+'"><div style="color:'+(completed?'#9ce0bd':active?'#f1d698':'#819ca0')+';font-size:12px">'+(completed?'✓':String(idx+1).padStart(2,'0'))+'</div><div><div style="font-size:13px;color:#edf3e2">'+escapeHTML(mission.title)+(active?' <span style="color:#f1d698">· 진행 중</span>':'')+'</div><div style="font-size:11px;line-height:1.6;color:#b7cfca;margin-top:3px">'+escapeHTML(mission.desc)+'</div><div style="font-size:10px;color:'+(completed?'#9ce0bd':active?'#f1d698':'#8ca9aa')+';margin-top:4px">'+(completed?'완료 · +'+mission.reward+' 코인':active?escapeHTML(campaignProgressLabel(mission))+' · 보상 '+mission.reward+' 코인':'보상 '+mission.reward+' 코인')+'</div></div></div>'});if(chapterDone)html+='<p class="item-desc" style="color:#a5dec4">'+escapeHTML(chapter.ending)+'</p>';html+='</div>'});$('modalContent').innerHTML=html}
+
 const moonGrotto={x:1076,y:936,id:'moon-grotto'};
 function generateSeaPickups(seed){
  const r=rng((seed>>>0)^0x61c88647),out=[];
@@ -430,7 +534,9 @@ $('pauseButton').addEventListener('click',()=>openPanel('menu'));
 function slotHTML(n){const d=readSave(n);const recovered=d&&d._saveSource!=='primary';return '<div class="save-card"><strong>항해 기록 '+n+'</strong><p class="item-desc">'+(d?('제 '+d.day+'일 · '+(d.visited||[]).length+'곳 발견 · 코인 '+d.coins+(recovered?' · 복구용 백업에서 읽음':'')):'아직 기록이 없는 빈 항해 슬롯입니다.')+'</p><div class="row-actions"><button class="action-button emphasis" data-load="'+n+'">'+(d?'이어가기':'새 항해')+'</button>'+(d?'<button class="action-button" data-export="'+n+'">백업</button><button class="action-button danger" data-delete="'+n+'">삭제</button>':'')+'</div></div>'}
 function panelShell(title,body){$('modalTitle').textContent=title;$('modalContent').innerHTML=body}
 function renderPanel(){
- if(panel==='bag'){
+ if(panel==='campaign'){
+  renderCampaignPanel();
+ }else if(panel==='bag'){
   let rows='';Object.keys(items).forEach(id=>{const q=itemTotal(id);if(q>0)rows+='<div class="item-card"><div class="item-icon">'+items[id].icon+'</div><div><div class="item-name">'+items[id].name+'</div><div class="item-desc">'+items[id].desc+'</div></div><div class="item-count">×'+q+'</div></div>'});
   panelShell('가방 · 작은 수집품들','<div class="story-cover"><div class="eyebrow">YOUR POCKET TREASURES</div><p>여행 중 모은 물건은 모두 소중한 추억이에요. 도구와 재료를 차곡차곡 모아 더 먼 바다를 향해 보세요.</p></div><div class="list-grid">'+(rows||'<p>가방이 가벼워요. 해변을 거닐며 작은 물건을 찾아보세요.</p>')+'</div><div class="row-actions"><button class="action-button" data-panel-action="craft">제작대 열기</button><button class="action-button" data-panel-action="sell">판매하기</button></div>');
  }else if(panel==='journal'){
@@ -479,7 +585,7 @@ function renderPanel(){
  const importInput=$('importSaveFile');if(importInput)importInput.addEventListener('change',async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text()),target=+$('importTarget').value;if(![1,2].includes(+data.version)||!data.player||!data.boat||!data.inventory||!Array.isArray(data.visited)||!Array.isArray(data.collected)||!Number.isFinite(+data.coins)||![1,2,3].includes(target))throw new Error('invalid save');if(readSave(target)&&!confirm('선택한 슬롯의 기존 기록을 복구용 백업으로 남기고 교체할까요?'))return;if(!await saveImportedVoyage(target,data))throw new Error('storage unavailable');lastSlot=target;try{localStorage.setItem('dogSailerLastSlot',String(target))}catch(e){}updateContinue();renderPanel();toast('백업 항해 기록을 슬롯 '+target+'에 복원했어요.')}catch(err){toast('백업을 복원하지 못했어요. 파일 형식 또는 브라우저 저장 공간을 확인해 주세요.')}finally{importInput.value=''}});
 }
 function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function panelAction(a){if(a==='craft'||a==='saves'||a==='upgrade'||a==='sell'){panel=a;renderPanel()}else if(a==='resume'){closePanel()}else if(a==='save'){saveGame(false);renderPanel()}else if(a==='sound'){muted=!muted;try{localStorage.setItem('dogSailerMuted',String(muted))}catch(e){}updateSoundLabel();renderPanel()}else if(a==='returnTitle'){saveGame(true);closePanel();openTitle()}}
+function panelAction(a){if(a==='craft'||a==='saves'||a==='upgrade'||a==='sell'||a==='campaign'){panel=a;renderPanel()}else if(a==='resume'){closePanel()}else if(a==='save'){saveGame(false);renderPanel()}else if(a==='sound'){muted=!muted;try{localStorage.setItem('dogSailerMuted',String(muted))}catch(e){}updateSoundLabel();renderPanel()}else if(a==='returnTitle'){saveGame(true);closePanel();openTitle()}}
 function craftItem(id){const recipe={woodPlank:{need:{driftwood:2},out:1},sailPatch:{need:{fiber:3},out:1},shellLantern:{need:{shell:3,seaGlass:1},out:1},herbTea:{need:{moonHerb:2,shell:1},out:1}}[id];if(!recipe||!Object.keys(recipe.need).every(k=>itemTotal(k)>=recipe.need[k]))return;Object.keys(recipe.need).forEach(k=>useItem(k,recipe.need[k]));addItem(id,recipe.out);crafted.push(id);journal.push(items[id].name+'을 만들었다.');playTone(700,.22,.025,'triangle');toast(items[id].name+'을 만들었어요.');saveGame(true);renderPanel();updateHud()}
 function sellItem(id){if(itemTotal(id)<=0||!items[id]||items[id].price<=0)return;useItem(id,1);coins+=items[id].price;journal.push(items[id].name+'을 항구에서 교환했다.');playTone(620,.12,.018);saveGame(true);renderPanel();updateHud();toast(items[id].name+' 1개를 '+items[id].price+' 코인에 교환했어요.')}
 function upgradeCost(type){
