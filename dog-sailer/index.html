@@ -115,6 +115,7 @@ h1{font:900 clamp(28px,5vw,44px)/1.08 Nunito,Hancom,sans-serif;letter-spacing:-.
 #fadeLayer{position:fixed;inset:0;z-index:40;pointer-events:none;background:#061522;opacity:0;transition:opacity .3s}
 #fadeLayer.on{opacity:1}
 .mobile-controls{display:none}
+.joystick{display:none}
 @keyframes pulse{50%{opacity:.45;box-shadow:0 0 3px #88d9b9}}
 @keyframes titleUp{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
 @keyframes floatDog{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-6px) rotate(1deg)}}
@@ -128,12 +129,12 @@ h1{font:900 clamp(28px,5vw,44px)/1.08 Nunito,Hancom,sans-serif;letter-spacing:-.
  .game-frame{border-radius:17px}.hud-top{top:6px;left:6px;right:6px}.hud-glass{font-size:9px;padding:6px 8px;gap:5px;border-radius:8px}.hud-bottom{left:6px;right:6px;bottom:6px}.objective{padding:7px 9px;border-radius:9px;max-width:72%}.objective-label{font-size:7px}#objectiveText{font-size:9px}#interactHint{font-size:8px;padding:7px 8px;border-radius:8px}
  .game-footer{padding:9px;gap:8px;align-items:start}.tool-btn{min-height:32px;padding:7px 9px;font-size:10px}.tool-btn .key{display:none}.foot-note{display:none}.info-grid{grid-template-columns:1fr;gap:9px}.info-card{padding:13px}.info-card p{font-size:11px}
  .modal{border-radius:17px}.modal-head{padding:15px}.modal-content{padding:14px}.list-grid{grid-template-columns:1fr}.item-card{grid-template-columns:32px 1fr auto}.item-icon{width:32px;height:32px}.dialogue-box{left:4%;right:4%;bottom:5%;padding:10px 12px}.title-card{padding:24px 15px 19px}.title-art{height:106px}.title-dog{width:68px;height:68px}.title-copy{font-size:12px}
- .mobile-controls{position:absolute;display:flex;justify-content:space-between;align-items:end;left:10px;right:10px;bottom:53px;z-index:4;pointer-events:none}
- .dpad{display:grid;grid-template-columns:35px 35px 35px;grid-template-rows:35px 35px 35px;gap:3px;pointer-events:auto}
- .pad-button,.mobile-action{display:grid;place-items:center;border:1px solid #d8f2e638;border-radius:9px;background:#09283cd9;color:#e8f4e8;backdrop-filter:blur(7px);font-size:15px;touch-action:none}
- .pad-button[data-dir=up]{grid-column:2;grid-row:1}.pad-button[data-dir=left]{grid-column:1;grid-row:2}.pad-button[data-dir=down]{grid-column:2;grid-row:2}.pad-button[data-dir=right]{grid-column:3;grid-row:2}
- .pad-button:active,.mobile-action:active{background:#b6e7d14d}
- .mobile-actions{display:flex;gap:6px;pointer-events:auto;align-items:end}.mobile-action{width:43px;height:43px;font-size:10px}
+ .mobile-controls{position:absolute;display:flex;justify-content:space-between;align-items:end;left:10px;right:10px;bottom:10px;z-index:5;pointer-events:none}
+ .joystick{position:relative;display:block;width:96px;height:96px;flex:0 0 96px;border:1px solid #d8f2e64d;border-radius:50%;background:radial-gradient(circle at 35% 28%,#b4e9df24,#082a3bc9 72%);box-shadow:0 5px 20px #03152155,inset 0 0 0 5px #d8f2e60b;backdrop-filter:blur(5px);touch-action:none;pointer-events:auto;user-select:none;-webkit-user-select:none}
+ .joystick:before,.joystick:after{content:"";position:absolute;background:#d8f2e626;pointer-events:none}.joystick:before{width:1px;top:12px;bottom:12px;left:50%}.joystick:after{height:1px;left:12px;right:12px;top:50%}
+ .joystick-knob{position:absolute;left:50%;top:50%;width:38px;height:38px;transform:translate(-50%,-50%);border-radius:50%;border:1px solid #e3f8e8a0;background:linear-gradient(145deg,#bde9d7ed,#5b9d9de8);box-shadow:0 3px 10px #0017228c,inset 0 1px 2px #ffffff90;pointer-events:none}
+ .mobile-actions{display:flex;gap:5px;pointer-events:auto;align-items:end}.mobile-action{display:grid;place-items:center;width:39px;height:39px;border:1px solid #d8f2e64d;border-radius:11px;background:#09283cd9;color:#e8f4e8;backdrop-filter:blur(7px);font-size:9px;touch-action:none;box-shadow:0 3px 12px #03152145}.mobile-action:active{background:#b6e7d14d}
+ .hud-bottom{bottom:116px;left:10px;right:10px;justify-content:center;gap:5px}.objective{max-width:52%;margin:0 auto 0 0;padding:6px 8px}.objective-label{font-size:6px}#objectiveText{font-size:8px;line-height:1.4}#interactHint{max-width:44%;font-size:8px;padding:6px 7px;border-radius:9px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
 </style>
@@ -161,11 +162,9 @@ h1{font:900 clamp(28px,5vw,44px)/1.08 Nunito,Hancom,sans-serif;letter-spacing:-.
     <div class="objective"><div class="objective-label">TODAY'S LITTLE PLAN</div><div id="objectiveText">낡은 등대에 다가가 E를 눌러보세요.</div></div>
     <div id="interactHint"><b>E</b> 둘러보기</div>
    </div>
-   <div class="mobile-controls" aria-label="모바일 이동 조작">
-    <div class="dpad">
-     <button class="pad-button" data-dir="up" aria-label="위로 이동">▲</button><button class="pad-button" data-dir="left" aria-label="왼쪽 이동">◀</button><button class="pad-button" data-dir="down" aria-label="아래로 이동">▼</button><button class="pad-button" data-dir="right" aria-label="오른쪽 이동">▶</button>
-    </div>
-    <div class="mobile-actions"><button class="mobile-action" data-action="interact">E<br>조사</button><button class="mobile-action" data-action="fish">낚시</button><button class="mobile-action" data-action="map">지도</button></div>
+   <div class="mobile-controls" aria-label="모바일 조이스틱과 액션 조작">
+    <div id="joystick" class="joystick" role="application" aria-label="조이스틱: 원하는 방향으로 드래그해 이동" tabindex="0"><div id="joystickKnob" class="joystick-knob"></div></div>
+    <div class="mobile-actions"><button class="mobile-action" data-action="interact" aria-label="조사하기">E<br>조사</button><button class="mobile-action" data-action="fish">낚시</button><button class="mobile-action" data-action="map">지도</button></div>
    </div>
    <div id="dialogue" class="dialogue-box" hidden>
     <div class="dialogue-top"><span id="dialogueName" class="dialogue-name">해솔 할아버지</span><span class="dialogue-next">천천히 읽어도 괜찮아요</span></div>
@@ -755,7 +754,11 @@ function handleFishingPress(){
 function onKeyDown(e){const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(panel){closePanel();return}if(!$('dialogue').hidden){$('dialogue').hidden=true;dialogueQueue=[];dialogueAfter=null;return}if(state==='play')openPanel('menu');return}if(!$('dialogue').hidden){if(k==='e'||k==='enter'||k===' '){advanceDialogue()}return}if(panel){if(k==='escape')closePanel();return}if(state!=='play')return;if(k==='e'||k==='enter'){interact();return}if(k===' '){startFishing();return}if(k==='m'){openPanel('map');return}if(k==='i'){openPanel('bag');return}if(k==='j'){openPanel('journal');return}if(k==='c'){openPanel('craft');return}keys[k]=true}
 function onKeyUp(e){keys[e.key.toLowerCase()]=false}
 window.addEventListener('keydown',onKeyDown);window.addEventListener('keyup',onKeyUp);window.addEventListener('blur',()=>{keys={};if(state==='play')saveGame(true)});
-document.querySelectorAll('[data-dir]').forEach(b=>{const k={up:'arrowup',down:'arrowdown',left:'arrowleft',right:'arrowright'}[b.dataset.dir];const start=e=>{e.preventDefault();keys[k]=true};const end=e=>{e.preventDefault();keys[k]=false};b.addEventListener('pointerdown',start);b.addEventListener('pointerup',end);b.addEventListener('pointerleave',end);b.addEventListener('pointercancel',end)});
+const joystick=$('joystick'),joystickKnob=$('joystickKnob');let joystickPointer=null;
+function resetJoystick(){joystickPointer=null;keys.arrowup=keys.arrowdown=keys.arrowleft=keys.arrowright=false;keys.w=keys.a=keys.s=keys.d=false;if(joystickKnob)joystickKnob.style.transform='translate(-50%,-50%)'}
+function updateJoystick(e){if(!joystick)return;const r=joystick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2,max=Math.max(1,r.width*.34);let x=e.clientX-cx,y=e.clientY-cy;const len=Math.hypot(x,y);if(len>max){x=x/len*max;y=y/len*max}const nx=x/max,ny=y/max,dead=.22;keys.arrowleft=nx< -dead;keys.arrowright=nx>dead;keys.arrowup=ny< -dead;keys.arrowdown=ny>dead;keys.a=keys.arrowleft;keys.d=keys.arrowright;keys.w=keys.arrowup;keys.s=keys.arrowdown;joystickKnob.style.transform='translate(calc(-50% + '+x+'px),calc(-50% + '+y+'px))';}
+if(joystick){joystick.addEventListener('pointerdown',e=>{e.preventDefault();if(state!=='play'||panel!==null||!$('dialogue').hidden)return;joystickPointer=e.pointerId;try{joystick.setPointerCapture(e.pointerId)}catch(err){}updateJoystick(e)});joystick.addEventListener('pointermove',e=>{if(e.pointerId!==joystickPointer)return;e.preventDefault();updateJoystick(e)});['pointerup','pointercancel','lostpointercapture'].forEach(type=>joystick.addEventListener(type,e=>{if(joystickPointer===null||e.pointerId===undefined||e.pointerId===joystickPointer)resetJoystick()}));joystick.addEventListener('keydown',e=>{const k={ArrowUp:'arrowup',ArrowDown:'arrowdown',ArrowLeft:'arrowleft',ArrowRight:'arrowright'}[e.key];if(k){e.preventDefault();keys[k]=true}});joystick.addEventListener('keyup',e=>{const k={ArrowUp:'arrowup',ArrowDown:'arrowdown',ArrowLeft:'arrowleft',ArrowRight:'arrowright'}[e.key];if(k){e.preventDefault();keys[k]=false}})}
+window.addEventListener('pointerup',()=>{if(joystickPointer!==null)resetJoystick()});window.addEventListener('blur',resetJoystick);
 document.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.action==='interact')interact();if(b.dataset.action==='fish')startFishing();if(b.dataset.action==='map')openPanel('map')}));
 $('newGame').addEventListener('click',()=>{beginTransition(()=>{openPanel('saves');})});
 $('continueGame').addEventListener('click',()=>{let d=readSave(lastSlot);if(!d){for(let n=1;n<=3;n++)if(readSave(n)){d=readSave(n);lastSlot=n;break}}if(!d){openPanel('saves');return}beginTransition(()=>{loadGame(lastSlot);state='play';$('titleScreen').classList.add('hide');updateHud();toast('다시 바다로 돌아왔어요.');})});
