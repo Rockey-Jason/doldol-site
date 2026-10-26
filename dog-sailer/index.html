@@ -216,7 +216,7 @@ const spriteSheet=new Image();
 let spriteSheetReady=false;
 spriteSheet.onload=()=>{spriteSheetReady=spriteSheet.naturalWidth===128&&spriteSheet.naturalHeight===128;if(!spriteSheetReady)console.warn('dog sailer: unexpected corgi sprite dimensions')};
 spriteSheet.onerror=()=>{spriteSheetReady=false;console.warn('dog sailer: SVG sprite sheet could not be loaded')};
-spriteSheet.src='./dori-corgi-frames.svg?v=3';
+spriteSheet.src='./dori-corgi-frames.svg?v=4';
 const islands=[
 {id:'harbor',name:'포근한 항구',x:280,y:260,rx:145,ry:108,biome:'grass',tone:'#87b58a',visited:true},
 {id:'green',name:'초록 우편섬',x:645,y:405,rx:112,ry:87,biome:'forest',tone:'#5f9d77'},
@@ -521,7 +521,7 @@ function upgradeEquipment(type){
 function upgradeBoat(){upgradeEquipment('boat')}
 function exportSave(n){const d=readSave(n);if(!d)return;const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='dog-sailer-voyage-'+n+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1200);toast('항해 기록을 백업 파일로 내보냈어요.')}
 function drawMap(){const c=$('mapCanvas');if(!c)return;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.fillStyle='#236e88';g.fillRect(0,0,480,300);for(let y=0;y<300;y+=12)for(let x=0;x<480;x+=12){g.fillStyle=((x*3+y*7)%5===0)?'#38839a':'#28758e';g.fillRect(x,y,12,12);if((x+y)%4===0){g.fillStyle='#7eb7bd55';g.fillRect(x+2,y+5,5,1)}}islands.forEach(i=>{const x=i.x/WORLD_W*460+10,y=i.y/WORLD_H*280+10,rx=i.rx/WORLD_W*460,ry=i.ry/WORLD_H*280;g.fillStyle='#e9d79e';g.beginPath();g.ellipse(x,y,Math.max(6,rx),Math.max(5,ry),0,0,Math.PI*2);g.fill();g.fillStyle=visited.includes(i.id)?'#78b78b':'#7f9c83';g.beginPath();g.ellipse(x,y,Math.max(4,rx-4),Math.max(4,ry-4),0,0,Math.PI*2);g.fill();g.fillStyle=visited.includes(i.id)?'#b6e7d1':'#b6c8b4';g.fillRect(x-2,y-2,4,4);if(visited.includes(i.id)){g.fillStyle='#f7f4e6';g.font='8px sans-serif';g.fillText(i.name,x+rx+2,y)}});const px=player.x/WORLD_W*460+10,py=player.y/WORLD_H*280+10;g.fillStyle='#ffe09c';g.beginPath();g.arc(px,py,4,0,Math.PI*2);g.fill();g.strokeStyle='#fff6d8';g.lineWidth=1;g.stroke();g.fillStyle='#fff6d8';g.font='10px sans-serif';g.fillText('나',px+5,py-5)}
-function updateHud(){const totalMin=(Math.floor(minutes)%1440+1440)%1440,hh=Math.floor(totalMin/60),mm=totalMin%60;$('timeLabel').textContent=(hh<12?'AM ':'PM ')+String(hh%12||12).padStart(2,'0')+':'+String(mm).padStart(2,'0');const sun=$('timeLabel').previousElementSibling;if(sun)sun.textContent=isNight()?'☾':'☀';$('weatherLabel').textContent=weather;$('coinLabel').textContent=coins.toLocaleString('ko-KR');const isl=currentIsland(player.x,player.y,.4);$('placeLabel').textContent=isl?isl.name:(player.boat?'열린 바다':'바닷가');$('objectiveText').textContent=objectiveText();$('interactHint').innerHTML='<b>E</b> '+(nearObject?nearObject.hint:(player.boat?'항구에 정박 / 물고기 관찰':'둘러보기'));const base=observed.length?'지금까지 '+observed.length+'종의 생물을 관찰했어요. 가까이 다가가 E를 눌러 기록을 남겨보세요.':'햇살 조개, 표류목, 바다 유리를 찾아보세요. 낯선 생물 가까이 다가가면 관찰 일지를 남길 수 있어요.';const timeHint=isNight()?'밤에는 달빛 온실섬의 숨은 동굴이 열리고 달빛수달과 반딧불이도 만날 수 있어요.':'낮에는 거북이와 나비를 찾아보세요. 저녁이 오면 달빛 온실섬을 다시 살펴보세요.';$('discoveryNote').textContent=base+' '+timeHint+' '+weatherTip()+' · 장비 성장: 배 Lv.'+boat.upgrade+'/30 · 낚싯대 Lv.'+rod.upgrade+'/20'}
+function updateHud(){const totalMin=(Math.floor(minutes)%1440+1440)%1440,hh=Math.floor(totalMin/60),mm=totalMin%60;$('timeLabel').textContent=(hh<12?'AM ':'PM ')+String(hh%12||12).padStart(2,'0')+':'+String(mm).padStart(2,'0');const sun=$('timeLabel').previousElementSibling;if(sun)sun.textContent=isNight()?'☾':'☀';$('weatherLabel').textContent=weather;$('coinLabel').textContent=coins.toLocaleString('ko-KR');const isl=currentIsland(player.x,player.y,.4);$('placeLabel').textContent=isl?isl.name:(player.boat?'열린 바다':'바닷가');$('objectiveText').textContent=objectiveText();$('interactHint').innerHTML=fishing?'<b>E</b> '+(fishing.phase==='bite'?'지금 낚아채기!':'낚시 중 · 입질 기다리기'):'<b>E</b> '+(nearObject?nearObject.hint:(player.boat?'항구에 정박 / 물고기 관찰':'둘러보기'));const base=observed.length?'지금까지 '+observed.length+'종의 생물을 관찰했어요. 가까이 다가가 E를 눌러 기록을 남겨보세요.':'햇살 조개, 표류목, 바다 유리를 찾아보세요. 낯선 생물 가까이 다가가면 관찰 일지를 남길 수 있어요.';const timeHint=isNight()?'밤에는 달빛 온실섬의 숨은 동굴이 열리고 달빛수달과 반딧불이도 만날 수 있어요.':'낮에는 거북이와 나비를 찾아보세요. 저녁이 오면 달빛 온실섬을 다시 살펴보세요.';$('discoveryNote').textContent=base+' '+timeHint+' '+weatherTip()+' · 장비 성장: 배 Lv.'+boat.upgrade+'/30 · 낚싯대 Lv.'+rod.upgrade+'/20'}
 function objectiveText(){if(stage===0)return '낡은 항구 등대에 다가가 E를 눌러보세요.';if(stage===1)return '표류목 3개와 햇살 조개 2개를 모아 등대를 고쳐요. ('+itemTotal('driftwood')+'/3 · '+itemTotal('shell')+'/2)';if(stage===2)return '조개달 섬에서 파도에 떠밀려 온 푸른 우편병을 찾아요.';if(stage===3)return '푸른 우편병을 포근한 항구의 등대로 가져가요.';if(stage===4)return '안개 등대섬에서 오래된 항해 지도 조각을 찾아요.';if(stage===5)return '별빛 군도의 등대에 별 조각 3개를 가져가요. ('+itemTotal('starFragment')+'/3)';return '오늘의 바다를 자유롭게 탐험하고 다음 추억을 만들어보세요.'}
 function addJournal(s){journal.push(s);if(journal.length>100)journal=journal.slice(-100)}
 function markVisited(id){if(!visited.includes(id)){visited.push(id);const i=islandById(id);if(i){addJournal(i.name+'을 처음 발견했다.');toast('새로운 장소 발견 · '+i.name);particles.push({x:i.x,y:i.y,t:0,type:'discovery'});if(id==='green'&&stage===2)toast('편지가 떠내려왔다는 조개달 섬의 소문이 들려요.');if(id==='mist'&&stage===4){toast('안개 속에서 오래된 지도 조각이 빛나요.')}}saveGame(true)}}
@@ -677,6 +677,7 @@ function drawLighthouse(x,y,lit){x=Math.round(x);y=Math.round(y);ctx.fillStyle='
 function drawWorkbench(x,y){x=Math.round(x);y=Math.round(y);ctx.fillStyle='#644631';ctx.fillRect(x-9,y-3,18,7);ctx.fillStyle='#b48a5b';ctx.fillRect(x-8,y-3,16,3);ctx.fillStyle='#74503a';ctx.fillRect(x-7,y+4,3,5);ctx.fillRect(x+4,y+4,3,5);ctx.fillStyle='#d4b279';ctx.fillRect(x-5,y-2,6,1);ctx.fillStyle='#4e5c54';ctx.fillRect(x+3,y-5,2,5);ctx.fillStyle='#a8bdad';ctx.fillRect(x+2,y-6,4,2);if(Math.sin(elapsed*1.7)>0.96){ctx.fillStyle='#fff0b5';ctx.fillRect(x+7,y-7,2,2)}}
 function drawPlayer(){
  const x=Math.round(player.x-cam.x),groundY=Math.round(player.y-cam.y);
+ const visualX=x+(player.boat?3:0);
  const onFoot=player.moving&&!player.boat,sailing=player.boat&&Math.hypot(boat.vx,boat.vy)>6;
  const stride=onFoot?Math.sin(walkT*Math.PI*2):0;
  const bob=onFoot?Math.round(Math.max(0,stride)*1.1):sailing?Math.round(Math.sin(elapsed*4.5)*1):Math.round(Math.sin(elapsed*2.2)*.35);
@@ -686,8 +687,8 @@ function drawPlayer(){
  if(spriteSheetReady){
   const row=player.dir==='down'?0:player.dir==='up'?1:player.dir==='left'?2:3;
   const frame=onFoot?Math.floor(walkT*8.8)%4:sailing?Math.floor(elapsed*3.2)%2:(Math.sin(elapsed*1.6)>0.965?1:0);
-  ctx.drawImage(spriteSheet,frame*32,row*32,32,32,x-16,y-29,32,32);
- }else if(sprite.complete&&sprite.naturalWidth){ctx.drawImage(sprite,x-16,y-29,32,32)}
+  ctx.drawImage(spriteSheet,frame*32,row*32,32,32,visualX-16,y-29,32,32);
+ }else if(sprite.complete&&sprite.naturalWidth){ctx.drawImage(sprite,visualX-16,y-29,32,32)}
  else{
   ctx.fillStyle='#272a29';ctx.fillRect(x-7,y-10,14,14);ctx.fillStyle='#f4d996';ctx.fillRect(x-5,y-9,10,10);
   ctx.fillStyle='#fff7e5';ctx.fillRect(x-4,y-3,8,6);ctx.fillStyle='#292b2a';ctx.fillRect(x-3,y-4,2,2);ctx.fillRect(x+2,y-4,2,2);ctx.fillRect(x-2,y,4,2)
