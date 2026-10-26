@@ -216,7 +216,7 @@ const spriteSheet=new Image();
 let spriteSheetReady=false;
 spriteSheet.onload=()=>{spriteSheetReady=spriteSheet.naturalWidth===128&&spriteSheet.naturalHeight===128;if(!spriteSheetReady)console.warn('dog sailer: unexpected corgi sprite dimensions')};
 spriteSheet.onerror=()=>{spriteSheetReady=false;console.warn('dog sailer: SVG sprite sheet could not be loaded')};
-spriteSheet.src='./dori-corgi-frames.svg?v=1';
+spriteSheet.src='./dori-corgi-frames.svg?v=2';
 const islands=[
 {id:'harbor',name:'포근한 항구',x:280,y:260,rx:145,ry:108,biome:'grass',tone:'#87b58a',visited:true},
 {id:'green',name:'초록 우편섬',x:645,y:405,rx:112,ry:87,biome:'forest',tone:'#5f9d77'},
