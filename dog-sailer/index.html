@@ -905,8 +905,9 @@ function tick(dt){
     boat.vx+=Math.cos(boat.heading)*engineAccel*dt;
     boat.vy+=Math.sin(boat.heading)*engineAccel*dt;
    }
-   // Substantial drift remains after the throttle is released.
-   const drag=Math.exp((inputMag>0?-.10:-.48)*dt);
+   // Keep sailing momentum, but dampen excessive rebound and drifting.
+   // Steering still feels heavier than walking, without the boat skating for too long.
+   const drag=Math.exp((inputMag>0?-.34:-1.05)*dt);
    boat.vx*=drag;boat.vy*=drag;
    boatSpeed=Math.hypot(boat.vx,boat.vy);
    if(boatSpeed>maxSpeed){boat.vx=boat.vx/boatSpeed*maxSpeed;boat.vy=boat.vy/boatSpeed*maxSpeed;boatSpeed=maxSpeed}
