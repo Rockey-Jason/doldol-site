@@ -892,7 +892,7 @@ function tick(dt){
   if(player.boat){
    const previousBoatX=boat.x,previousBoatY=boat.y;
    const windFactor=weather==='강풍'?1.18:weather==='비'?.94:weather==='안개'?.9:weather==='흐림'?.97:1;
-   const maxSpeed=Math.min(320,95+boat.upgrade*6.8)*windFactor;
+   const maxSpeed=(95+Math.min(30,boat.upgrade)*1.15)*windFactor;
    const baseAccel=weather==='강풍'?265:245;
    let boatSpeed=Math.hypot(boat.vx,boat.vy);
    // Boats turn toward a requested direction over time instead of snapping sideways instantly.
@@ -901,20 +901,23 @@ function tick(dt){
     const angleDifference=Math.atan2(Math.sin(targetHeading-boat.heading),Math.cos(targetHeading-boat.heading));
     const turnRate=1.55/(1+boatSpeed/175);
     boat.heading+=clamp(angleDifference,-turnRate*dt,turnRate*dt);
-    const engineAccel=baseAccel*(1+boat.upgrade*.015);
+    const engineAccel=baseAccel*(1+Math.min(30,boat.upgrade)*.005);
     boat.vx+=Math.cos(boat.heading)*engineAccel*dt;
     boat.vy+=Math.sin(boat.heading)*engineAccel*dt;
    }
    // Keep sailing momentum, but dampen excessive rebound and drifting.
    // Steering still feels heavier than walking, without the boat skating for too long.
-   const drag=Math.exp((inputMag>0?-.34:-1.05)*dt);
+   const level=Math.min(30,Math.max(0,boat.upgrade));
+   const steeringDrag=.34+level*.012,coastingDrag=1.05+level*.035;
+   const drag=Math.exp((inputMag>0?-steeringDrag:-coastingDrag)*dt);
    boat.vx*=drag;boat.vy*=drag;
    boatSpeed=Math.hypot(boat.vx,boat.vy);
    if(boatSpeed>maxSpeed){boat.vx=boat.vx/boatSpeed*maxSpeed;boat.vy=boat.vy/boatSpeed*maxSpeed;boatSpeed=maxSpeed}
    const nx=clamp(boat.x+boat.vx*dt,8,WORLD_W-8);
    const ny=clamp(boat.y+boat.vy*dt,8,WORLD_H-8);
-   if(!landAt(nx,boat.y))boat.x=nx;else boat.vx*=-.08;
-   if(!landAt(boat.x,ny))boat.y=ny;else boat.vy*=-.08;
+   const collisionRebound=Math.max(.01,.08-level*.0022);
+   if(!landAt(nx,boat.y))boat.x=nx;else boat.vx*=-collisionRebound;
+   if(!landAt(boat.x,ny))boat.y=ny;else boat.vy*=-collisionRebound;
    boatSpeed=Math.hypot(boat.vx,boat.vy);
    campaignState.stats.sailDistance+=Math.hypot(boat.x-previousBoatX,boat.y-previousBoatY);
    player.x=boat.x;player.y=boat.y;player.vx=boat.vx;player.vy=boat.vy;
