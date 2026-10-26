@@ -1,84 +1,107 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" shape-rendering="crispEdges">
 <defs>
-  <g id="front">
-    <path d="M3 10V7H5V4H8V2H13V4H15V7H17V7H19V4H21V2H26V4H28V7H30V11H28V16H29V22H27V25H24V28H20V26H17V25H14V27H10V29H7V27H5V24H3V19H4V14H3Z" fill="#292725"/>
-    <path d="M5 10V7H7V4H12V6H14V9H18V9H20V6H25V4H27V7H29V11H27V16H28V22H26V24H23V27H20V25H17V24H14V26H10V28H8V26H6V23H5V19H6V14H5Z" fill="#e9be70"/>
-    <path d="M14 7H17V11H19V13H23V16H25V20H23V23H21V26H18V24H14V26H11V23H9V20H7V16H11V13H14Z" fill="#fff7e5"/>
-    <path d="M9 12H11V14H9Z M21 12H23V14H21Z" fill="#292725"/>
-    <path d="M14 16H18V18H20V20H18V22H15V20H12V18H14Z" fill="#292725"/>
-    <path d="M12 22H15V24H17V22H20V25H18V27H14V26H11Z" fill="#fff7e5"/>
-    <path d="M8 25H11V28H8Z M21 25H24V27H21Z" fill="#f7ebd5"/>
-    <path d="M7 27H11V29H7Z M20 27H24V29H20Z" fill="#292725"/>
+  <!-- Dori: rounded Pembroke Welsh Corgi face, upright ears, plump low body. -->
+  <g id="frontBody">
+    <path d="M7 17H10V14H22V15H25V18H27V22H25V26H22V27H10V26H7V23H5V19H7Z" fill="#382a24"/>
+    <path d="M8 17H11V15H21V16H24V19H26V22H24V25H22V26H10V25H8V22H6V19H8Z" fill="#d99a4e"/>
+    <path d="M10 18H22V21H24V24H21V25H11V24H9V21H10Z" fill="#e9b967"/>
+    <path d="M12 17H20V19H22V23H20V25H12V23H10V19H12Z" fill="#fff3dc"/>
+    <path d="M14 18H18V23H19V24H13V23H14Z" fill="#f7e6c8"/>
+    <path d="M4 10V5H6V2H10V4H12V7H14V11H10V13H6V11Z M18 7H20V4H22V2H26V5H28V10H26V11H24V13H20V11H18Z" fill="#382a24"/>
+    <path d="M6 9V5H7V4H9V6H11V9H12V11H9V12H7V10Z M20 9V7H22V4H24V4H25V6H26V9H25V11H23V12H20Z" fill="#d99a4e"/>
+    <path d="M7 8V5H8V5H9V7H10V9H8V10H7Z M23 7V5H24V5H25V8H24V10H22V9Z" fill="#b87539"/>
+    <path d="M5 10H7V7H10V5H13V4H19V5H22V7H25V10H27V14H26V17H23V19H9V17H6V14H5Z" fill="#382a24"/>
+    <path d="M7 10H9V8H12V6H14V6H18V6H20V7H23V9H25V13H24V16H22V18H10V16H8V14H7Z" fill="#d99a4e"/>
+    <path d="M10 8H13V7H19V8H21V10H23V13H21V15H18V16H13V15H10V13H9V10H10Z" fill="#edbc70"/>
+    <path d="M14 6H18V9H17V11H15V9H14Z" fill="#fff1d8"/>
+    <path d="M9 10H12V12H9Z M21 10H24V12H21Z" fill="#382a24"/>
+    <path d="M10 10H11V11H10Z M22 10H23V11H22Z" fill="#fff7e8"/>
+    <path d="M11 12H14V13H18V12H21V15H19V17H13V16H11Z" fill="#fff7e8"/>
+    <path d="M14 13H18V15H17V16H15V15H14Z" fill="#382a24"/>
+    <path d="M15 14H17V15H15Z" fill="#241f1d"/>
+    <path d="M12 16H14V17H18V16H20V17H18V18H14V17H12Z" fill="#e8caa2"/>
   </g>
-  <g id="back">
-    <path d="M3 10V7H5V4H8V2H13V4H15V7H17V7H19V4H21V2H26V4H28V7H30V11H28V16H29V22H27V25H24V28H20V26H17V25H14V27H10V29H7V27H5V24H3V19H4V14H3Z" fill="#292725"/>
-    <path d="M5 10V7H7V4H12V6H14V9H18V9H20V6H25V4H27V7H29V11H27V16H28V22H26V24H23V27H20V25H17V24H14V26H10V28H8V26H6V23H5V19H6V14H5Z" fill="#e9be70"/>
-    <path d="M14 7H17V10H19V14H22V17H24V20H22V23H20V26H17V24H14V26H11V23H9V20H7V17H10V14H13V10H14Z" fill="#fff7e5"/>
-    <path d="M14 20H18V22H20V25H18V27H14V25H12V22H14Z" fill="#e9be70"/>
-    <path d="M15 22H17V24H15Z" fill="#292725"/>
-    <path d="M7 27H11V29H7Z M20 27H24V29H20Z" fill="#292725"/>
+  <g id="frontLegsA">
+    <path d="M7 22H12V27H11V29H7V27H6V24H7Z M20 22H25V24H26V27H25V29H21V27H20Z" fill="#382a24"/>
+    <path d="M8 23H11V27H10V28H8V26H7V24H8Z M21 23H24V24H25V27H24V28H22V26H21Z" fill="#d99a4e"/>
+    <path d="M7 26H11V28H10V29H7Z M21 26H25V28H24V29H21Z" fill="#fff3dc"/>
   </g>
-  <g id="side">
-    <path d="M5 15V10H4V7H6V3H12V2H16V5H18V8H20V10H25V12H28V14H31V17H29V19H27V24H25V27H22V29H18V27H16V24H13V26H11V29H7V27H5V24H3V19H2V16H5Z" fill="#292725"/>
-    <path d="M6 15V10H5V7H7V4H11V3H14V6H16V9H19V11H24V13H27V15H30V17H28V19H26V24H24V27H22V28H20V26H17V23H13V26H11V28H8V26H6V23H4V19H3V17H6Z" fill="#e9be70"/>
-    <path d="M6 15V11H8V7H10V6H13V9H15V12H13V15H10V19H8V22H6V19H4V17H6Z" fill="#fff7e5"/>
-    <path d="M5 13H8V15H5Z M9 16H12V18H9Z" fill="#fff7e5"/>
-    <path d="M7 11H9V13H7Z" fill="#292725"/>
-    <path d="M2 16H6V18H2Z" fill="#fff7e5"/>
-    <path d="M3 16H6V18H3Z" fill="#292725"/>
-    <path d="M24 12H27V13H29V15H27V16H24Z" fill="#e9be70"/>
-    <path d="M27 14H30V16H28V18H26V16H27Z" fill="#292725"/>
-    <path d="M8 26H11V28H8Z M18 26H21V28H18Z M23 26H25V28H23Z" fill="#f7ebd5"/>
-    <path d="M7 28H11V29H7Z M17 28H21V29H17Z M22 28H26V29H22Z" fill="#292725"/>
-    <path d="M15 9H18V11H21V13H18V16H15V13H13V11H15Z" fill="#e9be70"/>
+  <g id="frontLegsB">
+    <path d="M8 22H13V24H12V28H11V29H7V27H7V24H8Z M19 22H24V24H25V27H24V29H20V27H19Z" fill="#382a24"/>
+    <path d="M9 23H12V25H11V28H8V26H8V24H9Z M20 23H23V25H24V28H21V26H20Z" fill="#d99a4e"/>
+    <path d="M8 26H11V28H10V29H8Z M21 26H24V28H23V29H21Z" fill="#fff3dc"/>
   </g>
-  <g id="tail">
-    <path d="M25 14H28V12H30V14H29V17H27V18H25Z" fill="#292725"/>
-    <path d="M26 14H28V13H29V15H28V17H26Z" fill="#e9be70"/>
+  <g id="backBody">
+    <path d="M7 17H10V14H22V15H25V18H27V22H25V26H22V27H10V26H7V23H5V19H7Z" fill="#382a24"/>
+    <path d="M8 17H11V15H21V16H24V19H26V22H24V25H22V26H10V25H8V22H6V19H8Z" fill="#d99a4e"/>
+    <path d="M10 18H22V21H24V23H21V25H11V24H9V21H10Z" fill="#e9b967"/>
+    <path d="M12 18H20V20H22V23H20V25H12V23H10V20H12Z" fill="#fff3dc"/>
+    <path d="M4 10V5H6V2H10V4H12V7H14V11H10V13H6V11Z M18 7H20V4H22V2H26V5H28V10H26V11H24V13H20V11H18Z" fill="#382a24"/>
+    <path d="M6 9V5H8V5H9V7H11V10H9V12H7V10Z M20 9V7H22V4H24V4H25V7H26V9H24V11H21Z" fill="#d99a4e"/>
+    <path d="M8 6H9V8H10V9H8Z M23 6H24V8H25V9H23Z" fill="#b87539"/>
+    <path d="M5 10H7V7H10V5H13V4H19V5H22V7H25V10H27V14H26V17H23V19H9V17H6V14H5Z" fill="#382a24"/>
+    <path d="M7 10H9V8H12V6H20V8H23V10H25V14H23V16H21V18H11V17H8V14H7Z" fill="#d99a4e"/>
+    <path d="M12 7H20V10H22V13H20V16H18V18H14V16H12V13H10V10H12Z" fill="#e9b967"/>
+    <path d="M13 19H19V22H18V24H14V22H13Z" fill="#fff3dc"/>
   </g>
-  <g id="frontStepA">
-    <path d="M7 25H10V28H7Z M20 25H23V28H20Z" fill="#e9be70"/>
-    <path d="M7 27H11V29H7Z M20 27H24V29H20Z" fill="#292725"/>
+  <g id="backLegsA">
+    <path d="M7 22H12V27H11V29H7V27H6V24H7Z M20 22H25V24H26V27H25V29H21V27H20Z" fill="#382a24"/>
+    <path d="M8 23H11V27H10V28H8V26H7V24H8Z M21 23H24V24H25V27H24V28H22V26H21Z" fill="#d99a4e"/>
+    <path d="M7 26H11V28H10V29H7Z M21 26H25V28H24V29H21Z" fill="#fff3dc"/>
   </g>
-  <g id="frontStepB">
-    <path d="M8 25H11V28H8Z M19 25H22V28H19Z" fill="#fff7e5"/>
-    <path d="M8 27H12V29H8Z M19 27H23V29H19Z" fill="#292725"/>
+  <g id="backLegsB">
+    <path d="M8 22H13V24H12V28H11V29H7V27H7V24H8Z M19 22H24V24H25V27H24V29H20V27H19Z" fill="#382a24"/>
+    <path d="M9 23H12V25H11V28H8V26H8V24H9Z M20 23H23V25H24V28H21V26H20Z" fill="#d99a4e"/>
+    <path d="M8 26H11V28H10V29H8Z M21 26H24V28H23V29H21Z" fill="#fff3dc"/>
   </g>
-  <g id="backStepA">
-    <path d="M7 25H10V28H7Z M20 25H23V28H20Z" fill="#fff7e5"/>
-    <path d="M7 27H11V29H7Z M20 27H24V29H20Z" fill="#292725"/>
+  <g id="sideBody">
+    <!-- Short tail, long body and low belly. -->
+    <path d="M2 15H5V13H9V12H17V13H20V14H23V17H27V19H30V21H28V23H25V25H20V24H8V25H5V22H3V19H2Z" fill="#382a24"/>
+    <path d="M4 15H6V14H10V13H17V14H20V15H23V18H27V20H29V21H27V22H24V24H20V23H8V24H6V22H4V19H3V16H4Z" fill="#d99a4e"/>
+    <path d="M7 16H11V15H18V16H21V18H24V20H26V21H22V22H9V23H7V21H5V18H7Z" fill="#e9b967"/>
+    <path d="M7 20H10V21H18V20H22V22H20V23H9V22H7Z" fill="#fff3dc"/>
+    <!-- Triangular ears, round cheek and compact muzzle. -->
+    <path d="M16 10V5H18V2H22V4H24V7H26V11H23V13H18V11Z" fill="#382a24"/>
+    <path d="M18 9V5H19V4H21V6H23V8H24V10H21V12H18Z" fill="#d99a4e"/>
+    <path d="M20 7V5H21V5H22V8H23V9H21V10H20Z" fill="#b87539"/>
+    <path d="M22 10H25V12H28V14H30V17H28V19H25V20H20V18H18V15H19V12H22Z" fill="#382a24"/>
+    <path d="M22 11H25V13H27V14H29V16H27V18H24V19H21V17H19V14H20V12H22Z" fill="#d99a4e"/>
+    <path d="M23 12H26V14H28V16H26V17H23V16H21V14H22V13H23Z" fill="#edbc70"/>
+    <path d="M23 13H25V15H23Z" fill="#382a24"/>
+    <path d="M24 13H25V14H24Z" fill="#fff7e8"/>
+    <path d="M26 15H29V16H30V18H27V17H25V16H26Z" fill="#fff3dc"/>
+    <path d="M28 16H30V17H28Z" fill="#fffaf0"/>
+    <path d="M29 16H30V17H29Z" fill="#382a24"/>
   </g>
-  <g id="backStepB">
-    <path d="M8 25H11V28H8Z M19 25H22V28H19Z" fill="#e9be70"/>
-    <path d="M8 27H12V29H8Z M19 27H23V29H19Z" fill="#292725"/>
+  <g id="sideLegsA">
+    <path d="M4 21H8V26H7V29H4V27H3V23H4Z M9 22H13V26H12V29H9V27H8V24H9Z M19 22H23V26H22V29H19V27H18V24H19Z M24 21H28V25H27V28H24V26H23V23H24Z" fill="#382a24"/>
+    <path d="M5 22H7V26H6V28H5V26H4V23H5Z M10 23H12V26H11V28H10V26H9V24H10Z M20 23H22V26H21V28H20V26H19V24H20Z M25 22H27V25H26V27H25V25H24V23H25Z" fill="#d99a4e"/>
+    <path d="M4 26H7V28H6V29H4Z M9 26H12V28H11V29H9Z M19 26H22V28H21V29H19Z M24 25H27V27H26V28H24Z" fill="#fff3dc"/>
   </g>
-  <g id="sideStepA">
-    <path d="M5 24H8V27H5Z M16 23H19V27H16Z M22 24H25V27H22Z" fill="#e9be70"/>
-    <path d="M5 27H10V29H5Z M16 27H21V29H16Z M22 27H26V29H22Z" fill="#292725"/>
-  </g>
-  <g id="sideStepB">
-    <path d="M6 24H9V27H6Z M17 23H20V27H17Z M21 24H24V27H21Z" fill="#fff7e5"/>
-    <path d="M6 27H10V29H6Z M17 27H21V29H17Z M21 27H25V29H21Z" fill="#292725"/>
+  <g id="sideLegsB">
+    <path d="M5 21H9V25H8V28H5V29H4V26H3V23H5Z M8 22H12V25H13V28H12V29H9V27H8Z M20 22H24V25H23V28H20V29H19V26H18V24H20Z M23 21H27V24H28V27H27V28H24V26H23Z" fill="#382a24"/>
+    <path d="M5 22H8V25H7V28H5V26H4V23H5Z M9 23H11V26H12V28H10V27H9Z M20 23H23V26H22V28H20V26H19V24H20Z M24 22H26V25H27V27H25V26H24Z" fill="#d99a4e"/>
+    <path d="M5 26H8V28H7V29H5Z M10 26H12V28H11V29H10Z M20 26H23V28H22V29H20Z M24 25H27V27H26V28H24Z" fill="#fff3dc"/>
   </g>
 </defs>
-<!-- Front-facing walk cycle -->
-<g transform="translate(0 0)"><use href="#front"/><use href="#frontStepA"/></g>
-<g transform="translate(32 0)"><use href="#front"/><use href="#frontStepB"/></g>
-<g transform="translate(64 0)"><use href="#front"/><use href="#frontStepA"/><path d="M7 24H10V27H7Z" fill="#fff7e5"/></g>
-<g transform="translate(96 0)"><use href="#front"/><use href="#frontStepB"/><path d="M20 24H23V27H20Z" fill="#e9be70"/></g>
-<!-- Back-facing walk cycle -->
-<g transform="translate(0 32)"><use href="#back"/><use href="#backStepA"/></g>
-<g transform="translate(32 32)"><use href="#back"/><use href="#backStepB"/></g>
-<g transform="translate(64 32)"><use href="#back"/><use href="#backStepA"/><path d="M8 24H11V27H8Z" fill="#e9be70"/></g>
-<g transform="translate(96 32)"><use href="#back"/><use href="#backStepB"/><path d="M20 24H23V27H20Z" fill="#fff7e5"/></g>
-<!-- Left-facing walk cycle -->
-<g transform="translate(0 64)"><use href="#side"/><use href="#sideStepA"/></g>
-<g transform="translate(32 64)"><use href="#side"/><use href="#sideStepB"/></g>
-<g transform="translate(64 64)"><use href="#side"/><use href="#sideStepA"/><path d="M4 24H8V27H4Z" fill="#fff7e5"/></g>
-<g transform="translate(96 64)"><use href="#side"/><use href="#sideStepB"/><path d="M21 24H25V27H21Z" fill="#e9be70"/></g>
-<!-- Right-facing walk cycle, mirrored from the same silhouette -->
-<g transform="translate(32 96) scale(-1 1)"><use href="#side"/><use href="#tail"/><use href="#sideStepA"/></g>
-<g transform="translate(64 96) scale(-1 1)"><use href="#side"/><use href="#tail"/><use href="#sideStepB"/></g>
-<g transform="translate(96 96) scale(-1 1)"><use href="#side"/><use href="#tail"/><use href="#sideStepA"/></g>
-<g transform="translate(128 96) scale(-1 1)"><use href="#side"/><use href="#tail"/><use href="#sideStepB"/></g>
+<!-- Down-facing: expressive eyes, cream muzzle, broad chest and tiny paws. -->
+<g transform="translate(0 0)"><use href="#frontBody"/><use href="#frontLegsA"/></g>
+<g transform="translate(32 0)"><use href="#frontBody"/><use href="#frontLegsB"/></g>
+<g transform="translate(64 0)"><use href="#frontBody"/><use href="#frontLegsA"/></g>
+<g transform="translate(96 0)"><use href="#frontBody"/><use href="#frontLegsB"/></g>
+<!-- Up-facing: broad cream chest/belly and the same upright ears. -->
+<g transform="translate(0 32)"><use href="#backBody"/><use href="#backLegsA"/></g>
+<g transform="translate(32 32)"><use href="#backBody"/><use href="#backLegsB"/></g>
+<g transform="translate(64 32)"><use href="#backBody"/><use href="#backLegsA"/></g>
+<g transform="translate(96 32)"><use href="#backBody"/><use href="#backLegsB"/></g>
+<!-- Left-facing; mirrored within each 32px frame. -->
+<g transform="translate(32 64) scale(-1 1)"><use href="#sideBody"/><use href="#sideLegsA"/></g>
+<g transform="translate(64 64) scale(-1 1)"><use href="#sideBody"/><use href="#sideLegsB"/></g>
+<g transform="translate(96 64) scale(-1 1)"><use href="#sideBody"/><use href="#sideLegsA"/></g>
+<g transform="translate(128 64) scale(-1 1)"><use href="#sideBody"/><use href="#sideLegsB"/></g>
+<!-- Right-facing. -->
+<g transform="translate(0 96)"><use href="#sideBody"/><use href="#sideLegsA"/></g>
+<g transform="translate(32 96)"><use href="#sideBody"/><use href="#sideLegsB"/></g>
+<g transform="translate(64 96)"><use href="#sideBody"/><use href="#sideLegsA"/></g>
+<g transform="translate(96 96)"><use href="#sideBody"/><use href="#sideLegsB"/></g>
 </svg>
