@@ -208,7 +208,7 @@ h1{font:900 clamp(28px,5vw,44px)/1.08 Nunito,Hancom,sans-serif;letter-spacing:-.
 'use strict';
 const canvas=document.getElementById('world'),ctx=canvas.getContext('2d',{alpha:false});
 ctx.imageSmoothingEnabled=false;
-const W=480,H=270,WORLD_W=2400,WORLD_H=1500;
+const W=480,H=270,WORLD_W=7200,WORLD_H=4800;
 const sprite=new Image();
 sprite.src='./dori-corgi-icon.svg?v=1';
 document.getElementById('titleDog').src=sprite.src;
@@ -225,7 +225,18 @@ const islands=[
 {id:'mist',name:'안개 등대섬',x:1580,y:225,rx:108,ry:83,biome:'mist',tone:'#709b94'},
 {id:'wind',name:'바람 언덕',x:1805,y:760,rx:138,ry:104,biome:'wind',tone:'#7fac83'},
 {id:'star',name:'별빛 군도',x:2195,y:470,rx:152,ry:114,biome:'star',tone:'#598e8f'},
-{id:'garden',name:'달빛 온실섬',x:1030,y:930,rx:105,ry:80,biome:'forest',tone:'#7cae8d'}
+{id:'garden',name:'달빛 온실섬',x:1030,y:930,rx:105,ry:80,biome:'forest',tone:'#7cae8d'},
+{id:'drift',name:'표류물 만',x:2760,y:840,rx:155,ry:110,biome:'sand',tone:'#9fb99b'},
+{id:'kelp',name:'해초 미로섬',x:3240,y:1450,rx:132,ry:99,biome:'forest',tone:'#579b7b'},
+{id:'frost',name:'은빛 안개섬',x:3800,y:600,rx:120,ry:88,biome:'mist',tone:'#9eb9b0'},
+{id:'deep',name:'깊은 산호섬',x:4200,y:1700,rx:146,ry:108,biome:'coral',tone:'#4b9f9b'},
+{id:'lantern',name:'바람등불섬',x:4750,y:950,rx:128,ry:94,biome:'wind',tone:'#7eaf8a'},
+{id:'reef',name:'무지개 암초섬',x:5270,y:2100,rx:165,ry:118,biome:'coral',tone:'#61a9a1'},
+{id:'whale',name:'고래 노래섬',x:5900,y:1450,rx:145,ry:108,biome:'mist',tone:'#779f98'},
+{id:'dawn',name:'새벽 별섬',x:6450,y:500,rx:152,ry:110,biome:'star',tone:'#5a8d8d'},
+{id:'farstar',name:'먼별 군도',x:3350,y:3300,rx:158,ry:116,biome:'star',tone:'#5b8889'},
+{id:'tide',name:'큰물결섬',x:4500,y:4050,rx:170,ry:125,biome:'sand',tone:'#8fb29a'},
+{id:'abyss',name:'심해 유리섬',x:5650,y:3650,rx:145,ry:106,biome:'coral',tone:'#4b8f98'}
 ];
 const items={
 driftwood:{name:'표류목',icon:'🪵',desc:'파도에 씻겨 매끈해진 작은 나무.',price:4},
@@ -242,7 +253,12 @@ woodPlank:{name:'잘 다듬은 판자',icon:'🪚',desc:'배를 고치거나 가
 sailPatch:{name:'돛 수선 천',icon:'🧵',desc:'바람을 조금 더 잘 받게 해준다.',price:0},
 shellLantern:{name:'조개 등불',icon:'🏮',desc:'밤마다 작은 파도빛을 비춘다.',price:0},
 berry:{name:'바다 딸기',icon:'🍓',desc:'짭짤한 바람 속에서 자라는 달콤한 열매.',price:6},
-herbTea:{name:'달빛 허브차',icon:'🍵',desc:'따뜻한 향이 마음을 편안하게 한다.',price:18}
+herbTea:{name:'달빛 허브차',icon:'🍵',desc:'따뜻한 향이 마음을 편안하게 한다.',price:18},
+copperOre:{name:'구리 광석',icon:'🟠',desc:'배의 고정 장치와 낚싯대 부품에 쓰이는 금속 광석.',price:28},
+ironOre:{name:'철 광석',icon:'⚙️',desc:'튼튼한 선체와 정밀한 장비에 필요한 무거운 광석.',price:55},
+coralShard:{name:'빛나는 산호 조각',icon:'🪸',desc:'먼바다의 산호초에서 떨어져 나온 단단한 조각.',price:92},
+deepCrystal:{name:'심해 수정',icon:'🔷',desc:'깊은 바다의 압력을 견디며 자란 푸른 수정.',price:180},
+engineCore:{name:'고대 엔진 코어',icon:'🔩',desc:'오래전 항해자들이 남긴 고성능 동력 장치의 중심부.',price:320}
 };
 const pickups=[
 {id:'wood1',item:'driftwood',qty:1,x:182,y:276,island:'harbor'},
@@ -285,7 +301,8 @@ const wildlife=[
 let state='title',panel=null,slot=1,lastSlot=1,dialogueQueue=[],dialogueAfter=null;
 let player={x:327,y:284,vx:0,vy:0,dir:'down',moving:false,boat:false};
 let boat={x:416,y:322,vx:0,vy:0,heading:0,upgrade:0};
-let inventory={driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,mapFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0};
+let rod={upgrade:0},seaPickups=[],seaCollected=[];
+let inventory={driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,mapFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0,copperOre:0,ironOre:0,coralShard:0,deepCrystal:0,engineCore:0};
 let coins=40,stage=0,visited=['harbor'],discovered=[],collected=[],relationships={haesol:0,fox:0,botanist:0},crafted=[],observed=[],nightDiscoveries=[],journal=['바닷바람을 타고 포근한 항구에 도착했다.'];
 let day=1,minutes=8*60+10,weather='맑음',worldSeed=73219,elapsed=0,walkT=0,fishing=null,muted=false,audio=null,melodyTimer=null,toastTimer=null,autosaveTimer=0,lastSaveTime=0;
 try{muted=localStorage.getItem('dogSailerMuted')==='true'}catch(e){}
@@ -312,6 +329,36 @@ function wildlifeVisible(w){
 }
 function visibleWildlife(){return wildlife.filter(wildlifeVisible)}
 const moonGrotto={x:1076,y:936,id:'moon-grotto'};
+function generateSeaPickups(seed){
+ const r=rng((seed>>>0)^0x61c88647),out=[];
+ for(let n=0;n<320;n++){
+  let x=0,y=0,tries=0;
+  do{x=180+r()*(WORLD_W-360);y=160+r()*(WORLD_H-320);tries++}
+  while(tries<70&&islands.some(i=>Math.pow((x-i.x)/(i.rx*1.35),2)+Math.pow((y-i.y)/(i.ry*1.35),2)<1));
+  const depth=Math.max(x/WORLD_W,y/WORLD_H),roll=r();let item;
+  if(depth>.72&&roll>.965)item='engineCore';
+  else if(depth>.54&&roll>.94)item='deepCrystal';
+  else if(depth>.34&&roll>.9)item='coralShard';
+  else if(roll>.77)item='ironOre';
+  else if(roll>.53)item='copperOre';
+  else if(roll>.37)item='seaGlass';
+  else if(roll>.23)item='fiber';
+  else if(roll>.12)item='shell';
+  else item='driftwood';
+  out.push({id:'sea-'+String(n+1).padStart(3,'0'),x:Math.round(x),y:Math.round(y),item,qty:item==='driftwood'&&r()>.7?2:1,phase:r()*Math.PI*2});
+ }
+ const starters=[
+  {x:480,y:440,item:'driftwood'},{x:515,y:180,item:'copperOre'},{x:760,y:570,item:'fiber'},
+  {x:840,y:310,item:'seaGlass'},{x:1110,y:670,item:'ironOre'},{x:1410,y:680,item:'driftwood'},
+  {x:1620,y:650,item:'copperOre'},{x:1910,y:1000,item:'shell'},{x:2070,y:1100,item:'ironOre'},
+  {x:2350,y:660,item:'coralShard'},{x:740,y:700,item:'copperOre'},{x:1400,y:100,item:'driftwood'}
+ ];
+ starters.forEach((p,i)=>out.push({id:'starter-'+String(i+1).padStart(2,'0'),x:p.x,y:p.y,item:p.item,qty:1,phase:r()*Math.PI*2}));
+ return out;
+}
+function seaPickupKey(p){return day+':'+p.id}
+function seaPickupCollected(p){return seaCollected.includes(seaPickupKey(p))}
+function generatePickupSpark(x,y,count,type){for(let i=0;i<count;i++)particles.push({x:x+(Math.random()-.5)*8,y:y+(Math.random()-.5)*6,t:0,type:type||'discovery'})}
 const islandById=id=>islands.find(i=>i.id===id);
 function currentIsland(x,y,margin){return islands.find(i=>{const dx=(x-i.x)/i.rx,dy=(y-i.y)/i.ry;return dx*dx+dy*dy<=1+(margin||0)})||null}
 function landAt(x,y){return !!currentIsland(x,y,-.015)}
@@ -336,7 +383,7 @@ function blockedAt(x,y){
  if(!player.boat&&Math.abs(x-boat.x)<22&&Math.abs(y-boat.y)<12)return true;
  return false;
 }
-function canOccupy(x,y){return landAt(x,y)&&!blockedAt(x,y)}
+function canOccupy(x,y){return landAt(x,y)&&!blockedAt(x,y)&&!blockedAt(x-5,y)&&!blockedAt(x+5,y)}
 function objectDistance(x,y,obj){return Math.hypot(x-obj.x,y-obj.y)}
 function itemTotal(id){return inventory[id]||0}
 function addItem(id,q){inventory[id]=(inventory[id]||0)+q}
@@ -347,26 +394,26 @@ function soundClick(){playTone(520,.09,.018,'sine')}
 function startMelody(){if(muted||melodyTimer)return;const notes=[392,494,587,494,440,587,659,587,392,494,587,784,659,587,494,440];let n=0;melodyTimer=setInterval(()=>{if(muted||state==='title'&&document.hidden)return;playTone(notes[n%notes.length],1.25,.006,'sine');if(n%4===0)playTone(notes[(n+2)%notes.length]/2,2.1,.004,'triangle');n++},1450)}
 function stopMelody(){if(melodyTimer){clearInterval(melodyTimer);melodyTimer=null}}
 function updateSoundLabel(){$('soundToggle').textContent=muted?'♫ 소리 꺼짐':'♫ 소리 켜짐';if(muted)stopMelody();else startMelody()}
-function newSave(){return {version:1,worldSeed:Math.floor(Math.random()*900000)+10000,player:{x:327,y:284,dir:'down',boat:false},boat:{x:416,y:322,vx:0,vy:0,heading:0,upgrade:0},inventory:{driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,mapFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0},coins:40,stage:0,visited:['harbor'],discovered:[],collected:[],relationships:{haesol:0,fox:0,botanist:0},crafted:[],observed:[],journal:['바닷바람을 타고 포근한 항구에 도착했다.'],day:1,minutes:490,weather:'맑음',playSeconds:0}}
+function newSave(){return {version:2,worldSeed:Math.floor(Math.random()*900000)+10000,player:{x:327,y:284,dir:'down',boat:false},boat:{x:416,y:322,vx:0,vy:0,heading:0,upgrade:0},rod:{upgrade:0},seaCollected:[],inventory:{driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,mapFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0,copperOre:0,ironOre:0,coralShard:0,deepCrystal:0,engineCore:0},coins:40,stage:0,visited:['harbor'],discovered:[],collected:[],relationships:{haesol:0,fox:0,botanist:0},crafted:[],observed:[],nightDiscoveries:[],journal:['바닷바람을 타고 포근한 항구에 도착했다.'],day:1,minutes:490,weather:'맑음',playSeconds:0}}
 function saveKey(n){return 'dogSailerSaveV1Slot'+n}
 function readSave(n){try{const raw=localStorage.getItem(saveKey(n));if(!raw)return null;const d=JSON.parse(raw);if(!d||typeof d!=='object'||d.version!==1||!d.player||typeof d.player!=='object'||!d.boat||typeof d.boat!=='object'||!d.inventory||typeof d.inventory!=='object'||!Array.isArray(d.visited)||!Array.isArray(d.collected)||!Number.isFinite(+d.coins)||!Number.isFinite(+d.player.x)||!Number.isFinite(+d.player.y)||!Number.isFinite(+d.boat.x)||!Number.isFinite(+d.boat.y))return null;for(const key of ['discovered','crafted','observed','journal'])if(!Array.isArray(d[key]))d[key]=[];d.stage=clamp(Number.isFinite(+d.stage)?Math.floor(+d.stage):0,0,6);d.coins=Math.max(0,Math.floor(+d.coins));d.visited=d.visited.filter(id=>islandById(id));d.collected=d.collected.filter(id=>pickups.some(p=>p.id===id));d.relationships=d.relationships&&typeof d.relationships==='object'&&!Array.isArray(d.relationships)?d.relationships:{haesol:0,fox:0,botanist:0};d.inventory=Object.fromEntries(Object.keys(items).map(id=>[id,Number.isFinite(+d.inventory[id])?Math.max(0,Math.floor(+d.inventory[id])):0]));if(!Number.isFinite(+d.day))d.day=1;if(!Number.isFinite(+d.minutes))d.minutes=490;if(!Number.isFinite(+d.playSeconds))d.playSeconds=0;if(!Number.isFinite(+d.worldSeed))d.worldSeed=73219;return d}catch(e){return null}}
 function serialize(){return {version:1,worldSeed:worldSeed,player:{x:player.x,y:player.y,vx:player.vx,vy:player.vy,dir:player.dir,boat:player.boat},boat:{x:boat.x,y:boat.y,vx:boat.vx,vy:boat.vy,heading:boat.heading,upgrade:boat.upgrade},inventory:inventory,coins:coins,stage:stage,visited:visited,discovered:discovered,collected:collected,relationships:relationships,crafted:crafted,observed:observed,journal:journal,day:day,minutes:minutes,weather:weather,playSeconds:elapsed}}
 function saveGame(silent){try{localStorage.setItem(saveKey(slot),JSON.stringify(serialize()));lastSlot=slot;try{localStorage.setItem('dogSailerLastSlot',String(slot))}catch(e){}updateContinue();lastSaveTime=Date.now();$('saveState').textContent='저장됨 · '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});if(!silent)toast('항해 일지를 안전하게 저장했어요.')}catch(e){$('saveState').textContent='저장 공간 확인 필요';if(!silent)toast('저장에 실패했어요. 브라우저 저장 공간을 확인해 주세요.')}}
-function loadGame(n){const d=readSave(n);if(!d)return false;slot=n;lastSlot=n;try{localStorage.setItem('dogSailerLastSlot',String(n))}catch(e){}worldSeed=d.worldSeed||73219;player=Object.assign({x:327,y:284,vx:0,vy:0,dir:'down',moving:false,boat:false},d.player||{});player.boat=!!player.boat;player.x=clamp(Number.isFinite(+player.x)?+player.x:327,8,WORLD_W-8);player.y=clamp(Number.isFinite(+player.y)?+player.y:284,8,WORLD_H-8);player.vx=clamp(Number.isFinite(+player.vx)?+player.vx:0,-100,100);player.vy=clamp(Number.isFinite(+player.vy)?+player.vy:0,-100,100);if(!['up','down','left','right'].includes(player.dir))player.dir='down';boat=Object.assign({x:416,y:322,vx:0,vy:0,heading:0,upgrade:0},d.boat||{});boat.x=clamp(Number.isFinite(+boat.x)?+boat.x:416,8,WORLD_W-8);boat.y=clamp(Number.isFinite(+boat.y)?+boat.y:322,8,WORLD_H-8);boat.vx=clamp(Number.isFinite(+boat.vx)?+boat.vx:0,-150,150);boat.vy=clamp(Number.isFinite(+boat.vy)?+boat.vy:0,-150,150);inventory=Object.assign(inventory,d.inventory||{});coins=d.coins??40;stage=d.stage||0;visited=d.visited||['harbor'];discovered=d.discovered||[];collected=d.collected||[];relationships=d.relationships||{haesol:0,fox:0,botanist:0};crafted=d.crafted||[];observed=d.observed||[];journal=d.journal||[];day=Number.isFinite(+d.day)?Math.max(1,+d.day):1;minutes=Number.isFinite(+d.minutes)?clamp(+d.minutes,0,1439):490;weather=['맑음','흐림','비','안개','강풍'].includes(d.weather)?d.weather:'맑음';elapsed=Number.isFinite(+d.playSeconds)?Math.max(0,+d.playSeconds):0;fishing=null;keys={};particles=[];player.moving=false;autosaveTimer=0;lastFootstepBeat=-1;return true}
+function loadGame(n){const d=readSave(n);if(!d)return false;slot=n;lastSlot=n;try{localStorage.setItem('dogSailerLastSlot',String(n))}catch(e){}worldSeed=d.worldSeed||73219;player=Object.assign({x:327,y:284,vx:0,vy:0,dir:'down',moving:false,boat:false},d.player||{});player.boat=!!player.boat;player.x=clamp(Number.isFinite(+player.x)?+player.x:327,8,WORLD_W-8);player.y=clamp(Number.isFinite(+player.y)?+player.y:284,8,WORLD_H-8);player.vx=clamp(Number.isFinite(+player.vx)?+player.vx:0,-100,100);player.vy=clamp(Number.isFinite(+player.vy)?+player.vy:0,-100,100);if(!['up','down','left','right'].includes(player.dir))player.dir='down';boat=Object.assign({x:416,y:322,vx:0,vy:0,heading:0,upgrade:0},d.boat||{});boat.upgrade=clamp(Number.isFinite(+boat.upgrade)?Math.floor(+boat.upgrade):0,0,30);rod={upgrade:clamp(Number.isFinite(+((d.rod||{}).upgrade))?Math.floor(+d.rod.upgrade):0,0,20)};seaCollected=Array.isArray(d.seaCollected)?d.seaCollected.filter(x=>typeof x==='string').slice(-1200):[];seaPickups=generateSeaPickups(worldSeed);inventory=Object.fromEntries(Object.keys(items).map(id=>[id,0]));boat.x=clamp(Number.isFinite(+boat.x)?+boat.x:416,8,WORLD_W-8);boat.y=clamp(Number.isFinite(+boat.y)?+boat.y:322,8,WORLD_H-8);boat.vx=clamp(Number.isFinite(+boat.vx)?+boat.vx:0,-150,150);boat.vy=clamp(Number.isFinite(+boat.vy)?+boat.vy:0,-150,150);inventory=Object.assign(inventory,d.inventory||{});coins=d.coins??40;stage=d.stage||0;visited=d.visited||['harbor'];discovered=d.discovered||[];collected=d.collected||[];relationships=d.relationships||{haesol:0,fox:0,botanist:0};crafted=d.crafted||[];observed=d.observed||[];journal=d.journal||[];day=Number.isFinite(+d.day)?Math.max(1,+d.day):1;minutes=Number.isFinite(+d.minutes)?clamp(+d.minutes,0,1439):490;weather=['맑음','흐림','비','안개','강풍'].includes(d.weather)?d.weather:'맑음';elapsed=Number.isFinite(+d.playSeconds)?Math.max(0,+d.playSeconds):0;fishing=null;keys={};particles=[];player.moving=false;autosaveTimer=0;lastFootstepBeat=-1;return true}
 function backupKey(n){return 'dogSailerSaveBackupV2Slot'+n}
 function previousBackupKey(n){return 'dogSailerSavePreviousV2Slot'+n}
 let saveDbPromise=null,indexedSaveCache={};
 function openSaveDB(){if(!window.indexedDB)return Promise.resolve(null);if(saveDbPromise)return saveDbPromise;saveDbPromise=new Promise(resolve=>{let req;try{req=window.indexedDB.open('DogSailerVoyageVault',1)}catch(e){resolve(null);return}req.onupgradeneeded=()=>{if(!req.result.objectStoreNames.contains('slots'))req.result.createObjectStore('slots',{keyPath:'slot'})};req.onsuccess=()=>resolve(req.result);req.onerror=()=>resolve(null);req.onblocked=()=>resolve(null)});return saveDbPromise}
 function hydrateIndexedSaves(){return openSaveDB().then(db=>new Promise(resolve=>{if(!db){resolve(false);return}try{const q=db.transaction('slots','readonly').objectStore('slots').getAll();q.onsuccess=()=>{(q.result||[]).forEach(r=>{if([1,2,3].includes(+r.slot)&&r.data)indexedSaveCache[+r.slot]=r.data});resolve(true)};q.onerror=()=>resolve(false)}catch(e){resolve(false)}}))}
 function persistIndexedSave(n,data){return openSaveDB().then(db=>new Promise(resolve=>{if(!db){resolve(false);return}try{const tx=db.transaction('slots','readwrite');tx.objectStore('slots').put({slot:n,savedAt:data.savedAt||Date.now(),data:JSON.parse(JSON.stringify(data))});tx.oncomplete=()=>resolve(true);tx.onerror=()=>resolve(false);tx.onabort=()=>resolve(false)}catch(e){resolve(false)}}))}
-function normalizeVoyage(d){if(!d||typeof d!=='object'||![1,2].includes(+d.version)||!d.player||typeof d.player!=='object'||!d.boat||typeof d.boat!=='object'||!d.inventory||typeof d.inventory!=='object'||Array.isArray(d.inventory)||!Array.isArray(d.visited)||!Array.isArray(d.collected)||!Number.isFinite(+d.coins)||!Number.isFinite(+d.player.x)||!Number.isFinite(+d.player.y)||!Number.isFinite(+d.boat.x)||!Number.isFinite(+d.boat.y))return null;const out={...d,version:2,savedAt:Number.isFinite(+d.savedAt)?+d.savedAt:0};for(const k of ['discovered','crafted','observed','journal','nightDiscoveries'])if(!Array.isArray(out[k]))out[k]=[];out.stage=clamp(Number.isFinite(+out.stage)?Math.floor(+out.stage):0,0,6);out.coins=Math.max(0,Math.floor(+out.coins));out.visited=[...new Set(out.visited.filter(id=>islandById(id)))];out.collected=[...new Set(out.collected.filter(id=>pickups.some(p=>p.id===id)))];out.discovered=out.discovered.filter(id=>Object.prototype.hasOwnProperty.call(items,id));out.observed=out.observed.filter(id=>wildlife.some(w=>w.type===id));out.nightDiscoveries=out.nightDiscoveries.filter(id=>id==='moon-grotto');out.crafted=out.crafted.filter(id=>Object.prototype.hasOwnProperty.call(items,id));out.journal=out.journal.filter(x=>typeof x==='string').slice(-100);out.inventory=Object.fromEntries(Object.keys(items).map(id=>[id,Number.isFinite(+out.inventory[id])?Math.max(0,Math.floor(+out.inventory[id])):0]));out.player={...out.player,x:clamp(+out.player.x,8,WORLD_W-8),y:clamp(+out.player.y,8,WORLD_H-8),vx:clamp(Number.isFinite(+out.player.vx)?+out.player.vx:0,-100,100),vy:clamp(Number.isFinite(+out.player.vy)?+out.player.vy:0,-100,100),dir:['up','down','left','right'].includes(out.player.dir)?out.player.dir:'down',boat:!!out.player.boat};out.boat={...out.boat,x:clamp(+out.boat.x,8,WORLD_W-8),y:clamp(+out.boat.y,8,WORLD_H-8),vx:clamp(Number.isFinite(+out.boat.vx)?+out.boat.vx:0,-150,150),vy:clamp(Number.isFinite(+out.boat.vy)?+out.boat.vy:0,-150,150),upgrade:clamp(Number.isFinite(+out.boat.upgrade)?Math.floor(+out.boat.upgrade):0,0,9)};out.day=Number.isFinite(+out.day)?Math.max(1,Math.floor(+out.day)):1;out.minutes=Number.isFinite(+out.minutes)?clamp(+out.minutes,0,1439):490;out.weather=['맑음','흐림','비','안개','강풍'].includes(out.weather)?out.weather:'맑음';out.worldSeed=Number.isFinite(+out.worldSeed)?+out.worldSeed:73219;out.playSeconds=Number.isFinite(+out.playSeconds)?Math.max(0,+out.playSeconds):0;out.relationships=out.relationships&&typeof out.relationships==='object'&&!Array.isArray(out.relationships)?out.relationships:{haesol:0,fox:0,botanist:0};return out}
+function normalizeVoyage(d){if(!d||typeof d!=='object'||![1,2].includes(+d.version)||!d.player||typeof d.player!=='object'||!d.boat||typeof d.boat!=='object'||!d.inventory||typeof d.inventory!=='object'||Array.isArray(d.inventory)||!Array.isArray(d.visited)||!Array.isArray(d.collected)||!Number.isFinite(+d.coins)||!Number.isFinite(+d.player.x)||!Number.isFinite(+d.player.y)||!Number.isFinite(+d.boat.x)||!Number.isFinite(+d.boat.y))return null;const out={...d,version:2,savedAt:Number.isFinite(+d.savedAt)?+d.savedAt:0};for(const k of ['discovered','crafted','observed','journal','nightDiscoveries'])if(!Array.isArray(out[k]))out[k]=[];out.stage=clamp(Number.isFinite(+out.stage)?Math.floor(+out.stage):0,0,6);out.coins=Math.max(0,Math.floor(+out.coins));out.visited=[...new Set(out.visited.filter(id=>islandById(id)))];out.collected=[...new Set(out.collected.filter(id=>pickups.some(p=>p.id===id)))];out.seaCollected=Array.isArray(out.seaCollected)?out.seaCollected.filter(x=>typeof x==='string').slice(-1200):[];out.discovered=out.discovered.filter(id=>Object.prototype.hasOwnProperty.call(items,id));out.observed=out.observed.filter(id=>wildlife.some(w=>w.type===id));out.nightDiscoveries=out.nightDiscoveries.filter(id=>id==='moon-grotto');out.crafted=out.crafted.filter(id=>Object.prototype.hasOwnProperty.call(items,id));out.journal=out.journal.filter(x=>typeof x==='string').slice(-100);out.inventory=Object.fromEntries(Object.keys(items).map(id=>[id,Number.isFinite(+out.inventory[id])?Math.max(0,Math.floor(+out.inventory[id])):0]));out.player={...out.player,x:clamp(+out.player.x,8,WORLD_W-8),y:clamp(+out.player.y,8,WORLD_H-8),vx:clamp(Number.isFinite(+out.player.vx)?+out.player.vx:0,-100,100),vy:clamp(Number.isFinite(+out.player.vy)?+out.player.vy:0,-100,100),dir:['up','down','left','right'].includes(out.player.dir)?out.player.dir:'down',boat:!!out.player.boat};out.boat={...out.boat,x:clamp(+out.boat.x,8,WORLD_W-8),y:clamp(+out.boat.y,8,WORLD_H-8),vx:clamp(Number.isFinite(+out.boat.vx)?+out.boat.vx:0,-150,150),vy:clamp(Number.isFinite(+out.boat.vy)?+out.boat.vy:0,-150,150),upgrade:clamp(Number.isFinite(+out.boat.upgrade)?Math.floor(+out.boat.upgrade):0,0,30)};out.rod={upgrade:clamp(Number.isFinite(+((out.rod||{}).upgrade))?Math.floor(+out.rod.upgrade):0,0,20)};out.day=Number.isFinite(+out.day)?Math.max(1,Math.floor(+out.day)):1;out.minutes=Number.isFinite(+out.minutes)?clamp(+out.minutes,0,1439):490;out.weather=['맑음','흐림','비','안개','강풍'].includes(out.weather)?out.weather:'맑음';out.worldSeed=Number.isFinite(+out.worldSeed)?+out.worldSeed:73219;out.playSeconds=Number.isFinite(+out.playSeconds)?Math.max(0,+out.playSeconds):0;out.relationships=out.relationships&&typeof out.relationships==='object'&&!Array.isArray(out.relationships)?out.relationships:{haesol:0,fox:0,botanist:0};return out}
 function readSave(n){if(![1,2,3].includes(+n))return null;const found=[],add=(value,source)=>{try{if(value==null)return;const d=normalizeVoyage(typeof value==='string'?JSON.parse(value):value);if(d){Object.defineProperty(d,'_saveSource',{value:source,enumerable:false});found.push(d)}}catch(e){}};try{add(localStorage.getItem(saveKey(n)),'primary')}catch(e){}try{add(localStorage.getItem(backupKey(n)),'backup')}catch(e){}try{add(localStorage.getItem(previousBackupKey(n)),'previous-backup')}catch(e){}if(indexedSaveCache[+n])add(indexedSaveCache[+n],'indexeddb');found.sort((a,b)=>(b.savedAt||0)-(a.savedAt||0));return found[0]||null}
-function serialize(){return {version:2,savedAt:Date.now(),worldSeed,player:{x:player.x,y:player.y,vx:player.vx,vy:player.vy,dir:player.dir,boat:player.boat},boat:{x:boat.x,y:boat.y,vx:boat.vx,vy:boat.vy,heading:boat.heading,upgrade:boat.upgrade},inventory,coins,stage,visited,discovered,collected,relationships,crafted,observed,nightDiscoveries,journal,day,minutes,weather,playSeconds:elapsed}}
+function serialize(){return {version:2,savedAt:Date.now(),worldSeed,player:{x:player.x,y:player.y,vx:player.vx,vy:player.vy,dir:player.dir,boat:player.boat},boat:{x:boat.x,y:boat.y,vx:boat.vx,vy:boat.vy,heading:boat.heading,upgrade:boat.upgrade},rod:{upgrade:rod.upgrade},seaCollected:seaCollected.slice(-1200),inventory,coins,stage,visited,discovered,collected,relationships,crafted,observed,nightDiscoveries,journal,day,minutes,weather,playSeconds:elapsed}}
 function saveGame(silent){const n=slot,data=serialize(),old=readSave(n);data.savedAt=Math.max(Date.now(),(old&&old.savedAt||0)+1);let main=false,backup=false;try{if(old)localStorage.setItem(previousBackupKey(n),JSON.stringify(old))}catch(e){}const raw=JSON.stringify(data);try{localStorage.setItem(backupKey(n),raw);backup=true}catch(e){}try{localStorage.setItem(saveKey(n),raw);main=true}catch(e){}indexedSaveCache[n]=data;try{localStorage.setItem('dogSailerLastSlot',String(n))}catch(e){}persistIndexedSave(n,data).then(indexed=>{updateContinue();const ok=main||backup||indexed;if(ok){lastSlot=n;lastSaveTime=Date.now();$('saveState').textContent=(main?'저장됨':indexed?'복구 저장소에 저장됨':'백업에 저장됨')+' · '+new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});if(!silent)toast('항해와 복구용 기록을 저장했어요.')}else{$('saveState').textContent='저장 공간 확인 필요';if(!silent)toast('저장에 실패했어요. 항해 기록 관리에서 백업 파일로 내보내 주세요.')}}).catch(()=>{if(!main&&!backup){$('saveState').textContent='저장 공간 확인 필요';if(!silent)toast('저장에 실패했어요. 백업 파일로 항해 기록을 내보내 주세요.')}})}
 function loadGame(n){const d=readSave(n);if(!d)return false;slot=n;lastSlot=n;try{localStorage.setItem('dogSailerLastSlot',String(n))}catch(e){}worldSeed=d.worldSeed||73219;player=Object.assign({x:327,y:284,vx:0,vy:0,dir:'down',moving:false,boat:false},d.player||{});player.boat=!!player.boat;player.x=clamp(Number.isFinite(+player.x)?+player.x:327,8,WORLD_W-8);player.y=clamp(Number.isFinite(+player.y)?+player.y:284,8,WORLD_H-8);player.vx=clamp(Number.isFinite(+player.vx)?+player.vx:0,-100,100);player.vy=clamp(Number.isFinite(+player.vy)?+player.vy:0,-100,100);if(!['up','down','left','right'].includes(player.dir))player.dir='down';boat=Object.assign({x:416,y:322,vx:0,vy:0,heading:0,upgrade:0},d.boat||{});boat.x=clamp(+boat.x,8,WORLD_W-8);boat.y=clamp(+boat.y,8,WORLD_H-8);boat.vx=clamp(+boat.vx,-150,150);boat.vy=clamp(+boat.vy,-150,150);inventory=Object.assign(inventory,d.inventory||{});coins=d.coins??40;stage=d.stage||0;visited=d.visited||['harbor'];discovered=d.discovered||[];collected=d.collected||[];relationships=d.relationships||{haesol:0,fox:0,botanist:0};crafted=d.crafted||[];observed=d.observed||[];nightDiscoveries=d.nightDiscoveries||[];journal=d.journal||[];day=Number.isFinite(+d.day)?Math.max(1,+d.day):1;minutes=Number.isFinite(+d.minutes)?clamp(+d.minutes,0,1439):490;weather=['맑음','흐림','비','안개','강풍'].includes(d.weather)?d.weather:'맑음';elapsed=Number.isFinite(+d.playSeconds)?Math.max(0,+d.playSeconds):0;fishing=null;keys={};particles=[];player.moving=false;autosaveTimer=0;lastFootstepBeat=-1;return true}
 async function saveImportedVoyage(n,data){if(![1,2,3].includes(+n))return false;const normalized=normalizeVoyage(data);if(!normalized)return false;const old=readSave(n);normalized.savedAt=Math.max(Date.now(),(old&&old.savedAt||0)+1);try{if(old)localStorage.setItem(previousBackupKey(n),JSON.stringify(old))}catch(e){}const raw=JSON.stringify(normalized);let ok=false;try{localStorage.setItem(backupKey(n),raw);ok=true}catch(e){}try{localStorage.setItem(saveKey(n),raw);ok=true}catch(e){}indexedSaveCache[n]=normalized;let indexed=false;try{indexed=await persistIndexedSave(n,normalized)}catch(e){}return ok||indexed}
 
-function startNew(n){slot=n;lastSlot=n;try{localStorage.setItem('dogSailerLastSlot',String(n))}catch(e){}worldSeed=Math.floor(Math.random()*900000)+10000;player={x:327,y:284,vx:0,vy:0,dir:'down',moving:false,boat:false};boat={x:416,y:322,vx:0,vy:0,heading:0,upgrade:0};inventory={driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0};coins=40;stage=0;visited=['harbor'];discovered=[];collected=[];relationships={haesol:0,fox:0,botanist:0};crafted=[];observed=[];nightDiscoveries=[];journal=['첫 항해의 아침, 오래된 해도 한 장이 배에 떠밀려왔다. 그 위에는 빛을 잃은 여섯 등대가 그려져 있었다.','“빛이 꺼진 등대가 다시 길을 알려줄 수 있도록, 오래된 항해자에게 마음을 전해 주세요.”'];day=1;minutes=490;weather='맑음';elapsed=0;keys={};particles=[];autosaveTimer=0;lastFootstepBeat=-1;panel=null;state='play';$('titleScreen').classList.add('hide');showDialogue([{name:'항해 일지',text:'첫 항해의 아침. 짧은 다리와 황금빛 털을 가진 작은 선장이 낡은 돛단배 앞에 섰다. 파도가 밀어 준 오래된 해도에는 빛을 잃어가는 여섯 등대에 대한 이야기가 적혀 있었다.'},{name:'해솔 할아버지',text:'어서 오렴, 작은 선장. 이 항구의 등대는 예전엔 멀리서도 반짝였단다. 등대가 다시 빛나면 바다가 길을 잊지 않을 거야. 먼저 등대에 가서 이야기를 들어보렴.'}]);journal.push('첫 항해가 시작되었다. 오래된 항구 등대에서 이야기의 실마리를 찾아보자.');saveGame(true);updateHud()}
+function startNew(n){slot=n;lastSlot=n;try{localStorage.setItem('dogSailerLastSlot',String(n))}catch(e){}worldSeed=Math.floor(Math.random()*900000)+10000;player={x:327,y:284,vx:0,vy:0,dir:'down',moving:false,boat:false};boat={x:416,y:322,vx:0,vy:0,heading:0,upgrade:0};rod={upgrade:0};seaCollected=[];seaPickups=generateSeaPickups(worldSeed);inventory={driftwood:0,shell:0,fiber:0,seaGlass:0,moonHerb:0,blueFish:0,silverFish:0,moonPearl:0,starFragment:0,bottleLetter:0,woodPlank:0,sailPatch:0,shellLantern:0,berry:0,herbTea:0};coins=40;stage=0;visited=['harbor'];discovered=[];collected=[];relationships={haesol:0,fox:0,botanist:0};crafted=[];observed=[];nightDiscoveries=[];journal=['첫 항해의 아침, 오래된 해도 한 장이 배에 떠밀려왔다. 그 위에는 빛을 잃은 여섯 등대가 그려져 있었다.','“빛이 꺼진 등대가 다시 길을 알려줄 수 있도록, 오래된 항해자에게 마음을 전해 주세요.”'];day=1;minutes=490;weather='맑음';elapsed=0;keys={};particles=[];autosaveTimer=0;lastFootstepBeat=-1;panel=null;state='play';$('titleScreen').classList.add('hide');showDialogue([{name:'항해 일지',text:'첫 항해의 아침. 짧은 다리와 황금빛 털을 가진 작은 선장이 낡은 돛단배 앞에 섰다. 파도가 밀어 준 오래된 해도에는 빛을 잃어가는 여섯 등대에 대한 이야기가 적혀 있었다.'},{name:'해솔 할아버지',text:'어서 오렴, 작은 선장. 이 항구의 등대는 예전엔 멀리서도 반짝였단다. 등대가 다시 빛나면 바다가 길을 잊지 않을 거야. 먼저 등대에 가서 이야기를 들어보렴.'}]);journal.push('첫 항해가 시작되었다. 오래된 항구 등대에서 이야기의 실마리를 찾아보자.');saveGame(true);updateHud()}
 function finishIntro(){state='play';saveGame(true);toast('첫 번째 항해를 시작했어요. 바다는 서두르지 않아도 괜찮아요.')}
 function showDialogue(lines,after){dialogueQueue=lines.slice();dialogueAfter=after||null;advanceDialogue()}
 function advanceDialogue(){if(!dialogueQueue.length){$('dialogue').hidden=true;const fn=dialogueAfter;dialogueAfter=null;if(fn)fn();return}const d=dialogueQueue.shift();$('dialogueName').textContent=d.name||'항해 일지';$('dialogueText').textContent=d.text;$('dialogue').hidden=false;soundClick()}
@@ -405,18 +452,22 @@ function renderPanel(){
   ];
   let html='<div class="story-cover"><div class="eyebrow">GENTLE CRAFTING</div><p>만드는 데 걸리는 시간은 없어요. 재료가 있으면 바로 만들고, 없는 날은 그냥 바다를 바라봐도 좋아요.</p></div><div class="list-grid">';
   recipes.forEach(r=>{const can=Object.keys(r.need).every(id=>itemTotal(id)>=r.need[id]);html+='<div class="item-card"><div class="item-icon">'+r.icon+'</div><div><div class="item-name">'+r.name+'</div><div class="item-desc">'+r.desc+'</div></div><button class="action-button '+(can?'emphasis':'')+'" data-craft="'+r.id+'" '+(!can?'disabled style="opacity:.4"':'')+'>만들기</button></div>'});
-  html+='</div><div class="row-actions"><button class="action-button" data-panel-action="upgrade">배 업그레이드</button></div>';
+  html+='</div><div class="row-actions"><button class="action-button" data-panel-action="upgrade">배·낚싯대 강화</button></div>';
   panelShell('작은 제작대',html);
  }else if(panel==='saves'){
   panelShell('항해 기록 관리','<div class="story-cover"><div class="eyebrow">THREE LITTLE VOYAGES</div><p>세 개의 독립된 항해를 보관해요. 기본 기록과 두 단계의 복구용 백업을 저장하고, 지원되는 브라우저에서는 별도 IndexedDB 저장소에도 기록합니다. 중요한 항해는 JSON 백업 파일로 내려받아 두면 더 안전해요.</p></div><div class="list-grid">'+[1,2,3].map(slotHTML).join('')+'</div><div class="row-actions"><label class="action-button">백업 파일 가져오기<input id="importSaveFile" type="file" accept=".json,application/json" hidden></label><select id="importTarget" class="action-button" aria-label="백업을 복원할 슬롯"><option value="1">슬롯 1에 복원</option><option value="2">슬롯 2에 복원</option><option value="3">슬롯 3에 복원</option></select><button class="action-button" data-panel-action="returnTitle">타이틀로 돌아가기</button>'+(state==='play'?'<button class="action-button" data-panel-action="save">현재 항해 저장</button>':'')+'</div>');
  }else if(panel==='menu'){
-  panelShell('잠깐 쉬어 가기','<div class="story-cover"><div class="eyebrow">A QUIET PAUSE</div><p>파도는 계속 흐르지만 당신은 언제든 멈춰 쉴 수 있어요. 현재 위치와 아이템은 자동 저장됩니다.</p></div><div class="row-actions"><button class="action-button emphasis" data-panel-action="resume">계속 항해하기</button><button class="action-button" data-panel-action="save">지금 저장</button><button class="action-button" data-panel-action="saves">세이브 관리</button><button class="action-button" data-panel-action="returnTitle">타이틀 화면</button><button class="action-button" data-panel-action="sound">소리 켜기/끄기</button></div><p class="item-desc">조작: WASD/방향키 이동 · E 상호작용 · SPACE 낚시 · M 지도 · I 가방 · J 일지 · C 제작 · ESC 닫기</p>');
+  panelShell('잠깐 쉬어 가기','<div class="story-cover"><div class="eyebrow">A QUIET PAUSE</div><p>파도는 계속 흐르지만 당신은 언제든 멈춰 쉴 수 있어요. 현재 위치와 아이템은 자동 저장됩니다.</p></div><div class="row-actions"><button class="action-button emphasis" data-panel-action="resume">계속 항해하기</button><button class="action-button" data-panel-action="save">지금 저장</button><button class="action-button" data-panel-action="saves">세이브 관리</button><button class="action-button" data-panel-action="returnTitle">타이틀 화면</button><button class="action-button" data-panel-action="sound">소리 켜기/끄기</button></div><p class="item-desc">조작: WASD/방향키 이동 · SPACE 낚싯줄 던지기 · 입질 순간 E 낚아채기 · M 지도 · I 가방 · J 일지 · C 제작 · ESC 닫기</p>');
  }else if(panel==='sell'){
   const sellable=Object.keys(items).filter(id=>itemTotal(id)>0&&items[id].price>0);
   panelShell('항구 상점 · 물물교환','<div class="story-cover"><div class="eyebrow">HARBOR TRADING POST</div><p>필요한 물건은 남겨 두고, 여분만 천천히 판매해요. 희귀한 수집품은 팔지 않고 간직해도 괜찮아요.</p></div><div class="list-grid">'+sellable.map(id=>'<div class="item-card"><div class="item-icon">'+items[id].icon+'</div><div><div class="item-name">'+items[id].name+'</div><div class="item-desc">1개당 '+items[id].price+' 코인</div></div><button class="action-button" data-sell="'+id+'">1개 판매</button></div>').join('')+'</div>');
  }else if(panel==='upgrade'){
-  const can=coins>=80&&itemTotal('woodPlank')>=3;
-  panelShell('배를 조금 더 편안하게','<div class="story-cover"><div class="eyebrow">A LITTLE BOAT, BIG DREAMS</div><p>판자 3개와 코인 80개로 돛과 선체를 튼튼하게 보강해요. 항해 속도가 조금 올라가고, 파도 위에서 더 안정적으로 움직입니다.</p></div><div class="quest-card"><strong>생활형 범선 부품</strong><p>필요 재료: 잘 다듬은 판자 3개 · 코인 80개</p><span class="quest-state">'+(can?'준비 완료':'재료를 모으는 중')+'</span></div><div class="row-actions"><button class="action-button emphasis" data-upgrade="boat" '+(!can?'disabled style="opacity:.4"':'')+'>배 업그레이드</button></div>');
+  const bCost=upgradeCost('boat'),rCost=upgradeCost('rod');
+  const makeCard=(type,name,desc,cost,level,max)=>{
+   const ready=!!cost&&canAffordUpgrade(type),need=cost?formatUpgradeCost(cost):'최고 레벨에 도달했어요.';
+   return '<div class="quest-card"><strong>'+name+' · Lv.'+level+'/'+max+'</strong><p>'+desc+'</p><p>필요 재료: '+need+'</p><span class="quest-state">'+(!cost?'MAX 레벨':ready?'강화 가능':'재료를 모으는 중')+'</span><div class="row-actions"><button class="action-button '+(ready?'emphasis':'')+'" data-upgrade="'+type+'" '+(!ready?'disabled style="opacity:.4"':'')+'>'+(cost?'강화하기':'최고 레벨')+'</button></div></div>';
+  };
+  panelShell('선박과 낚싯대 강화','<div class="story-cover"><div class="eyebrow">ENDLESS VOYAGE UPGRADES</div><p>표류 자원을 건져 올리고 낚은 물고기를 교환해 코인을 모으세요. 배는 최대 Lv.30, 낚싯대는 최대 Lv.20까지 강화할 수 있어요. 깊은 바다일수록 고급 재료가 나타납니다.</p></div>'+makeCard('boat','탐험용 범선','선체와 돛을 보강해 최고 속도와 항해 능력을 높입니다.',bCost,boat.upgrade,30)+makeCard('rod','정밀 낚싯대','입질 대기 시간이 짧아지고 E 타이밍 창과 희귀 보상 확률이 커집니다.',rCost,rod.upgrade,20));
  }
  $('modalContent').querySelectorAll('[data-panel-action]').forEach(b=>b.addEventListener('click',()=>panelAction(b.dataset.panelAction)));
  $('modalContent').querySelectorAll('[data-craft]').forEach(b=>b.addEventListener('click',()=>craftItem(b.dataset.craft)));
@@ -424,25 +475,83 @@ function renderPanel(){
  $('modalContent').querySelectorAll('[data-load]').forEach(b=>b.addEventListener('click',()=>{const n=+b.dataset.load;if(readSave(n)){beginTransition(()=>{loadGame(n);closePanel();$('titleScreen').classList.add('hide');state='play';updateHud();toast('제 '+day+'일의 항해를 이어가요.');})}else{beginTransition(()=>{startNew(n);closePanel();})}}));
  $('modalContent').querySelectorAll('[data-delete]').forEach(b=>b.addEventListener('click',()=>{if(confirm('이 항해 기록을 삭제할까요? 백업이 없다면 되돌릴 수 없어요.')){try{localStorage.removeItem(saveKey(+b.dataset.delete));localStorage.removeItem(backupKey(+b.dataset.delete));localStorage.removeItem(previousBackupKey(+b.dataset.delete))}catch(e){}delete indexedSaveCache[+b.dataset.delete];openSaveDB().then(db=>{if(db)try{db.transaction('slots','readwrite').objectStore('slots').delete(+b.dataset.delete)}catch(e){}});renderPanel();updateContinue()}}));
  $('modalContent').querySelectorAll('[data-export]').forEach(b=>b.addEventListener('click',()=>exportSave(+b.dataset.export)));
- $('modalContent').querySelectorAll('[data-upgrade]').forEach(b=>b.addEventListener('click',upgradeBoat));
+ $('modalContent').querySelectorAll('[data-upgrade]').forEach(b=>b.addEventListener('click',()=>upgradeEquipment(b.dataset.upgrade)));
  const importInput=$('importSaveFile');if(importInput)importInput.addEventListener('change',async e=>{const file=e.target.files&&e.target.files[0];if(!file)return;try{const data=JSON.parse(await file.text()),target=+$('importTarget').value;if(![1,2].includes(+data.version)||!data.player||!data.boat||!data.inventory||!Array.isArray(data.visited)||!Array.isArray(data.collected)||!Number.isFinite(+data.coins)||![1,2,3].includes(target))throw new Error('invalid save');if(readSave(target)&&!confirm('선택한 슬롯의 기존 기록을 복구용 백업으로 남기고 교체할까요?'))return;if(!await saveImportedVoyage(target,data))throw new Error('storage unavailable');lastSlot=target;try{localStorage.setItem('dogSailerLastSlot',String(target))}catch(e){}updateContinue();renderPanel();toast('백업 항해 기록을 슬롯 '+target+'에 복원했어요.')}catch(err){toast('백업을 복원하지 못했어요. 파일 형식 또는 브라우저 저장 공간을 확인해 주세요.')}finally{importInput.value=''}});
 }
 function escapeHTML(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function panelAction(a){if(a==='craft'||a==='saves'||a==='upgrade'||a==='sell'){panel=a;renderPanel()}else if(a==='resume'){closePanel()}else if(a==='save'){saveGame(false);renderPanel()}else if(a==='sound'){muted=!muted;try{localStorage.setItem('dogSailerMuted',String(muted))}catch(e){}updateSoundLabel();renderPanel()}else if(a==='returnTitle'){saveGame(true);closePanel();openTitle()}}
 function craftItem(id){const recipe={woodPlank:{need:{driftwood:2},out:1},sailPatch:{need:{fiber:3},out:1},shellLantern:{need:{shell:3,seaGlass:1},out:1},herbTea:{need:{moonHerb:2,shell:1},out:1}}[id];if(!recipe||!Object.keys(recipe.need).every(k=>itemTotal(k)>=recipe.need[k]))return;Object.keys(recipe.need).forEach(k=>useItem(k,recipe.need[k]));addItem(id,recipe.out);crafted.push(id);journal.push(items[id].name+'을 만들었다.');playTone(700,.22,.025,'triangle');toast(items[id].name+'을 만들었어요.');saveGame(true);renderPanel();updateHud()}
 function sellItem(id){if(itemTotal(id)<=0||!items[id]||items[id].price<=0)return;useItem(id,1);coins+=items[id].price;journal.push(items[id].name+'을 항구에서 교환했다.');playTone(620,.12,.018);saveGame(true);renderPanel();updateHud();toast(items[id].name+' 1개를 '+items[id].price+' 코인에 교환했어요.')}
-function upgradeBoat(){if(coins<80||itemTotal('woodPlank')<3)return;coins-=80;useItem('woodPlank',3);boat.upgrade++;journal.push('배의 돛과 선체를 보강했다.');saveGame(true);playTone(440,.15,.02);playTone(660,.22,.018);toast('배가 한층 튼튼해졌어요. 항해 속도가 조금 빨라집니다.');renderPanel();updateHud()}
+function upgradeCost(type){
+ const level=type==='boat'?boat.upgrade:rod.upgrade,max=type==='boat'?30:20;
+ if(level>=max)return null;
+ if(type==='boat'){
+  const cost={coins:Math.round(80*Math.pow(1.39,level)),woodPlank:3+Math.floor(level/3)};
+  if(level>=1)cost.copperOre=1+Math.floor((level-1)/5);
+  if(level>=3)cost.ironOre=1+Math.floor((level-3)/5);
+  if(level>=7)cost.coralShard=1+Math.floor((level-7)/6);
+  if(level>=12)cost.deepCrystal=1+Math.floor((level-12)/6);
+  if(level>=18)cost.engineCore=1+Math.floor((level-18)/7);
+  return cost;
+ }
+ const cost={coins:Math.round(55*Math.pow(1.38,level)),fiber:2+Math.floor(level/4)};
+ if(level>=2)cost.seaGlass=1+Math.floor((level-2)/4);
+ if(level>=3)cost.copperOre=1+Math.floor((level-3)/5);
+ if(level>=7)cost.coralShard=1+Math.floor((level-7)/5);
+ if(level>=12)cost.deepCrystal=1+Math.floor((level-12)/6);
+ if(level>=16)cost.moonPearl=1+Math.floor((level-16)/4);
+ return cost;
+}
+function canAffordUpgrade(type){
+ const cost=upgradeCost(type);return !!cost&&coins>=cost.coins&&Object.keys(cost).filter(k=>k!=='coins').every(id=>itemTotal(id)>=cost[id]);
+}
+function formatUpgradeCost(cost){
+ return ['coins',...Object.keys(cost).filter(k=>k!=='coins')].map(id=>id==='coins'?'코인 '+cost.coins:items[id].name+' ×'+cost[id]).join(' · ');
+}
+function upgradeEquipment(type){
+ const cost=upgradeCost(type);
+ if(!cost){toast('이미 최고 레벨이에요.');return}
+ if(!canAffordUpgrade(type)){toast('재료가 부족해요. 열린 바다 자원과 낚시 보상을 모아보세요.');return}
+ coins-=cost.coins;Object.keys(cost).filter(k=>k!=='coins').forEach(id=>useItem(id,cost[id]));
+ if(type==='boat'){boat.upgrade++;addJournal('배를 Lv.'+boat.upgrade+'로 강화했다.');toast('배 강화 완료 · Lv.'+boat.upgrade+' / 30')}
+ else{rod.upgrade++;addJournal('낚싯대를 Lv.'+rod.upgrade+'로 강화했다.');toast('낚싯대 강화 완료 · Lv.'+rod.upgrade+' / 20')}
+ generatePickupSpark(player.x,player.y,16,'discovery');playTone(440,.15,.02);playTone(660,.22,.018);
+ saveGame(true);renderPanel();updateHud();
+}
+function upgradeBoat(){upgradeEquipment('boat')}
 function exportSave(n){const d=readSave(n);if(!d)return;const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='dog-sailer-voyage-'+n+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1200);toast('항해 기록을 백업 파일로 내보냈어요.')}
 function drawMap(){const c=$('mapCanvas');if(!c)return;const g=c.getContext('2d');g.imageSmoothingEnabled=false;g.fillStyle='#236e88';g.fillRect(0,0,480,300);for(let y=0;y<300;y+=12)for(let x=0;x<480;x+=12){g.fillStyle=((x*3+y*7)%5===0)?'#38839a':'#28758e';g.fillRect(x,y,12,12);if((x+y)%4===0){g.fillStyle='#7eb7bd55';g.fillRect(x+2,y+5,5,1)}}islands.forEach(i=>{const x=i.x/WORLD_W*460+10,y=i.y/WORLD_H*280+10,rx=i.rx/WORLD_W*460,ry=i.ry/WORLD_H*280;g.fillStyle='#e9d79e';g.beginPath();g.ellipse(x,y,Math.max(6,rx),Math.max(5,ry),0,0,Math.PI*2);g.fill();g.fillStyle=visited.includes(i.id)?'#78b78b':'#7f9c83';g.beginPath();g.ellipse(x,y,Math.max(4,rx-4),Math.max(4,ry-4),0,0,Math.PI*2);g.fill();g.fillStyle=visited.includes(i.id)?'#b6e7d1':'#b6c8b4';g.fillRect(x-2,y-2,4,4);if(visited.includes(i.id)){g.fillStyle='#f7f4e6';g.font='8px sans-serif';g.fillText(i.name,x+rx+2,y)}});const px=player.x/WORLD_W*460+10,py=player.y/WORLD_H*280+10;g.fillStyle='#ffe09c';g.beginPath();g.arc(px,py,4,0,Math.PI*2);g.fill();g.strokeStyle='#fff6d8';g.lineWidth=1;g.stroke();g.fillStyle='#fff6d8';g.font='10px sans-serif';g.fillText('나',px+5,py-5)}
-function updateHud(){const totalMin=(Math.floor(minutes)%1440+1440)%1440,hh=Math.floor(totalMin/60),mm=totalMin%60;$('timeLabel').textContent=(hh<12?'AM ':'PM ')+String(hh%12||12).padStart(2,'0')+':'+String(mm).padStart(2,'0');const sun=$('timeLabel').previousElementSibling;if(sun)sun.textContent=isNight()?'☾':'☀';$('weatherLabel').textContent=weather;$('coinLabel').textContent=coins.toLocaleString('ko-KR');const isl=currentIsland(player.x,player.y,.4);$('placeLabel').textContent=isl?isl.name:(player.boat?'열린 바다':'바닷가');$('objectiveText').textContent=objectiveText();$('interactHint').innerHTML='<b>E</b> '+(nearObject?nearObject.hint:(player.boat?'항구에 정박 / 물고기 관찰':'둘러보기'));const base=observed.length?'지금까지 '+observed.length+'종의 생물을 관찰했어요. 가까이 다가가 E를 눌러 기록을 남겨보세요.':'햇살 조개, 표류목, 바다 유리를 찾아보세요. 낯선 생물 가까이 다가가면 관찰 일지를 남길 수 있어요.';const timeHint=isNight()?'밤에는 달빛 온실섬의 숨은 동굴이 열리고 달빛수달과 반딧불이도 만날 수 있어요.':'낮에는 거북이와 나비를 찾아보세요. 저녁이 오면 달빛 온실섬을 다시 살펴보세요.';$('discoveryNote').textContent=base+' '+timeHint+' '+weatherTip()}
+function updateHud(){const totalMin=(Math.floor(minutes)%1440+1440)%1440,hh=Math.floor(totalMin/60),mm=totalMin%60;$('timeLabel').textContent=(hh<12?'AM ':'PM ')+String(hh%12||12).padStart(2,'0')+':'+String(mm).padStart(2,'0');const sun=$('timeLabel').previousElementSibling;if(sun)sun.textContent=isNight()?'☾':'☀';$('weatherLabel').textContent=weather;$('coinLabel').textContent=coins.toLocaleString('ko-KR');const isl=currentIsland(player.x,player.y,.4);$('placeLabel').textContent=isl?isl.name:(player.boat?'열린 바다':'바닷가');$('objectiveText').textContent=objectiveText();$('interactHint').innerHTML='<b>E</b> '+(nearObject?nearObject.hint:(player.boat?'항구에 정박 / 물고기 관찰':'둘러보기'));const base=observed.length?'지금까지 '+observed.length+'종의 생물을 관찰했어요. 가까이 다가가 E를 눌러 기록을 남겨보세요.':'햇살 조개, 표류목, 바다 유리를 찾아보세요. 낯선 생물 가까이 다가가면 관찰 일지를 남길 수 있어요.';const timeHint=isNight()?'밤에는 달빛 온실섬의 숨은 동굴이 열리고 달빛수달과 반딧불이도 만날 수 있어요.':'낮에는 거북이와 나비를 찾아보세요. 저녁이 오면 달빛 온실섬을 다시 살펴보세요.';$('discoveryNote').textContent=base+' '+timeHint+' '+weatherTip()+' · 장비 성장: 배 Lv.'+boat.upgrade+'/30 · 낚싯대 Lv.'+rod.upgrade+'/20'}
 function objectiveText(){if(stage===0)return '낡은 항구 등대에 다가가 E를 눌러보세요.';if(stage===1)return '표류목 3개와 햇살 조개 2개를 모아 등대를 고쳐요. ('+itemTotal('driftwood')+'/3 · '+itemTotal('shell')+'/2)';if(stage===2)return '조개달 섬에서 파도에 떠밀려 온 푸른 우편병을 찾아요.';if(stage===3)return '푸른 우편병을 포근한 항구의 등대로 가져가요.';if(stage===4)return '안개 등대섬에서 오래된 항해 지도 조각을 찾아요.';if(stage===5)return '별빛 군도의 등대에 별 조각 3개를 가져가요. ('+itemTotal('starFragment')+'/3)';return '오늘의 바다를 자유롭게 탐험하고 다음 추억을 만들어보세요.'}
 function addJournal(s){journal.push(s);if(journal.length>100)journal=journal.slice(-100)}
 function markVisited(id){if(!visited.includes(id)){visited.push(id);const i=islandById(id);if(i){addJournal(i.name+'을 처음 발견했다.');toast('새로운 장소 발견 · '+i.name);particles.push({x:i.x,y:i.y,t:0,type:'discovery'});if(id==='green'&&stage===2)toast('편지가 떠내려왔다는 조개달 섬의 소문이 들려요.');if(id==='mist'&&stage===4){toast('안개 속에서 오래된 지도 조각이 빛나요.')}}saveGame(true)}}
 function pickupEnabled(p){if(p.item==='bottleLetter'&&stage<2)return false;if(p.item==='mapFragment'&&stage<4)return false;return true}
 function interact(){
+ if(fishing){handleFishingPress();return}
  if($('dialogue').hidden===false){advanceDialogue();return}
  if(panel){closePanel();return}
- if(player.boat){const seaLife=visibleWildlife().filter(w=>w.type==='dolphin'&&objectDistance(boat.x,boat.y,w)<INTERACTION_RADIUS).sort((a,b)=>objectDistance(boat.x,boat.y,a)-objectDistance(boat.x,boat.y,b))[0];if(seaLife){observeCreature(seaLife);return}const island=currentIsland(boat.x,boat.y,.28);if(island){player.boat=false;boat.vx=0;boat.vy=0;boat.heading=0;player.vx=0;player.vy=0;let dx=island.x-boat.x,dy=island.y-boat.y,L=Math.hypot(dx,dy)||1;player.x=clamp(boat.x-dx/L*27,0,WORLD_W);player.y=clamp(boat.y-dy/L*27,0,WORLD_H);if(!canOccupy(player.x,player.y)){player.x=boat.x+dx/L*27;player.y=boat.y+dy/L*27;if(!canOccupy(player.x,player.y)){player.x=island.x;player.y=island.y}player.vx=0;player.vy=0}markVisited(island.id);toast(island.name+'에 정박했어요.');saveGame(true);return}else{toast('육지가 가까워지면 정박할 수 있어요.');return}}
+ if(player.boat){
+  const nearbySalvage=seaPickups.filter(p=>!seaPickupCollected(p)&&objectDistance(boat.x,boat.y,p)<INTERACTION_RADIUS).map(p=>({type:'salvage',obj:p,d:objectDistance(boat.x,boat.y,p)}));
+  const nearbyDolphins=visibleWildlife().filter(w=>w.type==='dolphin'&&objectDistance(boat.x,boat.y,w)<INTERACTION_RADIUS).map(w=>({type:'dolphin',obj:w,d:objectDistance(boat.x,boat.y,w)}));
+  const nearestSea=[...nearbySalvage,...nearbyDolphins].sort((a,b)=>a.d-b.d)[0];
+  if(nearestSea){
+   if(nearestSea.type==='dolphin'){observeCreature(nearestSea.obj);return}
+   const p=nearestSea.obj;seaCollected.push(seaPickupKey(p));addItem(p.item,p.qty);
+   if(!discovered.includes(p.item)){discovered.push(p.item);addJournal(items[p.item].name+'을 열린 바다에서 건져 올렸다.')}
+   generatePickupSpark(p.x,p.y,12,'discovery');playTone(680,.15,.02,'triangle');
+   toast('바다 자원 발견 · '+items[p.item].name+' ×'+p.qty+' · 매일 다시 나타나요.');
+   saveGame(true);updateHud();return;
+  }
+  const island=currentIsland(boat.x,boat.y,.28);
+  if(island){
+   player.boat=false;boat.vx=0;boat.vy=0;boat.heading=0;player.vx=0;player.vy=0;
+   let dx=island.x-boat.x,dy=island.y-boat.y,L=Math.hypot(dx,dy)||1;
+   player.x=clamp(boat.x-dx/L*27,0,WORLD_W);player.y=clamp(boat.y-dy/L*27,0,WORLD_H);
+   if(!canOccupy(player.x,player.y)){player.x=boat.x+dx/L*27;player.y=boat.y+dy/L*27;if(!canOccupy(player.x,player.y)){player.x=island.x;player.y=island.y}player.vx=0;player.vy=0}
+   markVisited(island.id);toast(island.name+'에 정박했어요.');saveGame(true);return;
+  }
+  toast('육지가 가까워지면 정박할 수 있어요.');return
+ }
  const candidates=[];
  pickups.filter(p=>!collected.includes(p.id)&&pickupEnabled(p)).forEach(p=>candidates.push({type:'pickup',obj:p,d:objectDistance(player.x,player.y,p),hint:'줍기'}));
  visibleWildlife().forEach(w=>candidates.push({type:'wildlife',obj:w,d:objectDistance(player.x,player.y,w),hint:'관찰하기'}));
@@ -477,7 +586,66 @@ function doLighthouse(id){
 function talkHaesol(){if(stage===0){showDialogue([{name:'해솔 할아버지',text:'어서 오렴, 작은 선장. 등대가 다시 빛나면 멀리 있는 섬들도 서로의 존재를 기억할 수 있단다.'}]);return}relationships.haesol++;if(stage===1){showDialogue([{name:'해솔 할아버지',text:'해변의 표류목은 등대 문 옆에 쌓아두렴. 햇살 조개는 불빛을 부드럽게 만드는 데 쓸 수 있어.'}])}else if(stage===3){showDialogue([{name:'해솔 할아버지',text:'푸른 병을 찾았니? 등대로 가져오면 함께 읽어보자꾸나.'}])}else if(stage>=4&&stage<6){showDialogue([{name:'해솔 할아버지',text:'좋은 아침이구나. 네가 바다를 천천히 살펴보는 모습이 참 보기 좋다. 발견한 곳이 있다면 항해 일지에 적어두렴.'}])}else{showDialogue([{name:'해솔 할아버지',text:'바다에는 아직 발견하지 못한 조용한 섬이 많단다. 가끔은 목적지 없이 항해해도 괜찮아.'}])}}
 function observeCreature(w){if(!observed.includes(w.type)){observed.push(w.type);addJournal(w.name+'을 관찰했다. 바다 생물 도감에 작은 기록을 남겼다.');coins+=3;toast(w.name+' 관찰 기록 +3 코인');}else toast(w.name+'이/가 천천히 움직이는 모습을 바라봤어요.');showDialogue([{name:w.name,text:creatureText(w.type)}]);saveGame(true);updateHud()}
 function creatureText(t){return ({turtle:'초록바다거북은 숨을 길게 내쉰 뒤 부드럽게 물속으로 미끄러져 들어갔다. 등껍질 위에 작은 물방울이 반짝인다.',crab:'집게 조개게가 작은 조개를 꼭 끌어안고 모래 위를 옆으로 걸어간다. 가까이 다가가자 한쪽 집게를 들어 인사한다.',butterfly:'바람나비가 꽃 위를 천천히 돌다가 강아지의 귀 가까이에 앉았다. 잠시 쉬고는 다시 바람을 따라 날아간다.',bird:'항구갈매기가 돛대에 앉아 작은 소리를 냈다. 발밑에는 반짝이는 조개껍데기가 하나 놓여 있다.',dolphin:'푸른돌고래가 배 옆에서 물 위로 올라왔다. 잠깐 나란히 헤엄친 뒤 멀리 수평선 쪽으로 돌아갔다.',otter:'달빛수달이 물가에 놓인 조개를 굴려 보다가 앞발로 꼭 안았다. 너를 발견하자 느긋하게 꼬리를 흔들었다.',jellyfish:'유리 해파리는 투명한 몸 안에 작은 푸른 빛을 품고 있다. 물결을 따라 오르내릴 때마다 빛도 부드럽게 숨을 쉰다.',firefly:'반딧불이가 풀 위를 작게 맴돈다. 빛은 일정하게 반짝이지 않고, 마치 바다의 별을 흉내 내듯 천천히 밝아졌다 어두워진다.'})[t]||'작은 생물이 조용히 주변을 살펴보고 있다.'}
-function startFishing(){if(state!=='play'||panel||!$('dialogue').hidden)return;if(!player.boat){const shore=currentIsland(player.x,player.y,0);if(!shore){toast('바다 가까이에서 낚시할 수 있어요.');return}const edge=Math.sqrt(((player.x-shore.x)/shore.rx)**2+((player.y-shore.y)/shore.ry)**2);if(edge<.72){toast('조금 더 물가 쪽으로 걸어가 봐요.');return}}if(fishing){if(fishing.bite){const moonChance=isNight()?(weather==='비'?.24:.16):(weather==='비'?.06:0);const roll=Math.random();const id=roll<moonChance?'moonPearl':roll<(weather==='비'?.50:.28)?'silverFish':'blueFish';addItem(id,1);if(!discovered.includes(id)){discovered.push(id);addJournal(items[id].name+'을 처음 낚았다.')}fishing=null;playTone(760,.18,.02,'triangle');toast(items[id].name+'을 낚았어요! 가방에 담았어요.');saveGame(true);updateHud()}else{toast('아직 물고기가 오지 않았어요. 조금만 더 기다려봐요.')}return}fishing={t:0,bite:false,biteAt:weather==='비'?1.8+Math.random()*2.4:weather==='안개'?3.4+Math.random()*3.4:weather==='강풍'?3+Math.random()*3.2:2.5+Math.random()*3};toast('낚싯줄을 조용히 던졌어요. 물결을 바라봐요.');playTone(430,.25,.015,'sine')}
+function startFishing(){
+ if(state!=='play'||panel||!$('dialogue').hidden)return;
+ if(fishing){toast('낚싯줄을 던졌어요. 입질 순간에 E를 눌러요.');return}
+ if(!player.boat){
+  const shore=currentIsland(player.x,player.y,0);
+  if(!shore){toast('해안이나 배 위에서 낚시할 수 있어요.');return}
+  const edge=Math.sqrt(((player.x-shore.x)/shore.rx)**2+((player.y-shore.y)/shore.ry)**2);
+  if(edge<.72){toast('조금 더 물가 쪽으로 걸어가 봐요.');return}
+ }
+ fishing={phase:'approach',t:0,approachDuration:1.05,biteDelay:0,window:1,dir:player.dir};
+ generatePickupSpark(player.boat?boat.x:player.x,player.boat?boat.y:player.y,7,'fishSplash');
+ playTone(430,.24,.016,'sine');
+ toast('낚싯줄을 던졌어요. 물고기 파티클이 낚싯대로 오면 입질을 기다리세요.');
+}
+function tickFishing(dt){
+ if(!fishing)return;
+ fishing.t+=dt;
+ if(fishing.phase==='approach'&&fishing.t>=fishing.approachDuration){
+  fishing.phase='waiting';fishing.t=0;
+  const weatherFactor=weather==='비'?.76:weather==='안개'?1.25:weather==='강풍'?1.18:1;
+  fishing.biteDelay=Math.max(.65,(1.5+Math.random()*3.3)*weatherFactor/(1+rod.upgrade*.055));
+  playTone(590,.11,.012,'sine');
+  toast('물고기가 낚싯대에 도착했어요. 찌를 자세히 살펴보세요.');
+ }else if(fishing.phase==='waiting'&&fishing.t>=fishing.biteDelay){
+  fishing.phase='bite';fishing.t=0;fishing.window=clamp(.78+rod.upgrade*.035,.78,1.5);
+  playTone(880,.16,.023,'triangle');toast('입질! 찌가 반짝이는 순간 E를 눌러 낚아채세요!');
+ }else if(fishing.phase==='bite'&&fishing.t>fishing.window){
+  fishing=null;playTone(220,.18,.012,'sine');toast('아깝다! 물고기가 도망갔어요. SPACE로 다시 낚시할 수 있어요.');
+ }
+}
+function rollFishingLoot(){
+ const actor=player.boat?boat:player,depth=Math.max(actor.x/WORLD_W,actor.y/WORLD_H);
+ const r=Math.random(),bonus=Math.min(.105,rod.upgrade*.005),rain=weather==='비'?.025:0;
+ if(isNight()&&r<.018+bonus*.22)return 'moonPearl';
+ if(depth>.72&&r<.035+bonus)return 'engineCore';
+ if(depth>.54&&r<.075+bonus)return 'deepCrystal';
+ if(depth>.32&&r<.13+bonus)return 'coralShard';
+ if(r<.28+bonus)return 'ironOre';
+ if(r<.48+bonus)return 'copperOre';
+ if(r<.60+rain)return 'seaGlass';
+ if(r<.69+rain)return 'shell';
+ if(r<.80+bonus)return 'silverFish';
+ if(r<.90)return 'driftwood';
+ return 'blueFish';
+}
+function handleFishingPress(){
+ if(!fishing)return false;
+ if(fishing.phase==='bite'&&fishing.t<=fishing.window){
+  const id=rollFishingLoot();addItem(id,1);
+  if(!discovered.includes(id)){discovered.push(id);addJournal(items[id].name+'을 처음 낚았다.')}
+  const actor=player.boat?boat:player;generatePickupSpark(actor.x,actor.y,12,'discovery');
+  fishing=null;playTone(760,.18,.024,'triangle');
+  toast('성공! '+items[id].name+'을 낚았어요. 낚싯대 Lv.'+rod.upgrade+' 효과가 반영돼요.');
+  saveGame(true);updateHud();return true;
+ }
+ if(fishing.phase==='approach')toast('아직 물고기가 낚싯대로 다가오는 중이에요.');
+ else if(fishing.phase==='waiting')toast('찌가 흔들릴 때까지 기다려요. 너무 일찍 누르지 마세요.');
+ else toast('입질 순간이 지났어요.');
+ return true;
+}
 function onKeyDown(e){const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(k==='escape'){if(panel){closePanel();return}if(!$('dialogue').hidden){$('dialogue').hidden=true;dialogueQueue=[];dialogueAfter=null;return}if(state==='play')openPanel('menu');return}if(!$('dialogue').hidden){if(k==='e'||k==='enter'||k===' '){advanceDialogue()}return}if(panel){if(k==='escape')closePanel();return}if(state!=='play')return;if(k==='e'||k==='enter'){interact();return}if(k===' '){startFishing();return}if(k==='m'){openPanel('map');return}if(k==='i'){openPanel('bag');return}if(k==='j'){openPanel('journal');return}if(k==='c'){openPanel('craft');return}keys[k]=true}
 function onKeyUp(e){keys[e.key.toLowerCase()]=false}
 window.addEventListener('keydown',onKeyDown);window.addEventListener('keyup',onKeyUp);window.addEventListener('blur',()=>{keys={};if(state==='play')saveGame(true)});
@@ -508,38 +676,84 @@ function drawDock(x,y){x=Math.round(x);y=Math.round(y);ctx.fillStyle='#6e4b36';c
 function drawLighthouse(x,y,lit){x=Math.round(x);y=Math.round(y);ctx.fillStyle='#425d67';ctx.fillRect(x-8,y+1,17,14);ctx.fillStyle='#e4dfc8';ctx.fillRect(x-7,y-9,15,11);ctx.fillStyle='#a85d4c';ctx.fillRect(x-9,y-12,19,4);ctx.fillStyle='#55413d';ctx.fillRect(x-4,y+7,5,8);ctx.fillStyle='#344f5a';ctx.fillRect(x-2,y-6,4,4);ctx.fillStyle=lit?'#ffe4a0':'#9bb7b5';ctx.fillRect(x-3,y-6,2,3);ctx.fillStyle=lit?'#ffeab4':'#5f838b';ctx.fillRect(x-2,y-13,4,2);if(lit){ctx.save();ctx.translate(x,y-8);ctx.rotate(Math.sin(elapsed*.36)*.42);ctx.globalAlpha=.11+.05*Math.sin(elapsed*2);ctx.fillStyle='#ffe6a7';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(40,-9);ctx.lineTo(40,9);ctx.closePath();ctx.fill();ctx.restore();ctx.globalAlpha=1;ctx.fillStyle='#fff0b1';ctx.fillRect(x-2,y-7,4,4)}}
 function drawWorkbench(x,y){x=Math.round(x);y=Math.round(y);ctx.fillStyle='#644631';ctx.fillRect(x-9,y-3,18,7);ctx.fillStyle='#b48a5b';ctx.fillRect(x-8,y-3,16,3);ctx.fillStyle='#74503a';ctx.fillRect(x-7,y+4,3,5);ctx.fillRect(x+4,y+4,3,5);ctx.fillStyle='#d4b279';ctx.fillRect(x-5,y-2,6,1);ctx.fillStyle='#4e5c54';ctx.fillRect(x+3,y-5,2,5);ctx.fillStyle='#a8bdad';ctx.fillRect(x+2,y-6,4,2);if(Math.sin(elapsed*1.7)>0.96){ctx.fillStyle='#fff0b5';ctx.fillRect(x+7,y-7,2,2)}}
 function drawPlayer(){
- const x=Math.round(player.x-cam.x), y=Math.round(player.y-cam.y);
- const onFoot=player.moving&&!player.boat;
- // player.x/y is the ground-contact point. Keep the canvas draw box and foot baseline fixed for every frame.
- ctx.imageSmoothingEnabled=false;
- ctx.fillStyle=player.boat?'rgba(8,24,31,.24)':'rgba(8,24,31,.30)';
- ctx.beginPath();
- ctx.ellipse(x,y+2,9,2.6,0,0,Math.PI*2);
- ctx.fill();
+ const x=Math.round(player.x-cam.x),groundY=Math.round(player.y-cam.y);
+ const onFoot=player.moving&&!player.boat,sailing=player.boat&&Math.hypot(boat.vx,boat.vy)>6;
+ const stride=onFoot?Math.sin(walkT*Math.PI*2):0;
+ const bob=onFoot?Math.round(Math.max(0,stride)*1.1):sailing?Math.round(Math.sin(elapsed*4.5)*1):Math.round(Math.sin(elapsed*2.2)*.35);
+ const y=groundY-bob;
+ ctx.imageSmoothingEnabled=false;ctx.fillStyle=player.boat?'rgba(8,24,31,.24)':'rgba(8,24,31,.30)';
+ ctx.beginPath();ctx.ellipse(x,y+2,onFoot?8.5:9,onFoot?2.2:2.6,0,0,Math.PI*2);ctx.fill();
  if(spriteSheetReady){
   const row=player.dir==='down'?0:player.dir==='up'?1:player.dir==='left'?2:3;
-  const frame=onFoot?Math.floor(walkT*8.5)%4:(Math.sin(elapsed*1.1)>0.97?1:0);
-  // Every normalized frame is 32×32, with the same visible bounds and the same bottom pixel row.
+  const frame=onFoot?Math.floor(walkT*8.8)%4:sailing?Math.floor(elapsed*3.2)%2:(Math.sin(elapsed*1.6)>0.965?1:0);
   ctx.drawImage(spriteSheet,frame*32,row*32,32,32,x-16,y-29,32,32);
- }else if(sprite.complete&&sprite.naturalWidth){
-  ctx.drawImage(sprite,x-16,y-29,32,32);
- }else{
-  ctx.fillStyle='#272a29';ctx.fillRect(x-7,y-10,14,14);
-  ctx.fillStyle='#f4d996';ctx.fillRect(x-5,y-9,10,10);
-  ctx.fillStyle='#fff7e5';ctx.fillRect(x-4,y-3,8,6);
-  ctx.fillStyle='#292b2a';ctx.fillRect(x-3,y-4,2,2);ctx.fillRect(x+2,y-4,2,2);ctx.fillRect(x-2,y,4,2);
+ }else if(sprite.complete&&sprite.naturalWidth){ctx.drawImage(sprite,x-16,y-29,32,32)}
+ else{
+  ctx.fillStyle='#272a29';ctx.fillRect(x-7,y-10,14,14);ctx.fillStyle='#f4d996';ctx.fillRect(x-5,y-9,10,10);
+  ctx.fillStyle='#fff7e5';ctx.fillRect(x-4,y-3,8,6);ctx.fillStyle='#292b2a';ctx.fillRect(x-3,y-4,2,2);ctx.fillRect(x+2,y-4,2,2);ctx.fillRect(x-2,y,4,2)
  }
 }
 function drawBoat(x,y,scale){x=Math.round(x);y=Math.round(y+Math.sin(elapsed*2.1+x*.025)*1.1);scale=scale||1;ctx.save();ctx.translate(x,y);if(player.boat&&Math.hypot(boat.vx,boat.vy)>8){ctx.rotate(Math.atan2(boat.vy,boat.vx))}ctx.scale(scale,scale);ctx.fillStyle='#133b4b44';ctx.beginPath();ctx.ellipse(0,7,23,7,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#634635';ctx.fillRect(-19,-2,38,10);ctx.fillStyle='#bd8d5a';ctx.fillRect(-17,-2,34,4);ctx.fillStyle='#855a40';for(let j=-13;j<16;j+=7)ctx.fillRect(j,1,4,5);ctx.fillStyle='#352e2a';ctx.fillRect(-20,4,40,2);ctx.fillStyle='#55463a';ctx.fillRect(-1,-28,2,28);ctx.fillStyle='#fff0ce';ctx.fillRect(1,-26,12,23);ctx.fillStyle='#d3e7d9';ctx.fillRect(-14,-23,1,19);ctx.fillStyle='#e5d8b8';ctx.fillRect(-15,-24,13,21);ctx.fillStyle='#5b6d66';ctx.fillRect(-13,-22,2,17);ctx.fillStyle='#fff5d6';ctx.fillRect(3,-23,7,2);ctx.restore()}
+function drawSeaPickup(p){
+ const x=Math.round(p.x-cam.x),y=Math.round(p.y-cam.y+Math.sin(elapsed*1.8+p.phase)*1.8);
+ if(x<-16||x>W+16||y<-16||y>H+16||seaPickupCollected(p))return;
+ const rare=['coralShard','deepCrystal','engineCore'].includes(p.item);
+ ctx.fillStyle=rare?'#d4f5df26':'#d5f0ed1b';ctx.fillRect(x-6,y-6,12,12);
+ if(p.item==='driftwood'){ctx.fillStyle='#684c38';ctx.fillRect(x-5,y-1,10,3);ctx.fillStyle='#b68a5b';ctx.fillRect(x-3,y-3,5,2)}
+ else if(p.item==='fiber'){ctx.fillStyle='#74bd8b';ctx.fillRect(x-1,y-5,2,10);ctx.fillRect(x-5,y-2,4,2);ctx.fillRect(x+1,y,4,2)}
+ else if(p.item==='shell'){ctx.fillStyle='#fff0d1';ctx.fillRect(x-4,y-2,8,4);ctx.fillStyle='#f2b6b1';ctx.fillRect(x-1,y-1,3,2)}
+ else if(p.item==='seaGlass'){ctx.fillStyle='#8bd9d3';ctx.fillRect(x-2,y-5,4,10);ctx.fillStyle='#d3fff0';ctx.fillRect(x-1,y-3,2,4)}
+ else if(p.item==='copperOre'||p.item==='ironOre'){ctx.fillStyle=p.item==='copperOre'?'#d28a59':'#a2b9bb';ctx.fillRect(x-4,y-3,8,6);ctx.fillStyle='#e4dfc4';ctx.fillRect(x-1,y-4,3,2);ctx.fillStyle='#4c747b';ctx.fillRect(x-2,y+1,3,2)}
+ else if(p.item==='coralShard'){ctx.fillStyle='#f29d9b';ctx.fillRect(x-2,y-5,4,10);ctx.fillRect(x-5,y-2,3,3);ctx.fillRect(x+2,y+1,3,2);ctx.fillStyle='#ffe2c7';ctx.fillRect(x-1,y-3,2,3)}
+ else if(p.item==='deepCrystal'){ctx.fillStyle='#7dd9df';ctx.fillRect(x-2,y-6,4,12);ctx.fillRect(x-5,y-2,10,4);ctx.fillStyle='#e1fff5';ctx.fillRect(x-1,y-4,2,4)}
+ else if(p.item==='engineCore'){ctx.fillStyle='#c3d0c6';ctx.fillRect(x-4,y-4,8,8);ctx.fillStyle='#f5d98e';ctx.fillRect(x-2,y-2,4,4);ctx.fillStyle='#537d84';ctx.fillRect(x-1,y-1,2,2)}
+ const pulse=.5+.5*Math.sin(elapsed*3+p.phase);
+ if(pulse>.8){ctx.fillStyle=rare?'#fff3a6':'#e2fff7';ctx.fillRect(x+6,y-5,2,2);ctx.fillRect(x-6,y+4,1,1)}
+}
 function drawPickup(p){const x=Math.round(p.x-cam.x),y=Math.round(p.y-cam.y);if(x<-20||x>W+20||y<-20||y>H+20)return;const pulse=.5+.5*Math.sin(elapsed*3+p.x);ctx.fillStyle='#f6e4ad22';ctx.fillRect(x-7,y-7,14,14);ctx.fillStyle='#f7df9d';if(p.item==='driftwood'){ctx.fillRect(x-4,y-1,9,3);ctx.fillRect(x-3,y-3,3,2);ctx.fillRect(x+2,y+1,3,2)}else if(p.item==='shell'){ctx.fillRect(x-3,y-2,6,4);ctx.fillStyle='#f7b6b8';ctx.fillRect(x-1,y-1,2,2)}else if(p.item==='seaGlass'){ctx.fillRect(x-2,y-3,4,6);ctx.fillStyle='#c9f2dd';ctx.fillRect(x-1,y-2,1,2)}else if(p.item==='moonHerb'||p.item==='fiber'){ctx.fillStyle='#66a982';ctx.fillRect(x-1,y-4,2,8);ctx.fillRect(x-5,y-2,4,2);ctx.fillRect(x+1,y,4,2);if(p.item==='moonHerb'){ctx.fillStyle='#f2edb5';ctx.fillRect(x-1,y-6,3,2)}}else if(p.item==='bottleLetter'){ctx.fillStyle='#b8e7e3';ctx.fillRect(x-3,y-4,6,8);ctx.fillStyle='#fff1d0';ctx.fillRect(x-2,y-2,4,4);ctx.fillStyle='#a8d9d3';ctx.fillRect(x-1,y-5,2,2)}else if(p.item==='mapFragment'){ctx.fillStyle='#e8d7aa';ctx.fillRect(x-4,y-4,8,8);ctx.fillStyle='#7c6c4e';ctx.fillRect(x-2,y-2,5,1);ctx.fillRect(x-2,y+1,4,1);ctx.fillStyle='#7eada3';ctx.fillRect(x+1,y-1,2,3)}else if(p.item==='starFragment'||p.item==='moonPearl'){ctx.fillStyle=p.item==='starFragment'?'#fff0ae':'#c7f1ed';ctx.fillRect(x-1,y-5,2,10);ctx.fillRect(x-5,y-1,10,2);ctx.fillRect(x-3,y-3,6,6)}else{ctx.fillStyle='#d87d6a';ctx.fillRect(x-3,y-3,6,6)}if(pulse>.85){ctx.fillStyle='#fff5d6';ctx.fillRect(x+5,y-5,1,1);ctx.fillRect(x-6,y+4,1,1)}}
 function drawNPC(){const x=294-cam.x,y=283-cam.y;drawPixelAnimal(x,y,'#cbab75','#8d6048');ctx.fillStyle='#f3dfb3';ctx.fillRect(x-4,y-15,8,3);ctx.fillStyle='#73503a';ctx.fillRect(x-3,y-14,6,1)}
 function drawForegroundTrees(){if(player.boat)return;for(let idx=0;idx<islands.length;idx++){const i=islands[idx];if(Math.abs(player.x-i.x)>i.rx+35||Math.abs(player.y-i.y)>i.ry+35)continue;for(let j=0;j<(i.id==='harbor'?9:5);j++){const a=j*2.17+idx*.8,rx=i.rx*(.22+.47*((j%3)/3)),ry=i.ry*(.25+.48*((j%4)/4)),tx=Math.round(i.x+Math.cos(a)*rx),ty=Math.round(i.y+Math.sin(a)*ry);if(i.id==='harbor'&&Math.hypot(tx-i.x,ty-i.y)<52)continue;if(player.y<ty&&Math.abs(player.x-tx)<30&&Math.abs(player.y-ty)<25)drawTree(tx-cam.x,ty-cam.y,j%3===0)}}}
 function drawPixelAnimal(x,y,fur,accent){x=Math.round(x);y=Math.round(y+Math.sin(elapsed*2)*.6);ctx.fillStyle='#173f4a44';ctx.fillRect(x-7,y+6,14,3);ctx.fillStyle='#2b2928';ctx.fillRect(x-6,y-6,12,12);ctx.fillStyle=fur;ctx.fillRect(x-5,y-5,10,9);ctx.fillStyle=accent;ctx.fillRect(x-5,y-7,3,4);ctx.fillRect(x+2,y-7,3,4);ctx.fillStyle='#2c2927';ctx.fillRect(x-3,y-2,2,2);ctx.fillRect(x+2,y-2,2,2);ctx.fillStyle='#f1e7d0';ctx.fillRect(x-3,y+1,6,3)}
 function drawWildlife(w){const bob=Math.sin(elapsed*1.7+w.x*.03)*1.4;const drift=w.type==='dolphin'?0:w.type==='bird'?Math.sin(elapsed*.75+w.x*.01)*9:w.type==='butterfly'?Math.sin(elapsed*1.1+w.y*.02)*6:w.type==='turtle'?Math.sin(elapsed*.22+w.x*.01)*2:w.type==='crab'?Math.round(Math.sin(elapsed*1.8+w.x)*2):w.type==='otter'?Math.sin(elapsed*.55+w.y*.02)*4:Math.sin(elapsed*.9+w.x*.01)*2;const x=Math.round(w.x+drift-cam.x),y=Math.round(w.y-cam.y+bob);if(x<-20||x>W+20||y<-20||y>H+20)return;if(w.type==='turtle'){ctx.fillStyle='#2e574d';ctx.fillRect(x-6,y-3,12,7);ctx.fillStyle='#6a9c72';ctx.fillRect(x-5,y-5,10,8);ctx.fillStyle='#9cc48b';ctx.fillRect(x+5,y-2,4,3);ctx.fillRect(x-4,y+3,3,3);ctx.fillRect(x+2,y+3,3,3);ctx.fillStyle='#263d36';ctx.fillRect(x+7,y-1,1,1)}else if(w.type==='crab'){ctx.fillStyle='#b9675a';ctx.fillRect(x-5,y-3,10,6);ctx.fillRect(x-8,y-5,3,3);ctx.fillRect(x+5,y-5,3,3);ctx.fillStyle='#f7d2a0';ctx.fillRect(x-3,y-2,1,1);ctx.fillRect(x+2,y-2,1,1);ctx.fillStyle='#8f5149';for(let j=-5;j<=5;j+=5){ctx.fillRect(x+j,y+3,1,3)}}else if(w.type==='butterfly'){ctx.fillStyle='#e9b5cf';ctx.fillRect(x-6,y-3,5,5);ctx.fillRect(x+2,y-4,5,5);ctx.fillStyle='#fff0ca';ctx.fillRect(x-1,y-3,3,6);ctx.fillStyle='#aa7c9d';ctx.fillRect(x,y-5,1,3)}else if(w.type==='bird'){ctx.fillStyle='#efe5c8';ctx.fillRect(x-4,y-2,9,5);ctx.fillRect(x-2,y-5,4,4);ctx.fillStyle='#d19f65';ctx.fillRect(x+4,y-1,3,2);ctx.fillStyle='#2d3f43';ctx.fillRect(x,y-4,1,1)}else if(w.type==='dolphin'){const drift=Math.round(Math.sin(elapsed*.65)*12);ctx.fillStyle='#73c3c6';ctx.fillRect(x-8+drift,y-2,14,4);ctx.fillRect(x+4+drift,y-5,5,5);ctx.fillRect(x-11+drift,y-4,4,3);ctx.fillStyle='#c4e6d9';ctx.fillRect(x-4+drift,y+2,7,1);ctx.fillStyle='#e5f9ed';ctx.fillRect(x+6+drift,y-4,1,1)}else if(w.type==='otter'){ctx.fillStyle='#614e43';ctx.fillRect(x-6,y-4,13,7);ctx.fillRect(x+4,y-7,5,5);ctx.fillStyle='#c9b29a';ctx.fillRect(x-2,y-2,7,4);ctx.fillStyle='#302e2b';ctx.fillRect(x+7,y-6,1,1);ctx.fillRect(x-8,y+2,3,2)}else if(w.type==='jellyfish'){ctx.fillStyle='#9adbd9';ctx.fillRect(x-5,y-4,10,5);ctx.fillRect(x-4,y-6,8,3);ctx.fillStyle='#d8f2df';ctx.fillRect(x-3,y-5,2,2);ctx.fillStyle='#85c6d2';ctx.fillRect(x-4,y+1,1,4);ctx.fillRect(x,y+1,1,5);ctx.fillRect(x+3,y+1,1,4)}else if(w.type==='firefly'){ctx.fillStyle='#b8dca0';ctx.fillRect(x-2,y-2,4,3);ctx.fillStyle='#fff2a5';ctx.fillRect(x-5,y-5,10,1);ctx.fillRect(x-4,y-4,8,1);ctx.fillStyle='#ffffff';ctx.fillRect(x,y-4,1,1)}}
 function drawWeather(){const t=elapsed,night=isNight();if(weather==='비'){ctx.fillStyle='#1b34491c';ctx.fillRect(0,0,W,H);for(let i=0;i<42;i++){const x=(i*71+t*46)%W,y=(i*43+t*69)%H;ctx.fillStyle=i%4===0?'#d2f2e75b':'#b4e6ec42';ctx.fillRect(x,y,1,4)}islands.forEach((island,idx)=>{const ix=island.x-cam.x,iy=island.y-cam.y;if(ix<-island.rx||ix>W+island.rx||iy<-island.ry||iy>H+island.ry)return;for(let j=0;j<3;j++){const px=Math.round(ix+Math.sin(idx*7+j*3)*island.rx*.55),py=Math.round(iy+Math.cos(idx*5+j*4)*island.ry*.55);ctx.fillStyle='#c6f0e22a';ctx.fillRect(px,py,3,1)}})}if(weather==='안개'){ctx.fillStyle='#d7e9df35';ctx.fillRect(0,0,W,H);ctx.fillStyle='#deedea22';for(let i=0;i<6;i++){ctx.fillRect((i*113+Math.sin(t*.1)*30)%W,26+i*39,140,13)}}if(weather==='흐림'){ctx.fillStyle='#273d4b18';ctx.fillRect(0,0,W,H);for(let i=0;i<4;i++){const x=(i*137+Math.sin(t*.08+i)*12)%W,y=22+i*17;ctx.fillStyle='#d9e7df12';ctx.fillRect(x,y,44,3);ctx.fillRect(x+8,y-2,27,2)}}if(weather==='강풍'){for(let i=0;i<15;i++){const x=(i*67+t*53)%W,y=(i*37+Math.sin(t+i)*5)%H;ctx.fillStyle='#c7eee84c';ctx.fillRect(x,y,7,1);ctx.fillRect(x+4,y+2,4,1)}}if(night){ctx.fillStyle='#071c3955';ctx.fillRect(0,0,W,H);if(weather!=='비'&&weather!=='안개'){for(let i=0;i<17;i++){const x=(i*83+17)%W,y=(i*47+11)%100;ctx.fillStyle=(i%4===0)?'#e9efce':'#a7d8d5';ctx.fillRect(x,y,1,1)}}}if(weather==='맑음'&&!night&&minutes%1440>500&&minutes%1440<1000){ctx.fillStyle='#fff4be0c';ctx.fillRect(0,0,W,H)}}
-function drawFishing(){if(!fishing)return;const x=Math.round((player.boat?boat.x:player.x)-cam.x),y=Math.round((player.boat?boat.y:player.y)-cam.y);ctx.strokeStyle='#e4edda';ctx.beginPath();ctx.moveTo(x+4,y-3);ctx.quadraticCurveTo(x+16,y+1,x+22,y+7+Math.sin(elapsed*5)*2);ctx.stroke();ctx.fillStyle=fishing.bite?'#fff2a4':'#9ad9d7';ctx.fillRect(x+20,y+7,3,3);if(fishing.bite){ctx.fillStyle='#fff0b8';ctx.fillRect(x+16,y+1,2,2);ctx.fillRect(x+25,y+4,2,2)}}
-function render(){ctx.clearRect(0,0,W,H);const target=player.boat?boat:player,desiredX=clamp(target.x-W/2,0,WORLD_W-W),desiredY=clamp(target.y-H/2,0,WORLD_H-H);if(!cam.initialized){cam.x=desiredX;cam.y=desiredY;cam.initialized=true}else{const follow=1-Math.exp(-8*frameDelta);cam.x+=(desiredX-cam.x)*follow;cam.y+=(desiredY-cam.y)*follow}drawOcean();drawIslands();pickups.forEach(p=>{if(!collected.includes(p.id)&&pickupEnabled(p))drawPickup(p)});visibleWildlife().forEach(drawWildlife);if(!player.boat)drawNPC();drawBoat(boat.x-cam.x,boat.y-cam.y,1+boat.upgrade*.06);drawFishing();drawPlayer();drawForegroundTrees();drawWeather();particles=particles.filter(p=>p.t<1.4);particles.forEach(p=>{const x=p.x-cam.x,y=p.y-cam.y-p.t*18;ctx.globalAlpha=1-p.t/1.4;if(p.type==='step'){ctx.fillStyle='#e4d7b0';ctx.fillRect(Math.round(x),Math.round(y+2),2,1);ctx.fillRect(Math.round(x+4),Math.round(y+1),1,1)}else{ctx.fillStyle='#fff0b5';ctx.fillRect(Math.round(x-p.t*6),Math.round(y),2,2);ctx.fillRect(Math.round(x+p.t*7),Math.round(y-6),2,2)}ctx.globalAlpha=1});if(state==='play'&&!panel&&$('dialogue').hidden){ctx.fillStyle='#f3e8be';ctx.fillRect(0,H-2,W,2);ctx.fillStyle='#b7e5dc';ctx.fillRect(0,H-2,(W*((minutes%1440)/1440)),2)}}
-function findNearObject(){if(player.boat){const seaLife=visibleWildlife().find(w=>w.type==='dolphin'&&objectDistance(boat.x,boat.y,w)<INTERACTION_RADIUS);if(seaLife)return {hint:'돌고래 관찰하기'};return currentIsland(boat.x,boat.y,.28)?{hint:'정박하기'}: {hint:'바다를 항해 중'}}let candidates=[];pickups.filter(p=>!collected.includes(p.id)&&pickupEnabled(p)).forEach(o=>candidates.push({o,d:objectDistance(player.x,player.y,o),hint:'줍기'}));candidates.push({o:{x:245,y:216},d:objectDistance(player.x,player.y,{x:245,y:216}),hint:'등대 살펴보기'});candidates.push({o:{x:294,y:283},d:objectDistance(player.x,player.y,{x:294,y:283}),hint:'대화하기'});candidates.push({o:{x:2199,y:453},d:objectDistance(player.x,player.y,{x:2199,y:453}),hint:'별빛 등대 살펴보기'});candidates.push({o:{x:354,y:282},d:objectDistance(player.x,player.y,{x:354,y:282}),hint:'제작하기'});candidates.push({o:boat,d:objectDistance(player.x,player.y,boat),hint:'배에 타기'});if(isNight()&&objectDistance(player.x,player.y,moonGrotto)<INTERACTION_RADIUS)return {hint:'달빛 동굴 살펴보기'};const n=candidates.filter(c=>c.d<INTERACTION_RADIUS).sort((a,b)=>a.d-b.d)[0];return n?{hint:n.hint}:null}
+function drawFishing(){
+ if(!fishing)return;
+ const actor=player.boat?boat:player;
+ const x=Math.round(actor.x-cam.x),y=Math.round(actor.y-cam.y);
+ const dir=fishing.dir||player.dir,side=dir==='left'?-1:1;
+ const tipX=x+side*7,tipY=y-21,bobX=x+side*27,bobY=y+7+Math.round(Math.sin(elapsed*4)*1.5);
+ ctx.strokeStyle='#4b3026';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x+side*2,y-7);ctx.lineTo(tipX,tipY);ctx.stroke();
+ ctx.strokeStyle='#f4e7bf';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(tipX,tipY);ctx.quadraticCurveTo(x+side*19,y-2,bobX,bobY);ctx.stroke();
+ if(fishing.phase==='approach'){
+  const progress=clamp(fishing.t/fishing.approachDuration,0,1);
+  for(let i=0;i<7;i++){const p=clamp(progress-i*.115,0,1),px=Math.round(bobX+(tipX-bobX)*p+Math.sin(elapsed*13+i)*1.5),py=Math.round(bobY+(tipY-bobY)*p+Math.cos(elapsed*11+i)*1.5);ctx.fillStyle=i%2?'#9de2e0':'#fff2bd';ctx.fillRect(px,py,3,2);ctx.fillRect(px-2,py+1,2,1)}
+ }else{
+  const flash=fishing.phase==='bite'&&Math.floor(fishing.t*16)%2===0;
+  ctx.fillStyle=flash?'#fff4a8':fishing.phase==='bite'?'#f4c879':'#7ed2d0';ctx.fillRect(bobX-2,bobY-2,5,5);ctx.fillRect(bobX-1,bobY-4,3,2);
+  if(fishing.phase==='bite'){ctx.fillStyle='#fff3b0';ctx.fillRect(bobX-5,bobY-8,11,1);ctx.fillRect(bobX-2,bobY-11,5,1);ctx.fillStyle='#08283a';ctx.fillRect(bobX-4,bobY-21,17,12);ctx.fillStyle='#fff5d7';ctx.font='bold 8px sans-serif';ctx.fillText('E!',bobX-2,bobY-13);ctx.fillStyle='#ffe7a0';ctx.fillRect(bobX-8,bobY+8,Math.max(1,Math.round(12*(1-fishing.t/fishing.window))),2)}
+  else if(fishing.phase==='waiting'){ctx.fillStyle='#d2fff1';ctx.fillRect(bobX+4,bobY-4,1,2)}
+ }
+}
+function render(){ctx.clearRect(0,0,W,H);const target=player.boat?boat:player,desiredX=clamp(target.x-W/2,0,WORLD_W-W),desiredY=clamp(target.y-H/2,0,WORLD_H-H);if(!cam.initialized){cam.x=desiredX;cam.y=desiredY;cam.initialized=true}else{const follow=1-Math.exp(-11*frameDelta);cam.x+=(desiredX-cam.x)*follow;cam.y+=(desiredY-cam.y)*follow}drawOcean();drawIslands();pickups.forEach(p=>{if(!collected.includes(p.id)&&pickupEnabled(p))drawPickup(p)});seaPickups.forEach(drawSeaPickup);visibleWildlife().forEach(drawWildlife);if(!player.boat)drawNPC();drawBoat(boat.x-cam.x,boat.y-cam.y,1+Math.min(boat.upgrade,20)*.025);drawPlayer();drawFishing();drawForegroundTrees();drawWeather();particles=particles.filter(p=>p.t<1.4);particles.forEach(p=>{const x=p.x-cam.x,y=p.y-cam.y-p.t*18;ctx.globalAlpha=1-p.t/1.4;if(p.type==='step'){ctx.fillStyle='#e4d7b0';ctx.fillRect(Math.round(x),Math.round(y+2),2,1);ctx.fillRect(Math.round(x+4),Math.round(y+1),1,1)}else{ctx.fillStyle='#fff0b5';ctx.fillRect(Math.round(x-p.t*6),Math.round(y),2,2);ctx.fillRect(Math.round(x+p.t*7),Math.round(y-6),2,2)}ctx.globalAlpha=1});if(state==='play'&&!panel&&$('dialogue').hidden){ctx.fillStyle='#f3e8be';ctx.fillRect(0,H-2,W,2);ctx.fillStyle='#b7e5dc';ctx.fillRect(0,H-2,(W*((minutes%1440)/1440)),2)}}
+function findNearObject(){
+ if(player.boat){
+  const salvage=seaPickups.filter(p=>!seaPickupCollected(p)&&objectDistance(boat.x,boat.y,p)<INTERACTION_RADIUS).sort((a,b)=>objectDistance(boat.x,boat.y,a)-objectDistance(boat.x,boat.y,b))[0];
+  if(salvage)return {hint:'표류 자원 줍기 · '+items[salvage.item].name};
+  const seaLife=visibleWildlife().find(w=>w.type==='dolphin'&&objectDistance(boat.x,boat.y,w)<INTERACTION_RADIUS);
+  if(seaLife)return {hint:'돌고래 관찰하기'};
+  return currentIsland(boat.x,boat.y,.28)?{hint:'정박하기'}:{hint:'바다를 항해 중'};
+ }
+ let candidates=[];
+ pickups.filter(p=>!collected.includes(p.id)&&pickupEnabled(p)).forEach(o=>candidates.push({o,d:objectDistance(player.x,player.y,o),hint:'줍기'}));
+ candidates.push({o:{x:245,y:216},d:objectDistance(player.x,player.y,{x:245,y:216}),hint:'등대 살펴보기'});
+ candidates.push({o:{x:294,y:283},d:objectDistance(player.x,player.y,{x:294,y:283}),hint:'대화하기'});
+ candidates.push({o:{x:2199,y:453},d:objectDistance(player.x,player.y,{x:2199,y:453}),hint:'별빛 등대 살펴보기'});
+ candidates.push({o:{x:354,y:282},d:objectDistance(player.x,player.y,{x:354,y:282}),hint:'제작하기'});
+ candidates.push({o:boat,d:objectDistance(player.x,player.y,boat),hint:'배에 타기'});
+ if(isNight()&&objectDistance(player.x,player.y,moonGrotto)<INTERACTION_RADIUS)return {hint:'달빛 동굴 살펴보기'};
+ const n=candidates.filter(c=>c.d<INTERACTION_RADIUS).sort((a,b)=>a.d-b.d)[0];
+ return n?{hint:n.hint}:null
+}
 function tick(dt){
  elapsed+=dt;
  autosaveTimer+=dt;
@@ -548,32 +762,27 @@ function tick(dt){
  if(state==='play'&&panel===null&&$('dialogue').hidden){
   minutes+=dt*1.15;
   if(minutes>=1440){
-   minutes-=1440;day++;
+   minutes-=1440;day++;seaCollected=seaCollected.filter(k=>{const d=Number(k.split(':')[0]);return Number.isFinite(d)&&d>=day-3});
    weather=['맑음','흐림','비','맑음','안개','강풍'][Math.floor(Math.random()*6)];
    addJournal('제 '+day+'일, 오늘의 날씨는 '+weather+'이다.');
    toast('새로운 아침이 찾아왔어요. 오늘은 '+weather+' 날씨예요.')
   }
-  if(fishing){
-   fishing.t+=dt;
-   if(!fishing.bite&&fishing.t>=fishing.biteAt){
-    fishing.bite=true;playTone(740,.13,.014,'sine');
-    toast('톡, 낚싯대가 움직여요! SPACE를 눌러 천천히 당겨봐요.')
-   }
-  }
+  if(fishing)tickFishing(dt);
   let dx=0,dy=0;
   if(keys.w||keys.arrowup)dy-=1;
   if(keys.s||keys.arrowdown)dy+=1;
   if(keys.a||keys.arrowleft)dx-=1;
   if(keys.d||keys.arrowright)dx+=1;
+  if(fishing&&player.boat){dx=0;dy=0}
   const inputMag=Math.hypot(dx,dy);
   if(inputMag>0){
    dx/=inputMag;dy/=inputMag;
    player.dir=Math.abs(dx)>Math.abs(dy)?(dx<0?'left':'right'):(dy<0?'up':'down')
   }
   if(player.boat){
-   const windFactor=weather==='강풍'?1.18:weather==='비'?.94:weather==='안개'?.9:weather==='흐림'?.97:1;const maxSpeed=(95+boat.upgrade*14)*windFactor,accel=weather==='강풍'?265:245;
+   const windFactor=weather==='강풍'?1.18:weather==='비'?.94:weather==='안개'?.9:weather==='흐림'?.97:1;const maxSpeed=Math.min(270,95+boat.upgrade*6.8)*windFactor,accel=weather==='강풍'?265:245;
    boat.vx+=dx*accel*dt;boat.vy+=dy*accel*dt;
-   const drag=Math.exp((inputMag>0?-.34:-2.35)*dt);
+   const drag=Math.exp((inputMag>0?-.10:-.48)*dt);
    boat.vx*=drag;boat.vy*=drag;
    let boatSpeed=Math.hypot(boat.vx,boat.vy);
    if(boatSpeed>maxSpeed){boat.vx=boat.vx/boatSpeed*maxSpeed;boat.vy=boat.vy/boatSpeed*maxSpeed;boatSpeed=maxSpeed}
@@ -587,7 +796,7 @@ function tick(dt){
    player.moving=boatSpeed>6;
    if(player.moving)walkT+=dt*clamp(boatSpeed/maxSpeed,.25,1.1)
   }else{
-   const maxSpeed=68,accel=230;
+   const maxSpeed=68*(fishing?.28:1),accel=230*(fishing?.42:1);
    player.vx+=dx*accel*dt;player.vy+=dy*accel*dt;
    const drag=Math.exp((inputMag>0?-.72:-4.6)*dt);
    player.vx*=drag;player.vy*=drag;
@@ -600,7 +809,7 @@ function tick(dt){
    speedNow=Math.hypot(player.vx,player.vy);
    player.moving=speedNow>3.2;
    if(player.moving){
-    walkT+=dt*clamp(speedNow/32,.35,1.8);
+    walkT+=dt*clamp(speedNow/32,.18,2.15);
     const beat=Math.floor(walkT*8.5);
     if(beat!==lastFootstepBeat){
      lastFootstepBeat=beat;
