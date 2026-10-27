@@ -908,14 +908,14 @@ function tick(dt){
    // Keep sailing momentum, but dampen excessive rebound and drifting.
    // Steering still feels heavier than walking, without the boat skating for too long.
    const level=Math.min(30,Math.max(0,boat.upgrade));
-   const steeringDrag=.34+level*.012,coastingDrag=1.05+level*.035;
+   const steeringDrag=.52+level*.012,coastingDrag=1.65+level*.035;
    const drag=Math.exp((inputMag>0?-steeringDrag:-coastingDrag)*dt);
    boat.vx*=drag;boat.vy*=drag;
    boatSpeed=Math.hypot(boat.vx,boat.vy);
    if(boatSpeed>maxSpeed){boat.vx=boat.vx/boatSpeed*maxSpeed;boat.vy=boat.vy/boatSpeed*maxSpeed;boatSpeed=maxSpeed}
    const nx=clamp(boat.x+boat.vx*dt,8,WORLD_W-8);
    const ny=clamp(boat.y+boat.vy*dt,8,WORLD_H-8);
-   const collisionRebound=Math.max(.01,.08-level*.0022);
+   const collisionRebound=Math.max(.003,.018-level*.00045);
    if(!landAt(nx,boat.y))boat.x=nx;else boat.vx*=-collisionRebound;
    if(!landAt(boat.x,ny))boat.y=ny;else boat.vy*=-collisionRebound;
    boatSpeed=Math.hypot(boat.vx,boat.vy);
