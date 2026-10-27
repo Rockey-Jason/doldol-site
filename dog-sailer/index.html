@@ -948,7 +948,9 @@ function tick(dt){
    const ny=clamp(boat.y+boat.vy*dt,8,WORLD_H-8);
    // Speed-sensitive, gentle rebound: faster impacts bounce slightly more.
    const impactSpeed=Math.hypot(boat.vx,boat.vy);
-   const reboundFactor=clamp((impactSpeed/Math.max(1,maxSpeed))*.16,0,.16);
+   // Higher boat upgrade levels steadily reduce wall rebound; speed still affects impact strength.
+   const reboundLevelFactor=1-Math.min(30,Math.max(0,boat.upgrade||0))*.025;
+   const reboundFactor=clamp((impactSpeed/Math.max(1,maxSpeed))*.16*reboundLevelFactor,0,.16);
    let hitX=false,hitY=false;
    if(!landAt(nx,boat.y))boat.x=nx;else{boat.vx=-boat.vx*reboundFactor;hitX=true}
    if(!landAt(boat.x,ny))boat.y=ny;else{boat.vy=-boat.vy*reboundFactor;hitY=true}
