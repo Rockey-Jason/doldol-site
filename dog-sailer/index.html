@@ -915,22 +915,17 @@ function tick(dt){
    const steeringDrag=.52+level*.012,coastingDrag=1.65+level*.035;
    const drag=Math.exp((inputMag>0?-steeringDrag:-coastingDrag)*dt);
    boat.vx*=drag;boat.vy*=drag;
-   // While steering, gently align momentum with the boat's heading to avoid sideways skating.
-   boatSpeed=Math.hypot(boat.vx,boat.vy);
-   if(inputMag>0&&boatSpeed>1){
-    const velocityHeading=Math.atan2(boat.vy,boat.vx);
-    const headingError=Math.atan2(Math.sin(boat.heading-velocityHeading),Math.cos(boat.heading-velocityHeading));
-    const alignStep=clamp(headingError,-2.8*dt,2.8*dt);
-    const alignedHeading=velocityHeading+alignStep;
-    boat.vx=Math.cos(alignedHeading)*boatSpeed;boat.vy=Math.sin(alignedHeading)*boatSpeed;
-   }
    boatSpeed=Math.hypot(boat.vx,boat.vy);
    if(boatSpeed>maxSpeed){boat.vx=boat.vx/boatSpeed*maxSpeed;boat.vy=boat.vy/boatSpeed*maxSpeed;boatSpeed=maxSpeed}
    const nx=clamp(boat.x+boat.vx*dt,8,WORLD_W-8);
    const ny=clamp(boat.y+boat.vy*dt,8,WORLD_H-8);
-   // Hard-stop only the blocked axis: no bounce, while allowing the boat to slide along shore.
-   if(!landAt(nx,boat.y))boat.x=nx;else boat.vx=0;
-   if(!landAt(boat.x,ny))boat.y=ny;else boat.vy=0;
+   // Resolve each axis independently: stop at walls without bouncing or vibrating.
+   let hitX=false,hitY=false;
+   if(!landAt(nx,boat.y))boat.x=nx;else{boat.vx=0;hitX=true}
+   if(!landAt(boat.x,ny))boat.y=ny;else{boat.vy=0;hitY=true}
+   // After scraping a wall, reset the heading to the actual requested direction
+   // so the engine doesn't keep pushing into the obstacle and wobble on release.
+   if((hitX||hitY)&&inputMag>0)boat.heading=Math.atan2(dy,dx);
    boatSpeed=Math.hypot(boat.vx,boat.vy);
    campaignState.stats.sailDistance+=Math.hypot(boat.x-previousBoatX,boat.y-previousBoatY);
    player.x=boat.x;player.y=boat.y;player.vx=boat.vx;player.vy=boat.vy;
