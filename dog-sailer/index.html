@@ -899,8 +899,12 @@ function tick(dt){
    if(inputMag>0){
     const targetHeading=Math.atan2(dy,dx);
     const angleDifference=Math.atan2(Math.sin(targetHeading-boat.heading),Math.cos(targetHeading-boat.heading));
-    const turnRate=1.55/(1+boatSpeed/175);
-    boat.heading+=clamp(angleDifference,-turnRate*dt,turnRate*dt);
+    // Once nearly stopped, face the new input immediately so reversing cannot thrust backward first.
+    if(boatSpeed<5)boat.heading=targetHeading;
+    else{
+     const turnRate=1.55/(1+boatSpeed/175);
+     boat.heading+=clamp(angleDifference,-turnRate*dt,turnRate*dt);
+    }
     const engineAccel=baseAccel*(1+Math.min(30,boat.upgrade)*.005);
     boat.vx+=Math.cos(boat.heading)*engineAccel*dt;
     boat.vy+=Math.sin(boat.heading)*engineAccel*dt;
