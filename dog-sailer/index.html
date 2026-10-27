@@ -915,7 +915,7 @@ function tick(dt){
    if(boatSpeed>maxSpeed){boat.vx=boat.vx/boatSpeed*maxSpeed;boat.vy=boat.vy/boatSpeed*maxSpeed;boatSpeed=maxSpeed}
    const nx=clamp(boat.x+boat.vx*dt,8,WORLD_W-8);
    const ny=clamp(boat.y+boat.vy*dt,8,WORLD_H-8);
-   const collisionRebound=Math.max(.003,.018-level*.00045);
+   const collisionRebound=0;
    if(!landAt(nx,boat.y))boat.x=nx;else boat.vx*=-collisionRebound;
    if(!landAt(boat.x,ny))boat.y=ny;else boat.vy*=-collisionRebound;
    boatSpeed=Math.hypot(boat.vx,boat.vy);
