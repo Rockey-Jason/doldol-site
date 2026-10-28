@@ -172,42 +172,42 @@ const frame=document.getElementById("gameFrame");
 const $=id=>document.getElementById(id);
 const SKILL_META={
  parry:{name:"머리로 튕겨내기",icon:"↶",category:1,key:"Q",rarity:"일반",weight:60,effect:"parry",power:1},
- goldParry:{name:"황금 반사",icon:"✨",category:1,key:"Q",rarity:"희귀",weight:28,effect:"parry",power:1.25},
- perfectGuard:{name:"완벽 방어",icon:"🛡️",category:1,key:"Q",rarity:"영웅",weight:10,effect:"parry",power:1.6},
- prismReflect:{name:"프리즘 반사",icon:"💎",category:1,key:"Q",rarity:"전설",weight:2,effect:"parry",power:2},
- echoGuard:{name:"메아리 방패",icon:"〰️",category:1,key:"Q",rarity:"일반",weight:60,effect:"parry",power:1.08},
- ironMane:{name:"강철 갈기",icon:"⚙️",category:1,key:"Q",rarity:"일반",weight:60,effect:"parry",power:1.12},
- counterBurst:{name:"반격 폭발",icon:"💥",category:1,key:"Q",rarity:"희귀",weight:28,effect:"parry",power:1.35},
- mirrorPaw:{name:"거울 발톱",icon:"🪞",category:1,key:"Q",rarity:"희귀",weight:28,effect:"parry",power:1.3},
- cometGuard:{name:"혜성 방어",icon:"☄️",category:1,key:"Q",rarity:"영웅",weight:10,effect:"parry",power:1.7},
- royalGuard:{name:"왕실 수호",icon:"👑",category:1,key:"Q",rarity:"영웅",weight:10,effect:"parry",power:1.8},
- infinityReflect:{name:"무한 반사",icon:"♾️",category:1,key:"Q",rarity:"전설",weight:2,effect:"parry",power:2.2},
+ goldParry:{name:"황금 반사",icon:"✨",category:1,key:"Q",rarity:"희귀",weight:28,effect:"goldReflect",power:1.25},
+ perfectGuard:{name:"완벽 방어",icon:"🛡️",category:1,key:"Q",rarity:"영웅",weight:10,effect:"perfectGuard",power:1.6},
+ prismReflect:{name:"프리즘 반사",icon:"💎",category:1,key:"Q",rarity:"전설",weight:2,effect:"prismReflect",power:2},
+ echoGuard:{name:"메아리 방패",icon:"〰️",category:1,key:"Q",rarity:"일반",weight:60,effect:"echoGuard",power:1.08},
+ ironMane:{name:"강철 갈기",icon:"⚙️",category:1,key:"Q",rarity:"일반",weight:60,effect:"ironMane",power:1.12},
+ counterBurst:{name:"반격 폭발",icon:"💥",category:1,key:"Q",rarity:"희귀",weight:28,effect:"counterBurst",power:1.35},
+ mirrorPaw:{name:"거울 발톱",icon:"🪞",category:1,key:"Q",rarity:"희귀",weight:28,effect:"mirrorPaw",power:1.3},
+ cometGuard:{name:"혜성 방어",icon:"☄️",category:1,key:"Q",rarity:"영웅",weight:10,effect:"cometGuard",power:1.7},
+ royalGuard:{name:"왕실 수호",icon:"👑",category:1,key:"Q",rarity:"영웅",weight:10,effect:"royalGuard",power:1.8},
+ infinityReflect:{name:"무한 반사",icon:"♾️",category:1,key:"Q",rarity:"전설",weight:2,effect:"infinityReflect",power:2.2},
  dash:{name:"돌격",icon:"➤",category:2,key:"E",rarity:"일반",weight:60,effect:"dash",power:1},
  head:{name:"머리 박치기",icon:"◆",category:2,key:"Shift",rarity:"일반",weight:60,effect:"head",power:1},
- lightningDash:{name:"번개 돌진",icon:"⚡",category:2,key:"E",rarity:"희귀",weight:28,effect:"dash",power:1.35},
+ lightningDash:{name:"번개 돌진",icon:"⚡",category:2,key:"E",rarity:"희귀",weight:28,effect:"lightningDash",power:1.35},
  skyLeap:{name:"공중 도약",icon:"🪽",category:2,key:"E",rarity:"희귀",weight:28,effect:"jump",power:1.3},
- impactLanding:{name:"충격 착지",icon:"🌋",category:2,key:"E",rarity:"영웅",weight:10,effect:"dash",power:1.7},
- cometRush:{name:"혜성 질주",icon:"☄️",category:2,key:"E",rarity:"영웅",weight:10,effect:"dash",power:1.8},
- shadowStep:{name:"그림자 도약",icon:"🌑",category:2,key:"E",rarity:"일반",weight:60,effect:"dash",power:1.12},
- windRunner:{name:"질풍 보법",icon:"🌪️",category:2,key:"E",rarity:"일반",weight:60,effect:"dash",power:1.18},
-meteorDash:{name:"유성 돌파",icon:"☄️",category:2,key:"E",rarity:"희귀",weight:28,effect:"dash",power:1.5},
-phantomRush:{name:"환영 돌진",icon:"👻",category:2,key:"E",rarity:"전설",weight:2,effect:"dash",power:2.1},
+ impactLanding:{name:"충격 착지",icon:"🌋",category:2,key:"E",rarity:"영웅",weight:10,effect:"impactLanding",power:1.7},
+ cometRush:{name:"혜성 질주",icon:"☄️",category:2,key:"E",rarity:"영웅",weight:10,effect:"cometRush",power:1.8},
+ shadowStep:{name:"그림자 도약",icon:"🌑",category:2,key:"E",rarity:"일반",weight:60,effect:"shadowStep",power:1.12},
+ windRunner:{name:"질풍 보법",icon:"🌪️",category:2,key:"E",rarity:"일반",weight:60,effect:"windRunner",power:1.18},
+meteorDash:{name:"유성 돌파",icon:"☄️",category:2,key:"E",rarity:"희귀",weight:28,effect:"meteorDash",power:1.5},
+phantomRush:{name:"환영 돌진",icon:"👻",category:2,key:"E",rarity:"전설",weight:2,effect:"phantomRush",power:2.1},
 party:{name:"Rockey Party",icon:"♫",category:3,key:"F",rarity:"일반",weight:60,effect:"party",power:1},
-frenzy:{name:"광폭화",icon:"🔥",category:3,key:"F",rarity:"희귀",weight:28,effect:"party",power:1.35},
-goldenFur:{name:"황금 털",icon:"🌟",category:3,key:"F",rarity:"영웅",weight:10,effect:"party",power:1.6},
-coinMagnet:{name:"코인 자석",icon:"🧲",category:3,key:"F",rarity:"일반",weight:60,effect:"speed",power:1.1},
-swiftPaws:{name:"날쌘 발",icon:"🐾",category:3,key:"F",rarity:"일반",weight:60,effect:"speed",power:1.25},
-powerSnack:{name:"파워 간식",icon:"🍖",category:3,key:"F",rarity:"희귀",weight:28,effect:"party",power:1.5},
-starCoat:{name:"별빛 코트",icon:"🌠",category:3,key:"F",rarity:"영웅",weight:10,effect:"party",power:1.75},
-overdrive:{name:"오버드라이브",icon:"🚀",category:3,key:"F",rarity:"전설",weight:2,effect:"party",power:2.2},
+frenzy:{name:"광폭화",icon:"🔥",category:3,key:"F",rarity:"희귀",weight:28,effect:"frenzy",power:1.35},
+goldenFur:{name:"황금 털",icon:"🌟",category:3,key:"F",rarity:"영웅",weight:10,effect:"goldenFur",power:1.6},
+coinMagnet:{name:"코인 자석",icon:"🧲",category:3,key:"F",rarity:"일반",weight:60,effect:"coinMagnet",power:1.1},
+swiftPaws:{name:"날쌘 발",icon:"🐾",category:3,key:"F",rarity:"일반",weight:60,effect:"swiftPaws",power:1.25},
+powerSnack:{name:"파워 간식",icon:"🍖",category:3,key:"F",rarity:"희귀",weight:28,effect:"powerSnack",power:1.5},
+starCoat:{name:"별빛 코트",icon:"🌠",category:3,key:"F",rarity:"영웅",weight:10,effect:"starCoat",power:1.75},
+overdrive:{name:"오버드라이브",icon:"🚀",category:3,key:"F",rarity:"전설",weight:2,effect:"overdrive",power:2.2},
 bark:{name:"짖기",icon:"◉",category:4,key:"R",rarity:"일반",weight:60,effect:"bark",power:1},
-sonicBark:{name:"초음파 짖기",icon:"🔊",category:4,key:"R",rarity:"희귀",weight:28,effect:"bark",power:1.35},
-shockwave:{name:"충격파",icon:"💫",category:4,key:"R",rarity:"영웅",weight:10,effect:"bark",power:1.7},
-meteorCall:{name:"운석 소환",icon:"☄️",category:4,key:"R",rarity:"전설",weight:2,effect:"bark",power:2.3},
-cloneBuddy:{name:"도리 분신",icon:"🐶",category:4,key:"R",rarity:"희귀",weight:28,effect:"bark",power:1.45},
-frostHowl:{name:"서리 울부짖기",icon:"❄️",category:4,key:"R",rarity:"일반",weight:60,effect:"bark",power:1.12},
-thunderHowl:{name:"천둥 울음",icon:"🌩️",category:4,key:"R",rarity:"영웅",weight:10,effect:"bark",power:1.8},
-novaRoar:{name:"초신성 포효",icon:"🌌",category:4,key:"R",rarity:"전설",weight:2,effect:"bark",power:2.5}
+sonicBark:{name:"초음파 짖기",icon:"🔊",category:4,key:"R",rarity:"희귀",weight:28,effect:"sonicBark",power:1.35},
+shockwave:{name:"충격파",icon:"💫",category:4,key:"R",rarity:"영웅",weight:10,effect:"shockwave",power:1.7},
+meteorCall:{name:"운석 소환",icon:"☄️",category:4,key:"R",rarity:"전설",weight:2,effect:"meteorCall",power:2.3},
+cloneBuddy:{name:"도리 분신",icon:"🐶",category:4,key:"R",rarity:"희귀",weight:28,effect:"cloneBuddy",power:1.45},
+frostHowl:{name:"서리 울부짖기",icon:"❄️",category:4,key:"R",rarity:"일반",weight:60,effect:"frostHowl",power:1.12},
+thunderHowl:{name:"천둥 울음",icon:"🌩️",category:4,key:"R",rarity:"영웅",weight:10,effect:"thunderHowl",power:1.8},
+novaRoar:{name:"초신성 포효",icon:"🌌",category:4,key:"R",rarity:"전설",weight:2,effect:"novaRoar",power:2.5}
 };
 const SLOT_COSTS={2:180,3:350,4:600},GACHA_COST=100;
 const RARITY_COLORS={"일반":"#c4d0e8","희귀":"#67d8ff","영웅":"#c49aff","전설":"#ffd76e"};
@@ -414,30 +414,63 @@ function activate(name,tx,tz){
  if(mode!=="playing")return;
  const meta=SKILL_META[name],category=meta?.category,effect=meta?.effect||name,power=meta?.power||1;
  if(!category||!unlockedSlots.includes(category)||equippedSkills[category]!==name)return;
- if(player.partyT>0&&effect!=="party")return;
+ if(player.partyT>0&&category!==3)return;
  if(effect!=="party"&&player.headbutt)return;
  if((cooldowns[name]||0)>0)return;
- if(effect==="parry"){
-  player.parryT=.34*Math.min(1.8,power);player.parryHit=new Set();cooldowns[name]=Math.max(.55,1.05/power);
-  impactFX(player.x+player.face*28,player.z+38,colors.cyan,"parry",.85*Math.min(1.5,power));sfx("parry-ready");
- }else if(effect==="dash"){
-  player.dashT=.22*Math.min(1.5,power);player.dashHit=new Set();player.dashPower=power;player.vx=0;cooldowns[name]=Math.max(.7,1.5/power);
-  impactFX(player.x,player.z+24,colors.cyan,"dash-start",.65);sfx("dash");emit(player.x,player.z+20,colors.cyan,22+Math.round(power*5),250*power);
- }else if(effect==="bark"){
-  player.barkT=.5*Math.min(1.7,power);player.barkHit=new Set();player.barkX=player.x;player.barkZ=player.z;player.barkPower=power;player.speedBuff=3;cooldowns[name]=Math.max(3.5,9/power);
-  impactFX(player.x,player.z+30,colors.cyan,"bark",Math.min(1.8,power));sfx("bark");emit(player.x,player.z+30,colors.cyan,30+Math.round(power*8),300*power);
- }else if(effect==="party"){
-  player.partyT=5*Math.min(1.5,power);player.powerBuff=0;cooldowns[name]=Math.max(6,18/power);
-  showHint(meta.name+"! 공격 강화");sfx("party");
- }else if(effect==="speed"){
-  player.speedBuff=3*Math.min(1.8,power);cooldowns[name]=Math.max(4,12/power);
-  showHint(meta.name+"! 이동 속도 증가");impactFX(player.x,player.z+30,colors.green,"dash-start",1);sfx("dash");
+ const cd=(base)=>cooldowns[name]=Math.max(base,base*1.65/power);
+ const burst=(range,damage,color,knock=200,stun=0)=>{
+  impactFX(player.x+player.face*range*.35,player.z+28,color,"bark",Math.min(2.2,power));
+  emit(player.x+player.face*range*.35,player.z+28,color,18+Math.round(power*8),260*power);
+  enemies.forEach(e=>{if(e.dead||Math.abs(e.x-player.x)>range||Math.abs((e.z||0)-player.z)>150)return;damageEnemy(e,damage*power,knock,Math.sign(e.x-player.x)||player.face,"bark-impact");if(stun&&!e.boss)e.stun=Math.max(e.stun,stun)});
+  cores.forEach(c=>{if(!c.dead&&Math.abs(c.x-player.x)<=range)coreHit(c,damage*.7*power)});
+ };
+ if(effect==="parry"||["goldReflect","perfectGuard","prismReflect","echoGuard","ironMane","counterBurst","mirrorPaw","cometGuard","royalGuard","infinityReflect"].includes(effect)){
+  player.parryT=.34*Math.min(2,power);player.parryHit=new Set();cd(.9);
+  if(effect==="perfectGuard"||effect==="royalGuard"||effect==="infinityReflect")player.invuln=Math.max(player.invuln,effect==="infinityReflect"?1.8:.8);
+  if(effect==="ironMane"){player.hp=Math.min(player.maxHp,player.hp+12);showHint("강철 갈기 · 체력 +12");}
+  if(effect==="goldReflect"||effect==="prismReflect"||effect==="counterBurst"||effect==="cometGuard"||effect==="infinityReflect"){
+   const range=effect==="infinityReflect"?430:effect==="prismReflect"?330:effect==="cometGuard"?280:effect==="counterBurst"?220:170;
+   burst(range,effect==="infinityReflect"?48:effect==="prismReflect"?38:effect==="cometGuard"?30:effect==="counterBurst"?24:16,colors.gold,330,effect==="infinityReflect"?2:1);
+  }
+  if(effect==="echoGuard"||effect==="mirrorPaw"){player.speedBuff=Math.max(player.speedBuff,2.5);if(effect==="mirrorPaw")player.powerBuff=Math.max(player.powerBuff,2);}
+  impactFX(player.x+player.face*28,player.z+38,colors.cyan,"parry",.85*Math.min(1.8,power));sfx("parry-ready");showHint(meta.name+"!");
+ }else if(effect==="dash"||["lightningDash","impactLanding","cometRush","shadowStep","windRunner","meteorDash","phantomRush"].includes(effect)){
+  if(effect==="impactLanding"){player.landingBurst=power;player.vz=Math.max(player.vz,650);player.dashT=0;cd(4.5);showHint("착지 순간 충격파가 발동해!");sfx("jump");}
+  else{
+   player.dashT=(effect==="phantomRush"?.38:effect==="cometRush"?.32:.22)*Math.min(1.8,power);player.dashHit=new Set();player.dashPower=power*(effect==="lightningDash"?1.8:effect==="meteorDash"?2.1:effect==="phantomRush"?2.5:1);player.vx=0;cd(effect==="phantomRush"?5:effect==="meteorDash"?4:1.5);
+   if(effect==="shadowStep"){player.invuln=Math.max(player.invuln,.65);emit(player.x,player.z+20,"#a78bfa",32,300);}
+   if(effect==="windRunner"){player.speedBuff=Math.max(player.speedBuff,5);player.vx=player.face*BASE_SPEED*1.45;}
+   if(effect==="meteorDash"||effect==="phantomRush"||effect==="cometRush")emit(player.x,player.z+20,effect==="meteorDash"?"#ff8b55":colors.gold,34,360);
+   impactFX(player.x,player.z+24,effect==="lightningDash"?"#ffe86b":colors.cyan,"dash-start",.8);sfx("dash");
+  }
  }else if(effect==="jump"){
-  if(player.z>1){showHint("땅에 착지한 뒤 사용할 수 있어!");return;}
-  player.vz=700*Math.min(1.4,power);cooldowns[name]=Math.max(2,7/power);sfx("jump");emit(player.x,player.z+15,colors.cyan,18,220);showHint(meta.name+"!");
+  if(player.z>1){showHint("땅에 착지한 뒤 사용할 수 있어!");return;}player.vz=700*Math.min(1.55,power);player.invuln=Math.max(player.invuln,.12);cd(4);sfx("jump");emit(player.x,player.z+15,colors.cyan,22,240);showHint(meta.name+"!");
  }else if(effect==="head"){
-  if(tx==null){tx=player.x+player.face*520;tz=player.z}
-  headbuttTo(tx,tz);cooldowns[name]=Math.max(3.5,7.5/power);
+  if(tx==null){tx=player.x+player.face*520;tz=player.z;}headbuttTo(tx,tz);cd(7.5);
+ }else if(effect==="bark"||["sonicBark","shockwave","meteorCall","cloneBuddy","frostHowl","thunderHowl","novaRoar"].includes(effect)){
+  cd(effect==="novaRoar"?8:effect==="meteorCall"?7:effect==="cloneBuddy"?6:5);
+  if(effect==="cloneBuddy"){
+   const target=enemies.filter(e=>!e.dead).sort((a,b)=>Math.abs(a.x-player.x)-Math.abs(b.x-player.x))[0];
+   if(target){damageEnemy(target,42*power,260,Math.sign(target.x-player.x)||player.face,"bark-impact");if(!target.boss)target.stun=Math.max(target.stun,1.2);}
+   burst(190,12,"#d8b4fe",140,0);showHint("도리 분신이 함께 공격!");
+  }else if(effect==="meteorCall"){
+   const tx=clamp(player.x+player.face*260,40,LEVEL_W-40);impactFX(tx,0,"#ff7b45","boss-break",1.8);emit(tx,40,"#ff7b45",44,430);
+   enemies.forEach(e=>{if(!e.dead&&Math.abs(e.x-tx)<150){damageEnemy(e,75*power,360,Math.sign(e.x-tx)||player.face,"bark-impact");if(!e.boss)e.stun=Math.max(e.stun,1.4)}});
+   cores.forEach(c=>{if(!c.dead&&Math.abs(c.x-tx)<150)coreHit(c,55*power)});showHint("☄ 운석 낙하!");
+  }else if(effect==="frostHowl"){burst(330,26,"#8beaff",120,2);player.frozenT=0;player.invuln=Math.max(player.invuln,.35);}
+  else if(effect==="thunderHowl"){burst(300,38,"#ffe66b",400,1);projectiles.forEach(b=>{if(b.owner==="enemy"&&!b.dead&&Math.abs(b.x-player.x)<360){b.dead=true;impactFX(b.x,b.h,"#ffe66b","parry",.8)}});}
+  else if(effect==="novaRoar"){burst(480,65,"#e0a5ff",500,2);player.invuln=Math.max(player.invuln,1);shake=Math.max(shake,10);}
+  else if(effect==="shockwave"){burst(360,42,"#c4a1ff",420,1.2);}
+  else if(effect==="sonicBark"){burst(280,34,"#70f6ff",320,1);}
+  else{player.barkT=.5*Math.min(1.7,power);player.barkHit=new Set();player.barkX=player.x;player.barkZ=player.z;player.barkPower=power;player.speedBuff=3;impactFX(player.x,player.z+30,colors.cyan,"bark",Math.min(1.8,power));sfx("bark");emit(player.x,player.z+30,colors.cyan,30+Math.round(power*8),300*power);}
+ }else if(effect==="party"||["frenzy","goldenFur","coinMagnet","swiftPaws","powerSnack","starCoat","overdrive"].includes(effect)){
+  const duration=effect==="overdrive"?9:effect==="frenzy"?7:effect==="starCoat"?8:5;
+  player.partyT=0;player.powerBuff=Math.max(player.powerBuff,duration*(effect==="powerSnack"?1.4:1));player.speedBuff=Math.max(player.speedBuff,["swiftPaws","coinMagnet","overdrive"].includes(effect)?duration:0);
+  if(effect==="goldenFur"||effect==="starCoat"||effect==="overdrive")player.invuln=Math.max(player.invuln,effect==="overdrive"?1.8:.65);
+  if(effect==="powerSnack")player.hp=Math.min(player.maxHp,player.hp+35);
+  if(effect==="coinMagnet"){addCoins(15);showHint("코인 자석 · +15 코인 및 이동 가속!");}
+  else showHint(meta.name+"! 공격력 강화"+(effect==="powerSnack"?" · 체력 회복":""));
+  emit(player.x,player.z+28,effect==="overdrive"?"#ffd76e":colors.green,28,260);impactFX(player.x,player.z+30,colors.gold,"parry",1);sfx("party");cd(12);
  }
 }function headbuttTo(tx,tz){
  const dx=clamp(tx,35,LEVEL_W-35)-player.x,dz=clamp(tz,0,260)-player.z;
