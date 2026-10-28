@@ -226,6 +226,7 @@ function takeDamage(amount,sourceX){
  if(player.hp<=0){player.hp=0;finishGame(false)}
 }
 function showHint(text){const el=$("hintToast");el.textContent=text;el.classList.add("visible");hintTimer=1.25}
+function currentSpeedDamageMultiplier(){const speed=Math.abs(player.vx);return 1+Math.min(speed,520)/520;}
 function startAttack(){
  if(mode!=="playing"||player.partyT>0||player.attackT>=0||player.headbutt||player.dashT>0)return;
  player.attackT=0;player.attackDone=[false,false];player.attackSets=[new Set(),new Set()];
@@ -331,8 +332,8 @@ function update(dt){
  player.anim+=dt*(Math.abs(player.vx)>20?11:3);
  if(player.attackT>=0){
   player.attackT+=dt;
-  if(!player.attackDone[0]&&player.attackT>=.075){const dmg=21*(player.powerBuff>0?1.5:1);hitTargets(player.x,player.face,104,dmg,player.attackSets[0],player.z,420);player.attackDone[0]=true;sfx("hit")}
-  if(!player.attackDone[1]&&player.attackT>=.225){const dmg=25*(player.powerBuff>0?1.5:1);hitTargets(player.x,player.face,120,dmg,player.attackSets[1],player.z,680);player.attackDone[1]=true;sfx("hit")}
+  if(!player.attackDone[0]&&player.attackT>=.075){const dmg=21*currentSpeedDamageMultiplier()*(player.powerBuff>0?1.5:1);hitTargets(player.x,player.face,104,dmg,player.attackSets[0],player.z,420);player.attackDone[0]=true;sfx("hit")}
+  if(!player.attackDone[1]&&player.attackT>=.225){const dmg=25*currentSpeedDamageMultiplier()*(player.powerBuff>0?1.5:1);hitTargets(player.x,player.face,120,dmg,player.attackSets[1],player.z,680);player.attackDone[1]=true;sfx("hit")}
   if(player.attackT>.46)player.attackT=-1;
  }
  if(player.parryT>0)reflectProjectiles();
