@@ -71,7 +71,7 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,
 .controls-note{display:flex;gap:10px;flex-wrap:wrap;margin-top:13px;color:#8094bb;font-size:11px;line-height:1.7}.controls-note span{padding:5px 9px;border:1px solid rgba(139,171,255,.12);border-radius:8px;background:rgba(255,255,255,.018)}
 .touch-controls{display:none;position:absolute;inset:auto 9px 9px;z-index:5;align-items:end;justify-content:space-between;gap:8px;pointer-events:none}
 .touch-group{display:flex;align-items:end;gap:6px;pointer-events:auto}
-.touch-pad{display:grid;grid-template-columns:repeat(2,44px);gap:6px}.touch-btn{display:grid;place-items:center;min-width:39px;min-height:39px;padding:4px;border:1px solid rgba(203,225,255,.28);border-radius:13px;color:#f0f6ff;background:rgba(7,15,38,.74);box-shadow:0 4px 15px rgba(0,0,0,.25);font-size:14px;backdrop-filter:blur(7px);user-select:none}
+.touch-pad{display:flex;align-items:center;justify-content:center}.move-joystick{position:relative;width:112px;height:112px;border:1px solid rgba(107,241,255,.48);border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(80,130,210,.26),rgba(7,15,38,.82) 70%);box-shadow:inset 0 0 22px rgba(107,241,255,.09),0 5px 22px rgba(0,0,0,.32);touch-action:none;user-select:none;pointer-events:auto}.move-joystick:before{content:"";position:absolute;left:50%;top:50%;width:64%;height:64%;transform:translate(-50%,-50%);border:1px dashed rgba(185,219,255,.2);border-radius:50%;pointer-events:none}.joystick-thumb{position:absolute;left:50%;top:50%;width:45px;height:45px;transform:translate(-50%,-50%);display:grid;place-items:center;border:1px solid rgba(210,248,255,.75);border-radius:50%;background:linear-gradient(145deg,rgba(107,241,255,.68),rgba(60,106,196,.82));box-shadow:0 0 18px rgba(107,241,255,.25),inset 0 1px 5px rgba(255,255,255,.35);color:white;font-size:18px;font-weight:400;pointer-events:none;will-change:transform}.move-joystick.active{border-color:var(--cyan);box-shadow:inset 0 0 26px rgba(107,241,255,.16),0 0 16px rgba(107,241,255,.13)}.touch-btn{display:grid;place-items:center;min-width:39px;min-height:39px;padding:4px;border:1px solid rgba(203,225,255,.28);border-radius:13px;color:#f0f6ff;background:rgba(7,15,38,.74);box-shadow:0 4px 15px rgba(0,0,0,.25);font-size:14px;backdrop-filter:blur(7px);user-select:none}
 .touch-btn:active,.touch-btn.active{background:rgba(73,150,255,.48);border-color:var(--cyan);transform:scale(.95)}
 .touch-btn.move{font-size:18px;min-height:45px}.touch-skills{display:grid;grid-template-columns:repeat(3,39px);gap:5px;justify-items:center}.touch-skills .touch-btn{min-width:39px;min-height:39px;font-size:10px}.touch-skills .touch-btn strong{display:block;font-size:13px;color:var(--cyan);font-weight:400}
 .touch-main{display:grid;grid-template-columns:repeat(2,46px);gap:6px}.touch-main .touch-btn{min-width:46px;min-height:46px;font-size:11px}
@@ -124,12 +124,12 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,
         <div class="feature"><b>03 / ROCKEY PARTY</b><span>5초 춤을 완료하면 6초간 공격력 +50%.</span></div>
       </div>
       <button class="primary-btn" id="screenPrimary" type="button">▶ 전투 시작</button><button class="secondary-btn" id="screenSecondary" type="button" hidden>처음부터</button>
-      <p class="overlay-hint" id="screenHint">PC: A/D 또는 ←/→ 이동 · Space 점프 · J 공격 · Q/E/R/F/Shift 스킬</p>
+      <p class="overlay-hint" id="screenHint">PC: A/D 또는 ←/→ 이동 · Space 점프 · J 공격 · Q/E/R/F/Shift 스킬 · 모바일: 조이스틱 이동</p>
     </div>
   </div>
   <div class="touch-controls" id="touchControls" aria-label="모바일 터치 조작">
     <div class="touch-group">
-      <div class="touch-pad"><button class="touch-btn move" data-move="left" type="button" aria-label="왼쪽 이동">◀</button><button class="touch-btn move" data-move="right" type="button" aria-label="오른쪽 이동">▶</button></div>
+      <div class="touch-pad"><div class="move-joystick" id="moveJoystick" role="application" aria-label="조이스틱: 왼쪽 또는 오른쪽으로 드래그해 이동" tabindex="0"><div class="joystick-thumb" id="joystickThumb">●</div></div></div>
     </div>
     <div class="touch-group">
       <div class="touch-skills">
@@ -569,13 +569,34 @@ canvas.addEventListener("pointerdown",e=>{
  if(aimMode&&mode==="playing"){e.preventDefault();selectHeadTarget(e.clientX,e.clientY);return}
  if(e.pointerType==="mouse"){canvas.focus()}
 });
-const moveButtons=document.querySelectorAll("[data-move]");
-moveButtons.forEach(btn=>{
- const dir=btn.dataset.move;
- const down=e=>{e.preventDefault();touch[dir]=true;btn.classList.add("active");try{btn.setPointerCapture(e.pointerId)}catch(err){}};
- const up=e=>{touch[dir]=false;btn.classList.remove("active")};
- btn.addEventListener("pointerdown",down);btn.addEventListener("pointerup",up);btn.addEventListener("pointercancel",up);btn.addEventListener("lostpointercapture",up);
+const joystick=$("moveJoystick"),joystickThumb=$("joystickThumb");
+let joystickPointer=null,joystickX=0,joystickY=0;
+function updateJoystick(e){
+ const r=joystick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
+ let dx=e.clientX-cx,dy=e.clientY-cy;const limit=r.width*.31,dist=Math.hypot(dx,dy);
+ if(dist>limit){dx=dx/dist*limit;dy=dy/dist*limit}
+ joystickX=dx/limit;joystickY=dy/limit;
+ joystickThumb.style.transform="translate(calc(-50% + "+dx+"px), calc(-50% + "+dy+"px))";
+ touch.left=joystickX<-.22;touch.right=joystickX>.22;
+ joystick.classList.toggle("active",Math.abs(joystickX)>.12||Math.abs(joystickY)>.12);
+}
+function releaseJoystick(e){
+ if(joystickPointer!==null&&e&&e.pointerId!==joystickPointer)return;
+ joystickPointer=null;joystickX=0;joystickY=0;touch.left=false;touch.right=false;
+ joystickThumb.style.transform="translate(-50%,-50%)";joystick.classList.remove("active");
+}
+joystick.addEventListener("pointerdown",e=>{
+ if(mode!=="playing")return;e.preventDefault();joystickPointer=e.pointerId;
+ try{joystick.setPointerCapture(e.pointerId)}catch(err){}
+ updateJoystick(e);
 });
+joystick.addEventListener("pointermove",e=>{if(e.pointerId===joystickPointer){e.preventDefault();updateJoystick(e)}});
+joystick.addEventListener("pointerup",releaseJoystick);
+joystick.addEventListener("pointercancel",releaseJoystick);
+joystick.addEventListener("lostpointercapture",releaseJoystick);
+joystick.addEventListener("keydown",e=>{if(e.key==="ArrowLeft"||e.key==="ArrowRight"){e.preventDefault();touch.left=e.key==="ArrowLeft";touch.right=e.key==="ArrowRight"}});
+joystick.addEventListener("keyup",e=>{if(e.key==="ArrowLeft")touch.left=false;if(e.key==="ArrowRight")touch.right=false});
+
 document.querySelectorAll("[data-skill]").forEach(btn=>btn.addEventListener("click",()=>{
  const name=btn.dataset.skill;
  if(name==="head")tapHead();else activate(name)
@@ -601,7 +622,7 @@ window.addEventListener("keydown",e=>{
 window.addEventListener("keyup",e=>{
  const k=e.key.toLowerCase();if(k==="a"||k==="arrowleft")keys.left=false;if(k==="d"||k==="arrowright")keys.right=false;
 });
-window.addEventListener("blur",()=>{keys.left=false;keys.right=false;touch.left=false;touch.right=false;if(mode==="playing")pauseGame()});
+window.addEventListener("blur",()=>{keys.left=false;keys.right=false;releaseJoystick();touch.left=false;touch.right=false;if(mode==="playing")pauseGame()});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&mode==="playing")pauseGame()});
 refreshUI();requestAnimationFrame(loop);
 })();
