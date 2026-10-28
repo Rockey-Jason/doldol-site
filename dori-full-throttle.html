@@ -69,12 +69,12 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,
 .skill-button.locked{opacity:.55}.skill-icon{flex-shrink:0;display:grid;place-items:center;width:32px;height:32px;border:1px solid rgba(121,204,255,.2);border-radius:10px;color:var(--cyan);background:rgba(81,164,255,.08);font-size:17px}
 .skill-text{display:flex;flex-direction:column;min-width:0;gap:3px}.skill-text b{font-size:12px;font-weight:400;color:#f2f6ff;white-space:nowrap}.skill-text small{font-size:10px;color:#8ea5d0;white-space:nowrap}.skill-text em{font-style:normal;color:var(--gold)}
 .controls-note{display:flex;gap:10px;flex-wrap:wrap;margin-top:13px;color:#8094bb;font-size:11px;line-height:1.7}.controls-note span{padding:5px 9px;border:1px solid rgba(139,171,255,.12);border-radius:8px;background:rgba(255,255,255,.018)}
-.touch-controls{display:none;position:absolute;inset:auto 9px 9px;z-index:5;align-items:end;justify-content:space-between;gap:8px;pointer-events:none}
-.touch-group{display:flex;align-items:end;gap:6px;pointer-events:auto}
-.touch-pad{display:flex;align-items:center;justify-content:center}.move-joystick{position:relative;width:112px;height:112px;border:1px solid rgba(107,241,255,.48);border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(80,130,210,.26),rgba(7,15,38,.82) 70%);box-shadow:inset 0 0 22px rgba(107,241,255,.09),0 5px 22px rgba(0,0,0,.32);touch-action:none;user-select:none;pointer-events:auto}.move-joystick:before{content:"";position:absolute;left:50%;top:50%;width:64%;height:64%;transform:translate(-50%,-50%);border:1px dashed rgba(185,219,255,.2);border-radius:50%;pointer-events:none}.joystick-thumb{position:absolute;left:50%;top:50%;width:45px;height:45px;transform:translate(-50%,-50%);display:grid;place-items:center;border:1px solid rgba(210,248,255,.75);border-radius:50%;background:linear-gradient(145deg,rgba(107,241,255,.68),rgba(60,106,196,.82));box-shadow:0 0 18px rgba(107,241,255,.25),inset 0 1px 5px rgba(255,255,255,.35);color:white;font-size:18px;font-weight:400;pointer-events:none;will-change:transform}.move-joystick.active{border-color:var(--cyan);box-shadow:inset 0 0 26px rgba(107,241,255,.16),0 0 16px rgba(107,241,255,.13)}.touch-btn{display:grid;place-items:center;min-width:39px;min-height:39px;padding:4px;border:1px solid rgba(203,225,255,.28);border-radius:13px;color:#f0f6ff;background:rgba(7,15,38,.74);box-shadow:0 4px 15px rgba(0,0,0,.25);font-size:14px;backdrop-filter:blur(7px);user-select:none}
+.touch-controls{display:none;position:absolute;touch-action:none;overscroll-behavior:contain;inset:auto 9px 9px;z-index:5;align-items:end;justify-content:space-between;gap:8px;pointer-events:none}
+.touch-group{display:flex;align-items:end;gap:6px;pointer-events:auto;touch-action:none}
+.touch-pad{display:flex;align-items:center;justify-content:center}.move-joystick{position:relative;width:112px;height:112px;border:1px solid rgba(107,241,255,.48);border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(80,130,210,.26),rgba(7,15,38,.82) 70%);box-shadow:inset 0 0 22px rgba(107,241,255,.09),0 5px 22px rgba(0,0,0,.32);touch-action:none;user-select:none;pointer-events:auto}.move-joystick:before{content:"";position:absolute;left:50%;top:50%;width:64%;height:64%;transform:translate(-50%,-50%);border:1px dashed rgba(185,219,255,.2);border-radius:50%;pointer-events:none}.joystick-thumb{position:absolute;left:50%;top:50%;width:45px;height:45px;transform:translate(-50%,-50%);display:grid;place-items:center;border:1px solid rgba(210,248,255,.75);border-radius:50%;background:linear-gradient(145deg,rgba(107,241,255,.68),rgba(60,106,196,.82));box-shadow:0 0 18px rgba(107,241,255,.25),inset 0 1px 5px rgba(255,255,255,.35);color:white;font-size:18px;font-weight:400;pointer-events:none;will-change:transform}.move-joystick.active{border-color:var(--cyan);box-shadow:inset 0 0 26px rgba(107,241,255,.16),0 0 16px rgba(107,241,255,.13)}.touch-btn{touch-action:none;overscroll-behavior:contain;display:grid;place-items:center;min-width:39px;min-height:39px;padding:4px;border:1px solid rgba(203,225,255,.28);border-radius:13px;color:#f0f6ff;background:rgba(7,15,38,.74);box-shadow:0 4px 15px rgba(0,0,0,.25);font-size:14px;backdrop-filter:blur(7px);user-select:none}
 .touch-btn:active,.touch-btn.active{background:rgba(73,150,255,.48);border-color:var(--cyan);transform:scale(.95)}
-.touch-btn.move{font-size:18px;min-height:45px}.touch-skills{display:grid;grid-template-columns:repeat(3,39px);gap:5px;justify-items:center}.touch-skills .touch-btn{min-width:39px;min-height:39px;font-size:10px}.touch-skills .touch-btn strong{display:block;font-size:13px;color:var(--cyan);font-weight:400}
-.touch-main{display:grid;grid-template-columns:repeat(2,46px);gap:6px}.touch-main .touch-btn{min-width:46px;min-height:46px;font-size:11px}
+.touch-btn.move{font-size:18px;min-height:45px}.touch-skills{display:grid;grid-template-columns:repeat(3,39px);gap:5px;justify-items:center;touch-action:none}.touch-skills .touch-btn{min-width:39px;min-height:39px;font-size:10px}.touch-skills .touch-btn strong{display:block;font-size:13px;color:var(--cyan);font-weight:400}
+.touch-main{display:grid;grid-template-columns:repeat(2,46px);gap:6px;touch-action:none}.touch-main .touch-btn{min-width:46px;min-height:46px;font-size:11px}
 .bottom-note{margin:12px 2px 0;color:#7f92b7;font-size:11px;line-height:1.6}
 @media(max-width:900px){.page{width:calc(100% - 20px);padding-top:12px}.hero{align-items:flex-start}.skill-panel{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.skill-button{padding:8px 6px;gap:6px;justify-content:center}.skill-icon{width:27px;height:27px}.skill-text b{font-size:10px}.skill-text small{font-size:9px}.hud-card{min-width:135px}.hud-left,.hud-right{max-width:45%}}
 @media(max-width:700px){.topbar{margin-bottom:16px}.brand-mark{width:36px;height:36px;border-radius:12px}.brand-copy strong{font-size:13px}.brand-copy span{font-size:9px}.ghost-btn{padding:9px 10px;font-size:11px}.hero{margin:7px 0 12px;display:block}.hero h1{font-size:clamp(29px,8vw,39px)}.hero p{font-size:12px;max-width:440px}.version-chip{display:none}#gameCanvas{height:clamp(430px,60vh,560px);max-height:none;min-height:400px}.game-frame{border-radius:15px}.hud{top:8px;left:8px;right:8px;gap:5px}.hud-card{min-width:0;padding:7px 8px;border-radius:10px}.hud-left,.hud-right{gap:5px;max-width:49%}.hud-label{font-size:9px;letter-spacing:.8px;margin-bottom:4px}.hud-label b{font-size:10px}.bar{height:6px}.hud-mini{font-size:9px;padding:6px 7px}.boss-wrap{top:80px;width:70%}.skill-panel{display:none}.touch-controls{display:flex}.action-row{font-size:10px;margin-top:9px}.controls-note{font-size:10px;gap:5px}.controls-note span{padding:4px 6px}.bottom-note{font-size:10px}.screen-panel{border-radius:18px;padding:18px 14px}.screen-panel h2{font-size:34px}.screen-panel p{font-size:12px;margin-bottom:10px}.feature-grid{gap:5px;margin:12px 0 14px}.feature{padding:8px 7px}.feature b{font-size:10px}.feature span{font-size:9px}.primary-btn{min-width:165px;min-height:44px}.secondary-btn{min-height:42px}.overlay-hint{font-size:9px!important}}
@@ -589,7 +589,7 @@ function updateJoystick(e){
  if(dist>limit){dx=dx/dist*limit;dy=dy/dist*limit}
  joystickX=dx/limit;joystickY=dy/limit;
  joystickThumb.style.transform="translate(calc(-50% + "+dx+"px), calc(-50% + "+dy+"px))";
- touch.left=joystickX<-.22;touch.right=joystickX>.22;
+ touch.left=joystickX<-.16;touch.right=joystickX>.16;
  joystick.classList.toggle("active",Math.abs(joystickX)>.12||Math.abs(joystickY)>.12);
 }
 function releaseJoystick(e){
@@ -609,12 +609,20 @@ joystick.addEventListener("lostpointercapture",releaseJoystick);
 joystick.addEventListener("keydown",e=>{if(e.key==="ArrowLeft"||e.key==="ArrowRight"){e.preventDefault();touch.left=e.key==="ArrowLeft";touch.right=e.key==="ArrowRight"}});
 joystick.addEventListener("keyup",e=>{if(e.key==="ArrowLeft")touch.left=false;if(e.key==="ArrowRight")touch.right=false});
 
-document.querySelectorAll("[data-skill]").forEach(btn=>btn.addEventListener("click",()=>{
- const name=btn.dataset.skill;
- if(name==="head")tapHead();else activate(name)
-}));
-$("touchAttack").addEventListener("pointerdown",e=>{e.preventDefault();startAttack()});
-$("touchJump").addEventListener("pointerdown",e=>{e.preventDefault();jump()});
+// Independent pointerdown handlers allow joystick + attacks/skills at the same time.
+document.querySelectorAll(".touch-controls [data-skill]").forEach(btn=>{
+ btn.addEventListener("pointerdown",e=>{
+  e.preventDefault();e.stopPropagation();
+  try{btn.setPointerCapture(e.pointerId)}catch(err){}
+  const name=btn.dataset.skill;
+  if(name==="head")tapHead();else activate(name);
+ });
+});
+$("touchAttack").addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();try{$("touchAttack").setPointerCapture(e.pointerId)}catch(err){}startAttack()});
+$("touchJump").addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();try{$("touchJump").setPointerCapture(e.pointerId)}catch(err){}jump()});
+function clearHeldInputs(){keys.left=false;keys.right=false;releaseJoystick()}
+window.addEventListener("blur",clearHeldInputs);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)clearHeldInputs()});
 window.addEventListener("keydown",e=>{
  const k=e.key.toLowerCase();
  if(["arrowleft","arrowright"," ","shift"].includes(k))e.preventDefault();
