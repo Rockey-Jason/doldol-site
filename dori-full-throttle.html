@@ -519,6 +519,8 @@ function update(dt){
   if(player.rootedT>0)player.vx*=Math.max(0,1-dt*9);player.x+=player.vx*dt;
  }
  if(!player.headbutt&&(player.z>0||player.vz>0)){player.z+=player.vz*dt;player.vz-=GRAVITY*dt;if(player.z<=0){player.z=0;player.vz=0}}
+ // 조이스틱을 위로 계속 유지하면 착지한 프레임에 자동으로 다시 점프한다.
+ if(mode==="playing"&&joystickPointer!==null&&joystickY<-.62&&player.z<=0&&player.vz===0&&!player.headbutt)jump();
  player.x=clamp(player.x,26,LEVEL_W-30);
  if(coreCount()>0&&player.x>3880){player.x=3880;if(player.headbutt)player.headbutt=null;if(player.dashT>0)player.dashT=0;showHint("파워 코어를 모두 파괴해야 방벽이 열려!")}
  enemies.forEach(e=>updateEnemy(e,dt));
