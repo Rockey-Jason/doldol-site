@@ -615,7 +615,7 @@ function update(dt){
   else{const drag=2500*dt;player.vx=Math.abs(player.vx)<=drag?0:player.vx-Math.sign(player.vx)*drag}
   if(player.rootedT>0)player.vx*=Math.max(0,1-dt*9);player.x+=player.vx*dt;
  }
- if(!player.headbutt&&(player.z>0||player.vz>0)){player.z+=player.vz*dt;player.vz-=GRAVITY*dt;if(player.z<=0){player.z=0;player.vz=0}}
+ if(!player.headbutt&&(player.z>0||player.vz>0)){player.z+=player.vz*dt;player.vz-=GRAVITY*dt;if(player.z<=0){player.z=0;player.vz=0;if(player.landingBurst>0){const p=player.landingBurst;impactFX(player.x,8,"#ff9c55","boss-break",1.1*p);emit(player.x,12,"#ff9c55",28,300*p);enemies.forEach(e=>{if(!e.dead&&Math.abs(e.x-player.x)<210){damageEnemy(e,35*p,340,Math.sign(e.x-player.x)||player.face,"dash-impact");if(!e.boss)e.stun=Math.max(e.stun,.8)}});cores.forEach(c=>{if(!c.dead&&Math.abs(c.x-player.x)<190)coreHit(c,28*p)});player.landingBurst=0;showHint("충격 착지! 주변 적을 날려버렸어!");shake=Math.max(shake,6)}}}
  // 조이스틱을 위로 계속 유지하면 착지한 프레임에 자동으로 다시 점프한다.
  if(mode==="playing"&&joystickPointer!==null&&joystickY<-.62&&player.z<=0&&player.vz===0&&!player.headbutt)jump();
  player.x=clamp(player.x,26,LEVEL_W-30);
