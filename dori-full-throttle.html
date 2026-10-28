@@ -209,7 +209,8 @@ frostHowl:{name:"서리 울부짖기",icon:"❄️",category:4,key:"R",rarity:"�
 thunderHowl:{name:"천둥 울음",icon:"🌩️",category:4,key:"R",rarity:"영웅",weight:10,effect:"bark",power:1.8},
 novaRoar:{name:"초신성 포효",icon:"🌌",category:4,key:"R",rarity:"전설",weight:2,effect:"bark",power:2.5}
 };
-const SLOT_COSTS={2:180,3:350,4:600},GACHA_COST=100;\nconst RARITY_COLORS={"일반":"#c4d0e8","희귀":"#67d8ff","영웅":"#c49aff","전설":"#ffd76e"};
+const SLOT_COSTS={2:180,3:350,4:600},GACHA_COST=100;
+const RARITY_COLORS={"일반":"#c4d0e8","희귀":"#67d8ff","영웅":"#c49aff","전설":"#ffd76e"};
 let totalCoins=0,ownedSkills=["parry"],unlockedSlots=[1],equippedSkills={1:"parry",2:null,3:null,4:null};
 try{totalCoins=Math.max(0,Number(localStorage.getItem("doriFullThrottleCoins"))||0);const save=JSON.parse(localStorage.getItem("doriFullThrottleLoadout")||"null");if(save&&Array.isArray(save.ownedSkills)&&Array.isArray(save.unlockedSlots)&&save.equippedSkills){ownedSkills=Array.from(new Set(["parry",...save.ownedSkills.filter(k=>SKILL_META[k])]));unlockedSlots=Array.from(new Set([1,...save.unlockedSlots.filter(n=>[2,3,4].includes(n))]));equippedSkills={1:"parry",2:null,3:null,4:null,...save.equippedSkills};for(const n of [1,2,3,4])if(equippedSkills[n]&&(!ownedSkills.includes(equippedSkills[n])||SKILL_META[equippedSkills[n]].category!==n||!unlockedSlots.includes(n)))equippedSkills[n]=n===1?"parry":null;}}catch(e){}
 function saveLoadout(){try{localStorage.setItem("doriFullThrottleCoins",String(totalCoins));localStorage.setItem("doriFullThrottleLoadout",JSON.stringify({ownedSkills,unlockedSlots,equippedSkills}));}catch(e){}}
