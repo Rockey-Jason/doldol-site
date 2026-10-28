@@ -331,8 +331,8 @@ function update(dt){
  player.anim+=dt*(Math.abs(player.vx)>20?11:3);
  if(player.attackT>=0){
   player.attackT+=dt;
-  if(!player.attackDone[0]&&player.attackT>=.075){const dmg=21*(player.powerBuff>0?1.5:1);hitTargets(player.x,player.face,104,dmg,player.attackSets[0],player.z,100);player.attackDone[0]=true;sfx("hit")}
-  if(!player.attackDone[1]&&player.attackT>=.225){const dmg=25*(player.powerBuff>0?1.5:1);hitTargets(player.x,player.face,120,dmg,player.attackSets[1],player.z,155);player.attackDone[1]=true;sfx("hit")}
+  if(!player.attackDone[0]&&player.attackT>=.075){const dmg=21*(player.powerBuff>0?1.5:1);hitTargets(player.x,player.face,104,dmg,player.attackSets[0],player.z,190);player.attackDone[0]=true;sfx("hit")}
+  if(!player.attackDone[1]&&player.attackT>=.225){const dmg=25*(player.powerBuff>0?1.5:1);hitTargets(player.x,player.face,120,dmg,player.attackSets[1],player.z,285);player.attackDone[1]=true;sfx("hit")}
   if(player.attackT>.46)player.attackT=-1;
  }
  if(player.parryT>0)reflectProjectiles();
