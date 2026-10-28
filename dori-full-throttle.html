@@ -197,9 +197,11 @@ const STAGES=[
 {id:8,name:"보스 스테이지 · 식빵이",subtitle:"첫 번째 보스 결전",length:2400,difficulty:"보스",desc:"식빵이의 공격 패턴을 파악하고 쓰러뜨려라!",cores:[],enemies:[[400,"melee"],[680,"shooter"],[1050,"melee"],[1330,"shooter"]],hazards:[{x:900,w:80,phase:0}],boss:true,bossName:"식빵이",bossHp:760},
 {id:9,name:"보스 스테이지 · 윈터",subtitle:"두 번째 보스 결전",length:2750,difficulty:"보스+",desc:"더 빠르고 강해진 윈터와 대결해!",cores:[],enemies:[[380,"shooter"],[610,"melee"],[850,"shooter"],[1110,"melee"],[1380,"shooter"],[1640,"melee"]],hazards:[{x:780,w:85,phase:0},{x:1510,w:90,phase:1}],boss:true,bossName:"윈터",bossHp:950},
 {id:10,name:"보스 스테이지 · 모래",subtitle:"세 번째 보스 결전",length:3000,difficulty:"보스++",desc:"모래의 압박 공격을 버티며 빈틈을 노려!",cores:[],enemies:[[360,"melee"],[560,"shooter"],[780,"shooter"],[1010,"melee"],[1240,"shooter"],[1480,"melee"],[1730,"shooter"],[1980,"melee"]],hazards:[{x:690,w:95,phase:0},{x:1420,w:100,phase:1},{x:2140,w:85,phase:2}],boss:true,bossName:"모래",bossHp:1180},
-{id:11,name:"최종 보스 · 복돌이",subtitle:"마지막 생존 시험",length:3300,difficulty:"악몽+",desc:"모든 실력을 쏟아부어 복돌이를 쓰러뜨려. 가장 강력한 최종 보스야!",cores:[],enemies:[[350,"shooter"],[550,"melee"],[760,"shooter"],[970,"melee"],[1190,"shooter"],[1410,"melee"],[1640,"shooter"],[1880,"melee"],[2110,"shooter"],[2350,"melee"]],hazards:[{x:650,w:95,phase:0},{x:1290,w:100,phase:1},{x:1970,w:100,phase:2},{x:2600,w:95,phase:0}],boss:true,bossName:"복돌이",bossHp:1450}
+{id:11,name:"최종 보스 · 복돌이",subtitle:"마지막 생존 시험",length:3300,difficulty:"악몽+",desc:"모든 실력을 쏟아부어 복돌이를 쓰러뜨려. 가장 강력한 최종 보스야!",cores:[],enemies:[[350,"shooter"],[550,"melee"],[760,"shooter"],[970,"melee"],[1190,"shooter"],[1410,"melee"],[1640,"shooter"],[1880,"melee"],[2110,"shooter"],[2350,"melee"]],hazards:[{x:650,w:95,phase:0},{x:1290,w:100,phase:1},{x:1970,w:100,phase:2},{x:2600,w:95,phase:0}],boss:true,bossName:"복돌이",bossHp:1450},
+{id:12,name:"보스 스테이지 · 껌껌이",subtitle:"깊은 물속의 기습",length:3000,difficulty:"악몽++",desc:"물개 보스 껌껌이는 물속으로 사라졌다가 예측하기 힘든 위치에서 기습해!",cores:[],enemies:[[420,"shooter"],[720,"melee"],[1010,"shooter"],[1320,"melee"]],hazards:[{x:900,w:90,phase:1},{x:1780,w:95,phase:2}],boss:true,bossName:"껌껌이",bossHp:1750,bossStart:620},
+{id:13,name:"최종 보스 · 솜솜이",subtitle:"다섯 수정의 봉인",length:3650,difficulty:"초월",desc:"솜솜이는 전투 시작과 동시에 나타나! 다섯 수정을 모두 파괴해야만 솜솜이에게 피해를 줄 수 있어. 레이저·화염구·어둠·분신 마법을 버텨!",cores:[{id:"som-core-1",x:430,hp:150,maxHp:150,dead:false,phase:0},{id:"som-core-2",x:880,hp:150,maxHp:150,dead:false,phase:1},{id:"som-core-3",x:1330,hp:150,maxHp:150,dead:false,phase:2},{id:"som-core-4",x:1780,hp:150,maxHp:150,dead:false,phase:3},{id:"som-core-5",x:2230,hp:150,maxHp:150,dead:false,phase:4}],enemies:[],hazards:[{x:740,w:80,phase:1},{x:1510,w:100,phase:2},{x:2360,w:100,phase:0},{x:2980,w:100,phase:1}],boss:true,bossName:"솜솜이",bossHp:4200,bossStart:610}
 ];
-function setupRun(stageId=currentStage){currentStage=clamp(Number(stageId)||0,0,STAGES.length-1);const stage=STAGES[currentStage];LEVEL_W=stage.length;player=newPlayer();cooldowns={parry:0,dash:0,bark:0,party:0,head:0};particles=[];projectiles=[];aimMode=false;hintTimer=0;cam=0;elapsed=0;won=false;shake=0;cores=stage.cores.map(c=>({...c}));hazards=stage.hazards.map(h=>({...h}));const mult=[.72,.82,1,1.18,1.28][currentStage];enemies=stage.enemies.map((sp,i)=>({id:"enemy"+i,x:sp[0],type:sp[1],hp:Math.round((sp[1]==="shooter"?44:62)*mult),maxHp:Math.round((sp[1]==="shooter"?44:62)*mult),dead:false,z:sp[1]==="shooter"?58:0,vx:0,face:-1,cooldown:rand(.3,1.4),wind:0,stun:0,flash:0,anim:rand(0,7),score:sp[1]==="shooter"?180:140}));if(stage.boss){const bx=Math.min(stage.length-260,stage.length*.84),bh=stage.bossHp||760;enemies.push({id:"boss",x:bx,type:"boss",name:stage.bossName||"식빵이",hp:bh,maxHp:bh,dead:false,z:0,vx:0,face:-1,cooldown:Math.max(.72,1.65-currentStage*.07),wind:0,meleeWind:0,meleeCooldown:.8,stun:0,flash:0,anim:0,score:2500+currentStage*350,boss:true});}}
+function setupRun(stageId=currentStage){currentStage=clamp(Number(stageId)||0,0,STAGES.length-1);const stage=STAGES[currentStage];LEVEL_W=stage.length;player=newPlayer();cooldowns={parry:0,dash:0,bark:0,party:0,head:0};particles=[];projectiles=[];aimMode=false;hintTimer=0;cam=0;elapsed=0;won=false;shake=0;cores=stage.cores.map(c=>({...c}));hazards=stage.hazards.map(h=>({...h}));const mult=[.72,.82,1,1.18,1.28][currentStage];enemies=stage.enemies.map((sp,i)=>({id:"enemy"+i,x:sp[0],type:sp[1],hp:Math.round((sp[1]==="shooter"?44:62)*mult),maxHp:Math.round((sp[1]==="shooter"?44:62)*mult),dead:false,z:sp[1]==="shooter"?58:0,vx:0,face:-1,cooldown:rand(.3,1.4),wind:0,stun:0,flash:0,anim:rand(0,7),score:sp[1]==="shooter"?180:140}));if(stage.boss){const bx=stage.bossStart||Math.min(stage.length-260,stage.length*.84),bh=stage.bossHp||760;enemies.push({id:"boss",x:bx,type:"boss",name:stage.bossName||"식빵이",hp:bh,maxHp:bh,dead:false,z:0,vx:0,face:-1,cooldown:Math.max(.72,1.65-currentStage*.07),wind:0,meleeWind:0,meleeCooldown:.8,stun:0,flash:0,anim:0,score:2500+currentStage*350,boss:true});}}
 function coreCount(){return cores.filter(c=>!c.dead).length}function boss(){return enemies.find(e=>e.boss)||null}function stageExitOpen(){const b=boss();return coreCount()===0&&(!b||b.dead)}setupRun();
 function emit(x,h,color,count=10,power=180){
  for(let i=0;i<count;i++){const a=rand(0,Math.PI*2),sp=rand(power*.22,power);particles.push({x,h,vx:Math.cos(a)*sp,vh:Math.sin(a)*sp,life:rand(.18,.55),max:.55,size:rand(1.5,4.7),color})}
@@ -212,7 +214,7 @@ function coreHit(c,damage){
  if(c.hp<=0){c.hp=0;c.dead=true;player.score+=520;emit(c.x,45,colors.gold,32,310);sfx("break");showHint("POWER CORE DESTROYED  +520");}
 }
 function damageEnemy(e,damage,knock=140,dir=1){
- if(!e||e.dead)return;if(e.boss&&coreCount()>0){emit(e.x,45,colors.blue,3,55);return}
+ if(!e||e.dead)return;if(e.boss&&(coreCount()>0||((e.hiddenT||0)>0))){emit(e.x,45,colors.blue,3,55);return}
  const amount=damage*(e.boss?1:1);e.hp-=amount;e.flash=.13;player.damageDone+=amount;addCombo();shake=Math.max(shake,e.boss?5:2.4);emit(e.x,e.z+30,e.boss?colors.red:colors.gold,5,e.boss?150:110);
  if(!e.boss){e.vx+=dir*knock}
  if(e.hp<=0){e.hp=0;e.dead=true;player.kills++;player.score+=e.score||140;emit(e.x,e.z+24,e.boss?colors.gold:colors.cyan,e.boss?45:17,e.boss?340:220);sfx(e.boss?"win":"break");if(e.boss)showHint((e.name||"보스")+" 격파! · 출구가 열렸어!");else if(player.kills%3===0)showHint("COMBO CLEAR  +"+e.score)}
@@ -301,7 +303,7 @@ function updateEnemy(e,dt){
  e.stun=Math.max(0,e.stun-dt);e.cooldown-=dt;
  let dx=player.x-e.x,dist=Math.abs(dx);e.face=dx<0?-1:1;
  if(e.boss){
-  if(coreCount()>0){e.x=4140;e.wind=0;e.meleeWind=0;return}
+  if(coreCount()>0&&e.name!=="솜솜이"){e.x=4140;e.wind=0;e.meleeWind=0;return}
   e.phase=(e.phase||0)+dt;e.specialCd=(e.specialCd==null?1.15:e.specialCd)-dt;
   const name=e.name||"식빵이";
   if(name==="식빵이"){
@@ -324,6 +326,25 @@ function updateEnemy(e,dt){
    if(e.dashCd<=0&&dist<1000){emit(e.x,30,"#ffbd70",24,260);if(e.phase%7<2.8){e.x=clamp(player.x+(Math.sign(e.x-player.x)||-1)*rand(190,310),90,LEVEL_W-90);e.specialKind="strike";e.wind=.24;e.dashCd=.9}else if(e.phase%7<5){e.x=clamp(player.x+(Math.sign(e.x-player.x)||-1)*rand(95,170),90,LEVEL_W-90);e.specialKind="cross";e.wind=.38;e.dashCd=1.25}else{e.x=clamp(player.x+(Math.sign(e.x-player.x)||-1)*rand(260,390),90,LEVEL_W-90);e.specialKind="volley";e.wind=.6;e.dashCd=1.5}e.face=player.x<e.x?-1:1;showHint("복돌이: 초고속 기습!");emit(e.x,30,"#ffbd70",18,220)}
    if(e.wind>0){e.wind=Math.max(0,e.wind-dt);if(e.wind===0){const d=Math.abs(player.x-e.x);if(d<155&&Math.abs(player.z)<125)takeDamage(e.specialKind==="cross"?25:21,e.x);if(e.specialKind==="volley")for(let k=-2;k<=2;k++)projectiles.push({id:"quick"+Math.random(),x:e.x,h:38+Math.abs(k)*12,vx:(player.x>=e.x?1:-1)*420,vh:k*100,owner:"enemy",damage:13,r:7,life:2,color:"#ffbd70",dead:false})}}
    if(e.cooldown<=0&&dist<950){enemyFire(e);e.cooldown=2.9}
+  }else if(name==="껌껌이"){
+   e.hideCd=(e.hideCd==null?1.5:e.hideCd)-dt;
+   if((e.hiddenT||0)>0){e.hiddenT=Math.max(0,e.hiddenT-dt);e.x=clamp(e.ambushX||player.x+220,70,LEVEL_W-70);if(e.hiddenT===0){e.x=clamp(player.x+(Math.random()<.5?-1:1)*rand(85,145),70,LEVEL_W-70);e.face=player.x<e.x?-1:1;emit(e.x,20,"#5bdde8",36,320);showHint("껌껌이 수면 기습!");e.wind=.22;e.ambushStrike=true}}
+   else if(e.hideCd<=0&&dist<900){e.hiddenT=1.05;e.hideCd=2.8;e.ambushX=clamp(player.x+rand(-230,230),70,LEVEL_W-70);emit(e.x,18,"#5bdde8",25,210);showHint("껌껌이가 물속으로 숨었어!")}
+   if(e.ambushStrike&&e.wind>0){e.wind=Math.max(0,e.wind-dt);if(e.wind===0){if(Math.abs(player.x-e.x)<180&&Math.abs(player.z)<140)takeDamage(29,e.x);e.ambushStrike=false;for(let k=-1;k<=1;k++)projectiles.push({id:"water"+Math.random(),x:e.x,h:28+Math.abs(k)*18,vx:(player.x>=e.x?1:-1)*(310+Math.abs(k)*45),vh:k*115,owner:"enemy",damage:14,r:9,life:2.1,color:"#5bdde8",dead:false})}}
+   if(!(e.hiddenT>0)&&e.cooldown<=0&&dist<780){enemyFire(e);e.cooldown=2.35}
+  }else if(name==="솜솜이"){
+   // Final boss remains active while five crystals shield it from damage.
+   e.x+=Math.sin(e.phase*1.35)*32*dt;e.face=player.x<e.x?-1:1;
+   if(coreCount()>0){e.specialCd=Math.max(0,e.specialCd);if(e.specialCd<=0){showHint("솜솜이의 봉인 수정 "+coreCount()+"개 남음!");e.specialCd=2.8}}
+   if(e.specialCd<=0&&dist<1300){
+    const cycle=Math.floor(e.phase/2.3)%4;
+    if(cycle===0){showHint("솜솜이: 추적 레이저!");for(let k=-1;k<=1;k++)projectiles.push({id:"laser"+Math.random(),x:e.x,h:28+k*24,vx:(player.x>=e.x?1:-1)*650,vh:k*28,owner:"enemy",damage:22,r:12,life:2.2,color:"#ff4bdb",effect:"laser",dead:false})}
+    else if(cycle===1){showHint("솜솜이: 화염구 연사!");for(let k=-2;k<=2;k++)projectiles.push({id:"fire"+Math.random(),x:e.x,h:42+Math.abs(k)*18,vx:(player.x>=e.x?1:-1)*(340+Math.abs(k)*35),vh:k*115,owner:"enemy",damage:19,r:12,life:2.7,color:"#ff773e",effect:"fire",dead:false})}
+    else if(cycle===2){showHint("솜솜이: 어둠의 장막!");for(let k=-3;k<=3;k++)projectiles.push({id:"dark"+Math.random(),x:e.x,h:50,vx:(player.x>=e.x?1:-1)*300,vh:k*78,owner:"enemy",damage:16,r:10,life:2.5,color:"#9b70ff",effect:"dark",dead:false})}
+    else{showHint("솜솜이: 분신 마법!");for(let k=-1;k<=1;k++)projectiles.push({id:"clone"+Math.random(),x:e.x+k*55,h:40+Math.abs(k)*32,vx:(player.x>=e.x?1:-1)*(440-Math.abs(k)*45),vh:k*155,owner:"enemy",damage:18,r:11,life:2.3,color:"#f5a8ff",effect:"clone",dead:false});emit(e.x,35,"#f5a8ff",42,360)}
+    e.specialCd=2.3;
+   }
+   if(e.cooldown<=0&&dist<1250){enemyFire(e);e.cooldown=1.25}
   }
   e.x=clamp(e.x,60,LEVEL_W-60);return;
  }
@@ -459,10 +480,11 @@ function drawCore(c){
 }
 function drawEnemy(e){
  if(e.dead)return;const sx=e.x-cam;if(sx< -100||sx>W+100)return;
+ if(e.boss&&e.name==="껌껌이"&&(e.hiddenT||0)>0){const ripple=1+Math.sin(elapsed*12)*.18;ctx.strokeStyle="rgba(91,221,232,.8)";ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(sx,FLOOR-8,28*ripple,8*ripple,0,0,Math.PI*2);ctx.stroke();return}
  const boss=e.boss;const scale=boss?1.9:1;const foot=FLOOR-(e.z||0);const cy=foot-(boss?54:25);ctx.save();ctx.translate(sx,cy);ctx.scale(e.face||-1,1);
  if(boss&&coreCount()>0){ctx.strokeStyle="rgba(110,145,255,.55)";ctx.lineWidth=3;ctx.setLineDash([8,7]);ctx.beginPath();ctx.ellipse(0,0,65,75,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
- const bodyColor=e.flash>0?"#fff":boss?"#78344f":e.type==="shooter"?"#315b7c":"#394467";
- const glowColor=boss?(e.name==="윈터"?"#9deeff":e.name==="모래"?"#d7a8ff":e.name==="복돌이"?"#ffbd70":"#ffb6c7"):e.type==="shooter"?"#6bf1ff":"#ffd76e";
+ const bodyColor=e.flash>0?"#fff":boss?(e.name==="껌껌이"?"#2c8f9e":e.name==="솜솜이"?"#67449d":"#78344f"):e.type==="shooter"?"#315b7c":"#394467";
+ const glowColor=boss?(e.name==="윈터"?"#9deeff":e.name==="모래"?"#d7a8ff":e.name==="복돌이"?"#ffbd70":e.name==="껌껌이"?"#5bdde8":e.name==="솜솜이"?"#f5a8ff":"#ffb6c7"):e.type==="shooter"?"#6bf1ff":"#ffd76e";
  ctx.fillStyle="rgba(0,0,0,.24)";ctx.beginPath();ctx.ellipse(0,31*scale,27*scale,7*scale,0,0,Math.PI*2);ctx.fill();
  ctx.fillStyle=bodyColor;ctx.beginPath();ctx.roundRect(-22*scale,-20*scale,44*scale,42*scale,9*scale);ctx.fill();ctx.strokeStyle=glowColor;ctx.lineWidth=2;ctx.stroke();
  ctx.fillStyle="#0b1329";ctx.fillRect(-14*scale,-12*scale,28*scale,15*scale);
