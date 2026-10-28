@@ -117,7 +117,7 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,
     <div class="screen-panel">
       <div class="screen-kicker" id="screenKicker">ROCKEY GAME LAB · ACTION PROTOCOL</div>
       <h2 id="screenTitle">DORI: <em>FULL THROTTLE</em></h2>
-      <p id="screenDescription">속도와 타이밍을 무기로 삼아 세 개의 파워 코어를 파괴하고, 최종 보스를 무너뜨린 뒤 탈출 지점까지 도달하세요.</p>
+      <p id="screenDescription">튜토리얼부터 시작하는 5개 스테이지 캠페인! 보스는 최종 스테이지에서만 등장해.</p>
       <div class="feature-grid" id="featureGrid">
         <div class="feature"><b>01 / REFLECT</b><span>머리로 투사체를 반사해 적에게 되돌려 줘.</span></div>
         <div class="feature"><b>02 / BREAKTHROUGH</b><span>짧은 돌격과 목표 지정 박치기로 전선을 뚫어.</span></div>
@@ -162,10 +162,10 @@ const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d",{alpha:false});
 const frame=document.getElementById("gameFrame");
 const $=id=>document.getElementById(id);
-const LEVEL_W=4680, GRAVITY=1760, BASE_SPEED=365, DASH_SPEED=1160, HEAD_SPEED=1320;
+let LEVEL_W=4680; const GRAVITY=1760, BASE_SPEED=365, DASH_SPEED=1160, HEAD_SPEED=1320;
 let W=960,H=560,FLOOR=500,DPR=1,cam=0,lastTime=0,uiClock=0,shake=0,mode="title",soundOn=true,audioCtx=null,aimMode=false,mouseInside=false;
 let aimWorldX=520,aimZ=0,hintTimer=0,particles=[],projectiles=[],enemies=[],cores=[],hazards=[],keys={left:false,right:false},touch={left:false,right:false};
-let player,cooldowns,bestScore=0,runStart=0,elapsed=0,won=false,shakeOffsetX=0,shakeOffsetY=0;
+let player,cooldowns,bestScore=0,runStart=0,elapsed=0,won=false,shakeOffsetX=0,shakeOffsetY=0,currentStage=0;
 const colors={cyan:"#6bf1ff",blue:"#6e91ff",gold:"#ffd76e",red:"#ff667f",green:"#7affc7",white:"#f6f8ff",orange:"#ffad70"};
 try{bestScore=Number(localStorage.getItem("doriFullThrottleBest")||0)||0}catch(e){}
 function resize(){
@@ -185,19 +185,15 @@ function sfx(type){
  try{const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.type=cfg[3];osc.frequency.setValueAtTime(cfg[0],now);osc.frequency.exponentialRampToValueAtTime(Math.max(25,cfg[1]),now+cfg[2]);gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.075,now+.012);gain.gain.exponentialRampToValueAtTime(.0001,now+cfg[2]);osc.connect(gain);gain.connect(audioCtx.destination);osc.start(now);osc.stop(now+cfg[2]+.02)}catch(e){}
 }
 function newPlayer(){return{x:145,z:0,vx:0,vz:0,face:1,hp:100,maxHp:100,invuln:0,attackT:-1,attackDone:[false,false],attackSets:[new Set(),new Set()],parryT:0,parryHit:new Set(),dashT:0,dashHit:new Set(),barkT:0,barkHit:new Set(),speedBuff:0,partyT:0,powerBuff:0,headbutt:null,combo:0,comboTimer:0,score:0,kills:0,reflections:0,damageDone:0,hazardCd:0,anim:0,shake:0}}
-function setupRun(){
- player=newPlayer();cooldowns={parry:0,dash:0,bark:0,party:0,head:0};particles=[];projectiles=[];aimMode=false;hintTimer=0;cam=0;elapsed=0;won=false;shake=0;
- cores=[{id:"core1",x:900,hp:115,maxHp:115,dead:false,phase:0,flash:0},{id:"core2",x:2050,hp:135,maxHp:135,dead:false,phase:1.2,flash:0},{id:"core3",x:3110,hp:150,maxHp:150,dead:false,phase:2.4,flash:0}];
- const specs=[
-  [430,"melee"],[600,"shooter"],[760,"melee"],[1115,"shooter"],[1280,"melee"],[1510,"melee"],[1710,"shooter"],[1900,"melee"],[2250,"shooter"],[2410,"melee"],[2690,"shooter"],[2870,"melee"],[3330,"shooter"],[3480,"melee"],[3690,"shooter"],[3800,"melee"]
- ];
- enemies=specs.map((s,i)=>({id:"enemy"+i,x:s[0],type:s[1],hp:s[1]==="shooter"?44:62,maxHp:s[1]==="shooter"?44:62,dead:false,z:s[1]==="shooter"?58:0,vx:0,face:-1,cooldown:rand(.3,1.4),wind:0,stun:0,flash:0,anim:rand(0,7),score:s[1]==="shooter"?180:140}));
- enemies.push({id:"boss",x:4140,type:"boss",hp:650,maxHp:650,dead:false,z:0,vx:0,face:-1,cooldown:1.65,wind:0,meleeWind:0,meleeCooldown:.8,stun:0,flash:0,anim:0,score:2500,boss:true});
- hazards=[{x:1390,w:70,phase:0},{x:2490,w:90,phase:1},{x:3550,w:72,phase:2}];
-}
-setupRun();
-function coreCount(){return cores.filter(c=>!c.dead).length}
-function boss(){return enemies.find(e=>e.boss)}
+const STAGES=[
+{id:0,name:"튜토리얼 · 첫걸음",subtitle:"조작을 익히고 출구로!",length:1150,difficulty:"입문",desc:"이동·점프·공격·반사·돌격을 안전하게 연습해. 보스전 없이 출구에 도달하면 완료!",cores:[],enemies:[[430,"melee"],[760,"melee"]],hazards:[]},
+{id:1,name:"스테이지 1 · 훈련 평원",subtitle:"기본 전투와 이동",length:1900,difficulty:"쉬움",desc:"근접 적과 원거리 적의 공격 패턴을 익히며 전선을 돌파해. 보스는 없어!",cores:[],enemies:[[400,"melee"],[620,"shooter"],[850,"melee"],[1120,"shooter"],[1460,"melee"]],hazards:[{x:980,w:65,phase:0}]},
+{id:2,name:"스테이지 2 · 탄환의 회랑",subtitle:"반사 타이밍 시험",length:2700,difficulty:"보통",desc:"탄환을 반사하고 여러 적의 압박을 버텨라. 보스 없이 마지막 출구까지!",cores:[],enemies:[[390,"melee"],[590,"shooter"],[810,"shooter"],[1060,"melee"],[1310,"shooter"],[1580,"melee"],[1830,"shooter"],[2110,"melee"],[2380,"shooter"]],hazards:[{x:900,w:65,phase:0},{x:1740,w:90,phase:1}]},
+{id:3,name:"스테이지 3 · 붕괴 지대",subtitle:"빠른 판단과 연속 전투",length:3450,difficulty:"어려움",desc:"강한 적과 위험 지형을 뚫고 생존해. 이 구간도 보스전은 없어!",cores:[],enemies:[[390,"melee"],[570,"shooter"],[820,"melee"],[1040,"shooter"],[1280,"melee"],[1510,"shooter"],[1770,"melee"],[2020,"shooter"],[2290,"melee"],[2550,"shooter"],[2820,"melee"],[3100,"shooter"]],hazards:[{x:730,w:72,phase:0},{x:1660,w:90,phase:1},{x:2640,w:75,phase:2}]},
+{id:4,name:"최종 스테이지 · WARDEN",subtitle:"유일한 보스전",length:4680,difficulty:"매우 어려움",desc:"세 개의 파워 코어를 파괴하고 WARDEN을 쓰러뜨려라. 보스가 등장하는 건 여기뿐!",cores:[{id:"core1",x:900,hp:115,maxHp:115,dead:false,phase:0,flash:0},{id:"core2",x:2050,hp:135,maxHp:135,dead:false,phase:1.2,flash:0},{id:"core3",x:3110,hp:150,maxHp:150,dead:false,phase:2.4,flash:0}],enemies:[[430,"melee"],[600,"shooter"],[760,"melee"],[1115,"shooter"],[1280,"melee"],[1510,"melee"],[1710,"shooter"],[1900,"melee"],[2250,"shooter"],[2410,"melee"],[2690,"shooter"],[2870,"melee"],[3330,"shooter"],[3480,"melee"],[3690,"shooter"],[3800,"melee"]],hazards:[{x:1390,w:70,phase:0},{x:2490,w:90,phase:1},{x:3550,w:72,phase:2}],boss:true}
+];
+function setupRun(stageId=currentStage){currentStage=clamp(Number(stageId)||0,0,STAGES.length-1);const stage=STAGES[currentStage];LEVEL_W=stage.length;player=newPlayer();cooldowns={parry:0,dash:0,bark:0,party:0,head:0};particles=[];projectiles=[];aimMode=false;hintTimer=0;cam=0;elapsed=0;won=false;shake=0;cores=stage.cores.map(c=>({...c}));hazards=stage.hazards.map(h=>({...h}));const mult=[.72,.82,1,1.18,1.28][currentStage];enemies=stage.enemies.map((sp,i)=>({id:"enemy"+i,x:sp[0],type:sp[1],hp:Math.round((sp[1]==="shooter"?44:62)*mult),maxHp:Math.round((sp[1]==="shooter"?44:62)*mult),dead:false,z:sp[1]==="shooter"?58:0,vx:0,face:-1,cooldown:rand(.3,1.4),wind:0,stun:0,flash:0,anim:rand(0,7),score:sp[1]==="shooter"?180:140}));if(stage.boss)enemies.push({id:"boss",x:4140,type:"boss",hp:650,maxHp:650,dead:false,z:0,vx:0,face:-1,cooldown:1.65,wind:0,meleeWind:0,meleeCooldown:.8,stun:0,flash:0,anim:0,score:2500,boss:true});}
+function coreCount(){return cores.filter(c=>!c.dead).length}function boss(){return enemies.find(e=>e.boss)||null}function stageExitOpen(){const b=boss();return coreCount()===0&&(!b||b.dead)}setupRun();
 function emit(x,h,color,count=10,power=180){
  for(let i=0;i<count;i++){const a=rand(0,Math.PI*2),sp=rand(power*.22,power);particles.push({x,h,vx:Math.cos(a)*sp,vh:Math.sin(a)*sp,life:rand(.18,.55),max:.55,size:rand(1.5,4.7),color})}
 }
@@ -379,7 +375,7 @@ function update(dt){
  particles.forEach(p=>{p.x+=p.vx*dt;p.h+=p.vh*dt;p.vh-=440*dt;p.life-=dt});particles=particles.filter(p=>p.life>0);
  shake=Math.max(0,shake-dt*25);
  const target=clamp(player.x-W*.31,0,LEVEL_W-W);cam+=(target-cam)*Math.min(1,dt*9);
- if(boss().dead&&player.x>=LEVEL_W-100){finishGame(true);return}
+ if(stageExitOpen()&&player.x>=LEVEL_W-100){finishGame(true);return}
  if(player.hp<=0){finishGame(false);return}
  uiClock-=dt;if(uiClock<=0){refreshUI();uiClock=.08}
  if(hintTimer>0){hintTimer-=dt;if(hintTimer<=0)$("hintToast").classList.remove("visible")}
@@ -390,21 +386,16 @@ function finishGame(victory){
  if(player.score>bestScore){bestScore=player.score;try{localStorage.setItem("doriFullThrottleBest",String(bestScore))}catch(e){}}
  $("screenOverlay").classList.remove("hidden");$("screenKicker").textContent=victory?"MISSION ACCOMPLISHED":"SIGNAL LOST";
  $("screenTitle").innerHTML=victory?"돌이, <em>돌파 성공!</em>":"<em>임무 실패</em>";
- $("screenDescription").textContent=victory?"최종 보스를 격파하고 탈출 지점에 도달했어! 전장을 완전히 돌파했어.":"체력이 모두 소진됐어. 공격 타이밍과 투사체 반사를 활용해 다시 도전해 봐.";
+ $("screenDescription").textContent=victory?STAGES[currentStage].name+" 클리어! 출구에 도달했어. 다음 스테이지에 도전해 봐!":"체력이 모두 소진됐어. 공격 타이밍과 투사체 반사를 활용해 다시 도전해 봐.";
  $("featureGrid").innerHTML='<div class="feature"><b>최종 점수</b><span>'+formatScore(player.score)+'</span></div><div class="feature"><b>완료 시간</b><span>'+Math.floor(elapsed/60)+'분 '+String(Math.floor(elapsed%60)).padStart(2,"0")+'초</span></div><div class="feature"><b>최고 기록</b><span>'+formatScore(bestScore)+'</span></div>';
- $("screenPrimary").textContent="↻ 다시 도전";$("screenSecondary").hidden=false;$("screenSecondary").textContent="게임 센터로";$("screenHint").textContent="처치 "+player.kills+" · 반사 "+player.reflections+"회 · 최대 콤보 x"+Math.max(player.combo,0);
+ $("screenPrimary").textContent="↻ 다시 도전";$("screenSecondary").hidden=false;$("screenSecondary").textContent="스테이지 선택";$("screenHint").textContent="처치 "+player.kills+" · 반사 "+player.reflections+"회 · 최대 콤보 x"+Math.max(player.combo,0);
  refreshUI();
 }
 function refreshUI(){
  $("healthText").textContent=Math.ceil(player.hp)+" / "+player.maxHp;$("healthFill").style.width=(player.hp/player.maxHp*100)+"%";
  $("progressText").textContent=Math.floor(player.x/LEVEL_W*100)+"%";$("progressFill").style.width=(player.x/LEVEL_W*100)+"%";
  $("scoreText").textContent=formatScore(player.score);$("comboText").textContent="x"+player.combo;$("killText").textContent=player.kills;
- const remaining=coreCount();let stage;
- if(player.x<1500)stage="SECTOR 01 · 돌파 훈련소";else if(player.x<2800)stage="SECTOR 02 · 탄환의 회랑";else if(remaining>0)stage="SECTOR 03 · 원자로 접근";else stage="FINAL SECTOR · WARDEN";
- $("stageText").textContent=stage;
- $("objectiveText").textContent=remaining>0?"임무: 파워 코어 파괴 ("+(3-remaining)+"/3)":"임무: 최종 보스 격파 → 출구 도달";
- $("speedBuff").classList.toggle("show",player.speedBuff>0);$("partyBuff").classList.toggle("show",player.powerBuff>0);$("danceBuff").classList.toggle("show",player.partyT>0);
- const b=boss();$("bossWrap").classList.toggle("show",remaining===0&&!b.dead);$("bossText").textContent=Math.ceil(b.hp)+" / "+b.maxHp;$("bossFill").style.width=(b.hp/b.maxHp*100)+"%";
+ const remaining=coreCount(),cfg=STAGES[currentStage],b=boss();$("stageText").textContent="STAGE "+String(currentStage).padStart(2,"0")+" · "+cfg.name;$("objectiveText").textContent=remaining>0?"임무: 파워 코어 파괴 ("+(cfg.cores.length-remaining)+"/"+cfg.cores.length+")":b&&!b.dead?"임무: WARDEN 격파 → 출구 도달":"임무: 출구 도달";$("speedBuff").classList.toggle("show",player.speedBuff>0);$("partyBuff").classList.toggle("show",player.powerBuff>0);$("danceBuff").classList.toggle("show",player.partyT>0);$("bossWrap").classList.toggle("show",!!b&&remaining===0&&!b.dead);if(b){$("bossText").textContent=Math.ceil(b.hp)+" / "+b.maxHp;$("bossFill").style.width=(b.hp/b.maxHp*100)+"%";}
  document.querySelectorAll("[data-cooldown]").forEach(el=>{const t=cooldowns[el.dataset.cooldown]||0;el.textContent=t>0?t.toFixed(1)+"s":"READY"});
  document.querySelectorAll("[data-skill]").forEach(btn=>{const t=cooldowns[btn.dataset.skill]||0;btn.classList.toggle("locked",t>0||(player.partyT>0&&btn.dataset.skill!=="party"));btn.style.setProperty("--ready",t>0?.12:1)});
  $("pauseButton").textContent=mode==="paused"?"▶ 계속하기":"Ⅱ 일시 정지";
@@ -544,7 +535,7 @@ function drawGate(){
 }
 function drawExit(){
  const x=LEVEL_W-90-cam;if(x< -40||x>W+60)return;
- ctx.save();ctx.translate(x,FLOOR-62);const active=boss().dead;ctx.strokeStyle=active?colors.green:"rgba(133,151,191,.55)";ctx.lineWidth=3;ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=active?16:3;ctx.strokeRect(-22,-38,44,75);ctx.shadowBlur=0;ctx.fillStyle=active?"rgba(122,255,199,.16)":"rgba(129,145,185,.08)";ctx.fillRect(-17,-33,34,65);ctx.fillStyle=active?colors.green:"#8e9cbb";ctx.font="bold 10px sans-serif";ctx.textAlign="center";ctx.fillText(active?"EXIT":"LOCKED",0,-47);if(active){ctx.beginPath();ctx.moveTo(-7,0);ctx.lineTo(5,0);ctx.lineTo(5,-8);ctx.lineTo(13,6);ctx.lineTo(5,18);ctx.lineTo(5,9);ctx.lineTo(-7,9);ctx.closePath();ctx.fill()}ctx.restore();
+ ctx.save();ctx.translate(x,FLOOR-62);const active=stageExitOpen();ctx.strokeStyle=active?colors.green:"rgba(133,151,191,.55)";ctx.lineWidth=3;ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=active?16:3;ctx.strokeRect(-22,-38,44,75);ctx.shadowBlur=0;ctx.fillStyle=active?"rgba(122,255,199,.16)":"rgba(129,145,185,.08)";ctx.fillRect(-17,-33,34,65);ctx.fillStyle=active?colors.green:"#8e9cbb";ctx.font="bold 10px sans-serif";ctx.textAlign="center";ctx.fillText(active?"EXIT":"LOCKED",0,-47);if(active){ctx.beginPath();ctx.moveTo(-7,0);ctx.lineTo(5,0);ctx.lineTo(5,-8);ctx.lineTo(13,6);ctx.lineTo(5,18);ctx.lineTo(5,9);ctx.lineTo(-7,9);ctx.closePath();ctx.fill()}ctx.restore();
 }
 function drawAim(){
  if(!aimMode)return;const x=aimWorldX-cam,y=FLOOR-aimZ-25;if(x<0||x>W)return;ctx.save();ctx.strokeStyle=aimMode?"#ffe5a0":"rgba(107,241,255,.55)";ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(player.x-cam,FLOOR-player.z-25);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.arc(x,y,12+Math.sin(elapsed*8)*2,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(x-17,y);ctx.lineTo(x+17,y);ctx.moveTo(x,y-17);ctx.lineTo(x,y+17);ctx.stroke();ctx.restore();
@@ -561,9 +552,8 @@ function loop(now){
  if(mode==="playing")update(dt);else if(mode==="title"){elapsed=now/1000*.25;player.anim+=dt*2;cam=0}
  draw();requestAnimationFrame(loop)
 }
-function startGame(){
- setupRun();mode="playing";runStart=performance.now();$("screenOverlay").classList.add("hidden");$("screenSecondary").hidden=true;$("screenPrimary").textContent="▶ 전투 시작";$("pauseButton").textContent="Ⅱ 일시 정지";audioReady();canvas.focus();refreshUI()
-}
+function showStageSelect(){mode="title";$("screenOverlay").classList.remove("hidden");$("screenKicker").textContent="CAMPAIGN SELECT · 5 STAGES";$("screenTitle").innerHTML="스테이지 <em>선택</em>";$("screenDescription").textContent="쉬운 튜토리얼부터 점점 어려워져. 보스는 마지막 스테이지에만 등장해.";$("featureGrid").innerHTML=STAGES.map(st=>'<button type="button" class="feature stage-choice" data-stage="'+st.id+'" style="text-align:left;cursor:pointer;color:inherit"><b>'+st.name+'</b><span>'+st.subtitle+' · 난이도 '+st.difficulty+'</span></button>').join("");$("screenPrimary").textContent="▶ 선택한 스테이지 시작";$("screenSecondary").hidden=false;$("screenSecondary").textContent="게임 센터로";$("screenHint").textContent="튜토리얼부터 시작하는 걸 추천해!";document.querySelectorAll("[data-stage]").forEach(btn=>btn.addEventListener("click",()=>{currentStage=Number(btn.dataset.stage);document.querySelectorAll("[data-stage]").forEach(b=>b.classList.toggle("selected",b===btn));$("screenDescription").textContent=STAGES[currentStage].desc;$("screenPrimary").textContent="▶ "+STAGES[currentStage].name+" 시작";}));}
+function startGame(){setupRun(currentStage);mode="playing";runStart=performance.now();$("screenOverlay").classList.add("hidden");$("screenSecondary").hidden=true;$("screenPrimary").textContent="▶ 전투 시작";$("pauseButton").textContent="Ⅱ 일시 정지";audioReady();canvas.focus();refreshUI()}
 function pauseGame(){
  if(mode==="playing"){mode="paused";$("screenOverlay").classList.remove("hidden");$("screenKicker").textContent="PAUSE · TAKE A BREATH";$("screenTitle").innerHTML="잠시 <em>정지</em>";$("screenDescription").textContent="작전을 정비하고 다시 돌파하자. 일시 정지 중에는 전투 시간이 흐르지 않아.";$("featureGrid").innerHTML='<div class="feature"><b>현재 점수</b><span>'+formatScore(player.score)+'</span></div><div class="feature"><b>남은 코어</b><span>'+coreCount()+'개</span></div><div class="feature"><b>최고 기록</b><span>'+formatScore(bestScore)+'</span></div>';$("screenPrimary").textContent="▶ 계속하기";$("screenSecondary").hidden=false;$("screenSecondary").textContent="처음부터";$("screenHint").textContent="P 또는 ESC를 누르면 다시 시작할 수 있어."}
  else if(mode==="paused"){mode="playing";$("screenOverlay").classList.add("hidden");$("screenSecondary").hidden=true;refreshUI()}
@@ -572,8 +562,8 @@ function screenPrimary(){
  if(mode==="title"||mode==="gameover"||mode==="victory"){startGame();return}
  if(mode==="paused"){pauseGame();return}
 }
-$("screenPrimary").addEventListener("click",screenPrimary);
-$("screenSecondary").addEventListener("click",()=>{if(mode==="paused"){startGame()}else location.href="./gamepage.html"});
+$("screenPrimary").addEventListener("click",()=>{if(mode==="paused"){mode="playing";$("screenOverlay").classList.add("hidden");$("screenSecondary").hidden=true}else startGame()});
+$("screenSecondary").addEventListener("click",()=>{if(mode==="paused"){showStageSelect()}else if(mode==="victory"||mode==="gameover"){showStageSelect()}else location.href="./gamepage.html"});
 $("pauseButton").addEventListener("click",()=>{if(mode==="playing"||mode==="paused")pauseGame()});
 $("soundToggle").addEventListener("click",()=>{soundOn=!soundOn;$("soundToggle").textContent=soundOn?"♫ 사운드 ON":"♫ 사운드 OFF";$("soundToggle").setAttribute("aria-pressed",String(soundOn));if(soundOn)audioReady()});
 canvas.addEventListener("pointermove",e=>{const r=canvas.getBoundingClientRect();aimWorldX=cam+e.clientX-r.left;aimZ=clamp(FLOOR-(e.clientY-r.top)-25,0,260);mouseInside=true});
