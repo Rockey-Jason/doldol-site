@@ -74,7 +74,7 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,
 .touch-pad{display:flex;align-items:center;justify-content:center}.move-joystick{position:relative;width:112px;height:112px;border:1px solid rgba(107,241,255,.48);border-radius:50%;background:radial-gradient(circle at 35% 28%,rgba(80,130,210,.26),rgba(7,15,38,.82) 70%);box-shadow:inset 0 0 22px rgba(107,241,255,.09),0 5px 22px rgba(0,0,0,.32);touch-action:none;user-select:none;pointer-events:auto}.move-joystick:before{content:"";position:absolute;left:50%;top:50%;width:64%;height:64%;transform:translate(-50%,-50%);border:1px dashed rgba(185,219,255,.2);border-radius:50%;pointer-events:none}.joystick-thumb{position:absolute;left:50%;top:50%;width:45px;height:45px;transform:translate(-50%,-50%);display:grid;place-items:center;border:1px solid rgba(210,248,255,.75);border-radius:50%;background:linear-gradient(145deg,rgba(107,241,255,.68),rgba(60,106,196,.82));box-shadow:0 0 18px rgba(107,241,255,.25),inset 0 1px 5px rgba(255,255,255,.35);color:white;font-size:18px;font-weight:400;pointer-events:none;will-change:transform}.move-joystick.active{border-color:var(--cyan);box-shadow:inset 0 0 26px rgba(107,241,255,.16),0 0 16px rgba(107,241,255,.13)}.touch-btn{touch-action:none;overscroll-behavior:contain;display:grid;place-items:center;min-width:39px;min-height:39px;padding:4px;border:1px solid rgba(203,225,255,.28);border-radius:13px;color:#f0f6ff;background:rgba(7,15,38,.74);box-shadow:0 4px 15px rgba(0,0,0,.25);font-size:14px;backdrop-filter:blur(7px);user-select:none}
 .touch-btn:active,.touch-btn.active{background:rgba(73,150,255,.48);border-color:var(--cyan);transform:scale(.95)}
 .touch-btn.move{font-size:18px;min-height:45px}.touch-skills{display:grid;grid-template-columns:repeat(3,39px);gap:5px;justify-items:center;touch-action:none}.touch-skills .touch-btn{min-width:39px;min-height:39px;font-size:10px}.touch-skills .touch-btn strong{display:block;font-size:13px;color:var(--cyan);font-weight:400}
-.touch-main{display:grid;grid-template-columns:repeat(2,46px);gap:6px;touch-action:none}.touch-main .touch-btn{min-width:46px;min-height:46px;font-size:11px}
+.touch-main{display:grid;grid-template-columns:46px;gap:6px;touch-action:none}.touch-main .touch-btn{min-width:46px;min-height:46px;font-size:11px}
 .bottom-note{margin:12px 2px 0;color:#7f92b7;font-size:11px;line-height:1.6}
 @media(max-width:900px){.page{width:calc(100% - 20px);padding-top:12px}.hero{align-items:flex-start}.skill-panel{grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.skill-button{padding:8px 6px;gap:6px;justify-content:center}.skill-icon{width:27px;height:27px}.skill-text b{font-size:10px}.skill-text small{font-size:9px}.hud-card{min-width:135px}.hud-left,.hud-right{max-width:45%}}
 @media(max-width:700px){.topbar{margin-bottom:16px}.brand-mark{width:36px;height:36px;border-radius:12px}.brand-copy strong{font-size:13px}.brand-copy span{font-size:9px}.ghost-btn{padding:9px 10px;font-size:11px}.hero{margin:7px 0 12px;display:block}.hero h1{font-size:clamp(29px,8vw,39px)}.hero p{font-size:12px;max-width:440px}.version-chip{display:none}#gameCanvas{height:clamp(430px,60vh,560px);max-height:none;min-height:400px}.game-frame{border-radius:15px}.hud{top:8px;left:8px;right:8px;gap:5px}.hud-card{min-width:0;padding:7px 8px;border-radius:10px}.hud-left,.hud-right{gap:5px;max-width:49%}.hud-label{font-size:9px;letter-spacing:.8px;margin-bottom:4px}.hud-label b{font-size:10px}.bar{height:6px}.hud-mini{font-size:9px;padding:6px 7px}.boss-wrap{top:80px;width:70%}.skill-panel{display:none}.touch-controls{display:flex}.action-row{font-size:10px;margin-top:9px}.controls-note{font-size:10px;gap:5px}.controls-note span{padding:4px 6px}.bottom-note{font-size:10px}.screen-panel{border-radius:18px;padding:18px 14px}.screen-panel h2{font-size:34px}.screen-panel p{font-size:12px;margin-bottom:10px}.feature-grid{gap:5px;margin:12px 0 14px}.feature{padding:8px 7px}.feature b{font-size:10px}.feature span{font-size:9px}.primary-btn{min-width:165px;min-height:44px}.secondary-btn{min-height:42px}.overlay-hint{font-size:9px!important}}
@@ -139,7 +139,7 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,
         <button class="touch-btn" data-skill="party" type="button" aria-label="Rockey Party"><strong>F</strong>춤</button>
         <button class="touch-btn" data-skill="head" type="button" aria-label="머리 박치기, 목표 지정"><strong>⇧</strong>박치기</button>
       </div>
-      <div class="touch-main"><button class="touch-btn" id="touchJump" type="button" aria-label="점프">↑<br>점프</button><button class="touch-btn" id="touchAttack" type="button" aria-label="머리 휘두르기">⚔<br>공격</button></div>
+      <div class="touch-main"><button class="touch-btn" id="touchAttack" type="button" aria-label="머리 휘두르기">⚔<br>공격</button></div>
     </div>
   </div>
 </div>
@@ -916,7 +916,7 @@ canvas.addEventListener("pointerdown",e=>{
  if(e.pointerType==="mouse"){canvas.focus()}
 });
 const joystick=$("moveJoystick"),joystickThumb=$("joystickThumb");
-let joystickPointer=null,joystickX=0,joystickY=0;
+let joystickPointer=null,joystickX=0,joystickY=0,joystickJumped=false;
 function updateJoystick(e){
  const r=joystick.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;
  let dx=e.clientX-cx,dy=e.clientY-cy;const limit=r.width*.31,dist=Math.hypot(dx,dy);
@@ -924,11 +924,12 @@ function updateJoystick(e){
  joystickX=dx/limit;joystickY=dy/limit;
  joystickThumb.style.transform="translate(calc(-50% + "+dx+"px), calc(-50% + "+dy+"px))";
  touch.left=joystickX<-.16;touch.right=joystickX>.16;
+ if(joystickY<-.62&&!joystickJumped){joystickJumped=true;jump()}else if(joystickY>-.25){joystickJumped=false}
  joystick.classList.toggle("active",Math.abs(joystickX)>.12||Math.abs(joystickY)>.12);
 }
 function releaseJoystick(e){
  if(joystickPointer!==null&&e&&e.pointerId!==joystickPointer)return;
- joystickPointer=null;joystickX=0;joystickY=0;touch.left=false;touch.right=false;
+ joystickPointer=null;joystickX=0;joystickY=0;joystickJumped=false;touch.left=false;touch.right=false;
  joystickThumb.style.transform="translate(-50%,-50%)";joystick.classList.remove("active");
 }
 joystick.addEventListener("pointerdown",e=>{
@@ -953,7 +954,6 @@ document.querySelectorAll(".touch-controls [data-skill]").forEach(btn=>{
  });
 });
 $("touchAttack").addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();try{$("touchAttack").setPointerCapture(e.pointerId)}catch(err){}startAttack()});
-$("touchJump").addEventListener("pointerdown",e=>{e.preventDefault();e.stopPropagation();try{$("touchJump").setPointerCapture(e.pointerId)}catch(err){}jump()});
 function clearHeldInputs(){keys.left=false;keys.right=false;releaseJoystick()}
 window.addEventListener("blur",clearHeldInputs);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)clearHeldInputs()});
