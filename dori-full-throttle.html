@@ -599,6 +599,7 @@ function updateEnemy(e,dt){
  e.x=clamp(e.x,40,LEVEL_W-40);
 }
 function update(dt){
+ if(impactFreeze>0)dt*=.38;
  elapsed+=dt;
  cores.forEach(c=>c.flash=Math.max(0,(c.flash||0)-dt));enemies.forEach(e=>{e.hitT=Math.max(0,(e.hitT||0)-dt);e.flash=Math.max(0,(e.flash||0)-dt)});
  Object.keys(cooldowns).forEach(k=>cooldowns[k]=Math.max(0,cooldowns[k]-dt));
@@ -839,7 +840,20 @@ function drawPlayer(){
  // Animate the supplied Dori sprite independently from movement/attack hitboxes.
  const partyPhase=player.partyT>0?elapsed*13:0;
  let tilt=0,stretchX=1,stretchY=1,bodyY=0;
- if(player.skillMotion){const sm=player.skillMotion,p=1-sm.life/sm.max,cat=SKILL_META[sm.name]?.category||0,kick=Math.sin(p*Math.PI);tilt+=player.face*(cat===1?-.2*kick:cat===2?-.32*kick:cat===3?.18*Math.sin(p*Math.PI*2):-.16*kick);stretchX*=1+(cat===2?.2:.09)*kick;stretchY*=1-(cat===2?.16:.07)*kick;bodyY-=kick*(cat===2?11:cat===4?5:3);}
+ if(player.skillMotion){
+  const sm=player.skillMotion,p=clamp(1-sm.life/sm.max,0,1),cat=SKILL_META[sm.name]?.category||0,kick=Math.sin(p*Math.PI),n=sm.name;
+  const guard=["parry","goldParry","perfectGuard","prismReflect","echoGuard","ironMane","counterBurst","mirrorPaw","cometGuard","royalGuard","infinityReflect"].includes(n);
+  const dash=["dash","lightningDash","cometRush","shadowStep","windRunner","meteorDash","phantomRush"].includes(n);
+  const roar=["bark","sonicBark","shockwave","frostHowl","thunderHowl","novaRoar"].includes(n);
+  if(guard){tilt+=player.face*(-.24*kick);stretchX*=1+.13*kick;stretchY*=1-.1*kick;bodyY-=kick*2;}
+  else if(dash){tilt+=player.face*(-.4*kick);stretchX*=1+.25*kick;stretchY*=1-.19*kick;bodyY-=kick*(n==="phantomRush"?15:10);}
+  else if(n==="impactLanding"){tilt+=player.face*.16*kick;stretchX*=1-.13*kick;stretchY*=1+.2*kick;bodyY+=kick*5;}
+  else if(n==="skyLeap"){tilt+=player.face*.08;stretchY*=1+.19*kick;bodyY-=kick*10;}
+  else if(n==="head"){tilt+=player.face*(-.46*kick);stretchX*=1+.2*kick;stretchY*=1-.15*kick;bodyY-=kick*4;}
+  else if(roar){tilt+=player.face*(p<.35?-.12:.16)*kick;stretchX*=1+.17*kick;stretchY*=1-.09*kick;bodyY-=kick*5;}
+  else if(["party","frenzy","goldenFur","coinMagnet","swiftPaws","powerSnack","starCoat","overdrive"].includes(n)){tilt+=Math.sin(p*Math.PI*4)*.14;stretchX*=1+.1*kick;stretchY*=1-.08*kick;bodyY-=kick*6;}
+  else{tilt+=player.face*(cat===3?.12:-.16)*kick;stretchX*=1+.09*kick;stretchY*=1-.07*kick;bodyY-=kick*(cat===4?5:3);}
+ }
  if(player.attackT>=0){
   const attackPhase=player.attackT<.22?player.attackT/.22:(player.attackT-.22)/.22;
   tilt=player.face*(.12+Math.sin(Math.min(1,attackPhase)*Math.PI)*.24);
