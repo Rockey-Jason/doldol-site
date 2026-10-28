@@ -758,10 +758,10 @@ function drawEnemy(e){
  if(e.dead)return;const sx=e.x-cam;if(sx< -100||sx>W+100)return;
  if(e.boss&&e.name==="껌껌이"&&(e.hiddenT||0)>0){const ripple=1+Math.sin(elapsed*12)*.18;ctx.strokeStyle="rgba(91,221,232,.8)";ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(sx,FLOOR-8,28*ripple,8*ripple,0,0,Math.PI*2);ctx.stroke();return}
  const boss=e.boss;const scale=boss?1.9:1;const foot=FLOOR-(e.z||0);const cy=foot-(boss?54:25);ctx.save();const hitKick=(e.hitT||0)>0?Math.sin((e.hitT/.2)*Math.PI):0;ctx.translate(sx+(e.hitDir||0)*hitKick*(boss?7:4),cy-hitKick*(boss?3:1));ctx.rotate((e.hitDir||0)*hitKick*(boss?.045:.025));ctx.scale((e.face||-1)*(1+hitKick*(boss?.035:.07)),1-hitKick*(boss?.045:.08));if(boss)drawBossAura(e,scale);
- if((e.hitT||0)>0){ctx.save();ctx.globalCompositeOperation="lighter";ctx.globalAlpha=hitKick*.65;ctx.strokeStyle=glowColor;ctx.shadowColor=glowColor;ctx.shadowBlur=boss?25:13;ctx.lineWidth=boss?3.5:2;ctx.beginPath();ctx.ellipse(0,0,(boss?57:29)+hitKick*10,(boss?65:31)+hitKick*7,0,0,Math.PI*2);ctx.stroke();ctx.restore()}
  if(boss&&coreCount()>0){ctx.strokeStyle="rgba(110,145,255,.55)";ctx.lineWidth=3;ctx.setLineDash([8,7]);ctx.beginPath();ctx.ellipse(0,0,65,75,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
  const bodyColor=e.flash>0?"#fff":boss?(e.name==="껌껌이"?"#2c8f9e":e.name==="솜솜이"?"#67449d":"#78344f"):e.type==="shooter"?"#315b7c":"#394467";
  const glowColor=boss?(e.name==="윈터"?"#9deeff":e.name==="모래"?"#d7a8ff":e.name==="복돌이"?"#ffbd70":e.name==="껌껌이"?"#5bdde8":e.name==="솜솜이"?"#f5a8ff":"#ffb6c7"):e.type==="shooter"?"#6bf1ff":"#ffd76e";
+ if((e.hitT||0)>0){ctx.save();ctx.globalCompositeOperation="lighter";ctx.globalAlpha=hitKick*.65;ctx.strokeStyle=glowColor;ctx.shadowColor=glowColor;ctx.shadowBlur=boss?25:13;ctx.lineWidth=boss?3.5:2;ctx.beginPath();ctx.ellipse(0,0,(boss?57:29)+hitKick*10,(boss?65:31)+hitKick*7,0,0,Math.PI*2);ctx.stroke();ctx.restore()}
  ctx.fillStyle="rgba(0,0,0,.24)";ctx.beginPath();ctx.ellipse(0,31*scale,27*scale,7*scale,0,0,Math.PI*2);ctx.fill();
  ctx.fillStyle=bodyColor;ctx.beginPath();ctx.roundRect(-22*scale,-20*scale,44*scale,42*scale,9*scale);ctx.fill();ctx.strokeStyle=glowColor;ctx.lineWidth=2;ctx.stroke();
  ctx.fillStyle="#0b1329";ctx.fillRect(-14*scale,-12*scale,28*scale,15*scale);
