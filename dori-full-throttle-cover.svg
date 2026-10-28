@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 520" role="img" aria-label="DORI FULL THROTTLE game cover">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#101f49"/><stop offset=".52" stop-color="#0a1630"/><stop offset="1" stop-color="#070a19"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#55e6ff" stop-opacity=".45"/><stop offset="1" stop-color="#55e6ff" stop-opacity="0"/></radialGradient>
+ <linearGradient id="slash"><stop stop-color="#ffe9a0"/><stop offset="1" stop-color="#62eaff" stop-opacity=".18"/></linearGradient>
+ <filter id="blur"><feGaussianBlur stdDeviation="14"/></filter>
+</defs>
+<rect width="720" height="520" rx="28" fill="url(#bg)"/>
+<circle cx="480" cy="200" r="220" fill="url(#glow)"/>
+<g opacity=".2" stroke="#7cb9ff"><path d="M0 390H720M0 422H720M0 454H720M0 486H720"/><path d="M60 350L0 520M180 350L120 520M300 350L240 520M420 350L360 520M540 350L480 520M660 350L600 520"/></g>
+<g opacity=".4" fill="#203660"><path d="M0 315V190H60V315H90V230H150V315H191V170H244V315H274V226H322V315H365V205H412V315H450V176H496V315H534V228H576V315H610V195H660V315H720V520H0Z"/></g>
+<path d="M0 365H720V520H0Z" fill="#0d1428"/><path d="M0 365H720" stroke="#6bf1ff" stroke-opacity=".5" stroke-width="3"/>
+<g transform="translate(350 290)">
+ <ellipse cx="-6" cy="88" rx="105" ry="15" fill="#020612" opacity=".65"/>
+ <path d="M-90 5L-150-13L-126 9L-151 20L-94 28Z" fill="#c47b3c"/>
+ <path d="M-60 27L-65 71L-48 75L-38 37M8 28L8 69L26 72L35 30" fill="#a85e2e" stroke="#da9452" stroke-width="3"/>
+ <path d="M-62 63L-41 63L-37 76L-65 76ZM8 62L29 62L34 76L8 76Z" fill="#fff0d7"/>
+ <ellipse cx="-24" cy="17" rx="63" ry="39" fill="#c47b3c"/>
+ <ellipse cx="-8" cy="28" rx="43" ry="21" fill="#f4dfbd"/>
+ <ellipse cx="27" cy="-27" rx="49" ry="44" fill="#d8904e"/>
+ <path d="M-5-50L-12-91L22-67Z" fill="#ac652f"/><path d="M31-65L56-101L62-55Z" fill="#ad672f"/>
+ <path d="M0-58L2-78L12-67ZM42-69L54-88L57-64Z" fill="#f0b0a1"/>
+ <ellipse cx="64" cy="-18" rx="25" ry="19" fill="#fff0d7"/>
+ <circle cx="49" cy="-39" r="5" fill="#172037"/><ellipse cx="86" cy="-15" rx="8" ry="6" fill="#151724"/>
+ <path d="M74-3Q83 6 91-2" fill="none" stroke="#75462d" stroke-width="3" stroke-linecap="round"/>
+ <path d="M-63 4L-87-31L-82 3L-61 20Z" fill="#e0a05d"/>
+ <path d="M77 27L106 17L96 34L80 41Z" fill="#c47b3c"/>
+</g>
+<path d="M120 280Q240 160 345 235Q410 277 510 192" fill="none" stroke="url(#slash)" stroke-width="15" stroke-linecap="round" opacity=".8"/>
+<path d="M92 305Q224 196 340 262Q430 313 566 184" fill="none" stroke="#6bf1ff" stroke-width="3" stroke-linecap="round" opacity=".8"/>
+<g fill="#ff778b" stroke="#ffbdcb" stroke-width="2">
+ <circle cx="542" cy="288" r="13"/><circle cx="590" cy="252" r="9"/><circle cx="508" cy="322" r="8"/>
+</g>
+<g transform="translate(570 170)"><rect x="-25" y="-22" width="50" height="49" rx="9" fill="#78344f" stroke="#ff698c" stroke-width="3"/><rect x="-15" y="-10" width="30" height="17" rx="4" fill="#0b1329"/><circle cx="-7" cy="-2" r="4" fill="#ff698c"/><circle cx="8" cy="-2" r="4" fill="#ff698c"/></g>
+<text x="34" y="57" fill="#6bf1ff" font-family="Arial,sans-serif" font-size="14" letter-spacing="5">ROCKEY GAME LAB</text>
+<text x="31" y="95" fill="#f5f7ff" font-family="Arial,sans-serif" font-size="32" font-weight="900" letter-spacing="1">DORI: FULL THROTTLE</text>
+<text x="34" y="126" fill="#c0d2f5" font-family="Arial,sans-serif" font-size="14" letter-spacing="2">HIGH-SPEED ACTION · REFLECT · BREAK THROUGH</text>
+<rect x="30" y="444" width="208" height="42" rx="12" fill="#ffd76e"/><text x="134" y="470" text-anchor="middle" fill="#171423" font-family="Arial,sans-serif" font-weight="800" font-size="14" letter-spacing="1">PLAY NOW  →</text>
+</svg>
