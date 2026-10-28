@@ -386,6 +386,7 @@ function selectHeadTarget(clientX,clientY){
  aimWorldX=cam+lx;aimZ=clamp(FLOOR-ly-25,0,260);headbuttTo(aimWorldX,aimZ);aimMode=false;$("hintToast").classList.remove("visible");
 }
 function tapHead(){
+ if(!unlockedSlots.includes(2)||equippedSkills[2]!=="head"){showHint("슬롯 2에 머리 박치기를 뽑아 장착해야 해!");return;}
  if(mode!=="playing"||player.partyT>0||cooldowns.head>0)return;
  const coarse=window.matchMedia("(pointer: coarse)").matches||window.innerWidth<720;
  if(coarse){aimMode=true;showHint("머리 박치기: 화면에서 목표 지점을 터치!");return}
