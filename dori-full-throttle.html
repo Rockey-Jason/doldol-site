@@ -10,7 +10,7 @@
 <style>
 @font-face{font-family:HancomMalrangmalrang;src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
 :root{color-scheme:dark;--bg:#070b1d;--panel:#0d1530;--line:rgba(144,175,255,.2);--text:#f5f7ff;--muted:#a2b1d1;--cyan:#6bf1ff;--blue:#6e91ff;--gold:#ffd76e;--red:#ff667f;--green:#7affc7}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}b,strong{font-weight:400}
 html{min-height:100%;background:var(--bg);scroll-behavior:smooth}
 body{margin:0;min-height:100vh;color:var(--text);font-family:HancomMalrangmalrang,system-ui,sans-serif;background:radial-gradient(ellipse at 15% 0%,rgba(45,85,192,.18),transparent 38%),radial-gradient(ellipse at 92% 22%,rgba(0,221,255,.08),transparent 27%),linear-gradient(150deg,#0b1230,#050714 72%);overflow-x:hidden}
 button,a{font:inherit}button{color:inherit;cursor:pointer;touch-action:manipulation}button:focus-visible,a:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
@@ -23,7 +23,7 @@ button,a{font:inherit}button{color:inherit;cursor:pointer;touch-action:manipulat
 .ghost-btn{border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.04);padding:10px 14px;text-decoration:none;color:#dce7ff;font-size:13px;transition:transform .18s,border-color .18s,background .18s}
 .ghost-btn:hover{border-color:rgba(107,241,255,.55);background:rgba(107,241,255,.08);transform:translateY(-1px)}
 .hero{display:flex;justify-content:space-between;align-items:end;gap:20px;margin:12px 0 17px}
-.eyebrow{font-size:11px;letter-spacing:3px;color:var(--cyan);font-weight:700}
+.eyebrow{font-size:11px;letter-spacing:3px;color:var(--cyan);font-weight:400}
 h1{font-size:clamp(27px,4vw,46px);line-height:1.06;letter-spacing:-1.2px;margin:7px 0 8px;font-weight:400}
 h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,.15)}
 .hero p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
@@ -231,7 +231,7 @@ function startAttack(){
  player.attackT=0;player.attackDone=[false,false];player.attackSets=[new Set(),new Set()];
 }
 function jump(){
- if(mode!=="playing"||player.partyT>0||player.z>1||player.headbutt)return;
+ if(mode!=="playing"||player.z>1||player.headbutt)return;
  player.vz=700;sfx("jump");
 }
 function activate(name,tx,tz){
@@ -257,7 +257,7 @@ function headbuttTo(tx,tz){
  const dx=clamp(tx,35,LEVEL_W-35)-player.x,dz=clamp(tz,0,260)-player.z;
  const dist=Math.hypot(dx,dz);if(dist<55){showHint("목표 지점을 조금 더 멀리 잡아봐!");return}
  player.headbutt={vx:dx/dist*HEAD_SPEED,vz:dz/dist*HEAD_SPEED,remaining:Math.min(1.05,dist/HEAD_SPEED),hit:new Set(),reduction:.7};
- player.dashT=0;player.parryT=0;player.attackT=-1;player.vx=0;player.face=dx>=0?1:-1;cooldowns.head=7.5;sfx("dash");emit(player.x,player.z+25,colors.gold,14,160);
+ player.dashT=0;player.parryT=0;player.attackT=-1;player.vx=0;player.vz=0;player.face=dx>=0?1:-1;cooldowns.head=7.5;sfx("dash");emit(player.x,player.z+25,colors.gold,14,160);
 }
 function selectHeadTarget(clientX,clientY){
  const r=canvas.getBoundingClientRect();const lx=clientX-r.left,ly=clientY-r.top;
@@ -273,7 +273,7 @@ function reflectProjectiles(){
  projectiles.forEach(b=>{
   if(b.owner!=="enemy"||b.dead||player.parryHit.has(b.id))return;
   const dx=b.x-player.x;if(dx*player.face< -18||Math.abs(dx)>140||Math.abs(b.h-(player.z+27))>100)return;
-  player.parryHit.add(b.id);b.owner="player";b.vx=-b.vx*1.36;b.vh=-b.vh*1.1;b.damage=Math.max(18,b.damage*1.65);b.x=player.x+player.face*37;b.h=player.z+32;b.life=2.2;b.reflected=true;player.reflections++;player.score+=25;shake=Math.max(shake,2);emit(player.x+player.face*38,player.z+30,colors.cyan,15,245);sfx("parry");showHint("PERFECT REFLECT  +25");
+  player.parryHit.add(b.id);b.owner="player";b.vx=-b.vx*1.36;b.vh=-b.vh*1.1;b.damage=Math.max(18,b.damage*1.65)*(player.powerBuff>0?1.5:1);b.x=player.x+player.face*37;b.h=player.z+32;b.life=2.2;b.reflected=true;player.reflections++;player.score+=25;shake=Math.max(shake,2);emit(player.x+player.face*38,player.z+30,colors.cyan,15,245);sfx("parry");showHint("PERFECT REFLECT  +25");
  });
 }
 function enemyFire(e){
@@ -338,8 +338,8 @@ function update(dt){
  if(player.parryT>0)reflectProjectiles();
  if(player.barkT>0){
   const radius=(.5-player.barkT)/.5*305;
-  enemies.forEach(e=>{if(e.dead||player.barkHit.has(e.id)||Math.abs(e.x-player.barkX)>radius||Math.abs((e.z||0)-player.barkZ)>135)return;player.barkHit.add(e.id);damageEnemy(e,25,220,Math.sign(e.x-player.barkX)||player.face);if(!e.boss)e.stun=Math.max(e.stun,2)});
-  cores.forEach(c=>{if(!c.dead&&!player.barkHit.has(c.id)&&Math.abs(c.x-player.barkX)<=radius){player.barkHit.add(c.id);coreHit(c,20)}});
+  enemies.forEach(e=>{if(e.dead||player.barkHit.has(e.id)||Math.abs(e.x-player.barkX)>radius||Math.abs((e.z||0)-player.barkZ)>135)return;player.barkHit.add(e.id);damageEnemy(e,25*(player.powerBuff>0?1.5:1),220,Math.sign(e.x-player.barkX)||player.face);if(!e.boss)e.stun=Math.max(e.stun,2)});
+  cores.forEach(c=>{if(!c.dead&&!player.barkHit.has(c.id)&&Math.abs(c.x-player.barkX)<=radius){player.barkHit.add(c.id);coreHit(c,20*(player.powerBuff>0?1.5:1))}});
  }
  if(player.headbutt){
   const h=player.headbutt;
@@ -359,7 +359,7 @@ function update(dt){
   else{const drag=2500*dt;player.vx=Math.abs(player.vx)<=drag?0:player.vx-Math.sign(player.vx)*drag}
   player.x+=player.vx*dt;
  }
- if(player.z>0||player.vz>0){player.z+=player.vz*dt;player.vz-=GRAVITY*dt;if(player.z<=0){player.z=0;player.vz=0}}
+ if(!player.headbutt&&(player.z>0||player.vz>0)){player.z+=player.vz*dt;player.vz-=GRAVITY*dt;if(player.z<=0){player.z=0;player.vz=0}}
  player.x=clamp(player.x,26,LEVEL_W-30);
  if(coreCount()>0&&player.x>3880){player.x=3880;if(player.headbutt)player.headbutt=null;if(player.dashT>0)player.dashT=0;showHint("파워 코어를 모두 파괴해야 방벽이 열려!")}
  enemies.forEach(e=>updateEnemy(e,dt));
