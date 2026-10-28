@@ -157,7 +157,7 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,
   <div class="loadout-actions"><button class="ghost-btn" id="gachaButton" type="button">✨ 스킬 뽑기 · 100 코인</button><button class="ghost-btn" id="loadoutToggle" type="button">🎒 보유 스킬 보기</button></div>
   <div class="gacha-result" id="gachaResult" aria-live="polite">스킬 뽑기로 새로운 전투 기술을 획득하세요.</div>
   <div class="inventory-grid" id="inventoryGrid" hidden></div>
-  <p class="loadout-note">슬롯 1: 반사 · 슬롯 2: 이동 · 슬롯 3: 버프 · 슬롯 4: 특수. 중복 스킬은 코인으로 환급됩니다.</p>
+  <p class="loadout-note">슬롯 1: 반사 · 슬롯 2: 이동 · 슬롯 3: 버프 · 슬롯 4: 특수. 총 32종 · 일반/희귀/영웅/전설 · 중복 없이 수집</p>
 </section>
 <div class="controls-note"><span>이동 A/D · ←/→</span><span>점프 Space</span><span>일반 공격 J</span><span>Q 반사</span><span>E 돌격</span><span>R 짖기</span><span>F 춤</span><span>Shift 박치기 (마우스 지점)</span><span>P 일시 정지</span></div>
 <p class="bottom-note">기록은 이 기기의 브라우저에 저장됩니다. 네트워크나 계정 연동 없이 플레이할 수 있어요. 모바일은 방향 버튼과 기술 버튼을 사용하세요.</p>
@@ -170,8 +170,46 @@ const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d",{alpha:false});
 const frame=document.getElementById("gameFrame");
 const $=id=>document.getElementById(id);
-const SKILL_META={parry:{name:"머리로 튕겨내기",icon:"↶",category:1,key:"Q"},dash:{name:"돌격",icon:"➤",category:2,key:"E"},head:{name:"머리 박치기",icon:"◆",category:2,key:"Shift"},party:{name:"Rockey Party",icon:"♫",category:3,key:"F"},bark:{name:"짖기",icon:"◉",category:4,key:"R"}};
-const SLOT_COSTS={2:180,3:350,4:600},GACHA_COST=100;
+const SKILL_META={
+ parry:{name:"머리로 튕겨내기",icon:"↶",category:1,key:"Q",rarity:"일반",weight:60,effect:"parry",power:1},
+ goldParry:{name:"황금 반사",icon:"✨",category:1,key:"Q",rarity:"희귀",weight:28,effect:"parry",power:1.25},
+ perfectGuard:{name:"완벽 방어",icon:"🛡️",category:1,key:"Q",rarity:"영웅",weight:10,effect:"parry",power:1.6},
+ prismReflect:{name:"프리즘 반사",icon:"💎",category:1,key:"Q",rarity:"전설",weight:2,effect:"parry",power:2},
+ echoGuard:{name:"메아리 방패",icon:"〰️",category:1,key:"Q",rarity:"일반",weight:60,effect:"parry",power:1.08},
+ ironMane:{name:"강철 갈기",icon:"⚙️",category:1,key:"Q",rarity:"일반",weight:60,effect:"parry",power:1.12},
+ counterBurst:{name:"반격 폭발",icon:"💥",category:1,key:"Q",rarity:"희귀",weight:28,effect:"parry",power:1.35},
+ mirrorPaw:{name:"거울 발톱",icon:"🪞",category:1,key:"Q",rarity:"희귀",weight:28,effect:"parry",power:1.3},
+ cometGuard:{name:"혜성 방어",icon:"☄️",category:1,key:"Q",rarity:"영웅",weight:10,effect:"parry",power:1.7},
+ royalGuard:{name:"왕실 수호",icon:"👑",category:1,key:"Q",rarity:"영웅",weight:10,effect:"parry",power:1.8},
+ infinityReflect:{name:"무한 반사",icon:"♾️",category:1,key:"Q",rarity:"전설",weight:2,effect:"parry",power:2.2},
+ dash:{name:"돌격",icon:"➤",category:2,key:"E",rarity:"일반",weight:60,effect:"dash",power:1},
+ head:{name:"머리 박치기",icon:"◆",category:2,key:"Shift",rarity:"일반",weight:60,effect:"head",power:1},
+ lightningDash:{name:"번개 돌진",icon:"⚡",category:2,key:"E",rarity:"희귀",weight:28,effect:"dash",power:1.35},
+ skyLeap:{name:"공중 도약",icon:"🪽",category:2,key:"E",rarity:"희귀",weight:28,effect:"jump",power:1.3},
+ impactLanding:{name:"충격 착지",icon:"🌋",category:2,key:"E",rarity:"영웅",weight:10,effect:"dash",power:1.7},
+ cometRush:{name:"혜성 질주",icon:"☄️",category:2,key:"E",rarity:"영웅",weight:10,effect:"dash",power:1.8},
+ shadowStep:{name:"그림자 도약",icon:"🌑",category:2,key:"E",rarity:"일반",weight:60,effect:"dash",power:1.12},
+ windRunner:{name:"질풍 보법",icon:"🌪️",category:2,key:"E",rarity:"일반",weight:60,effect:"dash",power:1.18},
+meteorDash:{name:"유성 돌파",icon:"☄️",category:2,key:"E",rarity:"희귀",weight:28,effect:"dash",power:1.5},
+phantomRush:{name:"환영 돌진",icon:"👻",category:2,key:"E",rarity:"전설",weight:2,effect:"dash",power:2.1},
+party:{name:"Rockey Party",icon:"♫",category:3,key:"F",rarity:"일반",weight:60,effect:"party",power:1},
+frenzy:{name:"광폭화",icon:"🔥",category:3,key:"F",rarity:"희귀",weight:28,effect:"party",power:1.35},
+goldenFur:{name:"황금 털",icon:"🌟",category:3,key:"F",rarity:"영웅",weight:10,effect:"party",power:1.6},
+coinMagnet:{name:"코인 자석",icon:"🧲",category:3,key:"F",rarity:"일반",weight:60,effect:"speed",power:1.1},
+swiftPaws:{name:"날쌘 발",icon:"🐾",category:3,key:"F",rarity:"일반",weight:60,effect:"speed",power:1.25},
+powerSnack:{name:"파워 간식",icon:"🍖",category:3,key:"F",rarity:"희귀",weight:28,effect:"party",power:1.5},
+starCoat:{name:"별빛 코트",icon:"🌠",category:3,key:"F",rarity:"영웅",weight:10,effect:"party",power:1.75},
+overdrive:{name:"오버드라이브",icon:"🚀",category:3,key:"F",rarity:"전설",weight:2,effect:"party",power:2.2},
+bark:{name:"짖기",icon:"◉",category:4,key:"R",rarity:"일반",weight:60,effect:"bark",power:1},
+sonicBark:{name:"초음파 짖기",icon:"🔊",category:4,key:"R",rarity:"희귀",weight:28,effect:"bark",power:1.35},
+shockwave:{name:"충격파",icon:"💫",category:4,key:"R",rarity:"영웅",weight:10,effect:"bark",power:1.7},
+meteorCall:{name:"운석 소환",icon:"☄️",category:4,key:"R",rarity:"전설",weight:2,effect:"bark",power:2.3},
+cloneBuddy:{name:"도리 분신",icon:"🐶",category:4,key:"R",rarity:"희귀",weight:28,effect:"bark",power:1.45},
+frostHowl:{name:"서리 울부짖기",icon:"❄️",category:4,key:"R",rarity:"일반",weight:60,effect:"bark",power:1.12},
+thunderHowl:{name:"천둥 울음",icon:"🌩️",category:4,key:"R",rarity:"영웅",weight:10,effect:"bark",power:1.8},
+novaRoar:{name:"초신성 포효",icon:"🌌",category:4,key:"R",rarity:"전설",weight:2,effect:"bark",power:2.5}
+};
+const SLOT_COSTS={2:180,3:350,4:600},GACHA_COST=100;\nconst RARITY_COLORS={"일반":"#c4d0e8","희귀":"#67d8ff","영웅":"#c49aff","전설":"#ffd76e"};
 let totalCoins=0,ownedSkills=["parry"],unlockedSlots=[1],equippedSkills={1:"parry",2:null,3:null,4:null};
 try{totalCoins=Math.max(0,Number(localStorage.getItem("doriFullThrottleCoins"))||0);const save=JSON.parse(localStorage.getItem("doriFullThrottleLoadout")||"null");if(save&&Array.isArray(save.ownedSkills)&&Array.isArray(save.unlockedSlots)&&save.equippedSkills){ownedSkills=Array.from(new Set(["parry",...save.ownedSkills.filter(k=>SKILL_META[k])]));unlockedSlots=Array.from(new Set([1,...save.unlockedSlots.filter(n=>[2,3,4].includes(n))]));equippedSkills={1:"parry",2:null,3:null,4:null,...save.equippedSkills};for(const n of [1,2,3,4])if(equippedSkills[n]&&(!ownedSkills.includes(equippedSkills[n])||SKILL_META[equippedSkills[n]].category!==n||!unlockedSlots.includes(n)))equippedSkills[n]=n===1?"parry":null;}}catch(e){}
 function saveLoadout(){try{localStorage.setItem("doriFullThrottleCoins",String(totalCoins));localStorage.setItem("doriFullThrottleLoadout",JSON.stringify({ownedSkills,unlockedSlots,equippedSkills}));}catch(e){}}
@@ -182,13 +220,13 @@ function refreshLoadoutUI(){
  const grid=$("slotGrid");if(!grid)return;
  grid.innerHTML=[1,2,3,4].map(n=>{const skill=equippedSkills[n],meta=skill&&SKILL_META[skill],open=unlockedSlots.includes(n);return '<button class="slot-card '+(open?'equipped':'locked')+'" type="button" data-slot="'+n+'"><b>슬롯 '+n+(n===1?' · 기본':'')+'</b><span>'+(open?(meta?meta.icon+" "+meta.name:"비어 있음"):"🔒 잠김")+'</span><small>'+(open?["","반사 관련 공격","이동 관련 공격","버프 관련 공격","특수 스킬"][n]:"해금 비용 "+SLOT_COSTS[n]+" 코인")+'</small></button>'}).join("");
  grid.querySelectorAll("[data-slot]").forEach(btn=>btn.addEventListener("click",()=>{const n=Number(btn.dataset.slot);if(unlockedSlots.includes(n)){$("gachaResult").textContent="슬롯 "+n+"은 "+["","반사","이동","버프","특수"][n]+" 관련 스킬 전용이에요. 보유 스킬 목록에서 장착할 수 있어요.";return;}const cost=SLOT_COSTS[n];if(totalCoins<cost){$("gachaResult").textContent="코인이 부족해요. 적을 처치해 코인을 모아 보세요!";return;}totalCoins-=cost;unlockedSlots.push(n);saveLoadout();refreshLoadoutUI();$("gachaResult").textContent="슬롯 "+n+" 해금 완료! 이제 해당 유형의 스킬을 장착할 수 있어요.";renderSkillControls();}));
- const inv=$("inventoryGrid");if(inv&&!inv.hidden){inv.innerHTML=ownedSkills.map(k=>{const m=SKILL_META[k],equipped=equippedSkills[m.category]===k;return '<div class="inventory-item"><b>'+m.icon+" "+m.name+'</b><small style="display:block;color:#8ea5d0;margin-top:4px">슬롯 '+m.category+' 전용</small>'+(equipped?'<small style="display:block;color:#7ff4d5;margin-top:6px">장착 중</small>':'<button type="button" data-equip="'+k+'">슬롯 '+m.category+'에 장착</button>')+'</div>'}).join("");
+ const inv=$("inventoryGrid");if(inv&&!inv.hidden){inv.innerHTML=ownedSkills.map(k=>{const m=SKILL_META[k],equipped=equippedSkills[m.category]===k;return '<div class="inventory-item" style="border-color:'+(RARITY_COLORS[m.rarity]||"rgba(144,175,255,.2)")+'"><b style="color:'+(RARITY_COLORS[m.rarity]||"inherit")+'">'+m.icon+" "+m.name+'</b><small style="display:block;color:'+(RARITY_COLORS[m.rarity]||"#8ea5d0")+' ;margin-top:4px">'+m.rarity+" · 슬롯 "+m.category+' 전용</small>'+(equipped?'<small style="display:block;color:#7ff4d5;margin-top:6px">장착 중</small>':'<button type="button" data-equip="'+k+'">슬롯 '+m.category+'에 장착</button>')+'</div>'}).join("");
  inv.querySelectorAll("[data-equip]").forEach(btn=>btn.addEventListener("click",()=>{const k=btn.dataset.equip,m=SKILL_META[k],n=m.category;if(!unlockedSlots.includes(n)){$("gachaResult").textContent="먼저 슬롯 "+n+"을 코인으로 해금하세요.";return;}equippedSkills[n]=k;saveLoadout();refreshLoadoutUI();renderSkillControls();$("gachaResult").textContent=m.name+" 장착 완료!";}));
  }
  const g=$("gachaButton");if(g)g.disabled=totalCoins<GACHA_COST;
  renderSkillControls();
 }
-$("gachaButton").addEventListener("click",()=>{if(totalCoins<GACHA_COST){$("gachaResult").textContent="코인이 부족해요. 적을 처치해 코인을 모아 보세요!";return;}totalCoins-=GACHA_COST;const pool=Object.keys(SKILL_META).filter(k=>!ownedSkills.includes(k));if(!pool.length){totalCoins+=35;saveLoadout();$("gachaResult").textContent="모든 스킬을 모았어요! 중복 보상으로 35 코인을 돌려받았어요.";refreshLoadoutUI();return;}const skill=pool[Math.floor(Math.random()*pool.length)],m=SKILL_META[skill];ownedSkills.push(skill);saveLoadout();$("gachaResult").textContent="✨ "+m.name+" 획득! 슬롯 "+m.category+" 전용 스킬이에요. 슬롯이 잠겨 있다면 먼저 해금하세요.";refreshLoadoutUI();});
+$("gachaButton").addEventListener("click",()=>{if(totalCoins<GACHA_COST){$("gachaResult").textContent="코인이 부족해요. 적을 처치해 코인을 모아 보세요!";return;}const pool=Object.keys(SKILL_META).filter(k=>!ownedSkills.includes(k));if(!pool.length){$("gachaResult").textContent="🎉 32종 스킬을 모두 수집했어요!";refreshLoadoutUI();return;}totalCoins-=GACHA_COST;const rarityWeights={"일반":60,"희귀":28,"영웅":10,"전설":2};const availableRarities=Object.keys(rarityWeights).filter(r=>pool.some(k=>SKILL_META[k].rarity===r));let roll=Math.random()*availableRarities.reduce((sum,r)=>sum+rarityWeights[r],0),rarity=availableRarities[0];for(const r of availableRarities){roll-=rarityWeights[r];if(roll<0){rarity=r;break;}}const tierPool=pool.filter(k=>SKILL_META[k].rarity===rarity);const totalWeight=tierPool.reduce((sum,k)=>sum+SKILL_META[k].weight,0);roll=Math.random()*totalWeight;let skill=tierPool[tierPool.length-1];for(const k of tierPool){roll-=SKILL_META[k].weight;if(roll<0){skill=k;break;}}const m=SKILL_META[skill];ownedSkills.push(skill);saveLoadout();$("gachaResult").innerHTML="✨ <b style=\"color:"+RARITY_COLORS[m.rarity]+"\">"+m.rarity+" 스킬 획득!</b> "+m.icon+" "+m.name+" · 슬롯 "+m.category+" 전용";refreshLoadoutUI();});
 $("loadoutToggle").addEventListener("click",()=>{const inv=$("inventoryGrid");inv.hidden=!inv.hidden;$("loadoutToggle").textContent=inv.hidden?"🎒 보유 스킬 보기":"✕ 보유 스킬 닫기";refreshLoadoutUI();});
 let LEVEL_W=4680; const GRAVITY=1760, BASE_SPEED=365, DASH_SPEED=1160, HEAD_SPEED=1320;
 let W=960,H=560,FLOOR=500,DPR=1,cam=0,lastTime=0,uiClock=0,shake=0,mode="title",soundOn=true,audioCtx=null,aimMode=false,mouseInside=false;
