@@ -476,16 +476,46 @@ function drawPlayer(){
   ctx.beginPath();ctx.ellipse(0,-55,49+Math.sin(elapsed*7)*3,45+Math.sin(elapsed*7)*2,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.restore()
  }
  if(player.speedBuff>0){ctx.strokeStyle="rgba(107,241,255,.42)";ctx.lineWidth=3;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-player.face*(40+i*8),-45+i*9);ctx.lineTo(-player.face*(62+i*10),-45+i*9);ctx.stroke()}}
+ // Animate the supplied Dori sprite independently from movement/attack hitboxes.
+ const partyPhase=player.partyT>0?elapsed*13:0;
+ let tilt=0,stretchX=1,stretchY=1,bodyY=0;
+ if(player.attackT>=0){
+  const attackPhase=player.attackT<.22?player.attackT/.22:(player.attackT-.22)/.22;
+  tilt=player.face*(.12+Math.sin(Math.min(1,attackPhase)*Math.PI)*.24);
+  stretchX=1.04;stretchY=.96;
+ }
+ if(player.parryT>0){
+  const p=player.parryT/.34;tilt=player.face*(.38*(1-p)+.08);
+  stretchX=1.08;stretchY=.91;
+ }
+ if(player.dashT>0){
+  const p=player.dashT/.22;tilt=player.face*-.18;
+  stretchX=1.22;stretchY=.78;bodyY=-Math.sin(p*Math.PI)*4;
+ }
+ if(player.barkT>0){
+  const p=1-player.barkT/.5;tilt=player.face*(p<.25?.18:-.12);
+  stretchX=1+.12*Math.sin(p*Math.PI*5);stretchY=1-.08*Math.sin(p*Math.PI*5);
+  bodyY=-Math.sin(p*Math.PI)*4;
+ }
+ if(player.partyT>0){
+  tilt=Math.sin(partyPhase)*.22;stretchX=1+.08*Math.sin(partyPhase*2);stretchY=1+.12*Math.cos(partyPhase*2);
+  bodyY=-Math.abs(Math.sin(partyPhase))*7;
+ }
+ if(player.headbutt){
+  tilt=player.face*-.34;stretchX=1.2;stretchY=.82;bodyY=-2;
+ }
+ if(player.z>0){stretchY*=.97;bodyY-=Math.min(4,player.z*.025)}
  // Use the exact silhouette and markings traced from the user's supplied Dori drawing.
  if(doriSprite.complete&&doriSprite.naturalWidth){
-  ctx.save();ctx.scale(player.face===1?-1:1,1);
-  ctx.drawImage(doriSprite,-52,-110,104,110);
+  ctx.save();ctx.translate(0,-42+bodyY);ctx.rotate(tilt);ctx.scale(stretchX,stretchY);ctx.translate(0,42-bodyY);
+  ctx.scale(player.face===1?-1:1,1);
+  ctx.drawImage(doriSprite,-40,-84,80,84);
   ctx.restore();
  }else{
   ctx.fillStyle="#ffe6a3";ctx.strokeStyle="#242321";ctx.lineWidth=5;
-  ctx.beginPath();ctx.ellipse(0,-51,35,29,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.ellipse(0,-42,27,24,0,0,Math.PI*2);ctx.fill();ctx.stroke();
  }
- ctx.fillStyle="rgba(0,0,0,.28)";ctx.beginPath();ctx.ellipse(0,2,36,6,0,0,Math.PI*2);ctx.fill();
+ ctx.fillStyle="rgba(0,0,0,.28)";ctx.beginPath();ctx.ellipse(0,2,31,5,0,0,Math.PI*2);ctx.fill();
  ctx.restore();
  // Keep attack and skill feedback separate from the character artwork.
  if(player.attackT>=.02&&player.attackT<.41){
