@@ -187,12 +187,12 @@ function sfx(type){
 function newPlayer(){return{x:145,z:0,vx:0,vz:0,face:1,hp:100,maxHp:100,invuln:0,attackT:-1,attackDone:[false,false],attackSets:[new Set(),new Set()],parryT:0,parryHit:new Set(),dashT:0,dashHit:new Set(),barkT:0,barkHit:new Set(),speedBuff:0,partyT:0,powerBuff:0,headbutt:null,combo:0,comboTimer:0,score:0,kills:0,reflections:0,damageDone:0,hazardCd:0,anim:0,shake:0}}
 function setupRun(){
  player=newPlayer();cooldowns={parry:0,dash:0,bark:0,party:0,head:0};particles=[];projectiles=[];aimMode=false;hintTimer=0;cam=0;elapsed=0;won=false;shake=0;
- cores=[{id:"core1",x:900,hp:115,maxHp:115,dead:false,phase:0},{id:"core2",x:2050,hp:135,maxHp:135,dead:false,phase:1.2},{id:"core3",x:3110,hp:150,maxHp:150,dead:false,phase:2.4}];
+ cores=[{id:"core1",x:900,hp:115,maxHp:115,dead:false,phase:0,flash:0},{id:"core2",x:2050,hp:135,maxHp:135,dead:false,phase:1.2,flash:0},{id:"core3",x:3110,hp:150,maxHp:150,dead:false,phase:2.4,flash:0}];
  const specs=[
   [430,"melee"],[600,"shooter"],[760,"melee"],[1115,"shooter"],[1280,"melee"],[1510,"melee"],[1710,"shooter"],[1900,"melee"],[2250,"shooter"],[2410,"melee"],[2690,"shooter"],[2870,"melee"],[3330,"shooter"],[3480,"melee"],[3690,"shooter"],[3800,"melee"]
  ];
  enemies=specs.map((s,i)=>({id:"enemy"+i,x:s[0],type:s[1],hp:s[1]==="shooter"?44:62,maxHp:s[1]==="shooter"?44:62,dead:false,z:s[1]==="shooter"?58:0,vx:0,face:-1,cooldown:rand(.3,1.4),wind:0,stun:0,flash:0,anim:rand(0,7),score:s[1]==="shooter"?180:140}));
- enemies.push({id:"boss",x:4140,type:"boss",hp:650,maxHp:650,dead:false,z:0,vx:0,face:-1,cooldown:1.65,wind:0,stun:0,flash:0,anim:0,score:2500,boss:true});
+ enemies.push({id:"boss",x:4140,type:"boss",hp:650,maxHp:650,dead:false,z:0,vx:0,face:-1,cooldown:1.65,wind:0,meleeWind:0,meleeCooldown:.8,stun:0,flash:0,anim:0,score:2500,boss:true});
  hazards=[{x:1390,w:70,phase:0},{x:2490,w:90,phase:1},{x:3550,w:72,phase:2}];
 }
 setupRun();
@@ -244,9 +244,7 @@ function activate(name,tx,tz){
  }else if(name==="dash"){
   player.dashT=.22;player.dashHit=new Set();player.vx=0;cooldowns.dash=1.25;sfx("dash");emit(player.x,player.z+20,colors.cyan,10,120);
  }else if(name==="bark"){
-  player.barkT=.5;player.barkHit=new Set();player.speedBuff=3;cooldowns.bark=8.5;sfx("bark");
-  enemies.forEach(e=>{if(e.dead||Math.abs(e.x-player.x)>300||Math.abs((e.z||0)-player.z)>135)return;player.barkHit.add(e.id);damageEnemy(e,25,220,Math.sign(e.x-player.x)||player.face);e.stun=e.boss?Math.max(e.stun,0):Math.max(e.stun,2)});
-  cores.forEach(c=>{if(!c.dead&&Math.abs(c.x-player.x)<300){player.barkHit.add(c.id);coreHit(c,20)}});
+  player.barkT=.5;player.barkHit=new Set();player.barkX=player.x;player.barkZ=player.z;player.speedBuff=3;cooldowns.bark=8.5;sfx("bark");
   emit(player.x,player.z+30,colors.cyan,18,220);
  }else if(name==="party"){
   player.partyT=5;player.powerBuff=0;cooldowns.party=17;showHint("ROCKEY PARTY! 춤을 완료하면 피해 +50%");sfx("party");
@@ -293,20 +291,29 @@ function enemyFire(e){
  emit(e.x,e.z+30,e.boss?colors.red:colors.gold,4,90);
 }
 function updateEnemy(e,dt){
- if(e.dead)return;e.anim+=dt;e.flash=Math.max(0,e.flash-dt);e.stun=Math.max(0,e.stun-dt);e.wind=Math.max(0,e.wind-dt);e.cooldown-=dt;
- if(e.boss&&coreCount()>0){e.x=4140;return}
- if(e.stun>0)return;
- const dx=player.x-e.x,dist=Math.abs(dx);e.face=dx<0?-1:1;
+ if(e.dead)return;
+ e.anim+=dt;e.flash=Math.max(0,e.flash-dt);
+ const wasWind=e.wind>0;e.wind=Math.max(0,e.wind-dt);
+ e.stun=Math.max(0,e.stun-dt);e.cooldown-=dt;
+ let dx=player.x-e.x,dist=Math.abs(dx);e.face=dx<0?-1:1;
  if(e.boss){
-  if(e.cooldown<=0&&dist<800){enemyFire(e);e.cooldown=1.65}
-  if(e.wind===0&&e.cooldown<.15&&dist<100&&Math.abs(player.z)<100){e.wind=.28;e.cooldown=1.3}
-  if(e.wind===dt&&dist<105&&Math.abs(player.z)<80)takeDamage(19,e.x);
+  if(coreCount()>0){e.x=4140;e.wind=0;e.meleeWind=0;return}
+  e.meleeCooldown=Math.max(0,(e.meleeCooldown||0)-dt);
+  if(e.meleeWind>0){
+   e.meleeWind=Math.max(0,e.meleeWind-dt);
+   if(e.meleeWind===0&&dist<128&&Math.abs(player.z)<110)takeDamage(19,e.x);
+  }
+  if(e.meleeWind===0&&e.meleeCooldown<=0&&dist<116){e.meleeWind=.42;e.meleeCooldown=1.85}
+  e.wind=e.meleeWind;
+  if(e.cooldown<=0&&dist<850){enemyFire(e);e.cooldown=1.75}
   return;
  }
+ if(e.stun>0)return;
  if(e.type==="melee"){
   if(dist<620&&dist>45)e.x+=Math.sign(dx)*Math.min(115*dt,dist-43);
-  if(e.cooldown<=0&&dist<77&&Math.abs(player.z-e.z)<100){e.wind=.3;e.cooldown=1.25}
-  if(e.wind>0&&e.wind<dt+.015&&dist<85&&Math.abs(player.z-e.z)<95)takeDamage(11,e.x);
+  dx=player.x-e.x;dist=Math.abs(dx);e.face=dx<0?-1:1;
+  if(e.wind===0&&e.cooldown<=0&&dist<80&&Math.abs(player.z-e.z)<100){e.wind=.34;e.cooldown=1.25}
+  if(wasWind&&e.wind===0&&dist<90&&Math.abs(player.z-e.z)<100)takeDamage(11,e.x);
  }else{
   if(dist<245&&dist>125)e.x-=Math.sign(dx)*Math.min(70*dt,dist-125);
   else if(dist>680&&dist<1000)e.x+=Math.sign(dx)*75*dt;
@@ -316,6 +323,7 @@ function updateEnemy(e,dt){
 }
 function update(dt){
  elapsed+=dt;
+ cores.forEach(c=>c.flash=Math.max(0,(c.flash||0)-dt));
  Object.keys(cooldowns).forEach(k=>cooldowns[k]=Math.max(0,cooldowns[k]-dt));
  player.invuln=Math.max(0,player.invuln-dt);player.speedBuff=Math.max(0,player.speedBuff-dt);player.powerBuff=Math.max(0,player.powerBuff-dt);player.comboTimer=Math.max(0,player.comboTimer-dt);if(player.comboTimer<=0)player.combo=0;
  player.parryT=Math.max(0,player.parryT-dt);player.barkT=Math.max(0,player.barkT-dt);player.hazardCd=Math.max(0,player.hazardCd-dt);
@@ -328,9 +336,14 @@ function update(dt){
   if(player.attackT>.46)player.attackT=-1;
  }
  if(player.parryT>0)reflectProjectiles();
+ if(player.barkT>0){
+  const radius=(.5-player.barkT)/.5*305;
+  enemies.forEach(e=>{if(e.dead||player.barkHit.has(e.id)||Math.abs(e.x-player.barkX)>radius||Math.abs((e.z||0)-player.barkZ)>135)return;player.barkHit.add(e.id);damageEnemy(e,25,220,Math.sign(e.x-player.barkX)||player.face);if(!e.boss)e.stun=Math.max(e.stun,2)});
+  cores.forEach(c=>{if(!c.dead&&!player.barkHit.has(c.id)&&Math.abs(c.x-player.barkX)<=radius){player.barkHit.add(c.id);coreHit(c,20)}});
+ }
  if(player.headbutt){
   const h=player.headbutt;
-  const step=Math.min(dt,h.remaining);player.x+=h.vx*step;player.z+=h.vz*step;h.remaining-=step;
+  const step=Math.min(dt,h.remaining);player.x+=h.vx*step;player.z=Math.max(0,player.z+h.vz*step);h.remaining-=step;
   const dir=Math.sign(h.vx)||player.face;
   hitTargets(player.x,dir,57,39*(player.powerBuff>0?1.5:1),h.hit,player.z,230);
   projectiles.forEach(b=>{if(!b.dead&&Math.abs(b.x-player.x)<55&&Math.abs(b.h-(player.z+22))<80){if(b.owner==="enemy"){b.dead=true;emit(b.x,b.h,colors.cyan,4,100)}}});
@@ -481,7 +494,7 @@ function drawPlayer(){
   const phase=player.attackT<.22?0:1;const t=phase===0?player.attackT/.22:(player.attackT-.22)/.22;const x=sx+player.face*31,y=cy-8;ctx.save();ctx.globalAlpha=.8;ctx.lineWidth=4;ctx.strokeStyle=phase===0?"#fff2b2":"#6bf1ff";ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=18;ctx.beginPath();const start=player.face===1?-.98:Math.PI-.98,end=player.face===1?1.0:Math.PI+1.0;ctx.arc(x,y,54+t*19,start,end);ctx.stroke();ctx.restore();
  }
  if(player.parryT>0){ctx.save();ctx.strokeStyle="rgba(107,241,255,.95)";ctx.lineWidth=3;ctx.shadowColor=colors.cyan;ctx.shadowBlur=18;ctx.beginPath();ctx.arc(sx+player.face*22,cy-7,38,-1.05,.95);ctx.stroke();ctx.restore()}
- if(player.barkT>0){const r=(.5-player.barkT)/.5*270;ctx.save();ctx.strokeStyle="rgba(107,241,255,"+(1-r/330)+")";ctx.lineWidth=3;ctx.shadowColor=colors.cyan;ctx.shadowBlur=15;ctx.beginPath();ctx.arc(sx,foot-25,Math.max(3,r),0,Math.PI*2);ctx.stroke();ctx.restore()}
+ if(player.barkT>0){const r=(.5-player.barkT)/.5*305;ctx.save();ctx.strokeStyle="rgba(107,241,255,"+(1-r/360)+")";ctx.lineWidth=3;ctx.shadowColor=colors.cyan;ctx.shadowBlur=15;ctx.beginPath();ctx.arc(player.barkX-cam,FLOOR-(player.barkZ||0)-25,Math.max(3,r),0,Math.PI*2);ctx.stroke();ctx.restore()}
  if(player.partyT>0){ctx.fillStyle="#ffe29a";ctx.font="bold 14px sans-serif";ctx.textAlign="center";ctx.fillText("♪  ♫  ♪",sx,cy-46+Math.sin(elapsed*8)*4);const dance=Math.sin(elapsed*13)*.12;ctx.fillStyle="rgba(255,215,110,.2)";ctx.beginPath();ctx.ellipse(sx,foot-4,34,13,dance,0,Math.PI*2);ctx.fill()}
  if(player.headbutt){ctx.save();ctx.strokeStyle="rgba(255,215,110,.75)";ctx.lineWidth=3;ctx.setLineDash([7,5]);ctx.beginPath();ctx.moveTo(sx,cy);ctx.lineTo(sx-player.headbutt.vx*.09,cy-player.headbutt.vz*.09);ctx.stroke();ctx.restore()}
 }
@@ -503,7 +516,7 @@ function drawExit(){
  ctx.save();ctx.translate(x,FLOOR-62);const active=boss().dead;ctx.strokeStyle=active?colors.green:"rgba(133,151,191,.55)";ctx.lineWidth=3;ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=active?16:3;ctx.strokeRect(-22,-38,44,75);ctx.shadowBlur=0;ctx.fillStyle=active?"rgba(122,255,199,.16)":"rgba(129,145,185,.08)";ctx.fillRect(-17,-33,34,65);ctx.fillStyle=active?colors.green:"#8e9cbb";ctx.font="bold 10px sans-serif";ctx.textAlign="center";ctx.fillText(active?"EXIT":"LOCKED",0,-47);if(active){ctx.beginPath();ctx.moveTo(-7,0);ctx.lineTo(5,0);ctx.lineTo(5,-8);ctx.lineTo(13,6);ctx.lineTo(5,18);ctx.lineTo(5,9);ctx.lineTo(-7,9);ctx.closePath();ctx.fill()}ctx.restore();
 }
 function drawAim(){
- if(!aimMode&&!mouseInside)return;const x=aimWorldX-cam,y=FLOOR-aimZ-25;if(x<0||x>W)return;ctx.save();ctx.strokeStyle=aimMode?"#ffe5a0":"rgba(107,241,255,.55)";ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(player.x-cam,FLOOR-player.z-25);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.arc(x,y,12+Math.sin(elapsed*8)*2,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(x-17,y);ctx.lineTo(x+17,y);ctx.moveTo(x,y-17);ctx.lineTo(x,y+17);ctx.stroke();ctx.restore();
+ if(!aimMode)return;const x=aimWorldX-cam,y=FLOOR-aimZ-25;if(x<0||x>W)return;ctx.save();ctx.strokeStyle=aimMode?"#ffe5a0":"rgba(107,241,255,.55)";ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(player.x-cam,FLOOR-player.z-25);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.arc(x,y,12+Math.sin(elapsed*8)*2,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(x-17,y);ctx.lineTo(x+17,y);ctx.moveTo(x,y-17);ctx.lineTo(x,y+17);ctx.stroke();ctx.restore();
 }
 function draw(){
  ctx.save();if(shake>0){ctx.translate(rand(-shake,shake),rand(-shake,shake))}
