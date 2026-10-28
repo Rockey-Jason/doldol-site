@@ -247,7 +247,8 @@ $("gachaButton").addEventListener("click",()=>{if(totalCoins<GACHA_COST){$("gach
 $("loadoutToggle").addEventListener("click",()=>{const inv=$("inventoryGrid");inv.hidden=!inv.hidden;$("loadoutToggle").textContent=inv.hidden?"🎒 보유 스킬 보기":"✕ 보유 스킬 닫기";refreshLoadoutUI();});
 let LEVEL_W=4680; const GRAVITY=1760, BASE_SPEED=365, DASH_SPEED=1160, HEAD_SPEED=1320;
 let W=960,H=560,FLOOR=500,DPR=1,cam=0,lastTime=0,uiClock=0,shake=0,mode="title",soundOn=true,audioCtx=null,aimMode=false,mouseInside=false;
-let aimWorldX=520,aimZ=0,hintTimer=0,particles=[],projectiles=[],combatBursts=[],enemies=[],cores=[],hazards=[],keys={left:false,right:false},touch={left:false,right:false};
+let aimWorldX=520,aimZ=0,hintTimer=0,particles=[],projectiles=[],combatBursts=[],skillTrails=[],enemies=[],cores=[],hazards=[],keys={left:false,right:false},touch={left:false,right:false};
+let screenFlash={color:"#ffffff",life:0,max:.12},impactFreeze=0;
 let player,cooldowns,bestScore=0,runStart=0,elapsed=0,won=false,shakeOffsetX=0,shakeOffsetY=0,currentStage=0;
 const colors={cyan:"#6bf1ff",blue:"#6e91ff",gold:"#ffd76e",red:"#ff667f",green:"#7affc7",white:"#f6f8ff",orange:"#ffad70"};
 try{bestScore=Number(localStorage.getItem("doriFullThrottleBest")||0)||0}catch(e){}
@@ -375,6 +376,8 @@ function skillVisual(name,power=1){
  };
  const color=palette[name]||"#8bdcff";
  const style="skill-"+name;
+ const trailStart=({lightningDash:"#ffe86b",meteorDash:"#ff865c",phantomRush:"#d2b6ff",shadowStep:"#b49aff",cometRush:"#ffd76e",windRunner:"#9dffdf"}[name]||color);
+ if(name==="impactLanding"||name==="meteorCall"||name==="novaRoar"||name==="infinityReflect"){screenFlash={color:trailStart,life:.13,max:.13};shake=Math.max(shake,name==="novaRoar"||name==="meteorCall"?5:3)}
  const life=(name==="meteorCall"||name==="novaRoar"||name==="infinityReflect")?.78:.56;
  combatBursts.push({x:player.x+player.face*18,h:player.z+45,color,style,life,max:life,power:Math.min(2.4,power),rot:rand(0,Math.PI*2),seed:rand(0,Math.PI*2)});
  if(combatBursts.length>90)combatBursts.splice(0,combatBursts.length-90);
@@ -396,9 +399,10 @@ function coreHit(c,damage,sourceEffect=null){
  if(c.dead)return;c.hp-=damage;player.damageDone+=damage;addCombo();c.flash=.16;impactFX(c.x,42,colors.cyan,"core",1);sfx("core");if(sourceEffect)sfx("impact-"+sourceEffect);
  if(c.hp<=0){c.hp=0;c.dead=true;player.score+=520;impactFX(c.x,45,colors.gold,"core-break",1.35);sfx("break");showHint("POWER CORE DESTROYED  +520");}
 }
+function hitBossFlashColor(name){return ({"식빵이":"#ff9aa8","윈터":"#baf7ff","모래":"#e0b5ff","복돌이":"#ffd08a","껌껌이":"#8afff5","솜솜이":"#ffb5f0"}[name]||"#ffffff")}
 function damageEnemy(e,damage,knock=140,dir=1,sourceEffect=null){
  if(!e||e.dead)return;if(e.boss&&(coreCount()>0||((e.hiddenT||0)>0))){emit(e.x,45,e.name==="솜솜이"?"#f5a8ff":colors.blue,4,95);return}
- const amount=damage;e.hp-=amount;e.flash=.13;player.damageDone+=amount;addCombo();shake=Math.max(shake,e.boss?6.5:3.1);
+ const amount=damage;e.hp-=amount;e.flash=.18;e.hitT=.2;e.hitDir=dir;e.hitPulse=(e.hitPulse||0)+1;player.damageDone+=amount;addCombo();shake=Math.max(shake,e.boss?8.2:4.0);screenFlash={color:e.boss?hitBossFlashColor(e.name):"#fff0be",life:e.boss?.11:.055,max:e.boss?.11:.055};impactFreeze=Math.max(impactFreeze,e.boss?.035:.012);
  const bossStyle=e.boss?({"식빵이":"boss-ember","윈터":"boss-ice","모래":"boss-sand","복돌이":"boss-steel","껌껌이":"boss-water","솜솜이":"boss-arcane"}[e.name]||"boss-ember"):"impact";
  const hitColor=e.boss?({"식빵이":"#ff6b78","윈터":"#baf7ff","모래":"#d8a3ff","복돌이":"#ffc06e","껌껌이":"#62f5e8","솜솜이":"#ff8de8"}[e.name]||colors.red):colors.gold;
  impactFX(e.x,e.z+30,hitColor,bossStyle,e.boss?1.1:.72);
@@ -596,20 +600,16 @@ function updateEnemy(e,dt){
 }
 function update(dt){
  elapsed+=dt;
- cores.forEach(c=>c.flash=Math.max(0,(c.flash||0)-dt));
+ cores.forEach(c=>c.flash=Math.max(0,(c.flash||0)-dt));enemies.forEach(e=>{e.hitT=Math.max(0,(e.hitT||0)-dt);e.flash=Math.max(0,(e.flash||0)-dt)});
  Object.keys(cooldowns).forEach(k=>cooldowns[k]=Math.max(0,cooldowns[k]-dt));
  player.invuln=Math.max(0,player.invuln-dt);player.frozenT=Math.max(0,(player.frozenT||0)-dt);player.rootedT=Math.max(0,(player.rootedT||0)-dt);player.speedBuff=Math.max(0,player.speedBuff-dt);player.powerBuff=Math.max(0,player.powerBuff-dt);player.comboTimer=Math.max(0,player.comboTimer-dt);if(player.comboTimer<=0)player.combo=0;
  player.parryT=Math.max(0,player.parryT-dt);player.barkT=Math.max(0,player.barkT-dt);player.hazardCd=Math.max(0,player.hazardCd-dt);
  if(player.partyT>0){player.partyT=Math.max(0,player.partyT-dt);if(player.partyT===0){player.powerBuff=6;showHint("PARTY BOOST! 피해량 +50% · 6초");emit(player.x,player.z+25,colors.gold,24,240);sfx("party")}}
  player.skillMotion&&(player.skillMotion.life=Math.max(0,player.skillMotion.life-dt));if(player.skillMotion&&player.skillMotion.life<=0)player.skillMotion=null;
+ screenFlash.life=Math.max(0,screenFlash.life-dt);impactFreeze=Math.max(0,impactFreeze-dt);
+ skillTrails.forEach(t=>t.life-=dt);skillTrails=skillTrails.filter(t=>t.life>0);
  player.anim+=dt*(Math.abs(player.vx)>20?11:3);
- if(player.skillMotion){
-  const sm=player.skillMotion,p=1-sm.life/sm.max,cat=SKILL_META[sm.name]?.category||0;
-  const kick=Math.sin(p*Math.PI);
-  tilt+=player.face*(cat===1?-.2*kick:cat===2?-.32*kick:cat===3?.18*Math.sin(p*Math.PI*2):-.16*kick);
-  stretchX*=1+(cat===2?.2:.09)*kick;stretchY*=1-(cat===2?.16:.07)*kick;
-  bodyY-=kick*(cat===2?11:cat===4?5:3);
- }
+ if(player.dashT>0){const skill=player.skillMotion?.name||equippedSkills[2]||"dash",color=({lightningDash:"#ffe86b",meteorDash:"#ff865c",phantomRush:"#d2b6ff",shadowStep:"#b49aff",cometRush:"#ffd76e",windRunner:"#9dffdf"}[skill]||"#6bf1ff");skillTrails.push({x:player.x-player.face*rand(8,28),h:player.z+rand(12,54),life:rand(.12,.24),max:.24,color,size:rand(12,24),face:player.face,kind:skill});if(skillTrails.length>55)skillTrails.splice(0,skillTrails.length-55)}
  if(player.attackT>=0){
   player.attackT+=dt;
   if(!player.attackDone[0]&&player.attackT>=.075){const dmg=21*currentSpeedDamageMultiplier()*(player.powerBuff>0?1.5:1);sfx("attack1");impactFX(player.x+player.face*86,player.z+39,"#ffe39b","slash",.62);hitTargets(player.x,player.face,104,dmg,player.attackSets[0],player.z,420,"attack1");player.attackDone[0]=true;}
@@ -756,7 +756,8 @@ function drawBossAura(e,scale){
 function drawEnemy(e){
  if(e.dead)return;const sx=e.x-cam;if(sx< -100||sx>W+100)return;
  if(e.boss&&e.name==="껌껌이"&&(e.hiddenT||0)>0){const ripple=1+Math.sin(elapsed*12)*.18;ctx.strokeStyle="rgba(91,221,232,.8)";ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(sx,FLOOR-8,28*ripple,8*ripple,0,0,Math.PI*2);ctx.stroke();return}
- const boss=e.boss;const scale=boss?1.9:1;const foot=FLOOR-(e.z||0);const cy=foot-(boss?54:25);ctx.save();ctx.translate(sx,cy);ctx.scale(e.face||-1,1);if(boss)drawBossAura(e,scale);
+ const boss=e.boss;const scale=boss?1.9:1;const foot=FLOOR-(e.z||0);const cy=foot-(boss?54:25);ctx.save();const hitKick=(e.hitT||0)>0?Math.sin((e.hitT/.2)*Math.PI):0;ctx.translate(sx+(e.hitDir||0)*hitKick*(boss?7:4),cy-hitKick*(boss?3:1));ctx.rotate((e.hitDir||0)*hitKick*(boss?.045:.025));ctx.scale((e.face||-1)*(1+hitKick*(boss?.035:.07)),1-hitKick*(boss?.045:.08));if(boss)drawBossAura(e,scale);
+ if((e.hitT||0)>0){ctx.save();ctx.globalCompositeOperation="lighter";ctx.globalAlpha=hitKick*.65;ctx.strokeStyle=glowColor;ctx.shadowColor=glowColor;ctx.shadowBlur=boss?25:13;ctx.lineWidth=boss?3.5:2;ctx.beginPath();ctx.ellipse(0,0,(boss?57:29)+hitKick*10,(boss?65:31)+hitKick*7,0,0,Math.PI*2);ctx.stroke();ctx.restore()}
  if(boss&&coreCount()>0){ctx.strokeStyle="rgba(110,145,255,.55)";ctx.lineWidth=3;ctx.setLineDash([8,7]);ctx.beginPath();ctx.ellipse(0,0,65,75,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
  const bodyColor=e.flash>0?"#fff":boss?(e.name==="껌껌이"?"#2c8f9e":e.name==="솜솜이"?"#67449d":"#78344f"):e.type==="shooter"?"#315b7c":"#394467";
  const glowColor=boss?(e.name==="윈터"?"#9deeff":e.name==="모래"?"#d7a8ff":e.name==="복돌이"?"#ffbd70":e.name==="껌껌이"?"#5bdde8":e.name==="솜솜이"?"#f5a8ff":"#ffb6c7"):e.type==="shooter"?"#6bf1ff":"#ffd76e";
@@ -838,6 +839,7 @@ function drawPlayer(){
  // Animate the supplied Dori sprite independently from movement/attack hitboxes.
  const partyPhase=player.partyT>0?elapsed*13:0;
  let tilt=0,stretchX=1,stretchY=1,bodyY=0;
+ if(player.skillMotion){const sm=player.skillMotion,p=1-sm.life/sm.max,cat=SKILL_META[sm.name]?.category||0,kick=Math.sin(p*Math.PI);tilt+=player.face*(cat===1?-.2*kick:cat===2?-.32*kick:cat===3?.18*Math.sin(p*Math.PI*2):-.16*kick);stretchX*=1+(cat===2?.2:.09)*kick;stretchY*=1-(cat===2?.16:.07)*kick;bodyY-=kick*(cat===2?11:cat===4?5:3);}
  if(player.attackT>=0){
   const attackPhase=player.attackT<.22?player.attackT/.22:(player.attackT-.22)/.22;
   tilt=player.face*(.12+Math.sin(Math.min(1,attackPhase)*Math.PI)*.24);
@@ -975,6 +977,7 @@ function drawProjectile(b){
  }
  ctx.restore();
 }
+function drawSkillTrails(){if(!skillTrails.length)return;ctx.save();ctx.globalCompositeOperation="lighter";skillTrails.forEach(t=>{const a=clamp(t.life/t.max,0,1),x=t.x-cam,y=FLOOR-t.h;if(x< -80||x>W+80)return;ctx.save();ctx.translate(x,y);ctx.scale(t.face||1,1);ctx.globalAlpha=a*.72;ctx.strokeStyle=t.color;ctx.fillStyle=t.color;ctx.shadowColor=t.color;ctx.shadowBlur=15;ctx.lineWidth=2+a*3;ctx.beginPath();ctx.moveTo(-t.size*1.7,-t.size*.6);ctx.quadraticCurveTo(t.size*.1,0,t.size*1.4,t.size*.25);ctx.stroke();if(t.kind==="lightningDash"||t.kind==="meteorDash"||t.kind==="phantomRush"){ctx.beginPath();ctx.moveTo(-t.size*.7,0);ctx.lineTo(-t.size*.1,-t.size*.8);ctx.lineTo(t.size*.25,t.size*.1);ctx.lineTo(t.size*.9,-t.size*.35);ctx.stroke()}else{ctx.beginPath();ctx.ellipse(0,0,t.size*.7,t.size*.28,0,0,Math.PI*2);ctx.stroke()}ctx.restore()});ctx.restore();ctx.globalAlpha=1;ctx.shadowBlur=0}
 function drawParticles(){
  ctx.save();ctx.lineCap="round";
  particles.forEach(p=>{
@@ -1061,7 +1064,8 @@ function drawAim(){
 }
 function draw(){
  ctx.save();if(shake>0){ctx.translate(rand(-shake,shake),rand(-shake,shake))}
- drawBackground();drawHazards();cores.forEach(drawCore);drawGate();drawExit();enemies.forEach(drawEnemy);projectiles.forEach(drawProjectile);drawPlayer();drawParticles();drawCombatBursts();drawAim();
+ drawBackground();drawHazards();cores.forEach(drawCore);drawGate();drawExit();enemies.forEach(drawEnemy);projectiles.forEach(drawProjectile);drawSkillTrails();drawPlayer();drawParticles();drawCombatBursts();drawAim();
+ if(screenFlash.life>0){ctx.save();ctx.globalCompositeOperation="screen";ctx.globalAlpha=(screenFlash.life/screenFlash.max)*.22;ctx.fillStyle=screenFlash.color;ctx.fillRect(0,0,W,H);ctx.restore()}
  // front edge flash while dashing
  if(player.dashT>0||player.headbutt){const alpha=player.dashT>0?player.dashT/.22:.45;const g=ctx.createLinearGradient(0,0,W,0);g.addColorStop(0,"rgba(107,241,255,0)");g.addColorStop(.5,"rgba(107,241,255,"+(alpha*.12)+")");g.addColorStop(1,"rgba(107,241,255,0)");ctx.fillStyle=g;ctx.fillRect(0,0,W,H)}
  ctx.restore();
