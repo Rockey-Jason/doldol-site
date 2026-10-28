@@ -635,7 +635,7 @@ window.addEventListener("keyup",e=>{
 });
 window.addEventListener("blur",()=>{keys.left=false;keys.right=false;releaseJoystick();touch.left=false;touch.right=false;if(mode==="playing")pauseGame()});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&mode==="playing")pauseGame()});
-refreshUI();requestAnimationFrame(loop);
+showStageSelect();refreshUI();requestAnimationFrame(loop);
 })();
 </script>
 </body>
