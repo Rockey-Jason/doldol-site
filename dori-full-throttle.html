@@ -492,11 +492,22 @@ function drawEnemy(e){
  ctx.fillStyle=bodyColor;ctx.fillRect(-16*scale,19*scale,9*scale,11*scale);ctx.fillRect(7*scale,19*scale,9*scale,11*scale);
  if(e.type==="shooter"||boss){ctx.strokeStyle=glowColor;ctx.lineWidth=5*scale;ctx.beginPath();ctx.moveTo(17*scale,0);ctx.lineTo(33*scale,8*scale);ctx.stroke()}
  if(boss){
-  ctx.fillStyle=bodyColor;ctx.beginPath();ctx.moveTo(-20*scale,-13*scale);ctx.lineTo(-18*scale,-37*scale);ctx.lineTo(-2*scale,-20*scale);ctx.fill();ctx.beginPath();ctx.moveTo(5*scale,-20*scale);ctx.lineTo(21*scale,-38*scale);ctx.lineTo(22*scale,-11*scale);ctx.fill();
-  ctx.fillStyle="#ffb6c7";ctx.beginPath();ctx.moveTo(-17*scale,-19*scale);ctx.lineTo(-17*scale,-30*scale);ctx.lineTo(-8*scale,-21*scale);ctx.fill();ctx.beginPath();ctx.moveTo(11*scale,-21*scale);ctx.lineTo(18*scale,-31*scale);ctx.lineTo(18*scale,-18*scale);ctx.fill();
-  ctx.fillStyle="#fff4d6";ctx.beginPath();ctx.ellipse(-8*scale,-5*scale,4*scale,5*scale,0,0,Math.PI*2);ctx.ellipse(9*scale,-5*scale,4*scale,5*scale,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#15182d";ctx.beginPath();ctx.arc(-7*scale,-5*scale,2*scale,0,Math.PI*2);ctx.arc(10*scale,-5*scale,2*scale,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle=glowColor;ctx.lineWidth=1.2*scale;for(let k=0;k<3;k++){ctx.beginPath();ctx.moveTo(-12*scale,4*scale);ctx.lineTo(-30*scale,(k-1)*6*scale+3*scale);ctx.moveTo(12*scale,4*scale);ctx.lineTo(30*scale,(k-1)*6*scale+3*scale);ctx.stroke()}
-  ctx.fillStyle="#ff8da8";ctx.beginPath();ctx.moveTo(-2*scale,1*scale);ctx.lineTo(2*scale,1*scale);ctx.lineTo(0,4*scale);ctx.fill();
+  if(e.name==="솜솜이"){
+   // 솜솜이는 고양이가 아닌 복슬복슬한 강아지: 늘어진 귀와 둥근 주둥이.
+   ctx.fillStyle=bodyColor;ctx.beginPath();ctx.ellipse(-23*scale,-12*scale,10*scale,20*scale,-.28,0,Math.PI*2);ctx.ellipse(23*scale,-12*scale,10*scale,20*scale,.28,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle="#fff0fa";ctx.beginPath();ctx.ellipse(0,2*scale,17*scale,12*scale,0,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle="#fff4d6";ctx.beginPath();ctx.ellipse(-8*scale,-6*scale,4*scale,5*scale,0,0,Math.PI*2);ctx.ellipse(9*scale,-6*scale,4*scale,5*scale,0,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle="#21172e";ctx.beginPath();ctx.arc(-7*scale,-6*scale,2*scale,0,Math.PI*2);ctx.arc(10*scale,-6*scale,2*scale,0,Math.PI*2);ctx.fill();
+   ctx.fillStyle="#30203d";ctx.beginPath();ctx.ellipse(0,2*scale,3.5*scale,2.6*scale,0,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle=glowColor;ctx.lineWidth=1.5*scale;ctx.beginPath();ctx.moveTo(0,5*scale);ctx.lineTo(0,8*scale);ctx.moveTo(0,8*scale);ctx.quadraticCurveTo(-5*scale,12*scale,-8*scale,8*scale);ctx.moveTo(0,8*scale);ctx.quadraticCurveTo(5*scale,12*scale,8*scale,8*scale);ctx.stroke();
+   ctx.fillStyle="#f5a8ff";ctx.beginPath();ctx.arc(-23*scale,-14*scale,3*scale,0,Math.PI*2);ctx.arc(23*scale,-14*scale,3*scale,0,Math.PI*2);ctx.fill();
+  }else{
+   ctx.fillStyle=bodyColor;ctx.beginPath();ctx.moveTo(-20*scale,-13*scale);ctx.lineTo(-18*scale,-37*scale);ctx.lineTo(-2*scale,-20*scale);ctx.fill();ctx.beginPath();ctx.moveTo(5*scale,-20*scale);ctx.lineTo(21*scale,-38*scale);ctx.lineTo(22*scale,-11*scale);ctx.fill();
+   ctx.fillStyle="#ffb6c7";ctx.beginPath();ctx.moveTo(-17*scale,-19*scale);ctx.lineTo(-17*scale,-30*scale);ctx.lineTo(-8*scale,-21*scale);ctx.fill();ctx.beginPath();ctx.moveTo(11*scale,-21*scale);ctx.lineTo(18*scale,-31*scale);ctx.lineTo(18*scale,-18*scale);ctx.fill();
+   ctx.fillStyle="#fff4d6";ctx.beginPath();ctx.ellipse(-8*scale,-5*scale,4*scale,5*scale,0,0,Math.PI*2);ctx.ellipse(9*scale,-5*scale,4*scale,5*scale,0,0,Math.PI*2);ctx.fill();ctx.fillStyle="#15182d";ctx.beginPath();ctx.arc(-7*scale,-5*scale,2*scale,0,Math.PI*2);ctx.arc(10*scale,-5*scale,2*scale,0,Math.PI*2);ctx.fill();
+   ctx.strokeStyle=glowColor;ctx.lineWidth=1.2*scale;for(let k=0;k<3;k++){ctx.beginPath();ctx.moveTo(-12*scale,4*scale);ctx.lineTo(-30*scale,(k-1)*6*scale+3*scale);ctx.moveTo(12*scale,4*scale);ctx.lineTo(30*scale,(k-1)*6*scale+3*scale);ctx.stroke()}
+   ctx.fillStyle="#ff8da8";ctx.beginPath();ctx.moveTo(-2*scale,1*scale);ctx.lineTo(2*scale,1*scale);ctx.lineTo(0,4*scale);ctx.fill();
+  }
  }
  ctx.restore();
  if(!boss){ctx.fillStyle="rgba(0,0,0,.45)";ctx.fillRect(sx-19,cy-38,38,4);ctx.fillStyle= e.type==="shooter"?"#6bf1ff":"#ffd76e";ctx.fillRect(sx-19,cy-38,38*e.hp/e.maxHp,4)}
