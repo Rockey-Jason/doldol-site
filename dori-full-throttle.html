@@ -561,8 +561,8 @@ function update(dt){
  if(player.parryT>0)reflectProjectiles();
  if(player.barkT>0){
   const radius=(.5-player.barkT)/.5*305;
-  enemies.forEach(e=>{if(e.dead||player.barkHit.has(e.id)||Math.abs(e.x-player.barkX)>radius||Math.abs((e.z||0)-player.barkZ)>135)return;player.barkHit.add(e.id);damageEnemy(e,25*(player.powerBuff>0?1.5:1),220,Math.sign(e.x-player.barkX)||player.face,"bark-impact");if(!e.boss)e.stun=Math.max(e.stun,2)});
-  cores.forEach(c=>{if(!c.dead&&!player.barkHit.has(c.id)&&Math.abs(c.x-player.barkX)<=radius){player.barkHit.add(c.id);coreHit(c,20*(player.powerBuff>0?1.5:1))}});
+  enemies.forEach(e=>{if(e.dead||player.barkHit.has(e.id)||Math.abs(e.x-player.barkX)>radius||Math.abs((e.z||0)-player.barkZ)>135)return;player.barkHit.add(e.id);damageEnemy(e,25*(player.powerBuff>0?1.5:1)*(player.barkPower||1),220,Math.sign(e.x-player.barkX)||player.face,"bark-impact");if(!e.boss)e.stun=Math.max(e.stun,2)});
+  cores.forEach(c=>{if(!c.dead&&!player.barkHit.has(c.id)&&Math.abs(c.x-player.barkX)<=radius){player.barkHit.add(c.id);coreHit(c,20*(player.powerBuff>0?1.5:1)*(player.barkPower||1))}});
  }
  if(player.headbutt){
   const h=player.headbutt;
@@ -573,7 +573,7 @@ function update(dt){
   if(h.remaining<=0){player.headbutt=null;player.vz=player.z>0?-80:0;player.vx=dir*110}
  }else if(player.dashT>0){
   const step=Math.min(dt,player.dashT);player.x+=player.face*DASH_SPEED*step;player.dashT-=step;
-  hitTargets(player.x,player.face,55,24*(player.powerBuff>0?1.5:1),player.dashHit,player.z,190,"dash-impact");
+  hitTargets(player.x,player.face,55,24*(player.powerBuff>0?1.5:1)*(player.dashPower||1),player.dashHit,player.z,190,"dash-impact");
   if(player.dashT<=0)player.vx=player.face*220;
  }else{
   const move=(keys.right||touch.right?1:0)-(keys.left||touch.left?1:0);
@@ -1040,6 +1040,11 @@ joystick.addEventListener("lostpointercapture",releaseJoystick);
 joystick.addEventListener("keydown",e=>{if(e.key==="ArrowLeft"||e.key==="ArrowRight"){e.preventDefault();touch.left=e.key==="ArrowLeft";touch.right=e.key==="ArrowRight"}});
 joystick.addEventListener("keyup",e=>{if(e.key==="ArrowLeft")touch.left=false;if(e.key==="ArrowRight")touch.right=false});
 
+// 데스크톱 스킬 카드도 장착된 슬롯 스킬을 실행한다.
+document.querySelectorAll(".skill-panel [data-skill]").forEach(btn=>btn.addEventListener("click",()=>{
+ const name=btn.dataset.skill;if(!name)return;
+ const meta=SKILL_META[name];if(meta?.effect==="head")tapHead();else activate(name);
+}));
 // Independent pointerdown handlers allow joystick + attacks/skills at the same time.
 document.querySelectorAll(".touch-controls [data-skill]").forEach(btn=>{
  btn.addEventListener("pointerdown",e=>{
