@@ -461,49 +461,31 @@ function drawEnemy(e){
  if(e.wind>0){ctx.strokeStyle="rgba(255,105,134,.75)";ctx.lineWidth=2;ctx.beginPath();ctx.arc(sx,cy,32+Math.sin(elapsed*25)*6,-.8,Math.PI*.8);ctx.stroke()}
  if(e.stun>0){ctx.fillStyle=colors.cyan;ctx.font="16px sans-serif";ctx.textAlign="center";ctx.fillText("✦",sx,cy-34)}
 }
+const doriSprite = new Image();
+doriSprite.src = "./dori-reference.svg";
 function drawPlayer(){
- const sx=player.x-cam,foot=FLOOR-player.z,cy=foot-35;
+ const sx=player.x-cam,foot=FLOOR-player.z,cy=foot-55;
  if(sx< -100||sx>W+100)return;
- ctx.save();ctx.translate(sx,cy);
+ ctx.save();
+ ctx.translate(sx,foot);
  const bob=(player.z>0?0:Math.sin(player.anim)*Math.min(2.2,Math.abs(player.vx)/170));
  ctx.translate(0,bob);
  if(player.invuln>0&&Math.floor(elapsed*22)%2===0)ctx.globalAlpha=.55;
  if(player.powerBuff>0||player.partyT>0){
   ctx.save();ctx.strokeStyle=player.partyT>0?"rgba(255,215,110,.9)":"rgba(255,215,110,.65)";ctx.lineWidth=2.5;ctx.setLineDash([5,5]);
-  ctx.beginPath();ctx.ellipse(0,4,48+Math.sin(elapsed*7)*3,40+Math.sin(elapsed*7)*2,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.restore()
+  ctx.beginPath();ctx.ellipse(0,-55,49+Math.sin(elapsed*7)*3,45+Math.sin(elapsed*7)*2,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.restore()
  }
- if(player.speedBuff>0){ctx.strokeStyle="rgba(107,241,255,.42)";ctx.lineWidth=3;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-player.face*(38+i*8),-2+i*9);ctx.lineTo(-player.face*(60+i*10),-2+i*9);ctx.stroke()}}
- ctx.scale(player.face,1);
- const run=Math.abs(player.vx)>20&&player.partyT<=0,leg=Math.sin(player.anim)*(run?5:1.2);
- // Ground shadow and stubby legs, matching Dori's hand-drawn silhouette.
- ctx.fillStyle="rgba(0,0,0,.28)";ctx.beginPath();ctx.ellipse(0,35,39-player.z*.018,7,0,0,Math.PI*2);ctx.fill();
- // Tiny upright tail with a dark, rounded outline.
- ctx.lineCap="round";ctx.lineJoin="round";
- ctx.beginPath();ctx.moveTo(-32,3);ctx.quadraticCurveTo(-48,-8,-45,-20);ctx.quadraticCurveTo(-43,-27,-35,-20);ctx.strokeStyle="#242321";ctx.lineWidth=10;ctx.stroke();
- ctx.beginPath();ctx.moveTo(-32,3);ctx.quadraticCurveTo(-44,-7,-42,-17);ctx.strokeStyle="#ffe6a0";ctx.lineWidth=5;ctx.stroke();
- // Far legs.
- ctx.fillStyle="#ffe5a0";ctx.strokeStyle="#242321";ctx.lineWidth=6;
- ctx.beginPath();ctx.roundRect(-29+leg,16,16,22,6);ctx.fill();ctx.stroke();
- ctx.beginPath();ctx.roundRect(14-leg,16,16,22,6);ctx.fill();ctx.stroke();
- // Long, low corgi body.
- ctx.beginPath();ctx.moveTo(-35,5);ctx.quadraticCurveTo(-34,-12,-18,-16);ctx.lineTo(23,-13);ctx.quadraticCurveTo(43,-9,43,8);ctx.lineTo(38,23);ctx.quadraticCurveTo(14,28,-18,24);ctx.quadraticCurveTo(-35,22,-35,5);ctx.closePath();
- ctx.fillStyle="#ffe6a3";ctx.fill();ctx.strokeStyle="#242321";ctx.lineWidth=6;ctx.stroke();
- // White chest and broad white underside marking.
- ctx.beginPath();ctx.moveTo(5,-12);ctx.quadraticCurveTo(20,-14,29,-4);ctx.lineTo(25,19);ctx.quadraticCurveTo(10,25,-2,20);ctx.quadraticCurveTo(10,3,5,-12);ctx.closePath();ctx.fillStyle="#fffdf8";ctx.fill();
- // Big head with a distinct white blaze down the face.
- ctx.beginPath();ctx.moveTo(-22,-18);ctx.quadraticCurveTo(-37,-24,-32,-42);ctx.lineTo(-25,-67);ctx.quadraticCurveTo(-22,-77,-14,-70);ctx.lineTo(-6,-48);ctx.quadraticCurveTo(1,-53,10,-49);ctx.lineTo(28,-68);ctx.quadraticCurveTo(37,-76,42,-63);ctx.quadraticCurveTo(48,-46,37,-28);ctx.lineTo(32,-12);ctx.quadraticCurveTo(12,-4,-9,-11);ctx.closePath();
- ctx.fillStyle="#ffe6a3";ctx.fill();ctx.strokeStyle="#242321";ctx.lineWidth=7;ctx.stroke();
- // White blaze / muzzle, inspired by the supplied drawing.
- ctx.beginPath();ctx.moveTo(-5,-48);ctx.quadraticCurveTo(-2,-33,7,-27);ctx.quadraticCurveTo(7,-18,0,-10);ctx.quadraticCurveTo(-11,-9,-18,-18);ctx.quadraticCurveTo(-22,-29,-14,-39);ctx.closePath();ctx.fillStyle="#fffdf8";ctx.fill();
- ctx.beginPath();ctx.ellipse(-14,-22,13,12,-.25,0,Math.PI*2);ctx.fillStyle="#fffdf8";ctx.fill();
- // Eye, nose and a little smile: simple black strokes like Dori's drawing.
- ctx.fillStyle="#242321";ctx.beginPath();ctx.arc(19,-38,3.5,0,Math.PI*2);ctx.fill();
- ctx.beginPath();ctx.arc(-24,-45,3.2,0,Math.PI*2);ctx.fill();
- ctx.beginPath();ctx.ellipse(-24,-25,5.2,4,0,0,Math.PI*2);ctx.fill();
- ctx.strokeStyle="#242321";ctx.lineWidth=3.8;ctx.beginPath();ctx.moveTo(-25,-21);ctx.quadraticCurveTo(-13,-13,-5,-22);ctx.stroke();
- // Foreleg in front, with a white paw.
- ctx.beginPath();ctx.roundRect(24+leg*.45,9,14,27,6);ctx.fillStyle="#ffe6a3";ctx.fill();ctx.strokeStyle="#242321";ctx.lineWidth=6;ctx.stroke();
- ctx.beginPath();ctx.moveTo(25+leg*.45,29);ctx.lineTo(37+leg*.45,29);ctx.strokeStyle="#fffdf8";ctx.lineWidth=5;ctx.stroke();
+ if(player.speedBuff>0){ctx.strokeStyle="rgba(107,241,255,.42)";ctx.lineWidth=3;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-player.face*(40+i*8),-45+i*9);ctx.lineTo(-player.face*(62+i*10),-45+i*9);ctx.stroke()}}
+ // Use the exact silhouette and markings traced from the user's supplied Dori drawing.
+ if(doriSprite.complete&&doriSprite.naturalWidth){
+  ctx.save();ctx.scale(player.face===1?-1:1,1);
+  ctx.drawImage(doriSprite,-52,-110,104,110);
+  ctx.restore();
+ }else{
+  ctx.fillStyle="#ffe6a3";ctx.strokeStyle="#242321";ctx.lineWidth=5;
+  ctx.beginPath();ctx.ellipse(0,-51,35,29,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+ }
+ ctx.fillStyle="rgba(0,0,0,.28)";ctx.beginPath();ctx.ellipse(0,2,36,6,0,0,Math.PI*2);ctx.fill();
  ctx.restore();
  // Keep attack and skill feedback separate from the character artwork.
  if(player.attackT>=.02&&player.attackT<.41){
