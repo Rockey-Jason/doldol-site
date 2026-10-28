@@ -281,11 +281,11 @@ function impactFX(x,h,color,style="impact",power=1){
 function addCombo(){
  player.combo++;player.comboTimer=1.7;player.score+=10;
 }
-function coreHit(c,damage){
- if(c.dead)return;c.hp-=damage;player.damageDone+=damage;addCombo();c.flash=.16;impactFX(c.x,42,colors.cyan,"core",1);sfx("core");
+function coreHit(c,damage,sourceEffect=null){
+ if(c.dead)return;c.hp-=damage;player.damageDone+=damage;addCombo();c.flash=.16;impactFX(c.x,42,colors.cyan,"core",1);sfx("core");if(sourceEffect)sfx("impact-"+sourceEffect);
  if(c.hp<=0){c.hp=0;c.dead=true;player.score+=520;impactFX(c.x,45,colors.gold,"core-break",1.35);sfx("break");showHint("POWER CORE DESTROYED  +520");}
 }
-function damageEnemy(e,damage,knock=140,dir=1){
+function damageEnemy(e,damage,knock=140,dir=1,sourceEffect=null){
  if(!e||e.dead)return;if(e.boss&&(coreCount()>0||((e.hiddenT||0)>0))){emit(e.x,45,e.name==="솜솜이"?"#f5a8ff":colors.blue,4,95);return}
  const amount=damage;e.hp-=amount;e.flash=.13;player.damageDone+=amount;addCombo();shake=Math.max(shake,e.boss?6.5:3.1);
  const bossStyle=e.boss?({"식빵이":"boss-ember","윈터":"boss-ice","모래":"boss-sand","복돌이":"boss-steel","껌껌이":"boss-water","솜솜이":"boss-arcane"}[e.name]||"boss-ember"):"impact";
@@ -293,16 +293,16 @@ function damageEnemy(e,damage,knock=140,dir=1){
  impactFX(e.x,e.z+30,hitColor,bossStyle,e.boss?1.1:.72);
  if(!e.boss){e.vx+=dir*knock}
  if(e.hp<=0){e.hp=0;e.dead=true;player.kills++;player.score+=e.score||140;impactFX(e.x,e.z+24,e.boss?colors.gold:colors.cyan,e.boss?"boss-break":"break",e.boss?1.6:1);sfx(e.boss?"win":"break");if(e.boss)showHint((e.name||"보스")+" 격파! · 출구가 열렸어!");else if(player.kills%3===0)showHint("COMBO CLEAR  +"+e.score)}
- else sfx("hit");
+ else {const bossHit={"식빵이":"boss-hit-ember","윈터":"boss-hit-ice","모래":"boss-hit-sand","복돌이":"boss-hit-steel","껌껌이":"boss-hit-water","솜솜이":"boss-hit-arcane"}[e.name]||"boss-hit-ember";sfx(sourceEffect?("impact-"+sourceEffect):(e.boss?bossHit:"enemy-hit"));}
 }
-function hitTargets(x,dir,range,damage,hitSet,height,knock){
- enemies.forEach(e=>{if(e.dead||hitSet.has(e.id))return;const dx=e.x-x;if(dx*dir< -22||Math.abs(dx)>range||Math.abs((e.z||0)-height)>115)return;hitSet.add(e.id);damageEnemy(e,damage,knock,dir)});
- cores.forEach(c=>{if(c.dead||hitSet.has(c.id))return;if(Math.abs(c.x-x)<=range&&Math.abs(45-height)<125){hitSet.add(c.id);coreHit(c,damage)}});
+function hitTargets(x,dir,range,damage,hitSet,height,knock,sourceEffect=null){
+ enemies.forEach(e=>{if(e.dead||hitSet.has(e.id))return;const dx=e.x-x;if(dx*dir< -22||Math.abs(dx)>range||Math.abs((e.z||0)-height)>115)return;hitSet.add(e.id);damageEnemy(e,damage,knock,dir,sourceEffect)});
+ cores.forEach(c=>{if(c.dead||hitSet.has(c.id))return;if(Math.abs(c.x-x)<=range&&Math.abs(45-height)<125){hitSet.add(c.id);coreHit(c,damage,sourceEffect)}});
 }
-function takeDamage(amount,sourceX){
+function takeDamage(amount,sourceX,soundType="hurt"){
  if(mode!=="playing"||player.invuln>0)return;
  let reduce=player.headbutt?.reduction||0;
- const actual=amount*(1-reduce);player.hp=Math.max(0,player.hp-actual);player.invuln=.72;player.combo=0;player.comboTimer=0;shake=Math.max(shake,8.5);impactFX(player.x,player.z+25,"#ff526d","player-hit",1.12);emit(player.x,player.z+25,colors.red,18,260);player.vx+=(player.x>=sourceX?1:-1)*230;sfx("hurt");
+ const actual=amount*(1-reduce);player.hp=Math.max(0,player.hp-actual);player.invuln=.72;player.combo=0;player.comboTimer=0;shake=Math.max(shake,8.5);impactFX(player.x,player.z+25,"#ff526d","player-hit",1.12);emit(player.x,player.z+25,colors.red,18,260);player.vx+=(player.x>=sourceX?1:-1)*230;sfx(soundType);
  if(player.hp<=0){player.hp=0;finishGame(false)}
 }
 function showHint(text){const el=$("hintToast");el.textContent=text;el.classList.add("visible");hintTimer=1.25}
@@ -321,7 +321,7 @@ function activate(name,tx,tz){
  if(name!=="party"&&player.headbutt)return;
  if((cooldowns[name]||0)>0)return;
  if(name==="parry"){
-  player.parryT=.34;player.parryHit=new Set();cooldowns.parry=.78;impactFX(player.x+player.face*28,player.z+38,colors.cyan,"parry",.85);sfx("parry");
+  player.parryT=.34;player.parryHit=new Set();cooldowns.parry=.78;impactFX(player.x+player.face*28,player.z+38,colors.cyan,"parry",.85);sfx("parry-ready");
  }else if(name==="dash"){
   player.dashT=.22;player.dashHit=new Set();player.vx=0;cooldowns.dash=1.25;impactFX(player.x,player.z+24,colors.cyan,"dash-start",.65);sfx("dash");emit(player.x,player.z+20,colors.cyan,22,250);
  }else if(name==="bark"){
@@ -338,7 +338,7 @@ function headbuttTo(tx,tz){
  const dx=clamp(tx,35,LEVEL_W-35)-player.x,dz=clamp(tz,0,260)-player.z;
  const dist=Math.hypot(dx,dz);if(dist<55){showHint("목표 지점을 조금 더 멀리 잡아봐!");return}
  player.headbutt={vx:dx/dist*HEAD_SPEED,vz:dz/dist*HEAD_SPEED,remaining:Math.min(1.05,dist/HEAD_SPEED),hit:new Set(),reduction:.7};
- player.dashT=0;player.parryT=0;player.attackT=-1;player.vx=0;player.vz=0;player.face=dx>=0?1:-1;cooldowns.head=7.5;sfx("dash");emit(player.x,player.z+25,colors.gold,14,160);
+ player.dashT=0;player.parryT=0;player.attackT=-1;player.vx=0;player.vz=0;player.face=dx>=0?1:-1;cooldowns.head=7.5;sfx("headbutt");emit(player.x,player.z+25,colors.gold,14,160);
 }
 function selectHeadTarget(clientX,clientY){
  const r=canvas.getBoundingClientRect();const lx=clientX-r.left,ly=clientY-r.top;
@@ -354,7 +354,7 @@ function reflectProjectiles(){
  projectiles.forEach(b=>{
   if(b.owner!=="enemy"||b.dead||player.parryHit.has(b.id))return;
   const dx=b.x-player.x;if(dx*player.face< -18||Math.abs(dx)>140||Math.abs(b.h-(player.z+27))>100)return;
-  player.parryHit.add(b.id);b.owner="player";b.vx=-b.vx*1.36;b.vh=-b.vh*1.1;b.damage=Math.max(18,b.damage*1.65)*(player.powerBuff>0?1.5:1);b.x=player.x+player.face*37;b.h=player.z+32;b.life=2.2;b.reflected=true;b.effect="reflected";b.color="#8cffff";player.reflections++;player.score+=25;shake=Math.max(shake,3.5);impactFX(player.x+player.face*38,player.z+30,colors.cyan,"parry",1.15);emit(player.x+player.face*38,player.z+30,colors.cyan,24,320);sfx("parry");showHint("PERFECT REFLECT  +25");
+  player.parryHit.add(b.id);const reflectedEffect=b.effect||"bolt";b.owner="player";b.vx=-b.vx*1.36;b.vh=-b.vh*1.1;b.damage=Math.max(18,b.damage*1.65)*(player.powerBuff>0?1.5:1);b.x=player.x+player.face*37;b.h=player.z+32;b.life=2.2;b.reflected=true;b.effect="reflected";b.color="#8cffff";player.reflections++;player.score+=25;shake=Math.max(shake,3.5);impactFX(player.x+player.face*38,player.z+30,colors.cyan,"parry",1.15);emit(player.x+player.face*38,player.z+30,colors.cyan,24,320);sfx(({"ember":"reflect-ember","fire":"reflect-ember","ice":"reflect-ice","freeze":"reflect-ice","sand":"reflect-sand","slash":"reflect-steel","water":"reflect-water","arcane":"reflect-arcane","laser":"reflect-arcane","dark":"reflect-arcane","clone":"reflect-arcane","bolt":"reflect-perfect"}[reflectedEffect])||"reflect-perfect");showHint("PERFECT REFLECT  +25");
  });
 }
 function enemyFire(e){
@@ -448,26 +448,26 @@ function update(dt){
  player.anim+=dt*(Math.abs(player.vx)>20?11:3);
  if(player.attackT>=0){
   player.attackT+=dt;
-  if(!player.attackDone[0]&&player.attackT>=.075){const dmg=21*currentSpeedDamageMultiplier()*(player.powerBuff>0?1.5:1);impactFX(player.x+player.face*86,player.z+39,player.face===1?"#ffe39b":"#ffe39b","slash",.62);hitTargets(player.x,player.face,104,dmg,player.attackSets[0],player.z,420);player.attackDone[0]=true;sfx("hit")}
-  if(!player.attackDone[1]&&player.attackT>=.225){const dmg=25*currentSpeedDamageMultiplier()*(player.powerBuff>0?1.5:1);impactFX(player.x+player.face*105,player.z+44,"#70f6ff","slash",.82);hitTargets(player.x,player.face,120,dmg,player.attackSets[1],player.z,680);player.attackDone[1]=true;sfx("hit")}
+  if(!player.attackDone[0]&&player.attackT>=.075){const dmg=21*currentSpeedDamageMultiplier()*(player.powerBuff>0?1.5:1);sfx("attack1");impactFX(player.x+player.face*86,player.z+39,"#ffe39b","slash",.62);hitTargets(player.x,player.face,104,dmg,player.attackSets[0],player.z,420,"attack1");player.attackDone[0]=true;}
+  if(!player.attackDone[1]&&player.attackT>=.225){const dmg=25*currentSpeedDamageMultiplier()*(player.powerBuff>0?1.5:1);sfx("attack2");impactFX(player.x+player.face*105,player.z+44,"#70f6ff","slash",.82);hitTargets(player.x,player.face,120,dmg,player.attackSets[1],player.z,680,"attack2");player.attackDone[1]=true;}
   if(player.attackT>.46)player.attackT=-1;
  }
  if(player.parryT>0)reflectProjectiles();
  if(player.barkT>0){
   const radius=(.5-player.barkT)/.5*305;
-  enemies.forEach(e=>{if(e.dead||player.barkHit.has(e.id)||Math.abs(e.x-player.barkX)>radius||Math.abs((e.z||0)-player.barkZ)>135)return;player.barkHit.add(e.id);damageEnemy(e,25*(player.powerBuff>0?1.5:1),220,Math.sign(e.x-player.barkX)||player.face);if(!e.boss)e.stun=Math.max(e.stun,2)});
+  enemies.forEach(e=>{if(e.dead||player.barkHit.has(e.id)||Math.abs(e.x-player.barkX)>radius||Math.abs((e.z||0)-player.barkZ)>135)return;player.barkHit.add(e.id);damageEnemy(e,25*(player.powerBuff>0?1.5:1),220,Math.sign(e.x-player.barkX)||player.face,"bark-impact");if(!e.boss)e.stun=Math.max(e.stun,2)});
   cores.forEach(c=>{if(!c.dead&&!player.barkHit.has(c.id)&&Math.abs(c.x-player.barkX)<=radius){player.barkHit.add(c.id);coreHit(c,20*(player.powerBuff>0?1.5:1))}});
  }
  if(player.headbutt){
   const h=player.headbutt;
   const step=Math.min(dt,h.remaining);player.x+=h.vx*step;player.z=Math.max(0,player.z+h.vz*step);h.remaining-=step;
   const dir=Math.sign(h.vx)||player.face;
-  hitTargets(player.x,dir,57,39*(player.powerBuff>0?1.5:1),h.hit,player.z,230);
+  hitTargets(player.x,dir,57,39*(player.powerBuff>0?1.5:1),h.hit,player.z,230,"headbutt-impact");
   projectiles.forEach(b=>{if(!b.dead&&Math.abs(b.x-player.x)<55&&Math.abs(b.h-(player.z+22))<80){if(b.owner==="enemy"){b.dead=true;impactFX(b.x,b.h,colors.cyan,"parry",.65);emit(b.x,b.h,colors.cyan,12,230)}}});
   if(h.remaining<=0){player.headbutt=null;player.vz=player.z>0?-80:0;player.vx=dir*110}
  }else if(player.dashT>0){
   const step=Math.min(dt,player.dashT);player.x+=player.face*DASH_SPEED*step;player.dashT-=step;
-  hitTargets(player.x,player.face,55,24*(player.powerBuff>0?1.5:1),player.dashHit,player.z,190);
+  hitTargets(player.x,player.face,55,24*(player.powerBuff>0?1.5:1),player.dashHit,player.z,190,"dash-impact");
   if(player.dashT<=0)player.vx=player.face*220;
  }else{
   const move=(keys.right||touch.right?1:0)-(keys.left||touch.left?1:0);
