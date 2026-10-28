@@ -401,7 +401,7 @@ function coreHit(c,damage,sourceEffect=null){
 }
 function hitBossFlashColor(name){return ({"식빵이":"#ff9aa8","윈터":"#baf7ff","모래":"#e0b5ff","복돌이":"#ffd08a","껌껌이":"#8afff5","솜솜이":"#ffb5f0"}[name]||"#ffffff")}
 function damageEnemy(e,damage,knock=140,dir=1,sourceEffect=null){
- if(!e||e.dead)return;if(e.boss&&(coreCount()>0||((e.hiddenT||0)>0))){emit(e.x,45,e.name==="솜솜이"?"#f5a8ff":colors.blue,4,95);return}
+ if(!e||e.dead)return;if(e.boss&&((e.name==="솜솜이"&&coreCount()>0)||(e.name==="껌껌이"&&(e.hiddenT||0)>0))){emit(e.x,45,e.name==="솜솜이"?"#f5a8ff":colors.blue,4,95);return}
  const amount=damage;e.hp-=amount;e.flash=.18;e.hitT=.2;e.hitDir=dir;e.hitPulse=(e.hitPulse||0)+1;player.damageDone+=amount;addCombo();shake=Math.max(shake,e.boss?8.2:4.0);screenFlash={color:e.boss?hitBossFlashColor(e.name):"#fff0be",life:e.boss?.11:.055,max:e.boss?.11:.055};impactFreeze=Math.max(impactFreeze,e.boss?.035:.012);
  const bossStyle=e.boss?({"식빵이":"boss-ember","윈터":"boss-ice","모래":"boss-sand","복돌이":"boss-steel","껌껌이":"boss-water","솜솜이":"boss-arcane"}[e.name]||"boss-ember"):"impact";
  const hitColor=e.boss?({"식빵이":"#ff6b78","윈터":"#baf7ff","모래":"#d8a3ff","복돌이":"#ffc06e","껌껌이":"#62f5e8","솜솜이":"#ff8de8"}[e.name]||colors.red):colors.gold;
@@ -682,7 +682,7 @@ function refreshUI(){
  $("healthText").textContent=Math.ceil(player.hp)+" / "+player.maxHp;$("healthFill").style.width=(player.hp/player.maxHp*100)+"%";
  $("progressText").textContent=Math.floor(player.x/LEVEL_W*100)+"%";$("progressFill").style.width=(player.x/LEVEL_W*100)+"%";
  $("scoreText").textContent=formatScore(player.score);$("comboText").textContent="x"+player.combo;$("killText").textContent=player.kills;
- const remaining=coreCount(),cfg=STAGES[currentStage],b=boss();$("stageText").textContent="STAGE "+String(currentStage).padStart(2,"0")+" · "+cfg.name;$("objectiveText").textContent=remaining>0?"임무: 파워 코어 파괴 ("+(cfg.cores.length-remaining)+"/"+cfg.cores.length+")":b&&!b.dead?"임무: WARDEN 격파 → 출구 도달":"임무: 출구 도달";$("speedBuff").classList.toggle("show",player.speedBuff>0);$("partyBuff").classList.toggle("show",player.powerBuff>0);$("danceBuff").classList.toggle("show",player.partyT>0);$("bossWrap").classList.toggle("show",!!b&&remaining===0&&!b.dead);if(b){$("bossWrap").querySelector(".boss-label span").textContent="☠ "+(b.name||"BOSS");$("bossText").textContent=Math.ceil(b.hp)+" / "+b.maxHp;$("bossFill").style.width=(b.hp/b.maxHp*100)+"%";}
+ const remaining=coreCount(),cfg=STAGES[currentStage],b=boss();$("stageText").textContent="STAGE "+String(currentStage).padStart(2,"0")+" · "+cfg.name;$("objectiveText").textContent=remaining>0?"임무: 파워 코어 파괴 ("+(cfg.cores.length-remaining)+"/"+cfg.cores.length+")":b&&!b.dead?"임무: WARDEN 격파 → 출구 도달":"임무: 출구 도달";$("speedBuff").classList.toggle("show",player.speedBuff>0);$("partyBuff").classList.toggle("show",player.powerBuff>0);$("danceBuff").classList.toggle("show",player.partyT>0);$("bossWrap").classList.toggle("show",!!b&&!b.dead&&(b.name!=="솜솜이"||remaining===0));if(b){$("bossWrap").querySelector(".boss-label span").textContent="☠ "+(b.name||"BOSS");$("bossText").textContent=Math.ceil(b.hp)+" / "+b.maxHp;$("bossFill").style.width=(b.hp/b.maxHp*100)+"%";}
  document.querySelectorAll("[data-cooldown]").forEach(el=>{const t=cooldowns[el.dataset.cooldown]||0;el.textContent=t>0?t.toFixed(1)+"s":"READY"});
  document.querySelectorAll("[data-skill]").forEach(btn=>{const t=cooldowns[btn.dataset.skill]||0;btn.classList.toggle("locked",t>0||(player.partyT>0&&SKILL_META[btn.dataset.skill]?.effect!=="party"));btn.style.setProperty("--ready",t>0?.12:1)});
  $("pauseButton").textContent=mode==="paused"?"▶ 계속하기":"Ⅱ 일시 정지";
@@ -787,7 +787,8 @@ function drawEnemy(e){
   }
  }
  ctx.restore();
- if(!boss){ctx.fillStyle="rgba(0,0,0,.45)";ctx.fillRect(sx-19,cy-38,38,4);ctx.fillStyle= e.type==="shooter"?"#6bf1ff":"#ffd76e";ctx.fillRect(sx-19,cy-38,38*e.hp/e.maxHp,4)}
+ if(!boss){const bw=38;ctx.fillStyle="rgba(0,0,0,.72)";ctx.fillRect(sx-bw/2-1,cy-39,bw+2,6);ctx.fillStyle=e.type==="shooter"?"#6bf1ff":"#ffd76e";ctx.fillRect(sx-bw/2,cy-38,bw*clamp(e.hp/Math.max(1,e.maxHp),0,1),4)}
+ else if(!(e.name==="껌껌이"&&(e.hiddenT||0)>0)){const bw=100,by=cy-88;ctx.save();ctx.globalAlpha=.98;ctx.fillStyle="rgba(3,8,24,.9)";ctx.fillRect(sx-bw/2-2,by-3,bw+4,11);ctx.fillStyle="rgba(255,255,255,.14)";ctx.fillRect(sx-bw/2,by,bw,5);ctx.fillStyle=glowColor;ctx.shadowColor=glowColor;ctx.shadowBlur=10;ctx.fillRect(sx-bw/2,by,bw*clamp(e.hp/Math.max(1,e.maxHp),0,1),5);ctx.shadowBlur=0;ctx.font="10px HancomMalrangmalrang, sans-serif";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.fillText((e.name||"BOSS")+" · "+Math.ceil(e.hp)+"/"+e.maxHp,sx,by-6);ctx.restore()}
  if(e.wind>0){
   const warn=e.boss?({"식빵이":"#ff667f","윈터":"#a6f2ff","모래":"#d7a8ff","복돌이":"#ffbd70","껌껌이":"#5bdde8","솜솜이":"#f5a8ff"}[e.name]||"#ff667f"):(e.type==="shooter"?"#6bf1ff":"#ffd76e");
   const ratio=clamp(e.wind/(e.boss?.85:.38),0,1),pulse=1+Math.sin(elapsed*22)*.08;
@@ -814,6 +815,8 @@ function drawPlayer(){
  const sx=player.x-cam,foot=FLOOR-player.z,cy=foot-55;
  if(sx< -100||sx>W+100)return;
  ctx.save();
+ // Keep the character visible even after effects alter the canvas drawing state.
+ ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";ctx.filter="none";
  ctx.translate(sx,foot);
  const bob=(player.z>0?0:Math.sin(player.anim)*Math.min(2.2,Math.abs(player.vx)/170));
  ctx.translate(0,bob);
