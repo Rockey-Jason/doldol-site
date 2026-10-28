@@ -462,40 +462,58 @@ function drawEnemy(e){
  if(e.stun>0){ctx.fillStyle=colors.cyan;ctx.font="16px sans-serif";ctx.textAlign="center";ctx.fillText("✦",sx,cy-34)}
 }
 function drawPlayer(){
- const sx=player.x-cam,foot=FLOOR-player.z,cy=foot-23;
- if(sx< -80||sx>W+80)return;
- ctx.save();ctx.translate(sx,cy);const bob=(player.z>0?0:Math.sin(player.anim)*Math.min(2.5,Math.abs(player.vx)/150));ctx.translate(0,bob);
+ const sx=player.x-cam,foot=FLOOR-player.z,cy=foot-35;
+ if(sx< -100||sx>W+100)return;
+ ctx.save();ctx.translate(sx,cy);
+ const bob=(player.z>0?0:Math.sin(player.anim)*Math.min(2.2,Math.abs(player.vx)/170));
+ ctx.translate(0,bob);
  if(player.invuln>0&&Math.floor(elapsed*22)%2===0)ctx.globalAlpha=.55;
- if(player.powerBuff>0||player.partyT>0){ctx.save();ctx.strokeStyle=player.partyT>0?"rgba(255,215,110,.85)":"rgba(255,215,110,.6)";ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.ellipse(0,2,39+Math.sin(elapsed*7)*3,31+Math.sin(elapsed*7)*2,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.restore()}
- if(player.speedBuff>0){ctx.strokeStyle="rgba(107,241,255,.35)";ctx.lineWidth=3;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-player.face*(30+i*8),-4+i*9);ctx.lineTo(-player.face*(52+i*10),-4+i*9);ctx.stroke()}}
- ctx.scale(player.face,1);
- const run=Math.abs(player.vx)>20&&player.partyT<=0;const leg=Math.sin(player.anim)* (run?5:1.2);
- // soft ground shadow
- ctx.fillStyle="rgba(0,0,0,.3)";ctx.beginPath();ctx.ellipse(-2,25,28-player.z*.018,6,0,0,Math.PI*2);ctx.fill();
- // tail
- ctx.fillStyle="#d9904e";ctx.beginPath();ctx.moveTo(-27,-4);ctx.lineTo(-38,-11);ctx.lineTo(-34,-1);ctx.lineTo(-40,4);ctx.lineTo(-27,6);ctx.closePath();ctx.fill();
- // legs
- ctx.fillStyle="#b96f38";ctx.beginPath();ctx.roundRect(-21+leg,7,9,17,4);ctx.roundRect(6-leg,7,9,17,4);ctx.fill();
- ctx.fillStyle="#fff0d5";ctx.beginPath();ctx.roundRect(-22+leg,18,11,7,3);ctx.roundRect(5-leg,18,11,7,3);ctx.fill();
- // body
- ctx.fillStyle="#c47b3c";ctx.beginPath();ctx.ellipse(-4,1,27,15,-.04,0,Math.PI*2);ctx.fill();
- ctx.fillStyle="#f4dfbd";ctx.beginPath();ctx.ellipse(1,7,17,8,.08,0,Math.PI*2);ctx.fill();
- // head and ears
- ctx.fillStyle="#d8904e";ctx.beginPath();ctx.ellipse(13,-12,20,17,-.1,0,Math.PI*2);ctx.fill();
- ctx.fillStyle="#b66b35";ctx.beginPath();ctx.moveTo(1,-20);ctx.lineTo(-1,-37);ctx.lineTo(12,-28);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(18,-24);ctx.lineTo(25,-40);ctx.lineTo(30,-23);ctx.closePath();ctx.fill();
- ctx.fillStyle="#f0b0a1";ctx.beginPath();ctx.moveTo(3,-25);ctx.lineTo(3,-32);ctx.lineTo(8,-28);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(22,-27);ctx.lineTo(25,-34);ctx.lineTo(27,-26);ctx.closePath();ctx.fill();
- // white muzzle and chest
- ctx.fillStyle="#fff0d7";ctx.beginPath();ctx.ellipse(24,-8,12,9,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(2,-2,8,11,-.2,0,Math.PI*2);ctx.fill();
- // eye, nose, smile
- ctx.fillStyle="#172037";ctx.beginPath();ctx.arc(19,-16,2.2,0,Math.PI*2);ctx.fill();ctx.fillStyle="#151724";ctx.beginPath();ctx.ellipse(34,-9,4,3,0,0,Math.PI*2);ctx.fill();
- ctx.strokeStyle="#75462d";ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(29,-3);ctx.quadraticCurveTo(31,1,34,-2);ctx.stroke();
- ctx.restore();
- if(player.attackT>=.02&&player.attackT<.41){
-  const phase=player.attackT<.22?0:1;const t=phase===0?player.attackT/.22:(player.attackT-.22)/.22;const x=sx+player.face*31,y=cy-8;ctx.save();ctx.globalAlpha=.8;ctx.lineWidth=4;ctx.strokeStyle=phase===0?"#fff2b2":"#6bf1ff";ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=18;ctx.beginPath();const start=player.face===1?-.98:Math.PI-.98,end=player.face===1?1.0:Math.PI+1.0;ctx.arc(x,y,54+t*19,start,end);ctx.stroke();ctx.restore();
+ if(player.powerBuff>0||player.partyT>0){
+  ctx.save();ctx.strokeStyle=player.partyT>0?"rgba(255,215,110,.9)":"rgba(255,215,110,.65)";ctx.lineWidth=2.5;ctx.setLineDash([5,5]);
+  ctx.beginPath();ctx.ellipse(0,4,48+Math.sin(elapsed*7)*3,40+Math.sin(elapsed*7)*2,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);ctx.restore()
  }
- if(player.parryT>0){ctx.save();ctx.strokeStyle="rgba(107,241,255,.95)";ctx.lineWidth=3;ctx.shadowColor=colors.cyan;ctx.shadowBlur=18;ctx.beginPath();ctx.arc(sx+player.face*22,cy-7,38,-1.05,.95);ctx.stroke();ctx.restore()}
- if(player.barkT>0){const r=(.5-player.barkT)/.5*305;ctx.save();ctx.strokeStyle="rgba(107,241,255,"+(1-r/360)+")";ctx.lineWidth=3;ctx.shadowColor=colors.cyan;ctx.shadowBlur=15;ctx.beginPath();ctx.arc(player.barkX-cam,FLOOR-(player.barkZ||0)-25,Math.max(3,r),0,Math.PI*2);ctx.stroke();ctx.restore()}
- if(player.partyT>0){ctx.fillStyle="#ffe29a";ctx.font="bold 14px sans-serif";ctx.textAlign="center";ctx.fillText("♪  ♫  ♪",sx,cy-46+Math.sin(elapsed*8)*4);const dance=Math.sin(elapsed*13)*.12;ctx.fillStyle="rgba(255,215,110,.2)";ctx.beginPath();ctx.ellipse(sx,foot-4,34,13,dance,0,Math.PI*2);ctx.fill()}
+ if(player.speedBuff>0){ctx.strokeStyle="rgba(107,241,255,.42)";ctx.lineWidth=3;for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-player.face*(38+i*8),-2+i*9);ctx.lineTo(-player.face*(60+i*10),-2+i*9);ctx.stroke()}}
+ ctx.scale(player.face,1);
+ const run=Math.abs(player.vx)>20&&player.partyT<=0,leg=Math.sin(player.anim)*(run?5:1.2);
+ // Ground shadow and stubby legs, matching Dori's hand-drawn silhouette.
+ ctx.fillStyle="rgba(0,0,0,.28)";ctx.beginPath();ctx.ellipse(0,35,39-player.z*.018,7,0,0,Math.PI*2);ctx.fill();
+ // Tiny upright tail with a dark, rounded outline.
+ ctx.lineCap="round";ctx.lineJoin="round";
+ ctx.beginPath();ctx.moveTo(-32,3);ctx.quadraticCurveTo(-48,-8,-45,-20);ctx.quadraticCurveTo(-43,-27,-35,-20);ctx.strokeStyle="#242321";ctx.lineWidth=10;ctx.stroke();
+ ctx.beginPath();ctx.moveTo(-32,3);ctx.quadraticCurveTo(-44,-7,-42,-17);ctx.strokeStyle="#ffe6a0";ctx.lineWidth=5;ctx.stroke();
+ // Far legs.
+ ctx.fillStyle="#ffe5a0";ctx.strokeStyle="#242321";ctx.lineWidth=6;
+ ctx.beginPath();ctx.roundRect(-29+leg,16,16,22,6);ctx.fill();ctx.stroke();
+ ctx.beginPath();ctx.roundRect(14-leg,16,16,22,6);ctx.fill();ctx.stroke();
+ // Long, low corgi body.
+ ctx.beginPath();ctx.moveTo(-35,5);ctx.quadraticCurveTo(-34,-12,-18,-16);ctx.lineTo(23,-13);ctx.quadraticCurveTo(43,-9,43,8);ctx.lineTo(38,23);ctx.quadraticCurveTo(14,28,-18,24);ctx.quadraticCurveTo(-35,22,-35,5);ctx.closePath();
+ ctx.fillStyle="#ffe6a3";ctx.fill();ctx.strokeStyle="#242321";ctx.lineWidth=6;ctx.stroke();
+ // White chest and broad white underside marking.
+ ctx.beginPath();ctx.moveTo(5,-12);ctx.quadraticCurveTo(20,-14,29,-4);ctx.lineTo(25,19);ctx.quadraticCurveTo(10,25,-2,20);ctx.quadraticCurveTo(10,3,5,-12);ctx.closePath();ctx.fillStyle="#fffdf8";ctx.fill();
+ // Big head with a distinct white blaze down the face.
+ ctx.beginPath();ctx.moveTo(-22,-18);ctx.quadraticCurveTo(-37,-24,-32,-42);ctx.lineTo(-25,-67);ctx.quadraticCurveTo(-22,-77,-14,-70);ctx.lineTo(-6,-48);ctx.quadraticCurveTo(1,-53,10,-49);ctx.lineTo(28,-68);ctx.quadraticCurveTo(37,-76,42,-63);ctx.quadraticCurveTo(48,-46,37,-28);ctx.lineTo(32,-12);ctx.quadraticCurveTo(12,-4,-9,-11);ctx.closePath();
+ ctx.fillStyle="#ffe6a3";ctx.fill();ctx.strokeStyle="#242321";ctx.lineWidth=7;ctx.stroke();
+ // White blaze / muzzle, inspired by the supplied drawing.
+ ctx.beginPath();ctx.moveTo(-5,-48);ctx.quadraticCurveTo(-2,-33,7,-27);ctx.quadraticCurveTo(7,-18,0,-10);ctx.quadraticCurveTo(-11,-9,-18,-18);ctx.quadraticCurveTo(-22,-29,-14,-39);ctx.closePath();ctx.fillStyle="#fffdf8";ctx.fill();
+ ctx.beginPath();ctx.ellipse(-14,-22,13,12,-.25,0,Math.PI*2);ctx.fillStyle="#fffdf8";ctx.fill();
+ // Eye, nose and a little smile: simple black strokes like Dori's drawing.
+ ctx.fillStyle="#242321";ctx.beginPath();ctx.arc(19,-38,3.5,0,Math.PI*2);ctx.fill();
+ ctx.beginPath();ctx.arc(-24,-45,3.2,0,Math.PI*2);ctx.fill();
+ ctx.beginPath();ctx.ellipse(-24,-25,5.2,4,0,0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle="#242321";ctx.lineWidth=3.8;ctx.beginPath();ctx.moveTo(-25,-21);ctx.quadraticCurveTo(-13,-13,-5,-22);ctx.stroke();
+ // Foreleg in front, with a white paw.
+ ctx.beginPath();ctx.roundRect(24+leg*.45,9,14,27,6);ctx.fillStyle="#ffe6a3";ctx.fill();ctx.strokeStyle="#242321";ctx.lineWidth=6;ctx.stroke();
+ ctx.beginPath();ctx.moveTo(25+leg*.45,29);ctx.lineTo(37+leg*.45,29);ctx.strokeStyle="#fffdf8";ctx.lineWidth=5;ctx.stroke();
+ ctx.restore();
+ // Keep attack and skill feedback separate from the character artwork.
+ if(player.attackT>=.02&&player.attackT<.41){
+  const phase=player.attackT<.22?0:1;const t=phase===0?player.attackT/.22:(player.attackT-.22)/.22;const x=sx+player.face*38,y=cy-14;
+  ctx.save();ctx.globalAlpha=.8;ctx.lineWidth=4;ctx.strokeStyle=phase===0?"#fff2b2":"#6bf1ff";ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=18;
+  ctx.beginPath();const start=player.face===1?-.98:Math.PI-.98,end=player.face===1?1.0:Math.PI+1.0;ctx.arc(x,y,59+t*19,start,end);ctx.stroke();ctx.restore()
+ }
+ if(player.parryT>0){ctx.save();ctx.strokeStyle="rgba(107,241,255,.95)";ctx.lineWidth=3;ctx.shadowColor=colors.cyan;ctx.shadowBlur=18;ctx.beginPath();ctx.arc(sx+player.face*27,cy-13,43,-1.05,.95);ctx.stroke();ctx.restore()}
+ if(player.barkT>0){const r=(.5-player.barkT)/.5*305;ctx.save();ctx.strokeStyle="rgba(107,241,255,"+(1-r/360)+")";ctx.lineWidth=3;ctx.shadowColor=colors.cyan;ctx.shadowBlur=15;ctx.beginPath();ctx.arc(player.barkX-cam,FLOOR-(player.barkZ||0)-35,Math.max(3,r),0,Math.PI*2);ctx.stroke();ctx.restore()}
+ if(player.partyT>0){ctx.fillStyle="#ffe29a";ctx.font="14px sans-serif";ctx.textAlign="center";ctx.fillText("♪  ♫  ♪",sx,cy-80+Math.sin(elapsed*8)*4);const dance=Math.sin(elapsed*13)*.12;ctx.fillStyle="rgba(255,215,110,.2)";ctx.beginPath();ctx.ellipse(sx,foot-4,40,13,dance,0,Math.PI*2);ctx.fill()}
  if(player.headbutt){ctx.save();ctx.strokeStyle="rgba(255,215,110,.75)";ctx.lineWidth=3;ctx.setLineDash([7,5]);ctx.beginPath();ctx.moveTo(sx,cy);ctx.lineTo(sx-player.headbutt.vx*.09,cy-player.headbutt.vz*.09);ctx.stroke();ctx.restore()}
 }
 function drawProjectile(b){
