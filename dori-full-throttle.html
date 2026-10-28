@@ -237,7 +237,7 @@ function hitTargets(x,dir,range,damage,hitSet,height,knock){
 function takeDamage(amount,sourceX){
  if(mode!=="playing"||player.invuln>0)return;
  let reduce=player.headbutt?.reduction||0;
- const actual=amount*(1-reduce);player.hp=Math.max(0,player.hp-actual);player.invuln=.72;player.combo=0;player.comboTimer=0;shake=Math.max(shake,7);emit(player.x,player.z+25,colors.red,12,190);player.vx+=(player.x>=sourceX?1:-1)*190;sfx("hurt");
+ const actual=amount*(1-reduce);player.hp=Math.max(0,player.hp-actual);player.invuln=.72;player.combo=0;player.comboTimer=0;shake=Math.max(shake,8.5);impactFX(player.x,player.z+25,"#ff526d","player-hit",1.12);emit(player.x,player.z+25,colors.red,18,260);player.vx+=(player.x>=sourceX?1:-1)*230;sfx("hurt");
  if(player.hp<=0){player.hp=0;finishGame(false)}
 }
 function showHint(text){const el=$("hintToast");el.textContent=text;el.classList.add("visible");hintTimer=1.25}
@@ -289,7 +289,7 @@ function reflectProjectiles(){
  projectiles.forEach(b=>{
   if(b.owner!=="enemy"||b.dead||player.parryHit.has(b.id))return;
   const dx=b.x-player.x;if(dx*player.face< -18||Math.abs(dx)>140||Math.abs(b.h-(player.z+27))>100)return;
-  player.parryHit.add(b.id);b.owner="player";b.vx=-b.vx*1.36;b.vh=-b.vh*1.1;b.damage=Math.max(18,b.damage*1.65)*(player.powerBuff>0?1.5:1);b.x=player.x+player.face*37;b.h=player.z+32;b.life=2.2;b.reflected=true;player.reflections++;player.score+=25;shake=Math.max(shake,2);emit(player.x+player.face*38,player.z+30,colors.cyan,15,245);sfx("parry");showHint("PERFECT REFLECT  +25");
+  player.parryHit.add(b.id);b.owner="player";b.vx=-b.vx*1.36;b.vh=-b.vh*1.1;b.damage=Math.max(18,b.damage*1.65)*(player.powerBuff>0?1.5:1);b.x=player.x+player.face*37;b.h=player.z+32;b.life=2.2;b.reflected=true;b.effect="reflected";b.color="#8cffff";player.reflections++;player.score+=25;shake=Math.max(shake,3.5);impactFX(player.x+player.face*38,player.z+30,colors.cyan,"parry",1.15);emit(player.x+player.face*38,player.z+30,colors.cyan,24,320);sfx("parry");showHint("PERFECT REFLECT  +25");
  });
 }
 function enemyFire(e){
@@ -365,7 +365,7 @@ function updateEnemy(e,dt){
   if(dist<620&&dist>45)e.x+=Math.sign(dx)*Math.min(115*dt,dist-43);
   dx=player.x-e.x;dist=Math.abs(dx);e.face=dx<0?-1:1;
   if(e.wind===0&&e.cooldown<=0&&dist<80&&Math.abs(player.z-e.z)<100){e.wind=.34;e.cooldown=1.25}
-  if(wasWind&&e.wind===0&&dist<90&&Math.abs(player.z-e.z)<100)takeDamage(11,e.x);
+  if(wasWind&&e.wind===0&&dist<90&&Math.abs(player.z-e.z)<100){impactFX(player.x,player.z+28,"#ff667f","enemy-slash",.85);impactFX(e.x,e.z+28,"#ffbd70","slash",.6);takeDamage(11,e.x)}
  }else{
   if(dist<245&&dist>125)e.x-=Math.sign(dx)*Math.min(70*dt,dist-125);
   else if(dist>680&&dist<1000)e.x+=Math.sign(dx)*75*dt;
@@ -398,7 +398,7 @@ function update(dt){
   const step=Math.min(dt,h.remaining);player.x+=h.vx*step;player.z=Math.max(0,player.z+h.vz*step);h.remaining-=step;
   const dir=Math.sign(h.vx)||player.face;
   hitTargets(player.x,dir,57,39*(player.powerBuff>0?1.5:1),h.hit,player.z,230);
-  projectiles.forEach(b=>{if(!b.dead&&Math.abs(b.x-player.x)<55&&Math.abs(b.h-(player.z+22))<80){if(b.owner==="enemy"){b.dead=true;emit(b.x,b.h,colors.cyan,4,100)}}});
+  projectiles.forEach(b=>{if(!b.dead&&Math.abs(b.x-player.x)<55&&Math.abs(b.h-(player.z+22))<80){if(b.owner==="enemy"){b.dead=true;impactFX(b.x,b.h,colors.cyan,"parry",.65);emit(b.x,b.h,colors.cyan,12,230)}}});
   if(h.remaining<=0){player.headbutt=null;player.vz=player.z>0?-80:0;player.vx=dir*110}
  }else if(player.dashT>0){
   const step=Math.min(dt,player.dashT);player.x+=player.face*DASH_SPEED*step;player.dashT-=step;
