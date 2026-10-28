@@ -411,25 +411,34 @@ function jump(){
 }
 function activate(name,tx,tz){
  if(mode!=="playing")return;
- const meta=SKILL_META[name],category=meta?.category,effect=meta?.effect||name,power=meta?.power||1;if(!category||!unlockedSlots.includes(category)||equippedSkills[category]!==name)return;
- if(player.partyT>0&&name!=="party")return;
- if(name!=="party"&&player.headbutt)return;
+ const meta=SKILL_META[name],category=meta?.category,effect=meta?.effect||name,power=meta?.power||1;
+ if(!category||!unlockedSlots.includes(category)||equippedSkills[category]!==name)return;
+ if(player.partyT>0&&effect!=="party")return;
+ if(effect!=="party"&&player.headbutt)return;
  if((cooldowns[name]||0)>0)return;
- if(name==="parry"){
-  player.parryT=.34;player.parryHit=new Set();cooldowns.parry=.78;impactFX(player.x+player.face*28,player.z+38,colors.cyan,"parry",.85);sfx("parry-ready");
- }else if(name==="dash"){
-  player.dashT=.22;player.dashHit=new Set();player.vx=0;cooldowns.dash=1.25;impactFX(player.x,player.z+24,colors.cyan,"dash-start",.65);sfx("dash");emit(player.x,player.z+20,colors.cyan,22,250);
- }else if(name==="bark"){
-  player.barkT=.5;player.barkHit=new Set();player.barkX=player.x;player.barkZ=player.z;player.speedBuff=3;cooldowns.bark=8.5;impactFX(player.x,player.z+30,colors.cyan,"bark",1);sfx("bark");
-  emit(player.x,player.z+30,colors.cyan,30,300);
- }else if(name==="party"){
-  player.partyT=5;player.powerBuff=0;cooldowns.party=17;showHint("ROCKEY PARTY! 춤을 완료하면 피해 +50%");sfx("party");
- }else if(name==="head"){
+ if(effect==="parry"){
+  player.parryT=.34*Math.min(1.8,power);player.parryHit=new Set();cooldowns[name]=Math.max(.55,1.05/power);
+  impactFX(player.x+player.face*28,player.z+38,colors.cyan,"parry",.85*Math.min(1.5,power));sfx("parry-ready");
+ }else if(effect==="dash"){
+  player.dashT=.22*Math.min(1.5,power);player.dashHit=new Set();player.dashPower=power;player.vx=0;cooldowns[name]=Math.max(.7,1.5/power);
+  impactFX(player.x,player.z+24,colors.cyan,"dash-start",.65);sfx("dash");emit(player.x,player.z+20,colors.cyan,22+Math.round(power*5),250*power);
+ }else if(effect==="bark"){
+  player.barkT=.5*Math.min(1.7,power);player.barkHit=new Set();player.barkX=player.x;player.barkZ=player.z;player.barkPower=power;player.speedBuff=3;cooldowns[name]=Math.max(3.5,9/power);
+  impactFX(player.x,player.z+30,colors.cyan,"bark",Math.min(1.8,power));sfx("bark");emit(player.x,player.z+30,colors.cyan,30+Math.round(power*8),300*power);
+ }else if(effect==="party"){
+  player.partyT=5*Math.min(1.5,power);player.powerBuff=0;cooldowns[name]=Math.max(6,18/power);
+  showHint(meta.name+"! 공격 강화");sfx("party");
+ }else if(effect==="speed"){
+  player.speedBuff=3*Math.min(1.8,power);cooldowns[name]=Math.max(4,12/power);
+  showHint(meta.name+"! 이동 속도 증가");impactFX(player.x,player.z+30,colors.green,"dash-start",1);sfx("dash");
+ }else if(effect==="jump"){
+  if(player.z>1){showHint("땅에 착지한 뒤 사용할 수 있어!");return;}
+  player.vz=700*Math.min(1.4,power);cooldowns[name]=Math.max(2,7/power);sfx("jump");emit(player.x,player.z+15,colors.cyan,18,220);showHint(meta.name+"!");
+ }else if(effect==="head"){
   if(tx==null){tx=player.x+player.face*520;tz=player.z}
-  headbuttTo(tx,tz);cooldowns.head=7.5;
+  headbuttTo(tx,tz);cooldowns[name]=Math.max(3.5,7.5/power);
  }
-}
-function headbuttTo(tx,tz){
+}function headbuttTo(tx,tz){
  const dx=clamp(tx,35,LEVEL_W-35)-player.x,dz=clamp(tz,0,260)-player.z;
  const dist=Math.hypot(dx,dz);if(dist<55){showHint("목표 지점을 조금 더 멀리 잡아봐!");return}
  player.headbutt={vx:dx/dist*HEAD_SPEED,vz:dz/dist*HEAD_SPEED,remaining:Math.min(1.05,dist/HEAD_SPEED),hit:new Set(),reduction:.7};
