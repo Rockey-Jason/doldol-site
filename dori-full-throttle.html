@@ -229,6 +229,7 @@ function sfx(type){
   "boss-sand-impact":{t:[[280,85,.18,"triangle",.05,0],[440,150,.14,"square",.026,.04]],n:[.14,320,.032]},
   "boss-steel-impact":{t:[[980,160,.09,"sawtooth",.056,0],[670,1420,.12,"triangle",.04,.04],[170,58,.19,"square",.04,.08]]},
   "enemy-melee-wind":{t:[[280,160,.12,"triangle",.025,0],[430,240,.09,"sawtooth",.018,.03]],n:[.09,600,.015]},
+  "enemy-melee-impact":{t:[[165,52,.16,"square",.048,0],[310,110,.1,"sawtooth",.025,.02]],n:[.095,400,.028]},
   "dash":{t:[[210,74,.12,"sawtooth",.045,0],[160,65,.17,"triangle",.028,.045]],n:[.18,650,.035]},
   "bark":{t:[[205,95,.09,"square",.055,0],[145,72,.105,"square",.05,.085],[310,170,.065,"triangle",.025,.14]]},
   "party":{t:[[520,780,.11,"sine",.04,0],[660,1040,.14,"sine",.04,.075],[880,1320,.19,"triangle",.032,.15],[1040,780,.22,"sine",.026,.235]]},
@@ -412,7 +413,7 @@ function updateEnemy(e,dt){
   }else if(name==="복돌이"){
    e.dashCd=(e.dashCd==null?.55:e.dashCd)-dt;
    if(e.dashCd<=0&&dist<1000){emit(e.x,30,"#ffbd70",24,260);if(e.phase%7<2.8){e.x=clamp(player.x+(Math.sign(e.x-player.x)||-1)*rand(190,310),90,LEVEL_W-90);e.specialKind="strike";e.wind=.24;e.dashCd=.9}else if(e.phase%7<5){e.x=clamp(player.x+(Math.sign(e.x-player.x)||-1)*rand(95,170),90,LEVEL_W-90);e.specialKind="cross";e.wind=.38;e.dashCd=1.25}else{e.x=clamp(player.x+(Math.sign(e.x-player.x)||-1)*rand(260,390),90,LEVEL_W-90);e.specialKind="volley";e.wind=.6;e.dashCd=1.5}e.face=player.x<e.x?-1:1;sfx("boss-steel-special");showHint("복돌이: 초고속 기습!");emit(e.x,30,"#ffbd70",18,220)}
-   if(e.wind>0){e.wind=Math.max(0,e.wind-dt);if(e.wind===0){const d=Math.abs(player.x-e.x);if(d<155&&Math.abs(player.z)<125)takeDamage(e.specialKind==="cross"?25:21,e.x);if(e.specialKind==="volley")for(let k=-2;k<=2;k++)projectiles.push({id:"quick"+Math.random(),x:e.x,h:38+Math.abs(k)*12,vx:(player.x>=e.x?1:-1)*420,vh:k*100,owner:"enemy",damage:13,r:7,life:2,color:"#ffbd70",effect:"slash",spin:rand(0,Math.PI*2),dead:false})}}
+   if(e.wind>0){e.wind=Math.max(0,e.wind-dt);if(e.wind===0){const d=Math.abs(player.x-e.x);if(d<155&&Math.abs(player.z)<125)takeDamage(e.specialKind==="cross"?25:21,e.x,"boss-steel-impact");if(e.specialKind==="volley")for(let k=-2;k<=2;k++)projectiles.push({id:"quick"+Math.random(),x:e.x,h:38+Math.abs(k)*12,vx:(player.x>=e.x?1:-1)*420,vh:k*100,owner:"enemy",damage:13,r:7,life:2,color:"#ffbd70",effect:"slash",spin:rand(0,Math.PI*2),dead:false})}}
    if(e.cooldown<=0&&dist<950){enemyFire(e);e.cooldown=2.9}
   }else if(name==="껌껌이"){
    e.hideCd=(e.hideCd==null?1.5:e.hideCd)-dt;
@@ -441,7 +442,7 @@ function updateEnemy(e,dt){
   if(dist<620&&dist>45)e.x+=Math.sign(dx)*Math.min(115*dt,dist-43);
   dx=player.x-e.x;dist=Math.abs(dx);e.face=dx<0?-1:1;
   if(e.wind===0&&e.cooldown<=0&&dist<80&&Math.abs(player.z-e.z)<100){e.wind=.34;e.cooldown=1.25;sfx("enemy-melee-wind")}
-  if(wasWind&&e.wind===0&&dist<90&&Math.abs(player.z-e.z)<100){impactFX(player.x,player.z+28,"#ff667f","enemy-slash",.85);impactFX(e.x,e.z+28,"#ffbd70","slash",.6);takeDamage(11,e.x)}
+  if(wasWind&&e.wind===0&&dist<90&&Math.abs(player.z-e.z)<100){impactFX(player.x,player.z+28,"#ff667f","enemy-slash",.85);impactFX(e.x,e.z+28,"#ffbd70","slash",.6);takeDamage(11,e.x,"enemy-melee-impact")}
  }else{
   if(dist<245&&dist>125)e.x-=Math.sign(dx)*Math.min(70*dt,dist-125);
   else if(dist>680&&dist<1000)e.x+=Math.sign(dx)*75*dt;
