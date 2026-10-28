@@ -181,8 +181,73 @@ function audioReady(){if(!soundOn)return;try{const AC=window.AudioContext||windo
 function sfx(type){
  if(!soundOn)return;audioReady();if(!audioCtx)return;
  const now=audioCtx.currentTime;
- const cfg={hit:[180,75,.08,"square"],parry:[510,980,.15,"sine"],dash:[160,90,.1,"sawtooth"],bark:[145,420,.25,"triangle"],party:[440,660,.12,"sine"],core:[300,720,.22,"triangle"],hurt:[115,65,.18,"sawtooth"],break:[220,820,.24,"square"],win:[520,880,.5,"sine"],jump:[220,310,.08,"sine"]}[type]||[260,420,.09,"sine"];
- try{const osc=audioCtx.createOscillator(),gain=audioCtx.createGain();osc.type=cfg[3];osc.frequency.setValueAtTime(cfg[0],now);osc.frequency.exponentialRampToValueAtTime(Math.max(25,cfg[1]),now+cfg[2]);gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.075,now+.012);gain.gain.exponentialRampToValueAtTime(.0001,now+cfg[2]);osc.connect(gain);gain.connect(audioCtx.destination);osc.start(now);osc.stop(now+cfg[2]+.02)}catch(e){}
+ const playTone=(from,to,dur,wave="sine",vol=.05,delay=0)=>{
+  try{const osc=audioCtx.createOscillator(),gain=audioCtx.createGain(),start=now+delay,end=start+dur;osc.type=wave;osc.frequency.setValueAtTime(Math.max(20,from),start);osc.frequency.exponentialRampToValueAtTime(Math.max(20,to),end);gain.gain.setValueAtTime(.0001,start);gain.gain.exponentialRampToValueAtTime(vol,start+.008);gain.gain.exponentialRampToValueAtTime(.0001,end);osc.connect(gain);gain.connect(audioCtx.destination);osc.start(start);osc.stop(end+.025)}catch(e){}
+ };
+ const playNoise=(dur,center,vol=.022,delay=0)=>{
+  try{const count=Math.max(1,Math.floor(audioCtx.sampleRate*dur)),buffer=audioCtx.createBuffer(1,count,audioCtx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<count;i++)data[i]=(Math.random()*2-1)*(1-i/count);const src=audioCtx.createBufferSource(),filter=audioCtx.createBiquadFilter(),gain=audioCtx.createGain(),start=now+delay,end=start+dur;src.buffer=buffer;filter.type="bandpass";filter.frequency.setValueAtTime(center,start);filter.Q.value=.72;gain.gain.setValueAtTime(Math.max(.0001,vol),start);gain.gain.exponentialRampToValueAtTime(.0001,end);src.connect(filter);filter.connect(gain);gain.connect(audioCtx.destination);src.start(start);src.stop(end+.015)}catch(e){}
+ };
+ const profiles={
+  "attack1":{t:[[820,245,.115,"sawtooth",.042,0],[1320,520,.105,"triangle",.028,.014]],n:[.105,1600,.021]},
+  "attack2":{t:[[520,105,.19,"sawtooth",.055,0],[980,280,.15,"square",.025,.018],[1450,620,.12,"sine",.022,.04]],n:[.16,820,.028]},
+  "enemy-hit":{t:[[210,88,.095,"square",.042,0],[620,190,.07,"triangle",.025,.008]],n:[.055,950,.02]},
+  "boss-hit-ember":{t:[[145,62,.19,"sawtooth",.052,0],[430,170,.13,"square",.035,.012]],n:[.12,520,.026]},
+  "boss-hit-ice":{t:[[920,540,.18,"sine",.043,0],[1480,820,.2,"triangle",.027,.022],[320,210,.1,"sine",.022,.018]]},
+  "boss-hit-sand":{t:[[270,105,.15,"triangle",.045,0],[650,250,.11,"square",.025,.018]],n:[.12,430,.027]},
+  "boss-hit-steel":{t:[[840,1450,.08,"triangle",.047,0],[410,135,.16,"square",.042,.018],[1160,720,.1,"sine",.027,.045]]},
+  "boss-hit-water":{t:[[410,650,.13,"sine",.045,0],[650,210,.19,"triangle",.035,.065]],n:[.12,780,.019]},
+  "boss-hit-arcane":{t:[[550,980,.18,"sine",.043,0],[820,1240,.2,"triangle",.03,.035],[340,170,.19,"sine",.033,.045]]},
+  "impact-attack1":{t:[[760,220,.11,"sawtooth",.035,0],[180,85,.09,"square",.028,.012]],n:[.075,1500,.024]},
+  "impact-attack2":{t:[[410,95,.16,"sawtooth",.045,0],[1250,480,.12,"triangle",.03,.018],[170,65,.18,"square",.033,.022]],n:[.12,900,.028]},
+  "impact-dash-impact":{t:[[320,78,.12,"sawtooth",.05,0],[880,310,.11,"triangle",.025,.016]],n:[.12,520,.032]},
+  "impact-bark-impact":{t:[[185,72,.14,"square",.045,0],[520,230,.1,"triangle",.032,.02]],n:[.1,700,.023]},
+  "impact-headbutt-impact":{t:[[98,42,.22,"sawtooth",.065,0],[170,65,.17,"square",.042,.018]],n:[.15,300,.035]},
+  "impact-ember":{t:[[190,72,.14,"sawtooth",.046,0],[680,260,.1,"triangle",.024,.02]],n:[.1,500,.028]},
+  "impact-fire":{t:[[230,85,.16,"sawtooth",.048,0],[820,330,.1,"triangle",.026,.02]],n:[.12,720,.03]},
+  "impact-ice":{t:[[1250,690,.19,"sine",.04,0],[760,430,.13,"triangle",.026,.025]]},
+  "impact-freeze":{t:[[1420,790,.2,"sine",.04,0],[680,300,.14,"triangle",.03,.03]]},
+  "impact-sand":{t:[[270,110,.15,"triangle",.044,0],[590,230,.09,"square",.022,.012]],n:[.12,420,.026]},
+  "impact-slash":{t:[[920,360,.095,"sawtooth",.04,0],[1530,740,.08,"triangle",.022,.014]],n:[.07,1300,.025]},
+  "impact-water":{t:[[370,680,.13,"sine",.04,0],[640,230,.18,"triangle",.032,.06]],n:[.09,800,.02]},
+  "impact-arcane":{t:[[650,1100,.16,"sine",.04,0],[950,1380,.19,"triangle",.027,.025],[330,180,.16,"sine",.025,.045]]},
+  "impact-dark":{t:[[280,65,.2,"sawtooth",.039,0],[470,190,.15,"triangle",.025,.022]],n:[.14,280,.028]},
+  "impact-clone":{t:[[720,1280,.1,"sine",.035,0],[1180,570,.13,"triangle",.026,.055]]},
+  "impact-laser":{t:[[1450,360,.15,"sawtooth",.041,0],[980,420,.1,"square",.02,.02]]},
+  "impact-bolt":{t:[[390,140,.1,"square",.04,0],[730,260,.08,"triangle",.022,.01]]},
+  "impact-reflected":{t:[[1150,1750,.12,"sine",.055,0],[780,1460,.18,"triangle",.035,.015],[190,85,.1,"square",.032,.02]]},
+  "impact-headbutt":{t:[[110,38,.25,"sawtooth",.065,0],[190,65,.16,"square",.04,.018]],n:[.16,310,.042]},
+  "parry-ready":{t:[[460,960,.16,"sine",.05,0],[780,1320,.19,"triangle",.035,.035]]},
+  "reflect-perfect":{t:[[980,1780,.12,"sine",.06,0],[1420,860,.18,"triangle",.042,.028],[210,90,.1,"square",.028,.012]],n:[.065,1900,.018]},
+  "dash":{t:[[210,74,.12,"sawtooth",.045,0],[160,65,.17,"triangle",.028,.045]],n:[.18,650,.035]},
+  "bark":{t:[[205,95,.09,"square",.055,0],[145,72,.105,"square",.05,.085],[310,170,.065,"triangle",.025,.14]]},
+  "party":{t:[[520,780,.11,"sine",.04,0],[660,1040,.14,"sine",.04,.075],[880,1320,.19,"triangle",.032,.15],[1040,780,.22,"sine",.026,.235]]},
+  "headbutt":{t:[[155,48,.24,"sawtooth",.06,0],[290,95,.16,"square",.038,.02]],n:[.18,340,.04]},
+  "jump":{t:[[235,420,.09,"sine",.034,0],[340,560,.09,"triangle",.021,.024]]},
+  "parry":{t:[[510,980,.15,"sine",.045,0],[840,1180,.13,"triangle",.025,.04]]},
+  "enemy-shot":{t:[[330,145,.115,"triangle",.034,0],[620,330,.075,"square",.017,.014]]},
+  "boss-ember-shot":{t:[[165,72,.18,"sawtooth",.045,0],[310,105,.14,"square",.027,.018]],n:[.12,470,.027]},
+  "boss-ice-shot":{t:[[960,680,.18,"sine",.04,0],[1420,1010,.21,"triangle",.026,.035]]},
+  "boss-sand-shot":{t:[[280,110,.15,"triangle",.042,0],[560,245,.12,"square",.023,.025]],n:[.12,420,.023]},
+  "boss-steel-shot":{t:[[780,1420,.08,"triangle",.042,0],[340,155,.14,"square",.032,.025]]},
+  "boss-water-shot":{t:[[390,650,.14,"sine",.04,0],[620,235,.18,"triangle",.03,.07]],n:[.1,750,.018]},
+  "boss-arcane-shot":{t:[[500,970,.17,"sine",.04,0],[760,1200,.21,"triangle",.029,.035],[310,160,.18,"sine",.025,.055]]},
+  "boss-ember-special":{t:[[115,48,.34,"sawtooth",.06,0],[230,80,.28,"square",.035,.055]],n:[.25,330,.04]},
+  "boss-ice-special":{t:[[1100,440,.26,"sine",.05,0],[1480,950,.22,"triangle",.035,.05],[380,180,.18,"sine",.025,.12]]},
+  "boss-sand-special":{t:[[360,95,.23,"triangle",.05,0],[510,180,.19,"square",.03,.04]],n:[.2,320,.036]},
+  "boss-steel-special":{t:[[980,170,.1,"sawtooth",.052,0],[640,1250,.14,"triangle",.04,.08],[180,72,.16,"square",.035,.14]]},
+  "boss-water-dive":{t:[[420,145,.3,"sine",.045,0],[620,280,.22,"triangle",.028,.08]],n:[.24,450,.022]},
+  "boss-water-ambush":{t:[[180,620,.12,"sawtooth",.05,0],[680,240,.18,"sine",.035,.065]],n:[.15,1000,.025]},
+  "boss-water-impact":{t:[[170,520,.13,"sine",.045,0],[550,190,.19,"triangle",.035,.06]],n:[.1,700,.025]},
+  "som-laser":{t:[[880,1560,.18,"sawtooth",.05,0],[1560,920,.15,"sine",.035,.04],[420,220,.17,"triangle",.027,.055]]},
+  "som-fire":{t:[[190,70,.2,"sawtooth",.05,0],[300,110,.2,"square",.03,.04]],n:[.16,520,.032]},
+  "som-dark":{t:[[310,52,.29,"sawtooth",.048,0],[650,240,.2,"triangle",.027,.035]],n:[.22,260,.032]},
+  "som-clone":{t:[[740,1320,.15,"sine",.042,0],[980,560,.17,"triangle",.032,.05],[350,170,.18,"sine",.024,.1]]},
+  "core":{t:[[300,720,.22,"triangle",.04,0],[660,1120,.14,"sine",.026,.06]]},
+  "hurt":{t:[[115,55,.18,"sawtooth",.055,0],[175,70,.11,"square",.028,.024]]},
+  "break":{t:[[220,820,.24,"square",.05,0],[550,1220,.16,"triangle",.03,.06]],n:[.1,750,.026]},
+  "win":{t:[[520,880,.24,"sine",.042,0],[660,1050,.32,"triangle",.035,.12],[880,1320,.42,"sine",.03,.24]]}
+ };
+ const p=profiles[type]||profiles["enemy-hit"];p.t.forEach(v=>playTone(...v));if(p.n)playNoise(...p.n);
 }
 function newPlayer(){return{x:145,z:0,vx:0,vz:0,face:1,hp:100,maxHp:100,invuln:0,attackT:-1,attackDone:[false,false],attackSets:[new Set(),new Set()],parryT:0,parryHit:new Set(),dashT:0,dashHit:new Set(),barkT:0,barkHit:new Set(),speedBuff:0,partyT:0,powerBuff:0,headbutt:null,combo:0,comboTimer:0,score:0,kills:0,reflections:0,damageDone:0,hazardCd:0,anim:0,shake:0}}
 const STAGES=[
