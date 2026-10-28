@@ -335,7 +335,7 @@ function updateEnemy(e,dt){
   }else if(name==="솜솜이"){
    // Final boss remains active while five crystals shield it from damage.
    e.x+=Math.sin(e.phase*1.35)*32*dt;e.face=player.x<e.x?-1:1;
-   if(coreCount()>0){e.specialCd=Math.max(0,e.specialCd);if(e.specialCd<=0){showHint("솜솜이의 봉인 수정 "+coreCount()+"개 남음!");e.specialCd=2.8}}
+   if(coreCount()>0){e.sealHintCd=(e.sealHintCd==null?0:e.sealHintCd)-dt;if(e.sealHintCd<=0){showHint("솜솜이의 봉인 수정 "+coreCount()+"개 남음!");e.sealHintCd=3.2}}
    if(e.specialCd<=0&&dist<1300){
     const cycle=Math.floor(e.phase/2.3)%4;
     if(cycle===0){showHint("솜솜이: 추적 레이저!");for(let k=-1;k<=1;k++)projectiles.push({id:"laser"+Math.random(),x:e.x,h:28+k*24,vx:(player.x>=e.x?1:-1)*650,vh:k*28,owner:"enemy",damage:22,r:12,life:2.2,color:"#ff4bdb",effect:"laser",dead:false})}
