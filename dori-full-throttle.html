@@ -218,6 +218,17 @@ function sfx(type){
   "impact-headbutt":{t:[[110,38,.25,"sawtooth",.065,0],[190,65,.16,"square",.04,.018]],n:[.16,310,.042]},
   "parry-ready":{t:[[460,960,.16,"sine",.05,0],[780,1320,.19,"triangle",.035,.035]]},
   "reflect-perfect":{t:[[980,1780,.12,"sine",.06,0],[1420,860,.18,"triangle",.042,.028],[210,90,.1,"square",.028,.012]],n:[.065,1900,.018]},
+  "reflect-ember":{t:[[470,1350,.11,"sawtooth",.045,0],[1080,1620,.16,"sine",.04,.025],[190,75,.11,"square",.026,.01]],n:[.06,1450,.022]},
+  "reflect-ice":{t:[[1320,1940,.16,"sine",.05,0],[1820,1230,.22,"triangle",.037,.025],[760,1120,.13,"sine",.024,.07]]},
+  "reflect-sand":{t:[[590,1150,.13,"triangle",.045,0],[860,1320,.15,"square",.025,.025],[240,115,.12,"triangle",.027,.035]],n:[.08,750,.02]},
+  "reflect-steel":{t:[[1240,1960,.065,"triangle",.055,0],[760,280,.12,"square",.035,.018],[1680,920,.12,"sine",.026,.045]],n:[.06,1800,.024]},
+  "reflect-water":{t:[[580,1260,.13,"sine",.048,0],[1280,740,.19,"triangle",.032,.04],[330,560,.13,"sine",.022,.09]]},
+  "reflect-arcane":{t:[[720,1420,.17,"sine",.05,0],[1160,1740,.2,"triangle",.036,.04],[510,230,.2,"sine",.028,.08]]},
+  "boss-ember-impact":{t:[[90,42,.25,"sawtooth",.062,0],[190,60,.18,"square",.04,.025]],n:[.17,300,.04]},
+  "boss-ice-impact":{t:[[1180,530,.2,"sine",.044,0],[720,280,.16,"triangle",.03,.045]]},
+  "boss-sand-impact":{t:[[280,85,.18,"triangle",.05,0],[440,150,.14,"square",.026,.04]],n:[.14,320,.032]},
+  "boss-steel-impact":{t:[[980,160,.09,"sawtooth",.056,0],[670,1420,.12,"triangle",.04,.04],[170,58,.19,"square",.04,.08]]},
+  "enemy-melee-wind":{t:[[280,160,.12,"triangle",.025,0],[430,240,.09,"sawtooth",.018,.03]],n:[.09,600,.015]},
   "dash":{t:[[210,74,.12,"sawtooth",.045,0],[160,65,.17,"triangle",.028,.045]],n:[.18,650,.035]},
   "bark":{t:[[205,95,.09,"square",.055,0],[145,72,.105,"square",.05,.085],[310,170,.065,"triangle",.025,.14]]},
   "party":{t:[[520,780,.11,"sine",.04,0],[660,1040,.14,"sine",.04,.075],[880,1320,.19,"triangle",.032,.15],[1040,780,.22,"sine",.026,.235]]},
@@ -371,7 +382,7 @@ function enemyFire(e){
   const vx=(dx>=0?1:-1)*Math.sqrt(Math.max(100,speed*speed*.9));
   projectiles.push({id:"b"+Math.random(),x:e.x+(dx<0?-17:17),h:(e.z||38)+22,vx:vx,vh:clamp(dh/distance*speed,-170,170),owner:"enemy",damage:9,r:5.5,life:3,color:shot.color,effect:shot.effect,spin:rand(0,Math.PI*2),dead:false});
  }
- impactFX(e.x,e.z+30,shot.color,e.boss?"muzzle-boss":"muzzle",e.boss?1:.45);
+ impactFX(e.x,e.z+30,shot.color,e.boss?"muzzle-boss":"muzzle",e.boss?1:.45);sfx(e.boss?({"식빵이":"boss-ember-shot","윈터":"boss-ice-shot","모래":"boss-sand-shot","복돌이":"boss-steel-shot","껌껌이":"boss-water-shot","솜솜이":"boss-arcane-shot"}[e.name]||"enemy-shot"):"enemy-shot");
 }
 function updateEnemy(e,dt){
  if(e.dead)return;
@@ -385,29 +396,29 @@ function updateEnemy(e,dt){
   const name=e.name||"식빵이";
   if(name==="식빵이"){
    e.x+=Math.sign(player.x-e.x)*Math.min(48*dt,Math.max(0,dist-76));
-   if(e.specialCd<=0&&dist<650){e.wind=.72;e.specialCd=3.1;e.specialKind="pounce";showHint("식빵이: 느릿한 끈질긴 돌진!")}
-   if(e.wind>0){e.wind=Math.max(0,e.wind-dt);if(e.wind===0&&Math.abs(player.x-e.x)<150&&Math.abs(player.z)<115)takeDamage(15,e.x)}
+   if(e.specialCd<=0&&dist<650){e.wind=.72;e.specialCd=3.1;e.specialKind="pounce";sfx("boss-ember-special");showHint("식빵이: 느릿한 끈질긴 돌진!")}
+   if(e.wind>0){e.wind=Math.max(0,e.wind-dt);if(e.wind===0&&Math.abs(player.x-e.x)<150&&Math.abs(player.z)<115)takeDamage(15,e.x,"boss-ember-impact")}
    if(e.cooldown<=0&&dist<500){enemyFire(e);e.cooldown=2.6}
   }else if(name==="윈터"){
    e.x+=Math.sign(player.x-e.x)*Math.min(24*dt,Math.max(0,dist-205));
-   if(e.specialCd<=0&&dist<760){e.wind=.85;e.specialCd=2.7;showHint("윈터: 서리 폭풍! 회피하거나 반사해!");emit(e.x,32,"#8deaff",28,260)}
+   if(e.specialCd<=0&&dist<760){e.wind=.85;e.specialCd=2.7;sfx("boss-ice-special");showHint("윈터: 서리 폭풍! 회피하거나 반사해!");emit(e.x,32,"#8deaff",28,260)}
    if(e.wind>0){e.wind=Math.max(0,e.wind-dt);if(e.wind===0){for(let k=-1;k<=1;k++)projectiles.push({id:"frost"+Math.random(),x:e.x+k*24,h:35+Math.abs(k)*27,vx:(player.x>=e.x?1:-1)*(250+Math.abs(k)*65),vh:k*105,owner:"enemy",damage:19,r:11,life:2.2,color:"#9deeff",effect:"freeze",dead:false})}}
    if(e.cooldown<=0&&dist<900){enemyFire(e);e.cooldown=2.2}
   }else if(name==="모래"){
    e.x+=Math.sin(e.phase*1.65)*38*dt;
-   if(e.specialCd<=0&&dist<800){e.specialCd=3.25;showHint("모래: 분신과 속박의 미궁!");emit(player.x,22,"#d9b5ff",35,300);player.rootedT=Math.max(player.rootedT||0,1.05);for(let k=-1;k<=1;k++)projectiles.push({id:"sand"+Math.random(),x:e.x+k*65,h:42+Math.abs(k)*27,vx:(player.x>=e.x?1:-1)*(280+Math.abs(k)*65),vh:k*125,owner:"enemy",damage:14,r:9,life:2.6,color:"#d7a8ff",effect:"sand",dead:false});e.cloneT=.85}
+   if(e.specialCd<=0&&dist<800){e.specialCd=3.25;sfx("boss-sand-special");showHint("모래: 분신과 속박의 미궁!");emit(player.x,22,"#d9b5ff",35,300);player.rootedT=Math.max(player.rootedT||0,1.05);for(let k=-1;k<=1;k++)projectiles.push({id:"sand"+Math.random(),x:e.x+k*65,h:42+Math.abs(k)*27,vx:(player.x>=e.x?1:-1)*(280+Math.abs(k)*65),vh:k*125,owner:"enemy",damage:14,r:9,life:2.6,color:"#d7a8ff",effect:"sand",dead:false});e.cloneT=.85}
    if(e.cloneT>0){e.cloneT-=dt;if(Math.random()<dt*17)emit(e.x+rand(-100,100),rand(15,100),"#d7a8ff",2,70)}
    if(e.cooldown<=0&&dist<820){enemyFire(e);e.cooldown=1.45}
   }else if(name==="복돌이"){
    e.dashCd=(e.dashCd==null?.55:e.dashCd)-dt;
-   if(e.dashCd<=0&&dist<1000){emit(e.x,30,"#ffbd70",24,260);if(e.phase%7<2.8){e.x=clamp(player.x+(Math.sign(e.x-player.x)||-1)*rand(190,310),90,LEVEL_W-90);e.specialKind="strike";e.wind=.24;e.dashCd=.9}else if(e.phase%7<5){e.x=clamp(player.x+(Math.sign(e.x-player.x)||-1)*rand(95,170),90,LEVEL_W-90);e.specialKind="cross";e.wind=.38;e.dashCd=1.25}else{e.x=clamp(player.x+(Math.sign(e.x-player.x)||-1)*rand(260,390),90,LEVEL_W-90);e.specialKind="volley";e.wind=.6;e.dashCd=1.5}e.face=player.x<e.x?-1:1;showHint("복돌이: 초고속 기습!");emit(e.x,30,"#ffbd70",18,220)}
+   if(e.dashCd<=0&&dist<1000){emit(e.x,30,"#ffbd70",24,260);if(e.phase%7<2.8){e.x=clamp(player.x+(Math.sign(e.x-player.x)||-1)*rand(190,310),90,LEVEL_W-90);e.specialKind="strike";e.wind=.24;e.dashCd=.9}else if(e.phase%7<5){e.x=clamp(player.x+(Math.sign(e.x-player.x)||-1)*rand(95,170),90,LEVEL_W-90);e.specialKind="cross";e.wind=.38;e.dashCd=1.25}else{e.x=clamp(player.x+(Math.sign(e.x-player.x)||-1)*rand(260,390),90,LEVEL_W-90);e.specialKind="volley";e.wind=.6;e.dashCd=1.5}e.face=player.x<e.x?-1:1;sfx("boss-steel-special");showHint("복돌이: 초고속 기습!");emit(e.x,30,"#ffbd70",18,220)}
    if(e.wind>0){e.wind=Math.max(0,e.wind-dt);if(e.wind===0){const d=Math.abs(player.x-e.x);if(d<155&&Math.abs(player.z)<125)takeDamage(e.specialKind==="cross"?25:21,e.x);if(e.specialKind==="volley")for(let k=-2;k<=2;k++)projectiles.push({id:"quick"+Math.random(),x:e.x,h:38+Math.abs(k)*12,vx:(player.x>=e.x?1:-1)*420,vh:k*100,owner:"enemy",damage:13,r:7,life:2,color:"#ffbd70",effect:"slash",spin:rand(0,Math.PI*2),dead:false})}}
    if(e.cooldown<=0&&dist<950){enemyFire(e);e.cooldown=2.9}
   }else if(name==="껌껌이"){
    e.hideCd=(e.hideCd==null?1.5:e.hideCd)-dt;
-   if((e.hiddenT||0)>0){e.hiddenT=Math.max(0,e.hiddenT-dt);e.x=clamp(e.ambushX||player.x+220,70,LEVEL_W-70);if(e.hiddenT===0){e.x=clamp(player.x+(Math.random()<.5?-1:1)*rand(85,145),70,LEVEL_W-70);e.face=player.x<e.x?-1:1;emit(e.x,20,"#5bdde8",36,320);showHint("껌껌이 수면 기습!");e.wind=.22;e.ambushStrike=true}}
-   else if(e.hideCd<=0&&dist<900){e.hiddenT=1.05;e.hideCd=2.8;e.ambushX=clamp(player.x+rand(-230,230),70,LEVEL_W-70);emit(e.x,18,"#5bdde8",25,210);showHint("껌껌이가 물속으로 숨었어!")}
-   if(e.ambushStrike&&e.wind>0){e.wind=Math.max(0,e.wind-dt);if(e.wind===0){if(Math.abs(player.x-e.x)<180&&Math.abs(player.z)<140)takeDamage(29,e.x);e.ambushStrike=false;for(let k=-1;k<=1;k++)projectiles.push({id:"water"+Math.random(),x:e.x,h:28+Math.abs(k)*18,vx:(player.x>=e.x?1:-1)*(310+Math.abs(k)*45),vh:k*115,owner:"enemy",damage:14,r:9,life:2.1,color:"#5bdde8",effect:"water",spin:rand(0,Math.PI*2),dead:false})}}
+   if((e.hiddenT||0)>0){e.hiddenT=Math.max(0,e.hiddenT-dt);e.x=clamp(e.ambushX||player.x+220,70,LEVEL_W-70);if(e.hiddenT===0){e.x=clamp(player.x+(Math.random()<.5?-1:1)*rand(85,145),70,LEVEL_W-70);e.face=player.x<e.x?-1:1;emit(e.x,20,"#5bdde8",36,320);sfx("boss-water-ambush");showHint("껌껌이 수면 기습!");e.wind=.22;e.ambushStrike=true}}
+   else if(e.hideCd<=0&&dist<900){e.hiddenT=1.05;e.hideCd=2.8;e.ambushX=clamp(player.x+rand(-230,230),70,LEVEL_W-70);emit(e.x,18,"#5bdde8",25,210);sfx("boss-water-dive");showHint("껌껌이가 물속으로 숨었어!")}
+   if(e.ambushStrike&&e.wind>0){e.wind=Math.max(0,e.wind-dt);if(e.wind===0){if(Math.abs(player.x-e.x)<180&&Math.abs(player.z)<140)takeDamage(29,e.x,"boss-water-impact");e.ambushStrike=false;for(let k=-1;k<=1;k++)projectiles.push({id:"water"+Math.random(),x:e.x,h:28+Math.abs(k)*18,vx:(player.x>=e.x?1:-1)*(310+Math.abs(k)*45),vh:k*115,owner:"enemy",damage:14,r:9,life:2.1,color:"#5bdde8",effect:"water",spin:rand(0,Math.PI*2),dead:false})}}
    if(!(e.hiddenT>0)&&e.cooldown<=0&&dist<780){enemyFire(e);e.cooldown=2.35}
   }else if(name==="솜솜이"){
    // Final boss remains active while five crystals shield it from damage.
@@ -415,10 +426,10 @@ function updateEnemy(e,dt){
    if(coreCount()>0){e.sealHintCd=(e.sealHintCd==null?0:e.sealHintCd)-dt;if(e.sealHintCd<=0){showHint("솜솜이의 봉인 수정 "+coreCount()+"개 남음!");e.sealHintCd=3.2}}
    if(e.specialCd<=0&&dist<1300){
     const cycle=Math.floor(e.phase/2.3)%4;
-    if(cycle===0){showHint("솜솜이: 추적 레이저!");for(let k=-1;k<=1;k++)projectiles.push({id:"laser"+Math.random(),x:e.x,h:28+k*24,vx:(player.x>=e.x?1:-1)*650,vh:k*28,owner:"enemy",damage:22,r:12,life:2.2,color:"#ff4bdb",effect:"laser",dead:false})}
-    else if(cycle===1){showHint("솜솜이: 화염구 연사!");for(let k=-2;k<=2;k++)projectiles.push({id:"fire"+Math.random(),x:e.x,h:42+Math.abs(k)*18,vx:(player.x>=e.x?1:-1)*(340+Math.abs(k)*35),vh:k*115,owner:"enemy",damage:19,r:12,life:2.7,color:"#ff773e",effect:"fire",dead:false})}
-    else if(cycle===2){showHint("솜솜이: 어둠의 장막!");for(let k=-3;k<=3;k++)projectiles.push({id:"dark"+Math.random(),x:e.x,h:50,vx:(player.x>=e.x?1:-1)*300,vh:k*78,owner:"enemy",damage:16,r:10,life:2.5,color:"#9b70ff",effect:"dark",dead:false})}
-    else{showHint("솜솜이: 분신 마법!");for(let k=-1;k<=1;k++)projectiles.push({id:"clone"+Math.random(),x:e.x+k*55,h:40+Math.abs(k)*32,vx:(player.x>=e.x?1:-1)*(440-Math.abs(k)*45),vh:k*155,owner:"enemy",damage:18,r:11,life:2.3,color:"#f5a8ff",effect:"clone",dead:false});emit(e.x,35,"#f5a8ff",42,360)}
+    if(cycle===0){sfx("som-laser");showHint("솜솜이: 추적 레이저!");for(let k=-1;k<=1;k++)projectiles.push({id:"laser"+Math.random(),x:e.x,h:28+k*24,vx:(player.x>=e.x?1:-1)*650,vh:k*28,owner:"enemy",damage:22,r:12,life:2.2,color:"#ff4bdb",effect:"laser",dead:false})}
+    else if(cycle===1){sfx("som-fire");showHint("솜솜이: 화염구 연사!");for(let k=-2;k<=2;k++)projectiles.push({id:"fire"+Math.random(),x:e.x,h:42+Math.abs(k)*18,vx:(player.x>=e.x?1:-1)*(340+Math.abs(k)*35),vh:k*115,owner:"enemy",damage:19,r:12,life:2.7,color:"#ff773e",effect:"fire",dead:false})}
+    else if(cycle===2){sfx("som-dark");showHint("솜솜이: 어둠의 장막!");for(let k=-3;k<=3;k++)projectiles.push({id:"dark"+Math.random(),x:e.x,h:50,vx:(player.x>=e.x?1:-1)*300,vh:k*78,owner:"enemy",damage:16,r:10,life:2.5,color:"#9b70ff",effect:"dark",dead:false})}
+    else{sfx("som-clone");showHint("솜솜이: 분신 마법!");for(let k=-1;k<=1;k++)projectiles.push({id:"clone"+Math.random(),x:e.x+k*55,h:40+Math.abs(k)*32,vx:(player.x>=e.x?1:-1)*(440-Math.abs(k)*45),vh:k*155,owner:"enemy",damage:18,r:11,life:2.3,color:"#f5a8ff",effect:"clone",dead:false});emit(e.x,35,"#f5a8ff",42,360)}
     e.specialCd=2.3;
    }
    if(e.cooldown<=0&&dist<1250){enemyFire(e);e.cooldown=1.25}
@@ -429,7 +440,7 @@ function updateEnemy(e,dt){
  if(e.type==="melee"){
   if(dist<620&&dist>45)e.x+=Math.sign(dx)*Math.min(115*dt,dist-43);
   dx=player.x-e.x;dist=Math.abs(dx);e.face=dx<0?-1:1;
-  if(e.wind===0&&e.cooldown<=0&&dist<80&&Math.abs(player.z-e.z)<100){e.wind=.34;e.cooldown=1.25}
+  if(e.wind===0&&e.cooldown<=0&&dist<80&&Math.abs(player.z-e.z)<100){e.wind=.34;e.cooldown=1.25;sfx("enemy-melee-wind")}
   if(wasWind&&e.wind===0&&dist<90&&Math.abs(player.z-e.z)<100){impactFX(player.x,player.z+28,"#ff667f","enemy-slash",.85);impactFX(e.x,e.z+28,"#ffbd70","slash",.6);takeDamage(11,e.x)}
  }else{
   if(dist<245&&dist>125)e.x-=Math.sign(dx)*Math.min(70*dt,dist-125);
@@ -484,9 +495,9 @@ function update(dt){
   if(b.dead)return;b.prevX=b.x;b.prevH=b.h;b.age=(b.age||0)+dt;b.x+=b.vx*dt;b.h+=b.vh*dt;b.life-=dt;
   if(b.life<=0||b.x<0||b.x>LEVEL_W+200||b.h< -20||b.h>H+180){b.dead=true;return}
   if(b.owner==="enemy"){
-   if(Math.abs(b.x-player.x)<27&&Math.abs(b.h-(player.z+24))<32){b.dead=true;impactFX(b.x,b.h,b.color||colors.red,"player-hit",.9);takeDamage(b.damage,b.x);emit(b.x,b.h,colors.red,12,220)}
+   if(Math.abs(b.x-player.x)<27&&Math.abs(b.h-(player.z+24))<32){b.dead=true;impactFX(b.x,b.h,b.color||colors.red,"player-hit",.9);const hurtSound=({"ember":"impact-ember","fire":"impact-fire","ice":"impact-freeze","freeze":"impact-freeze","sand":"impact-sand","slash":"impact-slash","water":"impact-water","arcane":"impact-arcane","laser":"impact-laser","dark":"impact-dark","clone":"impact-clone","bolt":"impact-bolt","reflected":"impact-reflected"}[b.effect]||"hurt");takeDamage(b.damage,b.x,hurtSound);emit(b.x,b.h,colors.red,12,220)}
   }else{
-   enemies.forEach(e=>{if(e.dead||b.dead)return;const eh=e.z+26;if(Math.abs(b.x-e.x)<(e.boss?68:28)&&Math.abs(b.h-eh)<(e.boss?90:48)){impactFX(b.x,b.h,b.color||colors.gold,b.effect||"impact",e.boss?1:.55);damageEnemy(e,b.damage,90,Math.sign(b.vx));b.dead=true}});
+   enemies.forEach(e=>{if(e.dead||b.dead)return;const eh=e.z+26;if(Math.abs(b.x-e.x)<(e.boss?68:28)&&Math.abs(b.h-eh)<(e.boss?90:48)){impactFX(b.x,b.h,b.color||colors.gold,b.effect||"impact",e.boss?1:.55);damageEnemy(e,b.damage,90,Math.sign(b.vx),b.effect||"bolt");b.dead=true}});
    cores.forEach(c=>{if(!c.dead&&!b.dead&&Math.abs(b.x-c.x)<34&&Math.abs(b.h-48)<60){impactFX(b.x,b.h,b.color||colors.cyan,b.effect||"core",.7);coreHit(c,b.damage);b.dead=true}});
   }
  });
