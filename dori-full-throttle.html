@@ -124,7 +124,7 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,
         <div class="feature"><b>03 / ROCKEY PARTY</b><span>5초 춤을 완료하면 6초간 공격력 +50%.</span></div>
       </div>
       <button class="primary-btn" id="screenPrimary" type="button">▶ 전투 시작</button><button class="secondary-btn" id="screenSecondary" type="button" hidden>처음부터</button>
-      <p class="overlay-hint" id="screenHint">PC: A/D 이동 · Space 점프 · 오른손 J/K/L/; 연속 조작 · 모바일: 조이스틱 이동</p>
+      <p class="overlay-hint" id="screenHint">PC: A/D 이동 · Space 점프 · J 공격 · K/L/I/; 스킬 · 모바일: 조이스틱 이동</p>
     </div>
   </div>
   <div class="touch-controls" id="touchControls" aria-label="모바일 터치 조작">
@@ -133,11 +133,11 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,
     </div>
     <div class="touch-group">
       <div class="touch-skills">
-        <button class="touch-btn" data-skill="parry" type="button" aria-label="머리로 튕겨내기"><strong>Q</strong>반사</button>
-        <button class="touch-btn" data-skill="dash" type="button" aria-label="돌격"><strong>E</strong>돌격</button>
-        <button class="touch-btn" data-skill="bark" type="button" aria-label="짖기"><strong>R</strong>짖기</button>
-        <button class="touch-btn" data-skill="party" type="button" aria-label="Rockey Party"><strong>F</strong>춤</button>
-        <button class="touch-btn" data-skill="head" type="button" aria-label="머리 박치기, 목표 지정"><strong>⇧</strong>박치기</button>
+        <button class="touch-btn" data-skill="parry" type="button" aria-label="머리로 튕겨내기"><strong>K</strong>반사</button>
+        <button class="touch-btn" data-skill="dash" type="button" aria-label="돌격"><strong>L</strong>돌격</button>
+        <button class="touch-btn" data-skill="bark" type="button" aria-label="짖기"><strong>;</strong>짖기</button>
+        <button class="touch-btn" data-skill="party" type="button" aria-label="Rockey Party"><strong>I</strong>춤</button>
+        <button class="touch-btn" data-skill="head" type="button" aria-label="머리 박치기, 목표 지정"><strong>L</strong>박치기</button>
       </div>
       <div class="touch-main"><button class="touch-btn" id="touchAttack" type="button" aria-label="머리 휘두르기">⚔<br>공격</button></div>
     </div>
@@ -159,7 +159,7 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,
   <div class="inventory-grid" id="inventoryGrid" hidden></div>
   <p class="loadout-note">슬롯 1: 반사 · 슬롯 2: 이동 · 슬롯 3: 버프 · 슬롯 4: 특수. 총 32종 · 일반/희귀/영웅/전설 · 중복 없이 수집</p>
 </section>
-<div class="controls-note"><span>이동 A/D · ←/→</span><span>점프 Space</span><span>오른손 4손가락: J 공격 · K 슬롯 1 · L 슬롯 2 · ; 슬롯 4</span><span>I 슬롯 3</span><span>Shift 박치기</span><span>P 일시 정지</span><span>기존 Q/E/R/F 키도 사용 가능</span></div>
+<div class="controls-note"><span>이동 A/D</span><span>점프 Space</span><span>J 공격</span><span>K 스킬 슬롯 1</span><span>L 스킬 슬롯 2</span><span>I 스킬 슬롯 3</span><span>; 스킬 슬롯 4</span><span>일시 정지: 화면 버튼</span></div>
 <p class="bottom-note">기록은 이 기기의 브라우저에 저장됩니다. 네트워크나 계정 연동 없이 플레이할 수 있어요. 모바일은 방향 버튼과 기술 버튼을 사용하세요.</p>
 </main>
 </div>
@@ -171,43 +171,43 @@ const ctx=canvas.getContext("2d",{alpha:false});
 const frame=document.getElementById("gameFrame");
 const $=id=>document.getElementById(id);
 const SKILL_META={
- parry:{name:"머리로 튕겨내기",icon:"↶",category:1,key:"Q",rarity:"일반",weight:60,effect:"parry",power:1},
- goldParry:{name:"황금 반사",icon:"✨",category:1,key:"Q",rarity:"희귀",weight:28,effect:"goldReflect",power:1.25},
- perfectGuard:{name:"완벽 방어",icon:"🛡️",category:1,key:"Q",rarity:"영웅",weight:10,effect:"perfectGuard",power:1.6},
- prismReflect:{name:"프리즘 반사",icon:"💎",category:1,key:"Q",rarity:"전설",weight:2,effect:"prismReflect",power:2},
- echoGuard:{name:"메아리 방패",icon:"〰️",category:1,key:"Q",rarity:"일반",weight:60,effect:"echoGuard",power:1.08},
- ironMane:{name:"강철 갈기",icon:"⚙️",category:1,key:"Q",rarity:"일반",weight:60,effect:"ironMane",power:1.12},
- counterBurst:{name:"반격 폭발",icon:"💥",category:1,key:"Q",rarity:"희귀",weight:28,effect:"counterBurst",power:1.35},
- mirrorPaw:{name:"거울 발톱",icon:"🪞",category:1,key:"Q",rarity:"희귀",weight:28,effect:"mirrorPaw",power:1.3},
- cometGuard:{name:"혜성 방어",icon:"☄️",category:1,key:"Q",rarity:"영웅",weight:10,effect:"cometGuard",power:1.7},
- royalGuard:{name:"왕실 수호",icon:"👑",category:1,key:"Q",rarity:"영웅",weight:10,effect:"royalGuard",power:1.8},
- infinityReflect:{name:"무한 반사",icon:"♾️",category:1,key:"Q",rarity:"전설",weight:2,effect:"infinityReflect",power:2.2},
- dash:{name:"돌격",icon:"➤",category:2,key:"E",rarity:"일반",weight:60,effect:"dash",power:1},
- head:{name:"머리 박치기",icon:"◆",category:2,key:"Shift",rarity:"일반",weight:60,effect:"head",power:1},
- lightningDash:{name:"번개 돌진",icon:"⚡",category:2,key:"E",rarity:"희귀",weight:28,effect:"lightningDash",power:1.35},
- skyLeap:{name:"공중 도약",icon:"🪽",category:2,key:"E",rarity:"희귀",weight:28,effect:"jump",power:1.3},
- impactLanding:{name:"충격 착지",icon:"🌋",category:2,key:"E",rarity:"영웅",weight:10,effect:"impactLanding",power:1.7},
- cometRush:{name:"혜성 질주",icon:"☄️",category:2,key:"E",rarity:"영웅",weight:10,effect:"cometRush",power:1.8},
- shadowStep:{name:"그림자 도약",icon:"🌑",category:2,key:"E",rarity:"일반",weight:60,effect:"shadowStep",power:1.12},
- windRunner:{name:"질풍 보법",icon:"🌪️",category:2,key:"E",rarity:"일반",weight:60,effect:"windRunner",power:1.18},
-meteorDash:{name:"유성 돌파",icon:"☄️",category:2,key:"E",rarity:"희귀",weight:28,effect:"meteorDash",power:1.5},
-phantomRush:{name:"환영 돌진",icon:"👻",category:2,key:"E",rarity:"전설",weight:2,effect:"phantomRush",power:2.1},
-party:{name:"Rockey Party",icon:"♫",category:3,key:"F",rarity:"일반",weight:60,effect:"party",power:1},
-frenzy:{name:"광폭화",icon:"🔥",category:3,key:"F",rarity:"희귀",weight:28,effect:"frenzy",power:1.35},
-goldenFur:{name:"황금 털",icon:"🌟",category:3,key:"F",rarity:"영웅",weight:10,effect:"goldenFur",power:1.6},
-coinMagnet:{name:"코인 자석",icon:"🧲",category:3,key:"F",rarity:"일반",weight:60,effect:"coinMagnet",power:1.1},
-swiftPaws:{name:"날쌘 발",icon:"🐾",category:3,key:"F",rarity:"일반",weight:60,effect:"swiftPaws",power:1.25},
-powerSnack:{name:"파워 간식",icon:"🍖",category:3,key:"F",rarity:"희귀",weight:28,effect:"powerSnack",power:1.5},
-starCoat:{name:"별빛 코트",icon:"🌠",category:3,key:"F",rarity:"영웅",weight:10,effect:"starCoat",power:1.75},
-overdrive:{name:"오버드라이브",icon:"🚀",category:3,key:"F",rarity:"전설",weight:2,effect:"overdrive",power:2.2},
-bark:{name:"짖기",icon:"◉",category:4,key:"R",rarity:"일반",weight:60,effect:"bark",power:1},
-sonicBark:{name:"초음파 짖기",icon:"🔊",category:4,key:"R",rarity:"희귀",weight:28,effect:"sonicBark",power:1.35},
-shockwave:{name:"충격파",icon:"💫",category:4,key:"R",rarity:"영웅",weight:10,effect:"shockwave",power:1.7},
-meteorCall:{name:"운석 소환",icon:"☄️",category:4,key:"R",rarity:"전설",weight:2,effect:"meteorCall",power:2.3},
-cloneBuddy:{name:"도리 분신",icon:"🐶",category:4,key:"R",rarity:"희귀",weight:28,effect:"cloneBuddy",power:1.45},
-frostHowl:{name:"서리 울부짖기",icon:"❄️",category:4,key:"R",rarity:"일반",weight:60,effect:"frostHowl",power:1.12},
-thunderHowl:{name:"천둥 울음",icon:"🌩️",category:4,key:"R",rarity:"영웅",weight:10,effect:"thunderHowl",power:1.8},
-novaRoar:{name:"초신성 포효",icon:"🌌",category:4,key:"R",rarity:"전설",weight:2,effect:"novaRoar",power:2.5}
+ parry:{name:"머리로 튕겨내기",icon:"↶",category:1,key:"K",rarity:"일반",weight:60,effect:"parry",power:1},
+ goldParry:{name:"황금 반사",icon:"✨",category:1,key:"K",rarity:"희귀",weight:28,effect:"goldReflect",power:1.25},
+ perfectGuard:{name:"완벽 방어",icon:"🛡️",category:1,key:"K",rarity:"영웅",weight:10,effect:"perfectGuard",power:1.6},
+ prismReflect:{name:"프리즘 반사",icon:"💎",category:1,key:"K",rarity:"전설",weight:2,effect:"prismReflect",power:2},
+ echoGuard:{name:"메아리 방패",icon:"〰️",category:1,key:"K",rarity:"일반",weight:60,effect:"echoGuard",power:1.08},
+ ironMane:{name:"강철 갈기",icon:"⚙️",category:1,key:"K",rarity:"일반",weight:60,effect:"ironMane",power:1.12},
+ counterBurst:{name:"반격 폭발",icon:"💥",category:1,key:"K",rarity:"희귀",weight:28,effect:"counterBurst",power:1.35},
+ mirrorPaw:{name:"거울 발톱",icon:"🪞",category:1,key:"K",rarity:"희귀",weight:28,effect:"mirrorPaw",power:1.3},
+ cometGuard:{name:"혜성 방어",icon:"☄️",category:1,key:"K",rarity:"영웅",weight:10,effect:"cometGuard",power:1.7},
+ royalGuard:{name:"왕실 수호",icon:"👑",category:1,key:"K",rarity:"영웅",weight:10,effect:"royalGuard",power:1.8},
+ infinityReflect:{name:"무한 반사",icon:"♾️",category:1,key:"K",rarity:"전설",weight:2,effect:"infinityReflect",power:2.2},
+ dash:{name:"돌격",icon:"➤",category:2,key:"L",rarity:"일반",weight:60,effect:"dash",power:1},
+ head:{name:"머리 박치기",icon:"◆",category:2,key:"L",rarity:"일반",weight:60,effect:"head",power:1},
+ lightningDash:{name:"번개 돌진",icon:"⚡",category:2,key:"L",rarity:"희귀",weight:28,effect:"lightningDash",power:1.35},
+ skyLeap:{name:"공중 도약",icon:"🪽",category:2,key:"L",rarity:"희귀",weight:28,effect:"jump",power:1.3},
+ impactLanding:{name:"충격 착지",icon:"🌋",category:2,key:"L",rarity:"영웅",weight:10,effect:"impactLanding",power:1.7},
+ cometRush:{name:"혜성 질주",icon:"☄️",category:2,key:"L",rarity:"영웅",weight:10,effect:"cometRush",power:1.8},
+ shadowStep:{name:"그림자 도약",icon:"🌑",category:2,key:"L",rarity:"일반",weight:60,effect:"shadowStep",power:1.12},
+ windRunner:{name:"질풍 보법",icon:"🌪️",category:2,key:"L",rarity:"일반",weight:60,effect:"windRunner",power:1.18},
+meteorDash:{name:"유성 돌파",icon:"☄️",category:2,key:"L",rarity:"희귀",weight:28,effect:"meteorDash",power:1.5},
+phantomRush:{name:"환영 돌진",icon:"👻",category:2,key:"L",rarity:"전설",weight:2,effect:"phantomRush",power:2.1},
+party:{name:"Rockey Party",icon:"♫",category:3,key:"I",rarity:"일반",weight:60,effect:"party",power:1},
+frenzy:{name:"광폭화",icon:"🔥",category:3,key:"I",rarity:"희귀",weight:28,effect:"frenzy",power:1.35},
+goldenFur:{name:"황금 털",icon:"🌟",category:3,key:"I",rarity:"영웅",weight:10,effect:"goldenFur",power:1.6},
+coinMagnet:{name:"코인 자석",icon:"🧲",category:3,key:"I",rarity:"일반",weight:60,effect:"coinMagnet",power:1.1},
+swiftPaws:{name:"날쌘 발",icon:"🐾",category:3,key:"I",rarity:"일반",weight:60,effect:"swiftPaws",power:1.25},
+powerSnack:{name:"파워 간식",icon:"🍖",category:3,key:"I",rarity:"희귀",weight:28,effect:"powerSnack",power:1.5},
+starCoat:{name:"별빛 코트",icon:"🌠",category:3,key:"I",rarity:"영웅",weight:10,effect:"starCoat",power:1.75},
+overdrive:{name:"오버드라이브",icon:"🚀",category:3,key:"I",rarity:"전설",weight:2,effect:"overdrive",power:2.2},
+bark:{name:"짖기",icon:"◉",category:4,key:";",rarity:"일반",weight:60,effect:"bark",power:1},
+sonicBark:{name:"초음파 짖기",icon:"🔊",category:4,key:";",rarity:"희귀",weight:28,effect:"sonicBark",power:1.35},
+shockwave:{name:"충격파",icon:"💫",category:4,key:";",rarity:"영웅",weight:10,effect:"shockwave",power:1.7},
+meteorCall:{name:"운석 소환",icon:"☄️",category:4,key:";",rarity:"전설",weight:2,effect:"meteorCall",power:2.3},
+cloneBuddy:{name:"도리 분신",icon:"🐶",category:4,key:";",rarity:"희귀",weight:28,effect:"cloneBuddy",power:1.45},
+frostHowl:{name:"서리 울부짖기",icon:"❄️",category:4,key:";",rarity:"일반",weight:60,effect:"frostHowl",power:1.12},
+thunderHowl:{name:"천둥 울음",icon:"🌩️",category:4,key:";",rarity:"영웅",weight:10,effect:"thunderHowl",power:1.8},
+novaRoar:{name:"초신성 포효",icon:"🌌",category:4,key:";",rarity:"전설",weight:2,effect:"novaRoar",power:2.5}
 };
 const SLOT_COSTS={2:180,3:350,4:600},GACHA_COST=100;
 const RARITY_COLORS={"일반":"#c4d0e8","희귀":"#67d8ff","영웅":"#c49aff","전설":"#ffd76e"};
@@ -1167,24 +1167,23 @@ window.addEventListener("blur",clearHeldInputs);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)clearHeldInputs()});
 window.addEventListener("keydown",e=>{
  const k=e.key.toLowerCase();
- if(["arrowleft","arrowright"," ","shift"].includes(k))e.preventDefault();
- if(k==="a"||k==="arrowleft")keys.left=true;
- if(k==="d"||k==="arrowright")keys.right=true;
+ if(k===" ")e.preventDefault();
+ if(k==="a")keys.left=true;
+ if(k==="d")keys.right=true;
  if(e.repeat)return;
  if(k===" "){jump();return}
- if(k==="j"||k==="z"){startAttack();return}
+ if(k==="j"){startAttack();return}
  // Always trigger the skill currently equipped in each keyboard slot.
  const triggerSlot=slot=>{const name=equippedSkills[slot];if(!name||!unlockedSlots.includes(slot)){showHint("먼저 해당 스킬 슬롯을 해금하고 스킬을 장착해 줘!");return}if(slot===2&&SKILL_META[name]?.effect==="head")tapHead();else activate(name)};
- if(k==="k"||k==="q"){triggerSlot(1);return}
- if(k==="l"||k==="e"){triggerSlot(2);return}
- if(k===";"||k==="r"){triggerSlot(4);return}
- if(k==="i"||k==="f"){triggerSlot(3);return}
- if(k==="shift"){tapHead();return}
- if(k==="p"||k==="escape"){if(mode==="playing"||mode==="paused")pauseGame();return}
+ if(k==="k"){triggerSlot(1);return}
+ if(k==="l"){triggerSlot(2);return}
+ if(k===";"){triggerSlot(4);return}
+ if(k==="i"){triggerSlot(3);return}
+ if(k==="escape"){if(mode==="playing"||mode==="paused")pauseGame();return}
  if(k==="enter"&&mode!=="playing"&&mode!=="paused"){screenPrimary()}
 });
 window.addEventListener("keyup",e=>{
- const k=e.key.toLowerCase();if(k==="a"||k==="arrowleft")keys.left=false;if(k==="d"||k==="arrowright")keys.right=false;
+ const k=e.key.toLowerCase();if(k==="a")keys.left=false;if(k==="d")keys.right=false;
 });
 window.addEventListener("blur",()=>{keys.left=false;keys.right=false;releaseJoystick();touch.left=false;touch.right=false;if(mode==="playing")pauseGame()});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&mode==="playing")pauseGame()});
