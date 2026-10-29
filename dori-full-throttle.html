@@ -365,7 +365,9 @@ const STAGES=[
 function setupRun(stageId=currentStage){currentStage=clamp(Number(stageId)||0,0,STAGES.length-1);const stage=STAGES[currentStage];LEVEL_W=stage.length;player=newPlayer();cooldowns={parry:0,dash:0,bark:0,party:0,head:0};particles=[];projectiles=[];combatBursts=[];aimMode=false;hintTimer=0;cam=0;elapsed=0;won=false;shake=0;cores=stage.cores.map(c=>({...c}));hazards=stage.hazards.map(h=>({...h}));const mult=[.72,.82,1,1.18,1.28][currentStage];enemies=stage.enemies.map((sp,i)=>({id:"enemy"+i,x:sp[0],type:sp[1],hp:Math.round((sp[1]==="shooter"?44:62)*mult),maxHp:Math.round((sp[1]==="shooter"?44:62)*mult),dead:false,z:sp[1]==="shooter"?58:0,vx:0,face:-1,cooldown:rand(.3,1.4),wind:0,stun:0,flash:0,anim:rand(0,7),score:sp[1]==="shooter"?180:140}));if(stage.boss){const bx=stage.bossStart||Math.min(stage.length-260,stage.length*.84),bh=stage.bossHp||760;enemies.push({id:"boss",x:bx,type:"boss",name:stage.bossName||"식빵이",hp:bh,maxHp:bh,dead:false,z:0,vx:0,face:-1,cooldown:Math.max(.72,1.65-currentStage*.07),wind:0,meleeWind:0,meleeCooldown:.8,stun:0,flash:0,anim:0,score:2500+currentStage*350,boss:true});}}
 function coreCount(){return cores.filter(c=>!c.dead).length}function boss(){return enemies.find(e=>e.boss)||null}function stageExitOpen(){const b=boss();return coreCount()===0&&(!b||b.dead)}setupRun();
 function emit(x,h,color,count=10,power=180){
- for(let i=0;i<count;i++){const a=rand(0,Math.PI*2),sp=rand(power*.22,power);particles.push({x,h,vx:Math.cos(a)*sp,vh:Math.sin(a)*sp,life:rand(.18,.55),max:.55,size:rand(1.5,4.7),color})}
+ // Bound live particles so crowded fights stay responsive.
+ const cap=W<620?115:175,available=Math.max(0,cap-particles.length),n=Math.min(count,available);
+ for(let i=0;i<n;i++){const a=rand(0,Math.PI*2),sp=rand(power*.22,power);particles.push({x,h,vx:Math.cos(a)*sp,vh:Math.sin(a)*sp,life:rand(.18,.55),max:.55,size:rand(1.5,4.7),color})}
 }
 function skillVisual(name,power=1){
  const palette={
@@ -380,16 +382,16 @@ function skillVisual(name,power=1){
  if(name==="impactLanding"||name==="meteorCall"||name==="novaRoar"||name==="infinityReflect"){screenFlash={color:trailStart,life:.13,max:.13};shake=Math.max(shake,name==="novaRoar"||name==="meteorCall"?5:3)}
  const life=(name==="meteorCall"||name==="novaRoar"||name==="infinityReflect")?.78:.56;
  combatBursts.push({x:player.x+player.face*18,h:player.z+45,color,style,life,max:life,power:Math.min(2.4,power),rot:rand(0,Math.PI*2),seed:rand(0,Math.PI*2)});
- if(combatBursts.length>90)combatBursts.splice(0,combatBursts.length-90);
- const count=({prismReflect:30,infinityReflect:42,meteorCall:34,novaRoar:34,phantomRush:30,cloneBuddy:24,party:18}[name]||15)+Math.round(power*3);
+ if(combatBursts.length>36)combatBursts.splice(0,combatBursts.length-36);
+ const count=Math.round((({prismReflect:24,infinityReflect:30,meteorCall:26,novaRoar:26,phantomRush:22,cloneBuddy:18,party:14}[name]||11)+Math.round(power*2))*(W<620?.72:1));
  emit(player.x+player.face*18,player.z+38,color,count,150+power*100);
  player.skillMotion={name,life:.32,max:.32};
 }
 function impactFX(x,h,color,style="impact",power=1){
  const life=style==="boss-break" ? .72 : .42;
  combatBursts.push({x,h,color,style,life,max:life,power,rot:rand(0,Math.PI*2),seed:rand(0,Math.PI*2)});
- if(combatBursts.length>90)combatBursts.splice(0,combatBursts.length-90);
- const count=style==="boss-break"?48:style.startsWith("boss-")?24:style==="impact"?13:9;
+ if(combatBursts.length>36)combatBursts.splice(0,combatBursts.length-36);
+ const count=Math.round((style==="boss-break"?32:style.startsWith("boss-")?16:style==="impact"?9:6)*(W<620?.72:1));
  emit(x,h,color,count,style==="boss-break"?390:style.startsWith("boss-")?290:210);
 }
 function addCombo(){
@@ -900,7 +902,7 @@ function drawPlayer(){
   const phase=player.attackT<.22?0:1,t=phase===0?player.attackT/.22:(player.attackT-.22)/.22;
   const fade=Math.sin(Math.PI*clamp(t,0,1)),col=phase===0?"#ffe39b":"#70f6ff";
   ctx.save();ctx.translate(sx+player.face*28,cy-16);ctx.scale(player.face,1);ctx.globalCompositeOperation="lighter";
-  ctx.globalAlpha=.35+.55*fade;ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=24;ctx.lineCap="round";
+  ctx.globalAlpha=.35+.55*fade;ctx.strokeStyle=col;ctx.shadowColor=col;ctx.shadowBlur=14;ctx.lineCap="round";
   ctx.lineWidth=13;ctx.beginPath();ctx.arc(0,0,54+t*28,-1.16,.98);ctx.stroke();
   ctx.globalAlpha=.92*fade;ctx.strokeStyle=phase===0?"#fff9df":"#efffff";ctx.lineWidth=3.6;ctx.beginPath();ctx.arc(0,0,55+t*28,-1.16,.98);ctx.stroke();
   ctx.globalAlpha=.78*fade;ctx.strokeStyle=col;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(15,-28-t*3);ctx.lineTo(48+t*20,-4);ctx.lineTo(28+t*20,8);ctx.stroke();
@@ -909,7 +911,7 @@ function drawPlayer(){
  }
  if(player.parryT>0){
   const p=player.parryT/.34;ctx.save();ctx.translate(sx+player.face*25,cy-15);ctx.scale(player.face,1);ctx.globalCompositeOperation="lighter";
-  ctx.strokeStyle="#6bf1ff";ctx.shadowColor="#6bf1ff";ctx.shadowBlur=24;ctx.lineWidth=7;ctx.globalAlpha=.22+.6*p;ctx.beginPath();ctx.arc(0,0,38+12*(1-p),-1.18,1.18);ctx.stroke();
+  ctx.strokeStyle="#6bf1ff";ctx.shadowColor="#6bf1ff";ctx.shadowBlur=14;ctx.lineWidth=7;ctx.globalAlpha=.22+.6*p;ctx.beginPath();ctx.arc(0,0,38+12*(1-p),-1.18,1.18);ctx.stroke();
   ctx.globalAlpha=.95;ctx.strokeStyle="#eaffff";ctx.lineWidth=2.4;ctx.beginPath();ctx.arc(0,0,40+12*(1-p),-1.18,1.18);ctx.stroke();
   for(let k=0;k<3;k++){ctx.rotate(.65);ctx.beginPath();ctx.moveTo(38,-5-k*3);ctx.lineTo(48,-9-k*3);ctx.lineTo(44,-1-k*3);ctx.stroke()}
   ctx.restore()
@@ -940,7 +942,7 @@ function drawProjectile(b){
  const speed=Math.hypot(b.vx,b.vh),tail=clamp(speed*.095,18,76);
  ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.globalCompositeOperation="lighter";
  const trail=ctx.createLinearGradient(-tail,0,r*2,0);trail.addColorStop(0,"rgba(255,255,255,0)");trail.addColorStop(.48,color+"35");trail.addColorStop(1,color);
- ctx.strokeStyle=trail;ctx.lineCap="round";ctx.lineWidth=effect==="laser"?r*1.55:Math.max(2,r*.72);ctx.shadowColor=color;ctx.shadowBlur=effect==="laser"?25:14;
+ ctx.strokeStyle=trail;ctx.lineCap="round";ctx.lineWidth=effect==="laser"?r*1.55:Math.max(2,r*.72);ctx.shadowColor=color;ctx.shadowBlur=effect==="laser"?16:8;
  ctx.beginPath();ctx.moveTo(-tail,0);ctx.lineTo(r*1.2,0);ctx.stroke();ctx.shadowBlur=0;
  if(effect==="laser"){
   ctx.fillStyle=color;ctx.shadowColor=color;ctx.shadowBlur=18;ctx.beginPath();ctx.moveTo(-r*1.7,-r*.7);ctx.lineTo(r*2.3,-r*.43);ctx.lineTo(r*5.6,0);ctx.lineTo(r*2.3,r*.43);ctx.lineTo(-r*1.7,r*.7);ctx.closePath();ctx.fill();
@@ -999,9 +1001,10 @@ function drawParticles(){
  ctx.save();ctx.lineCap="round";
  particles.forEach(p=>{
   const alpha=clamp(p.life/p.max,0,1),x=p.x-cam,y=FLOOR-p.h;
-  ctx.globalAlpha=alpha;ctx.strokeStyle=p.color;ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=5;
-  ctx.lineWidth=Math.max(1,p.size*alpha*.8);ctx.beginPath();ctx.moveTo(x-clamp(p.vx*.022,-13,13),y+clamp(p.vh*.022,-13,13));ctx.lineTo(x,y);ctx.stroke();
-  ctx.beginPath();ctx.arc(x,y,Math.max(.6,p.size*alpha*.55),0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=alpha;ctx.strokeStyle=p.color;ctx.fillStyle=p.color;
+   // Crisp streaks preserve the spark look without per-particle shadow filters.
+   ctx.lineWidth=Math.max(1,p.size*alpha*.8);ctx.beginPath();ctx.moveTo(x-clamp(p.vx*.022,-13,13),y+clamp(p.vh*.022,-13,13));ctx.lineTo(x,y);ctx.stroke();
+   if(p.size>3.2){ctx.beginPath();ctx.arc(x,y,Math.max(.6,p.size*alpha*.45),0,Math.PI*2);ctx.fill()}
  });
  ctx.restore();ctx.globalAlpha=1;ctx.shadowBlur=0;
 }
@@ -1010,7 +1013,7 @@ function drawCombatBursts(){
  combatBursts.forEach(f=>{
   const a=clamp(f.life/f.max,0,1),t=1-a,r=(10+t*62)*(f.power||1),x=f.x-cam,y=FLOOR-f.h;
   if(x< -150||x>W+150)return;
-  ctx.save();ctx.translate(x,y);ctx.rotate((f.rot||0)+t*(f.style==="boss-sand"?4:1));ctx.globalAlpha=a;ctx.strokeStyle=f.color;ctx.fillStyle=f.color;ctx.shadowColor=f.color;ctx.shadowBlur=18;ctx.lineCap="round";
+  ctx.save();ctx.translate(x,y);ctx.rotate((f.rot||0)+t*(f.style==="boss-sand"?4:1));ctx.globalAlpha=a;ctx.strokeStyle=f.color;ctx.fillStyle=f.color;ctx.shadowColor=f.color;ctx.shadowBlur=f.style==="boss-break"?11:7;ctx.lineCap="round";
   ctx.lineWidth=Math.max(1,4*a);
   ctx.beginPath();ctx.ellipse(0,0,r*.78,r*.48,0,0,Math.PI*2);ctx.stroke();
   ctx.globalAlpha=a*.7;ctx.lineWidth=Math.max(1,2.2*a);ctx.beginPath();ctx.ellipse(0,0,r*.55,r*.82,0,0,Math.PI*2);ctx.stroke();
@@ -1074,7 +1077,7 @@ function drawGate(){
 }
 function drawExit(){
  const x=LEVEL_W-90-cam;if(x< -40||x>W+60)return;
- ctx.save();ctx.translate(x,FLOOR-62);const active=stageExitOpen();ctx.strokeStyle=active?colors.green:"rgba(133,151,191,.55)";ctx.lineWidth=3;ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=active?16:3;ctx.strokeRect(-22,-38,44,75);ctx.shadowBlur=0;ctx.fillStyle=active?"rgba(122,255,199,.16)":"rgba(129,145,185,.08)";ctx.fillRect(-17,-33,34,65);ctx.fillStyle=active?colors.green:"#8e9cbb";ctx.font="bold 10px sans-serif";ctx.textAlign="center";ctx.fillText(active?"EXIT":"LOCKED",0,-47);if(active){ctx.beginPath();ctx.moveTo(-7,0);ctx.lineTo(5,0);ctx.lineTo(5,-8);ctx.lineTo(13,6);ctx.lineTo(5,18);ctx.lineTo(5,9);ctx.lineTo(-7,9);ctx.closePath();ctx.fill()}ctx.restore();
+ ctx.save();ctx.translate(x,FLOOR-62);const active=stageExitOpen();ctx.strokeStyle=active?colors.green:"rgba(133,151,191,.55)";ctx.lineWidth=3;ctx.shadowColor=ctx.strokeStyle;ctx.shadowBlur=active?10:2;ctx.strokeRect(-22,-38,44,75);ctx.shadowBlur=0;ctx.fillStyle=active?"rgba(122,255,199,.16)":"rgba(129,145,185,.08)";ctx.fillRect(-17,-33,34,65);ctx.fillStyle=active?colors.green:"#8e9cbb";ctx.font="bold 10px sans-serif";ctx.textAlign="center";ctx.fillText(active?"EXIT":"LOCKED",0,-47);if(active){ctx.beginPath();ctx.moveTo(-7,0);ctx.lineTo(5,0);ctx.lineTo(5,-8);ctx.lineTo(13,6);ctx.lineTo(5,18);ctx.lineTo(5,9);ctx.lineTo(-7,9);ctx.closePath();ctx.fill()}ctx.restore();
 }
 function drawAim(){
  if(!aimMode)return;const x=aimWorldX-cam,y=FLOOR-aimZ-25;if(x<0||x>W)return;ctx.save();ctx.strokeStyle=aimMode?"#ffe5a0":"rgba(107,241,255,.55)";ctx.lineWidth=2;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(player.x-cam,FLOOR-player.z-25);ctx.lineTo(x,y);ctx.stroke();ctx.setLineDash([]);ctx.beginPath();ctx.arc(x,y,12+Math.sin(elapsed*8)*2,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(x-17,y);ctx.lineTo(x+17,y);ctx.moveTo(x,y-17);ctx.lineTo(x,y+17);ctx.stroke();ctx.restore();
