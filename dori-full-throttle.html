@@ -622,7 +622,7 @@ function showCinematicLine(){
  $("cinematicPortrait").textContent=line.portrait;$("cinematicSpeaker").textContent=line.speaker;$("cinematicRole").textContent=line.role;
  const textEl=$("cinematicText");if(cinematicTypingTimer){clearInterval(cinematicTypingTimer);cinematicTypingTimer=null}
  cinematicFullText=line.text;cinematicChars=Array.from(cinematicFullText);let charAt=0;textEl.textContent="";textEl.classList.add("typing");
- cinematicTypingTimer=setInterval(()=>{charAt=Math.min(cinematicChars.length,charAt+Math.max(1,Math.ceil(cinematicChars.length/115)));textEl.textContent=cinematicChars.slice(0,charAt).join("");if(charAt>=cinematicChars.length){clearInterval(cinematicTypingTimer);cinematicTypingTimer=null;textEl.classList.remove("typing")}},14);
+ $("cinematicNext").querySelector("span").textContent="대사 전체 표시";cinematicTypingTimer=setInterval(()=>{charAt=Math.min(cinematicChars.length,charAt+Math.max(1,Math.ceil(cinematicChars.length/115)));textEl.textContent=cinematicChars.slice(0,charAt).join("");if(charAt>=cinematicChars.length){clearInterval(cinematicTypingTimer);cinematicTypingTimer=null;textEl.classList.remove("typing");$("cinematicNext").querySelector("span").textContent=cinematicState.index===cinematicState.lines.length-1?(cinematicState.kind==="intro"||cinematicState.kind==="bossIntro"?"전투 시작":"결과 확인"):"다음 대사"}},14);
  $("cinematicProgress").innerHTML=cinematicState.lines.map((_,i)=>'<i class="'+(i<=cinematicState.index?"active":"")+'"></i>').join("");
  $("cinematicNext").querySelector("span").textContent=cinematicState.index===cinematicState.lines.length-1?(cinematicState.kind==="intro"||cinematicState.kind==="bossIntro"?"전투 시작":"결과 확인"):"다음 대사";
  copy.classList.remove("line-in");void copy.offsetWidth;copy.classList.add("line-in");
@@ -813,7 +813,7 @@ function updateEnemy(e,dt){
   if(dist<620&&dist>45)e.x+=Math.sign(dx)*Math.min(115*dt,dist-43);
   dx=player.x-e.x;dist=Math.abs(dx);e.face=dx<0?-1:1;
   if(e.wind===0&&e.cooldown<=0&&dist<80&&Math.abs(player.z-e.z)<100){e.wind=.34;e.cooldown=1.25;sfx("enemy-melee-wind")}
-  if(wasWind&&e.wind===0&&dist<90&&Math.abs(player.z-e.z)<100){impactFX(player.x,player.z+28,"#ff667f","enemy-slash",.85);impactFX(e.x,e.z+28,"#ffbd70","slash",.6);takeDamage(11,e.x,"enemy-melee-impact")}
+  if(wasWind&&e.wind===0&&dist<90&&Math.abs(player.z-e.z)<100){const fx=({food:{color:"#ff9dc6",style:"cream"},winter:{color:"#9deeff",style:"ice"},desert:{color:"#ffd06e",style:"sand"},west:{color:"#ffc477",style:"slash"},ocean:{color:"#7bfff1",style:"water"},hell:{color:"#ff704f",style:"ember"}}[e.theme]||{color:"#ff667f",style:"slash"});impactFX(player.x,player.z+28,fx.color,fx.style,.85);impactFX(e.x,e.z+28,fx.color,fx.style,.6);takeDamage(11,e.x,"enemy-melee-impact")}
  }else{
   if(dist<245&&dist>125)e.x-=Math.sign(dx)*Math.min(70*dt,dist-125);
   else if(dist>680&&dist<1000)e.x+=Math.sign(dx)*75*dt;
