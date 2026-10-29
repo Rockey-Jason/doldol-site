@@ -1171,10 +1171,12 @@ window.addEventListener("keydown",e=>{
  if(e.repeat)return;
  if(k===" "){jump();return}
  if(k==="j"||k==="z"){startAttack();return}
- if(k==="q"){activate("parry");return}
- if(k==="e"){activate("dash");return}
- if(k==="r"){activate("bark");return}
- if(k==="f"){activate("party");return}
+ // Always trigger the skill currently equipped in each keyboard slot.
+ const triggerSlot=slot=>{const name=equippedSkills[slot];if(!name||!unlockedSlots.includes(slot)){showHint("먼저 해당 스킬 슬롯을 해금하고 스킬을 장착해 줘!");return}if(slot===2&&SKILL_META[name]?.effect==="head")tapHead();else activate(name)};
+ if(k==="q"){triggerSlot(1);return}
+ if(k==="e"){triggerSlot(2);return}
+ if(k==="r"){triggerSlot(4);return}
+ if(k==="f"){triggerSlot(3);return}
  if(k==="shift"){tapHead();return}
  if(k==="p"||k==="escape"){if(mode==="playing"||mode==="paused")pauseGame();return}
  if(k==="enter"&&mode!=="playing"&&mode!=="paused"){screenPrimary()}
