@@ -225,7 +225,7 @@ function renderSkillControls(){
   btn.setAttribute("aria-label",meta.name+" · "+meta.rarity);
   if(btn.classList.contains("skill-button")){
    const icon=btn.querySelector(".skill-icon"),name=btn.querySelector(".skill-text b"),key=btn.querySelector(".skill-text em"),cool=btn.querySelector("[data-cooldown]");
-   if(icon)icon.textContent=meta.icon;if(name)name.textContent=meta.name;if(key)key.textContent=meta.key;if(cool){cool.dataset.cooldown=skill;cool.textContent=(cooldowns&&cooldowns[skill]>0)?cooldowns[skill].toFixed(1)+"s":"READY";}
+   if(icon)icon.textContent=meta.icon;if(name)name.textContent=meta.name;if(key)key.textContent=meta.key;if(cool){cool.dataset.cooldown=skill;cool.textContent=(cooldowns&&cooldowns[skill]>0)?cooldowns[skill].toFixed(2)+"s":"READY";}
   }else{
    const strong=btn.querySelector("strong");if(strong)strong.textContent=meta.key;
    Array.from(btn.childNodes).filter(n=>n.nodeType===3).forEach(n=>n.remove());
@@ -686,7 +686,7 @@ function refreshUI(){
  $("progressText").textContent=Math.floor(player.x/LEVEL_W*100)+"%";$("progressFill").style.width=(player.x/LEVEL_W*100)+"%";
  $("scoreText").textContent=formatScore(player.score);$("comboText").textContent="x"+player.combo;$("killText").textContent=player.kills;
  const remaining=coreCount(),cfg=STAGES[currentStage],b=boss();$("stageText").textContent="STAGE "+String(currentStage).padStart(2,"0")+" · "+cfg.name;$("objectiveText").textContent=remaining>0?"임무: 파워 코어 파괴 ("+(cfg.cores.length-remaining)+"/"+cfg.cores.length+")":b&&!b.dead?"임무: WARDEN 격파 → 출구 도달":"임무: 출구 도달";$("speedBuff").classList.toggle("show",player.speedBuff>0);$("partyBuff").classList.toggle("show",player.powerBuff>0);$("danceBuff").classList.toggle("show",player.partyT>0);$("bossWrap").classList.toggle("show",!!b&&!b.dead&&(b.name!=="솜솜이"||remaining===0));if(b){$("bossWrap").querySelector(".boss-label span").textContent="☠ "+(b.name||"BOSS");$("bossText").textContent=Math.ceil(b.hp)+" / "+b.maxHp;$("bossFill").style.width=(b.hp/b.maxHp*100)+"%";}
- document.querySelectorAll("[data-cooldown]").forEach(el=>{const t=cooldowns[el.dataset.cooldown]||0;el.textContent=t>0?t.toFixed(1)+"s":"READY"});
+ document.querySelectorAll("[data-cooldown]").forEach(el=>{const t=cooldowns[el.dataset.cooldown]||0;el.textContent=t>0?t.toFixed(2)+"s":"READY"});
  document.querySelectorAll("[data-skill]").forEach(btn=>{const t=cooldowns[btn.dataset.skill]||0;btn.classList.toggle("locked",t>0||(player.partyT>0&&SKILL_META[btn.dataset.skill]?.effect!=="party"));btn.style.setProperty("--ready",t>0?.12:1)});
  $("pauseButton").textContent=mode==="paused"?"▶ 계속하기":"Ⅱ 일시 정지";
 }
