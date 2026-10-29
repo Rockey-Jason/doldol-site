@@ -172,7 +172,7 @@ const ctx=canvas.getContext("2d",{alpha:false});
 const frame=document.getElementById("gameFrame");
 const $=id=>document.getElementById(id);
 const SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
-const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
 const supabaseClient=window.doriSupabase||(window.supabase&&typeof window.supabase.createClient==="function"?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null);
 if(supabaseClient&&!window.doriSupabase)window.doriSupabase=supabaseClient;
 const CLOUD_SAVE_TABLE="dori_full_throttle_saves";
