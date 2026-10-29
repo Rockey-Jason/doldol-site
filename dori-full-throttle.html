@@ -81,6 +81,33 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,
 @media(max-width:700px){.topbar{margin-bottom:16px}.brand-mark{width:36px;height:36px;border-radius:12px}.brand-copy strong{font-size:13px}.brand-copy span{font-size:9px}.ghost-btn{padding:9px 10px;font-size:11px}.hero{margin:7px 0 12px;display:block}.hero h1{font-size:clamp(29px,8vw,39px)}.hero p{font-size:12px;max-width:440px}.version-chip{display:none}#gameCanvas{height:clamp(430px,60vh,560px);max-height:none;min-height:400px}.game-frame{border-radius:15px}.hud{top:8px;left:8px;right:8px;gap:5px}.hud-card{min-width:0;padding:7px 8px;border-radius:10px}.hud-left,.hud-right{gap:5px;max-width:49%}.hud-label{font-size:9px;letter-spacing:.8px;margin-bottom:4px}.hud-label b{font-size:10px}.bar{height:6px}.hud-mini{font-size:9px;padding:6px 7px}.boss-wrap{top:80px;width:70%}.skill-panel{display:none}.touch-controls{display:flex}.action-row{font-size:10px;margin-top:9px}.controls-note{font-size:10px;gap:5px}.controls-note span{padding:4px 6px}.bottom-note{font-size:10px}.screen-panel{border-radius:18px;padding:18px 14px}.screen-panel h2{font-size:34px}.screen-panel p{font-size:12px;margin-bottom:10px}.feature-grid{gap:5px;margin:12px 0 14px}.feature{padding:8px 7px}.feature b{font-size:10px}.feature span{font-size:9px}.primary-btn{min-width:165px;min-height:44px}.secondary-btn{min-height:42px}.overlay-hint{font-size:9px!important}}
 @media(max-width:390px){.page{width:calc(100% - 12px)}.touch-pad{grid-template-columns:repeat(2,38px);gap:4px}.touch-btn.move{min-height:40px}.touch-skills{grid-template-columns:repeat(3,34px);gap:4px}.touch-skills .touch-btn{min-width:34px;min-height:35px}.touch-main{grid-template-columns:repeat(2,40px);gap:4px}.touch-main .touch-btn{min-width:40px;min-height:42px}.touch-controls{inset:auto 5px 5px}.feature-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+/* Story cinematics: chapter intro, boss dialogue, aftermath */
+.cinematic-overlay{position:absolute;inset:0;z-index:12;display:flex;align-items:flex-end;justify-content:center;padding:clamp(12px,3.2vw,34px);overflow:hidden;opacity:0;visibility:hidden;pointer-events:none;background:linear-gradient(180deg,rgba(3,6,18,.08),rgba(3,6,18,.28) 35%,rgba(3,6,18,.9) 73%,rgba(3,6,18,.97));transition:opacity .65s ease,visibility .65s}
+.cinematic-overlay.active{opacity:1;visibility:visible;pointer-events:auto}
+.cinematic-overlay:before{content:"";position:absolute;inset:-8%;background:radial-gradient(ellipse at 50% 34%,var(--cine-glow,rgba(110,170,255,.24)),transparent 48%),linear-gradient(125deg,transparent 25%,rgba(255,255,255,.035) 48%,transparent 70%);animation:cine-atmosphere 9s ease-in-out infinite alternate;pointer-events:none}
+.cinematic-overlay:after{content:"";position:absolute;inset:0;border:1px solid rgba(228,236,255,.1);box-shadow:inset 0 0 80px rgba(0,0,0,.28);pointer-events:none}
+.cinematic-overlay[data-theme="food"]{--cine-glow:rgba(255,137,183,.3);--cine-accent:#ffd3a1}.cinematic-overlay[data-theme="winter"]{--cine-glow:rgba(101,211,255,.31);--cine-accent:#c0f8ff}.cinematic-overlay[data-theme="desert"]{--cine-glow:rgba(255,165,86,.29);--cine-accent:#ffd18a}.cinematic-overlay[data-theme="west"]{--cine-glow:rgba(255,157,92,.26);--cine-accent:#ffc58c}.cinematic-overlay[data-theme="ocean"]{--cine-glow:rgba(37,221,230,.28);--cine-accent:#8efff3}.cinematic-overlay[data-theme="hell"]{--cine-glow:rgba(255,55,68,.3);--cine-accent:#ff9b78}
+.cinematic-topline{position:absolute;top:clamp(16px,3vw,32px);left:clamp(16px,3vw,32px);right:clamp(16px,3vw,32px);z-index:1;display:flex;justify-content:space-between;gap:12px;align-items:center;color:rgba(232,240,255,.74);font-size:10px;letter-spacing:2.8px;text-transform:uppercase}
+.cinematic-topline strong{font-size:10px;letter-spacing:1.5px;font-weight:400;color:var(--cine-accent,#d4e9ff);border:1px solid color-mix(in srgb,var(--cine-accent,#d4e9ff) 35%,transparent);padding:8px 11px;border-radius:99px;background:rgba(5,9,24,.48);backdrop-filter:blur(10px)}
+.cinematic-stage-art{position:absolute;left:0;right:0;top:9%;height:58%;display:flex;align-items:center;justify-content:center;pointer-events:none;opacity:.88}
+.cinematic-sigil{position:relative;display:grid;place-items:center;width:clamp(128px,24vw,238px);aspect-ratio:1;border:1px solid color-mix(in srgb,var(--cine-accent,#d4e9ff) 36%,transparent);border-radius:50%;background:radial-gradient(circle,rgba(255,255,255,.055),rgba(3,8,25,.03) 60%,transparent 70%);box-shadow:0 0 0 14px rgba(255,255,255,.018),0 0 0 30px rgba(255,255,255,.012),0 0 70px color-mix(in srgb,var(--cine-accent,#d4e9ff) 24%,transparent);animation:cine-sigil 7s linear infinite}
+.cinematic-sigil:before,.cinematic-sigil:after{content:"";position:absolute;inset:12%;border:1px solid color-mix(in srgb,var(--cine-accent,#d4e9ff) 26%,transparent);transform:rotate(45deg);border-radius:28px}.cinematic-sigil:after{inset:24%;transform:rotate(22.5deg);border-radius:50%}
+.cinematic-sigil span{font-size:clamp(56px,12vw,104px);filter:drop-shadow(0 0 26px color-mix(in srgb,var(--cine-accent,#d4e9ff) 45%,transparent));animation:cine-float 3s ease-in-out infinite}
+.cinematic-copy{position:relative;z-index:2;width:min(880px,100%);padding:clamp(14px,2.4vw,25px);border:1px solid rgba(198,218,255,.2);border-radius:20px;background:linear-gradient(135deg,rgba(10,17,39,.88),rgba(4,8,23,.95));backdrop-filter:blur(18px);box-shadow:0 25px 90px rgba(0,0,0,.52),inset 0 1px rgba(255,255,255,.055);transform:translateY(28px) scale(.985);transition:transform .65s cubic-bezier(.2,.8,.2,1);max-height:66%;overflow:auto}
+.cinematic-overlay.active .cinematic-copy{transform:translateY(0) scale(1)}.cinematic-copy.line-in{animation:cine-line-in .42s cubic-bezier(.2,.8,.2,1)}
+.cinematic-eyebrow{display:flex;align-items:center;gap:9px;color:var(--cine-accent,#b9d8ff);font-size:10px;letter-spacing:2.7px;text-transform:uppercase}.cinematic-eyebrow:before{content:"";width:25px;height:1px;background:currentColor;box-shadow:0 0 14px currentColor}
+.cinematic-dialogue-row{display:grid;grid-template-columns:68px minmax(0,1fr);gap:clamp(12px,2.4vw,23px);align-items:start;margin-top:15px}
+.cinematic-portrait{display:grid;place-items:center;width:68px;height:78px;border:1px solid color-mix(in srgb,var(--cine-accent,#d4e9ff) 36%,transparent);border-radius:15px;background:linear-gradient(145deg,color-mix(in srgb,var(--cine-accent,#d4e9ff) 14%,#111a35),rgba(4,8,22,.9));font-size:38px;box-shadow:inset 0 1px rgba(255,255,255,.08),0 0 25px color-mix(in srgb,var(--cine-accent,#d4e9ff) 9%,transparent)}
+.cinematic-speaker{font-size:clamp(17px,2.5vw,22px);color:#f6f8ff;letter-spacing:.2px;font-weight:400}.cinematic-role{margin-top:4px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:rgba(180,198,232,.66)}
+.cinematic-text{margin:11px 0 0;color:#e1e9fb;font-size:clamp(14px,1.8vw,18px);line-height:1.85;white-space:pre-line;letter-spacing:.05px}
+.cinematic-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:19px;padding-top:14px;border-top:1px solid rgba(193,213,255,.1)}
+.cinematic-progress{display:flex;gap:5px;align-items:center}.cinematic-progress i{display:block;width:19px;height:3px;border-radius:99px;background:rgba(205,220,255,.18);transition:background .25s,width .25s}.cinematic-progress i.active{width:28px;background:var(--cine-accent,#c5e0ff);box-shadow:0 0 14px color-mix(in srgb,var(--cine-accent,#c5e0ff) 45%,transparent)}
+.cinematic-next{display:inline-flex;align-items:center;justify-content:center;gap:16px;min-width:165px;min-height:45px;padding:11px 16px;border:1px solid color-mix(in srgb,var(--cine-accent,#c5e0ff) 48%,transparent);border-radius:12px;background:linear-gradient(120deg,color-mix(in srgb,var(--cine-accent,#c5e0ff) 16%,#172441),rgba(10,16,34,.9));color:#f7fbff;font-size:12px;letter-spacing:.7px;box-shadow:0 8px 28px rgba(0,0,0,.2);transition:transform .2s,border-color .2s,filter .2s}.cinematic-next:hover{transform:translateY(-2px);filter:brightness(1.13);border-color:var(--cine-accent,#c5e0ff)}.cinematic-next:focus-visible{outline:2px solid var(--cine-accent,#c5e0ff);outline-offset:3px}
+.cinematic-hint{color:rgba(182,199,231,.55);font-size:10px;letter-spacing:.6px}
+@keyframes cine-atmosphere{from{transform:translate3d(-1.5%,0,0) scale(1)}to{transform:translate3d(1.5%,-1%,0) scale(1.06)}}@keyframes cine-sigil{to{transform:rotate(360deg)}}@keyframes cine-float{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-7px) scale(1.025)}}@keyframes cine-line-in{from{opacity:.25;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:640px){.cinematic-overlay{padding:10px}.cinematic-topline{top:12px;left:12px;right:12px;font-size:8px;letter-spacing:1.4px}.cinematic-topline strong{font-size:8px;padding:7px 8px}.cinematic-stage-art{top:8%;height:48%}.cinematic-sigil{width:108px}.cinematic-sigil span{font-size:54px}.cinematic-copy{max-height:68%;padding:14px;border-radius:16px}.cinematic-dialogue-row{grid-template-columns:48px minmax(0,1fr);gap:11px;margin-top:12px}.cinematic-portrait{width:48px;height:58px;border-radius:12px;font-size:28px}.cinematic-text{font-size:13px;line-height:1.72;margin-top:8px}.cinematic-speaker{font-size:17px}.cinematic-role{font-size:8px}.cinematic-footer{margin-top:13px;padding-top:11px}.cinematic-hint{display:none}.cinematic-next{min-width:135px;min-height:42px;padding:9px 12px;gap:10px}}
+@media(prefers-reduced-motion:reduce){.cinematic-sigil,.cinematic-sigil span,.cinematic-overlay:before{animation:none!important}.cinematic-overlay,.cinematic-copy{transition-duration:.01ms!important}}
 </style>
 </head>
 <body>
@@ -126,6 +153,15 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,
       </div>
       <button class="primary-btn" id="screenPrimary" type="button">▶ 전투 시작</button><button class="secondary-btn" id="screenSecondary" type="button" hidden>처음부터</button>
       <p class="overlay-hint" id="screenHint">PC: A/D 이동 · Space 점프 · J 공격 · K/L/I/; 스킬 · 모바일: 조이스틱 이동</p>
+    </div>
+  </div>
+  <div class="cinematic-overlay" id="cinematicOverlay" data-theme="food" aria-live="polite" aria-modal="true" role="dialog" aria-label="스토리 시네마틱">
+    <div class="cinematic-topline"><span id="cinematicChapter">DORI CHRONICLES</span><strong id="cinematicBadge">STORY SEQUENCE</strong></div>
+    <div class="cinematic-stage-art" aria-hidden="true"><div class="cinematic-sigil"><span id="cinematicSigil">🐕</span></div></div>
+    <div class="cinematic-copy" id="cinematicCopy">
+      <div class="cinematic-eyebrow" id="cinematicEyebrow">PROLOGUE</div>
+      <div class="cinematic-dialogue-row"><div class="cinematic-portrait" id="cinematicPortrait">🐕</div><div><div class="cinematic-speaker" id="cinematicSpeaker">돌이</div><div class="cinematic-role" id="cinematicRole">떠돌이 강아지</div><p class="cinematic-text" id="cinematicText"></p></div></div>
+      <div class="cinematic-footer"><div><div class="cinematic-progress" id="cinematicProgress"></div><div class="cinematic-hint">ENTER 또는 버튼을 눌러 다음 대사</div></div><button class="cinematic-next" id="cinematicNext" type="button"><span>다음 대사</span><span aria-hidden="true">↗</span></button></div>
     </div>
   </div>
   <div class="touch-controls" id="touchControls" aria-label="모바일 터치 조작">
@@ -339,7 +375,7 @@ let LEVEL_W=4680; const GRAVITY=1760, BASE_SPEED=365, DASH_SPEED=1160, HEAD_SPEE
 let W=960,H=560,FLOOR=500,DPR=1,cam=0,lastTime=0,lastDrawTime=0,drawInterval=1000/40,uiClock=0,shake=0,mode="title",soundOn=true,audioCtx=null,aimMode=false,mouseInside=false;
 let aimWorldX=520,aimZ=0,hintTimer=0,particles=[],projectiles=[],combatBursts=[],skillTrails=[],enemies=[],cores=[],hazards=[],platforms=[],blocks=[],keys={left:false,right:false},touch={left:false,right:false};
 let screenFlash={color:"#ffffff",life:0,max:.12},impactFreeze=0;
-let player,cooldowns,bestScore=0,runStart=0,elapsed=0,won=false,shakeOffsetX=0,shakeOffsetY=0,currentStage=0;
+let player,cooldowns,bestScore=0,runStart=0,elapsed=0,won=false,shakeOffsetX=0,shakeOffsetY=0,currentStage=0,cinematicState=null,bossIntroShown=false,bossOutroSeen=false,stageOutroSeen=false;
 let campaignUnlocked=0;try{campaignUnlocked=Math.max(0,Math.min(STAGES.length-1,Number(localStorage.getItem("doriFullThrottleCampaignUnlocked"))||0))}catch(e){}
 let visitedStages=[];try{const v=JSON.parse(localStorage.getItem("doriFullThrottleVisitedStages")||"[]");if(Array.isArray(v))visitedStages=Array.from(new Set(v.map(Number).filter(n=>Number.isInteger(n)&&n>=0&&n<STAGES.length)));}catch(e){}
 try{currentStage=Math.max(0,Math.min(campaignUnlocked,Number(localStorage.getItem("doriFullThrottleLastStage"))||0))}catch(e){}
@@ -460,7 +496,7 @@ function buildCampaignStage(cycle,part){
  return{id:stageIndex,name:"스테이지 "+stageNo+" · "+localNames,subtitle:region.realm+" / "+["국경 돌파","보급로 장악","미궁 침투","수도 진격"][part],story:region.story[part],desc:region.story[part]+" "+["구조물을 뛰어넘고 적의 공격을 반사해 전진하자.","무너진 발판과 좁은 통로를 활용해 보급로를 끊자.","높은 발판과 기둥 뒤의 사각지대를 이용해 미궁을 통과하자.","마지막 방어선의 정예 부대를 돌파하고 보스의 문을 열자."][part],length,difficulty:difficultyNames[Math.min(6,cycle+Math.floor(part/3))],theme:region.theme,themeLabel:region.realm,enemyMultiplier,enemies,hazards,platforms,blocks:mapBlocks,cores:[]};
 }
 const STAGES=[STORY_TUTORIAL,...WORLD_REGIONS.flatMap((_,cycle)=>[0,1,2,3,4].map(part=>buildCampaignStage(cycle,part)))];
-function setupRun(stageId=currentStage){currentStage=clamp(Number(stageId)||0,0,STAGES.length-1);const stage=STAGES[currentStage];LEVEL_W=stage.length;player=newPlayer();cooldowns={parry:0,dash:0,bark:0,party:0,head:0};particles=[];projectiles=[];combatBursts=[];aimMode=false;hintTimer=0;cam=0;elapsed=0;won=false;shake=0;cores=(stage.cores||[]).map(c=>({...c}));hazards=(stage.hazards||[]).map(h=>({...h}));platforms=(stage.platforms||[]).map(p=>({...p}));blocks=(stage.blocks||[]).map(b=>({...b}));const mult=Number.isFinite(Number(stage.enemyMultiplier))?Number(stage.enemyMultiplier):1;enemies=(stage.enemies||[]).map((sp,i)=>{const hp=Math.max(1,Math.round((sp[1]==="shooter"?44:62)*mult));return{id:"enemy"+i,x:sp[0],type:sp[1],hp,maxHp:hp,dead:false,z:sp[1]==="shooter"?58:0,vx:0,face:-1,cooldown:rand(.3,1.4),wind:0,stun:0,flash:0,anim:rand(0,7),score:sp[1]==="shooter"?180:140}});if(stage.boss){const bx=stage.bossStart||Math.min(stage.length-260,stage.length*.84),bh=stage.bossHp||760;enemies.push({id:"boss",x:bx,type:"boss",name:stage.bossName||"식빵이",hp:bh,maxHp:bh,dead:false,z:0,vx:0,face:-1,cooldown:Math.max(.72,1.65-currentStage*.035),wind:0,meleeWind:0,meleeCooldown:.8,stun:0,flash:0,anim:0,score:2500+currentStage*350,boss:true});}}
+function setupRun(stageId=currentStage){currentStage=clamp(Number(stageId)||0,0,STAGES.length-1);const stage=STAGES[currentStage];bossIntroShown=false;bossOutroSeen=false;stageOutroSeen=false;LEVEL_W=stage.length;player=newPlayer();cooldowns={parry:0,dash:0,bark:0,party:0,head:0};particles=[];projectiles=[];combatBursts=[];aimMode=false;hintTimer=0;cam=0;elapsed=0;won=false;shake=0;cores=(stage.cores||[]).map(c=>({...c}));hazards=(stage.hazards||[]).map(h=>({...h}));platforms=(stage.platforms||[]).map(p=>({...p}));blocks=(stage.blocks||[]).map(b=>({...b}));const mult=Number.isFinite(Number(stage.enemyMultiplier))?Number(stage.enemyMultiplier):1;enemies=(stage.enemies||[]).map((sp,i)=>{const hp=Math.max(1,Math.round((sp[1]==="shooter"?44:62)*mult));return{id:"enemy"+i,x:sp[0],type:sp[1],hp,maxHp:hp,dead:false,z:sp[1]==="shooter"?58:0,vx:0,face:-1,cooldown:rand(.3,1.4),wind:0,stun:0,flash:0,anim:rand(0,7),score:sp[1]==="shooter"?180:140}});if(stage.boss){const bx=stage.bossStart||Math.min(stage.length-260,stage.length*.84),bh=stage.bossHp||760;enemies.push({id:"boss",x:bx,type:"boss",name:stage.bossName||"식빵이",hp:bh,maxHp:bh,dead:false,z:0,vx:0,face:-1,cooldown:Math.max(.72,1.65-currentStage*.035),wind:0,meleeWind:0,meleeCooldown:.8,stun:0,flash:0,anim:0,score:2500+currentStage*350,boss:true});}}
 function coreCount(){return cores.filter(c=>!c.dead).length}function boss(){return enemies.find(e=>e.boss)||null}function stageExitOpen(){const b=boss();return coreCount()===0&&(!b||b.dead)}setupRun();
 function emit(x,h,color,count=10,power=180){
  // Bound live particles so crowded fights stay responsive.
@@ -526,6 +562,82 @@ function takeDamage(amount,sourceX,soundType="hurt"){
  if(player.hp<=0){player.hp=0;finishGame(false)}
 }
 function showHint(text){const el=$("hintToast");el.textContent=text;el.classList.add("visible");hintTimer=1.25}
+const CINEMATIC_BOSSES={
+ "식빵이":{portrait:"🍞",title:"제빵 왕국의 군주",challenge:"여긴 내 왕국이야. 떠돌이 강아지에게 왕관을 내줄 생각은 없어!",reply:"왕관은 원래 주인이 있는 게 아니야. 내가 차지하면 그게 내 왕관이지!",victory:"내 황금 식탁이… 무너지다니!"},
+ "윈터":{portrait:"❄️",title:"서리 제국의 지배자",challenge:"내 겨울은 끝나지 않는다. 네 발자국도 이 눈 속에 영원히 묻어 주마.",reply:"발이 얼어붙어도 멈추진 않아. 다음 왕관은 네 뒤에 있거든!",victory:"이 눈보라를 뚫었다고…? 믿을 수 없어."},
+ "모래":{portrait:"🌪️",title:"모래 술탄국의 환영술사",challenge:"네가 보는 길도, 네가 믿는 적도 모두 환영이다. 사막은 네 야망을 삼킬 거야.",reply:"길이 가짜라면 벽을 부수고 새 길을 만들면 돼!",victory:"환영이 걷히다니… 네 의지가 모래바람보다 강했구나."},
+ "복돌이":{portrait:"🤠",title:"황야 연방의 보안관",challenge:"이 마을엔 두 왕이 필요 없어. 결투가 끝나면 왕관은 내 것이겠지.",reply:"난 총보다 빠르게 달려. 결투를 시작해 보자고!",victory:"네 속도를 얕봤군. 이 황야의 깃발은 네가 가져가라."},
+ "껌껌이":{portrait:"🌊",title:"심해 왕국의 수호자",challenge:"깊은 바다에선 왕관도 빛나지 않아. 네가 어디 있는지조차 모르게 해 주지.",reply:"어둠 속에서도 네 파도 소리는 들려. 더는 숨을 수 없어!",victory:"파도가 잦아들었어… 심해는 이제 네가 다스려."},
+ "솜솜이":{portrait:"🔥",title:"잿불 지옥령의 왕",challenge:"여기까지 온 용기는 인정하지. 하지만 내 왕좌에 닿는 자는 모두 재가 된다!",reply:"난 나라를 정복하러 왔어. 네 지옥도 예외는 아니야!",victory:"왕관이… 네게 반응하고 있어. 세계의 운명이 바뀌겠구나."}
+};
+const THEME_PRESENTATION={
+ food:{icon:"🍰",intro:"달콤한 향기 아래 숨겨진 보급로를 장악해. 크림 파이프와 과자 요새를 이용한 적의 공격을 조심해.",name:"제과 수비대"},
+ winter:{icon:"❄️",intro:"얼음 파편과 서리 탄환이 날아오는 전장이다. 서늘한 빛을 읽고 정확히 반사해.",name:"빙결 척후대"},
+ desert:{icon:"🌵",intro:"모래 결정과 가시 탄환이 사방에서 날아온다. 협곡의 사각지대와 모래 폭풍을 이용해.",name:"사막 약탈대"},
+ west:{icon:"🤠",intro:"강철 탄환과 회전하는 칼날이 철로를 지킨다. 높은 감시대의 사격을 피하고 빠르게 거리를 좁혀.",name:"황야 레인저"},
+ ocean:{icon:"🫧",intro:"전류 구체와 압축된 물방울이 좁은 해저 길목을 메운다. 산호 구조물 사이로 파고들어.",name:"산호 수비대"},
+ hell:{icon:"🔥",intro:"불씨와 어둠의 파편이 무너진 요새를 가득 채운다. 타오르는 위험 지형을 건너 봉인을 깨뜨려.",name:"잿불 추종자"}
+};
+function cinematicLines(kind){
+ const st=STAGES[currentStage],theme=THEME_PRESENTATION[st.theme]||THEME_PRESENTATION.food,bname=boss()?.name||st.bossName||"보스";
+ const line=(speaker,role,portrait,text)=>({speaker,role,portrait,text});
+ if(kind==="intro")return [
+  line("원정 기록관","CHAPTER "+String(Math.max(1,Math.ceil(currentStage/5))).padStart(2,"0")+" · "+(st.themeLabel||"정복 원정"),"✦",st.story),
+  line("돌이","떠돌이 강아지 · 정복자 후보","🐕","난 더는 이름 없는 떠돌이로 살지 않을 거야. 모든 나라의 왕이 되겠어. 이 길을 막는 자가 있다면 직접 뚫고 나아가면 돼."),
+  line(theme.name,"INTELLIGENCE BRIEFING",theme.icon,theme.intro+" "+st.subtitle+" — "+st.desc),
+  line("돌이","정복 선언","🐕",st.boss?"보스가 기다리고 있겠지. 먼저 길을 열고, 마지막엔 왕관을 내 손으로 가져오겠어.":"전진! 오늘은 이 땅의 문을 하나 더 열어젖히는 날이야.")
+ ];
+ if(kind==="bossIntro"){
+  const b=CINEMATIC_BOSSES[bname]||CINEMATIC_BOSSES["식빵이"];
+  return [
+   line("원정 기록관","BOSS CONTACT · "+(st.themeLabel||"UNKNOWN REALM"),theme.icon,"통로 끝에서 거대한 기운이 솟구친다. 전장의 소음이 멎고, "+bname+"가 돌이 앞을 가로막는다."),
+   line(bname,b.title,b.portrait,b.challenge),
+   line("돌이","왕관을 노리는 떠돌이","🐕",b.reply),
+   line(bname,"FINAL WARNING",b.portrait,"말로 끝날 싸움은 아니군. 네 야망이 얼마나 단단한지 직접 확인하겠다.")
+  ];
+ }
+ if(kind==="bossOutro"){
+  const b=CINEMATIC_BOSSES[bname]||CINEMATIC_BOSSES["식빵이"],last=currentStage===STAGES.length-1;
+  return [
+   line(bname,"DEFEATED · LAST WORDS",b.portrait,b.victory),
+   line("돌이","승리한 정복자","🐕",last?"여기까지 왔어. 세계의 마지막 왕관까지 내 손에 들어왔어. 이제 누구도 내가 떠돌이라고 부르지 못할 거야.":"이 나라의 왕관은 이제 내 거야. 하지만 내 원정은 끝나지 않았어. 다음 나라의 문이 열릴 때까지 계속 달릴 거야."),
+   line("원정 기록관",last?"THE CROWN OF THE WORLD":"REALM CONQUERED",theme.icon,last?"마지막 봉인이 풀리고, 종말의 왕도 위로 새벽빛이 번진다. 돌이의 정복 원정은 세계의 끝에 도달했다.":"보스의 깃발이 내려가고 "+(st.themeLabel||"이 나라")+"의 문장이 돌이의 원정 지도에 새겨진다. 다음 영토로 가는 길이 열린다.")
+  ];
+ }
+ if(kind==="stageOutro")return [
+  line("원정 기록관","MISSION COMPLETE · "+(st.themeLabel||"FRONTIER"),theme.icon,(st.themeLabel||"이 지역")+"의 관문이 돌이의 뒤에서 닫힌다. 전장은 잠잠해지고, 다음 원정 지도가 천천히 펼쳐진다."),
+  line("돌이","다음 왕관을 향해","🐕","한 걸음 더 가까워졌어. 쉬는 건 나중에 해도 돼. 다음 나라가 내 이름을 듣게 해 주자."),
+  line("원정 기록관","CAMPAIGN REPORT","✦",st.story)
+ ];
+ return [];
+}
+function showCinematicLine(){
+ if(!cinematicState)return;
+ const st=STAGES[currentStage],line=cinematicState.lines[cinematicState.index],overlay=$("cinematicOverlay"),copy=$("cinematicCopy");
+ overlay.dataset.theme=st.theme||"food";$("cinematicChapter").textContent=(st.themeLabel||"DORI CHRONICLES")+" · "+st.name;
+ $("cinematicBadge").textContent=cinematicState.kind==="intro"?"STORY SEQUENCE":cinematicState.kind==="bossIntro"?"BOSS ENCOUNTER":cinematicState.kind==="bossOutro"?"VICTORY CHRONICLE":"MISSION CHRONICLE";
+ $("cinematicSigil").textContent=cinematicState.kind.startsWith("boss")?(CINEMATIC_BOSSES[boss()?.name||st.bossName]?.portrait||THEME_PRESENTATION[st.theme]?.icon||"✦"):(THEME_PRESENTATION[st.theme]?.icon||"✦");
+ $("cinematicEyebrow").textContent=String(cinematicState.index+1).padStart(2,"0")+" / "+String(cinematicState.lines.length).padStart(2,"0")+" · "+(cinematicState.kind==="intro"?"THE ROAD TO THE CROWN":cinematicState.kind==="bossIntro"?"THE OPPONENT SPEAKS":cinematicState.kind==="bossOutro"?"AFTERMATH":"FRONTIER REPORT");
+ $("cinematicPortrait").textContent=line.portrait;$("cinematicSpeaker").textContent=line.speaker;$("cinematicRole").textContent=line.role;$("cinematicText").textContent=line.text;
+ $("cinematicProgress").innerHTML=cinematicState.lines.map((_,i)=>'<i class="'+(i<=cinematicState.index?"active":"")+'"></i>').join("");
+ $("cinematicNext").querySelector("span").textContent=cinematicState.index===cinematicState.lines.length-1?(cinematicState.kind==="intro"||cinematicState.kind==="bossIntro"?"전투 시작":"결과 확인"):"다음 대사";
+ copy.classList.remove("line-in");void copy.offsetWidth;copy.classList.add("line-in");
+}
+function beginCinematic(kind){
+ if(cinematicState)return;cinematicState={kind,lines:cinematicLines(kind),index:0};
+ mode="cinematic";$("screenOverlay").classList.add("hidden");$("cinematicOverlay").classList.add("active");
+ $("cinematicOverlay").setAttribute("aria-label",kind==="intro"?"스테이지 시작 이야기":kind==="bossIntro"?"보스 조우 대화":kind==="bossOutro"?"보스 격파 후 대화":"스테이지 완료 대화");
+ showCinematicLine();$("cinematicNext").focus({preventScroll:true});
+}
+function advanceCinematic(){
+ if(!cinematicState)return;cinematicState.index++;
+ if(cinematicState.index<cinematicState.lines.length){showCinematicLine();return}
+ const finished=cinematicState.kind;cinematicState=null;$("cinematicOverlay").classList.remove("active");
+ if(finished==="intro"||finished==="bossIntro"){if(finished==="bossIntro")bossIntroShown=true;mode="playing";runStart=performance.now();refreshUI();return}
+ if(finished==="bossOutro"||finished==="stageOutro"){finishGame(true,true);return}
+ mode="playing";
+}
+$("cinematicNext").addEventListener("click",advanceCinematic);
 function currentSpeedDamageMultiplier(){const speed=Math.abs(player.vx);return 1+Math.min(speed,520)/520;}
 function startAttack(){
  if(mode!=="playing"||player.partyT>0||player.attackT>=0||player.headbutt||player.dashT>0)return;
@@ -704,6 +816,8 @@ function updateEnemy(e,dt){
  e.x=clamp(e.x,40,LEVEL_W-40);
 }
 function update(dt){
+ if(mode!=="playing")return;
+ const approachingBoss=boss();if(approachingBoss&&!approachingBoss.dead&&!bossIntroShown&&player.x>=approachingBoss.x-900){beginCinematic("bossIntro");return}
  if(impactFreeze>0)dt*=.38;
  elapsed+=dt;
  cores.forEach(c=>c.flash=Math.max(0,(c.flash||0)-dt));enemies.forEach(e=>{e.hitT=Math.max(0,(e.hitT||0)-dt);e.flash=Math.max(0,(e.flash||0)-dt)});
@@ -769,13 +883,16 @@ function update(dt){
  particles.forEach(p=>{p.x+=p.vx*dt;p.h+=p.vh*dt;p.vh-=440*dt;p.life-=dt});particles=particles.filter(p=>p.life>0);combatBursts.forEach(f=>f.life-=dt);combatBursts=combatBursts.filter(f=>f.life>0);
  shake=Math.max(0,shake-dt*25);
  const target=clamp(player.x-W*.31,0,LEVEL_W-W);cam+=(target-cam)*Math.min(1,dt*9);
+ const defeatedBoss=boss();if(STAGES[currentStage].boss&&defeatedBoss&&defeatedBoss.dead&&!bossOutroSeen){bossOutroSeen=true;beginCinematic("bossOutro");return}
  if(stageExitOpen()&&player.x>=LEVEL_W-100){finishGame(true);return}
  if(player.hp<=0){finishGame(false);return}
  uiClock-=dt;if(uiClock<=0){refreshUI();uiClock=.08}
  if(hintTimer>0){hintTimer-=dt;if(hintTimer<=0)$("hintToast").classList.remove("visible")}
 }
-function finishGame(victory){
- if(mode!=="playing")return;mode=victory?"victory":"gameover";won=victory;
+function finishGame(victory,fromCinematic=false){
+ if(mode!=="playing"&&!(fromCinematic&&mode==="cinematic"))return;
+ if(victory&&!fromCinematic&&!STAGES[currentStage].boss&&!stageOutroSeen){stageOutroSeen=true;beginCinematic("stageOutro");return}
+ mode=victory?"victory":"gameover";won=victory;
  if(victory){player.score+=Math.max(0,Math.floor(1800-elapsed*8));player.score+=Math.max(0,player.hp*8);campaignUnlocked=Math.max(campaignUnlocked,Math.min(STAGES.length-1,currentStage+1));saveLocalProgress();queueCloudSave();sfx("win");emit(player.x,25,colors.gold,55,380)}else sfx("hurt");
  if(player.score>bestScore){bestScore=player.score;saveLocalProgress();queueCloudSave();}
  $("screenOverlay").classList.remove("hidden");$("screenKicker").textContent=victory?"MISSION ACCOMPLISHED":"SIGNAL LOST";
@@ -1195,13 +1312,14 @@ function draw(){
 }
 function loop(now){
  if(!lastTime)lastTime=now;const dt=Math.min(.034,Math.max(0,(now-lastTime)/1000));lastTime=now;
- if(mode==="playing")update(dt);else if(mode==="title"){elapsed=now/1000*.25;player.anim+=dt*2;cam=0}
+ if(mode==="playing")update(dt);else if(mode==="title"){elapsed=now/1000*.25;player.anim+=dt*2;cam=0}else if(mode==="cinematic"){elapsed+=dt*.18;player.anim+=dt*1.1}
  if(now-lastDrawTime>=drawInterval){draw();lastDrawTime=now}
  requestAnimationFrame(loop)
 }
 function showStageSelect(){mode="title";$("screenOverlay").classList.remove("hidden");$("screenKicker").textContent="CAMPAIGN · "+STAGES.length+" STAGES";$("screenTitle").innerHTML="돌이의 <em>정복 원정</em>";$("screenDescription").textContent="진행 상황과 보유 스킬은 로그인 계정에 저장돼. PC와 휴대폰에서 같은 계정으로 이어서 플레이할 수 있어."; $("featureGrid").innerHTML=STAGES.map((st,i)=>{const open=i<=campaignUnlocked,visited=visitedStages.includes(i),mark=!open?"🔒 ":visited?"★ ":"✓ ",tag=visited?" · 방문함":open?" · 도전 가능":"";return '<button type="button" class="feature stage-choice '+(open?'':'locked')+'" data-stage="'+i+'" '+(open?'':'disabled')+' style="text-align:left;cursor:'+(open?'pointer':'not-allowed')+';color:inherit;opacity:'+(open?'1':'.42')+'"><b>'+mark+st.name+'</b><span>'+st.subtitle+' · 난이도 '+st.difficulty+tag+(i===campaignUnlocked?' · 현재 도전':'')+'</span></button>'}).join("");currentStage=Math.min(currentStage,campaignUnlocked);$("screenDescription").textContent=STAGES[currentStage].story+"\n\n"+STAGES[currentStage].desc;$("screenPrimary").textContent="▶ "+STAGES[currentStage].name+" 시작";$("screenSecondary").hidden=false;$("screenSecondary").textContent="게임 센터로";$("screenHint").textContent="잠긴 스테이지는 앞선 스테이지를 클리어하면 열려!";document.querySelectorAll("[data-stage]:not(:disabled)").forEach(btn=>btn.addEventListener("click",()=>{currentStage=Number(btn.dataset.stage);saveLocalProgress();queueCloudSave();document.querySelectorAll("[data-stage]").forEach(b=>b.classList.toggle("selected",b===btn));$("screenDescription").textContent=STAGES[currentStage].story+"\n\n"+STAGES[currentStage].desc;$("screenPrimary").textContent="▶ "+STAGES[currentStage].name+" 시작";}));if(cloudSyncMessage)$("screenHint").textContent=cloudSyncMessage;}
-function startGame(){if(!cloudSyncReady){showHint("계정 저장을 확인 중이야. 잠시만 기다려 줘.");return}visitedStages=Array.from(new Set([...visitedStages,currentStage]));saveLocalProgress();queueCloudSave();setupRun(currentStage);mode="playing";runStart=performance.now();$("screenOverlay").classList.add("hidden");$("screenSecondary").hidden=true;$("screenPrimary").textContent="▶ 전투 시작";$("pauseButton").textContent="Ⅱ 일시 정지";audioReady();canvas.focus();refreshUI()}
+function startGame(){if(!cloudSyncReady){showHint("계정 저장을 확인 중이야. 잠시만 기다려 줘.");return}visitedStages=Array.from(new Set([...visitedStages,currentStage]));saveLocalProgress();queueCloudSave();setupRun(currentStage);mode="cinematic";runStart=0;$("screenOverlay").classList.add("hidden");$("cinematicOverlay").classList.remove("active");$("screenSecondary").hidden=true;$("screenPrimary").textContent="▶ 전투 시작";$("pauseButton").textContent="Ⅱ 일시 정지";audioReady();canvas.focus();beginCinematic("intro");refreshUI()}
 function pauseGame(){
+ if(mode==="cinematic")return;
  if(mode==="playing"){mode="paused";$("screenOverlay").classList.remove("hidden");$("screenKicker").textContent="PAUSE · TAKE A BREATH";$("screenTitle").innerHTML="잠시 <em>정지</em>";$("screenDescription").textContent="작전을 정비하고 다시 돌파하자. 일시 정지 중에는 전투 시간이 흐르지 않아.";$("featureGrid").innerHTML='<div class="feature"><b>현재 점수</b><span>'+formatScore(player.score)+'</span></div><div class="feature"><b>남은 코어</b><span>'+coreCount()+'개</span></div><div class="feature"><b>최고 기록</b><span>'+formatScore(bestScore)+'</span></div>';$("screenPrimary").textContent="▶ 계속하기";$("screenSecondary").hidden=false;$("screenSecondary").textContent="처음부터";$("screenHint").textContent="P 또는 ESC를 누르면 다시 시작할 수 있어."}
  else if(mode==="paused"){mode="playing";$("screenOverlay").classList.add("hidden");$("screenSecondary").hidden=true;refreshUI()}
 }
@@ -1269,6 +1387,7 @@ window.addEventListener("blur",clearHeldInputs);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)clearHeldInputs()});
 window.addEventListener("keydown",e=>{
  const k=e.key.toLowerCase();
+ if(mode==="cinematic"&&(k==="enter"||k===" ")){e.preventDefault();advanceCinematic();return}
  if(k===" ")e.preventDefault();
  if(k==="a")keys.left=true;
  if(k==="d")keys.right=true;
