@@ -388,11 +388,11 @@ function skillVisual(name,power=1){
  player.skillMotion={name,life:.32,max:.32};
 }
 function impactFX(x,h,color,style="impact",power=1){
- const life=style==="boss-break" ? .72 : .42;
+ const life=style==="boss-break" ? .72 : style==="slash" ? .2 : .42;
  combatBursts.push({x,h,color,style,life,max:life,power,rot:rand(0,Math.PI*2),seed:rand(0,Math.PI*2)});
  if(combatBursts.length>18)combatBursts.splice(0,combatBursts.length-18);
- const count=Math.round((style==="boss-break"?20:style.startsWith("boss-")?10:style==="impact"?6:4)*(W<620?.55:.78));
- emit(x,h,color,count,style==="boss-break"?390:style.startsWith("boss-")?290:210);
+ const count=Math.round((style==="boss-break"?20:style.startsWith("boss-")?10:style==="impact"?6:style==="slash"?1:4)*(W<620?.55:.78));
+ emit(x,h,color,count,style==="boss-break"?390:style.startsWith("boss-")?290:style==="slash"?95:210);
 }
 function addCombo(){
  player.combo++;player.comboTimer=1.7;player.score+=10;
@@ -615,8 +615,8 @@ function update(dt){
  if(player.dashT>0){const skill=player.skillMotion?.name||equippedSkills[2]||"dash",color=({lightningDash:"#ffe86b",meteorDash:"#ff865c",phantomRush:"#d2b6ff",shadowStep:"#b49aff",cometRush:"#ffd76e",windRunner:"#9dffdf"}[skill]||"#6bf1ff");skillTrails.push({x:player.x-player.face*rand(8,28),h:player.z+rand(12,54),life:rand(.12,.24),max:.24,color,size:rand(12,24),face:player.face,kind:skill});if(skillTrails.length>14)skillTrails.splice(0,skillTrails.length-14)}
  if(player.attackT>=0){
   player.attackT+=dt;
-  if(!player.attackDone[0]&&player.attackT>=.075){const dmg=21*currentSpeedDamageMultiplier()*(player.powerBuff>0?1.5:1);sfx("attack1");impactFX(player.x+player.face*86,player.z+39,"#ffe39b","slash",.62);hitTargets(player.x,player.face,104,dmg,player.attackSets[0],player.z,420,"attack1");player.attackDone[0]=true;}
-  if(!player.attackDone[1]&&player.attackT>=.225){const dmg=25*currentSpeedDamageMultiplier()*(player.powerBuff>0?1.5:1);sfx("attack2");impactFX(player.x+player.face*105,player.z+44,"#70f6ff","slash",.82);hitTargets(player.x,player.face,120,dmg,player.attackSets[1],player.z,680,"attack2");player.attackDone[1]=true;}
+  if(!player.attackDone[0]&&player.attackT>=.075){const dmg=21*currentSpeedDamageMultiplier()*(player.powerBuff>0?1.5:1);sfx("attack1");impactFX(player.x+player.face*86,player.z+39,"#ffe39b","slash",.35);hitTargets(player.x,player.face,104,dmg,player.attackSets[0],player.z,420,"attack1");player.attackDone[0]=true;}
+  if(!player.attackDone[1]&&player.attackT>=.225){const dmg=25*currentSpeedDamageMultiplier()*(player.powerBuff>0?1.5:1);sfx("attack2");impactFX(player.x+player.face*105,player.z+44,"#70f6ff","slash",.42);hitTargets(player.x,player.face,120,dmg,player.attackSets[1],player.z,680,"attack2");player.attackDone[1]=true;}
   if(player.attackT>.46)player.attackT=-1;
  }
  if(player.parryT>0)reflectProjectiles();
@@ -1046,7 +1046,7 @@ function drawCombatBursts(){
    ctx.globalAlpha=a*.92;ctx.setLineDash([5,4]);ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,0,r*.95,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
    for(let k=0;k<5;k++){ctx.save();ctx.rotate(k*1.256);ctx.beginPath();ctx.moveTo(r*.5,0);ctx.lineTo(r*.78,-r*.15);ctx.lineTo(r*1.05,0);ctx.lineTo(r*.78,r*.15);ctx.closePath();ctx.fill();ctx.restore()}
   }else if(f.style==="boss-steel"||f.style==="slash"){
-   ctx.globalAlpha=a;for(let k=0;k<3;k++){ctx.save();ctx.rotate((k-1)*.28);ctx.beginPath();ctx.moveTo(-r*.9,-r*.38+k*r*.2);ctx.lineTo(r*.95,r*.05+k*r*.2);ctx.lineTo(r*.72,r*.13+k*r*.2);ctx.stroke();ctx.restore()}
+   ctx.globalAlpha=a;const strokes=f.style==="slash"?1:3;for(let k=0;k<strokes;k++){ctx.save();if(f.style!=="slash")ctx.rotate((k-1)*.28);ctx.beginPath();ctx.moveTo(-r*.72,-r*.18);ctx.lineTo(r*.72,r*.04);ctx.lineTo(r*.52,r*.12);ctx.stroke();ctx.restore()}
   }else if(f.style==="boss-water"||f.style==="water"){
    ctx.globalAlpha=a;ctx.lineWidth=3;for(let k=0;k<3;k++){ctx.beginPath();ctx.ellipse(0,0,r*(.38+k*.3),r*(.22+k*.16),0,0,Math.PI*2);ctx.stroke()}
    for(let k=0;k<5;k++){ctx.beginPath();ctx.arc(Math.cos(k*1.257)*r*.8,Math.sin(k*1.257)*r*.5,Math.max(1,r*.04),0,Math.PI*2);ctx.fill()}
