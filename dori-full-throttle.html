@@ -253,7 +253,7 @@ let player,cooldowns,bestScore=0,runStart=0,elapsed=0,won=false,shakeOffsetX=0,s
 const colors={cyan:"#6bf1ff",blue:"#6e91ff",gold:"#ffd76e",red:"#ff667f",green:"#7affc7",white:"#f6f8ff",orange:"#ffad70"};
 try{bestScore=Number(localStorage.getItem("doriFullThrottleBest")||0)||0}catch(e){}
 function resize(){
- const r=canvas.getBoundingClientRect(); W=Math.max(320,r.width);H=Math.max(360,r.height);FLOOR=H-58;DPR=Math.min(window.devicePixelRatio||1,2);
+ const r=canvas.getBoundingClientRect(); W=Math.max(320,r.width);H=Math.max(360,r.height);FLOOR=H-58;DPR=Math.min(window.devicePixelRatio||1,1.25);
  canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);ctx.setTransform(DPR,0,0,DPR,0,0);
  if(player&&player.z>FLOOR-90) player.z=FLOOR-90;
 }
@@ -366,7 +366,7 @@ function setupRun(stageId=currentStage){currentStage=clamp(Number(stageId)||0,0,
 function coreCount(){return cores.filter(c=>!c.dead).length}function boss(){return enemies.find(e=>e.boss)||null}function stageExitOpen(){const b=boss();return coreCount()===0&&(!b||b.dead)}setupRun();
 function emit(x,h,color,count=10,power=180){
  // Bound live particles so crowded fights stay responsive.
- const cap=W<620?55:90,available=Math.max(0,cap-particles.length),n=Math.min(count,available);
+ const cap=W<620?32:55,available=Math.max(0,cap-particles.length),n=Math.min(count,available);
  for(let i=0;i<n;i++){const a=rand(0,Math.PI*2),sp=rand(power*.22,power);particles.push({x,h,vx:Math.cos(a)*sp,vh:Math.sin(a)*sp,life:rand(.18,.55),max:.55,size:rand(1.5,4.7),color})}
 }
 function skillVisual(name,power=1){
@@ -382,7 +382,7 @@ function skillVisual(name,power=1){
  if(name==="impactLanding"||name==="meteorCall"||name==="novaRoar"||name==="infinityReflect"){screenFlash={color:trailStart,life:.13,max:.13};shake=Math.max(shake,name==="novaRoar"||name==="meteorCall"?5:3)}
  const life=(name==="meteorCall"||name==="novaRoar"||name==="infinityReflect")?.78:.56;
  combatBursts.push({x:player.x+player.face*18,h:player.z+45,color,style,life,max:life,power:Math.min(2.4,power),rot:rand(0,Math.PI*2),seed:rand(0,Math.PI*2)});
- if(combatBursts.length>18)combatBursts.splice(0,combatBursts.length-18);
+ if(combatBursts.length>10)combatBursts.splice(0,combatBursts.length-10);
  const count=Math.round((({prismReflect:16,infinityReflect:19,meteorCall:17,novaRoar:17,phantomRush:15,cloneBuddy:12,party:10}[name]||7)+Math.round(power*1.3))*(W<620?.55:.78));
  emit(player.x+player.face*18,player.z+38,color,count,150+power*100);
  player.skillMotion={name,life:.32,max:.32};
@@ -612,7 +612,7 @@ function update(dt){
  screenFlash.life=Math.max(0,screenFlash.life-dt);impactFreeze=Math.max(0,impactFreeze-dt);
  skillTrails.forEach(t=>t.life-=dt);skillTrails=skillTrails.filter(t=>t.life>0);
  player.anim+=dt*(Math.abs(player.vx)>20?11:3);
- if(player.dashT>0){const skill=player.skillMotion?.name||equippedSkills[2]||"dash",color=({lightningDash:"#ffe86b",meteorDash:"#ff865c",phantomRush:"#d2b6ff",shadowStep:"#b49aff",cometRush:"#ffd76e",windRunner:"#9dffdf"}[skill]||"#6bf1ff");skillTrails.push({x:player.x-player.face*rand(8,28),h:player.z+rand(12,54),life:rand(.12,.24),max:.24,color,size:rand(12,24),face:player.face,kind:skill});if(skillTrails.length>24)skillTrails.splice(0,skillTrails.length-24)}
+ if(player.dashT>0){const skill=player.skillMotion?.name||equippedSkills[2]||"dash",color=({lightningDash:"#ffe86b",meteorDash:"#ff865c",phantomRush:"#d2b6ff",shadowStep:"#b49aff",cometRush:"#ffd76e",windRunner:"#9dffdf"}[skill]||"#6bf1ff");skillTrails.push({x:player.x-player.face*rand(8,28),h:player.z+rand(12,54),life:rand(.12,.24),max:.24,color,size:rand(12,24),face:player.face,kind:skill});if(skillTrails.length>14)skillTrails.splice(0,skillTrails.length-14)}
  if(player.attackT>=0){
   player.attackT+=dt;
   if(!player.attackDone[0]&&player.attackT>=.075){const dmg=21*currentSpeedDamageMultiplier()*(player.powerBuff>0?1.5:1);sfx("attack1");impactFX(player.x+player.face*86,player.z+39,"#ffe39b","slash",.62);hitTargets(player.x,player.face,104,dmg,player.attackSets[0],player.z,420,"attack1");player.attackDone[0]=true;}
