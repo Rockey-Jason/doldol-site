@@ -1093,7 +1093,8 @@ function draw(){
 function loop(now){
  if(!lastTime)lastTime=now;const dt=Math.min(.034,Math.max(0,(now-lastTime)/1000));lastTime=now;
  if(mode==="playing")update(dt);else if(mode==="title"){elapsed=now/1000*.25;player.anim+=dt*2;cam=0}
- draw();requestAnimationFrame(loop)
+ if(now-lastDrawTime>=drawInterval){draw();lastDrawTime=now}
+ requestAnimationFrame(loop)
 }
 function showStageSelect(){mode="title";$("screenOverlay").classList.remove("hidden");$("screenKicker").textContent="CAMPAIGN SELECT · "+STAGES.length+" STAGES";$("screenTitle").innerHTML="스테이지 <em>선택</em>";$("screenDescription").textContent="12개 스테이지! 튜토리얼부터 점점 어려워지고, 네 명의 보스가 기다려.";$("featureGrid").innerHTML=STAGES.map(st=>'<button type="button" class="feature stage-choice" data-stage="'+st.id+'" style="text-align:left;cursor:pointer;color:inherit"><b>'+st.name+'</b><span>'+st.subtitle+' · 난이도 '+st.difficulty+'</span></button>').join("");$("screenPrimary").textContent="▶ 선택한 스테이지 시작";$("screenSecondary").hidden=false;$("screenSecondary").textContent="게임 센터로";$("screenHint").textContent="튜토리얼부터 시작하는 걸 추천해!";document.querySelectorAll("[data-stage]").forEach(btn=>btn.addEventListener("click",()=>{currentStage=Number(btn.dataset.stage);document.querySelectorAll("[data-stage]").forEach(b=>b.classList.toggle("selected",b===btn));$("screenDescription").textContent=STAGES[currentStage].desc;$("screenPrimary").textContent="▶ "+STAGES[currentStage].name+" 시작";}));}
 function startGame(){setupRun(currentStage);mode="playing";runStart=performance.now();$("screenOverlay").classList.add("hidden");$("screenSecondary").hidden=true;$("screenPrimary").textContent="▶ 전투 시작";$("pauseButton").textContent="Ⅱ 일시 정지";audioReady();canvas.focus();refreshUI()}
