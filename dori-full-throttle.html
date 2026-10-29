@@ -7,6 +7,7 @@
 <meta name="description" content="DORI: FULL THROTTLE — 돌이의 초고속 2D 액션 돌파 게임">
 <title>DORI: FULL THROTTLE | 돌이 액션</title>
 <link rel="icon" href="./rockeysite-icon-3.png" type="image/png">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 @font-face{font-family:HancomMalrangmalrang;src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
 :root{color-scheme:dark;--bg:#070b1d;--panel:#0d1530;--line:rgba(144,175,255,.2);--text:#f5f7ff;--muted:#a2b1d1;--cyan:#6bf1ff;--blue:#6e91ff;--gold:#ffd76e;--red:#ff667f;--green:#7affc7}
@@ -170,6 +171,12 @@ const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d",{alpha:false});
 const frame=document.getElementById("gameFrame");
 const $=id=>document.getElementById(id);
+const SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+const supabaseClient=window.doriSupabase||(window.supabase&&typeof window.supabase.createClient==="function"?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null);
+if(supabaseClient&&!window.doriSupabase)window.doriSupabase=supabaseClient;
+const CLOUD_SAVE_TABLE="dori_full_throttle_saves";
+let cloudUserId=null,cloudSyncReady=false,cloudWriteTimer=null,cloudWriteChain=Promise.resolve(),applyingRemoteSave=false,cloudSyncMessage="";
 const SKILL_META={
  parry:{name:"머리로 튕겨내기",icon:"↶",category:1,key:"K",rarity:"일반",weight:60,effect:"parry",power:1},
  goldParry:{name:"황금 반사",icon:"✨",category:1,key:"K",rarity:"희귀",weight:28,effect:"goldReflect",power:1.25},
@@ -213,7 +220,83 @@ const SLOT_COSTS={2:180,3:350,4:600},GACHA_COST=100;
 const RARITY_COLORS={"일반":"#c4d0e8","희귀":"#67d8ff","영웅":"#c49aff","전설":"#ffd76e"};
 let totalCoins=0,ownedSkills=["parry"],unlockedSlots=[1],equippedSkills={1:"parry",2:null,3:null,4:null};
 try{totalCoins=Math.max(0,Number(localStorage.getItem("doriFullThrottleCoins"))||0);const save=JSON.parse(localStorage.getItem("doriFullThrottleLoadout")||"null");if(save&&Array.isArray(save.ownedSkills)&&Array.isArray(save.unlockedSlots)&&save.equippedSkills){ownedSkills=Array.from(new Set(["parry",...save.ownedSkills.filter(k=>SKILL_META[k])]));unlockedSlots=Array.from(new Set([1,...save.unlockedSlots.filter(n=>[2,3,4].includes(n))]));equippedSkills={1:"parry",2:null,3:null,4:null,...save.equippedSkills};for(const n of [1,2,3,4])if(equippedSkills[n]&&(!ownedSkills.includes(equippedSkills[n])||SKILL_META[equippedSkills[n]].category!==n||!unlockedSlots.includes(n)))equippedSkills[n]=n===1?"parry":null;}}catch(e){}
-function saveLoadout(){try{localStorage.setItem("doriFullThrottleCoins",String(totalCoins));localStorage.setItem("doriFullThrottleLoadout",JSON.stringify({ownedSkills,unlockedSlots,equippedSkills}));}catch(e){}}
+function saveLoadout(){saveLocalProgress();queueCloudSave();}
+function saveLocalProgress(){
+ try{
+  localStorage.setItem("doriFullThrottleCoins",String(totalCoins));
+  localStorage.setItem("doriFullThrottleLoadout",JSON.stringify({ownedSkills,unlockedSlots,equippedSkills}));
+  localStorage.setItem("doriFullThrottleCampaignUnlocked",String(campaignUnlocked));
+  localStorage.setItem("doriFullThrottleBest",String(bestScore));
+  localStorage.setItem("doriFullThrottleVisitedStages",JSON.stringify(visitedStages));
+  localStorage.setItem("doriFullThrottleLastStage",String(currentStage));
+ }catch(e){}
+}
+function collectCloudSave(){
+ return {version:1,coins:Math.max(0,Math.floor(Number(totalCoins)||0)),loadout:{ownedSkills:[...ownedSkills],unlockedSlots:[...unlockedSlots],equippedSkills:{...equippedSkills}},campaignUnlocked:Math.max(0,Math.min(STAGES.length-1,Number(campaignUnlocked)||0)),bestScore:Math.max(0,Math.floor(Number(bestScore)||0)),visitedStages:[...new Set(visitedStages.filter(n=>Number.isInteger(n)&&n>=0&&n<STAGES.length))],lastStage:Math.max(0,Math.min(campaignUnlocked,Number(currentStage)||0)),savedAt:new Date().toISOString()};
+}
+function applyCloudSave(data){
+ if(!data||typeof data!=="object")return;
+ applyingRemoteSave=true;
+ try{
+  if(Number.isFinite(Number(data.coins)))totalCoins=Math.max(0,Math.floor(Number(data.coins)));
+  const load=data.loadout;
+  if(load&&Array.isArray(load.ownedSkills)&&Array.isArray(load.unlockedSlots)&&load.equippedSkills&&typeof load.equippedSkills==="object"){
+   ownedSkills=Array.from(new Set(["parry",...load.ownedSkills.filter(k=>SKILL_META[k])]));
+   unlockedSlots=Array.from(new Set([1,...load.unlockedSlots.map(Number).filter(n=>[2,3,4].includes(n))]));
+   equippedSkills={1:"parry",2:null,3:null,4:null,...load.equippedSkills};
+   for(const n of [1,2,3,4])if(equippedSkills[n]&&(!ownedSkills.includes(equippedSkills[n])||!SKILL_META[equippedSkills[n]]||SKILL_META[equippedSkills[n]].category!==n||!unlockedSlots.includes(n)))equippedSkills[n]=n===1?"parry":null;
+  }
+  if(Number.isFinite(Number(data.campaignUnlocked)))campaignUnlocked=Math.max(0,Math.min(STAGES.length-1,Math.floor(Number(data.campaignUnlocked))));
+  if(Number.isFinite(Number(data.bestScore)))bestScore=Math.max(0,Math.floor(Number(data.bestScore)));
+  if(Array.isArray(data.visitedStages))visitedStages=Array.from(new Set(data.visitedStages.map(Number).filter(n=>Number.isInteger(n)&&n>=0&&n<STAGES.length)));
+  if(Number.isFinite(Number(data.lastStage)))currentStage=Math.max(0,Math.min(campaignUnlocked,Math.floor(Number(data.lastStage))));
+  saveLocalProgress();
+ }finally{applyingRemoteSave=false}
+}
+function queueCloudSave(){
+ if(applyingRemoteSave||!cloudUserId||!cloudSyncReady||!supabaseClient)return;
+ clearTimeout(cloudWriteTimer);
+ cloudWriteTimer=setTimeout(()=>{persistCloudSave()},450);
+}
+function persistCloudSave(){
+ if(!cloudUserId||!cloudSyncReady||!supabaseClient||applyingRemoteSave)return Promise.resolve();
+ const record={user_id:cloudUserId,save_data:collectCloudSave(),updated_at:new Date().toISOString()};
+ cloudWriteChain=cloudWriteChain.catch(()=>{}).then(async()=>{
+  const {error}=await supabaseClient.from(CLOUD_SAVE_TABLE).upsert(record,{onConflict:"user_id"});
+  if(error)throw error;
+ }).catch(error=>{console.warn("[DORI: FULL THROTTLE] 계정 저장 실패:",error)});
+ return cloudWriteChain;
+}
+function setCloudMessage(message){
+ cloudSyncMessage=message;
+ const el=$("screenHint");
+ if(el&&mode==="title")el.textContent=message;
+}
+async function syncAccountSave(){
+ if(!supabaseClient){cloudUserId=null;cloudSyncReady=true;setCloudMessage("로그인하면 PC·휴대폰에서 스테이지와 아이템을 공유할 수 있어.");return}
+ try{
+  const {data,error}=await supabaseClient.auth.getSession();
+  if(error)throw error;
+  const session=data?.session;
+  if(!session?.user?.id){
+   cloudUserId=null;cloudSyncReady=true;
+   setCloudMessage("로그인하면 PC·휴대폰에서 진행 상황과 아이템이 자동 동기화돼.");
+   return;
+  }
+  const uid=session.user.id;cloudSyncReady=false;cloudUserId=uid;
+  const {data:row,error:loadError}=await supabaseClient.from(CLOUD_SAVE_TABLE).select("save_data,updated_at").eq("user_id",uid).maybeSingle();
+  if(loadError)throw loadError;
+  if(row&&row.save_data)applyCloudSave(row.save_data);
+  cloudSyncReady=true;
+  if(!row)await persistCloudSave();
+  showStageSelect();refreshLoadoutUI();refreshUI();
+  setCloudMessage("☁ 계정 동기화 완료 · 스테이지와 아이템이 저장돼.");
+ }catch(error){
+  console.warn("[DORI: FULL THROTTLE] 계정 동기화를 완료하지 못했습니다:",error);
+  cloudUserId=null;cloudSyncReady=true;
+  setCloudMessage("계정 동기화에 실패했어. 이 기기의 저장은 계속돼. 연결 후 새로고침해 줘.");
+ }
+}
 function addCoins(amount){amount=Math.max(0,Math.floor(amount));totalCoins+=amount;if(player)player.runCoins=(player.runCoins||0)+amount;saveLoadout();refreshLoadoutUI();}
 function renderSkillControls(){
  document.querySelectorAll("[data-skill]").forEach(btn=>{
@@ -251,6 +334,8 @@ let aimWorldX=520,aimZ=0,hintTimer=0,particles=[],projectiles=[],combatBursts=[]
 let screenFlash={color:"#ffffff",life:0,max:.12},impactFreeze=0;
 let player,cooldowns,bestScore=0,runStart=0,elapsed=0,won=false,shakeOffsetX=0,shakeOffsetY=0,currentStage=0;
 let campaignUnlocked=0;try{campaignUnlocked=Math.max(0,Math.min(STAGES.length-1,Number(localStorage.getItem("doriFullThrottleCampaignUnlocked"))||0))}catch(e){}
+let visitedStages=[];try{const v=JSON.parse(localStorage.getItem("doriFullThrottleVisitedStages")||"[]");if(Array.isArray(v))visitedStages=Array.from(new Set(v.map(Number).filter(n=>Number.isInteger(n)&&n>=0&&n<STAGES.length)));}catch(e){}
+try{currentStage=Math.max(0,Math.min(campaignUnlocked,Number(localStorage.getItem("doriFullThrottleLastStage"))||0))}catch(e){}
 const colors={cyan:"#6bf1ff",blue:"#6e91ff",gold:"#ffd76e",red:"#ff667f",green:"#7affc7",white:"#f6f8ff",orange:"#ffad70"};
 try{bestScore=Number(localStorage.getItem("doriFullThrottleBest")||0)||0}catch(e){}
 function resize(){
@@ -405,7 +490,11 @@ function coreHit(c,damage,sourceEffect=null){
 function hitBossFlashColor(name){return ({"식빵이":"#ff9aa8","윈터":"#baf7ff","모래":"#e0b5ff","복돌이":"#ffd08a","껌껌이":"#8afff5","솜솜이":"#ffb5f0"}[name]||"#ffffff")}
 function damageEnemy(e,damage,knock=140,dir=1,sourceEffect=null){
  if(!e||e.dead)return;if(e.boss&&((e.name==="솜솜이"&&coreCount()>0)||(e.name==="껌껌이"&&(e.hiddenT||0)>0))){emit(e.x,45,e.name==="솜솜이"?"#f5a8ff":colors.blue,4,95);return}
- const amount=damage;e.hp-=amount;e.flash=.18;e.hitT=.2;e.hitDir=dir;e.hitPulse=(e.hitPulse||0)+1;player.damageDone+=amount;addCombo();shake=Math.max(shake,e.boss?8.2:4.0);screenFlash={color:e.boss?hitBossFlashColor(e.name):"#fff0be",life:e.boss?.11:.055,max:e.boss?.11:.055};impactFreeze=Math.max(impactFreeze,e.boss?.035:.012);
+ const maxHp=Number(e.maxHp);
+ if(!Number.isFinite(maxHp)||maxHp<=0)e.maxHp=e.boss?760:(e.type==="shooter"?44:62);
+ if(!Number.isFinite(Number(e.hp)))e.hp=e.maxHp;
+ const rawDamage=Number(damage),amount=Number.isFinite(rawDamage)&&rawDamage>0?rawDamage:1;
+ e.hp=clamp(Number(e.hp)-amount,0,e.maxHp);e.flash=.18;e.hitT=.2;e.hitDir=dir;e.hitPulse=(e.hitPulse||0)+1;player.damageDone+=amount;addCombo();shake=Math.max(shake,e.boss?8.2:4.0);screenFlash={color:e.boss?hitBossFlashColor(e.name):"#fff0be",life:e.boss?.11:.055,max:e.boss?.11:.055};impactFreeze=Math.max(impactFreeze,e.boss?.035:.012);
  const bossStyle=e.boss?({"식빵이":"boss-ember","윈터":"boss-ice","모래":"boss-sand","복돌이":"boss-steel","껌껌이":"boss-water","솜솜이":"boss-arcane"}[e.name]||"boss-ember"):"impact";
  const hitColor=e.boss?({"식빵이":"#ff6b78","윈터":"#baf7ff","모래":"#d8a3ff","복돌이":"#ffc06e","껌껌이":"#62f5e8","솜솜이":"#ff8de8"}[e.name]||colors.red):colors.gold;
  impactFX(e.x,e.z+30,hitColor,bossStyle,e.boss?1.1:.72);
@@ -672,8 +761,8 @@ function update(dt){
 }
 function finishGame(victory){
  if(mode!=="playing")return;mode=victory?"victory":"gameover";won=victory;
- if(victory){player.score+=Math.max(0,Math.floor(1800-elapsed*8));player.score+=Math.max(0,player.hp*8);campaignUnlocked=Math.max(campaignUnlocked,Math.min(STAGES.length-1,currentStage+1));try{localStorage.setItem("doriFullThrottleCampaignUnlocked",String(campaignUnlocked))}catch(e){}sfx("win");emit(player.x,25,colors.gold,55,380)}else sfx("hurt");
- if(player.score>bestScore){bestScore=player.score;try{localStorage.setItem("doriFullThrottleBest",String(bestScore))}catch(e){}}
+ if(victory){player.score+=Math.max(0,Math.floor(1800-elapsed*8));player.score+=Math.max(0,player.hp*8);campaignUnlocked=Math.max(campaignUnlocked,Math.min(STAGES.length-1,currentStage+1));saveLocalProgress();queueCloudSave();sfx("win");emit(player.x,25,colors.gold,55,380)}else sfx("hurt");
+ if(player.score>bestScore){bestScore=player.score;saveLocalProgress();queueCloudSave();}
  $("screenOverlay").classList.remove("hidden");$("screenKicker").textContent=victory?"MISSION ACCOMPLISHED":"SIGNAL LOST";
  $("screenTitle").innerHTML=victory?"돌이, <em>돌파 성공!</em>":"<em>임무 실패</em>";
  $("screenDescription").textContent=victory?(STAGES[currentStage].name+" 클리어! "+(currentStage<STAGES.length-1?"다음 스테이지가 해금됐어. 계속 진행하자!":"캠페인 전체를 정복했어! 전설적인 돌파야!")):"체력이 모두 소진됐어. 공격 타이밍과 투사체 반사를 활용해 다시 도전해 봐.";
@@ -758,7 +847,11 @@ function drawBossAura(e,scale){
  ctx.restore();
 }
 function drawEnemy(e){
- if(e.dead)return;const sx=e.x-cam;if(sx< -100||sx>W+100)return;
+ if(e.dead)return;
+ if(!Number.isFinite(Number(e.maxHp))||Number(e.maxHp)<=0)e.maxHp=e.boss?760:(e.type==="shooter"?44:62);
+ if(!Number.isFinite(Number(e.hp)))e.hp=e.maxHp;
+ e.hp=clamp(Number(e.hp),0,Number(e.maxHp));
+ const sx=e.x-cam;if(sx< -100||sx>W+100)return;
  if(e.boss&&e.name==="껌껌이"&&(e.hiddenT||0)>0){const ripple=1+Math.sin(elapsed*12)*.18;ctx.strokeStyle="rgba(91,221,232,.8)";ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(sx,FLOOR-8,28*ripple,8*ripple,0,0,Math.PI*2);ctx.stroke();return}
  const boss=e.boss;const scale=boss?1.9:1;const foot=FLOOR-(e.z||0);const cy=foot-(boss?54:25);ctx.save();const hitKick=(e.hitT||0)>0?Math.sin((e.hitT/.2)*Math.PI):0;ctx.translate(sx+(e.hitDir||0)*hitKick*(boss?7:4),cy-hitKick*(boss?3:1));ctx.rotate((e.hitDir||0)*hitKick*(boss?.045:.025));ctx.scale((e.face||-1)*(1+hitKick*(boss?.035:.07)),1-hitKick*(boss?.045:.08));if(boss)drawBossAura(e,scale);
  if(boss&&coreCount()>0){ctx.strokeStyle="rgba(110,145,255,.55)";ctx.lineWidth=3;ctx.setLineDash([8,7]);ctx.beginPath();ctx.ellipse(0,0,65,75,0,0,Math.PI*2);ctx.stroke();ctx.setLineDash([])}
@@ -790,7 +883,14 @@ function drawEnemy(e){
   }
  }
  ctx.restore();
- if(!boss){const bw=38;ctx.fillStyle="rgba(0,0,0,.72)";ctx.fillRect(sx-bw/2-1,cy-39,bw+2,6);ctx.fillStyle=e.type==="shooter"?"#6bf1ff":"#ffd76e";ctx.fillRect(sx-bw/2,cy-38,bw*clamp(e.hp/Math.max(1,e.maxHp),0,1),4)}
+ if(!boss){
+  const bw=42,ratio=clamp(Number(e.hp)/Math.max(1,Number(e.maxHp)),0,1),barY=cy-43;
+  ctx.save();ctx.globalAlpha=1;ctx.globalCompositeOperation="source-over";ctx.shadowBlur=0;
+  ctx.fillStyle="rgba(1,5,18,.96)";ctx.fillRect(sx-bw/2-2,barY-2,bw+4,9);
+  ctx.fillStyle="rgba(255,255,255,.18)";ctx.fillRect(sx-bw/2,barY,bw,5);
+  ctx.fillStyle=e.type==="shooter"?"#6bf1ff":"#ffd76e";ctx.shadowColor=ctx.fillStyle;ctx.shadowBlur=5;ctx.fillRect(sx-bw/2,barY,bw*ratio,5);
+  ctx.restore();
+ }
  else if(!(e.name==="껌껌이"&&(e.hiddenT||0)>0)){const bw=100,by=cy-88;ctx.save();ctx.globalAlpha=.98;ctx.fillStyle="rgba(3,8,24,.9)";ctx.fillRect(sx-bw/2-2,by-3,bw+4,11);ctx.fillStyle="rgba(255,255,255,.14)";ctx.fillRect(sx-bw/2,by,bw,5);ctx.fillStyle=glowColor;ctx.shadowColor=glowColor;ctx.shadowBlur=10;ctx.fillRect(sx-bw/2,by,bw*clamp(e.hp/Math.max(1,e.maxHp),0,1),5);ctx.shadowBlur=0;ctx.font="10px HancomMalrangmalrang, sans-serif";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.fillText((e.name||"BOSS")+" · "+Math.ceil(e.hp)+"/"+e.maxHp,sx,by-6);ctx.restore()}
  if(e.wind>0){
   const warn=e.boss?({"식빵이":"#ff667f","윈터":"#a6f2ff","모래":"#d7a8ff","복돌이":"#ffbd70","껌껌이":"#5bdde8","솜솜이":"#f5a8ff"}[e.name]||"#ff667f"):(e.type==="shooter"?"#6bf1ff":"#ffd76e");
@@ -1097,8 +1197,8 @@ function loop(now){
  if(now-lastDrawTime>=drawInterval){draw();lastDrawTime=now}
  requestAnimationFrame(loop)
 }
-function showStageSelect(){mode="title";$("screenOverlay").classList.remove("hidden");$("screenKicker").textContent="CAMPAIGN · "+STAGES.length+" STAGES";$("screenTitle").innerHTML="캠페인 <em>진행</em>";$("screenDescription").textContent="스테이지 4개를 차례로 돌파하면 보스가 등장해! 클리어한 진행 상황은 저장돼."; $("featureGrid").innerHTML=STAGES.map((st,i)=>{const open=i<=campaignUnlocked;return '<button type="button" class="feature stage-choice '+(open?'':'locked')+'" data-stage="'+i+'" '+(open?'':'disabled')+' style="text-align:left;cursor:'+(open?'pointer':'not-allowed')+';color:inherit;opacity:'+(open?'1':'.42')+'"><b>'+(open?'✓ ':'🔒 ')+st.name+'</b><span>'+st.subtitle+' · 난이도 '+st.difficulty+(i===campaignUnlocked?' · 현재 도전':'')+'</span></button>'}).join("");currentStage=Math.min(currentStage,campaignUnlocked);$("screenPrimary").textContent="▶ "+STAGES[currentStage].name+" 시작";$("screenSecondary").hidden=false;$("screenSecondary").textContent="게임 센터로";$("screenHint").textContent="잠긴 스테이지는 앞선 스테이지를 클리어하면 열려!";document.querySelectorAll("[data-stage]:not(:disabled)").forEach(btn=>btn.addEventListener("click",()=>{currentStage=Number(btn.dataset.stage);document.querySelectorAll("[data-stage]").forEach(b=>b.classList.toggle("selected",b===btn));$("screenDescription").textContent=STAGES[currentStage].desc;$("screenPrimary").textContent="▶ "+STAGES[currentStage].name+" 시작";}));}
-function startGame(){setupRun(currentStage);mode="playing";runStart=performance.now();$("screenOverlay").classList.add("hidden");$("screenSecondary").hidden=true;$("screenPrimary").textContent="▶ 전투 시작";$("pauseButton").textContent="Ⅱ 일시 정지";audioReady();canvas.focus();refreshUI()}
+function showStageSelect(){mode="title";$("screenOverlay").classList.remove("hidden");$("screenKicker").textContent="CAMPAIGN · "+STAGES.length+" STAGES";$("screenTitle").innerHTML="캠페인 <em>진행</em>";$("screenDescription").textContent="진행 상황과 보유 스킬은 로그인 계정에 저장돼. PC와 휴대폰에서 같은 계정으로 이어서 플레이할 수 있어."; $("featureGrid").innerHTML=STAGES.map((st,i)=>{const open=i<=campaignUnlocked,visited=visitedStages.includes(i),mark=!open?"🔒 ":visited?"★ ":"✓ ",tag=visited?" · 방문함":open?" · 도전 가능":"";return '<button type="button" class="feature stage-choice '+(open?'':'locked')+'" data-stage="'+i+'" '+(open?'':'disabled')+' style="text-align:left;cursor:'+(open?'pointer':'not-allowed')+';color:inherit;opacity:'+(open?'1':'.42')+'"><b>'+mark+st.name+'</b><span>'+st.subtitle+' · 난이도 '+st.difficulty+tag+(i===campaignUnlocked?' · 현재 도전':'')+'</span></button>'}).join("");currentStage=Math.min(currentStage,campaignUnlocked);$("screenPrimary").textContent="▶ "+STAGES[currentStage].name+" 시작";$("screenSecondary").hidden=false;$("screenSecondary").textContent="게임 센터로";$("screenHint").textContent="잠긴 스테이지는 앞선 스테이지를 클리어하면 열려!";document.querySelectorAll("[data-stage]:not(:disabled)").forEach(btn=>btn.addEventListener("click",()=>{currentStage=Number(btn.dataset.stage);saveLocalProgress();queueCloudSave();document.querySelectorAll("[data-stage]").forEach(b=>b.classList.toggle("selected",b===btn));$("screenDescription").textContent=STAGES[currentStage].desc;$("screenPrimary").textContent="▶ "+STAGES[currentStage].name+" 시작";}));if(cloudSyncMessage)$("screenHint").textContent=cloudSyncMessage;}
+function startGame(){if(!cloudSyncReady){showHint("계정 저장을 확인 중이야. 잠시만 기다려 줘.");return}visitedStages=Array.from(new Set([...visitedStages,currentStage]));saveLocalProgress();queueCloudSave();setupRun(currentStage);mode="playing";runStart=performance.now();$("screenOverlay").classList.add("hidden");$("screenSecondary").hidden=true;$("screenPrimary").textContent="▶ 전투 시작";$("pauseButton").textContent="Ⅱ 일시 정지";audioReady();canvas.focus();refreshUI()}
 function pauseGame(){
  if(mode==="playing"){mode="paused";$("screenOverlay").classList.remove("hidden");$("screenKicker").textContent="PAUSE · TAKE A BREATH";$("screenTitle").innerHTML="잠시 <em>정지</em>";$("screenDescription").textContent="작전을 정비하고 다시 돌파하자. 일시 정지 중에는 전투 시간이 흐르지 않아.";$("featureGrid").innerHTML='<div class="feature"><b>현재 점수</b><span>'+formatScore(player.score)+'</span></div><div class="feature"><b>남은 코어</b><span>'+coreCount()+'개</span></div><div class="feature"><b>최고 기록</b><span>'+formatScore(bestScore)+'</span></div>';$("screenPrimary").textContent="▶ 계속하기";$("screenSecondary").hidden=false;$("screenSecondary").textContent="처음부터";$("screenHint").textContent="P 또는 ESC를 누르면 다시 시작할 수 있어."}
  else if(mode==="paused"){mode="playing";$("screenOverlay").classList.add("hidden");$("screenSecondary").hidden=true;refreshUI()}
@@ -1187,7 +1287,7 @@ window.addEventListener("keyup",e=>{
 });
 window.addEventListener("blur",()=>{keys.left=false;keys.right=false;releaseJoystick();touch.left=false;touch.right=false;if(mode==="playing")pauseGame()});
 document.addEventListener("visibilitychange",()=>{if(document.hidden&&mode==="playing")pauseGame()});
-showStageSelect();refreshLoadoutUI();refreshUI();requestAnimationFrame(loop);
+showStageSelect();refreshLoadoutUI();refreshUI();requestAnimationFrame(loop);syncAccountSave();if(supabaseClient?.auth){supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_IN"&&session?.user?.id&&session.user.id!==cloudUserId){Promise.resolve().then(()=>syncAccountSave())}else if(event==="SIGNED_OUT"){cloudUserId=null;cloudSyncReady=true;setCloudMessage("로그인하면 PC·휴대폰에서 진행 상황과 아이템을 공유할 수 있어.")}})}window.addEventListener("pagehide",()=>{if(cloudWriteTimer){clearTimeout(cloudWriteTimer);persistCloudSave()}},{capture:true});
 })();
 </script>
 </body>
