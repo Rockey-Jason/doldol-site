@@ -365,6 +365,11 @@ export class GameRoom {
       best=along;target=candidate;
       headshot=Math.abs(oy+dy*along-(candidate.y+1.45))<0.24;
     }
+    // Server-authoritative recoil: apply after the shot ray is evaluated, then sync the new aim to the shooter.
+    const recoil=Math.min(0.045,0.012+weapon.damage/2500+weapon.spread*0.25);
+    shooter.pitch=Math.max(-1.3,Math.min(1.3,shooter.pitch+recoil));
+    shooter.yaw+=(Math.random()-0.5)*recoil*0.18;
+    send(shooter.client,{type:'weapon.recoil',pitch:shooter.pitch,yaw:shooter.yaw});
     if(!target) return;
     let damage=weapon.damage*(headshot?weapon.headshotMultiplier:1);
     if(weapon.pellets) damage*=Math.min(weapon.pellets,Math.max(1,Math.ceil((weapon.range-best)/weapon.range*weapon.pellets)));
