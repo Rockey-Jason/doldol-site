@@ -408,7 +408,7 @@ export class GameRoom {
   }
 
   private captureReplayFrame(now:number) {
-    if(now-this.lastReplayFrameAt<200 || this.replayFrames.length>=1800) return;
+    if(now-this.lastReplayFrameAt<200 || this.replayFrames.length>=3600) return;
     this.lastReplayFrameAt=now;
     this.replayFrames.push({
       t:now-this.startedAt,
