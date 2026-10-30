@@ -107,7 +107,8 @@ async function handleFriendSearch(client:PlayerClient,queryValue:unknown){
     friendshipRows(client.player.id),
     authIds.length?admin.from('rockey_profiles').select('auth_user_id,rank_tier,rank_rating').in('auth_user_id',authIds):Promise.resolve({data:[] as any[]})
   ]);
-  const result=(mappings||[]).map(mapping=>{
+  const registeredIds=new Set((profiles.data||[]).map((p:any)=>p.auth_user_id));
+  const result=(mappings||[]).filter(mapping=>registeredIds.has(mapping.auth_user_id)).map(mapping=>{
     const site=siteUsers!.find(u=>u.user_id===mapping.site_user_id);
     const profile=profiles.data?.find((p:any)=>p.auth_user_id===mapping.auth_user_id);
     const relation=rows.find(r=>
