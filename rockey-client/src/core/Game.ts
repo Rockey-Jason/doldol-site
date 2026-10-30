@@ -389,6 +389,7 @@ export async function createGame(
           target.visible = false;
           notify('TARGET ELIMINATED');
           window.setTimeout(() => {
+            if(disposed)return;
             target.userData.hp = 100;
             target.visible = true;
           }, 2200);
@@ -407,6 +408,7 @@ export async function createGame(
     muzzleFlash.visible = true;
     gun.position.z = 0.045;
     window.setTimeout(() => {
+      if(disposed)return;
       gun.position.z = 0;
       muzzleFlash.visible = false;
     }, 55);
@@ -417,6 +419,7 @@ export async function createGame(
     reloadAt = performance.now() + currentWeapon.reloadMs;
     if (mode === 'practice') {
       window.setTimeout(() => {
+        if(disposed)return;
         const amount = Math.min(currentWeapon.magazine - ammo, reserve);
         ammo += amount;
         reserve -= amount;
@@ -848,6 +851,8 @@ export async function createGame(
       });
       geometries.forEach(geometry => geometry.dispose());
       materials.forEach(material => material.dispose());
+      enemyMat.dispose();
+      allyMat.dispose();
       scene.clear();
     }
   };
