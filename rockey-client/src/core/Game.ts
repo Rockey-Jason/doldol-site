@@ -603,11 +603,15 @@ export async function createGame(
         );
         model.castShadow = true;
         mesh.add(model);
+        mesh.position.set(player.x,player.y-0.08,player.z);
+        mesh.rotation.y=player.yaw;
         scene.add(mesh);
         remotes.set(player.id, mesh);
       }
-      mesh.position.set(player.x, player.y - 0.08, player.z);
-      mesh.rotation.y = player.yaw;
+      mesh.userData.targetX=player.x;
+      mesh.userData.targetY=player.y-0.08;
+      mesh.userData.targetZ=player.z;
+      mesh.userData.targetYaw=player.yaw;
       mesh.visible = player.connected !== false && player.alive !== false && player.health > 0;
     }
   }
@@ -621,6 +625,18 @@ export async function createGame(
     }
     const dt = Math.min((now - previous) / 1000, 0.05);
     previous = now;
+    const remoteBlend=1-Math.exp(-18*dt);
+    for(const mesh of remotes.values()){
+      const data=mesh.userData;
+      if(typeof data.targetX!=='number')continue;
+      mesh.position.x=THREE.MathUtils.lerp(mesh.position.x,data.targetX,remoteBlend);
+      mesh.position.y=THREE.MathUtils.lerp(mesh.position.y,data.targetY,remoteBlend);
+      mesh.position.z=THREE.MathUtils.lerp(mesh.position.z,data.targetZ,remoteBlend);
+      if(typeof data.targetYaw==='number'){
+        const delta=THREE.MathUtils.euclideanModulo(data.targetYaw-mesh.rotation.y+Math.PI,Math.PI*2)-Math.PI;
+        mesh.rotation.y+=delta*remoteBlend;
+      }
+    }
 
     if (mode === 'spectator' || mode === 'replay') {
       const target = new THREE.Vector3(0,0,0);
