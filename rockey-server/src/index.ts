@@ -422,6 +422,8 @@ async function handle(client:PlayerClient,raw:WebSocket.RawData){
       return send(client,{type:'matches.live',matches:[...rooms.values()].map(r=>r.getInfo())});
 
     case 'match.spectate': {
+      if(client.roomId||client.spectatorRoomId)
+        return send(client,{type:'spectate.error',message:'경기 중이거나 이미 관전 중인 상태에서는 다른 경기를 열 수 없습니다.'});
       const roomId=String(message.roomId||'');
       const room=rooms.get(roomId);
       if(!room) return send(client,{type:'spectate.error',message:'관전할 수 있는 경기가 없습니다.'});
