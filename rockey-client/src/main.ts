@@ -116,9 +116,13 @@ function scheduleReconnect(){
     reconnectTimer=0;
     if(reconnecting)return;
     reconnecting=true;
+    let retry=false;
     try{
       const {data}=await supabase.auth.getSession();
-      if(!data.session){status('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');return;}
+      if(!data.session){
+        status('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.');
+        return;
+      }
       await socket.connect(ROCKEY_WS_URL,data.session.access_token);
       reconnectAttempts=0;
       setConnection(true,'SERVER ONLINE');
@@ -126,8 +130,11 @@ function scheduleReconnect(){
       toast('RECONNECTED');
     }catch{
       setConnection(false,'RECONNECTING');
-      scheduleReconnect();
-    }finally{reconnecting=false;}
+      retry=true;
+    }finally{
+      reconnecting=false;
+      if(retry)scheduleReconnect();
+    }
   },delay);
 }
 function switchWeapon(){
