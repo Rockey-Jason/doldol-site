@@ -8,6 +8,7 @@ on:
       - 'rockey/**'
       - '.github/workflows/deploy-rockey-pages.yml'
       - 'docs/rockey/**'
+      - 'gamepage.html'
   workflow_dispatch:
 
 permissions:
@@ -41,6 +42,7 @@ jobs:
         run: |
           mkdir -p _site
           rsync -a --exclude='.git' --exclude='rockey-client/node_modules' --exclude='rockey-server/node_modules' --exclude='_site' ./ _site/
+          touch _site/.nojekyll
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
