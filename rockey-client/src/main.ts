@@ -128,7 +128,11 @@ socket.onMessage((message: GameMessage) => {
   switch (message.type) {
     case 'match.start':
       currentMode = String(message.mode || '1v1');
-      game?.activate(currentMode, Number(message.team || 0));
+      game?.activate(
+        currentMode,
+        Number(message.team || 0),
+        message.spawn as { x: number; y: number; z: number; yaw: number } | undefined
+      );
       $('modeLabel')!.textContent = currentMode.toUpperCase() + ' · R-16';
       showGame();
       toast('MATCH START');
@@ -143,6 +147,9 @@ socket.onMessage((message: GameMessage) => {
       break;
     case 'damage':
       game?.setHealth(Number(message.health));
+      break;
+    case 'ammo.update':
+      game?.setAmmo(Number(message.ammo), Number(message.reserve));
       break;
     case 'hit':
       toast(message.headshot ? 'HEADSHOT' : 'HIT');
@@ -170,6 +177,10 @@ socket.onMessage((message: GameMessage) => {
       break;
     case 'match.result':
       showResult(Boolean(message.won), String(message.detail || '경기가 종료되었습니다.'));
+      break;
+    case 'match.cancelled':
+      status(String(message.message || '경기가 취소되었습니다.'));
+      showMenu();
       break;
     case 'network.closed':
       setConnection(false, 'SERVER OFFLINE');
