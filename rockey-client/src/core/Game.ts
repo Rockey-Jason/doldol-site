@@ -330,6 +330,7 @@ export async function createGame(
   function pointerDown(event: PointerEvent) {
     if (event.pointerType === 'mouse' && event.button === 0) fire();
     if (event.pointerType === 'touch') {
+      canvas.setPointerCapture(event.pointerId);
       (canvas as HTMLCanvasElement & { lx?: number; ly?: number }).lx = event.clientX;
       (canvas as HTMLCanvasElement & { lx?: number; ly?: number }).ly = event.clientY;
     }
