@@ -17,6 +17,7 @@ export interface GameInstance {
   setHealth(value: number): void;
   setAmmo(ammo: number, reserve: number): void;
   setWeapon(weaponCode: string, ammo?: number, reserve?: number): void;
+  beginReload(): void;
   applyRecoil(pitch: number, yaw: number): void;
   playReplay(frames: ReplayFrame[]): void;
   playKillcam(frames: ReplayFrame[], killerId: string, onComplete: () => void): void;
@@ -325,6 +326,11 @@ export async function createGame(
   let killcamReturnMode = '1v1';
   let killcamComplete: (() => void) | null = null;
   let mobileFireTimer = 0;
+  let audioContext: AudioContext | null = null;
+  let noiseBuffer: AudioBuffer | null = null;
+  let gunKick = 0;
+  let reloadAnimationStart = 0;
+  let reloadAnimationDuration = 0;
   let movePointerId: number | null = null;
   let lookPointerId: number | null = null;
   let active = false;
@@ -365,6 +371,58 @@ export async function createGame(
     updateHud(hp,ammo,reserve,currentWeapon.name);
   }
 
+  const soundProfiles: Record<string,{base:number;crack:number;wave:OscillatorType;duration:number}> = {
+    R16:{base:92,crack:1180,wave:'sawtooth',duration:.105},
+    R9:{base:138,crack:1780,wave:'square',duration:.085},
+    VIPER:{base:72,crack:920,wave:'sawtooth',duration:.075},
+    THUNDER:{base:48,crack:620,wave:'triangle',duration:.19},
+    LONGSHOT:{base:42,crack:2100,wave:'sawtooth',duration:.24},
+    HELIX:{base:112,crack:1480,wave:'triangle',duration:.12},
+    BASTION:{base:66,crack:840,wave:'sawtooth',duration:.11},
+    NOVA:{base:165,crack:1960,wave:'square',duration:.1},
+    ARC:{base:240,crack:2650,wave:'sine',duration:.16},
+    PULSE:{base:185,crack:2240,wave:'triangle',duration:.13}
+  };
+  function getAudioContext() {
+    if (!audioContext) audioContext = new AudioContext();
+    if (audioContext.state === 'suspended') void audioContext.resume();
+    return audioContext;
+  }
+  function getNoiseBuffer(ctx:AudioContext) {
+    if(noiseBuffer)return noiseBuffer;
+    noiseBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.22),ctx.sampleRate);
+    const data=noiseBuffer.getChannelData(0);
+    for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,1.8);
+    return noiseBuffer;
+  }
+  function playFireSound(code:string) {
+    try {
+      const ctx=getAudioContext(),profile=soundProfiles[code]||soundProfiles.R16,now=ctx.currentTime;
+      const master=ctx.createGain();master.gain.setValueAtTime(.0001,now);master.gain.exponentialRampToValueAtTime(.22,now+.004);master.gain.exponentialRampToValueAtTime(.0001,now+profile.duration);master.connect(ctx.destination);
+      const low=ctx.createOscillator();low.type=profile.wave;low.frequency.setValueAtTime(profile.base*1.7,now);low.frequency.exponentialRampToValueAtTime(profile.base*.62,now+profile.duration);low.connect(master);low.start(now);low.stop(now+profile.duration);
+      const snap=ctx.createOscillator();snap.type='triangle';snap.frequency.setValueAtTime(profile.crack,now);snap.frequency.exponentialRampToValueAtTime(profile.crack*.42,now+.035);
+      const snapGain=ctx.createGain();snapGain.gain.setValueAtTime(.0001,now);snapGain.gain.exponentialRampToValueAtTime(.12,now+.002);snapGain.gain.exponentialRampToValueAtTime(.0001,now+.045);snap.connect(snapGain);snapGain.connect(ctx.destination);snap.start(now);snap.stop(now+.05);
+      const noise=ctx.createBufferSource();noise.buffer=getNoiseBuffer(ctx);
+      const noiseGain=ctx.createGain();noiseGain.gain.setValueAtTime(.0001,now);noiseGain.gain.exponentialRampToValueAtTime(code==='THUNDER'||code==='LONGSHOT'?.16:.075,now+.002);noiseGain.gain.exponentialRampToValueAtTime(.0001,now+profile.duration*.72);noise.connect(noiseGain);noiseGain.connect(ctx.destination);noise.start(now);noise.stop(now+profile.duration);
+    } catch { /* Audio is optional; gameplay must continue if the device blocks it. */ }
+  }
+  function playReloadSound(code:string) {
+    try {
+      const ctx=getAudioContext(),now=ctx.currentTime;
+      const metallic=code==='LONGSHOT'||code==='BASTION'||code==='THUNDER';
+      const times=metallic?[0,.24,.58]:[0,.17,.39];
+      times.forEach((offset,index)=>{
+        const osc=ctx.createOscillator(),gain=ctx.createGain();
+        osc.type=index===1?'triangle':'square';
+        osc.frequency.setValueAtTime((metallic?520:760)*(index===2?.72:1),now+offset);
+        gain.gain.setValueAtTime(.0001,now+offset);
+        gain.gain.exponentialRampToValueAtTime(.075,now+offset+.004);
+        gain.gain.exponentialRampToValueAtTime(.0001,now+offset+.065);
+        osc.connect(gain);gain.connect(ctx.destination);osc.start(now+offset);osc.stop(now+offset+.07);
+      });
+    } catch { /* Audio is optional. */ }
+  }
+
   function stopMobileFire() {
     if (mobileFireTimer) window.clearInterval(mobileFireTimer);
     mobileFireTimer = 0;
@@ -375,6 +433,8 @@ export async function createGame(
     if (!active || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
     lastShot = now;
     ammo -= 1;
+    gunKick = Math.min(1.35,gunKick+0.82);
+    playFireSound(currentWeaponCode);
     updateHud(hp, ammo, reserve, currentWeapon.name);
 
     if (mode === 'practice') {
@@ -411,17 +471,15 @@ export async function createGame(
     }
 
     muzzleFlash.visible = true;
-    gun.position.z = 0.045;
-    window.setTimeout(() => {
-      if(disposed)return;
-      gun.position.z = 0;
-      muzzleFlash.visible = false;
-    }, 55);
+    window.setTimeout(() => { if(!disposed)muzzleFlash.visible = false; }, 70);
   }
 
   function reload() {
     if (!active || ammo >= currentWeapon.magazine || reserve <= 0 || performance.now() < reloadAt) return;
     reloadAt = performance.now() + currentWeapon.reloadMs;
+    reloadAnimationStart = performance.now();
+    reloadAnimationDuration = currentWeapon.reloadMs;
+    playReloadSound(currentWeaponCode);
     if (mode === 'practice') {
       window.setTimeout(() => {
         if(disposed)return;
@@ -634,6 +692,13 @@ export async function createGame(
     const dt = Math.min((now - previous) / 1000, 0.05);
     previous = now;
     const remoteBlend=1-Math.exp(-18*dt);
+    gunKick*=Math.exp(-17*dt);
+    const reloadProgress=reloadAnimationStart?THREE.MathUtils.clamp((now-reloadAnimationStart)/Math.max(1,reloadAnimationDuration),0,1):1;
+    if(reloadProgress>=1)reloadAnimationStart=0;
+    const reloadWave=reloadAnimationStart?Math.sin(reloadProgress*Math.PI):0;
+    const reloadTilt=currentWeaponCode==='LONGSHOT'?.42:currentWeaponCode==='THUNDER'?.34:currentWeaponCode==='BASTION'?.25:currentWeaponCode==='R9'||currentWeaponCode==='NOVA'?.18:.12;
+    gun.position.set(0,-reloadWave*reloadTilt*.34,gunKick*.11+reloadWave*.19);
+    gun.rotation.set(reloadWave*reloadTilt,0,reloadWave*(currentWeaponCode==='BASTION'?.18:.07));
     for(const mesh of remotes.values()){
       const data=mesh.userData;
       if(typeof data.targetX!=='number')continue;
@@ -881,6 +946,7 @@ export async function createGame(
       world.free();
       stopMobileFire();
       renderer.dispose();
+      if(audioContext){void audioContext.close();audioContext=null;noiseBuffer=null;}
       // Dispose shared materials/geometries exactly once, including remote players and practice targets.
       const geometries = new Set<THREE.BufferGeometry>();
       const materials = new Set<THREE.Material>();
