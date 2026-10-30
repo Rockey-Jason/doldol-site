@@ -469,7 +469,7 @@ async function handle(client:PlayerClient,raw:WebSocket.RawData){
   }
 }
 
-app.get('/',async()=>({status:'online',service:'rockey-game-server',build:'BUILD 02'}));
+app.get('/',async()=>({status:'online',service:'rockey-game-server',build:'BUILD 03'}));
 
 app.get('/health',async()=>({
   status:'online',service:'rockey-game-server',
