@@ -41,6 +41,7 @@ export class RockeyHub {
   constructor(root:HTMLElement,send:Sender,onReplay:(frames:ReplayFrame[],mapId:string)=>void,onQuality:(level:'low'|'balanced'|'high')=>void,onSensitivity:(value:number)=>void){
     this.root=root;this.send=send;this.onReplay=onReplay;this.onQuality=onQuality;this.onSensitivity=onSensitivity;
     this.mapId=localStorage.getItem('rockey.mapId')||'training_facility';
+    this.mapId=localStorage.getItem('rockey.mapId')||'training_facility';
     this.quality=(localStorage.getItem('rockey.quality') as any)||'balanced';
     const saved=Number(localStorage.getItem('rockey.sensitivity')||'1');
     this.sensitivity=Number.isFinite(saved)?Math.max(.4,Math.min(2.2,saved)):1;
