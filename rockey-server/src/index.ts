@@ -467,6 +467,8 @@ async function handle(client:PlayerClient,raw:WebSocket.RawData){
   }
 }
 
+app.get('/',async()=>({status:'online',service:'rockey-game-server',build:'BUILD 02'}));
+
 app.get('/health',async()=>({
   status:'online',service:'rockey-game-server',
   activePlayers:clients.size,activeRooms:rooms.size,
