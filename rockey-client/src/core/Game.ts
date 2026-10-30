@@ -6,10 +6,11 @@ export interface RemotePlayer {
   yaw: number; health: number; team: number; alive?: boolean;
 }
 export interface GameInstance {
-  activate(mode: string, team?: number): void;
+  activate(mode: string, team?: number, spawn?: { x: number; y: number; z: number; yaw: number }): void;
   setRemotePlayers(players: RemotePlayer[]): void;
   setScore(a: number, b: number, round: number): void;
   setHealth(value: number): void;
+  setAmmo(ammo: number, reserve: number): void;
   toggleCamera(): void;
   dispose(): void;
 }
@@ -170,13 +171,17 @@ export async function createGame(
   function reload() {
     if (!active || ammo >= 30 || reserve <= 0 || performance.now() < reloadAt) return;
     reloadAt = performance.now() + 1500;
-    window.setTimeout(() => {
-      const amount = Math.min(30 - ammo, reserve);
-      ammo += amount;
-      reserve -= amount;
-      reloadAt = 0;
-      updateHud(hp, ammo, reserve, 'R-16');
-    }, 1500);
+    if (mode === 'practice') {
+      window.setTimeout(() => {
+        const amount = Math.min(30 - ammo, reserve);
+        ammo += amount;
+        reserve -= amount;
+        reloadAt = 0;
+        updateHud(hp, ammo, reserve, 'R-16');
+      }, 1500);
+    } else {
+      send({ type: 'reload' });
+    }
   }
 
   function keyDown(event: KeyboardEvent) {
@@ -361,15 +366,15 @@ export async function createGame(
   raf = requestAnimationFrame(frame);
 
   return {
-    activate(nextMode: string, team = 0) {
+    activate(nextMode: string, team = 0, serverSpawn?: { x: number; y: number; z: number; yaw: number }) {
       mode = nextMode;
       active = true;
       hp = 100; ammo = 30; reserve = 90; vertical = 0;
-      yaw = team === 1 ? Math.PI : 0;
-      const spawn = mode === 'practice'
-        ? { x: 0, y: 0.92, z: 20 }
-        : team === 0 ? { x: -20, y: 0.92, z: 17 } : { x: 20, y: 0.92, z: -17 };
-      body.setTranslation(spawn, true);
+      const spawn = serverSpawn || (mode === 'practice'
+        ? { x: 0, y: 0.92, z: 20, yaw: 0 }
+        : team === 0 ? { x: -20, y: 0.92, z: 17, yaw: 0 } : { x: 20, y: 0.92, z: -17, yaw: Math.PI });
+      yaw = spawn.yaw;
+      body.setTranslation({ x: spawn.x, y: spawn.y, z: spawn.z }, true);
       updateHud(hp, ammo, reserve, 'R-16');
     },
     setRemotePlayers,
@@ -381,6 +386,12 @@ export async function createGame(
     },
     setHealth(value: number) {
       hp = Math.max(0, Math.min(100, value));
+      updateHud(hp, ammo, reserve, 'R-16');
+    },
+    setAmmo(nextAmmo: number, nextReserve: number) {
+      ammo = Math.max(0, Math.min(30, nextAmmo));
+      reserve = Math.max(0, Math.min(180, nextReserve));
+      reloadAt = 0;
       updateHud(hp, ammo, reserve, 'R-16');
     },
     toggleCamera,
