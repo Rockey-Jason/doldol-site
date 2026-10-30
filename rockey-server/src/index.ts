@@ -6,7 +6,7 @@ import { GameRoom, type Mode, type PlayerClient } from './game-room.js';
 import { MAPS, WEAPONS } from './catalog.js';
 
 const app=Fastify({logger:true,bodyLimit:2*1024*1024});
-const wss=new WebSocketServer({noServer:true,maxPayload:8*1024*1024});
+const wss=new WebSocketServer({noServer:true,maxPayload:256*1024,perMessageDeflate:false});
 const clients=new Map<string,PlayerClient>();
 const queues=new Map<string,PlayerClient[]>();
 type Party={
@@ -486,6 +486,9 @@ app.server.on('upgrade',(request,socket,head)=>{
 });
 
 wss.on('connection',ws=>{
+  let isAlive=true;
+  ws.on('pong',()=>{isAlive=true;});
+  ws.on('error',error=>app.log.warn({err:error},'ROCKEY websocket error'));
   let authenticated=false;
   let busy=false;
   let client:PlayerClient|null=null;
@@ -556,6 +559,17 @@ wss.on('connection',ws=>{
   });
 });
 
+const heartbeatTimer=setInterval(()=>{
+  for(const socket of wss.clients){
+    if(socket.readyState!==WebSocket.OPEN)continue;
+    const state=socket as WebSocket & { isAlive?: boolean };
+    if(state.isAlive===false){socket.terminate();continue;}
+    state.isAlive=false;
+    try{socket.ping();}catch{socket.terminate();}
+  }
+},25_000);
+wss.on('close',()=>clearInterval(heartbeatTimer));
+
 const port=Number(process.env.PORT||3000);
 await app.listen({host:'0.0.0.0',port});
-app.log.info('ROCKEY BUILD 02 server listening on port '+port);
+app.log.info('ROCKEY BUILD 03 server listening on port '+port);
