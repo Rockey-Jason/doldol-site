@@ -56,6 +56,9 @@ jobs:
       - name: Audit server dependencies
         working-directory: rockey-server
         run: npm audit --audit-level=high
+      - name: Test server combat rules
+        working-directory: rockey-server
+        run: npm test
       - name: Build server
         working-directory: rockey-server
         run: npm run build
