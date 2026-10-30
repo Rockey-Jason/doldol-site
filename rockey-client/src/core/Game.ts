@@ -184,6 +184,7 @@ export async function createGame(
   let vertical = 0;
   let mode = 'practice';
   let currentWeaponCode = 'R16';
+  let primaryWeaponCode = 'R16';
   let secondaryWeaponCode = 'R9';
   let currentWeapon: RockeyWeapon = WEAPONS.R16;
   let localTeam = 0;
@@ -285,7 +286,7 @@ export async function createGame(
     if (event.code === 'KeyR') reload();
     if (event.code === 'KeyQ') {
       if (mode === 'practice') {
-        const next = currentWeaponCode === 'R16' ? secondaryWeaponCode : 'R16';
+        const next = currentWeaponCode === primaryWeaponCode ? secondaryWeaponCode : primaryWeaponCode;
         setWeapon(next);
       } else {
         send({ type: 'weapon.switch' });
@@ -503,6 +504,7 @@ export async function createGame(
       replayFrames = null;
       localTeam = team;
       currentWeaponCode = WEAPONS[weaponCode] ? weaponCode : 'R16';
+      primaryWeaponCode = currentWeaponCode;
       secondaryWeaponCode = WEAPONS[secondaryWeapon] ? secondaryWeapon : 'R9';
       currentWeapon = WEAPONS[currentWeaponCode];
       hp = 100; ammo = currentWeapon.magazine; reserve = currentWeapon.reserve; vertical = 0;
@@ -568,7 +570,7 @@ export async function createGame(
       gunBody.scale.set(
         code==='LONGSHOT'?1.25:code==='THUNDER'?1.4:1,
         code==='BASTION'?1.25:1,
-        code==='LONGSHOT'?1.45:code==='VIPER'?.82:1
+        code==='LONGSHOT' ? 1.45 : code==='VIPER' ? 0.82 : 1
       );
       updateHud(hp,ammo,reserve,currentWeapon.name);
     },
