@@ -199,7 +199,7 @@ export async function createGame(
     yaw -= dx * 0.0022;
     pitch = THREE.MathUtils.clamp(pitch - dy * 0.002, -1.3, 1.3);
   }
-  function pointerMove(event: PointerEvent) {
+  function pointerMove(event: MouseEvent) {
     if (document.pointerLockElement === canvas) look(event.movementX, event.movementY);
   }
   function pointerDown(event: PointerEvent) {
