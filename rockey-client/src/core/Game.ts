@@ -762,6 +762,8 @@ export async function createGame(
       mode = nextMode;
       active = nextMode !== 'spectator' && nextMode !== 'replay';
       replayFrames = null;
+      replayFocusId = '';
+      killcamComplete = null;
       localTeam = team;
       currentWeaponCode = WEAPONS[weaponCode] ? weaponCode : 'R16';
       primaryWeaponCode = currentWeaponCode;
@@ -858,6 +860,8 @@ export async function createGame(
     toggleCamera,
     dispose() {
       disposed = true;
+      killcamComplete = null;
+      replayFrames = null;
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
       window.removeEventListener('keydown', keyDown);
