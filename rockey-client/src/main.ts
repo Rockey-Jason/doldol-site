@@ -29,6 +29,11 @@ let reconnecting=false;
 let menuSessionAvailable=false;
 
 function status(message:string){statusText.textContent=message;}
+function requestLandscape(){
+  if(!window.matchMedia('(pointer:coarse)').matches)return;
+  const orientation=screen.orientation as ScreenOrientation & {lock?:(value:'landscape')=>Promise<void>};
+  try{void orientation.lock?.('landscape').catch(()=>{});}catch{/* Rotation prompt remains as the fallback. */}
+}
 function toast(message:string){
   const el=$('toast');
   if(!el)return;
@@ -42,6 +47,7 @@ function setConnection(connected:boolean,label:string){
   $('sessionStatus')!.textContent=connected?'CONNECTED · DEV 03/04':'RECONNECTING';
 }
 function showMenu(){
+  document.body.classList.remove('game-active');
   game?.cancelKillcam();
   isKillcam=false;
   menu.classList.remove('hidden');hud.classList.add('hidden');
@@ -50,6 +56,7 @@ function showMenu(){
   isSpectating=false;
 }
 function showGame(){
+  document.body.classList.add('game-active');
   menu.classList.add('hidden');hud.classList.remove('hidden');
   $('resultPanel')!.classList.add('hidden');
 }
@@ -213,6 +220,7 @@ $('hubOpenBtn')?.addEventListener('click',()=>{
   hub.open('friends');
 });
 $('practiceBtn')?.addEventListener('click',async()=>{
+  requestLandscape();
   try{
     updateLocalLoadout();
     const loadout=hub.getLoadout();
@@ -225,6 +233,7 @@ $('practiceBtn')?.addEventListener('click',async()=>{
 });
 document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(button=>{
   button.addEventListener('click',()=>{
+    requestLandscape();
     const mode=button.dataset.mode||'1v1';
     if(!socket.connected)return status('실시간 대전에는 게임 서버 연결이 필요합니다.');
     updateLocalLoadout();
@@ -235,17 +244,19 @@ document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(button=>{
   });
 });
 $('createPrivateBtn')?.addEventListener('click',()=>{
+  requestLandscape();
   if(!socket.connected)return status('게임 서버 연결이 필요합니다.');
   updateLocalLoadout();
   send({type:'private.create',mode:($('privateMode') as HTMLSelectElement).value,mapId:hub.getLoadout().mapId});
   status('비공개 방을 만들고 있습니다.');
 });
 $('joinPrivateBtn')?.addEventListener('click',()=>{
+  requestLandscape();
   const code=($('privateCode') as HTMLInputElement).value.trim().toUpperCase();
   if(!code)return status('초대 코드를 입력해 주세요.');
   send({type:'private.join',code});
 });
-$('startPrivateBtn')?.addEventListener('click',()=>send({type:'private.start'}));
+$('startPrivateBtn')?.addEventListener('click',()=>{requestLandscape();send({type:'private.start'});});
 $('copyCodeBtn')?.addEventListener('click',async()=>{
   const code=$('privateCodeText')?.textContent||'';
   try{await navigator.clipboard.writeText(code);toast('초대 코드를 복사했습니다.');}
