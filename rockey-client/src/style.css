@@ -22,3 +22,107 @@
 .mobile-controls{display:none}
 @media(pointer:coarse){.mobile-controls{display:block;position:fixed;z-index:3;inset:0;pointer-events:none}.move-pad{pointer-events:auto;position:absolute;left:18px;bottom:23px;width:124px;height:124px;border:1px solid rgba(145,203,255,.35);border-radius:50%;background:rgba(6,25,48,.45);touch-action:none}.move-stick{position:absolute;left:39px;top:39px;width:46px;height:46px;border-radius:50%;background:rgba(92,183,255,.5);border:1px solid rgba(174,224,255,.65)}.mobile-actions{position:absolute;right:17px;bottom:20px;display:flex;align-items:end;gap:8px;pointer-events:auto}.touch-btn{width:54px;height:54px;border-radius:50%;border:1px solid rgba(127,199,255,.4);background:rgba(5,24,47,.75);color:#e8f6ff;font-size:9px;font-weight:700;touch-action:none}.fire-btn{width:72px;height:72px;background:rgba(20,106,183,.82);border-color:#64c7ff;font-size:12px}.hud-bottom{left:12px;right:12px;bottom:156px}.health-box,.ammo-box{min-width:118px;padding:8px 10px}.health-box strong,.ammo-box strong{font-size:20px}.match-info{top:68px;gap:12px;padding:7px 11px;font-size:10px}.camera-btn{top:109px;right:12px}.exit-btn{top:145px;right:12px}}
 @media(max-width:560px){.topbar{height:52px;padding:0 14px}.brand{font-size:18px}.brand-mark{width:31px;height:31px}.menu-layer{padding:60px 10px 12px}.menu-card{padding:22px 16px;border-radius:18px}.menu-grid{grid-template-columns:repeat(2,1fr);gap:8px}.mode-card{min-height:72px;padding:11px}.private-row{grid-template-columns:1fr 1fr}.private-row input{grid-column:1}.private-row button:last-child{grid-column:2}}
+
+
+.hub-launch-row{display:flex;align-items:center;gap:12px;margin-top:12px}
+.hub-launch-row .outline-btn{flex:1}
+#sessionStatus{color:#6c91b7;font-size:10px;letter-spacing:1.5px}
+.weapon-switch-btn{position:absolute;top:163px;right:22px;pointer-events:auto;border:1px solid rgba(228,200,117,.35);border-radius:8px;padding:8px 12px;background:rgba(28,23,12,.72);color:#ead49a;font-size:11px;letter-spacing:1px}
+.hub-panel{position:fixed;z-index:9;inset:0;display:grid;place-items:center;padding:16px}
+.hub-backdrop{position:absolute;inset:0;background:rgba(1,5,13,.82);backdrop-filter:blur(12px)}
+.hub-card{position:relative;width:min(920px,100%);height:min(820px,calc(100dvh - 32px));display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(96,175,255,.28);border-radius:22px;background:linear-gradient(145deg,rgba(11,25,48,.98),rgba(4,10,23,.99));box-shadow:0 35px 120px rgba(0,0,0,.72),inset 0 1px rgba(255,255,255,.06)}
+.hub-header{display:flex;align-items:center;justify-content:space-between;padding:22px 26px 16px;border-bottom:1px solid rgba(130,179,228,.12)}
+.hub-kicker{color:#55dfff;font-size:10px;font-weight:700;letter-spacing:3px}
+.hub-header h2{margin:3px 0 0;color:#f3f8ff;font-size:28px;letter-spacing:2px}
+.hub-close{width:38px;height:38px;border:1px solid rgba(135,181,232,.22);border-radius:10px;background:rgba(16,34,58,.7);color:#c3d8ed;font-size:25px;line-height:1}
+.hub-nav{display:flex;gap:8px;padding:12px 24px;border-bottom:1px solid rgba(130,179,228,.12);overflow-x:auto}
+.hub-tab{min-width:108px;padding:10px 13px;text-align:left;border:1px solid transparent;border-radius:10px;background:rgba(12,28,50,.56);color:#7995b5}
+.hub-tab b,.hub-tab span{display:block}
+.hub-tab b{font-size:12px;letter-spacing:1.3px}
+.hub-tab span{margin-top:2px;font-size:11px}
+.hub-tab.active{border-color:rgba(69,181,255,.42);background:linear-gradient(135deg,rgba(16,86,143,.65),rgba(11,45,79,.8));color:#e9f7ff}
+.hub-notice{display:none;margin:10px 24px 0;padding:9px 12px;border:1px solid rgba(74,196,255,.22);border-radius:9px;background:rgba(13,70,104,.22);color:#a9ddf7;font-size:12px}
+.hub-notice.show{display:block}
+.hub-content{flex:1;min-height:0;overflow:auto;padding:18px 24px 26px;overscroll-behavior:contain}
+.hub-section{margin-bottom:21px;padding:17px;border:1px solid rgba(126,167,216,.13);border-radius:15px;background:rgba(9,22,42,.6)}
+.hub-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px}
+.hub-section-head h3{margin:0;color:#e8f4ff;font-size:14px;letter-spacing:1.4px}
+.hub-section-head h3 small{color:#67ceff;font-size:11px}
+.hub-section-head p{margin:4px 0 0;color:#809ab8;font-size:12px}
+.hub-search{display:flex;gap:8px;margin-bottom:10px}
+.hub-search input,.hub-loadout-grid select,.hub-settings select{width:100%;min-width:0;padding:11px 12px;border:1px solid rgba(120,171,223,.22);border-radius:9px;background:#061326;color:#e8f5ff;outline:none}
+.hub-search input:focus,.hub-loadout-grid select:focus,.hub-settings select:focus{border-color:#48baff;box-shadow:0 0 0 2px rgba(72,186,255,.12)}
+.hub-primary,.hub-secondary,.hub-small{border:1px solid rgba(81,172,241,.3);border-radius:9px;padding:9px 12px;background:rgba(19,69,111,.72);color:#e1f4ff;font-size:12px;font-weight:700;white-space:nowrap}
+.hub-primary{border-color:transparent;background:linear-gradient(110deg,#147bd1,#22b4df);color:#041321}
+.hub-secondary{background:rgba(40,54,75,.72)}
+.hub-small{padding:7px 10px}
+.hub-small.danger{border-color:rgba(228,102,122,.28);background:rgba(99,31,49,.45);color:#f0c0c9}
+.hub-primary.wide{width:100%;margin-top:12px}
+.hub-list,.hub-rank-list,.hub-weapon-list{display:flex;flex-direction:column;gap:7px}
+.hub-row,.hub-rank-row,.hub-weapon,.hub-reward{display:flex;align-items:center;gap:12px;padding:10px 11px;border:1px solid rgba(113,158,210,.1);border-radius:10px;background:rgba(9,24,44,.68)}
+.hub-avatar{flex:0 0 34px;width:34px;height:34px;display:grid;place-items:center;border:1px solid rgba(89,173,238,.3);border-radius:10px;background:linear-gradient(145deg,#183b60,#0b1d35);color:#a8ddff;font-weight:700}
+.hub-avatar.online{border-color:rgba(63,227,165,.55);color:#69e9b9}
+.hub-avatar.live{color:#63eab4;border-color:rgba(63,227,165,.4)}
+.hub-avatar.replay{color:#e6cb7d;border-color:rgba(228,200,117,.4)}
+.hub-row-main{flex:1;min-width:0}
+.hub-row-main b{display:block;overflow:hidden;color:#e4f0ff;font-size:13px;text-overflow:ellipsis;white-space:nowrap}
+.hub-row-main span{display:block;margin-top:3px;overflow:hidden;color:#7f9bb9;font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.hub-dim{color:#7188a2;font-size:11px;white-space:nowrap}
+.hub-empty{padding:18px;text-align:center;border:1px dashed rgba(118,161,208,.18);border-radius:10px;color:#748da8;font-size:12px}
+.hub-rank-number{width:34px;color:#8ba5c2;font-size:16px}
+.hub-rank-row:first-child .hub-rank-number{color:#e8d18c}
+.hub-rating{color:#88d6ff;font-size:14px;white-space:nowrap}
+.hub-rating small{font-size:9px;color:#7898b7}
+.hub-note{padding:10px 13px;color:#7895b3;font-size:11px;line-height:1.6}
+.hub-season-hero{margin-bottom:18px;padding:22px;border:1px solid rgba(228,200,117,.26);border-radius:15px;background:radial-gradient(ellipse at 80% 0%,rgba(156,115,35,.18),transparent 55%),linear-gradient(130deg,rgba(34,43,59,.95),rgba(11,20,36,.96))}
+.hub-season-hero h3{margin:5px 0;color:#f1dd9d;font-size:24px;letter-spacing:1px}
+.hub-season-hero p{margin:0;color:#91a7c0;font-size:12px}
+.hub-season-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:18px 0}
+.hub-season-stats div{padding:10px;border:1px solid rgba(218,190,119,.12);border-radius:9px;background:rgba(5,13,25,.45)}
+.hub-season-stats span{display:block;color:#8399b2;font-size:9px;letter-spacing:1px}
+.hub-season-stats b{display:block;margin-top:3px;color:#f1dfac;font-size:20px}
+.hub-progress{height:7px;overflow:hidden;border-radius:10px;background:rgba(255,255,255,.1)}
+.hub-progress i{display:block;height:100%;border-radius:10px;background:linear-gradient(90deg,#b38a39,#f0d88c);box-shadow:0 0 16px rgba(232,198,105,.3)}
+.hub-progress-label{margin-top:7px;text-align:right;color:#a6b5c8;font-size:10px}
+.hub-reward.ready{border-color:rgba(72,205,157,.24);background:rgba(10,63,56,.22)}
+.hub-reward.claimed{opacity:.56}
+.hub-reward-mark{width:25px;height:25px;display:grid;place-items:center;border-radius:8px;background:rgba(77,146,190,.16);color:#8edbff}
+.hub-loadout-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.hub-loadout-grid label,.hub-settings label{display:flex;flex-direction:column;gap:7px;color:#88a6c5;font-size:10px;letter-spacing:1px}
+.hub-map-select{grid-column:1/-1}
+.hub-weapon-icon{width:42px;height:34px;display:grid;place-items:center;border:1px solid rgba(83,178,245,.24);border-radius:8px;background:rgba(16,55,88,.6);color:#72d4ff;font-weight:700;font-size:12px}
+.hub-weapon-rate{color:#e6ce8d;font-size:13px;white-space:nowrap}
+.hub-weapon-rate small{font-size:9px;color:#899db3}
+.hub-settings{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.hub-settings label span{color:#d9c17d}
+.hub-settings input[type=range]{width:100%;accent-color:#39baff}
+.hub-invite{display:flex;align-items:center;gap:10px;padding:13px 20px;border-top:1px solid rgba(113,170,223,.15);background:rgba(6,19,35,.95)}
+.hub-invite div{flex:1;color:#dceeff;font-size:12px}
+.hub-invite span{display:block;margin-top:3px;color:#7e9dbd;font-size:10px}
+@media(pointer:coarse){.weapon-switch-btn{top:181px;right:12px}.hub-launch-row{flex-direction:column;align-items:stretch}.hub-launch-row .outline-btn{width:100%}}
+@media(max-width:640px){
+  .hub-panel{padding:0}
+  .hub-card{width:100%;height:100dvh;max-height:100dvh;border-radius:0;border-left:0;border-right:0}
+  .hub-header{padding:15px 16px 12px}
+  .hub-header h2{font-size:23px}
+  .hub-nav{padding:9px 12px;gap:5px}
+  .hub-tab{min-width:88px;padding:9px 10px}
+  .hub-tab b{font-size:10px}
+  .hub-tab span{font-size:10px}
+  .hub-content{padding:12px 12px 22px}
+  .hub-section{padding:13px;margin-bottom:13px}
+  .hub-section-head h3{font-size:12px}
+  .hub-section-head p{font-size:11px}
+  .hub-row{gap:8px;padding:8px}
+  .hub-row-main b{font-size:12px}
+  .hub-row-main span{font-size:10px}
+  .hub-small{font-size:10px;padding:7px 8px}
+  .hub-loadout-grid,.hub-settings{grid-template-columns:1fr}
+  .hub-map-select{grid-column:auto}
+  .hub-season-stats{gap:5px}
+  .hub-season-stats b{font-size:17px}
+  .hub-invite{padding:11px 12px;flex-wrap:wrap}
+  .hub-invite div{flex-basis:100%}
+  .private-row{grid-template-columns:1fr 1fr}
+  .weapon-switch-btn{top:181px}
+}
