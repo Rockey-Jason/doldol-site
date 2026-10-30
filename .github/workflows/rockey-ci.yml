@@ -3,8 +3,14 @@ name: ROCKEY Build Check
 on:
   push:
     branches:
-      - feature/rockey-foundation
+      - 'feature/rockey-*'
       - main
+    paths:
+      - 'rockey-client/**'
+      - 'rockey-server/**'
+      - 'supabase/migrations/*rockey*'
+      - '.github/workflows/rockey-ci.yml'
+  pull_request:
     paths:
       - 'rockey-client/**'
       - 'rockey-server/**'
