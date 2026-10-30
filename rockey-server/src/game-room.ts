@@ -378,7 +378,7 @@ export class GameRoom {
           target!.alive=false;
         },0);
         setTimeout(()=>{
-          if(this.finished || target!.connected) return;
+          if(this.finished || !target!.connected) return;
           target!.health=100;target!.alive=true;target!.x=target!.spawnX;target!.z=target!.spawnZ;
           target!.y=0.92;target!.verticalVelocity=0;
         },1800);
