@@ -13,7 +13,7 @@ The client uses the current Dori Site Supabase Auth session. The public publisha
 
 ### Client features
 - Five distinct maps: Training Facility, Neon District, Frostline, Orbital Dock and Canyon Relay
-- Ten weapons with individual damage, headshot multiplier, rate of fire, magazine, reload and range
+- Ten weapons with separate procedural first-person 3D silhouettes plus individual damage, headshot multiplier, rate of fire, magazine, reload and range
 - Primary/secondary loadout selection
 - Friends search, requests, online status and invite actions
 - Global leaderboard and season rewards overview
@@ -45,7 +45,8 @@ SUPABASE_SERVICE_ROLE_KEY must contain the actual project secret, set only in Re
 - Friends and multi-recipient private-room invites
 - Matchmaking by mode and selected map
 - Server-authoritative movement, jump, ammo, reload, weapon switch, hit detection and scoring
-- Request rate limits and repeated suspicious-input checks
+- Request rate limits, repeated suspicious-input checks and patched WebSocket dependency (ws 8.22.0)
+- CI npm audit gate for high-severity dependency advisories
 - Reconnect grace period of 30 seconds
 - Live spectator snapshots
 - Match replay capture at 5 frames per second and server persistence
