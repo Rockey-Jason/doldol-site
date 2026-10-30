@@ -162,3 +162,6 @@ button{-webkit-tap-highlight-color:transparent;user-select:none}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+.crosshair.hit i{background:#68f5c2;box-shadow:0 0 9px #48ffc0;transform:scale(1.35)}
+.crosshair.headshot i{background:#ffd77a;box-shadow:0 0 12px #ffb43f;transform:scale(1.65)}
