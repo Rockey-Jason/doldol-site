@@ -385,7 +385,10 @@ export class GameRoom {
       target.deaths++;
       shooter.kills++;
       shooter.weaponKills[weapon.code]=(shooter.weaponKills[weapon.code]||0)+1;
-      send(target.client,{type:'eliminated',by:shooter.client.player.name});
+      const clipStart=now-this.startedAt-3500;
+      const killcamFrames=this.replayFrames.filter(frame=>frame.t>=clipStart);
+      killcamFrames.push({t:now-this.startedAt,players:this.snapshots()});
+      send(target.client,{type:'eliminated',by:shooter.client.player.name,killerId:shooter.client.player.id,killcamFrames});
       send(shooter.client,{type:'elimination',target:target.client.player.name,kills:shooter.kills});
       if(this.mode==='ffa') {
         if(shooter.kills>=20) void this.finish(shooter.client.player.id);
