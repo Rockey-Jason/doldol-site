@@ -193,9 +193,12 @@ async function handleFriendRespond(client:PlayerClient,targetValue:unknown,accep
     .eq('user_a_id',a).eq('user_b_id',b).eq('status','pending').maybeSingle();
   if(!request||request.requested_by===client.player.id)
     return send(client,{type:'error',message:'처리할 수 있는 친구 요청이 없습니다.'});
-  const {error}=await admin.from('rockey_friendships')
-    .update({status:accept?'accepted':'blocked',updated_at:new Date().toISOString()})
-    .eq('id',request.id);
+  const {error}=accept
+    ?await admin.from('rockey_friendships')
+      .update({status:'accepted',updated_at:new Date().toISOString()})
+      .eq('id',request.id)
+    :await admin.from('rockey_friendships')
+      .delete().eq('id',request.id);
   if(error) return send(client,{type:'error',message:'친구 요청을 처리하지 못했습니다.'});
   send(client,{type:'friend.request.updated',targetId:target,accepted:accept});
   const other=clients.get(target);
@@ -211,12 +214,15 @@ async function handleFriendInvite(client:PlayerClient,targetValue:unknown){
   const {data:friend}=await admin.from('rockey_friendships').select('status')
     .eq('user_a_id',a).eq('user_b_id',b).maybeSingle();
   if(friend?.status!=='accepted') return send(client,{type:'error',message:'친구에게만 초대할 수 있습니다.'});
-  const {error}=await admin.from('rockey_invites')
-    .update({target_user_id:target})
-    .eq('room_code_hash',hashCode(party.code)).eq('status','pending');
-  if(error) return send(client,{type:'error',message:'초대 정보를 저장하지 못했습니다.'});
   const recipient=clients.get(target);
   if(!recipient) return send(client,{type:'error',message:'친구가 현재 온라인이 아닙니다.'});
+  const {data:invite,error:inviteError}=await admin.from('rockey_invites')
+    .select('id').eq('room_code_hash',hashCode(party.code)).eq('status','pending').maybeSingle();
+  if(inviteError||!invite) return send(client,{type:'error',message:'초대 방 정보를 찾지 못했습니다.'});
+  const {error}=await admin.from('rockey_invite_recipients').upsert({
+    invite_id:invite.id,target_user_id:target,invited_by:client.player.id
+  },{onConflict:'invite_id,target_user_id'});
+  if(error) return send(client,{type:'error',message:'초대 정보를 저장하지 못했습니다.'});
   send(recipient,{
     type:'friend.invite',
     from:{id:client.player.id,name:client.player.name},
@@ -341,8 +347,15 @@ async function handle(client:PlayerClient,raw:WebSocket.RawData){
         .eq('room_code_hash',hashCode(code)).maybeSingle();
       if(error||!invite||invite.status!=='pending'||new Date(invite.expires_at).getTime()<Date.now())
         return send(client,{type:'private.error',message:'초대가 만료되었거나 유효하지 않습니다.'});
-      if(invite.target_user_id && invite.target_user_id!==client.player.id && party.hostId!==client.player.id)
-        return send(client,{type:'private.error',message:'이 초대는 다른 플레이어에게 발송되었습니다.'});
+      const {data:recipients,error:recipientError}=await admin.from('rockey_invite_recipients')
+        .select('target_user_id').eq('invite_id',invite.id);
+      if(recipientError) return send(client,{type:'private.error',message:'초대 대상 정보를 확인하지 못했습니다.'});
+      const allowedTargets=(recipients||[]).map(row=>row.target_user_id as string);
+      const hasTargetList=allowedTargets.length>0;
+      if(party.hostId!==client.player.id && (
+        (hasTargetList && !allowedTargets.includes(client.player.id)) ||
+        (!hasTargetList && invite.target_user_id && invite.target_user_id!==client.player.id)
+      )) return send(client,{type:'private.error',message:'이 초대는 다른 플레이어에게 발송되었습니다.'});
       party.members.push(client);
       for(const member of party.members) send(member,{
         type:'private.member',name:client.player.name,members:party.members.length,required:modeSize(party.mode)
