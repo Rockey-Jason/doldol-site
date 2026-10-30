@@ -23,6 +23,8 @@ It is not a claim that all five builds are production-complete. The changes must
 - Add local recoil in the training range.
 - Add a short killer-follow killcam clip from server-captured match frames.
 - Add hit/headshot marker feedback.
+- Add weapon-specific firing kick and reload motion profiles plus synthesized per-weapon firing/reload sounds using Web Audio.
+- Extract server-authoritative shot tracing (range, line of sight, cover, team filtering, headshots) into deterministic combat rules and test it for all ten weapons.
 - Smooth remote-player position and rotation updates between server snapshots.
 
 ### BUILD 07 — delivery and responsive UI
