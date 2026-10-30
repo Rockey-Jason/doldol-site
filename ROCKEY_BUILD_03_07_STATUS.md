@@ -42,7 +42,7 @@ These baseline features were audited; this branch does not claim they were newly
 
 ## Still required before calling BUILD 03–07 complete
 
-- BUILD 04: full weapon-specific reload/inspect animations, production sound assets/mix controls, richer hit/death effects, and balance testing for all ten weapons.
+- BUILD 04: generated per-weapon firing and reload audio (10 distinct weapon profiles), weapon-class reload motion, animated recoil, and automated server combat-rule tests for all ten weapon definitions. Remaining: authored production sound assets/mix controls, richer hit/death effects, and live balance testing.
 - BUILD 05: verify all five maps for spawn fairness, collision/navigation, and objective/FFA balance; verify ranked rating changes and season reward claims against the live database.
 - BUILD 06: multi-device tests for friend presence, invites, disconnect/reconnect, spectator transitions, replay retrieval, and replay integrity.
 - BUILD 07: browser/device performance profiling, low-memory Android testing, accessibility review, visual QA, and end-to-end regression tests.
@@ -51,5 +51,5 @@ These baseline features were audited; this branch does not claim they were newly
 ## Verification status
 
 - Source changes are committed to this feature branch.
-- GitHub Actions client/server build and dependency audit must pass before merge.
+- GitHub Actions client/server build, dependency audit, and server combat test suite must pass before merge.
 - No production deploy or live database mutation is performed by this branch update.
