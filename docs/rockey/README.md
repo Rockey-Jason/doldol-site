@@ -57,7 +57,7 @@ This is a feature-complete BUILD 02 foundation for these requested systems, not 
 ## Database
 - 20261030115224_rockey_core_schema.sql: core isolated ROCKEY tables
 - 20261030120902_rockey_build_02_social_seasons_catalogues_replays.sql: seasons, maps, weapons, rewards, replay storage and ranked RPCs
-- 20261030121200_rockey_private_room_multi_friend_invites.sql: multiple invited friends per private room
+- 20261030122225_rockey_private_room_multi_friend_invites.sql: multiple invited friends per private room
 
 The migrations are applied to the configured Supabase project. All ROCKEY tables use RLS. Client roles are read-only; server writes use the service role. Existing Dori Site wallet, bank, stock and achievements tables are not changed by ROCKEY migrations.
 
