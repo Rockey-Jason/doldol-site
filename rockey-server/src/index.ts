@@ -6,7 +6,7 @@ import { GameRoom, type Mode, type PlayerClient } from './game-room.js';
 import { MAPS, WEAPONS } from './catalog.js';
 
 const app=Fastify({logger:true,bodyLimit:2*1024*1024});
-const wss=new WebSocketServer({noServer:true,maxPayload:2*1024*1024});
+const wss=new WebSocketServer({noServer:true,maxPayload:8*1024*1024});
 const clients=new Map<string,PlayerClient>();
 const queues=new Map<string,PlayerClient[]>();
 type Party={
@@ -523,12 +523,13 @@ wss.on('connection',ws=>{
   ws.on('close',()=>{
     clearTimeout(authTimeout);
     if(!client)return;
+    // A replaced socket may close after the new socket has already resumed.
+    // Never let a stale close event disconnect the new session.
+    if(clients.get(client.player.id)!==client)return;
+    clients.delete(client.player.id);
     removeFromQueues(client);
-    if(clients.get(client.player.id)===client) clients.delete(client.player.id);
     roomFor(client)?.disconnect(client);
-    if(client.spectatorRoomId){
-      rooms.get(client.spectatorRoomId)?.removeSpectator(client);
-    }
+    if(client.spectatorRoomId)rooms.get(client.spectatorRoomId)?.removeSpectator(client);
     for(const [id,party] of parties){
       party.members=party.members.filter(member=>member!==client);
       if(party.members.length===0) parties.delete(id);
