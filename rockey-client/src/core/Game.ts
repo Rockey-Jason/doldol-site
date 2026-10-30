@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import RAPIER from '@dimforge/rapier3d-compat';
 import { MAPS, WEAPONS, type RockeyWeapon } from '../catalog';
 
 export interface RemotePlayer {
@@ -18,7 +17,10 @@ export interface GameInstance {
   setHealth(value: number): void;
   setAmmo(ammo: number, reserve: number): void;
   setWeapon(weaponCode: string, ammo?: number, reserve?: number): void;
+  applyRecoil(pitch: number, yaw: number): void;
   playReplay(frames: ReplayFrame[]): void;
+  playKillcam(frames: ReplayFrame[], killerId: string, onComplete: () => void): void;
+  cancelKillcam(): void;
   setQuality(level: 'low'|'balanced'|'high'): void;
   setSensitivity(value: number): void;
   toggleCamera(): void;
@@ -32,6 +34,8 @@ export async function createGame(
   updateHud: (hp: number, ammo: number, reserve: number, weapon: string) => void,
   initialMapId = 'training_facility'
 ): Promise<GameInstance> {
+  const rapierModule = await import('@dimforge/rapier3d-compat');
+  const RAPIER = rapierModule.default;
   await RAPIER.init();
 
   const map = MAPS[initialMapId] || MAPS.training_facility;
@@ -317,7 +321,24 @@ export async function createGame(
   let replayFrames: ReplayFrame[] | null = null;
   let replayStartedAt = 0;
   let replayIndex = -1;
+  let replayFocusId = '';
+  let killcamReturnMode = '1v1';
+  let killcamComplete: (() => void) | null = null;
   let mobileFireTimer = 0;
+  let audioContext: AudioContext | null = null;
+  let noiseBuffer: AudioBuffer | null = null;
+  let gunKick = 0;
+  const weaponMotion:Record<string,{kick:number;reloadTilt:number;roll:number}> = {
+    R16:{kick:.82,reloadTilt:.12,roll:.06},R9:{kick:.95,reloadTilt:.2,roll:.12},
+    VIPER:{kick:.48,reloadTilt:.09,roll:.04},THUNDER:{kick:1.28,reloadTilt:.38,roll:.2},
+    LONGSHOT:{kick:1.35,reloadTilt:.46,roll:.1},HELIX:{kick:.88,reloadTilt:.16,roll:.08},
+    BASTION:{kick:.56,reloadTilt:.28,roll:.22},NOVA:{kick:1.16,reloadTilt:.22,roll:.14},
+    ARC:{kick:.62,reloadTilt:.1,roll:.04},PULSE:{kick:.72,reloadTilt:.14,roll:.08}
+  };
+  let reloadAnimationStart = 0;
+  let reloadAnimationDuration = 0;
+  let movePointerId: number | null = null;
+  let lookPointerId: number | null = null;
   let active = false;
   let disposed = false;
   let cameraMode: 'first' | 'third' = 'first';
@@ -356,6 +377,58 @@ export async function createGame(
     updateHud(hp,ammo,reserve,currentWeapon.name);
   }
 
+  const soundProfiles: Record<string,{base:number;crack:number;wave:OscillatorType;duration:number}> = {
+    R16:{base:92,crack:1180,wave:'sawtooth',duration:.105},
+    R9:{base:138,crack:1780,wave:'square',duration:.085},
+    VIPER:{base:72,crack:920,wave:'sawtooth',duration:.075},
+    THUNDER:{base:48,crack:620,wave:'triangle',duration:.19},
+    LONGSHOT:{base:42,crack:2100,wave:'sawtooth',duration:.24},
+    HELIX:{base:112,crack:1480,wave:'triangle',duration:.12},
+    BASTION:{base:66,crack:840,wave:'sawtooth',duration:.11},
+    NOVA:{base:165,crack:1960,wave:'square',duration:.1},
+    ARC:{base:240,crack:2650,wave:'sine',duration:.16},
+    PULSE:{base:185,crack:2240,wave:'triangle',duration:.13}
+  };
+  function getAudioContext() {
+    if (!audioContext) audioContext = new AudioContext();
+    if (audioContext.state === 'suspended') void audioContext.resume();
+    return audioContext;
+  }
+  function getNoiseBuffer(ctx:AudioContext) {
+    if(noiseBuffer)return noiseBuffer;
+    noiseBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.22),ctx.sampleRate);
+    const data=noiseBuffer.getChannelData(0);
+    for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*Math.pow(1-i/data.length,1.8);
+    return noiseBuffer;
+  }
+  function playFireSound(code:string) {
+    try {
+      const ctx=getAudioContext(),profile=soundProfiles[code]||soundProfiles.R16,now=ctx.currentTime;
+      const master=ctx.createGain();master.gain.setValueAtTime(.0001,now);master.gain.exponentialRampToValueAtTime(.22,now+.004);master.gain.exponentialRampToValueAtTime(.0001,now+profile.duration);master.connect(ctx.destination);
+      const low=ctx.createOscillator();low.type=profile.wave;low.frequency.setValueAtTime(profile.base*1.7,now);low.frequency.exponentialRampToValueAtTime(profile.base*.62,now+profile.duration);low.connect(master);low.start(now);low.stop(now+profile.duration);
+      const snap=ctx.createOscillator();snap.type='triangle';snap.frequency.setValueAtTime(profile.crack,now);snap.frequency.exponentialRampToValueAtTime(profile.crack*.42,now+.035);
+      const snapGain=ctx.createGain();snapGain.gain.setValueAtTime(.0001,now);snapGain.gain.exponentialRampToValueAtTime(.12,now+.002);snapGain.gain.exponentialRampToValueAtTime(.0001,now+.045);snap.connect(snapGain);snapGain.connect(ctx.destination);snap.start(now);snap.stop(now+.05);
+      const noise=ctx.createBufferSource();noise.buffer=getNoiseBuffer(ctx);
+      const noiseGain=ctx.createGain();noiseGain.gain.setValueAtTime(.0001,now);noiseGain.gain.exponentialRampToValueAtTime(code==='THUNDER'||code==='LONGSHOT'?.16:.075,now+.002);noiseGain.gain.exponentialRampToValueAtTime(.0001,now+profile.duration*.72);noise.connect(noiseGain);noiseGain.connect(ctx.destination);noise.start(now);noise.stop(now+profile.duration);
+    } catch { /* Audio is optional; gameplay must continue if the device blocks it. */ }
+  }
+  function playReloadSound(code:string) {
+    try {
+      const ctx=getAudioContext(),now=ctx.currentTime;
+      const metallic=code==='LONGSHOT'||code==='BASTION'||code==='THUNDER';
+      const times=metallic?[0,.24,.58]:[0,.17,.39];
+      times.forEach((offset,index)=>{
+        const osc=ctx.createOscillator(),gain=ctx.createGain();
+        osc.type=index===1?'triangle':'square';
+        osc.frequency.setValueAtTime((metallic?520:760)*(index===2?.72:1),now+offset);
+        gain.gain.setValueAtTime(.0001,now+offset);
+        gain.gain.exponentialRampToValueAtTime(.075,now+offset+.004);
+        gain.gain.exponentialRampToValueAtTime(.0001,now+offset+.065);
+        osc.connect(gain);gain.connect(ctx.destination);osc.start(now+offset);osc.stop(now+offset+.07);
+      });
+    } catch { /* Audio is optional. */ }
+  }
+
   function stopMobileFire() {
     if (mobileFireTimer) window.clearInterval(mobileFireTimer);
     mobileFireTimer = 0;
@@ -366,6 +439,8 @@ export async function createGame(
     if (!active || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
     lastShot = now;
     ammo -= 1;
+    gunKick = Math.min(1.8,gunKick+(weaponMotion[currentWeaponCode]?.kick||.82));
+    playFireSound(currentWeaponCode);
     updateHud(hp, ammo, reserve, currentWeapon.name);
 
     if (mode === 'practice') {
@@ -385,6 +460,7 @@ export async function createGame(
           target.visible = false;
           notify('TARGET ELIMINATED');
           window.setTimeout(() => {
+            if(disposed)return;
             target.userData.hp = 100;
             target.visible = true;
           }, 2200);
@@ -395,20 +471,24 @@ export async function createGame(
     } else {
       send({ type: 'fire', weaponCode: currentWeaponCode, sequence: ++seq });
     }
+    if (mode === 'practice') {
+      pitch = THREE.MathUtils.clamp(pitch + Math.min(0.045,0.012+currentWeapon.damage/2500+currentWeapon.spread*0.25),-1.3,1.3);
+      yaw += (Math.random()-0.5)*0.003;
+    }
 
     muzzleFlash.visible = true;
-    gun.position.z = 0.045;
-    window.setTimeout(() => {
-      gun.position.z = 0;
-      muzzleFlash.visible = false;
-    }, 55);
+    window.setTimeout(() => { if(!disposed)muzzleFlash.visible = false; }, 70);
   }
 
   function reload() {
     if (!active || ammo >= currentWeapon.magazine || reserve <= 0 || performance.now() < reloadAt) return;
     reloadAt = performance.now() + currentWeapon.reloadMs;
+    reloadAnimationStart = performance.now();
+    reloadAnimationDuration = currentWeapon.reloadMs;
+    playReloadSound(currentWeaponCode);
     if (mode === 'practice') {
       window.setTimeout(() => {
+        if(disposed)return;
         const amount = Math.min(currentWeapon.magazine - ammo, reserve);
         ammo += amount;
         reserve -= amount;
@@ -449,6 +529,7 @@ export async function createGame(
   function pointerDown(event: PointerEvent) {
     if (event.pointerType === 'mouse' && event.button === 0) fire();
     if (event.pointerType === 'touch') {
+      lookPointerId = event.pointerId;
       canvas.setPointerCapture(event.pointerId);
       (canvas as HTMLCanvasElement & { lx?: number; ly?: number }).lx = event.clientX;
       (canvas as HTMLCanvasElement & { lx?: number; ly?: number }).ly = event.clientY;
@@ -456,12 +537,19 @@ export async function createGame(
   }
   function pointerDrag(event: PointerEvent) {
     if (document.pointerLockElement === canvas) return;
-    if (event.pointerType !== 'touch' || !event.buttons) return;
+    if (event.pointerType !== 'touch' || event.pointerId !== lookPointerId) return;
     const element = canvas as HTMLCanvasElement & { lx?: number; ly?: number };
     if (element.lx === undefined || element.ly === undefined) return;
     look(event.clientX - element.lx, event.clientY - element.ly);
     element.lx = event.clientX;
     element.ly = event.clientY;
+  }
+  function pointerLookEnd(event: PointerEvent) {
+    if (event.pointerId !== lookPointerId) return;
+    lookPointerId = null;
+    const element = canvas as HTMLCanvasElement & { lx?: number; ly?: number };
+    delete element.lx;
+    delete element.ly;
   }
   function resize() {
     const w = Math.max(1, canvas.clientWidth);
@@ -483,51 +571,99 @@ export async function createGame(
   canvas.addEventListener('click', clickCanvas);
   canvas.addEventListener('pointerdown', pointerDown);
   canvas.addEventListener('pointermove', pointerDrag);
+  canvas.addEventListener('pointerup', pointerLookEnd);
+  canvas.addEventListener('pointercancel', pointerLookEnd);
+  canvas.addEventListener('lostpointercapture', pointerLookEnd);
+  const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null;
+  resizeObserver?.observe(canvas);
+  window.visualViewport?.addEventListener('resize', resize);
+  const resetAllInput = () => {
+    keys.clear();
+    touch.forward = 0; touch.right = 0; touch.jump = false;
+    resetPad();
+    stopMobileFire();
+    previous = performance.now();
+  };
+  const onVisibilityChange = () => {
+    if (document.hidden) resetAllInput();
+    previous = performance.now();
+  };
+  const onWindowBlur = () => resetAllInput();
+  document.addEventListener('visibilitychange', onVisibilityChange);
+  window.addEventListener('blur', onWindowBlur);
   resize();
 
   const pad = document.getElementById('movePad');
   const stick = document.getElementById('moveStick');
   const resetPad = () => {
+    movePointerId = null;
     touch.forward = 0; touch.right = 0;
     if (stick instanceof HTMLElement) stick.style.transform = 'translate(0,0)';
   };
-  pad?.addEventListener('pointerdown', event => {
+  const updatePad = (event: PointerEvent) => {
+    if (!pad) return;
     const rect = pad.getBoundingClientRect();
-    pad.setPointerCapture(event.pointerId);
-    const x = event.clientX - rect.left - rect.width / 2;
-    const y = event.clientY - rect.top - rect.height / 2;
+    const x = THREE.MathUtils.clamp(event.clientX - rect.left - rect.width / 2, -rect.width * 0.38, rect.width * 0.38);
+    const y = THREE.MathUtils.clamp(event.clientY - rect.top - rect.height / 2, -rect.height * 0.38, rect.height * 0.38);
     touch.right = THREE.MathUtils.clamp(x / (rect.width * 0.38), -1, 1);
     touch.forward = THREE.MathUtils.clamp(-y / (rect.height * 0.38), -1, 1);
     if (stick instanceof HTMLElement) stick.style.transform = 'translate(' + x * 0.35 + 'px,' + y * 0.35 + 'px)';
+  };
+  pad?.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    if (movePointerId !== null) return;
+    movePointerId = event.pointerId;
+    pad.setPointerCapture(event.pointerId);
+    updatePad(event);
   });
   pad?.addEventListener('pointermove', event => {
-    if (event.buttons === 0) return;
-    const rect = pad.getBoundingClientRect();
-    const x = event.clientX - rect.left - rect.width / 2;
-    const y = event.clientY - rect.top - rect.height / 2;
-    touch.right = THREE.MathUtils.clamp(x / (rect.width * 0.38), -1, 1);
-    touch.forward = THREE.MathUtils.clamp(-y / (rect.height * 0.38), -1, 1);
-    if (stick instanceof HTMLElement) stick.style.transform = 'translate(' + x * 0.35 + 'px,' + y * 0.35 + 'px)';
+    if (event.pointerId !== movePointerId) return;
+    updatePad(event);
   });
-  pad?.addEventListener('pointerup', resetPad);
-  pad?.addEventListener('pointercancel', resetPad);
-  document.getElementById('mobileFire')?.addEventListener('pointerdown', event => {
+  pad?.addEventListener('pointerup', event => { if(event.pointerId===movePointerId)resetPad(); });
+  pad?.addEventListener('pointercancel', event => { if(event.pointerId===movePointerId)resetPad(); });
+  pad?.addEventListener('lostpointercapture', event => { if(event.pointerId===movePointerId)resetPad(); });
+  const mobileFire = document.getElementById('mobileFire');
+  mobileFire?.addEventListener('pointerdown', event => {
     event.preventDefault();
+    mobileFire.setPointerCapture(event.pointerId);
     fire();
     stopMobileFire();
     mobileFireTimer = window.setInterval(fire,85);
   });
-  document.getElementById('mobileFire')?.addEventListener('pointerup',stopMobileFire);
-  document.getElementById('mobileFire')?.addEventListener('pointercancel',stopMobileFire);
-  document.getElementById('mobileJump')?.addEventListener('pointerdown', event => { event.preventDefault(); touch.jump = true; });
-  document.getElementById('mobileJump')?.addEventListener('pointerup', () => { touch.jump = false; });
+  mobileFire?.addEventListener('pointerup',stopMobileFire);
+  mobileFire?.addEventListener('pointercancel',stopMobileFire);
+  mobileFire?.addEventListener('lostpointercapture',stopMobileFire);
+  const mobileJump = document.getElementById('mobileJump');
+  mobileJump?.addEventListener('pointerdown', event => { event.preventDefault(); mobileJump.setPointerCapture(event.pointerId); touch.jump = true; });
+  const stopJump = () => { touch.jump = false; };
+  mobileJump?.addEventListener('pointerup', stopJump);
+  mobileJump?.addEventListener('pointercancel', stopJump);
+  mobileJump?.addEventListener('lostpointercapture', stopJump);
   document.getElementById('mobileReload')?.addEventListener('pointerdown', reload);
   document.getElementById('mobileView')?.addEventListener('pointerdown', toggleCamera);
+
+  function disposeObjectResources(root: THREE.Object3D) {
+    const geometries = new Set<THREE.BufferGeometry>();
+    const materials = new Set<THREE.Material>();
+    root.traverse(object => {
+      if (!(object instanceof THREE.Mesh)) return;
+      geometries.add(object.geometry);
+      const attached = Array.isArray(object.material) ? object.material : [object.material];
+      attached.forEach(material => materials.add(material));
+    });
+    geometries.forEach(geometry => geometry.dispose());
+    materials.forEach(material => material.dispose());
+  }
 
   function setRemotePlayers(players: RemotePlayer[]) {
     const ids = new Set(players.map(player => player.id));
     for (const [id, mesh] of remotes) {
-      if (!ids.has(id)) { scene.remove(mesh); remotes.delete(id); }
+      if (!ids.has(id)) {
+        scene.remove(mesh);
+        disposeObjectResources(mesh);
+        remotes.delete(id);
+      }
     }
     for (const player of players) {
       let mesh = remotes.get(player.id);
@@ -539,24 +675,60 @@ export async function createGame(
         );
         model.castShadow = true;
         mesh.add(model);
+        mesh.position.set(player.x,player.y-0.08,player.z);
+        mesh.rotation.y=player.yaw;
         scene.add(mesh);
         remotes.set(player.id, mesh);
       }
-      mesh.position.set(player.x, player.y - 0.08, player.z);
-      mesh.rotation.y = player.yaw;
+      mesh.userData.targetX=player.x;
+      mesh.userData.targetY=player.y-0.08;
+      mesh.userData.targetZ=player.z;
+      mesh.userData.targetYaw=player.yaw;
       mesh.visible = player.connected !== false && player.alive !== false && player.health > 0;
     }
   }
 
   function frame(now: number) {
     if (disposed) return;
+    if (document.hidden) {
+      previous = now;
+      raf = requestAnimationFrame(frame);
+      return;
+    }
     const dt = Math.min((now - previous) / 1000, 0.05);
     previous = now;
+    const remoteBlend=1-Math.exp(-18*dt);
+    gunKick*=Math.exp(-17*dt);
+    const reloadProgress=reloadAnimationStart?THREE.MathUtils.clamp((now-reloadAnimationStart)/Math.max(1,reloadAnimationDuration),0,1):1;
+    if(reloadProgress>=1)reloadAnimationStart=0;
+    const reloadWave=reloadAnimationStart?Math.sin(reloadProgress*Math.PI):0;
+    const motion=weaponMotion[currentWeaponCode]||weaponMotion.R16;
+    gun.position.set(0,-reloadWave*motion.reloadTilt*.34,gunKick*.11+reloadWave*.19);
+    gun.rotation.set(reloadWave*motion.reloadTilt,0,reloadWave*motion.roll);
+    for(const mesh of remotes.values()){
+      const data=mesh.userData;
+      if(typeof data.targetX!=='number')continue;
+      mesh.position.x=THREE.MathUtils.lerp(mesh.position.x,data.targetX,remoteBlend);
+      mesh.position.y=THREE.MathUtils.lerp(mesh.position.y,data.targetY,remoteBlend);
+      mesh.position.z=THREE.MathUtils.lerp(mesh.position.z,data.targetZ,remoteBlend);
+      if(typeof data.targetYaw==='number'){
+        const delta=THREE.MathUtils.euclideanModulo(data.targetYaw-mesh.rotation.y+Math.PI,Math.PI*2)-Math.PI;
+        mesh.rotation.y+=delta*remoteBlend;
+      }
+    }
 
     if (mode === 'spectator' || mode === 'replay') {
       const target = new THREE.Vector3(0,0,0);
       camera.position.lerp(new THREE.Vector3(0,22,34),1-Math.exp(-3*dt));
       camera.lookAt(target);
+    } else if (mode === 'killcam') {
+      const focus = remotes.get(replayFocusId);
+      if (focus) {
+        const yaw = focus.rotation.y;
+        const desired = focus.position.clone().add(new THREE.Vector3(Math.sin(yaw)*2.8,1.45,Math.cos(yaw)*2.8));
+        camera.position.lerp(desired,1-Math.exp(-7*dt));
+        camera.lookAt(focus.position.clone().add(new THREE.Vector3(0,0.85,0)));
+      }
     }
 
     if (replayFrames && replayFrames.length > 0) {
@@ -569,7 +741,17 @@ export async function createGame(
       }
       if (index >= replayFrames.length - 1 && elapsed >= replayFrames[replayFrames.length - 1].t) {
         replayFrames = null;
-        notify('REPLAY COMPLETE');
+        if(mode==='killcam'){
+          mode=killcamReturnMode;
+          active=true;
+          replayFocusId='';
+          const complete=killcamComplete;
+          killcamComplete=null;
+          complete?.();
+          notify('KILLCAM COMPLETE');
+        }else{
+          notify('REPLAY COMPLETE');
+        }
       }
     }
 
@@ -651,6 +833,8 @@ export async function createGame(
       mode = nextMode;
       active = nextMode !== 'spectator' && nextMode !== 'replay';
       replayFrames = null;
+      replayFocusId = '';
+      killcamComplete = null;
       localTeam = team;
       currentWeaponCode = WEAPONS[weaponCode] ? weaponCode : 'R16';
       primaryWeaponCode = currentWeaponCode;
@@ -711,11 +895,29 @@ export async function createGame(
     setWeapon(code: string, nextAmmo?: number, nextReserve?: number) {
       setWeaponLocal(code,nextAmmo,nextReserve);
     },
+    applyRecoil(nextPitch: number, nextYaw: number) {
+      pitch = THREE.MathUtils.clamp(nextPitch,-1.3,1.3);
+      yaw = nextYaw;
+    },
     playReplay(frames: ReplayFrame[]) {
       if (!Array.isArray(frames) || frames.length===0) return notify('저장된 리플레이 프레임이 없습니다.');
-      active=false;mode='replay';replayFrames=frames;
+      active=false;mode='replay';replayFocusId='';replayFrames=frames;
       replayStartedAt=performance.now();replayIndex=-1;
       notify('REPLAY START');
+    },
+    playKillcam(frames: ReplayFrame[],killerId:string,onComplete:()=>void) {
+      if(!Array.isArray(frames)||frames.length<2){onComplete();return;}
+      killcamReturnMode=mode;
+      mode='killcam';active=false;replayFocusId=killerId;
+      const firstTime=frames[0].t;
+      replayFrames=frames.map(frame=>({...frame,t:Math.max(0,frame.t-firstTime)}));
+      replayStartedAt=performance.now();replayIndex=-1;killcamComplete=onComplete;
+      notify('KILLCAM');
+    },
+    cancelKillcam() {
+      if(mode!=='killcam')return;
+      replayFrames=null;replayFocusId='';mode=killcamReturnMode;active=false;
+      const complete=killcamComplete;killcamComplete=null;complete?.();
     },
     setQuality(level: 'low'|'balanced'|'high') {
       const ratio=level==='low'?0.8:level==='balanced'?1.15:1.6;
@@ -729,27 +931,42 @@ export async function createGame(
     toggleCamera,
     dispose() {
       disposed = true;
+      killcamComplete = null;
+      replayFrames = null;
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
       window.removeEventListener('keydown', keyDown);
       window.removeEventListener('keyup', keyUp);
       window.removeEventListener('mousemove', pointerMove);
+      window.visualViewport?.removeEventListener('resize', resize);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('blur', onWindowBlur);
+      resizeObserver?.disconnect();
       canvas.removeEventListener('click', clickCanvas);
       canvas.removeEventListener('pointerdown', pointerDown);
       canvas.removeEventListener('pointermove', pointerDrag);
+      canvas.removeEventListener('pointerup', pointerLookEnd);
+      canvas.removeEventListener('pointercancel', pointerLookEnd);
+      canvas.removeEventListener('lostpointercapture', pointerLookEnd);
       world.removeCharacterController(controller);
       world.free();
       stopMobileFire();
       renderer.dispose();
-      for (const mesh of remotes.values()) scene.remove(mesh);
-      for (const target of practiceTargets) scene.remove(target);
-      for (const part of gun.children) {
-        if (part instanceof THREE.Mesh) {
-          part.geometry.dispose();
-          const materials=Array.isArray(part.material)?part.material:[part.material];
-          materials.forEach(material=>material.dispose());
-        }
-      }
+      if(audioContext){void audioContext.close();audioContext=null;noiseBuffer=null;}
+      // Dispose shared materials/geometries exactly once, including remote players and practice targets.
+      const geometries = new Set<THREE.BufferGeometry>();
+      const materials = new Set<THREE.Material>();
+      scene.traverse(object => {
+        if (!(object instanceof THREE.Mesh)) return;
+        geometries.add(object.geometry);
+        const attached = Array.isArray(object.material) ? object.material : [object.material];
+        attached.forEach(material => materials.add(material));
+      });
+      geometries.forEach(geometry => geometry.dispose());
+      materials.forEach(material => material.dispose());
+      enemyMat.dispose();
+      allyMat.dispose();
+      scene.clear();
     }
   };
 }

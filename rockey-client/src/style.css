@@ -126,3 +126,75 @@
   .private-row{grid-template-columns:1fr 1fr}
   .weapon-switch-btn{top:181px}
 }
+
+/* BUILD 03–07: mobile-safe controls, viewport handling and reduced-motion support */
+html,body,#app{min-height:100%;overscroll-behavior:none}
+#gameCanvas{height:100dvh}
+button{-webkit-tap-highlight-color:transparent;user-select:none}
+.mobile-controls{padding-bottom:env(safe-area-inset-bottom);padding-left:env(safe-area-inset-left);padding-right:env(safe-area-inset-right);touch-action:none;user-select:none;-webkit-user-select:none}
+.move-pad,.touch-btn{touch-action:none;user-select:none;-webkit-user-select:none}
+.touch-btn{min-width:52px;min-height:52px}
+.fire-btn{min-width:68px;min-height:68px}
+@media(pointer:coarse){
+  .move-pad{bottom:calc(18px + env(safe-area-inset-bottom));left:calc(14px + env(safe-area-inset-left))}
+  .mobile-actions{right:calc(12px + env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));gap:clamp(5px,1.5vw,9px)}
+  .touch-btn{width:clamp(48px,12vw,58px);height:clamp(48px,12vw,58px)}
+  .fire-btn{width:clamp(64px,16vw,76px);height:clamp(64px,16vw,76px)}
+}
+@media(max-width:380px){
+  .move-pad{width:108px;height:108px}
+  .move-stick{left:32px;top:32px;width:42px;height:42px}
+  .mobile-actions{gap:4px}
+  .touch-btn{width:46px;height:46px;min-width:46px;min-height:46px;font-size:8px}
+  .fire-btn{width:60px;height:60px;min-width:60px;min-height:60px}
+  .hud-bottom{bottom:145px}
+}
+@media(orientation:landscape) and (max-height:500px) and (pointer:coarse){
+  .topbar{height:40px}
+  .move-pad{width:94px;height:94px;bottom:8px;left:10px}
+  .move-stick{left:27px;top:27px;width:38px;height:38px}
+  .mobile-actions{bottom:8px;right:10px}
+  .touch-btn{width:44px;height:44px;min-width:44px;min-height:44px}
+  .fire-btn{width:58px;height:58px;min-width:58px;min-height:58px}
+  .hud-bottom{bottom:74px}
+  .match-info{top:42px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+.crosshair.hit i{background:#68f5c2;box-shadow:0 0 9px #48ffc0;transform:scale(1.35)}
+.crosshair.headshot i{background:#ffd77a;box-shadow:0 0 12px #ffb43f;transform:scale(1.65)}
+
+.killcam-banner{position:fixed;z-index:5;top:116px;left:50%;transform:translateX(-50%);padding:9px 18px;border:1px solid rgba(255,190,91,.55);border-radius:999px;background:rgba(44,24,8,.82);box-shadow:0 0 28px rgba(255,161,65,.2);color:#ffe0a4;font-size:11px;font-weight:700;letter-spacing:2px;white-space:nowrap;pointer-events:none;animation:killcamPulse 1.4s ease-in-out infinite}
+@keyframes killcamPulse{0%,100%{box-shadow:0 0 14px rgba(255,161,65,.12)}50%{box-shadow:0 0 28px rgba(255,161,65,.34)}}
+@media(pointer:coarse){.killcam-banner{top:102px;font-size:10px;padding:8px 14px}}
+@media(prefers-reduced-motion:reduce){.killcam-banner{animation:none}}
+
+
+/* ROCKEY mobile matches are landscape-first. */
+.rotate-prompt{display:none}
+@media(orientation:portrait) and (pointer:coarse){
+  body.game-active .rotate-prompt{
+    position:fixed;z-index:20;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;
+    padding:28px;text-align:center;background:radial-gradient(ellipse at 50% 38%,rgba(17,82,143,.42),rgba(2,7,18,.98) 68%);
+  }
+  body.game-active .rotate-prompt .rotate-icon{
+    width:82px;height:82px;display:grid;place-items:center;border:1px solid rgba(84,226,255,.42);border-radius:24px;
+    color:#69dfff;font-size:58px;line-height:1;box-shadow:0 0 42px rgba(54,164,255,.18);animation:rotateDevice 2s ease-in-out infinite;
+  }
+  body.game-active .rotate-prompt strong{color:#f3f8ff;font-size:22px;letter-spacing:1px}
+  body.game-active .rotate-prompt span{max-width:280px;color:#91aac8;font-size:13px;line-height:1.6}
+}
+@keyframes rotateDevice{0%,100%{transform:rotate(0) scale(1)}50%{transform:rotate(90deg) scale(.92)}}
+@media(orientation:landscape) and (max-height:500px) and (pointer:coarse){
+  body.game-active .topbar{display:none}
+  .match-info{top:7px;left:50%;padding:6px 12px}
+  .camera-btn,.exit-btn,.weapon-switch-btn{top:7px;right:auto;padding:6px 9px;font-size:9px}
+  .camera-btn{right:8px}
+  .exit-btn{right:98px}
+  .weapon-switch-btn{right:174px}
+  .killcam-banner{top:49px}
+  .toast{top:22%}
+  .hud-bottom{bottom:72px}
+}

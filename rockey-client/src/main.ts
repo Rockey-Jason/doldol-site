@@ -2,7 +2,7 @@ import './style.css';
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_ANON_KEY, SUPABASE_URL, ROCKEY_WS_URL } from './config';
 import { GameSocket, type GameMessage } from './network/GameSocket';
-import { createGame, type GameInstance, type RemotePlayer, type ReplayFrame } from './core/Game';
+import type { GameInstance, RemotePlayer, ReplayFrame } from './core/Game';
 import { RockeyHub } from './RockeyHub';
 
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
@@ -13,6 +13,7 @@ const hud=$('hud')!;
 const statusText=$('menuStatus')!;
 const canvas=$('gameCanvas') as HTMLCanvasElement;
 let game:GameInstance|null=null;
+let gameLoading:Promise<void>|null=null;
 let currentMode='practice';
 let userId='';
 let activeMapId='training_facility';
@@ -20,12 +21,19 @@ let primaryWeapon='R16';
 let secondaryWeapon='R9';
 let activeWeapon='R16';
 let isSpectating=false;
+let isKillcam=false;
+let latestLocalSnapshot:RemotePlayer|null=null;
 let reconnectTimer=0;
 let reconnectAttempts=0;
 let reconnecting=false;
 let menuSessionAvailable=false;
 
 function status(message:string){statusText.textContent=message;}
+function requestLandscape(){
+  if(!window.matchMedia('(pointer:coarse)').matches)return;
+  const orientation=screen.orientation as ScreenOrientation & {lock?:(value:'landscape')=>Promise<void>};
+  try{void orientation.lock?.('landscape').catch(()=>{});}catch{/* Rotation prompt remains as the fallback. */}
+}
 function toast(message:string){
   const el=$('toast');
   if(!el)return;
@@ -36,15 +44,19 @@ function setConnection(connected:boolean,label:string){
   $('connectionText')!.textContent=label;
   $('connectionDot')!.classList.toggle('online',connected);
   $('connectionDot')!.classList.toggle('offline',!connected);
-  $('sessionStatus')!.textContent=connected?'CONNECTED · BUILD 02':'RECONNECTING';
+  $('sessionStatus')!.textContent=connected?'CONNECTED · DEV 03/04':'RECONNECTING';
 }
 function showMenu(){
+  document.body.classList.remove('game-active');
+  game?.cancelKillcam();
+  isKillcam=false;
   menu.classList.remove('hidden');hud.classList.add('hidden');
   $('resultPanel')!.classList.add('hidden');$('hubPanel')!.classList.add('hidden');
   document.exitPointerLock?.();
   isSpectating=false;
 }
 function showGame(){
+  document.body.classList.add('game-active');
   menu.classList.add('hidden');hud.classList.remove('hidden');
   $('resultPanel')!.classList.add('hidden');
 }
@@ -77,17 +89,29 @@ function applyQuality(){
 }
 async function ensureGame(mapId:string){
   if(game&&activeMapId===mapId)return;
+  if(gameLoading)await gameLoading;
+  if(game&&activeMapId===mapId)return;
   game?.dispose();
   game=null;
   activeMapId=mapId;
-  game=await createGame(canvas,send,toast,updateHud,mapId);
-  applyQuality();
+  const loading=(async()=>{
+    // Keep the heavy 3D engine and physics code out of the initial menu bundle.
+    const {createGame}=await import('./core/Game');
+    const next=await createGame(canvas,send,toast,updateHud,mapId);
+    if(activeMapId!==mapId){next.dispose();return;}
+    game=next;
+    applyQuality();
+  })();
+  gameLoading=loading;
+  try{await loading;}finally{if(gameLoading===loading)gameLoading=null;}
 }
 async function enterMatch(message:Record<string,any>){
   const mapId=String(message.mapId||'training_facility');
   await ensureGame(mapId);
   currentMode=String(message.mode||'1v1');
   isSpectating=false;
+  isKillcam=false;
+  latestLocalSnapshot=null;
   activeWeapon=String(message.weaponCode||primaryWeapon);
   game?.activate(
     currentMode,
@@ -103,7 +127,7 @@ async function enterMatch(message:Record<string,any>){
 async function enterSpectator(message:Record<string,any>){
   const mapId=String(message.mapId||'training_facility');
   await ensureGame(mapId);
-  currentMode='spectator';isSpectating=true;
+  currentMode='spectator';isSpectating=true;isKillcam=false;
   game?.activate('spectator');
   $('modeLabel')!.textContent='SPECTATING · '+String(message.mapName||mapId);
   showGame();toast('SPECTATOR MODE');
@@ -181,10 +205,10 @@ async function initialize(){
     }catch{
       setConnection(false,'SERVER OFFLINE');
       status('게임 서버 연결을 기다리는 중입니다. 훈련장은 이용할 수 있습니다.');
+      scheduleReconnect();
     }
-    await ensureGame('training_facility');
+    // 3D/physics modules are loaded only after the player enters a match or training.
     hub.refresh();
-    applyQuality();
   }catch(error){
     console.error('ROCKEY initialization failed',error);
     status('게임 초기화에 실패했습니다. 새로고침해 주세요.');
@@ -196,6 +220,7 @@ $('hubOpenBtn')?.addEventListener('click',()=>{
   hub.open('friends');
 });
 $('practiceBtn')?.addEventListener('click',async()=>{
+  requestLandscape();
   try{
     updateLocalLoadout();
     const loadout=hub.getLoadout();
@@ -208,6 +233,7 @@ $('practiceBtn')?.addEventListener('click',async()=>{
 });
 document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(button=>{
   button.addEventListener('click',()=>{
+    requestLandscape();
     const mode=button.dataset.mode||'1v1';
     if(!socket.connected)return status('실시간 대전에는 게임 서버 연결이 필요합니다.');
     updateLocalLoadout();
@@ -218,17 +244,19 @@ document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(button=>{
   });
 });
 $('createPrivateBtn')?.addEventListener('click',()=>{
+  requestLandscape();
   if(!socket.connected)return status('게임 서버 연결이 필요합니다.');
   updateLocalLoadout();
   send({type:'private.create',mode:($('privateMode') as HTMLSelectElement).value,mapId:hub.getLoadout().mapId});
   status('비공개 방을 만들고 있습니다.');
 });
 $('joinPrivateBtn')?.addEventListener('click',()=>{
+  requestLandscape();
   const code=($('privateCode') as HTMLInputElement).value.trim().toUpperCase();
   if(!code)return status('초대 코드를 입력해 주세요.');
   send({type:'private.join',code});
 });
-$('startPrivateBtn')?.addEventListener('click',()=>send({type:'private.start'}));
+$('startPrivateBtn')?.addEventListener('click',()=>{requestLandscape();send({type:'private.start'});});
 $('copyCodeBtn')?.addEventListener('click',async()=>{
   const code=$('privateCodeText')?.textContent||'';
   try{await navigator.clipboard.writeText(code);toast('초대 코드를 복사했습니다.');}
@@ -262,8 +290,10 @@ socket.onMessage((message:GameMessage)=>{
       break;
     case 'snapshot':{
       const players=(message.players||[]) as RemotePlayer[];
+      const local=players.find(p=>p.id===userId);
+      if(local)latestLocalSnapshot=local;
+      if(isKillcam)break;
       if(!isSpectating){
-        const local=players.find(p=>p.id===userId);
         if(local)game?.reconcileLocalPlayer(local);
         game?.setRemotePlayers(players.filter(p=>p.id!==userId));
       }else{
@@ -285,15 +315,36 @@ socket.onMessage((message:GameMessage)=>{
       game?.setWeapon(activeWeapon,Number(message.ammo),Number(message.reserve));
       toast('WEAPON · '+activeWeapon);
       break;
-    case 'hit':
-      toast(message.headshot?'HEADSHOT':'HIT');
+    case 'weapon.recoil':
+      game?.applyRecoil(Number(message.pitch),Number(message.yaw));
       break;
+    case 'hit':{
+      toast(message.headshot?'HEADSHOT':'HIT');
+      const crosshair=document.querySelector('.crosshair');
+      crosshair?.classList.remove('hit','headshot');
+      crosshair?.classList.add(message.headshot?'headshot':'hit');
+      window.setTimeout(()=>crosshair?.classList.remove('hit','headshot'),180);
+      break;
+    }
     case 'elimination':
       toast('ELIMINATION');
       break;
-    case 'eliminated':
-      toast('ELIMINATED');
+    case 'eliminated':{
+      const killerName=String(message.by||'상대 플레이어');
+      toast('ELIMINATED BY '+killerName);
+      const frames=(message.killcamFrames||[]) as ReplayFrame[];
+      if(game&&frames.length>1){
+        isKillcam=true;
+        const banner=$('killcamBanner');
+        if(banner){banner.textContent='KILLCAM · ELIMINATED BY '+killerName;banner.classList.remove('hidden');}
+        game.playKillcam(frames,String(message.killerId||''),()=>{
+          isKillcam=false;
+          banner?.classList.add('hidden');
+          if(latestLocalSnapshot)game?.reconcileLocalPlayer(latestLocalSnapshot);
+        });
+      }
       break;
+    }
     case 'private.created':
       $('privateCodePanel')!.classList.remove('hidden');
       $('privateCodeText')!.textContent=String(message.code||'');
