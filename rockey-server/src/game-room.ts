@@ -3,12 +3,12 @@ import { admin, type VerifiedPlayer } from './auth.js';
 
 export type Mode = '1v1' | '2v2' | '3v3' | 'ranked' | 'ffa';
 export type PlayerClient = { ws: WebSocket; player: VerifiedPlayer; roomId?: string };
-type Block = { x: number; z: number; hx: number; hz: number };
+type Block = { x: number; z: number; hx: number; hz: number; top: number };
 const COVER: Block[] = [
-  { x: 0, z: 0, hx: 2.4, hz: 2.4 },
-  { x: -9, z: -7, hx: 3.2, hz: 1.1 }, { x: 9, z: -7, hx: 3.2, hz: 1.1 },
-  { x: -9, z: 7, hx: 3.2, hz: 1.1 }, { x: 9, z: 7, hx: 3.2, hz: 1.1 },
-  { x: -17, z: 0, hx: 1.2, hz: 4.2 }, { x: 17, z: 0, hx: 1.2, hz: 4.2 }
+  { x: 0, z: 0, hx: 2.4, hz: 2.4, top: 3 },
+  { x: -9, z: -7, hx: 3.2, hz: 1.1, top: 2.2 }, { x: 9, z: -7, hx: 3.2, hz: 1.1, top: 2.2 },
+  { x: -9, z: 7, hx: 3.2, hz: 1.1, top: 2.2 }, { x: 9, z: 7, hx: 3.2, hz: 1.1, top: 2.2 },
+  { x: -17, z: 0, hx: 1.2, hz: 4.2, top: 4.4 }, { x: 17, z: 0, hx: 1.2, hz: 4.2, top: 4.4 }
 ];
 function send(client: PlayerClient, message: Record<string, unknown>) {
   if (client.ws.readyState === 1) client.ws.send(JSON.stringify(message));
@@ -38,6 +38,7 @@ interface State {
   spawnX: number; spawnZ: number;
   yaw: number; pitch: number;
   forward: number; right: number; sprint: boolean;
+  verticalVelocity: number;
   health: number; kills: number; deaths: number; headshots: number; damage: number;
   sequence: number; lastFire: number; lastInput: number;
   ammo: number; reserve: number; reloadUntil: number;
@@ -73,6 +74,7 @@ export class GameRoom {
         x: spawnX, y: 0.92, z: spawnZ,
         spawnX, spawnZ, yaw: spawnYaw,
         pitch: 0, forward: 0, right: 0, sprint: false,
+        verticalVelocity: 0,
         health: 100, kills: 0, deaths: 0, headshots: 0, damage: 0,
         sequence: -1, lastFire: 0, lastInput: Date.now(),
         ammo: 30, reserve: 90, reloadUntil: 0, alive: true
@@ -120,6 +122,9 @@ export class GameRoom {
     p.forward = Math.max(-1, Math.min(1, Number(message.forward) || 0));
     p.right = Math.max(-1, Math.min(1, Number(message.right) || 0));
     p.sprint = message.sprint === true;
+    if (message.jump === true && p.y <= 0.94 && p.verticalVelocity <= 0) {
+      p.verticalVelocity = 7.2;
+    }
     if (Number.isFinite(Number(message.yaw))) p.yaw = Number(message.yaw);
     if (Number.isFinite(Number(message.pitch))) p.pitch = Math.max(-1.3, Math.min(1.3, Number(message.pitch)));
     p.lastInput = Date.now();
@@ -199,6 +204,7 @@ export class GameRoom {
             p.health = 100; p.alive = true;
             p.x = p.spawnX;
             p.y = 0.92; p.z = p.spawnZ;
+            p.verticalVelocity = 0;
           });
         }
       }
@@ -210,6 +216,7 @@ export class GameRoom {
           target!.x = target!.spawnX;
           target!.z = target!.spawnZ;
           target!.y = 0.92;
+          target!.verticalVelocity = 0;
         }, 1800);
       }
     }
@@ -230,7 +237,22 @@ export class GameRoom {
       if (magnitude > speed * delta) { dx *= speed * delta / magnitude; dz *= speed * delta / magnitude; }
       const nx = Math.max(-27.5, Math.min(27.5, p.x + dx));
       const nz = Math.max(-27.5, Math.min(27.5, p.z + dz));
-      const blocked = COVER.some(b => nx + 0.38 > b.x - b.hx && nx - 0.38 < b.x + b.hx && nz + 0.38 > b.z - b.hz && nz - 0.38 < b.z + b.hz);
+      p.verticalVelocity -= 18 * delta;
+      const nextY = p.y + p.verticalVelocity * delta;
+      if (nextY <= 0.92) {
+        p.y = 0.92;
+        p.verticalVelocity = 0;
+      } else {
+        p.y = Math.min(8, nextY);
+      }
+      const blocked = COVER.some(b =>
+        p.y - 0.86 < b.top &&
+        p.y + 0.86 > 0 &&
+        nx + 0.38 > b.x - b.hx &&
+        nx - 0.38 < b.x + b.hx &&
+        nz + 0.38 > b.z - b.hz &&
+        nz - 0.38 < b.z + b.hz
+      );
       if (!blocked) { p.x = nx; p.z = nz; }
     }
     this.broadcast({
