@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -38,6 +38,17 @@ jobs:
       - name: Build ROCKEY
         working-directory: rockey-client
         run: npm run build
+      - name: Commit built ROCKEY files for branch-based Pages fallback
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add rockey
+          if git diff --cached --quiet; then
+            echo "ROCKEY build output is already current"
+          else
+            git commit -m "Build ROCKEY static game assets"
+            git push origin HEAD:main
+          fi
       - name: Assemble Dori Site
         run: |
           mkdir -p _site
