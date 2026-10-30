@@ -1,0 +1,49 @@
+name: ROCKEY Build Check
+
+on:
+  push:
+    branches:
+      - feature/rockey-foundation
+      - main
+    paths:
+      - 'rockey-client/**'
+      - 'rockey-server/**'
+      - 'supabase/migrations/*rockey*'
+      - '.github/workflows/rockey-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  client:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: rockey-client/package.json
+      - name: Install client packages
+        working-directory: rockey-client
+        run: npm install
+      - name: Typecheck and build client
+        working-directory: rockey-client
+        run: npm run build
+
+  server:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: rockey-server/package.json
+      - name: Install server packages
+        working-directory: rockey-server
+        run: npm install
+      - name: Build server
+        working-directory: rockey-server
+        run: npm run build
