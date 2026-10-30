@@ -1,6 +1,7 @@
 import type { WebSocket } from 'ws';
 import { admin, type VerifiedPlayer } from './auth.js';
 import { MAPS, WEAPONS, type RockeyWeapon } from './catalog.js';
+import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil } from './combat.js';
 
 export type Mode = '1v1' | '2v2' | '3v3' | 'ranked' | 'ffa';
 export type PlayerClient = {
@@ -335,7 +336,7 @@ export class GameRoom {
     }
     const weapon=WEAPONS[shooter.weaponCode] as RockeyWeapon;
     const now=Date.now();
-    if(now<shooter.reloadUntil || shooter.ammo<=0 || now-shooter.lastFire<weapon.fireInterval) {
+    if(!canFireWeapon(now,shooter.lastFire,shooter.reloadUntil,shooter.ammo,weapon.fireInterval)) {
       if(now-shooter.lastFire<weapon.fireInterval/3) shooter.suspiciousInputs++;
       return;
     }
@@ -366,14 +367,12 @@ export class GameRoom {
       headshot=Math.abs(oy+dy*along-(candidate.y+1.45))<0.24;
     }
     // Server-authoritative recoil: apply after the shot ray is evaluated, then sync the new aim to the shooter.
-    const recoil=Math.min(0.045,0.012+weapon.damage/2500+weapon.spread*0.25);
+    const recoil=calculateWeaponRecoil(weapon);
     shooter.pitch=Math.max(-1.3,Math.min(1.3,shooter.pitch+recoil));
     shooter.yaw+=(Math.random()-0.5)*recoil*0.18;
     send(shooter.client,{type:'weapon.recoil',pitch:shooter.pitch,yaw:shooter.yaw});
     if(!target) return;
-    let damage=weapon.damage*(headshot?weapon.headshotMultiplier:1);
-    if(weapon.pellets) damage*=Math.min(weapon.pellets,Math.max(1,Math.ceil((weapon.range-best)/weapon.range*weapon.pellets)));
-    damage=Math.round(damage);
+    const damage=calculateWeaponDamage(weapon,headshot,best);
     target.health=Math.max(0,target.health-damage);
     target.damage+=damage;
     if(headshot) shooter.headshots++;
