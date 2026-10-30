@@ -220,6 +220,28 @@ export async function createGame(
   };
   const toggleCamera = () => setCamera(cameraMode === 'first' ? 'third' : 'first');
 
+  function setWeaponLocal(code: string, nextAmmo?: number, nextReserve?: number) {
+    if (!WEAPONS[code]) return;
+    currentWeaponCode = code;
+    currentWeapon = WEAPONS[code];
+    ammo = nextAmmo === undefined ? currentWeapon.magazine : Math.max(0,Math.min(currentWeapon.magazine,nextAmmo));
+    reserve = nextReserve === undefined ? currentWeapon.reserve : Math.max(0,nextReserve);
+    reloadAt = 0;
+    const color = new THREE.Color(map.light);
+    gunLight.material = new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:2.2});
+    gunBody.scale.set(
+      code==='LONGSHOT'?1.25:code==='THUNDER'?1.4:1,
+      code==='BASTION'?1.25:1,
+      code==='LONGSHOT'?1.45:code==='VIPER'?0.82:1
+    );
+    updateHud(hp,ammo,reserve,currentWeapon.name);
+  }
+
+  function stopMobileFire() {
+    if (mobileFireTimer) window.clearInterval(mobileFireTimer);
+    mobileFireTimer = 0;
+  }
+
   function fire() {
     const now = performance.now();
     if (!active || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
@@ -287,7 +309,7 @@ export async function createGame(
     if (event.code === 'KeyQ') {
       if (mode === 'practice') {
         const next = currentWeaponCode === primaryWeaponCode ? secondaryWeaponCode : primaryWeaponCode;
-        setWeapon(next);
+        setWeaponLocal(next);
       } else {
         send({ type: 'weapon.switch' });
       }
@@ -369,7 +391,14 @@ export async function createGame(
   });
   pad?.addEventListener('pointerup', resetPad);
   pad?.addEventListener('pointercancel', resetPad);
-  document.getElementById('mobileFire')?.addEventListener('pointerdown', event => { event.preventDefault(); fire(); });
+  document.getElementById('mobileFire')?.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    fire();
+    stopMobileFire();
+    mobileFireTimer = window.setInterval(fire,85);
+  });
+  document.getElementById('mobileFire')?.addEventListener('pointerup',stopMobileFire);
+  document.getElementById('mobileFire')?.addEventListener('pointercancel',stopMobileFire);
   document.getElementById('mobileJump')?.addEventListener('pointerdown', event => { event.preventDefault(); touch.jump = true; });
   document.getElementById('mobileJump')?.addEventListener('pointerup', () => { touch.jump = false; });
   document.getElementById('mobileReload')?.addEventListener('pointerdown', reload);
@@ -404,7 +433,7 @@ export async function createGame(
     const dt = Math.min((now - previous) / 1000, 0.05);
     previous = now;
 
-    if (mode === 'spectator') {
+    if (mode === 'spectator' || mode === 'replay') {
       const target = new THREE.Vector3(0,0,0);
       camera.position.lerp(new THREE.Vector3(0,22,34),1-Math.exp(-3*dt));
       camera.lookAt(target);
@@ -559,20 +588,7 @@ export async function createGame(
       updateHud(hp, ammo, reserve, currentWeapon.name);
     },
     setWeapon(code: string, nextAmmo?: number, nextReserve?: number) {
-      if (!WEAPONS[code]) return;
-      currentWeaponCode = code;
-      currentWeapon = WEAPONS[code];
-      ammo = nextAmmo === undefined ? currentWeapon.magazine : Math.max(0,Math.min(currentWeapon.magazine,nextAmmo));
-      reserve = nextReserve === undefined ? currentWeapon.reserve : Math.max(0,nextReserve);
-      reloadAt = 0;
-      const color = new THREE.Color(map.light);
-      gunLight.material = new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:2.2});
-      gunBody.scale.set(
-        code==='LONGSHOT'?1.25:code==='THUNDER'?1.4:1,
-        code==='BASTION'?1.25:1,
-        code==='LONGSHOT' ? 1.45 : code==='VIPER' ? 0.82 : 1
-      );
-      updateHud(hp,ammo,reserve,currentWeapon.name);
+      setWeaponLocal(code,nextAmmo,nextReserve);
     },
     playReplay(frames: ReplayFrame[]) {
       if (!Array.isArray(frames) || frames.length===0) return notify('저장된 리플레이 프레임이 없습니다.');
