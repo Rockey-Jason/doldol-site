@@ -296,9 +296,17 @@ socket.onMessage((message:GameMessage)=>{
       game?.setWeapon(activeWeapon,Number(message.ammo),Number(message.reserve));
       toast('WEAPON · '+activeWeapon);
       break;
-    case 'hit':
-      toast(message.headshot?'HEADSHOT':'HIT');
+    case 'weapon.recoil':
+      game?.applyRecoil(Number(message.pitch),Number(message.yaw));
       break;
+    case 'hit':{
+      toast(message.headshot?'HEADSHOT':'HIT');
+      const crosshair=document.querySelector('.crosshair');
+      crosshair?.classList.remove('hit','headshot');
+      crosshair?.classList.add(message.headshot?'headshot':'hit');
+      window.setTimeout(()=>crosshair?.classList.remove('hit','headshot'),180);
+      break;
+    }
     case 'elimination':
       toast('ELIMINATION');
       break;
