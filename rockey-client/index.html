@@ -44,6 +44,10 @@
         <button id="copyCodeBtn" class="outline-btn">코드 복사</button>
         <button id="startPrivateBtn" class="primary-btn">방장: 경기 시작</button>
       </div>
+      <div class="hub-launch-row">
+        <button id="hubOpenBtn" class="outline-btn">PLAYER HUB · 친구 / 랭킹 / 무기 / 리플레이</button>
+        <span id="sessionStatus">BUILD 02</span>
+      </div>
       <div id="menuStatus" class="menu-status" role="status">게임 준비 중...</div>
       <div class="menu-footer"><span>BUILD 01 · TRAINING FACILITY</span><a href="/doldol-site/">DORI SITE ↗</a></div>
     </div>
@@ -57,6 +61,7 @@
     </div>
     <div id="toast" class="toast"></div>
     <button id="cameraBtn" class="camera-btn">VIEW · FIRST [V]</button>
+    <button id="weaponSwitchBtn" class="weapon-switch-btn">SWAP · Q</button>
     <button id="exitBtn" class="exit-btn">나가기</button>
   </section>
   <div id="mobileControls" class="mobile-controls">
@@ -65,9 +70,11 @@
       <button id="mobileView" class="touch-btn">VIEW</button>
       <button id="mobileJump" class="touch-btn">JUMP</button>
       <button id="mobileReload" class="touch-btn">RELOAD</button>
+      <button id="mobileSwitch" class="touch-btn">SWAP</button>
       <button id="mobileFire" class="touch-btn fire-btn">FIRE</button>
     </div>
   </div>
+  <section id="hubPanel" class="hub-panel hidden" aria-label="ROCKEY 플레이어 허브"></section>
   <section id="resultPanel" class="result-layer hidden">
     <div class="result-card"><div class="eyebrow">MATCH COMPLETE</div><h2 id="resultTitle">VICTORY</h2><p id="resultDescription"></p><button id="returnMenuBtn" class="primary-btn">메인 메뉴로</button></div>
   </section>
