@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#050a18">
+  <meta name="description" content="ROCKEY — Skill. Speed. Victory.">
+  <title>ROCKEY — Competitive FPS</title>
+</head>
+<body>
+<div id="app">
+  <canvas id="gameCanvas" aria-label="ROCKEY 3D game"></canvas>
+  <header class="topbar">
+    <a class="brand" href="/doldol-site/"><span class="brand-mark">R</span> ROCKEY</a>
+    <div class="connection"><i id="connectionDot"></i><span id="connectionText">SERVER CONNECTING</span></div>
+  </header>
+  <section id="menu" class="menu-layer">
+    <div class="menu-card">
+      <div class="eyebrow">COMPETITIVE SCI-FI FPS</div>
+      <h1>ROCKEY</h1>
+      <p class="tagline">SKILL. SPEED. VICTORY.</p>
+      <p id="welcomeText" class="welcome">돌이사이트 계정으로 전투에 참여하세요.</p>
+      <div class="menu-grid">
+        <button id="practiceBtn" class="mode-card secondary"><strong>TRAINING</strong><span>훈련장 입장</span></button>
+        <button class="mode-card" data-mode="1v1"><strong>1 VS 1</strong><span>정밀한 결투</span></button>
+        <button class="mode-card" data-mode="2v2"><strong>2 VS 2</strong><span>팀 전투</span></button>
+        <button class="mode-card" data-mode="3v3"><strong>3 VS 3</strong><span>스쿼드 전투</span></button>
+        <button class="mode-card" data-mode="ranked"><strong>RANKED</strong><span>경쟁 랭크전</span></button>
+        <button class="mode-card" data-mode="ffa"><strong>FREE FOR ALL</strong><span>개인전</span></button>
+      </div>
+      <div class="private-row">
+        <select id="privateMode" aria-label="비공개 방 모드">
+          <option value="1v1">1v1 PRIVATE</option>
+          <option value="2v2">2v2 PRIVATE</option>
+          <option value="3v3">3v3 PRIVATE</option>
+        </select>
+        <button id="createPrivateBtn" class="outline-btn">방 만들기</button>
+        <input id="privateCode" maxlength="8" placeholder="초대 코드" autocomplete="off">
+        <button id="joinPrivateBtn" class="outline-btn">참가</button>
+      </div>
+      <div id="privateCodePanel" class="private-code hidden">
+        <span>친구에게 초대 코드를 공유하세요.</span>
+        <strong id="privateCodeText"></strong>
+        <button id="copyCodeBtn" class="outline-btn">코드 복사</button>
+        <button id="startPrivateBtn" class="primary-btn">방장: 경기 시작</button>
+      </div>
+      <div class="hub-launch-row">
+        <button id="hubOpenBtn" class="outline-btn">PLAYER HUB · 친구 / 랭킹 / 무기 / 리플레이</button>
+        <span id="sessionStatus">BUILD 02</span>
+      </div>
+      <div id="menuStatus" class="menu-status" role="status">게임 준비 중...</div>
+      <div class="menu-footer"><span>BUILD 01 · TRAINING FACILITY</span><a href="/doldol-site/">DORI SITE ↗</a></div>
+    </div>
+  </section>
+  <section id="hud" class="hud hidden">
+    <div class="match-info"><span id="modeLabel">TRAINING</span><span id="scoreLabel">0 : 0</span><span id="roundLabel">ROUND 1</span></div>
+    <div class="crosshair"><i></i><i></i><i></i><i></i></div>
+    <div class="hud-bottom">
+      <div class="health-box"><span>VITAL</span><strong id="healthValue">100</strong><div class="health-track"><i id="healthBar"></i></div></div>
+      <div class="ammo-box"><strong id="ammoValue">30 / 90</strong><span>R-16 · ASSAULT</span></div>
+    </div>
+    <div id="toast" class="toast"></div>
+    <button id="cameraBtn" class="camera-btn">VIEW · FIRST [V]</button>
+    <button id="weaponSwitchBtn" class="weapon-switch-btn">SWAP · Q</button>
+    <button id="exitBtn" class="exit-btn">나가기</button>
+  </section>
+  <div id="mobileControls" class="mobile-controls">
+    <div id="movePad" class="move-pad"><div id="moveStick" class="move-stick"></div></div>
+    <div class="mobile-actions">
+      <button id="mobileView" class="touch-btn">VIEW</button>
+      <button id="mobileJump" class="touch-btn">JUMP</button>
+      <button id="mobileReload" class="touch-btn">RELOAD</button>
+      <button id="mobileSwitch" class="touch-btn">SWAP</button>
+      <button id="mobileFire" class="touch-btn fire-btn">FIRE</button>
+    </div>
+  </div>
+  <section id="hubPanel" class="hub-panel hidden" aria-label="ROCKEY 플레이어 허브"></section>
+  <section id="resultPanel" class="result-layer hidden">
+    <div class="result-card"><div class="eyebrow">MATCH COMPLETE</div><h2 id="resultTitle">VICTORY</h2><p id="resultDescription"></p><button id="returnMenuBtn" class="primary-btn">메인 메뉴로</button></div>
+  </section>
+</div>
+<script type="module" src="/src/main.ts"></script>
+</body>
+</html>

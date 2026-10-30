@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="675" viewBox="0 0 1200 675">
+<defs>
+ <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#071329"/><stop offset=".55" stop-color="#0a2850"/><stop offset="1" stop-color="#030713"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#168cff" stop-opacity=".65"/><stop offset="1" stop-color="#168cff" stop-opacity="0"/></radialGradient>
+ <linearGradient id="type" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#fff"/><stop offset=".55" stop-color="#90d8ff"/><stop offset="1" stop-color="#e4c875"/></linearGradient>
+ <pattern id="grid" width="44" height="44" patternUnits="userSpaceOnUse"><path d="M44 0H0V44" fill="none" stroke="#3d91d5" stroke-opacity=".15"/></pattern>
+</defs>
+<rect width="1200" height="675" fill="url(#bg)"/><rect width="1200" height="675" fill="url(#glow)"/><rect width="1200" height="675" fill="url(#grid)"/>
+<g fill="none" stroke="#3baaff" stroke-opacity=".45"><path d="M0 500 250 320 540 420 790 210 1200 360" stroke-width="3"/><path d="M0 540 250 360 540 460 790 250 1200 400" stroke-width="1"/><path d="M120 0V675M1080 0V675" stroke-opacity=".18"/></g>
+<g opacity=".8" fill="#0b203f" stroke="#278dd8" stroke-width="3"><path d="M760 390 900 280 1030 350 1030 560 760 560Z"/><path d="M900 280V560M760 390H1030"/><path d="M820 430H870V510H820ZM930 380H980V460H930Z" fill="#0b4e82"/></g>
+<g fill="#54dfff" opacity=".9"><path d="M760 560H1030V570H760Z"/><path d="M0 610H1200V614H0Z"/></g>
+<text x="86" y="280" fill="url(#type)" font-family="Arial,sans-serif" font-size="150" font-weight="900" letter-spacing="12">ROCKEY</text>
+<text x="94" y="350" fill="#d2eaff" font-family="Arial,sans-serif" font-size="28" font-weight="700" letter-spacing="8">SKILL. SPEED. VICTORY.</text>
+<text x="96" y="615" fill="#9ebbdc" font-family="Arial,sans-serif" font-size="19" letter-spacing="5">COMPETITIVE SCI-FI FPS</text>
+<path d="M88 390H450" stroke="#e4c875" stroke-width="4"/><circle cx="450" cy="390" r="6" fill="#e4c875"/>
+</svg>
