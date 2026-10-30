@@ -1,47 +1,52 @@
 import * as THREE from 'three';
 import RAPIER from '@dimforge/rapier3d-compat';
+import { MAPS, WEAPONS, type RockeyWeapon } from '../catalog';
 
 export interface RemotePlayer {
   id: string; name: string; x: number; y: number; z: number;
-  yaw: number; health: number; team: number; alive?: boolean;
+  yaw: number; health: number; team: number; alive?: boolean; connected?: boolean;
+}
+export interface ReplayFrame {
+  t: number;
+  players: RemotePlayer[];
 }
 export interface GameInstance {
-  activate(mode: string, team?: number, spawn?: { x: number; y: number; z: number; yaw: number }): void;
+  activate(mode: string, team?: number, spawn?: { x: number; y: number; z: number; yaw: number }, weaponCode?: string, secondaryWeapon?: string): void;
   setRemotePlayers(players: RemotePlayer[]): void;
   reconcileLocalPlayer(player: RemotePlayer): void;
   setScore(a: number, b: number, round: number): void;
   setHealth(value: number): void;
   setAmmo(ammo: number, reserve: number): void;
+  setWeapon(weaponCode: string, ammo?: number, reserve?: number): void;
+  playReplay(frames: ReplayFrame[]): void;
+  setQuality(level: 'low'|'balanced'|'high'): void;
+  setSensitivity(value: number): void;
   toggleCamera(): void;
   dispose(): void;
 }
-
-const BLOCKS = [
-  [0, 1.5, 0, 2.4, 1.5, 2.4],
-  [-9, 1.1, -7, 3.2, 1.1, 1.1], [9, 1.1, -7, 3.2, 1.1, 1.1],
-  [-9, 1.1, 7, 3.2, 1.1, 1.1], [9, 1.1, 7, 3.2, 1.1, 1.1],
-  [-17, 2, 0, 1.2, 2, 4.2], [17, 2, 0, 1.2, 2, 4.2]
-];
 
 export async function createGame(
   canvas: HTMLCanvasElement,
   send: (message: Record<string, unknown> & { type: string }) => void,
   notify: (message: string) => void,
-  updateHud: (hp: number, ammo: number, reserve: number, weapon: string) => void
+  updateHud: (hp: number, ammo: number, reserve: number, weapon: string) => void,
+  initialMapId = 'training_facility'
 ): Promise<GameInstance> {
   await RAPIER.init();
 
+  const map = MAPS[initialMapId] || MAPS.training_facility;
+  const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 760;
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x050a18);
-  scene.fog = new THREE.Fog(0x050a18, 34, 95);
+  scene.background = new THREE.Color(map.background);
+  scene.fog = new THREE.Fog(map.fog, 34, 95);
 
   const camera = new THREE.PerspectiveCamera(78, 1, 0.08, 180);
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.15 : 1.6));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.15;
-  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.enabled = !isMobile;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   scene.add(new THREE.HemisphereLight(0x9dbfff, 0x0a1020, 1.5));
@@ -50,7 +55,7 @@ export async function createGame(
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);
   scene.add(sun);
-  const blue = new THREE.PointLight(0x147dff, 70, 55);
+  const blue = new THREE.PointLight(map.light, 70, 55);
   blue.position.set(0, 5, 0);
   scene.add(blue);
 
@@ -60,19 +65,25 @@ export async function createGame(
 
   const floor = new THREE.Mesh(
     new THREE.BoxGeometry(60, 1, 60),
-    new THREE.MeshStandardMaterial({ color: 0x0d1930, metalness: 0.72, roughness: 0.34 })
+    new THREE.MeshStandardMaterial({ color: map.floor, metalness: 0.72, roughness: 0.34 })
   );
   floor.position.y = -0.5;
   floor.receiveShadow = true;
   scene.add(floor);
-  const grid = new THREE.GridHelper(60, 60, 0x1765ad, 0x102849);
+  const grid = new THREE.GridHelper(60, 60, map.grid, map.grid);
   grid.position.y = 0.012;
   (grid.material as THREE.Material).transparent = true;
   (grid.material as THREE.Material).opacity = 0.38;
   scene.add(grid);
 
-  const solid = new THREE.MeshStandardMaterial({ color: 0x1b2c48, metalness: 0.82, roughness: 0.27 });
-  const glow = new THREE.MeshStandardMaterial({ color: 0x137cff, emissive: 0x0759c8, emissiveIntensity: 2.2 });
+  const solid = new THREE.MeshStandardMaterial({
+    color: map.palette === 'amber' ? 0x61432b : map.palette === 'magenta' ? 0x3b214b :
+      map.palette === 'ice' ? 0x2c5367 : map.palette === 'cyan' ? 0x1b4658 : 0x1b2c48,
+    metalness: 0.82, roughness: 0.27
+  });
+  const glow = new THREE.MeshStandardMaterial({
+    color: map.light, emissive: map.light, emissiveIntensity: 1.8
+  });
   const raycastMeshes: THREE.Object3D[] = [floor];
 
   function box(x: number, y: number, z: number, hx: number, hy: number, hz: number) {
@@ -85,10 +96,10 @@ export async function createGame(
     world.createCollider(RAPIER.ColliderDesc.cuboid(hx, hy, hz).setTranslation(x, y, z));
   }
 
-  for (const b of BLOCKS) {
-    box(b[0], b[1], b[2], b[3], b[4], b[5]);
-    const led = new THREE.Mesh(new THREE.BoxGeometry(b[3] * 1.7, 0.055, 0.08), glow);
-    led.position.set(b[0], b[1] + 0.7, b[2] + b[5] + 0.02);
+  for (const b of map.cover) {
+    box(b.x, b.top / 2, b.z, b.hx, b.top / 2, b.hz);
+    const led = new THREE.Mesh(new THREE.BoxGeometry(b.hx * 1.7, 0.055, 0.08), glow);
+    led.position.set(b.x, b.top + 0.08, b.z + b.hz + 0.025);
     scene.add(led);
   }
   box(0, 2.2, -30, 30, 2.2, 0.6);
@@ -131,6 +142,7 @@ export async function createGame(
   scene.add(camera);
 
   const enemyMat = new THREE.MeshStandardMaterial({ color: 0x8a3149, metalness: 0.5, roughness: 0.35 });
+  const allyMat = new THREE.MeshStandardMaterial({ color: 0x267aa5, metalness: 0.5, roughness: 0.35 });
   const remotes = new Map<string, THREE.Group>();
   const practiceTargets: THREE.Group[] = [];
 
@@ -159,6 +171,7 @@ export async function createGame(
       core.position.y = 1.05;
       target.add(core);
       scene.add(target);
+      target.visible = map.id === 'training_facility';
       practiceTargets.push(target);
     }
   }
@@ -170,6 +183,15 @@ export async function createGame(
   let pitch = 0;
   let vertical = 0;
   let mode = 'practice';
+  let currentWeaponCode = 'R16';
+  let secondaryWeaponCode = 'R9';
+  let currentWeapon: RockeyWeapon = WEAPONS.R16;
+  let localTeam = 0;
+  let sensitivity = 1;
+  let replayFrames: ReplayFrame[] | null = null;
+  let replayStartedAt = 0;
+  let replayIndex = -1;
+  let mobileFireTimer = 0;
   let active = false;
   let disposed = false;
   let cameraMode: 'first' | 'third' = 'first';
@@ -199,10 +221,10 @@ export async function createGame(
 
   function fire() {
     const now = performance.now();
-    if (!active || now - lastShot < 100 || ammo <= 0 || now < reloadAt) return;
+    if (!active || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
     lastShot = now;
     ammo -= 1;
-    updateHud(hp, ammo, reserve, 'R-16');
+    updateHud(hp, ammo, reserve, currentWeapon.name);
 
     if (mode === 'practice') {
       camera.updateMatrixWorld(true);
@@ -215,7 +237,8 @@ export async function createGame(
       const hit = shotRay.intersectObjects(candidates, true)[0];
       if (hit) {
         const target = hit.object.parent as THREE.Group;
-        target.userData.hp = Math.max(0, Number(target.userData.hp || 100) - 25);
+        const practiceDamage = Math.round(currentWeapon.damage * (currentWeapon.pellets || 1));
+        target.userData.hp = Math.max(0, Number(target.userData.hp || 100) - practiceDamage);
         if (target.userData.hp <= 0) {
           target.visible = false;
           notify('TARGET ELIMINATED');
@@ -228,7 +251,7 @@ export async function createGame(
         }
       }
     } else {
-      send({ type: 'fire', weaponCode: 'R16', sequence: ++seq });
+      send({ type: 'fire', weaponCode: currentWeaponCode, sequence: ++seq });
     }
 
     muzzleFlash.visible = true;
@@ -240,16 +263,16 @@ export async function createGame(
   }
 
   function reload() {
-    if (!active || ammo >= 30 || reserve <= 0 || performance.now() < reloadAt) return;
-    reloadAt = performance.now() + 1500;
+    if (!active || ammo >= currentWeapon.magazine || reserve <= 0 || performance.now() < reloadAt) return;
+    reloadAt = performance.now() + currentWeapon.reloadMs;
     if (mode === 'practice') {
       window.setTimeout(() => {
-        const amount = Math.min(30 - ammo, reserve);
+        const amount = Math.min(currentWeapon.magazine - ammo, reserve);
         ammo += amount;
         reserve -= amount;
         reloadAt = 0;
-        updateHud(hp, ammo, reserve, 'R-16');
-      }, 1500);
+        updateHud(hp, ammo, reserve, currentWeapon.name);
+      }, currentWeapon.reloadMs);
     } else {
       send({ type: 'reload' });
     }
@@ -260,6 +283,14 @@ export async function createGame(
     keys.add(event.code);
     if (event.code === 'KeyV') toggleCamera();
     if (event.code === 'KeyR') reload();
+    if (event.code === 'KeyQ') {
+      if (mode === 'practice') {
+        const next = currentWeaponCode === 'R16' ? secondaryWeaponCode : 'R16';
+        setWeapon(next);
+      } else {
+        send({ type: 'weapon.switch' });
+      }
+    }
     if (event.code === 'Space') touch.jump = true;
   }
   function keyUp(event: KeyboardEvent) {
@@ -267,8 +298,8 @@ export async function createGame(
     if (event.code === 'Space') touch.jump = false;
   }
   function look(dx: number, dy: number) {
-    yaw -= dx * 0.0022;
-    pitch = THREE.MathUtils.clamp(pitch - dy * 0.002, -1.3, 1.3);
+    yaw -= dx * 0.0022 * sensitivity;
+    pitch = THREE.MathUtils.clamp(pitch - dy * 0.002 * sensitivity, -1.3, 1.3);
   }
   function pointerMove(event: MouseEvent) {
     if (document.pointerLockElement === canvas) look(event.movementX, event.movementY);
@@ -352,7 +383,10 @@ export async function createGame(
       let mesh = remotes.get(player.id);
       if (!mesh) {
         mesh = new THREE.Group();
-        const model = new THREE.Mesh(new THREE.CapsuleGeometry(0.34, 0.78, 5, 10), enemyMat.clone());
+        const model = new THREE.Mesh(
+          new THREE.CapsuleGeometry(0.34, 0.78, 5, 10),
+          (player.team === localTeam ? allyMat : enemyMat).clone()
+        );
         model.castShadow = true;
         mesh.add(model);
         scene.add(mesh);
@@ -360,7 +394,7 @@ export async function createGame(
       }
       mesh.position.set(player.x, player.y - 0.08, player.z);
       mesh.rotation.y = player.yaw;
-      mesh.visible = player.alive !== false && player.health > 0;
+      mesh.visible = player.connected !== false && player.alive !== false && player.health > 0;
     }
   }
 
@@ -368,6 +402,26 @@ export async function createGame(
     if (disposed) return;
     const dt = Math.min((now - previous) / 1000, 0.05);
     previous = now;
+
+    if (mode === 'spectator') {
+      const target = new THREE.Vector3(0,0,0);
+      camera.position.lerp(new THREE.Vector3(0,22,34),1-Math.exp(-3*dt));
+      camera.lookAt(target);
+    }
+
+    if (replayFrames && replayFrames.length > 0) {
+      const elapsed = now - replayStartedAt;
+      let index = replayIndex;
+      while (index + 1 < replayFrames.length && replayFrames[index + 1].t <= elapsed) index++;
+      if (index !== replayIndex && index >= 0) {
+        replayIndex = index;
+        setRemotePlayers(replayFrames[index].players);
+      }
+      if (index >= replayFrames.length - 1 && elapsed >= replayFrames[replayFrames.length - 1].t) {
+        replayFrames = null;
+        notify('REPLAY COMPLETE');
+      }
+    }
 
     if (active) {
       const forward =
@@ -443,14 +497,19 @@ export async function createGame(
   raf = requestAnimationFrame(frame);
 
   return {
-    activate(nextMode: string, team = 0, serverSpawn?: { x: number; y: number; z: number; yaw: number }) {
+    activate(nextMode: string, team = 0, serverSpawn?: { x: number; y: number; z: number; yaw: number }, weaponCode = 'R16', secondaryWeapon = 'R9') {
       mode = nextMode;
-      active = true;
-      hp = 100; ammo = 30; reserve = 90; vertical = 0;
+      active = nextMode !== 'spectator' && nextMode !== 'replay';
+      replayFrames = null;
+      localTeam = team;
+      currentWeaponCode = WEAPONS[weaponCode] ? weaponCode : 'R16';
+      secondaryWeaponCode = WEAPONS[secondaryWeapon] ? secondaryWeapon : 'R9';
+      currentWeapon = WEAPONS[currentWeaponCode];
+      hp = 100; ammo = currentWeapon.magazine; reserve = currentWeapon.reserve; vertical = 0;
       if (mode === 'practice') {
         for (const target of practiceTargets) {
           target.userData.hp = 100;
-          target.visible = true;
+          target.visible = map.id === 'training_facility';
         }
       }
       const spawn = serverSpawn || (mode === 'practice'
@@ -458,7 +517,7 @@ export async function createGame(
         : team === 0 ? { x: -20, y: 0.92, z: 17, yaw: 0 } : { x: 20, y: 0.92, z: -17, yaw: Math.PI });
       yaw = spawn.yaw;
       body.setTranslation({ x: spawn.x, y: spawn.y, z: spawn.z }, true);
-      updateHud(hp, ammo, reserve, 'R-16');
+      updateHud(hp, ammo, reserve, currentWeapon.name);
     },
     setRemotePlayers,
     reconcileLocalPlayer(serverPlayer: RemotePlayer) {
@@ -489,13 +548,44 @@ export async function createGame(
     },
     setHealth(value: number) {
       hp = Math.max(0, Math.min(100, value));
-      updateHud(hp, ammo, reserve, 'R-16');
+      updateHud(hp, ammo, reserve, currentWeapon.name);
     },
     setAmmo(nextAmmo: number, nextReserve: number) {
-      ammo = Math.max(0, Math.min(30, nextAmmo));
-      reserve = Math.max(0, Math.min(180, nextReserve));
+      ammo = Math.max(0, Math.min(currentWeapon.magazine, nextAmmo));
+      reserve = Math.max(0, Math.min(240, nextReserve));
       reloadAt = 0;
-      updateHud(hp, ammo, reserve, 'R-16');
+      updateHud(hp, ammo, reserve, currentWeapon.name);
+    },
+    setWeapon(code: string, nextAmmo?: number, nextReserve?: number) {
+      if (!WEAPONS[code]) return;
+      currentWeaponCode = code;
+      currentWeapon = WEAPONS[code];
+      ammo = nextAmmo === undefined ? currentWeapon.magazine : Math.max(0,Math.min(currentWeapon.magazine,nextAmmo));
+      reserve = nextReserve === undefined ? currentWeapon.reserve : Math.max(0,nextReserve);
+      reloadAt = 0;
+      const color = new THREE.Color(map.light);
+      gunLight.material = new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:2.2});
+      gunBody.scale.set(
+        code==='LONGSHOT'?1.25:code==='THUNDER'?1.4:1,
+        code==='BASTION'?1.25:1,
+        code==='LONGSHOT'?1.45:code==='VIPER'?.82:1
+      );
+      updateHud(hp,ammo,reserve,currentWeapon.name);
+    },
+    playReplay(frames: ReplayFrame[]) {
+      if (!Array.isArray(frames) || frames.length===0) return notify('저장된 리플레이 프레임이 없습니다.');
+      active=false;mode='replay';replayFrames=frames;
+      replayStartedAt=performance.now();replayIndex=-1;
+      notify('REPLAY START');
+    },
+    setQuality(level: 'low'|'balanced'|'high') {
+      const ratio=level==='low'?0.8:level==='balanced'?1.15:1.6;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,ratio));
+      renderer.shadowMap.enabled=level==='high'&&!isMobile;
+      renderer.shadowMap.needsUpdate=true;
+    },
+    setSensitivity(value: number) {
+      sensitivity=THREE.MathUtils.clamp(value,0.4,2.2);
     },
     toggleCamera,
     dispose() {
@@ -510,6 +600,7 @@ export async function createGame(
       canvas.removeEventListener('pointermove', pointerDrag);
       world.removeCharacterController(controller);
       world.free();
+      stopMobileFire();
       renderer.dispose();
       for (const mesh of remotes.values()) scene.remove(mesh);
       for (const target of practiceTargets) scene.remove(target);
