@@ -1,7 +1,7 @@
 import type { ReplayFrame } from './core/Game';
 
 type Sender=(message:Record<string,unknown>&{type:string})=>void;
-type Friend={id:string;name:string;avatar?:string|null;online:boolean;rank:string;rating:number;wins?:number;losses?:number;incoming?:boolean;outgoing?:boolean};
+type Friend={id:string;name:string;avatar?:string|null;online:boolean;rank:string;rating:number;wins?:number;losses?:number;incoming?:boolean;outgoing?:boolean;friendship?:string;requestedBy?:string|null};
 type Weapon={code:string;name:string;category:string;damage:number;headshotMultiplier:number;fireInterval:number;magazine:number;reserve:number;reloadMs:number;range:number;pellets?:number};
 type MapItem={id:string;name:string;description:string;difficulty:string};
 type ReplayItem={match_id:string;map_id:string;mode:string;duration_ms:number;created_at:string;participants:Array<{id:string;name:string;team:number}>};
@@ -61,7 +61,13 @@ export class RockeyHub {
       case 'friend.request.sent':this.notice='친구 요청을 보냈습니다.';this.send({type:'friend.list'});this.render();break;
       case 'friend.request.received':this.notice=(m.from?.name||'플레이어')+' 님이 친구 요청을 보냈습니다.';this.send({type:'friend.list'});this.render();break;
       case 'friend.request.updated':this.notice=m.accepted?'친구가 되었습니다.':'친구 요청을 거절했습니다.';this.send({type:'friend.list'});this.render();break;
-      case 'friend.invite':this.incomingInvite=m;this.notice=(m.from?.name||'친구')+' 님이 비공개 경기에 초대했습니다.';this.render();break;
+      case 'friend.invite':
+        this.incomingInvite={
+          from:{id:String(m.from?.id||''),name:String(m.from?.name||'친구')},
+          code:String(m.code||''),mode:String(m.mode||'1v1'),mapId:String(m.mapId||'training_facility')
+        };
+        this.notice=(m.from?.name||'친구')+' 님이 비공개 경기에 초대했습니다.';
+        this.render();break;
       case 'friend.invite.sent':this.notice='친구에게 경기 초대를 보냈습니다.';this.render();break;
       case 'leaderboard.data':this.leaderboard=m.rows||[];this.render();break;
       case 'season.data':this.season=m.season||null;this.profile=m.profile||null;this.rewards=m.rewards||[];this.render();break;
