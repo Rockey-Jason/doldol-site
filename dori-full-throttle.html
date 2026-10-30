@@ -230,16 +230,16 @@ const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d",{alpha:false});
 const frame=document.getElementById("gameFrame");
 const $=id=>document.getElementById(id);
-const BOSS_SPRITE_CELL=192;
+const BOSS_SPRITE_CELL=128;
 const BOSS_SPRITE_SHEET=new Image();
 BOSS_SPRITE_SHEET.src="./assets/dori-boss-sprites.webp";
 const BOSS_SPRITES={
  "껌껌이":{sx:0,sy:0,col:0,row:0},
- "복돌이":{sx:192,sy:0,col:1,row:0},
- "모래":{sx:384,sy:0,col:2,row:0},
- "솜솜이":{sx:0,sy:192,col:0,row:1},
- "식빵이":{sx:192,sy:192,col:1,row:1},
- "윈터":{sx:384,sy:192,col:2,row:1}
+ "복돌이":{sx:128,sy:0,col:1,row:0},
+ "모래":{sx:256,sy:0,col:2,row:0},
+ "솜솜이":{sx:0,sy:128,col:0,row:1},
+ "식빵이":{sx:128,sy:128,col:1,row:1},
+ "윈터":{sx:256,sy:128,col:2,row:1}
 };
 function renderCinematicPortrait(line){
  const el=$("cinematicPortrait"),sprite=BOSS_SPRITES[line.speaker];
