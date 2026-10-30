@@ -20,6 +20,7 @@ export interface GameInstance {
   applyRecoil(pitch: number, yaw: number): void;
   playReplay(frames: ReplayFrame[]): void;
   playKillcam(frames: ReplayFrame[], killerId: string, onComplete: () => void): void;
+  cancelKillcam(): void;
   setQuality(level: 'low'|'balanced'|'high'): void;
   setSensitivity(value: number): void;
   toggleCamera(): void;
@@ -839,6 +840,11 @@ export async function createGame(
       replayFrames=frames.map(frame=>({...frame,t:Math.max(0,frame.t-firstTime)}));
       replayStartedAt=performance.now();replayIndex=-1;killcamComplete=onComplete;
       notify('KILLCAM');
+    },
+    cancelKillcam() {
+      if(mode!=='killcam')return;
+      replayFrames=null;replayFocusId='';mode=killcamReturnMode;active=false;
+      const complete=killcamComplete;killcamComplete=null;complete?.();
     },
     setQuality(level: 'low'|'balanced'|'high') {
       const ratio=level==='low'?0.8:level==='balanced'?1.15:1.6;
