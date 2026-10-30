@@ -329,6 +329,13 @@ export async function createGame(
   let audioContext: AudioContext | null = null;
   let noiseBuffer: AudioBuffer | null = null;
   let gunKick = 0;
+  const weaponMotion:Record<string,{kick:number;reloadTilt:number;roll:number}> = {
+    R16:{kick:.82,reloadTilt:.12,roll:.06},R9:{kick:.95,reloadTilt:.2,roll:.12},
+    VIPER:{kick:.48,reloadTilt:.09,roll:.04},THUNDER:{kick:1.28,reloadTilt:.38,roll:.2},
+    LONGSHOT:{kick:1.35,reloadTilt:.46,roll:.1},HELIX:{kick:.88,reloadTilt:.16,roll:.08},
+    BASTION:{kick:.56,reloadTilt:.28,roll:.22},NOVA:{kick:1.16,reloadTilt:.22,roll:.14},
+    ARC:{kick:.62,reloadTilt:.1,roll:.04},PULSE:{kick:.72,reloadTilt:.14,roll:.08}
+  };
   let reloadAnimationStart = 0;
   let reloadAnimationDuration = 0;
   let movePointerId: number | null = null;
@@ -433,7 +440,7 @@ export async function createGame(
     if (!active || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
     lastShot = now;
     ammo -= 1;
-    gunKick = Math.min(1.35,gunKick+0.82);
+    gunKick = Math.min(1.8,gunKick+(weaponMotion[currentWeaponCode]?.kick||.82));
     playFireSound(currentWeaponCode);
     updateHud(hp, ammo, reserve, currentWeapon.name);
 
@@ -696,9 +703,9 @@ export async function createGame(
     const reloadProgress=reloadAnimationStart?THREE.MathUtils.clamp((now-reloadAnimationStart)/Math.max(1,reloadAnimationDuration),0,1):1;
     if(reloadProgress>=1)reloadAnimationStart=0;
     const reloadWave=reloadAnimationStart?Math.sin(reloadProgress*Math.PI):0;
-    const reloadTilt=currentWeaponCode==='LONGSHOT'?.42:currentWeaponCode==='THUNDER'?.34:currentWeaponCode==='BASTION'?.25:currentWeaponCode==='R9'||currentWeaponCode==='NOVA'?.18:.12;
-    gun.position.set(0,-reloadWave*reloadTilt*.34,gunKick*.11+reloadWave*.19);
-    gun.rotation.set(reloadWave*reloadTilt,0,reloadWave*(currentWeaponCode==='BASTION'?.18:.07));
+    const motion=weaponMotion[currentWeaponCode]||weaponMotion.R16;
+    gun.position.set(0,-reloadWave*motion.reloadTilt*.34,gunKick*.11+reloadWave*.19);
+    gun.rotation.set(reloadWave*motion.reloadTilt,0,reloadWave*motion.roll);
     for(const mesh of remotes.values()){
       const data=mesh.userData;
       if(typeof data.targetX!=='number')continue;
