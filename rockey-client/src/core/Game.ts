@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import RAPIER from '@dimforge/rapier3d-compat';
 import { MAPS, WEAPONS, type RockeyWeapon } from '../catalog';
 
 export interface RemotePlayer {
@@ -32,6 +31,8 @@ export async function createGame(
   updateHud: (hp: number, ammo: number, reserve: number, weapon: string) => void,
   initialMapId = 'training_facility'
 ): Promise<GameInstance> {
+  const rapierModule = await import('@dimforge/rapier3d-compat');
+  const RAPIER = rapierModule.default;
   await RAPIER.init();
 
   const map = MAPS[initialMapId] || MAPS.training_facility;
@@ -318,6 +319,8 @@ export async function createGame(
   let replayStartedAt = 0;
   let replayIndex = -1;
   let mobileFireTimer = 0;
+  let movePointerId: number | null = null;
+  let lookPointerId: number | null = null;
   let active = false;
   let disposed = false;
   let cameraMode: 'first' | 'third' = 'first';
@@ -449,6 +452,7 @@ export async function createGame(
   function pointerDown(event: PointerEvent) {
     if (event.pointerType === 'mouse' && event.button === 0) fire();
     if (event.pointerType === 'touch') {
+      lookPointerId = event.pointerId;
       canvas.setPointerCapture(event.pointerId);
       (canvas as HTMLCanvasElement & { lx?: number; ly?: number }).lx = event.clientX;
       (canvas as HTMLCanvasElement & { lx?: number; ly?: number }).ly = event.clientY;
@@ -456,12 +460,19 @@ export async function createGame(
   }
   function pointerDrag(event: PointerEvent) {
     if (document.pointerLockElement === canvas) return;
-    if (event.pointerType !== 'touch' || !event.buttons) return;
+    if (event.pointerType !== 'touch' || event.pointerId !== lookPointerId) return;
     const element = canvas as HTMLCanvasElement & { lx?: number; ly?: number };
     if (element.lx === undefined || element.ly === undefined) return;
     look(event.clientX - element.lx, event.clientY - element.ly);
     element.lx = event.clientX;
     element.ly = event.clientY;
+  }
+  function pointerLookEnd(event: PointerEvent) {
+    if (event.pointerId !== lookPointerId) return;
+    lookPointerId = null;
+    const element = canvas as HTMLCanvasElement & { lx?: number; ly?: number };
+    delete element.lx;
+    delete element.ly;
   }
   function resize() {
     const w = Math.max(1, canvas.clientWidth);
@@ -483,44 +494,70 @@ export async function createGame(
   canvas.addEventListener('click', clickCanvas);
   canvas.addEventListener('pointerdown', pointerDown);
   canvas.addEventListener('pointermove', pointerDrag);
+  canvas.addEventListener('pointerup', pointerLookEnd);
+  canvas.addEventListener('pointercancel', pointerLookEnd);
+  canvas.addEventListener('lostpointercapture', pointerLookEnd);
+  const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null;
+  resizeObserver?.observe(canvas);
+  window.visualViewport?.addEventListener('resize', resize);
+  const onVisibilityChange = () => {
+    if (document.hidden) {
+      keys.clear();
+      touch.forward = 0; touch.right = 0; touch.jump = false;
+      stopMobileFire();
+    }
+    previous = performance.now();
+  };
+  document.addEventListener('visibilitychange', onVisibilityChange);
   resize();
 
   const pad = document.getElementById('movePad');
   const stick = document.getElementById('moveStick');
   const resetPad = () => {
+    movePointerId = null;
     touch.forward = 0; touch.right = 0;
     if (stick instanceof HTMLElement) stick.style.transform = 'translate(0,0)';
   };
-  pad?.addEventListener('pointerdown', event => {
+  const updatePad = (event: PointerEvent) => {
+    if (!pad) return;
     const rect = pad.getBoundingClientRect();
-    pad.setPointerCapture(event.pointerId);
-    const x = event.clientX - rect.left - rect.width / 2;
-    const y = event.clientY - rect.top - rect.height / 2;
+    const x = THREE.MathUtils.clamp(event.clientX - rect.left - rect.width / 2, -rect.width * 0.38, rect.width * 0.38);
+    const y = THREE.MathUtils.clamp(event.clientY - rect.top - rect.height / 2, -rect.height * 0.38, rect.height * 0.38);
     touch.right = THREE.MathUtils.clamp(x / (rect.width * 0.38), -1, 1);
     touch.forward = THREE.MathUtils.clamp(-y / (rect.height * 0.38), -1, 1);
     if (stick instanceof HTMLElement) stick.style.transform = 'translate(' + x * 0.35 + 'px,' + y * 0.35 + 'px)';
+  };
+  pad?.addEventListener('pointerdown', event => {
+    event.preventDefault();
+    if (movePointerId !== null) return;
+    movePointerId = event.pointerId;
+    pad.setPointerCapture(event.pointerId);
+    updatePad(event);
   });
   pad?.addEventListener('pointermove', event => {
-    if (event.buttons === 0) return;
-    const rect = pad.getBoundingClientRect();
-    const x = event.clientX - rect.left - rect.width / 2;
-    const y = event.clientY - rect.top - rect.height / 2;
-    touch.right = THREE.MathUtils.clamp(x / (rect.width * 0.38), -1, 1);
-    touch.forward = THREE.MathUtils.clamp(-y / (rect.height * 0.38), -1, 1);
-    if (stick instanceof HTMLElement) stick.style.transform = 'translate(' + x * 0.35 + 'px,' + y * 0.35 + 'px)';
+    if (event.pointerId !== movePointerId) return;
+    updatePad(event);
   });
-  pad?.addEventListener('pointerup', resetPad);
-  pad?.addEventListener('pointercancel', resetPad);
-  document.getElementById('mobileFire')?.addEventListener('pointerdown', event => {
+  pad?.addEventListener('pointerup', event => { if(event.pointerId===movePointerId)resetPad(); });
+  pad?.addEventListener('pointercancel', event => { if(event.pointerId===movePointerId)resetPad(); });
+  pad?.addEventListener('lostpointercapture', event => { if(event.pointerId===movePointerId)resetPad(); });
+  const mobileFire = document.getElementById('mobileFire');
+  mobileFire?.addEventListener('pointerdown', event => {
     event.preventDefault();
+    mobileFire.setPointerCapture(event.pointerId);
     fire();
     stopMobileFire();
     mobileFireTimer = window.setInterval(fire,85);
   });
-  document.getElementById('mobileFire')?.addEventListener('pointerup',stopMobileFire);
-  document.getElementById('mobileFire')?.addEventListener('pointercancel',stopMobileFire);
-  document.getElementById('mobileJump')?.addEventListener('pointerdown', event => { event.preventDefault(); touch.jump = true; });
-  document.getElementById('mobileJump')?.addEventListener('pointerup', () => { touch.jump = false; });
+  mobileFire?.addEventListener('pointerup',stopMobileFire);
+  mobileFire?.addEventListener('pointercancel',stopMobileFire);
+  mobileFire?.addEventListener('lostpointercapture',stopMobileFire);
+  const mobileJump = document.getElementById('mobileJump');
+  mobileJump?.addEventListener('pointerdown', event => { event.preventDefault(); mobileJump.setPointerCapture(event.pointerId); touch.jump = true; });
+  const stopJump = () => { touch.jump = false; };
+  mobileJump?.addEventListener('pointerup', stopJump);
+  mobileJump?.addEventListener('pointercancel', stopJump);
+  mobileJump?.addEventListener('lostpointercapture', stopJump);
   document.getElementById('mobileReload')?.addEventListener('pointerdown', reload);
   document.getElementById('mobileView')?.addEventListener('pointerdown', toggleCamera);
 
@@ -550,6 +587,11 @@ export async function createGame(
 
   function frame(now: number) {
     if (disposed) return;
+    if (document.hidden) {
+      previous = now;
+      raf = requestAnimationFrame(frame);
+      return;
+    }
     const dt = Math.min((now - previous) / 1000, 0.05);
     previous = now;
 
@@ -734,9 +776,15 @@ export async function createGame(
       window.removeEventListener('keydown', keyDown);
       window.removeEventListener('keyup', keyUp);
       window.removeEventListener('mousemove', pointerMove);
+      window.visualViewport?.removeEventListener('resize', resize);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      resizeObserver?.disconnect();
       canvas.removeEventListener('click', clickCanvas);
       canvas.removeEventListener('pointerdown', pointerDown);
       canvas.removeEventListener('pointermove', pointerDrag);
+      canvas.removeEventListener('pointerup', pointerLookEnd);
+      canvas.removeEventListener('pointercancel', pointerLookEnd);
+      canvas.removeEventListener('lostpointercapture', pointerLookEnd);
       world.removeCharacterController(controller);
       world.free();
       stopMobileFire();
