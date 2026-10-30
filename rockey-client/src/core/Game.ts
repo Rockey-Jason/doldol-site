@@ -19,6 +19,7 @@ export interface GameInstance {
   setWeapon(weaponCode: string, ammo?: number, reserve?: number): void;
   applyRecoil(pitch: number, yaw: number): void;
   playReplay(frames: ReplayFrame[]): void;
+  playKillcam(frames: ReplayFrame[], killerId: string, onComplete: () => void): void;
   setQuality(level: 'low'|'balanced'|'high'): void;
   setSensitivity(value: number): void;
   toggleCamera(): void;
@@ -319,6 +320,9 @@ export async function createGame(
   let replayFrames: ReplayFrame[] | null = null;
   let replayStartedAt = 0;
   let replayIndex = -1;
+  let replayFocusId = '';
+  let killcamReturnMode = '1v1';
+  let killcamComplete: (() => void) | null = null;
   let mobileFireTimer = 0;
   let movePointerId: number | null = null;
   let lookPointerId: number | null = null;
@@ -645,6 +649,14 @@ export async function createGame(
       const target = new THREE.Vector3(0,0,0);
       camera.position.lerp(new THREE.Vector3(0,22,34),1-Math.exp(-3*dt));
       camera.lookAt(target);
+    } else if (mode === 'killcam') {
+      const focus = remotes.get(replayFocusId);
+      if (focus) {
+        const yaw = focus.rotation.y;
+        const desired = focus.position.clone().add(new THREE.Vector3(Math.sin(yaw)*2.8,1.45,Math.cos(yaw)*2.8));
+        camera.position.lerp(desired,1-Math.exp(-7*dt));
+        camera.lookAt(focus.position.clone().add(new THREE.Vector3(0,0.85,0)));
+      }
     }
 
     if (replayFrames && replayFrames.length > 0) {
@@ -657,7 +669,17 @@ export async function createGame(
       }
       if (index >= replayFrames.length - 1 && elapsed >= replayFrames[replayFrames.length - 1].t) {
         replayFrames = null;
-        notify('REPLAY COMPLETE');
+        if(mode==='killcam'){
+          mode=killcamReturnMode;
+          active=true;
+          replayFocusId='';
+          const complete=killcamComplete;
+          killcamComplete=null;
+          complete?.();
+          notify('KILLCAM COMPLETE');
+        }else{
+          notify('REPLAY COMPLETE');
+        }
       }
     }
 
@@ -805,9 +827,18 @@ export async function createGame(
     },
     playReplay(frames: ReplayFrame[]) {
       if (!Array.isArray(frames) || frames.length===0) return notify('저장된 리플레이 프레임이 없습니다.');
-      active=false;mode='replay';replayFrames=frames;
+      active=false;mode='replay';replayFocusId='';replayFrames=frames;
       replayStartedAt=performance.now();replayIndex=-1;
       notify('REPLAY START');
+    },
+    playKillcam(frames: ReplayFrame[],killerId:string,onComplete:()=>void) {
+      if(!Array.isArray(frames)||frames.length<2){onComplete();return;}
+      killcamReturnMode=mode;
+      mode='killcam';active=false;replayFocusId=killerId;
+      const firstTime=frames[0].t;
+      replayFrames=frames.map(frame=>({...frame,t:Math.max(0,frame.t-firstTime)}));
+      replayStartedAt=performance.now();replayIndex=-1;killcamComplete=onComplete;
+      notify('KILLCAM');
     },
     setQuality(level: 'low'|'balanced'|'high') {
       const ratio=level==='low'?0.8:level==='balanced'?1.15:1.6;
