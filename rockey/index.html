@@ -5,9 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#050a18">
   <meta name="description" content="ROCKEY — Skill. Speed. Victory.">
+  <meta name="color-scheme" content="dark">
   <title>ROCKEY — Competitive FPS</title>
-  <script type="module" crossorigin src="/doldol-site/rockey/assets/index-DgCSHdW1.js"></script>
-  <link rel="stylesheet" crossorigin href="/doldol-site/rockey/assets/index-BEChMxTP.css">
+  <script type="module" crossorigin src="/doldol-site/rockey/assets/index-keSZg48m.js"></script>
+  <link rel="stylesheet" crossorigin href="/doldol-site/rockey/assets/index-5VIpJQoW.css">
 </head>
 <body>
 <div id="app">
@@ -16,6 +17,7 @@
     <a class="brand" href="/doldol-site/"><span class="brand-mark">R</span> ROCKEY</a>
     <div class="connection"><i id="connectionDot"></i><span id="connectionText">SERVER CONNECTING</span></div>
   </header>
+  <div id="rotatePrompt" class="rotate-prompt" role="status" aria-live="polite"><div class="rotate-icon">↻</div><strong>기기를 가로로 돌려주세요</strong><span>ROCKEY는 모바일 가로 화면에 최적화되어 있습니다.</span></div>
   <section id="menu" class="menu-layer">
     <div class="menu-card">
       <div class="eyebrow">COMPETITIVE SCI-FI FPS</div>
@@ -48,14 +50,15 @@
       </div>
       <div class="hub-launch-row">
         <button id="hubOpenBtn" class="outline-btn">PLAYER HUB · 친구 / 랭킹 / 무기 / 리플레이</button>
-        <span id="sessionStatus">BUILD 02</span>
+        <span id="sessionStatus">DEV BUILD 03/04</span>
       </div>
       <div id="menuStatus" class="menu-status" role="status">게임 준비 중...</div>
-      <div class="menu-footer"><span>BUILD 01 · TRAINING FACILITY</span><a href="/doldol-site/">DORI SITE ↗</a></div>
+      <div class="menu-footer"><span>DEV BUILD 03/04 · COMPETITIVE FPS</span><a href="/doldol-site/">DORI SITE ↗</a></div>
     </div>
   </section>
   <section id="hud" class="hud hidden">
     <div class="match-info"><span id="modeLabel">TRAINING</span><span id="scoreLabel">0 : 0</span><span id="roundLabel">ROUND 1</span></div>
+    <div id="killcamBanner" class="killcam-banner hidden" role="status">KILLCAM</div>
     <div class="crosshair"><i></i><i></i><i></i><i></i></div>
     <div class="hud-bottom">
       <div class="health-box"><span>VITAL</span><strong id="healthValue">100</strong><div class="health-track"><i id="healthBar"></i></div></div>
