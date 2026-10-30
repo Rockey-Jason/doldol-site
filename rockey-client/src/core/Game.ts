@@ -500,15 +500,20 @@ export async function createGame(
   const resizeObserver = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(resize) : null;
   resizeObserver?.observe(canvas);
   window.visualViewport?.addEventListener('resize', resize);
-  const onVisibilityChange = () => {
-    if (document.hidden) {
-      keys.clear();
-      touch.forward = 0; touch.right = 0; touch.jump = false;
-      stopMobileFire();
-    }
+  const resetAllInput = () => {
+    keys.clear();
+    touch.forward = 0; touch.right = 0; touch.jump = false;
+    resetPad();
+    stopMobileFire();
     previous = performance.now();
   };
+  const onVisibilityChange = () => {
+    if (document.hidden) resetAllInput();
+    previous = performance.now();
+  };
+  const onWindowBlur = () => resetAllInput();
   document.addEventListener('visibilitychange', onVisibilityChange);
+  window.addEventListener('blur', onWindowBlur);
   resize();
 
   const pad = document.getElementById('movePad');
@@ -561,10 +566,27 @@ export async function createGame(
   document.getElementById('mobileReload')?.addEventListener('pointerdown', reload);
   document.getElementById('mobileView')?.addEventListener('pointerdown', toggleCamera);
 
+  function disposeObjectResources(root: THREE.Object3D) {
+    const geometries = new Set<THREE.BufferGeometry>();
+    const materials = new Set<THREE.Material>();
+    root.traverse(object => {
+      if (!(object instanceof THREE.Mesh)) return;
+      geometries.add(object.geometry);
+      const attached = Array.isArray(object.material) ? object.material : [object.material];
+      attached.forEach(material => materials.add(material));
+    });
+    geometries.forEach(geometry => geometry.dispose());
+    materials.forEach(material => material.dispose());
+  }
+
   function setRemotePlayers(players: RemotePlayer[]) {
     const ids = new Set(players.map(player => player.id));
     for (const [id, mesh] of remotes) {
-      if (!ids.has(id)) { scene.remove(mesh); remotes.delete(id); }
+      if (!ids.has(id)) {
+        scene.remove(mesh);
+        disposeObjectResources(mesh);
+        remotes.delete(id);
+      }
     }
     for (const player of players) {
       let mesh = remotes.get(player.id);
@@ -778,6 +800,7 @@ export async function createGame(
       window.removeEventListener('mousemove', pointerMove);
       window.visualViewport?.removeEventListener('resize', resize);
       document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('blur', onWindowBlur);
       resizeObserver?.disconnect();
       canvas.removeEventListener('click', clickCanvas);
       canvas.removeEventListener('pointerdown', pointerDown);
