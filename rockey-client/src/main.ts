@@ -2,7 +2,7 @@ import './style.css';
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_ANON_KEY, SUPABASE_URL, ROCKEY_WS_URL } from './config';
 import { GameSocket, type GameMessage } from './network/GameSocket';
-import { createGame, type GameInstance, type RemotePlayer, type ReplayFrame } from './core/Game';
+import type { GameInstance, RemotePlayer, ReplayFrame } from './core/Game';
 import { RockeyHub } from './RockeyHub';
 
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
@@ -13,6 +13,7 @@ const hud=$('hud')!;
 const statusText=$('menuStatus')!;
 const canvas=$('gameCanvas') as HTMLCanvasElement;
 let game:GameInstance|null=null;
+let gameLoading:Promise<void>|null=null;
 let currentMode='practice';
 let userId='';
 let activeMapId='training_facility';
@@ -36,7 +37,7 @@ function setConnection(connected:boolean,label:string){
   $('connectionText')!.textContent=label;
   $('connectionDot')!.classList.toggle('online',connected);
   $('connectionDot')!.classList.toggle('offline',!connected);
-  $('sessionStatus')!.textContent=connected?'CONNECTED · BUILD 02':'RECONNECTING';
+  $('sessionStatus')!.textContent=connected?'CONNECTED · BUILD 07':'RECONNECTING';
 }
 function showMenu(){
   menu.classList.remove('hidden');hud.classList.add('hidden');
@@ -77,11 +78,21 @@ function applyQuality(){
 }
 async function ensureGame(mapId:string){
   if(game&&activeMapId===mapId)return;
+  if(gameLoading)await gameLoading;
+  if(game&&activeMapId===mapId)return;
   game?.dispose();
   game=null;
   activeMapId=mapId;
-  game=await createGame(canvas,send,toast,updateHud,mapId);
-  applyQuality();
+  const loading=(async()=>{
+    // Keep the heavy 3D engine and physics code out of the initial menu bundle.
+    const {createGame}=await import('./core/Game');
+    const next=await createGame(canvas,send,toast,updateHud,mapId);
+    if(activeMapId!==mapId){next.dispose();return;}
+    game=next;
+    applyQuality();
+  })();
+  gameLoading=loading;
+  try{await loading;}finally{if(gameLoading===loading)gameLoading=null;}
 }
 async function enterMatch(message:Record<string,any>){
   const mapId=String(message.mapId||'training_facility');
@@ -181,10 +192,10 @@ async function initialize(){
     }catch{
       setConnection(false,'SERVER OFFLINE');
       status('게임 서버 연결을 기다리는 중입니다. 훈련장은 이용할 수 있습니다.');
+      scheduleReconnect();
     }
-    await ensureGame('training_facility');
+    // 3D/physics modules are loaded only after the player enters a match or training.
     hub.refresh();
-    applyQuality();
   }catch(error){
     console.error('ROCKEY initialization failed',error);
     status('게임 초기화에 실패했습니다. 새로고침해 주세요.');
