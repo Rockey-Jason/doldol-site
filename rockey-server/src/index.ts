@@ -486,8 +486,9 @@ app.server.on('upgrade',(request,socket,head)=>{
 });
 
 wss.on('connection',ws=>{
-  let isAlive=true;
-  ws.on('pong',()=>{isAlive=true;});
+  const heartbeatState=ws as WebSocket & { isAlive?: boolean };
+  heartbeatState.isAlive=true;
+  ws.on('pong',()=>{heartbeatState.isAlive=true;});
   ws.on('error',error=>app.log.warn({err:error},'ROCKEY websocket error'));
   let authenticated=false;
   let busy=false;
