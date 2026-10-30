@@ -42,6 +42,8 @@ function setConnection(connected:boolean,label:string){
   $('sessionStatus')!.textContent=connected?'CONNECTED · DEV 03/04':'RECONNECTING';
 }
 function showMenu(){
+  game?.cancelKillcam();
+  isKillcam=false;
   menu.classList.remove('hidden');hud.classList.add('hidden');
   $('resultPanel')!.classList.add('hidden');$('hubPanel')!.classList.add('hidden');
   document.exitPointerLock?.();
