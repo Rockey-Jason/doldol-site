@@ -70,7 +70,6 @@ export class GameRoom {
   readonly id: string;
   readonly mode: Mode;
   readonly mapId: string;
-  readonly matchId: string | null = null;
   private persistedMatchId: string | null = null;
   private players: PlayerState[];
   private spectators = new Set<PlayerClient>();
@@ -84,6 +83,7 @@ export class GameRoom {
   private replayFrames: ReplayFrame[] = [];
   private onFinished: (id: string) => void;
   private disconnectTimers = new Map<string, NodeJS.Timeout>();
+  private replaySaved = false;
 
   constructor(id: string, mode: Mode, members: PlayerClient[], mapId: string, onFinished: (id: string) => void) {
     this.id = id;
@@ -186,6 +186,18 @@ export class GameRoom {
     for(const spectator of this.spectators) send(spectator,message);
   }
 
+  private flagSuspicious(p:PlayerState,reason:string) {
+    p.suspiciousInputs++;
+    if(p.suspiciousInputs===5 && p.connected) {
+      send(p.client,{type:'anti-cheat.warning',message:'비정상 입력이 감지되었습니다. 정상적인 조작을 유지해 주세요.'});
+    }
+    if(p.suspiciousInputs>=15 && p.connected) {
+      send(p.client,{type:'anti-cheat.removed',reason});
+      p.client.ws.close(4003,'Anti-cheat violation');
+      this.disconnect(p.client);
+    }
+  }
+
   addSpectator(client: PlayerClient) {
     if(this.finished) return send(client,{type:'spectate.error',message:'이미 종료된 경기입니다.'});
     if(this.players.some(p=>p.client.player.id===client.player.id)) {
@@ -256,13 +268,13 @@ export class GameRoom {
     if(!p || !p.alive || !p.connected || this.finished) return;
     const sequence=Number(message.sequence);
     if(!Number.isSafeInteger(sequence) || sequence<=p.sequence) {
-      p.suspiciousInputs++;
+      this.flagSuspicious(p,'입력 순서가 비정상적입니다.');
       return;
     }
     p.sequence=sequence;
     const rawForward=Number(message.forward)||0;
     const rawRight=Number(message.right)||0;
-    if(Math.abs(rawForward)>1.05 || Math.abs(rawRight)>1.05) p.suspiciousInputs++;
+    if(Math.abs(rawForward)>1.05 || Math.abs(rawRight)>1.05) this.flagSuspicious(p,'이동 입력 범위를 초과했습니다.');
     p.forward=Math.max(-1,Math.min(1,rawForward));
     p.right=Math.max(-1,Math.min(1,rawRight));
     p.sprint=message.sprint===true;
@@ -271,7 +283,7 @@ export class GameRoom {
       const proposed=Number(message.yaw);
       const turn=angleDistance(proposed,p.yaw);
       if(turn>1.6){
-        p.suspiciousInputs++;
+        this.flagSuspicious(p,'비정상적인 시점 회전이 감지되었습니다.');
         const direction=Math.sign(((proposed-p.yaw+Math.PI*3)%(Math.PI*2))-Math.PI);
         p.yaw+=direction*1.6;
       }else p.yaw=proposed;
@@ -513,11 +525,12 @@ export class GameRoom {
         frames:this.replayFrames,
         participants:this.players.map(p=>({id:p.client.player.id,name:p.client.player.name,team:p.team}))
       },{onConflict:'match_id'});
+      this.replaySaved=!replayWrite.error;
       if(replayWrite.error) console.error('ROCKEY replay write failed',replayWrite.error.message);
 
       const matchWrite=await admin.from('rockey_matches').update({
         status:'completed',ended_at:new Date().toISOString(),winner_team:winnerTeam,
-        replay_available:!replayWrite.error,result
+        replay_available:this.replaySaved,result
       }).eq('id',this.persistedMatchId);
       if(matchWrite.error) console.error('ROCKEY match final write failed',matchWrite.error.message);
 
@@ -532,7 +545,7 @@ export class GameRoom {
       if(p.connected) send(p.client,{
         type:'match.result',won,detail:'처치 '+p.kills+' · 사망 '+p.deaths,
         ratingDelta:this.mode==='ranked'?(won?24:-18):0,
-        replayAvailable:Boolean(this.persistedMatchId)
+        replayAvailable:this.replaySaved
       });
       p.client.roomId=undefined;
     }
