@@ -177,7 +177,7 @@ export class RockeyHub {
       '<div class="hub-row"><div class="hub-avatar">'+esc(f.name.slice(0,1))+'</div><div class="hub-row-main"><b>'+esc(f.name)+'</b><span>'+(f.online?'● 온라인':'○ 오프라인')+' · '+esc(f.rank)+' '+f.rating+'</span></div>'+
       (f.friendship==='none'?'<button class="hub-small" data-action="friend-add" data-id="'+f.id+'">친구 추가</button>':
       f.friendship==='accepted'?'<span class="hub-dim">친구</span>':
-      f.requestedBy===f.id?'<span class="hub-dim">요청 보냄</span>':'<span class="hub-dim">요청 대기</span>')+'</div>'
+      f.requestedBy===f.id?'<span class="hub-dim">받은 요청</span>':'<span class="hub-dim">요청 보냄</span>')+'</div>'
     ).join('');
     const friends=this.friends.map(f=>
       '<div class="hub-row"><div class="hub-avatar '+(f.online?'online':'')+'">'+esc(f.name.slice(0,1))+'</div><div class="hub-row-main"><b>'+esc(f.name)+'</b><span>'+(f.online?'● 온라인':'○ 오프라인')+' · '+esc(f.rank)+' '+f.rating+' RP · W '+(f.wins||0)+'</span></div>'+
