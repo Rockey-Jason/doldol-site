@@ -21,6 +21,8 @@ let primaryWeapon='R16';
 let secondaryWeapon='R9';
 let activeWeapon='R16';
 let isSpectating=false;
+let isKillcam=false;
+let latestLocalSnapshot:RemotePlayer|null=null;
 let reconnectTimer=0;
 let reconnectAttempts=0;
 let reconnecting=false;
@@ -99,6 +101,8 @@ async function enterMatch(message:Record<string,any>){
   await ensureGame(mapId);
   currentMode=String(message.mode||'1v1');
   isSpectating=false;
+  isKillcam=false;
+  latestLocalSnapshot=null;
   activeWeapon=String(message.weaponCode||primaryWeapon);
   game?.activate(
     currentMode,
@@ -114,7 +118,7 @@ async function enterMatch(message:Record<string,any>){
 async function enterSpectator(message:Record<string,any>){
   const mapId=String(message.mapId||'training_facility');
   await ensureGame(mapId);
-  currentMode='spectator';isSpectating=true;
+  currentMode='spectator';isSpectating=true;isKillcam=false;
   game?.activate('spectator');
   $('modeLabel')!.textContent='SPECTATING · '+String(message.mapName||mapId);
   showGame();toast('SPECTATOR MODE');
@@ -273,8 +277,10 @@ socket.onMessage((message:GameMessage)=>{
       break;
     case 'snapshot':{
       const players=(message.players||[]) as RemotePlayer[];
+      const local=players.find(p=>p.id===userId);
+      if(local)latestLocalSnapshot=local;
+      if(isKillcam)break;
       if(!isSpectating){
-        const local=players.find(p=>p.id===userId);
         if(local)game?.reconcileLocalPlayer(local);
         game?.setRemotePlayers(players.filter(p=>p.id!==userId));
       }else{
@@ -310,9 +316,22 @@ socket.onMessage((message:GameMessage)=>{
     case 'elimination':
       toast('ELIMINATION');
       break;
-    case 'eliminated':
-      toast('ELIMINATED');
+    case 'eliminated':{
+      const killerName=String(message.by||'상대 플레이어');
+      toast('ELIMINATED BY '+killerName);
+      const frames=(message.killcamFrames||[]) as ReplayFrame[];
+      if(game&&frames.length>1){
+        isKillcam=true;
+        const banner=$('killcamBanner');
+        if(banner){banner.textContent='KILLCAM · ELIMINATED BY '+killerName;banner.classList.remove('hidden');}
+        game.playKillcam(frames,String(message.killerId||''),()=>{
+          isKillcam=false;
+          banner?.classList.add('hidden');
+          if(latestLocalSnapshot)game?.reconcileLocalPlayer(latestLocalSnapshot);
+        });
+      }
       break;
+    }
     case 'private.created':
       $('privateCodePanel')!.classList.remove('hidden');
       $('privateCodeText')!.textContent=String(message.code||'');
