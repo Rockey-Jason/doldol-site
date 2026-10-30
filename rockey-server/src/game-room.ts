@@ -1,7 +1,7 @@
 import type { WebSocket } from 'ws';
 import { admin, type VerifiedPlayer } from './auth.js';
 import { MAPS, WEAPONS, type RockeyWeapon } from './catalog.js';
-import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil } from './combat.js';
+import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot } from './combat.js';
 
 export type Mode = '1v1' | '2v2' | '3v3' | 'ranked' | 'ffa';
 export type PlayerClient = {
@@ -48,25 +48,6 @@ function angleDistance(a: number, b: number) {
   if (d < -Math.PI) d += Math.PI * 2;
   return Math.abs(d);
 }
-function rayBlocked(ox: number, oz: number, dx: number, dz: number, distance: number, box: {x:number;z:number;hx:number;hz:number}) {
-  let min = 0, max = distance;
-  for (const axis of [
-    { o: ox, d: dx, lo: box.x - box.hx, hi: box.x + box.hx },
-    { o: oz, d: dz, lo: box.z - box.hz, hi: box.z + box.hz }
-  ]) {
-    if (Math.abs(axis.d) < 0.00001) {
-      if (axis.o < axis.lo || axis.o > axis.hi) return false;
-      continue;
-    }
-    let a = (axis.lo - axis.o) / axis.d, b = (axis.hi - axis.o) / axis.d;
-    if (a > b) [a, b] = [b, a];
-    min = Math.max(min, a);
-    max = Math.min(max, b);
-    if (max < min) return false;
-  }
-  return true;
-}
-
 export class GameRoom {
   readonly id: string;
   readonly mode: Mode;
@@ -345,27 +326,10 @@ export class GameRoom {
     shooter.weaponAmmo[shooter.weaponCode]={ammo:shooter.ammo,reserve:shooter.reserve};
     send(client,{type:'ammo.update',ammo:shooter.ammo,reserve:shooter.reserve,weaponCode:shooter.weaponCode});
 
-    const cp=Math.cos(shooter.pitch);
-    const dx=-Math.sin(shooter.yaw)*cp;
-    const dy=Math.sin(shooter.pitch);
-    const dz=-Math.cos(shooter.yaw)*cp;
-    const ox=shooter.x,oy=shooter.y+0.55,oz=shooter.z;
-    let target:PlayerState|null=null;
-    let best=weapon.range;
-    let headshot=false;
-
-    for(const candidate of this.players) {
-      if(candidate===shooter || !candidate.alive || !candidate.connected) continue;
-      if(this.mode!=='ffa' && candidate.team===shooter.team) continue;
-      const tx=candidate.x-ox,ty=candidate.y+0.65-oy,tz=candidate.z-oz;
-      const along=tx*dx+ty*dy+tz*dz;
-      if(along<=0 || along>=best) continue;
-      const px=tx-dx*along,py=ty-dy*along,pz=tz-dz*along;
-      if(Math.hypot(px,py,pz)>0.62+weapon.spread*along*0.35) continue;
-      if(MAPS[this.mapId].cover.some(box=>rayBlocked(ox,oz,dx,dz,along,box))) continue;
-      best=along;target=candidate;
-      headshot=Math.abs(oy+dy*along-(candidate.y+1.45))<0.24;
-    }
+    const trace=traceWeaponShot(shooter,this.players,this.mode,MAPS[this.mapId].cover,weapon);
+    const target=trace.target as PlayerState|null;
+    const best=trace.distance;
+    const headshot=trace.headshot;
     // Server-authoritative recoil: apply after the shot ray is evaluated, then sync the new aim to the shooter.
     const recoil=calculateWeaponRecoil(weapon);
     shooter.pitch=Math.max(-1.3,Math.min(1.3,shooter.pitch+recoil));
