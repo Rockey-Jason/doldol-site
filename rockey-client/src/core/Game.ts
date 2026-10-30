@@ -656,6 +656,7 @@ export async function createGame(
       primaryWeaponCode = currentWeaponCode;
       secondaryWeaponCode = WEAPONS[secondaryWeapon] ? secondaryWeapon : 'R9';
       currentWeapon = WEAPONS[currentWeaponCode];
+      rebuildGun(currentWeaponCode);
       hp = 100; ammo = currentWeapon.magazine; reserve = currentWeapon.reserve; vertical = 0;
       if (mode === 'practice') {
         for (const target of practiceTargets) {
@@ -742,6 +743,13 @@ export async function createGame(
       renderer.dispose();
       for (const mesh of remotes.values()) scene.remove(mesh);
       for (const target of practiceTargets) scene.remove(target);
+      for (const part of gun.children) {
+        if (part instanceof THREE.Mesh) {
+          part.geometry.dispose();
+          const materials=Array.isArray(part.material)?part.material:[part.material];
+          materials.forEach(material=>material.dispose());
+        }
+      }
     }
   };
 }
