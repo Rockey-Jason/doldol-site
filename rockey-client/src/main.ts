@@ -37,7 +37,7 @@ function setConnection(connected:boolean,label:string){
   $('connectionText')!.textContent=label;
   $('connectionDot')!.classList.toggle('online',connected);
   $('connectionDot')!.classList.toggle('offline',!connected);
-  $('sessionStatus')!.textContent=connected?'CONNECTED · BUILD 07':'RECONNECTING';
+  $('sessionStatus')!.textContent=connected?'CONNECTED · DEV 03/04':'RECONNECTING';
 }
 function showMenu(){
   menu.classList.remove('hidden');hud.classList.add('hidden');
