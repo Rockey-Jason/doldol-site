@@ -48,7 +48,7 @@ export function traceWeaponShot<T extends Combatant>(
     const along=tx*dx+ty*dy+tz*dz;
     if(along<=0||along>=best)continue;
     const px=tx-dx*along,py=ty-dy*along,pz=tz-dz*along;
-    if(Math.hypot(px,py,pz)>.62+weapon.spread*along*.35)continue;
+    if(Math.hypot(px,pz)>.62+weapon.spread*along*.35||Math.abs(py)>.95)continue;
     if(cover.some(box=>rayBlocked(ox,oz,dx,dz,along,box)))continue;
     best=along;target=candidate;
     headshot=Math.abs(oy+dy*along-(candidate.y+1.45))<.24;
