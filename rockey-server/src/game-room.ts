@@ -35,6 +35,7 @@ interface State {
   client: PlayerClient;
   team: number;
   x: number; y: number; z: number;
+  spawnX: number; spawnZ: number;
   yaw: number; pitch: number;
   forward: number; right: number; sprint: boolean;
   health: number; kills: number; deaths: number; headshots: number; damage: number;
@@ -60,14 +61,17 @@ export class GameRoom {
     this.mode = mode;
     this.onFinished = onFinished;
     this.players = clients.map((client, index) => {
-      const half = Math.max(1, clients.length / 2);
-      const team = mode === 'ffa' ? index : Math.floor(index / half);
+      const teamSize = mode === 'ffa' ? 1 : Math.max(1, clients.length / 2);
+      const team = mode === 'ffa' ? index : Math.floor(index / teamSize);
+      const lane = mode === 'ffa' ? index : index % teamSize;
+      const angle = (Math.PI * 2 * index) / clients.length;
+      const spawnX = mode === 'ffa' ? Math.cos(angle) * 20 : (team === 0 ? -20 : 20);
+      const spawnZ = mode === 'ffa' ? Math.sin(angle) * 20 : (team === 0 ? 17 - lane * 3 : -17 + lane * 3);
+      const spawnYaw = mode === 'ffa' ? angle + Math.PI : (team === 0 ? 0 : Math.PI);
       return {
         client, team,
-        x: index % 2 === 0 ? -20 : 20,
-        y: 0.92,
-        z: index % 2 === 0 ? 17 : -17,
-        yaw: index % 2 === 0 ? 0 : Math.PI,
+        x: spawnX, y: 0.92, z: spawnZ,
+        spawnX, spawnZ, yaw: spawnYaw,
         pitch: 0, forward: 0, right: 0, sprint: false,
         health: 100, kills: 0, deaths: 0, headshots: 0, damage: 0,
         sequence: -1, lastFire: 0, lastInput: Date.now(),
@@ -97,7 +101,9 @@ export class GameRoom {
       send(state.client, {
         type: 'match.start', mode: this.mode, roomId: this.id,
         playerId: state.client.player.id, playerName: state.client.player.name,
-        team: state.team, map: 'training_facility'
+        team: state.team,
+        spawn: { x: state.spawnX, y: 0.92, z: state.spawnZ, yaw: state.yaw },
+        map: 'training_facility'
       });
       send(state.client, { type: 'ammo.update', ammo: state.ammo, reserve: state.reserve });
     }
@@ -191,8 +197,8 @@ export class GameRoom {
           this.round += 1;
           this.players.forEach((p, index) => {
             p.health = 100; p.alive = true;
-            p.x = index % 2 === 0 ? -20 : 20;
-            p.y = 0.92; p.z = index % 2 === 0 ? 17 : -17;
+            p.x = p.spawnX;
+            p.y = 0.92; p.z = p.spawnZ;
           });
         }
       }
@@ -201,8 +207,8 @@ export class GameRoom {
           if (this.finished) return;
           target!.health = 100;
           target!.alive = true;
-          target!.x = target!.team === 0 ? -20 : 20;
-          target!.z = target!.team === 0 ? 17 : -17;
+          target!.x = target!.spawnX;
+          target!.z = target!.spawnZ;
           target!.y = 0.92;
         }, 1800);
       }
