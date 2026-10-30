@@ -28,6 +28,9 @@ jobs:
       - name: Install client packages
         working-directory: rockey-client
         run: npm install
+      - name: Audit client dependencies
+        working-directory: rockey-client
+        run: npm audit --audit-level=high
       - name: Typecheck and build client
         working-directory: rockey-client
         run: npm run build
@@ -44,6 +47,9 @@ jobs:
       - name: Install server packages
         working-directory: rockey-server
         run: npm install
+      - name: Audit server dependencies
+        working-directory: rockey-server
+        run: npm audit --audit-level=high
       - name: Build server
         working-directory: rockey-server
         run: npm run build
