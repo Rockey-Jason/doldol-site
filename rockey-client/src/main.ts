@@ -150,7 +150,8 @@ function switchWeapon(){
 const hub=new RockeyHub(
   $('hubPanel')!,
   send,
-  (frames:ReplayFrame[])=>{
+  async (frames:ReplayFrame[],mapId:string)=>{
+    await ensureGame(mapId);
     currentMode='replay';isSpectating=true;
     game?.activate('replay');
     game?.playReplay(frames);
