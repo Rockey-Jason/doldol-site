@@ -139,6 +139,8 @@ socket.onMessage((message: GameMessage) => {
       break;
     case 'snapshot': {
       const players = (message.players || []) as RemotePlayer[];
+      const localPlayer = players.find(player => player.id === userId);
+      if (localPlayer) game?.reconcileLocalPlayer(localPlayer);
       game?.setRemotePlayers(players.filter(player => player.id !== userId));
       break;
     }
