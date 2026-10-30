@@ -33,6 +33,7 @@ interface PlayerState {
   sequence: number; lastFire: number; lastInput: number;
   weaponCode: string; secondaryWeapon: string;
   ammo: number; reserve: number; reloadUntil: number;
+  weaponAmmo: Record<string,{ammo:number;reserve:number}>;
   alive: boolean; connected: boolean; disconnectedAt: number | null;
   suspiciousInputs: number; weaponKills: Record<string, number>;
 }
@@ -101,12 +102,17 @@ export class GameRoom {
       const weaponCode = WEAPONS[client.primaryWeapon] ? client.primaryWeapon : 'R16';
       const weapon = WEAPONS[weaponCode];
       const secondaryWeapon = WEAPONS[client.secondaryWeapon] ? client.secondaryWeapon : 'R9';
+      const secondaryDefinition = WEAPONS[secondaryWeapon];
       return {
         client,team,x:spawnX,y:0.92,z:spawnZ,spawnX,spawnZ,spawnYaw,
         yaw:spawnYaw,pitch:0,forward:0,right:0,sprint:false,verticalVelocity:0,
         health:100,kills:0,deaths:0,headshots:0,damage:0,
         sequence:-1,lastFire:0,lastInput:Date.now(),
         weaponCode,secondaryWeapon,ammo:weapon.magazine,reserve:weapon.reserve,
+        weaponAmmo:{
+          [weaponCode]:{ammo:weapon.magazine,reserve:weapon.reserve},
+          [secondaryWeapon]:{ammo:secondaryDefinition.magazine,reserve:secondaryDefinition.reserve}
+        },
         reloadUntil:0,alive:true,connected:true,disconnectedAt:null,
         suspiciousInputs:0,weaponKills:{}
       };
@@ -263,8 +269,12 @@ export class GameRoom {
     if(message.jump===true && p.y<=0.94 && p.verticalVelocity<=0) p.verticalVelocity=7.2;
     if(Number.isFinite(Number(message.yaw))) {
       const proposed=Number(message.yaw);
-      if(angleDistance(proposed,p.yaw)>1.25) p.suspiciousInputs++;
-      p.yaw=proposed;
+      const turn=angleDistance(proposed,p.yaw);
+      if(turn>1.6){
+        p.suspiciousInputs++;
+        const direction=Math.sign(((proposed-p.yaw+Math.PI*3)%(Math.PI*2))-Math.PI);
+        p.yaw+=direction*1.6;
+      }else p.yaw=proposed;
     }
     if(Number.isFinite(Number(message.pitch))) {
       const proposed=Number(message.pitch);
@@ -284,19 +294,22 @@ export class GameRoom {
       if(this.finished || !p.connected) return;
       const amount=Math.min(weapon.magazine-p.ammo,p.reserve);
       p.ammo+=amount;p.reserve-=amount;p.reloadUntil=0;
-      send(p.client,{type:'ammo.update',ammo:p.ammo,reserve:p.reserve,weaponCode:p.weaponCode});
+      p.weaponAmmo[p.weaponCode]={ammo:p.ammo,reserve:p.reserve};
+      if(p.connected)send(p.client,{type:'ammo.update',ammo:p.ammo,reserve:p.reserve,weaponCode:p.weaponCode});
     },weapon.reloadMs);
   }
 
   handleSwitchWeapon(client:PlayerClient) {
     const p=this.players.find(item=>item.client===client);
     if(!p || this.finished || Date.now()<p.reloadUntil) return;
+    p.weaponAmmo[p.weaponCode]={ammo:p.ammo,reserve:p.reserve};
     const next=p.weaponCode===p.client.primaryWeapon?p.secondaryWeapon:p.client.primaryWeapon;
     if(!WEAPONS[next]) return;
     p.weaponCode=next;
     const weapon=WEAPONS[next];
-    p.ammo=weapon.magazine;
-    p.reserve=weapon.reserve;
+    const stored=p.weaponAmmo[next]||{ammo:weapon.magazine,reserve:weapon.reserve};
+    p.ammo=stored.ammo;
+    p.reserve=stored.reserve;
     p.lastFire=0;
     send(p.client,{type:'weapon.update',weaponCode:next,weapon,ammo:p.ammo,reserve:p.reserve});
   }
@@ -316,6 +329,7 @@ export class GameRoom {
     }
     shooter.lastFire=now;
     shooter.ammo--;
+    shooter.weaponAmmo[shooter.weaponCode]={ammo:shooter.ammo,reserve:shooter.reserve};
     send(client,{type:'ammo.update',ammo:shooter.ammo,reserve:shooter.reserve,weaponCode:shooter.weaponCode});
 
     const cp=Math.cos(shooter.pitch);
@@ -367,8 +381,10 @@ export class GameRoom {
           this.round++;
           this.players.forEach(p=>{
             p.health=100;p.alive=true;p.x=p.spawnX;p.y=0.92;p.z=p.spawnZ;p.verticalVelocity=0;
-            p.ammo=WEAPONS[p.weaponCode].magazine;p.reserve=WEAPONS[p.weaponCode].reserve;
-            if(p.connected) send(p.client,{type:'ammo.update',ammo:p.ammo,reserve:p.reserve,weaponCode:p.weaponCode});
+            p.weaponAmmo[p.weaponCode]={ammo:WEAPONS[p.weaponCode].magazine,reserve:WEAPONS[p.weaponCode].reserve};
+            p.weaponAmmo[p.secondaryWeapon]={ammo:WEAPONS[p.secondaryWeapon].magazine,reserve:WEAPONS[p.secondaryWeapon].reserve};
+            p.ammo=p.weaponAmmo[p.weaponCode].ammo;p.reserve=p.weaponAmmo[p.weaponCode].reserve;
+            if(p.connected)send(p.client,{type:'ammo.update',ammo:p.ammo,reserve:p.reserve,weaponCode:p.weaponCode});
           });
         }
       }
