@@ -120,11 +120,49 @@ export async function createGame(
   const gunLight = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.5), glow);
   gunLight.position.set(0.24, -0.09, -0.42);
   gun.add(gunLight);
+  const muzzleFlash = new THREE.Mesh(
+    new THREE.SphereGeometry(0.105, 10, 8),
+    new THREE.MeshBasicMaterial({ color: 0x8cecff })
+  );
+  muzzleFlash.position.set(0.24, -0.22, -1.2);
+  muzzleFlash.visible = false;
+  gun.add(muzzleFlash);
   camera.add(gun);
   scene.add(camera);
 
   const enemyMat = new THREE.MeshStandardMaterial({ color: 0x8a3149, metalness: 0.5, roughness: 0.35 });
   const remotes = new Map<string, THREE.Group>();
+  const practiceTargets: THREE.Group[] = [];
+
+  function createPracticeTargets() {
+    const bodyMaterial = new THREE.MeshStandardMaterial({
+      color: 0x244b70, metalness: 0.55, roughness: 0.3,
+      emissive: 0x06264b, emissiveIntensity: 0.55
+    });
+    const headMaterial = new THREE.MeshStandardMaterial({
+      color: 0x69dfff, metalness: 0.35, roughness: 0.24,
+      emissive: 0x0c79b4, emissiveIntensity: 1.1
+    });
+    for (const [x, z] of [[-5, -10], [5, -10], [0, -20]] as const) {
+      const target = new THREE.Group();
+      target.position.set(x, 0, z);
+      target.userData.hp = 100;
+      const targetBody = new THREE.Mesh(new THREE.CapsuleGeometry(0.42, 0.8, 5, 10), bodyMaterial);
+      targetBody.position.y = 1.05;
+      targetBody.castShadow = true;
+      target.add(targetBody);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.27, 16, 12), headMaterial);
+      head.position.y = 1.82;
+      head.castShadow = true;
+      target.add(head);
+      const core = new THREE.Mesh(new THREE.TorusGeometry(0.52, 0.035, 8, 32), glow);
+      core.position.y = 1.05;
+      target.add(core);
+      scene.add(target);
+      practiceTargets.push(target);
+    }
+  }
+  createPracticeTargets();
   const raycaster = new THREE.Raycaster();
   const keys = new Set<string>();
   const touch = { forward: 0, right: 0, jump: false };
@@ -165,9 +203,40 @@ export async function createGame(
     lastShot = now;
     ammo -= 1;
     updateHud(hp, ammo, reserve, 'R-16');
-    send({ type: 'fire', weaponCode: 'R16', sequence: ++seq });
+
+    if (mode === 'practice') {
+      camera.updateMatrixWorld(true);
+      const origin = camera.getWorldPosition(new THREE.Vector3());
+      const direction = camera.getWorldDirection(new THREE.Vector3());
+      const shotRay = new THREE.Raycaster(origin, direction, 0, 65);
+      const candidates = practiceTargets
+        .filter(target => target.visible)
+        .flatMap(target => target.children);
+      const hit = shotRay.intersectObjects(candidates, true)[0];
+      if (hit) {
+        const target = hit.object.parent as THREE.Group;
+        target.userData.hp = Math.max(0, Number(target.userData.hp || 100) - 25);
+        if (target.userData.hp <= 0) {
+          target.visible = false;
+          notify('TARGET ELIMINATED');
+          window.setTimeout(() => {
+            target.userData.hp = 100;
+            target.visible = true;
+          }, 2200);
+        } else {
+          notify('TARGET HIT · ' + target.userData.hp + ' HP');
+        }
+      }
+    } else {
+      send({ type: 'fire', weaponCode: 'R16', sequence: ++seq });
+    }
+
+    muzzleFlash.visible = true;
     gun.position.z = 0.045;
-    window.setTimeout(() => { gun.position.z = 0; }, 55);
+    window.setTimeout(() => {
+      gun.position.z = 0;
+      muzzleFlash.visible = false;
+    }, 55);
   }
 
   function reload() {
@@ -378,6 +447,12 @@ export async function createGame(
       mode = nextMode;
       active = true;
       hp = 100; ammo = 30; reserve = 90; vertical = 0;
+      if (mode === 'practice') {
+        for (const target of practiceTargets) {
+          target.userData.hp = 100;
+          target.visible = true;
+        }
+      }
       const spawn = serverSpawn || (mode === 'practice'
         ? { x: 0, y: 0.92, z: 20, yaw: 0 }
         : team === 0 ? { x: -20, y: 0.92, z: 17, yaw: 0 } : { x: 20, y: 0.92, z: -17, yaw: Math.PI });
@@ -437,6 +512,7 @@ export async function createGame(
       world.free();
       renderer.dispose();
       for (const mesh of remotes.values()) scene.remove(mesh);
+      for (const target of practiceTargets) scene.remove(target);
     }
   };
 }
