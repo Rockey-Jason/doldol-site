@@ -14,7 +14,7 @@ const esc=(v:unknown)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&l
 export class RockeyHub {
   private root:HTMLElement;
   private send:Sender;
-  private onReplay:(frames:ReplayFrame[])=>void;
+  private onReplay:(frames:ReplayFrame[],mapId:string)=>void;
   private onQuality:(level:'low'|'balanced'|'high')=>void;
   private onSensitivity:(value:number)=>void;
   private tab='friends';
@@ -38,8 +38,9 @@ export class RockeyHub {
   private quality:'low'|'balanced'|'high'='balanced';
   private sensitivity=1;
 
-  constructor(root:HTMLElement,send:Sender,onReplay:(frames:ReplayFrame[])=>void,onQuality:(level:'low'|'balanced'|'high')=>void,onSensitivity:(value:number)=>void){
+  constructor(root:HTMLElement,send:Sender,onReplay:(frames:ReplayFrame[],mapId:string)=>void,onQuality:(level:'low'|'balanced'|'high')=>void,onSensitivity:(value:number)=>void){
     this.root=root;this.send=send;this.onReplay=onReplay;this.onQuality=onQuality;this.onSensitivity=onSensitivity;
+    this.mapId=localStorage.getItem('rockey.mapId')||'training_facility';
     this.quality=(localStorage.getItem('rockey.quality') as any)||'balanced';
     const saved=Number(localStorage.getItem('rockey.sensitivity')||'1');
     this.sensitivity=Number.isFinite(saved)?Math.max(.4,Math.min(2.2,saved)):1;
@@ -81,7 +82,12 @@ export class RockeyHub {
       case 'replays.list':this.replays=m.replays||[];this.render();break;
       case 'matches.live':this.liveMatches=m.matches||[];this.render();break;
       case 'replay.data':
-        this.close();this.onReplay((m.replay?.frames||[]) as ReplayFrame[]);break;
+        this.close();
+        this.onReplay(
+          (m.replay?.frames||[]) as ReplayFrame[],
+          String(m.replay?.map_id||'training_facility')
+        );
+        break;
       case 'error':this.notice=String(m.message||'요청을 처리하지 못했습니다.');this.render();break;
     }
   }
@@ -99,7 +105,10 @@ export class RockeyHub {
     if(!(t instanceof HTMLInputElement||t instanceof HTMLSelectElement))return;
     if(t.id==='hubPrimary')this.primaryWeapon=t.value;
     if(t.id==='hubSecondary')this.secondaryWeapon=t.value;
-    if(t.id==='hubMap')this.mapId=t.value;
+    if(t.id==='hubMap'){
+      this.mapId=t.value;
+      localStorage.setItem('rockey.mapId',this.mapId);
+    }
     if(t.id==='hubQuality'){
       this.quality=t.value as any;localStorage.setItem('rockey.quality',this.quality);this.onQuality(this.quality);
     }
