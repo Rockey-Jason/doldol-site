@@ -122,15 +122,6 @@ export async function createGame(
   scene.add(avatar);
 
   const gun = new THREE.Group();
-  const gunBody = new THREE.Mesh(
-    new THREE.BoxGeometry(0.22, 0.2, 0.8),
-    new THREE.MeshStandardMaterial({ color: 0x1c2d46, metalness: 0.9, roughness: 0.22 })
-  );
-  gunBody.position.set(0.24, -0.23, -0.46);
-  gun.add(gunBody);
-  const gunLight = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.06, 0.5), glow);
-  gunLight.position.set(0.24, -0.09, -0.42);
-  gun.add(gunLight);
   const muzzleFlash = new THREE.Mesh(
     new THREE.SphereGeometry(0.105, 10, 8),
     new THREE.MeshBasicMaterial({ color: 0x8cecff })
@@ -140,6 +131,140 @@ export async function createGame(
   gun.add(muzzleFlash);
   camera.add(gun);
   scene.add(camera);
+
+  function rebuildGun(code: string) {
+    for (const child of [...gun.children]) {
+      if (child === muzzleFlash) continue;
+      gun.remove(child);
+      if (child instanceof THREE.Mesh) {
+        child.geometry.dispose();
+        const materials = Array.isArray(child.material) ? child.material : [child.material];
+        materials.forEach(material => material.dispose());
+      }
+    }
+
+    const accent = new THREE.Color(
+      code === 'VIPER' ? 0x54e6b0 :
+      code === 'THUNDER' ? 0xffaa5b :
+      code === 'LONGSHOT' ? 0xa8d8ff :
+      code === 'BASTION' ? 0xffc45f :
+      code === 'NOVA' ? 0xff748e :
+      code === 'ARC' ? 0x57efff :
+      code === 'PULSE' ? 0xbe8cff : map.light
+    );
+    const metal = new THREE.MeshStandardMaterial({
+      color: code === 'THUNDER' ? 0x443b34 : code === 'LONGSHOT' ? 0x263c53 : 0x1c2d46,
+      metalness: 0.88, roughness: 0.24
+    });
+    const glowPart = new THREE.MeshStandardMaterial({
+      color: accent, emissive: accent, emissiveIntensity: 1.7,
+      metalness: 0.45, roughness: 0.23
+    });
+    const dark = new THREE.MeshStandardMaterial({
+      color: 0x101b2b, metalness: 0.68, roughness: 0.34
+    });
+
+    const addBox = (x:number,y:number,z:number,sx:number,sy:number,sz:number,material:THREE.Material) => {
+      const part = new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),material);
+      part.position.set(x,y,z);
+      part.castShadow = true;
+      gun.add(part);
+      return part;
+    };
+    const addCylinder = (x:number,y:number,z:number,length:number,radius:number,material:THREE.Material) => {
+      const part = new THREE.Mesh(new THREE.CylinderGeometry(radius,radius,length,12),material);
+      part.rotation.x = Math.PI/2;
+      part.position.set(x,y,z);
+      part.castShadow = true;
+      gun.add(part);
+      return part;
+    };
+
+    const compact = code === 'R9' || code === 'NOVA';
+    const shotgun = code === 'THUNDER';
+    const sniper = code === 'LONGSHOT';
+    const dmr = code === 'HELIX';
+    const lmg = code === 'BASTION';
+    const energy = code === 'ARC' || code === 'PULSE';
+    const smg = code === 'VIPER';
+    const burst = code === 'PULSE';
+    const bodyLength = compact ? 0.49 : shotgun ? 0.68 : sniper ? 0.82 : lmg ? 0.78 : 0.66;
+    const barrelLength = compact ? 0.34 : shotgun ? 0.62 : sniper ? 1.15 : dmr ? 0.86 : lmg ? 0.72 : smg ? 0.48 : 0.67;
+    const bodyWidth = shotgun ? 0.3 : lmg ? 0.34 : compact ? 0.19 : 0.24;
+
+    addBox(0.24,-0.23,-0.36,bodyWidth,0.19,bodyLength,metal);
+    addBox(0.24,-0.105,-0.38,bodyWidth*0.68,0.055,bodyLength*0.8,glowPart);
+    addBox(0.24,-0.33,-0.2,bodyWidth*0.5,0.25,0.18,dark);
+
+    if (compact) {
+      addBox(0.24,-0.42,-0.13,0.13,0.22,0.16,metal);
+      addBox(0.24,-0.51,-0.12,0.1,0.04,0.13,glowPart);
+    } else if (shotgun) {
+      addBox(0.24,-0.42,-0.25,0.23,0.28,0.19,metal);
+      addBox(0.24,-0.21,0.04,0.3,0.15,0.22,dark);
+      addBox(0.24,-0.14,0.08,0.22,0.045,0.14,glowPart);
+    } else if (lmg) {
+      addBox(0.24,-0.47,-0.34,0.32,0.34,0.3,metal);
+      addBox(0.24,-0.48,-0.34,0.22,0.07,0.24,glowPart);
+      addBox(0.24,-0.2,0.08,0.28,0.14,0.26,dark);
+    } else {
+      addBox(0.24,-0.42,-0.28,0.15,0.29,0.16,dark);
+      addBox(0.24,-0.16,0.09,0.2,0.11,0.3,dark);
+    }
+
+    if (sniper || dmr) {
+      addBox(0.24,-0.005,-0.32,0.12,0.13,0.44,metal);
+      const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.075,0.42,16),dark);
+      scope.rotation.x = Math.PI/2;
+      scope.position.set(0.24,0.13,-0.43);
+      gun.add(scope);
+      const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.061,0.061,0.012,16),glowPart);
+      lens.rotation.x = Math.PI/2;
+      lens.position.set(0.24,0.13,-0.65);
+      gun.add(lens);
+    } else if (energy) {
+      const coil = new THREE.Mesh(new THREE.TorusGeometry(0.12,0.026,8,28),glowPart);
+      coil.position.set(0.24,-0.22,-0.56);
+      gun.add(coil);
+      const coil2 = coil.clone();
+      coil2.position.z = -0.22;
+      gun.add(coil2);
+    } else if (burst) {
+      addBox(0.36,-0.2,-0.5,0.055,0.08,0.48,glowPart);
+    }
+
+    if (shotgun) {
+      addCylinder(0.17,-0.19,-0.55,barrelLength,0.045,metal);
+      addCylinder(0.31,-0.19,-0.55,barrelLength,0.045,metal);
+      muzzleFlash.position.set(0.24,-0.19,-0.55-barrelLength/2);
+    } else {
+      addCylinder(0.24,-0.19,-0.55,barrelLength,0.052,metal);
+      const muzzleRing = new THREE.Mesh(new THREE.TorusGeometry(0.065,0.012,6,18),glowPart);
+      muzzleRing.position.set(0.24,-0.19,-0.55-barrelLength);
+      gun.add(muzzleRing);
+      muzzleFlash.position.set(0.24,-0.19,-0.58-barrelLength);
+    }
+    if (sniper) {
+      addBox(0.24,-0.21,0.22,0.16,0.14,0.45,metal);
+      addBox(0.24,-0.29,0.4,0.19,0.09,0.2,dark);
+    }
+    if (smg) {
+      addBox(0.24,-0.35,-0.25,0.17,0.28,0.17,metal);
+      addBox(0.24,-0.47,-0.25,0.11,0.05,0.13,glowPart);
+    }
+    if (lmg) {
+      const belt = new THREE.Mesh(new THREE.TorusGeometry(0.105,0.025,6,20,Math.PI*1.6),glowPart);
+      belt.position.set(0.42,-0.34,-0.35);
+      belt.rotation.z = Math.PI/2;
+      gun.add(belt);
+    }
+    if (energy) {
+      const chamber = new THREE.Mesh(new THREE.SphereGeometry(0.105,12,10),glowPart);
+      chamber.position.set(0.24,-0.2,-0.25);
+      gun.add(chamber);
+    }
+  }
+  rebuildGun('R16');
 
   const enemyMat = new THREE.MeshStandardMaterial({ color: 0x8a3149, metalness: 0.5, roughness: 0.35 });
   const allyMat = new THREE.MeshStandardMaterial({ color: 0x267aa5, metalness: 0.5, roughness: 0.35 });
@@ -227,13 +352,7 @@ export async function createGame(
     ammo = nextAmmo === undefined ? currentWeapon.magazine : Math.max(0,Math.min(currentWeapon.magazine,nextAmmo));
     reserve = nextReserve === undefined ? currentWeapon.reserve : Math.max(0,nextReserve);
     reloadAt = 0;
-    const color = new THREE.Color(map.light);
-    gunLight.material = new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:2.2});
-    gunBody.scale.set(
-      code==='LONGSHOT'?1.25:code==='THUNDER'?1.4:1,
-      code==='BASTION'?1.25:1,
-      code==='LONGSHOT'?1.45:code==='VIPER'?0.82:1
-    );
+    rebuildGun(code);
     updateHud(hp,ammo,reserve,currentWeapon.name);
   }
 
