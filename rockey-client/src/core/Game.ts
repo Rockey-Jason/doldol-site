@@ -8,6 +8,7 @@ export interface RemotePlayer {
 export interface GameInstance {
   activate(mode: string, team?: number, spawn?: { x: number; y: number; z: number; yaw: number }): void;
   setRemotePlayers(players: RemotePlayer[]): void;
+  reconcileLocalPlayer(player: RemotePlayer): void;
   setScore(a: number, b: number, round: number): void;
   setHealth(value: number): void;
   setAmmo(ammo: number, reserve: number): void;
@@ -139,6 +140,7 @@ export async function createGame(
   let reserve = 90;
   let seq = 0;
   let lastInput = 0;
+  let jumpPending = false;
   let lastShot = 0;
   let reloadAt = 0;
   let raf = 0;
@@ -312,7 +314,11 @@ export async function createGame(
       if (direction.lengthSq() > 1) direction.normalize();
       const speed = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 7.1 : 5.4;
       if (controller.computedGrounded() && vertical < 0) vertical = -1;
-      if (touch.jump && controller.computedGrounded()) { vertical = 7.2; touch.jump = false; }
+      if (touch.jump && controller.computedGrounded()) {
+        vertical = 7.2;
+        touch.jump = false;
+        jumpPending = true;
+      }
       vertical -= 18 * dt;
 
       controller.computeColliderMovement(collider, {
@@ -355,8 +361,10 @@ export async function createGame(
           forward: THREE.MathUtils.clamp(forward, -1, 1),
           right: THREE.MathUtils.clamp(right, -1, 1),
           sprint: keys.has('ShiftLeft') || keys.has('ShiftRight'),
+          jump: jumpPending,
           yaw, pitch
         });
+        jumpPending = false;
         lastInput = now;
       }
     }
@@ -378,6 +386,26 @@ export async function createGame(
       updateHud(hp, ammo, reserve, 'R-16');
     },
     setRemotePlayers,
+    reconcileLocalPlayer(serverPlayer: RemotePlayer) {
+      if (mode === 'practice' || !active) return;
+      const current = body.translation();
+      const error = Math.hypot(
+        serverPlayer.x - current.x,
+        serverPlayer.y - current.y,
+        serverPlayer.z - current.z
+      );
+      if (error > 2.2) {
+        body.setTranslation({ x: serverPlayer.x, y: serverPlayer.y, z: serverPlayer.z }, true);
+        vertical = 0;
+      } else if (error > 0.08) {
+        const blend = 0.22;
+        body.setTranslation({
+          x: THREE.MathUtils.lerp(current.x, serverPlayer.x, blend),
+          y: THREE.MathUtils.lerp(current.y, serverPlayer.y, blend),
+          z: THREE.MathUtils.lerp(current.z, serverPlayer.z, blend)
+        }, true);
+      }
+    },
     setScore(a: number, b: number, round: number) {
       const score = document.getElementById('scoreLabel');
       const label = document.getElementById('roundLabel');
