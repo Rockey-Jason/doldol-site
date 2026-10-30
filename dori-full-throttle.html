@@ -129,6 +129,8 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 24px rgba(255,215,110,
 .cinematic-next:hover{transform:translateY(-1px);filter:brightness(1.05)}
 @media(max-width:640px){.cinematic-stage-art{top:7%;height:45%}.cinematic-copy{max-height:70%}}
 
+.cinematic-portrait.has-boss-art{overflow:hidden;padding:0;background:rgba(4,9,24,.72)}
+.cinematic-boss-art{display:block;width:100%;height:100%;background-repeat:no-repeat;background-size:300% 200%}
 </style>
 </head>
 <body>
@@ -228,6 +230,24 @@ const canvas=document.getElementById("gameCanvas");
 const ctx=canvas.getContext("2d",{alpha:false});
 const frame=document.getElementById("gameFrame");
 const $=id=>document.getElementById(id);
+const BOSS_SPRITE_CELL=240;
+const BOSS_SPRITE_SHEET=new Image();
+BOSS_SPRITE_SHEET.src="./assets/dori-boss-sprites.webp";
+const BOSS_SPRITES={
+ "껌껌이":{sx:0,sy:0,col:0,row:0},
+ "복돌이":{sx:240,sy:0,col:1,row:0},
+ "모래":{sx:480,sy:0,col:2,row:0},
+ "솜솜이":{sx:0,sy:240,col:0,row:1},
+ "식빵이":{sx:240,sy:240,col:1,row:1},
+ "윈터":{sx:480,sy:240,col:2,row:1}
+};
+function renderCinematicPortrait(line){
+ const el=$("cinematicPortrait"),sprite=BOSS_SPRITES[line.speaker];
+ if(!sprite){el.classList.remove("has-boss-art");el.textContent=line.portrait;return}
+ const art=document.createElement("span");art.className="cinematic-boss-art";art.setAttribute("role","img");art.setAttribute("aria-label",line.speaker);
+ art.style.backgroundImage='url("./assets/dori-boss-sprites.webp")';art.style.backgroundSize="300% 200%";art.style.backgroundPosition=(sprite.col*50)+"% "+(sprite.row*100)+"%";
+ el.classList.add("has-boss-art");el.replaceChildren(art);
+}
 const SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
 const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
 const supabaseClient=window.doriSupabase||(window.supabase&&typeof window.supabase.createClient==="function"?window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY):null);
@@ -640,7 +660,7 @@ function showCinematicLine(){
  $("cinematicBadge").textContent=cinematicState.kind==="intro"?"STORY SEQUENCE":cinematicState.kind==="bossIntro"?"BOSS ENCOUNTER":cinematicState.kind==="bossOutro"?"VICTORY CHRONICLE":"MISSION CHRONICLE";
  $("cinematicSigil").textContent=cinematicState.kind.startsWith("boss")?(CINEMATIC_BOSSES[boss()?.name||st.bossName]?.portrait||THEME_PRESENTATION[st.theme]?.icon||"✦"):(THEME_PRESENTATION[st.theme]?.icon||"✦");
  $("cinematicEyebrow").textContent=String(cinematicState.index+1).padStart(2,"0")+" / "+String(cinematicState.lines.length).padStart(2,"0")+" · "+(cinematicState.kind==="intro"?"THE ROAD TO THE CROWN":cinematicState.kind==="bossIntro"?"THE OPPONENT SPEAKS":cinematicState.kind==="bossOutro"?"AFTERMATH":"FRONTIER REPORT");
- $("cinematicPortrait").textContent=line.portrait;$("cinematicSpeaker").textContent=line.speaker;$("cinematicRole").textContent=line.role;
+ renderCinematicPortrait(line);$("cinematicSpeaker").textContent=line.speaker;$("cinematicRole").textContent=line.role;
  const textEl=$("cinematicText");if(cinematicTypingTimer){clearInterval(cinematicTypingTimer);cinematicTypingTimer=null}
  cinematicFullText=line.text;cinematicChars=Array.from(cinematicFullText);let charAt=0;textEl.textContent="";textEl.classList.add("typing");
  $("cinematicNext").querySelector("span").textContent="대사 전체 표시";cinematicTypingTimer=setInterval(()=>{charAt=Math.min(cinematicChars.length,charAt+Math.max(1,Math.ceil(cinematicChars.length/115)));textEl.textContent=cinematicChars.slice(0,charAt).join("");if(charAt>=cinematicChars.length){clearInterval(cinematicTypingTimer);cinematicTypingTimer=null;textEl.classList.remove("typing");$("cinematicNext").querySelector("span").textContent=cinematicState.index===cinematicState.lines.length-1?(cinematicState.kind==="intro"||cinematicState.kind==="bossIntro"?"전투 시작":"결과 확인"):"다음 대사"}},14);
@@ -1008,6 +1028,9 @@ function drawEnemy(e){
  const enemyGlowColors={food:["#ffd28b","#ff8fba"],winter:["#7ddcff","#c9fbff"],desert:["#ffbd66","#ffe0a0"],west:["#e7a66c","#ffd18a"],ocean:["#64eadf","#a0fff7"],hell:["#ff755a","#da9cff"]};const regionalGlow=enemyGlowColors[enemyTheme]||enemyGlowColors.food;const glowColor=boss?(e.name==="윈터"?"#9deeff":e.name==="모래"?"#d7a8ff":e.name==="복돌이"?"#ffbd70":e.name==="껌껌이"?"#5bdde8":e.name==="솜솜이"?"#f5a8ff":"#ffb6c7"):regionalGlow[e.type==="shooter"?1:0];
  if((e.hitT||0)>0){ctx.save();ctx.globalCompositeOperation="lighter";ctx.globalAlpha=hitKick*.65;ctx.strokeStyle=glowColor;ctx.shadowColor=glowColor;ctx.shadowBlur=boss?12:6;ctx.lineWidth=boss?3.5:2;ctx.beginPath();ctx.ellipse(0,0,(boss?57:29)+hitKick*10,(boss?65:31)+hitKick*7,0,0,Math.PI*2);ctx.stroke();ctx.restore()}
  ctx.fillStyle="rgba(0,0,0,.24)";ctx.beginPath();ctx.ellipse(0,31*scale,27*scale,7*scale,0,0,Math.PI*2);ctx.fill();
+ const spriteInfo=boss&&BOSS_SPRITES[e.name],useBossSprite=!!(spriteInfo&&BOSS_SPRITE_SHEET.complete&&BOSS_SPRITE_SHEET.naturalWidth>0);
+ if(useBossSprite){ctx.drawImage(BOSS_SPRITE_SHEET,spriteInfo.sx,spriteInfo.sy,BOSS_SPRITE_CELL,BOSS_SPRITE_CELL,-48,-48,96,96)}
+ else{
  ctx.fillStyle=bodyColor;ctx.beginPath();ctx.roundRect(-22*scale,-20*scale,44*scale,42*scale,9*scale);ctx.fill();ctx.strokeStyle=glowColor;ctx.lineWidth=2;ctx.stroke();
  ctx.fillStyle="#0b1329";ctx.fillRect(-14*scale,-12*scale,28*scale,15*scale);
  ctx.fillStyle=glowColor;ctx.shadowColor=glowColor;ctx.shadowBlur=10;ctx.fillRect(-10*scale,-7*scale,6*scale,5*scale);ctx.fillRect(4*scale,-7*scale,6*scale,5*scale);ctx.shadowBlur=0;
@@ -1051,6 +1074,7 @@ function drawEnemy(e){
    ctx.strokeStyle=glowColor;ctx.lineWidth=1.2*scale;for(let k=0;k<3;k++){ctx.beginPath();ctx.moveTo(-12*scale,4*scale);ctx.lineTo(-30*scale,(k-1)*6*scale+3*scale);ctx.moveTo(12*scale,4*scale);ctx.lineTo(30*scale,(k-1)*6*scale+3*scale);ctx.stroke()}
    ctx.fillStyle="#ff8da8";ctx.beginPath();ctx.moveTo(-2*scale,1*scale);ctx.lineTo(2*scale,1*scale);ctx.lineTo(0,4*scale);ctx.fill();
   }
+ }
  }
  ctx.restore();
  if(!boss){
