@@ -17,7 +17,6 @@ export interface GameInstance {
   setHealth(value: number): void;
   setAmmo(ammo: number, reserve: number): void;
   setWeapon(weaponCode: string, ammo?: number, reserve?: number): void;
-  beginReload(): void;
   applyRecoil(pitch: number, yaw: number): void;
   playReplay(frames: ReplayFrame[]): void;
   playKillcam(frames: ReplayFrame[], killerId: string, onComplete: () => void): void;
