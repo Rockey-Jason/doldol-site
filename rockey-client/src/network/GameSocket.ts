@@ -44,13 +44,19 @@ export class GameSocket {
         }
       });
       socket.addEventListener('close', () => {
-        this.connected = false;
+        const isCurrent = this.socket === socket;
+        if (isCurrent) {
+          this.connected = false;
+          this.socket = null;
+        }
         if (!settled) {
           settled = true;
           clearTimeout(timeout);
           reject(new Error('GAME_SERVER_CLOSED'));
         }
-        for (const listener of this.listeners) listener({ type: 'network.closed' });
+        if (isCurrent) {
+          for (const listener of this.listeners) listener({ type: 'network.closed' });
+        }
       });
       socket.addEventListener('error', () => {
         if (!settled) {
