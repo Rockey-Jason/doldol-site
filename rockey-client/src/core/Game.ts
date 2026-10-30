@@ -17,6 +17,7 @@ export interface GameInstance {
   setHealth(value: number): void;
   setAmmo(ammo: number, reserve: number): void;
   setWeapon(weaponCode: string, ammo?: number, reserve?: number): void;
+  applyRecoil(pitch: number, yaw: number): void;
   playReplay(frames: ReplayFrame[]): void;
   setQuality(level: 'low'|'balanced'|'high'): void;
   setSensitivity(value: number): void;
@@ -398,6 +399,10 @@ export async function createGame(
     } else {
       send({ type: 'fire', weaponCode: currentWeaponCode, sequence: ++seq });
     }
+    if (mode === 'practice') {
+      pitch = THREE.MathUtils.clamp(pitch + Math.min(0.045,0.012+currentWeapon.damage/2500+currentWeapon.spread*0.25),-1.3,1.3);
+      yaw += (Math.random()-0.5)*0.003;
+    }
 
     muzzleFlash.visible = true;
     gun.position.z = 0.045;
@@ -774,6 +779,10 @@ export async function createGame(
     },
     setWeapon(code: string, nextAmmo?: number, nextReserve?: number) {
       setWeaponLocal(code,nextAmmo,nextReserve);
+    },
+    applyRecoil(nextPitch: number, nextYaw: number) {
+      pitch = THREE.MathUtils.clamp(nextPitch,-1.3,1.3);
+      yaw = nextYaw;
     },
     playReplay(frames: ReplayFrame[]) {
       if (!Array.isArray(frames) || frames.length===0) return notify('저장된 리플레이 프레임이 없습니다.');
