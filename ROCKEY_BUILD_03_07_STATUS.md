@@ -21,6 +21,7 @@ It is not a claim that all five builds are production-complete. The changes must
 - The baseline already contains ten weapon definitions and server-side weapon fire-rate/ammo/damage validation.
 - Add server-authoritative per-weapon recoil and synchronize the resulting aim to the shooter.
 - Add local recoil in the training range.
+- Add a short killer-follow killcam clip from server-captured match frames.
 - Add hit/headshot marker feedback.
 - Smooth remote-player position and rotation updates between server snapshots.
 
@@ -41,7 +42,7 @@ These baseline features were audited; this branch does not claim they were newly
 
 ## Still required before calling BUILD 03–07 complete
 
-- BUILD 04: killcam, full weapon-specific reload/inspect animations, production sound assets/mix controls, richer hit/death effects, and balance testing for all ten weapons.
+- BUILD 04: full weapon-specific reload/inspect animations, production sound assets/mix controls, richer hit/death effects, and balance testing for all ten weapons.
 - BUILD 05: verify all five maps for spawn fairness, collision/navigation, and objective/FFA balance; verify ranked rating changes and season reward claims against the live database.
 - BUILD 06: multi-device tests for friend presence, invites, disconnect/reconnect, spectator transitions, replay retrieval, and replay integrity.
 - BUILD 07: browser/device performance profiling, low-memory Android testing, accessibility review, visual QA, and end-to-end regression tests.
