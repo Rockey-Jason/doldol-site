@@ -306,7 +306,6 @@ socket.onMessage((message:GameMessage)=>{
       toast(String(message.name||'플레이어')+' 참가');
       break;
     case 'friend.invite':
-      hub.onMessage(message);
       hub.open('friends');
       break;
     case 'player.disconnected':
