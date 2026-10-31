@@ -1788,6 +1788,7 @@ export async function createGame(
       world.free();
       stopMobileFire();
       renderer.dispose();
+      reflectionEnvironment?.dispose();
       if(audioContext){void audioContext.close();audioContext=null;noiseBuffer=null;}
       for(const shot of projectiles){shot.trail.geometry.dispose();(shot.trail.material as THREE.Material).dispose();}
       for(const popup of damagePopups){const material=popup.material as THREE.SpriteMaterial;material.map?.dispose();material.dispose();}
