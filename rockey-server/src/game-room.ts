@@ -117,14 +117,14 @@ export class GameRoom {
       if(currentY>4.05&&absX<.72&&localZ>=-.35&&localZ<=2.85){
         return 4.38+((2.75-localZ)/3.01)*1.33;
       }
-      if(currentY>5.85&&absX<4.0&&absZ<4.45)return 5.85;
+      if(currentY>5.85&&absX<4.0&&absZ<4.45)return 5.99;
       // Second-floor stairs and upper gallery.
       if(currentY>.78&&currentY<5.2&&localX>=2.45&&localX<=3.65&&localZ>=-2.55&&localZ<=2.4){
         return Math.max(0,Math.min(3.9,((2.35-localZ)/4.85)*3.9));
       }
-      if(currentY>3.95&&absX<4.42&&localZ>=-1.95&&localZ<=4.85)return 4.05;
+      if(currentY>3.95&&absX<4.42&&localZ>=-2.65&&localZ<=4.85)return 4.19;
       // Basement stairwell is a descending run through the ground-floor opening.
-      if(currentY>-.4&&currentY<1.8&&absX<.78&&localZ>=-2.3&&localZ<=2.3){
+      if(currentY>-2.3&&currentY<1.8&&absX<.78&&localZ>=-2.3&&localZ<=2.3){
         return -((2.25-localZ)/4.5)*2.45;
       }
       // The basement floor occupies the footprint below the first-floor slab.
