@@ -10,7 +10,7 @@ function addSegment(parent:THREE.Object3D,start:THREE.Vector3,end:THREE.Vector3,
 
 export interface FirstPersonHands {
   group:THREE.Group;
-  update:(progress:number,active:boolean,walk:number,fire:number,aim:number)=>void;
+  update:(progress:number,active:boolean,walk:number,fire:number,aim:number,weaponCode?:string)=>void;
 }
 
 /** Paired first-person arms with articulated glove fingers and a reload reach/seat animation. */
@@ -66,9 +66,24 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
   parent.add(group);
 
   const smooth=(value:number,a:number,b:number)=>THREE.MathUtils.smoothstep(value,a,b);
-  const update=(progress:number,active:boolean,walk:number,fire:number,aim:number)=>{
+  const weaponGrip:Record<string,{left:THREE.Vector3;right:THREE.Vector3;leftRot:THREE.Vector3;rightRot:THREE.Vector3}>={
+    R16:{left:new THREE.Vector3(0,0,0),right:new THREE.Vector3(0,0,0),leftRot:new THREE.Vector3(0,0,0),rightRot:new THREE.Vector3(0,0,0)},
+    VIPER:{left:new THREE.Vector3(-.035,.025,.025),right:new THREE.Vector3(.015,0,.015),leftRot:new THREE.Vector3(-.04,0,.03),rightRot:new THREE.Vector3(0,0,.02)},
+    R9:{left:new THREE.Vector3(-.09,.055,.08),right:new THREE.Vector3(.045,.015,.045),leftRot:new THREE.Vector3(-.12,.04,.12),rightRot:new THREE.Vector3(.04,0,-.08)},
+    THUNDER:{left:new THREE.Vector3(.025,-.025,-.07),right:new THREE.Vector3(.015,-.015,-.025),leftRot:new THREE.Vector3(.10,0,-.08),rightRot:new THREE.Vector3(.04,0,.02)},
+    LONGSHOT:{left:new THREE.Vector3(.055,-.035,-.12),right:new THREE.Vector3(-.015,.005,-.025),leftRot:new THREE.Vector3(.14,-.04,-.10),rightRot:new THREE.Vector3(.02,0,.04)},
+    HELIX:{left:new THREE.Vector3(.015,.015,-.035),right:new THREE.Vector3(.005,0,.015),leftRot:new THREE.Vector3(.04,0,-.025),rightRot:new THREE.Vector3(0,0,.01)},
+    BASTION:{left:new THREE.Vector3(.035,-.015,-.06),right:new THREE.Vector3(.005,0,-.015),leftRot:new THREE.Vector3(.08,0,-.04),rightRot:new THREE.Vector3(.02,0,.02)},
+    NOVA:{left:new THREE.Vector3(-.025,.035,.035),right:new THREE.Vector3(.03,.01,.035),leftRot:new THREE.Vector3(-.08,.02,.05),rightRot:new THREE.Vector3(.03,0,-.04)},
+    ARC:{left:new THREE.Vector3(.015,.015,-.025),right:new THREE.Vector3(.01,0,.015),leftRot:new THREE.Vector3(.03,0,-.02),rightRot:new THREE.Vector3(0,0,0)},
+    PULSE:{left:new THREE.Vector3(.01,.01,-.02),right:new THREE.Vector3(.01,0,.01),leftRot:new THREE.Vector3(.02,0,-.02),rightRot:new THREE.Vector3(0,0,0)}
+  };
+  const update=(progress:number,active:boolean,walk:number,fire:number,aim:number,weaponCode='R16')=>{
     group.visible=true;
     const p=active?THREE.MathUtils.clamp(progress,0,1):0;
+    const pose=weaponGrip[weaponCode]||weaponGrip.R16;
+    const gripLeft=leftHome.clone().add(pose.left);
+    const gripRight=rightHome.clone().add(pose.right);
     const lift=smooth(p,.10,.25);
     const reach=smooth(p,.25,.46);
     const seat=smooth(p,.52,.72);
@@ -79,14 +94,14 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     // then guides the replacement upward before returning to the foregrip.
     const magazineGrip=new THREE.Vector3(.235,-.535,-.405);
     const magazineSeat=new THREE.Vector3(.225,-.405,-.39);
-    const reachPosition=leftHome.clone().lerp(magazineGrip,lift);
+    const reachPosition=gripLeft.clone().lerp(magazineGrip,lift);
     const holdBlend=THREE.MathUtils.smoothstep(p,.30,.43)*(1-THREE.MathUtils.smoothstep(p,.67,.78));
     const seatBlend=THREE.MathUtils.smoothstep(p,.69,.82);
     const heldPosition=reachPosition.clone().lerp(magazineGrip,holdBlend);
     const guidedPosition=heldPosition.lerp(magazineSeat,seatBlend);
-    left.position.copy(guidedPosition.lerp(leftHome,returnGrip));
+    left.position.copy(guidedPosition.lerp(gripLeft,returnGrip));
     left.position.y+=Math.sin(performance.now()*.009)*walk*.006;
-    left.rotation.set(-.08+reach*.42-seat*.2,reach*.24,-.02-reach*.38+seat*.16-returnGrip*.05);
+    left.rotation.set(pose.leftRot.x-.08+reach*.42-seat*.2,pose.leftRot.y+reach*.24,pose.leftRot.z-.02-reach*.38+seat*.16-returnGrip*.05);
     const curl=THREE.MathUtils.clamp(holdBlend*.98+lift*.18-seatBlend*.12,0,1);
     const leftFingers=left.userData.fingers as THREE.Group[];
     leftFingers.forEach((finger,i)=>{finger.rotation.x=-.12-curl*(i===0?.82:1.08);finger.rotation.z=(i-1.5)*.035;});
@@ -97,9 +112,9 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     // weapon-specific bolt/pump animation in Game.ts.
     const boltReach=smooth(p,.80,.88)*(1-smooth(p,.91,.985));
     const boltPosition=new THREE.Vector3(.24,-.105,-.43);
-    right.position.copy(rightHome).lerp(boltPosition,boltReach);
+    right.position.copy(gripRight).lerp(boltPosition,boltReach);
     right.position.y+=Math.sin(performance.now()*.009+1)*walk*.004-fire*.018;
-    right.rotation.set(-.06+fire*.08-aim*.015+boltReach*.42,boltReach*.12,.03+Math.sin(performance.now()*.006)*walk*.008-boltReach*.28);
+    right.rotation.set(pose.rightRot.x-.06+fire*.08-aim*.015+boltReach*.42,pose.rightRot.y+boltReach*.12,pose.rightRot.z+.03+Math.sin(performance.now()*.006)*walk*.008-boltReach*.28);
     rightFingers.forEach((finger,i)=>{finger.rotation.x=-.18-boltReach*(i===0?.72:1.02);});
   };
   return {group,update};
