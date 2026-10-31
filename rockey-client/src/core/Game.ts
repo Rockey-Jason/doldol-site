@@ -629,7 +629,7 @@ export async function createGame(
   function selectItem(code:string){
     if(!(code in ITEMS))return;
     const selected=code as RockeyItemCode;
-    if(currentItemCount()<=0 && itemInventory[selected]<=0){notify('해당 아이템이 모두 소진되었습니다.');return;}
+    if((itemInventory[selected]||0)<=0){notify('해당 아이템이 모두 소진되었습니다.');return;}
     if(mode!=='practice'){send({type:'item.select',itemCode:selected});return;}
     currentItemCode=selected;updateItemHud();emitItemState();notify(ITEMS[selected].name+' 선택 · USE 버튼으로 사용');
   }
