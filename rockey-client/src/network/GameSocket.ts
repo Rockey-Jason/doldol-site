@@ -103,6 +103,7 @@ export class GameSocket {
       socket.addEventListener('message', event => {
         if (this.socket !== socket) return;
         const deliver=()=>{
+        if(this.socket!==socket)return;
         let message: GameMessage;
         try {
           const parsed: unknown = JSON.parse(String(event.data));
