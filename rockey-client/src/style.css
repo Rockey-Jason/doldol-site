@@ -274,3 +274,12 @@ button{-webkit-tap-highlight-color:transparent;user-select:none}
 .item-select-foot{margin-top:15px;color:#718ba9;font-size:10px;line-height:1.5}
 @media(pointer:coarse){.item-box{display:none}.item-touch-btn{border-color:rgba(228,200,117,.48);background:rgba(78,59,20,.84);color:#ffe8ae}.item-use-touch-btn{border-color:rgba(94,213,255,.55);background:rgba(12,81,117,.88);color:#e2f8ff}}
 @media(max-width:560px){.item-select-panel{padding:10px}.item-select-card{padding:18px 14px;border-radius:16px}.item-option-list{grid-template-columns:1fr}.item-option{padding:11px 12px}}
+
+/* PC keyboard-first tactical item controls */
+.item-box{min-width:186px}
+.item-key-hint{margin-top:5px;color:#8ea6c1;font-size:9px;letter-spacing:.6px}
+.item-box-actions kbd{display:inline-grid;place-items:center;min-width:16px;height:16px;margin-left:3px;padding:0 4px;border:1px solid rgba(255,235,180,.32);border-radius:4px;background:rgba(0,0,0,.25);color:#fff0c4;font-size:9px;line-height:1}
+.item-option{position:relative;padding-left:42px}
+.item-option-key{position:absolute;left:12px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:22px;height:22px;border:1px solid rgba(228,200,117,.35);border-radius:6px;background:rgba(80,61,22,.38);color:#f5d98e;font-size:11px;font-weight:700}
+.item-option:focus-visible{outline:2px solid #64d9ff;outline-offset:2px;border-color:#64d9ff;box-shadow:0 0 0 4px rgba(76,194,255,.15)}
+@media(pointer:coarse){.item-box{min-width:0}}
