@@ -701,6 +701,8 @@ export async function createGame(
   let perfWindowStart=previous;
   let perfFrames=0;
   let smoothedFrameMs=16.7;
+  const sessionStartedAt=performance.now();
+  let lastStabilityReportAt=sessionStartedAt;
   const frameTimeSamples:number[]=[];
   const heapSamples:Array<{t:number;mb:number}>=[];
   let lastSnapshotServerTime=0;
@@ -1488,7 +1490,7 @@ export async function createGame(
         bloomPass.strength=Math.min(isMobile ? .10 : .38,bloomPass.strength+.015);
         if(!isMobile)renderer.shadowMap.enabled=true;
       }
-      performanceBadge.textContent='FPS '+measuredFps+' · 1% LOW '+onePercentLow+' · '+measuredFrame+'ms · DPR '+adaptivePixelRatio.toFixed(2)+(memoryMb===null?'':' · HEAP '+memoryMb+'MB');
+      performanceBadge.textContent='FPS '+measuredFps+' · 1% LOW '+onePercentLow+' · '+measuredFrame+'ms · DPR '+adaptivePixelRatio.toFixed(2)+(memoryMb===null?'':' · HEAP '+memoryMb+'MB')+' · GEO '+renderer.info.memory.geometries+' · NET '+Math.round(snapshotJitterMs)+'ms';
       performanceBadge.style.color=stressed?'#ffb4a8':'#d9edff';
       window.dispatchEvent(new CustomEvent('rockey:performance',{detail:{
         fps:measuredFps,onePercentLow,frameMs:measuredFrame,pixelRatio:Math.round(adaptivePixelRatio*100)/100,
@@ -1499,6 +1501,17 @@ export async function createGame(
         activeDebris:physicalDebris.length,activeSmoke:smokeClouds.length,activeParticles:fxParticles.length,
         bloomStrength:Math.round(bloomPass.strength*100)/100
       }}));
+      if(now-lastStabilityReportAt>=60000){
+        window.dispatchEvent(new CustomEvent('rockey:stability',{detail:{
+          sessionSeconds:Math.round((now-sessionStartedAt)/1000),device:isMobile?'mobile':'desktop',
+          heapMb:memoryMb,heapDeltaMb,geometries:renderer.info.memory.geometries,
+          textures:renderer.info.memory.textures,drawCalls:renderer.info.render.calls,
+          triangles:renderer.info.render.triangles,activeDebris:physicalDebris.length,
+          activeSmoke:smokeClouds.length,activeParticles:fxParticles.length,
+          snapshotJitterMs:Math.round(snapshotJitterMs*10)/10,estimatedSnapshotLoss
+        }}));
+        lastStabilityReportAt=now;
+      }
       perfWindowStart=now;perfFrames=0;
     }
     aimBlend=THREE.MathUtils.damp(aimBlend,precisionAiming?1:0,13,dt);
