@@ -140,6 +140,7 @@ export async function createGame(
   scene.add(camera);
 
   function rebuildGun(code: string) {
+    gun.scale.set(1, 1, 1);
     for (const child of [...gun.children]) {
       if (child === muzzleFlash) continue;
       gun.remove(child);
@@ -189,25 +190,63 @@ export async function createGame(
     };
 
     if (code === 'DORI') {
-      const fur = new THREE.MeshStandardMaterial({color:0xc98a4c,roughness:.92});
-      const cream = new THREE.MeshStandardMaterial({color:0xfff0d8,roughness:.96});
-      const black = new THREE.MeshStandardMaterial({color:0x17191d,roughness:.45});
-      const nose = new THREE.MeshStandardMaterial({color:0x35221d,roughness:.55});
+      // A smaller, softer Pembroke Welsh Corgi plush inspired by the real Dori doll.
+      const fur = new THREE.MeshStandardMaterial({color:0xc98b50,roughness:1,metalness:0});
+      const cream = new THREE.MeshStandardMaterial({color:0xfff4e4,roughness:1,metalness:0});
+      const pawWhite = new THREE.MeshStandardMaterial({color:0xfff8ed,roughness:1,metalness:0});
+      const eye = new THREE.MeshStandardMaterial({color:0x171411,roughness:.34,metalness:0});
+      const nose = new THREE.MeshStandardMaterial({color:0x38251f,roughness:.55,metalness:0});
+      const shine = new THREE.MeshBasicMaterial({color:0xffffff});
       const plushSphere=(x:number,y:number,z:number,sx:number,sy:number,sz:number,material:THREE.Material)=>{
-        const part=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),material);
-        part.position.set(x,y,z);part.scale.set(sx,sy,sz);part.castShadow=true;gun.add(part);return part;
+        const part=new THREE.Mesh(new THREE.SphereGeometry(1,24,18),material);
+        part.position.set(x,y,z);
+        part.scale.set(sx,sy,sz);
+        part.castShadow=true;
+        part.receiveShadow=true;
+        gun.add(part);
+        return part;
       };
-      plushSphere(.24,-.28,-.48,.23,.25,.34,fur);
-      plushSphere(.24,-.08,-.77,.22,.22,.22,fur);
-      plushSphere(.24,-.13,-.96,.15,.105,.1,cream);
-      plushSphere(.24,-.32,-.76,.16,.17,.055,cream);
-      plushSphere(.11,.105,-.75,.075,.17,.075,fur).rotation.z=-.24;
-      plushSphere(.37,.105,-.75,.075,.17,.075,fur).rotation.z=.24;
-      plushSphere(.16,-.02,-.91,.026,.03,.02,black);
-      plushSphere(.32,-.02,-.91,.026,.03,.02,black);
-      plushSphere(.24,-.13,-1.055,.035,.027,.025,nose);
-      for(const x of [.1,.38])plushSphere(x,-.49,-.38,.085,.13,.11,fur);
-      plushSphere(.24,-.25,-.19,.07,.08,.1,fur);
+
+      // Short, broad body and little legs: the classic low-to-the-ground corgi shape.
+      plushSphere(.24,-.31,-.47,.235,.205,.34,fur);
+      plushSphere(.24,-.39,-.57,.19,.12,.27,cream); // white belly
+      plushSphere(.24,-.265,-.72,.19,.18,.105,cream); // white chest bib
+      plushSphere(.24,-.045,-.79,.235,.225,.225,fur); // oversized rounded head
+
+      // White muzzle, soft cheeks and tiny dark nose.
+      plushSphere(.24,-.145,-.985,.158,.105,.105,cream);
+      plushSphere(.18,-.155,-.963,.082,.075,.07,cream);
+      plushSphere(.30,-.155,-.963,.082,.075,.07,cream);
+      plushSphere(.24,-.112,-1.078,.038,.029,.025,nose);
+
+      // Big upright, slightly outward-pointing corgi ears.
+      const leftEar=plushSphere(.105,.145,-.77,.083,.19,.085,fur);
+      leftEar.rotation.z=-.27;
+      const rightEar=plushSphere(.375,.145,-.77,.083,.19,.085,fur);
+      rightEar.rotation.z=.27;
+      plushSphere(.108,.145,-.842,.043,.105,.018,cream);
+      plushSphere(.372,.145,-.842,.043,.105,.018,cream);
+
+      // Friendly glossy eyes with tiny catchlights.
+      plushSphere(.158,-.045,-.986,.027,.034,.022,eye);
+      plushSphere(.322,-.045,-.986,.027,.034,.022,eye);
+      plushSphere(.149,-.032,-1.006,.008,.009,.006,shine);
+      plushSphere(.313,-.032,-1.006,.008,.009,.006,shine);
+
+      // Four very short legs; the front paws and lower chest are white.
+      plushSphere(.105,-.475,-.58,.073,.105,.105,fur);
+      plushSphere(.375,-.475,-.58,.073,.105,.105,fur);
+      plushSphere(.105,-.535,-.615,.075,.055,.09,pawWhite);
+      plushSphere(.375,-.535,-.615,.075,.055,.09,pawWhite);
+      plushSphere(.12,-.45,-.29,.072,.09,.095,fur);
+      plushSphere(.36,-.45,-.29,.072,.09,.095,fur);
+
+      // Tiny rounded tail, not a long fox-like tail.
+      const tail=plushSphere(.24,-.245,-.105,.055,.065,.105,fur);
+      tail.rotation.x=-.25;
+
+      // Keep the whole plush comfortably small in the first-person view.
+      gun.scale.setScalar(.76);
       muzzleFlash.visible=false;
       metal.dispose();glowPart.dispose();dark.dispose();
       return;
