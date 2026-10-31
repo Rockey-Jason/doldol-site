@@ -27,7 +27,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);
     mesh.position.set(x,y,z);mesh.castShadow=!isMobile;mesh.receiveShadow=!isMobile;parent.add(mesh);
     if(collide){parent.updateWorldMatrix(true,false);const worldPoint=parent.localToWorld(new THREE.Vector3(x,y,z));addCollider(worldPoint.x,worldPoint.y,worldPoint.z,sx/2,sy/2,sz/2);}
-    if(mat===wall||mat===glass)addRaycast?.(mesh);
+    if(collide||mat===wall||mat===glass)addRaycast?.(mesh);
     return mesh;
   };
   const point=(root:THREE.Object3D,x:number,y:number,z:number)=>new THREE.Vector3(root.position.x+x,root.position.y+y,root.position.z+z);
