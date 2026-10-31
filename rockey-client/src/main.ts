@@ -221,6 +221,7 @@ async function enterMatch(message:Record<string,any>){
     message.itemInventory as Record<string,number>|undefined
   );
   game?.applyWorldDestruction((Array.isArray(message.worldDestruction)?message.worldDestruction:[]) as Array<{id:string;x:number;y:number;z:number;radius:number}>);
+  game?.applyWorldDebris((Array.isArray(message.worldDebris)?message.worldDebris:[]) as import('./core/Game').WorldDebrisSnapshot[]);
   if(typeof message.ammo==='number')game?.setAmmo(message.ammo,Number(message.reserve||0));
   $('modeLabel')!.textContent=currentMode.toUpperCase()+' · '+String(message.weaponCode||primaryWeapon);
   showGame();toast('MATCH START · '+String(message.mapName||mapId));
@@ -441,6 +442,10 @@ socket.onMessage((message:GameMessage)=>{
     }
     case 'world.state':
       game?.applyWorldDestruction((Array.isArray(message.destruction)?message.destruction:[]) as Array<{id:string;x:number;y:number;z:number;radius:number}>);
+      if(Array.isArray(message.debris))game?.applyWorldDebris(message.debris as import('./core/Game').WorldDebrisSnapshot[]);
+      break;
+    case 'world.debris':
+      game?.applyWorldDebris((Array.isArray(message.bodies)?message.bodies:[]) as import('./core/Game').WorldDebrisSnapshot[]);
       break;
     case 'round.update':
       game?.setScore(Number(message.team0||0),Number(message.team1||0),Number(message.round||1));
