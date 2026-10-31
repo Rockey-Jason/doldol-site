@@ -481,6 +481,7 @@ export async function createGame(
   let hp = 100;
   let ammo = 30;
   let reserve = 90;
+  const localWeaponAmmo: Record<string,{ammo:number;reserve:number}> = {};
   let seq = 0;
   let lastInput = 0;
   let jumpPending = false;
@@ -505,10 +506,14 @@ export async function createGame(
   function setWeaponLocal(code: string, nextAmmo?: number, nextReserve?: number) {
     if (!WEAPONS[code]) return;
     const previousCode=currentWeaponCode;
+    // Keep each weapon's own magazine and reserve when it is holstered.
+    if (WEAPONS[previousCode]) localWeaponAmmo[previousCode]={ammo,reserve};
     currentWeaponCode = code;
     currentWeapon = WEAPONS[code];
-    ammo = nextAmmo === undefined ? currentWeapon.magazine : Math.max(0,Math.min(currentWeapon.magazine,nextAmmo));
-    reserve = nextReserve === undefined ? currentWeapon.reserve : Math.max(0,nextReserve);
+    const stored=localWeaponAmmo[code];
+    ammo = nextAmmo === undefined ? (stored?.ammo ?? currentWeapon.magazine) : Math.max(0,Math.min(currentWeapon.magazine,nextAmmo));
+    reserve = nextReserve === undefined ? (stored?.reserve ?? currentWeapon.reserve) : Math.max(0,nextReserve);
+    localWeaponAmmo[code]={ammo,reserve};
     reloadAt = 0;
     rebuildGun(code);
     switchAnimationStart=performance.now();
@@ -696,7 +701,7 @@ export async function createGame(
     lastShot = now;
     fireAnimationStart = now;
     const melee=currentWeapon.category==='MELEE';
-    if(!melee)ammo-=1;
+    if(!melee){ammo-=1;localWeaponAmmo[currentWeaponCode]={ammo,reserve};}
     gunKick = Math.min(1.8,gunKick+(weaponMotion[currentWeaponCode]?.kick||.82));
     camera.updateMatrixWorld(true);
     const origin=camera.getWorldPosition(new THREE.Vector3());
@@ -756,6 +761,7 @@ export async function createGame(
         const amount = Math.min(currentWeapon.magazine - ammo, reserve);
         ammo += amount;
         reserve -= amount;
+        localWeaponAmmo[currentWeaponCode]={ammo,reserve};
         reloadAt = 0;
         updateHud(hp, ammo, reserve, currentWeapon.name);
       }, currentWeapon.reloadMs);
@@ -1208,6 +1214,8 @@ export async function createGame(
       setPrecisionAiming(false);
       camera.fov=normalFov;camera.updateProjectionMatrix();
       hp = 100; ammo = currentWeapon.magazine; reserve = currentWeapon.reserve; vertical = 0;
+      for(const code of Object.keys(localWeaponAmmo))delete localWeaponAmmo[code];
+      localWeaponAmmo[currentWeaponCode]={ammo,reserve};
       if (mode === 'practice') {
         for (const target of practiceTargets) {
           target.userData.hp = 100;
@@ -1255,6 +1263,7 @@ export async function createGame(
     setAmmo(nextAmmo: number, nextReserve: number) {
       ammo = Math.max(0, Math.min(currentWeapon.magazine, nextAmmo));
       reserve = Math.max(0, Math.min(240, nextReserve));
+      localWeaponAmmo[currentWeaponCode]={ammo,reserve};
       reloadAt = 0;
       updateHud(hp, ammo, reserve, currentWeapon.name);
     },
