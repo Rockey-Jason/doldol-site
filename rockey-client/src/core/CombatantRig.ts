@@ -188,6 +188,10 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
   let landingUntil=0;
   const footRestY=legs.map(leg=>leg.foot.position.y);
   const footWorldScratch=new THREE.Vector3();
+  const hipWorldScratch=new THREE.Vector3();
+  const targetWorldScratch=new THREE.Vector3();
+  const hipLocalScratch=new THREE.Vector3();
+  const targetLocalScratch=new THREE.Vector3();
   const animate=(movement:number,time:number,action=0,recoil=0,vertical=0,dead=false,sprint=0,grounded=true,aim=0)=>{
     const move=THREE.MathUtils.clamp(movement,0,1);
     const runBlend=THREE.MathUtils.clamp(sprint,0,1)*move;
@@ -229,6 +233,7 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
       knee.rotation.x=swing*(.38+runBlend*.56)+airborne*.32+deathBlend*.95;
       // Stance phase keeps the sole level; swing phase adds toe clearance.
       foot.rotation.x=THREE.MathUtils.lerp(gait*.12,-gait*.10,stance)+swing*.16-airborne*.18+deathBlend*-.45;
+      foot.userData.ikWeight=stance;
     });
     root.rotation.z=deathBlend*.95;
     root.position.y=-deathBlend*.25+landing*.035;
@@ -241,10 +246,30 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
       group.updateMatrixWorld(true);
       leg.foot.getWorldPosition(footWorldScratch);
       const ground=sampleGround(footWorldScratch.x,footWorldScratch.z,footWorldScratch.y);
-      const soleY=footWorldScratch.y-.12;
-      const correction=THREE.MathUtils.clamp(ground-soleY,-.22,.22);
-      leg.foot.position.y=footRestY[index]+correction;
-      leg.knee.rotation.x+=THREE.MathUtils.clamp(-correction*1.05,-.18,.18);
+      const weight=THREE.MathUtils.clamp(Number(leg.foot.userData.ikWeight??1),0,1);
+      if(weight<.02)return;
+      // Two-bone inverse kinematics in the leg's sagittal plane. The foot
+      // target comes from a downward scene ray, so stairs and raised floors
+      // produce a real hip/knee solution instead of a visual ankle offset.
+      targetWorldScratch.set(footWorldScratch.x,ground+.12,footWorldScratch.z);
+      leg.hip.getWorldPosition(hipWorldScratch);
+      group.worldToLocal(targetLocalScratch.copy(targetWorldScratch));
+      group.worldToLocal(hipLocalScratch.copy(hipWorldScratch));
+      const dy=targetLocalScratch.y-hipLocalScratch.y;
+      const dz=targetLocalScratch.z-hipLocalScratch.z;
+      const upper=.38,lower=.37;
+      const distance=THREE.MathUtils.clamp(Math.hypot(dy,dz),.025,upper+lower-.004);
+      const kneeCos=THREE.MathUtils.clamp((upper*upper+lower*lower-distance*distance)/(2*upper*lower),-1,1);
+      const kneeFlex=Math.PI-Math.acos(kneeCos);
+      const hipCos=THREE.MathUtils.clamp((upper*upper+distance*distance-lower*lower)/(2*upper*distance),-1,1);
+      const targetAngle=Math.atan2(dz,-dy);
+      const bendOffset=Math.atan2(lower*Math.sin(kneeFlex),upper+lower*Math.cos(kneeFlex));
+      const solvedHip=targetAngle-bendOffset;
+      const solvedKnee=kneeFlex;
+      const baseHip=leg.hip.rotation.x,baseKnee=leg.knee.rotation.x;
+      leg.hip.rotation.x=THREE.MathUtils.lerp(baseHip,solvedHip,weight);
+      leg.knee.rotation.x=THREE.MathUtils.lerp(baseKnee,solvedKnee,weight);
+      leg.foot.rotation.x=THREE.MathUtils.lerp(leg.foot.rotation.x,-(solvedHip+solvedKnee),weight);
     });
   };
   group.userData.animatePose=animate;
