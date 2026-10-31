@@ -90,6 +90,12 @@ for(const cx of [-17.2,17.2]){
   addTacticalCover(cx+1.65,-3.55,.75,.16,3.15);
   addTacticalCover(cx,-3.55,.60,.16,4.1,3.15);
 }
+// Bridge floor, glass-panel side walls and ceiling use vertical bounds so
+// ground-floor combat is not accidentally blocked by elevated structure.
+addTacticalCover(0,-1.5,12.8,1.25,4.19,3.91);
+addTacticalCover(0,-2.74,12.8,.12,5.69,4.19);
+addTacticalCover(0,-.26,12.8,.12,5.69,4.19);
+addTacticalCover(0,-1.5,12.8,1.25,6.25,6.05);
 for(const map of Object.values(MAPS))map.cover.push(...TACTICAL_BUILDING_COVER);
 
 export interface RockeyWeapon {
