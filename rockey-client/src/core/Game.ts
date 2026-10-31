@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { ITEMS, MAPS, WEAPONS, type RockeyItemCode, type RockeyWeapon } from '../catalog';
 import { addRockeyEnvironment } from './EnvironmentDressing';
+import { addTacticalLevel } from './TacticalLevel';
 import { createCombatantRig } from './CombatantRig';
 import { createFirstPersonHands } from './FirstPersonHands';
 
@@ -181,6 +182,9 @@ export async function createGame(
   // Full arena dressing is separate from the combat cover and keeps all new
   // static props out of the hitscan raycast list.
   addRockeyEnvironment(scene,map,isMobile,(x,y,z,hx,hy,hz)=>{
+    world.createCollider(RAPIER.ColliderDesc.cuboid(hx,hy,hz).setTranslation(x,y,z));
+  });
+  const tacticalLevel=addTacticalLevel(scene,map,isMobile,(x,y,z,hx,hy,hz)=>{
     world.createCollider(RAPIER.ColliderDesc.cuboid(hx,hy,hz).setTranslation(x,y,z));
   });
 
@@ -647,6 +651,12 @@ export async function createGame(
   let reloadAt = 0;
   let raf = 0;
   let previous = performance.now();
+  let perfWindowStart=previous;
+  let perfFrames=0;
+  let smoothedFrameMs=16.7;
+  let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
+  const minPixelRatio=isMobile?.78:1.0;
+  const maxPixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
 
   const position = () => {
     const p = body.translation();
@@ -851,6 +861,8 @@ export async function createGame(
     shellVisuals.push({mesh,velocity,spin:new THREE.Vector3(7+Math.random()*7,5+Math.random()*6,8+Math.random()*8),age:0});
   }
   function spawnExplosionFx(position:THREE.Vector3,radius:number,durationMs:number){
+    // Explosions can permanently break nearby tactical crates and cabinets.
+    tacticalLevel.destroyNear(position,radius,(p,count,impulse)=>spawnDebrisFx(p,count,impulse));
     const group=new THREE.Group();group.position.copy(position);
     const coreMaterial=new THREE.MeshBasicMaterial({color:0xffa14d,transparent:true,opacity:.92,toneMapped:false,depthWrite:false});
     const core=new THREE.Mesh(new THREE.SphereGeometry(.48,14,12),coreMaterial);core.scale.set(1,.76,1);group.add(core);
@@ -1271,6 +1283,25 @@ export async function createGame(
     }
     const dt = Math.min((now - previous) / 1000, 0.05);
     previous = now;
+    perfFrames++;
+    const frameMs=Math.min(100,dt*1000);
+    smoothedFrameMs=smoothedFrameMs*.92+frameMs*.08;
+    if(now-perfWindowStart>=2500){
+      const fps=perfFrames*1000/(now-perfWindowStart);
+      const target=isMobile?48:55;
+      if(fps<target-5&&adaptivePixelRatio>minPixelRatio){
+        adaptivePixelRatio=Math.max(minPixelRatio,adaptivePixelRatio-.1);
+        renderer.setPixelRatio(adaptivePixelRatio);resize();
+      }else if(fps>target+12&&adaptivePixelRatio<maxPixelRatio){
+        adaptivePixelRatio=Math.min(maxPixelRatio,adaptivePixelRatio+.05);
+        renderer.setPixelRatio(adaptivePixelRatio);resize();
+      }
+      window.dispatchEvent(new CustomEvent('rockey:performance',{detail:{
+        fps:Math.round(fps),frameMs:Math.round(smoothedFrameMs*10)/10,
+        pixelRatio:Math.round(adaptivePixelRatio*100)/100,device:isMobile?'mobile':'desktop'
+      }}));
+      perfWindowStart=now;perfFrames=0;
+    }
     aimBlend=THREE.MathUtils.damp(aimBlend,precisionAiming?1:0,13,dt);
     const targetFov=precisionAiming?precisionFov:normalFov;
     const nextFov=THREE.MathUtils.damp(camera.fov,targetFov,12,dt);
