@@ -630,8 +630,9 @@ export async function createGame(
     if(!(code in ITEMS))return;
     const selected=code as RockeyItemCode;
     if((itemInventory[selected]||0)<=0){notify('해당 아이템이 모두 소진되었습니다.');return;}
+    currentItemCode=selected;updateItemHud();emitItemState();
     if(mode!=='practice'){send({type:'item.select',itemCode:selected});return;}
-    currentItemCode=selected;updateItemHud();emitItemState();notify(ITEMS[selected].name+' 선택 · USE 버튼으로 사용');
+    notify(ITEMS[selected].name+' 선택 · USE 버튼으로 사용');
   }
   function consumeSelectedItem(){itemInventory[currentItemCode]=Math.max(0,currentItemCount()-1);updateItemHud();emitItemState();}
   function showThrownItem(itemCode:string,x:number,y:number,z:number,throwYaw:number,throwPitch:number,fuseMs:number){
