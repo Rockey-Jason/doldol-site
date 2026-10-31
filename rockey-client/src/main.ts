@@ -483,7 +483,7 @@ socket.onMessage((message:GameMessage)=>{
       break;
     }
     case 'weapon.shot':
-      if(String(message.shooterId||'')!==userId)game?.showShot(Number(message.x),Number(message.y),Number(message.z),Number(message.yaw),Number(message.pitch),String(message.weaponCode||'R16'),Number.isFinite(Number(message.distance))?Number(message.distance):undefined);
+      if(String(message.shooterId||'')!==userId)game?.showShot(Number(message.x),Number(message.y),Number(message.z),Number(message.yaw),Number(message.pitch),String(message.weaponCode||'R16'),message.distance!==null&&message.distance!==undefined&&Number.isFinite(Number(message.distance))?Number(message.distance):undefined);
       break;
     case 'elimination':
       toast('ELIMINATION');
