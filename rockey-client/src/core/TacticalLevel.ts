@@ -30,8 +30,15 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     add(root,floor,-.9,4.05,1.45,6.8,.28,6.7,true);
     add(root,floor,4.05,4.05,1.45,.7,.28,6.7,true);
     // Four walls are segmented to leave a generous central entrance and firing lanes.
-    add(root,wall,-w/2+t/2,h/2,0,t,h,d,true);
-    add(root,wall,w/2-t/2,h/2,0,t,h,d,true);
+    if(front>0){
+      add(root,wall,-w/2+t/2,h/2,0,t,h,d,true);
+      add(root,wall,w/2-t/2,h/2,-3.35,t,h,2.9,true);
+      add(root,wall,w/2-t/2,h/2,3.35,t,h,2.9,true);
+    }else{
+      add(root,wall,w/2-t/2,h/2,0,t,h,d,true);
+      add(root,wall,-w/2+t/2,h/2,-3.35,t,h,2.9,true);
+      add(root,wall,-w/2+t/2,h/2,3.35,t,h,2.9,true);
+    }
     add(root,wall,0,h/2,-d/2+t/2,w,h,t,true);
     add(root,wall,-2.95,h/2,d/2-t/2,2.9,h,t,true);
     add(root,wall,2.95,h/2,d/2-t/2,2.9,h,t,true);
