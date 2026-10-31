@@ -20,7 +20,7 @@ export type PlayerClient = {
 type PlayerSnapshot = {
   id: string; name: string; team: number;
   x: number; y: number; z: number; yaw: number;
-  health: number; alive: boolean; connected: boolean;
+  health: number; alive: boolean; connected: boolean; aim:boolean;
 };
 
 type ReplayFrame = { t: number; players: PlayerSnapshot[] };
@@ -199,7 +199,7 @@ export class GameRoom {
   private snapshots(): PlayerSnapshot[] {
     return this.players.map(p=>({
       id:p.client.player.id,name:p.client.player.name,team:p.team,
-      x:p.x,y:p.y,z:p.z,yaw:p.yaw,health:p.health,alive:p.alive,connected:p.connected
+      x:p.x,y:p.y,z:p.z,yaw:p.yaw,health:p.health,alive:p.alive,connected:p.connected,aim:p.aim
     }));
   }
 
@@ -264,7 +264,7 @@ export class GameRoom {
       worldDestruction:this.worldDestruction,score:this.score,round:this.round
     });
     this.broadcast({type:'player.reconnected',playerId:client.player.id,name:client.player.name});
-    send(client,{type:'snapshot',players:this.snapshots()});
+    send(client,{type:'snapshot',serverTime:Date.now(),players:this.snapshots()});
     return true;
   }
 
@@ -415,6 +415,7 @@ export class GameRoom {
         const destruction={id:this.id+':'+this.nextDestructionId++,x,y,z,radius:6};
         this.worldDestruction.push(destruction);
         if(this.worldDestruction.length>240)this.worldDestruction.shift();
+        this.broadcast({type:'world.state',revision:this.nextDestructionId-1,destruction:this.worldDestruction});
         this.broadcast({type:'item.effect',effect:'GRENADE',x,y,z,radius:6,durationMs:520,eventId:destruction.id});
         for(const target of this.players.filter(v=>v.alive&&v.connected&&v.team!==p.team)){
           const distance=Math.hypot(target.x-x,target.z-z,(target.y+.5)-y);if(distance<7)this.applyDamage(p,target,Math.max(1,Math.round(82*(1-distance/7))),'GRENADE',false,Date.now());
