@@ -1,189 +1,222 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export interface CombatantRig {
   group: THREE.Group;
-  animate: (movement:number, time:number, action?:number, recoil?:number) => void;
+  animate: (movement:number,time:number,action?:number,recoil?:number,vertical?:number,dead?:boolean) => void;
+  triggerHit: () => void;
 }
 
-function addSegment(parent:THREE.Object3D,start:THREE.Vector3,end:THREE.Vector3,radius:number,material:THREE.Material):THREE.Mesh{
-  const direction=end.clone().sub(start);
-  const mesh=new THREE.Mesh(new THREE.CapsuleGeometry(radius,Math.max(.025,direction.length()-radius*2),4,8),material);
-  mesh.position.copy(start).add(end).multiplyScalar(.5);
-  mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize());
-  mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
-}
-
-/** Articulated tactical operator with layered armour, webbing, gloves and segmented limbs. */
-export function createCombatantRig(baseColor:number, accentColor:number):CombatantRig{
+/**
+ * Bone-driven tactical operator. The visible body is one weighted SkinnedMesh;
+ * all body pieces are merged into a single geometry and weighted to a real
+ * THREE.Skeleton so limb animation is driven by bones rather than parent groups.
+ */
+export function createCombatantRig(baseColor:number,accentColor:number):CombatantRig{
   const group=new THREE.Group();
-  const fabric=new THREE.MeshStandardMaterial({color:baseColor,roughness:.84,metalness:.08});
-  const armor=new THREE.MeshPhysicalMaterial({color:0x26394d,roughness:.34,metalness:.58,clearcoat:.32,clearcoatRoughness:.3});
-  const dark=new THREE.MeshStandardMaterial({color:0x101923,roughness:.72,metalness:.38});
-  const metal=new THREE.MeshStandardMaterial({color:0x75899a,roughness:.32,metalness:.88});
-  const rubber=new THREE.MeshStandardMaterial({color:0x1b252e,roughness:.96,metalness:.02});
-  const glove=new THREE.MeshStandardMaterial({color:0x26313a,roughness:.92,metalness:.02});
-  const accent=new THREE.MeshStandardMaterial({color:accentColor,emissive:accentColor,emissiveIntensity:.72,roughness:.32,metalness:.34});
-  const lens=new THREE.MeshPhysicalMaterial({color:accentColor,emissive:accentColor,emissiveIntensity:.32,roughness:.12,metalness:.18,clearcoat:1});
-  const skin=new THREE.MeshStandardMaterial({color:0x9a795f,roughness:.9,metalness:0});
-  const addBox=(parent:THREE.Object3D,geo:THREE.BufferGeometry,mat:THREE.Material,x:number,y:number,z:number,rx=0,ry=0,rz=0)=>{
-    const mesh=new THREE.Mesh(geo,mat);mesh.position.set(x,y,z);mesh.rotation.set(rx,ry,rz);
-    mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
-  };
-  const addSphere=(parent:THREE.Object3D,mat:THREE.Material,x:number,y:number,z:number,sx:number,sy:number,sz:number)=>{
-    const mesh=new THREE.Mesh(new THREE.SphereGeometry(1,14,10),mat);mesh.position.set(x,y,z);mesh.scale.set(sx,sy,sz);
-    mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);return mesh;
-  };
-  const addCylinder=(parent:THREE.Object3D,mat:THREE.Material,x:number,y:number,z:number,r:number,h:number,rx=0,ry=0,rz=0)=>{
-    const mesh=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,10),mat);mesh.position.set(x,y,z);mesh.rotation.set(rx,ry,rz);
-    mesh.castShadow=true;parent.add(mesh);return mesh;
+  group.name='rockey-skeletal-operator';
+
+  const materials:THREE.Material[]=[
+    new THREE.MeshStandardMaterial({color:baseColor,roughness:.86,metalness:.06}),
+    new THREE.MeshPhysicalMaterial({color:0x26394d,roughness:.34,metalness:.58,clearcoat:.4,clearcoatRoughness:.28}),
+    new THREE.MeshStandardMaterial({color:0x101923,roughness:.72,metalness:.38}),
+    new THREE.MeshStandardMaterial({color:0x8295a5,roughness:.3,metalness:.88}),
+    new THREE.MeshStandardMaterial({color:0x26313a,roughness:.92,metalness:.02}),
+    new THREE.MeshStandardMaterial({color:accentColor,emissive:accentColor,emissiveIntensity:.7,roughness:.32,metalness:.34}),
+    new THREE.MeshPhysicalMaterial({color:accentColor,emissive:accentColor,emissiveIntensity:.28,roughness:.12,metalness:.18,clearcoat:1}),
+    new THREE.MeshStandardMaterial({color:0x9a795f,roughness:.9,metalness:0}),
+    new THREE.MeshStandardMaterial({color:0x1b252e,roughness:.96,metalness:.02})
+  ];
+
+  const bones:THREE.Bone[]=[];
+  const boneIndex=new Map<string,number>();
+  const makeBone=(name:string,parent:THREE.Bone|null,x:number,y:number,z:number)=>{
+    const bone=new THREE.Bone();bone.name=name;bone.position.set(x,y,z);
+    if(parent)parent.add(bone);else group.add(bone);
+    boneIndex.set(name,bones.length);bones.push(bone);return bone;
   };
 
-  // Core silhouette: flexible undersuit beneath a separate armoured carrier.
-  const torso=new THREE.Group();group.add(torso);
-  const body=new THREE.Mesh(new THREE.CapsuleGeometry(.285,.53,5,12),fabric);
-  body.position.y=.02;body.castShadow=true;body.receiveShadow=true;torso.add(body);
-  const pelvis=addBox(torso,new THREE.BoxGeometry(.5,.25,.31),dark,0,-.34,0);
-  addBox(torso,new THREE.BoxGeometry(.58,.46,.22),armor,0,.02,-.175);
-  addBox(torso,new THREE.BoxGeometry(.42,.3,.055),dark,0,.015,-.3);
-  addBox(torso,new THREE.BoxGeometry(.25,.055,.026),accent,0,.19,-.335);
-  addBox(torso,new THREE.BoxGeometry(.12,.12,.045),lens,0,-.075,-.338);
-  // Molle webbing, three magazine pouches, side utility pouches and buckle.
-  addBox(torso,new THREE.BoxGeometry(.045,.46,.035),dark,-.19,.04,-.31,0,0,.18);
-  addBox(torso,new THREE.BoxGeometry(.045,.46,.035),dark,.19,.04,-.31,0,0,-.18);
+  const root=makeBone('root',null,0,0,0);
+  const pelvis=makeBone('pelvis',root,0,.98,0);
+  const spine=makeBone('spine',pelvis,0,.22,0);
+  const chest=makeBone('chest',spine,0,.17,0);
+  const neck=makeBone('neck',chest,0,.25,0);
+  const head=makeBone('head',neck,0,.11,0);
+  const arms:{shoulder:THREE.Bone;elbow:THREE.Bone;hand:THREE.Bone;side:number}[]=[];
+  const legs:{hip:THREE.Bone;knee:THREE.Bone;foot:THREE.Bone;side:number}[]=[];
+  for(const side of [-1,1]){
+    const label=side<0?'left':'right';
+    const shoulder=makeBone(label+'Shoulder',chest,side*.34,.08,0);
+    const elbow=makeBone(label+'Elbow',shoulder,side*.035,-.32,0);
+    const hand=makeBone(label+'Hand',elbow,side*.015,-.29,-.025);
+    arms.push({shoulder,elbow,hand,side});
+    const hip=makeBone(label+'Hip',pelvis,side*.16,-.08,0);
+    const knee=makeBone(label+'Knee',hip,0,-.38,0);
+    const foot=makeBone(label+'Foot',knee,0,-.37,-.025);
+    legs.push({hip,knee,foot,side});
+  }
+
+  const parts:THREE.BufferGeometry[]=[];
+  const addPart=(geometry:THREE.BufferGeometry,material:number,bone:string,position:THREE.Vector3,rotation=new THREE.Quaternion(),scale=new THREE.Vector3(1,1,1))=>{
+    const index=boneIndex.get(bone);
+    if(index===undefined){geometry.dispose();return;}
+    const matrix=new THREE.Matrix4().compose(position,rotation,scale);
+    geometry.applyMatrix4(matrix);
+    const count=geometry.getAttribute('position').count;
+    const indices=new Uint16Array(count*4),weights=new Float32Array(count*4);
+    for(let i=0;i<count;i++){indices[i*4]=index;weights[i*4]=1;}
+    geometry.setAttribute('skinIndex',new THREE.Uint16BufferAttribute(indices,4));
+    geometry.setAttribute('skinWeight',new THREE.Float32BufferAttribute(weights,4));
+    geometry.clearGroups();geometry.addGroup(0,geometry.index?geometry.index.count:count,material);
+    parts.push(geometry);
+  };
+  const box=(bone:string,material:number,x:number,y:number,z:number,sx:number,sy:number,sz:number,rx=0,ry=0,rz=0)=>{
+    const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(rx,ry,rz));
+    addPart(new THREE.BoxGeometry(sx,sy,sz),material,bone,new THREE.Vector3(x,y,z),q);
+  };
+  const sphere=(bone:string,material:number,x:number,y:number,z:number,sx:number,sy:number,sz:number)=>{
+    addPart(new THREE.SphereGeometry(1,18,12),material,bone,new THREE.Vector3(x,y,z),new THREE.Quaternion(),new THREE.Vector3(sx,sy,sz));
+  };
+  const capsule=(bone:string,material:number,a:THREE.Vector3,b:THREE.Vector3,r:number)=>{
+    const delta=b.clone().sub(a),length=delta.length();
+    const q=new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0),delta.normalize());
+    addPart(new THREE.CapsuleGeometry(r,Math.max(.025,length-r*2),5,10),material,bone,a.clone().add(b).multiplyScalar(.5),q);
+  };
+  const cylinder=(bone:string,material:number,x:number,y:number,z:number,r:number,h:number,rx=0,ry=0,rz=0)=>{
+    const q=new THREE.Quaternion().setFromEuler(new THREE.Euler(rx,ry,rz));
+    addPart(new THREE.CylinderGeometry(r,r,h,12),material,bone,new THREE.Vector3(x,y,z),q);
+  };
+
+  // Torso, carrier and webbing.
+  capsule('spine',0,new THREE.Vector3(0,1.08,0),new THREE.Vector3(0,1.55,0),.255);
+  box('chest',1,0,1.36,-.14,.57,.43,.20);
+  box('chest',2,0,1.35,-.265,.42,.30,.055);
+  box('chest',5,0,1.58,-.285,.25,.045,.025);
+  box('pelvis',2,0,.99,-.015,.49,.24,.3);
+  box('pelvis',1,0,.91,-.15,.52,.17,.10);
   for(let i=0;i<3;i++){
     const x=-.17+i*.17;
-    addBox(torso,new THREE.BoxGeometry(.12,.18,.105),dark,x,-.12,-.34);
-    addBox(torso,new THREE.BoxGeometry(.1,.035,.026),metalMaterial(),x,-.055,-.402);
-    addBox(torso,new THREE.BoxGeometry(.08,.026,.025),accent,x,-.16,-.402);
+    box('chest',2,x,1.18,-.285,.12,.17,.09);
+    box('chest',3,x,1.245,-.338,.085,.025,.025);
+    box('chest',5,x,1.12,-.34,.07,.022,.018);
   }
   for(const side of [-1,1]){
-    addBox(torso,new THREE.BoxGeometry(.13,.2,.15),armor,side*.31,-.12,-.01,0,0,side*.12);
-    addBox(torso,new THREE.BoxGeometry(.15,.11,.16),dark,side*.29,-.34,-.02);
-    addBox(torso,new THREE.BoxGeometry(.09,.045,.025),accent,side*.29,-.34,-.11);
+    box('chest',1,side*.30,1.30,-.015,.15,.21,.16,0,0,side*.12);
+    box('chest',2,side*.30,1.04,-.02,.16,.12,.16);
+    box('chest',5,side*.30,1.04,-.112,.09,.035,.018);
   }
-  addBox(torso,new THREE.BoxGeometry(.16,.12,.045),metal,0,-.34,-.19);
-  addBox(torso,new THREE.BoxGeometry(.09,.055,.025),accent,0,-.34,-.22);
+  box('chest',3,0,1.02,-.19,.16,.11,.045);
+  box('chest',5,0,1.02,-.218,.09,.05,.018);
 
-  // Neck and helmet system: cheek guards, visor, optics, headset and mic boom.
-  addCylinder(torso,dark,0,.43,0,.105,.18);
-  const head=new THREE.Group();head.position.set(0,.66,-.005);torso.add(head);
-  addSphere(head,skin,0,0,0,.19,.23,.18);
-  addSphere(head,dark,0,-.115,-.045,.16,.09,.15);
-  addSphere(head,armor,0,.105,.015,.235,.17,.225);
-  addBox(head,new THREE.BoxGeometry(.37,.055,.26),dark,0,.205,.015);
-  addBox(head,new THREE.BoxGeometry(.34,.035,.29),accent,0,.17,-.01);
-  addBox(head,new THREE.BoxGeometry(.36,.11,.035),lens,0,.025,-.197);
-  addBox(head,new THREE.BoxGeometry(.26,.035,.035),dark,0,-.055,-.203);
+  // Helmet, optics, visor, radio and backpack.
+  cylinder('neck',2,0,1.66,0,.105,.18,.18);
+  sphere('head',7,0,1.82,0,.18,.22,.17);
+  sphere('head',1,0,1.94,.015,.225,.16,.205);
+  box('head',2,0,2.075,.015,.37,.055,.25);
+  box('head',5,0,2.045,-.015,.33,.035,.26);
+  box('head',6,0,1.83,-.17,.35,.105,.035);
+  box('head',2,0,1.72,-.18,.25,.035,.035);
   for(const side of [-1,1]){
-    addCylinder(head,armor,side*.222,-.015,0,.09,.095,0,0,Math.PI/2);
-    addCylinder(head,accent,side*.275,-.015,0,.045,.035,0,0,Math.PI/2);
-    addBox(head,new THREE.BoxGeometry(.1,.055,.24),dark,side*.12,.255,.04,0,0,side*.24);
+    cylinder('head',1,side*.215,1.82,0,.09,.095,0,0,Math.PI/2);
+    cylinder('head',5,side*.265,1.82,0,.045,.035,0,0,Math.PI/2);
+    box('head',2,side*.12,2.11,.035,.1,.055,.20,0,0,side*.22);
   }
-  addSegment(head,new THREE.Vector3(.14,-.11,-.13),new THREE.Vector3(.2,-.18,-.2),.018,dark);
-  addSphere(head,accent,.2,-.18,-.2,.026,.026,.026);
-  // Helmet mount, rear battery and a small side rail.
-  addBox(head,new THREE.BoxGeometry(.12,.035,.12),metal,0,.31,-.015);
-  addBox(head,new THREE.BoxGeometry(.1,.11,.16),dark,0,.03,.205);
-  addBox(head,new THREE.BoxGeometry(.035,.12,.04),metal,-.245,.02,-.015);
-
-  // Backpack, radio, antenna, shoulder straps and hydration tube.
-  const pack=addBox(group,new THREE.BoxGeometry(.38,.52,.2),dark,0,.06,.245);
-  addBox(group,new THREE.BoxGeometry(.3,.17,.08),armor,0,.25,.37);
+  box('head',3,0,2.13,-.01,.12,.035,.12);
+  box('head',2,0,1.82,.18,.13,.11,.15);
+  box('pelvis',2,0,1.04,.22,.38,.50,.19);
+  box('pelvis',1,0,1.28,.31,.30,.15,.07);
   for(const side of [-1,1]){
-    addBox(group,new THREE.BoxGeometry(.13,.22,.1),dark,side*.12,-.05,.38);
-    addBox(group,new THREE.BoxGeometry(.05,.36,.05),accent,side*.17,.06,.18,0,0,side*.14);
+    box('pelvis',2,side*.12,1.05,.37,.13,.21,.09);
+    box('pelvis',5,side*.17,1.06,.325,.045,.28,.035,0,0,side*.12);
   }
-  addBox(group,new THREE.BoxGeometry(.13,.2,.12),armor,-.28,.18,.12);
-  addCylinder(group,metal,-.28,.34,.12,.018,.42);
-  addSegment(group,new THREE.Vector3(.18,.2,.16),new THREE.Vector3(.25,.02,.1),.018,rubber);
-  addSegment(group,new THREE.Vector3(.25,.02,.1),new THREE.Vector3(.24,-.16,.02),.018,rubber);
+  cylinder('pelvis',3,-.27,1.31,.15,.018,.43);
+  box('pelvis',1,-.27,1.17,.14,.14,.20,.10);
 
-  // Articulated arms. Each hand has a palm, a thumb and individually modelled
-  // two-link fingers, so the reload/weapon pose can bend the elbows and fingers.
-  const arms:Array<{shoulder:THREE.Group;elbow:THREE.Group;fingers:THREE.Group[];side:number}>=[];
-  for(const side of [-1,1]){
-    const shoulder=new THREE.Group();shoulder.position.set(side*.34,.27,-.005);torso.add(shoulder);
-    addSphere(shoulder,armor,0,-.015,0,.18,.17,.17);
-    addBox(shoulder,new THREE.BoxGeometry(.29,.16,.29),armor,side*.01,-.04,-.015,0,0,side*.12);
-    addSegment(shoulder,new THREE.Vector3(0,-.08,0),new THREE.Vector3(side*.015,-.34,-.015),.105,fabric);
-    addBox(shoulder,new THREE.BoxGeometry(.19,.28,.2),armor,side*.015,-.22,-.02,0,0,side*.06);
-    const elbow=new THREE.Group();elbow.position.set(side*.015,-.35,-.018);shoulder.add(elbow);
-    addSphere(elbow,dark,0,0,0,.105,.105,.105);
-    addBox(elbow,new THREE.BoxGeometry(.18,.14,.18),armor,0,-.01,-.025);
-    addSegment(elbow,new THREE.Vector3(0,-.04,0),new THREE.Vector3(side*.015,-.29,-.035),.088,fabric);
-    addBox(elbow,new THREE.BoxGeometry(.19,.26,.15),armor,side*.012,-.17,-.045,0,0,side*.04);
-    addCylinder(elbow,metal,side*.012,-.3,-.045,.095,.045,0,0,0);
-    const hand=new THREE.Group();hand.position.set(side*.015,-.34,-.055);elbow.add(hand);
-    addBox(hand,new THREE.BoxGeometry(.135,.13,.16),glove,0,-.025,-.035);
-    addBox(hand,new THREE.BoxGeometry(.11,.035,.04),dark,0,.045,-.055);
-    const fingers:THREE.Group[]=[];
+  // Arms: weighted upper arms, forearms, elbow guards, gloves and fingers.
+  for(const arm of arms){
+    const s=arm.side,label=arm.side<0?'left':'right';
+    sphere(label+'Shoulder',1,s*.36,1.46,0,.17,.16,.16);
+    capsule(label+'Shoulder',0,new THREE.Vector3(s*.36,1.43,0),new THREE.Vector3(s*.39,1.16,-.012),.095);
+    box(label+'Shoulder',1,s*.385,1.31,-.025,.205,.27,.17,0,0,-s*.08);
+    sphere(label+'Elbow',2,s*.40,1.12,-.02,.105,.105,.105);
+    box(label+'Elbow',1,s*.40,1.12,-.09,.19,.14,.11);
+    capsule(label+'Elbow',0,new THREE.Vector3(s*.40,1.08,-.015),new THREE.Vector3(s*.415,.83,-.045),.078);
+    box(label+'Elbow',1,s*.41,.97,-.065,.18,.25,.13,0,0,-s*.04);
+    cylinder(label+'Hand',3,s*.415,.82,-.04,.085,.045);
+    box(label+'Hand',4,s*.415,.78,-.075,.135,.12,.16);
     for(let finger=0;finger<4;finger++){
-      const pivot=new THREE.Group();pivot.position.set(-.048+finger*.032,-.07,-.09);hand.add(pivot);
-      addSegment(pivot,new THREE.Vector3(0,0,0),new THREE.Vector3(0,-.065,-.008),.018,glove);
-      const tip=new THREE.Group();tip.position.set(0,-.064,-.008);pivot.add(tip);
-      addSegment(tip,new THREE.Vector3(0,0,0),new THREE.Vector3(0,-.044,-.012),.015,glove);
-      addSphere(tip,dark,0,-.045,-.014,.016,.013,.016);
-      fingers.push(pivot);
+      const fx=s*.415+(finger-1.5)*.032;
+      capsule(label+'Hand',4,new THREE.Vector3(fx,.755,-.14),new THREE.Vector3(fx,.705,-.15),.014);
     }
-    const thumb=new THREE.Group();thumb.position.set(side*.075,-.02,-.04);hand.add(thumb);
-    addSegment(thumb,new THREE.Vector3(0,0,0),new THREE.Vector3(-side*.04,-.05,-.045),.023,glove);
-    addSegment(thumb,new THREE.Vector3(-side*.04,-.05,-.045),new THREE.Vector3(-side*.06,-.085,-.075),.018,glove);
-    arms.push({shoulder,elbow,fingers,side});
+    capsule(label+'Hand',4,new THREE.Vector3(s*.48,.79,-.09),new THREE.Vector3(s*.50,.735,-.14),.018);
   }
 
-  // Articulated legs with layered knee guards, shin plates, straps and boots.
-  const legs:Array<{hip:THREE.Group;knee:THREE.Group;side:number}>=[];
-  for(const side of [-1,1]){
-    const hip=new THREE.Group();hip.position.set(side*.17,-.28,0);group.add(hip);
-    addSegment(hip,new THREE.Vector3(0,0,0),new THREE.Vector3(0,-.25,0),.12,fabric);
-    addBox(hip,new THREE.BoxGeometry(.23,.25,.24),armor,0,-.13,-.01);
-    addBox(hip,new THREE.BoxGeometry(.19,.14,.05),dark,0,-.11,-.14);
-    addBox(hip,new THREE.BoxGeometry(.12,.055,.025),accent,0,-.11,-.17);
-    const knee=new THREE.Group();knee.position.set(0,-.26,-.005);hip.add(knee);
-    addSphere(knee,dark,0,0,0,.125,.12,.12);
-    addBox(knee,new THREE.BoxGeometry(.22,.18,.09),armor,0,-.01,-.075);
-    addBox(knee,new THREE.BoxGeometry(.12,.045,.025),accent,0,-.01,-.13);
-    addSegment(knee,new THREE.Vector3(0,-.04,0),new THREE.Vector3(0,-.22,-.025),.095,fabric);
-    addBox(knee,new THREE.BoxGeometry(.2,.22,.12),armor,0,-.13,-.065);
-    addBox(knee,new THREE.BoxGeometry(.19,.045,.035),dark,0,-.07,-.13);
-    addBox(knee,new THREE.BoxGeometry(.2,.17,.3),rubber,0,-.22,-.09);
-    addBox(knee,new THREE.BoxGeometry(.19,.07,.12),dark,0,-.23,-.23);
-    addBox(knee,new THREE.BoxGeometry(.12,.035,.035),accent,0,-.16,-.153);
-    legs.push({hip,knee,side});
+  // Legs with independent thigh, knee and ankle bones.
+  for(const leg of legs){
+    const s=leg.side,label=leg.side<0?'left':'right';
+    capsule(label+'Hip',0,new THREE.Vector3(s*.16,.92,0),new THREE.Vector3(s*.16,.61,-.005),.115);
+    box(label+'Hip',1,s*.16,.77,-.035,.23,.25,.21);
+    box(label+'Hip',2,s*.16,.78,-.155,.20,.14,.045);
+    box(label+'Hip',5,s*.16,.79,-.18,.12,.035,.018);
+    sphere(label+'Knee',2,s*.16,.59,-.015,.12,.115,.12);
+    box(label+'Knee',1,s*.16,.59,-.095,.22,.18,.085);
+    capsule(label+'Knee',0,new THREE.Vector3(s*.16,.55,-.012),new THREE.Vector3(s*.16,.25,-.035),.085);
+    box(label+'Knee',1,s*.16,.39,-.08,.19,.23,.12);
+    box(label+'Knee',2,s*.16,.30,-.17,.18,.06,.12);
+    box(label+'Foot',8,s*.16,.115,-.115,.20,.19,.34);
+    box(label+'Foot',2,s*.16,.075,-.26,.19,.055,.10);
+    box(label+'Foot',5,s*.16,.18,-.285,.08,.025,.018);
   }
 
-  // Cable routing and small kit details on the carrier make the silhouette less
-  // like a stack of primitives and more like a properly equipped operator.
-  addBox(torso,new THREE.BoxGeometry(.24,.07,.035),metal,0,.27,-.306);
-  addBox(torso,new THREE.BoxGeometry(.14,.1,.04),dark,.25,.16,-.19);
-  addCylinder(torso,accent,.25,.16,-.22,.025,.035,Math.PI/2);
-  addBox(torso,new THREE.BoxGeometry(.12,.14,.08),dark,-.31,.18,.03);
-  addBox(torso,new THREE.BoxGeometry(.1,.035,.025),accent,-.31,.2,-.02);
+  const merged=mergeGeometries(parts,true);
+  parts.forEach(part=>part.dispose());
+  if(!merged)throw new Error('Unable to merge tactical operator geometry');
+  merged.computeBoundingBox();merged.computeBoundingSphere();
+  const skeleton=new THREE.Skeleton(bones);
+  const mesh=new THREE.SkinnedMesh(merged,materials);
+  mesh.name='operator-skinned-mesh';
+  mesh.castShadow=true;mesh.receiveShadow=true;
+  group.add(mesh);
+  group.updateMatrixWorld(true);
+  mesh.bind(skeleton);
 
-  const animate=(movement:number,time:number,action=0,recoil=0)=>{
-    const stride=Math.sin(time*9.2)*movement;
-    const counter=Math.sin(time*9.2+Math.PI)*movement;
-    torso.rotation.z=Math.sin(time*4.6)*movement*.018;
-    torso.position.y=.015+Math.abs(Math.sin(time*9.2))*.012*movement;
-    head.rotation.y=Math.sin(time*1.25)*.025;
-    arms.forEach(({shoulder,elbow,fingers,side})=>{
-      shoulder.rotation.x=.22+(side===1?-.06:.06)+stride*.12+recoil*.16;
-      shoulder.rotation.z=side*.12+stride*side*.09+action*.08*side;
-      elbow.rotation.x=.44+action*.32+(side===-1?recoil*.08:0);
-      elbow.rotation.z=side*.04;
-      fingers.forEach((finger,i)=>{finger.rotation.x=-.16-action*.24+(i===0?.04:0);});
+  let hitUntil=0;
+  let deathBlend=0;
+  const triggerHit=()=>{hitUntil=performance.now()+230;};
+  const animate=(movement:number,time:number,action=0,recoil=0,vertical=0,dead=false)=>{
+    const run=THREE.MathUtils.clamp(movement,0,1);
+    const stride=Math.sin(time*9.6)*run;
+    const counter=Math.sin(time*9.6+Math.PI)*run;
+    const airborne=THREE.MathUtils.clamp(Math.abs(vertical)/6,0,1);
+    const hit=THREE.MathUtils.clamp((hitUntil-performance.now())/230,0,1);
+    deathBlend=THREE.MathUtils.damp(deathBlend,dead?1:0,dead?7:11,1/60);
+    pelvis.rotation.x=deathBlend*.42+airborne*.08;
+    spine.rotation.x=-.025*run+airborne*.13+hit*.16+deathBlend*.52;
+    spine.rotation.z=Math.sin(time*4.7)*run*.018+hit*.12;
+    chest.rotation.x=-.035*run+airborne*.10+hit*.22+deathBlend*.28;
+    chest.rotation.z=Math.sin(time*4.2)*run*.012-hit*.08;
+    neck.rotation.x=airborne*-.08+hit*-.18+deathBlend*-.25;
+    head.rotation.x=Math.sin(time*1.3)*.025+hit*.14+deathBlend*.32;
+    head.rotation.y=Math.sin(time*1.15)*.035;
+    arms.forEach(({shoulder,elbow,hand,side})=>{
+      const gait=side<0?stride:counter;
+      shoulder.rotation.x=.10+gait*.72+airborne*-.62+recoil*.10+hit*-.35+deathBlend*.7;
+      shoulder.rotation.z=side*.08+action*.09*side+deathBlend*side*.12;
+      elbow.rotation.x=.16+Math.max(0,-gait)*.68+action*.22+airborne*.42+deathBlend*-.85;
+      hand.rotation.x=action*.12+airborne*.22+deathBlend*.32;
     });
-    legs.forEach(({hip,knee,side})=>{
-      const gait=side===1?stride:counter;
-      hip.rotation.x=gait*.52;
-      knee.rotation.x=Math.max(0,-gait)*.62+.06;
+    legs.forEach(({hip,knee,foot,side})=>{
+      const gait=side<0?stride:counter;
+      hip.rotation.x=gait*.78+airborne*(side<0?-.18:.18)+deathBlend*(side<0?-.65:.5);
+      knee.rotation.x=Math.max(0,-gait)*.88+airborne*.32+deathBlend*.95;
+      foot.rotation.x=Math.max(0,gait)*.2-airborne*.18+deathBlend*-.45;
     });
+    root.rotation.z=deathBlend*.95;
+    root.position.y=-deathBlend*.25;
   };
-  animate(0,0,0,0);
   group.userData.animatePose=animate;
-  return {group,animate};
-}
-
-function metalMaterial():THREE.Material{
-  return new THREE.MeshStandardMaterial({color:0x75899a,roughness:.32,metalness:.88});
+  group.userData.triggerHit=triggerHit;
+  group.userData.setDead=(dead:boolean)=>{if(dead)triggerHit();};
+  animate(0,0);
+  return {group,animate,triggerHit};
 }
