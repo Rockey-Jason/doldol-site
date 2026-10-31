@@ -57,6 +57,12 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
       add(root,dark,0,y,-4.45,1.25,.24,.3);
       add(root,glow,0,y-.12,-4.27,.82,.055,.08);
     }
+    const groundLamp=new THREE.PointLight(map.light,isMobile?7:15,10,2);
+    groundLamp.position.set(0,3.35,-2.2);root.add(groundLamp);
+    if(!isMobile){
+      const upperLamp=new THREE.PointLight(map.light,12,9,2);
+      upperLamp.position.set(0,4.9,2.8);root.add(upperLamp);
+    }
     // Reinforced observation windows, inset behind the exterior wall line.
     for(const side of [-1,1]){
       const win=add(root,glass,side*4.27,2.85,-1.2,.035,1.0,1.8);
