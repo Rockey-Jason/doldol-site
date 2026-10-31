@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { WEAPONS } from './catalog.js';
-import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, type Combatant } from './combat.js';
+import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, type Combatant, type SmokeVolume } from './combat.js';
 
 test('all ten weapon definitions have valid combat tuning',()=>{
   assert.equal(Object.keys(WEAPONS).length,11);
@@ -73,4 +73,15 @@ test('live shot trace enforces range and recognizes headshots',()=>{
   assert.equal(trace.target,headTarget);
   assert.equal(trace.headshot,true);
   assert.equal(traceWeaponShot(shooter,[shooter,farTarget],'1v1',[],weapon).target,null);
+});
+
+test('live smoke blocks server-authoritative target acquisition only when the shot crosses its volume',()=>{
+  const shooter=combatant('a',0,0,.92,0);
+  const enemy=combatant('b',1,0,.92,-12);
+  const smoke:SmokeVolume={x:0,y:1.5,z:-6,radius:2,expiresAt:Date.now()+8000};
+  assert.equal(traceWeaponShot(shooter,[shooter,enemy],'1v1',[],WEAPONS.R16,[smoke]).target,null);
+  const offsetSmoke={...smoke,x:5};
+  assert.equal(traceWeaponShot(shooter,[shooter,enemy],'1v1',[],WEAPONS.R16,[offsetSmoke]).target,enemy);
+  const smokeBeyondTarget={...smoke,z:-18};
+  assert.equal(traceWeaponShot(shooter,[shooter,enemy],'1v1',[],WEAPONS.R16,[smokeBeyondTarget]).target,enemy);
 });
