@@ -1,6 +1,7 @@
 import type { WebSocket } from 'ws';
 import { admin, type VerifiedPlayer } from './auth.js';
 import { MAPS, WEAPONS, type RockeyWeapon } from './catalog.js';
+import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot } from './combat.js';
 
 export type Mode = '1v1' | '2v2' | '3v3' | 'ranked' | 'ffa';
 export type PlayerClient = {
@@ -47,25 +48,6 @@ function angleDistance(a: number, b: number) {
   if (d < -Math.PI) d += Math.PI * 2;
   return Math.abs(d);
 }
-function rayBlocked(ox: number, oz: number, dx: number, dz: number, distance: number, box: {x:number;z:number;hx:number;hz:number}) {
-  let min = 0, max = distance;
-  for (const axis of [
-    { o: ox, d: dx, lo: box.x - box.hx, hi: box.x + box.hx },
-    { o: oz, d: dz, lo: box.z - box.hz, hi: box.z + box.hz }
-  ]) {
-    if (Math.abs(axis.d) < 0.00001) {
-      if (axis.o < axis.lo || axis.o > axis.hi) return false;
-      continue;
-    }
-    let a = (axis.lo - axis.o) / axis.d, b = (axis.hi - axis.o) / axis.d;
-    if (a > b) [a, b] = [b, a];
-    min = Math.max(min, a);
-    max = Math.min(max, b);
-    if (max < min) return false;
-  }
-  return true;
-}
-
 export class GameRoom {
   readonly id: string;
   readonly mode: Mode;
@@ -298,7 +280,7 @@ export class GameRoom {
 
   handleReload(client:PlayerClient) {
     const p=this.players.find(item=>item.client===client);
-    if(!p || this.finished || p.ammo>=WEAPONS[p.weaponCode].magazine ||
+    if(!p || this.finished || WEAPONS[p.weaponCode].category==='MELEE' || p.ammo>=WEAPONS[p.weaponCode].magazine ||
       p.reserve<=0 || Date.now()<p.reloadUntil) return;
     const weapon=WEAPONS[p.weaponCode];
     p.reloadUntil=Date.now()+weapon.reloadMs;
@@ -335,44 +317,36 @@ export class GameRoom {
     }
     const weapon=WEAPONS[shooter.weaponCode] as RockeyWeapon;
     const now=Date.now();
-    if(now<shooter.reloadUntil || shooter.ammo<=0 || now-shooter.lastFire<weapon.fireInterval) {
+    if(!canFireWeapon(now,shooter.lastFire,shooter.reloadUntil,shooter.ammo,weapon.fireInterval)) {
       if(now-shooter.lastFire<weapon.fireInterval/3) shooter.suspiciousInputs++;
       return;
     }
     shooter.lastFire=now;
-    shooter.ammo--;
-    shooter.weaponAmmo[shooter.weaponCode]={ammo:shooter.ammo,reserve:shooter.reserve};
-    send(client,{type:'ammo.update',ammo:shooter.ammo,reserve:shooter.reserve,weaponCode:shooter.weaponCode});
-
-    const cp=Math.cos(shooter.pitch);
-    const dx=-Math.sin(shooter.yaw)*cp;
-    const dy=Math.sin(shooter.pitch);
-    const dz=-Math.cos(shooter.yaw)*cp;
-    const ox=shooter.x,oy=shooter.y+0.55,oz=shooter.z;
-    let target:PlayerState|null=null;
-    let best=weapon.range;
-    let headshot=false;
-
-    for(const candidate of this.players) {
-      if(candidate===shooter || !candidate.alive || !candidate.connected) continue;
-      if(this.mode!=='ffa' && candidate.team===shooter.team) continue;
-      const tx=candidate.x-ox,ty=candidate.y+0.65-oy,tz=candidate.z-oz;
-      const along=tx*dx+ty*dy+tz*dz;
-      if(along<=0 || along>=best) continue;
-      const px=tx-dx*along,py=ty-dy*along,pz=tz-dz*along;
-      if(Math.hypot(px,py,pz)>0.62+weapon.spread*along*0.35) continue;
-      if(MAPS[this.mapId].cover.some(box=>rayBlocked(ox,oz,dx,dz,along,box))) continue;
-      best=along;target=candidate;
-      headshot=Math.abs(oy+dy*along-(candidate.y+1.45))<0.24;
+    if(weapon.category!=='MELEE'){
+      shooter.ammo--;
+      shooter.weaponAmmo[shooter.weaponCode]={ammo:shooter.ammo,reserve:shooter.reserve};
+      send(client,{type:'ammo.update',ammo:shooter.ammo,reserve:shooter.reserve,weaponCode:shooter.weaponCode});
     }
+    if(weapon.category!=='MELEE')this.broadcast({type:'weapon.shot',shooterId:client.player.id,x:shooter.x,y:shooter.y+0.55,z:shooter.z,yaw:shooter.yaw,pitch:shooter.pitch,weaponCode:weapon.code});
+    const arenaWalls=[
+      {x:0,z:-29.4,hx:30,hz:0.6,top:4.4},{x:0,z:29.4,hx:30,hz:0.6,top:4.4},
+      {x:-29.4,z:0,hx:0.6,hz:30,top:4.4},{x:29.4,z:0,hx:0.6,hz:30,top:4.4}
+    ];
+    const trace=traceWeaponShot(shooter,this.players,this.mode,[...MAPS[this.mapId].cover,...arenaWalls],weapon);
+    const target=trace.target as PlayerState|null;
+    const best=trace.distance;
+    const headshot=trace.headshot;
+    // Server-authoritative recoil: apply after the shot ray is evaluated, then sync the new aim to the shooter.
+    const recoil=calculateWeaponRecoil(weapon);
+    shooter.pitch=Math.max(-1.3,Math.min(1.3,shooter.pitch+recoil));
+    shooter.yaw+=(Math.random()-0.5)*recoil*0.18;
+    send(shooter.client,{type:'weapon.recoil',pitch:shooter.pitch,yaw:shooter.yaw});
     if(!target) return;
-    let damage=weapon.damage*(headshot?weapon.headshotMultiplier:1);
-    if(weapon.pellets) damage*=Math.min(weapon.pellets,Math.max(1,Math.ceil((weapon.range-best)/weapon.range*weapon.pellets)));
-    damage=Math.round(damage);
+    const damage=calculateWeaponDamage(weapon,headshot,best);
     target.health=Math.max(0,target.health-damage);
     target.damage+=damage;
     if(headshot) shooter.headshots++;
-    send(shooter.client,{type:'hit',damage,headshot,target:target.client.player.name,weaponCode:weapon.code});
+    send(shooter.client,{type:'hit',damage,headshot,target:target.client.player.name,targetId:target.client.player.id,weaponCode:weapon.code});
     send(target.client,{type:'damage',health:target.health,damage,headshot,from:shooter.client.player.name});
 
     if(target.health<=0) {
@@ -380,7 +354,10 @@ export class GameRoom {
       target.deaths++;
       shooter.kills++;
       shooter.weaponKills[weapon.code]=(shooter.weaponKills[weapon.code]||0)+1;
-      send(target.client,{type:'eliminated',by:shooter.client.player.name});
+      const clipStart=now-this.startedAt-3500;
+      const killcamFrames=this.replayFrames.filter(frame=>frame.t>=clipStart);
+      killcamFrames.push({t:now-this.startedAt,players:this.snapshots()});
+      send(target.client,{type:'eliminated',by:shooter.client.player.name,killerId:shooter.client.player.id,killcamFrames});
       send(shooter.client,{type:'elimination',target:target.client.player.name,kills:shooter.kills});
       if(this.mode==='ffa') {
         if(shooter.kills>=20) void this.finish(shooter.client.player.id);
