@@ -7,8 +7,8 @@
   <meta name="description" content="ROCKEY — Skill. Speed. Victory.">
   <meta name="color-scheme" content="dark">
   <title>ROCKEY — Competitive FPS</title>
-  <script type="module" crossorigin src="/doldol-site/rockey/assets/index-zBxzmWIa.js"></script>
-  <link rel="stylesheet" crossorigin href="/doldol-site/rockey/assets/index-B0pB_8U5.css">
+  <script type="module" crossorigin src="/doldol-site/rockey/assets/index-B-0qupkq.js"></script>
+  <link rel="stylesheet" crossorigin href="/doldol-site/rockey/assets/index-V6JAYH2-.css">
 </head>
 <body>
 <div id="app">
@@ -76,7 +76,7 @@
       <div class="health-box"><span>VITAL</span><strong id="healthValue">100</strong><div class="health-track"><i id="healthBar"></i></div></div>
       <div class="ammo-box"><strong id="ammoValue">30 / 90</strong><span>R-16 · ASSAULT</span></div>
     </div>
-    <div class="item-box"><span>TACTICAL INVENTORY · G</span><strong id="itemLabel">수류탄</strong><small id="itemCount">2개 남음</small><div class="item-box-actions"><button id="itemSelectBtn" type="button">아이템 선택</button><button id="itemUseBtn" type="button">사용</button></div></div>
+    <div class="item-box"><span>TACTICAL INVENTORY</span><strong id="itemLabel">수류탄</strong><small id="itemCount">2개 남음</small><div class="item-box-actions"><button id="itemSelectBtn" type="button" title="G 키">선택 <kbd>G</kbd></button><button id="itemUseBtn" type="button" title="E 키">사용 <kbd>E</kbd></button></div><small class="item-key-hint">1–5 선택 · E 사용</small></div>
     <div id="toast" class="toast"></div>
     <button id="cameraBtn" class="camera-btn">VIEW · FIRST [V]</button>
     <button id="weaponSwitchBtn" class="weapon-switch-btn">SWAP · Q</button>
@@ -98,9 +98,9 @@
   <section id="itemSelectPanel" class="item-select-panel hidden" aria-label="전술 아이템 선택">
     <div class="item-select-card">
       <div class="item-select-header"><div><span>ROCKEY · TACTICAL INVENTORY</span><h2>아이템 선택</h2></div><button id="itemSelectClose" type="button" aria-label="닫기">×</button></div>
-      <p>사용할 아이템을 먼저 선택해. 선택만으로는 수량이 줄어들지 않아.</p>
+      <p>숫자키 1–5로 바로 선택하거나 방향키로 이동한 뒤 Enter를 눌러 선택해. 선택만으로는 수량이 줄지 않고, 전투 중 E를 눌러야 사용돼.</p>
       <div id="itemOptionList" class="item-option-list"></div>
-      <div class="item-select-foot">아이템 선택 후 전투 화면의 USE 버튼을 눌러야 실제로 사용돼.</div>
+      <div class="item-select-foot"><b>G</b> 열기/닫기 · <b>1–5</b> 아이템 선택 · <b>방향키</b> 이동 · <b>Enter</b> 확정 · <b>E</b> 사용 · <b>Esc</b> 닫기</div>
     </div>
   </section>
   <div id="flashOverlay" class="flash-overlay" aria-hidden="true"></div>
