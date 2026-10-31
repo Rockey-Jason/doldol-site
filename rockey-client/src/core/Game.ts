@@ -785,10 +785,14 @@ export async function createGame(
       if(!mesh){
         mesh=new THREE.Mesh(remoteDebrisGeometry,remoteDebrisMaterial);
         mesh.castShadow=!isMobile;mesh.receiveShadow=!isMobile;mesh.userData.serverDebrisId=body.id;
+        mesh.position.set(body.x,body.y,body.z);mesh.rotation.set(body.rx,body.ry,body.rz);
+        mesh.userData.serverTargetPosition=new THREE.Vector3(body.x,body.y,body.z);
+        mesh.userData.serverTargetQuaternion=new THREE.Quaternion().setFromEuler(mesh.rotation);
         scene.add(mesh);remoteDebris.set(body.id,mesh);
+      }else{
+        (mesh.userData.serverTargetPosition as THREE.Vector3).set(body.x,body.y,body.z);
+        (mesh.userData.serverTargetQuaternion as THREE.Quaternion).setFromEuler(new THREE.Euler(body.rx,body.ry,body.rz));
       }
-      mesh.position.set(body.x,body.y,body.z);
-      mesh.rotation.set(body.rx,body.ry,body.rz);
       mesh.scale.setScalar(THREE.MathUtils.clamp(body.size,.04,.8));
     }
   };
@@ -1963,6 +1967,12 @@ export async function createGame(
       });
       world.step();
       updatePhysicalDebris(dt);
+    for(const mesh of remoteDebris.values()){
+      const targetPosition=mesh.userData.serverTargetPosition as THREE.Vector3|undefined;
+      const targetQuaternion=mesh.userData.serverTargetQuaternion as THREE.Quaternion|undefined;
+      if(targetPosition)mesh.position.lerp(targetPosition,1-Math.exp(-18*dt));
+      if(targetQuaternion)mesh.quaternion.slerp(targetQuaternion,1-Math.exp(-18*dt));
+    }
 
       const p = position();
       if(movementCheck&&now-movementCheck.lastSampleAt>=100&&movementCheck.samples.length<3600){
