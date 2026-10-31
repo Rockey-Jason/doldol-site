@@ -70,6 +70,8 @@ function updateHud(hp:number,ammo:number,reserve:number,weapon:string){
   $('healthValue')!.textContent=String(Math.max(0,Math.round(hp)));
   ($('healthBar') as HTMLElement).style.width=Math.max(0,Math.min(100,hp))+'%';
   $('ammoValue')!.textContent=weapon.includes('DORI')?'MELEE':ammo+' / '+reserve;
+  const ammoMeta=$('ammoValue')?.parentElement?.querySelector('span');
+  if(ammoMeta)ammoMeta.textContent=weapon.includes('DORI')?'CLOSE COMBAT · MELEE':weapon;
   $('modeLabel')!.textContent=currentMode.toUpperCase()+' · '+weapon;
 }
 function send(message:Record<string,unknown>&{type:string}){
