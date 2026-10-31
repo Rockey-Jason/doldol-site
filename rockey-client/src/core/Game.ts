@@ -1062,9 +1062,9 @@ export async function createGame(
     if(eventId&&appliedDestructionIds.has(eventId))return;
     if(eventId){appliedDestructionIds.add(eventId);if(appliedDestructionIds.size>500)appliedDestructionIds.delete(appliedDestructionIds.values().next().value as string);}
     tacticalLevel.destroyNear(position,radius,(p,count,impulse,kind)=>{
-      if(kind==='glass')spawnGlassShards(p,count,impulse,eventId||'glass');
-      else if(kind==='light'){spawnLightBreakFx(p,eventId||'light');spawnPhysicalDebris(p,count,impulse,eventId||'light');}
-      else{spawnDebrisFx(p,count,impulse);spawnPhysicalDebris(p,count,impulse,eventId||'prop');}
+      // World fragment transforms arrive from the server snapshots.
+      if(kind==='light')spawnLightBreakFx(p,eventId||'light');
+      spawnDebrisFx(p,count,impulse);
     });
   }
   function spawnExplosionFx(position:THREE.Vector3,radius:number,durationMs:number,eventId?:string){
