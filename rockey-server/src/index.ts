@@ -297,7 +297,7 @@ async function handle(client:PlayerClient,raw:WebSocket.RawData){
 
   switch(type){
     case 'ping':
-      return send(client,{type:'pong',timestamp:Date.now()});
+      return send(client,{type:'pong',timestamp:Date.now(),nonce:message.nonce});
 
     case 'queue.join': {
       if(client.roomId||client.spectatorRoomId) return send(client,{type:'error',message:'이미 경기에 참가 중입니다.'});
