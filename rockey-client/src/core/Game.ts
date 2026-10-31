@@ -42,7 +42,7 @@ export async function createGame(
   const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 760;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(map.background);
-  scene.fog = new THREE.Fog(map.fog, 34, 95);
+  scene.fog = new THREE.Fog(map.fog, 48, 145);
 
   const camera = new THREE.PerspectiveCamera(78, 1, 0.08, 180);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
@@ -53,8 +53,9 @@ export async function createGame(
   renderer.shadowMap.enabled = !isMobile;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  scene.add(new THREE.HemisphereLight(0x9dbfff, 0x0a1020, 1.5));
-  const sun = new THREE.DirectionalLight(0xb7d3ff, 2.3);
+  scene.add(new THREE.HemisphereLight(0xe5f5ff, 0x526579, 2.35));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.42));
+  const sun = new THREE.DirectionalLight(0xfff1d8, 3.1);
   sun.position.set(-15, 25, 12);
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);
@@ -69,7 +70,7 @@ export async function createGame(
 
   const floor = new THREE.Mesh(
     new THREE.BoxGeometry(60, 1, 60),
-    new THREE.MeshStandardMaterial({ color: map.floor, metalness: 0.72, roughness: 0.34 })
+    new THREE.MeshStandardMaterial({ color: map.floor, metalness: 0.18, roughness: 0.78 })
   );
   floor.position.y = -0.5;
   floor.receiveShadow = true;
@@ -77,7 +78,7 @@ export async function createGame(
   const grid = new THREE.GridHelper(60, 60, map.grid, map.grid);
   grid.position.y = 0.012;
   (grid.material as THREE.Material).transparent = true;
-  (grid.material as THREE.Material).opacity = 0.38;
+  (grid.material as THREE.Material).opacity = 0.18;
   scene.add(grid);
 
   const solid = new THREE.MeshStandardMaterial({
