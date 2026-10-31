@@ -29,7 +29,7 @@ export class GameSocket {
       const nonce=String(++this.pingSequence);
       this.pendingPings.set(nonce,performance.now());
       while(this.pendingPings.size>8)this.pendingPings.delete(this.pendingPings.keys().next().value as string);
-      try{socket.send(JSON.stringify({type:'ping',nonce}));}catch{/* close handler owns recovery */}
+      this.send({type:'ping',nonce});
     },5000);
   }
 
