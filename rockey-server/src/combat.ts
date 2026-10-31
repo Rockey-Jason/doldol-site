@@ -71,3 +71,11 @@ export function traceWeaponShot<T extends Combatant>(
   }
   return {target,distance:best,headshot};
 }
+
+/** Pure server reload transfer; cancellation must skip this function entirely. */
+export function transferReloadAmmo(ammo:number,reserve:number,magazine:number){
+  const safeAmmo=Math.max(0,Math.min(magazine,Math.floor(ammo)));
+  const safeReserve=Math.max(0,Math.floor(reserve));
+  const moved=Math.min(magazine-safeAmmo,safeReserve);
+  return {ammo:safeAmmo+moved,reserve:safeReserve-moved,moved};
+}
