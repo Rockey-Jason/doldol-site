@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { ITEMS, MAPS, WEAPONS } from './catalog.js';
 import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, transferReloadAmmo, type Combatant, type SmokeVolume } from './combat.js';
 
-test('all ten weapon definitions have valid combat tuning',()=>{
+test('all eleven weapon definitions have valid combat tuning',()=>{
   assert.equal(Object.keys(WEAPONS).length,11);
   for(const weapon of Object.values(WEAPONS)){
     assert.ok(weapon.magazine>0,weapon.code+' magazine');
