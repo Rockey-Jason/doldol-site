@@ -22,6 +22,18 @@ export type Combatant = {
   yaw:number; pitch:number; alive:boolean; connected:boolean;
 };
 export type CoverBox = {x:number;z:number;hx:number;hz:number;top?:number};
+export type SmokeVolume = {x:number;y:number;z:number;radius:number;expiresAt:number};
+function rayBlockedBySmoke(
+  ox:number,oy:number,oz:number,dx:number,dy:number,dz:number,distance:number,smoke:readonly SmokeVolume[]
+):boolean{
+  for(const cloud of smoke){
+    const along=(cloud.x-ox)*dx+(cloud.y-oy)*dy+(cloud.z-oz)*dz;
+    if(along<=0||along>=distance)continue;
+    const cx=ox+dx*along,cy=oy+dy*along,cz=oz+dz*along;
+    if(Math.hypot(cloud.x-cx,cloud.y-cy,cloud.z-cz)<cloud.radius)return true;
+  }
+  return false;
+}
 function rayBlocked(ox:number,oy:number,oz:number,dx:number,dy:number,dz:number,distance:number,box:CoverBox):boolean {
   let min=0,max=distance;
   for(const axis of [
@@ -38,7 +50,8 @@ function rayBlocked(ox:number,oy:number,oz:number,dx:number,dy:number,dz:number,
   return true;
 }
 export function traceWeaponShot<T extends Combatant>(
-  shooter:T,candidates:readonly T[],mode:string,cover:readonly CoverBox[],weapon:RockeyWeapon
+  shooter:T,candidates:readonly T[],mode:string,cover:readonly CoverBox[],weapon:RockeyWeapon,
+  smoke:readonly SmokeVolume[]=[]
 ):{target:T|null;distance:number;headshot:boolean}{
   const cp=Math.cos(shooter.pitch),dx=-Math.sin(shooter.yaw)*cp,dy=Math.sin(shooter.pitch),dz=-Math.cos(shooter.yaw)*cp;
   const ox=shooter.x,oy=shooter.y+.55,oz=shooter.z;
@@ -52,6 +65,7 @@ export function traceWeaponShot<T extends Combatant>(
     const px=tx-dx*along,py=ty-dy*along,pz=tz-dz*along;
     if(Math.hypot(px,pz)>.62+weapon.spread*along*.35||Math.abs(py)>.95)continue;
     if(cover.some(box=>rayBlocked(ox,oy,oz,dx,dy,dz,along,box)))continue;
+    if(rayBlockedBySmoke(ox,oy,oz,dx,dy,dz,along,smoke))continue;
     best=along;target=candidate;
     headshot=Math.abs(oy+dy*along-(candidate.y+1.45))<.24;
   }
