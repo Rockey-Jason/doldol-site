@@ -374,6 +374,38 @@ export async function createGame(
       chamber.position.set(0.24,-0.2,-0.25);
       gun.add(chamber);
     }
+
+    // Give every firearm a visible optic so aiming always has a physical sight
+    // to bring into the center of the camera. Sniper/DMR already have a scope.
+    if (!sniper && !dmr) {
+      const optic = new THREE.Group();
+      optic.position.set(0.24,0.13,-0.43);
+      const opticBody = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.078,0.078,0.38,18),
+        dark
+      );
+      opticBody.rotation.x = Math.PI/2;
+      optic.add(opticBody);
+      const rearRing = new THREE.Mesh(new THREE.TorusGeometry(0.079,0.014,8,24),glowPart);
+      rearRing.position.z = 0.19;
+      optic.add(rearRing);
+      const frontRing = new THREE.Mesh(new THREE.TorusGeometry(0.079,0.014,8,24),glowPart);
+      frontRing.position.z = -0.19;
+      optic.add(frontRing);
+      const opticGlass = new THREE.Mesh(
+        new THREE.CircleGeometry(0.064,24),
+        new THREE.MeshBasicMaterial({color:0x8cecff,transparent:true,opacity:0.18,depthWrite:false})
+      );
+      opticGlass.position.z = -0.196;
+      optic.add(opticGlass);
+      const reticleMaterial = new THREE.LineBasicMaterial({color:0xff5b63,transparent:true,opacity:0.95});
+      const reticle = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(-0.045,0,-0.199),new THREE.Vector3(0.045,0,-0.199),
+        new THREE.Vector3(0,-0.045,-0.199),new THREE.Vector3(0,0.045,-0.199)
+      ]);
+      optic.add(new THREE.LineSegments(reticle,reticleMaterial));
+      gun.add(optic);
+    }
   }
   rebuildGun('R16');
 
@@ -455,6 +487,7 @@ export async function createGame(
   let noiseBuffer: AudioBuffer | null = null;
   let gunKick = 0;
   let movementAmount = 0;
+  let aimBlend = 0;
   let fireAnimationStart = 0;
   const weaponMotion:Record<string,{kick:number;reloadTilt:number;roll:number;sway:number;bob:number;fireTilt:number;switchRoll:number}> = {
     R16:{kick:.82,reloadTilt:.12,roll:.06,sway:.75,bob:1,fireTilt:.9,switchRoll:.42},
@@ -982,6 +1015,7 @@ export async function createGame(
     }
     const dt = Math.min((now - previous) / 1000, 0.05);
     previous = now;
+    aimBlend=THREE.MathUtils.damp(aimBlend,precisionAiming?1:0,13,dt);
     const targetFov=precisionAiming?precisionFov:normalFov;
     const nextFov=THREE.MathUtils.damp(camera.fov,targetFov,12,dt);
     if(Math.abs(nextFov-camera.fov)>.04){camera.fov=nextFov;camera.updateProjectionMatrix();}
@@ -1002,21 +1036,24 @@ export async function createGame(
     const fireAge=fireAnimationStart?now-fireAnimationStart:9999;
     const fireWave=fireAge<260?Math.exp(-fireAge/72):0;
     if(fireAge>300)fireAnimationStart=0;
-    const idleSway=Math.sin(time*1.65)*.0045*motion.sway;
-    const idleRoll=Math.cos(time*1.25)*.006*motion.sway;
+    const weaponAimBlend=currentWeapon.category==='MELEE'?0:aimBlend;
+    const idleSway=Math.sin(time*1.65)*.0045*motion.sway*(1-weaponAimBlend*.82);
+    const idleRoll=Math.cos(time*1.25)*.006*motion.sway*(1-weaponAimBlend*.82);
     const walkWave=Math.sin(time*10.8);
     const walkSide=Math.cos(time*5.4);
-    const walkAmount=movementAmount*motion.bob;
+    const walkAmount=movementAmount*motion.bob*(1-weaponAimBlend*.48);
     const reloadDip=reloadWave*(.075+motion.reloadTilt*.12);
     const switchDip=switchWave*.16;
     const melee=currentWeapon.category==='MELEE';
     const meleeArc=doriSwingStart?Math.sin(doriProgress*Math.PI):0;
     const meleeFollow=doriSwingStart?Math.sin(doriProgress*Math.PI*2):0;
 
+    // Hip-fire rests low and to the right. While aiming, smoothly shoulder the
+    // weapon and align its optic with the camera center; release eases it back.
     gun.position.set(
-      idleSway+walkSide*.012*walkAmount,
-      -reloadDip-switchDip+Math.abs(walkWave)*.009*walkAmount,
-      gunKick*.115+reloadWave*.19+switchWave*.24+fireWave*.025
+      idleSway+walkSide*.012*walkAmount-weaponAimBlend*.24,
+      -reloadDip-switchDip+Math.abs(walkWave)*.009*walkAmount-weaponAimBlend*.13,
+      gunKick*.115+reloadWave*.19+switchWave*.24+fireWave*.025+weaponAimBlend*.075
     );
     if(melee){
       gun.rotation.set(
@@ -1026,9 +1063,9 @@ export async function createGame(
       );
     }else{
       gun.rotation.set(
-        reloadWave*(.3+motion.reloadTilt)+switchWave*.3+gunKick*.075*motion.fireTilt+fireWave*.035*motion.fireTilt,
-        idleSway*2+walkSide*.018*walkAmount+switchWave*.12,
-        reloadWave*(.12+motion.roll)+switchWave*motion.switchRoll+idleRoll+walkSide*.025*walkAmount
+        (reloadWave*(.3+motion.reloadTilt)+switchWave*.3+gunKick*.075*motion.fireTilt+fireWave*.035*motion.fireTilt)*(1-weaponAimBlend*.88),
+        (idleSway*2+walkSide*.018*walkAmount+switchWave*.12)*(1-weaponAimBlend*.88),
+        (reloadWave*(.12+motion.roll)+switchWave*motion.switchRoll+idleRoll+walkSide*.025*walkAmount)*(1-weaponAimBlend*.88)
       );
     }
 
