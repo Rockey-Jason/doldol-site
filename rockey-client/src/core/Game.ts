@@ -703,6 +703,9 @@ export async function createGame(
   let smoothedFrameMs=16.7;
   const frameTimeSamples:number[]=[];
   const heapSamples:Array<{t:number;mb:number}>=[];
+  let lastSnapshotServerTime=0;
+  let snapshotJitterMs=0;
+  let estimatedSnapshotLoss=0;
   let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
   const minPixelRatio=isMobile ? .78 : 1.0;
   const maxPixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
@@ -1490,6 +1493,7 @@ export async function createGame(
       window.dispatchEvent(new CustomEvent('rockey:performance',{detail:{
         fps:measuredFps,onePercentLow,frameMs:measuredFrame,pixelRatio:Math.round(adaptivePixelRatio*100)/100,
         device:isMobile?'mobile':'desktop',memoryMb,memoryLimitMb,heapDeltaMb,deviceMemoryGb:deviceMemory,
+        snapshotJitterMs:Math.round(snapshotJitterMs*10)/10,estimatedSnapshotLoss,
         geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,
         drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,
         activeDebris:physicalDebris.length,activeSmoke:smokeClouds.length,activeParticles:fxParticles.length,
