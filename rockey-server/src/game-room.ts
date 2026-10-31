@@ -28,7 +28,7 @@ interface PlayerState {
   x: number; y: number; z: number;
   spawnX: number; spawnZ: number; spawnYaw: number;
   yaw: number; pitch: number;
-  forward: number; right: number; sprint: boolean;
+  forward: number; right: number; sprint: boolean; aim: boolean;
   verticalVelocity: number;
   health: number; kills: number; deaths: number; headshots: number; damage: number;
   sequence: number; lastFire: number; lastInput: number;
@@ -87,7 +87,7 @@ export class GameRoom {
       const secondaryDefinition = WEAPONS[secondaryWeapon];
       return {
         client,team,x:spawnX,y:0.92,z:spawnZ,spawnX,spawnZ,spawnYaw,
-        yaw:spawnYaw,pitch:0,forward:0,right:0,sprint:false,verticalVelocity:0,
+        yaw:spawnYaw,pitch:0,forward:0,right:0,sprint:false,aim:false,verticalVelocity:0,
         health:100,kills:0,deaths:0,headshots:0,damage:0,
         sequence:-1,lastFire:0,lastInput:Date.now(),
         weaponCode,secondaryWeapon,ammo:weapon.magazine,reserve:weapon.reserve,
@@ -232,7 +232,7 @@ export class GameRoom {
     if(!p || !p.connected) return;
     p.connected=false;
     p.disconnectedAt=Date.now();
-    p.forward=0;p.right=0;p.sprint=false;
+    p.forward=0;p.right=0;p.sprint=false;p.aim=false;
     this.broadcast({type:'player.disconnected',playerId:client.player.id,name:client.player.name,graceMs:30000});
     const timer=setTimeout(()=>{
       this.disconnectTimers.delete(client.player.id);
@@ -260,6 +260,7 @@ export class GameRoom {
     p.forward=Math.max(-1,Math.min(1,rawForward));
     p.right=Math.max(-1,Math.min(1,rawRight));
     p.sprint=message.sprint===true;
+    p.aim=message.aim===true;
     if(message.jump===true && p.y<=0.94 && p.verticalVelocity<=0) p.verticalVelocity=7.2;
     if(Number.isFinite(Number(message.yaw))) {
       const proposed=Number(message.yaw);
@@ -411,8 +412,8 @@ export class GameRoom {
     const cover=MAPS[this.mapId].cover;
     for(const p of this.players) {
       if(!p.alive || !p.connected) continue;
-      if(now-p.lastInput>1200) {p.forward=0;p.right=0;}
-      const speed=p.sprint?7:5.4;
+      if(now-p.lastInput>1200) {p.forward=0;p.right=0;p.aim=false;}
+      const speed=(p.sprint?7:5.4)*(p.aim?0.5:1);
       const fx=-Math.sin(p.yaw),fz=-Math.cos(p.yaw);
       const rx=Math.cos(p.yaw),rz=-Math.sin(p.yaw);
       let dx=(fx*p.forward+rx*p.right)*speed*delta;
