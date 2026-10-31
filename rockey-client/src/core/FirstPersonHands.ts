@@ -75,16 +75,21 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     const returnGrip=smooth(p,.78,.98);
     // The support hand leaves the foregrip, reaches down for the magazine,
     // guides it upward, then returns to the handguard.
-    const target=new THREE.Vector3(.16,-.56,-.31);
-    const raised=new THREE.Vector3(.105,-.34,-.42);
-    const positionA=leftHome.clone().lerp(target,lift);
-    const positionB=positionA.clone().lerp(raised,seat);
-    left.position.copy(positionB.lerp(leftHome,returnGrip));
+    // The palm travels to the magazine well, closes around the dropped mag,
+    // then guides the replacement upward before returning to the foregrip.
+    const magazineGrip=new THREE.Vector3(.235,-.535,-.405);
+    const magazineSeat=new THREE.Vector3(.225,-.405,-.39);
+    const reachPosition=leftHome.clone().lerp(magazineGrip,lift);
+    const holdBlend=THREE.MathUtils.smoothstep(p,.30,.43)*(1-THREE.MathUtils.smoothstep(p,.67,.78));
+    const seatBlend=THREE.MathUtils.smoothstep(p,.69,.82);
+    const heldPosition=reachPosition.clone().lerp(magazineGrip,holdBlend);
+    const guidedPosition=heldPosition.lerp(magazineSeat,seatBlend);
+    left.position.copy(guidedPosition.lerp(leftHome,returnGrip));
     left.position.y+=Math.sin(performance.now()*.009)*walk*.006;
-    left.rotation.set(-.08+reach*.3-seat*.12,reach*.18, -.02-reach*.3+seat*.08-returnGrip*.05);
-    const curl=THREE.MathUtils.clamp(lift*(1-seat*.35)*(1-returnGrip*.85),0,1);
+    left.rotation.set(-.08+reach*.42-seat*.2,reach*.24,-.02-reach*.38+seat*.16-returnGrip*.05);
+    const curl=THREE.MathUtils.clamp(holdBlend*.98+lift*.18-seatBlend*.12,0,1);
     const leftFingers=left.userData.fingers as THREE.Group[];
-    leftFingers.forEach((finger,i)=>{finger.rotation.x=-.12-curl*(i===0?.72:.96);finger.rotation.z=(i-1.5)*.025;});
+    leftFingers.forEach((finger,i)=>{finger.rotation.x=-.12-curl*(i===0?.82:1.08);finger.rotation.z=(i-1.5)*.035;});
     const rightFingers=right.userData.fingers as THREE.Group[];
     rightFingers.forEach((finger,i)=>{finger.rotation.x=i===1?-.05:-.2;});
     right.position.copy(rightHome);
