@@ -5,7 +5,7 @@ export interface CombatantRig {
   group: THREE.Group;
   animate: (movement:number,time:number,action?:number,recoil?:number,vertical?:number,dead?:boolean,sprint?:number,grounded?:boolean,aim?:number) => void;
   triggerHit: () => void;
-  updateFootIK: (sampleGround:(x:number,z:number,footY:number)=>number) => void;
+  updateFootIK: (sampleGround:(x:number,z:number,footY:number)=>number,grounded?:boolean) => void;
 }
 
 /**
@@ -232,7 +232,8 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
     root.rotation.z=deathBlend*.95;
     root.position.y=-deathBlend*.25+landing*.035;
   };
-  const updateFootIK=(sampleGround:(x:number,z:number,footY:number)=>number)=>{
+  const updateFootIK=(sampleGround:(x:number,z:number,footY:number)=>number,grounded=true)=>{
+    if(!grounded){legs.forEach((leg,index)=>{leg.foot.position.y=footRestY[index];});return;}
     group.updateMatrixWorld(true);
     legs.forEach((leg,index)=>{
       leg.foot.position.y=footRestY[index];
