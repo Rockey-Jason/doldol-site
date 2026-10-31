@@ -212,6 +212,16 @@ export async function createGame(
   // Declared before the first rebuildGun call because the rebuild routine resets these references.
   let magazineModel: THREE.Group | null = null;
   let boltModel: THREE.Group | null = null;
+  const smokeCanvas=document.createElement('canvas');smokeCanvas.width=64;smokeCanvas.height=64;
+  const smokeContext=smokeCanvas.getContext('2d');
+  if(smokeContext){
+    const gradient=smokeContext.createRadialGradient(32,32,2,32,32,31);
+    gradient.addColorStop(0,'rgba(255,255,255,.75)');
+    gradient.addColorStop(.35,'rgba(255,255,255,.42)');
+    gradient.addColorStop(1,'rgba(255,255,255,0)');
+    smokeContext.fillStyle=gradient;smokeContext.fillRect(0,0,64,64);
+  }
+  const smokeTexture=new THREE.CanvasTexture(smokeCanvas);
   const muzzleFlash = new THREE.Mesh(
     new THREE.SphereGeometry(0.105, 10, 8),
     new THREE.MeshBasicMaterial({ color: 0x8cecff,transparent:true,opacity:.95,toneMapped:false })
@@ -236,7 +246,7 @@ export async function createGame(
   function rebuildGun(code: string) {
     gun.scale.set(1, 1, 1);
     for (const child of [...gun.children]) {
-      if (child === muzzleFlash) continue;
+      if (child === muzzleFlash || child === muzzleFx) continue;
       gun.remove(child);
       disposeObjectResources(child);
     }
@@ -541,17 +551,7 @@ export async function createGame(
   const fxParticleLimit=isMobile?76:150;
   const fxParticleGeometry=new THREE.IcosahedronGeometry(.055,0);
   const shellGeometry=new THREE.CylinderGeometry(.022,.022,.115,8);
-  const smokeCanvas=document.createElement('canvas');smokeCanvas.width=64;smokeCanvas.height=64;
-  const smokeContext=smokeCanvas.getContext('2d');
-  if(smokeContext){
-    const gradient=smokeContext.createRadialGradient(32,32,2,32,32,31);
-    gradient.addColorStop(0,'rgba(255,255,255,.75)');
-    gradient.addColorStop(.35,'rgba(255,255,255,.42)');
-    gradient.addColorStop(1,'rgba(255,255,255,0)');
-    smokeContext.fillStyle=gradient;smokeContext.fillRect(0,0,64,64);
-  }
-  const smokeTexture=new THREE.CanvasTexture(smokeCanvas);
-  const projectileColors:Record<string,number>={R16:0x4aa8ff,R9:0xffd166,VIPER:0x54e6b0,THUNDER:0xff8a45,LONGSHOT:0xa8d8ff,HELIX:0xb18aff,BASTION:0xffc45f,NOVA:0xff748e,ARC:0x57efff,PULSE:0xbe8cff,DORI:0xc98a4c};
+
   const projectileColors:Record<string,number>={R16:0x4aa8ff,R9:0xffd166,VIPER:0x54e6b0,THUNDER:0xff8a45,LONGSHOT:0xa8d8ff,HELIX:0xb18aff,BASTION:0xffc45f,NOVA:0xff748e,ARC:0x57efff,PULSE:0xbe8cff,DORI:0xc98a4c};
 
   function createPracticeTargets() {
@@ -808,7 +808,6 @@ export async function createGame(
     const color=projectileColors[code]||0xffd28a;
     const flashMaterial=muzzleFlash.material as THREE.MeshBasicMaterial;
     flashMaterial.color.setHex(color);
-    muzzleFlame.material=(muzzleFlame.material as THREE.MeshBasicMaterial);
     (muzzleFlame.material as THREE.MeshBasicMaterial).color.setHex(color);
     (muzzleHalo.material as THREE.SpriteMaterial).color.setHex(color);
     muzzleLight.color.setHex(color);
@@ -1388,7 +1387,7 @@ export async function createGame(
         scene.remove(shell.mesh);(shell.mesh.material as THREE.Material).dispose();shellVisuals.splice(i,1);
       }
     }
-    if(fireAge<90){
+    if(currentWeapon.category!=='MELEE'&&fireAge<90){
       const flashStrength=Math.max(0,1-fireAge/90);
       muzzleFx.visible=true;muzzleFlash.visible=true;
       muzzleFx.scale.setScalar((currentWeaponCode==='LONGSHOT'||currentWeaponCode==='THUNDER'?1.28:1)*(.72+flashStrength*.42));
