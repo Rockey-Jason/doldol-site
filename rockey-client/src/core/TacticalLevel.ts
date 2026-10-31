@@ -2,13 +2,14 @@ import * as THREE from 'three';
 import type { RockeyMap } from '../catalog';
 
 type ColliderAdder=(x:number,y:number,z:number,hx:number,hy:number,hz:number)=>void;
+type RaycastAdder=(mesh:THREE.Object3D)=>void;
 type Breakable={root:THREE.Object3D;position:THREE.Vector3;radius:number;shards:number;broken:boolean};
 
 /**
  * Walkable tactical complex with a ground-floor office, storage rooms, upper
  * galleries, rooftop access and a connected sublevel service corridor.
  */
-export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolean,addCollider:ColliderAdder){
+export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolean,addCollider:ColliderAdder,addRaycast?:RaycastAdder){
   const wall=new THREE.MeshStandardMaterial({color:map.palette==='amber'?0x786044:0x34495c,roughness:.88});
   const floor=new THREE.MeshStandardMaterial({color:0x283747,roughness:.82,metalness:.16});
   const trim=new THREE.MeshStandardMaterial({color:0x71889a,roughness:.38,metalness:.82});
@@ -25,6 +26,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);
     mesh.position.set(x,y,z);mesh.castShadow=!isMobile;mesh.receiveShadow=!isMobile;parent.add(mesh);
     if(collide){parent.updateWorldMatrix(true,false);const worldPoint=parent.localToWorld(new THREE.Vector3(x,y,z));addCollider(worldPoint.x,worldPoint.y,worldPoint.z,sx/2,sy/2,sz/2);}
+    if(mat===wall||mat===glass)addRaycast?.(mesh);
     return mesh;
   };
   const point=(root:THREE.Object3D,x:number,y:number,z:number)=>new THREE.Vector3(root.position.x+x,root.position.y+y,root.position.z+z);
@@ -94,8 +96,8 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     add(root,wall,-1.95,2.05,-.55,.32,4.1,.32,true);
     add(root,wall,1.95,2.05,-.55,.32,4.1,.32,true);
     // A broad doorway replaces the old full-width partition.
-    add(root,wall,-1.35,2.05,-2.05,1.5,4.1,.32,true);
-    add(root,wall,1.35,2.05,-2.05,1.5,4.1,.32,true);
+    add(root,wall,-1.65,2.05,-2.05,1.5,4.1,.32,true);
+    add(root,wall,1.65,2.05,-2.05,1.5,4.1,.32,true);
     add(root,wall,0,3.62,-2.05,1.2,.95,.32,true);
 
     // A furnished office occupies one side of the lower level.
