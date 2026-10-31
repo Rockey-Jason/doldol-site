@@ -132,6 +132,8 @@ export class GameRoom {
       // Ground-floor interior excluding the stairwell opening.
       if(absX<4.35&&absZ<4.75)return 0;
     }
+    // Upper bridge is a continuous walkable plane between the two second floors.
+    if(currentY>3.95&&x>=-12.8&&x<=12.8&&z>=-2.75&&z<=-.25)return 4.19;
     // The underpass joins both basements beneath the centre lane.
     if(currentY<-.35&&x>=-12.8&&x<=12.8&&z>=-2.88&&z<=-.12)return -2.64;
     return 0;
