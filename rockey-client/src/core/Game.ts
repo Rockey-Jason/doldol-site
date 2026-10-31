@@ -17,7 +17,7 @@ export interface GameInstance {
   setHealth(value: number): void;
   setAmmo(ammo: number, reserve: number): void;
   setWeapon(weaponCode: string, ammo?: number, reserve?: number): void;
-  setItem(itemCode:string,count:number):void;
+  setItem(itemCode:string,count:number,effect?:string):void;
   useItem():void;
   showThrownItem(itemCode:string,x:number,y:number,z:number,yaw:number,pitch:number,fuseMs:number):void;
   showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number):void;
@@ -1207,7 +1207,7 @@ export async function createGame(
     setWeapon(code: string, nextAmmo?: number, nextReserve?: number) {
       setWeaponLocal(code,nextAmmo,nextReserve);
     },
-    setItem(code:string,count:number){setItemLocal(code,count);},useItem,showThrownItem,showItemEffect,
+    setItem(code:string,count:number,effect?:string){setItemLocal(code,count);if(effect==='ENERGY')energyUntil=performance.now()+8000;},useItem,showThrownItem,showItemEffect,
     showDamageOnTarget,
     showShot,
     applyRecoil(nextPitch: number, nextYaw: number) {
