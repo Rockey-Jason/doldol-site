@@ -4,6 +4,7 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL, ROCKEY_WS_URL } from './config';
 import { GameSocket, type GameMessage } from './network/GameSocket';
 import type { GameInstance, RemotePlayer, ReplayFrame } from './core/Game';
 import { RockeyHub } from './RockeyHub';
+import { ITEMS, MAPS, WEAPON_LIST, type RockeyItemCode } from './catalog';
 
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const socket=new GameSocket();
@@ -20,6 +21,9 @@ let activeMapId='training_facility';
 let primaryWeapon='R16';
 let secondaryWeapon='R9';
 let activeWeapon='R16';
+let selectedItemCode:RockeyItemCode='GRENADE';
+type PendingStart={kind:'practice'}|{kind:'queue';mode:string}|{kind:'private-create';mode:string}|{kind:'private-join';code:string}|{kind:'private-start'};
+let pendingStart:PendingStart|null=null;
 let isSpectating=false;
 let isKillcam=false;
 let latestLocalSnapshot:RemotePlayer|null=null;
@@ -85,9 +89,41 @@ function showResult(won:boolean,detail:string){
   isSpectating=false;
 }
 function updateLocalLoadout(){
-  const loadout=hub.getLoadout();
-  primaryWeapon=loadout.primaryWeapon;
-  secondaryWeapon=loadout.secondaryWeapon;
+  const loadout=hub.getLoadout();primaryWeapon=loadout.primaryWeapon;secondaryWeapon=loadout.secondaryWeapon;selectedItemCode=loadout.itemCode;
+}
+function openStageLoadout(action:PendingStart){
+  pendingStart=action;const loadout=hub.getLoadout();updateLocalLoadout();
+  const primary=$('stagePrimary') as HTMLSelectElement,secondary=$('stageSecondary') as HTMLSelectElement,item=$('stageItem') as HTMLSelectElement;
+  primary.innerHTML=WEAPON_LIST.map(w=>'<option value="'+w.code+'">'+w.name+' · '+w.category+'</option>').join('');
+  secondary.innerHTML=primary.innerHTML;item.innerHTML=Object.values(ITEMS).map(i=>'<option value="'+i.code+'">'+i.name+' · '+i.description+'</option>').join('');
+  primary.value=loadout.primaryWeapon;secondary.value=loadout.secondaryWeapon;item.value=loadout.itemCode;
+  $('loadoutStageName')!.textContent=(MAPS[loadout.mapId]?.name||loadout.mapId).toUpperCase()+' · STAGE LOADOUT';
+  $('loadoutPanel')!.classList.remove('hidden');
+}
+async function confirmStageLoadout(){
+  if(!pendingStart)return;
+  const primary=($('stagePrimary') as HTMLSelectElement).value,secondary=($('stageSecondary') as HTMLSelectElement).value,itemCode=($('stageItem') as HTMLSelectElement).value as RockeyItemCode;
+  if(primary===secondary){toast('주무기와 보조무기는 서로 달라야 해.');return;}
+  const action=pendingStart;pendingStart=null;const loadout=hub.setStageLoadout(primary,secondary,itemCode);updateLocalLoadout();
+  $('loadoutPanel')!.classList.add('hidden');
+  try{
+    if(action.kind==='practice'){
+      requestLandscape();await ensureGame(loadout.mapId||'training_facility');currentMode='practice';isSpectating=false;activeWeapon=loadout.primaryWeapon;
+      game?.activate('practice',0,undefined,loadout.primaryWeapon,loadout.secondaryWeapon,loadout.itemCode);showGame();toast('TRAINING FACILITY · LOADOUT READY');
+    }else if(action.kind==='queue'){
+      if(!socket.connected)return status('실시간 대전에는 게임 서버 연결이 필요합니다.');
+      currentMode=action.mode;send({type:'queue.join',mode:action.mode,mapId:loadout.mapId,...loadout});status('상대를 찾고 있습니다: '+action.mode.toUpperCase()+' · '+loadout.mapId.toUpperCase());
+    }else if(action.kind==='private-create'){
+      if(!socket.connected)return status('게임 서버 연결이 필요합니다.');
+      send({type:'private.create',mode:action.mode,mapId:loadout.mapId,...loadout});status('비공개 방을 만들고 있습니다.');
+    }else if(action.kind==='private-join'){
+      if(!socket.connected)return status('게임 서버 연결이 필요합니다.');
+      send({type:'private.join',code:action.code,...loadout});
+    }else if(action.kind==='private-start'){
+      if(!socket.connected)return status('게임 서버 연결이 필요합니다.');
+      send({type:'private.start',...loadout});
+    }
+  }catch(error){console.error('Stage loadout start failed',error);status('장비를 적용하지 못했습니다. 다시 시도해 주세요.');}
 }
 function applyQuality(){
   const quality=(localStorage.getItem('rockey.quality')||'balanced') as 'low'|'balanced'|'high';
@@ -126,7 +162,9 @@ async function enterMatch(message:Record<string,any>){
     Number(message.team||0),
     message.spawn as {x:number;y:number;z:number;yaw:number}|undefined,
     activeWeapon,
-    String(message.secondaryWeapon||secondaryWeapon)
+    String(message.secondaryWeapon||secondaryWeapon),
+    String(message.itemCode||hub.getLoadout().itemCode),
+    Number(message.itemCount??ITEMS[(String(message.itemCode||hub.getLoadout().itemCode) in ITEMS?String(message.itemCode||hub.getLoadout().itemCode):'GRENADE') as RockeyItemCode].startingCount)
   );
   if(typeof message.ammo==='number')game?.setAmmo(message.ammo,Number(message.reserve||0));
   $('modeLabel')!.textContent=currentMode.toUpperCase()+' · '+String(message.weaponCode||primaryWeapon);
@@ -227,44 +265,19 @@ $('hubOpenBtn')?.addEventListener('click',()=>{
   if(!menuSessionAvailable)return status('돌이사이트 로그인 후 이용할 수 있습니다.');
   hub.open('friends');
 });
-$('practiceBtn')?.addEventListener('click',async()=>{
-  requestLandscape();
-  try{
-    updateLocalLoadout();
-    const loadout=hub.getLoadout();
-    await ensureGame(loadout.mapId||'training_facility');
-    currentMode='practice';isSpectating=false;
-    activeWeapon=loadout.primaryWeapon;
-    game?.activate('practice',0,undefined,loadout.primaryWeapon,loadout.secondaryWeapon);
-    showGame();toast('TRAINING FACILITY');
-  }catch(error){console.error(error);status('훈련장 로딩에 실패했습니다.');}
-});
-document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(button=>{
-  button.addEventListener('click',()=>{
-    requestLandscape();
-    const mode=button.dataset.mode||'1v1';
-    if(!socket.connected)return status('실시간 대전에는 게임 서버 연결이 필요합니다.');
-    updateLocalLoadout();
-    const loadout=hub.getLoadout();
-    currentMode=mode;
-    send({type:'queue.join',mode,mapId:loadout.mapId});
-    status('상대를 찾고 있습니다: '+mode.toUpperCase()+' · '+loadout.mapId.toUpperCase());
-  });
-});
-$('createPrivateBtn')?.addEventListener('click',()=>{
-  requestLandscape();
-  if(!socket.connected)return status('게임 서버 연결이 필요합니다.');
-  updateLocalLoadout();
-  send({type:'private.create',mode:($('privateMode') as HTMLSelectElement).value,mapId:hub.getLoadout().mapId});
-  status('비공개 방을 만들고 있습니다.');
-});
+$('practiceBtn')?.addEventListener('click',()=>openStageLoadout({kind:'practice'}));
+document.querySelectorAll<HTMLButtonElement>('[data-mode]').forEach(button=>button.addEventListener('click',()=>{
+  const mode=button.dataset.mode||'1v1';if(!socket.connected)return status('실시간 대전에는 게임 서버 연결이 필요합니다.');openStageLoadout({kind:'queue',mode});
+}));
+$('createPrivateBtn')?.addEventListener('click',()=>{if(!socket.connected)return status('게임 서버 연결이 필요합니다.');openStageLoadout({kind:'private-create',mode:($('privateMode') as HTMLSelectElement).value});});
 $('joinPrivateBtn')?.addEventListener('click',()=>{
-  requestLandscape();
   const code=($('privateCode') as HTMLInputElement).value.trim().toUpperCase();
-  if(!code)return status('초대 코드를 입력해 주세요.');
-  send({type:'private.join',code});
+  if(!/^[A-F0-9]{8}$/.test(code))return status('초대 코드를 확인해 주세요.');
+  if(!socket.connected)return status('게임 서버 연결이 필요합니다.');openStageLoadout({kind:'private-join',code});
 });
-$('startPrivateBtn')?.addEventListener('click',()=>{requestLandscape();send({type:'private.start'});});
+$('startPrivateBtn')?.addEventListener('click',()=>openStageLoadout({kind:'private-start'}));
+$('loadoutStart')?.addEventListener('click',()=>void confirmStageLoadout());
+$('loadoutCancel')?.addEventListener('click',()=>{pendingStart=null;$('loadoutPanel')!.classList.add('hidden');});
 $('copyCodeBtn')?.addEventListener('click',async()=>{
   const code=$('privateCodeText')?.textContent||'';
   try{await navigator.clipboard.writeText(code);toast('초대 코드를 복사했습니다.');}
@@ -273,6 +286,8 @@ $('copyCodeBtn')?.addEventListener('click',async()=>{
 $('cameraBtn')?.addEventListener('click',()=>game?.toggleCamera());
 $('weaponSwitchBtn')?.addEventListener('click',switchWeapon);
 $('mobileSwitch')?.addEventListener('pointerdown',event=>{event.preventDefault();switchWeapon();});
+$('mobileItem')?.addEventListener('pointerdown',event=>{event.preventDefault();game?.useItem();});
+$('itemUseBtn')?.addEventListener('click',()=>game?.useItem());
 $('exitBtn')?.addEventListener('click',()=>{
   if(isSpectating)send({type:'spectator.leave'});
   else send({type:'match.leave'});
@@ -317,6 +332,17 @@ socket.onMessage((message:GameMessage)=>{
       break;
     case 'ammo.update':
       game?.setAmmo(Number(message.ammo),Number(message.reserve));
+      break;
+    case 'item.update':
+      if(typeof message.health==='number')game?.setHealth(Number(message.health));
+      game?.setItem(String(message.itemCode||selectedItemCode),Number(message.count??0));
+      if(message.effect==='ENERGY')toast('ENERGY BOOST · 8초');
+      break;
+    case 'item.throw':
+      game?.showThrownItem(String(message.itemCode||'GRENADE'),Number(message.x),Number(message.y),Number(message.z),Number(message.yaw),Number(message.pitch),Number(message.fuseMs||900));
+      break;
+    case 'item.effect':
+      game?.showItemEffect(String(message.effect||''),Number(message.x||0),Number(message.y||0),Number(message.z||0),Number(message.radius||4),Number(message.durationMs||500));
       break;
     case 'weapon.update':
       activeWeapon=String(message.weaponCode||activeWeapon);

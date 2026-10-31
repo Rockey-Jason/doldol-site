@@ -1,4 +1,5 @@
 import type { ReplayFrame } from './core/Game';
+import { ITEMS, type RockeyItemCode } from './catalog';
 
 type Sender=(message:Record<string,unknown>&{type:string})=>void;
 type Friend={id:string;name:string;avatar?:string|null;online:boolean;rank:string;rating:number;wins?:number;losses?:number;incoming?:boolean;outgoing?:boolean;friendship?:string;requestedBy?:string|null};
@@ -31,6 +32,8 @@ export class RockeyHub {
   private maps:MapItem[]=[];
   private primaryWeapon='R16';
   private secondaryWeapon='R9';
+  private itemCode:RockeyItemCode='GRENADE';
+  private stageLoadouts:Record<string,{primaryWeapon:string;secondaryWeapon:string;itemCode:RockeyItemCode}>={};
   private mapId='training_facility';
   private searchQuery='';
   private incomingInvite:{from:{id:string;name:string};code:string;mode:string;mapId:string}|null=null;
@@ -41,7 +44,8 @@ export class RockeyHub {
   constructor(root:HTMLElement,send:Sender,onReplay:(frames:ReplayFrame[],mapId:string)=>void,onQuality:(level:'low'|'balanced'|'high')=>void,onSensitivity:(value:number)=>void){
     this.root=root;this.send=send;this.onReplay=onReplay;this.onQuality=onQuality;this.onSensitivity=onSensitivity;
     this.mapId=localStorage.getItem('rockey.mapId')||'training_facility';
-    this.mapId=localStorage.getItem('rockey.mapId')||'training_facility';
+    try{const saved=JSON.parse(localStorage.getItem('rockey.stageLoadouts.v1')||'{}');if(saved&&typeof saved==='object')this.stageLoadouts=saved;}catch{this.stageLoadouts={};}
+    this.restoreStageLoadout();
     this.quality=(localStorage.getItem('rockey.quality') as any)||'balanced';
     const saved=Number(localStorage.getItem('rockey.sensitivity')||'1');
     this.sensitivity=Number.isFinite(saved)?Math.max(.4,Math.min(2.2,saved)):1;
@@ -51,7 +55,10 @@ export class RockeyHub {
   }
   open(tab='friends'){this.tab=tab;this.root.classList.remove('hidden');this.refresh();this.render();}
   close(){this.root.classList.add('hidden');}
-  getLoadout(){return {primaryWeapon:this.primaryWeapon,secondaryWeapon:this.secondaryWeapon,mapId:this.mapId};}
+  getLoadout(){return {primaryWeapon:this.primaryWeapon,secondaryWeapon:this.secondaryWeapon,itemCode:this.itemCode,mapId:this.mapId};}
+  setStageLoadout(primaryWeapon:string,secondaryWeapon:string,itemCode:string){if(primaryWeapon===secondaryWeapon)throw new Error('주무기와 보조 무기는 달라야 합니다.');this.primaryWeapon=primaryWeapon;this.secondaryWeapon=secondaryWeapon;this.itemCode=(itemCode in ITEMS?itemCode:'GRENADE') as RockeyItemCode;this.persistStageLoadout();return this.getLoadout();}
+  private restoreStageLoadout(){const saved=this.stageLoadouts[this.mapId];if(!saved)return;if(saved.primaryWeapon)this.primaryWeapon=saved.primaryWeapon;if(saved.secondaryWeapon)this.secondaryWeapon=saved.secondaryWeapon;this.itemCode=(saved.itemCode in ITEMS?saved.itemCode:'GRENADE') as RockeyItemCode;}
+  private persistStageLoadout(){this.stageLoadouts[this.mapId]={primaryWeapon:this.primaryWeapon,secondaryWeapon:this.secondaryWeapon,itemCode:this.itemCode};localStorage.setItem('rockey.stageLoadouts.v1',JSON.stringify(this.stageLoadouts));}
   refresh(){
     this.send({type:'friend.list'});this.send({type:'leaderboard.get'});this.send({type:'season.get'});
     this.send({type:'loadout.get'});this.send({type:'replays.list'});this.send({type:'matches.live'});
@@ -76,7 +83,7 @@ export class RockeyHub {
       case 'loadout.data':
         this.weapons=m.weapons||[];this.maps=m.maps||[];
         this.primaryWeapon=m.primaryWeapon||this.primaryWeapon;
-        this.secondaryWeapon=m.secondaryWeapon||this.secondaryWeapon;this.render();break;
+        this.secondaryWeapon=m.secondaryWeapon||this.secondaryWeapon;this.restoreStageLoadout();this.render();break;
       case 'loadout.saved':
         this.primaryWeapon=m.primaryWeapon||this.primaryWeapon;this.secondaryWeapon=m.secondaryWeapon||this.secondaryWeapon;
         this.notice='장비 설정을 저장했습니다.';this.render();break;
@@ -106,10 +113,8 @@ export class RockeyHub {
     if(!(t instanceof HTMLInputElement||t instanceof HTMLSelectElement))return;
     if(t.id==='hubPrimary')this.primaryWeapon=t.value;
     if(t.id==='hubSecondary')this.secondaryWeapon=t.value;
-    if(t.id==='hubMap'){
-      this.mapId=t.value;
-      localStorage.setItem('rockey.mapId',this.mapId);
-    }
+    if(t.id==='hubItem'&&t.value in ITEMS)this.itemCode=t.value as RockeyItemCode;
+    if(t.id==='hubMap'){this.persistStageLoadout();this.mapId=t.value;localStorage.setItem('rockey.mapId',this.mapId);this.restoreStageLoadout();this.render();}
     if(t.id==='hubQuality'){
       this.quality=t.value as any;localStorage.setItem('rockey.quality',this.quality);this.onQuality(this.quality);
     }
@@ -133,11 +138,11 @@ export class RockeyHub {
       case 'friend-reject':this.send({type:'friend.respond',targetId:id,accept:false});break;
       case 'friend-invite':this.send({type:'friend.invite',targetId:id});break;
       case 'invite-accept':
-        if(this.incomingInvite){this.send({type:'private.join',code:this.incomingInvite.code});this.incomingInvite=null;this.close();}break;
+        if(this.incomingInvite){const loadout=this.getLoadout();this.send({type:'private.join',code:this.incomingInvite.code,...loadout});this.incomingInvite=null;this.close();}break;
       case 'invite-dismiss':this.incomingInvite=null;this.render();break;
       case 'loadout-save':
         if(this.primaryWeapon===this.secondaryWeapon){this.notice='주무기와 보조 무기는 달라야 합니다.';this.render();}
-        else this.send({type:'loadout.set',primaryWeapon:this.primaryWeapon,secondaryWeapon:this.secondaryWeapon});break;
+        else {this.persistStageLoadout();this.send({type:'loadout.set',primaryWeapon:this.primaryWeapon,secondaryWeapon:this.secondaryWeapon});}break;
       case 'rank-refresh':this.send({type:'leaderboard.get'});break;
       case 'season-refresh':this.send({type:'season.get'});break;
       case 'live-refresh':this.send({type:'matches.live'});break;
@@ -219,12 +224,13 @@ export class RockeyHub {
     const option=(w:Weapon)=>'<option value="'+w.code+'" '+(w.code===this.primaryWeapon?'':'')+'>'+esc(w.name)+' · '+esc(w.category)+'</option>';
     const primaryOptions=this.weapons.map(w=>'<option value="'+w.code+'" '+(w.code===this.primaryWeapon?'selected':'')+'>'+esc(w.name)+' · '+esc(w.category)+'</option>').join('');
     const secondaryOptions=this.weapons.map(w=>'<option value="'+w.code+'" '+(w.code===this.secondaryWeapon?'selected':'')+'>'+esc(w.name)+' · '+esc(w.category)+'</option>').join('');
+    const itemOptions=Object.values(ITEMS).map(i=>'<option value="'+i.code+'" '+(i.code===this.itemCode?'selected':'')+'>'+esc(i.name)+' · '+esc(i.description)+'</option>').join('');
     const mapOptions=this.maps.map(m=>'<option value="'+m.id+'" '+(m.id===this.mapId?'selected':'')+'>'+esc(m.name)+' · '+esc(m.difficulty)+'</option>').join('');
     const cards=this.weapons.map(w=>
       '<div class="hub-weapon"><div class="hub-weapon-icon">'+esc(w.code.slice(0,2))+'</div><div class="hub-row-main"><b>'+esc(w.name)+'</b><span>'+esc(w.category)+' · 피해 '+w.damage+' · 탄창 '+w.magazine+'</span></div><span class="hub-weapon-rate">'+(1000/w.fireInterval).toFixed(1)+' <small>RPM</small></span></div>'
     ).join('');
-    return '<section class="hub-section"><div class="hub-section-head"><div><h3>LOADOUT CONFIGURATION</h3><p>전투에 사용할 주무기와 보조 무기를 저장하세요.</p></div></div>'+
-      '<div class="hub-loadout-grid"><label>PRIMARY WEAPON<select id="hubPrimary">'+primaryOptions+'</select></label><label>SECONDARY WEAPON<select id="hubSecondary">'+secondaryOptions+'</select></label><label class="hub-map-select">BATTLE MAP<select id="hubMap">'+mapOptions+'</select></label></div>'+
+    return '<section class="hub-section"><div class="hub-section-head"><div><h3>LOADOUT CONFIGURATION</h3><p>스테이지마다 주무기·보조무기·전술 아이템을 따로 저장합니다.</p></div></div>'+
+      '<div class="hub-loadout-grid"><label>PRIMARY WEAPON<select id="hubPrimary">'+primaryOptions+'</select></label><label>SECONDARY WEAPON<select id="hubSecondary">'+secondaryOptions+'</select></label><label>TACTICAL ITEM<select id="hubItem">'+itemOptions+'</select></label><label class="hub-map-select">STAGE / BATTLE MAP<select id="hubMap">'+mapOptions+'</select></label></div>'+
       '<button class="hub-primary wide" data-action="loadout-save">장비 저장</button></section>'+
       '<section class="hub-section"><div class="hub-section-head"><div><h3>WEAPON ARMORY <small>'+this.weapons.length+'/11</small></h3><p>총기별 피해량과 특성을 비교하고, 돌이 근접 무기도 장착할 수 있습니다.</p></div></div><div class="hub-weapon-list">'+(cards||'<div class="hub-empty">무기 데이터를 불러오는 중입니다.</div>')+'</div></section>'+
       '<section class="hub-section"><div class="hub-section-head"><div><h3>GRAPHICS & CONTROLS</h3><p>모바일 기기에서는 낮은 그래픽 설정을 권장합니다.</p></div></div><div class="hub-settings">'+

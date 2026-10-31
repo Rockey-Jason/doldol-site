@@ -88,3 +88,9 @@ export const WEAPONS: Record<string,RockeyWeapon> = {
   DORI:{code:'DORI',name:'DORI',category:'MELEE',damage:48,headshotMultiplier:1.3,fireInterval:620,magazine:1,reserve:0,reloadMs:500,range:3.2,spread:.08}
 };
 export const WEAPON_LIST = Object.values(WEAPONS);
+export type RockeyItemCode='GRENADE'|'SMOKE'|'FLASH'|'PILLS'|'ENERGY';
+export const ITEMS:Record<RockeyItemCode,{code:RockeyItemCode;name:string;startingCount:number}>={
+ GRENADE:{code:'GRENADE',name:'수류탄',startingCount:2},SMOKE:{code:'SMOKE',name:'연막탄',startingCount:1},
+ FLASH:{code:'FLASH',name:'섬광탄',startingCount:1},PILLS:{code:'PILLS',name:'회복 알약',startingCount:2},
+ ENERGY:{code:'ENERGY',name:'에너지 드링크',startingCount:1}
+};

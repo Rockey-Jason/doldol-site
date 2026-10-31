@@ -54,6 +54,18 @@
       <div class="menu-footer"><span>DEV BUILD 03/04 · COMPETITIVE FPS</span><a href="/doldol-site/">DORI SITE ↗</a></div>
     </div>
   </section>
+  <section id="loadoutPanel" class="loadout-panel hidden" aria-label="스테이지 장비 선택">
+    <div class="loadout-card">
+      <div class="loadout-kicker">ROCKEY · STAGE PREPARATION</div><h2>전투 장비 선택</h2><p id="loadoutStageName">TRAINING FACILITY</p>
+      <div class="stage-loadout-grid">
+        <label><span>01 · 주무기</span><select id="stagePrimary"></select></label>
+        <label><span>02 · 보조무기</span><select id="stageSecondary"></select></label>
+        <label class="stage-item-slot"><span>03 · 아이템</span><select id="stageItem"></select></label>
+      </div>
+      <div class="loadout-hint">스테이지별 선택은 이 기기에 자동 저장돼. 전투 시작 전 언제든 변경할 수 있어.</div>
+      <div class="loadout-actions"><button id="loadoutCancel" class="outline-btn">취소</button><button id="loadoutStart" class="primary-btn">장비 확정 · 전투 시작</button></div>
+    </div>
+  </section>
   <section id="hud" class="hud hidden">
     <div class="match-info"><span id="modeLabel">TRAINING</span><span id="scoreLabel">0 : 0</span><span id="roundLabel">ROUND 1</span></div>
     <div id="killcamBanner" class="killcam-banner hidden" role="status">KILLCAM</div>
@@ -62,6 +74,7 @@
       <div class="health-box"><span>VITAL</span><strong id="healthValue">100</strong><div class="health-track"><i id="healthBar"></i></div></div>
       <div class="ammo-box"><strong id="ammoValue">30 / 90</strong><span>R-16 · ASSAULT</span></div>
     </div>
+    <div class="item-box"><span>TACTICAL ITEM · G</span><strong id="itemLabel">수류탄</strong><small id="itemCount">2개 남음</small><button id="itemUseBtn" type="button">아이템 사용</button></div>
     <div id="toast" class="toast"></div>
     <button id="cameraBtn" class="camera-btn">VIEW · FIRST [V]</button>
     <button id="weaponSwitchBtn" class="weapon-switch-btn">SWAP · Q</button>
@@ -74,10 +87,12 @@
       <button id="mobileJump" class="touch-btn">JUMP</button>
       <button id="mobileReload" class="touch-btn">RELOAD</button>
       <button id="mobileSwitch" class="touch-btn">SWAP</button>
+      <button id="mobileItem" class="touch-btn item-touch-btn">ITEM</button>
       <button id="mobileFire" class="touch-btn fire-btn">FIRE</button>
     </div>
   </div>
   <section id="hubPanel" class="hub-panel hidden" aria-label="ROCKEY 플레이어 허브"></section>
+  <div id="flashOverlay" class="flash-overlay" aria-hidden="true"></div>
   <section id="resultPanel" class="result-layer hidden">
     <div class="result-card"><div class="eyebrow">MATCH COMPLETE</div><h2 id="resultTitle">VICTORY</h2><p id="resultDescription"></p><button id="returnMenuBtn" class="primary-btn">메인 메뉴로</button></div>
   </section>

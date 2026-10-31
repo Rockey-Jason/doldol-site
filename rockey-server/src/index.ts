@@ -3,7 +3,7 @@ import { WebSocket, WebSocketServer } from 'ws';
 import { createHash, randomBytes } from 'node:crypto';
 import { admin, verifyPlayer, type VerifiedPlayer } from './auth.js';
 import { GameRoom, type Mode, type PlayerClient } from './game-room.js';
-import { MAPS, WEAPONS } from './catalog.js';
+import { ITEMS, MAPS, WEAPONS, type RockeyItemCode } from './catalog.js';
 
 const app=Fastify({logger:true,bodyLimit:2*1024*1024});
 const wss=new WebSocketServer({noServer:true,maxPayload:256*1024,perMessageDeflate:false});
@@ -40,6 +40,14 @@ function isMap(value:unknown):value is string{
 }
 function isWeapon(value:unknown):value is string{
   return typeof value==='string' && Boolean(WEAPONS[value]);
+}
+function isItem(value:unknown):value is RockeyItemCode{return typeof value==='string'&&value in ITEMS;}
+function applyStageLoadout(client:PlayerClient,message:Record<string,unknown>){
+  const primary=isWeapon(message.primaryWeapon)?message.primaryWeapon:client.primaryWeapon;
+  const secondary=isWeapon(message.secondaryWeapon)?message.secondaryWeapon:client.secondaryWeapon;
+  if(primary!==secondary){client.selectedPrimaryWeapon=primary;client.selectedSecondaryWeapon=secondary;}
+  else{client.selectedPrimaryWeapon=client.primaryWeapon;client.selectedSecondaryWeapon=client.secondaryWeapon;}
+  if(isItem(message.itemCode))client.selectedItemCode=message.itemCode;else if(!client.selectedItemCode)client.selectedItemCode='GRENADE';
 }
 function removeFromQueues(client:PlayerClient){
   for(const [key,list] of queues) queues.set(key,list.filter(item=>item!==client));
@@ -296,7 +304,7 @@ async function handle(client:PlayerClient,raw:WebSocket.RawData){
       if(!isMode(message.mode)) return send(client,{type:'error',message:'지원하지 않는 모드입니다.'});
       const mode=message.mode;
       const mapId=isMap(message.mapId)?message.mapId:'training_facility';
-      client.selectedMapId=mapId;
+      applyStageLoadout(client,message);client.selectedMapId=mapId;
       removeFromQueues(client);
       const key=queueKey(mode,mapId);
       const queue=queues.get(key)||[];
@@ -324,6 +332,7 @@ async function handle(client:PlayerClient,raw:WebSocket.RawData){
       const id=randomBytes(10).toString('hex');
       const mode=message.mode as Mode;
       const mapId=isMap(message.mapId)?message.mapId:'training_facility';
+      applyStageLoadout(client,message);
       const expiresAt=Date.now()+15*60*1000;
       const {error}=await admin.from('rockey_invites').insert({
         host_user_id:client.player.id,room_code_hash:hashCode(code),
@@ -356,7 +365,7 @@ async function handle(client:PlayerClient,raw:WebSocket.RawData){
         (hasTargetList && !allowedTargets.includes(client.player.id)) ||
         (!hasTargetList && invite.target_user_id && invite.target_user_id!==client.player.id)
       )) return send(client,{type:'private.error',message:'이 초대는 다른 플레이어에게 발송되었습니다.'});
-      party.members.push(client);
+      applyStageLoadout(client,message);party.members.push(client);
       for(const member of party.members) send(member,{
         type:'private.member',name:client.player.name,members:party.members.length,required:modeSize(party.mode)
       });
@@ -368,7 +377,7 @@ async function handle(client:PlayerClient,raw:WebSocket.RawData){
       if(!party||party.expiresAt<Date.now()) return send(client,{type:'private.error',message:'시작할 수 있는 비공개 방이 없습니다.'});
       if(party.members.length!==modeSize(party.mode))
         return send(client,{type:'private.error',message:'필요 인원 '+modeSize(party.mode)+'명 / 현재 '+party.members.length+'명'});
-      parties.delete(party.id);
+      applyStageLoadout(client,message);parties.delete(party.id);
       await admin.from('rockey_invites').update({status:'accepted'})
         .eq('room_code_hash',hashCode(party.code));
       await startRoom(party.mode,party.members,party.mapId);
@@ -388,7 +397,7 @@ async function handle(client:PlayerClient,raw:WebSocket.RawData){
 
     case 'loadout.get': {
       const loadout=await getLoadout(client.player.id);
-      send(client,{type:'loadout.data',...loadout,weapons:Object.values(WEAPONS),maps:Object.values(MAPS).map(m=>({id:m.id,name:m.name,description:m.description,difficulty:m.difficulty}))});
+      send(client,{type:'loadout.data',...loadout,weapons:Object.values(WEAPONS),items:Object.values(ITEMS),maps:Object.values(MAPS).map(m=>({id:m.id,name:m.name,description:m.description,difficulty:m.difficulty}))});
       return;
     }
     case 'loadout.set': {
@@ -462,6 +471,9 @@ async function handle(client:PlayerClient,raw:WebSocket.RawData){
     }
     case 'weapon.switch':
       roomFor(client)?.handleSwitchWeapon(client);
+      return;
+    case 'item.use':
+      roomFor(client)?.handleUseItem(client,message);
       return;
 
     default:

@@ -88,3 +88,12 @@ export const WEAPONS: Record<string,RockeyWeapon> = {
   DORI:{code:'DORI',name:'DORI',category:'MELEE',damage:48,headshotMultiplier:1.3,fireInterval:620,magazine:1,reserve:0,reloadMs:500,range:3.2,spread:.08}
 };
 export const WEAPON_LIST = Object.values(WEAPONS);
+export type RockeyItemCode='GRENADE'|'SMOKE'|'FLASH'|'PILLS'|'ENERGY';
+export interface RockeyItem{code:RockeyItemCode;name:string;category:'THROWABLE'|'SUPPORT';description:string;startingCount:number;}
+export const ITEMS:Record<RockeyItemCode,RockeyItem>={
+ GRENADE:{code:'GRENADE',name:'수류탄',category:'THROWABLE',description:'폭발 범위 안의 적에게 큰 피해를 줍니다.',startingCount:2},
+ SMOKE:{code:'SMOKE',name:'연막탄',category:'THROWABLE',description:'넓은 연막을 만들어 시야를 차단합니다.',startingCount:1},
+ FLASH:{code:'FLASH',name:'섬광탄',category:'THROWABLE',description:'가까운 적의 시야를 잠시 가립니다.',startingCount:1},
+ PILLS:{code:'PILLS',name:'회복 알약',category:'SUPPORT',description:'체력을 35 회복합니다.',startingCount:2},
+ ENERGY:{code:'ENERGY',name:'에너지 드링크',category:'SUPPORT',description:'8초 동안 이동 속도가 25% 증가합니다.',startingCount:1}
+};

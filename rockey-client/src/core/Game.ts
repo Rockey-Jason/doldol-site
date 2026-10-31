@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { MAPS, WEAPONS, type RockeyWeapon } from '../catalog';
+import { ITEMS, MAPS, WEAPONS, type RockeyItemCode, type RockeyWeapon } from '../catalog';
 
 export interface RemotePlayer {
   id: string; name: string; x: number; y: number; z: number;
@@ -10,13 +10,17 @@ export interface ReplayFrame {
   players: RemotePlayer[];
 }
 export interface GameInstance {
-  activate(mode: string, team?: number, spawn?: { x: number; y: number; z: number; yaw: number }, weaponCode?: string, secondaryWeapon?: string): void;
+  activate(mode: string, team?: number, spawn?: { x: number; y: number; z: number; yaw: number }, weaponCode?: string, secondaryWeapon?: string, itemCode?: string, itemCount?: number): void;
   setRemotePlayers(players: RemotePlayer[]): void;
   reconcileLocalPlayer(player: RemotePlayer): void;
   setScore(a: number, b: number, round: number): void;
   setHealth(value: number): void;
   setAmmo(ammo: number, reserve: number): void;
   setWeapon(weaponCode: string, ammo?: number, reserve?: number): void;
+  setItem(itemCode:string,count:number):void;
+  useItem():void;
+  showThrownItem(itemCode:string,x:number,y:number,z:number,yaw:number,pitch:number,fuseMs:number):void;
+  showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number):void;
   applyRecoil(pitch: number, yaw: number): void;
   showDamageOnTarget(targetId: string, targetName: string, damage: number, headshot: boolean): void;
   showShot(x: number, y: number, z: number, yaw: number, pitch: number, weaponCode: string): void;
@@ -378,6 +382,8 @@ export async function createGame(
   const practiceTargets: THREE.Group[] = [];
   const projectiles: Array<{mesh:THREE.Mesh;trail:THREE.Line;direction:THREE.Vector3;travelled:number;maxDistance:number;age:number}> = [];
   const damagePopups: THREE.Sprite[] = [];
+  const thrownItemVisuals:Array<{mesh:THREE.Mesh;velocity:THREE.Vector3;age:number;fuseMs:number}> = [];
+  const timedItemEffects:Array<{group:THREE.Group;startedAt:number;endsAt:number;kind:string}> = [];
   const projectileColors:Record<string,number>={R16:0x4aa8ff,R9:0xffd166,VIPER:0x54e6b0,THUNDER:0xff8a45,LONGSHOT:0xa8d8ff,HELIX:0xb18aff,BASTION:0xffc45f,NOVA:0xff748e,ARC:0x57efff,PULSE:0xbe8cff,DORI:0xc98a4c};
 
   function createPracticeTargets() {
@@ -418,6 +424,9 @@ export async function createGame(
   let vertical = 0;
   let mode = 'practice';
   let currentWeaponCode = 'R16';
+  let currentItemCode:RockeyItemCode='GRENADE';
+  let itemCount=ITEMS.GRENADE.startingCount;
+  let energyUntil=0;
   let primaryWeaponCode = 'R16';
   let secondaryWeaponCode = 'R9';
   let currentWeapon: RockeyWeapon = WEAPONS.R16;
@@ -598,6 +607,50 @@ export async function createGame(
     const direction=new THREE.Vector3(-Math.sin(shotYaw)*cp,Math.sin(shotPitch),-Math.cos(shotYaw)*cp).normalize();
     spawnProjectile(new THREE.Vector3(x,y,z),direction,weaponCode,WEAPONS[weaponCode]?.range||70);
   }
+  function updateItemHud(){
+    const label=document.getElementById('itemLabel'),count=document.getElementById('itemCount'),mobile=document.getElementById('mobileItem');
+    if(label)label.textContent=ITEMS[currentItemCode].name;if(count)count.textContent=itemCount+'개 남음';if(mobile)mobile.textContent='ITEM · '+itemCount;
+    const button=document.getElementById('itemUseBtn') as HTMLButtonElement|null;if(button)button.disabled=itemCount<=0;
+  }
+  function setItemLocal(code:string,count:number){currentItemCode=(code in ITEMS?code:'GRENADE') as RockeyItemCode;itemCount=Math.max(0,Math.min(10,Math.floor(count)));updateItemHud();}
+  function showThrownItem(itemCode:string,x:number,y:number,z:number,throwYaw:number,throwPitch:number,fuseMs:number){
+    const color=itemCode==='GRENADE'?0xe5a94d:itemCode==='SMOKE'?0xb5c3cf:0x8cecff;
+    const mesh=new THREE.Mesh(new THREE.SphereGeometry(.13,12,10),new THREE.MeshStandardMaterial({color,metalness:.35,roughness:.32,emissive:color,emissiveIntensity:.25}));
+    mesh.position.set(x,y,z);mesh.castShadow=true;scene.add(mesh);const cp=Math.cos(throwPitch);
+    const direction=new THREE.Vector3(-Math.sin(throwYaw)*cp,Math.sin(throwPitch),-Math.cos(throwYaw)*cp).normalize();
+    thrownItemVisuals.push({mesh,velocity:direction.multiplyScalar(8.5).add(new THREE.Vector3(0,3.2,0)),age:0,fuseMs});
+  }
+  function showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number){
+    if(effect==='FLASH'){const overlay=document.getElementById('flashOverlay');if(overlay){overlay.classList.add('active');window.setTimeout(()=>overlay.classList.remove('active'),Math.max(220,durationMs));}return;}
+    const group=new THREE.Group();group.position.set(x,y,z);
+    if(effect==='SMOKE'){
+      const material=new THREE.MeshStandardMaterial({color:0xaab7c5,transparent:true,opacity:.26,depthWrite:false,roughness:1});
+      for(let i=0;i<11;i++){const puff=new THREE.Mesh(new THREE.SphereGeometry(.65+(i%4)*.22,12,10),material);puff.position.set(Math.sin(i*2.13)*radius*.43,(i%3)*.55,Math.cos(i*1.7)*radius*.43);group.add(puff);}
+    }else{
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(Math.max(.6,radius*.28),.08,8,36),new THREE.MeshBasicMaterial({color:0xffbd69,transparent:true,opacity:.9}));ring.rotation.x=Math.PI/2;group.add(ring);
+      for(let i=0;i<10;i++){const spark=new THREE.Mesh(new THREE.SphereGeometry(.09,6,6),new THREE.MeshBasicMaterial({color:i%2?0xffe0a0:0xff754a}));const angle=i/10*Math.PI*2;spark.position.set(Math.cos(angle)*radius*.55,.25+(i%3)*.12,Math.sin(angle)*radius*.55);group.add(spark);}
+    }
+    scene.add(group);const now=performance.now();timedItemEffects.push({group,startedAt:now,endsAt:now+Math.max(350,durationMs),kind:effect});
+  }
+  function useItem(){
+    if(!active)return;if(itemCount<=0){notify('아이템을 모두 사용했습니다.');return;}
+    if(mode!=='practice'){send({type:'item.use',itemCode:currentItemCode});return;}
+    if(currentItemCode==='PILLS'){if(hp>=100){notify('체력이 이미 가득 찼습니다.');return;}hp=Math.min(100,hp+35);itemCount--;updateHud(hp,ammo,reserve,currentWeapon.name);updateItemHud();notify('체력 +35');return;}
+    if(currentItemCode==='ENERGY'){energyUntil=performance.now()+8000;itemCount--;updateItemHud();notify('이동 속도 증가 · 8초');return;}
+    camera.updateMatrixWorld(true);const origin=camera.getWorldPosition(new THREE.Vector3()),direction=camera.getWorldDirection(new THREE.Vector3());
+    const impact=origin.clone().addScaledVector(direction,7.2);impact.y=Math.max(.75,impact.y);
+    const usedCode=currentItemCode,fuseMs=usedCode==='GRENADE'?1050:usedCode==='SMOKE'?850:650;
+    showThrownItem(usedCode,origin.x,origin.y,origin.z,yaw,pitch,fuseMs);itemCount--;updateItemHud();
+    window.setTimeout(()=>{
+      if(disposed)return;showItemEffect(usedCode,impact.x,impact.y,impact.z,usedCode==='GRENADE'?6:4.5,usedCode==='SMOKE'?8000:usedCode==='FLASH'?700:480);
+      if(usedCode==='GRENADE')for(const target of practiceTargets){
+        if(!target.visible)continue;const distance=target.position.distanceTo(impact);if(distance>6)continue;
+        const damage=Math.max(1,Math.round(78*(1-distance/6)));showDamageAt(target.position.clone(),damage,false);
+        target.userData.hp=Math.max(0,Number(target.userData.hp||100)-damage);
+        if(target.userData.hp<=0){target.visible=false;window.setTimeout(()=>{if(!disposed){target.userData.hp=100;target.visible=true;}},1800);}
+      }
+    },fuseMs);
+  }
 
   function stopMobileFire() {
     if (mobileFireTimer) window.clearInterval(mobileFireTimer);
@@ -683,6 +736,7 @@ export async function createGame(
     keys.add(event.code);
     if (event.code === 'KeyV') toggleCamera();
     if (event.code === 'KeyR') reload();
+    if (event.code === 'KeyG' || event.code === 'Digit3') useItem();
     if (event.code === 'KeyQ') {
       if (mode === 'practice') {
         const next = currentWeaponCode === primaryWeaponCode ? secondaryWeaponCode : primaryWeaponCode;
@@ -820,6 +874,8 @@ export async function createGame(
   mobileJump?.addEventListener('lostpointercapture', stopJump);
   document.getElementById('mobileReload')?.addEventListener('pointerdown', reload);
   document.getElementById('mobileView')?.addEventListener('pointerdown', toggleCamera);
+  document.getElementById('mobileItem')?.addEventListener('pointerdown',event=>{event.preventDefault();useItem();});
+  document.getElementById('itemUseBtn')?.addEventListener('click',useItem);
 
   function disposeObjectResources(root: THREE.Object3D) {
     const geometries = new Set<THREE.BufferGeometry>();
@@ -949,6 +1005,8 @@ export async function createGame(
       (popup.material as THREE.SpriteMaterial).opacity=Math.max(0,1-age/.9);
       if(age>=.9){scene.remove(popup);const material=popup.material as THREE.SpriteMaterial;material.map?.dispose();material.dispose();damagePopups.splice(i,1);}
     }
+    for(let i=thrownItemVisuals.length-1;i>=0;i--){const item=thrownItemVisuals[i];item.age+=dt;item.velocity.y-=9.8*dt;item.mesh.position.addScaledVector(item.velocity,dt);if(item.age>=item.fuseMs/1000){scene.remove(item.mesh);disposeObjectResources(item.mesh);thrownItemVisuals.splice(i,1);}}
+    for(let i=timedItemEffects.length-1;i>=0;i--){const effect=timedItemEffects[i],age=now-effect.startedAt,remaining=effect.endsAt-now;if(effect.kind==='SMOKE'){const fade=Math.min(1,Math.max(0,remaining/1600));effect.group.scale.setScalar(1+Math.min(.22,age/5000));effect.group.traverse(object=>{if(object instanceof THREE.Mesh){const mats=Array.isArray(object.material)?object.material:[object.material];mats.forEach(mat=>{if('opacity' in mat)mat.opacity=.26*fade;});}});}if(remaining<=0){scene.remove(effect.group);disposeObjectResources(effect.group);timedItemEffects.splice(i,1);}}
     for(const mesh of remotes.values()){
       const data=mesh.userData;
       if(typeof data.targetX!=='number')continue;
@@ -1013,7 +1071,8 @@ export async function createGame(
       if (direction.lengthSq() > 1) direction.normalize();
       const movementTarget=Math.min(1,direction.length());
       movementAmount+=(movementTarget-movementAmount)*(1-Math.exp(-12*dt));
-      const speed = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 7.1 : 5.4;
+      const baseSpeed=keys.has('ShiftLeft')||keys.has('ShiftRight')?7.1:5.4;
+      const speed=baseSpeed*(now<energyUntil?1.25:1);
       if (controller.computedGrounded() && vertical < 0) vertical = -1;
       if (touch.jump && controller.computedGrounded()) {
         vertical = 7.2;
@@ -1075,7 +1134,7 @@ export async function createGame(
   raf = requestAnimationFrame(frame);
 
   return {
-    activate(nextMode: string, team = 0, serverSpawn?: { x: number; y: number; z: number; yaw: number }, weaponCode = 'R16', secondaryWeapon = 'R9') {
+    activate(nextMode: string, team = 0, serverSpawn?: { x: number; y: number; z: number; yaw: number }, weaponCode = 'R16', secondaryWeapon = 'R9', itemCode = 'GRENADE', nextItemCount?: number) {
       mode = nextMode;
       active = nextMode !== 'spectator' && nextMode !== 'replay';
       replayFrames = null;
@@ -1086,6 +1145,7 @@ export async function createGame(
       primaryWeaponCode = currentWeaponCode;
       secondaryWeaponCode = WEAPONS[secondaryWeapon] ? secondaryWeapon : 'R9';
       currentWeapon = WEAPONS[currentWeaponCode];
+      const safeItemCode=(itemCode in ITEMS?itemCode:'GRENADE') as RockeyItemCode;setItemLocal(safeItemCode,nextItemCount===undefined?ITEMS[safeItemCode].startingCount:nextItemCount);energyUntil=0;
       rebuildGun(currentWeaponCode);
       switchAnimationStart=performance.now();
       reloadAnimationStart=0;
@@ -1147,6 +1207,7 @@ export async function createGame(
     setWeapon(code: string, nextAmmo?: number, nextReserve?: number) {
       setWeaponLocal(code,nextAmmo,nextReserve);
     },
+    setItem(code:string,count:number){setItemLocal(code,count);},useItem,showThrownItem,showItemEffect,
     showDamageOnTarget,
     showShot,
     applyRecoil(nextPitch: number, nextYaw: number) {
