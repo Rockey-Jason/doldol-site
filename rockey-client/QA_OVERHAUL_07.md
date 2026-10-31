@@ -29,6 +29,16 @@ window.RockeyNetworkQA.clear();
 
 This opt-in test affects gameplay WebSocket messages in both directions, including heartbeat pings. It is intentionally disabled by default. It can cause disconnects and match disruption; use a private/practice test session, not a ranked match.
 
+## Live stair / slope / jump capture
+Enter the training map, then run:
+
+```js
+window.addEventListener('rockey:movement-check-stop', e => console.table(e.detail.samples));
+window.RockeyQA.startMovementCheck();
+```
+
+Walk up and down the indoor stairs, cross the skybridge, enter/exit the basement, traverse the rooftop access, and perform repeated jumps/landings. Then run `window.RockeyQA.stopMovementCheck()`. Samples include grounded state, vertical velocity, sampled floor height and local slope estimate. This captures a run for inspection; it does not automatically certify visual foot placement.
+
 ## PC / mobile benchmark
 The game emits `rockey:performance` events containing device class, FPS, 1% low, frame time, pixel ratio, heap (when Chromium exposes it), GPU resource counts, draw calls, triangles, debris and network RTT/jitter.
 
