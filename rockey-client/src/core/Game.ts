@@ -1691,6 +1691,13 @@ export async function createGame(
           if(object instanceof THREE.PointLight)object.intensity=Math.max(0,9*(1-progress));
         });
       }
+      if(effect.kind==='LIGHT'){
+        const progress=THREE.MathUtils.clamp(age/Math.max(1,effect.endsAt-effect.startedAt),0,1);
+        const flicker=age<210?(Math.sin(age*.105)+Math.sin(age*.037)>.12?1:.045):1-progress;
+        effect.group.traverse(object=>{
+          if(object instanceof THREE.PointLight)object.intensity=Math.max(0,8*flicker*(1-progress));
+        });
+      }
       if(remaining<=0){scene.remove(effect.group);disposeObjectResources(effect.group);timedItemEffects.splice(i,1);}
     }
     for(const mesh of remotes.values()){
