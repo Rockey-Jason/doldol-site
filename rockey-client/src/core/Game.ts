@@ -78,7 +78,7 @@ export async function createGame(
   renderer.toneMappingExposure = 1.08;
   const composer=new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene,camera));
-  const bloomPass=new UnrealBloomPass(new THREE.Vector2(1,1),deviceTier==='low'?.06:isMobile?.08:.34,.42,.84);
+  const bloomPass=new UnrealBloomPass(new THREE.Vector2(1,1),deviceTier==='low' ? .06 : isMobile ? .08 : .34,.42,.84);
   composer.addPass(bloomPass);
   // Pre-filtered environment probe adds stable reflections to metal, glass and armour.
   let reflectionEnvironment:THREE.Texture|null=null;
@@ -769,8 +769,8 @@ export async function createGame(
     if(Number.isFinite(value))networkRttMs=value;
   };
   window.addEventListener('rockey:network',onNetworkRtt);
-  let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
-  const minPixelRatio=isMobile ? .78 : 1.0;
+  let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,deviceTier==='low'?(isMobile?1:1.25):isMobile?1.25:1.8);
+  const minPixelRatio=deviceTier==='low'?(isMobile ? .62 : .72):isMobile ? .78 : 1.0;
   const maxPixelRatio=Math.min(window.devicePixelRatio||1,deviceTier==='low'?(isMobile?1:1.25):isMobile?1.25:1.8);
   const appliedDestructionIds=new Set<string>();
   const remoteDebris=new Map<string,THREE.Mesh>();
