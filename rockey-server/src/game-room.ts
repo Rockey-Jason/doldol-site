@@ -459,7 +459,7 @@ export class GameRoom {
       const nextY=p.y+p.verticalVelocity*delta;
       if(nextY<=0.92){p.y=0.92;p.verticalVelocity=0;} else p.y=Math.min(8,nextY);
       const blocked=cover.some(b=>
-        p.y-0.86<b.top && p.y+0.86>0 &&
+        p.y-0.86<b.top && p.y+0.86>(b.bottom??0) &&
         nx+0.38>b.x-b.hx && nx-0.38<b.x+b.hx &&
         nz+0.38>b.z-b.hz && nz-0.38<b.z+b.hz
       );
