@@ -251,8 +251,8 @@ export async function createGame(
 
       // Keep the plush center at its original camera-space position while
       // reducing only its visible dimensions to 22% of the original size.
-      plushModel.scale.setScalar(.28);
-      plushModel.position.set(.1728,-.144,-.432);
+      plushModel.scale.setScalar(.40);
+      plushModel.position.set(.144,-.12,-.36);
       muzzleFlash.visible=false;
       metal.dispose();glowPart.dispose();dark.dispose();
       return;
