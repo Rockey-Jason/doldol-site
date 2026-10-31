@@ -3,7 +3,7 @@ import type { RockeyMap } from '../catalog';
 
 type ColliderAdder=(x:number,y:number,z:number,hx:number,hy:number,hz:number)=>void;
 type RaycastAdder=(mesh:THREE.Object3D)=>void;
-type Breakable={root:THREE.Object3D;position:THREE.Vector3;radius:number;shards:number;broken:boolean};
+type Breakable={root:THREE.Object3D;position:THREE.Vector3;radius:number;shards:number;kind:'glass'|'light'|'prop';broken:boolean};
 
 /**
  * Walkable tactical complex with a ground-floor office, storage rooms, upper
@@ -19,8 +19,9 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
   const fabric=new THREE.MeshStandardMaterial({color:0x4b5a69,roughness:.95});
   const paper=new THREE.MeshStandardMaterial({color:0xc7c4b7,roughness:.96});
   const breakable:Breakable[]=[];
-  const register=(root:THREE.Object3D,position:THREE.Vector3,radius:number,shards=6)=>{
-    breakable.push({root,position:position.clone(),radius,shards,broken:false});
+  const register=(root:THREE.Object3D,position:THREE.Vector3,radius:number,shards=6,kind:'glass'|'light'|'prop'='prop')=>{
+    root.traverse(object=>{if(object instanceof THREE.PointLight)object.userData.baseIntensity=object.intensity;});
+    breakable.push({root,position:position.clone(),radius,shards,kind,broken:false});
   };
   const add=(parent:THREE.Object3D,mat:THREE.Material,x:number,y:number,z:number,sx:number,sy:number,sz:number,collide=false)=>{
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);
@@ -167,7 +168,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
       add(lightRoot,dark,0,0,0,1.25,.16,.32);
       add(lightRoot,glow,0,-.10,0,1.08,.045,.23);
       const lamp=new THREE.PointLight(map.light,isMobile?4:8,7,2);lightRoot.add(lamp);
-      register(lightRoot,point(root,0,3.65,z),1.0,5);
+      register(lightRoot,point(root,0,3.65,z),1.0,5,'light');
     }
 
     // Electrical cabinets and industrial supply crates.
@@ -224,7 +225,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
       add(panel,glass,0,0,0,1.92,1.18,.045,true);
       add(panel,trim,0,.63,0,1.98,.055,.085);
       add(panel,trim,0,-.63,0,1.98,.055,.085);
-      register(panel,point(bridge,x,4.94,side*1.17),1.45,8);
+      register(panel,point(bridge,x,4.94,side*1.17),1.45,8,'glass');
     }
     for(let x=-12.1;x<=12.11;x+=2.15){
       add(bridge,trim,x,4.94,side*1.24,.095,1.5,.15,true);
@@ -254,16 +255,24 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
   const underpassLamp=new THREE.PointLight(map.light,isMobile?7:13,26,2);
   underpassLamp.position.set(0,-.45,0);underpass.add(underpassLamp);
 
-  const destroyNear=(position:THREE.Vector3,radius:number,spawn:(p:THREE.Vector3,count:number,impulse:number)=>void)=>{
+  const destroyNear=(position:THREE.Vector3,radius:number,spawn:(p:THREE.Vector3,count:number,impulse:number,kind:'glass'|'light'|'prop')=>void)=>{
     let destroyed=0;
     for(const item of breakable){
       if(item.broken||item.position.distanceTo(position)>radius+item.radius)continue;
       item.broken=true;
       item.root.visible=false;
       destroyed++;
-      spawn(item.position.clone(),isMobile?Math.max(3,Math.round(item.shards*.55)):item.shards,3.6);
+      spawn(item.position.clone(),isMobile?Math.max(3,Math.round(item.shards*.55)):item.shards,3.6,item.kind);
     }
     return destroyed;
   };
-  return {destroyNear};
+  const resetDestruction=()=>{
+    for(const item of breakable){
+      item.broken=false;item.root.visible=true;
+      item.root.traverse(object=>{
+        if(object instanceof THREE.PointLight&&typeof object.userData.baseIntensity==='number')object.intensity=object.userData.baseIntensity;
+      });
+    }
+  };
+  return {destroyNear,resetDestruction};
 }
