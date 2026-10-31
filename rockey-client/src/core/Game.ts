@@ -158,7 +158,10 @@ export async function createGame(
       code === 'ARC' ? 0x57efff : code === 'PULSE' ? 0xbe8cff : map.light
     );
     const metal = new THREE.MeshStandardMaterial({
-      color: code === 'THUNDER' ? 0x443b34 : code === 'LONGSHOT' ? 0x263c53 : 0x1c2d46,
+      color: code === 'R16' ? 0x254b75 : code === 'R9' ? 0x65522c : code === 'VIPER' ? 0x204b3c :
+        code === 'THUNDER' ? 0x61422d : code === 'LONGSHOT' ? 0x263c53 : code === 'HELIX' ? 0x44305f :
+        code === 'BASTION' ? 0x4b4528 : code === 'NOVA' ? 0x542b3c : code === 'ARC' ? 0x204c58 :
+        code === 'PULSE' ? 0x3b2b60 : 0x1c2d46,
       metalness: 0.88, roughness: 0.24
     });
     const glowPart = new THREE.MeshStandardMaterial({
@@ -552,7 +555,7 @@ export async function createGame(
             target.visible = true;
           }, 2200);
         } else {
-          notify('TARGET HIT · ' + target.userData.hp + ' HP');
+          // Damage is shown beside the struck target in-world, not in a top-center toast.
         }
       }
     } else {
@@ -801,8 +804,8 @@ export async function createGame(
     if(doriProgress>=1)doriSwingStart=0;
     const doriWave=doriSwingStart?Math.sin(doriProgress*Math.PI):0;
     const motion=weaponMotion[currentWeaponCode]||weaponMotion.R16;
-    gun.position.set(0,-reloadWave*motion.reloadTilt*.34-switchWave*.18,gunKick*.11+reloadWave*.19+switchWave*.28);
-    gun.rotation.set(reloadWave*motion.reloadTilt+switchWave*.38,doriWave*1.2,reloadWave*motion.roll+switchWave*.28);
+    gun.position.set(0,-reloadWave*(.14+motion.reloadTilt*.34)-switchWave*.18,gunKick*.11+reloadWave*.34+switchWave*.28);
+    gun.rotation.set(reloadWave*(.42+motion.reloadTilt)+switchWave*.38,doriWave*1.2,reloadWave*(.22+motion.roll)+switchWave*.28);
     for(let i=projectiles.length-1;i>=0;i--){
       const shot=projectiles[i];shot.age+=dt;const step=130*dt;shot.travelled+=step;
       shot.mesh.position.addScaledVector(shot.direction,step);
