@@ -720,7 +720,18 @@ export async function createGame(
     window.dispatchEvent(new CustomEvent('rockey:soak-stop',{detail:report}));
     soakTest=null;
   };
-  const qaApi={startSoakTest,stopSoakTest};
+  type MovementSample={elapsedMs:number;x:number;y:number;z:number;verticalVelocity:number;grounded:boolean;floorY:number|null;slopeDegrees:number;};
+  let movementCheck:{startedAt:number;lastSampleAt:number;samples:MovementSample[]}|null=null;
+  const startMovementCheck=()=>{
+    movementCheck={startedAt:performance.now(),lastSampleAt:0,samples:[]};
+    window.dispatchEvent(new CustomEvent('rockey:movement-check-start'));
+  };
+  const stopMovementCheck=()=>{
+    if(!movementCheck)return;
+    window.dispatchEvent(new CustomEvent('rockey:movement-check-stop',{detail:{durationMs:performance.now()-movementCheck.startedAt,samples:movementCheck.samples}}));
+    movementCheck=null;
+  };
+  const qaApi={startSoakTest,stopSoakTest,startMovementCheck,stopMovementCheck};
   (window as Window&{RockeyQA?:typeof qaApi}).RockeyQA=qaApi;
   let lastSnapshotServerTime=0;
   let snapshotJitterMs=0;
@@ -1906,6 +1917,18 @@ export async function createGame(
       updatePhysicalDebris(dt);
 
       const p = position();
+      if(movementCheck&&now-movementCheck.lastSampleAt>=100&&movementCheck.samples.length<3600){
+        const footY=p.y-.92;
+        const floorY=sampleGroundHeight(p.x,p.z,footY);
+        const floorX=sampleGroundHeight(p.x+.25,p.z,footY);
+        const floorZ=sampleGroundHeight(p.x,p.z+.25,footY);
+        const gradientX=floorY===null||floorX===null?0:(floorX-floorY)/.25;
+        const gradientZ=floorY===null||floorZ===null?0:(floorZ-floorY)/.25;
+        movementCheck.samples.push({elapsedMs:now-movementCheck.startedAt,x:p.x,y:p.y,z:p.z,
+          verticalVelocity:vertical,grounded:controller.computedGrounded(),floorY,
+          slopeDegrees:Math.atan(Math.hypot(gradientX,gradientZ))*180/Math.PI});
+        movementCheck.lastSampleAt=now;
+      }
       avatar.position.set(p.x, p.y - .92, p.z);
       avatar.rotation.y = yaw;
       avatarRig.animate(movementAmount,time,reloadWave,fireWave,vertical,hp<=0,keys.has('ShiftLeft')||keys.has('ShiftRight')?1:0,controller.computedGrounded(),aimBlend);
@@ -2086,6 +2109,7 @@ export async function createGame(
       window.removeEventListener('resize', resize);
       window.removeEventListener('rockey:network',onNetworkRtt);
       stopSoakTest();
+      stopMovementCheck();
       if((window as Window&{RockeyQA?:typeof qaApi}).RockeyQA===qaApi)delete (window as Window&{RockeyQA?:typeof qaApi}).RockeyQA;
       window.removeEventListener('keydown', keyDown);
       window.removeEventListener('keyup', keyUp);
