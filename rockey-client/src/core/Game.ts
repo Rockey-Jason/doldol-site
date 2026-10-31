@@ -971,7 +971,7 @@ export async function createGame(
     timedItemEffects.push({group,startedAt:now,endsAt:now+360,kind:'LIGHT'});
     for(let i=0;i<(isMobile?5:10);i++){
       const direction=new THREE.Vector3((Math.random()-.5)*2,Math.random()*1.5,(Math.random()-.5)*2).normalize();
-      emitFxParticle(position,direction.multiplyScalar(2.2+Math.random()*3.2),'spark',.22+Math.random()*.16,.025+Math.random()*.025,0x9cecff);
+      emitFxParticle(position,direction.multiplyScalar(2.2+Math.random()*3.2),'ember',.22+Math.random()*.16,.025+Math.random()*.025,0x9cecff);
     }
   }
   function applyDestruction(position:THREE.Vector3,radius:number,eventId?:string){
@@ -991,7 +991,7 @@ export async function createGame(
       const delta=new THREE.Vector3(p.x-position.x,p.y-position.y,p.z-position.z);
       const distance=delta.length();
       if(distance>0.05&&distance<radius*1.45){
-        delta.normalize().multiplyScalar((1-distance/(radius*1.45))*impulseScale(radius));
+        delta.normalize().multiplyScalar((1-distance/(radius*1.45))*3.4);
         piece.body.applyImpulse({x:delta.x,y:delta.y+.35,z:delta.z},true);
       }
     }
