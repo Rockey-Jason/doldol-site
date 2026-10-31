@@ -2,6 +2,7 @@ import type { WebSocket } from 'ws';
 import { admin, type VerifiedPlayer } from './auth.js';
 import { ITEMS, MAPS, WEAPONS, type RockeyItemCode, type RockeyWeapon } from './catalog.js';
 import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot } from './combat.js';
+import { createAuthoritativeDebris, stepAuthoritativeDebris, type DebrisBodyState } from './world-physics.js';
 
 export type Mode = '1v1' | '2v2' | '3v3' | 'ranked' | 'ffa';
 export type PlayerClient = {
@@ -61,6 +62,8 @@ export class GameRoom {
   private smokeVolumes:Array<{x:number;y:number;z:number;radius:number;expiresAt:number}>=[];
   private worldDestruction:Array<{id:string;x:number;y:number;z:number;radius:number}>=[];
   private nextDestructionId=1;
+  private worldDebris:DebrisBodyState[]=[];
+  private lastDebrisBroadcastAt=0;
   private spectators = new Set<PlayerClient>();
   private score = [0,0];
   private startedAt = Date.now();
@@ -232,7 +235,7 @@ export class GameRoom {
       mode:this.mode,mapId:this.mapId,mapName:MAPS[this.mapId].name
     });
     send(client,{type:'snapshot',serverTime:Date.now(),players:this.snapshots()});
-    send(client,{type:'world.state',destruction:this.worldDestruction});
+    send(client,{type:'world.state',revision:this.nextDestructionId-1,destruction:this.worldDestruction,debris:this.worldDebris});
     send(client,{type:'round.update',team0:this.score[0],team1:this.score[1],round:this.round});
   }
 
@@ -261,7 +264,7 @@ export class GameRoom {
       mapId:this.mapId,mapName:MAPS[this.mapId].name,
       weaponCode:p.weaponCode,secondaryWeapon:p.secondaryWeapon,itemCode:p.itemCode,itemCount:p.itemCount,itemInventory:p.itemInventory,
       ammo:p.ammo,reserve:p.reserve,health:p.health,weapon,
-      worldDestruction:this.worldDestruction,score:this.score,round:this.round
+      worldDestruction:this.worldDestruction,worldDebris:this.worldDebris,score:this.score,round:this.round
     });
     this.broadcast({type:'player.reconnected',playerId:client.player.id,name:client.player.name});
     send(client,{type:'snapshot',serverTime:Date.now(),players:this.snapshots()});
@@ -415,7 +418,9 @@ export class GameRoom {
         const destruction={id:this.id+':'+this.nextDestructionId++,x,y,z,radius:6};
         this.worldDestruction.push(destruction);
         if(this.worldDestruction.length>240)this.worldDestruction.shift();
-        this.broadcast({type:'world.state',revision:this.nextDestructionId-1,destruction:this.worldDestruction});
+        this.worldDebris.push(...createAuthoritativeDebris(destruction.id,x,y,z,6,12));
+        if(this.worldDebris.length>160)this.worldDebris.splice(0,this.worldDebris.length-160);
+        this.broadcast({type:'world.state',revision:this.nextDestructionId-1,destruction:this.worldDestruction,debris:this.worldDebris});
         this.broadcast({type:'item.effect',effect:'GRENADE',x,y,z,radius:6,durationMs:520,eventId:destruction.id});
         for(const target of this.players.filter(v=>v.alive&&v.connected&&v.team!==p.team)){
           const distance=Math.hypot(target.x-x,target.z-z,(target.y+.5)-y);if(distance<7)this.applyDamage(p,target,Math.max(1,Math.round(82*(1-distance/7))),'GRENADE',false,Date.now());
@@ -490,6 +495,14 @@ export class GameRoom {
     if(this.finished) return;
     const now=Date.now(),delta=0.05;
     this.smokeVolumes=this.smokeVolumes.filter(cloud=>cloud.expiresAt>now);
+    if(this.worldDebris.length){
+      stepAuthoritativeDebris(this.worldDebris,delta,MAPS[this.mapId].cover,(x,z,y)=>this.floorHeightAt(x,z,y));
+      this.worldDebris=this.worldDebris.filter(piece=>Math.abs(piece.x)<34&&Math.abs(piece.z)<34&&piece.y>-4);
+      if(now-this.lastDebrisBroadcastAt>=100){
+        this.lastDebrisBroadcastAt=now;
+        this.broadcast({type:'world.debris',serverTime:now,bodies:this.worldDebris});
+      }
+    }
     const cover=MAPS[this.mapId].cover;
     for(const p of this.players) {
       if(!p.alive || !p.connected) continue;
