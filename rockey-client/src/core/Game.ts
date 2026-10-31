@@ -627,7 +627,6 @@ export async function createGame(
     const text=(headshot?'HEADSHOT  ':'')+damage;
     ctx.font='700 48px Arial';
     ctx.textAlign='center';ctx.textBaseline='middle';
-    const measured=ctx.measureText(text);
     const centerX=label.width/2,centerY=label.height/2;
     ctx.lineJoin='round';ctx.lineWidth=9;ctx.strokeStyle='rgba(10,18,30,.94)';
     ctx.strokeText(text,centerX,centerY);
@@ -636,7 +635,6 @@ export async function createGame(
     const material=new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false,depthWrite:false});
     const sprite=new THREE.Sprite(material);
     sprite.position.copy(position).add(new THREE.Vector3(.78,1.55,0));
-    const aspect=label.width/label.height;
     sprite.scale.set(2.15,.484,1);
     sprite.userData.startedAt=performance.now();sprite.userData.baseY=sprite.position.y;
     scene.add(sprite);damagePopups.push(sprite);
@@ -1090,7 +1088,6 @@ export async function createGame(
       const out=THREE.MathUtils.smoothstep(reloadProgress,style.out,style.out+.18);
       const seat=THREE.MathUtils.smoothstep(reloadProgress,style.in,style.in+.16);
       const magTravel=reloadActive?out*(1-seat):0;
-      const magHomeY=currentWeaponCode==='BASTION'?-0.405:-0.405;
       magazineModel.position.set(.24,-.405-magTravel*style.drop,-.37+magTravel*.035);
       magazineModel.rotation.set(magTravel*style.tilt,0,magTravel*style.roll);
       // A crisp upward seat at the final beat sells the magazine locking in.
