@@ -213,8 +213,8 @@ $("prestigeButton").addEventListener("click",prestige);
 $("modalClose").addEventListener("click",()=>$("modalBackdrop").classList.remove("show"));
 $("modalBackdrop").addEventListener("click",e=>{if(e.target===$("modalBackdrop"))$("modalBackdrop").classList.remove("show");});
 function scheduleGolden(){clearTimeout(goldenTimer);goldenTimer=setTimeout(()=>{if(goldenVisible)return;goldenVisible=true;const btn=document.createElement("button");btn.className="golden";btn.type="button";btn.textContent="R";btn.setAttribute("aria-label","황금 로키 보너스 받기");$("clickPanel").appendChild(btn);$("goldStatus").textContent="황금 로키가 나타났어요!";$("goldHint").textContent="화면의 황금 코인을 눌러 보너스를 받으세요.";const remove=()=>{btn.remove();goldenVisible=false;$("goldStatus").textContent="다음 황금 로키를 기다리는 중";$("goldHint").textContent="잠시 후 특별한 보너스가 등장합니다.";scheduleGolden();};btn.addEventListener("click",()=>{const reward=Math.max(100,production()*60+clickPower()*50);addCoins(reward);toast("황금 로키 보너스 +"+fmt(reward)+" 코인!");remove();render();scheduleSave();});setTimeout(()=>{if(btn.isConnected)remove();},12000);},35000+Math.random()*35000);}
-setInterval(()=>{const rate=production();if(rate>0){addCoins(rate/10);render();if(Math.random()<.08)scheduleSave();}},100);
-window.addEventListener("beforeunload",()=>{state.lastActiveAt=Date.now();localStorage.setItem(SAVE_KEY,JSON.stringify(state));if(userId){const payload={user_id:userId,game_state:state,updated_at:new Date().toISOString()};navigator.sendBeacon?.(SUPABASE_URL+"/rest/v1/rockey_clicker_saves?on_conflict=user_id",new Blob([JSON.stringify(payload)],{type:"application/json"}));}});
+let lastAutosave=Date.now();\nsetInterval(()=>{const rate=production();if(rate>0){addCoins(rate);render();}if(Date.now()-lastAutosave>=15000){lastAutosave=Date.now();save();}},1000);
+window.addEventListener("pagehide",()=>{state.lastActiveAt=Date.now();localStorage.setItem(SAVE_KEY,JSON.stringify(state));void save();});
 window.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")save();});
 await load();scheduleGolden();
 </script>
