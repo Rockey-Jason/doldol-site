@@ -192,14 +192,19 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
   const targetWorldScratch=new THREE.Vector3();
   const hipLocalScratch=new THREE.Vector3();
   const targetLocalScratch=new THREE.Vector3();
+  let movementBlend=0,sprintBlend=0,aimBlend=0,airBlend=0;
   const animate=(movement:number,time:number,action=0,recoil=0,vertical=0,dead=false,sprint=0,grounded=true,aim=0)=>{
-    const move=THREE.MathUtils.clamp(movement,0,1);
-    const runBlend=THREE.MathUtils.clamp(sprint,0,1)*move;
+    movementBlend=THREE.MathUtils.damp(movementBlend,THREE.MathUtils.clamp(movement,0,1),12,1/60);
+    sprintBlend=THREE.MathUtils.damp(sprintBlend,THREE.MathUtils.clamp(sprint,0,1),9,1/60);
+    aimBlend=THREE.MathUtils.damp(aimBlend,THREE.MathUtils.clamp(aim,0,1),14,1/60);
+    airBlend=THREE.MathUtils.damp(airBlend,grounded?0:THREE.MathUtils.clamp(Math.abs(vertical)/7,0,1),10,1/60);
+    const move=movementBlend;
+    const runBlend=sprintBlend*move;
     const walkBlend=move*(1-THREE.MathUtils.smoothstep(runBlend,0.05,.9));
     const cadence=9.2+runBlend*3.1;
     const stride=Math.sin(time*cadence)*(walkBlend*.48+runBlend);
     const counter=Math.sin(time*cadence+Math.PI)*(walkBlend*.48+runBlend);
-    const airborne=grounded?0:THREE.MathUtils.clamp(Math.abs(vertical)/7,0,1);
+    const airborne=airBlend;
     if(grounded&&!wasGrounded&&vertical< -1)landingUntil=performance.now()+190;
     wasGrounded=grounded;
     const landing=THREE.MathUtils.clamp((landingUntil-performance.now())/190,0,1);
@@ -212,16 +217,16 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
     pelvis.rotation.y=Math.sin(time*cadence*.5)*runBlend*.035;
     spine.rotation.x=-.018*walkBlend-.055*runBlend+airborne*.13+hit*.16+deathBlend*.52+landing*.08;
     spine.rotation.z=Math.sin(time*4.7)*walkBlend*.012+hit*.12;
-    chest.rotation.x=-.02*walkBlend-.035*runBlend+airborne*.10+hit*.22+deathBlend*.28-aim*.045;
+    chest.rotation.x=-.02*walkBlend-.035*runBlend+airborne*.10+hit*.22+deathBlend*.28-aimBlend*.045;
     chest.rotation.z=Math.sin(time*4.2)*walkBlend*.009-hit*.08;
     neck.rotation.x=airborne*-.08+hit*-.18+deathBlend*-.25+landing*-.06;
-    head.rotation.x=Math.sin(time*1.3)*.018*idle+hit*.14+deathBlend*.32;
+    head.rotation.x=Math.sin(time*1.3)*.018*idle+Math.sin(time*2.1)*.008*idle+hit*.14+deathBlend*.32;
     head.rotation.y=Math.sin(time*1.15)*.025;
     arms.forEach(({shoulder,elbow,hand,side})=>{
       const gait=side<0?stride:counter;
-      shoulder.rotation.x=.10+gait*.64+airborne*-.62+recoil*.10+hit*-.35+deathBlend*.7+landing*.08-aim*.18;
+      shoulder.rotation.x=.10+gait*.64+airborne*-.62+recoil*.10+hit*-.35+deathBlend*.7+landing*.08-aimBlend*.18;
       shoulder.rotation.z=side*.08+action*.09*side+deathBlend*side*.12;
-      elbow.rotation.x=.16+Math.max(0,-gait)*.62+action*.22+airborne*.42+deathBlend*-.85+aim*.24;
+      elbow.rotation.x=.16+Math.max(0,-gait)*.62+action*.22+airborne*.42+deathBlend*-.85+aimBlend*.24;
       hand.rotation.x=action*.12+airborne*.22+deathBlend*.32;
     });
     legs.forEach(({hip,knee,foot,side})=>{
