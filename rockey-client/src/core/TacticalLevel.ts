@@ -187,8 +187,10 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     add(root,wall,0,-1.45,-4.38,8.2,2.65,.22,true);
     add(root,wall,0,-1.45,4.38,8.2,2.65,.22,true);
     for(let i=0;i<13;i++){
-      const riseDown=(i+1)*2.45/13,stepZ=2.25-(i+.5)*4.5/13;
-      add(root,i%2?trim:floor,0,-riseDown/2,stepZ,1.45,riseDown,.42,true);
+      const stepHeight=2.45/13;
+      const stepY=-(i+.5)*stepHeight;
+      const stepZ=2.25-(i+.5)*4.5/13;
+      add(root,i%2?trim:floor,0,stepY,stepZ,1.45,stepHeight,.42,true);
     }
     add(root,wall,-2.8,-1.35,-2.75,.18,2.5,3.0,true);
     add(root,wall,2.8,-1.35,-2.75,.18,2.5,3.0,true);
