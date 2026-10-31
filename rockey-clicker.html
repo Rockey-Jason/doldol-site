@@ -363,10 +363,60 @@ $("coinButton").addEventListener("click",e=>{
 function renderAchievements(){const all=[{id:"click1",icon:"👆",name:"첫 번째 클릭",desc:"처음으로 코인을 클릭하세요.",ok:state.totalClicks>=1},{id:"click100",icon:"💯",name:"클릭 입문자",desc:"누적 100회 클릭하세요.",ok:state.totalClicks>=100},{id:"click1000",icon:"⚡",name:"클릭 마스터",desc:"누적 1,000회 클릭하세요.",ok:state.totalClicks>=1000},{id:"factory1",icon:"🏭",name:"첫 공장",desc:"생산 시설을 처음 구매하세요.",ok:BUILDINGS.some(b=>safeNum(state.buildings[b.id])>0)},{id:"factory25",icon:"🏗️",name:"산업의 지배자",desc:"생산 시설을 총 25개 보유하세요.",ok:BUILDINGS.reduce((s,b)=>s+safeNum(state.buildings[b.id]),0)>=25},{id:"million",icon:"🪙",name:"백만장자",desc:"누적 1,000,000 코인을 획득하세요.",ok:state.totalEarned>=1e6},{id:"rebirth",icon:"♻️",name:"새로운 시작",desc:"첫 환생을 완료하세요.",ok:state.prestigeCount>=1}];const root=$("achievementList");root.innerHTML="";all.slice(0,5).forEach(a=>{const el=document.createElement("div");el.className="achievement"+(a.ok?"":" locked");el.innerHTML='<span class="a-icon"></span><div><strong></strong><small></small></div>';el.querySelector(".a-icon").textContent=a.ok?a.icon:"🔒";el.querySelector("strong").textContent=a.name;el.querySelector("small").textContent=a.ok?"달성 완료":a.desc;root.appendChild(el);});}
 function renderQuests(){const root=$("questList");const quests=[["오늘 클릭",state.daily.clicks,100],["시설 구매",state.daily.buildings,3],["누적 생산",state.totalEarned,10000]];root.innerHTML="";quests.forEach(([name,value,target])=>{const row=document.createElement("div");row.className="quest-row";const left=document.createElement("span");left.textContent=name+" · "+fmt(value)+"/"+fmt(target);const right=document.createElement("strong");right.textContent=value>=target?"완료":"진행 중";row.append(left,right);root.appendChild(row);});}
 document.querySelectorAll(".tab").forEach(b=>b.addEventListener("click",()=>{activeTab=b.dataset.tab;renderTab();}));
+
+async function syncRecord(force=false){
+ if(!userId||recordSyncBusy||(!force&&Date.now()-lastRecordSync<30000))return;
+ recordSyncBusy=true;
+ try{
+  const {data:old,error:readError}=await supabase.from("rockey_clicker_records").select("user_id,public_tag,best_total_earned,best_run_earned,all_time_clicks,best_combo,highest_click,prestige_count").eq("user_id",userId).maybeSingle();
+  if(readError)throw readError;
+  const capCoins=n=>Math.min(9e59,Math.max(0,Math.floor(Number(n)||0)));
+  const row={
+   user_id:userId,public_tag:old?.public_tag||("ROCKEY-"+userId.slice(-5).toUpperCase()),
+   best_total_earned:capCoins(Math.max(Number(old?.best_total_earned)||0,state.totalEarned)),
+   best_run_earned:capCoins(Math.max(Number(old?.best_run_earned)||0,state.bestRunEarned,state.runEarned)),
+   all_time_clicks:Math.min(9000000000000000,Math.floor(Math.max(Number(old?.all_time_clicks)||0,state.totalClicks))),
+   best_combo:Math.floor(Math.max(Number(old?.best_combo)||0,state.bestCombo)),
+   highest_click:capCoins(Math.max(Number(old?.highest_click)||0,state.highestClick)),
+   prestige_count:Math.floor(Math.max(Number(old?.prestige_count)||0,state.prestigeCount)),
+   updated_at:new Date().toISOString()
+  };
+  const {error}=await supabase.from("rockey_clicker_records").upsert(row,{onConflict:"user_id"});
+  if(error)throw error;
+  lastRecordSync=Date.now();$("recordSync").textContent="클라우드 기록 동기화 완료";
+  await loadLeaderboard();
+ }catch(err){console.warn("Rockey Clicker record sync failed:",err);$("recordSync").textContent="랭킹 동기화 대기";}
+ finally{recordSyncBusy=false;}
+}
+async function loadLeaderboard(){
+ const root=$("leaderboardList");if(!root)return;
+ if(!userId){root.innerHTML='<div class="empty">글로벌 랭킹은 돌이사이트 로그인 후 이용할 수 있습니다.<br>내 기록은 이 기기에 계속 저장됩니다.</div>';$("rankSub").textContent="로그인 후 글로벌 순위 참여";return;}
+ const columns={wealth:"best_total_earned",clicks:"all_time_clicks",prestige:"prestige_count"};
+ const field=columns[rankMode]||columns.wealth;
+ root.innerHTML='<div class="empty">랭킹을 불러오는 중입니다.</div>';
+ try{
+  const {data,error}=await supabase.from("rockey_clicker_records").select("user_id,public_tag,best_total_earned,all_time_clicks,prestige_count").order(field,{ascending:false}).order("updated_at",{ascending:true}).limit(10);
+  if(error)throw error;
+  root.innerHTML="";
+  if(!data?.length){root.innerHTML='<div class="empty">아직 등록된 기록이 없습니다.<br>첫 번째 로키 레전드가 되어 보세요!</div>';return;}
+  data.forEach((row,index)=>{
+   const item=document.createElement("div");item.className="rank-row";
+   const number=document.createElement("span");number.className="rank-no";number.textContent=String(index+1).padStart(2,"0");
+   const player=document.createElement("span");player.className="rank-player";player.textContent=(row.public_tag||"ROCKEY PLAYER")+(row.user_id===userId?" · 나":"");
+   const value=document.createElement("strong");value.className="rank-value";
+   value.textContent=rankMode==="wealth"?fmt(row.best_total_earned)+" 코인":rankMode==="clicks"?fmt(row.all_time_clicks)+" 클릭":fmt(row.prestige_count)+" 회";
+   item.append(number,player,value);root.appendChild(item);
+  });
+  $("rankSub").textContent="전체 로그인 플레이어 · TOP 10";
+ }catch(err){console.warn("Rockey Clicker leaderboard unavailable:",err);root.innerHTML='<div class="empty">랭킹을 불러오지 못했습니다.<br>잠시 후 새로고침해 주세요.</div>';$("rankSub").textContent="연결 상태 확인 필요";}
+}
+document.querySelectorAll(".rank-tab").forEach(button=>button.addEventListener("click",()=>{rankMode=button.dataset.rank;document.querySelectorAll(".rank-tab").forEach(b=>b.classList.toggle("active",b===button));void loadLeaderboard();}));
+$("refreshRank").addEventListener("click",async()=>{await syncRecord(true);await loadLeaderboard();});
+
 function scheduleSave(){if(saveTimer)clearTimeout(saveTimer);saveTimer=setTimeout(save,1200);}
-async function save(){state.lastActiveAt=Date.now();localStorage.setItem(storageKey(),JSON.stringify(state));if(!userId){$("saveText").textContent="이 기기에 저장됨";return;}if(isSaving)return;isSaving=true;$("saveText").textContent="클라우드 저장 중";try{const {error}=await supabase.from("rockey_clicker_saves").upsert({user_id:userId,game_state:state,updated_at:new Date().toISOString()},{onConflict:"user_id"});if(error)throw error;$("saveText").textContent="클라우드 저장 완료";$("saveDot").style.background="var(--green)";}catch(err){console.warn("Rockey Clicker cloud save failed:",err);$("saveText").textContent="로컬 저장 · 클라우드 연결 확인 필요";$("saveDot").style.background="var(--red)";}finally{isSaving=false;}}
-async function load(){let local=null;try{const {data:{session}}=await supabase.auth.getSession();userId=session?.user?.id||null;}catch{}try{local=normalize(JSON.parse(localStorage.getItem(storageKey())||"null"));}catch{}state=local||fresh();let cloud=null;try{if(userId){const {data,error}=await supabase.from("rockey_clicker_saves").select("game_state").eq("user_id",userId).maybeSingle();if(error)throw error;cloud=data?.game_state?normalize(data.game_state):null;if(cloud){if(local&&safeNum(local.lastActiveAt)>safeNum(cloud.lastActiveAt)){state=local;await save();}else{state=cloud;localStorage.setItem(storageKey(),JSON.stringify(state));}}else if(local){await save();}}}catch(err){console.warn("Rockey Clicker cloud load unavailable:",err);$("saveText").textContent="로컬 저장 모드";}const elapsed=Math.max(0,Math.min(MAX_OFFLINE,Date.now()-safeNum(state.lastActiveAt,0,Date.now())));const efficiency=Math.min(.95,.7+safeNum(state.research.offline)*.05);const earned=production()*elapsed/1000*efficiency;if(earned>0){addCoins(earned);popup("오프라인 생산 완료",Math.floor(elapsed/60000)+"분 동안 시설이 작동해 "+fmt(earned)+" 로키 코인을 생산했습니다. (효율 "+Math.round(efficiency*100)+"%)");}state.lastActiveAt=Date.now();render();await save();}
-async function prestige(){if(state.runEarned<1e7)return;const gain=Math.max(1,Math.floor(Math.sqrt(state.runEarned/1e7)));if(!confirm("현재 코인, 시설, 클릭 강화와 연구를 초기화하고 환생 크리스탈 "+gain+"개를 획득할까요?\\n크리스탈 1개당 영구 생산/클릭 배율 +10%"))return;state.coins=0;state.runEarned=0;state.buildings={};state.clickUpgrades={};state.research={};state.crystals+=gain;state.prestigeCount++;render();await save();popup("환생 완료!",gain+"개의 환생 크리스탈을 획득했습니다. 영구 배율이 강화되었습니다.");}
+async function save(){state.lastActiveAt=Date.now();localStorage.setItem(storageKey(),JSON.stringify(state));if(!userId){$("saveText").textContent="이 기기에 저장됨";return;}if(isSaving)return;isSaving=true;$("saveText").textContent="클라우드 저장 중";try{const {error}=await supabase.from("rockey_clicker_saves").upsert({user_id:userId,game_state:state,updated_at:new Date().toISOString()},{onConflict:"user_id"});if(error)throw error;$("saveText").textContent="클라우드 저장 완료";$("saveDot").style.background="var(--green)";void syncRecord(false);}catch(err){console.warn("Rockey Clicker cloud save failed:",err);$("saveText").textContent="로컬 저장 · 클라우드 연결 확인 필요";$("saveDot").style.background="var(--red)";}finally{isSaving=false;}}
+async function load(){let local=null;try{const {data:{session}}=await supabase.auth.getSession();userId=session?.user?.id||null;}catch{}try{local=normalize(JSON.parse(localStorage.getItem(storageKey())||"null"));}catch{}state=local||fresh();let cloud=null;try{if(userId){const {data,error}=await supabase.from("rockey_clicker_saves").select("game_state").eq("user_id",userId).maybeSingle();if(error)throw error;cloud=data?.game_state?normalize(data.game_state):null;if(cloud){if(local&&safeNum(local.lastActiveAt)>safeNum(cloud.lastActiveAt)){state=local;await save();}else{state=cloud;localStorage.setItem(storageKey(),JSON.stringify(state));}}else if(local){await save();}}}catch(err){console.warn("Rockey Clicker cloud load unavailable:",err);$("saveText").textContent="로컬 저장 모드";}const elapsed=Math.max(0,Math.min(MAX_OFFLINE,Date.now()-safeNum(state.lastActiveAt,0,Date.now())));const efficiency=Math.min(.99,.7+safeNum(state.research.offline)*.05+legacyLevel("legacy_offline")*.05+legacyLevel("legacy_transcend")*.03);const earned=production()*elapsed/1000*efficiency;if(earned>0){addCoins(earned);popup("오프라인 생산 완료",Math.floor(elapsed/60000)+"분 동안 시설이 작동해 "+fmt(earned)+" 로키 코인을 생산했습니다. (효율 "+Math.round(efficiency*100)+"%)");}state.lastActiveAt=Date.now();render();renderTab();await save();void syncRecord(true);void loadLeaderboard();}
+async function prestige(){if(state.runEarned<1e7)return;const gain=Math.max(1,Math.floor(Math.sqrt(state.runEarned/1e7)));if(!confirm("현재 코인, 시설, 클릭 강화와 기본 연구를 초기화하고 환생 크리스탈 "+gain+"개를 획득할까요?\\n코인 스킨과 환생 연구는 영구 보존됩니다."))return;state.bestRunEarned=Math.max(state.bestRunEarned,state.runEarned);state.coins=0;state.runEarned=0;state.buildings={};state.clickUpgrades={};state.research={};state.crystals+=gain;state.prestigeCount++;render();renderTab();await save();void syncRecord(true);popup("환생 완료!",gain+"개의 환생 크리스탈을 획득했습니다. 환생 연구 트리에서 영구 강화를 해금하세요.");}
 $("prestigeButton").addEventListener("click",prestige);
 $("modalClose").addEventListener("click",()=>$("modalBackdrop").classList.remove("show"));
 $("modalBackdrop").addEventListener("click",e=>{if(e.target===$("modalBackdrop"))$("modalBackdrop").classList.remove("show");});
@@ -375,7 +425,7 @@ let lastAutosave=Date.now();
 setInterval(()=>{const rate=production();if(rate>0){addCoins(rate);render();}if(Date.now()-lastAutosave>=15000){lastAutosave=Date.now();save();}},1000);
 window.addEventListener("pagehide",()=>{state.lastActiveAt=Date.now();localStorage.setItem(storageKey(),JSON.stringify(state));void save();});
 window.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")save();});
-await load();scheduleGolden();
+await load();resizeParticleCanvas();window.addEventListener("resize",resizeParticleCanvas);scheduleGolden();
 </script>
 </body>
 </html>
