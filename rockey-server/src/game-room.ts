@@ -1,7 +1,7 @@
 import type { WebSocket } from 'ws';
 import { admin, type VerifiedPlayer } from './auth.js';
 import { ITEMS, MAPS, WEAPONS, type RockeyItemCode, type RockeyWeapon } from './catalog.js';
-import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot } from './combat.js';
+import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, transferReloadAmmo } from './combat.js';
 import { createAuthoritativeDebris, stepAuthoritativeDebris, type DebrisBodyState } from './world-physics.js';
 
 export type Mode = '1v1' | '2v2' | '3v3' | 'ranked' | 'ffa';
@@ -333,8 +333,8 @@ export class GameRoom {
     if(p.reloadTimer)clearTimeout(p.reloadTimer);
     p.reloadTimer=setTimeout(()=>{
       if(this.finished||p.reloadToken!==token||p.weaponCode!==weapon.code)return;
-      const amount=Math.min(weapon.magazine-p.ammo,p.reserve);
-      p.ammo+=amount;p.reserve-=amount;p.reloadUntil=0;p.reloadTimer=null;
+      const transfer=transferReloadAmmo(p.ammo,p.reserve,weapon.magazine);
+      p.ammo=transfer.ammo;p.reserve=transfer.reserve;p.reloadUntil=0;p.reloadTimer=null;
       p.weaponAmmo[p.weaponCode]={ammo:p.ammo,reserve:p.reserve};
       if(p.connected)send(p.client,{type:'ammo.update',ammo:p.ammo,reserve:p.reserve,weaponCode:p.weaponCode});
     },weapon.reloadMs);
