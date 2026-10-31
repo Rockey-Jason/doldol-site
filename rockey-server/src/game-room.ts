@@ -58,6 +58,7 @@ export class GameRoom {
   readonly mapId: string;
   private persistedMatchId: string | null = null;
   private players: PlayerState[];
+  private smokeVolumes:Array<{x:number;y:number;z:number;radius:number;expiresAt:number}>=[];
   private spectators = new Set<PlayerClient>();
   private score = [0,0];
   private startedAt = Date.now();
@@ -376,7 +377,11 @@ export class GameRoom {
         for(const target of this.players.filter(v=>v.alive&&v.connected&&v.team!==p.team)){
           const distance=Math.hypot(target.x-x,target.z-z,(target.y+.5)-y);if(distance<7)this.applyDamage(p,target,Math.max(1,Math.round(82*(1-distance/7))),'GRENADE',false,Date.now());
         }
-      }else if(itemCode==='SMOKE')this.broadcast({type:'item.effect',effect:'SMOKE',x,y,z,radius:4.5,durationMs:8000});
+      }else if(itemCode==='SMOKE'){
+        const durationMs=8000;
+        this.smokeVolumes.push({x,y,z,radius:4.5,expiresAt:Date.now()+durationMs});
+        this.broadcast({type:'item.effect',effect:'SMOKE',x,y,z,radius:4.5,durationMs});
+      }
       else{
         for(const target of this.players){if(!target.alive||!target.connected||target.team===p.team)continue;const distance=Math.hypot(target.x-x,target.z-z,(target.y+.5)-y);if(distance<10)send(target.client,{type:'item.effect',effect:'FLASH',durationMs:Math.round(1400*(1-distance/12))});}
         this.broadcast({type:'item.effect',effect:'FLASH_BURST',x,y,z,radius:4,durationMs:360});
@@ -408,7 +413,9 @@ export class GameRoom {
       {x:0,z:-29.4,hx:30,hz:0.6,top:4.4},{x:0,z:29.4,hx:30,hz:0.6,top:4.4},
       {x:-29.4,z:0,hx:0.6,hz:30,top:4.4},{x:29.4,z:0,hx:0.6,hz:30,top:4.4}
     ];
-    const trace=traceWeaponShot(shooter,this.players,this.mode,[...MAPS[this.mapId].cover,...arenaWalls],weapon);
+    const activeSmoke=this.smokeVolumes.filter(cloud=>cloud.expiresAt>now);
+    this.smokeVolumes=activeSmoke;
+    const trace=traceWeaponShot(shooter,this.players,this.mode,[...MAPS[this.mapId].cover,...arenaWalls],weapon,activeSmoke);
     const target=trace.target as PlayerState|null;
     const best=trace.distance;
     const headshot=trace.headshot;
@@ -434,6 +441,7 @@ export class GameRoom {
   private tick() {
     if(this.finished) return;
     const now=Date.now(),delta=0.05;
+    this.smokeVolumes=this.smokeVolumes.filter(cloud=>cloud.expiresAt>now);
     const cover=MAPS[this.mapId].cover;
     for(const p of this.players) {
       if(!p.alive || !p.connected) continue;
