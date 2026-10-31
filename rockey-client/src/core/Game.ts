@@ -511,9 +511,17 @@ export async function createGame(
   type FxParticle={object:THREE.Object3D;material:THREE.SpriteMaterial|THREE.MeshBasicMaterial;velocity:THREE.Vector3;age:number;life:number;gravity:number;drag:number;spin:THREE.Vector3;baseScale:THREE.Vector3;kind:'smoke'|'spark'|'ember'};
   const fxParticles:FxParticle[]=[];
   const shellVisuals:Array<{mesh:THREE.Mesh;velocity:THREE.Vector3;spin:THREE.Vector3;age:number}>=[];
+  type SmokeCloud={mesh:THREE.Mesh;material:THREE.ShaderMaterial;velocity:THREE.Vector3;age:number;life:number;baseScale:THREE.Vector3;spin:number};
+  type DebrisPiece={mesh:THREE.Mesh;velocity:THREE.Vector3;spin:THREE.Vector3;age:number;life:number};
+  const smokeClouds:SmokeCloud[]=[];
+  const debrisVisuals:DebrisPiece[]=[];
   const fxParticleLimit=isMobile?76:150;
   const fxParticleGeometry=new THREE.IcosahedronGeometry(.055,0);
   const shellGeometry=new THREE.CylinderGeometry(.022,.022,.115,8);
+  const smokeVolumeGeometry=new THREE.SphereGeometry(1,16,12);
+  const debrisGeometry=new THREE.DodecahedronGeometry(.08,0);
+  const smokeVolumeVertexShader=`varying vec3 vLocalPosition;varying vec3 vLocalNormal;void main(){vLocalPosition=position;vLocalNormal=normal;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`;
+  const smokeVolumeFragmentShader=`uniform vec3 uColor;uniform float uTime;uniform float uOpacity;varying vec3 vLocalPosition;varying vec3 vLocalNormal;void main(){float n1=sin(vLocalPosition.x*7.1+uTime*.8)*sin(vLocalPosition.y*8.3-uTime*.6)*sin(vLocalPosition.z*6.7+uTime*.45);float n2=sin(vLocalPosition.x*15.3-uTime*.4)*sin(vLocalPosition.y*13.1+uTime*.5)*sin(vLocalPosition.z*12.7-uTime*.7);float radius=length(vLocalPosition);float edge=1.0-smoothstep(.56,.99,radius+(n1*.09+n2*.035));float wisps=smoothstep(-.78,.48,n1*.72+n2*.28);float alpha=edge*(.24+wisps*.52)*uOpacity;if(alpha<.012)discard;float light=.68+.32*max(dot(normalize(vLocalNormal),normalize(vec3(-.35,.82,.44))),0.0);gl_FragColor=vec4(uColor*light,alpha);}`;
 
   const projectileColors:Record<string,number>={R16:0x4aa8ff,R9:0xffd166,VIPER:0x54e6b0,THUNDER:0xff8a45,LONGSHOT:0xa8d8ff,HELIX:0xb18aff,BASTION:0xffc45f,NOVA:0xff748e,ARC:0x57efff,PULSE:0xbe8cff,DORI:0xc98a4c};
 
@@ -759,13 +767,56 @@ export async function createGame(
     scene.add(object);
     fxParticles.push({object,material,velocity:velocity.clone(),age:0,life,gravity:kind==='smoke'?-0.12:kind==='ember'?-1.8:-4.8,drag:kind==='smoke'?.18:kind==='ember'?.8:1.7,spin:new THREE.Vector3((Math.random()-.5)*5,(Math.random()-.5)*5,(Math.random()-.5)*5),baseScale:object.scale.clone(),kind});
   }
+  function spawnVolumetricSmoke(position:THREE.Vector3,velocity:THREE.Vector3,color:number,size:number,life:number,puffs=2){
+    const count=isMobile?Math.min(2,puffs):puffs;
+    while(smokeClouds.length+count>(isMobile?16:34)){
+      const oldest=smokeClouds.shift();
+      if(oldest){scene.remove(oldest.mesh);oldest.material.dispose();}
+    }
+    for(let i=0;i<count;i++){
+      const angle=Math.random()*Math.PI*2,offset=.22+Math.random()*.42;
+      const material=new THREE.ShaderMaterial({
+        uniforms:{uColor:{value:new THREE.Color(color)},uTime:{value:0},uOpacity:{value:.78}},
+        vertexShader:smokeVolumeVertexShader,fragmentShader:smokeVolumeFragmentShader,
+        transparent:true,depthWrite:false,side:THREE.DoubleSide,toneMapped:false
+      });
+      const mesh=new THREE.Mesh(smokeVolumeGeometry,material);
+      mesh.position.copy(position).add(new THREE.Vector3(Math.cos(angle)*size*offset,(Math.random()-.5)*size*.22,Math.sin(angle)*size*offset));
+      const baseScale=new THREE.Vector3(size*(.7+Math.random()*.35),size*(.78+Math.random()*.48),size*(.7+Math.random()*.35));
+      mesh.scale.copy(baseScale).multiplyScalar(.62);
+      mesh.rotation.set(Math.random()*.4,Math.random()*Math.PI*2,Math.random()*.4);
+      mesh.renderOrder=2;mesh.frustumCulled=false;scene.add(mesh);
+      smokeClouds.push({mesh,material,velocity:velocity.clone().add(new THREE.Vector3((Math.random()-.5)*.24,.08+Math.random()*.18,(Math.random()-.5)*.24)),age:0,life:life*(.86+Math.random()*.28),baseScale,spin:(Math.random()-.5)*.38});
+    }
+  }
+  function spawnDebrisFx(position:THREE.Vector3,count:number,impulse:number){
+    const limit=isMobile?20:46;
+    while(debrisVisuals.length+count>limit){
+      const oldest=debrisVisuals.shift();
+      if(oldest){scene.remove(oldest.mesh);(oldest.mesh.material as THREE.Material).dispose();}
+    }
+    for(let i=0;i<count;i++){
+      const angle=Math.random()*Math.PI*2;
+      const material=new THREE.MeshStandardMaterial({color:map.palette==='amber'?0x927653:map.palette==='ice'?0x718b98:0x65717d,roughness:.94,metalness:.08,transparent:true,opacity:1});
+      const mesh=new THREE.Mesh(debrisGeometry,material);
+      const size=.45+Math.random()*.85;
+      mesh.position.copy(position).add(new THREE.Vector3((Math.random()-.5)*.35,.08+Math.random()*.22,(Math.random()-.5)*.35));
+      mesh.scale.set(size*(.7+Math.random()*.6),size*(.4+Math.random()*.6),size*(.7+Math.random()*.6));
+      mesh.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);
+      mesh.castShadow=false;scene.add(mesh);
+      const speed=impulse*(.48+Math.random()*.72);
+      const velocity=new THREE.Vector3(Math.cos(angle)*speed,(.55+Math.random()*.9)*speed,Math.sin(angle)*speed);
+      debrisVisuals.push({mesh,velocity,spin:new THREE.Vector3((Math.random()-.5)*9,(Math.random()-.5)*10,(Math.random()-.5)*9),age:0,life:2.2+Math.random()*1.8});
+    }
+  }
   function spawnImpactFx(position:THREE.Vector3,direction:THREE.Vector3,color:number){
     const count=isMobile?3:6;
     for(let i=0;i<count;i++){
       const velocity=direction.clone().multiplyScalar(.7+Math.random()*1.4).add(new THREE.Vector3((Math.random()-.5)*2,Math.random()*1.8,(Math.random()-.5)*2));
       emitFxParticle(position,velocity,'spark',.22+Math.random()*.2,.035+Math.random()*.025,color);
     }
-    emitFxParticle(position,new THREE.Vector3(0,.45,0),'smoke',.65,.19,0x8795a5);
+    spawnVolumetricSmoke(position,direction.clone().multiplyScalar(.08).add(new THREE.Vector3(0,.18,0)),0x8795a5,.24,.82,1);
+    if(!isMobile)spawnDebrisFx(position,2,1.25);
   }
   function spawnMuzzleFx(code:string,origin:THREE.Vector3,direction:THREE.Vector3){
     const color=projectileColors[code]||0xffd28a;
@@ -815,11 +866,13 @@ export async function createGame(
       const velocity=new THREE.Vector3(Math.cos(angle)*Math.cos(elevation),Math.sin(elevation)+.45,Math.sin(angle)*Math.cos(elevation)).multiplyScalar(2.8+Math.random()*5.2);
       emitFxParticle(position,velocity,'ember',.45+Math.random()*.55,.045+Math.random()*.04,i%3===0?0xffe3a4:0xff7548);
     }
-    for(let i=0;i<(isMobile?10:18);i++){
-      const angle=i/18*Math.PI*2;
-      const velocity=new THREE.Vector3(Math.cos(angle)*(.25+Math.random()*.8),.5+Math.random()*1.1,Math.sin(angle)*(.25+Math.random()*.8));
-      emitFxParticle(position,velocity,'smoke',1.8+Math.random()*1.8,.28+Math.random()*.34,i%2?0x5d6878:0x8a919a);
+    for(let i=0;i<(isMobile?3:6);i++){
+      const angle=Math.random()*Math.PI*2,spread=Math.random()*radius*.24;
+      const puffPosition=position.clone().add(new THREE.Vector3(Math.cos(angle)*spread,.18+Math.random()*.35,Math.sin(angle)*spread));
+      const velocity=new THREE.Vector3(Math.cos(angle)*(.18+Math.random()*.35),.32+Math.random()*.55,Math.sin(angle)*(.18+Math.random()*.35));
+      spawnVolumetricSmoke(puffPosition,velocity,i%2?0x687583:0x92989e,.72+Math.random()*.32,2.6+Math.random()*1.5,1);
     }
+    spawnDebrisFx(position,isMobile?5:11,5.7);
   }
   function spawnProjectile(origin:THREE.Vector3,direction:THREE.Vector3,code:string,range:number) {
     const color=projectileColors[code]||0xffffff;
@@ -903,12 +956,12 @@ export async function createGame(
     const position=new THREE.Vector3(x,y,z);
     if(effect==='GRENADE'){spawnExplosionFx(position,radius,durationMs);return;}
     if(effect==='SMOKE'){
-      const count=isMobile?15:25,life=Math.max(2.8,Math.min(7.2,durationMs/1000*.86));
+      const count=isMobile?7:14,life=Math.max(3.6,Math.min(8.2,durationMs/1000*.95));
       for(let i=0;i<count;i++){
-        const angle=Math.random()*Math.PI*2,spread=Math.random()*radius*.52;
-        const velocity=new THREE.Vector3(Math.cos(angle)*(.12+Math.random()*.35),.28+Math.random()*.52,Math.sin(angle)*(.12+Math.random()*.35));
-        const puffPosition=position.clone().add(new THREE.Vector3(Math.cos(angle)*spread,Math.random()*.45,Math.sin(angle)*spread));
-        emitFxParticle(puffPosition,velocity,'smoke',life*(.72+Math.random()*.32),.55+Math.random()*.65,i%3===0?0x9aa7b6:0x768696);
+        const angle=Math.random()*Math.PI*2,spread=Math.random()*radius*.58;
+        const velocity=new THREE.Vector3(Math.cos(angle)*(.1+Math.random()*.24),.24+Math.random()*.42,Math.sin(angle)*(.1+Math.random()*.24));
+        const puffPosition=position.clone().add(new THREE.Vector3(Math.cos(angle)*spread,Math.random()*.55,Math.sin(angle)*spread));
+        spawnVolumetricSmoke(puffPosition,velocity,i%3===0?0x9aa7b6:0x768696,.72+Math.random()*.48,life*(.82+Math.random()*.24),1);
       }
     }
   }
@@ -1364,6 +1417,37 @@ export async function createGame(
     }else{
       muzzleFx.visible=false;muzzleFlash.visible=false;muzzleLight.intensity=0;
     }
+    for(let i=smokeClouds.length-1;i>=0;i--){
+      const cloud=smokeClouds[i];cloud.age+=dt;
+      const progress=THREE.MathUtils.clamp(cloud.age/cloud.life,0,1);
+      cloud.velocity.y+=.12*dt;
+      cloud.velocity.multiplyScalar(Math.exp(-.16*dt));
+      cloud.mesh.position.addScaledVector(cloud.velocity,dt);
+      cloud.mesh.rotation.y+=cloud.spin*dt;
+      cloud.mesh.rotation.x+=cloud.spin*.22*dt;
+      cloud.mesh.scale.copy(cloud.baseScale).multiplyScalar(.62+progress*1.72);
+      cloud.material.uniforms.uTime.value=time*1.15+cloud.age*1.8;
+      cloud.material.uniforms.uOpacity.value=Math.pow(1-progress,.82)*.82;
+      if(progress>=1){
+        scene.remove(cloud.mesh);cloud.material.dispose();smokeClouds.splice(i,1);
+      }
+    }
+    for(let i=debrisVisuals.length-1;i>=0;i--){
+      const piece=debrisVisuals[i];piece.age+=dt;piece.velocity.y-=9.8*dt;
+      piece.mesh.position.addScaledVector(piece.velocity,dt);
+      piece.mesh.rotation.x+=piece.spin.x*dt;piece.mesh.rotation.y+=piece.spin.y*dt;piece.mesh.rotation.z+=piece.spin.z*dt;
+      if(piece.mesh.position.y<.045){
+        piece.mesh.position.y=.045;
+        if(Math.abs(piece.velocity.y)>.75)piece.velocity.y=Math.abs(piece.velocity.y)*.28;
+        else piece.velocity.y=0;
+        piece.velocity.x*=Math.exp(-4.8*dt);piece.velocity.z*=Math.exp(-4.8*dt);
+      }
+      const material=piece.mesh.material as THREE.MeshStandardMaterial;
+      material.opacity=Math.max(0,1-piece.age/piece.life);
+      if(piece.age>=piece.life){
+        scene.remove(piece.mesh);material.dispose();debrisVisuals.splice(i,1);
+      }
+    }
     for(let i=damagePopups.length-1;i>=0;i--){
       const popup=damagePopups[i],age=(now-Number(popup.userData.startedAt||now))/1000;
       popup.position.y=Number(popup.userData.baseY||popup.position.y)+age*.62;
@@ -1668,7 +1752,9 @@ export async function createGame(
       for(const popup of damagePopups){const material=popup.material as THREE.SpriteMaterial;material.map?.dispose();material.dispose();}
       for(const particle of fxParticles)particle.material.dispose();
       for(const shell of shellVisuals)(shell.mesh.material as THREE.Material).dispose();
-      smokeTexture.dispose();fxParticleGeometry.dispose();shellGeometry.dispose();
+      for(const cloud of smokeClouds)cloud.material.dispose();
+      for(const piece of debrisVisuals)(piece.mesh.material as THREE.Material).dispose();
+      smokeTexture.dispose();fxParticleGeometry.dispose();shellGeometry.dispose();smokeVolumeGeometry.dispose();debrisGeometry.dispose();
       // Dispose shared materials/geometries exactly once, including remote players and practice targets.
       const geometries = new Set<THREE.BufferGeometry>();
       const materials = new Set<THREE.Material>();
