@@ -3,7 +3,7 @@ import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export interface CombatantRig {
   group: THREE.Group;
-  animate: (movement:number,time:number,action?:number,recoil?:number,vertical?:number,dead?:boolean,sprint?:number,grounded?:boolean) => void;
+  animate: (movement:number,time:number,action?:number,recoil?:number,vertical?:number,dead?:boolean,sprint?:number,grounded?:boolean,aim?:number) => void;
   triggerHit: () => void;
   updateFootIK: (sampleGround:(x:number,z:number,footY:number)=>number) => void;
 }
