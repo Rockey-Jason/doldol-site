@@ -4,7 +4,7 @@ import { WEAPONS } from './catalog.js';
 import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, type Combatant } from './combat.js';
 
 test('all ten weapon definitions have valid combat tuning',()=>{
-  assert.equal(Object.keys(WEAPONS).length,10);
+  assert.equal(Object.keys(WEAPONS).length,11);
   for(const weapon of Object.values(WEAPONS)){
     assert.ok(weapon.magazine>0,weapon.code+' magazine');
     assert.ok(weapon.reserve>=0,weapon.code+' reserve');
@@ -16,6 +16,14 @@ test('all ten weapon definitions have valid combat tuning',()=>{
     assert.ok(calculateWeaponDamage(weapon,false,weapon.range/2)>=weapon.damage,weapon.code+' body damage');
     assert.ok(calculateWeaponDamage(weapon,true,weapon.range/2)>calculateWeaponDamage(weapon,false,weapon.range/2),weapon.code+' headshot damage');
   }
+});
+
+test('all firearm and DORI headshots use exactly a 1.3x multiplier',()=>{
+  for(const weapon of Object.values(WEAPONS)){
+    assert.equal(weapon.headshotMultiplier,1.3,weapon.code+' headshot multiplier');
+    assert.equal(calculateWeaponDamage(weapon,true,weapon.range/2),Math.round(calculateWeaponDamage(weapon,false,weapon.range/2)*1.3));
+  }
+  assert.equal(calculateWeaponRecoil(WEAPONS.DORI),0);
 });
 
 test('server fire gate rejects empty, reloading, and too-fast shots',()=>{
@@ -45,6 +53,13 @@ test('live shot trace hits enemies, blocks cover, and ignores teammates outside 
   assert.equal(traceWeaponShot(shooter,[shooter,ally],'ffa',[],weapon).target,ally);
   assert.equal(traceWeaponShot(shooter,[shooter,enemy],'1v1',[{x:0,z:-6,hx:2,hz:.5}],weapon).target,null);
 });
+test('shots cannot pass through a full-height wall but can pass above low cover',()=>{
+  const shooter=combatant('a',0,0,.92,0,0,.09);
+  const enemy=combatant('b',1,0,.92,-10);
+  const wall={x:0,z:-5,hx:2,hz:.35,top:2.4};
+  assert.equal(traceWeaponShot(shooter,[shooter,enemy],'1v1',[wall],WEAPONS.R16).target,null);
+});
+
 test('live shot trace enforces range and recognizes headshots',()=>{
   const weapon=WEAPONS.R16;
   const shooter=combatant('a',0,0,.92,0,0,.09);
