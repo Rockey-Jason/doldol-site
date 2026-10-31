@@ -515,27 +515,30 @@ export async function createGame(
   const remoteAllyAccent = new THREE.MeshStandardMaterial({color:0x63dfff,emissive:0x0c527b,emissiveIntensity:.75,metalness:.3,roughness:.3});
   function createCombatantVisual(team:number){
     const group=new THREE.Group();
-    const base=team===localTeam?allyMat:enemyMat;
-    const accent=team===localTeam?remoteAllyAccent:remoteEnemyAccent;
+    // Every remote owns its material instances so removing one player never
+    // disposes materials still used by another player on the same team.
+    const base=(team===localTeam?allyMat:enemyMat).clone();
+    const armor=remoteArmor.clone();
+    const accent=(team===localTeam?remoteAllyAccent:remoteEnemyAccent).clone();
     const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.31,.72,5,10),base);
     torso.castShadow=true;torso.receiveShadow=true;group.add(torso);
     const head=new THREE.Mesh(new THREE.SphereGeometry(.22,18,14),base);
     head.position.y=.59;head.castShadow=true;group.add(head);
-    const helmet=new THREE.Mesh(new THREE.SphereGeometry(.235,18,12,0,Math.PI*2,0,Math.PI*.58),remoteArmor);
+    const helmet=new THREE.Mesh(new THREE.SphereGeometry(.235,18,12,0,Math.PI*2,0,Math.PI*.58),armor);
     helmet.position.y=.64;helmet.castShadow=true;group.add(helmet);
     const visor=new THREE.Mesh(new THREE.BoxGeometry(.29,.065,.045),accent);
     visor.position.set(0,.61,-.2);group.add(visor);
-    const chest=new THREE.Mesh(new THREE.BoxGeometry(.42,.34,.1),remoteArmor);
+    const chest=new THREE.Mesh(new THREE.BoxGeometry(.42,.34,.1),armor);
     chest.position.set(0,.08,-.26);chest.castShadow=true;group.add(chest);
     const insignia=new THREE.Mesh(new THREE.BoxGeometry(.18,.035,.018),accent);
     insignia.position.set(0,.16,-.316);group.add(insignia);
     for(const side of [-1,1]){
       const shoulder=new THREE.Mesh(new THREE.SphereGeometry(.155,12,10),base);
       shoulder.position.set(side*.33,.25,0);shoulder.scale.set(1,.8,1.05);shoulder.castShadow=true;group.add(shoulder);
-      const boot=new THREE.Mesh(new THREE.BoxGeometry(.18,.15,.27),remoteArmor);
+      const boot=new THREE.Mesh(new THREE.BoxGeometry(.18,.15,.27),armor);
       boot.position.set(side*.16,-.48,-.04);boot.castShadow=true;group.add(boot);
     }
-    const pack=new THREE.Mesh(new THREE.BoxGeometry(.34,.4,.15),remoteArmor);
+    const pack=new THREE.Mesh(new THREE.BoxGeometry(.34,.4,.15),armor);
     pack.position.set(0,.12,.22);pack.castShadow=true;group.add(pack);
     return group;
   }
