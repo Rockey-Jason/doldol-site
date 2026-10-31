@@ -10,6 +10,17 @@ export class GameSocket {
   private heartbeatTimer=0;
   private pingSequence=0;
   private pendingPings=new Map<string,number>();
+  private simulationProfile:{lossPercent:number;minDelayMs:number;maxDelayMs:number}|null=null;
+  private simulationRandomState=0x524f434b;
+  private simulationRandom(){this.simulationRandomState=(Math.imul(this.simulationRandomState,1664525)+1013904223)>>>0;return this.simulationRandomState/4294967296;}
+  setNetworkSimulation(profile:{lossPercent:number;minDelayMs:number;maxDelayMs:number;seed?:number}|null){
+    if(!profile){this.simulationProfile=null;return;}
+    const min=Math.max(0,Math.min(3000,profile.minDelayMs));
+    const max=Math.max(min,Math.min(3000,profile.maxDelayMs));
+    this.simulationProfile={lossPercent:Math.max(0,Math.min(20,profile.lossPercent)),minDelayMs:min,maxDelayMs:max};
+    this.simulationRandomState=(profile.seed??0x524f434b)>>>0;
+  }
+  clearNetworkSimulation(){this.simulationProfile=null;}
 
   private startHeartbeat(socket:WebSocket){
     if(this.heartbeatTimer)window.clearInterval(this.heartbeatTimer);
@@ -91,6 +102,7 @@ export class GameSocket {
 
       socket.addEventListener('message', event => {
         if (this.socket !== socket) return;
+        const deliver=()=>{
         let message: GameMessage;
         try {
           const parsed: unknown = JSON.parse(String(event.data));
@@ -116,6 +128,15 @@ export class GameSocket {
         } else if (message.type === 'auth.error' && !settled) {
           fail(String(message.reason || 'AUTH_FAILED'));
         }
+        };
+        const profile=this.simulationProfile;
+        if(this.connected&&profile){
+          if(this.simulationRandom()*100<profile.lossPercent)return;
+          const delay=profile.minDelayMs+this.simulationRandom()*(profile.maxDelayMs-profile.minDelayMs);
+          window.setTimeout(deliver,delay);
+          return;
+        }
+        deliver();
       });
 
       socket.addEventListener('close', () => {
@@ -147,6 +168,16 @@ export class GameSocket {
     try { payload = JSON.stringify(message); }
     catch { return false; }
     if (new TextEncoder().encode(payload).byteLength > MAX_OUTBOUND_BYTES) return false;
+    const profile=this.simulationProfile;
+    if(profile){
+      if(this.simulationRandom()*100<profile.lossPercent)return true;
+      const delay=profile.minDelayMs+this.simulationRandom()*(profile.maxDelayMs-profile.minDelayMs);
+      window.setTimeout(()=>{
+        if(this.socket!==socket||socket.readyState!==WebSocket.OPEN)return;
+        try{socket.send(payload);}catch{this.connected=false;}
+      },delay);
+      return true;
+    }
     try {
       socket.send(payload);
       return true;
