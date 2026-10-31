@@ -151,13 +151,11 @@ export async function createGame(
     }
 
     const accent = new THREE.Color(
-      code === 'VIPER' ? 0x54e6b0 :
-      code === 'THUNDER' ? 0xffaa5b :
-      code === 'LONGSHOT' ? 0xa8d8ff :
-      code === 'BASTION' ? 0xffc45f :
-      code === 'NOVA' ? 0xff748e :
-      code === 'ARC' ? 0x57efff :
-      code === 'PULSE' ? 0xbe8cff : map.light
+      code === 'R16' ? 0x4aa8ff : code === 'R9' ? 0xffd166 :
+      code === 'VIPER' ? 0x54e6b0 : code === 'THUNDER' ? 0xff8a45 :
+      code === 'LONGSHOT' ? 0xa8d8ff : code === 'HELIX' ? 0xb18aff :
+      code === 'BASTION' ? 0xffc45f : code === 'NOVA' ? 0xff748e :
+      code === 'ARC' ? 0x57efff : code === 'PULSE' ? 0xbe8cff : map.light
     );
     const metal = new THREE.MeshStandardMaterial({
       color: code === 'THUNDER' ? 0x443b34 : code === 'LONGSHOT' ? 0x263c53 : 0x1c2d46,
@@ -187,6 +185,29 @@ export async function createGame(
       return part;
     };
 
+    if (code === 'DORI') {
+      const fur = new THREE.MeshStandardMaterial({color:0xc98a4c,roughness:.92});
+      const cream = new THREE.MeshStandardMaterial({color:0xfff0d8,roughness:.96});
+      const black = new THREE.MeshStandardMaterial({color:0x17191d,roughness:.45});
+      const nose = new THREE.MeshStandardMaterial({color:0x35221d,roughness:.55});
+      const plushSphere=(x:number,y:number,z:number,sx:number,sy:number,sz:number,material:THREE.Material)=>{
+        const part=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),material);
+        part.position.set(x,y,z);part.scale.set(sx,sy,sz);part.castShadow=true;gun.add(part);return part;
+      };
+      plushSphere(.24,-.28,-.48,.23,.25,.34,fur);
+      plushSphere(.24,-.08,-.77,.22,.22,.22,fur);
+      plushSphere(.24,-.13,-.96,.15,.105,.1,cream);
+      plushSphere(.24,-.32,-.76,.16,.17,.055,cream);
+      plushSphere(.11,.105,-.75,.075,.17,.075,fur).rotation.z=-.24;
+      plushSphere(.37,.105,-.75,.075,.17,.075,fur).rotation.z=.24;
+      plushSphere(.16,-.02,-.91,.026,.03,.02,black);
+      plushSphere(.32,-.02,-.91,.026,.03,.02,black);
+      plushSphere(.24,-.13,-1.055,.035,.027,.025,nose);
+      for(const x of [.1,.38])plushSphere(x,-.49,-.38,.085,.13,.11,fur);
+      plushSphere(.24,-.25,-.19,.07,.08,.1,fur);
+      muzzleFlash.visible=false;
+      return;
+    }
     const compact = code === 'R9' || code === 'NOVA';
     const shotgun = code === 'THUNDER';
     const sniper = code === 'LONGSHOT';
