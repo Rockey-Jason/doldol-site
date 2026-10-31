@@ -95,13 +95,20 @@ function updateLocalLoadout(){
 }
 function renderItemOptions(){
   const list=$('itemOptionList');if(!list)return;
-  list.innerHTML=Object.values(ITEMS).map(item=>{
+  list.innerHTML=Object.values(ITEMS).map((item,index)=>{
     const count=itemInventory[item.code]||0,selected=selectedItemCode===item.code;
-    return '<button type="button" class="item-option '+(selected?'selected':'')+'" data-item-code="'+item.code+'" '+(count<=0?'disabled':'')+'>'+
+    return '<button type="button" class="item-option '+(selected?'selected':'')+'" data-item-code="'+item.code+'" aria-keyshortcuts="'+(index+1)+'" '+(count<=0?'disabled':'')+'>'+
+      '<span class="item-option-key" aria-hidden="true">'+(index+1)+'</span>'+
       '<span class="item-option-main"><b>'+item.name+'</b><small>'+item.description+'</small></span><span class="item-option-count">'+count+'개</span></button>';
   }).join('');
 }
-function openItemSelector(){if(!game||isSpectating||isKillcam)return;renderItemOptions();$('itemSelectPanel')!.classList.remove('hidden');}
+function openItemSelector(){
+  if(!game||isSpectating||isKillcam)return;
+  renderItemOptions();$('itemSelectPanel')!.classList.remove('hidden');
+  const selected=document.querySelector<HTMLButtonElement>('#itemOptionList .item-option.selected:not(:disabled)');
+  const first=document.querySelector<HTMLButtonElement>('#itemOptionList .item-option:not(:disabled)');
+  (selected||first)?.focus({preventScroll:true});
+}
 function closeItemSelector(){$('itemSelectPanel')!.classList.add('hidden');}
 function chooseItem(code:string){
   if(!(code in ITEMS))return;const itemCode=code as RockeyItemCode;
@@ -325,10 +332,58 @@ $('itemOptionList')?.addEventListener('click',event=>{
   const target=event.target;if(!(target instanceof Element))return;
   const option=target.closest<HTMLElement>('[data-item-code]');if(option&&!option.hasAttribute('disabled'))chooseItem(option.dataset.itemCode||'');
 });
-window.addEventListener('keydown',event=>{
-  if((event.code==='KeyG'||event.code==='Digit3')&&!event.repeat){event.preventDefault();openItemSelector();}
-  if(event.code==='Escape'&&!$('itemSelectPanel')?.classList.contains('hidden'))closeItemSelector();
-});
+function isTextEntryTarget(target:EventTarget|null):boolean{
+  return target instanceof HTMLElement&&(target.isContentEditable||!!target.closest('input,textarea,select,[contenteditable="true"]'));
+}
+function itemCodeFromNumberKey(event:KeyboardEvent):RockeyItemCode|null{
+  const match=/^(?:Digit|Numpad)([1-5])$/.exec(event.code);
+  if(!match)return null;
+  return Object.values(ITEMS)[Number(match[1])-1]?.code||null;
+}
+function moveItemOptionFocus(direction:number){
+  const buttons=Array.from(document.querySelectorAll<HTMLButtonElement>('#itemOptionList .item-option:not(:disabled)'));
+  if(!buttons.length)return;
+  const current=buttons.indexOf(document.activeElement as HTMLButtonElement);
+  const next=current<0?0:(current+direction+buttons.length)%buttons.length;
+  buttons[next].focus({preventScroll:true});
+}
+function handleGameKeyboard(event:KeyboardEvent){
+  if(!document.body.classList.contains('game-active')||isTextEntryTarget(event.target))return;
+  const pickerOpen=!$('itemSelectPanel')?.classList.contains('hidden');
+  if(pickerOpen){
+    if(event.code==='Escape'||event.code==='KeyG'){
+      event.preventDefault();closeItemSelector();event.stopImmediatePropagation();return;
+    }
+    const numberedItem=itemCodeFromNumberKey(event);
+    if(numberedItem){
+      event.preventDefault();chooseItem(numberedItem);event.stopImmediatePropagation();return;
+    }
+    if(event.code==='ArrowDown'||event.code==='ArrowRight'){
+      event.preventDefault();moveItemOptionFocus(1);
+    }else if(event.code==='ArrowUp'||event.code==='ArrowLeft'){
+      event.preventDefault();moveItemOptionFocus(-1);
+    }else if(event.code==='Enter'){
+      event.preventDefault();
+      const focused=document.activeElement;
+      const option=focused instanceof HTMLElement?focused.closest<HTMLButtonElement>('#itemOptionList .item-option:not(:disabled)'):null;
+      option?.click();
+    }
+    // Keep movement, reload, jump, and weapon-switch inputs from reaching the game while the picker is open.
+    event.stopImmediatePropagation();return;
+  }
+  if(event.repeat)return;
+  if(event.code==='KeyG'){
+    event.preventDefault();openItemSelector();event.stopImmediatePropagation();return;
+  }
+  const numberedItem=itemCodeFromNumberKey(event);
+  if(numberedItem){
+    event.preventDefault();chooseItem(numberedItem);event.stopImmediatePropagation();return;
+  }
+  if(event.code==='KeyE'){
+    event.preventDefault();game?.useItem();event.stopImmediatePropagation();
+  }
+}
+window.addEventListener('keydown',handleGameKeyboard,true);
 $('exitBtn')?.addEventListener('click',()=>{
   closeItemSelector();
   if(isSpectating)send({type:'spectator.leave'});
