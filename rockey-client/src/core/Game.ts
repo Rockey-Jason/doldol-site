@@ -520,23 +520,26 @@ export async function createGame(
     const now = performance.now();
     if (!active || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
     lastShot = now;
-    ammo -= 1;
+    const melee=currentWeapon.category==='MELEE';
+    if(!melee)ammo-=1;
     gunKick = Math.min(1.8,gunKick+(weaponMotion[currentWeaponCode]?.kick||.82));
-    playFireSound(currentWeaponCode);
+    camera.updateMatrixWorld(true);
+    const origin=camera.getWorldPosition(new THREE.Vector3());
+    const direction=camera.getWorldDirection(new THREE.Vector3());
+    if(melee){doriSwingStart=now;playMeleeSound();}else{playFireSound(currentWeaponCode);spawnProjectile(origin,direction,currentWeaponCode,currentWeapon.range);}
     updateHud(hp, ammo, reserve, currentWeapon.name);
 
     if (mode === 'practice') {
-      camera.updateMatrixWorld(true);
-      const origin = camera.getWorldPosition(new THREE.Vector3());
-      const direction = camera.getWorldDirection(new THREE.Vector3());
-      const shotRay = new THREE.Raycaster(origin, direction, 0, 65);
-      const candidates = practiceTargets
-        .filter(target => target.visible)
-        .flatMap(target => target.children);
-      const hit = shotRay.intersectObjects(candidates, true)[0];
+      const shotRay = new THREE.Raycaster(origin, direction, 0, currentWeapon.range);
+      const candidates = practiceTargets.filter(target => target.visible).flatMap(target => target.children);
+      const targetHit = shotRay.intersectObjects(candidates, true)[0];
+      const wallHit = shotRay.intersectObjects(raycastMeshes, false)[0];
+      const hit = targetHit && (!wallHit || targetHit.distance < wallHit.distance - .015) ? targetHit : null;
       if (hit) {
         const target = hit.object.parent as THREE.Group;
-        const practiceDamage = Math.round(currentWeapon.damage * (currentWeapon.pellets || 1));
+        const headshot=hit.object===target.children[1];
+        const practiceDamage = Math.round(currentWeapon.damage * (headshot?1.3:1) * (currentWeapon.pellets || 1));
+        showDamageAt(target.position.clone(),practiceDamage,headshot);
         target.userData.hp = Math.max(0, Number(target.userData.hp || 100) - practiceDamage);
         if (target.userData.hp <= 0) {
           target.visible = false;
@@ -553,17 +556,21 @@ export async function createGame(
     } else {
       send({ type: 'fire', weaponCode: currentWeaponCode, sequence: ++seq });
     }
-    if (mode === 'practice') {
+    if (mode === 'practice' && !melee) {
       pitch = THREE.MathUtils.clamp(pitch + Math.min(0.045,0.012+currentWeapon.damage/2500+currentWeapon.spread*0.25),-1.3,1.3);
       yaw += (Math.random()-0.5)*0.003;
     }
 
-    muzzleFlash.visible = true;
-    window.setTimeout(() => { if(!disposed)muzzleFlash.visible = false; }, 70);
+    if(!melee){
+      const flashMaterial=muzzleFlash.material as THREE.MeshBasicMaterial;
+      flashMaterial.color.setHex(projectileColors[currentWeaponCode]||0xffffff);
+      muzzleFlash.visible = true;
+      window.setTimeout(() => { if(!disposed)muzzleFlash.visible = false; }, 70);
+    }
   }
 
   function reload() {
-    if (!active || ammo >= currentWeapon.magazine || reserve <= 0 || performance.now() < reloadAt) return;
+    if (!active || currentWeapon.category==='MELEE' || ammo >= currentWeapon.magazine || reserve <= 0 || performance.now() < reloadAt) return;
     reloadAt = performance.now() + currentWeapon.reloadMs;
     reloadAnimationStart = performance.now();
     reloadAnimationDuration = currentWeapon.reloadMs;
