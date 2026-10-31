@@ -1392,10 +1392,10 @@ export async function createGame(
       const deviceMemory=(navigator as Navigator&{deviceMemory?:number}).deviceMemory??null;
       const stressed=measuredFps<target-5||measuredFrame>21||memoryPressure;
       if(stressed){
-        bloomPass.strength=Math.max(isMobile?.035:.08,bloomPass.strength-.035);
+        bloomPass.strength=Math.max(isMobile ? .035 : .08,bloomPass.strength-.035);
         if(measuredFps<target-8||measuredFrame>25)renderer.shadowMap.enabled=false;
       }else if(measuredFps>target+12&&!memoryPressure){
-        bloomPass.strength=Math.min(isMobile?.10:.38,bloomPass.strength+.015);
+        bloomPass.strength=Math.min(isMobile ? .10 : .38,bloomPass.strength+.015);
         if(!isMobile)renderer.shadowMap.enabled=true;
       }
       performanceBadge.textContent='FPS '+measuredFps+' · '+measuredFrame+'ms · DPR '+adaptivePixelRatio.toFixed(2)+(memoryMb===null?'':' · HEAP '+memoryMb+'MB');
