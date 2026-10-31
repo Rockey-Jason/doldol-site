@@ -209,6 +209,7 @@ export async function createGame(
       for(const x of [.1,.38])plushSphere(x,-.49,-.38,.085,.13,.11,fur);
       plushSphere(.24,-.25,-.19,.07,.08,.1,fur);
       muzzleFlash.visible=false;
+      metal.dispose();glowPart.dispose();dark.dispose();
       return;
     }
     const compact = code === 'R9' || code === 'NOVA';
