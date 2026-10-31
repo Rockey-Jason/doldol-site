@@ -19,7 +19,7 @@ export interface ReplayFrame {
 }
 export interface GameInstance {
   activate(mode: string, team?: number, spawn?: { x: number; y: number; z: number; yaw: number }, weaponCode?: string, secondaryWeapon?: string, itemCode?: string, itemCount?: number, itemInventory?:Record<string,number>): void;
-  setRemotePlayers(players: RemotePlayer[]): void;
+  setRemotePlayers(players: RemotePlayer[], serverTime?: number): void;
   reconcileLocalPlayer(player: RemotePlayer): void;
   setScore(a: number, b: number, round: number): void;
   setHealth(value: number): void;
@@ -29,7 +29,8 @@ export interface GameInstance {
   selectItem(itemCode:string):void;
   useItem():void;
   showThrownItem(itemCode:string,x:number,y:number,z:number,yaw:number,pitch:number,fuseMs:number):void;
-  showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number):void;
+  showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number,eventId?:string):void;
+  applyWorldDestruction(events:Array<{id:string;x:number;y:number;z:number;radius:number}>):void;
   applyRecoil(pitch: number, yaw: number): void;
   showDamageOnTarget(targetId: string, targetName: string, damage: number, headshot: boolean): void;
   showShot(x: number, y: number, z: number, yaw: number, pitch: number, weaponCode: string): void;
@@ -684,14 +685,19 @@ export async function createGame(
   let jumpPending = false;
   let lastShot = 0;
   let reloadAt = 0;
+  let reloadToken=0;
+  let wasGrounded=true;
+  let landingKick=0;
   let raf = 0;
   let previous = performance.now();
   let perfWindowStart=previous;
   let perfFrames=0;
   let smoothedFrameMs=16.7;
+  const frameTimeSamples:number[]=[];
   let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
   const minPixelRatio=isMobile ? .78 : 1.0;
   const maxPixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
+  const appliedDestructionIds=new Set<string>();
   const performanceBadge=document.createElement('div');
   performanceBadge.style.cssText='position:fixed;top:calc(env(safe-area-inset-top, 0px) + 8px);right:10px;z-index:30;padding:6px 9px;border:1px solid rgba(130,190,230,.24);border-radius:7px;background:rgba(5,13,25,.68);color:#d9edff;font:600 10px/1.2 ui-monospace,monospace;letter-spacing:.04em;pointer-events:none;backdrop-filter:blur(8px)';
   performanceBadge.textContent='FPS -- · FRAME -- ms';
@@ -722,6 +728,8 @@ export async function createGame(
     reserve = nextReserve === undefined ? (stored?.reserve ?? currentWeapon.reserve) : Math.max(0,nextReserve);
     localWeaponAmmo[code]={ammo,reserve};
     reloadAt = 0;
+    reloadToken++;
+    reloadAnimationStart=0;
     rebuildGun(code);
     switchAnimationStart=performance.now();
     playSwitchSound(previousCode,code);
@@ -1137,20 +1145,23 @@ export async function createGame(
 
   function reload() {
     if (!active || currentWeapon.category==='MELEE' || ammo >= currentWeapon.magazine || reserve <= 0 || performance.now() < reloadAt) return;
-    reloadAt = performance.now() + currentWeapon.reloadMs;
+    const reloadWeaponCode=currentWeaponCode;
+    const reloadWeapon=currentWeapon;
+    const token=++reloadToken;
+    reloadAt = performance.now() + reloadWeapon.reloadMs;
     reloadAnimationStart = performance.now();
-    reloadAnimationDuration = currentWeapon.reloadMs;
-    playReloadSound(currentWeaponCode);
+    reloadAnimationDuration = reloadWeapon.reloadMs;
+    playReloadSound(reloadWeaponCode);
     if (mode === 'practice') {
       window.setTimeout(() => {
-        if(disposed)return;
-        const amount = Math.min(currentWeapon.magazine - ammo, reserve);
+        if(disposed||token!==reloadToken||currentWeaponCode!==reloadWeaponCode)return;
+        const amount = Math.min(reloadWeapon.magazine - ammo, reserve);
         ammo += amount;
         reserve -= amount;
-        localWeaponAmmo[currentWeaponCode]={ammo,reserve};
+        localWeaponAmmo[reloadWeaponCode]={ammo,reserve};
         reloadAt = 0;
-        updateHud(hp, ammo, reserve, currentWeapon.name);
-      }, currentWeapon.reloadMs);
+        updateHud(hp, ammo, reserve, reloadWeapon.name);
+      }, reloadWeapon.reloadMs);
     } else {
       send({ type: 'reload' });
     }
@@ -1163,6 +1174,7 @@ export async function createGame(
     if (event.code === 'KeyR') reload();
     // G opens the item picker in main.ts; item use is a separate action.
     if (event.code === 'KeyQ') {
+      if(reloadAnimationStart){reloadAnimationStart=0;reloadAt=0;reloadToken++;}
       if (mode === 'practice') {
         const next = currentWeaponCode === primaryWeaponCode ? secondaryWeaponCode : primaryWeaponCode;
         setWeaponLocal(next);
@@ -1327,7 +1339,7 @@ export async function createGame(
     materials.forEach(material => material.dispose());
   }
 
-  function setRemotePlayers(players: RemotePlayer[]) {
+  function setRemotePlayers(players: RemotePlayer[],serverTime=Date.now()) {
     const ids = new Set(players.map(player => player.id));
     for (const [id, mesh] of remotes) {
       if (!ids.has(id)) {
@@ -1353,6 +1365,14 @@ export async function createGame(
       mesh.userData.targetY=player.y-0.08;
       mesh.userData.targetZ=player.z;
       mesh.userData.targetYaw=player.yaw;
+      const samples=(mesh.userData.samples as Array<{t:number;x:number;y:number;z:number;yaw:number}>|undefined)||[];
+      const stamp=Number.isFinite(serverTime)?serverTime:Date.now();
+      const last=samples[samples.length-1];
+      if(!last||stamp>last.t){
+        samples.push({t:stamp,x:player.x,y:player.y-.08,z:player.z,yaw:player.yaw});
+        while(samples.length>8)samples.shift();
+      }
+      mesh.userData.samples=samples;
       mesh.userData.baseVisible=player.connected!==false;
       const dead=player.alive===false||player.health<=0;
       if(dead&&!mesh.userData.dead)mesh.userData.deadAt=performance.now();
@@ -1373,6 +1393,7 @@ export async function createGame(
     previous = now;
     perfFrames++;
     const frameMs=Math.min(100,dt*1000);
+    frameTimeSamples.push(frameMs);if(frameTimeSamples.length>300)frameTimeSamples.shift();
     smoothedFrameMs=smoothedFrameMs*.92+frameMs*.08;
     if(now-perfWindowStart>=2500){
       const fps=perfFrames*1000/(now-perfWindowStart);
@@ -1386,6 +1407,9 @@ export async function createGame(
       }
       const measuredFps=Math.round(fps);
       const measuredFrame=Math.round(smoothedFrameMs*10)/10;
+      const sortedFrames=[...frameTimeSamples].sort((a,b)=>a-b);
+      const p99Frame=sortedFrames[Math.min(sortedFrames.length-1,Math.ceil(sortedFrames.length*.99)-1)]||measuredFrame;
+      const onePercentLow=Math.round(1000/Math.max(1,p99Frame));
       const memory=(performance as Performance&{memory?:{usedJSHeapSize:number;jsHeapSizeLimit:number}}).memory;
       const memoryMb=memory?Math.round(memory.usedJSHeapSize/1048576):null;
       const memoryLimitMb=memory?Math.round(memory.jsHeapSizeLimit/1048576):null;
@@ -1399,10 +1423,10 @@ export async function createGame(
         bloomPass.strength=Math.min(isMobile ? .10 : .38,bloomPass.strength+.015);
         if(!isMobile)renderer.shadowMap.enabled=true;
       }
-      performanceBadge.textContent='FPS '+measuredFps+' · '+measuredFrame+'ms · DPR '+adaptivePixelRatio.toFixed(2)+(memoryMb===null?'':' · HEAP '+memoryMb+'MB');
+      performanceBadge.textContent='FPS '+measuredFps+' · 1% LOW '+onePercentLow+' · '+measuredFrame+'ms · DPR '+adaptivePixelRatio.toFixed(2)+(memoryMb===null?'':' · HEAP '+memoryMb+'MB');
       performanceBadge.style.color=stressed?'#ffb4a8':'#d9edff';
       window.dispatchEvent(new CustomEvent('rockey:performance',{detail:{
-        fps:measuredFps,frameMs:measuredFrame,pixelRatio:Math.round(adaptivePixelRatio*100)/100,
+        fps:measuredFps,onePercentLow,frameMs:measuredFrame,pixelRatio:Math.round(adaptivePixelRatio*100)/100,
         device:isMobile?'mobile':'desktop',memoryMb,memoryLimitMb,deviceMemoryGb:deviceMemory,
         bloomStrength:Math.round(bloomPass.strength*100)/100
       }}));
@@ -1493,7 +1517,7 @@ export async function createGame(
       if(!reloadActive){magazineModel.position.set(.24,-.405,-.37);magazineModel.rotation.set(0,0,0);magazineModel.visible=true;replacementMagazineModel.visible=false;}
     }
     weaponHands.group.visible=!melee;
-    weaponHands.update(reloadProgress,reloadAnimationStart>0,walkAmount,fireWave,weaponAimBlend);
+    weaponHands.update(reloadProgress,reloadAnimationStart>0,walkAmount,fireWave,weaponAimBlend,currentWeaponCode);
     if(boltModel){
       const boltKick=fireWave*.095;
       const boltReload=reloadAnimationStart?(
@@ -1627,9 +1651,21 @@ export async function createGame(
       const data=mesh.userData;
       if(typeof data.targetX!=='number')continue;
       const oldX=mesh.position.x,oldY=mesh.position.y,oldZ=mesh.position.z;
-      mesh.position.x=THREE.MathUtils.lerp(mesh.position.x,data.targetX,remoteBlend);
-      mesh.position.y=THREE.MathUtils.lerp(mesh.position.y,data.targetY,remoteBlend);
-      mesh.position.z=THREE.MathUtils.lerp(mesh.position.z,data.targetZ,remoteBlend);
+      const samples=data.samples as Array<{t:number;x:number;y:number;z:number;yaw:number}>|undefined;
+      if(samples&&samples.length){
+        const renderAt=Date.now()-105;
+        while(samples.length>2&&samples[1].t<renderAt)samples.shift();
+        const a=samples[0],b=samples[1]||a;
+        const span=Math.max(1,b.t-a.t);
+        const alpha=THREE.MathUtils.clamp((renderAt-a.t)/span,0,1);
+        mesh.position.set(THREE.MathUtils.lerp(a.x,b.x,alpha),THREE.MathUtils.lerp(a.y,b.y,alpha),THREE.MathUtils.lerp(a.z,b.z,alpha));
+        const yawDelta=THREE.MathUtils.euclideanModulo(b.yaw-a.yaw+Math.PI,Math.PI*2)-Math.PI;
+        mesh.rotation.y=a.yaw+yawDelta*alpha;
+      }else{
+        mesh.position.x=THREE.MathUtils.lerp(mesh.position.x,data.targetX,remoteBlend);
+        mesh.position.y=THREE.MathUtils.lerp(mesh.position.y,data.targetY,remoteBlend);
+        mesh.position.z=THREE.MathUtils.lerp(mesh.position.z,data.targetZ,remoteBlend);
+      }
       const remoteMotion=Math.min(1,Math.hypot(mesh.position.x-oldX,mesh.position.z-oldZ)/Math.max(.001,dt)/4.2);
       const remoteVertical=(mesh.position.y-oldY)/Math.max(.001,dt);
       const animatePose=mesh.userData.animatePose;
@@ -1697,8 +1733,12 @@ export async function createGame(
       movementAmount+=(movementTarget-movementAmount)*(1-Math.exp(-12*dt));
       const baseSpeed=keys.has('ShiftLeft')||keys.has('ShiftRight')?7.1:5.4;
       const speed=baseSpeed*(now<energyUntil?2:1)*(precisionAiming?0.5:1);
-      if (controller.computedGrounded() && vertical < 0) vertical = -1;
-      if (touch.jump && controller.computedGrounded()) {
+      const groundedBefore=controller.computedGrounded();
+      if(groundedBefore&&!wasGrounded&&vertical< -2)landingKick=.13;
+      wasGrounded=groundedBefore;
+      landingKick*=Math.exp(-13*dt);
+      if (groundedBefore && vertical < 0) vertical = -1;
+      if (touch.jump && groundedBefore) {
         vertical = 7.2;
         touch.jump = false;
         jumpPending = true;
@@ -1723,8 +1763,9 @@ export async function createGame(
       const p = position();
       avatar.position.set(p.x, p.y - 0.08, p.z);
       avatar.rotation.y = yaw;
-      avatarRig.animate(movementAmount,time,reloadWave,fireWave,vertical,hp<=0);
-      const eye = p.clone().add(new THREE.Vector3(0, 0.58, 0));
+      avatarRig.animate(movementAmount,time,reloadWave,fireWave,vertical,hp<=0,keys.has('ShiftLeft')||keys.has('ShiftRight')?1:0,controller.computedGrounded());
+      const gaitBob=Math.sin(time*(keys.has('ShiftLeft')||keys.has('ShiftRight')?13.2:10.2))*movementAmount*(precisionAiming?.008:.022);
+      const eye = p.clone().add(new THREE.Vector3(0, 0.58+gaitBob-landingKick, 0));
       if (cameraMode === 'first') {
         camera.position.copy(eye);
       } else {
@@ -1764,6 +1805,7 @@ export async function createGame(
     activate(nextMode: string, team = 0, serverSpawn?: { x: number; y: number; z: number; yaw: number }, weaponCode = 'R16', secondaryWeapon = 'R9', itemCode = 'GRENADE', nextItemCount?: number, nextItemInventory?:Record<string,number>) {
       mode = nextMode;
       active = nextMode !== 'spectator' && nextMode !== 'replay';
+      tacticalLevel.resetDestruction();appliedDestructionIds.clear();
       replayFrames = null;
       replayFocusId = '';
       killcamComplete = null;
@@ -1811,11 +1853,11 @@ export async function createGame(
         serverPlayer.y - current.y,
         serverPlayer.z - current.z
       );
-      if (error > 2.2) {
+      if (error > 3.5) {
         body.setTranslation({ x: serverPlayer.x, y: serverPlayer.y, z: serverPlayer.z }, true);
         vertical = 0;
-      } else if (error > 0.08) {
-        const blend = 0.22;
+      } else if (error > 0.035) {
+        const blend = error > .8 ? .16 : .10;
         body.setTranslation({
           x: THREE.MathUtils.lerp(current.x, serverPlayer.x, blend),
           y: THREE.MathUtils.lerp(current.y, serverPlayer.y, blend),
@@ -1840,6 +1882,8 @@ export async function createGame(
       reserve = Math.max(0, Math.min(240, nextReserve));
       localWeaponAmmo[currentWeaponCode]={ammo,reserve};
       reloadAt = 0;
+      reloadToken++;
+      reloadAnimationStart=0;
       updateHud(hp, ammo, reserve, currentWeapon.name);
     },
     setWeapon(code: string, nextAmmo?: number, nextReserve?: number) {
