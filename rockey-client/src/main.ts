@@ -209,6 +209,7 @@ async function enterMatch(message:Record<string,any>){
     Number(message.itemCount??ITEMS[(String(message.itemCode||hub.getLoadout().itemCode) in ITEMS?String(message.itemCode||hub.getLoadout().itemCode):'GRENADE') as RockeyItemCode].startingCount),
     message.itemInventory as Record<string,number>|undefined
   );
+  game?.applyWorldDestruction((Array.isArray(message.worldDestruction)?message.worldDestruction:[]) as Array<{id:string;x:number;y:number;z:number;radius:number}>);
   if(typeof message.ammo==='number')game?.setAmmo(message.ammo,Number(message.reserve||0));
   $('modeLabel')!.textContent=currentMode.toUpperCase()+' · '+String(message.weaponCode||primaryWeapon);
   showGame();toast('MATCH START · '+String(message.mapName||mapId));
@@ -421,12 +422,15 @@ socket.onMessage((message:GameMessage)=>{
       if(isKillcam)break;
       if(!isSpectating){
         if(local)game?.reconcileLocalPlayer(local);
-        game?.setRemotePlayers(players.filter(p=>p.id!==userId));
+        game?.setRemotePlayers(players.filter(p=>p.id!==userId),Number(message.serverTime)||Date.now());
       }else{
-        game?.setRemotePlayers(players);
+        game?.setRemotePlayers(players,Number(message.serverTime)||Date.now());
       }
       break;
     }
+    case 'world.state':
+      game?.applyWorldDestruction((Array.isArray(message.destruction)?message.destruction:[]) as Array<{id:string;x:number;y:number;z:number;radius:number}>);
+      break;
     case 'round.update':
       game?.setScore(Number(message.team0||0),Number(message.team1||0),Number(message.round||1));
       break;
@@ -460,7 +464,7 @@ socket.onMessage((message:GameMessage)=>{
       game?.showThrownItem(String(message.itemCode||'GRENADE'),Number(message.x),Number(message.y),Number(message.z),Number(message.yaw),Number(message.pitch),Number(message.fuseMs||900));
       break;
     case 'item.effect':
-      game?.showItemEffect(String(message.effect||''),Number(message.x||0),Number(message.y||0),Number(message.z||0),Number(message.radius||4),Number(message.durationMs||500));
+      game?.showItemEffect(String(message.effect||''),Number(message.x||0),Number(message.y||0),Number(message.z||0),Number(message.radius||4),Number(message.durationMs||500),typeof message.eventId==='string'?message.eventId:undefined);
       break;
     case 'weapon.update':
       activeWeapon=String(message.weaponCode||activeWeapon);
