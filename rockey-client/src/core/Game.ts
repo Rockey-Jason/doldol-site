@@ -422,7 +422,7 @@ export async function createGame(
   const touch = { forward: 0, right: 0, jump: false };
   let precisionAiming = false;
   const normalFov = camera.fov;
-  const precisionFov = 46;
+  const precisionFov = 30;
   function setPrecisionAiming(enabled:boolean) {
     if (precisionAiming === enabled) return;
     precisionAiming = enabled;
