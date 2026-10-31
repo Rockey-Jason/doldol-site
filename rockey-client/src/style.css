@@ -283,3 +283,15 @@ button{-webkit-tap-highlight-color:transparent;user-select:none}
 .item-option-key{position:absolute;left:12px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:22px;height:22px;border:1px solid rgba(228,200,117,.35);border-radius:6px;background:rgba(80,61,22,.38);color:#f5d98e;font-size:11px;font-weight:700}
 .item-option:focus-visible{outline:2px solid #64d9ff;outline-offset:2px;border-color:#64d9ff;box-shadow:0 0 0 4px rgba(76,194,255,.15)}
 @media(pointer:coarse){.item-box{min-width:0}}
+
+/* Precision aim: restrained reticle and active mobile hold control */
+body.precision-aiming .crosshair{width:10px;height:10px;transition:width .16s,height .16s}
+body.precision-aiming .crosshair i{background:rgba(222,248,255,.98);box-shadow:0 0 7px rgba(82,202,255,.95)}
+body.precision-aiming .crosshair i:nth-child(1){height:3px;top:0}
+body.precision-aiming .crosshair i:nth-child(2){height:3px;bottom:0}
+body.precision-aiming .crosshair i:nth-child(3){width:3px;left:0}
+body.precision-aiming .crosshair i:nth-child(4){width:3px;right:0}
+body.precision-aiming .crosshair::after{content:"";position:absolute;left:50%;top:50%;width:2px;height:2px;border-radius:50%;background:#fff;transform:translate(-50%,-50%);box-shadow:0 0 5px #64dfff}
+.aim-touch-btn{border-color:rgba(94,213,255,.58);background:rgba(10,68,99,.86);color:#dff8ff}
+.aim-touch-btn.active{border-color:#8cecff;background:linear-gradient(145deg,rgba(24,143,190,.96),rgba(10,72,118,.96));box-shadow:0 0 0 2px rgba(92,213,255,.18),0 0 18px rgba(66,190,255,.38);color:#fff}
+@media(pointer:fine){.aim-touch-btn{display:none}}
