@@ -144,12 +144,10 @@ export async function createGame(
     for (const child of [...gun.children]) {
       if (child === muzzleFlash) continue;
       gun.remove(child);
-      if (child instanceof THREE.Mesh) {
-        child.geometry.dispose();
-        const materials = Array.isArray(child.material) ? child.material : [child.material];
-        materials.forEach(material => material.dispose());
-      }
+      disposeObjectResources(child);
     }
+    magazineModel = null;
+    boltModel = null;
 
     const accent = new THREE.Color(
       code === 'R16' ? 0x4aa8ff : code === 'R9' ? 0xffd166 :
@@ -268,6 +266,34 @@ export async function createGame(
     const bodyLength = compact ? 0.49 : shotgun ? 0.68 : sniper ? 0.82 : lmg ? 0.78 : 0.66;
     const barrelLength = compact ? 0.34 : shotgun ? 0.62 : sniper ? 1.15 : dmr ? 0.86 : lmg ? 0.72 : smg ? 0.48 : 0.67;
     const bodyWidth = shotgun ? 0.3 : lmg ? 0.34 : compact ? 0.19 : 0.24;
+
+    // Independent magazine and charging handle let reload/fire animations move
+    // the small mechanical parts instead of rotating the entire weapon only.
+    const magazine = new THREE.Group();
+    magazine.position.set(0.24, -0.405, -0.37);
+    const magWidth = lmg ? 0.19 : compact ? 0.085 : sniper ? 0.14 : 0.125;
+    const magHeight = lmg ? 0.25 : compact ? 0.17 : 0.21;
+    const magDepth = lmg ? 0.18 : compact ? 0.105 : 0.14;
+    const magBody = new THREE.Mesh(new THREE.BoxGeometry(magWidth,magHeight,magDepth),dark);
+    magBody.castShadow = true;
+    magazine.add(magBody);
+    const magBase = new THREE.Mesh(new THREE.BoxGeometry(magWidth*1.08,0.035,magDepth*1.08),glowPart);
+    magBase.position.y = -magHeight/2 + 0.012;
+    magBase.castShadow = true;
+    magazine.add(magBase);
+    gun.add(magazine);
+    magazineModel = magazine;
+
+    const bolt = new THREE.Group();
+    bolt.position.set(0.24,-0.105,-0.43);
+    const boltBody = new THREE.Mesh(new THREE.BoxGeometry(0.075,0.045,0.17),dark);
+    boltBody.castShadow = true;
+    bolt.add(boltBody);
+    const boltAccent = new THREE.Mesh(new THREE.BoxGeometry(0.082,0.018,0.055),glowPart);
+    boltAccent.position.set(0,-0.012,0.035);
+    bolt.add(boltAccent);
+    gun.add(bolt);
+    boltModel = bolt;
 
     addBox(0.24,-0.23,-0.36,bodyWidth,0.19,bodyLength,metal);
     addBox(0.24,-0.105,-0.38,bodyWidth*0.68,0.055,bodyLength*0.8,glowPart);
@@ -404,12 +430,22 @@ export async function createGame(
   let audioContext: AudioContext | null = null;
   let noiseBuffer: AudioBuffer | null = null;
   let gunKick = 0;
-  const weaponMotion:Record<string,{kick:number;reloadTilt:number;roll:number}> = {
-    R16:{kick:.82,reloadTilt:.12,roll:.06},R9:{kick:.95,reloadTilt:.2,roll:.12},
-    VIPER:{kick:.48,reloadTilt:.09,roll:.04},THUNDER:{kick:1.28,reloadTilt:.38,roll:.2},
-    LONGSHOT:{kick:1.35,reloadTilt:.46,roll:.1},HELIX:{kick:.88,reloadTilt:.16,roll:.08},
-    BASTION:{kick:.56,reloadTilt:.28,roll:.22},NOVA:{kick:1.16,reloadTilt:.22,roll:.14},
-    ARC:{kick:.62,reloadTilt:.1,roll:.04},PULSE:{kick:.72,reloadTilt:.14,roll:.08},DORI:{kick:0,reloadTilt:.05,roll:.05}
+  let movementAmount = 0;
+  let fireAnimationStart = 0;
+  let magazineModel: THREE.Group | null = null;
+  let boltModel: THREE.Group | null = null;
+  const weaponMotion:Record<string,{kick:number;reloadTilt:number;roll:number;sway:number;bob:number;fireTilt:number;switchRoll:number}> = {
+    R16:{kick:.82,reloadTilt:.12,roll:.06,sway:.75,bob:1,fireTilt:.9,switchRoll:.42},
+    R9:{kick:.95,reloadTilt:.2,roll:.12,sway:.55,bob:.8,fireTilt:1.12,switchRoll:.62},
+    VIPER:{kick:.48,reloadTilt:.09,roll:.04,sway:.9,bob:1.12,fireTilt:.58,switchRoll:.34},
+    THUNDER:{kick:1.28,reloadTilt:.38,roll:.2,sway:.48,bob:.72,fireTilt:1.4,switchRoll:.7},
+    LONGSHOT:{kick:1.35,reloadTilt:.46,roll:.1,sway:.3,bob:.42,fireTilt:1.55,switchRoll:.58},
+    HELIX:{kick:.88,reloadTilt:.16,roll:.08,sway:.42,bob:.62,fireTilt:.92,switchRoll:.46},
+    BASTION:{kick:.56,reloadTilt:.28,roll:.22,sway:.34,bob:.5,fireTilt:.64,switchRoll:.76},
+    NOVA:{kick:1.16,reloadTilt:.22,roll:.14,sway:.52,bob:.72,fireTilt:1.3,switchRoll:.68},
+    ARC:{kick:.62,reloadTilt:.1,roll:.04,sway:.7,bob:.9,fireTilt:.72,switchRoll:.38},
+    PULSE:{kick:.72,reloadTilt:.14,roll:.08,sway:.62,bob:.84,fireTilt:.82,switchRoll:.44},
+    DORI:{kick:0,reloadTilt:.05,roll:.05,sway:.35,bob:.42,fireTilt:0,switchRoll:.22}
   };
   let reloadAnimationStart = 0;
   let reloadAnimationDuration = 0;
@@ -571,6 +607,7 @@ export async function createGame(
     const now = performance.now();
     if (!active || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
     lastShot = now;
+    fireAnimationStart = now;
     const melee=currentWeapon.category==='MELEE';
     if(!melee)ammo-=1;
     gunKick = Math.min(1.8,gunKick+(weaponMotion[currentWeaponCode]?.kick||.82));
@@ -840,18 +877,65 @@ export async function createGame(
     previous = now;
     const remoteBlend=1-Math.exp(-18*dt);
     gunKick*=Math.exp(-17*dt);
+    movementAmount*=Math.exp(-9*dt);
     const reloadProgress=reloadAnimationStart?THREE.MathUtils.clamp((now-reloadAnimationStart)/Math.max(1,reloadAnimationDuration),0,1):1;
     if(reloadProgress>=1)reloadAnimationStart=0;
     const reloadWave=reloadAnimationStart?Math.sin(reloadProgress*Math.PI):0;
-    const switchProgress=switchAnimationStart?THREE.MathUtils.clamp((now-switchAnimationStart)/380,0,1):1;
+    const switchProgress=switchAnimationStart?THREE.MathUtils.clamp((now-switchAnimationStart)/460,0,1):1;
     if(switchProgress>=1)switchAnimationStart=0;
     const switchWave=switchAnimationStart?Math.sin(switchProgress*Math.PI):0;
-    const doriProgress=doriSwingStart?THREE.MathUtils.clamp((now-doriSwingStart)/300,0,1):1;
+    const doriProgress=doriSwingStart?THREE.MathUtils.clamp((now-doriSwingStart)/360,0,1):1;
     if(doriProgress>=1)doriSwingStart=0;
     const doriWave=doriSwingStart?Math.sin(doriProgress*Math.PI):0;
     const motion=weaponMotion[currentWeaponCode]||weaponMotion.R16;
-    gun.position.set(0,-reloadWave*(.14+motion.reloadTilt*.34)-switchWave*.18,gunKick*.11+reloadWave*.34+switchWave*.28);
-    gun.rotation.set(reloadWave*(.42+motion.reloadTilt)+switchWave*.38,doriWave*1.2,reloadWave*(.22+motion.roll)+switchWave*.28);
+    const time=now*.001;
+    const fireAge=fireAnimationStart?now-fireAnimationStart:9999;
+    const fireWave=fireAge<260?Math.exp(-fireAge/72):0;
+    if(fireAge>300)fireAnimationStart=0;
+    const idleSway=Math.sin(time*1.65)*.0045*motion.sway;
+    const idleRoll=Math.cos(time*1.25)*.006*motion.sway;
+    const walkWave=Math.sin(time*10.8);
+    const walkSide=Math.cos(time*5.4);
+    const walkAmount=movementAmount*motion.bob;
+    const reloadDip=reloadWave*(.075+motion.reloadTilt*.12);
+    const switchDip=switchWave*.16;
+    const melee=currentWeapon.category==='MELEE';
+    const meleeArc=doriSwingStart?Math.sin(doriProgress*Math.PI):0;
+    const meleeFollow=doriSwingStart?Math.sin(doriProgress*Math.PI*2):0;
+
+    gun.position.set(
+      idleSway+walkSide*.012*walkAmount,
+      -reloadDip-switchDip+Math.abs(walkWave)*.009*walkAmount,
+      gunKick*.115+reloadWave*.19+switchWave*.24+fireWave*.025
+    );
+    if(melee){
+      gun.rotation.set(
+        -meleeArc*.52+meleeFollow*.12,
+        meleeFollow*.42,
+        -meleeArc*.82+idleRoll+walkSide*.018*walkAmount
+      );
+    }else{
+      gun.rotation.set(
+        reloadWave*(.3+motion.reloadTilt)+switchWave*.3+gunKick*.075*motion.fireTilt+fireWave*.035*motion.fireTilt,
+        idleSway*2+walkSide*.018*walkAmount+switchWave*.12,
+        reloadWave*(.12+motion.roll)+switchWave*motion.switchRoll+idleRoll+walkSide*.025*walkAmount
+      );
+    }
+
+    if(magazineModel){
+      // Magazine drops clear of the receiver, pauses, then seats back into place.
+      const magOut=THREE.MathUtils.clamp((reloadProgress-.12)/.3,0,1);
+      const magIn=THREE.MathUtils.clamp((reloadProgress-.56)/.27,0,1);
+      const magTravel=reloadAnimationStart?(magOut*(1-magIn)):0;
+      magazineModel.position.y=-.405-magTravel*.22;
+      magazineModel.rotation.x=magTravel*.2;
+      magazineModel.rotation.z=magTravel*.08;
+    }
+    if(boltModel){
+      const boltKick=fireWave*.095;
+      const boltReload=reloadWave*.045;
+      boltModel.position.z=-.43+boltKick+boltReload;
+    }
     for(let i=projectiles.length-1;i>=0;i--){
       const shot=projectiles[i];shot.age+=dt;const step=130*dt;shot.travelled+=step;
       shot.mesh.position.addScaledVector(shot.direction,step);
@@ -926,6 +1010,8 @@ export async function createGame(
       const side = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
       const direction = fwd.multiplyScalar(forward).add(side.multiplyScalar(right));
       if (direction.lengthSq() > 1) direction.normalize();
+      const movementTarget=Math.min(1,direction.length());
+      movementAmount+=(movementTarget-movementAmount)*(1-Math.exp(-12*dt));
       const speed = keys.has('ShiftLeft') || keys.has('ShiftRight') ? 7.1 : 5.4;
       if (controller.computedGrounded() && vertical < 0) vertical = -1;
       if (touch.jump && controller.computedGrounded()) {
@@ -1000,6 +1086,12 @@ export async function createGame(
       secondaryWeaponCode = WEAPONS[secondaryWeapon] ? secondaryWeapon : 'R9';
       currentWeapon = WEAPONS[currentWeaponCode];
       rebuildGun(currentWeaponCode);
+      switchAnimationStart=performance.now();
+      reloadAnimationStart=0;
+      reloadAnimationDuration=0;
+      doriSwingStart=0;
+      gunKick=0;
+      movementAmount=0;
       hp = 100; ammo = currentWeapon.magazine; reserve = currentWeapon.reserve; vertical = 0;
       if (mode === 'practice') {
         for (const target of practiceTargets) {
