@@ -7,6 +7,20 @@ export class GameSocket {
   private socket: WebSocket | null = null;
   private listeners = new Set<(message: GameMessage) => void>();
   connected = false;
+  private heartbeatTimer=0;
+  private pingSequence=0;
+  private pendingPings=new Map<string,number>();
+
+  private startHeartbeat(socket:WebSocket){
+    if(this.heartbeatTimer)window.clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer=window.setInterval(()=>{
+      if(this.socket!==socket||socket.readyState!==WebSocket.OPEN)return;
+      const nonce=String(++this.pingSequence);
+      this.pendingPings.set(nonce,performance.now());
+      while(this.pendingPings.size>8)this.pendingPings.delete(this.pendingPings.keys().next().value as string);
+      try{socket.send(JSON.stringify({type:'ping',nonce}));}catch{/* close handler owns recovery */}
+    },5000);
+  }
 
   onMessage(listener: (message: GameMessage) => void): () => void {
     this.listeners.add(listener);
@@ -28,6 +42,8 @@ export class GameSocket {
 
     // Replacing an old socket first prevents duplicate authenticated sessions.
     const previous = this.socket;
+    if(this.heartbeatTimer)window.clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer=0;this.pendingPings.clear();
     this.socket = null;
     this.connected = false;
     if (previous && previous.readyState < WebSocket.CLOSING) {
@@ -82,11 +98,20 @@ export class GameSocket {
           message = parsed as GameMessage;
         } catch { return; }
 
+        if(message.type==='pong'){
+          const nonce=String(message.nonce||'');
+          const started=this.pendingPings.get(nonce);
+          if(started!==undefined){
+            this.pendingPings.delete(nonce);
+            window.dispatchEvent(new CustomEvent('rockey:network',{detail:{rttMs:Math.max(0,performance.now()-started)}}));
+          }
+        }
         this.emit(message);
         if (message.type === 'auth.ok' && !settled) {
           settled = true;
           clearAuthTimeout();
           this.connected = true;
+          this.startHeartbeat(socket);
           resolve();
         } else if (message.type === 'auth.error' && !settled) {
           fail(String(message.reason || 'AUTH_FAILED'));
@@ -98,6 +123,8 @@ export class GameSocket {
         if (isCurrent) {
           this.socket = null;
           this.connected = false;
+          if(this.heartbeatTimer)window.clearInterval(this.heartbeatTimer);
+          this.heartbeatTimer=0;this.pendingPings.clear();
         }
         if (!settled) {
           settled = true;
@@ -130,6 +157,8 @@ export class GameSocket {
   }
 
   close(): void {
+    if(this.heartbeatTimer)window.clearInterval(this.heartbeatTimer);
+    this.heartbeatTimer=0;this.pendingPings.clear();
     const socket = this.socket;
     this.socket = null;
     this.connected = false;
