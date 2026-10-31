@@ -23,7 +23,6 @@ export const MAPS: Record<string,RockeyMap> = {
       {x:0,z:0,hx:2.4,hz:2.4,top:3},
       {x:-9,z:-7,hx:3.2,hz:1.1,top:2.2},{x:9,z:-7,hx:3.2,hz:1.1,top:2.2},
       {x:-9,z:7,hx:3.2,hz:1.1,top:2.2},{x:9,z:7,hx:3.2,hz:1.1,top:2.2},
-      {x:-17,z:0,hx:1.2,hz:4.2,top:4.4},{x:17,z:0,hx:1.2,hz:4.2,top:4.4}
     ]
   },
   neon_district: {
