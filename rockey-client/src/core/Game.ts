@@ -246,7 +246,7 @@ export async function createGame(
       tail.rotation.x=-.25;
 
       // Keep the whole plush comfortably small in the first-person view.
-      gun.scale.setScalar(.76);
+      gun.scale.setScalar(.42);
       muzzleFlash.visible=false;
       metal.dispose();glowPart.dispose();dark.dispose();
       return;
