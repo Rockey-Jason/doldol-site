@@ -59,7 +59,7 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
   const left=buildArm('left');
   const right=buildArm('right');
   const leftHome=new THREE.Vector3(.105,-.39,-.61);
-  const rightHome=new THREE.Vector3(.43,-.39,.08);
+  const rightHome=new THREE.Vector3(.39,-.39,-.20);
   left.position.copy(leftHome);right.position.copy(rightHome);
   left.rotation.set(-.08,0,-.02);right.rotation.set(-.06,0,.03);
   group.add(left,right);
