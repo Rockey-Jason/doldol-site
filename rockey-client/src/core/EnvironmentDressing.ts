@@ -61,7 +61,7 @@ export function addRockeyEnvironment(
     for(const side of [-1,1]){
       addBox(group,metal,side*(width/2-.11),2.42,.17,.22,4.8,.26);
       addBox(group,dark,side*(width/2-.38),2.35,.17,.12,3.9,.24);
-      for(let rivet=0;rivet<5;rivet++)addCylinder(group,hazard,side*(width/2-.11),.72+rivet*.82,.315,.035,.025,Math.PI/2,0,0,8);
+      for(let rivet=0;rivet<(isMobile?2:5);rivet++)addCylinder(group,hazard,side*(width/2-.11),.72+rivet*.82,.315,.035,.025,Math.PI/2,0,0,8);
     }
     // Observation window with deep inset and a double frame.
     addBox(group,dark,-.34,2.95,.16,2.7,1.36,.12);
@@ -75,12 +75,12 @@ export function addRockeyEnvironment(
     // Ventilation grille and a service/AC box.
     addBox(group,dark,2.2,3.05,.2,1.28,.92,.24);
     addBox(group,metal,2.2,3.05,.335,1.18,.08,.045);
-    for(let slat=0;slat<5;slat++)addBox(group,metal,1.73+slat*.235,3.05,.36,.035,.62,.025);
+    for(let slat=0;slat<(isMobile?3:5);slat++)addBox(group,metal,1.73+slat*.235,3.05,.36,.035,.62,.025);
     addCylinder(group,dark,2.2,3.05,.39,.22,.055,Math.PI/2,0,0,16);
     addCylinder(group,accent,2.2,3.05,.435,.035,.065,Math.PI/2,0,0,10);
     addBox(group,concreteLight,-2.05,1.2,.2,1.18,.76,.34);
     addBox(group,dark,-2.05,1.2,.385,.94,.53,.035);
-    for(let vent=0;vent<4;vent++)addBox(group,metal,-2.39+vent*.23,1.2,.414,.055,.42,.025);
+    for(let vent=0;vent<(isMobile?2:4);vent++)addBox(group,metal,-2.39+vent*.23,1.2,.414,.055,.42,.025);
     // Utility lamp housing and the luminous diffuser are geometry, not a flat decal.
     addBox(group,dark,0,4.35,.27,1.15,.2,.42);
     addBox(group,accent,0,4.23,.31,.86,.055,.24);
@@ -91,15 +91,16 @@ export function addRockeyEnvironment(
     addLine(group,[new THREE.Vector3(-2.75,1.66,.37),new THREE.Vector3(-2.75,1.28,.37),new THREE.Vector3(-2.35,1.04,.37),new THREE.Vector3(-2.35,.64,.37)],0x263d50,.95,.035);
     // Small warning plates and fasteners.
     addBox(group,hazard,2.88,1.02,.24,.48,.15,.055,0,0,-.12);
-    for(let bolt=0;bolt<4;bolt++)addCylinder(group,metal,-.65+bolt*.2,1.35,.28,.026,.025,Math.PI/2,0,0,8);
+    for(let bolt=0;bolt<(isMobile?2:4);bolt++)addCylinder(group,metal,-.65+bolt*.2,1.35,.28,.026,.025,Math.PI/2,0,0,8);
     scene.add(group);
   };
 
-  const panels = [-21.5,-7.2,7.2,21.5];
-  panels.forEach((x,i)=>facade(x,-29.26,0,i));
-  panels.forEach((x,i)=>facade(x,29.26,Math.PI,i+4));
-  panels.forEach((z,i)=>facade(-29.26,z,Math.PI/2,i+8));
-  panels.forEach((z,i)=>facade(29.26,z,-Math.PI/2,i+12));
+  const panels = isMobile ? [-14.3,14.3] : [-21.5,-7.2,7.2,21.5];
+  // Face each facade toward the arena interior rather than the exterior wall.
+  panels.forEach((x,i)=>facade(x,-29.26,Math.PI,i));
+  panels.forEach((x,i)=>facade(x,29.26,0,i+4));
+  panels.forEach((z,i)=>facade(-29.26,z,-Math.PI/2,i+8));
+  panels.forEach((z,i)=>facade(29.26,z,Math.PI/2,i+12));
 
   // Continuous overhead cable runs and corner drops. The curves are fixed to
   // the perimeter so the main combat lanes remain visually open.
@@ -133,7 +134,6 @@ export function addRockeyEnvironment(
   // impact scorches, concrete cracks and scattered aggregate.
   const floorMetal = new THREE.MeshStandardMaterial({color:map.palette==='amber'?0x5f4c36:0x344b5e,metalness:.82,roughness:.58});
   const floorDark = new THREE.MeshStandardMaterial({color:0x202a32,metalness:.08,roughness:.98,transparent:true,opacity:.72});
-  const decalMat = new THREE.MeshBasicMaterial({color:map.palette==='amber'?0x493b2c:0x293d4c,transparent:true,opacity:.52,depthWrite:false});
   const floorSpots = isMobile ? 12 : 26;
   for(let i=0;i<floorSpots;i++){
     const x=-23+random()*46,z=-23+random()*46;
@@ -183,7 +183,7 @@ export function addRockeyEnvironment(
     for(let slat=0;slat<4;slat++)addBox(group,crateTop,0,h*.2+slat*.17*scale,-d/2-.055,w*.56,.045*scale,.035);
     addBox(group,accent,0,h*.66,-d/2-.085,.22*scale,.07*scale,.025);
     addBox(group,dark,0,h*.66,-d/2-.105,.12*scale,.025*scale,.018);
-    for(let bolt=0;bolt<4;bolt++)addCylinder(group,metal,(bolt%2?1:-1)*(w/2-.16),bolt<2?.13*scale:h-.13*scale,-d/2-.07,.028*scale,.025*scale,Math.PI/2,0,0,8);
+    for(let bolt=0;bolt<(isMobile?2:4);bolt++)addCylinder(group,metal,(bolt%2?1:-1)*(w/2-.16),bolt<2?.13*scale:h-.13*scale,-d/2-.07,.028*scale,.025*scale,Math.PI/2,0,0,8);
     scene.add(group);
     if(!stack)addCollider?.(x,h/2,z,w/2+.04,h/2+.02,d/2+.04);
     return group;
