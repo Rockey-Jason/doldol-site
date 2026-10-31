@@ -116,12 +116,12 @@ const researchDefs=[
 {id:'logistics',name:'자율 물류 최적화',icon:'📡',desc:'물류 시설 효과 2배',cost:15000,unlock:6,effect:'logistics',value:2},
 {id:'singularity',name:'도로늄 특이점 연구',icon:'🌌',desc:'도로늄 생산량 +100%',cost:50000,unlock:9,effect:'core',value:2}
 ];
-const fresh=()=>({money:650,ore:0,alloy:0,energy:0,doronium:0,level:1,xp:0,lifetime:0,totalSold:0,buildings:{},research:[],last:now(),started:now(),totalSeconds:0});
-let s=fresh(),lastTick=now(),toastTimer=null,modalAction=null,offlinePending=0,activeTab='all';
+const fresh=()=>({money:2000,ore:0,alloy:0,energy:0,doronium:0,level:1,xp:0,lifetime:0,totalSold:0,buildings:{},research:[],last:now(),started:now(),totalSeconds:0});
+let s=fresh(),lastTick=now(),toastTimer=null,modalAction=null,offlinePending=0,offlineElapsed=0,offlineGains=null,activeTab='all';
 function log(msg){const arr=s.logs||(s.logs=[]);arr.unshift({msg,t:now()});arr.splice(12);renderLog()}
 function notify(msg){$('toast').textContent=msg;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2200)}
 function save(){s.last=now();try{localStorage.setItem(SAVE_KEY,JSON.stringify(s));$('saveState').textContent='● 저장 완료'}catch(e){$('saveState').textContent='저장 실패'}}
-function load(){try{const raw=localStorage.getItem(SAVE_KEY);if(raw){const v=JSON.parse(raw);s={...fresh(),...v,buildings:v.buildings||{},research:v.research||[]};const elapsed=Math.min(Math.max(0,(now()-(v.last||now()))/1000),8*3600);if(elapsed>8){const gain=calcRates();offlinePending=Math.min(gain.core*elapsed,Math.max(0,s.ore+gain.ore*elapsed));$('offlineText').textContent='최대 8시간 동안 예상 생산량을 계산했어요. 수령하면 원석·합금·도로늄 생산이 반영됩니다.';}}}catch(e){s=fresh()}}
+function load(){try{const raw=localStorage.getItem(SAVE_KEY);if(raw){const v=JSON.parse(raw);s={...fresh(),...v,buildings:v.buildings||{},research:v.research||[]};const elapsed=Math.min(Math.max(0,(now()-(v.last||now()))/1000),8*3600);if(elapsed>30){const gain=calcRates();offlineElapsed=elapsed;const oreGain=gain.ore*elapsed;const refined=Math.min(s.ore+oreGain,gain.refine*elapsed);const coreGain=Math.min(s.alloy+refined,gain.core*elapsed);offlineGains={ore:oreGain-refined,alloy:refined-coreGain,doronium:coreGain};offlinePending=1;$('offlineText').textContent='약 '+timeFmt(elapsed)+' 동안 원석 '+short(oreGain)+'개, 합금 '+short(refined)+'개, 도로늄 '+short(coreGain)+'개를 생산했어요.';}}}catch(e){s=fresh()}}
 function count(id){return s.buildings[id]||0}
 function research(id){return s.research.includes(id)}
 function multiplier(effect){return researchDefs.filter(r=>research(r.id)&&r.effect===effect).reduce((a,r)=>a*r.value,1)}
@@ -130,7 +130,7 @@ function powerStats(){return {made:total('power')*multiplier('power'),used:defs.
 function calcRates(){const p=powerStats(),energyFactor=p.used===0?1:Math.min(1,s.energy>0?1:p.made/Math.max(1,p.used));const logistics=1+total('logistics')*multiplier('logistics');const auto=multiplier('all');return {ore:total('ore')*multiplier('ore')*auto*logistics*energyFactor,refine:total('refine')*multiplier('refine')*auto*logistics*energyFactor,core:total('core')*multiplier('core')*auto*logistics*energyFactor,power:p.made,used:p.used,energyFactor,storage:p.storage}}
 function cost(d){return Math.floor(d.base*Math.pow(1.17,count(d.id)))}
 function gainXp(n){s.xp+=n;while(s.xp>=s.level*100){s.xp-=s.level*100;s.level++;s.money+=s.level*150;log('공장 레벨 상승! '+s.level+' Lv · 운영 자금 보너스 지급');notify('공장 레벨 '+s.level+' 달성!');}}
-function tick(dt){const r=calcRates();const producedOre=r.ore*dt;s.ore+=producedOre;const refined=Math.min(s.ore,r.refine*dt);s.ore-=refined;s.alloy+=refined;const made=Math.min(s.alloy,r.core*dt);s.alloy-=made;s.doronium+=made;s.lifetime+=made;const surplus=Math.max(0,r.power-r.used);s.energy=Math.min(r.storage+100,s.energy+surplus*dt);if(r.used>r.power&&s.energy>0)s.energy=Math.max(0,s.energy-(r.used-r.power)*dt);if(made>0)gainXp(made*.5);s.totalSeconds+=dt}
+function tick(dt){const r=calcRates();const producedOre=r.ore*dt;s.ore+=producedOre;const refined=Math.min(s.ore,r.refine*dt);s.ore-=refined;s.alloy+=refined;const made=Math.min(s.alloy,r.core*dt);s.alloy-=made;s.doronium+=made;s.lifetime+=made;const surplus=Math.max(0,r.power-r.used);s.energy=Math.min(r.storage+100,s.energy+surplus*dt);if(r.used>r.power&&s.energy>0)s.energy=Math.max(0,s.energy-(r.used-r.power)*dt);if(producedOre>0||refined>0||made>0)gainXp(producedOre*.5+refined*.8+made*.5);s.totalSeconds+=dt}
 function build(d){const c=cost(d);if(s.level<d.unlock){notify('공장 '+d.unlock+'레벨부터 건설할 수 있어요.');return}if(s.money<c){notify('자금이 부족합니다.');return}s.money-=c;s.buildings[d.id]=count(d.id)+1;log(d.name+' '+count(d.id)+'개 건설');notify(d.name+' 건설 완료!');render();save()}
 function doResearch(r){if(research(r.id))return;if(s.level<r.unlock||s.money<r.cost){notify('레벨 또는 자금이 부족합니다.');return}s.money-=r.cost;s.research.push(r.id);log('연구 완료: '+r.name);notify('연구 완료! '+r.name);render();save()}
 function sell(){const n=Math.floor(s.doronium);if(n<1){notify('판매할 도로늄이 없습니다.');return}const price=25*(1+Math.max(0,s.level-1)*.08);const earned=Math.floor(n*price);s.doronium-=n;s.money+=earned;s.totalSold+=n;gainXp(n*.15);log('도로늄 '+fmt(n)+'개 판매 · '+fmt(earned)+' ₵ 획득');notify(fmt(earned)+' ₵ 판매 수익!');render();save()}
@@ -150,7 +150,7 @@ $('researchList').addEventListener('click',e=>{const b=e.target.closest('[data-r
 $('sellBtn').onclick=sell;$('manualBtn').onclick=manual;
 $('resetBtn').onclick=()=>modal('공장 데이터 초기화','현재 공장 진행도와 저장 데이터를 모두 삭제합니다. 이 작업은 되돌릴 수 없습니다.','초기화하기',()=>{localStorage.removeItem(SAVE_KEY);s=fresh();log('새로운 공장 운영 시작');render();save();notify('새 공장을 시작합니다.')});
 $('helpBtn').onclick=()=>modal('도로늄 공장 안내','① 채굴기를 건설해 원석을 모으세요. ② 정제기를 통해 합금으로 가공하세요. ③ 코어 조립기를 건설하면 도로늄이 생산됩니다. ④ 도로늄을 판매해 자금을 확보하고 시설·연구에 재투자하세요. 발전 시설이 부족하면 생산 효율이 낮아집니다. 공장은 브라우저에 자동 저장되며 최대 8시간의 오프라인 생산을 지원합니다.','확인',null);
-$('offlineOk').onclick=()=>{$('offline').style.display='none';offlinePending=0;render();save()};
+$('offlineOk').onclick=()=>{if(offlinePending&&offlineGains){s.ore+=offlineGains.ore;s.alloy+=offlineGains.alloy;s.doronium+=offlineGains.doronium;s.lifetime+=offlineGains.doronium;gainXp(offlineGains.ore*.5+offlineGains.alloy*.8+offlineGains.doronium*.5);log('오프라인 생산 보상 수령 · 도로늄 '+fmt(offlineGains.doronium)+'개');} $('offline').style.display='none';offlinePending=0;offlineGains=null;render();save()};
 load();if(offlinePending>0){$('offline').style.display='block';}else if(s.logs?.length===0)log('도로늄 공장 가동 시작');
 render();lastTick=now();
 setInterval(()=>{const t=now(),dt=Math.min(2,(t-lastTick)/1000);lastTick=t;if(dt>0)tick(dt);renderStats();renderResources();if(Math.floor(t/5000)!==Math.floor((t-dt*1000)/5000))save()},500);
