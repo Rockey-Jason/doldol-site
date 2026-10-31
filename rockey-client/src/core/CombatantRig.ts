@@ -19,6 +19,7 @@ export function createCombatantRig(baseColor:number, accentColor:number):Combata
   const fabric=new THREE.MeshStandardMaterial({color:baseColor,roughness:.84,metalness:.08});
   const armor=new THREE.MeshPhysicalMaterial({color:0x26394d,roughness:.34,metalness:.58,clearcoat:.32,clearcoatRoughness:.3});
   const dark=new THREE.MeshStandardMaterial({color:0x101923,roughness:.72,metalness:.38});
+  const metal=new THREE.MeshStandardMaterial({color:0x75899a,roughness:.32,metalness:.88});
   const rubber=new THREE.MeshStandardMaterial({color:0x1b252e,roughness:.96,metalness:.02});
   const glove=new THREE.MeshStandardMaterial({color:0x26313a,roughness:.92,metalness:.02});
   const accent=new THREE.MeshStandardMaterial({color:accentColor,emissive:accentColor,emissiveIntensity:.72,roughness:.32,metalness:.34});
@@ -76,14 +77,14 @@ export function createCombatantRig(baseColor:number, accentColor:number):Combata
   for(const side of [-1,1]){
     addCylinder(head,armor,side*.222,-.015,0,.09,.095,0,0,Math.PI/2);
     addCylinder(head,accent,side*.275,-.015,0,.045,.035,0,0,Math.PI/2);
-    addBox(head,dark,side*.12,.255,.04,.1,.055,.24,0,0,side*.24);
+    addBox(head,new THREE.BoxGeometry(.1,.055,.24),dark,side*.12,.255,.04,0,0,side*.24);
   }
   addSegment(head,new THREE.Vector3(.14,-.11,-.13),new THREE.Vector3(.2,-.18,-.2),.018,dark);
   addSphere(head,accent,.2,-.18,-.2,.026,.026,.026);
   // Helmet mount, rear battery and a small side rail.
   addBox(head,new THREE.BoxGeometry(.12,.035,.12),metal,0,.31,-.015);
-  addBox(head,dark,new THREE.BoxGeometry(.1,.11,.16),0,.03,.205);
-  addBox(head,metal,new THREE.BoxGeometry(.035,.12,.04),-.245,.02,-.015);
+  addBox(head,new THREE.BoxGeometry(.1,.11,.16),dark,0,.03,.205);
+  addBox(head,new THREE.BoxGeometry(.035,.12,.04),metal,-.245,.02,-.015);
 
   // Backpack, radio, antenna, shoulder straps and hydration tube.
   const pack=addBox(group,new THREE.BoxGeometry(.38,.52,.2),dark,0,.06,.245);
@@ -133,21 +134,21 @@ export function createCombatantRig(baseColor:number, accentColor:number):Combata
   // Articulated legs with layered knee guards, shin plates, straps and boots.
   const legs:Array<{hip:THREE.Group;knee:THREE.Group;side:number}>=[];
   for(const side of [-1,1]){
-    const hip=new THREE.Group();hip.position.set(side*.17,-.39,0);group.add(hip);
-    addSegment(hip,new THREE.Vector3(0,0,0),new THREE.Vector3(0,-.31,0),.12,fabric);
-    addBox(hip,new THREE.BoxGeometry(.23,.29,.24),armor,0,-.16,-.01);
-    addBox(hip,new THREE.BoxGeometry(.19,.16,.05),dark,0,-.13,-.14);
-    addBox(hip,new THREE.BoxGeometry(.12,.055,.025),accent,0,-.13,-.17);
-    const knee=new THREE.Group();knee.position.set(0,-.32,-.005);hip.add(knee);
+    const hip=new THREE.Group();hip.position.set(side*.17,-.28,0);group.add(hip);
+    addSegment(hip,new THREE.Vector3(0,0,0),new THREE.Vector3(0,-.25,0),.12,fabric);
+    addBox(hip,new THREE.BoxGeometry(.23,.25,.24),armor,0,-.13,-.01);
+    addBox(hip,new THREE.BoxGeometry(.19,.14,.05),dark,0,-.11,-.14);
+    addBox(hip,new THREE.BoxGeometry(.12,.055,.025),accent,0,-.11,-.17);
+    const knee=new THREE.Group();knee.position.set(0,-.26,-.005);hip.add(knee);
     addSphere(knee,dark,0,0,0,.125,.12,.12);
     addBox(knee,new THREE.BoxGeometry(.22,.18,.09),armor,0,-.01,-.075);
     addBox(knee,new THREE.BoxGeometry(.12,.045,.025),accent,0,-.01,-.13);
-    addSegment(knee,new THREE.Vector3(0,-.04,0),new THREE.Vector3(0,-.29,-.025),.095,fabric);
-    addBox(knee,new THREE.BoxGeometry(.2,.27,.12),armor,0,-.17,-.065);
-    addBox(knee,new THREE.BoxGeometry(.19,.045,.035),dark,0,-.09,-.13);
-    addBox(knee,new THREE.BoxGeometry(.2,.17,.3),rubber,0,-.34,-.09);
-    addBox(knee,new THREE.BoxGeometry(.19,.07,.12),dark,0,-.35,-.23);
-    addBox(knee,new THREE.BoxGeometry(.12,.035,.035),accent,0,-.28,-.153);
+    addSegment(knee,new THREE.Vector3(0,-.04,0),new THREE.Vector3(0,-.22,-.025),.095,fabric);
+    addBox(knee,new THREE.BoxGeometry(.2,.22,.12),armor,0,-.13,-.065);
+    addBox(knee,new THREE.BoxGeometry(.19,.045,.035),dark,0,-.07,-.13);
+    addBox(knee,new THREE.BoxGeometry(.2,.17,.3),rubber,0,-.22,-.09);
+    addBox(knee,new THREE.BoxGeometry(.19,.07,.12),dark,0,-.23,-.23);
+    addBox(knee,new THREE.BoxGeometry(.12,.035,.035),accent,0,-.16,-.153);
     legs.push({hip,knee,side});
   }
 
