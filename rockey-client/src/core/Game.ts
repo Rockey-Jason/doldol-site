@@ -665,8 +665,12 @@ export async function createGame(
   let perfFrames=0;
   let smoothedFrameMs=16.7;
   let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
-  const minPixelRatio=isMobile?.78:1.0;
+  const minPixelRatio=isMobile ? .78 : 1.0;
   const maxPixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
+  const performanceBadge=document.createElement('div');
+  performanceBadge.style.cssText='position:fixed;top:calc(env(safe-area-inset-top, 0px) + 8px);right:10px;z-index:30;padding:6px 9px;border:1px solid rgba(130,190,230,.24);border-radius:7px;background:rgba(5,13,25,.68);color:#d9edff;font:600 10px/1.2 ui-monospace,monospace;letter-spacing:.04em;pointer-events:none;backdrop-filter:blur(8px)';
+  performanceBadge.textContent='FPS -- · FRAME -- ms';
+  document.body.appendChild(performanceBadge);
 
   const position = () => {
     const p = body.translation();
@@ -1306,8 +1310,12 @@ export async function createGame(
         adaptivePixelRatio=Math.min(maxPixelRatio,adaptivePixelRatio+.05);
         renderer.setPixelRatio(adaptivePixelRatio);resize();
       }
+      const measuredFps=Math.round(fps);
+      const measuredFrame=Math.round(smoothedFrameMs*10)/10;
+      performanceBadge.textContent='FPS '+measuredFps+' · FRAME '+measuredFrame+' ms · DPR '+adaptivePixelRatio.toFixed(2);
+      performanceBadge.style.color=measuredFps<target?'#ffb4a8':'#d9edff';
       window.dispatchEvent(new CustomEvent('rockey:performance',{detail:{
-        fps:Math.round(fps),frameMs:Math.round(smoothedFrameMs*10)/10,
+        fps:measuredFps,frameMs:measuredFrame,
         pixelRatio:Math.round(adaptivePixelRatio*100)/100,device:isMobile?'mobile':'desktop'
       }}));
       perfWindowStart=now;perfFrames=0;
@@ -1789,6 +1797,7 @@ export async function createGame(
       stopMobileFire();
       renderer.dispose();
       reflectionEnvironment?.dispose();
+      performanceBadge.remove();
       if(audioContext){void audioContext.close();audioContext=null;noiseBuffer=null;}
       for(const shot of projectiles){shot.trail.geometry.dispose();(shot.trail.material as THREE.Material).dispose();}
       for(const popup of damagePopups){const material=popup.material as THREE.SpriteMaterial;material.map?.dispose();material.dispose();}
