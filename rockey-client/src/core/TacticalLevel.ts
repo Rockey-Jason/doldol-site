@@ -24,7 +24,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
   const add=(parent:THREE.Object3D,mat:THREE.Material,x:number,y:number,z:number,sx:number,sy:number,sz:number,collide=false)=>{
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);
     mesh.position.set(x,y,z);mesh.castShadow=!isMobile;mesh.receiveShadow=!isMobile;parent.add(mesh);
-    if(collide)addCollider(parent.position.x+x,parent.position.y+y,parent.position.z+z,sx/2,sy/2,sz/2);
+    if(collide){parent.updateWorldMatrix(true,false);const worldPoint=parent.localToWorld(new THREE.Vector3(x,y,z));addCollider(worldPoint.x,worldPoint.y,worldPoint.z,sx/2,sy/2,sz/2);}
     return mesh;
   };
   const point=(root:THREE.Object3D,x:number,y:number,z:number)=>new THREE.Vector3(root.position.x+x,root.position.y+y,root.position.z+z);
@@ -179,16 +179,21 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
 
     // A reachable service sublevel; the two building basements meet the link tunnel.
     add(root,floor,0,-2.78,0,8.2,.28,8.9,true);
-    add(root,wall,-4.12,-1.45,0,.22,2.65,8.8,true);
-    add(root,wall,4.12,-1.45,0,.22,2.65,8.8,true);
+    for(const side of [-1,1]){
+      add(root,wall,side*4.12,-1.45,-2.85,.22,2.65,3.1,true);
+      add(root,wall,side*4.12,-1.45,2.85,.22,2.65,3.1,true);
+      add(root,wall,side*4.12,-.18,0,.22,.35,1.7,true);
+    }
     add(root,wall,0,-1.45,-4.38,8.2,2.65,.22,true);
     add(root,wall,0,-1.45,4.38,8.2,2.65,.22,true);
     for(let i=0;i<13;i++){
       const riseDown=(i+1)*2.45/13,stepZ=2.25-(i+.5)*4.5/13;
       add(root,i%2?trim:floor,0,-riseDown/2,stepZ,1.45,riseDown,.42,true);
     }
-    add(root,wall,-2.8,-1.35,-1.25,.18,2.5,5.0,true);
-    add(root,wall,2.8,-1.35,-1.25,.18,2.5,5.0,true);
+    add(root,wall,-2.8,-1.35,-2.75,.18,2.5,3.0,true);
+    add(root,wall,2.8,-1.35,-2.75,.18,2.5,3.0,true);
+    add(root,wall,-2.8,-1.35,2.75,.18,2.5,3.0,true);
+    add(root,wall,2.8,-1.35,2.75,.18,2.5,3.0,true);
     makeFurniture(root,-2.9,-2.78,1.9,'rack');
     makeFurniture(root,2.9,-2.78,1.9,'cabinet');
     const basementLamp=new THREE.PointLight(map.light,isMobile?5:11,11,2);
