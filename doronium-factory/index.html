@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071426">
+<title>도로늄 공장 | ROCKEY INDUSTRIES</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap');
+:root{color-scheme:dark;--bg:#07111f;--panel:#0d1c2e;--panel2:#10243a;--line:#203750;--text:#edf5ff;--muted:#8da5bd;--cyan:#56d8e8;--blue:#5b9dff;--gold:#f5c86a;--green:#64d6a1;--red:#ff7d86;--shadow:0 18px 50px #0005;--radius:20px}
+*{box-sizing:border-box}html{min-height:100%;background:var(--bg)}body{margin:0;min-height:100vh;color:var(--text);font-family:Inter,'Noto Sans KR',sans-serif;background:radial-gradient(900px 520px at 85% -10%,#173d5b66,transparent 70%),radial-gradient(650px 420px at -10% 30%,#15365a55,transparent 70%),linear-gradient(145deg,#071426,#08111e 58%,#0a1725);font-size:14px}button{font:inherit;color:inherit;cursor:pointer}button:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}.shell{max-width:1500px;margin:auto;padding:24px clamp(14px,3vw,38px) 56px}.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px}.brand{display:flex;align-items:center;gap:13px}.brandmark{width:46px;height:46px;border-radius:15px;background:linear-gradient(145deg,#4ce0eb,#2777a9 65%,#173b60);display:grid;place-items:center;color:#062033;font-weight:900;font-size:23px;box-shadow:0 0 30px #42cce633}.eyebrow{font-size:10px;letter-spacing:2.2px;color:var(--cyan);font-weight:800}.brand h1{font-size:clamp(19px,3vw,27px);letter-spacing:-1px;margin:3px 0 0}.top-actions{display:flex;gap:8px;align-items:center}.pill{border:1px solid var(--line);background:#0c1a2b;border-radius:999px;padding:9px 13px;color:var(--muted);font-size:12px}.btn{border:1px solid #2c4b68;background:linear-gradient(135deg,#18334c,#10243a);border-radius:12px;padding:10px 14px;font-weight:700;transition:.2s transform,.2s border-color,.2s filter}.btn:hover{transform:translateY(-2px);border-color:#5b9dff;filter:brightness(1.12)}.btn.primary{color:#071725;border:0;background:linear-gradient(135deg,#75e5e9,#4da6d8)}.btn.gold{color:#211805;border:0;background:linear-gradient(135deg,#ffe19a,#d8a94d)}.btn.small{padding:7px 10px;font-size:11px;border-radius:9px}.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:16px}.stat,.panel{background:linear-gradient(145deg,#102239eF,#0b1929f2);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}.stat{padding:15px 16px;min-width:0;position:relative;overflow:hidden}.stat:after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-35px;top:-42px;background:var(--glow,#56d8e8);opacity:.09;filter:blur(5px)}.stat-label{color:var(--muted);font-size:11px;font-weight:700}.stat-value{font-size:clamp(18px,2.2vw,25px);font-weight:900;letter-spacing:-.8px;margin-top:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stat-sub{font-size:10px;color:#6f8aa4;margin-top:5px}.layout{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.85fr);gap:16px;align-items:start}.maincol,.sidecol{display:grid;gap:16px;min-width:0}.panel{padding:18px}.panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}.panel-head h2{font-size:15px;margin:0;letter-spacing:-.3px}.panel-head p{margin:4px 0 0;color:var(--muted);font-size:11px}.factory-scene{position:relative;min-height:280px;border-radius:17px;overflow:hidden;border:1px solid #25445f;background:radial-gradient(ellipse at 50% 72%,#1b4961 0%,#102c43 36%,#0a1b2d 72%);padding:22px;display:flex;flex-direction:column;justify-content:space-between}.scene-grid{position:absolute;inset:0;opacity:.16;background-image:linear-gradient(#8fdff4 1px,transparent 1px),linear-gradient(90deg,#8fdff4 1px,transparent 1px);background-size:36px 36px;mask-image:linear-gradient(transparent,#000 25%,#000)}.scene-top,.scene-bottom{position:relative;z-index:1;display:flex;justify-content:space-between;align-items:center;gap:10px}.live{display:flex;align-items:center;gap:7px;color:#9fe9d0;font-size:10px;font-weight:800;letter-spacing:1px}.dot{width:7px;height:7px;border-radius:50%;background:#5de3a7;box-shadow:0 0 12px #5de3a7;animation:pulse 1.8s infinite}@keyframes pulse{50%{opacity:.35;box-shadow:0 0 2px #5de3a7}}.machine-row{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;gap:clamp(9px,3vw,36px);padding:18px 0}.machine{width:clamp(72px,11vw,112px);height:112px;border:1px solid #4a829d;border-radius:17px;background:linear-gradient(145deg,#244d66,#0d263b);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;box-shadow:inset 0 1px #ffffff22,0 13px 25px #0005;position:relative}.machine:after{content:"";position:absolute;bottom:-7px;left:15%;width:70%;height:7px;background:#081724;border-radius:0 0 5px 5px}.machine-icon{font-size:31px;filter:drop-shadow(0 0 10px #69dff077)}.machine-name{font-size:9px;color:#c6d9e8;font-weight:700}.machine-status{font-size:8px;color:#73e2c0}.belt{height:5px;width:clamp(12px,3vw,34px);background:repeating-linear-gradient(90deg,#7dd6e8 0 5px,#28506a 5px 10px);border-radius:5px;box-shadow:0 0 12px #55d9e855;animation:convey 1s linear infinite}@keyframes convey{to{background-position:10px 0}}.scene-bottom{color:#9ab4c9;font-size:10px}.progress{height:7px;background:#071321;border-radius:99px;overflow:hidden}.progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,#42b8d8,#72e4cb);border-radius:99px;transition:width .35s}.production-line{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:13px}.line-item{background:#0a1928;border:1px solid #1d354b;border-radius:12px;padding:11px}.line-item small{color:var(--muted);font-size:10px}.line-item strong{display:block;margin-top:5px;font-size:14px}.line-item em{font-style:normal;font-size:10px;color:var(--green)}.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.tab{background:#0a1928;border:1px solid #1c354b;color:#8fa8bf;padding:8px 12px;border-radius:10px;font-size:11px;font-weight:700}.tab.active{color:#dffaff;border-color:#3c9db1;background:#123248;box-shadow:inset 0 0 0 1px #3c9db122}.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.item{background:linear-gradient(145deg,#11263b,#0b1a2a);border:1px solid #203b54;border-radius:14px;padding:13px;min-width:0;transition:.2s transform,.2s border-color}.item:hover{transform:translateY(-2px);border-color:#3b7894}.item-top{display:flex;gap:10px;align-items:center}.item-icon{width:39px;height:39px;border-radius:12px;background:#17364d;display:grid;place-items:center;font-size:21px;flex:none}.item h3{margin:0;font-size:12px}.item p{margin:4px 0 0;color:var(--muted);font-size:10px;line-height:1.45}.item-foot{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px}.cost{color:#e9c977;font-size:10px}.muted{color:var(--muted)}.resource-list{display:grid;gap:10px}.resource{display:grid;grid-template-columns:28px 1fr auto;gap:9px;align-items:center}.resource-icon{font-size:18px}.resource-name{font-size:11px;font-weight:700}.resource-rate{font-size:9px;color:var(--muted);margin-top:3px}.resource-value{text-align:right;font-size:12px;font-weight:800}.resource-value small{display:block;color:var(--muted);font-size:9px;font-weight:500;margin-top:3px}.divider{height:1px;background:#1b334a;margin:13px 0}.log{display:grid;gap:8px;max-height:200px;overflow:auto}.log-row{display:flex;justify-content:space-between;gap:12px;font-size:10px;color:#a9bfd1}.log-row time{color:#68839c;white-space:nowrap}.research-list{display:grid;gap:9px}.research{display:flex;align-items:center;gap:10px;background:#0b1a2a;border:1px solid #1c354b;border-radius:12px;padding:11px}.research .item-icon{width:34px;height:34px;font-size:17px}.research-info{flex:1;min-width:0}.research-info strong{font-size:11px}.research-info p{font-size:9px;color:var(--muted);margin:4px 0 0}.research.done{border-color:#2e806c;background:#0d2929}.offline{border:1px solid #3a6a77;background:linear-gradient(120deg,#103347,#11273a);border-radius:14px;padding:13px;display:none;margin-bottom:13px}.offline strong{color:#8de7df}.offline p{margin:5px 0 10px;font-size:11px;color:#b2c8d6}.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:#e5faff;color:#082334;padding:11px 17px;border-radius:12px;font-size:12px;font-weight:800;box-shadow:0 12px 35px #0007;transition:.25s;z-index:20}.toast.show{opacity:1;transform:translate(-50%,0)}.modal-back{position:fixed;inset:0;background:#020812bb;display:none;place-items:center;padding:18px;z-index:30;backdrop-filter:blur(8px)}.modal-back.show{display:grid}.modal{width:min(440px,100%);background:#102239;border:1px solid #36536e;border-radius:20px;padding:22px;box-shadow:0 25px 90px #0009}.modal h2{margin:0 0 8px}.modal p{color:var(--muted);font-size:12px;line-height:1.6}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}.footer{text-align:center;color:#5d7891;font-size:10px;margin-top:22px}.empty{padding:25px;text-align:center;color:var(--muted);font-size:11px}.mobile-nav{display:none}
+@media(max-width:900px){.stats{grid-template-columns:repeat(3,1fr)}.layout{grid-template-columns:1fr}.sidecol{grid-template-columns:repeat(2,minmax(0,1fr))}.sidecol .panel:first-child{grid-row:span 2}}
+@media(max-width:600px){.shell{padding:16px 12px 90px}.top{align-items:flex-start}.top-actions .pill{display:none}.brandmark{width:40px;height:40px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.stat{padding:12px}.stat-value{font-size:19px}.panel{padding:14px;border-radius:17px}.factory-scene{min-height:245px;padding:14px}.machine{height:91px;width:75px}.machine-icon{font-size:25px}.machine-row{gap:7px}.machine-name{font-size:8px}.production-line{gap:6px}.line-item{padding:9px}.sidecol{grid-template-columns:1fr}.sidecol .panel:first-child{grid-row:auto}.cards{grid-template-columns:1fr}.item{padding:12px}.top-actions .btn{padding:8px 10px}.mobile-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:10;justify-content:space-around;padding:10px 6px calc(10px + env(safe-area-inset-bottom));background:#081625ee;border-top:1px solid #203750;backdrop-filter:blur(16px)}.mobile-nav button{background:none;border:0;color:#8fa8bf;font-size:10px;display:grid;gap:4px;justify-items:center}.mobile-nav span{font-size:18px}.footer{padding-bottom:16px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="top">
+ <div class="brand"><div class="brandmark">D</div><div><div class="eyebrow">ROCKEY INDUSTRIES · INDUSTRIAL DIVISION</div><h1>도로늄 공장</h1></div></div>
+ <div class="top-actions"><span class="pill" id="saveState">● 자동 저장</span><button class="btn small" id="helpBtn">도움말</button><button class="btn small" id="resetBtn">초기화</button></div>
+</header>
+<section class="stats">
+ <div class="stat" style="--glow:#f5c86a"><div class="stat-label">💰 보유 자금</div><div class="stat-value" id="money">0 ₵</div><div class="stat-sub">공장 운영 자본</div></div>
+ <div class="stat" style="--glow:#56d8e8"><div class="stat-label">🔷 도로늄</div><div class="stat-value" id="doronium">0</div><div class="stat-sub">최종 생산 자원</div></div>
+ <div class="stat" style="--glow:#64d6a1"><div class="stat-label">⚡ 전력</div><div class="stat-value" id="power">0 / 0</div><div class="stat-sub" id="powerState">전력 생산량 / 소비량</div></div>
+ <div class="stat" style="--glow:#5b9dff"><div class="stat-label">🏭 공장 레벨</div><div class="stat-value" id="level">1 Lv</div><div class="stat-sub" id="xp">경험치 0 / 100</div></div>
+ <div class="stat" style="--glow:#b78cff"><div class="stat-label">📈 총 생산량</div><div class="stat-value" id="lifetime">0</div><div class="stat-sub">누적 도로늄 생산</div></div>
+</section>
+<div class="offline" id="offline"><strong>🌙 자리를 비운 동안 공장이 가동됐어요!</strong><p id="offlineText"></p><button class="btn small primary" id="offlineOk">보상 수령</button></div>
+<div class="layout">
+ <main class="maincol">
+  <section class="panel">
+   <div class="panel-head"><div><h2>공장 현황</h2><p>실시간 생산 라인 모니터링</p></div><span class="live"><i class="dot"></i> SYSTEM ONLINE</span></div>
+   <div class="factory-scene">
+    <div class="scene-grid"></div>
+    <div class="scene-top"><span class="eyebrow">DORONIUM CORE FACILITY · 01</span><span class="pill" id="efficiency">효율 100%</span></div>
+    <div class="machine-row">
+     <div class="machine"><div class="machine-icon">⛏️</div><div class="machine-name">채굴기</div><div class="machine-status" id="mineStatus">대기</div></div><div class="belt"></div>
+     <div class="machine"><div class="machine-icon">⚗️</div><div class="machine-name">정제기</div><div class="machine-status" id="refineStatus">대기</div></div><div class="belt"></div>
+     <div class="machine"><div class="machine-icon">💎</div><div class="machine-name">도로늄 코어</div><div class="machine-status" id="coreStatus">대기</div></div>
+    </div>
+    <div class="scene-bottom"><span>SECTOR 01 · STARTER COMPLEX</span><span id="clock">가동 시간 00:00</span></div>
+   </div>
+   <div class="production-line">
+    <div class="line-item"><small>초당 원석 채굴</small><strong id="oreRate">0 /s</strong><em>ORE EXTRACTION</em></div>
+    <div class="line-item"><small>초당 정제 에너지</small><strong id="refineRate">0 /s</strong><em>REFINING</em></div>
+    <div class="line-item"><small>초당 도로늄</small><strong id="doroRate">0 /s</strong><em>DORONIUM OUTPUT</em></div>
+   </div>
+  </section>
+  <section class="panel">
+   <div class="panel-head"><div><h2>시설 관리</h2><p>생산 시설을 건설하고 자동화하세요.</p></div><span class="pill" id="buildingCount">시설 0개</span></div>
+   <div class="tabs" id="buildTabs"><button class="tab active" data-tab="all">전체</button><button class="tab" data-tab="resource">자원</button><button class="tab" data-tab="energy">에너지</button><button class="tab" data-tab="factory">가공</button><button class="tab" data-tab="logistics">물류</button></div>
+   <div class="cards" id="buildingCards"></div>
+  </section>
+  <section class="panel">
+   <div class="panel-head"><div><h2>기술 연구소</h2><p>연구를 통해 생산 체계를 한 단계 끌어올리세요.</p></div><span class="pill" id="researchCount">연구 0 / 0</span></div>
+   <div class="research-list" id="researchList"></div>
+  </section>
+ </main>
+ <aside class="sidecol">
+  <section class="panel">
+   <div class="panel-head"><div><h2>자원 창고</h2><p>공장 내부 자원 현황</p></div><span class="pill">INVENTORY</span></div>
+   <div class="resource-list" id="resources"></div>
+   <div class="divider"></div><div class="panel-head"><h2>빠른 작업</h2></div>
+   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn primary" id="sellBtn">도로늄 판매</button><button class="btn" id="manualBtn">수동 채굴 +1</button></div>
+   <p class="muted" style="font-size:10px;line-height:1.5;margin:10px 0 0">수동 채굴은 초반 자금 마련에 유용해요. 생산 시설이 늘어나면 자동 생산이 중심이 됩니다.</p>
+  </section>
+  <section class="panel">
+   <div class="panel-head"><div><h2>물류 · 생산 통계</h2><p>공장 운영 기록</p></div></div>
+   <div class="resource-list">
+    <div class="resource"><span class="resource-icon">📦</span><div><div class="resource-name">보유 원석</div><div class="resource-rate">ORE STORAGE</div></div><div class="resource-value" id="ore">0</div></div>
+    <div class="resource"><span class="resource-icon">🧪</span><div><div class="resource-name">정제된 합금</div><div class="resource-rate">REFINED ALLOY</div></div><div class="resource-value" id="alloy">0</div></div>
+    <div class="resource"><span class="resource-icon">🔋</span><div><div class="resource-name">에너지 잔량</div><div class="resource-rate">ENERGY BUFFER</div></div><div class="resource-value" id="energy">0</div></div>
+   </div>
+   <div class="divider"></div><div class="panel-head"><h2>최근 기록</h2><span class="muted" style="font-size:10px">LIVE LOG</span></div><div class="log" id="log"></div>
+  </section>
+  <section class="panel">
+   <div class="panel-head"><div><h2>공장 성장</h2><p>다음 레벨까지의 진행도</p></div></div>
+   <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:7px"><span class="muted">FACTORY EXP</span><strong id="xpLabel">0 / 100</strong></div><div class="progress"><span id="xpBar"></span></div>
+   <div class="divider"></div><div style="display:flex;justify-content:space-between;align-items:center"><span class="muted" style="font-size:10px">다음 레벨 보상</span><strong style="color:var(--gold);font-size:11px">자금 + 레벨 해금</strong></div>
+  </section>
+ </aside>
+</div>
+<div class="footer">ROCKEY INDUSTRIES · DORONIUM FACTORY SIMULATOR · BUILD 01</div>
+</div>
+<nav class="mobile-nav"><button onclick="document.querySelector('.factory-scene').scrollIntoView({behavior:'smooth'})"><span>🏭</span>공장</button><button onclick="document.querySelector('#buildingCards').scrollIntoView({behavior:'smooth'})"><span>⚙️</span>시설</button><button onclick="document.querySelector('#researchList').scrollIntoView({behavior:'smooth'})"><span>🔬</span>연구</button><button onclick="document.querySelector('#resources').scrollIntoView({behavior:'smooth'})"><span>📦</span>창고</button></nav>
+<div class="toast" id="toast"></div>
+<div class="modal-back" id="modal"><div class="modal"><h2 id="modalTitle">도로늄 공장</h2><p id="modalText"></p><div class="modal-actions"><button class="btn" id="modalCancel">닫기</button><button class="btn primary" id="modalConfirm">확인</button></div></div></div>
+<script>
+(()=>{
+'use strict';
+const SAVE_KEY='rockey_doronium_factory_v1';
+const $=id=>document.getElementById(id);
+const fmt=n=>Math.floor(n).toLocaleString('ko-KR');
+const short=n=>n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(2)+'M':n>=1e3?(n/1e3).toFixed(1)+'K':fmt(n);
+const now=()=>Date.now();
+const defs=[
+{id:'miner',name:'도로늄 광맥 채굴기',icon:'⛏️',cat:'resource',desc:'지하 광맥에서 도로늄 원석을 자동 채굴합니다.',base:120,ore:0,rate:0,kind:'ore',amount:1.2,power:1,unlock:1},
+{id:'solar',name:'태양광 발전 모듈',icon:'☀️',cat:'energy',desc:'유지비 없이 안정적인 전력을 공급합니다.',base:180,kind:'power',amount:3,power:0,unlock:1},
+{id:'refinery',name:'고순도 정제기',icon:'⚗️',cat:'factory',desc:'원석을 정제해 도로늄 합금으로 가공합니다.',base:350,kind:'refine',amount:0.8,power:2,unlock:1},
+{id:'core',name:'도로늄 코어 조립기',icon:'💎',cat:'factory',desc:'정제 합금을 압축해 도로늄 코어를 생산합니다.',base:900,kind:'core',amount:0.35,power:4,unlock:2},
+{id:'battery',name:'초전도 축전기',icon:'🔋',cat:'energy',desc:'남는 전력을 저장해 생산 라인의 안정성을 높입니다.',base:650,kind:'storage',amount:25,power:0,unlock:2},
+{id:'drone',name:'채굴 드론 허브',icon:'🛸',cat:'resource',desc:'고속 드론 편대로 원석 채굴 효율을 높입니다.',base:1800,kind:'ore',amount:5,power:4,unlock:3},
+{id:'conveyor',name:'고속 컨베이어 네트워크',icon:'🛤️',cat:'logistics',desc:'물류 흐름을 개선해 전체 생산 효율을 높입니다.',base:2400,kind:'logistics',amount:0.08,power:1,unlock:3},
+{id:'reactor',name:'핵융합 발전로',icon:'☢️',cat:'energy',desc:'대량의 전력을 지속적으로 공급합니다.',base:5200,kind:'power',amount:22,power:0,unlock:4},
+{id:'nano',name:'나노 정밀 가공기',icon:'🧬',cat:'factory',desc:'합금 손실을 줄이고 코어 생산량을 높입니다.',base:8500,kind:'refine',amount:7,power:12,unlock:5},
+{id:'quantum',name:'양자 코어 합성기',icon:'🔮',cat:'factory',desc:'초고밀도 에너지로 고급 도로늄을 합성합니다.',base:24000,kind:'core',amount:4,power:28,unlock:7}
+];
+const researchDefs=[
+{id:'survey',name:'광맥 탐사 알고리즘',icon:'🛰️',desc:'채굴 생산량 +25%',cost:500,unlock:1,effect:'ore',value:1.25},
+{id:'catalyst',name:'촉매 반응 최적화',icon:'🧪',desc:'정제 생산량 +25%',cost:900,unlock:2,effect:'refine',value:1.25},
+{id:'powergrid',name:'스마트 전력망',icon:'⚡',desc:'모든 발전량 +30%',cost:1600,unlock:3,effect:'power',value:1.3},
+{id:'compression',name:'초고압 압축 기술',icon:'💠',desc:'도로늄 생산량 +35%',cost:4200,unlock:4,effect:'core',value:1.35},
+{id:'automation',name:'완전 자동화 프로토콜',icon:'🤖',desc:'전체 생산 효율 +20%',cost:9000,unlock:5,effect:'all',value:1.2},
+{id:'logistics',name:'자율 물류 최적화',icon:'📡',desc:'물류 시설 효과 2배',cost:15000,unlock:6,effect:'logistics',value:2},
+{id:'singularity',name:'도로늄 특이점 연구',icon:'🌌',desc:'도로늄 생산량 +100%',cost:50000,unlock:9,effect:'core',value:2}
+];
+const fresh=()=>({money:2000,ore:0,alloy:0,energy:0,doronium:0,level:1,xp:0,lifetime:0,totalSold:0,buildings:{},research:[],last:now(),started:now(),totalSeconds:0});
+let s=fresh(),lastTick=now(),toastTimer=null,modalAction=null,offlinePending=0,offlineElapsed=0,offlineGains=null,activeTab='all';
+function log(msg){const arr=s.logs||(s.logs=[]);arr.unshift({msg,t:now()});arr.splice(12);renderLog()}
+function notify(msg){$('toast').textContent=msg;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2200)}
+function save(){s.last=now();try{localStorage.setItem(SAVE_KEY,JSON.stringify(s));$('saveState').textContent='● 저장 완료'}catch(e){$('saveState').textContent='저장 실패'}}
+function load(){try{const raw=localStorage.getItem(SAVE_KEY);if(raw){const v=JSON.parse(raw);s={...fresh(),...v,buildings:v.buildings||{},research:v.research||[]};const elapsed=Math.min(Math.max(0,(now()-(v.last||now()))/1000),8*3600);if(elapsed>30){const gain=calcRates();offlineElapsed=elapsed;const oreGain=gain.ore*elapsed;const refined=Math.min(s.ore+oreGain,gain.refine*elapsed);const coreGain=Math.min(s.alloy+refined,gain.core*elapsed);offlineGains={ore:oreGain-refined,alloy:refined-coreGain,doronium:coreGain};offlinePending=1;$('offlineText').textContent='약 '+timeFmt(elapsed)+' 동안 원석 '+short(oreGain)+'개, 합금 '+short(refined)+'개, 도로늄 '+short(coreGain)+'개를 생산했어요.';}}}catch(e){s=fresh()}}
+function count(id){return s.buildings[id]||0}
+function research(id){return s.research.includes(id)}
+function multiplier(effect){return researchDefs.filter(r=>research(r.id)&&r.effect===effect).reduce((a,r)=>a*r.value,1)}
+function total(kind){return defs.filter(d=>d.kind===kind).reduce((a,d)=>a+count(d.id)*d.amount,0)}
+function powerStats(){return {made:total('power')*multiplier('power'),used:defs.reduce((a,d)=>a+count(d.id)*d.power,0),storage:total('storage')}}
+function calcRates(){const p=powerStats(),energyFactor=p.used===0?1:Math.min(1,s.energy>0?1:p.made/Math.max(1,p.used));const logistics=1+total('logistics')*multiplier('logistics');const auto=multiplier('all');return {ore:total('ore')*multiplier('ore')*auto*logistics*energyFactor,refine:total('refine')*multiplier('refine')*auto*logistics*energyFactor,core:total('core')*multiplier('core')*auto*logistics*energyFactor,power:p.made,used:p.used,energyFactor,storage:p.storage}}
+function cost(d){return Math.floor(d.base*Math.pow(1.17,count(d.id)))}
+function gainXp(n){s.xp+=n;while(s.xp>=s.level*100){s.xp-=s.level*100;s.level++;s.money+=s.level*150;log('공장 레벨 상승! '+s.level+' Lv · 운영 자금 보너스 지급');notify('공장 레벨 '+s.level+' 달성!');}}
+function tick(dt){const r=calcRates();const producedOre=r.ore*dt;s.ore+=producedOre;const refined=Math.min(s.ore,r.refine*dt);s.ore-=refined;s.alloy+=refined;const made=Math.min(s.alloy,r.core*dt);s.alloy-=made;s.doronium+=made;s.lifetime+=made;const surplus=Math.max(0,r.power-r.used);s.energy=Math.min(r.storage+100,s.energy+surplus*dt);if(r.used>r.power&&s.energy>0)s.energy=Math.max(0,s.energy-(r.used-r.power)*dt);if(producedOre>0||refined>0||made>0)gainXp(producedOre*.5+refined*.8+made*.5);s.totalSeconds+=dt}
+function build(d){const c=cost(d);if(s.level<d.unlock){notify('공장 '+d.unlock+'레벨부터 건설할 수 있어요.');return}if(s.money<c){notify('자금이 부족합니다.');return}s.money-=c;s.buildings[d.id]=count(d.id)+1;log(d.name+' '+count(d.id)+'개 건설');notify(d.name+' 건설 완료!');render();save()}
+function doResearch(r){if(research(r.id))return;if(s.level<r.unlock||s.money<r.cost){notify('레벨 또는 자금이 부족합니다.');return}s.money-=r.cost;s.research.push(r.id);log('연구 완료: '+r.name);notify('연구 완료! '+r.name);render();save()}
+function sell(){const n=Math.floor(s.doronium);if(n<1){notify('판매할 도로늄이 없습니다.');return}const price=25*(1+Math.max(0,s.level-1)*.08);const earned=Math.floor(n*price);s.doronium-=n;s.money+=earned;s.totalSold+=n;gainXp(n*.15);log('도로늄 '+fmt(n)+'개 판매 · '+fmt(earned)+' ₵ 획득');notify(fmt(earned)+' ₵ 판매 수익!');render();save()}
+function manual(){s.ore+=1;gainXp(.3);notify('원석 +1');render()}
+function renderStats(){const r=calcRates(),p=powerStats();$('money').textContent=short(s.money)+' ₵';$('doronium').textContent=short(s.doronium);$('power').textContent=short(p.made)+' / '+short(p.used);$('powerState').textContent=p.made>=p.used?'전력 공급 안정':'전력 부족 · 생산량 감소';$('level').textContent=s.level+' Lv';$('xp').textContent='경험치 '+fmt(s.xp)+' / '+fmt(s.level*100);$('lifetime').textContent=short(s.lifetime);$('ore').textContent=short(s.ore);$('alloy').textContent=short(s.alloy);$('energy').textContent=short(s.energy);$('oreRate').textContent=r.ore.toFixed(2)+' /s';$('refineRate').textContent=r.refine.toFixed(2)+' /s';$('doroRate').textContent=r.core.toFixed(2)+' /s';$('efficiency').textContent='효율 '+Math.round(r.energyFactor*100)+'%';$('buildingCount').textContent='시설 '+Object.values(s.buildings).reduce((a,b)=>a+b,0)+'개';$('researchCount').textContent='연구 '+s.research.length+' / '+researchDefs.length;$('xpLabel').textContent=fmt(s.xp)+' / '+fmt(s.level*100);$('xpBar').style.width=Math.min(100,s.xp/(s.level*100)*100)+'%';$('mineStatus').textContent=r.ore>0?'채굴 중':'대기';$('refineStatus').textContent=r.refine>0?'정제 중':'대기';$('coreStatus').textContent=r.core>0?'합성 중':'대기';$('clock').textContent='가동 시간 '+timeFmt(s.totalSeconds);$('saveState').textContent='● 자동 저장'}
+function timeFmt(sec){sec=Math.floor(sec);const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s2=sec%60;return h?String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s2).padStart(2,'0'):String(m).padStart(2,'0')+':'+String(s2).padStart(2,'0')}
+function renderResources(){const data=[['⛏️','도로늄 원석',s.ore,total('ore')+' /s'],['🧪','정제 합금',s.alloy,total('refine')+' /s'],['💎','도로늄',s.doronium,calcRates().core.toFixed(2)+' /s'],['⚡','전력',s.energy,short(powerStats().made)+' 공급'],['💰','운영 자금',s.money,'판매·건설']];$('resources').innerHTML=data.map(x=>'<div class="resource"><span class="resource-icon">'+x[0]+'</span><div><div class="resource-name">'+x[1]+'</div><div class="resource-rate">'+x[3]+'</div></div><div class="resource-value">'+short(x[2])+'</div></div>').join('')}
+function renderBuildings(){const list=defs.filter(d=>activeTab==='all'||d.cat===activeTab);$('buildingCards').innerHTML=list.map(d=>{const c=cost(d),locked=s.level<d.unlock,afford=s.money>=c;return '<article class="item"><div class="item-top"><div class="item-icon">'+d.icon+'</div><div><h3>'+d.name+'</h3><p>'+d.desc+'</p></div></div><div class="item-foot"><span class="cost">'+fmt(c)+' ₵ · 보유 '+count(d.id)+'</span><button class="btn small '+(afford&&!locked?'primary':'')+'" data-build="'+d.id+'" '+(afford&&!locked?'':'disabled')+'>'+(locked?d.unlock+' Lv 해금':'건설')+'</button></div></article>'}).join('')}
+function renderResearch(){$('researchList').innerHTML=researchDefs.map(r=>{const done=research(r.id),locked=s.level<r.unlock;return '<div class="research '+(done?'done':'')+'"><div class="item-icon">'+r.icon+'</div><div class="research-info"><strong>'+r.name+(done?' · 완료':'')+'</strong><p>'+r.desc+' · '+r.unlock+' Lv 해금</p></div><button class="btn small '+(!done&&!locked&&s.money>=r.cost?'gold':'')+'" data-research="'+r.id+'" '+(done||locked||s.money<r.cost?'disabled':'')+'>'+(done?'완료':locked?r.unlock+' Lv':fmt(r.cost)+' ₵')+'</button></div>'}).join('')}
+function renderLog(){const arr=s.logs||[];$('log').innerHTML=arr.length?arr.map(x=>'<div class="log-row"><span>'+x.msg+'</span><time>'+new Date(x.t).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'})+'</time></div>').join(''):'<div class="empty">아직 기록이 없습니다.</div>'}
+function render(){renderStats();renderResources();renderBuildings();renderResearch();renderLog()}
+function modal(title,text,confirm,action){$('modalTitle').textContent=title;$('modalText').textContent=text;$('modalConfirm').textContent=confirm;modalAction=action;$('modal').classList.add('show')}
+$('modalCancel').onclick=()=>$('modal').classList.remove('show');$('modalConfirm').onclick=()=>{if(modalAction)modalAction();$('modal').classList.remove('show')};
+$('buildTabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;activeTab=b.dataset.tab;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===b));renderBuildings()});
+$('buildingCards').addEventListener('click',e=>{const b=e.target.closest('[data-build]');if(b){const d=defs.find(x=>x.id===b.dataset.build);if(d)build(d)}});
+$('researchList').addEventListener('click',e=>{const b=e.target.closest('[data-research]');if(b){const r=researchDefs.find(x=>x.id===b.dataset.research);if(r)doResearch(r)}});
+$('sellBtn').onclick=sell;$('manualBtn').onclick=manual;
+$('resetBtn').onclick=()=>modal('공장 데이터 초기화','현재 공장 진행도와 저장 데이터를 모두 삭제합니다. 이 작업은 되돌릴 수 없습니다.','초기화하기',()=>{localStorage.removeItem(SAVE_KEY);s=fresh();log('새로운 공장 운영 시작');render();save();notify('새 공장을 시작합니다.')});
+$('helpBtn').onclick=()=>modal('도로늄 공장 안내','① 채굴기를 건설해 원석을 모으세요. ② 정제기를 통해 합금으로 가공하세요. ③ 코어 조립기를 건설하면 도로늄이 생산됩니다. ④ 도로늄을 판매해 자금을 확보하고 시설·연구에 재투자하세요. 발전 시설이 부족하면 생산 효율이 낮아집니다. 공장은 브라우저에 자동 저장되며 최대 8시간의 오프라인 생산을 지원합니다.','확인',null);
+$('offlineOk').onclick=()=>{if(offlinePending&&offlineGains){s.ore+=offlineGains.ore;s.alloy+=offlineGains.alloy;s.doronium+=offlineGains.doronium;s.lifetime+=offlineGains.doronium;gainXp(offlineGains.ore*.5+offlineGains.alloy*.8+offlineGains.doronium*.5);log('오프라인 생산 보상 수령 · 도로늄 '+fmt(offlineGains.doronium)+'개');} $('offline').style.display='none';offlinePending=0;offlineGains=null;render();save()};
+load();if(offlinePending>0){$('offline').style.display='block';}else if(s.logs?.length===0)log('도로늄 공장 가동 시작');
+render();lastTick=now();
+setInterval(()=>{const t=now(),dt=Math.min(2,(t-lastTick)/1000);lastTick=t;if(dt>0)tick(dt);renderStats();renderResources();if(Math.floor(t/5000)!==Math.floor((t-dt*1000)/5000))save()},500);
+setInterval(save,15000);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)save();else{lastTick=now();render()}});
+window.addEventListener('beforeunload',save);
+})();
+</script>
+</body>
+</html>
