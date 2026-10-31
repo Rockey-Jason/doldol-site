@@ -325,14 +325,6 @@ export async function createGame(
 
     if (sniper || dmr) {
       addBox(0.24,-0.005,-0.32,0.12,0.13,0.44,metal);
-      const scope = new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.075,0.42,16),dark);
-      scope.rotation.x = Math.PI/2;
-      scope.position.set(0.24,0.13,-0.43);
-      gun.add(scope);
-      const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.061,0.061,0.012,16),glowPart);
-      lens.rotation.x = Math.PI/2;
-      lens.position.set(0.24,0.13,-0.65);
-      gun.add(lens);
     } else if (energy) {
       const coil = new THREE.Mesh(new THREE.TorusGeometry(0.12,0.026,8,28),glowPart);
       coil.position.set(0.24,-0.22,-0.56);
@@ -375,33 +367,25 @@ export async function createGame(
       gun.add(chamber);
     }
 
-    // Give every firearm a visible optic so aiming always has a physical sight
-    // to bring into the center of the camera. Sniper/DMR already have a scope.
-    if (!sniper && !dmr) {
+    // Clear-aperture optic: only thin rings and a reticle are rendered.
+    // No glass disks or capped cylinders sit in the sight line, so the world
+    // remains fully visible through every weapon's optic while aiming.
+    {
       const optic = new THREE.Group();
       optic.position.set(0.24,0.13,-0.43);
-      const opticBody = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.078,0.078,0.38,18,1,true),
-        dark
-      );
-      opticBody.rotation.x = Math.PI/2;
-      optic.add(opticBody);
-      const rearRing = new THREE.Mesh(new THREE.TorusGeometry(0.079,0.014,8,24),glowPart);
-      rearRing.position.z = 0.19;
+      const radius = sniper || dmr ? 0.075 : 0.079;
+      const tubeLength = sniper || dmr ? 0.42 : 0.38;
+      const rearRing = new THREE.Mesh(new THREE.TorusGeometry(radius,0.012,8,28),glowPart);
+      rearRing.position.z = tubeLength / 2;
       optic.add(rearRing);
-      const frontRing = new THREE.Mesh(new THREE.TorusGeometry(0.079,0.014,8,24),glowPart);
-      frontRing.position.z = -0.19;
+      const frontRing = new THREE.Mesh(new THREE.TorusGeometry(radius,0.012,8,28),glowPart);
+      frontRing.position.z = -tubeLength / 2;
       optic.add(frontRing);
-      const opticGlass = new THREE.Mesh(
-        new THREE.CircleGeometry(0.064,24),
-        new THREE.MeshBasicMaterial({color:0x8cecff,transparent:true,opacity:0.18,depthWrite:false})
-      );
-      opticGlass.position.z = -0.196;
-      optic.add(opticGlass);
-      const reticleMaterial = new THREE.LineBasicMaterial({color:0xff5b63,transparent:true,opacity:0.95});
+      const reticleZ = -tubeLength / 2 + 0.008;
+      const reticleMaterial = new THREE.LineBasicMaterial({color:0xff5b63,transparent:true,opacity:0.9});
       const reticle = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(-0.045,0,-0.199),new THREE.Vector3(0.045,0,-0.199),
-        new THREE.Vector3(0,-0.045,-0.199),new THREE.Vector3(0,0.045,-0.199)
+        new THREE.Vector3(-0.043,0,reticleZ),new THREE.Vector3(0.043,0,reticleZ),
+        new THREE.Vector3(0,-0.043,reticleZ),new THREE.Vector3(0,0.043,reticleZ)
       ]);
       optic.add(new THREE.LineSegments(reticle,reticleMaterial));
       gun.add(optic);
