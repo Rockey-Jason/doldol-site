@@ -473,6 +473,25 @@ export async function createGame(
   let movementAmount = 0;
   let aimBlend = 0;
   let fireAnimationStart = 0;
+  const reloadMotionProfiles:Record<string,{dip:number;roll:number;pitch:number}> = {
+    R16:{dip:.12,roll:.10,pitch:.24},R9:{dip:.18,roll:.22,pitch:.34},
+    VIPER:{dip:.10,roll:.08,pitch:.16},THUNDER:{dip:.25,roll:.30,pitch:.46},
+    LONGSHOT:{dip:.34,roll:.16,pitch:.62},HELIX:{dip:.20,roll:.12,pitch:.32},
+    BASTION:{dip:.16,roll:.08,pitch:.28},NOVA:{dip:.19,roll:.26,pitch:.38},
+    ARC:{dip:.16,roll:.10,pitch:.22},PULSE:{dip:.15,roll:.12,pitch:.24}
+  };
+  const magazineReloadProfiles:Record<string,{out:number;in:number;drop:number;tilt:number;roll:number}> = {
+    R16:{out:.10,in:.63,drop:.24,tilt:.16,roll:.06},
+    R9:{out:.08,in:.58,drop:.19,tilt:.34,roll:.18},
+    VIPER:{out:.16,in:.56,drop:.28,tilt:.12,roll:.04},
+    THUNDER:{out:.08,in:.68,drop:.22,tilt:.28,roll:.12},
+    LONGSHOT:{out:.18,in:.72,drop:.30,tilt:.42,roll:.10},
+    HELIX:{out:.13,in:.65,drop:.25,tilt:.22,roll:.08},
+    BASTION:{out:.07,in:.76,drop:.17,tilt:.12,roll:.04},
+    NOVA:{out:.09,in:.60,drop:.20,tilt:.38,roll:.20},
+    ARC:{out:.20,in:.70,drop:.23,tilt:.18,roll:.08},
+    PULSE:{out:.14,in:.64,drop:.22,tilt:.20,roll:.08}
+  };
   const weaponMotion:Record<string,{kick:number;reloadTilt:number;roll:number;sway:number;bob:number;fireTilt:number;switchRoll:number}> = {
     R16:{kick:.82,reloadTilt:.12,roll:.06,sway:.75,bob:1,fireTilt:.9,switchRoll:.42},
     R9:{kick:.95,reloadTilt:.2,roll:.12,sway:.55,bob:.8,fireTilt:1.12,switchRoll:.62},
@@ -1034,14 +1053,7 @@ export async function createGame(
     const walkWave=Math.sin(time*10.8);
     const walkSide=Math.cos(time*5.4);
     const walkAmount=movementAmount*motion.bob*(1-weaponAimBlend*.48);
-    const reloadStyle:Record<string,{dip:number;roll:number;pitch:number}> = {
-      R16:{dip:.12,roll:.10,pitch:.24},R9:{dip:.18,roll:.22,pitch:.34},
-      VIPER:{dip:.10,roll:.08,pitch:.16},THUNDER:{dip:.25,roll:.30,pitch:.46},
-      LONGSHOT:{dip:.34,roll:.16,pitch:.62},HELIX:{dip:.20,roll:.12,pitch:.32},
-      BASTION:{dip:.16,roll:.08,pitch:.28},NOVA:{dip:.19,roll:.26,pitch:.38},
-      ARC:{dip:.16,roll:.10,pitch:.22},PULSE:{dip:.15,roll:.12,pitch:.24}
-    };
-    const reloadMotion=reloadStyle[currentWeaponCode]||reloadStyle.R16;
+    const reloadMotion=reloadMotionProfiles[currentWeaponCode]||reloadMotionProfiles.R16;
     const reloadDip=reloadWave*(.075+reloadMotion.dip);
     const switchDip=switchWave*.16;
     const melee=currentWeapon.category==='MELEE';
@@ -1072,19 +1084,7 @@ export async function createGame(
     if(magazineModel){
       // Weapon-specific reload choreography: eject, present, seat and lock.
       const reloadActive=reloadAnimationStart>0;
-      const profile:Record<string,{out:number;in:number;drop:number;tilt:number;roll:number}> = {
-        R16:{out:.10,in:.63,drop:.24,tilt:.16,roll:.06},
-        R9:{out:.08,in:.58,drop:.19,tilt:.34,roll:.18},
-        VIPER:{out:.16,in:.56,drop:.28,tilt:.12,roll:.04},
-        THUNDER:{out:.08,in:.68,drop:.22,tilt:.28,roll:.12},
-        LONGSHOT:{out:.18,in:.72,drop:.30,tilt:.42,roll:.10},
-        HELIX:{out:.13,in:.65,drop:.25,tilt:.22,roll:.08},
-        BASTION:{out:.07,in:.76,drop:.17,tilt:.12,roll:.04},
-        NOVA:{out:.09,in:.60,drop:.20,tilt:.38,roll:.20},
-        ARC:{out:.20,in:.70,drop:.23,tilt:.18,roll:.08},
-        PULSE:{out:.14,in:.64,drop:.22,tilt:.20,roll:.08}
-      };
-      const style=profile[currentWeaponCode]||profile.R16;
+      const style=magazineReloadProfiles[currentWeaponCode]||magazineReloadProfiles.R16;
       const out=THREE.MathUtils.smoothstep(reloadProgress,style.out,style.out+.18);
       const seat=THREE.MathUtils.smoothstep(reloadProgress,style.in,style.in+.16);
       const magTravel=reloadActive?out*(1-seat):0;
