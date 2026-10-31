@@ -707,6 +707,21 @@ export async function createGame(
   let lastStabilityReportAt=sessionStartedAt;
   const frameTimeSamples:number[]=[];
   const heapSamples:Array<{t:number;mb:number}>=[];
+  type SoakSample={elapsedMs:number;fps:number;frameMs:number;heapMb:number|null;geometries:number;textures:number;drawCalls:number};
+  let soakTest:{startedAt:number;durationMs:number;samples:SoakSample[]}|null=null;
+  const startSoakTest=(durationMs=60*60*1000)=>{
+    const safeDuration=THREE.MathUtils.clamp(durationMs,60_000,2*60*60*1000);
+    soakTest={startedAt:performance.now(),durationMs:safeDuration,samples:[]};
+    window.dispatchEvent(new CustomEvent('rockey:soak-start',{detail:{durationMs:safeDuration,device:isMobile?'mobile':'desktop'}}));
+  };
+  const stopSoakTest=()=>{
+    if(!soakTest)return;
+    const report={device:isMobile?'mobile':'desktop',durationMs:performance.now()-soakTest.startedAt,samples:soakTest.samples};
+    window.dispatchEvent(new CustomEvent('rockey:soak-stop',{detail:report}));
+    soakTest=null;
+  };
+  const qaApi={startSoakTest,stopSoakTest};
+  (window as Window&{RockeyQA?:typeof qaApi}).RockeyQA=qaApi;
   let lastSnapshotServerTime=0;
   let snapshotJitterMs=0;
   let estimatedSnapshotLoss=0;
@@ -1527,6 +1542,14 @@ export async function createGame(
           activeSmoke:smokeClouds.length,activeParticles:fxParticles.length,
           snapshotJitterMs:Math.round(snapshotJitterMs*10)/10,estimatedSnapshotLoss,rttMs:networkRttMs===null?null:Math.round(networkRttMs)
         }}));
+        if(soakTest){
+          const elapsed=now-soakTest.startedAt;
+          soakTest.samples.push({elapsedMs:elapsed,fps:measuredFps,frameMs:measuredFrame,
+            heapMb:memoryMb,geometries:renderer.info.memory.geometries,
+            textures:renderer.info.memory.textures,drawCalls:renderer.info.render.calls});
+          window.dispatchEvent(new CustomEvent('rockey:soak-sample',{detail:soakTest.samples[soakTest.samples.length-1]}));
+          if(elapsed>=soakTest.durationMs)stopSoakTest();
+        }
         lastStabilityReportAt=now;
       }
       perfWindowStart=now;perfFrames=0;
@@ -2060,6 +2083,8 @@ export async function createGame(
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
       window.removeEventListener('rockey:network',onNetworkRtt);
+      stopSoakTest();
+      if((window as Window&{RockeyQA?:typeof qaApi}).RockeyQA===qaApi)delete (window as Window&{RockeyQA?:typeof qaApi}).RockeyQA;
       window.removeEventListener('keydown', keyDown);
       window.removeEventListener('keyup', keyUp);
       window.removeEventListener('mousemove', pointerMove);
