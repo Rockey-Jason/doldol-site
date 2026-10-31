@@ -40,19 +40,20 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     addBox(hand,new THREE.BoxGeometry(.145,.13,.17),glove,0,-.015,-.025,0,0,isLeft?-.08:.08);
     addBox(hand,new THREE.BoxGeometry(.13,.035,.12),gloveEdge,0,.048,-.045);
     addBox(hand,new THREE.BoxGeometry(.11,.018,.08),sleevePlate,0,.068,-.045);
-    const fingers:THREE.Group[]=[];
+    const fingers:THREE.Group[]=[];const distalJoints:THREE.Group[]=[];
     for(let i=0;i<4;i++){
       const finger=new THREE.Group();finger.position.set(-.052+i*.035,-.075,-.105);hand.add(finger);
       addSegment(finger,new THREE.Vector3(0,0,0),new THREE.Vector3(0,-.045,-.016),.018,glove);
       const distal=new THREE.Group();distal.position.set(0,-.044,-.016);finger.add(distal);
       addSegment(distal,new THREE.Vector3(0,0,0),new THREE.Vector3(0,-.034,-.014),.014,glove);
       addBox(distal,new THREE.BoxGeometry(.025,.012,.025),gloveEdge,0,-.034,-.014);
-      fingers.push(finger);
+      fingers.push(finger);distalJoints.push(distal);
     }
     const thumb=new THREE.Group();thumb.position.set(isLeft?-.085:.085,-.015,-.055);hand.add(thumb);
     addSegment(thumb,new THREE.Vector3(0,0,0),new THREE.Vector3(isLeft?.04:-.04,-.045,-.045),.022,glove);
     addSegment(thumb,new THREE.Vector3(isLeft?.04:-.04,-.045,-.045),new THREE.Vector3(isLeft?.06:-.06,-.085,-.08),.018,glove);
     arm.userData.fingers=fingers;
+    arm.userData.distalJoints=distalJoints;
     arm.userData.thumb=thumb;
     arm.userData.hand=hand;
     return arm;
@@ -106,12 +107,40 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     const curl=THREE.MathUtils.clamp(holdBlend*.98+lift*.18-seatBlend*.12,0,1);
     const leftFingers=left.userData.fingers as THREE.Group[];
     const leftThumb=left.userData.thumb as THREE.Group;
-    leftFingers.forEach((finger,i)=>{const contact=pose.supportCurl;finger.rotation.x=-.10-curl*(i===0?.82:1.08)-contact*.16*(1-holdBlend);finger.rotation.z=(i-1.5)*.035;});
+    const leftDistal=left.userData.distalJoints as THREE.Group[];
+    leftFingers.forEach((finger,i)=>{
+      const contact=THREE.MathUtils.clamp(pose.supportCurl*.72+(i===0?-.08:.04),.2,.92);
+      const targetAngle=contact*.72;
+      const segmentA=.047,segmentB=.036;
+      const targetY=-Math.cos(targetAngle)*.073,targetZ=-Math.sin(targetAngle)*.073;
+      const distance=THREE.MathUtils.clamp(Math.hypot(targetY,targetZ),.002,segmentA+segmentB-.001);
+      const kneeCos=THREE.MathUtils.clamp((segmentA*segmentA+segmentB*segmentB-distance*distance)/(2*segmentA*segmentB),-1,1);
+      const knee=Math.PI-Math.acos(kneeCos);
+      const target=Math.atan2(-targetZ,-targetY);
+      const bend=Math.atan2(segmentB*Math.sin(knee),segmentA+segmentB*Math.cos(knee));
+      finger.rotation.x=THREE.MathUtils.lerp(finger.rotation.x,target-bend,1-holdBlend*.18);
+      finger.rotation.z=(i-1.5)*.035;
+      leftDistal[i].rotation.x=-knee*.72;
+    });
     leftThumb.rotation.x=-.10-pose.thumbCurl*.54-curl*.16;
     leftThumb.rotation.z=.10;
     const rightFingers=right.userData.fingers as THREE.Group[];
     const rightThumb=right.userData.thumb as THREE.Group;
-    rightFingers.forEach((finger,i)=>{finger.rotation.x=-.10-pose.triggerCurl*(i===1?.18:1);finger.rotation.z=(i-1.5)*.025;});
+    const rightDistal=right.userData.distalJoints as THREE.Group[];
+    rightFingers.forEach((finger,i)=>{
+      const triggerFinger=i===1;
+      const contact=THREE.MathUtils.clamp(pose.triggerCurl*(triggerFinger?.58:1.08),.12,.88);
+      const targetAngle=contact*.78;
+      const segmentA=.047,segmentB=.036,distance=.073;
+      const targetY=-Math.cos(targetAngle)*distance,targetZ=-Math.sin(targetAngle)*distance;
+      const kneeCos=THREE.MathUtils.clamp((segmentA*segmentA+segmentB*segmentB-distance*distance)/(2*segmentA*segmentB),-1,1);
+      const knee=Math.PI-Math.acos(kneeCos);
+      const target=Math.atan2(-targetZ,-targetY);
+      const bend=Math.atan2(segmentB*Math.sin(knee),segmentA+segmentB*Math.cos(knee));
+      finger.rotation.x=target-bend;
+      finger.rotation.z=(i-1.5)*.025;
+      rightDistal[i].rotation.x=-knee*.72;
+    });
     rightThumb.rotation.x=-.12-pose.thumbCurl*.62;
     rightThumb.rotation.z=-.12;
     // The firing hand briefly leaves the grip to rack the charging handle
@@ -122,7 +151,7 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     right.position.copy(gripRight).lerp(boltPosition,boltReach);
     right.position.y+=Math.sin(performance.now()*.009+1)*walk*.004-fire*.018;
     right.rotation.set(pose.rightRot.x-.06+fire*.08-aim*.015+boltReach*.42,pose.rightRot.y+boltReach*.12,pose.rightRot.z+.03+Math.sin(performance.now()*.006)*walk*.008-boltReach*.28);
-    rightFingers.forEach((finger,i)=>{finger.rotation.x=-.10-pose.triggerCurl*(i===1?.18:1)-boltReach*(i===0?.72:1.02);});
+    rightFingers.forEach((finger,i)=>{finger.rotation.x+=-boltReach*(i===0?.72:1.02);});
   };
   return {group,update};
 }
