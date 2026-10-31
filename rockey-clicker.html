@@ -101,6 +101,85 @@ h1{font-size:clamp(29px,5vw,48px);line-height:1.05;letter-spacing:-.04em;margin:
 .modal button{margin-top:12px;border:1px solid #d6ad5555;border-radius:10px;background:#d6ad551a;color:var(--gold2);padding:10px 20px;cursor:pointer}
 .golden{position:absolute;z-index:10;right:18px;top:18px;width:64px;height:64px;border:2px solid #ffe6a0;border-radius:50%;background:radial-gradient(circle at 35% 25%,#fff9cf,#eab84f 55%,#92551a);color:#6b4213;font-size:27px;box-shadow:0 0 35px #ffd45c88;cursor:pointer;animation:goldPulse 1.3s ease-in-out infinite}
 @keyframes goldPulse{50%{transform:scale(1.09);box-shadow:0 0 48px #ffd45cbb}}
+
+/* ===== ROCKEY CLICKER premium interaction pack ===== */
+.top-actions{flex-wrap:wrap;justify-content:flex-end}
+.sound-toggle{color:#f5dfaa;border-color:#d8b15b45}
+.click-panel{isolation:isolate}
+.particle-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.click-panel>*:not(.particle-canvas){z-index:2}
+.coin-button{perspective:900px;transform-style:preserve-3d;will-change:transform}
+.coin-face{transform-style:preserve-3d;will-change:transform;transition:filter .18s ease}
+.coin-face:after{content:"";position:absolute;inset:7%;border-radius:50%;background:linear-gradient(125deg,transparent 28%,rgba(255,255,255,.43) 48%,transparent 65%);transform:translateX(-130%) rotate(18deg);opacity:0}
+.coin-button.is-hit .coin-face:after{animation:coinSweep .42s ease-out}
+@keyframes coinSweep{0%{transform:translateX(-130%) rotate(18deg);opacity:0}35%{opacity:.78}100%{transform:translateX(130%) rotate(18deg);opacity:0}}
+.coin-button[data-skin="obsidian"] .coin-face{background:radial-gradient(circle at 32% 22%,#b9c1d4 0,#5b6478 23%,#222a3e 55%,#090e1d 77%,#8995ad 86%,#161d2d 100%);border-color:#aab6cc;box-shadow:inset 0 0 0 5px #dce6ff44,inset 0 -14px 25px #000a,0 0 0 2px #c6d5ed55,0 0 38px #849bbf38}
+.coin-button[data-skin="obsidian"] .coin-letter{color:#172033;text-shadow:0 2px 0 #e4ebf7,0 5px 4px #0009}
+.coin-button[data-skin="aurora"] .coin-face{background:radial-gradient(circle at 34% 22%,#fff8ff 0,#b3f4e8 17%,#6d9fe2 42%,#705cb8 69%,#dca2df 82%,#344f8c 100%);border-color:#bbd7f0;box-shadow:inset 0 0 0 5px #fff9,inset 0 -14px 25px #273b7777,0 0 0 2px #cef5ff66,0 0 42px #80d5ff55}
+.coin-button[data-skin="aurora"] .coin-letter{color:#38578b;text-shadow:0 2px 0 #fff,0 5px 4px #334a8c88}
+.coin-button[data-skin="doronium"] .coin-face{background:radial-gradient(circle at 35% 22%,#e4fff5 0,#8af1da 16%,#2c9d91 39%,#13516b 66%,#4ad4c1 82%,#123448 100%);border-color:#94f2df;box-shadow:inset 0 0 0 5px #cafff355,inset 0 -14px 25px #001a2b99,0 0 0 2px #8fffe366,0 0 44px #26d7c477}
+.coin-button[data-skin="doronium"] .coin-letter{color:#0b4654;text-shadow:0 2px 0 #cafff5,0 5px 4px #003d4d99}
+.coin-button[data-skin="prism"] .coin-face{background:conic-gradient(from 20deg,#ffe7a3,#b6f7ed,#9bb7ff,#e6a9ff,#ffe7a3,#f5bd77,#ffe7a3);border-color:#f4e4ff;box-shadow:inset 0 0 0 5px #fff8,inset 0 -14px 25px #28205a66,0 0 0 2px #fff6,0 0 48px #d3aaff66}
+.coin-button[data-skin="prism"] .coin-letter{color:#52406d;text-shadow:0 2px 0 #fff,0 5px 4px #43305b99}
+.coin-button[data-skin="royal"] .coin-face{background:radial-gradient(circle at 34% 20%,#fff9d9 0,#fff0a3 14%,#e2b342 38%,#a34d25 60%,#6d1837 76%,#f0ce70 88%,#6b1f3f 100%);border-color:#ffe9a1;box-shadow:inset 0 0 0 5px #fff3bd88,inset 0 -14px 25px #44102688,0 0 0 2px #ffe6a055,0 0 52px #e6a64c77}
+.coin-button[data-skin="royal"] .coin-letter{color:#6b2038;text-shadow:0 2px 0 #fff0bd,0 5px 4px #42102299}
+.combo-box{position:relative;width:min(340px,100%);margin-top:9px}
+.combo-line{display:flex;justify-content:space-between;gap:10px;color:#9fadc4;font-size:10px;margin-bottom:7px}
+.combo-line strong{color:var(--gold2);font-weight:400;font-variant-numeric:tabular-nums}
+.combo-track{height:5px;border-radius:99px;background:#ffffff12;overflow:hidden}
+.combo-track i{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#b98b3d,#ffe7a0);box-shadow:0 0 12px #edc56b66;transition:width .22s ease}
+.event-banner{display:flex;align-items:center;gap:9px;width:min(420px,100%);min-height:35px;margin-top:10px;padding:8px 12px;border:1px solid #d9b75b25;border-radius:12px;background:linear-gradient(100deg,#d6a74412,#ffffff04);color:#aebbd0;font-size:10px;line-height:1.45;transition:border-color .2s,background .2s}
+.event-banner.pop{border-color:#f3d27d88;background:linear-gradient(100deg,#e5b95225,#ffffff08);animation:eventPulse .55s ease}
+.event-icon{color:#e9c56f;font-size:14px;flex:0 0 auto}
+@keyframes eventPulse{0%{transform:scale(.985)}45%{transform:scale(1.015)}100%{transform:scale(1)}}
+.item[data-building] .item-icon{position:relative;overflow:hidden}
+.item[data-building="paper"] .item-icon:after{content:"";position:absolute;width:18px;height:4px;left:-22px;top:29px;border-radius:3px;background:#f1dba8;box-shadow:0 -7px #f1dba866,0 7px #f1dba844;animation:paperFeed 2.1s linear infinite}
+.item[data-building="workshop"] .item-icon:after{content:"✦";position:absolute;color:#ffe39a;font-size:11px;right:4px;top:3px;animation:sparkFlicker 1.3s ease-in-out infinite}
+.item[data-building="doronium"] .item-icon{animation:crystalGlow 2.8s ease-in-out infinite}
+.item[data-building="lab"] .item-icon:after{content:"";position:absolute;left:7px;right:7px;height:2px;top:8px;background:#aaf4ff;box-shadow:0 0 8px #72e8ff;animation:labScan 2.2s ease-in-out infinite}
+.item[data-building="tower"] .item-icon:after{content:"";position:absolute;width:3px;height:3px;right:9px;top:9px;border-radius:50%;background:#ffe49b;box-shadow:-8px 8px #ffe49b,0 13px #ffe49b;animation:cityLights 1.5s steps(2) infinite}
+.item[data-building="orbital"] .item-icon{animation:orbitalFloat 3.8s ease-in-out infinite}
+.item[data-building="megastructure"] .item-icon{animation:megaPulse 3s ease-in-out infinite}
+@keyframes paperFeed{to{transform:translateX(72px)}}
+@keyframes sparkFlicker{0%,100%{opacity:.15;transform:scale(.6) rotate(0)}50%{opacity:1;transform:scale(1.35) rotate(40deg)}}
+@keyframes crystalGlow{50%{filter:brightness(1.3) drop-shadow(0 0 8px #5ee6cf88)}}
+@keyframes labScan{0%{transform:translateY(0);opacity:.1}50%{opacity:1}100%{transform:translateY(26px);opacity:.1}}
+@keyframes cityLights{50%{opacity:.25}}
+@keyframes orbitalFloat{50%{transform:translateY(-4px) rotate(5deg)}}
+@keyframes megaPulse{50%{transform:scale(1.06);filter:drop-shadow(0 0 8px #b8a7ff88)}}
+.skin-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:14px}
+.skin-card{padding:12px;border:1px solid #ffffff12;border-radius:15px;background:#ffffff05;min-width:0}
+.skin-card.equipped{border-color:#e7c16b99;background:#d6a74412}
+.skin-card .skin-swatch{height:63px;border-radius:12px;margin-bottom:10px;display:grid;place-items:center;font-family:Georgia,serif;font-size:36px;font-weight:900;text-shadow:0 2px 4px #0006;box-shadow:inset 0 0 0 2px #ffffff33}
+.skin-card strong{display:block;font-size:12px;font-weight:400}
+.skin-card small{display:block;color:var(--muted);font-size:10px;line-height:1.5;margin:5px 0 9px;min-height:29px}
+.skin-card button{width:100%;min-height:34px}
+.skin-card.locked{opacity:.58}
+.rank-heading{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.rank-heading h2{font-size:16px;font-weight:400;margin:0}
+.rank-heading small{font-size:10px;color:var(--muted);display:block;margin-top:4px}
+.refresh-rank{border:1px solid #d6ad5540;background:#d6ad550d;color:#ecd59e;border-radius:9px;padding:8px 10px;font-size:10px;cursor:pointer}
+.rank-tabs{display:flex;gap:5px;margin:14px 0 8px}
+.rank-tab{flex:1;border:1px solid transparent;border-radius:9px;padding:8px 4px;background:#ffffff08;color:#9cabc2;font-size:10px;cursor:pointer}
+.rank-tab.active{border-color:#d6ad5555;background:#d6ad5518;color:#ffe6a6}
+.leaderboard-list{display:grid;gap:6px}
+.rank-row{display:grid;grid-template-columns:25px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px 9px;border-radius:10px;background:#ffffff06;border:1px solid #ffffff0a}
+.rank-no{font-size:11px;color:#b8c2d3;text-align:center}
+.rank-row:nth-child(1) .rank-no{color:#ffe79b}.rank-row:nth-child(2) .rank-no{color:#cbd8ec}.rank-row:nth-child(3) .rank-no{color:#e5ae85}
+.rank-player{font-size:10px;color:#e9e4d7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-value{font-size:10px;color:var(--gold2);white-space:nowrap;font-variant-numeric:tabular-nums}
+.personal-records{border-top:1px solid #ffffff12;margin-top:14px;padding-top:13px}
+.record-title{display:flex;justify-content:space-between;gap:8px;color:#d7c69f;font-size:10px;letter-spacing:.12em;margin-bottom:10px}
+.record-title span{color:#8291aa;letter-spacing:0}
+.record-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.record-grid>div{padding:9px;border:1px solid #ffffff0d;border-radius:10px;background:#ffffff04;min-width:0}
+.record-grid small{display:block;color:#8d9bb1;font-size:9px}
+.record-grid strong{display:block;margin-top:5px;color:#f3e7ca;font-size:12px;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(min-width:1100px){.bottom-grid{grid-template-columns:1fr 1fr 1.12fr}}
+@media(max-width:1099px){.bottom-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.leaderboard-panel{grid-column:1/-1}}
+@media(max-width:620px){.top-actions{gap:6px}.save-state{order:3;width:100%;justify-content:flex-end}.sound-toggle{font-size:10px}.skin-grid{gap:8px;padding:10px}.skin-card{padding:9px}.skin-swatch{height:54px}.leaderboard-panel{grid-column:auto}.bottom-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.item[data-building] .item-icon,.item[data-building] .item-icon:after{animation:none!important}.coin-button.is-hit .coin-face:after{animation:none}}
+
 @media(max-width:900px){.dashboard{grid-template-columns:1fr}.click-panel{min-height:470px}.side{display:grid;grid-template-columns:1fr}.bottom-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.shell{padding:14px 11px 42px}.topbar{margin-bottom:22px}.brand-mark{width:37px;height:37px}.brand-name{font-size:12px}.ghost{padding:9px 10px;font-size:11px}.hero{grid-template-columns:1fr;gap:8px}.hero p{font-size:12px}.save-state{font-size:10px}.click-panel{min-height:445px;padding:18px 13px;border-radius:19px}.balance{font-size:40px}.coin-button{width:min(61vw,220px);margin:18px 0 14px}.stats{gap:6px}.stat{padding:10px 7px}.stat strong{font-size:13px}.panel{border-radius:18px}.side-head{padding:17px 15px 0}.tabs{padding:12px 10px 0}.tab{font-size:11px;padding:9px 6px}.list{padding:10px}.item{grid-template-columns:38px minmax(0,1fr) auto;gap:8px;padding:10px}.item-icon{width:38px;height:38px}.buy{min-width:78px;padding:9px 7px;font-size:10px}.section-grid{padding:10px;gap:8px}.research{padding:11px}.bottom-grid{gap:12px}.info-panel{padding:16px}.golden{width:54px;height:54px;right:12px;top:12px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
@@ -112,16 +191,19 @@ h1{font-size:clamp(29px,5vw,48px);line-height:1.05;letter-spacing:-.04em;margin:
 <a class="brand" href="./index.html" aria-label="돌이 게임센터">
 <span class="brand-mark">R</span><span><span class="brand-name">ROCKEY CLICKER</span><span class="brand-sub">IDLE TYCOON EXPERIENCE</span></span>
 </a>
-<div class="top-actions"><span class="save-state"><i class="dot" id="saveDot"></i><span id="saveText">저장 준비 중</span></span><a class="ghost" href="./gamepage.html">게임센터</a><a class="ghost" href="./index.html">메인</a></div>
+<div class="top-actions"><button class="ghost sound-toggle" id="soundToggle" type="button" aria-pressed="true">♪ 소리 켜짐</button><span class="save-state"><i class="dot" id="saveDot"></i><span id="saveText">저장 준비 중</span></span><a class="ghost" href="./gamepage.html">게임센터</a><a class="ghost" href="./index.html">메인</a></div>
 </header>
 <section class="hero">
 <div><div class="eyebrow">BUILD YOUR EMPIRE · EST. 2026</div><h1>로키 제국을 건설하라.</h1><p>한 번의 클릭에서 시작해 거대한 자동화 제국까지. 지금 로키 코인을 모아봐!</p></div>
 </section>
 <section class="dashboard">
 <section class="panel click-panel" id="clickPanel">
+<canvas id="particleCanvas" class="particle-canvas" aria-hidden="true"></canvas>
 <div class="balance-label">ROCKEY COINS</div><div class="balance" id="balance">0</div><div class="rate" id="rate">초당 +0 코인</div>
 <button class="coin-button" id="coinButton" type="button" aria-label="로키 코인 클릭하여 획득"><span class="coin-face"><span class="coin-letter">R</span></span></button>
 <div class="coin-caption">TAP TO EARN</div><div class="click-hint" id="clickHint">클릭할 때마다 +1 코인</div>
+<div class="combo-box"><div class="combo-line"><span id="comboLabel">클릭 콤보를 시작해 보세요</span><strong id="comboValue">x1.00</strong></div><div class="combo-track"><i id="comboBar"></i></div></div>
+<div class="event-banner" id="eventBanner" aria-live="polite"><span class="event-icon">✦</span><span id="eventText">클릭할수록 깜짝 이벤트가 찾아옵니다.</span></div>
 <div class="stats">
 <div class="stat"><span>총 획득 코인</span><strong id="totalEarned">0</strong></div>
 <div class="stat"><span>누적 클릭</span><strong id="totalClicks">0</strong></div>
@@ -132,7 +214,7 @@ h1{font-size:clamp(29px,5vw,48px);line-height:1.05;letter-spacing:-.04em;margin:
 <div>
 <div class="side-head"><h2>성장 센터</h2><small id="multiplierLabel">생산 배율 ×1.00</small></div>
 <div class="tabs" role="tablist" aria-label="성장 메뉴">
-<button class="tab active" data-tab="buildings" role="tab">생산 시설</button><button class="tab" data-tab="click" role="tab">클릭 강화</button><button class="tab" data-tab="research" role="tab">연구소</button>
+<button class="tab active" data-tab="buildings" role="tab">생산 시설</button><button class="tab" data-tab="click" role="tab">클릭 강화</button><button class="tab" data-tab="research" role="tab">연구소</button><button class="tab" data-tab="skins" role="tab">코인 스킨</button><button class="tab" data-tab="legacy" role="tab">환생 연구</button>
 </div>
 <div id="upgradeContent"></div>
 </div>
@@ -143,6 +225,7 @@ h1{font-size:clamp(29px,5vw,48px);line-height:1.05;letter-spacing:-.04em;margin:
 <section class="bottom-grid">
 <section class="panel info-panel"><h2>🏆 로키 업적</h2><div class="achievement-list" id="achievementList"></div></section>
 <section class="panel info-panel"><h2>📊 제국 현황</h2><div id="questList"></div><div class="bonus" style="margin-top:14px"><div><strong>환생 시스템</strong><span id="prestigeHint">현재 런에서 10,000,000 코인을 모으면 환생 가능</span></div><button id="prestigeButton" disabled>환생 잠김</button></div></section>
+<section class="panel info-panel leaderboard-panel"><div class="rank-heading"><div><h2>🌐 글로벌 랭킹</h2><small id="rankSub">로그인 플레이어의 기록</small></div><button class="refresh-rank" id="refreshRank" type="button">↻ 새로고침</button></div><div class="rank-tabs"><button class="rank-tab active" data-rank="wealth">자산왕</button><button class="rank-tab" data-rank="clicks">클릭왕</button><button class="rank-tab" data-rank="prestige">환생왕</button></div><div id="leaderboardList" class="leaderboard-list"><div class="empty">랭킹을 불러오는 중입니다.</div></div><div class="personal-records"><div class="record-title">MY RECORDS <span id="recordSync">개인 기록</span></div><div class="record-grid"><div><small>누적 코인</small><strong id="recordCoins">0</strong></div><div><small>누적 클릭</small><strong id="recordClicks">0</strong></div><div><small>최고 콤보</small><strong id="recordCombo">0</strong></div><div><small>최고 클릭</small><strong id="recordHit">0</strong></div></div></div></section>
 </section>
 <p class="footer-note">게임 전용 로키 코인 · 돌돌코인 및 돌이사이트 EXP와 별도로 운영됩니다.<br>로그인 시 Supabase 계정에 저장되며, 비로그인 시 현재 브라우저에 저장됩니다.</p>
 </main>
@@ -179,19 +262,37 @@ const RESEARCH=[
  {id:"click",name:"클릭 알고리즘",desc:"클릭 수익 영구 +50%",icon:"🖱️",base:8500,max:10},
  {id:"offline",name:"오프라인 네트워크",desc:"오프라인 생산 효율 +5% (최대 95%)",icon:"🌙",base:18000,max:5}
 ];
-const fresh=()=>({coins:0,totalEarned:0,runEarned:0,totalClicks:0,buildings:{},clickUpgrades:{},research:{},crystals:0,prestigeCount:0,lastActiveAt:Date.now(),daily:{date:"",clicks:0,buildings:0,claimed:false},achievements:{},version:1});
+const SKINS=[
+ {id:"gold",name:"클래식 골드",desc:"로키 클릭커의 상징적인 황금 코인",threshold:0,prestige:0,colors:["#fff0bd","#c58d31"],icon:"✦"},
+ {id:"obsidian",name:"옵시디언",desc:"깊은 밤처럼 차분한 흑요석 코인",threshold:100000,prestige:0,colors:["#bac4d9","#202a40"],icon:"◆"},
+ {id:"aurora",name:"오로라",desc:"북극광을 닮은 몽환적인 빛",threshold:1000000,prestige:0,colors:["#d4fff7","#7467ba"],icon:"✧"},
+ {id:"doronium",name:"도로늄 코어",desc:"도로늄 에너지가 흐르는 희귀 코인",threshold:100000000,prestige:0,colors:["#d8fff1","#126b70"],icon:"⬡"},
+ {id:"prism",name:"프리즘",desc:"빛을 여러 색으로 분해하는 특별한 코인",threshold:10000000000,prestige:0,colors:["#fff0a9","#a78be1"],icon:"◇"},
+ {id:"royal",name:"로열 엠블럼",desc:"세 번의 환생을 증명하는 제국의 문장",threshold:0,prestige:3,colors:["#fff0ba","#7c2447"],icon:"♛"}
+];
+const LEGACY_RESEARCH=[
+ {id:"legacy_click",name:"영구 클릭 핵",desc:"클릭 수익 +20%",cost:1,requires:[],icon:"✦"},
+ {id:"legacy_factory",name:"자동화의 유산",desc:"자동 생산량 +25%",cost:2,requires:["legacy_click"],icon:"⚙️"},
+ {id:"legacy_combo",name:"콤보 각성",desc:"콤보 보너스가 더 빠르게 성장",cost:2,requires:["legacy_click"],icon:"⛓️"},
+ {id:"legacy_offline",name:"심야 생산망",desc:"오프라인 생산 효율 +5%p",cost:3,requires:["legacy_factory"],icon:"🌙"},
+ {id:"legacy_event",name:"행운 공명",desc:"깜짝 이벤트 보상 +30%",cost:3,requires:["legacy_combo"],icon:"☄️"},
+ {id:"legacy_transcend",name:"도로늄 초월",desc:"모든 수익 +35% 및 이벤트 보너스",cost:6,requires:["legacy_offline","legacy_event"],icon:"💠"}
+];
+const fresh=()=>({coins:0,totalEarned:0,runEarned:0,totalClicks:0,buildings:{},clickUpgrades:{},research:{},crystals:0,prestigeCount:0,bestRunEarned:0,bestCombo:0,highestClick:0,doroniumFragments:0,skinsOwned:["gold"],equippedSkin:"gold",prestigeResearch:{},soundEnabled:true,lastActiveAt:Date.now(),daily:{date:"",clicks:0,buildings:0,claimed:false},achievements:{},version:2});
 let state=fresh(),userId=null,activeTab="buildings",saveTimer=null,isSaving=false,goldenTimer=null,goldenVisible=false,toastTimer=null;
 const safeNum=(v,min=0,max=1e300)=>{const n=Number(v);return Number.isFinite(n)?Math.min(max,Math.max(min,n)):min};
-function normalize(raw){const base=fresh();if(!raw||typeof raw!=="object")return base;return {...base,...raw,coins:safeNum(raw.coins),totalEarned:safeNum(raw.totalEarned),runEarned:safeNum(raw.runEarned),totalClicks:safeNum(raw.totalClicks),crystals:safeNum(raw.crystals),prestigeCount:safeNum(raw.prestigeCount),buildings:raw.buildings&&typeof raw.buildings==="object"?raw.buildings:{},clickUpgrades:raw.clickUpgrades&&typeof raw.clickUpgrades==="object"?raw.clickUpgrades:{},research:raw.research&&typeof raw.research==="object"?raw.research:{},achievements:raw.achievements&&typeof raw.achievements==="object"?raw.achievements:{},daily:raw.daily&&typeof raw.daily==="object"?raw.daily:base.daily,lastActiveAt:safeNum(raw.lastActiveAt,0,Date.now())};}
+function normalize(raw){const base=fresh();if(!raw||typeof raw!=="object")return base;return {...base,...raw,coins:safeNum(raw.coins),totalEarned:safeNum(raw.totalEarned),runEarned:safeNum(raw.runEarned),totalClicks:safeNum(raw.totalClicks),crystals:safeNum(raw.crystals),prestigeCount:safeNum(raw.prestigeCount),bestRunEarned:safeNum(raw.bestRunEarned),bestCombo:safeNum(raw.bestCombo),highestClick:safeNum(raw.highestClick),doroniumFragments:safeNum(raw.doroniumFragments,0,9),buildings:raw.buildings&&typeof raw.buildings==="object"?raw.buildings:{},clickUpgrades:raw.clickUpgrades&&typeof raw.clickUpgrades==="object"?raw.clickUpgrades:{},research:raw.research&&typeof raw.research==="object"?raw.research:{},prestigeResearch:raw.prestigeResearch&&typeof raw.prestigeResearch==="object"?raw.prestigeResearch:{},skinsOwned:Array.isArray(raw.skinsOwned)?Array.from(new Set(["gold",...raw.skinsOwned])):["gold"],equippedSkin:typeof raw.equippedSkin==="string"?raw.equippedSkin:"gold",soundEnabled:raw.soundEnabled!==false,achievements:raw.achievements&&typeof raw.achievements==="object"?raw.achievements:{},daily:raw.daily&&typeof raw.daily==="object"?raw.daily:base.daily,lastActiveAt:safeNum(raw.lastActiveAt,0,Date.now())};}
 function fmt(n){n=safeNum(n);if(n<1000)return Math.floor(n).toLocaleString("ko-KR");const units=["","K","M","B","T","Qa","Qi","Sx","Sp","Oc","No","Dc"];let tier=Math.min(units.length-1,Math.floor(Math.log10(n)/3));let value=n/Math.pow(1000,tier);return value.toFixed(value>=100?0:value>=10?1:2)+units[tier];}
 function cost(base,level){return Math.floor(base*Math.pow(1.16,level));}
 function buildingCost(item){return Math.floor(item.base*Math.pow(1.17,safeNum(state.buildings[item.id])));}
 function clickCost(item){return Math.floor(item.base*Math.pow(1.19,safeNum(state.clickUpgrades[item.id])));}
 function researchCost(item){return Math.floor(item.base*Math.pow(2.15,safeNum(state.research[item.id])));}
-function prodMultiplier(){return (1+safeNum(state.research.prod)*.5)*(1+safeNum(state.crystals)*.1);}
-function clickMultiplier(){return (1+safeNum(state.research.click)*.5)*(1+safeNum(state.crystals)*.1);}
-function production(){return BUILDINGS.reduce((sum,b)=>sum+safeNum(state.buildings[b.id])*b.rate,0)*prodMultiplier();}
-function clickPower(){return (1+CLICK_UPGRADES.reduce((sum,u)=>sum+safeNum(state.clickUpgrades[u.id])*u.add,0))*clickMultiplier();}
+function legacyLevel(id){return safeNum(state.prestigeResearch?.[id]);}
+function prodMultiplier(){return (1+safeNum(state.research.prod)*.5)*(1+safeNum(state.crystals)*.1)*(1+legacyLevel("legacy_factory")*.25)*(1+legacyLevel("legacy_transcend")*.35);}
+function clickMultiplier(){return (1+safeNum(state.research.click)*.5)*(1+safeNum(state.crystals)*.1)*(1+legacyLevel("legacy_click")*.2)*(1+legacyLevel("legacy_transcend")*.35);}
+let eventProductionMultiplier=1,eventProductionUntil=0,eventClickMultiplier=1,eventClickUntil=0,luckyClicks=0;
+function production(){const boost=Date.now()<eventProductionUntil?eventProductionMultiplier:1;return BUILDINGS.reduce((sum,b)=>sum+safeNum(state.buildings[b.id])*b.rate,0)*prodMultiplier()*boost;}
+function clickPower(){const boost=Date.now()<eventClickUntil?eventClickMultiplier:1;return (1+CLICK_UPGRADES.reduce((sum,u)=>sum+safeNum(state.clickUpgrades[u.id])*u.add,0))*clickMultiplier()*boost;}
 function addCoins(amount){amount=safeNum(amount);if(!amount)return;state.coins+=amount;state.totalEarned+=amount;state.runEarned+=amount;}
 function dailyReset(){const date=new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul"}).format(new Date());if(state.daily?.date!==date)state.daily={date,clicks:0,buildings:0,claimed:false};}
 function toast(message){const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2300);}
