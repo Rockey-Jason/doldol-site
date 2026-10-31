@@ -397,12 +397,15 @@ export async function createGame(
 
   function setWeaponLocal(code: string, nextAmmo?: number, nextReserve?: number) {
     if (!WEAPONS[code]) return;
+    const previousCode=currentWeaponCode;
     currentWeaponCode = code;
     currentWeapon = WEAPONS[code];
     ammo = nextAmmo === undefined ? currentWeapon.magazine : Math.max(0,Math.min(currentWeapon.magazine,nextAmmo));
     reserve = nextReserve === undefined ? currentWeapon.reserve : Math.max(0,nextReserve);
     reloadAt = 0;
     rebuildGun(code);
+    switchAnimationStart=performance.now();
+    playSwitchSound(previousCode,code);
     updateHud(hp,ammo,reserve,currentWeapon.name);
   }
 
@@ -456,6 +459,56 @@ export async function createGame(
         osc.connect(gain);gain.connect(ctx.destination);osc.start(now+offset);osc.stop(now+offset+.07);
       });
     } catch { /* Audio is optional. */ }
+  }
+
+  function playSwitchSound(from:string,to:string) {
+    try {
+      const ctx=getAudioContext(),now=ctx.currentTime;
+      const osc=ctx.createOscillator(),gain=ctx.createGain();
+      osc.type=to==='DORI'?'sine':'triangle';
+      osc.frequency.setValueAtTime(from==='LONGSHOT'?420:620,now);
+      osc.frequency.exponentialRampToValueAtTime(to==='DORI'?260:980,now+.16);
+      gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.075,now+.012);gain.gain.exponentialRampToValueAtTime(.0001,now+.19);
+      osc.connect(gain);gain.connect(ctx.destination);osc.start(now);osc.stop(now+.2);
+    } catch { /* Audio is optional. */ }
+  }
+  function playMeleeSound() {
+    try {
+      const ctx=getAudioContext(),now=ctx.currentTime;
+      const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='triangle';
+      osc.frequency.setValueAtTime(190,now);osc.frequency.exponentialRampToValueAtTime(72,now+.18);
+      gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.19,now+.008);gain.gain.exponentialRampToValueAtTime(.0001,now+.2);
+      osc.connect(gain);gain.connect(ctx.destination);osc.start(now);osc.stop(now+.21);
+    } catch { /* Audio is optional. */ }
+  }
+  function spawnProjectile(origin:THREE.Vector3,direction:THREE.Vector3,code:string,range:number) {
+    const color=projectileColors[code]||0xffffff;
+    const mesh=new THREE.Mesh(new THREE.SphereGeometry(.045,8,6),new THREE.MeshBasicMaterial({color,toneMapped:false}));
+    const start=origin.clone().addScaledVector(direction,.5);mesh.position.copy(start);scene.add(mesh);
+    const trail=new THREE.Line(new THREE.BufferGeometry().setFromPoints([start.clone().addScaledVector(direction,-.55),start]),new THREE.LineBasicMaterial({color,transparent:true,opacity:.78,toneMapped:false}));
+    scene.add(trail);projectiles.push({mesh,trail,direction:direction.clone().normalize(),travelled:0,maxDistance:range,age:0});
+  }
+  function showDamageAt(position:THREE.Vector3,damage:number,headshot:boolean) {
+    const label=document.createElement('canvas');label.width=256;label.height=112;
+    const ctx=label.getContext('2d');if(!ctx)return;
+    ctx.font='bold 46px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.lineWidth=8;ctx.strokeStyle='rgba(10,18,30,.88)';ctx.strokeText((headshot?'HEADSHOT  ':'')+damage,128,56);
+    ctx.fillStyle=headshot?'#ffe08a':'#ffffff';ctx.fillText((headshot?'HEADSHOT  ':'')+damage,128,56);
+    const texture=new THREE.CanvasTexture(label);texture.colorSpace=THREE.SRGBColorSpace;
+    const material=new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false});
+    const sprite=new THREE.Sprite(material);sprite.position.copy(position).add(new THREE.Vector3(.78,1.55,0));sprite.scale.set(1.45,.64,1);
+    sprite.userData.startedAt=performance.now();sprite.userData.baseY=sprite.position.y;
+    scene.add(sprite);damagePopups.push(sprite);
+  }
+  function showDamageOnTarget(targetId:string,targetName:string,damage:number,headshot:boolean) {
+    const target=remotes.get(targetId)||[...remotes.values()].find(mesh=>mesh.userData.playerName===targetName);
+    if(target)showDamageAt(target.position.clone(),damage,headshot);
+  }
+  function showShot(x:number,y:number,z:number,shotYaw:number,shotPitch:number,weaponCode:string) {
+    if(weaponCode==='DORI')return;
+    const cp=Math.cos(shotPitch);
+    const direction=new THREE.Vector3(-Math.sin(shotYaw)*cp,Math.sin(shotPitch),-Math.cos(shotYaw)*cp).normalize();
+    spawnProjectile(new THREE.Vector3(x,y,z),direction,weaponCode,WEAPONS[weaponCode]?.range||70);
   }
 
   function stopMobileFire() {
