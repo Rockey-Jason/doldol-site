@@ -420,6 +420,17 @@ export async function createGame(
   const raycaster = new THREE.Raycaster();
   const keys = new Set<string>();
   const touch = { forward: 0, right: 0, jump: false };
+  let precisionAiming = false;
+  const normalFov = camera.fov;
+  const precisionFov = 46;
+  function setPrecisionAiming(enabled:boolean) {
+    if (precisionAiming === enabled) return;
+    precisionAiming = enabled;
+    document.body.classList.toggle('precision-aiming', enabled);
+    const button=document.getElementById('mobileAim');
+    button?.classList.toggle('active',enabled);
+    button?.setAttribute('aria-pressed',String(enabled));
+  }
   let yaw = 0;
   let pitch = 0;
   let vertical = 0;
@@ -781,6 +792,7 @@ export async function createGame(
     if (document.pointerLockElement === canvas) look(event.movementX, event.movementY);
   }
   function pointerDown(event: PointerEvent) {
+    if (event.pointerType === 'mouse' && event.button === 2) { event.preventDefault(); setPrecisionAiming(true); }
     if (event.pointerType === 'mouse' && event.button === 0) fire();
     if (event.pointerType === 'touch') {
       lookPointerId = event.pointerId;
@@ -799,6 +811,7 @@ export async function createGame(
     element.ly = event.clientY;
   }
   function pointerLookEnd(event: PointerEvent) {
+    if (event.pointerType === 'mouse' && event.button === 2) setPrecisionAiming(false);
     if (event.pointerId !== lookPointerId) return;
     lookPointerId = null;
     const element = canvas as HTMLCanvasElement & { lx?: number; ly?: number };
@@ -822,6 +835,9 @@ export async function createGame(
   window.addEventListener('keydown', keyDown);
   window.addEventListener('keyup', keyUp);
   window.addEventListener('mousemove', pointerMove);
+  window.addEventListener('pointerup', event => { if(event.pointerType==='mouse'&&event.button===2)setPrecisionAiming(false); });
+  window.addEventListener('blur', () => setPrecisionAiming(false));
+  document.addEventListener('contextmenu', event => { if(event.target===canvas)event.preventDefault(); });
   canvas.addEventListener('click', clickCanvas);
   canvas.addEventListener('pointerdown', pointerDown);
   canvas.addEventListener('pointermove', pointerDrag);
@@ -877,6 +893,12 @@ export async function createGame(
   pad?.addEventListener('pointerup', event => { if(event.pointerId===movePointerId)resetPad(); });
   pad?.addEventListener('pointercancel', event => { if(event.pointerId===movePointerId)resetPad(); });
   pad?.addEventListener('lostpointercapture', event => { if(event.pointerId===movePointerId)resetPad(); });
+  const mobileAim = document.getElementById('mobileAim');
+  const stopMobileAim = () => setPrecisionAiming(false);
+  mobileAim?.addEventListener('pointerdown',event=>{event.preventDefault();mobileAim.setPointerCapture(event.pointerId);setPrecisionAiming(true);});
+  mobileAim?.addEventListener('pointerup',stopMobileAim);
+  mobileAim?.addEventListener('pointercancel',stopMobileAim);
+  mobileAim?.addEventListener('lostpointercapture',stopMobileAim);
   const mobileFire = document.getElementById('mobileFire');
   mobileFire?.addEventListener('pointerdown', event => {
     event.preventDefault();
@@ -954,6 +976,9 @@ export async function createGame(
     }
     const dt = Math.min((now - previous) / 1000, 0.05);
     previous = now;
+    const targetFov=precisionAiming?precisionFov:normalFov;
+    const nextFov=THREE.MathUtils.damp(camera.fov,targetFov,12,dt);
+    if(Math.abs(nextFov-camera.fov)>.04){camera.fov=nextFov;camera.updateProjectionMatrix();}
     const remoteBlend=1-Math.exp(-18*dt);
     gunKick*=Math.exp(-17*dt);
     movementAmount*=Math.exp(-9*dt);
@@ -1094,7 +1119,7 @@ export async function createGame(
       const movementTarget=Math.min(1,direction.length());
       movementAmount+=(movementTarget-movementAmount)*(1-Math.exp(-12*dt));
       const baseSpeed=keys.has('ShiftLeft')||keys.has('ShiftRight')?7.1:5.4;
-      const speed=baseSpeed*(now<energyUntil?2:1);
+      const speed=baseSpeed*(now<energyUntil?2:1)*(precisionAiming?0.5:1);
       if (controller.computedGrounded() && vertical < 0) vertical = -1;
       if (touch.jump && controller.computedGrounded()) {
         vertical = 7.2;
@@ -1143,6 +1168,7 @@ export async function createGame(
           forward: THREE.MathUtils.clamp(forward, -1, 1),
           right: THREE.MathUtils.clamp(right, -1, 1),
           sprint: keys.has('ShiftLeft') || keys.has('ShiftRight'),
+          aim: precisionAiming,
           jump: jumpPending,
           yaw, pitch
         });
@@ -1179,6 +1205,8 @@ export async function createGame(
       doriSwingStart=0;
       gunKick=0;
       movementAmount=0;
+      setPrecisionAiming(false);
+      camera.fov=normalFov;camera.updateProjectionMatrix();
       hp = 100; ammo = currentWeapon.magazine; reserve = currentWeapon.reserve; vertical = 0;
       if (mode === 'practice') {
         for (const target of practiceTargets) {
@@ -1272,6 +1300,7 @@ export async function createGame(
     },
     toggleCamera,
     dispose() {
+      setPrecisionAiming(false);
       disposed = true;
       killcamComplete = null;
       replayFrames = null;
