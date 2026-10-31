@@ -54,16 +54,6 @@ export async function createGame(
   const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 760;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(map.background);
-  // A compact prefiltered room probe gives metal, glass and armour readable
-  // environment reflections without a per-frame reflection pass.
-  let reflectionEnvironment:THREE.Texture|null=null;
-  if(!isMobile){
-    const pmrem=new THREE.PMREMGenerator(new THREE.WebGLRenderer({canvas:document.createElement('canvas'),alpha:true}));
-    const room=new RoomEnvironment();
-    reflectionEnvironment=pmrem.fromScene(room,.04).texture;
-    scene.environment=reflectionEnvironment;
-    pmrem.dispose();room.dispose();
-  }
   scene.fog = new THREE.Fog(map.fog, 54, 158);
 
   const camera = new THREE.PerspectiveCamera(78, 1, 0.08, 180);
@@ -72,6 +62,15 @@ export async function createGame(
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.08;
+  // Pre-filtered environment probe adds stable reflections to metal, glass and armour.
+  let reflectionEnvironment:THREE.Texture|null=null;
+  if(!isMobile){
+    const pmrem=new THREE.PMREMGenerator(renderer);
+    const room=new RoomEnvironment();
+    reflectionEnvironment=pmrem.fromScene(room,.04).texture;
+    scene.environment=reflectionEnvironment;
+    pmrem.dispose();room.dispose();
+  }
   renderer.shadowMap.enabled = !isMobile;
   renderer.shadowMap.type = THREE.PCFShadowMap;
 
