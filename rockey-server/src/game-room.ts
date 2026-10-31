@@ -37,7 +37,7 @@ interface PlayerState {
   sequence: number; lastFire: number; lastInput: number;
   weaponCode: string; secondaryWeapon: string;
   itemCode:RockeyItemCode;itemCount:number;itemInventory:Record<RockeyItemCode,number>;lastItemUse:number;energyUntil:number;
-  ammo: number; reserve: number; reloadUntil: number;
+  ammo: number; reserve: number; reloadUntil: number; reloadToken:number; reloadTimer:NodeJS.Timeout|null;
   weaponAmmo: Record<string,{ammo:number;reserve:number}>;
   alive: boolean; connected: boolean; disconnectedAt: number | null;
   suspiciousInputs: number; weaponKills: Record<string, number>;
@@ -59,6 +59,8 @@ export class GameRoom {
   private persistedMatchId: string | null = null;
   private players: PlayerState[];
   private smokeVolumes:Array<{x:number;y:number;z:number;radius:number;expiresAt:number}>=[];
+  private worldDestruction:Array<{id:string;x:number;y:number;z:number;radius:number}>=[];
+  private nextDestructionId=1;
   private spectators = new Set<PlayerClient>();
   private score = [0,0];
   private startedAt = Date.now();
@@ -103,7 +105,7 @@ export class GameRoom {
           [weaponCode]:{ammo:weapon.magazine,reserve:weapon.reserve},
           [secondaryWeapon]:{ammo:secondaryDefinition.magazine,reserve:secondaryDefinition.reserve}
         },
-        reloadUntil:0,alive:true,connected:true,disconnectedAt:null,
+        reloadUntil:0,reloadToken:0,reloadTimer:null,alive:true,connected:true,disconnectedAt:null,
         suspiciousInputs:0,weaponKills:{}
       };
     });
@@ -229,7 +231,8 @@ export class GameRoom {
       type:'match.spectating',roomId:this.id,matchId:this.persistedMatchId,
       mode:this.mode,mapId:this.mapId,mapName:MAPS[this.mapId].name
     });
-    send(client,{type:'snapshot',players:this.snapshots()});
+    send(client,{type:'snapshot',serverTime:Date.now(),players:this.snapshots()});
+    send(client,{type:'world.state',destruction:this.worldDestruction});
     send(client,{type:'round.update',team0:this.score[0],team1:this.score[1],round:this.round});
   }
 
@@ -258,7 +261,7 @@ export class GameRoom {
       mapId:this.mapId,mapName:MAPS[this.mapId].name,
       weaponCode:p.weaponCode,secondaryWeapon:p.secondaryWeapon,itemCode:p.itemCode,itemCount:p.itemCount,itemInventory:p.itemInventory,
       ammo:p.ammo,reserve:p.reserve,health:p.health,weapon,
-      score:this.score,round:this.round
+      worldDestruction:this.worldDestruction,score:this.score,round:this.round
     });
     this.broadcast({type:'player.reconnected',playerId:client.player.id,name:client.player.name});
     send(client,{type:'snapshot',players:this.snapshots()});
@@ -323,10 +326,12 @@ export class GameRoom {
       p.reserve<=0 || Date.now()<p.reloadUntil) return;
     const weapon=WEAPONS[p.weaponCode];
     p.reloadUntil=Date.now()+weapon.reloadMs;
-    setTimeout(()=>{
-      if(this.finished || !p.connected) return;
+    const token=++p.reloadToken;
+    if(p.reloadTimer)clearTimeout(p.reloadTimer);
+    p.reloadTimer=setTimeout(()=>{
+      if(this.finished||p.reloadToken!==token||p.weaponCode!==weapon.code)return;
       const amount=Math.min(weapon.magazine-p.ammo,p.reserve);
-      p.ammo+=amount;p.reserve-=amount;p.reloadUntil=0;
+      p.ammo+=amount;p.reserve-=amount;p.reloadUntil=0;p.reloadTimer=null;
       p.weaponAmmo[p.weaponCode]={ammo:p.ammo,reserve:p.reserve};
       if(p.connected)send(p.client,{type:'ammo.update',ammo:p.ammo,reserve:p.reserve,weaponCode:p.weaponCode});
     },weapon.reloadMs);
@@ -334,7 +339,11 @@ export class GameRoom {
 
   handleSwitchWeapon(client:PlayerClient) {
     const p=this.players.find(item=>item.client===client);
-    if(!p || this.finished || Date.now()<p.reloadUntil) return;
+    if(!p || this.finished) return;
+    // Weapon switching is a valid reload-cancel action. Incomplete reloads
+    // do not transfer ammunition; the old magazine remains unchanged.
+    if(p.reloadTimer){clearTimeout(p.reloadTimer);p.reloadTimer=null;}
+    p.reloadToken++;p.reloadUntil=0;
     p.weaponAmmo[p.weaponCode]={ammo:p.ammo,reserve:p.reserve};
     const primary=p.client.selectedPrimaryWeapon||p.client.primaryWeapon;
     const next=p.weaponCode===primary?p.secondaryWeapon:primary;
@@ -403,7 +412,10 @@ export class GameRoom {
     setTimeout(()=>{
       if(this.finished)return;
       if(itemCode==='GRENADE'){
-        this.broadcast({type:'item.effect',effect:'GRENADE',x,y,z,radius:6,durationMs:520});
+        const destruction={id:this.id+':'+this.nextDestructionId++,x,y,z,radius:6};
+        this.worldDestruction.push(destruction);
+        if(this.worldDestruction.length>240)this.worldDestruction.shift();
+        this.broadcast({type:'item.effect',effect:'GRENADE',x,y,z,radius:6,durationMs:520,eventId:destruction.id});
         for(const target of this.players.filter(v=>v.alive&&v.connected&&v.team!==p.team)){
           const distance=Math.hypot(target.x-x,target.z-z,(target.y+.5)-y);if(distance<7)this.applyDamage(p,target,Math.max(1,Math.round(82*(1-distance/7))),'GRENADE',false,Date.now());
         }
@@ -438,7 +450,6 @@ export class GameRoom {
       shooter.weaponAmmo[shooter.weaponCode]={ammo:shooter.ammo,reserve:shooter.reserve};
       send(client,{type:'ammo.update',ammo:shooter.ammo,reserve:shooter.reserve,weaponCode:shooter.weaponCode});
     }
-    if(weapon.category!=='MELEE')this.broadcast({type:'weapon.shot',shooterId:client.player.id,x:shooter.x,y:shooter.y+0.55,z:shooter.z,yaw:shooter.yaw,pitch:shooter.pitch,weaponCode:weapon.code});
     const arenaWalls=[
       {x:0,z:-29.4,hx:30,hz:0.6,top:4.4},{x:0,z:29.4,hx:30,hz:0.6,top:4.4},
       {x:-29.4,z:0,hx:0.6,hz:30,top:4.4},{x:29.4,z:0,hx:0.6,hz:30,top:4.4}
@@ -449,6 +460,12 @@ export class GameRoom {
     const target=trace.target as PlayerState|null;
     const best=trace.distance;
     const headshot=trace.headshot;
+    if(weapon.category!=='MELEE')this.broadcast({
+      type:'weapon.shot',shotId:client.player.id+':'+String(message.sequence??now),
+      shooterId:client.player.id,x:shooter.x,y:shooter.y+0.55,z:shooter.z,
+      yaw:shooter.yaw,pitch:shooter.pitch,weaponCode:weapon.code,
+      hit:!!target,targetId:target?.client.player.id??null,headshot,distance:target?best:null
+    });
     // Server-authoritative recoil: apply after the shot ray is evaluated, then sync the new aim to the shooter.
     const recoil=calculateWeaponRecoil(weapon);
     shooter.pitch=Math.max(-1.3,Math.min(1.3,shooter.pitch+recoil));
