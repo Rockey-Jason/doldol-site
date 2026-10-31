@@ -278,7 +278,10 @@ socket.onMessage((message:GameMessage)=>{
       game?.setHealth(Number(message.health));
       break;
     case 'ammo.update':
-      game?.setAmmo(Number(message.ammo),Number(message.reserve));
+      // Ignore delayed ammo packets belonging to the weapon that was just put away.
+      if(!message.weaponCode || String(message.weaponCode)===activeWeapon){
+        game?.setAmmo(Number(message.ammo),Number(message.reserve));
+      }
       break;
     case 'weapon.update':
       activeWeapon=String(message.weaponCode||activeWeapon);
