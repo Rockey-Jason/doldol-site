@@ -598,13 +598,13 @@ export async function createGame(
   const raycaster = new THREE.Raycaster();
   const downDirection=new THREE.Vector3(0,-1,0);
   const footRayOrigin=new THREE.Vector3();
-  const sampleGroundHeight=(x:number,z:number,footY:number)=>{
+  const sampleGroundHeight=(x:number,z:number,footY:number):number|null=>{
     footRayOrigin.set(x,footY+1.0,z);
     raycaster.set(footRayOrigin,downDirection);
     raycaster.near=0;raycaster.far=2.35;
     const hits=raycaster.intersectObjects(raycastMeshes,false);
     const hit=hits.find(value=>value.point.y<=footY+.28&&value.point.y>=footY-.72);
-    return hit?.point.y??0;
+    return hit?.point.y??null;
   };
   const keys = new Set<string>();
   const touch = { forward: 0, right: 0, jump: false };
