@@ -870,7 +870,7 @@ export async function createGame(
     const limit=isMobile?54:120;
     while(physicalDebris.length+count>limit){
       const oldest=physicalDebris.shift();
-      if(oldest){scene.remove(oldest.mesh);world.removeRigidBody(oldest.body);(oldest.mesh.material as THREE.Material).dispose();}
+      if(oldest){scene.remove(oldest.mesh);world.removeRigidBody(oldest.body);(oldest.mesh.material as THREE.Material).dispose();if(oldest.mesh.geometry!==physicalDebrisGeometry)oldest.mesh.geometry.dispose();}
     }
     for(let i=0;i<count;i++){
       const size=.12+Math.random()*.24;
@@ -891,7 +891,7 @@ export async function createGame(
       const piece=physicalDebris[i];piece.age+=dt;
       const p=piece.body.translation(),q=piece.body.rotation();
       piece.mesh.position.set(p.x,p.y,p.z);piece.mesh.quaternion.set(q.x,q.y,q.z,q.w);
-      if(piece.age>=piece.life){scene.remove(piece.mesh);world.removeRigidBody(piece.body);(piece.mesh.material as THREE.Material).dispose();physicalDebris.splice(i,1);}
+      if(piece.age>=piece.life){scene.remove(piece.mesh);world.removeRigidBody(piece.body);(piece.mesh.material as THREE.Material).dispose();if(piece.mesh.geometry!==physicalDebrisGeometry)piece.mesh.geometry.dispose();physicalDebris.splice(i,1);}
     }
   }
   function smokeDensityAlongRay(start:THREE.Vector3,end:THREE.Vector3){
@@ -1455,12 +1455,13 @@ export async function createGame(
       const sortedFrames=[...frameTimeSamples].sort((a,b)=>a-b);
       const p99Frame=sortedFrames[Math.min(sortedFrames.length-1,Math.ceil(sortedFrames.length*.99)-1)]||measuredFrame;
       const onePercentLow=Math.round(1000/Math.max(1,p99Frame));
+      if(onePercentLow<target*.55&&adaptivePixelRatio>minPixelRatio){adaptivePixelRatio=Math.max(minPixelRatio,adaptivePixelRatio-.08);renderer.setPixelRatio(adaptivePixelRatio);resize();}
       const memory=(performance as Performance&{memory?:{usedJSHeapSize:number;jsHeapSizeLimit:number}}).memory;
       const memoryMb=memory?Math.round(memory.usedJSHeapSize/1048576):null;
       const memoryLimitMb=memory?Math.round(memory.jsHeapSizeLimit/1048576):null;
       const memoryPressure=!!memory&&memory.jsHeapSizeLimit>0&&memory.usedJSHeapSize/memory.jsHeapSizeLimit>.82;
       const deviceMemory=(navigator as Navigator&{deviceMemory?:number}).deviceMemory??null;
-      const stressed=measuredFps<target-5||measuredFrame>21||memoryPressure;
+      const stressed=measuredFps<target-5||onePercentLow<target*.55||measuredFrame>21||memoryPressure;
       if(stressed){
         bloomPass.strength=Math.max(isMobile ? .035 : .08,bloomPass.strength-.035);
         if(measuredFps<target-8||measuredFrame>25)renderer.shadowMap.enabled=false;
