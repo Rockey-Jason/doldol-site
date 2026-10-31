@@ -49,25 +49,37 @@ export async function createGame(
   const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 760;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(map.background);
-  scene.fog = new THREE.Fog(map.fog, 48, 145);
+  scene.fog = new THREE.Fog(map.fog, 54, 158);
 
   const camera = new THREE.PerspectiveCamera(78, 1, 0.08, 180);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.15 : 1.6));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.8));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.15;
+  renderer.toneMappingExposure = 1.08;
   renderer.shadowMap.enabled = !isMobile;
-  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.type = THREE.PCFShadowMap;
 
-  scene.add(new THREE.HemisphereLight(0xe5f5ff, 0x526579, 2.35));
-  scene.add(new THREE.AmbientLight(0xffffff, 0.42));
-  const sun = new THREE.DirectionalLight(0xfff1d8, 3.1);
+  // Cinematic three-point lighting: soft sky fill, warm key light and a cool rim.
+  scene.add(new THREE.HemisphereLight(0xd9efff, 0x27364d, 2.05));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.28));
+  const sun = new THREE.DirectionalLight(0xffe8c7, 2.7);
   sun.position.set(-15, 25, 12);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.mapSize.set(isMobile ? 512 : 1536, isMobile ? 512 : 1536);
+  sun.shadow.camera.left = -34;
+  sun.shadow.camera.right = 34;
+  sun.shadow.camera.top = 34;
+  sun.shadow.camera.bottom = -34;
+  sun.shadow.camera.near = 1;
+  sun.shadow.camera.far = 72;
+  sun.shadow.bias = -0.00018;
+  sun.shadow.normalBias = 0.025;
   scene.add(sun);
-  const blue = new THREE.PointLight(map.light, 70, 55);
+  const rim = new THREE.DirectionalLight(map.light, 1.15);
+  rim.position.set(18, 10, -18);
+  scene.add(rim);
+  const blue = new THREE.PointLight(map.light, 52, 48, 2);
   blue.position.set(0, 5, 0);
   scene.add(blue);
 
@@ -164,12 +176,12 @@ export async function createGame(
       code === 'BASTION' ? 0xffc45f : code === 'NOVA' ? 0xff748e :
       code === 'ARC' ? 0x57efff : code === 'PULSE' ? 0xbe8cff : map.light
     );
-    const metal = new THREE.MeshStandardMaterial({
+    const metal = new THREE.MeshPhysicalMaterial({
       color: code === 'R16' ? 0x254b75 : code === 'R9' ? 0x65522c : code === 'VIPER' ? 0x204b3c :
         code === 'THUNDER' ? 0x61422d : code === 'LONGSHOT' ? 0x263c53 : code === 'HELIX' ? 0x44305f :
         code === 'BASTION' ? 0x4b4528 : code === 'NOVA' ? 0x542b3c : code === 'ARC' ? 0x204c58 :
         code === 'PULSE' ? 0x3b2b60 : 0x1c2d46,
-      metalness: 0.88, roughness: 0.24
+      metalness: 0.82, roughness: 0.29, clearcoat: 0.32, clearcoatRoughness: 0.24
     });
     const glowPart = new THREE.MeshStandardMaterial({
       color: accent, emissive: accent, emissiveIntensity: 1.7,
@@ -366,6 +378,25 @@ export async function createGame(
       chamber.position.set(0.24,-0.2,-0.25);
       gun.add(chamber);
     }
+
+    // Precision-machined weapon finish: raised top rail, side plates and vent cuts.
+    // These shared visual motifs make the procedural weapons read as manufactured objects.
+    const railY = shotgun || lmg ? -0.075 : -0.055;
+    addBox(0.24,railY,-0.43,bodyWidth*0.34,0.026,bodyLength*0.72,dark);
+    addBox(0.24,railY+0.018,-0.43,bodyWidth*0.22,0.012,bodyLength*0.58,glowPart);
+    addBox(0.24-bodyWidth*0.49,-0.235,-0.39,0.018,0.105,bodyLength*0.54,dark);
+    addBox(0.24+bodyWidth*0.49,-0.235,-0.39,0.018,0.105,bodyLength*0.54,dark);
+    for(let vent=0;vent<3;vent++){
+      addBox(0.24+bodyWidth*0.505,-0.205,-0.31+vent*0.075,0.008,0.018,0.035,glowPart);
+    }
+    const receiverPin = new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.018,0.012,12),glowPart);
+    receiverPin.rotation.z=Math.PI/2;
+    receiverPin.position.set(0.24-bodyWidth*0.53,-0.285,-0.22);
+    gun.add(receiverPin);
+    const muzzleCollar = new THREE.Mesh(new THREE.TorusGeometry(0.057,0.009,6,20),dark);
+    muzzleCollar.position.copy(muzzleFlash.position);
+    muzzleCollar.position.z += 0.075;
+    gun.add(muzzleCollar);
 
     // Clear-aperture optic: only thin rings and a reticle are rendered.
     // No glass disks or capped cylinders sit in the sight line, so the world
