@@ -1785,7 +1785,7 @@ export async function createGame(
       const animatePose=mesh.userData.animatePose;
       if(typeof animatePose==='function')animatePose(remoteMotion,time,0,0,remoteVertical,data.dead===true,remoteMotion>.72,Math.abs(remoteVertical)<.65,data.aim===true?1:0);
       const remoteFootIK=mesh.userData.updateFootIK;
-      if(typeof remoteFootIK==='function')remoteFootIK(sampleGroundHeight);
+      if(typeof remoteFootIK==='function')remoteFootIK(sampleGroundHeight,Math.abs(remoteVertical)<.65);
       const smokeBlock=smokeDensityAlongRay(camera.position,mesh.position.clone().add(new THREE.Vector3(0,1.02,0)));
       const deathExpired=data.dead===true&&now-Number(data.deadAt||now)>1350;
       mesh.visible=data.baseVisible===true&&!deathExpired&&smokeBlock<.72;
@@ -1880,7 +1880,7 @@ export async function createGame(
       avatar.position.set(p.x, p.y - .92, p.z);
       avatar.rotation.y = yaw;
       avatarRig.animate(movementAmount,time,reloadWave,fireWave,vertical,hp<=0,keys.has('ShiftLeft')||keys.has('ShiftRight')?1:0,controller.computedGrounded(),aimBlend);
-      avatarRig.updateFootIK(sampleGroundHeight);
+      avatarRig.updateFootIK(sampleGroundHeight,controller.computedGrounded());
       const gaitBob=Math.sin(time*(keys.has('ShiftLeft')||keys.has('ShiftRight')?13.2:10.2))*movementAmount*(precisionAiming?.008:.022);
       const eye = p.clone().add(new THREE.Vector3(0, 0.58+gaitBob-landingKick, 0));
       if (cameraMode === 'first') {
