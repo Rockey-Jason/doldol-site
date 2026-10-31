@@ -956,7 +956,9 @@ export async function createGame(
     const velocity=right.clone().multiplyScalar(1.45+Math.random()*.8).addScaledVector(up,.9+Math.random()*.75).add(new THREE.Vector3((Math.random()-.5)*.5,.15,(Math.random()-.5)*.5));
     shellVisuals.push({mesh,velocity,spin:new THREE.Vector3(7+Math.random()*7,5+Math.random()*6,8+Math.random()*8),age:0});
   }
-  function spawnGlassShards(position:THREE.Vector3,count:number,impulse:number){
+  function spawnGlassShards(position:THREE.Vector3,count:number,impulse:number,seed='glass'){
+    let randomState=Array.from(seed).reduce((value,char)=>(Math.imul(value^char.charCodeAt(0),16777619)>>>0),2166136261);
+    const random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296;};
     const total=isMobile?Math.min(5,count):Math.min(12,count);
     for(let i=0;i<total;i++){
       const size=.09+Math.random()*.19;
@@ -987,7 +989,7 @@ export async function createGame(
     if(eventId&&appliedDestructionIds.has(eventId))return;
     if(eventId){appliedDestructionIds.add(eventId);if(appliedDestructionIds.size>500)appliedDestructionIds.delete(appliedDestructionIds.values().next().value as string);}
     tacticalLevel.destroyNear(position,radius,(p,count,impulse,kind)=>{
-      if(kind==='glass')spawnGlassShards(p,count,impulse);
+      if(kind==='glass')spawnGlassShards(p,count,impulse,eventId||'glass');
       else if(kind==='light'){spawnLightBreakFx(p);spawnPhysicalDebris(p,count,impulse);}
       else{spawnDebrisFx(p,count,impulse);spawnPhysicalDebris(p,count,impulse);}
     });
@@ -1857,6 +1859,7 @@ export async function createGame(
         const offset = new THREE.Vector3(0.7, 1.1, 3.8).applyAxisAngle(new THREE.Vector3(0, 1, 0), yaw);
         const desired = p.clone().add(offset);
         raycaster.set(eye, desired.clone().sub(eye).normalize());
+        raycaster.near=0;raycaster.far=eye.distanceTo(desired);
         const hits = raycaster.intersectObjects(raycastMeshes, false);
         if (hits.length && hits[0].distance < eye.distanceTo(desired)) {
           const dir = desired.clone().sub(eye).normalize();
