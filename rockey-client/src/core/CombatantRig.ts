@@ -187,6 +187,7 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
   let wasGrounded=true;
   let landingUntil=0;
   const footRestY=legs.map(leg=>leg.foot.position.y);
+  const footWorldScratch=new THREE.Vector3();
   const animate=(movement:number,time:number,action=0,recoil=0,vertical=0,dead=false,sprint=0,grounded=true,aim=0)=>{
     const move=THREE.MathUtils.clamp(movement,0,1);
     const runBlend=THREE.MathUtils.clamp(sprint,0,1)*move;
@@ -238,9 +239,9 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
     legs.forEach((leg,index)=>{
       leg.foot.position.y=footRestY[index];
       group.updateMatrixWorld(true);
-      const worldFoot=new THREE.Vector3();leg.foot.getWorldPosition(worldFoot);
-      const ground=sampleGround(worldFoot.x,worldFoot.z,worldFoot.y);
-      const soleY=worldFoot.y-.12;
+      leg.foot.getWorldPosition(footWorldScratch);
+      const ground=sampleGround(footWorldScratch.x,footWorldScratch.z,footWorldScratch.y);
+      const soleY=footWorldScratch.y-.12;
       const correction=THREE.MathUtils.clamp(ground-soleY,-.22,.22);
       leg.foot.position.y=footRestY[index]+correction;
       leg.knee.rotation.x+=THREE.MathUtils.clamp(-correction*1.05,-.18,.18);
