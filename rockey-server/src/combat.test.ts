@@ -12,7 +12,8 @@ test('all ten weapon definitions have valid combat tuning',()=>{
     assert.ok(weapon.fireInterval>0,weapon.code+' fire interval');
     assert.ok(weapon.reloadMs>0,weapon.code+' reload duration');
     assert.ok(weapon.range>0,weapon.code+' range');
-    assert.ok(calculateWeaponRecoil(weapon)>0 && calculateWeaponRecoil(weapon)<=.045,weapon.code+' recoil');
+    if(weapon.category==='MELEE')assert.equal(calculateWeaponRecoil(weapon),0,weapon.code+' melee recoil');
+    else assert.ok(calculateWeaponRecoil(weapon)>0 && calculateWeaponRecoil(weapon)<=.045,weapon.code+' recoil');
     assert.ok(calculateWeaponDamage(weapon,false,weapon.range/2)>=weapon.damage,weapon.code+' body damage');
     assert.ok(calculateWeaponDamage(weapon,true,weapon.range/2)>calculateWeaponDamage(weapon,false,weapon.range/2),weapon.code+' headshot damage');
   }
