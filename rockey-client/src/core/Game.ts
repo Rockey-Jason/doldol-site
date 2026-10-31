@@ -1714,11 +1714,11 @@ export async function createGame(
       const remoteMotion=Math.min(1,Math.hypot(mesh.position.x-oldX,mesh.position.z-oldZ)/Math.max(.001,dt)/4.2);
       const remoteVertical=(mesh.position.y-oldY)/Math.max(.001,dt);
       const animatePose=mesh.userData.animatePose;
-      if(typeof animatePose==='function')animatePose(remoteMotion,time,0,0,remoteVertical,data.dead===true);
+      if(typeof animatePose==='function')animatePose(remoteMotion,time,0,0,remoteVertical,data.dead===true,remoteMotion>.72,Math.abs(remoteVertical)<.65);
       const smokeBlock=smokeDensityAlongRay(camera.position,mesh.position.clone().add(new THREE.Vector3(0,1.02,0)));
       const deathExpired=data.dead===true&&now-Number(data.deadAt||now)>1350;
       mesh.visible=data.baseVisible===true&&!deathExpired&&smokeBlock<.72;
-      if(typeof data.targetYaw==='number'){
+      if((!samples||samples.length<2)&&typeof data.targetYaw==='number'){
         const delta=THREE.MathUtils.euclideanModulo(data.targetYaw-mesh.rotation.y+Math.PI,Math.PI*2)-Math.PI;
         mesh.rotation.y+=delta*remoteBlend;
       }
