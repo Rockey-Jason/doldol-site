@@ -428,7 +428,10 @@ socket.onMessage((message:GameMessage)=>{
       game?.setHealth(Number(message.health));
       break;
     case 'ammo.update':
-      game?.setAmmo(Number(message.ammo),Number(message.reserve));
+      // Delayed packets from the weapon just switched away must not overwrite the active weapon HUD.
+      if(!message.weaponCode || String(message.weaponCode)===activeWeapon){
+        game?.setAmmo(Number(message.ammo),Number(message.reserve));
+      }
       break;
     case 'item.update':{
       if(typeof message.health==='number')game?.setHealth(Number(message.health));
