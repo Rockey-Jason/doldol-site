@@ -974,28 +974,30 @@ export async function createGame(
     const random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296;};
     const total=isMobile?Math.min(5,count):Math.min(12,count);
     for(let i=0;i<total;i++){
-      const size=.09+Math.random()*.19;
+      const size=.09+random()*.19;
       const material=new THREE.MeshPhysicalMaterial({color:0xb9e7f6,roughness:.08,metalness:.04,transparent:true,opacity:.72,transmission:.28,thickness:.08});
       const mesh=new THREE.Mesh(new THREE.TetrahedronGeometry(size,0),material);
-      mesh.position.copy(position).add(new THREE.Vector3((Math.random()-.5)*.7,(Math.random()-.5)*.65,(Math.random()-.5)*.25));
-      mesh.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);
+      mesh.position.copy(position).add(new THREE.Vector3((random()-.5)*.7,(random()-.5)*.65,(random()-.5)*.25));
+      mesh.rotation.set(random()*Math.PI,random()*Math.PI,random()*Math.PI);
       mesh.castShadow=!isMobile;scene.add(mesh);
       const body=world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(mesh.position.x,mesh.position.y,mesh.position.z).setLinearDamping(.08).setAngularDamping(.12).setCcdEnabled(true));
       world.createCollider(RAPIER.ColliderDesc.cuboid(size*.52,size*.52,size*.52).setDensity(1.8).setFriction(.34).setRestitution(.28),body);
-      const direction=new THREE.Vector3(mesh.position.x-position.x,Math.random()*.85+.25,mesh.position.z-position.z).normalize();
-      body.applyImpulse({x:direction.x*impulse*(.6+Math.random()),y:direction.y*impulse*(.65+Math.random()),z:direction.z*impulse*(.6+Math.random())},true);
-      body.applyTorqueImpulse({x:(Math.random()-.5)*impulse*1.8,y:(Math.random()-.5)*impulse*1.8,z:(Math.random()-.5)*impulse*1.8},true);
-      physicalDebris.push({mesh,body,age:0,life:3.2+Math.random()*2});
+      const direction=new THREE.Vector3(mesh.position.x-position.x,random()*.85+.25,mesh.position.z-position.z).normalize();
+      body.applyImpulse({x:direction.x*impulse*(.6+random()),y:direction.y*impulse*(.65+random()),z:direction.z*impulse*(.6+random())},true);
+      body.applyTorqueImpulse({x:(random()-.5)*impulse*1.8,y:(random()-.5)*impulse*1.8,z:(random()-.5)*impulse*1.8},true);
+      physicalDebris.push({mesh,body,age:0,life:3.2+random()*2});
     }
   }
-  function spawnLightBreakFx(position:THREE.Vector3){
+  function spawnLightBreakFx(position:THREE.Vector3,seed='light'){
+    let randomState=Array.from(seed).reduce((value,char)=>(Math.imul(value^char.charCodeAt(0),16777619)>>>0),2166136261);
+    const random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296;};
     const group=new THREE.Group();group.position.copy(position);
     const flash=new THREE.PointLight(0x8edfff,8,5,2);group.add(flash);
     scene.add(group);const now=performance.now();
     timedItemEffects.push({group,startedAt:now,endsAt:now+360,kind:'LIGHT'});
     for(let i=0;i<(isMobile?5:10);i++){
-      const direction=new THREE.Vector3((Math.random()-.5)*2,Math.random()*1.5,(Math.random()-.5)*2).normalize();
-      emitFxParticle(position,direction.multiplyScalar(2.2+Math.random()*3.2),'ember',.22+Math.random()*.16,.025+Math.random()*.025,0x9cecff);
+      const direction=new THREE.Vector3((random()-.5)*2,random()*1.5,(random()-.5)*2).normalize();
+      emitFxParticle(position,direction.multiplyScalar(2.2+random()*3.2),'ember',.22+random()*.16,.025+random()*.025,0x9cecff);
     }
   }
   function applyDestruction(position:THREE.Vector3,radius:number,eventId?:string){
@@ -1003,7 +1005,7 @@ export async function createGame(
     if(eventId){appliedDestructionIds.add(eventId);if(appliedDestructionIds.size>500)appliedDestructionIds.delete(appliedDestructionIds.values().next().value as string);}
     tacticalLevel.destroyNear(position,radius,(p,count,impulse,kind)=>{
       if(kind==='glass')spawnGlassShards(p,count,impulse,eventId||'glass');
-      else if(kind==='light'){spawnLightBreakFx(p);spawnPhysicalDebris(p,count,impulse);}
+      else if(kind==='light'){spawnLightBreakFx(p,eventId||'light');spawnPhysicalDebris(p,count,impulse);}
       else{spawnDebrisFx(p,count,impulse);spawnPhysicalDebris(p,count,impulse);}
     });
   }
