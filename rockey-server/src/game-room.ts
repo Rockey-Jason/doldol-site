@@ -109,6 +109,34 @@ export class GameRoom {
     });
   }
 
+  private floorHeightAt(x:number,z:number,currentY:number):number {
+    for(const centerX of [-17.2,17.2]){
+      const localX=x-centerX,localZ=z+1.5;
+      const absX=Math.abs(localX),absZ=Math.abs(localZ);
+      // Rooftop access stair and upper roof deck.
+      if(currentY>4.05&&absX<.72&&localZ>=-.35&&localZ<=2.85){
+        return 4.38+((2.75-localZ)/3.01)*1.33;
+      }
+      if(currentY>5.85&&absX<4.0&&absZ<4.45)return 5.85;
+      // Second-floor stairs and upper gallery.
+      if(currentY>.78&&currentY<5.2&&localX>=2.45&&localX<=3.65&&localZ>=-2.55&&localZ<=2.4){
+        return Math.max(0,Math.min(3.9,((2.35-localZ)/4.85)*3.9));
+      }
+      if(currentY>3.95&&absX<4.42&&localZ>=-1.95&&localZ<=4.85)return 4.05;
+      // Basement stairwell is a descending run through the ground-floor opening.
+      if(currentY>-.4&&currentY<1.8&&absX<.78&&localZ>=-2.3&&localZ<=2.3){
+        return -((2.25-localZ)/4.5)*2.45;
+      }
+      // The basement floor occupies the footprint below the first-floor slab.
+      if(currentY<-.35&&absX<4.05&&absZ<4.3)return -2.64;
+      // Ground-floor interior excluding the stairwell opening.
+      if(absX<4.35&&absZ<4.75)return 0;
+    }
+    // The underpass joins both basements beneath the centre lane.
+    if(currentY<-.35&&x>=-12.8&&x<=12.8&&z>=-2.88&&z<=-.12)return -2.64;
+    return 0;
+  }
+
   private get weaponForActivePlayer() {
     return WEAPONS;
   }
@@ -457,13 +485,18 @@ export class GameRoom {
       const nz=Math.max(-27.5,Math.min(27.5,p.z+dz));
       p.verticalVelocity-=18*delta;
       const nextY=p.y+p.verticalVelocity*delta;
-      if(nextY<=0.92){p.y=0.92;p.verticalVelocity=0;} else p.y=Math.min(8,nextY);
       const blocked=cover.some(b=>
         p.y-0.86<b.top && p.y+0.86>(b.bottom??0) &&
         nx+0.38>b.x-b.hx && nx-0.38<b.x+b.hx &&
         nz+0.38>b.z-b.hz && nz-0.38<b.z+b.hz
       );
       if(!blocked){p.x=nx;p.z=nz;}
+      const floorCenter=this.floorHeightAt(p.x,p.z,p.y)+.92;
+      if(nextY<=floorCenter&&p.y>=floorCenter-.95){
+        p.y=floorCenter;p.verticalVelocity=0;
+      }else{
+        p.y=Math.min(8,nextY);
+      }
     }
     this.captureReplayFrame(now);
     this.broadcast({type:'snapshot',serverTime:now,players:this.snapshots()});
