@@ -53,11 +53,14 @@ test('live shot trace hits enemies, blocks cover, and ignores teammates outside 
   assert.equal(traceWeaponShot(shooter,[shooter,ally],'ffa',[],weapon).target,ally);
   assert.equal(traceWeaponShot(shooter,[shooter,enemy],'1v1',[{x:0,z:-6,hx:2,hz:.5}],weapon).target,null);
 });
-test('shots cannot pass through a full-height wall but can pass above low cover',()=>{
+test('shots cannot pass through walls and can pass above low cover',()=>{
   const shooter=combatant('a',0,0,.92,0,0,.09);
   const enemy=combatant('b',1,0,.92,-10);
   const wall={x:0,z:-5,hx:2,hz:.35,top:2.4};
   assert.equal(traceWeaponShot(shooter,[shooter,enemy],'1v1',[wall],WEAPONS.R16).target,null);
+  const lowCover={...wall,top:1};
+  const shallowAim=combatant('c',0,0,.92,0,0,.01);
+  assert.equal(traceWeaponShot(shallowAim,[shallowAim,enemy],'1v1',[lowCover],WEAPONS.R16).target,enemy);
 });
 
 test('live shot trace enforces range and recognizes headshots',()=>{
