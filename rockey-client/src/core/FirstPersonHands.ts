@@ -92,9 +92,15 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     leftFingers.forEach((finger,i)=>{finger.rotation.x=-.12-curl*(i===0?.82:1.08);finger.rotation.z=(i-1.5)*.035;});
     const rightFingers=right.userData.fingers as THREE.Group[];
     rightFingers.forEach((finger,i)=>{finger.rotation.x=i===1?-.05:-.2;});
-    right.position.copy(rightHome);
+    // The firing hand briefly leaves the grip to rack the charging handle
+    // after the replacement magazine is seated. The timing is shared with the
+    // weapon-specific bolt/pump animation in Game.ts.
+    const boltReach=smooth(p,.80,.88)*(1-smooth(p,.91,.985));
+    const boltPosition=new THREE.Vector3(.24,-.105,-.43);
+    right.position.copy(rightHome).lerp(boltPosition,boltReach);
     right.position.y+=Math.sin(performance.now()*.009+1)*walk*.004-fire*.018;
-    right.rotation.set(-.06+fire*.08-aim*.015,0,.03+Math.sin(performance.now()*.006)*walk*.008);
+    right.rotation.set(-.06+fire*.08-aim*.015+boltReach*.42,boltReach*.12,.03+Math.sin(performance.now()*.006)*walk*.008-boltReach*.28);
+    rightFingers.forEach((finger,i)=>{finger.rotation.x=-.18-boltReach*(i===0?.72:1.02);});
   };
   return {group,update};
 }
