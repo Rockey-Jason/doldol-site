@@ -112,10 +112,10 @@ async function confirmStageLoadout(){
       game?.activate('practice',0,undefined,loadout.primaryWeapon,loadout.secondaryWeapon,loadout.itemCode);showGame();toast('TRAINING FACILITY · LOADOUT READY');
     }else if(action.kind==='queue'){
       if(!socket.connected)return status('실시간 대전에는 게임 서버 연결이 필요합니다.');
-      currentMode=action.mode;send({type:'queue.join',mode:action.mode,mapId:loadout.mapId,...loadout});status('상대를 찾고 있습니다: '+action.mode.toUpperCase()+' · '+loadout.mapId.toUpperCase());
+      currentMode=action.mode;send({type:'queue.join',...loadout,mode:action.mode});status('상대를 찾고 있습니다: '+action.mode.toUpperCase()+' · '+loadout.mapId.toUpperCase());
     }else if(action.kind==='private-create'){
       if(!socket.connected)return status('게임 서버 연결이 필요합니다.');
-      send({type:'private.create',mode:action.mode,mapId:loadout.mapId,...loadout});status('비공개 방을 만들고 있습니다.');
+      send({type:'private.create',...loadout,mode:action.mode});status('비공개 방을 만들고 있습니다.');
     }else if(action.kind==='private-join'){
       if(!socket.connected)return status('게임 서버 연결이 필요합니다.');
       send({type:'private.join',code:action.code,...loadout});
