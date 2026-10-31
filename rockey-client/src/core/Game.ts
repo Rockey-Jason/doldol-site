@@ -483,10 +483,12 @@ export async function createGame(
   }
   function spawnProjectile(origin:THREE.Vector3,direction:THREE.Vector3,code:string,range:number) {
     const color=projectileColors[code]||0xffffff;
+    const blocker=new THREE.Raycaster(origin,direction,0,range).intersectObjects(raycastMeshes,false)[0];
+    const visibleRange=blocker?Math.max(.15,blocker.distance):range;
     const mesh=new THREE.Mesh(new THREE.SphereGeometry(.045,8,6),new THREE.MeshBasicMaterial({color,toneMapped:false}));
     const start=origin.clone().addScaledVector(direction,.5);mesh.position.copy(start);scene.add(mesh);
     const trail=new THREE.Line(new THREE.BufferGeometry().setFromPoints([start.clone().addScaledVector(direction,-.55),start]),new THREE.LineBasicMaterial({color,transparent:true,opacity:.78,toneMapped:false}));
-    scene.add(trail);projectiles.push({mesh,trail,direction:direction.clone().normalize(),travelled:0,maxDistance:range,age:0});
+    scene.add(trail);projectiles.push({mesh,trail,direction:direction.clone().normalize(),travelled:0,maxDistance:visibleRange,age:0});
   }
   function showDamageAt(position:THREE.Vector3,damage:number,headshot:boolean) {
     const label=document.createElement('canvas');label.width=256;label.height=112;
@@ -805,7 +807,7 @@ export async function createGame(
       const shot=projectiles[i];shot.age+=dt;const step=130*dt;shot.travelled+=step;
       shot.mesh.position.addScaledVector(shot.direction,step);
       shot.trail.geometry.setFromPoints([shot.mesh.position.clone().addScaledVector(shot.direction,-.62),shot.mesh.position]);
-      if(shot.age>.42||shot.travelled>=shot.maxDistance){scene.remove(shot.mesh,shot.trail);disposeObjectResources(shot.mesh);disposeObjectResources(shot.trail);projectiles.splice(i,1);}
+      if(shot.age>.42||shot.travelled>=shot.maxDistance){scene.remove(shot.mesh,shot.trail);disposeObjectResources(shot.mesh);shot.trail.geometry.dispose();(shot.trail.material as THREE.Material).dispose();projectiles.splice(i,1);}
     }
     for(let i=damagePopups.length-1;i>=0;i--){
       const popup=damagePopups[i],age=(now-Number(popup.userData.startedAt||now))/1000;
@@ -1063,6 +1065,8 @@ export async function createGame(
       stopMobileFire();
       renderer.dispose();
       if(audioContext){void audioContext.close();audioContext=null;noiseBuffer=null;}
+      for(const shot of projectiles){shot.trail.geometry.dispose();(shot.trail.material as THREE.Material).dispose();}
+      for(const popup of damagePopups){const material=popup.material as THREE.SpriteMaterial;material.map?.dispose();material.dispose();}
       // Dispose shared materials/geometries exactly once, including remote players and practice targets.
       const geometries = new Set<THREE.BufferGeometry>();
       const materials = new Set<THREE.Material>();
