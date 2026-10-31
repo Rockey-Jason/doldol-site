@@ -53,6 +53,7 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     addSegment(thumb,new THREE.Vector3(0,0,0),new THREE.Vector3(isLeft?.04:-.04,-.045,-.045),.022,glove);
     addSegment(thumb,new THREE.Vector3(isLeft?.04:-.04,-.045,-.045),new THREE.Vector3(isLeft?.06:-.06,-.085,-.08),.018,glove);
     arm.userData.fingers=fingers;
+    arm.userData.thumb=thumb;
     arm.userData.hand=hand;
     return arm;
   };
@@ -66,17 +67,17 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
   parent.add(group);
 
   const smooth=(value:number,a:number,b:number)=>THREE.MathUtils.smoothstep(value,a,b);
-  const weaponGrip:Record<string,{left:THREE.Vector3;right:THREE.Vector3;leftRot:THREE.Vector3;rightRot:THREE.Vector3}>={
-    R16:{left:new THREE.Vector3(0,0,0),right:new THREE.Vector3(0,0,0),leftRot:new THREE.Vector3(0,0,0),rightRot:new THREE.Vector3(0,0,0)},
-    VIPER:{left:new THREE.Vector3(-.035,.025,.025),right:new THREE.Vector3(.015,0,.015),leftRot:new THREE.Vector3(-.04,0,.03),rightRot:new THREE.Vector3(0,0,.02)},
-    R9:{left:new THREE.Vector3(-.09,.055,.08),right:new THREE.Vector3(.045,.015,.045),leftRot:new THREE.Vector3(-.12,.04,.12),rightRot:new THREE.Vector3(.04,0,-.08)},
-    THUNDER:{left:new THREE.Vector3(.025,-.025,-.07),right:new THREE.Vector3(.015,-.015,-.025),leftRot:new THREE.Vector3(.10,0,-.08),rightRot:new THREE.Vector3(.04,0,.02)},
-    LONGSHOT:{left:new THREE.Vector3(.055,-.035,-.12),right:new THREE.Vector3(-.015,.005,-.025),leftRot:new THREE.Vector3(.14,-.04,-.10),rightRot:new THREE.Vector3(.02,0,.04)},
-    HELIX:{left:new THREE.Vector3(.015,.015,-.035),right:new THREE.Vector3(.005,0,.015),leftRot:new THREE.Vector3(.04,0,-.025),rightRot:new THREE.Vector3(0,0,.01)},
-    BASTION:{left:new THREE.Vector3(.035,-.015,-.06),right:new THREE.Vector3(.005,0,-.015),leftRot:new THREE.Vector3(.08,0,-.04),rightRot:new THREE.Vector3(.02,0,.02)},
-    NOVA:{left:new THREE.Vector3(-.025,.035,.035),right:new THREE.Vector3(.03,.01,.035),leftRot:new THREE.Vector3(-.08,.02,.05),rightRot:new THREE.Vector3(.03,0,-.04)},
-    ARC:{left:new THREE.Vector3(.015,.015,-.025),right:new THREE.Vector3(.01,0,.015),leftRot:new THREE.Vector3(.03,0,-.02),rightRot:new THREE.Vector3(0,0,0)},
-    PULSE:{left:new THREE.Vector3(.01,.01,-.02),right:new THREE.Vector3(.01,0,.01),leftRot:new THREE.Vector3(.02,0,-.02),rightRot:new THREE.Vector3(0,0,0)}
+  const weaponGrip:Record<string,{left:THREE.Vector3;right:THREE.Vector3;leftRot:THREE.Vector3;rightRot:THREE.Vector3;supportCurl:number;triggerCurl:number;thumbCurl:number}>={
+    R16:{left:new THREE.Vector3(0,0,0),right:new THREE.Vector3(0,0,0),leftRot:new THREE.Vector3(0,0,0),rightRot:new THREE.Vector3(0,0,0),supportCurl:0.78,triggerCurl:0.52,thumbCurl:0.68},
+    VIPER:{left:new THREE.Vector3(-.035,.025,.025),right:new THREE.Vector3(.015,0,.015),leftRot:new THREE.Vector3(-.04,0,.03),rightRot:new THREE.Vector3(0,0,.02),supportCurl:0.84,triggerCurl:0.58,thumbCurl:0.72},
+    R9:{left:new THREE.Vector3(-.09,.055,.08),right:new THREE.Vector3(.045,.015,.045),leftRot:new THREE.Vector3(-.12,.04,.12),rightRot:new THREE.Vector3(.04,0,-.08),supportCurl:0.72,triggerCurl:0.48,thumbCurl:0.64},
+    THUNDER:{left:new THREE.Vector3(.025,-.025,-.07),right:new THREE.Vector3(.015,-.015,-.025),leftRot:new THREE.Vector3(.10,0,-.08),rightRot:new THREE.Vector3(.04,0,.02),supportCurl:0.66,triggerCurl:0.46,thumbCurl:0.62},
+    LONGSHOT:{left:new THREE.Vector3(.055,-.035,-.12),right:new THREE.Vector3(-.015,.005,-.025),leftRot:new THREE.Vector3(.14,-.04,-.10),rightRot:new THREE.Vector3(.02,0,.04),supportCurl:0.58,triggerCurl:0.42,thumbCurl:0.56},
+    HELIX:{left:new THREE.Vector3(.015,.015,-.035),right:new THREE.Vector3(.005,0,.015),leftRot:new THREE.Vector3(.04,0,-.025),rightRot:new THREE.Vector3(0,0,.01),supportCurl:0.7,triggerCurl:0.48,thumbCurl:0.62},
+    BASTION:{left:new THREE.Vector3(.035,-.015,-.06),right:new THREE.Vector3(.005,0,-.015),leftRot:new THREE.Vector3(.08,0,-.04),rightRot:new THREE.Vector3(.02,0,.02),supportCurl:0.82,triggerCurl:0.54,thumbCurl:0.72},
+    NOVA:{left:new THREE.Vector3(-.025,.035,.035),right:new THREE.Vector3(.03,.01,.035),leftRot:new THREE.Vector3(-.08,.02,.05),rightRot:new THREE.Vector3(.03,0,-.04),supportCurl:0.72,triggerCurl:0.5,thumbCurl:0.64},
+    ARC:{left:new THREE.Vector3(.015,.015,-.025),right:new THREE.Vector3(.01,0,.015),leftRot:new THREE.Vector3(.03,0,-.02),rightRot:new THREE.Vector3(0,0,0),supportCurl:0.64,triggerCurl:0.44,thumbCurl:0.6},
+    PULSE:{left:new THREE.Vector3(.01,.01,-.02),right:new THREE.Vector3(.01,0,.01),leftRot:new THREE.Vector3(.02,0,-.02),rightRot:new THREE.Vector3(0,0,0),supportCurl:0.7,triggerCurl:0.48,thumbCurl:0.64}
   };
   const update=(progress:number,active:boolean,walk:number,fire:number,aim:number,weaponCode='R16')=>{
     group.visible=true;
@@ -104,9 +105,15 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     left.rotation.set(pose.leftRot.x-.08+reach*.42-seat*.2,pose.leftRot.y+reach*.24,pose.leftRot.z-.02-reach*.38+seat*.16-returnGrip*.05);
     const curl=THREE.MathUtils.clamp(holdBlend*.98+lift*.18-seatBlend*.12,0,1);
     const leftFingers=left.userData.fingers as THREE.Group[];
-    leftFingers.forEach((finger,i)=>{finger.rotation.x=-.12-curl*(i===0?.82:1.08);finger.rotation.z=(i-1.5)*.035;});
+    leftFingers.forEach((finger,i)=>{const contact=pose.supportCurl;finger.rotation.x=-.10-curl*(i===0?.82:1.08)-contact*.16*(1-holdBlend);finger.rotation.z=(i-1.5)*.035;});
+    leftThumb.rotation.x=-.10-pose.thumbCurl*.54-curl*.16;
+    leftThumb.rotation.z=.10;
     const rightFingers=right.userData.fingers as THREE.Group[];
-    rightFingers.forEach((finger,i)=>{finger.rotation.x=i===1?-.05:-.2;});
+    const rightThumb=right.userData.thumb as THREE.Group;
+    const leftThumb=left.userData.thumb as THREE.Group;
+    rightFingers.forEach((finger,i)=>{finger.rotation.x=-.10-pose.triggerCurl*(i===1?.18:1);finger.rotation.z=(i-1.5)*.025;});
+    rightThumb.rotation.x=-.12-pose.thumbCurl*.62;
+    rightThumb.rotation.z=-.12;
     // The firing hand briefly leaves the grip to rack the charging handle
     // after the replacement magazine is seated. The timing is shared with the
     // weapon-specific bolt/pump animation in Game.ts.
@@ -115,7 +122,7 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     right.position.copy(gripRight).lerp(boltPosition,boltReach);
     right.position.y+=Math.sin(performance.now()*.009+1)*walk*.004-fire*.018;
     right.rotation.set(pose.rightRot.x-.06+fire*.08-aim*.015+boltReach*.42,pose.rightRot.y+boltReach*.12,pose.rightRot.z+.03+Math.sin(performance.now()*.006)*walk*.008-boltReach*.28);
-    rightFingers.forEach((finger,i)=>{finger.rotation.x=-.18-boltReach*(i===0?.72:1.02);});
+    rightFingers.forEach((finger,i)=>{finger.rotation.x=-.10-pose.triggerCurl*(i===1?.18:1)-boltReach*(i===0?.72:1.02);});
   };
   return {group,update};
 }
