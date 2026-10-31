@@ -238,13 +238,14 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
       knee.rotation.x=swing*(.38+runBlend*.56)+airborne*.32+deathBlend*.95;
       // Stance phase keeps the sole level; swing phase adds toe clearance.
       foot.rotation.x=THREE.MathUtils.lerp(gait*.12,-gait*.10,stance)+swing*.16-airborne*.18+deathBlend*-.45;
+      foot.rotation.z=0;
       foot.userData.ikWeight=stance;
     });
     root.rotation.z=deathBlend*.95;
     root.position.y=-deathBlend*.25+landing*.035;
   };
   const updateFootIK=(sampleGround:(x:number,z:number,footY:number)=>{height:number;normalX:number;normalY:number;normalZ:number}|null,grounded=true)=>{
-    if(!grounded){legs.forEach((leg,index)=>{leg.foot.position.y=footRestY[index];});return;}
+    if(!grounded){legs.forEach((leg,index)=>{leg.foot.position.y=footRestY[index];leg.foot.rotation.z=0;});return;}
     group.updateMatrixWorld(true);
     legs.forEach((leg,index)=>{
       leg.foot.position.y=footRestY[index];
