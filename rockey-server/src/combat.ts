@@ -21,7 +21,7 @@ export type Combatant = {
   id?:string; team:number; x:number; y:number; z:number;
   yaw:number; pitch:number; alive:boolean; connected:boolean;
 };
-export type CoverBox = {x:number;z:number;hx:number;hz:number;top?:number};
+export type CoverBox = {x:number;z:number;hx:number;hz:number;top?:number;bottom?:number};
 export type SmokeVolume = {x:number;y:number;z:number;radius:number;expiresAt:number};
 function rayBlockedBySmoke(
   ox:number,oy:number,oz:number,dx:number,dy:number,dz:number,distance:number,smoke:readonly SmokeVolume[]
@@ -38,7 +38,7 @@ function rayBlocked(ox:number,oy:number,oz:number,dx:number,dy:number,dz:number,
   let min=0,max=distance;
   for(const axis of [
     {o:ox,d:dx,lo:box.x-box.hx,hi:box.x+box.hx},
-    {o:oy,d:dy,lo:0,hi:box.top??100},
+    {o:oy,d:dy,lo:box.bottom??0,hi:box.top??100},
     {o:oz,d:dz,lo:box.z-box.hz,hi:box.z+box.hz}
   ]){
     if(Math.abs(axis.d)<.00001){if(axis.o<axis.lo||axis.o>axis.hi)return false;continue;}
