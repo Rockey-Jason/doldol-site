@@ -183,36 +183,52 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
   let hitUntil=0;
   let deathBlend=0;
   const triggerHit=()=>{hitUntil=performance.now()+230;};
-  const animate=(movement:number,time:number,action=0,recoil=0,vertical=0,dead=false)=>{
-    const run=THREE.MathUtils.clamp(movement,0,1);
-    const stride=Math.sin(time*9.6)*run;
-    const counter=Math.sin(time*9.6+Math.PI)*run;
-    const airborne=THREE.MathUtils.clamp(Math.abs(vertical)/6,0,1);
+  let wasGrounded=true;
+  let landingUntil=0;
+  const animate=(movement:number,time:number,action=0,recoil=0,vertical=0,dead=false,sprint=0,grounded=true)=>{
+    const move=THREE.MathUtils.clamp(movement,0,1);
+    const runBlend=THREE.MathUtils.clamp(sprint,0,1)*move;
+    const walkBlend=move*(1-THREE.MathUtils.smoothstep(runBlend,0.05,.9));
+    const cadence=9.2+runBlend*3.1;
+    const stride=Math.sin(time*cadence)*(walkBlend*.48+runBlend);
+    const counter=Math.sin(time*cadence+Math.PI)*(walkBlend*.48+runBlend);
+    const airborne=grounded?0:THREE.MathUtils.clamp(Math.abs(vertical)/7,0,1);
+    if(grounded&&!wasGrounded&&vertical< -1)landingUntil=performance.now()+190;
+    wasGrounded=grounded;
+    const landing=THREE.MathUtils.clamp((landingUntil-performance.now())/190,0,1);
     const hit=THREE.MathUtils.clamp((hitUntil-performance.now())/230,0,1);
     deathBlend=THREE.MathUtils.damp(deathBlend,dead?1:0,dead?7:11,1/60);
-    pelvis.rotation.x=deathBlend*.42+airborne*.08;
-    spine.rotation.x=-.025*run+airborne*.13+hit*.16+deathBlend*.52;
-    spine.rotation.z=Math.sin(time*4.7)*run*.018+hit*.12;
-    chest.rotation.x=-.035*run+airborne*.10+hit*.22+deathBlend*.28;
-    chest.rotation.z=Math.sin(time*4.2)*run*.012-hit*.08;
-    neck.rotation.x=airborne*-.08+hit*-.18+deathBlend*-.25;
-    head.rotation.x=Math.sin(time*1.3)*.025+hit*.14+deathBlend*.32;
-    head.rotation.y=Math.sin(time*1.15)*.035;
+    const idle=1-move;
+    // Lower body: gait, toe-off and alternating foot plants are independent
+    // from upper-body reload/recoil poses.
+    pelvis.rotation.x=deathBlend*.42+airborne*.08+landing*.11;
+    pelvis.rotation.y=Math.sin(time*cadence*.5)*runBlend*.035;
+    spine.rotation.x=-.018*walkBlend-.055*runBlend+airborne*.13+hit*.16+deathBlend*.52+landing*.08;
+    spine.rotation.z=Math.sin(time*4.7)*walkBlend*.012+hit*.12;
+    chest.rotation.x=-.02*walkBlend-.035*runBlend+airborne*.10+hit*.22+deathBlend*.28;
+    chest.rotation.z=Math.sin(time*4.2)*walkBlend*.009-hit*.08;
+    neck.rotation.x=airborne*-.08+hit*-.18+deathBlend*-.25+landing*-.06;
+    head.rotation.x=Math.sin(time*1.3)*.018*idle+hit*.14+deathBlend*.32;
+    head.rotation.y=Math.sin(time*1.15)*.025;
     arms.forEach(({shoulder,elbow,hand,side})=>{
       const gait=side<0?stride:counter;
-      shoulder.rotation.x=.10+gait*.72+airborne*-.62+recoil*.10+hit*-.35+deathBlend*.7;
+      shoulder.rotation.x=.10+gait*.64+airborne*-.62+recoil*.10+hit*-.35+deathBlend*.7+landing*.08;
       shoulder.rotation.z=side*.08+action*.09*side+deathBlend*side*.12;
-      elbow.rotation.x=.16+Math.max(0,-gait)*.68+action*.22+airborne*.42+deathBlend*-.85;
+      elbow.rotation.x=.16+Math.max(0,-gait)*.62+action*.22+airborne*.42+deathBlend*-.85;
       hand.rotation.x=action*.12+airborne*.22+deathBlend*.32;
     });
     legs.forEach(({hip,knee,foot,side})=>{
       const gait=side<0?stride:counter;
-      hip.rotation.x=gait*.78+airborne*(side<0?-.18:.18)+deathBlend*(side<0?-.65:.5);
-      knee.rotation.x=Math.max(0,-gait)*.88+airborne*.32+deathBlend*.95;
-      foot.rotation.x=Math.max(0,gait)*.2-airborne*.18+deathBlend*-.45;
+      const phase=time*cadence+(side<0?0:Math.PI);
+      const stance=Math.max(0,Math.cos(phase));
+      const swing=Math.max(0,-Math.cos(phase));
+      hip.rotation.x=gait*.78+airborne*(side<0?-.18:.18)+deathBlend*(side<0?-.65:.5)+landing*.05;
+      knee.rotation.x=swing*(.38+runBlend*.56)+airborne*.32+deathBlend*.95;
+      // Stance phase keeps the sole level; swing phase adds toe clearance.
+      foot.rotation.x=THREE.MathUtils.lerp(gait*.12,-gait*.10,stance)+swing*.16-airborne*.18+deathBlend*-.45;
     });
     root.rotation.z=deathBlend*.95;
-    root.position.y=-deathBlend*.25;
+    root.position.y=-deathBlend*.25+landing*.035;
   };
   group.userData.animatePose=animate;
   group.userData.triggerHit=triggerHit;
