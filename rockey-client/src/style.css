@@ -602,3 +602,138 @@ button:disabled{opacity:.42;cursor:not-allowed;filter:saturate(.55)}
 .menu-card{z-index:1}
 .mode-card::before{z-index:0}
 .mode-card strong,.mode-card span{position:relative;z-index:1}
+
+
+/* BUILD 08 — premium combat presentation */
+:root{
+  --blue:#49b7ff;--cyan:#72e8ff;--gold:#e9cf88;
+  --line:rgba(129,193,255,.24);
+}
+::selection{background:rgba(73,183,255,.32);color:#fff}
+button{transition:transform .18s cubic-bezier(.2,.8,.2,1),border-color .2s,background .2s,box-shadow .2s,filter .2s}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
+  outline:2px solid var(--cyan);outline-offset:3px;
+}
+.topbar{
+  height:72px;padding-inline:clamp(16px,3vw,42px);
+  background:linear-gradient(180deg,rgba(2,7,18,.94),rgba(2,7,18,.36) 72%,transparent);
+}
+.brand{letter-spacing:2.6px;text-shadow:0 3px 22px rgba(72,184,255,.24)}
+.brand-mark{
+  border:1px solid rgba(255,255,255,.45);
+  box-shadow:0 0 0 4px rgba(75,174,255,.07),0 8px 28px rgba(45,154,255,.2);
+}
+.connection{padding:8px 12px;border:1px solid rgba(130,184,235,.14);border-radius:999px;background:rgba(3,12,27,.46);backdrop-filter:blur(12px)}
+.menu-layer,.result-layer{
+  background:radial-gradient(ellipse at 50% 28%,rgba(22,105,174,.26),transparent 52%),linear-gradient(135deg,rgba(1,5,14,.62),rgba(2,7,18,.88));
+  backdrop-filter:blur(12px) saturate(125%);
+}
+.menu-card,.result-card{
+  position:relative;border-color:rgba(111,190,255,.3);
+  background:linear-gradient(145deg,rgba(13,31,57,.96),rgba(4,11,25,.98));
+  box-shadow:0 34px 110px rgba(0,0,0,.62),0 0 70px rgba(27,122,201,.09),inset 0 1px rgba(255,255,255,.09);
+}
+.menu-card:before,.result-card:before{
+  content:"";position:absolute;inset:0 18% auto;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(120,219,255,.75),transparent);
+  pointer-events:none;
+}
+.menu-card h1{
+  text-shadow:0 8px 42px rgba(56,169,255,.16);
+  letter-spacing:5px;
+}
+.tagline{letter-spacing:4.5px;text-shadow:0 0 22px rgba(228,200,117,.18)}
+.menu-grid{gap:12px}
+.mode-card{
+  position:relative;isolation:isolate;overflow:hidden;min-height:96px;
+  border-color:rgba(99,176,245,.25);
+  background:linear-gradient(145deg,rgba(25,69,112,.72),rgba(5,19,39,.92));
+  box-shadow:inset 0 1px rgba(255,255,255,.06),0 10px 24px rgba(0,0,0,.14);
+}
+.mode-card:before{
+  content:"";position:absolute;z-index:-1;inset:0;
+  background:linear-gradient(115deg,transparent 20%,rgba(123,216,255,.1) 48%,transparent 76%);
+  transform:translateX(-120%);transition:transform .65s ease;
+}
+.mode-card:hover{
+  transform:translateY(-4px) scale(1.012);border-color:rgba(100,221,255,.75);
+  box-shadow:0 12px 32px rgba(0,0,0,.24),0 0 24px rgba(44,171,255,.12),inset 0 1px rgba(255,255,255,.12);
+}
+.mode-card:hover:before{transform:translateX(120%)}
+.mode-card strong{font-size:18px;text-shadow:0 2px 14px rgba(91,190,255,.14)}
+.mode-card span{line-height:1.4}
+.mode-card.secondary{box-shadow:inset 0 1px rgba(255,255,255,.07),0 10px 24px rgba(0,0,0,.14)}
+.outline-btn,.primary-btn,.hub-primary,.hub-secondary,.hub-small{
+  box-shadow:inset 0 1px rgba(255,255,255,.08),0 5px 16px rgba(0,0,0,.16);
+}
+.outline-btn:hover,.hub-secondary:hover,.hub-small:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(36,147,224,.15)}
+.primary-btn:hover,.hub-primary:hover{filter:brightness(1.12);transform:translateY(-2px);box-shadow:0 10px 28px rgba(27,151,225,.28)}
+.hud .match-info{
+  border-color:rgba(113,195,255,.28);
+  background:linear-gradient(120deg,rgba(3,15,31,.78),rgba(6,27,48,.64));
+  box-shadow:0 8px 30px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.07);
+}
+.crosshair{filter:drop-shadow(0 0 4px rgba(71,190,255,.55));transition:transform .12s}
+.crosshair.hit{transform:translate(-50%,-50%) scale(1.12)}
+.crosshair.headshot{transform:translate(-50%,-50%) scale(1.22)}
+.health-box,.ammo-box{
+  border-color:rgba(116,187,248,.28);
+  background:linear-gradient(145deg,rgba(5,19,38,.82),rgba(2,9,22,.78));
+  box-shadow:0 12px 32px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.06);
+}
+.health-track{height:5px;background:rgba(255,255,255,.1);box-shadow:inset 0 1px 3px rgba(0,0,0,.4)}
+.health-track i{box-shadow:0 0 12px rgba(78,225,170,.32)}
+.ammo-box strong{text-shadow:0 0 22px rgba(233,207,136,.2)}
+.toast{
+  border-color:rgba(90,203,255,.45);background:rgba(3,18,35,.9);
+  box-shadow:0 10px 35px rgba(0,0,0,.28),0 0 25px rgba(48,171,239,.1);
+}
+.camera-btn,.exit-btn,.weapon-switch-btn{
+  border-color:rgba(111,190,255,.34);background:rgba(4,15,31,.82);
+  box-shadow:0 8px 24px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.06);
+  backdrop-filter:blur(10px);
+}
+.hub-card{
+  border-color:rgba(111,190,255,.34);
+  box-shadow:0 40px 140px rgba(0,0,0,.76),0 0 60px rgba(38,141,218,.08),inset 0 1px rgba(255,255,255,.07);
+}
+.hub-section,.hub-row,.hub-rank-row,.hub-weapon,.hub-reward{
+  box-shadow:inset 0 1px rgba(255,255,255,.035);
+}
+.hub-tab{transition:background .2s,border-color .2s,color .2s,transform .2s}
+.hub-tab:hover{transform:translateY(-1px);color:#dff5ff}
+.hub-tab.active{box-shadow:0 0 22px rgba(48,166,240,.12),inset 0 1px rgba(255,255,255,.08)}
+.mobile-controls .move-pad{
+  border-color:rgba(157,216,255,.46);
+  background:radial-gradient(circle at 35% 28%,rgba(44,112,169,.5),rgba(3,19,39,.65));
+  box-shadow:0 10px 32px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.12);
+}
+.move-stick{
+  background:linear-gradient(145deg,rgba(115,205,255,.8),rgba(35,111,184,.65));
+  box-shadow:0 0 22px rgba(73,183,255,.25),inset 0 1px rgba(255,255,255,.35);
+}
+.touch-btn{
+  border-color:rgba(143,206,255,.48);
+  background:linear-gradient(145deg,rgba(12,43,75,.94),rgba(3,16,34,.94));
+  box-shadow:0 7px 22px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.1);
+  backdrop-filter:blur(9px);
+}
+.touch-btn:active{transform:scale(.94);filter:brightness(1.2)}
+.fire-btn{
+  background:radial-gradient(circle at 35% 25%,#36a6ed,#0a4c8b 72%);
+  box-shadow:0 0 0 4px rgba(55,168,239,.12),0 8px 30px rgba(0,89,166,.35),inset 0 1px rgba(255,255,255,.28);
+}
+@keyframes hudArrive{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.hud-bottom,.match-info,.camera-btn,.exit-btn,.weapon-switch-btn{animation:hudArrive .42s cubic-bezier(.2,.8,.2,1) both}
+@media(max-width:640px){
+  .topbar{height:54px;padding-inline:14px}
+  .menu-card{box-shadow:0 24px 80px rgba(0,0,0,.62),inset 0 1px rgba(255,255,255,.08)}
+  .menu-grid{gap:8px}
+  .mode-card{min-height:78px}
+  .mode-card strong{font-size:15px}
+  .mode-card span{font-size:11px}
+}
+@media(prefers-reduced-motion:reduce){
+  .mode-card:before{display:none}
+  .hud-bottom,.match-info,.camera-btn,.exit-btn,.weapon-switch-btn{animation:none}
+}
