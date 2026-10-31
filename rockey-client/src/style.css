@@ -253,3 +253,24 @@ button{-webkit-tap-highlight-color:transparent;user-select:none}
 @media(pointer:coarse){.item-box{display:none}.item-touch-btn{border-color:rgba(228,200,117,.48);background:rgba(78,59,20,.84);color:#ffe8ae}}
 @media(max-width:560px){.loadout-panel{padding:10px}.loadout-card{padding:20px 16px;border-radius:18px}.stage-loadout-grid{grid-template-columns:1fr}.stage-item-slot{grid-column:auto}.loadout-actions{display:grid;grid-template-columns:.8fr 1.5fr}.loadout-actions button{padding:10px 8px;font-size:11px}}
 @media(orientation:landscape) and (max-height:500px) and (pointer:coarse){.loadout-card{width:min(760px,94vw);padding:14px 20px}.loadout-card h2{font-size:24px}.loadout-card>p{margin-bottom:10px}.stage-loadout-grid{grid-template-columns:1fr 1fr 1fr;gap:8px}.stage-loadout-grid label{padding:9px}.stage-item-slot{grid-column:auto}.stage-loadout-grid select{padding:8px;font-size:11px}.loadout-hint{margin-top:7px}.loadout-actions{margin-top:10px}}
+
+/* BUILD 10 · Select a tactical item first, then explicitly use it */
+.item-box-actions{display:flex;gap:7px;margin-top:8px}
+.item-box-actions button{flex:1;min-width:0;margin:0;padding:7px 8px;border:1px solid rgba(228,200,117,.35);border-radius:7px;background:rgba(75,57,19,.45);color:#f4dfaa;font-size:10px;white-space:nowrap}
+.item-box-actions button:last-child{background:linear-gradient(110deg,rgba(143,103,30,.9),rgba(104,79,26,.9));border-color:rgba(255,220,135,.65)}
+.item-box button:disabled{opacity:.38;cursor:not-allowed}
+.item-select-panel{position:fixed;z-index:18;inset:0;display:grid;place-items:center;padding:18px;background:rgba(1,6,17,.78);backdrop-filter:blur(12px)}
+.item-select-card{width:min(560px,100%);max-height:min(760px,92dvh);overflow:auto;padding:24px;border:1px solid rgba(228,200,117,.35);border-radius:20px;background:linear-gradient(145deg,rgba(17,31,51,.99),rgba(5,12,25,.99));box-shadow:0 28px 100px rgba(0,0,0,.7)}
+.item-select-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.item-select-header span{color:#6edfff;font-size:9px;letter-spacing:2.8px}.item-select-header h2{margin:5px 0 0;color:#f5f8ff;font-size:27px}
+.item-select-header>button{width:36px;height:36px;border:1px solid rgba(148,180,217,.22);border-radius:10px;background:rgba(255,255,255,.05);color:#d6e6f7;font-size:22px}
+.item-select-card>p{margin:12px 0 18px;color:#9ab0ca;font-size:12px;line-height:1.6}
+.item-option-list{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.item-option{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0;padding:13px;border:1px solid rgba(116,161,207,.2);border-radius:12px;background:rgba(10,27,48,.82);color:#dceafa;text-align:left;transition:border-color .16s,background .16s,transform .16s}
+.item-option:hover{transform:translateY(-2px);border-color:rgba(92,211,255,.7)}.item-option.selected{border-color:#e6c873;background:linear-gradient(135deg,rgba(111,84,28,.38),rgba(13,39,62,.9));box-shadow:inset 0 0 0 1px rgba(230,200,115,.16)}
+.item-option:disabled{opacity:.38;cursor:not-allowed;transform:none}.item-option-main{display:flex;flex-direction:column;gap:4px;min-width:0}
+.item-option-main b{font-size:13px;color:#f1f6ff}.item-option-main small{font-size:10px;color:#8da5c2;line-height:1.35}
+.item-option-count{flex:none;color:#e7ce8b;font-size:12px;font-weight:700;white-space:nowrap}
+.item-select-foot{margin-top:15px;color:#718ba9;font-size:10px;line-height:1.5}
+@media(pointer:coarse){.item-box{display:none}.item-touch-btn{border-color:rgba(228,200,117,.48);background:rgba(78,59,20,.84);color:#ffe8ae}.item-use-touch-btn{border-color:rgba(94,213,255,.55);background:rgba(12,81,117,.88);color:#e2f8ff}}
+@media(max-width:560px){.item-select-panel{padding:10px}.item-select-card{padding:18px 14px;border-radius:16px}.item-option-list{grid-template-columns:1fr}.item-option{padding:11px 12px}}

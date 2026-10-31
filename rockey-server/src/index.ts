@@ -472,6 +472,9 @@ async function handle(client:PlayerClient,raw:WebSocket.RawData){
     case 'weapon.switch':
       roomFor(client)?.handleSwitchWeapon(client);
       return;
+    case 'item.select':
+      roomFor(client)?.handleSelectItem(client,message);
+      return;
     case 'item.use':
       roomFor(client)?.handleUseItem(client,message);
       return;

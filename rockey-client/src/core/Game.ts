@@ -10,14 +10,15 @@ export interface ReplayFrame {
   players: RemotePlayer[];
 }
 export interface GameInstance {
-  activate(mode: string, team?: number, spawn?: { x: number; y: number; z: number; yaw: number }, weaponCode?: string, secondaryWeapon?: string, itemCode?: string, itemCount?: number): void;
+  activate(mode: string, team?: number, spawn?: { x: number; y: number; z: number; yaw: number }, weaponCode?: string, secondaryWeapon?: string, itemCode?: string, itemCount?: number, itemInventory?:Record<string,number>): void;
   setRemotePlayers(players: RemotePlayer[]): void;
   reconcileLocalPlayer(player: RemotePlayer): void;
   setScore(a: number, b: number, round: number): void;
   setHealth(value: number): void;
   setAmmo(ammo: number, reserve: number): void;
   setWeapon(weaponCode: string, ammo?: number, reserve?: number): void;
-  setItem(itemCode:string,count:number,effect?:string):void;
+  setItem(itemCode:string,count:number,effect?:string,inventory?:Record<string,number>):void;
+  selectItem(itemCode:string):void;
   useItem():void;
   showThrownItem(itemCode:string,x:number,y:number,z:number,yaw:number,pitch:number,fuseMs:number):void;
   showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number):void;
@@ -425,7 +426,7 @@ export async function createGame(
   let mode = 'practice';
   let currentWeaponCode = 'R16';
   let currentItemCode:RockeyItemCode='GRENADE';
-  let itemCount=ITEMS.GRENADE.startingCount;
+  let itemInventory:Record<RockeyItemCode,number>={GRENADE:2,SMOKE:1,FLASH:1,PILLS:2,ENERGY:1};
   let energyUntil=0;
   let primaryWeaponCode = 'R16';
   let secondaryWeaponCode = 'R9';
@@ -607,12 +608,32 @@ export async function createGame(
     const direction=new THREE.Vector3(-Math.sin(shotYaw)*cp,Math.sin(shotPitch),-Math.cos(shotYaw)*cp).normalize();
     spawnProjectile(new THREE.Vector3(x,y,z),direction,weaponCode,WEAPONS[weaponCode]?.range||70);
   }
+  function currentItemCount(){return Math.max(0,itemInventory[currentItemCode]||0);}
+  function emitItemState(){window.dispatchEvent(new CustomEvent('rockey:item-state',{detail:{itemCode:currentItemCode,inventory:{...itemInventory}}}));}
   function updateItemHud(){
     const label=document.getElementById('itemLabel'),count=document.getElementById('itemCount'),mobile=document.getElementById('mobileItem');
-    if(label)label.textContent=ITEMS[currentItemCode].name;if(count)count.textContent=itemCount+'개 남음';if(mobile)mobile.textContent='ITEM · '+itemCount;
-    const button=document.getElementById('itemUseBtn') as HTMLButtonElement|null;if(button)button.disabled=itemCount<=0;
+    const remaining=currentItemCount();
+    if(label)label.textContent=ITEMS[currentItemCode].name;if(count)count.textContent=remaining+'개 남음';if(mobile)mobile.textContent='PICK';
+    const button=document.getElementById('itemUseBtn') as HTMLButtonElement|null,mobileUse=document.getElementById('mobileUse') as HTMLButtonElement|null;
+    if(button)button.disabled=remaining<=0;if(mobileUse)mobileUse.disabled=remaining<=0;
   }
-  function setItemLocal(code:string,count:number){currentItemCode=(code in ITEMS?code:'GRENADE') as RockeyItemCode;itemCount=Math.max(0,Math.min(10,Math.floor(count)));updateItemHud();}
+  function setItemLocal(code:string,count:number){
+    const safeCode=(code in ITEMS?code:'GRENADE') as RockeyItemCode;
+    currentItemCode=safeCode;itemInventory[safeCode]=Math.max(0,Math.min(10,Math.floor(count)));updateItemHud();emitItemState();
+  }
+  function setItemInventory(selectedCode:string,inventory?:Record<string,number>){
+    if(inventory)for(const item of Object.values(ITEMS)){const count=Number(inventory[item.code]);if(Number.isFinite(count))itemInventory[item.code]=Math.max(0,Math.min(10,Math.floor(count)));}
+    if(selectedCode in ITEMS)currentItemCode=selectedCode as RockeyItemCode;
+    updateItemHud();emitItemState();
+  }
+  function selectItem(code:string){
+    if(!(code in ITEMS))return;
+    const selected=code as RockeyItemCode;
+    if(currentItemCount()<=0 && itemInventory[selected]<=0){notify('해당 아이템이 모두 소진되었습니다.');return;}
+    if(mode!=='practice'){send({type:'item.select',itemCode:selected});return;}
+    currentItemCode=selected;updateItemHud();emitItemState();notify(ITEMS[selected].name+' 선택 · USE 버튼으로 사용');
+  }
+  function consumeSelectedItem(){itemInventory[currentItemCode]=Math.max(0,currentItemCount()-1);updateItemHud();emitItemState();}
   function showThrownItem(itemCode:string,x:number,y:number,z:number,throwYaw:number,throwPitch:number,fuseMs:number){
     const color=itemCode==='GRENADE'?0xe5a94d:itemCode==='SMOKE'?0xb5c3cf:0x8cecff;
     const mesh=new THREE.Mesh(new THREE.SphereGeometry(.13,12,10),new THREE.MeshStandardMaterial({color,metalness:.35,roughness:.32,emissive:color,emissiveIntensity:.25}));
@@ -633,14 +654,14 @@ export async function createGame(
     scene.add(group);const now=performance.now();timedItemEffects.push({group,startedAt:now,endsAt:now+Math.max(350,durationMs),kind:effect});
   }
   function useItem(){
-    if(!active)return;if(itemCount<=0){notify('아이템을 모두 사용했습니다.');return;}
+    if(!active)return;if(currentItemCount()<=0){notify('선택한 아이템을 모두 사용했습니다.');return;}
     if(mode!=='practice'){send({type:'item.use',itemCode:currentItemCode});return;}
-    if(currentItemCode==='PILLS'){if(hp>=100){notify('체력이 이미 가득 찼습니다.');return;}hp=Math.min(100,hp+35);itemCount--;updateHud(hp,ammo,reserve,currentWeapon.name);updateItemHud();notify('체력 +35');return;}
-    if(currentItemCode==='ENERGY'){energyUntil=performance.now()+8000;itemCount--;updateItemHud();notify('이동 속도 증가 · 8초');return;}
+    if(currentItemCode==='PILLS'){if(hp>=100){notify('체력이 이미 가득 찼습니다.');return;}hp=Math.min(100,hp+35);consumeSelectedItem();updateHud(hp,ammo,reserve,currentWeapon.name);notify('체력 +35');return;}
+    if(currentItemCode==='ENERGY'){energyUntil=performance.now()+8000;consumeSelectedItem();notify('이동 속도 100% 증가 · 8초');return;}
     camera.updateMatrixWorld(true);const origin=camera.getWorldPosition(new THREE.Vector3()),direction=camera.getWorldDirection(new THREE.Vector3());
     const impact=origin.clone().addScaledVector(direction,7.2);impact.y=Math.max(.75,impact.y);
     const usedCode=currentItemCode,fuseMs=usedCode==='GRENADE'?1050:usedCode==='SMOKE'?850:650;
-    showThrownItem(usedCode,origin.x,origin.y,origin.z,yaw,pitch,fuseMs);itemCount--;updateItemHud();
+    showThrownItem(usedCode,origin.x,origin.y,origin.z,yaw,pitch,fuseMs);consumeSelectedItem();
     window.setTimeout(()=>{
       if(disposed)return;showItemEffect(usedCode,impact.x,impact.y,impact.z,usedCode==='GRENADE'?6:4.5,usedCode==='SMOKE'?8000:usedCode==='FLASH'?700:480);
       if(usedCode==='GRENADE')for(const target of practiceTargets){
@@ -736,7 +757,7 @@ export async function createGame(
     keys.add(event.code);
     if (event.code === 'KeyV') toggleCamera();
     if (event.code === 'KeyR') reload();
-    if (event.code === 'KeyG' || event.code === 'Digit3') useItem();
+    // G opens the item picker in main.ts; item use is a separate action.
     if (event.code === 'KeyQ') {
       if (mode === 'practice') {
         const next = currentWeaponCode === primaryWeaponCode ? secondaryWeaponCode : primaryWeaponCode;
@@ -1072,7 +1093,7 @@ export async function createGame(
       const movementTarget=Math.min(1,direction.length());
       movementAmount+=(movementTarget-movementAmount)*(1-Math.exp(-12*dt));
       const baseSpeed=keys.has('ShiftLeft')||keys.has('ShiftRight')?7.1:5.4;
-      const speed=baseSpeed*(now<energyUntil?1.25:1);
+      const speed=baseSpeed*(now<energyUntil?2:1);
       if (controller.computedGrounded() && vertical < 0) vertical = -1;
       if (touch.jump && controller.computedGrounded()) {
         vertical = 7.2;
@@ -1134,7 +1155,7 @@ export async function createGame(
   raf = requestAnimationFrame(frame);
 
   return {
-    activate(nextMode: string, team = 0, serverSpawn?: { x: number; y: number; z: number; yaw: number }, weaponCode = 'R16', secondaryWeapon = 'R9', itemCode = 'GRENADE', nextItemCount?: number) {
+    activate(nextMode: string, team = 0, serverSpawn?: { x: number; y: number; z: number; yaw: number }, weaponCode = 'R16', secondaryWeapon = 'R9', itemCode = 'GRENADE', nextItemCount?: number, nextItemInventory?:Record<string,number>) {
       mode = nextMode;
       active = nextMode !== 'spectator' && nextMode !== 'replay';
       replayFrames = null;
@@ -1145,7 +1166,11 @@ export async function createGame(
       primaryWeaponCode = currentWeaponCode;
       secondaryWeaponCode = WEAPONS[secondaryWeapon] ? secondaryWeapon : 'R9';
       currentWeapon = WEAPONS[currentWeaponCode];
-      const safeItemCode=(itemCode in ITEMS?itemCode:'GRENADE') as RockeyItemCode;setItemLocal(safeItemCode,nextItemCount===undefined?ITEMS[safeItemCode].startingCount:nextItemCount);energyUntil=0;
+      const safeItemCode=(itemCode in ITEMS?itemCode:'GRENADE') as RockeyItemCode;
+      itemInventory={GRENADE:ITEMS.GRENADE.startingCount,SMOKE:ITEMS.SMOKE.startingCount,FLASH:ITEMS.FLASH.startingCount,PILLS:ITEMS.PILLS.startingCount,ENERGY:ITEMS.ENERGY.startingCount};
+      if(nextItemInventory)for(const item of Object.values(ITEMS)){const count=Number(nextItemInventory[item.code]);if(Number.isFinite(count))itemInventory[item.code]=Math.max(0,Math.min(10,Math.floor(count)));}
+      currentItemCode=safeItemCode;if(nextItemCount!==undefined)itemInventory[safeItemCode]=Math.max(0,Math.min(10,Math.floor(nextItemCount)));
+      updateItemHud();emitItemState();energyUntil=0;
       rebuildGun(currentWeaponCode);
       switchAnimationStart=performance.now();
       reloadAnimationStart=0;
@@ -1207,7 +1232,8 @@ export async function createGame(
     setWeapon(code: string, nextAmmo?: number, nextReserve?: number) {
       setWeaponLocal(code,nextAmmo,nextReserve);
     },
-    setItem(code:string,count:number,effect?:string){setItemLocal(code,count);if(effect==='ENERGY')energyUntil=performance.now()+8000;},useItem,showThrownItem,showItemEffect,
+    setItem(code:string,count:number,effect?:string,inventory?:Record<string,number>){if(inventory)setItemInventory(code,inventory);else setItemLocal(code,count);if(effect==='ENERGY')energyUntil=performance.now()+8000;},
+    selectItem,useItem,showThrownItem,showItemEffect,
     showDamageOnTarget,
     showShot,
     applyRecoil(nextPitch: number, nextYaw: number) {

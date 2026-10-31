@@ -22,6 +22,8 @@ let primaryWeapon='R16';
 let secondaryWeapon='R9';
 let activeWeapon='R16';
 let selectedItemCode:RockeyItemCode='GRENADE';
+function createItemInventory():Record<RockeyItemCode,number>{return Object.fromEntries(Object.values(ITEMS).map(item=>[item.code,item.startingCount])) as Record<RockeyItemCode,number>;}
+let itemInventory:Record<RockeyItemCode,number>=createItemInventory();
 type PendingStart={kind:'practice'}|{kind:'queue';mode:string}|{kind:'private-create';mode:string}|{kind:'private-join';code:string}|{kind:'private-start'};
 let pendingStart:PendingStart|null=null;
 let isSpectating=false;
@@ -91,6 +93,29 @@ function showResult(won:boolean,detail:string){
 function updateLocalLoadout(){
   const loadout=hub.getLoadout();primaryWeapon=loadout.primaryWeapon;secondaryWeapon=loadout.secondaryWeapon;selectedItemCode=loadout.itemCode;
 }
+function renderItemOptions(){
+  const list=$('itemOptionList');if(!list)return;
+  list.innerHTML=Object.values(ITEMS).map(item=>{
+    const count=itemInventory[item.code]||0,selected=selectedItemCode===item.code;
+    return '<button type="button" class="item-option '+(selected?'selected':'')+'" data-item-code="'+item.code+'" '+(count<=0?'disabled':'')+'>'+
+      '<span class="item-option-main"><b>'+item.name+'</b><small>'+item.description+'</small></span><span class="item-option-count">'+count+'개</span></button>';
+  }).join('');
+}
+function openItemSelector(){if(!game||isSpectating||isKillcam)return;renderItemOptions();$('itemSelectPanel')!.classList.remove('hidden');}
+function closeItemSelector(){$('itemSelectPanel')!.classList.add('hidden');}
+function chooseItem(code:string){
+  if(!(code in ITEMS))return;const itemCode=code as RockeyItemCode;
+  if((itemInventory[itemCode]||0)<=0)return toast('해당 아이템이 모두 소진되었습니다.');
+  game?.selectItem(itemCode);if(currentMode==='practice')selectedItemCode=itemCode;
+  closeItemSelector();renderItemOptions();
+}
+window.addEventListener('rockey:item-state',event=>{
+  const detail=(event as CustomEvent<{itemCode:RockeyItemCode;inventory:Record<string,number>}>).detail;if(!detail)return;
+  if(detail.itemCode in ITEMS)selectedItemCode=detail.itemCode;
+  itemInventory=createItemInventory();
+  for(const item of Object.values(ITEMS)){const count=Number(detail.inventory[item.code]);if(Number.isFinite(count))itemInventory[item.code]=Math.max(0,Math.min(10,Math.floor(count)));}
+  renderItemOptions();
+});
 function openStageLoadout(action:PendingStart){
   pendingStart=action;const loadout=hub.getLoadout();updateLocalLoadout();
   const primary=$('stagePrimary') as HTMLSelectElement,secondary=$('stageSecondary') as HTMLSelectElement,item=$('stageItem') as HTMLSelectElement;
@@ -109,7 +134,8 @@ async function confirmStageLoadout(){
   try{
     if(action.kind==='practice'){
       requestLandscape();await ensureGame(loadout.mapId||'training_facility');currentMode='practice';isSpectating=false;activeWeapon=loadout.primaryWeapon;
-      game?.activate('practice',0,undefined,loadout.primaryWeapon,loadout.secondaryWeapon,loadout.itemCode);showGame();toast('TRAINING FACILITY · LOADOUT READY');
+      itemInventory=createItemInventory();selectedItemCode=loadout.itemCode;
+      game?.activate('practice',0,undefined,loadout.primaryWeapon,loadout.secondaryWeapon,loadout.itemCode,undefined,itemInventory);showGame();toast('TRAINING FACILITY · LOADOUT READY');
     }else if(action.kind==='queue'){
       if(!socket.connected)return status('실시간 대전에는 게임 서버 연결이 필요합니다.');
       currentMode=action.mode;send({type:'queue.join',...loadout,mode:action.mode});status('상대를 찾고 있습니다: '+action.mode.toUpperCase()+' · '+loadout.mapId.toUpperCase());
@@ -157,6 +183,9 @@ async function enterMatch(message:Record<string,any>){
   isKillcam=false;
   latestLocalSnapshot=null;
   activeWeapon=String(message.weaponCode||primaryWeapon);
+  selectedItemCode=(String(message.itemCode||hub.getLoadout().itemCode) in ITEMS?String(message.itemCode||hub.getLoadout().itemCode):'GRENADE') as RockeyItemCode;
+  itemInventory=createItemInventory();
+  if(message.itemInventory&&typeof message.itemInventory==='object')for(const item of Object.values(ITEMS)){const count=Number(message.itemInventory[item.code]);if(Number.isFinite(count))itemInventory[item.code]=Math.max(0,Math.min(10,Math.floor(count)));}
   game?.activate(
     currentMode,
     Number(message.team||0),
@@ -164,7 +193,8 @@ async function enterMatch(message:Record<string,any>){
     activeWeapon,
     String(message.secondaryWeapon||secondaryWeapon),
     String(message.itemCode||hub.getLoadout().itemCode),
-    Number(message.itemCount??ITEMS[(String(message.itemCode||hub.getLoadout().itemCode) in ITEMS?String(message.itemCode||hub.getLoadout().itemCode):'GRENADE') as RockeyItemCode].startingCount)
+    Number(message.itemCount??ITEMS[(String(message.itemCode||hub.getLoadout().itemCode) in ITEMS?String(message.itemCode||hub.getLoadout().itemCode):'GRENADE') as RockeyItemCode].startingCount),
+    message.itemInventory as Record<string,number>|undefined
   );
   if(typeof message.ammo==='number')game?.setAmmo(message.ammo,Number(message.reserve||0));
   $('modeLabel')!.textContent=currentMode.toUpperCase()+' · '+String(message.weaponCode||primaryWeapon);
@@ -286,9 +316,21 @@ $('copyCodeBtn')?.addEventListener('click',async()=>{
 $('cameraBtn')?.addEventListener('click',()=>game?.toggleCamera());
 $('weaponSwitchBtn')?.addEventListener('click',switchWeapon);
 $('mobileSwitch')?.addEventListener('pointerdown',event=>{event.preventDefault();switchWeapon();});
-$('mobileItem')?.addEventListener('pointerdown',event=>{event.preventDefault();game?.useItem();});
+$('mobileItem')?.addEventListener('pointerdown',event=>{event.preventDefault();openItemSelector();});
+$('mobileUse')?.addEventListener('pointerdown',event=>{event.preventDefault();game?.useItem();});
+$('itemSelectBtn')?.addEventListener('click',openItemSelector);
 $('itemUseBtn')?.addEventListener('click',()=>game?.useItem());
+$('itemSelectClose')?.addEventListener('click',closeItemSelector);
+$('itemOptionList')?.addEventListener('click',event=>{
+  const target=event.target;if(!(target instanceof Element))return;
+  const option=target.closest<HTMLElement>('[data-item-code]');if(option&&!option.hasAttribute('disabled'))chooseItem(option.dataset.itemCode||'');
+});
+window.addEventListener('keydown',event=>{
+  if((event.code==='KeyG'||event.code==='Digit3')&&!event.repeat){event.preventDefault();openItemSelector();}
+  if(event.code==='Escape'&&!$('itemSelectPanel')?.classList.contains('hidden'))closeItemSelector();
+});
 $('exitBtn')?.addEventListener('click',()=>{
+  closeItemSelector();
   if(isSpectating)send({type:'spectator.leave'});
   else send({type:'match.leave'});
   showMenu();
@@ -333,10 +375,21 @@ socket.onMessage((message:GameMessage)=>{
     case 'ammo.update':
       game?.setAmmo(Number(message.ammo),Number(message.reserve));
       break;
-    case 'item.update':
+    case 'item.update':{
       if(typeof message.health==='number')game?.setHealth(Number(message.health));
-      game?.setItem(String(message.itemCode||selectedItemCode),Number(message.count??0),String(message.effect||''));
-      if(message.effect==='ENERGY')toast('ENERGY BOOST · 8초');
+      const itemCode=String(message.itemCode||selectedItemCode);
+      if(itemCode in ITEMS)selectedItemCode=itemCode as RockeyItemCode;
+      if(message.inventory&&typeof message.inventory==='object'){
+        itemInventory=createItemInventory();
+        for(const item of Object.values(ITEMS)){const count=Number(message.inventory[item.code]);if(Number.isFinite(count))itemInventory[item.code]=Math.max(0,Math.min(10,Math.floor(count)));}
+      }else if(itemCode in ITEMS&&typeof message.count==='number')itemInventory[itemCode as RockeyItemCode]=Math.max(0,Number(message.count));
+      game?.setItem(itemCode,Number(message.count??0),String(message.effect||''),message.inventory as Record<string,number>|undefined);
+      renderItemOptions();
+      if(message.effect==='ENERGY')toast('ENERGY BOOST · 이동 속도 100% 증가 · 8초');
+      break;
+    }
+    case 'item.error':
+      toast(String(message.message||'아이템을 선택하지 못했습니다.'));
       break;
     case 'item.throw':
       game?.showThrownItem(String(message.itemCode||'GRENADE'),Number(message.x),Number(message.y),Number(message.z),Number(message.yaw),Number(message.pitch),Number(message.fuseMs||900));
