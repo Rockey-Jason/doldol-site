@@ -608,6 +608,15 @@ export async function createGame(
     const hit=hits.find(value=>value.point.y<=footY+.28&&value.point.y>=footY-.72);
     return hit?.point.y??null;
   };
+  const normalMatrix=new THREE.Matrix3();
+  const sampleGroundSurface=(x:number,z:number,footY:number):{height:number;normalX:number;normalY:number;normalZ:number}|null=>{
+    footRayOrigin.set(x,footY+1.0,z);
+    raycaster.set(footRayOrigin,downDirection);raycaster.near=0;raycaster.far=2.35;
+    const hit=raycaster.intersectObjects(raycastMeshes,false).find(value=>value.point.y<=footY+.28&&value.point.y>=footY-.72&&!!value.face);
+    if(!hit?.face)return null;
+    const normal=hit.face.normal.clone().applyMatrix3(normalMatrix.getNormalMatrix(hit.object.matrixWorld)).normalize();
+    return {height:hit.point.y,normalX:normal.x,normalY:normal.y,normalZ:normal.z};
+  };
   const keys = new Set<string>();
   const touch = { forward: 0, right: 0, jump: false };
   let precisionAiming = false;
@@ -1953,7 +1962,7 @@ export async function createGame(
       avatar.position.set(p.x, p.y - .92, p.z);
       avatar.rotation.y = yaw;
       avatarRig.animate(movementAmount,time,reloadWave,fireWave,vertical,hp<=0,keys.has('ShiftLeft')||keys.has('ShiftRight')?1:0,controller.computedGrounded(),aimBlend);
-      avatarRig.updateFootIK(sampleGroundHeight,controller.computedGrounded());
+      avatarRig.updateFootIK(sampleGroundSurface,controller.computedGrounded());
       const gaitBob=Math.sin(time*(keys.has('ShiftLeft')||keys.has('ShiftRight')?13.2:10.2))*movementAmount*(precisionAiming?.008:.022);
       const eye = p.clone().add(new THREE.Vector3(0, 0.58+gaitBob-landingKick, 0));
       if (cameraMode === 'first') {
