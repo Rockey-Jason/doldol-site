@@ -5,7 +5,7 @@ export interface CombatantRig {
   group: THREE.Group;
   animate: (movement:number,time:number,action?:number,recoil?:number,vertical?:number,dead?:boolean,sprint?:number,grounded?:boolean,aim?:number) => void;
   triggerHit: () => void;
-  updateFootIK: (sampleGround:(x:number,z:number,footY:number)=>number,grounded?:boolean) => void;
+  updateFootIK: (sampleGround:(x:number,z:number,footY:number)=>number|null,grounded?:boolean) => void;
 }
 
 /**
@@ -238,7 +238,7 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
     root.rotation.z=deathBlend*.95;
     root.position.y=-deathBlend*.25+landing*.035;
   };
-  const updateFootIK=(sampleGround:(x:number,z:number,footY:number)=>number,grounded=true)=>{
+  const updateFootIK=(sampleGround:(x:number,z:number,footY:number)=>number|null,grounded=true)=>{
     if(!grounded){legs.forEach((leg,index)=>{leg.foot.position.y=footRestY[index];});return;}
     group.updateMatrixWorld(true);
     legs.forEach((leg,index)=>{
@@ -246,6 +246,7 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
       group.updateMatrixWorld(true);
       leg.foot.getWorldPosition(footWorldScratch);
       const ground=sampleGround(footWorldScratch.x,footWorldScratch.z,footWorldScratch.y);
+      if(ground===null||!Number.isFinite(ground))return;
       const weight=THREE.MathUtils.clamp(Number(leg.foot.userData.ikWeight??1),0,1);
       if(weight<.02)return;
       // Two-bone inverse kinematics in the leg's sagittal plane. The foot
