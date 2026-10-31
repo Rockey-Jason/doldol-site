@@ -280,7 +280,7 @@ export class GameRoom {
 
   handleReload(client:PlayerClient) {
     const p=this.players.find(item=>item.client===client);
-    if(!p || this.finished || p.ammo>=WEAPONS[p.weaponCode].magazine ||
+    if(!p || this.finished || WEAPONS[p.weaponCode].category==='MELEE' || p.ammo>=WEAPONS[p.weaponCode].magazine ||
       p.reserve<=0 || Date.now()<p.reloadUntil) return;
     const weapon=WEAPONS[p.weaponCode];
     p.reloadUntil=Date.now()+weapon.reloadMs;
@@ -322,11 +322,18 @@ export class GameRoom {
       return;
     }
     shooter.lastFire=now;
-    shooter.ammo--;
-    shooter.weaponAmmo[shooter.weaponCode]={ammo:shooter.ammo,reserve:shooter.reserve};
-    send(client,{type:'ammo.update',ammo:shooter.ammo,reserve:shooter.reserve,weaponCode:shooter.weaponCode});
-
-    const trace=traceWeaponShot(shooter,this.players,this.mode,MAPS[this.mapId].cover,weapon);
+    if(weapon.category!=='MELEE'){
+      shooter.ammo--;
+      shooter.weaponAmmo[shooter.weaponCode]={ammo:shooter.ammo,reserve:shooter.reserve};
+      send(client,{type:'ammo.update',ammo:shooter.ammo,reserve:shooter.reserve,weaponCode:shooter.weaponCode});
+    }
+    const direction={x:-Math.sin(shooter.yaw)*Math.cos(shooter.pitch),y:Math.sin(shooter.pitch),z:-Math.cos(shooter.yaw)*Math.cos(shooter.pitch)};
+    this.broadcast({type:'weapon.shot',shooterId:client.player.id,x:shooter.x,y:shooter.y+0.55,z:shooter.z,yaw:shooter.yaw,pitch:shooter.pitch,weaponCode:weapon.code});
+    const arenaWalls=[
+      {x:0,z:-29.4,hx:30,hz:0.6,top:4.4},{x:0,z:29.4,hx:30,hz:0.6,top:4.4},
+      {x:-29.4,z:0,hx:0.6,hz:30,top:4.4},{x:29.4,z:0,hx:0.6,hz:30,top:4.4}
+    ];
+    const trace=traceWeaponShot(shooter,this.players,this.mode,[...MAPS[this.mapId].cover,...arenaWalls],weapon);
     const target=trace.target as PlayerState|null;
     const best=trace.distance;
     const headshot=trace.headshot;
