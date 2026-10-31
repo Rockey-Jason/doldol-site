@@ -295,3 +295,5 @@ body.precision-aiming .crosshair::after{content:"";position:absolute;left:50%;to
 .aim-touch-btn{border-color:rgba(94,213,255,.58);background:rgba(10,68,99,.86);color:#dff8ff}
 .aim-touch-btn.active{border-color:#8cecff;background:linear-gradient(145deg,rgba(24,143,190,.96),rgba(10,72,118,.96));box-shadow:0 0 0 2px rgba(92,213,255,.18),0 0 18px rgba(66,190,255,.38);color:#fff}
 @media(pointer:fine){.aim-touch-btn{display:none}}
+
+@media(pointer:coarse){.mobile-actions .aim-touch-btn{position:absolute;right:0;bottom:calc(100% + 9px);z-index:2}}
