@@ -5,6 +5,7 @@ export function canFireWeapon(now:number,lastFire:number,reloadUntil:number,ammo
 }
 
 export function calculateWeaponRecoil(weapon:RockeyWeapon):number {
+  if(weapon.category==='MELEE')return 0;
   return Math.min(0.045,0.012+weapon.damage/2500+weapon.spread*0.25);
 }
 
@@ -20,11 +21,12 @@ export type Combatant = {
   id?:string; team:number; x:number; y:number; z:number;
   yaw:number; pitch:number; alive:boolean; connected:boolean;
 };
-export type CoverBox = {x:number;z:number;hx:number;hz:number};
-function rayBlocked(ox:number,oz:number,dx:number,dz:number,distance:number,box:CoverBox):boolean {
+export type CoverBox = {x:number;z:number;hx:number;hz:number;top?:number};
+function rayBlocked(ox:number,oy:number,oz:number,dx:number,dy:number,dz:number,distance:number,box:CoverBox):boolean {
   let min=0,max=distance;
   for(const axis of [
     {o:ox,d:dx,lo:box.x-box.hx,hi:box.x+box.hx},
+    {o:oy,d:dy,lo:0,hi:box.top??100},
     {o:oz,d:dz,lo:box.z-box.hz,hi:box.z+box.hz}
   ]){
     if(Math.abs(axis.d)<.00001){if(axis.o<axis.lo||axis.o>axis.hi)return false;continue;}
@@ -49,7 +51,7 @@ export function traceWeaponShot<T extends Combatant>(
     if(along<=0||along>=best)continue;
     const px=tx-dx*along,py=ty-dy*along,pz=tz-dz*along;
     if(Math.hypot(px,pz)>.62+weapon.spread*along*.35||Math.abs(py)>.95)continue;
-    if(cover.some(box=>rayBlocked(ox,oz,dx,dz,along,box)))continue;
+    if(cover.some(box=>rayBlocked(ox,oy,oz,dx,dy,dz,along,box)))continue;
     best=along;target=candidate;
     headshot=Math.abs(oy+dy*along-(candidate.y+1.45))<.24;
   }

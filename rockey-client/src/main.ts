@@ -32,7 +32,12 @@ function status(message:string){statusText.textContent=message;}
 function requestLandscape(){
   if(!window.matchMedia('(pointer:coarse)').matches)return;
   const orientation=screen.orientation as ScreenOrientation & {lock?:(value:'landscape')=>Promise<void>};
-  try{void orientation.lock?.('landscape').catch(()=>{});}catch{/* Rotation prompt remains as the fallback. */}
+  const lock=()=>{try{void orientation.lock?.('landscape').catch(()=>{});}catch{/* The rotate prompt is the fallback. */}};
+  try{
+    const root=document.documentElement as HTMLElement & {requestFullscreen?:()=>Promise<void>};
+    if(!document.fullscreenElement&&root.requestFullscreen)void root.requestFullscreen().then(lock).catch(lock);
+    else lock();
+  }catch{lock();}
 }
 function toast(message:string){
   const el=$('toast');
@@ -53,6 +58,7 @@ function showMenu(){
   menu.classList.remove('hidden');hud.classList.add('hidden');
   $('resultPanel')!.classList.add('hidden');$('hubPanel')!.classList.add('hidden');
   document.exitPointerLock?.();
+  if(document.fullscreenElement)void document.exitFullscreen().catch(()=>{});
   isSpectating=false;
 }
 function showGame(){
@@ -63,7 +69,9 @@ function showGame(){
 function updateHud(hp:number,ammo:number,reserve:number,weapon:string){
   $('healthValue')!.textContent=String(Math.max(0,Math.round(hp)));
   ($('healthBar') as HTMLElement).style.width=Math.max(0,Math.min(100,hp))+'%';
-  $('ammoValue')!.textContent=ammo+' / '+reserve;
+  $('ammoValue')!.textContent=weapon.includes('DORI')?'MELEE':ammo+' / '+reserve;
+  const ammoMeta=$('ammoValue')?.parentElement?.querySelector('span');
+  if(ammoMeta)ammoMeta.textContent=weapon.includes('DORI')?'CLOSE COMBAT · MELEE':weapon;
   $('modeLabel')!.textContent=currentMode.toUpperCase()+' · '+weapon;
 }
 function send(message:Record<string,unknown>&{type:string}){
@@ -319,13 +327,16 @@ socket.onMessage((message:GameMessage)=>{
       game?.applyRecoil(Number(message.pitch),Number(message.yaw));
       break;
     case 'hit':{
-      toast(message.headshot?'HEADSHOT':'HIT');
+      game?.showDamageOnTarget(String(message.targetId||''),String(message.target||''),Number(message.damage||0),Boolean(message.headshot));
       const crosshair=document.querySelector('.crosshair');
       crosshair?.classList.remove('hit','headshot');
       crosshair?.classList.add(message.headshot?'headshot':'hit');
       window.setTimeout(()=>crosshair?.classList.remove('hit','headshot'),180);
       break;
     }
+    case 'weapon.shot':
+      if(String(message.shooterId||'')!==userId)game?.showShot(Number(message.x),Number(message.y),Number(message.z),Number(message.yaw),Number(message.pitch),String(message.weaponCode||'R16'));
+      break;
     case 'elimination':
       toast('ELIMINATION');
       break;

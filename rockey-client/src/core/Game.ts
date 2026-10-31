@@ -18,6 +18,8 @@ export interface GameInstance {
   setAmmo(ammo: number, reserve: number): void;
   setWeapon(weaponCode: string, ammo?: number, reserve?: number): void;
   applyRecoil(pitch: number, yaw: number): void;
+  showDamageOnTarget(targetId: string, targetName: string, damage: number, headshot: boolean): void;
+  showShot(x: number, y: number, z: number, yaw: number, pitch: number, weaponCode: string): void;
   playReplay(frames: ReplayFrame[]): void;
   playKillcam(frames: ReplayFrame[], killerId: string, onComplete: () => void): void;
   cancelKillcam(): void;
@@ -42,7 +44,7 @@ export async function createGame(
   const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 760;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(map.background);
-  scene.fog = new THREE.Fog(map.fog, 34, 95);
+  scene.fog = new THREE.Fog(map.fog, 48, 145);
 
   const camera = new THREE.PerspectiveCamera(78, 1, 0.08, 180);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
@@ -53,8 +55,9 @@ export async function createGame(
   renderer.shadowMap.enabled = !isMobile;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-  scene.add(new THREE.HemisphereLight(0x9dbfff, 0x0a1020, 1.5));
-  const sun = new THREE.DirectionalLight(0xb7d3ff, 2.3);
+  scene.add(new THREE.HemisphereLight(0xe5f5ff, 0x526579, 2.35));
+  scene.add(new THREE.AmbientLight(0xffffff, 0.42));
+  const sun = new THREE.DirectionalLight(0xfff1d8, 3.1);
   sun.position.set(-15, 25, 12);
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);
@@ -69,7 +72,7 @@ export async function createGame(
 
   const floor = new THREE.Mesh(
     new THREE.BoxGeometry(60, 1, 60),
-    new THREE.MeshStandardMaterial({ color: map.floor, metalness: 0.72, roughness: 0.34 })
+    new THREE.MeshStandardMaterial({ color: map.floor, metalness: 0.18, roughness: 0.78 })
   );
   floor.position.y = -0.5;
   floor.receiveShadow = true;
@@ -77,7 +80,7 @@ export async function createGame(
   const grid = new THREE.GridHelper(60, 60, map.grid, map.grid);
   grid.position.y = 0.012;
   (grid.material as THREE.Material).transparent = true;
-  (grid.material as THREE.Material).opacity = 0.38;
+  (grid.material as THREE.Material).opacity = 0.18;
   scene.add(grid);
 
   const solid = new THREE.MeshStandardMaterial({
@@ -148,16 +151,17 @@ export async function createGame(
     }
 
     const accent = new THREE.Color(
-      code === 'VIPER' ? 0x54e6b0 :
-      code === 'THUNDER' ? 0xffaa5b :
-      code === 'LONGSHOT' ? 0xa8d8ff :
-      code === 'BASTION' ? 0xffc45f :
-      code === 'NOVA' ? 0xff748e :
-      code === 'ARC' ? 0x57efff :
-      code === 'PULSE' ? 0xbe8cff : map.light
+      code === 'R16' ? 0x4aa8ff : code === 'R9' ? 0xffd166 :
+      code === 'VIPER' ? 0x54e6b0 : code === 'THUNDER' ? 0xff8a45 :
+      code === 'LONGSHOT' ? 0xa8d8ff : code === 'HELIX' ? 0xb18aff :
+      code === 'BASTION' ? 0xffc45f : code === 'NOVA' ? 0xff748e :
+      code === 'ARC' ? 0x57efff : code === 'PULSE' ? 0xbe8cff : map.light
     );
     const metal = new THREE.MeshStandardMaterial({
-      color: code === 'THUNDER' ? 0x443b34 : code === 'LONGSHOT' ? 0x263c53 : 0x1c2d46,
+      color: code === 'R16' ? 0x254b75 : code === 'R9' ? 0x65522c : code === 'VIPER' ? 0x204b3c :
+        code === 'THUNDER' ? 0x61422d : code === 'LONGSHOT' ? 0x263c53 : code === 'HELIX' ? 0x44305f :
+        code === 'BASTION' ? 0x4b4528 : code === 'NOVA' ? 0x542b3c : code === 'ARC' ? 0x204c58 :
+        code === 'PULSE' ? 0x3b2b60 : 0x1c2d46,
       metalness: 0.88, roughness: 0.24
     });
     const glowPart = new THREE.MeshStandardMaterial({
@@ -184,6 +188,30 @@ export async function createGame(
       return part;
     };
 
+    if (code === 'DORI') {
+      const fur = new THREE.MeshStandardMaterial({color:0xc98a4c,roughness:.92});
+      const cream = new THREE.MeshStandardMaterial({color:0xfff0d8,roughness:.96});
+      const black = new THREE.MeshStandardMaterial({color:0x17191d,roughness:.45});
+      const nose = new THREE.MeshStandardMaterial({color:0x35221d,roughness:.55});
+      const plushSphere=(x:number,y:number,z:number,sx:number,sy:number,sz:number,material:THREE.Material)=>{
+        const part=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),material);
+        part.position.set(x,y,z);part.scale.set(sx,sy,sz);part.castShadow=true;gun.add(part);return part;
+      };
+      plushSphere(.24,-.28,-.48,.23,.25,.34,fur);
+      plushSphere(.24,-.08,-.77,.22,.22,.22,fur);
+      plushSphere(.24,-.13,-.96,.15,.105,.1,cream);
+      plushSphere(.24,-.32,-.76,.16,.17,.055,cream);
+      plushSphere(.11,.105,-.75,.075,.17,.075,fur).rotation.z=-.24;
+      plushSphere(.37,.105,-.75,.075,.17,.075,fur).rotation.z=.24;
+      plushSphere(.16,-.02,-.91,.026,.03,.02,black);
+      plushSphere(.32,-.02,-.91,.026,.03,.02,black);
+      plushSphere(.24,-.13,-1.055,.035,.027,.025,nose);
+      for(const x of [.1,.38])plushSphere(x,-.49,-.38,.085,.13,.11,fur);
+      plushSphere(.24,-.25,-.19,.07,.08,.1,fur);
+      muzzleFlash.visible=false;
+      metal.dispose();glowPart.dispose();dark.dispose();
+      return;
+    }
     const compact = code === 'R9' || code === 'NOVA';
     const shotgun = code === 'THUNDER';
     const sniper = code === 'LONGSHOT';
@@ -274,6 +302,9 @@ export async function createGame(
   const allyMat = new THREE.MeshStandardMaterial({ color: 0x267aa5, metalness: 0.5, roughness: 0.35 });
   const remotes = new Map<string, THREE.Group>();
   const practiceTargets: THREE.Group[] = [];
+  const projectiles: Array<{mesh:THREE.Mesh;trail:THREE.Line;direction:THREE.Vector3;travelled:number;maxDistance:number;age:number}> = [];
+  const damagePopups: THREE.Sprite[] = [];
+  const projectileColors:Record<string,number>={R16:0x4aa8ff,R9:0xffd166,VIPER:0x54e6b0,THUNDER:0xff8a45,LONGSHOT:0xa8d8ff,HELIX:0xb18aff,BASTION:0xffc45f,NOVA:0xff748e,ARC:0x57efff,PULSE:0xbe8cff,DORI:0xc98a4c};
 
   function createPracticeTargets() {
     const bodyMaterial = new THREE.MeshStandardMaterial({
@@ -333,10 +364,12 @@ export async function createGame(
     VIPER:{kick:.48,reloadTilt:.09,roll:.04},THUNDER:{kick:1.28,reloadTilt:.38,roll:.2},
     LONGSHOT:{kick:1.35,reloadTilt:.46,roll:.1},HELIX:{kick:.88,reloadTilt:.16,roll:.08},
     BASTION:{kick:.56,reloadTilt:.28,roll:.22},NOVA:{kick:1.16,reloadTilt:.22,roll:.14},
-    ARC:{kick:.62,reloadTilt:.1,roll:.04},PULSE:{kick:.72,reloadTilt:.14,roll:.08}
+    ARC:{kick:.62,reloadTilt:.1,roll:.04},PULSE:{kick:.72,reloadTilt:.14,roll:.08},DORI:{kick:0,reloadTilt:.05,roll:.05}
   };
   let reloadAnimationStart = 0;
   let reloadAnimationDuration = 0;
+  let switchAnimationStart = 0;
+  let doriSwingStart = 0;
   let movePointerId: number | null = null;
   let lookPointerId: number | null = null;
   let active = false;
@@ -368,12 +401,15 @@ export async function createGame(
 
   function setWeaponLocal(code: string, nextAmmo?: number, nextReserve?: number) {
     if (!WEAPONS[code]) return;
+    const previousCode=currentWeaponCode;
     currentWeaponCode = code;
     currentWeapon = WEAPONS[code];
     ammo = nextAmmo === undefined ? currentWeapon.magazine : Math.max(0,Math.min(currentWeapon.magazine,nextAmmo));
     reserve = nextReserve === undefined ? currentWeapon.reserve : Math.max(0,nextReserve);
     reloadAt = 0;
     rebuildGun(code);
+    switchAnimationStart=performance.now();
+    playSwitchSound(previousCode,code);
     updateHud(hp,ammo,reserve,currentWeapon.name);
   }
 
@@ -429,6 +465,58 @@ export async function createGame(
     } catch { /* Audio is optional. */ }
   }
 
+  function playSwitchSound(from:string,to:string) {
+    try {
+      const ctx=getAudioContext(),now=ctx.currentTime;
+      const osc=ctx.createOscillator(),gain=ctx.createGain();
+      osc.type=to==='DORI'?'sine':'triangle';
+      osc.frequency.setValueAtTime(from==='LONGSHOT'?420:620,now);
+      osc.frequency.exponentialRampToValueAtTime(to==='DORI'?260:980,now+.16);
+      gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.075,now+.012);gain.gain.exponentialRampToValueAtTime(.0001,now+.19);
+      osc.connect(gain);gain.connect(ctx.destination);osc.start(now);osc.stop(now+.2);
+    } catch { /* Audio is optional. */ }
+  }
+  function playMeleeSound() {
+    try {
+      const ctx=getAudioContext(),now=ctx.currentTime;
+      const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='triangle';
+      osc.frequency.setValueAtTime(190,now);osc.frequency.exponentialRampToValueAtTime(72,now+.18);
+      gain.gain.setValueAtTime(.0001,now);gain.gain.exponentialRampToValueAtTime(.19,now+.008);gain.gain.exponentialRampToValueAtTime(.0001,now+.2);
+      osc.connect(gain);gain.connect(ctx.destination);osc.start(now);osc.stop(now+.21);
+    } catch { /* Audio is optional. */ }
+  }
+  function spawnProjectile(origin:THREE.Vector3,direction:THREE.Vector3,code:string,range:number) {
+    const color=projectileColors[code]||0xffffff;
+    const blocker=new THREE.Raycaster(origin,direction,0,range).intersectObjects(raycastMeshes,false)[0];
+    const visibleRange=blocker?Math.max(.15,blocker.distance):range;
+    const mesh=new THREE.Mesh(new THREE.SphereGeometry(.045,8,6),new THREE.MeshBasicMaterial({color,toneMapped:false}));
+    const start=origin.clone().addScaledVector(direction,.5);mesh.position.copy(start);scene.add(mesh);
+    const trail=new THREE.Line(new THREE.BufferGeometry().setFromPoints([start.clone().addScaledVector(direction,-.55),start]),new THREE.LineBasicMaterial({color,transparent:true,opacity:.78,toneMapped:false}));
+    scene.add(trail);projectiles.push({mesh,trail,direction:direction.clone().normalize(),travelled:0,maxDistance:visibleRange,age:0});
+  }
+  function showDamageAt(position:THREE.Vector3,damage:number,headshot:boolean) {
+    const label=document.createElement('canvas');label.width=256;label.height=112;
+    const ctx=label.getContext('2d');if(!ctx)return;
+    ctx.font='bold 46px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.lineWidth=8;ctx.strokeStyle='rgba(10,18,30,.88)';ctx.strokeText((headshot?'HEADSHOT  ':'')+damage,128,56);
+    ctx.fillStyle=headshot?'#ffe08a':'#ffffff';ctx.fillText((headshot?'HEADSHOT  ':'')+damage,128,56);
+    const texture=new THREE.CanvasTexture(label);texture.colorSpace=THREE.SRGBColorSpace;
+    const material=new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false});
+    const sprite=new THREE.Sprite(material);sprite.position.copy(position).add(new THREE.Vector3(.78,1.55,0));sprite.scale.set(1.45,.64,1);
+    sprite.userData.startedAt=performance.now();sprite.userData.baseY=sprite.position.y;
+    scene.add(sprite);damagePopups.push(sprite);
+  }
+  function showDamageOnTarget(targetId:string,targetName:string,damage:number,headshot:boolean) {
+    const target=remotes.get(targetId)||[...remotes.values()].find(mesh=>mesh.userData.playerName===targetName);
+    if(target)showDamageAt(target.position.clone(),damage,headshot);
+  }
+  function showShot(x:number,y:number,z:number,shotYaw:number,shotPitch:number,weaponCode:string) {
+    if(weaponCode==='DORI')return;
+    const cp=Math.cos(shotPitch);
+    const direction=new THREE.Vector3(-Math.sin(shotYaw)*cp,Math.sin(shotPitch),-Math.cos(shotYaw)*cp).normalize();
+    spawnProjectile(new THREE.Vector3(x,y,z),direction,weaponCode,WEAPONS[weaponCode]?.range||70);
+  }
+
   function stopMobileFire() {
     if (mobileFireTimer) window.clearInterval(mobileFireTimer);
     mobileFireTimer = 0;
@@ -438,23 +526,26 @@ export async function createGame(
     const now = performance.now();
     if (!active || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
     lastShot = now;
-    ammo -= 1;
+    const melee=currentWeapon.category==='MELEE';
+    if(!melee)ammo-=1;
     gunKick = Math.min(1.8,gunKick+(weaponMotion[currentWeaponCode]?.kick||.82));
-    playFireSound(currentWeaponCode);
+    camera.updateMatrixWorld(true);
+    const origin=camera.getWorldPosition(new THREE.Vector3());
+    const direction=camera.getWorldDirection(new THREE.Vector3());
+    if(melee){doriSwingStart=now;playMeleeSound();}else{playFireSound(currentWeaponCode);spawnProjectile(origin,direction,currentWeaponCode,currentWeapon.range);}
     updateHud(hp, ammo, reserve, currentWeapon.name);
 
     if (mode === 'practice') {
-      camera.updateMatrixWorld(true);
-      const origin = camera.getWorldPosition(new THREE.Vector3());
-      const direction = camera.getWorldDirection(new THREE.Vector3());
-      const shotRay = new THREE.Raycaster(origin, direction, 0, 65);
-      const candidates = practiceTargets
-        .filter(target => target.visible)
-        .flatMap(target => target.children);
-      const hit = shotRay.intersectObjects(candidates, true)[0];
+      const shotRay = new THREE.Raycaster(origin, direction, 0, currentWeapon.range);
+      const candidates = practiceTargets.filter(target => target.visible).flatMap(target => target.children);
+      const targetHit = shotRay.intersectObjects(candidates, true)[0];
+      const wallHit = shotRay.intersectObjects(raycastMeshes, false)[0];
+      const hit = targetHit && (!wallHit || targetHit.distance < wallHit.distance - .015) ? targetHit : null;
       if (hit) {
         const target = hit.object.parent as THREE.Group;
-        const practiceDamage = Math.round(currentWeapon.damage * (currentWeapon.pellets || 1));
+        const headshot=hit.object===target.children[1];
+        const practiceDamage = Math.round(currentWeapon.damage * (headshot?1.3:1) * (currentWeapon.pellets || 1));
+        showDamageAt(target.position.clone(),practiceDamage,headshot);
         target.userData.hp = Math.max(0, Number(target.userData.hp || 100) - practiceDamage);
         if (target.userData.hp <= 0) {
           target.visible = false;
@@ -465,23 +556,27 @@ export async function createGame(
             target.visible = true;
           }, 2200);
         } else {
-          notify('TARGET HIT · ' + target.userData.hp + ' HP');
+          // Damage is shown beside the struck target in-world, not in a top-center toast.
         }
       }
     } else {
       send({ type: 'fire', weaponCode: currentWeaponCode, sequence: ++seq });
     }
-    if (mode === 'practice') {
+    if (mode === 'practice' && !melee) {
       pitch = THREE.MathUtils.clamp(pitch + Math.min(0.045,0.012+currentWeapon.damage/2500+currentWeapon.spread*0.25),-1.3,1.3);
       yaw += (Math.random()-0.5)*0.003;
     }
 
-    muzzleFlash.visible = true;
-    window.setTimeout(() => { if(!disposed)muzzleFlash.visible = false; }, 70);
+    if(!melee){
+      const flashMaterial=muzzleFlash.material as THREE.MeshBasicMaterial;
+      flashMaterial.color.setHex(projectileColors[currentWeaponCode]||0xffffff);
+      muzzleFlash.visible = true;
+      window.setTimeout(() => { if(!disposed)muzzleFlash.visible = false; }, 70);
+    }
   }
 
   function reload() {
-    if (!active || ammo >= currentWeapon.magazine || reserve <= 0 || performance.now() < reloadAt) return;
+    if (!active || currentWeapon.category==='MELEE' || ammo >= currentWeapon.magazine || reserve <= 0 || performance.now() < reloadAt) return;
     reloadAt = performance.now() + currentWeapon.reloadMs;
     reloadAnimationStart = performance.now();
     reloadAnimationDuration = currentWeapon.reloadMs;
@@ -680,6 +775,7 @@ export async function createGame(
         scene.add(mesh);
         remotes.set(player.id, mesh);
       }
+      mesh.userData.playerName=player.name;
       mesh.userData.targetX=player.x;
       mesh.userData.targetY=player.y-0.08;
       mesh.userData.targetZ=player.z;
@@ -702,9 +798,27 @@ export async function createGame(
     const reloadProgress=reloadAnimationStart?THREE.MathUtils.clamp((now-reloadAnimationStart)/Math.max(1,reloadAnimationDuration),0,1):1;
     if(reloadProgress>=1)reloadAnimationStart=0;
     const reloadWave=reloadAnimationStart?Math.sin(reloadProgress*Math.PI):0;
+    const switchProgress=switchAnimationStart?THREE.MathUtils.clamp((now-switchAnimationStart)/380,0,1):1;
+    if(switchProgress>=1)switchAnimationStart=0;
+    const switchWave=switchAnimationStart?Math.sin(switchProgress*Math.PI):0;
+    const doriProgress=doriSwingStart?THREE.MathUtils.clamp((now-doriSwingStart)/300,0,1):1;
+    if(doriProgress>=1)doriSwingStart=0;
+    const doriWave=doriSwingStart?Math.sin(doriProgress*Math.PI):0;
     const motion=weaponMotion[currentWeaponCode]||weaponMotion.R16;
-    gun.position.set(0,-reloadWave*motion.reloadTilt*.34,gunKick*.11+reloadWave*.19);
-    gun.rotation.set(reloadWave*motion.reloadTilt,0,reloadWave*motion.roll);
+    gun.position.set(0,-reloadWave*(.14+motion.reloadTilt*.34)-switchWave*.18,gunKick*.11+reloadWave*.34+switchWave*.28);
+    gun.rotation.set(reloadWave*(.42+motion.reloadTilt)+switchWave*.38,doriWave*1.2,reloadWave*(.22+motion.roll)+switchWave*.28);
+    for(let i=projectiles.length-1;i>=0;i--){
+      const shot=projectiles[i];shot.age+=dt;const step=130*dt;shot.travelled+=step;
+      shot.mesh.position.addScaledVector(shot.direction,step);
+      shot.trail.geometry.setFromPoints([shot.mesh.position.clone().addScaledVector(shot.direction,-.62),shot.mesh.position]);
+      if(shot.age>.42||shot.travelled>=shot.maxDistance){scene.remove(shot.mesh,shot.trail);disposeObjectResources(shot.mesh);shot.trail.geometry.dispose();(shot.trail.material as THREE.Material).dispose();projectiles.splice(i,1);}
+    }
+    for(let i=damagePopups.length-1;i>=0;i--){
+      const popup=damagePopups[i],age=(now-Number(popup.userData.startedAt||now))/1000;
+      popup.position.y=Number(popup.userData.baseY||popup.position.y)+age*.62;
+      (popup.material as THREE.SpriteMaterial).opacity=Math.max(0,1-age/.9);
+      if(age>=.9){scene.remove(popup);const material=popup.material as THREE.SpriteMaterial;material.map?.dispose();material.dispose();damagePopups.splice(i,1);}
+    }
     for(const mesh of remotes.values()){
       const data=mesh.userData;
       if(typeof data.targetX!=='number')continue;
@@ -895,6 +1009,8 @@ export async function createGame(
     setWeapon(code: string, nextAmmo?: number, nextReserve?: number) {
       setWeaponLocal(code,nextAmmo,nextReserve);
     },
+    showDamageOnTarget,
+    showShot,
     applyRecoil(nextPitch: number, nextYaw: number) {
       pitch = THREE.MathUtils.clamp(nextPitch,-1.3,1.3);
       yaw = nextYaw;
@@ -953,6 +1069,8 @@ export async function createGame(
       stopMobileFire();
       renderer.dispose();
       if(audioContext){void audioContext.close();audioContext=null;noiseBuffer=null;}
+      for(const shot of projectiles){shot.trail.geometry.dispose();(shot.trail.material as THREE.Material).dispose();}
+      for(const popup of damagePopups){const material=popup.material as THREE.SpriteMaterial;material.map?.dispose();material.dispose();}
       // Dispose shared materials/geometries exactly once, including remote players and practice targets.
       const geometries = new Set<THREE.BufferGeometry>();
       const materials = new Set<THREE.Material>();

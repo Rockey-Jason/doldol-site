@@ -4,7 +4,7 @@ import { WEAPONS } from './catalog.js';
 import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, type Combatant } from './combat.js';
 
 test('all ten weapon definitions have valid combat tuning',()=>{
-  assert.equal(Object.keys(WEAPONS).length,10);
+  assert.equal(Object.keys(WEAPONS).length,11);
   for(const weapon of Object.values(WEAPONS)){
     assert.ok(weapon.magazine>0,weapon.code+' magazine');
     assert.ok(weapon.reserve>=0,weapon.code+' reserve');
@@ -12,10 +12,19 @@ test('all ten weapon definitions have valid combat tuning',()=>{
     assert.ok(weapon.fireInterval>0,weapon.code+' fire interval');
     assert.ok(weapon.reloadMs>0,weapon.code+' reload duration');
     assert.ok(weapon.range>0,weapon.code+' range');
-    assert.ok(calculateWeaponRecoil(weapon)>0 && calculateWeaponRecoil(weapon)<=.045,weapon.code+' recoil');
+    if(weapon.category==='MELEE')assert.equal(calculateWeaponRecoil(weapon),0,weapon.code+' melee recoil');
+    else assert.ok(calculateWeaponRecoil(weapon)>0 && calculateWeaponRecoil(weapon)<=.045,weapon.code+' recoil');
     assert.ok(calculateWeaponDamage(weapon,false,weapon.range/2)>=weapon.damage,weapon.code+' body damage');
     assert.ok(calculateWeaponDamage(weapon,true,weapon.range/2)>calculateWeaponDamage(weapon,false,weapon.range/2),weapon.code+' headshot damage');
   }
+});
+
+test('all firearm and DORI headshots use exactly a 1.3x multiplier',()=>{
+  for(const weapon of Object.values(WEAPONS)){
+    assert.equal(weapon.headshotMultiplier,1.3,weapon.code+' headshot multiplier');
+    assert.equal(calculateWeaponDamage(weapon,true,weapon.range/2),Math.round(calculateWeaponDamage(weapon,false,weapon.range/2)*1.3));
+  }
+  assert.equal(calculateWeaponRecoil(WEAPONS.DORI),0);
 });
 
 test('server fire gate rejects empty, reloading, and too-fast shots',()=>{
@@ -45,6 +54,16 @@ test('live shot trace hits enemies, blocks cover, and ignores teammates outside 
   assert.equal(traceWeaponShot(shooter,[shooter,ally],'ffa',[],weapon).target,ally);
   assert.equal(traceWeaponShot(shooter,[shooter,enemy],'1v1',[{x:0,z:-6,hx:2,hz:.5}],weapon).target,null);
 });
+test('shots cannot pass through walls and can pass above low cover',()=>{
+  const shooter=combatant('a',0,0,.92,0,0,.09);
+  const enemy=combatant('b',1,0,.92,-10);
+  const wall={x:0,z:-5,hx:2,hz:.35,top:2.4};
+  assert.equal(traceWeaponShot(shooter,[shooter,enemy],'1v1',[wall],WEAPONS.R16).target,null);
+  const lowCover={...wall,top:1};
+  const shallowAim=combatant('c',0,0,.92,0,0,.01);
+  assert.equal(traceWeaponShot(shallowAim,[shallowAim,enemy],'1v1',[lowCover],WEAPONS.R16).target,enemy);
+});
+
 test('live shot trace enforces range and recognizes headshots',()=>{
   const weapon=WEAPONS.R16;
   const shooter=combatant('a',0,0,.92,0,0,.09);
