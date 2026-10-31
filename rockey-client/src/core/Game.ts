@@ -1487,6 +1487,8 @@ export async function createGame(
   }
 
   function setRemotePlayers(players: RemotePlayer[],serverTime=Date.now()) {
+    // Discard stale snapshots delivered out of order after variable network delay.
+    if(lastSnapshotServerTime>0&&serverTime<=lastSnapshotServerTime)return;
     if(lastSnapshotServerTime>0&&serverTime>lastSnapshotServerTime){
       const interval=serverTime-lastSnapshotServerTime;
       snapshotJitterMs=snapshotJitterMs*.82+Math.abs(interval-50)*.18;
