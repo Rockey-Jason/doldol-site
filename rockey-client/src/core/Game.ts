@@ -129,6 +129,9 @@ export async function createGame(
   scene.add(avatar);
 
   const gun = new THREE.Group();
+  // Declared before the first rebuildGun call because the rebuild routine resets these references.
+  let magazineModel: THREE.Group | null = null;
+  let boltModel: THREE.Group | null = null;
   const muzzleFlash = new THREE.Mesh(
     new THREE.SphereGeometry(0.105, 10, 8),
     new THREE.MeshBasicMaterial({ color: 0x8cecff })
@@ -432,8 +435,6 @@ export async function createGame(
   let gunKick = 0;
   let movementAmount = 0;
   let fireAnimationStart = 0;
-  let magazineModel: THREE.Group | null = null;
-  let boltModel: THREE.Group | null = null;
   const weaponMotion:Record<string,{kick:number;reloadTilt:number;roll:number;sway:number;bob:number;fireTilt:number;switchRoll:number}> = {
     R16:{kick:.82,reloadTilt:.12,roll:.06,sway:.75,bob:1,fireTilt:.9,switchRoll:.42},
     R9:{kick:.95,reloadTilt:.2,roll:.12,sway:.55,bob:.8,fireTilt:1.12,switchRoll:.62},
