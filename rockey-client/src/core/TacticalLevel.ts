@@ -27,7 +27,8 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     const w=8.8,d=9.6,h=4.25,t=.38;
     // Ground slab and upper deck. The upper deck has a stairwell opening.
     add(root,floor,0,.0,0,w,.28,d,true);
-    add(root,floor,0,4.05,1.45,w,.28,6.7,true);
+    add(root,floor,-.9,4.05,1.45,6.8,.28,6.7,true);
+    add(root,floor,4.05,4.05,1.45,.7,.28,6.7,true);
     // Four walls are segmented to leave a generous central entrance and firing lanes.
     add(root,wall,-w/2+t/2,h/2,0,t,h,d,true);
     add(root,wall,w/2-t/2,h/2,0,t,h,d,true);
@@ -88,6 +89,18 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
   // Buildings sit on opposite flanks, keeping the original centre lane readable.
   makeBuilding(-17.2,-1.5,1);
   makeBuilding(17.2,-1.5,-1);
+  // Elevated enclosed skybridge links both second floors into one continuous route.
+  const bridge=new THREE.Group();bridge.position.set(0,0,-1.5);scene.add(bridge);
+  add(bridge,floor,0,4.05,0,25.6,.28,2.8,true);
+  for(const side of [-1,1]){
+    add(bridge,wall,0,4.85,side*1.34,25.6,1.32,.16,true);
+    add(bridge,trim,0,5.52,side*1.34,25.6,.08,.22);
+    for(let x=-11;x<=11;x+=2.75){
+      add(bridge,glow,x,4.55,side*1.23,.42,.045,.035);
+    }
+  }
+  const bridgeLamp=new THREE.PointLight(map.light,isMobile?8:18,22,2);
+  bridgeLamp.position.set(0,5.05,0);bridge.add(bridgeLamp);
 
   const destroyNear=(point:THREE.Vector3,radius:number,spawn:(p:THREE.Vector3,count:number,impulse:number)=>void)=>{
     let destroyed=0;
