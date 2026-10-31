@@ -58,6 +58,7 @@ function showMenu(){
   menu.classList.remove('hidden');hud.classList.add('hidden');
   $('resultPanel')!.classList.add('hidden');$('hubPanel')!.classList.add('hidden');
   document.exitPointerLock?.();
+  if(document.fullscreenElement)void document.exitFullscreen().catch(()=>{});
   isSpectating=false;
 }
 function showGame(){
