@@ -138,11 +138,30 @@ export async function createGame(
   controller.enableAutostep(0.35, 0.22, true);
   controller.enableSnapToGround(0.18);
 
-  const avatar = new THREE.Mesh(
-    new THREE.CapsuleGeometry(0.34, 0.78, 5, 10),
-    new THREE.MeshStandardMaterial({ color: 0x183b65, metalness: 0.6, roughness: 0.3 })
-  );
-  avatar.castShadow = true;
+  const avatar = new THREE.Group();
+  const avatarArmor = new THREE.MeshPhysicalMaterial({color:0x183b65,metalness:.72,roughness:.28,clearcoat:.38});
+  const avatarDark = new THREE.MeshStandardMaterial({color:0x101b2c,metalness:.55,roughness:.42});
+  const avatarAccent = new THREE.MeshStandardMaterial({color:0x4aa8ff,emissive:0x164b78,emissiveIntensity:.85,metalness:.42,roughness:.26});
+  const avatarBody = new THREE.Mesh(new THREE.CapsuleGeometry(.31,.66,6,12),avatarArmor);
+  avatarBody.castShadow=true;avatarBody.receiveShadow=true;avatar.add(avatarBody);
+  const avatarHead = new THREE.Mesh(new THREE.SphereGeometry(.235,20,16),avatarArmor);
+  avatarHead.position.y=.59;avatarHead.castShadow=true;avatar.add(avatarHead);
+  const avatarHelmet = new THREE.Mesh(new THREE.SphereGeometry(.25,20,12,0,Math.PI*2,0,Math.PI*.58),avatarDark);
+  avatarHelmet.position.y=.64;avatarHelmet.castShadow=true;avatar.add(avatarHelmet);
+  const avatarVisor = new THREE.Mesh(new THREE.BoxGeometry(.31,.075,.055),avatarAccent);
+  avatarVisor.position.set(0,.61,-.205);avatar.add(avatarVisor);
+  const avatarChest = new THREE.Mesh(new THREE.BoxGeometry(.43,.36,.105),avatarDark);
+  avatarChest.position.set(0,.08,-.265);avatarChest.castShadow=true;avatar.add(avatarChest);
+  const avatarChestMark = new THREE.Mesh(new THREE.BoxGeometry(.22,.035,.018),avatarAccent);
+  avatarChestMark.position.set(0,.16,-.326);avatar.add(avatarChestMark);
+  for(const side of [-1,1]){
+    const shoulder = new THREE.Mesh(new THREE.SphereGeometry(.16,14,12),avatarArmor);
+    shoulder.position.set(side*.34,.25,0);shoulder.scale.set(1,.82,1.05);shoulder.castShadow=true;avatar.add(shoulder);
+    const boot = new THREE.Mesh(new THREE.BoxGeometry(.19,.16,.29),avatarDark);
+    boot.position.set(side*.17,-.48,-.045);boot.castShadow=true;avatar.add(boot);
+  }
+  const avatarPack = new THREE.Mesh(new THREE.BoxGeometry(.36,.42,.16),avatarDark);
+  avatarPack.position.set(0,.12,.22);avatarPack.castShadow=true;avatar.add(avatarPack);
   scene.add(avatar);
 
   const gun = new THREE.Group();
@@ -424,8 +443,37 @@ export async function createGame(
   }
   rebuildGun('R16');
 
-  const enemyMat = new THREE.MeshStandardMaterial({ color: 0x8a3149, metalness: 0.5, roughness: 0.35 });
-  const allyMat = new THREE.MeshStandardMaterial({ color: 0x267aa5, metalness: 0.5, roughness: 0.35 });
+  const enemyMat = new THREE.MeshPhysicalMaterial({ color: 0x8a3149, metalness: 0.58, roughness: 0.31, clearcoat:.28 });
+  const allyMat = new THREE.MeshPhysicalMaterial({ color: 0x267aa5, metalness: 0.58, roughness: 0.31, clearcoat:.28 });
+  const remoteArmor = new THREE.MeshStandardMaterial({color:0x111d30,metalness:.62,roughness:.34});
+  const remoteEnemyAccent = new THREE.MeshStandardMaterial({color:0xff647e,emissive:0x5c1022,emissiveIntensity:.65,metalness:.3,roughness:.3});
+  const remoteAllyAccent = new THREE.MeshStandardMaterial({color:0x63dfff,emissive:0x0c527b,emissiveIntensity:.75,metalness:.3,roughness:.3});
+  function createCombatantVisual(team:number){
+    const group=new THREE.Group();
+    const base=team===localTeam?allyMat:enemyMat;
+    const accent=team===localTeam?remoteAllyAccent:remoteEnemyAccent;
+    const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.31,.72,5,10),base);
+    torso.castShadow=true;torso.receiveShadow=true;group.add(torso);
+    const head=new THREE.Mesh(new THREE.SphereGeometry(.22,18,14),base);
+    head.position.y=.59;head.castShadow=true;group.add(head);
+    const helmet=new THREE.Mesh(new THREE.SphereGeometry(.235,18,12,0,Math.PI*2,0,Math.PI*.58),remoteArmor);
+    helmet.position.y=.64;helmet.castShadow=true;group.add(helmet);
+    const visor=new THREE.Mesh(new THREE.BoxGeometry(.29,.065,.045),accent);
+    visor.position.set(0,.61,-.2);group.add(visor);
+    const chest=new THREE.Mesh(new THREE.BoxGeometry(.42,.34,.1),remoteArmor);
+    chest.position.set(0,.08,-.26);chest.castShadow=true;group.add(chest);
+    const insignia=new THREE.Mesh(new THREE.BoxGeometry(.18,.035,.018),accent);
+    insignia.position.set(0,.16,-.316);group.add(insignia);
+    for(const side of [-1,1]){
+      const shoulder=new THREE.Mesh(new THREE.SphereGeometry(.155,12,10),base);
+      shoulder.position.set(side*.33,.25,0);shoulder.scale.set(1,.8,1.05);shoulder.castShadow=true;group.add(shoulder);
+      const boot=new THREE.Mesh(new THREE.BoxGeometry(.18,.15,.27),remoteArmor);
+      boot.position.set(side*.16,-.48,-.04);boot.castShadow=true;group.add(boot);
+    }
+    const pack=new THREE.Mesh(new THREE.BoxGeometry(.34,.4,.15),remoteArmor);
+    pack.position.set(0,.12,.22);pack.castShadow=true;group.add(pack);
+    return group;
+  }
   const remotes = new Map<string, THREE.Group>();
   const practiceTargets: THREE.Group[] = [];
   const projectiles: Array<{mesh:THREE.Mesh;trail:THREE.Line;direction:THREE.Vector3;travelled:number;maxDistance:number;age:number}> = [];
@@ -1027,13 +1075,7 @@ export async function createGame(
     for (const player of players) {
       let mesh = remotes.get(player.id);
       if (!mesh) {
-        mesh = new THREE.Group();
-        const model = new THREE.Mesh(
-          new THREE.CapsuleGeometry(0.34, 0.78, 5, 10),
-          (player.team === localTeam ? allyMat : enemyMat).clone()
-        );
-        model.castShadow = true;
-        mesh.add(model);
+        mesh = createCombatantVisual(player.team);
         mesh.position.set(player.x,player.y-0.08,player.z);
         mesh.rotation.y=player.yaw;
         scene.add(mesh);
