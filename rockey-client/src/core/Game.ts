@@ -13,6 +13,7 @@ export interface RemotePlayer {
   id: string; name: string; x: number; y: number; z: number;
   yaw: number; health: number; team: number; alive?: boolean; connected?: boolean; aim?:boolean;
 }
+export interface WorldDebrisSnapshot {id:string;x:number;y:number;z:number;rx:number;ry:number;rz:number;size:number;sleeping:boolean;}
 export interface ReplayFrame {
   t: number;
   players: RemotePlayer[];
@@ -31,6 +32,7 @@ export interface GameInstance {
   showThrownItem(itemCode:string,x:number,y:number,z:number,yaw:number,pitch:number,fuseMs:number):void;
   showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number,eventId?:string):void;
   applyWorldDestruction(events:Array<{id:string;x:number;y:number;z:number;radius:number}>):void;
+  applyWorldDebris(bodies:WorldDebrisSnapshot[]):void;
   applyRecoil(pitch: number, yaw: number): void;
   showDamageOnTarget(targetId: string, targetName: string, damage: number, headshot: boolean): void;
   showShot(x: number, y: number, z: number, yaw: number, pitch: number, weaponCode: string, targetDistance?:number): void;
@@ -746,6 +748,25 @@ export async function createGame(
   const minPixelRatio=isMobile ? .78 : 1.0;
   const maxPixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
   const appliedDestructionIds=new Set<string>();
+  const remoteDebris=new Map<string,THREE.Mesh>();
+  const remoteDebrisGeometry=new THREE.BoxGeometry(1,1,1);
+  const remoteDebrisMaterial=new THREE.MeshStandardMaterial({color:map.palette==='amber'?0x907451:0x586d7d,roughness:.88,metalness:.16});
+  const applyWorldDebris=(bodies:WorldDebrisSnapshot[])=>{
+    const live=new Set(bodies.map(body=>body.id));
+    for(const [id,mesh] of remoteDebris){if(!live.has(id)){scene.remove(mesh);remoteDebris.delete(id);}}
+    for(const body of bodies){
+      if(!body||typeof body.id!=='string'||![body.x,body.y,body.z,body.rx,body.ry,body.rz,body.size].every(Number.isFinite))continue;
+      let mesh=remoteDebris.get(body.id);
+      if(!mesh){
+        mesh=new THREE.Mesh(remoteDebrisGeometry,remoteDebrisMaterial);
+        mesh.castShadow=!isMobile;mesh.receiveShadow=!isMobile;mesh.userData.serverDebrisId=body.id;
+        scene.add(mesh);remoteDebris.set(body.id,mesh);
+      }
+      mesh.position.set(body.x,body.y,body.z);
+      mesh.rotation.set(body.rx,body.ry,body.rz);
+      mesh.scale.setScalar(THREE.MathUtils.clamp(body.size,.04,.8));
+    }
+  };
   const performanceBadge=document.createElement('div');
   performanceBadge.style.cssText='position:fixed;top:calc(env(safe-area-inset-top, 0px) + 8px);right:10px;z-index:30;padding:6px 9px;border:1px solid rgba(130,190,230,.24);border-radius:7px;background:rgba(5,13,25,.68);color:#d9edff;font:600 10px/1.2 ui-monospace,monospace;letter-spacing:.04em;pointer-events:none;backdrop-filter:blur(8px)';
   performanceBadge.textContent='FPS -- · FRAME -- ms';
@@ -2068,6 +2089,8 @@ export async function createGame(
       pitch = THREE.MathUtils.clamp(nextPitch,-1.3,1.3);
       yaw = nextYaw;
     },
+    applyWorldDebris,
+
     playReplay(frames: ReplayFrame[]) {
       if (!Array.isArray(frames) || frames.length===0) return notify('저장된 리플레이 프레임이 없습니다.');
       active=false;mode='replay';replayFocusId='';replayFrames=frames;
@@ -2108,6 +2131,8 @@ export async function createGame(
       cancelAnimationFrame(raf);
       window.removeEventListener('resize', resize);
       window.removeEventListener('rockey:network',onNetworkRtt);
+      for(const mesh of remoteDebris.values())scene.remove(mesh);
+      remoteDebris.clear();remoteDebrisGeometry.dispose();remoteDebrisMaterial.dispose();
       stopSoakTest();
       stopMovementCheck();
       if((window as Window&{RockeyQA?:typeof qaApi}).RockeyQA===qaApi)delete (window as Window&{RockeyQA?:typeof qaApi}).RockeyQA;
