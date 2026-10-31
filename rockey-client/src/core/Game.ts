@@ -64,6 +64,7 @@ export async function createGame(
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.8));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  // OVERHAUL 04: benchmark-aware post-processing and quality scaling.
   renderer.toneMappingExposure = 1.08;
   const composer=new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene,camera));
