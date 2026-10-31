@@ -1,5 +1,5 @@
 export interface RockeyCover {
-  x: number; z: number; hx: number; hz: number; top: number;
+  x: number; z: number; hx: number; hz: number; top: number; bottom?: number;
 }
 export interface RockeyMap {
   id: string;
@@ -67,6 +67,30 @@ export const MAPS: Record<string,RockeyMap> = {
     ]
   }
 };
+
+
+const TACTICAL_BUILDING_COVER:RockeyCover[]=[];
+const addTacticalCover=(x:number,z:number,hx:number,hz:number,top=4.25,bottom=0)=>{
+  TACTICAL_BUILDING_COVER.push({x,z,hx,hz,top,bottom});
+};
+for(const cx of [-17.2,17.2]){
+  const innerSide=cx<0?cx+4.21:cx-4.21;
+  const outerSide=cx<0?cx-4.21:cx+4.21;
+  // Outer building shell and the two side entrances into the main rooms.
+  addTacticalCover(cx,-6.11,4.4,.19);
+  addTacticalCover(outerSide,-1.5,.19,4.8);
+  addTacticalCover(innerSide,-4.85,.19,1.45);
+  addTacticalCover(innerSide,1.85,.19,1.45);
+  addTacticalCover(cx-2.95,2.91,1.45,.19);
+  addTacticalCover(cx+2.95,2.91,1.45,.19);
+  // Office/storage cross-partition with a clear central doorway and lintel.
+  addTacticalCover(cx-1.95,-2.05,.16,.16,4.1);
+  addTacticalCover(cx+1.95,-2.05,.16,.16,4.1);
+  addTacticalCover(cx-1.65,-3.55,.75,.16,3.15);
+  addTacticalCover(cx+1.65,-3.55,.75,.16,3.15);
+  addTacticalCover(cx,-3.55,.60,.16,4.1,3.15);
+}
+for(const map of Object.values(MAPS))map.cover.push(...TACTICAL_BUILDING_COVER);
 
 export interface RockeyWeapon {
   code: string; name: string; category: string;
