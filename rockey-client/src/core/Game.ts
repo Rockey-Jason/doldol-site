@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { ITEMS, MAPS, WEAPONS, type RockeyItemCode, type RockeyWeapon } from '../catalog';
 import { addRockeyEnvironment } from './EnvironmentDressing';
 import { addTacticalLevel } from './TacticalLevel';
@@ -53,6 +54,16 @@ export async function createGame(
   const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 760;
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(map.background);
+  // A compact prefiltered room probe gives metal, glass and armour readable
+  // environment reflections without a per-frame reflection pass.
+  let reflectionEnvironment:THREE.Texture|null=null;
+  if(!isMobile){
+    const pmrem=new THREE.PMREMGenerator(new THREE.WebGLRenderer({canvas:document.createElement('canvas'),alpha:true}));
+    const room=new RoomEnvironment();
+    reflectionEnvironment=pmrem.fromScene(room,.04).texture;
+    scene.environment=reflectionEnvironment;
+    pmrem.dispose();room.dispose();
+  }
   scene.fog = new THREE.Fog(map.fog, 54, 158);
 
   const camera = new THREE.PerspectiveCamera(78, 1, 0.08, 180);
