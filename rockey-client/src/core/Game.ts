@@ -18,6 +18,8 @@ export interface GameInstance {
   setAmmo(ammo: number, reserve: number): void;
   setWeapon(weaponCode: string, ammo?: number, reserve?: number): void;
   applyRecoil(pitch: number, yaw: number): void;
+  showDamageOnTarget(targetId: string, targetName: string, damage: number, headshot: boolean): void;
+  showShot(x: number, y: number, z: number, yaw: number, pitch: number, weaponCode: string): void;
   playReplay(frames: ReplayFrame[]): void;
   playKillcam(frames: ReplayFrame[], killerId: string, onComplete: () => void): void;
   cancelKillcam(): void;
@@ -275,6 +277,9 @@ export async function createGame(
   const allyMat = new THREE.MeshStandardMaterial({ color: 0x267aa5, metalness: 0.5, roughness: 0.35 });
   const remotes = new Map<string, THREE.Group>();
   const practiceTargets: THREE.Group[] = [];
+  const projectiles: Array<{mesh:THREE.Mesh;trail:THREE.Line;direction:THREE.Vector3;travelled:number;maxDistance:number;age:number}> = [];
+  const damagePopups: THREE.Sprite[] = [];
+  const projectileColors:Record<string,number>={R16:0x4aa8ff,R9:0xffd166,VIPER:0x54e6b0,THUNDER:0xff8a45,LONGSHOT:0xa8d8ff,HELIX:0xb18aff,BASTION:0xffc45f,NOVA:0xff748e,ARC:0x57efff,PULSE:0xbe8cff,DORI:0xc98a4c};
 
   function createPracticeTargets() {
     const bodyMaterial = new THREE.MeshStandardMaterial({
@@ -334,10 +339,12 @@ export async function createGame(
     VIPER:{kick:.48,reloadTilt:.09,roll:.04},THUNDER:{kick:1.28,reloadTilt:.38,roll:.2},
     LONGSHOT:{kick:1.35,reloadTilt:.46,roll:.1},HELIX:{kick:.88,reloadTilt:.16,roll:.08},
     BASTION:{kick:.56,reloadTilt:.28,roll:.22},NOVA:{kick:1.16,reloadTilt:.22,roll:.14},
-    ARC:{kick:.62,reloadTilt:.1,roll:.04},PULSE:{kick:.72,reloadTilt:.14,roll:.08}
+    ARC:{kick:.62,reloadTilt:.1,roll:.04},PULSE:{kick:.72,reloadTilt:.14,roll:.08},DORI:{kick:0,reloadTilt:.05,roll:.05}
   };
   let reloadAnimationStart = 0;
   let reloadAnimationDuration = 0;
+  let switchAnimationStart = 0;
+  let doriSwingStart = 0;
   let movePointerId: number | null = null;
   let lookPointerId: number | null = null;
   let active = false;
