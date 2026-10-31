@@ -303,7 +303,8 @@ export class GameRoom {
     const p=this.players.find(item=>item.client===client);
     if(!p || this.finished || Date.now()<p.reloadUntil) return;
     p.weaponAmmo[p.weaponCode]={ammo:p.ammo,reserve:p.reserve};
-    const next=p.weaponCode===p.client.primaryWeapon?p.secondaryWeapon:p.client.primaryWeapon;
+    const primary=p.client.selectedPrimaryWeapon||p.client.primaryWeapon;
+    const next=p.weaponCode===primary?p.secondaryWeapon:primary;
     if(!WEAPONS[next]) return;
     p.weaponCode=next;
     const weapon=WEAPONS[next];
