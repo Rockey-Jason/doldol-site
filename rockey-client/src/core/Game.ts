@@ -903,24 +903,26 @@ export async function createGame(
       debrisVisuals.push({mesh,velocity,spin:new THREE.Vector3((Math.random()-.5)*9,(Math.random()-.5)*10,(Math.random()-.5)*9),age:0,life:2.2+Math.random()*1.8});
     }
   }
-  function spawnPhysicalDebris(position:THREE.Vector3,count:number,impulse:number){
+  function spawnPhysicalDebris(position:THREE.Vector3,count:number,impulse:number,seed='debris'){
+    let randomState=Array.from(seed).reduce((value,char)=>(Math.imul(value^char.charCodeAt(0),16777619)>>>0),2166136261);
+    const random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296;};
     const limit=isMobile?54:120;
     while(physicalDebris.length+count>limit){
       const oldest=physicalDebris.shift();
       if(oldest){scene.remove(oldest.mesh);world.removeRigidBody(oldest.body);(oldest.mesh.material as THREE.Material).dispose();if(oldest.mesh.geometry!==physicalDebrisGeometry)oldest.mesh.geometry.dispose();}
     }
     for(let i=0;i<count;i++){
-      const size=.12+Math.random()*.24;
+      const size=.12+random()*.24;
       const material=new THREE.MeshStandardMaterial({color:map.palette==='amber'?0x907451:0x586d7d,roughness:.88,metalness:.16});
-      const mesh=new THREE.Mesh(physicalDebrisGeometry,material);mesh.scale.set(size*(.7+Math.random()*.8),size*(.55+Math.random()*.9),size*(.7+Math.random()*.8));
-      mesh.position.copy(position).add(new THREE.Vector3((Math.random()-.5)*.7,.12+Math.random()*.55,(Math.random()-.5)*.7));
-      mesh.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);mesh.castShadow=!isMobile;mesh.receiveShadow=!isMobile;scene.add(mesh);
+      const mesh=new THREE.Mesh(physicalDebrisGeometry,material);mesh.scale.set(size*(.7+random()*.8),size*(.55+random()*.9),size*(.7+random()*.8));
+      mesh.position.copy(position).add(new THREE.Vector3((random()-.5)*.7,.12+random()*.55,(random()-.5)*.7));
+      mesh.rotation.set(random()*Math.PI,random()*Math.PI,random()*Math.PI);mesh.castShadow=!isMobile;mesh.receiveShadow=!isMobile;scene.add(mesh);
       const body=world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(mesh.position.x,mesh.position.y,mesh.position.z).setLinearDamping(.12).setAngularDamping(.18).setCcdEnabled(true));
       world.createCollider(RAPIER.ColliderDesc.cuboid(mesh.scale.x/2,mesh.scale.y/2,mesh.scale.z/2).setDensity(2.6).setFriction(.72).setRestitution(.16),body);
-      const angle=Math.random()*Math.PI*2,speed=impulse*(.38+Math.random()*.72);
-      body.applyImpulse({x:Math.cos(angle)*speed,y:(.55+Math.random()*.75)*speed,z:Math.sin(angle)*speed},true);
-      body.applyTorqueImpulse({x:(Math.random()-.5)*speed,y:(Math.random()-.5)*speed,z:(Math.random()-.5)*speed},true);
-      physicalDebris.push({mesh,body,age:0,life:4.2+Math.random()*2.4});
+      const angle=random()*Math.PI*2,speed=impulse*(.38+random()*.72);
+      body.applyImpulse({x:Math.cos(angle)*speed,y:(.55+random()*.75)*speed,z:Math.sin(angle)*speed},true);
+      body.applyTorqueImpulse({x:(random()-.5)*speed,y:(random()-.5)*speed,z:(random()-.5)*speed},true);
+      physicalDebris.push({mesh,body,age:0,life:4.2+random()*2.4});
     }
   }
   function updatePhysicalDebris(dt:number){
@@ -1020,8 +1022,8 @@ export async function createGame(
     if(eventId){appliedDestructionIds.add(eventId);if(appliedDestructionIds.size>500)appliedDestructionIds.delete(appliedDestructionIds.values().next().value as string);}
     tacticalLevel.destroyNear(position,radius,(p,count,impulse,kind)=>{
       if(kind==='glass')spawnGlassShards(p,count,impulse,eventId||'glass');
-      else if(kind==='light'){spawnLightBreakFx(p,eventId||'light');spawnPhysicalDebris(p,count,impulse);}
-      else{spawnDebrisFx(p,count,impulse);spawnPhysicalDebris(p,count,impulse);}
+      else if(kind==='light'){spawnLightBreakFx(p,eventId||'light');spawnPhysicalDebris(p,count,impulse,eventId||'light');}
+      else{spawnDebrisFx(p,count,impulse);spawnPhysicalDebris(p,count,impulse,eventId||'prop');}
     });
   }
   function spawnExplosionFx(position:THREE.Vector3,radius:number,durationMs:number,eventId?:string){
