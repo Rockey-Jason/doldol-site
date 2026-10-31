@@ -33,7 +33,7 @@ export interface GameInstance {
   applyWorldDestruction(events:Array<{id:string;x:number;y:number;z:number;radius:number}>):void;
   applyRecoil(pitch: number, yaw: number): void;
   showDamageOnTarget(targetId: string, targetName: string, damage: number, headshot: boolean): void;
-  showShot(x: number, y: number, z: number, yaw: number, pitch: number, weaponCode: string): void;
+  showShot(x: number, y: number, z: number, yaw: number, pitch: number, weaponCode: string, targetDistance?:number): void;
   playReplay(frames: ReplayFrame[]): void;
   playKillcam(frames: ReplayFrame[], killerId: string, onComplete: () => void): void;
   cancelKillcam(): void;
@@ -1051,11 +1051,13 @@ export async function createGame(
     const target=remotes.get(targetId)||[...remotes.values()].find(mesh=>mesh.userData.playerName===targetName);
     if(target)showDamageAt(target.position.clone(),damage,headshot);
   }
-  function showShot(x:number,y:number,z:number,shotYaw:number,shotPitch:number,weaponCode:string) {
+  function showShot(x:number,y:number,z:number,shotYaw:number,shotPitch:number,weaponCode:string,targetDistance?:number) {
     if(weaponCode==='DORI')return;
     const cp=Math.cos(shotPitch);
     const direction=new THREE.Vector3(-Math.sin(shotYaw)*cp,Math.sin(shotPitch),-Math.cos(shotYaw)*cp).normalize();
-    spawnProjectile(new THREE.Vector3(x,y,z),direction,weaponCode,WEAPONS[weaponCode]?.range||70);
+    const weaponRange=WEAPONS[weaponCode]?.range||70;
+    const authoritativeDistance=Number.isFinite(targetDistance)?THREE.MathUtils.clamp(targetDistance as number,.5,weaponRange):weaponRange;
+    spawnProjectile(new THREE.Vector3(x,y,z),direction,weaponCode,authoritativeDistance);
   }
   function currentItemCount(){return Math.max(0,itemInventory[currentItemCode]||0);}
   function emitItemState(){window.dispatchEvent(new CustomEvent('rockey:item-state',{detail:{itemCode:currentItemCode,inventory:{...itemInventory}}}));}
