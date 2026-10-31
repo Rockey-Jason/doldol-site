@@ -105,12 +105,12 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     left.rotation.set(pose.leftRot.x-.08+reach*.42-seat*.2,pose.leftRot.y+reach*.24,pose.leftRot.z-.02-reach*.38+seat*.16-returnGrip*.05);
     const curl=THREE.MathUtils.clamp(holdBlend*.98+lift*.18-seatBlend*.12,0,1);
     const leftFingers=left.userData.fingers as THREE.Group[];
+    const leftThumb=left.userData.thumb as THREE.Group;
     leftFingers.forEach((finger,i)=>{const contact=pose.supportCurl;finger.rotation.x=-.10-curl*(i===0?.82:1.08)-contact*.16*(1-holdBlend);finger.rotation.z=(i-1.5)*.035;});
     leftThumb.rotation.x=-.10-pose.thumbCurl*.54-curl*.16;
     leftThumb.rotation.z=.10;
     const rightFingers=right.userData.fingers as THREE.Group[];
     const rightThumb=right.userData.thumb as THREE.Group;
-    const leftThumb=left.userData.thumb as THREE.Group;
     rightFingers.forEach((finger,i)=>{finger.rotation.x=-.10-pose.triggerCurl*(i===1?.18:1);finger.rotation.z=(i-1.5)*.025;});
     rightThumb.rotation.x=-.12-pose.thumbCurl*.62;
     rightThumb.rotation.z=-.12;
