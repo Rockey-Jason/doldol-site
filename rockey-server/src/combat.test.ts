@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { WEAPONS } from './catalog.js';
+import { MAPS, WEAPONS } from './catalog.js';
 import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, type Combatant, type SmokeVolume } from './combat.js';
 
 test('all ten weapon definitions have valid combat tuning',()=>{
@@ -84,4 +84,28 @@ test('live smoke blocks server-authoritative target acquisition only when the sh
   assert.equal(traceWeaponShot(shooter,[shooter,enemy],'1v1',[],WEAPONS.R16,[offsetSmoke]).target,enemy);
   const smokeBeyondTarget={...smoke,z:-18};
   assert.equal(traceWeaponShot(shooter,[shooter,enemy],'1v1',[],WEAPONS.R16,[smokeBeyondTarget]).target,enemy);
+});
+
+test('tactical building shells block server shots but preserve the side entrance',()=>{
+  const inside=combatant('a',0,-17.2,.92,0);
+  const farEnemy=combatant('b',1,-17.2,.92,-12);
+  assert.equal(traceWeaponShot(inside,[inside,farEnemy],'1v1',MAPS.training_facility.cover,WEAPONS.R16).target,null);
+
+  const doorwayShooter=combatant('c',0,-10,.92,0,Math.PI/2);
+  const doorwayTarget=combatant('d',1,-17.2,.92,0);
+  assert.equal(traceWeaponShot(doorwayShooter,[doorwayShooter,doorwayTarget],'1v1',MAPS.training_facility.cover,WEAPONS.R16).target,doorwayTarget);
+
+  const wallShooter=combatant('e',0,-10,.92,2,Math.PI/2);
+  const wallTarget=combatant('f',1,-17.2,.92,2);
+  assert.equal(traceWeaponShot(wallShooter,[wallShooter,wallTarget],'1v1',MAPS.training_facility.cover,WEAPONS.R16).target,null);
+});
+
+test('vertically bounded upper partitions do not block shots below their lintels',()=>{
+  const shooter=combatant('a',0,0,.92,0);
+  const enemy=combatant('b',1,0,.92,-10);
+  const lintel={x:0,z:-5,hx:2,hz:.25,bottom:3.15,top:4.1};
+  assert.equal(traceWeaponShot(shooter,[shooter,enemy],'1v1',[lintel],WEAPONS.R16).target,enemy);
+  const elevatedShooter=combatant('c',0,0,3.0,0,0,.0);
+  const elevatedEnemy=combatant('d',1,0,3.0,-10);
+  assert.equal(traceWeaponShot(elevatedShooter,[elevatedShooter,elevatedEnemy],'1v1',[lintel],WEAPONS.R16).target,null);
 });
