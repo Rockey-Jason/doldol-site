@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
+import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { ITEMS, MAPS, WEAPONS, type RockeyItemCode, type RockeyWeapon } from '../catalog';
 import { addRockeyEnvironment } from './EnvironmentDressing';
 import { addTacticalLevel } from './TacticalLevel';
@@ -62,6 +65,10 @@ export async function createGame(
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.08;
+  const composer=new EffectComposer(renderer);
+  composer.addPass(new RenderPass(scene,camera));
+  const bloomPass=new UnrealBloomPass(new THREE.Vector2(1,1),isMobile ? .08 : .34,.42,.84);
+  composer.addPass(bloomPass);
   // Pre-filtered environment probe adds stable reflections to metal, glass and armour.
   let reflectionEnvironment:THREE.Texture|null=null;
   if(!isMobile){
@@ -72,7 +79,7 @@ export async function createGame(
     pmrem.dispose();room.dispose();
   }
   renderer.shadowMap.enabled = !isMobile;
-  renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.type = isMobile?THREE.PCFShadowMap:THREE.PCFSoftShadowMap;
 
   // Cinematic three-point lighting: soft sky fill, warm key light and a cool rim.
   scene.add(new THREE.HemisphereLight(0xd9efff, 0x27364d, 2.05));
@@ -99,15 +106,20 @@ export async function createGame(
 
   const world = new RAPIER.World({ x: 0, y: -18, z: 0 });
   world.timestep = 1 / 60;
-  world.createCollider(RAPIER.ColliderDesc.cuboid(30, 0.5, 30).setTranslation(0, -0.5, 0));
-
-  const floor = new THREE.Mesh(
-    new THREE.BoxGeometry(60, 1, 60),
-    new THREE.MeshStandardMaterial({ color: map.floor, metalness: 0.18, roughness: 0.78 })
-  );
-  floor.position.y = -0.5;
-  floor.receiveShadow = true;
-  scene.add(floor);
+  const raycastMeshes:THREE.Object3D[]=[];
+  const groundMaterial=new THREE.MeshStandardMaterial({color:map.floor,metalness:.18,roughness:.78});
+  const groundPatches=[
+    {x:0,z:-18.15,w:60,d:23.7},
+    {x:0,z:16.65,w:60,d:26.7},
+    {x:-25.8,z:-1.5,w:8.4,d:9.6},
+    {x:0,z:-1.5,w:25.6,d:9.6},
+    {x:25.8,z:-1.5,w:8.4,d:9.6}
+  ];
+  for(const patch of groundPatches){
+    const mesh=new THREE.Mesh(new THREE.BoxGeometry(patch.w,1,patch.d),groundMaterial);
+    mesh.position.set(patch.x,-.5,patch.z);mesh.receiveShadow=true;scene.add(mesh);raycastMeshes.push(mesh);
+    world.createCollider(RAPIER.ColliderDesc.cuboid(patch.w/2,.5,patch.d/2).setTranslation(patch.x,-.5,patch.z));
+  }
   const grid = new THREE.GridHelper(60, 60, map.grid, map.grid);
   grid.position.y = 0.012;
   (grid.material as THREE.Material).transparent = true;
@@ -122,8 +134,6 @@ export async function createGame(
   const glow = new THREE.MeshStandardMaterial({
     color: map.light, emissive: map.light, emissiveIntensity: 1.8
   });
-  const raycastMeshes: THREE.Object3D[] = [floor];
-
   function box(x: number, y: number, z: number, hx: number, hy: number, hz: number) {
     const mesh = new THREE.Mesh(new THREE.BoxGeometry(hx * 2, hy * 2, hz * 2), solid);
     mesh.position.set(x, y, z);
@@ -212,6 +222,7 @@ export async function createGame(
   const gun = new THREE.Group();
   // Declared before the first rebuildGun call because the rebuild routine resets these references.
   let magazineModel: THREE.Group | null = null;
+  let replacementMagazineModel: THREE.Group | null = null;
   let boltModel: THREE.Group | null = null;
   const smokeCanvas=document.createElement('canvas');smokeCanvas.width=64;smokeCanvas.height=64;
   const smokeContext=smokeCanvas.getContext('2d');
@@ -253,6 +264,7 @@ export async function createGame(
       disposeObjectResources(child);
     }
     magazineModel = null;
+    replacementMagazineModel = null;
     boltModel = null;
 
     const accent = new THREE.Color(
@@ -389,6 +401,12 @@ export async function createGame(
     magazine.add(magBase);
     gun.add(magazine);
     magazineModel = magazine;
+    const replacementMagazine=magazine.clone(true);
+    replacementMagazine.name='replacement-magazine';
+    replacementMagazine.position.set(.235,-.68,-.405);
+    replacementMagazine.visible=false;
+    gun.add(replacementMagazine);
+    replacementMagazineModel=replacementMagazine;
 
     const bolt = new THREE.Group();
     bolt.position.set(0.24,-0.105,-0.43);
@@ -514,7 +532,10 @@ export async function createGame(
   const allyMat = new THREE.MeshPhysicalMaterial({ color: 0x267aa5, metalness: 0.58, roughness: 0.31, clearcoat:.28 });
   function createCombatantVisual(team:number){
     const isAlly=team===localTeam;
-    return createCombatantRig(isAlly?0x267aa5:0x8a3149,isAlly?0x63dfff:0xff647e).group;
+    const rig=createCombatantRig(isAlly?0x267aa5:0x8a3149,isAlly?0x63dfff:0xff647e);
+    rig.group.userData.animatePose=rig.animate;
+    rig.group.userData.triggerHit=rig.triggerHit;
+    return rig.group;
   }
   const remotes = new Map<string, THREE.Group>();
   const practiceTargets: THREE.Group[] = [];
@@ -529,6 +550,9 @@ export async function createGame(
   type DebrisPiece={mesh:THREE.Mesh;velocity:THREE.Vector3;spin:THREE.Vector3;age:number;life:number};
   const smokeClouds:SmokeCloud[]=[];
   const debrisVisuals:DebrisPiece[]=[];
+  type PhysicalDebris={mesh:THREE.Mesh;body:any;age:number;life:number};
+  const physicalDebris:PhysicalDebris[]=[];
+  const physicalDebrisGeometry=new THREE.BoxGeometry(1,1,1);
   const fxParticleLimit=isMobile?76:150;
   const fxParticleGeometry=new THREE.IcosahedronGeometry(.055,0);
   const shellGeometry=new THREE.CylinderGeometry(.022,.022,.115,8);
@@ -833,6 +857,46 @@ export async function createGame(
       debrisVisuals.push({mesh,velocity,spin:new THREE.Vector3((Math.random()-.5)*9,(Math.random()-.5)*10,(Math.random()-.5)*9),age:0,life:2.2+Math.random()*1.8});
     }
   }
+  function spawnPhysicalDebris(position:THREE.Vector3,count:number,impulse:number){
+    const limit=isMobile?54:120;
+    while(physicalDebris.length+count>limit){
+      const oldest=physicalDebris.shift();
+      if(oldest){scene.remove(oldest.mesh);world.removeRigidBody(oldest.body);(oldest.mesh.material as THREE.Material).dispose();}
+    }
+    for(let i=0;i<count;i++){
+      const size=.12+Math.random()*.24;
+      const material=new THREE.MeshStandardMaterial({color:map.palette==='amber'?0x907451:0x586d7d,roughness:.88,metalness:.16});
+      const mesh=new THREE.Mesh(physicalDebrisGeometry,material);mesh.scale.set(size*(.7+Math.random()*.8),size*(.55+Math.random()*.9),size*(.7+Math.random()*.8));
+      mesh.position.copy(position).add(new THREE.Vector3((Math.random()-.5)*.7,.12+Math.random()*.55,(Math.random()-.5)*.7));
+      mesh.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);mesh.castShadow=!isMobile;mesh.receiveShadow=!isMobile;scene.add(mesh);
+      const body=world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(mesh.position.x,mesh.position.y,mesh.position.z).setLinearDamping(.12).setAngularDamping(.18).setCcdEnabled(true));
+      world.createCollider(RAPIER.ColliderDesc.cuboid(mesh.scale.x/2,mesh.scale.y/2,mesh.scale.z/2).setDensity(2.6).setFriction(.72).setRestitution(.16),body);
+      const angle=Math.random()*Math.PI*2,speed=impulse*(.38+Math.random()*.72);
+      body.applyImpulse({x:Math.cos(angle)*speed,y:(.55+Math.random()*.75)*speed,z:Math.sin(angle)*speed},true);
+      body.applyTorqueImpulse({x:(Math.random()-.5)*speed,y:(Math.random()-.5)*speed,z:(Math.random()-.5)*speed},true);
+      physicalDebris.push({mesh,body,age:0,life:4.2+Math.random()*2.4});
+    }
+  }
+  function updatePhysicalDebris(dt:number){
+    for(let i=physicalDebris.length-1;i>=0;i--){
+      const piece=physicalDebris[i];piece.age+=dt;
+      const p=piece.body.translation(),q=piece.body.rotation();
+      piece.mesh.position.set(p.x,p.y,p.z);piece.mesh.quaternion.set(q.x,q.y,q.z,q.w);
+      if(piece.age>=piece.life){scene.remove(piece.mesh);world.removeRigidBody(piece.body);(piece.mesh.material as THREE.Material).dispose();physicalDebris.splice(i,1);}
+    }
+  }
+  function smokeDensityAlongRay(start:THREE.Vector3,end:THREE.Vector3){
+    const segment=end.clone().sub(start),lengthSq=Math.max(.0001,segment.lengthSq());let density=0;
+    for(const cloud of smokeClouds){
+      const t=THREE.MathUtils.clamp(cloud.mesh.position.clone().sub(start).dot(segment)/lengthSq,0,1);
+      const closest=start.clone().addScaledVector(segment,t);
+      const radius=Math.max(cloud.mesh.scale.x,cloud.mesh.scale.z)*.72;
+      const falloff=1-cloud.mesh.position.distanceTo(closest)/Math.max(.1,radius);
+      const remaining=1-THREE.MathUtils.clamp(cloud.age/cloud.life,0,1);
+      if(falloff>0)density+=falloff*remaining*.48;
+    }
+    return THREE.MathUtils.clamp(density,0,1);
+  }
   function spawnImpactFx(position:THREE.Vector3,direction:THREE.Vector3,color:number){
     const count=isMobile?3:6;
     for(let i=0;i<count;i++){
@@ -876,7 +940,7 @@ export async function createGame(
   }
   function spawnExplosionFx(position:THREE.Vector3,radius:number,durationMs:number){
     // Explosions can permanently break nearby tactical crates and cabinets.
-    tacticalLevel.destroyNear(position,radius,(p,count,impulse)=>spawnDebrisFx(p,count,impulse));
+    tacticalLevel.destroyNear(position,radius,(p,count,impulse)=>{spawnDebrisFx(p,count,impulse);spawnPhysicalDebris(p,count,impulse);});
     const group=new THREE.Group();group.position.copy(position);
     const coreMaterial=new THREE.MeshBasicMaterial({color:0xffa14d,transparent:true,opacity:.92,toneMapped:false,depthWrite:false});
     const core=new THREE.Mesh(new THREE.SphereGeometry(.48,14,12),coreMaterial);core.scale.set(1,.76,1);group.add(core);
@@ -1151,6 +1215,7 @@ export async function createGame(
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h, false);
+    composer.setSize(w,h);
   }
   function clickCanvas() {
     if (window.matchMedia('(pointer:fine)').matches && !document.pointerLockElement) {
@@ -1279,12 +1344,20 @@ export async function createGame(
         scene.add(mesh);
         remotes.set(player.id, mesh);
       }
+      const previousHealth=Number(mesh.userData.health??player.health);
+      if(player.health<previousHealth){const hit=mesh.userData.triggerHit;if(typeof hit==='function')hit();}
+      mesh.userData.health=player.health;
       mesh.userData.playerName=player.name;
       mesh.userData.targetX=player.x;
       mesh.userData.targetY=player.y-0.08;
       mesh.userData.targetZ=player.z;
       mesh.userData.targetYaw=player.yaw;
-      mesh.visible = player.connected !== false && player.alive !== false && player.health > 0;
+      mesh.userData.baseVisible=player.connected!==false;
+      const dead=player.alive===false||player.health<=0;
+      if(dead&&!mesh.userData.dead)mesh.userData.deadAt=performance.now();
+      if(!dead)mesh.userData.deadAt=0;
+      mesh.userData.dead=dead;
+      mesh.visible=mesh.userData.baseVisible===true;
     }
   }
 
@@ -1312,11 +1385,25 @@ export async function createGame(
       }
       const measuredFps=Math.round(fps);
       const measuredFrame=Math.round(smoothedFrameMs*10)/10;
-      performanceBadge.textContent='FPS '+measuredFps+' · FRAME '+measuredFrame+' ms · DPR '+adaptivePixelRatio.toFixed(2);
-      performanceBadge.style.color=measuredFps<target?'#ffb4a8':'#d9edff';
+      const memory=(performance as Performance&{memory?:{usedJSHeapSize:number;jsHeapSizeLimit:number}}).memory;
+      const memoryMb=memory?Math.round(memory.usedJSHeapSize/1048576):null;
+      const memoryLimitMb=memory?Math.round(memory.jsHeapSizeLimit/1048576):null;
+      const memoryPressure=!!memory&&memory.jsHeapSizeLimit>0&&memory.usedJSHeapSize/memory.jsHeapSizeLimit>.82;
+      const deviceMemory=(navigator as Navigator&{deviceMemory?:number}).deviceMemory??null;
+      const stressed=measuredFps<target-5||measuredFrame>21||memoryPressure;
+      if(stressed){
+        bloomPass.strength=Math.max(isMobile?.035:.08,bloomPass.strength-.035);
+        if(measuredFps<target-8||measuredFrame>25)renderer.shadowMap.enabled=false;
+      }else if(measuredFps>target+12&&!memoryPressure){
+        bloomPass.strength=Math.min(isMobile?.10:.38,bloomPass.strength+.015);
+        if(!isMobile)renderer.shadowMap.enabled=true;
+      }
+      performanceBadge.textContent='FPS '+measuredFps+' · '+measuredFrame+'ms · DPR '+adaptivePixelRatio.toFixed(2)+(memoryMb===null?'':' · HEAP '+memoryMb+'MB');
+      performanceBadge.style.color=stressed?'#ffb4a8':'#d9edff';
       window.dispatchEvent(new CustomEvent('rockey:performance',{detail:{
-        fps:measuredFps,frameMs:measuredFrame,
-        pixelRatio:Math.round(adaptivePixelRatio*100)/100,device:isMobile?'mobile':'desktop'
+        fps:measuredFps,frameMs:measuredFrame,pixelRatio:Math.round(adaptivePixelRatio*100)/100,
+        device:isMobile?'mobile':'desktop',memoryMb,memoryLimitMb,deviceMemoryGb:deviceMemory,
+        bloomStrength:Math.round(bloomPass.strength*100)/100
       }}));
       perfWindowStart=now;perfFrames=0;
     }
@@ -1328,7 +1415,15 @@ export async function createGame(
     gunKick*=Math.exp(-17*dt);
     movementAmount*=Math.exp(-9*dt);
     const reloadProgress=reloadAnimationStart?THREE.MathUtils.clamp((now-reloadAnimationStart)/Math.max(1,reloadAnimationDuration),0,1):1;
-    if(reloadProgress>=1)reloadAnimationStart=0;
+    if(reloadProgress>=1&&reloadAnimationStart){
+      if(magazineModel&&replacementMagazineModel){
+        magazineModel.visible=false;replacementMagazineModel.visible=true;
+        replacementMagazineModel.position.set(.24,-.405,-.37);replacementMagazineModel.rotation.set(0,0,0);
+        const previousMagazine=magazineModel;magazineModel=replacementMagazineModel;replacementMagazineModel=previousMagazine;
+        replacementMagazineModel.visible=false;
+      }
+      reloadAnimationStart=0;
+    }
     const reloadWave=reloadAnimationStart?Math.sin(reloadProgress*Math.PI):0;
     const switchProgress=switchAnimationStart?THREE.MathUtils.clamp((now-switchAnimationStart)/460,0,1):1;
     if(switchProgress>=1)switchAnimationStart=0;
@@ -1375,18 +1470,26 @@ export async function createGame(
       );
     }
 
-    if(magazineModel){
-      // Weapon-specific reload choreography: eject, present, seat and lock.
+    if(magazineModel&&replacementMagazineModel){
+      // A two-magazine sequence: the spent mag is pulled into the support hand,
+      // stowed out of view, and a separate fresh mag is guided into the well.
       const reloadActive=reloadAnimationStart>0;
       const style=magazineReloadProfiles[currentWeaponCode]||magazineReloadProfiles.R16;
-      const out=THREE.MathUtils.smoothstep(reloadProgress,style.out,style.out+.18);
-      const seat=THREE.MathUtils.smoothstep(reloadProgress,style.in,style.in+.16);
-      const magTravel=reloadActive?out*(1-seat):0;
-      magazineModel.position.set(.24,-.405-magTravel*style.drop,-.37+magTravel*.035);
-      magazineModel.rotation.set(magTravel*style.tilt,0,magTravel*style.roll);
-      // A crisp upward seat at the final beat sells the magazine locking in.
+      const eject=THREE.MathUtils.smoothstep(reloadProgress,style.out,style.out+.17);
+      const grabPoint=new THREE.Vector3(.235,-.585,-.405);
+      const discard=THREE.MathUtils.smoothstep(reloadProgress,style.in-.30,style.in-.12);
+      const spentPosition=new THREE.Vector3(.42,-.82,-.29);
+      magazineModel.position.copy(new THREE.Vector3(.24,-.405,-.37).lerp(grabPoint,eject).lerp(spentPosition,discard));
+      magazineModel.rotation.set(eject*style.tilt,0,eject*style.roll);
+      magazineModel.visible=!reloadActive||reloadProgress<style.in-.08;
+      const freshStart=THREE.MathUtils.clamp(style.in-.30,style.out+.12,.56);
+      const insert=THREE.MathUtils.smoothstep(reloadProgress,freshStart,style.in+.08);
+      replacementMagazineModel.visible=reloadActive&&reloadProgress>=freshStart;
+      replacementMagazineModel.position.copy(grabPoint.clone().lerp(new THREE.Vector3(.24,-.405,-.37),insert));
+      replacementMagazineModel.rotation.set((1-insert)*style.tilt*.35,0,(1-insert)*style.roll*.4);
       const lock=reloadActive?Math.max(0,1-Math.abs(reloadProgress-(style.in+.12))/.075):0;
-      magazineModel.position.y-=lock*.025;
+      replacementMagazineModel.position.y-=lock*.025;
+      if(!reloadActive){magazineModel.position.set(.24,-.405,-.37);magazineModel.rotation.set(0,0,0);magazineModel.visible=true;replacementMagazineModel.visible=false;}
     }
     weaponHands.group.visible=!melee;
     weaponHands.update(reloadProgress,reloadAnimationStart>0,walkAmount,fireWave,weaponAimBlend);
@@ -1527,8 +1630,12 @@ export async function createGame(
       mesh.position.y=THREE.MathUtils.lerp(mesh.position.y,data.targetY,remoteBlend);
       mesh.position.z=THREE.MathUtils.lerp(mesh.position.z,data.targetZ,remoteBlend);
       const remoteMotion=Math.min(1,Math.hypot(mesh.position.x-oldX,mesh.position.z-oldZ)/Math.max(.001,dt)/4.2);
+      const remoteVertical=(mesh.position.y-oldY)/Math.max(.001,dt);
       const animatePose=mesh.userData.animatePose;
-      if(typeof animatePose==='function')animatePose(remoteMotion,time,0,0);
+      if(typeof animatePose==='function')animatePose(remoteMotion,time,0,0,remoteVertical,data.dead===true);
+      const smokeBlock=smokeDensityAlongRay(camera.position,mesh.position.clone().add(new THREE.Vector3(0,1.02,0)));
+      const deathExpired=data.dead===true&&now-Number(data.deadAt||now)>1350;
+      mesh.visible=data.baseVisible===true&&!deathExpired&&smokeBlock<.72;
       if(typeof data.targetYaw==='number'){
         const delta=THREE.MathUtils.euclideanModulo(data.targetYaw-mesh.rotation.y+Math.PI,Math.PI*2)-Math.PI;
         mesh.rotation.y+=delta*remoteBlend;
@@ -1610,11 +1717,12 @@ export async function createGame(
         z: old.z + corrected.z
       });
       world.step();
+      updatePhysicalDebris(dt);
 
       const p = position();
       avatar.position.set(p.x, p.y - 0.08, p.z);
       avatar.rotation.y = yaw;
-      avatarRig.animate(movementAmount,time,reloadWave,fireWave);
+      avatarRig.animate(movementAmount,time,reloadWave,fireWave,vertical,hp<=0);
       const eye = p.clone().add(new THREE.Vector3(0, 0.58, 0));
       if (cameraMode === 'first') {
         camera.position.copy(eye);
@@ -1646,7 +1754,7 @@ export async function createGame(
         lastInput = now;
       }
     }
-    renderer.render(scene, camera);
+    composer.render(dt);
     raf = requestAnimationFrame(frame);
   }
   raf = requestAnimationFrame(frame);
@@ -1721,7 +1829,9 @@ export async function createGame(
       if (label) label.textContent = 'ROUND ' + round;
     },
     setHealth(value: number) {
-      hp = Math.max(0, Math.min(100, value));
+      const nextHealth=Math.max(0,Math.min(100,value));
+      if(nextHealth<hp)avatarRig.triggerHit();
+      hp=nextHealth;
       updateHud(hp, ammo, reserve, currentWeapon.name);
     },
     setAmmo(nextAmmo: number, nextReserve: number) {
@@ -1763,10 +1873,12 @@ export async function createGame(
       const complete=killcamComplete;killcamComplete=null;complete?.();
     },
     setQuality(level: 'low'|'balanced'|'high') {
-      const ratio=level==='low'?0.8:level==='balanced'?1.15:1.6;
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,ratio));
-      renderer.shadowMap.enabled=level==='high'&&!isMobile;
+      const ratio=level==='low'?.82:level==='balanced'?1.12:1.55;
+      adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8,ratio);
+      renderer.setPixelRatio(adaptivePixelRatio);composer.setPixelRatio(adaptivePixelRatio);resize();
+      renderer.shadowMap.enabled=level!=='low'&&!isMobile;
       renderer.shadowMap.needsUpdate=true;
+      bloomPass.strength=isMobile?.07:level==='low'?.12:level==='balanced'?.28:.42;
     },
     setSensitivity(value: number) {
       sensitivity=THREE.MathUtils.clamp(value,0.4,2.2);
@@ -1795,6 +1907,7 @@ export async function createGame(
       world.removeCharacterController(controller);
       world.free();
       stopMobileFire();
+      composer.dispose();
       renderer.dispose();
       reflectionEnvironment?.dispose();
       performanceBadge.remove();
@@ -1805,7 +1918,9 @@ export async function createGame(
       for(const shell of shellVisuals)(shell.mesh.material as THREE.Material).dispose();
       for(const cloud of smokeClouds)cloud.material.dispose();
       for(const piece of debrisVisuals)(piece.mesh.material as THREE.Material).dispose();
-      smokeTexture.dispose();fxParticleGeometry.dispose();shellGeometry.dispose();smokeVolumeGeometry.dispose();debrisGeometry.dispose();
+      for(const piece of physicalDebris){scene.remove(piece.mesh);(piece.mesh.material as THREE.Material).dispose();}
+      physicalDebris.length=0;
+      smokeTexture.dispose();fxParticleGeometry.dispose();shellGeometry.dispose();smokeVolumeGeometry.dispose();debrisGeometry.dispose();physicalDebrisGeometry.dispose();
       // Dispose shared materials/geometries exactly once, including remote players and practice targets.
       const geometries = new Set<THREE.BufferGeometry>();
       const materials = new Set<THREE.Material>();
