@@ -251,14 +251,14 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
       // Two-bone inverse kinematics in the leg's sagittal plane. The foot
       // target comes from a downward scene ray, so stairs and raised floors
       // produce a real hip/knee solution instead of a visual ankle offset.
-      targetWorldScratch.set(footWorldScratch.x,ground+.12,footWorldScratch.z);
+      targetWorldScratch.set(footWorldScratch.x,ground+.15,footWorldScratch.z);
       leg.hip.getWorldPosition(hipWorldScratch);
       group.worldToLocal(targetLocalScratch.copy(targetWorldScratch));
       group.worldToLocal(hipLocalScratch.copy(hipWorldScratch));
       const dy=targetLocalScratch.y-hipLocalScratch.y;
       const dz=targetLocalScratch.z-hipLocalScratch.z;
       const upper=.38,lower=.37;
-      const distance=THREE.MathUtils.clamp(Math.hypot(dy,dz),.025,upper+lower-.004);
+      const distance=THREE.MathUtils.clamp(Math.hypot(dy,dz),.025,upper+lower-.001);
       const kneeCos=THREE.MathUtils.clamp((upper*upper+lower*lower-distance*distance)/(2*upper*lower),-1,1);
       const kneeFlex=Math.PI-Math.acos(kneeCos);
       const hipCos=THREE.MathUtils.clamp((upper*upper+distance*distance-lower*lower)/(2*upper*distance),-1,1);
