@@ -206,7 +206,7 @@ export async function createGame(
   });
   const tacticalLevel=addTacticalLevel(scene,map,isMobile,(x,y,z,hx,hy,hz)=>{
     world.createCollider(RAPIER.ColliderDesc.cuboid(hx,hy,hz).setTranslation(x,y,z));
-  });
+  },mesh=>raycastMeshes.push(mesh));
 
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(0, 0.92, 20));
   const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.52, 0.34).setFriction(0), body);
