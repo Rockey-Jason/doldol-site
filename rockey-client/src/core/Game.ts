@@ -11,7 +11,7 @@ import { createFirstPersonHands } from './FirstPersonHands';
 
 export interface RemotePlayer {
   id: string; name: string; x: number; y: number; z: number;
-  yaw: number; health: number; team: number; alive?: boolean; connected?: boolean;
+  yaw: number; health: number; team: number; alive?: boolean; connected?: boolean; aim?:boolean;
 }
 export interface ReplayFrame {
   t: number;
@@ -596,6 +596,14 @@ export async function createGame(
   }
   createPracticeTargets();
   const raycaster = new THREE.Raycaster();
+  const downDirection=new THREE.Vector3(0,-1,0);
+  const sampleGroundHeight=(x:number,z:number,footY:number)=>{
+    raycaster.set(new THREE.Vector3(x,footY+1.0,z),downDirection);
+    raycaster.near=0;raycaster.far=2.35;
+    const hits=raycaster.intersectObjects(raycastMeshes,false);
+    const hit=hits.find(value=>value.point.y<=footY+.28&&value.point.y>=footY-.72);
+    return hit?.point.y??0;
+  };
   const keys = new Set<string>();
   const touch = { forward: 0, right: 0, jump: false };
   let precisionAiming = false;
@@ -694,6 +702,7 @@ export async function createGame(
   let perfFrames=0;
   let smoothedFrameMs=16.7;
   const frameTimeSamples:number[]=[];
+  const heapSamples:Array<{t:number;mb:number}>=[];
   let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
   const minPixelRatio=isMobile ? .78 : 1.0;
   const maxPixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
@@ -1399,7 +1408,7 @@ export async function createGame(
       let mesh = remotes.get(player.id);
       if (!mesh) {
         mesh = createCombatantVisual(player.team);
-        mesh.position.set(player.x,player.y-0.08,player.z);
+        mesh.position.set(player.x,player.y-.92,player.z);
         mesh.rotation.y=player.yaw;
         scene.add(mesh);
         remotes.set(player.id, mesh);
@@ -1409,14 +1418,15 @@ export async function createGame(
       mesh.userData.health=player.health;
       mesh.userData.playerName=player.name;
       mesh.userData.targetX=player.x;
-      mesh.userData.targetY=player.y-0.08;
+      mesh.userData.targetY=player.y-.92;
+      mesh.userData.aim=player.aim===true;
       mesh.userData.targetZ=player.z;
       mesh.userData.targetYaw=player.yaw;
       const samples=(mesh.userData.samples as Array<{t:number;x:number;y:number;z:number;yaw:number}>|undefined)||[];
       const stamp=Number.isFinite(serverTime)?serverTime:Date.now();
       const last=samples[samples.length-1];
       if(!last||stamp>last.t){
-        samples.push({t:stamp,x:player.x,y:player.y-.08,z:player.z,yaw:player.yaw});
+        samples.push({t:stamp,x:player.x,y:player.y-.92,z:player.z,yaw:player.yaw});
         while(samples.length>8)samples.shift();
       }
       mesh.userData.samples=samples;
@@ -1440,7 +1450,7 @@ export async function createGame(
     previous = now;
     perfFrames++;
     const frameMs=Math.min(100,dt*1000);
-    frameTimeSamples.push(frameMs);if(frameTimeSamples.length>300)frameTimeSamples.shift();
+    frameTimeSamples.push(frameMs);if(frameTimeSamples.length>1800)frameTimeSamples.shift();
     smoothedFrameMs=smoothedFrameMs*.92+frameMs*.08;
     if(now-perfWindowStart>=2500){
       const fps=perfFrames*1000/(now-perfWindowStart);
@@ -1460,8 +1470,10 @@ export async function createGame(
       if(onePercentLow<target*.55&&adaptivePixelRatio>minPixelRatio){adaptivePixelRatio=Math.max(minPixelRatio,adaptivePixelRatio-.08);renderer.setPixelRatio(adaptivePixelRatio);resize();}
       const memory=(performance as Performance&{memory?:{usedJSHeapSize:number;jsHeapSizeLimit:number}}).memory;
       const memoryMb=memory?Math.round(memory.usedJSHeapSize/1048576):null;
+      if(memoryMb!==null){heapSamples.push({t:now,mb:memoryMb});while(heapSamples.length>24)heapSamples.shift();}
+      const heapDeltaMb=heapSamples.length>1?heapSamples[heapSamples.length-1].mb-heapSamples[0].mb:null;
       const memoryLimitMb=memory?Math.round(memory.jsHeapSizeLimit/1048576):null;
-      const memoryPressure=!!memory&&memory.jsHeapSizeLimit>0&&memory.usedJSHeapSize/memory.jsHeapSizeLimit>.82;
+      const memoryPressure=!!memory&&memory.jsHeapSizeLimit>0&&(memory.usedJSHeapSize/memory.jsHeapSizeLimit>.82||(heapDeltaMb!==null&&heapDeltaMb>96));
       const deviceMemory=(navigator as Navigator&{deviceMemory?:number}).deviceMemory??null;
       const stressed=measuredFps<target-5||onePercentLow<target*.55||measuredFrame>21||memoryPressure;
       if(stressed){
@@ -1475,7 +1487,10 @@ export async function createGame(
       performanceBadge.style.color=stressed?'#ffb4a8':'#d9edff';
       window.dispatchEvent(new CustomEvent('rockey:performance',{detail:{
         fps:measuredFps,onePercentLow,frameMs:measuredFrame,pixelRatio:Math.round(adaptivePixelRatio*100)/100,
-        device:isMobile?'mobile':'desktop',memoryMb,memoryLimitMb,deviceMemoryGb:deviceMemory,
+        device:isMobile?'mobile':'desktop',memoryMb,memoryLimitMb,heapDeltaMb,deviceMemoryGb:deviceMemory,
+        geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,
+        drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,
+        activeDebris:physicalDebris.length,activeSmoke:smokeClouds.length,activeParticles:fxParticles.length,
         bloomStrength:Math.round(bloomPass.strength*100)/100
       }}));
       perfWindowStart=now;perfFrames=0;
@@ -1714,6 +1729,18 @@ export async function createGame(
         const span=Math.max(1,b.t-a.t);
         const alpha=THREE.MathUtils.clamp((renderAt-a.t)/span,0,1);
         mesh.position.set(THREE.MathUtils.lerp(a.x,b.x,alpha),THREE.MathUtils.lerp(a.y,b.y,alpha),THREE.MathUtils.lerp(a.z,b.z,alpha));
+        // Brief bounded extrapolation masks one or two lost snapshots without
+        // allowing remote avatars to drift indefinitely during packet loss.
+        if(renderAt>b.t&&samples.length>=2){
+          const extrapolateMs=Math.min(100,Math.max(0,renderAt-b.t));
+          const seconds=span/1000;
+          if(seconds>.001){
+            const vx=THREE.MathUtils.clamp((b.x-a.x)/seconds,-9,9);
+            const vy=THREE.MathUtils.clamp((b.y-a.y)/seconds,-8,8);
+            const vz=THREE.MathUtils.clamp((b.z-a.z)/seconds,-9,9);
+            mesh.position.add(new THREE.Vector3(vx,vy,vz).multiplyScalar(extrapolateMs/1000));
+          }
+        }
         const yawDelta=THREE.MathUtils.euclideanModulo(b.yaw-a.yaw+Math.PI,Math.PI*2)-Math.PI;
         mesh.rotation.y=a.yaw+yawDelta*alpha;
       }else{
@@ -1724,7 +1751,9 @@ export async function createGame(
       const remoteMotion=Math.min(1,Math.hypot(mesh.position.x-oldX,mesh.position.z-oldZ)/Math.max(.001,dt)/4.2);
       const remoteVertical=(mesh.position.y-oldY)/Math.max(.001,dt);
       const animatePose=mesh.userData.animatePose;
-      if(typeof animatePose==='function')animatePose(remoteMotion,time,0,0,remoteVertical,data.dead===true,remoteMotion>.72,Math.abs(remoteVertical)<.65);
+      if(typeof animatePose==='function')animatePose(remoteMotion,time,0,0,remoteVertical,data.dead===true,remoteMotion>.72,Math.abs(remoteVertical)<.65,data.aim===true?1:0);
+      const remoteFootIK=mesh.userData.updateFootIK;
+      if(typeof remoteFootIK==='function')remoteFootIK(sampleGroundHeight);
       const smokeBlock=smokeDensityAlongRay(camera.position,mesh.position.clone().add(new THREE.Vector3(0,1.02,0)));
       const deathExpired=data.dead===true&&now-Number(data.deadAt||now)>1350;
       mesh.visible=data.baseVisible===true&&!deathExpired&&smokeBlock<.72;
@@ -1816,9 +1845,10 @@ export async function createGame(
       updatePhysicalDebris(dt);
 
       const p = position();
-      avatar.position.set(p.x, p.y - 0.08, p.z);
+      avatar.position.set(p.x, p.y - .92, p.z);
       avatar.rotation.y = yaw;
-      avatarRig.animate(movementAmount,time,reloadWave,fireWave,vertical,hp<=0,keys.has('ShiftLeft')||keys.has('ShiftRight')?1:0,controller.computedGrounded());
+      avatarRig.animate(movementAmount,time,reloadWave,fireWave,vertical,hp<=0,keys.has('ShiftLeft')||keys.has('ShiftRight')?1:0,controller.computedGrounded(),aimBlend);
+      avatarRig.updateFootIK(sampleGroundHeight);
       const gaitBob=Math.sin(time*(keys.has('ShiftLeft')||keys.has('ShiftRight')?13.2:10.2))*movementAmount*(precisionAiming?.008:.022);
       const eye = p.clone().add(new THREE.Vector3(0, 0.58+gaitBob-landingKick, 0));
       if (cameraMode === 'first') {
