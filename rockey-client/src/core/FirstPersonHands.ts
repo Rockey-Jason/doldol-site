@@ -80,6 +80,30 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     ARC:{left:new THREE.Vector3(.015,.015,-.025),right:new THREE.Vector3(.01,0,.015),leftRot:new THREE.Vector3(.03,0,-.02),rightRot:new THREE.Vector3(0,0,0),supportCurl:0.64,triggerCurl:0.44,thumbCurl:0.6},
     PULSE:{left:new THREE.Vector3(.01,.01,-.02),right:new THREE.Vector3(.01,0,.01),leftRot:new THREE.Vector3(.02,0,-.02),rightRot:new THREE.Vector3(0,0,0),supportCurl:0.7,triggerCurl:0.48,thumbCurl:0.64}
   };
+  const contactAnchors:Record<string,{support:THREE.Vector3;trigger:THREE.Vector3}>={};
+  for(const code of ['R16','VIPER','R9','THUNDER','LONGSHOT','HELIX','BASTION','NOVA','ARC','PULSE']){
+    const compact=code==='R9'||code==='NOVA';
+    const shotgun=code==='THUNDER',sniper=code==='LONGSHOT'||code==='HELIX',lmg=code==='BASTION';
+    contactAnchors[code]={
+      support:new THREE.Vector3(.24,compact?-.46:shotgun?-.34:lmg?-.43:-.36,compact?-.13:shotgun?-.47:sniper?-.63:lmg?-.55:-.53),
+      trigger:new THREE.Vector3(.24,compact?-.40:-.36,compact?-.12:-.22)
+    };
+  }
+  const solveContact=(finger:THREE.Group,distal:THREE.Group,targetInWeapon:THREE.Vector3,curl:number)=>{
+    const hand=finger.parent as THREE.Object3D;
+    parent.updateMatrixWorld(true);
+    const targetWorld=parent.localToWorld(targetInWeapon.clone());
+    const targetLocal=hand.worldToLocal(targetWorld);
+    const dy=targetLocal.y-finger.position.y,dz=targetLocal.z-finger.position.z;
+    const upper=.047,lower=.036;
+    const distance=THREE.MathUtils.clamp(Math.hypot(dy,dz),.004,upper+lower-.001);
+    const kneeCos=THREE.MathUtils.clamp((upper*upper+lower*lower-distance*distance)/(2*upper*lower),-1,1);
+    const knee=Math.PI-Math.acos(kneeCos);
+    const targetAngle=Math.atan2(-dz,-dy);
+    const bend=Math.atan2(lower*Math.sin(knee),upper+lower*Math.cos(knee));
+    finger.rotation.x=THREE.MathUtils.lerp(finger.rotation.x,targetAngle-bend,THREE.MathUtils.clamp(curl,0,1));
+    distal.rotation.x=THREE.MathUtils.lerp(distal.rotation.x,-knee*.86,THREE.MathUtils.clamp(curl,0,1));
+  };
   const update=(progress:number,active:boolean,walk:number,fire:number,aim:number,weaponCode='R16')=>{
     group.visible=true;
     const p=active?THREE.MathUtils.clamp(progress,0,1):0;
@@ -108,19 +132,13 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     const leftFingers=left.userData.fingers as THREE.Group[];
     const leftThumb=left.userData.thumb as THREE.Group;
     const leftDistal=left.userData.distalJoints as THREE.Group[];
+    const anchors=contactAnchors[weaponCode]||contactAnchors.R16;
     leftFingers.forEach((finger,i)=>{
-      const contact=THREE.MathUtils.clamp(pose.supportCurl*.72+(i===0?-.08:.04),.2,.92);
-      const targetAngle=contact*.72;
-      const segmentA=.047,segmentB=.036;
-      const targetY=-Math.cos(targetAngle)*.073,targetZ=-Math.sin(targetAngle)*.073;
-      const distance=THREE.MathUtils.clamp(Math.hypot(targetY,targetZ),.002,segmentA+segmentB-.001);
-      const kneeCos=THREE.MathUtils.clamp((segmentA*segmentA+segmentB*segmentB-distance*distance)/(2*segmentA*segmentB),-1,1);
-      const knee=Math.PI-Math.acos(kneeCos);
-      const target=Math.atan2(-targetZ,-targetY);
-      const bend=Math.atan2(segmentB*Math.sin(knee),segmentA+segmentB*Math.cos(knee));
-      finger.rotation.x=THREE.MathUtils.lerp(finger.rotation.x,target-bend,1-holdBlend*.18);
-      finger.rotation.z=(i-1.5)*.035;
-      leftDistal[i].rotation.x=-knee*.72;
+      const target=anchors.support.clone();
+      target.x+=(i-1.5)*.027;
+      target.y+=(i===0?.012:0);
+      solveContact(finger,leftDistal[i],target,pose.supportCurl);
+      finger.rotation.z=(i-1.5)*.025;
     });
     leftThumb.rotation.x=-.10-pose.thumbCurl*.54-curl*.16;
     leftThumb.rotation.z=.10;
@@ -128,18 +146,12 @@ export function createFirstPersonHands(parent:THREE.Group):FirstPersonHands{
     const rightThumb=right.userData.thumb as THREE.Group;
     const rightDistal=right.userData.distalJoints as THREE.Group[];
     rightFingers.forEach((finger,i)=>{
-      const triggerFinger=i===1;
-      const contact=THREE.MathUtils.clamp(pose.triggerCurl*(triggerFinger?.58:1.08),.12,.88);
-      const targetAngle=contact*.78;
-      const segmentA=.047,segmentB=.036,distance=.073;
-      const targetY=-Math.cos(targetAngle)*distance,targetZ=-Math.sin(targetAngle)*distance;
-      const kneeCos=THREE.MathUtils.clamp((segmentA*segmentA+segmentB*segmentB-distance*distance)/(2*segmentA*segmentB),-1,1);
-      const knee=Math.PI-Math.acos(kneeCos);
-      const target=Math.atan2(-targetZ,-targetY);
-      const bend=Math.atan2(segmentB*Math.sin(knee),segmentA+segmentB*Math.cos(knee));
-      finger.rotation.x=target-bend;
-      finger.rotation.z=(i-1.5)*.025;
-      rightDistal[i].rotation.x=-knee*.72;
+      const target=anchors.trigger.clone();
+      target.x+=(i-1.5)*.024;
+      target.y+=i===1?.025:0;
+      target.z+=i===1?.045:0;
+      solveContact(finger,rightDistal[i],target,pose.triggerCurl);
+      finger.rotation.z=(i-1.5)*.02;
     });
     rightThumb.rotation.x=-.12-pose.thumbCurl*.62;
     rightThumb.rotation.z=-.12;
