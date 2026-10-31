@@ -235,8 +235,9 @@ async function enterSpectator(message:Record<string,any>){
   showGame();toast('SPECTATOR MODE');
 }
 function scheduleReconnect(){
-  if(reconnectTimer||reconnecting)return;
-  const delay=Math.min(30000,1200*Math.pow(1.7,reconnectAttempts));
+  if(reconnectTimer||reconnecting||socket.connected||!menuSessionAvailable)return;
+  const baseDelay=Math.min(30000,1200*Math.pow(1.7,reconnectAttempts));
+  const delay=Math.round(baseDelay*(.82+Math.random()*.36));
   reconnectAttempts++;
   reconnectTimer=window.setTimeout(async()=>{
     reconnectTimer=0;
@@ -263,6 +264,8 @@ function scheduleReconnect(){
     }
   },delay);
 }
+window.addEventListener('online',()=>{if(!socket.connected){reconnectAttempts=0;scheduleReconnect();}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!socket.connected)scheduleReconnect();});
 function switchWeapon(){
   if(currentMode==='practice'){
     activeWeapon=activeWeapon===primaryWeapon?secondaryWeapon:primaryWeapon;
