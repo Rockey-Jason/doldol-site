@@ -620,14 +620,24 @@ export async function createGame(
     scene.add(trail);projectiles.push({mesh,trail,direction:direction.clone().normalize(),travelled:0,maxDistance:visibleRange,age:0});
   }
   function showDamageAt(position:THREE.Vector3,damage:number,headshot:boolean) {
-    const label=document.createElement('canvas');label.width=256;label.height=112;
+    // Wide, high-resolution label with measured text bounds and generous padding.
+    // This prevents long HEADSHOT labels or large damage values being cropped.
+    const label=document.createElement('canvas');label.width=640;label.height=144;
     const ctx=label.getContext('2d');if(!ctx)return;
-    ctx.font='bold 46px Arial';ctx.textAlign='center';ctx.textBaseline='middle';
-    ctx.lineWidth=8;ctx.strokeStyle='rgba(10,18,30,.88)';ctx.strokeText((headshot?'HEADSHOT  ':'')+damage,128,56);
-    ctx.fillStyle=headshot?'#ffe08a':'#ffffff';ctx.fillText((headshot?'HEADSHOT  ':'')+damage,128,56);
+    const text=(headshot?'HEADSHOT  ':'')+damage;
+    ctx.font='700 48px Arial';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    const measured=ctx.measureText(text);
+    const centerX=label.width/2,centerY=label.height/2;
+    ctx.lineJoin='round';ctx.lineWidth=9;ctx.strokeStyle='rgba(10,18,30,.94)';
+    ctx.strokeText(text,centerX,centerY);
+    ctx.fillStyle=headshot?'#ffe08a':'#ffffff';ctx.fillText(text,centerX,centerY);
     const texture=new THREE.CanvasTexture(label);texture.colorSpace=THREE.SRGBColorSpace;
-    const material=new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false});
-    const sprite=new THREE.Sprite(material);sprite.position.copy(position).add(new THREE.Vector3(.78,1.55,0));sprite.scale.set(1.45,.64,1);
+    const material=new THREE.SpriteMaterial({map:texture,transparent:true,depthTest:false,depthWrite:false});
+    const sprite=new THREE.Sprite(material);
+    sprite.position.copy(position).add(new THREE.Vector3(.78,1.55,0));
+    const aspect=label.width/label.height;
+    sprite.scale.set(2.15,.484,1);
     sprite.userData.startedAt=performance.now();sprite.userData.baseY=sprite.position.y;
     scene.add(sprite);damagePopups.push(sprite);
   }
@@ -1026,7 +1036,15 @@ export async function createGame(
     const walkWave=Math.sin(time*10.8);
     const walkSide=Math.cos(time*5.4);
     const walkAmount=movementAmount*motion.bob*(1-weaponAimBlend*.48);
-    const reloadDip=reloadWave*(.075+motion.reloadTilt*.12);
+    const reloadStyle:Record<string,{dip:number;roll:number;pitch:number}> = {
+      R16:{dip:.12,roll:.10,pitch:.24},R9:{dip:.18,roll:.22,pitch:.34},
+      VIPER:{dip:.10,roll:.08,pitch:.16},THUNDER:{dip:.25,roll:.30,pitch:.46},
+      LONGSHOT:{dip:.34,roll:.16,pitch:.62},HELIX:{dip:.20,roll:.12,pitch:.32},
+      BASTION:{dip:.16,roll:.08,pitch:.28},NOVA:{dip:.19,roll:.26,pitch:.38},
+      ARC:{dip:.16,roll:.10,pitch:.22},PULSE:{dip:.15,roll:.12,pitch:.24}
+    };
+    const reloadMotion=reloadStyle[currentWeaponCode]||reloadStyle.R16;
+    const reloadDip=reloadWave*(.075+reloadMotion.dip);
     const switchDip=switchWave*.16;
     const melee=currentWeapon.category==='MELEE';
     const meleeArc=doriSwingStart?Math.sin(doriProgress*Math.PI):0;
@@ -1047,25 +1065,57 @@ export async function createGame(
       );
     }else{
       gun.rotation.set(
-        (reloadWave*(.3+motion.reloadTilt)+switchWave*.3+gunKick*.075*motion.fireTilt+fireWave*.035*motion.fireTilt)*(1-weaponAimBlend*.88),
+        (reloadWave*(.3+reloadMotion.pitch)+switchWave*.3+gunKick*.075*motion.fireTilt+fireWave*.035*motion.fireTilt)*(1-weaponAimBlend*.88),
         (idleSway*2+walkSide*.018*walkAmount+switchWave*.12)*(1-weaponAimBlend*.88),
-        (reloadWave*(.12+motion.roll)+switchWave*motion.switchRoll+idleRoll+walkSide*.025*walkAmount)*(1-weaponAimBlend*.88)
+        (reloadWave*(.12+reloadMotion.roll)+switchWave*motion.switchRoll+idleRoll+walkSide*.025*walkAmount)*(1-weaponAimBlend*.88)
       );
     }
 
     if(magazineModel){
-      // Magazine drops clear of the receiver, pauses, then seats back into place.
-      const magOut=THREE.MathUtils.clamp((reloadProgress-.12)/.3,0,1);
-      const magIn=THREE.MathUtils.clamp((reloadProgress-.56)/.27,0,1);
-      const magTravel=reloadAnimationStart?(magOut*(1-magIn)):0;
-      magazineModel.position.y=-.405-magTravel*.22;
-      magazineModel.rotation.x=magTravel*.2;
-      magazineModel.rotation.z=magTravel*.08;
+      // Weapon-specific reload choreography: eject, present, seat and lock.
+      const reloadActive=reloadAnimationStart>0;
+      const profile:Record<string,{out:number;in:number;drop:number;tilt:number;roll:number}> = {
+        R16:{out:.10,in:.63,drop:.24,tilt:.16,roll:.06},
+        R9:{out:.08,in:.58,drop:.19,tilt:.34,roll:.18},
+        VIPER:{out:.16,in:.56,drop:.28,tilt:.12,roll:.04},
+        THUNDER:{out:.08,in:.68,drop:.22,tilt:.28,roll:.12},
+        LONGSHOT:{out:.18,in:.72,drop:.30,tilt:.42,roll:.10},
+        HELIX:{out:.13,in:.65,drop:.25,tilt:.22,roll:.08},
+        BASTION:{out:.07,in:.76,drop:.17,tilt:.12,roll:.04},
+        NOVA:{out:.09,in:.60,drop:.20,tilt:.38,roll:.20},
+        ARC:{out:.20,in:.70,drop:.23,tilt:.18,roll:.08},
+        PULSE:{out:.14,in:.64,drop:.22,tilt:.20,roll:.08}
+      };
+      const style=profile[currentWeaponCode]||profile.R16;
+      const out=THREE.MathUtils.smoothstep(reloadProgress,style.out,style.out+.18);
+      const seat=THREE.MathUtils.smoothstep(reloadProgress,style.in,style.in+.16);
+      const magTravel=reloadActive?out*(1-seat):0;
+      const magHomeY=currentWeaponCode==='BASTION'?-0.405:-0.405;
+      magazineModel.position.set(.24,-.405-magTravel*style.drop,-.37+magTravel*.035);
+      magazineModel.rotation.set(magTravel*style.tilt,0,magTravel*style.roll);
+      // A crisp upward seat at the final beat sells the magazine locking in.
+      const lock=reloadActive?Math.max(0,1-Math.abs(reloadProgress-(style.in+.12))/.075):0;
+      magazineModel.position.y-=lock*.025;
     }
     if(boltModel){
       const boltKick=fireWave*.095;
-      const boltReload=reloadWave*.045;
+      const boltReload=reloadAnimationStart?(
+        currentWeaponCode==='LONGSHOT'
+          ? -THREE.MathUtils.smoothstep(reloadProgress,.68,.82)*.24*(1-THREE.MathUtils.smoothstep(reloadProgress,.84,.98))
+          : currentWeaponCode==='THUNDER'
+            ? -Math.sin(THREE.MathUtils.clamp((reloadProgress-.48)/.28,0,1)*Math.PI)*.17
+            : currentWeaponCode==='HELIX'
+              ? Math.sin(THREE.MathUtils.clamp((reloadProgress-.62)/.22,0,1)*Math.PI)*.10
+              : currentWeaponCode==='BASTION'
+                ? Math.sin(THREE.MathUtils.clamp((reloadProgress-.78)/.18,0,1)*Math.PI)*.07
+                : Math.sin(reloadProgress*Math.PI)*.045
+      ):0;
       boltModel.position.z=-.43+boltKick+boltReload;
+      boltModel.rotation.x=reloadAnimationStart&&currentWeaponCode==='LONGSHOT'
+        ? THREE.MathUtils.smoothstep(reloadProgress,.68,.78)*.42*(1-THREE.MathUtils.smoothstep(reloadProgress,.84,.98))
+        : reloadAnimationStart&&currentWeaponCode==='THUNDER'
+          ? Math.sin(THREE.MathUtils.clamp((reloadProgress-.48)/.28,0,1)*Math.PI)*.22
+          : 0;
     }
     for(let i=projectiles.length-1;i>=0;i--){
       const shot=projectiles[i];shot.age+=dt;const step=130*dt;shot.travelled+=step;
