@@ -120,12 +120,56 @@ export async function createGame(
     world.createCollider(RAPIER.ColliderDesc.cuboid(hx, hy, hz).setTranslation(x, y, z));
   }
 
+  const mapTrim = new THREE.MeshStandardMaterial({color:0x5b7188,metalness:.86,roughness:.3});
+  const mapDark = new THREE.MeshStandardMaterial({color:0x101b2b,metalness:.68,roughness:.38});
+  const mapAccent = new THREE.MeshStandardMaterial({color:map.light,emissive:map.light,emissiveIntensity:1.2,metalness:.35,roughness:.26});
+  const mapHazard = new THREE.MeshStandardMaterial({color:map.palette==='amber'?0xf0b354:0xd1e8f4,metalness:.28,roughness:.55});
+  const makeMapDetail=(geometry:THREE.BufferGeometry,material:THREE.Material,x:number,y:number,z:number,rx=0,ry=0,rz=0)=>{
+    const part=new THREE.Mesh(geometry,material);
+    part.position.set(x,y,z);part.rotation.set(rx,ry,rz);
+    part.castShadow=true;part.receiveShadow=true;scene.add(part);return part;
+  };
+
   for (const b of map.cover) {
     box(b.x, b.top / 2, b.z, b.hx, b.top / 2, b.hz);
     const led = new THREE.Mesh(new THREE.BoxGeometry(b.hx * 1.7, 0.055, 0.08), glow);
     led.position.set(b.x, b.top + 0.08, b.z + b.hz + 0.025);
     scene.add(led);
+
+    // Raised top rails and armored corner caps make the cover read as a built structure.
+    const railY=b.top+.035;
+    makeMapDetail(new THREE.BoxGeometry(b.hx*1.92,.07,.12),mapTrim,b.x,railY,b.z-b.hz*.82);
+    makeMapDetail(new THREE.BoxGeometry(b.hx*1.92,.07,.12),mapTrim,b.x,railY,b.z+b.hz*.82);
+    makeMapDetail(new THREE.BoxGeometry(.12,.07,b.hz*1.65),mapTrim,b.x-b.hx*.9,railY,b.z);
+    makeMapDetail(new THREE.BoxGeometry(.12,.07,b.hz*1.65),mapTrim,b.x+b.hx*.9,railY,b.z);
+
+    const panelWidth=Math.max(.42,Math.min(1.35,b.hx*1.18));
+    const panelHeight=Math.min(.34,b.top*.2);
+    const panelY=Math.max(.28,b.top*.52);
+    const panelZ=b.z+b.hz+.028;
+    makeMapDetail(new THREE.BoxGeometry(panelWidth,panelHeight,.045),mapDark,b.x,panelY,panelZ);
+    makeMapDetail(new THREE.BoxGeometry(panelWidth*.72,.028,.018),mapAccent,b.x,panelY+panelHeight*.2,panelZ-.027);
+    makeMapDetail(new THREE.BoxGeometry(panelWidth*.42,.018,.02),mapHazard,b.x,panelY-panelHeight*.22,panelZ-.028);
+    for(const side of [-1,1]){
+      const bolt=makeMapDetail(new THREE.CylinderGeometry(.035,.035,.025,10),mapTrim,b.x+side*(panelWidth*.42),panelY,panelZ-.055,Math.PI/2);
+      bolt.rotation.z=Math.PI/2;
+      makeMapDetail(new THREE.BoxGeometry(.075,Math.min(.5,b.top*.28),.055),mapDark,b.x+side*(b.hx*.82),Math.min(b.top*.42,.9),panelZ-.025);
+    }
+    // Three small hazard bars on the exposed face add scale and industrial detail.
+    for(let stripe=0;stripe<3;stripe++){
+      makeMapDetail(new THREE.BoxGeometry(.045,.19,.018),mapHazard,
+        b.x-panelWidth*.28+stripe*panelWidth*.28,Math.min(.34,b.top*.25),panelZ-.052,0,0,-.18);
+    }
   }
+
+  // Low-profile perimeter beacons and floor-side service pylons frame each map without blocking lanes.
+  for(const [x,z] of [[-25,-25],[25,-25],[-25,25],[25,25],[-25,0],[25,0]] as const){
+    makeMapDetail(new THREE.CylinderGeometry(.13,.19,1.15,10),mapDark,x,.58,z);
+    makeMapDetail(new THREE.CylinderGeometry(.18,.18,.075,12),mapTrim,x,1.08,z);
+    makeMapDetail(new THREE.TorusGeometry(.19,.025,6,18),mapAccent,x,.91,z,Math.PI/2);
+    makeMapDetail(new THREE.BoxGeometry(.055,.34,.055),mapAccent,x,1.35,z);
+  }
+
   box(0, 2.2, -30, 30, 2.2, 0.6);
   box(0, 2.2, 30, 30, 2.2, 0.6);
   box(-30, 2.2, 0, 0.6, 2.2, 30);
@@ -170,11 +214,22 @@ export async function createGame(
   let boltModel: THREE.Group | null = null;
   const muzzleFlash = new THREE.Mesh(
     new THREE.SphereGeometry(0.105, 10, 8),
-    new THREE.MeshBasicMaterial({ color: 0x8cecff })
+    new THREE.MeshBasicMaterial({ color: 0x8cecff,transparent:true,opacity:.95,toneMapped:false })
   );
   muzzleFlash.position.set(0.24, -0.22, -1.2);
   muzzleFlash.visible = false;
   gun.add(muzzleFlash);
+  const muzzleFx=new THREE.Group();
+  const muzzleFlame=new THREE.Mesh(new THREE.ConeGeometry(.075,.34,7),new THREE.MeshBasicMaterial({color:0xffd28a,transparent:true,opacity:.95,toneMapped:false}));
+  muzzleFlame.rotation.x=-Math.PI/2;muzzleFlame.position.z=-.16;muzzleFx.add(muzzleFlame);
+  const muzzleCore=new THREE.Mesh(new THREE.SphereGeometry(.065,8,6),new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.95,toneMapped:false}));
+  muzzleCore.scale.set(1,.7,1.65);muzzleFx.add(muzzleCore);
+  const muzzleRing=new THREE.Mesh(new THREE.TorusGeometry(.095,.012,6,18),new THREE.MeshBasicMaterial({color:0xffe7b2,transparent:true,opacity:.85,toneMapped:false}));
+  muzzleRing.position.z=-.045;muzzleFx.add(muzzleRing);
+  const muzzleHalo=new THREE.Sprite(new THREE.SpriteMaterial({map:smokeTexture,color:0xffb66e,transparent:true,opacity:.8,depthWrite:false,toneMapped:false}));
+  muzzleHalo.scale.set(.65,.65,1);muzzleHalo.position.z=-.08;muzzleFx.add(muzzleHalo);
+  const muzzleLight=new THREE.PointLight(0xffa85c,0,5,2);
+  muzzleFx.add(muzzleLight);muzzleFx.visible=false;gun.add(muzzleFx);
   camera.add(gun);
   scene.add(camera);
 
@@ -476,10 +531,27 @@ export async function createGame(
   }
   const remotes = new Map<string, THREE.Group>();
   const practiceTargets: THREE.Group[] = [];
-  const projectiles: Array<{mesh:THREE.Mesh;trail:THREE.Line;direction:THREE.Vector3;travelled:number;maxDistance:number;age:number}> = [];
+  const projectiles: Array<{mesh:THREE.Mesh;trail:THREE.Line;direction:THREE.Vector3;travelled:number;maxDistance:number;age:number;impactPoint:THREE.Vector3|null;impactColor:number}> = [];
   const damagePopups: THREE.Sprite[] = [];
   const thrownItemVisuals:Array<{mesh:THREE.Mesh;velocity:THREE.Vector3;age:number;fuseMs:number}> = [];
   const timedItemEffects:Array<{group:THREE.Group;startedAt:number;endsAt:number;kind:string}> = [];
+  type FxParticle={object:THREE.Object3D;material:THREE.SpriteMaterial|THREE.MeshBasicMaterial;velocity:THREE.Vector3;age:number;life:number;gravity:number;drag:number;spin:THREE.Vector3;baseScale:THREE.Vector3;kind:'smoke'|'spark'|'ember'};
+  const fxParticles:FxParticle[]=[];
+  const shellVisuals:Array<{mesh:THREE.Mesh;velocity:THREE.Vector3;spin:THREE.Vector3;age:number}>=[];
+  const fxParticleLimit=isMobile?76:150;
+  const fxParticleGeometry=new THREE.IcosahedronGeometry(.055,0);
+  const shellGeometry=new THREE.CylinderGeometry(.022,.022,.115,8);
+  const smokeCanvas=document.createElement('canvas');smokeCanvas.width=64;smokeCanvas.height=64;
+  const smokeContext=smokeCanvas.getContext('2d');
+  if(smokeContext){
+    const gradient=smokeContext.createRadialGradient(32,32,2,32,32,31);
+    gradient.addColorStop(0,'rgba(255,255,255,.75)');
+    gradient.addColorStop(.35,'rgba(255,255,255,.42)');
+    gradient.addColorStop(1,'rgba(255,255,255,0)');
+    smokeContext.fillStyle=gradient;smokeContext.fillRect(0,0,64,64);
+  }
+  const smokeTexture=new THREE.CanvasTexture(smokeCanvas);
+  const projectileColors:Record<string,number>={R16:0x4aa8ff,R9:0xffd166,VIPER:0x54e6b0,THUNDER:0xff8a45,LONGSHOT:0xa8d8ff,HELIX:0xb18aff,BASTION:0xffc45f,NOVA:0xff748e,ARC:0x57efff,PULSE:0xbe8cff,DORI:0xc98a4c};
   const projectileColors:Record<string,number>={R16:0x4aa8ff,R9:0xffd166,VIPER:0x54e6b0,THUNDER:0xff8a45,LONGSHOT:0xa8d8ff,HELIX:0xb18aff,BASTION:0xffc45f,NOVA:0xff748e,ARC:0x57efff,PULSE:0xbe8cff,DORI:0xc98a4c};
 
   function createPracticeTargets() {
@@ -708,6 +780,85 @@ export async function createGame(
       osc.connect(gain);gain.connect(ctx.destination);osc.start(now);osc.stop(now+.21);
     } catch { /* Audio is optional. */ }
   }
+  function emitFxParticle(position:THREE.Vector3,velocity:THREE.Vector3,kind:'smoke'|'spark'|'ember',life:number,size:number,color:number){
+    while(fxParticles.length>=fxParticleLimit){
+      const oldest=fxParticles.shift();
+      if(oldest){scene.remove(oldest.object);oldest.material.dispose();}
+    }
+    const material=kind==='smoke'
+      ? new THREE.SpriteMaterial({map:smokeTexture,color,transparent:true,opacity:.38,depthWrite:false,toneMapped:false})
+      : new THREE.MeshBasicMaterial({color,transparent:true,opacity:kind==='ember'?.95:1,toneMapped:false});
+    const object:THREE.Object3D=kind==='smoke'
+      ? new THREE.Sprite(material as THREE.SpriteMaterial)
+      : new THREE.Mesh(fxParticleGeometry,material as THREE.MeshBasicMaterial);
+    object.position.copy(position);object.scale.setScalar(size);
+    object.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);
+    scene.add(object);
+    fxParticles.push({object,material,velocity:velocity.clone(),age:0,life,gravity:kind==='smoke'?-0.12:kind==='ember'?-1.8:-4.8,drag:kind==='smoke'?.18:kind==='ember'?.8:1.7,spin:new THREE.Vector3((Math.random()-.5)*5,(Math.random()-.5)*5,(Math.random()-.5)*5),baseScale:object.scale.clone(),kind});
+  }
+  function spawnImpactFx(position:THREE.Vector3,direction:THREE.Vector3,color:number){
+    const count=isMobile?3:6;
+    for(let i=0;i<count;i++){
+      const velocity=direction.clone().multiplyScalar(.7+Math.random()*1.4).add(new THREE.Vector3((Math.random()-.5)*2,Math.random()*1.8,(Math.random()-.5)*2));
+      emitFxParticle(position,velocity,'spark',.22+Math.random()*.2,.035+Math.random()*.025,color);
+    }
+    emitFxParticle(position,new THREE.Vector3(0,.45,0),'smoke',.65,.19,0x8795a5);
+  }
+  function spawnMuzzleFx(code:string,origin:THREE.Vector3,direction:THREE.Vector3){
+    const color=projectileColors[code]||0xffd28a;
+    const flashMaterial=muzzleFlash.material as THREE.MeshBasicMaterial;
+    flashMaterial.color.setHex(color);
+    muzzleFlame.material=(muzzleFlame.material as THREE.MeshBasicMaterial);
+    (muzzleFlame.material as THREE.MeshBasicMaterial).color.setHex(color);
+    (muzzleHalo.material as THREE.SpriteMaterial).color.setHex(color);
+    muzzleLight.color.setHex(color);
+    muzzleFx.position.copy(muzzleFlash.position);
+    muzzleFx.scale.setScalar(code==='LONGSHOT'||code==='THUNDER'?1.28:1);
+    muzzleFx.visible=true;muzzleFlash.visible=true;
+    const sparks=isMobile?2:4;
+    for(let i=0;i<sparks;i++){
+      const velocity=direction.clone().multiplyScalar(2+Math.random()*2).add(new THREE.Vector3((Math.random()-.5)*2,(Math.random()-.5)*2,(Math.random()-.5)*1.5));
+      emitFxParticle(origin,velocity,'spark',.12+Math.random()*.12,.028+Math.random()*.025,color);
+    }
+    emitFxParticle(origin,direction.clone().multiplyScalar(.45).add(new THREE.Vector3(0,.35,0)),'smoke',.55,.12,0xaab6c5);
+    if(Math.random()>.28)emitFxParticle(origin,direction.clone().multiplyScalar(.25).add(new THREE.Vector3(0,.55,0)),'smoke',.72,.095,0x77899c);
+  }
+  function spawnShellCasing(origin:THREE.Vector3){
+    while(shellVisuals.length>=(isMobile?8:16)){
+      const oldest=shellVisuals.shift();
+      if(oldest){scene.remove(oldest.mesh);(oldest.mesh.material as THREE.Material).dispose();}
+    }
+    const right=new THREE.Vector3(1,0,0).applyQuaternion(camera.quaternion);
+    const up=new THREE.Vector3(0,1,0).applyQuaternion(camera.quaternion);
+    const mesh=new THREE.Mesh(shellGeometry,new THREE.MeshStandardMaterial({color:0xd7b56d,metalness:.9,roughness:.22}));
+    mesh.position.copy(origin).addScaledVector(right,.24).addScaledVector(up,-.16);
+    mesh.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);
+    mesh.castShadow=false;scene.add(mesh);
+    const velocity=right.clone().multiplyScalar(1.45+Math.random()*.8).addScaledVector(up,.9+Math.random()*.75).add(new THREE.Vector3((Math.random()-.5)*.5,.15,(Math.random()-.5)*.5));
+    shellVisuals.push({mesh,velocity,spin:new THREE.Vector3(7+Math.random()*7,5+Math.random()*6,8+Math.random()*8),age:0});
+  }
+  function spawnExplosionFx(position:THREE.Vector3,radius:number,durationMs:number){
+    const group=new THREE.Group();group.position.copy(position);
+    const coreMaterial=new THREE.MeshBasicMaterial({color:0xffa14d,transparent:true,opacity:.92,toneMapped:false,depthWrite:false});
+    const core=new THREE.Mesh(new THREE.SphereGeometry(.48,14,12),coreMaterial);core.scale.set(1,.76,1);group.add(core);
+    const ringMaterial=new THREE.MeshBasicMaterial({color:0xffd18a,transparent:true,opacity:.95,toneMapped:false,depthWrite:false});
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(.65,.045,7,36),ringMaterial);ring.rotation.x=Math.PI/2;group.add(ring);
+    const innerMaterial=new THREE.MeshBasicMaterial({color:0xff754b,transparent:true,opacity:.75,toneMapped:false,depthWrite:false});
+    const innerRing=new THREE.Mesh(new THREE.TorusGeometry(.4,.025,6,30),innerMaterial);innerRing.rotation.x=Math.PI/2;group.add(innerRing);
+    const light=new THREE.PointLight(0xff934d,9,Math.max(8,radius*3),2);light.position.y=.6;group.add(light);
+    scene.add(group);const now=performance.now();timedItemEffects.push({group,startedAt:now,endsAt:now+Math.max(350,durationMs),kind:'GRENADE'});
+    const sparkCount=isMobile?16:30;
+    for(let i=0;i<sparkCount;i++){
+      const angle=Math.random()*Math.PI*2,elevation=(Math.random()-.5)*1.25;
+      const velocity=new THREE.Vector3(Math.cos(angle)*Math.cos(elevation),Math.sin(elevation)+.45,Math.sin(angle)*Math.cos(elevation)).multiplyScalar(2.8+Math.random()*5.2);
+      emitFxParticle(position,velocity,'ember',.45+Math.random()*.55,.045+Math.random()*.04,i%3===0?0xffe3a4:0xff7548);
+    }
+    for(let i=0;i<(isMobile?10:18);i++){
+      const angle=i/18*Math.PI*2;
+      const velocity=new THREE.Vector3(Math.cos(angle)*(.25+Math.random()*.8),.5+Math.random()*1.1,Math.sin(angle)*(.25+Math.random()*.8));
+      emitFxParticle(position,velocity,'smoke',1.8+Math.random()*1.8,.28+Math.random()*.34,i%2?0x5d6878:0x8a919a);
+    }
+  }
   function spawnProjectile(origin:THREE.Vector3,direction:THREE.Vector3,code:string,range:number) {
     const color=projectileColors[code]||0xffffff;
     const blocker=new THREE.Raycaster(origin,direction,0,range).intersectObjects(raycastMeshes,false)[0];
@@ -715,7 +866,7 @@ export async function createGame(
     const mesh=new THREE.Mesh(new THREE.SphereGeometry(.045,8,6),new THREE.MeshBasicMaterial({color,toneMapped:false}));
     const start=origin.clone().addScaledVector(direction,.5);mesh.position.copy(start);scene.add(mesh);
     const trail=new THREE.Line(new THREE.BufferGeometry().setFromPoints([start.clone().addScaledVector(direction,-.55),start]),new THREE.LineBasicMaterial({color,transparent:true,opacity:.78,toneMapped:false}));
-    scene.add(trail);projectiles.push({mesh,trail,direction:direction.clone().normalize(),travelled:0,maxDistance:visibleRange,age:0});
+    scene.add(trail);projectiles.push({mesh,trail,direction:direction.clone().normalize(),travelled:0,maxDistance:visibleRange,age:0,impactPoint:blocker?blocker.point.clone():null,impactColor:color});
   }
   function showDamageAt(position:THREE.Vector3,damage:number,headshot:boolean) {
     // Wide, high-resolution label with measured text bounds and generous padding.
@@ -782,16 +933,22 @@ export async function createGame(
     thrownItemVisuals.push({mesh,velocity:direction.multiplyScalar(8.5).add(new THREE.Vector3(0,3.2,0)),age:0,fuseMs});
   }
   function showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number){
-    if(effect==='FLASH'){const overlay=document.getElementById('flashOverlay');if(overlay){overlay.classList.add('active');window.setTimeout(()=>overlay.classList.remove('active'),Math.max(220,durationMs));}return;}
-    const group=new THREE.Group();group.position.set(x,y,z);
-    if(effect==='SMOKE'){
-      const material=new THREE.MeshStandardMaterial({color:0xaab7c5,transparent:true,opacity:.26,depthWrite:false,roughness:1});
-      for(let i=0;i<11;i++){const puff=new THREE.Mesh(new THREE.SphereGeometry(.65+(i%4)*.22,12,10),material);puff.position.set(Math.sin(i*2.13)*radius*.43,(i%3)*.55,Math.cos(i*1.7)*radius*.43);group.add(puff);}
-    }else{
-      const ring=new THREE.Mesh(new THREE.TorusGeometry(Math.max(.6,radius*.28),.08,8,36),new THREE.MeshBasicMaterial({color:0xffbd69,transparent:true,opacity:.9}));ring.rotation.x=Math.PI/2;group.add(ring);
-      for(let i=0;i<10;i++){const spark=new THREE.Mesh(new THREE.SphereGeometry(.09,6,6),new THREE.MeshBasicMaterial({color:i%2?0xffe0a0:0xff754a}));const angle=i/10*Math.PI*2;spark.position.set(Math.cos(angle)*radius*.55,.25+(i%3)*.12,Math.sin(angle)*radius*.55);group.add(spark);}
+    if(effect==='FLASH'){
+      const overlay=document.getElementById('flashOverlay');
+      if(overlay){overlay.classList.add('active');window.setTimeout(()=>overlay.classList.remove('active'),Math.max(220,durationMs));}
+      return;
     }
-    scene.add(group);const now=performance.now();timedItemEffects.push({group,startedAt:now,endsAt:now+Math.max(350,durationMs),kind:effect});
+    const position=new THREE.Vector3(x,y,z);
+    if(effect==='GRENADE'){spawnExplosionFx(position,radius,durationMs);return;}
+    if(effect==='SMOKE'){
+      const count=isMobile?15:25,life=Math.max(2.8,Math.min(7.2,durationMs/1000*.86));
+      for(let i=0;i<count;i++){
+        const angle=Math.random()*Math.PI*2,spread=Math.random()*radius*.52;
+        const velocity=new THREE.Vector3(Math.cos(angle)*(.12+Math.random()*.35),.28+Math.random()*.52,Math.sin(angle)*(.12+Math.random()*.35));
+        const puffPosition=position.clone().add(new THREE.Vector3(Math.cos(angle)*spread,Math.random()*.45,Math.sin(angle)*spread));
+        emitFxParticle(puffPosition,velocity,'smoke',life*(.72+Math.random()*.32),.55+Math.random()*.65,i%3===0?0x9aa7b6:0x768696);
+      }
+    }
   }
   function useItem(){
     if(!active)return;if(currentItemCount()<=0){notify('선택한 아이템을 모두 사용했습니다.');return;}
@@ -829,7 +986,12 @@ export async function createGame(
     camera.updateMatrixWorld(true);
     const origin=camera.getWorldPosition(new THREE.Vector3());
     const direction=camera.getWorldDirection(new THREE.Vector3());
-    if(melee){doriSwingStart=now;playMeleeSound();}else{playFireSound(currentWeaponCode);spawnProjectile(origin,direction,currentWeaponCode,currentWeapon.range);}
+    if(melee){doriSwingStart=now;playMeleeSound();}else{
+      playFireSound(currentWeaponCode);
+      spawnProjectile(origin,direction,currentWeaponCode,currentWeapon.range);
+      spawnMuzzleFx(currentWeaponCode,muzzleFlash.getWorldPosition(new THREE.Vector3()),direction);
+      spawnShellCasing(origin);
+    }
     updateHud(hp, ammo, reserve, currentWeapon.name);
 
     if (mode === 'practice') {
@@ -864,12 +1026,7 @@ export async function createGame(
       yaw += (Math.random()-0.5)*0.003;
     }
 
-    if(!melee){
-      const flashMaterial=muzzleFlash.material as THREE.MeshBasicMaterial;
-      flashMaterial.color.setHex(projectileColors[currentWeaponCode]||0xffffff);
-      muzzleFlash.visible = true;
-      window.setTimeout(() => { if(!disposed)muzzleFlash.visible = false; }, 70);
-    }
+    // Muzzle flash lifetime and point-light intensity are animated centrally in frame().
   }
 
   function reload() {
@@ -1191,7 +1348,57 @@ export async function createGame(
       const shot=projectiles[i];shot.age+=dt;const step=130*dt;shot.travelled+=step;
       shot.mesh.position.addScaledVector(shot.direction,step);
       shot.trail.geometry.setFromPoints([shot.mesh.position.clone().addScaledVector(shot.direction,-.62),shot.mesh.position]);
-      if(shot.age>.42||shot.travelled>=shot.maxDistance){scene.remove(shot.mesh,shot.trail);disposeObjectResources(shot.mesh);shot.trail.geometry.dispose();(shot.trail.material as THREE.Material).dispose();projectiles.splice(i,1);}
+      if(shot.age>.42||shot.travelled>=shot.maxDistance){
+        if(shot.impactPoint)spawnImpactFx(shot.impactPoint,shot.direction,shot.impactColor);
+        scene.remove(shot.mesh,shot.trail);disposeObjectResources(shot.mesh);shot.trail.geometry.dispose();(shot.trail.material as THREE.Material).dispose();projectiles.splice(i,1);
+      }
+    }
+    for(let i=fxParticles.length-1;i>=0;i--){
+      const particle=fxParticles[i];particle.age+=dt;
+      const lifeProgress=THREE.MathUtils.clamp(particle.age/particle.life,0,1);
+      particle.velocity.y+=particle.gravity*dt;
+      particle.velocity.multiplyScalar(Math.exp(-particle.drag*dt));
+      particle.object.position.addScaledVector(particle.velocity,dt);
+      particle.object.rotation.x+=particle.spin.x*dt;
+      particle.object.rotation.y+=particle.spin.y*dt;
+      particle.object.rotation.z+=particle.spin.z*dt;
+      const fade=1-lifeProgress;
+      particle.material.opacity=(particle.kind==='smoke'?.38:particle.kind==='ember'?.95:1)*fade;
+      if(particle.kind==='smoke'){
+        const growth=1+lifeProgress*1.35;
+        particle.object.scale.copy(particle.baseScale).multiplyScalar(growth);
+      }else{
+        particle.object.scale.copy(particle.baseScale).multiplyScalar(.35+fade*.75);
+      }
+      if(lifeProgress>=1){
+        scene.remove(particle.object);particle.material.dispose();fxParticles.splice(i,1);
+      }
+    }
+    for(let i=shellVisuals.length-1;i>=0;i--){
+      const shell=shellVisuals[i];shell.age+=dt;shell.velocity.y-=9.8*dt;
+      shell.mesh.position.addScaledVector(shell.velocity,dt);
+      shell.mesh.rotation.x+=shell.spin.x*dt;shell.mesh.rotation.y+=shell.spin.y*dt;shell.mesh.rotation.z+=shell.spin.z*dt;
+      if(shell.mesh.position.y<.035){
+        shell.mesh.position.y=.035;
+        if(Math.abs(shell.velocity.y)>.42)shell.velocity.y=Math.abs(shell.velocity.y)*.28;
+        else shell.velocity.y=0;
+        shell.velocity.x*=Math.exp(-4.5*dt);shell.velocity.z*=Math.exp(-4.5*dt);
+      }
+      if(shell.age>2.4){
+        scene.remove(shell.mesh);(shell.mesh.material as THREE.Material).dispose();shellVisuals.splice(i,1);
+      }
+    }
+    if(fireAge<90){
+      const flashStrength=Math.max(0,1-fireAge/90);
+      muzzleFx.visible=true;muzzleFlash.visible=true;
+      muzzleFx.scale.setScalar((currentWeaponCode==='LONGSHOT'||currentWeaponCode==='THUNDER'?1.28:1)*(.72+flashStrength*.42));
+      muzzleLight.intensity=flashStrength*10;
+      (muzzleFlash.material as THREE.MeshBasicMaterial).opacity=flashStrength*.92;
+      (muzzleFlame.material as THREE.MeshBasicMaterial).opacity=flashStrength*.95;
+      (muzzleRing.material as THREE.MeshBasicMaterial).opacity=flashStrength*.85;
+      (muzzleHalo.material as THREE.SpriteMaterial).opacity=flashStrength*.8;
+    }else{
+      muzzleFx.visible=false;muzzleFlash.visible=false;muzzleLight.intensity=0;
     }
     for(let i=damagePopups.length-1;i>=0;i--){
       const popup=damagePopups[i],age=(now-Number(popup.userData.startedAt||now))/1000;
@@ -1200,7 +1407,21 @@ export async function createGame(
       if(age>=.9){scene.remove(popup);const material=popup.material as THREE.SpriteMaterial;material.map?.dispose();material.dispose();damagePopups.splice(i,1);}
     }
     for(let i=thrownItemVisuals.length-1;i>=0;i--){const item=thrownItemVisuals[i];item.age+=dt;item.velocity.y-=9.8*dt;item.mesh.position.addScaledVector(item.velocity,dt);if(item.age>=item.fuseMs/1000){scene.remove(item.mesh);disposeObjectResources(item.mesh);thrownItemVisuals.splice(i,1);}}
-    for(let i=timedItemEffects.length-1;i>=0;i--){const effect=timedItemEffects[i],age=now-effect.startedAt,remaining=effect.endsAt-now;if(effect.kind==='SMOKE'){const fade=Math.min(1,Math.max(0,remaining/1600));effect.group.scale.setScalar(1+Math.min(.22,age/5000));effect.group.traverse(object=>{if(object instanceof THREE.Mesh){const mats=Array.isArray(object.material)?object.material:[object.material];mats.forEach(mat=>{if('opacity' in mat)mat.opacity=.26*fade;});}});}if(remaining<=0){scene.remove(effect.group);disposeObjectResources(effect.group);timedItemEffects.splice(i,1);}}
+    for(let i=timedItemEffects.length-1;i>=0;i--){
+      const effect=timedItemEffects[i],age=now-effect.startedAt,remaining=effect.endsAt-now;
+      if(effect.kind==='GRENADE'){
+        const progress=THREE.MathUtils.clamp(age/Math.max(1,effect.endsAt-effect.startedAt),0,1);
+        effect.group.scale.setScalar(.55+progress*2.2);
+        effect.group.traverse(object=>{
+          if(object instanceof THREE.Mesh){
+            const mat=object.material as THREE.Material&{opacity?:number};
+            if(typeof mat.opacity==='number')mat.opacity=Math.max(0,1-progress);
+          }
+          if(object instanceof THREE.PointLight)object.intensity=Math.max(0,9*(1-progress));
+        });
+      }
+      if(remaining<=0){scene.remove(effect.group);disposeObjectResources(effect.group);timedItemEffects.splice(i,1);}
+    }
     for(const mesh of remotes.values()){
       const data=mesh.userData;
       if(typeof data.targetX!=='number')continue;
@@ -1476,6 +1697,9 @@ export async function createGame(
       if(audioContext){void audioContext.close();audioContext=null;noiseBuffer=null;}
       for(const shot of projectiles){shot.trail.geometry.dispose();(shot.trail.material as THREE.Material).dispose();}
       for(const popup of damagePopups){const material=popup.material as THREE.SpriteMaterial;material.map?.dispose();material.dispose();}
+      for(const particle of fxParticles)particle.material.dispose();
+      for(const shell of shellVisuals)(shell.mesh.material as THREE.Material).dispose();
+      smokeTexture.dispose();fxParticleGeometry.dispose();shellGeometry.dispose();
       // Dispose shared materials/geometries exactly once, including remote players and practice targets.
       const geometries = new Set<THREE.BufferGeometry>();
       const materials = new Set<THREE.Material>();
