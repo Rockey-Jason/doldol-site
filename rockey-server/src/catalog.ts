@@ -88,6 +88,17 @@ for(const cx of [-17.2,17.2]){
   addTacticalCover(cx-1.65,-3.55,.75,.16,3.15);
   addTacticalCover(cx+1.65,-3.55,.75,.16,3.15);
   addTacticalCover(cx,-3.55,.60,.16,4.1,3.15);
+  // Elevated gallery platform, side walls and roof parapets.
+  addTacticalCover(cx-.9,-.05,3.4,3.35,4.19,3.91);
+  addTacticalCover(cx+4.05,-.05,.35,3.35,4.19,3.91);
+  addTacticalCover(cx-4.18,-.05,.14,3.35,5.08,4.08);
+  addTacticalCover(cx+4.18,-.05,.14,3.35,5.08,4.08);
+  addTacticalCover(cx,-3.25,4.1,.14,5.08,4.08);
+  addTacticalCover(cx,-1.5,4.175,4.575,5.99,5.71);
+  addTacticalCover(cx-4.02,-1.5,.11,4.45,6.64,5.92);
+  addTacticalCover(cx+4.02,-1.5,.11,4.45,6.64,5.92);
+  addTacticalCover(cx,-5.93,4.05,.11,6.64,5.92);
+  addTacticalCover(cx,2.93,4.05,.11,6.64,5.92);
 }
 // Bridge floor, glass-panel side walls and ceiling use vertical bounds so
 // ground-floor combat is not accidentally blocked by elevated structure.
