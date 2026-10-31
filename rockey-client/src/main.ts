@@ -379,11 +379,12 @@ socket.onMessage((message:GameMessage)=>{
       if(typeof message.health==='number')game?.setHealth(Number(message.health));
       const itemCode=String(message.itemCode||selectedItemCode);
       if(itemCode in ITEMS)selectedItemCode=itemCode as RockeyItemCode;
-      if(message.inventory&&typeof message.inventory==='object'){
+      const incomingInventory=message.inventory as Record<string,unknown>|undefined;
+      if(incomingInventory&&typeof incomingInventory==='object'){
         itemInventory=createItemInventory();
-        for(const item of Object.values(ITEMS)){const count=Number(message.inventory[item.code]);if(Number.isFinite(count))itemInventory[item.code]=Math.max(0,Math.min(10,Math.floor(count)));}
+        for(const item of Object.values(ITEMS)){const count=Number(incomingInventory[item.code]);if(Number.isFinite(count))itemInventory[item.code]=Math.max(0,Math.min(10,Math.floor(count)));}
       }else if(itemCode in ITEMS&&typeof message.count==='number')itemInventory[itemCode as RockeyItemCode]=Math.max(0,Number(message.count));
-      game?.setItem(itemCode,Number(message.count??0),String(message.effect||''),message.inventory as Record<string,number>|undefined);
+      game?.setItem(itemCode,Number(message.count??0),String(message.effect||''),incomingInventory as Record<string,number>|undefined);
       renderItemOptions();
       if(message.effect==='ENERGY')toast('ENERGY BOOST · 이동 속도 100% 증가 · 8초');
       break;
