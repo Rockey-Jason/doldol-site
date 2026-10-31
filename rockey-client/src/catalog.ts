@@ -85,6 +85,6 @@ export const WEAPONS: Record<string,RockeyWeapon> = {
   NOVA:{code:'NOVA',name:'NOVA',category:'HEAVY PISTOL',damage:42,headshotMultiplier:1.3,fireInterval:410,magazine:8,reserve:40,reloadMs:1550,range:64,spread:.003},
   ARC:{code:'ARC',name:'ARC',category:'ENERGY',damage:28,headshotMultiplier:1.3,fireInterval:190,magazine:24,reserve:96,reloadMs:2050,range:74,spread:.006},
   PULSE:{code:'PULSE',name:'PULSE',category:'BURST',damage:25,headshotMultiplier:1.3,fireInterval:205,magazine:21,reserve:84,reloadMs:1850,range:78,spread:.005},
-  DORI:{code:'DORI',name:'DORI',category:'MELEE',damage:48,headshotMultiplier:1.3,fireInterval:620,magazine:1,reserve:0,reloadMs:0,range:3.2,spread:.08}
+  DORI:{code:'DORI',name:'DORI',category:'MELEE',damage:48,headshotMultiplier:1.3,fireInterval:620,magazine:1,reserve:0,reloadMs:500,range:3.2,spread:.08}
 };
 export const WEAPON_LIST = Object.values(WEAPONS);
