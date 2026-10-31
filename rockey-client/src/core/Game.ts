@@ -381,7 +381,7 @@ export async function createGame(
       const optic = new THREE.Group();
       optic.position.set(0.24,0.13,-0.43);
       const opticBody = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.078,0.078,0.38,18),
+        new THREE.CylinderGeometry(0.078,0.078,0.38,18,1,true),
         dark
       );
       opticBody.rotation.x = Math.PI/2;
