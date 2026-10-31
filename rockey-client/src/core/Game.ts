@@ -769,6 +769,7 @@ export async function createGame(
         scene.add(mesh);
         remotes.set(player.id, mesh);
       }
+      mesh.userData.playerName=player.name;
       mesh.userData.targetX=player.x;
       mesh.userData.targetY=player.y-0.08;
       mesh.userData.targetZ=player.z;
@@ -791,9 +792,27 @@ export async function createGame(
     const reloadProgress=reloadAnimationStart?THREE.MathUtils.clamp((now-reloadAnimationStart)/Math.max(1,reloadAnimationDuration),0,1):1;
     if(reloadProgress>=1)reloadAnimationStart=0;
     const reloadWave=reloadAnimationStart?Math.sin(reloadProgress*Math.PI):0;
+    const switchProgress=switchAnimationStart?THREE.MathUtils.clamp((now-switchAnimationStart)/380,0,1):1;
+    if(switchProgress>=1)switchAnimationStart=0;
+    const switchWave=switchAnimationStart?Math.sin(switchProgress*Math.PI):0;
+    const doriProgress=doriSwingStart?THREE.MathUtils.clamp((now-doriSwingStart)/300,0,1):1;
+    if(doriProgress>=1)doriSwingStart=0;
+    const doriWave=doriSwingStart?Math.sin(doriProgress*Math.PI):0;
     const motion=weaponMotion[currentWeaponCode]||weaponMotion.R16;
-    gun.position.set(0,-reloadWave*motion.reloadTilt*.34,gunKick*.11+reloadWave*.19);
-    gun.rotation.set(reloadWave*motion.reloadTilt,0,reloadWave*motion.roll);
+    gun.position.set(0,-reloadWave*motion.reloadTilt*.34-switchWave*.18,gunKick*.11+reloadWave*.19+switchWave*.28);
+    gun.rotation.set(reloadWave*motion.reloadTilt+switchWave*.38,doriWave*1.2,reloadWave*motion.roll+switchWave*.28);
+    for(let i=projectiles.length-1;i>=0;i--){
+      const shot=projectiles[i];shot.age+=dt;const step=130*dt;shot.travelled+=step;
+      shot.mesh.position.addScaledVector(shot.direction,step);
+      shot.trail.geometry.setFromPoints([shot.mesh.position.clone().addScaledVector(shot.direction,-.62),shot.mesh.position]);
+      if(shot.age>.42||shot.travelled>=shot.maxDistance){scene.remove(shot.mesh,shot.trail);disposeObjectResources(shot.mesh);disposeObjectResources(shot.trail);projectiles.splice(i,1);}
+    }
+    for(let i=damagePopups.length-1;i>=0;i--){
+      const popup=damagePopups[i],age=(now-Number(popup.userData.startedAt||now))/1000;
+      popup.position.y=Number(popup.userData.baseY||popup.position.y)+age*.62;
+      (popup.material as THREE.SpriteMaterial).opacity=Math.max(0,1-age/.9);
+      if(age>=.9){scene.remove(popup);const material=popup.material as THREE.SpriteMaterial;material.map?.dispose();material.dispose();damagePopups.splice(i,1);}
+    }
     for(const mesh of remotes.values()){
       const data=mesh.userData;
       if(typeof data.targetX!=='number')continue;
@@ -984,6 +1003,8 @@ export async function createGame(
     setWeapon(code: string, nextAmmo?: number, nextReserve?: number) {
       setWeaponLocal(code,nextAmmo,nextReserve);
     },
+    showDamageOnTarget,
+    showShot,
     applyRecoil(nextPitch: number, nextYaw: number) {
       pitch = THREE.MathUtils.clamp(nextPitch,-1.3,1.3);
       yaw = nextYaw;
