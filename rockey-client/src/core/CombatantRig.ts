@@ -238,7 +238,7 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
     root.rotation.z=deathBlend*.95;
     root.position.y=-deathBlend*.25+landing*.035;
   };
-  const updateFootIK=(sampleGround:(x:number,z:number,footY:number)=>number|null,grounded=true)=>{
+  const updateFootIK=(sampleGround:(x:number,z:number,footY:number)=>{height:number;normalX:number;normalY:number;normalZ:number}|null,grounded=true)=>{
     if(!grounded){legs.forEach((leg,index)=>{leg.foot.position.y=footRestY[index];});return;}
     group.updateMatrixWorld(true);
     legs.forEach((leg,index)=>{
@@ -246,13 +246,13 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
       group.updateMatrixWorld(true);
       leg.foot.getWorldPosition(footWorldScratch);
       const ground=sampleGround(footWorldScratch.x,footWorldScratch.z,footWorldScratch.y);
-      if(ground===null||!Number.isFinite(ground))return;
+      if(ground===null||!Number.isFinite(ground.height))return;
       const weight=THREE.MathUtils.clamp(Number(leg.foot.userData.ikWeight??1),0,1);
       if(weight<.02)return;
       // Two-bone inverse kinematics in the leg's sagittal plane. The foot
       // target comes from a downward scene ray, so stairs and raised floors
       // produce a real hip/knee solution instead of a visual ankle offset.
-      targetWorldScratch.set(footWorldScratch.x,ground+.15,footWorldScratch.z);
+      targetWorldScratch.set(footWorldScratch.x,ground.height+.15,footWorldScratch.z);
       leg.hip.getWorldPosition(hipWorldScratch);
       group.worldToLocal(targetLocalScratch.copy(targetWorldScratch));
       group.worldToLocal(hipLocalScratch.copy(hipWorldScratch));
@@ -270,7 +270,10 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
       const baseHip=leg.hip.rotation.x,baseKnee=leg.knee.rotation.x;
       leg.hip.rotation.x=THREE.MathUtils.lerp(baseHip,solvedHip,weight);
       leg.knee.rotation.x=THREE.MathUtils.lerp(baseKnee,solvedKnee,weight);
-      leg.foot.rotation.x=THREE.MathUtils.lerp(leg.foot.rotation.x,-(solvedHip+solvedKnee),weight);
+      const slopePitch=Math.atan2(ground.normalZ,Math.max(.2,ground.normalY));
+      const slopeRoll=-Math.atan2(ground.normalX,Math.max(.2,ground.normalY));
+      leg.foot.rotation.x=THREE.MathUtils.lerp(leg.foot.rotation.x,-(solvedHip+solvedKnee)+slopePitch,weight);
+      leg.foot.rotation.z=THREE.MathUtils.lerp(leg.foot.rotation.z,slopeRoll,weight);
     });
   };
   group.userData.animatePose=animate;
