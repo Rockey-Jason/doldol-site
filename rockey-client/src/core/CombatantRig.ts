@@ -81,7 +81,7 @@ export function createCombatantRig(baseColor:number, accentColor:number):Combata
   addSegment(head,new THREE.Vector3(.14,-.11,-.13),new THREE.Vector3(.2,-.18,-.2),.018,dark);
   addSphere(head,accent,.2,-.18,-.2,.026,.026,.026);
   // Helmet mount, rear battery and a small side rail.
-  addBox(head,metal,new THREE.BoxGeometry(.12,.035,.12),0,.31,-.015);
+  addBox(head,new THREE.BoxGeometry(.12,.035,.12),metal,0,.31,-.015);
   addBox(head,dark,new THREE.BoxGeometry(.1,.11,.16),0,.03,.205);
   addBox(head,metal,new THREE.BoxGeometry(.035,.12,.04),-.245,.02,-.015);
 
