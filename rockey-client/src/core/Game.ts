@@ -58,20 +58,27 @@ export async function createGame(
 
   const map = MAPS[initialMapId] || MAPS.training_facility;
   const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 760;
+  const hardwareCores=navigator.hardwareConcurrency||4;
+  const deviceMemoryGb=(navigator as Navigator&{deviceMemory?:number}).deviceMemory??null;
+  const deviceTier:'low'|'balanced'|'high'=isMobile
+    ?(hardwareCores<=4||(deviceMemoryGb!==null&&deviceMemoryGb<=4)?'low':'balanced')
+    :(hardwareCores>=8&&(deviceMemoryGb===null||deviceMemoryGb>=8)?'high':hardwareCores>=6?'balanced':'low');
+  const deviceProfile={class:isMobile?'mobile':'desktop',tier:deviceTier,hardwareCores,deviceMemoryGb,
+    screenWidth:window.screen.width,screenHeight:window.screen.height,devicePixelRatio:window.devicePixelRatio||1};
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(map.background);
   scene.fog = new THREE.Fog(map.fog, 54, 158);
 
   const camera = new THREE.PerspectiveCamera(78, 1, 0.08, 180);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.25 : 1.8));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,deviceTier==='low'?(isMobile?1:1.25):isMobile?1.25:1.8));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   // OVERHAUL 04: benchmark-aware post-processing and quality scaling.
   renderer.toneMappingExposure = 1.08;
   const composer=new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene,camera));
-  const bloomPass=new UnrealBloomPass(new THREE.Vector2(1,1),isMobile ? .08 : .34,.42,.84);
+  const bloomPass=new UnrealBloomPass(new THREE.Vector2(1,1),deviceTier==='low'?.06:isMobile?.08:.34,.42,.84);
   composer.addPass(bloomPass);
   // Pre-filtered environment probe adds stable reflections to metal, glass and armour.
   let reflectionEnvironment:THREE.Texture|null=null;
@@ -82,7 +89,7 @@ export async function createGame(
     scene.environment=reflectionEnvironment;
     pmrem.dispose();room.dispose();
   }
-  renderer.shadowMap.enabled = !isMobile;
+  renderer.shadowMap.enabled = !isMobile&&deviceTier!=='low';
   renderer.shadowMap.type = isMobile?THREE.PCFShadowMap:THREE.PCFSoftShadowMap;
 
   // Cinematic three-point lighting: soft sky fill, warm key light and a cool rim.
@@ -91,7 +98,7 @@ export async function createGame(
   const sun = new THREE.DirectionalLight(0xffe8c7, 2.7);
   sun.position.set(-15, 25, 12);
   sun.castShadow = true;
-  sun.shadow.mapSize.set(isMobile ? 512 : 1536, isMobile ? 512 : 1536);
+  sun.shadow.mapSize.set(isMobile||deviceTier==='low'?512:deviceTier==='balanced'?1024:1536,isMobile||deviceTier==='low'?512:deviceTier==='balanced'?1024:1536);
   sun.shadow.camera.left = -34;
   sun.shadow.camera.right = 34;
   sun.shadow.camera.top = 34;
@@ -727,7 +734,16 @@ export async function createGame(
   };
   const stopSoakTest=()=>{
     if(!soakTest)return;
-    const report={device:isMobile?'mobile':'desktop',durationMs:performance.now()-soakTest.startedAt,samples:soakTest.samples};
+    const samples=soakTest.samples;
+    const first=samples[0],last=samples[samples.length-1];
+    const heapValues=samples.filter(sample=>sample.heapMb!==null);
+    const heapGrowthMb=heapValues.length>1?heapValues[heapValues.length-1].heapMb!-heapValues[0].heapMb!:null;
+    const geometryGrowth=first&&last?last.geometries-first.geometries:0;
+    const textureGrowth=first&&last?last.textures-first.textures:0;
+    const suspectedLeak=(heapGrowthMb!==null&&heapGrowthMb>32)||geometryGrowth>8||textureGrowth>4;
+    const report={device:isMobile?'mobile':'desktop',deviceTier,durationMs:performance.now()-soakTest.startedAt,
+      samples,heapGrowthMb,geometryGrowth,textureGrowth,suspectedLeak,
+      completedTarget:performance.now()-soakTest.startedAt>=soakTest.durationMs};
     window.dispatchEvent(new CustomEvent('rockey:soak-stop',{detail:report}));
     soakTest=null;
   };
@@ -755,7 +771,7 @@ export async function createGame(
   window.addEventListener('rockey:network',onNetworkRtt);
   let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
   const minPixelRatio=isMobile ? .78 : 1.0;
-  const maxPixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8);
+  const maxPixelRatio=Math.min(window.devicePixelRatio||1,deviceTier==='low'?(isMobile?1:1.25):isMobile?1.25:1.8);
   const appliedDestructionIds=new Set<string>();
   const remoteDebris=new Map<string,THREE.Mesh>();
   const remoteDebrisGeometry=new THREE.BoxGeometry(1,1,1);
@@ -1536,7 +1552,7 @@ export async function createGame(
     smoothedFrameMs=smoothedFrameMs*.92+frameMs*.08;
     if(now-perfWindowStart>=2500){
       const fps=perfFrames*1000/(now-perfWindowStart);
-      const target=isMobile?48:55;
+      const target=deviceTier==='low'?(isMobile?40:45):deviceTier==='balanced'?(isMobile?48:55):60;
       if(fps<target-5&&adaptivePixelRatio>minPixelRatio){
         adaptivePixelRatio=Math.max(minPixelRatio,adaptivePixelRatio-.1);
         renderer.setPixelRatio(adaptivePixelRatio);resize();
@@ -1569,7 +1585,7 @@ export async function createGame(
       performanceBadge.style.color=stressed?'#ffb4a8':'#d9edff';
       window.dispatchEvent(new CustomEvent('rockey:performance',{detail:{
         fps:measuredFps,onePercentLow,frameMs:measuredFrame,pixelRatio:Math.round(adaptivePixelRatio*100)/100,
-        device:isMobile?'mobile':'desktop',memoryMb,memoryLimitMb,heapDeltaMb,deviceMemoryGb:deviceMemory,
+        device:isMobile?'mobile':'desktop',deviceTier,deviceProfile,memoryMb,memoryLimitMb,heapDeltaMb,deviceMemoryGb:deviceMemory,
         snapshotJitterMs:Math.round(snapshotJitterMs*10)/10,estimatedSnapshotLoss,rttMs:networkRttMs===null?null:Math.round(networkRttMs),
         geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,
         drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,
@@ -1578,7 +1594,7 @@ export async function createGame(
       }}));
       if(now-lastStabilityReportAt>=60000){
         window.dispatchEvent(new CustomEvent('rockey:stability',{detail:{
-          sessionSeconds:Math.round((now-sessionStartedAt)/1000),device:isMobile?'mobile':'desktop',
+          sessionSeconds:Math.round((now-sessionStartedAt)/1000),device:isMobile?'mobile':'desktop',deviceTier,deviceProfile,
           heapMb:memoryMb,heapDeltaMb,geometries:renderer.info.memory.geometries,
           textures:renderer.info.memory.textures,drawCalls:renderer.info.render.calls,
           triangles:renderer.info.render.triangles,activeDebris:physicalDebris.length,
