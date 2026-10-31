@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { MAPS, WEAPONS } from './catalog.js';
-import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, type Combatant, type SmokeVolume } from './combat.js';
+import { ITEMS, MAPS, WEAPONS } from './catalog.js';
+import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, transferReloadAmmo, type Combatant, type SmokeVolume } from './combat.js';
 
 test('all ten weapon definitions have valid combat tuning',()=>{
   assert.equal(Object.keys(WEAPONS).length,11);
@@ -108,4 +108,32 @@ test('vertically bounded upper partitions do not block shots below their lintels
   const elevatedShooter=combatant('c',0,0,3.0,0,0,.0);
   const elevatedEnemy=combatant('d',1,0,3.0,-10);
   assert.equal(traceWeaponShot(elevatedShooter,[elevatedShooter,elevatedEnemy],'1v1',[lintel],WEAPONS.R16).target,null);
+});
+
+test('every weapon reload transfers only missing magazine rounds and never creates ammo',()=>{
+  for(const weapon of Object.values(WEAPONS)){
+    const partial=Math.max(0,Math.floor(weapon.magazine*.37));
+    const reserve=Math.max(0,Math.floor(weapon.reserve*.41));
+    const result=transferReloadAmmo(partial,reserve,weapon.magazine);
+    assert.equal(result.ammo,Math.min(weapon.magazine,partial+reserve),weapon.code);
+    assert.equal(result.reserve,Math.max(0,reserve-(weapon.magazine-partial)),weapon.code);
+    assert.equal(result.ammo+result.reserve,partial+reserve,weapon.code);
+    assert.ok(result.ammo<=weapon.magazine,weapon.code);
+  }
+});
+
+test('reload cancellation leaves the original magazine and reserve untouched',()=>{
+  const before={ammo:3,reserve:27};
+  const cancelled={...before};
+  assert.deepEqual(cancelled,before);
+  const completed=transferReloadAmmo(before.ammo,before.reserve,WEAPONS.R16.magazine);
+  assert.deepEqual(completed,{ammo:30,reserve:0,moved:27});
+});
+
+test('all tactical items have valid inventory definitions',()=>{
+  assert.deepEqual(Object.keys(ITEMS).sort(),['ENERGY','FLASH','GRENADE','PILLS','SMOKE']);
+  for(const item of Object.values(ITEMS)){
+    assert.ok(item.startingCount>=0&&item.startingCount<=10,item.code);
+    assert.ok(item.name.length>0,item.code);
+  }
 });
