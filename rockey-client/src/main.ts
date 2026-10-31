@@ -335,7 +335,7 @@ socket.onMessage((message:GameMessage)=>{
       break;
     case 'item.update':
       if(typeof message.health==='number')game?.setHealth(Number(message.health));
-      game?.setItem(String(message.itemCode||selectedItemCode),Number(message.count??0));
+      game?.setItem(String(message.itemCode||selectedItemCode),Number(message.count??0),String(message.effect||''));
       if(message.effect==='ENERGY')toast('ENERGY BOOST · 8초');
       break;
     case 'item.throw':
