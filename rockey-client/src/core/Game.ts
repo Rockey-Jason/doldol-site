@@ -947,9 +947,54 @@ export async function createGame(
     const velocity=right.clone().multiplyScalar(1.45+Math.random()*.8).addScaledVector(up,.9+Math.random()*.75).add(new THREE.Vector3((Math.random()-.5)*.5,.15,(Math.random()-.5)*.5));
     shellVisuals.push({mesh,velocity,spin:new THREE.Vector3(7+Math.random()*7,5+Math.random()*6,8+Math.random()*8),age:0});
   }
-  function spawnExplosionFx(position:THREE.Vector3,radius:number,durationMs:number){
-    // Explosions can permanently break nearby tactical crates and cabinets.
-    tacticalLevel.destroyNear(position,radius,(p,count,impulse)=>{spawnDebrisFx(p,count,impulse);spawnPhysicalDebris(p,count,impulse);});
+  function spawnGlassShards(position:THREE.Vector3,count:number,impulse:number){
+    const total=isMobile?Math.min(5,count):Math.min(12,count);
+    for(let i=0;i<total;i++){
+      const size=.09+Math.random()*.19;
+      const material=new THREE.MeshPhysicalMaterial({color:0xb9e7f6,roughness:.08,metalness:.04,transparent:true,opacity:.72,transmission:.28,thickness:.08});
+      const mesh=new THREE.Mesh(new THREE.TetrahedronGeometry(size,0),material);
+      mesh.position.copy(position).add(new THREE.Vector3((Math.random()-.5)*.7,(Math.random()-.5)*.65,(Math.random()-.5)*.25));
+      mesh.rotation.set(Math.random()*Math.PI,Math.random()*Math.PI,Math.random()*Math.PI);
+      mesh.castShadow=!isMobile;scene.add(mesh);
+      const body=world.createRigidBody(RAPIER.RigidBodyDesc.dynamic().setTranslation(mesh.position.x,mesh.position.y,mesh.position.z).setLinearDamping(.08).setAngularDamping(.12).setCcdEnabled(true));
+      world.createCollider(RAPIER.ColliderDesc.cuboid(size*.52,size*.52,size*.52).setDensity(1.8).setFriction(.34).setRestitution(.28),body);
+      const direction=new THREE.Vector3(mesh.position.x-position.x,Math.random()*.85+.25,mesh.position.z-position.z).normalize();
+      body.applyImpulse({x:direction.x*impulse*(.6+Math.random()),y:direction.y*impulse*(.65+Math.random()),z:direction.z*impulse*(.6+Math.random())},true);
+      body.applyTorqueImpulse({x:(Math.random()-.5)*impulse*1.8,y:(Math.random()-.5)*impulse*1.8,z:(Math.random()-.5)*impulse*1.8},true);
+      physicalDebris.push({mesh,body,age:0,life:3.2+Math.random()*2});
+    }
+  }
+  function spawnLightBreakFx(position:THREE.Vector3){
+    const group=new THREE.Group();group.position.copy(position);
+    const flash=new THREE.PointLight(0x8edfff,8,5,2);group.add(flash);
+    scene.add(group);const now=performance.now();
+    timedItemEffects.push({group,startedAt:now,endsAt:now+360,kind:'LIGHT'});
+    for(let i=0;i<(isMobile?5:10);i++){
+      const direction=new THREE.Vector3((Math.random()-.5)*2,Math.random()*1.5,(Math.random()-.5)*2).normalize();
+      emitFxParticle(position,direction.multiplyScalar(2.2+Math.random()*3.2),'spark',.22+Math.random()*.16,.025+Math.random()*.025,0x9cecff);
+    }
+  }
+  function applyDestruction(position:THREE.Vector3,radius:number,eventId?:string){
+    if(eventId&&appliedDestructionIds.has(eventId))return;
+    if(eventId){appliedDestructionIds.add(eventId);if(appliedDestructionIds.size>500)appliedDestructionIds.delete(appliedDestructionIds.values().next().value as string);}
+    tacticalLevel.destroyNear(position,radius,(p,count,impulse,kind)=>{
+      if(kind==='glass')spawnGlassShards(p,count,impulse);
+      else if(kind==='light'){spawnLightBreakFx(p);spawnPhysicalDebris(p,count,impulse);}
+      else{spawnDebrisFx(p,count,impulse);spawnPhysicalDebris(p,count,impulse);}
+    });
+  }
+  function spawnExplosionFx(position:THREE.Vector3,radius:number,durationMs:number,eventId?:string){
+    applyDestruction(position,radius,eventId);
+    // Nearby loose fragments receive a secondary blast impulse.
+    for(const piece of physicalDebris){
+      const p=piece.body.translation();
+      const delta=new THREE.Vector3(p.x-position.x,p.y-position.y,p.z-position.z);
+      const distance=delta.length();
+      if(distance>0.05&&distance<radius*1.45){
+        delta.normalize().multiplyScalar((1-distance/(radius*1.45))*impulseScale(radius));
+        piece.body.applyImpulse({x:delta.x,y:delta.y+.35,z:delta.z},true);
+      }
+    }
     const group=new THREE.Group();group.position.copy(position);
     const coreMaterial=new THREE.MeshBasicMaterial({color:0xffa14d,transparent:true,opacity:.92,toneMapped:false,depthWrite:false});
     const core=new THREE.Mesh(new THREE.SphereGeometry(.48,14,12),coreMaterial);core.scale.set(1,.76,1);group.add(core);
@@ -1046,14 +1091,14 @@ export async function createGame(
     const direction=new THREE.Vector3(-Math.sin(throwYaw)*cp,Math.sin(throwPitch),-Math.cos(throwYaw)*cp).normalize();
     thrownItemVisuals.push({mesh,velocity:direction.multiplyScalar(8.5).add(new THREE.Vector3(0,3.2,0)),age:0,fuseMs});
   }
-  function showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number){
+  function showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number,eventId?:string){
     if(effect==='FLASH'){
       const overlay=document.getElementById('flashOverlay');
       if(overlay){overlay.classList.add('active');window.setTimeout(()=>overlay.classList.remove('active'),Math.max(220,durationMs));}
       return;
     }
     const position=new THREE.Vector3(x,y,z);
-    if(effect==='GRENADE'){spawnExplosionFx(position,radius,durationMs);return;}
+    if(effect==='GRENADE'){spawnExplosionFx(position,radius,durationMs,eventId);return;}
     if(effect==='SMOKE'){
       const count=isMobile?7:14,life=Math.max(3.6,Math.min(8.2,durationMs/1000*.95));
       for(let i=0;i<count;i++){
@@ -1891,6 +1936,7 @@ export async function createGame(
     },
     setItem(code:string,count:number,effect?:string,inventory?:Record<string,number>){if(inventory)setItemInventory(code,inventory);else setItemLocal(code,count);if(effect==='ENERGY')energyUntil=performance.now()+8000;},
     selectItem,useItem,showThrownItem,showItemEffect,
+    applyWorldDestruction(events:Array<{id:string;x:number;y:number;z:number;radius:number}>){for(const event of events){if(!event||typeof event.id!=='string')continue;applyDestruction(new THREE.Vector3(event.x,event.y,event.z),event.radius,event.id);}},
     showDamageOnTarget,
     showShot,
     applyRecoil(nextPitch: number, nextYaw: number) {
