@@ -596,3 +596,9 @@ button:disabled{opacity:.42;cursor:not-allowed;filter:saturate(.55)}
   50%{box-shadow:0 0 0 1px rgba(255,105,116,.14),0 0 28px rgba(255,74,90,.2),0 10px 28px rgba(0,0,0,.2)}
 }
 @media(prefers-reduced-motion:reduce){.health-box.critical{animation:none!important}}
+
+/* Layering fix: keep decorative grids and hover sheen above panel paint but below content. */
+.menu-layer::before,.menu-layer::after{z-index:0}
+.menu-card{z-index:1}
+.mode-card::before{z-index:0}
+.mode-card strong,.mode-card span{position:relative;z-index:1}
