@@ -5,7 +5,7 @@ export interface CombatantRig {
   group: THREE.Group;
   animate: (movement:number,time:number,action?:number,recoil?:number,vertical?:number,dead?:boolean,sprint?:number,grounded?:boolean,aim?:number) => void;
   triggerHit: () => void;
-  updateFootIK: (sampleGround:(x:number,z:number,footY:number)=>number|null,grounded?:boolean) => void;
+  updateFootIK: (sampleGround:(x:number,z:number,footY:number)=>{height:number;normalX:number;normalY:number;normalZ:number}|null,grounded?:boolean) => void;
 }
 
 /**
