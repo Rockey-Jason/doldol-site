@@ -197,13 +197,17 @@ export async function createGame(
       const eye = new THREE.MeshStandardMaterial({color:0x171411,roughness:.34,metalness:0});
       const nose = new THREE.MeshStandardMaterial({color:0x38251f,roughness:.55,metalness:0});
       const shine = new THREE.MeshBasicMaterial({color:0xffffff});
+      // Scale the plush around its visual center. Scaling the whole gun group
+      // also pulls the model toward the camera, which can make it look larger.
+      const plushModel = new THREE.Group();
+      gun.add(plushModel);
       const plushSphere=(x:number,y:number,z:number,sx:number,sy:number,sz:number,material:THREE.Material)=>{
         const part=new THREE.Mesh(new THREE.SphereGeometry(1,24,18),material);
         part.position.set(x,y,z);
         part.scale.set(sx,sy,sz);
         part.castShadow=true;
         part.receiveShadow=true;
-        gun.add(part);
+        plushModel.add(part);
         return part;
       };
 
@@ -245,8 +249,10 @@ export async function createGame(
       const tail=plushSphere(.24,-.245,-.105,.055,.065,.105,fur);
       tail.rotation.x=-.25;
 
-      // Keep the whole plush comfortably small in the first-person view.
-      gun.scale.setScalar(.22);
+      // Keep the plush center at its original camera-space position while
+      // reducing only its visible dimensions to 22% of the original size.
+      plushModel.scale.setScalar(.22);
+      plushModel.position.set(.1872,-.156,-.468);
       muzzleFlash.visible=false;
       metal.dispose();glowPart.dispose();dark.dispose();
       return;
