@@ -597,8 +597,10 @@ export async function createGame(
   createPracticeTargets();
   const raycaster = new THREE.Raycaster();
   const downDirection=new THREE.Vector3(0,-1,0);
+  const footRayOrigin=new THREE.Vector3();
   const sampleGroundHeight=(x:number,z:number,footY:number)=>{
-    raycaster.set(new THREE.Vector3(x,footY+1.0,z),downDirection);
+    footRayOrigin.set(x,footY+1.0,z);
+    raycaster.set(footRayOrigin,downDirection);
     raycaster.near=0;raycaster.far=2.35;
     const hits=raycaster.intersectObjects(raycastMeshes,false);
     const hit=hits.find(value=>value.point.y<=footY+.28&&value.point.y>=footY-.72);
@@ -1785,7 +1787,7 @@ export async function createGame(
       const animatePose=mesh.userData.animatePose;
       if(typeof animatePose==='function')animatePose(remoteMotion,time,0,0,remoteVertical,data.dead===true,remoteMotion>.72,Math.abs(remoteVertical)<.65,data.aim===true?1:0);
       const remoteFootIK=mesh.userData.updateFootIK;
-      if(typeof remoteFootIK==='function')remoteFootIK(sampleGroundHeight,Math.abs(remoteVertical)<.65);
+      if(typeof remoteFootIK==='function'&&now-Number(data.lastFootIKAt||0)>80){remoteFootIK(sampleGroundHeight,Math.abs(remoteVertical)<.65);data.lastFootIKAt=now;}
       const smokeBlock=smokeDensityAlongRay(camera.position,mesh.position.clone().add(new THREE.Vector3(0,1.02,0)));
       const deathExpired=data.dead===true&&now-Number(data.deadAt||now)>1350;
       mesh.visible=data.baseVisible===true&&!deathExpired&&smokeBlock<.72;
