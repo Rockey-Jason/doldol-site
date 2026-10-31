@@ -1409,6 +1409,13 @@ export async function createGame(
   }
 
   function setRemotePlayers(players: RemotePlayer[],serverTime=Date.now()) {
+    if(lastSnapshotServerTime>0&&serverTime>lastSnapshotServerTime){
+      const interval=serverTime-lastSnapshotServerTime;
+      snapshotJitterMs=snapshotJitterMs*.82+Math.abs(interval-50)*.18;
+      if(interval>78)estimatedSnapshotLoss+=Math.max(1,Math.round(interval/50)-1);
+    }
+    lastSnapshotServerTime=serverTime;
+    const arrival=performance.now();
     const ids = new Set(players.map(player => player.id));
     for (const [id, mesh] of remotes) {
       if (!ids.has(id)) {
@@ -1436,7 +1443,7 @@ export async function createGame(
       mesh.userData.targetZ=player.z;
       mesh.userData.targetYaw=player.yaw;
       const samples=(mesh.userData.samples as Array<{t:number;x:number;y:number;z:number;yaw:number}>|undefined)||[];
-      const stamp=Number.isFinite(serverTime)?serverTime:Date.now();
+      const stamp=arrival;
       const last=samples[samples.length-1];
       if(!last||stamp>last.t){
         samples.push({t:stamp,x:player.x,y:player.y-.92,z:player.z,yaw:player.yaw});
@@ -1748,7 +1755,7 @@ export async function createGame(
       const oldX=mesh.position.x,oldY=mesh.position.y,oldZ=mesh.position.z;
       const samples=data.samples as Array<{t:number;x:number;y:number;z:number;yaw:number}>|undefined;
       if(samples&&samples.length){
-        const renderAt=Date.now()-105;
+        const renderAt=performance.now()-105;
         while(samples.length>2&&samples[1].t<renderAt)samples.shift();
         const a=samples[0],b=samples[1]||a;
         const span=Math.max(1,b.t-a.t);
