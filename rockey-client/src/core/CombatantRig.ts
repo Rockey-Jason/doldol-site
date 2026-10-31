@@ -5,6 +5,7 @@ export interface CombatantRig {
   group: THREE.Group;
   animate: (movement:number,time:number,action?:number,recoil?:number,vertical?:number,dead?:boolean,sprint?:number,grounded?:boolean) => void;
   triggerHit: () => void;
+  updateFootIK: (sampleGround:(x:number,z:number,footY:number)=>number) => void;
 }
 
 /**
@@ -185,7 +186,8 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
   const triggerHit=()=>{hitUntil=performance.now()+230;};
   let wasGrounded=true;
   let landingUntil=0;
-  const animate=(movement:number,time:number,action=0,recoil=0,vertical=0,dead=false,sprint=0,grounded=true)=>{
+  const footRestY=legs.map(leg=>leg.foot.position.y);
+  const animate=(movement:number,time:number,action=0,recoil=0,vertical=0,dead=false,sprint=0,grounded=true,aim=0)=>{
     const move=THREE.MathUtils.clamp(movement,0,1);
     const runBlend=THREE.MathUtils.clamp(sprint,0,1)*move;
     const walkBlend=move*(1-THREE.MathUtils.smoothstep(runBlend,0.05,.9));
@@ -205,16 +207,16 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
     pelvis.rotation.y=Math.sin(time*cadence*.5)*runBlend*.035;
     spine.rotation.x=-.018*walkBlend-.055*runBlend+airborne*.13+hit*.16+deathBlend*.52+landing*.08;
     spine.rotation.z=Math.sin(time*4.7)*walkBlend*.012+hit*.12;
-    chest.rotation.x=-.02*walkBlend-.035*runBlend+airborne*.10+hit*.22+deathBlend*.28;
+    chest.rotation.x=-.02*walkBlend-.035*runBlend+airborne*.10+hit*.22+deathBlend*.28-aim*.045;
     chest.rotation.z=Math.sin(time*4.2)*walkBlend*.009-hit*.08;
     neck.rotation.x=airborne*-.08+hit*-.18+deathBlend*-.25+landing*-.06;
     head.rotation.x=Math.sin(time*1.3)*.018*idle+hit*.14+deathBlend*.32;
     head.rotation.y=Math.sin(time*1.15)*.025;
     arms.forEach(({shoulder,elbow,hand,side})=>{
       const gait=side<0?stride:counter;
-      shoulder.rotation.x=.10+gait*.64+airborne*-.62+recoil*.10+hit*-.35+deathBlend*.7+landing*.08;
+      shoulder.rotation.x=.10+gait*.64+airborne*-.62+recoil*.10+hit*-.35+deathBlend*.7+landing*.08-aim*.18;
       shoulder.rotation.z=side*.08+action*.09*side+deathBlend*side*.12;
-      elbow.rotation.x=.16+Math.max(0,-gait)*.62+action*.22+airborne*.42+deathBlend*-.85;
+      elbow.rotation.x=.16+Math.max(0,-gait)*.62+action*.22+airborne*.42+deathBlend*-.85+aim*.24;
       hand.rotation.x=action*.12+airborne*.22+deathBlend*.32;
     });
     legs.forEach(({hip,knee,foot,side})=>{
@@ -230,9 +232,23 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
     root.rotation.z=deathBlend*.95;
     root.position.y=-deathBlend*.25+landing*.035;
   };
+  const updateFootIK=(sampleGround:(x:number,z:number,footY:number)=>number)=>{
+    group.updateMatrixWorld(true);
+    legs.forEach((leg,index)=>{
+      leg.foot.position.y=footRestY[index];
+      group.updateMatrixWorld(true);
+      const worldFoot=new THREE.Vector3();leg.foot.getWorldPosition(worldFoot);
+      const ground=sampleGround(worldFoot.x,worldFoot.z,worldFoot.y);
+      const soleY=worldFoot.y-.12;
+      const correction=THREE.MathUtils.clamp(ground-soleY,-.22,.22);
+      leg.foot.position.y=footRestY[index]+correction;
+      leg.knee.rotation.x+=THREE.MathUtils.clamp(-correction*1.05,-.18,.18);
+    });
+  };
   group.userData.animatePose=animate;
+  group.userData.updateFootIK=updateFootIK;
   group.userData.triggerHit=triggerHit;
   group.userData.setDead=(dead:boolean)=>{if(dead)triggerHit();};
   animate(0,0);
-  return {group,animate,triggerHit};
+  return {group,animate,triggerHit,updateFootIK};
 }
