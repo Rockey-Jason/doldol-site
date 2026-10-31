@@ -8,6 +8,17 @@ import { ITEMS, MAPS, WEAPON_LIST, type RockeyItemCode } from './catalog';
 
 const supabase=createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
 const socket=new GameSocket();
+const networkQaApi={
+  setProfile:(lossPercent:number,minDelayMs=50,maxDelayMs=300,seed=0x524f434b)=>{
+    socket.setNetworkSimulation({lossPercent,minDelayMs,maxDelayMs,seed});
+    window.dispatchEvent(new CustomEvent('rockey:network-simulation',{detail:{enabled:true,lossPercent,minDelayMs,maxDelayMs}}));
+  },
+  clear:()=>{
+    socket.clearNetworkSimulation();
+    window.dispatchEvent(new CustomEvent('rockey:network-simulation',{detail:{enabled:false}}));
+  }
+};
+(window as Window&{RockeyNetworkQA?:typeof networkQaApi}).RockeyNetworkQA=networkQaApi;
 const $=(id:string)=>document.getElementById(id);
 const menu=$('menu')!;
 const hud=$('hud')!;
