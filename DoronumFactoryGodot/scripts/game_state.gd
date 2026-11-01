@@ -1148,6 +1148,42 @@ func _read_save_file(path: String) -> Dictionary:
 			return {}
 	return parsed
 
+func validate_save_payload(parsed: Dictionary) -> Array[String]:
+	var errors: Array[String] = []
+	var seen_stack_ids: Dictionary = {}
+	for stack in parsed.get("inventory",[]):
+		if not stack is Dictionary:
+			errors.append("Inventory entry is not a dictionary.")
+			continue
+		var stack_id := str(stack.get("stack_id",""))
+		var item_id := str(stack.get("item_id",""))
+		var quantity := int(stack.get("quantity",0))
+		var quality := float(stack.get("quality",-1.0))
+		var purity := float(stack.get("purity",-1.0))
+		var reserved := int(stack.get("reserved",0))
+		if stack_id.is_empty() or seen_stack_ids.has(stack_id):
+			errors.append("Missing or duplicate StackID · "+stack_id)
+		seen_stack_ids[stack_id] = true
+		if not GameData.ITEMS.has(item_id) and item_id not in GameData.DORONUM_IDS:
+			errors.append("Unknown critical ItemID · "+item_id)
+		if quantity<=0 or reserved<0 or reserved>quantity:
+			errors.append("Invalid quantity/reservation · "+stack_id)
+		if not is_finite(quality) or not is_finite(purity) or quality<0.0 or quality>100.0 or purity<0.0 or purity>100.0:
+			errors.append("Invalid Quality/Purity · "+stack_id)
+	var seen_building_ids: Dictionary = {}
+	for building in parsed.get("buildings",[]):
+		if not building is Dictionary:
+			errors.append("Building entry is not a dictionary.")
+			continue
+		var building_id := str(building.get("id",""))
+		var instance_id := str(building.get("instance_id",""))
+		if GameData.building_definition(building_id).is_empty():
+			errors.append("Unknown critical BuildingID · "+building_id)
+		if instance_id.is_empty() or seen_building_ids.has(instance_id):
+			errors.append("Missing or duplicate Building InstanceID · "+instance_id)
+		seen_building_ids[instance_id] = true
+	return errors
+
 func load_game() -> void:
 	var parsed := _read_save_file(SAVE_PATH)
 	if parsed.is_empty():
@@ -1157,14 +1193,17 @@ func load_game() -> void:
 	if parsed.is_empty():
 		if FileAccess.file_exists(SAVE_PATH):
 			save_blocked = true
+			save_loaded = true
 			notification.emit("저장 데이터와 백업이 손상됐어. 원본 파일을 보호하기 위해 저장을 중지했어.")
 		return
 	var loaded_version := int(parsed.get("version",0))
 	if loaded_version > GameData.SAVE_VERSION:
+		save_loaded = true
 		save_blocked = true
 		notification.emit("이 저장은 더 최신 버전이야. 덮어쓰지 않을게.")
 		return
 	if loaded_version<1:
+		save_loaded = true
 		save_blocked = true
 		notification.emit("저장 버전이 유효하지 않아. 원본을 보호했어.")
 		return
@@ -1177,6 +1216,12 @@ func load_game() -> void:
 		parsed["save_id"] = "DF-SAVE-%d" % int(parsed.get("world_seed",GameData.WORLD_SEED))
 		parsed["save_revision"] = 0
 		parsed["simulation_tick"] = 0
+	var payload_errors := validate_save_payload(parsed)
+	if not payload_errors.is_empty():
+		save_blocked = true
+		save_loaded = true
+		notification.emit("저장 검증 실패 · 원본 보호: "+payload_errors[0])
+		return
 	world_seed = int(parsed.get("world_seed", GameData.WORLD_SEED))
 	save_id = str(parsed.get("save_id","DF-SAVE-%d" % world_seed))
 	save_revision = int(parsed.get("save_revision",0))
