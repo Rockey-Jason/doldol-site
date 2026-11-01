@@ -37,6 +37,9 @@ var _event_ids: Dictionary = {}
 var _next_stack_id := 1
 var save_loaded := false
 var save_blocked := false
+var save_id := ""
+var save_revision := 0
+var simulation_tick: int = 0
 var fusion_diagnostics := {"power_stability":false,"pressure_calibration":false,"emergency_cooling":false}
 
 func _ready() -> void:
@@ -46,6 +49,7 @@ func _ready() -> void:
 		state_changed.emit()
 
 func advance_fixed_tick(dt: float) -> void:
+	simulation_tick += 1
 	_tick_research(dt)
 	_tick_fusion(dt)
 	_tick_planetary_stabilization(dt)
@@ -883,8 +887,13 @@ func find_lore(lore_id: String) -> void:
 func save_game() -> void:
 	if save_blocked:
 		return
+	save_revision += 1
+	if save_id.is_empty():
+		save_id = "DF-SAVE-%d" % world_seed
 	var data := {
-		"version":GameData.SAVE_VERSION,"world_seed":world_seed,
+		"version":GameData.SAVE_VERSION,"build_version":"0.2.0","canonical_data_version":1,
+		"world_generator_version":1,"simulation_rules_version":1,"save_id":save_id,
+		"save_revision":save_revision,"simulation_tick":simulation_tick,"world_seed":world_seed,
 		"player_position":[player_position.x,player_position.y,player_position.z],"equipped_tool":equipped_tool,
 		"inventory":inventory,"buildings":buildings,"discovered_nodes":discovered_nodes,
 		"research_completed":research_completed,"active_research":active_research,"research_progress":research_progress,
@@ -942,12 +951,28 @@ func load_game() -> void:
 			save_blocked = true
 			notification.emit("저장 데이터와 백업이 손상됐어. 원본 파일을 보호하기 위해 저장을 중지했어.")
 		return
-	save_loaded = true
-	if int(parsed.get("version", 0)) > GameData.SAVE_VERSION:
+	var loaded_version := int(parsed.get("version",0))
+	if loaded_version > GameData.SAVE_VERSION:
 		save_blocked = true
 		notification.emit("이 저장은 더 최신 버전이야. 덮어쓰지 않을게.")
 		return
+	if loaded_version<1:
+		save_blocked = true
+		notification.emit("저장 버전이 유효하지 않아. 원본을 보호했어.")
+		return
+	save_loaded = true
+	if loaded_version==1:
+		parsed["version"] = GameData.SAVE_VERSION
+		parsed["canonical_data_version"] = 1
+		parsed["world_generator_version"] = 1
+		parsed["simulation_rules_version"] = 1
+		parsed["save_id"] = "DF-SAVE-%d" % int(parsed.get("world_seed",GameData.WORLD_SEED))
+		parsed["save_revision"] = 0
+		parsed["simulation_tick"] = 0
 	world_seed = int(parsed.get("world_seed", GameData.WORLD_SEED))
+	save_id = str(parsed.get("save_id","DF-SAVE-%d" % world_seed))
+	save_revision = int(parsed.get("save_revision",0))
+	simulation_tick = int(parsed.get("simulation_tick",0))
 	equipped_tool = str(parsed.get("equipped_tool","ITEM_TOOL_HANDS"))
 	player_position = Vector3(parsed.get("player_position", [0,0,0])[0], parsed.get("player_position", [0,0,0])[1], parsed.get("player_position", [0,0,0])[2])
 	inventory.assign(parsed.get("inventory", []))
