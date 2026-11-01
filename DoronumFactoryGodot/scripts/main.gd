@@ -28,6 +28,8 @@ func _ready() -> void:
 	player.name = "Player"
 	add_child(player)
 	player.global_position = game.player_position if game.player_position.length() > 0.1 else Vector3(0,height_at(0,0)+1.2,0)
+	if game.has_skill("FIELD_SURVEYOR"):
+		player.interaction_range *= 1.10
 	player.interact_requested.connect(_on_player_interact)
 	hud = GameUI.new()
 	hud.name = "HUD"
@@ -298,6 +300,7 @@ func _interact_tree(tree: Node) -> void:
 		tree.set_meta("cycle",int(tree.get_meta("cycle",0))+1)
 		game.claim_research_sample(str(tree.get_meta("node_id")),"ITEM_DORI_MEAT")
 		game._claim_once("FIRST_DORI_MEAT_HARVEST","TREE_HARVEST",1000)
+		game.grant_skill_point("DORI_TREE_DISCOVERED","DORI_TREE_DISCOVERY")
 		game.story_flags["DORI_MEAT_DISCOVERED"] = true
 		_update_tree_visuals()
 		return
