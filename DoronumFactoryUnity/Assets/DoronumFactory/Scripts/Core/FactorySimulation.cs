@@ -413,16 +413,19 @@ namespace DoronumFactory
 
         private void RecordPowerSample(MachineRuntimeData machine)
         {
-            if (!powerSamples.TryGetValue(machine.InstanceId,out var samples))
-            { samples=new List<float>(); powerSamples[machine.InstanceId]=samples; }
-            samples.Add(machine.PowerRatio);
-            if (samples.Count>2600) samples.RemoveAt(0);
+            float ratio=Mathf.Clamp01(machine.PowerRatio);
+            machine.PowerRatioSum+=ratio;
+            machine.PowerRatioSquareSum+=ratio*ratio;
+            machine.PowerSampleCount++;
+            machine.FailureExposureSeconds+=TickSeconds*ratio;
         }
 
         public float GetPowerStability(MachineRuntimeData machine)
         {
-            if (!powerSamples.TryGetValue(machine.InstanceId,out var samples) || samples.Count==0) return 100f;
-            float mean=samples.Average(),variance=samples.Average(x=>(x-mean)*(x-mean));
+            if(machine.PowerSampleCount<=0)return 100f;
+            float mean=machine.PowerRatioSum/machine.PowerSampleCount;
+            float meanSquare=machine.PowerRatioSquareSum/machine.PowerSampleCount;
+            float variance=Mathf.Max(0f,meanSquare-mean*mean);
             return Mathf.Clamp(100f*mean-50f*Mathf.Sqrt(variance),0f,100f);
         }
 
