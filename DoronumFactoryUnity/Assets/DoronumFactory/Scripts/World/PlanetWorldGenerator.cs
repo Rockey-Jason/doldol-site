@@ -112,6 +112,9 @@ namespace DoronumFactory
         private void GenerateResourceDeposits(GameBootstrap game)
         {
             var rng=new System.Random(game.State.WorldSeed);
+            SpawnCluster(game,rng,"WOOD","ITEM_WOOD",new Vector2(40f,30f),16,18,1,92f,90f);
+            SpawnCluster(game,rng,"STONE","ITEM_STONE",new Vector2(-45f,45f),14,24,1,92f,90f);
+            SpawnCluster(game,rng,"GRASS","ITEM_GRASS",new Vector2(80f,-40f),14,20,0,90f,90f);
             SpawnCluster(game,rng,"IRON","ITEM_IRON_ORE",new Vector2(-260f,130f),20,95,10,90f,78f);
             SpawnCluster(game,rng,"COPPER","ITEM_COPPER_ORE",new Vector2(250f,160f),18,90,8,88f,80f);
             SpawnCluster(game,rng,"COAL","ITEM_COAL",new Vector2(-140f,-280f),20,110,5,86f,88f);
@@ -147,12 +150,15 @@ namespace DoronumFactory
                 float x=center.x+Mathf.Cos(angle)*radius;
                 float z=center.y+Mathf.Sin(angle)*radius;
                 Vector3 position=new Vector3(x,HeightAt(x,z)+0.75f,z);
-                var node=GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                var primitive=itemId=="ITEM_WOOD"?PrimitiveType.Cylinder:(itemId=="ITEM_GRASS"?PrimitiveType.Capsule:PrimitiveType.Sphere);
+                var node=GameObject.CreatePrimitive(primitive);
                 node.name=prefix+"_VEIN_"+i.ToString("00");
                 node.transform.position=position;
-                node.transform.localScale=new Vector3(1.25f,0.85f,1.25f);
+                node.transform.localScale=itemId=="ITEM_WOOD"?new Vector3(0.55f,0.9f,0.55f):(itemId=="ITEM_GRASS"?new Vector3(0.5f,0.7f,0.5f):new Vector3(1.25f,0.85f,1.25f));
                 var material=new Material(Shader.Find("Universal Render Pipeline/Lit")??Shader.Find("Standard"));
                 material.color=ResourceColor(itemId);
+                if(itemId=="ITEM_WOOD")material.color=new Color(0.36f,0.2f,0.1f);
+                if(itemId=="ITEM_GRASS")material.color=new Color(0.18f,0.42f,0.17f);
                 material.SetFloat("_Metallic",0.28f);
                 material.SetFloat("_Smoothness",0.48f);
                 node.GetComponent<Renderer>().sharedMaterial=material;
