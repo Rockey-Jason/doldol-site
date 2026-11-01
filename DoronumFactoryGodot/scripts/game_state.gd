@@ -103,15 +103,29 @@ func consume_items(cost: Dictionary) -> bool:
 	return remaining.is_empty()
 
 func craft_manual(recipe_id: String) -> bool:
-	var recipe := GameData.MANUAL_RECIPES.get(recipe_id, {})
+	var recipe: Dictionary = GameData.MANUAL_RECIPES.get(recipe_id,{})
 	if recipe.is_empty():
 		return false
-	if not consume_items(recipe.inputs):
+	var lots := consume_items_with_lots(recipe.inputs,true)
+	if lots.is_empty():
 		notification.emit("재료가 부족해.")
 		return false
+	var quality_sum := 0.0
+	var purity_sum := 0.0
+	var quantity_sum := 0
+	var synthetic := false
+	for lot in lots:
+		var quantity := int(lot.quantity)
+		quality_sum += float(lot.quality)*quantity
+		purity_sum += float(lot.purity)*quantity
+		quantity_sum += quantity
+		synthetic = synthetic or bool(lot.synthetic)
+	var material_quality := 90.0 if quantity_sum<=0 else quality_sum/quantity_sum
+	var material_purity := 90.0 if quantity_sum<=0 else purity_sum/quantity_sum
+	var output_quality := clampf(material_quality*0.40+100.0*0.60,0.0,100.0)
 	for output_id in recipe.outputs:
-		add_item(output_id, int(recipe.outputs[output_id]), 90.0, 90.0, false, "MANUAL_RECIPE:" + recipe_id)
-	_claim_once("FIRST_RECIPE:" + recipe_id, "RECIPE_CRAFTED", 10)
+		add_item(output_id,int(recipe.outputs[output_id]),output_quality,material_purity,synthetic,"MANUAL_RECIPE:"+recipe_id)
+	_claim_once("FIRST_RECIPE:"+recipe_id,"RECIPE_CRAFTED",10)
 	return true
 
 func consume_items_with_lots(cost: Dictionary, allow_synthetic: bool = true) -> Array[Dictionary]:
