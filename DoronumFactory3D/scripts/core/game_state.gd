@@ -315,6 +315,7 @@ var campaign_stage := 0
 var player_state := {"position": Vector3.ZERO, "health": 100.0, "stamina": 100.0, "equipped_tool":"ITEM_TOOL_HANDS"}
 var currency_d := 0
 var simulation_tick := 0
+var world_seed := 827142
 var paused := false
 var _accumulator := 0.0
 var _rng := RandomNumberGenerator.new()
@@ -325,9 +326,10 @@ var selected_building_type := ""
 var selected_machine_id := ""
 
 func _ready() -> void:
-	_rng.seed = 827142
+	_rng.seed = world_seed
+	var save_exists := FileAccess.file_exists(save_path) or FileAccess.file_exists("user://doronium_factory_save_v5.bak")
 	load_game()
-	if inventory.is_empty():
+	if not save_exists:
 		_seed_starting_inventory()
 
 func _process(delta: float) -> void:
@@ -649,7 +651,7 @@ func save_game() -> void:
 		"simulationRulesVersion":1,
 		"saveRevision":simulation_tick,
 		"simulationTick":simulation_tick,
-		"worldSeed":827142,
+		"worldSeed":world_seed,
 		"inventory":inventory,
 		"researchPoints":research_points,
 		"skillPoints":skill_points,
