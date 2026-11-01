@@ -161,23 +161,21 @@ func _create_dori_forest() -> void:
 		tree.tree_id = "DORI_TREE_%03d" % i
 		tree.position = Vector3(p.x,height_at(p.x,p.y),p.y)
 		add_child(tree)
-	var grove_area := Area3D.new()
-	grove_area.name = "DoriMeatTreeDiscovery"
-	grove_area.collision_layer = 0
-	grove_area.collision_mask = 1
+	var grove_trigger: StoryTrigger3D = STORY_TRIGGER_SCRIPT.new()
+	grove_trigger.name = "DoriMeatTreeDiscovery"
+	grove_trigger.collision_layer = 0
+	grove_trigger.collision_mask = 1
+	grove_trigger.event_id = "DORI_MEAT_TREE_DISCOVERED"
+	grove_trigger.title = "Dori Meat Tree Grove"
+	grove_trigger.orbit_line = "Natural Dori Meat Tree detected. The fruit is the missing input in the Doronum resonance records."
 	var grove_shape := CollisionShape3D.new()
 	var grove_box := BoxShape3D.new()
 	grove_box.size = Vector3(85,24,85)
 	grove_shape.shape = grove_box
 	grove_shape.position.y = 12.0
-	grove_area.add_child(grove_shape)
-	var grove_trigger: StoryTrigger3D = STORY_TRIGGER_SCRIPT.new()
-	grove_trigger.event_id = "DORI_MEAT_TREE_DISCOVERED"
-	grove_trigger.title = "Dori Meat Tree Grove"
-	grove_trigger.orbit_line = "Natural Dori Meat Tree detected. The fruit is the missing input in the Doronum resonance records."
-	grove_area.add_child(grove_trigger)
-	grove_area.position = Vector3(380,height_at(380,250),250)
-	add_child(grove_area)
+	grove_trigger.add_child(grove_shape)
+	grove_trigger.position = Vector3(380,height_at(380,250),250)
+	add_child(grove_trigger)
 
 func _create_first_factory_poi() -> void:
 	var poi := Node3D.new()
@@ -210,22 +208,20 @@ func _create_first_factory_poi() -> void:
 		ring_mat.emission = Color(0.02,0.17,0.23)
 		ring.material_override = ring_mat
 		room.add_child(ring)
-		var area := Area3D.new()
-		area.name = "Discover_"+room_names[i]
-		area.collision_layer = 0
-		area.collision_mask = 1
+		var story_trigger: StoryTrigger3D = STORY_TRIGGER_SCRIPT.new()
+		story_trigger.name = "Discover_"+room_names[i]
+		story_trigger.collision_layer = 0
+		story_trigger.collision_mask = 1
+		story_trigger.event_id = room_events[i]
+		story_trigger.title = room_names[i].replace("_"," ").capitalize()
+		story_trigger.orbit_line = "First Factory record recovered: "+room_names[i].replace("_"," ").capitalize()+"."
 		var trigger_collision := CollisionShape3D.new()
 		var trigger_shape := BoxShape3D.new()
 		trigger_shape.size = Vector3(18,8,18)
 		trigger_collision.shape = trigger_shape
 		trigger_collision.position.y = 4.0
-		area.add_child(trigger_collision)
-		var story_trigger: StoryTrigger3D = STORY_TRIGGER_SCRIPT.new()
-		story_trigger.event_id = room_events[i]
-		story_trigger.title = room_names[i].replace("_"," ").capitalize()
-		story_trigger.orbit_line = "First Factory record recovered: "+room_names[i].replace("_"," ").capitalize()+"."
-		area.add_child(story_trigger)
-		room.add_child(area)
+		story_trigger.add_child(trigger_collision)
+		room.add_child(story_trigger)
 		for beacon_index in range(2):
 			var beacon := OmniLight3D.new()
 			beacon.light_color = Color(0.12,0.78,0.92)
