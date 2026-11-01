@@ -445,7 +445,7 @@ func _render_machine_panel() -> void:
 	if str(record.type) == "INFINITY_FUSION_MACHINE":
 		_panel_content.add_child(_text_card("INFINITY FUSION · 7 STAGES / 260s IDEAL\nStage %d / 7 · %.1fs\nTemperature %.0f°C · Pressure %.0fMPa" % [int(GameState.fusion_job.get("stage_index",0))+1,float(GameState.fusion_job.get("stage_progress",0.0)),float(GameState.fusion_job.get("temperature_c",20.0)),float(GameState.fusion_job.get("pressure_mpa",0.0))]))
 		for test_id in ["power","pressure","cooling"]:
-			var test_label := {"power":"5MW 전력 안정성 시험 · 30초","pressure":"압력 센서 7채널 교정","cooling":"비상 냉각 부하 시험 · 20초"}.get(test_id,test_id)
+			var test_label: String = str({"power":"5MW 전력 안정성 시험 · 30초","pressure":"압력 센서 7채널 교정","cooling":"비상 냉각 부하 시험 · 20초"}.get(test_id,test_id))
 			var tests: Dictionary = GameState.story_flags.get("FUSION_PREFLIGHT",{})
 			var passed := bool(tests.get(test_id,{}).get("passed",false))
 			var running: Dictionary = GameState.story_flags.get("FUSION_PREFLIGHT_RUNNING",{})
