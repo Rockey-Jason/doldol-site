@@ -330,5 +330,9 @@ func _on_notification(message: String) -> void:
 func set_build_mode(active: bool, building_id: String = "") -> void:
 	build_mode_label.text = "BUILD MODE  ·  "+building_id+"  ·  click ground to place" if active else ""
 
+func open_tab(tab: String) -> void:
+	_select_tab(tab)
+	root.get_child(1).visible = true
+
 func toggle_panel() -> void:
 	root.get_child(1).visible = not root.get_child(1).visible
