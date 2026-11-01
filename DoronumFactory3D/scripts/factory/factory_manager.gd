@@ -481,6 +481,9 @@ func _tick_machines() -> void:
 		if kind in ["auto_miner","miner"]:
 			_tick_auto_miner(record)
 			continue
+		if kind == "harvester":
+			_tick_dori_harvester(record)
+			continue
 		if kind == "water_pump":
 			_tick_water_pump(record)
 			continue
@@ -705,6 +708,47 @@ func _resolve_machine_failure(record: Dictionary,job: Dictionary,recipe: Diction
 	record.last_failure = {"event_id":"FAILURE:"+str(record.instance_id)+":"+str(GameState.simulation_tick),"severity":severity,"salvage_ratio":salvage_ratio}
 	GameState.toast("기계 고장 · %s · 회수율 %d%%" % [severity,int(salvage_ratio*100.0)],"error" if severity=="CRITICAL" else "warning")
 	GameState.save_game()
+func _tick_dori_harvester(record: Dictionary) -> void:
+	var ratio := float(record.get("power_ratio",1.0))
+	if ratio < 0.8:
+		record.status = "PAUSED_POWER"
+		return
+	if not record.get("output_buffer",{}).is_empty():
+		record.status = "PAUSED_OUTPUT"
+		return
+	var recipe: Dictionary = GameState.RECIPES.get("DORI_MEAT_HARVEST",{})
+	if recipe.is_empty():
+		record.status = "ERROR"
+		record.last_error = "DORI_MEAT_HARVEST recipe missing"
+		return
+	var buffer: Dictionary = record.get("input_buffer",{})
+	if int(buffer.get("ITEM_WATER",0)) < 2:
+		record.status = "WAITING_INPUT"
+		return
+	var nearest: DoriMeatTree3D
+	var nearest_distance: float = 9.0
+	for tree in get_tree().get_nodes_in_group("dori_meat_trees"):
+		if tree is DoriMeatTree3D:
+			var distance: float = tree.global_position.distance_to(record.position)
+			if distance < nearest_distance and tree.mature:
+				nearest = tree
+				nearest_distance = distance
+	if nearest == null:
+		record.status = "WAITING_TREE"
+		return
+	buffer["ITEM_WATER"] = int(buffer.get("ITEM_WATER",0))-2
+	record.input_buffer = buffer
+	var harvested: Dictionary = nearest.harvest_automated(str(record.instance_id))
+	if harvested.is_empty():
+		record.status = "WAITING_TREE"
+		return
+	harvested.erase("item_id")
+	record.output_buffer = {"ITEM_DORI_MEAT":harvested}
+	record.status = "PAUSED_OUTPUT"
+	GameState.grant_rp_once("FIRST_PRODUCTION:DORI_MEAT_HARVEST",1500)
+	GameState.progress_objective("DORI_MEAT_HARVESTED",nearest.tree_id)
+	GameState.save_game()
+
 func _tick_water_pump(record: Dictionary) -> void:
 	var ratio := float(record.get("power_ratio",1.0))
 	if ratio < 0.8:
