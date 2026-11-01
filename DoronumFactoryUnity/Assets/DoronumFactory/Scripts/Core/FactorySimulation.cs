@@ -24,6 +24,7 @@ namespace DoronumFactory
             state.SimulationTick++;
             elapsedGameSeconds+=TickSeconds;
             AllocatePower();
+            TickBelts();
             foreach (var machine in state.Machines.ToList()) TickMachine(machine);
         }
 
@@ -213,16 +214,39 @@ namespace DoronumFactory
 
         private bool TryReserveRecipeInputs(MachineRuntimeData machine,RecipeDefinition recipe)
         {
-            var before=state.Inventory.Select(x=>x.Clone()).ToList();
+            var inventorySnapshot=inventory.Snapshot();
+            var bufferSnapshot=machine.InputBuffer.Select(x=>x.Clone()).ToList();
             var reserved=new List<ItemStackData>();
             foreach (var input in recipe.Inputs)
             {
-                if (!inventory.TryReserveEligible(input.ItemId,input.Quantity,0f,0f,recipe.AllowSyntheticInput,out var parts))
+                int remaining=input.Quantity;
+                foreach (var buffered in machine.InputBuffer.Where(x=>x.ItemId==input.ItemId).ToList())
                 {
-                    state.Inventory.Clear(); state.Inventory.AddRange(before);
-                    machine.State="WAITING_INPUT"; return false;
+                    if (remaining<=0) break;
+                    if (!recipe.AllowSyntheticInput && buffered.Synthetic) continue;
+                    int take=Math.Min(remaining,buffered.Quantity);
+                    if (take<=0) continue;
+                    var portion=buffered.Clone();
+                    portion.StackId=Guid.NewGuid().ToString("N");
+                    portion.SourceStackId=buffered.StackId;
+                    portion.Quantity=take;
+                    reserved.Add(portion);
+                    buffered.Quantity-=take;
+                    remaining-=take;
                 }
-                reserved.AddRange(parts);
+                machine.InputBuffer.RemoveAll(x=>x.Quantity<=0);
+                if (remaining>0)
+                {
+                    if (!inventory.TryReserveEligible(input.ItemId,remaining,0f,0f,recipe.AllowSyntheticInput,out var parts))
+                    {
+                        inventory.RestoreSnapshot(inventorySnapshot);
+                        machine.InputBuffer.Clear();
+                        machine.InputBuffer.AddRange(bufferSnapshot);
+                        machine.State="WAITING_INPUT";
+                        return false;
+                    }
+                    reserved.AddRange(parts);
+                }
             }
             machine.ReservedInputs=reserved;
             machine.ProgressSeconds=0f;
