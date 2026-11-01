@@ -242,6 +242,11 @@ func _collect_output(record: Dictionary) -> void:
 	for item_id in buffer:
 		var payload: Dictionary = buffer[item_id]
 		GameState.add_item(str(item_id),int(payload.get("quantity",0)),float(payload.get("quality",90.0)),float(payload.get("purity",90.0)),bool(payload.get("synthetic",false)),str(payload.get("origin","FACTORY_OUTPUT")))
+		if str(item_id)=="ITEM_DORONUM_INFINITY":
+			GameState.story_flags["INFINITY_OUTPUT_INSPECTED"]=true
+			GameState.story_flags["INFINITY_OUTPUT_READY"]=false
+			GameState.toast("Infinity Doronum 검사 완료 · 행성 코어에 설치할 수 있습니다.","success")
+			get_tree().call_group("story_manager","evaluate_progression")
 	record.output_buffer = {}
 	record.status = "IDLE"
 	GameState.progress_objective("MACHINE_OUTPUT_COLLECTED",str(record.type))
@@ -327,6 +332,7 @@ func _refresh_machine(record: Dictionary) -> void:
 func _on_simulation_tick(tick_index: int) -> void:
 	_elapsed_game_seconds += GameState.FIXED_TICK
 	_allocate_power()
+	_update_relay_objectives()
 	_tick_machines()
 	_tick_conveyors()
 	_tick_preflight()
@@ -826,6 +832,19 @@ func get_machine_inventory(machine_id: String) -> Dictionary:
 	return _records.get(machine_id,{})
 
 
+func _update_relay_objectives() -> void:
+	var sites: Dictionary = {}
+	for record in _records.values():
+		if str(record.type)!="STABILIZATION_RELAY" or float(record.get("power_ratio",0.0))<0.8:
+			continue
+		for i in range(RELAY_SITE_XZ.size()):
+			if Vector2(record.position.x,record.position.z).distance_to(RELAY_SITE_XZ[i])<=18.0:
+				sites[i]=true
+	if sites.size()>=3 and not bool(GameState.story_flags.get("THREE_RELAYS_ACTIVE",false)):
+		GameState.story_flags["THREE_RELAYS_ACTIVE"]=true
+		GameState.toast("세 행성 에너지 노드에 안정화 릴레이 연결 완료","success")
+		get_tree().call_group("story_manager","evaluate_progression")
+
 func fuel_all_generators(fuel_seconds: float = 300.0) -> void:
 	var required_per_generator := int(ceil(fuel_seconds/45.0))
 	var generators: Array[Dictionary] = []
@@ -1183,25 +1202,19 @@ func install_infinity_core() -> bool:
 	return true
 
 func _tick_stabilization() -> void:
-	if GameState.stabilization_state!="STABILIZING":
+	if GameState.stabilization_state not in ["STABILIZING","PAUSED_RELAY"]:
 		return
 	var active_sites: Dictionary = {}
 	for relay in _records.values():
 		if str(relay.type)=="STABILIZATION_RELAY" and float(relay.get("power_ratio",0.0))>=0.8:
-			var site_index := -1
 			for i in range(RELAY_SITE_XZ.size()):
 				if Vector2(relay.position.x,relay.position.z).distance_to(RELAY_SITE_XZ[i])<=18.0:
-					site_index=i
-			if site_index>=0:
-				active_sites[site_index]=true
-	var active_relays := active_sites.size()
-	if active_relays>=3:
-		GameState.story_flags["THREE_RELAYS_ACTIVE"]=true
-	if active_relays<3:
+					active_sites[i]=true
+	if active_sites.size()<3:
 		GameState.stabilization_state="PAUSED_RELAY"
-		GameState.toast("릴레이 연결이 불안정합니다. 세 지점의 전력을 확인하세요.","warning")
 		return
 	GameState.stabilization_state="STABILIZING"
+	GameState.story_flags["THREE_RELAYS_ACTIVE"]=true
 	var progress := float(GameState.story_flags.get("STABILIZATION_PROGRESS",0.0))+GameState.FIXED_TICK
 	GameState.story_flags["STABILIZATION_PROGRESS"]=progress
 	if progress>=60.0:
@@ -1212,8 +1225,8 @@ func _tick_stabilization() -> void:
 		GameState.grant_skill_point_once("ENDING:PLANETARY_STABILIZATION")
 		GameState.toast("THE PLANET IS STABLE · THE FACTORY REMAINS OPERATIONAL","success")
 		get_tree().call_group("story_manager","evaluate_progression")
-	GameState.save_game()
-
+	if GameState.simulation_tick%10==0:
+		GameState.save_game()
 func buildable_machine_ids() -> Array[String]:
 	var result: Array[String] = []
 	for type in GameState.MACHINE_DEFS:
