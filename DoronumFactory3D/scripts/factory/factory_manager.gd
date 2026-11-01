@@ -706,6 +706,30 @@ func _resolve_machine_failure(record: Dictionary,job: Dictionary,recipe: Diction
 	record.last_failure = {"event_id":"FAILURE:"+str(record.instance_id)+":"+str(GameState.simulation_tick),"severity":severity,"salvage_ratio":salvage_ratio}
 	GameState.toast("기계 고장 · %s · 회수율 %d%%" % [severity,int(salvage_ratio*100.0)],"error" if severity=="CRITICAL" else "warning")
 	GameState.save_game()
+func _tick_water_pump(record: Dictionary) -> void:
+	var ratio := float(record.get("power_ratio",1.0))
+	if ratio < 0.8:
+		record.status = "PAUSED_POWER"
+		return
+	if not record.get("output_buffer",{}).is_empty():
+		record.status = "PAUSED_OUTPUT"
+		return
+	var near_water := false
+	for node in get_tree().get_nodes_in_group("resource_nodes"):
+		if node is ResourceNode3D and node.item_id == "ITEM_WATER" and not node.depleted and node.global_position.distance_to(record.position) <= 12.0:
+			near_water = true
+			break
+	if not near_water:
+		record.status = "WAITING_WATER_SOURCE"
+		return
+	record.progress = float(record.get("progress",0.0))+GameState.FIXED_TICK*ratio
+	if float(record.progress) >= 5.0:
+		record.progress = 0.0
+		record.output_buffer = {"ITEM_WATER":{"quantity":5,"quality":100.0,"purity":100.0,"synthetic":false,"origin":"WATER_PUMP:"+str(record.instance_id)}}
+		record.status = "PAUSED_OUTPUT"
+	else:
+		record.status = "RUNNING"
+
 func _tick_auto_miner(record: Dictionary) -> void:
 	var definition: Dictionary = GameState.MACHINE_DEFS.get(str(record.type),{})
 	var required := float(definition.get("power_kw",0.0))
