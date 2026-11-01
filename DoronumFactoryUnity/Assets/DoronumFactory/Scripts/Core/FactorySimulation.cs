@@ -84,6 +84,7 @@ namespace DoronumFactory
             float daylight=Mathf.Clamp01(Mathf.Sin((elapsedGameSeconds/1800f)*Mathf.PI*2f)*0.5f+0.5f);
             float generated=0f,requested=0f;
             var requests=new List<(MachineRuntimeData machine,float required,int priority)>();
+            var buffers=state.Machines.Where(m=>m.MachineId=="POWER_BUFFER").ToList();
             foreach (var m in state.Machines)
             {
                 if (m.MachineId=="GENERATOR")
@@ -93,21 +94,50 @@ namespace DoronumFactory
                 }
                 if (m.MachineId=="SOLAR_PANEL") { generated+=90f*daylight; continue; }
                 if (m.MachineId=="WIND_TURBINE") { generated+=180f; continue; }
-                if (m.MachineId=="BATTERY") continue;
+                if (m.MachineId=="BATTERY" || m.MachineId=="POWER_BUFFER") continue;
+                if (!MachineCatalog.All.TryGetValue(m.MachineId,out var machineDef)) { m.PowerRatio=1f; continue; }
+
+                float idle=machineDef.IdlePowerKW>0f?machineDef.IdlePowerKW:1f;
                 float process=0f;
-                if (!string.IsNullOrEmpty(m.RecipeId) && FactoryCatalog.Recipes.TryGetValue(m.RecipeId,out var recipe) &&
-                    (m.ReservedInputs.Count>0 || m.CompletionBuffer.Count==0)) process=recipe.PowerKW;
-                float idle=1f;
-                float required=idle+process;
-                if (required<=0f) { m.PowerRatio=1f; continue; }
-                int priority=0;
-                if (m.MachineId.Contains("DORONUM") || m.MachineId.Contains("FUSION") || m.MachineId.Contains("STABILIZATION")) priority=1;
-                else if (m.MachineId.Contains("AUTO") || m.MachineId.Contains("FABRICATOR")) priority=2;
-                else priority=3;
+                bool active=m.ReservedInputs.Count>0;
+                if (m.MachineId=="INFINITY_FUSION_MACHINE" && state.Fusion.Running)
+                {
+                    int stage=Mathf.Clamp(state.Fusion.StageIndex,0,FactoryCatalog.FusionStages.Length-1);
+                    process=FactoryCatalog.FusionStages[stage].MaxPowerMW*1000f;
+                    active=true;
+                }
+                else if (!string.IsNullOrEmpty(m.RecipeId) && FactoryCatalog.Recipes.TryGetValue(m.RecipeId,out var recipe))
+                {
+                    process=recipe.PowerKW;
+                    active=true;
+                }
+                bool safetyContinuous=m.MachineId=="COOLING_TOWER" || m.MachineId=="SHIELDING" ||
+                    m.MachineId=="EMERGENCY_CUTOFF" || m.MachineId=="STABILIZATION_RELAY" ||
+                    m.MachineId=="POWER_BUFFER";
+                bool coreActive=m.MachineId=="STABILIZATION_CORE" && state.CoreInstalled;
+                if (safetyContinuous || coreActive) active=true;
+                float required=idle+(active?process:0f);
+                if (required<=0f) { m.PowerRatio=1f;continue; }
+                int priority=(safetyContinuous||coreActive)?0:
+                    (m.MachineId.Contains("DORONUM")||m.MachineId.Contains("FUSION")||m.MachineId.Contains("STABILIZATION")?1:
+                    (m.MachineId.Contains("AUTO")||m.MachineId.Contains("FABRICATOR")?2:3));
                 requests.Add((m,required,priority));
                 requested+=required;
             }
-            float remaining=generated,consumed=0f;
+
+            float deficit=Mathf.Max(0f,requested-generated);
+            float discharge=0f;
+            foreach(var buffer in buffers)
+            {
+                float available=Mathf.Min(5000f,buffer.EnergyKJ/TickSeconds);
+                float take=Mathf.Min(available,deficit-discharge);
+                if(take<=0f)continue;
+                buffer.EnergyKJ=Mathf.Max(0f,buffer.EnergyKJ-take*TickSeconds);
+                discharge+=take;
+                if(discharge>=deficit)break;
+            }
+            float supply=generated+discharge;
+            float remaining=supply,consumed=0f;
             foreach (int priority in new[]{0,1,2,3})
             {
                 var group=requests.Where(r=>r.priority==priority).ToList();
@@ -121,14 +151,22 @@ namespace DoronumFactory
                     consumed+=allocation;
                 }
             }
-            state.LastPowerGenerationKW=generated;
+            float surplus=Mathf.Max(0f,generated-consumed);
+            foreach(var buffer in buffers)
+            {
+                if(surplus<=0f)break;
+                float roomKW=(1800000f-buffer.EnergyKJ)/TickSeconds;
+                float charge=Mathf.Min(surplus,Mathf.Min(5000f,roomKW));
+                if(charge>0f) { buffer.EnergyKJ=Mathf.Min(1800000f,buffer.EnergyKJ+charge*TickSeconds);surplus-=charge; }
+            }
+            state.LastPowerGenerationKW=supply;
             state.LastPowerConsumptionKW=consumed;
-            state.LastPowerRatio=requested<=0f?1f:Mathf.Clamp01(generated/requested);
+            state.LastPowerRatio=requested<=0f?1f:Mathf.Clamp01(supply/requested);
             foreach (var m in state.Machines)
                 if (m.MachineId=="GENERATOR" && m.FuelSeconds>0f) m.FuelSeconds=Mathf.Max(0f,m.FuelSeconds-TickSeconds);
         }
 
-        private void TickMachine(MachineRuntimeData machine)
+        rivate void TickMachine(MachineRuntimeData machine)
         {
             if (machine.CompletionBuffer.Count>0) { machine.State="PAUSED_OUTPUT"; MachineChanged?.Invoke(machine); return; }
             if (machine.Condition<=0f) { machine.State="BROKEN"; MachineChanged?.Invoke(machine); return; }
@@ -209,12 +247,16 @@ namespace DoronumFactory
             machine.ReservedInputs.Clear();
             machine.ProgressSeconds=0f;
             machine.State="PAUSED_OUTPUT";
-            state.TryClaim("FIRST_RECIPE:"+recipe.Id,"FIRST_RECIPE",RecipeRp(recipe));
-            state.TryClaim("FIRST_PRODUCTION:"+recipe.Id,"FIRST_PRODUCTION",RecipeRp(recipe));
+            var quota=state.RecipeTotals.Find(x=>x.RecipeId==recipe.Id);
+            if(quota==null) { quota=new RecipeTotalData { RecipeId=recipe.Id,Quantity=0 };state.RecipeTotals.Add(quota); }
+            quota.Quantity+=recipe.Outputs.Sum(x=>x.Quantity);
+            int rp=RecipeRp(recipe);
+            if(state.TryClaim("FIRST_RECIPE:"+recipe.Id,"FIRST_RECIPE",rp)) state.ResearchPoints+=rp;
+            if(state.TryClaim("FIRST_PRODUCTION:"+recipe.Id,"FIRST_PRODUCTION",rp)) state.ResearchPoints+=rp;
             ProductionCompleted?.Invoke(recipe.Id);
         }
 
-        private void RecordPowerSample(MachineRuntimeData machine)
+        rivate void RecordPowerSample(MachineRuntimeData machine)
         {
             if (!powerSamples.TryGetValue(machine.InstanceId,out var samples))
             { samples=new List<float>(); powerSamples[machine.InstanceId]=samples; }
