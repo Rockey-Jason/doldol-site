@@ -1051,13 +1051,9 @@ func start_infinity_fusion() -> bool:
 		if str(record.type)=="POWER_BUFFER":power_buffer=record
 	if float(power_buffer.get("energy_kj",0.0))<300000.0:errors.append("독립 전력 버퍼 에너지 300,000kJ 미달")
 	for item_id in GameState.DORONUM_IDS:
-		if GameState.count_item(item_id)<GameState.INFINITY_INPUT_COUNT:
-			errors.append(str(GameState.ITEM_DATA.get(item_id,{}).get("name",item_id))+": 100개 부족")
-			continue
-		var average: Dictionary = GameState.item_average(item_id)
-		if float(average.quality)<GameState.INFINITY_REQUIRED_QUALITY:errors.append(item_id+" Quality 90 미달")
-		if float(average.purity)<GameState.INFINITY_REQUIRED_PURITY:errors.append(item_id+" Purity 90 미달")
-		if bool(average.synthetic):errors.append(item_id+" Synthetic 원료 포함")
+		var eligible := GameState.eligible_quantity(item_id,GameState.INFINITY_REQUIRED_QUALITY,GameState.INFINITY_REQUIRED_PURITY,false)
+		if eligible<GameState.INFINITY_INPUT_COUNT:
+			errors.append(str(GameState.ITEM_DATA.get(item_id,{}).get("name",item_id))+": Infinity 적격 수량 %d / 100" % eligible)
 	if not errors.is_empty():
 		GameState.toast("퓨전 시작 불가 · "+str(errors.size())+"개 조건 미충족","error")
 		GameState.story_flags["FUSION_PREFLIGHT_ERRORS"] = errors
@@ -1069,14 +1065,13 @@ func start_infinity_fusion() -> bool:
 	var snapshot := GameState.inventory.duplicate(true)
 	var manifest: Dictionary = {}
 	for item_id in GameState.DORONUM_IDS:
-		var average: Dictionary = GameState.item_average(item_id)
-		manifest[item_id] = {"quantity":100,"quality":average.quality,"purity":average.purity,"synthetic":false}
-	for item_id in GameState.DORONUM_IDS:
-		if not GameState.remove_item(item_id,100):
+		var eligible_payload: Dictionary = GameState.remove_eligible_items(item_id,100,GameState.INFINITY_REQUIRED_QUALITY,GameState.INFINITY_REQUIRED_PURITY,false)
+		if eligible_payload.is_empty():
 			GameState.inventory = snapshot
 			GameState.inventory_changed.emit()
-			GameState.toast("입력 예약 트랜잭션 실패 · 재료를 되돌렸습니다.","error")
+			GameState.toast("입력 예약 트랜잭션 실패 · 부적격 또는 부족한 재료를 되돌렸습니다.","error")
 			return false
+		manifest[item_id] = eligible_payload
 	GameState.fusion_job = {
 		"job_id":"INFINITY-"+str(GameState.simulation_tick),
 		"running":true,"completed":false,"stage_index":0,"stage_progress":0.0,
