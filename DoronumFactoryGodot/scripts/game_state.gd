@@ -161,7 +161,6 @@ func discover_resource(node_id: String, item_id: String) -> void:
 	if discovered_nodes.has(node_id):
 		return
 	discovered_nodes[node_id] = true
-	research_points += 10
 	_claim_once("SCAN:" + node_id, "RESOURCE_SCANNED", 10)
 	notification.emit("자원 스캔 · " + GameData.item_name(item_id))
 
@@ -213,7 +212,10 @@ func _tick_research(dt: float) -> void:
 	if research_progress >= float(definition.time):
 		research_completed.append(active_research)
 		notification.emit("연구 완료 · " + str(definition.name))
+		if active_research == "RESEARCH_DORONUM_FUSION" and bool(story_flags.get("STORY_INCIDENT_RECONSTRUCTED",false)) and bool(story_flags.get("ACT_V_COMPLETE",false)):
+			story_flags["ORBIT_04"] = true
 		_claim_once("RESEARCH:" + active_research, "RESEARCH_COMPLETE", 0)
+		state_changed.emit()
 		active_research = ""
 		research_progress = 0.0
 
@@ -408,7 +410,7 @@ func _tick_fusion(dt: float) -> void:
 		fusion.failure_exposure += dt
 		fusion.rng_index += 1
 		var chance := 1.0 - pow(0.99, dt / 260.0)
-		if randf() < chance:
+		if _deterministic_unit(int(fusion.rng_index)) < chance:
 			fusion.state = "FAILED_MINOR"
 			fusion.failure_event_id = "FUSION-FAIL-" + str(fusion.rng_index)
 			notification.emit("퓨전 이상 감지 · 안전 정지. 입력은 복구 대기 상태야.")
@@ -461,6 +463,10 @@ func run_fusion_diagnostic(diagnostic_id: String) -> bool:
 	save_game()
 	state_changed.emit()
 	return true
+
+func _deterministic_unit(index: int) -> float:
+	var value := sin(float(world_seed) * 0.000013 + float(index) * 12.9898) * 43758.5453
+	return value - floorf(value)
 
 func _fusion_interlocks_valid() -> bool:
 	if fusion.is_empty():
