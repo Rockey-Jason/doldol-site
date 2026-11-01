@@ -124,9 +124,16 @@ const ITEMS := {
 	"ITEM_CONTROL_MODULE":{"name":"Control Module","category":"Component"},"ITEM_MOTOR":{"name":"Motor","category":"Component"},
 	"ITEM_BATTERY":{"name":"Battery","category":"Component"},"ITEM_RUBBER":{"name":"Rubber","category":"Material"},
 	"ITEM_TITANIUM_PLATE":{"name":"Titanium Plate","category":"Material"},"ITEM_GOLD_INGOT":{"name":"Gold Ingot","category":"Material"},"ITEM_CHROME_INGOT":{"name":"Chrome Ingot","category":"Material"},"ITEM_ARCHIVE_PATTERN":{"name":"Archive Pattern","category":"Contract"},"ITEM_CONTRACT_SEAL":{"name":"Contract Batch Seal","category":"Contract"},
-	"ITEM_MAGNETITE":{"name":"Magnetite","category":"Ore"},"ITEM_CHROME_ORE":{"name":"Chromite Ore","category":"Ore"},"ITEM_HEAT_CRYSTAL":{"name":"Heat Crystal","category":"Crystal"},
+	"ITEM_MAGNETITE":{"name":"Magnetite","category":"Ore"},"ITEM_CHROME_ORE":{"name":"Chromite Ore","category":"Ore"},"ITEM_NICKEL_ORE":{"name":"Nickel Ore","category":"Ore"},"ITEM_LEAD_ORE":{"name":"Lead Ore","category":"Ore"},
+	"ITEM_TITANIUM_ORE":{"name":"Titanium Ore","category":"Ore"},"ITEM_NEODYMIUM_ORE":{"name":"Neodymium Ore","category":"Ore"},"ITEM_HEAT_CRYSTAL":{"name":"Heat Crystal","category":"Crystal"},
 	"ITEM_COLD_CRYSTAL":{"name":"Cold Crystal","category":"Crystal"},"ITEM_DORI_MEAT":{"name":"Dori Meat","category":"Biological"},
-	"ITEM_DORONUM_INFINITY":{"name":"Infinity Doronum","category":"Endgame"}
+	"ITEM_DORONUM_INFINITY":{"name":"Infinity Doronum","category":"Endgame"},"ITEM_DORONUM_RESIDUE":{"name":"Doronum Residue","category":"Byproduct"},
+	"ITEM_BASIC_BUILDING_PART":{"name":"Basic Building Part","category":"Component"},"ITEM_LEAD":{"name":"Lead","category":"Material"},
+	"ITEM_NEODYMIUM_MAGNET":{"name":"Neodymium Magnet","category":"Component"},"ITEM_NICKEL_INGOT":{"name":"Nickel Ingot","category":"Material"},
+	"ITEM_SENSOR":{"name":"Sensor","category":"Component"},"ITEM_TITANIUM_INGOT":{"name":"Titanium Ingot","category":"Material"},
+	"ITEM_WOODEN_PICKAXE":{"name":"Wooden Pickaxe","category":"Tool"},"ITEM_WOODEN_AXE":{"name":"Wooden Axe","category":"Tool"},
+	"ITEM_WOODEN_SHOVEL":{"name":"Wooden Shovel","category":"Tool"},"ITEM_IRON_PICKAXE":{"name":"Iron Pickaxe","category":"Tool"},
+	"ITEM_STEEL_PICKAXE":{"name":"Steel Pickaxe","category":"Tool"},"ITEM_DORONUM_PICKAXE":{"name":"Doronum Pickaxe","category":"Tool"}
 }
 
 const MANUAL_RECIPES := {
@@ -153,7 +160,17 @@ const RECIPES := {
 	"RECIPE_ADVANCED_CIRCUIT":{"name":"Advanced Circuit","machine":"ADVANCED_ASSEMBLER","inputs":{"ITEM_BASIC_CIRCUIT":3,"ITEM_GOLD_INGOT":2,"ITEM_NICKEL_INGOT":2,"ITEM_QUARTZ":2,"ITEM_COPPER_WIRE":5},"outputs":{"ITEM_ADVANCED_CIRCUIT":1},"seconds":25.0,"power":45.0},
 	"RECIPE_CONTROL_MODULE":{"name":"Control Module","machine":"ADVANCED_ASSEMBLER","inputs":{"ITEM_ADVANCED_CIRCUIT":2,"ITEM_SENSOR":2,"ITEM_BATTERY":1,"ITEM_NEODYMIUM_MAGNET":1},"outputs":{"ITEM_CONTROL_MODULE":1},"seconds":30.0,"power":50.0},
 	"RECIPE_DORONUM_NORMAL":{"name":"Natural Doronum","machine":"DORONUM_COMPRESSOR","inputs":{"ITEM_DORI_MEAT":10},"outputs":{"ITEM_DORONUM_NORMAL":1},"seconds":20.0,"temperature":900.0,"pressure":500.0,"power":750.0,"allow_synthetic":false},
-	"RECIPE_PURIFY_RUSTED_DORONUM":{"name":"Purify Rusted Doronum","machine":"DORONUM_PURIFIER","inputs":{"ITEM_DORONUM_RUSTED":2,"ITEM_QUARTZ":4,"ITEM_WATER":4},"outputs":{"ITEM_DORONUM_RUSTED":1},"seconds":120.0,"temperature":350.0,"pressure":300.0,"power":500.0,"allow_synthetic":false,"purity_loss":0.0,"purification_bonus":15.0,"quality_modifier":2.0}
+	"RECIPE_PURIFY_RUSTED_DORONUM":{"name":"Purify Rusted Doronum","machine":"DORONUM_PURIFIER","inputs":{"ITEM_DORONUM_RUSTED":2,"ITEM_QUARTZ":4,"ITEM_WATER":4},"outputs":{"ITEM_DORONUM_RUSTED":1},"seconds":120.0,"temperature":350.0,"pressure":300.0,"power":500.0,"allow_synthetic":false,"purity_loss":0.0,"purification_bonus":15.0,"quality_modifier":2.0},
+	"RECIPE_GOLD_INGOT":{"name":"Gold Ingot","machine":"FURNACE","inputs":{"ITEM_GOLD_ORE":2,"ITEM_COAL":1},"outputs":{"ITEM_GOLD_INGOT":1},"seconds":12.0,"temperature":1064.0,"pressure":50.0,"power":0.0},
+	"RECIPE_CHROME_INGOT":{"name":"Chrome Ingot","machine":"STEEL_FURNACE","inputs":{"ITEM_CHROME_ORE":2,"ITEM_COAL":2},"outputs":{"ITEM_CHROME_INGOT":1},"seconds":20.0,"temperature":1907.0,"pressure":100.0,"power":40.0},
+	"RECIPE_NICKEL_INGOT":{"name":"Nickel Ingot","machine":"FURNACE","inputs":{"ITEM_NICKEL_ORE":2,"ITEM_COAL":1},"outputs":{"ITEM_NICKEL_INGOT":1},"seconds":14.0,"temperature":1455.0,"pressure":60.0,"power":0.0},
+	"RECIPE_LEAD_INGOT":{"name":"Lead Ingot","machine":"FURNACE","inputs":{"ITEM_LEAD_ORE":2,"ITEM_COAL":1},"outputs":{"ITEM_LEAD":1},"seconds":10.0,"temperature":327.0,"pressure":30.0,"power":0.0},
+	"RECIPE_TITANIUM_INGOT":{"name":"Titanium Ingot","machine":"STEEL_FURNACE","inputs":{"ITEM_TITANIUM_ORE":3,"ITEM_CARBON_POWDER":2},"outputs":{"ITEM_TITANIUM_INGOT":1},"seconds":24.0,"temperature":1668.0,"pressure":300.0,"power":50.0},
+	"RECIPE_TITANIUM_PLATE":{"name":"Titanium Plate","machine":"ROLLING_MILL","inputs":{"ITEM_TITANIUM_INGOT":1},"outputs":{"ITEM_TITANIUM_PLATE":1},"seconds":12.0,"temperature":500.0,"pressure":150.0,"power":35.0},
+	"RECIPE_NEODYMIUM_MAGNET":{"name":"Neodymium Magnet","machine":"FABRICATOR","inputs":{"ITEM_NEODYMIUM_ORE":2,"ITEM_IRON_PLATE":1,"ITEM_COPPER_WIRE":2},"outputs":{"ITEM_NEODYMIUM_MAGNET":1},"seconds":16.0,"power":25.0},
+	"RECIPE_BEARING":{"name":"Bearing","machine":"FABRICATOR","inputs":{"ITEM_IRON_PLATE":2,"ITEM_STEEL":1},"outputs":{"ITEM_BEARING":2},"seconds":10.0,"power":20.0},
+	"RECIPE_SENSOR":{"name":"Sensor","machine":"CIRCUIT_ASSEMBLER","inputs":{"ITEM_QUARTZ":2,"ITEM_BASIC_CIRCUIT":1,"ITEM_COPPER_WIRE":2},"outputs":{"ITEM_SENSOR":1},"seconds":12.0,"power":18.0},
+	"RECIPE_RUBBER":{"name":"Rubber","machine":"FABRICATOR","inputs":{"ITEM_PLANT_FIBER":4,"ITEM_CARBON_POWDER":1},"outputs":{"ITEM_RUBBER":2},"seconds":12.0,"power":15.0}
 }
 static func _finalize_recipe(recipe: Dictionary) -> Dictionary:
 	var result: Dictionary = recipe.duplicate(true)
