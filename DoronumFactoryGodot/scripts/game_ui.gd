@@ -238,11 +238,15 @@ func _draw_factory() -> void:
 		])
 		if machine.output.size()>0:
 			_button("출력 회수 · "+str(machine.output.size())+" batch",func(): game.collect_machine_output(str(machine.instance_id)))
-		if machine.id in ["FURNACE","COMPRESSOR","ROLLING_MILL","FABRICATOR","DORONUM_COMPRESSOR"]:
-			for recipe_id in GameData.RECIPES:
-				var recipe: Dictionary = GameData.RECIPES[recipe_id]
-				if recipe.machine == machine.id:
-					_button("레시피 설정 · "+str(recipe.name),func(): game.set_machine_recipe(str(machine.instance_id),str(recipe_id)))
+		for recipe_id in GameData.RECIPES:
+			var recipe: Dictionary = GameData.RECIPES[recipe_id]
+			if recipe.machine == machine.id:
+				_button("레시피 설정 · "+str(recipe.name),func(): game.set_machine_recipe(str(machine.instance_id),str(recipe_id)))
+		for output_id in GameData.VARIANT_RECIPES:
+			var variant_recipe_id := "RECIPE_"+str(output_id).replace("ITEM_","")
+			var variant_recipe: Dictionary = GameData.recipe_definition(variant_recipe_id)
+			if not variant_recipe.is_empty() and variant_recipe.machine == machine.id:
+				_button("도로늄 레시피 · "+str(variant_recipe.name),func(): game.set_machine_recipe(str(machine.instance_id),variant_recipe_id))
 
 func _draw_story() -> void:
 	_heading("ORBIT  /  STORY ARCHIVE")
