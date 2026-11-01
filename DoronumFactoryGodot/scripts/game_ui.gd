@@ -202,11 +202,12 @@ func _draw_craft() -> void:
 
 func _draw_inventory() -> void:
 	_heading("INVENTORY  /  QUALITY · PURITY · LINEAGE")
-	_label("장착 도구: " + GameData.item_name(game.equipped_tool))
-	_button("장착 · 손",func(): game.equipped_tool="ITEM_TOOL_HANDS";game.save_game();_refresh())
-	for tool_id in ["ITEM_WOODEN_PICKAXE","ITEM_WOODEN_AXE","ITEM_IRON_PICKAXE","ITEM_STEEL_PICKAXE"]:
+	_label("장착 도구: %s  ·  Condition %.0f%%" % [GameData.item_name(game.equipped_tool),game.equipped_tool_condition])
+	_button("장착 · 손",func(): game.equip_tool("ITEM_TOOL_HANDS");_refresh())
+	_button("도구 수리",func(): game.repair_equipped_tool();_refresh(),game.equipped_tool=="ITEM_TOOL_HANDS" or game.equipped_tool_condition>=100.0)
+	for tool_id in ["ITEM_WOODEN_PICKAXE","ITEM_WOODEN_AXE","ITEM_IRON_PICKAXE","ITEM_STEEL_PICKAXE","ITEM_DORONUM_PICKAXE"]:
 		if game.count_item(tool_id)>0:
-			_button("장착 · "+GameData.item_name(tool_id),func(): game.equipped_tool=tool_id;game.save_game();_refresh())
+			_button("장착 · "+GameData.item_name(tool_id),func(): game.equip_tool(tool_id);_refresh())
 	for stack in game.inventory:
 		_label("%s ×%d   Q %.2f / P %.2f   %s\n%s" % [
 			GameData.item_name(stack.item_id),int(stack.quantity),float(stack.quality),float(stack.purity),
