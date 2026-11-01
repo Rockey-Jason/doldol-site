@@ -30,6 +30,10 @@ var ending_complete := false
 var post_endgame := false
 var production_history: Array[Dictionary] = []
 var research_point_ledger: Array[Dictionary] = []
+var skill_points := 1
+var skills_unlocked: Array[String] = []
+var skill_point_ledger: Array[Dictionary] = []
+var skill_respec_used := false
 var total_power_generated := 0.0
 var total_power_used := 0.0
 var power_state := {"starter_fuel_timer":0.0,"world_time":0.25,"fusion_buffer_kwh":0.0,"fusion_power_ratio":0.0}
@@ -63,6 +67,9 @@ func _grant_starter_kit() -> void:
 	add_item("ITEM_WATER", 10, 100.0, 100.0, false, "STARTER")
 	add_item("ITEM_COAL", 6, 90.0, 90.0, false, "STARTER")
 	research_points = 50
+	skill_points = 1
+	_event_ids["SKILL_POINT:START"] = true
+	skill_point_ledger.append({"claim_id":"SKILL_POINT:START","amount":1,"source":"START"})
 	story_flags["PROLOGUE_COMPLETE"] = true
 
 func add_item(item_id: String, quantity: int, quality: float = 90.0, purity: float = 90.0, synthetic: bool = false, provenance: String = "UNKNOWN") -> void:
@@ -222,6 +229,7 @@ func discover_resource(node_id: String, item_id: String) -> void:
 	if item_id in ["ITEM_DIAMOND","ITEM_TITANIUM_ORE","ITEM_NEODYMIUM_ORE","ITEM_MAGNETITE","ITEM_HEAT_CRYSTAL","ITEM_COLD_CRYSTAL","ITEM_CHROME_ORE","ITEM_NICKEL_ORE","ITEM_LEAD_ORE"]:
 		tier = "RARE"
 		reward = 500
+		grant_skill_point("RARE_SCAN","RARE_RESOURCE_SCAN")
 	_claim_once("SCAN:"+str(world_seed)+":"+item_id+":"+tier,"RESOURCE_SCANNED",reward)
 	notification.emit("자원 스캔 · "+GameData.item_name(item_id))
 
@@ -232,6 +240,7 @@ func harvest_dori_tree(tree_id: String, mature: bool) -> bool:
 	add_item("ITEM_DORI_MEAT",1,92.0,90.0,false,"DORI_TREE:"+tree_id)
 	claim_research_sample(tree_id,"ITEM_DORI_MEAT")
 	_claim_once("FIRST_DORI_MEAT_HARVEST","DORI_TREE_HARVEST",1000)
+	grant_skill_point("DORI_TREE_DISCOVERED","DORI_TREE_DISCOVERY")
 	return true
 
 func _claim_once(event_id: String, kind: String, rp: int = 0) -> void:
@@ -242,6 +251,53 @@ func _claim_once(event_id: String, kind: String, rp: int = 0) -> void:
 		research_points += rp
 		research_point_ledger.append({"source_id":kind,"event_id":event_id,"claim_id":event_id,"amount":rp,"created_at_tick":simulation_tick})
 		state_changed.emit()
+
+func grant_skill_point(claim_id: String,source: String) -> bool:
+	var event_id := "SKILL_POINT:"+claim_id
+	if _event_ids.has(event_id):
+		return false
+	_event_ids[event_id] = true
+	skill_points += 1
+	skill_point_ledger.append({"claim_id":event_id,"amount":1,"source":source,"created_at_tick":simulation_tick})
+	notification.emit("Skill Point +1 · "+source)
+	state_changed.emit()
+	return true
+
+func unlock_skill(skill_id: String) -> bool:
+	if skill_id in skills_unlocked:
+		return false
+	var definition: Dictionary = GameData.SKILLS.filter(func(s): return s.id==skill_id).front() if GameData.SKILLS.any(func(s): return s.id==skill_id) else {}
+	if definition.is_empty():
+		return false
+	for prerequisite in definition.requires:
+		if prerequisite not in skills_unlocked:
+			notification.emit("선행 스킬이 필요해 · "+str(prerequisite))
+			return false
+	if skill_points<1:
+		notification.emit("Skill Point가 부족해.")
+		return false
+	skill_points -= 1
+	skills_unlocked.append(skill_id)
+	skill_point_ledger.append({"claim_id":"SKILL_BUY:"+skill_id,"amount":-1,"source":"SKILL_PURCHASE","created_at_tick":simulation_tick})
+	notification.emit("스킬 해금 · "+str(definition.name))
+	save_game()
+	state_changed.emit()
+	return true
+
+func has_skill(skill_id: String) -> bool:
+	return skill_id in skills_unlocked
+
+func respec_skill_tree() -> bool:
+	if skill_respec_used or not research_completed.has("RESEARCH_INFINITY_INDUSTRY") or not buildings.any(func(m): return m.id=="SKILL_RESPEC_TERMINAL" and float(m.condition)>0.0):
+		notification.emit("스킬 초기화에는 Skill Respec Terminal과 Infinity Industry 연구가 필요해.")
+		return false
+	skill_points += skills_unlocked.size()
+	skills_unlocked.clear()
+	skill_respec_used = true
+	notification.emit("스킬 초기화 완료 · 남은 재분배 기회 0회")
+	save_game()
+	state_changed.emit()
+	return true
 
 func claim_research_sample(node_id: String,item_id: String) -> bool:
 	var token_id := "RESEARCH_SAMPLE:"+str(world_seed)+":"+node_id
@@ -347,6 +403,9 @@ func _tick_research(dt: float) -> void:
 	research_progress += dt
 	if research_progress >= float(definition.time):
 		research_completed.append(active_research)
+		var completed_tier := int(definition.tier)
+		if completed_tier>=1:
+			grant_skill_point("TIER:"+str(completed_tier),"TIER_"+str(completed_tier)+"_REACHED")
 		notification.emit("연구 완료 · " + str(definition.name))
 		if active_research == "RESEARCH_DORONUM_FUSION" and bool(story_flags.get("STORY_INCIDENT_RECONSTRUCTED",false)) and bool(story_flags.get("ACT_V_COMPLETE",false)):
 			story_flags["ORBIT_04"] = true
@@ -937,6 +996,7 @@ func find_lore(lore_id: String) -> void:
 	var required := ["LORE_INCIDENT_SAFETY_OVERRIDE","LORE_INCIDENT_POWER_OSCILLATION","LORE_INCIDENT_COOLING_FAILURE","LORE_INCIDENT_ARCHIVE_EDIT"]
 	if required.all(func(id): return id in lore_found):
 		story_flags["STORY_INCIDENT_RECONSTRUCTED"] = true
+		grant_skill_point("INCIDENT_RECONSTRUCTED","INCIDENT_RECONSTRUCTION")
 		notification.emit("BLUE FURNACE INCIDENT 재구성 완료")
 
 func save_game() -> void:
@@ -956,7 +1016,7 @@ func save_game() -> void:
 		"fusion":fusion,"fusion_diagnostics":fusion_diagnostics,"relays":relays,
 		"core_installed":core_installed,"stabilization_phase":stabilization_phase,
 		"ending_complete":ending_complete,"post_endgame":post_endgame,
-		"production_history":production_history,"research_point_ledger":research_point_ledger,"power_state":power_state,"stabilization_progress":stabilization_progress,"stabilization_running":stabilization_running,"event_ids":_event_ids,"next_stack_id":_next_stack_id
+		"production_history":production_history,"research_point_ledger":research_point_ledger,"skill_points":skill_points,"skills_unlocked":skills_unlocked,"skill_point_ledger":skill_point_ledger,"skill_respec_used":skill_respec_used,"power_state":power_state,"stabilization_progress":stabilization_progress,"stabilization_running":stabilization_running,"event_ids":_event_ids,"next_stack_id":_next_stack_id
 	}
 	data["checksum"] = hash(JSON.stringify(data))
 	var temporary_path := SAVE_PATH + ".tmp"
@@ -1048,6 +1108,10 @@ func load_game() -> void:
 	post_endgame = bool(parsed.get("post_endgame", false))
 	production_history.assign(parsed.get("production_history", []))
 	research_point_ledger.assign(parsed.get("research_point_ledger", []))
+	skill_points = int(parsed.get("skill_points",1))
+	skills_unlocked.assign(parsed.get("skills_unlocked",[]))
+	skill_point_ledger.assign(parsed.get("skill_point_ledger",[]))
+	skill_respec_used = bool(parsed.get("skill_respec_used",false))
 	power_state = parsed.get("power_state",{"starter_fuel_timer":0.0,"world_time":0.25,"fusion_buffer_kwh":0.0,"fusion_power_ratio":0.0})
 	stabilization_progress = float(parsed.get("stabilization_progress",0.0))
 	stabilization_running = bool(parsed.get("stabilization_running",false))
