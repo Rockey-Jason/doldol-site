@@ -10,6 +10,21 @@ var dori_trees: Array[Area3D] = []
 var terrain_material: StandardMaterial3D
 var world_seed := GameData.WORLD_SEED
 
+func _process(delta: float) -> void:
+	for tree in dori_trees:
+		if not is_instance_valid(tree) or bool(tree.get_meta("mature",false)):
+			continue
+		if float(tree.get_meta("water",0.0)) < 2.0:
+			continue
+		var growth := float(tree.get_meta("growth",0.0)) + delta
+		tree.set_meta("growth",growth)
+		if growth >= 60.0:
+			tree.set_meta("growth",60.0)
+			tree.set_meta("mature",true)
+			var fruit := tree.get_node_or_null("DoriMeatFruit")
+			if fruit:
+				fruit.visible = true
+
 func generate(seed_value: int = GameData.WORLD_SEED) -> void:
 	world_seed = seed_value
 	rng.seed = seed_value
@@ -129,6 +144,7 @@ func _spawn_resource(node_id: String, item_id: String, position: Vector3, quanti
 	area.set_meta("quality",rng.randf_range(82.0,98.0))
 	area.set_meta("purity",rng.randf_range(78.0,96.0))
 	area.set_meta("synthetic",false)
+	area.set_meta("mining_power_required",25 if item_id in ["ITEM_DIAMOND","ITEM_TITANIUM_ORE","ITEM_NEODYMIUM_ORE"] else (10 if item_id.contains("ORE") or item_id in ["ITEM_COAL","ITEM_QUARTZ","ITEM_MAGNETITE"] else 1))
 	var collision := CollisionShape3D.new()
 	var sphere := SphereShape3D.new()
 	sphere.radius = 1.6
@@ -221,6 +237,16 @@ func _spawn_points_of_interest() -> void:
 		tower.position.y = 9
 		tower.material_override = _material(poi[2],0.65,0.35)
 		marker.add_child(tower)
+		var interact := Area3D.new()
+		interact.collision_layer = 16
+		interact.set_meta("poi_name",str(poi[0]))
+		var collider := CollisionShape3D.new()
+		var collider_shape := SphereShape3D.new()
+		collider_shape.radius = 12.0
+		collider.shape = collider_shape
+		collider.position.y = 6.0
+		interact.add_child(collider)
+		marker.add_child(interact)
 		add_child(marker)
 
 func _material(color: Color, metallic: float, roughness: float) -> StandardMaterial3D:
