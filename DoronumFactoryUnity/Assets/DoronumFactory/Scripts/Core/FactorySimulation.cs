@@ -97,7 +97,17 @@ namespace DoronumFactory
         public bool CollectOutput(string instanceId)
         {
             var machine=state.Machines.Find(x=>x.InstanceId==instanceId);
-            if (machine==null || machine.CompletionBuffer.Count==0) return false;
+            if (machine==null) return false;
+            if(machine.MachineId=="WAREHOUSE" && machine.InputBuffer.Count>0)
+            {
+                foreach(var stack in machine.InputBuffer)
+                    inventory.Add(stack.ItemId,stack.Quantity,stack.Quality,stack.Purity,stack.Synthetic,stack.Provenance);
+                machine.InputBuffer.Clear();
+                machine.State="IDLE";
+                MachineChanged?.Invoke(machine);
+                return true;
+            }
+            if (machine.CompletionBuffer.Count==0) return false;
             foreach (var stack in machine.CompletionBuffer)
                 inventory.Add(stack.ItemId,stack.Quantity,stack.Quality,stack.Purity,stack.Synthetic,stack.Provenance);
             machine.CompletionBuffer.Clear();
