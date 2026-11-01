@@ -255,6 +255,7 @@ func _on_player_interact(target: Object, hit_position: Vector3) -> void:
 		var purity := float(node.get_meta("purity",90.0))
 		game.add_item(resource_id,1,quality,purity,false,"WORLD_NODE:"+node_id)
 		game.discover_resource(node_id,resource_id)
+		game.claim_research_sample(node_id,resource_id)
 		node.set_meta("quantity",quantity-1)
 		if quantity-1 <= 0:
 			node.queue_free()
