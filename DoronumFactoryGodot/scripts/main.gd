@@ -9,6 +9,7 @@ var selected_building := ""
 var build_mode := false
 var machine_visuals: Dictionary = {}
 var elapsed := 0.0
+var next_mining_time := 0.0
 
 func _ready() -> void:
 	_setup_input()
@@ -237,6 +238,9 @@ func _on_player_interact(target: Object, hit_position: Vector3) -> void:
 		return
 	var node := target as Node
 	if node.has_meta("resource_id"):
+		if elapsed<next_mining_time:
+			return
+		next_mining_time = elapsed+(0.36 if game.has_skill("STEADY_SWING") else 0.40)
 		var resource_id := str(node.get_meta("resource_id"))
 		var node_id := str(node.get_meta("node_id",""))
 		if resource_id == "ITEM_DORI_MEAT":
@@ -273,6 +277,10 @@ func _on_player_interact(target: Object, hit_position: Vector3) -> void:
 			game.add_item("ITEM_MINERAL_RESIDUE",1,quality,purity,false,"MINING_BYPRODUCT:"+node_id+":"+str(quantity))
 		node.set_meta("quantity",quantity-1)
 		game.resource_depletion[node_id] = quantity-1
+		if game.has_skill("GEOLOGICAL_READOUT"):
+			game.notification.emit("광맥 잔량 · %d" % (quantity-1))
+		if game.has_skill("DEEP_EXTRACTION") and resource_id in ["ITEM_DIAMOND","ITEM_TITANIUM_ORE","ITEM_NEODYMIUM_ORE"]:
+			game.notification.emit("심부 광맥 경고 · 고강도 채굴 대상")
 		if quantity-1 <= 0:
 			node.queue_free()
 		game.save_game()
