@@ -494,6 +494,16 @@ func _tick_machines() -> void:
 		_tick_recipe_machine(record,recipe_id)
 func _tick_recipe_machine(record: Dictionary, recipe_id: String) -> void:
 	var recipe: Dictionary = GameState.RECIPES[recipe_id]
+	if int(recipe.get("max_total",0)) > 0:
+		var totals: Dictionary = GameState.world_state.get("recipe_totals",{})
+		var committed := int(totals.get(recipe_id,0))
+		var active_jobs := 0
+		for other in _records.values():
+			if str(other.get("active_job",{}).get("recipe_id","")) == recipe_id:
+				active_jobs += 1
+		if committed + active_jobs >= int(recipe.max_total) and record.get("active_job",{}).is_empty():
+			record.status = "SUPPLY_LIMIT"
+			return
 	if not str(recipe.get("requires_story","")).is_empty() and not bool(GameState.story_flags.get(str(recipe.requires_story),false)):
 		record.status = "LOCKED_STORY"
 		return
@@ -614,7 +624,7 @@ func _tick_recipe_machine(record: Dictionary, recipe_id: String) -> void:
 		var mean_power := 0.0
 		for sample in samples:
 			mean_power += float(sample)
-		mean_power /= maxf(1.0,float(samples.size()))
+		mean_power = mean_power/maxf(1.0,float(samples.size()))
 		var variance := 0.0
 		for sample in samples:
 			variance += pow(float(sample)-mean_power,2.0)
@@ -627,10 +637,16 @@ func _tick_recipe_machine(record: Dictionary, recipe_id: String) -> void:
 		for item_id in recipe.outputs:
 			output_payload[str(item_id)] = {"quantity":int(recipe.outputs[item_id]),"quality":output_quality,"purity":output_purity,"synthetic":bool(job.synthetic),"origin":"RECIPE:"+recipe_id}
 		record.output_buffer = output_payload
+		var totals: Dictionary = GameState.world_state.get("recipe_totals",{})
+		var produced_count := 0
+		for output_id in recipe.outputs:
+			produced_count += int(recipe.outputs[output_id])
+		totals[recipe_id] = int(totals.get(recipe_id,0))+produced_count
+		GameState.world_state["recipe_totals"] = totals
 		record.active_job = {}
 		record.progress = 0.0
 		record.status = "PAUSED_OUTPUT"
-		GameState.grant_rp_once("FIRST_PRODUCTION:"+recipe_id,25 if int(recipe.tier)<=2 else 100)
+		GameState.grant_rp_once("FIRST_PRODUCTION:"+recipe_id,GameState.recipe_rp_reward(recipe))
 		GameState.progress_objective("RECIPE_PRODUCED",recipe_id)
 		if recipe_id == "DORONUM_NORMAL" and get_tree().has_node("/root/DoronumFactory3D/StoryManager"):
 			get_tree().call_group("story_manager","on_first_doronum_created")
