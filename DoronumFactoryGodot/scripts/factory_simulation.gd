@@ -75,10 +75,10 @@ func _fixed_tick(dt: float) -> void:
 			total_consumption += idle_power
 	var base_consumption := total_consumption
 	var surplus := maxf(0.0,total_generation-base_consumption)
-	var has_buffer := game.buildings.any(func(m): return m.id=="FUSION_POWER_BUFFER" and float(m.condition)>0.0)
+	var has_buffer: bool = game.buildings.any(func(m): return m.id=="FUSION_POWER_BUFFER" and float(m.condition)>0.0)
 	var buffer_kwh := float(game.power_state.get("fusion_buffer_kwh",0.0))
 	var fusion_request := 0.0
-	var fusion_active := not game.fusion.is_empty() and not bool(game.fusion.get("output_committed",false)) and not str(game.fusion.get("state","")).begins_with("FAILED")
+	var fusion_active: bool = not game.fusion.is_empty() and not bool(game.fusion.get("output_committed",false)) and not str(game.fusion.get("state","")).begins_with("FAILED")
 	if fusion_active:
 		var stage_index := int(game.fusion.get("stage",0))
 		if stage_index>=0 and stage_index<GameData.FUSION_STAGES.size():
@@ -86,7 +86,7 @@ func _fixed_tick(dt: float) -> void:
 	var direct_fusion_power := minf(surplus,fusion_request)
 	var battery_fusion_power := 0.0
 	if fusion_request>direct_fusion_power and has_buffer and dt>0.0:
-		battery_fusion_power = minf(5000.0,fusion_request-direct_fusion_power,buffer_kwh*3600.0/dt)
+		battery_fusion_power = minf(5000.0,minf(fusion_request-direct_fusion_power,buffer_kwh*3600.0/dt))
 		buffer_kwh -= battery_fusion_power*dt/3600.0
 	var remaining_surplus := maxf(0.0,surplus-direct_fusion_power)
 	if has_buffer and not fusion_active:
@@ -230,7 +230,7 @@ func _consume_machine_inputs(machine: Dictionary, inputs: Dictionary, allow_synt
 			remaining -= take
 		machine.input = machine.input.filter(func(s): return int(s.quantity)>0)
 		if remaining > 0:
-			var inventory_lots := game.consume_items_with_lots({item_id:remaining},allow_synthetic)
+			var inventory_lots: Array[Dictionary] = game.consume_items_with_lots({item_id:remaining},allow_synthetic)
 			if inventory_lots.is_empty():
 				machine.input = buffer_snapshot
 				game.inventory = inventory_snapshot
