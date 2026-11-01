@@ -333,6 +333,9 @@ func _tick_auto_miner(machine: Dictionary, dt: float) -> void:
 		"provenance":"AUTO_MINER:"+str(target.get_meta("node_id"))
 	}
 	machine.output.append(stack)
+	var byproduct_chance := 0.05+(0.02 if game.has_skill("VEIN_EFFICIENCY") else 0.0)
+	if game._deterministic_unit(int(game.world_seed+hash(str(target.get_meta("node_id","")))+remaining))<byproduct_chance:
+		machine.output.append({"item_id":"ITEM_MINERAL_RESIDUE","quantity":1,"quality":float(stack.quality),"purity":float(stack.purity),"synthetic":false,"provenance":"AUTO_MINER_BYPRODUCT:"+str(target.get_meta("node_id",""))})
 	target.set_meta("quantity",remaining-1)
 	game.resource_depletion[str(target.get_meta("node_id",""))] = remaining-1
 	game.discover_resource(str(target.get_meta("node_id")),item_id)
