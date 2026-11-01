@@ -14,6 +14,7 @@ namespace DoronumFactory
         public FactorySimulation Simulation { get; private set; }
         public ResearchAndSkillSystem Research { get; private set; }
         public InfinityFusionController Fusion { get; private set; }
+        public ContractShippingSystem Contracts { get; private set; }
         public FactoryHUD HUD { get; private set; }
         public PlanetWorldGenerator World { get; private set; }
         public ThirdPersonEngineerController Player { get; private set; }
@@ -51,6 +52,8 @@ namespace DoronumFactory
             Simulation=new FactorySimulation(State,Inventory);
             Research=new ResearchAndSkillSystem(State,Inventory);
             Fusion=new InfinityFusionController(State,Inventory,Simulation);
+            Contracts=new ContractShippingSystem(State,Inventory);
+            Contracts.Toast+=ShowWorldMessage;
             Fusion.Toast+=ShowWorldMessage;
             Fusion.FusionStateChanged+=OnFusionStateChanged;
         }
@@ -147,6 +150,7 @@ namespace DoronumFactory
                 Simulation.Tick();
                 Research.Tick(FactorySimulation.TickSeconds);
                 Fusion.Tick(FactorySimulation.TickSeconds);
+                Contracts.Tick(FactorySimulation.TickSeconds);
                 foreach(var tree in World.DoriTrees) tree.Advance(FactorySimulation.TickSeconds);
                 if (State.SimulationTick%10==0) SnapshotTrees();
             }
