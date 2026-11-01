@@ -259,7 +259,9 @@ func _draw_story() -> void:
 		_button("기록 복구 · "+lore_id,func(): game.find_lore(lore_id),lore_id in game.lore_found)
 	_heading("FIRST FACTORY")
 	for flag in ["ARCHIVE_RESTORED","COOLING_CORE_RESTORED","RESONANCE_CHAMBER_RESTORED"]:
-		_button("복구 · "+flag,func(): game.story_flags[flag]=true;game._claim_once("LORE:"+flag,"LORE",50);_refresh(),bool(game.story_flags.get(flag,false)))
+		_button("복구 · "+flag,func(): game.story_flags[flag]=true;game._claim_once("LORE:"+flag,"LORE",50);game.save_game();_refresh(),bool(game.story_flags.get(flag,false)))
+	_button("SPECIAL EDITION · ARCHIVE PATTERN CONTRACT",game.claim_special_edition_batch_contract,bool(game._event_ids.has("CONTRACT:SPECIAL_EDITION_PATTERN_BATCH")))
+	_button("LIMITED EDITION · LEGACY BATCH CONTRACT",game.claim_limited_edition_batch_contract,bool(game._event_ids.has("CONTRACT:LIMITED_EDITION_SEALS")))
 
 func _draw_fusion() -> void:
 	_heading("INFINITY FUSION  /  7 STAGES")
@@ -267,6 +269,8 @@ func _draw_fusion() -> void:
 	for item_id in GameData.DORONUM_IDS:
 		_label("%s  %d / 100" % [GameData.item_name(item_id),game.count_item(item_id)])
 	_heading("FINAL SAFETY DIAGNOSTICS")
+	_label("Fusion Buffer  %.1f / 500 kWh" % float(game.power_state.get("fusion_buffer_kwh",0.0)))
+	_label("독립 버퍼는 발전소의 잉여 전력으로 충전돼. 최종 진단에는 250kWh 이상이 필요해.")
 	for diagnostic in ["power_stability","pressure_calibration","emergency_cooling"]:
 		var passed := bool(game.fusion_diagnostics.get(diagnostic,false))
 		_button("%s  ·  %s" % [diagnostic.to_upper(),"PASSED" if passed else "RUN TEST"],func(): game.run_fusion_diagnostic(diagnostic),passed)
@@ -302,7 +306,8 @@ func _draw_fusion() -> void:
 		var active := i < game.relays.size() and bool(game.relays[i].active)
 		_button("RELAY %d  ·  %s" % [i+1,"ACTIVE" if active else "ACTIVATE"],func(): game.activate_relay(i),active or not bool(game.story_flags.get("INFINITY_CRAFTED",false)))
 	_button("INSTALL INFINITY CORE",game.install_infinity_core,game.core_installed or game.relays.size()<3 or game.count_item("ITEM_INFINITY_DORONUM")<1)
-	_button("STABILIZATION PHASE %d / 3" % game.stabilization_phase,game.complete_stabilization_phase,not game.core_installed or game.ending_complete)
+	_label("STABILIZATION PHASE %d / 3  ·  %.1f sec" % [game.stabilization_phase,game.stabilization_progress])
+	_button("START / RESUME STABILIZATION",game.start_stabilization_phase,not game.core_installed or game.ending_complete or game.stabilization_running)
 
 func _draw_map() -> void:
 	_heading("PLANET MAP  /  SEED %d" % game.world_seed)
