@@ -269,6 +269,10 @@ namespace DoronumFactory
                 job.CoolingSeconds=30f;
                 machine.Condition=Mathf.Max(0f,machine.Condition-20f);
                 Salvage(job.InputManifest,0.5f,"FUSION_MAJOR_SALVAGE");
+                job.Running=false;
+                job.Failed=true;
+                job.State="FAILED_MAJOR";
+                machine.State="COOLING";
             }
             else
             {
