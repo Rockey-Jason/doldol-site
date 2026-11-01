@@ -1,0 +1,505 @@
+extends Node
+class_name GameState
+
+signal state_changed
+signal notification(text: String)
+signal fusion_stage_changed(stage: int)
+signal ending_started
+
+const SAVE_PATH := "user://doronium_factory_save.json"
+var world_seed: int = GameData.WORLD_SEED
+var player_position := Vector3(0, 0, 0)
+var inventory: Array[Dictionary] = []
+var buildings: Array[Dictionary] = []
+var discovered_nodes: Dictionary = {}
+var research_completed: Array[String] = ["RESEARCH_BASIC_SURVIVAL"]
+var active_research := ""
+var research_progress := 0.0
+var research_points := 0
+var story_flags: Dictionary = {}
+var lore_found: Array[String] = []
+var machines: Array[Dictionary] = []
+var fusion: Dictionary = {}
+var relays: Array[Dictionary] = []
+var core_installed := false
+var stabilization_phase := 0
+var ending_complete := false
+var post_endgame := false
+var production_history: Array[Dictionary] = []
+var total_power_generated := 250.0
+var total_power_used := 0.0
+var simulation_paused := false
+var _tick_accumulator := 0.0
+var _event_ids: Dictionary = {}
+var _next_stack_id := 1
+
+func _ready() -> void:
+	load_game()
+	if inventory.is_empty():
+		_grant_starter_kit()
+		state_changed.emit()
+
+func _process(delta: float) -> void:
+	if simulation_paused:
+		return
+	_tick_accumulator += minf(delta, 1.0)
+	var ticks := 0
+	while _tick_accumulator >= GameData.SIM_TICK and ticks < 10:
+		_tick_accumulator -= GameData.SIM_TICK
+		_tick(GameData.SIM_TICK)
+		ticks += 1
+
+func _tick(dt: float) -> void:
+	_tick_research(dt)
+	_tick_machines(dt)
+	_tick_fusion(dt)
+	for building in buildings:
+		if building.get("kind", "") == "DORI_MEAT_TREE":
+			building.growth += dt
+			if building.growth >= 60.0 and building.water >= 2.0:
+				building.growth -= 60.0
+				building.water -= 2.0
+				building.mature = true
+	state_changed.emit()
+
+func _grant_starter_kit() -> void:
+	add_item("ITEM_WOOD", 12, 92.0, 90.0, false, "STARTER")
+	add_item("ITEM_STONE", 8, 92.0, 90.0, false, "STARTER")
+	add_item("ITEM_GRASS", 8, 90.0, 90.0, false, "STARTER")
+	add_item("ITEM_WATER", 10, 100.0, 100.0, false, "STARTER")
+	add_item("ITEM_COAL", 6, 90.0, 90.0, false, "STARTER")
+	research_points = 50
+	story_flags["PROLOGUE_COMPLETE"] = true
+
+func add_item(item_id: String, quantity: int, quality: float = 90.0, purity: float = 90.0, synthetic: bool = false, provenance: String = "UNKNOWN") -> void:
+	if quantity <= 0:
+		return
+	inventory.append({
+		"stack_id": _new_stack_id(), "item_id": item_id, "quantity": quantity,
+		"quality": clampf(quality, 0.0, 100.0), "purity": clampf(purity, 0.0, 100.0),
+		"synthetic": synthetic, "provenance": provenance, "reserved": 0
+	})
+	notification.emit("+%d %s" % [quantity, GameData.item_name(item_id)])
+	state_changed.emit()
+
+func _new_stack_id() -> String:
+	var id := "DF-%08d-%08d" % [Time.get_ticks_usec() % 100000000, _next_stack_id]
+	_next_stack_id += 1
+	return id
+
+func count_item(item_id: String) -> int:
+	var total := 0
+	for stack in inventory:
+		if stack.item_id == item_id:
+			total += int(stack.quantity) - int(stack.get("reserved", 0))
+	return total
+
+func can_afford(cost: Dictionary) -> bool:
+	for item_id in cost:
+		if count_item(item_id) < int(cost[item_id]):
+			return false
+	return true
+
+func consume_items(cost: Dictionary) -> bool:
+	if not can_afford(cost):
+		return false
+	var remaining := cost.duplicate(true)
+	for stack in inventory:
+		var id: String = stack.item_id
+		if not remaining.has(id):
+			continue
+		var take := mini(int(stack.quantity) - int(stack.get("reserved", 0)), int(remaining[id]))
+		stack.quantity -= take
+		remaining[id] -= take
+		if remaining[id] <= 0:
+			remaining.erase(id)
+		if remaining.is_empty():
+			break
+	inventory = inventory.filter(func(s): return int(s.quantity) > 0)
+	state_changed.emit()
+	return remaining.is_empty()
+
+func craft_manual(recipe_id: String) -> bool:
+	var recipe := GameData.MANUAL_RECIPES.get(recipe_id, {})
+	if recipe.is_empty():
+		return false
+	if not consume_items(recipe.inputs):
+		notification.emit("재료가 부족해.")
+		return false
+	for output_id in recipe.outputs:
+		add_item(output_id, int(recipe.outputs[output_id]), 90.0, 90.0, false, "MANUAL_RECIPE:" + recipe_id)
+	_claim_once("FIRST_RECIPE:" + recipe_id, "RECIPE_CRAFTED", 10)
+	return true
+
+func build(building_id: String, world_position: Vector3, rotation_y: float = 0.0) -> bool:
+	var definition: Dictionary = GameData.building_definition(building_id)
+	if definition.is_empty():
+		return false
+	if not _is_unlocked(building_id):
+		notification.emit("아직 해금되지 않은 설비야.")
+		return false
+	if absf(world_position.x) > GameData.WORLD_LIMIT or absf(world_position.z) > GameData.WORLD_LIMIT:
+		notification.emit("건설 가능 구역 밖이야.")
+		return false
+	if not consume_items(definition.cost):
+		notification.emit("건설 재료가 부족해.")
+		return false
+	var instance := {
+		"id": building_id, "instance_id": _new_stack_id(), "position": world_position,
+		"rotation": rotation_y, "condition": 100.0, "state": "IDLE",
+		"recipe": "", "progress": 0.0, "temperature": 20.0, "pressure": 0.0,
+		"input": [], "output": [], "target": "", "buffer_limit": 1
+	}
+	buildings.append(instance)
+	if building_id == "STABILIZATION_RELAY":
+		relays.append({"instance_id": instance.instance_id, "position": world_position, "active": false})
+	notification.emit("설치 완료 · " + str(definition.name))
+	state_changed.emit()
+	return true
+
+func _is_unlocked(building_id: String) -> bool:
+	for research in GameData.RESEARCH:
+		if building_id in research.unlocks and research.id not in research_completed:
+			return false
+	return true
+
+func discover_resource(node_id: String, item_id: String) -> void:
+	if discovered_nodes.has(node_id):
+		return
+	discovered_nodes[node_id] = true
+	research_points += 10
+	_claim_once("SCAN:" + node_id, "RESOURCE_SCANNED", 10)
+	notification.emit("자원 스캔 · " + GameData.item_name(item_id))
+
+func harvest_dori_tree(tree_id: String, mature: bool) -> bool:
+	if not mature:
+		notification.emit("나무가 아직 자라는 중이야.")
+		return false
+	add_item("ITEM_DORI_MEAT", 1, 92.0, 90.0, false, "DORI_TREE:" + tree_id)
+	_claim_once("TREE_HARVEST:" + tree_id, "DORI_TREE_HARVEST", 15)
+	return true
+
+func _claim_once(event_id: String, _kind: String, rp: int = 0) -> void:
+	if _event_ids.has(event_id):
+		return
+	_event_ids[event_id] = true
+	research_points += rp
+
+func start_research(research_id: String) -> bool:
+	var definition: Dictionary = GameData.research_definition(research_id)
+	if definition.is_empty() or research_id in research_completed or not active_research.is_empty():
+		return false
+	for prerequisite in definition.requires:
+		if prerequisite not in research_completed:
+			notification.emit("선행 연구가 필요해: " + str(prerequisite))
+			return false
+	if research_points < int(definition.rp):
+		notification.emit("연구 포인트가 부족해.")
+		return false
+	if definition.power > 0.0 and total_power_generated < float(definition.power):
+		notification.emit("연구소 전력 부족 · 필요 %.0f kW" % float(definition.power))
+		return false
+	research_points -= int(definition.rp)
+	active_research = research_id
+	research_progress = 0.0
+	notification.emit("연구 시작 · " + str(definition.name))
+	return true
+
+func _tick_research(dt: float) -> void:
+	if active_research.is_empty():
+		return
+	var definition: Dictionary = GameData.research_definition(active_research)
+	if total_power_generated - total_power_used < float(definition.power):
+		return
+	research_progress += dt
+	if research_progress >= float(definition.time):
+		research_completed.append(active_research)
+		notification.emit("연구 완료 · " + str(definition.name))
+		_claim_once("RESEARCH:" + active_research, "RESEARCH_COMPLETE", 0)
+		active_research = ""
+		research_progress = 0.0
+
+func _tick_machines(dt: float) -> void:
+	var generation := 250.0
+	var usage := 0.0
+	for machine in buildings:
+		if machine.id == "GENERATOR":
+			generation += 250.0
+		elif machine.id == "SOLAR_PANEL":
+			generation += 80.0
+		elif machine.id == "RESEARCH_LAB" and not active_research.is_empty():
+			usage += 25.0
+		elif machine.id == "INFINITY_FUSION_MACHINE" and not fusion.is_empty():
+			usage += float(GameData.FUSION_STAGES[int(fusion.stage)].power)
+	total_power_generated = generation
+	total_power_used = usage
+	var ratio := 1.0 if usage <= 0.0 else minf(1.0, generation / usage)
+	for machine in buildings:
+		if machine.get("recipe", "").is_empty() or not machine.output.is_empty():
+			continue
+		var recipe: Dictionary = GameData.RECIPES.get(machine.recipe, {})
+		if recipe.is_empty():
+			continue
+		if machine.get("job_started", false) == false:
+			if not consume_items(recipe.inputs):
+				machine.state = "WAITING_INPUT"
+				continue
+			machine.job_started = true
+		if ratio < 0.8:
+			machine.state = "PAUSED_POWER"
+			continue
+		machine.state = "RUNNING" if ratio >= 1.0 else "BROWNOUT_RUNNING"
+		var factor := minf(1.0, ratio)
+		machine.progress += dt * factor
+		var target_temp := float(recipe.get("temperature", 20.0))
+		var target_pressure := float(recipe.get("pressure", 0.0))
+		machine.temperature = move_toward(machine.temperature, target_temp, 120.0 * dt)
+		machine.pressure = move_toward(machine.pressure, target_pressure, 50.0 * dt)
+		if machine.progress >= float(recipe.seconds):
+			var q := 90.0
+			var p := 90.0
+			var synthetic := false
+			for output_id in recipe.outputs:
+				machine.output.append({"item_id":output_id,"quantity":int(recipe.outputs[output_id]),"quality":q,"purity":p,"synthetic":synthetic,"provenance":"MACHINE:"+machine.instance_id})
+			machine.state = "PAUSED_OUTPUT"
+			machine.progress = 0.0
+			machine.job_started = false
+			production_history.append({"machine":machine.instance_id,"recipe":machine.recipe,"time":Time.get_unix_time_from_system()})
+			if production_history.size() > 500:
+				production_history.pop_front()
+
+func collect_machine_output(instance_id: String) -> bool:
+	for machine in buildings:
+		if machine.instance_id != instance_id or machine.output.is_empty():
+			continue
+		for stack in machine.output:
+			add_item(stack.item_id, stack.quantity, stack.quality, stack.purity, stack.synthetic, stack.provenance)
+		machine.output.clear()
+		machine.state = "IDLE"
+		state_changed.emit()
+		return true
+	return false
+
+func set_machine_recipe(instance_id: String, recipe_id: String) -> bool:
+	var recipe: Dictionary = GameData.RECIPES.get(recipe_id, {})
+	if recipe.is_empty():
+		return false
+	for machine in buildings:
+		if machine.instance_id == instance_id and machine.id == recipe.machine:
+			machine.recipe = recipe_id
+			machine.progress = 0.0
+			machine.job_started = false
+			notification.emit("레시피 설정 · " + str(recipe.name))
+			return true
+	return false
+
+func fusion_preflight() -> Array[String]:
+	var errors: Array[String] = []
+	if "RESEARCH_INFINITY_INDUSTRY" not in research_completed:
+		errors.append("Infinity Industry 연구가 필요해.")
+	var fusion_machine := false
+	for machine in buildings:
+		if machine.id == "INFINITY_FUSION_MACHINE" and machine.condition > 0.0:
+			fusion_machine = true
+	if not fusion_machine:
+		errors.append("Infinity Fusion Machine이 없어.")
+	if not fusion.is_empty():
+		errors.append("이미 퓨전 작업이 진행 중이거나 결과가 있어.")
+	for item_id in GameData.DORONUM_IDS:
+		var stacks := inventory.filter(func(s): return s.item_id == item_id)
+		var total := 0
+		for stack in stacks:
+			if stack.synthetic or float(stack.quality) < 90.0 or float(stack.purity) < 90.0:
+				errors.append("%s: 비합성·품질 90·순도 90 조건 미달" % GameData.item_name(item_id))
+				break
+			total += int(stack.quantity) - int(stack.get("reserved", 0))
+		if total < 100:
+			errors.append("%s: %d/100 부족" % [GameData.item_name(item_id), total])
+	return errors
+
+func start_infinity_fusion() -> bool:
+	var errors := fusion_preflight()
+	if not errors.is_empty():
+		notification.emit("퓨전 시작 불가 · " + errors[0])
+		return false
+	var snapshot := inventory.duplicate(true)
+	for item_id in GameData.DORONUM_IDS:
+		if not _consume_quality_lots(item_id, 100, 90.0, 90.0):
+			inventory = snapshot
+			notification.emit("입력 예약 실패 · 모든 재료를 되돌렸어.")
+			return false
+	fusion = {
+		"stage":0,"stage_progress":0.0,"temperature":20.0,"pressure":0.0,
+		"failure_exposure":0.0,"rng_index":0,"output_committed":false,
+		"reserved_inputs":1500,"state":"RUNNING","interlocks":{"power":true,"cooling":true,"shield":true,"emergency":true}
+	}
+	notification.emit("Infinity Fusion 시작 · 15종 × 100개 예약 완료")
+	save_game()
+	return true
+
+func _consume_quality_lots(item_id: String, quantity: int, min_quality: float, min_purity: float) -> bool:
+	var remaining := quantity
+	for stack in inventory:
+		if stack.item_id != item_id or stack.synthetic or stack.quality < min_quality or stack.purity < min_purity:
+			continue
+		var take := mini(remaining, int(stack.quantity) - int(stack.get("reserved", 0)))
+		stack.quantity -= take
+		remaining -= take
+		if remaining == 0:
+			break
+	if remaining > 0:
+		return false
+	inventory = inventory.filter(func(s): return s.quantity > 0)
+	return true
+
+func _tick_fusion(dt: float) -> void:
+	if fusion.is_empty() or fusion.state != "RUNNING" or fusion.output_committed:
+		return
+	var stage_data: Dictionary = GameData.FUSION_STAGES[int(fusion.stage)]
+	var power := float(stage_data.power)
+	var available := total_power_generated - total_power_used
+	var ratio := 1.0 if power <= 0.0 else minf(1.0, available / power)
+	if ratio < 0.8 or not _fusion_interlocks_valid():
+		fusion.state = "PAUSED_SAFETY" if not _fusion_interlocks_valid() else "PAUSED_POWER"
+		return
+	fusion.state = "RUNNING"
+	fusion.temperature = move_toward(float(fusion.temperature), float(stage_data.temperature), 180.0 * dt)
+	fusion.pressure = move_toward(float(fusion.pressure), float(stage_data.pressure), 600.0 * dt)
+	var temp_ok := absf(float(fusion.temperature) - float(stage_data.temperature)) <= maxf(5.0, float(stage_data.temperature) * 0.10)
+	var pressure_ok := absf(float(fusion.pressure) - float(stage_data.pressure)) <= maxf(1.0, float(stage_data.pressure) * 0.10)
+	if temp_ok and pressure_ok:
+		fusion.stage_progress += dt * minf(1.0, ratio)
+		fusion.failure_exposure += dt
+		fusion.rng_index += 1
+		var chance := 1.0 - pow(0.99, dt / 260.0)
+		if randf() < chance:
+			fusion.state = "FAILED_MINOR"
+			fusion.failure_event_id = "FUSION-FAIL-" + str(fusion.rng_index)
+			notification.emit("퓨전 이상 감지 · 안전 정지. 입력은 복구 대기 상태야.")
+			return
+	if fusion.stage_progress >= float(stage_data.seconds):
+		fusion.stage += 1
+		fusion.stage_progress = 0.0
+		fusion.temperature = 20.0 if fusion.stage >= GameData.FUSION_STAGES.size() else fusion.temperature
+		fusion_stage_changed.emit(int(fusion.stage))
+		if fusion.stage >= GameData.FUSION_STAGES.size():
+			fusion.output_committed = true
+			fusion.state = "COMPLETED"
+			add_item("ITEM_INFINITY_DORONUM", 1, 100.0, 100.0, false, "INFINITY_FUSION")
+			story_flags["INFINITY_CRAFTED"] = true
+			notification.emit("INFINITY DORONUM ×1 · 생산 완료")
+	save_game()
+
+func _fusion_interlocks_valid() -> bool:
+	if fusion.is_empty():
+		return false
+	for key in ["power","cooling","shield","emergency"]:
+		if not bool(fusion.interlocks.get(key, false)):
+			return false
+	return true
+
+func set_fusion_interlock(key: String, enabled: bool) -> void:
+	if fusion.is_empty() or not fusion.interlocks.has(key):
+		return
+	fusion.interlocks[key] = enabled
+	if not enabled:
+		fusion.state = "PAUSED_SAFETY"
+
+func activate_relay(index: int) -> bool:
+	if not bool(story_flags.get("INFINITY_CRAFTED", false)) or index < 0 or index >= 3 or index >= relays.size():
+		return false
+	relays[index].active = true
+	story_flags["RELAY_%d_ACTIVE" % (index + 1)] = true
+	notification.emit("행성 에너지 릴레이 %d/3 활성화" % (index + 1))
+	return true
+
+func install_infinity_core() -> bool:
+	if not bool(story_flags.get("INFINITY_CRAFTED", false)) or core_installed or count_item("ITEM_INFINITY_DORONUM") < 1:
+		return false
+	if relays.size() < 3:
+		return false
+	for relay in relays:
+		if not relay.active:
+			return false
+	if not consume_items({"ITEM_INFINITY_DORONUM":1}):
+		return false
+	core_installed = true
+	stabilization_phase = 1
+	story_flags["CORE_INSTALLED"] = true
+	notification.emit("Infinity Doronum이 Stabilization Core에 설치됐어.")
+	return true
+
+func complete_stabilization_phase() -> bool:
+	if not core_installed or stabilization_phase < 1 or stabilization_phase > 3:
+		return false
+	stabilization_phase += 1
+	if stabilization_phase > 3:
+		ending_complete = true
+		post_endgame = true
+		story_flags["PLANETARY_STABILIZATION_COMPLETE"] = true
+		notification.emit("ORBIT: The planet is stable. The factory remains operational.")
+		ending_started.emit()
+	else:
+		notification.emit("행성 안정화 동기화 %d/3" % stabilization_phase)
+	return true
+
+func find_lore(lore_id: String) -> void:
+	if lore_id in lore_found:
+		return
+	lore_found.append(lore_id)
+	research_points += 100
+	notification.emit("기록 복구 · " + lore_id)
+	var required := ["LORE_INCIDENT_SAFETY_OVERRIDE","LORE_INCIDENT_POWER_OSCILLATION","LORE_INCIDENT_COOLING_FAILURE","LORE_INCIDENT_ARCHIVE_EDIT"]
+	if required.all(func(id): return id in lore_found):
+		story_flags["STORY_INCIDENT_RECONSTRUCTED"] = true
+		notification.emit("BLUE FURNACE INCIDENT 재구성 완료")
+
+func save_game() -> void:
+	var data := {
+		"version":GameData.SAVE_VERSION,"world_seed":world_seed,"player_position":[player_position.x,player_position.y,player_position.z],
+		"inventory":inventory,"buildings":buildings,"discovered_nodes":discovered_nodes,
+		"research_completed":research_completed,"active_research":active_research,"research_progress":research_progress,
+		"research_points":research_points,"story_flags":story_flags,"lore_found":lore_found,
+		"fusion":fusion,"relays":relays,"core_installed":core_installed,"stabilization_phase":stabilization_phase,
+		"ending_complete":ending_complete,"post_endgame":post_endgame,"production_history":production_history,
+		"event_ids":_event_ids,"next_stack_id":_next_stack_id
+	}
+	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(data))
+		file.flush()
+
+func load_game() -> void:
+	if not FileAccess.file_exists(SAVE_PATH):
+		return
+	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
+	if not file:
+		notification.emit("저장 파일을 열 수 없어. 새 세이브 백업을 만들 수 있어.")
+		return
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		notification.emit("저장 데이터가 손상됐어. 원본을 보존하고 새 게임을 시작해.")
+		return
+	if int(parsed.get("version", 0)) > GameData.SAVE_VERSION:
+		notification.emit("이 저장은 더 최신 버전이야. 덮어쓰지 않을게.")
+		return
+	world_seed = int(parsed.get("world_seed", GameData.WORLD_SEED))
+	player_position = Vector3(parsed.get("player_position", [0,0,0])[0], parsed.get("player_position", [0,0,0])[1], parsed.get("player_position", [0,0,0])[2])
+	inventory.assign(parsed.get("inventory", []))
+	buildings.assign(parsed.get("buildings", []))
+	discovered_nodes = parsed.get("discovered_nodes", {})
+	research_completed.assign(parsed.get("research_completed", ["RESEARCH_BASIC_SURVIVAL"]))
+	active_research = str(parsed.get("active_research", ""))
+	research_progress = float(parsed.get("research_progress", 0.0))
+	research_points = int(parsed.get("research_points", 0))
+	story_flags = parsed.get("story_flags", {})
+	lore_found.assign(parsed.get("lore_found", []))
+	fusion = parsed.get("fusion", {})
+	relays.assign(parsed.get("relays", []))
+	core_installed = bool(parsed.get("core_installed", false))
+	stabilization_phase = int(parsed.get("stabilization_phase", 0))
+	ending_complete = bool(parsed.get("ending_complete", false))
+	post_endgame = bool(parsed.get("post_endgame", false))
+	production_history.assign(parsed.get("production_history", []))
+	_event_ids = parsed.get("event_ids", {})
+	_next_stack_id = int(parsed.get("next_stack_id", 1))
