@@ -212,6 +212,120 @@ namespace DoronumFactory
             MachineChanged?.Invoke(machine);
         }
 
+        private const float BeltStepSeconds=0.75f;
+        private const float BeltGridMeters=2f;
+
+        private void TickBelts()
+        {
+            var belts=state.Machines.Where(x=>x.MachineId=="CONVEYOR")
+                .OrderBy(x=>x.InstanceId,StringComparer.Ordinal).ToList();
+            foreach(var belt in belts)
+            {
+                if(belt.PowerRatio<0.8f)
+                {
+                    belt.State="PAUSED_POWER";
+                    continue;
+                }
+                if(belt.BeltPayload==null)
+                {
+                    var producer=state.Machines.Where(x=>x.InstanceId!=belt.InstanceId &&
+                        x.MachineId!="CONVEYOR" && x.CompletionBuffer.Count>0)
+                        .Where(x=>Vector2.Distance(OutputPort(x),new Vector2(belt.X,belt.Z))<=1.45f)
+                        .OrderBy(x=>x.InstanceId,StringComparer.Ordinal).FirstOrDefault();
+                    if(producer!=null)
+                    {
+                        belt.BeltPayload=producer.CompletionBuffer[0].Clone();
+                        producer.CompletionBuffer.RemoveAt(0);
+                        producer.State=producer.CompletionBuffer.Count==0?"IDLE":"PAUSED_OUTPUT";
+                        belt.BeltProgressSeconds=0f;
+                    }
+                }
+                if(belt.BeltPayload==null) continue;
+                belt.BeltProgressSeconds+=TickSeconds*belt.PowerRatio;
+                belt.State="RUNNING";
+                if(belt.BeltProgressSeconds<BeltStepSeconds) continue;
+
+                Vector2 next=NextBeltPosition(belt);
+                var receiver=state.Machines.Where(x=>x.InstanceId!=belt.InstanceId && x.MachineId!="CONVEYOR")
+                    .Where(x=>Vector2.Distance(InputPort(x),next)<=1.45f)
+                    .OrderBy(x=>x.InstanceId,StringComparer.Ordinal).FirstOrDefault();
+                if(receiver!=null)
+                {
+                    if(receiver.MachineId=="WAREHOUSE")
+                    {
+                        int used=receiver.InputBuffer.Sum(x=>x.Quantity);
+                        if(used+belt.BeltPayload.Quantity>1000)
+                        {
+                            belt.State="BLOCKED_OUTPUT";
+                            continue;
+                        }
+                        receiver.InputBuffer.Add(belt.BeltPayload);
+                        belt.BeltPayload=null;
+                        belt.BeltProgressSeconds=0f;
+                        receiver.State="STORING";
+                        continue;
+                    }
+                    if(!string.IsNullOrEmpty(receiver.RecipeId) &&
+                        FactoryCatalog.Recipes.TryGetValue(receiver.RecipeId,out var targetRecipe) &&
+                        targetRecipe.Inputs.Any(x=>x.ItemId==belt.BeltPayload.ItemId))
+                    {
+                        receiver.InputBuffer.Add(belt.BeltPayload);
+                        belt.BeltPayload=null;
+                        belt.BeltProgressSeconds=0f;
+                        receiver.State="WAITING_INPUT";
+                        continue;
+                    }
+                }
+                var nextBelt=belts.Where(x=>x.InstanceId!=belt.InstanceId && x.BeltPayload==null)
+                    .Where(x=>Vector2.Distance(new Vector2(x.X,x.Z),next)<=0.2f)
+                    .OrderBy(x=>x.InstanceId,StringComparer.Ordinal).FirstOrDefault();
+                if(nextBelt!=null)
+                {
+                    nextBelt.BeltPayload=belt.BeltPayload;
+                    nextBelt.BeltProgressSeconds=0f;
+                    nextBelt.State="RUNNING";
+                    belt.BeltPayload=null;
+                    belt.BeltProgressSeconds=0f;
+                }
+                else
+                {
+                    belt.State="BLOCKED_ROUTE";
+                    belt.BeltProgressSeconds=BeltStepSeconds;
+                }
+            }
+        }
+
+        private static Vector2 Forward(MachineRuntimeData machine)
+        {
+            switch(((machine.Rotation%4)+4)%4)
+            {
+                case 1:return Vector2.right;
+                case 2:return Vector2.down;
+                case 3:return Vector2.left;
+                default:return Vector2.up;
+            }
+        }
+
+        private static Vector2 OutputPort(MachineRuntimeData machine)
+        {
+            float offset=MachineCatalog.All.TryGetValue(machine.MachineId,out var def)?Mathf.Max(0.5f,def.Depth):1f;
+            Vector2 p=new Vector2(machine.X,machine.Z);
+            return p+Forward(machine)*offset;
+        }
+
+        private static Vector2 InputPort(MachineRuntimeData machine)
+        {
+            float offset=MachineCatalog.All.TryGetValue(machine.MachineId,out var def)?Mathf.Max(0.5f,def.Depth):1f;
+            Vector2 p=new Vector2(machine.X,machine.Z);
+            return p-Forward(machine)*offset;
+        }
+
+        private static Vector2 NextBeltPosition(MachineRuntimeData belt)
+        {
+            Vector2 p=new Vector2(belt.X,belt.Z);
+            return p+Forward(belt)*BeltGridMeters;
+        }
+
         private bool TryReserveRecipeInputs(MachineRuntimeData machine,RecipeDefinition recipe)
         {
             var inventorySnapshot=inventory.Snapshot();
