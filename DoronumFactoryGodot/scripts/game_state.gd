@@ -1055,6 +1055,7 @@ func find_lore(lore_id: String) -> void:
 		reward = 10000
 	_claim_once("LORE:"+lore_id,"LORE_RESTORED",reward)
 	notification.emit("기록 복구 · "+lore_id+" · +%d RP" % reward)
+	save_game()
 	var required := ["LORE_INCIDENT_SAFETY_OVERRIDE","LORE_INCIDENT_POWER_OSCILLATION","LORE_INCIDENT_COOLING_FAILURE","LORE_INCIDENT_ARCHIVE_EDIT"]
 	if required.all(func(id): return id in lore_found):
 		story_flags["STORY_INCIDENT_RECONSTRUCTED"] = true
