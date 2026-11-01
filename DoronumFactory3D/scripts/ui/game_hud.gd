@@ -296,8 +296,8 @@ func _render_craft_panel() -> void:
 
 func _craft_recipe(recipe_id: String) -> void:
 	var recipe: Dictionary = GameState.RECIPES.get(recipe_id,{})
-	if not recipe.is_empty() and not str(recipe.get("machine","")).is_empty() and not GameState.has_machine_kind(str(recipe.machine)):
-		show_toast("필요한 설비를 먼저 건설하세요: "+str(recipe.machine),"warning")
+	if not recipe.is_empty() and not str(recipe.get("machine","")).is_empty():
+		show_toast("이 레시피는 %s에서 실행해야 합니다. 설비를 선택하고 레시피를 지정하세요." % str(recipe.machine),"warning")
 		return
 	GameState.craft(recipe_id)
 	_refresh_current_panel()
@@ -403,6 +403,29 @@ func _render_machine_panel() -> void:
 		return
 	_panel_content.add_child(_text_card("%s\n%s  ·  POWER %.0f%%\nQ %.1f / P %.1f" % [str(GameState.MACHINE_DEFS.get(str(record.type),{}).get("name",record.type)),str(record.get("status","IDLE")),float(record.get("power_ratio",1.0))*100.0,float(record.get("quality",0.0)),float(record.get("purity",0.0))]))
 	_panel_content.add_child(_text_card("INPUT BUFFER\n%s\nOUTPUT BUFFER\n%s" % [str(record.get("input_buffer",{})),str(record.get("output_buffer",{}))]))
+	var recipe_selector := OptionButton.new()
+	recipe_selector.add_item("레시피 선택")
+	var selected_recipe_index := 0
+	var item_index := 1
+	for recipe_id in GameState.RECIPES:
+		var recipe: Dictionary = GameState.RECIPES[recipe_id]
+		if str(recipe.get("machine","")) != str(record.type):
+			continue
+		if int(recipe.get("tier",0)) > GameState.current_tier():
+			continue
+		recipe_selector.add_item(str(recipe_id))
+		if str(record.get("recipe_id","")) == str(recipe_id):
+			selected_recipe_index = item_index
+		item_index += 1
+	if selected_recipe_index > 0:
+		recipe_selector.select(selected_recipe_index)
+	recipe_selector.item_selected.connect(func(index: int):
+		if index <= 0:
+			return
+		factory.selected_machine_action("recipe",recipe_selector.get_item_text(index))
+		_refresh_current_panel()
+	)
+	_panel_content.add_child(recipe_selector)
 	var actions := [
 		["supply","창고에서 원료 투입"],
 		["collect","출력 버퍼 회수"],
@@ -415,9 +438,24 @@ func _render_machine_panel() -> void:
 		var button := _button(str(action[1]),Color(0.09,0.18,0.23),Color(0.88,0.93,0.94))
 		button.pressed.connect(func(): factory.selected_machine_action(str(action[0])); _refresh_current_panel())
 		_panel_content.add_child(button)
+	if str(record.type) == "GENERATOR":
+		var fuel_all := _button("전체 발전기 연료 300초분 충전",Color(0.18,0.2,0.1),Color(0.94,0.9,0.63))
+		fuel_all.pressed.connect(func(): factory.fuel_all_generators(300.0); refresh_top())
+		_panel_content.add_child(fuel_all)
 	if str(record.type) == "INFINITY_FUSION_MACHINE":
-		var fusion := _button("INFINITY FUSION PRE-FLIGHT",Color(0.28,0.22,0.1),Color(1.0,0.85,0.51))
-		fusion.pressed.connect(func(): factory.start_infinity_fusion())
+		_panel_content.add_child(_text_card("INFINITY FUSION · 7 STAGES / 260s IDEAL\nStage %d / 7 · %.1fs\nTemperature %.0f°C · Pressure %.0fMPa" % [int(GameState.fusion_job.get("stage_index",0))+1,float(GameState.fusion_job.get("stage_progress",0.0)),float(GameState.fusion_job.get("temperature_c",20.0)),float(GameState.fusion_job.get("pressure_mpa",0.0))]))
+		for test_id in ["power","pressure","cooling"]:
+			var test_label := {"power":"5MW 전력 안정성 시험 · 30초","pressure":"압력 센서 7채널 교정","cooling":"비상 냉각 부하 시험 · 20초"}.get(test_id,test_id)
+			var tests: Dictionary = GameState.story_flags.get("FUSION_PREFLIGHT",{})
+			var passed := bool(tests.get(test_id,{}).get("passed",false))
+			var running: Dictionary = GameState.story_flags.get("FUSION_PREFLIGHT_RUNNING",{})
+			var test_button := _button(("✓ " if passed else "○ ")+test_label,Color(0.12,0.2,0.19),Color(0.82,0.95,0.86))
+			test_button.disabled = passed or (not running.is_empty())
+			test_button.pressed.connect(func(): factory.run_preflight_test(test_id); _refresh_current_panel())
+			_panel_content.add_child(test_button)
+		var fusion := _button("INFINITY FUSION START · 15 × 100",Color(0.28,0.22,0.1),Color(1.0,0.85,0.51))
+		fusion.disabled = bool(GameState.fusion_job.get("running",false)) or bool(GameState.fusion_job.get("completed",false))
+		fusion.pressed.connect(func(): factory.start_infinity_fusion(); _refresh_current_panel())
 		_panel_content.add_child(fusion)
 	if str(record.type) == "STABILIZATION_CORE":
 		var core := _button("인피니티 도로늄 설치",Color(0.1,0.24,0.27),Color(0.6,0.95,0.94))
