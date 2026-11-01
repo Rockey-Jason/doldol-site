@@ -209,10 +209,13 @@ func _draw_inventory() -> void:
 		if game.count_item(tool_id)>0:
 			_button("장착 · "+GameData.item_name(tool_id),func(): game.equip_tool(tool_id);_refresh())
 	for stack in game.inventory:
-		_label("%s ×%d   Q %.2f / P %.2f   %s\n%s" % [
-			GameData.item_name(stack.item_id),int(stack.quantity),float(stack.quality),float(stack.purity),
-			"SYNTHETIC" if stack.synthetic else "NATURAL",str(stack.provenance)
-		])
+		if game.has_skill("MATERIAL_ANALYST"):
+			_label("%s ×%d   Q %.2f / P %.2f   %s\n%s" % [
+				GameData.item_name(stack.item_id),int(stack.quantity),float(stack.quality),float(stack.purity),
+				"SYNTHETIC" if stack.synthetic else "NATURAL",str(stack.provenance)
+			])
+		else:
+			_label("%s ×%d  ·  %s" % [GameData.item_name(stack.item_id),int(stack.quantity),"SYNTHETIC" if stack.synthetic else "NATURAL"])
 
 func _draw_research() -> void:
 	_heading("RESEARCH GRAPH  /  18 NODES")
@@ -332,8 +335,11 @@ func _draw_fusion() -> void:
 	_heading("PRE-FLIGHT DIAGNOSTICS")
 	var errors := game.fusion_preflight()
 	if game.fusion.is_empty():
-		for error in errors:
-			_label("BLOCKED  ·  "+error,Color(1.0,0.64,0.38))
+		if game.has_skill("INFINITY_SAFETY"):
+			for error in errors:
+				_label("BLOCKED  ·  "+error,Color(1.0,0.64,0.38))
+		elif not errors.is_empty():
+			_label("BLOCKED · "+str(errors[0])+" · Infinity Safety unlocks the full interlock report.",Color(1.0,0.64,0.38))
 		_button("START INFINITY FUSION",game.start_infinity_fusion,not errors.is_empty())
 	else:
 		var stage_index := mini(int(game.fusion.stage),GameData.FUSION_STAGES.size()-1)
