@@ -159,6 +159,11 @@ func _try_place_building() -> void:
 		if Vector2(existing_pos.x,existing_pos.z).distance_to(Vector2(point.x,point.z)) < 3.0:
 			game.notification.emit("설비 사이 공간이 부족해.")
 			return
+	if selected_building=="CONVEYOR" and game.has_skill("CONVEYOR_PLANNER"):
+		var has_port: bool = game.buildings.any(func(b): return Vector2(b.position.x-point.x,b.position.z-point.z).length()<=4.5)
+		if not has_port:
+			game.notification.emit("Conveyor Planner · 연결 가능한 기계/벨트 포트가 4.5m 안에 없어.")
+			return
 	if game.build(selected_building,point,player.rotation.y):
 		_spawn_building_visual(game.buildings.back())
 		build_mode = false
