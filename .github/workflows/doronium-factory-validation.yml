@@ -1,0 +1,33 @@
+name: Doronium Factory validation
+on:
+  push:
+    paths:
+      - "doronium-factory/**"
+      - ".github/workflows/doronium-factory-validation.yml"
+  pull_request:
+    paths:
+      - "doronium-factory/**"
+      - ".github/workflows/doronium-factory-validation.yml"
+jobs:
+  validate-web-game:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Parse game JavaScript
+        run: node --check doronium-factory/factory.js
+      - name: Check required game files and runtime contracts
+        run: |
+          test -s doronium-factory/index.html
+          test -s doronium-factory/factory.css
+          test -s doronium-factory/factory.js
+          grep -q 'dori_cloud_storage' doronium-factory/factory.js
+          grep -q 'doronium_factory_infinite_industry_v1' doronium-factory/factory.js
+          grep -q 'function tickMachine' doronium-factory/factory.js
+          grep -q 'function tickBelts' doronium-factory/factory.js
+          grep -q 'function startFusion' doronium-factory/factory.js
+          ! grep -q 'service_role' doronium-factory/factory.js
