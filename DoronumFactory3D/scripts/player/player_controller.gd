@@ -35,6 +35,9 @@ func _ready() -> void:
 	_create_camera()
 	_setup_input_actions()
 	global_position = GameState.player_state.get("position", Vector3(0,0.2,0))
+	collision_layer = 1
+	collision_mask = 3
+	_spring_arm.collision_mask = 3
 	GameState.simulation_tick.connect(_on_simulation_tick)
 
 func _build_character() -> void:
@@ -170,7 +173,7 @@ func _physics_process(delta: float) -> void:
 	right.y = 0.0
 	forward = forward.normalized()
 	right = right.normalized()
-	var direction := right * movement.x + forward * movement.y
+	var direction := right * movement.x + forward * -movement.y
 	direction.y = 0.0
 	direction = direction.normalized()
 	var target_speed := sprint_speed if (Input.is_action_pressed("sprint") or is_sprinting) else walk_speed
