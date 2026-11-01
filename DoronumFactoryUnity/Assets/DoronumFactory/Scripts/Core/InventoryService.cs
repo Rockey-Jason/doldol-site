@@ -28,6 +28,13 @@ namespace DoronumFactory
                 s.Purity>=minPurity && (allowSynthetic || !s.Synthetic)).Sum(s=>s.Quantity);
         }
 
+        public List<ItemStackData> Snapshot() => state.Inventory.Select(x=>x.Clone()).ToList();
+        public void RestoreSnapshot(IEnumerable<ItemStackData> snapshot)
+        {
+            state.Inventory.Clear();
+            state.Inventory.AddRange(snapshot.Select(x=>x.Clone()));
+        }
+
         public bool Add(string itemId,int quantity,float quality=90f,float purity=90f,bool synthetic=false,string provenance="UNKNOWN")
         {
             if (quantity<=0 || !FactoryCatalog.Items.ContainsKey(itemId)) return false;
@@ -83,6 +90,7 @@ namespace DoronumFactory
                 int take=Math.Min(remaining,stack.Quantity);
                 var part=stack.Clone();
                 part.StackId=Guid.NewGuid().ToString("N");
+                part.SourceStackId=stack.StackId;
                 part.Quantity=take;
                 reserved.Add(part);
                 stack.Quantity-=take;
