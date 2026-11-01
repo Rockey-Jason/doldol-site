@@ -227,12 +227,12 @@ func _spawn_points_of_interest() -> void:
 		["Research Station",Vector2(300,-580),Color(0.25,0.52,0.65)],
 		["Mine Entrance",Vector2(650,500),Color(0.36,0.30,0.23)],
 		["Shipping Port",Vector2(-80,850),Color(0.34,0.42,0.50)],
-		["First Factory Archive",Vector2(-760,-120),Color(0.12,0.48,0.65)]
 	]
 	_spawn_lore_site("IncidentSafetyRecord","Incident · Safety Override",Vector2(-760,-720),"LORE_INCIDENT_SAFETY_OVERRIDE")
 	_spawn_lore_site("IncidentPowerRecord","Incident · Power Oscillation",Vector2(-650,-650),"LORE_INCIDENT_POWER_OSCILLATION")
 	_spawn_lore_site("IncidentCoolingRecord","Incident · Cooling Failure",Vector2(-560,-760),"LORE_INCIDENT_COOLING_FAILURE")
 	_spawn_lore_site("IncidentAuditRecord","Incident · Archive Edit",Vector2(-820,-610),"LORE_INCIDENT_ARCHIVE_EDIT")
+	_spawn_lore_site("FirstFactoryArchive","First Factory Archive",Vector2(-760,-120),"FIRST_FACTORY_ARCHIVE")
 	_spawn_lore_site("ArchiveControl","First Factory · Archive",Vector2(-720,-690),"","ARCHIVE_RESTORED")
 	_spawn_lore_site("CoolingControl","First Factory · Cooling Core",Vector2(-650,-790),"","COOLING_CORE_RESTORED")
 	_spawn_lore_site("ResonanceControl","First Factory · Resonance Chamber",Vector2(-840,-760),"","RESONANCE_CHAMBER_RESTORED")
