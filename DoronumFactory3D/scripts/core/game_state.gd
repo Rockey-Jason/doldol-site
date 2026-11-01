@@ -417,6 +417,9 @@ func craft(recipe_id: String) -> bool:
 		toast_requested.emit("Unknown recipe: " + recipe_id, "error")
 		return false
 	var recipe: Dictionary = RECIPES[recipe_id]
+	if not str(recipe.get("machine","")).is_empty():
+		toast_requested.emit("이 레시피는 지정된 3D 설비에서 실행해야 합니다.","warning")
+		return false
 	if int(recipe.tier) > current_tier():
 		toast_requested.emit("Required Tier is not unlocked.", "warning")
 		return false
@@ -432,13 +435,16 @@ func craft(recipe_id: String) -> bool:
 				toast_requested.emit("Synthetic Dori Meat is rejected by Doronum processing.", "error")
 				return false
 	var snapshot := inventory.duplicate(true)
-	var input_quality := 90.0
-	var input_purity := 90.0
+	var input_quality_sum := 0.0
+	var input_purity_sum := 0.0
+	var input_weight := 0.0
 	var input_synthetic := false
 	for input_id in recipe.inputs:
 		var avg_before: Dictionary = item_average(str(input_id))
-		input_quality = minf(input_quality, float(avg_before.quality))
-		input_purity = minf(input_purity, float(avg_before.purity))
+		var weight := float(recipe.inputs[input_id])*float(recipe.get("material_weights",{}).get(input_id,1.0))
+		input_quality_sum += float(avg_before.quality)*weight
+		input_purity_sum += float(avg_before.purity)*float(recipe.inputs[input_id])*float(recipe.get("purity_weights",{}).get(input_id,1.0))
+		input_weight += weight
 		input_synthetic = input_synthetic or bool(avg_before.synthetic)
 	if recipe.get("allow_synthetic", true) == false and input_synthetic:
 		toast_requested.emit("Synthetic lineage cannot enter this recipe.", "error")
