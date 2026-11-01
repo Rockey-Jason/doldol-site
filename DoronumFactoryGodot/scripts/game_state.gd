@@ -220,6 +220,19 @@ func collect_machine_output(instance_id: String) -> bool:
 		return true
 	return false
 
+func supply_machine(instance_id: String, item_id: String, quantity: int) -> bool:
+	if quantity <= 0 or count_item(item_id) < quantity:
+		return false
+	for machine in buildings:
+		if machine.instance_id != instance_id:
+			continue
+		if not consume_items({item_id:quantity}):
+			return false
+		machine.input.append({"item_id":item_id,"quantity":quantity,"quality":90.0,"purity":90.0,"synthetic":false,"provenance":"PLAYER_SUPPLY"})
+		notification.emit("기계 투입 · %s ×%d" % [GameData.item_name(item_id),quantity])
+		return true
+	return false
+
 func set_machine_recipe(instance_id: String, recipe_id: String) -> bool:
 	var recipe: Dictionary = GameData.recipe_definition(recipe_id, {})
 	if recipe.is_empty():
