@@ -31,7 +31,7 @@ var _preview_material: StandardMaterial3D
 
 func _ready() -> void:
 	add_to_group("factory_manager")
-	GameState.simulation_tick.connect(_on_simulation_tick)
+	GameState.tick_advanced.connect(_on_simulation_tick)
 	for record in GameState.buildings:
 		_spawn_machine(record)
 
@@ -166,7 +166,6 @@ func place_selected(world_position: Vector3) -> bool:
 		"belt_timer":0.0,
 		"energy_kj":0.0,
 		"failure_events":0,
-		"belt_timer":0.0,
 		"variant_recipe":"DORONUM_BLUE",
 		"sensor_calibrated":false,
 		"network_id":"POWER_MAIN"
@@ -272,7 +271,7 @@ func _supply_from_inventory(record: Dictionary) -> void:
 	var metadata: Dictionary = record.get("input_meta",{})
 	var moved := 0
 	for item_id in recipe.inputs:
-		var needed := max(0,int(recipe.inputs[item_id])-int(buffer.get(item_id,0)))
+		var needed: int = maxi(0,int(recipe.inputs[item_id])-int(buffer.get(item_id,0)))
 		var available := mini(needed,GameState.count_item(str(item_id)))
 		if available <= 0:
 			continue
@@ -374,7 +373,7 @@ func _allocate_power() -> void:
 		var definition: Dictionary = GameState.MACHINE_DEFS.get(str(record.type),{})
 		var idle_kw := float(definition.get("idle_power_kw",MACHINE_IDLE_POWER_KW))
 		var process_kw := float(definition.get("power_kw",0.0))
-		var job_active := not record.get("active_job",{}).is_empty()
+		var job_active: bool = not record.get("active_job",{}).is_empty()
 		if kind == "lab":
 			job_active = GameState.active_research != ""
 		if kind == "fusion" and bool(GameState.fusion_job.get("running",false)):
@@ -746,7 +745,7 @@ func _tick_auto_miner(record: Dictionary) -> void:
 	var nearest_distance := 5.0
 	for node in get_tree().get_nodes_in_group("resource_nodes"):
 		if node is ResourceNode3D:
-			var distance := node.global_position.distance_to(record.position)
+			var distance: float = node.global_position.distance_to(record.position as Vector3)
 			if distance<nearest_distance and not node.depleted and node.item_id in ["ITEM_IRON_ORE","ITEM_COPPER_ORE","ITEM_COAL","ITEM_QUARTZ","ITEM_GOLD_ORE","ITEM_NICKEL_ORE","ITEM_TITANIUM_ORE","ITEM_NEODYMIUM_ORE"]:
 				nearest = node
 				nearest_distance = distance
@@ -802,7 +801,7 @@ func _tick_conveyors() -> void:
 		if not receiver.is_empty():
 			var item_id := str(record.belt_payload.keys()[0])
 			var accepted: Dictionary = receiver.input_buffer
-			var target_recipe := GameState.RECIPES.get(str(receiver.get("recipe_id",GameState.MACHINE_DEFS.get(str(receiver.type),{}).get("recipe",""))),{})
+			var target_recipe: Dictionary = GameState.RECIPES.get(str(receiver.get("recipe_id",GameState.MACHINE_DEFS.get(str(receiver.type),{}).get("recipe",""))),{})
 			if target_recipe.is_empty() or not target_recipe.get("inputs",{}).has(item_id):
 				record.status = "BLOCKED_ROUTE"
 				continue
