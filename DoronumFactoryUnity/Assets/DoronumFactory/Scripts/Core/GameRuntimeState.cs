@@ -154,6 +154,11 @@ namespace DoronumFactory
         public List<ClaimRecord> RewardLedger = new List<ClaimRecord>();
         public List<ShipmentRuntimeData> Shipments = new List<ShipmentRuntimeData>();
         public List<string> PurchasedSkills = new List<string>();
+        public string ActiveResearchId;
+        public float ActiveResearchProgress;
+        public float LastPowerGenerationKW;
+        public float LastPowerConsumptionKW;
+        public float LastPowerRatio = 1f;
         public List<string> LoreRecords = new List<string>();
         public FusionRuntimeData Fusion = new FusionRuntimeData();
         public bool CoreInstalled;
@@ -175,7 +180,12 @@ namespace DoronumFactory
             else flag.Value=value;
         }
 
-        public bool HasClaim(string id) => RewardLedger.Exists(x => x.ClaimId == id);
+        public bool HasClaim(string id)
+        {
+            for (int i=0;i<RewardLedger.Count;i++)
+                if (RewardLedger[i].ClaimId==id) return true;
+            return false;
+        }
         public bool TryClaim(string id, string source, int amount)
         {
             if (string.IsNullOrWhiteSpace(id) || HasClaim(id)) return false;
