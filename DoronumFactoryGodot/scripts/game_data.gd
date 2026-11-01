@@ -193,7 +193,10 @@ const RECIPES := {
 	"RECIPE_NEODYMIUM_MAGNET":{"name":"Neodymium Magnet","machine":"FABRICATOR","inputs":{"ITEM_NEODYMIUM_ORE":2,"ITEM_IRON_PLATE":1,"ITEM_COPPER_WIRE":2},"outputs":{"ITEM_NEODYMIUM_MAGNET":1},"seconds":16.0,"power":25.0},
 	"RECIPE_BEARING":{"name":"Bearing","machine":"FABRICATOR","inputs":{"ITEM_IRON_PLATE":2,"ITEM_STEEL":1},"outputs":{"ITEM_BEARING":2},"seconds":10.0,"power":20.0},
 	"RECIPE_SENSOR":{"name":"Sensor","machine":"CIRCUIT_ASSEMBLER","inputs":{"ITEM_QUARTZ":2,"ITEM_BASIC_CIRCUIT":1,"ITEM_COPPER_WIRE":2},"outputs":{"ITEM_SENSOR":1},"seconds":12.0,"power":18.0},
-	"RECIPE_RUBBER":{"name":"Rubber","machine":"FABRICATOR","inputs":{"ITEM_PLANT_FIBER":4,"ITEM_CARBON_POWDER":1},"outputs":{"ITEM_RUBBER":2},"seconds":12.0,"power":15.0}
+	"RECIPE_RUBBER":{"name":"Rubber","machine":"FABRICATOR","inputs":{"ITEM_PLANT_FIBER":4,"ITEM_CARBON_POWDER":1},"outputs":{"ITEM_RUBBER":2},"seconds":12.0,"power":15.0},
+	"RECIPE_IRON_PICKAXE":{"name":"Iron Pickaxe","machine":"FABRICATOR","inputs":{"ITEM_IRON_PLATE":5,"ITEM_WOOD":2,"ITEM_GEAR":1},"outputs":{"ITEM_IRON_PICKAXE":1},"seconds":18.0,"power":25.0},
+	"RECIPE_STEEL_PICKAXE":{"name":"Steel Pickaxe","machine":"FABRICATOR","inputs":{"ITEM_STEEL_PLATE":5,"ITEM_MOTOR":1,"ITEM_CONTROL_MODULE":1},"outputs":{"ITEM_STEEL_PICKAXE":1},"seconds":35.0,"power":60.0},
+	"RECIPE_DORONUM_PICKAXE":{"name":"Doronum Pickaxe","machine":"DORONUM_COMPRESSOR","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_TITANIUM_PLATE":5,"ITEM_CONTROL_MODULE":5},"outputs":{"ITEM_DORONUM_PICKAXE":1},"seconds":90.0,"temperature":900.0,"pressure":500.0,"power":750.0,"allow_synthetic":false}
 }
 static func _finalize_recipe(recipe: Dictionary) -> Dictionary:
 	var result: Dictionary = recipe.duplicate(true)
