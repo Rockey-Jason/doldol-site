@@ -37,6 +37,9 @@ namespace DoronumFactory
         public float CurrentTemperatureC = 20f;
         public float CurrentPressureMPa;
         public float FuelSeconds;
+        public string TargetTreeId;
+        public ItemStackData BeltPayload;
+        public float BeltProgressSeconds;
         public string RecipeId;
         public float ProgressSeconds;
         public List<ItemStackData> InputBuffer = new List<ItemStackData>();
@@ -171,6 +174,7 @@ namespace DoronumFactory
         public float PlayerX, PlayerY = 1.2f, PlayerZ;
         public float PlayerHealth = 100f;
         public float PlayerStamina = 100f;
+        public string EquippedToolId = "ITEM_TOOL_WOODEN_PICKAXE";
         public int ResearchPoints;
         public int SkillPoints = 1;
         public float CurrencyD;
