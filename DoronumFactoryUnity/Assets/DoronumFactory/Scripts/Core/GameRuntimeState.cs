@@ -180,7 +180,7 @@ namespace DoronumFactory
         public float PlayerX, PlayerY = 1.2f, PlayerZ;
         public float PlayerHealth = 100f;
         public float PlayerStamina = 100f;
-        public string EquippedToolId = "ITEM_TOOL_WOODEN_PICKAXE";
+        public string EquippedToolId = "ITEM_TOOL_HANDS";
         public int ResearchPoints;
         public int SkillPoints = 1;
         public float CurrencyD;
