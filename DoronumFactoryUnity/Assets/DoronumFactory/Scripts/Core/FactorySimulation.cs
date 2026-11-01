@@ -64,17 +64,15 @@ namespace DoronumFactory
         public bool SupplyMachine(string instanceId,string itemId,int quantity)
         {
             var machine=state.Machines.Find(x=>x.InstanceId==instanceId);
-            if (machine==null || quantity<=0 || inventory.Count(itemId)<quantity) return false;
-            var copy=state.Inventory.Select(x=>x.Clone()).ToList();
-            var total=inventory.EligibleQuantity(itemId,0f,0f,true);
-            if (total<quantity || !inventory.Remove(itemId,quantity)) return false;
-            float q=90f,p=90f;
-            var used=copy.Where(x=>x.ItemId==itemId).ToList();
-            if (used.Count>0) { q=used.Average(x=>x.Quality); p=used.Average(x=>x.Purity); }
-            machine.InputBuffer.Add(new ItemStackData {
-                StackId=Guid.NewGuid().ToString("N"),ItemId=itemId,Quantity=quantity,
-                Quality=q,Purity=p,Synthetic=used.Any(x=>x.Synthetic),Provenance="PLAYER_SUPPLY"
-            });
+            if (machine==null || quantity<=0) return false;
+            if (!inventory.TryReserveEligible(itemId,quantity,0f,0f,true,out var selected)) return false;
+            int buffered=machine.InputBuffer.Where(x=>x.ItemId==itemId).Sum(x=>x.Quantity);
+            if (buffered+quantity>500)
+            {
+                inventory.Restore(selected);
+                return false;
+            }
+            machine.InputBuffer.AddRange(selected);
             MachineChanged?.Invoke(machine);
             return true;
         }
