@@ -219,7 +219,7 @@ func _draw_research() -> void:
 	_label("RESEARCH POINTS  ·  %d RP  ·  분석 샘플 %d개" % [game.research_points,game.count_item("ITEM_RESEARCH_SAMPLE")])
 	_button("ANALYZE UNIQUE RESEARCH SAMPLE  ·  +1,000 RP",game.analyze_research_sample,game.count_item("ITEM_RESEARCH_SAMPLE")<=0)
 	for definition in GameData.RESEARCH:
-		var done := definition.id in game.research_completed
+		var done: bool = definition.id in game.research_completed
 		var prereq_ok := true
 		for prereq in definition.requires:
 			if prereq not in game.research_completed:
@@ -237,7 +237,7 @@ func _draw_skills() -> void:
 		for skill in GameData.SKILLS:
 			if skill.branch!=branch:
 				continue
-			var unlocked := skill.id in game.skills_unlocked
+			var unlocked: bool = skill.id in game.skills_unlocked
 			var prerequisites_met := true
 			for prerequisite in skill.requires:
 				if prerequisite not in game.skills_unlocked:
