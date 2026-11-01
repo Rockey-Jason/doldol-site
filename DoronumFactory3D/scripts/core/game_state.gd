@@ -538,6 +538,20 @@ func progress_objective(event_type: String, target_id: String, amount: int = 1) 
 	save_game()
 
 func save_game() -> void:
+	var serialized_buildings: Array[Dictionary] = []
+	for building in buildings:
+		var serialized: Dictionary = building.duplicate(true)
+		var building_position = serialized.get("position",Vector3.ZERO)
+		if building_position is Vector3:
+			serialized["position"] = {"x":building_position.x,"y":building_position.y,"z":building_position.z}
+		serialized_buildings.append(serialized)
+	var serialized_relays: Array[Dictionary] = []
+	for relay in relay_instances:
+		var serialized_relay: Dictionary = relay.duplicate(true)
+		var relay_position = serialized_relay.get("position",Vector3.ZERO)
+		if relay_position is Vector3:
+			serialized_relay["position"] = {"x":relay_position.x,"y":relay_position.y,"z":relay_position.z}
+		serialized_relays.append(serialized_relay)
 	var payload := {
 		"saveFormatVersion":SAVE_VERSION,
 		"gameBuildVersion":"0.1.0",
@@ -555,12 +569,12 @@ func save_game() -> void:
 		"purchasedSkills":purchased_skills,
 		"activeResearch":active_research,
 		"researchProgress":research_progress,
-		"buildings":buildings,
+		"buildings":serialized_buildings,
 		"worldState":world_state,
 		"storyFlags":story_flags,
 		"rewardLedger":reward_ledger,
 		"fusionJob":fusion_job,
-		"relayInstances":relay_instances,
+		"relayInstances":serialized_relays,
 		"coreInstalled":core_installed,
 		"stabilizationState":stabilization_state,
 		"campaignStage":campaign_stage,
@@ -610,11 +624,21 @@ func load_game() -> void:
 	active_research = str(parsed.get("activeResearch",""))
 	research_progress = float(parsed.get("researchProgress",0.0))
 	buildings.assign(parsed.get("buildings",[]))
+	for building in buildings:
+		var position_data = building.get("position",{})
+		if position_data is Dictionary:
+			building["position"] = Vector3(float(position_data.get("x",0.0)),float(position_data.get("y",0.0)),float(position_data.get("z",0.0)))
+		elif position_data is Array and position_data.size() >= 3:
+			building["position"] = Vector3(float(position_data[0]),float(position_data[1]),float(position_data[2]))
 	world_state = parsed.get("worldState",{})
 	story_flags = parsed.get("storyFlags",{})
 	reward_ledger = parsed.get("rewardLedger",{})
 	fusion_job = parsed.get("fusionJob",{})
 	relay_instances.assign(parsed.get("relayInstances",[]))
+	for relay in relay_instances:
+		var position_data = relay.get("position",{})
+		if position_data is Dictionary:
+			relay["position"] = Vector3(float(position_data.get("x",0.0)),float(position_data.get("y",0.0)),float(position_data.get("z",0.0)))
 	core_installed = bool(parsed.get("coreInstalled",false))
 	stabilization_state = str(parsed.get("stabilizationState","NOT_STARTED"))
 	campaign_stage = int(parsed.get("campaignStage",0))
