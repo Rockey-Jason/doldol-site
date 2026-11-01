@@ -76,34 +76,57 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 		machine.state = "INVALID_RECIPE"
 		return
 	if not machine.get("job_started", false):
-		if not _consume_machine_inputs(machine,recipe.inputs):
+		if not _consume_machine_inputs(machine,recipe.inputs,bool(recipe.get("allow_synthetic",true))):
 			machine.state = "WAITING_INPUT"
 			return
 		machine.job_started = true
 		machine.progress = 0.0
+		machine.temperature_quality_sum = 0.0
+		machine.pressure_quality_sum = 0.0
+		machine.condition_quality_sum = 0.0
+		machine.progress_sample_seconds = 0.0
+		machine.power_ratio_sum = 0.0
+		machine.power_ratio_square_sum = 0.0
+		machine.power_sample_count = 0
 		machine.state = "STARTING"
 	if last_power_ratio < 0.8:
 		machine.state = "PAUSED_POWER"
 		return
 	machine.state = "RUNNING" if last_power_ratio >= 1.0 else "BROWNOUT_RUNNING"
-	var progress_ratio := minf(1.0, last_power_ratio)
-	machine.progress += dt * progress_ratio
-	var target_temperature := float(recipe.get("temperature", 20.0))
-	var target_pressure := float(recipe.get("pressure", 0.0))
-	machine.temperature = move_toward(float(machine.temperature), target_temperature, float(recipe.get("heat_rate", 120.0)) * dt)
-	machine.pressure = move_toward(float(machine.pressure), target_pressure, float(recipe.get("pressure_rate", 50.0)) * dt)
-	var temp_tolerance := float(recipe.get("temperature_tolerance", 0.1))
-	var pressure_tolerance := float(recipe.get("pressure_tolerance", 0.1))
-	var temp_ok := absf(float(machine.temperature) - target_temperature) <= maxf(5.0, absf(target_temperature) * temp_tolerance)
-	var pressure_ok := absf(float(machine.pressure) - target_pressure) <= maxf(1.0, absf(target_pressure) * pressure_tolerance)
+	var progress_ratio := minf(1.0,last_power_ratio)
+	var target_temperature := float(recipe.get("temperature",20.0))
+	var target_pressure := float(recipe.get("pressure",0.0))
+	machine.temperature = move_toward(float(machine.temperature),target_temperature,float(recipe.get("heat_rate",120.0))*dt)
+	machine.pressure = move_toward(float(machine.pressure),target_pressure,float(recipe.get("pressure_rate",50.0))*dt)
+	var temp_tolerance := float(recipe.get("temperature_tolerance",0.1))
+	var pressure_tolerance := float(recipe.get("pressure_tolerance",0.1))
+	var temp_ok := target_temperature == 0.0 or absf(float(machine.temperature)-target_temperature) <= maxf(5.0,absf(target_temperature)*temp_tolerance)
+	var pressure_ok := target_pressure == 0.0 or absf(float(machine.pressure)-target_pressure) <= maxf(1.0,absf(target_pressure)*pressure_tolerance)
 	if not temp_ok or not pressure_ok:
 		machine.state = "RAMPING"
 		return
+	var progress_delta := dt*progress_ratio
+	machine.progress += progress_delta
+	machine.temperature_quality_sum += _score_process_accuracy(float(machine.temperature),target_temperature)*progress_delta
+	machine.pressure_quality_sum += _score_process_accuracy(float(machine.pressure),target_pressure)*progress_delta
+	machine.condition_quality_sum += clampf(float(machine.condition),0.0,100.0)*progress_delta
+	machine.progress_sample_seconds += progress_delta
+	machine.power_ratio_sum += progress_ratio
+	machine.power_ratio_square_sum += progress_ratio*progress_ratio
+	machine.power_sample_count += 1
 	if machine.progress < float(recipe.seconds):
 		return
-	var q := 90.0
-	var p := 90.0
+	var material_quality := _calculate_material_quality(machine,recipe)
+	var temp_quality := float(machine.temperature_quality_sum)/maxf(0.0001,float(machine.progress_sample_seconds))
+	var pressure_quality := float(machine.pressure_quality_sum)/maxf(0.0001,float(machine.progress_sample_seconds))
+	var condition_quality := float(machine.condition_quality_sum)/maxf(0.0001,float(machine.progress_sample_seconds))
+	var power_stability := _calculate_power_stability(machine)
+	var raw_quality := material_quality*0.40+temp_quality*0.20+pressure_quality*0.20+condition_quality*0.10+power_stability*0.10+float(recipe.get("quality_modifier",0.0))
+	var q := clampf(raw_quality-float(recipe.get("pollution_penalty",0.0)),0.0,100.0)
+	var p := _calculate_output_purity(machine,recipe)
 	var synthetic := false
+	for input_lot in machine.get("job_inputs",[]):
+		synthetic = synthetic or bool(input_lot.synthetic)
 	for output_id in recipe.outputs:
 		machine.output.append({
 			"item_id":output_id,"quantity":int(recipe.outputs[output_id]),
@@ -113,28 +136,83 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	machine.state = "PAUSED_OUTPUT"
 	machine.progress = 0.0
 	machine.job_started = false
+	machine.job_inputs = []
+	machine.cycles = int(machine.get("cycles",0))+1
 	game.production_history.append({"machine":machine.instance_id,"recipe":recipe_id,"tick":tick_number})
 	if game.production_history.size() > 1000:
 		game.production_history.pop_front()
 	game.state_changed.emit()
 
-func _consume_machine_inputs(machine: Dictionary, inputs: Dictionary) -> bool:
+func _consume_machine_inputs(machine: Dictionary, inputs: Dictionary, allow_synthetic: bool = true) -> bool:
 	var buffer_snapshot: Array = machine.input.duplicate(true)
-	var inventory_snapshot: Array = game.inventory.duplicate(true)
+	var inventory_snapshot: Array[Dictionary] = game.inventory.duplicate(true)
+	var consumed: Array[Dictionary] = []
 	for item_id in inputs:
 		var remaining := int(inputs[item_id])
 		for stack in machine.input:
-			if stack.item_id != item_id or remaining <= 0:
+			if stack.item_id != item_id or remaining <= 0 or (not allow_synthetic and bool(stack.synthetic)):
 				continue
 			var take := mini(remaining,int(stack.quantity))
+			if take <= 0:
+				continue
+			var lot: Dictionary = stack.duplicate(true)
+			lot.quantity = take
+			consumed.append(lot)
 			stack.quantity -= take
 			remaining -= take
 		machine.input = machine.input.filter(func(s): return int(s.quantity)>0)
-		if remaining > 0 and not game.consume_items({item_id:remaining}):
-			machine.input = buffer_snapshot
-			game.inventory = inventory_snapshot
-			return false
+		if remaining > 0:
+			var inventory_lots := game.consume_items_with_lots({item_id:remaining},allow_synthetic)
+			if inventory_lots.is_empty():
+				machine.input = buffer_snapshot
+				game.inventory = inventory_snapshot
+				return false
+			consumed.append_array(inventory_lots)
+	machine.job_inputs = consumed
 	return true
+
+func _score_process_accuracy(actual: float, target: float) -> float:
+	if absf(target) <= 0.0001:
+		return 100.0
+	var deviation := absf(actual-target)/absf(target)*100.0
+	if deviation <= 1.0: return 100.0
+	if deviation <= 3.0: return 95.0
+	if deviation <= 5.0: return 85.0
+	if deviation <= 10.0: return 70.0
+	return 50.0
+
+func _calculate_material_quality(machine: Dictionary, recipe: Dictionary) -> float:
+	var total := 0.0
+	var weight_sum := 0.0
+	var weights: Dictionary = recipe.get("material_weights",{})
+	for stack in machine.get("job_inputs",[]):
+		var weight := float(weights.get(stack.item_id,1.0))
+		total += float(stack.quality)*int(stack.quantity)*weight
+		weight_sum += int(stack.quantity)*weight
+	if weight_sum <= 0.0:
+		return float(recipe.get("base_material_quality",0.0))
+	return total/weight_sum
+
+func _calculate_output_purity(machine: Dictionary, recipe: Dictionary) -> float:
+	var total := 0.0
+	var weight_sum := 0.0
+	var weights: Dictionary = recipe.get("purity_weights",{})
+	for stack in machine.get("job_inputs",[]):
+		var weight := float(weights.get(stack.item_id,1.0))
+		total += float(stack.purity)*int(stack.quantity)*weight
+		weight_sum += int(stack.quantity)*weight
+	if weight_sum <= 0.0:
+		return float(recipe.get("base_output_purity",0.0))
+	return clampf(total/weight_sum-float(recipe.get("purity_loss",0.0))+float(recipe.get("purification_bonus",0.0))+float(recipe.get("output_purity_modifier",0.0)),0.0,100.0)
+
+func _calculate_power_stability(machine: Dictionary) -> float:
+	var count := int(machine.get("power_sample_count",0))
+	if count <= 0:
+		return 100.0
+	var mean := float(machine.get("power_ratio_sum",0.0))/count
+	var mean_square := float(machine.get("power_ratio_square_sum",0.0))/count
+	var deviation := sqrt(maxf(0.0,mean_square-mean*mean))
+	return clampf(100.0*mean-50.0*deviation,0.0,100.0)
 
 func _tick_auto_miner(machine: Dictionary, dt: float) -> void:
 	if not machine.output.is_empty():
