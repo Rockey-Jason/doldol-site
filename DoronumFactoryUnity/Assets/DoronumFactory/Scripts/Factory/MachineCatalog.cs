@@ -33,6 +33,11 @@ namespace DoronumFactory
             void Add(FactoryMachineDefinition m)=>d.Add(m.Id,m);
             string[] R(string id)=>new[]{id};
             Add(new FactoryMachineDefinition("WORKBENCH","Workbench",0,2,2,0).Pay(new ItemAmount("ITEM_WOOD",12),new ItemAmount("ITEM_STONE",6)));
+            Add(new FactoryMachineDefinition("HAND_CRANK_GENERATOR","Hand-Crank Generator",0,2,2,0,R("RESEARCH_BASIC_SURVIVAL")).Pay(new ItemAmount("ITEM_WOOD",20),new ItemAmount("ITEM_STONE",10)));
+            Add(new FactoryMachineDefinition("CARBON_MILL","Carbon Mill",1,2,2,12,R("RESEARCH_BASIC_MINING")).Pay(new ItemAmount("ITEM_STONE",12),new ItemAmount("ITEM_IRON",2)));
+            Add(new FactoryMachineDefinition("WIRE_MILL","Wire Mill",2,3,2,20,R("RESEARCH_MECHANICAL_PROCESSING")).Pay(new ItemAmount("ITEM_IRON_PLATE",8),new ItemAmount("ITEM_GEAR",3)));
+            Add(new FactoryMachineDefinition("STEEL_FURNACE","Steel Furnace",2,4,4,80,R("RESEARCH_STEEL")).Pay(new ItemAmount("ITEM_STEEL_PLATE",12),new ItemAmount("ITEM_BASIC_CIRCUIT",2)));
+            Add(new FactoryMachineDefinition("FABRICATOR","Fabricator",2,3,3,45,R("RESEARCH_MECHANICAL_PROCESSING")).Pay(new ItemAmount("ITEM_IRON_PLATE",10),new ItemAmount("ITEM_GEAR",5)));
             Add(new FactoryMachineDefinition("FURNACE","Furnace",1,3,3,35,R("RESEARCH_IRON_SMELTING")).Pay(new ItemAmount("ITEM_STONE",20),new ItemAmount("ITEM_IRON",8)));
             Add(new FactoryMachineDefinition("COMPRESSOR","Compressor",2,3,3,50,R("RESEARCH_MECHANICAL_PROCESSING")).Pay(new ItemAmount("ITEM_IRON_PLATE",12),new ItemAmount("ITEM_GEAR",4)));
             Add(new FactoryMachineDefinition("ROLLING_MILL","Rolling Mill",2,4,3,60,R("RESEARCH_MECHANICAL_PROCESSING")).Pay(new ItemAmount("ITEM_STEEL_PLATE",10),new ItemAmount("ITEM_GEAR",6)));
@@ -56,7 +61,7 @@ namespace DoronumFactory
             Add(new FactoryMachineDefinition("AUTO_FURNACE","Auto Furnace",4,4,4,120,R("RESEARCH_AUTOMATION")).Pay(new ItemAmount("ITEM_STEEL_PLATE",20),new ItemAmount("ITEM_BASIC_CIRCUIT",5)));
             Add(new FactoryMachineDefinition("AUTO_FABRICATOR","Auto Fabricator",4,4,4,160,R("RESEARCH_ADVANCED_CIRCUITS")).Pay(new ItemAmount("ITEM_STEEL_PLATE",20),new ItemAmount("ITEM_ADVANCED_CIRCUIT",8)));
             Add(new FactoryMachineDefinition("QUALITY_INSPECTOR","Quality Inspector",4,3,2,30,R("RESEARCH_ADVANCED_CIRCUITS")).Pay(new ItemAmount("ITEM_STEEL_PLATE",8),new ItemAmount("ITEM_SENSOR",6)));
-            Add(new FactoryMachineDefinition("RESEARCH_LAB","Research Laboratory",0,3,3,25,R("RESEARCH_BASIC_SURVIVAL")).Pay(new ItemAmount("ITEM_STEEL_PLATE",12),new ItemAmount("ITEM_BASIC_CIRCUIT",4)));
+            Add(new FactoryMachineDefinition("RESEARCH_LAB","Research Laboratory",0,3,3,25,R("RESEARCH_BASIC_SURVIVAL")).Pay(new ItemAmount("ITEM_WOOD",20),new ItemAmount("ITEM_STONE",10),new ItemAmount("ITEM_QUARTZ",5)));
             Add(new FactoryMachineDefinition("DORI_HARVESTER","Dori Meat Harvester",6,3,3,20,R("RESEARCH_DORONUM_COMPRESSOR")).Pay(new ItemAmount("ITEM_STEEL_PLATE",18),new ItemAmount("ITEM_MOTOR",2),new ItemAmount("ITEM_ADVANCED_CIRCUIT",4)));
             Add(new FactoryMachineDefinition("DORONUM_COMPRESSOR","Doronum Compressor",5,6,6,1500,R("RESEARCH_DORONUM_ENGINEERING")).Pay(new ItemAmount("ITEM_STEEL_PLATE",50),new ItemAmount("ITEM_TITANIUM_PLATE",25),new ItemAmount("ITEM_ADVANCED_CIRCUIT",20),new ItemAmount("ITEM_CONTROL_MODULE",10),new ItemAmount(GameIds.Blue,5),new ItemAmount(GameIds.Red,5),new ItemAmount("ITEM_HEAT_CRYSTAL",10),new ItemAmount("ITEM_COLD_CRYSTAL",10)));
             Add(new FactoryMachineDefinition("REFINEMENT_CHAMBER","Refinement Chamber",5,5,5,1200,R("RESEARCH_DORONUM_CRYSTAL")).Pay(new ItemAmount("ITEM_STEEL_PLATE",35),new ItemAmount("ITEM_TITANIUM_PLATE",20),new ItemAmount("ITEM_ADVANCED_CIRCUIT",15)));
