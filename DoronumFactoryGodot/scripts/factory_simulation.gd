@@ -25,18 +25,44 @@ func tick(delta: float) -> void:
 
 func _fixed_tick(dt: float) -> void:
 	tick_number += 1
-	total_generation = 250.0
+	total_generation = 0.0
 	total_consumption = 0.0
+	var starter_timer := float(game.power_state.get("starter_fuel_timer",0.0))
+	if starter_timer <= 0.0:
+		if game.consume_items({"ITEM_COAL":1}):
+			starter_timer = 60.0
+	if starter_timer > 0.0:
+		total_generation += 250.0
+		starter_timer = maxf(0.0,starter_timer-dt)
+	game.power_state["starter_fuel_timer"] = starter_timer
+	var world_time := fposmod(float(game.power_state.get("world_time",0.25))+dt/900.0,1.0)
+	game.power_state["world_time"] = world_time
+	var daylight := maxf(0.0,sin(world_time*TAU))
 	for machine in game.buildings:
 		match machine.id:
-			"GENERATOR": total_generation += 250.0
-			"SOLAR_PANEL": total_generation += 80.0
-			"WIND_TURBINE": total_generation += 100.0
+			"GENERATOR":
+				var fuel_timer := float(machine.get("fuel_timer",0.0))
+				if fuel_timer <= 0.0 and game.consume_items({"ITEM_COAL":1}):
+					fuel_timer = 60.0
+				if fuel_timer > 0.0:
+					total_generation += 250.0
+					fuel_timer = maxf(0.0,fuel_timer-dt)
+				machine.fuel_timer = fuel_timer
+			"SOLAR_PANEL": total_generation += 80.0*daylight
+			"WIND_TURBINE": total_generation += 100.0*(0.65+0.35*sin(world_time*TAU*2.7))
 	for machine in game.buildings:
 		if machine.id == "RESEARCH_LAB" and not game.active_research.is_empty():
 			total_consumption += 25.0
 		elif machine.id in ["AUTO_MINER","WATER_PUMP","DORI_MEAT_HARVESTER"]:
 			total_consumption += float(GameData.building_definition(machine.id).get("power",10.0))
+		elif machine.id == "CONVEYOR":
+			total_consumption += 1.0
+		elif machine.id == "WAREHOUSE":
+			total_consumption += 5.0
+		elif machine.id == "STABILIZATION_RELAY" and game.relays.any(func(r): return r.instance_id==machine.instance_id and r.active):
+			total_consumption += 100.0
+		elif machine.id == "STABILIZATION_CORE" and game.core_installed:
+			total_consumption += 500.0
 		elif not str(machine.get("recipe", "")).is_empty():
 			var recipe: Dictionary = GameData.recipe_definition(machine.recipe)
 			total_consumption += float(recipe.get("power", 10.0))
