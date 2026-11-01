@@ -251,7 +251,7 @@ func _refresh_current_panel() -> void:
 		"inventory": _render_inventory_panel()
 		"research": _render_research_panel()
 		"skills": _render_skill_panel()
-		"missions": _render_missions_panel(),
+		"missions": _render_missions_panel()
 		"contracts": _render_contracts_panel()
 		"machine": _render_machine_panel()
 
