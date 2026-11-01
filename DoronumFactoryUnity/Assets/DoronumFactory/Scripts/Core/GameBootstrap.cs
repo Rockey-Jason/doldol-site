@@ -152,6 +152,7 @@ namespace DoronumFactory
                 Fusion.Tick(FactorySimulation.TickSeconds);
                 Contracts.Tick(FactorySimulation.TickSeconds);
                 foreach(var tree in World.DoriTrees) tree.Advance(FactorySimulation.TickSeconds);
+                TickAutomatedMachines();
                 if (State.SimulationTick%10==0) SnapshotTrees();
             }
             if (saveTimer>=15f)
@@ -165,6 +166,111 @@ namespace DoronumFactory
                 State.PlayerY=Player.transform.position.y;
                 State.PlayerZ=Player.transform.position.z;
             }
+        }
+
+        private void TickAutomatedMachines()
+        {
+            foreach(var machine in State.Machines)
+            {
+                if(machine.PowerRatio<0.8f || machine.CompletionBuffer.Count>0) continue;
+                if(machine.MachineId=="AUTO_MINER") TickAutoMiner(machine);
+                else if(machine.MachineId=="WATER_PUMP") TickWaterPump(machine);
+                else if(machine.MachineId=="DORI_HARVESTER") TickDoriHarvester(machine);
+            }
+        }
+
+        private void TickAutoMiner(MachineRuntimeData machine)
+        {
+            machine.AutoMinerProgressSeconds+=FactorySimulation.TickSeconds*machine.PowerRatio;
+            machine.State="RUNNING";
+            if(machine.AutoMinerProgressSeconds<8f)return;
+            var nearest=World.ResourceNodes.Where(n=>!n.Depleted && n.MiningPowerRequired<=50 &&
+                    new[]{"ITEM_IRON_ORE","ITEM_COPPER_ORE","ITEM_COAL","ITEM_QUARTZ","ITEM_GOLD_ORE",
+                          "ITEM_NICKEL_ORE","ITEM_TITANIUM_ORE","ITEM_NEODYMIUM_ORE","ITEM_MAGNETITE",
+                          "ITEM_LEAD_ORE","ITEM_CHROME_ORE","ITEM_ALUMINUM_ORE"}.Contains(n.ItemId) &&
+                    Vector3.Distance(n.transform.position,new Vector3(machine.X,machine.Y,machine.Z))<=5f)
+                .OrderBy(n=>Vector3.Distance(n.transform.position,new Vector3(machine.X,machine.Y,machine.Z)))
+                .FirstOrDefault();
+            if(nearest==null) { machine.State="WAITING_ORE";return; }
+            if(!nearest.TryAutomatedMine(out var output)) { machine.State="WAITING_ORE";return; }
+            machine.CompletionBuffer.Add(output);
+            machine.AutoMinerProgressSeconds=0f;
+            machine.State="PAUSED_OUTPUT";
+            State.ResourceStates.RemoveAll(x=>x.NodeId==nearest.NodeId);
+            State.ResourceStates.Add(new WorldResourceState { NodeId=nearest.NodeId,ItemId=nearest.ItemId,Remaining=nearest.Remaining,Depleted=nearest.Depleted });
+            Research.GrantFirstScan(nearest.ItemId);
+        }
+
+        private void TickWaterPump(MachineRuntimeData machine)
+        {
+            machine.ProgressSeconds+=FactorySimulation.TickSeconds*machine.PowerRatio;
+            machine.State="RUNNING";
+            if(machine.ProgressSeconds<5f)return;
+            var water=World.ResourceNodes.Where(n=>n.ItemId=="ITEM_WATER" && !n.Depleted &&
+                    Vector3.Distance(n.transform.position,new Vector3(machine.X,machine.Y,machine.Z))<=12f)
+                .OrderBy(n=>Vector3.Distance(n.transform.position,new Vector3(machine.X,machine.Y,machine.Z)))
+                .FirstOrDefault();
+            if(water==null) { machine.State="WAITING_WATER_SOURCE";return; }
+            if(!water.TryAutomatedMine(5,out var output)) { machine.State="WAITING_WATER_SOURCE";return; }
+            output.Provenance="WATER_PUMP:"+machine.InstanceId;
+            machine.CompletionBuffer.Add(output);
+            machine.ProgressSeconds=0f;
+            machine.State="PAUSED_OUTPUT";
+            State.ResourceStates.RemoveAll(x=>x.NodeId==water.NodeId);
+            State.ResourceStates.Add(new WorldResourceState { NodeId=water.NodeId,ItemId=water.ItemId,Remaining=water.Remaining,Depleted=water.Depleted });
+        }
+
+        private void TickDoriHarvester(MachineRuntimeData machine)
+        {
+            DoriMeatTree target=string.IsNullOrEmpty(machine.TargetTreeId)?null:World.DoriTrees.FirstOrDefault(t=>t.TreeId==machine.TargetTreeId);
+            if(target==null)
+            {
+                target=World.DoriTrees.Where(t=>t.Mature || t.NeedsWater)
+                    .OrderBy(t=>Vector3.Distance(t.transform.position,new Vector3(machine.X,machine.Y,machine.Z)))
+                    .FirstOrDefault();
+                if(target==null) { machine.State="WAITING_TREE";return; }
+                machine.TargetTreeId=target.TreeId;
+            }
+            if(target.Mature)
+            {
+                if(target.HarvestForMachine(out var meat))
+                {
+                    machine.CompletionBuffer.Add(meat);
+                    machine.TargetTreeId=null;
+                    machine.State="PAUSED_OUTPUT";
+                    State.SetFlag("DORI_MEAT_HARVESTED");
+                    Research.GrantFirstRecipe(FactoryCatalog.Recipes.ContainsKey("DORI_MEAT_HARVEST")?FactoryCatalog.Recipes["DORI_MEAT_HARVEST"]:null);
+                }
+                return;
+            }
+            if(target.NeedsWater)
+            {
+                if(!ConsumeMachineBuffer(machine,"ITEM_WATER",2))
+                {
+                    machine.State="WAITING_INPUT";
+                    return;
+                }
+                target.ProvideAutomatedWater(2f);
+                machine.TargetTreeId=target.TreeId;
+                machine.State="GROWING_TREE";
+                return;
+            }
+            machine.State="GROWING_TREE";
+        }
+
+        private static bool ConsumeMachineBuffer(MachineRuntimeData machine,string itemId,int quantity)
+        {
+            int total=machine.InputBuffer.Where(x=>x.ItemId==itemId).Sum(x=>x.Quantity);
+            if(total<quantity)return false;
+            int remaining=quantity;
+            foreach(var stack in machine.InputBuffer.Where(x=>x.ItemId==itemId).ToList())
+            {
+                int take=Math.Min(remaining,stack.Quantity);
+                stack.Quantity-=take;remaining-=take;
+                if(remaining<=0)break;
+            }
+            machine.InputBuffer.RemoveAll(x=>x.Quantity<=0);
+            return remaining==0;
         }
 
         private void SnapshotTrees()
