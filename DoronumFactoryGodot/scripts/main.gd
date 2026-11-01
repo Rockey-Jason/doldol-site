@@ -95,7 +95,14 @@ func _setup_environment() -> void:
 	sun.directional_shadow_max_distance = 180.0
 	add_child(sun)
 
+func _sync_building_visuals() -> void:
+	for building in game.buildings:
+		var instance_id := str(building.get("instance_id",""))
+		if not machine_visuals.has(instance_id):
+			_spawn_building_visual(building)
+
 func _process(delta: float) -> void:
+	_sync_building_visuals()
 	elapsed += delta
 	if simulation != null:
 		simulation.tick(delta)
