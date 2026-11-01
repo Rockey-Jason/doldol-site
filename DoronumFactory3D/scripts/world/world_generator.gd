@@ -5,6 +5,7 @@ const WORLD_SIZE := 2048.0
 const GRID_SEGMENTS := 128
 const RESOURCE_NODE_SCRIPT = preload("res://scripts/world/resource_node.gd")
 const DORI_TREE_SCRIPT = preload("res://scripts/world/dori_meat_tree.gd")
+const STORY_TRIGGER_SCRIPT = preload("res://scripts/story/story_trigger.gd")
 var world_seed := 827142
 var _noise := FastNoiseLite.new()
 var _terrain_collision: StaticBody3D
@@ -62,6 +63,9 @@ func _create_terrain() -> void:
 	var collision := CollisionShape3D.new()
 	collision.shape = mesh.create_trimesh_shape()
 	_terrain_collision.add_child(collision)
+	_terrain_collision.collision_layer = 2
+	_terrain_collision.collision_mask = 0
+	_terrain_collision.add_to_group("build_surface")
 	add_child(_terrain_collision)
 
 func _add_triangle(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, color: Color) -> void:
@@ -157,25 +161,78 @@ func _create_dori_forest() -> void:
 		tree.tree_id = "DORI_TREE_%03d" % i
 		tree.position = Vector3(p.x,height_at(p.x,p.y),p.y)
 		add_child(tree)
+	var grove_area := Area3D.new()
+	grove_area.name = "DoriMeatTreeDiscovery"
+	grove_area.collision_layer = 0
+	grove_area.collision_mask = 1
+	var grove_shape := CollisionShape3D.new()
+	var grove_box := BoxShape3D.new()
+	grove_box.size = Vector3(85,24,85)
+	grove_shape.shape = grove_box
+	grove_shape.position.y = 12.0
+	grove_area.add_child(grove_shape)
+	var grove_trigger: StoryTrigger3D = STORY_TRIGGER_SCRIPT.new()
+	grove_trigger.event_id = "DORI_MEAT_TREE_DISCOVERED"
+	grove_trigger.title = "Dori Meat Tree Grove"
+	grove_trigger.orbit_line = "Natural Dori Meat Tree detected. The fruit is the missing input in the Doronum resonance records."
+	grove_area.add_child(grove_trigger)
+	grove_area.position = Vector3(380,height_at(380,250),250)
+	add_child(grove_area)
 
 func _create_first_factory_poi() -> void:
 	var poi := Node3D.new()
 	poi.name = "FIRST_DORONUM_FACTORY"
 	poi.position = Vector3(460,height_at(460,-410),-410)
 	add_child(poi)
-	var main_structure := _make_industrial_structure(Vector3(38,18,26),Color(0.11,0.19,0.24),Color(0.18,0.65,0.76))
-	main_structure.position.y = 9.0
+	var main_structure := _make_industrial_structure(Vector3(84,16,38),Color(0.075,0.14,0.2),Color(0.08,0.4,0.54))
+	main_structure.position.y = 8.0
 	poi.add_child(main_structure)
 	_add_poi_sign(poi,"FIRST DORONUM FACTORY","BLUE FURNACE INCIDENT · 30 YEARS AGO")
+	var room_names := ["ARCHIVE","COOLING CORE","RESONANCE CHAMBER"]
+	var room_events := ["FIRST_FACTORY_ARCHIVE","FIRST_FACTORY_COOLING_CORE","FIRST_FACTORY_RESONANCE_CHAMBER"]
 	for i in range(3):
-		var beacon := OmniLight3D.new()
-		beacon.light_color = Color(0.1,0.8,1.0)
-		beacon.light_energy = 1.3
-		beacon.omni_range = 18.0
-		beacon.position = Vector3(-14.0+14.0*i,4.0,13.0)
-		poi.add_child(beacon)
-	for room in ["ARCHIVE","COOLING CORE","RESONANCE CHAMBER"]:
-		GameState.story_flags["POI_LOCKED_"+room] = true
+		var room := Node3D.new()
+		room.name = room_names[i]
+		room.position = Vector3(-30.0+float(i)*30.0,0.0,0.0)
+		poi.add_child(room)
+		var room_body := _make_industrial_structure(Vector3(22,10,24),Color(0.1,0.18,0.22),Color(0.1,0.5,0.62))
+		room_body.position.y = 5.0
+		room.add_child(room_body)
+		var ring := MeshInstance3D.new()
+		var ring_mesh := TorusMesh.new()
+		ring_mesh.inner_radius = 3.5
+		ring_mesh.outer_radius = 3.8
+		ring.mesh = ring_mesh
+		ring.position.y = 2.3
+		var ring_mat := StandardMaterial3D.new()
+		ring_mat.albedo_color = Color(0.12,0.55,0.65)
+		ring_mat.emission_enabled = true
+		ring_mat.emission = Color(0.02,0.17,0.23)
+		ring.material_override = ring_mat
+		room.add_child(ring)
+		var area := Area3D.new()
+		area.name = "Discover_"+room_names[i]
+		area.collision_layer = 0
+		area.collision_mask = 1
+		var trigger_collision := CollisionShape3D.new()
+		var trigger_shape := BoxShape3D.new()
+		trigger_shape.size = Vector3(18,8,18)
+		trigger_collision.shape = trigger_shape
+		trigger_collision.position.y = 4.0
+		area.add_child(trigger_collision)
+		var story_trigger: StoryTrigger3D = STORY_TRIGGER_SCRIPT.new()
+		story_trigger.event_id = room_events[i]
+		story_trigger.title = room_names[i].replace("_"," ").capitalize()
+		story_trigger.orbit_line = "First Factory record recovered: "+room_names[i].replace("_"," ").capitalize()+"."
+		area.add_child(story_trigger)
+		room.add_child(area)
+		for beacon_index in range(2):
+			var beacon := OmniLight3D.new()
+			beacon.light_color = Color(0.12,0.78,0.92)
+			beacon.light_energy = 0.9
+			beacon.omni_range = 11.0
+			beacon.position = Vector3(-6.0+float(beacon_index)*12.0,2.0,8.0)
+			room.add_child(beacon)
 
 func _make_industrial_structure(size_value: Vector3, color: Color, emissive: Color) -> MeshInstance3D:
 	var mesh := MeshInstance3D.new()
