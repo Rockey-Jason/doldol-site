@@ -96,10 +96,15 @@ func _setup_environment() -> void:
 	add_child(sun)
 
 func _sync_building_visuals() -> void:
+	var changed := false
 	for building in game.buildings:
 		var instance_id := str(building.get("instance_id",""))
 		if not machine_visuals.has(instance_id):
+			building.position.y = world.height_at(building.position.x,building.position.z)
 			_spawn_building_visual(building)
+			changed = true
+	if changed:
+		game.save_game()
 
 func _process(delta: float) -> void:
 	_sync_building_visuals()
