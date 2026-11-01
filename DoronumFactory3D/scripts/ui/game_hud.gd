@@ -265,7 +265,7 @@ func _render_build_panel() -> void:
 		var data: Dictionary = GameState.MACHINE_DEFS[machine_type]
 		if int(data.get("tier",0)) > GameState.current_tier():
 			continue
-		var afford := GameState.can_afford(data.get("cost",{}))
+		var afford := GameState.can_afford(data.get("cost",{})) and GameState.machine_unlocks_met(str(machine_type))
 		var button := _button("%s\n%s\nTier %d · %dm×%dm" % [str(data.name),_cost_text(data.cost),int(data.tier),int(data.footprint.x)*2,int(data.footprint.y)*2],Color(0.08,0.16,0.22),Color(0.84,0.92,0.92))
 		button.custom_minimum_size = Vector2(170,82)
 		button.disabled = not afford
@@ -448,7 +448,6 @@ func _button(text_value: String, background: Color, foreground: Color) -> Button
 	var button := Button.new()
 	button.text = text_value
 	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.add_theme_font_size_override("font_size",11)
 	button.add_theme_color_override("font_color",foreground)
 	button.add_theme_color_override("font_hover_color",Color.WHITE)
