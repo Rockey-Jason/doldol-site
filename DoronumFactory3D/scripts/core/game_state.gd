@@ -454,8 +454,15 @@ func craft(recipe_id: String) -> bool:
 			inventory = snapshot
 			inventory_changed.emit()
 			return false
+	var material_quality := input_quality_sum/maxf(0.0001,input_weight)
+	var purity_weight := 0.0
+	for input_id in recipe.inputs:
+		purity_weight += float(recipe.inputs[input_id])*float(recipe.get("purity_weights",{}).get(input_id,1.0))
+	var material_purity := input_purity_sum/maxf(0.0001,purity_weight)
+	var manual_quality := clampf(material_quality*0.4+100.0*0.6+float(recipe.get("quality_modifier",0.0)),0.0,100.0)
+	var manual_purity := clampf(material_purity-float(recipe.get("process_purity_loss",0.0))+float(recipe.get("purification_bonus",0.0)),0.0,100.0)
 	for item_id in recipe.outputs:
-		add_item(str(item_id), int(recipe.outputs[item_id]), clampf(input_quality+float(recipe.get("quality_bonus",0.0)),0,100), clampf(input_purity-float(recipe.get("purity_loss",0.0))+float(recipe.get("purity_bonus",0.0)),0,100), input_synthetic, "RECIPE:" + recipe_id)
+		add_item(str(item_id), int(recipe.outputs[item_id]), manual_quality, manual_purity, input_synthetic, "RECIPE:" + recipe_id)
 	var event_id := "FIRST_RECIPE:" + recipe_id
 	grant_rp_once(event_id, 50 if int(recipe.tier) <= 2 else 250)
 	toast_requested.emit("Crafted " + recipe_id, "success")
