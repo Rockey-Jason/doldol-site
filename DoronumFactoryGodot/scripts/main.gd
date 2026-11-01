@@ -278,6 +278,7 @@ func _on_player_interact(target: Object, hit_position: Vector3) -> void:
 		var restored := ["ARCHIVE_RESTORED","COOLING_CORE_RESTORED","RESONANCE_CHAMBER_RESTORED"]
 		if restored.all(func(flag): return bool(game.story_flags.get(flag,false))):
 			game.story_flags["ACT_V_COMPLETE"] = true
+			game.grant_skill_point("ACT_V_COMPLETE","ACT_V_MISSION")
 			game.notification.emit("FIRST FACTORY · Archive / Cooling / Resonance restored")
 		return
 	if node.has_meta("poi_name"):
@@ -329,14 +330,17 @@ func _update_story_progress() -> void:
 		var has_furnace := game.buildings.any(func(b): return b.id=="FURNACE")
 		if has_workbench and has_furnace and game.equipped_tool!="ITEM_TOOL_HANDS":
 			game.story_flags["ACT_I_COMPLETE"] = true
+			game.grant_skill_point("ACT_I_COMPLETE","ACT_I_MISSION")
 			game.notification.emit("ACT I complete · The Ruins")
 	if int(game.story_flags.get("AUTOMATION_CYCLES",0)) >= 5 and not bool(game.story_flags.get("ACT_II_COMPLETE",false)):
 		game.story_flags["ACT_II_COMPLETE"] = true
+		game.grant_skill_point("ACT_II_COMPLETE","ACT_II_MISSION")
 		game.notification.emit("ACT II complete · The Hidden Industry")
 	if bool(game.story_flags.get("STORY_INCIDENT_RECONSTRUCTED",false)) and bool(game.story_flags.get("ACT_V_COMPLETE",false)) and "RESEARCH_DORONUM_FUSION" in game.research_completed:
 		game.story_flags["ORBIT_04"] = true
 	if game.fusion_diagnostics.values().all(func(value): return bool(value)):
 		game.story_flags["ACT_VI_COMPLETE"] = true
+		game.grant_skill_point("ACT_VI_COMPLETE","ACT_VI_MISSION")
 
 func _play_ending() -> void:
 	game.simulation_paused = true
