@@ -146,6 +146,17 @@ namespace DoronumFactory
     }
 
     [Serializable]
+    public sealed class ContractProgressData
+    {
+        public string ContractId;
+        public string State = "NOT_SHIPPED";
+        public string ShipmentId;
+        public int Cycle;
+        public int AcceptedTick;
+        public int DeliveredTick;
+    }
+
+    [Serializable]
     public sealed class GameRuntimeState
     {
         public int SaveFormatVersion = 1;
@@ -172,6 +183,7 @@ namespace DoronumFactory
         public List<ClaimRecord> RewardLedger = new List<ClaimRecord>();
         public List<RecipeTotalData> RecipeTotals = new List<RecipeTotalData>();
         public List<ShipmentRuntimeData> Shipments = new List<ShipmentRuntimeData>();
+        public List<ContractProgressData> ContractProgress = new List<ContractProgressData>();
         public List<string> PurchasedSkills = new List<string>();
         public string ActiveResearchId;
         public float ActiveResearchProgress;
