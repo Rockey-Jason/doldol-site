@@ -33,6 +33,7 @@ var simulation_paused := false
 var _event_ids: Dictionary = {}
 var _next_stack_id := 1
 var save_loaded := false
+var save_blocked := false
 var fusion_diagnostics := {"power_stability":false,"pressure_calibration":false,"emergency_cooling":false}
 
 func _ready() -> void:
@@ -535,6 +536,8 @@ func find_lore(lore_id: String) -> void:
 		notification.emit("BLUE FURNACE INCIDENT 재구성 완료")
 
 func save_game() -> void:
+	if save_blocked:
+		return
 	var data := {
 		"version":GameData.SAVE_VERSION,"world_seed":world_seed,
 		"player_position":[player_position.x,player_position.y,player_position.z],"equipped_tool":equipped_tool,
@@ -555,10 +558,13 @@ func save_game() -> void:
 	file.store_string(JSON.stringify(data))
 	file.flush()
 	file.close()
+	var absolute_temp := ProjectSettings.globalize_path(temporary_path)
+	var absolute_save := ProjectSettings.globalize_path(SAVE_PATH)
+	var absolute_backup := ProjectSettings.globalize_path(SAVE_PATH+".bak")
 	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.copy_absolute(SAVE_PATH,SAVE_PATH+".bak")
-		DirAccess.remove_absolute(SAVE_PATH)
-	var error := DirAccess.rename_absolute(temporary_path,SAVE_PATH)
+		DirAccess.copy_absolute(absolute_save,absolute_backup)
+		DirAccess.remove_absolute(absolute_save)
+	var error := DirAccess.rename_absolute(absolute_temp,absolute_save)
 	if error != OK:
 		notification.emit("저장 교체 실패 · 백업 파일은 보존했어.")
 
@@ -587,10 +593,12 @@ func load_game() -> void:
 			notification.emit("기본 저장을 읽지 못해 백업에서 복구했어.")
 	if parsed.is_empty():
 		if FileAccess.file_exists(SAVE_PATH):
-			notification.emit("저장 데이터와 백업이 손상됐어. 원본 파일은 보존돼.")
+			save_blocked = true
+			notification.emit("저장 데이터와 백업이 손상됐어. 원본 파일을 보호하기 위해 저장을 중지했어.")
 		return
 	save_loaded = true
 	if int(parsed.get("version", 0)) > GameData.SAVE_VERSION:
+		save_blocked = true
 		notification.emit("이 저장은 더 최신 버전이야. 덮어쓰지 않을게.")
 		return
 	world_seed = int(parsed.get("world_seed", GameData.WORLD_SEED))
