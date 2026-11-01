@@ -10,6 +10,7 @@ const SAVE_PATH := "user://doronium_factory_save.json"
 var world_seed: int = GameData.WORLD_SEED
 var player_position := Vector3(0, 0, 0)
 var equipped_tool := "ITEM_TOOL_HANDS"
+var equipped_tool_condition := 100.0
 var inventory: Array[Dictionary] = []
 var buildings: Array[Dictionary] = []
 var discovered_nodes: Dictionary = {}
@@ -73,6 +74,49 @@ func _grant_starter_kit() -> void:
 	_event_ids["SKILL_POINT:START"] = true
 	skill_point_ledger.append({"claim_id":"SKILL_POINT:START","amount":1,"source":"START"})
 	story_flags["PROLOGUE_COMPLETE"] = true
+
+func equip_tool(tool_id: String) -> bool:
+	if tool_id=="ITEM_TOOL_HANDS":
+		equipped_tool = tool_id
+		equipped_tool_condition = 100.0
+		save_game()
+		state_changed.emit()
+		return true
+	if count_item(tool_id)<=0:
+		return false
+	equipped_tool = tool_id
+	equipped_tool_condition = 100.0
+	notification.emit("도구 장착 · "+GameData.item_name(tool_id))
+	save_game()
+	state_changed.emit()
+	return true
+
+func apply_tool_wear() -> void:
+	if equipped_tool=="ITEM_TOOL_HANDS":
+		return
+	var wear := 1.0*(0.90 if has_skill("HARDPOINT_CALIBRATION") else 1.0)
+	equipped_tool_condition = maxf(0.0,equipped_tool_condition-wear)
+	if equipped_tool_condition<=0.0:
+		var broken_tool := equipped_tool
+		consume_items({broken_tool:1})
+		equipped_tool = "ITEM_TOOL_HANDS"
+		equipped_tool_condition = 100.0
+		notification.emit("도구 파손 · "+GameData.item_name(broken_tool)+"이 부서졌어.")
+	save_game()
+
+func repair_equipped_tool() -> bool:
+	if equipped_tool=="ITEM_TOOL_HANDS" or equipped_tool_condition>=100.0:
+		return false
+	var repair_material := "ITEM_STEEL_PLATE" if equipped_tool in ["ITEM_STEEL_PICKAXE","ITEM_DORONUM_PICKAXE"] else "ITEM_IRON_PLATE"
+	if not consume_items({repair_material:1}):
+		notification.emit("도구 수리 재료 부족 · "+GameData.item_name(repair_material))
+		return false
+	var repair_amount := 50.0*(1.10 if has_skill("PRECISE_ALIGNMENT") else 1.0)
+	equipped_tool_condition = minf(100.0,equipped_tool_condition+repair_amount)
+	notification.emit("도구 정비 완료 · Condition %.0f%%" % equipped_tool_condition)
+	save_game()
+	state_changed.emit()
+	return true
 
 func add_item(item_id: String, quantity: int, quality: float = 90.0, purity: float = 90.0, synthetic: bool = false, provenance: String = "UNKNOWN") -> void:
 	if quantity <= 0:
@@ -914,7 +958,7 @@ func save_game() -> void:
 		"version":GameData.SAVE_VERSION,"build_version":"0.2.0","canonical_data_version":1,
 		"world_generator_version":1,"simulation_rules_version":1,"save_id":save_id,
 		"save_revision":save_revision,"simulation_tick":simulation_tick,"world_seed":world_seed,
-		"player_position":[player_position.x,player_position.y,player_position.z],"equipped_tool":equipped_tool,
+		"player_position":[player_position.x,player_position.y,player_position.z],"equipped_tool":equipped_tool,"equipped_tool_condition":equipped_tool_condition,
 		"inventory":inventory,"buildings":buildings,"discovered_nodes":discovered_nodes,"resource_depletion":resource_depletion,"tree_states":tree_states,
 		"research_completed":research_completed,"active_research":active_research,"research_progress":research_progress,
 		"research_points":research_points,"story_flags":story_flags,"lore_found":lore_found,
@@ -994,6 +1038,7 @@ func load_game() -> void:
 	save_revision = int(parsed.get("save_revision",0))
 	simulation_tick = int(parsed.get("simulation_tick",0))
 	equipped_tool = str(parsed.get("equipped_tool","ITEM_TOOL_HANDS"))
+	equipped_tool_condition = float(parsed.get("equipped_tool_condition",100.0))
 	player_position = Vector3(parsed.get("player_position", [0,0,0])[0], parsed.get("player_position", [0,0,0])[1], parsed.get("player_position", [0,0,0])[2])
 	inventory.assign(parsed.get("inventory", []))
 	buildings.assign(parsed.get("buildings", []))
