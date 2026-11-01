@@ -135,6 +135,27 @@ namespace DoronumFactory
             if(!string.IsNullOrEmpty(game.SelectedBuildMachineId) && GUILayout.Button("배치 취소")) game.CancelBuild();
         }
 
+        private void DrawCraft()
+        {
+            GUILayout.Label("수동 제작 · 기계 설비가 필요 없는 레시피",HudSkin.Kicker);
+            foreach(var recipe in FactoryCatalog.Recipes.Values.Where(x=>string.IsNullOrEmpty(x.MachineId)).OrderBy(x=>x.Tier).ThenBy(x=>x.Id))
+            {
+                GUILayout.BeginVertical(HudSkin.Card);
+                GUILayout.Label(recipe.Id,HudSkin.CardTitle);
+                GUILayout.Label(string.Join(", ",recipe.Inputs.Select(x=>x.ItemId+" ×"+x.Quantity))+"  →  "+
+                    string.Join(", ",recipe.Outputs.Select(x=>x.ItemId+" ×"+x.Quantity)),HudSkin.Small);
+                int currentTier=FactoryCatalog.Research.Where(r=>game.State.Research.Any(p=>p.ResearchId==r.Id&&p.Completed)).Select(r=>r.Tier).DefaultIfEmpty(0).Max();
+                GUI.enabled=recipe.Tier<=currentTier;
+                if(GUILayout.Button("수동 제작",HudSkin.Action))
+                {
+                    if(!game.Simulation.CraftManual(recipe.Id))game.ShowWorldMessage("재료가 부족하거나 제작 조건이 맞지 않습니다.");
+                    else game.ShowWorldMessage("제작 완료 · "+recipe.Id);
+                }
+                GUI.enabled=true;
+                GUILayout.EndVertical();
+            }
+        }
+
         private void DrawMachine()
         {
             var machine=game.GetSelectedMachine();
