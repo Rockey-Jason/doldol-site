@@ -215,8 +215,40 @@ namespace DoronumFactory
 
         private void DrawContracts()
         {
-            GUILayout.Label("배송 계약 시스템을 연결하는 중입니다. 진행 상태는 로컬 세이브에 저장됩니다.",HudSkin.Body);
-            GUILayout.Label("요구 등급별 품질·순도 검증, 포장, 운송, 멱등 정산을 적용합니다.",HudSkin.Small);
+            GUILayout.Label("RESERVED → PACKED → IN TRANSIT → DELIVERED",HudSkin.Kicker);
+            foreach(var def in ContractCatalog.All)
+            {
+                var progress=game.State.ContractProgress.Find(x=>x.ContractId==def.Id);
+                if(progress==null)continue;
+                GUILayout.BeginVertical(HudSkin.Card);
+                GUILayout.Label(def.Name+" · "+def.Category,HudSkin.CardTitle);
+                GUILayout.Label(def.Description,HudSkin.Small);
+                GUILayout.Label("요구품: "+string.Join(", ",def.Inputs.Select(x=>x.ItemId+" ×"+x.Quantity)),HudSkin.Small);
+                GUILayout.Label("최소 Q"+def.MinimumQuality.ToString("F0")+" / P"+def.MinimumPurity.ToString("F0")+" · 포장 "+def.Packaging,HudSkin.Small);
+                GUILayout.Label("보상: "+def.ResearchPointReward+" RP · "+def.CurrencyDReward+" D",HudSkin.Small);
+                GUILayout.Label("상태: "+progress.State,HudSkin.Stat);
+                if(progress.State=="NOT_SHIPPED")
+                {
+                    string reason=game.Contracts.PrerequisiteReason(def);
+                    GUI.enabled=string.IsNullOrEmpty(reason);
+                    if(GUILayout.Button("계약 수락",HudSkin.Action))game.Contracts.Accept(def.Id);
+                    GUI.enabled=true;
+                    if(!string.IsNullOrEmpty(reason))GUILayout.Label(reason,HudSkin.Small);
+                }
+                else if(progress.State=="RESERVED")
+                {
+                    if(GUILayout.Button("품질 검사 · 포장 및 출하",HudSkin.Action))game.Contracts.PackAndShip(def.Id);
+                }
+                else if(progress.State=="IN_TRANSIT")
+                {
+                    var shipment=game.State.Shipments.Find(x=>x.ShipmentId==progress.ShipmentId);
+                    if(shipment!=null)GUILayout.Label("운송 잔여 "+shipment.RemainingSeconds.ToString("F1")+"초",HudSkin.Body);
+                    if(GUILayout.Button("운송 취소 및 화물 회수",HudSkin.Tab))game.Contracts.CancelShipment(def.Id);
+                }
+                else if(progress.State=="DELIVERED")
+                    GUILayout.Label("✓ 멱등 정산 완료",HudSkin.Small);
+                GUILayout.EndVertical();
+            }
         }
 
         private void DrawFusion()
