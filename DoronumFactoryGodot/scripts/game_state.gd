@@ -169,9 +169,19 @@ func build(building_id: String, world_position: Vector3, rotation_y: float = 0.0
 	if not _is_unlocked(building_id):
 		notification.emit("아직 해금되지 않은 설비야.")
 		return false
-	if absf(world_position.x) > GameData.WORLD_LIMIT or absf(world_position.z) > GameData.WORLD_LIMIT:
+	if absf(world_position.x)>GameData.WORLD_LIMIT or absf(world_position.z)>GameData.WORLD_LIMIT:
 		notification.emit("건설 가능 구역 밖이야.")
 		return false
+	if building_id=="STABILIZATION_RELAY" and relays.size()>=3:
+		notification.emit("행성 안정화 릴레이는 정확히 3개만 설치할 수 있어.")
+		return false
+	if building_id=="STABILIZATION_CORE" and buildings.any(func(m): return m.id=="STABILIZATION_CORE"):
+		notification.emit("Stabilization Core는 하나만 설치할 수 있어.")
+		return false
+	for existing in buildings:
+		if Vector2(existing.position.x,existing.position.z).distance_to(Vector2(world_position.x,world_position.z))<3.0:
+			notification.emit("다른 설비와 설치 공간이 겹쳐.")
+			return false
 	if not consume_items(definition.cost):
 		notification.emit("건설 재료가 부족해.")
 		return false
@@ -183,10 +193,6 @@ func build(building_id: String, world_position: Vector3, rotation_y: float = 0.0
 	}
 	buildings.append(instance)
 	if building_id == "STABILIZATION_RELAY":
-		if relays.size() >= 3:
-			buildings.pop_back()
-			add_item("ITEM_STEEL_PLATE",50)
-			return false
 		relays.append({"instance_id": instance.instance_id, "position": world_position, "active": false})
 	notification.emit("설치 완료 · " + str(definition.name))
 	state_changed.emit()
