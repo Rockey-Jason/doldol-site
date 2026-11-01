@@ -215,6 +215,8 @@ func _draw_inventory() -> void:
 func _draw_research() -> void:
 	_heading("RESEARCH GRAPH  /  18 NODES")
 	_label("연구소 전력이 확보된 상태에서만 진행돼. 반복 생산으로 RP를 무한 획득하지 않아.")
+	_label("RESEARCH POINTS  ·  %d RP  ·  분석 샘플 %d개" % [game.research_points,game.count_item("ITEM_RESEARCH_SAMPLE")])
+	_button("ANALYZE UNIQUE RESEARCH SAMPLE  ·  +1,000 RP",game.analyze_research_sample,game.count_item("ITEM_RESEARCH_SAMPLE")<=0)
 	for definition in GameData.RESEARCH:
 		var done := definition.id in game.research_completed
 		var prereq_ok := true
