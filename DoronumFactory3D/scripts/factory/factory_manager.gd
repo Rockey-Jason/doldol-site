@@ -101,6 +101,15 @@ func can_place(machine_type: String, world_position: Vector3) -> bool:
 	if not GameState.can_afford(cost):
 		return false
 	var snap := _snap_position(world_position,machine_type)
+	if machine_type == "AUTO_MINER":
+		var has_vein := false
+		for node in get_tree().get_nodes_in_group("resource_nodes"):
+			if node is ResourceNode3D and not node.depleted and node.item_id in ["ITEM_IRON_ORE","ITEM_COPPER_ORE","ITEM_COAL","ITEM_QUARTZ","ITEM_GOLD_ORE","ITEM_NICKEL_ORE","ITEM_TITANIUM_ORE","ITEM_NEODYMIUM_ORE"]:
+				if node.global_position.distance_to(snap) <= 5.0:
+					has_vein = true
+					break
+		if not has_vein:
+			return false
 	if machine_type == "STABILIZATION_RELAY":
 		var on_site := false
 		for site_position in RELAY_SITE_XZ:
@@ -351,6 +360,10 @@ func _allocate_power() -> void:
 		if kind == "solar":
 			generation += 90.0*sun_multiplier
 			continue
+		if kind == "wind":
+			var wind_factor := 0.65+0.35*sin(_elapsed_game_seconds*0.013)
+			generation += 180.0*clampf(wind_factor,0.2,1.0)
+			continue
 		if kind == "generator":
 			if float(record.get("fuel_seconds",0.0)) > 0.0:
 				generation += 600.0
@@ -450,7 +463,7 @@ func _tick_machines() -> void:
 			else:
 				record.fuel_seconds = maxf(0.0,float(record.get("fuel_seconds",0.0))-GameState.FIXED_TICK)
 			continue
-		if kind in ["solar","battery","transformer","power_buffer","power_pole","relay","core","cooling","cutoff","shielding","lab","research_analyzer","warehouse","sorter","merger","pump"]:
+		if kind in ["solar","wind","battery","transformer","power_buffer","power_pole","relay","core","cooling","cutoff","shielding","lab","research_analyzer","warehouse","sorter","merger","pump","water_tank","pipe","valve"]:
 			if kind == "relay":
 				record.status = "ONLINE" if float(record.get("power_ratio",0.0)) >= 0.8 else "PAUSED_POWER"
 			if kind == "core" and GameState.core_installed:
@@ -468,6 +481,9 @@ func _tick_machines() -> void:
 			continue
 		if kind in ["auto_miner","miner"]:
 			_tick_auto_miner(record)
+			continue
+		if kind == "water_pump":
+			_tick_water_pump(record)
 			continue
 		var recipe_id := str(record.get("recipe_id",GameState.MACHINE_DEFS.get(type,{}).get("recipe","")))
 		if recipe_id.is_empty() or not GameState.RECIPES.has(recipe_id):
@@ -744,8 +760,9 @@ func _tick_conveyors() -> void:
 					var first_id := str(producer_buffer.keys()[0])
 					payload = producer_buffer[first_id]
 					record.belt_payload = {first_id:payload}
-					producer.output_buffer = {}
-					producer.status = "IDLE"
+					producer_buffer.erase(first_id)
+					producer.output_buffer = producer_buffer
+					producer.status = "IDLE" if producer_buffer.is_empty() else "PAUSED_OUTPUT"
 		if payload.is_empty():
 			var empty_machine: FactoryMachine3D = machines.get(str(record.instance_id))
 			if empty_machine: empty_machine.set_belt_payload({})
