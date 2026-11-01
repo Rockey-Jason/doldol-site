@@ -24,12 +24,14 @@ var fusion: Dictionary = {}
 var relays: Array[Dictionary] = []
 var core_installed := false
 var stabilization_phase := 0
+var stabilization_progress := 0.0
+var stabilization_running := false
 var ending_complete := false
 var post_endgame := false
 var production_history: Array[Dictionary] = []
 var total_power_generated := 0.0
 var total_power_used := 0.0
-var power_state := {"starter_fuel_timer":0.0,"world_time":0.25}
+var power_state := {"starter_fuel_timer":0.0,"world_time":0.25,"fusion_buffer_kwh":0.0,"fusion_power_ratio":0.0}
 var simulation_paused := false
 var _event_ids: Dictionary = {}
 var _next_stack_id := 1
@@ -46,6 +48,7 @@ func _ready() -> void:
 func advance_fixed_tick(dt: float) -> void:
 	_tick_research(dt)
 	_tick_fusion(dt)
+	_tick_planetary_stabilization(dt)
 
 func _grant_starter_kit() -> void:
 	add_item("ITEM_WOOD", 12, 92.0, 90.0, false, "STARTER")
@@ -180,6 +183,10 @@ func build(building_id: String, world_position: Vector3, rotation_y: float = 0.0
 	}
 	buildings.append(instance)
 	if building_id == "STABILIZATION_RELAY":
+		if relays.size() >= 3:
+			buildings.pop_back()
+			add_item("ITEM_STEEL_PLATE",50)
+			return false
 		relays.append({"instance_id": instance.instance_id, "position": world_position, "active": false})
 	notification.emit("설치 완료 · " + str(definition.name))
 	state_changed.emit()
@@ -295,12 +302,8 @@ func fusion_preflight() -> Array[String]:
 	var errors: Array[String] = []
 	if "RESEARCH_INFINITY_INDUSTRY" not in research_completed:
 		errors.append("Infinity Industry 연구가 필요해.")
-	var fusion_machine := false
-	for machine in buildings:
-		if machine.id == "INFINITY_FUSION_MACHINE" and machine.condition > 0.0:
-			fusion_machine = true
-	if not fusion_machine:
-		errors.append("Infinity Fusion Machine이 없어.")
+	if not buildings.any(func(m): return m.id=="INFINITY_FUSION_MACHINE" and float(m.condition)>0.0):
+		errors.append("정상 상태의 Infinity Fusion Machine이 없어.")
 	if not fusion.is_empty():
 		errors.append("이미 퓨전 작업이 진행 중이거나 결과가 있어.")
 	if not bool(story_flags.get("STORY_INCIDENT_RECONSTRUCTED",false)):
@@ -313,35 +316,45 @@ func fusion_preflight() -> Array[String]:
 	for diagnostic in fusion_diagnostics:
 		if not bool(fusion_diagnostics[diagnostic]):
 			errors.append("최종 진단 미완료 · "+diagnostic)
+	for required_building in ["FUSION_POWER_BUFFER","FUSION_CONTAINMENT_SHIELD","EMERGENCY_COOLING_SYSTEM","PRESSURE_CALIBRATION_RIG","COOLING_STABILIZER"]:
+		if not buildings.any(func(m): return m.id==required_building and float(m.condition)>0.0):
+			errors.append("최종 안전 설비 누락 · "+required_building)
+	if float(power_state.get("fusion_buffer_kwh",0.0)) < 250.0:
+		errors.append("독립 전력 버퍼 충전 부족 · 250kWh 이상 필요 (현재 %.1fkWh)" % float(power_state.get("fusion_buffer_kwh",0.0)))
 	for item_id in GameData.DORONUM_IDS:
-		var stacks := inventory.filter(func(s): return s.item_id == item_id)
 		var total := 0
-		for stack in stacks:
-			if stack.synthetic or float(stack.quality) < 90.0 or float(stack.purity) < 90.0:
+		for stack in inventory:
+			if stack.item_id != item_id or bool(stack.synthetic) or float(stack.quality)<90.0 or float(stack.purity)<90.0:
 				continue
-			total += int(stack.quantity) - int(stack.get("reserved", 0))
+			total += int(stack.quantity)-int(stack.get("reserved",0))
 		if total < 100:
-			errors.append("%s: 유효한 비합성 Q/P≥90 재료 %d/100 부족" % [GameData.item_name(item_id), total])
+			errors.append("%s: 유효한 비합성 Q/P≥90 재료 %d/100 부족" % [GameData.item_name(item_id),total])
 	return errors
 
 func start_infinity_fusion() -> bool:
 	var errors := fusion_preflight()
 	if not errors.is_empty():
-		notification.emit("퓨전 시작 불가 · " + errors[0])
+		notification.emit("퓨전 시작 불가 · "+errors[0])
 		return false
-	var snapshot := inventory.duplicate(true)
+	var snapshot: Array[Dictionary] = inventory.duplicate(true)
 	var custody: Array[Dictionary] = []
+	var material_quality_sum := 0.0
+	var input_purity_sum := 0.0
+	var manifest: Array[Dictionary] = []
 	for item_id in GameData.DORONUM_IDS:
 		var remaining := 100
 		for stack in inventory:
-			if stack.item_id != item_id or stack.synthetic or float(stack.quality) < 90.0 or float(stack.purity) < 90.0:
+			if stack.item_id != item_id or bool(stack.synthetic) or float(stack.quality)<90.0 or float(stack.purity)<90.0:
 				continue
-			var take := mini(remaining, int(stack.quantity) - int(stack.get("reserved",0)))
+			var take := mini(remaining,int(stack.quantity)-int(stack.get("reserved",0)))
 			if take <= 0:
 				continue
-			var reserved_stack := stack.duplicate(true)
+			var reserved_stack: Dictionary = stack.duplicate(true)
 			reserved_stack.quantity = take
 			custody.append(reserved_stack)
+			manifest.append({"stack_id":str(stack.stack_id),"item_id":item_id,"quantity":take,"quality":float(stack.quality),"purity":float(stack.purity),"synthetic":false,"provenance":str(stack.provenance)})
+			material_quality_sum += float(stack.quality)*take
+			input_purity_sum += float(stack.purity)*take
 			stack.quantity -= take
 			remaining -= take
 			if remaining == 0:
@@ -350,16 +363,272 @@ func start_infinity_fusion() -> bool:
 			inventory = snapshot
 			notification.emit("원자 예약 실패 · 모든 재료가 원래 상태로 복구됐어.")
 			return false
-	inventory = inventory.filter(func(s): return int(s.quantity) > 0)
+	inventory = inventory.filter(func(s): return int(s.quantity)>0)
+	var job_id := "FUSION-"+_new_stack_id()
 	fusion = {
+		"job_id":job_id,"manifest":manifest,"manifest_checksum":hash(JSON.stringify(manifest)),
 		"stage":0,"stage_progress":0.0,"temperature":20.0,"pressure":0.0,
 		"failure_exposure":0.0,"rng_index":0,"hazard_multiplier":1.0,"output_committed":false,
 		"reserved_inputs":1500,"custody":custody,"state":"RUNNING",
+		"input_material_quality":material_quality_sum/1500.0,
+		"input_purity":input_purity_sum/1500.0,
+		"temperature_quality_sum":0.0,"pressure_quality_sum":0.0,"condition_quality_sum":0.0,
+		"progress_sample_seconds":0.0,"power_ratio_sum":0.0,"power_ratio_square_sum":0.0,"power_sample_count":0,
+		"purity_loss":0.0,"purification_bonus":0.0,"output_purity_modifier":0.0,
+		"recovery_ratio":1.0,"failure_loss_manifest":[],
 		"interlocks":{"power":true,"cooling":true,"shield":true,"emergency":true}
 	}
-	notification.emit("Infinity Fusion 시작 · 정확한 15종 × 100개 예약 완료")
+	_event_ids["FUSION_START:"+job_id] = true
+	notification.emit("Infinity Fusion 시작 · 정확한 15종 × 100개 원자 예약 완료")
 	save_game()
 	return true
+
+func _fusion_process_score(actual: float,target: float) -> float:
+	var deviation := absf(actual-target)/maxf(0.0001,absf(target))*100.0
+	if deviation<=1.0: return 100.0
+	if deviation<=3.0: return 95.0
+	if deviation<=5.0: return 85.0
+	if deviation<=10.0: return 70.0
+	return 50.0
+
+func _fusion_power_stability() -> float:
+	var count := int(fusion.get("power_sample_count",0))
+	if count<=0:
+		return 0.0
+	var mean := float(fusion.power_ratio_sum)/count
+	var mean_square := float(fusion.power_ratio_square_sum)/count
+	var deviation := sqrt(maxf(0.0,mean_square-mean*mean))
+	return clampf(100.0*mean-50.0*deviation,0.0,100.0)
+
+func _tick_fusion(dt: float) -> void:
+	if fusion.is_empty() or str(fusion.get("state","")).begins_with("FAILED") or bool(fusion.get("output_committed",false)):
+		return
+	var stage_index := int(fusion.get("stage",0))
+	if stage_index<0 or stage_index>=GameData.FUSION_STAGES.size():
+		fusion.state = "ERROR_INVALID_STAGE"
+		notification.emit("Fusion 오류 · 잘못된 단계 인덱스. 출력은 생성하지 않았어.")
+		return
+	var stage_data: Dictionary = GameData.FUSION_STAGES[stage_index]
+	var ratio := clampf(float(power_state.get("fusion_power_ratio",0.0)),0.0,1.0)
+	if ratio<0.8 or not _fusion_interlocks_valid():
+		fusion.state = "PAUSED_SAFETY" if not _fusion_interlocks_valid() else "PAUSED_POWER"
+		return
+	fusion.state = "RUNNING" if ratio>=1.0 else "BROWNOUT_RUNNING"
+	var temperature_target := float(stage_data.temperature)
+	var pressure_target := float(stage_data.pressure)
+	fusion.temperature = move_toward(float(fusion.temperature),temperature_target,180.0*dt)
+	fusion.pressure = move_toward(float(fusion.pressure),pressure_target,600.0*dt)
+	var temperature_ok := absf(float(fusion.temperature)-temperature_target)<=maxf(5.0,temperature_target*0.10)
+	var pressure_ok := absf(float(fusion.pressure)-pressure_target)<=maxf(1.0,pressure_target*0.10)
+	if not temperature_ok or not pressure_ok:
+		fusion.state = "RAMPING"
+		return
+	var progress_delta := dt*ratio
+	fusion.stage_progress += progress_delta
+	fusion.failure_exposure += progress_delta
+	fusion.temperature_quality_sum += _fusion_process_score(float(fusion.temperature),temperature_target)*progress_delta
+	fusion.pressure_quality_sum += _fusion_process_score(float(fusion.pressure),pressure_target)*progress_delta
+	var fusion_machine := buildings.filter(func(m): return m.id=="INFINITY_FUSION_MACHINE")
+	var condition := 0.0 if fusion_machine.is_empty() else clampf(float(fusion_machine[0].condition),0.0,100.0)
+	fusion.condition_quality_sum += condition*progress_delta
+	fusion.progress_sample_seconds += progress_delta
+	fusion.power_ratio_sum += ratio
+	fusion.power_ratio_square_sum += ratio*ratio
+	fusion.power_sample_count += 1
+	fusion.rng_index += 1
+	var chance := 1.0-pow(0.99,progress_delta/260.0)
+	if _deterministic_unit(int(fusion.rng_index))<chance:
+		var severity_roll := _deterministic_unit(int(fusion.rng_index)+900000)
+		var severity := "FAILED_MINOR" if severity_roll<0.70 else ("FAILED_MAJOR" if severity_roll<0.95 else "FAILED_CRITICAL")
+		var recovery_ratio := 1.0 if severity=="FAILED_MINOR" else (0.95 if severity=="FAILED_MAJOR" else 0.80)
+		fusion.state = severity
+		fusion.recovery_ratio = recovery_ratio
+		fusion.failure_event_id = "FUSION-FAIL-"+str(fusion.rng_index)
+		var loss_manifest: Array[Dictionary] = []
+		for lot in fusion.custody:
+			var returned := int(floor(float(lot.quantity)*recovery_ratio))
+			var lost := int(lot.quantity)-returned
+			if lost>0:
+				loss_manifest.append({"item_id":lot.item_id,"quantity":lost,"source_stack_id":lot.stack_id})
+		fusion.failure_loss_manifest = loss_manifest
+		for machine in buildings:
+			if machine.id=="INFINITY_FUSION_MACHINE":
+				machine.condition = maxf(0.0,float(machine.condition)-(5.0 if severity=="FAILED_MINOR" else (20.0 if severity=="FAILED_MAJOR" else 40.0)))
+		notification.emit("퓨전 이상 감지 · %s · 회수 가능 비율 %.0f%%. 손실 내역을 저장했어." % [severity,recovery_ratio*100.0])
+		save_game()
+		return
+	if fusion.stage_progress>=float(stage_data.seconds):
+		fusion.stage += 1
+		fusion.stage_progress = 0.0
+		fusion_stage_changed.emit(int(fusion.stage))
+		save_game()
+		if int(fusion.stage)>=GameData.FUSION_STAGES.size():
+			var elapsed := maxf(0.0001,float(fusion.progress_sample_seconds))
+			var temperature_quality := float(fusion.temperature_quality_sum)/elapsed
+			var pressure_quality := float(fusion.pressure_quality_sum)/elapsed
+			var condition_quality := float(fusion.condition_quality_sum)/elapsed
+			var power_stability := _fusion_power_stability()
+			var raw_quality := float(fusion.input_material_quality)*0.40+temperature_quality*0.20+pressure_quality*0.20+condition_quality*0.10+power_stability*0.10
+			var output_quality := clampf(raw_quality,0.0,100.0)
+			var output_purity := clampf(float(fusion.input_purity)-float(fusion.purity_loss)+float(fusion.purification_bonus)+float(fusion.output_purity_modifier),0.0,100.0)
+			fusion.output_committed = true
+			fusion.state = "COMPLETED"
+			fusion.output_buffer = {"item_id":"ITEM_DORONUM_INFINITY","quantity":1,"quality":output_quality,"purity":output_purity,"synthetic":false,"provenance":"INFINITY_FUSION:"+str(fusion.job_id)}
+			fusion.custody = []
+			fusion.reserved_inputs = 0
+			story_flags["INFINITY_CRAFTED"] = true
+			_event_ids["FUSION_OUTPUT:"+str(fusion.job_id)] = true
+			notification.emit("INFINITY DORONUM ×1 · Q %.2f / P %.2f · 생산 완료" % [output_quality,output_purity])
+			save_game()
+
+func collect_infinity_output() -> bool:
+	if fusion.is_empty() or not bool(fusion.get("output_committed",false)) or fusion.get("output_buffer",{}).is_empty():
+		return false
+	var payload: Dictionary = fusion.output_buffer
+	var event_id := "FUSION_COLLECT:"+str(fusion.get("job_id",""))
+	if _event_ids.has(event_id):
+		return false
+	add_item(str(payload.item_id),int(payload.quantity),float(payload.quality),float(payload.purity),bool(payload.synthetic),str(payload.provenance))
+	_event_ids[event_id] = true
+	fusion.output_buffer = {}
+	save_game()
+	return true
+
+func run_fusion_diagnostic(diagnostic_id: String) -> bool:
+	if not fusion_diagnostics.has(diagnostic_id) or bool(fusion_diagnostics[diagnostic_id]):
+		return false
+	match diagnostic_id:
+		"power_stability":
+			if not buildings.any(func(m): return m.id=="FUSION_POWER_BUFFER" and float(m.condition)>0.0) or float(power_state.get("fusion_buffer_kwh",0.0))<250.0:
+				notification.emit("전력 안정성 검사 실패 · 독립 버퍼 250kWh 이상 충전이 필요해.")
+				return false
+		"pressure_calibration":
+			if "RESEARCH_HIGH_PRESSURE" not in research_completed or not buildings.any(func(m): return m.id=="PRESSURE_CALIBRATION_RIG" and float(m.condition)>0.0):
+				notification.emit("압력 센서 교정 실패 · 고압 연구와 압력 교정 장치가 필요해.")
+				return false
+		"emergency_cooling":
+			if not buildings.any(func(m): return m.id=="EMERGENCY_COOLING_SYSTEM" and float(m.condition)>0.0) or count_item("ITEM_COLD_CRYSTAL")<1:
+				notification.emit("비상 냉각 검사 실패 · 비상 냉각 시스템과 Cold Crystal이 필요해.")
+				return false
+	fusion_diagnostics[diagnostic_id] = true
+	notification.emit("퓨전 안전 진단 통과 · "+diagnostic_id)
+	save_game()
+	state_changed.emit()
+	return true
+
+func _deterministic_unit(index: int) -> float:
+	var value := sin(float(world_seed)*0.000013+float(index)*12.9898)*43758.5453
+	return value-floorf(value)
+
+func _fusion_interlocks_valid() -> bool:
+	if fusion.is_empty():
+		return false
+	var requirements := {
+		"power":"FUSION_POWER_BUFFER",
+		"cooling":"COOLING_STABILIZER",
+		"shield":"FUSION_CONTAINMENT_SHIELD",
+		"emergency":"EMERGENCY_COOLING_SYSTEM"
+	}
+	for key in requirements:
+		if not bool(fusion.interlocks.get(key,false)):
+			return false
+		if not buildings.any(func(m): return m.id==requirements[key] and float(m.condition)>0.0):
+			return false
+	return true
+
+func set_fusion_interlock(key: String,enabled: bool) -> void:
+	if fusion.is_empty() or not fusion.interlocks.has(key):
+		return
+	var requirements := {"power":"FUSION_POWER_BUFFER","cooling":"COOLING_STABILIZER","shield":"FUSION_CONTAINMENT_SHIELD","emergency":"EMERGENCY_COOLING_SYSTEM"}
+	if enabled and (not requirements.has(key) or not buildings.any(func(m): return m.id==requirements[key] and float(m.condition)>0.0)):
+		notification.emit("안전 인터록 연결 실패 · "+key)
+		return
+	fusion.interlocks[key] = enabled
+	if not enabled:
+		fusion.state = "PAUSED_SAFETY"
+	save_game()
+
+func activate_relay(index: int) -> bool:
+	if not bool(story_flags.get("INFINITY_CRAFTED",false)) or index<0 or index>=3 or index>=relays.size():
+		return false
+	var active_count := relays.filter(func(r): return bool(r.active)).size()
+	if relays[index].active:
+		return false
+	if active_count>=3 or total_power_generated-total_power_used<100.0:
+		notification.emit("릴레이 활성화 실패 · 전력 100kW와 고유 릴레이가 필요해.")
+		return false
+	var relay_machine := buildings.filter(func(m): return m.instance_id==relays[index].instance_id and m.id=="STABILIZATION_RELAY" and float(m.condition)>0.0)
+	if relay_machine.is_empty():
+		return false
+	relays[index].active = true
+	story_flags["RELAY_%d_ACTIVE" % (index+1)] = true
+	notification.emit("행성 에너지 릴레이 %d/3 활성화" % (index+1))
+	save_game()
+	state_changed.emit()
+	return true
+
+func install_infinity_core() -> bool:
+	if not bool(story_flags.get("INFINITY_CRAFTED",false)) or core_installed or count_item("ITEM_DORONUM_INFINITY")<1:
+		return false
+	if relays.size()!=3 or not buildings.any(func(m): return m.id=="STABILIZATION_CORE" and float(m.condition)>0.0):
+		notification.emit("Stabilization Core와 정확히 3개의 Relay를 설치해야 해.")
+		return false
+	if not relays.all(func(r): return bool(r.active)):
+		notification.emit("3개 Relay를 모두 활성화해야 해.")
+		return false
+	if not consume_items({"ITEM_DORONUM_INFINITY":1}):
+		return false
+	core_installed = true
+	stabilization_phase = 1
+	stabilization_progress = 0.0
+	stabilization_running = false
+	story_flags["CORE_INSTALLED"] = true
+	notification.emit("Infinity Doronum이 Stabilization Core에 설치됐어.")
+	save_game()
+	return true
+
+func start_stabilization_phase() -> bool:
+	if not core_installed or ending_complete or stabilization_phase<1 or stabilization_phase>3:
+		return false
+	if not bool(story_flags.get("ORBIT_04",false)) or relays.size()!=3 or not relays.all(func(r): return bool(r.active)):
+		notification.emit("ORBIT 04와 세 릴레이 동기화가 필요해.")
+		return false
+	if total_power_generated-total_power_used<800.0:
+		notification.emit("행성 안정화 전력 부족 · 800kW 필요해.")
+		return false
+	stabilization_running = true
+	notification.emit("행성 안정화 동기화 시작 · Phase %d" % stabilization_phase)
+	save_game()
+	return true
+
+func _tick_planetary_stabilization(dt: float) -> void:
+	if not stabilization_running or ending_complete:
+		return
+	if not core_installed or relays.size()!=3 or not relays.all(func(r): return bool(r.active)) or total_power_generated-total_power_used<800.0:
+		stabilization_running = false
+		notification.emit("행성 안정화 일시 정지 · 전력/릴레이/코어 인터록 확인")
+		return
+	var durations := [60.0,90.0,120.0]
+	stabilization_progress += dt
+	if stabilization_progress<durations[stabilization_phase-1]:
+		return
+	stabilization_progress = 0.0
+	stabilization_running = false
+	story_flags["STABILIZATION_PHASE_%d" % stabilization_phase] = true
+	stabilization_phase += 1
+	if stabilization_phase>3:
+		ending_complete = true
+		post_endgame = true
+		story_flags["PLANETARY_STABILIZATION_COMPLETE"] = true
+		notification.emit("ORBIT: Energy network synchronization complete. Planetary instability decreasing. Factory operational.")
+		ending_started.emit()
+	else:
+		notification.emit("행성 안정화 동기화 완료 · 다음 Phase %d" % stabilization_phase)
+	save_game()
+	state_changed.emit()
+
+func complete_stabilization_phase() -> bool:
+	return start_stabilization_phase()
 
 func recover_fusion_failure() -> bool:
 	if fusion.is_empty() or not str(fusion.get("state","")).begins_with("FAILED"):
@@ -555,7 +824,7 @@ func save_game() -> void:
 		"fusion":fusion,"fusion_diagnostics":fusion_diagnostics,"relays":relays,
 		"core_installed":core_installed,"stabilization_phase":stabilization_phase,
 		"ending_complete":ending_complete,"post_endgame":post_endgame,
-		"production_history":production_history,"power_state":power_state,"event_ids":_event_ids,"next_stack_id":_next_stack_id
+		"production_history":production_history,"power_state":power_state,"stabilization_progress":stabilization_progress,"stabilization_running":stabilization_running,"event_ids":_event_ids,"next_stack_id":_next_stack_id
 	}
 	data["checksum"] = hash(JSON.stringify(data))
 	var temporary_path := SAVE_PATH + ".tmp"
@@ -629,6 +898,8 @@ func load_game() -> void:
 	ending_complete = bool(parsed.get("ending_complete", false))
 	post_endgame = bool(parsed.get("post_endgame", false))
 	production_history.assign(parsed.get("production_history", []))
-	power_state = parsed.get("power_state",{"starter_fuel_timer":0.0,"world_time":0.25})
+	power_state = parsed.get("power_state",{"starter_fuel_timer":0.0,"world_time":0.25,"fusion_buffer_kwh":0.0,"fusion_power_ratio":0.0})
+	stabilization_progress = float(parsed.get("stabilization_progress",0.0))
+	stabilization_running = bool(parsed.get("stabilization_running",false))
 	_event_ids = parsed.get("event_ids", {})
 	_next_stack_id = int(parsed.get("next_stack_id", 1))
