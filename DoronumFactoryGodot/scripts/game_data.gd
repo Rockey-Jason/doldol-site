@@ -105,5 +105,59 @@ const ITEMS := {
 	"ITEM_COLD_CRYSTAL":{"name":"Cold Crystal","category":"Crystal"},"ITEM_DORI_MEAT":{"name":"Dori Meat","category":"Biological"},
 	"ITEM_INFINITY_DORONUM":{"name":"Infinity Doronum","category":"Endgame"}
 }
+
+const MANUAL_RECIPES := {
+	"RECIPE_GRASS_TO_FIBER":{"name":"Plant Fiber","inputs":{"ITEM_GRASS":3},"outputs":{"ITEM_PLANT_FIBER":2},"seconds":4.0},
+	"RECIPE_FIBER_TO_ROPE":{"name":"Plant Rope","inputs":{"ITEM_PLANT_FIBER":5},"outputs":{"ITEM_PLANT_ROPE":1},"seconds":5.0},
+	"RECIPE_WOODEN_PICKAXE":{"name":"Wooden Pickaxe","inputs":{"ITEM_WOOD":3,"ITEM_STONE":2,"ITEM_PLANT_ROPE":1},"outputs":{"ITEM_WOODEN_PICKAXE":1},"seconds":8.0},
+	"RECIPE_WOODEN_AXE":{"name":"Wooden Axe","inputs":{"ITEM_WOOD":3,"ITEM_STONE":2,"ITEM_PLANT_ROPE":1},"outputs":{"ITEM_WOODEN_AXE":1},"seconds":8.0},
+	"RECIPE_WOODEN_SHOVEL":{"name":"Wooden Shovel","inputs":{"ITEM_WOOD":3,"ITEM_STONE":1,"ITEM_PLANT_ROPE":1},"outputs":{"ITEM_WOODEN_SHOVEL":1},"seconds":6.0},
+	"RECIPE_COPPER_WIRE":{"name":"Copper Wire","inputs":{"ITEM_COPPER":1},"outputs":{"ITEM_COPPER_WIRE":2},"seconds":4.0},
+	"RECIPE_BASIC_BUILDING_PART":{"name":"Basic Building Part","inputs":{"ITEM_WOOD":6,"ITEM_STONE":4},"outputs":{"ITEM_BASIC_BUILDING_PART":2},"seconds":6.0}
+}
+const RECIPES := {
+	"RECIPE_IRON_ORE_TO_MOLTEN_IRON":{"name":"Iron Ore → Molten Iron","machine":"FURNACE","inputs":{"ITEM_IRON_ORE":1,"ITEM_COAL":1},"outputs":{"ITEM_MOLTEN_IRON":1},"seconds":10.0,"temperature":1538.0,"pressure":100.0,"power":0.0},
+	"RECIPE_MOLTEN_IRON_TO_IRON":{"name":"Molten Iron → Iron","machine":"COMPRESSOR","inputs":{"ITEM_MOLTEN_IRON":1},"outputs":{"ITEM_IRON":1},"seconds":8.0,"temperature":900.0,"pressure":200.0,"power":0.0},
+	"RECIPE_IRON_TO_PLATE":{"name":"Iron → Iron Plate","machine":"ROLLING_MILL","inputs":{"ITEM_IRON":1},"outputs":{"ITEM_IRON_PLATE":1},"seconds":5.0,"temperature":250.0,"pressure":50.0,"power":20.0},
+	"RECIPE_GEAR":{"name":"Gear","machine":"FABRICATOR","inputs":{"ITEM_IRON_PLATE":2,"ITEM_IRON":3},"outputs":{"ITEM_GEAR":1},"seconds":6.0,"power":15.0},
+	"RECIPE_COPPER_SMELT":{"name":"Copper Ore → Copper","machine":"FURNACE","inputs":{"ITEM_COPPER_ORE":1,"ITEM_COAL":1},"outputs":{"ITEM_COPPER":1},"seconds":8.0,"temperature":1085.0,"pressure":50.0,"power":0.0},
+	"RECIPE_CARBON_POWDER":{"name":"Coal → Carbon Powder","machine":"CRUSHER","inputs":{"ITEM_COAL":1},"outputs":{"ITEM_CARBON_POWDER":2},"seconds":5.0,"power":8.0},
+	"RECIPE_STEEL":{"name":"Steel","machine":"STEEL_FURNACE","inputs":{"ITEM_IRON":3,"ITEM_CARBON_POWDER":1},"outputs":{"ITEM_STEEL":1},"seconds":15.0,"temperature":1450.0,"pressure":100.0,"power":40.0},
+	"RECIPE_STEEL_PLATE":{"name":"Steel Plate","machine":"ROLLING_MILL","inputs":{"ITEM_STEEL":1},"outputs":{"ITEM_STEEL_PLATE":1},"seconds":7.0,"temperature":300.0,"pressure":60.0,"power":25.0},
+	"RECIPE_BASIC_CIRCUIT":{"name":"Basic Circuit","machine":"CIRCUIT_ASSEMBLER","inputs":{"ITEM_COPPER_WIRE":3,"ITEM_QUARTZ":1,"ITEM_CARBON_POWDER":1},"outputs":{"ITEM_BASIC_CIRCUIT":1},"seconds":8.0,"power":18.0},
+	"RECIPE_BATTERY":{"name":"Battery","machine":"FABRICATOR","inputs":{"ITEM_LEAD":4,"ITEM_COPPER":2,"ITEM_CARBON_POWDER":2,"ITEM_RUBBER":1},"outputs":{"ITEM_BATTERY":1},"seconds":10.0,"power":20.0},
+	"RECIPE_MOTOR":{"name":"Motor","machine":"FABRICATOR","inputs":{"ITEM_COPPER":5,"ITEM_IRON":5,"ITEM_NEODYMIUM_MAGNET":2,"ITEM_BEARING":2,"ITEM_COPPER_WIRE":5},"outputs":{"ITEM_MOTOR":1},"seconds":15.0,"power":30.0},
+	"RECIPE_ADVANCED_CIRCUIT":{"name":"Advanced Circuit","machine":"ADVANCED_ASSEMBLER","inputs":{"ITEM_BASIC_CIRCUIT":3,"ITEM_GOLD_INGOT":2,"ITEM_NICKEL_INGOT":2,"ITEM_QUARTZ":2,"ITEM_COPPER_WIRE":5},"outputs":{"ITEM_ADVANCED_CIRCUIT":1},"seconds":25.0,"power":45.0},
+	"RECIPE_CONTROL_MODULE":{"name":"Control Module","machine":"ADVANCED_ASSEMBLER","inputs":{"ITEM_ADVANCED_CIRCUIT":2,"ITEM_SENSOR":2,"ITEM_BATTERY":1,"ITEM_NEODYMIUM_MAGNET":1},"outputs":{"ITEM_CONTROL_MODULE":1},"seconds":30.0,"power":50.0},
+	"RECIPE_DORONUM_NORMAL":{"name":"Natural Doronum","machine":"DORONUM_COMPRESSOR","inputs":{"ITEM_DORI_MEAT":10},"outputs":{"ITEM_DORONUM_NORMAL":1},"seconds":20.0,"temperature":900.0,"pressure":500.0,"power":750.0,"allow_synthetic":false}
+}
 for item_id in DORONUM_IDS:
-	ITEMS[item_id] = {"name":item_id.replace("ITEM_DORONUM_","").replace("_"," ").capitalize(),"category":"Doronum"}
+	RECIPES["RECIPE_" + item_id.replace("ITEM_","")] = {
+		"name":str(VARIANT_RECIPES[item_id].name),
+		"machine":str(VARIANT_RECIPES[item_id].machine),
+		"inputs":VARIANT_RECIPES[item_id].inputs,
+		"outputs":{item_id:1},
+		"seconds":float(VARIANT_RECIPES[item_id].seconds),
+		"temperature":float(VARIANT_RECIPES[item_id].temperature),
+		"pressure":float(VARIANT_RECIPES[item_id].pressure),
+		"power":250.0,
+		"allow_synthetic":false
+	}
+static func item_name(item_id: String) -> String:
+	if ITEMS.has(item_id):
+		return str(ITEMS[item_id].name)
+	if item_id in DORONUM_IDS:
+		return item_id.replace("ITEM_DORONUM_","").replace("_"," ").capitalize()
+	return item_id.replace("ITEM_","").replace("_"," ").capitalize()
+
+static func research_definition(research_id: String) -> Dictionary:
+	for definition in RESEARCH:
+		if definition.id == research_id:
+			return definition
+	return {}
+
+static func building_definition(building_id: String) -> Dictionary:
+	for definition in BUILDINGS:
+		if definition.id == building_id:
+			return definition
+	return {}
