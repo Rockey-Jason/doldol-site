@@ -197,6 +197,7 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	machine.job_started = false
 	machine.job_inputs = []
 	machine.cycles = int(machine.get("cycles",0))+1
+	game.claim_recipe_research_reward(recipe_id)
 	game.production_history.append({"machine":machine.instance_id,"recipe":recipe_id,"tick":tick_number})
 	if game.production_history.size() > 1000:
 		game.production_history.pop_front()
