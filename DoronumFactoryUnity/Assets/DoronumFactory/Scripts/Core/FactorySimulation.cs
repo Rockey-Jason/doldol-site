@@ -166,7 +166,7 @@ namespace DoronumFactory
                 if (m.MachineId=="GENERATOR" && m.FuelSeconds>0f) m.FuelSeconds=Mathf.Max(0f,m.FuelSeconds-TickSeconds);
         }
 
-        private void TickMachine(MachineRuntimeData machine)
+        pprivate void TickMachine(MachineRuntimeData machine)
         {
             if (machine.CompletionBuffer.Count>0) { machine.State="PAUSED_OUTPUT"; MachineChanged?.Invoke(machine); return; }
             if (machine.Condition<=0f) { machine.State="BROKEN"; MachineChanged?.Invoke(machine); return; }
@@ -254,7 +254,7 @@ namespace DoronumFactory
             ProductionCompleted?.Invoke(recipe.Id);
         }
 
-        private void RecordPowerSample(MachineRuntimeData machine)
+        pprivate void RecordPowerSample(MachineRuntimeData machine)
         {
             if (!powerSamples.TryGetValue(machine.InstanceId,out var samples))
             { samples=new List<float>(); powerSamples[machine.InstanceId]=samples; }
