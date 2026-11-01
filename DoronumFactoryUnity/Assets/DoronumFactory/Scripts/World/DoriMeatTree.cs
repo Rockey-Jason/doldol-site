@@ -23,6 +23,33 @@ namespace DoronumFactory
             interaction.height=3.8f;
         }
 
+        public bool Mature => data!=null && data.Mature;
+        public float WaterLitres => data==null?0f:data.WaterLitres;
+        public bool NeedsWater => data!=null && !data.Mature && data.WaterLitres<WaterPerCycleLitres;
+
+        public void ProvideAutomatedWater(float litres)
+        {
+            if(data==null || litres<=0f || data.Mature)return;
+            data.WaterLitres=Mathf.Min(WaterPerCycleLitres,data.WaterLitres+litres);
+        }
+
+        public bool HarvestForMachine(out ItemStackData output)
+        {
+            output=null;
+            if(game==null || data==null || !data.Mature)return false;
+            output=new ItemStackData {
+                StackId=System.Guid.NewGuid().ToString("N"),ItemId="ITEM_DORI_MEAT",
+                Quantity=HarvestPerCycle,Quality=92f,Purity=data.Purity,Synthetic=false,
+                Provenance="DORI_TREE:"+TreeId
+            };
+            data.Mature=false;data.GrowthSeconds=0f;data.WaterLitres=0f;data.Cycle++;
+            if(fruitVisual!=null)fruitVisual.SetActive(false);
+            game.State.SetFlag("DORI_MEAT_DISCOVERED");
+            game.State.TryClaim("FIRST_DORI_MEAT_HARVEST:"+TreeId+":"+data.Cycle,"TREE_HARVEST",1);
+            game.Research.GrantSkillPointOnce("KEY_MILESTONE:DORI_TREE",1);
+            return true;
+        }
+
         public void Advance(float deltaSeconds)
         {
             if (data==null || data.Mature || data.WaterLitres<WaterPerCycleLitres) return;
