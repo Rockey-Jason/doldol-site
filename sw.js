@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v19-20261025-time-attack-overtime";
+const CACHE_NAME = "doldol-site-pwa-v20-20261101-cloud-sync";
 const APP_SHELL = [
   "/doldol-site/",
   "/doldol-site/index.html",
@@ -30,6 +30,40 @@ self.addEventListener("activate", (event) => {
     )
   );
   self.clients.claim();
+});
+
+// Inject the account sync bootstrap into every site page controlled by this worker.
+self.addEventListener("fetch", (event) => {
+  const request = event.request;
+  if (request.method !== "GET" || request.mode !== "navigate") return;
+  const scope = new URL(self.registration.scope);
+  const target = new URL(request.url);
+  if (target.origin !== scope.origin || !target.pathname.startsWith(scope.pathname)) return;
+
+  event.respondWith((async () => {
+    const response = await fetch(request);
+    const contentType = response.headers.get("content-type") || "";
+    if (!response.ok || !contentType.includes("text/html")) return response;
+
+    let html = await response.clone().text();
+    if (html.includes("dori-cloud-sync.js")) return response;
+
+    const base = scope.pathname.endsWith("/") ? scope.pathname : scope.pathname + "/";
+    const bootstrap = '<script src="' + base + 'js/supabase.min.js?v=2.117.2"></script>' +
+      '<script src="' + base + 'js/dori-cloud-sync.js?v=20261101-1"></script>';
+    if (html.includes("</head>")) html = html.replace("</head>", bootstrap + "</head>");
+    else html = bootstrap + html;
+
+    const headers = new Headers(response.headers);
+    headers.delete("content-length");
+    headers.delete("content-encoding");
+    headers.set("cache-control", "no-store");
+    return new Response(html, {
+      status: response.status,
+      statusText: response.statusText,
+      headers
+    });
+  })());
 });
 
 
