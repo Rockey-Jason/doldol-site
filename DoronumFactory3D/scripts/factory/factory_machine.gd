@@ -12,6 +12,7 @@ var _moving_parts: Array[Node3D] = []
 var _status_lamp: MeshInstance3D
 var _body_material: StandardMaterial3D
 var _belt_items: Array[MeshInstance3D] = []
+var _belt_payload_visual: MeshInstance3D
 var _ports: Dictionary = {}
 
 func configure(record: Dictionary, owner_manager: FactoryManager3D) -> void:
@@ -276,6 +277,38 @@ func _update_status_visual() -> void:
 func set_runtime_state(data: Dictionary) -> void:
 	machine_state = data
 	_update_status_visual()
+
+func set_belt_payload(payload: Dictionary, progress: float = 0.0) -> void:
+	if machine_type != "CONVEYOR":
+		return
+	if payload.is_empty():
+		if is_instance_valid(_belt_payload_visual):
+			_belt_payload_visual.queue_free()
+		_belt_payload_visual = null
+		return
+	if not is_instance_valid(_belt_payload_visual):
+		_belt_payload_visual = MeshInstance3D.new()
+		var box := BoxMesh.new()
+		box.size = Vector3(0.42,0.22,0.34)
+		_belt_payload_visual.mesh = box
+		var material := StandardMaterial3D.new()
+		material.metallic = 0.28
+		material.roughness = 0.46
+		_belt_payload_visual.material_override = material
+		add_child(_belt_payload_visual)
+	var item_id := str(payload.keys()[0])
+	var color := Color(0.54,0.42,0.28)
+	if item_id.find("DORONUM")>=0:
+		color = Color(0.13,0.7,0.9)
+	elif item_id.find("IRON")>=0:
+		color = Color(0.55,0.44,0.39)
+	elif item_id.find("COPPER")>=0:
+		color = Color(0.81,0.39,0.18)
+	elif item_id.find("COAL")>=0:
+		color = Color(0.09,0.1,0.12)
+	var material := _belt_payload_visual.material_override as StandardMaterial3D
+	material.albedo_color = color
+	_belt_payload_visual.position = Vector3(-0.7+clampf(progress,0.0,1.0)*1.4,1.03,0.0)
 
 func get_input_port() -> Vector3:
 	return _ports.input.global_position if _ports.has("input") else global_position
