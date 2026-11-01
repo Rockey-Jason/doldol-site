@@ -66,7 +66,7 @@ func _build_machine_model() -> void:
 			_build_power_plant(width,depth,dark,accent)
 		"furnace":
 			_build_furnace(width,depth,dark,accent)
-		"compressor","dor onium","doronium","press","fusion":
+		"compressor","doronium","press","fusion":
 			_build_pressure_machine(width,depth,dark,accent)
 		"lab":
 			_build_lab(width,depth,dark,accent)
@@ -79,6 +79,12 @@ func _build_machine_model() -> void:
 		_:
 			_build_assembler(width,depth,dark,accent)
 	_build_status_light(Vector3(width*0.34,1.55,-depth*0.34))
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(width,2.9 if machine_type != "INFINITY_FUSION_MACHINE" else 5.0,depth)
+	collision.shape = shape
+	collision.position.y = shape.size.y*0.5
+	add_child(collision)
 	_create_ports(width,depth)
 
 func _base_color() -> Color:
