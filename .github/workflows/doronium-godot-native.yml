@@ -1,0 +1,59 @@
+name: Doronium Factory — Godot Native Builds
+
+on:
+  push:
+    branches: [feature/doronum-factory-godot4]
+    paths:
+      - "DoronumFactoryGodot/**"
+      - ".github/workflows/doronium-godot-native.yml"
+  pull_request:
+    paths:
+      - "DoronumFactoryGodot/**"
+      - ".github/workflows/doronium-godot-native.yml"
+  workflow_dispatch:
+
+jobs:
+  validate-and-export:
+    runs-on: ubuntu-latest
+    container:
+      image: barichello/godot-ci:4.4.1
+    defaults:
+      run:
+        working-directory: DoroniumFactoryGodot
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Import and parse project
+        run: godot --headless --editor --path . --quit
+
+      - name: Run gameplay and endgame smoke tests
+        run: godot --headless --path . --script res://tests/smoke_test.gd
+
+      - name: Export Windows native game
+        run: |
+          mkdir -p build/windows
+          godot --headless --path . --export-release "Windows Desktop" build/windows/DoronumFactory.exe
+
+      - name: Export Linux native game
+        run: |
+          mkdir -p build/linux
+          godot --headless --path . --export-release "Linux/X11" build/linux/DoronumFactory.x86_64
+
+      - name: Package Godot source project
+        run: |
+          cd ..
+          zip -qr DoroniumFactoryGodot-Project.zip DoroniumFactoryGodot             -x "DoronumFactoryGodot/.godot/*"             -x "DoronumFactoryGodot/build/*"
+
+      - name: Upload native builds and source project
+        uses: actions/upload-artifact@v4
+        with:
+          name: DoroniumFactory-Godot4-Native-Builds
+          path: |
+            DoroniumFactoryGodot/build/windows/DoronumFactory.exe
+            DoroniumFactoryGodot/build/windows/DoronumFactory.exe.pck
+            DoroniumFactoryGodot/build/linux/DoronumFactory.x86_64
+            DoroniumFactoryGodot/build/linux/DoronumFactory.x86_64.pck
+            DoroniumFactoryGodot-Project.zip
+          if-no-files-found: error
+          retention-days: 30
