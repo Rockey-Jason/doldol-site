@@ -288,8 +288,8 @@ func _create_relay_sites() -> void:
 	for i in range(locations.size()):
 		var site := Node3D.new()
 		site.name = "RELAY_SITE_%d" % (i+1)
-		var x := locations[i].x
-		var z := locations[i].z
+		var x: float = float(locations[i].x)
+		var z: float = float(locations[i].z)
 		site.position = Vector3(x,height_at(x,z),z)
 		var marker := MeshInstance3D.new()
 		var pillar := CylinderMesh.new()
