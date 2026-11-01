@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v22-20261101-cloud-sync";
+const CACHE_NAME = "doldol-site-pwa-v23-20261101-cloud-sync";
 const APP_SHELL = [
   "/doldol-site/",
   "/doldol-site/index.html",
@@ -50,7 +50,7 @@ self.addEventListener("fetch", (event) => {
 
     const base = scope.pathname.endsWith("/") ? scope.pathname : scope.pathname + "/";
     const bootstrap = '<script src="' + base + 'js/supabase.min.js?v=2.117.2"></script>' +
-      '<script src="' + base + 'js/dori-cloud-sync.js?v=20261101-3"></script>';
+      '<script src="' + base + 'js/dori-cloud-sync.js?v=20261101-4"></script>';
     if (html.includes("</head>")) html = html.replace("</head>", bootstrap + "</head>");
     else html = bootstrap + html;
 
