@@ -367,23 +367,38 @@ func new_stack_id() -> String:
 	_stack_sequence += 1
 	return "STACK-%s-%08d" % [str(Time.get_unix_time_from_system()), _stack_sequence]
 
+func max_stack_size(item_id: String) -> int:
+	if DORONUM_IDS.has(item_id) or item_id in ["ITEM_DORONUM_SPECIAL_EDITION","ITEM_DORONUM_LIMITED_EDITION"]:
+		return 10
+	if item_id == "ITEM_DORI_MEAT":
+		return 50
+	if item_id in ["ITEM_BATTERY","ITEM_MOTOR","ITEM_ADVANCED_CIRCUIT","ITEM_CONTROL_MODULE","ITEM_SENSOR"]:
+		return 25
+	if item_id.begins_with("ITEM_TOOL_") or ITEM_DATA.get(item_id,{}).get("group","") in ["Building","Infinity"]:
+		return 1
+	if ITEM_DATA.get(item_id,{}).get("group","") in ["Metal","Part","Electronics"]:
+		return 50
+	return 100
+
 func add_item(item_id: String, quantity: int, quality: float = 90.0, purity: float = 90.0, synthetic: bool = false, origin: String = "UNKNOWN") -> bool:
 	if quantity <= 0 or not ITEM_DATA.has(item_id):
 		return false
 	var remaining := quantity
+	var limit := max_stack_size(item_id)
 	for stack in inventory:
-		if stack.item_id == item_id and stack.synthetic == synthetic and stack.origin == origin and is_equal_approx(stack.quality, quality) and is_equal_approx(stack.purity, purity) and int(stack.quantity) < 100:
-			var moved := mini(remaining, 100 - int(stack.quantity))
+		if stack.item_id == item_id and stack.synthetic == synthetic and stack.origin == origin and is_equal_approx(stack.quality, quality) and is_equal_approx(stack.purity, purity) and int(stack.quantity) < limit:
+			var moved := mini(remaining,limit-int(stack.quantity))
 			stack.quantity += moved
 			remaining -= moved
 			if remaining <= 0:
 				inventory_changed.emit()
 				return true
-	if remaining > 0:
-		inventory.append({"stack_id":new_stack_id(),"item_id":item_id,"quantity":remaining,"quality":clampf(quality,0.0,100.0),"purity":clampf(purity,0.0,100.0),"synthetic":synthetic,"origin":origin,"contamination":"NONE"})
+	while remaining > 0:
+		var amount := mini(remaining,limit)
+		inventory.append({"stack_id":new_stack_id(),"item_id":item_id,"quantity":amount,"quality":clampf(quality,0.0,100.0),"purity":clampf(purity,0.0,100.0),"synthetic":synthetic,"origin":origin,"contamination":"NONE","packaging":"NONE","material_grade":"STANDARD"})
+		remaining -= amount
 	inventory_changed.emit()
 	return true
-
 func count_item(item_id: String) -> int:
 	var total := 0
 	for stack in inventory:
@@ -404,6 +419,53 @@ func item_average(item_id: String) -> Dictionary:
 			weight += amount
 			synthetic = synthetic or bool(stack.synthetic)
 	return {"quality":q_total / maxf(1.0,float(weight)),"purity":p_total / maxf(1.0,float(weight)),"synthetic":synthetic,"quantity":weight}
+
+func eligible_quantity(item_id: String, minimum_quality: float = 90.0, minimum_purity: float = 90.0, allow_synthetic: bool = false) -> int:
+	var total := 0
+	for stack in inventory:
+		if str(stack.get("item_id","")) != item_id:
+			continue
+		if float(stack.get("quality",0.0)) < minimum_quality or float(stack.get("purity",0.0)) < minimum_purity:
+			continue
+		if not allow_synthetic and bool(stack.get("synthetic",false)):
+			continue
+		total += int(stack.get("quantity",0))
+	return total
+
+func remove_eligible_items(item_id: String, quantity: int, minimum_quality: float = 90.0, minimum_purity: float = 90.0, allow_synthetic: bool = false) -> Dictionary:
+	if quantity <= 0 or eligible_quantity(item_id,minimum_quality,minimum_purity,allow_synthetic) < quantity:
+		return {}
+	var remaining := quantity
+	var quality_sum := 0.0
+	var purity_sum := 0.0
+	var ordered := inventory.duplicate()
+	ordered.sort_custom(func(a: Dictionary,b: Dictionary) -> bool: return str(a.stack_id)<str(b.stack_id))
+	for selected in ordered:
+		if remaining <= 0:
+			break
+		if str(selected.get("item_id","")) != item_id:
+			continue
+		if float(selected.get("quality",0.0)) < minimum_quality or float(selected.get("purity",0.0)) < minimum_purity:
+			continue
+		if not allow_synthetic and bool(selected.get("synthetic",false)):
+			continue
+		var stack_id := str(selected.stack_id)
+		for i in range(inventory.size()):
+			var stack: Dictionary = inventory[i]
+			if str(stack.stack_id) != stack_id:
+				continue
+			var take := mini(remaining,int(stack.quantity))
+			quality_sum += float(stack.quality)*take
+			purity_sum += float(stack.purity)*take
+			stack.quantity = int(stack.quantity)-take
+			remaining -= take
+			if int(stack.quantity)<=0:
+				inventory.remove_at(i)
+			else:
+				inventory[i]=stack
+			break
+	inventory_changed.emit()
+	return {"quantity":quantity,"quality":quality_sum/float(quantity),"purity":purity_sum/float(quantity),"synthetic":false}
 
 func can_afford(requirements: Dictionary) -> bool:
 	for item_id in requirements:
