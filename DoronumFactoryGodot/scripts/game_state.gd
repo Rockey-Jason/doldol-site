@@ -548,6 +548,7 @@ func claim_special_edition_batch_contract() -> bool:
 		notification.emit("특별판 패턴 계약은 이미 수령했어.")
 		return false
 	add_item("ITEM_ARCHIVE_PATTERN",100,100.0,100.0,false,"FIRST_FACTORY_ARCHIVE_CONTRACT")
+	_claim_once("CONTRACT_REWARD:SPECIAL_EDITION_PATTERN_BATCH","CONTRACT_REWARD",15000)
 	_event_ids[event_id] = true
 	story_flags["SPECIAL_EDITION_BATCH_RESEARCHED"] = true
 	notification.emit("특별판 배치 계약 완료 · Archive Pattern 100개 지급")
@@ -567,6 +568,7 @@ func claim_limited_edition_batch_contract() -> bool:
 		notification.emit("Limited Edition 계약 납품 부족 · Advanced Circuit 50, Steel Plate 50")
 		return false
 	add_item("ITEM_CONTRACT_SEAL",100,100.0,100.0,false,"LEGACY_BATCH_CONTRACT")
+	_claim_once("CONTRACT_REWARD:LIMITED_EDITION_SEALS","CONTRACT_REWARD",25000)
 	_event_ids[event_id] = true
 	story_flags["LIMITED_EDITION_CONTRACT_ACTIVE"] = true
 	notification.emit("Legacy Batch 계약 완료 · Contract Seal 100개 지급")
