@@ -56,8 +56,11 @@ namespace DoronumFactory
             var props=new MaterialPropertyBlock();
             cachedRenderer.GetPropertyBlock(props);
             Color color=ItemId.Contains("DORONUM")?new Color(0.1f,0.62f,0.88f):
+                (ItemId=="ITEM_WOOD"?new Color(0.36f,0.2f,0.1f):
+                (ItemId=="ITEM_GRASS"?new Color(0.18f,0.42f,0.17f):
+                (ItemId=="ITEM_WATER"?new Color(0.08f,0.43f,0.76f):
                 (ItemId.Contains("IRON")?new Color(0.48f,0.4f,0.34f):
-                (ItemId.Contains("COPPER")?new Color(0.77f,0.34f,0.16f):new Color(0.3f,0.34f,0.38f)));
+                (ItemId.Contains("COPPER")?new Color(0.77f,0.34f,0.16f):new Color(0.3f,0.34f,0.38f)))));
             props.SetColor("_BaseColor",color); props.SetColor("_Color",color);
             cachedRenderer.SetPropertyBlock(props);
         }
