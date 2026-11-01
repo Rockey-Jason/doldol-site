@@ -1,5 +1,9 @@
 name: Doronium Factory — Godot Native Builds
 
+concurrency:
+  group: doronium-godot-native-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [feature/doronum-factory-godot4]
