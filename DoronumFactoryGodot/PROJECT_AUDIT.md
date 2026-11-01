@@ -1,18 +1,17 @@
 # Project Audit
 
-- Project root: DoroniumFactoryGodot/
-- Engine: Godot 4.4.1 Standard, native 3D.
+- Project root: `DoronumFactoryGodot/`
+- Engine: Godot 4.4.1 Standard; native 3D; no Unity runtime or browser runtime.
+- Main scene: `scenes/main.tscn`
 - Renderer: GL Compatibility.
-- Main scene: scenes/main.tscn.
-- Runtime architecture: GameState owns inventory/research/story/save; FactorySimulation owns 0.10s production/logistics ticks; PlanetWorld creates seeded terrain, biomes, deposits, trees and POIs; PlayerController owns third-person controls; GameUI owns HUD.
-- Save: user://doronium_factory_save.json, schema 1, checksum, temporary write and .bak recovery.
-- Build targets: Windows Desktop and Linux/X11.
-- No Unity assemblies, Unity packages or browser runtime are used.
+- Runtime architecture: `GameState` owns inventory/research/story/ledger/save; `FactorySimulation` owns fixed-tick production, power and basic logistics; `PlanetWorld` owns deterministic terrain/resources/POIs and saved world state; `PlayerController` owns third-person PC/mobile controls; `GameUI` owns tabs/HUD.
+- Save schema: 2; schema-1 migration; checksum, temporary write, valid rolling backup and save revision.
+- Export targets configured: Windows Desktop, Linux/X11, Android arm64.
 
-## Verification status
+## Verification
 
-- Source files authored and committed.
-- Godot Editor parse, smoke tests, Windows export and Linux export: Not Verifiable until the GitHub Actions workflow completes.
-- In-engine Play/physics/camera/UI testing: Not Executed in this environment.
-- Android export: Missing.
-- Full end-to-end campaign: Partial; see SPEC_GAP_MATRIX.md.
+- Godot editor parse and Fusion smoke tests: passed on commit `e65632c13d799db2bca4f7c2e01823a1632a0623`; this earlier run still reported UI script errors and therefore is not the final validation.
+- A later run reached native export but failed because export templates were not installed and the UI still had two inferred-type parse errors. Both issues have been patched; current workflow must be checked before claiming success.
+- Main 3D scene boot, latest smoke test, Windows/Linux/Android exports: Not Yet Verified.
+- In-engine manual play, touch-device testing and full campaign acceptance: Not Executed.
+- See `SPEC_GAP_MATRIX.md` for remaining work.
