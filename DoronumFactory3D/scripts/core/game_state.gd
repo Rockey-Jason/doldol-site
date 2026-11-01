@@ -36,6 +36,8 @@ const ITEM_DATA := {
 	"ITEM_STEEL_PICKAXE":{"name":"Steel Pickaxe","group":"Tool","price":260},
 	"ITEM_DORONUM_PICKAXE":{"name":"Doronum Pickaxe","group":"Tool","price":2500},
 	"ITEM_WORKBENCH_KIT":{"name":"Workbench Kit","group":"Building","price":50},
+	"ITEM_CONTRACT_SEAL":{"name":"Legacy Contract Seal","group":"Quest","price":0},
+	"ITEM_ARCHIVE_PATTERN":{"name":"Archive Pattern","group":"Quest","price":0},
 	"ITEM_SAND":{"name":"Sand","group":"Raw","price":1},
 	"ITEM_STONE":{"name":"Stone","group":"Raw","price":2},
 	"ITEM_GRAVEL":{"name":"Gravel","group":"Raw","price":2},
@@ -167,7 +169,8 @@ const FUSION_STAGES: Array[Dictionary] = [
 ]
 
 const MACHINE_DEFS := {
-	"WORKBENCH":{"name":"Workbench","tier":0,"category":"Crafting","footprint":Vector2i(2,2),"power_kw":0,"cost":{"ITEM_WOOD":12,"ITEM_STONE":6},"recipe":"","kind":"crafting"},
+	"WORKBENCH":{"name":"Workbench","tier":0,"category":"Crafting","footprint":Vector2i(2,2),"power_kw":0,"cost":{"ITEM_WORKBENCH_KIT":1},"recipe":"","kind":"crafting"},
+	"RESEARCH_ANALYZER":{"name":"Research Analyzer","tier":0,"category":"Research","footprint":Vector2i(2,2),"power_kw":0,"cost":{"ITEM_WOOD":6,"ITEM_STONE":4},"recipe":"","kind":"research_analyzer"},
 	"FURNACE":{"name":"Furnace","tier":1,"category":"Processing","footprint":Vector2i(2,2),"power_kw":0,"cost":{"ITEM_STONE":12,"ITEM_CLAY":4},"recipe":"IRON_SMELTING","kind":"furnace"},
 	"COMPRESSOR":{"name":"Compressor","tier":2,"category":"Processing","footprint":Vector2i(3,3),"power_kw":25,"cost":{"ITEM_IRON_PLATE":12,"ITEM_GEAR":4},"recipe":"IRON_COMPRESSION","kind":"compressor"},
 	"ROLLING_MILL":{"name":"Rolling Mill","tier":2,"category":"Processing","footprint":Vector2i(3,2),"power_kw":20,"cost":{"ITEM_IRON_PLATE":8,"ITEM_GEAR":4},"recipe":"IRON_PLATE","kind":"mill"},
@@ -189,6 +192,16 @@ const MACHINE_DEFS := {
 	"QUALITY_INSPECTOR":{"name":"Quality Inspector","tier":4,"category":"Quality","footprint":Vector2i(2,2),"power_kw":12,"cost":{"ITEM_ALUMINUM_PLATE":8,"ITEM_GLASS":4,"ITEM_SENSOR":3,"ITEM_ADVANCED_CIRCUIT":2,"ITEM_CONTROL_MODULE":1},"recipe":"","kind":"inspector"},
 	"DORI_HARVESTER":{"name":"Auto Dori Harvester","tier":6,"category":"Bio","footprint":Vector2i(3,3),"power_kw":20,"cost":{"ITEM_STEEL_PLATE":18,"ITEM_MOTOR":2,"ITEM_ADVANCED_CIRCUIT":4,"ITEM_CONTROL_MODULE":2},"recipe":"","kind":"harvester"},
 	"RESEARCH_LAB":{"name":"Research Lab","tier":2,"category":"Research","footprint":Vector2i(3,3),"power_kw":18,"cost":{"ITEM_IRON_PLATE":8,"ITEM_COPPER_WIRE":6,"ITEM_BASIC_CIRCUIT":2},"recipe":"","kind":"lab"},
+	"REFINEMENT_CHAMBER":{"name":"Refinement Chamber","tier":5,"category":"Doronum","footprint":Vector2i(5,5),"power_kw":1200,"cost":{"ITEM_STEEL_PLATE":35,"ITEM_TITANIUM_PLATE":20,"ITEM_ADVANCED_CIRCUIT":15,"ITEM_CONTROL_MODULE":8,"ITEM_DORONUM_NORMAL":3},"recipe":"","kind":"doronium"},
+	"REINFORCED_DORONUM_PRESS":{"name":"Reinforced Doronum Press","tier":5,"category":"Doronum","footprint":Vector2i(5,5),"power_kw":1800,"cost":{"ITEM_STEEL_PLATE":45,"ITEM_TITANIUM_PLATE":20,"ITEM_ADVANCED_CIRCUIT":18,"ITEM_CONTROL_MODULE":10,"ITEM_DORONUM_IRON":2},"recipe":"","kind":"press"},
+	"CONTROLLED_ATMOSPHERE_CHAMBER":{"name":"Controlled Atmosphere Chamber","tier":5,"category":"Doronum","footprint":Vector2i(5,5),"power_kw":900,"cost":{"ITEM_STEEL_PLATE":30,"ITEM_ADVANCED_CIRCUIT":12,"ITEM_SENSOR":8,"ITEM_CONTROL_MODULE":6},"recipe":"","kind":"doronium"},
+	"OPTICAL_REFINEMENT_CHAMBER":{"name":"Optical Refinement Chamber","tier":5,"category":"Doronum","footprint":Vector2i(5,5),"power_kw":1000,"cost":{"ITEM_TITANIUM_PLATE":20,"ITEM_GLASS":20,"ITEM_ADVANCED_CIRCUIT":16,"ITEM_SENSOR":10},"recipe":"","kind":"doronium"},
+	"THERMAL_STABILIZER":{"name":"Thermal Stabilizer","tier":5,"category":"Doronum","footprint":Vector2i(4,4),"power_kw":1500,"cost":{"ITEM_STEEL_PLATE":30,"ITEM_ADVANCED_CIRCUIT":14,"ITEM_HEAT_CRYSTAL":5,"ITEM_THERMAL_CRYSTAL":3},"recipe":"","kind":"doronium"},
+	"COOLING_STABILIZER":{"name":"Cooling Stabilizer","tier":5,"category":"Doronum","footprint":Vector2i(4,4),"power_kw":1000,"cost":{"ITEM_STEEL_PLATE":30,"ITEM_ADVANCED_CIRCUIT":14,"ITEM_COLD_CRYSTAL":5,"ITEM_DORONUM_COLD_CRYSTAL":3},"recipe":"","kind":"doronium"},
+	"ABSORPTION_PRESS":{"name":"Absorption Press","tier":5,"category":"Doronum","footprint":Vector2i(5,5),"power_kw":2000,"cost":{"ITEM_STEEL_PLATE":40,"ITEM_TITANIUM_PLATE":25,"ITEM_ADVANCED_CIRCUIT":16,"ITEM_CONTROL_MODULE":8},"recipe":"","kind":"press"},
+	"SEALED_PRECISION_CHAMBER":{"name":"Sealed Precision Chamber","tier":6,"category":"Doronum","footprint":Vector2i(6,6),"power_kw":2200,"cost":{"ITEM_STEEL_PLATE":50,"ITEM_TITANIUM_PLATE":30,"ITEM_ADVANCED_CIRCUIT":25,"ITEM_CONTROL_MODULE":12,"ITEM_DORONUM_TRANSLUCENT":2},"recipe":"","kind":"doronium"},
+	"LEGACY_BATCH_LINE":{"name":"Legacy Batch Line","tier":6,"category":"Doronum","footprint":Vector2i(6,6),"power_kw":3000,"cost":{"ITEM_STEEL_PLATE":60,"ITEM_TITANIUM_PLATE":35,"ITEM_ADVANCED_CIRCUIT":25,"ITEM_CONTROL_MODULE":15,"ITEM_DORONUM_RUSTED":2},"recipe":"","kind":"doronium"},
+	"DORONUM_PURIFIER":{"name":"Doronum Purification Unit","tier":6,"category":"Quality","footprint":Vector2i(4,4),"power_kw":800,"cost":{"ITEM_STEEL_PLATE":30,"ITEM_ADVANCED_CIRCUIT":14,"ITEM_SENSOR":10,"ITEM_CONTROL_MODULE":8,"ITEM_DORONUM_TRANSLUCENT":2},"recipe":"","kind":"purifier"},
 	"DORONUM_COMPRESSOR":{"name":"Doronum Compressor","tier":5,"category":"Doronum","footprint":Vector2i(6,6),"power_kw":1500,"cost":{"ITEM_STEEL_PLATE":50,"ITEM_TITANIUM_PLATE":25,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_CONTROL_MODULE":10,"ITEM_DORONUM_BLUE":5,"ITEM_DORONUM_RED":5,"ITEM_HEAT_CRYSTAL":10,"ITEM_COLD_CRYSTAL":10},"recipe":"DORONUM_NORMAL","kind":"doronium"},
 	"ULTRA_MATERIAL_PRESS":{"name":"Ultra Material Press","tier":6,"category":"Doronum","footprint":Vector2i(5,5),"power_kw":3000,"cost":{"ITEM_STEEL_PLATE":80,"ITEM_TITANIUM_PLATE":40,"ITEM_DORONUM_ULTRA":5,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_CONTROL_MODULE":10,"ITEM_THERMAL_CRYSTAL":5,"ITEM_COLD_CRYSTAL":5},"recipe":"","kind":"press"},
 	"COOLING_TOWER":{"name":"Superconducting Cooling Tower","tier":6,"category":"Safety","footprint":Vector2i(4,4),"power_kw":60,"cost":{"ITEM_STEEL_PLATE":25,"ITEM_COPPER_WIRE":15,"ITEM_ADVANCED_CIRCUIT":8},"recipe":"","kind":"cooling"},
@@ -199,6 +212,8 @@ const MACHINE_DEFS := {
 	"STABILIZATION_RELAY":{"name":"Planetary Stabilization Relay","tier":7,"category":"Infinity","footprint":Vector2i(3,3),"power_kw":20,"cost":{"ITEM_STEEL_PLATE":50,"ITEM_TITANIUM_PLATE":25,"ITEM_ADVANCED_CIRCUIT":10,"ITEM_CONTROL_MODULE":5,"ITEM_DORONUM_ORANGE":3,"ITEM_DORONUM_BLUE":2},"recipe":"","kind":"relay"},
 	"STABILIZATION_CORE":{"name":"Central Stabilization Core","tier":7,"category":"Infinity","footprint":Vector2i(5,5),"power_kw":40,"cost":{"ITEM_STEEL_PLATE":100,"ITEM_TITANIUM_PLATE":50,"ITEM_ADVANCED_CIRCUIT":25,"ITEM_CONTROL_MODULE":15,"ITEM_ULTRA_DORONUM":5,"ITEM_DORONUM_TRANSLUCENT":5,"ITEM_DORONUM_BLACK":5},"recipe":"","kind":"core"}
 }
+
+const MACHINE_RESEARCH_REQUIREMENTS := {"FURNACE":["RESEARCH_IRON_SMELTING"],"COMPRESSOR":["RESEARCH_MECHANICAL_PROCESSING"],"ROLLING_MILL":["RESEARCH_MECHANICAL_PROCESSING"],"GEAR_STATION":["RESEARCH_MECHANICAL_PROCESSING"],"BEARING_STATION":["RESEARCH_MECHANICAL_PROCESSING"],"GENERATOR":["RESEARCH_ELECTRIC_PROCESSING"],"SOLAR_PANEL":["RESEARCH_ELECTRIC_PROCESSING"],"BATTERY":["RESEARCH_ELECTRIC_PROCESSING"],"TRANSFORMER":["RESEARCH_ELECTRIC_PROCESSING"],"CONVEYOR":["RESEARCH_AUTOMATION"],"SORTER":["RESEARCH_AUTOMATION"],"MERGER":["RESEARCH_AUTOMATION"],"WAREHOUSE":["RESEARCH_AUTOMATION"],"REFINERY":["RESEARCH_OIL_CHEMISTRY"],"PIPE_PUMP":["RESEARCH_OIL_CHEMISTRY"],"AUTO_MINER":["RESEARCH_AUTOMATION"],"AUTO_FURNACE":["RESEARCH_AUTOMATION"],"AUTO_FABRICATOR":["RESEARCH_ADVANCED_CIRCUITS"],"QUALITY_INSPECTOR":["RESEARCH_ADVANCED_CIRCUITS"],"RESEARCH_LAB":["RESEARCH_ELECTRIC_PROCESSING"],"DORI_HARVESTER":["RESEARCH_DORONUM_COMPRESSOR"],"DORONUM_COMPRESSOR":["RESEARCH_DORONUM_ENGINEERING"],"REFINEMENT_CHAMBER":["RESEARCH_DORONUM_CRYSTAL"],"REINFORCED_DORONUM_PRESS":["RESEARCH_DORONUM_CRYSTAL"],"CONTROLLED_ATMOSPHERE_CHAMBER":["RESEARCH_DORONUM_CRYSTAL"],"OPTICAL_REFINEMENT_CHAMBER":["RESEARCH_DORONUM_CRYSTAL"],"THERMAL_STABILIZER":["RESEARCH_DORONUM_CRYSTAL"],"COOLING_STABILIZER":["RESEARCH_DORONUM_CRYSTAL"],"ABSORPTION_PRESS":["RESEARCH_DORONUM_CRYSTAL"],"ULTRA_MATERIAL_PRESS":["RESEARCH_ULTRA_MATERIAL_PROCESSING"],"DORONUM_PURIFIER":["RESEARCH_ULTRA_MATERIAL_PROCESSING"],"SEALED_PRECISION_CHAMBER":["RESEARCH_DORONUM_FUSION"],"LEGACY_BATCH_LINE":["RESEARCH_DORONUM_FUSION"],"COOLING_TOWER":["RESEARCH_DORONUM_FUSION"],"POWER_BUFFER":["RESEARCH_DORONUM_FUSION"],"SHIELDING":["RESEARCH_DORONUM_FUSION"],"EMERGENCY_CUTOFF":["RESEARCH_DORONUM_FUSION"],"INFINITY_FUSION_MACHINE":["RESEARCH_INFINITY_INDUSTRY"],"STABILIZATION_RELAY":["RESEARCH_INFINITY_INDUSTRY"],"STABILIZATION_CORE":["RESEARCH_INFINITY_INDUSTRY"]}
 
 const RECIPES := {
 	"PLANT_ROPE":{"inputs":{"ITEM_PLANT_FIBER":3},"outputs":{"ITEM_PLANT_ROPE":1},"seconds":5,"machine":"WORKBENCH","tier":0},
@@ -219,21 +234,37 @@ const RECIPES := {
 	"TRANSFORMER":{"inputs":{"ITEM_BATTERY":1,"ITEM_COPPER":4,"ITEM_STEEL_PLATE":3,"ITEM_BASIC_CIRCUIT":2},"outputs":{"ITEM_TRANSFORMER":1},"seconds":25,"machine":"AUTO_FABRICATOR","tier":3},
 	"ADVANCED_CIRCUIT":{"inputs":{"ITEM_BASIC_CIRCUIT":3,"ITEM_GOLD_INGOT":2,"ITEM_NICKEL_INGOT":2,"ITEM_QUARTZ":2,"ITEM_COPPER_WIRE":5},"outputs":{"ITEM_ADVANCED_CIRCUIT":1},"seconds":25,"machine":"AUTO_FABRICATOR","tier":4},
 	"CONTROL_MODULE":{"inputs":{"ITEM_ADVANCED_CIRCUIT":2,"ITEM_SENSOR":2,"ITEM_BATTERY":1,"ITEM_NEODYMIUM_MAGNET":1},"outputs":{"ITEM_CONTROL_MODULE":1},"seconds":30,"machine":"AUTO_FABRICATOR","tier":4},
-	"DORONUM_NORMAL":{"inputs":{"ITEM_DORI_MEAT":10},"outputs":{"ITEM_DORONUM_NORMAL":1},"seconds":20,"machine":"DORONUM_COMPRESSOR","tier":5,"temperature":900.0,"pressure":500.0,"allow_synthetic":false},
-	"DORONUM_YELLOW":{"inputs":{"ITEM_DORONUM_NORMAL":2,"ITEM_GOLD_INGOT":2,"ITEM_QUARTZ":1},"outputs":{"ITEM_DORONUM_YELLOW":1},"seconds":25,"machine":"DORONUM_COMPRESSOR","tier":5},
-	"DORONUM_ULTRA":{"inputs":{"ITEM_DORONUM_NORMAL":3,"ITEM_TITANIUM_PLATE":2,"ITEM_DIAMOND":1},"outputs":{"ITEM_ULTRA_DORONUM":1},"seconds":35,"machine":"ULTRA_MATERIAL_PRESS","tier":6},
-	"DORONUM_BLUE":{"inputs":{"ITEM_DORONUM_NORMAL":2,"ITEM_COLD_CRYSTAL":2,"ITEM_WATER":4},"outputs":{"ITEM_DORONUM_BLUE":1},"seconds":25,"machine":"DORONUM_COMPRESSOR","tier":5},
-	"DORONUM_RED":{"inputs":{"ITEM_DORONUM_NORMAL":2,"ITEM_HEAT_CRYSTAL":2,"ITEM_CHROME_ORE":2},"outputs":{"ITEM_DORONUM_RED":1},"seconds":25,"machine":"DORONUM_COMPRESSOR","tier":5},
-	"DORONUM_IRON":{"inputs":{"ITEM_DORONUM_NORMAL":2,"ITEM_IRON_PLATE":4},"outputs":{"ITEM_DORONUM_IRON":1},"seconds":28,"machine":"DORONUM_COMPRESSOR","tier":5},
-	"DORONUM_ORANGE":{"inputs":{"ITEM_DORONUM_NORMAL":2,"ITEM_COPPER_WIRE":8,"ITEM_GOLD_INGOT":1},"outputs":{"ITEM_DORONUM_ORANGE":1},"seconds":28,"machine":"DORONUM_COMPRESSOR","tier":5},
-	"DORONUM_SLIGHTLY_RUSTED":{"inputs":{"ITEM_DORONUM_NORMAL":2,"ITEM_IRON_ORE":3,"ITEM_WATER":2},"outputs":{"ITEM_DORONUM_SLIGHTLY_RUSTED":1},"seconds":30,"machine":"DORONUM_COMPRESSOR","tier":5},
-	"DORONUM_RUSTED":{"inputs":{"ITEM_DORONUM_SLIGHTLY_RUSTED":2,"ITEM_COAL":4,"ITEM_IRON_ORE":3},"outputs":{"ITEM_DORONUM_RUSTED":1},"seconds":32,"machine":"DORONUM_COMPRESSOR","tier":5},
-	"DORONUM_TRANSLUCENT":{"inputs":{"ITEM_DORONUM_NORMAL":2,"ITEM_QUARTZ":6,"ITEM_GLASS":2},"outputs":{"ITEM_DORONUM_TRANSLUCENT":1},"seconds":32,"machine":"DORONUM_COMPRESSOR","tier":5},
-	"DORONUM_THERMAL_CRYSTAL":{"inputs":{"ITEM_DORONUM_NORMAL":2,"ITEM_THERMAL_CRYSTAL":2,"ITEM_HEAT_CRYSTAL":1},"outputs":{"ITEM_DORONUM_THERMAL_CRYSTAL":1},"seconds":36,"machine":"DORONUM_COMPRESSOR","tier":5},
-	"DORONUM_COLD_CRYSTAL":{"inputs":{"ITEM_DORONUM_NORMAL":2,"ITEM_COLD_CRYSTAL":2,"ITEM_WATER":4},"outputs":{"ITEM_DORONUM_COLD_CRYSTAL":1},"seconds":36,"machine":"DORONUM_COMPRESSOR","tier":5},
-	"DORONUM_BLACK":{"inputs":{"ITEM_DORONUM_NORMAL":3,"ITEM_COAL":10,"ITEM_ADVANCED_CIRCUIT":1},"outputs":{"ITEM_DORONUM_BLACK":1},"seconds":40,"machine":"DORONUM_COMPRESSOR","tier":5},
-	"DORONUM_SPECIAL_EDITION":{"inputs":{"ITEM_DORONUM_NORMAL":4,"ITEM_DIAMOND":2,"ITEM_DORONUM_TRANSLUCENT":1},"outputs":{"ITEM_DORONUM_SPECIAL_EDITION":1},"seconds":55,"machine":"ULTRA_MATERIAL_PRESS","tier":6},
-	"DORONUM_LIMITED_EDITION":{"inputs":{"ITEM_DORONUM_NORMAL":5,"ITEM_GOLD_INGOT":4,"ITEM_DIAMOND":3,"ITEM_DORONUM_BLACK":1},"outputs":{"ITEM_DORONUM_LIMITED_EDITION":1},"seconds":65,"machine":"ULTRA_MATERIAL_PRESS","tier":6}
+	"DORONUM_NORMAL":{"inputs":{"ITEM_DORI_MEAT":10},"outputs":{"ITEM_DORONUM_NORMAL":1},"seconds":20,"machine":"DORONUM_COMPRESSOR","tier":5,"temperature":900.0,"pressure":500.0,"purity_bonus":0.0,"allow_synthetic":false},
+	"PLANT_FIBER":{"inputs":{"ITEM_GRASS":2},"outputs":{"ITEM_PLANT_FIBER":2},"seconds":4,"machine":"","tier":0},
+	"PLANT_ROPE":{"inputs":{"ITEM_PLANT_FIBER":3},"outputs":{"ITEM_PLANT_ROPE":1},"seconds":5,"machine":"","tier":0},
+	"WOODEN_PICKAXE":{"inputs":{"ITEM_WOOD":5,"ITEM_STONE":2,"ITEM_PLANT_ROPE":2},"outputs":{"ITEM_WOODEN_PICKAXE":1},"seconds":8,"machine":"WORKBENCH","tier":0},
+	"WOODEN_AXE":{"inputs":{"ITEM_WOOD":5,"ITEM_STONE":2,"ITEM_PLANT_ROPE":2},"outputs":{"ITEM_WOODEN_AXE":1},"seconds":8,"machine":"WORKBENCH","tier":0},
+	"WOODEN_SHOVEL":{"inputs":{"ITEM_WOOD":3,"ITEM_STONE":1,"ITEM_PLANT_ROPE":1},"outputs":{"ITEM_WOODEN_SHOVEL":1},"seconds":6,"machine":"WORKBENCH","tier":0},
+	"CARBON_POWDER":{"inputs":{"ITEM_COAL":2},"outputs":{"ITEM_CARBON_POWDER":2},"seconds":6,"machine":"WORKBENCH","tier":0},
+	"GLASS":{"inputs":{"ITEM_SAND":3,"ITEM_QUARTZ":1},"outputs":{"ITEM_GLASS":2},"seconds":12,"machine":"FURNACE","tier":2,"temperature":1200.0},
+	"PURIFY_DORONUM_NORMAL":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_QUARTZ":1},"outputs":{"ITEM_DORONUM_NORMAL":1},"seconds":20,"machine":"DORONUM_PURIFIER","tier":6,"quality_bonus":3.0,"purity_bonus":3.0,"allow_synthetic":false},
+	"PLANT_FIBER":{"inputs":{"ITEM_GRASS":2},"outputs":{"ITEM_PLANT_FIBER":2},"seconds":4,"machine":"","tier":0},
+	"PLANT_ROPE":{"inputs":{"ITEM_PLANT_FIBER":3},"outputs":{"ITEM_PLANT_ROPE":1},"seconds":5,"machine":"","tier":0},
+	"WOODEN_PICKAXE":{"inputs":{"ITEM_WOOD":5,"ITEM_STONE":2,"ITEM_PLANT_ROPE":2},"outputs":{"ITEM_WOODEN_PICKAXE":1},"seconds":8,"machine":"WORKBENCH","tier":0},
+	"WOODEN_AXE":{"inputs":{"ITEM_WOOD":5,"ITEM_STONE":2,"ITEM_PLANT_ROPE":2},"outputs":{"ITEM_WOODEN_AXE":1},"seconds":8,"machine":"WORKBENCH","tier":0},
+	"WOODEN_SHOVEL":{"inputs":{"ITEM_WOOD":3,"ITEM_STONE":1,"ITEM_PLANT_ROPE":1},"outputs":{"ITEM_WOODEN_SHOVEL":1},"seconds":6,"machine":"WORKBENCH","tier":0},
+	"CARBON_POWDER":{"inputs":{"ITEM_COAL":2},"outputs":{"ITEM_CARBON_POWDER":2},"seconds":6,"machine":"WORKBENCH","tier":0},
+	"GLASS":{"inputs":{"ITEM_SAND":3,"ITEM_QUARTZ":1},"outputs":{"ITEM_GLASS":2},"seconds":12,"machine":"FURNACE","tier":2,"temperature":1200.0},
+	"PURIFY_DORONUM_NORMAL":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_QUARTZ":1},"outputs":{"ITEM_DORONUM_NORMAL":1},"seconds":20,"machine":"DORONUM_PURIFIER","tier":6,"quality_bonus":3.0,"purity_bonus":3.0,"allow_synthetic":false},
+	"DORONUM_YELLOW":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_GOLD_INGOT":2,"ITEM_QUARTZ":1},"outputs":{"ITEM_DORONUM_YELLOW":1},"seconds":45,"machine":"REFINEMENT_CHAMBER","tier":5,"temperature":700.0,"pressure":300.0,"allow_synthetic":false},
+	"DORONUM_ULTRA":{"inputs":{"ITEM_DORONUM_NORMAL":3,"ITEM_TITANIUM_PLATE":2,"ITEM_DIAMOND":1},"outputs":{"ITEM_DORONUM_ULTRA":1},"seconds":90,"machine":"ULTRA_MATERIAL_PRESS","tier":6,"temperature":1200.0,"pressure":1000.0,"allow_synthetic":false},
+	"DORONUM_BLUE":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_COLD_CRYSTAL":2,"ITEM_QUARTZ":2},"outputs":{"ITEM_DORONUM_BLUE":1},"seconds":60,"machine":"REFINEMENT_CHAMBER","tier":5,"temperature":400.0,"pressure":200.0,"allow_synthetic":false},
+	"DORONUM_RED":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_HEAT_CRYSTAL":2,"ITEM_CHROME_ORE":2},"outputs":{"ITEM_DORONUM_RED":1},"seconds":60,"machine":"REFINEMENT_CHAMBER","tier":5,"temperature":1400.0,"pressure":500.0,"allow_synthetic":false},
+	"DORONUM_IRON":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_STEEL_PLATE":3,"ITEM_MAGNETITE":2},"outputs":{"ITEM_DORONUM_IRON":1},"seconds":75,"machine":"REINFORCED_DORONUM_PRESS","tier":5,"temperature":900.0,"pressure":700.0,"allow_synthetic":false},
+	"DORONUM_ORANGE":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_COPPER_WIRE":10,"ITEM_GOLD_INGOT":1},"outputs":{"ITEM_DORONUM_ORANGE":1},"seconds":55,"machine":"REFINEMENT_CHAMBER","tier":5,"temperature":800.0,"pressure":400.0,"allow_synthetic":false},
+	"DORONUM_SLIGHTLY_RUSTED":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_IRON_ORE":1,"ITEM_WATER":1},"outputs":{"ITEM_DORONUM_SLIGHTLY_RUSTED":1},"seconds":40,"machine":"CONTROLLED_ATMOSPHERE_CHAMBER","tier":5,"allow_synthetic":false},
+	"DORONUM_RUSTED":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_IRON_ORE":2,"ITEM_WATER":3},"outputs":{"ITEM_DORONUM_RUSTED":1},"seconds":60,"machine":"CONTROLLED_ATMOSPHERE_CHAMBER","tier":5,"allow_synthetic":false},
+	"DORONUM_TRANSLUCENT":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_QUARTZ":4,"ITEM_DIAMOND":1},"outputs":{"ITEM_DORONUM_TRANSLUCENT":1},"seconds":90,"machine":"OPTICAL_REFINEMENT_CHAMBER","tier":5,"temperature":650.0,"pressure":500.0,"allow_synthetic":false},
+	"DORONUM_THERMAL_CRYSTAL":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_HEAT_CRYSTAL":3},"outputs":{"ITEM_DORONUM_THERMAL_CRYSTAL":1},"seconds":75,"machine":"THERMAL_STABILIZER","tier":5,"temperature":1100.0,"pressure":600.0,"allow_synthetic":false},
+	"DORONUM_COLD_CRYSTAL":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_COLD_CRYSTAL":3},"outputs":{"ITEM_DORONUM_COLD_CRYSTAL":1},"seconds":75,"machine":"COOLING_STABILIZER","tier":5,"temperature":250.0,"pressure":400.0,"allow_synthetic":false},
+	"DORONUM_BLACK":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_CARBON_POWDER":5,"ITEM_DIAMOND":1},"outputs":{"ITEM_DORONUM_BLACK":1},"seconds":100,"machine":"ABSORPTION_PRESS","tier":5,"temperature":1000.0,"pressure":800.0,"allow_synthetic":false},
+	"DORONUM_SPECIAL_EDITION":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_DORONUM_YELLOW":1,"ITEM_ADVANCED_CIRCUIT":5,"ITEM_ARCHIVE_PATTERN":1},"outputs":{"ITEM_DORONUM_SPECIAL_EDITION":1},"seconds":120,"machine":"SEALED_PRECISION_CHAMBER","tier":6,"requires_story":"INFINITY_PROJECT_REVEALED","allow_synthetic":false},
+	"DORONUM_LIMITED_EDITION":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_DORONUM_ULTRA":1,"ITEM_DORONUM_TRANSLUCENT":1,"ITEM_CONTRACT_SEAL":1},"outputs":{"ITEM_DORONUM_LIMITED_EDITION":1},"seconds":180,"machine":"LEGACY_BATCH_LINE","tier":6,"requires_story":"LIMITED_EDITION_CONTRACT_ACTIVE","max_total":100,"allow_synthetic":false}
 }
 
 var inventory: Array[Dictionary] = []
@@ -379,6 +410,9 @@ func craft(recipe_id: String) -> bool:
 	if not can_afford(recipe.inputs):
 		toast_requested.emit("Not enough materials for " + recipe_id, "warning")
 		return false
+	if not str(recipe.get("requires_story","")).is_empty() and not bool(story_flags.get(str(recipe.requires_story),false)):
+		toast_requested.emit("스토리 계약/기록 조건이 필요합니다.","warning")
+		return false
 	if recipe.get("allow_synthetic", true) == false:
 		for item_id in recipe.inputs:
 			if str(item_id).begins_with("ITEM_DORI_MEAT") and item_average(str(item_id)).synthetic:
@@ -402,7 +436,7 @@ func craft(recipe_id: String) -> bool:
 			inventory_changed.emit()
 			return false
 	for item_id in recipe.outputs:
-		add_item(str(item_id), int(recipe.outputs[item_id]), input_quality, input_purity, input_synthetic, "RECIPE:" + recipe_id)
+		add_item(str(item_id), int(recipe.outputs[item_id]), clampf(input_quality+float(recipe.get("quality_bonus",0.0)),0,100), clampf(input_purity-float(recipe.get("purity_loss",0.0))+float(recipe.get("purity_bonus",0.0)),0,100), input_synthetic, "RECIPE:" + recipe_id)
 	var event_id := "FIRST_RECIPE:" + recipe_id
 	grant_rp_once(event_id, 50 if int(recipe.tier) <= 2 else 250)
 	toast_requested.emit("Crafted " + recipe_id, "success")
@@ -474,7 +508,7 @@ func _advance_research(delta: float) -> void:
 		active_research = ""
 		research_progress = 0.0
 		return
-	if not has_powered_machine_kind("lab"):
+	if not has_research_institute(int(found.tier)):
 		return
 	research_progress += delta
 	if research_progress >= float(found.seconds):
@@ -492,15 +526,29 @@ func _advance_research(delta: float) -> void:
 
 func has_machine_kind(kind: String) -> bool:
 	for building in buildings:
-		if str(building.get("kind","")) == kind or str(building.get("type","")) == kind:
+		var actual_kind := str(building.get("kind",""))
+		if actual_kind == kind or str(building.get("type","")) == kind:
+			return true
+		if kind == "lab" and actual_kind == "research_analyzer":
 			return true
 	return false
 
-func has_powered_machine_kind(kind: String) -> bool:
+func has_research_institute(required_tier: int) -> bool:
+	var needed_kind := "research_analyzer" if required_tier <= 2 else "lab"
 	for building in buildings:
-		if str(building.get("kind","")) == kind and float(building.get("power_ratio",0.0)) >= 0.8:
-			return true
+		if str(building.get("kind","")) == needed_kind:
+			if float(GameState.MACHINE_DEFS.get(str(building.type),{}).get("power_kw",0.0)) <= 0.0 or float(building.get("power_ratio",0.0)) >= 0.8:
+				return true
 	return false
+
+func machine_unlocks_met(machine_type: String) -> bool:
+	for requirement in MACHINE_RESEARCH_REQUIREMENTS.get(machine_type,[]):
+		if not completed_research.has(str(requirement)):
+			return false
+	return true
+
+func has_powered_machine_kind(kind: String) -> bool:
+	return has_research_institute(3) if kind == "lab" else has_machine_kind(kind)
 
 func purchase_skill(skill_id: String) -> bool:
 	for skill in SKILLS:
