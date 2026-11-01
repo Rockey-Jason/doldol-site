@@ -79,7 +79,7 @@ namespace DoronumFactory
             return true;
         }
 
-        pprivate void AllocatePower()
+        private void AllocatePower()
         {
             float daylight=Mathf.Clamp01(Mathf.Sin((elapsedGameSeconds/1800f)*Mathf.PI*2f)*0.5f+0.5f);
             float generated=0f,requested=0f;
@@ -166,7 +166,7 @@ namespace DoronumFactory
                 if (m.MachineId=="GENERATOR" && m.FuelSeconds>0f) m.FuelSeconds=Mathf.Max(0f,m.FuelSeconds-TickSeconds);
         }
 
-        pprivate void TickMachine(MachineRuntimeData machine)
+        private void TickMachine(MachineRuntimeData machine)
         {
             if (machine.CompletionBuffer.Count>0) { machine.State="PAUSED_OUTPUT"; MachineChanged?.Invoke(machine); return; }
             if (machine.Condition<=0f) { machine.State="BROKEN"; MachineChanged?.Invoke(machine); return; }
@@ -220,7 +220,7 @@ namespace DoronumFactory
             return true;
         }
 
-        pprivate void CommitProduction(MachineRuntimeData machine,RecipeDefinition recipe)
+        private void CommitProduction(MachineRuntimeData machine,RecipeDefinition recipe)
         {
             if (machine.CompletionBuffer.Count>0) { machine.State="PAUSED_OUTPUT"; return; }
             float totalQ=0f,totalP=0f,total=0f;
@@ -254,7 +254,7 @@ namespace DoronumFactory
             ProductionCompleted?.Invoke(recipe.Id);
         }
 
-        pprivate void RecordPowerSample(MachineRuntimeData machine)
+        private void RecordPowerSample(MachineRuntimeData machine)
         {
             if (!powerSamples.TryGetValue(machine.InstanceId,out var samples))
             { samples=new List<float>(); powerSamples[machine.InstanceId]=samples; }
