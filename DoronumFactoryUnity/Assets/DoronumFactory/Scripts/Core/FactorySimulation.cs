@@ -11,7 +11,7 @@ namespace DoronumFactory
         private readonly GameRuntimeState state;
         private readonly InventoryService inventory;
         private float elapsedGameSeconds;
-        private readonly Dictionary<string,List<float>> powerSamples=new Dictionary<string,List<float>>(StringComparer.Ordinal);
+        
         public event Action<MachineRuntimeData> MachineChanged;
         public event Action<string> ProductionCompleted;
         public event Action<string,string> MachineFailed;
@@ -178,6 +178,7 @@ namespace DoronumFactory
 
         private void TickMachine(MachineRuntimeData machine)
         {
+            if (machine.MachineId=="CONVEYOR") return;
             if (machine.CompletionBuffer.Count>0) { machine.State="PAUSED_OUTPUT"; MachineChanged?.Invoke(machine); return; }
             if (machine.Condition<=0f) { machine.State="BROKEN"; MachineChanged?.Invoke(machine); return; }
             if (string.IsNullOrEmpty(machine.RecipeId) || !FactoryCatalog.Recipes.TryGetValue(machine.RecipeId,out var recipe))
@@ -364,6 +365,11 @@ namespace DoronumFactory
             }
             machine.ReservedInputs=reserved;
             machine.ProgressSeconds=0f;
+            machine.PowerRatioSum=0f;
+            machine.PowerRatioSquareSum=0f;
+            machine.PowerSampleCount=0;
+            machine.FailureExposureSeconds=0f;
+            machine.FailureRngIndex=0;
             return true;
         }
 
