@@ -148,7 +148,7 @@ func interact(_player: Node) -> void:
 		GameState.toast("이 광맥은 고갈되었습니다.", "warning")
 		return
 	var tool_id := str(GameState.player_state.get("equipped_tool","ITEM_TOOL_HANDS"))
-	var power := {"ITEM_TOOL_HANDS":1,"ITEM_WOODEN_PICKAXE":10,"ITEM_IRON_PICKAXE":25,"ITEM_STEEL_PICKAXE":50,"ITEM_DORONUM_PICKAXE":120}.get(tool_id,1)
+	var power: int = int({"ITEM_TOOL_HANDS":1,"ITEM_WOODEN_PICKAXE":10,"ITEM_IRON_PICKAXE":25,"ITEM_STEEL_PICKAXE":50,"ITEM_DORONUM_PICKAXE":120}.get(tool_id,1))
 	if int(power) < mining_power_required:
 		GameState.toast("더 강한 채굴 도구가 필요합니다. 요구 Mining Power: %d" % mining_power_required,"warning")
 		return
