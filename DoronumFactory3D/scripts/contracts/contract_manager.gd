@@ -157,7 +157,14 @@ func pack_and_ship(contract_id: String) -> bool:
 		manifest[item_id] = removed
 	var cycle := int(record.get("cycle",0))+1
 	var shipment_id := "SHIPMENT:"+contract_id+":"+str(cycle)
-	var package_cost: int = int({"BOX":2,"SECURE_CONTAINER":5,"DORONUM_ISOLATION":8,"INFINITY_ISOLATION":12}.get(str(definition.get("packing","BOX")),2))
+	var package_cost: int = 2
+	match str(definition.get("packing","BOX")):
+		"SECURE_CONTAINER":
+			package_cost = 5
+		"DORONUM_ISOLATION":
+			package_cost = 8
+		"INFINITY_ISOLATION":
+			package_cost = 12
 	var packing_item := "ITEM_WOOD"
 	if GameState.count_item(packing_item)<package_cost:
 		GameState.inventory=snapshot
