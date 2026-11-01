@@ -119,11 +119,10 @@ func harvest_automated(machine_id: String) -> Dictionary:
 	mature = false
 	cycle_progress = 0.0
 	_set_fruit_visibility()
-	GameState.progress_objective("DORI_MEAT_HARVESTED",tree_id)
 	var claim := "DORI_HARVEST:"+tree_id+":"+str(GameState.world_state.get("tree_cycle_"+tree_id,0))
 	GameState.register_world_event(claim)
 	var result := {"item_id":"ITEM_DORI_MEAT","quantity":1,"quality":92.0,"purity":90.0,"synthetic":false,"origin":"DORI_TREE:"+tree_id,"harvester_id":machine_id}
-	_save_state(true)
+	_save_state(false)
 	return result
 
 func _set_fruit_visibility() -> void:
