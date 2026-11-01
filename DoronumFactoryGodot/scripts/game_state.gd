@@ -368,8 +368,8 @@ func fusion_preflight() -> Array[String]:
 	for required_building in ["FUSION_POWER_BUFFER","FUSION_CONTAINMENT_SHIELD","EMERGENCY_COOLING_SYSTEM","PRESSURE_CALIBRATION_RIG","COOLING_STABILIZER"]:
 		if not buildings.any(func(m): return m.id==required_building and float(m.condition)>0.0):
 			errors.append("최종 안전 설비 누락 · "+required_building)
-	if float(power_state.get("fusion_buffer_kwh",0.0)) < 250.0:
-		errors.append("독립 전력 버퍼 충전 부족 · 250kWh 이상 필요 (현재 %.1fkWh)" % float(power_state.get("fusion_buffer_kwh",0.0)))
+	if float(power_state.get("fusion_buffer_kwh",0.0)) < 400.0:
+		errors.append("독립 전력 버퍼 충전 부족 · 400kWh 이상 필요 (현재 %.1fkWh)" % float(power_state.get("fusion_buffer_kwh",0.0)))
 	for item_id in GameData.DORONUM_IDS:
 		var total := 0
 		for stack in inventory:
@@ -548,8 +548,8 @@ func run_fusion_diagnostic(diagnostic_id: String) -> bool:
 		return false
 	match diagnostic_id:
 		"power_stability":
-			if not buildings.any(func(m): return m.id=="FUSION_POWER_BUFFER" and float(m.condition)>0.0) or float(power_state.get("fusion_buffer_kwh",0.0))<250.0:
-				notification.emit("전력 안정성 검사 실패 · 독립 버퍼 250kWh 이상 충전이 필요해.")
+			if not buildings.any(func(m): return m.id=="FUSION_POWER_BUFFER" and float(m.condition)>0.0) or float(power_state.get("fusion_buffer_kwh",0.0))<400.0:
+				notification.emit("전력 안정성 검사 실패 · 독립 버퍼 400kWh 이상 충전이 필요해.")
 				return false
 		"pressure_calibration":
 			if "RESEARCH_HIGH_PRESSURE" not in research_completed or not buildings.any(func(m): return m.id=="PRESSURE_CALIBRATION_RIG" and float(m.condition)>0.0):
@@ -642,8 +642,8 @@ func start_stabilization_phase() -> bool:
 	if not bool(story_flags.get("ORBIT_04",false)) or relays.size()!=3 or not relays.all(func(r): return bool(r.active)):
 		notification.emit("ORBIT 04와 세 릴레이 동기화가 필요해.")
 		return false
-	if total_power_generated-total_power_used<800.0:
-		notification.emit("행성 안정화 전력 부족 · 800kW 필요해.")
+	if total_power_generated<total_power_used:
+		notification.emit("행성 안정화 전력 부족 · Relay/Core 800kW 부하를 감당할 발전량이 필요해.")
 		return false
 	stabilization_running = true
 	notification.emit("행성 안정화 동기화 시작 · Phase %d" % stabilization_phase)
@@ -653,7 +653,7 @@ func start_stabilization_phase() -> bool:
 func _tick_planetary_stabilization(dt: float) -> void:
 	if not stabilization_running or ending_complete:
 		return
-	if not core_installed or relays.size()!=3 or not relays.all(func(r): return bool(r.active)) or total_power_generated-total_power_used<800.0:
+	if not core_installed or relays.size()!=3 or not relays.all(func(r): return bool(r.active)) or total_power_generated<total_power_used:
 		stabilization_running = false
 		notification.emit("행성 안정화 일시 정지 · 전력/릴레이/코어 인터록 확인")
 		return
@@ -683,11 +683,30 @@ func recover_fusion_failure() -> bool:
 	if fusion.is_empty() or not str(fusion.get("state","")).begins_with("FAILED"):
 		return false
 	var custody: Array = fusion.get("custody",[])
+	var return_ratio := clampf(float(fusion.get("recovery_ratio",1.0)),0.0,1.0)
+	var total_lost := 0
 	for reserved_stack in custody:
-		if not inventory.any(func(s): return s.stack_id == reserved_stack.stack_id):
-			inventory.append(reserved_stack.duplicate(true))
+		var return_quantity := int(floor(float(reserved_stack.quantity)*return_ratio))
+		var lost_quantity := int(reserved_stack.quantity)-return_quantity
+		total_lost += lost_quantity
+		if return_quantity<=0:
+			continue
+		var existing_index := -1
+		for index in range(inventory.size()):
+			if str(inventory[index].get("stack_id",""))==str(reserved_stack.get("stack_id","")):
+				existing_index = index
+				break
+		if existing_index>=0:
+			inventory[existing_index].quantity = int(inventory[existing_index].quantity)+return_quantity
+		else:
+			var restored: Dictionary = reserved_stack.duplicate(true)
+			restored.quantity = return_quantity
+			inventory.append(restored)
+	if total_lost>0:
+		add_item("ITEM_DORONUM_RESIDUE",total_lost,50.0,0.0,false,"FUSION_FAILURE:"+str(fusion.get("failure_event_id","")))
+	_event_ids["FUSION_RECOVERY:"+str(fusion.get("failure_event_id",""))] = true
 	fusion.clear()
-	notification.emit("퓨전 안전 복구 완료 · 예약 재료를 전량 반환했어.")
+	notification.emit("퓨전 안전 복구 완료 · %.0f%% 재료 회수 / 손실 %d개는 Doronum Residue로 기록했어." % [return_ratio*100.0,total_lost])
 	save_game()
 	state_changed.emit()
 	return true
