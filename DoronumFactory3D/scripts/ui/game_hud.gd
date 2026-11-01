@@ -4,6 +4,7 @@ class_name GameHUD3D
 var player: PlayerController3D
 var factory: FactoryManager3D
 var story: StoryManager3D
+var contracts: ContractManager3D
 var current_panel := "build"
 var panel_open := true
 var selected_tab := "build"
@@ -29,13 +30,15 @@ const TAB_META := [
 	{"id":"inventory","text":"창고","icon":"▤"},
 	{"id":"research","text":"연구","icon":"⌬"},
 	{"id":"skills","text":"스킬","icon":"✧"},
-	{"id":"missions","text":"임무","icon":"◈"}
+	{"id":"missions","text":"임무","icon":"◈"},
+	{"id":"contracts","text":"계약","icon":"⇧"}
 ]
 
-func setup(p_player: PlayerController3D,p_factory: FactoryManager3D,p_story: StoryManager3D) -> void:
+func setup(p_player: PlayerController3D,p_factory: FactoryManager3D,p_story: StoryManager3D,p_contracts: ContractManager3D) -> void:
 	player = p_player
 	factory = p_factory
 	story = p_story
+	contracts = p_contracts
 
 func _ready() -> void:
 	add_to_group("game_hud")
@@ -49,6 +52,7 @@ func _ready() -> void:
 	factory.power_summary_changed.connect(_on_power_changed)
 	story.dialogue_changed.connect(_on_dialogue_changed)
 	story.quest_changed.connect(_on_quest_changed)
+	contracts.contracts_changed.connect(_on_contracts_changed)
 	_refresh_current_panel()
 	refresh_top()
 
@@ -247,7 +251,8 @@ func _refresh_current_panel() -> void:
 		"inventory": _render_inventory_panel()
 		"research": _render_research_panel()
 		"skills": _render_skill_panel()
-		"missions": _render_missions_panel()
+		"missions": _render_missions_panel(),
+		"contracts": _render_contracts_panel()
 		"machine": _render_machine_panel()
 
 func _render_build_panel() -> void:
@@ -394,6 +399,45 @@ func _render_missions_panel() -> void:
 		var complete := GameState.story_flags.has(str(quest.event))
 		var state := "완료" if complete else "진행 중" if i == story.current_quest_index else "잠김"
 		list.add_child(_text_card("%s  ·  %s\n%s\n%s" % [str(quest.id),str(quest.title),str(quest.description),state]))
+
+func _render_contracts_panel() -> void:
+	_add_panel_heading("CONTRACTS & SHIPPING","자격 조건을 확인하고, 품질·순도를 검사한 뒤 포장·출하합니다.")
+	var summary := _text_card("출하 계약은 예약 → 포장 → 운송 → 배송 순서로 진행됩니다. 같은 계약 보상은 한 번만 정산됩니다.")
+	_panel_content.add_child(summary)
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	_panel_content.add_child(scroll)
+	var list := VBoxContainer.new()
+	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list.add_theme_constant_override("separation",8)
+	scroll.add_child(list)
+	for contract in contracts.list_contracts():
+		var status_text := str(contract.state)
+		var remaining := float(contract.get("remaining_seconds",0.0))
+		var detail := "%s  ·  %s\n%s\n요구품: %s\n최소 Quality %.0f / Purity %.0f\n보상: %s · %d RP · %d D\n포장: %s · 상태: %s" % [
+			str(contract.category),str(contract.title),str(contract.description),
+			_cost_text(contract.inputs),float(contract.minimum_quality),float(contract.minimum_purity),
+			_cost_text(contract.rewards),int(contract.rp),int(contract.currency_d),str(contract.packing),status_text
+		]
+		if status_text == "IN_TRANSIT":
+			detail += "\n운송 잔여 시간: %.1f초" % remaining
+		var card := _text_card(detail)
+		list.add_child(card)
+		if status_text == "NOT_SHIPPED":
+			var accept := _button("계약 수락",Color(0.12,0.23,0.24),Color(0.83,0.95,0.92))
+			accept.disabled = not bool(contract.prerequisites_met)
+			accept.pressed.connect(func(): contracts.accept_contract(str(contract.id)); _refresh_current_panel())
+			list.add_child(accept)
+		elif status_text == "RESERVED":
+			var ship := _button("품질 검사 · 포장 및 출하",Color(0.2,0.17,0.09),Color(0.98,0.86,0.6))
+			ship.pressed.connect(func(): contracts.pack_and_ship(str(contract.id)); _refresh_current_panel())
+			list.add_child(ship)
+		elif status_text == "DELIVERED":
+			var delivered := Label.new()
+			delivered.text = "✓ 정산 완료 · 재접속해도 보상은 중복 지급되지 않습니다."
+			delivered.add_theme_color_override("font_color",Color(0.52,0.86,0.69))
+			delivered.add_theme_font_size_override("font_size",10)
+			list.add_child(delivered)
 
 func _render_machine_panel() -> void:
 	_add_panel_heading("MACHINE OPERATIONS","선택 시설의 생산 버퍼와 상태를 제어합니다.")
@@ -625,6 +669,11 @@ func apply_responsive_layout() -> void:
 func _on_machine_selected(machine_id: String) -> void:
 	_machine_detail_id = machine_id
 	toggle_panel("machine")
+
+func _on_contracts_changed() -> void:
+	if selected_tab == "contracts":
+		_refresh_current_panel()
+	refresh_top()
 
 func _on_building_placed(_machine_type: String,_instance_id: String) -> void:
 	refresh_top()
