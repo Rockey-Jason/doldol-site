@@ -481,8 +481,62 @@ func craft(recipe_id: String) -> bool:
 	for item_id in recipe.outputs:
 		add_item(str(item_id), int(recipe.outputs[item_id]), manual_quality, manual_purity, input_synthetic, "RECIPE:" + recipe_id)
 	var event_id := "FIRST_RECIPE:" + recipe_id
-	grant_rp_once(event_id, 50 if int(recipe.tier) <= 2 else 250)
+	grant_rp_once(event_id, recipe_rp_reward(recipe))
 	toast_requested.emit("Crafted " + recipe_id, "success")
+	save_game()
+	return true
+
+func recipe_rp_reward(recipe: Dictionary) -> int:
+	var tier := int(recipe.get("tier",0))
+	match tier:
+		0:
+			return 50
+		1:
+			return 100
+		2:
+			return 250
+		3:
+			return 500
+		4:
+			return 1000
+		5:
+			return 1500
+		_:
+			return 2500
+
+func analyze_research_sample(item_id: String) -> bool:
+	if not ITEM_DATA.has(item_id):
+		toast_requested.emit("Unknown sample item.","error")
+		return false
+	if not has_machine_kind("research_analyzer") and not has_machine_kind("lab"):
+		toast_requested.emit("연구 분석기가 필요합니다.","warning")
+		return false
+	var claim_id := "SAMPLE_ANALYSIS:"+str(world_seed)+":"+item_id
+	if reward_ledger.has(claim_id):
+		toast_requested.emit("이미 분석한 샘플입니다. 같은 아이템으로 RP를 반복 획득할 수 없습니다.","warning")
+		return false
+	if count_item(item_id)<1:
+		toast_requested.emit("분석할 샘플 1개가 필요합니다.","warning")
+		return false
+	if item_id == "ITEM_DORI_MEAT" and item_average(item_id).synthetic:
+		toast_requested.emit("합성 Dori Meat은 Doronium biology 연구 샘플로 인정되지 않습니다.","error")
+		return false
+	var group := str(ITEM_DATA[item_id].get("group","Raw"))
+	var points := 500
+	if group in ["Ore","Metal","Part","Electronics"]:
+		points = 1000
+	if group in ["Crystal","Doronum"]:
+		points = 1500
+	if item_id in ["ITEM_DIAMOND","ITEM_NEODYMIUM_ORE","ITEM_HEAT_CRYSTAL","ITEM_COLD_CRYSTAL"]:
+		points = 2500
+	if item_id in ["ITEM_DORONUM_SPECIAL_EDITION","ITEM_DORONUM_LIMITED_EDITION"]:
+		points = 5000
+	if not remove_item(item_id,1):
+		return false
+	reward_ledger[claim_id] = {"source_id":"SAMPLE_ANALYSIS","item_id":item_id,"amount":points,"tick":simulation_tick,"token_id":"ANALYSIS_TOKEN:"+item_id}
+	research_points += points
+	progression_changed.emit()
+	toast_requested.emit("샘플 분석 완료 · +%d RP" % points,"success")
 	save_game()
 	return true
 
