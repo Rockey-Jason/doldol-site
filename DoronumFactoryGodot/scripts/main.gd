@@ -102,6 +102,8 @@ func _process(delta: float) -> void:
 		_update_tree_visuals()
 	if player != null:
 		game.player_position = player.global_position
+		if game.has_skill("FIELD_SURVEYOR"):
+			player.interaction_range = 5.5
 	_animate_buildings(delta)
 	_update_story_progress()
 
@@ -263,6 +265,12 @@ func _on_player_interact(target: Object, hit_position: Vector3) -> void:
 		game.add_item(resource_id,1,quality,purity,false,"WORLD_NODE:"+node_id)
 		game.discover_resource(node_id,resource_id)
 		game.claim_research_sample(node_id,resource_id)
+		game.apply_tool_wear()
+		var base_byproduct_chance := 0.05
+		if game.has_skill("VEIN_EFFICIENCY"):
+			base_byproduct_chance += 0.02
+		if game._deterministic_unit(int(game.world_seed+hash(node_id)+quantity))<base_byproduct_chance:
+			game.add_item("ITEM_MINERAL_RESIDUE",1,quality,purity,false,"MINING_BYPRODUCT:"+node_id+":"+str(quantity))
 		node.set_meta("quantity",quantity-1)
 		game.resource_depletion[node_id] = quantity-1
 		if quantity-1 <= 0:
