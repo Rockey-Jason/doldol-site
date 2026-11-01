@@ -98,7 +98,7 @@ func _add_biome_ring(pos: Vector3, scale_value: Vector3, color: Color, label_tex
 	mesh.height = 0.15
 	ring.mesh = mesh
 	ring.position = pos + Vector3(0,0.1,0)
-	ring.scale = scale_value
+	ring.scale = Vector3(scale_value.x,1.0,scale_value.z)
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = color
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -151,6 +151,36 @@ func _create_resource_deposits() -> void:
 			var y := height_at(x,z)
 			var q := float(deposit.quality) + rng.randf_range(-3.0,3.0)
 			_spawn_node(str(deposit.id)+"_%02d" % i,str(deposit.item),Vector3(x,y,z),int(deposit.amount),q,88.0,float(deposit.hardness),int(deposit.power))
+	var advanced_deposits := [
+		{"id":"LEAD","item":"ITEM_LEAD_ORE","center":Vector2(-610,240),"count":12,"radius":42.0,"amount":95,"quality":86.0,"hardness":1.8,"power":10},
+		{"id":"MAGNETITE","item":"ITEM_MAGNETITE","center":Vector2(120,470),"count":14,"radius":48.0,"amount":100,"quality":90.0,"hardness":2.0,"power":25},
+		{"id":"CHROME","item":"ITEM_CHROME_ORE","center":Vector2(790,630),"count":10,"radius":50.0,"amount":70,"quality":94.0,"hardness":2.8,"power":50},
+		{"id":"ALUMINUM","item":"ITEM_ALUMINUM_ORE","center":Vector2(-820,220),"count":10,"radius":48.0,"amount":85,"quality":91.0,"hardness":2.0,"power":25}
+	]
+	for deposit in advanced_deposits:
+		for i in range(int(deposit.count)):
+			var angle := rng.randf_range(0.0,TAU)
+			var radius := sqrt(rng.randf())*float(deposit.radius)
+			var x := float(deposit.center.x)+cos(angle)*radius
+			var z := float(deposit.center.y)+sin(angle)*radius
+			_spawn_node(str(deposit.id)+"_%02d" % i,str(deposit.item),Vector3(x,height_at(x,z),z),int(deposit.amount),float(deposit.quality)+rng.randf_range(-2.0,2.0),88.0,float(deposit.hardness),int(deposit.power))
+	# Water, rubber sap and natural crystal deposits are resource nodes, not Doronum.
+	for i in range(18):
+		var x := 250.0+float(i%6)*18.0
+		var z := 70.0+float(i/6)*18.0
+		_spawn_node("SPRING_%02d" % i,"ITEM_WATER",Vector3(x,height_at(x,z),z),50,100.0,100.0,0.0,0)
+	for i in range(12):
+		var x := -260.0+float(i%4)*16.0
+		var z := 270.0+float(i/4)*18.0
+		_spawn_node("RUBBER_SAP_%02d" % i,"ITEM_RUBBER_SAP",Vector3(x,height_at(x,z),z),40,92.0,92.0,0.0,0)
+	for i in range(6):
+		var x := 720.0+float(i%3)*20.0
+		var z := 500.0+float(i/3)*24.0
+		_spawn_node("HEAT_CRYSTAL_%02d" % i,"ITEM_HEAT_CRYSTAL",Vector3(x,height_at(x,z),z),18,96.0,96.0,2.4,50)
+	for i in range(6):
+		var x := 20.0+float(i%3)*20.0
+		var z := -850.0+float(i/3)*24.0
+		_spawn_node("COLD_CRYSTAL_%02d" % i,"ITEM_COLD_CRYSTAL",Vector3(x,height_at(x,z),z),18,96.0,96.0,2.4,50)
 	# IMPORTANT: no Doronum resource deposit exists anywhere in the world data.
 
 func _create_dori_forest() -> void:
