@@ -450,7 +450,7 @@ func run_fusion_diagnostic(diagnostic_id: String) -> bool:
 		return false
 	match diagnostic_id:
 		"power_stability":
-			if total_power_generated < 5000.0:
+			if total_power_generated-total_power_used < 5000.0:
 				notification.emit("전력 안정성 검사 실패 · 5MW 전력 공급이 필요해.")
 				return false
 		"pressure_calibration":
@@ -489,6 +489,12 @@ func set_fusion_interlock(key: String, enabled: bool) -> void:
 func activate_relay(index: int) -> bool:
 	if not bool(story_flags.get("INFINITY_CRAFTED", false)) or index < 0 or index >= 3 or index >= relays.size():
 		return false
+	if total_power_generated-total_power_used < 100.0:
+		notification.emit("Stabilization Relay 전력 부족 · 100kW 필요")
+		return false
+	var relay_machine := buildings.filter(func(m): return m.instance_id == relays[index].instance_id)
+	if relay_machine.is_empty() or float(relay_machine[0].condition) <= 0.0:
+		return false
 	relays[index].active = true
 	story_flags["RELAY_%d_ACTIVE" % (index + 1)] = true
 	notification.emit("행성 에너지 릴레이 %d/3 활성화" % (index + 1))
@@ -497,7 +503,8 @@ func activate_relay(index: int) -> bool:
 func install_infinity_core() -> bool:
 	if not bool(story_flags.get("INFINITY_CRAFTED", false)) or core_installed or count_item("ITEM_INFINITY_DORONUM") < 1:
 		return false
-	if relays.size() < 3:
+	if relays.size() < 3 or not buildings.any(func(m): return m.id=="STABILIZATION_CORE" and float(m.condition)>0.0):
+		notification.emit("Stabilization Core를 먼저 설치해야 해.")
 		return false
 	for relay in relays:
 		if not relay.active:
