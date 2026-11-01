@@ -356,7 +356,7 @@ namespace DoronumFactory
             {
                 var site=PlanetWorldGenerator.RelaySites[i];
                 bool found=state.Machines.Any(m=>m.MachineId=="STABILIZATION_RELAY" &&
-                    new Vector2(m.X,m.Z).Distance(new Vector2(site.x,site.y))<=18f && m.PowerRatio>=0.8f);
+                    Vector2.Distance(new Vector2(m.X,m.Z),new Vector2(site.x,site.y))<=18f && m.PowerRatio>=0.8f);
                 if (!found) return false;
             }
             return true;
