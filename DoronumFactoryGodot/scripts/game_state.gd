@@ -9,6 +9,7 @@ signal ending_started
 const SAVE_PATH := "user://doronium_factory_save.json"
 var world_seed: int = GameData.WORLD_SEED
 var player_position := Vector3(0, 0, 0)
+var equipped_tool := "ITEM_TOOL_HANDS"
 var inventory: Array[Dictionary] = []
 var buildings: Array[Dictionary] = []
 var discovered_nodes: Dictionary = {}
@@ -51,7 +52,6 @@ func _process(delta: float) -> void:
 
 func _tick(dt: float) -> void:
 	_tick_research(dt)
-	_tick_machines(dt)
 	_tick_fusion(dt)
 	for building in buildings:
 		if building.get("kind", "") == "DORI_MEAT_TREE":
@@ -237,7 +237,7 @@ func _tick_machines(dt: float) -> void:
 	for machine in buildings:
 		if machine.get("recipe", "").is_empty() or not machine.output.is_empty():
 			continue
-		var recipe: Dictionary = GameData.RECIPES.get(machine.recipe, {})
+		var recipe: Dictionary = GameData.recipe_definition(machine.recipe, {})
 		if recipe.is_empty():
 			continue
 		if machine.get("job_started", false) == false:
@@ -281,7 +281,7 @@ func collect_machine_output(instance_id: String) -> bool:
 	return false
 
 func set_machine_recipe(instance_id: String, recipe_id: String) -> bool:
-	var recipe: Dictionary = GameData.RECIPES.get(recipe_id, {})
+	var recipe: Dictionary = GameData.recipe_definition(recipe_id, {})
 	if recipe.is_empty():
 		return false
 	for machine in buildings:
@@ -330,7 +330,7 @@ func start_infinity_fusion() -> bool:
 			return false
 	fusion = {
 		"stage":0,"stage_progress":0.0,"temperature":20.0,"pressure":0.0,
-		"failure_exposure":0.0,"rng_index":0,"output_committed":false,
+		"failure_exposure":0.0,"rng_index":0,"output_committed":false,"custody":[],
 		"reserved_inputs":1500,"state":"RUNNING","interlocks":{"power":true,"cooling":true,"shield":true,"emergency":true}
 	}
 	notification.emit("Infinity Fusion 시작 · 15종 × 100개 예약 완료")
@@ -456,7 +456,7 @@ func find_lore(lore_id: String) -> void:
 
 func save_game() -> void:
 	var data := {
-		"version":GameData.SAVE_VERSION,"world_seed":world_seed,"player_position":[player_position.x,player_position.y,player_position.z],
+		"version":GameData.SAVE_VERSION,"world_seed":world_seed,"player_position":[player_position.x,player_position.y,player_position.z],"equipped_tool":equipped_tool,
 		"inventory":inventory,"buildings":buildings,"discovered_nodes":discovered_nodes,
 		"research_completed":research_completed,"active_research":active_research,"research_progress":research_progress,
 		"research_points":research_points,"story_flags":story_flags,"lore_found":lore_found,
@@ -484,6 +484,7 @@ func load_game() -> void:
 		notification.emit("이 저장은 더 최신 버전이야. 덮어쓰지 않을게.")
 		return
 	world_seed = int(parsed.get("world_seed", GameData.WORLD_SEED))
+	equipped_tool = str(parsed.get("equipped_tool","ITEM_TOOL_HANDS"))
 	player_position = Vector3(parsed.get("player_position", [0,0,0])[0], parsed.get("player_position", [0,0,0])[1], parsed.get("player_position", [0,0,0])[2])
 	inventory.assign(parsed.get("inventory", []))
 	buildings.assign(parsed.get("buildings", []))
