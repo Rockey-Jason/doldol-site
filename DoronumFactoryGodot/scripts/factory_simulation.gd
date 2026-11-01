@@ -265,17 +265,62 @@ func _tick_conveyors(dt: float) -> void:
 	for belt in game.buildings:
 		if belt.id != "CONVEYOR":
 			continue
-		if belt.get("payload", {}).is_empty():
+		if belt.get("payload",{}).is_empty():
+			var sources: Array[Dictionary] = []
+			for source in game.buildings:
+				if source.instance_id == belt.instance_id or source.output.is_empty():
+					continue
+				if Vector2(source.position.x,source.position.z).distance_to(Vector2(belt.position.x,belt.position.z)) <= 5.0:
+					sources.append(source)
+			sources.sort_custom(func(a,b):
+				return Vector2(a.position.x,a.position.z).distance_squared_to(Vector2(belt.position.x,belt.position.z)) < Vector2(b.position.x,b.position.z).distance_squared_to(Vector2(belt.position.x,belt.position.z))
+			)
+			if not sources.is_empty():
+				var source: Dictionary = sources[0]
+				belt.payload = source.output.pop_front()
+				belt.source = source.instance_id
+				belt.state = "TRANSPORTING"
+		if belt.get("payload",{}).is_empty():
 			continue
-		belt.transfer_progress = float(belt.get("transfer_progress", 0.0)) + dt
+		belt.transfer_progress = float(belt.get("transfer_progress",0.0))+dt
 		if belt.transfer_progress < 1.0:
 			continue
-		var target_id := str(belt.get("target", ""))
-		for target in game.buildings:
-			if target.instance_id != target_id:
+		var payload: Dictionary = belt.payload
+		var target_id := str(belt.get("target",""))
+		var target: Dictionary = {}
+		if not target_id.is_empty():
+			for candidate in game.buildings:
+				if candidate.instance_id == target_id:
+					target = candidate
+					break
+		if target.is_empty():
+			var candidates: Array[Dictionary] = []
+			for candidate in game.buildings:
+				if candidate.instance_id == belt.instance_id or candidate.instance_id == str(belt.get("source","")):
+					continue
+				if Vector2(candidate.position.x,candidate.position.z).distance_to(Vector2(belt.position.x,belt.position.z)) > 6.0:
+					continue
+				if candidate.id == "WAREHOUSE":
+					candidates.append(candidate)
+					continue
+				var recipe: Dictionary = GameData.recipe_definition(str(candidate.get("recipe","")))
+				if recipe.get("inputs",{}).has(str(payload.item_id)):
+					candidates.append(candidate)
+			candidates.sort_custom(func(a,b):
+				return Vector2(a.position.x,a.position.z).distance_squared_to(Vector2(belt.position.x,belt.position.z)) < Vector2(b.position.x,b.position.z).distance_squared_to(Vector2(belt.position.x,belt.position.z))
+			)
+			if not candidates.is_empty():
+				target = candidates[0]
+		if target.is_empty():
+			belt.state = "JAMMED_NO_ROUTE"
+			continue
+		if target.id == "WAREHOUSE":
+			game.add_item(str(payload.item_id),int(payload.quantity),float(payload.quality),float(payload.purity),bool(payload.synthetic),str(payload.provenance))
+		else:
+			if target.input.size() >= 24:
+				belt.state = "JAMMED_TARGET_FULL"
 				continue
-			if target.output.size() < int(target.get("buffer_limit", 1)):
-				target.output.append(belt.payload.duplicate(true))
-				belt.payload = {}
-				belt.transfer_progress = 0.0
-			break
+			target.input.append(payload.duplicate(true))
+		belt.payload = {}
+		belt.transfer_progress = 0.0
+		belt.state = "IDLE"
