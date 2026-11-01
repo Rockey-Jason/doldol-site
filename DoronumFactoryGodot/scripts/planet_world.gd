@@ -125,7 +125,12 @@ func _spawn_resources() -> void:
 		["NICKEL","ITEM_NICKEL_ORE",Vector2(-720,260),18,44,Color(0.55,0.60,0.62)],
 		["LEAD","ITEM_LEAD_ORE",Vector2(820,-520),16,50,Color(0.30,0.34,0.39)],
 		["HEAT","ITEM_HEAT_CRYSTAL",Vector2(570,350),16,18,Color(0.95,0.29,0.10)],
-		["COLD","ITEM_COLD_CRYSTAL",Vector2(-500,480),16,18,Color(0.24,0.68,0.98)]
+		["COLD","ITEM_COLD_CRYSTAL",Vector2(-500,480),16,18,Color(0.24,0.68,0.98)],
+		["SAND","ITEM_SAND",Vector2(360,780),28,80,Color(0.72,0.63,0.43)],
+		["ALUMINUM","ITEM_ALUMINUM_ORE",Vector2(-820,650),20,50,Color(0.66,0.70,0.75)],
+		["RUBBER_SAP","ITEM_RUBBER_SAP",Vector2(540,-260),18,45,Color(0.54,0.72,0.31)],
+		["OIL","ITEM_OIL",Vector2(880,180),14,70,Color(0.08,0.10,0.13)],
+		["BIRCH_WOOD","ITEM_BIRCH_WOOD",Vector2(-180,-400),25,60,Color(0.76,0.68,0.48)]
 	]
 	for deposit in deposits:
 		var center: Vector2 = deposit[2]
