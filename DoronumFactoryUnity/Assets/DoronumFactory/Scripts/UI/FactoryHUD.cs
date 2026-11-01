@@ -167,6 +167,13 @@ namespace DoronumFactory
             foreach(var s in machine.InputBuffer) GUILayout.Label(s.ItemId+" ×"+s.Quantity+"  Q"+s.Quality.ToString("F1")+" / P"+s.Purity.ToString("F1"),HudSkin.Small);
             GUILayout.Label("OUTPUT BUFFER",HudSkin.Kicker);
             foreach(var s in machine.CompletionBuffer) GUILayout.Label(s.ItemId+" ×"+s.Quantity+"  Q"+s.Quality.ToString("F1")+" / P"+s.Purity.ToString("F1"),HudSkin.Small);
+            GUILayout.Label("AVAILABLE RECIPES",HudSkin.Kicker);
+            int currentTier=FactoryCatalog.Research.Where(r=>game.State.Research.Any(p=>p.ResearchId==r.Id&&p.Completed)).Select(r=>r.Tier).DefaultIfEmpty(0).Max();
+            foreach(var recipe in FactoryCatalog.Recipes.Values.Where(x=>x.MachineId==machine.MachineId && x.Tier<=currentTier))
+            {
+                if(GUILayout.Button((machine.RecipeId==recipe.Id?"✓ ":"")+recipe.Id,HudSkin.Tab))
+                    game.SetMachineRecipe(machine.InstanceId,recipe.Id);
+            }
             GUILayout.Space(8);
             if(GUILayout.Button("출력 회수",HudSkin.Action)) game.CollectSelectedMachineOutput();
             if(GUILayout.Button("원료 투입 · 선택한 아이템 1개",HudSkin.Action)) game.SupplySelectedMachine(selectedInputId,1);
