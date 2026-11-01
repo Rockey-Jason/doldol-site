@@ -29,6 +29,7 @@ var stabilization_running := false
 var ending_complete := false
 var post_endgame := false
 var production_history: Array[Dictionary] = []
+var research_point_ledger: Array[Dictionary] = []
 var total_power_generated := 0.0
 var total_power_used := 0.0
 var power_state := {"starter_fuel_timer":0.0,"world_time":0.25,"fusion_buffer_kwh":0.0,"fusion_power_ratio":0.0}
@@ -213,22 +214,69 @@ func discover_resource(node_id: String, item_id: String) -> void:
 	if discovered_nodes.has(node_id):
 		return
 	discovered_nodes[node_id] = true
-	_claim_once("SCAN:" + node_id, "RESOURCE_SCANNED", 10)
-	notification.emit("자원 스캔 · " + GameData.item_name(item_id))
+	var tier := "GENERAL"
+	var reward := 100
+	if item_id in ["ITEM_IRON_ORE","ITEM_COPPER_ORE","ITEM_QUARTZ","ITEM_GOLD_ORE","ITEM_COAL"]:
+		tier = "ADVANCED"
+		reward = 250
+	if item_id in ["ITEM_DIAMOND","ITEM_TITANIUM_ORE","ITEM_NEODYMIUM_ORE","ITEM_MAGNETITE","ITEM_HEAT_CRYSTAL","ITEM_COLD_CRYSTAL","ITEM_CHROME_ORE","ITEM_NICKEL_ORE","ITEM_LEAD_ORE"]:
+		tier = "RARE"
+		reward = 500
+	_claim_once("SCAN:"+str(world_seed)+":"+item_id+":"+tier,"RESOURCE_SCANNED",reward)
+	notification.emit("자원 스캔 · "+GameData.item_name(item_id))
 
 func harvest_dori_tree(tree_id: String, mature: bool) -> bool:
 	if not mature:
 		notification.emit("나무가 아직 자라는 중이야.")
 		return false
-	add_item("ITEM_DORI_MEAT", 1, 92.0, 90.0, false, "DORI_TREE:" + tree_id)
-	_claim_once("TREE_HARVEST:" + tree_id, "DORI_TREE_HARVEST", 15)
+	add_item("ITEM_DORI_MEAT",1,92.0,90.0,false,"DORI_TREE:"+tree_id)
+	claim_research_sample(tree_id,"ITEM_DORI_MEAT")
+	_claim_once("FIRST_DORI_MEAT_HARVEST","DORI_TREE_HARVEST",1000)
 	return true
 
-func _claim_once(event_id: String, _kind: String, rp: int = 0) -> void:
+func _claim_once(event_id: String, kind: String, rp: int = 0) -> void:
 	if _event_ids.has(event_id):
 		return
 	_event_ids[event_id] = true
-	research_points += rp
+	if rp>0:
+		research_points += rp
+		research_point_ledger.append({"source_id":kind,"event_id":event_id,"claim_id":event_id,"amount":rp,"created_at_tick":simulation_tick})
+		state_changed.emit()
+
+func claim_research_sample(node_id: String,item_id: String) -> bool:
+	var token_id := "RESEARCH_SAMPLE:"+str(world_seed)+":"+node_id
+	if _event_ids.has(token_id):
+		return false
+	_event_ids[token_id] = true
+	add_item("ITEM_RESEARCH_SAMPLE",1,90.0,90.0,false,token_id+":"+item_id)
+	return true
+
+func analyze_research_sample() -> bool:
+	var lots := consume_items_with_lots({"ITEM_RESEARCH_SAMPLE":1},false)
+	if lots.is_empty():
+		notification.emit("분석할 연구 샘플이 없어.")
+		return false
+	var sample: Dictionary = lots[0]
+	var event_id := "RESEARCH_SAMPLE_ANALYSIS:"+str(sample.get("stack_id",""))
+	if _event_ids.has(event_id):
+		notification.emit("이미 분석한 연구 샘플이야.")
+		return false
+	_claim_once(event_id,"RESEARCH_SAMPLE_ANALYSIS",1000)
+	notification.emit("연구 샘플 분석 완료 · +1,000 RP")
+	save_game()
+	return true
+
+func claim_recipe_research_reward(recipe_id: String) -> void:
+	var reward := 100
+	if recipe_id.contains("DORONUM"):
+		reward = 1500
+	elif recipe_id in ["RECIPE_ADVANCED_CIRCUIT","RECIPE_CONTROL_MODULE","RECIPE_MOTOR","RECIPE_BATTERY","RECIPE_STEEL","RECIPE_TITANIUM_INGOT"]:
+		reward = 1000
+	elif recipe_id in ["RECIPE_IRON_ORE_TO_MOLTEN_IRON","RECIPE_COPPER_SMELT","RECIPE_GOLD_INGOT","RECIPE_CHROME_INGOT","RECIPE_NICKEL_INGOT","RECIPE_LEAD_INGOT"]:
+		reward = 250
+	else:
+		reward = 100
+	_claim_once("FIRST_RECIPE:"+recipe_id,"FIRST_RECIPE_SUCCESS",reward)
 
 func claim_special_edition_batch_contract() -> bool:
 	if not bool(story_flags.get("ARCHIVE_RESTORED",false)) or "RESEARCH_DORONUM_CRYSTAL" not in research_completed:
@@ -283,6 +331,7 @@ func start_research(research_id: String) -> bool:
 		notification.emit("연구소 전력 부족 · 필요 %.0f kW" % float(definition.power))
 		return false
 	research_points -= int(definition.rp)
+	research_point_ledger.append({"source_id":"RESEARCH_COST","event_id":"RESEARCH_COST:"+research_id,"claim_id":"RESEARCH_COST:"+research_id,"amount":-int(definition.rp),"created_at_tick":simulation_tick})
 	active_research = research_id
 	research_progress = 0.0
 	notification.emit("연구 시작 · " + str(definition.name))
@@ -877,8 +926,13 @@ func find_lore(lore_id: String) -> void:
 	if lore_id in lore_found:
 		return
 	lore_found.append(lore_id)
-	research_points += 100
-	notification.emit("기록 복구 · " + lore_id)
+	var reward := 500
+	if lore_id.contains("INCIDENT"):
+		reward = 2500
+	elif lore_id.contains("FIRST_FACTORY") or lore_id.contains("INFINITY"):
+		reward = 10000
+	_claim_once("LORE:"+lore_id,"LORE_RESTORED",reward)
+	notification.emit("기록 복구 · "+lore_id+" · +%d RP" % reward)
 	var required := ["LORE_INCIDENT_SAFETY_OVERRIDE","LORE_INCIDENT_POWER_OSCILLATION","LORE_INCIDENT_COOLING_FAILURE","LORE_INCIDENT_ARCHIVE_EDIT"]
 	if required.all(func(id): return id in lore_found):
 		story_flags["STORY_INCIDENT_RECONSTRUCTED"] = true
@@ -901,7 +955,7 @@ func save_game() -> void:
 		"fusion":fusion,"fusion_diagnostics":fusion_diagnostics,"relays":relays,
 		"core_installed":core_installed,"stabilization_phase":stabilization_phase,
 		"ending_complete":ending_complete,"post_endgame":post_endgame,
-		"production_history":production_history,"power_state":power_state,"stabilization_progress":stabilization_progress,"stabilization_running":stabilization_running,"event_ids":_event_ids,"next_stack_id":_next_stack_id
+		"production_history":production_history,"research_point_ledger":research_point_ledger,"power_state":power_state,"stabilization_progress":stabilization_progress,"stabilization_running":stabilization_running,"event_ids":_event_ids,"next_stack_id":_next_stack_id
 	}
 	data["checksum"] = hash(JSON.stringify(data))
 	var temporary_path := SAVE_PATH + ".tmp"
@@ -992,6 +1046,7 @@ func load_game() -> void:
 	ending_complete = bool(parsed.get("ending_complete", false))
 	post_endgame = bool(parsed.get("post_endgame", false))
 	production_history.assign(parsed.get("production_history", []))
+	research_point_ledger.assign(parsed.get("research_point_ledger", []))
 	power_state = parsed.get("power_state",{"starter_fuel_timer":0.0,"world_time":0.25,"fusion_buffer_kwh":0.0,"fusion_power_ratio":0.0})
 	stabilization_progress = float(parsed.get("stabilization_progress",0.0))
 	stabilization_running = bool(parsed.get("stabilization_running",false))
