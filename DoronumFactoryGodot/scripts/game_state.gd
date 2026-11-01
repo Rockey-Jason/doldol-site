@@ -591,7 +591,7 @@ func _tick_fusion(dt: float) -> void:
 		return
 	var progress_delta := dt*ratio
 	fusion.stage_progress += progress_delta
-	fusion.failure_exposure += progress_delta
+	fusion.failure_exposure += dt
 	fusion.temperature_quality_sum += _fusion_process_score(float(fusion.temperature),temperature_target)*progress_delta
 	fusion.pressure_quality_sum += _fusion_process_score(float(fusion.pressure),pressure_target)*progress_delta
 	var fusion_machine := buildings.filter(func(m): return m.id=="INFINITY_FUSION_MACHINE")
@@ -602,10 +602,10 @@ func _tick_fusion(dt: float) -> void:
 	fusion.power_ratio_square_sum += ratio*ratio
 	fusion.power_sample_count += 1
 	fusion.rng_index += 1
-	var chance := 1.0-pow(0.99,progress_delta/260.0)
+	var chance := 1.0-pow(0.99,dt/260.0)
 	if _deterministic_unit(int(fusion.rng_index))<chance:
 		var severity_roll := _deterministic_unit(int(fusion.rng_index)+900000)
-		var severity := "FAILED_MINOR" if severity_roll<0.70 else ("FAILED_MAJOR" if severity_roll<0.95 else "FAILED_CRITICAL")
+		var severity := "FAILED_MINOR" if severity_roll<0.30 else ("FAILED_MAJOR" if severity_roll<0.75 else "FAILED_CRITICAL")
 		var recovery_ratio := 1.0 if severity=="FAILED_MINOR" else (0.95 if severity=="FAILED_MAJOR" else 0.80)
 		fusion.state = severity
 		fusion.recovery_ratio = recovery_ratio
