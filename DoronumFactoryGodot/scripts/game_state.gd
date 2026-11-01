@@ -195,7 +195,11 @@ func build(building_id: String, world_position: Vector3, rotation_y: float = 0.0
 		if Vector2(existing.position.x,existing.position.z).distance_to(Vector2(world_position.x,world_position.z))<3.0:
 			notification.emit("다른 설비와 설치 공간이 겹쳐.")
 			return false
-	if not consume_items(definition.cost):
+	var build_cost: Dictionary = definition.cost.duplicate(true)
+	if has_skill("BUFFER_ENGINEER") and building_id in ["WAREHOUSE","FUSION_POWER_BUFFER"]:
+		for item_id in build_cost:
+			build_cost[item_id] = int(ceil(float(build_cost[item_id])*0.95))
+	if not consume_items(build_cost):
 		notification.emit("건설 재료가 부족해.")
 		return false
 	var instance := {
