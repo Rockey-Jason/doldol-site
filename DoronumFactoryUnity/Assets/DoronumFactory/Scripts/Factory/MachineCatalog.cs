@@ -14,12 +14,14 @@ namespace DoronumFactory
         public int Depth;
         public float IdlePowerKW;
         public float ProcessPowerKW;
+        public float GenerationKW;
         public int PowerPriority;
         public string[] RequiredResearch;
         public readonly List<ItemAmount> Cost=new List<ItemAmount>();
         public FactoryMachineDefinition(string id,string name,int tier,int width,int depth,float processPower,string[] research=null)
         { Id=id;Name=name;Tier=tier;Width=width;Depth=depth;ProcessPowerKW=processPower;RequiredResearch=research??Array.Empty<string>(); }
         public FactoryMachineDefinition WithPower(float idle,int priority) { IdlePowerKW=idle;PowerPriority=priority;return this; }
+        public FactoryMachineDefinition Generates(float kw) { GenerationKW=kw;return this; }
         public FactoryMachineDefinition Pay(params ItemAmount[] cost) { Cost.AddRange(cost);return this; }
     }
 
@@ -33,16 +35,16 @@ namespace DoronumFactory
             void Add(FactoryMachineDefinition m)=>d.Add(m.Id,m);
             string[] R(string id)=>new[]{id};
             Add(new FactoryMachineDefinition("WORKBENCH","Workbench",0,2,2,0).Pay(new ItemAmount("ITEM_WOOD",12),new ItemAmount("ITEM_STONE",6)));
-            Add(new FactoryMachineDefinition("HAND_CRANK_GENERATOR","Hand-Crank Generator",0,2,2,0,R("RESEARCH_BASIC_SURVIVAL")).Pay(new ItemAmount("ITEM_WOOD",20),new ItemAmount("ITEM_STONE",10)));
+            Add(new FactoryMachineDefinition("HAND_CRANK_GENERATOR","Hand-Crank Generator",0,2,2,0,R("RESEARCH_BASIC_SURVIVAL")).Generates(25f).Pay(new ItemAmount("ITEM_WOOD",20),new ItemAmount("ITEM_STONE",10)));
             Add(new FactoryMachineDefinition("CARBON_MILL","Carbon Mill",1,2,2,12,R("RESEARCH_BASIC_MINING")).Pay(new ItemAmount("ITEM_STONE",12),new ItemAmount("ITEM_IRON",2)));
             Add(new FactoryMachineDefinition("WIRE_MILL","Wire Mill",2,3,2,20,R("RESEARCH_MECHANICAL_PROCESSING")).Pay(new ItemAmount("ITEM_IRON_PLATE",8),new ItemAmount("ITEM_GEAR",3)));
             Add(new FactoryMachineDefinition("STEEL_FURNACE","Steel Furnace",2,4,4,80,R("RESEARCH_STEEL")).Pay(new ItemAmount("ITEM_STEEL_PLATE",12),new ItemAmount("ITEM_BASIC_CIRCUIT",2)));
             Add(new FactoryMachineDefinition("FABRICATOR","Fabricator",2,3,3,45,R("RESEARCH_MECHANICAL_PROCESSING")).Pay(new ItemAmount("ITEM_IRON_PLATE",10),new ItemAmount("ITEM_GEAR",5)));
-            Add(new FactoryMachineDefinition("FURNACE","Furnace",1,3,3,35,R("RESEARCH_IRON_SMELTING")).Pay(new ItemAmount("ITEM_STONE",20),new ItemAmount("ITEM_IRON",8)));
+            Add(new FactoryMachineDefinition("FURNACE","Furnace",1,3,3,35,R("RESEARCH_IRON_SMELTING")).Pay(new ItemAmount("ITEM_STONE",20),new ItemAmount("ITEM_WOOD",8),new ItemAmount("ITEM_COPPER_ORE",2)));
             Add(new FactoryMachineDefinition("COMPRESSOR","Compressor",2,3,3,50,R("RESEARCH_MECHANICAL_PROCESSING")).Pay(new ItemAmount("ITEM_IRON_PLATE",12),new ItemAmount("ITEM_GEAR",4)));
-            Add(new FactoryMachineDefinition("ROLLING_MILL","Rolling Mill",2,4,3,60,R("RESEARCH_MECHANICAL_PROCESSING")).Pay(new ItemAmount("ITEM_STEEL_PLATE",10),new ItemAmount("ITEM_GEAR",6)));
-            Add(new FactoryMachineDefinition("GEAR_STATION","Gear Station",2,3,3,35,R("RESEARCH_MECHANICAL_PROCESSING")).Pay(new ItemAmount("ITEM_IRON_PLATE",10),new ItemAmount("ITEM_GEAR",3)));
-            Add(new FactoryMachineDefinition("BEARING_STATION","Bearing Station",2,3,3,40,R("RESEARCH_MECHANICAL_PROCESSING")).Pay(new ItemAmount("ITEM_IRON_PLATE",10),new ItemAmount("ITEM_GEAR",3)));
+            Add(new FactoryMachineDefinition("ROLLING_MILL","Rolling Mill",2,4,3,60,R("RESEARCH_MECHANICAL_PROCESSING")).Pay(new ItemAmount("ITEM_IRON_PLATE",12),new ItemAmount("ITEM_GEAR",4)));
+            Add(new FactoryMachineDefinition("GEAR_STATION","Gear Station",2,3,3,35,R("RESEARCH_MECHANICAL_PROCESSING")).Pay(new ItemAmount("ITEM_IRON_PLATE",10),new ItemAmount("ITEM_IRON",5)));
+            Add(new FactoryMachineDefinition("BEARING_STATION","Bearing Station",2,3,3,40,R("RESEARCH_MECHANICAL_PROCESSING")).Pay(new ItemAmount("ITEM_STEEL_PLATE",6),new ItemAmount("ITEM_GEAR",2)));
             Add(new FactoryMachineDefinition("GENERATOR","Thermal Generator",2,3,3,0,R("RESEARCH_ELECTRIC_PROCESSING")).Pay(new ItemAmount("ITEM_STEEL_PLATE",10),new ItemAmount("ITEM_COPPER_WIRE",8)));
             Add(new FactoryMachineDefinition("SOLAR_PANEL","Solar Array",2,3,2,0,R("RESEARCH_ELECTRIC_PROCESSING")).Pay(new ItemAmount("ITEM_ALUMINUM_PLATE",8),new ItemAmount("ITEM_BASIC_CIRCUIT",2)));
             Add(new FactoryMachineDefinition("WIND_TURBINE","Wind Turbine",3,3,3,0,R("RESEARCH_ELECTRIC_PROCESSING")).Pay(new ItemAmount("ITEM_STEEL_PLATE",12),new ItemAmount("ITEM_MOTOR",1)));
