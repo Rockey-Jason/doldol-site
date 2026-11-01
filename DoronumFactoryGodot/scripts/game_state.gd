@@ -208,55 +208,6 @@ func _tick_research(dt: float) -> void:
 		active_research = ""
 		research_progress = 0.0
 
-func _tick_machines(dt: float) -> void:
-	var generation := 250.0
-	var usage := 0.0
-	for machine in buildings:
-		if machine.id == "GENERATOR":
-			generation += 250.0
-		elif machine.id == "SOLAR_PANEL":
-			generation += 80.0
-		elif machine.id == "RESEARCH_LAB" and not active_research.is_empty():
-			usage += 25.0
-		elif machine.id == "INFINITY_FUSION_MACHINE" and not fusion.is_empty():
-			usage += float(GameData.FUSION_STAGES[int(fusion.stage)].power)
-	total_power_generated = generation
-	total_power_used = usage
-	var ratio := 1.0 if usage <= 0.0 else minf(1.0, generation / usage)
-	for machine in buildings:
-		if machine.get("recipe", "").is_empty() or not machine.output.is_empty():
-			continue
-		var recipe: Dictionary = GameData.recipe_definition(machine.recipe, {})
-		if recipe.is_empty():
-			continue
-		if machine.get("job_started", false) == false:
-			if not consume_items(recipe.inputs):
-				machine.state = "WAITING_INPUT"
-				continue
-			machine.job_started = true
-		if ratio < 0.8:
-			machine.state = "PAUSED_POWER"
-			continue
-		machine.state = "RUNNING" if ratio >= 1.0 else "BROWNOUT_RUNNING"
-		var factor := minf(1.0, ratio)
-		machine.progress += dt * factor
-		var target_temp := float(recipe.get("temperature", 20.0))
-		var target_pressure := float(recipe.get("pressure", 0.0))
-		machine.temperature = move_toward(machine.temperature, target_temp, 120.0 * dt)
-		machine.pressure = move_toward(machine.pressure, target_pressure, 50.0 * dt)
-		if machine.progress >= float(recipe.seconds):
-			var q := 90.0
-			var p := 90.0
-			var synthetic := false
-			for output_id in recipe.outputs:
-				machine.output.append({"item_id":output_id,"quantity":int(recipe.outputs[output_id]),"quality":q,"purity":p,"synthetic":synthetic,"provenance":"MACHINE:"+machine.instance_id})
-			machine.state = "PAUSED_OUTPUT"
-			machine.progress = 0.0
-			machine.job_started = false
-			production_history.append({"machine":machine.instance_id,"recipe":machine.recipe,"time":Time.get_unix_time_from_system()})
-			if production_history.size() > 500:
-				production_history.pop_front()
-
 func collect_machine_output(instance_id: String) -> bool:
 	for machine in buildings:
 		if machine.instance_id != instance_id or machine.output.is_empty():
