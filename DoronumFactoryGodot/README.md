@@ -1,49 +1,72 @@
 # DORONUM FACTORY — INFINITE INDUSTRY
 
-Native 3D game project built with Godot 4.4.1. Unity is not used. This is not a browser game.
+A native, standalone 3D factory/exploration game built with **Godot 4.4.1 Standard**. Unity is not used, and the runtime is not a browser page.
 
-## Run
+## Open and run
 
 1. Install Godot 4.4.1 Standard (not .NET).
-2. Open this folder as a project in Godot.
-3. Run scenes/main.tscn.
+2. Import the `DoronumFactoryGodot` folder.
+3. Open `scenes/main.tscn` and press Play.
 
-## Desktop controls
+The CI workflow is configured to export Windows, Linux and Android arm64 builds. Do not treat an export as available until the corresponding workflow artifact exists.
 
+## Controls
+
+**PC**
 - WASD: move
 - Shift: sprint
 - Space: jump
-- E: interact / gather / operate a machine
+- E: interact, gather or collect a machine output
 - B: construction mode
 - I: inventory
 - F: factory overview
 - H: hide/show HUD
-- Right mouse: capture camera
+- Right mouse: capture camera; move mouse to look
 - Escape: release mouse / pause
 - Left click on terrain: place selected building
 
-The game starts with the mouse visible so the HUD can be used immediately. Right-click the world to capture the camera; press Escape to release it.
+**Android**
+- On-screen D-pad: move
+- RUN: sprint
+- JUMP: jump
+- E: interact / gather
+- Swipe on the right side: camera
+- Tap terrain while building mode is active: place the selected building
 
-## Canonical endgame
+## Core game systems
 
-- World: 2048m × 2048m, X/Z bounds ±1024m.
-- Doronum is manufactured; it never appears as a natural ore deposit.
-- A natural Dori Meat Tree needs 2L water, grows for 60 seconds and yields 1 non-synthetic Dori Meat without being destroyed.
-- Normal Doronum requires 10 non-synthetic Dori Meat.
-- Infinity Fusion accepts exactly the 15 canonical item IDs in GameData.DORONUM_IDS, 100 each, 1500 total. Every selected lot must be non-synthetic and have unrounded Quality and Purity ≥90.
-- Fusion runs seven persisted stages with the exact 500/1200/1800/2500/3500/4500/5000°C targets, 100/500/1000/5000/10000/15000/20000MPa targets, 0.5/1/1.5/2.5/3.5/4.5/5MW demands and 20/25/30/35/40/50/60 seconds ideal progress.
-- Ideal RUNNING time is 260 seconds. Ramp time, power pauses, interlock pauses and recovery add wall-clock time.
-- Infinity is committed to an output buffer once. It does not automatically end the game.
-- Three independent relays, the central core and three stabilization phases are required. The ending then unlocks Infinite Industry free play.
+- Seeded 2048m × 2048m world with biome regions, finite ore deposits and six POI/story areas
+- Third-person player, mining tools, tool condition, repairs and inventory lot metadata
+- 18 research nodes, 20 engineer skills and a 15-point milestone ledger
+- Fixed 0.10s production simulation, generators, solar/wind, machine loads and a persistent 500kWh Fusion power buffer
+- Furnaces, compressors, fabrication, alloy chains, miners, conveyors, warehouses and Dori Meat Tree automation
+- 15 canonical Doronum variants (Normal plus 14 variants), edition batch contracts and Rusted Doronum purification
+- One-time Research Point Ledger, unique per-node research samples and analysis
+- Versioned local save with checksum, temporary write, rolling backup, world depletion/tree persistence and schema-1 migration
 
-## Simulation
+## Final technology path
 
-Authoritative production, world-tree growth, research and fusion use a 0.10-second fixed tick. Production pauses below PowerRatio 0.80 and brownout progress scales by the actual ratio. Saves use checksums, a temporary file and a rolling backup. Offline production is disabled.
+1. Complete the 18-node research tree and restore the four BLUE FURNACE INCIDENT records.
+2. Reach the First Factory and restore Archive, Cooling Core and Resonance Chamber POIs.
+3. Complete the Doronum/Fusion research and final safety diagnostics.
+4. Produce exactly 100 qualifying units of each of the 15 canonical Doronum IDs. Each consumed lot must be natural (`synthetic=false`) with unrounded Quality and Purity ≥90.
+5. Build and maintain the Infinity Fusion Machine, Fusion Power Buffer, Containment Shield, Emergency Cooling System, Pressure Calibration Rig and Cooling Stabilizer. Charge the independent buffer to at least 400kWh.
+6. Start the atomic 15×100 reservation. The seven persisted stages use the canonical temperature, pressure, power and ideal-time targets; ramping, brownouts and failures extend wall-clock time.
+7. Collect the single Infinity output, install three distinct Stabilization Relays and the Core, then complete the three timed planetary synchronization phases (60/90/120 seconds).
+8. The ending unlocks Infinite Industry free play.
 
-## Known implementation choices / gaps
+See `FINAL_TECH_ACCEPTANCE.md` for the acceptance checklist and `SPEC_GAP_MATRIX.md` for honest implementation status.
 
-- Equal input MaterialWeight/PurityWeight values are currently an explicit NCP for recipes whose source table does not yet provide individual weights. Replace them with per-input canonical values after full recipe-data extraction.
-- The default safe temperature/pressure tolerance for ordinary recipes is ±10% pending individual machine/fault profiles.
-- Several side systems from the full reference (shipping economy, complete contracts, fluids/pipes, full skill tree, all 40 audio tracks, complete animation/VFX inventories and final production-line acceptance tests) are not yet complete.
-- Rusted Doronum purification and special/limited batch supply require their dedicated purifier/contract implementation before the Infinity path can be considered complete.
-- Windows/Linux export and smoke tests are performed by the GitHub Actions workflow. They are not claimed as passed until that workflow completes successfully.
+## Save data
+
+Native saves live in Godot's `user://doronium_factory_save.json`. The save stores world seed, depleted resources, tree growth, inventory lots, buildings, research, skills, story flags, power buffer, fusion job/manifest, relays and ending state. Browser prototype localStorage is not imported.
+
+## Known gaps
+
+- The 3D world and factory visuals are procedural blockout assets; final custom meshes, detailed character/machine animations, VFX and the complete 40-track score are not yet supplied.
+- Power is currently a global supply/load model with a dedicated Fusion battery, not the full per-port network/priority graph.
+- Conveyors have basic automatic transfer; splitters, mergers, cycle validation, precise spacing and full backpressure ownership are not complete.
+- Shipping/contract economy exists only for the two final edition-material contracts; the full contract board, timed shipping routes, prices and market simulation remain incomplete.
+- Water is currently a tree-watering resource; the full graph-based fluid/pipe/tank/valve system is not complete.
+- Several of the 20 skill nodes currently provide data/UI or selected active modifiers; every passive effect and Blueprint workflow still needs implementation.
+- Full end-to-end campaign playtesting, save corruption fixtures, Android device testing and the native exports must pass before calling the build release-ready.
