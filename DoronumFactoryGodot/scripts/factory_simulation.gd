@@ -104,6 +104,8 @@ func _fixed_tick(dt: float) -> void:
 		world.advance_simulation(dt)
 	game.advance_fixed_tick(dt)
 	if tick_number % 50 == 0:
+		if world != null:
+			game.sync_world_state(world)
 		game.save_game()
 
 func _tick_machine(machine: Dictionary, dt: float) -> void:
@@ -332,6 +334,7 @@ func _tick_auto_miner(machine: Dictionary, dt: float) -> void:
 	}
 	machine.output.append(stack)
 	target.set_meta("quantity",remaining-1)
+	game.resource_depletion[str(target.get_meta("node_id",""))] = remaining-1
 	game.discover_resource(str(target.get_meta("node_id")),item_id)
 	if remaining-1 <= 0:
 		target.queue_free()
