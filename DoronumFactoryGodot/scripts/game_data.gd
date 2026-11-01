@@ -79,16 +79,16 @@ const BUILDINGS := [
 ]
 const VARIANT_RECIPES := {
 	"ITEM_DORONUM_YELLOW":{"name":"Yellow Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_GOLD_INGOT":2,"ITEM_QUARTZ":1},"machine":"DORONUM_REFINEMENT_CHAMBER","seconds":45.0,"temperature":700.0,"pressure":300.0},
-	"ITEM_DORONUM_ULTRA":{"name":"Ultra Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_DORONUM_YELLOW":1,"ITEM_DIAMOND":2},"machine":"ULTRA_MATERIAL_PRESS","seconds":90.0,"temperature":1600.0,"pressure":1200.0},
-	"ITEM_DORONUM_BLUE":{"name":"Blue Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_COLD_CRYSTAL":3},"machine":"COOLING_STABILIZER","seconds":75.0,"temperature":-120.0,"pressure":350.0},
-	"ITEM_DORONUM_RED":{"name":"Red Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_HEAT_CRYSTAL":3},"machine":"THERMAL_STABILIZER","seconds":75.0,"temperature":1400.0,"pressure":600.0},
+	"ITEM_DORONUM_ULTRA":{"name":"Ultra Doronum","inputs":{"ITEM_DORONUM_NORMAL":3,"ITEM_DIAMOND":1,"ITEM_TITANIUM_PLATE":2},"machine":"ULTRA_MATERIAL_PRESS","seconds":90.0,"temperature":1200.0,"pressure":1000.0},
+	"ITEM_DORONUM_BLUE":{"name":"Blue Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_COLD_CRYSTAL":2,"ITEM_QUARTZ":2},"machine":"DORONUM_REFINEMENT_CHAMBER","seconds":60.0,"temperature":400.0,"pressure":200.0},
+	"ITEM_DORONUM_RED":{"name":"Red Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_HEAT_CRYSTAL":2,"ITEM_CHROME_INGOT":2},"machine":"DORONUM_REFINEMENT_CHAMBER","seconds":60.0,"temperature":1400.0,"pressure":500.0},
 	"ITEM_DORONUM_IRON":{"name":"Iron Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_STEEL_PLATE":3,"ITEM_MAGNETITE":2},"machine":"REINFORCED_DORONUM_PRESS","seconds":75.0,"temperature":900.0,"pressure":700.0},
 	"ITEM_DORONUM_ORANGE":{"name":"Orange Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_COPPER_WIRE":10,"ITEM_GOLD_INGOT":1},"machine":"DORONUM_REFINEMENT_CHAMBER","seconds":55.0,"temperature":800.0,"pressure":400.0},
 	"ITEM_DORONUM_SLIGHTLY_RUSTED":{"name":"Slightly Rusted Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_IRON_ORE":1,"ITEM_WATER":1},"machine":"CONTROLLED_ATMOSPHERE_CHAMBER","seconds":45.0,"temperature":350.0,"pressure":120.0},
 	"ITEM_DORONUM_RUSTED":{"name":"Rusted Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_IRON_ORE":2,"ITEM_WATER":3},"machine":"CONTROLLED_ATMOSPHERE_CHAMBER","seconds":60.0,"temperature":500.0,"pressure":180.0},
 	"ITEM_DORONUM_TRANSLUCENT":{"name":"Translucent Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_QUARTZ":4,"ITEM_DIAMOND":1},"machine":"OPTICAL_REFINEMENT_CHAMBER","seconds":90.0,"temperature":650.0,"pressure":500.0},
-	"ITEM_DORONUM_THERMAL_CRYSTAL":{"name":"Thermal Crystal","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_HEAT_CRYSTAL":3},"machine":"THERMAL_STABILIZER","seconds":75.0,"temperature":1200.0,"pressure":600.0},
-	"ITEM_DORONUM_COLD_CRYSTAL":{"name":"Cold Crystal","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_COLD_CRYSTAL":3},"machine":"COOLING_STABILIZER","seconds":75.0,"temperature":-160.0,"pressure":400.0},
+	"ITEM_DORONUM_THERMAL_CRYSTAL":{"name":"Thermal Crystal","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_HEAT_CRYSTAL":3},"machine":"THERMAL_STABILIZER","seconds":75.0,"temperature":1100.0,"pressure":600.0},
+	"ITEM_DORONUM_COLD_CRYSTAL":{"name":"Cold Crystal","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_COLD_CRYSTAL":3},"machine":"COOLING_STABILIZER","seconds":75.0,"temperature":250.0,"pressure":400.0},
 	"ITEM_DORONUM_BLACK":{"name":"Black Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_CARBON_POWDER":5,"ITEM_DIAMOND":1},"machine":"ABSORPTION_PRESS","seconds":100.0,"temperature":1000.0,"pressure":800.0},
 	"ITEM_DORONUM_SPECIAL_EDITION":{"name":"Special Edition Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_DORONUM_YELLOW":1,"ITEM_ADVANCED_CIRCUIT":5,"ITEM_ARCHIVE_PATTERN":1},"machine":"SEALED_PRECISION_CHAMBER","seconds":120.0,"temperature":900.0,"pressure":1000.0,"story":"SPECIAL_EDITION_BATCH_RESEARCHED"},
 	"ITEM_DORONUM_LIMITED_EDITION":{"name":"Limited Edition Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_DORONUM_ULTRA":1,"ITEM_DORONUM_TRANSLUCENT":1,"ITEM_CONTRACT_SEAL":1},"machine":"LEGACY_BATCH_LINE","seconds":180.0,"temperature":1100.0,"pressure":1500.0,"story":"LIMITED_EDITION_CONTRACT_ACTIVE"}
