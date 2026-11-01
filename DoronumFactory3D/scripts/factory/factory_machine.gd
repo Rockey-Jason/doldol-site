@@ -36,8 +36,9 @@ func _process(delta: float) -> void:
 		if machine_type == "INFINITY_FUSION_MACHINE" and machine_state.get("status","") == "RUNNING":
 			part.rotate_y(delta*(0.4+float(i)*0.14))
 	if _status_lamp:
-		var active := str(machine_state.get("status","")) == "RUNNING"
-		_status_lamp.material_override.emission_energy_multiplier = 1.2+sin(visual_time*5.0)*0.25 if active else 0.25
+		var active := str(machine_state.get("status","")) in ["RUNNING","BROWNOUT_RUNNING"]
+		var lamp_material := _status_lamp.material_override as StandardMaterial3D
+		lamp_material.emission_energy_multiplier = 1.2+sin(visual_time*5.0)*0.25 if active else 0.25
 
 func _build_machine_model() -> void:
 	_body_material = StandardMaterial3D.new()
