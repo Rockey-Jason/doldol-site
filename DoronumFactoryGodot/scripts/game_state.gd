@@ -566,16 +566,32 @@ func save_game() -> void:
 	if error != OK:
 		notification.emit("저장 교체 실패 · 백업 파일은 보존했어.")
 
-func load_game() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
-		return
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if not file:
-		notification.emit("저장 파일을 열 수 없어. 새 세이브 백업을 만들 수 있어.")
-		return
+func _read_save_file(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var file := FileAccess.open(path,FileAccess.READ)
+	if file == null:
+		return {}
 	var parsed: Variant = JSON.parse_string(file.get_as_text())
 	if not parsed is Dictionary:
-		notification.emit("저장 데이터가 손상됐어. 원본을 보존하고 새 게임을 시작해.")
+		return {}
+	if parsed.has("checksum"):
+		var checksum := int(parsed.checksum)
+		var clean: Dictionary = parsed.duplicate(true)
+		clean.erase("checksum")
+		if hash(JSON.stringify(clean)) != checksum:
+			return {}
+	return parsed
+
+func load_game() -> void:
+	var parsed := _read_save_file(SAVE_PATH)
+	if parsed.is_empty():
+		parsed = _read_save_file(SAVE_PATH+".bak")
+		if not parsed.is_empty():
+			notification.emit("기본 저장을 읽지 못해 백업에서 복구했어.")
+	if parsed.is_empty():
+		if FileAccess.file_exists(SAVE_PATH):
+			notification.emit("저장 데이터와 백업이 손상됐어. 원본 파일은 보존돼.")
 		return
 	save_loaded = true
 	if int(parsed.get("version", 0)) > GameData.SAVE_VERSION:
