@@ -96,7 +96,7 @@ func _complete_quest(quest: Dictionary) -> void:
 	GameState.reward_ledger[claim_id] = {"tick":GameState.simulation_tick,"rp":int(quest.reward_rp)}
 	if int(quest.reward_rp)>0:
 		GameState.research_points += int(quest.reward_rp)
-	if quest_id in ["Q02","Q05","Q08","Q11","Q15","Q19"]:
+	if quest_id in ["Q02","Q05","Q10","Q15"]:
 		GameState.grant_skill_point_once("STORY_MILESTONE:"+quest_id)
 	var next_act := int(quest.act)
 	if next_act > current_act:
@@ -104,8 +104,6 @@ func _complete_quest(quest: Dictionary) -> void:
 		GameState.story_flags["CURRENT_ACT"] = current_act
 		act_changed.emit(current_act,str(ACTS[current_act-1].title))
 		chapter_music_requested.emit(mini(8,current_act))
-		if current_act in [2,3,4,5,6,7]:
-			GameState.grant_skill_point_once("ACT_COMPLETE:"+str(current_act-1))
 	last_dialogue = _orbit_quest_line(quest)
 	dialogue_changed.emit(orbit_name,last_dialogue)
 	GameState.toast("임무 완료 · "+str(quest.title),"success")
@@ -137,6 +135,11 @@ func notify_lore(event_id: String, title: String, orbit_line: String) -> void:
 	lore_records.append(event_id)
 	GameState.story_flags["LORE_RECORDS"] = lore_records
 	GameState.story_flags["LORE:"+event_id] = true
+	if event_id == "DORI_MEAT_TREE_DISCOVERED":
+		GameState.story_flags["DORI_MEAT_DISCOVERED"] = true
+		GameState.grant_skill_point_once("KEY_MILESTONE:DORI_TREE")
+	elif event_id == "INFINITY_PROJECT_REVEALED":
+		GameState.grant_skill_point_once("KEY_MILESTONE:INFINITY_PROJECT")
 	GameState.grant_rp_once("LORE:"+event_id,500)
 	last_dialogue = "“"+orbit_line+"”"
 	dialogue_changed.emit(orbit_name,last_dialogue)
@@ -146,6 +149,7 @@ func notify_lore(event_id: String, title: String, orbit_line: String) -> void:
 
 func on_first_doronum_created() -> void:
 	GameState.story_flags["FIRST_DORONUM_OUTPUT"] = true
+	GameState.grant_skill_point_once("KEY_MILESTONE:FIRST_DORONUM")
 	GameState.register_world_event("ORBIT_DORONUM_DISCOVERY")
 	last_dialogue = "“Unknown material detected. Designation: DORONUM. It is manufactured, not mined.”"
 	dialogue_changed.emit(orbit_name,last_dialogue)
