@@ -173,6 +173,12 @@
       return;
     }
     meta = readMeta(uid);
+    // Preserve writes made by page scripts before the first auth lookup completed.
+    for (const key of pending.keys()) {
+      if (!meta.dirty.includes(key)) meta.dirty.push(key);
+      if (!meta.managed.includes(key)) meta.managed.push(key);
+    }
+    writeMeta();
     try { native.set.call(localStorage, OWNER_KEY, uid); } catch (_) {}
     await syncNow(true);
   };
