@@ -82,7 +82,6 @@ namespace DoronumFactory
         public bool StartResearch(string researchId)
         {
             var def=FactoryCatalog.Research.FirstOrDefault(x=>x.Id==researchId);
-            if (def==null || string.IsNullOrEmpty(state.ActiveResearchId) || false) { }
             if (def==null || !string.IsNullOrEmpty(state.ActiveResearchId) || IsResearchCompleted(researchId) ||
                 !IsResearchUnlocked(def) || state.ResearchPoints<def.CostRP) return false;
             int labTier=def.Tier<=2?0:(def.Tier<=4?1:2);
@@ -129,13 +128,12 @@ namespace DoronumFactory
             if (!FactoryCatalog.Items.ContainsKey(itemId)) return false;
             string claim="SAMPLE_ANALYSIS:"+state.WorldSeed+":"+itemId;
             if (state.HasClaim(claim) || inventory.Count(itemId)<1) return false;
-            if (itemId=="ITEM_DORI_MEAT" && state.Inventory.Where(s=>s.ItemId==itemId).All(s=>s.Synthetic)) return false;
             int rp=500;
             string category=FactoryCatalog.Items[itemId].Category;
             if (category=="Ore" || category=="Metal" || category=="Part" || category=="Electronics") rp=1000;
             if (category=="Crystal" || category=="Doronum") rp=1500;
             if (itemId=="ITEM_DIAMOND" || itemId=="ITEM_NEODYMIUM_ORE" || itemId=="ITEM_HEAT_CRYSTAL" || itemId=="ITEM_COLD_CRYSTAL") rp=2500;
-            if (!inventory.Remove(itemId,1)) return false;
+            if (!inventory.TryReserveEligible(itemId,1,0f,0f,false,out var sample)) return false;
             state.TryClaim(claim,"SAMPLE_ANALYSIS",rp);
             state.ResearchPoints+=rp;
             ResearchChanged?.Invoke();
