@@ -14,6 +14,8 @@ func _run() -> void:
 	]
 	assert(GameData.DORONUM_IDS == expected_ids,"Canonical 15-item Infinity manifest mismatch")
 	assert(GameData.RESEARCH.size() == 18,"Research count must remain exactly 18")
+	assert(GameData.SKILLS.size() == 20,"Skill tree must contain exactly 20 nodes")
+	assert(GameData.VARIANT_RECIPES.size() == 14,"There must be fourteen Doronum variants beyond Normal")
 	assert(GameData.FUSION_STAGES.size() == 7,"Infinity Fusion must have seven stages")
 	var ideal_seconds := 0.0
 	for stage in GameData.FUSION_STAGES:
@@ -32,10 +34,12 @@ func _run() -> void:
 	state.story_flags["RESONANCE_CHAMBER_RESTORED"] = true
 	for key in state.fusion_diagnostics:
 		state.fusion_diagnostics[key] = true
-	state.buildings.append({
-		"id":"INFINITY_FUSION_MACHINE","instance_id":"TEST-FUSION","condition":100.0,
-		"position":Vector3.ZERO,"input":[],"output":[],"state":"IDLE"
-	})
+	state.power_state["fusion_buffer_kwh"] = 400.0
+	for building_id in ["INFINITY_FUSION_MACHINE","FUSION_POWER_BUFFER","FUSION_CONTAINMENT_SHIELD","EMERGENCY_COOLING_SYSTEM","PRESSURE_CALIBRATION_RIG","COOLING_STABILIZER"]:
+		state.buildings.append({
+			"id":building_id,"instance_id":"TEST-"+building_id,"condition":100.0,
+			"position":Vector3.ZERO,"input":[],"output":[],"state":"IDLE"
+		})
 	for item_id in GameData.DORONUM_IDS:
 		state.add_item(item_id,100,90.0,90.0,false,"TEST_NATURAL")
 	assert(state.fusion_preflight().is_empty(),"A valid 15x100 manifest must pass preflight")
