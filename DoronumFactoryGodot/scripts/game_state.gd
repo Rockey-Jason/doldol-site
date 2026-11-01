@@ -38,6 +38,7 @@ var skill_points := 1
 var skills_unlocked: Array[String] = []
 var skill_point_ledger: Array[Dictionary] = []
 var skill_respec_used := false
+var blueprints: Dictionary = {}
 var total_power_generated := 0.0
 var total_power_used := 0.0
 var power_state := {"starter_fuel_timer":0.0,"world_time":0.25,"fusion_buffer_kwh":0.0,"fusion_power_ratio":0.0}
@@ -382,6 +383,97 @@ func unlock_skill(skill_id: String) -> bool:
 
 func has_skill(skill_id: String) -> bool:
 	return skill_id in skills_unlocked
+
+func save_factory_blueprint(slot: String) -> bool:
+	if not has_skill("BLUEPRINT_TECHNICIAN"):
+		notification.emit("Blueprint Technician 스킬이 필요해.")
+		return false
+	if buildings.is_empty():
+		notification.emit("저장할 설비가 없어.")
+		return false
+	var center := Vector3.ZERO
+	var count := 0
+	for building in buildings:
+		if building.id in ["STABILIZATION_RELAY","STABILIZATION_CORE"]:
+			continue
+		center += building.position
+		count += 1
+	if count<=0:
+		return false
+	center /= float(count)
+	var entries: Array[Dictionary] = []
+	for building in buildings:
+		if building.id in ["STABILIZATION_RELAY","STABILIZATION_CORE"]:
+			continue
+		entries.append({
+			"id":str(building.id),
+			"offset":building.position-center,
+			"rotation_y":float(building.get("rotation_y",0.0)),
+			"recipe":str(building.get("recipe",""))
+		})
+	blueprints[slot] = {"slot":slot,"created_tick":simulation_tick,"buildings":entries}
+	save_game()
+	notification.emit("Factory Blueprint 저장 · Slot "+slot+" · %d 설비" % entries.size())
+	state_changed.emit()
+	return true
+
+func place_factory_blueprint(slot: String,origin: Vector3) -> bool:
+	if not has_skill("BLUEPRINT_TECHNICIAN"):
+		notification.emit("Blueprint Technician 스킬이 필요해.")
+		return false
+	if not blueprints.has(slot):
+		notification.emit("Blueprint Slot "+slot+" 비어 있어.")
+		return false
+	var entries: Array = blueprints[slot].get("buildings",[])
+	if entries.is_empty():
+		return false
+	var placements: Array[Dictionary] = []
+	var total_cost: Dictionary = {}
+	for entry in entries:
+		var building_id := str(entry.id)
+		var definition: Dictionary = GameData.building_definition(building_id)
+		if definition.is_empty() or not _is_unlocked(building_id):
+			notification.emit("Blueprint 배치 중단 · 해금되지 않은 설비 "+building_id)
+			return false
+		var position: Vector3 = origin+entry.offset
+		position.y = 0.0
+		if absf(position.x)>GameData.WORLD_LIMIT or absf(position.z)>GameData.WORLD_LIMIT:
+			notification.emit("Blueprint이 월드 경계를 벗어나.")
+			return false
+		for existing in buildings:
+			if Vector2(existing.position.x,existing.position.z).distance_to(Vector2(position.x,position.z))<3.0:
+				notification.emit("Blueprint 공간 충돌 · 재료는 소비되지 않았어.")
+				return false
+		for placed in placements:
+			if Vector2(placed.position.x,placed.position.z).distance_to(Vector2(position.x,position.z))<3.0:
+				notification.emit("Blueprint 내부 설비 간격 충돌 · 재료는 소비되지 않았어.")
+				return false
+		placements.append({"id":building_id,"position":position,"rotation_y":float(entry.get("rotation_y",0.0)),"recipe":str(entry.get("recipe",""))})
+		for item_id in definition.cost:
+			total_cost[item_id] = int(total_cost.get(item_id,0))+int(definition.cost[item_id])
+	if has_skill("BUFFER_ENGINEER"):
+		for item_id in total_cost:
+			if placements.any(func(p): return p.id in ["WAREHOUSE","FUSION_POWER_BUFFER"]):
+				total_cost[item_id] = int(ceil(float(total_cost[item_id])*0.95))
+	if not consume_items(total_cost):
+		notification.emit("Blueprint 건설 재료 부족 · 전체 배치는 취소됐어.")
+		return false
+	for placement in placements:
+		var instance_id := _new_stack_id()
+		var building := {
+			"id":placement.id,"instance_id":instance_id,"position":placement.position,
+			"rotation_y":placement.rotation_y,"condition":100.0,"input":[],"output":[],
+			"state":"IDLE","recipe":""
+		}
+		buildings.append(building)
+		if not str(placement.recipe).is_empty():
+			var recipe: Dictionary = GameData.recipe_definition(str(placement.recipe))
+			if not recipe.is_empty() and recipe.machine==placement.id and (not recipe.has("story") or bool(story_flags.get(str(recipe.story),false))):
+				building.recipe = str(placement.recipe)
+	notification.emit("Blueprint 배치 완료 · %d 설비" % placements.size())
+	save_game()
+	state_changed.emit()
+	return true
 
 func respec_skill_tree() -> bool:
 	if skill_respec_used or not research_completed.has("RESEARCH_INFINITY_INDUSTRY") or not buildings.any(func(m): return m.id=="SKILL_RESPEC_TERMINAL" and float(m.condition)>0.0):
@@ -987,7 +1079,7 @@ func save_game() -> void:
 		"fusion":fusion,"fusion_diagnostics":fusion_diagnostics,"relays":relays,
 		"core_installed":core_installed,"stabilization_phase":stabilization_phase,
 		"ending_complete":ending_complete,"post_endgame":post_endgame,
-		"production_history":production_history,"research_point_ledger":research_point_ledger,"skill_points":skill_points,"skills_unlocked":skills_unlocked,"skill_point_ledger":skill_point_ledger,"skill_respec_used":skill_respec_used,"power_state":power_state,"stabilization_progress":stabilization_progress,"stabilization_running":stabilization_running,"event_ids":_event_ids,"next_stack_id":_next_stack_id
+		"production_history":production_history,"research_point_ledger":research_point_ledger,"skill_points":skill_points,"skills_unlocked":skills_unlocked,"skill_point_ledger":skill_point_ledger,"skill_respec_used":skill_respec_used,"blueprints":blueprints,"power_state":power_state,"stabilization_progress":stabilization_progress,"stabilization_running":stabilization_running,"event_ids":_event_ids,"next_stack_id":_next_stack_id
 	}
 	data["checksum"] = hash(JSON.stringify(data))
 	var temporary_path := SAVE_PATH + ".tmp"
@@ -1089,6 +1181,7 @@ func load_game() -> void:
 	skills_unlocked.assign(parsed.get("skills_unlocked",[]))
 	skill_point_ledger.assign(parsed.get("skill_point_ledger",[]))
 	skill_respec_used = bool(parsed.get("skill_respec_used",false))
+	blueprints = parsed.get("blueprints",{})
 	power_state = parsed.get("power_state",{"starter_fuel_timer":0.0,"world_time":0.25,"fusion_buffer_kwh":0.0,"fusion_power_ratio":0.0})
 	stabilization_progress = float(parsed.get("stabilization_progress",0.0))
 	stabilization_running = bool(parsed.get("stabilization_running",false))
