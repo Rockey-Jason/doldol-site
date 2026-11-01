@@ -66,6 +66,31 @@ func _build_visual() -> void:
 			material.albedo_color = Color(0.38,0.9,0.96)
 			material.emission_enabled = true
 			material.emission = Color(0.1,0.55,0.85)
+		"ITEM_WATER":
+			var water_mesh := CylinderMesh.new()
+			water_mesh.top_radius = 0.38
+			water_mesh.bottom_radius = 0.45
+			water_mesh.height = 1.3
+			body_mesh.mesh = water_mesh
+			material.albedo_color = Color(0.12,0.55,0.76,0.8)
+			material.emission_enabled = true
+			material.emission = Color(0.02,0.12,0.2)
+			material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		"ITEM_RUBBER_SAP":
+			body_mesh.mesh = _crystal_mesh(1.0)
+			material.albedo_color = Color(0.92,0.7,0.25)
+			material.emission_enabled = true
+			material.emission = Color(0.14,0.06,0.0)
+		"ITEM_HEAT_CRYSTAL":
+			body_mesh.mesh = _crystal_mesh(1.35)
+			material.albedo_color = Color(0.95,0.3,0.12)
+			material.emission_enabled = true
+			material.emission = Color(0.48,0.06,0.01)
+		"ITEM_COLD_CRYSTAL":
+			body_mesh.mesh = _crystal_mesh(1.35)
+			material.albedo_color = Color(0.38,0.86,1.0)
+			material.emission_enabled = true
+			material.emission = Color(0.08,0.3,0.65)
 		"ITEM_STONE", _:
 			body_mesh.mesh = _rock_mesh(1.1, 0.7, 0.95)
 			material.albedo_color = Color(0.36,0.43,0.44)
