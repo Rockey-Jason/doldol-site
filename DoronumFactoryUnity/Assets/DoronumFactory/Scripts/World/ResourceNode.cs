@@ -33,6 +33,19 @@ namespace DoronumFactory
             return true;
         }
 
+        public bool TryAutomatedMine(out ItemStackData output)
+        {
+            output=null;
+            if(Depleted)return false;
+            Remaining--;
+            output=new ItemStackData {
+                StackId=System.Guid.NewGuid().ToString("N"),ItemId=ItemId,Quantity=1,
+                Quality=Quality,Purity=Purity,Synthetic=false,Provenance="AUTO_MINER:"+NodeId
+            };
+            if(Depleted && cachedRenderer!=null)cachedRenderer.enabled=false;
+            return true;
+        }
+
         private void ApplyAppearance()
         {
             if (cachedRenderer==null) cachedRenderer=GetComponent<Renderer>();
