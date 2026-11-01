@@ -33,10 +33,12 @@ var simulation_paused := false
 var _tick_accumulator := 0.0
 var _event_ids: Dictionary = {}
 var _next_stack_id := 1
+var save_loaded := false
+var fusion_diagnostics := {"power_stability":false,"pressure_calibration":false,"emergency_cooling":false}
 
 func _ready() -> void:
 	load_game()
-	if inventory.is_empty():
+	if not save_loaded:
 		_grant_starter_kit()
 		state_changed.emit()
 
@@ -188,6 +190,10 @@ func start_research(research_id: String) -> bool:
 	if research_points < int(definition.rp):
 		notification.emit("연구 포인트가 부족해.")
 		return false
+	var lab_exists := buildings.any(func(machine): return machine.id == "RESEARCH_LAB" and float(machine.condition) > 0.0)
+	if not lab_exists:
+		notification.emit("연구를 진행할 연구소를 먼저 건설해야 해.")
+		return false
 	if definition.power > 0.0 and total_power_generated < float(definition.power):
 		notification.emit("연구소 전력 부족 · 필요 %.0f kW" % float(definition.power))
 		return false
@@ -297,6 +303,14 @@ func fusion_preflight() -> Array[String]:
 		errors.append("Infinity Fusion Machine이 없어.")
 	if not fusion.is_empty():
 		errors.append("이미 퓨전 작업이 진행 중이거나 결과가 있어.")
+	if not bool(story_flags.get("STORY_INCIDENT_RECONSTRUCTED",false)):
+		errors.append("BLUE FURNACE INCIDENT 기록 4개를 모두 복구해야 해.")
+	for flag in ["ARCHIVE_RESTORED","COOLING_CORE_RESTORED","RESONANCE_CHAMBER_RESTORED"]:
+		if not bool(story_flags.get(flag,false)):
+			errors.append("FIRST FACTORY 복구 필요 · "+flag)
+	for diagnostic in fusion_diagnostics:
+		if not bool(fusion_diagnostics[diagnostic]):
+			errors.append("최종 진단 미완료 · "+diagnostic)
 	for item_id in GameData.DORONUM_IDS:
 		var stacks := inventory.filter(func(s): return s.item_id == item_id)
 		var total := 0
@@ -375,7 +389,7 @@ func _consume_quality_lots(item_id: String, quantity: int, min_quality: float, m
 	return true
 
 func _tick_fusion(dt: float) -> void:
-	if fusion.is_empty() or fusion.state != "RUNNING" or fusion.output_committed:
+	if fusion.is_empty() or str(fusion.get("state","")).begins_with("FAILED") or fusion.output_committed:
 		return
 	var stage_data: Dictionary = GameData.FUSION_STAGES[int(fusion.stage)]
 	var power := float(stage_data.power)
@@ -409,13 +423,44 @@ func _tick_fusion(dt: float) -> void:
 		if fusion.stage >= GameData.FUSION_STAGES.size():
 			fusion.output_committed = true
 			fusion.state = "COMPLETED"
-			add_item("ITEM_INFINITY_DORONUM", 1, 100.0, 100.0, false, "INFINITY_FUSION")
+			fusion.output_buffer = {"item_id":"ITEM_INFINITY_DORONUM","quantity":1,"quality":100.0,"purity":100.0,"synthetic":false,"provenance":"INFINITY_FUSION"}
 			fusion.custody = []
 			fusion.reserved_inputs = 0
 			story_flags["INFINITY_CRAFTED"] = true
 			notification.emit("INFINITY DORONUM ×1 · 생산 완료")
 			save_game()
 
+
+func collect_infinity_output() -> bool:
+	if fusion.is_empty() or not bool(fusion.get("output_committed",false)) or fusion.get("output_buffer",{}).is_empty():
+		return false
+	var payload: Dictionary = fusion.output_buffer
+	add_item(str(payload.item_id),int(payload.quantity),float(payload.quality),float(payload.purity),bool(payload.synthetic),str(payload.provenance))
+	fusion.output_buffer = {}
+	save_game()
+	return true
+
+func run_fusion_diagnostic(diagnostic_id: String) -> bool:
+	if not fusion_diagnostics.has(diagnostic_id) or bool(fusion_diagnostics[diagnostic_id]):
+		return false
+	match diagnostic_id:
+		"power_stability":
+			if total_power_generated < 5000.0:
+				notification.emit("전력 안정성 검사 실패 · 5MW 전력 공급이 필요해.")
+				return false
+		"pressure_calibration":
+			if "RESEARCH_HIGH_PRESSURE" not in research_completed or not buildings.any(func(m): return m.id == "ADVANCED_ASSEMBLER"):
+				notification.emit("압력 센서 교정 실패 · 고압 연구와 고급 조립기가 필요해.")
+				return false
+		"emergency_cooling":
+			if not buildings.any(func(m): return m.id == "COOLING_STABILIZER") or count_item("ITEM_COLD_CRYSTAL") < 1:
+				notification.emit("비상 냉각 검사 실패 · 냉각 안정기와 Cold Crystal이 필요해.")
+				return false
+	fusion_diagnostics[diagnostic_id] = true
+	notification.emit("퓨전 안전 진단 통과 · "+diagnostic_id)
+	save_game()
+	state_changed.emit()
+	return true
 
 func _fusion_interlocks_valid() -> bool:
 	if fusion.is_empty():
@@ -487,7 +532,7 @@ func save_game() -> void:
 		"inventory":inventory,"buildings":buildings,"discovered_nodes":discovered_nodes,
 		"research_completed":research_completed,"active_research":active_research,"research_progress":research_progress,
 		"research_points":research_points,"story_flags":story_flags,"lore_found":lore_found,
-		"fusion":fusion,"relays":relays,"core_installed":core_installed,"stabilization_phase":stabilization_phase,
+		"fusion":fusion,"fusion_diagnostics":fusion_diagnostics,"relays":relays,"core_installed":core_installed,"stabilization_phase":stabilization_phase,
 		"ending_complete":ending_complete,"post_endgame":post_endgame,"production_history":production_history,
 		"event_ids":_event_ids,"next_stack_id":_next_stack_id
 	}
@@ -507,6 +552,7 @@ func load_game() -> void:
 	if not parsed is Dictionary:
 		notification.emit("저장 데이터가 손상됐어. 원본을 보존하고 새 게임을 시작해.")
 		return
+	save_loaded = true
 	if int(parsed.get("version", 0)) > GameData.SAVE_VERSION:
 		notification.emit("이 저장은 더 최신 버전이야. 덮어쓰지 않을게.")
 		return
@@ -523,6 +569,7 @@ func load_game() -> void:
 	story_flags = parsed.get("story_flags", {})
 	lore_found.assign(parsed.get("lore_found", []))
 	fusion = parsed.get("fusion", {})
+	fusion_diagnostics = parsed.get("fusion_diagnostics",{"power_stability":false,"pressure_calibration":false,"emergency_cooling":false})
 	relays.assign(parsed.get("relays", []))
 	core_installed = bool(parsed.get("core_installed", false))
 	stabilization_phase = int(parsed.get("stabilization_phase", 0))
