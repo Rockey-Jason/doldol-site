@@ -323,18 +323,48 @@ func start_infinity_fusion() -> bool:
 		notification.emit("퓨전 시작 불가 · " + errors[0])
 		return false
 	var snapshot := inventory.duplicate(true)
+	var custody: Array[Dictionary] = []
 	for item_id in GameData.DORONUM_IDS:
-		if not _consume_quality_lots(item_id, 100, 90.0, 90.0):
+		var remaining := 100
+		for stack in inventory:
+			if stack.item_id != item_id or stack.synthetic or float(stack.quality) < 90.0 or float(stack.purity) < 90.0:
+				continue
+			var take := mini(remaining, int(stack.quantity) - int(stack.get("reserved",0)))
+			if take <= 0:
+				continue
+			var reserved_stack := stack.duplicate(true)
+			reserved_stack.quantity = take
+			custody.append(reserved_stack)
+			stack.quantity -= take
+			remaining -= take
+			if remaining == 0:
+				break
+		if remaining > 0:
 			inventory = snapshot
-			notification.emit("입력 예약 실패 · 모든 재료를 되돌렸어.")
+			notification.emit("원자 예약 실패 · 모든 재료가 원래 상태로 복구됐어.")
 			return false
+	inventory = inventory.filter(func(s): return int(s.quantity) > 0)
 	fusion = {
 		"stage":0,"stage_progress":0.0,"temperature":20.0,"pressure":0.0,
-		"failure_exposure":0.0,"rng_index":0,"output_committed":false,"custody":[],
-		"reserved_inputs":1500,"state":"RUNNING","interlocks":{"power":true,"cooling":true,"shield":true,"emergency":true}
+		"failure_exposure":0.0,"rng_index":0,"output_committed":false,
+		"reserved_inputs":1500,"custody":custody,"state":"RUNNING",
+		"interlocks":{"power":true,"cooling":true,"shield":true,"emergency":true}
 	}
-	notification.emit("Infinity Fusion 시작 · 15종 × 100개 예약 완료")
+	notification.emit("Infinity Fusion 시작 · 정확한 15종 × 100개 예약 완료")
 	save_game()
+	return true
+
+func recover_fusion_failure() -> bool:
+	if fusion.is_empty() or not str(fusion.get("state","")).begins_with("FAILED"):
+		return false
+	var custody: Array = fusion.get("custody",[])
+	for reserved_stack in custody:
+		if not inventory.any(func(s): return s.stack_id == reserved_stack.stack_id):
+			inventory.append(reserved_stack.duplicate(true))
+	fusion.clear()
+	notification.emit("퓨전 안전 복구 완료 · 예약 재료를 전량 반환했어.")
+	save_game()
+	state_changed.emit()
 	return true
 
 func _consume_quality_lots(item_id: String, quantity: int, min_quality: float, min_purity: float) -> bool:
@@ -357,7 +387,7 @@ func _tick_fusion(dt: float) -> void:
 		return
 	var stage_data: Dictionary = GameData.FUSION_STAGES[int(fusion.stage)]
 	var power := float(stage_data.power)
-	var available := total_power_generated - total_power_used
+	var available := maxf(0.0,total_power_generated - total_power_used)
 	var ratio := 1.0 if power <= 0.0 else minf(1.0, available / power)
 	if ratio < 0.8 or not _fusion_interlocks_valid():
 		fusion.state = "PAUSED_SAFETY" if not _fusion_interlocks_valid() else "PAUSED_POWER"
@@ -386,6 +416,8 @@ func _tick_fusion(dt: float) -> void:
 			fusion.output_committed = true
 			fusion.state = "COMPLETED"
 			add_item("ITEM_INFINITY_DORONUM", 1, 100.0, 100.0, false, "INFINITY_FUSION")
+			fusion.custody = []
+			fusion.reserved_inputs = 0
 			story_flags["INFINITY_CRAFTED"] = true
 			notification.emit("INFINITY DORONUM ×1 · 생산 완료")
 	save_game()
