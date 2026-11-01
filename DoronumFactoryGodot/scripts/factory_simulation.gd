@@ -2,14 +2,16 @@ extends Node
 class_name FactorySimulation
 
 var game: GameState
+var world: PlanetWorld
 var last_power_ratio := 1.0
 var total_generation := 0.0
 var total_consumption := 0.0
 var tick_number := 0
 var accumulator := 0.0
 
-func bind_state(state: GameState) -> void:
+func bind_state(state: GameState, planet: PlanetWorld = null) -> void:
 	game = state
+	world = planet
 
 func tick(delta: float) -> void:
 	if game == null or game.simulation_paused:
@@ -42,6 +44,9 @@ func _fixed_tick(dt: float) -> void:
 	for machine in game.buildings:
 		_tick_machine(machine, dt)
 	_tick_conveyors(dt)
+	if world != null:
+		world.advance_simulation(dt)
+	game.advance_fixed_tick(dt)
 	if tick_number % 50 == 0:
 		game.save_game()
 
