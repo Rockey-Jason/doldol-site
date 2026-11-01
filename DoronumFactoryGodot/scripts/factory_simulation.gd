@@ -24,8 +24,6 @@ func tick(dt: float) -> void:
 	for machine in game.buildings:
 		if machine.id == "RESEARCH_LAB" and not game.active_research.is_empty():
 			total_consumption += 25.0
-		elif machine.id == "INFINITY_FUSION_MACHINE" and not game.fusion.is_empty():
-			total_consumption += float(GameData.FUSION_STAGES[int(game.fusion.stage)].power)
 		elif not str(machine.get("recipe", "")).is_empty():
 			var recipe: Dictionary = GameData.recipe_definition(machine.recipe, {})
 			total_consumption += float(recipe.get("power", 10.0))
