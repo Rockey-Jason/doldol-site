@@ -234,7 +234,7 @@ func _on_player_interact(target: Object, hit_position: Vector3) -> void:
 			_interact_tree(node)
 			return
 		var required_power := 1
-		if resource_id in ["ITEM_IRON_ORE","ITEM_COPPER_ORE","ITEM_COAL","ITEM_QUARTZ","ITEM_GOLD_ORE","ITEM_MAGNETITE"]:
+		if resource_id.contains("ORE") or resource_id in ["ITEM_COAL","ITEM_QUARTZ","ITEM_MAGNETITE"]:
 			required_power = 10
 		if resource_id in ["ITEM_DIAMOND","ITEM_TITANIUM_ORE","ITEM_NEODYMIUM_ORE"]:
 			required_power = 25
