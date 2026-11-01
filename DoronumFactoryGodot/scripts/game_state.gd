@@ -53,14 +53,6 @@ func _process(delta: float) -> void:
 func _tick(dt: float) -> void:
 	_tick_research(dt)
 	_tick_fusion(dt)
-	for building in buildings:
-		if building.get("kind", "") == "DORI_MEAT_TREE":
-			building.growth += dt
-			if building.growth >= 60.0 and building.water >= 2.0:
-				building.growth -= 60.0
-				building.water -= 2.0
-				building.mature = true
-	state_changed.emit()
 
 func _grant_starter_kit() -> void:
 	add_item("ITEM_WOOD", 12, 92.0, 90.0, false, "STARTER")
@@ -406,6 +398,7 @@ func _tick_fusion(dt: float) -> void:
 			fusion.state = "FAILED_MINOR"
 			fusion.failure_event_id = "FUSION-FAIL-" + str(fusion.rng_index)
 			notification.emit("퓨전 이상 감지 · 안전 정지. 입력은 복구 대기 상태야.")
+			save_game()
 			return
 	if fusion.stage_progress >= float(stage_data.seconds):
 		fusion.stage += 1
@@ -420,7 +413,9 @@ func _tick_fusion(dt: float) -> void:
 			fusion.reserved_inputs = 0
 			story_flags["INFINITY_CRAFTED"] = true
 			notification.emit("INFINITY DORONUM ×1 · 생산 완료")
-	save_game()
+			save_game()
+	elif fusion.stage_progress == 0.0 and fusion.stage > 0:
+		save_game()
 
 func _fusion_interlocks_valid() -> bool:
 	if fusion.is_empty():
