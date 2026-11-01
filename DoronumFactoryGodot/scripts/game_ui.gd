@@ -278,6 +278,13 @@ func _draw_factory() -> void:
 		_label("%s  ·  %s  ·  %.0f°C  ·  %.0f MPa" % [
 			machine.id,machine.state,float(machine.temperature),float(machine.pressure)
 		])
+		if game.has_skill("FAULT_DIAGNOSTICS"):
+			_label("FAULT DIAGNOSTICS · Condition %.1f%% · State %s" % [float(machine.condition),str(machine.state)])
+		if game.has_skill("PROCESS_CONTROL") and not str(machine.get("recipe","")).is_empty():
+			var process_recipe: Dictionary = GameData.recipe_definition(str(machine.recipe))
+			_label("PROCESS CONTROL · Target %.0f°C / %.0fMPa" % [float(process_recipe.get("temperature",0.0)),float(process_recipe.get("pressure",0.0))])
+		if game.has_skill("CRYSTAL_LATTICE") and str(machine.get("recipe","")).contains("DORONUM"):
+			_label("CRYSTAL LATTICE · Doronum process recipe and quality lineage inspection enabled.")
 		if machine.output.size()>0:
 			_button("출력 회수 · "+str(machine.output.size())+" batch",func(): game.collect_machine_output(str(machine.instance_id)))
 		for recipe_id in GameData.RECIPES:
@@ -298,7 +305,9 @@ func _draw_story() -> void:
 		_label(chapter.objective)
 	_heading("BLUE FURNACE INCIDENT · EVIDENCE")
 	for lore_id in ["LORE_INCIDENT_SAFETY_OVERRIDE","LORE_INCIDENT_POWER_OSCILLATION","LORE_INCIDENT_COOLING_FAILURE","LORE_INCIDENT_ARCHIVE_EDIT"]:
-		_button("기록 복구 · "+lore_id,func(): game.find_lore(lore_id),lore_id in game.lore_found)
+		_label(("RECOVERED  ·  " if lore_id in game.lore_found else "MISSING  ·  ")+lore_id+"  ·  locate and interact with the physical evidence")
+	if game.has_skill("ARCHIVE_SPECIALIST"):
+		_label("ARCHIVE SPECIALIST · all four records are cross-referenced by incident timeline and system domain.")
 	_heading("FIRST FACTORY")
 	for flag in ["ARCHIVE_RESTORED","COOLING_CORE_RESTORED","RESONANCE_CHAMBER_RESTORED"]:
 		_label(("RESTORED  ·  " if bool(game.story_flags.get(flag,false)) else "UNRESTORED  ·  ")+flag+"  ·  interact with its physical POI")
@@ -356,7 +365,8 @@ func _draw_map() -> void:
 	_label("월드 경계: X/Z ±1024m · 총 2048m × 2048m")
 	for place in ["Dori Forest · West","Beach · South","Shipping Port · South","Oil Field · South-East","Mine Entrance · East","Quartz Canyon · North-East","Lava Zone · North-East","Frozen Zone · North-West","Research Station · East","Abandoned First Factory · North","Old Reactor"]:
 		_label("◇  "+place)
-	_button("FIRST FACTORY · ARCHIVE RECORD",func(): game.find_lore("FIRST_FACTORY_ARCHIVE"))
+	if game.has_skill("SAFE_PATHFINDER"):
+		_label("SAFE PATHFINDER · 위험 구역 경고: Lava Zone / Frozen Zone. 우회 경로를 이용해.")
 
 func _building_unlocked(building_id: String) -> bool:
 	for definition in GameData.RESEARCH:
