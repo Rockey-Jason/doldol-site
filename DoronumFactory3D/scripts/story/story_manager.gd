@@ -83,6 +83,10 @@ func _check_story_flags() -> void:
 		GameState.story_flags["FIRST_IRON"] = true
 	if GameState.has_machine_kind("AUTO_MINER") and GameState.has_machine_kind("WAREHOUSE") and GameState.has_machine_kind("CONVEYOR"):
 		GameState.story_flags["AUTO_MINING_LINE"] = true
+	if GameState.has_machine_kind("COMPRESSOR") and GameState.has_machine_kind("ROLLING_MILL") and GameState.has_machine_kind("GEAR_STATION"):
+		GameState.story_flags["MECHANICAL_LINE"] = true
+	if GameState.completed_research.has("RESEARCH_DORONUM_CRYSTAL") and GameState.has_machine_kind("DORONUM_COMPRESSOR"):
+		GameState.story_flags["DORONUM_INDUSTRY"] = true
 	if GameState.story_flags.has("FIRST_DORONUM_OUTPUT"):
 		GameState.story_flags["FIRST_DORONUM"] = true
 	if lore_records.size() >= 3:
