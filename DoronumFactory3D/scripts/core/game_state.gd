@@ -691,54 +691,76 @@ func save_game() -> void:
 	DirAccess.rename_absolute(absolute_tmp, absolute_final)
 
 func load_game() -> void:
-	var path := "user://doronium_factory_save_v5.json"
-	if not FileAccess.file_exists(path):
+	var final_path := "user://doronium_factory_save_v5.json"
+	var backup_path := "user://doronium_factory_save_v5.bak"
+	var parsed: Dictionary = {}
+	var loaded_from := ""
+	for candidate_path in [final_path, backup_path]:
+		if not FileAccess.file_exists(candidate_path):
+			continue
+		var file := FileAccess.open(candidate_path, FileAccess.READ)
+		if file == null:
+			continue
+		var candidate = JSON.parse_string(file.get_as_text())
+		file.close()
+		if typeof(candidate) != TYPE_DICTIONARY:
+			continue
+		var candidate_data: Dictionary = candidate.duplicate(true)
+		var saved_checksum: String = str(candidate_data.get("checksum", ""))
+		candidate_data.erase("checksum")
+		var actual_checksum: String = JSON.stringify(candidate_data).sha256_text()
+		if saved_checksum.is_empty() or saved_checksum != actual_checksum:
+			toast_requested.emit("Save checksum mismatch: " + candidate_path, "error")
+			continue
+		var version := int(candidate.get("saveFormatVersion", 0))
+		if version < 1 or version > SAVE_VERSION:
+			toast_requested.emit("Unsupported save version. Original file was not modified.", "error")
+			continue
+		parsed = candidate
+		loaded_from = candidate_path
+		break
+	if parsed.is_empty():
+		if FileAccess.file_exists(final_path) or FileAccess.file_exists(backup_path):
+			toast_requested.emit("Valid save not found. Existing save files were preserved for recovery.", "error")
 		return
-	var file := FileAccess.open(path, FileAccess.READ)
-	if file == null:
-		return
-	var parsed = JSON.parse_string(file.get_as_text())
-	file.close()
-	if typeof(parsed) != TYPE_DICTIONARY:
-		toast_requested.emit("Save is damaged. Backup kept for recovery.", "error")
-		return
-	var version := int(parsed.get("saveFormatVersion",0))
-	if version > SAVE_VERSION or version < 1:
-		toast_requested.emit("Unsupported save version. Original file was not modified.", "error")
-		return
-	inventory.assign(parsed.get("inventory",[]))
-	research_points = int(parsed.get("researchPoints",0))
-	skill_points = int(parsed.get("skillPoints",1))
-	_highest_tier_awarded = int(parsed.get("highestTierAwarded",0))
-	completed_research.assign(parsed.get("completedResearch",["RESEARCH_BASIC_SURVIVAL"]))
-	purchased_skills.assign(parsed.get("purchasedSkills",[]))
-	active_research = str(parsed.get("activeResearch",""))
-	research_progress = float(parsed.get("researchProgress",0.0))
-	buildings.assign(parsed.get("buildings",[]))
+	world_seed = int(parsed.get("worldSeed", 827142))
+	_rng.seed = world_seed
+	simulation_tick = int(parsed.get("simulationTick", 0))
+	inventory.assign(parsed.get("inventory", []))
+	research_points = int(parsed.get("researchPoints", 0))
+	skill_points = int(parsed.get("skillPoints", 1))
+	_highest_tier_awarded = int(parsed.get("highestTierAwarded", 0))
+	completed_research.assign(parsed.get("completedResearch", ["RESEARCH_BASIC_SURVIVAL"]))
+	purchased_skills.assign(parsed.get("purchasedSkills", []))
+	active_research = str(parsed.get("activeResearch", ""))
+	research_progress = float(parsed.get("researchProgress", 0.0))
+	buildings.assign(parsed.get("buildings", []))
 	for building in buildings:
-		var position_data = building.get("position",{})
+		var position_data = building.get("position", {})
 		if position_data is Dictionary:
-			building["position"] = Vector3(float(position_data.get("x",0.0)),float(position_data.get("y",0.0)),float(position_data.get("z",0.0)))
+			building["position"] = Vector3(float(position_data.get("x", 0.0)), float(position_data.get("y", 0.0)), float(position_data.get("z", 0.0)))
 		elif position_data is Array and position_data.size() >= 3:
-			building["position"] = Vector3(float(position_data[0]),float(position_data[1]),float(position_data[2]))
-	world_state = parsed.get("worldState",{})
-	story_flags = parsed.get("storyFlags",{})
-	reward_ledger = parsed.get("rewardLedger",{})
-	fusion_job = parsed.get("fusionJob",{})
-	relay_instances.assign(parsed.get("relayInstances",[]))
+			building["position"] = Vector3(float(position_data[0]), float(position_data[1]), float(position_data[2]))
+	world_state = parsed.get("worldState", {})
+	story_flags = parsed.get("storyFlags", {})
+	reward_ledger = parsed.get("rewardLedger", {})
+	fusion_job = parsed.get("fusionJob", {})
+	relay_instances.assign(parsed.get("relayInstances", []))
 	for relay in relay_instances:
-		var position_data = relay.get("position",{})
+		var position_data = relay.get("position", {})
 		if position_data is Dictionary:
-			relay["position"] = Vector3(float(position_data.get("x",0.0)),float(position_data.get("y",0.0)),float(position_data.get("z",0.0)))
-	core_installed = bool(parsed.get("coreInstalled",false))
-	stabilization_state = str(parsed.get("stabilizationState","NOT_STARTED"))
-	campaign_stage = int(parsed.get("campaignStage",0))
-	var ps: Dictionary = parsed.get("playerState",{})
-	player_state.position = Vector3(float(ps.get("position_x",0.0)),float(ps.get("position_y",0.0)),float(ps.get("position_z",0.0)))
-	player_state.health = float(ps.get("health",100.0))
-	player_state.stamina = float(ps.get("stamina",100.0))
-	player_state.equipped_tool = str(ps.get("equipped_tool","ITEM_TOOL_HANDS"))
-	currency_d = int(parsed.get("currencyD",0))
+			relay["position"] = Vector3(float(position_data.get("x", 0.0)), float(position_data.get("y", 0.0)), float(position_data.get("z", 0.0)))
+	core_installed = bool(parsed.get("coreInstalled", false))
+	stabilization_state = str(parsed.get("stabilizationState", "NOT_STARTED"))
+	campaign_stage = int(parsed.get("campaignStage", 0))
+	var ps: Dictionary = parsed.get("playerState", {})
+	player_state.position = Vector3(float(ps.get("position_x", 0.0)), float(ps.get("position_y", 0.0)), float(ps.get("position_z", 0.0)))
+	player_state.health = float(ps.get("health", 100.0))
+	player_state.stamina = float(ps.get("stamina", 100.0))
+	player_state.equipped_tool = str(ps.get("equipped_tool", "ITEM_TOOL_HANDS"))
+	currency_d = int(parsed.get("currencyD", 0))
+	if loaded_from == backup_path:
+		toast_requested.emit("기본 저장이 손상되어 백업 저장으로 복구했습니다.", "warning")
 	inventory_changed.emit()
 	progression_changed.emit()
 	objective_changed.emit()
