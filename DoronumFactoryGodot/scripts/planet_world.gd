@@ -225,6 +225,13 @@ func _spawn_points_of_interest() -> void:
 		["Shipping Port",Vector2(-80,850),Color(0.34,0.42,0.50)],
 		["First Factory Archive",Vector2(-760,-120),Color(0.12,0.48,0.65)]
 	]
+	_spawn_lore_site("IncidentSafetyRecord","Incident · Safety Override",Vector2(-760,-720),"LORE_INCIDENT_SAFETY_OVERRIDE")
+	_spawn_lore_site("IncidentPowerRecord","Incident · Power Oscillation",Vector2(-650,-650),"LORE_INCIDENT_POWER_OSCILLATION")
+	_spawn_lore_site("IncidentCoolingRecord","Incident · Cooling Failure",Vector2(-560,-760),"LORE_INCIDENT_COOLING_FAILURE")
+	_spawn_lore_site("IncidentAuditRecord","Incident · Archive Edit",Vector2(-820,-610),"LORE_INCIDENT_ARCHIVE_EDIT")
+	_spawn_lore_site("ArchiveControl","First Factory · Archive",Vector2(-720,-690),"","ARCHIVE_RESTORED")
+	_spawn_lore_site("CoolingControl","First Factory · Cooling Core",Vector2(-650,-790),"","COOLING_CORE_RESTORED")
+	_spawn_lore_site("ResonanceControl","First Factory · Resonance Chamber",Vector2(-840,-760),"","RESONANCE_CHAMBER_RESTORED")
 	for poi in pois:
 		var marker := Node3D.new()
 		marker.name = str(poi[0]).replace(" ","")
@@ -248,6 +255,41 @@ func _spawn_points_of_interest() -> void:
 		interact.add_child(collider)
 		marker.add_child(interact)
 		add_child(marker)
+
+
+func _spawn_lore_site(site_id: String, title: String, position: Vector2, lore_id: String = "", restore_flag: String = "") -> void:
+	var site := Node3D.new()
+	site.name = site_id
+	site.position = Vector3(position.x,height_at(position.x,position.y),position.y)
+	site.set_meta("poi_name",title)
+	if not lore_id.is_empty():
+		site.set_meta("lore_id",lore_id)
+	if not restore_flag.is_empty():
+		site.set_meta("restore_flag",restore_flag)
+	var beacon := MeshInstance3D.new()
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = 0.7
+	mesh.bottom_radius = 1.4
+	mesh.height = 7.0
+	beacon.mesh = mesh
+	beacon.position.y = 3.5
+	beacon.material_override = _material(Color(0.12,0.55,0.75),0.72,0.22)
+	site.add_child(beacon)
+	var area := Area3D.new()
+	area.set_meta("poi_name",title)
+	if not lore_id.is_empty():
+		area.set_meta("lore_id",lore_id)
+	if not restore_flag.is_empty():
+		area.set_meta("restore_flag",restore_flag)
+	var collider := CollisionShape3D.new()
+	var shape := SphereShape3D.new()
+	shape.radius = 9.0
+	collider.shape = shape
+	collider.position.y = 3.0
+	area.add_child(collider)
+	site.add_child(area)
+	add_child(site)
+
 
 func _material(color: Color, metallic: float, roughness: float) -> StandardMaterial3D:
 	var material := StandardMaterial3D.new()
