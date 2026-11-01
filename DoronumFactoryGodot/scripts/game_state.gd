@@ -136,7 +136,7 @@ func craft_manual(recipe_id: String) -> bool:
 	var output_quality := clampf(material_quality*0.40+100.0*0.60,0.0,100.0)
 	for output_id in recipe.outputs:
 		add_item(output_id,int(recipe.outputs[output_id]),output_quality,material_purity,synthetic,"MANUAL_RECIPE:"+recipe_id)
-	_claim_once("FIRST_RECIPE:"+recipe_id,"RECIPE_CRAFTED",10)
+	claim_recipe_research_reward(recipe_id)
 	return true
 
 func consume_items_with_lots(cost: Dictionary, allow_synthetic: bool = true) -> Array[Dictionary]:
@@ -335,6 +335,7 @@ func start_research(research_id: String) -> bool:
 	active_research = research_id
 	research_progress = 0.0
 	notification.emit("연구 시작 · " + str(definition.name))
+	state_changed.emit()
 	return true
 
 func _tick_research(dt: float) -> void:
