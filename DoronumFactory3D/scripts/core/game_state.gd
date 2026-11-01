@@ -486,6 +486,15 @@ func craft(recipe_id: String) -> bool:
 	save_game()
 	return true
 
+func grant_resource_scan_reward(item_id: String) -> bool:
+	var claim_id := "FIRST_RESOURCE_SCAN:"+str(world_seed)+":"+item_id+":TIER0"
+	var points := 100
+	if item_id in ["ITEM_NICKEL_ORE","ITEM_LEAD_ORE","ITEM_MAGNETITE","ITEM_QUARTZ","ITEM_CHROME_ORE","ITEM_GOLD_ORE","ITEM_ALUMINUM_ORE","ITEM_TITANIUM_ORE"]:
+		points = 250
+	if item_id in ["ITEM_DIAMOND","ITEM_NEODYMIUM_ORE","ITEM_HEAT_CRYSTAL","ITEM_COLD_CRYSTAL"]:
+		points = 500
+	return grant_rp_once(claim_id,points)
+
 func recipe_rp_reward(recipe: Dictionary) -> int:
 	var tier := int(recipe.get("tier",0))
 	match tier:
