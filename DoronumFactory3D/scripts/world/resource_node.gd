@@ -136,6 +136,7 @@ func interact(_player: Node) -> void:
 	yield_amount = mini(yield_amount,remaining)
 	remaining -= yield_amount
 	GameState.add_item(item_id,yield_amount,node_quality,node_purity,false,"VEIN:" + node_id)
+	GameState.grant_rp_once("FIRST_RESOURCE_SCAN:"+node_id,10)
 	GameState.progress_objective("RESOURCE_GATHERED",item_id,yield_amount)
 	var debris_roll := int(hash(node_id + str(GameState.simulation_tick))) % 100
 	if debris_roll < 10 and item_id not in ["ITEM_WOOD","ITEM_DIAMOND"]:
@@ -146,6 +147,7 @@ func interact(_player: Node) -> void:
 	var node_state: Dictionary = GameState.world_state.get("resource_nodes",{})
 	node_state[node_id] = remaining
 	GameState.world_state["resource_nodes"] = node_state
+	GameState.grant_rp_once("FIRST_RESOURCE_SCAN:"+node_id,10)
 	GameState.toast("%s +%d  · 남은 매장량 %d" % [GameState.ITEM_DATA.get(item_id,{}).get("name",item_id),yield_amount,remaining],"success")
 	GameState.save_game()
 
