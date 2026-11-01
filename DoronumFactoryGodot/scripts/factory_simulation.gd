@@ -6,13 +6,22 @@ var last_power_ratio := 1.0
 var total_generation := 0.0
 var total_consumption := 0.0
 var tick_number := 0
+var accumulator := 0.0
 
 func bind_state(state: GameState) -> void:
 	game = state
 
-func tick(dt: float) -> void:
-	if game == null:
+func tick(delta: float) -> void:
+	if game == null or game.simulation_paused:
 		return
+	accumulator += minf(delta,1.0)
+	var steps := 0
+	while accumulator >= GameData.SIM_TICK and steps < 10:
+		accumulator -= GameData.SIM_TICK
+		_fixed_tick(GameData.SIM_TICK)
+		steps += 1
+
+func _fixed_tick(dt: float) -> void:
 	tick_number += 1
 	total_generation = 250.0
 	total_consumption = 0.0
@@ -25,7 +34,7 @@ func tick(dt: float) -> void:
 		if machine.id == "RESEARCH_LAB" and not game.active_research.is_empty():
 			total_consumption += 25.0
 		elif not str(machine.get("recipe", "")).is_empty():
-			var recipe: Dictionary = GameData.recipe_definition(machine.recipe, {})
+			var recipe: Dictionary = GameData.recipe_definition(machine.recipe)
 			total_consumption += float(recipe.get("power", 10.0))
 	game.total_power_generated = total_generation
 	game.total_power_used = total_consumption
