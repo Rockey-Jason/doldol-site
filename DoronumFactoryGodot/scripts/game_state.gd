@@ -77,7 +77,7 @@ func add_item(item_id: String, quantity: int, quality: float = 90.0, purity: flo
 	state_changed.emit()
 
 func _new_stack_id() -> String:
-	var id := "DF-%08d-%08d" % [Time.get_ticks_usec() % 100000000, _next_stack_id]
+	var id := "DF-%d-%08d" % [world_seed, _next_stack_id]
 	_next_stack_id += 1
 	return id
 
@@ -307,6 +307,8 @@ func fusion_preflight() -> Array[String]:
 		errors.append("이미 퓨전 작업이 진행 중이거나 결과가 있어.")
 	if not bool(story_flags.get("STORY_INCIDENT_RECONSTRUCTED",false)):
 		errors.append("BLUE FURNACE INCIDENT 기록 4개를 모두 복구해야 해.")
+	if not bool(story_flags.get("ORBIT_04",false)):
+		errors.append("ORBIT 04 권한과 INFINITE PROJECT 기록이 필요해.")
 	for flag in ["ARCHIVE_RESTORED","COOLING_CORE_RESTORED","RESONANCE_CHAMBER_RESTORED"]:
 		if not bool(story_flags.get(flag,false)):
 			errors.append("FIRST FACTORY 복구 필요 · "+flag)
@@ -318,11 +320,10 @@ func fusion_preflight() -> Array[String]:
 		var total := 0
 		for stack in stacks:
 			if stack.synthetic or float(stack.quality) < 90.0 or float(stack.purity) < 90.0:
-				errors.append("%s: 비합성·품질 90·순도 90 조건 미달" % GameData.item_name(item_id))
-				break
+				continue
 			total += int(stack.quantity) - int(stack.get("reserved", 0))
 		if total < 100:
-			errors.append("%s: %d/100 부족" % [GameData.item_name(item_id), total])
+			errors.append("%s: 유효한 비합성 Q/P≥90 재료 %d/100 부족" % [GameData.item_name(item_id), total])
 	return errors
 
 func start_infinity_fusion() -> bool:
@@ -354,7 +355,7 @@ func start_infinity_fusion() -> bool:
 	inventory = inventory.filter(func(s): return int(s.quantity) > 0)
 	fusion = {
 		"stage":0,"stage_progress":0.0,"temperature":20.0,"pressure":0.0,
-		"failure_exposure":0.0,"rng_index":0,"output_committed":false,
+		"failure_exposure":0.0,"rng_index":0,"hazard_multiplier":1.0,"output_committed":false,
 		"reserved_inputs":1500,"custody":custody,"state":"RUNNING",
 		"interlocks":{"power":true,"cooling":true,"shield":true,"emergency":true}
 	}
@@ -409,11 +410,16 @@ func _tick_fusion(dt: float) -> void:
 		fusion.stage_progress += dt * minf(1.0, ratio)
 		fusion.failure_exposure += dt
 		fusion.rng_index += 1
-		var chance := 1.0 - pow(0.99, dt / 260.0)
+		var chance := minf(1.0,1.0 - pow(0.99, (dt / 260.0) * float(fusion.get("hazard_multiplier",1.0))))
 		if _deterministic_unit(int(fusion.rng_index)) < chance:
-			fusion.state = "FAILED_MINOR"
+			var severity_roll := _deterministic_unit(int(fusion.rng_index) + 900000)
+			var severity := "FAILED_MINOR" if severity_roll < 0.30 else ("FAILED_MAJOR" if severity_roll < 0.75 else "FAILED_CRITICAL")
+			fusion.state = severity
 			fusion.failure_event_id = "FUSION-FAIL-" + str(fusion.rng_index)
-			notification.emit("퓨전 이상 감지 · 안전 정지. 입력은 복구 대기 상태야.")
+			for machine in buildings:
+				if machine.id == "INFINITY_FUSION_MACHINE":
+					machine.condition = maxf(0.0,float(machine.condition) - (5.0 if severity=="FAILED_MINOR" else (20.0 if severity=="FAILED_MAJOR" else 40.0)))
+			notification.emit("퓨전 이상 감지 · %s · 안전 정지. 예약 입력은 복구 가능해." % severity)
 			save_game()
 			return
 	if fusion.stage_progress >= float(stage_data.seconds):
