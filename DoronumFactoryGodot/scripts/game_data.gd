@@ -222,7 +222,7 @@ static func recipe_definition(recipe_id: String) -> Dictionary:
 	if RECIPES.has(recipe_id):
 		return _finalize_recipe(RECIPES[recipe_id])
 	for item_id in DORONUM_IDS:
-		var variant_recipe_id := "RECIPE_" + item_id.replace("ITEM_","")
+		var variant_recipe_id: String = "RECIPE_" + str(item_id).replace("ITEM_","")
 		if recipe_id == variant_recipe_id and VARIANT_RECIPES.has(item_id):
 			var variant: Dictionary = VARIANT_RECIPES[item_id]
 			return _finalize_recipe({
