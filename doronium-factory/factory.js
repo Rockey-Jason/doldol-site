@@ -66,7 +66,7 @@ const BUILDINGS=[
 {id:"core",name:"중앙 안정화 코어",icon:"💠",cat:"advanced",cost:4800,materials:{ironPlate:45,circuit:30,doronium_special:5},desc:"인피니티 도로늄을 장착해 행성의 에너지 네트워크를 동기화합니다.",unlock:"infinity",kind:"core",power:12}
 ];
 // Correct the relay's materials without relying on malformed external data.
-BUILDINGS.find(b=>b.id==="relay").materials={ironPlate:25,circuit:15,doronium_normal:10};
+
 const RECIPES={
 smelt:{name:"철 제련",inputs:{ironOre:2,coal:1},output:"ironPlate",qty:1,time:12,temp:1538,pressure:100},
 wire:{name:"구리 전선 압연",inputs:{copperOre:1},output:"wire",qty:2,time:8,temp:250,pressure:50},
@@ -87,9 +87,9 @@ doronium_limited:{name:"한정 공명 공정",inputs:{doronium_normal:8,goldOre:
 doronium_crystal:{name:"결정 격자 성장",inputs:{doronium_normal:5,diamond:2,quartz:8},time:58},
 doronium_resonant:{name:"공명 주파수 각인",inputs:{doronium_normal:7,circuit:8,quartz:5},time:60},
 doronium_prismatic:{name:"프리즘 분광 분리",inputs:{doronium_normal:8,goldOre:5,diamond:3},time:68},
-doronium_void:{name:"공허 압축",inputs:{doronium_normal:10,"doronium_normal":0},time:75}
+doronium_void:{name:"공허 압축",inputs:{doronium_normal:10,doronium_black:2,circuit:10,coal:15},time:75}
 };
-VARIANT_RECIPES.doronium_void.inputs={doronium_normal:10,doronium_black:2,circuit:10,coal:15};
+
 const RESEARCH=[
 {id:"survey",name:"정밀 광맥 탐사",icon:"🛰️",tier:0,cost:120,need:{wood:5,stone:5},time:30,desc:"광맥 탐지 효율 향상. 채굴기 설치 해금."},
 {id:"mining",name:"기계식 채굴",icon:"⛏️",tier:0,cost:240,need:{ironOre:4,copperOre:2},time:45,desc:"구리·석탄 자동 채굴을 해금합니다." ,requires:["survey"]},
@@ -101,20 +101,19 @@ const RESEARCH=[
 {id:"chemistry",name:"분자 촉매 공학",icon:"🧪",tier:2,cost:1250,need:{circuit:4,quartz:4},time:100,desc:"가공 공정의 품질을 높입니다.",requires:["metallurgy"]},
 {id:"pressure",name:"초고압 공정",icon:"⏣",tier:2,cost:1800,need:{ironPlate:15,circuit:5},time:120,desc:"안전 압력 용기와 고압 냉각 설비를 해금합니다.",requires:["chemistry"]},
 {id:"doronium",name:"도로늄 공명 이론",icon:"🔷",tier:3,cost:2600,need:{doriMeat:5,circuit:8},time:150,desc:"도로늄 압력 반응로의 설계도를 해금합니다.",requires:["bio","pressure"]},
-{id:"resonance",name:"공명 주파수 제어",icon:"〽️",tier:3,cost:3200,need:{"doronium_normal":0},time:160,desc:"공명 반응의 안정성을 높입니다.",requires:["doronium"]},
+{id:"resonance",name:"공명 주파수 제어",icon:"〽️",tier:3,cost:3200,need:{doronium_normal:2,circuit:8},time:160,desc:"공명 반응의 안정성을 높입니다.",requires:["doronium"]},
 {id:"variant",name:"결정 변환 기술",icon:"💎",tier:4,cost:4800,need:{doronium_normal:3,circuit:10},time:180,desc:"특수 도로늄 변환 연구로를 해금합니다.",requires:["resonance"]},
 {id:"purity",name:"초고순도 정제",icon:"✨",tier:4,cost:6200,need:{doronium_blue:2,circuit:12},time:190,desc:"고순도 도로늄 생산 보정 연구.",requires:["variant"]},
 {id:"automation",name:"완전 자동화 프로토콜",icon:"🤖",tier:4,cost:7600,need:{circuit:20,ironPlate:25},time:200,desc:"자동 공급 및 기계 효율 +15%.",requires:["variant"]},
 {id:"fusion",name:"인피니티 퓨전 이론",icon:"🌌",tier:5,cost:12000,need:{doronium_special:5,circuit:30},time:240,desc:"인피니티 퓨전 설비의 설계도를 해금합니다.",requires:["purity","automation"]},
 {id:"relay",name:"행성 릴레이 공학",icon:"📡",tier:5,cost:16000,need:{doronium_resonant:5,circuit:35},time:260,desc:"행성 안정화 릴레이를 해금합니다.",requires:["fusion"]},
-{id:"infinity",name:"무한 결정 구조",icon:"♾️",tier:6,cost:25000,need:{doronium_prismatic:10,"doronium_normal":0},time:300,desc:"중앙 안정화 코어와 최종 프로토콜을 해금합니다.",requires:["relay"]},
+{id:"infinity",name:"무한 결정 구조",icon:"♾️",tier:6,cost:25000,need:{doronium_prismatic:10,doronium_resonant:3},time:300,desc:"중앙 안정화 코어와 최종 프로토콜을 해금합니다.",requires:["relay"]},
 {id:"planet",name:"행성 안정화 프로토콜",icon:"🌍",tier:7,cost:40000,need:{doronium_void:3,circuit:30},time:360,desc:"행성 에너지 네트워크 최종 동기화.",requires:["infinity"]}
 ];
 // Fix canonical ingredient keys for a few research entries.
-RESEARCH.find(r=>r.id==="resonance").need={doronium_normal:2,circuit:8};
-RESEARCH.find(r=>r.id==="purity").need={doronium_blue:2,circuit:12};
-RESEARCH.find(r=>r.id==="infinity").need={doronium_prismatic:10,"doronium_resonant":0};
-RESEARCH.find(r=>r.id==="infinity").need={doronium_prismatic:10,doronium_resonant:3};
+
+
+
 const FUSION_STAGES=[
 {name:"물질·공명 분석",temp:500,pressure:100,power:5,time:20},
 {name:"에너지 분리",temp:1200,pressure:500,power:10,time:25},
