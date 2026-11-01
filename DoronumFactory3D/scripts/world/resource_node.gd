@@ -14,6 +14,7 @@ var _visual_root: Node3D
 
 func configure(p_id: String, p_item: String, p_amount: int, p_quality: float, p_purity: float, p_hardness: float = 1.0, p_power: int = 0) -> void:
 	node_id = p_id
+	add_to_group("resource_nodes")
 	item_id = p_item
 	remaining = p_amount
 	max_amount = p_amount
