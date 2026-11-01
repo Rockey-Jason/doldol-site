@@ -22,7 +22,7 @@ func _ready() -> void:
 	world.generate(game.world_seed)
 	simulation = FactorySimulation.new()
 	simulation.name = "FactorySimulation"
-	simulation.bind_state(game)
+	simulation.bind_state(game,world)
 	add_child(simulation)
 	player = PlayerController.new()
 	player.name = "Player"
