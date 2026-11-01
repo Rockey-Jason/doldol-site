@@ -239,6 +239,7 @@ const RECIPES := {
 var inventory: Array[Dictionary] = []
 var research_points: int = 0
 var skill_points: int = 1
+var _highest_tier_awarded := 0
 var completed_research: Array[String] = ["RESEARCH_BASIC_SURVIVAL"]
 var purchased_skills: Array[String] = []
 var active_research: String = ""
