@@ -991,6 +991,36 @@ func start_infinity_fusion() -> bool:
 	GameState.save_game()
 	return true
 
+func _resolve_fusion_failure(job: Dictionary, fusion_record: Dictionary, rng: RandomNumberGenerator) -> void:
+	var roll := rng.randf()*100.0
+	var severity := "MINOR" if roll<30.0 else "MAJOR" if roll<75.0 else "CRITICAL"
+	if severity=="MINOR":
+		job.stage_progress = maxf(0.0,float(job.stage_progress)-2.0)
+		fusion_record.condition = maxf(0.0,float(fusion_record.get("condition",100.0))-3.0)
+		GameState.toast("Fusion Minor Failure · 공정 진행도가 일부 감소했습니다.","warning")
+	elif severity=="MAJOR":
+		job.stage_progress = maxf(0.0,float(job.stage_progress)-8.0)
+		job.cooldown_seconds = 30.0
+		fusion_record.condition = maxf(0.0,float(fusion_record.get("condition",100.0))-20.0)
+		fusion_record.status = "COOLING"
+		GameState.toast("Fusion Major Failure · 냉각 및 설비 점검이 필요합니다.","error")
+	else:
+		var manifest: Dictionary = job.get("input_manifest",{})
+		for item_id in manifest:
+			var payload: Dictionary = manifest[item_id]
+			var salvage := int(floor(float(payload.get("quantity",0))*0.75))
+			if salvage>0:
+				GameState.add_item(str(item_id),salvage,float(payload.get("quality",90.0)),float(payload.get("purity",90.0)),false,"INFINITY_FAILURE_SALVAGE")
+		fusion_record.condition = 0.0
+		fusion_record.status = "BROKEN"
+		job.running = false
+		job.failed = true
+		job.failure_severity = "CRITICAL"
+		GameState.story_flags["INFINITY_FUSION_FAILED"] = true
+		GameState.toast("Fusion Critical Failure · 75% 재료 회수 · 설비 수리 후 재도전할 수 있습니다.","error")
+	GameState.fusion_job = job
+	GameState.save_game()
+
 func _tick_fusion() -> void:
 	if not bool(GameState.fusion_job.get("running",false)):
 		return
@@ -1044,7 +1074,22 @@ func _tick_fusion() -> void:
 	job.pressure_score_sum = float(job.get("pressure_score_sum",0.0))+_process_score(float(job.pressure_mpa),target_pressure)*delta
 	job.condition_score_sum = float(job.get("condition_score_sum",0.0))+condition*delta
 	job.quality_time = float(job.get("quality_time",0.0))+delta
+	job.failure_exposure = float(job.get("failure_exposure",0.0))+delta
 	fusion_record.progress = float(job.stage_progress)
+	var fusion_base_hazard := -log(1.0-0.01)/260.0
+	var temp_risk := clampf(absf(float(job.temperature_c)-target_temp)/maxf(1.0,target_temp*0.1),0.0,1.0)
+	var pressure_risk := clampf(absf(float(job.pressure_mpa)-target_pressure)/maxf(1.0,target_pressure*0.1),0.0,1.0)
+	var power_risk := 1.0-clampf(ratio,0.0,1.0)
+	var wear_risk := 1.0-clampf(condition/100.0,0.0,1.0)
+	var hazard_multiplier := 1.0+temp_risk*0.8+pressure_risk+power_risk*0.8+wear_risk*0.8
+	if condition<=10.0:
+		hazard_multiplier*=2.0
+	var tick_failure_probability := 1.0-exp(-fusion_base_hazard*hazard_multiplier*delta)
+	var failure_rng := RandomNumberGenerator.new()
+	failure_rng.seed = absi(hash(str(job.get("job_id","INFINITY"))+str(GameState.simulation_tick)))
+	if failure_rng.randf()<tick_failure_probability:
+		_resolve_fusion_failure(job,fusion_record,failure_rng)
+		return
 	if float(job.stage_progress)>=float(stage.seconds):
 		GameState.story_flags["FUSION_STAGE_"+str(stage_index+1)+"_COMPLETE"] = true
 		job.stage_index = stage_index+1
