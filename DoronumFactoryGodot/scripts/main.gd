@@ -351,6 +351,18 @@ func _play_ending() -> void:
 	label.add_theme_font_size_override("font_size",30)
 	label.add_theme_color_override("font_color",Color(0.58,0.91,1.0))
 	overlay.add_child(label)
+	var continue_button := Button.new()
+	continue_button.text = "CONTINUE · INFINITE INDUSTRY MODE"
+	continue_button.custom_minimum_size = Vector2(420,56)
+	continue_button.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	continue_button.position = Vector2(-210,-110)
+	continue_button.pressed.connect(func():
+		overlay.queue_free()
+		game.simulation_paused = false
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		game.save_game()
+	)
+	overlay.add_child(continue_button)
 	game.save_game()
 
 func height_at(x: float, z: float) -> float:
