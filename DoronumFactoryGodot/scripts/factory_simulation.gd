@@ -177,7 +177,8 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	var pressure_quality := float(machine.pressure_quality_sum)/maxf(0.0001,float(machine.progress_sample_seconds))
 	var condition_quality := float(machine.condition_quality_sum)/maxf(0.0001,float(machine.progress_sample_seconds))
 	var power_stability := _calculate_power_stability(machine)
-	var raw_quality := material_quality*0.40+temp_quality*0.20+pressure_quality*0.20+condition_quality*0.10+power_stability*0.10+float(recipe.get("quality_modifier",0.0))
+	var skill_quality_bonus := 2.0 if game.has_skill("RECIPE_DISCIPLINE") and bool(recipe.get("allow_skill_quality_bonus",false)) else 0.0
+	var raw_quality := material_quality*0.40+temp_quality*0.20+pressure_quality*0.20+condition_quality*0.10+power_stability*0.10+float(recipe.get("quality_modifier",0.0))+skill_quality_bonus
 	var q := clampf(raw_quality-float(recipe.get("pollution_penalty",0.0)),0.0,100.0)
 	var p := _calculate_output_purity(machine,recipe)
 	var synthetic := false
