@@ -8,6 +8,7 @@ var _fruit_nodes: Array[MeshInstance3D] = []
 var _glow: OmniLight3D
 
 func _ready() -> void:
+	add_to_group("dori_meat_trees")
 	_build_tree()
 	_restore()
 	GameState.tick_advanced.connect(_on_simulation_tick)
@@ -111,6 +112,19 @@ func interact(_player: Node) -> void:
 	_set_fruit_visibility()
 	GameState.toast("비합성 돌이 고기 +1  · 순도 90","success")
 	_save_state(true)
+
+func harvest_automated(machine_id: String) -> Dictionary:
+	if not mature:
+		return {}
+	mature = false
+	cycle_progress = 0.0
+	_set_fruit_visibility()
+	GameState.progress_objective("DORI_MEAT_HARVESTED",tree_id)
+	var claim := "DORI_HARVEST:"+tree_id+":"+str(GameState.world_state.get("tree_cycle_"+tree_id,0))
+	GameState.register_world_event(claim)
+	var result := {"item_id":"ITEM_DORI_MEAT","quantity":1,"quality":92.0,"purity":90.0,"synthetic":false,"origin":"DORI_TREE:"+tree_id,"harvester_id":machine_id}
+	_save_state(true)
+	return result
 
 func _set_fruit_visibility() -> void:
 	for fruit in _fruit_nodes:
