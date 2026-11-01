@@ -41,7 +41,7 @@ const RESEARCH := [
 	{"id":"RESEARCH_ULTRA_MATERIAL_PROCESSING","name":"Ultra Material Processing","tier":6,"rp":35000,"time":4200.0,"requires":["RESEARCH_DORONUM_CRYSTAL","RESEARCH_HIGH_PRESSURE"],"power":250.0,"unlocks":["ULTRA_MATERIAL_PRESS","DORONUM_PURIFIER"]},
 	{"id":"RESEARCH_DORONUM_COMPRESSOR","name":"Doronum Compressor","tier":6,"rp":50000,"time":5400.0,"requires":["RESEARCH_ULTRA_MATERIAL_PROCESSING","RESEARCH_AUTOMATION"],"power":250.0,"unlocks":["FUSION_SAFETY"]},
 	{"id":"RESEARCH_DORONUM_FUSION","name":"Doronum Fusion","tier":6,"rp":75000,"time":7200.0,"requires":["RESEARCH_DORONUM_COMPRESSOR","RESEARCH_DORONUM_CRYSTAL"],"power":250.0,"unlocks":["INFINITY_FUSION_MACHINE","ISOLATION_TRANSPORT","FUSION_POWER_BUFFER","FUSION_CONTAINMENT_SHIELD","EMERGENCY_COOLING_SYSTEM","PRESSURE_CALIBRATION_RIG"]},
-	{"id":"RESEARCH_INFINITY_INDUSTRY","name":"Infinity Industry","tier":7,"rp":150000,"time":10800.0,"requires":["RESEARCH_DORONUM_FUSION","RESEARCH_DORONUM_BIOLOGY","RESEARCH_AUTOMATION"],"power":250.0,"unlocks":["STABILIZATION_RELAY","STABILIZATION_CORE"]}
+	{"id":"RESEARCH_INFINITY_INDUSTRY","name":"Infinity Industry","tier":7,"rp":150000,"time":10800.0,"requires":["RESEARCH_DORONUM_FUSION","RESEARCH_DORONUM_BIOLOGY","RESEARCH_AUTOMATION"],"power":250.0,"unlocks":["STABILIZATION_RELAY","STABILIZATION_CORE","SKILL_RESPEC_TERMINAL"]}
 ]
 const BUILDINGS := [
 	{"id":"WORKBENCH","name":"Workbench","cost":{"ITEM_WOOD":10,"ITEM_STONE":4,"ITEM_PLANT_ROPE":2},"tier":0,"power":0.0,"size":Vector2i(2,2)},
@@ -80,7 +80,8 @@ const BUILDINGS := [
 	{"id":"FUSION_POWER_BUFFER","name":"Fusion Power Buffer","cost":{"ITEM_STEEL_PLATE":120,"ITEM_TITANIUM_PLATE":60,"ITEM_BATTERY":40,"ITEM_ADVANCED_CIRCUIT":30,"ITEM_CONTROL_MODULE":10},"tier":7,"power":20.0,"size":Vector2i(4,4)},
 	{"id":"FUSION_CONTAINMENT_SHIELD","name":"Fusion Containment Shield","cost":{"ITEM_STEEL_PLATE":100,"ITEM_TITANIUM_PLATE":80,"ITEM_ADVANCED_CIRCUIT":30,"ITEM_DORONUM_BLACK":10},"tier":7,"power":250.0,"size":Vector2i(4,4)},
 	{"id":"EMERGENCY_COOLING_SYSTEM","name":"Emergency Cooling System","cost":{"ITEM_STEEL_PLATE":80,"ITEM_TITANIUM_PLATE":30,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_DORONUM_COLD_CRYSTAL":10},"tier":7,"power":250.0,"size":Vector2i(3,3)},
-	{"id":"PRESSURE_CALIBRATION_RIG","name":"Pressure Calibration Rig","cost":{"ITEM_STEEL_PLATE":60,"ITEM_TITANIUM_PLATE":40,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_DIAMOND":5},"tier":7,"power":200.0,"size":Vector2i(3,3)}
+	{"id":"PRESSURE_CALIBRATION_RIG","name":"Pressure Calibration Rig","cost":{"ITEM_STEEL_PLATE":60,"ITEM_TITANIUM_PLATE":40,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_DIAMOND":5},"tier":7,"power":200.0,"size":Vector2i(3,3)},
+	{"id":"SKILL_RESPEC_TERMINAL","name":"Skill Respec Terminal","cost":{"ITEM_STEEL_PLATE":50,"ITEM_TITANIUM_PLATE":25,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_DORONUM_TRANSLUCENT":5},"tier":7,"power":50.0,"size":Vector2i(2,2)}
 ]
 const VARIANT_RECIPES := {
 	"ITEM_DORONUM_YELLOW":{"name":"Yellow Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_GOLD_INGOT":2,"ITEM_QUARTZ":1},"machine":"DORONUM_REFINEMENT_CHAMBER","seconds":45.0,"temperature":700.0,"pressure":300.0,"power":250.0},
@@ -181,7 +182,7 @@ const RECIPES := {
 	"RECIPE_MOTOR":{"name":"Motor","machine":"FABRICATOR","inputs":{"ITEM_COPPER":5,"ITEM_IRON":5,"ITEM_NEODYMIUM_MAGNET":2,"ITEM_BEARING":2,"ITEM_COPPER_WIRE":5},"outputs":{"ITEM_MOTOR":1},"seconds":15.0,"power":30.0},
 	"RECIPE_ADVANCED_CIRCUIT":{"name":"Advanced Circuit","machine":"ADVANCED_ASSEMBLER","inputs":{"ITEM_BASIC_CIRCUIT":3,"ITEM_GOLD_INGOT":2,"ITEM_NICKEL_INGOT":2,"ITEM_QUARTZ":2,"ITEM_COPPER_WIRE":5},"outputs":{"ITEM_ADVANCED_CIRCUIT":1},"seconds":25.0,"power":45.0},
 	"RECIPE_CONTROL_MODULE":{"name":"Control Module","machine":"ADVANCED_ASSEMBLER","inputs":{"ITEM_ADVANCED_CIRCUIT":2,"ITEM_SENSOR":2,"ITEM_BATTERY":1,"ITEM_NEODYMIUM_MAGNET":1},"outputs":{"ITEM_CONTROL_MODULE":1},"seconds":30.0,"power":50.0},
-	"RECIPE_DORONUM_NORMAL":{"name":"Natural Doronum","machine":"DORONUM_COMPRESSOR","inputs":{"ITEM_DORI_MEAT":10},"outputs":{"ITEM_DORONUM_NORMAL":1},"seconds":20.0,"temperature":900.0,"pressure":500.0,"power":750.0,"allow_synthetic":false},
+	"RECIPE_DORONUM_NORMAL":{"name":"Natural Doronum","machine":"DORONUM_COMPRESSOR","inputs":{"ITEM_DORI_MEAT":10},"outputs":{"ITEM_DORONUM_NORMAL":1},"seconds":20.0,"temperature":900.0,"pressure":500.0,"power":750.0,"allow_synthetic":false,"allow_skill_quality_bonus":true},
 	"RECIPE_PURIFY_RUSTED_DORONUM":{"name":"Purify Rusted Doronum","machine":"DORONUM_PURIFIER","inputs":{"ITEM_DORONUM_RUSTED":2,"ITEM_QUARTZ":4,"ITEM_WATER":4},"outputs":{"ITEM_DORONUM_RUSTED":1},"seconds":120.0,"temperature":350.0,"pressure":300.0,"power":500.0,"allow_synthetic":false,"purity_loss":0.0,"purification_bonus":15.0,"quality_modifier":2.0},
 	"RECIPE_GOLD_INGOT":{"name":"Gold Ingot","machine":"FURNACE","inputs":{"ITEM_GOLD_ORE":2,"ITEM_COAL":1},"outputs":{"ITEM_GOLD_INGOT":1},"seconds":12.0,"temperature":1064.0,"pressure":50.0,"power":0.0},
 	"RECIPE_CHROME_INGOT":{"name":"Chrome Ingot","machine":"STEEL_FURNACE","inputs":{"ITEM_CHROME_ORE":2,"ITEM_COAL":2},"outputs":{"ITEM_CHROME_INGOT":1},"seconds":20.0,"temperature":1907.0,"pressure":100.0,"power":40.0},
