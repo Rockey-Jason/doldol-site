@@ -110,6 +110,7 @@ func _spawn_resources() -> void:
 	var deposits := [
 		["WOOD","ITEM_WOOD",Vector2(60,30),38,12,Color(0.34,0.18,0.09)],
 		["STONE","ITEM_STONE",Vector2(-35,60),34,18,Color(0.40,0.43,0.48)],
+		["WATER","ITEM_WATER",Vector2(15,220),22,100,Color(0.08,0.43,0.86)],
 		["GRASS","ITEM_GRASS",Vector2(80,-50),45,22,Color(0.20,0.43,0.17)],
 		["IRON","ITEM_IRON_ORE",Vector2(-280,120),36,80,Color(0.53,0.39,0.30)],
 		["COPPER","ITEM_COPPER_ORE",Vector2(280,120),30,75,Color(0.79,0.34,0.17)],
