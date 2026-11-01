@@ -10,7 +10,20 @@ var dori_trees: Array[Area3D] = []
 var terrain_material: StandardMaterial3D
 var world_seed := GameData.WORLD_SEED
 
-func _process(delta: float) -> void:
+func generate(seed_value: int = GameData.WORLD_SEED) -> void:
+	world_seed = seed_value
+	rng.seed = seed_value
+	noise.seed = seed_value
+	noise.frequency = 0.0028
+	noise.fractal_octaves = 4
+	noise.fractal_gain = 0.48
+	_build_terrain()
+	_build_biome_regions()
+	_spawn_resources()
+	_spawn_dori_forest()
+	_spawn_points_of_interest()
+
+func advance_simulation(delta: float) -> void:
 	for tree in dori_trees:
 		if not is_instance_valid(tree) or bool(tree.get_meta("mature",false)):
 			continue
@@ -24,19 +37,6 @@ func _process(delta: float) -> void:
 			var fruit := tree.get_node_or_null("DoriMeatFruit")
 			if fruit:
 				fruit.visible = true
-
-func generate(seed_value: int = GameData.WORLD_SEED) -> void:
-	world_seed = seed_value
-	rng.seed = seed_value
-	noise.seed = seed_value
-	noise.frequency = 0.0028
-	noise.fractal_octaves = 4
-	noise.fractal_gain = 0.48
-	_build_terrain()
-	_build_biome_regions()
-	_spawn_resources()
-	_spawn_dori_forest()
-	_spawn_points_of_interest()
 
 func height_at(x: float, z: float) -> float:
 	var broad := noise.get_noise_2d(x,z) * 12.0
