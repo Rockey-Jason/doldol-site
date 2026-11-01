@@ -288,7 +288,7 @@ func _draw_story() -> void:
 		_button("기록 복구 · "+lore_id,func(): game.find_lore(lore_id),lore_id in game.lore_found)
 	_heading("FIRST FACTORY")
 	for flag in ["ARCHIVE_RESTORED","COOLING_CORE_RESTORED","RESONANCE_CHAMBER_RESTORED"]:
-		_button("복구 · "+flag,func(): game.story_flags[flag]=true;game._claim_once("LORE:"+flag,"LORE",50);game.save_game();_refresh(),bool(game.story_flags.get(flag,false)))
+		_label(("RESTORED  ·  " if bool(game.story_flags.get(flag,false)) else "UNRESTORED  ·  ")+flag+"  ·  interact with its physical POI")
 	_button("SPECIAL EDITION · ARCHIVE PATTERN CONTRACT",game.claim_special_edition_batch_contract,bool(game._event_ids.has("CONTRACT:SPECIAL_EDITION_PATTERN_BATCH")))
 	_button("LIMITED EDITION · LEGACY BATCH CONTRACT",game.claim_limited_edition_batch_contract,bool(game._event_ids.has("CONTRACT:LIMITED_EDITION_SEALS")))
 
