@@ -275,13 +275,28 @@ func _on_player_interact(target: Object, hit_position: Vector3) -> void:
 		return
 	if node.has_meta("restore_flag"):
 		var restore_flag := str(node.get_meta("restore_flag"))
+		if bool(game.story_flags.get(restore_flag,false)):
+			game.notification.emit("이미 복구한 First Factory 설비야.")
+			return
+		var required_research := {
+			"ARCHIVE_RESTORED":"RESEARCH_ADVANCED_CIRCUITS",
+			"COOLING_CORE_RESTORED":"RESEARCH_HIGH_PRESSURE",
+			"RESONANCE_CHAMBER_RESTORED":"RESEARCH_DORONUM_CRYSTAL"
+		}
+		var required_id := str(required_research.get(restore_flag,""))
+		if not required_id.is_empty() and required_id not in game.research_completed:
+			game.notification.emit("복구 조건 미완료 · "+required_id+" 연구가 필요해.")
+			return
 		game.story_flags[restore_flag] = true
-		game.notification.emit("First Factory 복구 · "+restore_flag)
+		game._claim_once("FIRST_FACTORY_RESTORE:"+restore_flag,"FIRST_FACTORY_RESTORE",10000)
+		game.notification.emit("First Factory 복구 · "+restore_flag+" · +10,000 RP")
 		var restored := ["ARCHIVE_RESTORED","COOLING_CORE_RESTORED","RESONANCE_CHAMBER_RESTORED"]
 		if restored.all(func(flag): return bool(game.story_flags.get(flag,false))):
 			game.story_flags["ACT_V_COMPLETE"] = true
 			game.grant_skill_point("ACT_V_COMPLETE","ACT_V_MISSION")
 			game.notification.emit("FIRST FACTORY · Archive / Cooling / Resonance restored")
+		game.save_game()
+		game.state_changed.emit()
 		return
 	if node.has_meta("poi_name"):
 		var poi := str(node.get_meta("poi_name"))
@@ -289,6 +304,7 @@ func _on_player_interact(target: Object, hit_position: Vector3) -> void:
 		if poi == "Abandoned First Factory":
 			game.find_lore("FIRST_FACTORY_ARCHIVE")
 			game.story_flags["FIRST_FACTORY_FOUND"] = true
+		game.save_game()
 		return
 
 func _interact_tree(tree: Node) -> void:
