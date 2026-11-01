@@ -141,9 +141,9 @@ func add_item(item_id: String, quantity: int, quality: float = 90.0, purity: flo
 	state_changed.emit()
 
 func _new_stack_id() -> String:
-	var id := "DF-%d-%08d" % [world_seed, _next_stack_id]
+	var random_bytes := Crypto.new().generate_random_bytes(16)
 	_next_stack_id += 1
-	return id
+	return "STACK-"+random_bytes.hex_encode().to_upper()
 
 func count_item(item_id: String) -> int:
 	var total := 0
