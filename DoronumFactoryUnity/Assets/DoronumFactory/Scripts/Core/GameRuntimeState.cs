@@ -41,6 +41,8 @@ namespace DoronumFactory
         public List<ItemStackData> InputBuffer = new List<ItemStackData>();
         public List<ItemStackData> CompletionBuffer = new List<ItemStackData>();
         public List<ItemStackData> ReservedInputs = new List<ItemStackData>();
+        public float EnergyKJ;
+        public int FailureEvents;
     }
 
     [Serializable]
@@ -125,6 +127,21 @@ namespace DoronumFactory
         public float ResultPurity;
         public string LastFailureEventId;
         public string State = "NOT_STARTED";
+        public string ManifestChecksum;
+        public List<ItemStackData> InputManifest = new List<ItemStackData>();
+        public float PowerPreflightSeconds;
+        public float CoolingPreflightSeconds;
+        public bool PressurePreflightPassed;
+        public bool PowerPreflightPassed;
+        public bool CoolingPreflightPassed;
+        public bool Failed;
+    }
+
+    [Serializable]
+    public sealed class RecipeTotalData
+    {
+        public string RecipeId;
+        public int Quantity;
     }
 
     [Serializable]
@@ -152,6 +169,7 @@ namespace DoronumFactory
         public List<DoriTreeState> DoriTrees = new List<DoriTreeState>();
         public List<StoryFlagData> StoryFlags = new List<StoryFlagData>();
         public List<ClaimRecord> RewardLedger = new List<ClaimRecord>();
+        public List<RecipeTotalData> RecipeTotals = new List<RecipeTotalData>();
         public List<ShipmentRuntimeData> Shipments = new List<ShipmentRuntimeData>();
         public List<string> PurchasedSkills = new List<string>();
         public string ActiveResearchId;
