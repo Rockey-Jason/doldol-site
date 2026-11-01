@@ -270,7 +270,7 @@ func _draw_fusion() -> void:
 		_label("%s  %d / 100" % [GameData.item_name(item_id),game.count_item(item_id)])
 	_heading("FINAL SAFETY DIAGNOSTICS")
 	_label("Fusion Buffer  %.1f / 500 kWh" % float(game.power_state.get("fusion_buffer_kwh",0.0)))
-	_label("독립 버퍼는 발전소의 잉여 전력으로 충전돼. 최종 진단에는 250kWh 이상이 필요해.")
+	_label("독립 버퍼는 발전소의 잉여 전력으로 충전돼. 최종 진단에는 400kWh 이상이 필요해.")
 	for diagnostic in ["power_stability","pressure_calibration","emergency_cooling"]:
 		var passed := bool(game.fusion_diagnostics.get(diagnostic,false))
 		_button("%s  ·  %s" % [diagnostic.to_upper(),"PASSED" if passed else "RUN TEST"],func(): game.run_fusion_diagnostic(diagnostic),passed)
