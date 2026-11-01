@@ -11,7 +11,7 @@
   const TABLE = "dori_cloud_storage";
   const OWNER_KEY = "__dori_cloud_sync_owner_v1";
   const META_PREFIX = "__dori_cloud_sync_meta_v1:";
-  const MAX_VALUE_BYTES = 1024 * 1024;
+  const MAX_VALUE_BYTES = 4 * 1024 * 1024;
   const native = {
     get: Storage.prototype.getItem,
     set: Storage.prototype.setItem,
