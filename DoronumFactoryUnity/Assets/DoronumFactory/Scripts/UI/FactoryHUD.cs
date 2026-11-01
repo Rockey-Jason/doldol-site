@@ -28,10 +28,9 @@ namespace DoronumFactory
         }
         public void SelectMachine(string instanceId)
         {
-            if(game==null)return;
-            game.SelectMachine(instanceId);
             activePanel="MACHINE";
         }
+        public void OpenMachinePanel() { activePanel="MACHINE"; }
         private void ShowMessage(string text){message=text;messageUntil=Time.unscaledTime+4f;}
 
         private void OnGUI()
@@ -155,7 +154,7 @@ namespace DoronumFactory
             { if(game.Inventory.Remove("ITEM_COAL",1)) machine.FuelSeconds+=45f; }
             if(machine.MachineId=="STABILIZATION_CORE" && GUILayout.Button("Infinity Doronum 설치",HudSkin.Action))
                 game.Fusion.InstallInfinityCore();
-            if(GUILayout.Button("건설 취소 / 선택 해제",HudSkin.Tab)) game.SelectMachine(null);
+            if(GUILayout.Button("건설 취소 / 선택 해제",HudSkin.Tab)) { game.SelectMachine(null); activePanel="OVERVIEW"; }
         }
 
         private void DrawInventory()
