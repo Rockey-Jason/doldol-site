@@ -98,6 +98,28 @@ const VARIANT_RECIPES := {
 	"ITEM_DORONUM_SPECIAL_EDITION":{"name":"Special Edition Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_DORONUM_YELLOW":1,"ITEM_ADVANCED_CIRCUIT":5,"ITEM_ARCHIVE_PATTERN":1},"machine":"SEALED_PRECISION_CHAMBER","seconds":120.0,"temperature":900.0,"pressure":1000.0,"power":500.0,"story":"SPECIAL_EDITION_BATCH_RESEARCHED","supply_cap":100},
 	"ITEM_DORONUM_LIMITED_EDITION":{"name":"Limited Edition Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_DORONUM_ULTRA":1,"ITEM_DORONUM_TRANSLUCENT":1,"ITEM_CONTRACT_SEAL":1},"machine":"LEGACY_BATCH_LINE","seconds":180.0,"temperature":1100.0,"pressure":1500.0,"power":500.0,"story":"LIMITED_EDITION_CONTRACT_ACTIVE","supply_cap":100}
 }
+const SKILLS := [
+	{"id":"FIELD_SURVEYOR","name":"Field Surveyor","branch":"EXPLORATION","tier":1,"requires":[],"effect":"상호작용/스캔 거리 +10%"},
+	{"id":"GEOLOGICAL_READOUT","name":"Geological Readout","branch":"EXPLORATION","tier":2,"requires":["FIELD_SURVEYOR"],"effect":"광맥 잔량 범위를 표시"},
+	{"id":"SAFE_PATHFINDER","name":"Safe Pathfinder","branch":"EXPLORATION","tier":3,"requires":["FIELD_SURVEYOR","GEOLOGICAL_READOUT"],"effect":"지도에 위험 지역과 우회 경로 표시"},
+	{"id":"ARCHIVE_SPECIALIST","name":"Archive Specialist","branch":"EXPLORATION","tier":4,"requires":["FIELD_SURVEYOR","GEOLOGICAL_READOUT","SAFE_PATHFINDER"],"effect":"Lore 단서 관계와 미수집 카테고리 표시"},
+	{"id":"STEADY_SWING","name":"Steady Swing","branch":"EXTRACTION","tier":1,"requires":[],"effect":"채굴 속도 +10%"},
+	{"id":"VEIN_EFFICIENCY","name":"Vein Efficiency","branch":"EXTRACTION","tier":2,"requires":["STEADY_SWING"],"effect":"채굴 부산물 확률 +2%p"},
+	{"id":"HARDPOINT_CALIBRATION","name":"Hardpoint Calibration","branch":"EXTRACTION","tier":3,"requires":["STEADY_SWING","VEIN_EFFICIENCY"],"effect":"도구 내구도 소모 -10%"},
+	{"id":"DEEP_EXTRACTION","name":"Deep Extraction","branch":"EXTRACTION","tier":4,"requires":["STEADY_SWING","VEIN_EFFICIENCY","HARDPOINT_CALIBRATION"],"effect":"심부 채굴/광맥 유지보수 경고"},
+	{"id":"PRECISE_ALIGNMENT","name":"Precise Alignment","branch":"MANUFACTURING","tier":1,"requires":[],"effect":"정비 후 Condition 회복 +10%"},
+	{"id":"RECIPE_DISCIPLINE","name":"Recipe Discipline","branch":"MANUFACTURING","tier":2,"requires":["PRECISE_ALIGNMENT"],"effect":"허용 Recipe Quality Modifier +2"},
+	{"id":"PROCESS_CONTROL","name":"Process Control","branch":"MANUFACTURING","tier":3,"requires":["PRECISE_ALIGNMENT","RECIPE_DISCIPLINE"],"effect":"온도/압력 센서 편차 조기 경고"},
+	{"id":"FAULT_DIAGNOSTICS","name":"Fault Diagnostics","branch":"MANUFACTURING","tier":4,"requires":["PRECISE_ALIGNMENT","RECIPE_DISCIPLINE","PROCESS_CONTROL"],"effect":"고장 위험 원인과 경고 표시"},
+	{"id":"CONVEYOR_PLANNER","name":"Conveyor Planner","branch":"LOGISTICS","tier":1,"requires":[],"effect":"포트/벨트 연결 사전 검증"},
+	{"id":"BUFFER_ENGINEER","name":"Buffer Engineer","branch":"LOGISTICS","tier":2,"requires":["CONVEYOR_PLANNER"],"effect":"창고/버퍼 건설 비용 -5%"},
+	{"id":"BLUEPRINT_TECHNICIAN","name":"Blueprint Technician","branch":"LOGISTICS","tier":3,"requires":["CONVEYOR_PLANNER","BUFFER_ENGINEER"],"effect":"공장 Blueprint 저장/불러오기"},
+	{"id":"FLOW_OPTIMIZATION","name":"Flow Optimization","branch":"LOGISTICS","tier":4,"requires":["CONVEYOR_PLANNER","BUFFER_ENGINEER","BLUEPRINT_TECHNICIAN"],"effect":"최대 Backpressure/Power 병목 3개 분석"},
+	{"id":"SAMPLE_EFFICIENCY","name":"Sample Efficiency","branch":"RESEARCH_DORONUM","tier":1,"requires":[],"effect":"허용된 분석 샘플 소비량 -5%"},
+	{"id":"MATERIAL_ANALYST","name":"Material Analyst","branch":"RESEARCH_DORONUM","tier":2,"requires":["SAMPLE_EFFICIENCY"],"effect":"Stack 품질/순도 기여 상세 분석"},
+	{"id":"CRYSTAL_LATTICE","name":"Crystal Lattice","branch":"RESEARCH_DORONUM","tier":3,"requires":["SAMPLE_EFFICIENCY","MATERIAL_ANALYST"],"effect":"도로늄 결정 구조 검사 보고서 확장"},
+	{"id":"INFINITY_SAFETY","name":"Infinity Safety","branch":"RESEARCH_DORONUM","tier":4,"requires":["SAMPLE_EFFICIENCY","MATERIAL_ANALYST","CRYSTAL_LATTICE"],"effect":"Infinity 사전 진단과 위험 체크리스트 확장"}
+]
 const STORY_CHAPTERS := [
 	{"id":"PROLOGUE","title":"The Arrival","objective":"Scan the abandoned site and recover the first terminal.","flag":"PROLOGUE_COMPLETE"},
 	{"id":"ACT_I","title":"The Ruins","objective":"Gather wood and stone, craft tools and restore the furnace.","flag":"ACT_I_COMPLETE"},
