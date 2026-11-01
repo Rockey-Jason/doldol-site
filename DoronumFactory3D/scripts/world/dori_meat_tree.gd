@@ -10,7 +10,7 @@ var _glow: OmniLight3D
 func _ready() -> void:
 	_build_tree()
 	_restore()
-	GameState.simulation_tick.connect(_on_simulation_tick)
+	GameState.tick_advanced.connect(_on_simulation_tick)
 
 func _build_tree() -> void:
 	var trunk := MeshInstance3D.new()
