@@ -252,6 +252,10 @@ func _draw_skills() -> void:
 				if prerequisite not in game.skills_unlocked:
 					missing.append(str(prerequisite))
 			_button("UNLOCK · "+str(skill.name),func(): game.unlock_skill(str(skill.id)),unlocked or not prerequisites_met or game.skill_points<=0)
+	_heading("FACTORY BLUEPRINTS")
+	for slot in ["1","2","3"]:
+		_button("SAVE BLUEPRINT · SLOT "+slot,func(): game.save_factory_blueprint(slot),not game.has_skill("BLUEPRINT_TECHNICIAN"))
+		_button("PLACE BLUEPRINT · SLOT "+slot,func(): game.place_factory_blueprint(slot,game.player_position+Vector3(8.0,0.0,0.0)),not game.has_skill("BLUEPRINT_TECHNICIAN") or not game.blueprints.has(slot))
 	_heading("SKILL RESET")
 	var terminal_ready := game.buildings.any(func(m): return m.id=="SKILL_RESPEC_TERMINAL" and float(m.condition)>0.0)
 	_button("USE ONE-TIME FREE RESPEC",game.respec_skill_tree,not terminal_ready or game.skill_respec_used)
