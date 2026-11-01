@@ -7,6 +7,7 @@ namespace DoronumFactory
     public sealed class ItemStackData
     {
         public string StackId;
+        public string SourceStackId;
         public string ItemId;
         public int Quantity;
         public float Quality;
@@ -16,7 +17,7 @@ namespace DoronumFactory
         public string Contamination = "NONE";
         public string Packaging = "NONE";
         public ItemStackData Clone() => new ItemStackData {
-            StackId=StackId, ItemId=ItemId, Quantity=Quantity, Quality=Quality,
+            StackId=StackId, SourceStackId=SourceStackId, ItemId=ItemId, Quantity=Quantity, Quality=Quality,
             Purity=Purity, Synthetic=Synthetic, Provenance=Provenance,
             Contamination=Contamination, Packaging=Packaging
         };
