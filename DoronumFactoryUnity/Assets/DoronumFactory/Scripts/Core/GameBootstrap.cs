@@ -77,7 +77,6 @@ namespace DoronumFactory
             items.Add("ITEM_GRASS",30,90f,90f,false,"STARTER_PACKAGE");
             items.Add("ITEM_WATER",10,100f,100f,false,"STARTER_PACKAGE");
             items.Add("ITEM_COAL",10,90f,90f,false,"STARTER_PACKAGE");
-            items.Add("ITEM_IRON_ORE",0); 
             State.SkillPoints=1;
             State.ResearchPoints=0;
             State.SetFlag("ORBIT_00_DORMANT");
@@ -86,7 +85,8 @@ namespace DoronumFactory
         private void BuildPlayer()
         {
             var go=new GameObject("Recovery Engineer");
-            Vector3 position=new Vector3(0f,World.HeightAt(0f,0f)+1.2f,0f);
+            Vector3 saved=new Vector3(State.PlayerX,State.PlayerY,State.PlayerZ);
+            Vector3 position=(State.SaveRevision>0 && saved.sqrMagnitude>0.01f)?saved:new Vector3(0f,World.HeightAt(0f,0f)+1.2f,0f);
             go.transform.position=position;
             var controller=go.AddComponent<CharacterController>();
             controller.height=1.8f;controller.radius=0.42f;controller.center=new Vector3(0f,0.9f,0f);
@@ -198,7 +198,7 @@ namespace DoronumFactory
         public void SelectMachine(string instanceId)
         {
             SelectedMachineInstanceId=instanceId;
-            HUD?.SelectMachine(instanceId);
+            HUD?.OpenMachinePanel();
         }
 
         public MachineRuntimeData GetMachine(string instanceId) =>
