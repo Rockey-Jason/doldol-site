@@ -149,19 +149,42 @@ const RECIPES := {
 	"RECIPE_CONTROL_MODULE":{"name":"Control Module","machine":"ADVANCED_ASSEMBLER","inputs":{"ITEM_ADVANCED_CIRCUIT":2,"ITEM_SENSOR":2,"ITEM_BATTERY":1,"ITEM_NEODYMIUM_MAGNET":1},"outputs":{"ITEM_CONTROL_MODULE":1},"seconds":30.0,"power":50.0},
 	"RECIPE_DORONUM_NORMAL":{"name":"Natural Doronum","machine":"DORONUM_COMPRESSOR","inputs":{"ITEM_DORI_MEAT":10},"outputs":{"ITEM_DORONUM_NORMAL":1},"seconds":20.0,"temperature":900.0,"pressure":500.0,"power":750.0,"allow_synthetic":false}
 }
+static func _finalize_recipe(recipe: Dictionary) -> Dictionary:
+	var result: Dictionary = recipe.duplicate(true)
+	var material_weights: Dictionary = result.get("material_weights",{})
+	var purity_weights: Dictionary = result.get("purity_weights",{})
+	for item_id in result.get("inputs",{}):
+		if not material_weights.has(item_id):
+			material_weights[item_id] = 1.0
+		if not purity_weights.has(item_id):
+			purity_weights[item_id] = 1.0
+	result["material_weights"] = material_weights
+	result["purity_weights"] = purity_weights
+	result["quality_modifier"] = float(result.get("quality_modifier",0.0))
+	result["pollution_penalty"] = float(result.get("pollution_penalty",0.0))
+	result["purity_loss"] = float(result.get("purity_loss",0.0))
+	result["purification_bonus"] = float(result.get("purification_bonus",0.0))
+	result["output_purity_modifier"] = float(result.get("output_purity_modifier",0.0))
+	result["temperature_tolerance"] = float(result.get("temperature_tolerance",0.1))
+	result["pressure_tolerance"] = float(result.get("pressure_tolerance",0.1))
+	result["heat_rate"] = float(result.get("heat_rate",120.0))
+	result["pressure_rate"] = float(result.get("pressure_rate",50.0))
+	result["allow_synthetic"] = bool(result.get("allow_synthetic",true))
+	return result
+
 static func recipe_definition(recipe_id: String) -> Dictionary:
 	if RECIPES.has(recipe_id):
-		return RECIPES[recipe_id]
+		return _finalize_recipe(RECIPES[recipe_id])
 	for item_id in DORONUM_IDS:
 		var variant_recipe_id := "RECIPE_" + item_id.replace("ITEM_","")
 		if recipe_id == variant_recipe_id and VARIANT_RECIPES.has(item_id):
 			var variant: Dictionary = VARIANT_RECIPES[item_id]
-			return {
+			return _finalize_recipe({
 				"name":variant.name,"machine":variant.machine,"inputs":variant.inputs,
 				"outputs":{item_id:1},"seconds":variant.seconds,
 				"temperature":variant.temperature,"pressure":variant.pressure,
 				"power":250.0,"allow_synthetic":false
-			}
+			})
 	return {}
 
 static func item_name(item_id: String) -> String:
