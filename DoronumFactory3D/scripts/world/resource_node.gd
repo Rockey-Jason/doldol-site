@@ -69,6 +69,7 @@ func _build_visual() -> void:
 			body_mesh.mesh = _rock_mesh(1.1, 0.7, 0.95)
 			material.albedo_color = Color(0.36,0.43,0.44)
 	body_mesh.material_override = material
+	body_mesh.scale = Vector3(1.0, 0.75, 0.95) if item_id != "ITEM_QUARTZ" and item_id != "ITEM_DIAMOND" else Vector3.ONE
 	body_mesh.position.y = 0.65
 	_visual_root.add_child(body_mesh)
 	var collision := CollisionShape3D.new()
@@ -95,26 +96,7 @@ func _rock_mesh(sx: float, sy: float, sz: float) -> Mesh:
 	var mesh := SphereMesh.new()
 	mesh.radius = 0.7
 	mesh.height = 1.3
-	var instance_scale := Vector3(sx,sy,sz)
-	var wrapper := ArrayMesh.new()
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var faces := _icosa_faces()
-	for tri in faces:
-		for vertex in tri:
-			st.set_normal(vertex.normalized())
-			st.add_vertex(vertex * instance_scale)
-	st.generate_normals()
-	return st.commit()
-
-func _icosa_faces() -> Array:
-	var mesh := SphereMesh.new()
-	mesh.radius = 0.7
-	mesh.height = 1.3
-	# A scaled sphere is a lower-cost placeholder for the irregular ore silhouette.
-	var st := SurfaceTool.new()
-	st.create_from(mesh,0)
-	return []
+	return mesh
 
 func _crystal_mesh(height: float) -> Mesh:
 	var st := SurfaceTool.new()
@@ -160,7 +142,9 @@ func interact(_player: Node) -> void:
 	if remaining <= 0:
 		depleted = true
 		_visual_root.visible = false
-	GameState.world_state.get_or_add("resource_nodes",{})[node_id] = remaining
+	var node_state: Dictionary = GameState.world_state.get("resource_nodes",{})
+	node_state[node_id] = remaining
+	GameState.world_state["resource_nodes"] = node_state
 	GameState.toast("%s +%d  · 남은 매장량 %d" % [GameState.ITEM_DATA.get(item_id,{}).get("name",item_id),yield_amount,remaining],"success")
 	GameState.save_game()
 
