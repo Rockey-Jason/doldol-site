@@ -20,6 +20,7 @@ func _ready() -> void:
 	world.name = "Planet"
 	add_child(world)
 	world.generate(game.world_seed)
+	game.apply_world_state(world)
 	simulation = FactorySimulation.new()
 	simulation.name = "FactorySimulation"
 	simulation.bind_state(game,world)
@@ -263,8 +264,10 @@ func _on_player_interact(target: Object, hit_position: Vector3) -> void:
 		game.discover_resource(node_id,resource_id)
 		game.claim_research_sample(node_id,resource_id)
 		node.set_meta("quantity",quantity-1)
+		game.resource_depletion[node_id] = quantity-1
 		if quantity-1 <= 0:
 			node.queue_free()
+		game.save_game()
 		return
 	if node.has_meta("machine_instance_id"):
 		var instance_id := str(node.get_meta("machine_instance_id"))
@@ -322,6 +325,8 @@ func _interact_tree(tree: Node) -> void:
 		game._claim_once("FIRST_DORI_MEAT_HARVEST","TREE_HARVEST",1000)
 		game.grant_skill_point("DORI_TREE_DISCOVERED","DORI_TREE_DISCOVERY")
 		game.story_flags["DORI_MEAT_DISCOVERED"] = true
+		game.sync_world_state(world)
+		game.save_game()
 		_update_tree_visuals()
 		return
 	var water := float(tree.get_meta("water",0.0))
@@ -329,6 +334,8 @@ func _interact_tree(tree: Node) -> void:
 		if game.consume_items({"ITEM_WATER":2}):
 			tree.set_meta("water",2.0)
 			tree.set_meta("growth",0.0)
+			game.sync_world_state(world)
+			game.save_game()
 			game.notification.emit("돌이 고기 나무에 물 2L 공급 · 성장 60초")
 	else:
 		game.notification.emit("돌이 고기 나무는 물 2L가 필요하고 60초 동안 자라야 해.")
