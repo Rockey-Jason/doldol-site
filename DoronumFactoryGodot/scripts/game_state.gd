@@ -1076,18 +1076,40 @@ func save_game() -> void:
 	save_revision += 1
 	if save_id.is_empty():
 		save_id = "DF-SAVE-%d" % world_seed
+	var buildings_data: Array[Dictionary] = []
+	for building in buildings:
+		var serialized_building: Dictionary = building.duplicate(true)
+		var building_position: Vector3 = building.get("position",Vector3.ZERO)
+		serialized_building["position"] = [building_position.x,building_position.y,building_position.z]
+		buildings_data.append(serialized_building)
+	var relays_data: Array[Dictionary] = []
+	for relay in relays:
+		var serialized_relay: Dictionary = relay.duplicate(true)
+		var relay_position: Vector3 = relay.get("position",Vector3.ZERO)
+		serialized_relay["position"] = [relay_position.x,relay_position.y,relay_position.z]
+		relays_data.append(serialized_relay)
+	var blueprints_data: Dictionary = blueprints.duplicate(true)
+	for slot in blueprints_data:
+		var blueprint: Dictionary = blueprints_data[slot]
+		var entries: Array = blueprint.get("buildings",[])
+		for entry in entries:
+			var offset_value: Variant = entry.get("offset",Vector3.ZERO)
+			if offset_value is Vector3:
+				entry["offset"] = [offset_value.x,offset_value.y,offset_value.z]
+		blueprint["buildings"] = entries
+		blueprints_data[slot] = blueprint
 	var data := {
 		"version":GameData.SAVE_VERSION,"build_version":"0.2.0","canonical_data_version":1,
 		"world_generator_version":1,"simulation_rules_version":1,"save_id":save_id,
 		"save_revision":save_revision,"simulation_tick":simulation_tick,"world_seed":world_seed,
 		"player_position":[player_position.x,player_position.y,player_position.z],"equipped_tool":equipped_tool,"equipped_tool_condition":equipped_tool_condition,"tool_conditions":tool_conditions,
-		"inventory":inventory,"buildings":buildings,"discovered_nodes":discovered_nodes,"resource_depletion":resource_depletion,"tree_states":tree_states,
+		"inventory":inventory,"buildings":buildings_data,"discovered_nodes":discovered_nodes,"resource_depletion":resource_depletion,"tree_states":tree_states,
 		"research_completed":research_completed,"active_research":active_research,"research_progress":research_progress,
 		"research_points":research_points,"story_flags":story_flags,"lore_found":lore_found,
-		"fusion":fusion,"fusion_diagnostics":fusion_diagnostics,"relays":relays,
+		"fusion":fusion,"fusion_diagnostics":fusion_diagnostics,"relays":relays_data,
 		"core_installed":core_installed,"stabilization_phase":stabilization_phase,
 		"ending_complete":ending_complete,"post_endgame":post_endgame,
-		"production_history":production_history,"research_point_ledger":research_point_ledger,"skill_points":skill_points,"skills_unlocked":skills_unlocked,"skill_point_ledger":skill_point_ledger,"skill_respec_used":skill_respec_used,"blueprints":blueprints,"power_state":power_state,"stabilization_progress":stabilization_progress,"stabilization_running":stabilization_running,"event_ids":_event_ids,"next_stack_id":_next_stack_id
+		"production_history":production_history,"research_point_ledger":research_point_ledger,"skill_points":skill_points,"skills_unlocked":skills_unlocked,"skill_point_ledger":skill_point_ledger,"skill_respec_used":skill_respec_used,"blueprints":blueprints_data,"power_state":power_state,"stabilization_progress":stabilization_progress,"stabilization_running":stabilization_running,"event_ids":_event_ids,"next_stack_id":_next_stack_id
 	}
 	data["checksum"] = hash(JSON.stringify(data))
 	var temporary_path := SAVE_PATH + ".tmp"
@@ -1166,7 +1188,13 @@ func load_game() -> void:
 		equipped_tool_condition = float(tool_conditions.get(equipped_tool,equipped_tool_condition))
 	player_position = Vector3(parsed.get("player_position", [0,0,0])[0], parsed.get("player_position", [0,0,0])[1], parsed.get("player_position", [0,0,0])[2])
 	inventory.assign(parsed.get("inventory", []))
-	buildings.assign(parsed.get("buildings", []))
+	buildings.clear()
+	for raw_building in parsed.get("buildings",[]):
+		var loaded_building: Dictionary = raw_building.duplicate(true)
+		var position_value: Variant = loaded_building.get("position",[0.0,0.0,0.0])
+		if position_value is Array and position_value.size()>=3:
+			loaded_building["position"] = Vector3(float(position_value[0]),float(position_value[1]),float(position_value[2]))
+		buildings.append(loaded_building)
 	discovered_nodes = parsed.get("discovered_nodes", {})
 	resource_depletion = parsed.get("resource_depletion",{})
 	tree_states = parsed.get("tree_states",{})
@@ -1178,7 +1206,13 @@ func load_game() -> void:
 	lore_found.assign(parsed.get("lore_found", []))
 	fusion = parsed.get("fusion", {})
 	fusion_diagnostics = parsed.get("fusion_diagnostics",{"power_stability":false,"pressure_calibration":false,"emergency_cooling":false})
-	relays.assign(parsed.get("relays", []))
+	relays.clear()
+	for raw_relay in parsed.get("relays",[]):
+		var loaded_relay: Dictionary = raw_relay.duplicate(true)
+		var relay_position: Variant = loaded_relay.get("position",[0.0,0.0,0.0])
+		if relay_position is Array and relay_position.size()>=3:
+			loaded_relay["position"] = Vector3(float(relay_position[0]),float(relay_position[1]),float(relay_position[2]))
+		relays.append(loaded_relay)
 	core_installed = bool(parsed.get("core_installed", false))
 	stabilization_phase = int(parsed.get("stabilization_phase", 0))
 	ending_complete = bool(parsed.get("ending_complete", false))
@@ -1190,6 +1224,15 @@ func load_game() -> void:
 	skill_point_ledger.assign(parsed.get("skill_point_ledger",[]))
 	skill_respec_used = bool(parsed.get("skill_respec_used",false))
 	blueprints = parsed.get("blueprints",{})
+	for slot in blueprints:
+		var blueprint: Dictionary = blueprints[slot]
+		var entries: Array = blueprint.get("buildings",[])
+		for entry in entries:
+			var offset_value: Variant = entry.get("offset",[0.0,0.0,0.0])
+			if offset_value is Array and offset_value.size()>=3:
+				entry["offset"] = Vector3(float(offset_value[0]),float(offset_value[1]),float(offset_value[2]))
+		blueprint["buildings"] = entries
+		blueprints[slot] = blueprint
 	power_state = parsed.get("power_state",{"starter_fuel_timer":0.0,"world_time":0.25,"fusion_buffer_kwh":0.0,"fusion_power_ratio":0.0})
 	stabilization_progress = float(parsed.get("stabilization_progress",0.0))
 	stabilization_running = bool(parsed.get("stabilization_running",false))
