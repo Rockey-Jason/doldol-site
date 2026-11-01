@@ -264,10 +264,15 @@
       window.doriSupabase = client;
       const { data: { session }, error } = await client.auth.getSession();
       if (error) throw error;
-      if (session?.user?.id) await switchAccount(session.user.id);
       client.auth.onAuthStateChange((event, sessionNow) => {
         queueMicrotask(() => { void switchAccount(sessionNow?.user?.id || null); });
       });
+      if (session?.user?.id) {
+        // Verify the cached session against Auth before using its user ID for cloud partitioning.
+        const { data: { user }, error: userError } = await client.auth.getUser();
+        if (userError) throw userError;
+        if (user?.id) await switchAccount(user.id);
+      }
       window.addEventListener("focus", () => { if (currentUserId) void syncNow(); });
       window.addEventListener("online", () => { if (currentUserId) void syncNow(); });
       document.addEventListener("visibilitychange", () => {
