@@ -150,7 +150,7 @@ const ITEMS := {
 	"ITEM_MAGNETITE":{"name":"Magnetite","category":"Ore"},"ITEM_CHROME_ORE":{"name":"Chromite Ore","category":"Ore"},"ITEM_NICKEL_ORE":{"name":"Nickel Ore","category":"Ore"},"ITEM_LEAD_ORE":{"name":"Lead Ore","category":"Ore"},
 	"ITEM_TITANIUM_ORE":{"name":"Titanium Ore","category":"Ore"},"ITEM_NEODYMIUM_ORE":{"name":"Neodymium Ore","category":"Ore"},"ITEM_HEAT_CRYSTAL":{"name":"Heat Crystal","category":"Crystal"},
 	"ITEM_COLD_CRYSTAL":{"name":"Cold Crystal","category":"Crystal"},"ITEM_DORI_MEAT":{"name":"Dori Meat","category":"Biological"},
-	"ITEM_DORONUM_INFINITY":{"name":"Infinity Doronum","category":"Endgame"},"ITEM_DORONUM_RESIDUE":{"name":"Doronum Residue","category":"Byproduct"},"ITEM_RESEARCH_SAMPLE":{"name":"Research Sample","category":"Research"},
+	"ITEM_DORONUM_INFINITY":{"name":"Infinity Doronum","category":"Endgame"},"ITEM_DORONUM_RESIDUE":{"name":"Doronum Residue","category":"Byproduct"},"ITEM_MINERAL_RESIDUE":{"name":"Mineral Residue","category":"Byproduct"},"ITEM_RESEARCH_SAMPLE":{"name":"Research Sample","category":"Research"},
 	"ITEM_BASIC_BUILDING_PART":{"name":"Basic Building Part","category":"Component"},"ITEM_LEAD":{"name":"Lead","category":"Material"},
 	"ITEM_NEODYMIUM_MAGNET":{"name":"Neodymium Magnet","category":"Component"},"ITEM_NICKEL_INGOT":{"name":"Nickel Ingot","category":"Material"},
 	"ITEM_SENSOR":{"name":"Sensor","category":"Component"},"ITEM_TITANIUM_INGOT":{"name":"Titanium Ingot","category":"Material"},
