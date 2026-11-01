@@ -24,11 +24,13 @@ var _camera: Camera3D
 var _spring_arm: SpringArm3D
 var _mesh_root: Node3D
 var _interact_cooldown := 0.0
+var factory_manager: FactoryManager3D
 var _current_target: Node3D
 var _touch_look_active := false
 var _touch_look_last := Vector2.ZERO
 
 func _ready() -> void:
+	add_to_group("player")
 	_build_character()
 	_create_camera()
 	_setup_input_actions()
@@ -193,6 +195,7 @@ func _physics_process(delta: float) -> void:
 		_mesh_root.position.y = move_toward(_mesh_root.position.y,0.0,delta*0.2)
 	GameState.player_state["position"] = global_position
 	_update_interaction_target()
+	_update_build_preview()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton:
@@ -264,6 +267,14 @@ func _raycast_target() -> Dictionary:
 func _interact() -> void:
 	if _interact_cooldown > 0.0:
 		return
+	if factory_manager and not factory_manager.selected_building_type.is_empty():
+		var ground_hit := _raycast_floor()
+		if not ground_hit.is_empty():
+			factory_manager.place_selected(ground_hit.position)
+			_interact_cooldown = 0.25
+		else:
+			GameState.toast("설치 가능한 지면을 조준하세요.","warning")
+		return
 	var hit := _raycast_target()
 	if hit.is_empty():
 		return
@@ -272,6 +283,31 @@ func _interact() -> void:
 		target.interact(self)
 		player_interacted.emit(target)
 		_interact_cooldown = 0.22
+
+func interact_from_ui() -> void:
+	_interact()
+
+func set_factory_manager(manager: FactoryManager3D) -> void:
+	factory_manager = manager
+
+func _raycast_floor() -> Dictionary:
+	if _camera == null:
+		return {}
+	var origin := _camera.global_position
+	var direction := -_camera.global_basis.z
+	var query := PhysicsRayQueryParameters3D.create(origin,origin+direction*5000.0)
+	query.exclude = [get_rid()]
+	query.collision_mask = 2
+	return get_world_3d().direct_space_state.intersect_ray(query)
+
+func _update_build_preview() -> void:
+	if factory_manager == null or factory_manager.selected_building_type.is_empty():
+		return
+	var hit := _raycast_floor()
+	if hit.is_empty():
+		return
+	var valid := factory_manager.can_place(factory_manager.selected_building_type,hit.position)
+	factory_manager.update_preview(hit.position,valid)
 
 func set_mobile_move(value: Vector2) -> void:
 	move_touch = value.limit_length(1.0)
