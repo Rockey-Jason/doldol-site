@@ -376,15 +376,19 @@ namespace DoronumFactory
         private void CommitProduction(MachineRuntimeData machine,RecipeDefinition recipe)
         {
             if (machine.CompletionBuffer.Count>0) { machine.State="PAUSED_OUTPUT"; return; }
-            float totalQ=0f,totalP=0f,total=0f;
+            float qualitySum=0f,qualityWeight=0f,puritySum=0f,purityWeight=0f;
             foreach (var stack in machine.ReservedInputs)
             {
-                totalQ+=stack.Quality*stack.Quantity;
-                totalP+=stack.Purity*stack.Quantity;
-                total+=stack.Quantity;
+                var ingredient=recipe.Inputs.FirstOrDefault(x=>x.ItemId==stack.ItemId);
+                float materialWeight=ingredient==null?1f:ingredient.MaterialWeight;
+                float itemPurityWeight=ingredient==null?1f:ingredient.PurityWeight;
+                qualitySum+=stack.Quality*stack.Quantity*materialWeight;
+                qualityWeight+=stack.Quantity*materialWeight;
+                puritySum+=stack.Purity*stack.Quantity*itemPurityWeight;
+                purityWeight+=stack.Quantity*itemPurityWeight;
             }
-            float materialQ=total<=0f?90f:totalQ/total;
-            float materialP=total<=0f?90f:totalP/total;
+            float materialQ=qualityWeight<=0f?90f:qualitySum/qualityWeight;
+            float materialP=purityWeight<=0f?90f:puritySum/purityWeight;
             float tempScore=recipe.UsesTemperature?ProcessScore(machine.CurrentTemperatureC,recipe.TemperatureC):100f;
             float pressureScore=recipe.UsesPressure?ProcessScore(machine.CurrentPressureMPa,recipe.PressureMPa):100f;
             float stability=GetPowerStability(machine);
