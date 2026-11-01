@@ -279,7 +279,7 @@ func supply_machine(instance_id: String, item_id: String, quantity: int) -> bool
 	return false
 
 func set_machine_recipe(instance_id: String, recipe_id: String) -> bool:
-	var recipe: Dictionary = GameData.recipe_definition(recipe_id, {})
+	var recipe: Dictionary = GameData.recipe_definition(recipe_id)
 	if recipe.is_empty():
 		return false
 	for machine in buildings:
@@ -429,7 +429,7 @@ func _tick_fusion(dt: float) -> void:
 		if fusion.stage >= GameData.FUSION_STAGES.size():
 			fusion.output_committed = true
 			fusion.state = "COMPLETED"
-			fusion.output_buffer = {"item_id":"ITEM_INFINITY_DORONUM","quantity":1,"quality":100.0,"purity":100.0,"synthetic":false,"provenance":"INFINITY_FUSION"}
+			fusion.output_buffer = {"item_id":"ITEM_DORONUM_INFINITY","quantity":1,"quality":100.0,"purity":100.0,"synthetic":false,"provenance":"INFINITY_FUSION"}
 			fusion.custody = []
 			fusion.reserved_inputs = 0
 			story_flags["INFINITY_CRAFTED"] = true
@@ -502,7 +502,7 @@ func activate_relay(index: int) -> bool:
 	return true
 
 func install_infinity_core() -> bool:
-	if not bool(story_flags.get("INFINITY_CRAFTED", false)) or core_installed or count_item("ITEM_INFINITY_DORONUM") < 1:
+	if not bool(story_flags.get("INFINITY_CRAFTED", false)) or core_installed or count_item("ITEM_DORONUM_INFINITY") < 1:
 		return false
 	if relays.size() < 3 or not buildings.any(func(m): return m.id=="STABILIZATION_CORE" and float(m.condition)>0.0):
 		notification.emit("Stabilization Core를 먼저 설치해야 해.")
@@ -510,7 +510,7 @@ func install_infinity_core() -> bool:
 	for relay in relays:
 		if not relay.active:
 			return false
-	if not consume_items({"ITEM_INFINITY_DORONUM":1}):
+	if not consume_items({"ITEM_DORONUM_INFINITY":1}):
 		return false
 	core_installed = true
 	stabilization_phase = 1
