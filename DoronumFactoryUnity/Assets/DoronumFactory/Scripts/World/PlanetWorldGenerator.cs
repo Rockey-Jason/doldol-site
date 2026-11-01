@@ -9,6 +9,8 @@ namespace DoronumFactory
         public const float WorldSize=2048f;
         private readonly List<ResourceNode> resourceNodes=new List<ResourceNode>();
         private readonly List<DoriMeatTree> doriTrees=new List<DoriMeatTree>();
+        private float noiseOffsetX;
+        private float noiseOffsetZ;
         public IReadOnlyList<ResourceNode> ResourceNodes=>resourceNodes;
         public IReadOnlyList<DoriMeatTree> DoriTrees=>doriTrees;
         public static readonly Vector2[] RelaySites =
@@ -30,7 +32,9 @@ namespace DoronumFactory
         {
             var terrainData=new TerrainData { heightmapResolution=513, size=new Vector3(WorldSize,180f,WorldSize) };
             var heights=new float[513,513];
-            float ox=(seed%997)*0.013f,oz=(seed%613)*0.017f;
+            noiseOffsetX=(seed%997)*0.013f;
+            noiseOffsetZ=(seed%613)*0.017f;
+            float ox=noiseOffsetX,oz=noiseOffsetZ;
             for (int z=0;z<513;z++)
             for (int x=0;x<513;x++)
             {
@@ -67,8 +71,10 @@ namespace DoronumFactory
         {
             float nx=Mathf.Clamp01((x+WorldSize*0.5f)/WorldSize);
             float nz=Mathf.Clamp01((z+WorldSize*0.5f)/WorldSize);
-            float broad=Mathf.PerlinNoise(0.013f*827142f%997+nx*3.1f,0.017f*827142f%613+nz*3.1f);
-            return Mathf.Max(0f,(0.12f+broad*0.09f+Mathf.PerlinNoise(nx*15f+80f,nz*15f+110f)*0.018f)*180f);
+            float broad=Mathf.PerlinNoise(noiseOffsetX+nx*3.1f,noiseOffsetZ+nz*3.1f);
+            float fine=Mathf.PerlinNoise(noiseOffsetX+nx*15f+80f,noiseOffsetZ+nz*15f+110f);
+            float ridge=1f-Mathf.Abs(Mathf.PerlinNoise(noiseOffsetX+nx*5f+40f,noiseOffsetZ+nz*5f+30f)*2f-1f);
+            return Mathf.Max(0f,(0.12f+broad*0.09f+fine*0.018f+ridge*0.012f)*180f);
         }
 
         private void GenerateLighting()
