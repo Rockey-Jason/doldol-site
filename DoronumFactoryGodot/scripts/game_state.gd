@@ -114,6 +114,35 @@ func craft_manual(recipe_id: String) -> bool:
 	_claim_once("FIRST_RECIPE:" + recipe_id, "RECIPE_CRAFTED", 10)
 	return true
 
+func consume_items_with_lots(cost: Dictionary, allow_synthetic: bool = true) -> Array[Dictionary]:
+	var snapshot: Array[Dictionary] = inventory.duplicate(true)
+	var consumed: Array[Dictionary] = []
+	for item_id in cost:
+		var remaining := int(cost[item_id])
+		if remaining <= 0:
+			inventory = snapshot
+			return []
+		for stack in inventory:
+			if stack.item_id != item_id or (not allow_synthetic and bool(stack.synthetic)):
+				continue
+			var available := int(stack.quantity)-int(stack.get("reserved",0))
+			var take := mini(remaining,available)
+			if take <= 0:
+				continue
+			var lot: Dictionary = stack.duplicate(true)
+			lot.quantity = take
+			consumed.append(lot)
+			stack.quantity -= take
+			remaining -= take
+			if remaining == 0:
+				break
+		if remaining > 0:
+			inventory = snapshot
+			return []
+	inventory = inventory.filter(func(s): return int(s.quantity)>0)
+	state_changed.emit()
+	return consumed
+
 func build(building_id: String, world_position: Vector3, rotation_y: float = 0.0) -> bool:
 	var definition: Dictionary = GameData.building_definition(building_id)
 	if definition.is_empty():
