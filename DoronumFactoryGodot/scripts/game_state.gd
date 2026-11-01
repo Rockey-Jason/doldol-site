@@ -30,7 +30,6 @@ var production_history: Array[Dictionary] = []
 var total_power_generated := 250.0
 var total_power_used := 0.0
 var simulation_paused := false
-var _tick_accumulator := 0.0
 var _event_ids: Dictionary = {}
 var _next_stack_id := 1
 var save_loaded := false
@@ -42,17 +41,7 @@ func _ready() -> void:
 		_grant_starter_kit()
 		state_changed.emit()
 
-func _process(delta: float) -> void:
-	if simulation_paused:
-		return
-	_tick_accumulator += minf(delta, 1.0)
-	var ticks := 0
-	while _tick_accumulator >= GameData.SIM_TICK and ticks < 10:
-		_tick_accumulator -= GameData.SIM_TICK
-		_tick(GameData.SIM_TICK)
-		ticks += 1
-
-func _tick(dt: float) -> void:
+func advance_fixed_tick(dt: float) -> void:
 	_tick_research(dt)
 	_tick_fusion(dt)
 
