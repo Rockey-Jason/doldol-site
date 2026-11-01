@@ -70,7 +70,7 @@ namespace DoronumFactory
             PowerKW=powerKW; AllowSyntheticInput=allowSynthetic;
         }
 
-        public RecipeDefinition Input(string id, int count) { Inputs.Add(new ItemAmount(id,count)); return this; }
+        public RecipeDefinition Input(string id, int count, float materialWeight=1f, float purityWeight=1f) { Inputs.Add(new ItemAmount(id,count,materialWeight,purityWeight)); return this; }
         public RecipeDefinition Output(string id, int count) { Outputs.Add(new ItemAmount(id,count)); return this; }
         public RecipeDefinition At(float c, float mpa) { UsesTemperature=true; UsesPressure=true; TemperatureC=c; PressureMPa=mpa; return this; }
     }
@@ -80,7 +80,9 @@ namespace DoronumFactory
     {
         public string ItemId;
         public int Quantity;
-        public ItemAmount(string id, int quantity) { ItemId=id; Quantity=quantity; }
+        public float MaterialWeight=1f;
+        public float PurityWeight=1f;
+        public ItemAmount(string id, int quantity, float materialWeight=1f, float purityWeight=1f) { ItemId=id; Quantity=quantity; MaterialWeight=materialWeight; PurityWeight=purityWeight; }
     }
 
     [Serializable]
@@ -155,6 +157,24 @@ namespace DoronumFactory
             Add("ITEM_BATTERY","Battery","Part",25,45); Add("ITEM_MOTOR","Motor","Part",25,90);
             Add("ITEM_DORI_MEAT","Dori Meat","Food",50,55); Add("ITEM_ARCHIVE_PATTERN","Archive Pattern","Quest",1);
             Add("ITEM_CONTRACT_SEAL","Contract Batch Seal","Quest",1);
+            Add("ITEM_TOOL_HANDS","Hands","Tool",1,0);
+            Add("ITEM_TOOL_WOODEN_PICKAXE","Wooden Pickaxe","Tool",1,20);
+            Add("ITEM_TOOL_IRON_PICKAXE","Iron Pickaxe","Tool",1,80);
+            Add("ITEM_TOOL_STEEL_PICKAXE","Steel Pickaxe","Tool",1,180);
+            Add("ITEM_TOOL_DORONUM_PICKAXE","Doronum Pickaxe","Tool",1,1200);
+            Add("ITEM_WOODEN_AXE","Wooden Axe","Tool",1,18);
+            Add("ITEM_WOODEN_SHOVEL","Wooden Shovel","Tool",1,12);
+            Add("ITEM_STEEL","Steel","Metal",50,28);
+            Add("ITEM_LEAD_INGOT","Lead Ingot","Metal",50,16);
+            Add("ITEM_CHROME_INGOT","Chrome Ingot","Metal",50,42);
+            Add("ITEM_ALUMINUM_INGOT","Aluminum Ingot","Metal",50,20);
+            Add("ITEM_NICKEL_INGOT","Nickel Ingot","Metal",50,22);
+            Add("ITEM_NEODYMIUM_MAGNET","Neodymium Magnet","Part",25,90);
+            Add("ITEM_RUBBER","Rubber","Part",50,18);
+            Add("ITEM_NYLON","Nylon","Part",50,25);
+            Add("ITEM_OIL","Oil","Fluid",100,0,true);
+            Add("ITEM_PETROLEUM","Petroleum","Fluid",100,0,true);
+            Add("ITEM_CHEMICAL_WASTE","Chemical Waste","Waste",100,0);
             Add(GameIds.Normal,"Normal Doronum","Doronum",10,900);
             Add(GameIds.Yellow,"Yellow Doronum","Doronum",10,1200); Add(GameIds.Ultra,"Ultra Doronum","Doronum",10,2400);
             Add(GameIds.Blue,"Blue Doronum","Doronum",10,1400); Add(GameIds.Red,"Red Doronum","Doronum",10,1500);
