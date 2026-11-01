@@ -15,7 +15,7 @@ namespace DoronumFactory
         private string selectedRecipeId="";
         private string selectedInputId="ITEM_WOOD";
         private bool showCosts=true;
-        private string[] tabs={"BUILD","MACHINE","INVENTORY","RESEARCH","SKILLS","MISSIONS","CONTRACTS","FUSION"};
+        private string[] tabs={"BUILD","CRAFT","MACHINE","INVENTORY","RESEARCH","SKILLS","MISSIONS","CONTRACTS","FUSION"};
         public void Initialize(GameBootstrap bootstrap)
         {
             game=bootstrap;
@@ -102,6 +102,7 @@ namespace DoronumFactory
             switch(activePanel)
             {
                 case "BUILD":DrawBuild();break;
+                case "CRAFT":DrawCraft();break;
                 case "MACHINE":DrawMachine();break;
                 case "INVENTORY":DrawInventory();break;
                 case "RESEARCH":DrawResearch();break;
