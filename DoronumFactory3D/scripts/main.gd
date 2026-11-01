@@ -5,12 +5,14 @@ const PLAYER_SCRIPT = preload("res://scripts/player/player_controller.gd")
 const FACTORY_SCRIPT = preload("res://scripts/factory/factory_manager.gd")
 const STORY_SCRIPT = preload("res://scripts/story/story_manager.gd")
 const HUD_SCRIPT = preload("res://scripts/ui/game_hud.gd")
+const CONTRACT_SCRIPT = preload("res://scripts/contracts/contract_manager.gd")
 
 var world: WorldGenerator3D
 var player: PlayerController3D
 var factory: FactoryManager3D
 var story: StoryManager3D
 var hud: GameHUD3D
+var contracts: ContractManager3D
 var world_environment: WorldEnvironment
 var sun: DirectionalLight3D
 var _time_of_day := 0.31
@@ -21,6 +23,7 @@ func _ready() -> void:
 	_build_factory()
 	_build_player()
 	_build_story()
+	_build_contracts()
 	_build_hud()
 	_connect_events()
 	GameState.toast("DORONUM FACTORY · 돌돌행성 복구 작전이 시작되었습니다.","success")
@@ -96,10 +99,15 @@ func _build_story() -> void:
 	story.name = "StoryManager"
 	add_child(story)
 
+func _build_contracts() -> void:
+	contracts = CONTRACT_SCRIPT.new()
+	contracts.name = "ContractManager"
+	add_child(contracts)
+
 func _build_hud() -> void:
 	hud = HUD_SCRIPT.new()
 	hud.name = "GameHUD"
-	hud.setup(player,factory,story)
+	hud.setup(player,factory,story,contracts)
 	add_child(hud)
 
 func _connect_events() -> void:
