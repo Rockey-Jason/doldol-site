@@ -27,8 +27,9 @@ var stabilization_phase := 0
 var ending_complete := false
 var post_endgame := false
 var production_history: Array[Dictionary] = []
-var total_power_generated := 250.0
+var total_power_generated := 0.0
 var total_power_used := 0.0
+var power_state := {"starter_fuel_timer":0.0,"world_time":0.25}
 var simulation_paused := false
 var _event_ids: Dictionary = {}
 var _next_stack_id := 1
@@ -554,7 +555,7 @@ func save_game() -> void:
 		"fusion":fusion,"fusion_diagnostics":fusion_diagnostics,"relays":relays,
 		"core_installed":core_installed,"stabilization_phase":stabilization_phase,
 		"ending_complete":ending_complete,"post_endgame":post_endgame,
-		"production_history":production_history,"event_ids":_event_ids,"next_stack_id":_next_stack_id
+		"production_history":production_history,"power_state":power_state,"event_ids":_event_ids,"next_stack_id":_next_stack_id
 	}
 	data["checksum"] = hash(JSON.stringify(data))
 	var temporary_path := SAVE_PATH + ".tmp"
@@ -628,5 +629,6 @@ func load_game() -> void:
 	ending_complete = bool(parsed.get("ending_complete", false))
 	post_endgame = bool(parsed.get("post_endgame", false))
 	production_history.assign(parsed.get("production_history", []))
+	power_state = parsed.get("power_state",{"starter_fuel_timer":0.0,"world_time":0.25})
 	_event_ids = parsed.get("event_ids", {})
 	_next_stack_id = int(parsed.get("next_stack_id", 1))
