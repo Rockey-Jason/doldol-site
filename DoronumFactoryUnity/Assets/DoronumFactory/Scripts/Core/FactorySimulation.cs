@@ -92,6 +92,11 @@ namespace DoronumFactory
                     if (m.FuelSeconds>0f) generated+=600f;
                     continue;
                 }
+                if (MachineCatalog.All.TryGetValue(m.MachineId,out var generationDef) && generationDef.GenerationKW>0f)
+                {
+                    generated+=generationDef.GenerationKW;
+                    continue;
+                }
                 if (m.MachineId=="SOLAR_PANEL") { generated+=90f*daylight; continue; }
                 if (m.MachineId=="WIND_TURBINE") { generated+=180f; continue; }
                 if (m.MachineId=="BATTERY" || m.MachineId=="POWER_BUFFER") continue;
@@ -104,6 +109,12 @@ namespace DoronumFactory
                 {
                     int stage=Mathf.Clamp(state.Fusion.StageIndex,0,FactoryCatalog.FusionStages.Length-1);
                     process=FactoryCatalog.FusionStages[stage].MaxPowerMW*1000f;
+                    active=true;
+                }
+                else if (m.MachineId=="RESEARCH_LAB" && !string.IsNullOrEmpty(state.ActiveResearchId))
+                {
+                    var research=FactoryCatalog.Research.FirstOrDefault(x=>x.Id==state.ActiveResearchId);
+                    process=research==null?25f:(research.Tier<=2?25f:(research.Tier<=4?100f:250f));
                     active=true;
                 }
                 else if (!string.IsNullOrEmpty(m.RecipeId) && FactoryCatalog.Recipes.TryGetValue(m.RecipeId,out var recipe))
