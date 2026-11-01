@@ -11,6 +11,7 @@ var world_seed: int = GameData.WORLD_SEED
 var player_position := Vector3(0, 0, 0)
 var equipped_tool := "ITEM_TOOL_HANDS"
 var equipped_tool_condition := 100.0
+var tool_conditions: Dictionary = {}
 var inventory: Array[Dictionary] = []
 var buildings: Array[Dictionary] = []
 var discovered_nodes: Dictionary = {}
@@ -85,7 +86,7 @@ func equip_tool(tool_id: String) -> bool:
 	if count_item(tool_id)<=0:
 		return false
 	equipped_tool = tool_id
-	equipped_tool_condition = 100.0
+	equipped_tool_condition = float(tool_conditions.get(tool_id,100.0))
 	notification.emit("도구 장착 · "+GameData.item_name(tool_id))
 	save_game()
 	state_changed.emit()
@@ -96,9 +97,11 @@ func apply_tool_wear() -> void:
 		return
 	var wear := 1.0*(0.90 if has_skill("HARDPOINT_CALIBRATION") else 1.0)
 	equipped_tool_condition = maxf(0.0,equipped_tool_condition-wear)
+	tool_conditions[equipped_tool] = equipped_tool_condition
 	if equipped_tool_condition<=0.0:
 		var broken_tool := equipped_tool
 		consume_items({broken_tool:1})
+		tool_conditions.erase(broken_tool)
 		equipped_tool = "ITEM_TOOL_HANDS"
 		equipped_tool_condition = 100.0
 		notification.emit("도구 파손 · "+GameData.item_name(broken_tool)+"이 부서졌어.")
@@ -113,6 +116,7 @@ func repair_equipped_tool() -> bool:
 		return false
 	var repair_amount := 50.0*(1.10 if has_skill("PRECISE_ALIGNMENT") else 1.0)
 	equipped_tool_condition = minf(100.0,equipped_tool_condition+repair_amount)
+	tool_conditions[equipped_tool] = equipped_tool_condition
 	notification.emit("도구 정비 완료 · Condition %.0f%%" % equipped_tool_condition)
 	save_game()
 	state_changed.emit()
@@ -958,7 +962,7 @@ func save_game() -> void:
 		"version":GameData.SAVE_VERSION,"build_version":"0.2.0","canonical_data_version":1,
 		"world_generator_version":1,"simulation_rules_version":1,"save_id":save_id,
 		"save_revision":save_revision,"simulation_tick":simulation_tick,"world_seed":world_seed,
-		"player_position":[player_position.x,player_position.y,player_position.z],"equipped_tool":equipped_tool,"equipped_tool_condition":equipped_tool_condition,
+		"player_position":[player_position.x,player_position.y,player_position.z],"equipped_tool":equipped_tool,"equipped_tool_condition":equipped_tool_condition,"tool_conditions":tool_conditions,
 		"inventory":inventory,"buildings":buildings,"discovered_nodes":discovered_nodes,"resource_depletion":resource_depletion,"tree_states":tree_states,
 		"research_completed":research_completed,"active_research":active_research,"research_progress":research_progress,
 		"research_points":research_points,"story_flags":story_flags,"lore_found":lore_found,
@@ -1039,6 +1043,9 @@ func load_game() -> void:
 	simulation_tick = int(parsed.get("simulation_tick",0))
 	equipped_tool = str(parsed.get("equipped_tool","ITEM_TOOL_HANDS"))
 	equipped_tool_condition = float(parsed.get("equipped_tool_condition",100.0))
+	tool_conditions = parsed.get("tool_conditions",{})
+	if equipped_tool!="ITEM_TOOL_HANDS":
+		equipped_tool_condition = float(tool_conditions.get(equipped_tool,equipped_tool_condition))
 	player_position = Vector3(parsed.get("player_position", [0,0,0])[0], parsed.get("player_position", [0,0,0])[1], parsed.get("player_position", [0,0,0])[2])
 	inventory.assign(parsed.get("inventory", []))
 	buildings.assign(parsed.get("buildings", []))
