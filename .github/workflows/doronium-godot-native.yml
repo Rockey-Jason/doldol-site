@@ -55,6 +55,11 @@ jobs:
           mkdir -p build/linux
           godot --headless --path . --export-release "Linux/X11" build/linux/DoronumFactory.x86_64
 
+      - name: Export Android arm64 game
+        run: |
+          mkdir -p build/android
+          godot --headless --path . --export-debug "Android" build/android/DoronumFactory.apk
+
       - name: Package Godot source project
         run: |
           cd ..
@@ -67,6 +72,7 @@ jobs:
           path: |
             DoronumFactoryGodot/build/windows/DoronumFactory.exe
             DoronumFactoryGodot/build/linux/DoronumFactory.x86_64
+            DoronumFactoryGodot/build/android/DoronumFactory.apk
             DoronumFactoryGodot-Project.zip
           if-no-files-found: error
           retention-days: 30
