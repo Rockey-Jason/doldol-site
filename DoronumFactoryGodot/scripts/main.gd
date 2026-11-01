@@ -295,7 +295,8 @@ func _interact_tree(tree: Node) -> void:
 		tree.set_meta("growth",0.0)
 		tree.set_meta("water",0.0)
 		tree.set_meta("cycle",int(tree.get_meta("cycle",0))+1)
-		game._claim_once("DORI_TREE_CYCLE:"+str(tree.get_meta("node_id"))+":"+str(tree.get_meta("cycle")),"TREE_HARVEST",15)
+		game.claim_research_sample(str(tree.get_meta("node_id")),"ITEM_DORI_MEAT")
+		game._claim_once("FIRST_DORI_MEAT_HARVEST","TREE_HARVEST",1000)
 		game.story_flags["DORI_MEAT_DISCOVERED"] = true
 		_update_tree_visuals()
 		return
