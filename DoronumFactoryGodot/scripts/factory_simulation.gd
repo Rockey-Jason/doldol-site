@@ -97,7 +97,7 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	if recipe_id.is_empty():
 		machine.state = "IDLE"
 		return
-	var recipe: Dictionary = GameData.recipe_definition(recipe_id, {})
+	var recipe: Dictionary = GameData.recipe_definition(recipe_id)
 	if recipe.is_empty() or recipe.machine != machine.id:
 		machine.state = "INVALID_RECIPE"
 		return
