@@ -59,7 +59,7 @@ const CONTRACTS: Array[Dictionary] = [
 		"category":"Limited Edition",
 		"description":"FIRST FACTORY의 Legacy Batch Line에 사용할 봉인 승인서를 받습니다.",
 		"requires_research":["RESEARCH_DORONUM_FUSION"],
-		"requires_story":["INFINITY_PROJECT_REVEALED","FIRST_FACTORY_RESONANCE_CHAMBER"],
+		"requires_story":["INFINITY_PROJECT_REVEALED","LORE:FIRST_FACTORY_RESONANCE_CHAMBER"],
 		"inputs":{"ITEM_DORONUM_ULTRA":5,"ITEM_DORONUM_TRANSLUCENT":5,"ITEM_DORONUM_BLACK":5},
 		"minimum_quality":90.0,"minimum_purity":90.0,"transit_seconds":90.0,
 		"rewards":{"ITEM_CONTRACT_SEAL":100},"rp":15000,"currency_d":300000,
@@ -108,11 +108,11 @@ func _prerequisites_met(definition: Dictionary) -> bool:
 	return true
 
 func accept_contract(contract_id: String) -> bool:
-	var definition := _definition(contract_id)
+	var definition: Dictionary = _definition(contract_id)
 	if definition.is_empty():
 		GameState.toast("알 수 없는 계약입니다.","error")
 		return false
-	var record := _record_for(contract_id)
+	var record: Dictionary = _record_for(contract_id)
 	if str(record.get("state","NOT_SHIPPED")) != "NOT_SHIPPED":
 		GameState.toast("이 계약은 이미 수락했거나 종료되었습니다.","warning")
 		return false
@@ -128,10 +128,10 @@ func accept_contract(contract_id: String) -> bool:
 	return true
 
 func pack_and_ship(contract_id: String) -> bool:
-	var definition := _definition(contract_id)
+	var definition: Dictionary = _definition(contract_id)
 	if definition.is_empty():
 		return false
-	var record := _record_for(contract_id)
+	var record: Dictionary = _record_for(contract_id)
 	if str(record.get("state","")) != "RESERVED":
 		GameState.toast("먼저 계약을 수락하세요.","warning")
 		return false
@@ -139,7 +139,7 @@ func pack_and_ship(contract_id: String) -> bool:
 	var min_purity := float(definition.get("minimum_purity",0.0))
 	var shortages: Array[String] = []
 	for item_id in definition.inputs:
-		var eligible := GameState.eligible_quantity(str(item_id),min_quality,min_purity,false)
+		var eligible: int = GameState.eligible_quantity(str(item_id),min_quality,min_purity,false)
 		if eligible < int(definition.inputs[item_id]):
 			shortages.append(str(item_id)+" "+str(eligible)+"/"+str(definition.inputs[item_id]))
 	if not shortages.is_empty():
@@ -148,7 +148,7 @@ func pack_and_ship(contract_id: String) -> bool:
 	var snapshot := GameState.inventory.duplicate(true)
 	var manifest: Dictionary = {}
 	for item_id in definition.inputs:
-		var removed := GameState.remove_eligible_items(str(item_id),int(definition.inputs[item_id]),min_quality,min_purity,false)
+		var removed: Dictionary = GameState.remove_eligible_items(str(item_id),int(definition.inputs[item_id]),min_quality,min_purity,false)
 		if removed.is_empty():
 			GameState.inventory = snapshot
 			GameState.inventory_changed.emit()
@@ -157,7 +157,7 @@ func pack_and_ship(contract_id: String) -> bool:
 		manifest[item_id] = removed
 	var cycle := int(record.get("cycle",0))+1
 	var shipment_id := "SHIPMENT:"+contract_id+":"+str(cycle)
-	var package_cost := {"BOX":2,"SECURE_CONTAINER":5,"DORONUM_ISOLATION":8,"INFINITY_ISOLATION":12}.get(str(definition.get("packing","BOX")),2)
+	var package_cost: int = int({"BOX":2,"SECURE_CONTAINER":5,"DORONUM_ISOLATION":8,"INFINITY_ISOLATION":12}.get(str(definition.get("packing","BOX")),2))
 	var packing_item := "ITEM_WOOD"
 	if GameState.count_item(packing_item)<package_cost:
 		GameState.inventory=snapshot
@@ -204,7 +204,7 @@ func _settle_shipment(shipment_id: String, shipment: Dictionary) -> void:
 	if bool(shipment.get("settled",false)):
 		return
 	var contract_id := str(shipment.get("contract_id",""))
-	var definition := _definition(contract_id)
+	var definition: Dictionary = _definition(contract_id)
 	if definition.is_empty():
 		shipment["state"]="FAILED"
 		shipment["settled"]=true
