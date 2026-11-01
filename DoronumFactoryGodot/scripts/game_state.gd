@@ -54,6 +54,7 @@ func _grant_starter_kit() -> void:
 	add_item("ITEM_WOOD", 12, 92.0, 90.0, false, "STARTER")
 	add_item("ITEM_STONE", 8, 92.0, 90.0, false, "STARTER")
 	add_item("ITEM_GRASS", 8, 90.0, 90.0, false, "STARTER")
+	add_item("ITEM_PLANT_ROPE",3,90.0,90.0,false,"STARTER")
 	add_item("ITEM_WATER", 10, 100.0, 100.0, false, "STARTER")
 	add_item("ITEM_COAL", 6, 90.0, 90.0, false, "STARTER")
 	research_points = 50
@@ -887,7 +888,8 @@ func save_game() -> void:
 	var absolute_save := ProjectSettings.globalize_path(SAVE_PATH)
 	var absolute_backup := ProjectSettings.globalize_path(SAVE_PATH+".bak")
 	if FileAccess.file_exists(SAVE_PATH):
-		DirAccess.copy_absolute(absolute_save,absolute_backup)
+		if not _read_save_file(SAVE_PATH).is_empty():
+			DirAccess.copy_absolute(absolute_save,absolute_backup)
 		DirAccess.remove_absolute(absolute_save)
 	var error := DirAccess.rename_absolute(absolute_temp,absolute_save)
 	if error != OK:
