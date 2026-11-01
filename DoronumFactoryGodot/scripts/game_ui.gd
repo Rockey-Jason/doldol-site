@@ -258,6 +258,17 @@ func _draw_skills() -> void:
 
 func _draw_factory() -> void:
 	_heading("FACTORY OVERVIEW")
+	if game.has_skill("FLOW_OPTIMIZATION"):
+		var bottlenecks: Array[String] = []
+		for machine in game.buildings:
+			if str(machine.get("state","")) in ["PAUSED_OUTPUT","WAITING_INPUT","PAUSED_POWER","BLOCKED_STORY","SUPPLY_CAP_REACHED","BROWNOUT_RUNNING"]:
+				var definition: Dictionary = GameData.building_definition(str(machine.id))
+				bottlenecks.append("%s · %s" % [str(definition.get("name",machine.id)),str(machine.state)])
+		_label("FLOW OPTIMIZATION · TOP BOTTLENECKS")
+		for index in range(mini(3,bottlenecks.size())):
+			_label("%d. %s" % [index+1,bottlenecks[index]])
+		if bottlenecks.is_empty():
+			_label("현재 감지된 생산 병목 없음")
 	_label("발전 %.0f kW  ·  소비 %.0f kW  ·  가동 가능 %.0f kW" % [
 		game.total_power_generated,game.total_power_used,game.total_power_generated-game.total_power_used
 	])
