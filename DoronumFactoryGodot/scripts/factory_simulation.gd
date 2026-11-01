@@ -66,9 +66,30 @@ func _fixed_tick(dt: float) -> void:
 		elif not str(machine.get("recipe", "")).is_empty():
 			var recipe: Dictionary = GameData.recipe_definition(machine.recipe)
 			total_consumption += float(recipe.get("power", 10.0))
+	var base_consumption := total_consumption
+	var surplus := maxf(0.0,total_generation-base_consumption)
+	var has_buffer := game.buildings.any(func(m): return m.id=="FUSION_POWER_BUFFER" and float(m.condition)>0.0)
+	var buffer_kwh := float(game.power_state.get("fusion_buffer_kwh",0.0))
+	var fusion_request := 0.0
+	var fusion_active := not game.fusion.is_empty() and not bool(game.fusion.get("output_committed",false)) and not str(game.fusion.get("state","")).begins_with("FAILED")
+	if fusion_active:
+		var stage_index := int(game.fusion.get("stage",0))
+		if stage_index>=0 and stage_index<GameData.FUSION_STAGES.size():
+			fusion_request = float(GameData.FUSION_STAGES[stage_index].power)
+	var direct_fusion_power := minf(surplus,fusion_request)
+	var battery_fusion_power := 0.0
+	if fusion_request>direct_fusion_power and has_buffer and dt>0.0:
+		battery_fusion_power = minf(5000.0,fusion_request-direct_fusion_power,buffer_kwh*3600.0/dt)
+		buffer_kwh -= battery_fusion_power*dt/3600.0
+	var remaining_surplus := maxf(0.0,surplus-direct_fusion_power)
+	if has_buffer and not fusion_active:
+		var charge_kw := minf(5000.0,remaining_surplus)
+		buffer_kwh = minf(500.0,buffer_kwh+charge_kw*dt/3600.0)
+	game.power_state["fusion_buffer_kwh"] = clampf(buffer_kwh,0.0,500.0)
+	game.power_state["fusion_power_ratio"] = 0.0 if fusion_request<=0.0 else clampf((direct_fusion_power+battery_fusion_power)/fusion_request,0.0,1.0)
 	game.total_power_generated = total_generation
-	game.total_power_used = total_consumption
-	last_power_ratio = 1.0 if total_consumption <= 0.0 else minf(1.0, total_generation / total_consumption)
+	game.total_power_used = base_consumption+direct_fusion_power+battery_fusion_power
+	last_power_ratio = 1.0 if base_consumption<=0.0 else minf(1.0,total_generation/base_consumption)
 	for machine in game.buildings:
 		_tick_machine(machine, dt)
 	_tick_conveyors(dt)
