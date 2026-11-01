@@ -384,26 +384,24 @@ func craft(recipe_id: String) -> bool:
 				toast_requested.emit("Synthetic Dori Meat is rejected by Doronum processing.", "error")
 				return false
 	var snapshot := inventory.duplicate(true)
+	var input_quality := 90.0
+	var input_purity := 90.0
+	var input_synthetic := false
+	for input_id in recipe.inputs:
+		var avg_before: Dictionary = item_average(str(input_id))
+		input_quality = minf(input_quality, float(avg_before.quality))
+		input_purity = minf(input_purity, float(avg_before.purity))
+		input_synthetic = input_synthetic or bool(avg_before.synthetic)
+	if recipe.get("allow_synthetic", true) == false and input_synthetic:
+		toast_requested.emit("Synthetic lineage cannot enter this recipe.", "error")
+		return false
 	for item_id in recipe.inputs:
 		if not remove_item(str(item_id), int(recipe.inputs[item_id])):
 			inventory = snapshot
 			inventory_changed.emit()
 			return false
 	for item_id in recipe.outputs:
-		var q := 90.0
-		var p := 90.0
-		var synthetic := false
-		for input_id in recipe.inputs:
-			var avg := item_average(str(input_id))
-			q = minf(q, float(avg.quality))
-			p = minf(p, float(avg.purity))
-			synthetic = synthetic or bool(avg.synthetic)
-		if recipe.get("allow_synthetic", true) == false and synthetic:
-			inventory = snapshot
-			inventory_changed.emit()
-			toast_requested.emit("Synthetic lineage cannot enter this recipe.", "error")
-			return false
-		add_item(str(item_id), int(recipe.outputs[item_id]), q, p, synthetic, "RECIPE:" + recipe_id)
+		add_item(str(item_id), int(recipe.outputs[item_id]), input_quality, input_purity, input_synthetic, "RECIPE:" + recipe_id)
 	var event_id := "FIRST_RECIPE:" + recipe_id
 	grant_rp_once(event_id, 50 if int(recipe.tier) <= 2 else 250)
 	toast_requested.emit("Crafted " + recipe_id, "success")
@@ -480,7 +478,11 @@ func _advance_research(delta: float) -> void:
 	research_progress += delta
 	if research_progress >= float(found.seconds):
 		completed_research.append(active_research)
-		grant_skill_point_once("TIER_UNLOCK:" + active_research)
+		var reached_tier := current_tier()
+		if reached_tier > _highest_tier_awarded:
+			for tier_number in range(_highest_tier_awarded + 1, mini(reached_tier, 7) + 1):
+				grant_skill_point_once("TIER_FIRST_REACH:" + str(tier_number))
+			_highest_tier_awarded = maxi(_highest_tier_awarded, reached_tier)
 		toast_requested.emit("RESEARCH COMPLETE · " + str(found.name), "success")
 		active_research = ""
 		research_progress = 0.0
@@ -530,9 +532,7 @@ func register_world_event(event_id: String) -> bool:
 
 func progress_objective(event_type: String, target_id: String, amount: int = 1) -> void:
 	var event_id := "OBJECTIVE:" + event_type + ":" + target_id
-	if story_flags.has(event_id):
-		return
-	story_flags[event_id] = amount
+	story_flags[event_id] = int(story_flags.get(event_id, 0)) + amount
 	objective_changed.emit()
 	save_game()
 
@@ -549,6 +549,7 @@ func save_game() -> void:
 		"inventory":inventory,
 		"researchPoints":research_points,
 		"skillPoints":skill_points,
+		"highestTierAwarded":_highest_tier_awarded,
 		"completedResearch":completed_research,
 		"purchasedSkills":purchased_skills,
 		"activeResearch":active_research,
@@ -576,9 +577,12 @@ func save_game() -> void:
 	file.close()
 	var backup_path := "user://doronium_factory_save_v5.bak"
 	var final_path := "user://doronium_factory_save_v5.json"
+	var absolute_tmp := ProjectSettings.globalize_path("user://doronium_factory_save_v5.tmp")
+	var absolute_final := ProjectSettings.globalize_path(final_path)
+	var absolute_backup := ProjectSettings.globalize_path(backup_path)
 	if FileAccess.file_exists(final_path):
-		DirAccess.copy_absolute(final_path, backup_path)
-	DirAccess.rename_absolute("user://doronium_factory_save_v5.tmp", final_path)
+		DirAccess.copy_absolute(absolute_final, absolute_backup)
+	DirAccess.rename_absolute(absolute_tmp, absolute_final)
 
 func load_game() -> void:
 	var path := "user://doronium_factory_save_v5.json"
@@ -599,6 +603,7 @@ func load_game() -> void:
 	inventory.assign(parsed.get("inventory",[]))
 	research_points = int(parsed.get("researchPoints",0))
 	skill_points = int(parsed.get("skillPoints",1))
+	_highest_tier_awarded = int(parsed.get("highestTierAwarded",0))
 	completed_research.assign(parsed.get("completedResearch",["RESEARCH_BASIC_SURVIVAL"]))
 	purchased_skills.assign(parsed.get("purchasedSkills",[]))
 	active_research = str(parsed.get("activeResearch",""))
