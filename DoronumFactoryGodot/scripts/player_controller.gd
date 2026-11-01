@@ -19,7 +19,7 @@ var interaction_range := 5.0
 
 func _ready() -> void:
 	_build_character()
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 
 func _build_character() -> void:
 	var collider := CollisionShape3D.new()
@@ -72,15 +72,12 @@ func _material(color: Color, metallic: float) -> StandardMaterial3D:
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT:
 		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		rotate_y(-event.relative.x * mouse_sensitivity)
 		pitch = clampf(pitch - event.relative.y * mouse_sensitivity, -1.05, 0.5)
 		camera_pivot.rotation.x = pitch
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED else Input.MOUSE_MODE_CAPTURED
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
-		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 func _physics_process(delta: float) -> void:
 	if not is_on_floor():
