@@ -38,7 +38,7 @@ func _ready() -> void:
 	collision_layer = 1
 	collision_mask = 3
 	_spring_arm.collision_mask = 3
-	GameState.simulation_tick.connect(_on_simulation_tick)
+	GameState.tick_advanced.connect(_on_simulation_tick)
 
 func _build_character() -> void:
 	var capsule := CapsuleShape3D.new()
@@ -222,7 +222,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif not event.pressed:
 			_touch_look_active = false
 	if event is InputEventScreenDrag and _touch_look_active:
-		var delta := event.position-_touch_look_last
+		var delta: Vector2 = event.position-_touch_look_last
 		_touch_look_last = event.position
 		_rotate_camera(delta,touch_sensitivity)
 	if event.is_action_pressed("interact"):
