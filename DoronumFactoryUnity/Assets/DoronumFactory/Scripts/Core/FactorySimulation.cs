@@ -116,6 +116,11 @@ namespace DoronumFactory
                     process=research==null?25f:(research.Tier<=2?25f:(research.Tier<=4?100f:250f));
                     active=true;
                 }
+                else if (m.MachineId=="AUTO_MINER" || m.MachineId=="DORI_HARVESTER" || m.MachineId=="WATER_PUMP")
+                {
+                    process=machineDef.ProcessPowerKW;
+                    active=true;
+                }
                 else if (!string.IsNullOrEmpty(m.RecipeId) && FactoryCatalog.Recipes.TryGetValue(m.RecipeId,out var recipe))
                 {
                     process=recipe.PowerKW;
