@@ -292,7 +292,7 @@ const RECIPES := {
 	"DORONUM_THERMAL_CRYSTAL":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_HEAT_CRYSTAL":3},"outputs":{"ITEM_DORONUM_THERMAL_CRYSTAL":1},"seconds":75,"machine":"THERMAL_STABILIZER","tier":5,"temperature":1100.0,"pressure":600.0,"allow_synthetic":false},
 	"DORONUM_COLD_CRYSTAL":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_COLD_CRYSTAL":3},"outputs":{"ITEM_DORONUM_COLD_CRYSTAL":1},"seconds":75,"machine":"COOLING_STABILIZER","tier":5,"temperature":250.0,"pressure":400.0,"allow_synthetic":false},
 	"DORONUM_BLACK":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_CARBON_POWDER":5,"ITEM_DIAMOND":1},"outputs":{"ITEM_DORONUM_BLACK":1},"seconds":100,"machine":"ABSORPTION_PRESS","tier":5,"temperature":1000.0,"pressure":800.0,"allow_synthetic":false},
-	"DORONUM_SPECIAL_EDITION":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_DORONUM_YELLOW":1,"ITEM_ADVANCED_CIRCUIT":5,"ITEM_ARCHIVE_PATTERN":1},"outputs":{"ITEM_DORONUM_SPECIAL_EDITION":1},"seconds":120,"machine":"SEALED_PRECISION_CHAMBER","tier":6,"requires_story":"INFINITY_PROJECT_REVEALED","allow_synthetic":false},
+	"DORONUM_SPECIAL_EDITION":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_DORONUM_YELLOW":1,"ITEM_ADVANCED_CIRCUIT":5,"ITEM_ARCHIVE_PATTERN":1},"outputs":{"ITEM_DORONUM_SPECIAL_EDITION":1},"seconds":120,"machine":"SEALED_PRECISION_CHAMBER","tier":6,"requires_story":"SPECIAL_EDITION_BATCH_RESEARCHED","max_total":100,"allow_synthetic":false},
 	"DORONUM_LIMITED_EDITION":{"inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_DORONUM_ULTRA":1,"ITEM_DORONUM_TRANSLUCENT":1,"ITEM_CONTRACT_SEAL":1},"outputs":{"ITEM_DORONUM_LIMITED_EDITION":1},"seconds":180,"machine":"LEGACY_BATCH_LINE","tier":6,"requires_story":"LIMITED_EDITION_CONTRACT_ACTIVE","max_total":100,"allow_synthetic":false}
 }
 
