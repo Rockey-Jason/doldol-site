@@ -89,11 +89,24 @@ namespace DoronumFactory
             if (lab==null) return false;
             float requiredPower=labTier==0?25f:(labTier==1?100f:250f);
             if (lab.PowerRatio<0.8f || state.LastPowerGenerationKW<requiredPower) return false;
-            state.ResearchPoints-=def.CostRP;
-            state.ActiveResearchId=researchId;
             var progress=state.Research.Find(x=>x.ResearchId==researchId);
+            if(progress==null)return false;
+            var inventorySnapshot=inventory.Snapshot();
+            var reservedSamples=new List<ItemStackData>();
+            foreach(string sampleId in def.RequiredSamples)
+            {
+                if(!inventory.TryReserveEligible(sampleId,1,0f,0f,false,out var selected))
+                {
+                    inventory.RestoreSnapshot(inventorySnapshot);
+                    return false;
+                }
+                reservedSamples.AddRange(selected);
+            }
+            state.ResearchPoints-=def.CostRP;
+            progress.ReservedSamples=reservedSamples;
+            state.ActiveResearchId=researchId;
+            state.ActiveResearchProgress=progress.ProgressSeconds;
             progress.Running=true;
-            progress.ProgressSeconds=state.ActiveResearchProgress;
             ResearchChanged?.Invoke();
             return true;
         }
