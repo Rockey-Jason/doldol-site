@@ -121,6 +121,9 @@ func _spawn_resources() -> void:
 		["TITANIUM","ITEM_TITANIUM_ORE",Vector2(640,500),20,35,Color(0.53,0.63,0.72)],
 		["NEODYMIUM","ITEM_NEODYMIUM_ORE",Vector2(-650,-450),16,28,Color(0.49,0.36,0.73)],
 		["MAGNETITE","ITEM_MAGNETITE",Vector2(220,620),18,32,Color(0.25,0.28,0.33)],
+		["CHROME","ITEM_CHROME_ORE",Vector2(760,120),18,42,Color(0.42,0.48,0.55)],
+		["NICKEL","ITEM_NICKEL_ORE",Vector2(-720,260),18,44,Color(0.55,0.60,0.62)],
+		["LEAD","ITEM_LEAD_ORE",Vector2(820,-520),16,50,Color(0.30,0.34,0.39)],
 		["HEAT","ITEM_HEAT_CRYSTAL",Vector2(570,350),16,18,Color(0.95,0.29,0.10)],
 		["COLD","ITEM_COLD_CRYSTAL",Vector2(-500,480),16,18,Color(0.24,0.68,0.98)]
 	]
