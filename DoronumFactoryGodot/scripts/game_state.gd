@@ -225,6 +225,40 @@ func _claim_once(event_id: String, _kind: String, rp: int = 0) -> void:
 	_event_ids[event_id] = true
 	research_points += rp
 
+func claim_special_edition_batch_contract() -> bool:
+	if not bool(story_flags.get("ARCHIVE_RESTORED",false)) or "RESEARCH_DORONUM_CRYSTAL" not in research_completed:
+		notification.emit("특별판 배치 계약 · First Factory Archive와 Doronum Crystal 연구가 필요해.")
+		return false
+	var event_id := "CONTRACT:SPECIAL_EDITION_PATTERN_BATCH"
+	if _event_ids.has(event_id):
+		notification.emit("특별판 패턴 계약은 이미 수령했어.")
+		return false
+	add_item("ITEM_ARCHIVE_PATTERN",100,100.0,100.0,false,"FIRST_FACTORY_ARCHIVE_CONTRACT")
+	_event_ids[event_id] = true
+	story_flags["SPECIAL_EDITION_BATCH_RESEARCHED"] = true
+	notification.emit("특별판 배치 계약 완료 · Archive Pattern 100개 지급")
+	save_game()
+	return true
+
+func claim_limited_edition_batch_contract() -> bool:
+	if not bool(story_flags.get("ACT_V_COMPLETE",false)) or "RESEARCH_DORONUM_FUSION" not in research_completed:
+		notification.emit("Legacy Batch 계약 · First Factory 복구와 Doronum Fusion 연구가 필요해.")
+		return false
+	var event_id := "CONTRACT:LIMITED_EDITION_SEALS"
+	if _event_ids.has(event_id):
+		notification.emit("Limited Edition 계약은 이미 완료했어.")
+		return false
+	var payment := {"ITEM_ADVANCED_CIRCUIT":50,"ITEM_STEEL_PLATE":50}
+	if not consume_items(payment):
+		notification.emit("Limited Edition 계약 납품 부족 · Advanced Circuit 50, Steel Plate 50")
+		return false
+	add_item("ITEM_CONTRACT_SEAL",100,100.0,100.0,false,"LEGACY_BATCH_CONTRACT")
+	_event_ids[event_id] = true
+	story_flags["LIMITED_EDITION_CONTRACT_ACTIVE"] = true
+	notification.emit("Legacy Batch 계약 완료 · Contract Seal 100개 지급")
+	save_game()
+	return true
+
 func start_research(research_id: String) -> bool:
 	var definition: Dictionary = GameData.research_definition(research_id)
 	if definition.is_empty() or research_id in research_completed or not active_research.is_empty():
@@ -295,6 +329,14 @@ func set_machine_recipe(instance_id: String, recipe_id: String) -> bool:
 	var recipe: Dictionary = GameData.recipe_definition(recipe_id)
 	if recipe.is_empty():
 		return false
+	if recipe.has("story") and not bool(story_flags.get(str(recipe.story),false)):
+		notification.emit("스토리/계약 조건 미완료 · "+str(recipe.story))
+		return false
+	if int(recipe.get("supply_cap",0))>0:
+		var supply_key := "DORONUM_SUPPLY:"+str(recipe.outputs.keys()[0] if recipe.has("outputs") else recipe_id)
+		if int(story_flags.get(supply_key,0))>=int(recipe.supply_cap):
+			notification.emit("해당 한정 배치의 생산 상한에 도달했어.")
+			return false
 	for machine in buildings:
 		if machine.instance_id == instance_id and machine.id == recipe.machine:
 			machine.recipe = recipe_id
