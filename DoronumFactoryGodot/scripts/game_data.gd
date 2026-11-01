@@ -131,18 +131,21 @@ const RECIPES := {
 	"RECIPE_CONTROL_MODULE":{"name":"Control Module","machine":"ADVANCED_ASSEMBLER","inputs":{"ITEM_ADVANCED_CIRCUIT":2,"ITEM_SENSOR":2,"ITEM_BATTERY":1,"ITEM_NEODYMIUM_MAGNET":1},"outputs":{"ITEM_CONTROL_MODULE":1},"seconds":30.0,"power":50.0},
 	"RECIPE_DORONUM_NORMAL":{"name":"Natural Doronum","machine":"DORONUM_COMPRESSOR","inputs":{"ITEM_DORI_MEAT":10},"outputs":{"ITEM_DORONUM_NORMAL":1},"seconds":20.0,"temperature":900.0,"pressure":500.0,"power":750.0,"allow_synthetic":false}
 }
-for item_id in DORONUM_IDS:
-	RECIPES["RECIPE_" + item_id.replace("ITEM_","")] = {
-		"name":str(VARIANT_RECIPES[item_id].name),
-		"machine":str(VARIANT_RECIPES[item_id].machine),
-		"inputs":VARIANT_RECIPES[item_id].inputs,
-		"outputs":{item_id:1},
-		"seconds":float(VARIANT_RECIPES[item_id].seconds),
-		"temperature":float(VARIANT_RECIPES[item_id].temperature),
-		"pressure":float(VARIANT_RECIPES[item_id].pressure),
-		"power":250.0,
-		"allow_synthetic":false
-	}
+static func recipe_definition(recipe_id: String) -> Dictionary:
+	if RECIPES.has(recipe_id):
+		return RECIPES[recipe_id]
+	for item_id in DORONUM_IDS:
+		var variant_recipe_id := "RECIPE_" + item_id.replace("ITEM_","")
+		if recipe_id == variant_recipe_id and VARIANT_RECIPES.has(item_id):
+			var variant: Dictionary = VARIANT_RECIPES[item_id]
+			return {
+				"name":variant.name,"machine":variant.machine,"inputs":variant.inputs,
+				"outputs":{item_id:1},"seconds":variant.seconds,
+				"temperature":variant.temperature,"pressure":variant.pressure,
+				"power":250.0,"allow_synthetic":false
+			}
+	return {}
+
 static func item_name(item_id: String) -> String:
 	if ITEMS.has(item_id):
 		return str(ITEMS[item_id].name)
