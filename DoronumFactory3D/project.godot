@@ -1,0 +1,31 @@
+config_version=5
+
+[application]
+config/name="DORONUM FACTORY — INFINITE INDUSTRY"
+config/description="A full 3D industrial exploration and factory automation game on Doldol Planet."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+config/version="0.1.0"
+
+[autoload]
+GameState="*res://scripts/core/game_state.gd"
+
+[display]
+window/size/viewport_width=1600
+window/size/viewport_height=900
+window/size/window_width_override=1440
+window/size/window_height_override=810
+window/stretch/mode="canvas_items"
+window/handheld/orientation=1
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/default_filters/use_nearest_mipmap_filter=false
+environment/defaults/default_clear_color=Color(0.035, 0.065, 0.085, 1)
+
+[physics]
+3d/default_gravity=24.0
+
+[application/run]
+disable_stdout=false
