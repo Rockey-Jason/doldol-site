@@ -33,13 +33,16 @@ namespace DoronumFactory
             return true;
         }
 
-        public bool TryAutomatedMine(out ItemStackData output)
+        public bool TryAutomatedMine(out ItemStackData output) => TryAutomatedMine(1,out output);
+
+        public bool TryAutomatedMine(int quantity,out ItemStackData output)
         {
             output=null;
-            if(Depleted)return false;
-            Remaining--;
+            if(Depleted || quantity<=0)return false;
+            int take=Mathf.Min(Remaining,quantity);
+            Remaining-=take;
             output=new ItemStackData {
-                StackId=System.Guid.NewGuid().ToString("N"),ItemId=ItemId,Quantity=1,
+                StackId=System.Guid.NewGuid().ToString("N"),ItemId=ItemId,Quantity=take,
                 Quality=Quality,Purity=Purity,Synthetic=false,Provenance="AUTO_MINER:"+NodeId
             };
             if(Depleted && cachedRenderer!=null)cachedRenderer.enabled=false;
