@@ -405,6 +405,7 @@ func _tick_fusion(dt: float) -> void:
 		fusion.stage_progress = 0.0
 		fusion.temperature = 20.0 if fusion.stage >= GameData.FUSION_STAGES.size() else fusion.temperature
 		fusion_stage_changed.emit(int(fusion.stage))
+		save_game()
 		if fusion.stage >= GameData.FUSION_STAGES.size():
 			fusion.output_committed = true
 			fusion.state = "COMPLETED"
@@ -414,8 +415,7 @@ func _tick_fusion(dt: float) -> void:
 			story_flags["INFINITY_CRAFTED"] = true
 			notification.emit("INFINITY DORONUM ×1 · 생산 완료")
 			save_game()
-	elif fusion.stage_progress == 0.0 and fusion.stage > 0:
-		save_game()
+
 
 func _fusion_interlocks_valid() -> bool:
 	if fusion.is_empty():
