@@ -418,6 +418,24 @@ func analyze_research_sample() -> bool:
 	save_game()
 	return true
 
+func analyze_research_sample_batch() -> bool:
+	var efficient := has_skill("SAMPLE_EFFICIENCY")
+	var consume_count := 19 if efficient else 20
+	if count_item("ITEM_RESEARCH_SAMPLE")<consume_count:
+		notification.emit("연구 샘플 %d개가 필요해." % consume_count)
+		return false
+	var lots: Array[Dictionary] = consume_items_with_lots({"ITEM_RESEARCH_SAMPLE":consume_count},false)
+	if lots.size()!=consume_count:
+		notification.emit("샘플 분석 예약 실패 · 재료는 보존됐어.")
+		return false
+	for sample in lots:
+		_claim_once("RESEARCH_SAMPLE_ANALYSIS:"+str(sample.get("stack_id","")),"RESEARCH_SAMPLE_ANALYSIS",1000)
+	if efficient:
+		_claim_once("RESEARCH_SAMPLE_EFFICIENCY_BONUS:"+str(lots[0].get("stack_id","")),"SAMPLE_EFFICIENCY_BONUS",1000)
+	notification.emit("연구 샘플 배치 분석 · %d개 소비 / %d RP 지급" % [consume_count,consume_count*1000+(1000 if efficient else 0)])
+	save_game()
+	return true
+
 func claim_recipe_research_reward(recipe_id: String) -> void:
 	var reward := 100
 	if recipe_id.contains("DORONUM"):
