@@ -38,6 +38,7 @@ namespace DoronumFactory
         public float CurrentPressureMPa;
         public float FuelSeconds;
         public string TargetTreeId;
+        public float AutoMinerProgressSeconds;
         public ItemStackData BeltPayload;
         public float BeltProgressSeconds;
         public string RecipeId;
