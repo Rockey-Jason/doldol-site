@@ -79,7 +79,7 @@ namespace DoronumFactory
             return true;
         }
 
-        private void AllocatePower()
+        pprivate void AllocatePower()
         {
             float daylight=Mathf.Clamp01(Mathf.Sin((elapsedGameSeconds/1800f)*Mathf.PI*2f)*0.5f+0.5f);
             float generated=0f,requested=0f;
@@ -99,7 +99,7 @@ namespace DoronumFactory
 
                 float idle=machineDef.IdlePowerKW>0f?machineDef.IdlePowerKW:1f;
                 float process=0f;
-                bool active=m.ReservedInputs.Count>0;
+                bool active=m.ReservedInputs.Count>0 || (m.MachineId=="RESEARCH_LAB" && !string.IsNullOrEmpty(state.ActiveResearchId));
                 if (m.MachineId=="INFINITY_FUSION_MACHINE" && state.Fusion.Running)
                 {
                     int stage=Mathf.Clamp(state.Fusion.StageIndex,0,FactoryCatalog.FusionStages.Length-1);
@@ -166,7 +166,7 @@ namespace DoronumFactory
                 if (m.MachineId=="GENERATOR" && m.FuelSeconds>0f) m.FuelSeconds=Mathf.Max(0f,m.FuelSeconds-TickSeconds);
         }
 
-        rivate void TickMachine(MachineRuntimeData machine)
+        private void TickMachine(MachineRuntimeData machine)
         {
             if (machine.CompletionBuffer.Count>0) { machine.State="PAUSED_OUTPUT"; MachineChanged?.Invoke(machine); return; }
             if (machine.Condition<=0f) { machine.State="BROKEN"; MachineChanged?.Invoke(machine); return; }
@@ -176,8 +176,7 @@ namespace DoronumFactory
             { machine.State="LOCKED_STORY"; return; }
             if (recipe.MaxTotal>0)
             {
-                int produced=state.Machines.Where(m=>m.MachineId==machine.MachineId).SelectMany(m=>m.CompletionBuffer)
-                    .Where(s=>recipe.Outputs.Any(o=>o.ItemId==s.ItemId)).Sum(s=>s.Quantity);
+                int produced=state.RecipeTotals.Where(x=>x.RecipeId==recipe.Id).Sum(x=>x.Quantity);
                 int pending=state.Machines.Count(m=>m.RecipeId==recipe.Id && m.ReservedInputs.Count>0);
                 if (produced+pending>=recipe.MaxTotal && machine.ReservedInputs.Count==0) { machine.State="SUPPLY_LIMIT"; return; }
             }
@@ -221,7 +220,7 @@ namespace DoronumFactory
             return true;
         }
 
-        private void CommitProduction(MachineRuntimeData machine,RecipeDefinition recipe)
+        pprivate void CommitProduction(MachineRuntimeData machine,RecipeDefinition recipe)
         {
             if (machine.CompletionBuffer.Count>0) { machine.State="PAUSED_OUTPUT"; return; }
             float totalQ=0f,totalP=0f,total=0f;
@@ -251,12 +250,11 @@ namespace DoronumFactory
             if(quota==null) { quota=new RecipeTotalData { RecipeId=recipe.Id,Quantity=0 };state.RecipeTotals.Add(quota); }
             quota.Quantity+=recipe.Outputs.Sum(x=>x.Quantity);
             int rp=RecipeRp(recipe);
-            if(state.TryClaim("FIRST_RECIPE:"+recipe.Id,"FIRST_RECIPE",rp)) state.ResearchPoints+=rp;
-            if(state.TryClaim("FIRST_PRODUCTION:"+recipe.Id,"FIRST_PRODUCTION",rp)) state.ResearchPoints+=rp;
+            if(state.TryClaim("FIRST_RECIPE_SUCCESS:"+recipe.Id,"FIRST_RECIPE_SUCCESS",rp)) state.ResearchPoints+=rp;
             ProductionCompleted?.Invoke(recipe.Id);
         }
 
-        rivate void RecordPowerSample(MachineRuntimeData machine)
+        private void RecordPowerSample(MachineRuntimeData machine)
         {
             if (!powerSamples.TryGetValue(machine.InstanceId,out var samples))
             { samples=new List<float>(); powerSamples[machine.InstanceId]=samples; }
