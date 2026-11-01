@@ -57,7 +57,7 @@ func _build_ui() -> void:
 	var tabs := GridContainer.new()
 	tabs.columns = 4
 	panel_v.add_child(tabs)
-	for tab in ["BUILD","CRAFT","INVENTORY","RESEARCH","FACTORY","STORY","FUSION","MAP"]:
+	for tab in ["BUILD","CRAFT","INVENTORY","RESEARCH","SKILLS","FACTORY","STORY","FUSION","MAP"]:
 		var button := Button.new()
 		button.text = tab
 		button.custom_minimum_size = Vector2(105,34)
@@ -147,6 +147,7 @@ func _refresh() -> void:
 		"CRAFT": _draw_craft()
 		"INVENTORY": _draw_inventory()
 		"RESEARCH": _draw_research()
+		"SKILLS": _draw_skills()
 		"FACTORY": _draw_factory()
 		"STORY": _draw_story()
 		"FUSION": _draw_fusion()
@@ -226,6 +227,32 @@ func _draw_research() -> void:
 		var state_text := "COMPLETE" if done else ("RUNNING" if game.active_research==definition.id else ("AVAILABLE" if prereq_ok else "LOCKED"))
 		var text := "T%d  %s  ·  %s  ·  %d RP / %ds" % [int(definition.tier),definition.name,state_text,int(definition.rp),int(definition.time)]
 		_button(text,func(): game.start_research(str(definition.id)),done or not prereq_ok or not game.active_research.is_empty() or game.research_points<int(definition.rp))
+
+func _draw_skills() -> void:
+	_heading("ENGINEER SPECIALIZATION  /  20 NODES")
+	_label("SKILL POINTS  ·  %d available  ·  %d / 20 unlocked" % [game.skill_points,game.skills_unlocked.size()])
+	_label("반복 채굴/생산으로 포인트를 얻을 수 없어. 메인 스토리, 최초 탐험, Tier 도달로 총 15점을 받아.")
+	for branch in ["EXPLORATION","EXTRACTION","MANUFACTURING","LOGISTICS","RESEARCH_DORONUM"]:
+		_heading(branch.replace("_"," "))
+		for skill in GameData.SKILLS:
+			if skill.branch!=branch:
+				continue
+			var unlocked := skill.id in game.skills_unlocked
+			var prerequisites_met := true
+			for prerequisite in skill.requires:
+				if prerequisite not in game.skills_unlocked:
+					prerequisites_met = false
+			var status := "UNLOCKED" if unlocked else ("AVAILABLE" if prerequisites_met and game.skill_points>0 else "LOCKED")
+			_label("T%d  %s  ·  %s" % [int(skill.tier),skill.name,status])
+			_label(str(skill.effect))
+			var missing := []
+			for prerequisite in skill.requires:
+				if prerequisite not in game.skills_unlocked:
+					missing.append(str(prerequisite))
+			_button("UNLOCK · "+str(skill.name),func(): game.unlock_skill(str(skill.id)),unlocked or not prerequisites_met or game.skill_points<=0)
+	_heading("SKILL RESET")
+	var terminal_ready := game.buildings.any(func(m): return m.id=="SKILL_RESPEC_TERMINAL" and float(m.condition)>0.0)
+	_button("USE ONE-TIME FREE RESPEC",game.respec_skill_tree,not terminal_ready or game.skill_respec_used)
 
 func _draw_factory() -> void:
 	_heading("FACTORY OVERVIEW")
