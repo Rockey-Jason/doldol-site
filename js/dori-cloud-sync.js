@@ -136,8 +136,13 @@
       if (error) throw error;
       for (const [key, value] of items.slice(i, i + 100)) {
         const latest = pending.get(key);
-        if (latest && latest.deleted === value.deleted && latest.value === value.value) pending.delete(key);
-        meta.dirty = meta.dirty.filter(item => item !== key);
+        const unchanged = !latest || (latest.deleted === value.deleted && latest.value === value.value);
+        if (unchanged) {
+          pending.delete(key);
+          meta.dirty = meta.dirty.filter(item => item !== key);
+        } else if (!meta.dirty.includes(key)) {
+          meta.dirty.push(key);
+        }
         if (!meta.managed.includes(key)) meta.managed.push(key);
       }
     }
@@ -159,6 +164,7 @@
       applyingRemote = true;
       try { oldMeta.managed.forEach(key => { if (eligible(key)) native.remove.call(localStorage, key); }); }
       finally { applyingRemote = false; }
+      pending.clear();
     }
     currentUserId = uid || null;
     if (!uid) {
@@ -168,6 +174,7 @@
         try { oldMeta.managed.forEach(key => { if (eligible(key)) native.remove.call(localStorage, key); }); }
         finally { applyingRemote = false; }
       }
+      pending.clear();
       try { native.remove.call(localStorage, OWNER_KEY); } catch (_) {}
       meta = { dirty: [], managed: [], initialized: false };
       return;
