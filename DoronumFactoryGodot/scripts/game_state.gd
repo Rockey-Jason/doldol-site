@@ -450,11 +450,10 @@ func place_factory_blueprint(slot: String,origin: Vector3) -> bool:
 				return false
 		placements.append({"id":building_id,"position":position,"rotation_y":float(entry.get("rotation_y",0.0)),"recipe":str(entry.get("recipe",""))})
 		for item_id in definition.cost:
-			total_cost[item_id] = int(total_cost.get(item_id,0))+int(definition.cost[item_id])
-	if has_skill("BUFFER_ENGINEER"):
-		for item_id in total_cost:
-			if placements.any(func(p): return p.id in ["WAREHOUSE","FUSION_POWER_BUFFER"]):
-				total_cost[item_id] = int(ceil(float(total_cost[item_id])*0.95))
+			var amount := int(definition.cost[item_id])
+			if has_skill("BUFFER_ENGINEER") and building_id in ["WAREHOUSE","FUSION_POWER_BUFFER"]:
+				amount = int(ceil(float(amount)*0.95))
+			total_cost[item_id] = int(total_cost.get(item_id,0))+amount
 	if not consume_items(total_cost):
 		notification.emit("Blueprint 건설 재료 부족 · 전체 배치는 취소됐어.")
 		return false
