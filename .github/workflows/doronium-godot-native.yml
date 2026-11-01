@@ -28,6 +28,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Install Godot export templates
+        run: |
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.4.1.stable"
+          wget -q https://github.com/godotengine/godot/releases/download/4.4.1-stable/Godot_v4.4.1-stable_export_templates.tpz -O /tmp/godot-templates.tpz
+          unzip -q /tmp/godot-templates.tpz -d /tmp/godot-templates
+          if [ -d /tmp/godot-templates/templates ]; then
+            cp -a /tmp/godot-templates/templates/. "$HOME/.local/share/godot/export_templates/4.4.1.stable/"
+          else
+            cp -a /tmp/godot-templates/. "$HOME/.local/share/godot/export_templates/4.4.1.stable/"
+          fi
+
       - name: Import and parse project
         run: godot --headless --editor --path . --quit
 
@@ -55,9 +66,7 @@ jobs:
           name: DoroniumFactory-Godot4-Native-Builds
           path: |
             DoronumFactoryGodot/build/windows/DoronumFactory.exe
-            DoronumFactoryGodot/build/windows/DoronumFactory.exe.pck
             DoronumFactoryGodot/build/linux/DoronumFactory.x86_64
-            DoronumFactoryGodot/build/linux/DoronumFactory.x86_64.pck
             DoronumFactoryGodot-Project.zip
           if-no-files-found: error
           retention-days: 30
