@@ -48,6 +48,7 @@ func _setup_input() -> void:
 	_add_key_action("move_left",KEY_A)
 	_add_key_action("move_right",KEY_D)
 	_add_key_action("jump",KEY_SPACE)
+	_add_key_action("sprint",KEY_SHIFT)
 	_add_key_action("interact",KEY_E)
 	_add_key_action("build_mode",KEY_B)
 	_add_key_action("inventory",KEY_I)
@@ -123,6 +124,9 @@ func _unhandled_input(event: InputEvent) -> void:
 					game.notification.emit("일시 정지" if game.simulation_paused else "시뮬레이션 재개")
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		if build_mode and not selected_building.is_empty() and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
+			_try_place_building()
+	if event is InputEventScreenTouch and event.pressed:
+		if build_mode and not selected_building.is_empty():
 			_try_place_building()
 
 func _select_building(building_id: String) -> void:
