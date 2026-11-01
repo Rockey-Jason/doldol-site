@@ -47,6 +47,11 @@ namespace DoronumFactory
         public List<ItemStackData> ReservedInputs = new List<ItemStackData>();
         public float EnergyKJ;
         public int FailureEvents;
+        public float PowerRatioSum;
+        public float PowerRatioSquareSum;
+        public int PowerSampleCount;
+        public float FailureExposureSeconds;
+        public int FailureRngIndex;
     }
 
     [Serializable]
