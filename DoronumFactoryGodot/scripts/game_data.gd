@@ -183,7 +183,7 @@ const RECIPES := {
 	"RECIPE_ADVANCED_CIRCUIT":{"name":"Advanced Circuit","machine":"ADVANCED_ASSEMBLER","inputs":{"ITEM_BASIC_CIRCUIT":3,"ITEM_GOLD_INGOT":2,"ITEM_NICKEL_INGOT":2,"ITEM_QUARTZ":2,"ITEM_COPPER_WIRE":5},"outputs":{"ITEM_ADVANCED_CIRCUIT":1},"seconds":25.0,"power":45.0},
 	"RECIPE_CONTROL_MODULE":{"name":"Control Module","machine":"ADVANCED_ASSEMBLER","inputs":{"ITEM_ADVANCED_CIRCUIT":2,"ITEM_SENSOR":2,"ITEM_BATTERY":1,"ITEM_NEODYMIUM_MAGNET":1},"outputs":{"ITEM_CONTROL_MODULE":1},"seconds":30.0,"power":50.0},
 	"RECIPE_DORONUM_NORMAL":{"name":"Natural Doronum","machine":"DORONUM_COMPRESSOR","inputs":{"ITEM_DORI_MEAT":10},"outputs":{"ITEM_DORONUM_NORMAL":1},"seconds":20.0,"temperature":900.0,"pressure":500.0,"power":750.0,"allow_synthetic":false,"allow_skill_quality_bonus":true},
-	"RECIPE_PURIFY_RUSTED_DORONUM":{"name":"Purify Rusted Doronum","machine":"DORONUM_PURIFIER","inputs":{"ITEM_DORONUM_RUSTED":2,"ITEM_QUARTZ":4,"ITEM_WATER":4},"outputs":{"ITEM_DORONUM_RUSTED":1},"seconds":120.0,"temperature":350.0,"pressure":300.0,"power":500.0,"allow_synthetic":false,"purity_loss":0.0,"purification_bonus":15.0,"quality_modifier":2.0},
+	"RECIPE_PURIFY_RUSTED_DORONUM":{"name":"Purify Rusted Doronum","machine":"DORONUM_PURIFIER","inputs":{"ITEM_DORONUM_RUSTED":2,"ITEM_QUARTZ":4,"ITEM_WATER":4},"outputs":{"ITEM_DORONUM_RUSTED":1},"seconds":120.0,"temperature":350.0,"pressure":300.0,"power":500.0,"allow_synthetic":false,"purity_loss":0.0,"purification_bonus":15.0,"quality_modifier":2.0,"allow_skill_quality_bonus":true},
 	"RECIPE_GOLD_INGOT":{"name":"Gold Ingot","machine":"FURNACE","inputs":{"ITEM_GOLD_ORE":2,"ITEM_COAL":1},"outputs":{"ITEM_GOLD_INGOT":1},"seconds":12.0,"temperature":1064.0,"pressure":50.0,"power":0.0},
 	"RECIPE_CHROME_INGOT":{"name":"Chrome Ingot","machine":"STEEL_FURNACE","inputs":{"ITEM_CHROME_ORE":2,"ITEM_COAL":2},"outputs":{"ITEM_CHROME_INGOT":1},"seconds":20.0,"temperature":1907.0,"pressure":100.0,"power":40.0},
 	"RECIPE_NICKEL_INGOT":{"name":"Nickel Ingot","machine":"FURNACE","inputs":{"ITEM_NICKEL_ORE":2,"ITEM_COAL":1},"outputs":{"ITEM_NICKEL_INGOT":1},"seconds":14.0,"temperature":1455.0,"pressure":60.0,"power":0.0},
@@ -229,7 +229,7 @@ static func recipe_definition(recipe_id: String) -> Dictionary:
 				"name":variant.name,"machine":variant.machine,"inputs":variant.inputs,
 				"outputs":{item_id:1},"seconds":variant.seconds,
 				"temperature":variant.temperature,"pressure":variant.pressure,
-				"power":250.0,"allow_synthetic":false
+				"power":250.0,"allow_synthetic":false,"allow_skill_quality_bonus":true
 			})
 	return {}
 
