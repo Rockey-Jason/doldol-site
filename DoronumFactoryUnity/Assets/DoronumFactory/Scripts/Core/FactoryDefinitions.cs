@@ -133,7 +133,7 @@ namespace DoronumFactory
             var d=new Dictionary<string,ItemDefinition>(StringComparer.Ordinal);
             void Add(string id,string name,string category,int stack,float price=0,bool fluid=false)
                 => d.Add(id,new ItemDefinition(id,name,category,stack,price,fluid));
-            Add("ITEM_WOOD","Wood","Raw",100,5); Add("ITEM_STONE","Stone","Raw",100,4);
+            Add("ITEM_WOOD","Wood","Raw",100,5); Add("ITEM_STONE","Stone","Raw",100,4); Add("ITEM_SAND","Sand","Raw",100,2);
             Add("ITEM_GRASS","Grass","Raw",100,1); Add("ITEM_PLANT_FIBER","Plant Fiber","Raw",100,3);
             Add("ITEM_PLANT_ROPE","Plant Rope","Part",50,8);
             Add("ITEM_IRON_ORE","Iron Ore","Ore",100,8); Add("ITEM_COPPER_ORE","Copper Ore","Ore",100,9);
@@ -150,7 +150,7 @@ namespace DoronumFactory
             Add("ITEM_STEEL_PLATE","Steel Plate","Metal",50,55); Add("ITEM_COPPER_WIRE","Copper Wire","Part",50,18);
             Add("ITEM_GEAR","Gear","Part",50,20); Add("ITEM_BEARING","Bearing","Part",50,24);
             Add("ITEM_GOLD_INGOT","Gold Ingot","Metal",50,38); Add("ITEM_CHROME_INGOT","Chrome Ingot","Metal",50,42);
-            Add("ITEM_TITANIUM_PLATE","Titanium Plate","Metal",50,65); Add("ITEM_ALUMINUM_PLATE","Aluminum Plate","Metal",50,28);
+            Add("ITEM_TITANIUM_INGOT","Titanium Ingot","Metal",50,52); Add("ITEM_TITANIUM_PLATE","Titanium Plate","Metal",50,65); Add("ITEM_ALUMINUM_PLATE","Aluminum Plate","Metal",50,28);
             Add("ITEM_GLASS","Glass","Part",50,14); Add("ITEM_CARBON_POWDER","Carbon Powder","Raw",100,8);
             Add("ITEM_BASIC_CIRCUIT","Basic Circuit","Electronics",50,35); Add("ITEM_ADVANCED_CIRCUIT","Advanced Circuit","Electronics",25,120);
             Add("ITEM_CONTROL_MODULE","Control Module","Electronics",25,160); Add("ITEM_SENSOR","Sensor","Electronics",25,70);
