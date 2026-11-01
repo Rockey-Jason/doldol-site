@@ -22,7 +22,7 @@ namespace DoronumFactory
         public bool HudPointerBlocked { get; set; }
         public string SelectedBuildMachineId { get; private set; }
         public string SelectedMachineInstanceId { get; private set; }
-        public int CurrentMiningPower => 10;
+        public int CurrentMiningPower => State.EquippedToolId=="ITEM_TOOL_DORONUM_PICKAXE"?120:State.EquippedToolId=="ITEM_TOOL_STEEL_PICKAXE"?50:State.EquippedToolId=="ITEM_TOOL_IRON_PICKAXE"?25:State.EquippedToolId=="ITEM_TOOL_WOODEN_PICKAXE"?10:1;
         public event Action<string> WorldMessage;
         private readonly SaveManager saves=new SaveManager();
         private float accumulator;
@@ -80,6 +80,7 @@ namespace DoronumFactory
             items.Add("ITEM_GRASS",30,90f,90f,false,"STARTER_PACKAGE");
             items.Add("ITEM_WATER",10,100f,100f,false,"STARTER_PACKAGE");
             items.Add("ITEM_COAL",10,90f,90f,false,"STARTER_PACKAGE");
+            items.Add("ITEM_TOOL_HANDS",1,100f,100f,false,"STARTER_EQUIPMENT");
             State.SkillPoints=1;
             State.ResearchPoints=0;
             State.SetFlag("ORBIT_00_DORMANT");
@@ -315,6 +316,16 @@ namespace DoronumFactory
             State.Machines.FirstOrDefault(x=>x.InstanceId==instanceId);
 
         public MachineRuntimeData GetSelectedMachine() => GetMachine(SelectedMachineInstanceId);
+
+        public bool EquipTool(string itemId)
+        {
+            var tools=new[]{"ITEM_TOOL_HANDS","ITEM_TOOL_WOODEN_PICKAXE","ITEM_TOOL_IRON_PICKAXE","ITEM_TOOL_STEEL_PICKAXE","ITEM_TOOL_DORONUM_PICKAXE"};
+            if(!tools.Contains(itemId) || Inventory.Count(itemId)<1)return false;
+            State.EquippedToolId=itemId;
+            ShowWorldMessage("도구 장착 · "+itemId.Replace("ITEM_TOOL_",""));
+            SaveNow();
+            return true;
+        }
 
         public void SelectBuildMachine(string machineId)
         {
