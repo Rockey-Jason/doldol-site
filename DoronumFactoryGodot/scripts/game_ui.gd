@@ -262,6 +262,10 @@ func _draw_fusion() -> void:
 	_label("정확한 canonical ID 15종 × 100개 = 1,500개. 각 스택 비합성·Quality ≥90·Purity ≥90.")
 	for item_id in GameData.DORONUM_IDS:
 		_label("%s  %d / 100" % [GameData.item_name(item_id),game.count_item(item_id)])
+	_heading("FINAL SAFETY DIAGNOSTICS")
+	for diagnostic in ["power_stability","pressure_calibration","emergency_cooling"]:
+		var passed := bool(game.fusion_diagnostics.get(diagnostic,false))
+		_button("%s  ·  %s" % [diagnostic.to_upper(),"PASSED" if passed else "RUN TEST"],func(): game.run_fusion_diagnostic(diagnostic),passed)
 	_heading("PRE-FLIGHT DIAGNOSTICS")
 	var errors := game.fusion_preflight()
 	if game.fusion.is_empty():
@@ -286,7 +290,8 @@ func _draw_fusion() -> void:
 		if str(game.fusion.state).begins_with("FAILED"):
 			_button("SAFE RECOVERY · RETURN ALL RESERVED INPUTS",game.recover_fusion_failure)
 		elif game.fusion.state == "COMPLETED":
-			_label("INFINITY DORONUM ×1 COMMITTED",Color(0.42,0.94,1.0))
+			_label("INFINITY DORONUM ×1 COMMITTED · OUTPUT BUFFER",Color(0.42,0.94,1.0))
+			_button("COLLECT INFINITY DORONUM",game.collect_infinity_output,game.fusion.get("output_buffer",{}).is_empty())
 	_heading("PLANETARY STABILIZATION")
 	_label("Infinity 제작은 엔딩이 아니야. Relay 3개 → Core 설치 → 안정화 3단계가 필요해.")
 	for i in range(3):
