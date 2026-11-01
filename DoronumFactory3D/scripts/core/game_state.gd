@@ -4,7 +4,7 @@ signal inventory_changed
 signal progression_changed
 signal objective_changed
 signal toast_requested(message: String, severity: String)
-signal simulation_tick(tick_index: int)
+signal tick_advanced(tick_index: int)
 
 const SAVE_VERSION := 5
 const FIXED_TICK := 0.10
@@ -27,6 +27,15 @@ const DORONUM_IDS: Array[String] = [
 
 const ITEM_DATA := {
 	"ITEM_DIRT":{"name":"Dirt","group":"Raw","price":1},
+	"ITEM_CLAY":{"name":"Clay","group":"Raw","price":2},
+	"ITEM_TOOL_HANDS":{"name":"Bare Hands","group":"Tool","price":0},
+	"ITEM_WOODEN_PICKAXE":{"name":"Wooden Pickaxe","group":"Tool","price":35},
+	"ITEM_WOODEN_AXE":{"name":"Wooden Axe","group":"Tool","price":30},
+	"ITEM_WOODEN_SHOVEL":{"name":"Wooden Shovel","group":"Tool","price":28},
+	"ITEM_IRON_PICKAXE":{"name":"Iron Pickaxe","group":"Tool","price":110},
+	"ITEM_STEEL_PICKAXE":{"name":"Steel Pickaxe","group":"Tool","price":260},
+	"ITEM_DORONUM_PICKAXE":{"name":"Doronum Pickaxe","group":"Tool","price":2500},
+	"ITEM_WORKBENCH_KIT":{"name":"Workbench Kit","group":"Building","price":50},
 	"ITEM_SAND":{"name":"Sand","group":"Raw","price":1},
 	"ITEM_STONE":{"name":"Stone","group":"Raw","price":2},
 	"ITEM_GRAVEL":{"name":"Gravel","group":"Raw","price":2},
@@ -85,7 +94,8 @@ const ITEM_DATA := {
 	"ITEM_COLD_CRYSTAL":{"name":"Cold Crystal","group":"Crystal","price":150},
 	"ITEM_THERMAL_CRYSTAL":{"name":"Thermal Crystal","group":"Crystal","price":220},
 	"ITEM_DORONUM_COLD_CRYSTAL":{"name":"Cold Doronum Crystal","group":"Doronum","price":1900},
-	"ITEM_ULTRA_DORONUM":{"name":"Ultra Doronum","group":"Doronum","price":2100},
+	"ITEM_ULTRA_DORONUM":{"name":"Ultra Doronum intermediate","group":"Part","price":2100},
+	"ITEM_DORONUM_ULTRA":{"name":"Ultra Doronum","group":"Doronum","price":2400},
 	"ITEM_DORONUM_NORMAL":{"name":"Normal Doronum","group":"Doronum","price":1200},
 	"ITEM_DORONUM_YELLOW":{"name":"Yellow Doronum","group":"Doronum","price":1500},
 	"ITEM_DORONUM_BLUE":{"name":"Blue Doronum","group":"Doronum","price":1600},
@@ -178,13 +188,14 @@ const MACHINE_DEFS := {
 	"AUTO_FABRICATOR":{"name":"Auto Fabricator","tier":4,"category":"Crafting","footprint":Vector2i(4,4),"power_kw":120,"cost":{"ITEM_STEEL_PLATE":30,"ITEM_TITANIUM_PLATE":10,"ITEM_MOTOR":4,"ITEM_ADVANCED_CIRCUIT":5,"ITEM_CONTROL_MODULE":3,"ITEM_SENSOR":4},"recipe":"","kind":"fabricator"},
 	"QUALITY_INSPECTOR":{"name":"Quality Inspector","tier":4,"category":"Quality","footprint":Vector2i(2,2),"power_kw":12,"cost":{"ITEM_ALUMINUM_PLATE":8,"ITEM_GLASS":4,"ITEM_SENSOR":3,"ITEM_ADVANCED_CIRCUIT":2,"ITEM_CONTROL_MODULE":1},"recipe":"","kind":"inspector"},
 	"DORI_HARVESTER":{"name":"Auto Dori Harvester","tier":6,"category":"Bio","footprint":Vector2i(3,3),"power_kw":20,"cost":{"ITEM_STEEL_PLATE":18,"ITEM_MOTOR":2,"ITEM_ADVANCED_CIRCUIT":4,"ITEM_CONTROL_MODULE":2},"recipe":"","kind":"harvester"},
+	"RESEARCH_LAB":{"name":"Research Lab","tier":2,"category":"Research","footprint":Vector2i(3,3),"power_kw":18,"cost":{"ITEM_IRON_PLATE":8,"ITEM_COPPER_WIRE":6,"ITEM_BASIC_CIRCUIT":2},"recipe":"","kind":"lab"},
 	"DORONUM_COMPRESSOR":{"name":"Doronum Compressor","tier":5,"category":"Doronum","footprint":Vector2i(6,6),"power_kw":1500,"cost":{"ITEM_STEEL_PLATE":50,"ITEM_TITANIUM_PLATE":25,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_CONTROL_MODULE":10,"ITEM_DORONUM_BLUE":5,"ITEM_DORONUM_RED":5,"ITEM_HEAT_CRYSTAL":10,"ITEM_COLD_CRYSTAL":10},"recipe":"DORONUM_NORMAL","kind":"doronium"},
-	"ULTRA_MATERIAL_PRESS":{"name":"Ultra Material Press","tier":6,"category":"Doronum","footprint":Vector2i(5,5),"power_kw":3000,"cost":{"ITEM_STEEL_PLATE":80,"ITEM_TITANIUM_PLATE":40,"ITEM_ULTRA_DORONUM":5,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_CONTROL_MODULE":10,"ITEM_THERMAL_CRYSTAL":5,"ITEM_COLD_CRYSTAL":5},"recipe":"","kind":"press"},
+	"ULTRA_MATERIAL_PRESS":{"name":"Ultra Material Press","tier":6,"category":"Doronum","footprint":Vector2i(5,5),"power_kw":3000,"cost":{"ITEM_STEEL_PLATE":80,"ITEM_TITANIUM_PLATE":40,"ITEM_DORONUM_ULTRA":5,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_CONTROL_MODULE":10,"ITEM_THERMAL_CRYSTAL":5,"ITEM_COLD_CRYSTAL":5},"recipe":"","kind":"press"},
 	"COOLING_TOWER":{"name":"Superconducting Cooling Tower","tier":6,"category":"Safety","footprint":Vector2i(4,4),"power_kw":60,"cost":{"ITEM_STEEL_PLATE":25,"ITEM_COPPER_WIRE":15,"ITEM_ADVANCED_CIRCUIT":8},"recipe":"","kind":"cooling"},
 	"POWER_BUFFER":{"name":"Independent Power Buffer","tier":6,"category":"Power","footprint":Vector2i(4,3),"power_kw":10,"cost":{"ITEM_STEEL_PLATE":30,"ITEM_BATTERY":12,"ITEM_ADVANCED_CIRCUIT":8},"recipe":"","kind":"power_buffer"},
 	"SHIELDING":{"name":"Isolation Shield","tier":6,"category":"Safety","footprint":Vector2i(4,4),"power_kw":10,"cost":{"ITEM_STEEL_PLATE":30,"ITEM_TITANIUM_PLATE":20,"ITEM_GLASS":10},"recipe":"","kind":"shielding"},
 	"EMERGENCY_CUTOFF":{"name":"Emergency Cutoff Circuit","tier":6,"category":"Safety","footprint":Vector2i(2,2),"power_kw":2,"cost":{"ITEM_ADVANCED_CIRCUIT":8,"ITEM_CONTROL_MODULE":4,"ITEM_SENSOR":4},"recipe":"","kind":"cutoff"},
-	"INFINITY_FUSION_MACHINE":{"name":"Infinity Fusion Machine","tier":7,"category":"Infinity","footprint":Vector2i(8,8),"power_kw":5000,"cost":{"ITEM_STEEL_PLATE":200,"ITEM_TITANIUM_PLATE":100,"ITEM_ULTRA_DORONUM":20,"ITEM_ADVANCED_CIRCUIT":50,"ITEM_CONTROL_MODULE":25,"ITEM_THERMAL_CRYSTAL":10,"ITEM_COLD_CRYSTAL":10,"ITEM_DORONUM_BLUE":10,"ITEM_DORONUM_IRON":10},"recipe":"INFINITY_FUSION","kind":"fusion"},
+	"INFINITY_FUSION_MACHINE":{"name":"Infinity Fusion Machine","tier":7,"category":"Infinity","footprint":Vector2i(8,8),"power_kw":5000,"cost":{"ITEM_STEEL_PLATE":200,"ITEM_TITANIUM_PLATE":100,"ITEM_DORONUM_ULTRA":20,"ITEM_ADVANCED_CIRCUIT":50,"ITEM_CONTROL_MODULE":25,"ITEM_THERMAL_CRYSTAL":10,"ITEM_COLD_CRYSTAL":10,"ITEM_DORONUM_BLUE":10,"ITEM_DORONUM_IRON":10},"recipe":"INFINITY_FUSION","kind":"fusion"},
 	"STABILIZATION_RELAY":{"name":"Planetary Stabilization Relay","tier":7,"category":"Infinity","footprint":Vector2i(3,3),"power_kw":20,"cost":{"ITEM_STEEL_PLATE":50,"ITEM_TITANIUM_PLATE":25,"ITEM_ADVANCED_CIRCUIT":10,"ITEM_CONTROL_MODULE":5,"ITEM_DORONUM_ORANGE":3,"ITEM_DORONUM_BLUE":2},"recipe":"","kind":"relay"},
 	"STABILIZATION_CORE":{"name":"Central Stabilization Core","tier":7,"category":"Infinity","footprint":Vector2i(5,5),"power_kw":40,"cost":{"ITEM_STEEL_PLATE":100,"ITEM_TITANIUM_PLATE":50,"ITEM_ADVANCED_CIRCUIT":25,"ITEM_CONTROL_MODULE":15,"ITEM_ULTRA_DORONUM":5,"ITEM_DORONUM_TRANSLUCENT":5,"ITEM_DORONUM_BLACK":5},"recipe":"","kind":"core"}
 }
@@ -192,7 +203,7 @@ const MACHINE_DEFS := {
 const RECIPES := {
 	"PLANT_ROPE":{"inputs":{"ITEM_PLANT_FIBER":3},"outputs":{"ITEM_PLANT_ROPE":1},"seconds":5,"machine":"WORKBENCH","tier":0},
 	"WOODEN_PICKAXE":{"inputs":{"ITEM_WOOD":5,"ITEM_STONE":2,"ITEM_PLANT_ROPE":2},"outputs":{"ITEM_WOODEN_PICKAXE":1},"seconds":8,"machine":"WORKBENCH","tier":0},
-	"WORKBENCH":{"inputs":{"ITEM_WOOD":12,"ITEM_STONE":6},"outputs":{"BUILDING_WORKBENCH":1},"seconds":10,"machine":"","tier":0},
+	"WORKBENCH":{"inputs":{"ITEM_WOOD":12,"ITEM_STONE":6},"outputs":{"ITEM_WORKBENCH_KIT":1},"seconds":10,"machine":"","tier":0},
 	"IRON_SMELTING":{"inputs":{"ITEM_IRON_ORE":2,"ITEM_COAL":1},"outputs":{"ITEM_MOLTEN_IRON":1},"seconds":12,"machine":"FURNACE","tier":1,"temperature":1538.0},
 	"IRON_COMPRESSION":{"inputs":{"ITEM_MOLTEN_IRON":1},"outputs":{"ITEM_IRON":1},"seconds":8,"machine":"COMPRESSOR","tier":2,"pressure":100.0},
 	"IRON_PLATE":{"inputs":{"ITEM_IRON":1},"outputs":{"ITEM_IRON_PLATE":1},"seconds":8,"machine":"ROLLING_MILL","tier":2},
@@ -272,7 +283,7 @@ func _process(delta: float) -> void:
 		_accumulator -= FIXED_TICK
 		simulation_tick += 1
 		simulation_tick_event()
-		simulation_tick.emit(simulation_tick)
+		tick_advanced.emit(simulation_tick)
 		safety_steps += 1
 
 func simulation_tick_event() -> void:
@@ -283,12 +294,15 @@ func _seed_starting_inventory() -> void:
 	add_item("ITEM_WOOD", 10, 90.0, 90.0, false, "STARTER")
 	add_item("ITEM_STONE", 6, 90.0, 90.0, false, "STARTER")
 	add_item("ITEM_GRASS", 8, 90.0, 90.0, false, "STARTER")
+	add_item("ITEM_CLAY", 6, 90.0, 90.0, false, "STARTER")
 	add_item("ITEM_PLANT_FIBER", 2, 90.0, 90.0, false, "STARTER")
 	add_item("ITEM_WATER", 4, 100.0, 100.0, false, "STARTER")
 	add_item("ITEM_COAL", 4, 85.0, 88.0, false, "STARTER")
 
+var _stack_sequence := 0
 func new_stack_id() -> String:
-	return "STACK-" + Crypto.new().generate_random_bytes(16).hex_encode().to_upper()
+	_stack_sequence += 1
+	return "STACK-%s-%08d" % [str(Time.get_unix_time_from_system()), _stack_sequence]
 
 func add_item(item_id: String, quantity: int, quality: float = 90.0, purity: float = 90.0, synthetic: bool = false, origin: String = "UNKNOWN") -> bool:
 	if quantity <= 0 or not ITEM_DATA.has(item_id):
