@@ -13,6 +13,7 @@ const POWER_BUFFER_CAPACITY_KJ := 1800000.0
 const POWER_BUFFER_MAX_DISCHARGE_KW := 5000.0
 const POWER_BUFFER_MAX_CHARGE_KW := 5000.0
 const MACHINE_IDLE_POWER_KW := 1.0
+const RELAY_SITE_XZ := [Vector2(-900,900),Vector2(920,-860),Vector2(930,900)]
 
 var world_generator: WorldGenerator3D
 var selected_building_type := ""
@@ -100,6 +101,13 @@ func can_place(machine_type: String, world_position: Vector3) -> bool:
 	if not GameState.can_afford(cost):
 		return false
 	var snap := _snap_position(world_position,machine_type)
+	if machine_type == "STABILIZATION_RELAY":
+		var on_site := false
+		for site_position in RELAY_SITE_XZ:
+			if Vector2(snap.x,snap.z).distance_to(site_position)<=18.0:
+				on_site = true
+		if not on_site:
+			return false
 	var footprint: Vector2i = data.get("footprint",Vector2i(2,2))
 	var half_x := float(footprint.x)*0.5
 	var half_z := float(footprint.y)*0.5
@@ -177,7 +185,11 @@ func _spawn_machine(record: Dictionary) -> void:
 			if str(relay.get("instance_id","")) == str(record.instance_id):
 				exists = true
 		if not exists:
-			GameState.relay_instances.append({"instance_id":record.instance_id,"position":record.position,"active":true,"power_ratio":0.0})
+			var site_index := -1
+			for i in range(RELAY_SITE_XZ.size()):
+				if Vector2(record.position.x,record.position.z).distance_to(RELAY_SITE_XZ[i])<=18.0:
+					site_index = i
+			GameState.relay_instances.append({"instance_id":record.instance_id,"site_id":site_index,"position":record.position,"active":true,"power_ratio":0.0})
 	if record.get("type","") == "STABILIZATION_CORE":
 		GameState.story_flags["CORE_MACHINE_PLACED"] = true
 
@@ -1097,10 +1109,14 @@ func install_infinity_core() -> bool:
 		GameState.toast("Infinity Doronum ×1을 인벤토리에 회수해야 합니다.","warning")
 		return false
 	var relays: Array = []
+	var active_sites: Dictionary = {}
 	for record in _records.values():
 		if str(record.type)=="STABILIZATION_RELAY" and float(record.get("power_ratio",0.0))>=0.8:
+			for site_index in range(RELAY_SITE_XZ.size()):
+				if Vector2(record.position.x,record.position.z).distance_to(RELAY_SITE_XZ[site_index])<=18.0:
+					active_sites[site_index]=true
 			relays.append(record)
-	if relays.size()<3:
+	if active_sites.size()<3:
 		GameState.toast("행성 에너지 노드의 안정화 릴레이 3개가 모두 가동 중이어야 합니다.","warning")
 		return false
 	var core: Dictionary = {}
@@ -1124,10 +1140,18 @@ func install_infinity_core() -> bool:
 func _tick_stabilization() -> void:
 	if GameState.stabilization_state!="STABILIZING":
 		return
-	var active_relays := 0
+	var active_sites: Dictionary = {}
 	for relay in _records.values():
 		if str(relay.type)=="STABILIZATION_RELAY" and float(relay.get("power_ratio",0.0))>=0.8:
-			active_relays+=1
+			var site_index := -1
+			for i in range(RELAY_SITE_XZ.size()):
+				if Vector2(relay.position.x,relay.position.z).distance_to(RELAY_SITE_XZ[i])<=18.0:
+					site_index=i
+			if site_index>=0:
+				active_sites[site_index]=true
+	var active_relays := active_sites.size()
+	if active_relays>=3:
+		GameState.story_flags["THREE_RELAYS_ACTIVE"]=true
 	if active_relays<3:
 		GameState.stabilization_state="PAUSED_RELAY"
 		GameState.toast("릴레이 연결이 불안정합니다. 세 지점의 전력을 확인하세요.","warning")
