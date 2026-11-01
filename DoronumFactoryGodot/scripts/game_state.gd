@@ -540,18 +540,31 @@ func find_lore(lore_id: String) -> void:
 
 func save_game() -> void:
 	var data := {
-		"version":GameData.SAVE_VERSION,"world_seed":world_seed,"player_position":[player_position.x,player_position.y,player_position.z],"equipped_tool":equipped_tool,
+		"version":GameData.SAVE_VERSION,"world_seed":world_seed,
+		"player_position":[player_position.x,player_position.y,player_position.z],"equipped_tool":equipped_tool,
 		"inventory":inventory,"buildings":buildings,"discovered_nodes":discovered_nodes,
 		"research_completed":research_completed,"active_research":active_research,"research_progress":research_progress,
 		"research_points":research_points,"story_flags":story_flags,"lore_found":lore_found,
-		"fusion":fusion,"fusion_diagnostics":fusion_diagnostics,"relays":relays,"core_installed":core_installed,"stabilization_phase":stabilization_phase,
-		"ending_complete":ending_complete,"post_endgame":post_endgame,"production_history":production_history,
-		"event_ids":_event_ids,"next_stack_id":_next_stack_id
+		"fusion":fusion,"fusion_diagnostics":fusion_diagnostics,"relays":relays,
+		"core_installed":core_installed,"stabilization_phase":stabilization_phase,
+		"ending_complete":ending_complete,"post_endgame":post_endgame,
+		"production_history":production_history,"event_ids":_event_ids,"next_stack_id":_next_stack_id
 	}
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file:
-		file.store_string(JSON.stringify(data))
-		file.flush()
+	data["checksum"] = hash(JSON.stringify(data))
+	var temporary_path := SAVE_PATH + ".tmp"
+	var file := FileAccess.open(temporary_path,FileAccess.WRITE)
+	if file == null:
+		notification.emit("저장 실패 · 임시 파일을 열 수 없어.")
+		return
+	file.store_string(JSON.stringify(data))
+	file.flush()
+	file.close()
+	if FileAccess.file_exists(SAVE_PATH):
+		DirAccess.copy_absolute(SAVE_PATH,SAVE_PATH+".bak")
+		DirAccess.remove_absolute(SAVE_PATH)
+	var error := DirAccess.rename_absolute(temporary_path,SAVE_PATH)
+	if error != OK:
+		notification.emit("저장 교체 실패 · 백업 파일은 보존했어.")
 
 func load_game() -> void:
 	if not FileAccess.file_exists(SAVE_PATH):
