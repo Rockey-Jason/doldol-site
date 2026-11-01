@@ -35,6 +35,8 @@ func _fixed_tick(dt: float) -> void:
 	for machine in game.buildings:
 		if machine.id == "RESEARCH_LAB" and not game.active_research.is_empty():
 			total_consumption += 25.0
+		elif machine.id in ["AUTO_MINER","WATER_PUMP","DORI_MEAT_HARVESTER"]:
+			total_consumption += float(GameData.building_definition(machine.id).get("power",10.0))
 		elif not str(machine.get("recipe", "")).is_empty():
 			var recipe: Dictionary = GameData.recipe_definition(machine.recipe)
 			total_consumption += float(recipe.get("power", 10.0))
@@ -51,7 +53,16 @@ func _fixed_tick(dt: float) -> void:
 		game.save_game()
 
 func _tick_machine(machine: Dictionary, dt: float) -> void:
-	if machine.id in ["GENERATOR", "SOLAR_PANEL", "WIND_TURBINE", "CONVEYOR", "WAREHOUSE", "STABILIZATION_RELAY", "STABILIZATION_CORE"]:
+	if machine.id == "AUTO_MINER":
+		_tick_auto_miner(machine,dt)
+		return
+	if machine.id == "WATER_PUMP":
+		_tick_water_pump(machine,dt)
+		return
+	if machine.id == "DORI_MEAT_HARVESTER":
+		_tick_dori_harvester(machine,dt)
+		return
+	if machine.id in ["GENERATOR", "SOLAR_PANEL", "WIND_TURBINE", "CONVEYOR", "WAREHOUSE", "STABILIZATION_RELAY", "STABILIZATION_CORE","INFINITY_FUSION_MACHINE"]:
 		return
 	if machine.get("output", []).size() > 0:
 		machine.state = "PAUSED_OUTPUT"
@@ -65,10 +76,7 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 		machine.state = "INVALID_RECIPE"
 		return
 	if not machine.get("job_started", false):
-		if not game.can_afford(recipe.inputs):
-			machine.state = "WAITING_INPUT"
-			return
-		if not game.consume_items(recipe.inputs):
+		if not _consume_machine_inputs(machine,recipe.inputs):
 			machine.state = "WAITING_INPUT"
 			return
 		machine.job_started = true
@@ -109,6 +117,149 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	if game.production_history.size() > 1000:
 		game.production_history.pop_front()
 	game.state_changed.emit()
+
+func _consume_machine_inputs(machine: Dictionary, inputs: Dictionary) -> bool:
+	var buffer_snapshot: Array = machine.input.duplicate(true)
+	var inventory_snapshot: Array = game.inventory.duplicate(true)
+	for item_id in inputs:
+		var remaining := int(inputs[item_id])
+		for stack in machine.input:
+			if stack.item_id != item_id or remaining <= 0:
+				continue
+			var take := mini(remaining,int(stack.quantity))
+			stack.quantity -= take
+			remaining -= take
+		machine.input = machine.input.filter(func(s): return int(s.quantity)>0)
+		if remaining > 0 and not game.consume_items({item_id:remaining}):
+			machine.input = buffer_snapshot
+			game.inventory = inventory_snapshot
+			return false
+	return true
+
+func _tick_auto_miner(machine: Dictionary, dt: float) -> void:
+	if not machine.output.is_empty():
+		machine.state = "PAUSED_OUTPUT"
+		return
+	if last_power_ratio < 0.8:
+		machine.state = "PAUSED_POWER"
+		return
+	if world == null:
+		machine.state = "WAITING_WORLD"
+		return
+	var target: Area3D = null
+	var target_id := str(machine.get("target",""))
+	for node in world.resources:
+		if not is_instance_valid(node) or int(node.get_meta("quantity",0)) <= 0:
+			continue
+		if str(node.get_meta("node_id","")) == target_id:
+			target = node
+			break
+	if target == null:
+		var candidates: Array[Area3D] = []
+		for node in world.resources:
+			if not is_instance_valid(node) or int(node.get_meta("quantity",0)) <= 0:
+				continue
+			var item_id := str(node.get_meta("resource_id",""))
+			if item_id not in ["ITEM_IRON_ORE","ITEM_COPPER_ORE","ITEM_COAL","ITEM_QUARTZ","ITEM_GOLD_ORE","ITEM_DIAMOND","ITEM_TITANIUM_ORE","ITEM_NEODYMIUM_ORE","ITEM_MAGNETITE"]:
+				continue
+			candidates.append(node)
+		candidates.sort_custom(func(a,b):
+			return a.global_position.distance_squared_to(machine.position) < b.global_position.distance_squared_to(machine.position)
+		)
+		if not candidates.is_empty():
+			target = candidates[0]
+			machine.target = str(target.get_meta("node_id",""))
+	if target == null:
+		machine.state = "WAITING_ORE"
+		return
+	machine.mining_progress = float(machine.get("mining_progress",0.0)) + dt * minf(1.0,last_power_ratio)
+	machine.state = "MINING"
+	if machine.mining_progress < 8.0:
+		return
+	machine.mining_progress = 0.0
+	var item_id := str(target.get_meta("resource_id"))
+	var remaining := int(target.get_meta("quantity",0))
+	var stack := {
+		"item_id":item_id,"quantity":1,"quality":float(target.get_meta("quality",90.0)),
+		"purity":float(target.get_meta("purity",90.0)),"synthetic":false,
+		"provenance":"AUTO_MINER:"+str(target.get_meta("node_id"))
+	}
+	machine.output.append(stack)
+	target.set_meta("quantity",remaining-1)
+	game.discover_resource(str(target.get_meta("node_id")),item_id)
+	if remaining-1 <= 0:
+		target.queue_free()
+	machine.cycles = int(machine.get("cycles",0))+1
+	game.story_flags["AUTOMATION_CYCLES"] = int(game.story_flags.get("AUTOMATION_CYCLES",0))+1
+	machine.state = "PAUSED_OUTPUT"
+
+func _tick_water_pump(machine: Dictionary, dt: float) -> void:
+	if not machine.output.is_empty():
+		machine.state = "PAUSED_OUTPUT"
+		return
+	if last_power_ratio < 0.8 or world == null:
+		machine.state = "PAUSED_POWER"
+		return
+	var water_node: Area3D = null
+	for node in world.resources:
+		if is_instance_valid(node) and node.get_meta("resource_id","")=="ITEM_WATER" and int(node.get_meta("quantity",0))>=2:
+			if node.global_position.distance_to(machine.position) <= 24.0:
+				water_node = node
+				break
+	if water_node == null:
+		machine.state = "WAITING_WATER_SOURCE"
+		return
+	machine.progress = float(machine.get("progress",0.0))+dt*minf(1.0,last_power_ratio)
+	machine.state = "PUMPING"
+	if machine.progress < 5.0:
+		return
+	machine.progress = 0.0
+	water_node.set_meta("quantity",int(water_node.get_meta("quantity"))-2)
+	machine.output.append({"item_id":"ITEM_WATER","quantity":2,"quality":100.0,"purity":100.0,"synthetic":false,"provenance":"WATER_PUMP:"+str(machine.instance_id)})
+	machine.state = "PAUSED_OUTPUT"
+
+func _tick_dori_harvester(machine: Dictionary, dt: float) -> void:
+	if not machine.output.is_empty():
+		machine.state = "PAUSED_OUTPUT"
+		return
+	if last_power_ratio < 0.8 or world == null:
+		machine.state = "PAUSED_POWER"
+		return
+	var tree: Area3D = null
+	var target_id := str(machine.get("target",""))
+	for candidate in world.dori_trees:
+		if not is_instance_valid(candidate):
+			continue
+		if str(candidate.get_meta("node_id","")) == target_id:
+			tree = candidate
+			break
+	if tree == null:
+		var trees := world.dori_trees.filter(func(t): return is_instance_valid(t))
+		trees.sort_custom(func(a,b):
+			return a.global_position.distance_squared_to(machine.position) < b.global_position.distance_squared_to(machine.position)
+		)
+		if not trees.is_empty():
+			tree = trees[0]
+			machine.target = str(tree.get_meta("node_id",""))
+	if tree == null:
+		machine.state = "WAITING_TREE"
+		return
+	if bool(tree.get_meta("mature",false)):
+		machine.output.append({"item_id":"ITEM_DORI_MEAT","quantity":1,"quality":92.0,"purity":float(tree.get_meta("purity",90.0)),"synthetic":false,"provenance":"DORI_TREE:"+str(tree.get_meta("node_id"))})
+		tree.set_meta("mature",false)
+		tree.set_meta("growth",0.0)
+		tree.set_meta("water",0.0)
+		tree.set_meta("cycle",int(tree.get_meta("cycle",0))+1)
+		machine.state = "PAUSED_OUTPUT"
+		game.story_flags["DORI_MEAT_DISCOVERED"] = true
+		return
+	if float(tree.get_meta("water",0.0)) < 2.0:
+		if not _consume_machine_inputs(machine,{"ITEM_WATER":2}):
+			machine.state = "WAITING_WATER"
+			return
+		tree.set_meta("water",2.0)
+		tree.set_meta("growth",0.0)
+	machine.state = "GROWING_TREE"
 
 func _tick_conveyors(dt: float) -> void:
 	for belt in game.buildings:
