@@ -27,7 +27,7 @@ func tick(dt: float) -> void:
 		elif machine.id == "INFINITY_FUSION_MACHINE" and not game.fusion.is_empty():
 			total_consumption += float(GameData.FUSION_STAGES[int(game.fusion.stage)].power)
 		elif not str(machine.get("recipe", "")).is_empty():
-			var recipe: Dictionary = GameData.RECIPES.get(machine.recipe, {})
+			var recipe: Dictionary = GameData.recipe_definition(machine.recipe, {})
 			total_consumption += float(recipe.get("power", 10.0))
 	game.total_power_generated = total_generation
 	game.total_power_used = total_consumption
@@ -48,7 +48,7 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	if recipe_id.is_empty():
 		machine.state = "IDLE"
 		return
-	var recipe: Dictionary = GameData.RECIPES.get(recipe_id, {})
+	var recipe: Dictionary = GameData.recipe_definition(recipe_id, {})
 	if recipe.is_empty() or recipe.machine != machine.id:
 		machine.state = "INVALID_RECIPE"
 		return
