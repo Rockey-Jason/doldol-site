@@ -62,6 +62,7 @@ namespace DoronumFactory
         public float ProgressSeconds;
         public bool Completed;
         public bool Running;
+        public List<ItemStackData> ReservedSamples = new List<ItemStackData>();
     }
 
     [Serializable]
