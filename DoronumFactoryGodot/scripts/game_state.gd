@@ -13,6 +13,8 @@ var equipped_tool := "ITEM_TOOL_HANDS"
 var inventory: Array[Dictionary] = []
 var buildings: Array[Dictionary] = []
 var discovered_nodes: Dictionary = {}
+var resource_depletion: Dictionary = {}
+var tree_states: Dictionary = {}
 var research_completed: Array[String] = ["RESEARCH_BASIC_SURVIVAL"]
 var active_research := ""
 var research_progress := 0.0
@@ -221,6 +223,47 @@ func _is_unlocked(building_id: String) -> bool:
 			return false
 	return true
 
+func apply_world_state(planet: PlanetWorld) -> void:
+	for node in planet.resources:
+		if not is_instance_valid(node):
+			continue
+		var node_id := str(node.get_meta("node_id",""))
+		if resource_depletion.has(node_id):
+			var remaining := int(resource_depletion[node_id])
+			node.set_meta("quantity",remaining)
+			if remaining<=0:
+				node.queue_free()
+	for tree in planet.dori_trees:
+		if not is_instance_valid(tree):
+			continue
+		var tree_id := str(tree.get_meta("node_id",""))
+		if not tree_states.has(tree_id):
+			continue
+		var state: Dictionary = tree_states[tree_id]
+		for key in ["growth","water","mature","cycle","purity"]:
+			if state.has(key):
+				tree.set_meta(key,state[key])
+		var fruit := tree.get_node_or_null("DoriMeatFruit")
+		if fruit:
+			fruit.visible = bool(tree.get_meta("mature",false))
+
+func sync_world_state(planet: PlanetWorld) -> void:
+	for node in planet.resources:
+		if not is_instance_valid(node):
+			continue
+		resource_depletion[str(node.get_meta("node_id",""))] = int(node.get_meta("quantity",0))
+	for tree in planet.dori_trees:
+		if not is_instance_valid(tree):
+			continue
+		var tree_id := str(tree.get_meta("node_id",""))
+		tree_states[tree_id] = {
+			"growth":float(tree.get_meta("growth",0.0)),
+			"water":float(tree.get_meta("water",0.0)),
+			"mature":bool(tree.get_meta("mature",false)),
+			"cycle":int(tree.get_meta("cycle",0)),
+			"purity":float(tree.get_meta("purity",90.0))
+		}
+
 func discover_resource(node_id: String, item_id: String) -> void:
 	if discovered_nodes.has(node_id):
 		return
@@ -264,6 +307,7 @@ func grant_skill_point(claim_id: String,source: String) -> bool:
 	skill_points += 1
 	skill_point_ledger.append({"claim_id":event_id,"amount":1,"source":source,"created_at_tick":simulation_tick})
 	notification.emit("Skill Point +1 · "+source)
+	save_game()
 	state_changed.emit()
 	return true
 
@@ -871,7 +915,7 @@ func save_game() -> void:
 		"world_generator_version":1,"simulation_rules_version":1,"save_id":save_id,
 		"save_revision":save_revision,"simulation_tick":simulation_tick,"world_seed":world_seed,
 		"player_position":[player_position.x,player_position.y,player_position.z],"equipped_tool":equipped_tool,
-		"inventory":inventory,"buildings":buildings,"discovered_nodes":discovered_nodes,
+		"inventory":inventory,"buildings":buildings,"discovered_nodes":discovered_nodes,"resource_depletion":resource_depletion,"tree_states":tree_states,
 		"research_completed":research_completed,"active_research":active_research,"research_progress":research_progress,
 		"research_points":research_points,"story_flags":story_flags,"lore_found":lore_found,
 		"fusion":fusion,"fusion_diagnostics":fusion_diagnostics,"relays":relays,
@@ -954,6 +998,8 @@ func load_game() -> void:
 	inventory.assign(parsed.get("inventory", []))
 	buildings.assign(parsed.get("buildings", []))
 	discovered_nodes = parsed.get("discovered_nodes", {})
+	resource_depletion = parsed.get("resource_depletion",{})
+	tree_states = parsed.get("tree_states",{})
 	research_completed.assign(parsed.get("research_completed", ["RESEARCH_BASIC_SURVIVAL"]))
 	active_research = str(parsed.get("active_research", ""))
 	research_progress = float(parsed.get("research_progress", 0.0))
