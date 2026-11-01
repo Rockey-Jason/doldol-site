@@ -99,6 +99,7 @@ func _process(delta: float) -> void:
 	if player != null:
 		game.player_position = player.global_position
 	_animate_buildings(delta)
+	_update_story_progress()
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo:
@@ -266,6 +267,18 @@ func _on_player_interact(target: Object, hit_position: Vector3) -> void:
 				return
 		hud.open_tab("FACTORY")
 		return
+	if node.has_meta("lore_id"):
+		game.find_lore(str(node.get_meta("lore_id")))
+		return
+	if node.has_meta("restore_flag"):
+		var restore_flag := str(node.get_meta("restore_flag"))
+		game.story_flags[restore_flag] = true
+		game.notification.emit("First Factory 복구 · "+restore_flag)
+		var restored := ["ARCHIVE_RESTORED","COOLING_CORE_RESTORED","RESONANCE_CHAMBER_RESTORED"]
+		if restored.all(func(flag): return bool(game.story_flags.get(flag,false))):
+			game.story_flags["ACT_V_COMPLETE"] = true
+			game.notification.emit("FIRST FACTORY · Archive / Cooling / Resonance restored")
+		return
 	if node.has_meta("poi_name"):
 		var poi := str(node.get_meta("poi_name"))
 		game.notification.emit("관심 지점 발견 · "+poi)
@@ -307,6 +320,21 @@ func _update_tree_visuals() -> void:
 		var water := float(tree.get_meta("water",0.0))
 		if not bool(tree.get_meta("mature",false)) and water >= 2.0:
 			tree.set_meta("growth",minf(60.0,growth))
+
+func _update_story_progress() -> void:
+	if not bool(game.story_flags.get("ACT_I_COMPLETE",false)):
+		var has_workbench := game.buildings.any(func(b): return b.id=="WORKBENCH")
+		var has_furnace := game.buildings.any(func(b): return b.id=="FURNACE")
+		if has_workbench and has_furnace and game.equipped_tool!="ITEM_TOOL_HANDS":
+			game.story_flags["ACT_I_COMPLETE"] = true
+			game.notification.emit("ACT I complete · The Ruins")
+	if int(game.story_flags.get("AUTOMATION_CYCLES",0)) >= 5 and not bool(game.story_flags.get("ACT_II_COMPLETE",false)):
+		game.story_flags["ACT_II_COMPLETE"] = true
+		game.notification.emit("ACT II complete · The Hidden Industry")
+	if bool(game.story_flags.get("STORY_INCIDENT_RECONSTRUCTED",false)) and bool(game.story_flags.get("ACT_V_COMPLETE",false)) and "RESEARCH_DORONUM_FUSION" in game.research_completed:
+		game.story_flags["ORBIT_04"] = true
+	if game.fusion_diagnostics.values().all(func(value): return bool(value)):
+		game.story_flags["ACT_VI_COMPLETE"] = true
 
 func _play_ending() -> void:
 	game.simulation_paused = true
