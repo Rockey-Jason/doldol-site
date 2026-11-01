@@ -124,12 +124,18 @@ func repair_equipped_tool() -> bool:
 	return true
 
 func add_item(item_id: String, quantity: int, quality: float = 90.0, purity: float = 90.0, synthetic: bool = false, provenance: String = "UNKNOWN") -> void:
-	if quantity <= 0:
+	if quantity<=0:
+		return
+	if not GameData.ITEMS.has(item_id) and item_id not in GameData.DORONUM_IDS:
+		notification.emit("아이템 데이터 오류 · 알 수 없는 ID "+item_id)
+		return
+	if not is_finite(quality) or not is_finite(purity) or quality<0.0 or quality>100.0 or purity<0.0 or purity>100.0:
+		notification.emit("아이템 데이터 오류 · Quality/Purity는 유한한 0–100 값이어야 해.")
 		return
 	inventory.append({
-		"stack_id": _new_stack_id(), "item_id": item_id, "quantity": quantity,
-		"quality": clampf(quality, 0.0, 100.0), "purity": clampf(purity, 0.0, 100.0),
-		"synthetic": synthetic, "provenance": provenance, "reserved": 0
+		"stack_id":_new_stack_id(),"item_id":item_id,"quantity":quantity,
+		"quality":quality,"purity":purity,"synthetic":synthetic,
+		"provenance":provenance,"reserved":0
 	})
 	notification.emit("+%d %s" % [quantity, GameData.item_name(item_id)])
 	state_changed.emit()
@@ -693,7 +699,7 @@ func fusion_preflight() -> Array[String]:
 	for item_id in GameData.DORONUM_IDS:
 		var total := 0
 		for stack in inventory:
-			if stack.item_id != item_id or bool(stack.synthetic) or float(stack.quality)<90.0 or float(stack.purity)<90.0:
+			if stack.item_id != item_id or bool(stack.synthetic) or not is_finite(float(stack.quality)) or not is_finite(float(stack.purity)) or float(stack.quality)<90.0 or float(stack.quality)>100.0 or float(stack.purity)<90.0 or float(stack.purity)>100.0:
 				continue
 			total += int(stack.quantity)-int(stack.get("reserved",0))
 		if total < 100:
@@ -713,7 +719,7 @@ func start_infinity_fusion() -> bool:
 	for item_id in GameData.DORONUM_IDS:
 		var remaining := 100
 		for stack in inventory:
-			if stack.item_id != item_id or bool(stack.synthetic) or float(stack.quality)<90.0 or float(stack.purity)<90.0:
+			if stack.item_id != item_id or bool(stack.synthetic) or not is_finite(float(stack.quality)) or not is_finite(float(stack.purity)) or float(stack.quality)<90.0 or float(stack.quality)>100.0 or float(stack.purity)<90.0 or float(stack.purity)>100.0:
 				continue
 			var take := mini(remaining,int(stack.quantity)-int(stack.get("reserved",0)))
 			if take <= 0:
