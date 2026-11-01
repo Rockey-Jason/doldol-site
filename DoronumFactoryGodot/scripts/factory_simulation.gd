@@ -51,21 +51,28 @@ func _fixed_tick(dt: float) -> void:
 			"SOLAR_PANEL": total_generation += 80.0*daylight
 			"WIND_TURBINE": total_generation += 100.0*(0.65+0.35*sin(world_time*TAU*2.7))
 	for machine in game.buildings:
-		if machine.id == "RESEARCH_LAB" and not game.active_research.is_empty():
-			total_consumption += 25.0
-		elif machine.id in ["AUTO_MINER","WATER_PUMP","DORI_MEAT_HARVESTER"]:
-			total_consumption += float(GameData.building_definition(machine.id).get("power",10.0))
-		elif machine.id == "CONVEYOR":
-			total_consumption += 1.0
-		elif machine.id == "WAREHOUSE":
-			total_consumption += 5.0
-		elif machine.id == "STABILIZATION_RELAY" and game.relays.any(func(r): return r.instance_id==machine.instance_id and r.active):
-			total_consumption += 100.0
-		elif machine.id == "STABILIZATION_CORE" and game.core_installed:
-			total_consumption += 500.0
-		elif not str(machine.get("recipe", "")).is_empty():
-			var recipe: Dictionary = GameData.recipe_definition(machine.recipe)
-			total_consumption += float(recipe.get("power", 10.0))
+		if machine.id in ["GENERATOR","SOLAR_PANEL","WIND_TURBINE","INFINITY_FUSION_MACHINE"]:
+			continue
+		if machine.id=="RESEARCH_LAB":
+			if not game.active_research.is_empty():
+				total_consumption += 25.0
+			continue
+		if machine.id=="STABILIZATION_RELAY":
+			if game.relays.any(func(r): return r.instance_id==machine.instance_id and bool(r.active)):
+				total_consumption += 100.0
+			continue
+		if machine.id=="STABILIZATION_CORE":
+			if game.core_installed:
+				total_consumption += 500.0
+			continue
+		var definition: Dictionary = GameData.building_definition(str(machine.id))
+		var idle_power := maxf(0.0,float(definition.get("power",0.0)))
+		var recipe_id := str(machine.get("recipe",""))
+		if not recipe_id.is_empty():
+			var recipe: Dictionary = GameData.recipe_definition(recipe_id)
+			total_consumption += maxf(idle_power,float(recipe.get("power",0.0)))
+		else:
+			total_consumption += idle_power
 	var base_consumption := total_consumption
 	var surplus := maxf(0.0,total_generation-base_consumption)
 	var has_buffer := game.buildings.any(func(m): return m.id=="FUSION_POWER_BUFFER" and float(m.condition)>0.0)
