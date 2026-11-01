@@ -119,7 +119,7 @@ func _unhandled_input(event: InputEvent) -> void:
 					game.simulation_paused = not game.simulation_paused
 					game.notification.emit("일시 정지" if game.simulation_paused else "시뮬레이션 재개")
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		if build_mode and not selected_building.is_empty() and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		if build_mode and not selected_building.is_empty() and Input.mouse_mode == Input.MOUSE_MODE_VISIBLE:
 			_try_place_building()
 
 func _select_building(building_id: String) -> void:
