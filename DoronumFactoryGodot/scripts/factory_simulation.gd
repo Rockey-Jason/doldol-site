@@ -122,6 +122,15 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	if recipe.is_empty() or recipe.machine != machine.id:
 		machine.state = "INVALID_RECIPE"
 		return
+	if recipe.has("story") and not bool(game.story_flags.get(str(recipe.story),false)):
+		machine.state = "BLOCKED_STORY"
+		return
+	if int(recipe.get("supply_cap",0))>0:
+		var output_id := str(recipe.outputs.keys()[0])
+		var supply_key := "DORONUM_SUPPLY:"+output_id
+		if int(game.story_flags.get(supply_key,0))>=int(recipe.supply_cap):
+			machine.state = "SUPPLY_CAP_REACHED"
+			return
 	if not machine.get("job_started", false):
 		if not _consume_machine_inputs(machine,recipe.inputs,bool(recipe.get("allow_synthetic",true))):
 			machine.state = "WAITING_INPUT"
@@ -175,6 +184,9 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	for input_lot in machine.get("job_inputs",[]):
 		synthetic = synthetic or bool(input_lot.synthetic)
 	for output_id in recipe.outputs:
+		if int(recipe.get("supply_cap",0))>0:
+			var supply_key := "DORONUM_SUPPLY:"+str(output_id)
+			game.story_flags[supply_key] = int(game.story_flags.get(supply_key,0))+int(recipe.outputs[output_id])
 		machine.output.append({
 			"item_id":output_id,"quantity":int(recipe.outputs[output_id]),
 			"quality":q,"purity":p,"synthetic":synthetic,
