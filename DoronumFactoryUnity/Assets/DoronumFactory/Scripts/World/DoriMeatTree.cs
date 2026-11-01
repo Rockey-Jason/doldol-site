@@ -17,6 +17,10 @@ namespace DoronumFactory
             game=bootstrap; TreeId=id;
             data=saved??new DoriTreeState { TreeId=id,WaterLitres=0f,GrowthSeconds=0f,Cycle=0,Mature=false,Purity=90f };
             CreateVisual();
+            var interaction=gameObject.AddComponent<CapsuleCollider>();
+            interaction.center=new Vector3(0f,1.7f,0f);
+            interaction.radius=1.1f;
+            interaction.height=3.8f;
         }
 
         public void Advance(float deltaSeconds)
