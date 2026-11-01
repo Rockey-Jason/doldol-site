@@ -44,10 +44,54 @@ namespace DoronumFactory
             var machine=state.Machines.Find(x=>x.InstanceId==instanceId);
             if (machine==null || !FactoryCatalog.Recipes.TryGetValue(recipeId,out var recipe) ||
                 recipe.MachineId!=machine.MachineId || machine.CompletionBuffer.Count>0) return false;
+            if(!MachineCatalog.All.TryGetValue(machine.MachineId,out var machineDef) ||
+                !MachineCatalog.IsUnlocked(machineDef,state) || recipe.Tier>CurrentResearchTier()) return false;
             machine.RecipeId=recipeId;
             machine.State="IDLE";
             MachineChanged?.Invoke(machine);
             return true;
+        }
+
+        public bool CraftManual(string recipeId)
+        {
+            if(!FactoryCatalog.Recipes.TryGetValue(recipeId,out var recipe) ||
+                !string.IsNullOrEmpty(recipe.MachineId) || recipe.Tier>CurrentResearchTier()) return false;
+            var snapshot=inventory.Snapshot();
+            var reserved=new List<ItemStackData>();
+            foreach(var input in recipe.Inputs)
+            {
+                if(!inventory.TryReserveEligible(input.ItemId,input.Quantity,0f,0f,recipe.AllowSyntheticInput,out var selected))
+                {
+                    inventory.RestoreSnapshot(snapshot);
+                    return false;
+                }
+                reserved.AddRange(selected);
+            }
+            float qSum=0f,qWeight=0f,pSum=0f,pWeight=0f;
+            foreach(var stack in reserved)
+            {
+                var input=recipe.Inputs.FirstOrDefault(x=>x.ItemId==stack.ItemId);
+                float mw=input==null?1f:input.MaterialWeight;
+                float pw=input==null?1f:input.PurityWeight;
+                qSum+=stack.Quality*stack.Quantity*mw;qWeight+=stack.Quantity*mw;
+                pSum+=stack.Purity*stack.Quantity*pw;pWeight+=stack.Quantity*pw;
+            }
+            float materialQ=qWeight<=0f?90f:qSum/qWeight;
+            float materialP=pWeight<=0f?90f:pSum/pWeight;
+            float quality=Mathf.Clamp(materialQ*0.4f+60f+recipe.QualityModifier,0f,100f);
+            float purity=Mathf.Clamp(materialP-recipe.PurityLoss+recipe.PurificationBonus,0f,100f);
+            foreach(var output in recipe.Outputs)
+                inventory.Add(output.ItemId,output.Quantity,quality,purity,reserved.Exists(x=>x.Synthetic),"MANUAL_RECIPE:"+recipe.Id);
+            int rp=RecipeRp(recipe);
+            if(state.TryClaim("FIRST_RECIPE_SUCCESS:"+recipe.Id,"FIRST_RECIPE_SUCCESS",rp))
+                state.ResearchPoints+=rp;
+            return true;
+        }
+
+        private int CurrentResearchTier()
+        {
+            return FactoryCatalog.Research.Where(r=>state.Research.Exists(p=>p.ResearchId==r.Id && p.Completed))
+                .Select(r=>r.Tier).DefaultIfEmpty(0).Max();
         }
 
         public bool CollectOutput(string instanceId)
