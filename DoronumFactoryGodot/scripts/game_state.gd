@@ -181,25 +181,53 @@ func craft_manual(recipe_id: String) -> bool:
 	var recipe: Dictionary = GameData.MANUAL_RECIPES.get(recipe_id,{})
 	if recipe.is_empty():
 		return false
-	var lots := consume_items_with_lots(recipe.inputs,true)
+	var profile: Dictionary = recipe.get("quality_profile",{})
+	for score_key in ["temperature_quality","pressure_quality","machine_condition_quality","power_stability"]:
+		if not profile.has(score_key) or not is_finite(float(profile[score_key])) or float(profile[score_key])<0.0 or float(profile[score_key])>100.0:
+			notification.emit("수동 제작 QualityProfile 오류 · "+score_key)
+			return false
+	var modifier := float(profile.get("recipe_quality_modifier",0.0))
+	var pollution := float(profile.get("pollution_penalty",0.0))
+	if not is_finite(modifier) or modifier < -20.0 or modifier > 20.0 or not is_finite(pollution) or pollution<0.0 or pollution>100.0:
+		notification.emit("수동 제작 QualityProfile 범위 오류")
+		return false
+	var lots: Array[Dictionary] = consume_items_with_lots(recipe.inputs,true)
 	if lots.is_empty():
 		notification.emit("재료가 부족해.")
 		return false
-	var quality_sum := 0.0
-	var purity_sum := 0.0
-	var quantity_sum := 0
+	var material_weights: Dictionary = recipe.get("material_weights",{})
+	var purity_weights: Dictionary = recipe.get("purity_weights",{})
+	var material_total := 0.0
+	var material_weight_sum := 0.0
+	var purity_total := 0.0
+	var purity_weight_sum := 0.0
 	var synthetic := false
 	for lot in lots:
+		var item_id := str(lot.item_id)
 		var quantity := int(lot.quantity)
-		quality_sum += float(lot.quality)*quantity
-		purity_sum += float(lot.purity)*quantity
-		quantity_sum += quantity
+		var material_weight := float(material_weights.get(item_id,-1.0))
+		var purity_weight := float(purity_weights.get(item_id,-1.0))
+		if not is_finite(material_weight) or material_weight<0.0 or not is_finite(purity_weight) or purity_weight<0.0:
+			notification.emit("수동 제작 Weight 데이터 오류 · "+item_id)
+			return false
+		material_total += float(lot.quality)*quantity*material_weight
+		material_weight_sum += quantity*material_weight
+		purity_total += float(lot.purity)*quantity*purity_weight
+		purity_weight_sum += quantity*purity_weight
 		synthetic = synthetic or bool(lot.synthetic)
-	var material_quality := 90.0 if quantity_sum<=0 else quality_sum/quantity_sum
-	var material_purity := 90.0 if quantity_sum<=0 else purity_sum/quantity_sum
-	var output_quality := clampf(material_quality*0.40+100.0*0.60,0.0,100.0)
+	if material_weight_sum<=0.0 and not recipe.has("base_material_quality"):
+		notification.emit("BaseMaterialQuality가 없어 제작을 중단했어.")
+		return false
+	if purity_weight_sum<=0.0 and not recipe.has("base_output_purity"):
+		notification.emit("BaseOutputPurity가 없어 제작을 중단했어.")
+		return false
+	var material_quality := float(recipe.get("base_material_quality",0.0)) if material_weight_sum<=0.0 else material_total/material_weight_sum
+	var output_purity_input := float(recipe.get("base_output_purity",0.0)) if purity_weight_sum<=0.0 else purity_total/purity_weight_sum
+	var raw_quality := material_quality*0.40+float(profile.temperature_quality)*0.20+float(profile.pressure_quality)*0.20+float(profile.machine_condition_quality)*0.10+float(profile.power_stability)*0.10+modifier
+	var output_quality := clampf(raw_quality-pollution,0.0,100.0)
+	var output_purity := clampf(output_purity_input-float(recipe.get("purity_loss",0.0))+float(recipe.get("purification_bonus",0.0))+float(recipe.get("output_purity_modifier",0.0)),0.0,100.0)
 	for output_id in recipe.outputs:
-		add_item(output_id,int(recipe.outputs[output_id]),output_quality,material_purity,synthetic,"MANUAL_RECIPE:"+recipe_id)
+		add_item(output_id,int(recipe.outputs[output_id]),output_quality,output_purity,synthetic,"MANUAL_RECIPE:"+recipe_id)
 	claim_recipe_research_reward(recipe_id)
 	return true
 
