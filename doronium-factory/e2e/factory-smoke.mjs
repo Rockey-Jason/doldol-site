@@ -83,6 +83,11 @@ try {
   assert.ok(beltAfter.beltItemPositions.some((z, i) => Math.abs(z - beltBefore.beltItemPositions[i]) > 0.1), "Conveyor item meshes must animate along the belt according to the simulation move timer");
 
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupSoak());
+  const machineInteraction = await desktop.evaluate(() => window.__doroniumFactoryTest.interactAt(2, 2));
+  assert.equal(machineInteraction.selectedBuilding, "test-smelter", "Clicking a facility must select the correct machine");
+  assert.ok(machineInteraction.path > 0, "Engineer must path toward an adjacent interaction tile instead of teleporting into the machine");
+  await desktop.locator('[data-panel="build"]').click();
+  await desktop.evaluate(() => window.__doroniumFactoryTest.setupSoak());
   const nightPower = await desktop.evaluate(() => window.__doroniumFactoryTest.setClock(0));
   assert.ok(nightPower.ratio < 0.8, "Solar-only test factory must enter a low-power state at night");
   const powerGate = await desktop.evaluate(() => window.__doroniumFactoryTest.machinePowerGate());
