@@ -163,6 +163,10 @@ export function validateRuntimeState(state){
   if(rt.nextStackId<=maxID)errors.push("stack-id-counter-not-advanced");
   return {valid:errors.length===0,errors,stackCount:rt.itemStacks.length,reservationCount:Object.values(rt.reservations).filter(r=>r.status==="reserved").length};
 }
+export function availableItemCount(state,itemID){
+  const rt=ensureItemStacks(state),reserved=reservedByStack(rt);
+  return rt.itemStacks.filter(stack=>stack.itemID===itemID).reduce((total,stack)=>total+Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0)),0);
+}
 export function stackTotals(state){
   const totals={};
   for(const s of ensureItemStacks(state).itemStacks)totals[s.itemID]=(totals[s.itemID]||0)+s.quantity;
