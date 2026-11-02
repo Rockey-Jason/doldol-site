@@ -222,7 +222,42 @@ export function createWorld3D(canvas, getState) {
   const rippleMaterial=new THREE.MeshBasicMaterial({color:0x6bd8e6,transparent:true,opacity:.48});
   sharedMaterials.add(waterMaterial);sharedMaterials.add(rippleMaterial);
   sharedGeometry.add(waterBlockGeometry,rippleGeometry);
-  function clear(group){for(const o of [...group.children]){group.remove(o);o.traverse(child=>{if(child.geometry&&!sharedGeometry.has(child.geometry))child.geometry.dispose();if(child.material){const list=Array.isArray(child.material)?child.material:[child.material];for(const material of list)if(!sharedMaterials.has(material))material.dispose();}});}}
+  function disposeObject(root){root.traverse(child=>{if(child.geometry&&!sharedGeometry.has(child.geometry))child.geometry.dispose();if(child.material){const list=Array.isArray(child.material)?child.material:[child.material];for(const material of list)if(!sharedMaterials.has(material))material.dispose();}});}
+  function clear(group){for(const o of [...group.children]){group.remove(o);disposeObject(o);}}
+  function syncBeltItemVisual(anim,b){
+    if(!anim.itemGroup)return;
+    const signature=b.item?String(b.item.id)+":"+Math.min(24,Math.max(1,Math.ceil(Number(b.item.qty)||1))):"";
+    if(anim.itemSignature===signature)return;
+    clear(anim.itemGroup);
+    anim.itemSignature=signature;
+    if(!b.item)return;
+    const count=Math.min(24,Math.max(1,Math.ceil(Number(b.item.qty)||1)));
+    for(let i=0;i<count;i++){
+      const id=b.item.id;let mesh;
+      if(crystalSpecs[id])mesh=makeCrystal(anim.itemGroup,id,0,0,0,2.0);
+      else if(id==="wire"){mesh=new THREE.Mesh(new THREE.TorusGeometry(1.45,.42,7,20),mat(itemColors[id]||0xc89d57,.6,.24));anim.itemGroup.add(mesh);mesh.rotation.x=Math.PI/2;}
+      else if(id==="wood"){mesh=new THREE.Mesh(new THREE.CylinderGeometry(.72,.86,2.8,8),mat(itemColors[id],.12,.82));anim.itemGroup.add(mesh);mesh.rotation.z=Math.PI/2;}
+      else if(id==="stone"){mesh=new THREE.Mesh(new THREE.DodecahedronGeometry(1.25,0),mat(itemColors[id],.05,.9));anim.itemGroup.add(mesh);mesh.scale.set(2.4,2.0,2.4);}
+      else if(id==="ironOre"||id==="goldOre"){mesh=new THREE.Mesh(new THREE.IcosahedronGeometry(1.15,0),mat(itemColors[id],.42,.38));anim.itemGroup.add(mesh);mesh.scale.set(2.35,2.0,2.35);}
+      else if(id==="copperOre"||id==="quartz"||id==="diamond"){mesh=new THREE.Mesh(id==="diamond"?new THREE.OctahedronGeometry(1.2,0):new THREE.ConeGeometry(1.05,2.2,6,1),mat(itemColors[id],.38,.24));anim.itemGroup.add(mesh);mesh.scale.set(2.1,2.2,2.1);}
+      else if(id==="water"||id==="doriMeat"){mesh=makeSphere(anim.itemGroup,0,0,0,1.7,new THREE.MeshPhysicalMaterial({color:itemColors[id]||0x66b9db,metalness:.05,roughness:.2,transparent:id==="water",opacity:id==="water"?.68:1,transmission:id==="water"?.45:0}));}
+      else if(id==="ironPlate"){mesh=new THREE.Mesh(boxGeo,mat(itemColors[id],.78,.22));anim.itemGroup.add(mesh);mesh.scale.set(3,.55,2.5);}
+      else if(id==="circuit"){mesh=new THREE.Mesh(boxGeo,mat(itemColors[id],.48,.26,0x073a35));anim.itemGroup.add(mesh);mesh.scale.set(2.6,.75,2.2);}
+      else{mesh=new THREE.Mesh(boxGeo,mat(itemColors[id]||0xa8bac4,.46,.3));anim.itemGroup.add(mesh);mesh.scale.set(2.5,2.2,2.5);}
+      mesh.userData.itemIndex=i;mesh.position.y=8.6;mesh.castShadow=true;
+    }
+  }
+  function syncOutputVisual(g,anim,b){
+    const signature=b.output?.id||"";
+    if(anim.outputSignature===signature)return;
+    if(anim.outputMesh){g.remove(anim.outputMesh);disposeObject(anim.outputMesh);anim.outputMesh=null;}
+    anim.outputSignature=signature;
+    if(b.output){
+      if(crystalSpecs[b.output.id])anim.outputMesh=makeCrystal(g,b.output.id,11,24,10,2.6);
+      else anim.outputMesh=makeSphere(g,11,24,10,2.4,mat(itemColors[b.output.id]||0xf0c46a,.3,.28));
+      anim.outputMesh.userData.baseScale=anim.outputMesh.scale.clone();
+    }
+  }
   function cameraUpdate(){camera=mapCamera;const span=860/zoom;mapCamera.left=-span*width/height/2;mapCamera.right=span*width/height/2;mapCamera.top=span/2;mapCamera.bottom=-span/2;mapCamera.updateProjectionMatrix();const distance=1800,horizontal=Math.cos(pitch)*distance;mapCamera.position.set(target.x+Math.sin(yaw)*horizontal,Math.sin(pitch)*distance,target.z+Math.cos(yaw)*horizontal);mapCamera.lookAt(target.x,terrainHeightAt(target.x/32,target.z/32),target.z);}
   function updateGameCamera(state){
     const motion=state.playerMotion||{x:state.player.x,z:state.player.y,yaw:0,pitch:-.12,y:0};
@@ -414,23 +449,7 @@ export function createWorld3D(canvas, getState) {
         for(const x of [-9,9])makeCyl(deck,x,6.4,z,1.6,1,mats.gold,10);
       }
       const track=new THREE.Group();deck.add(track);anim.itemGroup=track;
-      if(b.item){
-        const count=Math.min(24,Math.max(1,Math.ceil(Number(b.item.qty)||1)));
-        for(let i=0;i<count;i++){
-          const id=b.item.id;let mesh;
-          if(crystalSpecs[id])mesh=makeCrystal(track,id,0,0,0,2.0);
-          else if(id==="wire"){mesh=new THREE.Mesh(new THREE.TorusGeometry(1.45,.42,7,20),mat(itemColors[id]||0xc89d57,.6,.24));track.add(mesh);mesh.rotation.x=Math.PI/2;}
-          else if(id==="wood"){mesh=new THREE.Mesh(new THREE.CylinderGeometry(.72,.86,2.8,8),mat(itemColors[id],.12,.82));track.add(mesh);mesh.rotation.z=Math.PI/2;}
-          else if(id==="stone"){mesh=new THREE.Mesh(new THREE.DodecahedronGeometry(1.25,0),mat(itemColors[id],.05,.9));track.add(mesh);mesh.scale.set(2.4,2.0,2.4);}
-          else if(id==="ironOre"||id==="goldOre"){mesh=new THREE.Mesh(new THREE.IcosahedronGeometry(1.15,0),mat(itemColors[id],.42,.38));track.add(mesh);mesh.scale.set(2.35,2.0,2.35);}
-          else if(id==="copperOre"||id==="quartz"||id==="diamond"){mesh=new THREE.Mesh(id==="diamond"?new THREE.OctahedronGeometry(1.2,0):new THREE.ConeGeometry(1.05,2.2,6,1),mat(itemColors[id],.38,.24));track.add(mesh);mesh.scale.set(2.1,2.2,2.1);}
-          else if(id==="water"||id==="doriMeat"){mesh=makeSphere(track,0,0,0,1.7,new THREE.MeshPhysicalMaterial({color:itemColors[id]||0x66b9db,metalness:.05,roughness:.2,transparent:id==="water",opacity:id==="water" ? .68 : 1,transmission:id==="water" ? .45 : 0}));}
-          else if(id==="ironPlate"){mesh=new THREE.Mesh(boxGeo,mat(itemColors[id],.78,.22));track.add(mesh);mesh.scale.set(3,.55,2.5);}
-          else if(id==="circuit"){mesh=new THREE.Mesh(boxGeo,mat(itemColors[id],.48,.26,0x073a35));track.add(mesh);mesh.scale.set(2.6,.75,2.2);}
-          else{mesh=new THREE.Mesh(boxGeo,mat(itemColors[id]||0xa8bac4,.46,.3));track.add(mesh);mesh.scale.set(2.5,2.2,2.5);}
-          mesh.userData.itemIndex=i;mesh.position.y=8.6;mesh.castShadow=true;
-        }
-      }
+      syncBeltItemVisual(anim,b);
     } else if(b.type==="solar"){
       for(const x of [-8,8])for(const z of [-6,6])pipe(x,5,z,x,13,z,.65,mats.trim);
       const panel=new THREE.Group();panel.position.set(0,14,0);panel.rotation.x=-.25;g.add(panel);anim.spin=panel;
@@ -542,9 +561,8 @@ export function createWorld3D(canvas, getState) {
     }
     const glow=new THREE.Mesh(new THREE.TorusGeometry(b.type==="fusion"?15:11,.65,8,40),new THREE.MeshBasicMaterial({color:active?0x5de5d4:0x496c7c,transparent:true,opacity:active ? .88 : .2}));
     glow.rotation.x=Math.PI/2;glow.position.y=5;g.add(glow);anim.glow=glow;
-    if(b.output){if(crystalSpecs[b.output.id])anim.outputMesh=makeCrystal(g,b.output.id,11,24,10,2.6);else anim.outputMesh=makeSphere(g,11,24,10,2.4,mat(itemColors[b.output.id]||0xf0c46a,.3,.28));}
     if(anim.orb)anim.orb.userData.baseScale=anim.orb.scale.clone();
-    if(anim.outputMesh)anim.outputMesh.userData.baseScale=anim.outputMesh.scale.clone();
+    syncOutputVisual(g,anim,b);
     g.userData={...anim,stateRef:b,cell:{x:b.x,z:b.y},targetKind:{kind:"building",type:b.type,uid:b.uid}};
   }
   function addPlayer(state){
@@ -560,7 +578,7 @@ export function createWorld3D(canvas, getState) {
   let trackedNodes=null,trackedMineDeposits=null,trackedFlattened=null,trackedFoundation=null,stateIdentityRevision=0,lastVisibilityRevision=null;
   function signature(s){
     if(s.nodes!==trackedNodes||s.mineDeposits!==trackedMineDeposits||s.flattened!==trackedFlattened||s.foundation!==trackedFoundation){trackedNodes=s.nodes;trackedMineDeposits=s.mineDeposits;trackedFlattened=s.flattened;trackedFoundation=s.foundation;stateIdentityRevision++;}
-    const machines=(s.buildings||[]).map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.output?.id,b.output?.qty,b.item?.id,b.item?.qty,b.variant].join(":")).join("|");
+    const machines=(s.buildings||[]).map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.variant].join(":")).join("|");
     return [s.sceneRevision||0,stateIdentityRevision,s.worldVersion,s.player?.layer,s.player?.mineLevel,machines].join(";");
   }
   function render(state){
@@ -579,7 +597,7 @@ export function createWorld3D(canvas, getState) {
     else if(activeViewMode==="map"){if(playerModel)playerModel.visible=true;firstPersonRig.visible=false;}else updateGameCamera(state);
     const t=performance.now()*.001;sun.intensity=2.25+Math.sin(t*.08)*.18;
     if(!inMine)machineRoot.children.forEach(g=>{
-      const a=g.userData||{},b=a.stateRef;if(!b)return;const running=b.status==="RUNNING";
+      const a=g.userData||{},b=a.stateRef;if(!b)return;syncBeltItemVisual(a,b);syncOutputVisual(g,a,b);const running=b.status==="RUNNING";
       if(a.fan&&running){if(a.type==="wind")a.fan.rotation.z=t*2.8;else a.fan.rotation.y=t*2.5;}
       if(a.spin&&running)a.spin.rotation.y=t*1.7;
       if(running){
