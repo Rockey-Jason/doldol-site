@@ -24,12 +24,14 @@ function normalizeStack(stack){
 }
 export function ensureItemStacks(state){
   if(!state.runtime||typeof state.runtime!=="object")state.runtime=createRuntimeState();
-  const rt=state.runtime;
+  const rt=state.runtime;rt.schemaVersion=Math.max(3,Math.floor(Number(rt.schemaVersion)||0));
   if(!Array.isArray(rt.itemStacks))rt.itemStacks=[];
   rt.itemStacks=rt.itemStacks.filter(s=>s&&s.quantity>0).map(normalizeStack);
   let maxId=0;
   for(const stack of rt.itemStacks){const n=Number(String(stack.runtimeID).replace(/^IS-/,""));if(Number.isFinite(n))maxId=Math.max(maxId,n)}
-  rt.nextStackId=Math.max(1,Math.floor(Number(rt.nextStackId)||1),maxId+1);\n  if(!rt.reservations||typeof rt.reservations!=="object")rt.reservations={};\n  rt.nextReservationId=Math.max(1,Math.floor(Number(rt.nextReservationId)||1));
+  rt.nextStackId=Math.max(1,Math.floor(Number(rt.nextStackId)||1),maxId+1);
+  if(!rt.reservations||typeof rt.reservations!=="object")rt.reservations={};
+  rt.nextReservationId=Math.max(1,Math.floor(Number(rt.nextReservationId)||1));
   // One-time migration from the legacy item-count map. Never replace existing stacks.
   if(!rt.legacyInventoryMigrated){
     for(const [itemID,quantity] of Object.entries(state.inventory||{})){
