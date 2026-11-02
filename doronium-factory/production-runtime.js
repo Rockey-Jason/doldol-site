@@ -35,14 +35,14 @@ export function advanceMachineEnvironment(machine,recipe,deltaSeconds,powerRatio
   const pressureStep=Number.isFinite(Number(recipe.pressureRampPerSecond))?Math.max(0,Number(recipe.pressureRampPerSecond))*dt*power:Math.abs(targetPressure-currentPressure)*Math.min(1,dt*.18)*power;
   if(usesTemperature)machine.temp=moveTowards(currentTemperature,targetTemperature,tempStep);
   if(usesPressure)machine.pressure=moveTowards(currentPressure,targetPressure,pressureStep);
-  const tempTolerance=Math.max(finite(recipe.temperatureTolerance,0),finite(recipe.temperatureToleranceAbsolute,0),Math.abs(targetTemperature)*finite(recipe.temperatureToleranceRatio,.1));
-  const pressureTolerance=Math.max(finite(recipe.pressureTolerance,0),finite(recipe.pressureToleranceAbsolute,0),Math.abs(targetPressure)*finite(recipe.pressureToleranceRatio,.1));
+  const tempTolerance=targetTemperature===0?Math.max(0,finite(recipe.temperatureAbsoluteTolerance,finite(recipe.temperatureToleranceAbsolute,0))):Math.max(30,finite(recipe.temperatureTolerance,0),Math.abs(targetTemperature)*finite(recipe.temperatureToleranceRatio,.1));
+  const pressureTolerance=targetPressure===0?Math.max(0,finite(recipe.pressureAbsoluteTolerance,finite(recipe.pressureToleranceAbsolute,0))):Math.max(15,finite(recipe.pressureTolerance,0),Math.abs(targetPressure)*finite(recipe.pressureToleranceRatio,.1));
   const tempMin=finite(recipe.safeTemperatureMin,targetTemperature-tempTolerance),tempMax=finite(recipe.safeTemperatureMax,targetTemperature+tempTolerance);
   const pressureMin=finite(recipe.safePressureMin,targetPressure-pressureTolerance),pressureMax=finite(recipe.safePressureMax,targetPressure+pressureTolerance);
   const temp=finite(machine.temp,25),pressure=finite(machine.pressure,0);
   const safe=(!usesTemperature||(temp>=tempMin&&temp<=tempMax))&&(!usesPressure||(pressure>=pressureMin&&pressure<=pressureMax));
-  return {safe,usesTemperature,usesPressure,temperatureQuality:usesTemperature?accuracy(temp,targetTemperature,recipe.temperatureAbsoluteTolerance):100,
-    pressureQuality:usesPressure?accuracy(pressure,targetPressure,recipe.pressureAbsoluteTolerance):100,
+  return {safe,usesTemperature,usesPressure,temperatureQuality:usesTemperature?accuracy(temp,targetTemperature,recipe.temperatureAbsoluteTolerance??recipe.temperatureToleranceAbsolute):100,
+    pressureQuality:usesPressure?accuracy(pressure,targetPressure,recipe.pressureAbsoluteTolerance??recipe.pressureToleranceAbsolute):100,
     targetTemperature,targetPressure,tempMin,tempMax,pressureMin,pressureMax};
 }
 export function applyMachineWear(machine,recipe,deltaSeconds,powerRatio){
@@ -62,8 +62,8 @@ export function applyMachineWear(machine,recipe,deltaSeconds,powerRatio){
 }
 export function commitCompletionBuffer(machine,payload){
   if(machine.output)return false;
-  if(!payload||!payload.id||!Number.isFinite(Number(payload.qty))||Number(payload.qty)<=0)return false;
-  machine.output={id:String(payload.id),qty:Math.floor(Number(payload.qty)),meta:{...(payload.meta||{})}};
+  if(!payload||!payload.id||!Number.isSafeInteger(Number(payload.qty))||Number(payload.qty)<=0)return false;
+  machine.output={id:String(payload.id),qty:Number(payload.qty),meta:{...(payload.meta||{})}};
   return true;
 }
 export function clearCompletionBuffer(machine){
