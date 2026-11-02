@@ -209,7 +209,7 @@ export function createWorld3D(canvas, getState) {
     const hits=raycaster.intersectObjects(roots,true);
     for(const hit of hits){
       let root=hit.object;
-      while(root&&root.parent!==nodeRoot&&root.parent!==machineRoot)root=root.parent;
+      while(root&&root.parent!==nodeRoot&&root.parent!==machineRoot&&root.parent!==mineRoot)root=root.parent;
       if(!root?.userData?.targetKind)continue;
       if(hit.distance>maxDistance) return null;
       return {...root.userData.targetKind,...root.userData.cell,distance:hit.distance};
@@ -516,7 +516,7 @@ export function createWorld3D(canvas, getState) {
     renderer.render(scene,camera);
   }
   function resizeIfNeeded(){const r=canvas.getBoundingClientRect();if(Math.abs(r.width-width)>1||Math.abs(r.height-height)>1)resize();}
-  function pickTile(clientX,clientY){const r=canvas.getBoundingClientRect();pointer.x=((clientX-r.left)/r.width)*2-1;pointer.y=-((clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObject(groundPick,false)[0];if(!hit)return null;const x=Math.floor(hit.point.x/32+0.5),z=Math.floor(hit.point.z/32+0.5);return x>=0&&z>=0&&x<WORLD_W&&z<WORLD_H?{x,z}:null;}
+  function pickTile(clientX,clientY){if(stateLayerForPicking==="mine")return null;const r=canvas.getBoundingClientRect();pointer.x=((clientX-r.left)/r.width)*2-1;pointer.y=-((clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const surface=worldRoot.children[0];const hit=surface?raycaster.intersectObject(surface,false)[0]:null;if(!hit?.instanceId&&hit?.instanceId!==0)return null;const index=hit.instanceId,x=index%WORLD_W,z=Math.floor(index/WORLD_W);return x>=0&&z>=0&&x<WORLD_W&&z<WORLD_H?{x,z}:null;}
   function pan(dx,dy){const scale=1/zoom;target.x=clamp(target.x-dx*1.6*scale,0,(WORLD_W-1)*32);target.z=clamp(target.z-dy*1.6*scale,0,(WORLD_H-1)*32);cameraUpdate();}
   function setZoom(value){zoom=clamp(value,.55,1.8);if(activeViewMode==="map"){cameraUpdate()}else{gameCamera.fov=clamp(74-(zoom-1)*38,52,88);gameCamera.updateProjectionMatrix();}}
   function center(x,y){target.set(x*32,terrainHeightAt(x,y),y*32);cameraUpdate();}
