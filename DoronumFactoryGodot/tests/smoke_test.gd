@@ -121,6 +121,11 @@ func _run() -> void:
 	assert(fusion_state.recover_fusion_failure(),"Failure recovery must return escrow")
 	for item_id in GameData.DORONUM_IDS:
 		assert(fusion_state.count_item(item_id)==100,"Recovery must restore exact quantities")
+	var normal_stack: Dictionary = fusion_state.inventory.filter(func(stack): return stack.item_id==GameData.DORONUM_IDS[0])[0]
+	normal_stack.quality = 89.99
+	assert(not fusion_state.fusion_preflight().is_empty(),"89.99 Quality must fail preflight")
+	normal_stack.quality = 90.0
+	assert(fusion_state.fusion_preflight().is_empty(),"90.00 Quality must pass preflight")
 	assert(fusion_state.start_infinity_fusion(),"A recovered job may be restarted")
 	var completed_job_id := str(fusion_state.fusion.job_id)
 	fusion_state.fusion.stage = 7
@@ -138,11 +143,5 @@ func _run() -> void:
 	assert(not fusion_state.collect_infinity_output(),"Infinity output must not collect twice")
 	assert(fusion_state.count_item("ITEM_DORONUM_INFINITY")==1,"Exactly one Infinity item should be owned after collection")
 	assert(fusion_state._fusion_job_validation_errors().is_empty(),"Collected output must retain a valid one-time event ledger")
-	for stack in fusion_state.inventory:
-		if stack.item_id==GameData.DORONUM_IDS[0]:
-			stack.quality = 89.99
-			break
-	assert(not fusion_state.fusion_preflight().is_empty(),"89.99 Quality must fail preflight")
-
 	print("DORONUM FACTORY SMOKE TESTS: PASS")
 	quit(0)
