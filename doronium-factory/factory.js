@@ -237,6 +237,7 @@ function isAdventureCellFree(x,z){
  const node=tileNode(cx,cz);return !buildingAt(cx,cz)&&(!node||node.amount<=0);
 }
 function updatePlayerMotion(dt){
+ if(S.paused){playerMotion.moving=false;return}
  if(!adventureMode()){
   if(!playerMotion.path.length){playerMotion.moving=false;return}
   let remaining=Math.max(0,dt)*4.2;playerMotion.moving=true;
@@ -276,7 +277,7 @@ function updateAdventureHud(){
  const mode=S.player.viewMode;$("view-first")?.classList.toggle("active",mode==="first");$("view-third")?.classList.toggle("active",mode==="third");$("view-map")?.classList.toggle("active",mode==="map");
 }
 function performAdventureAction(){
- if(!adventureMode())return;
+ if(!adventureMode()||S.paused)return;
  const target=world3d.pickTarget(190);
  if(target?.kind==="resource"){
   const node=tileNode(target.x,target.z);if(!node)return;
