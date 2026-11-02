@@ -44,6 +44,15 @@ jobs:
           grep -q 'function startFusion' doronium-factory/factory.js
           grep -q 'function recipeHasSyntheticInput' doronium-factory/factory.js
           grep -q 'function updatePlayerMotion' doronium-factory/factory.js
+          grep -q 'function performAdventureAction' doronium-factory/factory.js
+          grep -q 'function updateSurvival' doronium-factory/factory.js
+          grep -q 'function consumeFood' doronium-factory/factory.js
+          grep -q 'function drinkWater' doronium-factory/factory.js
+          grep -q 'data-view-mode="first"' doronium-factory/index.html
+          grep -q 'id="adventure-crosshair"' doronium-factory/index.html
+          grep -q 'function updateGameCamera' doronium-factory/world3d.js
+          grep -q 'function pickTarget' doronium-factory/world3d.js
+          grep -q 'const gameCamera = new THREE.PerspectiveCamera' doronium-factory/world3d.js
           grep -q 'function crystalGeometry' doronium-factory/world3d.js
           grep -q 'DORONIUM_CRYSTAL_MODEL_SHAPES' doronium-factory/world3d.js
           grep -q 'anim.itemGroup' doronium-factory/world3d.js
