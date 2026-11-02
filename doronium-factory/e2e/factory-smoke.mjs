@@ -54,6 +54,8 @@ try {
   assert.ok(perfAfter.pixelRatio > 0 && perfAfter.pixelRatio <= perfAfter.basePixelRatio, "Adaptive render resolution must remain within device limits");
 
   const audit = await desktop.evaluate(() => window.__doroniumFactoryTest.audit());
+  assert.equal(audit.dataValidation.valid, true, "All game data references and research dependencies must validate");
+  assert.equal(audit.runtimeValidation.valid, true, "Initial item stacks and reservations must validate");
   assert.equal(audit.variantCount, 15, "15 canonical Doronium variants must be present");
   assert.equal(audit.uniqueVariants, 15, "Variant IDs must be unique");
   assert.equal(audit.uniqueCrystalModels, 15, "All 15 variants must have 3D models");
