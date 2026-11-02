@@ -189,7 +189,7 @@ func _spawn_building_visual(data: Dictionary) -> void:
 	var root := Node3D.new()
 	root.name = "Building_"+str(data.instance_id)
 	root.position = data.position
-	root.rotation.y = float(data.rotation)
+	root.rotation.y = float(data.get("rotation_y",data.get("rotation",0.0)))
 	world.add_child(root)
 	var base := MeshInstance3D.new()
 	var box := BoxMesh.new()
