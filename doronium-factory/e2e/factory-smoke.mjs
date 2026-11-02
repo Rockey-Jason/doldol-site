@@ -128,6 +128,7 @@ try {
   assert.equal(construction.standardWithoutFoundation, false, "A standard conveyor must require land preparation");
   assert.equal(construction.adaptiveWithoutFoundation, true, "An adaptive conveyor must bridge unprepared terrain");
   assert.ok(construction.adaptiveBeltTilts.length >= 1, "The adaptive belt must expose terrain-derived deck pitch and roll");
+  assert.ok(construction.adaptiveBeltTilts.some(s => Math.abs(s.x) > 0.01 || Math.abs(s.z) > 0.01), "The adaptive belt must actually tilt to match uneven ground");
   assert.equal(construction.standardWithFoundation, true, "A standard conveyor must place on a prepared foundation");
 
   await openPanel(desktop, "build");
