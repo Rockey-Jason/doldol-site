@@ -137,10 +137,12 @@ export function createWorld3D(canvas, getState) {
   const memoryGB = Number(navigator.deviceMemory) || 4;
   const cpuCores = Number(navigator.hardwareConcurrency) || 4;
   const lowEndDevice = compactDevice || memoryGB <= 4 || cpuCores <= 4;
-  const shadowsEnabled = !compactDevice && memoryGB >= 8 && cpuCores >= 8;
-  const basePixelRatio = Math.min(Number(window.devicePixelRatio) || 1, compactDevice ? 1.0 : lowEndDevice ? 1.05 : 1.35);
-  const minPixelRatio = Math.min(basePixelRatio, compactDevice ? .7 : .75);
+  const highEndDevice = !compactDevice && memoryGB >= 12 && cpuCores >= 8;
+  const shadowsEnabled = highEndDevice;
+  const basePixelRatio = Math.min(Number(window.devicePixelRatio) || 1, compactDevice ? .88 : lowEndDevice ? 1.0 : highEndDevice ? 1.2 : 1.05);
+  const minPixelRatio = Math.min(basePixelRatio, compactDevice ? .55 : lowEndDevice ? .6 : .65);
   let currentPixelRatio = basePixelRatio, slowFrames = 0, fastFrames = 0, renderCount = 0, rebuildCount = 0;
+  let perfFrameTotal=0,perfFrameCount=0,measuredFps=60,measuredFrameMs=16.67;
   let renderer;
   try { renderer = new THREE.WebGLRenderer({canvas, antialias:!compactDevice && memoryGB >= 8 && cpuCores >= 8, alpha:false, powerPreference:"high-performance"}); }
   catch (error) { console.warn("WebGL unavailable; using the compatibility renderer.", error); return createFallbackWorld(canvas); }
@@ -152,7 +154,7 @@ export function createWorld3D(canvas, getState) {
   renderer.toneMappingExposure = 1.12;
 
   const mapCamera = new THREE.OrthographicCamera(-380,380,260,-260,1,6000);
-  const gameCamera = new THREE.PerspectiveCamera(74,1,.1,1650);
+  const gameCamera = new THREE.PerspectiveCamera(74,1,.1,1450);
   scene.add(gameCamera);
   let camera=mapCamera, activeViewMode="map";
   const target = new THREE.Vector3(64*32,terrainHeightAt(64,52),52*32);
@@ -167,6 +169,9 @@ export function createWorld3D(canvas, getState) {
   const machineRoot = new THREE.Group(); scene.add(machineRoot);
   const nodeRoot = new THREE.Group(); scene.add(nodeRoot);
   const nodeGroupsByKey = new Map();
+  let nodeBatches=null,nodeHitMesh=null;
+  const nodeBatchMeshes=[];
+  const nodeBatchedKeys=new Set();
   const markerRoot = new THREE.Group(); scene.add(markerRoot);
   const selectionRoot = new THREE.Group(); scene.add(selectionRoot);
   const selectionRing = new THREE.Mesh(new THREE.TorusGeometry(15,.65,8,48),new THREE.MeshBasicMaterial({color:0x70e7e9}));
@@ -180,7 +185,7 @@ export function createWorld3D(canvas, getState) {
   hoverRoot.add(hoverFill,hoverEdge);hoverRoot.visible=false;
   const ambient = new THREE.HemisphereLight(0xb9e6ef,0x15242a,1.65); scene.add(ambient);
   const sun = new THREE.DirectionalLight(0xffe4b8,2.7);
-  sun.position.set(-420,720,360); sun.castShadow=shadowsEnabled; sun.shadow.mapSize.set(shadowsEnabled?1024:256,shadowsEnabled?1024:256);
+  sun.position.set(-420,720,360); sun.castShadow=shadowsEnabled; sun.shadow.mapSize.set(shadowsEnabled?512:256,shadowsEnabled?512:256);
   sun.shadow.camera.left=-900; sun.shadow.camera.right=900; sun.shadow.camera.top=900; sun.shadow.camera.bottom=-900;
   sun.shadow.bias=-0.00025; scene.add(sun);
   const fill = new THREE.DirectionalLight(0x4a9fc1,0.8); fill.position.set(450,260,-500); scene.add(fill);
@@ -220,8 +225,12 @@ export function createWorld3D(canvas, getState) {
   const waterBlockGeometry=new THREE.BoxGeometry(29,1.2,29);
   const rippleGeometry=new THREE.BoxGeometry(8,.18,1.2);
   const rippleMaterial=new THREE.MeshBasicMaterial({color:0x6bd8e6,transparent:true,opacity:.48});
-  sharedMaterials.add(waterMaterial);sharedMaterials.add(rippleMaterial);
-  sharedGeometry.add(waterBlockGeometry,rippleGeometry);
+  const nodeHitGeometry=new THREE.BoxGeometry(1,1,1);
+  const nodeHitMaterial=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,colorWrite:false,depthWrite:false,side:THREE.DoubleSide});
+  const treeTrunkGeometry=new THREE.CylinderGeometry(3,3,24,8);
+  const doriCrystalGeometry=crystalGeometry("doronium_normal");
+  sharedMaterials.add(waterMaterial);sharedMaterials.add(rippleMaterial);sharedMaterials.add(nodeHitMaterial);
+  sharedGeometry.add(waterBlockGeometry,rippleGeometry,nodeHitGeometry,treeTrunkGeometry,doriCrystalGeometry);
   function disposeObject(root){root.traverse(child=>{if(child.geometry&&!sharedGeometry.has(child.geometry))child.geometry.dispose();if(child.material){const list=Array.isArray(child.material)?child.material:[child.material];for(const material of list)if(!sharedMaterials.has(material))material.dispose();}});}
   function clear(group){for(const o of [...group.children]){group.remove(o);disposeObject(o);}}
   function syncBeltItemVisual(anim,b){
@@ -264,6 +273,8 @@ export function createWorld3D(canvas, getState) {
     const px=motion.x*32,pz=motion.z*32,py=(state.player?.layer==="mine"?mineFloorY(state.player.mineLevel):surfaceY(state,Math.floor(motion.x+.5),Math.floor(motion.z+.5)) )+(Number(motion.y)||0),yaw=Number(motion.yaw)||0,pitch=Number(motion.pitch??-.12);
     const fx=-Math.sin(yaw),fz=-Math.cos(yaw);
     camera=gameCamera;
+    const targetFar=state.player?.layer==="mine"?520:activeViewMode==="first"?980:1320;
+    if(gameCamera.far!==targetFar){gameCamera.far=targetFar;gameCamera.updateProjectionMatrix();}
     if(activeViewMode==="first"){
       gameCamera.position.set(px,22+py,pz);
       gameCamera.rotation.order="YXZ";gameCamera.rotation.set(pitch,yaw,0);
@@ -277,13 +288,20 @@ export function createWorld3D(canvas, getState) {
   }
   function pickTarget(maxDistance=190){
     raycaster.setFromCamera(new THREE.Vector2(0,0),camera);
-    const roots=stateLayerForPicking==="mine"?[...mineRoot.children]:[...nodeRoot.children,...machineRoot.children];
+    const roots=stateLayerForPicking==="mine"
+      ?mineRoot.children
+      :[...(nodeHitMesh&&nodeHitMesh.count?[nodeHitMesh]:[]),...nodeGroupsByKey.values(),...machineRoot.children];
     const hits=raycaster.intersectObjects(roots,true);
     for(const hit of hits){
+      if(hit.distance>maxDistance)continue;
+      if(hit.object===nodeHitMesh){
+        const target=nodeHitMesh.userData.targets?.[hit.instanceId];
+        if(target)return {...target.targetKind,...target.cell,distance:hit.distance};
+        continue;
+      }
       let root=hit.object;
       while(root&&root.parent!==nodeRoot&&root.parent!==machineRoot&&root.parent!==mineRoot)root=root.parent;
       if(!root?.userData?.targetKind)continue;
-      if(hit.distance>maxDistance) return null;
       return {...root.userData.targetKind,...root.userData.cell,distance:hit.distance};
     }
     return null;
@@ -309,7 +327,7 @@ export function createWorld3D(canvas, getState) {
         for(const sx of [-13,13])makeBox(mineRoot,x+sx,floorY+13,z,2.8,26,3.4,rail);
         makeBox(mineRoot,x,floorY+26,z,29,3,3.4,rail);
       }
-      if(p.x%6===0&&p.z===12){makeCyl(mineRoot,x+11,floorY+24,z,1.1,2,lampMat,8);const light=new THREE.PointLight(0xf2bd65,.7,112,2);light.position.set(x,floorY+23,z);mineRoot.add(light);}
+      if(p.x%(lowEndDevice?12:6)===0&&p.z===12){makeCyl(mineRoot,x+11,floorY+24,z,1.1,2,lampMat,8);const light=new THREE.PointLight(0xf2bd65,lowEndDevice ? .38 : .7,112,2);light.position.set(x,floorY+23,z);mineRoot.add(light);}
     }
     for(const node of Object.values(state.mineDeposits||{})){
       if(node.level!==level||node.amount<=0)continue;
@@ -321,7 +339,7 @@ export function createWorld3D(canvas, getState) {
         const color=palette[node.type]||0x81919d,ore=mat(color,.5,.3,color);
         for(let i=0;i<4;i++){const m=new THREE.Mesh(i%2?new THREE.OctahedronGeometry(2.7,0):new THREE.IcosahedronGeometry(2.8,0),ore);m.position.set((i%2?1:-1)*(3+i%3),4+(i%3)*1.8,(i<2?-1:1)*(2+i));m.rotation.set(i*.3,i*.6,i*.2);m.castShadow=true;g.add(m);}
       }
-      const glow=new THREE.PointLight(String(node.type).startsWith("doronium_")?0x55dcec:0x8ca8b5,.35,34,2);glow.position.y=8;g.add(glow);
+      if(!lowEndDevice){const glow=new THREE.PointLight(String(node.type).startsWith("doronium_")?0x55dcec:0x8ca8b5,.35,34,2);glow.position.y=8;g.add(glow);}
     }
     const addLift=(x,kind)=>{
       const g=new THREE.Group();g.position.set(x*32,floorY,12*32);g.userData={cell:{x,z:12},targetKind:{kind}};mineRoot.add(g);
@@ -331,44 +349,86 @@ export function createWorld3D(canvas, getState) {
     };
     addLift(3,"mineExit");addLift(36,"mineDescend");
   }
+  const nodeMatrixDummy=new THREE.Object3D();
+  function nodeInstance(mesh,x,y,z,sx,sy,sz,rotationY=0){
+    if(!mesh)return -1;
+    const index=mesh.count;
+    nodeMatrixDummy.position.set(x,y,z);nodeMatrixDummy.rotation.set(0,rotationY,0);nodeMatrixDummy.scale.set(sx,sy,sz);
+    nodeMatrixDummy.updateMatrix();mesh.setMatrixAt(index,nodeMatrixDummy.matrix);mesh.count=index+1;
+    return index;
+  }
+  function createNodeBatches(state){
+    nodeBatchedKeys.clear();nodeBatchMeshes.length=0;
+    const totals={wood:0,dori:0,water:0};
+    for(const node of Object.values(state.nodes||{}))if(Object.prototype.hasOwnProperty.call(totals,node.type))totals[node.type]++;
+    const add=(geometry,material,capacity)=>{
+      if(!capacity)return null;
+      const mesh=new THREE.InstancedMesh(geometry,material,Math.max(1,capacity));
+      mesh.count=0;mesh.castShadow=false;mesh.receiveShadow=false;mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      nodeRoot.add(mesh);nodeBatchMeshes.push(mesh);return mesh;
+    };
+    nodeBatches={
+      woodTrunk:add(treeTrunkGeometry,mats.woodTrunk,totals.wood),
+      woodCrown:add(sphereGeo,mats.woodLeaves,totals.wood*2),
+      doriTrunk:add(treeTrunkGeometry,mats.doriTrunk,totals.dori),
+      doriCrown:add(sphereGeo,mats.green,totals.dori*2),
+      doriCrystal:add(doriCrystalGeometry,mats.crystal,totals.dori),
+      water:add(waterBlockGeometry,waterMaterial,totals.water),
+      ripples:add(rippleGeometry,rippleMaterial,totals.water*3)
+    };
+    nodeHitMesh=add(nodeHitGeometry,nodeHitMaterial,totals.wood+totals.dori+totals.water);
+    if(nodeHitMesh)nodeHitMesh.userData.targets=[];
+  }
+  function commitNodeBatches(){
+    for(const mesh of nodeBatchMeshes)if(mesh.count){mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();}
+    if(nodeHitMesh&&nodeHitMesh.count){nodeHitMesh.instanceMatrix.needsUpdate=true;nodeHitMesh.computeBoundingSphere();}
+  }
   function addSeenNodeModels(state){
+    if(!nodeBatches)createNodeBatches(state);
     for(const [key,node] of Object.entries(state.nodes||{})){
-      const existing=nodeGroupsByKey.get(key);
-      const visible=!!state.seen?.[key],alive=node.amount>0||node.type==="dori";
+      const existing=nodeGroupsByKey.get(key),visible=!!state.seen?.[key],alive=node.amount>0||node.type==="dori";
       if(!visible||!alive){
         if(existing){nodeRoot.remove(existing);clear(existing);nodeGroupsByKey.delete(key);}
         continue;
       }
-      if(existing)continue;
-      const [x,z]=key.split(",").map(Number);
-      const y=surfaceY(state,x,z),g=new THREE.Group();g.position.set(x*32,y,z*32);
-      g.userData={cell:{x,z},targetKind:node.type==="mineEntrance"?{kind:"mineEntrance"}:{kind:"resource",type:node.type}};
-      nodeRoot.add(g);nodeGroupsByKey.set(key,g);
-      if(node.type==="water"){
-        const waterBlock=new THREE.Mesh(waterBlockGeometry,waterMaterial);waterBlock.position.y=1;waterBlock.receiveShadow=true;g.add(waterBlock);
-        for(let i=0;i<3;i++){const ripple=new THREE.Mesh(rippleGeometry,rippleMaterial);ripple.position.set((i-1)*7,1.8,(i%2?4:-4));g.add(ripple);}
-      }else if(node.type==="wood"||node.type==="dori"){
-        const trunk=makeCyl(g,0,12,0,3,24,node.type==="dori"?mats.doriTrunk:mats.woodTrunk,8);
-        trunk.castShadow=false;trunk.receiveShadow=false;
-        const leaves=node.type==="dori"?mats.green:mats.woodLeaves;
-        const crown=makeSphere(g,0,31,0,node.type==="dori"?13:14,leaves);
-        const crownSize=node.type==="dori"?13:14;crown.scale.set(crownSize,crownSize*.92,crownSize);crown.castShadow=false;crown.receiveShadow=false;
-        const crownSide=makeSphere(g,7,28,0,8,leaves);
-        crownSide.scale.set(7.6,6.4,7.6);crownSide.castShadow=false;crownSide.receiveShadow=false;
-        if(node.type==="dori")makeCrystal(g,"doronium_normal",0,40,0,2.8);
-      }else if(node.type==="mineEntrance"){
-        const stone=mat(0x53616a,.18,.9),glow=mat(0x3c9eaa,.3,.35,0x124f59);
-        makeBox(g,-13,13,0,5,29,6,stone);makeBox(g,13,13,0,5,29,6,stone);makeBox(g,0,27,0,31,6,7,stone);
-        makeBox(g,0,8,-1,19,19,1.5,mat(0x02070c,.02,.98));makeBox(g,0,30,0,25,1.1,8,glow,false);
-        const lamp=new THREE.PointLight(0x56d8da,1.5,88,2);lamp.position.set(0,20,-8);g.add(lamp);
-      }else if(node.type==="relaySite"||node.type==="coreSite"){
-        makeCyl(g,0,2,0,9,4,mats.dark,8);makeCyl(g,0,12,0,2,18,mats.trim,8);makeSphere(g,0,24,0,node.type==="coreSite"?5:3,mats.crystal);
+      if(existing||nodeBatchedKeys.has(key))continue;
+      const [x,z]=key.split(",").map(Number),worldX=x*32,worldZ=z*32,y=surfaceY(state,x,z);
+      if(node.type==="wood"){
+        nodeInstance(nodeBatches.woodTrunk,worldX,y+12,worldZ,1,1,1);
+        nodeInstance(nodeBatches.woodCrown,worldX,y+31,worldZ,14,12.88,14);
+        nodeInstance(nodeBatches.woodCrown,worldX+7,y+28,worldZ,7.6,6.4,7.6);
+      }else if(node.type==="dori"){
+        nodeInstance(nodeBatches.doriTrunk,worldX,y+12,worldZ,1,1,1);
+        nodeInstance(nodeBatches.doriCrown,worldX,y+31,worldZ,13,11.96,13);
+        nodeInstance(nodeBatches.doriCrown,worldX+7,y+28,worldZ,7.6,6.4,7.6);
+        nodeInstance(nodeBatches.doriCrystal,worldX,y+40,worldZ,2.8,3.5,2.8,.22);
+      }else if(node.type==="water"){
+        nodeInstance(nodeBatches.water,worldX,y+1,worldZ,1,1,1);
+        for(let i=0;i<3;i++)nodeInstance(nodeBatches.ripples,worldX+(i-1)*7,y+1.8,worldZ+(i%2?4:-4),1,1,1);
+      }else{
+        const g=new THREE.Group();g.position.set(worldX,y,worldZ);
+        g.userData={cell:{x,z},targetKind:node.type==="mineEntrance"?{kind:"mineEntrance"}:{kind:"resource",type:node.type}};
+        nodeRoot.add(g);nodeGroupsByKey.set(key,g);
+        if(node.type==="mineEntrance"){
+          const stone=mat(0x53616a,.18,.9),glow=mat(0x3c9eaa,.3,.35,0x124f59);
+          makeBox(g,-13,13,0,5,29,6,stone);makeBox(g,13,13,0,5,29,6,stone);makeBox(g,0,27,0,31,6,7,stone);
+          makeBox(g,0,8,-1,19,19,1.5,mat(0x02070c,.02,.98));makeBox(g,0,30,0,25,1.1,8,glow,false);
+          const lamp=new THREE.PointLight(0x56d8da,lowEndDevice ? .65 : 1.5,88,2);lamp.position.set(0,20,-8);g.add(lamp);
+        }else if(node.type==="relaySite"||node.type==="coreSite"){
+          makeCyl(g,0,2,0,9,4,mats.dark,8);makeCyl(g,0,12,0,2,18,mats.trim,8);makeSphere(g,0,24,0,node.type==="coreSite"?5:3,mats.crystal);
+        }
       }
+      if(node.type==="wood"||node.type==="dori"||node.type==="water"){
+        const index=nodeInstance(nodeHitMesh,worldX,y+(node.type==="water"?4:23),worldZ,27,node.type==="water"?8:48,27);
+        if(index>=0)nodeHitMesh.userData.targets[index]={cell:{x,z},targetKind:{kind:"resource",type:node.type}};
+      }
+      nodeBatchedKeys.add(key);
     }
+    commitNodeBatches();
   }
   function rebuild(state){
-    clear(worldRoot);clear(machineRoot);clear(nodeRoot);clear(markerRoot);clear(mineRoot);terrainChunks.length=0;nodeGroupsByKey.clear();selectionRoot.visible=false;
-    const dummy=new THREE.Object3D(),color=new THREE.Color(),bottom=-52,chunkSize=24;
+    clear(worldRoot);clear(machineRoot);clear(nodeRoot);clear(markerRoot);clear(mineRoot);terrainChunks.length=0;nodeGroupsByKey.clear();nodeBatches=null;nodeHitMesh=null;nodeBatchMeshes.length=0;nodeBatchedKeys.clear();selectionRoot.visible=false;
+    const dummy=new THREE.Object3D(),color=new THREE.Color(),bottom=-52,chunkSize=32;
     for(let z0=0;z0<WORLD_H;z0+=chunkSize)for(let x0=0;x0<WORLD_W;x0+=chunkSize){
       const chunkWidth=Math.min(chunkSize,WORLD_W-x0),chunkHeight=Math.min(chunkSize,WORLD_H-z0);
       const tiles=new THREE.InstancedMesh(terrainTileGeometry,terrainTileMaterial,chunkWidth*chunkHeight);
@@ -595,8 +655,8 @@ export function createWorld3D(canvas, getState) {
     if(showHover){const h=surfaceY(state,hover.x,hover.y);hoverRoot.position.set(hover.x*32,h+2.2,hover.y*32);const color=state.canBuildPreview?0x6de4bb:0xf2a46e;hoverFillMaterial.color.setHex(color);hoverEdgeMaterial.color.setHex(color);}
     if(inMine){activeViewMode=state.player?.viewMode==="third"?"third":"first";updateGameCamera(state);if(playerModel)playerModel.visible=activeViewMode!=="first";firstPersonRig.visible=activeViewMode==="first";}
     else if(activeViewMode==="map"){if(playerModel)playerModel.visible=true;firstPersonRig.visible=false;}else updateGameCamera(state);
-    const t=performance.now()*.001;sun.intensity=2.25+Math.sin(t*.08)*.18;
-    if(!inMine)machineRoot.children.forEach(g=>{
+    const t=performance.now()*.001;if(shadowsEnabled&&renderer.shadowMap.enabled)sun.intensity=2.25+Math.sin(t*.08)*.18;
+    if(!inMine&&!state.paused)machineRoot.children.forEach(g=>{
       const a=g.userData||{},b=a.stateRef;if(!b)return;syncBeltItemVisual(a,b);syncOutputVisual(g,a,b);const running=b.status==="RUNNING";
       if(a.fan&&running){if(a.type==="wind")a.fan.rotation.z=t*2.8;else a.fan.rotation.y=t*2.5;}
       if(a.spin&&running)a.spin.rotation.y=t*1.7;
@@ -618,12 +678,25 @@ export function createWorld3D(canvas, getState) {
   function resizeIfNeeded(){const r=canvas.getBoundingClientRect();if(Math.abs(r.width-width)>1||Math.abs(r.height-height)>1)resize();}
   function adaptPerformanceFrame(frameMs){
     if(!Number.isFinite(frameMs)||frameMs<=0||frameMs>250)return;
-    if(frameMs>22){slowFrames++;fastFrames=0;}else if(frameMs<16.3){fastFrames++;slowFrames=0;}else{slowFrames=Math.max(0,slowFrames-1);fastFrames=0;}
-    if(slowFrames>=45){
-      currentPixelRatio=Math.max(minPixelRatio,Math.round(currentPixelRatio*.9*100)/100);
-      renderer.setPixelRatio(currentPixelRatio);resize();slowFrames=0;fastFrames=0;
+    perfFrameTotal+=frameMs;perfFrameCount++;
+    if(perfFrameTotal>=1000){
+      measuredFps=perfFrameCount*1000/perfFrameTotal;
+      measuredFrameMs=perfFrameTotal/perfFrameCount;
+      perfFrameTotal=0;perfFrameCount=0;
+    }
+    if(frameMs>21){slowFrames++;fastFrames=0;}
+    else if(frameMs<15.5){fastFrames++;slowFrames=0;}
+    else{slowFrames=Math.max(0,slowFrames-1);fastFrames=0;}
+    if(slowFrames>=24){
+      if(currentPixelRatio>minPixelRatio+.005){
+        currentPixelRatio=Math.max(minPixelRatio,Math.round(currentPixelRatio*.86*100)/100);
+        renderer.setPixelRatio(currentPixelRatio);resize();
+      }else if(renderer.shadowMap.enabled){
+        renderer.shadowMap.enabled=false;sun.castShadow=false;
+      }
+      slowFrames=0;fastFrames=0;
     }else if(fastFrames>=240&&currentPixelRatio<basePixelRatio){
-      currentPixelRatio=Math.min(basePixelRatio,Math.round((currentPixelRatio+.04)*100)/100);
+      currentPixelRatio=Math.min(basePixelRatio,Math.round((currentPixelRatio+.035)*100)/100);
       renderer.setPixelRatio(currentPixelRatio);resize();fastFrames=0;slowFrames=0;
     }
   }
@@ -633,5 +706,5 @@ export function createWorld3D(canvas, getState) {
   function center(x,y){target.set(x*32,terrainHeightAt(x,y),y*32);cameraUpdate();}
   function orbit(dx,dy){yaw-=dx*0.004;pitch=clamp(pitch+dy*0.003,0.42,1.25);cameraUpdate();}
   resize();cameraUpdate();
-  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?"third":"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},adaptPerformanceFrame,inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),adaptiveBeltTilts:machineRoot.children.filter(g=>g.userData?.type==="beltAdaptive").map(g=>g.userData.adaptiveSlope),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,terrainChunkCount:terrainChunks.length,renderCount,rebuildCount,pixelRatio:renderer.getPixelRatio(),basePixelRatio,shadowEnabled:renderer.shadowMap.enabled,qualityTier:compactDevice?"mobile":lowEndDevice?"low":shadowsEnabled?"high":"balanced",undergroundResourceNodes:mineRoot.children.filter(g=>g.userData?.targetKind?.kind==="resource").length};},get zoom(){return zoom;}};
+  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?"third":"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},adaptPerformanceFrame,inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),adaptiveBeltTilts:machineRoot.children.filter(g=>g.userData?.type==="beltAdaptive").map(g=>g.userData.adaptiveSlope),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,terrainChunkCount:terrainChunks.length,renderCount,rebuildCount,pixelRatio:renderer.getPixelRatio(),basePixelRatio,shadowEnabled:renderer.shadowMap.enabled,qualityTier:compactDevice?"mobile":lowEndDevice?"low":shadowsEnabled?"high":"balanced",undergroundResourceNodes:mineRoot.children.filter(g=>g.userData?.targetKind?.kind==="resource").length,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0)};},inspectPerformance(){return {fps:Math.round(measuredFps),averageFrameMs:Number(measuredFrameMs.toFixed(2)),pixelRatio:Number(currentPixelRatio.toFixed(2)),basePixelRatio:Number(basePixelRatio.toFixed(2)),shadowEnabled:renderer.shadowMap.enabled,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,terrainChunks:terrainChunks.length,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0),renderCount,rebuildCount};},get zoom(){return zoom;}};
 }
