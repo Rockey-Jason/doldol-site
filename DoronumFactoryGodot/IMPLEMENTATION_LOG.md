@@ -11,3 +11,15 @@
 - Tests executed: Not yet.
 - Native exports: Not yet.
 - In-engine manual play: Not yet.
+
+
+## 2026-11-02 — Runtime integrity pass
+
+- Added machine wear/condition slowdown, hazard-based failures, recovery cooldowns and repair actions.
+- Corrected upward terrain normals and preserved the fixed-tick catch-up backlog instead of dropping elapsed time.
+- Added machine/warehouse StackID ownership, atomic recipe input supply, persistent warehouse storage and atomic output collection.
+- Added schema 3 migration and cross-owner StackID validation.
+- Added explicit manual-craft QualityProfile and weighted Quality/Purity calculations.
+- Added canonical data validation and boundary tests for Quality, Purity, PowerRatio, backlog, transaction rollback, migration and Infinity escrow.
+- Godot CI / smoke tests / native exports: Pending current workflow run; not yet reported as passed.
+- Full campaign, Android device and in-engine manual play: Not yet executed.
