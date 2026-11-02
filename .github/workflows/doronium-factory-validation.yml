@@ -32,7 +32,9 @@ jobs:
           node --check doronium-factory/game-data-validation.test.mjs
           node --check doronium-factory/production-runtime.js
           node --check doronium-factory/production-runtime.test.mjs
-          node --test doronium-factory/simulation-core.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs
+          node --check doronium-factory/failure-runtime.js
+          node --check doronium-factory/failure-runtime.test.mjs
+          node --test doronium-factory/simulation-core.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs doronium-factory/failure-runtime.test.mjs
           node --check doronium-factory/world3d.js
           node --check doronium-factory/terrain-system.js
           node --check doronium-factory/e2e/factory-smoke.mjs
@@ -47,6 +49,8 @@ jobs:
           test -s doronium-factory/game-data-validation.test.mjs
           test -s doronium-factory/production-runtime.js
           test -s doronium-factory/production-runtime.test.mjs
+          test -s doronium-factory/failure-runtime.js
+          test -s doronium-factory/failure-runtime.test.mjs
           test -s doronium-factory/world3d.js
           test -s doronium-factory/terrain-system.js
           grep -q 'WORLD_W = 192' doronium-factory/terrain-system.js
