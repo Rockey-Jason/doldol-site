@@ -235,12 +235,12 @@ export function createWorld3D(canvas, getState) {
   function clear(group){for(const o of [...group.children]){group.remove(o);disposeObject(o);}}
   function syncBeltItemVisual(anim,b){
     if(!anim.itemGroup)return;
-    const signature=b.item?String(b.item.id)+":"+Math.min(24,Math.max(1,Math.ceil(Number(b.item.qty)||1))):"";
+    const signature=b.item?String(b.item.id)+":"+Math.min(8,Math.max(1,Math.ceil(Number(b.item.qty)||1))):"";
     if(anim.itemSignature===signature)return;
     clear(anim.itemGroup);
     anim.itemSignature=signature;
     if(!b.item)return;
-    const count=Math.min(24,Math.max(1,Math.ceil(Number(b.item.qty)||1)));
+    const count=Math.min(8,Math.max(1,Math.ceil(Number(b.item.qty)||1)));
     for(let i=0;i<count;i++){
       const id=b.item.id;let mesh;
       if(crystalSpecs[id])mesh=makeCrystal(anim.itemGroup,id,0,0,0,2.0);
