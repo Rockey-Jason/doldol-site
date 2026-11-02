@@ -290,6 +290,90 @@ static func recipe_definition(recipe_id: String) -> Dictionary:
 			})
 	return {}
 
+static func validate_canonical_data() -> Array[String]:
+	var errors: Array[String] = []
+	if DORONUM_IDS.size()!=15 or DORONUM_IDS.size()!=DORONUM_IDS.duplicate().size():
+		errors.append("Canonical Doronum manifest must contain 15 unique IDs.")
+	var building_ids: Dictionary = {}
+	for building in BUILDINGS:
+		var building_id := str(building.id)
+		if building_ids.has(building_id):
+			errors.append("Duplicate BuildingID · "+building_id)
+		building_ids[building_id] = true
+	var research_ids: Dictionary = {}
+	for research in RESEARCH:
+		var research_id := str(research.id)
+		if research_ids.has(research_id):
+			errors.append("Duplicate ResearchID · "+research_id)
+		research_ids[research_id] = int(research.tier)
+	for research in RESEARCH:
+		for prerequisite in research.requires:
+			if not research_ids.has(str(prerequisite)):
+				errors.append("Unknown research prerequisite · "+str(research.id)+" -> "+str(prerequisite))
+			elif int(research_ids[str(prerequisite)])>int(research.tier):
+				errors.append("Research prerequisite tier inversion · "+str(research.id)+" -> "+str(prerequisite))
+	var stage_seconds := 0.0
+	for stage in FUSION_STAGES:
+		stage_seconds += float(stage.get("seconds",0.0))
+		if float(stage.get("temperature",0.0))<=0.0 or float(stage.get("pressure",0.0))<=0.0 or float(stage.get("power",0.0))<=0.0 or float(stage.get("seconds",0.0))<=0.0:
+			errors.append("Invalid Infinity stage profile · "+str(stage.get("name","UNKNOWN")))
+	if not is_equal_approx(stage_seconds,260.0):
+		errors.append("Infinity ideal RUNNING time must equal 260 seconds.")
+	for recipe_id in RECIPES:
+		var recipe: Dictionary = recipe_definition(str(recipe_id))
+		if recipe.is_empty():
+			errors.append("Recipe cannot be resolved · "+str(recipe_id))
+			continue
+		if not building_ids.has(str(recipe.machine)):
+			errors.append("Unknown recipe machine · "+str(recipe_id)+" -> "+str(recipe.machine))
+		if float(recipe.get("seconds",0.0))<=0.0 or not is_finite(float(recipe.get("seconds",0.0))):
+			errors.append("Invalid recipe duration · "+str(recipe_id))
+		if float(recipe.get("power",0.0))<0.0 or not is_finite(float(recipe.get("power",0.0))):
+			errors.append("Invalid recipe power · "+str(recipe_id))
+		if float(recipe.temperature_safe_min)>float(recipe.temperature_safe_max) or float(recipe.pressure_safe_min)>float(recipe.pressure_safe_max):
+			errors.append("Invalid process safe band · "+str(recipe_id))
+		for item_id in recipe.inputs:
+			if not ITEMS.has(str(item_id)) and str(item_id) not in DORONUM_IDS:
+				errors.append("Unknown recipe input ItemID · "+str(recipe_id)+" -> "+str(item_id))
+			if int(recipe.inputs[item_id])<=0:
+				errors.append("Non-positive recipe input · "+str(recipe_id)+" -> "+str(item_id))
+			if not recipe.material_weights.has(item_id) or not recipe.purity_weights.has(item_id):
+				errors.append("Missing input weights · "+str(recipe_id)+" -> "+str(item_id))
+		for item_id in recipe.outputs:
+			if not ITEMS.has(str(item_id)) and str(item_id) not in DORONUM_IDS and str(item_id)!="ITEM_DORONUM_INFINITY":
+				errors.append("Unknown recipe output ItemID · "+str(recipe_id)+" -> "+str(item_id))
+			if int(recipe.outputs[item_id])<=0:
+				errors.append("Non-positive recipe output · "+str(recipe_id)+" -> "+str(item_id))
+		if str(recipe_id).contains("DORONUM") and bool(recipe.allow_synthetic):
+			errors.append("Doronum recipe permits synthetic lineage · "+str(recipe_id))
+	for item_id in VARIANT_RECIPES:
+		if str(item_id) not in DORONUM_IDS or str(item_id)=="ITEM_DORONUM_NORMAL":
+			errors.append("Unexpected Doronum variant ID · "+str(item_id))
+		var variant_recipe := recipe_definition("RECIPE_"+str(item_id).replace("ITEM_",""))
+		if variant_recipe.is_empty() or not building_ids.has(str(variant_recipe.get("machine",""))):
+			errors.append("Invalid Doronum variant machine/recipe · "+str(item_id))
+		elif bool(variant_recipe.get("allow_synthetic",true)):
+			errors.append("Doronum variant permits synthetic lineage · "+str(item_id))
+	for recipe_id in MANUAL_RECIPES:
+		var recipe: Dictionary = MANUAL_RECIPES[recipe_id]
+		var profile: Dictionary = recipe.get("quality_profile",{})
+		for key in ["temperature_quality","pressure_quality","machine_condition_quality","power_stability"]:
+			if not profile.has(key) or float(profile.get(key,-1.0))<0.0 or float(profile.get(key,101.0))>100.0:
+				errors.append("Missing/invalid manual QualityProfile · "+str(recipe_id)+" · "+key)
+		for item_id in recipe.inputs:
+			if not ITEMS.has(str(item_id)) and str(item_id) not in DORONUM_IDS:
+				errors.append("Unknown manual input ItemID · "+str(recipe_id)+" -> "+str(item_id))
+			if not recipe.get("material_weights",{}).has(item_id) or not recipe.get("purity_weights",{}).has(item_id):
+				errors.append("Missing manual input weights · "+str(recipe_id)+" -> "+str(item_id))
+		for item_id in recipe.outputs:
+			if not ITEMS.has(str(item_id)) and str(item_id) not in DORONUM_IDS:
+				errors.append("Unknown manual output ItemID · "+str(recipe_id)+" -> "+str(item_id))
+	if absf(float(INFINITY_FAILURE_PROFILE.minor_probability)+float(INFINITY_FAILURE_PROFILE.major_probability)+float(INFINITY_FAILURE_PROFILE.critical_probability)-1.0)>0.000001:
+		errors.append("Infinity failure severity distribution must total 100%.")
+	if absf(float(DEFAULT_MACHINE_FAILURE_PROFILE.minor_probability)+float(DEFAULT_MACHINE_FAILURE_PROFILE.major_probability)+float(DEFAULT_MACHINE_FAILURE_PROFILE.critical_probability)-1.0)>0.000001:
+		errors.append("Machine failure severity distribution must total 100%.")
+	return errors
+
 static func item_name(item_id: String) -> String:
 	if ITEMS.has(item_id):
 		return str(ITEMS[item_id].name)
