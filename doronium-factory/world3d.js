@@ -564,18 +564,29 @@ export function createWorld3D(canvas, getState) {
       }
       if(a.orb){const p=running?1+Math.sin(t*2.2)*.045:1,v=a.orb.userData.baseScale||new THREE.Vector3(1,1,1);a.orb.scale.set(v.x*p,v.y*p,v.z*p);}
       if(a.outputMesh){const v=a.outputMesh.userData.baseScale||new THREE.Vector3(1,1,1);a.outputMesh.position.y=24+(running?Math.sin(t*2.1)*1.1:0);a.outputMesh.rotation.y=running?t*.65:0;a.outputMesh.scale.set(v.x,v.y,v.z);}
-      if(a.glow)a.glow.material.opacity=running?.66+Math.sin(t*4)*.18:.18;
+      if(a.glow)a.glow.material.opacity=running ? .66+Math.sin(t*4)*.18 : .18;
       if(a.itemGroup&&b.item){const p=clamp((b.moveTimer||0)/.75,0,1),n=a.itemGroup.children.length,cols=Math.min(6,n),rows=Math.ceil(n/cols);for(let i=0;i<n;i++){const m=a.itemGroup.children[i];m.position.x=((i%cols)-(cols-1)/2)*3.0;m.position.z=-((Math.floor(i/cols)-(rows-1)/2)*3.0)-(p-.5)*18;m.position.y=8.6+Math.sin(t*5+i)*.18;m.rotation.y=t*1.5+i*.45;m.rotation.x=Math.sin(t*2+i)*.1;}}
     });
     if(playerModel){const m=state.playerMotion||{x:state.player.x,z:state.player.y,moving:false};const base=state.player?.layer==="mine"?mineFloorY(state.player.mineLevel):surfaceY(state,Math.floor(m.x+.5),Math.floor(m.z+.5));playerModel.position.set(m.x*32,base+1+(Number(m.y)||0)+Math.sin(t*3)*(m.moving ? .13 : .025),m.z*32);if(playerRing){playerRing.position.set(m.x*32,base+2+(Number(m.y)||0),m.z*32);playerRing.visible=state.player?.layer!=="mine";}playerModel.rotation.y=m.yaw??m.facing??0;const swing=m.moving ? Math.sin(t*9)*.48 : Math.sin(t*1.5)*.035;(playerModel.userData.legs||[]).forEach((leg,i)=>leg.rotation.x=swing*(i%2?-1:1));(playerModel.userData.arms||[]).forEach((arm,i)=>arm.rotation.x=m.moving?Math.sin(t*9+i*Math.PI)*.38:0);}
     renderer.render(scene,camera);
   }
   function resizeIfNeeded(){const r=canvas.getBoundingClientRect();if(Math.abs(r.width-width)>1||Math.abs(r.height-height)>1)resize();}
+  function adaptPerformanceFrame(frameMs){
+    if(!Number.isFinite(frameMs)||frameMs<=0||frameMs>250)return;
+    if(frameMs>22){slowFrames++;fastFrames=0;}else if(frameMs<16.3){fastFrames++;slowFrames=0;}else{slowFrames=Math.max(0,slowFrames-1);fastFrames=0;}
+    if(slowFrames>=45){
+      currentPixelRatio=Math.max(minPixelRatio,Math.round(currentPixelRatio*.9*100)/100);
+      renderer.setPixelRatio(currentPixelRatio);resize();slowFrames=0;fastFrames=0;
+    }else if(fastFrames>=240&&currentPixelRatio<basePixelRatio){
+      currentPixelRatio=Math.min(basePixelRatio,Math.round((currentPixelRatio+.04)*100)/100);
+      renderer.setPixelRatio(currentPixelRatio);resize();fastFrames=0;slowFrames=0;
+    }
+  }
   function pickTile(clientX,clientY){if(stateLayerForPicking==="mine")return null;const r=canvas.getBoundingClientRect();pointer.x=((clientX-r.left)/r.width)*2-1;pointer.y=-((clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hit=terrainChunks.length?raycaster.intersectObjects(terrainChunks,false)[0]:null;if(hit?.instanceId===undefined||hit.instanceId===null)return null;const chunk=hit.object.userData,index=hit.instanceId,x=chunk.chunkX+(index%chunk.chunkWidth),z=chunk.chunkZ+Math.floor(index/chunk.chunkWidth);return x>=0&&z>=0&&x<WORLD_W&&z<WORLD_H?{x,y:z,z}:null;}
   function pan(dx,dy){const scale=1/zoom;target.x=clamp(target.x-dx*1.6*scale,0,(WORLD_W-1)*32);target.z=clamp(target.z-dy*1.6*scale,0,(WORLD_H-1)*32);cameraUpdate();}
   function setZoom(value){zoom=clamp(value,.55,1.8);if(activeViewMode==="map"){cameraUpdate()}else{gameCamera.fov=clamp(74-(zoom-1)*38,52,88);gameCamera.updateProjectionMatrix();}}
   function center(x,y){target.set(x*32,terrainHeightAt(x,y),y*32);cameraUpdate();}
   function orbit(dx,dy){yaw-=dx*0.004;pitch=clamp(pitch+dy*0.003,0.42,1.25);cameraUpdate();}
   resize();cameraUpdate();
-  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?"third":"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),adaptiveBeltTilts:machineRoot.children.filter(g=>g.userData?.type==="beltAdaptive").map(g=>g.userData.adaptiveSlope),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,undergroundResourceNodes:mineRoot.children.filter(g=>g.userData?.targetKind?.kind==="resource").length};},get zoom(){return zoom;}};
+  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?"third":"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},adaptPerformanceFrame,inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),adaptiveBeltTilts:machineRoot.children.filter(g=>g.userData?.type==="beltAdaptive").map(g=>g.userData.adaptiveSlope),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,terrainChunkCount:terrainChunks.length,renderCount,rebuildCount,pixelRatio:renderer.getPixelRatio(),basePixelRatio,shadowEnabled:renderer.shadowMap.enabled,qualityTier:compactDevice?"mobile":lowEndDevice?"low":shadowsEnabled?"high":"balanced",undergroundResourceNodes:mineRoot.children.filter(g=>g.userData?.targetKind?.kind==="resource").length};},get zoom(){return zoom;}};
 }
