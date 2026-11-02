@@ -1,4 +1,4 @@
-import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS } from "./world3d.js?v=6";
+import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=6";
 let createClient = null;
 
 /* DORONIUM FACTORY — INFINITE INDUSTRY
@@ -323,7 +323,8 @@ if(E2E_MODE){
    variantCount:VARIANTS.length,
    uniqueVariants:new Set(VARIANTS).size,
    uniqueCrystalModels:DORONIUM_CRYSTAL_MODELS.filter(id=>id!=="infinity").length,
-   allCrystalModels:VARIANTS.every(id=>DORONIUM_CRYSTAL_MODELS.includes(id)),
+   uniqueCrystalShapes:new Set(VARIANTS.map(id=>DORONIUM_CRYSTAL_MODEL_SHAPES[id])).size,
+   allCrystalModels:VARIANTS.every(id=>DORONIUM_CRYSTAL_MODELS.includes(id)&&!!DORONIUM_CRYSTAL_MODEL_SHAPES[id]),
    researchCount:RESEARCH.length,
    buildingCount:BUILDINGS.length,
    allVariantModels:VARIANTS.every(id=>!!RESOURCE[id]),
@@ -331,6 +332,18 @@ if(E2E_MODE){
    buildingMaterialsValid:BUILDINGS.every(b=>Object.keys(b.materials||{}).every(id=>!!RESOURCE[id]))
   }),
   power:()=>currentPower(),
+  setClock(seconds){S.seconds=Math.max(0,Number(seconds)||0);renderHud();return currentPower()},
+  ledger(){
+   const total=id=>S.inventory[id]||0;
+   const result={ironOre:total("ironOre"),coal:total("coal"),ironPlate:total("ironPlate")};
+   for(const b of S.buildings){
+    result.ironOre+=(b.input?.ironOre||0)+(b.output?.id==="ironOre"?b.output.qty:0)+(b.item?.id==="ironOre"?b.item.qty:0);
+    result.coal+=(b.input?.coal||0)+(b.output?.id==="coal"?b.output.qty:0)+(b.item?.id==="coal"?b.item.qty:0);
+    result.ironPlate+=(b.input?.ironPlate||0)+(b.output?.id==="ironPlate"?b.output.qty:0)+(b.item?.id==="ironPlate"?b.item.qty:0);
+    if(b.activeMeta&&b.type==="smelter"){result.ironOre+=2;result.coal+=1;}
+   }
+   return {...result,oreBalance:result.ironOre+2*result.ironPlate,coalBalance:result.coal+result.ironPlate};
+  },
   testPath:(x,y)=>findPlayerPath(S.player.x,S.player.y,x,y),
   runSeconds(seconds){const count=Math.floor(seconds/STEP+1e-8);for(let i=0;i<count;i++)tick(STEP);drawWorld();return {ticks:count,state:structuredClone(S),power:currentPower()}},
   setupSoak(){
