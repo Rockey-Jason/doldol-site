@@ -532,10 +532,15 @@ func _tick_conveyors(dt: float) -> void:
 		if target.is_empty():
 			belt.state = "JAMMED_NO_ROUTE"
 			continue
-		if target.id == "WAREHOUSE":
-			game.add_item(str(payload.item_id),int(payload.quantity),float(payload.quality),float(payload.purity),bool(payload.synthetic),str(payload.provenance))
+		if target.id=="WAREHOUSE":
+			var warehouse_storage: Array = target.get("storage",[])
+			if warehouse_storage.size()>=100:
+				belt.state = "JAMMED_TARGET_FULL"
+				continue
+			warehouse_storage.append(payload.duplicate(true))
+			target.storage = warehouse_storage
 		else:
-			if target.input.size() >= 24:
+			if target.input.size()>=24:
 				belt.state = "JAMMED_TARGET_FULL"
 				continue
 			target.input.append(payload.duplicate(true))
