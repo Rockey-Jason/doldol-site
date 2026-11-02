@@ -819,6 +819,8 @@ func fusion_preflight() -> Array[String]:
 		errors.append("BLUE FURNACE INCIDENT 기록 4개를 모두 복구해야 해.")
 	if not bool(story_flags.get("ORBIT_04",false)):
 		errors.append("ORBIT 04 권한과 INFINITE PROJECT 기록이 필요해.")
+	if not bool(story_flags.get("ACT_VI_COMPLETE",false)):
+		errors.append("ACT VI 최종 공장 라인과 안전 검증을 완료해야 해.")
 	for flag in ["ARCHIVE_RESTORED","COOLING_CORE_RESTORED","RESONANCE_CHAMBER_RESTORED"]:
 		if not bool(story_flags.get(flag,false)):
 			errors.append("FIRST FACTORY 복구 필요 · "+flag)
