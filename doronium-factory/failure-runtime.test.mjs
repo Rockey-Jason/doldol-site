@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {validateFailureProfile,calculateFailureRisks,calculateFailureHazard,nextFailureRandom,rollMachineFailure,advanceFailureExposure} from "./failure-runtime.js";
 
-const profile={baseFailureProbability:.01,referenceDurationSec:260,weights:{temperature:1,pressure:1,powerInstability:1,wear:1,load:1},gradeDistribution:{minor:.3,major:.45,critical:.25},outcomes:{minor:{progressLossSeconds:1},major:{progressLossSeconds:5},critical:{progressLossSeconds:10}}};
+const profile={baseFailureProbability:.01,referenceDurationSec:260,weights:{temperature:1,pressure:1,powerInstability:1,wear:1,load:1},loadRiskRange:{optimalRatio:1,criticalRatio:2},gradeDistribution:{minor:.3,major:.45,critical:.25},outcomes:{minor:{progressLossSeconds:1},major:{progressLossSeconds:5},critical:{progressLossSeconds:10}}};
 const risks={temperature:0,pressure:0,powerInstability:0,wear:0,load:0};
 
 test("failure profile requires valid base hazard, risk weights, grade distribution and explicit outcomes",()=>{
@@ -25,16 +25,18 @@ test("hazard rate uses reference duration and exposure time, not repeated fixed 
 
 test("temperature and pressure risks rise from target to safe-band edge and fault outside",()=>{
  const args={temperature:100,targetTemperature:100,safeTemperatureMin:50,safeTemperatureMax:150,pressure:100,targetPressure:100,safePressureMin:50,safePressureMax:150,powerRatio:.8,condition:50,actualLoad:1,nominalLoad:2};
- const center=calculateFailureRisks(args);
+ const center=calculateFailureRisks({...args,profile});
  assert.equal(center.temperature,0);
  assert.equal(center.pressure,0);
  assert.equal(center.powerInstability,.19999999999999996);
  assert.equal(center.wear,.5);
- assert.equal(center.load,.5);
- const edge=calculateFailureRisks({...args,temperature:150,pressure:50});
+ assert.equal(center.load,0);
+ const overloaded=calculateFailureRisks({...args,profile,actualLoad:1.5});
+ assert.equal(overloaded.load,.5);
+ const edge=calculateFailureRisks({...args,profile,temperature:150,pressure:50});
  assert.equal(edge.temperature,1);
  assert.equal(edge.pressure,1);
- const fault=calculateFailureRisks({...args,temperature:151});
+ const fault=calculateFailureRisks({...args,profile,temperature:151});
  assert.equal(fault.safetyFault,true);
  assert.equal(calculateFailureHazard(profile,fault,10).tickProbability,0);
 });
