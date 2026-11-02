@@ -9,6 +9,11 @@ var total_consumption := 0.0
 var tick_number := 0
 var accumulator := 0.0
 
+static func calculate_progress_delta(delta_seconds: float,power_ratio: float) -> float:
+	if not is_finite(delta_seconds) or not is_finite(power_ratio) or delta_seconds<=0.0 or power_ratio<0.80:
+		return 0.0
+	return delta_seconds*clampf(power_ratio,0.0,1.0)
+
 func bind_state(state: GameState, planet: PlanetWorld = null) -> void:
 	game = state
 	world = planet
@@ -196,7 +201,7 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	if not temp_ok or not pressure_ok:
 		machine.state = "RAMPING"
 		return
-	var progress_delta := dt*progress_ratio*speed_multiplier
+	var progress_delta := calculate_progress_delta(dt,progress_ratio)*speed_multiplier
 	machine.progress += progress_delta
 	machine.temperature_quality_sum += _score_process_accuracy(float(machine.temperature),target_temperature,float(recipe.get("temperature_absolute_tolerance",1.0)))*progress_delta
 	machine.pressure_quality_sum += _score_process_accuracy(float(machine.pressure),target_pressure,float(recipe.get("pressure_absolute_tolerance",1.0)))*progress_delta
