@@ -35,24 +35,32 @@ export function biomeAt(x,z){
 
 export function terrainHeightAt(x,z){
   const wave=Math.sin(x*.105+z*.036)*5.5+Math.cos(z*.12-x*.025)*4.5+Math.sin((x+z)*.047)*5;
-  const biome=biomeAt(x,z);
-  const westernRidge=Math.max(0,1-Math.abs(x-(91+Math.sin(z*.09)*7))/32);
-  const easternRidge=Math.exp(-Math.pow((x-(153+Math.sin(z*.045)*11))/25,2));
-  const southernRidge=Math.exp(-Math.pow((z-(137+Math.sin(x*.035)*9))/24,2));
-  let h=wave;
-  if(biome==="highlands"||biome==="frost") h+=18+westernRidge*40+Math.sin(z*.31)*7;
-  else if(biome==="desert") h+=9+Math.sin(x*.17+z*.08)*6+Math.cos(z*.24)*3;
-  else if(biome==="wetland") h-=7+Math.sin(x*.15)*4;
-  else if(biome==="forest") h+=7+Math.sin(z*.2)*5;
-  else if(biome==="crystal") h+=20+Math.sin((x-z)*.16)*12;
-  else if(biome==="volcanic") h+=12+Math.sin(x*.2)*8+Math.cos(z*.19)*7;
-  // Broad mountain belts create readable block-height relief without isolated spikes.
-  h+=easternRidge*70+southernRidge*30;
-  if(biome==="volcanic"){
-    const cx=x<100?62:139,cz=x<100?24:116,d=Math.hypot(x-cx,z-cz);
-    h+=Math.max(0,1-d/25)*35-Math.max(0,1-d/10)*24;
-  }
-  return Math.round(h/3)*3;
+  const westCenter=91+Math.sin(z*.09)*7;
+  const eastCenter=153+Math.sin(z*.045)*11;
+  const southCenter=137+Math.sin(x*.035)*9;
+  const westernRidge=Math.exp(-Math.pow((x-westCenter)/31,2))*Math.exp(-Math.pow((z-26)/51,2));
+  const easternRidge=Math.exp(-Math.pow((x-eastCenter)/27,2))*Math.exp(-Math.pow((z-30)/55,2));
+  const southernRidge=Math.exp(-Math.pow((z-southCenter)/28,2))*Math.exp(-Math.pow((x-158)/60,2));
+
+  // Soft biome-shaped landforms keep adjacent block heights traversable.
+  const desert=smooth(168,180,x)*smooth(58,76,z);
+  const westWetland=Math.exp(-Math.pow((x-18)/20,2))*Math.exp(-Math.pow((z-76)/28,2));
+  const eastWetland=Math.exp(-Math.pow((x-139)/18,2))*Math.exp(-Math.pow((z-84)/25,2));
+  const westForest=Math.exp(-Math.pow((x-29)/24,2))*Math.exp(-Math.pow((z-26)/35,2));
+  const eastForest=Math.exp(-Math.pow((x-139)/20,2))*Math.exp(-Math.pow((z-143)/24,2));
+  const westCrystal=Math.exp(-Math.pow((x-95)/22,2))*Math.exp(-Math.pow((z-51)/28,2));
+  const eastCrystal=Math.exp(-Math.pow((x-164)/17,2))*Math.exp(-Math.pow((z-111)/27,2));
+  const volcano=(cx,cz)=>{
+    const d2=(x-cx)*(x-cx)+(z-cz)*(z-cz);
+    return Math.exp(-d2/700)*44-Math.exp(-d2/80)*24;
+  };
+  const relief=westernRidge*60+easternRidge*95+southernRidge*38;
+  const landforms=desert*(6+Math.sin(x*.17+z*.08)*4)
+    -(westWetland+eastWetland)*9
+    +(westForest+eastForest)*3
+    +(westCrystal+eastCrystal)*14
+    +volcano(62,24)+volcano(139,116);
+  return Math.round((wave+relief+landforms)/3)*3;
 }
 
 export function mineFloorY(level){return -42*clamp(Number(level)||1,1,MINE_LEVELS);}
