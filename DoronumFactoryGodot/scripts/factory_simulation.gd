@@ -394,14 +394,14 @@ func _tick_auto_miner(machine: Dictionary, dt: float) -> void:
 	var item_id := str(target.get_meta("resource_id"))
 	var remaining := int(target.get_meta("quantity",0))
 	var stack := {
-		"item_id":item_id,"quantity":1,"quality":float(target.get_meta("quality",90.0)),
+		"stack_id":game._new_stack_id(),"item_id":item_id,"quantity":1,"quality":float(target.get_meta("quality",90.0)),
 		"purity":float(target.get_meta("purity",90.0)),"synthetic":false,
 		"provenance":"AUTO_MINER:"+str(target.get_meta("node_id"))
 	}
 	machine.output.append(stack)
 	var byproduct_chance := 0.05+(0.02 if game.has_skill("VEIN_EFFICIENCY") else 0.0)
 	if game._deterministic_unit(int(game.world_seed+hash(str(target.get_meta("node_id","")))+remaining))<byproduct_chance:
-		machine.output.append({"item_id":"ITEM_MINERAL_RESIDUE","quantity":1,"quality":float(stack.quality),"purity":float(stack.purity),"synthetic":false,"provenance":"AUTO_MINER_BYPRODUCT:"+str(target.get_meta("node_id",""))})
+		machine.output.append({"stack_id":game._new_stack_id(),"item_id":"ITEM_MINERAL_RESIDUE","quantity":1,"quality":float(stack.quality),"purity":float(stack.purity),"synthetic":false,"provenance":"AUTO_MINER_BYPRODUCT:"+str(target.get_meta("node_id",""))})
 	target.set_meta("quantity",remaining-1)
 	game.resource_depletion[str(target.get_meta("node_id",""))] = remaining-1
 	game.discover_resource(str(target.get_meta("node_id")),item_id)
@@ -433,7 +433,7 @@ func _tick_water_pump(machine: Dictionary, dt: float) -> void:
 		return
 	machine.progress = 0.0
 	water_node.set_meta("quantity",int(water_node.get_meta("quantity"))-2)
-	machine.output.append({"item_id":"ITEM_WATER","quantity":2,"quality":100.0,"purity":100.0,"synthetic":false,"provenance":"WATER_PUMP:"+str(machine.instance_id)})
+	machine.output.append({"stack_id":game._new_stack_id(),"item_id":"ITEM_WATER","quantity":2,"quality":100.0,"purity":100.0,"synthetic":false,"provenance":"WATER_PUMP:"+str(machine.instance_id)})
 	machine.state = "PAUSED_OUTPUT"
 
 func _tick_dori_harvester(machine: Dictionary, dt: float) -> void:
@@ -463,7 +463,7 @@ func _tick_dori_harvester(machine: Dictionary, dt: float) -> void:
 		machine.state = "WAITING_TREE"
 		return
 	if bool(tree.get_meta("mature",false)):
-		machine.output.append({"item_id":"ITEM_DORI_MEAT","quantity":1,"quality":92.0,"purity":float(tree.get_meta("purity",90.0)),"synthetic":false,"provenance":"DORI_TREE:"+str(tree.get_meta("node_id"))})
+		machine.output.append({"stack_id":game._new_stack_id(),"item_id":"ITEM_DORI_MEAT","quantity":1,"quality":92.0,"purity":float(tree.get_meta("purity",90.0)),"synthetic":false,"provenance":"DORI_TREE:"+str(tree.get_meta("node_id"))})
 		tree.set_meta("mature",false)
 		tree.set_meta("growth",0.0)
 		tree.set_meta("water",0.0)
