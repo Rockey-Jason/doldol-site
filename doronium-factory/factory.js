@@ -367,6 +367,11 @@ if(E2E_MODE){
    S=freshState();S.player={x:18,y:14};S.seconds=8*3600;S.money=100000000;
    S.inventory={ironOre:50000,coal:30000};S.meta={};S.research=[];
    S.stats={gathered:{},built:{},produced:{},sold:0,energyProduced:0};
+   selectedBuild=null;selectedBuilding=null;
+   // Open a deterministic test corridor to the smelter while keeping the machine footprint blocked.
+   for(let x=2;x<=18;x++){delete S.nodes[x+",14"];S.seen[x+",14"]=true;}
+   for(let y=3;y<=14;y++){delete S.nodes["2,"+y];S.seen["2,"+y]=true;}
+   for(let y=2;y<=14;y++){delete S.nodes["1,"+y];S.seen["1,"+y]=true;}
    S.buildings=[
     {uid:"test-solar",type:"solar",x:1,y:1,dir:1,progress:0,condition:100,status:"IDLE"},
     {uid:"test-smelter",type:"smelter",x:2,y:2,dir:1,progress:0,condition:100,input:{},inputMeta:{},output:null,activeMeta:null,temp:25,pressure:0,status:"IDLE"},
