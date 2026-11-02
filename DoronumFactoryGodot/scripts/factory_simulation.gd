@@ -186,7 +186,7 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 		return
 	var temperature_safe_min := float(recipe.get("temperature_safe_min",target_temperature-maxf(5.0,absf(target_temperature)*0.20)))
 	var temperature_safe_max := float(recipe.get("temperature_safe_max",target_temperature+maxf(5.0,absf(target_temperature)*0.20)))
-	var pressure_safe_min := float(recipe.get("pressure_safe_min",maxf(0.0,target_pressure-maxf(1.0,absf(target_pressure)*0.20)))
+	var pressure_safe_min := float(recipe.get("pressure_safe_min",maxf(0.0,target_pressure-maxf(1.0,absf(target_pressure)*0.20))))
 	var pressure_safe_max := float(recipe.get("pressure_safe_max",target_pressure+maxf(1.0,absf(target_pressure)*0.20)))
 	if float(machine.temperature)<temperature_safe_min or float(machine.temperature)>temperature_safe_max or float(machine.pressure)<pressure_safe_min or float(machine.pressure)>pressure_safe_max:
 		machine.state = "PAUSED_SAFETY"
