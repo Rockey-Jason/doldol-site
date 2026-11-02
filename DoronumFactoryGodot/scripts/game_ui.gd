@@ -287,11 +287,11 @@ func _draw_factory() -> void:
 		])
 		_label("CONDITION %.1f%%  ·  FAILURE EXPOSURE %.1fs" % [float(machine.condition),float(machine.get("failure_exposure",0.0))])
 		if float(machine.condition)<=25.0 or str(machine.state)=="BROKEN":
-			_button("MAINTENANCE · REPAIR "+str(machine.id),func(): game.repair_machine(str(machine.instance_id));_refresh(),float(machine.condition)>=100.0)
+			_button("MAINTENANCE · REPAIR "+str(machine.id),_repair_machine_action.bind(str(machine.instance_id)),float(machine.condition)>=100.0)
 		if machine.id=="WAREHOUSE":
 			for stored_stack in machine.get("storage",[]):
 				_label("WAREHOUSE · %s ×%d · Q %.1f / P %.1f" % [GameData.item_name(str(stored_stack.item_id)),int(stored_stack.quantity),float(stored_stack.quality),float(stored_stack.purity)])
-				_button("창고 출고 · "+GameData.item_name(str(stored_stack.item_id)),func(): game.collect_warehouse_item(str(machine.instance_id),str(stored_stack.stack_id));_refresh())
+				_button("창고 출고 · "+GameData.item_name(str(stored_stack.item_id)),_warehouse_collect_action.bind(str(machine.instance_id),str(stored_stack.stack_id)))
 		for input_stack in machine.get("input",[]):
 			_label("INPUT · %s ×%d · %s" % [GameData.item_name(str(input_stack.item_id)),int(input_stack.quantity),"SYNTHETIC" if bool(input_stack.synthetic) else "NATURAL"])
 		if game.has_skill("FAULT_DIAGNOSTICS"):
@@ -313,12 +313,24 @@ func _draw_factory() -> void:
 			for item_id in active_recipe.get("inputs",{}):
 				input_summary.append("%s ×%d" % [GameData.item_name(str(item_id)),int(active_recipe.inputs[item_id])])
 			_label("ACTIVE RECIPE · "+" + ".join(input_summary))
-			_button("레시피 재료 원자 투입",func(): game.supply_machine_inputs(str(machine.instance_id));_refresh())
+			_button("레시피 재료 원자 투입",_supply_machine_action.bind(str(machine.instance_id)))
 		for output_id in GameData.VARIANT_RECIPES:
 			var variant_recipe_id := "RECIPE_"+str(output_id).replace("ITEM_","")
 			var variant_recipe: Dictionary = GameData.recipe_definition(variant_recipe_id)
 			if not variant_recipe.is_empty() and variant_recipe.machine == machine.id:
 				_button("도로늄 레시피 · "+str(variant_recipe.name),func(): game.set_machine_recipe(str(machine.instance_id),variant_recipe_id))
+
+func _repair_machine_action(instance_id: String) -> void:
+	game.repair_machine(instance_id)
+	_refresh()
+
+func _warehouse_collect_action(instance_id: String,stack_id: String) -> void:
+	game.collect_warehouse_item(instance_id,stack_id)
+	_refresh()
+
+func _supply_machine_action(instance_id: String) -> void:
+	game.supply_machine_inputs(instance_id)
+	_refresh()
 
 func _draw_story() -> void:
 	_heading("ORBIT  /  STORY ARCHIVE")
