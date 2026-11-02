@@ -446,7 +446,7 @@ export function createWorld3D(canvas, getState) {
   function render(state){
     if(!state)return;resizeIfNeeded();const sig=signature(state);if(sig!==lastSignature){rebuild(state);lastSignature=sig;}
     activeViewMode=state.player?.viewMode==="map"?"map":state.player?.viewMode==="third"?"third":"first";
-    if(activeViewMode==="map")cameraUpdate();else updateGameCamera(state);
+    if(activeViewMode==="map"){cameraUpdate();if(playerModel)playerModel.visible=true;firstPersonRig.visible=false;}else updateGameCamera(state);
     const t=performance.now()*.001;sun.intensity=2.25+Math.sin(t*.08)*.18;
     const byUid=new Map((state.buildings||[]).map(b=>[b.uid,b]));
     machineRoot.children.forEach(g=>{
