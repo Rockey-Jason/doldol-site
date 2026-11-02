@@ -9,6 +9,8 @@ on:
       - '.github/workflows/deploy-rockey-pages.yml'
       - 'docs/rockey/**'
       - 'gamepage.html'
+      - 'rockey-clicker.html'
+      - '*.html'
   workflow_dispatch:
 
 permissions:
