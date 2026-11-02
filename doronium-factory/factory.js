@@ -327,6 +327,12 @@ if(E2E_MODE){
    allCrystalModels:VARIANTS.every(id=>DORONIUM_CRYSTAL_MODELS.includes(id)&&!!DORONIUM_CRYSTAL_MODEL_SHAPES[id]),
    researchCount:RESEARCH.length,
    buildingCount:BUILDINGS.length,
+   simulationStep:STEP,
+   variantRecipeCount:Object.keys(VARIANT_RECIPES).length,
+   variantRecipesValid:VARIANTS.filter(id=>id!=="doronium_normal").every(id=>!!VARIANT_RECIPES[id]&&Object.keys(VARIANT_RECIPES[id].inputs).every(k=>!!RESOURCE[k])),
+   fusionStageCount:FUSION_STAGES.length,
+   fusionIdealDuration:FUSION_STAGES.reduce((n,x)=>n+x.time,0),
+   researchGraphValid:(()=>{const ids=new Set(RESEARCH.map(r=>r.id));if(!RESEARCH.every(r=>(r.requires||[]).every(id=>ids.has(id))))return false;const visiting=new Set(),done=new Set();function visit(id){if(visiting.has(id))return false;if(done.has(id))return true;visiting.add(id);const r=RESEARCH.find(v=>v.id===id);for(const dep of r?.requires||[])if(!visit(dep))return false;visiting.delete(id);done.add(id);return true}return RESEARCH.every(r=>visit(r.id))})(),
    allVariantModels:VARIANTS.every(id=>!!RESOURCE[id]),
    recipeInputsValid:Object.values(RECIPES).every(r=>Object.keys(r.inputs).every(id=>!!RESOURCE[id])),
    buildingMaterialsValid:BUILDINGS.every(b=>Object.keys(b.materials||{}).every(id=>!!RESOURCE[id]))
@@ -338,6 +344,11 @@ if(E2E_MODE){
    belt.item={id,qty,meta:{quality:90,purity:90,synthetic:false}};belt.moveTimer=.1;drawWorld();return world3d.inspect();
   },
   setClock(seconds){S.seconds=Math.max(0,Number(seconds)||0);renderHud();return currentPower()},
+  machinePowerGate(){
+   const b=S.buildings.find(v=>v.type==="smelter");if(!b)throw new Error("test smelter missing");
+   const before=itemCount("ironOre");tickMachine(b,STEP,currentPower().ratio);
+   return {status:b.status,ironOreBefore:before,ironOreAfter:itemCount("ironOre")};
+  },
   ledger(){
    const total=id=>S.inventory[id]||0;
    const result={ironOre:total("ironOre"),coal:total("coal"),ironPlate:total("ironPlate")};
