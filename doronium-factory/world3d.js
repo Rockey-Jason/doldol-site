@@ -144,6 +144,7 @@ export function createWorld3D(canvas, getState) {
 
   const mapCamera = new THREE.OrthographicCamera(-380,380,260,-260,1,6000);
   const gameCamera = new THREE.PerspectiveCamera(74,1,.1,2600);
+  scene.add(gameCamera);
   let camera=mapCamera, activeViewMode="map";
   const target = new THREE.Vector3(18*32,0,14*32);
   let zoom = 1, width = 1, height = 1, lastSignature = "", yaw = 0.68, pitch = 0.73;
@@ -474,5 +475,5 @@ export function createWorld3D(canvas, getState) {
   function center(x,y){target.set(x*32,0,y*32);cameraUpdate();}
   function orbit(dx,dy){yaw-=dx*0.004;pitch=clamp(pitch+dy*0.003,0.42,1.25);cameraUpdate();}
   resize();cameraUpdate();
-  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?mode:"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z))};},get zoom(){return zoom;}};
+  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?mode:"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible};},get zoom(){return zoom;}};
 }
