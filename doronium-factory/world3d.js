@@ -142,7 +142,9 @@ export function createWorld3D(canvas, getState) {
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.12;
 
-  const camera = new THREE.OrthographicCamera(-380,380,260,-260,1,6000);
+  const mapCamera = new THREE.OrthographicCamera(-380,380,260,-260,1,6000);
+  const gameCamera = new THREE.PerspectiveCamera(74,1,.1,2600);
+  let camera=mapCamera, activeViewMode="map";
   const target = new THREE.Vector3(18*32,0,14*32);
   let zoom = 1, width = 1, height = 1, lastSignature = "", yaw = 0.68, pitch = 0.73;
   const raycaster = new THREE.Raycaster();
@@ -176,8 +178,36 @@ export function createWorld3D(canvas, getState) {
   const sharedGeometry=new Set([boxGeo,cylGeo,sphereGeo,coneGeo]);
   const sharedMaterials=new Set(Object.values(mats));
   function clear(group){for(const o of [...group.children]){group.remove(o);o.traverse(child=>{if(child.geometry&&!sharedGeometry.has(child.geometry))child.geometry.dispose();if(child.material){const list=Array.isArray(child.material)?child.material:[child.material];for(const material of list)if(!sharedMaterials.has(material))material.dispose();}});}}
-  function cameraUpdate(){const span=440/zoom;camera.left=-span*width/height/2;camera.right=span*width/height/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();const distance=1000,horizontal=Math.cos(pitch)*distance;camera.position.set(target.x+Math.sin(yaw)*horizontal,Math.sin(pitch)*distance,target.z+Math.cos(yaw)*horizontal);camera.lookAt(target.x,0,target.z);}
-  function resize(){const r=canvas.getBoundingClientRect();width=Math.max(1,r.width);height=Math.max(1,r.height);renderer.setSize(width,height,false);cameraUpdate();}
+  function cameraUpdate(){camera=mapCamera;const span=440/zoom;mapCamera.left=-span*width/height/2;mapCamera.right=span*width/height/2;mapCamera.top=span/2;mapCamera.bottom=-span/2;mapCamera.updateProjectionMatrix();const distance=1000,horizontal=Math.cos(pitch)*distance;mapCamera.position.set(target.x+Math.sin(yaw)*horizontal,Math.sin(pitch)*distance,target.z+Math.cos(yaw)*horizontal);mapCamera.lookAt(target.x,0,target.z);}
+  function updateGameCamera(state){
+    const motion=state.playerMotion||{x:state.player.x,z:state.player.y,yaw:0,pitch:-.12,y:0};
+    const px=motion.x*32,pz=motion.z*32,py=Number(motion.y)||0,yaw=Number(motion.yaw)||0,pitch=Number(motion.pitch??-.12);
+    const fx=-Math.sin(yaw),fz=-Math.cos(yaw);
+    camera=gameCamera;gameCamera.aspect=width/height;gameCamera.updateProjectionMatrix();
+    if(activeViewMode==="first"){
+      gameCamera.position.set(px,22+py,pz);
+      gameCamera.rotation.order="YXZ";gameCamera.rotation.set(pitch,yaw,0);
+    }else{
+      gameCamera.position.set(px-fx*112,66+py,pz-fz*112);
+      gameCamera.lookAt(px,18+py,pz);
+    }
+    gameCamera.updateMatrixWorld(true);
+    if(playerModel)playerModel.visible=activeViewMode!=="first";
+  }
+  function pickTarget(maxDistance=190){
+    raycaster.setFromCamera(new THREE.Vector2(0,0),camera);
+    const roots=[...nodeRoot.children,...machineRoot.children];
+    const hits=raycaster.intersectObjects(roots,true);
+    for(const hit of hits){
+      let root=hit.object;
+      while(root&&root.parent!==nodeRoot&&root.parent!==machineRoot)root=root.parent;
+      if(!root?.userData?.targetKind)continue;
+      if(hit.distance>maxDistance) return null;
+      return {...root.userData.targetKind,...root.userData.cell,distance:hit.distance};
+    }
+    return null;
+  }
+  function resize(){const r=canvas.getBoundingClientRect();width=Math.max(1,r.width);height=Math.max(1,r.height);renderer.setSize(width,height,false);gameCamera.aspect=width/height;gameCamera.updateProjectionMatrix();cameraUpdate();}
   let playerModel=null;
   function rebuild(state){
     clear(worldRoot);clear(machineRoot);clear(nodeRoot);clear(markerRoot);
@@ -197,16 +227,20 @@ export function createWorld3D(canvas, getState) {
     const waterMat=new THREE.MeshStandardMaterial({color:0x0b6382,transparent:true,opacity:0.62,roughness:0.2,metalness:0.15});
     for(const [key,node] of Object.entries(state.nodes||{})){
       const [x,z]=key.split(",").map(Number);if(!state.seen?.[key]||node.type==="water")continue;
-      const g=new THREE.Group();g.position.set(x*32,0,z*32);nodeRoot.add(g);
+      const g=new THREE.Group();g.position.set(x*32,0,z*32);g.userData={cell:{x,z},targetKind:{kind:"resource",type:node.type}};nodeRoot.add(g);
       if(node.type==="wood"||node.type==="dori"){
-        const trunk=node.type==="dori"?mats.gold:mat(0x654a32,0,0.9);makeCyl(g,0,6,0,2.5,12,trunk,7);
-        for(let i=0;i<3;i++){const crown=new THREE.Mesh(coneGeo,node.type==="dori"?mats.green:mat(0x286d4e,0,0.9));crown.position.set((i-1)*2,15+i*2,0);crown.scale.set(12-i*1.4,15-i*2,12-i*1.4);crown.castShadow=true;g.add(crown);}
-        if(node.type==="dori"){const orb=makeSphere(g,0,22,0,4,mats.crystal);orb.scale.set(0.7,1.15,0.7);}
+        const trunk=node.type==="dori"?mat(0x9b7044,.08,.85):mat(0x65412e,.03,.92);
+        makeBox(g,0,12,0,6,24,6,trunk);
+        const leaves=node.type==="dori"?mats.green:mat(0x28754e,.04,.92);
+        for(const [lx,ly,lz,size] of [[0,27,0,15],[0,35,0,12],[-7,29,0,8],[7,29,0,8],[0,29,-7,8],[0,29,7,8]])makeBox(g,lx,ly,lz,size,size,size,leaves);
+        if(node.type==="dori"){const orb=makeCrystal(g,"doronium_normal",0,40,0,2.8);}
       } else if(node.type==="relaySite"||node.type==="coreSite"){
         makeCyl(g,0,2,0,9,4,mats.dark,8);makeCyl(g,0,12,0,2,18,mats.trim,8);makeSphere(g,0,24,0,node.type==="coreSite"?5:3,mats.crystal);
       } else {
-        const col=palette[node.type]||0x778995;
-        for(let i=0;i<4;i++){const crystal=new THREE.Mesh(coneGeo,mat(col,0.35,0.28,col));crystal.position.set(((i%2)-.5)*8,4+(i%3)*2,(Math.floor(i/2)-.5)*8);crystal.scale.set(5+(i%2)*2,9+(i%3)*2,5+(i%2)*2);crystal.rotation.z=(i-1)*.13;crystal.castShadow=true;g.add(crystal);}
+        const col=palette[node.type]||0x778995,oreMat=mat(col,.38,.48,col);
+        makeBox(g,0,5,0,17,10,17,mat(0x465b62,.12,.88));
+        const blocks=[[ -5,11,-5,7],[4,12,-4,8],[-3,14,5,7],[6,7,5,6],[0,18,0,5]];
+        for(let i=0;i<blocks.length;i++){const [bx,by,bz,size]=blocks[i];const part=makeBox(g,bx,by,bz,size,size,size,oreMat);part.rotation.y=(i%2)*.24;}
       }
     }
     for(const b of state.buildings||[]) addBuilding(b,state);
@@ -386,7 +420,7 @@ export function createWorld3D(canvas, getState) {
     if(b.output){if(crystalSpecs[b.output.id])anim.outputMesh=makeCrystal(g,b.output.id,11,24,10,2.6);else anim.outputMesh=makeSphere(g,11,24,10,2.4,mat(itemColors[b.output.id]||0xf0c46a,.3,.28));}
     if(anim.orb)anim.orb.userData.baseScale=anim.orb.scale.clone();
     if(anim.outputMesh)anim.outputMesh.userData.baseScale=anim.outputMesh.scale.clone();
-    g.userData=anim;
+    g.userData={...anim,cell:{x:b.x,z:b.y},targetKind:{kind:"building",type:b.type,uid:b.uid}};
   }
   function addPlayer(state){
     const g=new THREE.Group();g.position.set(state.player.x*32,1,state.player.y*32);markerRoot.add(g);playerModel=g;
@@ -401,6 +435,8 @@ export function createWorld3D(canvas, getState) {
   function signature(s){return [s.player?.x,s.player?.y,s.buildings?.map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.status,b.output?.id,b.output?.qty,b.item?.id,b.item?.qty,b.variant].join(":")).join("|"),Object.keys(s.seen||{}).length,Object.entries(s.nodes||{}).map(([id,n])=>[id,n.amount,Math.floor(n.cooldown||0)].join(":")).join("|"),s.selectedBuilding,s.selectedBuild,s.hoverCell?.x,s.hoverCell?.y].join(";");}
   function render(state){
     if(!state)return;resizeIfNeeded();const sig=signature(state);if(sig!==lastSignature){rebuild(state);lastSignature=sig;}
+    activeViewMode=state.player?.viewMode==="map"?"map":state.player?.viewMode==="third"?"third":"first";
+    if(activeViewMode==="map")cameraUpdate();else updateGameCamera(state);
     const t=performance.now()*.001;sun.intensity=2.25+Math.sin(t*.08)*.18;
     const byUid=new Map((state.buildings||[]).map(b=>[b.uid,b]));
     machineRoot.children.forEach(g=>{
@@ -428,5 +464,5 @@ export function createWorld3D(canvas, getState) {
   function center(x,y){target.set(x*32,0,y*32);cameraUpdate();}
   function orbit(dx,dy){yaw-=dx*0.004;pitch=clamp(pitch+dy*0.003,0.42,1.25);cameraUpdate();}
   resize();cameraUpdate();
-  return {backend:"webgl",render,pickTile,pan,orbit,setZoom,center,inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z))};},get zoom(){return zoom;}};
+  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?mode:"first";},inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z))};},get zoom(){return zoom;}};
 }
