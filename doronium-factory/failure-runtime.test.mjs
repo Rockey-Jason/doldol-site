@@ -24,7 +24,7 @@ test("hazard rate uses reference duration and exposure time, not repeated fixed 
 });
 
 test("temperature and pressure risks rise from target to safe-band edge and fault outside",()=>{
- const args={temperature:100,targetTemperature:100,safeTemperatureMin:50,safeTemperatureMax:150,pressure:100,targetPressure:100,safePressureMin:50,safePressureMax:150,powerRatio:.8,condition:50,actualLoad:1,nominalLoad:2};
+ const args={temperature:100,targetTemperature:100,safeTemperatureMin:50,safeTemperatureMax:150,pressure:100,targetPressure:100,safePressureMin:50,safePressureMax:150,powerRatio:.8,condition:50,actualLoad:2,nominalLoad:2};
  const center=calculateFailureRisks({...args,profile});
  assert.equal(center.temperature,0);
  assert.equal(center.pressure,0);
