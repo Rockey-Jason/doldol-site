@@ -93,7 +93,7 @@ function crystalGeometry(id){
 }
 function makeCrystal(parent,id,x,y,z,size=4){
  const spec=crystalSpecs[id]||crystalSpecs.doronium_normal;
- const material=new THREE.MeshPhysicalMaterial({color:spec.color,metalness:.4,roughness:.15,transmission:id==="doronium_clear"||id==="doronium_cold"?.22:.03,transparent:id==="doronium_clear"||id==="doronium_cold"||id==="doronium_void",opacity:id==="doronium_clear"?.78:.95,emissive:spec.emissive,emissiveIntensity:.55,clearcoat:.9,clearcoatRoughness:.12});
+ const material=new THREE.MeshPhysicalMaterial({color:spec.color,metalness:.4,roughness:.15,transmission:(id==="doronium_clear"||id==="doronium_cold") ? .22 : .03,transparent:id==="doronium_clear"||id==="doronium_cold"||id==="doronium_void",opacity:id==="doronium_clear" ? .78 : .95,emissive:spec.emissive,emissiveIntensity:.55,clearcoat:.9,clearcoatRoughness:.12});
  const mesh=new THREE.Mesh(crystalGeometry(id),material);mesh.position.set(x,y,z);mesh.scale.set(size,size*1.25,size);mesh.rotation.set(.18,.22,.08);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);
  const edges=new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry,24),new THREE.LineBasicMaterial({color:spec.color,transparent:true,opacity:.38}));mesh.add(edges);
  mesh.userData.baseScale=mesh.scale.clone();return mesh;
@@ -405,7 +405,7 @@ export function createWorld3D(canvas, getState) {
       (a.rings||[]).forEach((m,i)=>m.rotation.y=t*(i%2?.34:-.27));
       (a.arms||[]).forEach((m,i)=>m.rotation.z=Math.sin(t*1.8+i*.8)*(running ? .32 : .08));
       (a.pistons||[]).forEach((m,i)=>{if(m.geometry?.type==="BoxGeometry"&&Number.isFinite(m.userData.baseY))m.position.y=m.userData.baseY+Math.sin(t*4+i)*.7;else m.rotation.y=t*.8+i;});
-      (a.pistons||[]).forEach((m,i)=>{if(m.geometry?.type==="BoxGeometry"&&Number.isFinite(m.userData.baseY))m.position.y=m.userData.baseY+Math.sin(t*4+i)*.7;else m.rotation.y=t*.9+i;});
+
       (a.particles||[]).forEach((m,i)=>{m.position.y=29+Math.sin(t*2.5+i*1.4)*1.2;m.scale.setScalar(.92+Math.sin(t*3+i)*.12);});
       if(a.orb){const p=1+Math.sin(t*2.2)*.065,v=a.orb.userData.baseScale||new THREE.Vector3(1,1,1);a.orb.scale.set(v.x*p,v.y*p,v.z*p);}
       if(a.outputMesh){const v=a.outputMesh.userData.baseScale||new THREE.Vector3(1,1,1);a.outputMesh.position.y=24+Math.sin(t*2.1)*1.4;a.outputMesh.rotation.y=t*.65;a.outputMesh.scale.set(v.x,v.y,v.z);}
