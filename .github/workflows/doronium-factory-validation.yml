@@ -26,6 +26,7 @@ jobs:
       - name: Parse game JavaScript
         run: |
           node --check doronium-factory/factory.js
+          node --check doronium-factory/simulation-core.js
           node --check doronium-factory/world3d.js
           node --check doronium-factory/terrain-system.js
           node --check doronium-factory/e2e/factory-smoke.mjs
@@ -34,6 +35,7 @@ jobs:
           test -s doronium-factory/index.html
           test -s doronium-factory/factory.css
           test -s doronium-factory/factory.js
+          test -s doronium-factory/simulation-core.js
           test -s doronium-factory/world3d.js
           test -s doronium-factory/terrain-system.js
           grep -q 'WORLD_W = 192' doronium-factory/terrain-system.js
@@ -54,6 +56,10 @@ jobs:
           grep -q 'dori_cloud_storage' doronium-factory/factory.js
           grep -q 'doronium_factory_infinite_industry_v1' doronium-factory/factory.js
           grep -q 'function tickMachine' doronium-factory/factory.js
+          grep -q 'runCanonicalTick(context' doronium-factory/factory.js
+          grep -q 'addItemStack(S,id,qty,meta)' doronium-factory/factory.js
+          grep -q 'TICK_STAGE_ORDER' doronium-factory/simulation-core.js
+          grep -q 'calculateOutputQuality' doronium-factory/simulation-core.js
           grep -q 'function tickBelts' doronium-factory/factory.js
           grep -q 'function startFusion' doronium-factory/factory.js
           grep -q 'function recipeHasSyntheticInput' doronium-factory/factory.js
