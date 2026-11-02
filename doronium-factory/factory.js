@@ -589,7 +589,8 @@ if(E2E_MODE){
    const adaptiveWithoutFoundation=placeBuilding("beltAdaptive",76,50);
    S.flattened["77,50"]={height:terrainHeightAt(77,50)};S.foundation["77,50"]=true;
    const standardWithFoundation=placeBuilding("belt",77,50);
-   return {standardWithoutFoundation,adaptiveWithoutFoundation,standardWithFoundation,placed:S.buildings.map(b=>b.type)}
+   drawWorld();
+   return {standardWithoutFoundation,adaptiveWithoutFoundation,standardWithFoundation,placed:S.buildings.map(b=>b.type),adaptiveBeltTilts:world3d.inspect().adaptiveBeltTilts}
   },
 
 
