@@ -58,6 +58,10 @@ jobs:
           grep -q 'function startFusion' doronium-factory/factory.js
           grep -q 'function recipeHasSyntheticInput' doronium-factory/factory.js
           grep -q 'function updatePlayerMotion' doronium-factory/factory.js
+          grep -q 'frameRenderAccumulator-=1000/60' doronium-factory/factory.js
+          grep -q 'function createNodeBatches' doronium-factory/world3d.js
+          grep -q 'nodeBatchDrawCalls' doronium-factory/world3d.js
+          grep -q 'function adaptPerformanceFrame' doronium-factory/world3d.js
           grep -q 'sceneRevision' doronium-factory/factory.js
           grep -q 'adaptPerformanceFrame' doronium-factory/world3d.js
           grep -q 'terrainChunks' doronium-factory/world3d.js
