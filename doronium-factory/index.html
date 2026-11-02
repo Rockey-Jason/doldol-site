@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./factory.css?v=6">
+<link rel="stylesheet" href="./factory.css?v=7">
 </head>
 <body>
 <div id="game-root">
@@ -27,6 +27,19 @@
     <section class="world-column">
       <div class="world-toolbar"><div class="world-title-group"><div class="live-indicator"><i></i> 3D WORLD · SIMULATION LIVE</div><h1 id="region-title">FACTORY VALLEY <span>초기 산업 구역</span></h1><p id="world-subtitle">폐허 위에 첫 번째 산업 기지를 세우세요.</p></div><div class="world-tools"><button class="tool-btn" id="zoom-out" title="축소">－</button><span class="zoom-value" id="zoom-value">100%</span><button class="tool-btn" id="zoom-in" title="확대">＋</button><button class="tool-btn" id="center-view" title="플레이어 위치로 이동">◎</button><button class="tool-btn overview-btn" id="overview-toggle">공장 개요 <span>F</span></button></div></div>
       <div class="world-frame" id="world-frame">
+        <div class="game-toolbar">
+          <button id="game-menu-toggle" class="game-tool-button" title="건설·창고·연구 메뉴 (B)">☰ <span>메뉴</span></button>
+          <div class="tool-hotbar" aria-label="도구 선택">
+            <button type="button" data-tool="pickaxe" class="tool-slot active" title="곡괭이 (4)">⛏ <small>4</small></button>
+            <button type="button" data-tool="axe" class="tool-slot" title="도끼 (5)">🪓 <small>5</small></button>
+            <span id="equipped-tool-label">곡괭이 장착</span>
+          </div>
+          <div class="game-toolbar-right">
+            <button id="fullscreen-button" class="game-tool-button" title="전체 화면 (F)">⛶ <span>전체 화면</span></button>
+          </div>
+        </div>
+        <div id="active-mission-hud" class="active-mission-hud"></div>
+        <div id="mission-alert" class="mission-alert" aria-live="polite"></div>
         <canvas id="world-canvas" aria-label="실시간 3D 공장 월드"></canvas><div class="world-vignette"></div>
         <div class="world-coordinate" id="world-coordinate">SECTOR 01 / X: 0 · Y: 0</div><div class="world-clock"><span id="day-icon">☀</span><span id="world-clock-text">DAY 01 · 08:00</span><b id="weather-label">맑음</b></div>
         <div class="world-alerts" id="world-alerts"></div>
@@ -56,9 +69,16 @@
       <div class="world-footer"><div class="selected-build-status"><span class="status-square" id="build-mode-dot"></span><span id="build-mode-text">선택 모드 · 시설을 선택하거나 자원을 채집하세요</span></div><div class="world-footer-right"><span id="active-machines">가동 기계 0</span><span class="footer-divider"></span><span id="world-population">엔지니어 1</span></div></div>
       <div class="quick-objectives" id="quick-objectives"></div>
     </section>
-    <aside class="control-column">
+    <aside class="control-column" id="control-column">
+      <div class="panel-popover-head"><div><small>ROCKEY INDUSTRIES</small><strong>게임 시스템</strong></div><button type="button" id="panel-close" aria-label="메뉴 닫기">×</button></div>
       <nav class="main-tabs" id="main-tabs"><button class="main-tab active" data-panel="build"><span>▦</span>건설</button><button class="main-tab" data-panel="factory"><span>◫</span>운영</button><button class="main-tab" data-panel="inventory"><span>▤</span>창고</button><button class="main-tab" data-panel="research"><span>⌬</span>연구</button><button class="main-tab" data-panel="mission"><span>✧</span>임무</button></nav>
-      <section class="panel-view active" id="panel-build"><div class="panel-heading"><div><div class="section-kicker">CONSTRUCTION NETWORK</div><h2>시설 건설</h2><p>공장 부지에 생산 설비를 배치하세요.</p></div><span class="panel-count" id="build-count">0 / 40</span></div><div class="build-category" id="build-category"><button class="category-chip active" data-cat="all">전체</button><button class="category-chip" data-cat="resource">자원</button><button class="category-chip" data-cat="power">전력</button><button class="category-chip" data-cat="process">가공</button><button class="category-chip" data-cat="logistics">물류</button><button class="category-chip" data-cat="advanced">첨단</button></div><div class="build-list" id="build-list"></div><div class="build-inspector" id="build-inspector"><div class="inspector-empty"><span>⌖</span><strong>건설 설비를 선택하세요</strong><p>시설을 선택하면 비용과 기능을 확인할 수 있습니다.</p></div></div></section>
+      <section class="panel-view active" id="panel-build"><div class="panel-heading"><div><div class="section-kicker">CONSTRUCTION NETWORK</div><h2>시설 건설</h2><p>공장 부지에 생산 설비를 배치하세요.</p></div><span class="panel-count" id="build-count">0 / 40</span></div><div class="land-tools">
+        <div class="land-tools-title">지형 준비</div>
+        <button type="button" data-land-tool="flatten">▱ 땅 평탄화</button>
+        <button type="button" data-land-tool="foundation">▦ 기초 타일 설치</button>
+        <button type="button" data-land-tool="none">도구 해제</button>
+      </div>
+      <div class="build-category" id="build-category"><button class="category-chip active" data-cat="all">전체</button><button class="category-chip" data-cat="resource">자원</button><button class="category-chip" data-cat="power">전력</button><button class="category-chip" data-cat="process">가공</button><button class="category-chip" data-cat="logistics">물류</button><button class="category-chip" data-cat="advanced">첨단</button></div><div class="build-list" id="build-list"></div><div class="build-inspector" id="build-inspector"><div class="inspector-empty"><span>⌖</span><strong>건설 설비를 선택하세요</strong><p>시설을 선택하면 비용과 기능을 확인할 수 있습니다.</p></div></div></section>
       <section class="panel-view" id="panel-factory"><div class="panel-heading"><div><div class="section-kicker">INDUSTRIAL CONTROL</div><h2>공장 운영</h2><p>전력·생산·물류 흐름을 관리합니다.</p></div><span class="live-pill"><i></i> LIVE</span></div><div class="operation-cards" id="operation-cards"></div><div class="subheading"><h3>선택 시설 상세</h3><button class="text-btn" id="clear-selection">선택 해제</button></div><div id="machine-details" class="machine-details"><div class="inspector-empty"><span>⌖</span><strong>월드에서 기계를 선택하세요</strong><p>기계의 레시피, 방향, 입출력 버퍼와 상태를 확인할 수 있습니다.</p></div></div><div class="subheading"><h3>최근 생산 기록</h3><span class="muted-small">LAST EVENTS</span></div><div class="event-feed" id="event-feed"></div></section>
       <section class="panel-view" id="panel-inventory"><div class="panel-heading"><div><div class="section-kicker">WAREHOUSE & MARKET</div><h2>자원 창고</h2><p>보유 자원과 제품을 확인하고 판매합니다.</p></div><span class="panel-count" id="inventory-slots">0 종류</span></div><div class="inventory-summary" id="inventory-summary"></div><div class="inventory-grid" id="inventory-grid"></div><div class="crystal-codex"><div class="subheading"><h3>도로늄 결정 도감</h3><span class="muted-small">15 VARIANTS</span></div><p class="codex-help">결정 하나를 선택하면 고유한 3D 형상과 재질을 회전하며 관찰할 수 있습니다.</p><div class="crystal-codex-grid" id="crystal-codex"></div></div><div class="market-panel"><div class="subheading"><h3>산업 거래소</h3><span class="market-live">MARKET OPEN</span></div><p>완성품을 판매해 공장 확장 자금을 확보하세요. 도로늄은 고급 산업 계약에서 더 높은 가치를 인정받습니다.</p><div class="sell-row"><select id="sell-resource" aria-label="판매할 자원"></select><input id="sell-amount" type="number" min="1" value="1" aria-label="판매 수량"><button class="action-button gold-button" id="sell-button">판매</button></div><div class="market-estimate" id="market-estimate">판매 예상액 0 D</div></div></section>
       <section class="panel-view" id="panel-research"><div class="panel-heading"><div><div class="section-kicker">TECHNOLOGY & DEVELOPMENT</div><h2>연구 센터</h2><p>기술을 연구해 새로운 산업 시대를 여세요.</p></div><span class="panel-count" id="research-progress-label">0 / 18</span></div><div class="research-progress"><div class="progress-label"><span>기술 완성도</span><b id="research-percent">0%</b></div><div class="progress-track"><i id="research-progress-bar"></i></div></div><div class="research-tree" id="research-tree"></div></section>
@@ -67,6 +87,21 @@
   </main>
   <div class="bottom-dock"><div class="dock-left"><span class="dock-led"></span><b id="system-state">시스템 정상</b><span class="dock-separator"></span><span id="sim-speed">시뮬레이션 1×</span><button id="pause-sim" class="dock-control">Ⅱ 일시정지</button><button id="speed-sim" class="dock-control">속도 1×</button></div><div class="dock-right"><span id="save-message">자동 저장 대기</span><button class="dock-control" id="save-now">지금 저장</button></div></div>
 </div>
+<div class="story-intro" id="story-intro" hidden>
+  <div class="story-intro-backdrop"></div>
+  <div class="story-intro-content">
+    <div class="story-intro-kicker">ROCKEY INDUSTRIES · ARCHIVE 01</div>
+    <div class="story-intro-emblem">◈</div>
+    <div class="story-intro-eyebrow">THE LAST INDUSTRIAL FRONTIER</div>
+    <h1>도로늄 행성의 마지막 불빛</h1>
+    <p class="story-line">한때 도로늄의 무한한 에너지로 번영했던 행성.</p>
+    <p class="story-line">그러나 중앙 반응로의 붕괴 이후 지표는 갈라졌고, 대륙을 잇던 공장망은 멈췄다.</p>
+    <p class="story-line">깊은 지하에는 아직 정체를 알 수 없는 광맥이 잠들어 있다.</p>
+    <div class="story-transmission"><span>ORBIT / 복구 AI</span><p>“엔지니어, 응답이 감지되었습니다. 당신이 마지막 복구 프로토콜입니다. 공장을 다시 가동하고, 지하의 도로늄을 찾아 행성의 심장을 복원하십시오.”</p></div>
+    <button type="button" id="story-start-button">복구 프로토콜 시작 <span>→</span></button>
+    <small>WASD 이동 · 좌클릭 채집/상호작용 · B 건설 · I 창고 · J 임무 · F 전체 화면</small>
+  </div>
+</div>
 <div class="toast-stack" id="toast-stack"></div><div class="modal-overlay" id="modal-overlay"><div class="modal-card" id="modal-card"></div></div>
-<script type="module" src="./factory.js?v=17"></script>
+<script type="module" src="./factory.js?v=18"></script>
 </body></html>
