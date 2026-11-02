@@ -1261,28 +1261,31 @@ func _read_save_file(path: String) -> Dictionary:
 			return {}
 	return parsed
 
+func _validate_save_stack(stack: Variant,owner_name: String,seen_stack_ids: Dictionary,errors: Array[String]) -> void:
+	if not stack is Dictionary:
+		errors.append(owner_name+" entry is not a dictionary.")
+		return
+	var stack_id := str(stack.get("stack_id",""))
+	var item_id := str(stack.get("item_id",""))
+	var quantity := int(stack.get("quantity",0))
+	var quality := float(stack.get("quality",-1.0))
+	var purity := float(stack.get("purity",-1.0))
+	var reserved := int(stack.get("reserved",0))
+	if stack_id.is_empty() or seen_stack_ids.has(stack_id):
+		errors.append("Missing or duplicate StackID · "+owner_name+" · "+stack_id)
+	seen_stack_ids[stack_id] = owner_name
+	if not GameData.ITEMS.has(item_id) and item_id not in GameData.DORONUM_IDS:
+		errors.append("Unknown critical ItemID · "+item_id)
+	if quantity<=0 or reserved<0 or reserved>quantity:
+		errors.append("Invalid quantity/reservation · "+stack_id)
+	if not is_finite(quality) or not is_finite(purity) or quality<0.0 or quality>100.0 or purity<0.0 or purity>100.0:
+		errors.append("Invalid Quality/Purity · "+stack_id)
+
 func validate_save_payload(parsed: Dictionary) -> Array[String]:
 	var errors: Array[String] = []
 	var seen_stack_ids: Dictionary = {}
 	for stack in parsed.get("inventory",[]):
-		if not stack is Dictionary:
-			errors.append("Inventory entry is not a dictionary.")
-			continue
-		var stack_id := str(stack.get("stack_id",""))
-		var item_id := str(stack.get("item_id",""))
-		var quantity := int(stack.get("quantity",0))
-		var quality := float(stack.get("quality",-1.0))
-		var purity := float(stack.get("purity",-1.0))
-		var reserved := int(stack.get("reserved",0))
-		if stack_id.is_empty() or seen_stack_ids.has(stack_id):
-			errors.append("Missing or duplicate StackID · "+stack_id)
-		seen_stack_ids[stack_id] = true
-		if not GameData.ITEMS.has(item_id) and item_id not in GameData.DORONUM_IDS:
-			errors.append("Unknown critical ItemID · "+item_id)
-		if quantity<=0 or reserved<0 or reserved>quantity:
-			errors.append("Invalid quantity/reservation · "+stack_id)
-		if not is_finite(quality) or not is_finite(purity) or quality<0.0 or quality>100.0 or purity<0.0 or purity>100.0:
-			errors.append("Invalid Quality/Purity · "+stack_id)
+		_validate_save_stack(stack,"INVENTORY",seen_stack_ids,errors)
 	var seen_building_ids: Dictionary = {}
 	for building in parsed.get("buildings",[]):
 		if not building is Dictionary:
@@ -1295,6 +1298,15 @@ func validate_save_payload(parsed: Dictionary) -> Array[String]:
 		if instance_id.is_empty() or seen_building_ids.has(instance_id):
 			errors.append("Missing or duplicate Building InstanceID · "+instance_id)
 		seen_building_ids[instance_id] = true
+		for field in ["input","output","storage","job_inputs"]:
+			for stack in building.get(field,[]):
+				_validate_save_stack(stack,str(building_id)+"/"+field,seen_stack_ids,errors)
+	var fusion_data: Dictionary = parsed.get("fusion",{})
+	for stack in fusion_data.get("custody",[]):
+		_validate_save_stack(stack,"FUSION_CUSTODY",seen_stack_ids,errors)
+	var fusion_output: Dictionary = fusion_data.get("output_buffer",{})
+	if not fusion_output.is_empty():
+		_validate_save_stack(fusion_output,"FUSION_OUTPUT",seen_stack_ids,errors)
 	return errors
 
 func _migrate_save_payload(source: Dictionary,from_version: int) -> Dictionary:
