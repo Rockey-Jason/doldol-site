@@ -303,6 +303,10 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	machine.job_inputs = []
 	machine.cycles = int(machine.get("cycles",0))+1
 	game.claim_recipe_research_reward(recipe_id)
+	if recipe_id=="RECIPE_DORONUM_NORMAL" and bool(game.story_flags.get("DORI_MEAT_DISCOVERED",false)) and not bool(game.story_flags.get("ACT_III_COMPLETE",false)):
+		game.story_flags["ACT_III_COMPLETE"] = true
+		game.grant_skill_point("ACT_III_COMPLETE","ACT_III_NATURAL_DORONUM")
+		game.notification.emit("ACT III complete · The Doronum Truth")
 	game.production_history.append({"machine":machine.instance_id,"recipe":recipe_id,"tick":tick_number})
 	if game.production_history.size()>1000:
 		game.production_history.pop_front()
