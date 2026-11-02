@@ -634,13 +634,19 @@ func collect_machine_output(instance_id: String) -> bool:
 	for machine in buildings:
 		if machine.instance_id!=instance_id or machine.output.is_empty():
 			continue
+		var pending: Array[Dictionary] = []
+		var pending_ids: Dictionary = {}
 		for stack in machine.output:
 			var transferred: Dictionary = stack.duplicate(true)
 			if str(transferred.get("stack_id","")).is_empty():
 				transferred["stack_id"] = _new_stack_id()
-			if inventory.any(func(existing): return str(existing.get("stack_id",""))==str(transferred.stack_id)):
-				notification.emit("출력 회수 중복 방지 · StackID 충돌")
+			var stack_id := str(transferred.stack_id)
+			if pending_ids.has(stack_id) or inventory.any(func(existing): return str(existing.get("stack_id",""))==stack_id):
+				notification.emit("출력 회수 중복 방지 · StackID 충돌 · 원본 출력은 보존됐어.")
 				return false
+			pending_ids[stack_id] = true
+			pending.append(transferred)
+		for transferred in pending:
 			inventory.append(transferred)
 			notification.emit("+%d %s" % [int(transferred.quantity),GameData.item_name(str(transferred.item_id))])
 		machine.output.clear()
