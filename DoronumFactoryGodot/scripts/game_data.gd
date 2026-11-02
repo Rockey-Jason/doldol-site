@@ -1,0 +1,410 @@
+extends RefCounted
+class_name GameData
+
+const SAVE_VERSION := 3
+const WORLD_SEED := 827142
+const WORLD_SIZE := 2048.0
+const WORLD_LIMIT := 1024.0
+const SIM_TICK := 0.10
+# Canonicalized NCP until the original design assigns per-machine hazard weights.
+const INFINITY_FAILURE_PROFILE := {
+	"base_failure_probability":0.01,
+	"reference_duration_seconds":260.0,
+	"temperature_weight":0.20,
+	"pressure_weight":0.20,
+	"power_weight":0.20,
+	"wear_weight":0.20,
+	"load_weight":0.20,
+	"minor_probability":0.30,
+	"major_probability":0.45,
+	"critical_probability":0.25
+}
+# Explicit NCP machine profile; replace only when a machine-specific canonical profile exists.
+const DEFAULT_MACHINE_FAILURE_PROFILE := {
+	"base_failure_probability":0.01,
+	"reference_duration_seconds":3600.0,
+	"base_wear_per_second":0.002,
+	"temperature_weight":0.20,
+	"pressure_weight":0.20,
+	"power_weight":0.20,
+	"wear_weight":0.20,
+	"load_weight":0.20,
+	"minor_probability":0.70,
+	"major_probability":0.25,
+	"critical_probability":0.05
+}
+const DORONUM_IDS := [
+	"ITEM_DORONUM_NORMAL", "ITEM_DORONUM_YELLOW", "ITEM_DORONUM_ULTRA",
+	"ITEM_DORONUM_BLUE", "ITEM_DORONUM_RED", "ITEM_DORONUM_IRON",
+	"ITEM_DORONUM_ORANGE", "ITEM_DORONUM_SLIGHTLY_RUSTED", "ITEM_DORONUM_RUSTED",
+	"ITEM_DORONUM_TRANSLUCENT", "ITEM_DORONUM_THERMAL_CRYSTAL",
+	"ITEM_DORONUM_COLD_CRYSTAL", "ITEM_DORONUM_BLACK",
+	"ITEM_DORONUM_SPECIAL_EDITION", "ITEM_DORONUM_LIMITED_EDITION"
+]
+const FUSION_STAGES := [
+	{"name":"Material / Resonance Analysis","temperature":500.0,"pressure":100.0,"power":500.0,"seconds":20.0},
+	{"name":"Energy / Molecular Separation","temperature":1200.0,"pressure":500.0,"power":1000.0,"seconds":25.0},
+	{"name":"Equilibrium","temperature":1800.0,"pressure":1000.0,"power":1500.0,"seconds":30.0},
+	{"name":"High Pressure Compression","temperature":2500.0,"pressure":5000.0,"power":2500.0,"seconds":35.0},
+	{"name":"Fusion","temperature":3500.0,"pressure":10000.0,"power":3500.0,"seconds":40.0},
+	{"name":"Nucleus Formation","temperature":4500.0,"pressure":15000.0,"power":4500.0,"seconds":50.0},
+	{"name":"Infinite Crystallization","temperature":5000.0,"pressure":20000.0,"power":5000.0,"seconds":60.0}
+]
+const RESEARCH := [
+	{"id":"RESEARCH_BASIC_SURVIVAL","name":"Basic Survival","tier":0,"rp":0,"time":0.0,"requires":[],"power":0.0,"unlocks":["WORKBENCH","WOODEN_TOOLS","RESEARCH_LAB"]},
+	{"id":"RESEARCH_BASIC_MINING","name":"Basic Mining","tier":1,"rp":50,"time":60.0,"requires":["RESEARCH_BASIC_SURVIVAL"],"power":25.0,"unlocks":["FURNACE","MINING_TOOLS"]},
+	{"id":"RESEARCH_IRON_SMELTING","name":"Iron Smelting","tier":1,"rp":100,"time":120.0,"requires":["RESEARCH_BASIC_MINING"],"power":25.0,"unlocks":["IRON_SMELTING","COMPRESSOR"]},
+	{"id":"RESEARCH_MECHANICAL_PROCESSING","name":"Mechanical Processing","tier":2,"rp":250,"time":180.0,"requires":["RESEARCH_IRON_SMELTING"],"power":25.0,"unlocks":["ROLLING_MILL","GEAR_STATION","BEARING_STATION","FABRICATOR","CRUSHER","CIRCUIT_ASSEMBLER"]},
+	{"id":"RESEARCH_STEEL","name":"Steel","tier":2,"rp":500,"time":300.0,"requires":["RESEARCH_MECHANICAL_PROCESSING"],"power":100.0,"unlocks":["STEEL_PROCESSING","STEEL_FURNACE"]},
+	{"id":"RESEARCH_ELECTRIC_PROCESSING","name":"Electric Processing","tier":2,"rp":1000,"time":420.0,"requires":["RESEARCH_MECHANICAL_PROCESSING"],"power":100.0,"unlocks":["GENERATOR","SOLAR_PANEL","BATTERY","WIND_TURBINE","REFINERY"]},
+	{"id":"RESEARCH_OIL_CHEMISTRY","name":"Oil Chemistry","tier":3,"rp":1500,"time":600.0,"requires":["RESEARCH_ELECTRIC_PROCESSING"],"power":100.0,"unlocks":["REFINERY","PIPES"]},
+	{"id":"RESEARCH_HIGH_PRESSURE","name":"High Pressure","tier":3,"rp":2500,"time":900.0,"requires":["RESEARCH_MECHANICAL_PROCESSING","RESEARCH_ELECTRIC_PROCESSING"],"power":100.0,"unlocks":["HIGH_PRESSURE_SYSTEMS"]},
+	{"id":"RESEARCH_TITANIUM","name":"Titanium","tier":4,"rp":4000,"time":1200.0,"requires":["RESEARCH_HIGH_PRESSURE","RESEARCH_STEEL"],"power":250.0,"unlocks":["TITANIUM_PROCESSING"]},
+	{"id":"RESEARCH_ADVANCED_CIRCUITS","name":"Advanced Circuits","tier":4,"rp":6000,"time":1500.0,"requires":["RESEARCH_ELECTRIC_PROCESSING","RESEARCH_TITANIUM"],"power":250.0,"unlocks":["ADVANCED_CIRCUITS","CONTROL_MODULE","ADVANCED_ASSEMBLER","QUALITY_INSPECTOR"]},
+	{"id":"RESEARCH_AUTOMATION","name":"Automation","tier":4,"rp":9000,"time":1800.0,"requires":["RESEARCH_ADVANCED_CIRCUITS","RESEARCH_MECHANICAL_PROCESSING"],"power":250.0,"unlocks":["AUTO_MINER","CONVEYOR","SORTER","WAREHOUSE"]},
+	{"id":"RESEARCH_DORONUM_BIOLOGY","name":"Doronum Biology","tier":5,"rp":12000,"time":2400.0,"requires":["RESEARCH_AUTOMATION","RESEARCH_ADVANCED_CIRCUITS"],"power":250.0,"unlocks":["DORI_MEAT_TREE","DORI_MEAT_HARVESTER","WATER_PUMP"]},
+	{"id":"RESEARCH_DORONUM_ENGINEERING","name":"Doronum Engineering","tier":5,"rp":18000,"time":3000.0,"requires":["RESEARCH_DORONUM_BIOLOGY","RESEARCH_HIGH_PRESSURE"],"power":250.0,"unlocks":["DORONUM_COMPRESSOR"]},
+	{"id":"RESEARCH_DORONUM_CRYSTAL","name":"Doronum Crystal","tier":5,"rp":25000,"time":3600.0,"requires":["RESEARCH_DORONUM_ENGINEERING","RESEARCH_TITANIUM"],"power":250.0,"unlocks":["DORONUM_VARIANTS","DORONUM_REFINEMENT_CHAMBER","THERMAL_STABILIZER","COOLING_STABILIZER","REINFORCED_DORONUM_PRESS","CONTROLLED_ATMOSPHERE_CHAMBER","OPTICAL_REFINEMENT_CHAMBER","ABSORPTION_PRESS","SEALED_PRECISION_CHAMBER","LEGACY_BATCH_LINE"]},
+	{"id":"RESEARCH_ULTRA_MATERIAL_PROCESSING","name":"Ultra Material Processing","tier":6,"rp":35000,"time":4200.0,"requires":["RESEARCH_DORONUM_CRYSTAL","RESEARCH_HIGH_PRESSURE"],"power":250.0,"unlocks":["ULTRA_MATERIAL_PRESS","DORONUM_PURIFIER"]},
+	{"id":"RESEARCH_DORONUM_COMPRESSOR","name":"Doronum Compressor","tier":6,"rp":50000,"time":5400.0,"requires":["RESEARCH_ULTRA_MATERIAL_PROCESSING","RESEARCH_AUTOMATION"],"power":250.0,"unlocks":["FUSION_SAFETY"]},
+	{"id":"RESEARCH_DORONUM_FUSION","name":"Doronum Fusion","tier":6,"rp":75000,"time":7200.0,"requires":["RESEARCH_DORONUM_COMPRESSOR","RESEARCH_DORONUM_CRYSTAL"],"power":250.0,"unlocks":["INFINITY_FUSION_MACHINE","ISOLATION_TRANSPORT","FUSION_POWER_BUFFER","FUSION_CONTAINMENT_SHIELD","EMERGENCY_COOLING_SYSTEM","PRESSURE_CALIBRATION_RIG"]},
+	{"id":"RESEARCH_INFINITY_INDUSTRY","name":"Infinity Industry","tier":7,"rp":150000,"time":10800.0,"requires":["RESEARCH_DORONUM_FUSION","RESEARCH_DORONUM_BIOLOGY","RESEARCH_AUTOMATION"],"power":250.0,"unlocks":["STABILIZATION_RELAY","STABILIZATION_CORE","SKILL_RESPEC_TERMINAL"]}
+]
+const BUILDINGS := [
+	{"id":"WORKBENCH","name":"Workbench","cost":{"ITEM_WOOD":10,"ITEM_STONE":4,"ITEM_PLANT_ROPE":2},"tier":0,"power":0.0,"size":Vector2i(2,2)},
+	{"id":"FURNACE","name":"Furnace","cost":{"ITEM_STONE":12,"ITEM_IRON_ORE":4},"tier":1,"power":0.0,"size":Vector2i(2,2)},
+	{"id":"COMPRESSOR","name":"Compressor","cost":{"ITEM_IRON_PLATE":8,"ITEM_GEAR":4},"tier":1,"power":0.0,"size":Vector2i(2,2)},
+	{"id":"FABRICATOR","name":"Fabricator","cost":{"ITEM_IRON_PLATE":8,"ITEM_GEAR":3},"tier":2,"power":15.0,"size":Vector2i(2,2)},
+	{"id":"CRUSHER","name":"Carbon Mill","cost":{"ITEM_IRON_PLATE":6,"ITEM_GEAR":2},"tier":2,"power":8.0,"size":Vector2i(2,2)},
+	{"id":"STEEL_FURNACE","name":"Steel Furnace","cost":{"ITEM_STEEL_PLATE":8,"ITEM_GEAR":4},"tier":2,"power":40.0,"size":Vector2i(3,3)},
+	{"id":"CIRCUIT_ASSEMBLER","name":"Circuit Assembler","cost":{"ITEM_IRON_PLATE":8,"ITEM_COPPER_WIRE":10,"ITEM_GEAR":2},"tier":2,"power":18.0,"size":Vector2i(2,2)},
+	{"id":"ADVANCED_ASSEMBLER","name":"Advanced Assembler","cost":{"ITEM_STEEL_PLATE":20,"ITEM_TITANIUM_PLATE":5,"ITEM_MOTOR":2},"tier":4,"power":50.0,"size":Vector2i(3,3)},
+	{"id":"WIND_TURBINE","name":"Wind Turbine","cost":{"ITEM_STEEL_PLATE":12,"ITEM_GEAR":5,"ITEM_MOTOR":1,"ITEM_BASIC_CIRCUIT":2},"tier":3,"power":-100.0,"size":Vector2i(3,3)},
+	{"id":"SOLAR_PANEL","name":"Solar Panel","cost":{"ITEM_ALUMINUM_PLATE":5,"ITEM_GLASS":2,"ITEM_COPPER_WIRE":4,"ITEM_BASIC_CIRCUIT":1},"tier":3,"power":-80.0,"size":Vector2i(2,2)},
+	{"id":"DORI_MEAT_HARVESTER","name":"Dori Meat Harvester","cost":{"ITEM_STEEL_PLATE":20,"ITEM_ADVANCED_CIRCUIT":6,"ITEM_CONTROL_MODULE":2},"tier":5,"power":20.0,"size":Vector2i(3,3)},
+	{"id":"WATER_PUMP","name":"Water Pump","cost":{"ITEM_IRON_PLATE":8,"ITEM_GEAR":3,"ITEM_COPPER_WIRE":4},"tier":3,"power":15.0,"size":Vector2i(2,2)},
+	{"id":"REFINERY","name":"Refinery","cost":{"ITEM_STEEL_PLATE":20,"ITEM_GEAR":5,"ITEM_COPPER_WIRE":10,"ITEM_BASIC_CIRCUIT":3},"tier":3,"power":60.0,"size":Vector2i(3,3)},
+	{"id":"POLYMER_PROCESSOR","name":"Polymer Processor","cost":{"ITEM_STEEL_PLATE":20,"ITEM_GEAR":4,"ITEM_MOTOR":1,"ITEM_BASIC_CIRCUIT":2},"tier":3,"power":50.0,"size":Vector2i(3,3)},
+	{"id":"GLASS_FURNACE","name":"Glass Furnace","cost":{"ITEM_STEEL_PLATE":15,"ITEM_GEAR":4,"ITEM_COPPER_WIRE":4},"tier":3,"power":35.0,"size":Vector2i(3,3)},
+	{"id":"HIGH_TEMPERATURE_FURNACE","name":"High-Temperature Furnace","cost":{"ITEM_STEEL_PLATE":30,"ITEM_TITANIUM_PLATE":10,"ITEM_ADVANCED_CIRCUIT":5},"tier":4,"power":100.0,"size":Vector2i(3,3)},
+	{"id":"MAGNETIZER","name":"Magnetizer","cost":{"ITEM_STEEL_PLATE":20,"ITEM_COPPER_WIRE":20,"ITEM_ADVANCED_CIRCUIT":5,"ITEM_CONTROL_MODULE":2},"tier":4,"power":80.0,"size":Vector2i(3,3)},
+	{"id":"DORONUM_REFINEMENT_CHAMBER","name":"Doronum Refinement Chamber","cost":{"ITEM_STEEL_PLATE":30,"ITEM_ADVANCED_CIRCUIT":8},"tier":5,"power":250.0,"size":Vector2i(3,3)},
+	{"id":"THERMAL_STABILIZER","name":"Thermal Stabilizer","cost":{"ITEM_STEEL_PLATE":25,"ITEM_HEAT_CRYSTAL":5},"tier":5,"power":250.0,"size":Vector2i(3,3)},
+	{"id":"COOLING_STABILIZER","name":"Cooling Stabilizer","cost":{"ITEM_STEEL_PLATE":25,"ITEM_COLD_CRYSTAL":5},"tier":5,"power":250.0,"size":Vector2i(3,3)},
+	{"id":"REINFORCED_DORONUM_PRESS","name":"Reinforced Doronum Press","cost":{"ITEM_STEEL_PLATE":40,"ITEM_ADVANCED_CIRCUIT":8},"tier":5,"power":350.0,"size":Vector2i(4,4)},
+	{"id":"CONTROLLED_ATMOSPHERE_CHAMBER","name":"Controlled Atmosphere Chamber","cost":{"ITEM_STEEL_PLATE":30,"ITEM_ADVANCED_CIRCUIT":8},"tier":5,"power":300.0,"size":Vector2i(3,3)},
+	{"id":"OPTICAL_REFINEMENT_CHAMBER","name":"Optical Refinement Chamber","cost":{"ITEM_STEEL_PLATE":35,"ITEM_ADVANCED_CIRCUIT":10,"ITEM_DIAMOND":2},"tier":5,"power":350.0,"size":Vector2i(3,3)},
+	{"id":"ABSORPTION_PRESS","name":"Absorption Press","cost":{"ITEM_STEEL_PLATE":35,"ITEM_ADVANCED_CIRCUIT":10},"tier":5,"power":400.0,"size":Vector2i(3,3)},
+	{"id":"SEALED_PRECISION_CHAMBER","name":"Sealed Precision Chamber","cost":{"ITEM_STEEL_PLATE":45,"ITEM_ADVANCED_CIRCUIT":15},"tier":5,"power":500.0,"size":Vector2i(3,3)},
+	{"id":"LEGACY_BATCH_LINE","name":"Legacy Batch Line","cost":{"ITEM_STEEL_PLATE":50,"ITEM_ADVANCED_CIRCUIT":15},"tier":5,"power":500.0,"size":Vector2i(4,4)},
+	{"id":"ROLLING_MILL","name":"Rolling Mill","cost":{"ITEM_IRON_PLATE":12,"ITEM_GEAR":4},"tier":2,"power":20.0,"size":Vector2i(3,2)},
+	{"id":"GENERATOR","name":"Thermal Generator","cost":{"ITEM_STEEL_PLATE":20,"ITEM_COPPER_WIRE":10,"ITEM_GEAR":4,"ITEM_BASIC_CIRCUIT":3},"tier":3,"power":-250.0,"size":Vector2i(3,3)},
+	{"id":"RESEARCH_LAB","name":"Research Lab","cost":{"ITEM_WOOD":20,"ITEM_STONE":12},"tier":0,"power":25.0,"size":Vector2i(3,3)},
+	{"id":"AUTO_MINER","name":"Auto Miner","cost":{"ITEM_MOTOR":1,"ITEM_STEEL_PLATE":10,"ITEM_TITANIUM_PLATE":5,"ITEM_ADVANCED_CIRCUIT":3,"ITEM_CONTROL_MODULE":1,"ITEM_GEAR":5,"ITEM_IRON":10,"ITEM_BATTERY":2},"tier":4,"power":40.0,"size":Vector2i(3,3)},
+	{"id":"CONVEYOR","name":"Conveyor","cost":{"ITEM_IRON_PLATE":2,"ITEM_GEAR":1,"ITEM_RUBBER":1},"tier":4,"power":1.0,"size":Vector2i(1,1)},
+	{"id":"WAREHOUSE","name":"Warehouse","cost":{"ITEM_STEEL_PLATE":10,"ITEM_IRON_PLATE":10,"ITEM_BASIC_CIRCUIT":2},"tier":4,"power":5.0,"size":Vector2i(3,3)},
+	{"id":"DORONUM_COMPRESSOR","name":"Doronum Compressor","cost":{"ITEM_STEEL_PLATE":50,"ITEM_TITANIUM_PLATE":25,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_CONTROL_MODULE":10,"ITEM_DORONUM_BLUE":5,"ITEM_DORONUM_RED":5,"ITEM_HEAT_CRYSTAL":10,"ITEM_COLD_CRYSTAL":10},"tier":6,"power":750.0,"size":Vector2i(4,4)},
+	{"id":"ULTRA_MATERIAL_PRESS","name":"Ultra Material Press","cost":{"ITEM_STEEL_PLATE":80,"ITEM_TITANIUM_PLATE":40,"ITEM_DORONUM_ULTRA":5,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_CONTROL_MODULE":10,"ITEM_DORONUM_THERMAL_CRYSTAL":5,"ITEM_DORONUM_COLD_CRYSTAL":5},"tier":6,"power":1500.0,"size":Vector2i(4,4)},
+	{"id":"INFINITY_FUSION_MACHINE","name":"Infinity Fusion Machine","cost":{"ITEM_STEEL_PLATE":200,"ITEM_TITANIUM_PLATE":100,"ITEM_DORONUM_ULTRA":20,"ITEM_ADVANCED_CIRCUIT":50,"ITEM_CONTROL_MODULE":25,"ITEM_DORONUM_THERMAL_CRYSTAL":10,"ITEM_DORONUM_COLD_CRYSTAL":10,"ITEM_DORONUM_BLUE":10,"ITEM_DORONUM_IRON":10},"tier":7,"power":5000.0,"size":Vector2i(8,8)},
+	{"id":"STABILIZATION_RELAY","name":"Stabilization Relay","cost":{"ITEM_STEEL_PLATE":50,"ITEM_TITANIUM_PLATE":25,"ITEM_ADVANCED_CIRCUIT":10,"ITEM_CONTROL_MODULE":5,"ITEM_DORONUM_ORANGE":3,"ITEM_DORONUM_BLUE":2},"tier":7,"power":100.0,"size":Vector2i(2,2)},
+	{"id":"STABILIZATION_CORE","name":"Stabilization Core","cost":{"ITEM_STEEL_PLATE":100,"ITEM_TITANIUM_PLATE":50,"ITEM_ADVANCED_CIRCUIT":25,"ITEM_CONTROL_MODULE":15,"ITEM_DORONUM_ULTRA":5,"ITEM_DORONUM_TRANSLUCENT":5,"ITEM_DORONUM_BLACK":5},"tier":7,"power":500.0,"size":Vector2i(4,4)},
+	{"id":"DORONUM_PURIFIER","name":"Doronum Purifier","cost":{"ITEM_STEEL_PLATE":45,"ITEM_TITANIUM_PLATE":20,"ITEM_ADVANCED_CIRCUIT":15,"ITEM_DIAMOND":4},"tier":6,"power":500.0,"size":Vector2i(3,3)},
+	{"id":"FUSION_POWER_BUFFER","name":"Fusion Power Buffer","cost":{"ITEM_STEEL_PLATE":120,"ITEM_TITANIUM_PLATE":60,"ITEM_BATTERY":40,"ITEM_ADVANCED_CIRCUIT":30,"ITEM_CONTROL_MODULE":10},"tier":7,"power":20.0,"size":Vector2i(4,4)},
+	{"id":"FUSION_CONTAINMENT_SHIELD","name":"Fusion Containment Shield","cost":{"ITEM_STEEL_PLATE":100,"ITEM_TITANIUM_PLATE":80,"ITEM_ADVANCED_CIRCUIT":30,"ITEM_DORONUM_BLACK":10},"tier":7,"power":250.0,"size":Vector2i(4,4)},
+	{"id":"EMERGENCY_COOLING_SYSTEM","name":"Emergency Cooling System","cost":{"ITEM_STEEL_PLATE":80,"ITEM_TITANIUM_PLATE":30,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_DORONUM_COLD_CRYSTAL":10},"tier":7,"power":250.0,"size":Vector2i(3,3)},
+	{"id":"PRESSURE_CALIBRATION_RIG","name":"Pressure Calibration Rig","cost":{"ITEM_STEEL_PLATE":60,"ITEM_TITANIUM_PLATE":40,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_DIAMOND":5},"tier":7,"power":200.0,"size":Vector2i(3,3)},
+	{"id":"SKILL_RESPEC_TERMINAL","name":"Skill Respec Terminal","cost":{"ITEM_STEEL_PLATE":50,"ITEM_TITANIUM_PLATE":25,"ITEM_ADVANCED_CIRCUIT":20,"ITEM_DORONUM_TRANSLUCENT":5},"tier":7,"power":50.0,"size":Vector2i(2,2)}
+]
+const VARIANT_RECIPES := {
+	"ITEM_DORONUM_YELLOW":{"name":"Yellow Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_GOLD_INGOT":2,"ITEM_QUARTZ":1},"machine":"DORONUM_REFINEMENT_CHAMBER","seconds":45.0,"temperature":700.0,"pressure":300.0,"power":250.0},
+	"ITEM_DORONUM_ULTRA":{"name":"Ultra Doronum","inputs":{"ITEM_DORONUM_NORMAL":3,"ITEM_DIAMOND":1,"ITEM_TITANIUM_PLATE":2},"machine":"ULTRA_MATERIAL_PRESS","seconds":90.0,"temperature":1200.0,"pressure":1000.0,"power":1500.0},
+	"ITEM_DORONUM_BLUE":{"name":"Blue Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_COLD_CRYSTAL":2,"ITEM_QUARTZ":2},"machine":"DORONUM_REFINEMENT_CHAMBER","seconds":60.0,"temperature":400.0,"pressure":200.0,"power":250.0,"purity_loss":0.0},
+	"ITEM_DORONUM_RED":{"name":"Red Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_HEAT_CRYSTAL":2,"ITEM_CHROME_INGOT":2},"machine":"DORONUM_REFINEMENT_CHAMBER","seconds":60.0,"temperature":1400.0,"pressure":500.0,"power":250.0},
+	"ITEM_DORONUM_IRON":{"name":"Iron Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_STEEL_PLATE":3,"ITEM_MAGNETITE":2},"machine":"REINFORCED_DORONUM_PRESS","seconds":75.0,"temperature":900.0,"pressure":700.0,"power":350.0},
+	"ITEM_DORONUM_ORANGE":{"name":"Orange Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_COPPER_WIRE":10,"ITEM_GOLD_INGOT":1},"machine":"DORONUM_REFINEMENT_CHAMBER","seconds":55.0,"temperature":800.0,"pressure":400.0,"power":250.0},
+	"ITEM_DORONUM_SLIGHTLY_RUSTED":{"name":"Slightly Rusted Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_IRON_ORE":1,"ITEM_WATER":1},"machine":"CONTROLLED_ATMOSPHERE_CHAMBER","seconds":40.0,"temperature":350.0,"pressure":120.0,"power":300.0,"purity_loss":0.0},
+	"ITEM_DORONUM_RUSTED":{"name":"Rusted Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_IRON_ORE":2,"ITEM_WATER":3},"machine":"CONTROLLED_ATMOSPHERE_CHAMBER","seconds":60.0,"temperature":500.0,"pressure":180.0,"power":300.0,"purity_loss":8.0},
+	"ITEM_DORONUM_TRANSLUCENT":{"name":"Translucent Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_QUARTZ":4,"ITEM_DIAMOND":1},"machine":"OPTICAL_REFINEMENT_CHAMBER","seconds":90.0,"temperature":650.0,"pressure":500.0,"power":350.0},
+	"ITEM_DORONUM_THERMAL_CRYSTAL":{"name":"Thermal Crystal","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_HEAT_CRYSTAL":3},"machine":"THERMAL_STABILIZER","seconds":75.0,"temperature":1100.0,"pressure":600.0,"power":250.0},
+	"ITEM_DORONUM_COLD_CRYSTAL":{"name":"Cold Crystal","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_COLD_CRYSTAL":3},"machine":"COOLING_STABILIZER","seconds":75.0,"temperature":250.0,"pressure":400.0,"power":250.0},
+	"ITEM_DORONUM_BLACK":{"name":"Black Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_CARBON_POWDER":5,"ITEM_DIAMOND":1},"machine":"ABSORPTION_PRESS","seconds":100.0,"temperature":1000.0,"pressure":800.0,"power":400.0},
+	"ITEM_DORONUM_SPECIAL_EDITION":{"name":"Special Edition Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_DORONUM_YELLOW":1,"ITEM_ADVANCED_CIRCUIT":5,"ITEM_ARCHIVE_PATTERN":1},"machine":"SEALED_PRECISION_CHAMBER","seconds":120.0,"temperature":900.0,"pressure":1000.0,"power":500.0,"story":"SPECIAL_EDITION_BATCH_RESEARCHED","supply_cap":100},
+	"ITEM_DORONUM_LIMITED_EDITION":{"name":"Limited Edition Doronum","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_DORONUM_ULTRA":1,"ITEM_DORONUM_TRANSLUCENT":1,"ITEM_CONTRACT_SEAL":1},"machine":"LEGACY_BATCH_LINE","seconds":180.0,"temperature":1100.0,"pressure":1500.0,"power":500.0,"story":"LIMITED_EDITION_CONTRACT_ACTIVE","supply_cap":100}
+}
+const SKILLS := [
+	{"id":"FIELD_SURVEYOR","name":"Field Surveyor","branch":"EXPLORATION","tier":1,"requires":[],"effect":"상호작용/스캔 거리 +10%"},
+	{"id":"GEOLOGICAL_READOUT","name":"Geological Readout","branch":"EXPLORATION","tier":2,"requires":["FIELD_SURVEYOR"],"effect":"광맥 잔량 범위를 표시"},
+	{"id":"SAFE_PATHFINDER","name":"Safe Pathfinder","branch":"EXPLORATION","tier":3,"requires":["FIELD_SURVEYOR","GEOLOGICAL_READOUT"],"effect":"지도에 위험 지역과 우회 경로 표시"},
+	{"id":"ARCHIVE_SPECIALIST","name":"Archive Specialist","branch":"EXPLORATION","tier":4,"requires":["FIELD_SURVEYOR","GEOLOGICAL_READOUT","SAFE_PATHFINDER"],"effect":"Lore 단서 관계와 미수집 카테고리 표시"},
+	{"id":"STEADY_SWING","name":"Steady Swing","branch":"EXTRACTION","tier":1,"requires":[],"effect":"채굴 속도 +10%"},
+	{"id":"VEIN_EFFICIENCY","name":"Vein Efficiency","branch":"EXTRACTION","tier":2,"requires":["STEADY_SWING"],"effect":"채굴 부산물 확률 +2%p"},
+	{"id":"HARDPOINT_CALIBRATION","name":"Hardpoint Calibration","branch":"EXTRACTION","tier":3,"requires":["STEADY_SWING","VEIN_EFFICIENCY"],"effect":"도구 내구도 소모 -10%"},
+	{"id":"DEEP_EXTRACTION","name":"Deep Extraction","branch":"EXTRACTION","tier":4,"requires":["STEADY_SWING","VEIN_EFFICIENCY","HARDPOINT_CALIBRATION"],"effect":"심부 채굴/광맥 유지보수 경고"},
+	{"id":"PRECISE_ALIGNMENT","name":"Precise Alignment","branch":"MANUFACTURING","tier":1,"requires":[],"effect":"정비 후 Condition 회복 +10%"},
+	{"id":"RECIPE_DISCIPLINE","name":"Recipe Discipline","branch":"MANUFACTURING","tier":2,"requires":["PRECISE_ALIGNMENT"],"effect":"허용 Recipe Quality Modifier +2"},
+	{"id":"PROCESS_CONTROL","name":"Process Control","branch":"MANUFACTURING","tier":3,"requires":["PRECISE_ALIGNMENT","RECIPE_DISCIPLINE"],"effect":"온도/압력 센서 편차 조기 경고"},
+	{"id":"FAULT_DIAGNOSTICS","name":"Fault Diagnostics","branch":"MANUFACTURING","tier":4,"requires":["PRECISE_ALIGNMENT","RECIPE_DISCIPLINE","PROCESS_CONTROL"],"effect":"고장 위험 원인과 경고 표시"},
+	{"id":"CONVEYOR_PLANNER","name":"Conveyor Planner","branch":"LOGISTICS","tier":1,"requires":[],"effect":"포트/벨트 연결 사전 검증"},
+	{"id":"BUFFER_ENGINEER","name":"Buffer Engineer","branch":"LOGISTICS","tier":2,"requires":["CONVEYOR_PLANNER"],"effect":"창고/버퍼 건설 비용 -5%"},
+	{"id":"BLUEPRINT_TECHNICIAN","name":"Blueprint Technician","branch":"LOGISTICS","tier":3,"requires":["CONVEYOR_PLANNER","BUFFER_ENGINEER"],"effect":"공장 Blueprint 저장/불러오기"},
+	{"id":"FLOW_OPTIMIZATION","name":"Flow Optimization","branch":"LOGISTICS","tier":4,"requires":["CONVEYOR_PLANNER","BUFFER_ENGINEER","BLUEPRINT_TECHNICIAN"],"effect":"최대 Backpressure/Power 병목 3개 분석"},
+	{"id":"SAMPLE_EFFICIENCY","name":"Sample Efficiency","branch":"RESEARCH_DORONUM","tier":1,"requires":[],"effect":"허용된 분석 샘플 소비량 -5%"},
+	{"id":"MATERIAL_ANALYST","name":"Material Analyst","branch":"RESEARCH_DORONUM","tier":2,"requires":["SAMPLE_EFFICIENCY"],"effect":"Stack 품질/순도 기여 상세 분석"},
+	{"id":"CRYSTAL_LATTICE","name":"Crystal Lattice","branch":"RESEARCH_DORONUM","tier":3,"requires":["SAMPLE_EFFICIENCY","MATERIAL_ANALYST"],"effect":"도로늄 결정 구조 검사 보고서 확장"},
+	{"id":"INFINITY_SAFETY","name":"Infinity Safety","branch":"RESEARCH_DORONUM","tier":4,"requires":["SAMPLE_EFFICIENCY","MATERIAL_ANALYST","CRYSTAL_LATTICE"],"effect":"Infinity 사전 진단과 위험 체크리스트 확장"}
+]
+const STORY_CHAPTERS := [
+	{"id":"PROLOGUE","title":"The Arrival","objective":"Scan the abandoned site and recover the first terminal.","flag":"PROLOGUE_COMPLETE"},
+	{"id":"ACT_I","title":"The Ruins","objective":"Gather wood and stone, craft tools and restore the furnace.","flag":"ACT_I_COMPLETE"},
+	{"id":"ACT_II","title":"The Hidden Industry","objective":"Build a powered production line and automate ore processing.","flag":"ACT_II_COMPLETE"},
+	{"id":"ACT_III","title":"The Doronum Truth","objective":"Find a Dori Meat Tree and produce natural Doronum.","flag":"ACT_III_COMPLETE"},
+	{"id":"ACT_IV","title":"The Blue Furnace Incident","objective":"Recover four records and reconstruct the incident.","flag":"STORY_INCIDENT_RECONSTRUCTED"},
+	{"id":"ACT_V","title":"The Infinite Project","objective":"Restore the First Factory archive, cooling core and resonance chamber.","flag":"ACT_V_COMPLETE"},
+	{"id":"ACT_VI","title":"The Last Factory","objective":"Build the final line and pass three safety diagnostics.","flag":"ACT_VI_COMPLETE"},
+	{"id":"FINAL","title":"Planetary Stabilization","objective":"Install three relays, the Infinity Core and stabilize the planet.","flag":"PLANETARY_STABILIZATION_COMPLETE"}
+]
+const ITEMS := {
+	"ITEM_WOOD":{"name":"Wood","category":"Resource"},"ITEM_STONE":{"name":"Stone","category":"Resource"},
+	"ITEM_GRASS":{"name":"Grass","category":"Resource"},"ITEM_PLANT_FIBER":{"name":"Plant Fiber","category":"Material"},
+	"ITEM_PLANT_ROPE":{"name":"Plant Rope","category":"Material"},"ITEM_IRON_ORE":{"name":"Iron Ore","category":"Ore"},
+	"ITEM_COPPER_ORE":{"name":"Copper Ore","category":"Ore"},"ITEM_COAL":{"name":"Coal","category":"Ore"},
+	"ITEM_QUARTZ":{"name":"Quartz","category":"Ore"},"ITEM_GOLD_ORE":{"name":"Gold Ore","category":"Ore"},
+	"ITEM_DIAMOND":{"name":"Diamond","category":"Ore"},"ITEM_WATER":{"name":"Water","category":"Fluid"},
+	"ITEM_IRON":{"name":"Iron","category":"Material"},"ITEM_MOLTEN_IRON":{"name":"Molten Iron","category":"Fluid"},
+	"ITEM_IRON_PLATE":{"name":"Iron Plate","category":"Material"},"ITEM_GEAR":{"name":"Gear","category":"Component"},
+	"ITEM_COPPER":{"name":"Copper","category":"Material"},"ITEM_COPPER_WIRE":{"name":"Copper Wire","category":"Component"},
+	"ITEM_CARBON_POWDER":{"name":"Carbon Powder","category":"Material"},"ITEM_STEEL":{"name":"Steel","category":"Material"},
+	"ITEM_STEEL_PLATE":{"name":"Steel Plate","category":"Material"},"ITEM_BEARING":{"name":"Bearing","category":"Component"},
+	"ITEM_BASIC_CIRCUIT":{"name":"Basic Circuit","category":"Component"},"ITEM_ADVANCED_CIRCUIT":{"name":"Advanced Circuit","category":"Component"},
+	"ITEM_CONTROL_MODULE":{"name":"Control Module","category":"Component"},"ITEM_MOTOR":{"name":"Motor","category":"Component"},
+	"ITEM_BATTERY":{"name":"Battery","category":"Component"},"ITEM_RUBBER":{"name":"Rubber","category":"Material"},
+	"ITEM_TITANIUM_PLATE":{"name":"Titanium Plate","category":"Material"},"ITEM_GOLD_INGOT":{"name":"Gold Ingot","category":"Material"},"ITEM_CHROME_INGOT":{"name":"Chrome Ingot","category":"Material"},"ITEM_ARCHIVE_PATTERN":{"name":"Archive Pattern","category":"Contract"},"ITEM_CONTRACT_SEAL":{"name":"Contract Batch Seal","category":"Contract"},
+	"ITEM_MAGNETITE":{"name":"Magnetite","category":"Ore"},"ITEM_CHROME_ORE":{"name":"Chromite Ore","category":"Ore"},"ITEM_NICKEL_ORE":{"name":"Nickel Ore","category":"Ore"},"ITEM_LEAD_ORE":{"name":"Lead Ore","category":"Ore"},
+	"ITEM_TITANIUM_ORE":{"name":"Titanium Ore","category":"Ore"},"ITEM_NEODYMIUM_ORE":{"name":"Neodymium Ore","category":"Ore"},"ITEM_HEAT_CRYSTAL":{"name":"Heat Crystal","category":"Crystal"},
+	"ITEM_COLD_CRYSTAL":{"name":"Cold Crystal","category":"Crystal"},"ITEM_DORI_MEAT":{"name":"Dori Meat","category":"Biological"},
+	"ITEM_DORONUM_INFINITY":{"name":"Infinity Doronum","category":"Endgame"},
+	"ITEM_LEAD_INGOT":{"name":"Lead Ingot","category":"Material"},"ITEM_SAND":{"name":"Sand","category":"Resource"},
+	"ITEM_ALUMINUM_ORE":{"name":"Aluminum Ore","category":"Ore"},"ITEM_ALUMINUM_INGOT":{"name":"Aluminum Ingot","category":"Material"},
+	"ITEM_ALUMINUM_PLATE":{"name":"Aluminum Plate","category":"Material"},"ITEM_GLASS":{"name":"Glass","category":"Material"},
+	"ITEM_BIRCH_WOOD":{"name":"Birch Wood","category":"Resource"},"ITEM_BIRCH_PANEL":{"name":"Birch Panel","category":"Material"},
+	"ITEM_RUBBER_SAP":{"name":"Rubber Sap","category":"Fluid"},"ITEM_ORGANIC_WASTE":{"name":"Organic Waste","category":"Byproduct"},
+	"ITEM_OIL":{"name":"Crude Oil","category":"Fluid"},"ITEM_PETROLEUM":{"name":"Petroleum","category":"Fluid"},
+	"ITEM_CHEMICAL_WASTE":{"name":"Chemical Waste","category":"Byproduct"},"ITEM_CATALYST":{"name":"Catalyst","category":"Component"},"ITEM_DORONUM_RESIDUE":{"name":"Doronum Residue","category":"Byproduct"},"ITEM_MINERAL_RESIDUE":{"name":"Mineral Residue","category":"Byproduct"},"ITEM_RESEARCH_SAMPLE":{"name":"Research Sample","category":"Research"},
+	"ITEM_BASIC_BUILDING_PART":{"name":"Basic Building Part","category":"Component"},"ITEM_LEAD":{"name":"Lead","category":"Material"},
+	"ITEM_NEODYMIUM_MAGNET":{"name":"Neodymium Magnet","category":"Component"},"ITEM_NICKEL_INGOT":{"name":"Nickel Ingot","category":"Material"},
+	"ITEM_SENSOR":{"name":"Sensor","category":"Component"},"ITEM_TITANIUM_INGOT":{"name":"Titanium Ingot","category":"Material"},
+	"ITEM_WOODEN_PICKAXE":{"name":"Wooden Pickaxe","category":"Tool"},"ITEM_WOODEN_AXE":{"name":"Wooden Axe","category":"Tool"},
+	"ITEM_WOODEN_SHOVEL":{"name":"Wooden Shovel","category":"Tool"},"ITEM_IRON_PICKAXE":{"name":"Iron Pickaxe","category":"Tool"},
+	"ITEM_STEEL_PICKAXE":{"name":"Steel Pickaxe","category":"Tool"},"ITEM_DORONUM_PICKAXE":{"name":"Doronum Pickaxe","category":"Tool"}
+}
+
+const MANUAL_RECIPES := {
+	"RECIPE_GRASS_TO_FIBER":{"name":"Plant Fiber","inputs":{"ITEM_GRASS":3},"outputs":{"ITEM_PLANT_FIBER":2},"material_weights":{"ITEM_GRASS":1.0},"purity_weights":{"ITEM_GRASS":1.0},"quality_profile":{"temperature_quality":100.0,"pressure_quality":100.0,"machine_condition_quality":100.0,"power_stability":100.0,"recipe_quality_modifier":0.0,"pollution_penalty":0.0},"seconds":4.0},
+	"RECIPE_FIBER_TO_ROPE":{"name":"Plant Rope","inputs":{"ITEM_PLANT_FIBER":5},"outputs":{"ITEM_PLANT_ROPE":1},"material_weights":{"ITEM_PLANT_FIBER":1.0},"purity_weights":{"ITEM_PLANT_FIBER":1.0},"quality_profile":{"temperature_quality":100.0,"pressure_quality":100.0,"machine_condition_quality":100.0,"power_stability":100.0,"recipe_quality_modifier":0.0,"pollution_penalty":0.0},"seconds":5.0},
+	"RECIPE_WOODEN_PICKAXE":{"name":"Wooden Pickaxe","inputs":{"ITEM_WOOD":3,"ITEM_STONE":2,"ITEM_PLANT_ROPE":1},"outputs":{"ITEM_WOODEN_PICKAXE":1},"material_weights":{"ITEM_WOOD":1.0,"ITEM_STONE":1.0,"ITEM_PLANT_ROPE":1.0},"purity_weights":{"ITEM_WOOD":1.0,"ITEM_STONE":1.0,"ITEM_PLANT_ROPE":1.0},"quality_profile":{"temperature_quality":100.0,"pressure_quality":100.0,"machine_condition_quality":100.0,"power_stability":100.0,"recipe_quality_modifier":0.0,"pollution_penalty":0.0},"seconds":8.0},
+	"RECIPE_WOODEN_AXE":{"name":"Wooden Axe","inputs":{"ITEM_WOOD":3,"ITEM_STONE":2,"ITEM_PLANT_ROPE":1},"outputs":{"ITEM_WOODEN_AXE":1},"material_weights":{"ITEM_WOOD":1.0,"ITEM_STONE":1.0,"ITEM_PLANT_ROPE":1.0},"purity_weights":{"ITEM_WOOD":1.0,"ITEM_STONE":1.0,"ITEM_PLANT_ROPE":1.0},"quality_profile":{"temperature_quality":100.0,"pressure_quality":100.0,"machine_condition_quality":100.0,"power_stability":100.0,"recipe_quality_modifier":0.0,"pollution_penalty":0.0},"seconds":8.0},
+	"RECIPE_WOODEN_SHOVEL":{"name":"Wooden Shovel","inputs":{"ITEM_WOOD":3,"ITEM_STONE":1,"ITEM_PLANT_ROPE":1},"outputs":{"ITEM_WOODEN_SHOVEL":1},"material_weights":{"ITEM_WOOD":1.0,"ITEM_STONE":1.0,"ITEM_PLANT_ROPE":1.0},"purity_weights":{"ITEM_WOOD":1.0,"ITEM_STONE":1.0,"ITEM_PLANT_ROPE":1.0},"quality_profile":{"temperature_quality":100.0,"pressure_quality":100.0,"machine_condition_quality":100.0,"power_stability":100.0,"recipe_quality_modifier":0.0,"pollution_penalty":0.0},"seconds":6.0},
+	"RECIPE_COPPER_WIRE":{"name":"Copper Wire","inputs":{"ITEM_COPPER":1},"outputs":{"ITEM_COPPER_WIRE":2},"material_weights":{"ITEM_COPPER":1.0},"purity_weights":{"ITEM_COPPER":1.0},"quality_profile":{"temperature_quality":100.0,"pressure_quality":100.0,"machine_condition_quality":100.0,"power_stability":100.0,"recipe_quality_modifier":0.0,"pollution_penalty":0.0},"seconds":4.0},
+	"RECIPE_BASIC_BUILDING_PART":{"name":"Basic Building Part","inputs":{"ITEM_WOOD":6,"ITEM_STONE":4},"outputs":{"ITEM_BASIC_BUILDING_PART":2},"material_weights":{"ITEM_WOOD":1.0,"ITEM_STONE":1.0},"purity_weights":{"ITEM_WOOD":1.0,"ITEM_STONE":1.0},"quality_profile":{"temperature_quality":100.0,"pressure_quality":100.0,"machine_condition_quality":100.0,"power_stability":100.0,"recipe_quality_modifier":0.0,"pollution_penalty":0.0},"seconds":6.0}
+}
+const RECIPES := {
+	"RECIPE_IRON_ORE_TO_MOLTEN_IRON":{"name":"Iron Ore → Molten Iron","machine":"FURNACE","inputs":{"ITEM_IRON_ORE":1,"ITEM_COAL":1},"outputs":{"ITEM_MOLTEN_IRON":1},"seconds":10.0,"temperature":1538.0,"pressure":100.0,"power":0.0},
+	"RECIPE_MOLTEN_IRON_TO_IRON":{"name":"Molten Iron → Iron","machine":"COMPRESSOR","inputs":{"ITEM_MOLTEN_IRON":1},"outputs":{"ITEM_IRON":1},"seconds":8.0,"temperature":900.0,"pressure":200.0,"power":0.0},
+	"RECIPE_IRON_TO_PLATE":{"name":"Iron → Iron Plate","machine":"ROLLING_MILL","inputs":{"ITEM_IRON":1},"outputs":{"ITEM_IRON_PLATE":1},"seconds":5.0,"temperature":250.0,"pressure":50.0,"power":20.0},
+	"RECIPE_GEAR":{"name":"Gear","machine":"FABRICATOR","inputs":{"ITEM_IRON_PLATE":2,"ITEM_IRON":3},"outputs":{"ITEM_GEAR":1},"seconds":6.0,"power":15.0},
+	"RECIPE_COPPER_SMELT":{"name":"Copper Ore → Copper","machine":"FURNACE","inputs":{"ITEM_COPPER_ORE":1},"outputs":{"ITEM_COPPER":1},"seconds":8.0,"temperature":1085.0,"pressure":50.0,"power":0.0},
+	"RECIPE_CARBON_POWDER":{"name":"Coal → Carbon Powder","machine":"CRUSHER","inputs":{"ITEM_COAL":1},"outputs":{"ITEM_CARBON_POWDER":2},"seconds":5.0,"power":8.0},
+	"RECIPE_STEEL":{"name":"Steel","machine":"STEEL_FURNACE","inputs":{"ITEM_IRON":3,"ITEM_CARBON_POWDER":1},"outputs":{"ITEM_STEEL":1},"seconds":15.0,"temperature":1450.0,"pressure":100.0,"power":40.0},
+	"RECIPE_STEEL_PLATE":{"name":"Steel Plate","machine":"ROLLING_MILL","inputs":{"ITEM_STEEL":1},"outputs":{"ITEM_STEEL_PLATE":1},"seconds":7.0,"temperature":300.0,"pressure":60.0,"power":25.0},
+	"RECIPE_BASIC_CIRCUIT":{"name":"Basic Circuit","machine":"CIRCUIT_ASSEMBLER","inputs":{"ITEM_COPPER_WIRE":3,"ITEM_QUARTZ":1,"ITEM_CARBON_POWDER":1},"outputs":{"ITEM_BASIC_CIRCUIT":1},"seconds":8.0,"power":18.0},
+	"RECIPE_BATTERY":{"name":"Battery","machine":"FABRICATOR","inputs":{"ITEM_LEAD":4,"ITEM_COPPER":2,"ITEM_CARBON_POWDER":2,"ITEM_RUBBER":1},"outputs":{"ITEM_BATTERY":1},"seconds":10.0,"power":20.0},
+	"RECIPE_MOTOR":{"name":"Motor","machine":"FABRICATOR","inputs":{"ITEM_COPPER":5,"ITEM_IRON":5,"ITEM_NEODYMIUM_MAGNET":2,"ITEM_BEARING":2,"ITEM_COPPER_WIRE":5},"outputs":{"ITEM_MOTOR":1},"seconds":15.0,"power":30.0},
+	"RECIPE_ADVANCED_CIRCUIT":{"name":"Advanced Circuit","machine":"ADVANCED_ASSEMBLER","inputs":{"ITEM_BASIC_CIRCUIT":3,"ITEM_GOLD_INGOT":2,"ITEM_NICKEL_INGOT":2,"ITEM_QUARTZ":2,"ITEM_COPPER_WIRE":5},"outputs":{"ITEM_ADVANCED_CIRCUIT":1},"seconds":25.0,"power":45.0},
+	"RECIPE_CONTROL_MODULE":{"name":"Control Module","machine":"ADVANCED_ASSEMBLER","inputs":{"ITEM_ADVANCED_CIRCUIT":2,"ITEM_SENSOR":2,"ITEM_BATTERY":1,"ITEM_NEODYMIUM_MAGNET":1},"outputs":{"ITEM_CONTROL_MODULE":1},"seconds":30.0,"power":50.0},
+	"RECIPE_DORONUM_NORMAL":{"name":"Natural Doronum","machine":"DORONUM_COMPRESSOR","inputs":{"ITEM_DORI_MEAT":10},"outputs":{"ITEM_DORONUM_NORMAL":1},"seconds":20.0,"temperature":900.0,"pressure":500.0,"power":750.0,"allow_synthetic":false,"allow_skill_quality_bonus":true},
+	"RECIPE_PURIFY_RUSTED_DORONUM":{"name":"Purify Rusted Doronum","machine":"DORONUM_PURIFIER","inputs":{"ITEM_DORONUM_RUSTED":2,"ITEM_QUARTZ":4,"ITEM_WATER":4},"outputs":{"ITEM_DORONUM_RUSTED":1},"seconds":120.0,"temperature":350.0,"pressure":300.0,"power":500.0,"allow_synthetic":false,"purity_loss":0.0,"purification_bonus":15.0,"quality_modifier":2.0,"allow_skill_quality_bonus":true},
+	"RECIPE_GOLD_INGOT":{"name":"Gold Ingot","machine":"REFINERY","inputs":{"ITEM_GOLD_ORE":2},"outputs":{"ITEM_GOLD_INGOT":1},"seconds":10.0,"power":50.0},
+	"RECIPE_CHROME_INGOT":{"name":"Chrome Ingot","machine":"HIGH_TEMPERATURE_FURNACE","inputs":{"ITEM_CHROME_ORE":2},"outputs":{"ITEM_CHROME_INGOT":1},"seconds":15.0,"temperature":1600.0,"power":100.0},
+	"RECIPE_NICKEL_INGOT":{"name":"Nickel Ingot","machine":"REFINERY","inputs":{"ITEM_NICKEL_ORE":2},"outputs":{"ITEM_NICKEL_INGOT":1},"seconds":12.0,"power":50.0},
+	"RECIPE_LEAD_INGOT":{"name":"Lead Ingot","machine":"REFINERY","inputs":{"ITEM_LEAD_ORE":2},"outputs":{"ITEM_LEAD_INGOT":1},"seconds":10.0,"power":50.0},
+	"RECIPE_TITANIUM_INGOT":{"name":"Titanium Ingot","machine":"HIGH_TEMPERATURE_FURNACE","inputs":{"ITEM_TITANIUM_ORE":2,"ITEM_CARBON_POWDER":1},"outputs":{"ITEM_TITANIUM_INGOT":1},"seconds":20.0,"temperature":1700.0,"pressure":100.0,"power":100.0},
+	"RECIPE_TITANIUM_PLATE":{"name":"Titanium Plate","machine":"ROLLING_MILL","inputs":{"ITEM_TITANIUM_INGOT":1},"outputs":{"ITEM_TITANIUM_PLATE":1},"seconds":10.0,"temperature":500.0,"pressure":150.0,"power":35.0},
+	"RECIPE_NEODYMIUM_MAGNET":{"name":"Neodymium Magnet","machine":"MAGNETIZER","inputs":{"ITEM_NEODYMIUM_ORE":3,"ITEM_IRON":1,"ITEM_COPPER_WIRE":2},"outputs":{"ITEM_NEODYMIUM_MAGNET":1},"seconds":15.0,"power":80.0},
+	"RECIPE_BEARING":{"name":"Bearing","machine":"FABRICATOR","inputs":{"ITEM_STEEL":2,"ITEM_RUBBER":1},"outputs":{"ITEM_BEARING":1},"seconds":5.0,"power":20.0},
+	"RECIPE_SENSOR":{"name":"Sensor","machine":"CIRCUIT_ASSEMBLER","inputs":{"ITEM_BASIC_CIRCUIT":1,"ITEM_QUARTZ":2,"ITEM_COPPER_WIRE":2},"outputs":{"ITEM_SENSOR":1},"seconds":8.0,"power":18.0},
+	"RECIPE_RUBBER":{"name":"Rubber","machine":"POLYMER_PROCESSOR","inputs":{"ITEM_RUBBER_SAP":5},"outputs":{"ITEM_RUBBER":2,"ITEM_ORGANIC_WASTE":1},"seconds":15.0,"power":50.0},
+	"RECIPE_ALUMINUM_INGOT":{"name":"Aluminum Ingot","machine":"REFINERY","inputs":{"ITEM_ALUMINUM_ORE":2,"ITEM_CARBON_POWDER":1},"outputs":{"ITEM_ALUMINUM_INGOT":1},"seconds":12.0,"power":60.0},
+	"RECIPE_ALUMINUM_PLATE":{"name":"Aluminum Plate","machine":"ROLLING_MILL","inputs":{"ITEM_ALUMINUM_INGOT":1},"outputs":{"ITEM_ALUMINUM_PLATE":1},"seconds":6.0,"power":20.0},
+	"RECIPE_GLASS":{"name":"Glass","machine":"GLASS_FURNACE","inputs":{"ITEM_SAND":3,"ITEM_QUARTZ":1},"outputs":{"ITEM_GLASS":2},"seconds":12.0,"temperature":1200.0,"power":35.0},
+	"RECIPE_BIRCH_PANEL":{"name":"Birch Panel","machine":"WORKBENCH","inputs":{"ITEM_BIRCH_WOOD":4},"outputs":{"ITEM_BIRCH_PANEL":2},"seconds":5.0,"power":0.0},
+	"RECIPE_OIL_TO_PETROLEUM":{"name":"Oil to Petroleum","machine":"REFINERY","inputs":{"ITEM_OIL":10},"outputs":{"ITEM_PETROLEUM":7,"ITEM_CHEMICAL_WASTE":1},"seconds":20.0,"power":60.0},
+	"RECIPE_IRON_PICKAXE":{"name":"Iron Pickaxe","machine":"FABRICATOR","inputs":{"ITEM_IRON_PLATE":5,"ITEM_WOOD":2,"ITEM_GEAR":1},"outputs":{"ITEM_IRON_PICKAXE":1},"seconds":18.0,"power":25.0},
+	"RECIPE_STEEL_PICKAXE":{"name":"Steel Pickaxe","machine":"FABRICATOR","inputs":{"ITEM_STEEL_PLATE":5,"ITEM_MOTOR":1,"ITEM_CONTROL_MODULE":1},"outputs":{"ITEM_STEEL_PICKAXE":1},"seconds":35.0,"power":60.0},
+	"RECIPE_DORONUM_PICKAXE":{"name":"Doronum Pickaxe","machine":"DORONUM_COMPRESSOR","inputs":{"ITEM_DORONUM_NORMAL":1,"ITEM_TITANIUM_PLATE":5,"ITEM_CONTROL_MODULE":5},"outputs":{"ITEM_DORONUM_PICKAXE":1},"seconds":90.0,"temperature":900.0,"pressure":500.0,"power":750.0,"allow_synthetic":false}
+}
+static func _finalize_recipe(recipe: Dictionary) -> Dictionary:
+	var result: Dictionary = recipe.duplicate(true)
+	var material_weights: Dictionary = result.get("material_weights",{})
+	var purity_weights: Dictionary = result.get("purity_weights",{})
+	for item_id in result.get("inputs",{}):
+		if not material_weights.has(item_id):
+			material_weights[item_id] = 1.0
+		if not purity_weights.has(item_id):
+			purity_weights[item_id] = 1.0
+	result["material_weights"] = material_weights
+	result["purity_weights"] = purity_weights
+	result["quality_modifier"] = float(result.get("quality_modifier",0.0))
+	result["pollution_penalty"] = float(result.get("pollution_penalty",0.0))
+	result["purity_loss"] = float(result.get("purity_loss",0.0))
+	result["purification_bonus"] = float(result.get("purification_bonus",0.0))
+	result["output_purity_modifier"] = float(result.get("output_purity_modifier",0.0))
+	result["temperature_tolerance"] = float(result.get("temperature_tolerance",0.1))
+	result["pressure_tolerance"] = float(result.get("pressure_tolerance",0.1))
+	result["temperature_absolute_tolerance"] = float(result.get("temperature_absolute_tolerance",1.0))
+	result["pressure_absolute_tolerance"] = float(result.get("pressure_absolute_tolerance",1.0))
+	var target_temperature := float(result.get("temperature",20.0))
+	var target_pressure := float(result.get("pressure",0.0))
+	var temperature_safe_span := maxf(5.0,absf(target_temperature)*0.20)
+	var pressure_safe_span := maxf(1.0,absf(target_pressure)*0.20)
+	result["temperature_safe_min"] = float(result.get("temperature_safe_min",target_temperature-temperature_safe_span))
+	result["temperature_safe_max"] = float(result.get("temperature_safe_max",target_temperature+temperature_safe_span))
+	result["pressure_safe_min"] = float(result.get("pressure_safe_min",maxf(0.0,target_pressure-pressure_safe_span)))
+	result["pressure_safe_max"] = float(result.get("pressure_safe_max",target_pressure+pressure_safe_span))
+	result["heat_rate"] = float(result.get("heat_rate",120.0))
+	result["pressure_rate"] = float(result.get("pressure_rate",50.0))
+	result["allow_synthetic"] = bool(result.get("allow_synthetic",true))
+	return result
+
+static func recipe_definition(recipe_id: String) -> Dictionary:
+	if RECIPES.has(recipe_id):
+		return _finalize_recipe(RECIPES[recipe_id])
+	for item_id in DORONUM_IDS:
+		var variant_recipe_id: String = "RECIPE_" + str(item_id).replace("ITEM_","")
+		if recipe_id == variant_recipe_id and VARIANT_RECIPES.has(item_id):
+			var variant: Dictionary = VARIANT_RECIPES[item_id]
+			return _finalize_recipe({
+				"name":variant.name,"machine":variant.machine,"inputs":variant.inputs,
+				"outputs":{item_id:1},"seconds":variant.seconds,
+				"temperature":variant.temperature,"pressure":variant.pressure,
+				"power":250.0,"allow_synthetic":false,"allow_skill_quality_bonus":true
+			})
+	return {}
+
+static func validate_canonical_data() -> Array[String]:
+	var errors: Array[String] = []
+	var manifest_ids: Dictionary = {}
+	if DORONUM_IDS.size()!=15:
+		errors.append("Canonical Doronum manifest must contain exactly 15 IDs.")
+	for item_id in DORONUM_IDS:
+		if manifest_ids.has(str(item_id)):
+			errors.append("Duplicate canonical Doronum ID · "+str(item_id))
+		manifest_ids[str(item_id)] = true
+	var building_ids: Dictionary = {}
+	for building in BUILDINGS:
+		var building_id := str(building.id)
+		if building_ids.has(building_id):
+			errors.append("Duplicate BuildingID · "+building_id)
+		building_ids[building_id] = true
+	var research_ids: Dictionary = {}
+	for research in RESEARCH:
+		var research_id := str(research.id)
+		if research_ids.has(research_id):
+			errors.append("Duplicate ResearchID · "+research_id)
+		research_ids[research_id] = int(research.tier)
+	for research in RESEARCH:
+		for prerequisite in research.requires:
+			if not research_ids.has(str(prerequisite)):
+				errors.append("Unknown research prerequisite · "+str(research.id)+" -> "+str(prerequisite))
+			elif int(research_ids[str(prerequisite)])>int(research.tier):
+				errors.append("Research prerequisite tier inversion · "+str(research.id)+" -> "+str(prerequisite))
+	var stage_seconds := 0.0
+	for stage in FUSION_STAGES:
+		stage_seconds += float(stage.get("seconds",0.0))
+		if float(stage.get("temperature",0.0))<=0.0 or float(stage.get("pressure",0.0))<=0.0 or float(stage.get("power",0.0))<=0.0 or float(stage.get("seconds",0.0))<=0.0:
+			errors.append("Invalid Infinity stage profile · "+str(stage.get("name","UNKNOWN")))
+	if not is_equal_approx(stage_seconds,260.0):
+		errors.append("Infinity ideal RUNNING time must equal 260 seconds.")
+	for recipe_id in RECIPES:
+		var recipe: Dictionary = recipe_definition(str(recipe_id))
+		if recipe.is_empty():
+			errors.append("Recipe cannot be resolved · "+str(recipe_id))
+			continue
+		if not building_ids.has(str(recipe.machine)):
+			errors.append("Unknown recipe machine · "+str(recipe_id)+" -> "+str(recipe.machine))
+		if float(recipe.get("seconds",0.0))<=0.0 or not is_finite(float(recipe.get("seconds",0.0))):
+			errors.append("Invalid recipe duration · "+str(recipe_id))
+		if float(recipe.get("power",0.0))<0.0 or not is_finite(float(recipe.get("power",0.0))):
+			errors.append("Invalid recipe power · "+str(recipe_id))
+		if float(recipe.get("quality_modifier",0.0)) < -20.0 or float(recipe.get("quality_modifier",0.0)) > 20.0 or float(recipe.get("pollution_penalty",0.0))<0.0 or float(recipe.get("pollution_penalty",0.0))>100.0:
+			errors.append("Invalid Quality modifier/pollution profile · "+str(recipe_id))
+		if float(recipe.get("purity_loss",0.0))<0.0 or float(recipe.get("purification_bonus",0.0))<0.0 or float(recipe.get("output_purity_modifier",0.0)) < -100.0 or float(recipe.get("output_purity_modifier",0.0))>100.0:
+			errors.append("Invalid Purity profile · "+str(recipe_id))
+		if float(recipe.temperature_safe_min)>float(recipe.temperature_safe_max) or float(recipe.pressure_safe_min)>float(recipe.pressure_safe_max):
+			errors.append("Invalid process safe band · "+str(recipe_id))
+		for item_id in recipe.inputs:
+			if not ITEMS.has(str(item_id)) and str(item_id) not in DORONUM_IDS:
+				errors.append("Unknown recipe input ItemID · "+str(recipe_id)+" -> "+str(item_id))
+			if int(recipe.inputs[item_id])<=0:
+				errors.append("Non-positive recipe input · "+str(recipe_id)+" -> "+str(item_id))
+			if not recipe.material_weights.has(item_id) or not recipe.purity_weights.has(item_id):
+				errors.append("Missing input weights · "+str(recipe_id)+" -> "+str(item_id))
+		for item_id in recipe.outputs:
+			if not ITEMS.has(str(item_id)) and str(item_id) not in DORONUM_IDS and str(item_id)!="ITEM_DORONUM_INFINITY":
+				errors.append("Unknown recipe output ItemID · "+str(recipe_id)+" -> "+str(item_id))
+			if int(recipe.outputs[item_id])<=0:
+				errors.append("Non-positive recipe output · "+str(recipe_id)+" -> "+str(item_id))
+		if str(recipe_id).contains("DORONUM") and bool(recipe.allow_synthetic):
+			errors.append("Doronum recipe permits synthetic lineage · "+str(recipe_id))
+	for item_id in VARIANT_RECIPES:
+		if str(item_id) not in DORONUM_IDS or str(item_id)=="ITEM_DORONUM_NORMAL":
+			errors.append("Unexpected Doronum variant ID · "+str(item_id))
+		var variant_recipe := recipe_definition("RECIPE_"+str(item_id).replace("ITEM_",""))
+		if variant_recipe.is_empty() or not building_ids.has(str(variant_recipe.get("machine",""))):
+			errors.append("Invalid Doronum variant machine/recipe · "+str(item_id))
+		elif bool(variant_recipe.get("allow_synthetic",true)):
+			errors.append("Doronum variant permits synthetic lineage · "+str(item_id))
+		if not variant_recipe.is_empty():
+			for input_id in variant_recipe.inputs:
+				if not ITEMS.has(str(input_id)) and str(input_id) not in DORONUM_IDS:
+					errors.append("Unknown variant input ItemID · "+str(item_id)+" -> "+str(input_id))
+			for output_id in variant_recipe.outputs:
+				if not ITEMS.has(str(output_id)) and str(output_id) not in DORONUM_IDS:
+					errors.append("Unknown variant output ItemID · "+str(item_id)+" -> "+str(output_id))
+	for recipe_id in MANUAL_RECIPES:
+		var recipe: Dictionary = MANUAL_RECIPES[recipe_id]
+		var profile: Dictionary = recipe.get("quality_profile",{})
+		for key in ["temperature_quality","pressure_quality","machine_condition_quality","power_stability"]:
+			if not profile.has(key) or float(profile.get(key,-1.0))<0.0 or float(profile.get(key,101.0))>100.0:
+				errors.append("Missing/invalid manual QualityProfile · "+str(recipe_id)+" · "+key)
+		for item_id in recipe.inputs:
+			if not ITEMS.has(str(item_id)) and str(item_id) not in DORONUM_IDS:
+				errors.append("Unknown manual input ItemID · "+str(recipe_id)+" -> "+str(item_id))
+			if not recipe.get("material_weights",{}).has(item_id) or not recipe.get("purity_weights",{}).has(item_id):
+				errors.append("Missing manual input weights · "+str(recipe_id)+" -> "+str(item_id))
+		for item_id in recipe.outputs:
+			if not ITEMS.has(str(item_id)) and str(item_id) not in DORONUM_IDS:
+				errors.append("Unknown manual output ItemID · "+str(recipe_id)+" -> "+str(item_id))
+	if absf(float(INFINITY_FAILURE_PROFILE.minor_probability)+float(INFINITY_FAILURE_PROFILE.major_probability)+float(INFINITY_FAILURE_PROFILE.critical_probability)-1.0)>0.000001:
+		errors.append("Infinity failure severity distribution must total 100%.")
+	if absf(float(DEFAULT_MACHINE_FAILURE_PROFILE.minor_probability)+float(DEFAULT_MACHINE_FAILURE_PROFILE.major_probability)+float(DEFAULT_MACHINE_FAILURE_PROFILE.critical_probability)-1.0)>0.000001:
+		errors.append("Machine failure severity distribution must total 100%.")
+	return errors
+
+static func item_name(item_id: String) -> String:
+	if ITEMS.has(item_id):
+		return str(ITEMS[item_id].name)
+	if item_id in DORONUM_IDS:
+		return item_id.replace("ITEM_DORONUM_","").replace("_"," ").capitalize()
+	return item_id.replace("ITEM_","").replace("_"," ").capitalize()
+
+static func research_definition(research_id: String) -> Dictionary:
+	for definition in RESEARCH:
+		if definition.id == research_id:
+			return definition
+	return {}
+
+static func building_definition(building_id: String) -> Dictionary:
+	for definition in BUILDINGS:
+		if definition.id == building_id:
+			return definition
+	return {}
