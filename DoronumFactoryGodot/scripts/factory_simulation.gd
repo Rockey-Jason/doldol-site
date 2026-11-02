@@ -16,7 +16,7 @@ func bind_state(state: GameState, planet: PlanetWorld = null) -> void:
 func tick(delta: float) -> void:
 	if game == null or game.simulation_paused:
 		return
-	accumulator += minf(delta,1.0)
+	accumulator += maxf(0.0,delta)
 	var steps := 0
 	while accumulator >= GameData.SIM_TICK and steps < 10:
 		accumulator -= GameData.SIM_TICK
@@ -97,6 +97,7 @@ func _fixed_tick(dt: float) -> void:
 	game.total_power_generated = total_generation
 	game.total_power_used = base_consumption+direct_fusion_power+battery_fusion_power
 	last_power_ratio = 1.0 if base_consumption<=0.0 else minf(1.0,total_generation/base_consumption)
+	game.power_state["research_power_ratio"] = last_power_ratio
 	for machine in game.buildings:
 		_tick_machine(machine, dt)
 	_tick_conveyors(dt)
