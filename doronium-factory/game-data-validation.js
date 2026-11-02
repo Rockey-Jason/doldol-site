@@ -29,7 +29,7 @@ export function validateGameData({resources={},recipes={},variantRecipes={},buil
     checkItems(node.need,"research-"+node.id+"-sample");
     const requirements=node.requires||[];
     for(const required of requirements)if(!researchIDs.has(required))errors.push("research-unknown-prerequisite:"+node.id+":"+required);
-    graph.set(node.id,requirements);
+    if(!graph.has(node.id))graph.set(node.id,requirements);
   }
   const visiting=new Set(),visited=new Set();
   const visit=id=>{
