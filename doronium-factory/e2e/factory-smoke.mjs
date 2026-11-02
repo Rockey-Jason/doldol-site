@@ -200,6 +200,8 @@ try {
   assert.equal(soak.ledger.oreBalance, 50000, "Ore + in-process and finished-plate equivalent must be conserved");
   assert.equal(soak.ledger.coalBalance, 30000, "Coal + in-process and finished-plate equivalent must be conserved");
   await desktop.screenshot({ path: path.join(artifactDir, "doronium-desktop.png"), fullPage: true });
+  // Free the desktop WebGL context before creating the mobile WebGL context.
+  await desktop.close();
 
   const mobileContext = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -242,7 +244,6 @@ try {
     screenshots: ["doronium-desktop.png", "doronium-mobile-emulation.png"]
   }, null, 2));
   await mobileContext.close();
-  await desktop.close();
 } catch (error) {
   console.error(error);
   if (failures.length) console.error(failures.join("\n"));
