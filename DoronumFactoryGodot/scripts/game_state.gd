@@ -1203,6 +1203,7 @@ func activate_relay(index: int) -> bool:
 	if relay_machine.is_empty():
 		return false
 	relays[index].active = true
+	_event_ids["RELAY_ACTIVATE:"+str(relays[index].instance_id)] = true
 	story_flags["RELAY_%d_ACTIVE" % (index+1)] = true
 	notification.emit("행성 에너지 릴레이 %d/3 활성화" % (index+1))
 	save_game()
@@ -1225,15 +1226,33 @@ func install_infinity_core() -> bool:
 	stabilization_progress = 0.0
 	stabilization_running = false
 	story_flags["CORE_INSTALLED"] = true
+	_event_ids["CORE_INSTALL:"+str(fusion.get("job_id",""))] = true
 	notification.emit("Infinity Doronum이 Stabilization Core에 설치됐어.")
 	save_game()
 	return true
 
-func start_stabilization_phase() -> bool:
-	if not core_installed or ending_complete or stabilization_phase<1 or stabilization_phase>3:
+func _stabilization_hardware_valid() -> bool:
+	if not core_installed or relays.size()!=3:
 		return false
-	if not bool(story_flags.get("ORBIT_04",false)) or relays.size()!=3 or not relays.all(func(r): return bool(r.active)):
-		notification.emit("ORBIT 04와 세 릴레이 동기화가 필요해.")
+	var core_machines := buildings.filter(func(m): return m.id=="STABILIZATION_CORE" and float(m.condition)>0.0)
+	if core_machines.size()!=1:
+		return false
+	var seen_relays: Dictionary = {}
+	for relay in relays:
+		var instance_id := str(relay.get("instance_id",""))
+		if instance_id.is_empty() or seen_relays.has(instance_id) or not bool(relay.get("active",false)):
+			return false
+		seen_relays[instance_id] = true
+		var relay_machines := buildings.filter(func(m): return m.instance_id==instance_id and m.id=="STABILIZATION_RELAY" and float(m.condition)>0.0)
+		if relay_machines.size()!=1:
+			return false
+	return true
+
+func start_stabilization_phase() -> bool:
+	if not core_installed or ending_complete or stabilization_phase<1 or stabilization_phase>3 or stabilization_running:
+		return false
+	if not bool(story_flags.get("ORBIT_04",false)) or not _stabilization_hardware_valid():
+		notification.emit("ORBIT 04, 정상 Core와 세 개의 고유 활성 Relay가 필요해.")
 		return false
 	if total_power_generated<total_power_used:
 		notification.emit("행성 안정화 전력 부족 · Relay/Core 800kW 부하를 감당할 발전량이 필요해.")
@@ -1246,9 +1265,13 @@ func start_stabilization_phase() -> bool:
 func _tick_planetary_stabilization(dt: float) -> void:
 	if not stabilization_running or ending_complete:
 		return
-	if not core_installed or relays.size()!=3 or not relays.all(func(r): return bool(r.active)) or total_power_generated<total_power_used:
+	if stabilization_phase<1 or stabilization_phase>3:
 		stabilization_running = false
-		notification.emit("행성 안정화 일시 정지 · 전력/릴레이/코어 인터록 확인")
+		notification.emit("행성 안정화 오류 · 유효하지 않은 Phase")
+		return
+	if not _stabilization_hardware_valid() or total_power_generated<total_power_used:
+		stabilization_running = false
+		notification.emit("행성 안정화 일시 정지 · 전력/Relay/Core 물리 상태 확인")
 		return
 	var durations := [60.0,90.0,120.0]
 	stabilization_progress += dt
@@ -1257,11 +1280,13 @@ func _tick_planetary_stabilization(dt: float) -> void:
 	stabilization_progress = 0.0
 	stabilization_running = false
 	story_flags["STABILIZATION_PHASE_%d" % stabilization_phase] = true
+	_event_ids["STABILIZATION_PHASE_COMPLETE:"+str(stabilization_phase)] = true
 	stabilization_phase += 1
 	if stabilization_phase>3:
 		ending_complete = true
 		post_endgame = true
 		story_flags["PLANETARY_STABILIZATION_COMPLETE"] = true
+		_event_ids["PLANETARY_ENDING:"+str(world_seed)] = true
 		notification.emit("ORBIT: Energy network synchronization complete. Planetary instability decreasing. Factory operational.")
 		ending_started.emit()
 	else:
