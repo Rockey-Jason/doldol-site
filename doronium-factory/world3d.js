@@ -17,7 +17,7 @@ function createFallbackWorld(canvas) {
     const size=34*zoom,left=width/2-cx*size,top=height/2-cy*size;
     for(let y=0;y<WORLD_H;y++)for(let x=0;x<WORLD_W;x++){
       const px=left+x*size,py=top+y*size,key=x+","+y,node=state.nodes?.[key],seen=!!state.seen?.[key];
-      const h=terrainHeightAt(x,y),b=biomeAt(x,y);ctx.fillStyle=!seen?"#091a27":node?.type==="water"?"#14516a":({forest:"#315b42",meadow:"#3d674d",wetland:"#354f45",desert:"#92764d",highlands:"#687477",frost:"#81939a",crystal:"#3f6670",volcanic:"#5b4540"})[b]||"#3d674d";
+      const h=terrainHeightAt(x,y),biome=biomeAt(x,y);ctx.fillStyle=!seen?"#091a27":node?.type==="water"?"#14516a":({forest:"#315b42",meadow:"#3d674d",wetland:"#354f45",desert:"#92764d",highlands:"#687477",frost:"#81939a",crystal:"#3f6670",volcanic:"#5b4540"})[biome]||"#3d674d";
       ctx.fillRect(px,py,size-1,size-1);
       if(seen&&node&&node.type!=="water"){ctx.font=Math.max(10,size*.42)+"px sans-serif";ctx.textAlign="center";ctx.fillStyle="#d5e8e8";ctx.fillText(({wood:"🌲",water:"💧",dori:"🌳",mineEntrance:"⛏"})[node.type]||"◆",px+size/2,py+size*.63);}
       const b=state.buildings?.find(v=>v.x===x&&v.y===y);
