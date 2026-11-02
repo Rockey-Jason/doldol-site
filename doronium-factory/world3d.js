@@ -160,6 +160,7 @@ export function createWorld3D(canvas, getState) {
   const groundPick = new THREE.Mesh(new THREE.PlaneGeometry(WORLD_W*32,WORLD_H*32), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,colorWrite:false}));
   groundPick.rotation.x = -Math.PI/2; groundPick.position.set((WORLD_W-1)*16,-52,(WORLD_H-1)*16); scene.add(groundPick);
   const worldRoot = new THREE.Group(); scene.add(worldRoot);
+  const terrainChunks = [];
   const machineRoot = new THREE.Group(); scene.add(machineRoot);
   const nodeRoot = new THREE.Group(); scene.add(nodeRoot);
   const markerRoot = new THREE.Group(); scene.add(markerRoot);
@@ -188,9 +189,17 @@ export function createWorld3D(canvas, getState) {
   const sphereGeo = new THREE.SphereGeometry(1,14,10);
   const coneGeo = new THREE.ConeGeometry(0.5,1,8);
   const makeBox=(parent,x,y,z,sx,sy,sz,material,cast=true)=>{const m=new THREE.Mesh(boxGeo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=cast;m.receiveShadow=true;parent.add(m);return m};
-  const makeCyl=(parent,x,y,z,r,h,material,segments=12)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,segments),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m};
+  const cylinderGeometryCache = new Map([[12,cylGeo]]);
+  const makeCyl=(parent,x,y,z,r,h,material,segments=12)=>{
+    let geo=cylinderGeometryCache.get(segments);
+    if(!geo){geo=new THREE.CylinderGeometry(.5,.5,1,segments);cylinderGeometryCache.set(segments,geo);sharedGeometry.add(geo);}
+    const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(r*2,h,r*2);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
+  };
   const makeSphere=(parent,x,y,z,r,material)=>{const m=new THREE.Mesh(sphereGeo,material);m.position.set(x,y,z);m.scale.set(r,r,r);m.castShadow=true;parent.add(m);return m};
   const sharedGeometry=new Set([boxGeo,cylGeo,sphereGeo,coneGeo]);
+  const terrainTileGeometry=new THREE.BoxGeometry(31.7,1,31.7);
+  const terrainTileMaterial=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94});
+  sharedGeometry.add(terrainTileGeometry);
   const firstPersonRig=new THREE.Group();gameCamera.add(firstPersonRig);
   makeBox(firstPersonRig,-.52,-.58,-1.05,.25,.34,.82,mat(0x315d76,.18,.72));
   makeBox(firstPersonRig,.52,-.58,-1.05,.25,.34,.82,mat(0x315d76,.18,.72));
@@ -199,6 +208,7 @@ export function createWorld3D(canvas, getState) {
   makeBox(firstPersonRig,.52,-.20,-.74,.10,.38,.13,mats.trim);
 
   const sharedMaterials=new Set(Object.values(mats));
+  sharedMaterials.add(terrainTileMaterial);
   function clear(group){for(const o of [...group.children]){group.remove(o);o.traverse(child=>{if(child.geometry&&!sharedGeometry.has(child.geometry))child.geometry.dispose();if(child.material){const list=Array.isArray(child.material)?child.material:[child.material];for(const material of list)if(!sharedMaterials.has(material))material.dispose();}});}}
   function cameraUpdate(){camera=mapCamera;const span=860/zoom;mapCamera.left=-span*width/height/2;mapCamera.right=span*width/height/2;mapCamera.top=span/2;mapCamera.bottom=-span/2;mapCamera.updateProjectionMatrix();const distance=1800,horizontal=Math.cos(pitch)*distance;mapCamera.position.set(target.x+Math.sin(yaw)*horizontal,Math.sin(pitch)*distance,target.z+Math.cos(yaw)*horizontal);mapCamera.lookAt(target.x,terrainHeightAt(target.x/32,target.z/32),target.z);}
   function updateGameCamera(state){
@@ -274,16 +284,21 @@ export function createWorld3D(canvas, getState) {
     addLift(3,"mineExit");addLift(36,"mineDescend");
   }
   function rebuild(state){
-    clear(worldRoot);clear(machineRoot);clear(nodeRoot);clear(markerRoot);clear(mineRoot);
-    const tileGeo=new THREE.BoxGeometry(31.7,1,31.7),tileMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94});
-    const count=WORLD_W*WORLD_H,tiles=new THREE.InstancedMesh(tileGeo,tileMat,count);tiles.receiveShadow=true;
-    const dummy=new THREE.Object3D(),color=new THREE.Color();let n=0;const bottom=-52;
-    for(let z=0;z<WORLD_H;z++)for(let x=0;x<WORLD_W;x++){
-      const key=x+","+z,node=state.nodes?.[key],h=surfaceY(state,x,z);
-      dummy.position.set(x*32,(h+bottom)/2,z*32);dummy.scale.set(1,Math.max(1,h-bottom),1);dummy.updateMatrix();tiles.setMatrixAt(n,dummy.matrix);
-      color.setHex(node?.type==="water"?palette.water:biomeGroundColor(biomeAt(x,z)));tiles.setColorAt(n,color);n++;
+    clear(worldRoot);clear(machineRoot);clear(nodeRoot);clear(markerRoot);clear(mineRoot);terrainChunks.length=0;
+    const dummy=new THREE.Object3D(),color=new THREE.Color(),bottom=-52,chunkSize=24;
+    for(let z0=0;z0<WORLD_H;z0+=chunkSize)for(let x0=0;x0<WORLD_W;x0+=chunkSize){
+      const chunkWidth=Math.min(chunkSize,WORLD_W-x0),chunkHeight=Math.min(chunkSize,WORLD_H-z0);
+      const tiles=new THREE.InstancedMesh(terrainTileGeometry,terrainTileMaterial,chunkWidth*chunkHeight);
+      tiles.userData={chunkX:x0,chunkZ:z0,chunkWidth,chunkHeight};tiles.receiveShadow=true;
+      let n=0;
+      for(let z=z0;z<z0+chunkHeight;z++)for(let x=x0;x<x0+chunkWidth;x++){
+        const key=x+","+z,node=state.nodes?.[key],h=surfaceY(state,x,z);
+        dummy.position.set(x*32,(h+bottom)/2,z*32);dummy.scale.set(1,Math.max(1,h-bottom),1);dummy.updateMatrix();tiles.setMatrixAt(n,dummy.matrix);
+        color.setHex(node?.type==="water"?palette.water:biomeGroundColor(biomeAt(x,z)));tiles.setColorAt(n,color);n++;
+      }
+      tiles.instanceMatrix.needsUpdate=true;if(tiles.instanceColor)tiles.instanceColor.needsUpdate=true;
+      tiles.computeBoundingSphere();worldRoot.add(tiles);terrainChunks.push(tiles);
     }
-    tiles.instanceMatrix.needsUpdate=true;worldRoot.add(tiles);
     const waterMat=new THREE.MeshStandardMaterial({color:0x0b6382,transparent:true,opacity:.68,roughness:.2,metalness:.15});
     for(const [key,node] of Object.entries(state.nodes||{})){
       const [x,z]=key.split(",").map(Number);if(!state.seen?.[key]||(node.amount<=0&&node.type!=="dori"))continue;
@@ -546,7 +561,7 @@ export function createWorld3D(canvas, getState) {
     renderer.render(scene,camera);
   }
   function resizeIfNeeded(){const r=canvas.getBoundingClientRect();if(Math.abs(r.width-width)>1||Math.abs(r.height-height)>1)resize();}
-  function pickTile(clientX,clientY){if(stateLayerForPicking==="mine")return null;const r=canvas.getBoundingClientRect();pointer.x=((clientX-r.left)/r.width)*2-1;pointer.y=-((clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const surface=worldRoot.children[0];const hit=surface?raycaster.intersectObject(surface,false)[0]:null;if(!hit?.instanceId&&hit?.instanceId!==0)return null;const index=hit.instanceId,x=index%WORLD_W,z=Math.floor(index/WORLD_W);return x>=0&&z>=0&&x<WORLD_W&&z<WORLD_H?{x,y:z,z}:null;}
+  function pickTile(clientX,clientY){if(stateLayerForPicking==="mine")return null;const r=canvas.getBoundingClientRect();pointer.x=((clientX-r.left)/r.width)*2-1;pointer.y=-((clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hit=terrainChunks.length?raycaster.intersectObjects(terrainChunks,false)[0]:null;if(hit?.instanceId===undefined||hit.instanceId===null)return null;const chunk=hit.object.userData,index=hit.instanceId,x=chunk.chunkX+(index%chunk.chunkWidth),z=chunk.chunkZ+Math.floor(index/chunk.chunkWidth);return x>=0&&z>=0&&x<WORLD_W&&z<WORLD_H?{x,y:z,z}:null;}
   function pan(dx,dy){const scale=1/zoom;target.x=clamp(target.x-dx*1.6*scale,0,(WORLD_W-1)*32);target.z=clamp(target.z-dy*1.6*scale,0,(WORLD_H-1)*32);cameraUpdate();}
   function setZoom(value){zoom=clamp(value,.55,1.8);if(activeViewMode==="map"){cameraUpdate()}else{gameCamera.fov=clamp(74-(zoom-1)*38,52,88);gameCamera.updateProjectionMatrix();}}
   function center(x,y){target.set(x*32,terrainHeightAt(x,y),y*32);cameraUpdate();}
