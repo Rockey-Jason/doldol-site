@@ -256,12 +256,18 @@ export function createWorld3D(canvas, getState) {
       for(const x of [-9,9])for(const z of [-8,8])makeBox(g,x,2,z,2.1,4,2.1,main);
       const track=new THREE.Group();g.add(track);anim.itemGroup=track;
       if(b.item){
-        const count=Math.min(10,Math.max(1,Math.ceil(Number(b.item.qty)||1)));
+        const count=Math.min(24,Math.max(1,Math.ceil(Number(b.item.qty)||1)));
         for(let i=0;i<count;i++){
           const id=b.item.id;let mesh;
           if(crystalSpecs[id])mesh=makeCrystal(track,id,0,0,0,2.0);
           else if(id==="wire"){mesh=new THREE.Mesh(new THREE.TorusGeometry(1.45,.42,7,20),mat(itemColors[id]||0xc89d57,.6,.24));track.add(mesh);mesh.rotation.x=Math.PI/2;}
-          else if(id==="water"||id==="doriMeat"){mesh=makeSphere(track,0,0,0,1.7,mat(itemColors[id]||0x66b9db,.3,.2));}
+          else if(id==="wood"){mesh=new THREE.Mesh(new THREE.CylinderGeometry(.72,.86,2.8,8),mat(itemColors[id],.12,.82));track.add(mesh);mesh.rotation.z=Math.PI/2;}
+          else if(id==="stone"){mesh=new THREE.Mesh(new THREE.DodecahedronGeometry(1.25,0),mat(itemColors[id],.05,.9));track.add(mesh);mesh.scale.set(2.4,2.0,2.4);}
+          else if(id==="ironOre"||id==="goldOre"){mesh=new THREE.Mesh(new THREE.IcosahedronGeometry(1.15,0),mat(itemColors[id],.42,.38));track.add(mesh);mesh.scale.set(2.35,2.0,2.35);}
+          else if(id==="copperOre"||id==="quartz"||id==="diamond"){mesh=new THREE.Mesh(id==="diamond"?new THREE.OctahedronGeometry(1.2,0):new THREE.ConeGeometry(1.05,2.2,6,1),mat(itemColors[id],.38,.24));track.add(mesh);mesh.scale.set(2.1,2.2,2.1);}
+          else if(id==="water"||id==="doriMeat"){mesh=makeSphere(track,0,0,0,1.7,new THREE.MeshPhysicalMaterial({color:itemColors[id]||0x66b9db,metalness:.05,roughness:.2,transparent:id==="water",opacity:id==="water" ? .68 : 1,transmission:id==="water" ? .45 : 0}));}
+          else if(id==="ironPlate"){mesh=new THREE.Mesh(boxGeo,mat(itemColors[id],.78,.22));track.add(mesh);mesh.scale.set(3,.55,2.5);}
+          else if(id==="circuit"){mesh=new THREE.Mesh(boxGeo,mat(itemColors[id],.48,.26,0x073a35));track.add(mesh);mesh.scale.set(2.6,.75,2.2);}
           else{mesh=new THREE.Mesh(boxGeo,mat(itemColors[id]||0xa8bac4,.46,.3));track.add(mesh);mesh.scale.set(2.5,2.2,2.5);}
           mesh.userData.itemIndex=i;mesh.position.y=8.6;mesh.castShadow=true;
         }
@@ -410,7 +416,7 @@ export function createWorld3D(canvas, getState) {
       if(a.orb){const p=1+Math.sin(t*2.2)*.065,v=a.orb.userData.baseScale||new THREE.Vector3(1,1,1);a.orb.scale.set(v.x*p,v.y*p,v.z*p);}
       if(a.outputMesh){const v=a.outputMesh.userData.baseScale||new THREE.Vector3(1,1,1);a.outputMesh.position.y=24+Math.sin(t*2.1)*1.4;a.outputMesh.rotation.y=t*.65;a.outputMesh.scale.set(v.x,v.y,v.z);}
       if(a.glow)a.glow.material.opacity=running ? .66+Math.sin(t*4)*.18 : .18;
-      if(a.itemGroup&&b.item){const p=clamp((b.moveTimer||0)/.75,0,1),n=a.itemGroup.children.length;a.itemGroup.children.forEach((m,i)=>{m.position.x=(i-(n-1)/2)*2.65;m.position.z=-(p-.5)*18;m.position.y=8.6+Math.sin(t*5+i)*.18;m.rotation.y=t*1.5+i*.45;m.rotation.x=Math.sin(t*2+i)*.1;});}
+      if(a.itemGroup&&b.item){const p=clamp((b.moveTimer||0)/.75,0,1),n=a.itemGroup.children.length,cols=Math.min(6,n),rows=Math.ceil(n/cols);a.itemGroup.children.forEach((m,i)=>{m.position.x=((i%cols)-(cols-1)/2)*3.0;m.position.z=-((Math.floor(i/cols)-(rows-1)/2)*3.0)-(p-.5)*18;m.position.y=8.6+Math.sin(t*5+i)*.18;m.rotation.y=t*1.5+i*.45;m.rotation.x=Math.sin(t*2+i)*.1;});}
     });
     if(playerModel){const m=state.playerMotion||{x:state.player.x,z:state.player.y,moving:false};playerModel.position.set(m.x*32,1+Math.sin(t*3)*(m.moving ? .13 : .025),m.z*32);playerModel.rotation.y=m.facing||0;const swing=m.moving ? Math.sin(t*9)*.48 : Math.sin(t*1.5)*.035;(playerModel.userData.legs||[]).forEach((leg,i)=>leg.rotation.x=swing*(i%2?-1:1));(playerModel.userData.arms||[]).forEach((arm,i)=>arm.rotation.x=m.moving?Math.sin(t*9+i*Math.PI)*.38:0);}
     renderer.render(scene,camera);
