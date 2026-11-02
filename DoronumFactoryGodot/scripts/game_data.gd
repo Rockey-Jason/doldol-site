@@ -292,8 +292,13 @@ static func recipe_definition(recipe_id: String) -> Dictionary:
 
 static func validate_canonical_data() -> Array[String]:
 	var errors: Array[String] = []
-	if DORONUM_IDS.size()!=15 or DORONUM_IDS.size()!=DORONUM_IDS.duplicate().size():
-		errors.append("Canonical Doronum manifest must contain 15 unique IDs.")
+	var manifest_ids: Dictionary = {}
+	if DORONUM_IDS.size()!=15:
+		errors.append("Canonical Doronum manifest must contain exactly 15 IDs.")
+	for item_id in DORONUM_IDS:
+		if manifest_ids.has(str(item_id)):
+			errors.append("Duplicate canonical Doronum ID · "+str(item_id))
+		manifest_ids[str(item_id)] = true
 	var building_ids: Dictionary = {}
 	for building in BUILDINGS:
 		var building_id := str(building.id)
@@ -330,6 +335,10 @@ static func validate_canonical_data() -> Array[String]:
 			errors.append("Invalid recipe duration · "+str(recipe_id))
 		if float(recipe.get("power",0.0))<0.0 or not is_finite(float(recipe.get("power",0.0))):
 			errors.append("Invalid recipe power · "+str(recipe_id))
+		if float(recipe.get("quality_modifier",0.0)) < -20.0 or float(recipe.get("quality_modifier",0.0)) > 20.0 or float(recipe.get("pollution_penalty",0.0))<0.0 or float(recipe.get("pollution_penalty",0.0))>100.0:
+			errors.append("Invalid Quality modifier/pollution profile · "+str(recipe_id))
+		if float(recipe.get("purity_loss",0.0))<0.0 or float(recipe.get("purification_bonus",0.0))<0.0 or float(recipe.get("output_purity_modifier",0.0)) < -100.0 or float(recipe.get("output_purity_modifier",0.0))>100.0:
+			errors.append("Invalid Purity profile · "+str(recipe_id))
 		if float(recipe.temperature_safe_min)>float(recipe.temperature_safe_max) or float(recipe.pressure_safe_min)>float(recipe.pressure_safe_max):
 			errors.append("Invalid process safe band · "+str(recipe_id))
 		for item_id in recipe.inputs:
@@ -354,6 +363,13 @@ static func validate_canonical_data() -> Array[String]:
 			errors.append("Invalid Doronum variant machine/recipe · "+str(item_id))
 		elif bool(variant_recipe.get("allow_synthetic",true)):
 			errors.append("Doronum variant permits synthetic lineage · "+str(item_id))
+		if not variant_recipe.is_empty():
+			for input_id in variant_recipe.inputs:
+				if not ITEMS.has(str(input_id)) and str(input_id) not in DORONUM_IDS:
+					errors.append("Unknown variant input ItemID · "+str(item_id)+" -> "+str(input_id))
+			for output_id in variant_recipe.outputs:
+				if not ITEMS.has(str(output_id)) and str(output_id) not in DORONUM_IDS:
+					errors.append("Unknown variant output ItemID · "+str(item_id)+" -> "+str(output_id))
 	for recipe_id in MANUAL_RECIPES:
 		var recipe: Dictionary = MANUAL_RECIPES[recipe_id]
 		var profile: Dictionary = recipe.get("quality_profile",{})
