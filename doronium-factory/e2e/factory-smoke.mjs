@@ -127,6 +127,7 @@ try {
   const construction = await desktop.evaluate(() => window.__doroniumFactoryTest.constructionRules());
   assert.equal(construction.standardWithoutFoundation, false, "A standard conveyor must require land preparation");
   assert.equal(construction.adaptiveWithoutFoundation, true, "An adaptive conveyor must bridge unprepared terrain");
+  assert.ok(construction.adaptiveBeltTilts.length >= 1, "The adaptive belt must expose terrain-derived deck pitch and roll");
   assert.equal(construction.standardWithFoundation, true, "A standard conveyor must place on a prepared foundation");
 
   await openPanel(desktop, "build");
