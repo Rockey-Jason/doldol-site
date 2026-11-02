@@ -103,7 +103,7 @@ try {
   assert.equal(mined.target?.kind, "resource", "The screen-center ray must identify a 3D resource block");
   assert.equal(mined.target?.type, "stone", "The target resource should be the aimed stone block");
   assert.ok(mined.after > mined.before, "Mining an aimed block must add resources to the inventory");
-  assert.equal(mined.before - mined.after, 3, "Stone mining must award three units per action");
+  assert.equal(mined.after - mined.before, 3, "Stone mining must award three units per action");
   assert.equal(mined.node, 9, "A successful stone mining action must reduce the node quantity by three");
 
   await desktop.locator('[data-panel="build"]').click();
