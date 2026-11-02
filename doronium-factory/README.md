@@ -62,7 +62,7 @@ GitHub Actions에서 JavaScript 구문 검사와 필수 게임 런타임 파일/
 - 기존 `factory.js`의 생산·전력·연구·퀘스트·퓨전·저장 로직과 계정별 클라우드 저장 키를 유지
 - 드래그 이동, 레이캐스트 타일 선택, 모바일 포인터 입력, 카메라 확대/축소
 - 장면 재구성 시 GPU geometry/material 자원 정리
-- Three.js는 jsDelivr CDN에서 불러오므로 최초 접속 시 인터넷 연결이 필요합니다.
+- Three.js는 jsDelivr CDN에서 불러오며, CDN 또는 WebGL을 사용할 수 없는 환경에서는 호환용 2D 렌더러로 전환해 UI와 저장 기능이 중단되지 않도록 합니다.
 
 ## 남은 출시 검증
 
