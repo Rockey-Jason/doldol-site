@@ -5,7 +5,7 @@
 | Native 3D / no Unity | Partial | Godot 4.4.1 project, 3D scene, third-person controller | Main-scene boot and in-engine PC play test |
 | 2048m seeded world | Partial | deterministic seed, terrain, biome regions, deposits, POIs | chunk streaming, exact underground/depth data and world-boundary validator |
 | PC/mobile controls | Partial | keyboard, touch D-pad, jump/sprint/interact and right-side camera swipe | Android device layout/performance/input testing |
-| Save integrity | Partial | schema 2, checksum, temp write, valid backup, schema-1 migration, resource depletion/tree growth persistence | interrupted-write and corrupt-primary/backup fixtures |
+| Save integrity | Partial | schema 3, checksum, temp write, valid backup, schema-1 migration, resource depletion/tree growth persistence | interrupted-write and corrupt-primary/backup fixtures |
 | Inventory / provenance | Partial | stack metadata, synthetic flag, atomic lot consumption, Fusion manifest | full GUID ownership/transfer/reservation audit and merge invariants |
 | Mining / tools | Partial | ore power requirements, tools, condition, breakage, repair, deterministic byproduct skill | mining-speed modifier, complete tool progression balance |
 | Research | Partial | 18 nodes, one-time RP ledger, first scans/recipes/lore, unique research samples | full campaign RP simulation and per-node required sample data |
