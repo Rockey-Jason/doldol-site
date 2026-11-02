@@ -212,7 +212,7 @@ function canConsumeRecipe(b,r){return Object.entries(r.inputs).every(([id,n])=>(
 function consumeRecipe(b,r){if(!canConsumeRecipe(b,r))return null;let qsum=0,psum=0,weight=0,hasSynthetic=false;for(const[id,n]of Object.entries(r.inputs)){let remaining=n;const fromBuffer=Math.min(remaining,b.input?.[id]||0);if(fromBuffer){const m=b.inputMeta?.[id]||{quality:90,purity:90,synthetic:false};qsum+=m.quality*fromBuffer;psum+=m.purity*fromBuffer;weight+=fromBuffer;hasSynthetic=hasSynthetic||m.synthetic;b.input[id]-=fromBuffer;remaining-=fromBuffer;if(b.input[id]<=0){delete b.input[id];delete b.inputMeta[id]}}if(remaining){const m=S.meta[id]||{quality:90,purity:90,synthetic:false};qsum+=m.quality*remaining;psum+=m.purity*remaining;weight+=remaining;hasSynthetic=hasSynthetic||m.synthetic;takeItem(id,remaining)}}return {quality:weight?qsum/weight:90,purity:weight?psum/weight:90,synthetic:hasSynthetic}}
 function createOutput(b,id,qty,meta){b.output={id,qty,meta};b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(RESOURCE[id].name+" 생산 · "+fmt(qty)+"개");markDirty()}
 function placeBuilding(type,x,y){const d=buildingDef(type);if(!d)return false;if(S.buildings.length>=40){toast("공장 시설 한도 40개에 도달했습니다.","warn");return false}if(buildingAt(x,y)){toast("이미 시설이 설치된 타일입니다.","warn");return false}const node=tileNode(x,y);if(type==="pump"&&node?.type!=="water"){toast("정수 펌프는 수원지 위에 설치해야 합니다.","warn");return false}if(type==="minerIron"&&node?.type!=="ironOre"||type==="minerCopper"&&node?.type!=="copperOre"||type==="minerCoal"&&node?.type!=="coal"){toast("이 채굴기는 해당 광맥 위에 설치해야 합니다.","warn");return false}if(type==="doriFarm"&&node?.type!=="dori"){toast("돌이 나무 재배기는 돌이 고기 나무 위에 설치해야 합니다.","warn");return false}if(type==="relay"&&node?.type!=="relaySite"){toast("행성 에너지 릴레이 설치 지점을 찾아야 합니다.","warn");return false}if(type==="core"&&node?.type!=="coreSite"){toast("중앙 안정화 코어는 지정된 코어 부지에 설치해야 합니다.","warn");return false}if(node&&["water","ironOre","copperOre","coal","quartz","goldOre","diamond","dori","relaySite","coreSite"].includes(node.type)&&!["pump","minerIron","minerCopper","minerCoal","doriFarm","relay","core"].includes(type)){toast("이 타일에는 해당 시설을 설치할 수 없습니다.","warn");return false}if(!unlockOk(d)){toast("필요한 기술 연구를 먼저 완료하세요.","warn");return false}if(!canAfford(d)){toast("건설 자원이 부족합니다.","warn");return false}S.money-=d.cost;takeItems(d.materials);const b={uid:"B"+(++S.tick)+"-"+Math.floor(Math.random()*99999),type,x,y,dir:1,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:1,status:"IDLE",autoFeed:true,variant:"doronium_blue",temp:25,pressure:0,fuelTimer:0,moveTimer:0};S.buildings.push(b);S.stats.built[type]=(S.stats.built[type]||0)+1;if(type==="relay"){const index=S.sites.relay.findIndex(p=>p.x===x&&p.y===y);if(index>=0)S.relaySites[index]=true}if(type==="core")S.corePlaced=true;selectedBuilding=b.uid;selectedBuild=null;log(d.name+" 건설 완료");toast(d.name+" 설치 완료");playTone(580,.1,"triangle");markDirty();renderAll();questCheck();return true}
-function isWalkable(x,y){if(x<0||y<0||x>=WORLD_W||y>=WORLD_H||buildingAt(x,y))return false;const node=tileNode(x,y);return !node}
+function isWalkable(x,y){if(x<0||y<0||x>=WORLD_W||y>=WORLD_H||buildingAt(x,y))return false;const node=tileNode(x,y);return !node||node.amount<=0}
 function findPlayerPath(startX,startY,goalX,goalY){if(goalX===startX&&goalY===startY)return [];if(!isWalkable(goalX,goalY))return null;const start=startX+","+startY,goal=goalX+","+goalY,queue=[{x:startX,y:startY}],came=new Map([[start,null]]);let found=false;for(let head=0;head<queue.length&&head<1200;head++){const p=queue[head];for(const d of DIRS){const x=p.x+d.x,y=p.y+d.y,key=x+","+y;if(came.has(key)||!isWalkable(x,y))continue;came.set(key,p.x+","+p.y);if(key===goal){found=true;break}queue.push({x,y})}if(found)break}if(!found)return null;const path=[];let key=goal;while(key!==start){const [x,y]=key.split(",").map(Number);path.push({x,y});key=came.get(key)}return path.reverse()}
 function movePlayerTo(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y};const path=findPlayerPath(origin.x,origin.y,x,y);if(path===null){toast("이동 경로가 막혀 있습니다.","warn");return false}playerMotion.path=playerMotion.path.concat(path);playerMotion.onArrive=onArrive;if(!playerMotion.path.length){playerMotion.moving=false;const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
 function approachTile(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y},options=[];for(const d of DIRS){const nx=x+d.x,ny=y+d.y;if(!isWalkable(nx,ny))continue;const path=findPlayerPath(origin.x,origin.y,nx,ny);if(path!==null)options.push({path,nx,ny})}options.sort((a,b)=>a.path.length-b.path.length);if(!options.length){toast("대상 주변으로 접근할 경로가 없습니다.","warn");return false}const best=options[0];playerMotion.path=playerMotion.path.concat(best.path);playerMotion.onArrive=onArrive;if(!best.path.length){const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
@@ -234,7 +234,7 @@ function isAdventureCellFree(x,z){
  const cx=Math.floor(x+.5),cz=Math.floor(z+.5);
  if(cx<0||cz<0||cx>=WORLD_W||cz>=WORLD_H)return false;
  if(cx===Math.floor(playerMotion.x+.5)&&cz===Math.floor(playerMotion.z+.5))return true;
- return !buildingAt(cx,cz)&&!tileNode(cx,cz);
+ const node=tileNode(cx,cz);return !buildingAt(cx,cz)&&(!node||node.amount<=0);
 }
 function updatePlayerMotion(dt){
  if(!adventureMode()){
@@ -503,6 +503,20 @@ if(E2E_MODE){
   snapshot:()=>structuredClone(S),
   backend:world3d.backend,
   motion:()=>({x:playerMotion.x,z:playerMotion.z,path:playerMotion.path.length,moving:playerMotion.moving}),
+  viewMode:()=>S.player.viewMode,
+  setViewMode:(mode)=>setViewMode(mode),
+  move3D(key,seconds=.3){adventureKeys.add(key);updatePlayerMotion(seconds);adventureKeys.delete(key);return {x:playerMotion.x,z:playerMotion.z,viewMode:S.player.viewMode}},
+  survival:()=>structuredClone(S.survival),
+  consumeFood:()=>{consumeFood();return structuredClone(S.survival)},
+  drinkWater:()=>{drinkWater();return structuredClone(S.survival)},
+  setupMiningTest(){
+   S=freshState();S.player={x:18,y:14,viewMode:"first",yaw:0,pitch:-.12};S.survival={health:100,hunger:100,thirst:100};
+   S.nodes["18,13"]={type:"stone",amount:12,max:12,cooldown:0,seed:123456};S.seen["18,13"]=true;
+   S.seen["18,14"]=true;S.seen["18,12"]=true;playerMotion={x:18,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};
+   selectedBuild=null;selectedBuilding=null;renderAll();return structuredClone(S)
+  },
+  mineTarget(){const before=itemCount("stone"),target=world3d.pickTarget(190);performAdventureAction();return {target,before,after:itemCount("stone"),node:S.nodes["18,13"]?.amount}},
+
   move:(dx,dy)=>movePlayer(dx,dy),
   audit:()=>({
    resourceCount:Object.keys(RESOURCE).length,
