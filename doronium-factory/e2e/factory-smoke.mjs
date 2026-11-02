@@ -23,6 +23,12 @@ const failures = [];
 function capture(page, label) {
   page.on("pageerror", error => failures.push(`[${label}] ${error.stack || error.message}`));
 }
+async function openPanel(page, panel) {
+  const panelRoot = page.locator('#control-column');
+  if (!(await panelRoot.isVisible())) await page.locator('#game-menu-toggle').click();
+  await page.locator('[data-panel="' + panel + '"]').click();
+  await panelRoot.waitFor({ state: 'visible' });
+}
 async function boot(page) {
   await page.goto(baseURL + "?e2e=1", { waitUntil: "domcontentloaded", timeout: 45000 });
   await page.waitForFunction(() => !!window.__doroniumFactoryTest, { timeout: 45000 });
@@ -47,7 +53,13 @@ try {
   assert.equal(audit.uniqueCrystalShapes, 15, "Each variant must use a distinct geometry family");
   assert.equal(audit.allCrystalModels, true, "Every variant must resolve to a crystal model");
   assert.equal(audit.researchCount, 18, "18 research nodes must be present");
-  assert.equal(audit.buildingCount, 22, "22 facility definitions must be present");
+  assert.equal(audit.buildingCount, 23, "23 facility definitions, including the adaptive conveyor, must be present");
+  assert.equal(audit.worldWidth, 128, "The world must be expanded to 128 tiles wide");
+  assert.equal(audit.worldHeight, 96, "The world must be expanded to 96 tiles high");
+  assert.equal(audit.mineLevels, 5, "The mine must expose five depth levels");
+  assert.equal(audit.biomeCount, 8, "Eight distinct surface biomes must be generated");
+  assert.ok(audit.terrainHeightRange[1] - audit.terrainHeightRange[0] > 50, "Terrain must have real elevation changes");
+  assert.equal(audit.surfaceHasExposedOre, false, "Surface mineral deposits must be removed");
   assert.equal(audit.simulationStep, 0.1, "Simulation must use a fixed 0.1-second step");
   assert.equal(audit.variantRecipeCount, 14, "All fourteen non-base crystal recipes must be defined");
   assert.equal(audit.variantRecipesValid, true, "All variant recipe inputs must resolve");
@@ -57,7 +69,7 @@ try {
   assert.equal(audit.recipeInputsValid, true, "All recipe input IDs must resolve");
   assert.equal(audit.buildingMaterialsValid, true, "All construction material IDs must resolve");
 
-  await desktop.locator('[data-panel="inventory"]').click();
+  await openPanel(desktop, "inventory");
   assert.equal(await desktop.locator("[data-crystal]").count(), 16, "15 normal variants plus Infinity must be listed");
   await desktop.locator('[data-crystal="doronium_blue"]').click();
   await desktop.waitForSelector("#crystal-preview-canvas");
@@ -72,7 +84,7 @@ try {
     api.setViewMode("first");
     return api.move3D("w", 0.3);
   });
-  assert.ok(adventureStart.z < 14, "First-person WASD movement must move the engineer through the 3D world");
+  assert.ok(adventureStart.z < 52, "First-person WASD movement must move the engineer through the expanded 3D world");
   assert.equal(await desktop.evaluate(() => window.__doroniumFactoryTest.viewMode()), "first");
   const firstPersonVisual = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D());
   assert.equal(firstPersonVisual.playerVisible, false, "The third-person avatar must be hidden in first-person");
@@ -101,12 +113,22 @@ try {
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningTest());
   const mined = await desktop.evaluate(() => window.__doroniumFactoryTest.mineTarget());
   assert.equal(mined.target?.kind, "resource", "The screen-center ray must identify a 3D resource block");
-  assert.equal(mined.target?.type, "stone", "The target resource should be the aimed stone block");
-  assert.ok(mined.after > mined.before, "Mining an aimed block must add resources to the inventory");
-  assert.equal(mined.after - mined.before, 3, "Stone mining must award three units per action");
-  assert.equal(mined.node, 9, "A successful stone mining action must reduce the node quantity by three");
+  assert.equal(mined.target?.type, "stone", "The target resource should be the aimed underground stone vein");
+  assert.equal(mined.target?.mine, true, "The targeted stone must be underground, not on the surface");
+  assert.equal(mined.target?.level, 1, "The initial mine should expose first-level geology");
+  assert.equal(mined.target?.depthY, -18, "The first stone vein must use its fixed Y depth");
+  assert.ok(mined.after > mined.before, "Mining an aimed cave deposit must add resources to the inventory");
+  assert.equal(mined.after - mined.before, 2, "A pickaxe action must award two stone units");
+  assert.equal(mined.node, 10, "A successful stone mining action must reduce the vein by two");
+  const toolGuard = await desktop.evaluate(() => window.__doroniumFactoryTest.toolGuard());
+  assert.equal(toolGuard.tool, "axe", "The tool guard must register the equipped axe");
+  assert.equal(toolGuard.after, toolGuard.before, "An axe must not mine stone");
+  const construction = await desktop.evaluate(() => window.__doroniumFactoryTest.constructionRules());
+  assert.equal(construction.standardWithoutFoundation, false, "A standard conveyor must require land preparation");
+  assert.equal(construction.adaptiveWithoutFoundation, true, "An adaptive conveyor must bridge unprepared terrain");
+  assert.equal(construction.standardWithFoundation, true, "A standard conveyor must place on a prepared foundation");
 
-  await desktop.locator('[data-panel="build"]').click();
+  await openPanel(desktop, "build");
 
   const synthetic = await desktop.evaluate(() => window.__doroniumFactoryTest.syntheticGuard());
   assert.equal(synthetic.status, "ERROR", "Reactor must reject synthetic Dori Meat");
@@ -125,7 +147,7 @@ try {
   const machineInteraction = await desktop.evaluate(() => window.__doroniumFactoryTest.interactAt(2, 2));
   assert.equal(machineInteraction.selectedBuilding, "test-smelter", "Clicking a facility must select the correct machine");
   assert.ok(machineInteraction.path > 0, "Engineer must path toward an adjacent interaction tile instead of teleporting into the machine");
-  await desktop.locator('[data-panel="build"]').click();
+  await openPanel(desktop, "build");
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupSoak());
   const nightPower = await desktop.evaluate(() => window.__doroniumFactoryTest.setClock(0));
   assert.ok(nightPower.ratio < 0.8, "Solar-only test factory must enter a low-power state at night");
@@ -185,7 +207,7 @@ try {
     const s = window.__doroniumFactoryTest.snapshot();
     return { x: s.player.x, y: s.player.y };
   });
-  assert.ok(moved.x !== 18 || moved.y !== 14, "Touch movement control must move the engineer");
+  assert.ok(moved.x !== 72 || moved.y !== 52, "Touch movement control must move the engineer");
   await mobile.screenshot({ path: path.join(artifactDir, "doronium-mobile-emulation.png"), fullPage: true });
 
   assert.deepEqual(failures, [], "No uncaught browser JavaScript errors are allowed");
