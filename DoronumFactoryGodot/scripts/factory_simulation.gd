@@ -119,17 +119,26 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	if machine.id == "DORI_MEAT_HARVESTER":
 		_tick_dori_harvester(machine,dt)
 		return
-	if machine.id in ["GENERATOR", "SOLAR_PANEL", "WIND_TURBINE", "CONVEYOR", "WAREHOUSE", "STABILIZATION_RELAY", "STABILIZATION_CORE","INFINITY_FUSION_MACHINE"]:
+	if machine.id in ["GENERATOR","SOLAR_PANEL","WIND_TURBINE","CONVEYOR","WAREHOUSE","STABILIZATION_RELAY","STABILIZATION_CORE","INFINITY_FUSION_MACHINE"]:
 		return
-	if machine.get("output", []).size() > 0:
+	if float(machine.get("condition",100.0))<=0.0:
+		machine.condition = 0.0
+		machine.state = "BROKEN"
+		return
+	var cooldown := float(machine.get("failure_cooldown",0.0))
+	if cooldown>0.0:
+		machine.failure_cooldown = maxf(0.0,cooldown-dt)
+		machine.state = "COOLING_DOWN"
+		return
+	if machine.get("output",[]).size()>0:
 		machine.state = "PAUSED_OUTPUT"
 		return
-	var recipe_id := str(machine.get("recipe", ""))
+	var recipe_id := str(machine.get("recipe",""))
 	if recipe_id.is_empty():
 		machine.state = "IDLE"
 		return
 	var recipe: Dictionary = GameData.recipe_definition(recipe_id)
-	if recipe.is_empty() or recipe.machine != machine.id:
+	if recipe.is_empty() or recipe.machine!=machine.id:
 		machine.state = "INVALID_RECIPE"
 		return
 	if recipe.has("story") and not bool(game.story_flags.get(str(recipe.story),false)):
@@ -141,7 +150,7 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 		if int(game.story_flags.get(supply_key,0))>=int(recipe.supply_cap):
 			machine.state = "SUPPLY_CAP_REACHED"
 			return
-	if not machine.get("job_started", false):
+	if not machine.get("job_started",false):
 		if not _consume_machine_inputs(machine,recipe.inputs,bool(recipe.get("allow_synthetic",true))):
 			machine.state = "WAITING_INPUT"
 			return
@@ -154,33 +163,85 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 		machine.power_ratio_sum = 0.0
 		machine.power_ratio_square_sum = 0.0
 		machine.power_sample_count = 0
+		machine.failure_exposure = 0.0
+		machine.failure_rng_index = 0
 		machine.state = "STARTING"
-	if last_power_ratio < 0.8:
+	if last_power_ratio<0.8:
 		machine.state = "PAUSED_POWER"
 		return
-	machine.state = "RUNNING" if last_power_ratio >= 1.0 else "BROWNOUT_RUNNING"
+	machine.state = "RUNNING" if last_power_ratio>=1.0 else "BROWNOUT_RUNNING"
 	var progress_ratio := minf(1.0,last_power_ratio)
+	var condition_before_tick := clampf(float(machine.condition),0.0,100.0)
+	var speed_multiplier := 0.8 if condition_before_tick<=10.0 else 1.0
 	var target_temperature := float(recipe.get("temperature",20.0))
 	var target_pressure := float(recipe.get("pressure",0.0))
 	machine.temperature = move_toward(float(machine.temperature),target_temperature,float(recipe.get("heat_rate",120.0))*dt)
 	machine.pressure = move_toward(float(machine.pressure),target_pressure,float(recipe.get("pressure_rate",50.0))*dt)
 	var temp_tolerance := float(recipe.get("temperature_tolerance",0.1))
 	var pressure_tolerance := float(recipe.get("pressure_tolerance",0.1))
-	var temp_ok := target_temperature == 0.0 or absf(float(machine.temperature)-target_temperature) <= maxf(5.0,absf(target_temperature)*temp_tolerance)
-	var pressure_ok := target_pressure == 0.0 or absf(float(machine.pressure)-target_pressure) <= maxf(1.0,absf(target_pressure)*pressure_tolerance)
+	var temp_ok := target_temperature==0.0 or absf(float(machine.temperature)-target_temperature)<=maxf(5.0,absf(target_temperature)*temp_tolerance)
+	var pressure_ok := target_pressure==0.0 or absf(float(machine.pressure)-target_pressure)<=maxf(1.0,absf(target_pressure)*pressure_tolerance)
 	if not temp_ok or not pressure_ok:
 		machine.state = "RAMPING"
 		return
-	var progress_delta := dt*progress_ratio
+	var progress_delta := dt*progress_ratio*speed_multiplier
 	machine.progress += progress_delta
-	machine.temperature_quality_sum += _score_process_accuracy(float(machine.temperature),target_temperature)*progress_delta
-	machine.pressure_quality_sum += _score_process_accuracy(float(machine.pressure),target_pressure)*progress_delta
-	machine.condition_quality_sum += clampf(float(machine.condition),0.0,100.0)*progress_delta
+	machine.temperature_quality_sum += _score_process_accuracy(float(machine.temperature),target_temperature,float(recipe.get("temperature_absolute_tolerance",1.0)))*progress_delta
+	machine.pressure_quality_sum += _score_process_accuracy(float(machine.pressure),target_pressure,float(recipe.get("pressure_absolute_tolerance",1.0)))*progress_delta
+	machine.condition_quality_sum += condition_before_tick*progress_delta
 	machine.progress_sample_seconds += progress_delta
 	machine.power_ratio_sum += progress_ratio
 	machine.power_ratio_square_sum += progress_ratio*progress_ratio
 	machine.power_sample_count += 1
-	if machine.progress < float(recipe.seconds):
+
+	var temp_deviation := 0.0 if absf(target_temperature)<=0.0001 else absf(float(machine.temperature)-target_temperature)/absf(target_temperature)*100.0
+	var pressure_deviation := 0.0 if absf(target_pressure)<=0.0001 else absf(float(machine.pressure)-target_pressure)/absf(target_pressure)*100.0
+	var temperature_risk := clampf((temp_deviation-1.0)/9.0,0.0,1.0)
+	var pressure_risk := clampf((pressure_deviation-1.0)/9.0,0.0,1.0)
+	var power_risk := 1.0-progress_ratio
+	var wear_risk := 1.0-condition_before_tick/100.0
+	var load_ratio := float(machine.get("load_ratio",1.0))
+	var load_risk := clampf(maxf(0.0,load_ratio-1.0),0.0,1.0)
+	var profile: Dictionary = GameData.DEFAULT_MACHINE_FAILURE_PROFILE
+	var hazard_multiplier := 1.0
+	hazard_multiplier += temperature_risk*float(profile.temperature_weight)
+	hazard_multiplier += pressure_risk*float(profile.pressure_weight)
+	hazard_multiplier += power_risk*float(profile.power_weight)
+	hazard_multiplier += wear_risk*float(profile.wear_weight)
+	hazard_multiplier += load_risk*float(profile.load_weight)
+	machine.hazard_multiplier = hazard_multiplier
+
+	var stress_multiplier := hazard_multiplier
+	var base_wear := float(recipe.get("base_wear_per_second",profile.base_wear_per_second))
+	machine.condition = maxf(0.0,condition_before_tick-base_wear*dt*stress_multiplier)
+	machine.failure_exposure = float(machine.get("failure_exposure",0.0))+dt
+	machine.failure_rng_index = int(machine.get("failure_rng_index",0))+1
+	var base_failure_probability := float(recipe.get("base_failure_probability",profile.base_failure_probability))
+	var reference_duration := float(recipe.get("reference_duration_seconds",profile.reference_duration_seconds))
+	var base_hazard_rate := -log(1.0-base_failure_probability)/reference_duration
+	var failure_probability := 1.0-exp(-base_hazard_rate*hazard_multiplier*dt)
+	var failure_roll := game._deterministic_unit(hash(str(machine.instance_id))+int(machine.failure_rng_index))
+	if failure_roll<failure_probability:
+		var severity_roll := game._deterministic_unit(hash(str(machine.instance_id))+int(machine.failure_rng_index)+900000)
+		var minor_probability := float(profile.minor_probability)
+		var major_probability := minor_probability+float(profile.major_probability)
+		var severity := "FAILED_MINOR" if severity_roll<minor_probability else ("FAILED_MAJOR" if severity_roll<major_probability else "FAILED_CRITICAL")
+		var cooldown_seconds := 2.0 if severity=="FAILED_MINOR" else (8.0 if severity=="FAILED_MAJOR" else 20.0)
+		var condition_damage := 1.0 if severity=="FAILED_MINOR" else (8.0 if severity=="FAILED_MAJOR" else 20.0)
+		var progress_loss := 0.5 if severity=="FAILED_MINOR" else (3.0 if severity=="FAILED_MAJOR" else 10.0)
+		machine.failure_event_id = "MACHINE-FAIL-"+str(machine.instance_id)+"-"+str(machine.failure_rng_index)
+		machine.failure_cooldown = cooldown_seconds
+		machine.condition = maxf(0.0,float(machine.condition)-condition_damage)
+		machine.progress = maxf(0.0,float(machine.progress)-progress_loss)
+		machine.state = "BROKEN" if float(machine.condition)<=0.0 else severity
+		game.notification.emit("설비 이상 · %s · %s · 진행도 %.1f초 후퇴 / Condition %.1f%%" % [str(machine.id),severity,progress_loss,float(machine.condition)])
+		game.state_changed.emit()
+		return
+	if float(machine.condition)<=0.0:
+		machine.state = "BROKEN"
+		game.notification.emit("설비 파손 · %s · 정비가 필요해." % str(machine.id))
+		return
+	if machine.progress<float(recipe.seconds):
 		return
 	var material_quality := _calculate_material_quality(machine,recipe)
 	var temp_quality := float(machine.temperature_quality_sum)/maxf(0.0001,float(machine.progress_sample_seconds))
@@ -189,8 +250,8 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	var power_stability := _calculate_power_stability(machine)
 	var skill_quality_bonus := 2.0 if game.has_skill("RECIPE_DISCIPLINE") and bool(recipe.get("allow_skill_quality_bonus",false)) else 0.0
 	var raw_quality := material_quality*0.40+temp_quality*0.20+pressure_quality*0.20+condition_quality*0.10+power_stability*0.10+float(recipe.get("quality_modifier",0.0))+skill_quality_bonus
-	var q := clampf(raw_quality-float(recipe.get("pollution_penalty",0.0)),0.0,100.0)
-	var p := _calculate_output_purity(machine,recipe)
+	var quality := clampf(raw_quality-float(recipe.get("pollution_penalty",0.0)),0.0,100.0)
+	var purity := _calculate_output_purity(machine,recipe)
 	var synthetic := false
 	for input_lot in machine.get("job_inputs",[]):
 		synthetic = synthetic or bool(input_lot.synthetic)
@@ -199,8 +260,8 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 			var supply_key := "DORONUM_SUPPLY:"+str(output_id)
 			game.story_flags[supply_key] = int(game.story_flags.get(supply_key,0))+int(recipe.outputs[output_id])
 		machine.output.append({
-			"item_id":output_id,"quantity":int(recipe.outputs[output_id]),
-			"quality":q,"purity":p,"synthetic":synthetic,
+			"stack_id":game._new_stack_id(),"item_id":output_id,"quantity":int(recipe.outputs[output_id]),
+			"quality":quality,"purity":purity,"synthetic":synthetic,
 			"provenance":"MACHINE:"+str(machine.instance_id)+":"+recipe_id
 		})
 	machine.state = "PAUSED_OUTPUT"
@@ -210,7 +271,7 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	machine.cycles = int(machine.get("cycles",0))+1
 	game.claim_recipe_research_reward(recipe_id)
 	game.production_history.append({"machine":machine.instance_id,"recipe":recipe_id,"tick":tick_number})
-	if game.production_history.size() > 1000:
+	if game.production_history.size()>1000:
 		game.production_history.pop_front()
 	game.state_changed.emit()
 
@@ -242,10 +303,14 @@ func _consume_machine_inputs(machine: Dictionary, inputs: Dictionary, allow_synt
 	machine.job_inputs = consumed
 	return true
 
-func _score_process_accuracy(actual: float, target: float) -> float:
-	if absf(target) <= 0.0001:
-		return 100.0
-	var deviation := absf(actual-target)/absf(target)*100.0
+func _score_process_accuracy(actual: float,target: float,absolute_tolerance: float = 1.0) -> float:
+	var deviation := 0.0
+	if absf(target)<=0.0001:
+		if not is_finite(absolute_tolerance) or absolute_tolerance<=0.0:
+			return 0.0
+		deviation = absf(actual-target)/absolute_tolerance
+	else:
+		deviation = absf(actual-target)/absf(target)*100.0
 	if deviation <= 1.0: return 100.0
 	if deviation <= 3.0: return 95.0
 	if deviation <= 5.0: return 85.0
