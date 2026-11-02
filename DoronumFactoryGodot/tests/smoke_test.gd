@@ -173,6 +173,18 @@ func _run() -> void:
 	assert(planet_state.ending_complete and planet_state.post_endgame,"Phase 3 must unlock Infinite Industry")
 	assert(int(ending_count.value)==1,"Planetary ending must trigger exactly once")
 	planet_state._tick_planetary_stabilization(120.0)
-	assert(ending_count==1,"Completed ending must not replay")
+	assert(int(ending_count.value)==1,"Completed ending must not replay")
+	var visual_main = load("res://scripts/main.gd").new()
+	var visual_world := PlanetWorld.new()
+	visual_main.world = visual_world
+	visual_main._spawn_building_visual({
+		"id":"WORKBENCH","instance_id":"TEST-BLUEPRINT-VISUAL",
+		"position":Vector3.ZERO,"rotation_y":PI/2.0
+	})
+	var blueprint_visual: Dictionary = visual_main.machine_visuals["TEST-BLUEPRINT-VISUAL"]
+	assert(is_equal_approx(float(blueprint_visual.root.rotation.y),PI/2.0),"Blueprint rotation_y must be applied to the 3D machine model")
+	visual_main.free()
+	visual_world.free()
+
 	print("DORONUM FACTORY SMOKE TESTS: PASS")
 	quit(0)
