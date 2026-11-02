@@ -5,7 +5,7 @@
 - Main scene: `scenes/main.tscn`
 - Renderer: GL Compatibility.
 - Runtime architecture: `GameState` owns inventory/research/story/ledger/save; `FactorySimulation` owns fixed-tick production, power and basic logistics; `PlanetWorld` owns deterministic terrain/resources/POIs and saved world state; `PlayerController` owns third-person PC/mobile controls; `GameUI` owns tabs/HUD.
-- Save schema: 2; schema-1 migration; checksum, temporary write, valid rolling backup and save revision.
+- Save schema: 3; schema-1 migration; checksum, temporary write, valid rolling backup and save revision.
 - Export targets configured: Windows Desktop, Linux/X11, Android arm64.
 
 ## Verification
