@@ -198,3 +198,28 @@ html,body{width:100%;height:100%;min-height:100%;overflow:hidden;overscroll-beha
  .world-clock{bottom:9px;right:7px;padding:6px 8px}.world-coordinate{bottom:9px;left:7px;padding:6px 8px}
 }
 @media(prefers-reduced-motion:reduce){.story-intro-backdrop,.story-intro-emblem{animation:none}.story-intro-content{animation:none}.mission-alert-in,.mission-alert-out,.active-mission-hud.mission-hud-visible{animation:none;opacity:1;transform:translate(-50%,0)}}
+
+
+/* Final compact-device HUD spacing */
+.topbar{top:max(7px,env(safe-area-inset-top))}
+.game-toolbar{top:max(12px,env(safe-area-inset-top))}
+@media(max-width:760px){
+ .topbar{top:max(7px,env(safe-area-inset-top));left:max(7px,env(safe-area-inset-left))}
+ .top-resource-strip .top-stat:nth-child(n+3){display:none}
+ .top-resource-strip{min-height:31px}
+ .game-toolbar{top:max(7px,env(safe-area-inset-top));right:max(7px,env(safe-area-inset-right))}
+ .game-toolbar .game-tool-button span{display:none}
+ .view-switcher{top:49px;right:7px;left:auto;transform:none}
+ .survival-card{top:49px}
+ .active-mission-hud{bottom:142px}
+ .adventure-actions{bottom:max(8px,env(safe-area-inset-bottom))}
+ .adventure-hud .move-pad{bottom:max(8px,env(safe-area-inset-bottom))}
+ .target-label{bottom:91px}
+}
+@media(max-width:390px){
+ .top-resource-strip .top-stat{min-width:43px}
+ .view-switcher button{padding:6px 5px;font-size:8px}
+ .survival-card{width:140px}
+ .active-mission-hud{width:calc(100vw - 156px);left:7px;bottom:142px}
+ .active-mission-hud span{font-size:7px}
+}
