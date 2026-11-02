@@ -67,6 +67,15 @@ try {
   assert.equal(synthetic.remaining, 10, "Rejected synthetic inputs must not be consumed");
 
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupSoak());
+  const beltBefore = await desktop.evaluate(() => window.__doroniumFactoryTest.loadBeltVisual("ironOre", 8));
+  assert.equal(beltBefore.beltItemMeshes, 8, "A belt stack of eight units must create eight individual 3D item meshes");
+  const beltAfter = await desktop.evaluate(() => {
+    window.__doroniumFactoryTest.runSeconds(0.2);
+    return window.__doroniumFactoryTest.inspect3D();
+  });
+  assert.ok(beltAfter.beltItemPositions.some((z, i) => Math.abs(z - beltBefore.beltItemPositions[i]) > 0.1), "Conveyor item meshes must animate along the belt according to the simulation move timer");
+
+  await desktop.evaluate(() => window.__doroniumFactoryTest.setupSoak());
   const power = await desktop.evaluate(() => window.__doroniumFactoryTest.power());
   assert.ok(power.gen >= power.used, "Solar generation should cover the test smelter at the initial daytime clock");
   assert.ok(power.ratio >= 0.8, "Test factory should not start in a power-starved state");
