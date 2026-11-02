@@ -87,6 +87,15 @@ try {
   });
   assert.ok(preview.visible && preview.width > 0 && preview.height > 0, "3D crystal preview must render to a visible canvas");
   await desktop.locator("#modal-x").click();
+  const rendererAudit = await desktop.evaluate(() => ({
+    scene: window.__doroniumFactoryTest.inspect3D(),
+    performance: window.__doroniumFactoryTest.inspectPerformance()
+  }));
+  assert.ok(rendererAudit.scene.nodeBatchDrawCalls <= 8, "Trees, Dori trees and water should be rendered in a small number of instanced batches");
+  assert.ok(rendererAudit.scene.nodeBatchInstances > 0, "Visible surface resources must be present in instanced batches");
+  assert.ok(rendererAudit.scene.terrainChunkCount <= 30, "The terrain should use larger culling chunks to reduce draw calls");
+  assert.ok(rendererAudit.performance.drawCalls < 180, "The initial scene should avoid excessive WebGL draw calls");
+
   const adventureStart = await desktop.evaluate(() => {
     const api = window.__doroniumFactoryTest;
     api.setViewMode("first");
