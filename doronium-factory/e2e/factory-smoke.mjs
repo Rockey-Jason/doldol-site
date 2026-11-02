@@ -145,8 +145,10 @@ try {
   assert.equal(synthetic.remaining, 10, "Rejected synthetic inputs must not be consumed");
 
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupSoak());
+  const beltRebuildBefore = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D().rebuildCount);
   const beltBefore = await desktop.evaluate(() => window.__doroniumFactoryTest.loadBeltVisual("ironOre", 8));
   assert.equal(beltBefore.beltItemMeshes, 8, "A belt stack of eight units must create eight individual 3D item meshes");
+  assert.equal(beltBefore.rebuildCount, beltRebuildBefore, "Changing belt cargo must not rebuild the full terrain scene");
   const beltAfter = await desktop.evaluate(() => {
     window.__doroniumFactoryTest.runSeconds(0.2);
     return window.__doroniumFactoryTest.inspect3D();
