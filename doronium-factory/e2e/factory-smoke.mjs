@@ -54,11 +54,12 @@ try {
   assert.equal(audit.allCrystalModels, true, "Every variant must resolve to a crystal model");
   assert.equal(audit.researchCount, 18, "18 research nodes must be present");
   assert.equal(audit.buildingCount, 23, "23 facility definitions, including the adaptive conveyor, must be present");
-  assert.equal(audit.worldWidth, 128, "The world must be expanded to 128 tiles wide");
-  assert.equal(audit.worldHeight, 96, "The world must be expanded to 96 tiles high");
+  assert.equal(audit.worldWidth, 192, "The world must be expanded to 192 tiles wide");
+  assert.ok(audit.outerResourceCount > 20, "The expanded continent must contain natural resource patches");
+  assert.equal(audit.worldHeight, 160, "The world must be expanded to 160 tiles high");
   assert.equal(audit.mineLevels, 5, "The mine must expose five depth levels");
   assert.equal(audit.biomeCount, 8, "Eight distinct surface biomes must be generated");
-  assert.ok(audit.terrainHeightRange[1] - audit.terrainHeightRange[0] > 50, "Terrain must have real elevation changes");
+  assert.ok(audit.terrainHeightRange[1] - audit.terrainHeightRange[0] > 90, "Terrain must have pronounced valleys, ridgelines and highlands");
   assert.equal(audit.surfaceHasExposedOre, false, "Surface mineral deposits must be removed");
   assert.equal(audit.simulationStep, 0.1, "Simulation must use a fixed 0.1-second step");
   assert.equal(audit.variantRecipeCount, 14, "All fourteen non-base crystal recipes must be defined");
