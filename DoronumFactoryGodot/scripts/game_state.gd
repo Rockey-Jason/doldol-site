@@ -263,7 +263,7 @@ func build(building_id: String, world_position: Vector3, rotation_y: float = 0.0
 		"id": building_id, "instance_id": _new_stack_id(), "position": world_position,
 		"rotation": rotation_y, "condition": 100.0, "state": "IDLE",
 		"recipe": "", "progress": 0.0, "temperature": 20.0, "pressure": 0.0,
-		"input": [], "output": [], "target": "", "buffer_limit": 1
+		"input": [], "output": [], "storage": [], "target": "", "buffer_limit": 1
 	}
 	buildings.append(instance)
 	if building_id == "STABILIZATION_RELAY":
@@ -632,26 +632,76 @@ func _tick_research(dt: float) -> void:
 
 func collect_machine_output(instance_id: String) -> bool:
 	for machine in buildings:
-		if machine.instance_id != instance_id or machine.output.is_empty():
+		if machine.instance_id!=instance_id or machine.output.is_empty():
 			continue
 		for stack in machine.output:
-			add_item(stack.item_id, stack.quantity, stack.quality, stack.purity, stack.synthetic, stack.provenance)
+			var transferred: Dictionary = stack.duplicate(true)
+			if str(transferred.get("stack_id","")).is_empty():
+				transferred["stack_id"] = _new_stack_id()
+			if inventory.any(func(existing): return str(existing.get("stack_id",""))==str(transferred.stack_id)):
+				notification.emit("출력 회수 중복 방지 · StackID 충돌")
+				return false
+			inventory.append(transferred)
+			notification.emit("+%d %s" % [int(transferred.quantity),GameData.item_name(str(transferred.item_id))])
 		machine.output.clear()
 		machine.state = "IDLE"
 		state_changed.emit()
+		save_game()
 		return true
 	return false
 
-func supply_machine(instance_id: String, item_id: String, quantity: int) -> bool:
-	if quantity <= 0 or count_item(item_id) < quantity:
+func supply_machine(instance_id: String,item_id: String,quantity: int) -> bool:
+	if quantity<=0 or count_item(item_id)<quantity:
 		return false
 	for machine in buildings:
-		if machine.instance_id != instance_id:
+		if machine.instance_id!=instance_id:
 			continue
-		if not consume_items({item_id:quantity}):
+		var lots: Array[Dictionary] = consume_items_with_lots({item_id:quantity},true)
+		if lots.is_empty():
 			return false
-		machine.input.append({"item_id":item_id,"quantity":quantity,"quality":90.0,"purity":90.0,"synthetic":false,"provenance":"PLAYER_SUPPLY"})
-		notification.emit("기계 투입 · %s ×%d" % [GameData.item_name(item_id),quantity])
+		for lot in lots:
+			var transferred: Dictionary = lot.duplicate(true)
+			transferred["provenance"] = str(transferred.get("provenance","UNKNOWN"))+" -> MACHINE:"+instance_id
+			machine.input.append(transferred)
+		notification.emit("기계 투입 · %s ×%d · 원본 Quality/Purity/Lineage 유지" % [GameData.item_name(item_id),quantity])
+		save_game()
+		return true
+	return false
+
+func collect_warehouse_item(instance_id: String,stack_id: String) -> bool:
+	for machine in buildings:
+		if machine.instance_id!=instance_id or machine.id!="WAREHOUSE":
+			continue
+		for index in range(machine.get("storage",[]).size()):
+			var stack: Dictionary = machine.storage[index]
+			if str(stack.get("stack_id",""))!=stack_id:
+				continue
+			if inventory.any(func(existing): return str(existing.get("stack_id",""))==stack_id):
+				notification.emit("창고 회수 중복 방지 · StackID 충돌")
+				return false
+			inventory.append(stack.duplicate(true))
+			machine.storage.remove_at(index)
+			notification.emit("창고 출고 · %s ×%d" % [GameData.item_name(str(stack.item_id)),int(stack.quantity)])
+			save_game()
+			state_changed.emit()
+			return true
+	return false
+
+func repair_machine(instance_id: String) -> bool:
+	for machine in buildings:
+		if machine.instance_id!=instance_id or float(machine.get("condition",100.0))>=100.0:
+			continue
+		var high_tier := int(GameData.building_definition(str(machine.id)).get("tier",0))>=5
+		var cost := {"ITEM_STEEL_PLATE":5,"ITEM_ADVANCED_CIRCUIT":2} if high_tier else {"ITEM_IRON_PLATE":2,"ITEM_GEAR":1}
+		if not consume_items(cost):
+			notification.emit("설비 정비 재료 부족 · "+("Steel Plate 5 + Advanced Circuit 2" if high_tier else "Iron Plate 2 + Gear 1"))
+			return false
+		machine.condition = minf(100.0,maxf(30.0,float(machine.condition))+50.0)
+		machine.failure_cooldown = 0.0
+		machine.state = "RECOVERING"
+		notification.emit("설비 정비 완료 · %s · Condition %.1f%%" % [str(machine.id),float(machine.condition)])
+		save_game()
+		state_changed.emit()
 		return true
 	return false
 
