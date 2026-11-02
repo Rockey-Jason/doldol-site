@@ -112,3 +112,7 @@
 @media(prefers-reduced-motion:reduce){
  .survival-track i{transition:none}
 }
+
+.world-frame:not(.adventure-active) .adventure-hud .survival-card,
+.world-frame:not(.adventure-active) .adventure-hud .target-label,
+.world-frame:not(.adventure-active) .adventure-hud .adventure-actions{display:none}
