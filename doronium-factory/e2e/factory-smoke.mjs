@@ -35,6 +35,7 @@ async function boot(page) {
 
 try {
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+  desktop.setDefaultTimeout(120000);
   capture(desktop, "desktop");
   const backend = await boot(desktop);
   assert.equal(backend, "webgl", "Desktop must create the real WebGL renderer (not the fallback)");
@@ -83,7 +84,7 @@ try {
       beltOccupied: result.state.buildings.some(b => b.type === "belt" && !!b.item),
       ledger: window.__doroniumFactoryTest.ledger()
     };
-  }, { timeout: 120000 });
+  });
   assert.equal(soak.ticks, 36000, "A virtual hour must execute exactly 36,000 fixed 0.1-second ticks");
   assert.ok(soak.seconds >= 8 * 3600 + 3600 - 0.001, "Simulation clock must advance by one virtual hour");
   assert.ok(soak.produced > 0, "Smelter must produce during the one-hour soak");
