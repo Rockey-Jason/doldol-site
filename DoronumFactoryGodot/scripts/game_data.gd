@@ -19,6 +19,20 @@ const INFINITY_FAILURE_PROFILE := {
 	"major_probability":0.45,
 	"critical_probability":0.25
 }
+# Explicit NCP machine profile; replace only when a machine-specific canonical profile exists.
+const DEFAULT_MACHINE_FAILURE_PROFILE := {
+	"base_failure_probability":0.01,
+	"reference_duration_seconds":3600.0,
+	"base_wear_per_second":0.002,
+	"temperature_weight":0.20,
+	"pressure_weight":0.20,
+	"power_weight":0.20,
+	"wear_weight":0.20,
+	"load_weight":0.20,
+	"minor_probability":0.70,
+	"major_probability":0.25,
+	"critical_probability":0.05
+}
 const DORONUM_IDS := [
 	"ITEM_DORONUM_NORMAL", "ITEM_DORONUM_YELLOW", "ITEM_DORONUM_ULTRA",
 	"ITEM_DORONUM_BLUE", "ITEM_DORONUM_RED", "ITEM_DORONUM_IRON",
