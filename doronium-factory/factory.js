@@ -1,4 +1,4 @@
-import { createWorld3D, createCrystalViewer } from "./world3d.js?v=5";
+import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS } from "./world3d.js?v=6";
 let createClient = null;
 
 /* DORONIUM FACTORY — INFINITE INDUSTRY
@@ -322,6 +322,8 @@ if(E2E_MODE){
    resourceCount:Object.keys(RESOURCE).length,
    variantCount:VARIANTS.length,
    uniqueVariants:new Set(VARIANTS).size,
+   uniqueCrystalModels:DORONIUM_CRYSTAL_MODELS.filter(id=>id!=="infinity").length,
+   allCrystalModels:VARIANTS.every(id=>DORONIUM_CRYSTAL_MODELS.includes(id)),
    researchCount:RESEARCH.length,
    buildingCount:BUILDINGS.length,
    allVariantModels:VARIANTS.every(id=>!!RESOURCE[id]),
@@ -346,7 +348,7 @@ if(E2E_MODE){
    revealAround();renderAll();return structuredClone(S)
   },
   syntheticGuard(){
-   S=freshState();S.inventory={doriMeat:5};S.meta={doriMeat:{quality:90,purity:90,synthetic:true}};
+   S=freshState();S.inventory={doriMeat:10};S.meta={doriMeat:{quality:90,purity:90,synthetic:true}};
    const b={uid:"test-reactor",type:"reactor",x:1,y:1,dir:1,progress:0,input:{},inputMeta:{},output:null,activeMeta:null,temp:25,pressure:0,status:"IDLE"};
    S.buildings=[b];S.paused=false;tickMachine(b,STEP,1);
    return {status:b.status,remaining:itemCount("doriMeat"),activeMeta:!!b.activeMeta}
