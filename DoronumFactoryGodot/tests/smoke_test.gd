@@ -144,5 +144,35 @@ func _run() -> void:
 	assert(not fusion_state.collect_infinity_output(),"Infinity output must not collect twice")
 	assert(fusion_state.count_item("ITEM_DORONUM_INFINITY")==1,"Exactly one Infinity item should be owned after collection")
 	assert(fusion_state._fusion_job_validation_errors().is_empty(),"Collected output must retain a valid one-time event ledger")
+
+	var planet_state := GameState.new()
+	planet_state.save_blocked = true
+	planet_state.story_flags["INFINITY_CRAFTED"] = true
+	planet_state.story_flags["ORBIT_04"] = true
+	planet_state.total_power_generated = 1000.0
+	planet_state.total_power_used = 800.0
+	for index in range(3):
+		var relay_id := "TEST-RELAY-"+str(index+1)
+		planet_state.relays.append({"instance_id":relay_id,"position":Vector3(index*10,0,0),"active":true})
+		planet_state.buildings.append({"id":"STABILIZATION_RELAY","instance_id":relay_id,"condition":100.0,"position":Vector3(index*10,0,0),"input":[],"output":[],"storage":[]})
+	planet_state.buildings.append({"id":"STABILIZATION_CORE","instance_id":"TEST-CORE","condition":100.0,"position":Vector3.ZERO,"input":[],"output":[],"storage":[]})
+	planet_state.add_item("ITEM_DORONUM_INFINITY",1,95.0,95.0,false,"TEST_INFINITY")
+	var ending_count := 0
+	planet_state.ending_started.connect(func(): ending_count+=1)
+	assert(planet_state.install_infinity_core(),"Infinity Core must consume the one owned Infinity item")
+	assert(planet_state.count_item("ITEM_DORONUM_INFINITY")==0,"Core installation must consume exactly one Infinity")
+	assert(planet_state.start_stabilization_phase(),"Phase 1 should start with physical core, three relays and 800kW")
+	assert(not planet_state.start_stabilization_phase(),"A running phase cannot be started twice")
+	planet_state._tick_planetary_stabilization(60.0)
+	assert(planet_state.stabilization_phase==2,"Phase 1 must take 60 seconds")
+	assert(planet_state.start_stabilization_phase(),"Phase 2 should start")
+	planet_state._tick_planetary_stabilization(90.0)
+	assert(planet_state.stabilization_phase==3,"Phase 2 must take 90 seconds")
+	assert(planet_state.start_stabilization_phase(),"Phase 3 should start")
+	planet_state._tick_planetary_stabilization(120.0)
+	assert(planet_state.ending_complete and planet_state.post_endgame,"Phase 3 must unlock Infinite Industry")
+	assert(ending_count==1,"Planetary ending must trigger exactly once")
+	planet_state._tick_planetary_stabilization(120.0)
+	assert(ending_count==1,"Completed ending must not replay")
 	print("DORONUM FACTORY SMOKE TESTS: PASS")
 	quit(0)
