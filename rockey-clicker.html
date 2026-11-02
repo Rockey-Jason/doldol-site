@@ -489,7 +489,7 @@ function renderTab(){
   const grid=document.createElement("div");grid.className="section-grid legacy-grid";
   LEGACY_RESEARCH.forEach(item=>{
    const level=legacyLevel(item.id),max=item.max||10,price=legacyCost(item,level),unlocked=item.requires.every(id=>legacyLevel(id)>0),card=document.createElement("article");
-   card.className="research legacy-research-card"+(level>=max?" maxed":"");card.innerHTML='<div class="legacy-card-top"><h3></h3><span class="legacy-level-badge"></span></div><p></p><div class="legacy-progress"><i></i></div><div class="legacy-milestones"><span data-level="2">Ⅱ · Lv.2</span><span data-level="5">Ⅴ · Lv.5</span><span data-level="10">Ⅹ · Lv.10</span></div><div class="item-level"></div><button class="buy"></button>';
+   card.className="research legacy-research-card"+(level>=max?" maxed":"");card.innerHTML='<div class="legacy-card-top"><h3></h3><span class="legacy-level-badge"></span></div><p></p><div class="legacy-progress"><i></i></div><div class="legacy-milestones"><span data-level="2">Ⅱ · Lv.2</span><span data-level="5">Ⅴ · Lv.5</span><span data-level="10">Ⅹ · Lv.10</span></div><div class="item-level"></div>';
    card.querySelector("h3").textContent=item.icon+" "+item.name;
    card.querySelector(".legacy-level-badge").textContent="LV "+level+" / "+max;
    card.querySelector("p").textContent=legacyEffectText(item,level);
