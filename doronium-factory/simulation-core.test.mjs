@@ -4,7 +4,7 @@ import {
   createRuntimeState, ensureItemStacks, addItemStack, removeItemStacks,
   calculateOutputQuality, calculateOutputPurity, accuracyQuality,
   reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations,
-  splitItemStack, mergeItemStacks, validateRuntimeState,
+  splitItemStack, mergeItemStacks, validateRuntimeState, availableItemCount,
   runCanonicalTick, TICK_STAGE_ORDER
 } from "./simulation-core.js";
 
@@ -100,4 +100,16 @@ test("reserved source stacks cannot be split or merged away",()=>{
   assert.equal(splitItemStack(state,a,6),null);
   assert.equal(mergeItemStacks(state,a,b),false);
   assert.equal(validateRuntimeState(state).valid,true);
+});
+
+test("reserved quantities are excluded from spendable inventory",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:7};
+  addItemStack(state,"ironOre",12);
+  const held=reserveItemStacks(state,"ironOre",9,"fusion-input");
+  assert.ok(held);
+  assert.equal(availableItemCount(state,"ironOre"),3);
+  assert.equal(removeItemStacks(state,"ironOre",4),null);
+  assert.equal(availableItemCount(state,"ironOre"),3);
+  releaseItemReservation(state,held);
+  assert.equal(availableItemCount(state,"ironOre"),12);
 });
