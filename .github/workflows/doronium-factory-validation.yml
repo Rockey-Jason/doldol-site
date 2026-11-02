@@ -27,6 +27,7 @@ jobs:
         run: |
           node --check doronium-factory/factory.js
           node --check doronium-factory/world3d.js
+          node --check doronium-factory/terrain-system.js
           node --check doronium-factory/e2e/factory-smoke.mjs
       - name: Check required game files and runtime contracts
         run: |
@@ -34,6 +35,19 @@ jobs:
           test -s doronium-factory/factory.css
           test -s doronium-factory/factory.js
           test -s doronium-factory/world3d.js
+          test -s doronium-factory/terrain-system.js
+          grep -q 'WORLD_W = 128' doronium-factory/terrain-system.js
+          grep -q 'WORLD_H = 96' doronium-factory/terrain-system.js
+          grep -q 'function terrainHeightAt' doronium-factory/terrain-system.js
+          grep -q 'function makeMineDeposits' doronium-factory/terrain-system.js
+          grep -q 'beltAdaptive' doronium-factory/factory.js
+          grep -q 'function harvestMineDeposit' doronium-factory/factory.js
+          grep -q 'function enterMine' doronium-factory/factory.js
+          grep -q 'function notifyNewMission' doronium-factory/factory.js
+          grep -q 'story-start-button' doronium-factory/index.html
+          grep -q 'id="mission-alert"' doronium-factory/index.html
+          grep -q 'data-land-tool="flatten"' doronium-factory/index.html
+          grep -q 'id="game-menu-toggle"' doronium-factory/index.html
           grep -q 'WebGLRenderer' doronium-factory/world3d.js
           grep -q 'createWorld3D' doronium-factory/factory.js
           grep -q 'STEP = 0.1' doronium-factory/factory.js
