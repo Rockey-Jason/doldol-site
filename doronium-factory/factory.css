@@ -84,6 +84,8 @@
 .adventure-actions{position:absolute;right:13px;bottom:13px;display:flex;gap:6px;align-items:center}
 .adventure-actions button{min-width:58px;min-height:43px;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 11px;border:1px solid #4d7289;border-radius:11px;background:linear-gradient(145deg,#0a2437eF,#0b1b2ddd);color:#d9edf4;font-size:15px;box-shadow:0 5px 18px #0005;backdrop-filter:blur(9px);touch-action:manipulation}
 .adventure-actions button span{font-size:9px;font-weight:700}
+.adventure-actions button:hover{border-color:#79c6d1;background:linear-gradient(145deg,#16445a,#103044);box-shadow:0 0 0 1px #74dce433,0 7px 22px #0007,0 0 16px #4cc9d322}
+.adventure-actions button:focus-visible{outline:2px solid #8de4e8;outline-offset:3px}
 .adventure-actions button:active{transform:translateY(1px);background:#20546b}
 .adventure-actions #action-button{border-color:#c6a86b;color:#ffe4a4;background:linear-gradient(145deg,#3b321fdd,#152638eF)}
 .adventure-hud .move-pad{pointer-events:auto}
