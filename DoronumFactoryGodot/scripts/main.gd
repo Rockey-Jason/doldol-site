@@ -401,9 +401,14 @@ func _update_story_progress() -> void:
 		game.notification.emit("ACT II complete · The Hidden Industry")
 	if bool(game.story_flags.get("STORY_INCIDENT_RECONSTRUCTED",false)) and bool(game.story_flags.get("ACT_V_COMPLETE",false)) and "RESEARCH_DORONUM_FUSION" in game.research_completed:
 		game.story_flags["ORBIT_04"] = true
-	if game.fusion_diagnostics.values().all(func(value): return bool(value)):
+	var diagnostics_ready := game.fusion_diagnostics.values().all(func(value): return bool(value))
+	var final_hardware := ["INFINITY_FUSION_MACHINE","FUSION_POWER_BUFFER","FUSION_CONTAINMENT_SHIELD","EMERGENCY_COOLING_SYSTEM","PRESSURE_CALIBRATION_RIG","COOLING_STABILIZER"]
+	var final_hardware_ready := final_hardware.all(func(building_id): return game.buildings.any(func(building): return building.id==building_id and float(building.condition)>0.0))
+	var final_research_ready := "RESEARCH_DORONUM_FUSION" in game.research_completed
+	if diagnostics_ready and final_hardware_ready and final_research_ready and not bool(game.story_flags.get("ACT_VI_COMPLETE",false)):
 		game.story_flags["ACT_VI_COMPLETE"] = true
-		game.grant_skill_point("ACT_VI_COMPLETE","ACT_VI_MISSION")
+		game.grant_skill_point("ACT_VI_COMPLETE","ACT_VI_FINAL_LINE_AND_DIAGNOSTICS")
+		game.notification.emit("ACT VI complete · The Last Factory · Final line and all safety systems verified")
 
 func _play_ending() -> void:
 	game.simulation_paused = true
