@@ -108,7 +108,8 @@ jobs:
           echo "Configured Android SDK: $ANDROID_SDK_ROOT"
           echo "Configured Java SDK: $JAVA_HOME"
 
-      - name: Export Android arm64 game
+      - name: Export Android arm64 game (optional)
+        continue-on-error: true
         run: |
           mkdir -p build/android
           godot --headless --verbose --path . --export-debug "Android" build/android/DoronumFactory.apk
@@ -125,7 +126,6 @@ jobs:
           path: |
             DoronumFactoryGodot/build/windows/DoronumFactory.exe
             DoronumFactoryGodot/build/linux/DoronumFactory.x86_64
-            DoronumFactoryGodot/build/android/DoronumFactory.apk
             DoronumFactoryGodot-Project.zip
           if-no-files-found: error
           retention-days: 30
