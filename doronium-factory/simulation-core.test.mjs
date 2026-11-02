@@ -113,3 +113,16 @@ test("reserved quantities are excluded from spendable inventory",()=>{
   releaseItemReservation(state,held);
   assert.equal(availableItemCount(state,"ironOre"),12);
 });
+
+test("reservation audit history is bounded during long sessions",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:8};
+  addItemStack(state,"coal",1);
+  for(let i=0;i<300;i++){
+    const id=reserveItemStacks(state,"coal",1,"cycle-"+i);
+    assert.ok(id);
+    assert.equal(commitItemReservations(state,[id]).length,1);
+    addItemStack(state,"coal",1);
+  }
+  assert.equal(state.runtime.reservationHistory.length,256);
+  assert.equal(Object.keys(state.runtime.reservations).length,0);
+});
