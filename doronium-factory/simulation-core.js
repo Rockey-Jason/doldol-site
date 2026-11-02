@@ -15,7 +15,7 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number(v)||0));
 const clone=value=>typeof structuredClone==="function"?structuredClone(value):JSON.parse(JSON.stringify(value));
 
 export function createRuntimeState(){
-  return {schemaVersion:3,nextStackId:1,nextReservationId:1,itemStacks:[],reservations:{},tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
+  return {schemaVersion:3,nextStackId:1,nextReservationId:1,itemStacks:[],reservations:{},reservationHistory:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
 }
 function normalizeStack(stack){
   return {runtimeID:String(stack.runtimeID),itemID:String(stack.itemID),quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
@@ -31,6 +31,7 @@ export function ensureItemStacks(state){
   for(const stack of rt.itemStacks){const n=Number(String(stack.runtimeID).replace(/^IS-/,""));if(Number.isFinite(n))maxId=Math.max(maxId,n)}
   rt.nextStackId=Math.max(1,Math.floor(Number(rt.nextStackId)||1),maxId+1);
   if(!rt.reservations||typeof rt.reservations!=="object")rt.reservations={};
+  if(!Array.isArray(rt.reservationHistory))rt.reservationHistory=[];
   rt.nextReservationId=Math.max(1,Math.floor(Number(rt.nextReservationId)||1));
   // One-time migration from the legacy item-count map. Never replace existing stacks.
   if(!rt.legacyInventoryMigrated){
@@ -91,7 +92,7 @@ export function reserveItemBatch(state,requirements,ownerID="inventory-transacti
 export function releaseItemReservation(state,reservationID){
   const rt=ensureItemStacks(state),reservation=rt.reservations[reservationID];
   if(!reservation||reservation.status!=="reserved")return false;
-  reservation.status="released";reservation.releasedTick=Math.max(0,Number(state.tick)||0);return true;
+  reservation.status="released";reservation.releasedTick=Math.max(0,Number(state.tick)||0);rt.reservationHistory.push({reservationID,ownerID:reservation.ownerID,status:"released",tick:reservation.releasedTick});delete rt.reservations[reservationID];if(rt.reservationHistory.length>256)rt.reservationHistory.splice(0,rt.reservationHistory.length-256);return true;
 }
 export function commitItemReservations(state,reservationIDs){
   const rt=ensureItemStacks(state),ids=[...new Set(reservationIDs||[])],reservations=ids.map(id=>rt.reservations[id]);
@@ -108,9 +109,10 @@ export function commitItemReservations(state,reservationIDs){
       removed.push({...stack,quantity:allocation.quantity});
       stack.quantity-=allocation.quantity;
     }
-    reservation.status="committed";reservation.committedTick=Math.max(0,Number(state.tick)||0);
+    reservation.status="committed";reservation.committedTick=Math.max(0,Number(state.tick)||0);rt.reservationHistory.push({reservationID:reservation.reservationID,ownerID:reservation.ownerID,status:"committed",tick:reservation.committedTick});delete rt.reservations[reservation.reservationID];
   }
   rt.itemStacks=rt.itemStacks.filter(stack=>stack.quantity>0);
+  if(rt.reservationHistory.length>256)rt.reservationHistory.splice(0,rt.reservationHistory.length-256);
   return removed;
 }
 export function splitItemStack(state,runtimeID,quantity){
