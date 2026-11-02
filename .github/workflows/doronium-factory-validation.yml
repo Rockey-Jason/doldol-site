@@ -36,8 +36,8 @@ jobs:
           test -s doronium-factory/factory.js
           test -s doronium-factory/world3d.js
           test -s doronium-factory/terrain-system.js
-          grep -q 'WORLD_W = 128' doronium-factory/terrain-system.js
-          grep -q 'WORLD_H = 96' doronium-factory/terrain-system.js
+          grep -q 'WORLD_W = 192' doronium-factory/terrain-system.js
+          grep -q 'WORLD_H = 160' doronium-factory/terrain-system.js
           grep -q 'function terrainHeightAt' doronium-factory/terrain-system.js
           grep -q 'function makeMineDeposits' doronium-factory/terrain-system.js
           grep -q 'beltAdaptive' doronium-factory/factory.js
