@@ -19,3 +19,37 @@
 .modal-select{display:block;width:100%;margin:12px 0;padding:10px 12px;background:#0a1c2a;border:1px solid #34566e;border-radius:8px;color:#e9f5fc;font-size:10px}
 .ending-visual{font-size:72px;text-align:center;padding:10px;color:#8de7f2;text-shadow:0 0 26px #51dce8,0 0 50px #51dce855;animation:endingfloat 2.8s ease-in-out infinite}
 @keyframes endingfloat{50%{transform:translateY(-8px) scale(1.04);filter:brightness(1.25)}}
+
+
+/* Crystal codex and live 3D specimen viewer */
+.crystal-codex{margin:18px 0;padding:15px;border:1px solid #28455e;border-radius:14px;background:linear-gradient(145deg,#0e2334,#0a1b2b)}
+.codex-help{margin:5px 0 13px;color:#8faabd;font-size:11px;line-height:1.55}
+.crystal-codex-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.crystal-codex-card{display:flex;min-width:0;min-height:88px;flex-direction:column;align-items:flex-start;justify-content:center;gap:5px;padding:10px;border:1px solid #315168;border-radius:11px;background:linear-gradient(145deg,#132f43,#0b2031);color:#d7e7ef;text-align:left;cursor:pointer;transition:transform .18s,border-color .18s,background .18s}
+.crystal-codex-card:hover,.crystal-codex-card:focus-visible{transform:translateY(-2px);border-color:#69cbd6;background:linear-gradient(145deg,#1a3e55,#102c40);outline:none}
+.crystal-codex-card>span{font-size:21px;filter:drop-shadow(0 0 7px #4bc8dd66)}
+.crystal-codex-card strong{max-width:100%;font-size:10px;line-height:1.3;overflow-wrap:anywhere}
+.crystal-codex-card small{font-size:9px;color:#8aa9bc}
+.crystal-codex-card.infinity-card{border-color:#806b9e;background:linear-gradient(145deg,#2b2450,#151d37)}
+.crystal-preview-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+.crystal-preview-canvas{display:block;width:100%;height:310px;border:1px solid #36566e;border-radius:13px;background:#081827}
+.crystal-preview-info{display:grid;gap:5px;padding:12px;border:1px solid #29485d;border-radius:11px;background:#0c2030}
+.crystal-preview-info strong{font-size:15px;color:#dff4fa}
+.crystal-preview-info p{margin:0;color:#b6d2df;font-size:12px}
+.crystal-preview-info small{color:#86a5b9;font-size:10px;line-height:1.55}
+/* Touch-first player movement: visible only on compact viewports. */
+.move-pad{display:none;position:absolute;z-index:5;left:14px;bottom:14px;gap:5px;flex-direction:column;align-items:center;touch-action:none;user-select:none}
+.move-pad>div{display:flex;gap:5px}
+.move-pad button{width:39px;height:36px;border:1px solid #6aa0b6;border-radius:10px;background:#071b2dcc;color:#dcf1f6;font-size:13px;font-weight:800;box-shadow:0 4px 14px #0005;backdrop-filter:blur(8px);touch-action:manipulation}
+.move-pad button:active{background:#1b6476;transform:scale(.96)}
+@media(max-width:760px){
+ .move-pad{display:flex}
+ .crystal-codex{padding:11px}
+ .crystal-codex-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .crystal-codex-card{min-height:78px;padding:8px}
+ .crystal-preview-canvas{height:250px}
+}
+@media(prefers-reduced-motion:reduce){
+ .crystal-codex-card{transition:none}
+ .crystal-codex-card:hover{transform:none}
+}
