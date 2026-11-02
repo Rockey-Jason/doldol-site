@@ -51,3 +51,18 @@ test("completion buffer is single-capacity and clear is idempotent",()=>{
   assert.equal(clearCompletionBuffer(machine),false);
   assert.equal(commitCompletionBuffer(machine,{id:"gear",qty:2}),true);
 });
+
+test("zero-target process accuracy uses an explicit absolute tolerance",()=>{
+  const machine={temp:2,pressure:4};
+  const result=advanceMachineEnvironment(machine,{temp:0,pressure:0,temperatureAbsoluteTolerance:2,pressureAbsoluteTolerance:4},0.1,1);
+  assert.equal(result.temperatureQuality,100);
+  assert.equal(result.pressureQuality,100);
+  assert.equal(result.safe,true);
+});
+
+test("completion buffer rejects fractional and unsafe output quantities",()=>{
+  const machine={output:null};
+  assert.equal(commitCompletionBuffer(machine,{id:"ironPlate",qty:0.5}),false);
+  assert.equal(commitCompletionBuffer(machine,{id:"ironPlate",qty:Number.MAX_SAFE_INTEGER+1}),false);
+  assert.equal(machine.output,null);
+});
