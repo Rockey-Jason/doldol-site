@@ -384,7 +384,7 @@ function wireControls(){
  $("build-list").addEventListener("click",e=>{const b=e.target.closest("[data-build]");if(!b)return;selectedBuild=selectedBuild===b.dataset.build?null:b.dataset.build;selectedBuilding=null;renderBuildList();drawWorld();if(selectedBuild)toast(buildingDef(selectedBuild).name+" 선택 · 월드에서 위치를 클릭")});
  $("sell-button").onclick=sellItems;$("sell-resource").onchange=updateMarketEstimate;$("sell-amount").oninput=updateMarketEstimate;
  $("panel-inventory").addEventListener("click",e=>{const card=e.target.closest("[data-crystal]");if(card)showCrystalPreview(card.dataset.crystal)});
- document.querySelector(".move-pad")?.addEventListener("click",e=>{const b=e.target.closest("[data-move]");if(!b)return;const [dx,dy]=b.dataset.move.split(",").map(Number);if(adventureMode()){const key=directionKey(b.dataset.move);adventureKeys.add(key);setTimeout(()=>adventureKeys.delete(key),190)}else movePlayer(dx,dy)});
+
 
  $("zoom-in").onclick=()=>setZoom(camera.zoom+.1);$("zoom-out").onclick=()=>setZoom(camera.zoom-.1);$("center-view").onclick=centerCamera;
  $("overview-toggle").onclick=()=>changePanel("factory");$("clear-selection").onclick=()=>{selectedBuilding=null;renderMachineDetails();drawWorld()};
@@ -466,15 +466,29 @@ function wireControls(){
  $("jump-button").addEventListener("pointerdown",e=>{e.preventDefault();adventureKeys.add(" ")});
  $("jump-button").addEventListener("pointerup",()=>adventureKeys.delete(" "));
  $("jump-button").addEventListener("pointercancel",()=>adventureKeys.delete(" "));
- document.querySelector(".move-pad")?.addEventListener("pointerdown",e=>{
-  const b=e.target.closest("[data-move]");if(!b)return;
-  if(adventureMode())adventureKeys.add(directionKey(b.dataset.move));
- });
- document.querySelector(".move-pad")?.addEventListener("pointerup",e=>{
-  const b=e.target.closest("[data-move]");if(b)adventureKeys.delete(directionKey(b.dataset.move))
- });
- document.querySelector(".move-pad")?.addEventListener("pointerleave",e=>{
-  const b=e.target.closest("[data-move]");if(b)adventureKeys.delete(directionKey(b.dataset.move))
+ document.querySelectorAll(".move-pad [data-move]").forEach(button=>{
+  let pressedAt=0,activePointer=null;
+  const key=directionKey(button.dataset.move);
+  const [dx,dy]=button.dataset.move.split(",").map(Number);
+  button.addEventListener("pointerdown",e=>{
+   activePointer=e.pointerId;pressedAt=performance.now();
+   try{button.setPointerCapture(e.pointerId)}catch{}
+   if(adventureMode())adventureKeys.add(key);
+   else movePlayer(dx,dy);
+  });
+  const release=e=>{
+   if(activePointer!==null&&e.pointerId!==undefined&&e.pointerId!==activePointer)return;
+   if(adventureMode()){
+    adventureKeys.delete(key);
+    if(activePointer!==null&&performance.now()-pressedAt<150){
+     adventureKeys.add(key);updatePlayerMotion(.24);adventureKeys.delete(key);
+    }
+   }
+   activePointer=null;
+  };
+  button.addEventListener("pointerup",release);
+  button.addEventListener("pointercancel",release);
+  button.addEventListener("lostpointercapture",release);
  });
  window.addEventListener("resize",drawWorld);
 }
