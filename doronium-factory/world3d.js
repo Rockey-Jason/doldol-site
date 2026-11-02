@@ -166,7 +166,11 @@ export function createWorld3D(canvas, getState) {
   const terrainChunks = [];
   const machineRoot = new THREE.Group(); scene.add(machineRoot);
   const nodeRoot = new THREE.Group(); scene.add(nodeRoot);
+  const nodeGroupsByKey = new Map();
   const markerRoot = new THREE.Group(); scene.add(markerRoot);
+  const selectionRoot = new THREE.Group(); scene.add(selectionRoot);
+  const selectionRing = new THREE.Mesh(new THREE.TorusGeometry(15,.65,8,48),new THREE.MeshBasicMaterial({color:0x70e7e9}));
+  selectionRing.rotation.x=Math.PI/2;selectionRoot.add(selectionRing);selectionRoot.visible=false;
   const mineRoot = new THREE.Group(); scene.add(mineRoot);
   const hoverRoot = new THREE.Group(); scene.add(hoverRoot);
   const hoverFillMaterial = new THREE.MeshBasicMaterial({color:0x6de4bb,transparent:true,opacity:.2,depthWrite:false,side:THREE.DoubleSide});
@@ -212,6 +216,12 @@ export function createWorld3D(canvas, getState) {
 
   const sharedMaterials=new Set(Object.values(mats));
   sharedMaterials.add(terrainTileMaterial);
+  const waterMaterial=new THREE.MeshStandardMaterial({color:0x0b6382,transparent:true,opacity:.68,roughness:.2,metalness:.15});
+  const waterBlockGeometry=new THREE.BoxGeometry(29,1.2,29);
+  const rippleGeometry=new THREE.BoxGeometry(8,.18,1.2);
+  const rippleMaterial=new THREE.MeshBasicMaterial({color:0x6bd8e6,transparent:true,opacity:.48});
+  sharedMaterials.add(waterMaterial);sharedMaterials.add(rippleMaterial);
+  sharedGeometry.add(waterBlockGeometry,rippleGeometry);
   function clear(group){for(const o of [...group.children]){group.remove(o);o.traverse(child=>{if(child.geometry&&!sharedGeometry.has(child.geometry))child.geometry.dispose();if(child.material){const list=Array.isArray(child.material)?child.material:[child.material];for(const material of list)if(!sharedMaterials.has(material))material.dispose();}});}}
   function cameraUpdate(){camera=mapCamera;const span=860/zoom;mapCamera.left=-span*width/height/2;mapCamera.right=span*width/height/2;mapCamera.top=span/2;mapCamera.bottom=-span/2;mapCamera.updateProjectionMatrix();const distance=1800,horizontal=Math.cos(pitch)*distance;mapCamera.position.set(target.x+Math.sin(yaw)*horizontal,Math.sin(pitch)*distance,target.z+Math.cos(yaw)*horizontal);mapCamera.lookAt(target.x,terrainHeightAt(target.x/32,target.z/32),target.z);}
   function updateGameCamera(state){
@@ -286,30 +296,22 @@ export function createWorld3D(canvas, getState) {
     };
     addLift(3,"mineExit");addLift(36,"mineDescend");
   }
-  function rebuild(state){
-    clear(worldRoot);clear(machineRoot);clear(nodeRoot);clear(markerRoot);clear(mineRoot);terrainChunks.length=0;
-    const dummy=new THREE.Object3D(),color=new THREE.Color(),bottom=-52,chunkSize=24;
-    for(let z0=0;z0<WORLD_H;z0+=chunkSize)for(let x0=0;x0<WORLD_W;x0+=chunkSize){
-      const chunkWidth=Math.min(chunkSize,WORLD_W-x0),chunkHeight=Math.min(chunkSize,WORLD_H-z0);
-      const tiles=new THREE.InstancedMesh(terrainTileGeometry,terrainTileMaterial,chunkWidth*chunkHeight);
-      tiles.userData={chunkX:x0,chunkZ:z0,chunkWidth,chunkHeight};tiles.receiveShadow=true;
-      let n=0;
-      for(let z=z0;z<z0+chunkHeight;z++)for(let x=x0;x<x0+chunkWidth;x++){
-        const key=x+","+z,node=state.nodes?.[key],h=surfaceY(state,x,z);
-        dummy.position.set(x*32,(h+bottom)/2,z*32);dummy.scale.set(1,Math.max(1,h-bottom),1);dummy.updateMatrix();tiles.setMatrixAt(n,dummy.matrix);
-        color.setHex(node?.type==="water"?palette.water:biomeGroundColor(biomeAt(x,z)));tiles.setColorAt(n,color);n++;
-      }
-      tiles.instanceMatrix.needsUpdate=true;if(tiles.instanceColor)tiles.instanceColor.needsUpdate=true;
-      tiles.computeBoundingSphere();worldRoot.add(tiles);terrainChunks.push(tiles);
-    }
-    const waterMat=new THREE.MeshStandardMaterial({color:0x0b6382,transparent:true,opacity:.68,roughness:.2,metalness:.15});
+  function addSeenNodeModels(state){
     for(const [key,node] of Object.entries(state.nodes||{})){
-      const [x,z]=key.split(",").map(Number);if(!state.seen?.[key]||(node.amount<=0&&node.type!=="dori"))continue;
+      const existing=nodeGroupsByKey.get(key);
+      const visible=!!state.seen?.[key],alive=node.amount>0||node.type==="dori";
+      if(!visible||!alive){
+        if(existing){nodeRoot.remove(existing);clear(existing);nodeGroupsByKey.delete(key);}
+        continue;
+      }
+      if(existing)continue;
+      const [x,z]=key.split(",").map(Number);
       const y=surfaceY(state,x,z),g=new THREE.Group();g.position.set(x*32,y,z*32);
-      g.userData={cell:{x,z},targetKind:node.type==="mineEntrance"?{kind:"mineEntrance"}:{kind:"resource",type:node.type}};nodeRoot.add(g);
+      g.userData={cell:{x,z},targetKind:node.type==="mineEntrance"?{kind:"mineEntrance"}:{kind:"resource",type:node.type}};
+      nodeRoot.add(g);nodeGroupsByKey.set(key,g);
       if(node.type==="water"){
-        const waterBlock=new THREE.Mesh(new THREE.BoxGeometry(29,1.2,29),waterMat);waterBlock.position.y=1;waterBlock.receiveShadow=true;g.add(waterBlock);
-        for(let i=0;i<3;i++){const ripple=new THREE.Mesh(new THREE.BoxGeometry(8,.18,1.2),new THREE.MeshBasicMaterial({color:0x6bd8e6,transparent:true,opacity:.48}));ripple.position.set((i-1)*7,1.8,(i%2?4:-4));g.add(ripple);}
+        const waterBlock=new THREE.Mesh(waterBlockGeometry,waterMaterial);waterBlock.position.y=1;waterBlock.receiveShadow=true;g.add(waterBlock);
+        for(let i=0;i<3;i++){const ripple=new THREE.Mesh(rippleGeometry,rippleMaterial);ripple.position.set((i-1)*7,1.8,(i%2?4:-4));g.add(ripple);}
       }else if(node.type==="wood"||node.type==="dori"){
         const trunk=makeCyl(g,0,12,0,3,24,node.type==="dori"?mats.doriTrunk:mats.woodTrunk,8);
         trunk.castShadow=false;trunk.receiveShadow=false;
@@ -328,12 +330,30 @@ export function createWorld3D(canvas, getState) {
         makeCyl(g,0,2,0,9,4,mats.dark,8);makeCyl(g,0,12,0,2,18,mats.trim,8);makeSphere(g,0,24,0,node.type==="coreSite"?5:3,mats.crystal);
       }
     }
+  }
+  function rebuild(state){
+    clear(worldRoot);clear(machineRoot);clear(nodeRoot);clear(markerRoot);clear(mineRoot);terrainChunks.length=0;nodeGroupsByKey.clear();selectionRoot.visible=false;
+    const dummy=new THREE.Object3D(),color=new THREE.Color(),bottom=-52,chunkSize=24;
+    for(let z0=0;z0<WORLD_H;z0+=chunkSize)for(let x0=0;x0<WORLD_W;x0+=chunkSize){
+      const chunkWidth=Math.min(chunkSize,WORLD_W-x0),chunkHeight=Math.min(chunkSize,WORLD_H-z0);
+      const tiles=new THREE.InstancedMesh(terrainTileGeometry,terrainTileMaterial,chunkWidth*chunkHeight);
+      tiles.userData={chunkX:x0,chunkZ:z0,chunkWidth,chunkHeight};tiles.receiveShadow=true;
+      let n=0;
+      for(let z=z0;z<z0+chunkHeight;z++)for(let x=x0;x<x0+chunkWidth;x++){
+        const key=x+","+z,node=state.nodes?.[key],h=surfaceY(state,x,z);
+        dummy.position.set(x*32,(h+bottom)/2,z*32);dummy.scale.set(1,Math.max(1,h-bottom),1);dummy.updateMatrix();tiles.setMatrixAt(n,dummy.matrix);
+        color.setHex(node?.type==="water"?palette.water:biomeGroundColor(biomeAt(x,z)));tiles.setColorAt(n,color);n++;
+      }
+      tiles.instanceMatrix.needsUpdate=true;if(tiles.instanceColor)tiles.instanceColor.needsUpdate=true;
+      tiles.computeBoundingSphere();worldRoot.add(tiles);terrainChunks.push(tiles);
+    }
+    addSeenNodeModels(state);
     for(const key of Object.keys(state.foundation||{})){if(!state.foundation[key])continue;const [x,z]=key.split(",").map(Number);const h=surfaceY(state,x,z);makeBox(worldRoot,x*32,h+1.2,z*32,29,2.2,29,mat(0x65727a,.62,.55),false);}
     for(const key of Object.keys(state.flattened||{})){if(!state.flattened[key])continue;const [x,z]=key.split(",").map(Number);const h=surfaceY(state,x,z);const marker=new THREE.Mesh(new THREE.BoxGeometry(30,.45,30),new THREE.MeshBasicMaterial({color:0x87c4aa,transparent:true,opacity:.12,depthWrite:false}));marker.position.set(x*32,h+.15,z*32);worldRoot.add(marker);}
     for(const b of state.buildings||[])addBuilding(b,state);
     addPlayer(state);
     playerRing=new THREE.Mesh(new THREE.TorusGeometry(7,.35,8,40),new THREE.MeshBasicMaterial({color:0xf2d28a,transparent:true,opacity:.7}));playerRing.rotation.x=Math.PI/2;markerRoot.add(playerRing);
-    if(state.selectedBuilding){const b=state.buildings.find(v=>v.uid===state.selectedBuilding);if(b){const r=new THREE.Mesh(new THREE.TorusGeometry(15,.65,8,48),new THREE.MeshBasicMaterial({color:0x70e7e9}));r.rotation.x=Math.PI/2;r.position.set(b.x*32,surfaceY(state,b.x,b.y)+3,b.y*32);markerRoot.add(r);}}
+
 
     buildMine(state);
   }
@@ -541,13 +561,17 @@ export function createWorld3D(canvas, getState) {
   function signature(s){
     if(s.nodes!==trackedNodes||s.mineDeposits!==trackedMineDeposits||s.flattened!==trackedFlattened||s.foundation!==trackedFoundation){trackedNodes=s.nodes;trackedMineDeposits=s.mineDeposits;trackedFlattened=s.flattened;trackedFoundation=s.foundation;stateIdentityRevision++;}
     const machines=(s.buildings||[]).map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.output?.id,b.output?.qty,b.item?.id,b.item?.qty,b.variant].join(":")).join("|");
-    return [s.sceneRevision||0,stateIdentityRevision,s.worldVersion,s.player?.layer,s.player?.mineLevel,machines,s.selectedBuilding,s.selectedBuild,s.selectedLandTool].join(";");
+    return [s.sceneRevision||0,stateIdentityRevision,s.worldVersion,s.player?.layer,s.player?.mineLevel,machines].join(";");
   }
   function render(state){
     if(!state)return;resizeIfNeeded();const sig=signature(state);if(sig!==lastSignature){rebuild(state);lastSignature=sig;rebuildCount++;}
     renderCount++;
     activeViewMode=state.player?.viewMode==="map"?"map":state.player?.viewMode==="third"?"third":"first";
     const inMine=state.player?.layer==="mine";stateLayerForPicking=inMine?"mine":"surface";
+    if(state.visibilityRevision!==lastVisibilityRevision){addSeenNodeModels(state);lastVisibilityRevision=state.visibilityRevision;}
+    const selectedMachine=!inMine&&state.selectedBuilding?(state.buildings||[]).find(b=>b.uid===state.selectedBuilding):null;
+    selectionRoot.visible=!!selectedMachine;
+    if(selectedMachine)selectionRoot.position.set(selectedMachine.x*32,surfaceY(state,selectedMachine.x,selectedMachine.y)+3,selectedMachine.y*32);
     worldRoot.visible=!inMine;machineRoot.visible=!inMine;nodeRoot.visible=!inMine;mineRoot.visible=inMine;markerRoot.visible=true;
     const hover=state.hoverCell,showHover=!inMine&&!!hover&&!!(state.selectedBuild||state.selectedLandTool);hoverRoot.visible=showHover;
     if(showHover){const h=surfaceY(state,hover.x,hover.y);hoverRoot.position.set(hover.x*32,h+2.2,hover.y*32);const color=state.canBuildPreview?0x6de4bb:0xf2a46e;hoverFillMaterial.color.setHex(color);hoverEdgeMaterial.color.setHex(color);}
