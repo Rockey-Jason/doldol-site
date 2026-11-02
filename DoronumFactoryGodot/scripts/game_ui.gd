@@ -285,8 +285,17 @@ func _draw_factory() -> void:
 		_label("%s  ·  %s  ·  %.0f°C  ·  %.0f MPa" % [
 			machine.id,machine.state,float(machine.temperature),float(machine.pressure)
 		])
+		_label("CONDITION %.1f%%  ·  FAILURE EXPOSURE %.1fs" % [float(machine.condition),float(machine.get("failure_exposure",0.0))])
+		if float(machine.condition)<=25.0 or str(machine.state)=="BROKEN":
+			_button("MAINTENANCE · REPAIR "+str(machine.id),func(): game.repair_machine(str(machine.instance_id));_refresh(),float(machine.condition)>=100.0)
+		if machine.id=="WAREHOUSE":
+			for stored_stack in machine.get("storage",[]):
+				_label("WAREHOUSE · %s ×%d · Q %.1f / P %.1f" % [GameData.item_name(str(stored_stack.item_id)),int(stored_stack.quantity),float(stored_stack.quality),float(stored_stack.purity)])
+				_button("창고 출고 · "+GameData.item_name(str(stored_stack.item_id)),func(): game.collect_warehouse_item(str(machine.instance_id),str(stored_stack.stack_id));_refresh())
+		for input_stack in machine.get("input",[]):
+			_label("INPUT · %s ×%d · %s" % [GameData.item_name(str(input_stack.item_id)),int(input_stack.quantity),"SYNTHETIC" if bool(input_stack.synthetic) else "NATURAL"])
 		if game.has_skill("FAULT_DIAGNOSTICS"):
-			_label("FAULT DIAGNOSTICS · Condition %.1f%% · State %s" % [float(machine.condition),str(machine.state)])
+			_label("FAULT DIAGNOSTICS · Hazard ×%.2f · State %s" % [float(machine.get("hazard_multiplier",1.0)),str(machine.state)])
 		if game.has_skill("PROCESS_CONTROL") and not str(machine.get("recipe","")).is_empty():
 			var process_recipe: Dictionary = GameData.recipe_definition(str(machine.recipe))
 			_label("PROCESS CONTROL · Target %.0f°C / %.0fMPa" % [float(process_recipe.get("temperature",0.0)),float(process_recipe.get("pressure",0.0))])
@@ -298,6 +307,13 @@ func _draw_factory() -> void:
 			var recipe: Dictionary = GameData.RECIPES[recipe_id]
 			if recipe.machine == machine.id:
 				_button("레시피 설정 · "+str(recipe.name),func(): game.set_machine_recipe(str(machine.instance_id),str(recipe_id)))
+		if not str(machine.get("recipe","")).is_empty():
+			var active_recipe: Dictionary = GameData.recipe_definition(str(machine.recipe))
+			var input_summary: Array[String] = []
+			for item_id in active_recipe.get("inputs",{}):
+				input_summary.append("%s ×%d" % [GameData.item_name(str(item_id)),int(active_recipe.inputs[item_id])])
+			_label("ACTIVE RECIPE · "+" + ".join(input_summary))
+			_button("레시피 재료 원자 투입",func(): game.supply_machine_inputs(str(machine.instance_id));_refresh())
 		for output_id in GameData.VARIANT_RECIPES:
 			var variant_recipe_id := "RECIPE_"+str(output_id).replace("ITEM_","")
 			var variant_recipe: Dictionary = GameData.recipe_definition(variant_recipe_id)
