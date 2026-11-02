@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#061321">
-<meta name="description" content="DORONIUM FACTORY — INFINITE INDUSTRY. Build, automate, research and stabilize the planet.">
+<meta name="description" content="DORONIUM FACTORY — INFINITE INDUSTRY. Explore and build a real-time 3D industrial planet, automate production and research.">
 <title>도로늄 공장: 인피니트 인더스트리</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./factory.css?v=2">
+<link rel="stylesheet" href="./factory.css?v=3">
 </head>
 <body>
 <div id="game-root">
@@ -25,9 +25,9 @@
   </header>
   <main class="app-layout">
     <section class="world-column">
-      <div class="world-toolbar"><div class="world-title-group"><div class="live-indicator"><i></i> SIMULATION LIVE</div><h1 id="region-title">FACTORY VALLEY <span>초기 산업 구역</span></h1><p id="world-subtitle">폐허 위에 첫 번째 산업 기지를 세우세요.</p></div><div class="world-tools"><button class="tool-btn" id="zoom-out" title="축소">－</button><span class="zoom-value" id="zoom-value">100%</span><button class="tool-btn" id="zoom-in" title="확대">＋</button><button class="tool-btn" id="center-view" title="플레이어 위치로 이동">◎</button><button class="tool-btn overview-btn" id="overview-toggle">공장 개요 <span>F</span></button></div></div>
+      <div class="world-toolbar"><div class="world-title-group"><div class="live-indicator"><i></i> 3D WORLD · SIMULATION LIVE</div><h1 id="region-title">FACTORY VALLEY <span>초기 산업 구역</span></h1><p id="world-subtitle">폐허 위에 첫 번째 산업 기지를 세우세요.</p></div><div class="world-tools"><button class="tool-btn" id="zoom-out" title="축소">－</button><span class="zoom-value" id="zoom-value">100%</span><button class="tool-btn" id="zoom-in" title="확대">＋</button><button class="tool-btn" id="center-view" title="플레이어 위치로 이동">◎</button><button class="tool-btn overview-btn" id="overview-toggle">공장 개요 <span>F</span></button></div></div>
       <div class="world-frame" id="world-frame">
-        <canvas id="world-canvas" aria-label="공장 월드 지도"></canvas><div class="world-vignette"></div>
+        <canvas id="world-canvas" aria-label="실시간 3D 공장 월드"></canvas><div class="world-vignette"></div>
         <div class="world-coordinate" id="world-coordinate">SECTOR 01 / X: 0 · Y: 0</div><div class="world-clock"><span id="day-icon">☀</span><span id="world-clock-text">DAY 01 · 08:00</span><b id="weather-label">맑음</b></div>
         <div class="world-alerts" id="world-alerts"></div><div class="world-help" id="world-help"><b>조작</b><span>WASD 이동</span><span>마우스 드래그 지도 이동</span><span>휠 확대/축소</span><span>타일 클릭 채집·선택·건설</span></div>
         <div class="map-controls"><button id="map-toggle" class="map-control">지도</button><button id="help-toggle" class="map-control">조작 도움말</button></div>
@@ -47,5 +47,5 @@
   <div class="bottom-dock"><div class="dock-left"><span class="dock-led"></span><b id="system-state">시스템 정상</b><span class="dock-separator"></span><span id="sim-speed">시뮬레이션 1×</span><button id="pause-sim" class="dock-control">Ⅱ 일시정지</button><button id="speed-sim" class="dock-control">속도 1×</button></div><div class="dock-right"><span id="save-message">자동 저장 대기</span><button class="dock-control" id="save-now">지금 저장</button></div></div>
 </div>
 <div class="toast-stack" id="toast-stack"></div><div class="modal-overlay" id="modal-overlay"><div class="modal-card" id="modal-card"></div></div>
-<script type="module" src="./factory.js?v=2"></script>
+<script type="module" src="./factory.js?v=3"></script>
 </body></html>
