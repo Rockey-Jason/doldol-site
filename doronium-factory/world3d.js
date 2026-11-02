@@ -382,7 +382,7 @@ export function createWorld3D(canvas, getState) {
       tiles.instanceMatrix.needsUpdate=true;if(tiles.instanceColor)tiles.instanceColor.needsUpdate=true;
       tiles.computeBoundingSphere();worldRoot.add(tiles);terrainChunks.push(tiles);
     }
-    addSeenNodeModels(state);
+    addSeenNodeModels(state);lastVisibilityRevision=state.visibilityRevision;
     for(const key of Object.keys(state.foundation||{})){if(!state.foundation[key])continue;const [x,z]=key.split(",").map(Number);const h=surfaceY(state,x,z);makeBox(worldRoot,x*32,h+1.2,z*32,29,2.2,29,mat(0x65727a,.62,.55),false);}
     for(const key of Object.keys(state.flattened||{})){if(!state.flattened[key])continue;const [x,z]=key.split(",").map(Number);const h=surfaceY(state,x,z);const marker=new THREE.Mesh(new THREE.BoxGeometry(30,.45,30),new THREE.MeshBasicMaterial({color:0x87c4aa,transparent:true,opacity:.12,depthWrite:false}));marker.position.set(x*32,h+.15,z*32);worldRoot.add(marker);}
     for(const b of state.buildings||[])addBuilding(b,state);
