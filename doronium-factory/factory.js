@@ -144,7 +144,9 @@ function hasBuilding(s,id){return s.buildings.some(b=>b.type===id)}
 function isBeltType(type){return type==="belt"||type==="beltAdaptive"}
 function surfaceKey(x,y){return x+","+y}
 function hasFoundation(x,y){const k=surfaceKey(x,y);return !!S.flattened?.[k]&&!!S.foundation?.[k]}
-function notifyNewMission(q){if(!q||E2E_MODE)return;const el=$("mission-alert");if(!el)return;el.innerHTML='<div class="mission-alert-kicker">ORBIT · MISSION CONTROL</div><strong>신규 임무 등록</strong><span>'+q.title+'</span>';el.classList.remove("mission-alert-out","mission-alert-in");void el.offsetWidth;el.classList.add("mission-alert-in");setTimeout(()=>{el.classList.remove("mission-alert-in");el.classList.add("mission-alert-out")},1700);setTimeout(()=>el.classList.remove("mission-alert-out"),2450);const hud=$("active-mission-hud");if(hud){hud.innerHTML='<small>ACTIVE DIRECTIVE · '+String(S.questIndex+1).padStart(2,"0")+'</small><strong>'+q.title+'</strong><span>'+q.desc+'</span>';hud.classList.remove("mission-hud-visible");void hud.offsetWidth;hud.classList.add("mission-hud-visible")}}
+function notifyNewMission(q){if(!q||E2E_MODE)return;const el=$("mission-alert");if(!el)return;el.innerHTML='<div class="mission-alert-kicker">ORBIT · MISSION CONTROL</div><strong>신규 임무 등록</strong><span>'+q.title+'</span>';el.classList.remove("mission-alert-out","mission-alert-in");void el.offsetWidth;el.classList.add("mission-alert-in");setTimeout(()=>{el.classList.remove("mission-alert-in");el.classList.add("mission-alert-out")},1700);setTimeout(()=>el.classList.remove("mission-alert-out"),2450);setTimeout(()=>{const hud=$("active-mission-hud");if(hud){hud.innerHTML='<small>ACTIVE DIRECTIVE · '+String(S.questIndex+1).padStart(2,"0")+'</small><strong>'+q.title+'</strong><span>'+q.desc+'</span>';hud.classList.remove("mission-hud-visible");void hud.offsetWidth;hud.classList.add("mission-hud-visible")}},1850)}
+function showStoryIntro(){const el=$("story-intro");if(el)el.hidden=false}
+function startCampaign(){const el=$("story-intro");if(el)el.hidden=true;S.campaign??={};S.campaign.introSeen=true;markDirty();toggleFullscreen();playTone(520,.2,"sine");setTimeout(()=>notifyNewMission(getQuest()),380);toast("ORBIT 연결 완료 · 복구 프로토콜 시작")}
 function toggleControlPanel(name=activePanel){if(name)changePanel(name);controlPanelOpen=!controlPanelOpen;$("control-column")?.classList.toggle("panel-open",controlPanelOpen);$("game-menu-toggle")?.classList.toggle("active",controlPanelOpen);if(controlPanelOpen&&document.pointerLockElement===canvas)document.exitPointerLock()}
 function closeControlPanel(){controlPanelOpen=false;$("control-column")?.classList.remove("panel-open");$("game-menu-toggle")?.classList.remove("active")}
 async function toggleFullscreen(){try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen?.();else await document.exitFullscreen?.()}catch{toast("브라우저에서 전체 화면 전환을 허용하지 않았습니다.","warn")}}
@@ -316,7 +318,8 @@ function performAdventureAction(){
   selectedBuilding=b.uid;selectedBuild=null;changePanel("factory");renderBuildList();renderMachineDetails();toast((buildingDef(b.type)?.name||"시설")+" 선택");return;
  }
  const rect=canvas.getBoundingClientRect(),cell=world3d.pickTile(rect.left+rect.width/2,rect.top+rect.height/2);
- if(cell&&selectedBuild){if(placeBuilding(selectedBuild,cell.x,cell.y))toast("시설 설치 완료")}
+ if(cell&&selectedLandTool){selectTile(cell.x,cell.z);return}
+ if(cell&&selectedBuild){if(placeBuilding(selectedBuild,cell.x,cell.z))toast("시설 설치 완료")}
  else if(cell&&adventureKeys.has("e")){const node=tileNode(cell.x,cell.y);if(node)harvestNode(cell.x,cell.y,node)}
 }
 function consumeFood(){
@@ -493,6 +496,7 @@ function wireControls(){
  document.querySelectorAll("[data-tool]").forEach(b=>b.addEventListener("click",()=>selectTool(b.dataset.tool)));
  document.querySelectorAll("[data-land-tool]").forEach(b=>b.addEventListener("click",()=>{selectedLandTool=b.dataset.landTool==="none"?null:b.dataset.landTool;selectedBuild=null;closeControlPanel();toast(selectedLandTool==="flatten"?"평탄화할 타일을 선택하세요.":selectedLandTool==="foundation"?"기초 타일을 설치할 평탄화 지형을 선택하세요.":"지형 도구 해제");drawWorld()}));
  $("game-menu-toggle")?.addEventListener("click",()=>toggleControlPanel("build"));
+ $("story-start-button")?.addEventListener("click",startCampaign);
  $("panel-close")?.addEventListener("click",closeControlPanel);
  $("fullscreen-button")?.addEventListener("click",toggleFullscreen);
  $("eat-button").onclick=consumeFood;$("drink-button").onclick=drinkWater;$("action-button").onclick=performAdventureAction;
