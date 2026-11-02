@@ -94,6 +94,7 @@ func _run() -> void:
 	fusion_state.story_flags["ARCHIVE_RESTORED"] = true
 	fusion_state.story_flags["COOLING_CORE_RESTORED"] = true
 	fusion_state.story_flags["RESONANCE_CHAMBER_RESTORED"] = true
+	fusion_state.story_flags["ACT_VI_COMPLETE"] = true
 	for key in fusion_state.fusion_diagnostics:
 		fusion_state.fusion_diagnostics[key] = true
 	fusion_state.power_state["fusion_buffer_kwh"] = 400.0
