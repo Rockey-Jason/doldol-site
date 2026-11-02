@@ -386,15 +386,90 @@ function wireControls(){
  $("save-now").onclick=()=>saveGame(true);$("sound-toggle").onclick=()=>{S.settings.sound=!S.settings.sound;$("sound-toggle").style.color=S.settings.sound?"var(--cyan)":"var(--muted)";markDirty();toast(S.settings.sound?"효과음 켜짐":"효과음 꺼짐")};$("settings-open").onclick=settingsModal;
  $("help-toggle").onclick=()=>$("world-help").classList.toggle("hidden");$("map-toggle").onclick=()=>showModal("돌돌행성 지도","<p>현재 탐험 구역은 Factory Valley입니다. 숲·수원지·광맥·돌이 고기 숲을 탐험하고, 지도 위에 생산 시설을 직접 배치하세요.</p><p>지도 좌표는 타일당 32m입니다. 이동은 WASD 또는 빈 타일 클릭, 화면 이동은 드래그, 확대는 휠 또는 +/− 버튼입니다.</p>",[{label:"확인",cls:"primary"}]);
  const card=canvas;
- let pointer=null;const activePointers=new Map();
- const touchGeometry=()=>{const points=[...activePointers.values()];if(points.length<2)return null;const cx=(points[0].x+points[1].x)/2,cy=(points[0].y+points[1].y)/2;return {x:cx,y:cy,distance:Math.hypot(points[0].x-points[1].x,points[0].y-points[1].y)}};
+ let pointer=null,mapPointer=null;const activePointers=new Map();
+ const touchGeometry=()=>{const p=[...activePointers.values()];if(p.length<2)return null;return {x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2,distance:Math.hypot(p[0].x-p[1].x,p[0].y-p[1].y)}};
+ const directionKey=(value)=>{const [dx,dy]=value.split(",").map(Number);return dx<0?"a":dx>0?"d":dy<0?"w":"s"};
  card.addEventListener("contextmenu",e=>e.preventDefault());
- card.addEventListener("pointerdown",e=>{activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});card.setPointerCapture(e.pointerId);if(activePointers.size>=2){const g=touchGeometry();pointer={id:-1,mode:"multi",lastX:g.x,lastY:g.y,lastDistance:g.distance,moved:10,rotate:true}}else pointer={id:e.pointerId,mode:"single",lastX:e.clientX,lastY:e.clientY,moved:0,rotate:e.button===2||e.shiftKey}});
- card.addEventListener("pointermove",e=>{if(activePointers.has(e.pointerId))activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});const t=screenTile(e.clientX,e.clientY);hoverCell=t.x>=0&&t.y>=0?t:null;if(activePointers.size>=2){const g=touchGeometry();if(g&&pointer){const dx=g.x-pointer.lastX,dy=g.y-pointer.lastY;pointer.moved+=Math.abs(dx)+Math.abs(dy);world3d.orbit(dx,dy);setZoom(camera.zoom+(g.distance-pointer.lastDistance)*.002);pointer.lastX=g.x;pointer.lastY=g.y;pointer.lastDistance=g.distance}}else if(pointer&&pointer.mode==="single"&&pointer.id===e.pointerId){const dx=e.clientX-pointer.lastX,dy=e.clientY-pointer.lastY;pointer.moved+=Math.abs(dx)+Math.abs(dy);if(pointer.rotate)world3d.orbit(dx,dy);else world3d.pan(dx,dy);pointer.lastX=e.clientX;pointer.lastY=e.clientY}drawWorld()});
- card.addEventListener("pointerup",e=>{const hadMulti=activePointers.size>=2||pointer?.mode==="multi";activePointers.delete(e.pointerId);if(hadMulti){pointer=null;return}if(!pointer||pointer.id!==e.pointerId){pointer=null;return}const moved=pointer.moved;if(moved<8&&!pointer.rotate){const t=screenTile(e.clientX,e.clientY);if(t.x>=0&&t.y>=0&&t.x<WORLD_W&&t.y<WORLD_H)selectTile(t.x,t.y)}pointer=null});
- card.addEventListener("pointercancel",e=>{activePointers.delete(e.pointerId);pointer=null});
- card.addEventListener("wheel",e=>{e.preventDefault();setZoom(camera.zoom+(e.deltaY<0?.06:-.06))},{passive:false});
- window.addEventListener("keydown",e=>{if(e.target instanceof HTMLInputElement||e.target instanceof HTMLSelectElement||$("modal-overlay").classList.contains("show"))return;const k=e.key.toLowerCase();if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))e.preventDefault();if(k==="w"||k==="arrowup")movePlayer(0,-1);if(k==="s"||k==="arrowdown")movePlayer(0,1);if(k==="a"||k==="arrowleft")movePlayer(-1,0);if(k==="d"||k==="arrowright")movePlayer(1,0);if(k==="r"){if(selectedBuilding){const b=S.buildings.find(x=>x.uid===selectedBuilding);if(b){b.dir=(b.dir+1)%4;renderMachineDetails();drawWorld();markDirty()}}else toast("시설을 선택한 뒤 R 키로 방향을 회전하세요.")}if(k==="escape"){selectedBuild=null;renderBuildList();drawWorld()}if(k==="b"||k==="f"||k==="i"||k==="t"||k==="m")setTabFromKey(k);if(k===" "){S.paused=!S.paused;renderHud()}});
+ card.addEventListener("pointerdown",e=>{
+  activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(card.setPointerCapture)card.setPointerCapture(e.pointerId);
+  if(adventureMode()){
+   if(e.pointerType==="touch"){
+    if(e.clientX>card.getBoundingClientRect().left+card.getBoundingClientRect().width*.38)lookPointer={id:e.pointerId,x:e.clientX,y:e.clientY};
+   }else if(e.button===2||e.shiftKey){lookPointer={id:e.pointerId,x:e.clientX,y:e.clientY}}
+   else if(e.button===0){mineHeld=true;mineCooldown=0;performAdventureAction();if(!document.pointerLockElement&&card.requestPointerLock&&S.player.viewMode==="first"){try{card.requestPointerLock()}catch{}}}
+   return;
+  }
+  pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:0,rotate:e.button===2||e.shiftKey};
+ });
+ card.addEventListener("pointermove",e=>{
+  if(activePointers.has(e.pointerId))activePointers.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  if(adventureMode()){
+   if(lookPointer?.id===e.pointerId){
+    const dx=e.clientX-lookPointer.x,dy=e.clientY-lookPointer.y;playerMotion.yaw-=dx*.006;playerMotion.pitch=clamp(playerMotion.pitch-dy*.005,-1.25,1.12);lookPointer.x=e.clientX;lookPointer.y=e.clientY;
+   }
+   return;
+  }
+  if(!pointer||pointer.id!==e.pointerId)return;
+  const dx=e.clientX-pointer.lastX,dy=e.clientY-pointer.lastY;pointer.moved+=Math.abs(dx)+Math.abs(dy);
+  if(pointer.rotate)world3d.orbit(dx,dy);else world3d.pan(dx,dy);
+  pointer.lastX=e.clientX;pointer.lastY=e.clientY;drawWorld();
+ });
+ card.addEventListener("pointerup",e=>{
+  activePointers.delete(e.pointerId);
+  if(adventureMode()){
+   if(lookPointer?.id===e.pointerId)lookPointer=null;
+   if(e.pointerType!=="touch")mineHeld=false;
+   return;
+  }
+  if(!pointer||pointer.id!==e.pointerId){pointer=null;return}
+  if(pointer.moved<8&&!pointer.rotate){const t=screenTile(e.clientX,e.clientY);if(t.x>=0&&t.y>=0&&t.x<WORLD_W&&t.y<WORLD_H)selectTile(t.x,t.y)}
+  pointer=null;
+ });
+ card.addEventListener("pointercancel",e=>{activePointers.delete(e.pointerId);if(pointer?.id===e.pointerId)pointer=null;if(lookPointer?.id===e.pointerId)lookPointer=null;mineHeld=false});
+ card.addEventListener("wheel",e=>{e.preventDefault();if(adventureMode())setZoom(camera.zoom+(e.deltaY<0?.06:-.06));else setZoom(camera.zoom+(e.deltaY<0?.06:-.06))},{passive:false});
+ document.addEventListener("mousemove",e=>{
+  if(!adventureMode()||document.pointerLockElement!==card)return;
+  playerMotion.yaw-=e.movementX*.0025;playerMotion.pitch=clamp(playerMotion.pitch-e.movementY*.0025,-1.25,1.12);
+ });
+ document.addEventListener("pointerlockchange",()=>{card.classList.toggle("pointer-locked",document.pointerLockElement===card)});
+ document.addEventListener("pointerlockerror",()=>toast("마우스 잠금이 지원되지 않습니다. 드래그로 시점을 조작하세요.","warn"));
+ window.addEventListener("keydown",e=>{
+  if(e.target instanceof HTMLInputElement||e.target instanceof HTMLSelectElement||e.target instanceof HTMLTextAreaElement||$("modal-overlay").classList.contains("show"))return;
+  const k=e.key.toLowerCase();
+  if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"," ","shift"].includes(k))e.preventDefault();
+  if(k==="v"){setViewMode(S.player.viewMode==="first"?"third":"first");return}
+  if(k==="m"){setViewMode(S.player.viewMode==="map"?"first":"map");return}
+  if(k==="1"){setViewMode("first");return}if(k==="3"){setViewMode("third");return}
+  if(k==="e"&&adventureMode()){adventureKeys.add("e");performAdventureAction();return}
+  if(k==="r"){if(selectedBuilding){const b=S.buildings.find(x=>x.uid===selectedBuilding);if(b){b.dir=(b.dir+1)%4;renderMachineDetails();drawWorld();markDirty()}}else toast("시설을 선택한 뒤 R 키로 방향을 회전하세요.");return}
+  if(k==="escape"){if(document.pointerLockElement===card)document.exitPointerLock();selectedBuild=null;renderBuildList();drawWorld();return}
+  if(k==="b"||k==="f"||k==="i"||k==="t")setTabFromKey(k);
+  if(k===" "&&adventureMode())adventureKeys.add(" ");
+  else if(adventureMode()&&["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright","shift"].includes(k))adventureKeys.add(k);
+  else if(!adventureMode()&&(k==="w"||k==="arrowup"))movePlayer(0,-1);
+  else if(!adventureMode()&&(k==="s"||k==="arrowdown"))movePlayer(0,1);
+  else if(!adventureMode()&&(k==="a"||k==="arrowleft"))movePlayer(-1,0);
+  else if(!adventureMode()&&(k==="d"||k==="arrowright"))movePlayer(1,0);
+  if(k===" "&&!adventureMode()){S.paused=!S.paused;renderHud()}
+ });
+ window.addEventListener("keyup",e=>{const k=e.key.toLowerCase();adventureKeys.delete(k);if(k===" ")adventureKeys.delete(" ")});
+ document.querySelectorAll("[data-view-mode]").forEach(b=>b.addEventListener("click",()=>setViewMode(b.dataset.viewMode)));
+ $("eat-button").onclick=consumeFood;$("drink-button").onclick=drinkWater;$("action-button").onclick=performAdventureAction;
+ $("jump-button").addEventListener("pointerdown",e=>{e.preventDefault();adventureKeys.add(" ")});
+ $("jump-button").addEventListener("pointerup",()=>adventureKeys.delete(" "));
+ $("jump-button").addEventListener("pointercancel",()=>adventureKeys.delete(" "));
+ document.querySelector(".move-pad")?.addEventListener("pointerdown",e=>{
+  const b=e.target.closest("[data-move]");if(!b)return;e.preventDefault();
+  if(adventureMode())adventureKeys.add(directionKey(b.dataset.move));
+  else{const [dx,dy]=b.dataset.move.split(",").map(Number);movePlayer(dx,dy)}
+ });
+ document.querySelector(".move-pad")?.addEventListener("pointerup",e=>{
+  const b=e.target.closest("[data-move]");if(b)adventureKeys.delete(directionKey(b.dataset.move))
+ });
+ document.querySelector(".move-pad")?.addEventListener("pointerleave",e=>{
+  const b=e.target.closest("[data-move]");if(b)adventureKeys.delete(directionKey(b.dataset.move))
+ });
  window.addEventListener("resize",drawWorld);
 }
 
