@@ -67,6 +67,40 @@ try {
   });
   assert.ok(preview.visible && preview.width > 0 && preview.height > 0, "3D crystal preview must render to a visible canvas");
   await desktop.locator("#modal-x").click();
+  const adventureStart = await desktop.evaluate(() => {
+    const api = window.__doroniumFactoryTest;
+    api.setViewMode("first");
+    return api.move3D("w", 0.3);
+  });
+  assert.ok(adventureStart.z < 14, "First-person WASD movement must move the engineer through the 3D world");
+  assert.equal(await desktop.evaluate(() => window.__doroniumFactoryTest.viewMode()), "first");
+  await desktop.evaluate(() => window.__doroniumFactoryTest.setViewMode("third"));
+  assert.equal(await desktop.evaluate(() => window.__doroniumFactoryTest.viewMode()), "third", "Third-person camera must be selectable");
+  await desktop.evaluate(() => window.__doroniumFactoryTest.setViewMode("map"));
+  assert.equal(await desktop.evaluate(() => window.__doroniumFactoryTest.viewMode()), "map", "Factory strategy view must remain available");
+  await desktop.evaluate(() => window.__doroniumFactoryTest.setViewMode("first"));
+
+  await desktop.evaluate(() => window.__doroniumFactoryTest.setupSurvivalTest());
+  const fed = await desktop.evaluate(() => window.__doroniumFactoryTest.consumeFood());
+  assert.equal(fed.hunger, 88, "Eating Dori Meat must restore hunger");
+  assert.equal(fed.health, 100, "Eating Dori Meat must restore a small amount of health");
+  const hydrated = await desktop.evaluate(() => window.__doroniumFactoryTest.drinkWater());
+  assert.equal(hydrated.thirst, 92, "Drinking water must restore thirst");
+  const depleted = await desktop.evaluate(() => {
+    const api=window.__doroniumFactoryTest;
+    const state=api.snapshot();
+    state.survival.hunger=0;state.survival.thirst=0;
+    return api.survivalTick(5);
+  });
+  assert.ok(depleted.health < 100, "Hunger and thirst depletion must damage health");
+
+  await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningTest());
+  const mined = await desktop.evaluate(() => window.__doroniumFactoryTest.mineTarget());
+  assert.equal(mined.target?.kind, "resource", "The screen-center ray must identify a 3D resource block");
+  assert.equal(mined.target?.type, "stone", "The target resource should be the aimed stone block");
+  assert.ok(mined.after > mined.before, "Mining an aimed block must add resources to the inventory");
+  assert.equal(mined.node, 10, "A successful mining action must reduce the world node quantity");
+
   await desktop.locator('[data-panel="build"]').click();
 
   const synthetic = await desktop.evaluate(() => window.__doroniumFactoryTest.syntheticGuard());
