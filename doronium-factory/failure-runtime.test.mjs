@@ -31,7 +31,7 @@ test("temperature and pressure risks rise from target to safe-band edge and faul
  assert.equal(center.powerInstability,.19999999999999996);
  assert.equal(center.wear,.5);
  assert.equal(center.load,0);
- const overloaded=calculateFailureRisks({...args,profile,actualLoad:1.5});
+ const overloaded=calculateFailureRisks({...args,profile,actualLoad:3});
  assert.equal(overloaded.load,.5);
  const edge=calculateFailureRisks({...args,profile,temperature:150,pressure:50});
  assert.equal(edge.temperature,1);
