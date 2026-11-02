@@ -932,7 +932,7 @@ func _tick_fusion(dt: float) -> void:
 	if not temperature_ok or not pressure_ok:
 		fusion.state = "RAMPING"
 		return
-	var progress_delta := dt*ratio
+	var progress_delta := FactorySimulation.calculate_progress_delta(dt,ratio)
 	fusion.stage_progress += progress_delta
 	var fusion_machine_for_risk := buildings.filter(func(m): return m.id=="INFINITY_FUSION_MACHINE")
 	var machine_condition_for_risk := 0.0 if fusion_machine_for_risk.is_empty() else clampf(float(fusion_machine_for_risk[0].condition),0.0,100.0)
