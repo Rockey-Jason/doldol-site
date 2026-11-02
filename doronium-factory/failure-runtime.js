@@ -11,6 +11,7 @@ export function validateFailureProfile(profile){
  const probability=Number(profile.baseFailureProbability),duration=Number(profile.referenceDurationSec);
  if(!Number.isFinite(probability)||probability<0||probability>=1)errors.push("baseFailureProbability must be in [0,1)");
  if(!Number.isFinite(duration)||duration<=0)errors.push("referenceDurationSec must be > 0");
+ if(!profile.loadRiskRange||!Number.isFinite(Number(profile.loadRiskRange.optimalRatio))||!Number.isFinite(Number(profile.loadRiskRange.criticalRatio))||Number(profile.loadRiskRange.optimalRatio)<0||Number(profile.loadRiskRange.criticalRatio)<=Number(profile.loadRiskRange.optimalRatio))errors.push("loadRiskRange must define optimalRatio and a greater criticalRatio");
  if(!profile.weights||typeof profile.weights!=="object")errors.push("risk weights are missing");
  else for(const key of RISK_KEYS){const w=Number(profile.weights[key]??0);if(!Number.isFinite(w)||w<0)errors.push("invalid risk weight: "+key)}
  const grades=profile.gradeDistribution;
@@ -31,11 +32,12 @@ function normalizedBandRisk(actual,target,min,max){
  if(span<=0)return {risk:actual===target?0:1,valid:true,outOfBand:actual!==target};
  return {risk:clamp(Math.abs(actual-target)/span,0,1),valid:true,outOfBand:false};
 }
-export function calculateFailureRisks({temperature,targetTemperature,safeTemperatureMin,safeTemperatureMax,pressure,targetPressure,safePressureMin,safePressureMax,powerRatio,condition,actualLoad,nominalLoad}={}){
+export function calculateFailureRisks({profile,temperature,targetTemperature,safeTemperatureMin,safeTemperatureMax,pressure,targetPressure,safePressureMin,safePressureMax,powerRatio,condition,actualLoad,nominalLoad}={}){
  const temp=normalizedBandRisk(Number(temperature),Number(targetTemperature),Number(safeTemperatureMin),Number(safeTemperatureMax));
  const press=normalizedBandRisk(Number(pressure),Number(targetPressure),Number(safePressureMin),Number(safePressureMax));
  const loadRatio=Number(nominalLoad)>0?Number(actualLoad||0)/Number(nominalLoad):0;
- const load=Number.isFinite(loadRatio)?clamp(loadRatio,0,1):0;
+ const loadRange=profile?.loadRiskRange||{optimalRatio:1,criticalRatio:2};
+ const load=Number.isFinite(loadRatio)?clamp(Math.abs(loadRatio-Number(loadRange.optimalRatio))/Math.max(1e-9,Number(loadRange.criticalRatio)-Number(loadRange.optimalRatio)),0,1):0;
  return {temperature:temp.risk,pressure:press.risk,powerInstability:1-clamp(powerRatio,0,1),wear:1-clamp(finite(condition,100)/100,0,1),load,
   safetyFault:temp.outOfBand||press.outOfBand,temperatureBandValid:temp.valid,pressureBandValid:press.valid};
 }
