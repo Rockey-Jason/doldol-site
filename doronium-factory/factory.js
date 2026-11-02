@@ -187,7 +187,7 @@ function freshState(){
  const world=makeWorld();
  return {version:1,worldVersion:4,seed:827142,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},money:1100,inventory:{wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,relaySites:[false,false,false],coreInstalled:false,victory:false,settings:{sound:true,reducedMotion:false},lastSavedAt:null};
 }
-let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
+let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, frameRenderAccumulator=0, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
 let playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Number(S.player.yaw)||0,pitch:Number(S.player.pitch??-.12),path:[],moving:false,facing:0,onArrive:null};
 const adventureKeys=new Set();
 let mineHeld=false,mineCooldown=0,lookPointer=null,survivalHudClock=0,adventureTarget=null;
@@ -559,15 +559,14 @@ async function initCloud(){try{const mod=await import("https://cdn.jsdelivr.net/
 async function saveGame(force=false){if(!force&&!dirty)return;if(cloudBusy){saveLocal();return}const savedAt=saveLocal();if(!savedAt)return;dirty=false;setSaveMessage("이 기기 저장 완료");if(!cloudClient||!authSession?.user?.id){setCloud("","로그인 필요");return}cloudBusy=true;setCloud("syncing","클라우드 저장");try{const envelope={game:"doronium-factory",version:1,savedAt,state:S};const {error}=await cloudClient.from("dori_cloud_storage").upsert({user_id:authSession.user.id,storage_key:CLOUD_KEY,storage_value:envelope,is_deleted:false,updated_at:savedAt},{onConflict:"user_id,storage_key"});if(error)throw error;cloudUpdatedAt=savedAt;setCloud("online","모든 기기 동기화");setSaveMessage("계정 클라우드 저장 완료")}catch(e){console.error("Cloud save failed",e);setCloud("error","로컬 저장됨");setSaveMessage("클라우드 오류 · 로컬 보존");toast("클라우드 저장에 실패했습니다. 이 기기 저장은 보존했습니다.","warn")}finally{cloudBusy=false}}
 async function pollCloud(){if(!cloudClient||!authSession?.user?.id||cloudBusy)return;try{const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at").eq("storage_key",CLOUD_KEY).eq("is_deleted",false).maybeSingle();if(error)throw error;if(!data)return;const remote=data.updated_at||data.storage_value?.savedAt;if(!remote||remote===cloudUpdatedAt)return;if(dirty){setCloud("syncing","다른 기기 변경 감지");toast("다른 기기의 저장 데이터가 있습니다. 저장 후 새로고침하면 최신 진행도를 불러옵니다.","warn");return}const envelope=data.storage_value;if(envelope?.state){hydrateState(envelope.state);S.lastSavedAt=remote;cloudUpdatedAt=remote;localStorage.setItem(activeLocalKey,JSON.stringify({game:"doronium-factory",version:1,savedAt:remote,state:S}));renderAll();setViewMode(S.player.viewMode);setCloud("online","다른 기기와 동기화");toast("다른 기기의 공장 진행도를 동기화했습니다.")}}catch(e){console.warn("Cloud polling error",e)}}
 function animationFrame(time){
- if(document.hidden){lastFrame=time;requestAnimationFrame(animationFrame);return}
- const frameMs=time-lastFrame;
- if(frameMs<15.5){requestAnimationFrame(animationFrame);return}
- const elapsed=Math.min(.08,Math.max(0,frameMs/1000));
- lastFrame=time;drawTime=time;
+ if(document.hidden){lastFrame=time;frameRenderAccumulator=0;requestAnimationFrame(animationFrame);return}
+ const frameMs=Math.min(80,Math.max(0,time-lastFrame));lastFrame=time;drawTime=time;
  world3d.adaptPerformanceFrame?.(frameMs);
+ const elapsed=frameMs/1000;
  updatePlayerMotion(elapsed);
  if(!S.paused&&!S.victory){accumulator+=elapsed*S.simSpeed;while(accumulator>=STEP){tick(STEP);accumulator-=STEP}}
- drawWorld();
+ frameRenderAccumulator+=frameMs;
+ if(frameRenderAccumulator>=1000/60){frameRenderAccumulator%=1000/60;drawWorld()}
  requestAnimationFrame(animationFrame);
 }
 function boot(){const localTime=loadLocal();playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Number(S.player.yaw)||0,pitch:Number(S.player.pitch??-.12),path:[],moving:false,facing:0,onArrive:null};camera.x=S.player.x;camera.y=S.player.y;revealAround();wireControls();renderAll();setViewMode(S.player.viewMode);if(!E2E_MODE){initCloud();setInterval(()=>saveGame(false),12000);setInterval(()=>pollCloud(),25000);window.addEventListener("beforeunload",()=>{try{saveLocal()}catch{}});document.addEventListener("visibilitychange",()=>{if(document.hidden){saveLocal();setSaveMessage("이 기기 저장 완료")}else{lastFrame=performance.now();pollCloud()}})}else setCloud("online","테스트 모드");lastFrame=performance.now();requestAnimationFrame(animationFrame);if(!E2E_MODE){if(!S.campaign.introSeen)showStoryIntro();else if(getQuest())setTimeout(()=>notifyNewMission(getQuest()),350);if(!localTime)log("공장 복구 프로토콜 시작 · ORBIT 온라인 대기")}}
