@@ -176,6 +176,13 @@ export function createWorld3D(canvas, getState) {
   const makeCyl=(parent,x,y,z,r,h,material,segments=12)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,segments),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m};
   const makeSphere=(parent,x,y,z,r,material)=>{const m=new THREE.Mesh(sphereGeo,material);m.position.set(x,y,z);m.scale.set(r,r,r);m.castShadow=true;parent.add(m);return m};
   const sharedGeometry=new Set([boxGeo,cylGeo,sphereGeo,coneGeo]);
+  const firstPersonRig=new THREE.Group();gameCamera.add(firstPersonRig);
+  makeBox(firstPersonRig,-.52,-.58,-1.05,.25,.34,.82,mat(0x315d76,.18,.72));
+  makeBox(firstPersonRig,.52,-.58,-1.05,.25,.34,.82,mat(0x315d76,.18,.72));
+  makeBox(firstPersonRig,.52,-.48,-.66,.22,.24,.42,mat(0x94714e,.12,.84));
+  makeBox(firstPersonRig,.52,-.30,-.74,.92,.13,.14,mats.gold);
+  makeBox(firstPersonRig,.52,-.20,-.74,.10,.38,.13,mats.trim);
+
   const sharedMaterials=new Set(Object.values(mats));
   function clear(group){for(const o of [...group.children]){group.remove(o);o.traverse(child=>{if(child.geometry&&!sharedGeometry.has(child.geometry))child.geometry.dispose();if(child.material){const list=Array.isArray(child.material)?child.material:[child.material];for(const material of list)if(!sharedMaterials.has(material))material.dispose();}});}}
   function cameraUpdate(){camera=mapCamera;const span=440/zoom;mapCamera.left=-span*width/height/2;mapCamera.right=span*width/height/2;mapCamera.top=span/2;mapCamera.bottom=-span/2;mapCamera.updateProjectionMatrix();const distance=1000,horizontal=Math.cos(pitch)*distance;mapCamera.position.set(target.x+Math.sin(yaw)*horizontal,Math.sin(pitch)*distance,target.z+Math.cos(yaw)*horizontal);mapCamera.lookAt(target.x,0,target.z);}
@@ -192,7 +199,7 @@ export function createWorld3D(canvas, getState) {
       gameCamera.lookAt(px,18+py,pz);
     }
     gameCamera.updateMatrixWorld(true);
-    if(playerModel)playerModel.visible=activeViewMode!=="first";
+    if(playerModel)playerModel.visible=activeViewMode!=="first";firstPersonRig.visible=activeViewMode==="first";
   }
   function pickTarget(maxDistance=190){
     raycaster.setFromCamera(new THREE.Vector2(0,0),camera);
