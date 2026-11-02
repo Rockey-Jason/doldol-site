@@ -467,9 +467,8 @@ function wireControls(){
  $("jump-button").addEventListener("pointerup",()=>adventureKeys.delete(" "));
  $("jump-button").addEventListener("pointercancel",()=>adventureKeys.delete(" "));
  document.querySelector(".move-pad")?.addEventListener("pointerdown",e=>{
-  const b=e.target.closest("[data-move]");if(!b)return;e.preventDefault();
+  const b=e.target.closest("[data-move]");if(!b)return;
   if(adventureMode())adventureKeys.add(directionKey(b.dataset.move));
-  else{const [dx,dy]=b.dataset.move.split(",").map(Number);movePlayer(dx,dy)}
  });
  document.querySelector(".move-pad")?.addEventListener("pointerup",e=>{
   const b=e.target.closest("[data-move]");if(b)adventureKeys.delete(directionKey(b.dataset.move))
