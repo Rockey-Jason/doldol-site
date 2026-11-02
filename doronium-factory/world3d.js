@@ -129,20 +129,27 @@ export function createWorld3D(canvas, getState) {
   if (!THREE) return createFallbackWorld(canvas);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x071522);
-  scene.fog = new THREE.FogExp2(0x071522, 0.00062);
-  let renderer;
-  try { renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false, powerPreference:"high-performance"}); }
-  catch (error) { console.warn("WebGL unavailable; using the compatibility renderer.", error); return createFallbackWorld(canvas); }
+  scene.fog = new THREE.FogExp2(0x071522, 0.00092);
   const compactDevice = window.matchMedia("(max-width: 760px)").matches || /Android|iPhone|iPad/i.test(navigator.userAgent);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, compactDevice ? 1.15 : 1.6));
-  renderer.shadowMap.enabled = true;
+  const memoryGB = Number(navigator.deviceMemory) || 4;
+  const cpuCores = Number(navigator.hardwareConcurrency) || 4;
+  const lowEndDevice = compactDevice || memoryGB <= 4 || cpuCores <= 4;
+  const shadowsEnabled = !compactDevice && memoryGB >= 8 && cpuCores >= 8;
+  const basePixelRatio = Math.min(Number(window.devicePixelRatio) || 1, compactDevice ? 1.0 : lowEndDevice ? 1.05 : 1.35);
+  const minPixelRatio = Math.min(basePixelRatio, compactDevice ? .7 : .75);
+  let currentPixelRatio = basePixelRatio, slowFrames = 0, fastFrames = 0, renderCount = 0, rebuildCount = 0;
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({canvas, antialias:!compactDevice && memoryGB >= 8 && cpuCores >= 8, alpha:false, powerPreference:"high-performance"}); }
+  catch (error) { console.warn("WebGL unavailable; using the compatibility renderer.", error); return createFallbackWorld(canvas); }
+  renderer.setPixelRatio(currentPixelRatio);
+  renderer.shadowMap.enabled = shadowsEnabled;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.12;
 
   const mapCamera = new THREE.OrthographicCamera(-380,380,260,-260,1,6000);
-  const gameCamera = new THREE.PerspectiveCamera(74,1,.1,2600);
+  const gameCamera = new THREE.PerspectiveCamera(74,1,.1,1650);
   scene.add(gameCamera);
   let camera=mapCamera, activeViewMode="map";
   const target = new THREE.Vector3(64*32,terrainHeightAt(64,52),52*32);
@@ -165,7 +172,7 @@ export function createWorld3D(canvas, getState) {
   hoverRoot.add(hoverFill,hoverEdge);hoverRoot.visible=false;
   const ambient = new THREE.HemisphereLight(0xb9e6ef,0x15242a,1.65); scene.add(ambient);
   const sun = new THREE.DirectionalLight(0xffe4b8,2.7);
-  sun.position.set(-420,720,360); sun.castShadow=true; sun.shadow.mapSize.set(compactDevice?768:1536,compactDevice?768:1536);
+  sun.position.set(-420,720,360); sun.castShadow=shadowsEnabled; sun.shadow.mapSize.set(shadowsEnabled?1024:256,shadowsEnabled?1024:256);
   sun.shadow.camera.left=-900; sun.shadow.camera.right=900; sun.shadow.camera.top=900; sun.shadow.camera.bottom=-900;
   sun.shadow.bias=-0.00025; scene.add(sun);
   const fill = new THREE.DirectionalLight(0x4a9fc1,0.8); fill.position.set(450,260,-500); scene.add(fill);
@@ -198,7 +205,7 @@ export function createWorld3D(canvas, getState) {
     const motion=state.playerMotion||{x:state.player.x,z:state.player.y,yaw:0,pitch:-.12,y:0};
     const px=motion.x*32,pz=motion.z*32,py=(state.player?.layer==="mine"?mineFloorY(state.player.mineLevel):surfaceY(state,Math.floor(motion.x+.5),Math.floor(motion.z+.5)) )+(Number(motion.y)||0),yaw=Number(motion.yaw)||0,pitch=Number(motion.pitch??-.12);
     const fx=-Math.sin(yaw),fz=-Math.cos(yaw);
-    camera=gameCamera;gameCamera.aspect=width/height;gameCamera.updateProjectionMatrix();
+    camera=gameCamera;
     if(activeViewMode==="first"){
       gameCamera.position.set(px,22+py,pz);
       gameCamera.rotation.order="YXZ";gameCamera.rotation.set(pitch,yaw,0);
