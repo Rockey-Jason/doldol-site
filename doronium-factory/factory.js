@@ -1,4 +1,4 @@
-import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=16";
+import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=17";
 import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=2";
 let createClient = null;
 
@@ -389,7 +389,7 @@ function tickMachine(b,dt,ratio){const r=recipeFor(b);if(!r){b.status="NO_RECIPE
 function tickBelts(dt){for(const b of S.buildings){if(!isBeltType(b.type))continue;if(!b.item)continue;b.moveTimer=(b.moveTimer||0)+dt;if(b.moveTimer<.75)continue;b.moveTimer=0;const dir=DIRS[b.dir||1],nx=b.x+dir.x,ny=b.y+dir.y,target=buildingAt(nx,ny);if(target){if(target.type==="storage"||target.type==="warehouse"){addItem(b.item.id,b.item.qty,b.item.meta,false);log("물류 센터 회수 · "+RESOURCE[b.item.id].name);b.item=null;markDirty()}else if(target.type==="market"){const amount=b.item.qty,earned=Math.floor(amount*RESOURCE[b.item.id].price*.8);S.money+=earned;S.stats.sold+=amount;b.item=null;log("자동 거래 · "+fmt(earned)+" D");markDirty()}else if(["machine","reactor","variantLab"].includes(buildingDef(target.type)?.kind)||["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.item.id,b.item.qty,b.item.meta);b.item=null;target.status="WAITING_INPUT"}continue}
  const next=S.buildings.find(x=>x.x===nx&&x.y===ny&&isBeltType(x.type));if(next&&!next.item){next.item=b.item;b.item=null;next.moveTimer=.45;markDirty()}}
  for(const b of S.buildings){if(!b.output)continue;const dir=DIRS[b.dir||1],nx=b.x+dir.x,ny=b.y+dir.y,target=buildingAt(nx,ny);if(!target)continue;if(isBeltType(target.type)&&!target.item){target.item={...b.output};target.moveTimer=.45;b.output=null;b.status="IDLE";markDirty()}else if(target.type==="storage"||target.type==="warehouse"){addItem(b.output.id,b.output.qty,b.output.meta,false);b.output=null;b.status="IDLE";log("창고 자동 적재 · 생산품 회수");markDirty()}else if(target.type==="market"){const earned=Math.floor(b.output.qty*RESOURCE[b.output.id].price*.8);S.money+=earned;S.stats.sold+=b.output.qty;log("산업 거래소 자동 판매 · "+fmt(earned)+" D");b.output=null;b.status="IDLE";markDirty()}else if(["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.output.id,b.output.qty,b.output.meta);b.output=null;b.status="IDLE";markDirty()}}}
-function tick(dt){if(S.paused||S.victory)return;S.seconds+=dt;S.tick++;if(!E2E_MODE)updateSurvival(dt);for(const node of Object.values(S.nodes))if(node.cooldown>0)node.cooldown=Math.max(0,node.cooldown-dt);
+function tick(dt){if(S.paused||S.victory)return;S.seconds+=dt;S.tick++;if(!E2E_MODE)updateSurvival(dt);for(const key in S.nodes){const node=S.nodes[key];if(node.cooldown>0)node.cooldown=Math.max(0,node.cooldown-dt)}
  for(const b of S.buildings){if(b.type==="coalgen"&&b.fuelTimer<=0&&itemCount("coal")>0){takeItem("coal",1);b.fuelTimer=24;b.status="RUNNING"}}
  let power=currentPower();for(const b of S.buildings)tickBuilding(b,dt,power);power=currentPower();tickBelts(dt);tickResearch(dt,power.ratio);if(S.fusionJob)updateFusion(dt);if(S.tick%10===0){questCheck();if(!E2E_MODE){renderHud();if(activePanel==="factory")renderFactory();if(activePanel==="inventory")renderInventory();if(activePanel==="mission")renderMissions();if(activePanel==="research")renderResearch()}}if(S.tick%5===0)markDirty()}
 function renderEventsSafe(){try{renderEvents()}catch{}}
@@ -565,8 +565,8 @@ function animationFrame(time){
  const elapsed=frameMs/1000;
  updatePlayerMotion(elapsed);
  if(!S.paused&&!S.victory){accumulator+=elapsed*S.simSpeed;while(accumulator>=STEP){tick(STEP);accumulator-=STEP}}
- frameRenderAccumulator+=frameMs;
- if(frameRenderAccumulator>=1000/60){frameRenderAccumulator%=1000/60;drawWorld()}
+ frameRenderAccumulator=Math.min(50,frameRenderAccumulator+frameMs);
+ if(frameRenderAccumulator>=1000/60){frameRenderAccumulator-=1000/60;drawWorld()}
  requestAnimationFrame(animationFrame);
 }
 function boot(){const localTime=loadLocal();playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Number(S.player.yaw)||0,pitch:Number(S.player.pitch??-.12),path:[],moving:false,facing:0,onArrive:null};camera.x=S.player.x;camera.y=S.player.y;revealAround();wireControls();renderAll();setViewMode(S.player.viewMode);if(!E2E_MODE){initCloud();setInterval(()=>saveGame(false),12000);setInterval(()=>pollCloud(),25000);window.addEventListener("beforeunload",()=>{try{saveLocal()}catch{}});document.addEventListener("visibilitychange",()=>{if(document.hidden){saveLocal();setSaveMessage("이 기기 저장 완료")}else{lastFrame=performance.now();pollCloud()}})}else setCloud("online","테스트 모드");lastFrame=performance.now();requestAnimationFrame(animationFrame);if(!E2E_MODE){if(!S.campaign.introSeen)showStoryIntro();else if(getQuest())setTimeout(()=>notifyNewMission(getQuest()),350);if(!localTime)log("공장 복구 프로토콜 시작 · ORBIT 온라인 대기")}}
@@ -627,6 +627,7 @@ if(E2E_MODE){
   }),
   power:()=>currentPower(),
   inspect3D:()=>world3d.inspect(),
+  inspectPerformance:()=>world3d.inspectPerformance?.()||null,
   loadBeltVisual(id="ironOre",qty=8){
    const belt=S.buildings.find(b=>b.type==="belt");if(!belt||!RESOURCE[id])throw new Error("test belt/resource missing");
    belt.item={id,qty,meta:{quality:90,purity:90,synthetic:false}};belt.moveTimer=.1;drawWorld();return world3d.inspect();
