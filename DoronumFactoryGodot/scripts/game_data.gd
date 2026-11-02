@@ -6,6 +6,19 @@ const WORLD_SEED := 827142
 const WORLD_SIZE := 2048.0
 const WORLD_LIMIT := 1024.0
 const SIM_TICK := 0.10
+# Canonicalized NCP until the original design assigns per-machine hazard weights.
+const INFINITY_FAILURE_PROFILE := {
+	"base_failure_probability":0.01,
+	"reference_duration_seconds":260.0,
+	"temperature_weight":0.20,
+	"pressure_weight":0.20,
+	"power_weight":0.20,
+	"wear_weight":0.20,
+	"load_weight":0.20,
+	"minor_probability":0.30,
+	"major_probability":0.45,
+	"critical_probability":0.25
+}
 const DORONUM_IDS := [
 	"ITEM_DORONUM_NORMAL", "ITEM_DORONUM_YELLOW", "ITEM_DORONUM_ULTRA",
 	"ITEM_DORONUM_BLUE", "ITEM_DORONUM_RED", "ITEM_DORONUM_IRON",
