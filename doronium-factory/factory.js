@@ -1,4 +1,4 @@
-import { createWorld3D } from "./world3d.js?v=4";
+import { createWorld3D } from "./world3d.js?v=5";
 let createClient = null;
 
 /* DORONIUM FACTORY — INFINITE INDUSTRY
