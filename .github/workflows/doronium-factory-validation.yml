@@ -37,3 +37,43 @@ jobs:
           grep -q 'function tickBelts' doronium-factory/factory.js
           grep -q 'function startFusion' doronium-factory/factory.js
           ! grep -q 'service_role' doronium-factory/factory.js
+
+  browser-regression:
+    needs: validate-web-game
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright
+        working-directory: doronium-factory/e2e
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Start local site server
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/doronium-site.log 2>&1 &
+          echo $! >/tmp/doronium-site.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8765/doronium-factory/ >/dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/doronium-site.log
+          exit 1
+      - name: Run WebGL, interaction and virtual one-hour regression
+        working-directory: doronium-factory/e2e
+        env:
+          DORONIUM_BASE_URL: http://127.0.0.1:8765/doronium-factory/
+          ARTIFACT_DIR: ../../test-artifacts
+        run: npm test
+      - name: Upload browser test screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doronium-factory-browser-regression
+          path: test-artifacts/
+          if-no-files-found: ignore
