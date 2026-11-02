@@ -383,7 +383,7 @@ function wireControls(){
  $("build-list").addEventListener("click",e=>{const b=e.target.closest("[data-build]");if(!b)return;selectedBuild=selectedBuild===b.dataset.build?null:b.dataset.build;selectedBuilding=null;renderBuildList();drawWorld();if(selectedBuild)toast(buildingDef(selectedBuild).name+" 선택 · 월드에서 위치를 클릭")});
  $("sell-button").onclick=sellItems;$("sell-resource").onchange=updateMarketEstimate;$("sell-amount").oninput=updateMarketEstimate;
  $("panel-inventory").addEventListener("click",e=>{const card=e.target.closest("[data-crystal]");if(card)showCrystalPreview(card.dataset.crystal)});
- document.querySelector(".move-pad")?.addEventListener("click",e=>{const b=e.target.closest("[data-move]");if(!b)return;const [dx,dy]=b.dataset.move.split(",").map(Number);movePlayer(dx,dy)});
+ document.querySelector(".move-pad")?.addEventListener("click",e=>{const b=e.target.closest("[data-move]");if(!b)return;const [dx,dy]=b.dataset.move.split(",").map(Number);if(adventureMode()){const key=directionKey(b.dataset.move);adventureKeys.add(key);setTimeout(()=>adventureKeys.delete(key),190)}else movePlayer(dx,dy)});
 
  $("zoom-in").onclick=()=>setZoom(camera.zoom+.1);$("zoom-out").onclick=()=>setZoom(camera.zoom-.1);$("center-view").onclick=centerCamera;
  $("overview-toggle").onclick=()=>changePanel("factory");$("clear-selection").onclick=()=>{selectedBuilding=null;renderMachineDetails();drawWorld()};
@@ -472,11 +472,6 @@ function wireControls(){
  });
  document.querySelector(".move-pad")?.addEventListener("pointerup",e=>{
   const b=e.target.closest("[data-move]");if(b)adventureKeys.delete(directionKey(b.dataset.move))
- });
- document.querySelector(".move-pad")?.addEventListener("click",e=>{
-  const b=e.target.closest("[data-move]");if(!b)return;const [dx,dy]=b.dataset.move.split(",").map(Number);
-  if(adventureMode()){const key=directionKey(b.dataset.move);adventureKeys.add(key);setTimeout(()=>adventureKeys.delete(key),190)}
-  else movePlayer(dx,dy);
  });
  document.querySelector(".move-pad")?.addEventListener("pointerleave",e=>{
   const b=e.target.closest("[data-move]");if(b)adventureKeys.delete(directionKey(b.dataset.move))
