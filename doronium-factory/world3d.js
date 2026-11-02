@@ -197,8 +197,9 @@ export function createWorld3D(canvas, getState) {
       gameCamera.position.set(px,22+py,pz);
       gameCamera.rotation.order="YXZ";gameCamera.rotation.set(pitch,yaw,0);
     }else{
-      gameCamera.position.set(px-fx*112,66+py,pz-fz*112);
-      gameCamera.lookAt(px+fx*40,18+py,pz+fz*40);
+      const underground=state.player?.layer==="mine",distance=underground?66:112,cameraHeight=underground?21:66,lookHeight=underground?14:18;
+      gameCamera.position.set(px-fx*distance,cameraHeight+py,pz-fz*distance);
+      gameCamera.lookAt(px+fx*(underground?24:40),lookHeight+py,pz+fz*(underground?24:40));
     }
     gameCamera.updateMatrixWorld(true);
     if(playerModel)playerModel.visible=activeViewMode!=="first";firstPersonRig.visible=activeViewMode==="first";
