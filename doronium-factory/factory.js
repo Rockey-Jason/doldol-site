@@ -219,15 +219,15 @@ function approachTile(x,y,onArrive=null){const origin=playerMotion.path.length?p
 function adventureMode(){return S.player.viewMode!=="map"}
 function setViewMode(mode){
  let next=["first","third","map"].includes(mode)?mode:"first";
+ if(next!=="map"&&world3d.backend!=="webgl"){toast("이 기기는 WebGL 3D 시점을 지원하지 않아 전략 지도를 사용합니다.","warn");next="map"}
  S.player.viewMode=next;playerMotion.path=[];playerMotion.onArrive=null;
- if(next==="map"){world3d.setViewMode("map");centerCamera()}
- else{world3d.setViewMode(next);world3d.center(S.player.x,S.player.y)}
+ if(next==="map"){playerMotion.x=S.player.x;playerMotion.z=S.player.y;playerMotion.y=0;world3d.setViewMode?.("map");centerCamera()}
+ else{world3d.setViewMode?.(next);world3d.center(S.player.x,S.player.y)}
  document.querySelectorAll("[data-view-mode]").forEach(b=>b.classList.toggle("active",b.dataset.viewMode===next));
  $("app-layout").classList.toggle("adventure-active",next!=="map");
  $("world-frame").classList.toggle("adventure-active",next!=="map");
  if($("adventure-crosshair"))$("adventure-crosshair").hidden=next==="map";
  if($("world-help"))$("world-help").innerHTML=next==="map"?"<b>조작</b><span>WASD 이동</span><span>드래그 화면 이동 · 우클릭 회전</span><span>휠 확대/축소</span>":"<b>생존 조작</b><span>WASD 이동 · Shift 달리기 · Space 점프</span><span>마우스 시점 · 좌클릭 채집 · E 상호작용</span><span>V 1인칭/3인칭 · M 전략 지도</span>";
- if(next!=="map"&&world3d.backend!=="webgl"){toast("3D 시점에는 WebGL 지원 브라우저가 필요합니다.","warn");S.player.viewMode="map";next="map";world3d.setViewMode("map");$("app-layout").classList.remove("adventure-active");$("world-frame").classList.remove("adventure-active")}
  renderHud();drawWorld();markDirty();
 }
 function isAdventureCellFree(x,z){
@@ -472,6 +472,11 @@ function wireControls(){
  });
  document.querySelector(".move-pad")?.addEventListener("pointerup",e=>{
   const b=e.target.closest("[data-move]");if(b)adventureKeys.delete(directionKey(b.dataset.move))
+ });
+ document.querySelector(".move-pad")?.addEventListener("click",e=>{
+  const b=e.target.closest("[data-move]");if(!b)return;const [dx,dy]=b.dataset.move.split(",").map(Number);
+  if(adventureMode()){const key=directionKey(b.dataset.move);adventureKeys.add(key);setTimeout(()=>adventureKeys.delete(key),190)}
+  else movePlayer(dx,dy);
  });
  document.querySelector(".move-pad")?.addEventListener("pointerleave",e=>{
   const b=e.target.closest("[data-move]");if(b)adventureKeys.delete(directionKey(b.dataset.move))
