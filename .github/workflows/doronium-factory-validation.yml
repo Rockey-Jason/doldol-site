@@ -30,6 +30,7 @@ jobs:
           test -s doronium-factory/world3d.js
           grep -q 'WebGLRenderer' doronium-factory/world3d.js
           grep -q 'createWorld3D' doronium-factory/factory.js
+          grep -q 'STEP = 0.1' doronium-factory/factory.js
           grep -q 'dori_cloud_storage' doronium-factory/factory.js
           grep -q 'doronium_factory_infinite_industry_v1' doronium-factory/factory.js
           grep -q 'function tickMachine' doronium-factory/factory.js
