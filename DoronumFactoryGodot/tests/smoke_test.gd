@@ -157,8 +157,8 @@ func _run() -> void:
 		planet_state.buildings.append({"id":"STABILIZATION_RELAY","instance_id":relay_id,"condition":100.0,"position":Vector3(index*10,0,0),"input":[],"output":[],"storage":[]})
 	planet_state.buildings.append({"id":"STABILIZATION_CORE","instance_id":"TEST-CORE","condition":100.0,"position":Vector3.ZERO,"input":[],"output":[],"storage":[]})
 	planet_state.add_item("ITEM_DORONUM_INFINITY",1,95.0,95.0,false,"TEST_INFINITY")
-	var ending_count := 0
-	planet_state.ending_started.connect(func(): ending_count+=1)
+	var ending_count := {"value":0}
+	planet_state.ending_started.connect(func(): ending_count.value+=1)
 	assert(planet_state.install_infinity_core(),"Infinity Core must consume the one owned Infinity item")
 	assert(planet_state.count_item("ITEM_DORONUM_INFINITY")==0,"Core installation must consume exactly one Infinity")
 	assert(planet_state.start_stabilization_phase(),"Phase 1 should start with physical core, three relays and 800kW")
@@ -171,7 +171,7 @@ func _run() -> void:
 	assert(planet_state.start_stabilization_phase(),"Phase 3 should start")
 	planet_state._tick_planetary_stabilization(120.0)
 	assert(planet_state.ending_complete and planet_state.post_endgame,"Phase 3 must unlock Infinite Industry")
-	assert(ending_count==1,"Planetary ending must trigger exactly once")
+	assert(int(ending_count.value)==1,"Planetary ending must trigger exactly once")
 	planet_state._tick_planetary_stabilization(120.0)
 	assert(ending_count==1,"Completed ending must not replay")
 	print("DORONUM FACTORY SMOKE TESTS: PASS")
