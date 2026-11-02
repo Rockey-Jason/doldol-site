@@ -45,6 +45,13 @@ try {
   capture(desktop, "desktop");
   const backend = await boot(desktop);
   assert.equal(backend, "webgl", "Desktop must create the real WebGL renderer (not the fallback)");
+  const perfBefore = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D());
+  assert.equal(perfBefore.terrainChunkCount, 56, "The expanded world must use 56 independently cullable terrain chunks");
+  await desktop.waitForTimeout(600);
+  const perfAfter = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D());
+  assert.equal(perfAfter.rebuildCount, perfBefore.rebuildCount, "Static frames must not rebuild the full world scene");
+  assert.ok(perfAfter.renderCount - perfBefore.renderCount < 50, "The main loop must render at most once per 60Hz frame");
+  assert.ok(perfAfter.pixelRatio > 0 && perfAfter.pixelRatio <= perfAfter.basePixelRatio, "Adaptive render resolution must remain within device limits");
 
   const audit = await desktop.evaluate(() => window.__doroniumFactoryTest.audit());
   assert.equal(audit.variantCount, 15, "15 canonical Doronium variants must be present");
