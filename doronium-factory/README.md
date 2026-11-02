@@ -85,3 +85,39 @@ GitHub Actions에서 JavaScript 구문 검사와 필수 게임 런타임 파일/
 ### Validation boundary
 
 A virtual one-hour soak advances 36,000 fixed 0.1-second simulation ticks in automated Chromium. This is not a 60-minute wall-clock endurance test. Phone-sized Playwright emulation is not a physical Android/iPhone test. GPU behavior and thermals on real devices still require device testing. Procedural code-generated meshes are not a substitute for bespoke artist-authored production assets.
+
+
+## BUILD 03 — FIRST-PERSON FACTORY SURVIVAL
+
+The default play mode is now an immersive first-person 3D exploration mode. The old strategy camera remains available for large-scale factory planning.
+
+### Controls
+- **WASD / Arrow keys:** move relative to camera facing
+- **Mouse:** look around; click-and-hold to mine the aimed resource
+- **Shift:** sprint
+- **Space:** jump
+- **E:** interact with an aimed machine / collect its output
+- **V:** toggle first-person and third-person follow camera
+- **M:** return to the factory strategy map
+- **1 / 3:** select first-person / third-person directly
+- **Mobile:** left-side directional pad, right-side drag to look, and on-screen jump / mine / eat / drink actions
+
+### Survival and factory loop
+- Health, hunger and thirst are stored alongside the existing player save data.
+- Hunger and thirst decrease as the simulation clock advances. Running out of either causes damage; keeping both high allows slow recovery.
+- Dori Meat restores hunger and a little health; water restores thirst.
+- At zero health the engineer is recovered at the starting area with 10% of selected raw materials lost.
+- The engineer collides with occupied resource and building tiles. Depleted mineral/stone/ore blocks can be walked through.
+- Center-screen ray targeting lets the player mine 3D resource blocks, select machines, and place a selected facility at the aimed ground tile.
+- Machine production, conveyor logistics, research, power and cloud saves retain the existing simulation state and save keys.
+
+### Automated adventure checks
+The Chromium suite additionally verifies:
+- First-person walking changes world position.
+- First-person, third-person and strategy-map modes switch without losing state.
+- Eating Dori Meat and drinking water restore the corresponding survival meters.
+- Empty hunger and thirst damage health.
+- A center-screen ray can identify and mine a 3D stone deposit.
+
+### Practical limits
+This is a finite 36×28 block-based factory valley with procedural geometry, not an infinite terrain engine. The world is block-inspired and has grid collision; it does not yet implement full Minecraft-style terrain chunk streaming, caves, water swimming/flow simulation, crafting-table tool durability, enemy AI, combat or multi-player networking. Desktop Chromium and mobile-sized browser emulation do not replace physical-device testing.
