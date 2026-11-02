@@ -28,8 +28,8 @@ function createFallbackWorld(canvas) {
     ctx.fillStyle="#071522";ctx.font="12px sans-serif";ctx.textAlign="center";ctx.fillText("👷",px,py+4);
     ctx.fillStyle="#d8e8ec";ctx.font="11px sans-serif";ctx.textAlign="left";ctx.fillText("WebGL 미지원 · 호환 모드",12,height-14);
   }
-  function pickTile(x,y){const r=canvas.getBoundingClientRect(),size=34*zoom,left=r.width/2-cx*size,top=r.height/2-cy*size;const tx=Math.floor((x-r.left-left)/size),ty=Math.floor((y-r.top-top)/size);return tx>=0&&ty>=0&&tx<WORLD_W&&ty<WORLD_H?{x:tx,y:ty}:null;}
-  return {backend:"canvas2d-fallback",render,pickTile,pan(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},orbit(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},setZoom(v){zoom=clamp(v,.55,1.8);},center(x,y){cx=x;cy=y;},get zoom(){return zoom;}};
+  function pickTile(x,y){const r=canvas.getBoundingClientRect(),size=34*zoom,left=r.width/2-cx*size,top=r.height/2-cy*size;const tx=Math.floor((x-r.left-left)/size),ty=Math.floor((y-r.top-top)/size);return tx>=0&&ty>=0&&tx<WORLD_W&&ty<WORLD_H?{x:tx,y:ty,z:ty}:null;}
+  return {backend:"canvas2d-fallback",render,pickTile,pickTarget(){return null},pan(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},orbit(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},setZoom(v){zoom=clamp(v,.55,1.8);},center(x,y){cx=x;cy=y;},setViewMode(){},inspect(){return {machineCount:0,beltCount:0,beltItemMeshes:0,viewMode:"map",playerVisible:true,firstPersonHandsVisible:false,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5}},get zoom(){return zoom;}};
 }
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -157,6 +157,12 @@ export function createWorld3D(canvas, getState) {
   const nodeRoot = new THREE.Group(); scene.add(nodeRoot);
   const markerRoot = new THREE.Group(); scene.add(markerRoot);
   const mineRoot = new THREE.Group(); scene.add(mineRoot);
+  const hoverRoot = new THREE.Group(); scene.add(hoverRoot);
+  const hoverFillMaterial = new THREE.MeshBasicMaterial({color:0x6de4bb,transparent:true,opacity:.2,depthWrite:false,side:THREE.DoubleSide});
+  const hoverEdgeMaterial = new THREE.LineBasicMaterial({color:0x6de4bb,transparent:true,opacity:.9});
+  const hoverFill = new THREE.Mesh(new THREE.BoxGeometry(30,1,30),hoverFillMaterial);
+  const hoverEdge = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(30,2,30)),hoverEdgeMaterial);
+  hoverRoot.add(hoverFill,hoverEdge);hoverRoot.visible=false;
   const ambient = new THREE.HemisphereLight(0xb9e6ef,0x15242a,1.65); scene.add(ambient);
   const sun = new THREE.DirectionalLight(0xffe4b8,2.7);
   sun.position.set(-420,720,360); sun.castShadow=true; sun.shadow.mapSize.set(compactDevice?768:1536,compactDevice?768:1536);
@@ -299,11 +305,7 @@ export function createWorld3D(canvas, getState) {
     addPlayer(state);
     playerRing=new THREE.Mesh(new THREE.TorusGeometry(7,.35,8,40),new THREE.MeshBasicMaterial({color:0xf2d28a,transparent:true,opacity:.7}));playerRing.rotation.x=Math.PI/2;markerRoot.add(playerRing);
     if(state.selectedBuilding){const b=state.buildings.find(v=>v.uid===state.selectedBuilding);if(b){const r=new THREE.Mesh(new THREE.TorusGeometry(15,.65,8,48),new THREE.MeshBasicMaterial({color:0x70e7e9}));r.rotation.x=Math.PI/2;r.position.set(b.x*32,surfaceY(state,b.x,b.y)+3,b.y*32);markerRoot.add(r);}}
-    if(state.hoverCell&&(state.selectedBuild||state.selectedLandTool)){
-      const h=state.hoverCell,y=surfaceY(state,h.x,h.y)+2,ok=!!state.canBuildPreview;
-      const r=new THREE.Mesh(new THREE.BoxGeometry(30,1,30),new THREE.MeshBasicMaterial({color:ok?0x6de4bb:0xf2a46e,transparent:true,opacity:.28,depthWrite:false}));r.position.set(h.x*32,y,h.y*32);markerRoot.add(r);
-      const edge=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(30,2,30)),new THREE.LineBasicMaterial({color:ok?0x6de4bb:0xf2a46e,transparent:true,opacity:.9}));edge.position.set(h.x*32,y,h.y*32);markerRoot.add(edge);
-    }
+
     buildMine(state);
   }
   function addBuilding(b,state){
@@ -488,12 +490,14 @@ export function createWorld3D(canvas, getState) {
     for(const x of [-5.5,5.5]){const a=makeBox(g,x,12,0,2.6,8,3,mats.trim);a.rotation.z=x<0?-.2:.2;arms.push(a);}
     g.userData={legs,arms};
   }
-  function signature(s){return [s.worldVersion,s.player?.layer,s.player?.mineLevel,s.buildings?.map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.status,b.output?.id,b.output?.qty,b.item?.id,b.item?.qty,b.variant].join(":")).join("|"),Object.entries(s.nodes||{}).map(([id,n])=>[id,n.amount,Math.floor(n.cooldown||0)].join(":")).join("|"),Object.entries(s.mineDeposits||{}).map(([id,n])=>[id,n.amount].join(":")).join("|"),Object.keys(s.flattened||{}).length,Object.keys(s.foundation||{}).length,s.selectedBuilding,s.selectedBuild,s.selectedLandTool,s.hoverCell?.x,s.hoverCell?.y].join(";");}
+  function signature(s){return [s.worldVersion,s.player?.layer,s.player?.mineLevel,s.buildings?.map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.output?.id,b.output?.qty,b.item?.id,b.item?.qty,b.variant].join(":")).join("|"),Object.entries(s.nodes||{}).map(([id,n])=>[id,n.amount].join(":")).join("|"),Object.entries(s.mineDeposits||{}).map(([id,n])=>[id,n.amount].join(":")).join("|"),Object.entries(s.flattened||{}).map(([k,v])=>[k,v?.height].join(":")).join("|"),Object.keys(s.foundation||{}).join("|"),s.selectedBuilding,s.selectedBuild,s.selectedLandTool].join(";");}
   function render(state){
     if(!state)return;resizeIfNeeded();const sig=signature(state);if(sig!==lastSignature){rebuild(state);lastSignature=sig;}
     activeViewMode=state.player?.viewMode==="map"?"map":state.player?.viewMode==="third"?"third":"first";
     const inMine=state.player?.layer==="mine";stateLayerForPicking=inMine?"mine":"surface";
     worldRoot.visible=!inMine;machineRoot.visible=!inMine;nodeRoot.visible=!inMine;mineRoot.visible=inMine;markerRoot.visible=true;
+    const hover=state.hoverCell,showHover=!inMine&&!!hover&&!!(state.selectedBuild||state.selectedLandTool);hoverRoot.visible=showHover;
+    if(showHover){const h=surfaceY(state,hover.x,hover.y);hoverRoot.position.set(hover.x*32,h+2.2,hover.y*32);const color=state.canBuildPreview?0x6de4bb:0xf2a46e;hoverFillMaterial.color.setHex(color);hoverEdgeMaterial.color.setHex(color);}
     if(inMine){activeViewMode=state.player?.viewMode==="third"?"third":"first";updateGameCamera(state);if(playerModel)playerModel.visible=activeViewMode!=="first";firstPersonRig.visible=activeViewMode==="first";}
     else if(activeViewMode==="map"){cameraUpdate();if(playerModel)playerModel.visible=true;firstPersonRig.visible=false;}else updateGameCamera(state);
     const t=performance.now()*.001;sun.intensity=2.25+Math.sin(t*.08)*.18;
