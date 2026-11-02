@@ -375,7 +375,7 @@ export function createWorld3D(canvas, getState) {
     } else {
       makeBox(g,0,14,0,22,19,22,main);makeBox(g,0,25,0,16,3,16,mats.trim);
     }
-    const glow=new THREE.Mesh(new THREE.TorusGeometry(b.type==="fusion"?15:11,.65,8,40),new THREE.MeshBasicMaterial({color:active?0x5de5d4:0x496c7c,transparent:true,opacity:active?.88:.2}));
+    const glow=new THREE.Mesh(new THREE.TorusGeometry(b.type==="fusion"?15:11,.65,8,40),new THREE.MeshBasicMaterial({color:active?0x5de5d4:0x496c7c,transparent:true,opacity:active ? .88 : .2}));
     glow.rotation.x=Math.PI/2;glow.position.y=5;g.add(glow);anim.glow=glow;
     if(b.output){if(crystalSpecs[b.output.id])anim.outputMesh=makeCrystal(g,b.output.id,11,24,10,2.6);else anim.outputMesh=makeSphere(g,11,24,10,2.4,mat(itemColors[b.output.id]||0xf0c46a,.3,.28));}
     if(anim.orb)anim.orb.userData.baseScale=anim.orb.scale.clone();
@@ -392,7 +392,7 @@ export function createWorld3D(canvas, getState) {
     for(const x of [-5.5,5.5]){const a=makeBox(g,x,12,0,2.6,8,3,mats.trim);a.rotation.z=x<0?-.2:.2;arms.push(a);}
     g.userData={legs,arms};
   }
-  function signature(s){return [s.player?.x,s.player?.y,s.buildings?.map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.status,b.output?.id,b.output?.qty,b.item?.id,b.item?.qty,b.variant].join(":")).join("|"),Object.keys(s.seen||{}).length,Object.keys(s.nodes||{}).length,(s.tick||0)%10,s.selectedBuilding,s.selectedBuild,s.hoverCell?.x,s.hoverCell?.y].join(";");}
+  function signature(s){return [s.player?.x,s.player?.y,s.buildings?.map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.status,b.output?.id,b.output?.qty,b.item?.id,b.item?.qty,b.variant].join(":")).join("|"),Object.keys(s.seen||{}).length,Object.entries(s.nodes||{}).map(([id,n])=>[id,n.amount,Math.floor(n.cooldown||0)].join(":")).join("|"),s.selectedBuilding,s.selectedBuild,s.hoverCell?.x,s.hoverCell?.y].join(";");}
   function render(state){
     if(!state)return;resizeIfNeeded();const sig=signature(state);if(sig!==lastSignature){rebuild(state);lastSignature=sig;}
     const t=performance.now()*.001;sun.intensity=2.25+Math.sin(t*.08)*.18;
@@ -403,15 +403,16 @@ export function createWorld3D(canvas, getState) {
       if(a.spin)a.spin.rotation.y=t*(running?1.7:.25);
       (a.rollers||[]).forEach((m,i)=>m.rotation.x=t*(running?4:1)*(i%2?-1:1));
       (a.rings||[]).forEach((m,i)=>m.rotation.y=t*(i%2?.34:-.27));
-      (a.arms||[]).forEach((m,i)=>m.rotation.z=Math.sin(t*1.8+i*.8)*(running?.32:.08));
+      (a.arms||[]).forEach((m,i)=>m.rotation.z=Math.sin(t*1.8+i*.8)*(running ? .32 : .08));
+      (a.pistons||[]).forEach((m,i)=>{if(m.geometry?.type==="BoxGeometry"&&Number.isFinite(m.userData.baseY))m.position.y=m.userData.baseY+Math.sin(t*4+i)*.7;else m.rotation.y=t*.8+i;});
       (a.pistons||[]).forEach((m,i)=>{if(m.geometry?.type==="BoxGeometry"&&Number.isFinite(m.userData.baseY))m.position.y=m.userData.baseY+Math.sin(t*4+i)*.7;else m.rotation.y=t*.9+i;});
       (a.particles||[]).forEach((m,i)=>{m.position.y=29+Math.sin(t*2.5+i*1.4)*1.2;m.scale.setScalar(.92+Math.sin(t*3+i)*.12);});
       if(a.orb){const p=1+Math.sin(t*2.2)*.065,v=a.orb.userData.baseScale||new THREE.Vector3(1,1,1);a.orb.scale.set(v.x*p,v.y*p,v.z*p);}
       if(a.outputMesh){const v=a.outputMesh.userData.baseScale||new THREE.Vector3(1,1,1);a.outputMesh.position.y=24+Math.sin(t*2.1)*1.4;a.outputMesh.rotation.y=t*.65;a.outputMesh.scale.set(v.x,v.y,v.z);}
-      if(a.glow)a.glow.material.opacity=running?.66+Math.sin(t*4)*.18:.18;
+      if(a.glow)a.glow.material.opacity=running ? .66+Math.sin(t*4)*.18 : .18;
       if(a.itemGroup&&b.item){const p=clamp((b.moveTimer||0)/.75,0,1),n=a.itemGroup.children.length;a.itemGroup.children.forEach((m,i)=>{m.position.x=(i-(n-1)/2)*2.65;m.position.z=-(p-.5)*18;m.position.y=8.6+Math.sin(t*5+i)*.18;m.rotation.y=t*1.5+i*.45;m.rotation.x=Math.sin(t*2+i)*.1;});}
     });
-    if(playerModel){const m=state.playerMotion||{x:state.player.x,z:state.player.y,moving:false};playerModel.position.set(m.x*32,1+Math.sin(t*3)*(m.moving?.13:.025),m.z*32);playerModel.rotation.y=m.facing||0;const swing=m.moving?Math.sin(t*9)*.48:Math.sin(t*1.5)*.035;(playerModel.userData.legs||[]).forEach((leg,i)=>leg.rotation.x=swing*(i%2?-1:1));(playerModel.userData.arms||[]).forEach((arm,i)=>arm.rotation.x=m.moving?Math.sin(t*9+i*Math.PI)*.38:0);}
+    if(playerModel){const m=state.playerMotion||{x:state.player.x,z:state.player.y,moving:false};playerModel.position.set(m.x*32,1+Math.sin(t*3)*(m.moving ? .13 : .025),m.z*32);playerModel.rotation.y=m.facing||0;const swing=m.moving ? Math.sin(t*9)*.48 : Math.sin(t*1.5)*.035;(playerModel.userData.legs||[]).forEach((leg,i)=>leg.rotation.x=swing*(i%2?-1:1));(playerModel.userData.arms||[]).forEach((arm,i)=>arm.rotation.x=m.moving?Math.sin(t*9+i*Math.PI)*.38:0);}
     renderer.render(scene,camera);
   }
   function resizeIfNeeded(){const r=canvas.getBoundingClientRect();if(Math.abs(r.width-width)>1||Math.abs(r.height-height)>1)resize();}
