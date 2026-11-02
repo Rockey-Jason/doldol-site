@@ -71,3 +71,17 @@ GitHub Actions에서 JavaScript 구문 검사와 필수 게임 런타임 파일/
 ## 남은 출시 검증
 
 현재 3D 월드 렌더링과 기존 게임 루프의 연결은 적용됐으며 GitHub Actions의 JavaScript 구문 및 필수 계약 검사가 통과했습니다. 다만 브라우저별 WebGL 호환성, 실제 모바일 기기 성능, 60분 이상 메모리/안정성, 기존 저장 데이터의 전수 회귀, 전체 v4.5 사양 준수는 아직 완료로 표시하지 않습니다. 3D 기계 모델은 현재 코드로 생성하는 절차적 모델이며 전용 고품질 외부 에셋·애니메이션은 후속 작업입니다.
+
+
+## BUILD 3D INTERACTION & VALIDATION
+
+- Facilities now use distinct procedural 3D assemblies: wind generator, solar array, mining drill, water pump, Dori greenhouse, furnace, wire mill, robotic assembler, research chamber, pressure reactor, fusion vessel, cooling tower, relay dish and planetary core.
+- Machine animation is driven by current machine state; conveyor items are represented as individual 3D meshes and move along the belt using the same `moveTimer` that drives logical transfer.
+- The engineer uses four-direction grid pathfinding, facility-footprint collision and proximity interaction. Mobile touch movement buttons and two-finger camera orbit/zoom are available.
+- The inventory includes a 15-variant 3D crystal codex. Each variant has its own geometry family, material and emissive color; Infinity has a separate final form.
+- Reactor recipe preflight rejects synthetic Dori Meat before consumption, preserving rejected inventory.
+- GitHub Actions now runs desktop Chromium WebGL, phone-sized touch emulation, recipe/reference checks, collision checks, a virtual one-hour fixed-tick production run and item-conservation assertions.
+
+### Validation boundary
+
+A virtual one-hour soak advances 36,000 fixed 0.1-second simulation ticks in automated Chromium. This is not a 60-minute wall-clock endurance test. Phone-sized Playwright emulation is not a physical Android/iPhone test. GPU behavior and thermals on real devices still require device testing. Procedural code-generated meshes are not a substitute for bespoke artist-authored production assets.
