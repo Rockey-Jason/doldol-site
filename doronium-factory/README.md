@@ -1,123 +1,81 @@
 # 도로늄 공장 — INFINITE INDUSTRY
 
-PC와 모바일 브라우저에서 실행되는 실시간 3D 공장 건설·자동화 시뮬레이션 게임입니다. Three.js WebGL 렌더러가 지형, 자원 지형물, 생산 설비, 엔지니어를 3D 장면으로 표시하며 기존 생산·연구·퀘스트·저장 시뮬레이션을 유지합니다.
+1인칭/3인칭 탐험, 생존, 자원 채집, 지형 개조, 공장 자동화를 하나로 연결한 3D 산업 생존 게임입니다.
 
-## 시작하기
+플레이: https://rockey-jason.github.io/doldol-site/doronium-factory/
 
-돌이사이트 메인 화면의 **도로늄 공장 입장** 카드를 누르거나 다음 경로로 접속합니다.
+## 월드
 
-- GitHub Pages: https://rockey-jason.github.io/doldol-site/doronium-factory/
+- 128×96 타일의 넓은 지표 월드와 높낮이가 다른 절차적 지형
+- 초원, 고대 숲, 습지, 붉은 사막, 고산 지대, 빙설 산맥, 수정 협곡, 화산 지대 등 8개 생태 지형
+- 지하 광산은 40×24 갱도이며 총 5개 심도 층으로 구성
+- 표면에는 광물 광맥이 노출되지 않으며 모든 광물은 지하에서 채굴
+
+## 시작과 스토리
+
+첫 시작 시 ‘도로늄 행성의 마지막 불빛’ 인트로와 ORBIT의 복구 지령이 재생됩니다. 복구 프로토콜을 시작하면 신규 임무 등록 배너가 나타났다가 사라지고, 현재 목표가 게임 화면에 표시됩니다. 임무를 완료하면 보상과 스토리 대사가 나오고 다음 임무가 등록됩니다. 기존 10개 메인 캠페인과 도로늄/인피니티/행성 안정화 엔드게임 흐름을 유지했습니다.
 
 ## 조작
 
-### PC
-- **W / A / S / D** 또는 방향키: 엔지니어 이동
-- **마우스 왼쪽 드래그**: 3D 월드 카메라 이동\n- **마우스 오른쪽 또는 Shift+드래그**: 3D 카메라 회전
-- **마우스 휠 / + / −**: 3D 카메라 확대·축소
-- **R**: 선택한 시설 방향 회전
-- **B / F / I / T / M**: 건설 / 운영 / 창고 / 연구 / 임무 탭
-- **Space**: 시뮬레이션 일시정지
-- 월드 타일 클릭: 자원 채집, 시설 선택, 건설
+| 키 | 동작 |
+|---|---|
+| WASD / 방향키 | 이동 |
+| 마우스 | 1인칭 시점 회전 |
+| 마우스 왼쪽 누르기 | 조준한 자원 채집 및 상호작용 |
+| Shift / Space | 달리기 / 점프 |
+| E | 조준한 시설 또는 광산 입구 사용 |
+| V 또는 1 / 3 | 1인칭 / 3인칭 전환 |
+| M | 지상 전략 지도 |
+| 4 / 5 | 곡괭이 / 도끼 장착 |
+| B / O / I / T / J | 건설 / 운영 / 창고 / 연구 / 임무 팝업 |
+| F / X / Esc | 전체 화면 / 시설 회전 / 팝업 닫기 |
 
-### 모바일
-- 3D 월드를 한 번 탭해 자원을 채집하거나 시설을 선택합니다.
-- 손가락을 드래그해 3D 카메라를 이동합니다.
-- 지도 위 시설 배치도 같은 탭 방식으로 진행합니다.
-- 오른쪽 패널의 탭으로 건설·운영·창고·연구·임무를 전환합니다.
+모바일에서는 왼쪽 방향 패드로 이동하고 화면 오른쪽을 드래그해 시점을 회전합니다. 상단 도구 슬롯과 메뉴 버튼으로 도구/팝업을 조작합니다.
 
-## 핵심 플레이 루프
+## 광산과 Y 심도
 
-1. 숲과 암석 지대에서 목재·석재를 채집합니다.
-2. 철광석·구리·석탄 광맥에 채굴기를 설치합니다.
-3. 발전기와 제련로·압연기·조립기를 배치해 생산 라인을 만듭니다.
-4. 컨베이어, 창고, 거래소를 연결해 물류와 판매를 자동화합니다.
-5. 기술 연구로 새로운 시설과 도로늄 공정을 해금합니다.
-6. 돌이 고기 나무에서 비합성 돌이 고기를 수확하고, 10개를 압력 반응로에서 도로늄으로 합성합니다.
-7. 15종의 도로늄 결정과 고급 연구를 모아 인피니티 퓨전을 완성합니다.
-8. 지정된 3개 지점에 안정화 릴레이를 설치하고 중앙 코어를 가동해 행성을 안정화합니다.
+곡괭이를 장착한 상태에서 광맥을 조준하고 사용합니다. 더 깊은 층으로 내려갈수록 희귀 광물과 도로늄이 등장합니다.
 
-## 시설 조작
+| 광산 층 | 바닥 Y | 광물 예시와 광맥 Y |
+|---|---:|---|
+| 1층 | -42 m | 석재 -18, 구리 -26, 철 -34 m |
+| 2층 | -84 m | 철 -60, 석탄 -66, 석영 -74 m |
+| 3층 | -126 m | 석영 -102, 금 -108, 석탄 -116 m |
+| 4층 | -168 m | 다이아몬드 -144, 금 -150, 일반 도로늄 -158 m |
+| 5층 | -210 m | 도로늄 일반/블루/레드/열/보이드 및 다이아몬드, Y -186~-204 m |
 
-건설 탭에서 시설을 고르면 월드 타일을 클릭해 설치할 수 있습니다. 기계를 클릭하면 운영 패널에서 입출력 버퍼를 확인하고, 출력 회수·원료 투입·방향 회전·해체를 할 수 있습니다. 컨베이어는 R 키 또는 방향 회전 버튼으로 운송 방향을 바꿉니다.
+도끼는 지상의 나무와 돌이 고기 나무를 벌목하는 데 필요합니다. 곡괭이는 지하 광물을 채굴하는 데 필요하며, 도구가 맞지 않으면 채집되지 않습니다.
 
-기계 출력은 인접한 컨베이어·창고·거래소 또는 다른 생산 기계로 전달할 수 있습니다. 컨베이어 끝에는 창고나 거래소를 연결하면 생산품을 자동 회수하거나 판매할 수 있습니다.
+## 지형 준비와 공장 설치
 
-## 저장
+일반 기계와 표준 컨베이어를 설치하려면 먼저 부지를 준비합니다.
 
-- 비로그인 상태: 이 브라우저의 로컬 저장을 사용합니다.
-- 돌이사이트 계정 로그인 상태: 기존 `dori_cloud_storage` 테이블의 전용 저장 키 `doronium_factory_infinite_industry_v1`를 사용해 계정별 클라우드 저장을 시도합니다.
-- 로컬 게스트 저장과 계정별 로컬 저장은 별도 키로 분리됩니다.
-- 오프라인 생산은 진행하지 않습니다.
-- 클라우드 동기화가 실패해도 현재 기기의 로컬 저장은 유지됩니다.
+1. B 키로 건설 팝업을 엽니다.
+2. 땅 평탄화를 선택하고 지형을 클릭합니다. 선택한 지점 중심으로 설치 가능한 3×3 영역을 같은 높이로 정리합니다.
+3. 기초 타일 설치를 선택합니다. 평탄화한 각 타일에 목재 2개와 석재 2개가 필요합니다.
+4. 표준 컨베이어나 기계를 선택하고 기초 타일 위에 설치합니다.
+5. 미리보기가 초록색이면 설치 가능, 주황색이면 부지 조건이 맞지 않습니다.
 
-## 검증 상태
+표준 컨베이어는 평탄화와 기초 타일이 필요합니다. 자연 적응형 컨베이어는 경사와 단차를 따라가며 두 과정 없이 바로 설치할 수 있습니다. 수원지 펌프와 지정 릴레이/코어 부지는 각각의 특수 설치 규칙을 따릅니다. 광산 채굴기가 아닌 직접 채굴 방식으로 변경했기 때문에 기존 지표 광물 채굴기는 건설 목록에서 제외했습니다.
 
-GitHub Actions에서 JavaScript 구문 검사와 필수 게임 런타임 파일/계약 검사를 통과했습니다. GitHub Pages 빌드 및 배포 작업도 성공했습니다. 실제 브라우저에서의 장시간 플레이, PC·모바일 간 계정 전환, 저장 복구 및 엔드게임 반복 테스트는 별도 플레이 검증이 필요합니다.
+## 생존과 공장
 
+체력·허기·갈증이 시간에 따라 감소합니다. 허기나 갈증이 바닥나면 체력이 감소하고, 둘 다 충분하면 천천히 회복합니다. 돌이 고기는 허기를, 물은 갈증을 회복합니다. 사망하면 지상으로 복귀하며 일부 원자재를 잃습니다.
 
-## 시뮬레이션 시간
+기존 전력, 생산 레시피, 컨베이어 물류, 연구, 15종 도로늄 결정, 7단계 인피니티 퓨전, 행성 안정화 스토리는 계속 연결됩니다.
 
-- 게임 시뮬레이션은 0.10초 고정 스텝으로 진행하며, 렌더 프레임 속도와 생산 시간 계산을 분리합니다.
+## 저장 데이터 이전
 
-## 3D 렌더러 적용 내역
+worldVersion을 이용해 구버전 저장 데이터를 새 월드 구조로 옮깁니다. 자금, 인벤토리, 연구, 생산 기록, 임무 진행도, 기존 공장 시설을 유지하고 기존 시설을 새 월드 안으로 이동시킨 뒤 부지를 평탄화/기초 처리합니다. 시설이 새 지형 자원과 겹치지 않도록 겹친 자원은 제거합니다.
 
-- `world3d.js`: Three.js 0.180.0 WebGL 기반 3D 월드 렌더러
-- 36×28 타일 월드, 안개·방향광·환경광·그림자, 자원 지형물, 플레이어 엔지니어, 시설별 절차적 3D 모델
-- 기존 `factory.js`의 생산·전력·연구·퀘스트·퓨전·저장 로직과 계정별 클라우드 저장 키를 유지
-- 드래그 이동, 레이캐스트 타일 선택, 모바일 포인터 입력, 카메라 확대/축소
-- 장면 재구성 시 GPU geometry/material 자원 정리
-- Three.js는 jsDelivr CDN에서 불러오며, CDN 또는 WebGL을 사용할 수 없는 환경에서는 호환용 2D 렌더러로 전환해 UI와 저장 기능이 중단되지 않도록 합니다.
+비로그인 상태에서는 브라우저 로컬 저장을 사용하고, 로그인 상태에서는 기존 dori_cloud_storage 테이블의 전용 저장 키 doronium_factory_infinite_industry_v1을 사용합니다. 클라우드 동기화가 실패해도 현재 기기의 로컬 저장은 유지됩니다.
 
-## 남은 출시 검증
+## 기술 및 검증 범위
 
-현재 3D 월드 렌더링과 기존 게임 루프의 연결은 적용됐으며 GitHub Actions의 JavaScript 구문 및 필수 계약 검사가 통과했습니다. 다만 브라우저별 WebGL 호환성, 실제 모바일 기기 성능, 60분 이상 메모리/안정성, 기존 저장 데이터의 전수 회귀, 전체 v4.5 사양 준수는 아직 완료로 표시하지 않습니다. 3D 기계 모델은 현재 코드로 생성하는 절차적 모델이며 전용 고품질 외부 에셋·애니메이션은 후속 작업입니다.
-
-
-## BUILD 3D INTERACTION & VALIDATION
-
-- Facilities now use distinct procedural 3D assemblies: wind generator, solar array, mining drill, water pump, Dori greenhouse, furnace, wire mill, robotic assembler, research chamber, pressure reactor, fusion vessel, cooling tower, relay dish and planetary core.
-- Machine animation is driven by current machine state; conveyor items are represented as individual 3D meshes and move along the belt using the same `moveTimer` that drives logical transfer.
-- The engineer uses four-direction grid pathfinding, facility-footprint collision and proximity interaction. Mobile touch movement buttons and two-finger camera orbit/zoom are available.
-- The inventory includes a 15-variant 3D crystal codex. Each variant has its own geometry family, material and emissive color; Infinity has a separate final form.
-- Reactor recipe preflight rejects synthetic Dori Meat before consumption, preserving rejected inventory.
-- GitHub Actions now runs desktop Chromium WebGL, phone-sized touch emulation, recipe/reference checks, collision checks, a virtual one-hour fixed-tick production run and item-conservation assertions.
-
-### Validation boundary
-
-A virtual one-hour soak advances 36,000 fixed 0.1-second simulation ticks in automated Chromium. This is not a 60-minute wall-clock endurance test. Phone-sized Playwright emulation is not a physical Android/iPhone test. GPU behavior and thermals on real devices still require device testing. Procedural code-generated meshes are not a substitute for bespoke artist-authored production assets.
-
-
-## BUILD 03 — FIRST-PERSON FACTORY SURVIVAL
-
-The default play mode is now an immersive first-person 3D exploration mode. The old strategy camera remains available for large-scale factory planning.
-
-### Controls
-- **WASD / Arrow keys:** move relative to camera facing
-- **Mouse:** look around; click-and-hold to mine the aimed resource
-- **Shift:** sprint
-- **Space:** jump
-- **E:** interact with an aimed machine / collect its output
-- **V:** toggle first-person and third-person follow camera
-- **M:** return to the factory strategy map
-- **1 / 3:** select first-person / third-person directly
-- **Mobile:** left-side directional pad, right-side drag to look, and on-screen jump / mine / eat / drink actions
-
-### Survival and factory loop
-- Health, hunger and thirst are stored alongside the existing player save data.
-- Hunger and thirst decrease as the simulation clock advances. Running out of either causes damage; keeping both high allows slow recovery.
-- Dori Meat restores hunger and a little health; water restores thirst.
-- At zero health the engineer is recovered at the starting area with 10% of selected raw materials lost.
-- The engineer collides with occupied resource and building tiles. Depleted mineral/stone/ore blocks can be walked through.
-- Center-screen ray targeting lets the player mine 3D resource blocks, select machines, and place a selected facility at the aimed ground tile.
-- Machine production, conveyor logistics, research, power and cloud saves retain the existing simulation state and save keys.
-
-### Automated adventure checks
-The Chromium suite additionally verifies:
-- First-person walking changes world position.
-- First-person, third-person and strategy-map modes switch without losing state.
-- Eating Dori Meat and drinking water restore the corresponding survival meters.
-- Empty hunger and thirst damage health.
-- A center-screen ray can identify and mine a 3D stone deposit.
-
-### Practical limits
-This is a finite 36×28 block-based factory valley with procedural geometry, not an infinite terrain engine. The world is block-inspired and has grid collision; it does not yet implement full Minecraft-style terrain chunk streaming, caves, water swimming/flow simulation, crafting-table tool durability, enemy AI, combat or multi-player networking. Desktop Chromium and mobile-sized browser emulation do not replace physical-device testing.
+- Three.js WebGL 기반 절차적 3D 지형, 시설, 엔지니어, 갱도, 광물 렌더링
+- 지형/광산 레이어 분리와 GPU 인스턴싱 지형 렌더링
+- 기존 도로늄 결정 도감 및 시설별 절차적 모델
+- GitHub Actions 정적 검사 및 Playwright WebGL/모바일 에뮬레이션 회귀 테스트 구성
+- 가상 1시간 테스트는 36,000회의 0.1초 고정 틱을 실행하며 실제 벽시계 60분 내구 테스트와 다릅니다.
+- 모바일 에뮬레이션은 실제 Android/iPhone 기기 테스트가 아닙니다.
+- 월드는 128×96 타일 기반이며 무한 청크 스트리밍, 몬스터 전투, 멀티플레이는 포함하지 않습니다.
