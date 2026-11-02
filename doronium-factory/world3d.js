@@ -24,7 +24,8 @@ export function createWorld3D(canvas, getState) {
   scene.background = new THREE.Color(0x071522);
   scene.fog = new THREE.FogExp2(0x071522, 0.00062);
   const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false, powerPreference:"high-performance"});
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.6));
+  const compactDevice = window.matchMedia("(max-width: 760px)").matches || /Android|iPhone|iPad/i.test(navigator.userAgent);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, compactDevice ? 1.15 : 1.6));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
@@ -33,7 +34,7 @@ export function createWorld3D(canvas, getState) {
 
   const camera = new THREE.OrthographicCamera(-380,380,260,-260,1,6000);
   const target = new THREE.Vector3(18*32,0,14*32);
-  let zoom = 1, width = 1, height = 1, lastSignature = "", hover = null;
+  let zoom = 1, width = 1, height = 1, lastSignature = "", yaw = 0.68, pitch = 0.73;
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
   const groundPick = new THREE.Mesh(new THREE.PlaneGeometry(36*32,28*32), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,colorWrite:false}));
@@ -44,7 +45,7 @@ export function createWorld3D(canvas, getState) {
   const markerRoot = new THREE.Group(); scene.add(markerRoot);
   const ambient = new THREE.HemisphereLight(0xb9e6ef,0x15242a,1.65); scene.add(ambient);
   const sun = new THREE.DirectionalLight(0xffe4b8,2.7);
-  sun.position.set(-420,720,360); sun.castShadow=true; sun.shadow.mapSize.set(1536,1536);
+  sun.position.set(-420,720,360); sun.castShadow=true; sun.shadow.mapSize.set(compactDevice?768:1536,compactDevice?768:1536);
   sun.shadow.camera.left=-900; sun.shadow.camera.right=900; sun.shadow.camera.top=900; sun.shadow.camera.bottom=-900;
   sun.shadow.bias=-0.00025; scene.add(sun);
   const fill = new THREE.DirectionalLight(0x4a9fc1,0.8); fill.position.set(450,260,-500); scene.add(fill);
@@ -65,7 +66,7 @@ export function createWorld3D(canvas, getState) {
   const sharedGeometry=new Set([boxGeo,cylGeo,sphereGeo,coneGeo]);
   const sharedMaterials=new Set(Object.values(mats));
   function clear(group){for(const o of [...group.children]){group.remove(o);o.traverse(child=>{if(child.geometry&&!sharedGeometry.has(child.geometry))child.geometry.dispose();if(child.material){const list=Array.isArray(child.material)?child.material:[child.material];for(const material of list)if(!sharedMaterials.has(material))material.dispose();}});}}
-  function cameraUpdate(){const span=440/zoom;camera.left=-span*width/height/2;camera.right=span*width/height/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();camera.position.set(target.x+500,720,target.z+620);camera.lookAt(target.x,0,target.z);}
+  function cameraUpdate(){const span=440/zoom;camera.left=-span*width/height/2;camera.right=span*width/height/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();const distance=1000,horizontal=Math.cos(pitch)*distance;camera.position.set(target.x+Math.sin(yaw)*horizontal,Math.sin(pitch)*distance,target.z+Math.cos(yaw)*horizontal);camera.lookAt(target.x,0,target.z);}
   function resize(){const r=canvas.getBoundingClientRect();width=Math.max(1,r.width);height=Math.max(1,r.height);renderer.setSize(width,height,false);cameraUpdate();}
   const tileMeshes=[];
   function rebuild(state){
@@ -162,6 +163,7 @@ export function createWorld3D(canvas, getState) {
   function pan(dx,dy){const scale=1/zoom;target.x=clamp(target.x-dx*0.9*scale,0,35*32);target.z=clamp(target.z-dy*0.9*scale,0,27*32);cameraUpdate();}
   function setZoom(value){zoom=clamp(value,.55,1.8);cameraUpdate();}
   function center(x,y){target.set(x*32,0,y*32);cameraUpdate();}
+  function orbit(dx,dy){yaw-=dx*0.004;pitch=clamp(pitch+dy*0.003,0.42,1.25);cameraUpdate();}
   resize();cameraUpdate();
-  return {render,pickTile,pan,setZoom,center,get zoom(){return zoom;}};
+  return {render,pickTile,pan,orbit,setZoom,center,get zoom(){return zoom;}};
 }
