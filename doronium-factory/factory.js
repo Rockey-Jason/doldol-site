@@ -561,15 +561,26 @@ if(E2E_MODE){
   survival:()=>structuredClone(S.survival),
   consumeFood:()=>{consumeFood();return structuredClone(S.survival)},
   drinkWater:()=>{drinkWater();return structuredClone(S.survival)},
-  setupSurvivalTest(){S=freshState();S.player={x:18,y:14,viewMode:"first",yaw:0,pitch:-.12};S.survival={health:100,hunger:50,thirst:50};S.inventory.doriMeat=2;S.inventory.water=3;playerMotion={x:18,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};renderAll();return structuredClone(S)},
+  setupSurvivalTest(){S=freshState();S.player={...S.player,x:72,y:52,layer:"surface",viewMode:"first",yaw:0,pitch:-.12};S.survival={health:100,hunger:50,thirst:50};S.inventory.doriMeat=2;S.inventory.water=3;playerMotion={x:72,z:52,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};renderAll();return structuredClone(S)},
   survivalTick(seconds,deplete=false){if(deplete){S.survival.hunger=0;S.survival.thirst=0}updateSurvival(Math.max(0,Number(seconds)||0));return structuredClone(S.survival)},
   setupMiningTest(){
-   S=freshState();S.player={x:18,y:14,viewMode:"first",yaw:0,pitch:-.12};S.survival={health:100,hunger:100,thirst:100};
-   S.nodes["18,13"]={type:"stone",amount:12,max:12,cooldown:0,seed:123456};S.seen["18,13"]=true;
-   S.seen["18,14"]=true;S.seen["18,12"]=true;playerMotion={x:18,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};
-   selectedBuild=null;selectedBuilding=null;renderAll();return structuredClone(S)
+   S=freshState();S.player={...S.player,x:8,y:14,viewMode:"first",layer:"mine",mineLevel:1,yaw:0,pitch:.06};S.survival={health:100,hunger:100,thirst:100};
+   const deposit=S.mineDeposits["1:8:12"];deposit.amount=12;S.activeTool="pickaxe";
+   playerMotion={x:8,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:.06,path:[],moving:false,facing:0,onArrive:null};
+   selectedBuild=null;selectedBuilding=null;world3d.center(8,14);renderAll();return structuredClone(S)
   },
-  mineTarget(){const before=itemCount("stone"),target=world3d.pickTarget(190);performAdventureAction();return {target,before,after:itemCount("stone"),node:S.nodes["18,13"]?.amount}},
+  mineTarget(){const before=itemCount("stone"),target=world3d.pickTarget(190);performAdventureAction();return {target,before,after:itemCount("stone"),node:S.mineDeposits["1:8:12"]?.amount}},
+  selectTool:(tool)=>selectTool(tool),
+  toolGuard(){setupMiningTest();selectTool("axe");const before=itemCount("stone");harvestMineDeposit(S.mineDeposits["1:8:12"]);return {before,after:itemCount("stone"),tool:S.activeTool}},
+  constructionRules(){
+   S=freshState();S.player={...S.player,viewMode:"map"};S.money=1000000;S.inventory={wood:200,stone:200,ironPlate:200,ironOre:100,coal:100,water:50};S.meta={};S.research.push("logistics");
+   const standardWithoutFoundation=placeBuilding("belt",75,50);
+   const adaptiveWithoutFoundation=placeBuilding("beltAdaptive",76,50);
+   S.flattened["77,50"]={height:terrainHeightAt(77,50)};S.foundation["77,50"]=true;
+   const standardWithFoundation=placeBuilding("belt",77,50);
+   return {standardWithoutFoundation,adaptiveWithoutFoundation,standardWithFoundation,placed:S.buildings.map(b=>b.type)}
+  },
+
 
   move:(dx,dy)=>movePlayer(dx,dy),
   audit:()=>({
@@ -580,7 +591,7 @@ if(E2E_MODE){
    uniqueCrystalShapes:new Set(VARIANTS.map(id=>DORONIUM_CRYSTAL_MODEL_SHAPES[id])).size,
    allCrystalModels:VARIANTS.every(id=>DORONIUM_CRYSTAL_MODELS.includes(id)&&!!DORONIUM_CRYSTAL_MODEL_SHAPES[id]),
    researchCount:RESEARCH.length,
-   buildingCount:BUILDINGS.length,
+   buildingCount:BUILDINGS.length,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:MINE_LEVELS,biomeCount:new Set(Array.from({length:WORLD_H},(_,z)=>Array.from({length:WORLD_W},(_,x)=>biomeAt(x,z))).flat()).size,terrainHeightRange:[Math.min(...Array.from({length:WORLD_H},(_,z)=>Math.min(...Array.from({length:WORLD_W},(_,x)=>terrainHeightAt(x,z))))),Math.max(...Array.from({length:WORLD_H},(_,z)=>Math.max(...Array.from({length:WORLD_W},(_,x)=>terrainHeightAt(x,z)))))],surfaceHasExposedOre:Object.values(S.nodes).some(n=>["stone","ironOre","copperOre","coal","quartz","goldOre","diamond"].includes(n.type)),
    simulationStep:STEP,
    variantRecipeCount:Object.keys(VARIANT_RECIPES).length,
    variantRecipesValid:VARIANTS.filter(id=>id!=="doronium_normal").every(id=>!!VARIANT_RECIPES[id]&&Object.keys(VARIANT_RECIPES[id].inputs).every(k=>!!RESOURCE[k])),
@@ -618,7 +629,7 @@ if(E2E_MODE){
   testPath:(x,y)=>findPlayerPath(S.player.x,S.player.y,x,y),
   runSeconds(seconds){const count=Math.floor(seconds/STEP+1e-8);for(let i=0;i<count;i++)tick(STEP);drawWorld();return {ticks:count,state:structuredClone(S),power:currentPower()}},
   setupSoak(){
-   S=freshState();S.player={x:18,y:14};S.seconds=8*3600;S.money=100000000;
+   S=freshState();S.player={...S.player,x:18,y:14,viewMode:"map",layer:"surface"};S.seconds=8*3600;S.money=100000000;
    S.inventory={ironOre:50000,coal:30000};S.meta={};S.research=[];
    S.stats={gathered:{},built:{},produced:{},sold:0,energyProduced:0};
    selectedBuild=null;selectedBuilding=null;
@@ -633,7 +644,7 @@ if(E2E_MODE){
     {uid:"test-storage",type:"storage",x:4,y:2,dir:1,progress:0,condition:100,status:"IDLE"}
    ];
    S.fusionJob=null;S.paused=false;S.victory=false;S.tick=0;S.logs=[];
-   playerMotion={x:S.player.x,z:S.player.y,path:[],moving:false,facing:0,onArrive:null};
+   playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};
    revealAround();renderAll();return structuredClone(S)
   },
   syntheticGuard(){
