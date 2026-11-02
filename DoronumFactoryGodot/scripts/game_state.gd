@@ -772,7 +772,7 @@ func _fusion_process_score(actual: float,target: float) -> float:
 func _fusion_power_stability() -> float:
 	var count := int(fusion.get("power_sample_count",0))
 	if count<=0:
-		return 0.0
+		return clampf(100.0*float(power_state.get("fusion_power_ratio",0.0)),0.0,100.0)
 	var mean := float(fusion.power_ratio_sum)/count
 	var mean_square := float(fusion.power_ratio_square_sum)/count
 	var deviation := sqrt(maxf(0.0,mean_square-mean*mean))
@@ -803,6 +803,23 @@ func _tick_fusion(dt: float) -> void:
 		return
 	var progress_delta := dt*ratio
 	fusion.stage_progress += progress_delta
+	var fusion_machine_for_risk := buildings.filter(func(m): return m.id=="INFINITY_FUSION_MACHINE")
+	var machine_condition_for_risk := 0.0 if fusion_machine_for_risk.is_empty() else clampf(float(fusion_machine_for_risk[0].condition),0.0,100.0)
+	var temperature_deviation := absf(float(fusion.temperature)-temperature_target)/maxf(0.0001,absf(temperature_target))*100.0
+	var pressure_deviation := absf(float(fusion.pressure)-pressure_target)/maxf(0.0001,absf(pressure_target))*100.0
+	var temperature_risk := clampf((temperature_deviation-1.0)/9.0,0.0,1.0)
+	var pressure_risk := clampf((pressure_deviation-1.0)/9.0,0.0,1.0)
+	var power_risk := 1.0-ratio
+	var wear_risk := 1.0-machine_condition_for_risk/100.0
+	var load_risk := 0.0
+	var failure_profile: Dictionary = GameData.INFINITY_FAILURE_PROFILE
+	var hazard_multiplier := 1.0
+	hazard_multiplier += temperature_risk*float(failure_profile.temperature_weight)
+	hazard_multiplier += pressure_risk*float(failure_profile.pressure_weight)
+	hazard_multiplier += power_risk*float(failure_profile.power_weight)
+	hazard_multiplier += wear_risk*float(failure_profile.wear_weight)
+	hazard_multiplier += load_risk*float(failure_profile.load_weight)
+	fusion.hazard_multiplier = hazard_multiplier
 	fusion.failure_exposure += dt
 	fusion.temperature_quality_sum += _fusion_process_score(float(fusion.temperature),temperature_target)*progress_delta
 	fusion.pressure_quality_sum += _fusion_process_score(float(fusion.pressure),pressure_target)*progress_delta
@@ -814,14 +831,20 @@ func _tick_fusion(dt: float) -> void:
 	fusion.power_ratio_square_sum += ratio*ratio
 	fusion.power_sample_count += 1
 	fusion.rng_index += 1
-	var chance := 1.0-pow(0.99,dt/260.0)
-	if _deterministic_unit(int(fusion.rng_index))<chance:
+	var base_probability := float(failure_profile.base_failure_probability)
+	var reference_duration := float(failure_profile.reference_duration_seconds)
+	var base_hazard_rate := -log(1.0-base_probability)/reference_duration
+	var tick_failure_probability := 1.0-exp(-base_hazard_rate*hazard_multiplier*dt)
+	if _deterministic_unit(int(fusion.rng_index))<tick_failure_probability:
 		var severity_roll := _deterministic_unit(int(fusion.rng_index)+900000)
-		var severity := "FAILED_MINOR" if severity_roll<0.30 else ("FAILED_MAJOR" if severity_roll<0.75 else "FAILED_CRITICAL")
+		var minor_limit := float(failure_profile.minor_probability)
+		var major_limit := minor_limit+float(failure_profile.major_probability)
+		var severity := "FAILED_MINOR" if severity_roll<minor_limit else ("FAILED_MAJOR" if severity_roll<major_limit else "FAILED_CRITICAL")
 		var recovery_ratio := 1.0 if severity=="FAILED_MINOR" else (0.95 if severity=="FAILED_MAJOR" else 0.80)
 		fusion.state = severity
 		fusion.recovery_ratio = recovery_ratio
 		fusion.failure_event_id = "FUSION-FAIL-"+str(fusion.rng_index)
+		_event_ids["FUSION_FAILURE:"+str(fusion.failure_event_id)] = true
 		var loss_manifest: Array[Dictionary] = []
 		for lot in fusion.custody:
 			var returned := int(floor(float(lot.quantity)*recovery_ratio))
