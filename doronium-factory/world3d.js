@@ -226,9 +226,12 @@ export function createWorld3D(canvas, getState) {
     const grid=new THREE.GridHelper(36*32,36,0x37636b,0x29484f);grid.position.set(17.5*32,0.25,13.5*32);grid.material.transparent=true;grid.material.opacity=0.28;worldRoot.add(grid);
     const waterMat=new THREE.MeshStandardMaterial({color:0x0b6382,transparent:true,opacity:0.62,roughness:0.2,metalness:0.15});
     for(const [key,node] of Object.entries(state.nodes||{})){
-      const [x,z]=key.split(",").map(Number);if(!state.seen?.[key]||node.type==="water")continue;
+      const [x,z]=key.split(",").map(Number);if(!state.seen?.[key])continue;
       const g=new THREE.Group();g.position.set(x*32,0,z*32);g.userData={cell:{x,z},targetKind:{kind:"resource",type:node.type}};nodeRoot.add(g);
-      if(node.type==="wood"||node.type==="dori"){
+      if(node.type==="water"){
+        const waterBlock=new THREE.Mesh(new THREE.BoxGeometry(29,1.2,29),waterMat);waterBlock.position.y=2;waterBlock.receiveShadow=true;g.add(waterBlock);
+        for(let i=0;i<3;i++){const ripple=new THREE.Mesh(new THREE.BoxGeometry(8,.18,1.2),new THREE.MeshBasicMaterial({color:0x6bd8e6,transparent:true,opacity:.48}));ripple.position.set((i-1)*7,2.8,(i%2?4:-4));g.add(ripple);}
+      } else if(node.type==="wood"||node.type==="dori"){
         const trunk=node.type==="dori"?mat(0x9b7044,.08,.85):mat(0x65412e,.03,.92);
         makeBox(g,0,12,0,6,24,6,trunk);
         const leaves=node.type==="dori"?mats.green:mat(0x28754e,.04,.92);
@@ -460,9 +463,9 @@ export function createWorld3D(canvas, getState) {
   function resizeIfNeeded(){const r=canvas.getBoundingClientRect();if(Math.abs(r.width-width)>1||Math.abs(r.height-height)>1)resize();}
   function pickTile(clientX,clientY){const r=canvas.getBoundingClientRect();pointer.x=((clientX-r.left)/r.width)*2-1;pointer.y=-((clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObject(groundPick,false)[0];if(!hit)return null;const x=Math.floor(hit.point.x/32+0.5),z=Math.floor(hit.point.z/32+0.5);return x>=0&&z>=0&&x<36&&z<28?{x,z}:null;}
   function pan(dx,dy){const scale=1/zoom;target.x=clamp(target.x-dx*0.9*scale,0,35*32);target.z=clamp(target.z-dy*0.9*scale,0,27*32);cameraUpdate();}
-  function setZoom(value){zoom=clamp(value,.55,1.8);cameraUpdate();}
+  function setZoom(value){zoom=clamp(value,.55,1.8);if(activeViewMode==="map"){cameraUpdate()}else{gameCamera.fov=clamp(74-(zoom-1)*38,52,88);gameCamera.updateProjectionMatrix();}}
   function center(x,y){target.set(x*32,0,y*32);cameraUpdate();}
   function orbit(dx,dy){yaw-=dx*0.004;pitch=clamp(pitch+dy*0.003,0.42,1.25);cameraUpdate();}
   resize();cameraUpdate();
-  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?mode:"first";},inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z))};},get zoom(){return zoom;}};
+  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?mode:"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z))};},get zoom(){return zoom;}};
 }
