@@ -48,6 +48,12 @@ try {
   assert.equal(audit.allCrystalModels, true, "Every variant must resolve to a crystal model");
   assert.equal(audit.researchCount, 18, "18 research nodes must be present");
   assert.equal(audit.buildingCount, 22, "22 facility definitions must be present");
+  assert.equal(audit.simulationStep, 0.1, "Simulation must use a fixed 0.1-second step");
+  assert.equal(audit.variantRecipeCount, 14, "All fourteen non-base crystal recipes must be defined");
+  assert.equal(audit.variantRecipesValid, true, "All variant recipe inputs must resolve");
+  assert.equal(audit.researchGraphValid, true, "Research prerequisites must exist and form an acyclic graph");
+  assert.equal(audit.fusionStageCount, 7, "Infinity fusion must contain seven stages");
+  assert.equal(audit.fusionIdealDuration, 260, "Ideal fusion-stage duration must total 260 seconds");
   assert.equal(audit.recipeInputsValid, true, "All recipe input IDs must resolve");
   assert.equal(audit.buildingMaterialsValid, true, "All construction material IDs must resolve");
 
@@ -76,7 +82,12 @@ try {
   assert.ok(beltAfter.beltItemPositions.some((z, i) => Math.abs(z - beltBefore.beltItemPositions[i]) > 0.1), "Conveyor item meshes must animate along the belt according to the simulation move timer");
 
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupSoak());
-  const power = await desktop.evaluate(() => window.__doroniumFactoryTest.power());
+  const nightPower = await desktop.evaluate(() => window.__doroniumFactoryTest.setClock(0));
+  assert.ok(nightPower.ratio < 0.8, "Solar-only test factory must enter a low-power state at night");
+  const powerGate = await desktop.evaluate(() => window.__doroniumFactoryTest.machinePowerGate());
+  assert.equal(powerGate.status, "PAUSED_POWER", "A machine below the 0.8 power ratio must pause");
+  assert.equal(powerGate.ironOreAfter, powerGate.ironOreBefore, "A power-paused machine must not consume inputs");
+  const power = await desktop.evaluate(() => window.__doroniumFactoryTest.setClock(8 * 3600));
   assert.ok(power.gen >= power.used, "Solar generation should cover the test smelter at the initial daytime clock");
   assert.ok(power.ratio >= 0.8, "Test factory should not start in a power-starved state");
 
