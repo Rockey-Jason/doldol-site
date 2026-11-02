@@ -422,5 +422,5 @@ export function createWorld3D(canvas, getState) {
   function center(x,y){target.set(x*32,0,y*32);cameraUpdate();}
   function orbit(dx,dy){yaw-=dx*0.004;pitch=clamp(pitch+dy*0.003,0.42,1.25);cameraUpdate();}
   resize();cameraUpdate();
-  return {backend:"webgl",render,pickTile,pan,orbit,setZoom,center,get zoom(){return zoom;}};
+  return {backend:"webgl",render,pickTile,pan,orbit,setZoom,center,inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z))};},get zoom(){return zoom;}};
 }
