@@ -23,13 +23,34 @@
     </div>
     <div class="top-actions"><span class="cloud-state" id="cloud-state"><i></i><span>로컬 저장</span></span><button class="icon-btn" id="sound-toggle" title="효과음 켜기/끄기">♫</button><button class="icon-btn" id="settings-open" title="설정">⚙</button><a class="exit-link" href="../">사이트 나가기</a></div>
   </header>
-  <main class="app-layout">
+  <main class="app-layout" id="app-layout">
     <section class="world-column">
       <div class="world-toolbar"><div class="world-title-group"><div class="live-indicator"><i></i> 3D WORLD · SIMULATION LIVE</div><h1 id="region-title">FACTORY VALLEY <span>초기 산업 구역</span></h1><p id="world-subtitle">폐허 위에 첫 번째 산업 기지를 세우세요.</p></div><div class="world-tools"><button class="tool-btn" id="zoom-out" title="축소">－</button><span class="zoom-value" id="zoom-value">100%</span><button class="tool-btn" id="zoom-in" title="확대">＋</button><button class="tool-btn" id="center-view" title="플레이어 위치로 이동">◎</button><button class="tool-btn overview-btn" id="overview-toggle">공장 개요 <span>F</span></button></div></div>
       <div class="world-frame" id="world-frame">
         <canvas id="world-canvas" aria-label="실시간 3D 공장 월드"></canvas><div class="world-vignette"></div>
         <div class="world-coordinate" id="world-coordinate">SECTOR 01 / X: 0 · Y: 0</div><div class="world-clock"><span id="day-icon">☀</span><span id="world-clock-text">DAY 01 · 08:00</span><b id="weather-label">맑음</b></div>
-        <div class="world-alerts" id="world-alerts"></div><div class="world-help" id="world-help"><b>조작</b><span>WASD 이동</span><span>좌클릭 드래그 이동 · 우클릭/Shift 회전</span><span>휠 확대/축소</span><span>타일 클릭 채집·선택·건설</span></div>
+        <div class="world-alerts" id="world-alerts"></div>
+        <div class="adventure-hud" id="adventure-hud">
+          <div class="survival-card">
+            <div class="survival-row health"><span>♥ 체력</span><div class="survival-track"><i id="health-fill"></i></div><b id="health-value">100</b></div>
+            <div class="survival-row hunger"><span>🍖 허기</span><div class="survival-track"><i id="hunger-fill"></i></div><b id="hunger-value">100</b></div>
+            <div class="survival-row thirst"><span>💧 갈증</span><div class="survival-track"><i id="thirst-fill"></i></div><b id="thirst-value">100</b></div>
+          </div>
+          <div class="view-switcher" role="group" aria-label="카메라 시점">
+            <button type="button" id="view-first" data-view-mode="first">1인칭</button>
+            <button type="button" id="view-third" data-view-mode="third">3인칭</button>
+            <button type="button" id="view-map" data-view-mode="map">전략 지도</button>
+          </div>
+          <div class="target-label" id="target-label">주변 탐색 중</div>
+          <div class="adventure-crosshair" id="adventure-crosshair" aria-hidden="true"><i></i></div>
+          <div class="adventure-actions">
+            <button type="button" id="eat-button" title="돌이 고기 먹기">🍖 <span>먹기</span></button>
+            <button type="button" id="drink-button" title="물 마시기">💧 <span>마시기</span></button>
+            <button type="button" id="action-button" title="조준한 자원 채집 또는 시설 사용">⛏ <span>사용</span></button>
+            <button type="button" id="jump-button" title="점프">↟ <span>점프</span></button>
+          </div>
+          <div class="move-pad" aria-label="캐릭터 이동"><button type="button" data-move="0,-1" aria-label="앞으로">▲</button><div><button type="button" data-move="-1,0" aria-label="왼쪽">◀</button><button type="button" data-move="0,1" aria-label="뒤로">▼</button><button type="button" data-move="1,0" aria-label="오른쪽">▶</button></div></div>
+        </div><div class="world-help" id="world-help"><b>조작</b><span>WASD 이동</span><span>좌클릭 드래그 이동 · 우클릭/Shift 회전</span><span>휠 확대/축소</span><span>타일 클릭 채집·선택·건설</span></div>
         <div class="map-controls"><button id="map-toggle" class="map-control">지도</button><button id="help-toggle" class="map-control">조작 도움말</button></div>
       </div>
       <div class="world-footer"><div class="selected-build-status"><span class="status-square" id="build-mode-dot"></span><span id="build-mode-text">선택 모드 · 시설을 선택하거나 자원을 채집하세요</span></div><div class="world-footer-right"><span id="active-machines">가동 기계 0</span><span class="footer-divider"></span><span id="world-population">엔지니어 1</span></div></div>
