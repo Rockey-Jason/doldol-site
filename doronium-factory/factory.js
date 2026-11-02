@@ -360,6 +360,7 @@ if(E2E_MODE){
    }
    return {...result,oreBalance:result.ironOre+2*result.ironPlate,coalBalance:result.coal+result.ironPlate};
   },
+  interactAt(x,y){selectTile(x,y);return {selectedBuilding,path:playerMotion.path.length,player:{x:S.player.x,y:S.player.y}};},
   testPath:(x,y)=>findPlayerPath(S.player.x,S.player.y,x,y),
   runSeconds(seconds){const count=Math.floor(seconds/STEP+1e-8);for(let i=0;i<count;i++)tick(STEP);drawWorld();return {ticks:count,state:structuredClone(S),power:currentPower()}},
   setupSoak(){
