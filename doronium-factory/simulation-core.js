@@ -172,7 +172,13 @@ export function validateRuntimeState(state){
   }
   const maxID=Math.max(0,...[...ids].map(id=>Number(id.replace(/^IS-/,""))||0));
   if(rt.nextStackId<=maxID)errors.push("stack-id-counter-not-advanced");
-  return {valid:errors.length===0,errors,stackCount:rt.itemStacks.length,reservationCount:Object.values(rt.reservations).filter(r=>r.status==="reserved").length};
+  if(!Number.isSafeInteger(rt.failureRngState)||rt.failureRngState<=0)errors.push("invalid-failure-rng-state");
+  if(!Number.isSafeInteger(rt.failureRngIndex)||rt.failureRngIndex<0)errors.push("invalid-failure-rng-index");
+  if(!Number.isSafeInteger(rt.nextFailureEventId)||rt.nextFailureEventId<1)errors.push("invalid-failure-event-counter");
+  const failureIDs=new Set();let maxFailureID=0;
+  for(const event of rt.failureEvents){if(!event?.failureEventID||failureIDs.has(event.failureEventID))errors.push("duplicate-failure-event:"+event?.failureEventID);failureIDs.add(event?.failureEventID);const n=Number(String(event?.failureEventID||"").replace(/^FAIL-/,""));if(Number.isSafeInteger(n))maxFailureID=Math.max(maxFailureID,n)}
+  if(rt.nextFailureEventId<=maxFailureID)errors.push("failure-event-counter-not-advanced");
+  return {valid:errors.length===0,errors,stackCount:rt.itemStacks.length,reservationCount:Object.values(rt.reservations).filter(r=>r.status==="reserved").length,failureEventCount:rt.failureEvents.length};
 }
 export function availableItemCount(state,itemID){
   const rt=ensureItemStacks(state),reserved=reservedByStack(rt);
