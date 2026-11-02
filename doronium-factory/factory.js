@@ -276,6 +276,9 @@ function wireControls(){
  $("build-category").addEventListener("click",e=>{const b=e.target.closest("[data-cat]");if(!b)return;activeCategory=b.dataset.cat;document.querySelectorAll(".category-chip").forEach(x=>x.classList.toggle("active",x===b));renderBuildList()});
  $("build-list").addEventListener("click",e=>{const b=e.target.closest("[data-build]");if(!b)return;selectedBuild=selectedBuild===b.dataset.build?null:b.dataset.build;selectedBuilding=null;renderBuildList();drawWorld();if(selectedBuild)toast(buildingDef(selectedBuild).name+" 선택 · 월드에서 위치를 클릭")});
  $("sell-button").onclick=sellItems;$("sell-resource").onchange=updateMarketEstimate;$("sell-amount").oninput=updateMarketEstimate;
+ $("panel-inventory").addEventListener("click",e=>{const card=e.target.closest("[data-crystal]");if(card)showCrystalPreview(card.dataset.crystal)});
+ document.querySelector(".move-pad")?.addEventListener("click",e=>{const b=e.target.closest("[data-move]");if(!b)return;const [dx,dy]=b.dataset.move.split(",").map(Number);movePlayer(dx,dy)});
+
  $("zoom-in").onclick=()=>setZoom(camera.zoom+.1);$("zoom-out").onclick=()=>setZoom(camera.zoom-.1);$("center-view").onclick=centerCamera;
  $("overview-toggle").onclick=()=>changePanel("factory");$("clear-selection").onclick=()=>{selectedBuilding=null;renderMachineDetails();drawWorld()};
  $("pause-sim").onclick=()=>{S.paused=!S.paused;renderHud();markDirty();toast(S.paused?"시뮬레이션 일시정지":"시뮬레이션 재개")};
@@ -306,4 +309,43 @@ async function saveGame(force=false){if(!force&&!dirty)return;if(cloudBusy){save
 async function pollCloud(){if(!cloudClient||!authSession?.user?.id||cloudBusy)return;try{const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at").eq("storage_key",CLOUD_KEY).eq("is_deleted",false).maybeSingle();if(error)throw error;if(!data)return;const remote=data.updated_at||data.storage_value?.savedAt;if(!remote||remote===cloudUpdatedAt)return;if(dirty){setCloud("syncing","다른 기기 변경 감지");toast("다른 기기의 저장 데이터가 있습니다. 저장 후 새로고침하면 최신 진행도를 불러옵니다.","warn");return}const envelope=data.storage_value;if(envelope?.state){hydrateState(envelope.state);S.lastSavedAt=remote;cloudUpdatedAt=remote;localStorage.setItem(activeLocalKey,JSON.stringify({game:"doronium-factory",version:1,savedAt:remote,state:S}));renderAll();centerCamera();setCloud("online","다른 기기와 동기화");toast("다른 기기의 공장 진행도를 동기화했습니다.")}}catch(e){console.warn("Cloud polling error",e)}}
 function animationFrame(time){const elapsed=Math.min(.08,Math.max(0,(time-lastFrame)/1000));lastFrame=time;drawTime=time;updatePlayerMotion(elapsed);if(!S.paused&&!S.victory){accumulator+=elapsed*S.simSpeed;while(accumulator>=STEP){tick(STEP);accumulator-=STEP}}drawWorld();requestAnimationFrame(animationFrame)}
 function boot(){const localTime=loadLocal();playerMotion={x:S.player.x,z:S.player.y,path:[],moving:false,facing:0,onArrive:null};revealAround();wireControls();renderAll();centerCamera();if(!E2E_MODE){initCloud();setInterval(()=>saveGame(false),12000);setInterval(()=>pollCloud(),25000);window.addEventListener("beforeunload",()=>{try{saveLocal()}catch{}});document.addEventListener("visibilitychange",()=>{if(document.hidden){saveLocal();setSaveMessage("이 기기 저장 완료")}else{lastFrame=performance.now();pollCloud()}})}else setCloud("online","테스트 모드");lastFrame=performance.now();requestAnimationFrame(animationFrame);if(!localTime&&!E2E_MODE)log("공장 복구 프로토콜 시작 · ORBIT 온라인 대기");if(!E2E_MODE)setTimeout(()=>{if(!S.victory)toast("복구 엔지니어, Factory Valley에 오신 것을 환영합니다.")},600)}
+
 boot();
+if(E2E_MODE){
+ window.__doroniumFactoryTest={
+  snapshot:()=>structuredClone(S),
+  audit:()=>({
+   resourceCount:Object.keys(RESOURCE).length,
+   variantCount:VARIANTS.length,
+   uniqueVariants:new Set(VARIANTS).size,
+   researchCount:RESEARCH.length,
+   buildingCount:BUILDINGS.length,
+   allVariantModels:VARIANTS.every(id=>!!RESOURCE[id]),
+   recipeInputsValid:Object.values(RECIPES).every(r=>Object.keys(r.inputs).every(id=>!!RESOURCE[id])),
+   buildingMaterialsValid:BUILDINGS.every(b=>Object.keys(b.materials||{}).every(id=>!!RESOURCE[id]))
+  }),
+  power:()=>currentPower(),
+  testPath:(x,y)=>findPlayerPath(S.player.x,S.player.y,x,y),
+  runSeconds(seconds){const count=Math.floor(seconds/STEP+1e-8);for(let i=0;i<count;i++)tick(STEP);drawWorld();return {ticks:count,state:structuredClone(S),power:currentPower()}},
+  setupSoak(){
+   S=freshState();S.player={x:18,y:14};S.seconds=8*3600;S.money=100000000;
+   S.inventory={ironOre:50000,coal:30000};S.meta={};S.research=[];
+   S.stats={gathered:{},built:{},produced:{},sold:0,energyProduced:0};
+   S.buildings=[
+    {uid:"test-solar",type:"solar",x:1,y:1,dir:1,progress:0,condition:100,status:"IDLE"},
+    {uid:"test-smelter",type:"smelter",x:2,y:2,dir:1,progress:0,condition:100,input:{},inputMeta:{},output:null,activeMeta:null,temp:25,pressure:0,status:"IDLE"},
+    {uid:"test-belt",type:"belt",x:3,y:2,dir:1,progress:0,condition:100,item:null,moveTimer:0,status:"IDLE"},
+    {uid:"test-storage",type:"storage",x:4,y:2,dir:1,progress:0,condition:100,status:"IDLE"}
+   ];
+   S.fusionJob=null;S.paused=false;S.victory=false;S.tick=0;S.logs=[];
+   playerMotion={x:S.player.x,z:S.player.y,path:[],moving:false,facing:0,onArrive:null};
+   revealAround();renderAll();return structuredClone(S)
+  },
+  syntheticGuard(){
+   S=freshState();S.inventory={doriMeat:5};S.meta={doriMeat:{quality:90,purity:90,synthetic:true}};
+   const b={uid:"test-reactor",type:"reactor",x:1,y:1,dir:1,progress:0,input:{},inputMeta:{},output:null,activeMeta:null,temp:25,pressure:0,status:"IDLE"};
+   S.buildings=[b];S.paused=false;tickMachine(b,STEP,1);
+   return {status:b.status,remaining:itemCount("doriMeat"),activeMeta:!!b.activeMeta}
+  }
+ };
+}
