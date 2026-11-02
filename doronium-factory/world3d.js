@@ -557,7 +557,7 @@ export function createWorld3D(canvas, getState) {
     for(const x of [-5.5,5.5]){const a=makeBox(g,x,12,0,2.6,8,3,mats.trim);a.rotation.z=x<0?-.2:.2;arms.push(a);}
     g.userData={legs,arms};
   }
-  let trackedNodes=null,trackedMineDeposits=null,trackedFlattened=null,trackedFoundation=null,stateIdentityRevision=0;
+  let trackedNodes=null,trackedMineDeposits=null,trackedFlattened=null,trackedFoundation=null,stateIdentityRevision=0,lastVisibilityRevision=null;
   function signature(s){
     if(s.nodes!==trackedNodes||s.mineDeposits!==trackedMineDeposits||s.flattened!==trackedFlattened||s.foundation!==trackedFoundation){trackedNodes=s.nodes;trackedMineDeposits=s.mineDeposits;trackedFlattened=s.flattened;trackedFoundation=s.foundation;stateIdentityRevision++;}
     const machines=(s.buildings||[]).map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.output?.id,b.output?.qty,b.item?.id,b.item?.qty,b.variant].join(":")).join("|");
