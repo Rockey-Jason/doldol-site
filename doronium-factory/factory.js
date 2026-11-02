@@ -534,7 +534,7 @@ function wireControls(){
   if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"," ","shift"].includes(k))e.preventDefault();
   if(k==="v"){setViewMode(S.player.viewMode==="first"?"third":"first");return}
   if(k==="m"){if(S.player.layer==="mine"){toast("광산 내부에서는 지도를 열 수 없습니다.");return}setViewMode(S.player.viewMode==="map"?"first":"map");return}
-  if(k==="1"){setViewMode("first");return}if(k==="3"){setViewMode("third");return}
+  
   if(k==="4"){selectTool("pickaxe");return}if(k==="5"){selectTool("axe");return}
   if(k==="f"){toggleFullscreen();return}
   if(k==="e"&&adventureMode()){adventureKeys.add("e");performAdventureAction();return}
