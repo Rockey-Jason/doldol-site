@@ -30,10 +30,11 @@ export function advanceMachineEnvironment(machine,recipe,deltaSeconds,powerRatio
   const usesTemperature=recipe.usesTemperature??Number.isFinite(Number(recipe.temp));
   const usesPressure=recipe.usesPressure??Number.isFinite(Number(recipe.pressure));
   const targetTemperature=finite(recipe.temp,0),targetPressure=finite(recipe.pressure,0);
-  const tempRate=Math.max(0,finite(recipe.temperatureRampPerSecond,Math.max(1,Math.abs(targetTemperature)*.22)));
-  const pressureRate=Math.max(0,finite(recipe.pressureRampPerSecond,Math.max(1,Math.abs(targetPressure)*.18)));
-  if(usesTemperature)machine.temp=moveTowards(machine.temp,targetTemperature,tempRate*dt*power);
-  if(usesPressure)machine.pressure=moveTowards(machine.pressure,targetPressure,pressureRate*dt*power);
+  const currentTemperature=finite(machine.temp,25),currentPressure=finite(machine.pressure,0);
+  const tempStep=Number.isFinite(Number(recipe.temperatureRampPerSecond))?Math.max(0,Number(recipe.temperatureRampPerSecond))*dt*power:Math.abs(targetTemperature-currentTemperature)*Math.min(1,dt*.22)*power;
+  const pressureStep=Number.isFinite(Number(recipe.pressureRampPerSecond))?Math.max(0,Number(recipe.pressureRampPerSecond))*dt*power:Math.abs(targetPressure-currentPressure)*Math.min(1,dt*.18)*power;
+  if(usesTemperature)machine.temp=moveTowards(currentTemperature,targetTemperature,tempStep);
+  if(usesPressure)machine.pressure=moveTowards(currentPressure,targetPressure,pressureStep);
   const tempTolerance=Math.max(finite(recipe.temperatureTolerance,0),finite(recipe.temperatureToleranceAbsolute,0),Math.abs(targetTemperature)*finite(recipe.temperatureToleranceRatio,.1));
   const pressureTolerance=Math.max(finite(recipe.pressureTolerance,0),finite(recipe.pressureToleranceAbsolute,0),Math.abs(targetPressure)*finite(recipe.pressureToleranceRatio,.1));
   const tempMin=finite(recipe.safeTemperatureMin,targetTemperature-tempTolerance),tempMax=finite(recipe.safeTemperatureMax,targetTemperature+tempTolerance);
