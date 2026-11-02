@@ -15,7 +15,7 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number(v)||0));
 const clone=value=>typeof structuredClone==="function"?structuredClone(value):JSON.parse(JSON.stringify(value));
 
 export function createRuntimeState(){
-  return {schemaVersion:3,nextStackId:1,nextReservationId:1,itemStacks:[],reservations:{},reservationHistory:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
+  return {schemaVersion:4,nextStackId:1,nextReservationId:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
 }
 function normalizeStack(stack){
   return {runtimeID:String(stack.runtimeID),itemID:String(stack.itemID),quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
@@ -24,7 +24,7 @@ function normalizeStack(stack){
 }
 export function ensureItemStacks(state){
   if(!state.runtime||typeof state.runtime!=="object")state.runtime=createRuntimeState();
-  const rt=state.runtime;rt.schemaVersion=Math.max(3,Math.floor(Number(rt.schemaVersion)||0));
+  const rt=state.runtime;rt.schemaVersion=Math.max(4,Math.floor(Number(rt.schemaVersion)||0));
   if(!Array.isArray(rt.itemStacks))rt.itemStacks=[];
   rt.itemStacks=rt.itemStacks.filter(s=>s&&s.quantity>0).map(normalizeStack);
   let maxId=0;
@@ -32,6 +32,11 @@ export function ensureItemStacks(state){
   rt.nextStackId=Math.max(1,Math.floor(Number(rt.nextStackId)||1),maxId+1);
   if(!rt.reservations||typeof rt.reservations!=="object")rt.reservations={};
   if(!Array.isArray(rt.reservationHistory))rt.reservationHistory=[];
+  rt.failureRngState=(Number(rt.failureRngState)>>>0)||0x6d2b79f5;
+  rt.failureRngIndex=Math.max(0,Math.floor(Number(rt.failureRngIndex)||0));
+  rt.nextFailureEventId=Math.max(1,Math.floor(Number(rt.nextFailureEventId)||1));
+  if(!Array.isArray(rt.failureEvents))rt.failureEvents=[];
+  if(rt.failureEvents.length>256)rt.failureEvents=rt.failureEvents.slice(-256);
   rt.nextReservationId=Math.max(1,Math.floor(Number(rt.nextReservationId)||1));
   // One-time migration from the legacy item-count map. Never replace existing stacks.
   if(!rt.legacyInventoryMigrated){
