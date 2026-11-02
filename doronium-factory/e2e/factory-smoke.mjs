@@ -74,10 +74,19 @@ try {
   });
   assert.ok(adventureStart.z < 14, "First-person WASD movement must move the engineer through the 3D world");
   assert.equal(await desktop.evaluate(() => window.__doroniumFactoryTest.viewMode()), "first");
+  const firstPersonVisual = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D());
+  assert.equal(firstPersonVisual.playerVisible, false, "The third-person avatar must be hidden in first-person");
+  assert.equal(firstPersonVisual.firstPersonHandsVisible, true, "First-person arms and the mining tool must be rendered");
   await desktop.evaluate(() => window.__doroniumFactoryTest.setViewMode("third"));
   assert.equal(await desktop.evaluate(() => window.__doroniumFactoryTest.viewMode()), "third", "Third-person camera must be selectable");
+  const thirdPersonVisual = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D());
+  assert.equal(thirdPersonVisual.playerVisible, true, "The engineer avatar must be visible in third-person");
+  assert.equal(thirdPersonVisual.firstPersonHandsVisible, false, "First-person hands must be hidden in third-person");
   await desktop.evaluate(() => window.__doroniumFactoryTest.setViewMode("map"));
   assert.equal(await desktop.evaluate(() => window.__doroniumFactoryTest.viewMode()), "map", "Factory strategy view must remain available");
+  const mapVisual = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D());
+  assert.equal(mapVisual.playerVisible, true, "The engineer avatar must reappear in the strategy map");
+  assert.equal(mapVisual.firstPersonHandsVisible, false, "First-person hands must stay hidden in the strategy map");
   await desktop.evaluate(() => window.__doroniumFactoryTest.setViewMode("first"));
 
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupSurvivalTest());
