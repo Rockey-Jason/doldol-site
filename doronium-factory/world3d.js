@@ -30,7 +30,7 @@ function createFallbackWorld(canvas) {
     ctx.fillStyle="#d8e8ec";ctx.font="11px sans-serif";ctx.textAlign="left";ctx.fillText("WebGL 미지원 · 호환 모드",12,height-14);
   }
   function pickTile(x,y){const r=canvas.getBoundingClientRect(),size=34*zoom,left=r.width/2-cx*size,top=r.height/2-cy*size;const tx=Math.floor((x-r.left-left)/size),ty=Math.floor((y-r.top-top)/size);return tx>=0&&ty>=0&&tx<36&&ty<28?{x:tx,y:ty}:null;}
-  return {render,pickTile,pan(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},orbit(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},setZoom(v){zoom=clamp(v,.55,1.8);},center(x,y){cx=x;cy=y;},get zoom(){return zoom;}};
+  return {backend:"canvas2d-fallback",render,pickTile,pan(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},orbit(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},setZoom(v){zoom=clamp(v,.55,1.8);},center(x,y){cx=x;cy=y;},get zoom(){return zoom;}};
 }
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -225,5 +225,5 @@ export function createWorld3D(canvas, getState) {
   function center(x,y){target.set(x*32,0,y*32);cameraUpdate();}
   function orbit(dx,dy){yaw-=dx*0.004;pitch=clamp(pitch+dy*0.003,0.42,1.25);cameraUpdate();}
   resize();cameraUpdate();
-  return {render,pickTile,pan,orbit,setZoom,center,get zoom(){return zoom;}};
+  return {backend:"webgl",render,pickTile,pan,orbit,setZoom,center,get zoom(){return zoom;}};
 }
