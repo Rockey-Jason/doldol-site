@@ -1,6 +1,6 @@
 import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=19";
 import { createRuntimeState, ensureItemStacks, addItemStack, removeItemStacks, runCanonicalTick, calculateOutputQuality, calculateOutputPurity, accuracyQuality } from "./simulation-core.js?v=1";
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=2";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=3";
 let createClient = null;
 
 /* DORONIUM FACTORY — INFINITE INDUSTRY
