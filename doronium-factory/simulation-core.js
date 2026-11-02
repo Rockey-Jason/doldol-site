@@ -37,6 +37,8 @@ export function ensureItemStacks(state){
   rt.nextFailureEventId=Math.max(1,Math.floor(Number(rt.nextFailureEventId)||1));
   if(!Array.isArray(rt.failureEvents))rt.failureEvents=[];
   if(rt.failureEvents.length>256)rt.failureEvents=rt.failureEvents.slice(-256);
+  if(!Number.isSafeInteger(rt.failureRngIndex)||rt.failureRngIndex<0)rt.failureRngIndex=0;
+  if(!Number.isSafeInteger(rt.nextFailureEventId)||rt.nextFailureEventId<1)rt.nextFailureEventId=1;
   rt.nextReservationId=Math.max(1,Math.floor(Number(rt.nextReservationId)||1));
   // One-time migration from the legacy item-count map. Never replace existing stacks.
   if(!rt.legacyInventoryMigrated){
