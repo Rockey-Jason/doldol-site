@@ -126,3 +126,14 @@ test("reservation audit history is bounded during long sessions",()=>{
   assert.equal(state.runtime.reservationHistory.length,256);
   assert.equal(Object.keys(state.runtime.reservations).length,0);
 });
+
+test("runtime save validation checks deterministic failure journal counters and IDs",()=>{
+ const state={runtime:createRuntimeState(),inventory:{}};
+ assert.equal(validateRuntimeState(state).valid,true);
+ state.runtime.failureEvents.push({failureEventID:"FAIL-1"});state.runtime.nextFailureEventId=1;
+ assert.ok(validateRuntimeState(state).errors.includes("failure-event-counter-not-advanced"));
+ state.runtime.nextFailureEventId=2;
+ assert.equal(validateRuntimeState(state).valid,true);
+ state.runtime.failureEvents.push({failureEventID:"FAIL-1"});
+ assert.ok(validateRuntimeState(state).errors.some(x=>x.startsWith("duplicate-failure-event:")));
+});
