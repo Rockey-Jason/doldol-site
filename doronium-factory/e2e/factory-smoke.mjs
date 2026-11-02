@@ -46,7 +46,7 @@ try {
   const backend = await boot(desktop);
   assert.equal(backend, "webgl", "Desktop must create the real WebGL renderer (not the fallback)");
   const perfBefore = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D());
-  assert.equal(perfBefore.terrainChunkCount, 56, "The expanded world must use 56 independently cullable terrain chunks");
+  assert.equal(perfBefore.terrainChunkCount, 30, "The optimized 192×160 world must use 30 larger independently cullable terrain chunks");
   await desktop.waitForTimeout(600);
   const perfAfter = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D());
   assert.equal(perfAfter.rebuildCount, perfBefore.rebuildCount, "Static frames must not rebuild the full world scene");
