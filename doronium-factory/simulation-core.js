@@ -86,6 +86,12 @@ export function calculateOutputQuality({materialQuality=90,temperatureQuality=10
   const raw=materialQuality*.4+temperatureQuality*.2+pressureQuality*.2+machineConditionQuality*.1+powerStability*.1+recipeModifier;
   return clamp(raw-pollutionPenalty,0,100);
 }
+export function accuracyQuality(actual,target){
+  const t=Math.abs(Number(target)||0),a=Number(actual)||0;
+  if(t<=0)return Math.abs(a)<=1?100:50;
+  const error=Math.abs(a-t)/t;
+  return error<=.01?100:error<=.03?95:error<=.05?85:error<=.10?70:50;
+}
 export function calculateOutputPurity({inputPurity=90,processLoss=0,purificationBonus=0,modifier=0}={}){
   return clamp(inputPurity-processLoss+purificationBonus+modifier,0,100);
 }
