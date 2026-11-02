@@ -58,6 +58,36 @@ jobs:
           mkdir -p build/linux
           godot --headless --path . --export-release "Linux/X11" build/linux/DoronumFactory.x86_64
 
+      - name: Configure Android Java SDK and debug signing
+        run: |
+          apt-get update -qq
+          apt-get install -y -qq openjdk-17-jdk-headless
+          JAVA_HOME="$(dirname "$(dirname "$(readlink -f "$(command -v javac)")")")"
+          ANDROID_SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          if [ -z "$ANDROID_SDK_ROOT" ] || [ ! -d "$ANDROID_SDK_ROOT" ]; then
+            for candidate in /opt/android-sdk /usr/local/lib/android/sdk /usr/lib/android-sdk /root/Android/Sdk; do
+              if [ -d "$candidate" ]; then ANDROID_SDK_ROOT="$candidate"; break; fi
+            done
+          fi
+          if [ -z "$ANDROID_SDK_ROOT" ] || [ ! -d "$ANDROID_SDK_ROOT" ]; then
+            echo "Android SDK directory not found in the Godot CI image."
+            exit 1
+          fi
+          mkdir -p "$HOME/.android" "$HOME/.config/godot"
+          keytool -genkeypair -v -keystore "$HOME/.android/debug.keystore" -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          cat > "$HOME/.config/godot/editor_settings-4.tres" <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_SDK_ROOT"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "$HOME/.android/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+          echo "Configured Android SDK: $ANDROID_SDK_ROOT"
+          echo "Configured Java SDK: $JAVA_HOME"
+
       - name: Export Android arm64 game
         run: |
           mkdir -p build/android
