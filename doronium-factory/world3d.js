@@ -36,7 +36,7 @@ export function createWorld3D(canvas, getState) {
   let zoom = 1, width = 1, height = 1, lastSignature = "", hover = null;
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
-  const groundPick = new THREE.Mesh(new THREE.PlaneGeometry(36*32,28*32), new THREE.MeshBasicMaterial({visible:false, side:THREE.DoubleSide}));
+  const groundPick = new THREE.Mesh(new THREE.PlaneGeometry(36*32,28*32), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,colorWrite:false}));
   groundPick.rotation.x = -Math.PI/2; groundPick.position.set(17.5*32,-0.15,13.5*32); scene.add(groundPick);
   const worldRoot = new THREE.Group(); scene.add(worldRoot);
   const machineRoot = new THREE.Group(); scene.add(machineRoot);
@@ -151,7 +151,7 @@ export function createWorld3D(canvas, getState) {
     makeBox(g,0,23,0,8,2.2,7,mats.gold);
     makeBox(g,-5,7,0,3,8,3,mats.dark);makeBox(g,5,7,0,3,8,3,mats.dark);
   }
-  function signature(s){return [s.player?.x,s.player?.y,s.buildings?.map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.status,b.output?.qty].join(":")).join("|"),Object.keys(s.seen||{}).length,Object.keys(s.nodes||{}).length,s.selectedBuilding,s.selectedBuild,s.hoverCell?.x,s.hoverCell?.y].join(";");}
+  function signature(s){return [s.player?.x,s.player?.y,s.buildings?.map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.status,b.output?.qty].join(":")).join("|"),Object.keys(s.seen||{}).length,Object.keys(s.nodes||{}).length,(s.tick||0)%10,s.selectedBuilding,s.selectedBuild,s.hoverCell?.x,s.hoverCell?.y].join(";");}
   function render(state){if(!state)return;resizeIfNeeded();const sig=signature(state);if(sig!==lastSignature){rebuild(state);lastSignature=sig;}
     const t=performance.now()*0.001;sun.intensity=2.25+Math.sin(t*.08)*.18;
     machineRoot.children.forEach(g=>{if(g.userData?.type==="wind"){const blade=g.children.find(o=>o.geometry?.type==="BoxGeometry"&&o.position.y>45);if(blade)blade.rotation.y=t*1.6;}});
