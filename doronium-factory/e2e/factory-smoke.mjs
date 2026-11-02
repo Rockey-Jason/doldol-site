@@ -122,8 +122,8 @@ try {
 
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupSurvivalTest());
   await desktop.locator('[data-tool="pickaxe"]').waitFor({ state: "visible" });
-  await desktop.locator('[data-tool="doriMeat"]').waitFor({ state: "visible" });
-  await desktop.locator('[data-tool="water"]').waitFor({ state: "visible" });
+  await desktop.locator("#eat-button").waitFor({ state: "visible" });
+  await desktop.locator("#drink-button").waitFor({ state: "visible" });
   assert.equal(await desktop.evaluate(() => document.pointerLockElement === document.querySelector("#world-canvas")), false, "Desktop controls must remain clickable without automatic pointer lock");
   await desktop.locator("#eat-button").click();
   const fed = await desktop.evaluate(() => ({ survival: window.__doroniumFactoryTest.survival(), inventory: window.__doroniumFactoryTest.snapshot().inventory }));
