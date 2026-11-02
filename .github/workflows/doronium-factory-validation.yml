@@ -22,6 +22,7 @@ jobs:
         run: |
           node --check doronium-factory/factory.js
           node --check doronium-factory/world3d.js
+          node --check doronium-factory/e2e/factory-smoke.mjs
       - name: Check required game files and runtime contracts
         run: |
           test -s doronium-factory/index.html
@@ -36,6 +37,11 @@ jobs:
           grep -q 'function tickMachine' doronium-factory/factory.js
           grep -q 'function tickBelts' doronium-factory/factory.js
           grep -q 'function startFusion' doronium-factory/factory.js
+          grep -q 'function recipeHasSyntheticInput' doronium-factory/factory.js
+          grep -q 'function updatePlayerMotion' doronium-factory/factory.js
+          grep -q 'function crystalGeometry' doronium-factory/world3d.js
+          grep -q 'DORONIUM_CRYSTAL_MODEL_SHAPES' doronium-factory/world3d.js
+          grep -q 'anim.itemGroup' doronium-factory/world3d.js
           ! grep -q 'service_role' doronium-factory/factory.js
 
   browser-regression:
