@@ -327,7 +327,7 @@ export function createWorld3D(canvas, getState) {
         for(const sx of [-13,13])makeBox(mineRoot,x+sx,floorY+13,z,2.8,26,3.4,rail);
         makeBox(mineRoot,x,floorY+26,z,29,3,3.4,rail);
       }
-      if(p.x%(lowEndDevice?12:6)===0&&p.z===12){makeCyl(mineRoot,x+11,floorY+24,z,1.1,2,lampMat,8);const light=new THREE.PointLight(0xf2bd65,lowEndDevice ? .38 : .7,112,2);light.position.set(x,floorY+23,z);mineRoot.add(light);}
+      if(highEndDevice&&p.x%6===0&&p.z===12){makeCyl(mineRoot,x+11,floorY+24,z,1.1,2,lampMat,8);const light=new THREE.PointLight(0xf2bd65,.55,112,2);light.position.set(x,floorY+23,z);mineRoot.add(light);}
     }
     for(const node of Object.values(state.mineDeposits||{})){
       if(node.level!==level||node.amount<=0)continue;
@@ -339,7 +339,7 @@ export function createWorld3D(canvas, getState) {
         const color=palette[node.type]||0x81919d,ore=mat(color,.5,.3,color);
         for(let i=0;i<4;i++){const m=new THREE.Mesh(i%2?new THREE.OctahedronGeometry(2.7,0):new THREE.IcosahedronGeometry(2.8,0),ore);m.position.set((i%2?1:-1)*(3+i%3),4+(i%3)*1.8,(i<2?-1:1)*(2+i));m.rotation.set(i*.3,i*.6,i*.2);m.castShadow=true;g.add(m);}
       }
-      if(!lowEndDevice){const glow=new THREE.PointLight(String(node.type).startsWith("doronium_")?0x55dcec:0x8ca8b5,.35,34,2);glow.position.y=8;g.add(glow);}
+      if(highEndDevice){const glow=new THREE.PointLight(String(node.type).startsWith("doronium_")?0x55dcec:0x8ca8b5,.35,34,2);glow.position.y=8;g.add(glow);}
     }
     const addLift=(x,kind)=>{
       const g=new THREE.Group();g.position.set(x*32,floorY,12*32);g.userData={cell:{x,z:12},targetKind:{kind}};mineRoot.add(g);
@@ -413,7 +413,7 @@ export function createWorld3D(canvas, getState) {
           const stone=mat(0x53616a,.18,.9),glow=mat(0x3c9eaa,.3,.35,0x124f59);
           makeBox(g,-13,13,0,5,29,6,stone);makeBox(g,13,13,0,5,29,6,stone);makeBox(g,0,27,0,31,6,7,stone);
           makeBox(g,0,8,-1,19,19,1.5,mat(0x02070c,.02,.98));makeBox(g,0,30,0,25,1.1,8,glow,false);
-          const lamp=new THREE.PointLight(0x56d8da,lowEndDevice ? .65 : 1.5,88,2);lamp.position.set(0,20,-8);g.add(lamp);
+          if(highEndDevice){const lamp=new THREE.PointLight(0x56d8da,1.1,88,2);lamp.position.set(0,20,-8);g.add(lamp);}
         }else if(node.type==="relaySite"||node.type==="coreSite"){
           makeCyl(g,0,2,0,9,4,mats.dark,8);makeCyl(g,0,12,0,2,18,mats.trim,8);makeSphere(g,0,24,0,node.type==="coreSite"?5:3,mats.crystal);
         }
@@ -474,6 +474,7 @@ export function createWorld3D(canvas, getState) {
       m.rotation.x=Math.PI/2;m.position.y=y;g.add(m);anim.rings.push(m);return m;
     };
     const lamp=(x,y,z,color=0x65dce8,power=.5)=>{
+      if(!highEndDevice)return null;
       const p=new THREE.PointLight(color,power,62,2);p.position.set(x,y,z);g.add(p);anim.lights??=[];anim.lights.push(p);return p;
     };
     const legs=[-10,10];
