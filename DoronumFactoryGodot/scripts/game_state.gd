@@ -596,8 +596,8 @@ func start_research(research_id: String) -> bool:
 	if not lab_exists:
 		notification.emit("연구를 진행할 연구소를 먼저 건설해야 해.")
 		return false
-	if definition.power > 0.0 and total_power_generated < float(definition.power):
-		notification.emit("연구소 전력 부족 · 필요 %.0f kW" % float(definition.power))
+	if definition.power > 0.0 and maxf(0.0,total_power_generated-total_power_used) < float(definition.power):
+		notification.emit("연구소 전력 부족 · 다른 부하를 제외한 가용 전력 %.0f / %.0f kW" % [maxf(0.0,total_power_generated-total_power_used),float(definition.power)])
 		return false
 	research_points -= int(definition.rp)
 	research_point_ledger.append({"source_id":"RESEARCH_COST","event_id":"RESEARCH_COST:"+research_id,"claim_id":"RESEARCH_COST:"+research_id,"amount":-int(definition.rp),"created_at_tick":simulation_tick})
@@ -611,8 +611,11 @@ func _tick_research(dt: float) -> void:
 	if active_research.is_empty():
 		return
 	var definition: Dictionary = GameData.research_definition(active_research)
-	if total_power_generated - total_power_used < float(definition.power):
+	var lab_power_ratio := clampf(float(power_state.get("research_power_ratio",0.0)),0.0,1.0)
+	if lab_power_ratio < 1.0:
+		story_flags["RESEARCH_PAUSED_POWER"] = true
 		return
+	story_flags["RESEARCH_PAUSED_POWER"] = false
 	research_progress += dt
 	if research_progress >= float(definition.time):
 		research_completed.append(active_research)
