@@ -1482,8 +1482,10 @@ func _migrate_save_payload(source: Dictionary,from_version: int) -> Dictionary:
 	var fusion_data: Dictionary = migrated.get("fusion",{})
 	var custody: Array = fusion_data.get("custody",[])
 	for lot in custody:
-		if lot is Dictionary and str(lot.get("stack_id","")).is_empty():
-			lot["stack_id"] = _new_stack_id()
+		if lot is Dictionary:
+			if str(lot.get("stack_id","")).is_empty():
+				lot["stack_id"] = _new_stack_id()
+			lot["reserved"] = 0
 	fusion_data["custody"] = custody
 	var output_buffer: Dictionary = fusion_data.get("output_buffer",{})
 	if not output_buffer.is_empty() and str(output_buffer.get("stack_id","")).is_empty():
@@ -1597,3 +1599,7 @@ func load_game() -> void:
 	stabilization_running = bool(parsed.get("stabilization_running",false))
 	_event_ids = parsed.get("event_ids", {})
 	_next_stack_id = int(parsed.get("next_stack_id", 1))
+	var loaded_fusion_errors := _fusion_job_validation_errors()
+	if not loaded_fusion_errors.is_empty():
+		save_blocked = true
+		notification.emit("저장된 Infinity Fusion 데이터 무결성 오류 · 원본 저장을 보호하고 생산을 중지했어. "+loaded_fusion_errors[0])
