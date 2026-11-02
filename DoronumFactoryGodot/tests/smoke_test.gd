@@ -109,10 +109,35 @@ func _run() -> void:
 	for item_id in GameData.DORONUM_IDS:
 		assert(fusion_state.count_item(item_id)==0,"All 1500 units must move into job custody")
 	assert(fusion_state.fusion.custody.size()==15,"Fusion custody must own exactly fifteen input lots")
+	assert(fusion_state._fusion_job_validation_errors().is_empty(),"Persisted manifest and custody must match exactly")
+	var original_manifest: Array = fusion_state.fusion.manifest.duplicate(true)
+	fusion_state.fusion.manifest[0].quantity = 99
+	assert(not fusion_state._fusion_job_validation_errors().is_empty(),"Tampered manifest must fail its checksum")
+	fusion_state._tick_fusion(0.1)
+	assert(fusion_state.fusion.state=="ERROR_INVALID_MANIFEST","Tampered manifest must block fusion production")
+	fusion_state.fusion.manifest = original_manifest
+	fusion_state.fusion.state = "RUNNING"
 	fusion_state.fusion.state = "FAILED_MINOR"
 	assert(fusion_state.recover_fusion_failure(),"Failure recovery must return escrow")
 	for item_id in GameData.DORONUM_IDS:
 		assert(fusion_state.count_item(item_id)==100,"Recovery must restore exact quantities")
+	assert(fusion_state.start_infinity_fusion(),"A recovered job may be restarted")
+	var completed_job_id := str(fusion_state.fusion.job_id)
+	fusion_state.fusion.stage = 7
+	fusion_state.fusion.output_committed = true
+	fusion_state.fusion.state = "COMPLETED"
+	fusion_state.fusion.custody = []
+	fusion_state.fusion.reserved_inputs = 0
+	fusion_state.fusion.output_buffer = {
+		"stack_id":"STACK-TEST-INFINITY","item_id":"ITEM_DORONUM_INFINITY","quantity":1,
+		"quality":95.0,"purity":95.0,"synthetic":false,"provenance":"TEST_FUSION"
+	}
+	fusion_state._event_ids["FUSION_OUTPUT:"+completed_job_id] = true
+	assert(fusion_state._fusion_job_validation_errors().is_empty(),"Single committed Infinity output must pass integrity validation")
+	assert(fusion_state.collect_infinity_output(),"Infinity output should collect once")
+	assert(not fusion_state.collect_infinity_output(),"Infinity output must not collect twice")
+	assert(fusion_state.count_item("ITEM_DORONUM_INFINITY")==1,"Exactly one Infinity item should be owned after collection")
+	assert(fusion_state._fusion_job_validation_errors().is_empty(),"Collected output must retain a valid one-time event ledger")
 	for stack in fusion_state.inventory:
 		if stack.item_id==GameData.DORONUM_IDS[0]:
 			stack.quality = 89.99
