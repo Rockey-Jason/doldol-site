@@ -317,7 +317,7 @@ export function createWorld3D(canvas, getState) {
     const active=b.status==="RUNNING";
     const main=mat(buildingColor[b.type]||0x54758a,.68,.3);
     const dark=mat(0x122637,.68,.38),light=mat(0x9bb6c1,.72,.25);
-    const anim={uid:b.uid,type:b.type,fan:null,spin:null,rollers:[],rings:[],arms:[],pistons:[],particles:[],orb:null,glow:null,itemGroup:null,outputMesh:null};
+    const anim={uid:b.uid,type:b.type,fan:null,spin:null,rollers:[],rings:[],arms:[],pistons:[],particles:[],orb:null,glow:null,itemGroup:null,outputMesh:null,adaptiveSlope:null};
     const pipe=(x1,y1,z1,x2,y2,z2,r=1,material=light)=>{
       const a=new THREE.Vector3(x1,y1,z1),c=new THREE.Vector3(x2,y2,z2),d=new THREE.Vector3().subVectors(c,a);
       const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,d.length(),10),material);
@@ -333,20 +333,38 @@ export function createWorld3D(canvas, getState) {
       const p=new THREE.PointLight(color,power,62,2);p.position.set(x,y,z);g.add(p);anim.lights??=[];anim.lights.push(p);return p;
     };
     const legs=[-10,10];
-    makeBox(g,0,2.4,0,27,4,27,mats.dark);
-    for(const x of [-10,10])for(const z of [-10,10])makeCyl(g,x,4,z,.9,2.2,mats.gold,8);
-
     if(b.type==="belt"||b.type==="beltAdaptive"){
-      makeBox(g,0,5.2,0,27,1.7,27,mats.steel);
-      makeBox(g,0,7.1,-12.6,27,3,1.4,mats.trim);
-      makeBox(g,0,7.1,12.6,27,3,1.4,mats.trim);
-      for(let z=-10;z<=10;z+=4){
-        const roller=makeCyl(g,0,6.4,z,1.45,22,mats.dark,16);
-        roller.rotation.z=Math.PI/2;anim.rollers.push(roller);
-        for(const x of [-9,9])makeCyl(g,x,6.4,z,1.6,1,mats.gold,10);
+      const adaptive=b.type==="beltAdaptive";
+      const deck=new THREE.Group();g.add(deck);
+      if(adaptive){
+        const dir=((Number(b.dir)||0)%4+4)%4;
+        const localX=[[1,0],[0,1],[-1,0],[0,-1]][dir];
+        const localZ=[[0,1],[-1,0],[0,-1],[1,0]][dir];
+        const sample=(x,z)=>surfaceY(state,clamp(x,0,WORLD_W-1),clamp(z,0,WORLD_H-1));
+        const riseX=sample(b.x+localX[0],b.y+localX[1])-sample(b.x-localX[0],b.y-localX[1]);
+        const riseZ=sample(b.x+localZ[0],b.y+localZ[1])-sample(b.x-localZ[0],b.y-localZ[1]);
+        const slopeX=Math.atan2(riseX,64),slopeZ=Math.atan2(riseZ,64);
+        deck.rotation.z=slopeX;deck.rotation.x=-slopeZ;
+        anim.adaptiveSlope={x:slopeX,z:slopeZ};
+        for(const x of [-10,10])for(const z of [-8,8]){
+          const groundY=Math.tan(slopeX)*x+Math.tan(slopeZ)*z;
+          const supportHeight=4.25;
+          makeCyl(g,x,groundY+supportHeight/2,z,1.2,supportHeight,mats.gold,8);
+          makeCyl(g,x,groundY+.3,z,3,.6,main,10);
+        }
+      }else{
+        makeBox(g,0,2.4,0,27,4,27,mats.dark);
+        for(const x of [-10,10])for(const z of [-10,10])makeCyl(g,x,4,z,.9,2.2,mats.gold,8);
       }
-      for(const x of [-9,9])for(const z of [-8,8]){const support=makeBox(g,x,2,z,2.1,4,2.1,main);if(b.type==="beltAdaptive"){support.position.y=-2;makeCyl(g,x,-5,z,1.15,5,mats.gold,8);}}
-      const track=new THREE.Group();g.add(track);anim.itemGroup=track;
+      makeBox(deck,0,5.2,0,27,1.7,27,mats.steel);
+      makeBox(deck,0,7.1,-12.6,27,3,1.4,mats.trim);
+      makeBox(deck,0,7.1,12.6,27,3,1.4,mats.trim);
+      for(let z=-10;z<=10;z+=4){
+        const roller=makeCyl(deck,0,6.4,z,1.45,22,mats.dark,16);
+        roller.rotation.z=Math.PI/2;anim.rollers.push(roller);
+        for(const x of [-9,9])makeCyl(deck,x,6.4,z,1.6,1,mats.gold,10);
+      }
+      const track=new THREE.Group();deck.add(track);anim.itemGroup=track;
       if(b.item){
         const count=Math.min(24,Math.max(1,Math.ceil(Number(b.item.qty)||1)));
         for(let i=0;i<count;i++){
@@ -527,5 +545,5 @@ export function createWorld3D(canvas, getState) {
   function center(x,y){target.set(x*32,terrainHeightAt(x,y),y*32);cameraUpdate();}
   function orbit(dx,dy){yaw-=dx*0.004;pitch=clamp(pitch+dy*0.003,0.42,1.25);cameraUpdate();}
   resize();cameraUpdate();
-  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?"third":"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,undergroundResourceNodes:mineRoot.children.filter(g=>g.userData?.targetKind?.kind==="resource").length};},get zoom(){return zoom;}};
+  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?"third":"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),adaptiveBeltTilts:machineRoot.children.filter(g=>g.userData?.type==="beltAdaptive").map(g=>g.userData.adaptiveSlope),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,undergroundResourceNodes:mineRoot.children.filter(g=>g.userData?.targetKind?.kind==="resource").length};},get zoom(){return zoom;}};
 }
