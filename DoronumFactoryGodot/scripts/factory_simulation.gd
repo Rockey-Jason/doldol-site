@@ -179,8 +179,20 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	machine.pressure = move_toward(float(machine.pressure),target_pressure,float(recipe.get("pressure_rate",50.0))*dt)
 	var temp_tolerance := float(recipe.get("temperature_tolerance",0.1))
 	var pressure_tolerance := float(recipe.get("pressure_tolerance",0.1))
-	var temp_ok := target_temperature==0.0 or absf(float(machine.temperature)-target_temperature)<=maxf(5.0,absf(target_temperature)*temp_tolerance)
-	var pressure_ok := target_pressure==0.0 or absf(float(machine.pressure)-target_pressure)<=maxf(1.0,absf(target_pressure)*pressure_tolerance)
+	var temperature_absolute_tolerance := float(recipe.get("temperature_absolute_tolerance",1.0))
+	var pressure_absolute_tolerance := float(recipe.get("pressure_absolute_tolerance",1.0))
+	if temperature_absolute_tolerance<=0.0 or pressure_absolute_tolerance<=0.0:
+		machine.state = "INVALID_RECIPE_PROFILE"
+		return
+	var temperature_safe_min := float(recipe.get("temperature_safe_min",target_temperature-maxf(5.0,absf(target_temperature)*0.20)))
+	var temperature_safe_max := float(recipe.get("temperature_safe_max",target_temperature+maxf(5.0,absf(target_temperature)*0.20)))
+	var pressure_safe_min := float(recipe.get("pressure_safe_min",maxf(0.0,target_pressure-maxf(1.0,absf(target_pressure)*0.20)))
+	var pressure_safe_max := float(recipe.get("pressure_safe_max",target_pressure+maxf(1.0,absf(target_pressure)*0.20)))
+	if float(machine.temperature)<temperature_safe_min or float(machine.temperature)>temperature_safe_max or float(machine.pressure)<pressure_safe_min or float(machine.pressure)>pressure_safe_max:
+		machine.state = "PAUSED_SAFETY"
+		return
+	var temp_ok := absf(float(machine.temperature)-target_temperature)<=maxf(5.0,absf(target_temperature)*temp_tolerance) if absf(target_temperature)>0.0001 else absf(float(machine.temperature)-target_temperature)<=temperature_absolute_tolerance
+	var pressure_ok := absf(float(machine.pressure)-target_pressure)<=maxf(1.0,absf(target_pressure)*pressure_tolerance) if absf(target_pressure)>0.0001 else absf(float(machine.pressure)-target_pressure)<=pressure_absolute_tolerance
 	if not temp_ok or not pressure_ok:
 		machine.state = "RAMPING"
 		return
