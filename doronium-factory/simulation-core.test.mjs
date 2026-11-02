@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {
   createRuntimeState, ensureItemStacks, addItemStack, removeItemStacks,
   calculateOutputQuality, calculateOutputPurity, accuracyQuality,
+  reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations,
+  splitItemStack, mergeItemStacks, validateRuntimeState,
   runCanonicalTick, TICK_STAGE_ORDER
 } from "./simulation-core.js";
 
