@@ -49,6 +49,33 @@ const buildingColor = {
   relay:0x4e9fa7, core:0x8b72c5
 };
 
+export function createCrystalViewer(canvas,id){
+  if(!THREE){
+    const ctx=canvas.getContext("2d");let raf=0;
+    const draw=()=>{const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,1.5);canvas.width=r.width*dpr;canvas.height=r.height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,r.width,r.height);const spec=crystalSpecs[id]||crystalSpecs.doronium_normal;ctx.fillStyle="#0b1b2b";ctx.fillRect(0,0,r.width,r.height);ctx.shadowColor="#"+spec.color.toString(16).padStart(6,"0");ctx.shadowBlur=25;ctx.fillStyle="#"+spec.color.toString(16).padStart(6,"0");ctx.beginPath();ctx.moveTo(r.width/2,r.height*.18);ctx.lineTo(r.width*.68,r.height*.53);ctx.lineTo(r.width/2,r.height*.83);ctx.lineTo(r.width*.32,r.height*.53);ctx.closePath();ctx.fill();ctx.shadowBlur=0;};
+    draw();return {dispose(){cancelAnimationFrame(raf);}};
+  }
+  let renderer;
+  try{renderer=new THREE.WebGLRenderer({canvas,alpha:false,antialias:true,powerPreference:"high-performance"});}
+  catch(error){console.warn("Crystal viewer WebGL unavailable",error);return {dispose(){}};}
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;
+  const scene=new THREE.Scene();scene.background=new THREE.Color(0x081827);scene.fog=new THREE.Fog(0x081827,8,18);
+  const camera=new THREE.PerspectiveCamera(34,1,.1,100);camera.position.set(3.4,2.8,6.8);camera.lookAt(0,1,0);
+  scene.add(new THREE.HemisphereLight(0xc8f2ff,0x18283b,1.9));
+  const key=new THREE.DirectionalLight(0xffedcf,3.2);key.position.set(-3,6,4);scene.add(key);
+  const rim=new THREE.PointLight((crystalSpecs[id]||crystalSpecs.doronium_normal).color,2.2,12);rim.position.set(2,2.8,-2);scene.add(rim);
+  const pedestal=new THREE.Mesh(new THREE.CylinderGeometry(1.15,1.35,.34,48),new THREE.MeshStandardMaterial({color:0x243c50,metalness:.8,roughness:.28}));pedestal.position.y=-.48;pedestal.castShadow=true;pedestal.receiveShadow=true;scene.add(pedestal);
+  const trim=new THREE.Mesh(new THREE.TorusGeometry(1.14,.035,8,48),new THREE.MeshStandardMaterial({color:0xc9a969,metalness:.7,roughness:.25,emissive:0x4a3108}));trim.position.y=-.28;scene.add(trim);
+  const model=new THREE.Group();scene.add(model);const stone=makeCrystal(model,id,0,.72,0,1.05);
+  const floor=new THREE.Mesh(new THREE.CircleGeometry(3,48),new THREE.MeshStandardMaterial({color:0x10283b,metalness:.35,roughness:.78}));floor.rotation.x=-Math.PI/2;floor.position.y=-.67;scene.add(floor);
+  let raf=0,alive=true;const start=performance.now();
+  function resize(){const r=canvas.getBoundingClientRect();const w=Math.max(1,r.width),h=Math.max(1,r.height);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
+  const observer=typeof ResizeObserver!=="undefined"?new ResizeObserver(resize):null;if(observer)observer.observe(canvas);resize();
+  function frame(now){if(!alive)return;const t=(now-start)/1000;model.rotation.y=t*.68;stone.rotation.x=.15+Math.sin(t*.7)*.12;stone.rotation.z=Math.cos(t*.6)*.08;stone.scale.setScalar(1+Math.sin(t*1.7)*.025);rim.intensity=1.8+Math.sin(t*2)*.45;renderer.render(scene,camera);raf=requestAnimationFrame(frame);}
+  raf=requestAnimationFrame(frame);
+  return {dispose(){alive=false;cancelAnimationFrame(raf);if(observer)observer.disconnect();model.traverse(o=>{if(o.geometry)o.geometry.dispose();if(o.material){const m=Array.isArray(o.material)?o.material:[o.material];m.forEach(v=>v.dispose());}});pedestal.geometry.dispose();pedestal.material.dispose();trim.geometry.dispose();trim.material.dispose();floor.geometry.dispose();floor.material.dispose();renderer.dispose();}};
+}
+
 export function createWorld3D(canvas, getState) {
   if (!THREE) return createFallbackWorld(canvas);
   const scene = new THREE.Scene();
