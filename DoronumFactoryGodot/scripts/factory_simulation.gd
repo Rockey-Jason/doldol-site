@@ -224,17 +224,33 @@ func _tick_machine(machine: Dictionary, dt: float) -> void:
 	if failure_roll<failure_probability:
 		var severity_roll := game._deterministic_unit(hash(str(machine.instance_id))+int(machine.failure_rng_index)+900000)
 		var minor_probability := float(profile.minor_probability)
-		var major_probability := minor_probability+float(profile.major_probability)
+		var major_probability_value := float(profile.major_probability)
+		var critical_probability := float(profile.critical_probability)
+		if machine.id in ["COMPRESSOR","STEEL_FURNACE","HIGH_TEMPERATURE_FURNACE","REINFORCED_DORONUM_PRESS","CONTROLLED_ATMOSPHERE_CHAMBER","OPTICAL_REFINEMENT_CHAMBER","THERMAL_STABILIZER","COOLING_STABILIZER","ABSORPTION_PRESS","SEALED_PRECISION_CHAMBER","LEGACY_BATCH_LINE"]:
+			minor_probability = 0.55
+			major_probability_value = 0.35
+			critical_probability = 0.10
+		elif machine.id in ["DORONUM_COMPRESSOR","ULTRA_MATERIAL_PRESS"]:
+			minor_probability = 0.40
+			major_probability_value = 0.40
+			critical_probability = 0.20
+		var major_probability := minor_probability+major_probability_value
 		var severity := "FAILED_MINOR" if severity_roll<minor_probability else ("FAILED_MAJOR" if severity_roll<major_probability else "FAILED_CRITICAL")
 		var cooldown_seconds := 2.0 if severity=="FAILED_MINOR" else (8.0 if severity=="FAILED_MAJOR" else 20.0)
 		var condition_damage := 1.0 if severity=="FAILED_MINOR" else (8.0 if severity=="FAILED_MAJOR" else 20.0)
-		var progress_loss := 0.5 if severity=="FAILED_MINOR" else (3.0 if severity=="FAILED_MAJOR" else 10.0)
+		var progress_loss_ratio := 0.25 if severity=="FAILED_MINOR" else (0.50 if severity=="FAILED_MAJOR" else 1.0)
+		var progress_loss := progress_delta*progress_loss_ratio
 		machine.failure_event_id = "MACHINE-FAIL-"+str(machine.instance_id)+"-"+str(machine.failure_rng_index)
+		game._event_ids[str(machine.failure_event_id)] = true
 		machine.failure_cooldown = cooldown_seconds
 		machine.condition = maxf(0.0,float(machine.condition)-condition_damage)
 		machine.progress = maxf(0.0,float(machine.progress)-progress_loss)
+		machine.temperature_quality_sum = maxf(0.0,float(machine.temperature_quality_sum)-_score_process_accuracy(float(machine.temperature),target_temperature,float(recipe.get("temperature_absolute_tolerance",1.0)))*progress_loss)
+		machine.pressure_quality_sum = maxf(0.0,float(machine.pressure_quality_sum)-_score_process_accuracy(float(machine.pressure),target_pressure,float(recipe.get("pressure_absolute_tolerance",1.0)))*progress_loss)
+		machine.condition_quality_sum = maxf(0.0,float(machine.condition_quality_sum)-condition_before_tick*progress_loss)
+		machine.progress_sample_seconds = maxf(0.0,float(machine.progress_sample_seconds)-progress_loss)
 		machine.state = "BROKEN" if float(machine.condition)<=0.0 else severity
-		game.notification.emit("설비 이상 · %s · %s · 진행도 %.1f초 후퇴 / Condition %.1f%%" % [str(machine.id),severity,progress_loss,float(machine.condition)])
+		game.notification.emit("설비 이상 · %s · %s · %.2f초 진행 손실 / Condition %.1f%%" % [str(machine.id),severity,progress_loss,float(machine.condition)])
 		game.state_changed.emit()
 		return
 	if float(machine.condition)<=0.0:
