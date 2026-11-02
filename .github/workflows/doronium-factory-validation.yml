@@ -62,6 +62,10 @@ jobs:
           grep -q 'adaptPerformanceFrame' doronium-factory/world3d.js
           grep -q 'terrainChunks' doronium-factory/world3d.js
           grep -q 'terrainChunkCount' doronium-factory/world3d.js
+          grep -q 'visibilityRevision' doronium-factory/factory.js
+          grep -q 'nodeGroupsByKey' doronium-factory/world3d.js
+          grep -q 'syncBeltItemVisual' doronium-factory/world3d.js
+          grep -q 'syncOutputVisual' doronium-factory/world3d.js
           grep -q 'function performAdventureAction' doronium-factory/factory.js
           grep -q 'function updateSurvival' doronium-factory/factory.js
           grep -q 'function consumeFood' doronium-factory/factory.js
