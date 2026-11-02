@@ -191,12 +191,31 @@ func craft_manual(recipe_id: String) -> bool:
 	if not is_finite(modifier) or modifier < -20.0 or modifier > 20.0 or not is_finite(pollution) or pollution<0.0 or pollution>100.0:
 		notification.emit("수동 제작 QualityProfile 범위 오류")
 		return false
+	var material_weights: Dictionary = recipe.get("material_weights",{})
+	var purity_weights: Dictionary = recipe.get("purity_weights",{})
+	var declared_material_weight := 0.0
+	var declared_purity_weight := 0.0
+	for item_id in recipe.inputs:
+		if not material_weights.has(item_id) or not purity_weights.has(item_id):
+			notification.emit("수동 제작 Weight 누락 · "+str(item_id))
+			return false
+		var material_weight := float(material_weights[item_id])
+		var purity_weight := float(purity_weights[item_id])
+		if not is_finite(material_weight) or material_weight<0.0 or not is_finite(purity_weight) or purity_weight<0.0:
+			notification.emit("수동 제작 Weight 데이터 오류 · "+str(item_id))
+			return false
+		declared_material_weight += int(recipe.inputs[item_id])*material_weight
+		declared_purity_weight += int(recipe.inputs[item_id])*purity_weight
+	if declared_material_weight<=0.0 and not recipe.has("base_material_quality"):
+		notification.emit("BaseMaterialQuality가 없어 제작을 중단했어.")
+		return false
+	if declared_purity_weight<=0.0 and not recipe.has("base_output_purity"):
+		notification.emit("BaseOutputPurity가 없어 제작을 중단했어.")
+		return false
 	var lots: Array[Dictionary] = consume_items_with_lots(recipe.inputs,true)
 	if lots.is_empty():
 		notification.emit("재료가 부족해.")
 		return false
-	var material_weights: Dictionary = recipe.get("material_weights",{})
-	var purity_weights: Dictionary = recipe.get("purity_weights",{})
 	var material_total := 0.0
 	var material_weight_sum := 0.0
 	var purity_total := 0.0
@@ -207,20 +226,11 @@ func craft_manual(recipe_id: String) -> bool:
 		var quantity := int(lot.quantity)
 		var material_weight := float(material_weights.get(item_id,-1.0))
 		var purity_weight := float(purity_weights.get(item_id,-1.0))
-		if not is_finite(material_weight) or material_weight<0.0 or not is_finite(purity_weight) or purity_weight<0.0:
-			notification.emit("수동 제작 Weight 데이터 오류 · "+item_id)
-			return false
 		material_total += float(lot.quality)*quantity*material_weight
 		material_weight_sum += quantity*material_weight
 		purity_total += float(lot.purity)*quantity*purity_weight
 		purity_weight_sum += quantity*purity_weight
 		synthetic = synthetic or bool(lot.synthetic)
-	if material_weight_sum<=0.0 and not recipe.has("base_material_quality"):
-		notification.emit("BaseMaterialQuality가 없어 제작을 중단했어.")
-		return false
-	if purity_weight_sum<=0.0 and not recipe.has("base_output_purity"):
-		notification.emit("BaseOutputPurity가 없어 제작을 중단했어.")
-		return false
 	var material_quality := float(recipe.get("base_material_quality",0.0)) if material_weight_sum<=0.0 else material_total/material_weight_sum
 	var output_purity_input := float(recipe.get("base_output_purity",0.0)) if purity_weight_sum<=0.0 else purity_total/purity_weight_sum
 	var raw_quality := material_quality*0.40+float(profile.temperature_quality)*0.20+float(profile.pressure_quality)*0.20+float(profile.machine_condition_quality)*0.10+float(profile.power_stability)*0.10+modifier
