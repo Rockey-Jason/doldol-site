@@ -1297,6 +1297,42 @@ func validate_save_payload(parsed: Dictionary) -> Array[String]:
 		seen_building_ids[instance_id] = true
 	return errors
 
+func _migrate_save_payload(source: Dictionary,from_version: int) -> Dictionary:
+	var migrated: Dictionary = source.duplicate(true)
+	_next_stack_id = maxi(1,int(migrated.get("next_stack_id",1)))
+	var owner_fields := ["input","output","storage","job_inputs"]
+	for building in migrated.get("buildings",[]):
+		if not building is Dictionary:
+			continue
+		if not building.has("storage"):
+			building["storage"] = []
+		for field in owner_fields:
+			var lots: Array = building.get(field,[])
+			for lot in lots:
+				if not lot is Dictionary:
+					continue
+				if str(lot.get("stack_id","")).is_empty():
+					lot["stack_id"] = _new_stack_id()
+				lot["reserved"] = int(lot.get("reserved",0))
+			building[field] = lots
+	var fusion_data: Dictionary = migrated.get("fusion",{})
+	var custody: Array = fusion_data.get("custody",[])
+	for lot in custody:
+		if lot is Dictionary and str(lot.get("stack_id","")).is_empty():
+			lot["stack_id"] = _new_stack_id()
+	fusion_data["custody"] = custody
+	var output_buffer: Dictionary = fusion_data.get("output_buffer",{})
+	if not output_buffer.is_empty() and str(output_buffer.get("stack_id","")).is_empty():
+		output_buffer["stack_id"] = _new_stack_id()
+	fusion_data["output_buffer"] = output_buffer
+	migrated["fusion"] = fusion_data
+	migrated["version"] = GameData.SAVE_VERSION
+	migrated["next_stack_id"] = _next_stack_id
+	migrated["save_revision"] = int(migrated.get("save_revision",0))+1
+	migrated.erase("checksum")
+	migrated["migration_from_version"] = from_version
+	return migrated
+
 func load_game() -> void:
 	var parsed := _read_save_file(SAVE_PATH)
 	if parsed.is_empty():
@@ -1321,14 +1357,15 @@ func load_game() -> void:
 		notification.emit("저장 버전이 유효하지 않아. 원본을 보호했어.")
 		return
 	save_loaded = true
-	if loaded_version==1:
-		parsed["version"] = GameData.SAVE_VERSION
-		parsed["canonical_data_version"] = 1
-		parsed["world_generator_version"] = 1
-		parsed["simulation_rules_version"] = 1
-		parsed["save_id"] = "DF-SAVE-%d" % int(parsed.get("world_seed",GameData.WORLD_SEED))
-		parsed["save_revision"] = 0
-		parsed["simulation_tick"] = 0
+	if loaded_version<GameData.SAVE_VERSION:
+		if loaded_version==1:
+			parsed["canonical_data_version"] = int(parsed.get("canonical_data_version",1))
+			parsed["world_generator_version"] = int(parsed.get("world_generator_version",1))
+			parsed["simulation_rules_version"] = int(parsed.get("simulation_rules_version",1))
+			parsed["save_id"] = str(parsed.get("save_id","DF-SAVE-%d" % int(parsed.get("world_seed",GameData.WORLD_SEED))))
+			parsed["save_revision"] = int(parsed.get("save_revision",0))
+			parsed["simulation_tick"] = int(parsed.get("simulation_tick",0))
+		parsed = _migrate_save_payload(parsed,loaded_version)
 	var payload_errors := validate_save_payload(parsed)
 	if not payload_errors.is_empty():
 		save_blocked = true
