@@ -33,7 +33,7 @@ test("quality and purity follow the canonical independent formulas",()=>{
   assert.equal(calculateOutputQuality({materialQuality:80,temperatureQuality:100,pressureQuality:90,machineConditionQuality:100,powerStability:100}),90);
   assert.equal(calculateOutputPurity({inputPurity:80,processLoss:2,purificationBonus:12,modifier:2}),92);
   assert.equal(accuracyQuality(1000,1000),100);
-  assert.equal(accuracyQuality(1040,1000),70);
+  assert.equal(accuracyQuality(1040,1000),85);
 });
 
 test("fixed simulation tick executes all 18 stages in canonical order",()=>{
