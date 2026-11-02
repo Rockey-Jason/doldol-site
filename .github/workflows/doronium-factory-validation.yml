@@ -1,4 +1,9 @@
 name: Doronium Factory validation
+
+concurrency:
+  group: doronium-factory-validation-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     paths:
