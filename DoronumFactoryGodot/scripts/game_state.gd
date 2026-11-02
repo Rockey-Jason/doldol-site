@@ -1006,8 +1006,8 @@ func _tick_fusion(dt: float) -> void:
 	var manifest_errors := _fusion_job_validation_errors()
 	if not manifest_errors.is_empty():
 		fusion.state = "ERROR_INVALID_MANIFEST"
-		notification.emit("Fusion manifest integrity failure · output blocked · "+manifest_errors[0])
-		save_game()
+		save_blocked = true
+		notification.emit("Fusion manifest integrity failure · output blocked · original save protected · "+manifest_errors[0])
 		return
 	if str(fusion.get("state","")).begins_with("FAILED") or bool(fusion.get("output_committed",false)):
 		return
