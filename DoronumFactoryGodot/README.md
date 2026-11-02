@@ -42,7 +42,7 @@ The CI workflow is configured to export Windows, Linux and Android arm64 builds.
 - Furnaces, compressors, fabrication, alloy chains, miners, conveyors, warehouses and Dori Meat Tree automation
 - 15 canonical Doronum variants (Normal plus 14 variants), edition batch contracts and Rusted Doronum purification
 - One-time Research Point Ledger, unique per-node research samples and analysis
-- Versioned local save with checksum, temporary write, rolling backup, world depletion/tree persistence and schema-1 migration
+- Versioned local save with checksum, temporary write, rolling backup, world depletion/tree persistence and schema-1/2 migration
 
 ## Final technology path
 
