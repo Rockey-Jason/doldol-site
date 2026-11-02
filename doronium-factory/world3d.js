@@ -196,7 +196,7 @@ export function createWorld3D(canvas, getState) {
       gameCamera.rotation.order="YXZ";gameCamera.rotation.set(pitch,yaw,0);
     }else{
       gameCamera.position.set(px-fx*112,66+py,pz-fz*112);
-      gameCamera.lookAt(px,18+py,pz);
+      gameCamera.lookAt(px+fx*40,18+py,pz+fz*40);
     }
     gameCamera.updateMatrixWorld(true);
     if(playerModel)playerModel.visible=activeViewMode!=="first";firstPersonRig.visible=activeViewMode==="first";
@@ -233,7 +233,7 @@ export function createWorld3D(canvas, getState) {
     const grid=new THREE.GridHelper(36*32,36,0x37636b,0x29484f);grid.position.set(17.5*32,0.25,13.5*32);grid.material.transparent=true;grid.material.opacity=0.28;worldRoot.add(grid);
     const waterMat=new THREE.MeshStandardMaterial({color:0x0b6382,transparent:true,opacity:0.62,roughness:0.2,metalness:0.15});
     for(const [key,node] of Object.entries(state.nodes||{})){
-      const [x,z]=key.split(",").map(Number);if(!state.seen?.[key])continue;
+      const [x,z]=key.split(",").map(Number);if(!state.seen?.[key]||(node.amount<=0&&node.type!=="dori"))continue;
       const g=new THREE.Group();g.position.set(x*32,0,z*32);g.userData={cell:{x,z},targetKind:{kind:"resource",type:node.type}};nodeRoot.add(g);
       if(node.type==="water"){
         const waterBlock=new THREE.Mesh(new THREE.BoxGeometry(29,1.2,29),waterMat);waterBlock.position.y=2;waterBlock.receiveShadow=true;g.add(waterBlock);
@@ -464,7 +464,7 @@ export function createWorld3D(canvas, getState) {
       if(a.glow)a.glow.material.opacity=running ? .66+Math.sin(t*4)*.18 : .18;
       if(a.itemGroup&&b.item){const p=clamp((b.moveTimer||0)/.75,0,1),n=a.itemGroup.children.length,cols=Math.min(6,n),rows=Math.ceil(n/cols);a.itemGroup.children.forEach((m,i)=>{m.position.x=((i%cols)-(cols-1)/2)*3.0;m.position.z=-((Math.floor(i/cols)-(rows-1)/2)*3.0)-(p-.5)*18;m.position.y=8.6+Math.sin(t*5+i)*.18;m.rotation.y=t*1.5+i*.45;m.rotation.x=Math.sin(t*2+i)*.1;});}
     });
-    if(playerModel){const m=state.playerMotion||{x:state.player.x,z:state.player.y,moving:false};playerModel.position.set(m.x*32,1+Math.sin(t*3)*(m.moving ? .13 : .025),m.z*32);playerModel.rotation.y=m.facing||0;const swing=m.moving ? Math.sin(t*9)*.48 : Math.sin(t*1.5)*.035;(playerModel.userData.legs||[]).forEach((leg,i)=>leg.rotation.x=swing*(i%2?-1:1));(playerModel.userData.arms||[]).forEach((arm,i)=>arm.rotation.x=m.moving?Math.sin(t*9+i*Math.PI)*.38:0);}
+    if(playerModel){const m=state.playerMotion||{x:state.player.x,z:state.player.y,moving:false};playerModel.position.set(m.x*32,1+Math.sin(t*3)*(m.moving ? .13 : .025),m.z*32);playerModel.rotation.y=m.yaw??m.facing??0;const swing=m.moving ? Math.sin(t*9)*.48 : Math.sin(t*1.5)*.035;(playerModel.userData.legs||[]).forEach((leg,i)=>leg.rotation.x=swing*(i%2?-1:1));(playerModel.userData.arms||[]).forEach((arm,i)=>arm.rotation.x=m.moving?Math.sin(t*9+i*Math.PI)*.38:0);}
     renderer.render(scene,camera);
   }
   function resizeIfNeeded(){const r=canvas.getBoundingClientRect();if(Math.abs(r.width-width)>1||Math.abs(r.height-height)>1)resize();}
