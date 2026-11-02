@@ -62,7 +62,9 @@ export function createWorld3D(canvas, getState) {
   const makeBox=(parent,x,y,z,sx,sy,sz,material,cast=true)=>{const m=new THREE.Mesh(boxGeo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=cast;m.receiveShadow=true;parent.add(m);return m};
   const makeCyl=(parent,x,y,z,r,h,material,segments=12)=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,segments),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m};
   const makeSphere=(parent,x,y,z,r,material)=>{const m=new THREE.Mesh(sphereGeo,material);m.position.set(x,y,z);m.scale.set(r,r,r);m.castShadow=true;parent.add(m);return m};
-  function clear(group){while(group.children.length){const o=group.children.pop();if(o.geometry && o.geometry!==boxGeo && o.geometry!==cylGeo && o.geometry!==sphereGeo && o.geometry!==coneGeo)o.geometry.dispose();if(o.material && !Object.values(mats).includes(o.material)){} }}
+  const sharedGeometry=new Set([boxGeo,cylGeo,sphereGeo,coneGeo]);
+  const sharedMaterials=new Set(Object.values(mats));
+  function clear(group){for(const o of [...group.children]){group.remove(o);o.traverse(child=>{if(child.geometry&&!sharedGeometry.has(child.geometry))child.geometry.dispose();if(child.material){const list=Array.isArray(child.material)?child.material:[child.material];for(const material of list)if(!sharedMaterials.has(material))material.dispose();}});}}
   function cameraUpdate(){const span=440/zoom;camera.left=-span*width/height/2;camera.right=span*width/height/2;camera.top=span/2;camera.bottom=-span/2;camera.updateProjectionMatrix();camera.position.set(target.x+500,720,target.z+620);camera.lookAt(target.x,0,target.z);}
   function resize(){const r=canvas.getBoundingClientRect();width=Math.max(1,r.width);height=Math.max(1,r.height);renderer.setSize(width,height,false);cameraUpdate();}
   const tileMeshes=[];
@@ -102,7 +104,6 @@ export function createWorld3D(canvas, getState) {
     ring.rotation.x=Math.PI/2;ring.position.set((state.player.x)*32,2,(state.player.y)*32);markerRoot.add(ring);
     if(state.selectedBuilding){const b=state.buildings.find(v=>v.uid===state.selectedBuilding);if(b){const r=new THREE.Mesh(new THREE.TorusGeometry(15,0.65,8,48),new THREE.MeshBasicMaterial({color:0x70e7e9}));r.rotation.x=Math.PI/2;r.position.set(b.x*32,3,b.y*32);markerRoot.add(r);}}
     if(state.hoverCell&&state.selectedBuild){const h=state.hoverCell;const r=new THREE.Mesh(new THREE.BoxGeometry(29,1,29),new THREE.MeshBasicMaterial({color:0xf2d17d,transparent:true,opacity:0.28}));r.position.set(h.x*32,2,h.y*32);markerRoot.add(r);}
-    tileMat.dispose();tileGeo.dispose();
   }
   function addBuilding(b,state){
     const d=(state.buildingDefs||[]).find(v=>v.id===b.type);
