@@ -1,6 +1,7 @@
 # Save Compatibility Report
 
-- Current schema: 1.
+- Current schema: 3.
+- Schema 1 and 2 migration: adds stable StackIDs to machine input/output/storage/job lots, Fusion custody and output payloads; adds warehouse storage owner.
 - Save location: Godot user://doronium_factory_save.json.
 - Stored state: world seed, player position/tool, inventory lots, buildings, research, story flags, lore, fusion stage/custody/output buffer, relays/core, stabilization phase, production history and one-time event claims.
 - Integrity: checksum over serialized state.
