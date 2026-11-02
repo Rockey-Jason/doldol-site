@@ -190,7 +190,7 @@ export function createWorld3D(canvas, getState) {
   function cameraUpdate(){camera=mapCamera;const span=860/zoom;mapCamera.left=-span*width/height/2;mapCamera.right=span*width/height/2;mapCamera.top=span/2;mapCamera.bottom=-span/2;mapCamera.updateProjectionMatrix();const distance=1800,horizontal=Math.cos(pitch)*distance;mapCamera.position.set(target.x+Math.sin(yaw)*horizontal,Math.sin(pitch)*distance,target.z+Math.cos(yaw)*horizontal);mapCamera.lookAt(target.x,terrainHeightAt(target.x/32,target.z/32),target.z);}
   function updateGameCamera(state){
     const motion=state.playerMotion||{x:state.player.x,z:state.player.y,yaw:0,pitch:-.12,y:0};
-    const px=motion.x*32,pz=motion.z*32,py=(state.player?.layer==="mine"?mineFloorY(state.player.mineLevel):terrainHeightAt(motion.x,motion.z))+(Number(motion.y)||0),yaw=Number(motion.yaw)||0,pitch=Number(motion.pitch??-.12);
+    const px=motion.x*32,pz=motion.z*32,py=(state.player?.layer==="mine"?mineFloorY(state.player.mineLevel):surfaceY(state,Math.floor(motion.x+.5),Math.floor(motion.z+.5)) )+(Number(motion.y)||0),yaw=Number(motion.yaw)||0,pitch=Number(motion.pitch??-.12);
     const fx=-Math.sin(yaw),fz=-Math.cos(yaw);
     camera=gameCamera;gameCamera.aspect=width/height;gameCamera.updateProjectionMatrix();
     if(activeViewMode==="first"){
@@ -272,7 +272,7 @@ export function createWorld3D(canvas, getState) {
     tiles.instanceMatrix.needsUpdate=true;worldRoot.add(tiles);
     const waterMat=new THREE.MeshStandardMaterial({color:0x0b6382,transparent:true,opacity:.68,roughness:.2,metalness:.15});
     for(const [key,node] of Object.entries(state.nodes||{})){
-      const [x,z]=key.split(",").map(Number);if(node.amount<=0&&node.type!=="dori")continue;
+      const [x,z]=key.split(",").map(Number);if(!state.seen?.[key]||(node.amount<=0&&node.type!=="dori"))continue;
       const y=surfaceY(state,x,z),g=new THREE.Group();g.position.set(x*32,y,z*32);
       g.userData={cell:{x,z},targetKind:node.type==="mineEntrance"?{kind:"mineEntrance"}:{kind:"resource",type:node.type}};nodeRoot.add(g);
       if(node.type==="water"){
@@ -478,7 +478,7 @@ export function createWorld3D(canvas, getState) {
     g.userData={...anim,cell:{x:b.x,z:b.y},targetKind:{kind:"building",type:b.type,uid:b.uid}};
   }
   function addPlayer(state){
-    const g=new THREE.Group();g.position.set(state.player.x*32,(state.player.layer==="mine"?mineFloorY(state.player.mineLevel):terrainHeightAt(state.player.x,state.player.y))+1,state.player.y*32);markerRoot.add(g);playerModel=g;
+    const g=new THREE.Group();g.position.set(state.player.x*32,(state.player.layer==="mine"?mineFloorY(state.player.mineLevel):surfaceY(state,state.player.x,state.player.y))+1,state.player.y*32);markerRoot.add(g);playerModel=g;
     makeCyl(g,0,9,0,4,13,mat(0x315d76,.15,.72),12);
     makeSphere(g,0,19,0,4.5,mat(0xe0b98b,.05,.82));
     makeBox(g,0,23,0,8,2.2,7,mats.gold);
@@ -512,11 +512,11 @@ export function createWorld3D(canvas, getState) {
       if(a.glow)a.glow.material.opacity=running ? .66+Math.sin(t*4)*.18 : .18;
       if(a.itemGroup&&b.item){const p=clamp((b.moveTimer||0)/.75,0,1),n=a.itemGroup.children.length,cols=Math.min(6,n),rows=Math.ceil(n/cols);a.itemGroup.children.forEach((m,i)=>{m.position.x=((i%cols)-(cols-1)/2)*3.0;m.position.z=-((Math.floor(i/cols)-(rows-1)/2)*3.0)-(p-.5)*18;m.position.y=8.6+Math.sin(t*5+i)*.18;m.rotation.y=t*1.5+i*.45;m.rotation.x=Math.sin(t*2+i)*.1;});}
     });
-    if(playerModel){const m=state.playerMotion||{x:state.player.x,z:state.player.y,moving:false};const base=state.player?.layer==="mine"?mineFloorY(state.player.mineLevel):terrainHeightAt(m.x,m.z);playerModel.position.set(m.x*32,base+1+(Number(m.y)||0)+Math.sin(t*3)*(m.moving ? .13 : .025),m.z*32);if(playerRing){playerRing.position.set(m.x*32,base+2+(Number(m.y)||0),m.z*32);playerRing.visible=state.player?.layer!=="mine";}playerModel.rotation.y=m.yaw??m.facing??0;const swing=m.moving ? Math.sin(t*9)*.48 : Math.sin(t*1.5)*.035;(playerModel.userData.legs||[]).forEach((leg,i)=>leg.rotation.x=swing*(i%2?-1:1));(playerModel.userData.arms||[]).forEach((arm,i)=>arm.rotation.x=m.moving?Math.sin(t*9+i*Math.PI)*.38:0);}
+    if(playerModel){const m=state.playerMotion||{x:state.player.x,z:state.player.y,moving:false};const base=state.player?.layer==="mine"?mineFloorY(state.player.mineLevel):surfaceY(state,Math.floor(m.x+.5),Math.floor(m.z+.5));playerModel.position.set(m.x*32,base+1+(Number(m.y)||0)+Math.sin(t*3)*(m.moving ? .13 : .025),m.z*32);if(playerRing){playerRing.position.set(m.x*32,base+2+(Number(m.y)||0),m.z*32);playerRing.visible=state.player?.layer!=="mine";}playerModel.rotation.y=m.yaw??m.facing??0;const swing=m.moving ? Math.sin(t*9)*.48 : Math.sin(t*1.5)*.035;(playerModel.userData.legs||[]).forEach((leg,i)=>leg.rotation.x=swing*(i%2?-1:1));(playerModel.userData.arms||[]).forEach((arm,i)=>arm.rotation.x=m.moving?Math.sin(t*9+i*Math.PI)*.38:0);}
     renderer.render(scene,camera);
   }
   function resizeIfNeeded(){const r=canvas.getBoundingClientRect();if(Math.abs(r.width-width)>1||Math.abs(r.height-height)>1)resize();}
-  function pickTile(clientX,clientY){if(stateLayerForPicking==="mine")return null;const r=canvas.getBoundingClientRect();pointer.x=((clientX-r.left)/r.width)*2-1;pointer.y=-((clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const surface=worldRoot.children[0];const hit=surface?raycaster.intersectObject(surface,false)[0]:null;if(!hit?.instanceId&&hit?.instanceId!==0)return null;const index=hit.instanceId,x=index%WORLD_W,z=Math.floor(index/WORLD_W);return x>=0&&z>=0&&x<WORLD_W&&z<WORLD_H?{x,z}:null;}
+  function pickTile(clientX,clientY){if(stateLayerForPicking==="mine")return null;const r=canvas.getBoundingClientRect();pointer.x=((clientX-r.left)/r.width)*2-1;pointer.y=-((clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const surface=worldRoot.children[0];const hit=surface?raycaster.intersectObject(surface,false)[0]:null;if(!hit?.instanceId&&hit?.instanceId!==0)return null;const index=hit.instanceId,x=index%WORLD_W,z=Math.floor(index/WORLD_W);return x>=0&&z>=0&&x<WORLD_W&&z<WORLD_H?{x,y:z,z}:null;}
   function pan(dx,dy){const scale=1/zoom;target.x=clamp(target.x-dx*1.6*scale,0,(WORLD_W-1)*32);target.z=clamp(target.z-dy*1.6*scale,0,(WORLD_H-1)*32);cameraUpdate();}
   function setZoom(value){zoom=clamp(value,.55,1.8);if(activeViewMode==="map"){cameraUpdate()}else{gameCamera.fov=clamp(74-(zoom-1)*38,52,88);gameCamera.updateProjectionMatrix();}}
   function center(x,y){target.set(x*32,terrainHeightAt(x,y),y*32);cameraUpdate();}
