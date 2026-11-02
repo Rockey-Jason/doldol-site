@@ -1,6 +1,6 @@
 /* DORONIUM FACTORY — world generation and geology */
-export const WORLD_W = 128;
-export const WORLD_H = 96;
+export const WORLD_W = 192;
+export const WORLD_H = 160;
 export const MINE_W = 40;
 export const MINE_H = 24;
 export const MINE_LEVELS = 5;
@@ -9,29 +9,49 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
 
 export function biomeAt(x,z){
-  const mountain=Math.hypot((x-91)*.88,z-27);
-  if(z<13 || (mountain<21 && z<36)) return "frost";
-  if(mountain<30) return "highlands";
-  if(x>91 && z>55) return "desert";
-  if(x<34 && z>56) return "wetland";
-  if(x<52 && z<57) return "forest";
-  if(x>77 && z>32 && z<70) return "crystal";
-  if(x>45 && x<79 && z<37) return "volcanic";
+  // Keep the original western continent intact for existing exploration routes.
+  const westernRidge=Math.hypot((x-91)*.88,z-27);
+  if(x<128){
+    if(z<13 || (westernRidge<21 && z<36)) return "frost";
+    if(westernRidge<30) return "highlands";
+    if(x>91 && z>55) return "desert";
+    if(x<34 && z>56) return "wetland";
+    if(x<52 && z<57) return "forest";
+    if(x>77 && z>32 && z<70) return "crystal";
+    if(x>45 && x<79 && z<37) return "volcanic";
+    return "meadow";
+  }
+  // A second continent with its own mountain chain, wetlands and volcanic basin.
+  const easternRidge=Math.hypot((x-153)*.82,z-31);
+  if(x>143 && z<24) return "frost";
+  if(easternRidge<31) return "highlands";
+  if(x>176 && z>64) return "desert";
+  if(x>=151 && x<=176 && z>=90 && z<132) return "crystal";
+  if(x>=128 && x<151 && z>=104 && z<128) return "volcanic";
+  if(x>=128 && x<151 && z>=128) return "forest";
+  if(x>=128 && x<151 && z>=65 && z<104) return "wetland";
   return "meadow";
 }
 
 export function terrainHeightAt(x,z){
   const wave=Math.sin(x*.105+z*.036)*5.5+Math.cos(z*.12-x*.025)*4.5+Math.sin((x+z)*.047)*5;
   const biome=biomeAt(x,z);
+  const westernRidge=Math.max(0,1-Math.abs(x-(91+Math.sin(z*.09)*7))/32);
+  const easternRidge=Math.exp(-Math.pow((x-(153+Math.sin(z*.045)*11))/25,2));
+  const southernRidge=Math.exp(-Math.pow((z-(137+Math.sin(x*.035)*9))/24,2));
   let h=wave;
-  if(biome==="highlands"||biome==="frost"){
-    const ridge=Math.max(0,1-Math.abs(x-(91+Math.sin(z*.09)*7))/32);
-    h+=28+ridge*38+Math.sin(z*.31)*8;
-  }else if(biome==="desert") h+=8+Math.sin(x*.17+z*.08)*5+Math.cos(z*.24)*2;
-  else if(biome==="wetland") h-=4+Math.sin(x*.15)*3;
-  else if(biome==="forest") h+=5+Math.sin(z*.2)*4;
-  else if(biome==="crystal") h+=17+Math.sin((x-z)*.16)*10;
-  else if(biome==="volcanic") h+=13+Math.sin(x*.2)*7+Math.cos(z*.19)*6;
+  if(biome==="highlands"||biome==="frost") h+=18+westernRidge*40+Math.sin(z*.31)*7;
+  else if(biome==="desert") h+=9+Math.sin(x*.17+z*.08)*6+Math.cos(z*.24)*3;
+  else if(biome==="wetland") h-=7+Math.sin(x*.15)*4;
+  else if(biome==="forest") h+=7+Math.sin(z*.2)*5;
+  else if(biome==="crystal") h+=20+Math.sin((x-z)*.16)*12;
+  else if(biome==="volcanic") h+=12+Math.sin(x*.2)*8+Math.cos(z*.19)*7;
+  // Broad mountain belts create readable block-height relief without isolated spikes.
+  h+=easternRidge*70+southernRidge*30;
+  if(biome==="volcanic"){
+    const cx=x<100?62:139,cz=x<100?24:116,d=Math.hypot(x-cx,z-cz);
+    h+=Math.max(0,1-d/25)*35-Math.max(0,1-d/10)*24;
+  }
   return Math.round(h/3)*3;
 }
 
