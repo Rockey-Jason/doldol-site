@@ -860,6 +860,7 @@ func start_infinity_fusion() -> bool:
 				continue
 			var reserved_stack: Dictionary = stack.duplicate(true)
 			reserved_stack.quantity = take
+			reserved_stack["reserved"] = 0
 			custody.append(reserved_stack)
 			manifest.append({"stack_id":str(stack.stack_id),"item_id":item_id,"quantity":take,"quality":float(stack.quality),"purity":float(stack.purity),"synthetic":false,"provenance":str(stack.provenance)})
 			material_quality_sum += float(stack.quality)*take
@@ -892,6 +893,94 @@ func start_infinity_fusion() -> bool:
 	save_game()
 	return true
 
+func _fusion_job_validation_errors() -> Array[String]:
+	var errors: Array[String] = []
+	if fusion.is_empty():
+		return errors
+	var job_id := str(fusion.get("job_id",""))
+	var manifest: Array = fusion.get("manifest",[])
+	var custody: Array = fusion.get("custody",[])
+	var manifest_checksum := int(fusion.get("manifest_checksum",-1))
+	if job_id.is_empty() or manifest.is_empty():
+		errors.append("Fusion job identity or manifest is missing.")
+	if manifest_checksum!=hash(JSON.stringify(manifest)):
+		errors.append("Fusion manifest checksum mismatch.")
+	var manifest_by_stack: Dictionary = {}
+	var item_totals: Dictionary = {}
+	var total_quantity := 0
+	for lot in manifest:
+		if not lot is Dictionary:
+			errors.append("Fusion manifest lot is not a dictionary.")
+			continue
+		var stack_id := str(lot.get("stack_id",""))
+		var item_id := str(lot.get("item_id",""))
+		var quantity := int(lot.get("quantity",0))
+		var quality := float(lot.get("quality",-1.0))
+		var purity := float(lot.get("purity",-1.0))
+		if stack_id.is_empty() or manifest_by_stack.has(stack_id):
+			errors.append("Fusion manifest StackID is missing or duplicated · "+stack_id)
+		manifest_by_stack[stack_id] = lot
+		if item_id not in GameData.DORONUM_IDS:
+			errors.append("Fusion manifest contains non-canonical ItemID · "+item_id)
+		if quantity<=0 or not is_finite(quality) or not is_finite(purity) or quality<90.0 or purity<90.0 or quality>100.0 or purity>100.0 or bool(lot.get("synthetic",true)):
+			errors.append("Fusion manifest lot fails quantity/Quality/Purity/lineage gate · "+stack_id)
+		item_totals[item_id] = int(item_totals.get(item_id,0))+quantity
+		total_quantity += quantity
+	for item_id in GameData.DORONUM_IDS:
+		if int(item_totals.get(item_id,0))!=100:
+			errors.append("Fusion manifest requires exactly 100 units · "+str(item_id))
+	if total_quantity!=1500:
+		errors.append("Fusion manifest total must equal 1500 units.")
+	var output_committed := bool(fusion.get("output_committed",false))
+	var reserved_inputs := int(fusion.get("reserved_inputs",0))
+	if not output_committed:
+		if reserved_inputs!=1500 or custody.size()!=manifest.size():
+			errors.append("Fusion custody count or reserved quantity does not match the manifest.")
+		var custody_by_stack: Dictionary = {}
+		for lot in custody:
+			if not lot is Dictionary:
+				errors.append("Fusion custody lot is not a dictionary.")
+				continue
+			var stack_id := str(lot.get("stack_id",""))
+			if stack_id.is_empty() or custody_by_stack.has(stack_id):
+				errors.append("Fusion custody StackID is missing or duplicated · "+stack_id)
+			custody_by_stack[stack_id] = lot
+		for stack_id in manifest_by_stack:
+			if not custody_by_stack.has(stack_id):
+				errors.append("Fusion custody lost manifest lot · "+stack_id)
+				continue
+			var manifest_lot: Dictionary = manifest_by_stack[stack_id]
+			var custody_lot: Dictionary = custody_by_stack[stack_id]
+			for field in ["item_id","quantity","quality","purity","synthetic","provenance"]:
+				if custody_lot.get(field)!=manifest_lot.get(field):
+					errors.append("Fusion custody lot diverged from manifest · "+stack_id+" · "+field)
+	else:
+		if reserved_inputs!=0 or not custody.is_empty():
+			errors.append("Committed Fusion output still owns reserved inputs.")
+		var output_buffer: Dictionary = fusion.get("output_buffer",{})
+		var collect_event := "FUSION_COLLECT:"+job_id
+		if output_buffer.is_empty():
+			if not _event_ids.has(collect_event):
+				errors.append("Committed Infinity output is missing and has no collection event.")
+		else:
+			var output_id := str(output_buffer.get("stack_id",""))
+			if output_id.is_empty() or manifest_by_stack.has(output_id):
+				errors.append("Infinity output StackID is invalid or duplicates an input lot.")
+			if str(output_buffer.get("item_id",""))!="ITEM_DORONUM_INFINITY" or int(output_buffer.get("quantity",0))!=1 or bool(output_buffer.get("synthetic",true)):
+				errors.append("Infinity output payload is not exactly one natural Infinity item.")
+			var output_quality := float(output_buffer.get("quality",-1.0))
+			var output_purity := float(output_buffer.get("purity",-1.0))
+			if not is_finite(output_quality) or not is_finite(output_purity) or output_quality<0.0 or output_quality>100.0 or output_purity<0.0 or output_purity>100.0:
+				errors.append("Infinity output Quality/Purity is invalid.")
+		if not _event_ids.has("FUSION_OUTPUT:"+job_id):
+			errors.append("Committed Infinity output lacks its one-time commit event.")
+	var stage_index := int(fusion.get("stage",-1))
+	if not output_committed and (stage_index<0 or stage_index>=GameData.FUSION_STAGES.size()):
+		errors.append("Fusion stage index is outside the seven-stage process.")
+	if not is_finite(float(fusion.get("stage_progress",-1.0))) or float(fusion.get("stage_progress",-1.0))<0.0:
+		errors.append("Fusion stage progress is invalid.")
+	return errors
+
 func _fusion_process_score(actual: float,target: float) -> float:
 	var deviation := absf(actual-target)/maxf(0.0001,absf(target))*100.0
 	if deviation<=1.0: return 100.0
@@ -910,7 +999,17 @@ func _fusion_power_stability() -> float:
 	return clampf(100.0*mean-50.0*deviation,0.0,100.0)
 
 func _tick_fusion(dt: float) -> void:
-	if fusion.is_empty() or str(fusion.get("state","")).begins_with("FAILED") or bool(fusion.get("output_committed",false)):
+	if fusion.is_empty():
+		return
+	if str(fusion.get("state","")).begins_with("ERROR_INVALID_MANIFEST"):
+		return
+	var manifest_errors := _fusion_job_validation_errors()
+	if not manifest_errors.is_empty():
+		fusion.state = "ERROR_INVALID_MANIFEST"
+		notification.emit("Fusion manifest integrity failure · output blocked · "+manifest_errors[0])
+		save_game()
+		return
+	if str(fusion.get("state","")).begins_with("FAILED") or bool(fusion.get("output_committed",false)):
 		return
 	var stage_index := int(fusion.get("stage",0))
 	if stage_index<0 or stage_index>=GameData.FUSION_STAGES.size():
@@ -1015,6 +1114,9 @@ func _tick_fusion(dt: float) -> void:
 
 func collect_infinity_output() -> bool:
 	if fusion.is_empty() or not bool(fusion.get("output_committed",false)) or fusion.get("output_buffer",{}).is_empty():
+		return false
+	if not _fusion_job_validation_errors().is_empty():
+		notification.emit("Infinity 회수 차단 · Fusion manifest integrity failure")
 		return false
 	var payload: Dictionary = fusion.output_buffer.duplicate(true)
 	var event_id := "FUSION_COLLECT:"+str(fusion.get("job_id",""))
