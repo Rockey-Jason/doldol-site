@@ -312,9 +312,9 @@ export function createWorld3D(canvas, getState) {
         trunk.castShadow=false;trunk.receiveShadow=false;
         const leaves=node.type==="dori"?mats.green:mats.woodLeaves;
         const crown=makeSphere(g,0,31,0,node.type==="dori"?13:14,leaves);
-        crown.scale.set(1,.92,1);crown.castShadow=false;crown.receiveShadow=false;
+        const crownSize=node.type==="dori"?13:14;crown.scale.set(crownSize,crownSize*.92,crownSize);crown.castShadow=false;crown.receiveShadow=false;
         const crownSide=makeSphere(g,7,28,0,8,leaves);
-        crownSide.scale.set(.95,.8,.95);crownSide.castShadow=false;crownSide.receiveShadow=false;
+        crownSide.scale.set(7.6,6.4,7.6);crownSide.castShadow=false;crownSide.receiveShadow=false;
         if(node.type==="dori")makeCrystal(g,"doronium_normal",0,40,0,2.8);
       }else if(node.type==="mineEntrance"){
         const stone=mat(0x53616a,.18,.9),glow=mat(0x3c9eaa,.3,.35,0x124f59);
