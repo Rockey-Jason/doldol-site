@@ -1,13 +1,12 @@
-/* DORONIUM FACTORY — real-time 3D world renderer (Three.js)
- * Keeps the existing deterministic simulation and save schema; this module is presentation/input only.
- */
+/* DORONIUM FACTORY — topographic 3D world, underground mine and industrial renderer */
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=1";
 let THREE = null;
 try { THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"); }
 catch (error) { console.warn("Three.js CDN unavailable; using the compatibility renderer.", error); }
 
 function createFallbackWorld(canvas) {
   const ctx = canvas.getContext("2d");
-  let cx=18, cy=14, zoom=1, width=1, height=1;
+  let cx=64, cy=52, zoom=1, width=1, height=1;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   function render(state) {
     if(!ctx)return;
@@ -16,11 +15,11 @@ function createFallbackWorld(canvas) {
     canvas.width=Math.floor(width*dpr); canvas.height=Math.floor(height*dpr); ctx.setTransform(dpr,0,0,dpr,0,0);
     ctx.fillStyle="#071522";ctx.fillRect(0,0,width,height);
     const size=34*zoom,left=width/2-cx*size,top=height/2-cy*size;
-    for(let y=0;y<28;y++)for(let x=0;x<36;x++){
+    for(let y=0;y<WORLD_H;y++)for(let x=0;x<WORLD_W;x++){
       const px=left+x*size,py=top+y*size,key=x+","+y,node=state.nodes?.[key],seen=!!state.seen?.[key];
-      ctx.fillStyle=!seen?"#091a27":node?.type==="water"?"#14516a":["#193a3d","#1b4142","#203f40"][(x*13+y*7)%3];
+      const h=terrainHeightAt(x,y),b=biomeAt(x,y);ctx.fillStyle=!seen?"#091a27":node?.type==="water"?"#14516a":({forest:"#315b42",meadow:"#3d674d",wetland:"#354f45",desert:"#92764d",highlands:"#687477",frost:"#81939a",crystal:"#3f6670",volcanic:"#5b4540"})[b]||"#3d674d";
       ctx.fillRect(px,py,size-1,size-1);
-      if(seen&&node&&node.type!=="water"){ctx.font=Math.max(10,size*.42)+"px sans-serif";ctx.textAlign="center";ctx.fillStyle="#d5e8e8";ctx.fillText(({wood:"🌲",stone:"🪨",ironOre:"⛏️",copperOre:"🟠",coal:"⬛",quartz:"🔹",goldOre:"🟡",diamond:"💠",dori:"🌳",relaySite:"📡",coreSite:"◎"})[node.type]||"◆",px+size/2,py+size*.63);}
+      if(seen&&node&&node.type!=="water"){ctx.font=Math.max(10,size*.42)+"px sans-serif";ctx.textAlign="center";ctx.fillStyle="#d5e8e8";ctx.fillText(({wood:"🌲",water:"💧",dori:"🌳",mineEntrance:"⛏"})[node.type]||"◆",px+size/2,py+size*.63);}
       const b=state.buildings?.find(v=>v.x===x&&v.y===y);
       if(b){ctx.fillStyle=b.status==="RUNNING"?"#247c85":"#29485c";ctx.fillRect(px+size*.13,py+size*.13,size*.74,size*.74);ctx.strokeStyle="#75d4d7";ctx.strokeRect(px+size*.13,py+size*.13,size*.74,size*.74);ctx.font=Math.max(9,size*.38)+"px sans-serif";ctx.fillStyle="#e2f1f3";ctx.fillText(({fusion:"🌌",reactor:"🔷",solar:"☀️",doriFarm:"🌳",lab:"🔬"})[b.type]||"⚙️",px+size/2,py+size*.62);}
     }
@@ -29,7 +28,7 @@ function createFallbackWorld(canvas) {
     ctx.fillStyle="#071522";ctx.font="12px sans-serif";ctx.textAlign="center";ctx.fillText("👷",px,py+4);
     ctx.fillStyle="#d8e8ec";ctx.font="11px sans-serif";ctx.textAlign="left";ctx.fillText("WebGL 미지원 · 호환 모드",12,height-14);
   }
-  function pickTile(x,y){const r=canvas.getBoundingClientRect(),size=34*zoom,left=r.width/2-cx*size,top=r.height/2-cy*size;const tx=Math.floor((x-r.left-left)/size),ty=Math.floor((y-r.top-top)/size);return tx>=0&&ty>=0&&tx<36&&ty<28?{x:tx,y:ty}:null;}
+  function pickTile(x,y){const r=canvas.getBoundingClientRect(),size=34*zoom,left=r.width/2-cx*size,top=r.height/2-cy*size;const tx=Math.floor((x-r.left-left)/size),ty=Math.floor((y-r.top-top)/size);return tx>=0&&ty>=0&&tx<WORLD_W&&ty<WORLD_H?{x:tx,y:ty}:null;}
   return {backend:"canvas2d-fallback",render,pickTile,pan(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},orbit(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},setZoom(v){zoom=clamp(v,.55,1.8);},center(x,y){cx=x;cy=y;},get zoom(){return zoom;}};
 }
 
@@ -41,7 +40,7 @@ const palette = {
   diamond: 0x82e2ed, dori: 0x45b68b, relaySite: 0x65d8e4, coreSite: 0xc1a6ff
 };
 const buildingColor = {
-  belt:0x6c8e9a, storage:0x627d8c, warehouse:0x617d91, solar:0x2c6c9b,
+  belt:0x6c8e9a, beltAdaptive:0x48b99f, storage:0x627d8c, warehouse:0x617d91, solar:0x2c6c9b,
   wind:0x7babb8, coalgen:0x4c5d69, pump:0x3187a0, minerIron:0x74838e,
   minerCopper:0xb9794b, minerCoal:0x4c5866, doriFarm:0x3d8b69, smelter:0x9a6149,
   wiremill:0x9a8a5a, assembler:0x5e829e, lab:0x796ca4, market:0x9b895e,
@@ -146,16 +145,18 @@ export function createWorld3D(canvas, getState) {
   const gameCamera = new THREE.PerspectiveCamera(74,1,.1,2600);
   scene.add(gameCamera);
   let camera=mapCamera, activeViewMode="map";
-  const target = new THREE.Vector3(18*32,0,14*32);
+  const target = new THREE.Vector3(64*32,terrainHeightAt(64,52),52*32);
   let zoom = 1, width = 1, height = 1, lastSignature = "", yaw = 0.68, pitch = 0.73;
   const raycaster = new THREE.Raycaster();
+  let stateLayerForPicking="surface";
   const pointer = new THREE.Vector2();
-  const groundPick = new THREE.Mesh(new THREE.PlaneGeometry(36*32,28*32), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,colorWrite:false}));
-  groundPick.rotation.x = -Math.PI/2; groundPick.position.set(17.5*32,-0.15,13.5*32); scene.add(groundPick);
+  const groundPick = new THREE.Mesh(new THREE.PlaneGeometry(WORLD_W*32,WORLD_H*32), new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,side:THREE.DoubleSide,depthWrite:false,colorWrite:false}));
+  groundPick.rotation.x = -Math.PI/2; groundPick.position.set((WORLD_W-1)*16,-52,(WORLD_H-1)*16); scene.add(groundPick);
   const worldRoot = new THREE.Group(); scene.add(worldRoot);
   const machineRoot = new THREE.Group(); scene.add(machineRoot);
   const nodeRoot = new THREE.Group(); scene.add(nodeRoot);
   const markerRoot = new THREE.Group(); scene.add(markerRoot);
+  const mineRoot = new THREE.Group(); scene.add(mineRoot);
   const ambient = new THREE.HemisphereLight(0xb9e6ef,0x15242a,1.65); scene.add(ambient);
   const sun = new THREE.DirectionalLight(0xffe4b8,2.7);
   sun.position.set(-420,720,360); sun.castShadow=true; sun.shadow.mapSize.set(compactDevice?768:1536,compactDevice?768:1536);
@@ -186,10 +187,10 @@ export function createWorld3D(canvas, getState) {
 
   const sharedMaterials=new Set(Object.values(mats));
   function clear(group){for(const o of [...group.children]){group.remove(o);o.traverse(child=>{if(child.geometry&&!sharedGeometry.has(child.geometry))child.geometry.dispose();if(child.material){const list=Array.isArray(child.material)?child.material:[child.material];for(const material of list)if(!sharedMaterials.has(material))material.dispose();}});}}
-  function cameraUpdate(){camera=mapCamera;const span=440/zoom;mapCamera.left=-span*width/height/2;mapCamera.right=span*width/height/2;mapCamera.top=span/2;mapCamera.bottom=-span/2;mapCamera.updateProjectionMatrix();const distance=1000,horizontal=Math.cos(pitch)*distance;mapCamera.position.set(target.x+Math.sin(yaw)*horizontal,Math.sin(pitch)*distance,target.z+Math.cos(yaw)*horizontal);mapCamera.lookAt(target.x,0,target.z);}
+  function cameraUpdate(){camera=mapCamera;const span=860/zoom;mapCamera.left=-span*width/height/2;mapCamera.right=span*width/height/2;mapCamera.top=span/2;mapCamera.bottom=-span/2;mapCamera.updateProjectionMatrix();const distance=1800,horizontal=Math.cos(pitch)*distance;mapCamera.position.set(target.x+Math.sin(yaw)*horizontal,Math.sin(pitch)*distance,target.z+Math.cos(yaw)*horizontal);mapCamera.lookAt(target.x,terrainHeightAt(target.x/32,target.z/32),target.z);}
   function updateGameCamera(state){
     const motion=state.playerMotion||{x:state.player.x,z:state.player.y,yaw:0,pitch:-.12,y:0};
-    const px=motion.x*32,pz=motion.z*32,py=Number(motion.y)||0,yaw=Number(motion.yaw)||0,pitch=Number(motion.pitch??-.12);
+    const px=motion.x*32,pz=motion.z*32,py=(state.player?.layer==="mine"?mineFloorY(state.player.mineLevel):terrainHeightAt(motion.x,motion.z))+(Number(motion.y)||0),yaw=Number(motion.yaw)||0,pitch=Number(motion.pitch??-.12);
     const fx=-Math.sin(yaw),fz=-Math.cos(yaw);
     camera=gameCamera;gameCamera.aspect=width/height;gameCamera.updateProjectionMatrix();
     if(activeViewMode==="first"){
@@ -204,7 +205,7 @@ export function createWorld3D(canvas, getState) {
   }
   function pickTarget(maxDistance=190){
     raycaster.setFromCamera(new THREE.Vector2(0,0),camera);
-    const roots=[...nodeRoot.children,...machineRoot.children];
+    const roots=stateLayerForPicking==="mine"?[...mineRoot.children]:[...nodeRoot.children,...machineRoot.children];
     const hits=raycaster.intersectObjects(roots,true);
     for(const hit of hits){
       let root=hit.object;
@@ -216,54 +217,97 @@ export function createWorld3D(canvas, getState) {
     return null;
   }
   function resize(){const r=canvas.getBoundingClientRect();width=Math.max(1,r.width);height=Math.max(1,r.height);renderer.setSize(width,height,false);gameCamera.aspect=width/height;gameCamera.updateProjectionMatrix();cameraUpdate();}
-  let playerModel=null;
-  function rebuild(state){
-    clear(worldRoot);clear(machineRoot);clear(nodeRoot);clear(markerRoot);
-    const tileGeo=new THREE.BoxGeometry(31.7,2.2,31.7);
-    const tileMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.92});
-    const count=36*28, tiles=new THREE.InstancedMesh(tileGeo,tileMat,count);tiles.receiveShadow=true;
-    const dummy=new THREE.Object3D(), color=new THREE.Color();let n=0;
-    for(let z=0;z<28;z++)for(let x=0;x<36;x++){
-      const node=state.nodes?.[x+","+z], seen=!!state.seen?.[x+","+z];
-      const y=(node?.type==="water"?-1.0:0)+(Math.sin(x*1.7+z*.9)*0.12);
-      dummy.position.set(x*32,y,z*32);dummy.rotation.set(0,0,0);dummy.scale.set(1,1,1);dummy.updateMatrix();tiles.setMatrixAt(n,dummy.matrix);
-      const base=palette.ground[(x*13+z*7)%palette.ground.length];
-      color.setHex(!seen?0x071522:node?.type==="water"?palette.water:base);tiles.setColorAt(n,color);n++;
+  let playerModel=null,playerRing=null;
+  function surfaceY(state,x,z){const key=x+","+z,v=state.flattened?.[key];return v&&typeof v==="object"&&Number.isFinite(v.height)?v.height:terrainHeightAt(x,z);}
+  function buildMine(state){
+    const level=clamp(Number(state.player?.mineLevel)||1,1,5),floorY=mineFloorY(level);
+    const rock=mat(0x34414a,.12,.95),rail=mat(0x8b9aa0,.72,.42),lampMat=mat(0xf0c76c,.22,.24,0x9a5a13);
+    const cells=[];for(let z=0;z<MINE_H;z++)for(let x=0;x<MINE_W;x++)if(mineTunnelAt(x,z))cells.push({x,z});
+    const floorGeo=new THREE.BoxGeometry(31.7,3,31.7),floorMat=mat(0x444c50,.1,.92);
+    const floors=new THREE.InstancedMesh(floorGeo,floorMat,cells.length),dummy=new THREE.Object3D();
+    cells.forEach((p,i)=>{dummy.position.set(p.x*32,floorY-1.5,p.z*32);dummy.updateMatrix();floors.setMatrixAt(i,dummy.matrix);});
+    floors.receiveShadow=true;mineRoot.add(floors);
+    for(const p of cells){
+      const x=p.x*32,z=p.z*32;
+      if(!mineTunnelAt(p.x-1,p.z))makeBox(mineRoot,x-16,floorY+13,z,3,29,32,rock);
+      if(!mineTunnelAt(p.x+1,p.z))makeBox(mineRoot,x+16,floorY+13,z,3,29,32,rock);
+      if(!mineTunnelAt(p.x,p.z-1))makeBox(mineRoot,x,floorY+13,z-16,32,29,3,rock);
+      if(!mineTunnelAt(p.x,p.z+1))makeBox(mineRoot,x,floorY+13,z+16,32,29,3,rock);
+      if((p.x===8||p.x===14||p.x===20||p.x===26||p.x===32)&&p.z===12){
+        for(const sx of [-13,13])makeBox(mineRoot,x+sx,floorY+13,z,2.8,26,3.4,rail);
+        makeBox(mineRoot,x,floorY+26,z,29,3,3.4,rail);
+      }
+      if(p.x%6===0&&p.z===12){makeCyl(mineRoot,x+11,floorY+24,z,1.1,2,lampMat,8);const light=new THREE.PointLight(0xf2bd65,.7,112,2);light.position.set(x,floorY+23,z);mineRoot.add(light);}
     }
-    worldRoot.add(tiles);
-    const grid=new THREE.GridHelper(36*32,36,0x37636b,0x29484f);grid.position.set(17.5*32,0.25,13.5*32);grid.material.transparent=true;grid.material.opacity=0.28;worldRoot.add(grid);
-    const waterMat=new THREE.MeshStandardMaterial({color:0x0b6382,transparent:true,opacity:0.62,roughness:0.2,metalness:0.15});
+    for(const node of Object.values(state.mineDeposits||{})){
+      if(node.level!==level||node.amount<=0)continue;
+      const g=new THREE.Group();g.position.set(node.x*32,node.depthY,node.z*32);
+      g.userData={cell:{x:node.x,z:node.z},targetKind:{kind:"resource",type:node.type,mine:true,level,depthY:node.depthY}};mineRoot.add(g);
+      makeBox(g,0,-2,0,13,8,13,mat(0x1a2932,.08,.98));
+      if(String(node.type).startsWith("doronium_"))makeCrystal(g,node.type,0,5,0,3.1);
+      else{
+        const color=palette[node.type]||0x81919d,ore=mat(color,.5,.3,color);
+        for(let i=0;i<4;i++){const m=new THREE.Mesh(i%2?new THREE.OctahedronGeometry(2.7,0):new THREE.IcosahedronGeometry(2.8,0),ore);m.position.set((i%2?1:-1)*(3+i%3),4+(i%3)*1.8,(i<2?-1:1)*(2+i));m.rotation.set(i*.3,i*.6,i*.2);m.castShadow=true;g.add(m);}
+      }
+      const glow=new THREE.PointLight(String(node.type).startsWith("doronium_")?0x55dcec:0x8ca8b5,.35,34,2);glow.position.y=8;g.add(glow);
+    }
+    const addLift=(x,kind)=>{
+      const g=new THREE.Group();g.position.set(x*32,floorY,12*32);g.userData={cell:{x,z:12},targetKind:{kind}};mineRoot.add(g);
+      makeBox(g,0,4,0,19,8,19,mats.dark);makeCyl(g,0,14,0,5,20,mats.trim,10);
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(10,.65,8,36),new THREE.MeshBasicMaterial({color:kind==="mineExit"?0x7ed9c3:0xf0c76c}));ring.rotation.x=Math.PI/2;ring.position.y=24;g.add(ring);
+      const light=new THREE.PointLight(kind==="mineExit"?0x6ed6c1:0xf2bd65,1.15,76,2);light.position.y=23;g.add(light);
+    };
+    addLift(3,"mineExit");addLift(36,"mineDescend");
+  }
+  function rebuild(state){
+    clear(worldRoot);clear(machineRoot);clear(nodeRoot);clear(markerRoot);clear(mineRoot);
+    const tileGeo=new THREE.BoxGeometry(31.7,1,31.7),tileMat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94});
+    const count=WORLD_W*WORLD_H,tiles=new THREE.InstancedMesh(tileGeo,tileMat,count);tiles.receiveShadow=true;
+    const dummy=new THREE.Object3D(),color=new THREE.Color();let n=0;const bottom=-52;
+    for(let z=0;z<WORLD_H;z++)for(let x=0;x<WORLD_W;x++){
+      const key=x+","+z,node=state.nodes?.[key],h=surfaceY(state,x,z);
+      dummy.position.set(x*32,(h+bottom)/2,z*32);dummy.scale.set(1,Math.max(1,h-bottom),1);dummy.updateMatrix();tiles.setMatrixAt(n,dummy.matrix);
+      color.setHex(node?.type==="water"?palette.water:biomeGroundColor(biomeAt(x,z)));tiles.setColorAt(n,color);n++;
+    }
+    tiles.instanceMatrix.needsUpdate=true;worldRoot.add(tiles);
+    const waterMat=new THREE.MeshStandardMaterial({color:0x0b6382,transparent:true,opacity:.68,roughness:.2,metalness:.15});
     for(const [key,node] of Object.entries(state.nodes||{})){
-      const [x,z]=key.split(",").map(Number);if(!state.seen?.[key]||(node.amount<=0&&node.type!=="dori"))continue;
-      const g=new THREE.Group();g.position.set(x*32,0,z*32);g.userData={cell:{x,z},targetKind:{kind:"resource",type:node.type}};nodeRoot.add(g);
+      const [x,z]=key.split(",").map(Number);if(node.amount<=0&&node.type!=="dori")continue;
+      const y=surfaceY(state,x,z),g=new THREE.Group();g.position.set(x*32,y,z*32);
+      g.userData={cell:{x,z},targetKind:node.type==="mineEntrance"?{kind:"mineEntrance"}:{kind:"resource",type:node.type}};nodeRoot.add(g);
       if(node.type==="water"){
-        const waterBlock=new THREE.Mesh(new THREE.BoxGeometry(29,1.2,29),waterMat);waterBlock.position.y=2;waterBlock.receiveShadow=true;g.add(waterBlock);
-        for(let i=0;i<3;i++){const ripple=new THREE.Mesh(new THREE.BoxGeometry(8,.18,1.2),new THREE.MeshBasicMaterial({color:0x6bd8e6,transparent:true,opacity:.48}));ripple.position.set((i-1)*7,2.8,(i%2?4:-4));g.add(ripple);}
-      } else if(node.type==="wood"||node.type==="dori"){
-        const trunk=node.type==="dori"?mat(0x9b7044,.08,.85):mat(0x65412e,.03,.92);
-        makeBox(g,0,12,0,6,24,6,trunk);
+        const waterBlock=new THREE.Mesh(new THREE.BoxGeometry(29,1.2,29),waterMat);waterBlock.position.y=1;waterBlock.receiveShadow=true;g.add(waterBlock);
+        for(let i=0;i<3;i++){const ripple=new THREE.Mesh(new THREE.BoxGeometry(8,.18,1.2),new THREE.MeshBasicMaterial({color:0x6bd8e6,transparent:true,opacity:.48}));ripple.position.set((i-1)*7,1.8,(i%2?4:-4));g.add(ripple);}
+      }else if(node.type==="wood"||node.type==="dori"){
+        const trunk=node.type==="dori"?mat(0x9b7044,.08,.85):mat(0x65412e,.03,.92);makeCyl(g,0,12,0,3,24,trunk,8);
         const leaves=node.type==="dori"?mats.green:mat(0x28754e,.04,.92);
         for(const [lx,ly,lz,size] of [[0,27,0,15],[0,35,0,12],[-7,29,0,8],[7,29,0,8],[0,29,-7,8],[0,29,7,8]])makeBox(g,lx,ly,lz,size,size,size,leaves);
-        if(node.type==="dori"){const orb=makeCrystal(g,"doronium_normal",0,40,0,2.8);}
-      } else if(node.type==="relaySite"||node.type==="coreSite"){
+        if(node.type==="dori")makeCrystal(g,"doronium_normal",0,40,0,2.8);
+      }else if(node.type==="mineEntrance"){
+        const stone=mat(0x53616a,.18,.9),glow=mat(0x3c9eaa,.3,.35,0x124f59);
+        makeBox(g,-13,13,0,5,29,6,stone);makeBox(g,13,13,0,5,29,6,stone);makeBox(g,0,27,0,31,6,7,stone);
+        makeBox(g,0,8,-1,19,19,1.5,mat(0x02070c,.02,.98));makeBox(g,0,30,0,25,1.1,8,glow,false);
+        const lamp=new THREE.PointLight(0x56d8da,1.5,88,2);lamp.position.set(0,20,-8);g.add(lamp);
+      }else if(node.type==="relaySite"||node.type==="coreSite"){
         makeCyl(g,0,2,0,9,4,mats.dark,8);makeCyl(g,0,12,0,2,18,mats.trim,8);makeSphere(g,0,24,0,node.type==="coreSite"?5:3,mats.crystal);
-      } else {
-        const col=palette[node.type]||0x778995,oreMat=mat(col,.38,.48,col);
-        makeBox(g,0,5,0,17,10,17,mat(0x465b62,.12,.88));
-        const blocks=[[ -5,11,-5,7],[4,12,-4,8],[-3,14,5,7],[6,7,5,6],[0,18,0,5]];
-        for(let i=0;i<blocks.length;i++){const [bx,by,bz,size]=blocks[i];const part=makeBox(g,bx,by,bz,size,size,size,oreMat);part.rotation.y=(i%2)*.24;}
       }
     }
-    for(const b of state.buildings||[]) addBuilding(b,state);
+    for(const key of Object.keys(state.foundation||{})){if(!state.foundation[key])continue;const [x,z]=key.split(",").map(Number);const h=surfaceY(state,x,z);makeBox(worldRoot,x*32,h+1.2,z*32,29,2.2,29,mat(0x65727a,.62,.55),false);}
+    for(const key of Object.keys(state.flattened||{})){if(!state.flattened[key])continue;const [x,z]=key.split(",").map(Number);const h=surfaceY(state,x,z);const marker=new THREE.Mesh(new THREE.BoxGeometry(30,.45,30),new THREE.MeshBasicMaterial({color:0x87c4aa,transparent:true,opacity:.12,depthWrite:false}));marker.position.set(x*32,h+.15,z*32);worldRoot.add(marker);}
+    for(const b of state.buildings||[])addBuilding(b,state);
     addPlayer(state);
-    const ring=new THREE.Mesh(new THREE.TorusGeometry(7,0.35,8,40),new THREE.MeshBasicMaterial({color:0xf2d28a,transparent:true,opacity:0.7}));
-    ring.rotation.x=Math.PI/2;ring.position.set((state.player.x)*32,2,(state.player.y)*32);markerRoot.add(ring);
-    if(state.selectedBuilding){const b=state.buildings.find(v=>v.uid===state.selectedBuilding);if(b){const r=new THREE.Mesh(new THREE.TorusGeometry(15,0.65,8,48),new THREE.MeshBasicMaterial({color:0x70e7e9}));r.rotation.x=Math.PI/2;r.position.set(b.x*32,3,b.y*32);markerRoot.add(r);}}
-    if(state.hoverCell&&state.selectedBuild){const h=state.hoverCell;const r=new THREE.Mesh(new THREE.BoxGeometry(29,1,29),new THREE.MeshBasicMaterial({color:0xf2d17d,transparent:true,opacity:0.28}));r.position.set(h.x*32,2,h.y*32);markerRoot.add(r);}
+    playerRing=new THREE.Mesh(new THREE.TorusGeometry(7,.35,8,40),new THREE.MeshBasicMaterial({color:0xf2d28a,transparent:true,opacity:.7}));playerRing.rotation.x=Math.PI/2;markerRoot.add(playerRing);
+    if(state.selectedBuilding){const b=state.buildings.find(v=>v.uid===state.selectedBuilding);if(b){const r=new THREE.Mesh(new THREE.TorusGeometry(15,.65,8,48),new THREE.MeshBasicMaterial({color:0x70e7e9}));r.rotation.x=Math.PI/2;r.position.set(b.x*32,surfaceY(state,b.x,b.y)+3,b.y*32);markerRoot.add(r);}}
+    if(state.hoverCell&&(state.selectedBuild||state.selectedLandTool)){
+      const h=state.hoverCell,y=surfaceY(state,h.x,h.y)+2,ok=!!state.canBuildPreview;
+      const r=new THREE.Mesh(new THREE.BoxGeometry(30,1,30),new THREE.MeshBasicMaterial({color:ok?0x6de4bb:0xf2a46e,transparent:true,opacity:.28,depthWrite:false}));r.position.set(h.x*32,y,h.y*32);markerRoot.add(r);
+      const edge=new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(30,2,30)),new THREE.LineBasicMaterial({color:ok?0x6de4bb:0xf2a46e,transparent:true,opacity:.9}));edge.position.set(h.x*32,y,h.y*32);markerRoot.add(edge);
+    }
+    buildMine(state);
   }
   function addBuilding(b,state){
     const g=new THREE.Group();
-    g.position.set(b.x*32,1,b.y*32);
+    g.position.set(b.x*32,surfaceY(state,b.x,b.y)+1,b.y*32);
     g.rotation.y=-(b.dir||0)*Math.PI/2;
     machineRoot.add(g);
 
@@ -289,7 +333,7 @@ export function createWorld3D(canvas, getState) {
     makeBox(g,0,2.4,0,27,4,27,mats.dark);
     for(const x of [-10,10])for(const z of [-10,10])makeCyl(g,x,4,z,.9,2.2,mats.gold,8);
 
-    if(b.type==="belt"){
+    if(b.type==="belt"||b.type==="beltAdaptive"){
       makeBox(g,0,5.2,0,27,1.7,27,mats.steel);
       makeBox(g,0,7.1,-12.6,27,3,1.4,mats.trim);
       makeBox(g,0,7.1,12.6,27,3,1.4,mats.trim);
@@ -298,7 +342,7 @@ export function createWorld3D(canvas, getState) {
         roller.rotation.z=Math.PI/2;anim.rollers.push(roller);
         for(const x of [-9,9])makeCyl(g,x,6.4,z,1.6,1,mats.gold,10);
       }
-      for(const x of [-9,9])for(const z of [-8,8])makeBox(g,x,2,z,2.1,4,2.1,main);
+      for(const x of [-9,9])for(const z of [-8,8]){const support=makeBox(g,x,2,z,2.1,4,2.1,main);if(b.type==="beltAdaptive"){support.position.y=-2;makeCyl(g,x,-5,z,1.15,5,mats.gold,8);}}
       const track=new THREE.Group();g.add(track);anim.itemGroup=track;
       if(b.item){
         const count=Math.min(24,Math.max(1,Math.ceil(Number(b.item.qty)||1)));
@@ -434,7 +478,7 @@ export function createWorld3D(canvas, getState) {
     g.userData={...anim,cell:{x:b.x,z:b.y},targetKind:{kind:"building",type:b.type,uid:b.uid}};
   }
   function addPlayer(state){
-    const g=new THREE.Group();g.position.set(state.player.x*32,1,state.player.y*32);markerRoot.add(g);playerModel=g;
+    const g=new THREE.Group();g.position.set(state.player.x*32,(state.player.layer==="mine"?mineFloorY(state.player.mineLevel):terrainHeightAt(state.player.x,state.player.y))+1,state.player.y*32);markerRoot.add(g);playerModel=g;
     makeCyl(g,0,9,0,4,13,mat(0x315d76,.15,.72),12);
     makeSphere(g,0,19,0,4.5,mat(0xe0b98b,.05,.82));
     makeBox(g,0,23,0,8,2.2,7,mats.gold);
@@ -443,11 +487,14 @@ export function createWorld3D(canvas, getState) {
     for(const x of [-5.5,5.5]){const a=makeBox(g,x,12,0,2.6,8,3,mats.trim);a.rotation.z=x<0?-.2:.2;arms.push(a);}
     g.userData={legs,arms};
   }
-  function signature(s){return [s.player?.x,s.player?.y,s.buildings?.map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.status,b.output?.id,b.output?.qty,b.item?.id,b.item?.qty,b.variant].join(":")).join("|"),Object.keys(s.seen||{}).length,Object.entries(s.nodes||{}).map(([id,n])=>[id,n.amount,Math.floor(n.cooldown||0)].join(":")).join("|"),s.selectedBuilding,s.selectedBuild,s.hoverCell?.x,s.hoverCell?.y].join(";");}
+  function signature(s){return [s.worldVersion,s.player?.layer,s.player?.mineLevel,s.buildings?.map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.status,b.output?.id,b.output?.qty,b.item?.id,b.item?.qty,b.variant].join(":")).join("|"),Object.entries(s.nodes||{}).map(([id,n])=>[id,n.amount,Math.floor(n.cooldown||0)].join(":")).join("|"),Object.entries(s.mineDeposits||{}).map(([id,n])=>[id,n.amount].join(":")).join("|"),Object.keys(s.flattened||{}).length,Object.keys(s.foundation||{}).length,s.selectedBuilding,s.selectedBuild,s.selectedLandTool,s.hoverCell?.x,s.hoverCell?.y].join(";");}
   function render(state){
     if(!state)return;resizeIfNeeded();const sig=signature(state);if(sig!==lastSignature){rebuild(state);lastSignature=sig;}
     activeViewMode=state.player?.viewMode==="map"?"map":state.player?.viewMode==="third"?"third":"first";
-    if(activeViewMode==="map"){cameraUpdate();if(playerModel)playerModel.visible=true;firstPersonRig.visible=false;}else updateGameCamera(state);
+    const inMine=state.player?.layer==="mine";stateLayerForPicking=inMine?"mine":"surface";
+    worldRoot.visible=!inMine;machineRoot.visible=!inMine;nodeRoot.visible=!inMine;mineRoot.visible=inMine;markerRoot.visible=true;
+    if(inMine){activeViewMode=state.player?.viewMode==="third"?"third":"first";updateGameCamera(state);if(playerModel)playerModel.visible=activeViewMode!=="first";firstPersonRig.visible=activeViewMode==="first";}
+    else if(activeViewMode==="map"){cameraUpdate();if(playerModel)playerModel.visible=true;firstPersonRig.visible=false;}else updateGameCamera(state);
     const t=performance.now()*.001;sun.intensity=2.25+Math.sin(t*.08)*.18;
     const byUid=new Map((state.buildings||[]).map(b=>[b.uid,b]));
     machineRoot.children.forEach(g=>{
@@ -465,15 +512,15 @@ export function createWorld3D(canvas, getState) {
       if(a.glow)a.glow.material.opacity=running ? .66+Math.sin(t*4)*.18 : .18;
       if(a.itemGroup&&b.item){const p=clamp((b.moveTimer||0)/.75,0,1),n=a.itemGroup.children.length,cols=Math.min(6,n),rows=Math.ceil(n/cols);a.itemGroup.children.forEach((m,i)=>{m.position.x=((i%cols)-(cols-1)/2)*3.0;m.position.z=-((Math.floor(i/cols)-(rows-1)/2)*3.0)-(p-.5)*18;m.position.y=8.6+Math.sin(t*5+i)*.18;m.rotation.y=t*1.5+i*.45;m.rotation.x=Math.sin(t*2+i)*.1;});}
     });
-    if(playerModel){const m=state.playerMotion||{x:state.player.x,z:state.player.y,moving:false};playerModel.position.set(m.x*32,1+Math.sin(t*3)*(m.moving ? .13 : .025),m.z*32);playerModel.rotation.y=m.yaw??m.facing??0;const swing=m.moving ? Math.sin(t*9)*.48 : Math.sin(t*1.5)*.035;(playerModel.userData.legs||[]).forEach((leg,i)=>leg.rotation.x=swing*(i%2?-1:1));(playerModel.userData.arms||[]).forEach((arm,i)=>arm.rotation.x=m.moving?Math.sin(t*9+i*Math.PI)*.38:0);}
+    if(playerModel){const m=state.playerMotion||{x:state.player.x,z:state.player.y,moving:false};const base=state.player?.layer==="mine"?mineFloorY(state.player.mineLevel):terrainHeightAt(m.x,m.z);playerModel.position.set(m.x*32,base+1+(Number(m.y)||0)+Math.sin(t*3)*(m.moving ? .13 : .025),m.z*32);if(playerRing){playerRing.position.set(m.x*32,base+2+(Number(m.y)||0),m.z*32);playerRing.visible=state.player?.layer!=="mine";}playerModel.rotation.y=m.yaw??m.facing??0;const swing=m.moving ? Math.sin(t*9)*.48 : Math.sin(t*1.5)*.035;(playerModel.userData.legs||[]).forEach((leg,i)=>leg.rotation.x=swing*(i%2?-1:1));(playerModel.userData.arms||[]).forEach((arm,i)=>arm.rotation.x=m.moving?Math.sin(t*9+i*Math.PI)*.38:0);}
     renderer.render(scene,camera);
   }
   function resizeIfNeeded(){const r=canvas.getBoundingClientRect();if(Math.abs(r.width-width)>1||Math.abs(r.height-height)>1)resize();}
-  function pickTile(clientX,clientY){const r=canvas.getBoundingClientRect();pointer.x=((clientX-r.left)/r.width)*2-1;pointer.y=-((clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObject(groundPick,false)[0];if(!hit)return null;const x=Math.floor(hit.point.x/32+0.5),z=Math.floor(hit.point.z/32+0.5);return x>=0&&z>=0&&x<36&&z<28?{x,z}:null;}
-  function pan(dx,dy){const scale=1/zoom;target.x=clamp(target.x-dx*0.9*scale,0,35*32);target.z=clamp(target.z-dy*0.9*scale,0,27*32);cameraUpdate();}
+  function pickTile(clientX,clientY){const r=canvas.getBoundingClientRect();pointer.x=((clientX-r.left)/r.width)*2-1;pointer.y=-((clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hit=raycaster.intersectObject(groundPick,false)[0];if(!hit)return null;const x=Math.floor(hit.point.x/32+0.5),z=Math.floor(hit.point.z/32+0.5);return x>=0&&z>=0&&x<WORLD_W&&z<WORLD_H?{x,z}:null;}
+  function pan(dx,dy){const scale=1/zoom;target.x=clamp(target.x-dx*1.6*scale,0,(WORLD_W-1)*32);target.z=clamp(target.z-dy*1.6*scale,0,(WORLD_H-1)*32);cameraUpdate();}
   function setZoom(value){zoom=clamp(value,.55,1.8);if(activeViewMode==="map"){cameraUpdate()}else{gameCamera.fov=clamp(74-(zoom-1)*38,52,88);gameCamera.updateProjectionMatrix();}}
-  function center(x,y){target.set(x*32,0,y*32);cameraUpdate();}
+  function center(x,y){target.set(x*32,terrainHeightAt(x,y),y*32);cameraUpdate();}
   function orbit(dx,dy){yaw-=dx*0.004;pitch=clamp(pitch+dy*0.003,0.42,1.25);cameraUpdate();}
   resize();cameraUpdate();
-  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?mode:"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible};},get zoom(){return zoom;}};
+  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?"third":"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,undergroundResourceNodes:mineRoot.children.filter(g=>g.userData?.targetKind?.kind==="resource").length};},get zoom(){return zoom;}};
 }
