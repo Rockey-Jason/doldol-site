@@ -668,6 +668,43 @@ func supply_machine(instance_id: String,item_id: String,quantity: int) -> bool:
 		return true
 	return false
 
+func supply_machine_inputs(instance_id: String) -> bool:
+	for machine in buildings:
+		if machine.instance_id!=instance_id:
+			continue
+		var recipe: Dictionary = GameData.recipe_definition(str(machine.get("recipe","")))
+		if recipe.is_empty():
+			notification.emit("먼저 기계 레시피를 선택해야 해.")
+			return false
+		var missing: Dictionary = {}
+		for item_id in recipe.inputs:
+			var buffered := 0
+			for stack in machine.get("input",[]):
+				if stack.item_id==item_id:
+					buffered += int(stack.quantity)
+			var amount := maxi(0,int(recipe.inputs[item_id])-buffered)
+			if amount>0:
+				missing[item_id] = amount
+		if missing.is_empty():
+			notification.emit("현재 레시피의 입력 버퍼가 이미 충족됐어.")
+			return false
+		if machine.get("input",[]).size()+missing.size()>24:
+			notification.emit("기계 입력 버퍼가 가득 찼어.")
+			return false
+		var lots: Array[Dictionary] = consume_items_with_lots(missing,bool(recipe.get("allow_synthetic",true)))
+		if lots.is_empty():
+			notification.emit("재료 부족 또는 합성 원료 제한 · 입력은 전혀 소비되지 않았어.")
+			return false
+		for lot in lots:
+			var transferred: Dictionary = lot.duplicate(true)
+			transferred["provenance"] = str(transferred.get("provenance","UNKNOWN"))+" -> MACHINE:"+instance_id
+			machine.input.append(transferred)
+		notification.emit("기계 입력 완료 · %d개 Stack / 레시피 재료 원자 투입" % lots.size())
+		save_game()
+		state_changed.emit()
+		return true
+	return false
+
 func collect_warehouse_item(instance_id: String,stack_id: String) -> bool:
 	for machine in buildings:
 		if machine.instance_id!=instance_id or machine.id!="WAREHOUSE":
