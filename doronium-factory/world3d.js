@@ -1,7 +1,37 @@
 /* DORONIUM FACTORY — real-time 3D world renderer (Three.js)
  * Keeps the existing deterministic simulation and save schema; this module is presentation/input only.
  */
-const THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js");
+let THREE = null;
+try { THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"); }
+catch (error) { console.warn("Three.js CDN unavailable; using the compatibility renderer.", error); }
+
+function createFallbackWorld(canvas) {
+  const ctx = canvas.getContext("2d");
+  let cx=18, cy=14, zoom=1, width=1, height=1;
+  const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+  function render(state) {
+    if(!ctx)return;
+    const r=canvas.getBoundingClientRect(); width=Math.max(1,r.width); height=Math.max(1,r.height);
+    const dpr=Math.min(window.devicePixelRatio||1,1.5);
+    canvas.width=Math.floor(width*dpr); canvas.height=Math.floor(height*dpr); ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.fillStyle="#071522";ctx.fillRect(0,0,width,height);
+    const size=34*zoom,left=width/2-cx*size,top=height/2-cy*size;
+    for(let y=0;y<28;y++)for(let x=0;x<36;x++){
+      const px=left+x*size,py=top+y*size,key=x+","+y,node=state.nodes?.[key],seen=!!state.seen?.[key];
+      ctx.fillStyle=!seen?"#091a27":node?.type==="water"?"#14516a":["#193a3d","#1b4142","#203f40"][(x*13+y*7)%3];
+      ctx.fillRect(px,py,size-1,size-1);
+      if(seen&&node&&node.type!=="water"){ctx.font=Math.max(10,size*.42)+"px sans-serif";ctx.textAlign="center";ctx.fillStyle="#d5e8e8";ctx.fillText(({wood:"🌲",stone:"🪨",ironOre:"⛏️",copperOre:"🟠",coal:"⬛",quartz:"🔹",goldOre:"🟡",diamond:"💠",dori:"🌳",relaySite:"📡",coreSite:"◎"})[node.type]||"◆",px+size/2,py+size*.63);}
+      const b=state.buildings?.find(v=>v.x===x&&v.y===y);
+      if(b){ctx.fillStyle=b.status==="RUNNING"?"#247c85":"#29485c";ctx.fillRect(px+size*.13,py+size*.13,size*.74,size*.74);ctx.strokeStyle="#75d4d7";ctx.strokeRect(px+size*.13,py+size*.13,size*.74,size*.74);ctx.font=Math.max(9,size*.38)+"px sans-serif";ctx.fillStyle="#e2f1f3";ctx.fillText(({fusion:"🌌",reactor:"🔷",solar:"☀️",doriFarm:"🌳",lab:"🔬"})[b.type]||"⚙️",px+size/2,py+size*.62);}
+    }
+    const px=left+state.player.x*size+size/2,py=top+state.player.y*size+size/2;
+    ctx.beginPath();ctx.fillStyle="#f2d28a";ctx.arc(px,py,Math.max(5,size*.18),0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#071522";ctx.font="12px sans-serif";ctx.textAlign="center";ctx.fillText("👷",px,py+4);
+    ctx.fillStyle="#d8e8ec";ctx.font="11px sans-serif";ctx.textAlign="left";ctx.fillText("WebGL 미지원 · 호환 모드",12,height-14);
+  }
+  function pickTile(x,y){const r=canvas.getBoundingClientRect(),size=34*zoom,left=r.width/2-cx*size,top=r.height/2-cy*size;const tx=Math.floor((x-r.left-left)/size),ty=Math.floor((y-r.top-top)/size);return tx>=0&&ty>=0&&tx<36&&ty<28?{x:tx,y:ty}:null;}
+  return {render,pickTile,pan(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},orbit(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},setZoom(v){zoom=clamp(v,.55,1.8);},center(x,y){cx=x;cy=y;},get zoom(){return zoom;}};
+}
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const palette = {
@@ -20,10 +50,13 @@ const buildingColor = {
 };
 
 export function createWorld3D(canvas, getState) {
+  if (!THREE) return createFallbackWorld(canvas);
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x071522);
   scene.fog = new THREE.FogExp2(0x071522, 0.00062);
-  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false, powerPreference:"high-performance"});
+  let renderer;
+  try { renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:false, powerPreference:"high-performance"}); }
+  catch (error) { console.warn("WebGL unavailable; using the compatibility renderer.", error); return createFallbackWorld(canvas); }
   const compactDevice = window.matchMedia("(max-width: 760px)").matches || /Android|iPhone|iPad/i.test(navigator.userAgent);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, compactDevice ? 1.15 : 1.6));
   renderer.shadowMap.enabled = true;
