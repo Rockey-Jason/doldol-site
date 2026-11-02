@@ -183,6 +183,60 @@ h1{font-size:clamp(29px,5vw,48px);line-height:1.05;letter-spacing:-.04em;margin:
 @media(max-width:900px){.dashboard{grid-template-columns:1fr}.click-panel{min-height:470px}.side{display:grid;grid-template-columns:1fr}.bottom-grid{grid-template-columns:1fr}}
 @media(max-width:560px){.shell{padding:14px 11px 42px}.topbar{margin-bottom:22px}.brand-mark{width:37px;height:37px}.brand-name{font-size:12px}.ghost{padding:9px 10px;font-size:11px}.hero{grid-template-columns:1fr;gap:8px}.hero p{font-size:12px}.save-state{font-size:10px}.click-panel{min-height:445px;padding:18px 13px;border-radius:19px}.balance{font-size:40px}.coin-button{width:min(61vw,220px);margin:18px 0 14px}.stats{gap:6px}.stat{padding:10px 7px}.stat strong{font-size:13px}.panel{border-radius:18px}.side-head{padding:17px 15px 0}.tabs{padding:12px 10px 0}.tab{font-size:11px;padding:9px 6px}.list{padding:10px}.item{grid-template-columns:38px minmax(0,1fr) auto;gap:8px;padding:10px}.item-icon{width:38px;height:38px}.buy{min-width:78px;padding:9px 7px;font-size:10px}.section-grid{padding:10px;gap:8px}.research{padding:11px}.bottom-grid{gap:12px}.info-panel{padding:16px}.golden{width:54px;height:54px;right:12px;top:12px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+
+/* ===== COIN SKIN AUDIO / PASSIVE BUFF / PRESTIGE RESEARCH UPGRADE ===== */
+.skin-passive{position:relative;display:flex;align-items:center;gap:10px;width:min(420px,100%);margin-top:13px;padding:10px 13px;border:1px solid #d9b45b38;border-radius:13px;background:linear-gradient(105deg,#d8ae5716,#fff1c007 58%,#7aa6d20a);box-shadow:inset 0 1px 0 #ffffff08;animation:passiveReveal .55s cubic-bezier(.2,.8,.2,1) both}
+.skin-passive-icon{width:27px;height:27px;flex:0 0 27px;display:grid;place-items:center;border-radius:9px;background:linear-gradient(145deg,#ffeab0,#b98232);color:#3e2a0e;box-shadow:0 0 17px #edc76c35}
+.skin-passive div{min-width:0;flex:1}.skin-passive strong{display:block;font-size:11px;font-weight:400;color:#ffe5a0}.skin-passive small{display:block;margin-top:4px;color:#aab7ca;font-size:9px;line-height:1.4}
+.skin-passive em{font-style:normal;font-size:8px;letter-spacing:.13em;color:#8ee0bb;border:1px solid #79d8ad38;background:#79d8ad0c;padding:5px 7px;border-radius:99px;white-space:nowrap}
+.coin-button:before{content:"";position:absolute;inset:-9%;z-index:-1;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 18%,#f6d88977 27%,transparent 38% 58%,#92d9ef66 68%,transparent 78%);filter:blur(13px);opacity:.2;animation:coinAuraRotate 16s linear infinite;transition:opacity .3s}
+.coin-button:hover:before{opacity:.55}
+.coin-button:not(.is-hit) .coin-face{animation:coinIdleFloat 5.2s ease-in-out infinite}
+.coin-button[data-skin="obsidian"]:before{background:conic-gradient(from 0deg,transparent 0 16%,#b8c4dc99 28%,transparent 42% 65%,#6f86ad88 76%,transparent 86%)}
+.coin-button[data-skin="aurora"]:before{background:conic-gradient(from 0deg,transparent 0 15%,#a6f5e9aa 27%,transparent 40% 62%,#b99ef7aa 77%,transparent 88%)}
+.coin-button[data-skin="doronium"]:before{background:conic-gradient(from 0deg,transparent 0 16%,#62f0d2aa 28%,transparent 42% 64%,#6caeff99 77%,transparent 88%)}
+.coin-button[data-skin="prism"]:before{background:conic-gradient(from 0deg,transparent 0 10%,#fff0a0bb 22%,#9df3eebb 38%,#bba2ffbb 58%,#ffb7ddaa 72%,transparent 88%)}
+.coin-button[data-skin="royal"]:before{background:conic-gradient(from 0deg,transparent 0 14%,#ffe9a6bb 26%,transparent 40% 58%,#df8aa9aa 72%,transparent 87%)}
+@keyframes coinAuraRotate{to{transform:rotate(360deg)}}
+@keyframes coinIdleFloat{0%,100%{transform:translateY(0) rotateZ(-.6deg)}50%{transform:translateY(-4px) rotateZ(.6deg)}}
+@keyframes passiveReveal{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+.research{position:relative;overflow:hidden;transition:transform .24s cubic-bezier(.2,.8,.2,1),border-color .24s,background .24s,box-shadow .24s}
+.research:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 20%,#ffffff08 48%,transparent 70%);transform:translateX(-130%);transition:transform .65s}
+.research:hover{transform:translateY(-3px);border-color:#e6c36d66;background:#ffffff09;box-shadow:0 15px 32px #0004}
+.research:hover:before{transform:translateX(130%)}
+.legacy-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+.legacy-research-card{padding:15px;background:linear-gradient(145deg,#152541c9,#0b182ce6);border-color:#d4b26120}
+.legacy-research-card.maxed{border-color:#e7c16b88;background:linear-gradient(145deg,#3a2d1b55,#0c192ee6);box-shadow:inset 0 0 25px #e9c56d0b}
+.legacy-card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.legacy-card-top h3{margin:0;line-height:1.45}
+.legacy-level-badge{flex:0 0 auto;padding:5px 7px;border-radius:8px;border:1px solid #d9b76044;background:#d9b76014;color:#f3d78f;font-size:9px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.legacy-research-card p{min-height:42px;margin-bottom:12px;color:#c2cce0}
+.legacy-progress{height:7px;overflow:hidden;border-radius:99px;background:#ffffff11;box-shadow:inset 0 1px 3px #0007}
+.legacy-progress i{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#9e7136,#efd17a 62%,#fff0bb);box-shadow:0 0 13px #eac56e77;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+.legacy-milestones{display:flex;justify-content:space-between;gap:4px;margin:9px 0 4px}
+.legacy-milestones span{padding:4px 5px;border-radius:6px;background:#ffffff07;color:#73819a;font-size:8px;white-space:nowrap;border:1px solid #ffffff0a;transition:all .25s}
+.legacy-milestones span.reached{color:#ffe39b;border-color:#e5c16b66;background:#d9ad561a;box-shadow:0 0 12px #e6c36c13}
+.legacy-research-card .item-level{min-height:28px;line-height:1.5;color:#91a2bb}
+.legacy-research-card .buy{width:100%;margin-top:8px;min-height:39px;background:linear-gradient(115deg,#e6c36f,#b98437 55%,#e6c36f);background-size:200% 100%;box-shadow:0 5px 16px #c3923c22;transition:background-position .4s,transform .2s,box-shadow .2s}
+.legacy-research-card .buy:hover:not(:disabled){background-position:100% 0;transform:translateY(-2px);box-shadow:0 9px 22px #d6aa4c33}
+.legacy-research-card .buy:disabled{background:#29364a;color:#8190a7;border-color:#ffffff10;box-shadow:none;opacity:.65}
+.skin-card{position:relative;overflow:hidden;transition:transform .25s,border-color .25s,background .25s,box-shadow .25s}
+.skin-card:hover{transform:translateY(-3px);border-color:#dfbd6b66;box-shadow:0 13px 26px #0004}
+.skin-card.equipped{box-shadow:inset 0 0 28px #e9c36d0b,0 0 22px #dcb45b0b}
+.skin-card .skin-swatch{position:relative;overflow:hidden;border:1px solid #ffffff22;animation:swatchShimmer 5s ease-in-out infinite}
+.skin-card .skin-swatch:after{content:"";position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 38%,#ffffff4a 49%,transparent 60%);transform:translateX(-75%) rotate(15deg);animation:swatchShine 5.6s ease-in-out infinite}
+@keyframes swatchShimmer{50%{filter:brightness(1.13) saturate(1.12)}}
+@keyframes swatchShine{0%,35%{transform:translateX(-75%) rotate(15deg)}70%,100%{transform:translateX(75%) rotate(15deg)}}
+.tab{transition:color .2s,border-color .2s,background .2s,transform .2s}
+.tab:active,.buy:active,.ghost:active{transform:scale(.97)}
+.stat{transition:transform .22s,border-color .22s,background .22s}
+.stat:hover{transform:translateY(-2px);border-color:#d7b05a33;background:#d5aa4310}
+.item{animation:itemEnter .4s both}
+.item:nth-child(2){animation-delay:.035s}.item:nth-child(3){animation-delay:.07s}.item:nth-child(4){animation-delay:.105s}.item:nth-child(5){animation-delay:.14s}.item:nth-child(6){animation-delay:.175s}.item:nth-child(7){animation-delay:.21s}
+@keyframes itemEnter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:560px){.legacy-grid{grid-template-columns:1fr}.skin-passive{gap:8px;padding:9px 10px}.skin-passive em{font-size:7px}.legacy-research-card{padding:13px}}
+@media(prefers-reduced-motion:reduce){.coin-button:before,.coin-button:not(.is-hit) .coin-face,.skin-passive,.skin-card .skin-swatch,.skin-card .skin-swatch:after,.item{animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -202,6 +256,7 @@ h1{font-size:clamp(29px,5vw,48px);line-height:1.05;letter-spacing:-.04em;margin:
 <div class="balance-label">ROCKEY COINS</div><div class="balance" id="balance">0</div><div class="rate" id="rate">초당 +0 코인</div>
 <button class="coin-button" id="coinButton" type="button" aria-label="로키 코인 클릭하여 획득"><span class="coin-face"><span class="coin-letter">R</span></span></button>
 <div class="coin-caption">TAP TO EARN</div><div class="click-hint" id="clickHint">클릭할 때마다 +1 코인</div>
+<div class="skin-passive" id="equippedBuff"><span class="skin-passive-icon">✦</span><div><strong>클래식 골드 · 착용 패시브</strong><small>모든 수익 +5%</small></div><em>ACTIVE</em></div>
 <div class="combo-box"><div class="combo-line"><span id="comboLabel">클릭 콤보를 시작해 보세요</span><strong id="comboValue">x1.00</strong></div><div class="combo-track"><i id="comboBar"></i></div></div>
 <div class="event-banner" id="eventBanner" aria-live="polite"><span class="event-icon">✦</span><span id="eventText">클릭할수록 깜짝 이벤트가 찾아옵니다.</span></div>
 <div class="stats">
@@ -263,20 +318,20 @@ const RESEARCH=[
  {id:"offline",name:"오프라인 네트워크",desc:"오프라인 생산 효율 +5% (최대 95%)",icon:"🌙",base:18000,max:5}
 ];
 const SKINS=[
- {id:"gold",name:"클래식 골드",desc:"로키 클릭커의 상징적인 황금 코인",threshold:0,prestige:0,colors:["#fff0bd","#c58d31"],icon:"✦"},
- {id:"obsidian",name:"옵시디언",desc:"깊은 밤처럼 차분한 흑요석 코인",threshold:100000,prestige:0,colors:["#bac4d9","#202a40"],icon:"◆"},
- {id:"aurora",name:"오로라",desc:"북극광을 닮은 몽환적인 빛",threshold:1000000,prestige:0,colors:["#d4fff7","#7467ba"],icon:"✧"},
- {id:"doronium",name:"도로늄 코어",desc:"도로늄 에너지가 흐르는 희귀 코인",threshold:100000000,prestige:0,colors:["#d8fff1","#126b70"],icon:"⬡"},
- {id:"prism",name:"프리즘",desc:"빛을 여러 색으로 분해하는 특별한 코인",threshold:10000000000,prestige:0,colors:["#fff0a9","#a78be1"],icon:"◇"},
- {id:"royal",name:"로열 엠블럼",desc:"세 번의 환생을 증명하는 제국의 문장",threshold:0,prestige:3,colors:["#fff0ba","#7c2447"],icon:"♛"}
+ {id:"gold",name:"클래식 골드",desc:"로키 클릭커의 상징적인 황금 코인",threshold:0,prestige:0,colors:["#fff0bd","#c58d31"],icon:"✦",buff:{all:.05},sound:"gold"},
+ {id:"obsidian",name:"옵시디언",desc:"깊은 밤처럼 차분한 흑요석 코인",threshold:100000,prestige:0,colors:["#bac4d9","#202a40"],icon:"◆",buff:{production:.12,offline:.04},sound:"obsidian"},
+ {id:"aurora",name:"오로라",desc:"북극광을 닮은 몽환적인 빛",threshold:1000000,prestige:0,colors:["#d4fff7","#7467ba"],icon:"✧",buff:{click:.15,production:.15,crit:.05},sound:"aurora"},
+ {id:"doronium",name:"도로늄 코어",desc:"도로늄 에너지가 흐르는 희귀 코인",threshold:100000000,prestige:0,colors:["#d8fff1","#126b70"],icon:"⬡",buff:{all:.28,event:.08},sound:"doronium"},
+ {id:"prism",name:"프리즘",desc:"빛을 여러 색으로 분해하는 특별한 코인",threshold:10000000000,prestige:0,colors:["#fff0a9","#a78be1"],icon:"◇",buff:{all:.45,click:.10,crit:.10,combo:.15},sound:"prism"},
+ {id:"royal",name:"로열 엠블럼",desc:"세 번의 환생을 증명하는 제국의 문장",threshold:0,prestige:3,colors:["#fff0ba","#7c2447"],icon:"♛",buff:{all:.70,event:.20,crit:.12,combo:.35},sound:"royal"}
 ];
 const LEGACY_RESEARCH=[
- {id:"legacy_click",name:"영구 클릭 핵",desc:"클릭 수익 +20%",cost:1,requires:[],icon:"✦"},
- {id:"legacy_factory",name:"자동화의 유산",desc:"자동 생산량 +25%",cost:2,requires:["legacy_click"],icon:"⚙️"},
- {id:"legacy_combo",name:"콤보 각성",desc:"콤보 보너스가 더 빠르게 성장",cost:2,requires:["legacy_click"],icon:"⛓️"},
- {id:"legacy_offline",name:"심야 생산망",desc:"오프라인 생산 효율 +5%p",cost:3,requires:["legacy_factory"],icon:"🌙"},
- {id:"legacy_event",name:"행운 공명",desc:"깜짝 이벤트 보상 +30%",cost:3,requires:["legacy_combo"],icon:"☄️"},
- {id:"legacy_transcend",name:"도로늄 초월",desc:"모든 수익 +35% 및 이벤트 보너스",cost:6,requires:["legacy_offline","legacy_event"],icon:"💠"}
+ {id:"legacy_click",name:"영구 클릭 핵",desc:"클릭 수익이 레벨마다 기하급수적으로 강화됩니다.",cost:1,growth:1.52,max:10,requires:[],icon:"✦"},
+ {id:"legacy_factory",name:"자동화의 유산",desc:"모든 자동 생산량이 큰 폭으로 증가합니다.",cost:2,growth:1.54,max:10,requires:["legacy_click"],icon:"⚙️"},
+ {id:"legacy_combo",name:"콤보 각성",desc:"콤보 성장 속도와 최대 보너스가 함께 증가합니다.",cost:2,growth:1.55,max:10,requires:["legacy_click"],icon:"⛓️"},
+ {id:"legacy_offline",name:"심야 생산망",desc:"오프라인 생산 효율을 최대 99%까지 끌어올립니다.",cost:3,growth:1.56,max:10,requires:["legacy_factory"],icon:"🌙"},
+ {id:"legacy_event",name:"행운 공명",desc:"랜덤 이벤트 보상과 특별 보너스가 증폭됩니다.",cost:3,growth:1.57,max:10,requires:["legacy_combo"],icon:"☄️"},
+ {id:"legacy_transcend",name:"도로늄 초월",desc:"클릭·자동 생산·이벤트를 모두 초월적으로 강화합니다.",cost:6,growth:1.60,max:10,requires:["legacy_offline","legacy_event"],icon:"💠"}
 ];
 const fresh=()=>({coins:0,totalEarned:0,runEarned:0,totalClicks:0,buildings:{},clickUpgrades:{},research:{},crystals:0,prestigeCount:0,bestRunEarned:0,bestCombo:0,highestClick:0,doroniumFragments:0,skinsOwned:["gold"],equippedSkin:"gold",prestigeResearch:{},soundEnabled:true,lastActiveAt:Date.now(),daily:{date:"",clicks:0,buildings:0,claimed:false},achievements:{},version:2});
 let state=fresh(),userId=null,activeTab="buildings",saveTimer=null,isSaving=false,goldenTimer=null,goldenVisible=false,toastTimer=null;
@@ -287,9 +342,24 @@ function cost(base,level){return Math.floor(base*Math.pow(1.16,level));}
 function buildingCost(item){return Math.floor(item.base*Math.pow(1.17,safeNum(state.buildings[item.id])));}
 function clickCost(item){return Math.floor(item.base*Math.pow(1.19,safeNum(state.clickUpgrades[item.id])));}
 function researchCost(item){return Math.floor(item.base*Math.pow(2.15,safeNum(state.research[item.id])));}
-function legacyLevel(id){return safeNum(state.prestigeResearch?.[id]);}
-function prodMultiplier(){return (1+safeNum(state.research.prod)*.5)*(1+safeNum(state.crystals)*.1)*(1+legacyLevel("legacy_factory")*.25)*(1+legacyLevel("legacy_transcend")*.35);}
-function clickMultiplier(){return (1+safeNum(state.research.click)*.5)*(1+safeNum(state.crystals)*.1)*(1+legacyLevel("legacy_click")*.2)*(1+legacyLevel("legacy_transcend")*.35);}
+function legacyLevel(id){return Math.floor(safeNum(state.prestigeResearch?.[id],0,10));}
+function legacyProgress(id){const level=legacyLevel(id);return level*(level+1)/2;}
+function legacyMultiplier(id,perRank){return 1+legacyProgress(id)*perRank;}
+function legacyCost(item,level=legacyLevel(item.id)){return Math.ceil(item.cost*Math.pow(item.growth||1.55,level)*(1+level*.08));}
+function equippedSkin(){return SKINS.find(s=>s.id===state.equippedSkin)||SKINS[0];}
+function skinBuff(){return equippedSkin().buff||{};}
+function skinBuffText(skin){const b=skin.buff||{},parts=[];const all=(b.all||0)*100;if(all)parts.push("모든 수익 +"+Math.round(all)+"%");if(b.click)parts.push("클릭 +"+Math.round(b.click*100)+"%");if(b.production)parts.push("자동 생산 +"+Math.round(b.production*100)+"%");if(b.offline)parts.push("오프라인 효율 +"+Math.round(b.offline*100)+"%p");if(b.event)parts.push("이벤트 보상 +"+Math.round(b.event*100)+"%");if(b.crit)parts.push("크리티컬 확률 +"+Math.round(b.crit*100)+"%p");if(b.combo)parts.push("콤보 보너스 +"+Math.round(b.combo*100)+"%");return parts.join(" · ");}
+function legacyEffectText(item,level){const p=legacyProgress(item.id),pct=v=>Math.round(v*100).toLocaleString("ko-KR")+"%";switch(item.id){
+ case "legacy_click":return "현재 클릭 수익 +"+pct(p*.12)+" · 다음 레벨부터 추가 강화";
+ case "legacy_factory":return "현재 자동 생산량 +"+pct(p*.16)+" · 다음 레벨부터 추가 강화";
+ case "legacy_combo":return "콤보 성장량 +"+pct(p*.014)+" · 콤보 상한도 레벨마다 상승";
+ case "legacy_offline":return "오프라인 효율 +"+pct(p*.0045)+"p · 최대 효율 99%";
+ case "legacy_event":return "랜덤 이벤트 보상 +"+pct(p*.12);
+ case "legacy_transcend":return "모든 수익 +"+pct(p*.10)+" · 이벤트 보상 추가 +"+pct(p*.08);
+ default:return item.desc;
+}}
+function prodMultiplier(){const b=skinBuff();return (1+safeNum(state.research.prod)*.5)*(1+safeNum(state.crystals)*.1)*legacyMultiplier("legacy_factory",.16)*legacyMultiplier("legacy_transcend",.10)*(1+(b.all||0)+(b.production||0));}
+function clickMultiplier(){const b=skinBuff();return (1+safeNum(state.research.click)*.5)*(1+safeNum(state.crystals)*.1)*legacyMultiplier("legacy_click",.12)*legacyMultiplier("legacy_transcend",.10)*(1+(b.all||0)+(b.click||0));}
 let eventProductionMultiplier=1,eventProductionUntil=0,eventClickMultiplier=1,eventClickUntil=0,luckyClicks=0;
 function production(){const boost=Date.now()<eventProductionUntil?eventProductionMultiplier:1;return BUILDINGS.reduce((sum,b)=>sum+safeNum(state.buildings[b.id])*b.rate,0)*prodMultiplier()*boost;}
 function clickPower(){const boost=Date.now()<eventClickUntil?eventClickMultiplier:1;return (1+CLICK_UPGRADES.reduce((sum,u)=>sum+safeNum(state.clickUpgrades[u.id])*u.add,0))*clickMultiplier()*boost;}
@@ -300,18 +370,51 @@ function popup(title,message){$("modalTitle").textContent=title;$("modalText").t
 let comboCount=0,lastClickAt=0,nextClickEventAt=32+Math.floor(Math.random()*18),lastMilestone=0;
 let audioContext=null,lastToneAt=0,particleCtx=null,particles=[],particleFrame=0,lastRecordSync=0,recordSyncBusy=false,rankMode="wealth";
 function syncSkinUnlocks(){let unlockedNow=false;for(const skin of SKINS){const eligible=state.totalEarned>=skin.threshold&&state.prestigeCount>=skin.prestige;if(eligible&&!state.skinsOwned.includes(skin.id)){state.skinsOwned.push(skin.id);toast("새 코인 스킨 해금: "+skin.name);scheduleSave();unlockedNow=true;}}if(!state.skinsOwned.includes(state.equippedSkin))state.equippedSkin="gold";if(unlockedNow&&activeTab==="skins")renderTab();}
-function comboMultiplier(){return 1+Math.min(1.25,Math.floor(comboCount/5)*.04+legacyLevel("legacy_combo")*.06);}
+function comboMultiplier(){const level=legacyLevel("legacy_combo"),b=skinBuff(),flow=Math.floor(comboCount/5)*(.04+level*.014),cap=1.25+level*.2;return (1+Math.min(cap,flow))*(1+(b.combo||0)+(b.all||0)*.2);}
 function updateComboUI(){if(Date.now()-lastClickAt>1350&&comboCount>0)comboCount=0;const mult=comboMultiplier();$("comboLabel").textContent=comboCount>0?"FLOW · "+comboCount+" 연속 클릭":"클릭 콤보를 시작해 보세요";$("comboValue").textContent="x"+mult.toFixed(2);$("comboBar").style.width=Math.min(100,comboCount/30*100)+"%";}
 function announceEvent(message,icon="✦"){const box=$("eventBanner");box.querySelector(".event-icon").textContent=icon;$("eventText").textContent=message;box.classList.remove("pop");void box.offsetWidth;box.classList.add("pop");}
-function playClickTone(critical=false,combo=0){if(!state.soundEnabled)return;const now=performance.now();if(now-lastToneAt<34)return;lastToneAt=now;try{const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;if(!audioContext)audioContext=new Ctx();if(audioContext.state==="suspended")void audioContext.resume();const t=audioContext.currentTime,base=(critical?590:420)+Math.random()*70+Math.min(100,combo*2);const master=audioContext.createGain();master.gain.setValueAtTime(.0001,t);master.gain.exponentialRampToValueAtTime(critical?.026:.018,t+.008);master.gain.exponentialRampToValueAtTime(.0001,t+.115);master.connect(audioContext.destination);const osc=audioContext.createOscillator();osc.type="sine";osc.frequency.setValueAtTime(base,t);osc.frequency.exponentialRampToValueAtTime(base*.78,t+.105);osc.connect(master);osc.start(t);osc.stop(t+.12);const overtone=audioContext.createOscillator(),soft=audioContext.createGain();soft.gain.setValueAtTime(.0001,t);soft.gain.exponentialRampToValueAtTime(critical?.006:.0035,t+.007);soft.gain.exponentialRampToValueAtTime(.0001,t+.075);overtone.type="sine";overtone.frequency.setValueAtTime(base*1.48,t);overtone.connect(soft);soft.connect(audioContext.destination);overtone.start(t);overtone.stop(t+.08);}catch(err){console.debug("Click audio unavailable",err);}}
+const SKIN_SOUND_PROFILES={
+ gold:{notes:[{hz:659.25,type:"sine",gain:.009,decay:.15},{hz:987.77,type:"sine",gain:.0038,decay:.115,delay:.012}],accent:1318.51},
+ obsidian:{notes:[{hz:246.94,type:"triangle",gain:.0085,decay:.19},{hz:369.99,type:"sine",gain:.0032,decay:.16,delay:.018},{hz:493.88,type:"sine",gain:.0015,decay:.13,delay:.028}],accent:739.99},
+ aurora:{notes:[{hz:523.25,type:"sine",gain:.0047,decay:.19},{hz:659.25,type:"sine",gain:.0041,decay:.17,delay:.018},{hz:783.99,type:"sine",gain:.0035,decay:.21,delay:.032}],accent:1046.5},
+ doronium:{notes:[{hz:392,type:"triangle",gain:.0062,decay:.2},{hz:587.33,type:"sine",gain:.0042,decay:.16,delay:.015},{hz:783.99,type:"sine",gain:.0025,decay:.13,delay:.03}],accent:1174.66},
+ prism:{notes:[{hz:659.25,type:"sine",gain:.0048,decay:.17},{hz:830.61,type:"sine",gain:.0042,decay:.19,delay:.012},{hz:987.77,type:"sine",gain:.0034,decay:.16,delay:.026},{hz:1318.51,type:"sine",gain:.0014,decay:.12,delay:.04}],accent:1661.22},
+ royal:{notes:[{hz:220,type:"sine",gain:.0025,decay:.2},{hz:440,type:"sine",gain:.0052,decay:.2,delay:.01},{hz:554.37,type:"sine",gain:.004,decay:.19,delay:.02},{hz:659.25,type:"sine",gain:.0037,decay:.22,delay:.03},{hz:880,type:"sine",gain:.0018,decay:.18,delay:.045}],accent:1108.73}
+};
+let clickAudioVariation=0;
+function playClickTone(critical=false,combo=0){
+ if(!state.soundEnabled)return;
+ const now=performance.now();if(now-lastToneAt<24)return;lastToneAt=now;
+ try{
+  const Ctx=window.AudioContext||window.webkitAudioContext;if(!Ctx)return;
+  if(!audioContext)audioContext=new Ctx({latencyHint:"interactive"});
+  if(audioContext.state==="suspended")void audioContext.resume();
+  const t=audioContext.currentTime,profile=SKIN_SOUND_PROFILES[equippedSkin().sound]||SKIN_SOUND_PROFILES.gold;
+  const variation=1+Math.min(.025,combo*.00035)+((clickAudioVariation++%5)-2)*.0015;
+  const playVoice=(voice,accent=false)=>{
+   const osc=audioContext.createOscillator(),amp=audioContext.createGain();
+   const start=t+(voice.delay||0),end=start+voice.decay,peak=voice.gain*(critical&&!accent?1.12:1);
+   osc.type=voice.type||"sine";
+   osc.frequency.setValueAtTime(voice.hz*variation,start);
+   osc.frequency.exponentialRampToValueAtTime(voice.hz*variation*(voice.endRatio||.985),end);
+   amp.gain.setValueAtTime(.0001,start);
+   amp.gain.exponentialRampToValueAtTime(peak,start+.009);
+   amp.gain.exponentialRampToValueAtTime(.0001,end);
+   osc.connect(amp);amp.connect(audioContext.destination);
+   osc.start(start);osc.stop(end+.012);
+  };
+  profile.notes.forEach(note=>playVoice(note));
+  if(critical)playVoice({hz:profile.accent||880,type:"sine",gain:.0027,decay:.13,delay:.025},true);
+ }catch(err){console.debug("Click audio unavailable",err);}
+}
 function resizeParticleCanvas(){const canvas=$("particleCanvas");if(!canvas)return;const rect=canvas.getBoundingClientRect(),dpr=Math.min(2,window.devicePixelRatio||1);canvas.width=Math.max(1,Math.round(rect.width*dpr));canvas.height=Math.max(1,Math.round(rect.height*dpr));particleCtx=canvas.getContext("2d");particleCtx.setTransform(dpr,0,0,dpr,0,0);}
 function emitClickParticles(clientX,clientY,critical=false){if(!particleCtx)resizeParticleCanvas();if(!particleCtx)return;const rect=$("particleCanvas").getBoundingClientRect(),x=clientX-rect.left,y=clientY-rect.top,skin=SKINS.find(v=>v.id===state.equippedSkin)||SKINS[0],colors=skin.colors,reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches,count=reduced?6:critical?30:17;for(let i=0;i<count;i++){const angle=Math.PI*2*(i/count)+(Math.random()-.5)*.28,speed=(critical?2.4:1.4)+Math.random()*(critical?4.8:3.1);particles.push({x,y,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-1.2,life:1,size:1.5+Math.random()*(critical?3.8:2.6),color:colors[Math.floor(Math.random()*colors.length)]});}particles.push({ring:true,x,y,radius:8,life:1,color:colors[0]});if(!particleFrame)particleFrame=requestAnimationFrame(drawParticles);}
 function drawParticles(){if(!particleCtx){particleFrame=0;return;}const canvas=$("particleCanvas"),rect=canvas.getBoundingClientRect();particleCtx.clearRect(0,0,rect.width,rect.height);particles=particles.filter(p=>p.life>0);for(const p of particles){if(p.ring){p.radius+=2.9;p.life-=.075;particleCtx.beginPath();particleCtx.arc(p.x,p.y,p.radius,0,Math.PI*2);particleCtx.strokeStyle=p.color;particleCtx.globalAlpha=Math.max(0,p.life)*.52;particleCtx.lineWidth=2.2;particleCtx.stroke();continue;}p.x+=p.vx;p.y+=p.vy;p.vy+=.095;p.vx*=.985;p.life-=.025;particleCtx.globalAlpha=Math.max(0,p.life);particleCtx.fillStyle=p.color;particleCtx.shadowColor=p.color;particleCtx.shadowBlur=8;particleCtx.beginPath();particleCtx.arc(p.x,p.y,p.size*Math.max(.2,p.life),0,Math.PI*2);particleCtx.fill();}particleCtx.globalAlpha=1;particleCtx.shadowBlur=0;if(particles.length)particleFrame=requestAnimationFrame(drawParticles);else{particleCtx.clearRect(0,0,rect.width,rect.height);particleFrame=0;}}
-function animateCoin(critical=false){const button=$("coinButton");button.classList.remove("is-hit");void button.offsetWidth;button.classList.add("is-hit");button.animate([{transform:"translateY(0) scale(1) rotateX(0deg)"},{transform:"translateY(5px) scale(.945) rotateX(7deg)"},{transform:"translateY(-3px) scale(1.025) rotateX(-2deg)"},{transform:"translateY(0) scale(1) rotateX(0deg)"}],{duration:critical?330:245,easing:"cubic-bezier(.22,1,.36,1)"});button.querySelector(".coin-face").animate([{filter:"brightness(1)"},{filter:"brightness(1.3)"},{filter:"brightness(1)"}],{duration:critical?390:260,easing:"ease-out"});}
-function triggerClickEvent(){const boost=1+legacyLevel("legacy_event")*.3+legacyLevel("legacy_transcend")*.3,roll=Math.floor(Math.random()*5);if(roll===0){const reward=Math.max(clickPower()*28,production()*14)*boost;addCoins(reward);announceEvent("보급 캡슐 도착! +"+fmt(reward)+" 코인을 획득했습니다.","📦");toast("긴급 보급 +"+fmt(reward));}else if(roll===1){eventClickMultiplier=2.5;eventClickUntil=Date.now()+12000;announceEvent("클릭 오버드라이브! 12초 동안 클릭 수익 x2.5","⚡");toast("12초 클릭 오버드라이브!");}else if(roll===2){luckyClicks=6;announceEvent("행운의 연속! 다음 6번의 클릭은 크리티컬입니다.","🍀");toast("크리티컬 6회 충전!");}else if(roll===3){eventProductionMultiplier=2.4;eventProductionUntil=Date.now()+18000;announceEvent("공장 과부하 가동! 18초 동안 생산량 x2.4","🏭");toast("공장 오버드라이브!");}else{state.doroniumFragments++;if(state.doroniumFragments>=10){state.doroniumFragments=0;state.crystals++;announceEvent("도로늄 파편 10개 완성! 환생 크리스탈 +1","💎");toast("환생 크리스탈 +1!");}else{announceEvent("도로늄 파편 발견! "+state.doroniumFragments+"/10 · 10개를 모으면 크리스탈 +1","💎");toast("도로늄 파편 획득!");}}scheduleSave();render();if(activeTab==="legacy")renderTab();}
+function animateCoin(critical=false){const button=$("coinButton");button.classList.remove("is-hit");void button.offsetWidth;button.classList.add("is-hit");button.animate([{transform:"translateY(0) scale(1) rotateX(0deg)"},{transform:"translateY(6px) scale(.925) rotateX(9deg)"},{transform:"translateY(-4px) scale(1.035) rotateX(-3deg)"},{transform:"translateY(0) scale(1) rotateX(0deg)"}],{duration:critical?410:285,easing:"cubic-bezier(.18,.9,.24,1)"});button.querySelector(".coin-face").animate([{filter:"brightness(1) saturate(1)"},{filter:"brightness(1.38) saturate(1.16)"},{filter:"brightness(1) saturate(1)"}],{duration:critical?460:330,easing:"cubic-bezier(.2,.8,.2,1)"});clearTimeout(button._hitTimer);button._hitTimer=setTimeout(()=>button.classList.remove("is-hit"),500);}
+function triggerClickEvent(){const b=skinBuff(),boost=legacyMultiplier("legacy_event",.12)*legacyMultiplier("legacy_transcend",.08)*(1+(b.event||0)+(b.all||0)*.5),roll=Math.floor(Math.random()*5);if(roll===0){const reward=Math.max(clickPower()*28,production()*14)*boost;addCoins(reward);announceEvent("보급 캡슐 도착! +"+fmt(reward)+" 코인을 획득했습니다.","📦");toast("긴급 보급 +"+fmt(reward));}else if(roll===1){eventClickMultiplier=2.5;eventClickUntil=Date.now()+12000;announceEvent("클릭 오버드라이브! 12초 동안 클릭 수익 x2.5","⚡");toast("12초 클릭 오버드라이브!");}else if(roll===2){luckyClicks=6;announceEvent("행운의 연속! 다음 6번의 클릭은 크리티컬입니다.","🍀");toast("크리티컬 6회 충전!");}else if(roll===3){eventProductionMultiplier=2.4;eventProductionUntil=Date.now()+18000;announceEvent("공장 과부하 가동! 18초 동안 생산량 x2.4","🏭");toast("공장 오버드라이브!");}else{state.doroniumFragments++;if(state.doroniumFragments>=10){state.doroniumFragments=0;state.crystals++;announceEvent("도로늄 파편 10개 완성! 환생 크리스탈 +1","💎");toast("환생 크리스탈 +1!");}else{announceEvent("도로늄 파편 발견! "+state.doroniumFragments+"/10 · 10개를 모으면 크리스탈 +1","💎");toast("도로늄 파편 획득!");}}scheduleSave();render();if(activeTab==="legacy")renderTab();}
 function processClickMilestones(){const n=state.totalClicks;if(n>0&&n%25===0&&n!==lastMilestone){lastMilestone=n;const reward=Math.max(clickPower()*7,production()*3);addCoins(reward);announceEvent("클릭 마일스톤 "+fmt(n)+"회 달성 · 리듬 보너스 +"+fmt(reward),"🎯");toast("클릭 마일스톤 보너스!");}if(n>0&&n%100===0){announceEvent("100 클릭 돌파! 로키의 클릭 리듬이 최고조에 도달했습니다.","🏅");}}
 function renderPersonalRecord(){if(!$("recordCoins"))return;$("recordCoins").textContent=fmt(state.totalEarned);$("recordClicks").textContent=fmt(state.totalClicks);$("recordCombo").textContent=fmt(state.bestCombo);$("recordHit").textContent=fmt(state.highestClick);$("recordSync").textContent=userId?"계정 기록":"이 기기 기록";}
-function render(){dailyReset();syncSkinUnlocks();$("coinButton").dataset.skin=state.equippedSkin;$("balance").textContent=fmt(state.coins);$("rate").textContent="초당 +"+fmt(production())+" 코인";$("clickHint").textContent="클릭할 때마다 +"+fmt(clickPower())+" 코인";$("totalEarned").textContent=fmt(state.totalEarned);$("totalClicks").textContent=fmt(state.totalClicks);$("crystals").textContent=fmt(state.crystals)+" · 조각 "+state.doroniumFragments+"/10";$("multiplierLabel").textContent="생산 배율 ×"+prodMultiplier().toFixed(2);$("prestigeHint").textContent=fmt(state.runEarned)+" / 10M 코인 · 환생 크리스탈과 영구 연구";const can=state.runEarned>=1e7;$("prestigeButton").disabled=!can;$("prestigeButton").textContent=can?"환생하기":"환생 잠김";$("soundToggle").textContent=state.soundEnabled?"♪ 소리 켜짐":"♪ 소리 꺼짐";$("soundToggle").setAttribute("aria-pressed",String(state.soundEnabled));updateComboUI();renderPersonalRecord();refreshBuyButtons();renderAchievements();renderQuests();}
+function render(){dailyReset();syncSkinUnlocks();$("coinButton").dataset.skin=state.equippedSkin;const activeSkin=equippedSkin();$("equippedBuff").querySelector("strong").textContent=activeSkin.name+" · 착용 패시브";$("equippedBuff").querySelector("small").textContent=skinBuffText(activeSkin);$("balance").textContent=fmt(state.coins);$("rate").textContent="초당 +"+fmt(production())+" 코인";$("clickHint").textContent="클릭할 때마다 +"+fmt(clickPower())+" 코인";$("totalEarned").textContent=fmt(state.totalEarned);$("totalClicks").textContent=fmt(state.totalClicks);$("crystals").textContent=fmt(state.crystals)+" · 조각 "+state.doroniumFragments+"/10";$("multiplierLabel").textContent="생산 배율 ×"+prodMultiplier().toFixed(2);$("prestigeHint").textContent=fmt(state.runEarned)+" / 10M 코인 · 환생 크리스탈과 영구 연구";const can=state.runEarned>=1e7;$("prestigeButton").disabled=!can;$("prestigeButton").textContent=can?"환생하기":"환생 잠김";$("soundToggle").textContent=state.soundEnabled?"♪ 소리 켜짐":"♪ 소리 꺼짐";$("soundToggle").setAttribute("aria-pressed",String(state.soundEnabled));updateComboUI();renderPersonalRecord();refreshBuyButtons();renderAchievements();renderQuests();}
 
 function renderOld(){/* replaced by enhanced render below */}
 function refreshBuyButtons(){document.querySelectorAll("#upgradeContent button[data-coin-cost]").forEach(button=>{button.disabled=state.coins<Number(button.dataset.coinCost);});}
@@ -332,17 +435,31 @@ function renderTab(){
   RESEARCH.forEach(item=>{const level=safeNum(state.research[item.id]),price=researchCost(item),card=document.createElement("article");card.className="research";card.innerHTML='<h3></h3><p></p><div class="item-level"></div><button class="buy"></button>';card.querySelector("h3").textContent=item.icon+" "+item.name;card.querySelector("p").textContent=item.desc;card.querySelector(".item-level").textContent="연구 단계 "+level+" / "+item.max;const btn=card.querySelector("button");btn.dataset.coinCost=String(price);btn.textContent=level>=item.max?"최대 단계":fmt(price)+" 코인";btn.disabled=level>=item.max||state.coins<price;btn.addEventListener("click",()=>purchase("research",item.id));grid.appendChild(card);});root.appendChild(grid);
  }else if(activeTab==="skins"){
   const grid=document.createElement("div");grid.className="skin-grid";
-  SKINS.forEach(item=>{const owned=state.skinsOwned.includes(item.id),equipped=state.equippedSkin===item.id,card=document.createElement("article");card.className="skin-card"+(equipped?" equipped":"")+(owned?"":" locked");const swatch=document.createElement("div");swatch.className="skin-swatch";swatch.style.background="radial-gradient(circle at 30% 20%,"+item.colors[0]+","+item.colors[1]+")";swatch.style.color="#fff";swatch.textContent="R";const title=document.createElement("strong");title.textContent=item.name;const desc=document.createElement("small");desc.textContent=owned?item.desc:(item.prestige>0?"환생 "+item.prestige+"회 달성 시 해금":"누적 "+fmt(item.threshold)+" 코인 획득 시 해금 · 현재 "+fmt(state.totalEarned));const btn=document.createElement("button");btn.className="buy";btn.type="button";btn.textContent=equipped?"장착 중":owned?"장착":"잠김";btn.disabled=!owned||equipped;btn.addEventListener("click",()=>{state.equippedSkin=item.id;render();renderTab();scheduleSave();toast(item.name+" 스킨을 장착했습니다.");});card.append(swatch,title,desc,btn);grid.appendChild(card);});root.appendChild(grid);
+  SKINS.forEach(item=>{const owned=state.skinsOwned.includes(item.id),equipped=state.equippedSkin===item.id,card=document.createElement("article");card.className="skin-card"+(equipped?" equipped":"")+(owned?"":" locked");const swatch=document.createElement("div");swatch.className="skin-swatch";swatch.style.background="radial-gradient(circle at 30% 20%,"+item.colors[0]+","+item.colors[1]+")";swatch.style.color="#fff";swatch.textContent="R";const title=document.createElement("strong");title.textContent=item.name;const desc=document.createElement("small");desc.textContent=owned?item.desc+" · 패시브: "+skinBuffText(item): (item.prestige>0?"환생 "+item.prestige+"회 달성 시 해금":"누적 "+fmt(item.threshold)+" 코인 획득 시 해금 · 현재 "+fmt(state.totalEarned));const btn=document.createElement("button");btn.className="buy";btn.type="button";btn.textContent=equipped?"장착 중":owned?"장착":"잠김";btn.disabled=!owned||equipped;btn.addEventListener("click",()=>{state.equippedSkin=item.id;render();renderTab();scheduleSave();toast(item.name+" 스킨 장착 · "+skinBuffText(item));});card.append(swatch,title,desc,btn);grid.appendChild(card);});root.appendChild(grid);
  }else if(activeTab==="legacy"){
-  const intro=document.createElement("div");intro.className="side-head";intro.innerHTML='<h2>환생 크리스탈 연구</h2><small></small>';intro.querySelector("small").textContent="보유 크리스탈 "+fmt(state.crystals);root.appendChild(intro);
-  const grid=document.createElement("div");grid.className="section-grid";
-  LEGACY_RESEARCH.forEach(item=>{const level=legacyLevel(item.id),owned=level>0,unlocked=item.requires.every(id=>legacyLevel(id)>0),card=document.createElement("article");card.className="research";card.innerHTML='<h3></h3><p></p><div class="item-level"></div><button class="buy"></button>';card.querySelector("h3").textContent=item.icon+" "+item.name;card.querySelector("p").textContent=item.desc;card.querySelector(".item-level").textContent=item.requires.length?"선행 연구: "+item.requires.map(id=>LEGACY_RESEARCH.find(x=>x.id===id)?.name||id).join(" · "):"기초 연구";const btn=card.querySelector("button");btn.textContent=owned?"연구 완료":unlocked?item.cost+" 크리스탈":"선행 연구 필요";btn.disabled=owned||!unlocked||state.crystals<item.cost;btn.addEventListener("click",()=>purchase("legacy",item.id));grid.appendChild(card);});root.appendChild(grid);
+  const intro=document.createElement("div");intro.className="side-head";intro.innerHTML='<h2>환생 크리스탈 연구</h2><small></small>';intro.querySelector("small").textContent="보유 크리스탈 "+fmt(state.crystals)+" · 각 연구 최대 Lv. 10";root.appendChild(intro);
+  const grid=document.createElement("div");grid.className="section-grid legacy-grid";
+  LEGACY_RESEARCH.forEach(item=>{
+   const level=legacyLevel(item.id),max=item.max||10,price=legacyCost(item,level),unlocked=item.requires.every(id=>legacyLevel(id)>0),card=document.createElement("article");
+   card.className="research legacy-research-card"+(level>=max?" maxed":"");card.innerHTML='<div class="legacy-card-top"><h3></h3><span class="legacy-level-badge"></span></div><p></p><div class="legacy-progress"><i></i></div><div class="legacy-milestones"><span data-level="2">Ⅱ · Lv.2</span><span data-level="5">Ⅴ · Lv.5</span><span data-level="10">Ⅹ · Lv.10</span></div><div class="item-level"></div><button class="buy"></button>';
+   card.querySelector("h3").textContent=item.icon+" "+item.name;
+   card.querySelector(".legacy-level-badge").textContent="LV "+level+" / "+max;
+   card.querySelector("p").textContent=legacyEffectText(item,level);
+   card.querySelector(".legacy-progress i").style.width=(level/max*100)+"%";
+   card.querySelectorAll(".legacy-milestones span").forEach(mark=>{if(level>=Number(mark.dataset.level))mark.classList.add("reached");});
+   card.querySelector(".item-level").textContent=item.requires.length?"선행 연구: "+item.requires.map(id=>LEGACY_RESEARCH.find(x=>x.id===id)?.name||id).join(" · "):"기초 연구 · 누적 단계형 영구 강화";
+   const btn=card.querySelector("button");btn.textContent=level>=max?"MAX · 완전 각성":!unlocked?"선행 연구 필요": "Lv. "+(level+1)+" 업그레이드 · "+fmt(price)+" 크리스탈";
+   btn.disabled=level>=max||!unlocked||state.crystals<price;
+   btn.addEventListener("click",()=>purchase("legacy",item.id));grid.appendChild(card);
+  });
+  root.appendChild(grid);
  }
 }
 function purchase(type,id){
  if(type==="legacy"){
-  const item=LEGACY_RESEARCH.find(x=>x.id===id);if(!item||legacyLevel(id)>0||!item.requires.every(key=>legacyLevel(key)>0)||state.crystals<item.cost)return;
-  state.crystals-=item.cost;state.prestigeResearch[id]=1;render();renderTab();scheduleSave();toast(item.name+" 연구 완료!");return;
+  const item=LEGACY_RESEARCH.find(x=>x.id===id),level=legacyLevel(id),price=item?legacyCost(item,level):Infinity;
+  if(!item||level>=(item.max||10)||!item.requires.every(key=>legacyLevel(key)>0)||state.crystals<price)return;
+  state.crystals-=price;state.prestigeResearch[id]=level+1;render();renderTab();scheduleSave();toast(item.name+" · Lv. "+(level+1)+" 각성 완료!");return;
  }
  let item,price,store;
  if(type==="buildings"){item=BUILDINGS.find(x=>x.id===id);store=state.buildings;price=buildingCost(item);}
@@ -354,7 +471,7 @@ function spawnPop(x,y,text){const el=document.createElement("span");el.className
 $("coinButton").addEventListener("click",e=>{
  const now=Date.now();comboCount=now-lastClickAt<1250?comboCount+1:1;lastClickAt=now;state.bestCombo=Math.max(state.bestCombo,comboCount);
  const rect=$("clickPanel").getBoundingClientRect(),x=e.clientX?e.clientX-rect.left:rect.width/2,y=e.clientY?e.clientY-rect.top:rect.height/2;
- const critical=luckyClicks>0?((luckyClicks--,true)):Math.random()<(.035+legacyLevel("legacy_event")*.005),comboBonus=comboMultiplier();
+ const skin=skinBuff(),critical=luckyClicks>0?((luckyClicks--,true)):Math.random()<Math.min(.42,.035+legacyLevel("legacy_event")*.009+(skin.crit||0)),comboBonus=comboMultiplier();
  const amount=clickPower()*comboBonus*(critical?10:1);addCoins(amount);state.totalClicks++;state.daily.clicks++;state.highestClick=Math.max(state.highestClick,amount);
  animateCoin(critical);emitClickParticles(e.clientX||rect.left+rect.width/2,e.clientY||rect.top+rect.height/2,critical);playClickTone(critical,comboCount);
  spawnPop(x,y,(critical?"CRITICAL! ":"+")+fmt(amount));if(comboCount===5||comboCount===10||comboCount===20||comboCount===30)announceEvent(comboCount+" COMBO! 클릭 흐름이 이어지고 있습니다.","✦");
@@ -416,7 +533,7 @@ $("refreshRank").addEventListener("click",async()=>{await syncRecord(true);await
 
 function scheduleSave(){if(saveTimer)clearTimeout(saveTimer);saveTimer=setTimeout(save,1200);}
 async function save(){state.lastActiveAt=Date.now();localStorage.setItem(storageKey(),JSON.stringify(state));if(!userId){$("saveText").textContent="이 기기에 저장됨";return;}if(isSaving)return;isSaving=true;$("saveText").textContent="클라우드 저장 중";try{const {error}=await supabase.from("rockey_clicker_saves").upsert({user_id:userId,game_state:state,updated_at:new Date().toISOString()},{onConflict:"user_id"});if(error)throw error;$("saveText").textContent="클라우드 저장 완료";$("saveDot").style.background="var(--green)";void syncRecord(false);}catch(err){console.warn("Rockey Clicker cloud save failed:",err);$("saveText").textContent="로컬 저장 · 클라우드 연결 확인 필요";$("saveDot").style.background="var(--red)";}finally{isSaving=false;}}
-async function load(){let local=null;try{const {data:{session}}=await supabase.auth.getSession();userId=session?.user?.id||null;}catch{}try{local=normalize(JSON.parse(localStorage.getItem(storageKey())||"null"));}catch{}state=local||fresh();let cloud=null;try{if(userId){const {data,error}=await supabase.from("rockey_clicker_saves").select("game_state").eq("user_id",userId).maybeSingle();if(error)throw error;cloud=data?.game_state?normalize(data.game_state):null;if(cloud){if(local&&safeNum(local.lastActiveAt)>safeNum(cloud.lastActiveAt)){state=local;await save();}else{state=cloud;localStorage.setItem(storageKey(),JSON.stringify(state));}}else if(local){await save();}}}catch(err){console.warn("Rockey Clicker cloud load unavailable:",err);$("saveText").textContent="로컬 저장 모드";}const elapsed=Math.max(0,Math.min(MAX_OFFLINE,Date.now()-safeNum(state.lastActiveAt,0,Date.now())));const efficiency=Math.min(.99,.7+safeNum(state.research.offline)*.05+legacyLevel("legacy_offline")*.05+legacyLevel("legacy_transcend")*.03);const earned=production()*elapsed/1000*efficiency;if(earned>0){addCoins(earned);popup("오프라인 생산 완료",Math.floor(elapsed/60000)+"분 동안 시설이 작동해 "+fmt(earned)+" 로키 코인을 생산했습니다. (효율 "+Math.round(efficiency*100)+"%)");}state.lastActiveAt=Date.now();render();renderTab();await save();void syncRecord(true);void loadLeaderboard();}
+async function load(){let local=null;try{const {data:{session}}=await supabase.auth.getSession();userId=session?.user?.id||null;}catch{}try{local=normalize(JSON.parse(localStorage.getItem(storageKey())||"null"));}catch{}state=local||fresh();let cloud=null;try{if(userId){const {data,error}=await supabase.from("rockey_clicker_saves").select("game_state").eq("user_id",userId).maybeSingle();if(error)throw error;cloud=data?.game_state?normalize(data.game_state):null;if(cloud){if(local&&safeNum(local.lastActiveAt)>safeNum(cloud.lastActiveAt)){state=local;await save();}else{state=cloud;localStorage.setItem(storageKey(),JSON.stringify(state));}}else if(local){await save();}}}catch(err){console.warn("Rockey Clicker cloud load unavailable:",err);$("saveText").textContent="로컬 저장 모드";}const elapsed=Math.max(0,Math.min(MAX_OFFLINE,Date.now()-safeNum(state.lastActiveAt,0,Date.now())));const offlineSkin=skinBuff(),efficiency=Math.min(.99,.7+safeNum(state.research.offline)*.05+legacyProgress("legacy_offline")*.0045+legacyProgress("legacy_transcend")*.004+(offlineSkin.offline||0));const earned=production()*elapsed/1000*efficiency;if(earned>0){addCoins(earned);popup("오프라인 생산 완료",Math.floor(elapsed/60000)+"분 동안 시설이 작동해 "+fmt(earned)+" 로키 코인을 생산했습니다. (효율 "+Math.round(efficiency*100)+"%)");}state.lastActiveAt=Date.now();render();renderTab();await save();void syncRecord(true);void loadLeaderboard();}
 async function prestige(){if(state.runEarned<1e7)return;const gain=Math.max(1,Math.floor(Math.sqrt(state.runEarned/1e7)));if(!confirm("현재 코인, 시설, 클릭 강화와 기본 연구를 초기화하고 환생 크리스탈 "+gain+"개를 획득할까요?\\n코인 스킨과 환생 연구는 영구 보존됩니다."))return;state.bestRunEarned=Math.max(state.bestRunEarned,state.runEarned);state.coins=0;state.runEarned=0;state.buildings={};state.clickUpgrades={};state.research={};state.crystals+=gain;state.prestigeCount++;render();renderTab();await save();void syncRecord(true);popup("환생 완료!",gain+"개의 환생 크리스탈을 획득했습니다. 환생 연구 트리에서 영구 강화를 해금하세요.");}
 $("prestigeButton").addEventListener("click",prestige);
 $("soundToggle").addEventListener("click",()=>{state.soundEnabled=!state.soundEnabled;render();scheduleSave();announceEvent(state.soundEnabled?"부드러운 클릭 사운드가 켜졌습니다.":"클릭 사운드를 껐습니다.",state.soundEnabled?"♪":"◌");});
