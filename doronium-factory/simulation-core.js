@@ -94,7 +94,7 @@ export function qualityGrade(value){
   return q<30?"불량":q<50?"하급":q<70?"일반":q<85?"고급":q<95?"희귀":"최고급";
 }
 export function runCanonicalTick(context,handlers={}){
-  const rt=ensureItemStacks(context.state),trace=[];
+  const rt=context.state.runtime||(context.state.runtime=createRuntimeState()),trace=[];
   for(let i=0;i<TICK_STAGE_ORDER.length;i++){
     const stage=TICK_STAGE_ORDER[i];trace.push(stage);
     if(typeof handlers[stage]==="function")handlers[stage](context);
