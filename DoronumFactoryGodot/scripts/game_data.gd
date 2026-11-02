@@ -1,7 +1,7 @@
 extends RefCounted
 class_name GameData
 
-const SAVE_VERSION := 2
+const SAVE_VERSION := 3
 const WORLD_SEED := 827142
 const WORLD_SIZE := 2048.0
 const WORLD_LIMIT := 1024.0
