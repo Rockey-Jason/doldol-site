@@ -15,12 +15,15 @@ function createFallbackWorld(canvas) {
     canvas.width=Math.floor(width*dpr); canvas.height=Math.floor(height*dpr); ctx.setTransform(dpr,0,0,dpr,0,0);
     ctx.fillStyle="#071522";ctx.fillRect(0,0,width,height);
     const size=34*zoom,left=width/2-cx*size,top=height/2-cy*size;
-    for(let y=0;y<WORLD_H;y++)for(let x=0;x<WORLD_W;x++){
+    const minX=Math.max(0,Math.floor(-left/size)),maxX=Math.min(WORLD_W-1,Math.ceil((width-left)/size));
+    const minY=Math.max(0,Math.floor(-top/size)),maxY=Math.min(WORLD_H-1,Math.ceil((height-top)/size));
+    const buildingByCell=new Map((state.buildings||[]).map(b=>[b.x+","+b.y,b]));
+    for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++){
       const px=left+x*size,py=top+y*size,key=x+","+y,node=state.nodes?.[key],seen=!!state.seen?.[key];
-      const h=terrainHeightAt(x,y),biome=biomeAt(x,y);ctx.fillStyle=!seen?"#091a27":node?.type==="water"?"#14516a":({forest:"#315b42",meadow:"#3d674d",wetland:"#354f45",desert:"#92764d",highlands:"#687477",frost:"#81939a",crystal:"#3f6670",volcanic:"#5b4540"})[biome]||"#3d674d";
+      const biome=biomeAt(x,y);ctx.fillStyle=!seen?"#091a27":node?.type==="water"?"#14516a":({forest:"#315b42",meadow:"#3d674d",wetland:"#354f45",desert:"#92764d",highlands:"#687477",frost:"#81939a",crystal:"#3f6670",volcanic:"#5b4540"})[biome]||"#3d674d";
       ctx.fillRect(px,py,size-1,size-1);
       if(seen&&node&&node.type!=="water"){ctx.font=Math.max(10,size*.42)+"px sans-serif";ctx.textAlign="center";ctx.fillStyle="#d5e8e8";ctx.fillText(({wood:"🌲",water:"💧",dori:"🌳",mineEntrance:"⛏"})[node.type]||"◆",px+size/2,py+size*.63);}
-      const b=state.buildings?.find(v=>v.x===x&&v.y===y);
+      const b=buildingByCell.get(key);
       if(b){ctx.fillStyle=b.status==="RUNNING"?"#247c85":"#29485c";ctx.fillRect(px+size*.13,py+size*.13,size*.74,size*.74);ctx.strokeStyle="#75d4d7";ctx.strokeRect(px+size*.13,py+size*.13,size*.74,size*.74);ctx.font=Math.max(9,size*.38)+"px sans-serif";ctx.fillStyle="#e2f1f3";ctx.fillText(({fusion:"🌌",reactor:"🔷",solar:"☀️",doriFarm:"🌳",lab:"🔬"})[b.type]||"⚙️",px+size/2,py+size*.62);}
     }
     const px=left+state.player.x*size+size/2,py=top+state.player.y*size+size/2;
