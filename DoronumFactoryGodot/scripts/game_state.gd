@@ -467,7 +467,7 @@ func place_factory_blueprint(slot: String,origin: Vector3) -> bool:
 		var instance_id := _new_stack_id()
 		var building := {
 			"id":placement.id,"instance_id":instance_id,"position":placement.position,
-			"rotation_y":placement.rotation_y,"condition":100.0,"input":[],"output":[],
+			"rotation_y":placement.rotation_y,"condition":100.0,"input":[],"output":[],"storage":[],
 			"state":"IDLE","recipe":""
 		}
 		buildings.append(building)
@@ -961,7 +961,7 @@ func _tick_fusion(dt: float) -> void:
 			var output_purity := clampf(float(fusion.input_purity)-float(fusion.purity_loss)+float(fusion.purification_bonus)+float(fusion.output_purity_modifier),0.0,100.0)
 			fusion.output_committed = true
 			fusion.state = "COMPLETED"
-			fusion.output_buffer = {"item_id":"ITEM_DORONUM_INFINITY","quantity":1,"quality":output_quality,"purity":output_purity,"synthetic":false,"provenance":"INFINITY_FUSION:"+str(fusion.job_id)}
+			fusion.output_buffer = {"stack_id":_new_stack_id(),"item_id":"ITEM_DORONUM_INFINITY","quantity":1,"quality":output_quality,"purity":output_purity,"synthetic":false,"provenance":"INFINITY_FUSION:"+str(fusion.job_id)}
 			fusion.custody = []
 			fusion.reserved_inputs = 0
 			story_flags["INFINITY_CRAFTED"] = true
@@ -972,14 +972,20 @@ func _tick_fusion(dt: float) -> void:
 func collect_infinity_output() -> bool:
 	if fusion.is_empty() or not bool(fusion.get("output_committed",false)) or fusion.get("output_buffer",{}).is_empty():
 		return false
-	var payload: Dictionary = fusion.output_buffer
+	var payload: Dictionary = fusion.output_buffer.duplicate(true)
 	var event_id := "FUSION_COLLECT:"+str(fusion.get("job_id",""))
-	if _event_ids.has(event_id):
+	var stack_id := str(payload.get("stack_id",""))
+	if _event_ids.has(event_id) or stack_id.is_empty():
 		return false
-	add_item(str(payload.item_id),int(payload.quantity),float(payload.quality),float(payload.purity),bool(payload.synthetic),str(payload.provenance))
+	if inventory.any(func(stack): return str(stack.get("stack_id",""))==stack_id):
+		notification.emit("Infinity 회수 중복 방지 · 이미 소유한 StackID")
+		return false
+	inventory.append(payload)
 	_event_ids[event_id] = true
 	fusion.output_buffer = {}
+	notification.emit("Infinity Doronum ×1 회수 완료")
 	save_game()
+	state_changed.emit()
 	return true
 
 func run_fusion_diagnostic(diagnostic_id: String) -> bool:
