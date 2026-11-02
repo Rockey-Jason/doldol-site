@@ -291,7 +291,7 @@ function setViewMode(mode){
  $("app-layout").classList.toggle("adventure-active",next!=="map");
  $("world-frame").classList.toggle("adventure-active",next!=="map");
  if($("adventure-crosshair"))$("adventure-crosshair").hidden=next==="map";
- if($("world-help"))$("world-help").innerHTML=next==="map"?"<b>조작</b><span>WASD 이동</span><span>드래그 화면 이동 · 우클릭 회전</span><span>휠 확대/축소</span>":"<b>생존 조작</b><span>WASD 이동 · Shift 달리기 · Space 점프</span><span>마우스 시점 · 좌클릭 채집 · E 상호작용</span><span>V 1인칭/3인칭 · M 전략 지도</span>";
+ if($("world-help"))$("world-help").innerHTML=next==="map"?"<b>조작</b><span>WASD 이동</span><span>드래그 화면 이동 · 우클릭 회전</span><span>휠 확대/축소</span>":"<b>생존 조작</b><span>WASD 이동 · Shift 달리기 · Space 점프</span><span>우클릭 드래그/Shift+드래그 시점 회전 · 화면 버튼 클릭으로 먹기/마시기/사용</span><span>V 1인칭/3인칭 · M 전략 지도</span>";
  renderHud();drawWorld();markDirty();
 }
 function isAdventureCellFree(x,z){
@@ -489,7 +489,7 @@ function wireControls(){
    if(e.pointerType==="touch"){
     if(e.clientX>card.getBoundingClientRect().left+card.getBoundingClientRect().width*.38)lookPointer={id:e.pointerId,x:e.clientX,y:e.clientY};
    }else if(e.button===2||e.shiftKey){lookPointer={id:e.pointerId,x:e.clientX,y:e.clientY}}
-   else if(e.button===0){mineHeld=true;mineCooldown=0;performAdventureAction();if(!document.pointerLockElement&&card.requestPointerLock&&S.player.viewMode==="first"){try{card.requestPointerLock()}catch{}}}
+   else if(e.button===0){mineHeld=true;mineCooldown=0;performAdventureAction()}
    return;
   }
   pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:0,rotate:e.button===2||e.shiftKey};
@@ -557,7 +557,17 @@ function wireControls(){
  $("story-start-button")?.addEventListener("click",startCampaign);
  $("panel-close")?.addEventListener("click",closeControlPanel);
  $("fullscreen-button")?.addEventListener("click",toggleFullscreen);
- $("eat-button").onclick=consumeFood;$("drink-button").onclick=drinkWater;$("action-button").onclick=performAdventureAction;
+ const bindAdventureButton=(id,action)=>{
+  const button=$(id);if(!button)return;
+  button.addEventListener("click",event=>{
+   event.preventDefault();event.stopPropagation();
+   if(document.pointerLockElement===card)document.exitPointerLock();
+   action();
+  });
+ };
+ bindAdventureButton("eat-button",consumeFood);
+ bindAdventureButton("drink-button",drinkWater);
+ bindAdventureButton("action-button",performAdventureAction);
  $("jump-button").addEventListener("pointerdown",e=>{e.preventDefault();adventureKeys.add(" ")});
  $("jump-button").addEventListener("pointerup",()=>adventureKeys.delete(" "));
  $("jump-button").addEventListener("pointercancel",()=>adventureKeys.delete(" "));
