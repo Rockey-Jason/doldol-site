@@ -510,7 +510,7 @@ if(E2E_MODE){
   consumeFood:()=>{consumeFood();return structuredClone(S.survival)},
   drinkWater:()=>{drinkWater();return structuredClone(S.survival)},
   setupSurvivalTest(){S=freshState();S.player={x:18,y:14,viewMode:"first",yaw:0,pitch:-.12};S.survival={health:100,hunger:50,thirst:50};S.inventory.doriMeat=2;S.inventory.water=3;playerMotion={x:18,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};renderAll();return structuredClone(S)},
-  survivalTick(seconds){updateSurvival(Math.max(0,Number(seconds)||0));return structuredClone(S.survival)},
+  survivalTick(seconds,deplete=false){if(deplete){S.survival.hunger=0;S.survival.thirst=0}updateSurvival(Math.max(0,Number(seconds)||0));return structuredClone(S.survival)},
   setupMiningTest(){
    S=freshState();S.player={x:18,y:14,viewMode:"first",yaw:0,pitch:-.12};S.survival={health:100,hunger:100,thirst:100};
    S.nodes["18,13"]={type:"stone",amount:12,max:12,cooldown:0,seed:123456};S.seen["18,13"]=true;
