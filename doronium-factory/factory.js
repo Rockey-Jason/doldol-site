@@ -649,7 +649,7 @@ if(E2E_MODE){
   survival:()=>structuredClone(S.survival),
   consumeFood:()=>{consumeFood();return structuredClone(S.survival)},
   drinkWater:()=>{drinkWater();return structuredClone(S.survival)},
-  setupSurvivalTest(){S=freshState();S.player={...S.player,x:72,y:52,layer:"surface",viewMode:"first",yaw:0,pitch:-.12};S.survival={health:100,hunger:50,thirst:50};S.inventory.doriMeat=2;S.inventory.water=3;playerMotion={x:72,z:52,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};renderAll();return structuredClone(S)},
+  setupSurvivalTest(){S=freshState();S.player={...S.player,x:72,y:52,layer:"surface",viewMode:"first",yaw:0,pitch:-.12};S.survival={health:100,hunger:50,thirst:50};S.inventory.doriMeat=2;S.inventory.water=3;S.runtime=createRuntimeState();ensureItemStacks(S);playerMotion={x:72,z:52,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};renderAll();return structuredClone(S)},
   survivalTick(seconds,deplete=false){if(deplete){S.survival.hunger=0;S.survival.thirst=0}updateSurvival(Math.max(0,Number(seconds)||0));return structuredClone(S.survival)},
   setupMiningTest(){
    S=freshState();S.player={...S.player,x:8,y:14,viewMode:"first",layer:"mine",mineLevel:1,yaw:0,pitch:.06};S.survival={health:100,hunger:100,thirst:100};
@@ -661,7 +661,7 @@ if(E2E_MODE){
   selectTool:(tool)=>selectTool(tool),
   toolGuard(){this.setupMiningTest();selectTool("axe");const before=itemCount("stone");harvestMineDeposit(S.mineDeposits["1:8:12"]);return {before,after:itemCount("stone"),tool:S.activeTool}},
   constructionRules(){
-   S=freshState();S.player={...S.player,viewMode:"map"};S.money=1000000;S.inventory={wood:200,stone:200,ironPlate:200,ironOre:100,coal:100,water:50};S.meta={};S.research.push("logistics");
+   S=freshState();S.player={...S.player,viewMode:"map"};S.money=1000000;S.inventory={wood:200,stone:200,ironPlate:200,ironOre:100,coal:100,water:50};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.research.push("logistics");
    const standardWithoutFoundation=placeBuilding("belt",75,50);
    const adaptiveWithoutFoundation=placeBuilding("beltAdaptive",76,50);
    S.flattened["77,50"]={height:terrainHeightAt(77,50)};S.foundation["77,50"]=true;
@@ -673,7 +673,7 @@ if(E2E_MODE){
 
   move:(dx,dy)=>movePlayer(dx,dy),
   audit:()=>({
-   resourceCount:Object.keys(RESOURCE).length,
+   dataValidation:DATA_VALIDATION,runtimeValidation:validateRuntimeState(S),resourceCount:Object.keys(RESOURCE).length,
    variantCount:VARIANTS.length,
    uniqueVariants:new Set(VARIANTS).size,
    uniqueCrystalModels:DORONIUM_CRYSTAL_MODELS.filter(id=>id!=="infinity").length,
@@ -720,7 +720,7 @@ if(E2E_MODE){
   runSeconds(seconds){const count=Math.floor(seconds/STEP+1e-8);for(let i=0;i<count;i++)tick(STEP);drawWorld();return {ticks:count,state:structuredClone(S),power:currentPower()}},
   setupSoak(){
    S=freshState();S.player={...S.player,x:18,y:14,viewMode:"map",layer:"surface"};S.seconds=8*3600;S.money=100000000;
-   S.inventory={ironOre:50000,coal:30000};S.meta={};S.research=[];
+   S.inventory={ironOre:50000,coal:30000};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.research=[];
    S.stats={gathered:{},built:{},produced:{},sold:0,energyProduced:0};
    selectedBuild=null;selectedBuilding=null;
    // Open a deterministic test corridor to the smelter while keeping the machine footprint blocked.
@@ -738,7 +738,7 @@ if(E2E_MODE){
    revealAround();renderAll();return structuredClone(S)
   },
   syntheticGuard(){
-   S=freshState();S.inventory={doriMeat:10};S.meta={doriMeat:{quality:90,purity:90,synthetic:true}};
+   S=freshState();S.inventory={doriMeat:10};S.meta={doriMeat:{quality:90,purity:90,synthetic:true}};S.runtime=createRuntimeState();ensureItemStacks(S);
    const b={uid:"test-reactor",type:"reactor",x:1,y:1,dir:1,progress:0,input:{},inputMeta:{},output:null,activeMeta:null,temp:25,pressure:0,status:"IDLE"};
    S.buildings=[b];S.paused=false;tickMachine(b,STEP,1);
    return {status:b.status,remaining:itemCount("doriMeat"),activeMeta:!!b.activeMeta}
