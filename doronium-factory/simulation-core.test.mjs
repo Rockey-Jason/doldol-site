@@ -50,3 +50,52 @@ test("fixed simulation tick executes all 18 stages in canonical order",()=>{
   assert.deepEqual(trace,TICK_STAGE_ORDER);
   assert.equal(state.runtime.lastTick,9);
 });
+
+test("stack split and merge preserve metadata and enforce the stack limit",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:3};
+  const first=addItemStack(state,"ironOre",7000,{quality:88,purity:93});
+  assert.equal(state.runtime.itemStacks.length,2);
+  assert.deepEqual(state.runtime.itemStacks.map(x=>x.quantity),[5000,2000]);
+  const split=splitItemStack(state,first,1200);
+  assert.ok(split);
+  assert.equal(state.runtime.itemStacks.find(x=>x.runtimeID===split).quality,88);
+  assert.equal(mergeItemStacks(state,split,first),true);
+  assert.equal(state.runtime.itemStacks.find(x=>x.runtimeID===first).quantity,5000);
+  assert.equal(validateRuntimeState(state).valid,true);
+});
+
+test("reservations lock stock until commit or release and cannot be double-spent",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:4};
+  addItemStack(state,"copperOre",10,{quality:91,purity:95});
+  const reservation=reserveItemStacks(state,"copperOre",7,"machine-1");
+  assert.ok(reservation);
+  assert.equal(reserveItemStacks(state,"copperOre",4,"machine-2"),null);
+  assert.equal(removeItemStacks(state,"copperOre",4),null);
+  const committed=commitItemReservations(state,[reservation]);
+  assert.equal(committed.reduce((n,x)=>n+x.quantity,0),7);
+  assert.equal(state.runtime.itemStacks[0].quantity,3);
+  assert.equal(commitItemReservations(state,[reservation]),null);
+});
+
+test("multi-item reservation rolls back completely when one ingredient is missing",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:5};
+  addItemStack(state,"ironOre",8);
+  const batch=reserveItemBatch(state,{ironOre:5,coal:1},"recipe-1");
+  assert.equal(batch,null);
+  assert.equal(Object.values(state.runtime.reservations).filter(x=>x.status==="reserved").length,0);
+  const held=reserveItemStacks(state,"ironOre",4,"machine-2");
+  assert.ok(held);
+  assert.equal(releaseItemReservation(state,held),true);
+  assert.ok(reserveItemStacks(state,"ironOre",8,"machine-3"));
+});
+
+test("reserved source stacks cannot be split or merged away",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:6};
+  const a=addItemStack(state,"stone",10);
+  const b=addItemStack(state,"stone",10);
+  const held=reserveItemStacks(state,"stone",5,"machine");
+  assert.ok(held);
+  assert.equal(splitItemStack(state,a,6),null);
+  assert.equal(mergeItemStacks(state,a,b),false);
+  assert.equal(validateRuntimeState(state).valid,true);
+});
