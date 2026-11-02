@@ -86,12 +86,7 @@ try {
   assert.equal(fed.health, 100, "Eating Dori Meat must restore a small amount of health");
   const hydrated = await desktop.evaluate(() => window.__doroniumFactoryTest.drinkWater());
   assert.equal(hydrated.thirst, 92, "Drinking water must restore thirst");
-  const depleted = await desktop.evaluate(() => {
-    const api=window.__doroniumFactoryTest;
-    const state=api.snapshot();
-    state.survival.hunger=0;state.survival.thirst=0;
-    return api.survivalTick(5);
-  });
+  const depleted = await desktop.evaluate(() => window.__doroniumFactoryTest.survivalTick(5, true));
   assert.ok(depleted.health < 100, "Hunger and thirst depletion must damage health");
 
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningTest());
