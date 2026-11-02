@@ -67,6 +67,7 @@ const crystalSpecs={
  infinity:{color:0xb5f5ff,shape:"infinity",emissive:0x347bcb}
 };
 export const DORONIUM_CRYSTAL_MODELS=Object.keys(crystalSpecs);
+export const DORONIUM_CRYSTAL_MODEL_SHAPES=Object.fromEntries(Object.entries(crystalSpecs).map(([id,spec])=>[id,spec.shape]));
 const itemColors={wood:0x956b43,stone:0x87929a,ironOre:0x9da8b4,copperOre:0xd58b58,coal:0x303741,water:0x3badd8,quartz:0x77c9df,goldOre:0xd9b65c,diamond:0x9bf2ff,ironPlate:0xaebbc4,wire:0xd29c45,circuit:0x48b9a2,doriMeat:0xc8796e};
 function crystalGeometry(id){
  const shape=crystalSpecs[id]?.shape||"octa";
