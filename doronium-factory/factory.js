@@ -210,7 +210,105 @@ function isWalkable(x,y){if(x<0||y<0||x>=WORLD_W||y>=WORLD_H||buildingAt(x,y))re
 function findPlayerPath(startX,startY,goalX,goalY){if(goalX===startX&&goalY===startY)return [];if(!isWalkable(goalX,goalY))return null;const start=startX+","+startY,goal=goalX+","+goalY,queue=[{x:startX,y:startY}],came=new Map([[start,null]]);let found=false;for(let head=0;head<queue.length&&head<1200;head++){const p=queue[head];for(const d of DIRS){const x=p.x+d.x,y=p.y+d.y,key=x+","+y;if(came.has(key)||!isWalkable(x,y))continue;came.set(key,p.x+","+p.y);if(key===goal){found=true;break}queue.push({x,y})}if(found)break}if(!found)return null;const path=[];let key=goal;while(key!==start){const [x,y]=key.split(",").map(Number);path.push({x,y});key=came.get(key)}return path.reverse()}
 function movePlayerTo(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y};const path=findPlayerPath(origin.x,origin.y,x,y);if(path===null){toast("이동 경로가 막혀 있습니다.","warn");return false}playerMotion.path=playerMotion.path.concat(path);playerMotion.onArrive=onArrive;if(!playerMotion.path.length){playerMotion.moving=false;const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
 function approachTile(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y},options=[];for(const d of DIRS){const nx=x+d.x,ny=y+d.y;if(!isWalkable(nx,ny))continue;const path=findPlayerPath(origin.x,origin.y,nx,ny);if(path!==null)options.push({path,nx,ny})}options.sort((a,b)=>a.path.length-b.path.length);if(!options.length){toast("대상 주변으로 접근할 경로가 없습니다.","warn");return false}const best=options[0];playerMotion.path=playerMotion.path.concat(best.path);playerMotion.onArrive=onArrive;if(!best.path.length){const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
-function updatePlayerMotion(dt){if(!playerMotion.path.length){playerMotion.moving=false;return}let remaining=Math.max(0,dt)*4.2;playerMotion.moving=true;while(remaining>0&&playerMotion.path.length){const target=playerMotion.path[0],dx=target.x-playerMotion.x,dz=target.y-playerMotion.z,dist=Math.hypot(dx,dz);if(dist<.0001||remaining>=dist){playerMotion.x=target.x;playerMotion.z=target.y;remaining-=dist;playerMotion.path.shift();S.player.x=target.x;S.player.y=target.y;revealAround();markDirty()}else{playerMotion.x+=dx/dist*remaining;playerMotion.z+=dz/dist*remaining;remaining=0}if(Math.abs(dx)+Math.abs(dz)>.0001)playerMotion.facing=Math.atan2(dx,dz)}if(!playerMotion.path.length){playerMotion.moving=false;const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}drawWorld()}
+function adventureMode(){return S.player.viewMode!=="map"}
+function setViewMode(mode){
+ let next=["first","third","map"].includes(mode)?mode:"first";
+ S.player.viewMode=next;playerMotion.path=[];playerMotion.onArrive=null;
+ if(next==="map"){world3d.setViewMode("map");centerCamera()}
+ else{world3d.setViewMode(next);world3d.center(S.player.x,S.player.y)}
+ document.querySelectorAll("[data-view-mode]").forEach(b=>b.classList.toggle("active",b.dataset.viewMode===next));
+ $("app-layout").classList.toggle("adventure-active",next!=="map");
+ $("world-frame").classList.toggle("adventure-active",next!=="map");
+ if($("adventure-crosshair"))$("adventure-crosshair").hidden=next==="map";
+ if($("world-help"))$("world-help").innerHTML=next==="map"?"<b>조작</b><span>WASD 이동</span><span>드래그 화면 이동 · 우클릭 회전</span><span>휠 확대/축소</span>":"<b>생존 조작</b><span>WASD 이동 · Shift 달리기 · Space 점프</span><span>마우스 시점 · 좌클릭 채집 · E 상호작용</span><span>V 1인칭/3인칭 · M 전략 지도</span>";
+ if(next!=="map"&&world3d.backend!=="webgl"){toast("3D 시점에는 WebGL 지원 브라우저가 필요합니다.","warn");S.player.viewMode="map";next="map";world3d.setViewMode("map");$("app-layout").classList.remove("adventure-active");$("world-frame").classList.remove("adventure-active")}
+ renderHud();drawWorld();markDirty();
+}
+function isAdventureCellFree(x,z){
+ const cx=Math.floor(x+.5),cz=Math.floor(z+.5);
+ if(cx<0||cz<0||cx>=WORLD_W||cz>=WORLD_H)return false;
+ if(cx===Math.floor(playerMotion.x+.5)&&cz===Math.floor(playerMotion.z+.5))return true;
+ return !buildingAt(cx,cz)&&!tileNode(cx,cz);
+}
+function updatePlayerMotion(dt){
+ if(!adventureMode()){
+  if(!playerMotion.path.length){playerMotion.moving=false;return}
+  let remaining=Math.max(0,dt)*4.2;playerMotion.moving=true;
+  while(remaining>0&&playerMotion.path.length){
+   const target=playerMotion.path[0],dx=target.x-playerMotion.x,dz=target.y-playerMotion.z,dist=Math.hypot(dx,dz);
+   if(dist<.0001||remaining>=dist){playerMotion.x=target.x;playerMotion.z=target.y;remaining-=dist;playerMotion.path.shift();S.player.x=target.x;S.player.y=target.y;revealAround();markDirty()}
+   else{playerMotion.x+=dx/dist*remaining;playerMotion.z+=dz/dist*remaining;remaining=0}
+   if(Math.abs(dx)+Math.abs(dz)>.0001)playerMotion.facing=Math.atan2(dx,dz)
+  }
+  if(!playerMotion.path.length){playerMotion.moving=false;const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}
+  drawWorld();return;
+ }
+ const forward=(adventureKeys.has("w")||adventureKeys.has("arrowup")?1:0)-(adventureKeys.has("s")||adventureKeys.has("arrowdown")?1:0);
+ const side=(adventureKeys.has("d")||adventureKeys.has("arrowright")?1:0)-(adventureKeys.has("a")||adventureKeys.has("arrowleft")?1:0);
+ const length=Math.hypot(forward,side)||1,speed=(adventureKeys.has("shift")?7.1:4.6)*dt;
+ const fx=-Math.sin(playerMotion.yaw),fz=-Math.cos(playerMotion.yaw);
+ const dx=(fx*forward+Math.cos(playerMotion.yaw)*side)/length*speed;
+ const dz=(fz*forward-Math.sin(playerMotion.yaw)*side)/length*speed;
+ let moved=false;
+ const nextX=clamp(playerMotion.x+dx,.35,WORLD_W-.35);
+ if(isAdventureCellFree(nextX,playerMotion.z)&&Math.abs(nextX-playerMotion.x)>.0001){playerMotion.x=nextX;moved=true}
+ const nextZ=clamp(playerMotion.z+dz,.35,WORLD_H-.35);
+ if(isAdventureCellFree(playerMotion.x,nextZ)&&Math.abs(nextZ-playerMotion.z)>.0001){playerMotion.z=nextZ;moved=true}
+ playerMotion.moving=moved;if(moved)playerMotion.facing=Math.atan2(dx,dz);
+ if(adventureKeys.has(" ")&&playerMotion.grounded){playerMotion.velocityY=34;playerMotion.grounded=false}
+ if(!playerMotion.grounded){playerMotion.velocityY-=72*dt;playerMotion.y+=playerMotion.velocityY*dt;if(playerMotion.y<=0){playerMotion.y=0;playerMotion.velocityY=0;playerMotion.grounded=true}}
+ const tileX=clamp(Math.floor(playerMotion.x+.5),0,WORLD_W-1),tileZ=clamp(Math.floor(playerMotion.z+.5),0,WORLD_H-1);
+ if(tileX!==S.player.x||tileZ!==S.player.y){S.player.x=tileX;S.player.y=tileZ;revealAround();markDirty()}
+ S.player.yaw=playerMotion.yaw;S.player.pitch=playerMotion.pitch;
+ if(mineHeld){mineCooldown-=dt;if(mineCooldown<=0){mineCooldown=.62;performAdventureAction()}}
+ survivalHudClock+=dt;if(survivalHudClock>.15){survivalHudClock=0;updateAdventureHud()}
+ drawWorld();
+}
+function updateAdventureHud(){
+ const target=world3d.pickTarget(190);adventureTarget=target;
+ const label=$("target-label");if(label){label.textContent=target?target.kind==="resource"?(RESOURCE[target.type]?.name||target.type):buildingDef(target.type)?.name||"산업 시설":"주변 탐색 중";label.classList.toggle("target-found",!!target)}
+ const mode=S.player.viewMode;$("view-first")?.classList.toggle("active",mode==="first");$("view-third")?.classList.toggle("active",mode==="third");$("view-map")?.classList.toggle("active",mode==="map");
+}
+function performAdventureAction(){
+ if(!adventureMode())return;
+ const target=world3d.pickTarget(190);
+ if(target?.kind==="resource"){
+  const node=tileNode(target.x,target.z);if(!node)return;
+  if(selectedBuild){placeBuilding(selectedBuild,target.x,target.z);return}
+  if(node.type==="relaySite"||node.type==="coreSite"){toast("이곳은 특수 시설 설치 지점입니다.");return}
+  harvestNode(target.x,target.z,node);return;
+ }
+ if(target?.kind==="building"){
+  const b=S.buildings.find(v=>v.uid===target.uid);if(!b)return;
+  if(b.output&&adventureKeys.has("e")){collectOutput(b);return}
+  selectedBuilding=b.uid;selectedBuild=null;changePanel("factory");renderBuildList();renderMachineDetails();toast((buildingDef(b.type)?.name||"시설")+" 선택");return;
+ }
+ const rect=canvas.getBoundingClientRect(),cell=world3d.pickTile(rect.left+rect.width/2,rect.top+rect.height/2);
+ if(cell&&selectedBuild){if(placeBuilding(selectedBuild,cell.x,cell.y))toast("시설 설치 완료")}
+ else if(cell&&adventureKeys.has("e")){const node=tileNode(cell.x,cell.y);if(node)harvestNode(cell.x,cell.y,node)}
+}
+function consumeFood(){
+ if(itemCount("doriMeat")<1){toast("먹을 돌이 고기가 없습니다.","warn");return}
+ takeItem("doriMeat",1);S.survival.hunger=clamp(S.survival.hunger+38,0,100);S.survival.health=clamp(S.survival.health+5,0,100);log("돌이 고기 섭취 · 허기 회복");toast("돌이 고기 + 허기 회복");markDirty();renderInventory();renderHud()
+}
+function drinkWater(){
+ if(itemCount("water")<1){toast("마실 물이 없습니다.","warn");return}
+ takeItem("water",1);S.survival.thirst=clamp(S.survival.thirst+42,0,100);log("식수 섭취 · 갈증 회복");toast("식수 + 갈증 회복");markDirty();renderInventory();renderHud()
+}
+function respawnEngineer(){
+ const lossIds=["wood","stone","ironOre","copperOre","coal","quartz","goldOre"];
+ for(const id of lossIds){const loss=Math.floor(itemCount(id)*.1);if(loss>0)takeItem(id,loss)}
+ playerMotion.x=18;playerMotion.z=13;playerMotion.y=0;playerMotion.velocityY=0;playerMotion.grounded=true;playerMotion.path=[];
+ S.player.x=18;S.player.y=13;S.survival={health:65,hunger:65,thirst:65};
+ revealAround();log("엔지니어 구조 완료 · 원자재 10% 손실","warn");toast("구조 지점에서 다시 시작합니다. 원자재 10%를 잃었습니다.","warn");markDirty();renderAll()
+}
+function updateSurvival(dt){
+ const v=S.survival;if(!v)return;
+ v.hunger=Math.max(0,v.hunger-dt*.026);v.thirst=Math.max(0,v.thirst-dt*.04);
+ if(v.hunger<=0||v.thirst<=0)v.health=Math.max(0,v.health-dt*(v.thirst<=0?1.05:.65));
+ else if(v.hunger>70&&v.thirst>70)v.health=Math.min(100,v.health+dt*.12);
+ if(v.health<=0)respawnEngineer();
+}
 function showCrystalPreview(id){if(!RESOURCE[id]||(!id.startsWith("doronium_")&&id!=="infinity"))return;if(crystalViewer){crystalViewer.dispose();crystalViewer=null}const title=RESOURCE[id].name,body='<div class="crystal-preview-wrap"><canvas id="crystal-preview-canvas" class="crystal-preview-canvas" aria-label="'+title+' 3D 결정 모델"></canvas><div class="crystal-preview-info"><strong>'+title+'</strong><p>보유량 '+fmt(itemCount(id))+'개 · 품질 '+Math.round(quality(S,id))+' · 순도 '+Math.round(purity(S,id))+'</p><small>결정 계열마다 서로 다른 3D 형상·재질·발광 특성을 적용했습니다.</small></div></div>';showModal("도로늄 3D 결정 도감",body,[{label:"닫기",cls:"primary"}]);crystalViewer=createCrystalViewer($("crystal-preview-canvas"),id)}
 function selectTile(x,y){const b=buildingAt(x,y);if(b){selectedBuild=null;selectedBuilding=b.uid;changePanel("factory");renderBuildList();renderMachineDetails();approachTile(x,y);drawWorld();return}if(selectedBuild){if(placeBuilding(selectedBuild,x,y))approachTile(x,y);return}const node=tileNode(x,y);if(node){approachTile(x,y,()=>{const current=tileNode(x,y);if(current)harvestNode(x,y,current)});return}selectedBuilding=null;renderMachineDetails();movePlayerTo(x,y)}
 function harvestNode(x,y,node){if(node.amount<=0){toast("이 자원은 고갈되었습니다.","warn");return}if(node.type==="dori"){if(node.cooldown>0){toast("돌이 고기 나무가 열매를 다시 키우고 있습니다. "+Math.ceil(node.cooldown)+"초 남음","warn");return}if(itemCount("water")<2){toast("돌이 고기 수확에는 물 2L가 필요합니다.","warn");return}takeItem("water",2);node.cooldown=60;addItem("doriMeat",1,{quality:90,purity:90,synthetic:false});S.stats.gathered.doriMeat=(S.stats.gathered.doriMeat||0)+1;log("돌이 고기 열매 수확 · 비합성 원료");toast("돌이 고기 +1 · 순도 90");playTone(760,.12,"sine");questCheck();renderAll();drawWorld();return}
