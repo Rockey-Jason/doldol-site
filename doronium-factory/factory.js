@@ -332,6 +332,11 @@ if(E2E_MODE){
    buildingMaterialsValid:BUILDINGS.every(b=>Object.keys(b.materials||{}).every(id=>!!RESOURCE[id]))
   }),
   power:()=>currentPower(),
+  inspect3D:()=>world3d.inspect(),
+  loadBeltVisual(id="ironOre",qty=8){
+   const belt=S.buildings.find(b=>b.type==="belt");if(!belt||!RESOURCE[id])throw new Error("test belt/resource missing");
+   belt.item={id,qty,meta:{quality:90,purity:90,synthetic:false}};belt.moveTimer=.1;drawWorld();return world3d.inspect();
+  },
   setClock(seconds){S.seconds=Math.max(0,Number(seconds)||0);renderHud();return currentPower()},
   ledger(){
    const total=id=>S.inventory[id]||0;
