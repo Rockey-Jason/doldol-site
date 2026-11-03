@@ -15,7 +15,7 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number(v)||0));
 const clone=value=>typeof structuredClone==="function"?structuredClone(value):JSON.parse(JSON.stringify(value));
 
 export function createRuntimeState(){
-  return {schemaVersion:4,nextStackId:1,nextReservationId:1,nextEntityId:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
+  return {schemaVersion:4,nextStackId:1,nextReservationId:1,nextEntityId:1,itemStacks:[],reservations:{},reservationHistory:[],transactionLedger:{},failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
 }
 function normalizeStack(stack){
   return {runtimeID:String(stack.runtimeID),itemID:String(stack.itemID),quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
@@ -32,6 +32,7 @@ export function ensureItemStacks(state){
   rt.nextStackId=Math.max(1,Math.floor(Number(rt.nextStackId)||1),maxId+1);
   if(!rt.reservations||typeof rt.reservations!=="object")rt.reservations={};
   if(!Array.isArray(rt.reservationHistory))rt.reservationHistory=[];
+  if(!rt.transactionLedger||typeof rt.transactionLedger!=="object"||Array.isArray(rt.transactionLedger))rt.transactionLedger={};
   rt.failureRngState=(Number(rt.failureRngState)>>>0)||0x6d2b79f5;
   rt.failureRngIndex=Math.max(0,Math.floor(Number(rt.failureRngIndex)||0));
   rt.nextFailureEventId=Math.max(1,Math.floor(Number(rt.nextFailureEventId)||1));
@@ -171,6 +172,11 @@ export function validateRuntimeState(state){
   for(const reservation of Object.values(rt.reservations)){
     if(reservation.status==="reserved"&&(!reservation.ownerID||!reservation.allocations?.length))errors.push("invalid-reservation:"+reservation.reservationID);
   }
+  for(const [transactionID,tx] of Object.entries(rt.transactionLedger)){
+    if(!transactionID||tx.transactionID!==transactionID||!["RESERVED","COMMITTED","ROLLED_BACK","REJECTED"].includes(tx.status))errors.push("invalid-transaction-ledger:"+transactionID);
+    if(tx.status==="RESERVED"&&(!Array.isArray(tx.reservationIDs)||tx.reservationIDs.some(id=>!rt.reservations[id])))errors.push("transaction-reservation-missing:"+transactionID);
+    if(tx.status==="COMMITTED"&&(!tx.receipt||tx.receipt.transactionID!==transactionID))errors.push("transaction-receipt-missing:"+transactionID);
+  }
   const maxID=Math.max(0,...[...ids].map(id=>Number(id.replace(/^IS-/,""))||0));
   if(rt.nextStackId<=maxID)errors.push("stack-id-counter-not-advanced");
   if(!Number.isSafeInteger(rt.nextEntityId)||rt.nextEntityId<1)errors.push("invalid-entity-id-counter");
@@ -189,7 +195,52 @@ export function availableItemCountWhere(state,itemID,predicate=()=>true){
 }
 export function availableItemCount(state,itemID){return availableItemCountWhere(state,itemID);}
 
-/** Allocate a persisted, monotonic entity ID. Existing legacy building IDs are preserved. */
+/** Persisted inventory transaction lifecycle with retry-safe commit receipts. */
+export function beginInventoryTransaction(state,{transactionID,ownerID="inventory-transaction",requirements={},predicate=null}={}){
+  const rt=ensureItemStacks(state),id=String(transactionID||"").trim();
+  if(!id)return {ok:false,status:"REJECTED",reason:"MISSING_TRANSACTION_ID"};
+  const existing=rt.transactionLedger[id];
+  if(existing)return {ok:existing.status==="RESERVED"||existing.status==="COMMITTED",...clone(existing),duplicate:true};
+  const normalized={};
+  for(const [itemID,raw] of Object.entries(requirements||{})){
+    const quantity=Number(raw);
+    if(!itemID||!Number.isSafeInteger(quantity)||quantity<0){
+      const rejected={transactionID:id,ownerID:String(ownerID),status:"REJECTED",reason:"INVALID_REQUIREMENT",createdTick:Math.max(0,Number(state.tick)||0)};
+      rt.transactionLedger[id]=rejected;return {ok:false,...clone(rejected),duplicate:false};
+    }
+    if(quantity>0)normalized[itemID]=quantity;
+  }
+  const reservationIDs=Object.keys(normalized).length?reserveItemBatch(state,normalized,String(ownerID),predicate):[];
+  if(reservationIDs===null){
+    const rejected={transactionID:id,ownerID:String(ownerID),status:"REJECTED",reason:"INSUFFICIENT_QUALIFIED_ITEMS",requirements:normalized,createdTick:Math.max(0,Number(state.tick)||0)};
+    rt.transactionLedger[id]=rejected;return {ok:false,...clone(rejected),duplicate:false};
+  }
+  const transaction={transactionID:id,ownerID:String(ownerID),status:"RESERVED",requirements:normalized,reservationIDs:[...reservationIDs],createdTick:Math.max(0,Number(state.tick)||0)};
+  rt.transactionLedger[id]=transaction;
+  return {ok:true,...clone(transaction),duplicate:false};
+}
+export function commitInventoryTransaction(state,transactionID){
+  const rt=ensureItemStacks(state),id=String(transactionID||"").trim(),tx=rt.transactionLedger[id];
+  if(!tx)return null;
+  if(tx.status==="COMMITTED")return clone(tx.receipt);
+  if(tx.status!=="RESERVED")return null;
+  const removed=tx.reservationIDs.length?commitItemReservations(state,tx.reservationIDs):[];
+  if(!removed)return null;
+  const receipt={transactionID:id,ownerID:tx.ownerID,items:clone(removed),committedTick:Math.max(0,Number(state.tick)||0)};
+  tx.status="COMMITTED";tx.receipt=receipt;tx.committedTick=receipt.committedTick;
+  return clone(receipt);
+}
+export function rollbackInventoryTransaction(state,transactionID,reason="CANCELLED"){
+  const rt=ensureItemStacks(state),id=String(transactionID||"").trim(),tx=rt.transactionLedger[id];
+  if(!tx)return false;
+  if(tx.status==="ROLLED_BACK")return true;
+  if(tx.status!=="RESERVED")return false;
+  for(const reservationID of tx.reservationIDs)releaseItemReservation(state,reservationID);
+  tx.status="ROLLED_BACK";tx.reason=String(reason);tx.rolledBackTick=Math.max(0,Number(state.tick)||0);
+  return true;
+}
+
+/** Allocate a persisted, monotonic entity ID. Existing legacy building IDs are preserved. */ Existing legacy building IDs are preserved. */
 export function allocateEntityID(state,prefix="ENT"){
   const rt=ensureItemStacks(state),used=new Set((state.buildings||[]).map(building=>String(building?.uid||"")));
   let id;
