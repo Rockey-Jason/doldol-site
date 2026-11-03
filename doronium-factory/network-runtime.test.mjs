@@ -27,7 +27,7 @@ test("power networks isolate disconnected islands and assign stable NetworkIDs",
 test("power allocation obeys priority, brownout floor, and cable losses",()=>{
   const state={
     powerNodes:[
-      {id:"g",kind:"generator",generationKW:100},
+      {id:"g",kind:"generator",generationKW:110},
       {id:"safety",kind:"consumer",demandKW:50,priority:0},
       {id:"machine",kind:"consumer",demandKW:60,priority:10}
     ],
@@ -57,7 +57,7 @@ test("battery stores kJ separately from kW output and respects both power limits
     powerNodes:[
       {id:"g",kind:"generator",generationKW:80},
       {id:"battery",kind:"battery",storedEnergyKJ:100,capacityKJ:1000,maxChargeKW:20,maxDischargeKW:5,chargeEfficiency:.9,dischargeEfficiency:.8},
-      {id:"m",kind:"consumer",demandKW:82,priority:0}
+      {id:"m",kind:"consumer",demandKW:85,priority:0}
     ],
     powerEdges:[{id:"c1",from:"g",to:"m",capacityKW:200},{id:"c2",from:"g",to:"battery",capacityKW:200},{id:"c3",from:"battery",to:"m",capacityKW:200}]
   };
