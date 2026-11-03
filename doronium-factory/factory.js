@@ -1054,6 +1054,25 @@ if(E2E_MODE){
    const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],batteryBefore:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ}
   },
   powerTopologyTick(){tick(STEP);const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],battery:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ,farStatus:S.buildings.find(b=>b.uid==="P-SMELTER-2").status}},
+  setupMiningAutomationTest(){
+   S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,viewMode:"first",x:3,y:12};playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[]};S.money=1000000;S.inventory={coal:20,ironPlate:10,wood:50,stone:50};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.mineDeposits=makeMineDeposits();S.powerTopologyEnabled=false;
+   const generator=placeMineBuilding("mineGen",11,15),miner=placeMineBuilding("minerIron",12,15);
+   return {generator,miner,buildings:S.buildings.map(b=>({uid:b.uid,type:b.type,layer:b.layer,mineLevel:b.mineLevel})),deposit:S.mineDeposits[mineDepositKey(1,12,15)]};
+  },
+  runMiningAutomationTest(){
+   for(let i=0;i<80;i++)tick(STEP);
+   const miner=S.buildings.find(b=>b.type==="minerIron"),deposit=S.mineDeposits[mineDepositKey(1,12,15)];
+   return {output:miner?.output?structuredClone(miner.output):null,depositAmount:deposit?.amount,drillDurability:miner?.drillDurability,power:currentPower().allocations?.[String(miner?.uid)]||null,generatorFuel:S.buildings.find(b=>b.type==="mineGen")?.fuelTimer||0};
+  },
+  runDrillRepairTest(){
+   const miner=S.buildings.find(b=>b.type==="minerIron");if(!miner)return {ok:false,reason:"MINER_MISSING"};
+   if(miner.output)collectOutput(miner);
+   miner.drillDurability=0;tick(STEP);
+   const started=!!miner.failureRepair&&repairMachine(miner);
+   if(!started)return {ok:false,reason:"REPAIR_START_FAILED"};
+   for(let i=0;i<300;i++)tick(STEP);
+   return {ok:miner.status==="IDLE"&&miner.drillDurability===1000,status:miner.status,drillDurability:miner.drillDurability,ironPlate:itemCount("ironPlate")};
+  },
   setupBlueprintTest(){
    S=freshState();S.player={...S.player,viewMode:"map",layer:"surface"};S.money=1000000;S.inventory={wood:200};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
    S.buildings=[{uid:"bp-seed-a",type:"belt",x:10,y:10,dir:1,footprint:{width:1,height:1},condition:100,status:"IDLE"},{uid:"bp-seed-b",type:"belt",x:11,y:10,dir:1,footprint:{width:1,height:1},condition:100,status:"IDLE"}];
