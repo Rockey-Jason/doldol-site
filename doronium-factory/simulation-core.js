@@ -15,7 +15,7 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number(v)||0));
 const clone=value=>typeof structuredClone==="function"?structuredClone(value):JSON.parse(JSON.stringify(value));
 
 export function createRuntimeState(){
-  return {schemaVersion:5,nextStackId:1,nextReservationId:1,nextEntityId:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
+  return {schemaVersion:5,nextStackId:1,nextReservationId:1,nextEntityId:1,itemStacks:[],reservations:{},reservationHistory:[],consumptionLedger:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
 }
 function normalizeStack(stack){
   return {runtimeID:String(stack.runtimeID),itemID:String(stack.itemID),quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
@@ -24,7 +24,7 @@ function normalizeStack(stack){
 }
 export function ensureItemStacks(state){
   if(!state.runtime||typeof state.runtime!=="object")state.runtime=createRuntimeState();
-  const rt=state.runtime;rt.schemaVersion=Math.max(4,Math.floor(Number(rt.schemaVersion)||0));
+  const rt=state.runtime;rt.schemaVersion=Math.max(5,Math.floor(Number(rt.schemaVersion)||0));
   if(!Array.isArray(rt.itemStacks))rt.itemStacks=[];
   rt.itemStacks=rt.itemStacks.filter(s=>s&&s.quantity>0).map(normalizeStack);
   let maxId=0;
@@ -36,6 +36,8 @@ export function ensureItemStacks(state){
   rt.failureRngIndex=Math.max(0,Math.floor(Number(rt.failureRngIndex)||0));
   rt.nextFailureEventId=Math.max(1,Math.floor(Number(rt.nextFailureEventId)||1));
   if(!Array.isArray(rt.failureEvents))rt.failureEvents=[];
+  if(!Array.isArray(rt.consumptionLedger))rt.consumptionLedger=[];
+  if(rt.consumptionLedger.length>512)rt.consumptionLedger=rt.consumptionLedger.slice(-512);
   if(rt.failureEvents.length>256)rt.failureEvents=rt.failureEvents.slice(-256);
   if(!Number.isSafeInteger(rt.failureRngIndex)||rt.failureRngIndex<0)rt.failureRngIndex=0;
   if(!Number.isSafeInteger(rt.nextFailureEventId)||rt.nextFailureEventId<1)rt.nextFailureEventId=1;
