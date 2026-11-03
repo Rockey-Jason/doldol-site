@@ -357,9 +357,10 @@ function placeBuilding(type,x,y){
  const moneyCost=buildingMoneyCost(d);
  if(!Number.isSafeInteger(moneyCost)||moneyCost<0||!Number.isFinite(S.money)||S.money<moneyCost){toast("건설 자금이 부족합니다.","warn");return false}
  // Reserve all materials first. No currency or world state changes until every item is secured.
- const reservationIDs=reserveItemBatch(S,d.materials,"build:"+type+":"+S.tick);
- if(!reservationIDs){toast("건설 재료가 부족하거나 다른 작업에 예약되어 있습니다.","warn");return false}
- const consumed=commitItemReservations(S,reservationIDs);
+ const materialRequirements=d.materials||{};
+ const reservationIDs=Object.keys(materialRequirements).length?reserveItemBatch(S,materialRequirements,"build:"+type+":"+S.tick):[];
+ if(reservationIDs===null){toast("건설 재료가 부족하거나 다른 작업에 예약되어 있습니다.","warn");return false}
+ const consumed=reservationIDs.length?commitItemReservations(S,reservationIDs):[];
  if(!consumed){for(const id of reservationIDs)releaseItemReservation(S,id);toast("건설 거래를 안전하게 완료하지 못했습니다. 자원은 변경되지 않았습니다.","warn");return false}
  S.money-=moneyCost;
  syncLegacyInventory(S);
