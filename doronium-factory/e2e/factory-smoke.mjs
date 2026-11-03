@@ -194,6 +194,20 @@ try {
   assert.ok(powerTick.battery > 0.39 && powerTick.battery < 0.41, "The battery must charge by 0.4kJ during one 0.1-second tick at 4kW");
   assert.equal(powerTick.far.ratio, 0, "A remote grid must remain isolated after a simulation tick");
 
+  const miningSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningAutomationTest());
+  assert.equal(miningSetup.generator, true, "A mine generator must be placeable in an underground tunnel");
+  assert.equal(miningSetup.miner, true, "An iron drill must install on a matching underground iron deposit");
+  assert.equal(miningSetup.deposit.amount, 28, "Installing a drill must not consume the deposit");
+  const miningResult = await desktop.evaluate(() => window.__doroniumFactoryTest.runMiningAutomationTest());
+  assert.equal(miningResult.output.id, "ironOre", "The automatic miner must extract its matching mineral");
+  assert.equal(miningResult.output.qty, 1, "One extraction cycle must produce exactly one ore");
+  assert.equal(miningResult.depositAmount, 27, "One extraction cycle must reduce the source deposit exactly once");
+  assert.ok(miningResult.drillDurability < 1000, "Extraction must wear the drill");
+  assert.equal(miningResult.power.status, "RUNNING", "The underground generator must power the connected drill");
+  const repairResult = await desktop.evaluate(() => window.__doroniumFactoryTest.runDrillRepairTest());
+  assert.equal(repairResult.ok, true, "A worn drill must consume repair materials and return to service");
+  assert.equal(repairResult.drillDurability, 1000, "Repair must restore drill durability");
+
   const synthetic = await desktop.evaluate(() => window.__doroniumFactoryTest.syntheticGuard());
   assert.equal(synthetic.status, "ERROR", "Reactor must reject synthetic Dori Meat");
   assert.equal(synthetic.remaining, 10, "Rejected synthetic inputs must not be consumed");
