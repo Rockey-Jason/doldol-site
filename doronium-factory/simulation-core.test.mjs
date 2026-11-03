@@ -5,7 +5,8 @@ import {
   calculateOutputQuality, calculateOutputPurity, accuracyQuality,
   reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations,
   splitItemStack, mergeItemStacks, validateRuntimeState, availableItemCount,
-  runCanonicalTick, TICK_STAGE_ORDER
+  runCanonicalTick, TICK_STAGE_ORDER, availableEligibleItemCount,
+  reserveEligibleItemBatch, allocateEntityID
 } from "./simulation-core.js";
 
 test("legacy inventory migrates to stable unique stack IDs",()=>{
@@ -136,4 +137,38 @@ test("runtime save validation checks deterministic failure journal counters and 
  assert.equal(validateRuntimeState(state).valid,true);
  state.runtime.failureEvents.push({failureEventID:"FAIL-1"});
  assert.ok(validateRuntimeState(state).errors.some(x=>x.startsWith("duplicate-failure-event:")));
+});
+
+test("eligible reservations select only qualifying per-stack quality and purity metadata",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:12};
+  addItemStack(state,"doronium_alpha",120,{quality:96,purity:93,synthetic:false});
+  addItemStack(state,"doronium_alpha",50,{quality:89,purity:99,synthetic:false});
+  addItemStack(state,"doronium_alpha",30,{quality:100,purity:100,synthetic:true});
+  addItemStack(state,"doronium_beta",1,{quality:99,purity:99,synthetic:false});
+  const criteria={minQuality:90,minPurity:90,allowSynthetic:false};
+  assert.equal(availableEligibleItemCount(state,"doronium_alpha",criteria),120);
+  const failed=reserveEligibleItemBatch(state,{doronium_alpha:100,doronium_beta:2},"fusion-test",criteria);
+  assert.equal(failed,null);
+  assert.equal(availableEligibleItemCount(state,"doronium_alpha",criteria),120);
+  assert.equal(Object.keys(state.runtime.reservations).length,0);
+  const batch=reserveEligibleItemBatch(state,{doronium_alpha:100,doronium_beta:1},"fusion-test",criteria);
+  assert.ok(batch);
+  const allocations=batch.flatMap(id=>state.runtime.reservations[id].allocations);
+  for(const allocation of allocations){
+    const stack=state.runtime.itemStacks.find(x=>x.runtimeID===allocation.stackID);
+    assert.ok(stack.quality>=90&&stack.purity>=90&&!stack.synthetic);
+  }
+  assert.equal(availableEligibleItemCount(state,"doronium_alpha",criteria),20);
+  const committed=commitItemReservations(state,batch);
+  assert.equal(committed.reduce((n,x)=>n+x.quantity,0),101);
+  assert.equal(validateRuntimeState(state).valid,true);
+});
+
+test("entity IDs are deterministic, globally monotonic, and save-resumable",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:0};
+  assert.equal(allocateEntityID(state,"BLD"),"BLD-00000001");
+  assert.equal(allocateEntityID(state,"FUS"),"FUS-00000002");
+  const snapshot=structuredClone(state);
+  assert.equal(allocateEntityID(snapshot,"BLD"),"BLD-00000003");
+  assert.equal(validateRuntimeState(snapshot).valid,true);
 });
