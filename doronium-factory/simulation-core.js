@@ -46,7 +46,6 @@ export function ensureItemStacks(state){
   if(!Array.isArray(rt.eventJournal))rt.eventJournal=[];
   if(rt.eventJournal.length>512)rt.eventJournal=rt.eventJournal.slice(-512);
   if(!Array.isArray(rt.processedEventKeys))rt.processedEventKeys=[];
-  if(rt.processedEventKeys.length>2048)rt.processedEventKeys=rt.processedEventKeys.slice(-2048);
   if(!rt.rngStreams||typeof rt.rngStreams!=="object"||Array.isArray(rt.rngStreams))rt.rngStreams={};
   // One-time migration from the legacy item-count map. Never replace existing stacks.
   if(!rt.legacyInventoryMigrated){
@@ -257,9 +256,11 @@ export function enqueueSimulationEvent(state,{type,payload=null,idempotencyKey=n
 }
 export function processSimulationEvents(state,handlers={},limit=128){
   const rt=ensureItemStacks(state),maximum=Math.max(1,Math.min(1024,Math.floor(Number(limit)||128)));
-  let processed=0,duplicates=0;const errors=[];
-  while(rt.eventQueue.length&&processed<maximum){
+  const snapshotCount=Math.min(rt.eventQueue.length,maximum);
+  let processed=0,duplicates=0,visited=0;const errors=[];
+  while(rt.eventQueue.length&&visited<snapshotCount){
     const event=rt.eventQueue[0],key=event.idempotencyKey;
+    visited++;
     if(key&&rt.processedEventKeys.includes(key)){rt.eventQueue.shift();duplicates++;continue}
     const handler=handlers[event.type];
     if(typeof handler!=="function"){errors.push({eventID:event.eventID,reason:"UNHANDLED_EVENT_TYPE"});break}
