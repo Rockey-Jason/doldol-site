@@ -1055,7 +1055,7 @@ if(E2E_MODE){
   },
   powerTopologyTick(){tick(STEP);const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],battery:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ,farStatus:S.buildings.find(b=>b.uid==="P-SMELTER-2").status}},
   setupMiningAutomationTest(){
-   S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,viewMode:"first",x:3,y:12};playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[]};S.money=1000000;S.inventory={coal:20,ironPlate:10,wood:50,stone:50};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.mineDeposits=makeMineDeposits();S.powerTopologyEnabled=false;
+   S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,viewMode:"first",x:3,y:12};playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[]};S.money=1000000;S.inventory={coal:20,ironPlate:10,wood:50,stone:50,wire:10,ironOre:20};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.mineDeposits=makeMineDeposits();S.powerTopologyEnabled=false;S.research.push("mining");playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],yaw:0,pitch:-.06};
    const generator=placeMineBuilding("mineGen",11,15),miner=placeMineBuilding("minerIron",12,15);
    return {generator,miner,buildings:S.buildings.map(b=>({uid:b.uid,type:b.type,layer:b.layer,mineLevel:b.mineLevel})),deposit:S.mineDeposits[mineDepositKey(1,12,15)]};
   },
