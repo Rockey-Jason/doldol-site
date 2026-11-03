@@ -62,6 +62,10 @@ try {
   assert.equal(audit.uniqueCrystalShapes, 15, "Each variant must use a distinct geometry family");
   assert.equal(audit.allCrystalModels, true, "Every variant must resolve to a crystal model");
   assert.equal(audit.researchCount, 18, "18 research nodes must be present");
+  assert.equal(audit.skillNodeCount, 20, "The separate specialization tree must define twenty real skill nodes");
+  assert.equal(audit.skillGroupCount, 5, "The skill tree must contain five specialization groups");
+  assert.equal(audit.skillTreeValidation.valid, true, "All skill prerequisites and tiers must validate");
+  assert.equal(audit.skillStateValidation.valid, true, "Skill points and unlocked nodes must validate");
   assert.equal(audit.buildingCount, 23, "23 facility definitions, including the adaptive conveyor, must be present");
   assert.equal(audit.worldWidth, 192, "The world must be expanded to 192 tiles wide");
   assert.ok(audit.outerResourceCount > 20, "The expanded continent must contain natural resource patches");
@@ -89,6 +93,14 @@ try {
   });
   assert.ok(preview.visible && preview.width > 0 && preview.height > 0, "3D crystal preview must render to a visible canvas");
   await desktop.locator("#modal-x").click();
+  await openPanel(desktop, "research");
+  assert.equal(await desktop.locator("[data-skill]").count(), 20, "All twenty specialization nodes must be visible");
+  await desktop.locator('[data-skill="FIELD_SURVEYOR"]').click();
+  await desktop.locator('[data-modal-action="1"]').click();
+  const skillUnlock = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot().skills);
+  assert.deepEqual(skillUnlock.unlockedSkillIDs, ["FIELD_SURVEYOR"], "A confirmed first-tier skill must unlock and persist in state");
+  assert.equal(skillUnlock.availablePoints, 0, "Unlocking a skill must spend exactly one point");
+  await desktop.locator("#panel-close").click();
   const rendererAudit = await desktop.evaluate(() => ({
     scene: window.__doroniumFactoryTest.inspect3D(),
     performance: window.__doroniumFactoryTest.inspectPerformance()
@@ -121,6 +133,7 @@ try {
   await desktop.evaluate(() => window.__doroniumFactoryTest.setViewMode("first"));
 
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupSurvivalTest());
+  assert.equal(await desktop.locator("#control-column").evaluate(el => el.classList.contains("panel-open")), false, "The panel overlay must be closed before testing the adventure HUD");
   await desktop.locator('[data-tool="pickaxe"]').waitFor({ state: "visible" });
   await desktop.locator("#eat-button").waitFor({ state: "visible" });
   await desktop.locator("#drink-button").waitFor({ state: "visible" });

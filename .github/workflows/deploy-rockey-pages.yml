@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - 'doronium-factory/**'
       - 'rockey-client/**'
       - 'rockey/**'
       - '.github/workflows/deploy-rockey-pages.yml'

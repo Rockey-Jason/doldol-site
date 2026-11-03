@@ -1,53 +1,58 @@
 # Doronium Factory — Project Audit
 
 - Audit date: 2026-11-03
-- Target: existing GitHub Pages implementation
 - Repository: https://github.com/Rockey-Jason/doldol-site
-- Decision: preserve the existing browser game and adapt the master specification to the web runtime (user-approved option A).
-- Source specification: `도로늄 공장을 만드는 법.md`, v4.5.0.
+- Live target: https://rockey-jason.github.io/doldol-site/doronium-factory/
+- Target specification: `도로늄 공장을 만드는 법.md`, v4.5.0.
+- User-approved target: preserve the existing browser game (A). Unity-only deliverables are adapted to Three.js/DOM/Node/Playwright equivalents.
 
 ## Runtime baseline
 
-| Area | Observed implementation | Status |
+| Area | Current implementation | Status |
 |---|---|---|
-| Entry point | `doronium-factory/index.html` | Implemented |
-| Main game logic | `doronium-factory/factory.js` (ES module, ~114 KB at audit) | Implemented |
-| 3D rendering | `world3d.js`, Three.js 0.180.0 from CDN, 2D compatibility fallback | Implemented |
-| Terrain | `terrain-system.js`, 192×160 tile world, 5 mine levels | Implemented |
-| Styling | `factory.css` | Implemented |
-| Browser persistence | localStorage envelope, game key `doronium_factory_infinite_industry_local_v1` | Implemented |
-| Cloud persistence | Supabase `dori_cloud_storage`, key `doronium_factory_infinite_industry_v1` | Implemented |
-| Automated checks | `e2e/factory-smoke.mjs` Playwright smoke/regression script | Partial / execution not verified in this audit |
-| Unity project | No `ProjectSettings/ProjectVersion.txt`, `Packages/manifest.json`, Unity scenes or prefabs were found in the inspected project paths | Not applicable to approved web target |
+| Entry | `doronium-factory/index.html` | Implemented |
+| Runtime | `factory.js`, ES module | Partial |
+| Renderer | `world3d.js`, Three.js 0.180.0 WebGL, compatibility fallback | Partial |
+| Terrain | `terrain-system.js`, 192×160 tile world, 8 biomes, 5 mine levels | Conflict with canonical 2048m×2048m coordinate world |
+| Items | `simulation-core.js`, ItemStack, reservation, split/merge and validation | Partial |
+| Data validation | `game-data-validation.js` | Implemented for present static registries; not the complete spec registry |
+| Production | `production-runtime.js` | Partial |
+| Failure | `failure-runtime.js` | Partial; primitives and deterministic RNG exist, but no live machine profiles/outcomes are active |
+| Skill | `skill-runtime.js` | Partial; 20-node graph/runtime and some live modifiers |
+| Save | `save-store.js` | New checksum/backup/recovery layer; pending CI/runtime verification |
+| Cloud | Supabase `dori_cloud_storage`, existing per-account key | Partial; schema compatibility checked in code, external session not exercised here |
+| Tests | Node tests and Playwright WebGL regression | Pending latest CI run; virtual soak is not wall-clock soak |
 
-## Runtime contracts observed
+## Confirmed code facts
 
-- World dimensions: 192×160 logical tiles.
-- Fixed simulation step constant: `STEP = 0.1` seconds.
-- Initial world seed: 827142.
-- Current save state declares `version: 1`, `worldVersion: 4`.
-- Initial player position: (72, 52), surface layer, first-person view.
-- Initial survival values: health/hunger/thirst = 100.
-- Building limit: 180.
-- Current save contains player, survival, tools, inventory, metadata, buildings, nodes, mine deposits, research, campaign, fusion, progression, statistics and settings.
-- Machine processing is currently implemented by `tickMachine`; it uses recipe lookup, input consumption, power threshold, temperature/pressure approach, progress and output creation.
-- Current power brownout threshold is 0.8 in the inspected machine path.
+- Fixed simulation step constant: 0.1 seconds.
+- Static Stage order contains 18 entries. Several stages are trace-only/no-op handlers; machine environment, quality, wear and progress are not yet separated into all 18 independent authoritative passes.
+- Runtime schema v4 stores ItemStack records, reservation data, failure PRNG state and bounded failure event journal.
+- ItemStack split/merge uses a 5000-item stack ceiling. Recipe consumption uses reservations to avoid double spending.
+- Machine processing includes power ratio gating, temperature/pressure ramp and safety bands, condition wear and one-result completion buffer.
+- Failure hazard calculation uses reference duration and exposure time. Actual grade outcomes are deliberately not applied without validated profiles.
+- Main static data defines 15 Doronium variants, 18 research records, 23 building definitions, 10 main campaign quests and seven Infinity stages.
+- Current mine deposit list contains conventional mineral types (stone/copper/iron/coal/quartz/gold/diamond); it has no natural Doronium entries. Older prose claiming natural Doronium veins was incorrect.
+- Local save key: `doronium_factory_infinite_industry_local_v1`; account suffix remains user-specific.
+- Supabase table/key remain `dori_cloud_storage` / `doronium_factory_infinite_industry_v1`.
+- Existing `worldVersion` migration logic is still in place. No global world-resize migration was made.
 
-## Key specification conflicts requiring deliberate web adaptation
+## Major gaps / conflicts
 
-1. The master spec is Unity 6-specific, while the deployed game is a browser ES-module/Three.js application. Unity-only deliverables (Scenes, Prefabs, ScriptableObjects, CharacterController, Unity Test Runner) must be translated to equivalent web runtime modules, data contracts, DOM/Canvas UI and Playwright checks.
-2. Spec world size is 2048m × 2048m; current world is 192×160 tiles. A conversion scale and migration must be defined before resizing or regenerating saved worlds.
-3. Spec forbids natural Doronum veins. Current `makeMineDeposits()` includes multiple Doronum deposit rows. This is a gameplay/spec conflict and must be resolved through a versioned migration, not by silently deleting player-accessible resources.
-4. README currently describes five mine levels and natural Doronum examples; documentation is inconsistent with the v4.5.0 canonical rule.
-5. Spec requires globally unique non-reused ItemStack IDs and per-stack quality/purity/synthetic state. Current state primarily uses item quantity maps plus item-level metadata; this is not equivalent to stack ownership/reservation semantics.
-6. Spec mandates an 18-stage fixed tick ordering. Existing machine tick logic is present, but the full game loop has not yet been proven to implement every canonical stage in that order.
-7. Spec requires a single completed-job payload in each machine completion buffer. Existing machine outputs are represented by `b.output`; equivalence and capacity invariants need explicit validation.
-8. Existing world generation, campaign, research, factory and save data must be preserved during staged migrations.
+See `SPEC_GAP_MATRIX.md`. Highest-risk open items:
+1. 192×160 tiles and legacy coordinate scale do not equal the 2048m×2048m spec world.
+2. No full graph-based FluidNetwork, tanks/valves/flow/contamination/reservations.
+3. Power uses aggregate generator/consumer totals, not isolated NetworkID topology and battery/transmission graph.
+4. Conveyor logic is one-dimensional adjacency transfer, without full sorter/splitter/merger/loop policy and global ownership ledger.
+5. Machine failure profiles/outcomes are not connected to live production.
+6. Infinity stage power target units conflict with current power economy, and start consumes the inputs immediately rather than keeping a resumable 1500-item reservation.
+7. Shipping contracts, packaging stages, Lore Archive and chapter music asset set are incomplete.
+8. Engineer skills are partially wired; a node being purchasable does not imply every described bonus is active.
 
-## Baseline limitations
+## Verification boundaries
 
-- This audit is based on repository source inspection, not a live browser session.
-- No actual Android/iOS hardware test was run.
-- No Unity compile, Unity Play Mode or Unity build applies to the approved browser target.
-- Playwright execution and production Pages deployment must be checked separately from source inspection.
-- Do not mark an item as verified merely because a function or UI element exists.
+- GitHub source audit is not a substitute for opening the live game on multiple real devices.
+- Playwright's mobile profile is emulation, not an actual Android/iOS test.
+- The virtual one-hour test executes 36,000 fixed simulation ticks; it does not observe the app for a real wall-clock hour.
+- CI and Pages deployment results must be recorded from their actual workflow runs.
+- No Unity project/build is part of the approved browser-game target.
