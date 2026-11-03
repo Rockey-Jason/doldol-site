@@ -1004,6 +1004,18 @@ if(E2E_MODE){
    drawWorld();
    return {standardWithoutFoundation,adaptiveWithoutFoundation,standardWithFoundation,placed:S.buildings.map(b=>b.type),adaptiveBeltTilts:world3d.inspect().adaptiveBeltTilts}
   },
+  setupPowerTopologyTest(){
+   S=freshState();S.player={...S.player,viewMode:"map"};S.seconds=8*3600;S.money=1000000;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=true;S.buildings=[
+    {uid:"P-GEN",type:"solar",x:1,y:1,dir:1,status:"IDLE"},
+    {uid:"P-CABLE-1",type:"powerCable",x:2,y:1,dir:1,status:"IDLE"},
+    {uid:"P-CABLE-2",type:"powerCable",x:3,y:1,dir:1,status:"IDLE"},
+    {uid:"P-SMELTER-1",type:"smelter",x:4,y:1,dir:1,condition:100,progress:0,input:{},inputMeta:{},status:"IDLE"},
+    {uid:"P-BATTERY",type:"battery",x:2,y:2,dir:1,energyKJ:0,status:"IDLE"},
+    {uid:"P-SMELTER-2",type:"smelter",x:10,y:10,dir:1,condition:100,progress:0,input:{},inputMeta:{},status:"IDLE"}
+   ];
+   const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],batteryBefore:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ}
+  },
+  powerTopologyTick(){tick(STEP);const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],battery:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ,farStatus:S.buildings.find(b=>b.uid==="P-SMELTER-2").status}},
   setupBlueprintTest(){
    S=freshState();S.player={...S.player,viewMode:"map",layer:"surface"};S.money=1000000;S.inventory={wood:200};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
    S.buildings=[{uid:"bp-seed-a",type:"belt",x:10,y:10,dir:1,footprint:{width:1,height:1},condition:100,status:"IDLE"},{uid:"bp-seed-b",type:"belt",x:11,y:10,dir:1,footprint:{width:1,height:1},condition:100,status:"IDLE"}];
