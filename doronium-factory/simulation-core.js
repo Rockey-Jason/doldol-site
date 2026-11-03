@@ -92,6 +92,33 @@ export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-trans
   rt.reservations[reservationID]={reservationID,ownerID:String(ownerID),itemID:String(itemID),quantity:qty,allocations,status:"reserved",createdTick:Math.max(0,Number(state.tick)||0)};
   return reservationID;
 }
+export function reserveQualifiedItemStacks(state,itemID,quantity,ownerID="qualified-transaction",predicate=()=>true){
+ const rt=ensureItemStacks(state),qty=Math.floor(Number(quantity)||0);
+ if(!itemID||qty<=0||typeof predicate!=="function")return null;
+ const reserved=reservedByStack(rt);let remaining=qty;const allocations=[];
+ for(const stack of rt.itemStacks){
+  if(stack.itemID!==itemID||remaining<=0)continue;
+  let eligible=false;try{eligible=predicate({...stack})===true}catch{eligible=false}
+  if(!eligible)continue;
+  const free=Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0));
+  const take=Math.min(free,remaining);if(take>0){allocations.push({stackID:stack.runtimeID,quantity:take});remaining-=take}
+ }
+ if(remaining>0)return null;
+ const reservationID="RS-"+rt.nextReservationId++;
+ rt.reservations[reservationID]={reservationID,ownerID:String(ownerID),itemID:String(itemID),quantity:qty,allocations,status:"reserved",createdTick:Math.max(0,Number(state.tick)||0),qualified:true};
+ return reservationID;
+}
+export function reserveQualifiedItemBatch(state,requirements,ownerID="qualified-transaction",predicates={}){
+ const created=[];
+ for(const [itemID,quantity] of Object.entries(requirements||{})){
+  const qty=Math.floor(Number(quantity)||0);if(qty<=0)continue;
+  const predicate=typeof predicates[itemID]==="function"?predicates[itemID]:()=>true;
+  const id=reserveQualifiedItemStacks(state,itemID,qty,ownerID,predicate);
+  if(!id){for(const prior of created)releaseItemReservation(state,prior);return null}
+  created.push(id);
+ }
+ return created;
+}
 export function reserveItemBatch(state,requirements,ownerID="inventory-transaction"){
   const created=[];
   for(const [itemID,quantity] of Object.entries(requirements||{})){
