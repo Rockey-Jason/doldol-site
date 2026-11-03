@@ -415,7 +415,64 @@ function buildingOccupiesCell(x,y){
  for(const b of S.buildings){const cells=buildingFootprintCells(b);if(cells.some(p=>p.x===x&&p.y===y))return true}
  return false;
 }
+function escapeHTML(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
+function renderBlueprints(){
+ const host=$("blueprint-list");if(!host)return;
+ const rows=(S.blueprints||[]).map(bp=>'<article class="blueprint-card '+(activeBlueprintID===bp.id?"active":"")+'"><div class="blueprint-title"><strong>'+escapeHTML(bp.name||"설계도")+'</strong><small>'+bp.buildings.length+'개 설비</small></div><div class="blueprint-actions"><button type="button" data-blueprint-action="place" data-blueprint-id="'+escapeHTML(bp.id)+'">배치 선택</button><button type="button" data-blueprint-action="rotate" data-blueprint-id="'+escapeHTML(bp.id)+'">90° 회전</button><button type="button" data-blueprint-action="duplicate" data-blueprint-id="'+escapeHTML(bp.id)+'">복제</button></div></article>').join("");
+ host.innerHTML=rows||'<div class="blueprint-empty">저장된 설계도가 없습니다. 현재 공장을 저장해 보세요.</div>';
+ host.querySelectorAll("[data-blueprint-action]").forEach(button=>button.addEventListener("click",()=>{
+  const id=button.dataset.blueprintId,action=button.dataset.blueprintAction,bp=S.blueprints.find(x=>x.id===id);if(!bp)return;
+  if(action==="place"){activeBlueprintID=id;activeBlueprintRotation=0;selectedBuild=null;selectedBuilding=null;renderBuildList();toast("설계도 배치 모드 · 월드에서 기준 위치를 선택하세요.")}
+  else if(action==="rotate"){if(activeBlueprintID!==id){activeBlueprintID=id;activeBlueprintRotation=0}activeBlueprintRotation=(activeBlueprintRotation+1)%4;toast("설계도 회전 · "+(activeBlueprintRotation*90)+"°");renderBlueprints()}
+  else if(action==="duplicate"){const copy=duplicateBlueprint(bp,{newID:allocateEntityID(S,"BP"),name:(bp.name||"설계도")+" 복제"});if(copy){S.blueprints.push(copy);markDirty();renderBlueprints();toast("설계도를 복제했습니다.")}}
+ }));
+}
+function saveCurrentBlueprint(){
+ const source=selectedBuilding?S.buildings.filter(b=>b.uid===selectedBuilding):S.buildings;
+ if(!source.length){toast("먼저 저장할 시설을 건설하세요.","warn");return}
+ const name=String($("blueprint-name")?.value||"").trim()||("공장 설계도 "+((S.blueprints||[]).length+1));
+ const blueprint=createBlueprint(source,{name,footprintForType:getBuildingFootprint});blueprint.id=allocateEntityID(S,"BP");
+ S.blueprints??=[];S.blueprints.push(blueprint);markDirty();renderBlueprints();toast("설계도 저장 완료 · "+blueprint.buildings.length+"개 설비");
+}
+function placeBlueprintAt(x,y){
+ const source=(S.blueprints||[]).find(b=>b.id===activeBlueprintID);if(!source){activeBlueprintID=null;return false}
+ if(S.player.layer==="mine"){toast("설계도는 지상 공장 구역에서만 배치할 수 있습니다.","warn");return false}
+ if(S.buildings.length+source.buildings.length>BUILDING_LIMIT){toast("설계도 배치 후 시설 한도를 초과합니다.","warn");return false}
+ const occupied=[];for(const b of S.buildings)occupied.push(...buildingFootprintCells(b));
+ const heightAt=(cx,cy)=>{const v=S.flattened?.[surfaceKey(cx,cy)];return v&&typeof v==="object"&&Number.isFinite(v.height)?v.height:terrainHeightAt(cx,cy)};
+ const catalogue=Object.fromEntries(BUILDINGS.map(d=>[d.id,{moneyCost:buildingMoneyCost(d),materials:d.materials,footprint:getBuildingFootprint(d.id),requiresFlat:d.id!=="beltAdaptive"&&!["relay","core","pump"].includes(d.id)}]));
+ const canPlaceType=(type,px,py)=>{
+  const d=buildingDef(type),node=tileNode(px,py);if(!d||!unlockOk(d))return false;
+  if(type==="pump"&&node?.type!=="water")return false;
+  if(type==="relay"&&node?.type!=="relaySite")return false;
+  if(type==="core"&&node?.type!=="coreSite")return false;
+  if(type==="doriFarm"&&(node?.type==="dori"||!findNearbyDoriNode(px,py)))return false;
+  return true;
+ };
+ const canOccupyCell=(type,cx,cy,def,context)=>{
+  const node=tileNode(cx,cy);if(!node)return true;
+  const anchor=context?.anchor||{},isAnchor=anchor.x===cx&&anchor.y===cy;
+  return isAnchor&&((type==="pump"&&node.type==="water")||(type==="doriFarm"&&node.type==="dori")||(type==="relay"&&node.type==="relaySite")||(type==="core"&&node.type==="coreSite"));
+ };
+ const transactionID=allocateEntityID(S,"BUILD");
+ const reservation=beginBlueprintConstruction(S,{transactionID,blueprint:source,x,y,rotation:activeBlueprintRotation,buildingCatalog:catalogue,ownerID:"player",worldWidth:WORLD_W,worldHeight:WORLD_H,occupied,heightAt,maxSlope:0,foundation:(cx,cy)=>hasFoundation(cx,cy),isUnlocked:type=>unlockOk(buildingDef(type)),canPlaceType,canOccupyCell});
+ if(!reservation.ok){toast(reservation.reason==="INSUFFICIENT_MONEY"?"설계도 설치 자금이 부족합니다.":reservation.reason==="INSUFFICIENT_MATERIALS"?"설계도 설치 재료가 부족합니다.":reservation.reason==="BUILDING_LOCKED"?"설계도에 잠긴 연구 시설이 포함되어 있습니다.":"설계도 배치 조건을 충족하지 못했습니다. "+reservation.reason,"warn");return false}
+ const committed=commitConstruction(S,transactionID,(state,tx)=>{
+  const uids=[];
+  for(const item of tx.placements){
+   const uid=allocateEntityID(state,"B");
+   const b={uid,type:item.type,x:item.x,y:item.y,dir:((Number(item.dir)||1)%4+4)%4,footprint:{...item.footprint},footprintRotation:0,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:item.dir??1,status:"IDLE",autoFeed:true,variant:item.variant||"doronium_blue",temp:25,pressure:0,fuelTimer:0,moveTimer:0};
+   state.buildings.push(b);state.stats.built[item.type]=(state.stats.built[item.type]||0)+1;uids.push(uid);
+   if(item.type==="relay"){const idx=state.sites.relay.findIndex(p=>p.x===item.x&&p.y===item.y);if(idx>=0)state.relaySites[idx]=true}
+   if(item.type==="core")state.corePlaced=true;
+  }
+  return {uids};
+ });
+ if(!committed.ok){cancelConstruction(S,transactionID);toast("설계도 배치에 실패했습니다. 자금과 재료는 보존했습니다.","warn");return false}
+ syncLegacyInventory(S);markSceneDirty();selectedBuilding=committed.result.uids.at(-1)||null;selectedBuild=null;activeBlueprintID=null;activeBlueprintRotation=0;log("설계도 배치 완료 · "+committed.result.uids.length+"개 설비");markDirty();renderAll();questCheck();toast("설계도 배치 완료");return true;
+}
 function placeBuilding(type,x,y){
+ if(activeBlueprintID)return placeBlueprintAt(x,y);
  const d=buildingDef(type);if(!d)return false;
  if(S.player.layer==="mine"){toast("지하 광산에는 채굴 전용 설비만 설치할 수 있습니다.","warn");return false}
  if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}
