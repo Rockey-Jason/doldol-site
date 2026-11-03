@@ -174,7 +174,10 @@ export function resolvePowerNetworks(state, { dtSec = 0.1, brownoutThreshold = 0
         rawGenerationKW += generationKW;
         sources.push({ id: node.id, kind: "generator", availableKW: generationKW, node });
       } else if (node.kind === "battery" && node.enabled !== false) {
-        const stored = clamp(finiteNonNegative(node.storedEnergyKJ), 0, finiteNonNegative(node.capacityKJ));
+        const capacityKJ = finiteNonNegative(node.capacityKJ);
+        const stored = clamp(finiteNonNegative(node.storedEnergyKJ), 0, capacityKJ);
+        node.capacityKJ = capacityKJ;
+        node.storedEnergyKJ = stored;
         const dischargeEfficiency = clamp(Number(node.dischargeEfficiency ?? 1), EPSILON, 1);
         const maxDischargeKW = finiteNonNegative(node.maxDischargeKW);
         const availableKW = Math.min(maxDischargeKW, stored * dischargeEfficiency / dtSec);
@@ -237,6 +240,7 @@ export function resolvePowerNetworks(state, { dtSec = 0.1, brownoutThreshold = 0
   return { networks, consumers, batteries };
 }
 
+function finiteNumber(value, fallback = 0) { const number = Number(value); return Number.isFinite(number) ? number : fallback; }
 function validFluidQuantity(node) {
   const quantity = Number(node.quantityL);
   const reserved = Number(node.reservedL ?? 0);
@@ -290,7 +294,7 @@ export function tickFluidNetwork(state, { dtSec = 0.1 } = {}) {
     const edgeRate = finiteNonNegative(edge.maxFlowLps);
     const sourceRate = finiteNonNegative(source.maxFlowLps, edgeRate);
     const targetRate = finiteNonNegative(target.maxFlowLps, edgeRate);
-    const rate = Math.min(edgeRate, sourceRate || edgeRate, targetRate || edgeRate) * pressureFactor;
+    const rate = Math.min(edgeRate, sourceRate, targetRate) * pressureFactor;
     const available = Math.max(0, (startAvailable.get(source.id) || 0) - outgoing.get(source.id));
     const targetSpace = Math.max(0, target.capacityL - (target.quantityL + incoming.get(target.id)));
     const gross = Math.min(available, targetSpace / Math.max(EPSILON, 1 - finiteNonNegative(edge.lossRatio)), rate * dtSec);
@@ -305,7 +309,7 @@ export function tickFluidNetwork(state, { dtSec = 0.1 } = {}) {
     const oldTargetL = target.quantityL + incoming.get(target.id) - delivered;
     const denominator = oldTargetL + delivered;
     if (denominator > EPSILON) {
-      target.temperatureC = ((finiteNonNegative(target.temperatureC) * oldTargetL) + (finiteNonNegative(source.temperatureC) * delivered)) / denominator;
+      target.temperatureC = ((finiteNumber(target.temperatureC, 20) * oldTargetL) + (finiteNumber(source.temperatureC, 20) * delivered)) / denominator;
       target.contamination = ((finiteNonNegative(target.contamination) * oldTargetL) + (finiteNonNegative(source.contamination) * delivered)) / denominator;
     }
     transfers.push({ edgeID: edge.id, sourceID: source.id, targetID: target.id, fluidType: source.fluidType, movedL: gross, deliveredL: delivered, lostL: loss });
