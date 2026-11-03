@@ -20,6 +20,6 @@ test("blueprint with one invalid member reserves nothing and duplicate is unique
  const s={money:100,tick:1,runtime:createRuntimeState(),inventory:{}};addItemStack(s,"wood",2);
  const bp={version:1,name:"Invalid",buildings:[{type:"pipe",dx:0,dy:0,footprint:{width:1,height:1}},{type:"pipe",dx:1,dy:0,footprint:{width:1,height:1}}]};
  const result=beginBlueprintConstruction(s,{transactionID:"BP-2",blueprint:bp,x:9,y:9,worldWidth:10,worldHeight:10,buildingCatalog:{pipe:{moneyCost:1,materials:{wood:1}}},foundation:()=>true});
- assert.equal(result.ok,false);assert.equal(Object.keys(s.runtime.reservations).length,0);assert.equal(s.moneyReservations,undefined);
+ assert.equal(result.ok,false);assert.equal(Object.keys(s.runtime.reservations).length,0);assert.equal(Object.keys(s.moneyReservations||{}).length,0);
  const copy=duplicateBlueprint(bp,{newID:"BP-COPY"});assert.equal(copy.id,"BP-COPY");assert.equal(copy.buildings.length,2);assert.notEqual(copy,bp);
 });
