@@ -150,7 +150,7 @@ test("qualified reservations select only stacks that individually satisfy metada
  assert.deepEqual(reservation.allocations.map(a=>a.quantity),[3]);
  const removed=commitItemReservations(state,[id]);
  assert.equal(removed.reduce((n,s)=>n+s.quantity,0),3);
- assert.equal(stackTotals(state).ironPlate,6);
+ assert.equal(state.runtime.itemStacks.filter(s=>s.itemID==="ironPlate").reduce((n,s)=>n+s.quantity,0),6);
 });
 test("qualified reservation rolls back without reserving ineligible stock",()=>{
  const state={inventory:{},tick:1};ensureItemStacks(state);addItemStack(state,"ironPlate",5,{quality:80,purity:90,synthetic:false});
