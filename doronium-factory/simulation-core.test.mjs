@@ -5,6 +5,7 @@ import {
   calculateOutputQuality, calculateOutputPurity, accuracyQuality,
   reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations,
   splitItemStack, mergeItemStacks, validateRuntimeState, availableItemCount, availableItemCountWhere, allocateEntityID,
+  beginInventoryTransaction, commitInventoryTransaction, rollbackInventoryTransaction,
   runCanonicalTick, TICK_STAGE_ORDER
 } from "./simulation-core.js";
 
@@ -172,4 +173,45 @@ test("entity IDs are persisted, monotonic and do not collide with existing build
   const restored=structuredClone(state);
   assert.equal(allocateEntityID(restored,"BLDG"),"BLDG-4");
   assert.equal(validateRuntimeState(restored).valid,true);
+});
+
+
+test("inventory transactions are retry-safe and commit output exactly once",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:30,buildings:[]};
+  addItemStack(state,"ironOre",9,{quality:92,purity:94});
+  const begun=beginInventoryTransaction(state,{transactionID:"TXN-101",ownerID:"machine-smelter",requirements:{ironOre:6}});
+  assert.equal(begun.status,"RESERVED");
+  assert.equal(availableItemCount(state,"ironOre"),3);
+  const duplicate=beginInventoryTransaction(state,{transactionID:"TXN-101",ownerID:"machine-smelter",requirements:{ironOre:6}});
+  assert.equal(duplicate.duplicate,true);
+  assert.equal(Object.keys(state.runtime.reservations).length,1);
+  const first=commitInventoryTransaction(state,"TXN-101");
+  const second=commitInventoryTransaction(state,"TXN-101");
+  assert.deepEqual(second,first);
+  assert.equal(state.runtime.itemStacks.reduce((n,s)=>n+s.quantity,0),3);
+  assert.equal(first.items.reduce((n,s)=>n+s.quantity,0),6);
+  assert.equal(validateRuntimeState(state).valid,true);
+});
+
+test("inventory transaction rollback releases stock and is idempotent",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:31,buildings:[]};
+  addItemStack(state,"coal",5);
+  const begun=beginInventoryTransaction(state,{transactionID:"TXN-102",ownerID:"machine",requirements:{coal:4}});
+  assert.equal(begun.status,"RESERVED");
+  assert.equal(rollbackInventoryTransaction(state,"TXN-102","CANCELLED"),true);
+  assert.equal(rollbackInventoryTransaction(state,"TXN-102","CANCELLED"),true);
+  assert.equal(commitInventoryTransaction(state,"TXN-102"),null);
+  assert.equal(availableItemCount(state,"coal"),5);
+  assert.equal(validateRuntimeState(state).valid,true);
+});
+
+test("failed transaction is all-or-nothing and cannot leave partial reservations",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:32,buildings:[]};
+  addItemStack(state,"ironOre",10);
+  const begun=beginInventoryTransaction(state,{transactionID:"TXN-103",ownerID:"machine",requirements:{ironOre:8,coal:1}});
+  assert.equal(begun.status,"REJECTED");
+  assert.equal(availableItemCount(state,"ironOre"),10);
+  assert.equal(Object.keys(state.runtime.reservations).length,0);
+  assert.equal(commitInventoryTransaction(state,"TXN-103"),null);
+  assert.equal(validateRuntimeState(state).valid,true);
 });
