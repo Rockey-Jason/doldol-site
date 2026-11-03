@@ -42,13 +42,16 @@ jobs:
           node --check doronium-factory/game-data-validation.test.mjs
           node --check doronium-factory/production-runtime.js
           node --check doronium-factory/production-runtime.test.mjs
+          node --check doronium-factory/failure-profiles.js
+          node --check doronium-factory/logistics-runtime.js
           node --check doronium-factory/failure-runtime.js
+          node --check doronium-factory/logistics-runtime.test.mjs
           node --check doronium-factory/failure-runtime.test.mjs
           node --check doronium-factory/skill-runtime.js
           node --check doronium-factory/skill-runtime.test.mjs
           node --check doronium-factory/save-store.js
           node --check doronium-factory/save-store.test.mjs
-          node --test doronium-factory/cloud-save-runtime.test.mjs doronium-factory/canonical-data.test.mjs doronium-factory/fusion-runtime.test.mjs doronium-factory/ownership-runtime.test.mjs doronium-factory/network-runtime.test.mjs doronium-factory/simulation-core.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs doronium-factory/failure-runtime.test.mjs doronium-factory/skill-runtime.test.mjs doronium-factory/save-store.test.mjs
+          node --test doronium-factory/logistics-runtime.test.mjs doronium-factory/cloud-save-runtime.test.mjs doronium-factory/canonical-data.test.mjs doronium-factory/fusion-runtime.test.mjs doronium-factory/ownership-runtime.test.mjs doronium-factory/network-runtime.test.mjs doronium-factory/simulation-core.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs doronium-factory/failure-runtime.test.mjs doronium-factory/skill-runtime.test.mjs doronium-factory/save-store.test.mjs
           node --check doronium-factory/world3d.js
           node --check doronium-factory/terrain-system.js
           node --check doronium-factory/e2e/factory-smoke.mjs
@@ -73,6 +76,9 @@ jobs:
           test -s doronium-factory/game-data-validation.test.mjs
           test -s doronium-factory/production-runtime.js
           test -s doronium-factory/production-runtime.test.mjs
+          test -s doronium-factory/failure-profiles.js
+          test -s doronium-factory/logistics-runtime.js
+          test -s doronium-factory/logistics-runtime.test.mjs
           test -s doronium-factory/failure-runtime.js
           test -s doronium-factory/failure-runtime.test.mjs
           test -s doronium-factory/skill-runtime.js
