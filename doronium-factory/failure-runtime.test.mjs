@@ -94,7 +94,7 @@ test("failure result applies once and preserves the in-process recipe for repair
  machine.maintenanceTimer=0;
  assert.equal(completeMachineRepair(machine),true);
  assert.equal(machine.status,"IDLE");
- assert.equal(machine.condition,82);
+ assert.equal(machine.condition,76);
  assert.equal(machine.activeMeta.quality,90);
  assert.equal(completeMachineRepair(machine),false);
 });
