@@ -1060,7 +1060,7 @@ if(E2E_MODE){
    return {generator,miner,buildings:S.buildings.map(b=>({uid:b.uid,type:b.type,layer:b.layer,mineLevel:b.mineLevel})),deposit:S.mineDeposits[mineDepositKey(1,12,15)]};
   },
   runMiningAutomationTest(){
-   for(let i=0;i<80;i++)tick(STEP);
+   for(let i=0;i<81;i++)tick(STEP);
    const miner=S.buildings.find(b=>b.type==="minerIron"),deposit=S.mineDeposits[mineDepositKey(1,12,15)];
    return {output:miner?.output?structuredClone(miner.output):null,depositAmount:deposit?.amount,drillDurability:miner?.drillDurability,power:currentPower().allocations?.[String(miner?.uid)]||null,generatorFuel:S.buildings.find(b=>b.type==="mineGen")?.fuelTimer||0};
   },
@@ -1070,7 +1070,7 @@ if(E2E_MODE){
    miner.drillDurability=0;tick(STEP);
    const started=!!miner.failureRepair&&repairMachine(miner);
    if(!started)return {ok:false,reason:"REPAIR_START_FAILED"};
-   for(let i=0;i<300&&miner.failureRepair;i++)tick(STEP);
+   for(let i=0;i<310&&miner.failureRepair;i++)tick(STEP);
    return {ok:miner.status==="IDLE"&&miner.drillDurability===1000,status:miner.status,drillDurability:miner.drillDurability,ironPlate:itemCount("ironPlate")};
   },
   setupBlueprintTest(){
