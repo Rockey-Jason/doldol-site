@@ -1,5 +1,5 @@
 /* Five-step package, qualified cargo reservation and idempotent delivery settlement. */
-import {reserveQualifiedItemStacks,reserveItemBatch,releaseItemReservation,commitItemReservations} from "./simulation-core.js";
+import {reserveQualifiedItemStacks,reserveItemBatch,releaseItemReservation,commitItemReservations,syncLegacyInventory} from "./simulation-core.js";
 const clone=v=>typeof structuredClone==="function"?structuredClone(v):JSON.parse(JSON.stringify(v));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,Number(v)||0));
 export const PACKAGING_STAGES=Object.freeze([
@@ -34,6 +34,7 @@ export function advancePackagingStage(gameState,contractState,shipmentID){
  if(!reservations)return {ok:false,reason:"PACKAGING_MATERIALS_MISSING"};
  const consumed=commitItemReservations(gameState,reservations);
  if(!consumed){for(const id of reservations)releaseItemReservation(gameState,id);return {ok:false,reason:"PACKAGING_COMMIT_FAILED"}}
+ syncLegacyInventory(gameState);
  contractState.claims[claimID]={claimedAt:Number(gameState.seconds)||0};
  shipment.protection=clamp(shipment.protection+stage.protection,0,.95);
  shipment.packageStage++;record(contractState,{eventID:claimID,type:"PACKAGED",shipmentID,stage:stage.id});
@@ -47,6 +48,7 @@ export function dispatchContractShipment(gameState,contractState,shipmentID){
  if(!removed)return {ok:false,reason:"CARGO_RESERVATION_LOST"};
  const quantity=removed.reduce((n,s)=>n+s.quantity,0);
  if(quantity!==shipment.quantity)return {ok:false,reason:"CARGO_QUANTITY_MISMATCH"};
+ syncLegacyInventory(gameState);
  shipment.cargo=removed.map(s=>({...s}));shipment.reservationID=null;shipment.status="IN_TRANSIT";shipment.dispatchedAt=Number(gameState.seconds)||0;
  record(contractState,{eventID:"DISPATCH:"+shipmentID,type:"DISPATCHED",shipmentID,quantity});
  return {ok:true,shipment:clone(shipment)};
