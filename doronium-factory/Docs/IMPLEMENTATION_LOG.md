@@ -31,6 +31,26 @@
 
 The corresponding commit/Actions/Pages run IDs and their results must be filled after the workflow completes. A source update is not proof of passing tests.
 
+## Verified execution results
+
+- Final source commit under test: `f39aa3f869195cdd9137f209beb0a1ed155614cc`.
+- Doronium validation workflow: run [41589409673](https://github.com/Rockey-Jason/doldol-site/actions/runs/41589409673) — **success**.
+- Node/static validation job — **success**, all **40/40** unit tests passed; JavaScript syntax and required runtime-contract checks passed.
+- Playwright browser regression job — **success**:
+  - Desktop WebGL renderer and mobile-emulation WebGL renderer initialized.
+  - Static scene rebuild/render budget and crystal preview checks passed.
+  - 20-node / 5-group skill tree, confirmation-based skill purchase and one-point accounting passed.
+  - Survival eat/drink controls, underground mining, tool guard, standard/adaptive conveyor placement checks passed.
+  - Belt cargo visuals, engineer path-to-machine interaction, low-power pause and input preservation passed.
+  - Virtual hour: 36,000 fixed 0.1-second ticks; simulation time advanced 3,600 seconds; 296 iron plates produced and delivered to inventory; ore-equivalent ledger balance 50,000 and coal-equivalent ledger balance 30,000 preserved.
+  - Mobile viewport 390×844: touch movement pad visible and engineer moved from (72,52) to (73,52).
+  - No uncaught browser JavaScript errors; desktop and mobile screenshots uploaded as workflow artifact 13209621174.
+- GitHub Pages build/deployment:
+  - Pages build run [41589409085](https://github.com/Rockey-Jason/doldol-site/actions/runs/41589409085) — **success**.
+  - ROCKEY Pages deployment run [41589409592](https://github.com/Rockey-Jason/doldol-site/actions/runs/41589409592) — **success**.
+- This is CI automation evidence. The virtual one-hour simulation is not a real wall-clock 60-minute device soak; mobile verification is browser emulation, not physical Android/iOS hardware.
+- The overall v4.5.0 spec status remains **Partial/Conflict**, as listed in `SPEC_GAP_MATRIX.md`. Passing these checks does not imply that fluid networks, power topology, full shipping contracts, live failure profiles, every skill effect, all story/music assets, or the conflicting canonical world/power scales are complete.
+
 ## Known remaining scope
 
 See `SPEC_GAP_MATRIX.md`. Overall v4.5.0 Gate remains Partial/Conflict while FluidNetwork, contract shipping, full FailureProfiles/outcomes, power topology, blueprints, all skill effect integrations, Lore/story audio, canonical Infinity power units and real-hardware soak checks remain incomplete.
