@@ -771,7 +771,7 @@ function animationFrame(time){
  world3d.adaptPerformanceFrame?.(Math.min(80,realFrameMs));
  const movementElapsed=Math.min(80,realFrameMs)/1000;
  updatePlayerMotion(movementElapsed);
- if(!S.paused&&!S.victory){accumulator+=realFrameMs/1000*S.simSpeed;const budget=consumeFixedStepBudget(accumulator,STEP,10);for(let i=0;i<budget.steps;i++)tick(STEP);accumulator=budget.remaining}
+ if(!S.paused&&!S.victory){accumulator+=realFrameMs/1000*S.simSpeed;const budget=consumeFixedStepBudget(accumulator,STEP,10);for(let i=0;i<budget.steps;i++)tick(STEP);accumulator=budget.remaining;if(accumulator>=2){const lastDiagnostic=Number(S.runtime.simulationBehindDiagnosticMs)||0;if(time-lastDiagnostic>=5000){S.runtime.simulationBehindDiagnosticMs=time;S.runtime.simulationBehindCount=(Number(S.runtime.simulationBehindCount)||0)+1;console.warn("[Doronium Factory] SimulationBehind",{backlogSeconds:Number(accumulator.toFixed(2)),count:S.runtime.simulationBehindCount})}}}
  frameRenderAccumulator=Math.min(50,frameRenderAccumulator+Math.min(80,realFrameMs));
  if(frameRenderAccumulator>=1000/60){frameRenderAccumulator-=1000/60;drawWorld()}
  requestAnimationFrame(animationFrame);
