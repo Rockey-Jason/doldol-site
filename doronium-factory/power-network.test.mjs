@@ -54,7 +54,6 @@ test("battery energy (kJ) and output power (kW) are separate limits", () => {
 test("cable losses and transformer efficiency/capacity limit delivered power", () => {
   const result=resolvePowerNetworks({
     dtSeconds:1,
-    nodes:[{id:"plant"},{id:"factory"}],
     cables:[{id:"cable",from:"plant",to:"transformer-in",capacityKW:100,lossRatio:0}],
     transformers:[{id:"xfmr",from:"transformer-in",to:"factory",capacityKW:60,lossRatio:0,efficiency:.9}],
     nodes:[{id:"plant"},{id:"transformer-in"},{id:"factory"}],
