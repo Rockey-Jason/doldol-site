@@ -69,3 +69,44 @@ test("failure roll emits one unique persisted event with configured grade",()=>{
  assert.equal(runtime.failureEvents.length,1);
  assert.equal(rollMachineFailure(runtime,{uid:"machine-7"},certain,{valid:false,tickProbability:1}),null);
 });
+
+import {applyMachineFailure,completeMachineRepair} from "./failure-runtime.js";
+import {FAILURE_PROFILES} from "./failure-profiles.js";
+
+test("all production machine profiles define valid explicit minor/major/critical outcomes",()=>{
+ for(const [machineType,p] of Object.entries(FAILURE_PROFILES)){
+  assert.equal(validateFailureProfile(p).valid,true,machineType);
+  for(const grade of ["minor","major","critical"]){
+   assert.ok(Number(p.outcomes[grade].repairSeconds)>0);
+   assert.ok(Object.keys(p.outcomes[grade].repairMaterials||{}).length>0);
+  }
+ }
+});
+
+test("failure result applies once and preserves the in-process recipe for repair",()=>{
+ const machine={uid:"M-42",condition:100,status:"RUNNING",activeMeta:{quality:90,purity:92,synthetic:false},progress:4};
+ const event={failureEventID:"FAIL-77",grade:"major",outcome:{...FAILURE_PROFILES.smelter.outcomes.major}};
+ assert.equal(applyMachineFailure(machine,event),true);
+ assert.equal(machine.status,"MAINTENANCE");
+ assert.equal(machine.condition,84);
+ assert.ok(machine.activeMeta,"active recipe inputs remain attached while under repair");
+ assert.equal(applyMachineFailure(machine,event),false,"the same failure event cannot be applied twice");
+ machine.maintenanceTimer=0;
+ assert.equal(completeMachineRepair(machine),true);
+ assert.equal(machine.status,"IDLE");
+ assert.equal(machine.condition,82);
+ assert.equal(machine.activeMeta.quality,90);
+ assert.equal(completeMachineRepair(machine),false);
+});
+
+test("critical failure enters BROKEN and requires an explicit repair",()=>{
+ const machine={uid:"M-99",condition:100,status:"RUNNING"};
+ const event={failureEventID:"FAIL-99",grade:"critical",outcome:{...FAILURE_PROFILES.reactor.outcomes.critical}};
+ assert.equal(applyMachineFailure(machine,event),true);
+ assert.equal(machine.status,"BROKEN");
+ assert.equal(machine.failureRepair.broken,true);
+ assert.equal(machine.failureRepair.repairMaterials.ironPlate,10);
+ assert.equal(completeMachineRepair(machine),true);
+ assert.equal(machine.status,"IDLE");
+ assert.equal(machine.condition,62);
+});
