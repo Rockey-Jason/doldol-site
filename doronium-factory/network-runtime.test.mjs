@@ -5,7 +5,6 @@ test("power allocation honors priority and brownout threshold",()=>{const r=solv
 test("fluid transfer conserves volume and respects capacity and flow",()=>{const a={fluidType:"WATER",amountL:20},b={fluidType:"WATER",amountL:2,capacityL:10};const before=a.amountL+b.amountL;const r=transferFluid({source:a,target:b,requestedLiters:15,deltaSeconds:2,maxFlowLps:3});assert.equal(r.movedL,6);assert.equal(validateFluidBalance(before,a.amountL+b.amountL).valid,true);assert.equal(b.amountL,8)});
 test("fluid type mismatch cannot silently mix",()=>{const a={fluidType:"OIL",amountL:10},b={fluidType:"WATER",amountL:2,capacityL:20};assert.equal(transferFluid({source:a,target:b,requestedLiters:5}).movedL,0);assert.equal(a.amountL,10)});
 
-import {solvePowerNetworks} from "./network-runtime.js";
 test("isolated battery supplies shortfall and only settles energy after simulation tick",()=>{
  const nodes=[{id:"G",type:"GENERATOR",generationKW:2},{id:"BAT",type:"BATTERY",energyKJ:100,capacityKJ:200,maxDischargeKW:3,maxChargeKW:4},{id:"C",type:"CONSUMER",demandKW:5,priority:10}];
  const results=solvePowerNetworks({nodes,edges:[{from:"G",to:"BAT"},{from:"BAT",to:"C"}],deltaSeconds:1});
