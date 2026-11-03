@@ -117,7 +117,7 @@ export function beginBlueprintConstruction(state,{transactionID,blueprint,x,y,ro
   const requiresFlat=def.requiresFlat!==false;
   const result=validateConstructionFootprint({x:px,y:py,width:footprint.width,height:footprint.height,worldWidth,worldHeight,occupied:[...(occupiedSet),...planned].map(v=>{const[a,b]=String(v).split(",").map(Number);return{x:a,y:b}}),heightAt,maxSlope:requiresFlat?maxSlope:Infinity,requiresFlat,foundation});
   if(!result.valid)return {ok:false,reason:"INVALID_BLUEPRINT_FOOTPRINT",buildingType:item.type,errors:result.errors};
-  for(const p of result.cells)if(!canOccupyCell(item.type,p.x,p.y,def))return {ok:false,reason:"BLOCKED_BLUEPRINT_CELL",buildingType:item.type,cell:p};
+  for(const p of result.cells)if(!canOccupyCell(item.type,p.x,p.y,def,{anchor:{x:px,y:py},building:item}))return {ok:false,reason:"BLOCKED_BLUEPRINT_CELL",buildingType:item.type,cell:p};
   for(const p of result.cells){const k=cellKey(p.x,p.y);planned.add(k);occupiedCells.push(p)}
   const cost=Math.max(0,Math.floor(Number(def.moneyCost)||0));moneyCost+=cost;
   for(const[id,qty]of Object.entries(def.materials||{}))materials[id]=(materials[id]||0)+Math.max(0,Math.floor(Number(qty)||0));
