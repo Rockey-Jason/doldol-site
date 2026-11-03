@@ -832,7 +832,7 @@ function tickFluidSystems(dt,power){
    const target=positions.get(surfaceKey(b.x+dx,b.y+dy));if(!target||String(target.uid)<=String(b.uid))continue;
    const t=nodesByID.get(String(target.uid));if(!t)continue;
    const closed=b.type==="fluidValve"&&b.valveOpen===false||target.type==="fluidValve"&&target.valveOpen===false;
-   edges.push({id:"F:"+b.uid+":"+target.uid,from:String(b.uid),to:String(target.uid),oneWay:false,open:!closed,maxFlowLps:20,conductanceLpsPerKPa:.08,referencePressureKPa:100,maxPressureKPa:Math.min(a.maxPressureKPa,t.maxPressureKPa),breakOnOverpressure:false});
+   edges.push({id:"F:"+b.uid+":"+target.uid,from:String(b.uid),to:String(target.uid),oneWay:false,open:!closed,maxFlowLps:20,conductanceLpsPerKPa:50,referencePressureKPa:100,maxPressureKPa:Math.min(a.maxPressureKPa,t.maxPressureKPa),breakOnOverpressure:false});
   }
  }
  const result=tickFluidNetwork({nodes,edges,deltaSeconds:dt,ambientTemperatureC:20});
@@ -1091,6 +1091,25 @@ if(E2E_MODE){
    const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],batteryBefore:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ}
   },
   powerTopologyTick(){tick(STEP);const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],battery:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ,farStatus:S.buildings.find(b=>b.uid==="P-SMELTER-2").status}},
+  setupFluidNetworkTest(){
+   S=freshState();S.player={...S.player,viewMode:"map",layer:"surface"};S.seconds=8*3600;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=false;
+   S.nodes["15,15"]={type:"water",amount:0,seed:123};
+   S.buildings=[
+    {uid:"F-GEN",type:"solar",x:10,y:10,dir:1,status:"IDLE"},
+    {uid:"F-PUMP",type:"fluidPump",x:15,y:15,layer:"surface",fluidAmountL:0,fluidType:null,status:"IDLE"},
+    {uid:"F-PIPE-1",type:"fluidPipe",x:16,y:15,layer:"surface",fluidAmountL:0,fluidType:null,status:"IDLE"},
+    {uid:"F-VALVE",type:"fluidValve",x:17,y:15,layer:"surface",valveOpen:false,fluidAmountL:0,fluidType:null,status:"IDLE"},
+    {uid:"F-PIPE-2",type:"fluidPipe",x:18,y:15,layer:"surface",fluidAmountL:0,fluidType:null,status:"IDLE"},
+    {uid:"F-TANK",type:"fluidTank",x:19,y:15,layer:"surface",fluidAmountL:0,fluidType:null,status:"IDLE"}
+   ];
+   return {power:currentPower(),types:S.buildings.filter(b=>b.type.startsWith("fluid")).map(b=>b.type)};
+  },
+  runFluidNetworkTest(openValve=false,steps=12){
+   const valve=S.buildings.find(b=>b.type==="fluidValve");if(valve)valve.valveOpen=!!openValve;
+   for(let i=0;i<steps;i++)tick(STEP);
+   const get=id=>S.buildings.find(b=>b.uid===id);
+   return {tankLiters:get("F-TANK")?.fluidAmountL||0,pipeOneLiters:get("F-PIPE-1")?.fluidAmountL||0,pipeTwoLiters:get("F-PIPE-2")?.fluidAmountL||0,valveOpen:!!valve?.valveOpen,pumpPower:currentPower().allocations["F-PUMP"]?.status||"NO_POWER",massBalance:S.lastFluidBalance,networkIDs:S.buildings.filter(b=>b.type.startsWith("fluid")).map(b=>b.fluidNetworkID)};
+  },
   setupFluidNetworkTest(){
    S=freshState();S.player={...S.player,viewMode:"map",layer:"surface"};S.seconds=8*3600;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=false;
    S.nodes["15,15"]={type:"water",amount:0,seed:123};
