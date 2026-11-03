@@ -17,7 +17,7 @@ function createFallbackWorld(canvas) {
     const size=34*zoom,left=width/2-cx*size,top=height/2-cy*size;
     const minX=Math.max(0,Math.floor(-left/size)),maxX=Math.min(WORLD_W-1,Math.ceil((width-left)/size));
     const minY=Math.max(0,Math.floor(-top/size)),maxY=Math.min(WORLD_H-1,Math.ceil((height-top)/size));
-    const buildingByCell=new Map((state.buildings||[]).map(b=>[b.x+","+b.y,b]));
+    const buildingByCell=new Map((state.buildings||[]).filter(b=>b.layer!=="mine").map(b=>[b.x+","+b.y,b]));
     for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++){
       const px=left+x*size,py=top+y*size,key=x+","+y,node=state.nodes?.[key],seen=!!state.seen?.[key];
       const biome=biomeAt(x,y);ctx.fillStyle=!seen?"#091a27":node?.type==="water"?"#14516a":({forest:"#315b42",meadow:"#3d674d",wetland:"#354f45",desert:"#92764d",highlands:"#687477",frost:"#81939a",crystal:"#3f6670",volcanic:"#5b4540"})[biome]||"#3d674d";
@@ -348,6 +348,26 @@ export function createWorld3D(canvas, getState) {
       const light=new THREE.PointLight(kind==="mineExit"?0x6ed6c1:0xf2bd65,1.15,76,2);light.position.y=23;g.add(light);
     };
     addLift(3,"mineExit");addLift(36,"mineDescend");
+    for(const b of state.buildings||[]){
+      if(b.layer!=="mine"||Number(b.mineLevel||1)!==level)continue;
+      const g=new THREE.Group(),x=b.x*32,z=b.y*32;
+      g.position.set(x,floorY+1,z);g.rotation.y=-(b.dir||0)*Math.PI/2;mineRoot.add(g);
+      const dark=mat(0x172b37,.65,.45),metal=mat(0x647c88,.7,.34),accent=mat(0xd69e58,.48,.28);
+      if(String(b.type).startsWith("miner")){
+        makeBox(g,0,5,0,19,10,19,dark);
+        makeCyl(g,0,14,0,5,10,metal,10);
+        makeCyl(g,0,23,0,2.8,12,accent,8);
+        const drill=new THREE.Mesh(new THREE.ConeGeometry(4,16,8),metal);drill.position.set(0,34,0);g.add(drill);
+        for(const sx of [-10,10]){makeBox(g,sx,2,0,3,3,24,accent);makeCyl(g,sx,1,0,4,2,dark,8)}
+      }else if(b.type==="mineGen"){
+        makeBox(g,0,8,0,22,16,18,dark);makeBox(g,0,18,0,15,4,12,metal);
+        makeCyl(g,0,23,0,3,8,accent,10);
+        const lamp=new THREE.PointLight(0xf2bd65,.25,32,2);lamp.position.set(0,26,0);g.add(lamp);
+      }else if(b.type==="powerCable"){
+        makeCyl(g,0,1.6,0,2.2,3.2,accent,8);makeBox(g,0,3,0,10,1.8,10,metal);
+      }
+      g.userData={cell:{x:b.x,z:b.y},targetKind:{kind:"building",type:b.type,uid:b.uid}};
+    }
   }
   const nodeMatrixDummy=new THREE.Object3D();
   function nodeInstance(mesh,x,y,z,sx,sy,sz,rotationY=0){
@@ -445,7 +465,7 @@ export function createWorld3D(canvas, getState) {
     addSeenNodeModels(state);lastVisibilityRevision=state.visibilityRevision;
     for(const key of Object.keys(state.foundation||{})){if(!state.foundation[key])continue;const [x,z]=key.split(",").map(Number);const h=surfaceY(state,x,z);makeBox(worldRoot,x*32,h+1.2,z*32,29,2.2,29,mat(0x65727a,.62,.55),false);}
     for(const key of Object.keys(state.flattened||{})){if(!state.flattened[key])continue;const [x,z]=key.split(",").map(Number);const h=surfaceY(state,x,z);const marker=new THREE.Mesh(new THREE.BoxGeometry(30,.45,30),new THREE.MeshBasicMaterial({color:0x87c4aa,transparent:true,opacity:.12,depthWrite:false}));marker.position.set(x*32,h+.15,z*32);worldRoot.add(marker);}
-    for(const b of state.buildings||[])addBuilding(b,state);
+    for(const b of state.buildings||[])if(b.layer!=="mine")addBuilding(b,state);
     addPlayer(state);
     playerRing=new THREE.Mesh(new THREE.TorusGeometry(7,.35,8,40),new THREE.MeshBasicMaterial({color:0xf2d28a,transparent:true,opacity:.7}));playerRing.rotation.x=Math.PI/2;markerRoot.add(playerRing);
 
@@ -639,7 +659,7 @@ export function createWorld3D(canvas, getState) {
   let trackedNodes=null,trackedMineDeposits=null,trackedFlattened=null,trackedFoundation=null,stateIdentityRevision=0,lastVisibilityRevision=null;
   function signature(s){
     if(s.nodes!==trackedNodes||s.mineDeposits!==trackedMineDeposits||s.flattened!==trackedFlattened||s.foundation!==trackedFoundation){trackedNodes=s.nodes;trackedMineDeposits=s.mineDeposits;trackedFlattened=s.flattened;trackedFoundation=s.foundation;stateIdentityRevision++;}
-    const machines=(s.buildings||[]).map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.variant].join(":")).join("|");
+    const machines=(s.buildings||[]).map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.variant,b.layer||"surface",b.mineLevel||0].join(":")).join("|");
     return [s.sceneRevision||0,stateIdentityRevision,s.worldVersion,s.player?.layer,s.player?.mineLevel,machines].join(";");
   }
   function render(state){
@@ -648,9 +668,9 @@ export function createWorld3D(canvas, getState) {
     activeViewMode=state.player?.viewMode==="map"?"map":state.player?.viewMode==="third"?"third":"first";
     const inMine=state.player?.layer==="mine";stateLayerForPicking=inMine?"mine":"surface";
     if(state.visibilityRevision!==lastVisibilityRevision){addSeenNodeModels(state);lastVisibilityRevision=state.visibilityRevision;}
-    const selectedMachine=!inMine&&state.selectedBuilding?(state.buildings||[]).find(b=>b.uid===state.selectedBuilding):null;
+    const selectedMachine=state.selectedBuilding?(state.buildings||[]).find(b=>b.uid===state.selectedBuilding&&(inMine?b.layer==="mine"&&Number(b.mineLevel||1)===Number(state.player?.mineLevel||1):b.layer!=="mine")):null;
     selectionRoot.visible=!!selectedMachine;
-    if(selectedMachine)selectionRoot.position.set(selectedMachine.x*32,surfaceY(state,selectedMachine.x,selectedMachine.y)+3,selectedMachine.y*32);
+    if(selectedMachine)selectionRoot.position.set(selectedMachine.x*32,(inMine?mineFloorY(state.player.mineLevel):surfaceY(state,selectedMachine.x,selectedMachine.y))+3,selectedMachine.y*32);
     worldRoot.visible=!inMine;machineRoot.visible=!inMine;nodeRoot.visible=!inMine;mineRoot.visible=inMine;markerRoot.visible=true;
     const hover=state.hoverCell,showHover=!inMine&&!!hover&&!!(state.selectedBuild||state.selectedLandTool);hoverRoot.visible=showHover;
     if(showHover){const h=surfaceY(state,hover.x,hover.y);hoverRoot.position.set(hover.x*32,h+2.2,hover.y*32);const color=state.canBuildPreview?0x6de4bb:0xf2a46e;hoverFillMaterial.color.setHex(color);hoverEdgeMaterial.color.setHex(color);}
