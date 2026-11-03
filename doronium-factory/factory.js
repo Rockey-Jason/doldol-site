@@ -3,6 +3,7 @@ import { createRuntimeState, ensureItemStacks, addItemStack, allocateEntityID, s
 import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=3";
 import { validateGameData } from "./game-data-validation.js?v=3";
 import { FAILURE_PROFILES } from "./failure-profiles.js?v=1";
+import { buildLogisticsGraph, selectLogisticsTarget, analyzeLogisticsPressure } from "./logistics-runtime.js?v=1";
 import { calculateFailureRisks, calculateFailureHazard, rollMachineFailure, advanceFailureExposure, applyMachineFailure, completeMachineRepair } from "./failure-runtime.js?v=2";
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
 import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, awardSkillPoints, unlockSkill, skillNodeStatus, calculateSkillBonuses, validateSkillTree, validateSkillState } from "./skill-runtime.js?v=1";
@@ -534,9 +535,29 @@ function repairMachine(b){
  b.maintenanceTimer=Math.max(.1,Number(b.failureRepair.repairSeconds)||1);b.status="MAINTENANCE";
  log("기계 정비 시작 · "+(buildingDef(b.type)?.name||b.type));markDirty();renderMachineDetails();return true;
 }
-function tickBelts(dt){for(const b of S.buildings){if(!isBeltType(b.type))continue;if(!b.item)continue;b.moveTimer=(b.moveTimer||0)+dt;if(b.moveTimer<.75)continue;b.moveTimer=0;const dir=DIRS[b.dir||1],nx=b.x+dir.x,ny=b.y+dir.y,target=buildingAt(nx,ny);if(target){if(target.type==="storage"||target.type==="warehouse"){addItem(b.item.id,b.item.qty,b.item.meta,false);log("물류 센터 회수 · "+RESOURCE[b.item.id].name);b.item=null;markDirty()}else if(target.type==="market"){const amount=b.item.qty,earned=Math.floor(amount*RESOURCE[b.item.id].price*.8);S.money+=earned;S.stats.sold+=amount;b.item=null;log("자동 거래 · "+fmt(earned)+" D");markDirty()}else if(["machine","reactor","variantLab"].includes(buildingDef(target.type)?.kind)||["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.item.id,b.item.qty,b.item.meta);b.item=null;target.status="WAITING_INPUT"}continue}
- const next=S.buildings.find(x=>x.x===nx&&x.y===ny&&isBeltType(x.type));if(next&&!next.item){next.item=b.item;b.item=null;next.moveTimer=.45;markDirty()}}
- for(const b of S.buildings){if(!b.output)continue;const dir=DIRS[b.dir||1],nx=b.x+dir.x,ny=b.y+dir.y,target=buildingAt(nx,ny);if(!target)continue;if(isBeltType(target.type)&&!target.item){target.item={...b.output};target.moveTimer=.45;clearCompletionBuffer(b);b.status="IDLE";markDirty()}else if(target.type==="storage"||target.type==="warehouse"){addItem(b.output.id,b.output.qty,b.output.meta,false);clearCompletionBuffer(b);b.status="IDLE";log("창고 자동 적재 · 생산품 회수");markDirty()}else if(target.type==="market"){const earned=Math.floor(b.output.qty*RESOURCE[b.output.id].price*.8);S.money+=earned;S.stats.sold+=b.output.qty;log("산업 거래소 자동 판매 · "+fmt(earned)+" D");clearCompletionBuffer(b);b.status="IDLE";markDirty()}else if(["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.output.id,b.output.qty,b.output.meta);clearCompletionBuffer(b);b.status="IDLE";markDirty()}}}
+function tickBelts(dt){
+ const graph=buildLogisticsGraph(S.buildings,{conveyorTypeIDs:["belt","beltAdaptive","sorter","splitter","merger","conveyorLift","curvedConveyor","multiLaneConveyor"]});
+ for(const b of S.buildings){if(!isBeltType(b.type)||!b.item)continue;
+  b.logisticsNetworkID=graph.networkByID.get(String(b.uid))||null;
+  b.moveTimer=(b.moveTimer||0)+dt;if(b.moveTimer<.75)continue;b.moveTimer=0;
+  const route=selectLogisticsTarget(graph,b,b.item,{canAccept:()=>true});
+  if(!route){const report=analyzeLogisticsPressure(graph),isDeadlocked=report.deadlocked.some(x=>x.buildingIDs.includes(String(b.uid)));b.logisticsStatus=isDeadlocked?"DEADLOCK":"BACKPRESSURE";continue}
+  const target=route.target;b.logisticsStatus="MOVING";
+  if(isBeltType(target.type)){target.item=b.item;b.item=null;target.moveTimer=.45;target.logisticsStatus="MOVING";markDirty();continue}
+  if(target.type==="storage"||target.type==="warehouse"){addItem(b.item.id,b.item.qty,b.item.meta,false);log("물류 센터 회수 · "+(RESOURCE[b.item.id]?.name||b.item.id));b.item=null;markDirty()}
+  else if(target.type==="market"){const amount=b.item.qty,earned=Math.floor(amount*(RESOURCE[b.item.id]?.price||0)*.8);S.money+=earned;S.stats.sold+=amount;b.item=null;log("자동 거래 · "+fmt(earned)+" D");markDirty()}
+  else if(["machine","reactor","variantLab"].includes(buildingDef(target.type)?.kind)||["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.item.id,b.item.qty,b.item.meta);b.item=null;target.status="WAITING_INPUT";markDirty()}
+ }
+ for(const b of S.buildings){if(!b.output)continue;
+  const route=selectLogisticsTarget(graph,b,b.output,{canAccept:()=>true});if(!route)continue;
+  const target=route.target;
+  if(isBeltType(target.type)&&!target.item){target.item={...b.output};target.moveTimer=.45;clearCompletionBuffer(b);b.status="IDLE";markDirty()}
+  else if(target.type==="storage"||target.type==="warehouse"){addItem(b.output.id,b.output.qty,b.output.meta,false);clearCompletionBuffer(b);b.status="IDLE";log("창고 자동 적재 · 생산품 회수");markDirty()}
+  else if(target.type==="market"){const earned=Math.floor(b.output.qty*(RESOURCE[b.output.id]?.price||0)*.8);S.money+=earned;S.stats.sold+=b.output.qty;log("산업 거래소 자동 판매 · "+fmt(earned)+" D");clearCompletionBuffer(b);b.status="IDLE";markDirty()}
+  else if(["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.output.id,b.output.qty,b.output.meta);clearCompletionBuffer(b);b.status="IDLE";markDirty()}
+ }
+}
+
 function tick(dt){
  if(S.paused||S.victory)return;
  const context={state:S,dt,power:null};
