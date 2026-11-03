@@ -972,7 +972,7 @@ if(E2E_MODE){
   setupBlueprintTest(){
    S=freshState();S.player={...S.player,viewMode:"map",layer:"surface"};S.money=1000000;S.inventory={wood:200};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
    S.buildings=[{uid:"bp-seed-a",type:"belt",x:10,y:10,dir:1,footprint:{width:1,height:1},condition:100,status:"IDLE"},{uid:"bp-seed-b",type:"belt",x:11,y:10,dir:1,footprint:{width:1,height:1},condition:100,status:"IDLE"}];
-   for(const key of ["20,20","20,21"]){S.nodes[key]=undefined;S.flattened[key]={height:terrainHeightAt(...key.split(",").map(Number))};S.foundation[key]=true}
+   for(const key of ["20,20","20,21"]){S.nodes[key]=undefined;S.flattened[key]={height:0};S.foundation[key]=true}
    delete S.nodes["20,20"];delete S.nodes["20,21"];S.blueprints=[];activeBlueprintID=null;activeBlueprintRotation=0;selectedBuild=null;selectedBuilding=null;markSceneDirty();renderAll();return structuredClone(S)
   },
   blueprintPlaceAt(x,y){const ok=placeBlueprintAt(Number(x),Number(y));return {ok,blueprints:structuredClone(S.blueprints),buildings:structuredClone(S.buildings),money:S.money,inventory:structuredClone(S.inventory)}},
