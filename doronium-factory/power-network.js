@@ -49,6 +49,14 @@ function buildAdjacency(nodes, edges) {
 }
 
 function components(nodes, adjacency) {
+  /* Network membership is weakly connected; power flow remains directional. */
+  const undirected = new Map([...nodes.keys()].map(id => [id, new Set()]));
+  for (const [from, links] of adjacency.entries()) {
+    for (const link of links) {
+      undirected.get(from)?.add(link.nodeID);
+      undirected.get(link.nodeID)?.add(from);
+    }
+  }
   const visited = new Set(), groups = [];
   for (const start of [...nodes.keys()].sort()) {
     if (visited.has(start)) continue;
@@ -56,9 +64,9 @@ function components(nodes, adjacency) {
     visited.add(start);
     for (let index=0; index<queue.length; index++) {
       const id = queue[index]; members.push(id);
-      for (const next of adjacency.get(id) || []) {
-        if (visited.has(next.nodeID)) continue;
-        visited.add(next.nodeID); queue.push(next.nodeID);
+      for (const nextID of [...(undirected.get(id) || [])].sort()) {
+        if (visited.has(nextID)) continue;
+        visited.add(nextID); queue.push(nextID);
       }
     }
     members.sort();
