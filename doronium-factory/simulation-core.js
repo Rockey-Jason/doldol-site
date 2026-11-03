@@ -15,7 +15,7 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number(v)||0));
 const clone=value=>typeof structuredClone==="function"?structuredClone(value):JSON.parse(JSON.stringify(value));
 
 export function createRuntimeState(){
-  return {schemaVersion:4,nextStackId:1,nextReservationId:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
+  return {schemaVersion:4,nextStackId:1,nextReservationId:1,nextEntityID:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
 }
 function normalizeStack(stack){
   return {runtimeID:String(stack.runtimeID),itemID:String(stack.itemID),quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
@@ -30,6 +30,7 @@ export function ensureItemStacks(state){
   let maxId=0;
   for(const stack of rt.itemStacks){const n=Number(String(stack.runtimeID).replace(/^IS-/,""));if(Number.isFinite(n))maxId=Math.max(maxId,n)}
   rt.nextStackId=Math.max(1,Math.floor(Number(rt.nextStackId)||1),maxId+1);
+  rt.nextEntityID=Math.max(1,Math.floor(Number(rt.nextEntityID)||1));
   if(!rt.reservations||typeof rt.reservations!=="object")rt.reservations={};
   if(!Array.isArray(rt.reservationHistory))rt.reservationHistory=[];
   rt.failureRngState=(Number(rt.failureRngState)>>>0)||0x6d2b79f5;
@@ -51,6 +52,11 @@ export function ensureItemStacks(state){
     rt.legacyInventoryMigrated=true;
   }
   return rt;
+}
+export function allocateEntityID(state,prefix="E"){
+ const rt=ensureItemStacks(state),sequence=rt.nextEntityID++;
+ const seed=(Number(state.seed)||0)>>>0;
+ return String(prefix).replace(/[^A-Za-z0-9_-]/g,"").slice(0,12)+"-"+seed.toString(36).toUpperCase()+"-"+String(sequence).padStart(8,"0");
 }
 export function addItemStack(state,itemID,quantity,meta={}){
   const rt=ensureItemStacks(state);let remaining=Math.floor(Number(quantity)||0),firstID=null;
@@ -172,6 +178,7 @@ export function validateRuntimeState(state){
   }
   const maxID=Math.max(0,...[...ids].map(id=>Number(id.replace(/^IS-/,""))||0));
   if(rt.nextStackId<=maxID)errors.push("stack-id-counter-not-advanced");
+  if(!Number.isSafeInteger(rt.nextEntityID)||rt.nextEntityID<1)errors.push("invalid-entity-id-counter");
   if(!Number.isSafeInteger(rt.failureRngState)||rt.failureRngState<=0)errors.push("invalid-failure-rng-state");
   if(!Number.isSafeInteger(rt.failureRngIndex)||rt.failureRngIndex<0)errors.push("invalid-failure-rng-index");
   if(!Number.isSafeInteger(rt.nextFailureEventId)||rt.nextFailureEventId<1)errors.push("invalid-failure-event-counter");
