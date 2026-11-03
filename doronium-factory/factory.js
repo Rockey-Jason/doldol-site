@@ -75,6 +75,7 @@ const BUILDINGS=[
 {id:"minerIron",name:"철광석 채굴기",icon:"⛏️",cat:"resource",cost:180,materials:{wood:8,stone:5,ironOre:2},desc:"철 광맥에서 철광석을 자동 채굴합니다.",unlock:null,kind:"miner",resource:"ironOre",power:2},
 {id:"minerCopper",name:"구리 채굴기",icon:"🟠",cat:"resource",cost:205,materials:{wood:8,stone:5,copperOre:2},desc:"구리 광맥에서 구리 광석을 자동 채굴합니다.",unlock:"mining",kind:"miner",resource:"copperOre",power:2},
 {id:"minerCoal",name:"심층 석탄 채굴기",icon:"⬛",cat:"resource",cost:240,materials:{wood:8,ironPlate:2},desc:"석탄 광맥을 자동 채굴합니다.",unlock:"mining",kind:"miner",resource:"coal",power:3},
+{id:"mineGen",name:"광산 지열 발전기",icon:"♨️",cat:"power",cost:420,materials:{ironPlate:5,wire:3,stone:8},desc:"석탄 1개로 24초 동안 12kW를 공급하는 지하 발전 설비입니다.",unlock:"mining",kind:"power",power:0,gen:12},
 {id:"doriFarm",name:"돌이 나무 재배기",icon:"🌳",cat:"resource",cost:290,materials:{wood:8,stone:6,ironPlate:2},desc:"인접한 돌이 고기 나무를 관리합니다. 60초마다 물 2L를 사용해 열매 1개를 수확합니다.",unlock:"bio",kind:"doriFarm",power:2},
 {id:"smelter",name:"고온 제련로",icon:"🔥",cat:"process",cost:280,materials:{stone:10,ironOre:6},desc:"철광석 2개와 석탄 1개를 철판 1개로 제련합니다.",unlock:null,kind:"machine",power:4,recipe:"smelt"},
 {id:"wiremill",name:"전선 압연기",icon:"〰️",cat:"process",cost:250,materials:{wood:8,stone:4},desc:"구리 광석 1개를 전선 2개로 가공합니다.",unlock:null,kind:"machine",power:3,recipe:"wire"},
