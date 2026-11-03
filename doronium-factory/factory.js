@@ -1070,7 +1070,7 @@ if(E2E_MODE){
    miner.drillDurability=0;tick(STEP);
    const started=!!miner.failureRepair&&repairMachine(miner);
    if(!started)return {ok:false,reason:"REPAIR_START_FAILED"};
-   for(let i=0;i<300;i++)tick(STEP);
+   for(let i=0;i<300&&miner.failureRepair;i++)tick(STEP);
    return {ok:miner.status==="IDLE"&&miner.drillDurability===1000,status:miner.status,drillDurability:miner.drillDurability,ironPlate:itemCount("ironPlate")};
   },
   setupBlueprintTest(){
