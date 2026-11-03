@@ -5,6 +5,7 @@ import { validateGameData } from "./game-data-validation.js?v=3";
 import { FAILURE_PROFILES } from "./failure-profiles.js?v=1";
 import { buildLogisticsGraph, selectLogisticsTarget, analyzeLogisticsPressure } from "./logistics-runtime.js?v=1";
 import { solvePowerNetworks } from "./network-runtime.js?v=2";
+import { tickFluidNetwork, consumeFluid } from "./fluid-runtime.js?v=1";
 import { calculateFailureRisks, calculateFailureHazard, rollMachineFailure, advanceFailureExposure, applyMachineFailure, completeMachineRepair } from "./failure-runtime.js?v=2";
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
 import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, awardSkillPoints, unlockSkill, skillNodeStatus, calculateSkillBonuses, validateSkillTree, validateSkillState } from "./skill-runtime.js?v=1";
@@ -87,7 +88,11 @@ const BUILDINGS=[
 {id:"cooling",name:"초전도 냉각탑",icon:"❄️",cat:"power",cost:950,materials:{ironPlate:10,circuit:4},desc:"고압 설비와 퓨전 반응로의 열을 안정화합니다.",unlock:"pressure",kind:"cooling",power:5},
 {id:"fusion",name:"인피니티 퓨전 설비",icon:"🌌",cat:"advanced",cost:12000,materials:{ironPlate:100,circuit:50,quartz:30},desc:"15종의 정식 도로늄을 각 100개씩 투입해 7단계 퓨전을 수행합니다.",unlock:"fusion",kind:"fusion",power:40},
 {id:"relay",name:"행성 안정화 릴레이",icon:"📡",cat:"advanced",cost:1500,materials:{ironPlate:25,circuit:15,doronium_normal:10},desc:"행성 에너지 노드에 설치하는 안정화 장치입니다.",unlock:"relay",kind:"relay",power:3},
-{id:"core",name:"중앙 안정화 코어",icon:"💠",cat:"advanced",cost:4800,materials:{ironPlate:45,circuit:30,doronium_special:5},desc:"인피니티 도로늄을 장착해 행성의 에너지 네트워크를 동기화합니다.",unlock:"infinity",kind:"core",power:12}
+{id:"core",name:"중앙 안정화 코어",icon:"💠",cat:"advanced",cost:4800,materials:{ironPlate:45,circuit:30,doronium_special:5},desc:"인피니티 도로늄을 장착해 행성의 에너지 네트워크를 동기화합니다.",unlock:"infinity",kind:"core",power:12},
+{id:"fluidPipe",name:"산업용 유체 파이프",icon:"━",cat:"fluid",cost:24,materials:{ironPlate:1},desc:"인접한 파이프·밸브·탱크·펌프를 연결해 압력 기반 유체를 운송합니다.",unlock:"chemistry",kind:"fluidPipe",power:0},
+{id:"fluidValve",name:"유체 차단 밸브",icon:"⚙",cat:"fluid",cost:42,materials:{ironPlate:2,wire:1},desc:"열림/닫힘을 전환해 연결된 유체 경로를 제어합니다.",unlock:"chemistry",kind:"fluidValve",power:0},
+{id:"fluidTank",name:"산업용 유체 탱크",icon:"▤",cat:"fluid",cost:210,materials:{ironPlate:6},desc:"최대 2,000L의 물·기름·화학 유체를 저장합니다.",unlock:"chemistry",kind:"fluidTank",power:0},
+{id:"fluidPump",name:"고압 취수 펌프",icon:"💧",cat:"fluid",cost:280,materials:{ironPlate:4,wire:3},desc:"수원지에서 물을 취수해 180kPa 압력으로 파이프망에 공급합니다.",unlock:"chemistry",kind:"fluidPump",power:2}
 ];
 // Correct the relay's materials without relying on malformed external data.
 
@@ -285,7 +290,7 @@ function currentPower(){
   else if(b.type==="solar")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1),buildingType:b.type};
   else if(b.type==="wind")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05),buildingType:b.type};
   else if(b.type==="coalgen"||b.type==="mineGen")node={id:b.uid,type:"GENERATOR",generationKW:b.fuelTimer>0?(b.type==="mineGen"?Number(def.gen)||12:18):0,buildingType:b.type};
-  else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["pump","doriFarm"].includes(b.type)?45:20;node={id:b.uid,type:"CONSUMER",demandKW:b.type==="fusion"?(S.fusionJob?FUSION_STAGES[S.fusionJob.stage]?.power||40:4):def.power,priority,transmissionLoss:0,buildingType:b.type}}
+  else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["fluidPump"].includes(b.type)?55:["pump","doriFarm"].includes(b.type)?45:20;node={id:b.uid,type:"CONSUMER",demandKW:b.type==="fusion"?(S.fusionJob?FUSION_STAGES[S.fusionJob.stage]?.power||40:4):def.power,priority,transmissionLoss:0,buildingType:b.type}}
   if(node){node.layer=b.layer||"surface";node.mineLevel=b.mineLevel||0;nodes.push(node);powerBuildings.push(b)}
  }
  const edges=[];
@@ -443,7 +448,7 @@ function consumeRecipe(b,r){if(!canConsumeRecipe(b,r))return null;const inventor
 function createOutput(b,id,qty,meta){if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(RESOURCE[id].name+" 생산 · "+fmt(qty)+"개");markDirty();return true}
 const BUILDING_FOOTPRINTS=Object.freeze({
  storage:{width:2,height:2},warehouse:{width:3,height:2},smelter:{width:2,height:2},wiremill:{width:2,height:2},assembler:{width:2,height:2},lab:{width:2,height:2},
- reactor:{width:3,height:3},variantLab:{width:3,height:3},cooling:{width:2,height:2},fusion:{width:4,height:4},relay:{width:2,height:2},core:{width:3,height:3},transformer:{width:2,height:2},battery:{width:2,height:2}
+ reactor:{width:3,height:3},variantLab:{width:3,height:3},cooling:{width:2,height:2},fusion:{width:4,height:4},relay:{width:2,height:2},core:{width:3,height:3},transformer:{width:2,height:2},battery:{width:2,height:2},fluidTank:{width:2,height:2}
 });
 function getBuildingFootprint(type){return BUILDING_FOOTPRINTS[type]||{width:1,height:1}}
 function buildingFootprintCells(b){const f=b.footprint||getBuildingFootprint(b.type);return footprintCells({x:b.x,y:b.y,width:f.width,height:f.height,rotation:b.footprintRotation??0})}
@@ -541,7 +546,7 @@ function placeBuilding(type,x,y){
  if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}
  const footprint=getBuildingFootprint(type),rotation=0,cells=footprintCells({x,y,...footprint,rotation});
  if(cells.some(p=>buildingOccupiesCell(p.x,p.y))){toast("건설 면적이 기존 시설과 겹칩니다.","warn");return false}
- const requiresFlat=type!=="beltAdaptive"&&!["relay","core","pump","powerCable"].includes(type);
+ const requiresFlat=type!=="beltAdaptive"&&!["relay","core","pump","powerCable","fluidPipe","fluidValve","fluidPump"].includes(type);
  const occupied=[];
  for(const b of S.buildings)occupied.push(...buildingFootprintCells(b));
  const heightAt=(cx,cy)=>{const v=S.flattened?.[surfaceKey(cx,cy)];return v&&typeof v==="object"&&Number.isFinite(v.height)?v.height:terrainHeightAt(cx,cy)};
@@ -552,10 +557,11 @@ function placeBuilding(type,x,y){
  }
  for(const p of placement.cells){
   const n=tileNode(p.x,p.y),isAnchor=p.x===x&&p.y===y;
-  if(n&&["water","wood","mineEntrance","dori","relaySite","coreSite"].includes(n.type)&&!(isAnchor&&["pump","doriFarm","relay","core"].includes(type))){toast("건설 면적 안에 사용할 수 없는 지형 또는 자원이 있습니다.","warn");return false}
+  if(n&&["water","wood","mineEntrance","dori","relaySite","coreSite"].includes(n.type)&&!(isAnchor&&["pump","fluidPump","doriFarm","relay","core"].includes(type))){toast("건설 면적 안에 사용할 수 없는 지형 또는 자원이 있습니다.","warn");return false}
  }
  const node=tileNode(x,y);
  if(type==="pump"&&node?.type!=="water"){toast("정수 펌프는 수원지 위에 설치해야 합니다.","warn");return false}
+ if(type==="fluidPump"&&node?.type!=="water"){toast("고압 취수 펌프는 수원지 위에 설치해야 합니다.","warn");return false}
  if(type==="doriFarm"&&node?.type==="dori"){toast("재배기는 나무 바로 옆의 평탄한 부지에 설치하세요.","warn");return false}
  if(type==="doriFarm"&&!findNearbyDoriNode(x,y)){toast("돌이 나무 재배기는 돌이 고기 나무 주변에 설치해야 합니다.","warn");return false}
  if(type==="relay"&&node?.type!=="relaySite"){toast("행성 에너지 릴레이 설치 지점을 찾아야 합니다.","warn");return false}
@@ -714,7 +720,7 @@ function finishPlanetary(){if(!S.coreInstalled||!S.relaySites.every(Boolean)){to
 function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;
  if(b.layer==="mine"&&b.failureRepair){if(b.maintenanceTimer>0){b.maintenanceTimer=Math.max(0,b.maintenanceTimer-dt);b.status="MAINTENANCE";if(b.maintenanceTimer<=0&&completeMachineRepair(b)){b.drillDurability=1000;log("채굴 드릴 정비 완료 · 내구도 복구","good");markDirty()}return}b.status="BROKEN";return}
  if(b.type==="coalgen"||b.type==="mineGen"){if(b.fuelTimer<=0){if(takeItem("coal",1)){b.fuelTimer=24;log((b.type==="mineGen"?"광산 지열 발전기":"화력 발전소")+" 석탄 투입")}else b.status="NO_INPUT"}else{b.fuelTimer=Math.max(0,b.fuelTimer-dt);b.status="RUNNING"}return}
- if(b.type==="solar"||b.type==="wind"||b.type==="cooling"||b.type==="storage"||b.type==="warehouse"||b.type==="market"||b.type==="battery"||b.type==="transformer"||b.type==="powerCable"||isBeltType(b.type)||b.type==="relay"||b.type==="core"||b.type==="lab")return;
+ if(b.type==="fluidPipe"||b.type==="fluidValve"||b.type==="fluidTank"||b.type==="fluidPump"||b.type==="solar"||b.type==="wind"||b.type==="cooling"||b.type==="storage"||b.type==="warehouse"||b.type==="market"||b.type==="battery"||b.type==="transformer"||b.type==="powerCable"||b.type==="fluidPipe"||b.type==="fluidValve"||b.type==="fluidTank"||b.type==="fluidPump"||isBeltType(b.type)||b.type==="relay"||b.type==="core"||b.type==="lab")return;
  const ratio=power.allocations?.[String(b.uid)]?.ratio??((d.power||0)>0?0:1);
  if(b.output){b.status="PAUSED_OUTPUT";return}
  if(b.type==="minerIron"||b.type==="minerCopper"||b.type==="minerCoal"||d.kind==="miner"){
@@ -804,6 +810,35 @@ function tickBelts(dt){
  }
 }
 
+function tickFluidSystems(dt,power){
+ const fluidTypes=new Set(["fluidPipe","fluidValve","fluidTank","fluidPump"]);
+ const relevant=S.buildings.filter(b=>b.layer!=="mine"&&(fluidTypes.has(b.type)||b.type==="doriFarm"));
+ if(!relevant.length)return null;
+ const nodes=relevant.map(b=>{
+  const type=b.type==="fluidPump"?"PUMP":b.type==="fluidTank"?"TANK":b.type==="fluidValve"?"VALVE":b.type==="doriFarm"?"CONSUMER":"PIPE";
+  const capacity=b.type==="fluidTank"?2000:b.type==="doriFarm"?20:b.type==="fluidPump"?120:100;
+  if(b.type==="fluidPump"){
+   const ratio=power?.allocations?.[String(b.uid)]?.ratio??0,water=tileNode(b.x,b.y)?.type==="water";
+   if(water&&ratio>=.8){b.fluidAmountL=Math.min(capacity,Math.max(0,Number(b.fluidAmountL)||0)+12*dt*Math.min(1,ratio));b.fluidType="WATER";b.status="RUNNING"}
+   else if(!water)b.status="NO_INPUT";
+   else b.status="PAUSED_POWER";
+  }
+  return {id:String(b.uid),type,amountL:Math.max(0,Number(b.fluidAmountL)||0),capacityL:capacity,fluidType:b.fluidType||null,pressureKPa:Math.max(0,Number(b.fluidPressureKPa)||0),temperatureC:Number.isFinite(Number(b.fluidTemperatureC))?Number(b.fluidTemperatureC):20,pumpHeadKPa:b.type==="fluidPump"?180:0,maxPressureKPa:b.type==="fluidTank"?600:350,pressureVolumeL:capacity,insulation:b.type==="fluidTank"?.5:0,thermalExchangePerSecond:.008,allowMixing:false,contaminants:Array.isArray(b.fluidContaminants)?b.fluidContaminants:[],ports:["IN","OUT"]};
+ });
+ const nodesByID=new Map(nodes.map(n=>[n.id,n])),positions=new Map(relevant.map(b=>[surfaceKey(b.x,b.y),b])),edges=[];
+ for(const b of relevant){
+  const a=nodesByID.get(String(b.uid));if(!a)continue;
+  for(const [dx,dy,dir] of [[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]]){
+   const target=positions.get(surfaceKey(b.x+dx,b.y+dy));if(!target||String(target.uid)<=String(b.uid))continue;
+   const t=nodesByID.get(String(target.uid));if(!t)continue;
+   const closed=b.type==="fluidValve"&&b.valveOpen===false||target.type==="fluidValve"&&target.valveOpen===false;
+   edges.push({id:"F:"+b.uid+":"+target.uid,from:String(b.uid),to:String(target.uid),oneWay:false,open:!closed,maxFlowLps:20,conductanceLpsPerKPa:.08,referencePressureKPa:100,maxPressureKPa:Math.min(a.maxPressureKPa,t.maxPressureKPa),breakOnOverpressure:false});
+  }
+ }
+ const result=tickFluidNetwork({nodes,edges,deltaSeconds:dt,ambientTemperatureC:20});
+ for(const node of nodes){const building=S.buildings.find(b=>String(b.uid)===node.id);if(!building)continue;building.fluidAmountL=Math.max(0,node.amountL);building.fluidType=node.fluidType||null;building.fluidPressureKPa=Math.max(0,node.pressureKPa||0);building.fluidTemperatureC=Number(node.temperatureC)||20;building.fluidContaminants=node.contaminants||[];building.fluidNetworkID=result.networkByID[node.id]||null;}
+ return result;
+}
 function tick(dt){
  if(S.paused||S.victory)return;
  const context={state:S,dt,power:null};
@@ -811,6 +846,7 @@ function tick(dt){
   STATE_READ(){S.seconds+=dt;S.tick++;if(!E2E_MODE)updateSurvival(dt);ensureCooldownIndex();for(const key of activeCooldownKeys){const node=S.nodes?.[key];if(!node||!(node.cooldown>0)){activeCooldownKeys.delete(key);continue}node.cooldown=Math.max(0,node.cooldown-dt);if(node.cooldown<=0)activeCooldownKeys.delete(key)}},
   PRODUCTION_STATE(){for(const b of S.buildings){if((b.type==="coalgen"||b.type==="mineGen")&&b.fuelTimer<=0&&itemCount("coal")>0){takeItem("coal",1);b.fuelTimer=24;b.status="RUNNING"}}},
   POWER_RESOLVE(){context.power=currentPower()},
+  PRESSURE_UPDATE(){context.fluid=tickFluidSystems(dt,context.power||currentPower())},
   PRODUCTION_PROGRESS(){for(const b of S.buildings)tickBuilding(b,dt,context.power||currentPower())},
   POWER_STABILITY(){context.power=currentPower();settlePowerStorage(context.power)},
   CONVEYOR_TRANSFER(){tickBelts(dt)},
