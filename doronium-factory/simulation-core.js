@@ -240,7 +240,7 @@ export function rollbackInventoryTransaction(state,transactionID,reason="CANCELL
   return true;
 }
 
-/** Allocate a persisted, monotonic entity ID. Existing legacy building IDs are preserved. */ Existing legacy building IDs are preserved. */
+/** Allocate a persisted, monotonic entity ID. Existing legacy building IDs are preserved. */
 export function allocateEntityID(state,prefix="ENT"){
   const rt=ensureItemStacks(state),used=new Set((state.buildings||[]).map(building=>String(building?.uid||"")));
   let id;
