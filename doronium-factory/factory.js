@@ -291,7 +291,7 @@ function currentPower(){
  if(S.powerTopologyEnabled){
   for(let i=0;i<powerBuildings.length;i++)for(let j=i+1;j<powerBuildings.length;j++){
    const a=powerBuildings[i],b=powerBuildings[j],distance=Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
-   if(distance===1&&(a.type==="powerCable"||b.type==="powerCable"||a.type!=="powerCable"&&b.type!=="powerCable"))edges.push({id:"P:"+a.uid+":"+b.uid,from:String(a.uid),to:String(b.uid)});
+   if(distance===1&&(a.type==="powerCable"||b.type==="powerCable"))edges.push({id:"P:"+a.uid+":"+b.uid,from:String(a.uid),to:String(b.uid)});
   }
  }else{
   // Preserve legacy shared-grid behavior until a player builds the first explicit cable.
