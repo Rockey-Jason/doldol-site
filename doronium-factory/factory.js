@@ -507,10 +507,37 @@ function placeBlueprintAt(x,y){
  if(!committed.ok){cancelConstruction(S,transactionID);toast("설계도 배치에 실패했습니다. 자금과 재료는 보존했습니다.","warn");return false}
  syncLegacyInventory(S);markSceneDirty();selectedBuilding=committed.result.uids.at(-1)||null;selectedBuild=null;activeBlueprintID=null;activeBlueprintRotation=0;log("설계도 배치 완료 · "+committed.result.uids.length+"개 설비");markDirty();renderAll();questCheck();toast("설계도 배치 완료");return true;
 }
+function placeMineBuilding(type,x,y){
+ const def=buildingDef(type),isMiner=["minerIron","minerCopper","minerCoal"].includes(type),supported=isMiner||type==="mineGen"||type==="powerCable";
+ if(!def||!supported){toast("광산에서는 채굴기·광산 발전기·전력 케이블만 설치할 수 있습니다.","warn");return false}
+ const level=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS),px=Math.floor(Number(x)||0),py=Math.floor(Number(y)||0);
+ if(px<0||py<0||px>=MINE_W||py>=MINE_H||!mineTunnelAt(px,py)){toast("광산 터널 안에 설치해야 합니다.","warn");return false}
+ if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}
+ const key=mineDepositKey(level,px,py),deposit=S.mineDeposits?.[key];
+ if(isMiner&&(!deposit||deposit.amount<=0||deposit.type!==def.resource)){toast("선택한 채굴기와 일치하는 광맥이 이 위치에 없습니다.","warn");return false}
+ if(!unlockOk(def)){toast("필요한 기술 연구를 먼저 완료하세요.","warn");return false}
+ const footprint=getBuildingFootprint(type),occupied=[];
+ for(const b of S.buildings)if(b.layer==="mine"&&Number(b.mineLevel||1)===level)occupied.push(...buildingFootprintCells(b));
+ const placement=validateConstructionFootprint({x:px,y:py,...footprint,worldWidth:MINE_W,worldHeight:MINE_H,occupied,heightAt:()=>0,maxSlope:Infinity,requiresFlat:false,foundation:()=>true});
+ if(!placement.valid||placement.cells.some(p=>!mineTunnelAt(p.x,p.y))){toast("설치 면적 전체가 광산 터널 안에 있어야 하며 기존 설비와 겹칠 수 없습니다.","warn");return false}
+ if(isMiner&&(placement.cells.length!==1||placement.cells[0].x!==px||placement.cells[0].y!==py)){toast("채굴기는 광맥 위 1×1 타일에만 설치할 수 있습니다.","warn");return false}
+ const transactionID=allocateEntityID(S,"MINEBUILD"),uid=allocateEntityID(S,"MINE");
+ const reservation=beginConstruction(S,{transactionID,buildingType:type,x:px,y:py,...footprint,rotation:0,moneyCost:buildingMoneyCost(def),materials:def.materials,ownerID:"player:mine:"+level,worldWidth:MINE_W,worldHeight:MINE_H,occupied,heightAt:()=>0,maxSlope:Infinity,requiresFlat:false,foundation:()=>true});
+ if(!reservation.ok){toast(reservation.reason==="INSUFFICIENT_MONEY"?"산업 자금이 부족합니다.":reservation.reason==="INSUFFICIENT_MATERIALS"?"설치 재료가 부족합니다.":"광산 설비 예약에 실패했습니다.","warn");return false}
+ const committed=commitConstruction(S,transactionID,(state,tx)=>{
+  const b={uid,type,x:px,y:py,layer:"mine",mineLevel:level,targetDepositKey:isMiner?key:null,dir:1,footprint:{...footprint},progress:0,condition:100,drillDurability:isMiner?1000:null,input:{},inputMeta:{},output:null,outputDir:1,status:"IDLE",fuelTimer:0,maintenanceTimer:0,byproductsProduced:0};
+  state.buildings.push(b);return {uid};
+ });
+ if(!committed.ok){cancelConstruction(S,transactionID);toast("광산 설비 설치가 실패했습니다. 자금과 재료는 보존했습니다.","warn");return false}
+ if(type==="powerCable")S.powerTopologyEnabled=true;
+ syncLegacyInventory(S);markSceneDirty();S.stats.built[type]=(S.stats.built[type]||0)+1;selectedBuilding=uid;selectedBuild=null;
+ log(def.name+" 설치 · 광산 "+level+"층");markDirty();renderAll();toast(def.name+" 설치 완료");return true;
+}
 function placeBuilding(type,x,y){
  if(activeBlueprintID)return placeBlueprintAt(x,y);
  const d=buildingDef(type);if(!d)return false;
- if(S.player.layer==="mine"){toast("지하 광산에는 채굴 전용 설비만 설치할 수 있습니다.","warn");return false}
+ if(S.player.layer==="mine")return placeMineBuilding(type,x,y);
+ if(["minerIron","minerCopper","minerCoal","mineGen"].includes(type)){toast("자동 채굴기와 광산 발전기는 지하 광산에서 설치해야 합니다.","warn");return false}
  if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}
  const footprint=getBuildingFootprint(type),rotation=0,cells=footprintCells({x,y,...footprint,rotation});
  if(cells.some(p=>buildingOccupiesCell(p.x,p.y))){toast("건설 면적이 기존 시설과 겹칩니다.","warn");return false}
@@ -629,7 +656,7 @@ function performAdventureAction(){
  if(target?.kind==="mineExit"){exitMine();return}
  if(target?.kind==="mineDescend"){descendMine();return}
  if(target?.kind==="resource"){
-  if(target.mine){const deposit=S.mineDeposits?.[mineDepositKey(target.level,target.x,target.z)];if(deposit)harvestMineDeposit(deposit);return}
+  if(target.mine){const deposit=S.mineDeposits?.[mineDepositKey(target.level,target.x,target.z)];if(selectedBuild){placeBuilding(selectedBuild,target.x,target.z);return}if(deposit)harvestMineDeposit(deposit);return}
   const node=tileNode(target.x,target.z);if(!node)return;
   if(selectedLandTool){selectTile(target.x,target.z);return}
   if(selectedBuild||activeBlueprintID){placeBuilding(selectedBuild,target.x,target.z);return}
@@ -689,7 +716,16 @@ function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;
  if(b.type==="solar"||b.type==="wind"||b.type==="cooling"||b.type==="storage"||b.type==="warehouse"||b.type==="market"||b.type==="battery"||b.type==="transformer"||b.type==="powerCable"||isBeltType(b.type)||b.type==="relay"||b.type==="core"||b.type==="lab")return;
  const ratio=power.allocations?.[String(b.uid)]?.ratio??((d.power||0)>0?0:1);
  if(b.output){b.status="PAUSED_OUTPUT";return}
- if(b.type==="minerIron"||b.type==="minerCopper"||b.type==="minerCoal"||d.kind==="miner"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=8){b.progress=0;node.amount=Math.max(0,node.amount-1);const id=d.resource;createOutput(b,id,1,{quality:86+(node.seed%12),purity:88,synthetic:false});}return}
+ if(b.type==="minerIron"||b.type==="minerCopper"||b.type==="minerCoal"||d.kind==="miner"){
+  if(b.layer!=="mine"){b.status="ERROR";b.errorCode="MINER_REQUIRES_MINE_LAYER";return}
+  if(ratio<.8){b.status="PAUSED_POWER";return}
+  const deposit=S.mineDeposits?.[b.targetDepositKey||mineDepositKey(b.mineLevel,b.x,b.y)];
+  if(!deposit||deposit.type!==d.resource||deposit.amount<=0){b.status="DEPLETED";return}
+  if(Number(b.drillDurability??1000)<=0){b.failureRepair??={grade:"major",repairSeconds:30,repairCondition:100,repairMaterials:{ironPlate:2},residue:{type:"drill_bit",amount:1},broken:false};b.maintenanceTimer=30;b.status="MAINTENANCE";return}
+  b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";
+  if(b.progress>=8){b.progress=0;deposit.amount=Math.max(0,deposit.amount-1);b.drillDurability=Math.max(0,Number(b.drillDurability??1000)-1);const id=d.resource;createOutput(b,id,1,{quality:clamp(84+Math.floor((deposit.seed%1200)/100)+Math.max(0,deposit.level-2),80,99),purity:Math.min(99,86+deposit.level*2),synthetic:false});b.lastDepositYieldTick=Number(S.tick)||0;if((deposit.max-deposit.amount)%5===0){addItem("stone",1,{quality:82,purity:85,synthetic:false});b.byproductsProduced=(Number(b.byproductsProduced)||0)+1}if(deposit.amount<=0)b.status="DEPLETED"}
+  return;
+ }
  if(b.type==="pump"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=5){b.progress=0;node.amount=Math.max(0,node.amount-3);createOutput(b,"water",3,{quality:100,purity:100,synthetic:false})}return}
  if(b.type==="doriFarm"){if(ratio<.8){b.status="PAUSED_POWER";return}const target=findNearbyDoriNode(b.x,b.y),node=target?.node;if(!node){b.status="NO_INPUT";return}if(node.cooldown>0){b.status="GROWING";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=60){if(itemCount("water")<2){b.status="NO_INPUT";b.progress=59;return}takeItem("water",2);startNodeCooldown(target.x,target.y,node,60);b.progress=0;createOutput(b,"doriMeat",1,{quality:S.research.includes("bio")?95:92,purity:90,synthetic:false})}return}
  if(d.kind==="machine"||d.kind==="reactor"||d.kind==="variant"){tickMachine(b,dt,ratio);return}
