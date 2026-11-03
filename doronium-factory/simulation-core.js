@@ -15,7 +15,7 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number(v)||0));
 const clone=value=>typeof structuredClone==="function"?structuredClone(value):JSON.parse(JSON.stringify(value));
 
 export function createRuntimeState(){
-  return {schemaVersion:4,nextStackId:1,nextReservationId:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
+  return {schemaVersion:5,nextStackId:1,nextReservationId:1,nextEntityId:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
 }
 function normalizeStack(stack){
   return {runtimeID:String(stack.runtimeID),itemID:String(stack.itemID),quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
@@ -40,6 +40,7 @@ export function ensureItemStacks(state){
   if(!Number.isSafeInteger(rt.failureRngIndex)||rt.failureRngIndex<0)rt.failureRngIndex=0;
   if(!Number.isSafeInteger(rt.nextFailureEventId)||rt.nextFailureEventId<1)rt.nextFailureEventId=1;
   rt.nextReservationId=Math.max(1,Math.floor(Number(rt.nextReservationId)||1));
+  rt.nextEntityId=Math.max(1,Math.floor(Number(rt.nextEntityId)||1));
   // One-time migration from the legacy item-count map. Never replace existing stacks.
   if(!rt.legacyInventoryMigrated){
     for(const [itemID,quantity] of Object.entries(state.inventory||{})){
@@ -51,6 +52,14 @@ export function ensureItemStacks(state){
     rt.legacyInventoryMigrated=true;
   }
   return rt;
+}
+export function allocateRuntimeID(state,prefix="ID"){
+  const rt=ensureItemStacks(state);
+  const safePrefix=String(prefix||"ID").replace(/[^a-zA-Z0-9_-]/g,"").slice(0,24)||"ID";
+  const existing=new Set((state.buildings||[]).map(building=>String(building.uid||"")));
+  let id;
+  do{id=safePrefix+"-"+String(rt.nextEntityId++).padStart(8,"0")}while(existing.has(id));
+  return id;
 }
 export function addItemStack(state,itemID,quantity,meta={}){
   const rt=ensureItemStacks(state);let remaining=Math.floor(Number(quantity)||0),firstID=null;
@@ -72,12 +81,12 @@ function reservedByStack(rt,excludeReservationID=null){
   }
   return totals;
 }
-export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-transaction"){
+export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-transaction",stackPredicate=null){
   const rt=ensureItemStacks(state),qty=Math.floor(Number(quantity)||0);
   if(!itemID||qty<=0)return null;
   const reserved=reservedByStack(rt);let remaining=qty;const allocations=[];
   for(const stack of rt.itemStacks){
-    if(stack.itemID!==itemID||remaining<=0)continue;
+    if(stack.itemID!==itemID||remaining<=0||(typeof stackPredicate==="function"&&!stackPredicate(stack)))continue;
     const free=Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0));
     const take=Math.min(free,remaining);if(take>0){allocations.push({stackID:stack.runtimeID,quantity:take});remaining-=take}
   }
@@ -86,11 +95,11 @@ export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-trans
   rt.reservations[reservationID]={reservationID,ownerID:String(ownerID),itemID:String(itemID),quantity:qty,allocations,status:"reserved",createdTick:Math.max(0,Number(state.tick)||0)};
   return reservationID;
 }
-export function reserveItemBatch(state,requirements,ownerID="inventory-transaction"){
+export function reserveItemBatch(state,requirements,ownerID="inventory-transaction",stackPredicate=null){
   const created=[];
   for(const [itemID,quantity] of Object.entries(requirements||{})){
     const qty=Math.floor(Number(quantity)||0);if(qty<=0)continue;
-    const id=reserveItemStacks(state,itemID,qty,ownerID);
+    const id=reserveItemStacks(state,itemID,qty,ownerID,stackPredicate);
     if(!id){for(const prior of created)releaseItemReservation(state,prior);return null}
     created.push(id);
   }
@@ -157,6 +166,7 @@ export function removeItemStacks(state,itemID,quantity){
 }
 export function validateRuntimeState(state){
   const rt=ensureItemStacks(state),errors=[],ids=new Set(),stackByID=new Map();
+  if(!Number.isSafeInteger(rt.nextEntityId)||rt.nextEntityId<1)errors.push("invalid-entity-id-counter");
   for(const stack of rt.itemStacks){
     if(ids.has(stack.runtimeID))errors.push("duplicate-stack-id:"+stack.runtimeID);
     ids.add(stack.runtimeID);stackByID.set(stack.runtimeID,stack);
