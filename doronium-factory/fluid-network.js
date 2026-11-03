@@ -125,6 +125,7 @@ export function transferFluid(state,{sourceTankID,targetTankID,requestedL,dtSeco
   const pressure=Number(source.pressureKPa||0)+pumps.reduce((sum,p)=>sum+Number(p.pressureBoostKPa||0),0)-
     path.reduce((sum,step)=>sum+Number(step.pipe.pressureDropKPa||0),0);
   if(pressure+1e-9<Number(target.requiredPressureKPa||0))return {ok:false,reason:"INSUFFICIENT_PRESSURE",availablePressureKPa:pressure};
+  if(finite(target.maxPressureKPa)&&pressure>Number(target.maxPressureKPa)+1e-9)return {ok:false,reason:"OVERPRESSURE",availablePressureKPa:pressure,maximumPressureKPa:Number(target.maxPressureKPa)};
   const maxFlow=path.length?Math.min(...path.map(step=>Number(step.pipe.maxFlowLps))):Number.POSITIVE_INFINITY;
   let factor=1,deliveredCapacity=Number.POSITIVE_INFINITY;
   for(const step of path){
