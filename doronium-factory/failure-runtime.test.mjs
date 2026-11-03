@@ -91,7 +91,7 @@ test("failure result applies once and preserves the in-process recipe for repair
  assert.equal(machine.condition,84);
  assert.ok(machine.activeMeta,"active recipe inputs remain attached while under repair");
  assert.equal(applyMachineFailure(machine,event),false,"the same failure event cannot be applied twice");
- machine.maintenanceTimer=0;
+ machine.condition=40;machine.maintenanceTimer=0;
  assert.equal(completeMachineRepair(machine),true);
  assert.equal(machine.status,"IDLE");
  assert.equal(machine.condition,76);
