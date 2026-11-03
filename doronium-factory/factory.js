@@ -202,7 +202,7 @@ function freshState(){
  const state={runtime:createRuntimeState(),version:1,worldVersion:4,seed,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},money:1100,inventory:{wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
  ensureItemStacks(state);return state;
 }
-let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, frameRenderAccumulator=0, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
+let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, frameRenderAccumulator=0, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudSaveRevision=null, localCloudRevision=null, cloudConflict=false, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
 let activeCooldownKeys=new Set(),cooldownNodeSource=null;
 let buildingIndex=new Map(),buildingIndexSource=null,buildingIndexRevision=-1,buildingIndexLength=-1;
 let playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Number(S.player.yaw)||0,pitch:Number(S.player.pitch??-.12),path:[],moving:false,facing:0,onArrive:null};
@@ -800,13 +800,101 @@ function hydrateState(input){markSceneDirty();const base=freshState(),incoming=i
  ensureItemStacks(S);if(S.fusionJob&&!S.fusionJob.transactionID&&!Array.isArray(S.fusionJob.reservationIDs)&&!S.fusionJob.materialsConsumed)S.fusionJob.legacyConsumedMaterials=true;reconcileSkillMilestones();
  if(migrate){const ox=38,oz=32;S.player.x=clamp(Number(incoming.player?.x??18)+ox,0,WORLD_W-1);S.player.y=clamp(Number(incoming.player?.y??14)+oz,0,WORLD_H-1);S.player.layer="surface";S.player.mineLevel=1;S.player.surfacePosition=null;for(const b of S.buildings){b.x=clamp((Number(b.x)||0)+ox,0,WORLD_W-1);b.y=clamp((Number(b.y)||0)+oz,0,WORLD_H-1);const k=surfaceKey(b.x,b.y);delete S.nodes[k];S.flattened[k]={height:terrainHeightAt(b.x,b.y)};S.foundation[k]=true}S.player.x=clamp(S.player.x,1,WORLD_W-2);S.player.y=clamp(S.player.y,1,WORLD_H-2)}
  S.simSpeed=[1,2,3].includes(S.simSpeed)?S.simSpeed:1;S.player.x=clamp(Number(S.player.x??64),0,S.player.layer==="mine"?MINE_W-1:WORLD_W-1);S.player.y=clamp(Number(S.player.y??52),0,S.player.layer==="mine"?MINE_H-1:WORLD_H-1);S.paused=!!S.paused;S.tick=Number(S.tick)||0;S.seconds=Number(S.seconds)||8*3600;S.player.viewMode=["first","third","map"].includes(S.player.viewMode)?S.player.viewMode:"first";if(S.player.layer==="mine"&&S.player.viewMode==="map")S.player.viewMode="first";S.player.mineLevel=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS);S.player.yaw=Number(S.player.yaw)||0;S.player.pitch=clamp(Number(S.player.pitch??-.12),-1.25,1.25);S.survival.health=clamp(Number(S.survival.health??100),0,100);S.survival.hunger=clamp(Number(S.survival.hunger??100),0,100);S.survival.thirst=clamp(Number(S.survival.thirst??100),0,100);playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:S.player.yaw,pitch:S.player.pitch,path:[],moving:false,facing:0,onArrive:null};rebuildCooldownIndex();}
-function loadLocal(){const candidate=readBestSave(localStorage,activeLocalKey);if(!candidate)return null;if(candidate.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;setSaveMessage("더 최신 버전의 저장 데이터입니다. 최신 게임 버전에서 열어 주세요.");if(!E2E_MODE)showModal("저장 데이터 버전 확인 필요","<p>이 저장 데이터는 현재 게임보다 새로운 버전에서 만들어졌습니다.</p><p>데이터를 덮어쓰지 않도록 저장을 잠갔습니다. 최신 게임 버전에서 다시 열어 주세요.</p>",[{label:"확인",cls:"primary"}]);return "future-schema-blocked"}if(!candidate.valid)return null;try{hydrateState(candidate.state);if(candidate.source!==activeLocalKey){restoreSaveCandidate(localStorage,activeLocalKey,candidate);if(!E2E_MODE)toast(candidate.source.includes("_backup_")?"이전 백업 저장 데이터에서 복구했습니다.":"임시 저장 데이터에서 복구했습니다.");}return candidate.savedAt||S.lastSavedAt||null}catch(error){console.warn("Local save candidate rejected",candidate.source,error);return null}}
+function loadLocal(){const candidate=readBestSave(localStorage,activeLocalKey);if(!candidate)return null;if(candidate.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;setSaveMessage("더 최신 버전의 저장 데이터입니다. 최신 게임 버전에서 열어 주세요.");if(!E2E_MODE)showModal("저장 데이터 버전 확인 필요","<p>이 저장 데이터는 현재 게임보다 새로운 버전에서 만들어졌습니다.</p><p>데이터를 덮어쓰지 않도록 저장을 잠갔습니다. 최신 게임 버전에서 다시 열어 주세요.</p>",[{label:"확인",cls:"primary"}]);return "future-schema-blocked"}if(!candidate.valid)return null;try{localCloudRevision=Number.isSafeInteger(Number(candidate.envelope?.cloudRevision))&&candidate.envelope?.cloudRevision!==null?Number(candidate.envelope.cloudRevision):null;hydrateState(candidate.state);if(candidate.source!==activeLocalKey){restoreSaveCandidate(localStorage,activeLocalKey,candidate);if(!E2E_MODE)toast(candidate.source.includes("_backup_")?"이전 백업 저장 데이터에서 복구했습니다.":"임시 저장 데이터에서 복구했습니다.");}return candidate.savedAt||S.lastSavedAt||null}catch(error){console.warn("Local save candidate rejected",candidate.source,error);return null}}
 function setSaveMessage(value){$("save-message").textContent=value}
-function saveLocal(){if(saveBlockedForFutureSchema){setSaveMessage("최신 버전에서 생성된 저장 데이터는 이 버전에서 덮어쓸 수 없습니다.");return null}const savedAt=nowISO();S.lastSavedAt=savedAt;try{const audit=validateRuntimeState(S);if(!audit.valid)throw new Error("저장 전 인벤토리 검증 실패: "+audit.errors.join(", "));const skills=validateSkillState(S.skills);if(!skills.valid)throw new Error("저장 전 스킬 검증 실패: "+skills.errors.join(", "));const snapshot=requestSaveSnapshot(S);S.runtime.saveSnapshotRequested=false;writeSaveEnvelope(localStorage,activeLocalKey,snapshot,savedAt);return savedAt}catch(e){setSaveMessage("저장 검증 또는 저장 공간 오류");console.error(e);return null}}
-async function loadCloudForUser(session){if(!cloudClient||!session?.user?.id)return false;setCloud("syncing","클라우드 확인");try{const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at").eq("storage_key",CLOUD_KEY).eq("is_deleted",false).maybeSingle();if(error)throw error;if(!data){cloudUpdatedAt=null;setCloud("online","계정 연결됨");return false}const envelope=data.storage_value||{};if(!envelope.state)throw new Error("저장 형식이 올바르지 않습니다.");const remoteValidation=validateSaveEnvelope(envelope);if(!remoteValidation.valid)throw new Error("클라우드 저장 데이터 검증 실패: "+remoteValidation.reason);const remoteTime=Date.parse(data.updated_at||envelope.savedAt||0),localTime=Date.parse(S.lastSavedAt||0);cloudUpdatedAt=data.updated_at||envelope.savedAt||null;if(remoteTime>localTime){hydrateState(envelope.state);S.lastSavedAt=cloudUpdatedAt;writeSaveEnvelope(localStorage,activeLocalKey,S,cloudUpdatedAt);renderAll();setViewMode(S.player.viewMode);toast("클라우드 저장 데이터를 불러왔습니다.");setCloud("online","클라우드 동기화")}else{setCloud("online","클라우드 연결됨");if(localTime>remoteTime)await saveGame(true)}return true}catch(e){if(String(e).includes("UNSUPPORTED_FUTURE_SCHEMA")){saveBlockedForFutureSchema=true;setCloud("error","최신 버전 필요");setSaveMessage("클라우드 저장 데이터가 더 최신 버전입니다. 덮어쓰기를 차단했습니다.");toast("최신 버전의 클라우드 저장 데이터가 있어 저장을 잠갔습니다.","warn");return true}console.error("Cloud load failed",e);setCloud("error","클라우드 오류");setSaveMessage("로컬 저장 사용 중");return false}}
+function saveLocal(){if(saveBlockedForFutureSchema){setSaveMessage("최신 버전에서 생성된 저장 데이터는 이 버전에서 덮어쓸 수 없습니다.");return null}const savedAt=nowISO();S.lastSavedAt=savedAt;try{const audit=validateRuntimeState(S);if(!audit.valid)throw new Error("저장 전 인벤토리 검증 실패: "+audit.errors.join(", "));const skills=validateSkillState(S.skills);if(!skills.valid)throw new Error("저장 전 스킬 검증 실패: "+skills.errors.join(", "));const snapshot=requestSaveSnapshot(S);S.runtime.saveSnapshotRequested=false;writeSaveEnvelope(localStorage,activeLocalKey,snapshot,savedAt,{cloudRevision:localCloudRevision});return savedAt}catch(e){setSaveMessage("저장 검증 또는 저장 공간 오류");console.error(e);return null}}
+async function loadCloudForUser(session){
+ if(!cloudClient||!session?.user?.id)return false;
+ setCloud("syncing","클라우드 확인");
+ try{
+  const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at,save_revision,is_deleted").eq("storage_key",CLOUD_KEY).maybeSingle();
+  if(error)throw error;
+  if(!data){cloudUpdatedAt=null;cloudSaveRevision=null;cloudConflict=false;setCloud("online","계정 연결됨");return false}
+  cloudSaveRevision=Number.isSafeInteger(Number(data.save_revision))&&Number(data.save_revision)>=0?Number(data.save_revision):0;
+  cloudUpdatedAt=data.updated_at||data.storage_value?.savedAt||null;
+  if(data.is_deleted){setCloud("online","클라우드 복구 가능");return false}
+  const envelope=data.storage_value||{};
+  if(!envelope.state)throw new Error("저장 형식이 올바르지 않습니다.");
+  const remoteValidation=validateSaveEnvelope(envelope);
+  if(!remoteValidation.valid)throw new Error("클라우드 저장 데이터 검증 실패: "+remoteValidation.reason);
+  const remoteTime=Date.parse(data.updated_at||envelope.savedAt||0),localTime=Date.parse(S.lastSavedAt||0);
+  const basedOnDifferentRevision=localCloudRevision!==null&&localCloudRevision!==cloudSaveRevision;
+  if(basedOnDifferentRevision&&localTime>remoteTime){
+   cloudConflict=true;dirty=true;setCloud("error","저장 충돌");setSaveMessage("다른 기기에서 먼저 저장했습니다. 이 기기 데이터는 보존했고 자동 덮어쓰기를 중단했습니다.");toast("다른 기기의 저장과 충돌했습니다. 어느 쪽도 자동으로 덮어쓰지 않았습니다.","warn");return true;
+  }
+  if(remoteTime>localTime||basedOnDifferentRevision){
+   hydrateState(envelope.state);S.lastSavedAt=cloudUpdatedAt;localCloudRevision=cloudSaveRevision;cloudConflict=false;
+   writeSaveEnvelope(localStorage,activeLocalKey,S,cloudUpdatedAt,{cloudRevision:localCloudRevision});
+   renderAll();setViewMode(S.player.viewMode);toast("클라우드 저장 데이터를 불러왔습니다.");setCloud("online","클라우드 동기화");
+  }else{
+   localCloudRevision=cloudSaveRevision;setCloud("online","클라우드 연결됨");
+   if(localTime>remoteTime)await saveGame(true);
+  }
+  return true;
+ }catch(e){
+  if(String(e).includes("UNSUPPORTED_FUTURE_SCHEMA")){saveBlockedForFutureSchema=true;setCloud("error","최신 버전 필요");setSaveMessage("클라우드 저장 데이터가 더 최신 버전입니다. 덮어쓰기를 차단했습니다.");toast("최신 버전의 클라우드 저장 데이터가 있어 저장을 잠갔습니다.","warn");return true}
+  console.error("Cloud load failed",e);setCloud("error","클라우드 오류");setSaveMessage("로컬 저장 사용 중");return false;
+ }
+}
 async function initCloud(){try{const mod=await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/+esm");createClient=mod.createClient;cloudClient=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"sb-scttowfhygcpdirrekqm-auth-token"}});const {data,error}=await cloudClient.auth.getSession();if(error)throw error;authSession=data.session;if(authSession){activeLocalKey=LOCAL_KEY+"_"+authSession.user.id;saveBlockedForFutureSchema=false;const accountLocal=loadLocal();if(!accountLocal)S=freshState();const found=await loadCloudForUser(authSession);if(!found){renderAll();await saveGame(true)}}else setCloud("","로그인 필요");cloudClient.auth.onAuthStateChange((event,session)=>{queueMicrotask(async()=>{const previous=authSession?.user?.id;authSession=session;if(session?.user?.id&&session.user.id!==previous){activeLocalKey=LOCAL_KEY+"_"+session.user.id;saveBlockedForFutureSchema=false;const accountLocal=loadLocal();if(!accountLocal)S=freshState();dirty=false;const found=await loadCloudForUser(session);if(!found){renderAll();await saveGame(true)}}else if(!session){activeLocalKey=LOCAL_KEY;saveBlockedForFutureSchema=false;const guestLocal=loadLocal();if(!guestLocal)S=freshState();renderAll();setCloud("","로그인 필요");saveLocal()}else if(event==="TOKEN_REFRESHED"){setCloud("online","클라우드 연결됨")}})});return true}catch(e){console.warn("Supabase client unavailable; using local save",e);cloudClient=null;authSession=null;setCloud("error","로컬 저장");return false}}
-async function saveGame(force=false){if(!force&&!dirty)return;if(cloudBusy){saveLocal();return}const savedAt=saveLocal();if(!savedAt)return;dirty=false;setSaveMessage("이 기기 저장 완료");if(!cloudClient||!authSession?.user?.id){setCloud("","로그인 필요");return}cloudBusy=true;setCloud("syncing","클라우드 저장");try{const envelope=createSaveEnvelope(requestSaveSnapshot(S),savedAt);const {error}=await cloudClient.from("dori_cloud_storage").upsert({user_id:authSession.user.id,storage_key:CLOUD_KEY,storage_value:envelope,is_deleted:false,updated_at:savedAt},{onConflict:"user_id,storage_key"});if(error)throw error;cloudUpdatedAt=savedAt;setCloud("online","모든 기기 동기화");setSaveMessage("계정 클라우드 저장 완료")}catch(e){console.error("Cloud save failed",e);setCloud("error","로컬 저장됨");setSaveMessage("클라우드 오류 · 로컬 보존");toast("클라우드 저장에 실패했습니다. 이 기기 저장은 보존했습니다.","warn")}finally{cloudBusy=false}}
-async function pollCloud(){if(!cloudClient||!authSession?.user?.id||cloudBusy)return;try{const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at").eq("storage_key",CLOUD_KEY).eq("is_deleted",false).maybeSingle();if(error)throw error;if(!data)return;const remote=data.updated_at||data.storage_value?.savedAt;if(!remote||remote===cloudUpdatedAt)return;if(dirty){setCloud("syncing","다른 기기 변경 감지");toast("다른 기기의 저장 데이터가 있습니다. 저장 후 새로고침하면 최신 진행도를 불러옵니다.","warn");return}const envelope=data.storage_value;if(envelope?.state){const validation=validateSaveEnvelope(envelope);if(validation.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;setCloud("error","최신 버전 필요");setSaveMessage("더 최신 클라우드 저장 데이터가 있어 저장을 잠갔습니다.");toast("최신 버전의 클라우드 저장 데이터가 있어 저장을 잠갔습니다.","warn");return}if(validation.valid){hydrateState(envelope.state);S.lastSavedAt=remote;cloudUpdatedAt=remote;writeSaveEnvelope(localStorage,activeLocalKey,S,remote);renderAll();setViewMode(S.player.viewMode);setCloud("online","다른 기기와 동기화");toast("다른 기기의 공장 진행도를 동기화했습니다.")}}}catch(e){console.warn("Cloud polling error",e)}}
+async function saveGame(force=false){
+ if(!force&&!dirty)return;
+ if(cloudBusy){saveLocal();return}
+ const savedAt=saveLocal();if(!savedAt)return;
+ dirty=false;setSaveMessage("이 기기 저장 완료");
+ if(!cloudClient||!authSession?.user?.id){setCloud("","로그인 필요");return}
+ if(cloudConflict){dirty=true;setCloud("error","저장 충돌");setSaveMessage("저장 충돌 상태입니다. 클라우드 데이터를 자동으로 덮어쓰지 않았습니다.");return}
+ cloudBusy=true;setCloud("syncing","클라우드 저장");
+ try{
+  const envelope=createSaveEnvelope(requestSaveSnapshot(S),savedAt,{cloudRevision:localCloudRevision});
+  const payload={user_id:authSession.user.id,storage_key:CLOUD_KEY,storage_value:envelope,is_deleted:false,updated_at:savedAt};
+  let nextRevision;
+  if(cloudSaveRevision===null){
+   const {data,error}=await cloudClient.from("dori_cloud_storage").insert({...payload,save_revision:1}).select("save_revision").maybeSingle();
+   if(error){if(error.code==="23505"){cloudConflict=true;throw new Error("CLOUD_SAVE_CONFLICT:INITIAL_INSERT_RACE")}throw error}
+   if(!data)throw new Error("CLOUD_SAVE_INSERT_UNCONFIRMED");
+   nextRevision=Number(data.save_revision);
+  }else{
+   const expectedRevision=cloudSaveRevision;nextRevision=expectedRevision+1;
+   const {data,error}=await cloudClient.from("dori_cloud_storage").update({...payload,save_revision:nextRevision}).eq("storage_key",CLOUD_KEY).eq("save_revision",expectedRevision).select("save_revision").maybeSingle();
+   if(error)throw error;
+   if(!data){cloudConflict=true;throw new Error("CLOUD_SAVE_CONFLICT:REVISION_MISMATCH")}
+   nextRevision=Number(data.save_revision);
+  }
+  cloudSaveRevision=nextRevision;localCloudRevision=nextRevision;cloudUpdatedAt=savedAt;cloudConflict=false;
+  writeSaveEnvelope(localStorage,activeLocalKey,requestSaveSnapshot(S),savedAt,{cloudRevision:localCloudRevision});
+  setCloud("online","모든 기기 동기화");setSaveMessage("계정 클라우드 저장 완료 · revision "+nextRevision);
+ }catch(e){
+  dirty=true;console.error("Cloud save failed",e);
+  if(String(e).includes("CLOUD_SAVE_CONFLICT")){cloudConflict=true;setCloud("error","저장 충돌");setSaveMessage("다른 기기에서 먼저 저장했습니다. 이 기기 저장은 유지하고 자동 덮어쓰기를 차단했습니다.");toast("클라우드 저장 충돌이 감지되었습니다. 진행 데이터를 보호하기 위해 자동 덮어쓰기를 중단했습니다.","warn")}
+  else{setCloud("error","로컬 저장됨");setSaveMessage("클라우드 오류 · 로컬 보존");toast("클라우드 저장에 실패했습니다. 이 기기 저장은 보존했습니다.","warn")}
+ }finally{cloudBusy=false}
+}
+async function pollCloud(){
+ if(!cloudClient||!authSession?.user?.id||cloudBusy)return;
+ try{
+  const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at,save_revision,is_deleted").eq("storage_key",CLOUD_KEY).maybeSingle();
+  if(error)throw error;if(!data)return;
+  const remoteRevision=Number(data.save_revision)||0;
+  if(remoteRevision===cloudSaveRevision)return;
+  const remote=data.updated_at||data.storage_value?.savedAt;
+  const localTime=Date.parse(S.lastSavedAt||0),remoteTime=Date.parse(remote||0);
+  if(dirty||(localCloudRevision!==null&&localCloudRevision!==cloudSaveRevision&&localTime>remoteTime)){
+   cloudConflict=true;setCloud("error","저장 충돌");setSaveMessage("다른 기기에서 revision "+remoteRevision+"을 저장했습니다. 로컬 데이터는 보존 중입니다.");toast("다른 기기의 저장 변경을 감지했습니다. 자동 병합/덮어쓰기를 중단했습니다.","warn");return;
+  }
+  if(data.is_deleted){cloudConflict=true;setCloud("error","클라우드 충돌");return}
+  const envelope=data.storage_value;
+  if(envelope?.state){
+   const validation=validateSaveEnvelope(envelope);
+   if(validation.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;cloudConflict=true;setCloud("error","최신 버전 필요");setSaveMessage("더 최신 클라우드 저장 데이터가 있어 저장을 잠갔습니다.");return}
+   if(validation.valid){
+    hydrateState(envelope.state);S.lastSavedAt=remote;cloudUpdatedAt=remote;cloudSaveRevision=remoteRevision;localCloudRevision=remoteRevision;cloudConflict=false;
+    writeSaveEnvelope(localStorage,activeLocalKey,S,remote,{cloudRevision:localCloudRevision});
+    renderAll();setViewMode(S.player.viewMode);setCloud("online","다른 기기와 동기화");toast("다른 기기의 공장 진행도를 동기화했습니다.");
+   }
+  }
+ }catch(e){console.warn("Cloud polling error",e)}
+}
 function animationFrame(time){
  if(document.hidden){lastFrame=time;frameRenderAccumulator=0;requestAnimationFrame(animationFrame);return}
  const frameMs=Math.min(80,Math.max(0,time-lastFrame));lastFrame=time;drawTime=time;
