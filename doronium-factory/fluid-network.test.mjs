@@ -104,7 +104,12 @@ test("temperature and contamination are mass-weighted; contaminated target can r
   assert.equal(result.ok,true);
   assert.equal(s.tanks[1].temperatureC,30);
   assert.ok(Math.abs(s.tanks[1].contamination-(.4*10/60))<1e-12);
-  const overPressure=state({tanks:[\n    {id:"source",nodeID:"a",fluidID:"FLUID_WATER",volumeL:50,capacityL:50,temperatureC:20,contamination:0,pressureKPa:200},\n    {id:"target",nodeID:"b",fluidID:null,volumeL:0,capacityL:100,maxPressureKPa:100}\n  ]});\n  assert.equal(transferFluid(overPressure,{sourceTankID:"source",targetTankID:"target",requestedL:10,dtSeconds:1}).reason,"OVERPRESSURE");\n  const rejected=state({tanks:[
+  const overPressure=state({tanks:[
+    {id:"source",nodeID:"a",fluidID:"FLUID_WATER",volumeL:50,capacityL:50,temperatureC:20,contamination:0,pressureKPa:200},
+    {id:"target",nodeID:"b",fluidID:null,volumeL:0,capacityL:100,maxPressureKPa:100}
+  ]});
+  assert.equal(transferFluid(overPressure,{sourceTankID:"source",targetTankID:"target",requestedL:10,dtSeconds:1}).reason,"OVERPRESSURE");
+  const rejected=state({tanks:[
     {id:"source",nodeID:"a",fluidID:"FLUID_WATER",volumeL:50,capacityL:50,temperatureC:20,contamination:.9,pressureKPa:200},
     {id:"target",nodeID:"b",fluidID:"FLUID_WATER",volumeL:50,capacityL:100,temperatureC:20,contamination:0,maxContamination:.1}
   ]});
