@@ -32,9 +32,11 @@ test("sorter routes matching item and quality rule to its selected branch",()=>{
 test("splitter distributes successive parcels round-robin across free outputs",()=>{
  const s=createConveyorState({segments:[
   segment("split","splitter",["left","right"]),segment("left"),segment("right")
- ],parcels:[parcel("IS-1","split"),parcel("IS-2","split")]});
+ ],parcels:[parcel("IS-1","split")]});
  const r=advanceConveyorTick(s,{tick:1});
  assert.equal(r.moved.length,1);
+ s.parcels.push(parcel("IS-2","split"));
+ s.segments.find(item=>item.id==="split").occupantStackID="IS-2";
  const r2=advanceConveyorTick(s,{tick:2});
  assert.equal(r2.moved.length,1);
  assert.deepEqual(s.parcels.map(p=>p.segmentID).sort(),["left","right"]);
