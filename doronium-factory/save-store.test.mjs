@@ -62,14 +62,13 @@ test("corrupt main falls back to a verified backup and restores it",()=>{
  const storage=memoryStorage(),key="factory";
  writeSaveEnvelope(storage,key,{inventory:{wood:20}},"good-before");
  writeSaveEnvelope(storage,key,{inventory:{wood:20}},"good");
- const original=storage.getItem(key);
  storage.setItem(key,"{broken");
  const candidate=readBestSave(storage,key);
  assert.equal(candidate.source,key+"_backup_1");
  assert.equal(candidate.state.inventory.wood,20);
  assert.equal(restoreSaveCandidate(storage,key,candidate),true);
  assert.equal(readBestSave(storage,key).state.inventory.wood,20);
- assert.equal(storage.getItem(key),original);
+ assert.equal(storage.getItem(key),candidate.raw);
 });
 
 test("failed temp write never overwrites the current main save",()=>{
