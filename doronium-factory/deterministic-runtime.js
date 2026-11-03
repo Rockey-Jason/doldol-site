@@ -115,9 +115,10 @@ export function createDeterministicEventQueue(snapshot = {}) {
       const order = (a, b) => a.tick - b.tick ||
         (stageMap.get(a.stage) ?? Number.MAX_SAFE_INTEGER) - (stageMap.get(b.stage) ?? Number.MAX_SAFE_INTEGER) ||
         a.sequence - b.sequence;
-      queue.sort(order);
       let count = 0;
-      while (queue.length && queue[0].tick <= throughTick) {
+      while (true) {
+        queue.sort(order);
+        if (!queue.length || queue[0].tick > throughTick) break;
         const event = queue[0];
         handle(clone(event));
         queue.shift();
