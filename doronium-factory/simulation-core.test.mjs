@@ -4,7 +4,7 @@ import {
   createRuntimeState, ensureItemStacks, addItemStack, removeItemStacks,
   calculateOutputQuality, calculateOutputPurity, accuracyQuality,
   reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations,
-  splitItemStack, mergeItemStacks, validateRuntimeState, availableItemCount,
+  splitItemStack, mergeItemStacks, validateRuntimeState, availableItemCount, availableItemCountWhere, allocateEntityID,
   runCanonicalTick, TICK_STAGE_ORDER
 } from "./simulation-core.js";
 
@@ -136,4 +136,40 @@ test("runtime save validation checks deterministic failure journal counters and 
  assert.equal(validateRuntimeState(state).valid,true);
  state.runtime.failureEvents.push({failureEventID:"FAIL-1"});
  assert.ok(validateRuntimeState(state).errors.some(x=>x.startsWith("duplicate-failure-event:")));
+});
+
+
+test("qualified reservations only lock stacks that individually satisfy the material contract",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:20,buildings:[]};
+  addItemStack(state,"doronium",5,{quality:99,purity:95,synthetic:false});
+  addItemStack(state,"doronium",4,{quality:89,purity:100,synthetic:false});
+  addItemStack(state,"doronium",6,{quality:100,purity:99,synthetic:true});
+  addItemStack(state,"doronium",3,{quality:95,purity:90,synthetic:false});
+  const qualifies=stack=>stack.quality>=90&&stack.purity>=90&&!stack.synthetic;
+  assert.equal(availableItemCountWhere(state,"doronium",qualifies),8);
+  assert.equal(reserveItemStacks(state,"doronium",9,"fusion-job",qualifies),null);
+  assert.equal(Object.keys(state.runtime.reservations).length,0);
+  const reservation=reserveItemStacks(state,"doronium",8,"fusion-job",qualifies);
+  assert.ok(reservation);
+  const record=state.runtime.reservations[reservation];
+  assert.equal(record.allocations.reduce((n,a)=>n+a.quantity,0),8);
+  for(const allocation of record.allocations){
+    const stack=state.runtime.itemStacks.find(s=>s.runtimeID===allocation.stackID);
+    assert.ok(qualifies(stack));
+  }
+  assert.equal(availableItemCountWhere(state,"doronium",qualifies),0);
+  const removed=commitItemReservations(state,[reservation]);
+  assert.equal(removed.reduce((n,s)=>n+s.quantity,0),8);
+  assert.ok(removed.every(qualifies));
+  assert.equal(validateRuntimeState(state).valid,true);
+});
+
+test("entity IDs are persisted, monotonic and do not collide with existing building IDs",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},buildings:[{uid:"BLDG-1"}]};
+  assert.equal(allocateEntityID(state,"BLDG"),"BLDG-2");
+  assert.equal(allocateEntityID(state,"BLDG"),"BLDG-3");
+  assert.equal(state.runtime.nextEntityId,4);
+  const restored=structuredClone(state);
+  assert.equal(allocateEntityID(restored,"BLDG"),"BLDG-4");
+  assert.equal(validateRuntimeState(restored).valid,true);
 });
