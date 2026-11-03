@@ -28,6 +28,10 @@ jobs:
           node --check doronium-factory/factory.js
           node --check doronium-factory/simulation-core.js
           node --check doronium-factory/simulation-core.test.mjs
+          grep -q 'const E2E_MODE = false' doronium-factory/factory.js
+          grep -q 'availableItemCountWhere' doronium-factory/simulation-core.js
+          grep -q 'allocateEntityID' doronium-factory/simulation-core.js
+          grep -q 'reservationIDs' doronium-factory/factory.js
           node --check doronium-factory/game-data-validation.js
           node --check doronium-factory/game-data-validation.test.mjs
           node --check doronium-factory/production-runtime.js
@@ -133,6 +137,19 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Start local site server
         run: |
+          # Build a disposable test copy. Production source keeps test hooks disabled.
+          mkdir -p /tmp/doronium-e2e-site
+          cp -a doronium-factory /tmp/doronium-e2e-site/
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("/tmp/doronium-e2e-site/doronium-factory/factory.js")
+          source = path.read_text()
+          marker = "const E2E_MODE = false;"
+          if source.count(marker) != 1:
+              raise SystemExit("Expected exactly one production E2E gate")
+          path.write_text(source.replace(marker, "const E2E_MODE = true;", 1))
+          PY
+          cd /tmp/doronium-e2e-site
           python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/doronium-site.log 2>&1 &
           echo $! >/tmp/doronium-site.pid
           for i in $(seq 1 30); do
