@@ -95,3 +95,37 @@ export function validateBlueprintPlacement(blueprint,{x,y,worldWidth,worldHeight
  }
  return {valid:errors.length===0,errors,placements};
 }
+
+export function duplicateBlueprint(blueprint,{newID,name}={}){
+ if(!blueprint||blueprint.version!==1||!Array.isArray(blueprint.buildings)||!newID)return null;
+ return {...clone(blueprint),id:String(newID),name:String(name||((blueprint.name||"Blueprint")+" Copy")).slice(0,80),createdAt:null};
+}
+export function beginBlueprintConstruction(state,{transactionID,blueprint,x,y,rotation=0,buildingCatalog={},ownerID="player",worldWidth,worldHeight,occupied=[],heightAt=()=>0,foundation=()=>true,maxSlope=Infinity,isUnlocked=()=>true,canPlaceType=()=>true}={}){
+ if(!state||!transactionID||!blueprint||blueprint.version!==1||!Array.isArray(blueprint.buildings)||!blueprint.buildings.length)return {ok:false,reason:"INVALID_BLUEPRINT_REQUEST"};
+ state.constructionLedger??={};state.moneyReservations??={};
+ if(state.constructionLedger[transactionID])return {ok:false,reason:"DUPLICATE_TRANSACTION"};
+ const rotated=rotation?rotateBlueprint(blueprint,rotation):clone(blueprint);
+ if(!rotated)return {ok:false,reason:"INVALID_BLUEPRINT"};
+ const occupiedSet=new Set((occupied||[]).map(p=>cellKey(p.x,p.y))),planned=new Set(),placements=[],materials={},occupiedCells=[];
+ let moneyCost=0;
+ for(const item of rotated.buildings){
+  const def=buildingCatalog[item.type];if(!def)return {ok:false,reason:"UNKNOWN_BUILDING:"+item.type};
+  if(!isUnlocked(item.type,def))return {ok:false,reason:"BUILDING_LOCKED:"+item.type};
+  const px=Math.floor(Number(x)||0)+(Number(item.dx)||0),py=Math.floor(Number(y)||0)+(Number(item.dy)||0);
+  if(!canPlaceType(item.type,px,py,def))return {ok:false,reason:"SPECIAL_PLACEMENT_RULE:"+item.type};
+  const footprint=item.footprint||def.footprint||{width:1,height:1};
+  const requiresFlat=def.requiresFlat!==false;
+  const result=validateConstructionFootprint({x:px,y:py,width:footprint.width,height:footprint.height,worldWidth,worldHeight,occupied:[...(occupiedSet),...planned].map(v=>{const[a,b]=String(v).split(",").map(Number);return{x:a,y:b}}),heightAt,maxSlope:requiresFlat?maxSlope:Infinity,requiresFlat,foundation});
+  if(!result.valid)return {ok:false,reason:"INVALID_BLUEPRINT_FOOTPRINT",buildingType:item.type,errors:result.errors};
+  for(const p of result.cells){const k=cellKey(p.x,p.y);planned.add(k);occupiedCells.push(p)}
+  const cost=Math.max(0,Math.floor(Number(def.moneyCost)||0));moneyCost+=cost;
+  for(const[id,qty]of Object.entries(def.materials||{}))materials[id]=(materials[id]||0)+Math.max(0,Math.floor(Number(qty)||0));
+  placements.push({...clone(item),x:px,y:py,footprint:{...footprint},moneyCost:cost,materials:{...def.materials}});
+ }
+ if(Math.floor(Number(state.money)||0)-moneyReserved(state)<moneyCost)return {ok:false,reason:"INSUFFICIENT_MONEY"};
+ const reservationIDs=reserveItemBatch(state,materials,"BLUEPRINT:"+transactionID);
+ if(!reservationIDs)return {ok:false,reason:"INSUFFICIENT_MATERIALS"};
+ state.moneyReservations[transactionID]={amount:moneyCost,ownerID:String(ownerID)};
+ state.constructionLedger[transactionID]={transactionID,buildingType:"BLUEPRINT",ownerID:String(ownerID),x:Math.floor(Number(x)||0),y:Math.floor(Number(y)||0),rotation,moneyCost,materials,reservationIDs,status:"RESERVED",cells:occupiedCells,placements,createdTick:Math.max(0,Number(state.tick)||0)};
+ return {ok:true,transaction:clone(state.constructionLedger[transactionID])};
+}
