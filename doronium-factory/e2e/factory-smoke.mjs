@@ -167,7 +167,20 @@ try {
   assert.ok(construction.adaptiveBeltTilts.some(s => Math.abs(s.x) > 0.01 || Math.abs(s.z) > 0.01), "The adaptive belt must actually tilt to match uneven ground");
   assert.equal(construction.standardWithFoundation, true, "A standard conveyor must place on a prepared foundation");
 
+  await desktop.evaluate(() => window.__doroniumFactoryTest.setupBlueprintTest());
   await openPanel(desktop, "build");
+  await desktop.locator("#blueprint-name").fill("회귀 테스트 설계도");
+  await desktop.locator("#blueprint-save").click();
+  assert.equal(await desktop.locator(".blueprint-card").count(), 1, "The in-game UI must save a multi-building blueprint");
+  await desktop.locator('.blueprint-card [data-blueprint-action="duplicate"]').first().click();
+  assert.equal(await desktop.locator(".blueprint-card").count(), 2, "Blueprint duplication must create a separate saved entry");
+  await desktop.locator('.blueprint-card [data-blueprint-action="place"]').first().click();
+  await desktop.locator('.blueprint-card [data-blueprint-action="rotate"]').first().click();
+  const blueprintResult = await desktop.evaluate(() => window.__doroniumFactoryTest.blueprintPlaceAt(20, 20));
+  assert.equal(blueprintResult.ok, true, "Rotated blueprint placement must commit atomically");
+  assert.equal(blueprintResult.buildings.length, 4, "A two-building blueprint must install both buildings, exactly once");
+  assert.deepEqual(blueprintResult.buildings.slice(-2).map(b => [b.x, b.y]), [[20, 20], [20, 21]], "A 90-degree rotation must rotate the full blueprint layout");
+  assert.equal(blueprintResult.money, 999976, "Blueprint money must be charged once for the complete transaction");
 
   const synthetic = await desktop.evaluate(() => window.__doroniumFactoryTest.syntheticGuard());
   assert.equal(synthetic.status, "ERROR", "Reactor must reject synthetic Dori Meat");
