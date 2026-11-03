@@ -23,8 +23,10 @@ export function buildLogisticsGraph(buildings=[],{conveyorTypeIDs}={}){
  const nodes=[],edges=[],outgoing=new Map(),incoming=new Map();
  const conveyors=(buildings||[]).filter(b=>conveyorSet.has(String(b.type))).sort((a,b)=>String(a.uid).localeCompare(String(b.uid)));
  for(const b of conveyors){const id=String(b.uid);nodes.push({id,type:String(b.type),x:Number(b.x),y:Number(b.y)});outgoing.set(id,[]);incoming.set(id,[])}
- for(const b of conveyors){
-  const from=String(b.uid),routes=dirsFor(b,b.item);
+ for(const b of buildings||[])if(b?.uid!=null&&b.output)outgoing.set(String(b.uid),[]);
+ const edgeSources=[...conveyors,...(buildings||[]).filter(b=>b?.uid!=null&&b.output&&!conveyorSet.has(String(b.type)))];
+ for(const b of edgeSources){
+  const from=String(b.uid),routes=dirsFor(b,b.item||b.output);
   for(const d of routes){const vector=DIRECTIONS[d],target=byPos.get(pos(Number(b.x)+vector.x,Number(b.y)+vector.y));if(!target)continue;
    const edge={from,to:String(target.uid),direction:d,targetType:String(target.type),targetIsConveyor:conveyorSet.has(String(target.type))};
    edges.push(edge);outgoing.get(from).push(edge);if(edge.targetIsConveyor){incoming.get(edge.to)?.push(edge)}
@@ -51,7 +53,7 @@ export function buildLogisticsGraph(buildings=[],{conveyorTypeIDs}={}){
  for(const id of [...outgoing.keys()].sort())if(!colors.has(id))visit(id);
  const cycles=[],cycleSeen=new Set();
  for(const cycle of cycleSets){const signature=[...cycle].sort().join("|");if(!cycleSeen.has(signature)){cycleSeen.add(signature);cycles.push([...cycle])}}
- return {nodes,edges,byID,byPos,outgoing,incoming,networkByID,cycles};
+ return {nodes,edges,byID,byPos,outgoing,incoming,networkByID,cycles,conveyorTypeIDs:[...conveyorSet]};
 }
 export function selectLogisticsTarget(graph,source,item,{canAccept=()=>true,occupied=hasItem}={}){
  const id=String(source?.uid||"");
