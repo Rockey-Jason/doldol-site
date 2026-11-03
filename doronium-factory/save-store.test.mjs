@@ -60,6 +60,7 @@ test("atomic save rotates three backups and retains the previous main save",()=>
 
 test("corrupt main falls back to a verified backup and restores it",()=>{
  const storage=memoryStorage(),key="factory";
+ writeSaveEnvelope(storage,key,{inventory:{wood:20}},"good-before");
  writeSaveEnvelope(storage,key,{inventory:{wood:20}},"good");
  const original=storage.getItem(key);
  storage.setItem(key,"{broken");
