@@ -49,7 +49,7 @@ export function commitConstruction(state,transactionID,install){
  const snapshot=clone(state);
  try{
   if(Math.floor(Number(state.money)||0)<tx.moneyCost)return {ok:false,reason:"MONEY_CHANGED"};
-  const consumed=commitItemReservations(state,tx.reservationIDs);
+  const consumed=tx.reservationIDs?.length?commitItemReservations(state,tx.reservationIDs):[];
   if(!consumed)return {ok:false,reason:"MATERIAL_RESERVATION_LOST"};
   const consumedCount=consumed.reduce((n,x)=>n+x.quantity,0),requiredCount=Object.values(tx.materials).reduce((n,x)=>n+Math.max(0,Math.floor(Number(x)||0)),0);
   if(consumedCount!==requiredCount)throw new Error("MATERIAL_COUNT_MISMATCH");
@@ -74,8 +74,14 @@ export function createBlueprint(buildings=[],{name="Blueprint"}={}){
 export function rotateBlueprint(blueprint,rotation=1){
  if(!blueprint||blueprint.version!==1||!Array.isArray(blueprint.buildings))return null;
  const r=((Math.floor(Number(rotation)||0)%4)+4)%4;
- const maxX=Math.max(0,...blueprint.buildings.map(b=>Number(b.dx)||0)),maxY=Math.max(0,...blueprint.buildings.map(b=>Number(b.dy)||0));
- return {...clone(blueprint),buildings:blueprint.buildings.map(b=>{const p=rotateOffset(Number(b.dx)||0,Number(b.dy)||0,maxX+1,maxY+1,r);return {...b,dx:p.x,dy:p.y,dir:((Number(b.dir)||0)+r)%4}})};
+ const width=Math.max(1,...blueprint.buildings.map(b=>(Number(b.dx)||0)+Math.max(1,Number(b.footprint?.width)||1)));
+ const height=Math.max(1,...blueprint.buildings.map(b=>(Number(b.dy)||0)+Math.max(1,Number(b.footprint?.height)||1)));
+ return {...clone(blueprint),buildings:blueprint.buildings.map(b=>{
+  const bw=Math.max(1,Number(b.footprint?.width)||1),bh=Math.max(1,Number(b.footprint?.height)||1),cells=[];
+  for(let y=0;y<bh;y++)for(let x=0;x<bw;x++)cells.push(rotateOffset((Number(b.dx)||0)+x,(Number(b.dy)||0)+y,width,height,r));
+  const minX=Math.min(...cells.map(p=>p.x)),minY=Math.min(...cells.map(p=>p.y)),maxX=Math.max(...cells.map(p=>p.x)),maxY=Math.max(...cells.map(p=>p.y));
+  return {...b,dx:minX,dy:minY,dir:((Number(b.dir)||0)+r)%4,footprint:{width:maxX-minX+1,height:maxY-minY+1}};
+ })};
 }
 export function validateBlueprintPlacement(blueprint,{x,y,worldWidth,worldHeight,occupied=[],heightAt=()=>0,foundation=()=>true,maxSlope=Infinity,requiresFlat=false}={}){
  if(!blueprint||blueprint.version!==1||!Array.isArray(blueprint.buildings)||!blueprint.buildings.length)return {valid:false,errors:["INVALID_BLUEPRINT"]};
