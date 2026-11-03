@@ -21,9 +21,9 @@
 | 7 연구·스킬 | Partial | `factory.js`, `skill-runtime.js`, `skill-runtime.test.mjs` | 18 연구 노드와 선행 DAG, 5 분야·20 스킬 노드, 고유 마일스톤 ClaimID, 총 15포인트 상한, 선행 조건·중복 구매 검증 | 스킬의 모든 효과가 실제 서브시스템에 연결된 것은 아님. 현재 스캐너 거리·채굴 속도·창고/버퍼 자금비 일부만 적용. 나머지 효과는 해당 시스템 구현 후 연결 필요 |
 | 8 건설·공장 상호작용 | Partial | `factory.js`, `terrain-system.js`, `world3d.js` | 평탄화/기초, 배치 비용·연구/지형 조건, 적응형 컨베이어, 시설 철거 | 포트 연결 미리보기, Blueprint, 멀티타일 footprint·건설 트랜잭션/환불 중복 검증 미완 |
 | 9 경제·포장·배송 | Partial | `factory.js` | 수동/자동 시장 판매, 생산 통계, 미션 자금 보상 | 계약/포장 단계, 배송 상태, Stack 제출 중복 차단, route risk, 운송 보험·배송 ledger 미구현 |
-| 10 도로늄 생산 체계 | Partial | `factory.js`, `world3d.js`, `game-data-validation.js` | 정식 ID 15종, 각 모델·레시피, 품질/순도/synthetic 메타데이터 및 synthetic 원료의 일부 반응로 투입 차단 | 15종 전부의 정식 데이터·검사·획득 경제·무한 생산 금지 전 과정 Acceptance Test 미완. 자연 도로늄 광맥은 현 정적 생성표에 없음 |
+| 10 도로늄 생산 체계 | Conflict | `factory.js`, `world3d.js`, `game-data-validation.js` | 기존 게임의 15개 변형 ID·모델·레시피, 품질/순도/synthetic 메타데이터 및 일부 synthetic 입력 차단 | 현재 ID 집합(`doronium_normal/blue/red/iron/orange/thermal/cold/black/clear/special/limited/crystal/resonant/prismatic/void`)이 B9의 정식 ID 집합(`ITEM_DORONUM_NORMAL/YELLOW/ULTRA/BLUE/RED/IRON/ORANGE/SLIGHTLY_RUSTED/RUSTED/TRANSLUCENT/THERMAL_CRYSTAL/COLD_CRYSTAL/BLACK/SPECIAL_EDITION/LIMITED_EDITION`)과 일치하지 않음. 외형/alias로 대체하지 말고 버전 migration + canonical model/recipe/metadata + 획득 경로를 먼저 완료해야 함. 자연 도로늄 광맥은 생성하지 않음 |
 | 11 스토리·ORBIT·퀘스트 | Partial | `factory.js`, `index.html` | 10개 메인 퀘스트, 5개 chapter label, 보상/대사/인트로/다음 임무 표시 | 사양의 Chapter 1–8/Act I–VI와 현재 5개 chapter 모델 대응 불완전. Lore Archive, 이벤트 기반 StoryRuntime, 컷신 skip/보상 ClaimID 전면 적용 미완 |
-| 12 Infinity Fusion / 엔딩 | Conflict | `factory.js`, `production-runtime.js` | 15종×100, Quality/Purity 90+, synthetic=false 사전 검사, 7단계 총 이상적 260초, 출력 1개, Relay 3+Core+Planet 조건 엔딩 | 사양 전력 목표(500~5000kW)와 현재 발전/소비 단위·단계 요구량(약 5~40 단위)이 불일치. 시작 시 재료 즉시 소비로 예약 취소/환불/실패 복구 미완 |
+| 12 Infinity Fusion / 엔딩 | Conflict | `factory.js`, `production-runtime.js`, `simulation-core.js` | 현재 변형 15종을 각 100개 요구하고 aggregate Quality/Purity/Synthetic 메타데이터를 사전 검사, 7단계 260초 표시, 출력 1개, Relay 3+Core+Planet 엔딩 조건 | B9/REQ-INFINITY의 정확한 15개 canonical ID가 현재 변형 ID와 다르며 각 Stack별 자격/manifest checksum 검사가 아님. 시작 시 `takeItem()`으로 15종 재료를 즉시 소비하고 active-job custody/rollback/recovery를 하지 않음. Stage power는 canonical 0.5–5.0MW와 불일치. FusionFailureProfile의 input outcome 및 resumable reservation/CompletionBuffer도 미완 |
 | 13 UI·아트·애니메이션·오디오·접근성 | Partial | `index.html`, `factory.css`, `world3d.js`, `factory.js` | Three.js 환경/기계/결정, 모바일 HUD, 모션 감소 설정, 이벤트 Tone | 40개 챕터별 음악 자산/믹싱, 전체 UI 키보드 포커스·스크린리더, 실제 고장/성공 애니메이션과 효과음 트리거 미완 |
 | 14 성능·안정성·출시 | Partial | `.github/workflows/doronium-factory-validation.yml`, `e2e/factory-smoke.mjs` | Node 정적 검사/단위 테스트, Playwright WebGL/모바일 에뮬레이션, 가상 1시간(36,000 fixed tick) 회귀, Three.js 청크/인스턴싱/적응형 품질 | CI/Pages 결과는 실제 실행 후 기록. 가상 1시간은 벽시계 60분 soak가 아님. 실제 모바일/저사양 PC/장시간 메모리 누수 테스트 미완 |
 
@@ -32,9 +32,10 @@
 1. **엔진** — 사용자가 웹게임 유지(A안)를 선택했다. Unity 프로젝트/씬/프리팹/빌드는 이번 구현 대상이 아니다. 해당 Gate는 브라우저 동등물로만 평가한다.
 2. **월드 크기** — 기존 월드 192×160 타일을 유지한다. 2048m×2048m로 무작정 바꾸면 기존 좌표, 건물, 지형, 세이브 호환성을 깨므로 버전이 있는 좌표 migration과 검증 없이 변경하지 않는다.
 3. **월드 광물** — 현재 `makeMineDeposits()` 정적 목록은 stone/copper/iron/coal/quartz/gold/diamond 계열이며 도로늄 Deposit ID는 없다. README에 남아 있던 “4·5층 자연 도로늄” 표현은 코드와 맞지 않아 정정한다.
-4. **Failure** — 위험 수식·RNG·event journal은 기반 코드다. 사양에서 요구한 실제 기계별 등급 분포 및 결과 데이터가 정의/검증되기 전까지 게임에서 무작위로 자원 손실을 일으키지 않는다.
-5. **Infinity 전력** — 사양 수치와 현재 전력 경제가 다르다. 단위와 발전기 용량을 일괄 수정하면 게임 전력 경제가 망가질 수 있으므로 Conflict로 표시하고 임의 변환하지 않는다.
-6. **보상** — 스킬 포인트는 시작 1 + 연구 Tier 1–7 각 1 + 기존 chapter 1–4 각 1 + 고유 탐험 마일스톤 3으로 합계 15를 상한으로 한다. 반복 생산/채굴은 포인트를 지급하지 않는다.
+4. **Canonical Doronum IDs** — 현재 기존 게임의 15개 변형 ID는 명세 B9의 15개 정식 ITEM_DORONUM ID와 다르다. 외형·표시 이름·alias로 Infinity 입력을 승인하지 않는다. ID migration과 정식 Recipe/Presentation/Physical profile 정합 전까지 Phase 10/12는 Conflict다.
+5. **Failure** — 위험 수식·RNG·event journal은 기반 코드다. 사양에서 요구한 실제 기계별 등급 분포 및 결과 데이터가 정의/검증되기 전까지 게임에서 무작위로 자원 손실을 일으키지 않는다.
+6. **Infinity 전력** — 사양 수치와 현재 전력 경제가 다르다. 단위와 발전기 용량을 일괄 수정하면 게임 전력 경제가 망가질 수 있으므로 Conflict로 표시하고 임의 변환하지 않는다.
+7. **보상** — 스킬 포인트는 시작 1 + 연구 Tier 1–7 각 1 + 기존 chapter 1–4 각 1 + 고유 탐험 마일스톤 3으로 합계 15를 상한으로 한다. 반복 생산/채굴은 포인트를 지급하지 않는다.
 
 ## CI에서 요구할 최소 Gate
 

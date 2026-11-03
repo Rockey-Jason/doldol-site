@@ -31,7 +31,7 @@
 - ItemStack split/merge uses a 5000-item stack ceiling. Recipe consumption uses reservations to avoid double spending.
 - Machine processing includes power ratio gating, temperature/pressure ramp and safety bands, condition wear and one-result completion buffer.
 - Failure hazard calculation uses reference duration and exposure time. Actual grade outcomes are deliberately not applied without validated profiles.
-- Main static data defines 15 Doronium variants, 18 research records, 23 building definitions, 10 main campaign quests and seven Infinity stages.
+- Main static data defines 15 legacy Doronium variants, 18 research records, 23 building definitions, 10 main campaign quests and seven Infinity stages. The 15 legacy variant IDs do **not** match the exact B9 canonical Infinity manifest; see `SPEC_GAP_MATRIX.md`.
 - Current mine deposit list contains conventional mineral types (stone/copper/iron/coal/quartz/gold/diamond); it has no natural Doronium entries. Older prose claiming natural Doronium veins was incorrect.
 - Local save key: `doronium_factory_infinite_industry_local_v1`; account suffix remains user-specific.
 - Supabase table/key remain `dori_cloud_storage` / `doronium_factory_infinite_industry_v1`.
