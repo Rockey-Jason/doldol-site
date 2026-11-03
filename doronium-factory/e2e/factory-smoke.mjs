@@ -182,6 +182,18 @@ try {
   assert.deepEqual(blueprintResult.buildings.slice(-2).map(b => [b.x, b.y]), [[20, 20], [20, 21]], "A 90-degree rotation must rotate the full blueprint layout");
   assert.equal(blueprintResult.money, 999976, "Blueprint money must be charged once for the complete transaction");
 
+  const powerSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.setupPowerTopologyTest());
+  assert.equal(powerSetup.near.ratio, 1, "A smelter connected to the solar generator through cables must receive full power");
+  assert.equal(powerSetup.far.ratio, 0, "A disconnected smelter must not receive power from another network");
+  assert.notEqual(
+    powerSetup.power.networks.find(n => n.nodeIDs.includes("P-SMELTER-1"))?.networkID,
+    powerSetup.power.networks.find(n => n.nodeIDs.includes("P-SMELTER-2"))?.networkID,
+    "Cable topology must create separate power network IDs"
+  );
+  const powerTick = await desktop.evaluate(() => window.__doroniumFactoryTest.powerTopologyTick());
+  assert.ok(powerTick.battery > 0.39 && powerTick.battery < 0.41, "The battery must charge by 0.4kJ during one 0.1-second tick at 4kW");
+  assert.equal(powerTick.far.ratio, 0, "A remote grid must remain isolated after a simulation tick");
+
   const synthetic = await desktop.evaluate(() => window.__doroniumFactoryTest.syntheticGuard());
   assert.equal(synthetic.status, "ERROR", "Reactor must reject synthetic Dori Meat");
   assert.equal(synthetic.remaining, 10, "Rejected synthetic inputs must not be consumed");
