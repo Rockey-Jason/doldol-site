@@ -9,7 +9,7 @@ import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commi
 import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, awardSkillPoints, unlockSkill, skillNodeStatus, calculateSkillBonuses, validateSkillTree, validateSkillState } from "./skill-runtime.js?v=1";
 import { createSaveEnvelope, decodeSave, readBestSave, restoreSaveCandidate, validateSaveEnvelope, writeSaveEnvelope } from "./save-store.js?v=1";
 import { writeCloudSave } from "./cloud-save-runtime.js?v=1";
-import { beginConstruction, commitConstruction, footprintCells, validateConstructionFootprint, createBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
+import { beginConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=1";
 let createClient = null;
 
@@ -410,7 +410,7 @@ const BUILDING_FOOTPRINTS=Object.freeze({
  reactor:{width:3,height:3},variantLab:{width:3,height:3},cooling:{width:2,height:2},fusion:{width:4,height:4},relay:{width:2,height:2},core:{width:3,height:3}
 });
 function getBuildingFootprint(type){return BUILDING_FOOTPRINTS[type]||{width:1,height:1}}
-function buildingFootprintCells(b){const f=b.footprint||getBuildingFootprint(b.type);return footprintCells({x:b.x,y:b.y,width:f.width,height:f.height,rotation:b.footprintRotation??b.dir??0})}
+function buildingFootprintCells(b){const f=b.footprint||getBuildingFootprint(b.type);return footprintCells({x:b.x,y:b.y,width:f.width,height:f.height,rotation:b.footprintRotation??0})}
 function buildingOccupiesCell(x,y){
  for(const b of S.buildings){const cells=buildingFootprintCells(b);if(cells.some(p=>p.x===x&&p.y===y))return true}
  return false;
@@ -449,7 +449,7 @@ function placeBuilding(type,x,y){
   built={uid,type,x,y,dir:1,footprint:{...footprint},footprintRotation:rotation,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:1,status:"IDLE",autoFeed:true,variant:"doronium_blue",temp:25,pressure:0,fuelTimer:0,moveTimer:0};
   built.uid=uid;state.buildings.push(built);return {uid};
  });
- if(!committed.ok){toast("건설 트랜잭션을 커밋하지 못했습니다. 자금과 재료는 보존했습니다.","warn");return false}
+ if(!committed.ok){cancelConstruction(S,transactionID);toast("건설 트랜잭션을 커밋하지 못했습니다. 자금과 재료는 보존했습니다.","warn");return false}
  syncLegacyInventory(S);
  markSceneDirty();S.stats.built[type]=(S.stats.built[type]||0)+1;
  if(type==="relay"){const index=S.sites.relay.findIndex(p=>p.x===x&&p.y===y);if(index>=0)S.relaySites[index]=true}
