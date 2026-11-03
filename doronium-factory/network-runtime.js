@@ -12,11 +12,8 @@ export function solvePowerNetworks({nodes=[],edges=[],deltaSeconds=1}={}){
  for(let i=0;i<groups.length;i++){
   const ids=groups[i],members=ids.map(id=>byID.get(id)),generators=members.reduce((n,x)=>n+Math.max(0,finite(x.generationKW)),0);
   let available=generators,storage=0;
-  for(const b of members.filter(x=>x.type==="BATTERY").sort((a,b)=>finite(b.priority)-finite(a.priority)||String(a.id).localeCompare(String(b.id)))){
-   const maxOut=Math.max(0,finite(b.maxDischargeKW)),energy=Math.max(0,finite(b.energyKJ));
-   const out=Math.min(maxOut,energy/Math.max(.001,finite(deltaSeconds,1)));
-   storage+=out;available+=out;b._plannedDischargeKJ=out*Math.max(0,finite(deltaSeconds,1));
-  }
+  const batteries=members.filter(x=>x.type==="BATTERY").sort((a,b)=>finite(b.priority)-finite(a.priority)||String(a.id).localeCompare(String(b.id)));
+  for(const b of batteries){const maxOut=Math.max(0,finite(b.maxDischargeKW)),energy=Math.max(0,finite(b.energyKJ));const out=Math.min(maxOut,energy/Math.max(.001,finite(deltaSeconds,1)));storage+=out;available+=out;}
   const consumers=members.filter(x=>x.type==="CONSUMER").sort((a,b)=>finite(b.priority)-finite(a.priority)||String(a.id).localeCompare(String(b.id)));
   let remaining=available,allocated=0;
   const allocations=[];
@@ -26,7 +23,8 @@ export function solvePowerNetworks({nodes=[],edges=[],deltaSeconds=1}={}){
    const ratio=demand===0?1:delivered/demand;
    allocations.push({id:String(c.id),demandKW:demand,deliveredKW:delivered,ratio,status:ratio>=1?"RUNNING":ratio>=.8?"BROWNOUT_RUNNING":"PAUSED_POWER"});
   }
-  for(const b of members.filter(x=>x.type==="BATTERY")){const out=Math.min(Math.max(0,finite(b.maxDischargeKW)),Math.max(0,finite(b.energyKJ))/Math.max(.001,finite(deltaSeconds,1)));b.energyKJ=Math.max(0,finite(b.energyKJ)-out*Math.max(0,finite(deltaSeconds,1)))}
+  let storageUsed=Math.max(0,allocated-generators);
+  for(const b of batteries){if(storageUsed<=0)break;const dt=Math.max(0,finite(deltaSeconds,1)),out=Math.min(storageUsed,Math.max(0,finite(b.maxDischargeKW)),Math.max(0,finite(b.energyKJ))/Math.max(.001,dt));b.energyKJ=Math.max(0,finite(b.energyKJ)-out*dt);storageUsed-=out;}
   results.push({networkID:"POWER-"+(i+1),nodeIDs:ids,generationKW:generators,storageDischargeKW:storage,availableKW:available,allocatedKW:allocated,allocations});
  }
  return results;
