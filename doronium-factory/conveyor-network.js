@@ -58,13 +58,13 @@ function isDestinationAvailable(segment,occupancy,arrivals){
  if(segment.type==="sink")return true;
  return (occupancy.get(segment.id)||0)+(arrivals.get(segment.id)||0)<segment.capacity;
 }
-function chooseOutput(segment,parcel,state,segments,occupied,arrivals){
+function chooseOutput(segment,parcel,state,segments,occupancy,arrivals){
  const outputs=(segment.outputs||[]).map(id=>segments.get(id)).filter(Boolean);
  if(segment.type==="sorter"){
   const rules=Array.isArray(segment.rules)?segment.rules:[];
   const matched=rules.find(rule=>routeMatches(rule,parcel));
-  if(matched){const target=segments.get(matched.outputID);return isDestinationAvailable(target,occupied,arrivals)?target:null;}
-  if(segment.defaultOutputID){const target=segments.get(segment.defaultOutputID);return isDestinationAvailable(target,occupied,arrivals)?target:null;}
+  if(matched){const target=segments.get(matched.outputID);return isDestinationAvailable(target,occupancy,arrivals)?target:null;}
+  if(segment.defaultOutputID){const target=segments.get(segment.defaultOutputID);return isDestinationAvailable(target,occupancy,arrivals)?target:null;}
  }
  if(segment.type==="sink"){
   return {id:"__SINK__",type:"sink"};
@@ -109,7 +109,7 @@ export function advanceConveyorTick(state,{tick=0,maxMoves=10000}={}){
   if(plans.length>=maxMoves)break;
   const source=segments.get(parcel.segmentID);
   if(!source||source.type==="sink"||source.type==="storage-port"&&source.accepting===true)continue;
-  const targetChoice=chooseOutput(source,parcel,state,segments,occupied,arrivals);
+  const targetChoice=chooseOutput(source,parcel,state,segments,occupancy,arrivals);
   if(!targetChoice){
    const nexts=(source.outputs||[]).filter(id=>segments.has(id));
    if(nexts.length){
