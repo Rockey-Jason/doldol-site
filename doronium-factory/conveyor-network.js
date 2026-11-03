@@ -77,11 +77,11 @@ function chooseOutput(segment,parcel,state,segments,occupancy,arrivals){
   for(let offset=0;offset<outputs.length;offset++){
    const index=(start+offset)%outputs.length;
    const target=outputs[index];
-   if(isDestinationAvailable(target,occupied,arrivals))return {target,nextCursor:index+1};
+   if(isDestinationAvailable(target,occupancy,arrivals))return {target,nextCursor:index+1};
   }
   return null;
  }
- for(const target of outputs)if(isDestinationAvailable(target,occupied,arrivals))return target;
+ for(const target of outputs)if(isDestinationAvailable(target,occupancy,arrivals))return target;
  return null;
 }
 function findDeadlocks(waitFor){
@@ -123,7 +123,7 @@ export function advanceConveyorTick(state,{tick=0,maxMoves=10000}={}){
    plans.push({parcel,source,target,sink:true});
    continue;
   }
-  if(!isDestinationAvailable(target,occupied,arrivals)){
+  if(!isDestinationAvailable(target,occupancy,arrivals)){
    blocked.push({stackID:parcel.stackID,segmentID:source.id,reason:"DESTINATION_FULL",targetID:target.id});
    waitFor.set(source.id,[target.id]);continue;
   }
