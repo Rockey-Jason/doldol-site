@@ -258,7 +258,7 @@ function ensureBuildingIndex(){
  const buildings=S.buildings||[];
  if(buildingIndexSource===buildings&&buildingIndexRevision===sceneRevision&&buildingIndexLength===buildings.length)return;
  buildingIndex.clear();
- for(const b of buildings)buildingIndex.set(surfaceKey(b.x,b.y),b);
+ for(const b of buildings)buildingIndex.set((b.layer==="mine"?"M"+Number(b.mineLevel||1)+":":"S:")+surfaceKey(b.x,b.y),b);
  buildingIndexSource=buildings;buildingIndexRevision=sceneRevision;buildingIndexLength=buildings.length;
 }
 function playTone(freq=520,duration=.08,kind="sine"){if(!S.settings.sound)return;try{soundCtx??=new AudioContext();const osc=soundCtx.createOscillator(),gain=soundCtx.createGain();osc.type=kind;osc.frequency.value=freq;gain.gain.setValueAtTime(.035,soundCtx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,soundCtx.currentTime+duration);osc.connect(gain);gain.connect(soundCtx.destination);osc.start();osc.stop(soundCtx.currentTime+duration)}catch{}}
@@ -272,7 +272,7 @@ function buildingMoneyCost(b){const discounted=["storage","warehouse"].includes(
 function canAfford(b){return S.money>=buildingMoneyCost(b)&&hasItems(b.materials)}
 function unlockOk(b){return !b.unlock||S.research.includes(b.unlock)}
 function buildingDef(id){return BUILDINGS.find(b=>b.id===id)}
-function buildingAt(x,y){ensureBuildingIndex();return buildingIndex.get(surfaceKey(x,y))||null}
+function buildingAt(x,y){ensureBuildingIndex();const key=(S.player.layer==="mine"?"M"+Number(S.player.mineLevel||1)+":":"S:")+surfaceKey(x,y);return buildingIndex.get(key)||null}
 function tileNode(x,y){return S.nodes[x+","+y]||null}
 function currentPower(){
  const daylight=(S.seconds%86400)/86400,sun=daylight>.25&&daylight<.78?1:.22,weather=weatherNow(),nodes=[],powerBuildings=[];
@@ -283,19 +283,19 @@ function currentPower(){
   else if(b.type==="battery")node={id:b.uid,type:"BATTERY",energyKJ:Math.max(0,Number(b.energyKJ)||0),capacityKJ:Number(def.capacityKJ)||120000,maxDischargeKW:Number(def.maxDischargeKW)||8,maxChargeKW:Number(def.maxChargeKW)||4,priority:80,buildingType:b.type};
   else if(b.type==="solar")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1),buildingType:b.type};
   else if(b.type==="wind")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05),buildingType:b.type};
-  else if(b.type==="coalgen")node={id:b.uid,type:"GENERATOR",generationKW:b.fuelTimer>0?18:0,buildingType:b.type};
+  else if(b.type==="coalgen"||b.type==="mineGen")node={id:b.uid,type:"GENERATOR",generationKW:b.fuelTimer>0?(b.type==="mineGen"?Number(def.gen)||12:18):0,buildingType:b.type};
   else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["pump","doriFarm"].includes(b.type)?45:20;node={id:b.uid,type:"CONSUMER",demandKW:b.type==="fusion"?(S.fusionJob?FUSION_STAGES[S.fusionJob.stage]?.power||40:4):def.power,priority,transmissionLoss:0,buildingType:b.type}}
-  if(node){nodes.push(node);powerBuildings.push(b)}
+  if(node){node.layer=b.layer||"surface";node.mineLevel=b.mineLevel||0;nodes.push(node);powerBuildings.push(b)}
  }
  const edges=[];
  if(S.powerTopologyEnabled){
   for(let i=0;i<powerBuildings.length;i++)for(let j=i+1;j<powerBuildings.length;j++){
    const a=powerBuildings[i],b=powerBuildings[j],distance=Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
-   if(distance===1&&(a.type==="powerCable"||b.type==="powerCable"))edges.push({id:"P:"+a.uid+":"+b.uid,from:String(a.uid),to:String(b.uid)});
+   if((a.layer||"surface")===(b.layer||"surface")&&(a.layer!=="mine"||Number(a.mineLevel||1)===Number(b.mineLevel||1))&&distance===1&&(a.type==="powerCable"||b.type==="powerCable"))edges.push({id:"P:"+a.uid+":"+b.uid,from:String(a.uid),to:String(b.uid)});
   }
  }else{
   // Preserve legacy shared-grid behavior until a player builds the first explicit cable.
-  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++)edges.push({id:"LEGACY:"+nodes[i].id+":"+nodes[j].id,from:String(nodes[i].id),to:String(nodes[j].id)});
+  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++)if(nodes[i].layer===nodes[j].layer&&(nodes[i].layer!=="mine"||Number(nodes[i].mineLevel)===Number(nodes[j].mineLevel)))edges.push({id:"LEGACY:"+nodes[i].id+":"+nodes[j].id,from:String(nodes[i].id),to:String(nodes[j].id)});
  }
  const networks=solvePowerNetworks({nodes,edges,deltaSeconds:STEP}),allocations={},batteryChanges=[];
  for(const network of networks){for(const item of network.allocations)allocations[item.id]=item;for(const change of network.batteryChanges||[])batteryChanges.push(change)}
@@ -317,7 +317,7 @@ function renderHud(){const p=currentPower();$("hud-money").textContent=short(S.m
  }
  document.querySelectorAll("[data-view-mode]").forEach(b=>b.classList.toggle("active",b.dataset.viewMode===S.player.viewMode));document.querySelectorAll("[data-tool]").forEach(b=>b.classList.toggle("active",b.dataset.tool===S.activeTool));if($("equipped-tool-label"))$("equipped-tool-label").textContent=S.activeTool==="axe"?"도끼 장착":"곡괭이 장착";
 }
-function renderBuildList(){const list=BUILDINGS.filter(b=>!["minerIron","minerCopper","minerCoal"].includes(b.id)&&(activeCategory==="all"||b.cat===activeCategory));$("build-list").innerHTML=list.map(b=>{const locked=!unlockOk(b),afford=canAfford(b);const material=Object.entries(b.materials||{}).map(([id,n])=>(RESOURCE[id]?.icon||"◆")+fmt(n)).join(" ");return '<button class="build-card '+(selectedBuild===b.id?"selected ":"")+(locked?"locked":"")+'" data-build="'+b.id+'"><div class="build-top"><span class="build-icon">'+b.icon+'</span><div style="min-width:0"><div class="build-name">'+b.name+'</div><div class="build-kind">'+({resource:"자원 생산",power:"전력 시설",process:"가공 설비",logistics:"물류 시설",advanced:"첨단 산업"})[b.cat]+'</div></div></div><div class="build-cost"><b>'+fmt(buildingMoneyCost(b))+' D</b><em>'+material+'</em></div>'+(locked?'<span class="build-lock-label">🔒 연구 필요</span>':"")+'</button>'}).join("");renderBuildInspector();renderBlueprints()}
+function renderBuildList(){const list=BUILDINGS.filter(b=>{const mineOnly=["minerIron","minerCopper","minerCoal","mineGen"].includes(b.id);return (S.player.layer==="mine"?mineOnly||b.id==="powerCable":!mineOnly)&&(activeCategory==="all"||b.cat===activeCategory)});$("build-list").innerHTML=list.map(b=>{const locked=!unlockOk(b),afford=canAfford(b);const material=Object.entries(b.materials||{}).map(([id,n])=>(RESOURCE[id]?.icon||"◆")+fmt(n)).join(" ");return '<button class="build-card '+(selectedBuild===b.id?"selected ":"")+(locked?"locked":"")+'" data-build="'+b.id+'"><div class="build-top"><span class="build-icon">'+b.icon+'</span><div style="min-width:0"><div class="build-name">'+b.name+'</div><div class="build-kind">'+({resource:"자원 생산",power:"전력 시설",process:"가공 설비",logistics:"물류 시설",advanced:"첨단 산업"})[b.cat]+'</div></div></div><div class="build-cost"><b>'+fmt(buildingMoneyCost(b))+' D</b><em>'+material+'</em></div>'+(locked?'<span class="build-lock-label">🔒 연구 필요</span>':"")+'</button>'}).join("");renderBuildInspector();renderBlueprints()}
 function renderBuildInspector(){const b=buildingDef(selectedBuild);const el=$("build-inspector");$("build-mode-dot").classList.toggle("build",!!b||!!activeBlueprintID);$("build-mode-text").textContent=activeBlueprintID?"설계도 배치 모드 · 회전 "+(activeBlueprintRotation*90)+"° / 기준 타일을 선택":b?"건설 모드 · "+b.name+" / 설치할 타일을 클릭":"선택 모드 · 시설을 선택하거나 자원을 채집하세요";if(!b){el.innerHTML='<div class="inspector-empty"><span>⌖</span><strong>건설 설비를 선택하세요</strong><p>시설을 선택하면 비용과 기능을 확인할 수 있습니다.</p></div>';return}const footprint=getBuildingFootprint(b.id),cost='<span>'+fmt(buildingMoneyCost(b))+' D</span>'+Object.entries(b.materials||{}).map(([id,n])=>'<span>'+RESOURCE[id].icon+" "+fmt(n)+" "+RESOURCE[id].name+"</span>").join("");el.innerHTML='<div class="inspector-title"><span class="build-icon">'+b.icon+'</span><div><strong>'+b.name+'</strong><small>'+b.desc+'</small></div></div><p class="inspector-desc">'+b.desc+'</p><div class="blueprint-footprint-note">설치 면적 · '+footprint.width+' × '+footprint.height+' 타일</div><div class="cost-line">'+cost+'</div><div class="inspector-actions"><button class="action-button" id="place-mode" '+(!canAfford(b)||!unlockOk(b)?"disabled":"")+'>설치할 위치 선택</button><button class="action-button secondary" id="cancel-build">취소</button></div>';$("place-mode").onclick=()=>{if(!canAfford(b)||!unlockOk(b)){toast("연구 또는 자원이 부족합니다.","warn");return}selectedBuild=b.id;renderBuildList();toast("월드에서 설치할 위치를 클릭하세요.")};$("cancel-build").onclick=()=>{selectedBuild=null;renderBuildList();drawWorld()}}
 function findContractShipment(contractID){
  const rows=(S.contractRuntime?.shipments||[]).filter(s=>s.contractID===contractID);
@@ -447,7 +447,7 @@ const BUILDING_FOOTPRINTS=Object.freeze({
 function getBuildingFootprint(type){return BUILDING_FOOTPRINTS[type]||{width:1,height:1}}
 function buildingFootprintCells(b){const f=b.footprint||getBuildingFootprint(b.type);return footprintCells({x:b.x,y:b.y,width:f.width,height:f.height,rotation:b.footprintRotation??0})}
 function buildingOccupiesCell(x,y){
- for(const b of S.buildings){const cells=buildingFootprintCells(b);if(cells.some(p=>p.x===x&&p.y===y))return true}
+ for(const b of S.buildings){if((S.player.layer==="mine")!==(b.layer==="mine"))continue;if(S.player.layer==="mine"&&Number(b.mineLevel||1)!==Number(S.player.mineLevel||1))continue;const cells=buildingFootprintCells(b);if(cells.some(p=>p.x===x&&p.y===y))return true}
  return false;
 }
 function escapeHTML(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
@@ -684,7 +684,7 @@ function installCore(b){if(!S.fusionDone||itemCount("infinity")<1){toast("인피
 function finishPlanetary(){if(!S.coreInstalled||!S.relaySites.every(Boolean)){toast("안정화 필수 조건을 충족하지 못했습니다.","warn");return}S.victory=true;S.questIndex=QUESTS.length;log("PLANETARY STABILIZATION COMPLETE","good");$("orbit-dialogue").textContent="“Energy network synchronization complete. Planetary instability: decreasing. Factory status: OPERATIONAL.”";markDirty();renderAll();showModal("PLANETARY STABILIZATION COMPLETE","<div class='ending-visual'>💠</div><h3>돌돌행성의 에너지 네트워크가 안정화되었습니다.</h3><p>공장 전체에 푸른 에너지 흐름이 연결되었습니다. 폐허에서 시작한 작은 산업 기지가 행성을 지키는 거대한 산업 네트워크로 성장했습니다.</p><p><b>DORONIUM FACTORY · INFINITE INDUSTRY</b><br>FINAL STATUS: OPERATIONAL</p>",[{label:"엔딩 보기",cls:"gold",action:closeModal}]);playTone(920,.5,"sine")}
 
 function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;
- if(b.type==="coalgen"){if(b.fuelTimer<=0){if(takeItem("coal",1)){b.fuelTimer=24;log("화력 발전소 석탄 투입")}else b.status="NO_INPUT"}else{b.fuelTimer=Math.max(0,b.fuelTimer-dt);b.status="RUNNING"}return}
+ if(b.type==="coalgen"||b.type==="mineGen"){if(b.fuelTimer<=0){if(takeItem("coal",1)){b.fuelTimer=24;log((b.type==="mineGen"?"광산 지열 발전기":"화력 발전소")+" 석탄 투입")}else b.status="NO_INPUT"}else{b.fuelTimer=Math.max(0,b.fuelTimer-dt);b.status="RUNNING"}return}
  if(b.type==="solar"||b.type==="wind"||b.type==="cooling"||b.type==="storage"||b.type==="warehouse"||b.type==="market"||b.type==="battery"||b.type==="transformer"||b.type==="powerCable"||isBeltType(b.type)||b.type==="relay"||b.type==="core"||b.type==="lab")return;
  const ratio=power.allocations?.[String(b.uid)]?.ratio??((d.power||0)>0?0:1);
  if(b.output){b.status="PAUSED_OUTPUT";return}
@@ -771,7 +771,7 @@ function tick(dt){
  const context={state:S,dt,power:null};
  runCanonicalTick(context,{
   STATE_READ(){S.seconds+=dt;S.tick++;if(!E2E_MODE)updateSurvival(dt);ensureCooldownIndex();for(const key of activeCooldownKeys){const node=S.nodes?.[key];if(!node||!(node.cooldown>0)){activeCooldownKeys.delete(key);continue}node.cooldown=Math.max(0,node.cooldown-dt);if(node.cooldown<=0)activeCooldownKeys.delete(key)}},
-  PRODUCTION_STATE(){for(const b of S.buildings){if(b.type==="coalgen"&&b.fuelTimer<=0&&itemCount("coal")>0){takeItem("coal",1);b.fuelTimer=24;b.status="RUNNING"}}},
+  PRODUCTION_STATE(){for(const b of S.buildings){if((b.type==="coalgen"||b.type==="mineGen")&&b.fuelTimer<=0&&itemCount("coal")>0){takeItem("coal",1);b.fuelTimer=24;b.status="RUNNING"}}},
   POWER_RESOLVE(){context.power=currentPower()},
   PRODUCTION_PROGRESS(){for(const b of S.buildings)tickBuilding(b,dt,context.power||currentPower())},
   POWER_STABILITY(){context.power=currentPower();settlePowerStorage(context.power)},
