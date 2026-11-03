@@ -448,7 +448,7 @@ function consumeRecipe(b,r){if(!canConsumeRecipe(b,r))return null;const inventor
 function createOutput(b,id,qty,meta){if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(RESOURCE[id].name+" 생산 · "+fmt(qty)+"개");markDirty();return true}
 const BUILDING_FOOTPRINTS=Object.freeze({
  storage:{width:2,height:2},warehouse:{width:3,height:2},smelter:{width:2,height:2},wiremill:{width:2,height:2},assembler:{width:2,height:2},lab:{width:2,height:2},
- reactor:{width:3,height:3},variantLab:{width:3,height:3},cooling:{width:2,height:2},fluidTank:{width:2,height:2},fusion:{width:4,height:4},relay:{width:2,height:2},core:{width:3,height:3},transformer:{width:2,height:2},battery:{width:2,height:2},fluidTank:{width:2,height:2}
+ reactor:{width:3,height:3},variantLab:{width:3,height:3},cooling:{width:2,height:2},fluidTank:{width:2,height:2},fusion:{width:4,height:4},relay:{width:2,height:2},core:{width:3,height:3},transformer:{width:2,height:2},battery:{width:2,height:2}
 });
 function getBuildingFootprint(type){return BUILDING_FOOTPRINTS[type]||{width:1,height:1}}
 function buildingFootprintCells(b){const f=b.footprint||getBuildingFootprint(b.type);return footprintCells({x:b.x,y:b.y,width:f.width,height:f.height,rotation:b.footprintRotation??0})}
