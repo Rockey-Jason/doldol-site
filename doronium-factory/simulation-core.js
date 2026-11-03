@@ -15,7 +15,7 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number(v)||0));
 const clone=value=>typeof structuredClone==="function"?structuredClone(value):JSON.parse(JSON.stringify(value));
 
 export function createRuntimeState(){
-  return {schemaVersion:4,nextStackId:1,nextReservationId:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
+  return {schemaVersion:4,nextStackId:1,nextReservationId:1,nextEntityId:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
 }
 function normalizeStack(stack){
   return {runtimeID:String(stack.runtimeID),itemID:String(stack.itemID),quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
@@ -40,6 +40,7 @@ export function ensureItemStacks(state){
   if(!Number.isSafeInteger(rt.failureRngIndex)||rt.failureRngIndex<0)rt.failureRngIndex=0;
   if(!Number.isSafeInteger(rt.nextFailureEventId)||rt.nextFailureEventId<1)rt.nextFailureEventId=1;
   rt.nextReservationId=Math.max(1,Math.floor(Number(rt.nextReservationId)||1));
+  rt.nextEntityId=Math.max(1,Math.floor(Number(rt.nextEntityId)||1));
   // One-time migration from the legacy item-count map. Never replace existing stacks.
   if(!rt.legacyInventoryMigrated){
     for(const [itemID,quantity] of Object.entries(state.inventory||{})){
@@ -72,12 +73,12 @@ function reservedByStack(rt,excludeReservationID=null){
   }
   return totals;
 }
-export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-transaction"){
+export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-transaction",predicate=null){
   const rt=ensureItemStacks(state),qty=Math.floor(Number(quantity)||0);
   if(!itemID||qty<=0)return null;
   const reserved=reservedByStack(rt);let remaining=qty;const allocations=[];
   for(const stack of rt.itemStacks){
-    if(stack.itemID!==itemID||remaining<=0)continue;
+    if(stack.itemID!==itemID||remaining<=0||(typeof predicate==="function"&&!predicate(stack)))continue;
     const free=Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0));
     const take=Math.min(free,remaining);if(take>0){allocations.push({stackID:stack.runtimeID,quantity:take});remaining-=take}
   }
@@ -86,11 +87,11 @@ export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-trans
   rt.reservations[reservationID]={reservationID,ownerID:String(ownerID),itemID:String(itemID),quantity:qty,allocations,status:"reserved",createdTick:Math.max(0,Number(state.tick)||0)};
   return reservationID;
 }
-export function reserveItemBatch(state,requirements,ownerID="inventory-transaction"){
+export function reserveItemBatch(state,requirements,ownerID="inventory-transaction",predicate=null){
   const created=[];
   for(const [itemID,quantity] of Object.entries(requirements||{})){
     const qty=Math.floor(Number(quantity)||0);if(qty<=0)continue;
-    const id=reserveItemStacks(state,itemID,qty,ownerID);
+    const id=reserveItemStacks(state,itemID,qty,ownerID,predicate);
     if(!id){for(const prior of created)releaseItemReservation(state,prior);return null}
     created.push(id);
   }
@@ -172,6 +173,7 @@ export function validateRuntimeState(state){
   }
   const maxID=Math.max(0,...[...ids].map(id=>Number(id.replace(/^IS-/,""))||0));
   if(rt.nextStackId<=maxID)errors.push("stack-id-counter-not-advanced");
+  if(!Number.isSafeInteger(rt.nextEntityId)||rt.nextEntityId<1)errors.push("invalid-entity-id-counter");
   if(!Number.isSafeInteger(rt.failureRngState)||rt.failureRngState<=0)errors.push("invalid-failure-rng-state");
   if(!Number.isSafeInteger(rt.failureRngIndex)||rt.failureRngIndex<0)errors.push("invalid-failure-rng-index");
   if(!Number.isSafeInteger(rt.nextFailureEventId)||rt.nextFailureEventId<1)errors.push("invalid-failure-event-counter");
@@ -180,9 +182,19 @@ export function validateRuntimeState(state){
   if(rt.nextFailureEventId<=maxFailureID)errors.push("failure-event-counter-not-advanced");
   return {valid:errors.length===0,errors,stackCount:rt.itemStacks.length,reservationCount:Object.values(rt.reservations).filter(r=>r.status==="reserved").length,failureEventCount:rt.failureEvents.length};
 }
-export function availableItemCount(state,itemID){
+export function availableItemCountWhere(state,itemID,predicate=()=>true){
   const rt=ensureItemStacks(state),reserved=reservedByStack(rt);
-  return rt.itemStacks.filter(stack=>stack.itemID===itemID).reduce((total,stack)=>total+Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0)),0);
+  return rt.itemStacks.filter(stack=>stack.itemID===itemID&&(!predicate||predicate(stack)))
+    .reduce((total,stack)=>total+Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0)),0);
+}
+export function availableItemCount(state,itemID){return availableItemCountWhere(state,itemID);}
+
+/** Allocate a persisted, monotonic entity ID. Existing legacy building IDs are preserved. */
+export function allocateEntityID(state,prefix="ENT"){
+  const rt=ensureItemStacks(state),used=new Set((state.buildings||[]).map(building=>String(building?.uid||"")));
+  let id;
+  do{id=String(prefix)+"-"+rt.nextEntityId++;}while(used.has(id));
+  return id;
 }
 export function stackTotals(state){
   const totals={};
