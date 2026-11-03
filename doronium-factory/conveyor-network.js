@@ -49,8 +49,8 @@ function routeMatches(rule,parcel){
  return true;
 }
 function isDestinationAvailable(segment,occupied,arrivals){
- return !!segment&&segment.type!=="source"&&segment.type!=="sink"&&
-  occupied.has(segment.id)===false&&arrivals.has(segment.id)===false;
+ return !!segment&&segment.type!=="source"&&
+  (segment.type==="sink"||(occupied.has(segment.id)===false&&arrivals.has(segment.id)===false));
 }
 function chooseOutput(segment,parcel,state,segments,occupied,arrivals){
  const outputs=(segment.outputs||[]).map(id=>segments.get(id)).filter(Boolean);
@@ -114,7 +114,7 @@ export function advanceConveyorTick(state,{tick=0,maxMoves=10000}={}){
    continue;
   }
   const target=targetChoice.target||targetChoice;
-  if(target.id==="__SINK__"){
+  if(target.id==="__SINK__"||target.type==="sink"){
    plans.push({parcel,source,target,sink:true});
    continue;
   }
