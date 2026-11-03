@@ -1,5 +1,5 @@
 import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=19";
-import { createRuntimeState, ensureItemStacks, addItemStack, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=5";
+import { createRuntimeState, ensureItemStacks, addItemStack, syncLegacyInventory, availableItemCount, availableItemCountWhere, reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, allocateEntityID, runCanonicalTick, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=6";
 import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=3";
 import { validateGameData } from "./game-data-validation.js?v=3";
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
@@ -11,7 +11,7 @@ let createClient = null;
    Standalone Canvas game, deterministic map seed, fixed-step simulation,
    persistent browser save + authenticated per-user Supabase cloud save.
 */
-const E2E_MODE = new URLSearchParams(location.search).has("e2e");
+const E2E_MODE = false; // Enabled only in the isolated CI test copy; never by a public URL parameter.
 const SUPABASE_URL = "https://scttowfhygcpdirrekqm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
 const CLOUD_KEY = "doronium_factory_infinite_industry_v1";
@@ -164,8 +164,12 @@ function quality(s,id){return s.meta?.[id]?.quality??(s.inventory?.[id]>0?90:0)}
 function purity(s,id){return s.meta?.[id]?.purity??(s.inventory?.[id]>0?90:0)}
 function synthetic(s,id){return s.meta?.[id]?.synthetic??false}
 function seedRand(seed){let x=seed>>>0;return()=>{x+=0x6D2B79F5;let t=x;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
-function makeWorld(){
- const rng=seedRand(827142),nodes={};
+function createWorldSeed(){
+ const buffer=new Uint32Array(1);
+ try{crypto.getRandomValues(buffer);return buffer[0]||0x6d2b79f5}catch{return ((Date.now()^Math.floor(performance.now()*1000))>>>0)||0x6d2b79f5}
+}
+function makeWorld(seed=827142){
+ const rng=seedRand(seed),nodes={};
  const put=(x,y,type,amount=80)=>{nodes[x+","+y]={type,amount,max:amount,cooldown:0,seed:Math.floor(rng()*1e9)}};
  for(let x=42;x<=54;x++)for(let y=44;y<=56;y++)if(rng()>.42)put(x,y,"wood",90);
  for(let x=58;x<=69;x++)for(let y=47;y<=60;y++)if(rng()>.55)put(x,y,"wood",90);
@@ -193,8 +197,9 @@ function makeWorld(){
  return {nodes,sites,mineDeposits:makeMineDeposits()};
 }
 function freshState(){
- const world=makeWorld();
- const state={runtime:createRuntimeState(),version:1,worldVersion:4,seed:827142,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},money:1100,inventory:{wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
+ const seed=E2E_MODE?827142:createWorldSeed();
+ const world=makeWorld(seed);
+ const state={runtime:createRuntimeState(),version:1,worldVersion:4,seed,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},money:1100,inventory:{wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
  ensureItemStacks(state);return state;
 }
 let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, frameRenderAccumulator=0, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
@@ -334,7 +339,36 @@ function recipeFor(b){const d=buildingDef(b.type);if(d?.recipe)return RECIPES[d.
 function canConsumeRecipe(b,r){return Object.entries(r.inputs).every(([id,n])=>(b.input?.[id]||0)+availableItemCount(S,id)>=n)}
 function consumeRecipe(b,r){if(!canConsumeRecipe(b,r))return null;const inventoryNeed={};for(const[id,n]of Object.entries(r.inputs)){const buffered=Math.min(n,b.input?.[id]||0),remaining=n-buffered;if(remaining>0)inventoryNeed[id]=remaining}const reservations=reserveItemBatch(S,inventoryNeed,"recipe:"+String(b.uid||b.type));if(!reservations)return null;const committed=reservations.length?commitItemReservations(S,reservations):[];if(!committed){for(const id of reservations)releaseItemReservation(S,id);return null}let qsum=0,psum=0,weight=0,hasSynthetic=false;const absorb=m=>{qsum+=m.quality*m.quantity;psum+=m.purity*m.quantity;weight+=m.quantity;hasSynthetic=hasSynthetic||m.synthetic};for(const[id,n]of Object.entries(r.inputs)){const fromBuffer=Math.min(n,b.input?.[id]||0);if(fromBuffer>0){const m=b.inputMeta?.[id]||{quality:90,purity:90,synthetic:false};absorb({...m,quantity:fromBuffer});b.input[id]-=fromBuffer;if(b.input[id]<=0){delete b.input[id];delete b.inputMeta[id]}}}for(const stack of committed)absorb(stack);syncLegacyInventory(S);return {quality:weight?qsum/weight:90,purity:weight?psum/weight:90,synthetic:hasSynthetic}}
 function createOutput(b,id,qty,meta){if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(RESOURCE[id].name+" 생산 · "+fmt(qty)+"개");markDirty();return true}
-function placeBuilding(type,x,y){const d=buildingDef(type);if(!d)return false;if(S.player.layer==="mine"){toast("지하 광산에서는 공장 시설을 설치할 수 없습니다.","warn");return false}if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}if(buildingAt(x,y)){toast("이미 시설이 설치된 타일입니다.","warn");return false}if(type!=="beltAdaptive"&&!["relay","core","pump"].includes(type)&&!hasFoundation(x,y)){toast("기계와 물류 시설은 먼저 땅을 평탄화하고 기초 타일을 설치해야 합니다.","warn");return false}const node=tileNode(x,y);if(type==="pump"&&node?.type!=="water"){toast("정수 펌프는 수원지 위에 설치해야 합니다.","warn");return false}if(["minerIron","minerCopper","minerCoal"].includes(type)){toast("광물은 지하 광산에서 곡괭이로 직접 채굴하세요.","warn");return false}if(type==="doriFarm"&&node?.type==="dori"){toast("재배기는 나무 바로 옆의 평탄한 부지에 설치하세요.","warn");return false}if(type==="doriFarm"&&!findNearbyDoriNode(x,y)){toast("돌이 나무 재배기는 돌이 고기 나무 주변에 설치해야 합니다.","warn");return false}if(type==="relay"&&node?.type!=="relaySite"){toast("행성 에너지 릴레이 설치 지점을 찾아야 합니다.","warn");return false}if(type==="core"&&node?.type!=="coreSite"){toast("중앙 안정화 코어는 지정된 코어 부지에 설치해야 합니다.","warn");return false}if(node&&["water","wood","mineEntrance","dori","relaySite","coreSite"].includes(node.type)&&!["pump","doriFarm","relay","core"].includes(type)){toast("이 타일에는 해당 시설을 설치할 수 없습니다.","warn");return false}if(!unlockOk(d)){toast("필요한 기술 연구를 먼저 완료하세요.","warn");return false}if(!canAfford(d)){toast("건설 자원이 부족합니다.","warn");return false}S.money-=buildingMoneyCost(d);takeItems(d.materials);const b={uid:"B"+(++S.tick)+"-"+Math.floor(Math.random()*99999),type,x,y,dir:1,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:1,status:"IDLE",autoFeed:true,variant:"doronium_blue",temp:25,pressure:0,fuelTimer:0,moveTimer:0};S.buildings.push(b);markSceneDirty();S.stats.built[type]=(S.stats.built[type]||0)+1;if(type==="relay"){const index=S.sites.relay.findIndex(p=>p.x===x&&p.y===y);if(index>=0)S.relaySites[index]=true}if(type==="core")S.corePlaced=true;selectedBuilding=b.uid;selectedBuild=null;log(d.name+" 건설 완료");toast(d.name+" 설치 완료");playTone(580,.1,"triangle");markDirty();renderAll();questCheck();return true}
+function placeBuilding(type,x,y){
+ const d=buildingDef(type);if(!d)return false;
+ if(S.player.layer==="mine"){toast("지하 광산에서는 공장 시설을 설치할 수 없습니다.","warn");return false}
+ if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}
+ if(buildingAt(x,y)){toast("이미 시설이 설치된 타일입니다.","warn");return false}
+ if(type!=="beltAdaptive"&&![ "relay","core","pump" ].includes(type)&&!hasFoundation(x,y)){toast("기계와 물류 시설은 먼저 땅을 평탄화하고 기초 타일을 설치해야 합니다.","warn");return false}
+ const node=tileNode(x,y);
+ if(type==="pump"&&node?.type!=="water"){toast("정수 펌프는 수원지 위에 설치해야 합니다.","warn");return false}
+ if(["minerIron","minerCopper","minerCoal"].includes(type)){toast("광물은 지하 광산에서 곡괭이로 직접 채굴하세요.","warn");return false}
+ if(type==="doriFarm"&&node?.type==="dori"){toast("재배기는 나무 바로 옆의 평탄한 부지에 설치하세요.","warn");return false}
+ if(type==="doriFarm"&&!findNearbyDoriNode(x,y)){toast("돌이 나무 재배기는 돌이 고기 나무 주변에 설치해야 합니다.","warn");return false}
+ if(type==="relay"&&node?.type!=="relaySite"){toast("행성 에너지 릴레이 설치 지점을 찾아야 합니다.","warn");return false}
+ if(type==="core"&&node?.type!=="coreSite"){toast("중앙 안정화 코어는 지정된 코어 부지에 설치해야 합니다.","warn");return false}
+ if(node&&["water","wood","mineEntrance","dori","relaySite","coreSite"].includes(node.type)&&!["pump","doriFarm","relay","core"].includes(type)){toast("이 타일에는 해당 시설을 설치할 수 없습니다.","warn");return false}
+ if(!unlockOk(d)){toast("필요한 기술 연구를 먼저 완료하세요.","warn");return false}
+ const moneyCost=buildingMoneyCost(d);
+ if(!Number.isSafeInteger(moneyCost)||moneyCost<0||!Number.isFinite(S.money)||S.money<moneyCost){toast("건설 자금이 부족합니다.","warn");return false}
+ // Reserve all materials first. No currency or world state changes until every item is secured.
+ const reservationIDs=reserveItemBatch(S,d.materials,"build:"+type+":"+S.tick);
+ if(!reservationIDs){toast("건설 재료가 부족하거나 다른 작업에 예약되어 있습니다.","warn");return false}
+ const consumed=commitItemReservations(S,reservationIDs);
+ if(!consumed){for(const id of reservationIDs)releaseItemReservation(S,id);toast("건설 거래를 안전하게 완료하지 못했습니다. 자원은 변경되지 않았습니다.","warn");return false}
+ S.money-=moneyCost;
+ syncLegacyInventory(S);
+ const b={uid:allocateEntityID(S,"BLDG"),type,x,y,dir:1,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:1,status:"IDLE",autoFeed:true,variant:"doronium_blue",temp:25,pressure:0,fuelTimer:0,moveTimer:0};
+ S.buildings.push(b);markSceneDirty();S.stats.built[type]=(S.stats.built[type]||0)+1;
+ if(type==="relay"){const index=S.sites.relay.findIndex(p=>p.x===x&&p.y===y);if(index>=0)S.relaySites[index]=true}
+ if(type==="core")S.corePlaced=true;
+ selectedBuilding=b.uid;selectedBuild=null;log(d.name+" 건설 완료");toast(d.name+" 설치 완료");playTone(580,.1,"triangle");markDirty();renderAll();questCheck();return true
+}
 function isWalkable(x,y){if(x<0||y<0||x>=WORLD_W||y>=WORLD_H||buildingAt(x,y))return false;if(S.player.layer==="mine")return mineTunnelAt(x,y);const node=tileNode(x,y);return !node||node.amount<=0}
 function findPlayerPath(startX,startY,goalX,goalY){if(goalX===startX&&goalY===startY)return [];if(!isWalkable(goalX,goalY))return null;const start=startX+","+startY,goal=goalX+","+goalY,queue=[{x:startX,y:startY}],came=new Map([[start,null]]);let found=false;for(let head=0;head<queue.length&&head<1200;head++){const p=queue[head];for(const d of DIRS){const x=p.x+d.x,y=p.y+d.y,key=x+","+y;if(came.has(key)||!isWalkable(x,y))continue;came.set(key,p.x+","+p.y);if(key===goal){found=true;break}queue.push({x,y})}if(found)break}if(!found)return null;const path=[];let key=goal;while(key!==start){const [x,y]=key.split(",").map(Number);path.push({x,y});key=came.get(key)}return path.reverse()}
 function movePlayerTo(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y};const path=findPlayerPath(origin.x,origin.y,x,y);if(path===null){toast("이동 경로가 막혀 있습니다.","warn");return false}playerMotion.path=playerMotion.path.concat(path);playerMotion.onArrive=onArrive;if(!playerMotion.path.length){playerMotion.moving=false;const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
@@ -465,8 +499,72 @@ function removeBuilding(b){markSceneDirty();const d=buildingDef(b.type);const re
 function chooseVariant(b){const choices=VARIANTS.filter(id=>id!=="doronium_normal");const body='<p>이 변환 연구로에서 제조할 결정 계열을 선택하세요. 레시피마다 원료와 처리 시간이 다릅니다.</p><select id="variant-select" class="modal-select">'+choices.map(id=>'<option value="'+id+'" '+(b.variant===id?"selected":"")+'>'+RESOURCE[id].name+'</option>').join("")+'</select>';showModal("결정 변환 레시피",body,[{label:"취소",cls:"secondary"},{label:"설정",cls:"primary",action:()=>{b.variant=$("variant-select").value;markDirty();renderMachineDetails();closeModal();toast("레시피 변경 완료")}}])}
 function startResearch(id){const r=RESEARCH.find(x=>x.id===id);if(!r||S.research.includes(id))return;if(!hasBuilding(S,"lab")){toast("먼저 기술 연구소를 건설하세요.","warn");return}if(r.requires&&!r.requires.every(v=>S.research.includes(v))){toast("선행 연구가 완료되지 않았습니다.","warn");return}if(S.activeResearch){toast("다른 연구가 이미 진행 중입니다.","warn");return}if(S.money<r.cost||!hasItems(r.need)){toast("연구 자원 또는 자금이 부족합니다.","warn");return}S.money-=r.cost;takeItems(r.need);S.activeResearch=id;S.researchProgress=0;log("연구 시작 · "+r.name);toast(r.name+" 연구를 시작합니다.");markDirty();renderResearch();renderHud()}
 function tickResearch(dt,ratio){if(!S.activeResearch)return;const r=RESEARCH.find(x=>x.id===S.activeResearch);if(!r){S.activeResearch=null;return}const labs=S.buildings.filter(b=>b.type==="lab").length;if(!labs)return;S.researchProgress+=dt*Math.max(.0,ratio)*Math.min(2,1+(labs-1)*.35)*(S.research.includes("automation")?1.15:1);if(S.researchProgress>=r.time){S.research.push(r.id);awardResearchTierSkillPoints();S.activeResearch=null;S.researchProgress=0;log("연구 완료 · "+r.name,"good");toast("기술 연구 완료 · "+r.name);$("orbit-dialogue").textContent="“"+r.name+" 연구 데이터가 연구소에 등록되었습니다.”";playTone(820,.22,"triangle");markDirty();renderResearch();renderBuildList();renderMissions();questCheck()}}
-function updateFusion(dt){if(!S.fusionJob)return;const b=S.buildings.find(x=>x.type==="fusion");if(!b){S.fusionJob=null;return}const stage=FUSION_STAGES[S.fusionJob.stage];if(!stage){S.fusionJob=null;return}const p=currentPower();b.temp+=(stage.temp-b.temp)*Math.min(1,dt*.045);b.pressure+=(stage.pressure-b.pressure)*Math.min(1,dt*.06);const tempOK=Math.abs(b.temp-stage.temp)<=Math.max(50,stage.temp*.1);const pressureOK=Math.abs(b.pressure-stage.pressure)<=Math.max(25,stage.pressure*.1);if(p.ratio>=.8&&p.gen>=stage.power&&tempOK&&pressureOK){S.fusionJob.progress+=dt*(p.ratio>=1?1:p.ratio);b.status="RUNNING"}else b.status=p.ratio<.8||p.gen<stage.power?"PAUSED_POWER":"CALIBRATING";if(S.fusionJob.progress>=stage.time){log("퓨전 단계 완료 · "+stage.name,"good");S.fusionJob.stage++;S.fusionJob.progress=0;if(S.fusionJob.stage>=FUSION_STAGES.length){S.fusionJob=null;S.fusionDone=true;addItem("infinity",1,{quality:100,purity:100,synthetic:false});log("인피니티 도로늄 결정화 성공 · 정확히 1개 출력","good");toast("인피니티 도로늄 제작 성공!", "");$("orbit-dialogue").textContent="“Infinity Doronum secured. Three stabilization relays are still required.”";showModal("INFINITY DORONUM 생성 완료","<p>7단계 결정화 공정이 완료되었습니다. 인피니티 도로늄 1개가 창고에 등록되었습니다.</p><p>이제 지정된 행성 에너지 노드 3곳에 릴레이를 설치하고 중앙 코어를 완성하세요.</p>",[{label:"계속 진행",cls:"primary",action:closeModal}]);}else toast("퓨전 "+(S.fusionJob.stage+1)+"/7 단계로 이동합니다.");markDirty();renderMissions()}}
-function startFusion(){if(S.fusionJob){toast("이미 퓨전이 진행 중입니다.");return}if(!S.buildings.some(b=>b.type==="fusion")){toast("인피니티 퓨전 설비가 필요합니다.","warn");return}if(!S.buildings.some(b=>b.type==="cooling")){toast("초전도 냉각탑을 먼저 건설하세요.","warn");return}const p=currentPower();if(p.gen<40||p.ratio<.8){toast("퓨전에 필요한 전력 40kW 이상을 확보하세요.","warn");return}const invalid=VARIANTS.filter(id=>itemCount(id)<100||quality(S,id)<90||purity(S,id)<90||synthetic(S,id));if(invalid.length){toast("재료 검증 실패 · "+invalid.map(id=>RESOURCE[id].name).slice(0,2).join(", ")+" 외 "+invalid.length+"종 부족","warn");return}showModal("인피니티 퓨전 시작","<p>15종 도로늄 각 100개, 총 1,500개가 공정에 예약됩니다.</p><p>각 재료의 품질과 순도는 90 이상이며 비합성 원료여야 합니다. 7단계 이상적 가동 시간은 260초입니다. 시작 후 입력 재료는 공정에 귀속됩니다.</p>",[{label:"취소",cls:"secondary"},{label:"퓨전 시작",cls:"gold",action:()=>{for(const id of VARIANTS)takeItem(id,100);S.fusionJob={stage:0,progress:0,startedAt:S.seconds};const b=S.buildings.find(x=>x.type==="fusion");if(b){b.temp=25;b.pressure=0}log("인피니티 퓨전 시작 · 재료 1,500개 예약");toast("INFINITY FUSION STARTED");closeModal();markDirty();renderFactory()}}])}
+function cancelFusionJob(reason){
+ const job=S.fusionJob;if(!job)return false;
+ // New jobs hold material reservations until the final stage. Releasing them restores availability exactly.
+ if(!job.materialsConsumed&&!job.legacyConsumedMaterials){
+  for(const id of Array.isArray(job.reservationIDs)?job.reservationIDs:[])releaseItemReservation(S,id);
+  syncLegacyInventory(S);
+  S.lastFusionJob={jobID:job.jobID||null,status:"CANCELLED",reason:String(reason),endedAt:S.seconds,stage:Number(job.stage)||0};
+  S.fusionJob=null;
+  log("인피니티 퓨전 취소 · 예약 원료 반환 ("+reason+")","warn");
+  markDirty();renderFactory();return true;
+ }
+ // Old saves consumed their inputs before the job was saved. Keep that job resumable rather than inventing a refund.
+ job.status="WAITING_FOR_MACHINE";job.errorCode=String(reason);markDirty();return false;
+}
+function updateFusion(dt){
+ const job=S.fusionJob;if(!job)return;
+ const b=S.buildings.find(x=>x.type==="fusion");
+ if(!b){cancelFusionJob("FUSION_MACHINE_MISSING");return}
+ if(Number(b.condition??100)<=0||b.status==="BROKEN"){cancelFusionJob("FUSION_MACHINE_BROKEN");return}
+ const stage=FUSION_STAGES[job.stage];
+ if(!stage){cancelFusionJob("FUSION_STAGE_INVALID");return}
+ const p=currentPower();
+ b.temp+=(stage.temp-b.temp)*Math.min(1,dt*.045);b.pressure+=(stage.pressure-b.pressure)*Math.min(1,dt*.06);
+ const tempOK=Math.abs(b.temp-stage.temp)<=Math.max(50,stage.temp*.1),pressureOK=Math.abs(b.pressure-stage.pressure)<=Math.max(25,stage.pressure*.1);
+ if(p.ratio>=.8&&p.gen>=stage.power&&tempOK&&pressureOK){job.progress+=dt*(p.ratio>=1?1:p.ratio);job.status="RUNNING";b.status="RUNNING"}
+ else{job.status=p.ratio<.8||p.gen<stage.power?"PAUSED_POWER":"CALIBRATING";b.status=job.status}
+ if(job.progress>=stage.time){
+  log("퓨전 단계 완료 · "+stage.name,"good");job.stage++;job.progress=0;
+  if(job.stage>=FUSION_STAGES.length){
+   if(!job.materialsConsumed){
+    const consumed=commitItemReservations(S,Array.isArray(job.reservationIDs)?job.reservationIDs:[]);
+    if(!consumed){job.status="ERROR";job.errorCode="FUSION_INPUT_ESCROW_INVALID";toast("퓨전 원료 보관 기록을 확인할 수 없어 출력을 중단했습니다.","warn");markDirty();return}
+    job.materialsConsumed=true;
+    job.consumedLedger=consumed.map(stack=>({itemID:stack.itemID,quantity:stack.quantity,quality:stack.quality,purity:stack.purity,synthetic:stack.synthetic,sourceStackID:stack.runtimeID}));
+    syncLegacyInventory(S);
+   }
+   S.lastFusionJob={jobID:job.jobID||null,status:"COMPLETED",endedAt:S.seconds,consumedLedger:job.consumedLedger||null};
+   S.fusionJob=null;S.fusionDone=true;addItem("infinity",1,{quality:100,purity:100,synthetic:false});
+   log("인피니티 도로늄 결정화 성공 · 정확히 1개 출력","good");toast("인피니티 도로늄 제작 성공!","");
+   $("orbit-dialogue").textContent="“Infinity Doronum secured. Three stabilization relays are still required.”";
+   showModal("INFINITY DORONUM 생성 완료","<p>7단계 결정화 공정이 완료되었습니다. 인피니티 도로늄 1개가 창고에 등록되었습니다.</p><p>이제 지정된 행성 에너지 노드 3곳에 릴레이를 설치하고 중앙 코어를 완성하세요.</p>",[{label:"계속 진행",cls:"primary",action:closeModal}]);
+  }else toast("퓨전 "+(job.stage+1)+"/7 단계로 이동합니다.");
+  markDirty();renderMissions();renderFactory();
+ }
+}
+function startFusion(){
+ if(S.fusionJob){toast("이미 퓨전이 진행 중입니다.");return}
+ if(!S.buildings.some(b=>b.type==="fusion")){toast("인피니티 퓨전 설비가 필요합니다.","warn");return}
+ if(!S.buildings.some(b=>b.type==="cooling")){toast("초전도 냉각탑을 먼저 건설하세요.","warn");return}
+ const p=currentPower();if(p.gen<40||p.ratio<.8){toast("퓨전에 필요한 전력 40kW 이상을 확보하세요.","warn");return}
+ const qualifies=stack=>stack.quality>=90&&stack.purity>=90&&!stack.synthetic;
+ const requirements=Object.fromEntries(VARIANTS.map(id=>[id,100]));
+ const invalid=VARIANTS.filter(id=>availableItemCountWhere(S,id,qualifies)<100);
+ if(invalid.length){toast("재료 검증 실패 · "+invalid.map(id=>RESOURCE[id]?.name||id).slice(0,2).join(", ")+ " 외 "+invalid.length+"종 부족","warn");return}
+ showModal("인피니티 퓨전 시작","<p>15종 도로늄 각 100개, 총 1,500개가 공정 예약으로 잠깁니다.</p><p>실제로 예약되는 각 ItemStack은 품질 90 이상, 순도 90 이상, 비합성이어야 합니다. 최종 단계에서만 원료가 커밋되며, 그 전 설비 중단 시 원료 예약을 해제합니다. 7단계 이상적 가동 시간은 260초입니다.</p>",[
+  {label:"취소",cls:"secondary"},
+  {label:"퓨전 시작",cls:"gold",action:()=>{
+   const reservationIDs=reserveItemBatch(S,requirements,"fusion-job:"+S.tick,qualifies);
+   if(!reservationIDs){toast("원료 예약에 실패했습니다. 원료 수량과 품질을 다시 확인하세요.","warn");closeModal();return}
+   const jobID=allocateEntityID(S,"FUSION");
+   S.fusionJob={jobID,stage:0,progress:0,startedAt:S.seconds,reservationIDs,materialsConsumed:false,status:"RESERVED",manifest:VARIANTS.map(itemID=>({itemID,quantity:100}))};
+   const machine=S.buildings.find(x=>x.type==="fusion");if(machine){machine.temp=25;machine.pressure=0}
+   log("인피니티 퓨전 시작 · 1,500개 Stack 단위 원료 예약");toast("INFINITY FUSION STARTED");closeModal();markDirty();renderFactory()
+  }}
+ ])
+}
 function installCore(b){if(!S.fusionDone||itemCount("infinity")<1){toast("인피니티 도로늄 1개가 필요합니다.","warn");return}if(!S.research.includes("planet")){toast("행성 안정화 프로토콜 연구를 완료하세요.","warn");return}if(!S.relaySites.every(Boolean)){toast("행성 안정화 릴레이 3개가 모두 필요합니다.","warn");return}if(!takeItem("infinity",1))return;S.coreInstalled=true;b.status="INSTALLED";log("인피니티 도로늄을 중앙 코어에 설치");toast("중앙 안정화 코어 설치 완료");showModal("행성 안정화 준비 완료","<p>3개 릴레이와 중앙 코어가 연결되었습니다. ORBIT의 최종 동기화 프로토콜을 실행할 수 있습니다.</p>",[{label:"계속",cls:"secondary"},{label:"행성 안정화 실행",cls:"gold",action:()=>{closeModal();finishPlanetary()}}]);markDirty();renderAll()}
 function finishPlanetary(){if(!S.coreInstalled||!S.relaySites.every(Boolean)){toast("안정화 필수 조건을 충족하지 못했습니다.","warn");return}S.victory=true;S.questIndex=QUESTS.length;log("PLANETARY STABILIZATION COMPLETE","good");$("orbit-dialogue").textContent="“Energy network synchronization complete. Planetary instability: decreasing. Factory status: OPERATIONAL.”";markDirty();renderAll();showModal("PLANETARY STABILIZATION COMPLETE","<div class='ending-visual'>💠</div><h3>돌돌행성의 에너지 네트워크가 안정화되었습니다.</h3><p>공장 전체에 푸른 에너지 흐름이 연결되었습니다. 폐허에서 시작한 작은 산업 기지가 행성을 지키는 거대한 산업 네트워크로 성장했습니다.</p><p><b>DORONIUM FACTORY · INFINITE INDUSTRY</b><br>FINAL STATUS: OPERATIONAL</p>",[{label:"엔딩 보기",cls:"gold",action:closeModal}]);playTone(920,.5,"sine")}
 
@@ -694,7 +792,7 @@ function renderAll(){renderHud();renderBuildList();renderFactory();renderInvento
 function hydrateState(input){markSceneDirty();const base=freshState(),incoming=input&&typeof input==="object"?input:{},migrate=Number(incoming.worldVersion||0)<3,expandSurface=Number(incoming.worldVersion||0)<4;
  S={...base,...incoming,worldVersion:4,player:{...base.player,...incoming.player},inventory:{...base.inventory,...incoming.inventory},meta:{...incoming.meta},tools:{...base.tools,...incoming.tools},activeTool:incoming.activeTool||"pickaxe",campaign:{...base.campaign,...incoming.campaign},flattened:{...incoming.flattened},foundation:{...incoming.foundation},mineDeposits:incoming.mineDeposits&&Object.keys(incoming.mineDeposits).length?incoming.mineDeposits:base.mineDeposits,buildings:Array.isArray(incoming.buildings)?incoming.buildings:[],nodes:migrate?base.nodes:(expandSurface?{...base.nodes,...(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:{})}:(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:base.nodes)),sites:base.sites,seen:incoming.seen||{},research:Array.isArray(incoming.research)?incoming.research:[],stats:{...base.stats,...incoming.stats,gathered:{...base.stats.gathered,...incoming.stats?.gathered},built:{...base.stats.built,...incoming.stats?.built},produced:{...base.stats.produced,...incoming.stats?.produced}},settings:{...base.settings,...incoming.settings},survival:{...base.survival,...incoming.survival},relaySites:Array.isArray(incoming.relaySites)?incoming.relaySites:[false,false,false],skills:normalizeSkillState(incoming.skills)};
  if(!incoming.runtime)S.runtime=createRuntimeState();
- ensureItemStacks(S);reconcileSkillMilestones();
+ ensureItemStacks(S);if(S.fusionJob&&!Array.isArray(S.fusionJob.reservationIDs)&&!S.fusionJob.materialsConsumed)S.fusionJob.legacyConsumedMaterials=true;reconcileSkillMilestones();
  if(migrate){const ox=38,oz=32;S.player.x=clamp(Number(incoming.player?.x??18)+ox,0,WORLD_W-1);S.player.y=clamp(Number(incoming.player?.y??14)+oz,0,WORLD_H-1);S.player.layer="surface";S.player.mineLevel=1;S.player.surfacePosition=null;for(const b of S.buildings){b.x=clamp((Number(b.x)||0)+ox,0,WORLD_W-1);b.y=clamp((Number(b.y)||0)+oz,0,WORLD_H-1);const k=surfaceKey(b.x,b.y);delete S.nodes[k];S.flattened[k]={height:terrainHeightAt(b.x,b.y)};S.foundation[k]=true}S.player.x=clamp(S.player.x,1,WORLD_W-2);S.player.y=clamp(S.player.y,1,WORLD_H-2)}
  S.simSpeed=[1,2,3].includes(S.simSpeed)?S.simSpeed:1;S.player.x=clamp(Number(S.player.x??64),0,S.player.layer==="mine"?MINE_W-1:WORLD_W-1);S.player.y=clamp(Number(S.player.y??52),0,S.player.layer==="mine"?MINE_H-1:WORLD_H-1);S.paused=!!S.paused;S.tick=Number(S.tick)||0;S.seconds=Number(S.seconds)||8*3600;S.player.viewMode=["first","third","map"].includes(S.player.viewMode)?S.player.viewMode:"first";if(S.player.layer==="mine"&&S.player.viewMode==="map")S.player.viewMode="first";S.player.mineLevel=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS);S.player.yaw=Number(S.player.yaw)||0;S.player.pitch=clamp(Number(S.player.pitch??-.12),-1.25,1.25);S.survival.health=clamp(Number(S.survival.health??100),0,100);S.survival.hunger=clamp(Number(S.survival.hunger??100),0,100);S.survival.thirst=clamp(Number(S.survival.thirst??100),0,100);playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:S.player.yaw,pitch:S.player.pitch,path:[],moving:false,facing:0,onArrive:null};rebuildCooldownIndex();}
 function loadLocal(){const candidate=readBestSave(localStorage,activeLocalKey);if(!candidate)return null;if(candidate.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;setSaveMessage("더 최신 버전의 저장 데이터입니다. 최신 게임 버전에서 열어 주세요.");if(!E2E_MODE)showModal("저장 데이터 버전 확인 필요","<p>이 저장 데이터는 현재 게임보다 새로운 버전에서 만들어졌습니다.</p><p>데이터를 덮어쓰지 않도록 저장을 잠갔습니다. 최신 게임 버전에서 다시 열어 주세요.</p>",[{label:"확인",cls:"primary"}]);return "future-schema-blocked"}if(!candidate.valid)return null;try{hydrateState(candidate.state);if(candidate.source!==activeLocalKey){restoreSaveCandidate(localStorage,activeLocalKey,candidate);if(!E2E_MODE)toast(candidate.source.includes("_backup_")?"이전 백업 저장 데이터에서 복구했습니다.":"임시 저장 데이터에서 복구했습니다.");}return candidate.savedAt||S.lastSavedAt||null}catch(error){console.warn("Local save candidate rejected",candidate.source,error);return null}}
