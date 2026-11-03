@@ -195,6 +195,16 @@ try {
   assert.ok(powerTick.battery > 0.39 && powerTick.battery < 0.41, "The battery must charge by 0.4kJ during one 0.1-second tick at 4kW");
   assert.equal(powerTick.far.ratio, 0, "A remote grid must remain isolated after a simulation tick");
 
+  const fluidSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.setupFluidNetworkTest());
+  assert.equal(fluidSetup.power.allocations["F-PUMP"].status, "RUNNING", "The water pump must receive power");
+  const closedValve = await desktop.evaluate(() => window.__doroniumFactoryTest.runFluidNetworkTest(false, 12));
+  assert.ok(closedValve.pipeOneLiters > 1, "The pump must fill the upstream pipe");
+  assert.equal(closedValve.tankLiters, 0, "A closed valve must block fluid from reaching the tank");
+  const openedValve = await desktop.evaluate(() => window.__doroniumFactoryTest.runFluidNetworkTest(true, 12));
+  assert.ok(openedValve.tankLiters > 0, "Opening the valve must let water reach the tank through downstream pipes");
+  assert.equal(openedValve.massBalance.valid, true, "Live fluid transfer must conserve the simulated water volume");
+  assert.equal(openedValve.valveOpen, true, "Valve state must remain open after live simulation");
+
   const miningSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningAutomationTest());
   assert.equal(miningSetup.generator, true, "A mine generator must be placeable in an underground tunnel");
   assert.equal(miningSetup.miner, true, "An iron drill must install on a matching underground iron deposit");
