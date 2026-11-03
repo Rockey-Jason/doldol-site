@@ -66,10 +66,10 @@ export function cancelConstruction(state,transactionID){
  for(const id of tx.reservationIDs||[])releaseItemReservation(state,id);
  tx.status="CANCELLED";tx.cancelledTick=Math.max(0,Number(state.tick)||0);delete state.moneyReservations[transactionID];return true;
 }
-export function createBlueprint(buildings=[],{name="Blueprint"}={}){
+export function createBlueprint(buildings=[],{name="Blueprint",footprintForType=()=>({width:1,height:1})}={}){
  const selected=(buildings||[]).filter(Boolean);if(!selected.length)return {version:1,name:String(name),buildings:[]};
  const minX=Math.min(...selected.map(b=>Number(b.x)||0)),minY=Math.min(...selected.map(b=>Number(b.y)||0));
- return {version:1,name:String(name).slice(0,80),createdAt:null,buildings:selected.map(b=>({type:String(b.type),dx:(Number(b.x)||0)-minX,dy:(Number(b.y)||0)-minY,dir:((Number(b.dir)||0)%4+4)%4,variant:b.variant||null,footprint:{width:Math.max(1,Number(b.footprint?.width)||1),height:Math.max(1,Number(b.footprint?.height)||1)}}))};
+ return {version:1,name:String(name).slice(0,80),createdAt:null,buildings:selected.map(b=>({type:String(b.type),dx:(Number(b.x)||0)-minX,dy:(Number(b.y)||0)-minY,dir:((Number(b.dir)||0)%4+4)%4,variant:b.variant||null,footprint:{width:Math.max(1,Number(b.footprint?.width??footprintForType(b.type)?.width)||1),height:Math.max(1,Number(b.footprint?.height??footprintForType(b.type)?.height)||1)}}))};
 }
 export function rotateBlueprint(blueprint,rotation=1){
  if(!blueprint||blueprint.version!==1||!Array.isArray(blueprint.buildings))return null;
@@ -100,7 +100,7 @@ export function duplicateBlueprint(blueprint,{newID,name}={}){
  if(!blueprint||blueprint.version!==1||!Array.isArray(blueprint.buildings)||!newID)return null;
  return {...clone(blueprint),id:String(newID),name:String(name||((blueprint.name||"Blueprint")+" Copy")).slice(0,80),createdAt:null};
 }
-export function beginBlueprintConstruction(state,{transactionID,blueprint,x,y,rotation=0,buildingCatalog={},ownerID="player",worldWidth,worldHeight,occupied=[],heightAt=()=>0,foundation=()=>true,maxSlope=Infinity,isUnlocked=()=>true,canPlaceType=()=>true}={}){
+export function beginBlueprintConstruction(state,{transactionID,blueprint,x,y,rotation=0,buildingCatalog={},ownerID="player",worldWidth,worldHeight,occupied=[],heightAt=()=>0,foundation=()=>true,maxSlope=Infinity,isUnlocked=()=>true,canPlaceType=()=>true,canOccupyCell=()=>true}={}){
  if(!state||!transactionID||!blueprint||blueprint.version!==1||!Array.isArray(blueprint.buildings)||!blueprint.buildings.length)return {ok:false,reason:"INVALID_BLUEPRINT_REQUEST"};
  state.constructionLedger??={};state.moneyReservations??={};
  if(state.constructionLedger[transactionID])return {ok:false,reason:"DUPLICATE_TRANSACTION"};
@@ -117,6 +117,7 @@ export function beginBlueprintConstruction(state,{transactionID,blueprint,x,y,ro
   const requiresFlat=def.requiresFlat!==false;
   const result=validateConstructionFootprint({x:px,y:py,width:footprint.width,height:footprint.height,worldWidth,worldHeight,occupied:[...(occupiedSet),...planned].map(v=>{const[a,b]=String(v).split(",").map(Number);return{x:a,y:b}}),heightAt,maxSlope:requiresFlat?maxSlope:Infinity,requiresFlat,foundation});
   if(!result.valid)return {ok:false,reason:"INVALID_BLUEPRINT_FOOTPRINT",buildingType:item.type,errors:result.errors};
+  for(const p of result.cells)if(!canOccupyCell(item.type,p.x,p.y,def))return {ok:false,reason:"BLOCKED_BLUEPRINT_CELL",buildingType:item.type,cell:p};
   for(const p of result.cells){const k=cellKey(p.x,p.y);planned.add(k);occupiedCells.push(p)}
   const cost=Math.max(0,Math.floor(Number(def.moneyCost)||0));moneyCost+=cost;
   for(const[id,qty]of Object.entries(def.materials||{}))materials[id]=(materials[id]||0)+Math.max(0,Math.floor(Number(qty)||0));
