@@ -34,9 +34,18 @@ export function totalFluidLiters(nodes){
 export function tickFluidNetwork({nodes=[],edges=[],deltaSeconds=.1,ambientTemperatureC=20}={}){
  const dt=Math.max(0,finite(deltaSeconds)),graph=buildFluidNetworks(nodes,edges),before=totalFluidLiters(nodes),flows=[],leaks=[],faults=[];
  for(const edge of graph.edges){
-  const source=graph.byID.get(String(edge.from)),target=graph.byID.get(String(edge.to));if(!source||!target)continue;
-  if(!edgeEnabled(edge,source,target))continue;
-  if(!portAllows(source,edge.fromPort)||!portAllows(target,edge.toPort))continue;
+  let source=graph.byID.get(String(edge.from)),target=graph.byID.get(String(edge.to));if(!source||!target)continue;
+  const reverse=()=>{const previous=source;source=target;target=previous};
+  const effectivePressure=node=>Math.max(0,finite(node.pressureKPa))+(node.type==="PUMP"?Math.max(0,finite(node.pumpHeadKPa)):0);
+  if(edge.open===false)continue;
+  if(edge.oneWay===false){
+   const forwardPressure=effectivePressure(source),reversePressure=effectivePressure(target);
+   if(reversePressure>forwardPressure)reverse();
+   else if(forwardPressure===reversePressure)continue;
+  }else if(!edgeEnabled(edge,source,target))continue;
+  const fromPort=source===graph.byID.get(String(edge.from))?edge.fromPort:edge.toPort;
+  const toPort=target===graph.byID.get(String(edge.to))?edge.toPort:edge.fromPort;
+  if(!portAllows(source,fromPort)||!portAllows(target,toPort))continue;
   if(!FLUID_NODE_TYPES.includes(String(source.type))||!FLUID_NODE_TYPES.includes(String(target.type)))continue;
   if(target.type==="SOURCE"||source.type==="CONSUMER")continue;
   const sourceAmount=Math.max(0,finite(source.amountL)),targetAmount=Math.max(0,finite(target.amountL));
@@ -47,19 +56,19 @@ export function tickFluidNetwork({nodes=[],edges=[],deltaSeconds=.1,ambientTempe
   const sourcePressure=Math.max(0,finite(source.pressureKPa)),targetPressure=Math.max(0,finite(target.pressureKPa));
   const gravityHead=Math.max(0,finite(edge.gravityHeadKPa)),pumpHead=source.type==="PUMP"?Math.max(0,finite(source.pumpHeadKPa)):0;
   const pressureDelta=Math.max(0,sourcePressure+pumpHead+gravityHead-targetPressure);
-  if(pressureDelta<=0){if(edge.allowReverse===true&&edge.oneWay===false){faults.push({edgeID:edge.id,reason:"REVERSE_FLOW_BLOCKED_BY_CHECK_VALVE"})}continue}
+  if(pressureDelta<=0)continue;
   const ratedPressure=Math.max(0,finite(edge.maxPressureKPa,finite(source.maxPressureKPa,Infinity)));
   if(sourcePressure+pumpHead+gravityHead>ratedPressure){
    faults.push({edgeID:edge.id,reason:"OVERPRESSURE",pressureKPa:sourcePressure+pumpHead+gravityHead,ratedPressureKPa:ratedPressure});
    if(edge.breakOnOverpressure){edge.open=false;edge.broken=true;continue}
   }
   const conductance=Math.max(0,finite(edge.conductanceLpsPerKPa,finite(edge.maxFlowLps,0)/(Math.max(1,finite(edge.referencePressureKPa,100)))));
-  const pressureFlow=conductance*pressureDelta;
-  const maxFlow=Math.max(0,finite(edge.maxFlowLps,Infinity));
+  const pressureFlow=conductance*pressureDelta,maxFlow=Math.max(0,finite(edge.maxFlowLps,Infinity));
   const requested=Math.max(0,finite(edge.requestedLiters,Infinity));
   const moved=Math.min(sourceAmount,Math.max(0,capacity-targetAmount),dt*maxFlow,dt*pressureFlow,requested);
   if(!(moved>0))continue;
-  source.amountL=sourceAmount-moved;target.amountL=targetAmount+moved;if(source.amountL<=1e-12){source.amountL=0;source.fluidType=null;}
+  source.amountL=sourceAmount-moved;target.amountL=targetAmount+moved;
+  if(source.amountL<=1e-12){source.amountL=0;source.fluidType=null}
   if(targetAmount<=0)target.fluidType=sourceType;
   const sourceTemp=finite(source.temperatureC,20),targetTemp=finite(target.temperatureC,20);
   target.temperatureC=targetAmount>0?(targetTemp*targetAmount+sourceTemp*moved)/(targetAmount+moved):sourceTemp;
@@ -69,7 +78,7 @@ export function tickFluidNetwork({nodes=[],edges=[],deltaSeconds=.1,ambientTempe
   const flowLps=moved/dt;
   flows.push({edgeID:edge.id,from:idOf(source),to:idOf(target),fluidType:sourceType,movedL:moved,flowLps,pressureDeltaKPa:pressureDelta});
   const leakRate=clamp(finite(edge.leakRateLps,0),0,flowLps);
-  if(leakRate>0){const lost=Math.min(moved,leakRate*dt);target.amountL=Math.max(0,target.amountL-lost);if(target.amountL===0)target.fluidType=null;leaks.push({edgeID:edge.id,fluidType:sourceType,lostL:lost});}
+  if(leakRate>0){const lost=Math.min(moved,leakRate*dt);target.amountL=Math.max(0,target.amountL-lost);if(target.amountL===0)target.fluidType=null;leaks.push({edgeID:edge.id,fluidType:sourceType,lostL:lost})}
  }
  // Thermal exchange is deterministic and does not alter fluid mass.
  for(const node of nodes||[]){
