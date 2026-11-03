@@ -12,7 +12,7 @@ let createClient = null;
    Standalone Canvas game, deterministic map seed, fixed-step simulation,
    persistent browser save + authenticated per-user Supabase cloud save.
 */
-const E2E_MODE = new URLSearchParams(location.search).has("e2e");
+const E2E_MODE = (location.hostname === "localhost" || location.hostname === "127.0.0.1" || location.hostname === "::1") && new URLSearchParams(location.search).has("e2e");
 const SUPABASE_URL = "https://scttowfhygcpdirrekqm.supabase.co";
 const SUPABASE_KEY = "sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
 const CLOUD_KEY = "doronium_factory_infinite_industry_v1";
