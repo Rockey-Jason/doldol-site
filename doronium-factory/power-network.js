@@ -30,6 +30,7 @@ function addEdge(edges, nodes, edge, type, errors) {
   edges.push({
     id, from, to, type, capacityRemainingKW: Number(edge.capacityKW),
     efficiency: type === "transformer" ? Number(edge.efficiency) : 1,
+    bidirectional: type === "cable" || edge.bidirectional === true,
     lossRatio: Number(edge.lossRatio ?? 0),
     enabled: edge.enabled !== false
   });
@@ -40,7 +41,7 @@ function buildAdjacency(nodes, edges) {
   for (const edge of edges) {
     if (!edge.enabled || edge.capacityRemainingKW <= 0) continue;
     adjacency.get(edge.from).push({ nodeID: edge.to, edge, forward: true });
-    adjacency.get(edge.to).push({ nodeID: edge.from, edge, forward: false });
+    if(edge.bidirectional)adjacency.get(edge.to).push({ nodeID: edge.from, edge, forward: false });
   }
   for (const list of adjacency.values()) list.sort((a,b) =>
     a.nodeID.localeCompare(b.nodeID) || a.edge.id.localeCompare(b.edge.id));
@@ -160,6 +161,7 @@ export function resolvePowerNetworks(input = {}) {
   if (errors.length) return { valid:false,errors,networks:[],consumers:{} };
 
   const edgeByID=new Map(edges.map(edge=>[edge.id,edge]));
+  const finalBatteryState={};
   if(edgeByID.size!==edges.length)return {valid:false,errors:["DUPLICATE_POWER_EDGE_ID"],networks:[],consumers:{}};
   const adjacency=buildAdjacency(nodes,edges),groups=components(nodes,adjacency),networkResults=[],consumerResults={};
   const componentForNode=new Map();
@@ -236,6 +238,7 @@ export function resolvePowerNetworks(input = {}) {
         needStoredKJ-=stored;
       }
     }
+    for(const battery of localBatteries)finalBatteryState[battery.id]={energyKJ:battery.energyKJ,capacityKJ:Number(battery.capacityKJ),maxOutputKW:Number(battery.maxOutputKW),maxInputKW:Number(battery.maxInputKW)};
     networkResults.push({
       networkID,nodeIDs:members,
       generatorAvailableKW:localGenerators.reduce((sum,g)=>sum+Number(g.availableKW),0),
@@ -246,6 +249,6 @@ export function resolvePowerNetworks(input = {}) {
   }
   return {
     valid:true,errors:[],networks:networkResults,consumers:consumerResults,
-    batteries:Object.fromEntries(batteries.map(b=>[b.id,{energyKJ:batteries.find(x=>x.id===b.id)?.energyKJ??b.energyKJ}]))
+    batteries:finalBatteryState
   };
 }
