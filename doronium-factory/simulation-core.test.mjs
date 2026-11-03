@@ -137,3 +137,23 @@ test("runtime save validation checks deterministic failure journal counters and 
  state.runtime.failureEvents.push({failureEventID:"FAIL-1"});
  assert.ok(validateRuntimeState(state).errors.some(x=>x.startsWith("duplicate-failure-event:")));
 });
+
+import {reserveQualifiedItemStacks} from "./simulation-core.js";
+test("qualified reservations select only stacks that individually satisfy metadata filters",()=>{
+ const state={inventory:{},tick:1};ensureItemStacks(state);
+ addItemStack(state,"ironPlate",4,{quality:70,purity:99,synthetic:false});
+ addItemStack(state,"ironPlate",3,{quality:95,purity:95,synthetic:false});
+ addItemStack(state,"ironPlate",2,{quality:100,purity:100,synthetic:true});
+ const id=reserveQualifiedItemStacks(state,"ironPlate",3,"shipping-test",s=>s.quality>=90&&s.purity>=90&&!s.synthetic);
+ assert.ok(id);
+ const reservation=state.runtime.reservations[id];
+ assert.deepEqual(reservation.allocations.map(a=>a.quantity),[3]);
+ const removed=commitItemReservations(state,[id]);
+ assert.equal(removed.reduce((n,s)=>n+s.quantity,0),3);
+ assert.equal(stackTotals(state).ironPlate,6);
+});
+test("qualified reservation rolls back without reserving ineligible stock",()=>{
+ const state={inventory:{},tick:1};ensureItemStacks(state);addItemStack(state,"ironPlate",5,{quality:80,purity:90,synthetic:false});
+ assert.equal(reserveQualifiedItemStacks(state,"ironPlate",2,"shipping-test",s=>s.quality>=90),null);
+ assert.equal(Object.keys(state.runtime.reservations).length,0);
+});
