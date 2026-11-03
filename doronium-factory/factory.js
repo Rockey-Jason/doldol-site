@@ -535,7 +535,8 @@ function updateFusion(dt){
     const consumed=job.transactionID?commitInventoryTransaction(S,job.transactionID):commitItemReservations(S,Array.isArray(job.reservationIDs)?job.reservationIDs:[]);
     if(!consumed){job.status="ERROR";job.errorCode="FUSION_INPUT_ESCROW_INVALID";toast("퓨전 원료 보관 기록을 확인할 수 없어 출력을 중단했습니다.","warn");markDirty();return}
     job.materialsConsumed=true;
-    job.consumedLedger=consumed.map(stack=>({itemID:stack.itemID,quantity:stack.quantity,quality:stack.quality,purity:stack.purity,synthetic:stack.synthetic,sourceStackID:stack.runtimeID}));
+    const consumedItems=Array.isArray(consumed)?consumed:(Array.isArray(consumed.items)?consumed.items:[]);
+    job.consumedLedger=consumedItems.map(stack=>({itemID:stack.itemID,quantity:stack.quantity,quality:stack.quality,purity:stack.purity,synthetic:stack.synthetic,sourceStackID:stack.runtimeID}));
     syncLegacyInventory(S);
    }
    S.lastFusionJob={jobID:job.jobID||null,status:"COMPLETED",endedAt:S.seconds,consumedLedger:job.consumedLedger||null};
