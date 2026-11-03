@@ -8,7 +8,7 @@ function validParcel(parcel){
 }
 export function createConveyorState({segments=[],parcels=[]}={}){
  const state={schemaVersion:1,nextTransferID:1,segments:clone(segments),parcels:clone(parcels),transferLedger:[],mergeCursors:{},splitterCursors:{}};
- for(const segment of state.segments)segment.occupantStackID??=null;
+ for(const segment of state.segments){segment.occupantStackID??=null;segment.occupantStackIDs??=[];}
  return state;
 }
 export function validateConveyorState(state){
@@ -26,12 +26,17 @@ export function validateConveyorState(state){
   if(!validParcel(parcel)||parcelIDs.has(parcel?.stackID))errors.push("INVALID_OR_DUPLICATE_PARCEL:"+String(parcel?.stackID));
   parcelIDs.add(parcel?.stackID);
   if(!ids.has(parcel?.segmentID))errors.push("PARCEL_SEGMENT_MISSING:"+parcel?.stackID);
-  if(occupants.has(parcel?.segmentID))errors.push("SEGMENT_HAS_MULTIPLE_PARCELS:"+parcel?.segmentID);
-  occupants.set(parcel?.segmentID,parcel?.stackID);
+  if(!occupants.has(parcel?.segmentID))occupants.set(parcel?.segmentID,[]);
+  occupants.get(parcel?.segmentID).push(parcel?.stackID);
  }
  for(const segment of state.segments){
-  if(segment.occupantStackID&&occupants.get(segment.id)!==segment.occupantStackID)
+  const actual=occupants.get(segment.id)||[];
+  if(actual.length>segment.capacity)errors.push("SEGMENT_CAPACITY_EXCEEDED:"+segment.id);
+  if(segment.occupantStackID&&actual[0]!==segment.occupantStackID)
    errors.push("OCCUPANT_INDEX_MISMATCH:"+segment.id);
+  if(Array.isArray(segment.occupantStackIDs)&&segment.occupantStackIDs.length&&
+     [...segment.occupantStackIDs].sort().join("|")!==[...actual].sort().join("|"))
+   errors.push("OCCUPANT_INDEX_LIST_MISMATCH:"+segment.id);
   for(const output of segment.outputs||[])if(!ids.has(output))errors.push("UNKNOWN_OUTPUT:"+segment.id+":"+output);
   if(segment.type==="lift"&&(!Number.isFinite(Number(segment.fromHeight))||!Number.isFinite(Number(segment.toHeight))))
    errors.push("INVALID_LIFT_HEIGHT:"+segment.id);
@@ -48,19 +53,18 @@ function routeMatches(rule,parcel){
  if(rule.provenance!==undefined&&parcel.provenance!==rule.provenance)return false;
  return true;
 }
-function isDestinationAvailable(segment,occupied,arrivals){
- return !!segment&&segment.type!=="source"&&
-  (segment.type==="sink"||(occupied.has(segment.id)===false&&arrivals.has(segment.id)===false));
+function isDestinationAvailable(segment,occupancy,arrivals){
+ if(!segment||segment.type==="source")return false;
+ if(segment.type==="sink")return true;
+ return (occupancy.get(segment.id)||0)+(arrivals.get(segment.id)||0)<segment.capacity;
 }
 function chooseOutput(segment,parcel,state,segments,occupied,arrivals){
  const outputs=(segment.outputs||[]).map(id=>segments.get(id)).filter(Boolean);
  if(segment.type==="sorter"){
   const rules=Array.isArray(segment.rules)?segment.rules:[];
-  for(const rule of rules){
-   if(!routeMatches(rule,parcel))continue;
-   const target=segments.get(rule.outputID);
-   if(isDestinationAvailable(target,occupied,arrivals))return target;
-  }
+  const matched=rules.find(rule=>routeMatches(rule,parcel));
+  if(matched){const target=segments.get(matched.outputID);return isDestinationAvailable(target,occupied,arrivals)?target:null;}
+  if(segment.defaultOutputID){const target=segments.get(segment.defaultOutputID);return isDestinationAvailable(target,occupied,arrivals)?target:null;}
  }
  if(segment.type==="sink"){
   return {id:"__SINK__",type:"sink"};
@@ -98,7 +102,8 @@ export function advanceConveyorTick(state,{tick=0,maxMoves=10000}={}){
  if(!Number.isSafeInteger(tick)||tick<0||!Number.isSafeInteger(maxMoves)||maxMoves<1)
   return {ok:false,reason:"INVALID_TICK_ARGUMENT",moved:[],blocked:[],deadlocks:[]};
  const segments=segmentMap(state),parcels=parcelMap(state);
- const occupied=new Set(state.parcels.map(p=>p.segmentID)),arrivals=new Set(),moved=[],blocked=[],waitFor=new Map(),plans=[];
+ const occupancy=new Map();for(const parcel of state.parcels)occupancy.set(parcel.segmentID,(occupancy.get(parcel.segmentID)||0)+1);
+ const occupied=new Set(occupancy.keys()),arrivals=new Map(),moved=[],blocked=[],waitFor=new Map(),plans=[];
  const ordered=[...state.parcels].sort((a,b)=>a.segmentID.localeCompare(b.segmentID)||a.stackID.localeCompare(b.stackID));
  for(const parcel of ordered){
   if(plans.length>=maxMoves)break;
@@ -122,7 +127,7 @@ export function advanceConveyorTick(state,{tick=0,maxMoves=10000}={}){
    blocked.push({stackID:parcel.stackID,segmentID:source.id,reason:"DESTINATION_FULL",targetID:target.id});
    waitFor.set(source.id,[target.id]);continue;
   }
-  arrivals.add(target.id);
+  arrivals.set(target.id,(arrivals.get(target.id)||0)+1);
   plans.push({parcel,source,target,sink:false,nextCursor:targetChoice.nextCursor});
  }
  const nextParcels=[],removeIDs=new Set();
@@ -139,7 +144,7 @@ export function advanceConveyorTick(state,{tick=0,maxMoves=10000}={}){
   }
  }
  state.parcels=state.parcels.filter(parcel=>!removeIDs.has(parcel.stackID)).concat(nextParcels);
- for(const segment of state.segments)segment.occupantStackID=state.parcels.find(p=>p.segmentID===segment.id)?.stackID||null;
+ for(const segment of state.segments){const ids=state.parcels.filter(p=>p.segmentID===segment.id).map(p=>p.stackID).sort();segment.occupantStackIDs=ids;segment.occupantStackID=ids[0]||null;}
  if(state.transferLedger.length>2048)state.transferLedger.splice(0,state.transferLedger.length-2048);
  return {ok:true,moved,blocked,deadlocks:findDeadlocks(waitFor),remainingParcels:state.parcels.length};
 }
