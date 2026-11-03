@@ -475,7 +475,7 @@ function placeBlueprintAt(x,y){
  if(S.buildings.length+source.buildings.length>BUILDING_LIMIT){toast("설계도 배치 후 시설 한도를 초과합니다.","warn");return false}
  const occupied=[];for(const b of S.buildings)occupied.push(...buildingFootprintCells(b));
  const heightAt=(cx,cy)=>{const v=S.flattened?.[surfaceKey(cx,cy)];return v&&typeof v==="object"&&Number.isFinite(v.height)?v.height:terrainHeightAt(cx,cy)};
- const catalogue=Object.fromEntries(BUILDINGS.map(d=>[d.id,{moneyCost:buildingMoneyCost(d),materials:d.materials,footprint:getBuildingFootprint(d.id),requiresFlat:d.id!=="beltAdaptive"&&!["relay","core","pump"].includes(d.id)}]));
+ const catalogue=Object.fromEntries(BUILDINGS.map(d=>[d.id,{moneyCost:buildingMoneyCost(d),materials:d.materials,footprint:getBuildingFootprint(d.id),requiresFlat:d.id!=="beltAdaptive"&&!["relay","core","pump","powerCable"].includes(d.id)}]));
  const canPlaceType=(type,px,py)=>{
   const d=buildingDef(type),node=tileNode(px,py);if(!d||!unlockOk(d))return false;
   if(type==="pump"&&node?.type!=="water")return false;
@@ -499,7 +499,7 @@ function placeBlueprintAt(x,y){
    const b={uid,type:item.type,x:item.x,y:item.y,dir:((Number(item.dir)||1)%4+4)%4,footprint:{...item.footprint},footprintRotation:0,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:item.dir??1,status:"IDLE",autoFeed:true,variant:item.variant||"doronium_blue",temp:25,pressure:0,fuelTimer:0,moveTimer:0};
    state.buildings.push(b);state.stats.built[item.type]=(state.stats.built[item.type]||0)+1;uids.push(uid);
    if(item.type==="relay"){const idx=state.sites.relay.findIndex(p=>p.x===item.x&&p.y===item.y);if(idx>=0)state.relaySites[idx]=true}
-   if(item.type==="core")state.corePlaced=true;
+   if(item.type==="core")state.corePlaced=true;if(item.type==="powerCable")state.powerTopologyEnabled=true;
   }
   return {uids};
  });
