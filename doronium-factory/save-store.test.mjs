@@ -79,3 +79,15 @@ test("failed temp write never overwrites the current main save",()=>{
  assert.throws(()=>writeSaveEnvelope(failing,key,{inventory:{wood:99}},"bad"),/quota/);
  assert.equal(storage.getItem(key),original);
 });
+
+
+test("cloud save base revision survives local save backups and decoding",()=>{
+ const storage=memoryStorage(),key="factory";
+ writeSaveEnvelope(storage,key,{inventory:{wood:12}},"rev-7",{cloudRevision:7});
+ const decoded=readBestSave(storage,key);
+ assert.equal(decoded.valid,true);
+ assert.equal(decoded.envelope.cloudRevision,7);
+ writeSaveEnvelope(storage,key,{inventory:{wood:13}},"rev-8",{cloudRevision:8});
+ assert.equal(readBestSave(storage,key).envelope.cloudRevision,8);
+ assert.equal(JSON.parse(storage.getItem(key+"_backup_1")).cloudRevision,7);
+});
