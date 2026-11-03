@@ -6,3 +6,20 @@ test("construction reserves all materials and money before commit",()=>{const s=
 test("failed construction callback rolls back money, materials and object placement",()=>{const s={money:50,tick:1,runtime:createRuntimeState(),inventory:{}};addItemStack(s,"wood",2);beginConstruction(s,{transactionID:"B2",buildingType:"pipe",x:1,y:1,moneyCost:20,materials:{wood:2},worldWidth:10,worldHeight:10});const result=commitConstruction(s,"B2",()=>{throw new Error("render-install-failure")});assert.equal(result.ok,false);assert.equal(s.money,50);assert.equal(s.runtime.itemStacks.reduce((n,x)=>n+x.quantity,0),2);assert.equal(Object.keys(s.runtime.reservations).length,1);assert.equal(s.constructionLedger.B2.status,"RESERVED")});
 test("cancel releases reserved stock and repeated transaction IDs are rejected",()=>{const s={money:50,tick:1,runtime:createRuntimeState(),inventory:{}};addItemStack(s,"wood",2);assert.equal(beginConstruction(s,{transactionID:"B3",buildingType:"pipe",x:1,y:1,moneyCost:10,materials:{wood:1},worldWidth:10,worldHeight:10}).ok,true);assert.equal(beginConstruction(s,{transactionID:"B3",buildingType:"pipe",x:2,y:2,moneyCost:10,materials:{wood:1},worldWidth:10,worldHeight:10}).reason,"DUPLICATE_TRANSACTION");assert.equal(cancelConstruction(s,"B3"),true);assert.equal(cancelConstruction(s,"B3"),false);assert.equal(Object.keys(s.runtime.reservations).length,0)});
 test("blueprint placement checks all tiles, rotation and connected footprint",()=>{const source=[{type:"smelter",x:4,y:5,dir:1,footprint:{width:2,height:2}},{type:"pipe",x:6,y:5,dir:1}];const bp=createBlueprint(source,{name:"Test"});const rotated=rotateBlueprint(bp,1);assert.equal(rotated.buildings[0].dir,2);const valid=validateBlueprintPlacement(bp,{x:1,y:1,worldWidth:20,worldHeight:20});assert.equal(valid.valid,true);const blocked=validateBlueprintPlacement(bp,{x:1,y:1,worldWidth:20,worldHeight:20,occupied:[{x:2,y:2}]});assert.equal(blocked.valid,false)});
+
+import {beginBlueprintConstruction,duplicateBlueprint} from "./construction-runtime.js";
+test("multi-building blueprint reserves one combined transaction and installs every footprint",()=>{
+ const s={money:100,tick:2,runtime:createRuntimeState(),inventory:{},buildings:[]};addItemStack(s,"ironPlate",2);addItemStack(s,"wood",1);
+ const bp={version:1,name:"Starter",buildings:[{type:"smelter",dx:0,dy:0,footprint:{width:2,height:2},dir:0},{type:"pipe",dx:2,dy:0,footprint:{width:1,height:1},dir:1}]};
+ const result=beginBlueprintConstruction(s,{transactionID:"BP-1",blueprint:bp,x:3,y:3,worldWidth:20,worldHeight:20,buildingCatalog:{smelter:{moneyCost:30,materials:{ironPlate:2}},pipe:{moneyCost:5,materials:{wood:1}}},foundation:()=>true});
+ assert.equal(result.ok,true);assert.equal(s.money,100);assert.equal(result.transaction.placements.length,2);
+ const committed=commitConstruction(s,"BP-1",(state,tx)=>{for(const p of tx.placements)state.buildings.push({type:p.type,x:p.x,y:p.y,footprint:p.footprint});return {count:tx.placements.length}});
+ assert.equal(committed.ok,true);assert.equal(s.money,65);assert.equal(s.buildings.length,2);assert.equal(s.constructionLedger["BP-1"].status,"COMMITTED");
+});
+test("blueprint with one invalid member reserves nothing and duplicate is uniquely identified",()=>{
+ const s={money:100,tick:1,runtime:createRuntimeState(),inventory:{}};addItemStack(s,"wood",2);
+ const bp={version:1,name:"Invalid",buildings:[{type:"pipe",dx:0,dy:0,footprint:{width:1,height:1}},{type:"pipe",dx:1,dy:0,footprint:{width:1,height:1}}]};
+ const result=beginBlueprintConstruction(s,{transactionID:"BP-2",blueprint:bp,x:9,y:9,worldWidth:10,worldHeight:10,buildingCatalog:{pipe:{moneyCost:1,materials:{wood:1}}},foundation:()=>true});
+ assert.equal(result.ok,false);assert.equal(Object.keys(s.runtime.reservations).length,0);assert.equal(s.moneyReservations,undefined);
+ const copy=duplicateBlueprint(bp,{newID:"BP-COPY"});assert.equal(copy.id,"BP-COPY");assert.equal(copy.buildings.length,2);assert.notEqual(copy,bp);
+});
