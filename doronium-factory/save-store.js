@@ -6,9 +6,11 @@ export function checksumText(value){
  for(let i=0;i<value.length;i++){hash^=value.charCodeAt(i);hash=Math.imul(hash,0x01000193)}
  return (hash>>>0).toString(16).padStart(8,"0");
 }
-export function createSaveEnvelope(state,savedAt=new Date().toISOString()){
+export function createSaveEnvelope(state,savedAt=new Date().toISOString(),metadata={}){
  const serialized=JSON.stringify(state);
- return {game:"doronium-factory",version:3,schemaVersion:SAVE_SCHEMA_VERSION,gameVersion:"v4.5-web-adaptation",savedAt,checksum:checksumText(serialized),state};
+ const revision=Number(metadata?.cloudRevision);
+ const cloudRevision=Number.isSafeInteger(revision)&&revision>=0?revision:null;
+ return {game:"doronium-factory",version:3,schemaVersion:SAVE_SCHEMA_VERSION,gameVersion:"v4.5-web-adaptation",savedAt,cloudRevision,checksum:checksumText(serialized),state};
 }
 export function validateSaveEnvelope(envelope,maxSchemaVersion=SAVE_SCHEMA_VERSION){
  if(!envelope||typeof envelope!=="object"||!envelope.state||typeof envelope.state!=="object")return {valid:false,reason:"INVALID_ENVELOPE"};
@@ -52,8 +54,8 @@ export function readBestSave(storage,key,maxSchemaVersion=SAVE_SCHEMA_VERSION){
  });
  return valid[0];
 }
-export function writeSaveEnvelope(storage,key,state,savedAt=new Date().toISOString()){
- const envelope=createSaveEnvelope(state,savedAt),raw=JSON.stringify(envelope);
+export function writeSaveEnvelope(storage,key,state,savedAt=new Date().toISOString(),metadata={}){
+ const envelope=createSaveEnvelope(state,savedAt,metadata),raw=JSON.stringify(envelope);
  storage.setItem(key+"_tmp",raw);
  const staged=decodeSave(storage.getItem(key+"_tmp"));
  if(!staged.valid)throw new Error("SAVE_TEMP_READBACK_FAILED:"+staged.reason);
