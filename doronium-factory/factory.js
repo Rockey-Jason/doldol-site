@@ -4,6 +4,7 @@ import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt
 import { validateGameData } from "./game-data-validation.js?v=3";
 import { FAILURE_PROFILES } from "./failure-profiles.js?v=1";
 import { buildLogisticsGraph, selectLogisticsTarget, analyzeLogisticsPressure } from "./logistics-runtime.js?v=1";
+import { solvePowerNetworks } from "./network-runtime.js?v=2";
 import { calculateFailureRisks, calculateFailureHazard, rollMachineFailure, advanceFailureExposure, applyMachineFailure, completeMachineRepair } from "./failure-runtime.js?v=2";
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
 import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, awardSkillPoints, unlockSkill, skillNodeStatus, calculateSkillBonuses, validateSkillTree, validateSkillState } from "./skill-runtime.js?v=1";
@@ -65,6 +66,10 @@ const BUILDINGS=[
 {id:"warehouse",name:"통합 물류 센터",icon:"🏬",cat:"logistics",cost:450,materials:{wood:12,ironPlate:5},desc:"인접 벨트의 생산품을 자동으로 회수하고 대량 보관합니다.",unlock:"logistics",kind:"warehouse",power:1},
 {id:"solar",name:"태양광 발전기",icon:"☀️",cat:"power",cost:140,materials:{wood:8,stone:4,copperOre:2},desc:"낮에 전력을 생산합니다. 밤에는 발전량이 감소합니다.",unlock:null,kind:"power",power:0,gen:8},
 {id:"wind",name:"풍력 발전기",icon:"🌬️",cat:"power",cost:280,materials:{wood:10,stone:8,ironPlate:2},desc:"날씨에 영향을 받지만 밤에도 전력을 공급합니다.",unlock:"electricity",kind:"power",power:0,gen:7},
+ {id:"powerCable",name:"전력 케이블",icon:"〰️",cat:"power",cost:18,materials:{wire:2},desc:"인접 케이블과 발전·소비 설비를 연결해 독립 전력망을 구성합니다.",unlock:null,kind:"powerCable",power:0},
+ {id:"transformer",name:"산업용 변압기",icon:"⚡",cat:"power",cost:480,materials:{ironPlate:8,wire:10,circuit:2},desc:"연결된 전력망의 최대 전송 용량을 30kW로 제한합니다.",unlock:"electricity",kind:"transformer",power:0,throughput:30},
+ {id:"battery",name:"산업용 배터리",icon:"🔋",cat:"power",cost:550,materials:{ironPlate:6,wire:4,quartz:2},desc:"120,000kJ를 저장하고 최대 8kW로 방전, 4kW로 충전합니다.",unlock:"electricity",kind:"battery",power:0,capacityKJ:120000,maxDischargeKW:8,maxChargeKW:4},
+
 {id:"coalgen",name:"석탄 화력 발전소",icon:"♨️",cat:"power",cost:520,materials:{ironPlate:6,stone:10},desc:"석탄을 태워 안정적으로 대량의 전력을 생산합니다.",unlock:"metallurgy",kind:"power",power:0,gen:18},
 {id:"pump",name:"정수 펌프",icon:"💧",cat:"resource",cost:150,materials:{wood:7,stone:5},desc:"수원지에서 물을 끌어올립니다. 물 타일 위에 설치하세요.",unlock:null,kind:"pump",power:1},
 {id:"minerIron",name:"철광석 채굴기",icon:"⛏️",cat:"resource",cost:180,materials:{wood:8,stone:5,ironOre:2},desc:"철 광맥에서 철광석을 자동 채굴합니다.",unlock:null,kind:"miner",resource:"ironOre",power:2},
@@ -206,7 +211,7 @@ function makeWorld(seed=827142){
 }
 function freshState(seed=generateWorldSeed()){
  const world=makeWorld(seed);
- const state={runtime:createRuntimeState(),contractRuntime:createContractState((seed^0x4c4f4749)>>>0),constructionLedger:{},moneyReservations:{},blueprints:[],version:1,worldVersion:4,seed:seed>>>0,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},money:1100,inventory:{wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
+ const state={runtime:createRuntimeState(),contractRuntime:createContractState((seed^0x4c4f4749)>>>0),constructionLedger:{},moneyReservations:{},blueprints:[],powerTopologyEnabled:false,version:1,worldVersion:4,seed:seed>>>0,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},money:1100,inventory:{wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
  ensureItemStacks(state);return state;
 }
 let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, frameRenderAccumulator=0, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, activeBlueprintID=null, activeBlueprintRotation=0, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudSaveRevision=0, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
@@ -269,7 +274,37 @@ function unlockOk(b){return !b.unlock||S.research.includes(b.unlock)}
 function buildingDef(id){return BUILDINGS.find(b=>b.id===id)}
 function buildingAt(x,y){ensureBuildingIndex();return buildingIndex.get(surfaceKey(x,y))||null}
 function tileNode(x,y){return S.nodes[x+","+y]||null}
-function currentPower(){const daylight=((S.seconds%86400)/86400);const sun=daylight>.25&&daylight<.78?1:.22;const weather=weatherNow();let gen=0,used=0;for(const b of S.buildings){const def=buildingDef(b.type);if(!def)continue;if(b.type==="solar")gen+=def.gen*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1);else if(b.type==="wind")gen+=def.gen*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05);else if(b.type==="coalgen")gen+=b.fuelTimer>0?18:0;else used+=(b.type==="fusion"?(S.fusionJob?FUSION_STAGES[S.fusionJob.stage]?.power||40:4):(def.power||0))}return {gen,used,ratio:used===0?1:Math.min(1,gen/used),raw:gen-used}}
+function currentPower(){
+ const daylight=(S.seconds%86400)/86400,sun=daylight>.25&&daylight<.78?1:.22,weather=weatherNow(),nodes=[],powerBuildings=[];
+ for(const b of S.buildings){
+  const def=buildingDef(b.type);if(!def)continue;let node=null;
+  if(b.type==="powerCable")node={id:b.uid,type:"CABLE",buildingType:b.type};
+  else if(b.type==="transformer")node={id:b.uid,type:"TRANSFORMER",maxThroughputKW:Number(def.throughput)||30,buildingType:b.type};
+  else if(b.type==="battery")node={id:b.uid,type:"BATTERY",energyKJ:Math.max(0,Number(b.energyKJ)||0),capacityKJ:Number(def.capacityKJ)||120000,maxDischargeKW:Number(def.maxDischargeKW)||8,maxChargeKW:Number(def.maxChargeKW)||4,priority:80,buildingType:b.type};
+  else if(b.type==="solar")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1),buildingType:b.type};
+  else if(b.type==="wind")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05),buildingType:b.type};
+  else if(b.type==="coalgen")node={id:b.uid,type:"GENERATOR",generationKW:b.fuelTimer>0?18:0,buildingType:b.type};
+  else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["pump","doriFarm"].includes(b.type)?45:20;node={id:b.uid,type:"CONSUMER",demandKW:b.type==="fusion"?(S.fusionJob?FUSION_STAGES[S.fusionJob.stage]?.power||40:4):def.power,priority,transmissionLoss:0,buildingType:b.type}}
+  if(node){nodes.push(node);powerBuildings.push(b)}
+ }
+ const edges=[];
+ if(S.powerTopologyEnabled){
+  for(let i=0;i<powerBuildings.length;i++)for(let j=i+1;j<powerBuildings.length;j++){
+   const a=powerBuildings[i],b=powerBuildings[j],distance=Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
+   if(distance===1&&(a.type==="powerCable"||b.type==="powerCable"||a.type!=="powerCable"&&b.type!=="powerCable"))edges.push({id:"P:"+a.uid+":"+b.uid,from:String(a.uid),to:String(b.uid)});
+  }
+ }else{
+  // Preserve legacy shared-grid behavior until a player builds the first explicit cable.
+  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++)edges.push({id:"LEGACY:"+nodes[i].id+":"+nodes[j].id,from:String(nodes[i].id),to:String(nodes[j].id)});
+ }
+ const networks=solvePowerNetworks({nodes,edges,deltaSeconds:STEP}),allocations={},batteryChanges=[];
+ for(const network of networks){for(const item of network.allocations)allocations[item.id]=item;for(const change of network.batteryChanges||[])batteryChanges.push(change)}
+ const gen=networks.reduce((n,x)=>n+x.generationKW,0),used=networks.reduce((n,x)=>n+x.allocations.reduce((a,v)=>a+v.demandKW,0),0),delivered=networks.reduce((n,x)=>n+x.allocatedKW,0),storageDischargeKW=networks.reduce((n,x)=>n+x.storageDischargeKW,0);
+ return {gen,used,delivered,ratio:used===0?1:Math.min(1,delivered/used),raw:gen+storageDischargeKW-used,allocations,networks,batteryChanges,topologyEnabled:!!S.powerTopologyEnabled,networkCount:networks.length};
+}
+function settlePowerStorage(power){
+ for(const change of power?.batteryChanges||[]){const battery=S.buildings.find(b=>String(b.uid)===String(change.id));if(battery?.type==="battery")battery.energyKJ=Math.max(0,Number(change.afterKJ)||0)}
+}
 function weatherNow(){const day=Math.floor(S.seconds/86400);return ["Clear","Clear","Rain","Clear","Storm","Clear","Snow"][day%7]}
 function revealAround(){if(S.player.layer==="mine")return;let changed=false;const radius=11*calculateSkillBonuses(S.skills).scannerRangeMultiplier,limit=radius*radius;for(let y=-Math.ceil(radius);y<=Math.ceil(radius);y++)for(let x=-Math.ceil(radius);x<=Math.ceil(radius);x++){if(x*x+y*y>limit)continue;const xx=S.player.x+x,yy=S.player.y+y;if(xx>=0&&yy>=0&&xx<WORLD_W&&yy<WORLD_H){const key=xx+","+yy;if(!S.seen[key]){S.seen[key]=true;changed=true}}}if(biomeAt(S.player.x,S.player.y)==="crystal")claimSkillPoint("EXPLORATION_CRYSTAL_CAVERN");if(changed)markVisibilityDirty()}
 function getQuest(){return S.questIndex>=QUESTS.length?null:QUESTS[S.questIndex]}
@@ -407,7 +442,7 @@ function consumeRecipe(b,r){if(!canConsumeRecipe(b,r))return null;const inventor
 function createOutput(b,id,qty,meta){if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(RESOURCE[id].name+" 생산 · "+fmt(qty)+"개");markDirty();return true}
 const BUILDING_FOOTPRINTS=Object.freeze({
  storage:{width:2,height:2},warehouse:{width:3,height:2},smelter:{width:2,height:2},wiremill:{width:2,height:2},assembler:{width:2,height:2},lab:{width:2,height:2},
- reactor:{width:3,height:3},variantLab:{width:3,height:3},cooling:{width:2,height:2},fusion:{width:4,height:4},relay:{width:2,height:2},core:{width:3,height:3}
+ reactor:{width:3,height:3},variantLab:{width:3,height:3},cooling:{width:2,height:2},fusion:{width:4,height:4},relay:{width:2,height:2},core:{width:3,height:3},transformer:{width:2,height:2},battery:{width:2,height:2}
 });
 function getBuildingFootprint(type){return BUILDING_FOOTPRINTS[type]||{width:1,height:1}}
 function buildingFootprintCells(b){const f=b.footprint||getBuildingFootprint(b.type);return footprintCells({x:b.x,y:b.y,width:f.width,height:f.height,rotation:b.footprintRotation??0})}
@@ -478,7 +513,7 @@ function placeBuilding(type,x,y){
  if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}
  const footprint=getBuildingFootprint(type),rotation=0,cells=footprintCells({x,y,...footprint,rotation});
  if(cells.some(p=>buildingOccupiesCell(p.x,p.y))){toast("건설 면적이 기존 시설과 겹칩니다.","warn");return false}
- const requiresFlat=type!=="beltAdaptive"&&!["relay","core","pump"].includes(type);
+ const requiresFlat=type!=="beltAdaptive"&&!["relay","core","pump","powerCable"].includes(type);
  const occupied=[];
  for(const b of S.buildings)occupied.push(...buildingFootprintCells(b));
  const heightAt=(cx,cy)=>{const v=S.flattened?.[surfaceKey(cx,cy)];return v&&typeof v==="object"&&Number.isFinite(v.height)?v.height:terrainHeightAt(cx,cy)};
@@ -507,7 +542,7 @@ function placeBuilding(type,x,y){
   built.uid=uid;state.buildings.push(built);return {uid};
  });
  if(!committed.ok){cancelConstruction(S,transactionID);toast("건설 트랜잭션을 커밋하지 못했습니다. 자금과 재료는 보존했습니다.","warn");return false}
- syncLegacyInventory(S);
+ if(type==="powerCable")S.powerTopologyEnabled=true;syncLegacyInventory(S);
  markSceneDirty();S.stats.built[type]=(S.stats.built[type]||0)+1;
  if(type==="relay"){const index=S.sites.relay.findIndex(p=>p.x===x&&p.y===y);if(index>=0)S.relaySites[index]=true}
  if(type==="core")S.corePlaced=true;
@@ -650,8 +685,8 @@ function finishPlanetary(){if(!S.coreInstalled||!S.relaySites.every(Boolean)){to
 
 function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;
  if(b.type==="coalgen"){if(b.fuelTimer<=0){if(takeItem("coal",1)){b.fuelTimer=24;log("화력 발전소 석탄 투입")}else b.status="NO_INPUT"}else{b.fuelTimer=Math.max(0,b.fuelTimer-dt);b.status="RUNNING"}return}
- if(b.type==="solar"||b.type==="wind"||b.type==="cooling"||b.type==="storage"||b.type==="warehouse"||b.type==="market"||isBeltType(b.type)||b.type==="relay"||b.type==="core"||b.type==="lab")return;
- const ratio=power.ratio;
+ if(b.type==="solar"||b.type==="wind"||b.type==="cooling"||b.type==="storage"||b.type==="warehouse"||b.type==="market"||b.type==="battery"||b.type==="transformer"||b.type==="powerCable"||isBeltType(b.type)||b.type==="relay"||b.type==="core"||b.type==="lab")return;
+ const ratio=power.allocations?.[String(b.uid)]?.ratio??((d.power||0)>0?0:1);
  if(b.output){b.status="PAUSED_OUTPUT";return}
  if(b.type==="minerIron"||b.type==="minerCopper"||b.type==="minerCoal"||d.kind==="miner"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=8){b.progress=0;node.amount=Math.max(0,node.amount-1);const id=d.resource;createOutput(b,id,1,{quality:86+(node.seed%12),purity:88,synthetic:false});}return}
  if(b.type==="pump"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=5){b.progress=0;node.amount=Math.max(0,node.amount-3);createOutput(b,"water",3,{quality:100,purity:100,synthetic:false})}return}
@@ -739,7 +774,7 @@ function tick(dt){
   PRODUCTION_STATE(){for(const b of S.buildings){if(b.type==="coalgen"&&b.fuelTimer<=0&&itemCount("coal")>0){takeItem("coal",1);b.fuelTimer=24;b.status="RUNNING"}}},
   POWER_RESOLVE(){context.power=currentPower()},
   PRODUCTION_PROGRESS(){for(const b of S.buildings)tickBuilding(b,dt,context.power||currentPower())},
-  POWER_STABILITY(){context.power=currentPower()},
+  POWER_STABILITY(){context.power=currentPower();settlePowerStorage(context.power)},
   CONVEYOR_TRANSFER(){tickBelts(dt)},
   METRICS(){tickResearch(dt,(context.power||currentPower()).ratio);if(S.fusionJob)updateFusion(dt);const arrived=advanceShipments(S,S.contractRuntime,dt);if(arrived.length){for(const shipment of arrived)log((shipment.status==="DELIVERED"?"배송 성공":"배송 실패")+" · "+shipment.contractID,shipment.status==="DELIVERED"?"good":"warn");markDirty()}if(S.tick%10===0){questCheck();if(!E2E_MODE){renderHud();if(activePanel==="factory")renderFactory();if(activePanel==="inventory")renderInventory();if(activePanel==="mission")renderMissions();if(activePanel==="research")renderResearch()}}},
   SAVE_SNAPSHOT_REQUEST(){if(S.tick%5===0){S.runtime.saveSnapshotRequested=true;markDirty()}else S.runtime.saveSnapshotRequested=false}
@@ -912,7 +947,7 @@ function wireControls(){
 function renderQuickObjectives(){const q=getQuest();if($("active-mission-hud")){$("active-mission-hud").innerHTML=q?'<small>ACTIVE DIRECTIVE · '+String(S.questIndex+1).padStart(2,"0")+'</small><strong>'+q.title+'</strong><span>'+q.desc+'</span>':'<small>CAMPAIGN COMPLETE</small><strong>행성 안정화 완료</strong><span>메인 스토리가 완료되었습니다.</span>'}if(!q){$("quick-objectives").innerHTML='<div class="objective-mini"><small>CAMPAIGN COMPLETE</small><strong>행성 안정화 완료</strong><div class="mini-progress"><i style="width:100%"></i></div></div>';return}const p=Math.min(q.max,q.progress(S));$("quick-objectives").innerHTML='<div class="objective-mini"><small>ACTIVE OBJECTIVE</small><strong>'+q.title+'</strong><div class="mini-progress"><i style="width:'+Math.round(p/q.max*100)+'%"></i></div></div><div class="objective-mini"><small>ORBIT DIRECTIVE</small><strong>'+q.desc+'</strong><div class="mini-progress"><i style="width:'+Math.round(p/q.max*100)+'%"></i></div></div><div class="objective-mini"><small>COMPLETION REWARD</small><strong>'+fmt(q.reward)+' D · 자금 보상</strong><div class="mini-progress"><i style="width:'+Math.round(p/q.max*100)+'%"></i></div></div>'}
 function renderAll(){renderHud();renderBuildList();renderFactory();renderInventory();renderResearch();renderMissions();renderQuickObjectives();drawWorld()}
 function hydrateState(input){markSceneDirty();const base=freshState(),incoming=input&&typeof input==="object"?input:{},migrate=Number(incoming.worldVersion||0)<3,expandSurface=Number(incoming.worldVersion||0)<4;
- S={...base,...incoming,worldVersion:4,player:{...base.player,...incoming.player},inventory:{...base.inventory,...incoming.inventory},meta:{...incoming.meta},tools:{...base.tools,...incoming.tools},activeTool:incoming.activeTool||"pickaxe",campaign:{...base.campaign,...incoming.campaign},flattened:{...incoming.flattened},foundation:{...incoming.foundation},mineDeposits:incoming.mineDeposits&&Object.keys(incoming.mineDeposits).length?incoming.mineDeposits:base.mineDeposits,buildings:Array.isArray(incoming.buildings)?incoming.buildings:[],nodes:migrate?base.nodes:(expandSurface?{...base.nodes,...(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:{})}:(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:base.nodes)),sites:base.sites,seen:incoming.seen||{},research:Array.isArray(incoming.research)?incoming.research:[],stats:{...base.stats,...incoming.stats,gathered:{...base.stats.gathered,...incoming.stats?.gathered},built:{...base.stats.built,...incoming.stats?.built},produced:{...base.stats.produced,...incoming.stats?.produced}},settings:{...base.settings,...incoming.settings},survival:{...base.survival,...incoming.survival},relaySites:Array.isArray(incoming.relaySites)?incoming.relaySites:[false,false,false],skills:normalizeSkillState(incoming.skills),contractRuntime:incoming.contractRuntime&&Array.isArray(incoming.contractRuntime.shipments)?incoming.contractRuntime:base.contractRuntime,constructionLedger:incoming.constructionLedger&&typeof incoming.constructionLedger==="object"?incoming.constructionLedger:{},moneyReservations:incoming.moneyReservations&&typeof incoming.moneyReservations==="object"?incoming.moneyReservations:{},blueprints:Array.isArray(incoming.blueprints)?incoming.blueprints.filter(b=>b&&b.version===1&&Array.isArray(b.buildings)):[]};
+ S={...base,...incoming,worldVersion:4,player:{...base.player,...incoming.player},inventory:{...base.inventory,...incoming.inventory},meta:{...incoming.meta},tools:{...base.tools,...incoming.tools},activeTool:incoming.activeTool||"pickaxe",campaign:{...base.campaign,...incoming.campaign},flattened:{...incoming.flattened},foundation:{...incoming.foundation},mineDeposits:incoming.mineDeposits&&Object.keys(incoming.mineDeposits).length?incoming.mineDeposits:base.mineDeposits,buildings:Array.isArray(incoming.buildings)?incoming.buildings:[],nodes:migrate?base.nodes:(expandSurface?{...base.nodes,...(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:{})}:(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:base.nodes)),sites:base.sites,seen:incoming.seen||{},research:Array.isArray(incoming.research)?incoming.research:[],stats:{...base.stats,...incoming.stats,gathered:{...base.stats.gathered,...incoming.stats?.gathered},built:{...base.stats.built,...incoming.stats?.built},produced:{...base.stats.produced,...incoming.stats?.produced}},settings:{...base.settings,...incoming.settings},survival:{...base.survival,...incoming.survival},relaySites:Array.isArray(incoming.relaySites)?incoming.relaySites:[false,false,false],skills:normalizeSkillState(incoming.skills),contractRuntime:incoming.contractRuntime&&Array.isArray(incoming.contractRuntime.shipments)?incoming.contractRuntime:base.contractRuntime,constructionLedger:incoming.constructionLedger&&typeof incoming.constructionLedger==="object"?incoming.constructionLedger:{},moneyReservations:incoming.moneyReservations&&typeof incoming.moneyReservations==="object"?incoming.moneyReservations:{},blueprints:Array.isArray(incoming.blueprints)?incoming.blueprints.filter(b=>b&&b.version===1&&Array.isArray(b.buildings)):[],powerTopologyEnabled:incoming.powerTopologyEnabled===true};
  if(!incoming.runtime)S.runtime=createRuntimeState();
  ensureItemStacks(S);if(!S.contractRuntime||!Array.isArray(S.contractRuntime.shipments))S.contractRuntime=createContractState((Number(S.seed)^0x4c4f4749)>>>0);if(!S.contractRuntime.claims||typeof S.contractRuntime.claims!=="object")S.contractRuntime.claims={};reconcileSkillMilestones();
  if(migrate){const ox=38,oz=32;S.player.x=clamp(Number(incoming.player?.x??18)+ox,0,WORLD_W-1);S.player.y=clamp(Number(incoming.player?.y??14)+oz,0,WORLD_H-1);S.player.layer="surface";S.player.mineLevel=1;S.player.surfacePosition=null;for(const b of S.buildings){b.x=clamp((Number(b.x)||0)+ox,0,WORLD_W-1);b.y=clamp((Number(b.y)||0)+oz,0,WORLD_H-1);const k=surfaceKey(b.x,b.y);delete S.nodes[k];S.flattened[k]={height:terrainHeightAt(b.x,b.y)};S.foundation[k]=true}S.player.x=clamp(S.player.x,1,WORLD_W-2);S.player.y=clamp(S.player.y,1,WORLD_H-2)}
