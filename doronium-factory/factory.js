@@ -1,5 +1,5 @@
 import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=19";
-import { createRuntimeState, ensureItemStacks, addItemStack, syncLegacyInventory, availableItemCount, availableItemCountWhere, reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, allocateEntityID, runCanonicalTick, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=6";
+import { createRuntimeState, ensureItemStacks, addItemStack, syncLegacyInventory, availableItemCount, availableItemCountWhere, reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations, beginInventoryTransaction, commitInventoryTransaction, rollbackInventoryTransaction, removeItemStacks, allocateEntityID, runCanonicalTick, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=7";
 import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=3";
 import { validateGameData } from "./game-data-validation.js?v=3";
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
@@ -358,10 +358,11 @@ function placeBuilding(type,x,y){
  if(!Number.isSafeInteger(moneyCost)||moneyCost<0||!Number.isFinite(S.money)||S.money<moneyCost){toast("건설 자금이 부족합니다.","warn");return false}
  // Reserve all materials first. No currency or world state changes until every item is secured.
  const materialRequirements=d.materials||{};
- const reservationIDs=Object.keys(materialRequirements).length?reserveItemBatch(S,materialRequirements,"build:"+type+":"+S.tick):[];
- if(reservationIDs===null){toast("건설 재료가 부족하거나 다른 작업에 예약되어 있습니다.","warn");return false}
- const consumed=reservationIDs.length?commitItemReservations(S,reservationIDs):[];
- if(!consumed){for(const id of reservationIDs)releaseItemReservation(S,id);toast("건설 거래를 안전하게 완료하지 못했습니다. 자원은 변경되지 않았습니다.","warn");return false}
+ const transactionID=allocateEntityID(S,"TXN");
+ const transaction=beginInventoryTransaction(S,{transactionID,ownerID:"build:"+type,requirements:materialRequirements});
+ if(!transaction.ok){toast("건설 재료가 부족하거나 다른 작업에 예약되어 있습니다.","warn");return false}
+ const consumed=commitInventoryTransaction(S,transactionID);
+ if(!consumed){rollbackInventoryTransaction(S,transactionID,"BUILD_COMMIT_FAILED");toast("건설 거래를 안전하게 완료하지 못했습니다. 자원은 변경되지 않았습니다.","warn");return false}
  S.money-=moneyCost;
  syncLegacyInventory(S);
  const b={uid:allocateEntityID(S,"BLDG"),type,x,y,dir:1,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:1,status:"IDLE",autoFeed:true,variant:"doronium_blue",temp:25,pressure:0,fuelTimer:0,moveTimer:0};
@@ -504,7 +505,8 @@ function cancelFusionJob(reason){
  const job=S.fusionJob;if(!job)return false;
  // New jobs hold material reservations until the final stage. Releasing them restores availability exactly.
  if(!job.materialsConsumed&&!job.legacyConsumedMaterials){
-  for(const id of Array.isArray(job.reservationIDs)?job.reservationIDs:[])releaseItemReservation(S,id);
+  if(job.transactionID)rollbackInventoryTransaction(S,job.transactionID,reason);
+  else for(const id of Array.isArray(job.reservationIDs)?job.reservationIDs:[])releaseItemReservation(S,id);
   syncLegacyInventory(S);
   S.lastFusionJob={jobID:job.jobID||null,status:"CANCELLED",reason:String(reason),endedAt:S.seconds,stage:Number(job.stage)||0};
   S.fusionJob=null;
@@ -530,7 +532,7 @@ function updateFusion(dt){
   log("퓨전 단계 완료 · "+stage.name,"good");job.stage++;job.progress=0;
   if(job.stage>=FUSION_STAGES.length){
    if(!job.materialsConsumed){
-    const consumed=commitItemReservations(S,Array.isArray(job.reservationIDs)?job.reservationIDs:[]);
+    const consumed=job.transactionID?commitInventoryTransaction(S,job.transactionID):commitItemReservations(S,Array.isArray(job.reservationIDs)?job.reservationIDs:[]);
     if(!consumed){job.status="ERROR";job.errorCode="FUSION_INPUT_ESCROW_INVALID";toast("퓨전 원료 보관 기록을 확인할 수 없어 출력을 중단했습니다.","warn");markDirty();return}
     job.materialsConsumed=true;
     job.consumedLedger=consumed.map(stack=>({itemID:stack.itemID,quantity:stack.quantity,quality:stack.quality,purity:stack.purity,synthetic:stack.synthetic,sourceStackID:stack.runtimeID}));
@@ -557,10 +559,11 @@ function startFusion(){
  showModal("인피니티 퓨전 시작","<p>15종 도로늄 각 100개, 총 1,500개가 공정 예약으로 잠깁니다.</p><p>실제로 예약되는 각 ItemStack은 품질 90 이상, 순도 90 이상, 비합성이어야 합니다. 최종 단계에서만 원료가 커밋되며, 그 전 설비 중단 시 원료 예약을 해제합니다. 7단계 이상적 가동 시간은 260초입니다.</p>",[
   {label:"취소",cls:"secondary"},
   {label:"퓨전 시작",cls:"gold",action:()=>{
-   const reservationIDs=reserveItemBatch(S,requirements,"fusion-job:"+S.tick,qualifies);
-   if(!reservationIDs){toast("원료 예약에 실패했습니다. 원료 수량과 품질을 다시 확인하세요.","warn");closeModal();return}
+   const transactionID=allocateEntityID(S,"TXN");
+   const transaction=beginInventoryTransaction(S,{transactionID,ownerID:"fusion-job",requirements,predicate:qualifies});
+   if(!transaction.ok){toast("원료 예약에 실패했습니다. 원료 수량과 품질을 다시 확인하세요.","warn");closeModal();return}
    const jobID=allocateEntityID(S,"FUSION");
-   S.fusionJob={jobID,stage:0,progress:0,startedAt:S.seconds,reservationIDs,materialsConsumed:false,status:"RESERVED",manifest:VARIANTS.map(itemID=>({itemID,quantity:100}))};
+   S.fusionJob={jobID,transactionID,stage:0,progress:0,startedAt:S.seconds,materialsConsumed:false,status:"RESERVED",manifest:VARIANTS.map(itemID=>({itemID,quantity:100}))};
    const machine=S.buildings.find(x=>x.type==="fusion");if(machine){machine.temp=25;machine.pressure=0}
    log("인피니티 퓨전 시작 · 1,500개 Stack 단위 원료 예약");toast("INFINITY FUSION STARTED");closeModal();markDirty();renderFactory()
   }}
@@ -793,7 +796,7 @@ function renderAll(){renderHud();renderBuildList();renderFactory();renderInvento
 function hydrateState(input){markSceneDirty();const base=freshState(),incoming=input&&typeof input==="object"?input:{},migrate=Number(incoming.worldVersion||0)<3,expandSurface=Number(incoming.worldVersion||0)<4;
  S={...base,...incoming,worldVersion:4,player:{...base.player,...incoming.player},inventory:{...base.inventory,...incoming.inventory},meta:{...incoming.meta},tools:{...base.tools,...incoming.tools},activeTool:incoming.activeTool||"pickaxe",campaign:{...base.campaign,...incoming.campaign},flattened:{...incoming.flattened},foundation:{...incoming.foundation},mineDeposits:incoming.mineDeposits&&Object.keys(incoming.mineDeposits).length?incoming.mineDeposits:base.mineDeposits,buildings:Array.isArray(incoming.buildings)?incoming.buildings:[],nodes:migrate?base.nodes:(expandSurface?{...base.nodes,...(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:{})}:(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:base.nodes)),sites:base.sites,seen:incoming.seen||{},research:Array.isArray(incoming.research)?incoming.research:[],stats:{...base.stats,...incoming.stats,gathered:{...base.stats.gathered,...incoming.stats?.gathered},built:{...base.stats.built,...incoming.stats?.built},produced:{...base.stats.produced,...incoming.stats?.produced}},settings:{...base.settings,...incoming.settings},survival:{...base.survival,...incoming.survival},relaySites:Array.isArray(incoming.relaySites)?incoming.relaySites:[false,false,false],skills:normalizeSkillState(incoming.skills)};
  if(!incoming.runtime)S.runtime=createRuntimeState();
- ensureItemStacks(S);if(S.fusionJob&&!Array.isArray(S.fusionJob.reservationIDs)&&!S.fusionJob.materialsConsumed)S.fusionJob.legacyConsumedMaterials=true;reconcileSkillMilestones();
+ ensureItemStacks(S);if(S.fusionJob&&!S.fusionJob.transactionID&&!Array.isArray(S.fusionJob.reservationIDs)&&!S.fusionJob.materialsConsumed)S.fusionJob.legacyConsumedMaterials=true;reconcileSkillMilestones();
  if(migrate){const ox=38,oz=32;S.player.x=clamp(Number(incoming.player?.x??18)+ox,0,WORLD_W-1);S.player.y=clamp(Number(incoming.player?.y??14)+oz,0,WORLD_H-1);S.player.layer="surface";S.player.mineLevel=1;S.player.surfacePosition=null;for(const b of S.buildings){b.x=clamp((Number(b.x)||0)+ox,0,WORLD_W-1);b.y=clamp((Number(b.y)||0)+oz,0,WORLD_H-1);const k=surfaceKey(b.x,b.y);delete S.nodes[k];S.flattened[k]={height:terrainHeightAt(b.x,b.y)};S.foundation[k]=true}S.player.x=clamp(S.player.x,1,WORLD_W-2);S.player.y=clamp(S.player.y,1,WORLD_H-2)}
  S.simSpeed=[1,2,3].includes(S.simSpeed)?S.simSpeed:1;S.player.x=clamp(Number(S.player.x??64),0,S.player.layer==="mine"?MINE_W-1:WORLD_W-1);S.player.y=clamp(Number(S.player.y??52),0,S.player.layer==="mine"?MINE_H-1:WORLD_H-1);S.paused=!!S.paused;S.tick=Number(S.tick)||0;S.seconds=Number(S.seconds)||8*3600;S.player.viewMode=["first","third","map"].includes(S.player.viewMode)?S.player.viewMode:"first";if(S.player.layer==="mine"&&S.player.viewMode==="map")S.player.viewMode="first";S.player.mineLevel=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS);S.player.yaw=Number(S.player.yaw)||0;S.player.pitch=clamp(Number(S.player.pitch??-.12),-1.25,1.25);S.survival.health=clamp(Number(S.survival.health??100),0,100);S.survival.hunger=clamp(Number(S.survival.hunger??100),0,100);S.survival.thirst=clamp(Number(S.survival.thirst??100),0,100);playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:S.player.yaw,pitch:S.player.pitch,path:[],moving:false,facing:0,onArrive:null};rebuildCooldownIndex();}
 function loadLocal(){const candidate=readBestSave(localStorage,activeLocalKey);if(!candidate)return null;if(candidate.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;setSaveMessage("더 최신 버전의 저장 데이터입니다. 최신 게임 버전에서 열어 주세요.");if(!E2E_MODE)showModal("저장 데이터 버전 확인 필요","<p>이 저장 데이터는 현재 게임보다 새로운 버전에서 만들어졌습니다.</p><p>데이터를 덮어쓰지 않도록 저장을 잠갔습니다. 최신 게임 버전에서 다시 열어 주세요.</p>",[{label:"확인",cls:"primary"}]);return "future-schema-blocked"}if(!candidate.valid)return null;try{hydrateState(candidate.state);if(candidate.source!==activeLocalKey){restoreSaveCandidate(localStorage,activeLocalKey,candidate);if(!E2E_MODE)toast(candidate.source.includes("_backup_")?"이전 백업 저장 데이터에서 복구했습니다.":"임시 저장 데이터에서 복구했습니다.");}return candidate.savedAt||S.lastSavedAt||null}catch(error){console.warn("Local save candidate rejected",candidate.source,error);return null}}
