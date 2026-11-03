@@ -59,8 +59,8 @@ export function tickFluidNetwork({nodes=[],edges=[],deltaSeconds=.1,ambientTempe
   const requested=Math.max(0,finite(edge.requestedLiters,Infinity));
   const moved=Math.min(sourceAmount,Math.max(0,capacity-targetAmount),dt*maxFlow,dt*pressureFlow,requested);
   if(!(moved>0))continue;
-  source.amountL=sourceAmount-moved;target.amountL=targetAmount+moved;
-  if(!target.fluidType)target.fluidType=sourceType;
+  source.amountL=sourceAmount-moved;target.amountL=targetAmount+moved;if(source.amountL<=1e-12){source.amountL=0;source.fluidType=null;}
+  if(targetAmount<=0)target.fluidType=sourceType;
   const sourceTemp=finite(source.temperatureC,20),targetTemp=finite(target.temperatureC,20);
   target.temperatureC=targetAmount>0?(targetTemp*targetAmount+sourceTemp*moved)/(targetAmount+moved):sourceTemp;
   source.pressureKPa=Math.max(0,sourcePressure-moved/Math.max(.001,finite(source.pressureVolumeL,100))*100);
