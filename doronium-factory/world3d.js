@@ -111,7 +111,7 @@ function crystalGeometry(id){
 }
 function makeCrystal(parent,id,x,y,z,size=4){
  const spec=crystalSpecs[id]||crystalSpecs.doronium_normal;
- const material=new THREE.MeshPhysicalMaterial({color:spec.color,metalness:.4,roughness:.15,transmission:(id==="doronium_clear"||id==="doronium_cold") ? .22 : .03,transparent:id==="doronium_clear"||id==="doronium_cold"||id==="doronium_void",opacity:id==="doronium_clear" ? .78 : .95,emissive:spec.emissive,emissiveIntensity:.55,clearcoat:.9,clearcoatRoughness:.12});
+ const material=new THREE.MeshPhysicalMaterial({color:spec.color,metalness:.4,roughness:.15,transmission:(id==="doronium_clear"||id==="doronium_cold") ? .22 : .03,transparent:id==="doronium_clear"||id==="doronium_cold"||id==="doronium_void"||id==="ITEM_DORONUM_TRANSLUCENT"||id==="ITEM_DORONUM_COLD_CRYSTAL"||id==="ITEM_DORONUM_BLACK",opacity:id==="doronium_clear"||id==="ITEM_DORONUM_TRANSLUCENT" ? .78 : .95,emissive:spec.emissive,emissiveIntensity:.55,clearcoat:.9,clearcoatRoughness:.12});
  const mesh=new THREE.Mesh(crystalGeometry(id),material);mesh.position.set(x,y,z);mesh.scale.set(size,size*1.25,size);mesh.rotation.set(.18,.22,.08);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);
  const edges=new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry,24),new THREE.LineBasicMaterial({color:spec.color,transparent:true,opacity:.38}));mesh.add(edges);
  mesh.userData.baseScale=mesh.scale.clone();return mesh;
