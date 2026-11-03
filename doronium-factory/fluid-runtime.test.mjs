@@ -17,3 +17,18 @@ test("one-way check valves do not permit reverse pressure flow",()=>{
  const r=tickFluidNetwork({nodes:[low,high],edges:[{id:"CHECK",from:"LOW",to:"HIGH",oneWay:true,maxFlowLps:4,conductanceLpsPerKPa:1}],deltaSeconds:1});
  assert.equal(r.flows.length,0);assert.equal(low.amountL,2);assert.equal(high.amountL,10);
 });
+
+test("pressurized water propagates across a serial pipe valve and tank chain in one fixed tick",()=>{
+ const pump={id:"P",type:"PUMP",amountL:10,capacityL:100,fluidType:"WATER",pressureKPa:0,pumpHeadKPa:180,maxPressureKPa:350};
+ const pipe={id:"A",type:"PIPE",amountL:0,capacityL:100,pressureKPa:0,maxPressureKPa:350};
+ const valve={id:"V",type:"VALVE",amountL:0,capacityL:100,pressureKPa:0,maxPressureKPa:350};
+ const pipe2={id:"B",type:"PIPE",amountL:0,capacityL:100,pressureKPa:0,maxPressureKPa:350};
+ const tank={id:"T",type:"TANK",amountL:0,capacityL:500,pressureKPa:0,maxPressureKPa:600};
+ const result=tickFluidNetwork({nodes:[pump,pipe,valve,pipe2,tank],edges:[
+  {id:"1",from:"P",to:"A",oneWay:false,maxFlowLps:20,conductanceLpsPerKPa:50,maxPressureKPa:350},
+  {id:"2",from:"A",to:"V",oneWay:false,maxFlowLps:20,conductanceLpsPerKPa:50,maxPressureKPa:350},
+  {id:"3",from:"V",to:"B",oneWay:false,maxFlowLps:20,conductanceLpsPerKPa:50,maxPressureKPa:350},
+  {id:"4",from:"B",to:"T",oneWay:false,maxFlowLps:20,conductanceLpsPerKPa:50,maxPressureKPa:350}
+ ],deltaSeconds:.1});
+ assert.equal(result.flows.length,4);assert.ok(tank.amountL>0);assert.equal(result.massBalance.valid,true);
+});
