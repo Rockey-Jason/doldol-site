@@ -6,7 +6,8 @@ import {
   reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations,
   splitItemStack, mergeItemStacks, validateRuntimeState, availableItemCount,
   runCanonicalTick, TICK_STAGE_ORDER, availableEligibleItemCount,
-  reserveEligibleItemBatch, allocateEntityID
+  reserveEligibleItemBatch, allocateEntityID, enqueueSimulationEvent,
+  processSimulationEvents, nextDeterministicRandom, consumeFixedStepBudget
 } from "./simulation-core.js";
 
 test("legacy inventory migrates to stable unique stack IDs",()=>{
@@ -171,4 +172,60 @@ test("entity IDs are deterministic, globally monotonic, and save-resumable",()=>
   const snapshot=structuredClone(state);
   assert.equal(allocateEntityID(snapshot,"BLD"),"BLD-00000003");
   assert.equal(validateRuntimeState(snapshot).valid,true);
+});
+
+test("simulation events are queued in order and idempotency keys prevent duplicate rewards",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},tick:10};
+  const seen=[];
+  const first=enqueueSimulationEvent(state,{type:"COIN_REWARD",payload:{amount:50},idempotencyKey:"quest:q1:reward"});
+  const duplicate=enqueueSimulationEvent(state,{type:"COIN_REWARD",payload:{amount:50},idempotencyKey:"quest:q1:reward"});
+  assert.equal(first.accepted,true);
+  assert.equal(duplicate.duplicate,true);
+  const result=processSimulationEvents(state,{COIN_REWARD:(payload,event,s)=>{s.money=(s.money||0)+payload.amount;seen.push(event.eventID)}});
+  assert.equal(result.processed,1);
+  assert.equal(state.money,50);
+  assert.equal(seen.length,1);
+  const replay=enqueueSimulationEvent(state,{type:"COIN_REWARD",payload:{amount:50},idempotencyKey:"quest:q1:reward"});
+  assert.equal(replay.duplicate,true);
+  assert.equal(state.money,50);
+  assert.equal(state.runtime.eventJournal.length,1);
+});
+
+test("failed simulation event remains queued for retry without losing payload",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},tick:3};
+  const queued=enqueueSimulationEvent(state,{type:"ATOMIC_EVENT",payload:{value:7},idempotencyKey:"operation:7"});
+  const failed=processSimulationEvents(state,{ATOMIC_EVENT:()=>{throw new Error("TEMPORARY_FAILURE")}});
+  assert.equal(failed.processed,0);
+  assert.equal(failed.remaining,1);
+  assert.equal(state.runtime.eventQueue[0].eventID,queued.eventID);
+  assert.equal(state.runtime.eventQueue[0].attempts,1);
+  let result=0;
+  const retried=processSimulationEvents(state,{ATOMIC_EVENT:payload=>{result=payload.value}});
+  assert.equal(retried.processed,1);
+  assert.equal(result,7);
+  assert.equal(state.runtime.eventQueue.length,0);
+});
+
+test("deterministic RNG streams replay independently from saved state",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},worldSeed:827142};
+  const firstA=nextDeterministicRandom(state,"factory-a");
+  const firstB=nextDeterministicRandom(state,"factory-b");
+  const snapshot=structuredClone(state);
+  const secondA=nextDeterministicRandom(state,"factory-a");
+  const secondB=nextDeterministicRandom(state,"factory-b");
+  assert.notEqual(firstA,firstB);
+  assert.deepEqual([secondA,secondB],[nextDeterministicRandom(snapshot,"factory-a"),nextDeterministicRandom(snapshot,"factory-b")]);
+});
+
+test("fixed-step catch-up executes at most ten ticks while retaining all backlog",()=>{
+  const first=consumeFixedStepBudget(3.45,0.1,10);
+  assert.equal(first.steps,10);
+  assert.ok(Math.abs(first.remaining-2.45)<1e-8);
+  const second=consumeFixedStepBudget(first.remaining,0.1,10);
+  assert.equal(second.steps,10);
+  assert.ok(Math.abs(second.remaining-1.45)<1e-8);
+  let total=first.steps+second.steps,remainder=second.remaining;
+  for(let i=0;i<3;i++){const next=consumeFixedStepBudget(remainder,0.1,10);total+=next.steps;remainder=next.remaining}
+  assert.equal(total,34);
+  assert.ok(remainder<0.06);
 });
