@@ -70,7 +70,9 @@ try {
   assert.equal(audit.uniqueCrystalModels, 15, "All 15 variants must have 3D models");
   assert.equal(audit.uniqueCrystalShapes, 15, "Each variant must use a distinct geometry family");
   assert.equal(audit.allCrystalModels, true, "Every variant must resolve to a crystal model");
-  assert.equal(audit.researchCount, 18, "18 research nodes must be present");
+  assert.equal(audit.researchCount, 19, "All 19 research nodes through planetary stabilization must be present");
+  const researchState = await desktop.evaluate(() => window.__doroniumFactoryTest.audit());
+  assert.equal(researchState.researchGraphValid, true, "All 19 research prerequisites must exist and form an acyclic graph");
   assert.equal(audit.skillNodeCount, 20, "The separate specialization tree must define twenty real skill nodes");
   assert.equal(audit.skillGroupCount, 5, "The skill tree must contain five specialization groups");
   assert.equal(audit.skillTreeValidation.valid, true, "All skill prerequisites and tiers must validate");
