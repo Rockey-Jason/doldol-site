@@ -38,8 +38,14 @@ const supportProfile=(baseFailureProbability,repairMaterials,residue)=>({
 });
 const SUPPORT_PROFILE_TYPES={
  pump:[.0011,{ironPlate:2,wire:1},"pump_seal"],
+ goldSmelter:[.0012,{ironPlate:3,circuit:1},"gold_crucible"],
+ chromeSmelter:[.0015,{ironPlate:4,circuit:2},"chrome_crucible"],
+ steelForge:[.0013,{ironPlate:3,wire:1},"forge_roller"],
+ titaniumPress:[.0017,{ironPlate:5,circuit:2},"titanium_press_die"],
+ carbonMill:[.001,{ironPlate:2,wire:1},"mill_bearing"],
  doriFarm:[.0008,{ironPlate:1,wire:1},"bio_filter"],
  minerIron:[.0014,{ironPlate:3,wire:1},"drill_bit"],
+ minerAdvanced:[.0018,{ironPlate:5,wire:2,circuit:1},"advanced_drill_bit"],
  minerCopper:[.0014,{ironPlate:3,wire:1},"drill_bit"],
  minerCoal:[.0017,{ironPlate:4,wire:1},"drill_bit"],
  mineGen:[.0018,{ironPlate:5,circuit:1},"mine_generator_coil"],
