@@ -746,13 +746,22 @@ function updateFusion(dt){
  }else toast("퓨전 "+job.stage+"/7 단계 완료");
  markDirty();renderMissions();
 }
+function fusionPowerPreflight(){
+ const prior=S.fusionJob;S.fusionJob={stage:0,status:"PREFLIGHT"};
+ let power;try{power=currentPower()}finally{S.fusionJob=prior}
+ const fusion=S.buildings.find(b=>b.type==="fusion"),cooling=S.buildings.filter(b=>b.type==="cooling");
+ const fusionAllocation=fusion?power.allocations?.[String(fusion.uid)]:null;
+ const coolingAllocations=cooling.map(b=>power.allocations?.[String(b.uid)]||null);
+ const coolingReady=coolingAllocations.length>0&&coolingAllocations.every(a=>a&&a.ratio>=.8);
+ return {ok:!!fusion&&!!fusionAllocation&&fusionAllocation.ratio>=.8&&coolingReady,power,fusionAllocation,coolingReady};
+}
 function startFusion(){
  if(S.fusionDone){toast("이 세이브에서는 인피니티 도로늄 제작이 이미 완료되었습니다.","warn");return}
  const active=["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","ERROR"].includes(S.fusionJob?.status);
  if(active){toast("이미 퓨전 작업이 진행 중입니다.");return}
  if(!S.buildings.some(b=>b.type==="fusion")){toast("인피니티 퓨전 설비가 필요합니다.","warn");return}
  if(!S.buildings.some(b=>b.type==="cooling")){toast("초전도 냉각탑을 먼저 건설하세요.","warn");return}
- const p=currentPower();if(p.gen<1000||p.ratio<.8){toast("퓨전 시작에는 냉각 설비를 포함해 최소 1MW의 안정적인 전력 공급이 필요합니다.","warn");return}
+ const preflight=fusionPowerPreflight();if(!preflight.ok){toast("퓨전 전력 사전 진단 실패 · 퓨전 설비 500kW와 냉각 설비에 독립적으로 안정된 전력망을 연결하세요.","warn");return}
  const requirements=Object.fromEntries(VARIANTS.map(id=>[id,100]));
  const invalid=VARIANTS.filter(id=>{
   const stacks=(S.runtime?.itemStacks||[]).filter(stack=>stack.itemID===id&&stack.quantity>0);
@@ -761,6 +770,7 @@ function startFusion(){
  });
  if(invalid.length){toast("개별 스택 품질·순도·비합성 조건을 충족하지 못한 재료: "+invalid.map(id=>RESOURCE[id]?.name||id).slice(0,3).join(", ")+" 외 "+Math.max(0,invalid.length-3)+"종","warn");return}
  showModal("인피니티 퓨전 시작","<p>정식 투입 목록 15종을 각 100개씩 원자적으로 예약합니다.</p><p>각 스택은 품질 90 이상, 순도 90 이상, 비합성 조건을 개별적으로 통과해야 합니다. 7단계 공정 중 입력은 잠기며 중단·기계 철거 시에도 작업 기록과 예약을 보존합니다.</p>",[{label:"취소",cls:"secondary"},{label:"퓨전 시작",cls:"gold",action:()=>{
+  const confirmPreflight=fusionPowerPreflight();if(!confirmPreflight.ok){toast("확인 중 전력망 상태가 변경되었습니다. 전력·냉각 진단을 다시 통과해야 합니다.","warn");return}
   const predicates=Object.fromEntries(VARIANTS.map(id=>[id,stack=>Number(stack.quality)>=90&&Number(stack.purity)>=90&&!stack.synthetic]));
   const reservationIDs=reserveQualifiedItemBatch(S,requirements,"INFINITY-FUSION:"+String(S.tick||0),predicates);
   if(!reservationIDs||reservationIDs.length!==15){toast("원료 예약에 실패했습니다. 모든 재료와 인벤토리는 그대로 보존됩니다.","warn");return}
