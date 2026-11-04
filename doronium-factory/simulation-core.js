@@ -44,11 +44,16 @@ export function ensureItemStacks(state){
   rt.nextReservationId=Math.max(1,Math.floor(Number(rt.nextReservationId)||1));
   // One-time migration from the legacy item-count map. Never replace existing stacks.
   if(!rt.legacyInventoryMigrated){
-    for(const [itemID,quantity] of Object.entries(state.inventory||{})){
-      const total=rt.itemStacks.filter(s=>s.itemID===itemID).reduce((n,s)=>n+s.quantity,0);
-      const missing=Math.max(0,Math.floor(Number(quantity)||0)-total);
-      if(missing){const meta=state.meta?.[itemID]||{};rt.itemStacks.push({runtimeID:"IS-"+rt.nextStackId++,itemID,quantity:missing,
-        quality:clamp(meta.quality??90,0,100),purity:clamp(meta.purity??90,0,100),synthetic:!!meta.synthetic,packaging:null,createdTick:state.tick||0})}
+    const grouped=new Map();
+    for(const [rawID,rawQuantity] of Object.entries(state.inventory||{})){
+      const itemID=canonicalItemID(rawID),quantity=Math.max(0,Math.floor(Number(rawQuantity)||0));if(!quantity)continue;
+      const meta=state.meta?.[rawID]||state.meta?.[itemID]||{},entry=grouped.get(itemID)||{quantity:0,qualityWeight:0,purityWeight:0,synthetic:false};
+      entry.quantity+=quantity;entry.qualityWeight+=clamp(meta.quality??90,0,100)*quantity;entry.purityWeight+=clamp(meta.purity??90,0,100)*quantity;entry.synthetic=entry.synthetic||!!meta.synthetic;grouped.set(itemID,entry);
+    }
+    for(const [itemID,entry] of grouped){
+      const total=rt.itemStacks.filter(s=>s.itemID===itemID).reduce((n,s)=>n+s.quantity,0),missing=Math.max(0,entry.quantity-total);
+      if(missing){rt.itemStacks.push({runtimeID:"IS-"+rt.nextStackId++,itemID,quantity:missing,
+        quality:entry.quantity?entry.qualityWeight/entry.quantity:90,purity:entry.quantity?entry.purityWeight/entry.quantity:90,synthetic:entry.synthetic,packaging:null,createdTick:state.tick||0})}
     }
     rt.legacyInventoryMigrated=true;
   }
