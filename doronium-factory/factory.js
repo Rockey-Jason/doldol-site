@@ -11,7 +11,7 @@ import { calculateFailureRisks, calculateFailureHazard, rollMachineFailure, adva
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
 import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, awardSkillPoints, unlockSkill, skillNodeStatus, calculateSkillBonuses, validateSkillTree, validateSkillState } from "./skill-runtime.js?v=1";
 import { createSaveEnvelope, decodeSave, readBestSave, restoreSaveCandidate, validateSaveEnvelope, writeSaveEnvelope } from "./save-store.js?v=1";
-import { writeCloudSave } from "./cloud-save-runtime.js?v=1";
+import { writeCloudSave, readCloudSaveSnapshot, replaceCloudSaveAfterExplicitConflict } from "./cloud-save-runtime.js?v=2";
 import { settleInfinityFusionOutput } from "./fusion-runtime.js?v=3";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=1";
@@ -297,7 +297,7 @@ function freshState(seed=generateWorldSeed()){
  const state={runtime:createRuntimeState(),ownershipLedger:createOwnershipState(),contractRuntime:createContractState((seed^0x4c4f4749)>>>0),constructionLedger:{},moneyReservations:{},blueprints:[],powerTopologyEnabled:false,powerTopologyLayers:{surface:false,mine:{}},version:1,worldVersion:4,seed:seed>>>0,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},money:1100,inventory:{wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,campaignAcquisitions:{},relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
  ensureItemStacks(state);return state;
 }
-let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, frameRenderAccumulator=0, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, activeBlueprintID=null, activeBlueprintRotation=0, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudSaveRevision=0, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
+let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, frameRenderAccumulator=0, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, activeBlueprintID=null, activeBlueprintRotation=0, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudSaveRevision=0, cloudSaveConflict=null, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
 let activeCooldownKeys=new Set(),cooldownNodeSource=null;
 let buildingIndex=new Map(),buildingIndexSource=null,buildingIndexRevision=-1,buildingIndexLength=-1;
 let playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Number(S.player.yaw)||0,pitch:Number(S.player.pitch??-.12),path:[],moving:false,facing:0,onArrive:null};
@@ -1326,10 +1326,96 @@ function hydrateState(input){markSceneDirty();const base=freshState(),incoming=i
 function loadLocal(){const candidate=readBestSave(localStorage,activeLocalKey);if(!candidate)return null;if(candidate.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;setSaveMessage("더 최신 버전의 저장 데이터입니다. 최신 게임 버전에서 열어 주세요.");if(!E2E_MODE)showModal("저장 데이터 버전 확인 필요","<p>이 저장 데이터는 현재 게임보다 새로운 버전에서 만들어졌습니다.</p><p>데이터를 덮어쓰지 않도록 저장을 잠갔습니다. 최신 게임 버전에서 다시 열어 주세요.</p>",[{label:"확인",cls:"primary"}]);return "future-schema-blocked"}if(!candidate.valid)return null;try{hydrateState(candidate.state);if(candidate.source!==activeLocalKey){restoreSaveCandidate(localStorage,activeLocalKey,candidate);if(!E2E_MODE)toast(candidate.source.includes("_backup_")?"이전 백업 저장 데이터에서 복구했습니다.":"임시 저장 데이터에서 복구했습니다.");}return candidate.savedAt||S.lastSavedAt||null}catch(error){console.warn("Local save candidate rejected",candidate.source,error);return null}}
 function setSaveMessage(value){$("save-message").textContent=value}
 function saveLocal(){if(saveBlockedForFutureSchema){setSaveMessage("최신 버전에서 생성된 저장 데이터는 이 버전에서 덮어쓸 수 없습니다.");return null}const savedAt=nowISO();S.lastSavedAt=savedAt;try{const audit=validateRuntimeState(S);if(!audit.valid)throw new Error("저장 전 인벤토리 검증 실패: "+audit.errors.join(", "));const skills=validateSkillState(S.skills);if(!skills.valid)throw new Error("저장 전 스킬 검증 실패: "+skills.errors.join(", "));const snapshot=requestSaveSnapshot(S);S.runtime.saveSnapshotRequested=false;writeSaveEnvelope(localStorage,activeLocalKey,snapshot,savedAt);return savedAt}catch(e){setSaveMessage("저장 검증 또는 저장 공간 오류");console.error(e);return null}}
-async function loadCloudForUser(session){if(!cloudClient||!session?.user?.id)return false;setCloud("syncing","클라우드 확인");try{const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at,save_revision").eq("storage_key",CLOUD_KEY).eq("is_deleted",false).maybeSingle();if(error)throw error;if(!data){cloudUpdatedAt=null;cloudSaveRevision=0;setCloud("online","계정 연결됨");return false}const envelope=data.storage_value||{};if(!envelope.state)throw new Error("저장 형식이 올바르지 않습니다.");const remoteValidation=validateSaveEnvelope(envelope);if(!remoteValidation.valid)throw new Error("클라우드 저장 데이터 검증 실패: "+remoteValidation.reason);const remoteTime=Date.parse(data.updated_at||envelope.savedAt||0),localTime=Date.parse(S.lastSavedAt||0);cloudUpdatedAt=data.updated_at||envelope.savedAt||null;cloudSaveRevision=Math.max(0,Number(data.save_revision)||0);if(remoteTime>localTime){hydrateState(envelope.state);S.lastSavedAt=cloudUpdatedAt;writeSaveEnvelope(localStorage,activeLocalKey,S,cloudUpdatedAt);renderAll();setViewMode(S.player.viewMode);toast("클라우드 저장 데이터를 불러왔습니다.");setCloud("online","클라우드 동기화")}else{setCloud("online","클라우드 연결됨");if(localTime>remoteTime)await saveGame(true)}return true}catch(e){if(String(e).includes("UNSUPPORTED_FUTURE_SCHEMA")){saveBlockedForFutureSchema=true;setCloud("error","최신 버전 필요");setSaveMessage("클라우드 저장 데이터가 더 최신 버전입니다. 덮어쓰기를 차단했습니다.");toast("최신 버전의 클라우드 저장 데이터가 있어 저장을 잠갔습니다.","warn");return true}console.error("Cloud load failed",e);setCloud("error","클라우드 오류");setSaveMessage("로컬 저장 사용 중");return false}}
-async function initCloud(){try{const mod=await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/+esm");createClient=mod.createClient;cloudClient=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"sb-scttowfhygcpdirrekqm-auth-token"}});const {data,error}=await cloudClient.auth.getSession();if(error)throw error;authSession=data.session;if(authSession){activeLocalKey=LOCAL_KEY+"_"+authSession.user.id;cloudSaveRevision=0;cloudUpdatedAt=null;saveBlockedForFutureSchema=false;const accountLocal=loadLocal();if(!accountLocal)S=freshState();const found=await loadCloudForUser(authSession);if(!found){renderAll();await saveGame(true)}}else setCloud("","로그인 필요");cloudClient.auth.onAuthStateChange((event,session)=>{queueMicrotask(async()=>{const previous=authSession?.user?.id;authSession=session;if(session?.user?.id&&session.user.id!==previous){activeLocalKey=LOCAL_KEY+"_"+session.user.id;cloudSaveRevision=0;cloudUpdatedAt=null;saveBlockedForFutureSchema=false;const accountLocal=loadLocal();if(!accountLocal)S=freshState();dirty=false;const found=await loadCloudForUser(session);if(!found){renderAll();await saveGame(true)}}else if(!session){activeLocalKey=LOCAL_KEY;cloudSaveRevision=0;cloudUpdatedAt=null;saveBlockedForFutureSchema=false;const guestLocal=loadLocal();if(!guestLocal)S=freshState();renderAll();setCloud("","로그인 필요");saveLocal()}else if(event==="TOKEN_REFRESHED"){setCloud("online","클라우드 연결됨")}})});return true}catch(e){console.warn("Supabase client unavailable; using local save",e);cloudClient=null;authSession=null;setCloud("error","로컬 저장");return false}}
-async function saveGame(force=false){if(!force&&!dirty)return;rebuildOwnershipLedger(S);if(cloudBusy){saveLocal();return}const savedAt=saveLocal();if(!savedAt)return;dirty=false;setSaveMessage("이 기기 저장 완료");if(!cloudClient||!authSession?.user?.id){setCloud("","로그인 필요");return}cloudBusy=true;setCloud("syncing","클라우드 저장");try{const envelope=createSaveEnvelope(requestSaveSnapshot(S),savedAt);const result=await writeCloudSave(cloudClient,{storageKey:CLOUD_KEY,userId:authSession.user.id,value:envelope,expectedRevision:cloudSaveRevision});if(!result.saved){dirty=true;cloudSaveRevision=Math.max(0,result.revision||0);setCloud("error","저장 충돌");setSaveMessage("다른 기기에서 더 최신 저장이 감지되었습니다. 로컬 진행도는 보존했습니다.");toast("클라우드 저장 충돌이 감지되었습니다. 다른 기기의 세이브를 덮어쓰지 않았습니다.","warn");return}cloudSaveRevision=result.revision;cloudUpdatedAt=result.updatedAt||savedAt;setCloud("online","모든 기기 동기화");setSaveMessage("계정 클라우드 저장 완료 · R"+cloudSaveRevision)}catch(e){dirty=true;console.error("Cloud save failed",e);setCloud("error","로컬 저장됨");setSaveMessage("클라우드 오류 · 로컬 보존");toast("클라우드 저장에 실패했습니다. 이 기기 저장은 보존했습니다.","warn")}finally{cloudBusy=false}}
-async function pollCloud(){if(!cloudClient||!authSession?.user?.id||cloudBusy)return;try{const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at,save_revision").eq("storage_key",CLOUD_KEY).eq("is_deleted",false).maybeSingle();if(error)throw error;if(!data)return;const remote=data.updated_at||data.storage_value?.savedAt;const remoteRevision=Math.max(0,Number(data.save_revision)||0);if(remoteRevision===cloudSaveRevision&&remote===cloudUpdatedAt)return;if(dirty){setCloud("syncing","다른 기기 변경 감지");toast("다른 기기의 저장 데이터가 있습니다. 저장 후 새로고침하면 최신 진행도를 불러옵니다.","warn");return}const envelope=data.storage_value;if(envelope?.state){const validation=validateSaveEnvelope(envelope);if(validation.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;setCloud("error","최신 버전 필요");setSaveMessage("더 최신 클라우드 저장 데이터가 있어 저장을 잠갔습니다.");toast("최신 버전의 클라우드 저장 데이터가 있어 저장을 잠갔습니다.","warn");return}if(validation.valid){hydrateState(envelope.state);S.lastSavedAt=remote;cloudUpdatedAt=remote;cloudSaveRevision=remoteRevision;writeSaveEnvelope(localStorage,activeLocalKey,S,remote);renderAll();setViewMode(S.player.viewMode);setCloud("online","다른 기기와 동기화");toast("다른 기기의 공장 진행도를 동기화했습니다.")}}}catch(e){console.warn("Cloud polling error",e)}}
+async function loadCloudForUser(session){if(!cloudClient||!session?.user?.id)return false;setCloud("syncing","클라우드 확인");try{const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at,save_revision").eq("storage_key",CLOUD_KEY).eq("is_deleted",false).maybeSingle();if(error)throw error;if(!data){cloudUpdatedAt=null;cloudSaveRevision=0;setCloud("online","계정 연결됨");return false}const envelope=data.storage_value||{};if(!envelope.state)throw new Error("저장 형식이 올바르지 않습니다.");const remoteValidation=validateSaveEnvelope(envelope);if(!remoteValidation.valid)throw new Error("클라우드 저장 데이터 검증 실패: "+remoteValidation.reason);const remoteTime=Date.parse(data.updated_at||envelope.savedAt||0),localTime=Date.parse(S.lastSavedAt||0);cloudUpdatedAt=data.updated_at||envelope.savedAt||null;cloudSaveRevision=Math.max(0,Number(data.save_revision)||0);if(remoteTime>localTime){hydrateState(envelope.state);S.lastSavedAt=cloudUpdatedAt;writeSaveEnvelope(localStorage,activeLocalKey,S,cloudUpdatedAt);renderAll();setViewMode(S.player.viewMode);toast("클라우드 저장 데이터를 불러왔습니다.");setCloud("online","클라우드 동기화")}else{setCloud("online","클라우드 연결됨");if(localTime>remoteTime){cloudSaveConflict={expectedRevision:cloudSaveRevision,remoteRevision:cloudSaveRevision,remoteUpdatedAt:cloudUpdatedAt,detectedAt:nowISO(),localSavedAt:S.lastSavedAt,reason:"LOCAL_NEWER_THAN_CLOUD"};dirty=true;setCloud("error","저장 충돌");setSaveMessage("기기와 클라우드 저장 시간이 다릅니다. 자동 덮어쓰기를 차단했습니다.");if(!E2E_MODE)showCloudSaveConflict()}}return true}catch(e){if(String(e).includes("UNSUPPORTED_FUTURE_SCHEMA")){saveBlockedForFutureSchema=true;setCloud("error","최신 버전 필요");setSaveMessage("클라우드 저장 데이터가 더 최신 버전입니다. 덮어쓰기를 차단했습니다.");toast("최신 버전의 클라우드 저장 데이터가 있어 저장을 잠갔습니다.","warn");return true}console.error("Cloud load failed",e);setCloud("error","클라우드 오류");setSaveMessage("로컬 저장 사용 중");return false}}
+async function initCloud(){try{const mod=await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/+esm");createClient=mod.createClient;cloudClient=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"sb-scttowfhygcpdirrekqm-auth-token"}});const {data,error}=await cloudClient.auth.getSession();if(error)throw error;authSession=data.session;if(authSession){activeLocalKey=LOCAL_KEY+"_"+authSession.user.id;cloudSaveRevision=0;cloudUpdatedAt=null;cloudSaveConflict=null;saveBlockedForFutureSchema=false;const accountLocal=loadLocal();if(!accountLocal)S=freshState();const found=await loadCloudForUser(authSession);if(!found){renderAll();await saveGame(true)}}else setCloud("","로그인 필요");cloudClient.auth.onAuthStateChange((event,session)=>{queueMicrotask(async()=>{const previous=authSession?.user?.id;authSession=session;if(session?.user?.id&&session.user.id!==previous){activeLocalKey=LOCAL_KEY+"_"+session.user.id;cloudSaveRevision=0;cloudUpdatedAt=null;cloudSaveConflict=null;saveBlockedForFutureSchema=false;const accountLocal=loadLocal();if(!accountLocal)S=freshState();dirty=false;const found=await loadCloudForUser(session);if(!found){renderAll();await saveGame(true)}}else if(!session){activeLocalKey=LOCAL_KEY;cloudSaveRevision=0;cloudUpdatedAt=null;saveBlockedForFutureSchema=false;const guestLocal=loadLocal();if(!guestLocal)S=freshState();renderAll();setCloud("","로그인 필요");saveLocal()}else if(event==="TOKEN_REFRESHED"){setCloud("online","클라우드 연결됨")}})});return true}catch(e){console.warn("Supabase client unavailable; using local save",e);cloudClient=null;authSession=null;setCloud("error","로컬 저장");return false}}
+function saveConflictBackup(state,label){
+ const key=activeLocalKey+"_conflict_"+label+"_"+Date.now();
+ const savedAt=nowISO();writeSaveEnvelope(localStorage,key,state,savedAt);return {key,savedAt};
+}
+function showCloudSaveConflict(){
+ if(!cloudSaveConflict||$("modal-overlay")?.classList.contains("show"))return;
+ const remoteRevision=Math.max(0,Number(cloudSaveConflict.remoteRevision)||0);
+ showModal("클라우드 저장 충돌",`<p>다른 기기에서 더 최신 저장이 발견되었습니다. 이 기기의 진행도와 클라우드 진행도는 모두 보존되어 있습니다.</p><p>충돌이 해결될 때까지 자동 클라우드 덮어쓰기는 잠겨 있습니다.</p><div class="cloud-conflict-details"><div><small>이 기기의 기준 Revision</small><strong>R${Math.max(0,Number(cloudSaveConflict.expectedRevision)||0)}</strong></div><div><small>현재 클라우드 Revision</small><strong>R${remoteRevision}</strong></div></div><p>원격 진행도를 불러오거나, 이 기기의 진행도로 최신 원격 Revision에 명시적으로 저장할 수 있습니다. 선택 전 양쪽 사본을 보존합니다.</p>`,[
+  {label:"클라우드 최신본 불러오기",cls:"secondary",action:()=>{void resolveCloudSaveConflict("REMOTE")}},
+  {label:"이 기기 진행도로 덮어쓰기",cls:"gold",action:()=>{void resolveCloudSaveConflict("LOCAL")}},
+  {label:"나중에 해결",cls:"secondary",action:closeModal}
+ ]);
+}
+async function resolveCloudSaveConflict(choice){
+ if(!cloudSaveConflict||cloudBusy||!cloudClient||!authSession?.user?.id)return false;
+ cloudBusy=true;setCloud("syncing","저장 충돌 해결 중");
+ try{
+  if(choice==="REMOTE"){
+   const remote=await readCloudSaveSnapshot(cloudClient,{storageKey:CLOUD_KEY});
+   if(!remote.exists||!remote.envelope?.state)throw new Error("REMOTE_SAVE_NOT_FOUND");
+   const validation=validateSaveEnvelope(remote.envelope);
+   if(!validation.valid)throw new Error("REMOTE_SAVE_INVALID:"+validation.reason);
+   const localState=requestSaveSnapshot(S);
+   const backup=saveConflictBackup(localState,"local");
+   hydrateState(remote.envelope.state);S.lastSavedAt=remote.updatedAt||remote.envelope.savedAt||nowISO();
+   writeSaveEnvelope(localStorage,activeLocalKey,requestSaveSnapshot(S),S.lastSavedAt);
+   cloudSaveRevision=remote.revision;cloudUpdatedAt=remote.updatedAt;cloudSaveConflict=null;dirty=false;
+   closeModal();renderAll();setViewMode(S.player.viewMode);
+   setCloud("online","클라우드 최신본 사용");setSaveMessage("클라우드 최신본 불러옴 · 로컬 백업 보존");
+   toast("클라우드 최신본을 불러왔습니다. 이전 기기 진행도는 별도 백업에 보존했습니다.");
+   log("클라우드 충돌 해결 · 원격 저장본 선택 · 로컬 백업 "+backup.key);
+   return true;
+  }
+  if(choice==="LOCAL"){
+   rebuildOwnershipLedger(S);
+   const savedAt=nowISO(),localEnvelope=createSaveEnvelope(requestSaveSnapshot(S),savedAt);
+   const result=await replaceCloudSaveAfterExplicitConflict(cloudClient,{storageKey:CLOUD_KEY,userId:authSession.user.id,value:localEnvelope});
+   if(!result.saved){
+    cloudSaveConflict={...cloudSaveConflict,remoteRevision:result.revision,remoteUpdatedAt:result.updatedAt,expectedRevision:cloudSaveRevision};
+    dirty=true;setCloud("error","저장 충돌 재발");setSaveMessage("클라우드가 다시 변경되었습니다. 두 저장본을 보존했습니다.");
+    toast("덮어쓰기 중 다른 기기에서 다시 저장되었습니다. 아무 데이터도 덮어쓰지 않았습니다.","warn");
+    closeModal();showCloudSaveConflict();return false;
+   }
+   if(result.previous?.exists&&result.previous.envelope?.state)saveConflictBackup(result.previous.envelope.state,"cloud");
+   cloudSaveRevision=result.revision;cloudUpdatedAt=result.updatedAt||savedAt;cloudSaveConflict=null;dirty=false;
+   S.lastSavedAt=savedAt;writeSaveEnvelope(localStorage,activeLocalKey,requestSaveSnapshot(S),savedAt);
+   closeModal();setCloud("online","모든 기기 동기화");setSaveMessage("충돌 해결 완료 · 클라우드 R"+cloudSaveRevision);
+   toast("이 기기의 진행도를 최신 클라우드 Revision에 저장했습니다. 이전 클라우드 사본도 백업했습니다.");
+   log("클라우드 충돌 해결 · 로컬 저장본 선택 · R"+cloudSaveRevision);
+   return true;
+  }
+  throw new Error("INVALID_CONFLICT_RESOLUTION");
+ }catch(error){
+  console.error("Cloud conflict resolution failed",error);
+  dirty=true;setCloud("error","충돌 해결 실패");setSaveMessage("충돌 해결 실패 · 로컬 및 클라우드 저장 보존");
+  toast("충돌 해결에 실패했습니다. 양쪽 저장 데이터는 유지됩니다.","warn");return false;
+ }finally{cloudBusy=false}
+}
+async function saveGame(force=false){
+ if(!force&&!dirty)return;
+ rebuildOwnershipLedger(S);
+ if(cloudBusy){saveLocal();return}
+ const savedAt=saveLocal();if(!savedAt)return;
+ if(cloudSaveConflict){
+  dirty=true;setCloud("error","저장 충돌 해결 필요");setSaveMessage("이 기기의 저장은 보존 중 · 충돌 해결 후 클라우드 동기화");
+  return;
+ }
+ dirty=false;setSaveMessage("이 기기 저장 완료");
+ if(!cloudClient||!authSession?.user?.id){setCloud("","로그인 필요");return}
+ cloudBusy=true;setCloud("syncing","클라우드 저장");
+ try{
+  const envelope=createSaveEnvelope(requestSaveSnapshot(S),savedAt);
+  const expectedRevision=cloudSaveRevision;
+  const result=await writeCloudSave(cloudClient,{storageKey:CLOUD_KEY,userId:authSession.user.id,value:envelope,expectedRevision});
+  if(!result.saved){
+   dirty=true;
+   cloudSaveConflict={expectedRevision,remoteRevision:Math.max(0,Number(result.revision)||0),remoteUpdatedAt:result.updatedAt||null,detectedAt:nowISO(),localSavedAt:savedAt};
+   setCloud("error","저장 충돌");setSaveMessage("다른 기기의 최신 저장 감지 · 두 사본 보존");
+   toast("저장 충돌이 감지되었습니다. 자동 덮어쓰기를 잠갔습니다.","warn");
+   return;
+  }
+  cloudSaveRevision=result.revision;cloudUpdatedAt=result.updatedAt||savedAt;setCloud("online","모든 기기 동기화");setSaveMessage("계정 클라우드 저장 완료 · R"+cloudSaveRevision);
+ }catch(error){
+  dirty=true;console.error("Cloud save failed",error);setCloud("error","로컬 저장됨");setSaveMessage("클라우드 오류 · 로컬 보존");toast("클라우드 저장에 실패했습니다. 이 기기 저장은 보존했습니다.","warn");
+ }finally{cloudBusy=false}
+ if(cloudSaveConflict)showCloudSaveConflict();
+}
+async function pollCloud(){if(!cloudClient||!authSession?.user?.id||cloudBusy||cloudSaveConflict)return;try{const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at,save_revision").eq("storage_key",CLOUD_KEY).eq("is_deleted",false).maybeSingle();if(error)throw error;if(!data)return;const remote=data.updated_at||data.storage_value?.savedAt;const remoteRevision=Math.max(0,Number(data.save_revision)||0);if(remoteRevision===cloudSaveRevision&&remote===cloudUpdatedAt)return;if(dirty){setCloud("syncing","다른 기기 변경 감지");toast("다른 기기의 저장 데이터가 있습니다. 저장 후 새로고침하면 최신 진행도를 불러옵니다.","warn");return}const envelope=data.storage_value;if(envelope?.state){const validation=validateSaveEnvelope(envelope);if(validation.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;setCloud("error","최신 버전 필요");setSaveMessage("더 최신 클라우드 저장 데이터가 있어 저장을 잠갔습니다.");toast("최신 버전의 클라우드 저장 데이터가 있어 저장을 잠갔습니다.","warn");return}if(validation.valid){hydrateState(envelope.state);S.lastSavedAt=remote;cloudUpdatedAt=remote;cloudSaveRevision=remoteRevision;writeSaveEnvelope(localStorage,activeLocalKey,S,remote);renderAll();setViewMode(S.player.viewMode);setCloud("online","다른 기기와 동기화");toast("다른 기기의 공장 진행도를 동기화했습니다.")}}}catch(e){console.warn("Cloud polling error",e)}}
 function animationFrame(time){
  if(document.hidden){lastFrame=time;frameRenderAccumulator=0;requestAnimationFrame(animationFrame);return}
  const frameMs=Math.min(80,Math.max(0,time-lastFrame));lastFrame=time;drawTime=time;
