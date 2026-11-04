@@ -930,7 +930,7 @@ function updateFusion(dt){
  log("퓨전 단계 완료 · "+stage.name,"good");job.stage++;job.progress=0;job.status="RUNNING";
  if(job.stage>=FUSION_STAGES.length){
   const settlement=settleInfinityFusionOutput(S,{jobID:job.jobID,outputItemID:"infinity",quality:100,purity:100});
-  if(!settlement.ok){job.status="ERROR";job.errorCode=settlement.reason||"FUSION_SETTLEMENT_FAILED";job.lastErrorAt=S.seconds;log("인피니티 퓨전 정산 실패 · "+job.errorCode,"warn");markDirty();return}
+  if(!settlement.ok){S.fusionJob.status="ERROR";S.fusionJob.errorCode=settlement.reason||"FUSION_SETTLEMENT_FAILED";S.fusionJob.lastErrorAt=S.seconds;log("인피니티 퓨전 정산 실패 · "+S.fusionJob.errorCode,"warn");markDirty();return}
   if(!settlement.duplicate){
    log("인피니티 도로늄 결정화 성공 · 원료 1,500개 소비 · 출력 1개","good");toast("인피니티 도로늄 제작 성공!");
    $("orbit-dialogue").textContent="“Infinity Doronum secured. Three stabilization relays are still required.”";
