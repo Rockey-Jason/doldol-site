@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#061020">
+<meta name="description" content="쉬움·보통·어려움 3단계 퀴즈와 인터랙티브 주기율표로 원소 이름, 기호, 원자번호를 연습하는 학습 게임.">
+<title>주기율표 챌린지 | 로키 스터디</title>
+<link rel="icon" href="./rockeysite-icon-3.png" type="image/png">
+<style>
+@font-face{font-family:HancomMalrangmalrang;src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+:root{color-scheme:dark;--bg:#061020;--panel:rgba(14,29,52,.82);--panel2:rgba(19,39,68,.72);--line:rgba(174,198,236,.16);--text:#f4f7ff;--muted:#9eafca;--blue:#9fc3ff;--cyan:#75e0e8;--gold:#ffdc8e;--green:#8fe0c1;--red:#ff9ca8;--ease:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box}
+html{min-height:100%;scroll-behavior:smooth}
+body{margin:0;min-height:100vh;color:var(--text);font-family:HancomMalrangmalrang,system-ui,sans-serif;font-weight:400;background:radial-gradient(ellipse at 12% -10%,rgba(67,105,203,.24),transparent 42%),radial-gradient(ellipse at 94% 25%,rgba(30,180,197,.1),transparent 34%),linear-gradient(145deg,#07152c,#030916 75%);overflow-x:hidden}
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(circle at 50% 0%,rgba(255,255,255,.045),transparent 38%)}
+a{color:inherit;text-decoration:none}
+button,input{font:inherit;color:inherit}
+button{-webkit-tap-highlight-color:transparent;cursor:pointer}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}
+button:disabled{cursor:not-allowed;opacity:.55}
+[hidden]{display:none!important}
+.shell{width:min(1240px,100%);margin:auto;padding:clamp(16px,3.6vw,42px)}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:28px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.brand-mark{display:grid;place-items:center;width:44px;height:44px;flex:none;border:1px solid rgba(141,181,255,.42);border-radius:15px;background:linear-gradient(145deg,rgba(141,181,255,.2),rgba(107,227,239,.06));color:#e4efff;font-size:18px;box-shadow:0 8px 26px rgba(0,0,0,.2)}
+.eyebrow{color:#91b6f8;font-size:10px;letter-spacing:.19em}
+.brand-name{font-size:17px;letter-spacing:.02em}
+.top-actions{display:flex;align-items:center;gap:8px}
+.nav-link{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:39px;padding:8px 13px;border:1px solid var(--line);border-radius:999px;color:#cedbf2;background:rgba(255,255,255,.025);font-size:12px;white-space:nowrap;transition:transform .25s var(--ease),background .25s,border-color .25s}
+.nav-link:hover{transform:translateY(-2px);background:rgba(255,255,255,.07);border-color:rgba(141,181,255,.34)}
+.hero{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(230px,.8fr);gap:25px;align-items:center;padding:clamp(24px,4.5vw,48px);border:1px solid rgba(156,187,239,.2);border-radius:29px;background:linear-gradient(120deg,rgba(22,42,75,.9),rgba(9,21,40,.78));box-shadow:0 28px 78px rgba(0,0,0,.24);animation:rise .7s var(--ease) both}
+.hero:before{content:"";position:absolute;width:430px;height:430px;right:-170px;top:-250px;border-radius:50%;background:rgba(95,132,255,.14);filter:blur(10px);z-index:-1}
+.hero-copy{position:relative;z-index:1}
+.kicker{display:flex;align-items:center;gap:9px;color:#9edce9;font-size:11px;letter-spacing:.16em}
+.kicker:before{content:"";width:22px;height:1px;background:var(--cyan)}
+h1{font-size:clamp(35px,5.5vw,62px);line-height:1.12;letter-spacing:-.045em;margin:15px 0 13px;font-weight:400}
+h1 span{color:#9bc1ff}
+.hero p{max-width:610px;margin:0;color:#b1bfd7;font-size:14px;line-height:1.9}
+.hero-visual{position:relative;display:grid;place-items:center;min-height:205px}
+.atom-orbit{position:absolute;width:min(100%,245px);aspect-ratio:1;border:1px solid rgba(143,190,255,.2);border-radius:50%;animation:spin 24s linear infinite}
+.atom-orbit:before,.atom-orbit:after{content:"";position:absolute;inset:18px;border:1px solid rgba(143,190,255,.17);border-radius:50%;transform:rotate(58deg) scaleX(.46)}
+.atom-orbit:after{inset:39px;transform:rotate(-57deg) scaleX(.58)}
+.atom-core{position:relative;display:grid;place-items:center;width:126px;height:126px;border:1px solid rgba(173,208,255,.4);border-radius:50%;background:radial-gradient(circle at 32% 22%,rgba(161,218,255,.23),rgba(26,51,89,.88) 62%,#071328);box-shadow:0 0 0 12px rgba(125,171,255,.035),0 0 65px rgba(91,151,255,.17),inset 0 0 34px rgba(118,179,255,.12)}
+.atom-core strong{font-size:43px;font-weight:400;color:#e3efff;letter-spacing:-.04em;text-shadow:0 0 24px rgba(135,207,255,.38)}
+.atom-core small{position:absolute;bottom:29px;color:#9fc8ef;font-size:9px;letter-spacing:.16em}
+.atom-dot{position:absolute;right:13%;top:19%;width:9px;height:9px;border-radius:50%;background:var(--cyan);box-shadow:0 0 18px var(--cyan)}
+.tabs{display:flex;gap:8px;margin:23px 0 18px}
+.tab{min-height:41px;padding:0 17px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.025);color:#aebfd8;font-size:13px;transition:all .22s}
+.tab:hover{background:rgba(255,255,255,.06)}
+.tab.active{border-color:rgba(117,224,232,.3);background:rgba(117,224,232,.09);color:#c5f4f2;box-shadow:inset 0 0 20px rgba(117,224,232,.035)}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:0 0 26px}
+.stat{padding:16px 18px;border:1px solid var(--line);border-radius:17px;background:linear-gradient(145deg,rgba(16,33,58,.76),rgba(6,16,30,.72));animation:rise .65s var(--ease) both}
+.stat:nth-child(2){animation-delay:.05s}.stat:nth-child(3){animation-delay:.1s}.stat:nth-child(4){animation-delay:.15s}
+.stat-label{display:block;color:#8fa4c3;font-size:11px}
+.stat-value{display:block;margin-top:8px;font-size:25px;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.stat-note{display:block;margin-top:4px;color:#7188a8;font-size:10px}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:16px;margin:27px 0 15px}
+.section-head h2{margin:0 0 6px;font-size:20px;font-weight:400}
+.section-head p{margin:0;color:var(--muted);font-size:12px;line-height:1.7}
+.section-tag{color:#8299ba;font-size:10px;letter-spacing:.14em;white-space:nowrap}
+.level-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.level-card{--accent:#9fc3ff;position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:flex-start;min-height:232px;padding:23px;border:1px solid color-mix(in srgb,var(--accent) 25%,transparent);border-radius:21px;background:linear-gradient(150deg,rgba(18,36,64,.88),rgba(7,18,34,.84));text-align:left;transition:transform .3s var(--ease),border-color .3s,box-shadow .3s;animation:rise .6s var(--ease) both}
+.level-card:nth-child(2){animation-delay:.07s}.level-card:nth-child(3){animation-delay:.14s}
+.level-card:before{content:"";position:absolute;width:190px;height:190px;right:-93px;top:-108px;border-radius:50%;background:color-mix(in srgb,var(--accent) 16%,transparent);filter:blur(8px);transition:transform .4s}
+.level-card:hover{transform:translateY(-5px);border-color:color-mix(in srgb,var(--accent) 55%,transparent);box-shadow:0 18px 44px rgba(0,0,0,.2)}
+.level-card:hover:before{transform:scale(1.25)}
+.level-top{position:relative;display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%}
+.level-number{color:var(--accent);font-size:10px;letter-spacing:.15em}
+.level-icon{display:grid;place-items:center;width:42px;height:42px;border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);border-radius:14px;background:color-mix(in srgb,var(--accent) 9%,transparent);color:var(--accent);font-size:18px}
+.level-card h3{position:relative;margin:18px 0 8px;font-size:22px;font-weight:400}
+.level-card p{position:relative;margin:0;color:#9eafca;font-size:12px;line-height:1.75}
+.level-meta{position:relative;display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.level-meta span{padding:6px 9px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:rgba(255,255,255,.025);color:#b5c5dc;font-size:10px}
+.level-start{position:relative;margin-top:auto;padding-top:18px;color:var(--accent);font-size:12px}
+.panel{border:1px solid var(--line);border-radius:23px;background:linear-gradient(150deg,rgba(17,35,62,.87),rgba(7,17,32,.9));box-shadow:0 22px 55px rgba(0,0,0,.14);animation:rise .5s var(--ease) both}
+.panel-inner{padding:clamp(17px,3vw,28px)}
+.game-top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:20px}
+.game-level{display:flex;align-items:center;gap:9px;color:#c5d7f4;font-size:12px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(143,224,193,.6)}
+.text-button{padding:8px 11px;border:1px solid var(--line);border-radius:10px;background:rgba(255,255,255,.025);color:#aebfd8;font-size:11px}
+.text-button:hover{background:rgba(255,255,255,.07)}
+.progress-line{height:5px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.07)}
+.progress-line span{display:block;width:0;height:100%;border-radius:99px;background:linear-gradient(90deg,#83b8ff,#75e0e8);transition:width .35s var(--ease)}
+.question-meta{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:19px 0 17px;color:#91a7c8;font-size:11px}
+.timer-wrap{display:flex;align-items:center;gap:9px;color:#b8c9e2;font-size:12px;font-variant-numeric:tabular-nums}
+.timer-track{width:90px;height:5px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.08)}
+.timer-track span{display:block;width:100%;height:100%;border-radius:99px;background:linear-gradient(90deg,#75e0e8,#ffdc8e);transition:width .35s linear}
+.timer-wrap.urgent{color:#ffb4bb}.timer-wrap.urgent .timer-track span{background:var(--red)}
+.question-card{padding:clamp(20px,4vw,35px);border:1px solid rgba(155,190,239,.13);border-radius:19px;background:radial-gradient(ellipse at 50% 0%,rgba(105,151,221,.12),transparent 70%),rgba(5,15,29,.56);text-align:center}
+.question-label{color:#8fa8cb;font-size:10px;letter-spacing:.18em}
+.question-prompt{margin:15px 0 0;font-size:clamp(20px,3vw,29px);line-height:1.5;font-weight:400;letter-spacing:-.02em}
+.question-prompt strong{color:#9fc8ff;font-weight:400}
+.question-hint{margin:10px 0 0;color:#7f94b4;font-size:11px;line-height:1.6}
+.option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin-top:17px}
+.option{display:flex;align-items:center;gap:12px;min-height:65px;padding:13px 15px;border:1px solid rgba(163,190,231,.14);border-radius:15px;background:rgba(14,29,51,.72);text-align:left;transition:transform .2s var(--ease),background .2s,border-color .2s}
+.option:hover:not(:disabled){transform:translateY(-2px);border-color:rgba(141,181,255,.38);background:rgba(39,66,105,.55)}
+.option-key{display:grid;place-items:center;width:29px;height:29px;flex:none;border:1px solid rgba(155,190,239,.16);border-radius:9px;background:rgba(255,255,255,.035);color:#90a9cd;font-size:11px}
+.option-label{font-size:14px;line-height:1.4}
+.option.correct{border-color:rgba(143,224,193,.45);background:rgba(44,112,93,.2)}
+.option.correct .option-key{border-color:rgba(143,224,193,.35);color:var(--green)}
+.option.wrong{border-color:rgba(255,156,168,.43);background:rgba(133,49,67,.2)}
+.option.wrong .option-key{border-color:rgba(255,156,168,.35);color:var(--red)}
+.feedback{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:15px;padding:15px 17px;border:1px solid rgba(143,224,193,.2);border-radius:15px;background:rgba(27,83,73,.14);animation:pop .28s var(--ease) both}
+.feedback.wrong{border-color:rgba(255,156,168,.2);background:rgba(102,38,52,.13)}
+.feedback-copy{min-width:0}
+.feedback-title{display:block;color:var(--green);font-size:14px}
+.feedback.wrong .feedback-title{color:#ffb2bc}
+.feedback-detail{display:block;margin-top:5px;color:#a8bad4;font-size:11px;line-height:1.6}
+.primary-button{display:inline-flex;justify-content:center;align-items:center;gap:9px;min-height:44px;padding:0 17px;border:1px solid transparent;border-radius:13px;background:linear-gradient(105deg,#c6dcff,#82d9e9);color:#071326;font-size:12px;box-shadow:0 8px 22px rgba(94,178,221,.12);transition:transform .22s var(--ease),box-shadow .22s;white-space:nowrap}
+.primary-button:hover{transform:translateY(-2px);box-shadow:0 13px 29px rgba(94,178,221,.22)}
+.secondary-button{display:inline-flex;justify-content:center;align-items:center;min-height:43px;padding:0 15px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.035);color:#d4e1f4;font-size:12px;transition:background .2s}
+.secondary-button:hover{background:rgba(255,255,255,.08)}
+.result-hero{padding:26px;border:1px solid rgba(141,181,255,.2);border-radius:20px;background:radial-gradient(ellipse at 50% 0%,rgba(116,169,255,.14),transparent 68%),rgba(7,18,34,.72);text-align:center}
+.result-kicker{color:#91b6f8;font-size:10px;letter-spacing:.18em}
+.result-score{margin:8px 0 2px;font-size:clamp(42px,7vw,68px);line-height:1.1;letter-spacing:-.06em;font-variant-numeric:tabular-nums}
+.result-score span{font-size:19px;color:#9fb4d1;letter-spacing:0}
+.result-caption{color:#a9bbd6;font-size:13px}
+.result-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:16px}
+.result-stat{padding:13px;border:1px solid rgba(163,190,231,.1);border-radius:13px;background:rgba(255,255,255,.025)}
+.result-stat strong{display:block;font-size:21px;font-weight:400}
+.result-stat span{display:block;margin-top:4px;color:#8197b7;font-size:10px}
+.review-list{display:grid;gap:9px;margin:15px 0 0;padding:0;list-style:none}
+.review-item{display:grid;grid-template-columns:1fr auto;gap:10px;padding:12px 14px;border:1px solid rgba(163,190,231,.11);border-radius:13px;background:rgba(255,255,255,.025)}
+.review-item strong{display:block;font-size:12px;font-weight:400}
+.review-item span{display:block;margin-top:4px;color:#8ea4c4;font-size:10px;line-height:1.6}
+.review-mark{align-self:center;color:#ffb4bc;font-size:11px;white-space:nowrap}
+.table-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.search-wrap{position:relative;flex:1;min-width:min(100%,220px);max-width:390px}
+.search-wrap input{width:100%;height:43px;padding:0 14px 0 39px;border:1px solid rgba(163,190,231,.16);border-radius:13px;background:rgba(4,14,27,.65);color:#edf4ff;font-size:12px;outline:none}
+.search-wrap input:focus{border-color:rgba(117,224,232,.45);box-shadow:0 0 0 3px rgba(117,224,232,.07)}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#8298b8;font-size:14px;pointer-events:none}
+.category-legend{display:flex;flex-wrap:wrap;gap:7px;margin:16px 0 13px}
+.legend-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 8px;border:1px solid rgba(255,255,255,.07);border-radius:999px;background:rgba(255,255,255,.025);color:#aabbd4;font-size:9px}
+.legend-chip i{width:7px;height:7px;border-radius:3px;background:var(--chip)}
+.periodic-wrap{padding:13px;border:1px solid rgba(163,190,231,.1);border-radius:16px;background:rgba(3,12,24,.48);overflow:hidden}
+.periodic-grid{display:grid;grid-template-columns:repeat(18,minmax(0,1fr));grid-template-rows:repeat(9,minmax(48px,auto));gap:clamp(2px,.45vw,6px)}
+.element{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;min-height:47px;padding:4px 1px;border:1px solid color-mix(in srgb,var(--tile) 33%,transparent);border-radius:8px;background:color-mix(in srgb,var(--tile) 10%,rgba(7,19,35,.92));color:#e8f0ff;transition:transform .2s var(--ease),background .2s,border-color .2s,opacity .2s;overflow:hidden}
+.element:hover{z-index:2;transform:translateY(-3px) scale(1.07);border-color:color-mix(in srgb,var(--tile) 75%,transparent);background:color-mix(in srgb,var(--tile) 22%,rgba(7,19,35,.95))}
+.element.dimmed{opacity:.2}
+.element .atomic-number{position:absolute;left:4px;top:3px;color:#96a9c4;font-size:clamp(6px,.65vw,9px);line-height:1}
+.element .symbol{margin-top:6px;color:var(--tile);font-size:clamp(9px,1.25vw,16px);line-height:1.1}
+.element .element-short{max-width:100%;margin-top:2px;overflow:hidden;color:#aabbd4;font-size:clamp(5px,.55vw,8px);line-height:1;text-overflow:ellipsis;white-space:nowrap}
+.series-placeholder{display:grid;place-items:center;padding:4px;border:1px dashed rgba(159,195,255,.2);border-radius:8px;background:rgba(159,195,255,.045);color:#a9c8f3;font-size:9px;line-height:1.5;text-align:center}
+.series-label{grid-column:1/4;display:flex;align-items:center;padding-left:3px;color:#8299ba;font-size:9px;letter-spacing:.05em}
+.element-detail{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:14px;margin-top:13px;padding:15px;border:1px solid rgba(117,224,232,.16);border-radius:15px;background:rgba(16,43,58,.28);animation:pop .22s var(--ease) both}
+.detail-symbol{display:grid;place-items:center;width:56px;height:56px;border:1px solid rgba(117,224,232,.28);border-radius:15px;background:rgba(117,224,232,.07);color:#a9eef0;font-size:24px}
+.detail-main strong{display:block;font-size:16px;font-weight:400}
+.detail-main span{display:block;margin-top:4px;color:#90a8c8;font-size:10px;line-height:1.6}
+.detail-category{padding:7px 9px;border:1px solid rgba(255,255,255,.09);border-radius:999px;color:#c4d7ee;font-size:10px;white-space:nowrap}
+.table-foot{margin:12px 2px 0;color:#7389a9;font-size:10px;line-height:1.7}
+.empty-note{padding:22px;text-align:center;color:#8fa4c3;font-size:12px}
+.bottom-note{margin:23px 0 8px;color:#6f85a4;text-align:center;font-size:10px;line-height:1.8}
+.toast{position:fixed;left:50%;bottom:22px;z-index:20;transform:translate(-50%,15px);padding:11px 16px;border:1px solid rgba(117,224,232,.22);border-radius:999px;background:rgba(8,24,42,.94);color:#c5f4f2;font-size:11px;box-shadow:0 12px 35px rgba(0,0,0,.28);opacity:0;pointer-events:none;transition:opacity .25s,transform .25s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@keyframes rise{from{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pop{from{opacity:0;transform:scale(.98) translateY(5px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:760px){.hero{grid-template-columns:1fr;padding:23px}.hero-visual{min-height:145px;grid-row:1}.atom-orbit{width:165px}.atom-core{width:96px;height:96px}.atom-core strong{font-size:34px}.atom-core small{bottom:20px;font-size:8px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.level-grid{grid-template-columns:1fr}.level-card{min-height:190px}.level-card h3{margin-top:14px}.section-head{align-items:flex-start;flex-direction:column}.periodic-wrap{padding:7px}.periodic-grid{grid-template-rows:repeat(9,minmax(38px,auto))}.element{min-height:37px;border-radius:5px}.element .atomic-number{left:2px;top:2px}.element .symbol{margin-top:5px}.series-placeholder{font-size:7px}.series-label{font-size:8px}.element-detail{grid-template-columns:auto 1fr;gap:10px}.detail-category{grid-column:2;justify-self:start}}
+@media(max-width:480px){.shell{padding:14px}.topbar{align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}.top-actions{width:100%;justify-content:flex-start}.brand-mark{width:39px;height:39px;border-radius:13px}.nav-link{min-height:35px;padding:7px 10px;font-size:10px}.hero{border-radius:23px}.hero-visual{min-height:126px}.atom-orbit{width:145px}.atom-core{width:83px;height:83px}.atom-core strong{font-size:29px}.atom-core small{bottom:17px;font-size:7px}.hero p{font-size:13px}.tabs{margin:17px 0 14px}.tab{min-height:39px;padding:0 13px;font-size:12px}.stat{padding:13px}.stat-value{font-size:22px}.level-card{padding:19px}.panel{border-radius:19px}.game-top{align-items:flex-start}.question-meta{font-size:10px}.timer-track{width:65px}.question-card{padding:19px 13px}.question-prompt{font-size:21px}.option-grid{gap:8px}.option{min-height:59px;padding:9px 8px;gap:7px}.option-key{width:25px;height:25px;border-radius:8px}.option-label{font-size:12px;overflow-wrap:anywhere}.feedback{align-items:flex-start;flex-direction:column}.feedback .primary-button{width:100%}.result-stats{gap:6px}.result-stat{padding:10px 5px}.result-stat strong{font-size:18px}.periodic-grid{grid-template-rows:repeat(9,minmax(31px,auto));gap:2px}.element{min-height:30px;padding:2px 0;border-radius:4px}.element .atomic-number{font-size:6px}.element .symbol{font-size:clamp(8px,2.45vw,11px);margin-top:5px}.element .element-short{display:none}.series-placeholder{font-size:6px;padding:1px}.series-label{font-size:7px}.legend-chip{font-size:8px;padding:5px 6px}.detail-symbol{width:48px;height:48px;font-size:20px}.detail-main strong{font-size:14px}.detail-main span{font-size:9px}.detail-category{font-size:9px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<main class="shell">
+<header class="topbar">
+  <a class="brand" href="./rockey-study.html" aria-label="로키 스터디로 돌아가기">
+    <span class="brand-mark">R</span>
+    <span><span class="eyebrow">ROCKEY · LEARNING SPACE</span><br><span class="brand-name">로키 스터디</span></span>
+  </a>
+  <nav class="top-actions" aria-label="페이지 이동">
+    <a class="nav-link" href="./rockey-study.html">↖ 스터디 홈</a>
+    <a class="nav-link" href="./index.html">돌이사이트 메인 ↗</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="hero-copy">
+    <div class="kicker">CHEMISTRY · ELEMENT MASTERY</div>
+    <h1>118개의 원소,<br><span>게임처럼 정복하기.</span></h1>
+    <p>원소 이름과 기호, 원자번호를 퀴즈로 익혀 봐. 쉬움부터 어려움까지 실력을 쌓고, 주기율표를 직접 눌러 원소 정보를 확인할 수도 있어.</p>
+  </div>
+  <div class="hero-visual" aria-hidden="true">
+    <div class="atom-orbit"></div><span class="atom-dot"></span>
+    <div class="atom-core"><strong>Ne</strong><small>ELEMENT 10</small></div>
+  </div>
+</section>
+
+<nav class="tabs" aria-label="학습 메뉴">
+  <button class="tab active" id="quizTab" type="button">퀴즈 챌린지</button>
+  <button class="tab" id="tableTab" type="button">인터랙티브 주기율표</button>
+</nav>
+
+<section class="stats" aria-label="나의 학습 기록">
+  <div class="stat"><span class="stat-label">플레이한 게임</span><strong class="stat-value" id="statGames">0</strong><span class="stat-note">누적 완료 횟수</span></div>
+  <div class="stat"><span class="stat-label">누적 정답률</span><strong class="stat-value" id="statAccuracy">—</strong><span class="stat-note">정답 / 전체 문항</span></div>
+  <div class="stat"><span class="stat-label">최고 연속 정답</span><strong class="stat-value" id="statStreak">0</strong><span class="stat-note">한 번에 이어 맞힌 문제</span></div>
+  <div class="stat"><span class="stat-label">최고 점수</span><strong class="stat-value" id="statBest">0</strong><span class="stat-note">한 판 최고 기록</span></div>
+</section>
+
+<section id="homeView">
+  <div class="section-head">
+    <div><h2>난이도를 선택해 줘</h2><p>각 단계는 10문제야. 한 단계씩 올라가며 원소를 익혀 보자.</p></div>
+    <span class="section-tag">CHOOSE YOUR LEVEL</span>
+  </div>
+  <div class="level-grid">
+    <button class="level-card" data-level="easy" type="button" style="--accent:#8fe0c1">
+      <span class="level-top"><span class="level-number">LEVEL 01 · STARTER</span><span class="level-icon">✦</span></span>
+      <h3>쉬움</h3>
+      <p>가장 먼저 익히는 1~20번 원소. 기호를 보고 이름을 고르며 기초를 다져 봐.</p>
+      <span class="level-meta"><span>1~20번 원소</span><span>문항당 20초</span><span>기초 기호</span></span>
+      <span class="level-start">쉬움 시작하기　↗</span>
+    </button>
+    <button class="level-card" data-level="normal" type="button" style="--accent:#9fc3ff">
+      <span class="level-top"><span class="level-number">LEVEL 02 · BUILDER</span><span class="level-icon">◇</span></span>
+      <h3>보통</h3>
+      <p>1~54번 원소를 대상으로 이름과 기호, 원자번호를 서로 연결해 봐.</p>
+      <span class="level-meta"><span>1~54번 원소</span><span>문항당 15초</span><span>양방향 연습</span></span>
+      <span class="level-start">보통 시작하기　↗</span>
+    </button>
+    <button class="level-card" data-level="hard" type="button" style="--accent:#ffdc8e">
+      <span class="level-top"><span class="level-number">LEVEL 03 · EXPERT</span><span class="level-icon">✧</span></span>
+      <h3>어려움</h3>
+      <p>1~118번 전체 원소가 등장해. 역방향 문제와 원자번호 문제까지 빠르게 풀어 봐.</p>
+      <span class="level-meta"><span>전체 118개 원소</span><span>문항당 10초</span><span>고난도 혼합</span></span>
+      <span class="level-start">어려움 도전하기　↗</span>
+    </button>
+  </div>
+  <div class="section-head" style="margin-top:30px">
+    <div><h2>먼저 둘러보기</h2><p>원소의 위치와 기호를 확인하며 퀴즈를 준비할 수 있어.</p></div>
+    <span class="section-tag">EXPLORE ELEMENTS</span>
+  </div>
+  <div class="panel"><div class="panel-inner" style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap">
+    <div><div style="font-size:15px">인터랙티브 주기율표</div><div style="margin-top:6px;color:#91a7c8;font-size:11px;line-height:1.6">원소 카드를 눌러 원자번호, 이름, 기호와 분류를 확인해.</div></div>
+    <button class="primary-button" id="openTableButton" type="button">주기율표 열기　↗</button>
+  </div></div>
+</section>
+
+<section id="quizView" hidden>
+  <div class="panel"><div class="panel-inner">
+    <div class="game-top">
+      <div class="game-level"><span class="live-dot"></span><span id="gameLevelName">쉬움</span><span style="color:#647c9e">·</span><span id="gameScope">1~20번 원소</span></div>
+      <button class="text-button" id="quitButton" type="button">나가기</button>
+    </div>
+    <div class="progress-line"><span id="questionProgress"></span></div>
+    <div class="question-meta">
+      <span id="questionCount">QUESTION 01 / 10</span>
+      <div class="timer-wrap" id="timerWrap"><span id="timerText">20초</span><span class="timer-track"><i id="timerBar"></i></span></div>
+    </div>
+    <div class="question-card">
+      <div class="question-label">ELEMENT QUIZ</div>
+      <div class="question-prompt" id="questionPrompt">기호 <strong>H</strong>인 원소는?</div>
+      <p class="question-hint" id="questionHint">가장 알맞은 답을 선택해 줘.</p>
+    </div>
+    <div class="option-grid" id="optionGrid" aria-label="정답 선택지"></div>
+    <div class="feedback" id="questionFeedback" hidden aria-live="polite">
+      <div class="feedback-copy"><strong class="feedback-title" id="feedbackTitle">정답이야!</strong><span class="feedback-detail" id="feedbackDetail"></span></div>
+      <button class="primary-button" id="nextButton" type="button">다음 문제　→</button>
+    </div>
+  </div></div>
+</section>
+
+<section id="resultView" hidden>
+  <div class="panel"><div class="panel-inner">
+    <div class="result-hero">
+      <div class="result-kicker">CHALLENGE COMPLETE</div>
+      <div class="result-score" id="resultScore">80<span> / 100</span></div>
+      <div class="result-caption" id="resultCaption">멋진 도전이야!</div>
+      <div class="result-stats">
+        <div class="result-stat"><strong id="resultCorrect">8</strong><span>정답</span></div>
+        <div class="result-stat"><strong id="resultAccuracy">80%</strong><span>정답률</span></div>
+        <div class="result-stat"><strong id="resultStreak">5</strong><span>최고 연속 정답</span></div>
+      </div>
+    </div>
+    <div class="section-head"><div><h2>다시 확인할 문제</h2><p>틀린 문제는 원소 정보를 확인하고 한 번 더 익혀 봐.</p></div><span class="section-tag">REVIEW</span></div>
+    <div id="reviewEmpty" class="empty-note">모든 문제를 맞혔어! 완벽해. ✦</div>
+    <ul class="review-list" id="reviewList"></ul>
+    <div style="display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:20px">
+      <button class="primary-button" id="retryButton" type="button">같은 난이도 다시 도전　↻</button>
+      <button class="secondary-button" id="homeButton" type="button">난이도 선택</button>
+    </div>
+  </div></div>
+</section>
+
+<section id="tableView" hidden>
+  <div class="panel"><div class="panel-inner">
+    <div class="section-head" style="margin:0 0 17px">
+      <div><h2>118개 원소 탐험</h2><p>원소를 누르면 이름과 기호, 원자번호, 분류가 표시돼.</p></div>
+      <span class="section-tag">PERIODIC TABLE</span>
+    </div>
+    <div class="table-toolbar">
+      <label class="search-wrap"><span class="search-icon">⌕</span><input id="elementSearch" type="search" autocomplete="off" placeholder="원소 이름 · 기호 · 원자번호 검색" aria-label="원소 검색"></label>
+      <span id="elementCount" style="color:#8fa5c4;font-size:11px">118개 원소</span>
+    </div>
+    <div class="category-legend" aria-label="원소 분류 범례">
+      <span class="legend-chip"><i style="--chip:#dca2ff"></i>알칼리 금속</span>
+      <span class="legend-chip"><i style="--chip:#ffca83"></i>알칼리 토금속</span>
+      <span class="legend-chip"><i style="--chip:#8db5ff"></i>전이 금속</span>
+      <span class="legend-chip"><i style="--chip:#8fe0c1"></i>준금속·기타 금속</span>
+      <span class="legend-chip"><i style="--chip:#75e0e8"></i>비금속·할로젠</span>
+      <span class="legend-chip"><i style="--chip:#e7b2d5"></i>비활성 기체</span>
+      <span class="legend-chip"><i style="--chip:#c1a7ff"></i>란타넘족·악티늄족</span>
+    </div>
+    <div class="periodic-wrap">
+      <div class="periodic-grid" id="periodicGrid" aria-label="인터랙티브 주기율표">
+        <div class="series-placeholder" style="grid-column:3;grid-row:6">57–71<br>란타넘족</div>
+        <div class="series-placeholder" style="grid-column:3;grid-row:7">89–103<br>악티늄족</div>
+        <div class="series-label" style="grid-row:8">란타넘족 · 57–71</div>
+        <div class="series-label" style="grid-row:9">악티늄족 · 89–103</div>
+      </div>
+    </div>
+    <div class="element-detail" id="elementDetail" hidden aria-live="polite">
+      <div class="detail-symbol" id="detailSymbol">H</div>
+      <div class="detail-main"><strong id="detailName">수소 · Hydrogen</strong><span id="detailInfo">원자번호 1번 · 1주기 · 1족</span></div>
+      <span class="detail-category" id="detailCategory">비금속</span>
+    </div>
+    <p class="table-foot">※ 원소 분류는 일반적인 주기율표 분류를 기준으로 표시했어. 원소 카드를 선택하면 세부 정보를 볼 수 있어.</p>
+  </div></div>
+</section>
+
+<p class="bottom-note">ROCKEY STUDY · CHEMISTRY CHALLENGE<br>학습 기록은 현재 사용 중인 브라우저에 저장돼.</p>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+const ELEMENTS = [
+[1,"H","수소","Hydrogen",1,1,"nonmetal"],[2,"He","헬륨","Helium",18,1,"noble"],
+[3,"Li","리튬","Lithium",1,2,"alkali"],[4,"Be","베릴륨","Beryllium",2,2,"alkaline"],[5,"B","붕소","Boron",13,2,"metalloid"],[6,"C","탄소","Carbon",14,2,"nonmetal"],[7,"N","질소","Nitrogen",15,2,"nonmetal"],[8,"O","산소","Oxygen",16,2,"nonmetal"],[9,"F","플루오린","Fluorine",17,2,"halogen"],[10,"Ne","네온","Neon",18,2,"noble"],
+[11,"Na","나트륨","Sodium",1,3,"alkali"],[12,"Mg","마그네슘","Magnesium",2,3,"alkaline"],[13,"Al","알루미늄","Aluminium",13,3,"post"],[14,"Si","규소","Silicon",14,3,"metalloid"],[15,"P","인","Phosphorus",15,3,"nonmetal"],[16,"S","황","Sulfur",16,3,"nonmetal"],[17,"Cl","염소","Chlorine",17,3,"halogen"],[18,"Ar","아르곤","Argon",18,3,"noble"],
+[19,"K","칼륨","Potassium",1,4,"alkali"],[20,"Ca","칼슘","Calcium",2,4,"alkaline"],[21,"Sc","스칸듐","Scandium",3,4,"transition"],[22,"Ti","타이타늄","Titanium",4,4,"transition"],[23,"V","바나듐","Vanadium",5,4,"transition"],[24,"Cr","크로뮴","Chromium",6,4,"transition"],[25,"Mn","망가니즈","Manganese",7,4,"transition"],[26,"Fe","철","Iron",8,4,"transition"],[27,"Co","코발트","Cobalt",9,4,"transition"],[28,"Ni","니켈","Nickel",10,4,"transition"],[29,"Cu","구리","Copper",11,4,"transition"],[30,"Zn","아연","Zinc",12,4,"transition"],[31,"Ga","갈륨","Gallium",13,4,"post"],[32,"Ge","저마늄","Germanium",14,4,"metalloid"],[33,"As","비소","Arsenic",15,4,"metalloid"],[34,"Se","셀레늄","Selenium",16,4,"nonmetal"],[35,"Br","브로민","Bromine",17,4,"halogen"],[36,"Kr","크립톤","Krypton",18,4,"noble"],
+[37,"Rb","루비듐","Rubidium",1,5,"alkali"],[38,"Sr","스트론튬","Strontium",2,5,"alkaline"],[39,"Y","이트륨","Yttrium",3,5,"transition"],[40,"Zr","지르코늄","Zirconium",4,5,"transition"],[41,"Nb","나이오븀","Niobium",5,5,"transition"],[42,"Mo","몰리브데넘","Molybdenum",6,5,"transition"],[43,"Tc","테크네튬","Technetium",7,5,"transition"],[44,"Ru","루테늄","Ruthenium",8,5,"transition"],[45,"Rh","로듐","Rhodium",9,5,"transition"],[46,"Pd","팔라듐","Palladium",10,5,"transition"],[47,"Ag","은","Silver",11,5,"transition"],[48,"Cd","카드뮴","Cadmium",12,5,"transition"],[49,"In","인듐","Indium",13,5,"post"],[50,"Sn","주석","Tin",14,5,"post"],[51,"Sb","안티모니","Antimony",15,5,"metalloid"],[52,"Te","텔루륨","Tellurium",16,5,"metalloid"],[53,"I","아이오딘","Iodine",17,5,"halogen"],[54,"Xe","제논","Xenon",18,5,"noble"],
+[55,"Cs","세슘","Caesium",1,6,"alkali"],[56,"Ba","바륨","Barium",2,6,"alkaline"],
+[57,"La","란타넘","Lanthanum",3,6,"lanth"],[58,"Ce","세륨","Cerium",null,6,"lanth"],[59,"Pr","프라세오디뮴","Praseodymium",null,6,"lanth"],[60,"Nd","네오디뮴","Neodymium",null,6,"lanth"],[61,"Pm","프로메튬","Promethium",null,6,"lanth"],[62,"Sm","사마륨","Samarium",null,6,"lanth"],[63,"Eu","유로퓸","Europium",null,6,"lanth"],[64,"Gd","가돌리늄","Gadolinium",null,6,"lanth"],[65,"Tb","터븀","Terbium",null,6,"lanth"],[66,"Dy","디스프로슘","Dysprosium",null,6,"lanth"],[67,"Ho","홀뮴","Holmium",null,6,"lanth"],[68,"Er","어븀","Erbium",null,6,"lanth"],[69,"Tm","툴륨","Thulium",null,6,"lanth"],[70,"Yb","이터븀","Ytterbium",null,6,"lanth"],[71,"Lu","루테튬","Lutetium",null,6,"lanth"],
+[72,"Hf","하프늄","Hafnium",4,6,"transition"],[73,"Ta","탄탈럼","Tantalum",5,6,"transition"],[74,"W","텅스텐","Tungsten",6,6,"transition"],[75,"Re","레늄","Rhenium",7,6,"transition"],[76,"Os","오스뮴","Osmium",8,6,"transition"],[77,"Ir","이리듐","Iridium",9,6,"transition"],[78,"Pt","백금","Platinum",10,6,"transition"],[79,"Au","금","Gold",11,6,"transition"],[80,"Hg","수은","Mercury",12,6,"transition"],[81,"Tl","탈륨","Thallium",13,6,"post"],[82,"Pb","납","Lead",14,6,"post"],[83,"Bi","비스무트","Bismuth",15,6,"post"],[84,"Po","폴로늄","Polonium",16,6,"metalloid"],[85,"At","아스타틴","Astatine",17,6,"halogen"],[86,"Rn","라돈","Radon",18,6,"noble"],
+[87,"Fr","프랑슘","Francium",1,7,"alkali"],[88,"Ra","라듐","Radium",2,7,"alkaline"],
+[89,"Ac","악티늄","Actinium",3,7,"act"],[90,"Th","토륨","Thorium",null,7,"act"],[91,"Pa","프로트악티늄","Protactinium",null,7,"act"],[92,"U","우라늄","Uranium",null,7,"act"],[93,"Np","넵투늄","Neptunium",null,7,"act"],[94,"Pu","플루토늄","Plutonium",null,7,"act"],[95,"Am","아메리슘","Americium",null,7,"act"],[96,"Cm","퀴륨","Curium",null,7,"act"],[97,"Bk","버클륨","Berkelium",null,7,"act"],[98,"Cf","캘리포늄","Californium",null,7,"act"],[99,"Es","아인슈타이늄","Einsteinium",null,7,"act"],[100,"Fm","페르뮴","Fermium",null,7,"act"],[101,"Md","멘델레븀","Mendelevium",null,7,"act"],[102,"No","노벨륨","Nobelium",null,7,"act"],[103,"Lr","로렌슘","Lawrencium",null,7,"act"],
+[104,"Rf","러더포듐","Rutherfordium",4,7,"transition"],[105,"Db","더브늄","Dubnium",5,7,"transition"],[106,"Sg","시보귬","Seaborgium",6,7,"transition"],[107,"Bh","보륨","Bohrium",7,7,"transition"],[108,"Hs","하슘","Hassium",8,7,"transition"],[109,"Mt","마이트너륨","Meitnerium",9,7,"transition"],[110,"Ds","다름슈타튬","Darmstadtium",10,7,"transition"],[111,"Rg","뢴트게늄","Roentgenium",11,7,"transition"],[112,"Cn","코페르니슘","Copernicium",12,7,"transition"],[113,"Nh","니호늄","Nihonium",13,7,"post"],[114,"Fl","플레로븀","Flerovium",14,7,"post"],[115,"Mc","모스코븀","Moscovium",15,7,"post"],[116,"Lv","리버모륨","Livermorium",16,7,"post"],[117,"Ts","테네신","Tennessine",17,7,"halogen"],[118,"Og","오가네손","Oganesson",18,7,"noble"]
+].map(function(e){return {z:e[0],symbol:e[1],ko:e[2],en:e[3],group:e[4],period:e[5],type:e[6]};});
+const TYPE_NAMES={alkali:"알칼리 금속",alkaline:"알칼리 토금속",transition:"전이 금속",post:"기타 금속",metalloid:"준금속",nonmetal:"비금속",halogen:"할로젠",noble:"비활성 기체",lanth:"란타넘족",act:"악티늄족"};
+const TYPE_COLORS={alkali:"#dca2ff",alkaline:"#ffca83",transition:"#8db5ff",post:"#8fe0c1",metalloid:"#9bd9b5",nonmetal:"#75e0e8",halogen:"#62cfe4",noble:"#e7b2d5",lanth:"#c1a7ff",act:"#b99cff"};
+const STORE_KEY="rockeyStudy.periodicChallenge.v1";
+const LEVELS={easy:{name:"쉬움",max:20,seconds:20,scope:"1~20번 원소"},normal:{name:"보통",max:54,seconds:15,scope:"1~54번 원소"},hard:{name:"어려움",max:118,seconds:10,scope:"전체 118개 원소"}};
+const $=function(id){return document.getElementById(id);};
+let game=null,timerId=null,remaining=0,toastId=null;
+function shuffle(list){const a=list.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function loadStats(){try{const value=JSON.parse(localStorage.getItem(STORE_KEY)||"{}");return {games:Number(value.games)||0,questions:Number(value.questions)||0,correct:Number(value.correct)||0,bestStreak:Number(value.bestStreak)||0,bestScore:Number(value.bestScore)||0,levelBest:value.levelBest&&typeof value.levelBest==="object"?value.levelBest:{}};}catch(_){return {games:0,questions:0,correct:0,bestStreak:0,bestScore:0,levelBest:{}};}}
+function updateStats(){const s=loadStats();$("statGames").textContent=s.games;$("statAccuracy").textContent=s.questions?Math.round(s.correct/s.questions*100)+"%":"—";$("statStreak").textContent=s.bestStreak;$("statBest").textContent=s.bestScore;}
+function showToast(message){const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toastId);toastId=setTimeout(function(){el.classList.remove("show");},2200);}
+function setView(name){["homeView","quizView","resultView","tableView"].forEach(function(id){$(id).hidden=id!==name;});$("quizTab").classList.toggle("active",name==="homeView"||name==="quizView"||name==="resultView");$("tableTab").classList.toggle("active",name==="tableView");window.scrollTo({top:0,behavior:"smooth"});}
+function makeQuestion(element,pool,index,mode){
+  const kind=mode==="hard"?index%4:(mode==="normal"?index%3:0);
+  let prompt="",answer="",label="",hint="";
+  if(kind===0){prompt='기호 <strong>'+element.symbol+'</strong>인 원소의 이름은?';answer=element.ko;label="원소 이름";hint="원소 기호와 한글 이름을 연결해 봐.";}
+  else if(kind===1){prompt='원소 이름이 <strong>'+element.ko+'</strong>인 원소의 기호는?';answer=element.symbol;label="원소 기호";hint="대소문자까지 정확히 기억해 봐.";}
+  else if(kind===2){prompt='원자번호 <strong>'+element.z+'</strong>번 원소의 기호는?';answer=element.symbol;label="원소 기호";hint="원자번호와 원소 기호를 연결해 봐.";}
+  else{prompt='<strong>'+element.symbol+' · '+element.ko+'</strong>의 원자번호는?';answer=String(element.z);label="원자번호";hint="원소 기호와 이름을 원자번호까지 연결해 봐.";}
+  const other=shuffle(pool.filter(function(e){return e.z!==element.z;})).slice(0,3);
+  const chosen=shuffle([element].concat(other)).map(function(e){
+    let value=kind===0?e.ko:(kind===1||kind===2)?e.symbol:String(e.z);
+    return {value:value,label:value};
+  });
+  return {element:element,kind:kind,prompt:prompt,promptText:prompt.replace(/<[^>]*>/g,""),answer:answer,label:label,hint:hint,choices:chosen};
+}
+function startGame(mode){
+  clearInterval(timerId);
+  const config=LEVELS[mode],pool=ELEMENTS.filter(function(e){return e.z<=config.max;});
+  const questions=shuffle(pool).slice(0,10).map(function(e,i){return makeQuestion(e,pool,i,mode);});
+  game={mode:mode,questions:questions,index:0,score:0,correct:0,streak:0,bestStreak:0,wrong:[]};
+  $("gameLevelName").textContent=config.name;$("gameScope").textContent=config.scope;
+  setView("quizView");renderQuestion();
+}
+function renderQuestion(){
+  clearInterval(timerId);
+  const q=game.questions[game.index],config=LEVELS[game.mode];
+  q.answered=false;
+  $("questionCount").textContent="QUESTION "+String(game.index+1).padStart(2,"0")+" / 10";
+  $("questionProgress").style.width=(game.index/10*100)+"%";
+  $("questionPrompt").innerHTML=q.prompt;
+  $("questionHint").textContent=q.hint;
+  $("questionFeedback").hidden=true;
+  $("optionGrid").innerHTML="";
+  q.choices.forEach(function(choice,index){
+    const button=document.createElement("button");button.type="button";button.className="option";button.dataset.value=choice.value;
+    const key=document.createElement("span");key.className="option-key";key.textContent=String.fromCharCode(65+index);
+    const text=document.createElement("span");text.className="option-label";text.textContent=choice.label;
+    button.append(key,text);button.addEventListener("click",function(){answerQuestion(choice.value);});$("optionGrid").appendChild(button);
+  });
+  remaining=config.seconds;updateTimer();
+  timerId=setInterval(function(){remaining=Math.max(0,remaining-1);updateTimer();if(remaining<=0){clearInterval(timerId);answerQuestion(null);}},1000);
+}
+function updateTimer(){
+  const total=LEVELS[game.mode].seconds,ratio=remaining/total;
+  $("timerText").textContent=remaining+"초";
+  $("timerBar").style.width=(ratio*100)+"%";
+  $("timerWrap").classList.toggle("urgent",remaining<=Math.max(4,Math.ceil(total*.3)));
+}
+function answerQuestion(value){
+  if(!game)return;
+  const q=game.questions[game.index];if(q.answered)return;
+  q.answered=true;clearInterval(timerId);
+  const correct=value===q.answer;
+  if(correct){game.correct++;game.streak++;game.bestStreak=Math.max(game.bestStreak,game.streak);game.score+=10+Math.min(game.streak-1,5)*2;}
+  else{game.streak=0;game.wrong.push(q);}
+  Array.from($("optionGrid").querySelectorAll(".option")).forEach(function(button){
+    button.disabled=true;
+    if(button.dataset.value===q.answer)button.classList.add("correct");
+    if(value!==null&&button.dataset.value===value&&value!==q.answer)button.classList.add("wrong");
+  });
+  const feedback=$("questionFeedback");feedback.hidden=false;feedback.classList.toggle("wrong",!correct);
+  $("feedbackTitle").textContent=correct?"정답이야! ✦":(value===null?"시간 초과!":"아쉽지만 정답은 따로 있어.");
+  $("feedbackDetail").textContent="정답: "+q.element.ko+" ("+q.element.symbol+") · 원자번호 "+q.element.z+"번";
+  $("nextButton").textContent=game.index===9?"결과 확인하기　✦":"다음 문제　→";
+  $("questionProgress").style.width=((game.index+1)/10*100)+"%";
+  $("questionHint").textContent=correct?"좋아! 다음 문제도 이어서 도전해 봐.":"정답을 확인했어. 기억해 두고 다음 문제로 가 보자.";
+}
+function nextQuestion(){if(!game)return;if(game.index>=9){finishGame();return;}game.index++;renderQuestion();}
+function finishGame(){
+  clearInterval(timerId);const s=loadStats();
+  s.games++;s.questions+=game.questions.length;s.correct+=game.correct;s.bestStreak=Math.max(s.bestStreak,game.bestStreak);s.bestScore=Math.max(s.bestScore,game.score);s.levelBest[game.mode]=Math.max(Number(s.levelBest[game.mode])||0,game.score);
+  try{localStorage.setItem(STORE_KEY,JSON.stringify(s));}catch(_){showToast("기록 저장 공간이 부족해. 브라우저 저장 공간을 확인해 줘.");}
+  updateStats();
+  const accuracy=Math.round(game.correct/10*100);
+  $("resultScore").innerHTML=game.score+'<span> / 120</span>';
+  $("resultCorrect").textContent=game.correct+"/10";$("resultAccuracy").textContent=accuracy+"%";$("resultStreak").textContent=game.bestStreak;
+  $("resultCaption").textContent=accuracy===100?"완벽해! 원소 마스터에 한 걸음 더 가까워졌어.":accuracy>=80?"훌륭해! 원소 정보가 점점 익숙해지고 있어.":accuracy>=50?"좋은 도전이야. 틀린 문제를 복습하면 더 탄탄해질 거야.":"괜찮아. 정답을 다시 확인하고 한 번 더 도전해 보자.";
+  $("reviewList").innerHTML="";$("reviewEmpty").hidden=game.wrong.length!==0;
+  game.wrong.forEach(function(q){
+    const li=document.createElement("li");li.className="review-item";
+    const copy=document.createElement("div");const prompt=document.createElement("strong");prompt.textContent=q.promptText;
+    const answer=document.createElement("span");answer.textContent="정답: "+q.element.ko+" ("+q.element.symbol+") · "+q.element.z+"번";
+    copy.append(prompt,answer);const mark=document.createElement("span");mark.className="review-mark";mark.textContent="다시 보기";li.append(copy,mark);$("reviewList").appendChild(li);
+  });
+  $("retryButton").textContent=LEVELS[game.mode].name+" 다시 도전　↻";
+  setView("resultView");
+}
+function renderPeriodicTable(){
+  const grid=$("periodicGrid");
+  ELEMENTS.forEach(function(e){
+    const button=document.createElement("button");button.type="button";button.className="element";button.dataset.z=e.z;button.dataset.search=(e.ko+" "+e.en+" "+e.symbol+" "+e.z).toLowerCase();button.style.setProperty("--tile",TYPE_COLORS[e.type]);
+    if(e.type==="lanth"){button.style.gridColumn=String(4+(e.z-57));button.style.gridRow="8";}
+    else if(e.type==="act"){button.style.gridColumn=String(4+(e.z-89));button.style.gridRow="9";}
+    else{button.style.gridColumn=String(e.group);button.style.gridRow=String(e.period);}
+    button.setAttribute("aria-label",e.z+"번 "+e.ko+" ("+e.symbol+")");
+    const number=document.createElement("span");number.className="atomic-number";number.textContent=e.z;
+    const symbol=document.createElement("strong");symbol.className="symbol";symbol.textContent=e.symbol;
+    const short=document.createElement("span");short.className="element-short";short.textContent=e.ko;
+    button.append(number,symbol,short);button.addEventListener("click",function(){showElement(e);});
+    grid.appendChild(button);
+  });
+}
+function showElement(e){
+  $("elementDetail").hidden=false;$("detailSymbol").textContent=e.symbol;$("detailName").textContent=e.ko+" · "+e.en;
+  const place=e.period+"주기"+(e.group?" · "+e.group+"족":" · 계열 원소");
+  $("detailInfo").textContent="원자번호 "+e.z+"번 · "+place;
+  $("detailCategory").textContent=TYPE_NAMES[e.type];
+}
+function filterElements(){
+  const q=$("elementSearch").value.trim().toLowerCase();let matches=0;
+  Array.from($("periodicGrid").querySelectorAll(".element")).forEach(function(button){
+    const match=!q||button.dataset.search.includes(q);button.classList.toggle("dimmed",!match);if(match)matches++;
+  });
+  $("elementCount").textContent=q?(matches+"개 일치"):"118개 원소";
+}
+function showTable(){
+  if(game&&$("quizView").hidden===false){if(!window.confirm("진행 중인 퀴즈를 끝내고 주기율표로 이동할까?"))return;clearInterval(timerId);game=null;}
+  setView("tableView");
+}
+function showHome(){
+  if(game&&$("quizView").hidden===false){if(!window.confirm("진행 중인 퀴즈를 종료할까?"))return;clearInterval(timerId);game=null;}
+  setView("homeView");
+}
+$("quizTab").addEventListener("click",showHome);
+$("tableTab").addEventListener("click",showTable);
+$("openTableButton").addEventListener("click",showTable);
+$("quitButton").addEventListener("click",showHome);
+$("nextButton").addEventListener("click",nextQuestion);
+$("homeButton").addEventListener("click",function(){game=null;setView("homeView");});
+$("retryButton").addEventListener("click",function(){if(game)startGame(game.mode);});
+$("elementSearch").addEventListener("input",filterElements);
+document.querySelectorAll("[data-level]").forEach(function(button){button.addEventListener("click",function(){startGame(button.dataset.level);});});
+document.addEventListener("keydown",function(event){
+  if(event.key==="Escape"&&$("tableView").hidden===false){$("elementDetail").hidden=true;$("elementSearch").value="";filterElements();}
+  if(/^[1-4]$/.test(event.key)&&$("quizView").hidden===false&&game&&!game.questions[game.index].answered){
+    const index=Number(event.key)-1,button=$("optionGrid").querySelectorAll(".option")[index];if(button)button.click();
+  }
+});
+renderPeriodicTable();updateStats();
+})();
+</script>
+</body>
+</html>
