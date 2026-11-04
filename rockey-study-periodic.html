@@ -208,6 +208,39 @@ h1 span{color:#9bc1ff}
 @keyframes particleBurst{0%{transform:translate(-50%,-50%) scale(.2);opacity:0}18%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.08);opacity:0}}
 @keyframes runnerImpact{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}}
 @media(max-width:760px){.runner-dori{width:84px;height:auto;aspect-ratio:320/318;bottom:12px}.approach-wall{left:8%;right:8%;height:58%}#optionGrid.gate-approaching{transform-origin:50% 12%}}
+
+/* Door impact: approach, open/pass or slam, then show result */
+.approach-wall{z-index:1;transform-origin:50% 50%;border:3px solid rgba(139,222,245,.42);background:linear-gradient(180deg,rgba(65,149,185,.13),rgba(13,50,78,.24));box-shadow:inset 0 0 28px rgba(99,210,239,.14),0 0 28px rgba(67,177,218,.18)}
+.door-panel{position:absolute;z-index:1;top:0;bottom:0;width:50%;border:1px solid rgba(162,231,249,.46);background:repeating-linear-gradient(135deg,rgba(98,176,207,.32) 0 10px,rgba(15,56,82,.78) 10px 21px);box-shadow:inset 0 0 24px rgba(123,222,246,.18),0 0 16px rgba(99,208,236,.13)}
+.door-left{left:0;border-radius:14px 0 0 7px;border-right:2px solid rgba(166,237,252,.65)}
+.door-right{right:0;border-radius:0 14px 7px 0;border-left:2px solid rgba(166,237,252,.65)}
+.approach-wall i,.approach-wall b{z-index:2;pointer-events:none}
+.runner-stage.door-rushing #approachWall{z-index:7;animation:doorRush .78s cubic-bezier(.16,.76,.22,1) forwards}
+.runner-stage.door-rushing #optionGrid{animation:gatePass .78s cubic-bezier(.2,.7,.2,1) forwards;pointer-events:none}
+.runner-stage.door-rushing.door-clear .door-left{animation:doorOpenLeft .58s .12s cubic-bezier(.2,.8,.2,1) forwards}
+.runner-stage.door-rushing.door-clear .door-right{animation:doorOpenRight .58s .12s cubic-bezier(.2,.8,.2,1) forwards}
+.runner-stage.door-rushing.door-crash .door-panel{animation:doorSlam .34s .26s ease-in-out both}
+.runner-stage.door-clear{--impact-glow:rgba(93,245,180,.3)}
+.runner-stage.door-crash{--impact-glow:rgba(255,113,135,.25)}
+.runner-stage.door-rushing{box-shadow:inset 0 0 60px var(--impact-glow),0 0 32px var(--impact-glow)}
+.runner-stage.impact-success{border-color:rgba(117,241,182,.65);box-shadow:inset 0 0 75px rgba(86,243,174,.16),0 0 28px rgba(74,226,164,.2)}
+.runner-stage.impact-fail{animation:impactShake .38s linear 2}
+.runner-stage.final-impact{border-color:rgba(255,158,126,.75);box-shadow:inset 0 0 100px rgba(255,93,110,.25),0 0 50px rgba(255,93,110,.25);animation:finalCrashShake .62s ease-in-out 2}
+.runner-dori.dori-launch{animation:doriLaunch .72s cubic-bezier(.22,.78,.28,1) forwards}
+.runner-dori.dori-recoil{animation:doriRecoil .58s ease-out both}
+.runner-dori.dori-final-bounce{z-index:9;animation:doriFinalBounce 1.18s cubic-bezier(.18,.72,.24,1) both}
+@keyframes doorRush{0%{transform:scale(.86);opacity:.48;filter:brightness(.8)}46%{transform:scale(1.34);opacity:1;filter:brightness(1.24)}76%{transform:scale(1.9);opacity:.9;filter:brightness(1.55)}100%{transform:scale(2.5);opacity:0;filter:brightness(1.8)}}
+@keyframes doorOpenLeft{0%,24%{transform:translateX(0)}100%{transform:translateX(-112%)}}
+@keyframes doorOpenRight{0%,24%{transform:translateX(0)}100%{transform:translateX(112%)}}
+@keyframes doorSlam{0%,100%{transform:translateX(0);filter:brightness(1)}30%{transform:translateX(-4px);filter:brightness(1.65)}65%{transform:translateX(4px);filter:brightness(1.1)}}
+@keyframes gatePass{0%{transform:scale(1);opacity:1;filter:blur(0)}62%{transform:scale(1.16);opacity:.8;filter:blur(1px)}100%{transform:scale(1.48);opacity:0;filter:blur(3px)}}
+@keyframes doriLaunch{0%{transform:translateX(-50%) translateY(0) scale(1)}42%{transform:translateX(-50%) translateY(-25px) scale(1.08)}100%{transform:translateX(-50%) translateY(-7px) scale(.98)}}
+@keyframes doriRecoil{0%{transform:translateX(-50%) translateY(-5px) rotate(0)}30%{transform:translateX(-50%) translateY(8px) rotate(-12deg)}65%{transform:translateX(-50%) translateY(-4px) rotate(8deg)}100%{transform:translateX(-50%) translateY(0) rotate(0)}}
+@keyframes doriFinalBounce{0%{transform:translateX(-50%) translateY(0) rotate(0) scale(1);opacity:1}18%{transform:translateX(-50%) translateY(10px) rotate(-13deg) scale(1.06)}52%{transform:translateX(-50%) translateY(-112px) rotate(36deg) scale(.92)}78%{transform:translateX(-50%) translateY(-70px) rotate(108deg) scale(.82);opacity:.92}100%{transform:translateX(-50%) translateY(-132px) rotate(190deg) scale(.72);opacity:0}}
+@keyframes impactShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+@keyframes finalCrashShake{0%,100%{transform:translateX(0)}18%{transform:translateX(-8px)}36%{transform:translateX(7px)}54%{transform:translateX(-5px)}72%{transform:translateX(4px)}}
+@media(max-width:760px){.door-panel{border-width:1px}.runner-dori.dori-final-bounce{animation-duration:1.1s}}
+@media(prefers-reduced-motion:reduce){.door-panel,.approach-wall,.runner-stage,.runner-dori{animation-duration:.01ms!important}}
 </style>
 </head>
 <body>
@@ -252,8 +285,8 @@ h1 span{color:#9bc1ff}
     <div class="runner-home-copy">
       <div class="runner-eyebrow"><i></i> ELEMENT RUN · PERIODIC TABLE ARCADE</div>
       <h2>돌이와 함께<br><span>원소 레이스에 도전해!</span></h2>
-      <p>4개의 원소 게이트 중 정답을 골라 돌이를 통과시켜 줘. 빠르게 정답을 고르고 콤보를 이어 가며 10개 구간을 완주해 보자!</p>
-      <div class="runner-home-tags"><span>← → 레인 이동</span><span>SPACE 대시</span><span>10개 구간 완주</span></div>
+      <p>4개의 원소 게이트 중 정답을 골라 돌이를 통과시켜 줘. 빠르게 정답을 고르고 콤보를 이어 가며 15~30개 구간을 완주해 보자!</p>
+      <div class="runner-home-tags"><span>← → 레인 이동</span><span>SPACE 대시</span><span>최대 30개 구간</span></div>
     </div>
     <div class="runner-mascot" aria-hidden="true">
       <div class="mascot-orbit"></div><div class="mascot-platform"></div>
@@ -269,7 +302,7 @@ h1 span{color:#9bc1ff}
     <button class="level-card run-mode-card easy-mode" data-level="easy" type="button">
       <span class="mode-art"><span>H</span><i></i><b></b></span><span class="mode-kicker">LEVEL 01 · STARTER</span><h3>쉬움</h3>
       <p>가장 먼저 익히는 1~20번 원소. 기호를 보고 이름을 골라 기초 레이스를 완주해 봐.</p>
-      <span class="mode-facts"><i>1~20번 원소</i><i>20초 / 문제</i><i>기호 → 이름</i></span>
+      <span class="mode-facts"><i>1~20번 원소</i><i>20초 / 문제</i><i>8종 문제 유형</i></span>
       <span class="mode-best" id="easyBest">최고 기록 · 아직 없음</span><span class="level-start">쉬움으로 달리기　<em>↗</em></span>
     </button>
     <button class="level-card run-mode-card normal-mode" data-level="normal" type="button">
@@ -280,8 +313,8 @@ h1 span{color:#9bc1ff}
     </button>
     <button class="level-card run-mode-card hard-mode" data-level="hard" type="button">
       <span class="mode-art"><span>Og</span><i></i><b></b></span><span class="mode-kicker">LEVEL 03 · EXPERT</span><h3>어려움</h3>
-      <p>1~118번 전체 원소가 등장해. 네 가지 유형의 문제를 10초 안에 통과해 봐.</p>
-      <span class="mode-facts"><i>전체 118개</i><i>10초 / 문제</i><i>4종 문제 유형</i></span>
+      <p>1~118번 전체 원소가 등장해. 여덟 가지 유형의 문제를 10초 안에 통과해 봐.</p>
+      <span class="mode-facts"><i>전체 118개</i><i>10초 / 문제</i><i>8종 문제 유형</i></span>
       <span class="mode-best" id="hardBest">최고 기록 · 아직 없음</span><span class="level-start">어려움으로 달리기　<em>↗</em></span>
     </button>
     <button class="level-card run-mode-card practice-mode" data-level="practice" type="button">
@@ -292,7 +325,7 @@ h1 span{color:#9bc1ff}
     </button>
     <button class="level-card run-mode-card infinite-mode" data-level="infinite" type="button">
       <span class="mode-art"><span>∞</span><i></i><b></b></span><span class="mode-kicker">ENDLESS RUN · SURVIVAL</span><h3>무한 모드</h3>
-      <p>끝없이 이어지는 원소 게이트! 정답을 맞혀 점수를 쌓고, 하트 3개가 모두 사라지기 전까지 최대한 오래 버텨 봐.</p>
+      <p>끝없이 이어지는 원소 게이트! 여덟 가지 유형을 풀며 하트 3개가 모두 사라지기 전까지 최대한 오래 버텨 봐.</p>
       <span class="mode-facts"><i>전체 118개 원소</i><i>12초 / 문제</i><i>무제한 구간</i></span>
       <span class="mode-best" id="infiniteBest">최고 기록 · 아직 없음</span><span class="level-start">무한 레이스 시작　<em>↗</em></span>
     </button>
@@ -331,7 +364,7 @@ h1 span{color:#9bc1ff}
     <div class="runner-horizon"><span>ELEMENT RUNWAY</span><i></i><b></b></div>
     <div class="runner-track">
       <div class="track-grid"></div><div class="track-lane-lines"><i></i><i></i><i></i></div>
-      <div class="approach-wall" id="approachWall" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
+      <div class="approach-wall" id="approachWall" aria-hidden="true"><div class="door-panel door-left"></div><div class="door-panel door-right"></div><i></i><i></i><i></i><b></b></div>
       <div class="gate-grid" id="optionGrid" aria-label="정답 게이트 선택"></div>
       <div class="runner-dori" id="runnerDori" style="--lane:1" aria-label="달리는 돌이">
         <span class="dori-shadow"></span>
@@ -443,7 +476,9 @@ const ELEMENTS = [
 const TYPE_NAMES={alkali:"알칼리 금속",alkaline:"알칼리 토금속",transition:"전이 금속",post:"기타 금속",metalloid:"준금속",nonmetal:"비금속",halogen:"할로젠",noble:"비활성 기체",lanth:"란타넘족",act:"악티늄족"};
 const TYPE_COLORS={alkali:"#dca2ff",alkaline:"#ffca83",transition:"#8db5ff",post:"#8fe0c1",metalloid:"#9bd9b5",nonmetal:"#75e0e8",halogen:"#62cfe4",noble:"#e7b2d5",lanth:"#c1a7ff",act:"#b99cff"};
 const STORE_KEY="rockeyStudy.periodicChallenge.v1";
-const LEVELS={easy:{name:"쉬움",max:20,seconds:20,scope:"1~20번 원소"},normal:{name:"보통",max:54,seconds:15,scope:"1~54번 원소"},hard:{name:"어려움",max:118,seconds:10,scope:"전체 118개 원소"},practice:{name:"연습 모드",max:118,seconds:60,scope:"전체 118개 · 이름·기호·원자번호·족·주기"},infinite:{name:"무한 모드",max:118,seconds:12,scope:"끝없는 레이스 · 전체 118개 원소"}};
+const LEVELS={easy:{name:"쉬움",max:20,seconds:20,count:15,scope:"1~20번 원소 · 15문제"},normal:{name:"보통",max:54,seconds:15,count:20,scope:"1~54번 원소 · 20문제"},hard:{name:"어려움",max:118,seconds:10,count:25,scope:"전체 118개 원소 · 25문제"},practice:{name:"연습 모드",max:118,seconds:60,count:30,scope:"전체 118개 · 8종 문제 · 30문제"},infinite:{name:"무한 모드",max:118,seconds:12,scope:"끝없는 레이스 · 전체 118개 원소"}};
+const QUESTION_TYPES={easy:[0,1,2],normal:[0,1,2,3,4,5],hard:[0,1,2,3,4,5,6,7],practice:[0,1,2,3,4,5,6,7],infinite:[0,1,2,3,4,5,6,7]};
+function pickQuestionKind(mode,index,order){const kinds=order||QUESTION_TYPES[mode]||QUESTION_TYPES.hard;return kinds[index%kinds.length];}
 const $=function(id){return document.getElementById(id);};
 let game=null,timerId=null,remaining=0,toastId=null;
 function setView(viewId){
@@ -492,30 +527,32 @@ function updateStats(){
   });
  }
 }
-function makeQuestion(element,pool,index,mode){
-  const kind=mode==="easy"?0:(mode==="normal"?index%5:index%6);
-  let prompt="",answer="",label="",hint="";
-  if(kind===0){prompt='기호 <strong>'+element.symbol+'</strong>인 원소의 이름은?';answer=element.ko;label="원소 이름";hint="원소 기호와 한글 이름을 연결해 봐.";}
-  else if(kind===1){prompt='원소 이름이 <strong>'+element.ko+'</strong>인 원소의 기호는?';answer=element.symbol;label="원소 기호";hint="대소문자까지 정확히 기억해 봐.";}
-  else if(kind===2){prompt='원자번호 <strong>'+element.z+'</strong>번 원소의 기호는?';answer=element.symbol;label="원소 기호";hint="원자번호와 원소 기호를 연결해 봐.";}
-  else if(kind===3){prompt='<strong>'+element.symbol+' · '+element.ko+'</strong>의 원자번호는?';answer=String(element.z);label="원자번호";hint="원소 기호와 이름을 원자번호까지 연결해 봐.";}
-  else if(kind===4){prompt='<strong>'+element.symbol+' · '+element.ko+'</strong>은 몇 족 원소일까?';answer=String(element.group);label="족";hint="주기율표에서 세로줄의 위치를 떠올려 봐.";}
-  else{prompt='<strong>'+element.symbol+' · '+element.ko+'</strong>은 몇 주기 원소일까?';answer=String(element.period);label="주기";hint="주기율표에서 가로줄의 위치를 떠올려 봐.";}
-  function valueFor(e){return kind===0?e.ko:(kind===1||kind===2)?e.symbol:kind===4?String(e.group):kind===5?String(e.period):String(e.z);}
-  const answerValue=valueFor(element);
-  const candidates=shuffle(pool.filter(function(e){return e.z!==element.z&&(kind!==4||e.group!==null);}));
-  const unique=[],seen=new Set([answerValue]);
-  candidates.forEach(function(e){const v=valueFor(e);if(!seen.has(v)&&unique.length<3){seen.add(v);unique.push({value:v,label:kind===4?v+"족":kind===5?v+"주기":v});}});
-  const chosen=shuffle([{value:answerValue,label:kind===4?answerValue+"족":kind===5?answerValue+"주기":answerValue}].concat(unique));
-  return {element:element,kind:kind,prompt:prompt,promptText:prompt.replace(/<[^>]*>/g,""),answer:answer,label:label,hint:hint,choices:chosen};
+function makeQuestion(element,pool,index,mode,kindOverride){
+ const kind=kindOverride==null?pickQuestionKind(mode,index):kindOverride;
+ let prompt="",answer="",label="",hint="";
+ if(kind===0){prompt='기호 <strong>'+element.symbol+'</strong>인 원소의 이름은?';answer=element.ko;label="원소 이름";hint="원소 기호와 한글 이름을 연결해 봐.";}
+ else if(kind===1){prompt='원소 이름이 <strong>'+element.ko+'</strong>인 원소의 기호는?';answer=element.symbol;label="원소 기호";hint="대소문자까지 정확히 기억해 봐.";}
+ else if(kind===2){prompt='원자번호 <strong>'+element.z+'</strong>번 원소의 기호는?';answer=element.symbol;label="원소 기호";hint="원자번호와 원소 기호를 연결해 봐.";}
+ else if(kind===3){prompt='<strong>'+element.symbol+' · '+element.ko+'</strong>의 원자번호는?';answer=String(element.z);label="원자번호";hint="원소 기호와 이름을 원자번호까지 연결해 봐.";}
+ else if(kind===4){prompt='<strong>'+element.symbol+' · '+element.ko+'</strong>은 몇 족 원소일까?';answer=String(element.group);label="족";hint="주기율표에서 세로줄의 위치를 떠올려 봐.";}
+ else if(kind===5){prompt='<strong>'+element.symbol+' · '+element.ko+'</strong>은 몇 주기 원소일까?';answer=String(element.period);label="주기";hint="주기율표에서 가로줄의 위치를 떠올려 봐.";}
+ else if(kind===6){prompt='기호가 <strong>'+element.symbol+'</strong>인 원소의 영어 이름은?';answer=element.en;label="영어 이름";hint="원소 기호와 영어 이름을 연결해 봐.";}
+ else{prompt='<strong>'+element.symbol+' · '+element.ko+'</strong>은 어떤 계열에 속할까?';answer=TYPE_NAMES[element.type];label="원소 분류";hint="원소의 성질과 주기율표의 계열을 떠올려 봐.";}
+ function valueFor(e){return kind===0?e.ko:(kind===1||kind===2)?e.symbol:kind===4?String(e.group):kind===5?String(e.period):kind===6?e.en:kind===7?TYPE_NAMES[e.type]:String(e.z);}
+ function displayValue(value){return kind===4?value+"족":kind===5?value+"주기":value;}
+ const answerValue=valueFor(element),candidates=shuffle(pool.filter(function(e){return e.z!==element.z&&(kind!==4||e.group!==null);}));
+ const unique=[],seen=new Set([answerValue]);
+ candidates.forEach(function(e){const v=valueFor(e);if(!seen.has(v)&&unique.length<3){seen.add(v);unique.push({value:v,label:displayValue(v)});}});
+ const chosen=shuffle([{value:answerValue,label:displayValue(answerValue)}].concat(unique));
+ return {element:element,kind:kind,prompt:prompt,promptText:prompt.replace(/<[^>]*>/g,""),answer:answer,label:label,hint:hint,choices:chosen};
 }
-let transitionTimer=null,timerStartedAt=0;
+let transitionTimer=null,impactTimer=null,timerStartedAt=0;
 function renderRunHud(){
  if(!game)return;
  $("playerLives").textContent=Array.from({length:3},function(_,i){return i<game.lives?"♥":"♡";}).join(" ");
  $("comboValue").textContent="×"+game.streak;
  $("battleScore").textContent=game.score.toLocaleString("ko-KR");
- $("runProgressText").textContent=game.mode==="infinite"?"∞":Math.round(game.index/10*100)+"%";
+ $("runProgressText").textContent=game.mode==="infinite"?"∞":Math.round(game.index/LEVELS[game.mode].count*100)+"%";
  $("distanceText").textContent="DIST "+String(game.distance).padStart(4,"0")+" m";
  $("speedText").textContent="SPEED "+(1+game.streak*.08).toFixed(1)+"×";
  $("runnerDori").style.left=(12.5+game.selectedLane*25)+"%";
@@ -528,28 +565,28 @@ function selectLane(index){
 }
 function moveLane(delta){if(!game||game.questions[game.index].answered)return;selectLane(game.selectedLane+delta);}
 function startGame(mode){
- clearInterval(timerId);clearTimeout(transitionTimer);
+ clearInterval(timerId);clearTimeout(transitionTimer);clearTimeout(impactTimer);
  const config=LEVELS[mode],pool=ELEMENTS.filter(function(e){return e.z<=config.max;});
- const used=new Set();
- const questions=Array.from({length:10},function(_,i){
-  const kind=mode==="easy"?0:(mode==="normal"?i%5:i%6);
+ const used=new Set(),typeOrder=shuffle(QUESTION_TYPES[mode].slice());
+ const questions=Array.from({length:config.count||10},function(_,i){
+  const kind=pickQuestionKind(mode,i,typeOrder);
   const source=kind===4?pool.filter(function(e){return e.group!==null;}):pool;
   const available=source.filter(function(e){return !used.has(e.z);});
   const element=shuffle(available)[0];used.add(element.z);
-  return makeQuestion(element,pool,i,mode);
+  return makeQuestion(element,pool,i,mode,kind);
  });
- game={mode:mode,questions:questions,index:0,score:0,correct:0,answeredCount:0,streak:0,bestStreak:0,wrong:[],lives:3,selectedLane:1,xpRun:0,collected:[],distance:0,answered:false,usedElements:used};
+ game={mode:mode,questions:questions,index:0,score:0,correct:0,answeredCount:0,streak:0,bestStreak:0,wrong:[],lives:3,selectedLane:1,xpRun:0,collected:[],distance:0,answered:false,usedElements:used,questionTypeOrder:typeOrder};
  $("gameLevelName").textContent=config.name;$("gameScope").textContent=config.scope;
- $("runnerStage").classList.remove("is-dashing","is-hit","is-success");
+ $("runnerStage").classList.remove("is-dashing","is-hit","is-success","door-rushing","door-clear","door-crash","final-impact","impact-success","impact-fail");
  setView("quizView");renderQuestion();
 }
 function renderQuestion(){
  clearInterval(timerId);
  ["optionGrid","approachWall"].forEach(function(id){const el=$(id);el.classList.remove("gate-approaching","wall-approaching");el.style.animation="";el.style.transition="";el.style.transform="";el.style.opacity="";el.style.setProperty("--approach-duration","");});
- $("runnerStage").classList.remove("gate-crossing");$("runnerParticles").innerHTML="";
+ $("runnerStage").classList.remove("gate-crossing","door-rushing","door-clear","door-crash","final-impact","impact-success","impact-fail");$("runnerDori").classList.remove("dori-launch","dori-recoil","dori-final-bounce");$("runnerParticles").innerHTML="";
  const q=game.questions[game.index],config=LEVELS[game.mode];
  game.answered=false;game.selectedLane=1;
- $("questionCount").innerHTML=String(game.index+1).padStart(2,"0")+' <span>/ '+(game.mode==="infinite"?"∞":"10")+'</span>';
+ $("questionCount").innerHTML=String(game.index+1).padStart(2,"0")+' <span>/ '+(game.mode==="infinite"?"∞":config.count)+'</span>';
  $("questionPrompt").innerHTML=q.prompt;
  $("questionHint").textContent=q.hint+" 정답이 있는 게이트로 이동한 뒤 대시해!";
  $("questionFeedback").hidden=true;$("runnerStage").classList.remove("is-dashing","is-hit","is-success");
@@ -567,7 +604,7 @@ function renderQuestion(){
  remaining=config.seconds;timerStartedAt=Date.now();updateTimer();
  timerId=setInterval(function(){
   remaining=Math.max(0,config.seconds-(Date.now()-timerStartedAt)/1000);updateTimer();
-  if(remaining<=0){clearInterval(timerId);answerQuestion(null);}
+  if(remaining<=0){clearInterval(timerId);answerQuestion(null,"timeout");}
  },60);
 }
 function updateTimer(){
@@ -576,76 +613,90 @@ function updateTimer(){
  $("timerWrap").classList.toggle("urgent",remaining<=Math.max(4,total*.28));
 }
 function dash(){
- if(!game||game.questions[game.index].answered)return;
+ if(!game||game.answered)return;
  const selected=game.questions[game.index].choices[game.selectedLane];if(!selected)return;
- $("runnerStage").classList.remove("is-dashing","is-hit","is-success");void $("runnerStage").offsetWidth;
- $("runnerStage").classList.add("is-dashing");
+ answerQuestion(selected.value,"dash");
+}
+function answerQuestion(value,source){
+ if(!game||game.answered)return;
+ const q=game.questions[game.index],correct=value===q.answer,lastLife=!correct&&game.lives===1;
+ game.answered=true;q.answered=true;clearInterval(timerId);clearTimeout(impactTimer);
+ game.pendingImpact={value:value,source:source||"submit",correct:correct,lastLife:lastLife};
+ const stage=$("runnerStage"),dori=$("runnerDori");
+ stage.classList.remove("is-dashing","is-hit","is-success","gate-crossing","door-clear","door-crash","final-impact","impact-success","impact-fail");
+ void stage.offsetWidth;stage.classList.add("is-dashing","door-rushing",correct?"door-clear":"door-crash");
+ if(lastLife)stage.classList.add("final-impact");
+ dori.classList.remove("dori-recoil","dori-final-bounce");dori.classList.add("dori-launch");
+ Array.from($("optionGrid").querySelectorAll(".gate")).forEach(function(gate){gate.disabled=true;});
  $("dashButton").disabled=true;$("moveLeftBtn").disabled=true;$("moveRightBtn").disabled=true;
- answerQuestion(selected.value);
+ $("runnerFx").textContent=source==="timeout"?"TIME! WALL INCOMING":"GATE IMPACT!";
+ $("runnerFx").classList.remove("show");void $("runnerFx").offsetWidth;$("runnerFx").classList.add("show");
+ impactTimer=setTimeout(resolveGateImpact,correct?820:760);
 }
-function passGateVisual(correct){
- const nodes=[$("optionGrid"),$("approachWall")];
- nodes.forEach(function(el){const st=getComputedStyle(el),transform=st.transform,opacity=st.opacity;el.style.animation="none";el.classList.remove("gate-approaching","wall-approaching");el.style.transform=transform==="none"?"translate3d(0,0,0)":transform;el.style.opacity=opacity;el.style.transition="transform .62s cubic-bezier(.35,.02,.8,.35),opacity .55s ease";void el.offsetWidth;requestAnimationFrame(function(){el.style.transform="scale(1.28)";el.style.opacity="0";});});
- $("runnerStage").classList.add("gate-crossing");
- const layer=$("runnerParticles");layer.innerHTML="";
- for(let i=0;i<20;i++){const spark=document.createElement("i");spark.style.left=(35+Math.random()*30)+"%";spark.style.top=(48+Math.random()*24)+"%";spark.style.setProperty("--dx",(Math.random()*210-105)+"px");spark.style.setProperty("--dy",(Math.random()*180-120)+"px");spark.style.setProperty("--particle-color",correct?"#8ff0bf":"#ff9eaa");layer.appendChild(spark);}
- setTimeout(function(){layer.innerHTML="";},900);
-}
-function answerQuestion(value){
- if(!game||game.questions[game.index].answered)return;
- const q=game.questions[game.index];q.answered=true;game.answered=true;clearInterval(timerId);game.answeredCount++;
- const correct=value===q.answer;let gained=0;
+function resolveGateImpact(){
+ if(!game||!game.pendingImpact)return;
+ const impact=game.pendingImpact;game.pendingImpact=null;
+ const q=game.questions[game.index],correct=impact.correct,value=impact.value;
  const correctLane=q.choices.findIndex(function(choice){return choice.value===q.answer;});
+ game.answeredCount++;let gained=0;
  if(correct){
   game.correct++;game.streak++;game.bestStreak=Math.max(game.bestStreak,game.streak);
   gained=100+Math.max(0,Math.floor(remaining))*5+Math.min(game.streak-1,5)*20;
   game.score+=gained;game.xpRun+=25;game.collected.push(q.element.z);game.distance+=125;
-  $("runnerStage").classList.remove("is-hit");$("runnerStage").classList.add("is-success");
-  $("runnerFx").textContent="GATE CLEAR! +"+gained;$("runnerFx").classList.remove("show");void $("runnerFx").offsetWidth;$("runnerFx").classList.add("show");
+  $("runnerStage").classList.remove("is-hit","door-crash");$("runnerStage").classList.add("is-success","impact-success");
+  $("runnerFx").textContent="GATE CLEAR! +"+gained;
  }else{
   game.streak=0;game.lives--;game.wrong.push(q);game.distance+=45;
-  $("runnerStage").classList.remove("is-success");$("runnerStage").classList.add("is-hit");
-  $("runnerFx").textContent=value===null?"TIME UP!":"CRASH! -1 HEART";$("runnerFx").classList.remove("show");void $("runnerFx").offsetWidth;$("runnerFx").classList.add("show");
+  $("runnerStage").classList.remove("is-success","door-clear");$("runnerStage").classList.add("is-hit","impact-fail");
+  $("runnerDori").classList.remove("dori-launch");$("runnerDori").classList.add(impact.lastLife?"dori-final-bounce":"dori-recoil");
+  if(impact.lastLife)$("runnerStage").classList.add("final-impact");
+  $("runnerFx").textContent=value===null?"TIME UP! -1 HEART":"WALL HIT! -1 HEART";
  }
+ $("runnerFx").classList.remove("show");void $("runnerFx").offsetWidth;$("runnerFx").classList.add("show");
  Array.from($("optionGrid").querySelectorAll(".gate")).forEach(function(gate,index){
-  gate.disabled=true;if(index===correctLane)gate.classList.add("gate-correct");
+  if(index===correctLane)gate.classList.add("gate-correct");
   if(index===game.selectedLane&&!correct)gate.classList.add("gate-wrong");
  });
- passGateVisual(correct);
- renderRunHud();$("dashButton").disabled=true;$("moveLeftBtn").disabled=true;$("moveRightBtn").disabled=true;
+ const layer=$("runnerParticles");layer.innerHTML="";
+ for(let i=0;i<(correct?24:32);i++){
+  const spark=document.createElement("i");spark.style.left=(34+Math.random()*32)+"%";spark.style.top=(43+Math.random()*35)+"%";
+  spark.style.setProperty("--dx",(Math.random()*250-125)+"px");spark.style.setProperty("--dy",(Math.random()*190-125)+"px");
+  spark.style.setProperty("--particle-color",correct?"#8ff0bf":(impact.lastLife?"#ffbb88":"#ff9eaa"));layer.appendChild(spark);
+ }
+ setTimeout(function(){layer.innerHTML="";},1000);renderRunHud();
  const feedback=$("questionFeedback");feedback.hidden=false;feedback.classList.toggle("wrong",!correct);
- $("feedbackTitle").textContent=correct?"완벽하게 통과! +"+gained+" PTS":(value===null?"시간 초과! 하트 1개 감소":"충돌! 하트 1개 감소");
+ $("feedbackTitle").textContent=correct?"완벽하게 통과! +"+gained+" PTS":(value===null?"시간 초과! 하트 1개 감소":(impact.lastLife?"마지막 충돌! 레이스 종료":"충돌! 하트 1개 감소"));
  $("feedbackDetail").textContent="원소 데이터: "+q.element.ko+" ("+q.element.symbol+") · 원자번호 "+q.element.z+"번";
- $("nextButton").textContent=(game.lives<=0||(game.mode!=="infinite"&&game.index===9))?"레이스 결과 보기　✦":(game.mode==="infinite"?"계속 달리기　→":"다음 구간으로　→");
- $("questionHint").textContent=correct?"멋진 조종이야! 정답 게이트를 통과했어.":"괜찮아. 초록색으로 표시된 게 정답 게이트야.";
- transitionTimer=setTimeout(advanceRun,1450);
+ $("nextButton").textContent=(game.lives<=0||(game.mode!=="infinite"&&game.index===LEVELS[game.mode].count-1))?"레이스 결과 보기　✦":(game.mode==="infinite"?"계속 달리기　→":"다음 구간으로　→");
+ $("questionHint").textContent=correct?"문이 열렸어! 돌이가 게이트를 통과했어.":(impact.lastLife?"마지막 하트야! 돌이가 벽에 튕겨 나갔어.":"문이 닫혀 있어! 충돌했어. 정답은 초록색 게이트야.");
+ transitionTimer=setTimeout(advanceRun,impact.lastLife?2050:1400);
 }
 function advanceRun(){
  clearTimeout(transitionTimer);if(!game)return;
- if(game.lives<=0||(game.mode!=="infinite"&&game.index>=9)){finishGame();return;}
+ if(game.lives<=0||(game.mode!=="infinite"&&game.index>=LEVELS[game.mode].count-1)){finishGame();return;}
  game.index++;
  if(game.mode==="infinite"&&game.index>=game.questions.length){
-  const pool=ELEMENTS,kind=game.index%6,source=kind===4?pool.filter(function(e){return e.group!==null;}):pool;
+  const pool=ELEMENTS,kind=pickQuestionKind(game.mode,game.index,game.questionTypeOrder),source=kind===4?pool.filter(function(e){return e.group!==null;}):pool;
   let available=source.filter(function(e){return !game.usedElements.has(e.z);});
   if(!available.length){game.usedElements.clear();available=source;}
   const element=shuffle(available)[0];game.usedElements.add(element.z);
-  game.questions.push(makeQuestion(element,pool,game.index,game.mode));
+  game.questions.push(makeQuestion(element,pool,game.index,game.mode,kind));
  }
  renderQuestion();
 }
 function finishGame(){
- if(!game)return;clearInterval(timerId);clearTimeout(transitionTimer);
- const s=loadStats(),mode=game.mode,reward=game.xpRun+Math.max(0,game.bestStreak*5)+(game.mode!=="infinite"&&game.answeredCount===10?60:0);
+ if(!game)return;clearInterval(timerId);clearTimeout(transitionTimer);clearTimeout(impactTimer);
+ const s=loadStats(),mode=game.mode,reward=game.xpRun+Math.max(0,game.bestStreak*5)+(game.mode!=="infinite"&&game.answeredCount===LEVELS[game.mode].count?60:0);
  s.games++;s.questions+=game.answeredCount;s.correct+=game.correct;s.bestStreak=Math.max(s.bestStreak,game.bestStreak);
  s.bestScore=Math.max(s.bestScore,game.score);s.levelBest[mode]=Math.max(Number(s.levelBest[mode])||0,game.score);s.xp+=reward;
  const previous=new Set(s.collected),fresh=game.collected.filter(function(z){return !previous.has(z);});
  game.collected.forEach(function(z){previous.add(z);});
  s.collected=Array.from(previous).sort(function(a,b){return a-b;});
  try{localStorage.setItem(STORE_KEY,JSON.stringify(s));}catch(_){showToast("기록 저장 공간이 부족해. 브라우저 저장 공간을 확인해 줘.");}
- updateStats();const complete=game.mode!=="infinite"&&game.answeredCount===10;
+ updateStats();const complete=game.mode!=="infinite"&&game.answeredCount===LEVELS[game.mode].count;
  $("resultStamp").textContent=game.mode==="infinite"?"ENDLESS RUN OVER":(complete?"RUN COMPLETE":"RUN OVER");
  $("resultTitle").textContent=game.mode==="infinite"?"무한 레이스 종료":(complete?"레이스 완주!":"레이스 종료");
- $("resultCaption").textContent=game.mode==="infinite"?"총 "+game.answeredCount+"개 구간을 달렸어. 최고 기록에 도전해 봐!":(complete?(game.correct===10?"정답 게이트를 모두 완벽하게 통과했어!":"10개 구간을 끝까지 달렸어. 오답을 확인하고 기록을 높여 봐!"):"하트가 모두 소진됐어. 틀린 원소를 복습하고 다시 출발해 보자.");
+ $("resultCaption").textContent=game.mode==="infinite"?"총 "+game.answeredCount+"개 구간을 달렸어. 최고 기록에 도전해 봐!":(complete?(game.correct===LEVELS[game.mode].count?"모든 정답 게이트를 완벽하게 통과했어!":LEVELS[game.mode].count+"개 구간을 끝까지 달렸어. 오답을 확인하고 기록을 높여 봐!"):"하트가 모두 소진됐어. 틀린 원소를 복습하고 다시 출발해 보자.");
  $("resultScore").innerHTML=game.score.toLocaleString("ko-KR")+'<span> PTS</span>';
  $("resultXp").textContent="+"+reward+" XP";$("resultCorrect").textContent=game.correct+" / "+game.answeredCount;
  $("resultStreak").textContent=game.bestStreak+" HIT";$("lootName").textContent=game.collected.length+"개 원소 데이터 획득";
@@ -690,7 +741,7 @@ function filterElements(){
   $("elementCount").textContent=q?(matches+"개 일치"):"118개 원소";
 }
 function showTable(){
-  if(game&&$("quizView").hidden===false){if(!window.confirm("진행 중인 레이스를 끝내고 주기율표로 이동할까?"))return;clearInterval(timerId);clearTimeout(transitionTimer);game=null;}
+  if(game&&$("quizView").hidden===false){if(!window.confirm("진행 중인 레이스를 끝내고 주기율표로 이동할까?"))return;clearInterval(timerId);clearTimeout(transitionTimer);clearTimeout(impactTimer);game=null;}
   setView("tableView");
 }
 function showHome(){
