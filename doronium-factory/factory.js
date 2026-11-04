@@ -12,6 +12,7 @@ import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commi
 import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, awardSkillPoints, unlockSkill, skillNodeStatus, calculateSkillBonuses, validateSkillTree, validateSkillState } from "./skill-runtime.js?v=1";
 import { createSaveEnvelope, decodeSave, readBestSave, restoreSaveCandidate, validateSaveEnvelope, writeSaveEnvelope } from "./save-store.js?v=1";
 import { writeCloudSave } from "./cloud-save-runtime.js?v=1";
+import { settleInfinityFusionOutput } from "./fusion-runtime.js?v=3";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=1";
 import { createOwnershipState, addCustody, validateOwnershipState } from "./ownership-runtime.js?v=2";
@@ -928,13 +929,13 @@ function updateFusion(dt){
  if(job.progress<stage.time)return;
  log("퓨전 단계 완료 · "+stage.name,"good");job.stage++;job.progress=0;job.status="RUNNING";
  if(job.stage>=FUSION_STAGES.length){
-  if(!job.legacyConsumedInput){const consumed=commitItemReservations(S,job.reservationIDs);if(!consumed||consumed.reduce((n,x)=>n+x.quantity,0)!==1500){job.stage=FUSION_STAGES.length-1;job.status="ERROR";job.errorCode="INPUT_COMMIT_FAILED";return}job.reservationIDs=[]}
-  if(job.outputIssued||S.fusionDone){job.status="COMPLETED";return}
-  job.status="COMPLETED";job.completedAt=S.seconds;job.outputIssued=true;S.fusionDone=true;
-  addItem("infinity",1,{quality:100,purity:100,synthetic:false});
-  log("인피니티 도로늄 결정화 성공 · 원료 1,500개 소비 · 출력 1개","good");toast("인피니티 도로늄 제작 성공!");
-  $("orbit-dialogue").textContent="“Infinity Doronum secured. Three stabilization relays are still required.”";
-  showModal("INFINITY DORONUM 생성 완료","<p>7단계 결정화 공정이 완료되었습니다. 인피니티 도로늄 1개가 창고에 등록되었습니다.</p><p>이제 지정된 행성 에너지 노드 3곳에 릴레이를 설치하고 중앙 코어를 완성하세요.</p>",[{label:"계속 진행",cls:"primary",action:closeModal}]);
+  const settlement=settleInfinityFusionOutput(S,{jobID:job.jobID,outputItemID:"infinity",quality:100,purity:100});
+  if(!settlement.ok){job.status="ERROR";job.errorCode=settlement.reason||"FUSION_SETTLEMENT_FAILED";job.lastErrorAt=S.seconds;log("인피니티 퓨전 정산 실패 · "+job.errorCode,"warn");markDirty();return}
+  if(!settlement.duplicate){
+   log("인피니티 도로늄 결정화 성공 · 원료 1,500개 소비 · 출력 1개","good");toast("인피니티 도로늄 제작 성공!");
+   $("orbit-dialogue").textContent="“Infinity Doronum secured. Three stabilization relays are still required.”";
+   showModal("INFINITY DORONUM 생성 완료","<p>7단계 결정화 공정이 완료되었습니다. 인피니티 도로늄 1개가 창고에 등록되었습니다.</p><p>이제 지정된 행성 에너지 노드 3곳에 릴레이를 설치하고 중앙 코어를 완성하세요.</p>",[{label:"계속 진행",cls:"primary",action:closeModal}]);
+  }
  }else toast("퓨전 "+job.stage+"/7 단계 완료");
  markDirty();renderMissions();
 }
