@@ -23,7 +23,7 @@ test("legacy saves without a runtime migrate from their saved inventory, not sta
   const state={inventory:{"ITEM_IRON_ORE":11,water:4},meta:{ironOre:{quality:75,purity:83}},tick:2};
   ensureItemStacks(state);
   const totals=state.runtime.itemStacks.reduce((out,stack)=>{out[stack.itemID]=(out[stack.itemID]||0)+stack.quantity;return out},{});
-  assert.deepEqual(totals,{ironOre:11,water:4});
+  assert.deepEqual(totals,{"ITEM_IRON_ORE":11,water:4});
   assert.equal(state.runtime.itemStacks.find(stack=>stack.itemID==="ITEM_IRON_ORE").quality,75);
 });
 
