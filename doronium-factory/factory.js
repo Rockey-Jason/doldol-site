@@ -1221,7 +1221,8 @@ function machineProgressPhase(context){
  for(const building of S.buildings)if(!isProductionMachine(building))tickBuilding(building,context.dt,context.power||currentPower(),context);
  for(const work of context.machineWork?.values()||[]){
   const b=work.building;
-  if(work.blocked||!work.inputReady||!work.power?.canProgress)continue;
+  if(work.blocked||!work.inputReady)continue;
+  if(!work.power?.canProgress){b.status=work.power?.status||"PAUSED_POWER";continue}
   if(!work.environment?.safe){b.status="COOLING";continue}
   if(!work.wear||work.wear.broken)continue;
   b.progress=Math.max(0,Number(b.progress)||0)+context.dt*work.power.progressMultiplier*work.wear.progressMultiplier;
@@ -1282,7 +1283,7 @@ function tick(dt){
   PRESSURE_UPDATE(){context.fluid=tickFluidSystems(dt,context.power||currentPower())},
   QUALITY(){qualityValidationPhase(context)},
   WEAR(){machineWearPhase(context)},
-  POWER_STABILITY(){context.power=currentPower();settlePowerStorage(context.power)},
+  POWER_STABILITY(){settlePowerStorage(context.power||currentPower())},
   PRODUCTION_PROGRESS(){machineProgressPhase(context)},
   FAILURE_CHECK(){machineFailureCheckPhase(context)},
   FAILURE_RESOLUTION(){machineFailureResolutionPhase(context)},
@@ -1667,12 +1668,13 @@ if(E2E_MODE){
    return {output:machine.output?structuredClone(machine.output):null,fluidAmountL:machine.fluidAmountL,fluidType:machine.fluidType,rustedRemaining:availableItemCount(S,"ITEM_DORONUM_RUSTED"),carbonRemaining:availableItemCount(S,"ITEM_CARBON_POWDER"),status:machine.status};
   },
   setupFluidRecipeConsumerTest(){
-   S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);S.buildings=[];
+   S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.buildings=[];
    addItemStack(S,"ITEM_DORONUM_NORMAL",1,{quality:95,purity:95,synthetic:false});
    addItemStack(S,"ITEM_IRON_ORE",1,{quality:95,purity:95,synthetic:false});
+   const generator={uid:"FLUID-RECIPE-GENERATOR",type:"coalgen",x:19,y:20,dir:1,fuelTimer:24,status:"RUNNING",condition:100};
    const machine={uid:"FLUID-RECIPE-CONSUMER",type:"variantLab",variant:"ITEM_DORONUM_SLIGHTLY_RUSTED",x:20,y:20,dir:1,condition:100,status:"IDLE",input:{},inputMeta:{},output:null,progress:0,temp:25,pressure:0,fluidAmountL:1,fluidType:"WATER"};
-   S.buildings.push(machine);tickBuilding(machine,STEP,1);
-   return {status:machine.status,fluidAmountL:machine.fluidAmountL,fluidType:machine.fluidType,progress:machine.progress,normalRemaining:availableItemCount(S,"ITEM_DORONUM_NORMAL"),ironOreRemaining:availableItemCount(S,"ITEM_IRON_ORE"),activeMeta:!!machine.activeMeta};
+   S.buildings.push(generator,machine);tick(STEP);
+   return {status:machine.status,fluidAmountL:machine.fluidAmountL,fluidType:machine.fluidType,progress:machine.progress,normalRemaining:availableItemCount(S,"ITEM_DORONUM_NORMAL"),ironOreRemaining:availableItemCount(S,"ITEM_IRON_ORE"),activeMeta:!!machine.activeMeta,tickStages:S.runtime.lastTickStages};
   },
   setupReservedInventoryTest(){
    S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
