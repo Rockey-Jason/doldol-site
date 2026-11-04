@@ -72,7 +72,6 @@ test("failure roll emits one unique persisted event with configured grade",()=>{
 });
 
 import {applyMachineFailure,completeMachineRepair} from "./failure-runtime.js";
-import {FAILURE_PROFILES} from "./failure-profiles.js";
 
 test("all production machine profiles define valid explicit minor/major/critical outcomes",()=>{
  for(const [machineType,p] of Object.entries(FAILURE_PROFILES)){
