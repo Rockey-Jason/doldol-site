@@ -62,6 +62,7 @@ try {
   assert.equal(audit.allCanonicalCrystalModels, true, "Every canonical Doronum ID must resolve to a 3D crystal model");
   assert.equal(audit.canonicalDoronumIntegration.complete, false, "Unimplemented live canonical dependencies must remain visible as an explicit release blocker");
   assert.equal(audit.canonicalDoronumIntegration.missingCanonicalItems.length, 15, "All canonical item IDs must be surfaced as not yet migrated into the live resource registry");
+  assert.equal(audit.canonicalDoronumIntegration.missingModels.length, 0, "Every canonical item must resolve to an actual Three.js crystal model profile");
   assert.equal(audit.runtimeValidation.valid, true, "Initial item stacks and reservations must validate");
   assert.equal(audit.variantCount, 15, "15 canonical Doronium variants must be present");
   assert.equal(audit.uniqueVariants, 15, "Variant IDs must be unique");
