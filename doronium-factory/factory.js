@@ -1469,6 +1469,19 @@ if(E2E_MODE){
    const passed=runFusionDiagnostics();
    return {passed,diagnostics:structuredClone(S.fusionDiagnostics),reservations:Object.keys(S.runtime.reservations||{}).length};
   },
+  runFusionSettlementTest(){
+   S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
+   for(const id of VARIANTS)addItemStack(S,id,100,{quality:95,purity:95,synthetic:false});
+   syncLegacyInventory(S);
+   const requirements=Object.fromEntries(VARIANTS.map(id=>[id,100]));
+   const predicates=Object.fromEntries(VARIANTS.map(id=>[id,stack=>Number(stack.quality)>=90&&Number(stack.purity)>=90&&!stack.synthetic]));
+   const reservationIDs=reserveQualifiedItemBatch(S,requirements,"LIVE-FUSION-E2E",predicates);
+   if(!reservationIDs||reservationIDs.length!==15)return {ok:false,reason:"RESERVATION_FAILED"};
+   S.fusionJob={jobID:"LIVE-FUSION-E2E",status:"RUNNING",stage:7,progress:0,reservationIDs,inputQuantity:1500,legacyConsumedInput:false,outputIssued:false};
+   const first=settleInfinityFusionOutput(S,{jobID:S.fusionJob.jobID,outputItemID:"infinity",quality:100,purity:100});
+   const second=settleInfinityFusionOutput(S,{jobID:S.fusionJob.jobID,outputItemID:"infinity",quality:100,purity:100});
+   return {ok:first.ok&&second.ok&&second.duplicate&&S.fusionDone&&S.fusionJob.status==="COMPLETED",first,second,fusionDone:S.fusionDone,jobStatus:S.fusionJob.status,outputCount:availableItemCount(S,"infinity"),outputStackID:S.fusionJob.outputStackID,reservationsRemaining:Object.values(S.runtime.reservations).filter(x=>x.status==="reserved").length,inputsRemaining:VARIANTS.reduce((n,id)=>n+availableItemCount(S,id),0),settlement:Object.values(S.fusionSettlements||{})[0]||null,produced:S.stats.produced.infinity};
+  },
   runFusionReservationCancelTest(){
    S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
    for(const id of VARIANTS)addItemStack(S,id,100,{quality:95,purity:95,synthetic:false});
