@@ -231,14 +231,19 @@ export function stackTotals(state){
   return totals;
 }
 export function syncLegacyInventory(state){
-  const rt=ensureItemStacks(state),totals={},weighted={};
+  const rt=ensureItemStacks(state),totals={},weighted={},quarantinedTotals={},quarantinedWeighted={};
   for(const s of rt.itemStacks){
-    totals[s.itemID]=(totals[s.itemID]||0)+s.quantity;
-    const w=weighted[s.itemID]||(weighted[s.itemID]={q:0,p:0,n:0,synthetic:false});
+    const isQuarantined=s.quarantined===true;
+    const target=isQuarantined?quarantinedTotals:totals;
+    const qualityTarget=isQuarantined?quarantinedWeighted:weighted;
+    target[s.itemID]=(target[s.itemID]||0)+s.quantity;
+    const w=qualityTarget[s.itemID]||(qualityTarget[s.itemID]={q:0,p:0,n:0,synthetic:false});
     w.q+=s.quality*s.quantity;w.p+=s.purity*s.quantity;w.n+=s.quantity;w.synthetic=w.synthetic||s.synthetic;
   }
   state.inventory=totals;state.meta={};
+  state.quarantinedInventory=quarantinedTotals;state.quarantinedMeta={};
   for(const [id,w] of Object.entries(weighted))state.meta[id]={quality:w.n?w.q/w.n:90,purity:w.n?w.p/w.n:90,synthetic:w.synthetic};
+  for(const [id,w] of Object.entries(quarantinedWeighted))state.quarantinedMeta[id]={quality:w.n?w.q/w.n:90,purity:w.n?w.p/w.n:90,synthetic:w.synthetic};
   return state;
 }
 export function calculateOutputQuality({materialQuality=90,temperatureQuality=100,pressureQuality=100,machineConditionQuality=100,powerStability=100,recipeModifier=0,pollutionPenalty=0}={}){
