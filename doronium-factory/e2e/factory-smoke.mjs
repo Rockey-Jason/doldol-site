@@ -203,6 +203,14 @@ try {
   assert.ok(powerTick.battery > 39.9 && powerTick.battery < 40.1, "The 400kW battery charger must store 40kJ during one 0.1-second tick");
   assert.equal(powerTick.far.ratio, 0, "A remote grid must remain isolated after a simulation tick");
 
+  const purifiedRusted = await desktop.evaluate(() => window.__doroniumFactoryTest.runRustedPurificationTest());
+  assert.equal(purifiedRusted.output.id, "ITEM_DORONUM_RUSTED", "Purification must output the same canonical rusted Doronum item");
+  assert.ok(purifiedRusted.output.meta.quality >= 90, "Purified rusted Doronum must meet the Infinity quality threshold");
+  assert.ok(purifiedRusted.output.meta.purity >= 90, "Purified rusted Doronum must meet the Infinity purity threshold");
+  assert.equal(purifiedRusted.fluidAmountL, 0, "Purification must consume its exact water requirement");
+  assert.equal(purifiedRusted.rustedRemaining, 0, "Purification must consume the unpurified source stack");
+  assert.equal(purifiedRusted.carbonRemaining, 0, "Purification must consume its carbon powder input");
+
   const fluidRecipe = await desktop.evaluate(() => window.__doroniumFactoryTest.setupFluidRecipeConsumerTest());
   assert.equal(fluidRecipe.status, "RUNNING", "A fluid-dependent Doronum recipe must start when its water buffer is available");
   assert.equal(fluidRecipe.fluidAmountL, 0, "The recipe must consume exactly its declared fluid quantity from the live building buffer");
