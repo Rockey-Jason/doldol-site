@@ -134,3 +134,35 @@ export function validateCanonicalDoronumCatalog(catalog=CANONICAL_DORONUM_CATALO
  if(ids.size!==15)errors.push("canonical-count-not-15:"+ids.size);
  return {valid:errors.length===0,errors,count:ids.size};
 }
+
+export function auditCanonicalDoronumIntegration({
+ catalog=CANONICAL_DORONUM_CATALOG,resources={},buildings=[],recipes={},research=[],fluidTypes=[]
+}={}){
+ const resourceIDs=new Set(Object.keys(resources)),buildingIDs=new Set(buildings.map(x=>x?.id)),recipeIDs=new Set(Object.keys(recipes)),researchIDs=new Set(research.map(x=>x?.id));
+ const missingCanonicalItems=[],missingRawResources=new Set(),missingMachines=new Set(),missingRecipes=new Set(),missingResearch=new Set(),missingFluids=new Set();
+ for(const item of catalog||[]){
+  if(!resourceIDs.has(item.id))missingCanonicalItems.push(item.id);
+  for(const recipeRef of item.recipeRefs||[])if(!recipeIDs.has(recipeRef))missingRecipes.add(recipeRef);
+  if(item.recipe){
+   if(!buildingIDs.has(item.recipe.machineID))missingMachines.add(item.recipe.machineID);
+   for(const input of Object.keys(item.recipe.inputs||{})){
+    if(input.startsWith("FLUID_")){
+     const fluid=input.slice(6).replace(/_L$/,"");
+     if(!new Set(fluidTypes).has(fluid))missingFluids.add(fluid);
+    }else if(!resourceIDs.has(input))missingRawResources.add(input);
+   }
+  }
+  if(item.acquisition?.researchID&&!researchIDs.has(item.acquisition.researchID))missingResearch.add(item.acquisition.researchID);
+ }
+ const result={
+  complete:!missingCanonicalItems.length&&!missingRawResources.size&&!missingMachines.size&&!missingRecipes.size&&!missingResearch.size&&!missingFluids.size,
+  missingCanonicalItems:missingCanonicalItems.sort(),
+  missingRawResources:[...missingRawResources].sort(),
+  missingMachines:[...missingMachines].sort(),
+  missingRecipes:[...missingRecipes].sort(),
+  missingResearch:[...missingResearch].sort(),
+  missingFluids:[...missingFluids].sort()
+ };
+ result.missingCount=Object.values(result).filter(Array.isArray).reduce((n,values)=>n+values.length,0);
+ return result;
+}
