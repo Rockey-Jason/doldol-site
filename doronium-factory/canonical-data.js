@@ -59,6 +59,8 @@ const doronumEntry=(id,name,role,recipeRefs,useCaseTags,recipe=null,acquisition=
  presentationProfileID:"PRESENTATION_"+id,
  physicalProfileID:"PHYSICAL_"+id,
  modelProfileID:id,
+ presentationProfile:{id:"PRESENTATION_"+id,metalness:0.8,roughness:0.18,emissionMode:"STATE_DEPENDENT",lods:[0,1,2],inventoryOrthographicIcon:true},
+ physicalProfile:{id:"PHYSICAL_"+id,provenance:"MANUFACTURED",naturalOre:false,syntheticAllowed:false,productionMetadataRequired:true,infinityQualityMin:90,infinityPurityMin:90},
  modelRequirements:{lods:[0,1,2],inventoryOrthographicIcon:true,turntable360:true},
  naturalOre:false,syntheticAllowed:false,requiresProductionMetadata:true,
  infinityInput:{required:true,qualityMin:90,purityMin:90,synthetic:false,quantity:100},
@@ -120,6 +122,8 @@ export function validateCanonicalDoronumCatalog(catalog=CANONICAL_DORONUM_CATALO
   for(const key of ["presentationProfileID","physicalProfileID","modelProfileID"])if(!item[key])errors.push("missing-"+key+":"+item.id);
   for(const key of [item.presentationProfileID,item.physicalProfileID,item.modelProfileID]){if(profiles.has(key))errors.push("duplicate-profile:"+key);profiles.add(key)}
   if(item.naturalOre!==false||item.syntheticAllowed!==false||item.requiresProductionMetadata!==true)errors.push("invalid-provenance-policy:"+item.id);
+  if(item.presentationProfile?.id!==item.presentationProfileID||item.presentationProfile?.emissionMode!=="STATE_DEPENDENT"||item.presentationProfile?.metalness<.7||item.presentationProfile?.metalness>.9||item.presentationProfile?.roughness<.1||item.presentationProfile?.roughness>.25)errors.push("invalid-presentation-profile:"+item.id);
+  if(item.physicalProfile?.id!==item.physicalProfileID||item.physicalProfile?.provenance!=="MANUFACTURED"||item.physicalProfile?.naturalOre!==false||item.physicalProfile?.syntheticAllowed!==false||item.physicalProfile?.infinityQualityMin!==90||item.physicalProfile?.infinityPurityMin!==90)errors.push("invalid-physical-profile:"+item.id);
   if(!Array.isArray(item.recipeRefs)||!item.recipeRefs.length)errors.push("missing-recipe-refs:"+item.id);
   if(!Array.isArray(item.useCaseTags)||!item.useCaseTags.length)errors.push("missing-use-cases:"+item.id);
   if(![0,1,2].every(level=>item.modelRequirements?.lods?.includes(level))||item.modelRequirements?.inventoryOrthographicIcon!==true)errors.push("incomplete-model-requirements:"+item.id);
@@ -136,12 +140,13 @@ export function validateCanonicalDoronumCatalog(catalog=CANONICAL_DORONUM_CATALO
 }
 
 export function auditCanonicalDoronumIntegration({
- catalog=CANONICAL_DORONUM_CATALOG,resources={},buildings=[],recipes={},research=[],fluidTypes=[]
+ catalog=CANONICAL_DORONUM_CATALOG,resources={},buildings=[],recipes={},research=[],fluidTypes=[],modelIDs=[]
 }={}){
  const resourceIDs=new Set(Object.keys(resources)),buildingIDs=new Set(buildings.map(x=>x?.id)),recipeIDs=new Set(Object.keys(recipes)),researchIDs=new Set(research.map(x=>x?.id));
- const missingCanonicalItems=[],missingRawResources=new Set(),missingMachines=new Set(),missingRecipes=new Set(),missingResearch=new Set(),missingFluids=new Set();
+ const missingCanonicalItems=[],missingModels=[],missingRawResources=new Set(),missingMachines=new Set(),missingRecipes=new Set(),missingResearch=new Set(),missingFluids=new Set();
  for(const item of catalog||[]){
   if(!resourceIDs.has(item.id))missingCanonicalItems.push(item.id);
+  if(!new Set(modelIDs).has(item.modelProfileID))missingModels.push(item.modelProfileID);
   for(const recipeRef of item.recipeRefs||[])if(!recipeIDs.has(recipeRef))missingRecipes.add(recipeRef);
   if(item.recipe){
    if(!buildingIDs.has(item.recipe.machineID))missingMachines.add(item.recipe.machineID);
@@ -155,8 +160,9 @@ export function auditCanonicalDoronumIntegration({
   if(item.acquisition?.researchID&&!researchIDs.has(item.acquisition.researchID))missingResearch.add(item.acquisition.researchID);
  }
  const result={
-  complete:!missingCanonicalItems.length&&!missingRawResources.size&&!missingMachines.size&&!missingRecipes.size&&!missingResearch.size&&!missingFluids.size,
+  complete:!missingCanonicalItems.length&&!missingModels.length&&!missingRawResources.size&&!missingMachines.size&&!missingRecipes.size&&!missingResearch.size&&!missingFluids.size,
   missingCanonicalItems:missingCanonicalItems.sort(),
+  missingModels:missingModels.sort(),
   missingRawResources:[...missingRawResources].sort(),
   missingMachines:[...missingMachines].sort(),
   missingRecipes:[...missingRecipes].sort(),
