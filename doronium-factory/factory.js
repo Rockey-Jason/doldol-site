@@ -14,6 +14,7 @@ import { createSaveEnvelope, decodeSave, readBestSave, restoreSaveCandidate, val
 import { writeCloudSave } from "./cloud-save-runtime.js?v=1";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=1";
+import { createOwnershipState, addCustody, validateOwnershipState } from "./ownership-runtime.js?v=2";
 let createClient = null;
 
 /* DORONIUM FACTORY — INFINITE INDUSTRY
@@ -292,7 +293,7 @@ function makeWorld(seed=827142){
 }
 function freshState(seed=generateWorldSeed()){
  const world=makeWorld(seed);
- const state={runtime:createRuntimeState(),contractRuntime:createContractState((seed^0x4c4f4749)>>>0),constructionLedger:{},moneyReservations:{},blueprints:[],powerTopologyEnabled:false,powerTopologyLayers:{surface:false,mine:{}},version:1,worldVersion:4,seed:seed>>>0,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},money:1100,inventory:{wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,campaignAcquisitions:{},relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
+ const state={runtime:createRuntimeState(),ownershipLedger:createOwnershipState(),contractRuntime:createContractState((seed^0x4c4f4749)>>>0),constructionLedger:{},moneyReservations:{},blueprints:[],powerTopologyEnabled:false,powerTopologyLayers:{surface:false,mine:{}},version:1,worldVersion:4,seed:seed>>>0,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},money:1100,inventory:{wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,campaignAcquisitions:{},relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
  ensureItemStacks(state);return state;
 }
 let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, frameRenderAccumulator=0, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, activeBlueprintID=null, activeBlueprintRotation=0, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudSaveRevision=0, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
@@ -541,11 +542,68 @@ function consumeRecipe(b,r){
  if(!reservations){b.fluidAmountL=fluidSnapshot.amountL;b.fluidType=fluidSnapshot.fluidType;return null}
  const committed=reservations.length?commitItemReservations(S,reservations):[];
  if(!committed){for(const id of reservations)releaseItemReservation(S,id);b.fluidAmountL=fluidSnapshot.amountL;b.fluidType=fluidSnapshot.fluidType;return null}
- let qsum=0,psum=0,weight=0,hasSynthetic=false;
- const absorb=m=>{qsum+=m.quality*m.quantity;psum+=m.purity*m.quantity;weight+=m.quantity;hasSynthetic=hasSynthetic||m.synthetic};
- for(const[rawID,n]of Object.entries(r.inputs||{})){const id=canonicalItemID(rawID),fromBuffer=Math.min(n,b.input?.[id]||0);if(fromBuffer>0){const m=b.inputMeta?.[id]||{quality:90,purity:90,synthetic:false};absorb({...m,quantity:fromBuffer});b.input[id]-=fromBuffer;if(b.input[id]<=0){delete b.input[id];delete b.inputMeta[id]}}}
- for(const stack of committed)absorb(stack);
- syncLegacyInventory(S);return {quality:weight?qsum/weight:90,purity:weight?psum/weight:90,synthetic:hasSynthetic}
+ let qsum=0,psum=0,weight=0,hasSynthetic=false;const consumedInputs=[];
+ const absorb=(m,itemID)=>{qsum+=m.quality*m.quantity;psum+=m.purity*m.quantity;weight+=m.quantity;hasSynthetic=hasSynthetic||m.synthetic;consumedInputs.push({itemID:String(itemID),quantity:m.quantity,quality:m.quality,purity:m.purity,synthetic:!!m.synthetic})};
+ for(const[rawID,n]of Object.entries(r.inputs||{})){const id=canonicalItemID(rawID),fromBuffer=Math.min(n,b.input?.[id]||0);if(fromBuffer>0){const m=b.inputMeta?.[id]||{quality:90,purity:90,synthetic:false};absorb({...m,quantity:fromBuffer},id);b.input[id]-=fromBuffer;if(b.input[id]<=0){delete b.input[id];delete b.inputMeta[id]}}}
+ for(const stack of committed)absorb(stack,stack.itemID);
+ syncLegacyInventory(S);return {quality:weight?qsum/weight:90,purity:weight?psum/weight:90,synthetic:hasSynthetic,consumedInputs}
+}
+function rebuildOwnershipLedger(state=S){
+ if(!state||typeof state!=="object")return {valid:false,errors:["missing-state"]};
+ const ledger=createOwnershipState(),runtime=state.runtime||{},stacks=Array.isArray(runtime.itemStacks)?runtime.itemStacks:[];
+ const reservedByStack=new Map();
+ for(const reservation of Object.values(runtime.reservations||{})){
+  if(reservation?.status!=="reserved")continue;
+  for(const allocation of reservation.allocations||[]){
+   const id=String(allocation.stackID),entry=reservedByStack.get(id)||[];
+   entry.push({quantity:Math.max(0,Math.floor(Number(allocation.quantity)||0)),ownerID:String(reservation.ownerID||reservation.reservationID||"reservation"),reservationID:String(reservation.reservationID||"")});
+   reservedByStack.set(id,entry);
+  }
+ }
+ for(const stack of stacks){
+  if(!stack?.runtimeID||!stack.itemID||!Number.isSafeInteger(stack.quantity)||stack.quantity<=0)continue;
+  if(stack.quarantined){
+   addCustody(ledger,{stackID:String(stack.runtimeID),itemID:stack.itemID,quantity:stack.quantity,ownerType:"QUARANTINE",ownerID:String(stack.quarantineReason||"legacy-quarantine"),metadata:{runtimeStackID:stack.runtimeID,quality:stack.quality,purity:stack.purity,synthetic:stack.synthetic}});
+   continue;
+  }
+  let reserved=0;
+  for(const allocation of reservedByStack.get(String(stack.runtimeID))||[]){
+   if(allocation.quantity<=0)continue;
+   reserved+=allocation.quantity;
+   addCustody(ledger,{stackID:String(stack.runtimeID)+"@"+allocation.reservationID,itemID:stack.itemID,quantity:allocation.quantity,ownerType:"ACTIVE_JOB",ownerID:allocation.ownerID,metadata:{runtimeStackID:stack.runtimeID,reservationID:allocation.reservationID,quality:stack.quality,purity:stack.purity,synthetic:stack.synthetic}});
+  }
+  const free=stack.quantity-reserved;
+  if(free<0)throw new Error("ownership-reservation-overflow:"+stack.runtimeID);
+  if(free>0)addCustody(ledger,{stackID:reserved?String(stack.runtimeID)+"@FREE":String(stack.runtimeID),itemID:stack.itemID,quantity:free,ownerType:"PLAYER_INVENTORY",ownerID:"player",metadata:{runtimeStackID:stack.runtimeID,quality:stack.quality,purity:stack.purity,synthetic:stack.synthetic}});
+ }
+ for(const building of state.buildings||[]){
+  const uid=String(building.uid||building.type||"unknown");
+  for(const [itemID,quantity] of Object.entries(building.input||{})){
+   const qty=Math.max(0,Math.floor(Number(quantity)||0));if(!qty)continue;
+   addCustody(ledger,{stackID:"MACHINE_INPUT:"+uid+":"+itemID,itemID,quantity:qty,ownerType:"MACHINE_INPUT",ownerID:uid,metadata:building.inputMeta?.[itemID]||{}});
+  }
+  const activeInputs=Array.isArray(building.activeInputQuantities)?building.activeInputQuantities:Array.isArray(building.activeMeta?.consumedInputs)?building.activeMeta.consumedInputs:[];
+  for(let i=0;i<activeInputs.length;i++){
+   const input=activeInputs[i],qty=Math.max(0,Math.floor(Number(input.quantity)||0));if(!input.itemID||!qty)continue;
+   addCustody(ledger,{stackID:"ACTIVE_INPUT:"+uid+":"+i+":"+input.itemID,itemID:input.itemID,quantity:qty,ownerType:"ACTIVE_JOB",ownerID:uid,metadata:{quality:input.quality,purity:input.purity,synthetic:input.synthetic}});
+  }
+  if(building.output&&Number(building.output.qty)>0)addCustody(ledger,{stackID:"MACHINE_OUTPUT:"+uid,itemID:building.output.id,quantity:Math.floor(building.output.qty),ownerType:"MACHINE_OUTPUT",ownerID:uid,metadata:building.output.meta||{}});
+  if(building.item&&Number(building.item.qty)>0)addCustody(ledger,{stackID:"CONVEYOR:"+uid,itemID:building.item.id,quantity:Math.floor(building.item.qty),ownerType:"CONVEYOR",ownerID:uid,metadata:building.item.meta||{}});
+ }
+ for(const shipment of state.contractRuntime?.shipments||[]){
+  for(let i=0;i<(shipment.cargo||[]).length;i++){
+   const stack=shipment.cargo[i],qty=Math.max(0,Math.floor(Number(stack.quantity)||0));if(!stack.itemID||!qty)continue;
+   const ownerType=shipment.status==="DELIVERED"?"WAREHOUSE":shipment.status==="FAILED"?"WORLD_DROP":"ACTIVE_JOB";
+   addCustody(ledger,{stackID:"SHIPMENT:"+String(shipment.shipmentID)+":"+i,itemID:stack.itemID,quantity:qty,ownerType,ownerID:String(shipment.shipmentID),metadata:{quality:stack.quality,purity:stack.purity,synthetic:stack.synthetic,status:shipment.status}});
+  }
+ }
+ for(let i=0;i<(state.completionBuffer||[]).length;i++){
+  const item=state.completionBuffer[i],qty=Math.max(0,Math.floor(Number(item.quantity)||0));if(!item.itemID||!qty)continue;
+  addCustody(ledger,{stackID:"COMPLETION:"+String(item.completionID||i),itemID:item.itemID,quantity:qty,ownerType:"COMPLETION_BUFFER",ownerID:String(item.completionID||i),metadata:{stackID:item.stackID}});
+ }
+ const validation=validateOwnershipState(ledger);
+ state.ownershipLedger=ledger;state.ownershipLedgerValidation=validation;
+ return validation;
 }
 function createOutput(b,id,qty,meta){id=canonicalItemID(id);if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(RESOURCE[id].name+" 생산 · "+fmt(qty)+"개");markDirty();return true}
 const BUILDING_FOOTPRINTS=Object.freeze({
@@ -967,7 +1025,7 @@ function tickMachine(b,dt,ratio){
   if(buildingDef(b.type)?.kind==="reactor"&&recipeHasSyntheticInput(b,r)){b.status="ERROR";b.errorCode="SYNTHETIC_DORONUM_INPUT";return}
   if(!power.canProgress){b.status="PAUSED_POWER";return}
   const meta=consumeRecipe(b,r);if(!meta){b.status="WAITING_INPUT";return}
-  b.activeMeta=meta;b.activeRecipe=r.name;b.temp=Number.isFinite(Number(b.temp))?b.temp:25;b.pressure=Number.isFinite(Number(b.pressure))?b.pressure:0;b.progress=0;
+  b.activeMeta=meta;b.activeInputQuantities=meta.consumedInputs||[];b.activeRecipe=r.name;b.temp=Number.isFinite(Number(b.temp))?b.temp:25;b.pressure=Number.isFinite(Number(b.pressure))?b.pressure:0;b.progress=0;
  }
  const environment=advanceMachineEnvironment(b,r,dt,ratio);
  if(!power.canProgress){b.status="PAUSED_POWER";return}
@@ -991,7 +1049,7 @@ function tickMachine(b,dt,ratio){
  const qualityOut=Math.max(Number(r.outputQualityMin)||0,calculateOutputQuality({materialQuality:b.activeMeta.quality,temperatureQuality:environment.temperatureQuality,pressureQuality:environment.pressureQuality,machineConditionQuality:wear.condition,powerStability:clamp(ratio*100,0,100),recipeModifier:(Number(r.qualityModifier)||0)+(r.allowSkillQualityBonus===true?calculateSkillBonuses(S.skills).recipeQualityModifier:0),pollutionPenalty:Number(b.pollutionPenalty)||0}));
  const purityOut=Math.max(Number(r.outputPurityMin)||0,calculateOutputPurity({inputPurity:b.activeMeta.purity,processLoss:Number(r.purityLoss??2),purificationBonus:S.research.includes("purity")?12:0,modifier:S.research.includes("chemistry")?2:0}));
  const meta={quality:qualityOut,purity:purityOut,synthetic:b.activeMeta.synthetic};
- if(createOutput(b,id,r.qty||1,meta)){b.progress=0;b.activeMeta=null;b.activeRecipe=null}
+ if(createOutput(b,id,r.qty||1,meta)){b.progress=0;b.activeMeta=null;b.activeInputQuantities=[];b.activeRecipe=null}
 }
 function repairMachine(b){
  if(!b?.failureRepair){toast("정비가 필요한 고장이 없습니다.");return false}
@@ -1067,7 +1125,7 @@ function tick(dt){
   POWER_STABILITY(){context.power=currentPower();settlePowerStorage(context.power)},
   CONVEYOR_TRANSFER(){tickBelts(dt)},
   METRICS(){tickResearch(dt,(context.power||currentPower()).ratio);if(S.fusionJob)updateFusion(dt);const arrived=advanceShipments(S,S.contractRuntime,dt);if(arrived.length){for(const shipment of arrived)log((shipment.status==="DELIVERED"?"배송 성공":"배송 실패")+" · "+shipment.contractID,shipment.status==="DELIVERED"?"good":"warn");markDirty()}if(S.tick%10===0){questCheck();if(!E2E_MODE){renderHud();if(activePanel==="factory")renderFactory();if(activePanel==="inventory")renderInventory();if(activePanel==="mission")renderMissions();if(activePanel==="research")renderResearch()}}},
-  SAVE_SNAPSHOT_REQUEST(){if(S.tick%5===0){S.runtime.saveSnapshotRequested=true;markDirty()}else S.runtime.saveSnapshotRequested=false}
+  SAVE_SNAPSHOT_REQUEST(){if(S.tick%10===0){rebuildOwnershipLedger(S);S.runtime.saveSnapshotRequested=true;markDirty()}else S.runtime.saveSnapshotRequested=false}
  });
 }
 function renderEventsSafe(){try{renderEvents()}catch{}}
@@ -1239,7 +1297,7 @@ function renderAll(){renderHud();renderBuildList();renderFactory();renderInvento
 function hydrateState(input){markSceneDirty();const base=freshState(),incoming=input&&typeof input==="object"?input:{},migrate=Number(incoming.worldVersion||0)<3,expandSurface=Number(incoming.worldVersion||0)<4;
  S={...base,...incoming,worldVersion:4,player:{...base.player,...incoming.player},inventory:{...base.inventory,...incoming.inventory},meta:{...incoming.meta},tools:{...base.tools,...incoming.tools},activeTool:incoming.activeTool||"pickaxe",campaign:{...base.campaign,...incoming.campaign},campaignAcquisitions:{...base.campaignAcquisitions,...incoming.campaignAcquisitions},flattened:{...incoming.flattened},foundation:{...incoming.foundation},mineDeposits:incoming.mineDeposits&&Object.keys(incoming.mineDeposits).length?incoming.mineDeposits:base.mineDeposits,buildings:Array.isArray(incoming.buildings)?incoming.buildings:[],nodes:migrate?base.nodes:(expandSurface?{...base.nodes,...(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:{})}:(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:base.nodes)),sites:base.sites,seen:incoming.seen||{},research:Array.isArray(incoming.research)?incoming.research:[],stats:{...base.stats,...incoming.stats,gathered:{...base.stats.gathered,...incoming.stats?.gathered},built:{...base.stats.built,...incoming.stats?.built},produced:{...base.stats.produced,...incoming.stats?.produced}},settings:{...base.settings,...incoming.settings},survival:{...base.survival,...incoming.survival},relaySites:Array.isArray(incoming.relaySites)?incoming.relaySites:[false,false,false],skills:normalizeSkillState(incoming.skills),contractRuntime:incoming.contractRuntime&&Array.isArray(incoming.contractRuntime.shipments)?incoming.contractRuntime:base.contractRuntime,constructionLedger:incoming.constructionLedger&&typeof incoming.constructionLedger==="object"?incoming.constructionLedger:{},moneyReservations:incoming.moneyReservations&&typeof incoming.moneyReservations==="object"?incoming.moneyReservations:{},blueprints:Array.isArray(incoming.blueprints)?incoming.blueprints.filter(b=>b&&b.version===1&&Array.isArray(b.buildings)):[],powerTopologyEnabled:incoming.powerTopologyEnabled===true,powerTopologyLayers:incoming.powerTopologyLayers&&typeof incoming.powerTopologyLayers==="object"?incoming.powerTopologyLayers:{surface:incoming.powerTopologyEnabled===true,mine:{}}};
  if(!incoming.runtime)S.runtime=createRuntimeState();
- ensureItemStacks(S);applyDoronumMigration(S);syncLegacyInventory(S);if(!S.contractRuntime||!Array.isArray(S.contractRuntime.shipments))S.contractRuntime=createContractState((Number(S.seed)^0x4c4f4749)>>>0);if(!S.contractRuntime.claims||typeof S.contractRuntime.claims!=="object")S.contractRuntime.claims={};reconcileSkillMilestones();
+ ensureItemStacks(S);applyDoronumMigration(S);syncLegacyInventory(S);rebuildOwnershipLedger(S);if(!S.contractRuntime||!Array.isArray(S.contractRuntime.shipments))S.contractRuntime=createContractState((Number(S.seed)^0x4c4f4749)>>>0);if(!S.contractRuntime.claims||typeof S.contractRuntime.claims!=="object")S.contractRuntime.claims={};reconcileSkillMilestones();
  if(migrate){const ox=38,oz=32;S.player.x=clamp(Number(incoming.player?.x??18)+ox,0,WORLD_W-1);S.player.y=clamp(Number(incoming.player?.y??14)+oz,0,WORLD_H-1);S.player.layer="surface";S.player.mineLevel=1;S.player.surfacePosition=null;for(const b of S.buildings){b.x=clamp((Number(b.x)||0)+ox,0,WORLD_W-1);b.y=clamp((Number(b.y)||0)+oz,0,WORLD_H-1);const k=surfaceKey(b.x,b.y);delete S.nodes[k];S.flattened[k]={height:terrainHeightAt(b.x,b.y)};S.foundation[k]=true}S.player.x=clamp(S.player.x,1,WORLD_W-2);S.player.y=clamp(S.player.y,1,WORLD_H-2)}
  S.simSpeed=[1,2,3].includes(S.simSpeed)?S.simSpeed:1;S.player.x=clamp(Number(S.player.x??64),0,S.player.layer==="mine"?MINE_W-1:WORLD_W-1);S.player.y=clamp(Number(S.player.y??52),0,S.player.layer==="mine"?MINE_H-1:WORLD_H-1);S.paused=!!S.paused;S.tick=Number(S.tick)||0;S.seconds=Number(S.seconds)||8*3600;S.player.viewMode=["first","third","map"].includes(S.player.viewMode)?S.player.viewMode:"first";if(S.player.layer==="mine"&&S.player.viewMode==="map")S.player.viewMode="first";S.player.mineLevel=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS);S.player.yaw=Number(S.player.yaw)||0;S.player.pitch=clamp(Number(S.player.pitch??-.12),-1.25,1.25);S.survival.health=clamp(Number(S.survival.health??100),0,100);S.survival.hunger=clamp(Number(S.survival.hunger??100),0,100);S.survival.thirst=clamp(Number(S.survival.thirst??100),0,100);playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:S.player.yaw,pitch:S.player.pitch,path:[],moving:false,facing:0,onArrive:null};rebuildCooldownIndex();}
 function loadLocal(){const candidate=readBestSave(localStorage,activeLocalKey);if(!candidate)return null;if(candidate.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;setSaveMessage("더 최신 버전의 저장 데이터입니다. 최신 게임 버전에서 열어 주세요.");if(!E2E_MODE)showModal("저장 데이터 버전 확인 필요","<p>이 저장 데이터는 현재 게임보다 새로운 버전에서 만들어졌습니다.</p><p>데이터를 덮어쓰지 않도록 저장을 잠갔습니다. 최신 게임 버전에서 다시 열어 주세요.</p>",[{label:"확인",cls:"primary"}]);return "future-schema-blocked"}if(!candidate.valid)return null;try{hydrateState(candidate.state);if(candidate.source!==activeLocalKey){restoreSaveCandidate(localStorage,activeLocalKey,candidate);if(!E2E_MODE)toast(candidate.source.includes("_backup_")?"이전 백업 저장 데이터에서 복구했습니다.":"임시 저장 데이터에서 복구했습니다.");}return candidate.savedAt||S.lastSavedAt||null}catch(error){console.warn("Local save candidate rejected",candidate.source,error);return null}}
@@ -1247,7 +1305,7 @@ function setSaveMessage(value){$("save-message").textContent=value}
 function saveLocal(){if(saveBlockedForFutureSchema){setSaveMessage("최신 버전에서 생성된 저장 데이터는 이 버전에서 덮어쓸 수 없습니다.");return null}const savedAt=nowISO();S.lastSavedAt=savedAt;try{const audit=validateRuntimeState(S);if(!audit.valid)throw new Error("저장 전 인벤토리 검증 실패: "+audit.errors.join(", "));const skills=validateSkillState(S.skills);if(!skills.valid)throw new Error("저장 전 스킬 검증 실패: "+skills.errors.join(", "));const snapshot=requestSaveSnapshot(S);S.runtime.saveSnapshotRequested=false;writeSaveEnvelope(localStorage,activeLocalKey,snapshot,savedAt);return savedAt}catch(e){setSaveMessage("저장 검증 또는 저장 공간 오류");console.error(e);return null}}
 async function loadCloudForUser(session){if(!cloudClient||!session?.user?.id)return false;setCloud("syncing","클라우드 확인");try{const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at,save_revision").eq("storage_key",CLOUD_KEY).eq("is_deleted",false).maybeSingle();if(error)throw error;if(!data){cloudUpdatedAt=null;cloudSaveRevision=0;setCloud("online","계정 연결됨");return false}const envelope=data.storage_value||{};if(!envelope.state)throw new Error("저장 형식이 올바르지 않습니다.");const remoteValidation=validateSaveEnvelope(envelope);if(!remoteValidation.valid)throw new Error("클라우드 저장 데이터 검증 실패: "+remoteValidation.reason);const remoteTime=Date.parse(data.updated_at||envelope.savedAt||0),localTime=Date.parse(S.lastSavedAt||0);cloudUpdatedAt=data.updated_at||envelope.savedAt||null;cloudSaveRevision=Math.max(0,Number(data.save_revision)||0);if(remoteTime>localTime){hydrateState(envelope.state);S.lastSavedAt=cloudUpdatedAt;writeSaveEnvelope(localStorage,activeLocalKey,S,cloudUpdatedAt);renderAll();setViewMode(S.player.viewMode);toast("클라우드 저장 데이터를 불러왔습니다.");setCloud("online","클라우드 동기화")}else{setCloud("online","클라우드 연결됨");if(localTime>remoteTime)await saveGame(true)}return true}catch(e){if(String(e).includes("UNSUPPORTED_FUTURE_SCHEMA")){saveBlockedForFutureSchema=true;setCloud("error","최신 버전 필요");setSaveMessage("클라우드 저장 데이터가 더 최신 버전입니다. 덮어쓰기를 차단했습니다.");toast("최신 버전의 클라우드 저장 데이터가 있어 저장을 잠갔습니다.","warn");return true}console.error("Cloud load failed",e);setCloud("error","클라우드 오류");setSaveMessage("로컬 저장 사용 중");return false}}
 async function initCloud(){try{const mod=await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/+esm");createClient=mod.createClient;cloudClient=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"sb-scttowfhygcpdirrekqm-auth-token"}});const {data,error}=await cloudClient.auth.getSession();if(error)throw error;authSession=data.session;if(authSession){activeLocalKey=LOCAL_KEY+"_"+authSession.user.id;cloudSaveRevision=0;cloudUpdatedAt=null;saveBlockedForFutureSchema=false;const accountLocal=loadLocal();if(!accountLocal)S=freshState();const found=await loadCloudForUser(authSession);if(!found){renderAll();await saveGame(true)}}else setCloud("","로그인 필요");cloudClient.auth.onAuthStateChange((event,session)=>{queueMicrotask(async()=>{const previous=authSession?.user?.id;authSession=session;if(session?.user?.id&&session.user.id!==previous){activeLocalKey=LOCAL_KEY+"_"+session.user.id;cloudSaveRevision=0;cloudUpdatedAt=null;saveBlockedForFutureSchema=false;const accountLocal=loadLocal();if(!accountLocal)S=freshState();dirty=false;const found=await loadCloudForUser(session);if(!found){renderAll();await saveGame(true)}}else if(!session){activeLocalKey=LOCAL_KEY;cloudSaveRevision=0;cloudUpdatedAt=null;saveBlockedForFutureSchema=false;const guestLocal=loadLocal();if(!guestLocal)S=freshState();renderAll();setCloud("","로그인 필요");saveLocal()}else if(event==="TOKEN_REFRESHED"){setCloud("online","클라우드 연결됨")}})});return true}catch(e){console.warn("Supabase client unavailable; using local save",e);cloudClient=null;authSession=null;setCloud("error","로컬 저장");return false}}
-async function saveGame(force=false){if(!force&&!dirty)return;if(cloudBusy){saveLocal();return}const savedAt=saveLocal();if(!savedAt)return;dirty=false;setSaveMessage("이 기기 저장 완료");if(!cloudClient||!authSession?.user?.id){setCloud("","로그인 필요");return}cloudBusy=true;setCloud("syncing","클라우드 저장");try{const envelope=createSaveEnvelope(requestSaveSnapshot(S),savedAt);const result=await writeCloudSave(cloudClient,{storageKey:CLOUD_KEY,userId:authSession.user.id,value:envelope,expectedRevision:cloudSaveRevision});if(!result.saved){dirty=true;cloudSaveRevision=Math.max(0,result.revision||0);setCloud("error","저장 충돌");setSaveMessage("다른 기기에서 더 최신 저장이 감지되었습니다. 로컬 진행도는 보존했습니다.");toast("클라우드 저장 충돌이 감지되었습니다. 다른 기기의 세이브를 덮어쓰지 않았습니다.","warn");return}cloudSaveRevision=result.revision;cloudUpdatedAt=result.updatedAt||savedAt;setCloud("online","모든 기기 동기화");setSaveMessage("계정 클라우드 저장 완료 · R"+cloudSaveRevision)}catch(e){dirty=true;console.error("Cloud save failed",e);setCloud("error","로컬 저장됨");setSaveMessage("클라우드 오류 · 로컬 보존");toast("클라우드 저장에 실패했습니다. 이 기기 저장은 보존했습니다.","warn")}finally{cloudBusy=false}}
+async function saveGame(force=false){if(!force&&!dirty)return;rebuildOwnershipLedger(S);if(cloudBusy){saveLocal();return}const savedAt=saveLocal();if(!savedAt)return;dirty=false;setSaveMessage("이 기기 저장 완료");if(!cloudClient||!authSession?.user?.id){setCloud("","로그인 필요");return}cloudBusy=true;setCloud("syncing","클라우드 저장");try{const envelope=createSaveEnvelope(requestSaveSnapshot(S),savedAt);const result=await writeCloudSave(cloudClient,{storageKey:CLOUD_KEY,userId:authSession.user.id,value:envelope,expectedRevision:cloudSaveRevision});if(!result.saved){dirty=true;cloudSaveRevision=Math.max(0,result.revision||0);setCloud("error","저장 충돌");setSaveMessage("다른 기기에서 더 최신 저장이 감지되었습니다. 로컬 진행도는 보존했습니다.");toast("클라우드 저장 충돌이 감지되었습니다. 다른 기기의 세이브를 덮어쓰지 않았습니다.","warn");return}cloudSaveRevision=result.revision;cloudUpdatedAt=result.updatedAt||savedAt;setCloud("online","모든 기기 동기화");setSaveMessage("계정 클라우드 저장 완료 · R"+cloudSaveRevision)}catch(e){dirty=true;console.error("Cloud save failed",e);setCloud("error","로컬 저장됨");setSaveMessage("클라우드 오류 · 로컬 보존");toast("클라우드 저장에 실패했습니다. 이 기기 저장은 보존했습니다.","warn")}finally{cloudBusy=false}}
 async function pollCloud(){if(!cloudClient||!authSession?.user?.id||cloudBusy)return;try{const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at,save_revision").eq("storage_key",CLOUD_KEY).eq("is_deleted",false).maybeSingle();if(error)throw error;if(!data)return;const remote=data.updated_at||data.storage_value?.savedAt;const remoteRevision=Math.max(0,Number(data.save_revision)||0);if(remoteRevision===cloudSaveRevision&&remote===cloudUpdatedAt)return;if(dirty){setCloud("syncing","다른 기기 변경 감지");toast("다른 기기의 저장 데이터가 있습니다. 저장 후 새로고침하면 최신 진행도를 불러옵니다.","warn");return}const envelope=data.storage_value;if(envelope?.state){const validation=validateSaveEnvelope(envelope);if(validation.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;setCloud("error","최신 버전 필요");setSaveMessage("더 최신 클라우드 저장 데이터가 있어 저장을 잠갔습니다.");toast("최신 버전의 클라우드 저장 데이터가 있어 저장을 잠갔습니다.","warn");return}if(validation.valid){hydrateState(envelope.state);S.lastSavedAt=remote;cloudUpdatedAt=remote;cloudSaveRevision=remoteRevision;writeSaveEnvelope(localStorage,activeLocalKey,S,remote);renderAll();setViewMode(S.player.viewMode);setCloud("online","다른 기기와 동기화");toast("다른 기기의 공장 진행도를 동기화했습니다.")}}}catch(e){console.warn("Cloud polling error",e)}}
 function animationFrame(time){
  if(document.hidden){lastFrame=time;frameRenderAccumulator=0;requestAnimationFrame(animationFrame);return}
@@ -1433,7 +1491,7 @@ if(E2E_MODE){
   blueprintState:()=>({blueprints:structuredClone(S.blueprints||[]),activeBlueprintID,activeBlueprintRotation}),
   move:(dx,dy)=>movePlayer(dx,dy),
   audit:()=>({
-   dataValidation:DATA_VALIDATION,canonicalDoronumValidation:CANONICAL_DORONUM_VALIDATION,canonicalDoronumIntegration:CANONICAL_DORONUM_INTEGRATION,runtimeValidation:validateRuntimeState(S),skillTreeValidation:validateSkillTree(),skillStateValidation:validateSkillState(S.skills),skillNodeCount:SKILL_NODES.length,skillGroupCount:SKILL_GROUPS.length,resourceCount:Object.keys(RESOURCE).length,
+   dataValidation:DATA_VALIDATION,canonicalDoronumValidation:CANONICAL_DORONUM_VALIDATION,canonicalDoronumIntegration:CANONICAL_DORONUM_INTEGRATION,runtimeValidation:validateRuntimeState(S),ownershipValidation:rebuildOwnershipLedger(S),skillTreeValidation:validateSkillTree(),skillStateValidation:validateSkillState(S.skills),skillNodeCount:SKILL_NODES.length,skillGroupCount:SKILL_GROUPS.length,resourceCount:Object.keys(RESOURCE).length,
    variantCount:VARIANTS.length,
    uniqueVariants:new Set(VARIANTS).size,
    uniqueCrystalModels:DORONIUM_CRYSTAL_MODELS.filter(id=>id!=="infinity").length,
