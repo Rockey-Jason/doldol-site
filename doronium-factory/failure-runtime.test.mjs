@@ -1,3 +1,4 @@
+import {FAILURE_PROFILES} from "./failure-profiles.js";
 import test from "node:test";
 import assert from "node:assert/strict";
 import {validateFailureProfile,calculateFailureRisks,calculateFailureHazard,nextFailureRandom,rollMachineFailure,advanceFailureExposure} from "./failure-runtime.js";
@@ -68,4 +69,49 @@ test("failure roll emits one unique persisted event with configured grade",()=>{
  assert.ok(["minor","major","critical"].includes(event.grade));
  assert.equal(runtime.failureEvents.length,1);
  assert.equal(rollMachineFailure(runtime,{uid:"machine-7"},certain,{valid:false,tickProbability:1}),null);
+});
+
+import {applyMachineFailure,completeMachineRepair} from "./failure-runtime.js";
+
+test("all production machine profiles define valid explicit minor/major/critical outcomes",()=>{
+ for(const [machineType,p] of Object.entries(FAILURE_PROFILES)){
+  assert.equal(validateFailureProfile(p).valid,true,machineType);
+  for(const grade of ["minor","major","critical"]){
+   assert.ok(Number(p.outcomes[grade].repairSeconds)>0);
+   assert.ok(Object.keys(p.outcomes[grade].repairMaterials||{}).length>0);
+  }
+ }
+});
+
+test("failure result applies once and preserves the in-process recipe for repair",()=>{
+ const machine={uid:"M-42",condition:100,status:"RUNNING",activeMeta:{quality:90,purity:92,synthetic:false},progress:4};
+ const event={failureEventID:"FAIL-77",grade:"major",outcome:{...FAILURE_PROFILES.smelter.outcomes.major}};
+ assert.equal(applyMachineFailure(machine,event),true);
+ assert.equal(machine.status,"MAINTENANCE");
+ assert.equal(machine.condition,84);
+ assert.ok(machine.activeMeta,"active recipe inputs remain attached while under repair");
+ assert.equal(applyMachineFailure(machine,event),false,"the same failure event cannot be applied twice");
+ machine.condition=40;machine.maintenanceTimer=0;
+ assert.equal(completeMachineRepair(machine),true);
+ assert.equal(machine.status,"IDLE");
+ assert.equal(machine.condition,76);
+ assert.equal(machine.activeMeta.quality,90);
+ assert.equal(completeMachineRepair(machine),false);
+});
+
+test("critical failure enters BROKEN and requires an explicit repair",()=>{
+ const machine={uid:"M-99",condition:100,status:"RUNNING"};
+ const event={failureEventID:"FAIL-99",grade:"critical",outcome:{...FAILURE_PROFILES.reactor.outcomes.critical}};
+ assert.equal(applyMachineFailure(machine,event),true);
+ assert.equal(machine.status,"BROKEN");
+ assert.equal(machine.failureRepair.broken,true);
+ assert.equal(machine.failureRepair.repairMaterials.ironPlate,10);
+ assert.equal(completeMachineRepair(machine),true);
+ assert.equal(machine.status,"IDLE");
+ assert.equal(machine.condition,62);
+});
+
+test("every live factory utility, mining, fluid, logistics and campaign facility has a valid failure profile",()=>{
+ const required=["smelter","wiremill","assembler","reactor","variantLab","goldSmelter","chromeSmelter","steelForge","titaniumPress","carbonMill","minerAdvanced","pump","doriFarm","minerIron","minerCopper","minerCoal","mineGen","coalgen","cooling","fusion","fluidPipe","fluidValve","fluidTank","fluidPump","solar","wind","battery","transformer","powerCable","belt","beltAdaptive","sorter","splitter","merger","conveyorLift","curvedConveyor","multiLaneConveyor","storage","warehouse","market","relay","core","lab"];
+ for(const id of required){assert.ok(FAILURE_PROFILES[id],id+" profile missing");assert.equal(validateFailureProfile(FAILURE_PROFILES[id]).valid,true,id+" profile invalid")}
 });

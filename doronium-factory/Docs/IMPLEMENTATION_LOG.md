@@ -1,56 +1,49 @@
-# Doronium Factory — Implementation Log
 
-- 작업일: 2026-11-03
-- Repository: `Rockey-Jason/doldol-site`
-- Target: GitHub Pages / Three.js browser game
-- Baseline: `도로늄 공장을 만드는 법.md` v4.5.0
-- Architecture choice: existing web game retained (user-approved option A).
 
-## 이전까지 존재하던 작업
+## 2026-11-04 — v4.5 completion implementation pass (work in progress)
 
-- 192×160 world / 8 biomes / 5 underground levels / terrain chunks and instanced world props.
-- Three.js WebGL renderer and fallback.
-- 15 Doronium crystal IDs/models, 18 research nodes, 23 building definitions, 10 main quests, 7-stage Infinity process.
-- ItemStack runtime, stable stack identifiers, split/merge, per-stack reservations, atomic recipe ingredient consumption.
-- Data-reference/research-dependency validator.
-- Machine power ratio, temperature/pressure ramp and safe band, condition wear, single completion buffer.
-- Failure hazard/RNG/event journal foundation (not connected to live machine outcome profiles).
-- Existing Playwright smoke/regression and Node test workflow.
+This pass adds and wires the following additional behavior on branch `codex/doronium-v4.5-completion`:
 
-## This pass — change set
+- Cloud save writes now call the owner-scoped `save_doronium_factory_state` compare-and-swap RPC. A stale save is rejected and the local snapshot remains intact. The migration is tracked in `supabase/migrations/20261104080000_add_doronium_factory_revision_compare_and_swap.sql`; the connected project has RLS enabled on `dori_cloud_storage` and the RPC is SECURITY INVOKER with EXECUTE granted to authenticated, not anon.
+- Construction placement now reserves money and ItemStacks before installation, validates multi-tile footprint/bounds/slope/foundation/occupancy, and rolls back on an installation callback failure. The factory construction panel now has saved blueprint, duplicate, rotate and atomic multi-building placement controls.
+- The factory uses graph-based logistics for existing conveyor routes and building outputs. The separate runtime includes routing preview, splitter/sorter lane choice, backpressure and full-loop deadlock diagnosis.
+- Three sample delivery contracts are connected to the inventory UI. Each contract reserves individually qualified stacks, consumes five packaging-stage material sets, dispatches a single shipment, tracks transit risk/insurance and allows one reward claim.
+- Explicit power mode is connected to the live tick loop. Adjacent power-cable tiles form isolated networks; consumers are allocated by priority; transformers cap throughput; batteries charge/discharge in kW against kJ storage and settle once per simulation tick. Legacy saves retain the shared-grid behavior until the player places a cable. Underground and surface power nodes are kept in different layers.
+- Underground miners are now buildable only in matching underground deposits. Mine generators burn coal for power, miners extract one matching ore per eight powered seconds, create periodic stone byproducts, track drill wear, and require repair material/time at end of drill life. Mine structures are rendered in the underground scene and do not appear in the surface building layer.
+- Demolition now refuses buildings with buffered input/output, active progress or outstanding failure-repair state.
 
-1. Add Engineer Skill Tree runtime: five groups, 20 nodes, 15-point ceiling, unique milestone claims, prerequisite validation and save-state ledger.
-2. Wire currently supported bonuses only: scan radius, manual mining repeat rate, explicitly opted-in recipe quality modifier, and 5% Storage/Warehouse currency installation-cost discount.
-3. Add skill acquisition confirmation and in-game tree UI under Research.
-4. Add versioned save envelope, checksum validation, temporary write/read-back, three rolling backups, latest-valid candidate recovery and future-schema protection.
-5. Integrate local-save workflow with existing account-scoped local key and Supabase cloud row; preserve legacy keys.
-6. Extend unit tests and Playwright for skill tree, confirmation, save recovery and overlay closure.
-7. Correct outdated mine documentation: current static mine deposit table has no natural Doronium ores.
+### Validation at this checkpoint
 
-## Validation status
+- The Node/static validation job passed at the current implementation checkpoint (run: [41742193482](https://github.com/Rockey-Jason/doldol-site/actions/runs/41742193482), `validate-web-game`).
+- Playwright has additional scenarios for blueprint save/duplicate/rotate/place, disconnected power networks and battery charge settlement, underground mining yield and drill repair. The latest browser-regression run is still required before these scenarios can be considered passed.
+- A helper module being unit-tested is not evidence that every related UI or live subsystem is complete. In particular, FluidNetwork and full ownership-ledger adoption are still not wired end-to-end; the canonical Doronum registry is not yet the live recipe/Infinity source; and the resumable fusion helper is not yet replacing the old in-game fusion entry points.
+- Do not merge or publish as a completed v4.5 release until the latest browser regression and Pages build pass and the remaining Phase gates below are closed.
 
-The corresponding commit/Actions/Pages run IDs and their results must be filled after the workflow completes. A source update is not proof of passing tests.
 
-## Verified execution results
+## 2026-11-04 follow-up — live transaction and power corrections (not release-ready)
 
-- Final source commit under test: `f39aa3f869195cdd9137f209beb0a1ed155614cc`.
-- Doronium validation workflow: run [41589409673](https://github.com/Rockey-Jason/doldol-site/actions/runs/41589409673) — **success**.
-- Node/static validation job — **success**, all **40/40** unit tests passed; JavaScript syntax and required runtime-contract checks passed.
-- Playwright browser regression job — **success**:
-  - Desktop WebGL renderer and mobile-emulation WebGL renderer initialized.
-  - Static scene rebuild/render budget and crystal preview checks passed.
-  - 20-node / 5-group skill tree, confirmation-based skill purchase and one-point accounting passed.
-  - Survival eat/drink controls, underground mining, tool guard, standard/adaptive conveyor placement checks passed.
-  - Belt cargo visuals, engineer path-to-machine interaction, low-power pause and input preservation passed.
-  - Virtual hour: 36,000 fixed 0.1-second ticks; simulation time advanced 3,600 seconds; 296 iron plates produced and delivered to inventory; ore-equivalent ledger balance 50,000 and coal-equivalent ledger balance 30,000 preserved.
-  - Mobile viewport 390×844: touch movement pad visible and engineer moved from (72,52) to (73,52).
-  - No uncaught browser JavaScript errors; desktop and mobile screenshots uploaded as workflow artifact 13209621174.
-- GitHub Pages build/deployment:
-  - Pages build run [41589409085](https://github.com/Rockey-Jason/doldol-site/actions/runs/41589409085) — **success**.
-  - ROCKEY Pages deployment run [41589409592](https://github.com/Rockey-Jason/doldol-site/actions/runs/41589409592) — **success**.
-- This is CI automation evidence. The virtual one-hour simulation is not a real wall-clock 60-minute device soak; mobile verification is browser emulation, not physical Android/iOS hardware.
-- The overall v4.5.0 spec status remains **Partial/Conflict**, as listed in `SPEC_GAP_MATRIX.md`. Passing these checks does not imply that fluid networks, power topology, full shipping contracts, live failure profiles, every skill effect, all story/music assets, or the conflicting canonical world/power scales are complete.
+- Fixed a logistics graph edge case where a production machine feeding the first conveyor was treated as a conveyor node during connected-component construction. Added a regression fixture with an east-facing machine output, two belts and a downstream sink. The test fixture was corrected to point east; the test has not yet been confirmed green on the latest CI run.
+- Reworked the active in-game Infinity Fusion path to reserve all 15 current variant inputs as one qualified batch. Each selected stack is individually checked for Quality >= 90, Purity >= 90 and synthetic=false. Reservations remain locked while the job runs; the final commit consumes 1,500 units and issues one output. Missing Fusion hardware now leaves the job in a recoverable error state rather than discarding it. A player cancellation releases the reservation allocations and is idempotent. Existing in-progress legacy saves are resumed using their already-consumed-input state to avoid deleting saved progress.
+- The live Fusion path still uses the old runtime variant IDs, not the canonical ITEM_DORONUM_* manifest. This is a known blocking gap; the new transaction safeguards do not make the canonical item/recipe migration complete.
+- Converted the factory's internal power design units to kW at the live network boundary (100kW per design unit). Battery capacity remains kJ; the battery's 8/4 design-unit charge/discharge limits now resolve to 800/400kW. Transformer 30 resolves to 3,000kW. Fusion stage demands now match 500, 1,000, 1,500, 2,500, 3,500, 4,500 and 5,000kW, with a 5MW machine rating. A live per-network preflight checks the Fusion machine and cooling allocation before inputs are reserved.
+- Added a browser regression for 15-stack reservation rollback/cancel, and updated the battery test to expect 40kJ from 400kW over a 0.1s tick. These new browser tests are not yet reported as passed.
+- Demolition now blocks active Fusion, buffered fluid and conveyor cargo to prevent silent loss. The test harness duplicate fluid hooks were removed.
+- Supabase production verification: public.dori_cloud_storage has RLS enabled, SELECT/INSERT/UPDATE policies restrict rows to auth.uid() = user_id, no client DELETE policy exists, save_revision is NOT NULL, and save_doronium_factory_state is SECURITY INVOKER with EXECUTE granted to authenticated (not anon). This verifies the cloud-save boundary only; it does not validate gameplay state authoritativeness or all other site RPCs.
 
-## Known remaining scope
+### Latest verification state
 
-See `SPEC_GAP_MATRIX.md`. Overall v4.5.0 Gate remains Partial/Conflict while FluidNetwork, contract shipping, full FailureProfiles/outcomes, power topology, blueprints, all skill effect integrations, Lore/story audio, canonical Infinity power units and real-hardware soak checks remain incomplete.
+- A prior static-validation job passed before the most recent follow-up edits. The latest static job and expanded Playwright browser job must run again against the newest branch commit.
+- The browser regression has not yet been observed passing after the machine-output logistics fix, kW scaling and Fusion rollback test addition.
+- Main branch/Pages deployment was not changed. Physical mobile-device testing, 60-minute soak, full canonical recipe/ID migration, all-fluid types, all-machine failure profiles, full ownership-ledger adoption and story/ending gates remain open.
+
+
+## 2026-11-04 — cloud-save server validation and regression checkpoint
+
+- Applied Supabase migration 20261104051630, also tracked in supabase/migrations/20261104051630_fix_doronium_factory_cloud_save_validation_and_updated_at.sql.
+- The owner-scoped SECURITY INVOKER RPC now checks the storage key, expected revision, JSON object envelope, Doronium Factory game tag when present, schemaVersion 1–4, FNV checksum string format when present, state/player/inventory/buildings/runtime JSON types, and the existing 5MB payload limit. The UPDATE branch now refreshes updated_at as well as save_revision.
+- Verified against the connected Supabase project: dori_cloud_storage has RLS enabled; SELECT/INSERT/UPDATE policies scope rows to auth.uid() = user_id; no DELETE policy exists; save_revision is NOT NULL; the RPC is SECURITY INVOKER and executable by authenticated, not anon. The Supabase security advisor returned no finding mentioning dori_cloud_storage.
+- Ran a database negative test with a malformed player-state envelope; the RPC rejected it with the expected validation SQLSTATE and no save row was written.
+- Confirmed E2E hooks are gated by both localhost/127.0.0.1/::1 and the ?e2e flag, so a production GitHub Pages URL cannot enable the test API merely by adding a query parameter.
+- Validation checkpoint 41778308536 passed: static validation and browser-regression jobs both succeeded. The static suite reported 93 tests passed, 0 failed. Playwright reported result PASS with desktop and mobile-emulation WebGL renderers, visible mobile touch pad, and a virtual one-hour regression. Browser screenshots were uploaded as the workflow artifact.
+- The browser audit reported 29 resources, 18 recipes, 31 buildings and 18 research nodes with no data-validator errors or warnings. These counts are evidence of current data consistency only; they do not satisfy the v4.5.0 full-catalog requirement.
+- The test result does not establish real-device Android/iOS compatibility, a 60-minute wall-clock memory soak, full server-authoritative multiplayer economy, all canonical Doronum recipe/model integration, all machine FailureProfiles, or completion of the story/ending gates. Main remains untouched; PR #11 remains draft.

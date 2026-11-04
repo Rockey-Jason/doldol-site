@@ -1,3 +1,4 @@
+import {canonicalItemID} from "./canonical-data.js?v=3";
 /* DORONIUM FACTORY — canonical simulation and item-stack runtime
  * Deterministic, renderer-independent core. Legacy aggregate inventory remains
  * a compatibility projection while stack records become the source of metadata.
@@ -15,12 +16,13 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number(v)||0));
 const clone=value=>typeof structuredClone==="function"?structuredClone(value):JSON.parse(JSON.stringify(value));
 
 export function createRuntimeState(){
-  return {schemaVersion:4,nextStackId:1,nextReservationId:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
+  return {schemaVersion:4,nextStackId:1,nextReservationId:1,nextEntityID:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
 }
 function normalizeStack(stack){
-  return {runtimeID:String(stack.runtimeID),itemID:String(stack.itemID),quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
+  const originalItemID=String(stack.itemID),normalizedItemID=canonicalItemID(originalItemID);
+  return {runtimeID:String(stack.runtimeID),itemID:normalizedItemID,quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
     quality:clamp(stack.quality??90,0,100),purity:clamp(stack.purity??90,0,100),
-    synthetic:!!stack.synthetic,packaging:stack.packaging||null,createdTick:Math.max(0,Number(stack.createdTick)||0)};
+    synthetic:!!stack.synthetic,packaging:stack.packaging||null,createdTick:Math.max(0,Number(stack.createdTick)||0),quarantined:stack.quarantined===true,quarantineReason:stack.quarantineReason||null,sourceItemID:stack.sourceItemID||(normalizedItemID!==originalItemID?originalItemID:null),migrationVersion:Math.max(0,Math.floor(Number(stack.migrationVersion)||0))};
 }
 export function ensureItemStacks(state){
   if(!state.runtime||typeof state.runtime!=="object")state.runtime=createRuntimeState();
@@ -30,6 +32,7 @@ export function ensureItemStacks(state){
   let maxId=0;
   for(const stack of rt.itemStacks){const n=Number(String(stack.runtimeID).replace(/^IS-/,""));if(Number.isFinite(n))maxId=Math.max(maxId,n)}
   rt.nextStackId=Math.max(1,Math.floor(Number(rt.nextStackId)||1),maxId+1);
+  rt.nextEntityID=Math.max(1,Math.floor(Number(rt.nextEntityID)||1));
   if(!rt.reservations||typeof rt.reservations!=="object")rt.reservations={};
   if(!Array.isArray(rt.reservationHistory))rt.reservationHistory=[];
   rt.failureRngState=(Number(rt.failureRngState)>>>0)||0x6d2b79f5;
@@ -42,18 +45,28 @@ export function ensureItemStacks(state){
   rt.nextReservationId=Math.max(1,Math.floor(Number(rt.nextReservationId)||1));
   // One-time migration from the legacy item-count map. Never replace existing stacks.
   if(!rt.legacyInventoryMigrated){
-    for(const [itemID,quantity] of Object.entries(state.inventory||{})){
-      const total=rt.itemStacks.filter(s=>s.itemID===itemID).reduce((n,s)=>n+s.quantity,0);
-      const missing=Math.max(0,Math.floor(Number(quantity)||0)-total);
-      if(missing){const meta=state.meta?.[itemID]||{};rt.itemStacks.push({runtimeID:"IS-"+rt.nextStackId++,itemID,quantity:missing,
-        quality:clamp(meta.quality??90,0,100),purity:clamp(meta.purity??90,0,100),synthetic:!!meta.synthetic,packaging:null,createdTick:state.tick||0})}
+    const grouped=new Map();
+    for(const [rawID,rawQuantity] of Object.entries(state.inventory||{})){
+      const itemID=canonicalItemID(rawID),quantity=Math.max(0,Math.floor(Number(rawQuantity)||0));if(!quantity)continue;
+      const meta=state.meta?.[rawID]||state.meta?.[itemID]||{},entry=grouped.get(itemID)||{quantity:0,qualityWeight:0,purityWeight:0,synthetic:false,sourceAliases:new Set()};
+      entry.sourceAliases.add(rawID);entry.quantity+=quantity;entry.qualityWeight+=clamp(meta.quality??90,0,100)*quantity;entry.purityWeight+=clamp(meta.purity??90,0,100)*quantity;entry.synthetic=entry.synthetic||!!meta.synthetic;grouped.set(itemID,entry);
+    }
+    for(const [itemID,entry] of grouped){
+      const total=rt.itemStacks.filter(s=>s.itemID===itemID).reduce((n,s)=>n+s.quantity,0),missing=Math.max(0,entry.quantity-total);
+      if(missing){rt.itemStacks.push({runtimeID:"IS-"+rt.nextStackId++,itemID,quantity:missing,
+        quality:entry.quantity?entry.qualityWeight/entry.quantity:90,purity:entry.quantity?entry.purityWeight/entry.quantity:90,synthetic:entry.synthetic,packaging:null,createdTick:state.tick||0,sourceItemID:entry.sourceAliases.size===1&&canonicalItemID([...entry.sourceAliases][0])!==[...entry.sourceAliases][0]?[...entry.sourceAliases][0]:null})}
     }
     rt.legacyInventoryMigrated=true;
   }
   return rt;
 }
+export function allocateEntityID(state,prefix="E"){
+ const rt=ensureItemStacks(state),sequence=rt.nextEntityID++;
+ const seed=(Number(state.seed)||0)>>>0;
+ return String(prefix).replace(/[^A-Za-z0-9_-]/g,"").slice(0,12)+"-"+seed.toString(36).toUpperCase()+"-"+String(sequence).padStart(8,"0");
+}
 export function addItemStack(state,itemID,quantity,meta={}){
-  const rt=ensureItemStacks(state);let remaining=Math.floor(Number(quantity)||0),firstID=null;
+  const rt=ensureItemStacks(state);itemID=canonicalItemID(itemID);let remaining=Math.floor(Number(quantity)||0),firstID=null;
   if(!itemID||remaining<=0)return null;
   while(remaining>0){
     const qty=Math.min(ITEM_STACK_LIMIT,remaining),runtimeID="IS-"+rt.nextStackId++;
@@ -73,11 +86,11 @@ function reservedByStack(rt,excludeReservationID=null){
   return totals;
 }
 export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-transaction"){
-  const rt=ensureItemStacks(state),qty=Math.floor(Number(quantity)||0);
+  const rt=ensureItemStacks(state),qty=Math.floor(Number(quantity)||0);itemID=canonicalItemID(itemID);
   if(!itemID||qty<=0)return null;
   const reserved=reservedByStack(rt);let remaining=qty;const allocations=[];
   for(const stack of rt.itemStacks){
-    if(stack.itemID!==itemID||remaining<=0)continue;
+    if(stack.itemID!==itemID||stack.quarantined||remaining<=0)continue;
     const free=Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0));
     const take=Math.min(free,remaining);if(take>0){allocations.push({stackID:stack.runtimeID,quantity:take});remaining-=take}
   }
@@ -85,6 +98,33 @@ export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-trans
   const reservationID="RS-"+rt.nextReservationId++;
   rt.reservations[reservationID]={reservationID,ownerID:String(ownerID),itemID:String(itemID),quantity:qty,allocations,status:"reserved",createdTick:Math.max(0,Number(state.tick)||0)};
   return reservationID;
+}
+export function reserveQualifiedItemStacks(state,itemID,quantity,ownerID="qualified-transaction",predicate=()=>true){
+ const rt=ensureItemStacks(state),qty=Math.floor(Number(quantity)||0);itemID=canonicalItemID(itemID);
+ if(!itemID||qty<=0||typeof predicate!=="function")return null;
+ const reserved=reservedByStack(rt);let remaining=qty;const allocations=[];
+ for(const stack of rt.itemStacks){
+  if(stack.itemID!==itemID||stack.quarantined||remaining<=0)continue;
+  let eligible=false;try{eligible=predicate({...stack})===true}catch{eligible=false}
+  if(!eligible)continue;
+  const free=Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0));
+  const take=Math.min(free,remaining);if(take>0){allocations.push({stackID:stack.runtimeID,quantity:take});remaining-=take}
+ }
+ if(remaining>0)return null;
+ const reservationID="RS-"+rt.nextReservationId++;
+ rt.reservations[reservationID]={reservationID,ownerID:String(ownerID),itemID:String(itemID),quantity:qty,allocations,status:"reserved",createdTick:Math.max(0,Number(state.tick)||0),qualified:true};
+ return reservationID;
+}
+export function reserveQualifiedItemBatch(state,requirements,ownerID="qualified-transaction",predicates={}){
+ const created=[];
+ for(const [itemID,quantity] of Object.entries(requirements||{})){
+  const qty=Math.floor(Number(quantity)||0);if(qty<=0)continue;
+  const predicate=typeof predicates[itemID]==="function"?predicates[itemID]:()=>true;
+  const id=reserveQualifiedItemStacks(state,itemID,qty,ownerID,predicate);
+  if(!id){for(const prior of created)releaseItemReservation(state,prior);return null}
+  created.push(id);
+ }
+ return created;
 }
 export function reserveItemBatch(state,requirements,ownerID="inventory-transaction"){
   const created=[];
@@ -140,7 +180,7 @@ export function mergeItemStacks(state,sourceID,targetID){
   target.quantity+=source.quantity;rt.itemStacks=rt.itemStacks.filter(s=>s.runtimeID!==sourceID);return true;
 }
 export function removeItemStacks(state,itemID,quantity){
-  const rt=ensureItemStacks(state);let remaining=Math.floor(Number(quantity)||0);
+  const rt=ensureItemStacks(state);itemID=canonicalItemID(itemID);let remaining=Math.floor(Number(quantity)||0);
   if(remaining<=0)return [];
   const reserved=reservedByStack(rt);
   const available=rt.itemStacks.filter(s=>s.itemID===itemID).reduce((n,s)=>n+Math.max(0,s.quantity-(reserved.get(s.runtimeID)||0)),0);
@@ -160,7 +200,7 @@ export function validateRuntimeState(state){
   for(const stack of rt.itemStacks){
     if(ids.has(stack.runtimeID))errors.push("duplicate-stack-id:"+stack.runtimeID);
     ids.add(stack.runtimeID);stackByID.set(stack.runtimeID,stack);
-    if(!stack.itemID||!Number.isInteger(stack.quantity)||stack.quantity<=0||stack.quantity>ITEM_STACK_LIMIT)errors.push("invalid-stack:"+stack.runtimeID);
+    if(!stack.itemID||!Number.isInteger(stack.quantity)||stack.quantity<=0||stack.quantity>ITEM_STACK_LIMIT)errors.push("invalid-stack:"+stack.runtimeID);if(stack.quarantined&&(!stack.quarantineReason||!stack.sourceItemID))errors.push("invalid-quarantined-stack:"+stack.runtimeID);
   }
   const reserved=reservedByStack(rt);
   for(const [stackID,quantity] of reserved){
@@ -172,6 +212,7 @@ export function validateRuntimeState(state){
   }
   const maxID=Math.max(0,...[...ids].map(id=>Number(id.replace(/^IS-/,""))||0));
   if(rt.nextStackId<=maxID)errors.push("stack-id-counter-not-advanced");
+  if(!Number.isSafeInteger(rt.nextEntityID)||rt.nextEntityID<1)errors.push("invalid-entity-id-counter");
   if(!Number.isSafeInteger(rt.failureRngState)||rt.failureRngState<=0)errors.push("invalid-failure-rng-state");
   if(!Number.isSafeInteger(rt.failureRngIndex)||rt.failureRngIndex<0)errors.push("invalid-failure-rng-index");
   if(!Number.isSafeInteger(rt.nextFailureEventId)||rt.nextFailureEventId<1)errors.push("invalid-failure-event-counter");
@@ -181,8 +222,8 @@ export function validateRuntimeState(state){
   return {valid:errors.length===0,errors,stackCount:rt.itemStacks.length,reservationCount:Object.values(rt.reservations).filter(r=>r.status==="reserved").length,failureEventCount:rt.failureEvents.length};
 }
 export function availableItemCount(state,itemID){
-  const rt=ensureItemStacks(state),reserved=reservedByStack(rt);
-  return rt.itemStacks.filter(stack=>stack.itemID===itemID).reduce((total,stack)=>total+Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0)),0);
+  itemID=canonicalItemID(itemID);const rt=ensureItemStacks(state),reserved=reservedByStack(rt);
+  return rt.itemStacks.filter(stack=>stack.itemID===itemID&&!stack.quarantined).reduce((total,stack)=>total+Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0)),0);
 }
 export function stackTotals(state){
   const totals={};
@@ -190,14 +231,19 @@ export function stackTotals(state){
   return totals;
 }
 export function syncLegacyInventory(state){
-  const rt=ensureItemStacks(state),totals={},weighted={};
+  const rt=ensureItemStacks(state),totals={},weighted={},quarantinedTotals={},quarantinedWeighted={};
   for(const s of rt.itemStacks){
-    totals[s.itemID]=(totals[s.itemID]||0)+s.quantity;
-    const w=weighted[s.itemID]||(weighted[s.itemID]={q:0,p:0,n:0,synthetic:false});
+    const isQuarantined=s.quarantined===true;
+    const target=isQuarantined?quarantinedTotals:totals;
+    const qualityTarget=isQuarantined?quarantinedWeighted:weighted;
+    target[s.itemID]=(target[s.itemID]||0)+s.quantity;
+    const w=qualityTarget[s.itemID]||(qualityTarget[s.itemID]={q:0,p:0,n:0,synthetic:false});
     w.q+=s.quality*s.quantity;w.p+=s.purity*s.quantity;w.n+=s.quantity;w.synthetic=w.synthetic||s.synthetic;
   }
   state.inventory=totals;state.meta={};
+  state.quarantinedInventory=quarantinedTotals;state.quarantinedMeta={};
   for(const [id,w] of Object.entries(weighted))state.meta[id]={quality:w.n?w.q/w.n:90,purity:w.n?w.p/w.n:90,synthetic:w.synthetic};
+  for(const [id,w] of Object.entries(quarantinedWeighted))state.quarantinedMeta[id]={quality:w.n?w.q/w.n:90,purity:w.n?w.p/w.n:90,synthetic:w.synthetic};
   return state;
 }
 export function calculateOutputQuality({materialQuality=90,temperatureQuality=100,pressureQuality=100,machineConditionQuality=100,powerStability=100,recipeModifier=0,pollutionPenalty=0}={}){

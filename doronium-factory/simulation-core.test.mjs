@@ -5,7 +5,7 @@ import {
   calculateOutputQuality, calculateOutputPurity, accuracyQuality,
   reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations,
   splitItemStack, mergeItemStacks, validateRuntimeState, availableItemCount,
-  runCanonicalTick, TICK_STAGE_ORDER
+  runCanonicalTick, TICK_STAGE_ORDER, stackTotals, syncLegacyInventory
 } from "./simulation-core.js";
 
 test("legacy inventory migrates to stable unique stack IDs",()=>{
@@ -23,8 +23,8 @@ test("legacy saves without a runtime migrate from their saved inventory, not sta
   const state={inventory:{ironOre:11,water:4},meta:{ironOre:{quality:75,purity:83}},tick:2};
   ensureItemStacks(state);
   const totals=state.runtime.itemStacks.reduce((out,stack)=>{out[stack.itemID]=(out[stack.itemID]||0)+stack.quantity;return out},{});
-  assert.deepEqual(totals,{ironOre:11,water:4});
-  assert.equal(state.runtime.itemStacks.find(stack=>stack.itemID==="ironOre").quality,75);
+  assert.deepEqual(totals,{"ITEM_IRON_ORE":11,water:4});
+  assert.equal(state.runtime.itemStacks.find(stack=>stack.itemID==="ITEM_IRON_ORE").quality,75);
 });
 
 test("stack removal is transactional and preserves per-stack metadata",()=>{
@@ -136,4 +136,50 @@ test("runtime save validation checks deterministic failure journal counters and 
  assert.equal(validateRuntimeState(state).valid,true);
  state.runtime.failureEvents.push({failureEventID:"FAIL-1"});
  assert.ok(validateRuntimeState(state).errors.some(x=>x.startsWith("duplicate-failure-event:")));
+});
+
+import {reserveQualifiedItemStacks} from "./simulation-core.js";
+test("qualified reservations select only stacks that individually satisfy metadata filters",()=>{
+ const state={inventory:{},tick:1};ensureItemStacks(state);
+ addItemStack(state,"ironPlate",4,{quality:70,purity:99,synthetic:false});
+ addItemStack(state,"ironPlate",3,{quality:95,purity:95,synthetic:false});
+ addItemStack(state,"ironPlate",2,{quality:100,purity:100,synthetic:true});
+ const id=reserveQualifiedItemStacks(state,"ironPlate",3,"shipping-test",s=>s.quality>=90&&s.purity>=90&&!s.synthetic);
+ assert.ok(id);
+ const reservation=state.runtime.reservations[id];
+ assert.deepEqual(reservation.allocations.map(a=>a.quantity),[3]);
+ const removed=commitItemReservations(state,[id]);
+ assert.equal(removed.reduce((n,s)=>n+s.quantity,0),3);
+ assert.equal(state.runtime.itemStacks.filter(s=>s.itemID==="ironPlate").reduce((n,s)=>n+s.quantity,0),6);
+});
+test("qualified reservation rolls back without reserving ineligible stock",()=>{
+ const state={inventory:{},tick:1};ensureItemStacks(state);addItemStack(state,"ironPlate",5,{quality:80,purity:90,synthetic:false});
+ assert.equal(reserveQualifiedItemStacks(state,"ironPlate",2,"shipping-test",s=>s.quality>=90),null);
+ assert.equal(Object.keys(state.runtime.reservations).length,0);
+});
+
+test("quarantined legacy stacks remain visible in totals but cannot be reserved or consumed",()=>{
+ const s={inventory:{},runtime:createRuntimeState()};
+ addItemStack(s,"doronium_void",5,{quality:95,purity:95});
+ const stack=s.runtime.itemStacks[0];stack.quarantined=true;stack.quarantineReason="canonical-equivalence-not-defined";stack.sourceItemID="doronium_void";
+ assert.equal(stackTotals(s).doronium_void,5);
+ assert.equal(availableItemCount(s,"doronium_void"),0);
+ assert.equal(reserveItemStacks(s,"doronium_void",1),null);
+ assert.equal(validateRuntimeState(s).valid,true);
+});
+
+test("quarantined legacy stock is kept for recovery but excluded from spendable inventory",()=>{
+ const s={inventory:{},meta:{},runtime:createRuntimeState()};
+ addItemStack(s,"ITEM_DORONUM_NORMAL",3,{quality:95,purity:96,synthetic:false});
+ addItemStack(s,"doronium_void",5,{quality:82,purity:88,synthetic:false});
+ const quarantined=s.runtime.itemStacks.find(x=>x.itemID==="doronium_void");
+ quarantined.quarantined=true;quarantined.quarantineReason="canonical-equivalence-not-defined";quarantined.sourceItemID="doronium_void";
+ syncLegacyInventory(s);
+ assert.equal(s.inventory.ITEM_DORONUM_NORMAL,3);
+ assert.equal(s.inventory.doronium_void,undefined);
+ assert.equal(s.quarantinedInventory.doronium_void,5);
+ assert.equal(s.meta.doronium_void,undefined);
+ assert.equal(s.quarantinedMeta.doronium_void.quality,82);
+ assert.equal(availableItemCount(s,"doronium_void"),0);
+ assert.equal(availableItemCount(s,"ITEM_DORONUM_NORMAL"),3);
 });

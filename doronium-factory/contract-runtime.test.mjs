@@ -1,0 +1,22 @@
+import test from "node:test";import assert from "node:assert/strict";
+import {createRuntimeState,addItemStack,stackTotals} from "./simulation-core.js";
+import {createContractState,PACKAGING_STAGES,startContractShipment,advancePackagingStage,dispatchContractShipment,advanceShipments,claimContractReward,cancelContractShipment} from "./contract-runtime.js";
+const contract={id:"IRON-25",itemID:"ironPlate",quantity:2,minQuality:90,minPurity:90,forbidSynthetic:true,reward:500,deadlineSeconds:600,transitSeconds:30,insuranceRate:.75};
+function setUp(){const game={tick:0,seconds:100,money:100,runtime:createRuntimeState(),inventory:{}};addItemStack(game,"ironPlate",2,{quality:95,purity:96,synthetic:false});for(const[id,n]of Object.entries({wood:6,ironPlate:6,wire:2,circuit:3,quartz:4}))addItemStack(game,id,n,{quality:95,purity:95});return {game,contracts:createContractState(123)}}
+test("contract reserves only stacks that individually satisfy quality, purity and synthetic policy",()=>{const {game,contracts}=setUp();const before=stackTotals(game);const r=startContractShipment(game,contracts,contract);assert.equal(r.ok,true);assert.equal(stackTotals(game).ironPlate,before.ironPlate);const low={tick:0,runtime:createRuntimeState(),inventory:{}};addItemStack(low,"ironPlate",2,{quality:89,purity:99,synthetic:false});assert.equal(startContractShipment(low,createContractState(),contract).reason,"NO_QUALIFIED_CARGO")});
+test("five packaging phases consume materials once and move cargo to dispatch-ready state",()=>{const {game,contracts}=setUp();startContractShipment(game,contracts,contract);const s=contracts.shipments[0];assert.equal(PACKAGING_STAGES.length,5);for(let i=0;i<5;i++)assert.equal(advancePackagingStage(game,contracts,s.shipmentID).ok,true);assert.equal(s.packageStage,5);assert.equal(s.status,"READY");assert.equal(advancePackagingStage(game,contracts,s.shipmentID).ok,false);assert.ok(s.protection>.8)});
+test("dispatch commits reserved cargo and creates a single in-transit manifest",()=>{const {game,contracts}=setUp();startContractShipment(game,contracts,contract);const s=contracts.shipments[0];for(let i=0;i<5;i++)advancePackagingStage(game,contracts,s.shipmentID);assert.equal(dispatchContractShipment(game,contracts,s.shipmentID).ok,true);assert.equal(s.status,"IN_TRANSIT");assert.equal(stackTotals(game).ironPlate,3);assert.equal(dispatchContractShipment(game,contracts,s.shipmentID).ok,false);assert.equal(s.cargo.reduce((n,x)=>n+x.quantity,0),2)});
+test("delivery and reward claim are idempotent",()=>{const {game,contracts}=setUp();startContractShipment(game,contracts,{...contract,deadlineSeconds:900,routeRisk:0});const s=contracts.shipments[0];for(let i=0;i<5;i++)advancePackagingStage(game,contracts,s.shipmentID);dispatchContractShipment(game,contracts,s.shipmentID);game.seconds+=30;const results=advanceShipments(game,contracts,30);assert.equal(results.length,1);assert.equal(s.status,"DELIVERED");const a=claimContractReward(game,contracts,s.shipmentID);const money=game.money;const b=claimContractReward(game,contracts,s.shipmentID);assert.equal(a.reward,500);assert.equal(b.duplicate,true);assert.equal(game.money,money)});
+test("cancel before dispatch releases cargo reservations",()=>{const {game,contracts}=setUp();startContractShipment(game,contracts,contract);const s=contracts.shipments[0];assert.equal(cancelContractShipment(game,contracts,s.shipmentID),true);assert.equal(cancelContractShipment(game,contracts,s.shipmentID),false);assert.equal(stackTotals(game).ironPlate,8)});
+
+test("dispatch rejects corrupted cargo reservation before consuming the reserved stack",()=>{
+ const {game,contracts}=setUp(),cargoContract={...contract,id:"CARGO_GUARD",minQuality:80,minPurity:80};
+ const started=startContractShipment(game,contracts,cargoContract);assert.equal(started.ok,true);
+ const shipment=contracts.shipments[0];for(let i=0;i<5;i++)assert.equal(advancePackagingStage(game,contracts,shipment.shipmentID).ok,true);
+ const reservation=game.runtime.reservations[shipment.reservationID];reservation.allocations[0].quantity=1;
+ const before=stackTotals(game).ironPlate;
+ const result=dispatchContractShipment(game,contracts,shipment.shipmentID);
+ assert.equal(result.ok,false);assert.equal(result.reason,"CARGO_ALLOCATION_MISMATCH");
+ assert.equal(stackTotals(game).ironPlate,before);
+ assert.equal(shipment.status,"READY");
+});
