@@ -1405,7 +1405,7 @@ if(E2E_MODE){
    return {status:machine.status,fluidAmountL:machine.fluidAmountL,fluidType:machine.fluidType,progress:machine.progress,normalRemaining:availableItemCount(S,"ITEM_DORONUM_NORMAL"),ironOreRemaining:availableItemCount(S,"ITEM_IRON_ORE"),activeMeta:!!machine.activeMeta};
   },
   setupReservedInventoryTest(){
-   S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
+   S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
    addItemStack(S,"ironOre",10,{quality:95,purity:96,synthetic:false});
    const reservation=reserveItemStacks(S,"ironOre",7,"INVENTORY-LOCK-TEST");
    syncLegacyInventory(S);renderInventory();
@@ -1421,7 +1421,7 @@ if(E2E_MODE){
    return {tradable:structuredClone(S.inventory),quarantined:structuredClone(S.quarantinedInventory),quarantineMeta:structuredClone(S.quarantinedMeta)};
   },
   setupOwnershipLedgerTest(){
-   S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);S.buildings=[];S.contractRuntime=createContractState(456);
+   S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.buildings=[];S.contractRuntime=createContractState(456);
    addItemStack(S,"ironOre",10,{quality:96,purity:97,synthetic:false});
    const reservation=reserveItemStacks(S,"ironOre",3,"OWNERSHIP-TEST-JOB");
    S.buildings=[
