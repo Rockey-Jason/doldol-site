@@ -58,7 +58,7 @@ const doronumEntry=(id,name,role,recipeRefs,useCaseTags,recipe=null,acquisition=
  id,name,role,recipeRefs,useCaseTags,
  presentationProfileID:"PRESENTATION_"+id,
  physicalProfileID:"PHYSICAL_"+id,
- modelProfileID:"MODEL_"+id,
+ modelProfileID:id,
  modelRequirements:{lods:[0,1,2],inventoryOrthographicIcon:true,turntable360:true},
  naturalOre:false,syntheticAllowed:false,requiresProductionMetadata:true,
  infinityInput:{required:true,qualityMin:90,purityMin:90,synthetic:false,quantity:100},
