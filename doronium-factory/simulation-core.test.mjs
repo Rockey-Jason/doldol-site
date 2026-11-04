@@ -157,3 +157,13 @@ test("qualified reservation rolls back without reserving ineligible stock",()=>{
  assert.equal(reserveQualifiedItemStacks(state,"ironPlate",2,"shipping-test",s=>s.quality>=90),null);
  assert.equal(Object.keys(state.runtime.reservations).length,0);
 });
+
+test("quarantined legacy stacks remain visible in totals but cannot be reserved or consumed",()=>{
+ const s={inventory:{},runtime:createRuntimeState()};
+ addItemStack(s,"doronium_void",5,{quality:95,purity:95});
+ const stack=s.runtime.itemStacks[0];stack.quarantined=true;stack.quarantineReason="canonical-equivalence-not-defined";stack.sourceItemID="doronium_void";
+ assert.equal(stackTotals(s).doronium_void,5);
+ assert.equal(availableItemCount(s,"doronium_void"),0);
+ assert.equal(reserveItemStacks(s,"doronium_void",1),null);
+ assert.equal(validateRuntimeState(s).valid,true);
+});
