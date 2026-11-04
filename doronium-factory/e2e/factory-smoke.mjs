@@ -68,7 +68,7 @@ try {
   const ownershipCase = await desktop.evaluate(() => window.__doroniumFactoryTest.setupOwnershipLedgerTest());
   assert.equal(ownershipCase.reservation !== null, true, "The custody scenario must create a real item reservation");
   assert.equal(ownershipCase.validation.valid, true, "Every item must have exactly one valid custody owner");
-  assert.equal(ownershipCase.itemTotals.ironOre, 11, "Reserved ore and in-process ore must both be represented exactly once");
+  assert.equal(ownershipCase.itemTotals.ITEM_IRON_ORE, 11, "Reserved ore and in-process ore must both be represented exactly once");
   assert.equal(ownershipCase.itemTotals.coal, 2, "Machine input buffers must be represented in custody");
   assert.equal(ownershipCase.itemTotals.ironPlate, 2, "Machine output buffers must be represented in custody");
   assert.equal(ownershipCase.itemTotals.circuit, 4, "Conveyor cargo must be represented in custody");
