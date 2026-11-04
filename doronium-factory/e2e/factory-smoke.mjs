@@ -208,6 +208,14 @@ try {
   assert.equal(fluidDrain.ok, true, "Buffered fluid must transfer to a compatible tank without loss before demolition");
   assert.equal(fluidDrain.before, fluidDrain.after, "Fluid drain must conserve total liters");
 
+  const failedFusionDiagnostics = await desktop.evaluate(() => window.__doroniumFactoryTest.runFusionDiagnosticsTest(false));
+  assert.equal(failedFusionDiagnostics.passed, false, "Fusion must not pass diagnostics without an independently powered cooling and fusion network");
+  assert.equal(failedFusionDiagnostics.diagnostics.allPassed, false, "A failed diagnostic must remain persisted as a failed gate");
+  assert.equal(failedFusionDiagnostics.reservations, 0, "A failed preflight must not reserve any materials");
+  const passedFusionDiagnostics = await desktop.evaluate(() => window.__doroniumFactoryTest.runFusionDiagnosticsTest(true));
+  assert.equal(passedFusionDiagnostics.passed, true, "A powered Fusion machine with calibrated pressure sensor and emergency cooling must pass all three diagnostics");
+  assert.equal(passedFusionDiagnostics.diagnostics.allPassed, true, "All three Fusion diagnostic results must be persisted");
+
   const fusionRollback = await desktop.evaluate(() => window.__doroniumFactoryTest.runFusionReservationCancelTest());
   assert.equal(fusionRollback.ok, true, "A 15-item Fusion reservation must be atomic and fully reversible on cancellation");
   assert.equal(fusionRollback.reservationCount, 15, "Fusion must reserve exactly one qualified allocation per required item");
