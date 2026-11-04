@@ -1324,6 +1324,36 @@ if(E2E_MODE){
    const generator=placeMineBuilding("mineGen",11,15),miner=placeMineBuilding("minerIron",12,15);
    return {generator,miner,buildings:S.buildings.map(b=>({uid:b.uid,type:b.type,layer:b.layer,mineLevel:b.mineLevel})),deposit:S.mineDeposits[mineDepositKey(1,12,15)]};
   },
+  setupAdvancedMiningTest(){
+   S=freshState();S.player={...S.player,layer:"mine",mineLevel:2,viewMode:"first",x:29,y:8};S.money=1000000;S.inventory={coal:20,ironPlate:20,wood:50,stone:50,wire:20,circuit:10};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.mineDeposits=makeMineDeposits();S.powerTopologyEnabled=false;S.research.push("mining");
+   const deposit=Object.values(S.mineDeposits).find(d=>d.type==="ITEM_COLD_CRYSTAL_RAW");
+   const generator=placeMineBuilding("mineGen",31,12),miner=placeMineBuilding("minerAdvanced",deposit.x,deposit.z);
+   return {generator,miner,deposit:structuredClone(deposit),placed:S.buildings.map(b=>b.type)};
+  },
+  runAdvancedMiningTest(){
+   for(let i=0;i<81;i++)tick(STEP);
+   const miner=S.buildings.find(b=>b.type==="minerAdvanced"),deposit=S.mineDeposits[miner?.targetDepositKey];
+   return {output:miner?.output?structuredClone(miner.output):null,depositAmount:deposit?.amount,drillDurability:miner?.drillDurability,power:currentPower().allocations?.[String(miner?.uid)]||null};
+  },
+  runRawMaterialProductionTest(){
+   const cases=[
+    {type:"goldSmelter",inputs:{goldOre:2,coal:1},output:"ITEM_GOLD_INGOT"},
+    {type:"chromeSmelter",inputs:{chromiteOre:2,coal:2},output:"ITEM_CHROME_INGOT"},
+    {type:"steelForge",inputs:{ironOre:3,coal:2},output:"ITEM_STEEL_PLATE"},
+    {type:"titaniumPress",inputs:{titaniumOre:2,coal:1},output:"ITEM_TITANIUM_PLATE"},
+    {type:"carbonMill",inputs:{coal:3},output:"ITEM_CARBON_POWDER"}
+   ];
+   const results=[];
+   for(const entry of cases){
+    S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);S.buildings=[];
+    for(const[id,qty]of Object.entries(entry.inputs))addItemStack(S,id,qty,{quality:95,purity:95,synthetic:false});
+    const b={uid:"RAW-"+entry.type,type:entry.type,x:10,y:10,dir:1,condition:100,status:"IDLE",input:{},inputMeta:{},output:null,progress:0,temp:25,pressure:0};
+    S.buildings.push(b);
+    for(let i=0;i<900&&!b.output;i++)tickBuilding(b,STEP,1);
+    results.push({type:entry.type,expected:entry.output,actual:b.output?.id||null,quantity:b.output?.qty||0});
+   }
+   return results;
+  },
   runMiningAutomationTest(){
    for(let i=0;i<81;i++)tick(STEP);
    const miner=S.buildings.find(b=>b.type==="minerIron"),deposit=S.mineDeposits[mineDepositKey(1,12,15)];
