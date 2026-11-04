@@ -8,3 +8,16 @@ test("five packaging phases consume materials once and move cargo to dispatch-re
 test("dispatch commits reserved cargo and creates a single in-transit manifest",()=>{const {game,contracts}=setUp();startContractShipment(game,contracts,contract);const s=contracts.shipments[0];for(let i=0;i<5;i++)advancePackagingStage(game,contracts,s.shipmentID);assert.equal(dispatchContractShipment(game,contracts,s.shipmentID).ok,true);assert.equal(s.status,"IN_TRANSIT");assert.equal(stackTotals(game).ironPlate,3);assert.equal(dispatchContractShipment(game,contracts,s.shipmentID).ok,false);assert.equal(s.cargo.reduce((n,x)=>n+x.quantity,0),2)});
 test("delivery and reward claim are idempotent",()=>{const {game,contracts}=setUp();startContractShipment(game,contracts,{...contract,deadlineSeconds:900,routeRisk:0});const s=contracts.shipments[0];for(let i=0;i<5;i++)advancePackagingStage(game,contracts,s.shipmentID);dispatchContractShipment(game,contracts,s.shipmentID);game.seconds+=30;const results=advanceShipments(game,contracts,30);assert.equal(results.length,1);assert.equal(s.status,"DELIVERED");const a=claimContractReward(game,contracts,s.shipmentID);const money=game.money;const b=claimContractReward(game,contracts,s.shipmentID);assert.equal(a.reward,500);assert.equal(b.duplicate,true);assert.equal(game.money,money)});
 test("cancel before dispatch releases cargo reservations",()=>{const {game,contracts}=setUp();startContractShipment(game,contracts,contract);const s=contracts.shipments[0];assert.equal(cancelContractShipment(game,contracts,s.shipmentID),true);assert.equal(cancelContractShipment(game,contracts,s.shipmentID),false);assert.equal(stackTotals(game).ironPlate,8)});
+
+test("dispatch rejects corrupted cargo reservation before consuming the reserved stack",()=>{
+ const game=gameState(),contracts=createContractState(9),contract={id:"CARGO_GUARD",itemID:"ironPlate",quantity:2,minQuality:80,minPurity:80,reward:100,deadlineSeconds:1000,transitSeconds:1};
+ addItemStack(game,"ironPlate",2,{quality:95,purity:95,synthetic:false});
+ const started=startContractShipment(game,contracts,contract);assert.equal(started.ok,true);
+ const shipment=contracts.shipments[0],reservation=game.runtime.reservations[shipment.reservationID];
+ reservation.allocations[0].quantity=1;
+ const before=stackTotals(game).ironPlate;
+ const result=dispatchContractShipment(game,contracts,shipment.shipmentID);
+ assert.equal(result.ok,false);assert.equal(result.reason,"CARGO_ALLOCATION_MISMATCH");
+ assert.equal(stackTotals(game).ironPlate,before);
+ assert.equal(shipment.status,"READY");
+});
