@@ -1188,6 +1188,13 @@ if(E2E_MODE){
    ];
    return {power:currentPower(),types:S.buildings.filter(b=>b.type.startsWith("fluid")).map(b=>b.type)};
   },
+  runFluidDrainTest(){
+   const pipe=S.buildings.find(b=>b.uid==="F-PIPE-1"),tank=S.buildings.find(b=>b.uid==="F-TANK");
+   if(!pipe||!tank)return {ok:false,reason:"FLUID_TEST_NODES_MISSING"};
+   pipe.fluidNetworkID=tank.fluidNetworkID="E2E-FLUID-DRAIN";pipe.fluidType=tank.fluidType="WATER";pipe.fluidAmountL=10;tank.fluidAmountL=5;
+   const before=pipe.fluidAmountL+tank.fluidAmountL,drained=drainFluidToTank(pipe),after=pipe.fluidAmountL+tank.fluidAmountL;
+   return {ok:drained&&pipe.fluidAmountL===0&&tank.fluidAmountL===15&&Math.abs(before-after)<1e-9,pipeLiters:pipe.fluidAmountL,tankLiters:tank.fluidAmountL,before,after};
+  },
   runFluidNetworkTest(openValve=false,steps=12){
    const valve=S.buildings.find(b=>b.type==="fluidValve");if(valve)valve.valveOpen=!!openValve;
    for(let i=0;i<steps;i++)tick(STEP);
