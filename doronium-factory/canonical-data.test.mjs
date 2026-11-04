@@ -46,7 +46,7 @@ test("save migration remaps unambiguous aliases, preserves active reservations a
   inventory:{doronium_normal:100,doronium_void:7},
   meta:{doronium_normal:{quality:95,purity:96}},
   stats:{produced:{doronium_normal:4},gathered:{}},
-  buildings:[{variant:"doronium_blue",input:{doronium_normal:2},output:{id:"doronium_normal",qty:1}}],
+  buildings:[{variant:"doronium_blue",input:{doronium_normal:2},inputMeta:{doronium_normal:{quality:88,purity:92,synthetic:false}},output:{id:"doronium_normal",qty:1}}],
   contractRuntime:{shipments:[{itemID:"doronium_normal"}]},
   runtime:{itemStacks:[
    {runtimeID:"IS-1",itemID:"doronium_normal",quantity:100,quality:95,purity:96,synthetic:false},
@@ -63,6 +63,8 @@ test("save migration remaps unambiguous aliases, preserves active reservations a
  assert.equal(state.inventory.ITEM_DORONUM_NORMAL,100);
  assert.equal(state.inventory.doronium_normal,undefined);
  assert.equal(state.stats.produced.ITEM_DORONUM_NORMAL,4);
+ assert.equal(state.meta.ITEM_DORONUM_NORMAL.quality,95,"Legacy quality metadata must survive alias migration");
+ assert.equal(state.buildings[0].inputMeta.ITEM_DORONUM_NORMAL.purity,92,"Buffered input metadata must survive alias migration");
  assert.equal(state.buildings[0].variant,"ITEM_DORONUM_BLUE");
  assert.equal(state.buildings[0].output.id,"ITEM_DORONUM_NORMAL");
  assert.equal(state.contractRuntime.shipments[0].itemID,"ITEM_DORONUM_NORMAL");
