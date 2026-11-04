@@ -65,6 +65,12 @@ try {
   assert.equal(audit.canonicalDoronumIntegration.missingCanonicalItems.length, 0, "All 15 canonical Doronum IDs must exist in the active resource registry");
   assert.equal(audit.canonicalDoronumIntegration.missingModels.length, 0, "Every canonical item must resolve to an actual Three.js crystal model profile");
   assert.equal(audit.runtimeValidation.valid, true, "Initial item stacks and reservations must validate");
+  const tickStages = await desktop.evaluate(() => window.__doroniumFactoryTest.runTickStageCoverageTest());
+  assert.equal(tickStages.tickNumber, 1, "One fixed tick must execute in the stage coverage scenario");
+  assert.equal(tickStages.count, 18, "Every canonical simulation phase must execute once in a fixed tick");
+  assert.deepEqual(tickStages.stages, tickStages.expected, "The actual tick handler trace must exactly match the canonical 18-stage order");
+  assert.deepEqual(tickStages.missing, [], "No fixed-tick simulation stage may be an empty handler");
+
   const ownershipCase = await desktop.evaluate(() => window.__doroniumFactoryTest.setupOwnershipLedgerTest());
   assert.equal(ownershipCase.reservation !== null, true, "The custody scenario must create a real item reservation");
   assert.equal(ownershipCase.validation.valid, true, "Every item must have exactly one valid custody owner");
