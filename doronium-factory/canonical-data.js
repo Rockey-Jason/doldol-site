@@ -50,3 +50,87 @@ export function validateInfinityManifest(stacks){
  for(const id of CANONICAL_DORONUM_IDS)if(totals[id]<100)errors.push("insufficient:"+id);
  return {valid:errors.length===0,errors,totals,total:CANONICAL_DORONUM_IDS.reduce((n,id)=>n+totals[id],0)};
 }
+
+/* Canonical 15-item presentation/physical/recipe catalog from the v4.5 spec.
+   The live factory must consume this catalog only after all referenced raw
+   materials, machine IDs and save migrations exist. */
+const doronumEntry=(id,name,role,recipeRefs,useCaseTags,recipe=null,acquisition=null,extra={})=>({
+ id,name,role,recipeRefs,useCaseTags,
+ presentationProfileID:"PRESENTATION_"+id,
+ physicalProfileID:"PHYSICAL_"+id,
+ modelProfileID:"MODEL_"+id,
+ modelRequirements:{lods:[0,1,2],inventoryOrthographicIcon:true,turntable360:true},
+ naturalOre:false,syntheticAllowed:false,requiresProductionMetadata:true,
+ infinityInput:{required:true,qualityMin:90,purityMin:90,synthetic:false,quantity:100},
+ recipe,acquisition,...extra
+});
+export const CANONICAL_DORONUM_CATALOG=Object.freeze([
+ doronumEntry("ITEM_DORONUM_NORMAL","Normal Doronum","high-density energy storage",["RECIPE_DORONUM_COMPRESSOR_NORMAL"],["energy-storage","variant-base","research-sample"],{
+  machineID:"BUILDING_DORONUM_COMPRESSOR",inputs:{"ITEM_DORI_MEAT":10},outputQuantity:1,durationSec:null,targetTemperatureC:null,targetPressureMPa:null,
+  stabilization:["THERMAL","PRESSURE","RESONANCE"],syntheticInputForbidden:true,lockedRatio:"10:1",requiresFinalRecipeData:true
+ }),
+ doronumEntry("ITEM_DORONUM_YELLOW","Yellow Doronum","energy conduction and precision output stabilization",["RECIPE_DORONUM_YELLOW"],["circuitry","power-regulation"],{
+  machineID:"BUILDING_DORONUM_REFINEMENT_CHAMBER",inputs:{"ITEM_DORONUM_NORMAL":1,"ITEM_GOLD_INGOT":2,"ITEM_QUARTZ":1},outputQuantity:1,durationSec:45,targetTemperatureC:700,targetPressureMPa:300
+ }),
+ doronumEntry("ITEM_DORONUM_ULTRA","Ultra Doronum","high-density high-stress industrial components",["RECIPE_DORONUM_ULTRA"],["advanced-compression","actuator","shielding"],{
+  machineID:"BUILDING_ULTRA_MATERIAL_PRESS",inputs:{"ITEM_DORONUM_NORMAL":3,"ITEM_DIAMOND":1,"ITEM_TITANIUM_PLATE":2},outputQuantity:1,durationSec:90,targetTemperatureC:1200,targetPressureMPa:1000,requiresCooling:true,requiresInspection:true
+ }),
+ doronumEntry("ITEM_DORONUM_BLUE","Blue Doronum","low-temperature and cooling stability",["RECIPE_DORONUM_BLUE"],["cooling-loop","cold-stabilizer"],{
+  machineID:"BUILDING_DORONUM_REFINEMENT_CHAMBER",inputs:{"ITEM_DORONUM_NORMAL":1,"ITEM_COLD_CRYSTAL_RAW":2,"ITEM_QUARTZ":2},outputQuantity:1,durationSec:60,targetTemperatureC:400,targetPressureMPa:200,requiresCoolingLoop:true
+ }),
+ doronumEntry("ITEM_DORONUM_RED","Red Doronum","high-temperature and thermal-shock resistance",["RECIPE_DORONUM_RED"],["heat-resistant-module"],{
+  machineID:"BUILDING_DORONUM_REFINEMENT_CHAMBER",inputs:{"ITEM_DORONUM_NORMAL":1,"ITEM_HEAT_CRYSTAL":2,"ITEM_CHROME_INGOT":2},outputQuantity:1,durationSec:60,targetTemperatureC:1400,targetPressureMPa:500
+ }),
+ doronumEntry("ITEM_DORONUM_IRON","Iron Doronum","high-load and wear-resistant structure",["RECIPE_DORONUM_IRON"],["heavy-frame","mining-head","high-pressure-ram","anchor"],{
+  machineID:"BUILDING_REINFORCED_DORONUM_PRESS",inputs:{"ITEM_DORONUM_NORMAL":1,"ITEM_STEEL_PLATE":3,"ITEM_MAGNETITE":2},outputQuantity:1,durationSec:75,targetTemperatureC:900,targetPressureMPa:700
+ }),
+ doronumEntry("ITEM_DORONUM_ORANGE","Orange Doronum","conduction and power stabilization",["RECIPE_DORONUM_ORANGE"],["transformer-module","energy-transfer","magnetic-field"],{
+  machineID:"BUILDING_DORONUM_REFINEMENT_CHAMBER",inputs:{"ITEM_DORONUM_NORMAL":1,"ITEM_COPPER_WIRE":10,"ITEM_GOLD_INGOT":1},outputQuantity:1,durationSec:55,targetTemperatureC:800,targetPressureMPa:400
+ }),
+ doronumEntry("ITEM_DORONUM_SLIGHTLY_RUSTED","Slightly Rusted Doronum","oxidation analysis and corrosion research",["RECIPE_DORONUM_SLIGHTLY_RUSTED"],["failure-analysis","corrosion-research","special-contract"],{
+  machineID:"BUILDING_CONTROLLED_ATMOSPHERE_CHAMBER",inputs:{"ITEM_DORONUM_NORMAL":1,"ITEM_IRON_ORE":1,"FLUID_WATER_L":1},outputQuantity:1,durationSec:40,targetTemperatureC:null,targetPressureMPa:null,requiresFinalRecipeData:true,qualityPurityPolicy:"no-purity-loss-if-infinity-eligible"
+ }),
+ doronumEntry("ITEM_DORONUM_RUSTED","Rusted Doronum","oxidation, recovery and purification research",["RECIPE_DORONUM_RUSTED_OXIDATION","RECIPE_PURIFY_RUSTED_DORONUM"],["oxidation-research","material-recovery","lore-contract"],{
+  machineID:"BUILDING_CONTROLLED_ATMOSPHERE_CHAMBER",inputs:{"ITEM_DORONUM_NORMAL":1,"ITEM_IRON_ORE":2,"FLUID_WATER_L":3},outputQuantity:1,durationSec:60,targetTemperatureC:null,targetPressureMPa:null,requiresFinalRecipeData:true,purificationRequiredForInfinity:true,qualityPurityGuaranteed:false
+ }),
+ doronumEntry("ITEM_DORONUM_TRANSLUCENT","Translucent Doronum","optical sensors and precision light-energy transfer",["RECIPE_DORONUM_TRANSLUCENT"],["optical-sensor","inspection","photonic-transfer"],{
+  machineID:"BUILDING_OPTICAL_REFINEMENT_CHAMBER",inputs:{"ITEM_DORONUM_NORMAL":1,"ITEM_QUARTZ":4,"ITEM_DIAMOND":1},outputQuantity:1,durationSec:90,targetTemperatureC:650,targetPressureMPa:500,requiresTransmissionShader:true
+ }),
+ doronumEntry("ITEM_DORONUM_THERMAL_CRYSTAL","Thermal Crystal","thermal stabilization and heat exchange",["RECIPE_DORONUM_THERMAL_CRYSTAL"],["thermal-stabilizer","heat-exchange","high-temperature-process"],{
+  machineID:"BUILDING_THERMAL_STABILIZER",inputs:{"ITEM_DORONUM_NORMAL":1,"ITEM_HEAT_CRYSTAL":3},outputQuantity:1,durationSec:75,targetTemperatureC:1100,targetPressureMPa:600
+ }),
+ doronumEntry("ITEM_DORONUM_COLD_CRYSTAL","Cold Crystal","low-temperature stabilization and cooling safety",["RECIPE_DORONUM_COLD_CRYSTAL"],["cooling-stabilizer","cooling-loop","safe-shutdown"],{
+  machineID:"BUILDING_COOLING_STABILIZER",inputs:{"ITEM_DORONUM_NORMAL":1,"ITEM_COLD_CRYSTAL_RAW":3},outputQuantity:1,durationSec:75,targetTemperatureC:250,targetPressureMPa:400
+ }),
+ doronumEntry("ITEM_DORONUM_BLACK","Black Doronum","energy absorption and peak-load buffering",["RECIPE_DORONUM_BLACK"],["energy-absorption","load-buffer","peak-stabilization"],{
+  machineID:"BUILDING_ABSORPTION_PRESS",inputs:{"ITEM_DORONUM_NORMAL":1,"ITEM_CARBON_POWDER":5,"ITEM_DIAMOND":1},outputQuantity:1,durationSec:100,targetTemperatureC:1000,targetPressureMPa:800,bufferCapacityUnit:"kJ",peakAbsorptionUnit:"kW",unboundedEnergyForbidden:true
+ }),
+ doronumEntry("ITEM_DORONUM_SPECIAL_EDITION","Special Edition Doronum","special contracts and story restoration records",["RECIPE_SPECIAL_EDITION_BATCH"],["special-contract","story-recovery","precision-manufacturing"],null,{
+  researchID:"SPECIAL_EDITION_BATCH",contractID:"SECURITY_MANUFACTURING_CONTRACT",productionLineID:"BUILDING_SPECIAL_EDITION_LINE",campaignSupplyMustCoverInfinityQuantity:100,bonusSupplyMayBeLimited:true
+ }),
+ doronumEntry("ITEM_DORONUM_LIMITED_EDITION","Limited Edition Doronum","limited-supply campaign and high-difficulty contracts",["RECIPE_LIMITED_EDITION_BATCH"],["limited-contract","legacy-batch","infinity-input-test"],null,{
+  productionLineID:"BUILDING_FIRST_FACTORY_LEGACY_BATCH_LINE",requiresLineRepair:true,contractID:"LIMITED_EDITION_CONTRACT",maximumCampaignSupply:100,repeatableRecipe:false
+ })
+]);
+export function validateCanonicalDoronumCatalog(catalog=CANONICAL_DORONUM_CATALOG){
+ const errors=[],ids=new Set(),profiles=new Set();
+ for(const item of catalog||[]){
+  if(!item||typeof item.id!=="string"){errors.push("invalid-catalog-item");continue}
+  if(ids.has(item.id))errors.push("duplicate-id:"+item.id);ids.add(item.id);
+  for(const key of ["presentationProfileID","physicalProfileID","modelProfileID"])if(!item[key])errors.push("missing-"+key+":"+item.id);
+  for(const key of [item.presentationProfileID,item.physicalProfileID,item.modelProfileID]){if(profiles.has(key))errors.push("duplicate-profile:"+key);profiles.add(key)}
+  if(item.naturalOre!==false||item.syntheticAllowed!==false||item.requiresProductionMetadata!==true)errors.push("invalid-provenance-policy:"+item.id);
+  if(!Array.isArray(item.recipeRefs)||!item.recipeRefs.length)errors.push("missing-recipe-refs:"+item.id);
+  if(!Array.isArray(item.useCaseTags)||!item.useCaseTags.length)errors.push("missing-use-cases:"+item.id);
+  if(![0,1,2].every(level=>item.modelRequirements?.lods?.includes(level))||item.modelRequirements?.inventoryOrthographicIcon!==true)errors.push("incomplete-model-requirements:"+item.id);
+  if(item.recipe){
+   if(!item.recipe.machineID||!item.recipe.inputs||Object.keys(item.recipe.inputs).length===0)errors.push("incomplete-recipe:"+item.id);
+   for(const [input,quantity] of Object.entries(item.recipe.inputs||{}))if(!Number.isFinite(Number(quantity))||Number(quantity)<=0)errors.push("invalid-recipe-input:"+item.id+":"+input);
+   if(item.recipe.durationSec!==null&&(!Number.isFinite(Number(item.recipe.durationSec))||Number(item.recipe.durationSec)<=0))errors.push("invalid-recipe-duration:"+item.id);
+   if(item.recipe.targetTemperatureC!==null&&(!Number.isFinite(Number(item.recipe.targetTemperatureC))||Number(item.recipe.targetTemperatureC)<0))errors.push("invalid-recipe-temperature:"+item.id);
+   if(item.recipe.targetPressureMPa!==null&&(!Number.isFinite(Number(item.recipe.targetPressureMPa))||Number(item.recipe.targetPressureMPa)<0))errors.push("invalid-recipe-pressure:"+item.id);
+  }else if(!item.acquisition)errors.push("missing-acquisition:"+item.id);
+ }
+ if(ids.size!==15)errors.push("canonical-count-not-15:"+ids.size);
+ return {valid:errors.length===0,errors,count:ids.size};
+}
