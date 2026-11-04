@@ -33,8 +33,8 @@ export function planDoronumMigration(stacks=[]){
  const changes=[],quarantined=[];
  for(const stack of stacks){
   if(!stack||typeof stack.itemID!=="string")continue;
-  const target=LEGACY_DORONUM_ID_MAP[stack.itemID];
-  if(target)changes.push({stackID:stack.runtimeID,from:stack.itemID,to:target,quantity:stack.quantity});
+  const sourceItemID=stack.sourceItemID||stack.itemID,target=LEGACY_DORONUM_ID_MAP[sourceItemID];
+  if(target&&(stack.itemID!==target||Number(stack.migrationVersion||0)<CANONICAL_ITEM_MIGRATION_VERSION))changes.push({stackID:stack.runtimeID,from:sourceItemID,to:target,quantity:stack.quantity});
   else if(UNRESOLVED_LEGACY_DORONUM_IDS.includes(stack.itemID))quarantined.push({stackID:stack.runtimeID,itemID:stack.itemID,quantity:stack.quantity,reason:"canonical-equivalence-not-defined"});
  }
  return {version:CANONICAL_ITEM_MIGRATION_VERSION,changes,quarantined,requiresUserResolution:quarantined.length>0};
