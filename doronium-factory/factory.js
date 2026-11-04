@@ -125,7 +125,7 @@ const RECIPES={
 smelt:{name:"철 제련",inputs:{ironOre:2,coal:1},output:"ironPlate",qty:1,time:12,temp:1538,pressure:100},
 wire:{name:"구리 전선 압연",inputs:{copperOre:1},output:"wire",qty:2,time:8,temp:250,pressure:50},
 circuit:{name:"산업 회로 조립",inputs:{ironPlate:1,wire:2},output:"circuit",qty:1,time:14,temp:120,pressure:20},
-doronium:{name:"도로늄 공명 합성",inputs:{"ITEM_DORI_MEAT":10},output:"ITEM_DORONUM_NORMAL",qty:1,time:42,temp:1800,pressure:1000}
+doronium:{name:"도로늄 공명 합성",inputs:{doriMeat:10},output:"ITEM_DORONUM_NORMAL",qty:1,time:42,temp:1800,pressure:1000}
 };
 const VARIANT_RECIPES={
  "ITEM_DORONUM_YELLOW":{name:"옐로 결정화",inputs:{"ITEM_DORONUM_NORMAL":1,"ITEM_GOLD_INGOT":2,quartz:1},time:45,temp:700,pressure:300},
@@ -191,8 +191,8 @@ const QUESTS=[
 {id:"q2",chapter:0,title:"첫 번째 전력망",desc:"작업 구역을 평탄화하고 기초 타일을 설치한 뒤 태양광 발전기를 건설하세요. 광산에서 철광석 8개도 확보해야 합니다.",reward:400,check:s=>Object.keys(s.foundation||{}).length>0&&hasBuilding(s,"solar")&&(s.stats.gathered.ironOre||0)>=8,progress:s=>(Object.keys(s.foundation||{}).length>0?1:0)+(hasBuilding(s,"solar")?1:0)+Math.min(1,Math.floor((s.stats.gathered.ironOre||0)/8)),max:3,orbit:"“전력 계통이 연결되었습니다. 산업 설비를 가동할 수 있습니다.”"},
 {id:"q3",chapter:0,title:"자동화의 시작",desc:"자연 적응형 또는 표준 컨베이어와 제련로를 설치하고 철판 5개를 생산하세요.",reward:650,check:s=>s.buildings.some(b=>isBeltType(b.type))&&hasBuilding(s,"smelter")&&(s.stats.produced.ironPlate||0)>=5,progress:s=>Math.min(1,s.buildings.some(b=>isBeltType(b.type))?1:0)+Math.min(1,s.stats.built.smelter||0)+Math.min(5,s.stats.produced.ironPlate||0),max:7,orbit:"“생산 라인에서 첫 번째 완제품이 확인되었습니다.”"},
 {id:"q4",chapter:1,title:"생체 에너지의 흔적",desc:"돌이 나무 재배기를 설치하고 돌이 고기 10개를 수확하세요.",reward:900,check:s=>hasBuilding(s,"doriFarm")&&(s.stats.produced.doriMeat||0)>=10,progress:s=>Math.min(1,s.stats.built.doriFarm||0)+Math.min(10,s.stats.produced.doriMeat||0),max:11,orbit:"“분석 결과, 이 식물의 열매는 특이한 분자 에너지 구조를 가지고 있습니다.”"},
-{id:"q5",chapter:2,title:"푸른 물질의 정체",desc:"도로늄 공명 이론을 연구하고 일반 도로늄을 처음 합성하세요.",reward:1600,check:s=>s.research.includes("doronium")&&(s.stats.produced.doronium_normal||0)>=1,progress:s=>(s.research.includes("doronium")?1:0)+Math.min(1,s.stats.produced.doronium_normal||0),max:2,orbit:"“Unknown material detected. Designation: DORONUM.”"},
-{id:"q6",chapter:2,title:"결정의 다변화",desc:"결정 변환 연구로를 건설하고 특수 도로늄 3종을 제조하세요.",reward:2600,check:s=>hasBuilding(s,"variantLab")&&VARIANTS.filter(id=>id!=="doronium_normal"&&(s.stats.produced[id]||0)>0).length>=3,progress:s=>Math.min(3,VARIANTS.filter(id=>id!=="doronium_normal"&&(s.stats.produced[id]||0)>0).length)+(hasBuilding(s,"variantLab")?1:0),max:4,orbit:"“15개의 결정 공명 계열이 확인되었습니다. 최초 공장의 기록과 일치합니다.”"},
+{id:"q5",chapter:2,title:"푸른 물질의 정체",desc:"도로늄 공명 이론을 연구하고 일반 도로늄을 처음 합성하세요.",reward:1600,check:s=>s.research.includes("doronium")&&(s.stats.produced.ITEM_DORONUM_NORMAL||0)>=1,progress:s=>(s.research.includes("doronium")?1:0)+Math.min(1,s.stats.produced.ITEM_DORONUM_NORMAL||0),max:2,orbit:"“Unknown material detected. Designation: DORONUM.”"},
+{id:"q6",chapter:2,title:"결정의 다변화",desc:"결정 변환 연구로를 건설하고 특수 도로늄 3종을 제조하세요.",reward:2600,check:s=>hasBuilding(s,"variantLab")&&VARIANTS.filter(id=>id!=="ITEM_DORONUM_NORMAL"&&(s.stats.produced[id]||0)>0).length>=3,progress:s=>Math.min(3,VARIANTS.filter(id=>id!=="ITEM_DORONUM_NORMAL"&&(s.stats.produced[id]||0)>0).length)+(hasBuilding(s,"variantLab")?1:0),max:4,orbit:"“15개의 결정 공명 계열이 확인되었습니다. 최초 공장의 기록과 일치합니다.”"},
 {id:"q7",chapter:3,title:"인피니티 프로젝트",desc:"인피니티 퓨전 이론을 연구하고 퓨전 설비를 건설하세요.",reward:6000,check:s=>s.research.includes("fusion")&&hasBuilding(s,"fusion"),progress:s=>(s.research.includes("fusion")?1:0)+(hasBuilding(s,"fusion")?1:0),max:2,orbit:"“INFINITE PROJECT identified. 행성 에너지 네트워크 자료를 복구했습니다.”"},
 {id:"q8",chapter:3,title:"완벽한 재료",desc:"정식 도로늄 15종을 각각 100개씩 확보하세요. 모든 재료는 품질·순도 90 이상이어야 합니다.",reward:12000,check:s=>VARIANTS.every(id=>(s.inventory[id]||0)>=100&&quality(s,id)>=90&&purity(s,id)>=90&&!synthetic(s,id)),progress:s=>VARIANTS.filter(id=>(s.inventory[id]||0)>=100&&quality(s,id)>=90&&purity(s,id)>=90&&!synthetic(s,id)).length,max:15,orbit:"“모든 입력 결정의 순도와 품질이 기준을 통과했습니다. 퓨전을 시작할 수 있습니다.”"},
 {id:"q9",chapter:4,title:"인피니티 결정화",desc:"7단계 퓨전을 완료해 인피니티 도로늄을 제작하세요.",reward:25000,check:s=>(s.inventory.infinity||0)>=1||s.fusionDone,progress:s=>s.fusionDone?1:0,max:1,orbit:"“Infinity Doronum secured. 이제 행성 안정화 장치를 구축해야 합니다.”"},
@@ -474,9 +474,30 @@ function renderResearch(){const done=S.research.length;$("research-progress-labe
 function renderMissions(){const chapters=["ACT I · THE RUINS","ACT II · HIDDEN INDUSTRY","ACT III · DORONUM TRUTH","ACT IV · INFINITE PROJECT","ACT V · LAST FACTORY"];const q=getQuest();const activeChapter=q?.chapter??4;$("orbit-level").textContent=String(Math.min(9,S.questIndex+1)).padStart(2,"0");$("story-chapters").innerHTML=chapters.map((c,i)=>'<div class="chapter-chip '+(i===activeChapter?"active":i<activeChapter?"complete":"")+'">'+c+'</div>').join("");const progress=q?Math.min(q.max,q.progress(S)):1;$("mission-list").innerHTML=QUESTS.map((m,i)=>'<div class="mission-card '+(i<S.questIndex?"completed":"")+'"><div class="mission-head"><strong>'+m.title+'</strong><span>'+(i<S.questIndex?"완료":i===S.questIndex?"진행 중":"잠김")+'</span></div><p>'+m.desc+'</p><div class="mission-reward">보상 · '+fmt(m.reward)+' D</div>'+(i===S.questIndex?'<div class="mission-progress"><i style="width:'+Math.round(progress/m.max*100)+'%"></i></div>':"")+'</div>').join("");if(q)$("orbit-dialogue").textContent=q.orbit}
 
 function addInput(b,id,qty,meta={quality:90,purity:90,synthetic:false}){b.input??={};b.inputMeta??={};b.input[id]=(b.input[id]||0)+qty;const old=b.inputMeta[id]||{quality:90,purity:90,synthetic:false},before=b.input[id]-qty,total=b.input[id];b.inputMeta[id]={quality:(old.quality*before+meta.quality*qty)/total,purity:(old.purity*before+meta.purity*qty)/total,synthetic:old.synthetic||!!meta.synthetic};markDirty()}
-function recipeFor(b){const d=buildingDef(b.type);if(d?.recipe)return RECIPES[d.recipe];if(b.type==="variantLab")return VARIANT_RECIPES[b.variant||"doronium_blue"];return null}
-function canConsumeRecipe(b,r){return Object.entries(r.inputs).every(([id,n])=>(b.input?.[id]||0)+availableItemCount(S,id)>=n)}
-function consumeRecipe(b,r){if(!canConsumeRecipe(b,r))return null;const inventoryNeed={};for(const[id,n]of Object.entries(r.inputs)){const buffered=Math.min(n,b.input?.[id]||0),remaining=n-buffered;if(remaining>0)inventoryNeed[id]=remaining}const reservations=reserveItemBatch(S,inventoryNeed,"recipe:"+String(b.uid||b.type));if(!reservations)return null;const committed=reservations.length?commitItemReservations(S,reservations):[];if(!committed){for(const id of reservations)releaseItemReservation(S,id);return null}let qsum=0,psum=0,weight=0,hasSynthetic=false;const absorb=m=>{qsum+=m.quality*m.quantity;psum+=m.purity*m.quantity;weight+=m.quantity;hasSynthetic=hasSynthetic||m.synthetic};for(const[id,n]of Object.entries(r.inputs)){const fromBuffer=Math.min(n,b.input?.[id]||0);if(fromBuffer>0){const m=b.inputMeta?.[id]||{quality:90,purity:90,synthetic:false};absorb({...m,quantity:fromBuffer});b.input[id]-=fromBuffer;if(b.input[id]<=0){delete b.input[id];delete b.inputMeta[id]}}}for(const stack of committed)absorb(stack);syncLegacyInventory(S);return {quality:weight?qsum/weight:90,purity:weight?psum/weight:90,synthetic:hasSynthetic}}
+function recipeFor(b){const d=buildingDef(b.type);if(d?.recipe)return RECIPES[d.recipe];if(b.type==="variantLab")return VARIANT_RECIPES[b.variant||"ITEM_DORONUM_BLUE"];return null}
+function canConsumeRecipe(b,r){
+ const itemsReady=Object.entries(r.inputs||{}).every(([id,n])=>(b.input?.[id]||0)+availableItemCount(S,id)>=n);
+ const fluidsReady=Object.entries(r.fluidInputs||{}).every(([type,n])=>b.fluidType===type&&Math.max(0,Number(b.fluidAmountL)||0)>=Number(n));
+ return itemsReady&&fluidsReady;
+}
+function consumeRecipe(b,r){
+ if(!canConsumeRecipe(b,r))return null;
+ const fluidSnapshot={amountL:Number(b.fluidAmountL)||0,fluidType:b.fluidType||null};
+ for(const[type,liters]of Object.entries(r.fluidInputs||{})){
+  const consumed=consumeFluid(b,liters,type);if(!consumed.ok){b.fluidAmountL=fluidSnapshot.amountL;b.fluidType=fluidSnapshot.fluidType;return null}
+ }
+ const inventoryNeed={};
+ for(const[id,n]of Object.entries(r.inputs||{})){const buffered=Math.min(n,b.input?.[id]||0),remaining=n-buffered;if(remaining>0)inventoryNeed[id]=remaining}
+ const reservations=reserveItemBatch(S,inventoryNeed,"recipe:"+String(b.uid||b.type));
+ if(!reservations){b.fluidAmountL=fluidSnapshot.amountL;b.fluidType=fluidSnapshot.fluidType;return null}
+ const committed=reservations.length?commitItemReservations(S,reservations):[];
+ if(!committed){for(const id of reservations)releaseItemReservation(S,id);b.fluidAmountL=fluidSnapshot.amountL;b.fluidType=fluidSnapshot.fluidType;return null}
+ let qsum=0,psum=0,weight=0,hasSynthetic=false;
+ const absorb=m=>{qsum+=m.quality*m.quantity;psum+=m.purity*m.quantity;weight+=m.quantity;hasSynthetic=hasSynthetic||m.synthetic};
+ for(const[id,n]of Object.entries(r.inputs||{})){const fromBuffer=Math.min(n,b.input?.[id]||0);if(fromBuffer>0){const m=b.inputMeta?.[id]||{quality:90,purity:90,synthetic:false};absorb({...m,quantity:fromBuffer});b.input[id]-=fromBuffer;if(b.input[id]<=0){delete b.input[id];delete b.inputMeta[id]}}}
+ for(const stack of committed)absorb(stack);
+ syncLegacyInventory(S);return {quality:weight?qsum/weight:90,purity:weight?psum/weight:90,synthetic:hasSynthetic}
+}
 function createOutput(b,id,qty,meta){if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(RESOURCE[id].name+" 생산 · "+fmt(qty)+"개");markDirty();return true}
 const BUILDING_FOOTPRINTS=Object.freeze({
  storage:{width:2,height:2},warehouse:{width:3,height:2},smelter:{width:2,height:2},wiremill:{width:2,height:2},assembler:{width:2,height:2},lab:{width:2,height:2},
@@ -534,7 +555,7 @@ function placeBlueprintAt(x,y){
   const uids=[];
   for(const item of tx.placements){
    const uid=allocateEntityID(state,"B");
-   const b={uid,type:item.type,x:item.x,y:item.y,dir:((Number(item.dir)||1)%4+4)%4,footprint:{...item.footprint},footprintRotation:0,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:item.dir??1,status:"IDLE",autoFeed:true,variant:item.variant||"doronium_blue",temp:25,pressure:0,fuelTimer:0,moveTimer:0};
+   const b={uid,type:item.type,x:item.x,y:item.y,dir:((Number(item.dir)||1)%4+4)%4,footprint:{...item.footprint},footprintRotation:0,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:item.dir??1,status:"IDLE",autoFeed:true,variant:item.variant||"ITEM_DORONUM_BLUE",temp:25,pressure:0,fuelTimer:0,moveTimer:0};
    state.buildings.push(b);state.stats.built[item.type]=(state.stats.built[item.type]||0)+1;uids.push(uid);
    if(item.type==="relay"){const idx=state.sites.relay.findIndex(p=>p.x===item.x&&p.y===item.y);if(idx>=0)state.relaySites[idx]=true}
    if(item.type==="core")state.corePlaced=true;if(item.type==="powerCable"){state.powerTopologyLayers??={surface:false,mine:{}};state.powerTopologyLayers.surface=true;state.powerTopologyEnabled=true}
@@ -604,7 +625,7 @@ function placeBuilding(type,x,y){
  if(!reservation.ok){toast(reservation.reason==="INSUFFICIENT_MONEY"?"산업 자금이 부족합니다.":reservation.reason==="INSUFFICIENT_MATERIALS"?"건설 재료가 부족합니다.": "건설 예약에 실패했습니다.","warn");return false}
  let built=null;
  const committed=commitConstruction(S,transactionID,(state,tx)=>{
-  built={uid,type,x,y,dir:1,footprint:{...footprint},footprintRotation:rotation,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:1,status:"IDLE",autoFeed:true,variant:"doronium_blue",temp:25,pressure:0,fuelTimer:0,moveTimer:0};
+  built={uid,type,x,y,dir:1,footprint:{...footprint},footprintRotation:rotation,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:1,status:"IDLE",autoFeed:true,variant:"ITEM_DORONUM_BLUE",temp:25,pressure:0,fuelTimer:0,moveTimer:0};
   built.uid=uid;state.buildings.push(built);return {uid};
  });
  if(!committed.ok){cancelConstruction(S,transactionID);toast("건설 트랜잭션을 커밋하지 못했습니다. 자금과 재료는 보존했습니다.","warn");return false}
@@ -895,7 +916,7 @@ function tickMachine(b,dt,ratio){
  b.progress+=dt*power.progressMultiplier*wear.progressMultiplier;
  b.status=power.status;
  if(b.progress<r.time)return;
- const id=b.type==="variantLab"?b.variant||"doronium_blue":r.output;
+ const id=b.type==="variantLab"?b.variant||"ITEM_DORONUM_BLUE":r.output;
  const qualityOut=calculateOutputQuality({materialQuality:b.activeMeta.quality,temperatureQuality:environment.temperatureQuality,pressureQuality:environment.pressureQuality,machineConditionQuality:wear.condition,powerStability:clamp(ratio*100,0,100),recipeModifier:(Number(r.qualityModifier)||0)+(r.allowSkillQualityBonus===true?calculateSkillBonuses(S.skills).recipeQualityModifier:0),pollutionPenalty:Number(b.pollutionPenalty)||0});
  const purityOut=calculateOutputPurity({inputPurity:b.activeMeta.purity,processLoss:Number(r.purityLoss??2),purificationBonus:S.research.includes("purity")?12:0,modifier:S.research.includes("chemistry")?2:0});
  const meta={quality:qualityOut,purity:purityOut,synthetic:b.activeMeta.synthetic};
@@ -935,11 +956,11 @@ function tickBelts(dt){
 
 function tickFluidSystems(dt,power){
  const fluidTypes=new Set(["fluidPipe","fluidValve","fluidTank","fluidPump"]);
- const relevant=S.buildings.filter(b=>b.layer!=="mine"&&(fluidTypes.has(b.type)||b.type==="doriFarm"));
+ const relevant=S.buildings.filter(b=>b.layer!=="mine"&&(fluidTypes.has(b.type)||b.type==="doriFarm"||(b.type==="variantLab"&&Object.keys(recipeFor(b)?.fluidInputs||{}).length>0)));
  if(!relevant.length)return null;
  const nodes=relevant.map(b=>{
-  const type=b.type==="fluidPump"?"PUMP":b.type==="fluidTank"?"TANK":b.type==="fluidValve"?"VALVE":b.type==="doriFarm"?"CONSUMER":"PIPE";
-  const capacity=b.type==="fluidTank"?2000:b.type==="doriFarm"?20:b.type==="fluidPump"?120:100;
+  const type=b.type==="fluidPump"?"PUMP":b.type==="fluidTank"?"TANK":b.type==="fluidValve"?"VALVE":b.type==="doriFarm"||(b.type==="variantLab"&&Object.keys(recipeFor(b)?.fluidInputs||{}).length>0)?"CONSUMER":"PIPE";
+  const capacity=b.type==="fluidTank"?2000:(b.type==="doriFarm"||b.type==="variantLab")?20:b.type==="fluidPump"?120:100;
   if(b.type==="fluidPump"){
    const ratio=power?.allocations?.[String(b.uid)]?.ratio??0,water=tileNode(b.x,b.y)?.type==="water";
    if(water&&ratio>=.8){b.fluidAmountL=Math.min(capacity,Math.max(0,Number(b.fluidAmountL)||0)+12*dt*Math.min(1,ratio));b.fluidType="WATER";b.status="RUNNING"}
