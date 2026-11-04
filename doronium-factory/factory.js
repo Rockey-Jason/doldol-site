@@ -1424,7 +1424,7 @@ if(E2E_MODE){
    addItemStack(S,"ironOre",10,{quality:96,purity:97,synthetic:false});
    const reservation=reserveItemStacks(S,"ironOre",3,"OWNERSHIP-TEST-JOB");
    S.buildings=[
-    {uid:"OWN-MACHINE",type:"smelter",input:{coal:2},inputMeta:{coal:{quality:90,purity:92,synthetic:false}},activeInputQuantities:[{itemID:"ironOre",quantity:1,quality:96,purity:97,synthetic:false}],output:{id:"ironPlate",qty:2,meta:{quality:95,purity:96,synthetic:false}}},
+    {uid:"OWN-MACHINE",type:"smelter",input:{coal:2},inputMeta:{coal:{quality:90,purity:92,synthetic:false}},activeInputQuantities:[{itemID:"ITEM_IRON_ORE",quantity:1,quality:96,purity:97,synthetic:false}],output:{id:"ironPlate",qty:2,meta:{quality:95,purity:96,synthetic:false}}},
     {uid:"OWN-BELT",type:"belt",item:{id:"circuit",qty:4,meta:{quality:94,purity:95,synthetic:false}}}
    ];
    S.contractRuntime.shipments=[{shipmentID:"OWN-SHIP",status:"IN_TRANSIT",cargo:[{itemID:"wood",quantity:5,quality:90,purity:91,synthetic:false}]}];
