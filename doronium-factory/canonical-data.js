@@ -37,6 +37,35 @@ export function planDoronumMigration(stacks=[]){
  }
  return {version:CANONICAL_ITEM_MIGRATION_VERSION,changes,quarantined,requiresUserResolution:quarantined.length>0};
 }
+export function applyDoronumMigration(state){
+ if(!state||typeof state!=="object"||!state.runtime||!Array.isArray(state.runtime.itemStacks))return {version:CANONICAL_ITEM_MIGRATION_VERSION,changes:[],quarantined:[],requiresUserResolution:false};
+ const plan=planDoronumMigration(state.runtime.itemStacks),map=new Map(plan.changes.map(x=>[x.from,x.to]));
+ for(const change of plan.changes){
+  const stack=state.runtime.itemStacks.find(x=>x.runtimeID===change.stackID);if(!stack)continue;
+  stack.sourceItemID??=change.from;stack.itemID=change.to;stack.migrationVersion=CANONICAL_ITEM_MIGRATION_VERSION;
+ }
+ for(const item of plan.quarantined){
+  const stack=state.runtime.itemStacks.find(x=>x.runtimeID===item.stackID);if(!stack)continue;
+  stack.quarantined=true;stack.quarantineReason=item.reason;stack.sourceItemID??=item.itemID;
+ }
+ for(const reservation of Object.values(state.runtime.reservations||{}))if(map.has(reservation.itemID))reservation.itemID=map.get(reservation.itemID);
+ const remapRecord=record=>{
+  if(!record||typeof record!=="object")return;
+  for(const [from,to] of map)if(Object.hasOwn(record,from)){record[to]=(Number(record[to])||0)+(Number(record[from])||0);delete record[from]}
+ };
+ remapRecord(state.inventory);remapRecord(state.meta);remapRecord(state.stats?.produced);remapRecord(state.stats?.gathered);
+ for(const building of state.buildings||[]){
+  if(building.input)remapRecord(building.input);
+  if(building.output&&map.has(building.output.id))building.output.id=map.get(building.output.id);
+  if(map.has(building.variant))building.variant=map.get(building.variant);
+ }
+ for(const shipment of state.contractRuntime?.shipments||[])if(map.has(shipment.itemID))shipment.itemID=map.get(shipment.itemID);
+ for(const transaction of Object.values(state.constructionLedger||{}))if(transaction.materials)remapRecord(transaction.materials);
+ state.canonicalDoronumMigrationVersion=CANONICAL_ITEM_MIGRATION_VERSION;
+ state.canonicalDoronumQuarantine=plan.quarantined.map(x=>({stackID:x.stackID,itemID:x.itemID,quantity:x.quantity,reason:x.reason}));
+ return plan;
+}
+
 export function validateInfinityManifest(stacks){
  const errors=[],totals=Object.fromEntries(CANONICAL_DORONUM_IDS.map(id=>[id,0]));
  for(const stack of stacks||[]){
