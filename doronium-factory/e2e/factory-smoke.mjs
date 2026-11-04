@@ -203,6 +203,13 @@ try {
   assert.ok(powerTick.battery > 39.9 && powerTick.battery < 40.1, "The 400kW battery charger must store 40kJ during one 0.1-second tick");
   assert.equal(powerTick.far.ratio, 0, "A remote grid must remain isolated after a simulation tick");
 
+  const fluidRecipe = await desktop.evaluate(() => window.__doroniumFactoryTest.setupFluidRecipeConsumerTest());
+  assert.equal(fluidRecipe.status, "RUNNING", "A fluid-dependent Doronum recipe must start when its water buffer is available");
+  assert.equal(fluidRecipe.fluidAmountL, 0, "The recipe must consume exactly its declared fluid quantity from the live building buffer");
+  assert.equal(fluidRecipe.fluidType, null, "An empty fluid buffer must clear its fluid type");
+  assert.equal(fluidRecipe.normalRemaining, 0, "The recipe must consume its reserved canonical Doronum input");
+  assert.equal(fluidRecipe.ironOreRemaining, 0, "The recipe must consume its canonical iron ore input");
+
   const fluidSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.setupFluidNetworkTest());
   assert.equal(fluidSetup.power.allocations["F-PUMP"].status, "RUNNING", "The water pump must receive power");
   const closedValve = await desktop.evaluate(() => window.__doroniumFactoryTest.runFluidNetworkTest(false, 12));
