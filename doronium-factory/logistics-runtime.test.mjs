@@ -8,7 +8,7 @@ test("path preview returns graph path and rejects unreachable targets",()=>{cons
 test("full directed loops are detected without consuming or deleting cargo",()=>{const a=belt("A",0,0,1,{id:"ironOre",qty:1}),b=belt("B",1,0,2,{id:"ironOre",qty:1}),c=belt("C",1,1,3,{id:"ironOre",qty:1}),d=belt("D",0,1,0,{id:"ironOre",qty:1});const g=buildLogisticsGraph([a,b,c,d]);const pressure=analyzeLogisticsPressure(g);assert.equal(pressure.cycleCount,1);assert.equal(pressure.deadlocked.length,1);assert.equal([a,b,c,d].reduce((n,x)=>n+(x.item?.qty||0),0),4)});
 
 test("machine output can feed the first conveyor without corrupting conveyor components",()=>{
- const machine={uid:"M",x:0,y:0,type:"smelter",output:{id:"ironPlate",qty:1,meta:{quality:90,purity:90}}};
+ const machine={uid:"M",x:0,y:0,type:"smelter",dir:1,output:{id:"ironPlate",qty:1,meta:{quality:90,purity:90}}};
  const first=belt("B1",1,0),second=belt("B2",2,0),sink={uid:"S",x:3,y:0,type:"storage"};
  const g=buildLogisticsGraph([machine,first,second,sink]);
  assert.equal(g.outgoing.get("M").length,1);
