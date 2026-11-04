@@ -345,7 +345,7 @@ function ensureBuildingIndex(){
 }
 function playTone(freq=520,duration=.08,kind="sine"){if(!S.settings.sound)return;try{soundCtx??=new AudioContext();const osc=soundCtx.createOscillator(),gain=soundCtx.createGain();osc.type=kind;osc.frequency.value=freq;gain.gain.setValueAtTime(.035,soundCtx.currentTime);gain.gain.exponentialRampToValueAtTime(.001,soundCtx.currentTime+duration);osc.connect(gain);gain.connect(soundCtx.destination);osc.start();osc.stop(soundCtx.currentTime+duration)}catch{}}
 function setCloud(state,label){const el=$("cloud-state");el.className="cloud-state "+state;el.querySelector("span").textContent=label}
-function itemCount(id){return Math.max(0,Number(S.inventory[canonicalItemID(id)]||0))}
+function itemCount(id){return availableItemCount(S,canonicalItemID(id))}
 function itemQuarantined(id){id=canonicalItemID(id);const stacks=(S.runtime?.itemStacks||[]).filter(s=>s.itemID===id);return stacks.length>0&&stacks.every(s=>s.quarantined===true)}
 function addItem(id,qty,meta={},record=true){id=canonicalItemID(id);if(!RESOURCE[id]||qty<=0)return;ensureItemStacks(S);addItemStack(S,id,qty,meta);syncLegacyInventory(S);if(record)S.stats.produced[id]=(S.stats.produced[id]||0)+qty;markDirty()}
 function takeItem(id,qty){if(itemCount(id)<qty)return false;const reservation=reserveItemStacks(S,id,qty,"direct-consume");if(!reservation)return false;const removed=commitItemReservations(S,[reservation]);if(!removed){releaseItemReservation(S,reservation);return false}syncLegacyInventory(S);markDirty();return true}
@@ -467,22 +467,26 @@ function renderContracts(){
  }));
 }
 function renderInventory(){
- const items=Object.entries(S.inventory||{}).filter(([id,n])=>n>0).sort((a,b)=>(RESOURCE[a[0]]?.kind||"").localeCompare(RESOURCE[b[0]]?.kind||""));
+ const items=Object.entries(S.inventory||{}).filter(([,total])=>Number(total)>0).map(([id,total])=>[id,availableItemCount(S,id),Math.max(0,Number(total)-availableItemCount(S,id))]).sort((a,b)=>(RESOURCE[a[0]]?.kind||"").localeCompare(RESOURCE[b[0]]?.kind||""));
  const quarantined=Object.entries(S.quarantinedInventory||{}).filter(([,n])=>Number(n)>0).sort(([a],[b])=>a.localeCompare(b));
- const kinds=items.length,quarantinedTotal=quarantined.reduce((sum,[,n])=>sum+Number(n||0),0);
+ const kinds=items.length,availableTotal=items.reduce((sum,[,available])=>sum+available,0),reservedTotal=items.reduce((sum,[,available,reserved])=>sum+reserved,0),quarantinedTotal=quarantined.reduce((sum,[,n])=>sum+Number(n||0),0);
  $("inventory-slots").textContent=kinds+" 종류";
- $("inventory-summary").innerHTML='<div><small>아이템 종류</small><strong>'+kinds+'</strong></div><div><small>사용 가능 수량</small><strong>'+short(items.reduce((a,[,n])=>a+n,0))+'</strong></div><div><small>특수 결정</small><strong>'+short(VARIANTS.reduce((a,id)=>a+itemCount(id),0))+'</strong></div><div><small>격리 보관 수량</small><strong>'+short(quarantinedTotal)+'</strong></div>';
- $("inventory-grid").innerHTML=items.map(([id,n])=>'<div class="inventory-item"><span class="res-icon">'+(RESOURCE[id]?.icon||"◈")+'</span><div><strong>'+escapeHTML(RESOURCE[id]?.name||id)+'</strong><small>Q '+Math.round(quality(S,id))+' · P '+Math.round(purity(S,id))+(synthetic(S,id)?" · 합성":" · 비합성")+'</small></div><b>'+fmt(n)+'</b></div>').join("")||'<div class="inspector-empty">사용 가능한 창고 자원이 없습니다.</div>';
+ $("inventory-summary").innerHTML='<div><small>아이템 종류</small><strong>'+kinds+'</strong></div><div><small>사용 가능 수량</small><strong>'+short(availableTotal)+'</strong></div><div><small>작업 예약 수량</small><strong>'+short(reservedTotal)+'</strong></div><div><small>격리 보관 수량</small><strong>'+short(quarantinedTotal)+'</strong></div>';
+ $("inventory-grid").innerHTML=items.map(([id,available,reserved])=>'<div class="inventory-item"><span class="res-icon">'+(RESOURCE[id]?.icon||"◈")+'</span><div><strong>'+escapeHTML(RESOURCE[id]?.name||id)+'</strong><small>사용 가능 '+fmt(available)+(reserved>0?' · 예약 '+fmt(reserved):"")+' · Q '+Math.round(quality(S,id))+' · P '+Math.round(purity(S,id))+(synthetic(S,id)?" · 합성":" · 비합성")+'</small></div><b>'+fmt(available+reserved)+'</b></div>').join("")||'<div class="inspector-empty">창고가 비어 있습니다.</div>';
  const quarantineHost=$("quarantine-grid");
  if(quarantineHost)quarantineHost.innerHTML=quarantined.map(([id,n])=>{
   const meta=S.quarantinedMeta?.[id]||{},stacks=(S.runtime?.itemStacks||[]).filter(stack=>stack.itemID===id&&stack.quarantined);
   const reasons=[...new Set(stacks.map(stack=>String(stack.quarantineReason||"정식 ID 대응 관계 미확정")))];
   return '<div class="inventory-item quarantine-item"><span class="res-icon">⚠️</span><div><strong>'+escapeHTML(RESOURCE[id]?.name||id)+'</strong><small>격리 사유 · '+escapeHTML(reasons.join(" / "))+' · Q '+Math.round(Number(meta.quality)||0)+' · P '+Math.round(Number(meta.purity)||0)+'</small></div><b>'+fmt(n)+'</b></div>';
  }).join("")||'<div class="inspector-empty">격리된 자원이 없습니다.</div>';
- $("crystal-codex").innerHTML=VARIANTS.map(id=>'<button class="crystal-codex-card" data-crystal="'+id+'"><span>'+RESOURCE[id].icon+'</span><strong>'+RESOURCE[id].name+'</strong><small>'+(itemCount(id)>0?"보유 "+fmt(itemCount(id)):"도감 미발견")+'</small></button>').join("")+'<button class="crystal-codex-card infinity-card" data-crystal="infinity"><span>💠</span><strong>인피니티 도로늄</strong><small>'+(itemCount("infinity")>0?"보유 "+fmt(itemCount("infinity")):"최종 결정")+'</small></button>';
+ $("crystal-codex").innerHTML=VARIANTS.map(id=>{
+  const total=Math.max(0,Number(S.inventory[id])||0),reserved=Math.max(0,total-itemCount(id));
+  return '<button class="crystal-codex-card" data-crystal="'+id+'"><span>'+RESOURCE[id].icon+'</span><strong>'+RESOURCE[id].name+'</strong><small>'+(total>0?"보유 "+fmt(total)+(reserved>0?" · 예약 "+fmt(reserved):""):"도감 미발견")+'</small></button>';
+ }).join("")+'<button class="crystal-codex-card infinity-card" data-crystal="infinity"><span>💠</span><strong>인피니티 도로늄</strong><small>'+(Math.max(0,Number(S.inventory.infinity)||0)>0?"보유 "+fmt(S.inventory.infinity):"최종 결정")+'</small></button>';
+ const sellable=items.filter(([,available])=>available>0&&_[0]!=="infinity");
  const sel=$("sell-resource"),old=sel.value;
- sel.innerHTML=items.filter(([id])=>id!=="infinity").map(([id,n])=>'<option value="'+id+'">'+(RESOURCE[id]?.icon||"◈")+" "+escapeHTML(RESOURCE[id]?.name||id)+" ("+fmt(n)+")</option>").join("");
- if(items.some(([id])=>id===old))sel.value=old;
+ sel.innerHTML=sellable.map(([id,available])=>'<option value="'+id+'">'+(RESOURCE[id]?.icon||"◈")+" "+escapeHTML(RESOURCE[id]?.name||id)+" ("+fmt(available)+")</option>").join("");
+ if(sellable.some(([id])=>id===old))sel.value=old;
  updateMarketEstimate();renderContracts();
 }
 function updateMarketEstimate(){const id=$("sell-resource").value,n=Math.max(0,Math.floor(Number($("sell-amount").value)||0));$("market-estimate").textContent="판매 예상액 "+fmt(n*(RESOURCE[id]?.price||0))+" D"}
