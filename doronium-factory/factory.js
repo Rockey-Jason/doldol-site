@@ -290,7 +290,7 @@ function currentPower(){
   else if(b.type==="solar")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*100*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1),buildingType:b.type};
   else if(b.type==="wind")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*100*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05),buildingType:b.type};
   else if(b.type==="coalgen"||b.type==="mineGen")node={id:b.uid,type:"GENERATOR",generationKW:b.fuelTimer>0?(Number(def.gen)|| (b.type==="mineGen"?12:18))*100:0,buildingType:b.type};
-  else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["fluidPump"].includes(b.type)?55:["pump","doriFarm"].includes(b.type)?45:20;const fusionStage=S.fusionJob&&Number.isInteger(S.fusionJob.stage)?FUSION_STAGES[S.fusionJob.stage]:null;const demandKW=b.type==="fusion"?(fusionStage?.power||0):def.power*100;node={id:b.uid,type:"CONSUMER",demandKW,priority,transmissionLoss:0,buildingType:b.type}}
+  else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["fluidPump"].includes(b.type)?55:["pump","doriFarm"].includes(b.type)?45:20;const fusionActive=S.fusionJob&&!["COMPLETED","CANCELLED"].includes(S.fusionJob.status);const fusionStage=fusionActive&&Number.isInteger(S.fusionJob.stage)?FUSION_STAGES[S.fusionJob.stage]:null;const demandKW=b.type==="fusion"?(fusionStage?.power||0):def.power*100;node={id:b.uid,type:"CONSUMER",demandKW,priority,transmissionLoss:0,buildingType:b.type}}
   if(node){node.layer=b.layer||"surface";node.mineLevel=b.mineLevel||0;nodes.push(node);powerBuildings.push(b)}
  }
  const edges=[];
@@ -718,14 +718,14 @@ function chooseVariant(b){const choices=VARIANTS.filter(id=>id!=="doronium_norma
 function startResearch(id){const r=RESEARCH.find(x=>x.id===id);if(!r||S.research.includes(id))return;if(!hasBuilding(S,"lab")){toast("먼저 기술 연구소를 건설하세요.","warn");return}if(r.requires&&!r.requires.every(v=>S.research.includes(v))){toast("선행 연구가 완료되지 않았습니다.","warn");return}if(S.activeResearch){toast("다른 연구가 이미 진행 중입니다.","warn");return}if(S.money<r.cost||!hasItems(r.need)){toast("연구 자원 또는 자금이 부족합니다.","warn");return}S.money-=r.cost;takeItems(r.need);S.activeResearch=id;S.researchProgress=0;log("연구 시작 · "+r.name);toast(r.name+" 연구를 시작합니다.");markDirty();renderResearch();renderHud()}
 function tickResearch(dt,ratio){if(!S.activeResearch)return;const r=RESEARCH.find(x=>x.id===S.activeResearch);if(!r){S.activeResearch=null;return}const labs=S.buildings.filter(b=>b.type==="lab").length;if(!labs)return;S.researchProgress+=dt*Math.max(.0,ratio)*Math.min(2,1+(labs-1)*.35)*(S.research.includes("automation")?1.15:1);if(S.researchProgress>=r.time){S.research.push(r.id);awardResearchTierSkillPoints();S.activeResearch=null;S.researchProgress=0;log("연구 완료 · "+r.name,"good");toast("기술 연구 완료 · "+r.name);$("orbit-dialogue").textContent="“"+r.name+" 연구 데이터가 연구소에 등록되었습니다.”";playTone(820,.22,"triangle");markDirty();renderResearch();renderBuildList();renderMissions();questCheck()}}
 function updateFusion(dt){
- const job=S.fusionJob;if(!job||!["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","ERROR"].includes(job.status))return;
+ const job=S.fusionJob;if(!job)return;if(!job.status&&Number.isInteger(job.stage)&&Number.isFinite(Number(job.progress))){job.status="RUNNING";job.legacyConsumedInput=true;job.outputIssued=false}if(!["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","ERROR"].includes(job.status))return;
  const b=S.buildings.find(x=>x.type==="fusion");
  if(!b){job.status="ERROR";job.errorCode="MACHINE_MISSING";job.lastErrorAt=S.seconds;return}
  if(job.errorCode==="MACHINE_MISSING"){delete job.errorCode;job.status="RESERVED"}
  const stage=FUSION_STAGES[job.stage];
  if(!stage){job.status="ERROR";job.errorCode="INVALID_STAGE";return}
  const reservations=job.reservationIDs||[];
- if(reservations.length!==15||reservations.some(id=>!S.runtime?.reservations?.[id]||S.runtime.reservations[id].status!=="reserved")){
+ if(!job.legacyConsumedInput&&(reservations.length!==15||reservations.some(id=>!S.runtime?.reservations?.[id]||S.runtime.reservations[id].status!=="reserved"))){
   job.status="ERROR";job.errorCode="RESERVATION_LEDGER_MISMATCH";return;
  }
  const p=currentPower();b.temp+=(stage.temp-b.temp)*Math.min(1,dt*.045);b.pressure+=(stage.pressure-b.pressure)*Math.min(1,dt*.06);
@@ -736,9 +736,9 @@ function updateFusion(dt){
  if(job.progress<stage.time)return;
  log("퓨전 단계 완료 · "+stage.name,"good");job.stage++;job.progress=0;job.status="RUNNING";
  if(job.stage>=FUSION_STAGES.length){
-  const consumed=commitItemReservations(S,job.reservationIDs);
-  if(!consumed||consumed.reduce((n,x)=>n+x.quantity,0)!==1500){job.stage=FUSION_STAGES.length-1;job.status="ERROR";job.errorCode="INPUT_COMMIT_FAILED";return}
-  job.reservationIDs=[];job.status="COMPLETED";job.completedAt=S.seconds;job.outputIssued=true;S.fusionDone=true;
+  if(!job.legacyConsumedInput){const consumed=commitItemReservations(S,job.reservationIDs);if(!consumed||consumed.reduce((n,x)=>n+x.quantity,0)!==1500){job.stage=FUSION_STAGES.length-1;job.status="ERROR";job.errorCode="INPUT_COMMIT_FAILED";return}job.reservationIDs=[]}
+  if(job.outputIssued||S.fusionDone){job.status="COMPLETED";return}
+  job.status="COMPLETED";job.completedAt=S.seconds;job.outputIssued=true;S.fusionDone=true;
   addItem("infinity",1,{quality:100,purity:100,synthetic:false});
   log("인피니티 도로늄 결정화 성공 · 원료 1,500개 소비 · 출력 1개","good");toast("인피니티 도로늄 제작 성공!");
   $("orbit-dialogue").textContent="“Infinity Doronum secured. Three stabilization relays are still required.”";
@@ -752,12 +752,12 @@ function fusionPowerPreflight(){
  const fusion=S.buildings.find(b=>b.type==="fusion"),cooling=S.buildings.filter(b=>b.type==="cooling");
  const fusionAllocation=fusion?power.allocations?.[String(fusion.uid)]:null;
  const coolingAllocations=cooling.map(b=>power.allocations?.[String(b.uid)]||null);
- const coolingReady=coolingAllocations.length>0&&coolingAllocations.every(a=>a&&a.ratio>=.8);
+ const coolingReady=coolingAllocations.some(a=>a&&a.ratio>=.8);
  return {ok:!!fusion&&!!fusionAllocation&&fusionAllocation.ratio>=.8&&coolingReady,power,fusionAllocation,coolingReady};
 }
 function startFusion(){
  if(S.fusionDone){toast("이 세이브에서는 인피니티 도로늄 제작이 이미 완료되었습니다.","warn");return}
- const active=["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","ERROR"].includes(S.fusionJob?.status);
+ const active=!!S.fusionJob&&!["COMPLETED","CANCELLED"].includes(S.fusionJob.status);
  if(active){toast("이미 퓨전 작업이 진행 중입니다.");return}
  if(!S.buildings.some(b=>b.type==="fusion")){toast("인피니티 퓨전 설비가 필요합니다.","warn");return}
  if(!S.buildings.some(b=>b.type==="cooling")){toast("초전도 냉각탑을 먼저 건설하세요.","warn");return}
