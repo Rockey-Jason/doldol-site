@@ -557,7 +557,11 @@ function consumeRecipe(b,r){
  if(!canConsumeRecipe(b,r))return null;
  const fluidSnapshot={amountL:Number(b.fluidAmountL)||0,fluidType:b.fluidType||null};
  for(const[type,liters]of Object.entries(r.fluidInputs||{})){
-  const consumed=consumeFluid(b,liters,type);if(!consumed.ok){b.fluidAmountL=fluidSnapshot.amountL;b.fluidType=fluidSnapshot.fluidType;return null}
+  const fluidNode={amountL:Math.max(0,Number(b.fluidAmountL)||0),fluidType:b.fluidType||null};
+  const consumed=consumeFluid(fluidNode,liters,type);
+  if(!consumed.ok){b.fluidAmountL=fluidSnapshot.amountL;b.fluidType=fluidSnapshot.fluidType;return null}
+  b.fluidAmountL=fluidNode.amountL;
+  b.fluidType=fluidNode.fluidType||null;
  }
  const inventoryNeed={};
  for(const[rawID,n]of Object.entries(r.inputs||{})){const id=canonicalItemID(rawID),buffered=Math.min(n,b.input?.[id]||0),remaining=n-buffered;if(remaining>0)inventoryNeed[id]=remaining}
