@@ -159,6 +159,35 @@ h1 span{color:#9bc1ff}
 @media(max-width:760px){.hero{grid-template-columns:1fr;padding:23px}.hero-visual{min-height:145px;grid-row:1}.atom-orbit{width:165px}.atom-core{width:96px;height:96px}.atom-core strong{font-size:34px}.atom-core small{bottom:20px;font-size:8px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.level-grid{grid-template-columns:1fr}.level-card{min-height:190px}.level-card h3{margin-top:14px}.section-head{align-items:flex-start;flex-direction:column}.periodic-wrap{padding:7px}.periodic-grid{grid-template-rows:repeat(9,minmax(38px,auto))}.element{min-height:37px;border-radius:5px}.element .atomic-number{left:2px;top:2px}.element .symbol{margin-top:5px}.series-placeholder{font-size:7px}.series-label{font-size:8px}.element-detail{grid-template-columns:auto 1fr;gap:10px}.detail-category{grid-column:2;justify-self:start}}
 @media(max-width:480px){.shell{padding:14px}.topbar{align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}.top-actions{width:100%;justify-content:flex-start}.brand-mark{width:39px;height:39px;border-radius:13px}.nav-link{min-height:35px;padding:7px 10px;font-size:10px}.hero{border-radius:23px}.hero-visual{min-height:126px}.atom-orbit{width:145px}.atom-core{width:83px;height:83px}.atom-core strong{font-size:29px}.atom-core small{bottom:17px;font-size:7px}.hero p{font-size:13px}.tabs{margin:17px 0 14px}.tab{min-height:39px;padding:0 13px;font-size:12px}.stat{padding:13px}.stat-value{font-size:22px}.level-card{padding:19px}.panel{border-radius:19px}.game-top{align-items:flex-start}.question-meta{font-size:10px}.timer-track{width:65px}.question-card{padding:19px 13px}.question-prompt{font-size:21px}.option-grid{gap:8px}.option{min-height:59px;padding:9px 8px;gap:7px}.option-key{width:25px;height:25px;border-radius:8px}.option-label{font-size:12px;overflow-wrap:anywhere}.feedback{align-items:flex-start;flex-direction:column}.feedback .primary-button{width:100%}.result-stats{gap:6px}.result-stat{padding:10px 5px}.result-stat strong{font-size:18px}.periodic-grid{grid-template-rows:repeat(9,minmax(31px,auto));gap:2px}.element{min-height:30px;padding:2px 0;border-radius:4px}.element .atomic-number{font-size:6px}.element .symbol{font-size:clamp(8px,2.45vw,11px);margin-top:5px}.element .element-short{display:none}.series-placeholder{font-size:6px;padding:1px}.series-label{font-size:7px}.legend-chip{font-size:8px;padding:5px 6px}.detail-symbol{width:48px;height:48px;font-size:20px}.detail-main strong{font-size:14px}.detail-main span{font-size:9px}.detail-category{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+/* GAME OVERHAUL · ELEMENT FRONTIER */
+.command-center{position:relative;display:grid;grid-template-columns:minmax(0,1.45fr) minmax(230px,.55fr);gap:20px;overflow:hidden;padding:clamp(23px,4vw,39px);border:1px solid rgba(122,185,255,.22);border-radius:26px;background:radial-gradient(ellipse at 15% 0%,rgba(67,145,219,.17),transparent 55%),linear-gradient(125deg,rgba(14,37,66,.96),rgba(7,18,35,.94));box-shadow:0 24px 68px rgba(0,0,0,.25);animation:rise .65s var(--ease) both}
+.command-center:after{content:"";position:absolute;width:350px;height:350px;right:18%;top:-270px;border:1px solid rgba(117,224,232,.16);border-radius:50%;box-shadow:0 0 0 35px rgba(117,224,232,.025),0 0 0 72px rgba(117,224,232,.018);pointer-events:none}
+.command-copy{position:relative;z-index:1}.command-kicker,.map-eyebrow{color:#7ccee1;font-size:9px;letter-spacing:.18em}.command-copy h2{margin:13px 0 10px;font-size:clamp(23px,3.2vw,36px);font-weight:400;letter-spacing:-.035em}.command-copy p{max-width:620px;margin:0;color:#a7bad3;font-size:12px;line-height:1.85}.command-metrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.command-metrics span{padding:7px 9px;border:1px solid rgba(162,192,231,.12);border-radius:9px;background:rgba(255,255,255,.025);color:#b8cce6;font-size:9px}
+.pilot-card{position:relative;z-index:1;align-self:stretch;display:flex;flex-direction:column;justify-content:center;padding:18px;border:1px solid rgba(145,190,245,.18);border-radius:18px;background:rgba(4,15,29,.58);min-width:0}.pilot-emblem{position:relative;display:grid;place-items:center;width:46px;height:46px;margin-bottom:12px;border:1px solid rgba(117,224,232,.34);border-radius:15px;background:linear-gradient(145deg,rgba(117,224,232,.17),rgba(141,181,255,.06));color:#c8f5f5;font-size:22px;box-shadow:0 0 24px rgba(117,224,232,.1)}.pilot-emblem i{position:absolute;right:-4px;top:-4px;width:9px;height:9px;border-radius:50%;background:#8fe0c1;box-shadow:0 0 10px #8fe0c1}.pilot-label{color:#7794b9;font-size:8px;letter-spacing:.16em}.pilot-name{display:flex;justify-content:space-between;gap:8px;margin-top:5px;color:#e5efff;font-size:13px}.pilot-name strong{color:#9dd9eb;font-size:11px;font-weight:400}.pilot-xp{margin-top:12px;color:#90a8c8;font-size:9px}.pilot-xp i,.zone-progress i{display:block;height:5px;overflow:hidden;margin-top:6px;border-radius:99px;background:rgba(255,255,255,.08)}.pilot-xp b,.zone-progress b{display:block;width:0;height:100%;border-radius:99px;background:linear-gradient(90deg,#74baff,#75e0e8);transition:width .45s var(--ease)}.pilot-rank{margin-top:7px;color:#7490b5;font-size:9px}
+.map-heading{display:flex;justify-content:space-between;align-items:end;gap:15px;margin:30px 0 15px}.map-heading h2{margin:7px 0 5px;font-size:21px;font-weight:400}.map-heading p{margin:0;color:#93a9c7;font-size:11px;line-height:1.7}.map-coordinates{color:#6f86a6;font-size:9px;letter-spacing:.15em}
+.level-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.level-card{min-height:305px;padding:17px 19px 18px;text-align:left;cursor:pointer}.level-card:before{width:180px;height:180px;right:-75px;top:-100px}.level-card h3{margin:13px 0 8px;font-size:19px}.level-card p{min-height:41px;font-size:10px}.level-top{z-index:1}.level-number{font-size:8px}.level-icon{width:34px;height:34px;font-size:15px}.level-meta{gap:5px;margin-top:11px}.level-meta span{padding:5px 7px;font-size:8px}.level-start{font-size:11px;padding-top:13px}.zone-art{position:relative;isolation:isolate;display:grid;place-items:center;width:100%;height:65px;margin-bottom:12px;overflow:hidden;border:1px solid color-mix(in srgb,var(--accent) 23%,transparent);border-radius:13px;background:radial-gradient(ellipse at 50% 120%,color-mix(in srgb,var(--accent) 22%,transparent),transparent 65%),linear-gradient(100deg,rgba(5,14,28,.7),color-mix(in srgb,var(--accent) 9%,rgba(6,18,34,.8)))}.zone-art:before{content:"";position:absolute;width:48px;height:48px;border:1px solid color-mix(in srgb,var(--accent) 42%,transparent);border-radius:50%;box-shadow:0 0 26px color-mix(in srgb,var(--accent) 23%,transparent),inset 0 0 18px color-mix(in srgb,var(--accent) 15%,transparent);animation:spin 18s linear infinite}.zone-art:after{content:"";position:absolute;width:78px;height:29px;border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:50%;transform:rotate(-25deg);animation:spin 13s linear infinite reverse}.zone-art em{z-index:1;font-size:23px;font-style:normal;color:var(--accent);text-shadow:0 0 17px color-mix(in srgb,var(--accent) 58%,transparent)}.zone-art i,.zone-art b{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}.zone-art i{left:27%;top:25%}.zone-art b{right:25%;bottom:22%}.zone-art-two:before{width:42px;height:42px;border-radius:10px;transform:rotate(45deg)}.zone-art-three:before{width:54px;height:54px;border-radius:17px;transform:rotate(45deg)}
+.zone-progress{display:block;margin-top:14px;color:#849ab9;font-size:8px;letter-spacing:.1em}.zone-progress i{margin-top:5px;height:4px}.base-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:13px;margin-top:17px}.base-card{min-width:0;padding:21px;border:1px solid var(--line);border-radius:19px;background:linear-gradient(145deg,rgba(16,33,58,.82),rgba(6,16,30,.85))}.base-card-head{display:flex;justify-content:space-between;align-items:start;gap:12px}.base-card h3{margin:6px 0 14px;font-size:16px;font-weight:400}.collection-number{white-space:nowrap}.collection-number strong{font-size:22px;color:#b8ddff;font-weight:400}.collection-number small{color:#7e94b4;font-size:10px}.collection-track{height:5px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}.collection-track i{display:block;width:0;height:100%;border-radius:99px;background:linear-gradient(90deg,#9fbbff,#77e4e7);transition:width .45s}.collection-preview{display:flex;align-items:center;gap:7px;min-height:45px;flex-wrap:wrap;margin:11px 0;color:#8097b8;font-size:10px}.empty-crystal{display:grid;place-items:center;width:28px;height:28px;border:1px solid rgba(145,181,255,.2);border-radius:9px;color:#9fc3ff}.crystal-chip{display:grid;place-items:center;min-width:35px;height:34px;padding:0 7px;border:1px solid rgba(143,193,255,.21);border-radius:9px;background:rgba(117,166,235,.07);color:#c3ddff;font-size:11px}.base-link{padding:0;border:0;background:none;color:#a9d9ea;font-size:10px;cursor:pointer}.base-link:hover{color:#e3f8ff}.briefing-card h3{margin-bottom:10px}.manual-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.055)}.manual-key{color:#7d9dc7;font-size:10px}.manual-row strong{display:block;font-size:10px;font-weight:400;color:#d8e5f6}.manual-row small{display:block;margin-top:2px;color:#8298b7;font-size:9px}.home-bottom{display:flex;justify-content:space-between;margin:18px 2px;color:#526b8c;font-size:8px;letter-spacing:.17em}
+.battle-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 13px}.battle-chapter{display:flex;align-items:center;gap:8px;color:#d7e7fb;font-size:12px}.battle-chapter small{padding:5px 7px;border:1px solid rgba(141,181,255,.18);border-radius:7px;color:#93b5dd;font-size:8px}.battle-live{width:7px;height:7px;border-radius:50%;background:#8fe0c1;box-shadow:0 0 11px #8fe0c1;animation:pulse 1.5s infinite}.battle-xp{text-align:right;color:#8299b7;font-size:8px}.battle-xp strong{display:block;color:#9fdce6;font-size:14px;font-weight:400}
+.battlefield{position:relative;isolation:isolate;overflow:hidden;min-height:310px;padding:17px 22px 15px;border:1px solid rgba(127,176,240,.2);border-radius:22px;background:radial-gradient(ellipse at 50% 70%,rgba(45,102,150,.22),transparent 43%),radial-gradient(ellipse at 50% -20%,rgba(80,112,190,.2),transparent 52%),linear-gradient(180deg,#0b1e39,#071325 85%);box-shadow:inset 0 0 55px rgba(75,141,205,.05),0 22px 55px rgba(0,0,0,.19)}.battlefield:before{content:"";position:absolute;left:-10%;right:-10%;bottom:-110px;height:190px;border:1px solid rgba(117,224,232,.11);border-radius:50%;background:repeating-radial-gradient(ellipse at center,transparent 0 22px,rgba(117,224,232,.055) 23px 24px);transform:perspective(200px) rotateX(18deg);z-index:-1}.battlefield-stars{position:absolute;inset:0;opacity:.6;pointer-events:none;background-image:radial-gradient(2px 2px at 17% 22%,#a9d8ff 50%,transparent),radial-gradient(1px 1px at 75% 18%,#a9d8ff 50%,transparent),radial-gradient(2px 2px at 83% 62%,#8de6eb 50%,transparent),radial-gradient(1px 1px at 28% 72%,#8de6eb 50%,transparent),radial-gradient(1px 1px at 60% 35%,#a9d8ff 50%,transparent)}
+.arena-caption{display:flex;justify-content:space-between;color:#7896bb;font-size:8px;letter-spacing:.16em}.guardian{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5px 0 0}.guardian-rings{position:absolute;top:0;width:170px;height:145px;display:grid;place-items:center;pointer-events:none}.guardian-rings i,.guardian-rings b,.guardian-rings em{position:absolute;width:116px;height:116px;border:1px solid rgba(130,191,250,.28);border-radius:50%;box-shadow:0 0 25px rgba(90,157,222,.09);animation:spin 13s linear infinite}.guardian-rings b{width:140px;height:76px;transform:rotate(55deg);border-color:rgba(117,224,232,.3);animation-duration:9s;animation-direction:reverse}.guardian-rings em{width:90px;height:143px;transform:rotate(-45deg);border-color:rgba(182,154,255,.24);animation-duration:17s}
+.guardian-orb{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:92px;height:92px;margin-top:8px;border:1px solid rgba(155,211,255,.48);border-radius:29px;background:radial-gradient(circle at 35% 25%,rgba(203,233,255,.5),rgba(87,143,196,.23) 22%,rgba(15,42,72,.94) 75%);box-shadow:0 0 0 9px rgba(116,189,255,.035),0 0 40px rgba(104,180,237,.24),inset 0 0 28px rgba(135,207,255,.2);transform:rotate(45deg);transition:transform .35s,filter .35s}
+.guardian-orb span,.guardian-orb small{transform:rotate(-45deg)}.guardian-orb span{font-size:28px;color:#e3f5ff;text-shadow:0 0 17px #7fd7ff}.guardian-orb small{margin-top:0;color:#9bcbe7;font-size:6px;letter-spacing:.12em}.guardian-orb.hit{animation:hitFlash .45s}.guardian-orb.shake{animation:shake .36s}.guardian-name{margin-top:9px;color:#ecf5ff;font-size:13px;text-shadow:0 0 17px rgba(135,207,255,.22)}.guardian-state{margin-top:3px;color:#7699ba;font-size:7px;letter-spacing:.16em}.damage-pop{position:absolute;top:13px;left:calc(50% + 67px);color:#9ef4e3;font-size:23px;opacity:0;transform:translateY(10px) scale(.7);text-shadow:0 0 18px rgba(117,224,232,.6);pointer-events:none}.damage-pop.show{animation:damageUp .7s ease-out}
+.guardian-hp{width:min(340px,75%);margin-top:12px}.hp-caption{display:flex;justify-content:space-between;margin-bottom:5px;color:#8ea8c5;font-size:7px;letter-spacing:.13em}.hp-caption strong{color:#c3d9ed;font-size:8px;font-weight:400}.guardian-hp>i{display:block;height:7px;overflow:hidden;border:1px solid rgba(255,255,255,.08);border-radius:99px;background:rgba(0,0,0,.3)}.guardian-hp>i b{display:block;width:100%;height:100%;border-radius:99px;background:linear-gradient(90deg,#65b6e4,#a8e7db);box-shadow:0 0 12px rgba(117,224,232,.34);transition:width .55s var(--ease)}
+.battle-hud{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:650px;margin:16px auto 0}.hud-cell{padding:8px 12px;border:1px solid rgba(154,190,230,.12);border-radius:11px;background:rgba(3,13,26,.52)}.hud-label{display:block;color:#7089a9;font-size:7px;letter-spacing:.13em}.hud-cell strong{display:block;margin-top:3px;color:#d9e8f9;font-size:13px;font-weight:400;letter-spacing:.04em}.hud-cell:nth-child(1) strong{color:#ffb5bf}.hud-cell:nth-child(2) strong{color:#9fe1e5}.hud-cell:nth-child(3) strong{color:#ffdf9e}
+.battle-console{margin-top:13px;padding:clamp(15px,2.7vw,23px);border:1px solid rgba(154,190,230,.16);border-radius:20px;background:linear-gradient(145deg,rgba(14,30,53,.94),rgba(5,15,29,.96));box-shadow:0 19px 55px rgba(0,0,0,.18)}.console-top{display:flex;justify-content:space-between;align-items:center;gap:12px}.mission-tag span{display:block;color:#7895b7;font-size:7px;letter-spacing:.16em}.mission-tag strong{display:block;margin-top:4px;color:#d9e8f8;font-size:11px;font-weight:400}.wave-tag{padding:7px 9px;border:1px solid rgba(117,224,232,.18);border-radius:8px;background:rgba(117,224,232,.04);color:#9fe1e5;font-size:8px;letter-spacing:.11em}
+.mission-progress{display:flex;align-items:center;gap:11px;margin-top:12px}.mission-progress>i{flex:1;height:4px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.07)}.mission-progress>i b{display:block;width:0;height:100%;border-radius:99px;background:linear-gradient(90deg,#8fbaff,#75e0e8);transition:width .3s}.mission-progress>span{color:#7792b4;font-size:7px;letter-spacing:.11em;white-space:nowrap}
+.combat-question{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:17px}.question-info{display:flex;align-items:center;gap:10px;color:#8aa2c2;font-size:8px;letter-spacing:.12em}.timer-wrap{display:flex;align-items:center;gap:7px;color:#ffdf9c;font-size:11px;font-variant-numeric:tabular-nums;white-space:nowrap}.timer-wrap>i{width:65px;height:5px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.08)}.timer-wrap>i b{display:block;width:100%;height:100%;border-radius:99px;background:linear-gradient(90deg,#79e2e5,#ffdc8e);transition:width .35s linear}.timer-wrap.urgent{color:#ff9ca8}.timer-wrap.urgent>i b{background:#ff9ca8}.question-prompt{margin:13px 0 0;color:#eff6ff;font-size:clamp(17px,2.5vw,22px);line-height:1.5}.question-prompt strong{color:#a7ceff;font-weight:400}.question-hint{margin:5px 0 0;color:#8199b8;font-size:9px;line-height:1.6}
+.option-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:15px}.option{position:relative;display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;min-height:71px;padding:11px 12px;border:1px solid rgba(159,190,231,.15);border-radius:12px;background:linear-gradient(145deg,rgba(30,54,83,.72),rgba(8,21,39,.85));text-align:left;transition:transform .2s,border-color .2s,background .2s,box-shadow .2s}.option:before{content:"";position:absolute;inset:0;background:linear-gradient(120deg,rgba(255,255,255,.04),transparent 50%);pointer-events:none}.option:hover:not(:disabled){transform:translateY(-3px);border-color:rgba(134,196,255,.42);box-shadow:0 8px 18px rgba(0,0,0,.18)}.option-key{width:19px;height:19px;display:grid;place-items:center;border:1px solid rgba(159,190,231,.2);border-radius:6px;color:#88a4c7;font-size:8px}.option-label{position:relative;color:#e3efff;font-size:12px;line-height:1.4;overflow-wrap:anywhere}.option.correct{border-color:rgba(143,224,193,.55);background:rgba(38,117,91,.25);box-shadow:0 0 22px rgba(143,224,193,.1)}.option.wrong{border-color:rgba(255,156,168,.45);background:rgba(125,39,59,.2)}.option.correct .option-key{color:#9be6c7}.option.wrong .option-key{color:#ffabb5}
+.console-bottom{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px}.scanner-button{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid rgba(193,167,255,.23);border-radius:11px;background:rgba(142,107,215,.08);color:#d4c4ff;text-align:left;transition:all .2s}.scanner-button:hover:not(:disabled){transform:translateY(-2px);background:rgba(142,107,215,.15)}.scanner-button>span{font-size:18px}.scanner-button strong{font-size:9px;font-weight:400}.scanner-button small{color:#9a8dc0;font-size:7px}.scanner-button:disabled{opacity:.45}.key-guide{text-align:right;color:#778eae;font-size:8px}.key-guide b{display:inline-grid;place-items:center;width:15px;height:15px;margin:0 1px;border:1px solid rgba(159,190,231,.17);border-radius:4px;color:#b5cae5;font-weight:400}.key-guide small{display:block;margin-top:4px;color:#9485bd}
+.feedback{margin-top:13px;padding:12px 14px;border:1px solid rgba(143,224,193,.2);border-radius:13px;background:rgba(27,83,73,.15);animation:pop .25s}.feedback.wrong{border-color:rgba(255,156,168,.2);background:rgba(102,38,52,.13)}.feedback-title{display:block;color:#9ce7c5;font-size:12px}.feedback.wrong .feedback-title{color:#ffb2bc}.feedback-detail{display:block;margin-top:4px;color:#a8bad4;font-size:9px;line-height:1.6}
+.result-screen{position:relative;isolation:isolate;overflow:hidden;padding:clamp(25px,5vw,48px);border:1px solid rgba(127,187,240,.22);border-radius:26px;background:radial-gradient(ellipse at 50% -10%,rgba(91,157,213,.2),transparent 58%),linear-gradient(145deg,rgba(14,34,59,.97),rgba(5,15,29,.98));text-align:center;box-shadow:0 28px 75px rgba(0,0,0,.23);animation:rise .5s}.result-aura{position:absolute;z-index:-1;width:290px;height:290px;top:-215px;left:calc(50% - 145px);border:1px solid rgba(117,224,232,.22);border-radius:50%;box-shadow:0 0 0 35px rgba(117,224,232,.03),0 0 0 75px rgba(117,224,232,.02)}.result-stamp{color:#85dfe2;font-size:9px;letter-spacing:.22em}.result-title{margin:13px 0 4px;font-size:clamp(29px,5vw,45px);font-weight:400;letter-spacing:-.04em}.result-description{margin:0;color:#93aac8;font-size:11px}.result-score{margin:17px 0 18px;color:#e4f5ff;font-size:clamp(44px,8vw,70px);line-height:1;letter-spacing:-.06em;text-shadow:0 0 32px rgba(120,191,255,.22)}.result-score span{color:#8fa8c7;font-size:12px;letter-spacing:.1em}.loot-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;max-width:610px;margin:0 auto}.loot-card{padding:13px;border:1px solid rgba(163,190,231,.12);border-radius:13px;background:rgba(255,255,255,.025)}.loot-card span{display:block;color:#8199b8;font-size:8px}.loot-card strong{display:block;margin-top:6px;color:#c3e8f1;font-size:16px;font-weight:400}.loot-unlock{display:flex;align-items:center;gap:11px;max-width:610px;margin:16px auto 0;padding:12px 14px;border:1px solid rgba(255,220,142,.2);border-radius:13px;background:rgba(255,220,142,.045);text-align:left}.loot-icon{display:grid;place-items:center;width:35px;height:35px;border:1px solid rgba(255,220,142,.23);border-radius:11px;color:#ffdf9c}.loot-unlock strong{display:block;color:#f3e4c2;font-size:10px;font-weight:400}.loot-unlock small{display:block;margin-top:4px;color:#9d987f;font-size:8px}.result-actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:19px}
+.battle-header .text-button{border-color:rgba(159,190,231,.13);background:rgba(255,255,255,.035)}.battle-console .primary-button{min-height:37px;padding:0 13px;font-size:10px}.battle-console .feedback{display:flex;justify-content:space-between;align-items:center;gap:12px}.battle-console .feedback[hidden]{display:none}
+@keyframes pulse{50%{opacity:.45;box-shadow:0 0 3px #8fe0c1}}@keyframes hitFlash{0%{filter:brightness(1);transform:rotate(45deg) scale(1)}35%{filter:brightness(2.4);transform:rotate(45deg) scale(1.22);box-shadow:0 0 0 16px rgba(117,224,232,.08),0 0 70px rgba(117,224,232,.75)}100%{filter:brightness(1);transform:rotate(45deg) scale(1)}}@keyframes shake{0%,100%{transform:rotate(45deg) translateX(0)}25%{transform:rotate(45deg) translateX(-8px)}75%{transform:rotate(45deg) translateX(8px)}}@keyframes damageUp{0%{opacity:0;transform:translateY(10px) scale(.7)}25%{opacity:1;transform:translateY(-4px) scale(1.15)}100%{opacity:0;transform:translateY(-35px) scale(1)}}@keyframes spin{to{transform:rotate(360deg)}}@keyframes spinReverse{to{transform:rotate(-360deg)}}
+@media(max-width:760px){.command-center{grid-template-columns:1fr}.pilot-card{display:grid;grid-template-columns:auto 1fr;column-gap:13px;align-items:center}.pilot-emblem{grid-row:1/5;margin:0}.pilot-xp{grid-column:2}.pilot-rank{grid-column:2}.level-grid{grid-template-columns:1fr}.level-card{min-height:0}.zone-art{height:58px}.base-grid{grid-template-columns:1fr}.battlefield{min-height:280px;padding:14px}.guardian-rings{transform:scale(.88)}.option-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.option{min-height:57px}.console-bottom{align-items:flex-start}.battle-console .feedback{align-items:flex-start;flex-direction:column}.battle-console .feedback .primary-button{width:100%}}
+@media(max-width:480px){.command-center{padding:19px;border-radius:21px}.command-copy h2{font-size:23px}.command-copy p{font-size:10px}.command-metrics span{font-size:8px}.pilot-card{padding:13px}.map-heading{align-items:flex-start;flex-direction:column}.map-coordinates{display:none}.level-card{padding:15px}.base-card{padding:16px}.battle-header{flex-wrap:wrap}.battle-chapter{order:3;width:100%;justify-content:center}.battle-xp{font-size:7px}.battlefield{min-height:260px;padding:12px}.guardian-orb{width:78px;height:78px}.guardian-rings{transform:scale(.78)}.damage-pop{left:calc(50% + 48px)}.battle-hud{gap:5px}.hud-cell{padding:7px}.hud-label{font-size:6px}.hud-cell strong{font-size:11px}.battle-console{padding:14px}.combat-question{align-items:flex-start;flex-direction:column;gap:8px}.question-info{width:100%;justify-content:space-between}.question-prompt{font-size:18px}.timer-wrap>i{width:85px}.option{min-height:61px;padding:9px}.option-label{font-size:11px}.console-bottom{gap:8px}.scanner-button{padding:7px 9px}.scanner-button small{display:none}.key-guide{font-size:7px}.loot-row{gap:5px}.loot-card{padding:10px 5px}.loot-card strong{font-size:13px}.result-screen{padding:23px 15px}.result-actions>*{flex:1 1 42%}.home-bottom{font-size:7px}}
+@media(prefers-reduced-motion:reduce){.guardian-rings i,.guardian-rings b,.guardian-rings em,.zone-art:before,.zone-art:after{animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -192,94 +221,146 @@ h1 span{color:#9bc1ff}
 </nav>
 
 <section class="stats" aria-label="나의 학습 기록">
-  <div class="stat"><span class="stat-label">플레이한 게임</span><strong class="stat-value" id="statGames">0</strong><span class="stat-note">누적 완료 횟수</span></div>
-  <div class="stat"><span class="stat-label">누적 정답률</span><strong class="stat-value" id="statAccuracy">—</strong><span class="stat-note">정답 / 전체 문항</span></div>
-  <div class="stat"><span class="stat-label">최고 연속 정답</span><strong class="stat-value" id="statStreak">0</strong><span class="stat-note">한 번에 이어 맞힌 문제</span></div>
-  <div class="stat"><span class="stat-label">최고 점수</span><strong class="stat-value" id="statBest">0</strong><span class="stat-note">한 판 최고 기록</span></div>
+  <div class="stat"><span class="stat-label">연구원 경험치</span><strong class="stat-value" id="statGames">0</strong><span class="stat-note">누적 획득 XP</span></div>
+  <div class="stat"><span class="stat-label">원소 도감 수집</span><strong class="stat-value" id="statAccuracy">—</strong><span class="stat-note">수집한 원소 / 118개</span></div>
+  <div class="stat"><span class="stat-label">전투 승리</span><strong class="stat-value" id="statStreak">0</strong><span class="stat-note">격파한 수호자</span></div>
+  <div class="stat"><span class="stat-label">최고 전투 점수</span><strong class="stat-value" id="statBest">0</strong><span class="stat-note">한 판 최고 기록</span></div>
 </section>
 
 <section id="homeView">
-  <div class="section-head">
-    <div><h2>난이도를 선택해 줘</h2><p>각 단계는 10문제야. 한 단계씩 올라가며 원소를 익혀 보자.</p></div>
-    <span class="section-tag">CHOOSE YOUR LEVEL</span>
+  <div class="command-center">
+    <div class="command-copy">
+      <div class="command-kicker">MISSION CONTROL · ELEMENT FRONTIER</div>
+      <h2>원소 탐험대, 출동 준비 완료?</h2>
+      <p>주기율표의 에너지를 훔쳐 간 원소 수호자들을 물리쳐라. 정답을 맞히면 공격하고, 콤보를 이어 보스를 쓰러뜨려 원소를 되찾아!</p>
+      <div class="command-metrics"><span>⚔ 3개의 탐험 구역</span><span>✦ 5개 보스 단계</span><span>◈ 118개 원소 수집</span></div>
+    </div>
+    <div class="pilot-card">
+      <div class="pilot-emblem"><span>R</span><i></i></div>
+      <div class="pilot-label">YOUR RESEARCHER</div>
+      <div class="pilot-name">원소 연구원 <strong id="homePlayerLevel">LV. 1</strong></div>
+      <div class="pilot-xp"><span id="homeXpText">0 / 200 XP</span><i><b id="homeXpBar"></b></i></div>
+      <div class="pilot-rank" id="homeRank">견습 연구원</div>
+    </div>
+  </div>
+
+  <div class="map-heading">
+    <div><span class="map-eyebrow">SELECT YOUR OPERATION</span><h2>탐험 구역 선택</h2><p>지역을 선택해 보스전을 시작해. 전투에서 승리하면 다음 보스가 등장해.</p></div>
+    <span class="map-coordinates">SECTOR MAP / 03</span>
   </div>
   <div class="level-grid">
     <button class="level-card" data-level="easy" type="button" style="--accent:#8fe0c1">
-      <span class="level-top"><span class="level-number">LEVEL 01 · STARTER</span><span class="level-icon">✦</span></span>
-      <h3>쉬움</h3>
-      <p>가장 먼저 익히는 1~20번 원소. 기호를 보고 이름을 고르며 기초를 다져 봐.</p>
-      <span class="level-meta"><span>1~20번 원소</span><span>문항당 20초</span><span>기초 기호</span></span>
-      <span class="level-start">쉬움 시작하기　↗</span>
+      <span class="zone-art zone-art-one"><i></i><b></b><em>H</em></span>
+      <span class="level-top"><span class="level-number">SECTOR 01 · STARTER FIELD</span><span class="level-icon">✦</span></span>
+      <h3>기초 원소 평원</h3>
+      <p>수소부터 칼슘까지. 기초 원소를 익히고 첫 수호자를 물리쳐라.</p>
+      <span class="level-meta"><span>1~20번 원소</span><span>20초 제한</span><span>기초 전투</span></span>
+      <span class="zone-progress"><span id="easyProgress">BOSS 0 / 5</span><i><b id="easyProgressBar"></b></i></span>
+      <span class="level-start">탐험 시작하기　⚔</span>
     </button>
     <button class="level-card" data-level="normal" type="button" style="--accent:#9fc3ff">
-      <span class="level-top"><span class="level-number">LEVEL 02 · BUILDER</span><span class="level-icon">◇</span></span>
-      <h3>보통</h3>
-      <p>1~54번 원소를 대상으로 이름과 기호, 원자번호를 서로 연결해 봐.</p>
-      <span class="level-meta"><span>1~54번 원소</span><span>문항당 15초</span><span>양방향 연습</span></span>
-      <span class="level-start">보통 시작하기　↗</span>
+      <span class="zone-art zone-art-two"><i></i><b></b><em>Fe</em></span>
+      <span class="level-top"><span class="level-number">SECTOR 02 · METAL FORTRESS</span><span class="level-icon">◇</span></span>
+      <h3>전이금속 요새</h3>
+      <p>54번 제논까지 확장된 구역. 이름과 기호, 원자번호를 섞어 공격하라.</p>
+      <span class="level-meta"><span>1~54번 원소</span><span>15초 제한</span><span>혼합 전투</span></span>
+      <span class="zone-progress"><span id="normalProgress">BOSS 0 / 5</span><i><b id="normalProgressBar"></b></i></span>
+      <span class="level-start">요새 진입하기　⚔</span>
     </button>
     <button class="level-card" data-level="hard" type="button" style="--accent:#ffdc8e">
-      <span class="level-top"><span class="level-number">LEVEL 03 · EXPERT</span><span class="level-icon">✧</span></span>
-      <h3>어려움</h3>
-      <p>1~118번 전체 원소가 등장해. 역방향 문제와 원자번호 문제까지 빠르게 풀어 봐.</p>
-      <span class="level-meta"><span>전체 118개 원소</span><span>문항당 10초</span><span>고난도 혼합</span></span>
-      <span class="level-start">어려움 도전하기　↗</span>
+      <span class="zone-art zone-art-three"><i></i><b></b><em>Og</em></span>
+      <span class="level-top"><span class="level-number">SECTOR 03 · DEEP SPACE</span><span class="level-icon">✧</span></span>
+      <h3>초중원소 심연</h3>
+      <p>118개 전체 원소가 등장한다. 제한 시간 10초, 최종 수호자에 도전하라.</p>
+      <span class="level-meta"><span>전체 118개 원소</span><span>10초 제한</span><span>엘리트 전투</span></span>
+      <span class="zone-progress"><span id="hardProgress">BOSS 0 / 5</span><i><b id="hardProgressBar"></b></i></span>
+      <span class="level-start">심연 진입하기　⚔</span>
     </button>
   </div>
-  <div class="section-head" style="margin-top:30px">
-    <div><h2>먼저 둘러보기</h2><p>원소의 위치와 기호를 확인하며 퀴즈를 준비할 수 있어.</p></div>
-    <span class="section-tag">EXPLORE ELEMENTS</span>
+
+  <div class="base-grid">
+    <div class="base-card collection-card">
+      <div class="base-card-head"><div><span class="map-eyebrow">RECOVERED ELEMENTS</span><h3>원소 수집 도감</h3></div><span class="collection-number"><strong id="collectionCount">0</strong><small> / 118</small></span></div>
+      <div class="collection-track"><i id="collectionBar"></i></div>
+      <div class="collection-preview" id="collectionPreview"><span class="empty-crystal">◇</span><span>전투에서 승리하고 원소를 수집해 봐.</span></div>
+      <button class="base-link" id="openAlbumButton" type="button">원소 도감 확인하기　↗</button>
+    </div>
+    <div class="base-card briefing-card">
+      <span class="map-eyebrow">FIELD MANUAL</span><h3>전투 방법</h3>
+      <div class="manual-row"><span class="manual-key">01</span><span><strong>정답 선택</strong><small>정답을 맞히면 보스에게 에너지 공격!</small></span></div>
+      <div class="manual-row"><span class="manual-key">02</span><span><strong>콤보 유지</strong><small>연속 정답일수록 공격력이 강해져.</small></span></div>
+      <div class="manual-row"><span class="manual-key">03</span><span><strong>실드 보호</strong><small>오답 3회면 전투가 종료돼.</small></span></div>
+      <div class="manual-row"><span class="manual-key">04</span><span><strong>원소 스캔</strong><small>한 전투에 한 번, 오답 선택지 2개 제거!</small></span></div>
+    </div>
   </div>
-  <div class="panel"><div class="panel-inner" style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap">
-    <div><div style="font-size:15px">인터랙티브 주기율표</div><div style="margin-top:6px;color:#91a7c8;font-size:11px;line-height:1.6">원소 카드를 눌러 원자번호, 이름, 기호와 분류를 확인해.</div></div>
-    <button class="primary-button" id="openTableButton" type="button">주기율표 열기　↗</button>
-  </div></div>
+  <div class="home-bottom"><span>ROCKEY SCIENCE CORPS</span><span>LEARN · FIGHT · COLLECT</span></div>
 </section>
 
 <section id="quizView" hidden>
-  <div class="panel"><div class="panel-inner">
-    <div class="game-top">
-      <div class="game-level"><span class="live-dot"></span><span id="gameLevelName">쉬움</span><span style="color:#647c9e">·</span><span id="gameScope">1~20번 원소</span></div>
-      <button class="text-button" id="quitButton" type="button">나가기</button>
+  <div class="battle-header">
+    <button class="text-button" id="quitButton" type="button">← 기지로 후퇴</button>
+    <div class="battle-chapter"><span class="battle-live"></span><span id="gameLevelName">기초 원소 평원</span><small id="battleStage">BOSS 01 / 05</small></div>
+    <div class="battle-xp"><span>전투 XP</span><strong id="battleXp">0</strong></div>
+  </div>
+  <div class="battlefield">
+    <div class="battlefield-stars"></div>
+    <div class="arena-caption"><span>HOSTILE ENTITY DETECTED</span><span id="bossPhase">PHASE 01</span></div>
+    <div class="guardian">
+      <div class="guardian-rings"><i></i><b></b><em></em></div>
+      <div class="guardian-orb" id="guardianOrb"><span id="guardianSymbol">Ne</span><small>ELEMENT CORE</small></div>
+      <div class="guardian-name" id="bossName">네온 수호자</div>
+      <div class="guardian-state" id="bossState">ENERGY SHIELD ACTIVE</div>
+      <div class="damage-pop" id="damagePop">-18</div>
+      <div class="guardian-hp"><div class="hp-caption"><span>BOSS INTEGRITY</span><strong id="bossHpText">100 / 100</strong></div><i><b id="bossHpFill"></b></i></div>
     </div>
-    <div class="progress-line"><span id="questionProgress"></span></div>
-    <div class="question-meta">
-      <span id="questionCount">QUESTION 01 / 10</span>
-      <div class="timer-wrap" id="timerWrap"><span id="timerText">20초</span><span class="timer-track"><i id="timerBar"></i></span></div>
+    <div class="battle-hud">
+      <div class="hud-cell"><span class="hud-label">RESEARCHER SHIELD</span><strong id="playerLives">♥ ♥ ♥</strong></div>
+      <div class="hud-cell"><span class="hud-label">COMBO CHAIN</span><strong id="comboValue">×0</strong></div>
+      <div class="hud-cell"><span class="hud-label">BATTLE SCORE</span><strong id="battleScore">0</strong></div>
     </div>
-    <div class="question-card">
-      <div class="question-label">ELEMENT QUIZ</div>
-      <div class="question-prompt" id="questionPrompt">기호 <strong>H</strong>인 원소는?</div>
-      <p class="question-hint" id="questionHint">가장 알맞은 답을 선택해 줘.</p>
+  </div>
+  <div class="battle-console">
+    <div class="console-top">
+      <div class="mission-tag"><span>MISSION</span><strong id="gameScope">원소 데이터 회수 작전</strong></div>
+      <div class="wave-tag" id="questionCount">WAVE 01 / 10</div>
     </div>
-    <div class="option-grid" id="optionGrid" aria-label="정답 선택지"></div>
+    <div class="mission-progress"><i><b id="questionProgress"></b></i><span id="waveStatus">TARGET LOCKED</span></div>
+    <div class="combat-question">
+      <div class="question-info"><span>IDENTIFY THE ELEMENT</span><div class="timer-wrap" id="timerWrap"><span id="timerText">20초</span><i><b id="timerBar"></b></i></div></div>
+      <div class="question-prompt" id="questionPrompt">기호 <strong>H</strong>인 원소의 이름은?</div>
+      <p class="question-hint" id="questionHint">정답을 맞히면 에너지 공격이 발사돼.</p>
+    </div>
+    <div class="option-grid" id="optionGrid" aria-label="공격 타깃 선택"></div>
+    <div class="console-bottom">
+      <button class="scanner-button" id="scannerButton" type="button"><span>⌕</span><strong>원소 스캔</strong><small>이번 전투 1회</small></button>
+      <div class="key-guide"><span>키보드 <b>1</b> <b>2</b> <b>3</b> <b>4</b> 로 선택</span><small id="scannerStatus">스캐너 준비 완료</small></div>
+    </div>
     <div class="feedback" id="questionFeedback" hidden aria-live="polite">
-      <div class="feedback-copy"><strong class="feedback-title" id="feedbackTitle">정답이야!</strong><span class="feedback-detail" id="feedbackDetail"></span></div>
-      <button class="primary-button" id="nextButton" type="button">다음 문제　→</button>
+      <div class="feedback-copy"><strong class="feedback-title" id="feedbackTitle">직격!</strong><span class="feedback-detail" id="feedbackDetail"></span></div>
+      <button class="primary-button" id="nextButton" type="button">다음 웨이브　→</button>
     </div>
-  </div></div>
+  </div>
 </section>
 
 <section id="resultView" hidden>
-  <div class="panel"><div class="panel-inner">
-    <div class="result-hero">
-      <div class="result-kicker">CHALLENGE COMPLETE</div>
-      <div class="result-score" id="resultScore">80<span> / 100</span></div>
-      <div class="result-caption" id="resultCaption">멋진 도전이야!</div>
-      <div class="result-stats">
-        <div class="result-stat"><strong id="resultCorrect">8</strong><span>정답</span></div>
-        <div class="result-stat"><strong id="resultAccuracy">80%</strong><span>정답률</span></div>
-        <div class="result-stat"><strong id="resultStreak">5</strong><span>최고 연속 정답</span></div>
-      </div>
+  <div class="result-screen">
+    <div class="result-aura"></div>
+    <div class="result-stamp" id="resultStamp">MISSION COMPLETE</div>
+    <div class="result-title" id="resultTitle">보스 격파!</div>
+    <p class="result-description" id="resultCaption">구역의 원소 에너지를 되찾았어.</p>
+    <div class="result-score" id="resultScore">820<span> PTS</span></div>
+    <div class="loot-row">
+      <div class="loot-card"><span>획득 경험치</span><strong id="resultXp">+180 XP</strong></div>
+      <div class="loot-card"><span>정답 횟수</span><strong id="resultCorrect">8 / 10</strong></div>
+      <div class="loot-card"><span>최고 콤보</span><strong id="resultStreak">5 HIT</strong></div>
     </div>
-    <div class="section-head"><div><h2>다시 확인할 문제</h2><p>틀린 문제는 원소 정보를 확인하고 한 번 더 익혀 봐.</p></div><span class="section-tag">REVIEW</span></div>
-    <div id="reviewEmpty" class="empty-note">모든 문제를 맞혔어! 완벽해. ✦</div>
-    <ul class="review-list" id="reviewList"></ul>
-    <div style="display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:20px">
-      <button class="primary-button" id="retryButton" type="button">같은 난이도 다시 도전　↻</button>
-      <button class="secondary-button" id="homeButton" type="button">난이도 선택</button>
+    <div class="loot-unlock" id="lootUnlock"><span class="loot-icon">✦</span><div><strong id="lootName">원소 데이터 획득!</strong><small id="lootDetail">원소 도감에 새로운 기록이 추가됐어.</small></div></div>
+    <div class="result-actions">
+      <button class="primary-button" id="retryButton" type="button">다시 도전　↻</button>
+      <button class="secondary-button" id="homeButton" type="button">기지로 돌아가기</button>
+      <button class="secondary-button" id="resultAlbumButton" type="button">원소 도감 보기</button>
     </div>
-  </div></div>
+  </div>
 </section>
 
 <section id="tableView" hidden>
