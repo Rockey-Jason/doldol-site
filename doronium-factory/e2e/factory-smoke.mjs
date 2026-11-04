@@ -76,6 +76,12 @@ try {
   assert.equal(ownershipCase.itemTotals.infinity, 1, "Completion-buffer items must be represented in custody");
   const ownershipOwners = ownershipCase.ownership.custody.map(x => x.ownerType);
   for (const owner of ["PLAYER_INVENTORY","ACTIVE_JOB","MACHINE_INPUT","MACHINE_OUTPUT","CONVEYOR","COMPLETION_BUFFER"]) assert.ok(ownershipOwners.includes(owner), "Missing custody owner type: " + owner);
+  const conflictGuard = await desktop.evaluate(() => window.__doroniumFactoryTest.runCloudConflictGuardTest());
+  assert.equal(conflictGuard.rpcCalls, 0, "Autosaves must not call Supabase RPC while a cloud conflict is unresolved");
+  assert.equal(conflictGuard.revision, 7, "A conflict must not advance the stale local revision to the newer remote revision");
+  assert.equal(conflictGuard.conflictLocked, true, "The conflict lock must remain active until the player explicitly resolves it");
+  assert.equal(conflictGuard.dirty, true, "The newer local state must remain marked for local persistence");
+
 
   assert.equal(audit.variantCount, 15, "15 canonical Doronium variants must be present");
   assert.equal(audit.uniqueVariants, 15, "Variant IDs must be unique");
