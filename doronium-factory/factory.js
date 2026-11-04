@@ -1269,6 +1269,14 @@ if(E2E_MODE){
    const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],batteryBefore:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ}
   },
   powerTopologyTick(){tick(STEP);const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],battery:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ,farStatus:S.buildings.find(b=>b.uid==="P-SMELTER-2").status}},
+  setupFluidRecipeConsumerTest(){
+   S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);S.buildings=[];
+   addItemStack(S,"ITEM_DORONUM_NORMAL",1,{quality:95,purity:95,synthetic:false});
+   addItemStack(S,"ITEM_IRON_ORE",1,{quality:95,purity:95,synthetic:false});
+   const machine={uid:"FLUID-RECIPE-CONSUMER",type:"variantLab",variant:"ITEM_DORONUM_SLIGHTLY_RUSTED",x:20,y:20,dir:1,condition:100,status:"IDLE",input:{},inputMeta:{},output:null,progress:0,temp:25,pressure:0,fluidAmountL:1,fluidType:"WATER"};
+   S.buildings.push(machine);tickBuilding(machine,STEP,1);
+   return {status:machine.status,fluidAmountL:machine.fluidAmountL,fluidType:machine.fluidType,progress:machine.progress,normalRemaining:availableItemCount(S,"ITEM_DORONUM_NORMAL"),ironOreRemaining:availableItemCount(S,"ITEM_IRON_ORE"),activeMeta:!!machine.activeMeta};
+  },
   setupFluidNetworkTest(){
    S=freshState();S.player={...S.player,viewMode:"map",layer:"surface"};S.seconds=8*3600;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=false;
    S.nodes["15,15"]={type:"water",amount:0,seed:123};
