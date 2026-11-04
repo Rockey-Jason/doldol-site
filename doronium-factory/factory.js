@@ -157,6 +157,22 @@ const VARIANT_RECIPES={
 const PURIFICATION_RECIPES=Object.freeze({
  PURIFY_RUSTED_DORONUM:{name:"부식 도로늄 정제",inputs:{"ITEM_DORONUM_RUSTED":1,"ITEM_CARBON_POWDER":2},fluidInputs:{WATER:2},output:"ITEM_DORONUM_RUSTED",qty:1,time:90,temp:650,pressure:200,purityLoss:0,outputQualityMin:90,outputPurityMin:90}
 });
+const CANONICAL_RECIPE_REGISTRY=Object.freeze({
+ RECIPE_DORONUM_COMPRESSOR_NORMAL:RECIPES.doronium,
+ RECIPE_DORONUM_YELLOW:VARIANT_RECIPES.ITEM_DORONUM_YELLOW,
+ RECIPE_DORONUM_ULTRA:VARIANT_RECIPES.ITEM_DORONUM_ULTRA,
+ RECIPE_DORONUM_BLUE:VARIANT_RECIPES.ITEM_DORONUM_BLUE,
+ RECIPE_DORONUM_RED:VARIANT_RECIPES.ITEM_DORONUM_RED,
+ RECIPE_DORONUM_IRON:VARIANT_RECIPES.ITEM_DORONUM_IRON,
+ RECIPE_DORONUM_ORANGE:VARIANT_RECIPES.ITEM_DORONUM_ORANGE,
+ RECIPE_DORONUM_SLIGHTLY_RUSTED:VARIANT_RECIPES.ITEM_DORONUM_SLIGHTLY_RUSTED,
+ RECIPE_DORONUM_RUSTED_OXIDATION:VARIANT_RECIPES.ITEM_DORONUM_RUSTED,
+ RECIPE_PURIFY_RUSTED_DORONUM:PURIFICATION_RECIPES.PURIFY_RUSTED_DORONUM,
+ RECIPE_DORONUM_TRANSLUCENT:VARIANT_RECIPES.ITEM_DORONUM_TRANSLUCENT,
+ RECIPE_DORONUM_THERMAL_CRYSTAL:VARIANT_RECIPES.ITEM_DORONUM_THERMAL_CRYSTAL,
+ RECIPE_DORONUM_COLD_CRYSTAL:VARIANT_RECIPES.ITEM_DORONUM_COLD_CRYSTAL,
+ RECIPE_DORONUM_BLACK:VARIANT_RECIPES.ITEM_DORONUM_BLACK
+});
 const CAMPAIGN_ONLY_DORONUM_IDS=Object.freeze(["ITEM_DORONUM_SPECIAL_EDITION","ITEM_DORONUM_LIMITED_EDITION"]);
 
 const SHIPPING_CONTRACTS=[
@@ -201,7 +217,7 @@ const DATA_VALIDATION=validateGameData({resources:RESOURCE,recipes:RECIPES,varia
 if(!DATA_VALIDATION.valid)console.error("Doronium Factory data validation failed",DATA_VALIDATION.errors);
 const CANONICAL_DORONUM_VALIDATION=validateCanonicalDoronumCatalog(CANONICAL_DORONUM_CATALOG);
 if(!CANONICAL_DORONUM_VALIDATION.valid)console.error("Canonical Doronum catalog validation failed",CANONICAL_DORONUM_VALIDATION.errors);
-const CANONICAL_DORONUM_INTEGRATION=auditCanonicalDoronumIntegration({catalog:CANONICAL_DORONUM_CATALOG,resources:RESOURCE,buildings:BUILDINGS,recipes:RECIPES,research:RESEARCH,fluidTypes:FLUID_TYPES,modelIDs:CANONICAL_DORONUM_CRYSTAL_MODELS});
+const CANONICAL_DORONUM_INTEGRATION=auditCanonicalDoronumIntegration({catalog:CANONICAL_DORONUM_CATALOG,resources:RESOURCE,buildings:BUILDINGS,recipes:{...RECIPES,...CANONICAL_RECIPE_REGISTRY},research:RESEARCH,fluidTypes:FLUID_TYPES,modelIDs:CANONICAL_DORONUM_CRYSTAL_MODELS});
 const QUESTS=[
 {id:"q1",chapter:0,title:"폐허의 첫걸음",desc:"숲에서 도끼로 목재 10개를 벌목하고, 첫 번째 광산에서 곡괭이로 석재 10개를 채굴하세요.",reward:250,check:s=>s.stats.gathered.wood>=10&&s.stats.gathered.stone>=10,progress:s=>Math.min(10,s.stats.gathered.wood)+Math.min(10,s.stats.gathered.stone),max:20,orbit:"“기초 자원 확보 확인. 이곳은 아직 충분히 복구할 수 있습니다.”"},
 {id:"q2",chapter:0,title:"첫 번째 전력망",desc:"작업 구역을 평탄화하고 기초 타일을 설치한 뒤 태양광 발전기를 건설하세요. 광산에서 철광석 8개도 확보해야 합니다.",reward:400,check:s=>Object.keys(s.foundation||{}).length>0&&hasBuilding(s,"solar")&&(s.stats.gathered.ironOre||0)>=8,progress:s=>(Object.keys(s.foundation||{}).length>0?1:0)+(hasBuilding(s,"solar")?1:0)+Math.min(1,Math.floor((s.stats.gathered.ironOre||0)/8)),max:3,orbit:"“전력 계통이 연결되었습니다. 산업 설비를 가동할 수 있습니다.”"},
