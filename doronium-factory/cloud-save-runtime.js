@@ -14,3 +14,20 @@ export async function writeCloudSave(client,{storageKey,userId,value,expectedRev
  if(!Number.isSafeInteger(revision)||revision<=expectedRevision)throw new Error("INVALID_CLOUD_SAVE_REVISION");
  return {saved:true,revision,updatedAt:row.updated_at||null};
 }
+
+export async function readCloudSaveSnapshot(client,{storageKey="doronium_factory_infinite_industry_v1"}={}){
+ if(!client||typeof client.from!=="function")throw new TypeError("Supabase query client required");
+ if(storageKey!=="doronium_factory_infinite_industry_v1")throw new TypeError("unsupported save key");
+ const {data,error}=await client.from("dori_cloud_storage").select("storage_value,updated_at,save_revision").eq("storage_key",storageKey).eq("is_deleted",false).maybeSingle();
+ if(error)throw error;
+ if(!data)return {exists:false,revision:0,updatedAt:null,envelope:null};
+ const revision=Number(data.save_revision);
+ if(!Number.isSafeInteger(revision)||revision<0)throw new Error("INVALID_REMOTE_SAVE_REVISION");
+ if(!data.storage_value||typeof data.storage_value!=="object"||!data.storage_value.state)throw new Error("INVALID_REMOTE_SAVE_ENVELOPE");
+ return {exists:true,revision,updatedAt:data.updated_at||data.storage_value.savedAt||null,envelope:data.storage_value};
+}
+export async function replaceCloudSaveAfterExplicitConflict(client,{storageKey="doronium_factory_infinite_industry_v1",userId,value}={}){
+ const latest=await readCloudSaveSnapshot(client,{storageKey});
+ const result=await writeCloudSave(client,{storageKey,userId,value,expectedRevision:latest.revision});
+ return {...result,previous:latest};
+}
