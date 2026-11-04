@@ -1,9 +1,10 @@
-const CACHE_NAME = "doldol-site-pwa-v27-periodic-infinite-20261104";
+const CACHE_NAME = "doldol-site-pwa-v28-original-mascot-20261104";
 const APP_SHELL = [
   "/doldol-site/",
   "/doldol-site/index.html",
   "/doldol-site/rockey-study.html",
   "/doldol-site/rockey-study-periodic.html",
+  "/doldol-site/assets/dori-mascot.webp",
   "/doldol-site/rockey-time-attack.html",
   "/doldol-site/rockey-study-planner.html",
   "/doldol-site/rockey-study-focus.html",
