@@ -60,7 +60,8 @@ try {
   assert.equal(audit.canonicalCrystalModelCount, 15, "All 15 canonical Doronum variants must have separate model profiles");
   assert.equal(audit.canonicalCrystalModelShapes, 15, "Canonical Doronum variants must use 15 distinct geometry families");
   assert.equal(audit.allCanonicalCrystalModels, true, "Every canonical Doronum ID must resolve to a 3D crystal model");
-  assert.equal(audit.canonicalDoronumIntegration.complete, false, "Unimplemented live canonical dependencies must remain visible as an explicit release blocker");
+  assert.equal(audit.canonicalDoronumIntegration.complete, true, "Canonical Doronum items, models, raw inputs, machines, recipe references, research, fluids and campaign contracts must all resolve");
+  for (const key of ["missingRawResources", "missingMachines", "missingRecipes", "missingResearch", "missingFluids", "missingContracts", "missingProductionLines"]) assert.equal(audit.canonicalDoronumIntegration[key].length, 0, `Canonical integration has unresolved ${key}`);
   assert.equal(audit.canonicalDoronumIntegration.missingCanonicalItems.length, 0, "All 15 canonical Doronum IDs must exist in the active resource registry");
   assert.equal(audit.canonicalDoronumIntegration.missingModels.length, 0, "Every canonical item must resolve to an actual Three.js crystal model profile");
   assert.equal(audit.runtimeValidation.valid, true, "Initial item stacks and reservations must validate");
