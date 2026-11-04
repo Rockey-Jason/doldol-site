@@ -1,5 +1,5 @@
 import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES, CANONICAL_DORONUM_CRYSTAL_MODELS } from "./world3d.js?v=20";
-import { createRuntimeState, ensureItemStacks, addItemStack, allocateEntityID, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, reserveQualifiedItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=6";
+import { createRuntimeState, ensureItemStacks, addItemStack, allocateEntityID, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, reserveQualifiedItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, TICK_STAGE_ORDER, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=6";
 import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=4";
 import { validateGameData } from "./game-data-validation.js?v=3";
 import { CANONICAL_DORONUM_CATALOG, validateCanonicalDoronumCatalog, auditCanonicalDoronumIntegration, applyDoronumMigration, canonicalItemID } from "./canonical-data.js?v=3";
@@ -1010,7 +1010,7 @@ function tickSupportFailure(b,dt,ratio,profile=FAILURE_PROFILES[b.type]){
  if(event&&applyMachineFailure(b,event)){log("설비 고장 · "+(buildingDef(b.type)?.name||b.type)+" / "+event.grade.toUpperCase(),"warn");markDirty();return true}
  return false;
 }
-function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;
+function tickBuilding(b,dt,power,context=null){const d=buildingDef(b.type);if(!d)return;
  if(b.type==="BUILDING_FIRST_FACTORY_LEGACY_BATCH_LINE"&&!b.legacyLineRepaired&&!b.failureRepair){b.condition=0;b.failureRepair={grade:"critical",broken:true,repairSeconds:120,repairCondition:85,repairMaterials:{ironPlate:20,circuit:10},residue:{type:"legacy_line_rebuild",amount:1}};b.status="BROKEN"}
  if(b.failureRepair){
   if(b.maintenanceTimer>0){b.maintenanceTimer=Math.max(0,b.maintenanceTimer-dt);b.status="MAINTENANCE";if(b.maintenanceTimer<=0&&completeMachineRepair(b)){if(b.layer==="mine"&&d.kind==="miner")b.drillDurability=1000;if(b.type==="BUILDING_FIRST_FACTORY_LEGACY_BATCH_LINE")b.legacyLineRepaired=true;log("기계 정비 완료 · "+d.name,"good");markDirty()}return}
@@ -1034,7 +1034,7 @@ function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;
  }
  if(b.type==="pump"){if(tickSupportFailure(b,dt,ratio))return;if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=5){b.progress=0;node.amount=Math.max(0,node.amount-3);createOutput(b,"water",3,{quality:100,purity:100,synthetic:false})}return}
  if(b.type==="doriFarm"){if(tickSupportFailure(b,dt,ratio))return;if(ratio<.8){b.status="PAUSED_POWER";return}const target=findNearbyDoriNode(b.x,b.y),node=target?.node;if(!node){b.status="NO_INPUT";return}if(node.cooldown>0){b.status="GROWING";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=60){const fluidAvailable=b.fluidType==="WATER"?Math.max(0,Number(b.fluidAmountL)||0):0;const fromFluid=Math.min(2,fluidAvailable),fromItems=2-fromFluid;if(itemCount("water")<fromItems){b.status="NO_INPUT";b.progress=59;return}if(fromFluid>0){b.fluidAmountL=fluidAvailable-fromFluid;if(b.fluidAmountL<=1e-9){b.fluidAmountL=0;b.fluidType=null}}if(fromItems>0)takeItem("water",fromItems);startNodeCooldown(target.x,target.y,node,60);b.progress=0;createOutput(b,"doriMeat",1,{quality:S.research.includes("bio")?95:92,purity:90,synthetic:false})}return}
- if(d.kind==="machine"||d.kind==="reactor"||d.kind==="variant"){tickMachine(b,dt,ratio);return}
+ if(d.kind==="machine"||d.kind==="reactor"||d.kind==="variant"){if(context?.machinePipelineActive)return;tickMachine(b,dt,ratio);return}
  if(d.kind==="campaignLine"){if(tickSupportFailure(b,dt,ratio))return;b.status="IDLE";return}
 }
 function recipeHasSyntheticInput(b,r){for(const[rawID,n]of Object.entries(r.inputs)){const id=canonicalItemID(rawID);let remaining=n;const buffered=Math.min(remaining,b.input?.[id]||0);if(buffered&&b.inputMeta?.[id]?.synthetic)return true;remaining-=buffered;if(remaining&&S.meta[id]?.synthetic)return true}return false}
@@ -1043,7 +1043,7 @@ function tickMachine(b,dt,ratio){
   if(b.maintenanceTimer>0){b.maintenanceTimer=Math.max(0,b.maintenanceTimer-dt);b.status="MAINTENANCE";if(b.maintenanceTimer<=0){completeMachineRepair(b);log("기계 정비 완료 · "+(buildingDef(b.type)?.name||b.type),"good");markDirty()}return}
   b.status=b.failureRepair.broken?"BROKEN":"MAINTENANCE";return;
  }
- const r=recipeFor(b);if(!r){b.status="ERROR";b.errorCode="NO_RECIPE";return}
+ const r=b.activeMeta&&b.activeRecipeSnapshot?b.activeRecipeSnapshot:recipeFor(b);if(!r){b.status="ERROR";b.errorCode="NO_RECIPE";return}
  if(b.output){b.status="PAUSED_OUTPUT";return}
  if(Number(b.condition??b.durability??100)<=0){b.condition=0;b.status="BROKEN";return}
  const power=resolveMachinePower(ratio,buildingDef(b.type)?.power||0);
@@ -1052,7 +1052,7 @@ function tickMachine(b,dt,ratio){
   if(buildingDef(b.type)?.kind==="reactor"&&recipeHasSyntheticInput(b,r)){b.status="ERROR";b.errorCode="SYNTHETIC_DORONUM_INPUT";return}
   if(!power.canProgress){b.status="PAUSED_POWER";return}
   const meta=consumeRecipe(b,r);if(!meta){b.status="WAITING_INPUT";return}
-  b.activeMeta=meta;b.activeInputQuantities=meta.consumedInputs||[];b.activeRecipe=r.name;b.temp=Number.isFinite(Number(b.temp))?b.temp:25;b.pressure=Number.isFinite(Number(b.pressure))?b.pressure:0;b.progress=0;
+  b.activeMeta=meta;b.activeInputQuantities=meta.consumedInputs||[];b.activeRecipe=r.name;b.activeRecipeSnapshot=structuredClone(r);b.temp=Number.isFinite(Number(b.temp))?b.temp:25;b.pressure=Number.isFinite(Number(b.pressure))?b.pressure:0;b.progress=0;
  }
  const environment=advanceMachineEnvironment(b,r,dt,ratio);
  if(!power.canProgress){b.status="PAUSED_POWER";return}
@@ -1076,7 +1076,7 @@ function tickMachine(b,dt,ratio){
  const qualityOut=Math.max(Number(r.outputQualityMin)||0,calculateOutputQuality({materialQuality:b.activeMeta.quality,temperatureQuality:environment.temperatureQuality,pressureQuality:environment.pressureQuality,machineConditionQuality:wear.condition,powerStability:clamp(ratio*100,0,100),recipeModifier:(Number(r.qualityModifier)||0)+(r.allowSkillQualityBonus===true?calculateSkillBonuses(S.skills).recipeQualityModifier:0),pollutionPenalty:Number(b.pollutionPenalty)||0}));
  const purityOut=Math.max(Number(r.outputPurityMin)||0,calculateOutputPurity({inputPurity:b.activeMeta.purity,processLoss:Number(r.purityLoss??2),purificationBonus:S.research.includes("purity")?12:0,modifier:S.research.includes("chemistry")?2:0}));
  const meta={quality:qualityOut,purity:purityOut,synthetic:b.activeMeta.synthetic};
- if(createOutput(b,id,r.qty||1,meta)){b.progress=0;b.activeMeta=null;b.activeInputQuantities=[];b.activeRecipe=null}
+ if(createOutput(b,id,r.qty||1,meta)){b.progress=0;b.activeMeta=null;b.activeInputQuantities=[];b.activeRecipe=null;b.activeRecipeSnapshot=null}
 }
 function repairMachine(b){
  if(!b?.failureRepair){toast("정비가 필요한 고장이 없습니다.");return false}
@@ -1140,21 +1140,164 @@ function tickFluidSystems(dt,power){
  for(const node of nodes){const building=S.buildings.find(b=>String(b.uid)===node.id);if(!building)continue;building.fluidAmountL=Math.max(0,node.amountL);building.fluidType=node.fluidType||null;building.fluidPressureKPa=Math.max(0,node.pressureKPa||0);building.fluidTemperatureC=Number(node.temperatureC)||20;building.fluidContaminants=node.contaminants||[];building.fluidNetworkID=result.networkByID[node.id]||null;}
  return result;
 }
+function isProductionMachine(building){
+ const kind=buildingDef(building.type)?.kind;
+ return kind==="machine"||kind==="reactor"||kind==="variant";
+}
+function reservationIntegrityPhase(context){
+ const audit=(S.tick%10===0)?validateRuntimeState(S):{valid:true,skipped:true,errors:[]};
+ context.reservationAudit=audit;context.reservationBlocked=!audit.valid;
+ if(!audit.valid){
+  S.runtime.reservationIntegrityErrors=audit.errors.slice(0,30);
+  for(const building of S.buildings)if(isProductionMachine(building)&&!building.activeMeta){building.status="ERROR";building.errorCode="ITEM_RESERVATION_INTEGRITY"}
+ }else if(S.runtime.reservationIntegrityErrors?.length){S.runtime.reservationIntegrityErrors=[]}
+ context.machineWork=new Map();
+ for(const building of S.buildings){
+  if(!isProductionMachine(building))continue;
+  const work={building,recipe:null,power:null,environment:null,wear:null,blocked:false,failureEvent:null,pendingOutput:null};
+  context.machineWork.set(String(building.uid),work);
+  if(building.failureRepair){
+   if(building.maintenanceTimer>0){
+    building.maintenanceTimer=Math.max(0,Number(building.maintenanceTimer)-context.dt);building.status="MAINTENANCE";
+    if(building.maintenanceTimer<=0&&completeMachineRepair(building)){
+     if(building.layer==="mine"&&buildingDef(building.type)?.kind==="miner")building.drillDurability=1000;
+     log("기계 정비 완료 · "+(buildingDef(building.type)?.name||building.type),"good");markDirty();
+    }
+   }else building.status=building.failureRepair.broken?"BROKEN":"MAINTENANCE";
+   work.blocked=true;continue;
+  }
+  if(building.output){building.status="PAUSED_OUTPUT";work.blocked=true;continue}
+  if(Number(building.condition??building.durability??100)<=0){building.condition=0;building.status="BROKEN";work.blocked=true;continue}
+  work.recipe=building.activeMeta&&building.activeRecipeSnapshot?building.activeRecipeSnapshot:recipeFor(building);
+  if(!work.recipe){building.status="ERROR";building.errorCode="NO_RECIPE";work.blocked=true}
+  else if(building.activeMeta&&!building.activeRecipeSnapshot){building.activeRecipeSnapshot=structuredClone(work.recipe);building.activeRecipe=work.recipe.name||building.activeRecipe}
+ }
+}
+function speedResolvePhase(context){
+ const allocations=context.power?.allocations||{};
+ for(const [id,work] of context.machineWork||[]){
+  const b=work.building;if(work.blocked||!work.recipe)continue;
+  const ratio=allocations[id]?.ratio??((buildingDef(b.type)?.power||0)>0?0:1);
+  work.power=resolveMachinePower(ratio,buildingDef(b.type)?.power||0);
+  if(!b.activeMeta){
+   if(context.reservationBlocked){b.status="ERROR";b.errorCode="ITEM_RESERVATION_INTEGRITY";work.blocked=true;continue}
+   if(buildingDef(b.type)?.kind==="reactor"&&recipeHasSyntheticInput(b,work.recipe)){b.status="ERROR";b.errorCode="SYNTHETIC_DORONUM_INPUT";work.blocked=true;continue}
+   if(!canConsumeRecipe(b,work.recipe)){b.status="WAITING_INPUT";work.blocked=true;continue}
+   if(!work.power.canProgress){b.status=work.power.status;work.blocked=true;continue}
+   const meta=consumeRecipe(b,work.recipe);
+   if(!meta){b.status="WAITING_INPUT";work.blocked=true;continue}
+   b.activeMeta=meta;b.activeInputQuantities=meta.consumedInputs||[];b.activeRecipe=work.recipe.name||String(work.recipe.output||"");b.activeRecipeSnapshot=structuredClone(work.recipe);
+   b.temp=Number.isFinite(Number(b.temp))?Number(b.temp):25;b.pressure=Number.isFinite(Number(b.pressure))?Number(b.pressure):0;b.progress=0;
+  }
+  work.recipe=b.activeRecipeSnapshot||work.recipe;
+  work.inputReady=true;
+ }
+}
+function temperatureUpdatePhase(context){
+ for(const work of context.machineWork?.values()||[]){
+  if(work.blocked||!work.inputReady||!work.recipe||!work.power)continue;
+  work.environment=advanceMachineEnvironment(work.building,work.recipe,context.dt,work.power.ratio);
+ }
+}
+function qualityValidationPhase(context){
+ for(const work of context.machineWork?.values()||[]){
+  if(work.blocked||!work.inputReady)continue;
+  const meta=work.building.activeMeta;
+  if(!meta||!Number.isFinite(Number(meta.quality))||!Number.isFinite(Number(meta.purity))||Number(meta.quality)<0||Number(meta.quality)>100||Number(meta.purity)<0||Number(meta.purity)>100){
+   work.building.status="ERROR";work.building.errorCode="INVALID_ACTIVE_INPUT_METADATA";work.blocked=true;continue;
+  }
+  meta.quality=clamp(meta.quality,0,100);meta.purity=clamp(meta.purity,0,100);meta.synthetic=!!meta.synthetic;
+ }
+}
+function machineWearPhase(context){
+ for(const work of context.machineWork?.values()||[]){
+  if(work.blocked||!work.inputReady||!work.power?.canProgress||!work.environment?.safe)continue;
+  work.wear=applyMachineWear(work.building,work.recipe,context.dt,work.power.ratio);
+  if(work.wear.broken){work.building.status="BROKEN";work.building.activeFailureReason="CONDITION_DEPLETED";work.blocked=true}
+  else if(work.wear.maintenanceRecommended)work.building.maintenanceRecommended=true;
+ }
+}
+function machineProgressPhase(context){
+ for(const building of S.buildings)tickBuilding(building,context.dt,context.power||currentPower(),context);
+ for(const work of context.machineWork?.values()||[]){
+  const b=work.building;
+  if(work.blocked||!work.inputReady||!work.power?.canProgress)continue;
+  if(!work.environment?.safe){b.status="COOLING";continue}
+  if(!work.wear||work.wear.broken)continue;
+  b.progress=Math.max(0,Number(b.progress)||0)+context.dt*work.power.progressMultiplier*work.wear.progressMultiplier;
+  b.status=work.power.status;
+ }
+}
+function machineFailureCheckPhase(context){
+ for(const work of context.machineWork?.values()||[]){
+  const b=work.building,profile=FAILURE_PROFILES[b.type];
+  if(work.blocked||!work.inputReady||!work.power?.canProgress||!work.environment?.safe||!work.wear||!profile)continue;
+  b.tick=Number(S.tick)||0;advanceFailureExposure(b,context.dt,true);
+  const risks=calculateFailureRisks({profile,temperature:Number(b.temp),targetTemperature:work.environment.targetTemperature,safeTemperatureMin:work.environment.tempMin,safeTemperatureMax:work.environment.tempMax,pressure:Number(b.pressure),targetPressure:work.environment.targetPressure,safePressureMin:work.environment.pressureMin,safePressureMax:work.environment.pressureMax,powerRatio:work.power.ratio,condition:work.wear.condition,actualLoad:1,nominalLoad:1});
+  const hazard=calculateFailureHazard(profile,risks,context.dt);
+  work.failureEvent=rollMachineFailure(S.runtime,b,profile,hazard)||null;
+ }
+}
+function machineFailureResolutionPhase(context){
+ for(const work of context.machineWork?.values()||[]){
+  if(!work.failureEvent)continue;
+  const b=work.building;
+  if(applyMachineFailure(b,work.failureEvent)){
+   work.blocked=true;b.status=b.failureRepair?.broken?"BROKEN":"MAINTENANCE";
+   log("기계 고장 · "+(buildingDef(b.type)?.name||b.type)+" / "+work.failureEvent.grade.toUpperCase(),"warn");markDirty();
+  }
+ }
+}
+function outputQualityPurityPhase(context){
+ for(const work of context.machineWork?.values()||[]){
+  const b=work.building,r=work.recipe;
+  if(work.blocked||!work.inputReady||!b.activeMeta||!r||!work.power?.canProgress||!work.environment?.safe||!work.wear||work.failureEvent)continue;
+  if(Number(b.progress)<Math.max(.001,Number(r.time)||0))continue;
+  const id=r.output||(b.type==="variantLab"?b.variant||"ITEM_DORONUM_BLUE":null);
+  if(!id||!RESOURCE[canonicalItemID(id)]){b.status="ERROR";b.errorCode="INVALID_RECIPE_OUTPUT";work.blocked=true;continue}
+  const qualityOut=Math.max(Number(r.outputQualityMin)||0,calculateOutputQuality({materialQuality:b.activeMeta.quality,temperatureQuality:work.environment.temperatureQuality,pressureQuality:work.environment.pressureQuality,machineConditionQuality:work.wear.condition,powerStability:clamp(work.power.ratio*100,0,100),recipeModifier:(Number(r.qualityModifier)||0)+(r.allowSkillQualityBonus===true?calculateSkillBonuses(S.skills).recipeQualityModifier:0),pollutionPenalty:Number(b.pollutionPenalty)||0}));
+  const purityOut=Math.max(Number(r.outputPurityMin)||0,calculateOutputPurity({inputPurity:b.activeMeta.purity,processLoss:Number(r.purityLoss??2),purificationBonus:S.research.includes("purity")?12:0,modifier:S.research.includes("chemistry")?2:0}));
+  work.pendingOutput={id:canonicalItemID(id),qty:r.qty||1,meta:{quality:qualityOut,purity:purityOut,synthetic:!!b.activeMeta.synthetic}};
+ }
+}
+function completionBufferPhase(context){
+ for(const work of context.machineWork?.values()||[]){
+  if(!work.pendingOutput)continue;
+  const b=work.building;
+  if(createOutput(b,work.pendingOutput.id,work.pendingOutput.qty,work.pendingOutput.meta)){
+   b.progress=0;b.activeMeta=null;b.activeInputQuantities=[];b.activeRecipe=null;b.activeRecipeSnapshot=null;b.maintenanceRecommended=false;
+  }
+ }
+}
 function tick(dt){
  if(S.paused||S.victory)return;
- const context={state:S,dt,power:null};
- runCanonicalTick(context,{
+ const context={state:S,dt,power:null,machinePipelineActive:true,machineWork:new Map()};
+ const handlers={
   STATE_READ(){S.seconds+=dt;S.tick++;if(!E2E_MODE)updateSurvival(dt);ensureCooldownIndex();for(const key of activeCooldownKeys){const node=S.nodes?.[key];if(!node||!(node.cooldown>0)){activeCooldownKeys.delete(key);continue}node.cooldown=Math.max(0,node.cooldown-dt);if(node.cooldown<=0)activeCooldownKeys.delete(key)}},
-  PRODUCTION_STATE(){for(const b of S.buildings){if((b.type==="coalgen"||b.type==="mineGen")&&b.fuelTimer<=0&&itemCount("coal")>0){takeItem("coal",1);b.fuelTimer=24;b.status="RUNNING"}}},
+  RESERVATION_RESOLVE(){reservationIntegrityPhase(context)},
   POWER_RESOLVE(){context.power=currentPower()},
+  PRODUCTION_STATE(){for(const b of S.buildings){if((b.type==="coalgen"||b.type==="mineGen")&&b.fuelTimer<=0&&itemCount("coal")>0){takeItem("coal",1);b.fuelTimer=24;b.status="RUNNING"}}},
+  SPEED_RESOLVE(){speedResolvePhase(context)},
+  TEMPERATURE_UPDATE(){temperatureUpdatePhase(context)},
   PRESSURE_UPDATE(){context.fluid=tickFluidSystems(dt,context.power||currentPower())},
-  PRODUCTION_PROGRESS(){for(const b of S.buildings)tickBuilding(b,dt,context.power||currentPower())},
+  QUALITY(){qualityValidationPhase(context)},
+  WEAR(){machineWearPhase(context)},
   POWER_STABILITY(){context.power=currentPower();settlePowerStorage(context.power)},
+  PRODUCTION_PROGRESS(){machineProgressPhase(context)},
+  FAILURE_CHECK(){machineFailureCheckPhase(context)},
+  FAILURE_RESOLUTION(){machineFailureResolutionPhase(context)},
+  OUTPUT_QUALITY_PURITY(){outputQualityPurityPhase(context)},
+  COMPLETION_BUFFER(){completionBufferPhase(context)},
   CONVEYOR_TRANSFER(){tickBelts(dt)},
   METRICS(){tickResearch(dt,(context.power||currentPower()).ratio);if(S.fusionJob)updateFusion(dt);const arrived=advanceShipments(S,S.contractRuntime,dt);if(arrived.length){for(const shipment of arrived)log((shipment.status==="DELIVERED"?"배송 성공":"배송 실패")+" · "+shipment.contractID,shipment.status==="DELIVERED"?"good":"warn");markDirty()}if(S.tick%10===0){questCheck();if(!E2E_MODE){renderHud();if(activePanel==="factory")renderFactory();if(activePanel==="inventory")renderInventory();if(activePanel==="mission")renderMissions();if(activePanel==="research")renderResearch()}}},
   SAVE_SNAPSHOT_REQUEST(){if(S.tick%10===0){rebuildOwnershipLedger(S);S.runtime.saveSnapshotRequested=true;markDirty()}else S.runtime.saveSnapshotRequested=false}
- });
+ };
+ const missing=TICK_STAGE_ORDER.filter(stage=>typeof handlers[stage]!=="function");
+ if(missing.length)throw new Error("MISSING_TICK_STAGE_HANDLERS:"+missing.join(","));
+ const trace=runCanonicalTick(context,handlers);
+ context.lastStageTrace=trace;
 }
+
 function renderEventsSafe(){try{renderEvents()}catch{}}
 function startMiningClick(x,y){const node=tileNode(x,y);if(node){harvestNode(x,y,node);return}S.player.x=x;S.player.y=y;revealAround();world3d.center(x,y);markDirty();drawWorld()}
 function canvasSize(){const r=canvas.getBoundingClientRect();if(!r.width||!r.height)return;dpr=Math.min(2,window.devicePixelRatio||1);const w=Math.floor(r.width*dpr),h=Math.floor(r.height*dpr);if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h}ctx.setTransform(dpr,0,0,dpr,0,0);return {w:r.width,h:r.height}}
