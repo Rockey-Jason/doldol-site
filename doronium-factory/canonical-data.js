@@ -185,7 +185,7 @@ export function auditCanonicalDoronumIntegration({
  for(const item of catalog||[]){
   if(!resourceIDs.has(item.id))missingCanonicalItems.push(item.id);
   if(!new Set(modelIDs).has(item.modelProfileID))missingModels.push(item.modelProfileID);
-  for(const recipeRef of item.recipeRefs||[])if(!recipeIDs.has(recipeRef))missingRecipes.add(recipeRef);
+  if(item.recipe)for(const recipeRef of item.recipeRefs||[])if(!recipeIDs.has(recipeRef))missingRecipes.add(recipeRef);
   if(item.recipe){
    if(!buildingIDs.has(item.recipe.machineID))missingMachines.add(item.recipe.machineID);
    for(const input of Object.keys(item.recipe.inputs||{})){
