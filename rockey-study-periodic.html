@@ -192,8 +192,8 @@ h1 span{color:#9bc1ff}
 .approach-wall i{position:absolute;top:0;bottom:0;width:5px;background:linear-gradient(180deg,rgba(142,226,247,.05),rgba(131,223,245,.48),rgba(142,226,247,.08));box-shadow:0 0 12px rgba(105,218,244,.4)}
 .approach-wall i:nth-child(1){left:24%}.approach-wall i:nth-child(2){left:50%}.approach-wall i:nth-child(3){left:76%}
 .approach-wall b{position:absolute;left:0;right:0;top:50%;height:3px;background:rgba(140,221,244,.25);box-shadow:0 0 12px rgba(105,218,244,.4)}
-#optionGrid.gate-approaching{transform-origin:50% 6%;will-change:transform,opacity;animation:gateApproach var(--approach-duration,12s) cubic-bezier(.18,.62,.3,1) forwards}
-#approachWall.wall-approaching{will-change:transform,opacity;animation:wallApproach var(--approach-duration,12s) cubic-bezier(.18,.62,.3,1) forwards}
+#optionGrid.gate-approaching{z-index:3;transform-origin:50% 12%;will-change:transform,opacity;animation:gateApproach var(--approach-duration,12s) cubic-bezier(.18,.62,.3,1) forwards}
+#approachWall.wall-approaching{z-index:2;will-change:transform,opacity;animation:wallApproach var(--approach-duration,12s) cubic-bezier(.18,.62,.3,1) forwards}
 #optionGrid.gate-approaching .gate{animation:gateVibrate 1.2s ease-in-out infinite alternate}
 .runner-particles{position:absolute;z-index:8;inset:0;overflow:hidden;pointer-events:none}
 .runner-particles i{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--particle-color,#9af1e6);box-shadow:0 0 12px var(--particle-color,#9af1e6);animation:particleBurst .78s ease-out forwards}
@@ -202,12 +202,12 @@ h1 span{color:#9bc1ff}
 .runner-stage.is-hit.gate-crossing{animation:runnerImpact .36s linear 2}
 .runner-stage.gate-crossing .runner-track:before{animation-duration:.19s}
 .runner-stage.gate-crossing .track-grid{animation-duration:.22s}
-@keyframes gateApproach{0%{transform:translate3d(0,-20px,-250px) scale(.46);opacity:.28;filter:brightness(.55) saturate(.65)}18%{opacity:.62}55%{opacity:.92;filter:brightness(1)}100%{transform:translate3d(0,122px,78px) scale(1.08);opacity:1;filter:brightness(1.2)}}
-@keyframes wallApproach{0%{transform:translate3d(0,-20px,-250px) scale(.46);opacity:.08}25%{opacity:.25}75%{opacity:.48}100%{transform:translate3d(0,112px,72px) scale(1.08);opacity:.7}}
+@keyframes gateApproach{0%{transform:translate3d(0,-12px,0) scale(.72);opacity:.32;filter:brightness(.62) saturate(.7)}18%{opacity:.68}55%{opacity:.94;filter:brightness(1)}100%{transform:translate3d(0,24px,0) scale(1.035);opacity:1;filter:brightness(1.12)}}
+@keyframes wallApproach{0%{transform:translate3d(0,-10px,0) scale(.68);opacity:.08}25%{opacity:.24}75%{opacity:.44}100%{transform:translate3d(0,28px,0) scale(1.035);opacity:.62}}
 @keyframes gateVibrate{from{filter:brightness(.92)}to{filter:brightness(1.18)}}
 @keyframes particleBurst{0%{transform:translate(-50%,-50%) scale(.2);opacity:0}18%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.08);opacity:0}}
 @keyframes runnerImpact{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}}
-@media(max-width:760px){.runner-dori{width:84px;height:auto;aspect-ratio:320/318;bottom:12px}.approach-wall{left:8%;right:8%;height:62%}#optionGrid.gate-approaching{transform-origin:50% 6%}}
+@media(max-width:760px){.runner-dori{width:84px;height:auto;aspect-ratio:320/318;bottom:12px}.approach-wall{left:8%;right:8%;height:58%}#optionGrid.gate-approaching{transform-origin:50% 12%}}
 </style>
 </head>
 <body>
