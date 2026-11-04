@@ -44,10 +44,15 @@ export function advancePackagingStage(gameState,contractState,shipmentID){
 export function dispatchContractShipment(gameState,contractState,shipmentID){
  const shipment=contractState.shipments.find(s=>s.shipmentID===shipmentID);
  if(!shipment||shipment.status!=="READY")return {ok:false,reason:"NOT_READY"};
+ const reservation=gameState.runtime?.reservations?.[shipment.reservationID];
+ if(!reservation||reservation.status!=="reserved"||reservation.itemID!==shipment.itemID||reservation.quantity!==shipment.quantity)return {ok:false,reason:"CARGO_RESERVATION_MISMATCH"};
+ const stackByID=new Map((gameState.runtime?.itemStacks||[]).map(stack=>[stack.runtimeID,stack]));
+ const reservedQuantity=(reservation.allocations||[]).reduce((n,allocation)=>{const stack=stackByID.get(allocation.stackID);if(!stack||stack.itemID!==shipment.itemID||!Number.isSafeInteger(allocation.quantity)||allocation.quantity<=0||stack.quantity<allocation.quantity)return NaN;return n+allocation.quantity},0);
+ if(reservedQuantity!==shipment.quantity)return {ok:false,reason:"CARGO_ALLOCATION_MISMATCH"};
  const removed=commitItemReservations(gameState,[shipment.reservationID]);
  if(!removed)return {ok:false,reason:"CARGO_RESERVATION_LOST"};
  const quantity=removed.reduce((n,s)=>n+s.quantity,0);
- if(quantity!==shipment.quantity)return {ok:false,reason:"CARGO_QUANTITY_MISMATCH"};
+ if(quantity!==shipment.quantity)throw new Error("CONTRACT_CARGO_ATOMICITY_VIOLATION");
  syncLegacyInventory(gameState);
  shipment.cargo=removed.map(s=>({...s}));shipment.reservationID=null;shipment.status="IN_TRANSIT";shipment.dispatchedAt=Number(gameState.seconds)||0;
  record(contractState,{eventID:"DISPATCH:"+shipmentID,type:"DISPATCHED",shipmentID,quantity});
