@@ -113,6 +113,6 @@ test("critical failure enters BROKEN and requires an explicit repair",()=>{
 });
 
 test("every live factory utility, mining, fluid, logistics and campaign facility has a valid failure profile",()=>{
- const required=["smelter","wiremill","assembler","reactor","variantLab","pump","doriFarm","minerIron","minerCopper","minerCoal","mineGen","coalgen","cooling","fusion","fluidPipe","fluidValve","fluidTank","fluidPump","solar","wind","battery","transformer","powerCable","belt","beltAdaptive","sorter","splitter","merger","conveyorLift","curvedConveyor","multiLaneConveyor","storage","warehouse","market","relay","core","lab"];
+ const required=["smelter","wiremill","assembler","reactor","variantLab","goldSmelter","chromeSmelter","steelForge","titaniumPress","carbonMill","minerAdvanced","pump","doriFarm","minerIron","minerCopper","minerCoal","mineGen","coalgen","cooling","fusion","fluidPipe","fluidValve","fluidTank","fluidPump","solar","wind","battery","transformer","powerCable","belt","beltAdaptive","sorter","splitter","merger","conveyorLift","curvedConveyor","multiLaneConveyor","storage","warehouse","market","relay","core","lab"];
  for(const id of required){assert.ok(FAILURE_PROFILES[id],id+" profile missing");assert.equal(validateFailureProfile(FAILURE_PROFILES[id]).valid,true,id+" profile invalid")}
 });
