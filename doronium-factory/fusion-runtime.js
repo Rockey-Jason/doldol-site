@@ -1,8 +1,54 @@
 /* Resumable, all-input-reserved Infinity Fusion transaction. */
 import {INFINITY_REQUIREMENTS,INFINITY_TOTAL_INPUT,validateInfinityManifest} from "./canonical-data.js";
-import {reserveItemBatch,releaseItemReservation,commitItemReservations,addItemStack} from "./simulation-core.js";
+import {reserveItemBatch,releaseItemReservation,commitItemReservations,addItemStack,syncLegacyInventory} from "./simulation-core.js";
 const clone=v=>typeof structuredClone==="function"?structuredClone(v):JSON.parse(JSON.stringify(v));
 const POWER_FLOOR=.8;
+export function settleInfinityFusionOutput(state,{jobID,outputItemID="infinity",quality=100,purity=100}={}){
+ const job=state?.fusionJob;
+ if(!job||!jobID||String(job.jobID)!==String(jobID))return {ok:false,reason:"JOB_NOT_FOUND"};
+ state.fusionSettlements??={};
+ const existing=state.fusionSettlements[String(jobID)];
+ if(existing){
+  job.status="COMPLETED";job.outputStackID=existing.outputStackID;job.outputIssued=true;job.reservationIDs=[];
+  state.fusionDone=true;
+  return {ok:true,duplicate:true,outputStackID:existing.outputStackID};
+ }
+ if(job.outputIssued||state.fusionDone)return {ok:false,reason:"OUTPUT_ALREADY_ISSUED"};
+ const snapshot={
+  runtime:clone(state.runtime),inventory:clone(state.inventory||{}),meta:clone(state.meta||{}),
+  stats:clone(state.stats||{}),fusionDone:!!state.fusionDone,
+  fusionSettlements:clone(state.fusionSettlements||{}),job:clone(job)
+ };
+ try{
+  let consumedQuantity=0;
+  if(!job.legacyConsumedInput){
+   const consumed=commitItemReservations(state,job.reservationIDs||[]);
+   if(!consumed)throw new Error("INPUT_COMMIT_FAILED");
+   consumedQuantity=consumed.reduce((total,stack)=>total+Math.max(0,Number(stack.quantity)||0),0);
+   if(consumedQuantity!==INFINITY_TOTAL_INPUT)throw new Error("INPUT_QUANTITY_MISMATCH");
+  }else consumedQuantity=Math.max(INFINITY_TOTAL_INPUT,Math.floor(Number(job.inputQuantity)||0));
+  const outputStackID=addItemStack(state,outputItemID,1,{quality,purity,synthetic:false});
+  if(!outputStackID)throw new Error("OUTPUT_CREATE_FAILED");
+  syncLegacyInventory(state);
+  state.stats??={};state.stats.produced??={};
+  state.stats.produced[outputItemID]=(Number(state.stats.produced[outputItemID])||0)+1;
+  job.status="COMPLETED";job.outputStackID=outputStackID;job.completedTick=Math.max(0,Number(state.tick)||0);
+  job.outputIssued=true;job.reservationIDs=[];
+  state.fusionDone=true;
+  state.fusionSettlements[String(jobID)]={
+   settlementID:"FUSION-SETTLEMENT:"+String(jobID),jobID:String(jobID),
+   outputStackID,outputItemID:String(outputItemID),outputQuantity:1,
+   inputQuantity:consumedQuantity,completedTick:job.completedTick
+  };
+  return {ok:true,duplicate:false,outputStackID,inputQuantity:consumedQuantity};
+ }catch(error){
+  state.runtime=snapshot.runtime;state.inventory=snapshot.inventory;state.meta=snapshot.meta;
+  state.stats=snapshot.stats;state.fusionDone=snapshot.fusionDone;state.fusionSettlements=snapshot.fusionSettlements;
+  state.fusionJob=snapshot.job;state.fusionJob.status="ERROR";
+  state.fusionJob.errorCode=String(error?.message||"FUSION_SETTLEMENT_FAILED");
+  return {ok:false,reason:state.fusionJob.errorCode};
+ }
+}
 export function startInfinityFusion(state,{jobID,machineID,stageDurationsSeconds,stagePowerMW}={}){
  if(state.fusionJob&&["RESERVED","RUNNING","WAITING_POWER","ERROR"].includes(state.fusionJob.status))return {ok:false,reason:"job-already-active"};
  if(!jobID||!machineID||!Array.isArray(stageDurationsSeconds)||stageDurationsSeconds.length!==7||stageDurationsSeconds.some(x=>!Number.isFinite(x)||x<=0)||Math.abs(stageDurationsSeconds.reduce((a,b)=>a+b,0)-260)>.001)return {ok:false,reason:"invalid-seven-stage-plan"};
@@ -27,16 +73,9 @@ export function tickInfinityFusion(state,{deltaSeconds=.1,machineExists=true,pow
   if(job.stageElapsedSeconds+1e-9>=job.stageDurationsSeconds[job.stageIndex]){job.stageIndex++;job.stageElapsedSeconds=0}
  }
  if(job.stageIndex<7)return {status:job.status,completed:false,stage:job.stageIndex+1,totalElapsedSeconds:job.totalElapsedSeconds};
- const before=clone(state);
- try{
-  const consumed=commitItemReservations(state,job.reservationIDs);
-  if(!consumed||consumed.reduce((n,x)=>n+x.quantity,0)!==INFINITY_TOTAL_INPUT)throw new Error("INPUT_COMMIT_FAILED");
-  const outputStackID=addItemStack(state,"infinity",1,{quality:100,purity:100,synthetic:false});
-  if(!outputStackID)throw new Error("OUTPUT_CREATE_FAILED");
-  job.status="COMPLETED";job.outputStackID=outputStackID;job.completedTick=Number(state.tick)||0;job.reservationIDs=[];
-  state.completionBuffer=state.completionBuffer||[];state.completionBuffer.push({completionID:"FUSION:"+job.jobID,stackID:outputStackID,itemID:"ITEM_DORONUM_INFINITY",quantity:1});
-  return {status:"COMPLETED",completed:true,outputStackID};
- }catch(error){for(const key of Object.keys(state))delete state[key];Object.assign(state,before);state.fusionJob.status="ERROR";state.fusionJob.errorCode=String(error.message||"FUSION_COMMIT_FAILED");return {status:"ERROR",completed:false,recoverable:true,error:state.fusionJob.errorCode}}
+ const settlement=settleInfinityFusionOutput(state,{jobID:job.jobID,outputItemID:"infinity",quality:100,purity:100});
+ if(!settlement.ok)return {status:"ERROR",completed:false,recoverable:true,error:settlement.reason};
+ return {status:"COMPLETED",completed:true,outputStackID:settlement.outputStackID,duplicate:!!settlement.duplicate};
 }
 export function cancelInfinityFusion(state,{jobID}={}){
  const job=state.fusionJob;if(!job||job.jobID!==jobID||!["RESERVED","RUNNING","WAITING_POWER","ERROR"].includes(job.status))return false;
