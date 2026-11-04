@@ -20,10 +20,11 @@ test("remote save snapshot reads the server revision and envelope without writin
 test("explicit local-save resolution reads the current remote revision before CAS overwrite",async()=>{
  const remote={save_revision:12,updated_at:"2026-11-05T00:00:00Z",storage_value:{schemaVersion:4,state:{money:1200}}};
  let call;
- const result=await replaceCloudSaveAfterExplicitConflict(remoteClient(remote,(...args)=>call=args),{...args,expectedRevision:3,value:{schemaVersion:4,state:{money:777}}});
+ let backedUp=null;
+ const result=await replaceCloudSaveAfterExplicitConflict(remoteClient(remote,(...args)=>call=args),{...args,expectedRevision:3,value:{schemaVersion:4,state:{money:777}},beforeWrite:snapshot=>{backedUp=snapshot.envelope.state.money}});
  assert.equal(call[0],"save_doronium_factory_state");
  assert.equal(call[1].p_expected_revision,12,"the explicit overwrite must use the latest remote revision, not the stale local revision");
- assert.equal(result.saved,true);assert.equal(result.previous.envelope.state.money,1200);
+ assert.equal(result.saved,true);assert.equal(result.previous.envelope.state.money,1200);assert.equal(backedUp,1200,"the old cloud state must be backed up before the write is attempted");
 });
 test("explicit conflict resolution still detects a race after reading the remote revision",async()=>{
  const remote={save_revision:12,updated_at:"2026-11-05T00:00:00Z",storage_value:{schemaVersion:4,state:{money:1200}}};
@@ -38,4 +39,11 @@ test("a missing remote save can be explicitly initialized only against revision 
  client.rpc=async(...args)=>{call=args;return {data:[{saved:true,revision:1}],error:null}};
  const result=await replaceCloudSaveAfterExplicitConflict(client,{...args,value:{schemaVersion:4,state:{money:1}}});
  assert.equal(call[1].p_expected_revision,0);assert.equal(result.saved,true);assert.equal(result.revision,1);
+});
+
+test("failed remote-backup callback prevents an explicit cloud overwrite",async()=>{
+ const remote={save_revision:12,updated_at:"2026-11-05T00:00:00Z",storage_value:{schemaVersion:4,state:{money:1200}}};
+ let rpcCalls=0;const client=remoteClient(remote);client.rpc=async()=>{rpcCalls++;return {data:[{saved:true,revision:13}],error:null}};
+ await assert.rejects(()=>replaceCloudSaveAfterExplicitConflict(client,{...args,value:{schemaVersion:4,state:{money:777}},beforeWrite:()=>{throw new Error("BACKUP_STORAGE_FULL")}}),/BACKUP_STORAGE_FULL/);
+ assert.equal(rpcCalls,0,"the remote row must not be overwritten when its backup could not be preserved");
 });
