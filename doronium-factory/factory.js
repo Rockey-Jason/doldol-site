@@ -1218,7 +1218,7 @@ function machineWearPhase(context){
  }
 }
 function machineProgressPhase(context){
- for(const building of S.buildings)tickBuilding(building,context.dt,context.power||currentPower(),context);
+ for(const building of S.buildings)if(!isProductionMachine(building))tickBuilding(building,context.dt,context.power||currentPower(),context);
  for(const work of context.machineWork?.values()||[]){
   const b=work.building;
   if(work.blocked||!work.inputReady||!work.power?.canProgress)continue;
@@ -1701,6 +1701,14 @@ if(E2E_MODE){
    const result={rpcCalls,revision:cloudSaveRevision,conflictLocked:!!cloudSaveConflict,dirty,saveMessage:$("save-message").textContent};
    S=old.state;playerMotion=old.playerMotion;cloudClient=old.cloudClient;authSession=old.authSession;cloudSaveRevision=old.cloudSaveRevision;cloudSaveConflict=old.cloudSaveConflict;dirty=old.dirty;activeLocalKey=old.activeLocalKey;cloudBusy=old.cloudBusy;
    return result;
+  },
+  runTickStageCoverageTest(){
+   const oldState=S,oldMotion=playerMotion;
+   S=freshState();S.buildings=[];S.runtime=createRuntimeState();ensureItemStacks(S);S.paused=false;S.victory=false;
+   tick(STEP);
+   const stages=structuredClone(S.runtime.lastTickStages||[]),tickNumber=S.tick;
+   S=oldState;playerMotion=oldMotion;
+   return {stages,tickNumber,count:stages.length,missing:TICK_STAGE_ORDER.filter(stage=>!stages.includes(stage)),expected:TICK_STAGE_ORDER};
   },
   setupOwnershipLedgerTest(){
    S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.buildings=[];S.contractRuntime=createContractState(456);
