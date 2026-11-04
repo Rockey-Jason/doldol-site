@@ -189,6 +189,28 @@ h1 span{color:#9bc1ff}
 @media(prefers-reduced-motion:reduce){.guardian-rings i,.guardian-rings b,.guardian-rings em,.zone-art:before,.zone-art:after{animation:none!important}}
 
 .element.collected{box-shadow:inset 0 0 13px color-mix(in srgb,var(--tile) 16%,transparent)}.element.collected:after{content:"";position:absolute;right:3px;top:3px;width:4px;height:4px;border-radius:50%;background:#a8edcb;box-shadow:0 0 7px #a8edcb}.element.collected .symbol{text-shadow:0 0 8px color-mix(in srgb,var(--tile) 35%,transparent)}
+
+/* ELEMENT RUN: four-lane playable runner */
+.runner-home-hero{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.2fr) minmax(220px,.8fr);align-items:center;gap:25px;min-height:250px;padding:clamp(23px,4vw,40px);border:1px solid rgba(132,189,240,.22);border-radius:26px;background:radial-gradient(ellipse at 18% 0%,rgba(51,135,204,.2),transparent 58%),linear-gradient(125deg,rgba(15,39,69,.96),rgba(5,17,33,.97));box-shadow:0 24px 65px rgba(0,0,0,.22);animation:rise .65s var(--ease) both}
+.runner-home-copy{position:relative;z-index:1}.runner-eyebrow{display:flex;align-items:center;gap:8px;color:#83dce8;font-size:9px;letter-spacing:.16em}.runner-eyebrow i,.run-live{width:7px;height:7px;border-radius:50%;background:#8fe0c1;box-shadow:0 0 12px #8fe0c1}.runner-home-copy h2{margin:14px 0 11px;font-size:clamp(27px,4.4vw,46px);font-weight:400;line-height:1.18;letter-spacing:-.045em}.runner-home-copy h2 span{color:#9fc8ff}.runner-home-copy p{max-width:590px;margin:0;color:#a9bdd7;font-size:12px;line-height:1.85}.runner-home-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:18px}.runner-home-tags span{padding:7px 9px;border:1px solid rgba(160,194,231,.15);border-radius:8px;background:rgba(255,255,255,.03);color:#bdd4ed;font-size:9px}
+.runner-mascot{position:relative;display:grid;place-items:center;min-height:190px}.mascot-orbit{position:absolute;width:170px;height:170px;border:1px solid rgba(117,224,232,.22);border-radius:50%;box-shadow:0 0 0 18px rgba(117,224,232,.025),0 0 0 40px rgba(117,224,232,.018);animation:spin 24s linear infinite}.mascot-orbit:before,.mascot-orbit:after{content:"";position:absolute;inset:18px;border:1px solid rgba(143,190,255,.18);border-radius:50%;transform:rotate(54deg) scaleX(.56)}.mascot-orbit:after{inset:37px;transform:rotate(-45deg) scaleX(.64)}.mascot-platform{position:absolute;bottom:24px;width:170px;height:28px;border:1px solid rgba(115,198,228,.26);border-radius:50%;background:radial-gradient(ellipse,rgba(81,165,203,.21),rgba(7,20,36,.12) 65%);box-shadow:0 0 30px rgba(73,173,212,.12)}.dori-art{position:relative;z-index:1;width:158px;filter:drop-shadow(0 12px 12px rgba(0,0,0,.3));animation:mascotBounce 2s ease-in-out infinite}.mascot-caption{position:absolute;bottom:2px;color:#6784a7;font-size:7px;letter-spacing:.2em}
+.mode-heading{margin-top:28px}.run-mode-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}.run-mode-card{position:relative;display:flex;flex-direction:column;align-items:flex-start;min-height:282px;padding:17px 18px;overflow:hidden;text-align:left;cursor:pointer;transition:transform .28s var(--ease),border-color .28s,box-shadow .28s}.run-mode-card:hover{transform:translateY(-5px);box-shadow:0 20px 45px rgba(0,0,0,.23)}.easy-mode{--accent:#8fe0c1;border-color:rgba(143,224,193,.22);background:linear-gradient(155deg,rgba(18,57,53,.8),rgba(7,20,34,.92))}.normal-mode{--accent:#9fc3ff;border-color:rgba(159,195,255,.24);background:linear-gradient(155deg,rgba(24,47,83,.83),rgba(7,20,34,.92))}.hard-mode{--accent:#ffdc8e;border-color:rgba(255,220,142,.22);background:linear-gradient(155deg,rgba(65,49,31,.78),rgba(7,20,34,.92))}.run-mode-card:before{content:"";position:absolute;width:180px;height:180px;right:-110px;top:-105px;border-radius:50%;background:color-mix(in srgb,var(--accent) 15%,transparent);filter:blur(5px)}.run-mode-card:hover{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}.mode-art{position:relative;isolation:isolate;display:grid;place-items:center;width:100%;height:65px;margin-bottom:13px;overflow:hidden;border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);border-radius:13px;background:radial-gradient(ellipse at 50% 100%,color-mix(in srgb,var(--accent) 19%,transparent),transparent 68%),rgba(2,12,25,.35)}.mode-art:before{content:"";position:absolute;width:48px;height:48px;border:1px solid color-mix(in srgb,var(--accent) 54%,transparent);border-radius:50%;box-shadow:0 0 24px color-mix(in srgb,var(--accent) 25%,transparent);animation:spin 12s linear infinite}.mode-art:after{content:"";position:absolute;width:76px;height:29px;border:1px solid color-mix(in srgb,var(--accent) 36%,transparent);border-radius:50%;transform:rotate(-25deg)}.mode-art span{z-index:1;color:var(--accent);font-size:23px;text-shadow:0 0 15px var(--accent)}.mode-art i,.mode-art b{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent)}.mode-art i{left:27%;top:22%}.mode-art b{right:25%;bottom:20%}.mode-kicker{position:relative;color:color-mix(in srgb,var(--accent) 87%,white);font-size:8px;letter-spacing:.15em}.run-mode-card h3{position:relative;margin:9px 0 6px;font-size:22px;font-weight:400}.run-mode-card p{position:relative;min-height:43px;margin:0;color:#a6b9d1;font-size:10px;line-height:1.7}.mode-facts{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}.mode-facts i{padding:5px 7px;border:1px solid rgba(255,255,255,.09);border-radius:7px;background:rgba(255,255,255,.03);color:#b5c8df;font-size:8px;font-style:normal}.mode-best{margin-top:12px;color:#7f99b9;font-size:8px}.run-mode-card .level-start{margin-top:auto;padding-top:12px;color:var(--accent);font-size:11px}.run-mode-card .level-start em{font-style:normal}
+.run-bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:16px}.run-info-card{min-width:0;padding:19px;border:1px solid rgba(163,190,231,.14);border-radius:17px;background:linear-gradient(145deg,rgba(15,32,55,.82),rgba(5,15,29,.9))}.info-kicker{color:#83cfe0;font-size:8px;letter-spacing:.17em}.run-info-card h3{margin:6px 0 13px;font-size:16px;font-weight:400}.how-row{display:flex;align-items:center;gap:5px;margin:8px 0;color:#9eb3ce;font-size:9px}.how-row kbd{display:grid;place-items:center;min-width:21px;height:21px;padding:0 5px;border:1px solid rgba(164,196,231,.2);border-radius:6px;background:rgba(255,255,255,.035);color:#d0e5fa;font:inherit;font-size:9px}.how-row span{margin-left:4px}.run-info-card>p{margin:12px 0 0;color:#748dab;font-size:9px;line-height:1.7}.collection-head{display:flex;align-items:start;justify-content:space-between;gap:12px}.collection-head h3{margin-bottom:11px}.collection-head>strong{color:#c1dfff;font-size:22px;font-weight:400;white-space:nowrap}.collection-head>strong small{color:#7e97b7;font-size:10px}
+.run-topbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;margin-bottom:12px}.run-topbar .text-button{justify-self:start;border-color:rgba(159,190,231,.16);background:rgba(255,255,255,.03)}.run-level{display:flex;align-items:center;justify-content:center;gap:8px;color:#e4f1ff;font-size:12px}.run-live{width:6px;height:6px;flex:none}.run-level small{padding:5px 7px;border:1px solid rgba(141,181,255,.16);border-radius:7px;color:#96b2d5;font-size:8px;white-space:nowrap}.run-question-count{justify-self:end;color:#dcecff;font-size:17px;font-variant-numeric:tabular-nums}.run-question-count span{color:#7890ae;font-size:10px}
+.run-hud{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:11px}.run-hud-cell{padding:9px 12px;border:1px solid rgba(164,194,231,.13);border-radius:11px;background:linear-gradient(145deg,rgba(17,35,60,.82),rgba(6,17,31,.9))}.run-hud-cell>span{display:block;color:#7891b0;font-size:8px}.run-hud-cell>strong{display:block;margin-top:4px;color:#d9eaff;font-size:14px;font-weight:400;letter-spacing:.03em}.run-hud-cell:first-child strong{color:#ffb7c0;letter-spacing:.13em}.run-hud-cell:nth-child(2) strong{color:#9ce8d8}.run-hud-cell:nth-child(3) strong{color:#ffdf9c}.run-hud-cell:nth-child(4) strong{color:#a9d0ff}
+.runner-stage{position:relative;isolation:isolate;overflow:hidden;height:clamp(300px,43vw,430px);border:1px solid rgba(128,185,236,.24);border-radius:21px;background:linear-gradient(180deg,#102c4d 0%,#0c2440 40%,#07172b 100%);box-shadow:inset 0 0 75px rgba(80,157,215,.08),0 20px 52px rgba(0,0,0,.22)}.runner-sky-glow{position:absolute;z-index:-2;left:50%;top:-150px;width:560px;height:360px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(ellipse,rgba(95,191,229,.2),transparent 70%)}.runner-stars{position:absolute;inset:0;z-index:-1;opacity:.7;background-image:radial-gradient(2px 2px at 11% 17%,#c6eaff 50%,transparent 60%),radial-gradient(1px 1px at 78% 14%,#c6eaff 50%,transparent 60%),radial-gradient(2px 2px at 91% 45%,#8de8ea 50%,transparent 60%),radial-gradient(1px 1px at 34% 37%,#c6eaff 50%,transparent 60%),radial-gradient(1px 1px at 68% 62%,#b2dbff 50%,transparent 60%),radial-gradient(2px 2px at 24% 72%,#8de8ea 50%,transparent 60%)}
+.runner-horizon{position:absolute;left:0;right:0;top:0;display:flex;justify-content:space-between;padding:13px 17px;color:#7899bb;font-size:7px;letter-spacing:.18em}.runner-horizon i{position:absolute;left:50%;top:42px;width:170px;height:1px;transform:translateX(-50%);background:linear-gradient(90deg,transparent,rgba(139,219,235,.4),transparent)}.runner-horizon b{position:absolute;left:50%;top:32px;width:8px;height:8px;border:1px solid rgba(139,219,235,.6);border-radius:50%;box-shadow:0 0 18px rgba(139,219,235,.4)}
+.runner-track{position:absolute;left:5%;right:5%;top:43px;bottom:20px;overflow:hidden;clip-path:polygon(31% 0,69% 0,100% 100%,0 100%);background:linear-gradient(180deg,rgba(25,65,91,.42),rgba(3,14,27,.93));border-top:1px solid rgba(141,209,232,.2);perspective:700px}.runner-track:before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(180deg,transparent 0 34px,rgba(122,205,227,.08) 35px 36px);transform:perspective(250px) rotateX(24deg);transform-origin:center top;animation:trackScroll .7s linear infinite}.track-grid{position:absolute;inset:0;background:linear-gradient(90deg,transparent 24.7%,rgba(116,196,222,.16) 25%,transparent 25.3%,transparent 49.7%,rgba(116,196,222,.16) 50%,transparent 50.3%,transparent 74.7%,rgba(116,196,222,.16) 75%,transparent 75.3%),repeating-linear-gradient(180deg,transparent 0 27px,rgba(112,178,211,.1) 28px 29px);opacity:.8;animation:trackScroll .9s linear infinite}.track-lane-lines{position:absolute;inset:0;display:grid;grid-template-columns:repeat(4,1fr);pointer-events:none}.track-lane-lines i{border-right:1px dashed rgba(123,193,221,.13)}.track-lane-lines i:last-child{border:0}
+.gate-grid{position:absolute;z-index:2;left:0;right:0;top:20%;height:52%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1.2%;padding:0 1.5%}.gate{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-width:0;padding:8px 3px;border:1px solid rgba(139,209,230,.28);border-radius:14px 14px 9px 9px;background:linear-gradient(180deg,rgba(57,128,156,.22),rgba(13,46,68,.52));color:#eaf7ff;box-shadow:inset 0 0 22px rgba(112,222,232,.06),0 0 15px rgba(0,0,0,.16);transition:transform .2s,border-color .2s,background .2s,box-shadow .2s;cursor:pointer;animation:gateFloat 2.6s ease-in-out infinite}.gate:nth-child(2){animation-delay:-.5s}.gate:nth-child(3){animation-delay:-1s}.gate:nth-child(4){animation-delay:-1.5s}.gate:before{content:"";position:absolute;left:8px;right:8px;top:7px;height:2px;border-radius:99px;background:rgba(142,229,240,.45);box-shadow:0 0 9px rgba(142,229,240,.35)}.gate:after{content:"";position:absolute;inset:0;border-radius:inherit;background:linear-gradient(130deg,rgba(255,255,255,.08),transparent 43%);pointer-events:none}.gate:hover,.gate.selected{z-index:2;transform:translateY(-6px) scale(1.035);border-color:#9ce9f1;background:linear-gradient(180deg,rgba(78,171,191,.37),rgba(17,60,85,.72));box-shadow:0 0 0 2px rgba(117,224,232,.08),0 0 28px rgba(117,224,232,.22),inset 0 0 20px rgba(117,224,232,.12)}.gate-key{display:grid;place-items:center;width:21px;height:21px;border:1px solid rgba(161,207,231,.22);border-radius:7px;background:rgba(2,18,32,.38);color:#8db2d2;font-size:9px}.gate-value{position:relative;z-index:1;max-width:100%;overflow-wrap:anywhere;color:#effaff;font-size:clamp(10px,1.7vw,17px);line-height:1.3;text-align:center}.gate.selected .gate-value{color:#b9f8f4;text-shadow:0 0 12px rgba(117,224,232,.38)}.gate-correct{border-color:#8ff0bf!important;background:linear-gradient(180deg,rgba(62,190,130,.35),rgba(14,82,66,.76))!important;box-shadow:0 0 30px rgba(100,243,167,.3)!important}.gate-wrong{border-color:#ff9eaa!important;background:linear-gradient(180deg,rgba(196,64,89,.31),rgba(76,19,39,.8))!important}
+.runner-dori{position:absolute;z-index:4;left:calc(12.5% + var(--lane)*25%);bottom:14px;width:clamp(70px,11vw,104px);height:91px;transform:translateX(-50%);transition:left .22s cubic-bezier(.2,.8,.2,1);pointer-events:none;filter:drop-shadow(0 10px 12px rgba(0,0,0,.35))}.runner-dori svg{position:relative;z-index:1;width:100%;height:100%;overflow:visible;animation:doriRun .33s ease-in-out infinite alternate}.dori-shadow{position:absolute;left:15%;right:15%;bottom:0;height:11px;border-radius:50%;background:rgba(0,0,0,.38);filter:blur(5px)}.runner-stage.is-dashing .runner-dori svg{animation:doriDash .42s ease-in forwards}.runner-stage.is-hit .runner-dori{animation:doriCrash .4s ease}.runner-stage.is-success .runner-track{filter:brightness(1.18)}.runner-fx{position:absolute;z-index:5;left:50%;top:52%;transform:translate(-50%,-50%) scale(.7);padding:10px 19px;border:1px solid rgba(255,255,255,.2);border-radius:999px;background:rgba(4,19,34,.85);color:#d7f9f6;font-size:clamp(12px,2vw,17px);letter-spacing:.1em;opacity:0;pointer-events:none}.runner-fx.show{animation:runFx .8s ease-out}.runner-distance{position:absolute;z-index:2;left:14px;right:14px;bottom:7px;display:flex;justify-content:space-between;color:#6886a7;font-size:7px;letter-spacing:.14em;pointer-events:none}.runner-stage-footer{display:flex;justify-content:space-between;gap:8px;padding:9px 5px 0;color:#7891b0;font-size:8px}
+.run-question-panel{margin-top:12px;padding:clamp(16px,2.5vw,23px);border:1px solid rgba(158,190,229,.15);border-radius:18px;background:linear-gradient(145deg,rgba(16,34,59,.92),rgba(5,15,28,.96));box-shadow:0 17px 42px rgba(0,0,0,.16)}.run-question-top{display:flex;align-items:center;justify-content:space-between;gap:10px}.run-question-kicker{color:#8ca8c8;font-size:8px;letter-spacing:.16em}.run-question-panel .timer-wrap{display:flex;align-items:center;gap:5px;color:#ffdf9c;font-size:10px;font-variant-numeric:tabular-nums}.run-question-panel .timer-wrap strong{font-size:14px;font-weight:400}.run-question-panel .timer-wrap>span{color:#7f94b0;font-size:7px}.run-question-panel .timer-wrap>i{display:block;width:83px;height:5px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.08)}.run-question-panel .timer-wrap>i b{display:block;width:100%;height:100%;border-radius:99px;background:linear-gradient(90deg,#79e2e5,#ffdc8e);transition:width .1s linear}.run-question-panel .timer-wrap.urgent{color:#ff9ca8}.run-question-panel .timer-wrap.urgent>i b{background:#ff8b9a}.run-question-panel .question-prompt{margin:13px 0 5px;color:#f0f6ff;font-size:clamp(17px,2.6vw,23px);line-height:1.5}.run-question-panel .question-prompt strong{color:#a7ceff;font-weight:400}.run-question-panel .question-hint{margin:0;color:#839ab8;font-size:9px;line-height:1.6}
+.run-controls{display:grid;grid-template-columns:46px 1fr 46px minmax(140px,.7fr);gap:8px;align-items:center;margin-top:14px}.lane-move-button{height:43px;border:1px solid rgba(157,192,231,.19);border-radius:11px;background:rgba(255,255,255,.035);color:#d7e9fb;font-size:20px;transition:background .2s,transform .2s}.lane-move-button:active{transform:scale(.94);background:rgba(117,224,232,.13)}.selected-lane-label{color:#7895b6;font-size:8px;letter-spacing:.15em;text-align:center}.dash-button{display:flex;justify-content:center;align-items:center;gap:8px;height:43px;border:1px solid rgba(117,224,232,.32);border-radius:11px;background:linear-gradient(110deg,#b9ddff,#7de0e8);color:#06172a;font-size:12px;letter-spacing:.11em;box-shadow:0 8px 24px rgba(94,178,221,.16);transition:transform .2s,filter .2s,box-shadow .2s}.dash-button span{font-size:16px}.dash-button:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.06);box-shadow:0 12px 27px rgba(94,178,221,.23)}.dash-button:disabled{opacity:.5;cursor:not-allowed}
+.run-feedback{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px;padding:12px 14px;border:1px solid rgba(143,224,193,.2);border-radius:13px;background:rgba(27,83,73,.15);animation:pop .25s}.run-feedback.wrong{border-color:rgba(255,156,168,.22);background:rgba(102,38,52,.15)}.run-feedback .feedback-title{display:block;color:#9ce7c5;font-size:12px}.run-feedback.wrong .feedback-title{color:#ffb2bc}.run-feedback .feedback-detail{display:block;margin-top:4px;color:#a8bad4;font-size:9px;line-height:1.6}.run-feedback .primary-button{min-height:37px;padding:0 13px;font-size:10px}
+.run-result-screen .result-title{margin-top:13px}.run-result-screen .result-actions{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;margin-top:19px}.run-result-screen .review-list{max-width:760px;margin-left:auto;margin-right:auto}
+@keyframes trackScroll{from{background-position:0 0}to{background-position:0 58px}}@keyframes gateFloat{0%,100%{translate:0 0}50%{translate:0 -4px}}@keyframes doriRun{from{transform:translateY(0) rotate(-2deg)}to{transform:translateY(-5px) rotate(2deg)}}@keyframes doriDash{0%{transform:translateY(0) scale(1)}35%{transform:translateY(-24px) scale(1.12)}100%{transform:translateY(-4px) scale(.96)}}@keyframes doriCrash{25%{transform:translateX(-8px) rotate(-8deg)}60%{transform:translateX(8px) rotate(8deg)}}@keyframes runFx{0%{opacity:0;transform:translate(-50%,-50%) scale(.65)}20%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}75%{opacity:1;transform:translate(-50%,-65%) scale(1)}100%{opacity:0;transform:translate(-50%,-95%) scale(.95)}}@keyframes mascotBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@media(max-width:760px){.runner-home-hero{grid-template-columns:1fr;min-height:0}.runner-mascot{grid-row:1;min-height:155px}.mascot-orbit{width:135px;height:135px}.dori-art{width:125px}.mascot-platform{bottom:10px;width:135px}.mascot-caption{bottom:-2px}.run-mode-grid{grid-template-columns:1fr}.run-mode-card{min-height:0}.mode-art{height:55px}.run-mode-card p{min-height:0}.run-bottom-grid{grid-template-columns:1fr}.runner-stage{height:330px}.gate-grid{top:21%;height:53%;gap:1%;padding:0 .7%}.gate{padding:6px 2px;gap:6px}.gate-value{font-size:clamp(9px,2vw,14px)}.runner-track{left:2%;right:2%;clip-path:polygon(22% 0,78% 0,100% 100%,0 100%)}.runner-dori{width:82px;height:78px;bottom:12px}.run-controls{grid-template-columns:45px 1fr 45px minmax(115px,.7fr)}}
+@media(max-width:480px){.runner-home-hero{padding:17px;border-radius:21px}.runner-home-copy h2{font-size:27px}.runner-home-copy p{font-size:10px}.runner-home-tags span{font-size:8px}.run-mode-card{padding:15px}.mode-art{height:48px}.run-topbar{grid-template-columns:auto 1fr auto;gap:6px}.run-topbar .text-button{min-height:34px;padding:0 8px;font-size:9px}.run-level{gap:5px;font-size:10px}.run-level small{font-size:7px;padding:4px 5px}.run-question-count{font-size:14px}.run-hud{gap:5px}.run-hud-cell{padding:7px 8px}.run-hud-cell>span{font-size:7px}.run-hud-cell>strong{font-size:11px}.runner-stage{height:292px;border-radius:16px}.gate-grid{top:22%;height:49%;gap:1%;padding:0 .4%}.gate{border-radius:9px 9px 6px 6px;gap:4px}.gate:before{left:4px;right:4px;top:5px}.gate-key{width:17px;height:17px;border-radius:5px;font-size:7px}.gate-value{font-size:clamp(8px,2.5vw,12px)}.runner-track{top:40px;bottom:17px;left:0;right:0;clip-path:polygon(17% 0,83% 0,100% 100%,0 100%)}.runner-dori{width:72px;height:68px;bottom:10px}.runner-distance{font-size:6px}.runner-stage-footer{font-size:7px}.run-question-panel{padding:14px;border-radius:15px}.run-question-kicker{font-size:7px}.run-question-panel .timer-wrap>i{width:55px}.run-question-panel .question-prompt{font-size:17px}.run-controls{grid-template-columns:40px 1fr 40px;gap:6px}.lane-move-button{height:40px}.dash-button{grid-column:1/-1;height:43px}.selected-lane-label{font-size:7px}.run-feedback{align-items:flex-start;flex-direction:column}.run-feedback .primary-button{width:100%}.run-result-screen{padding:23px 14px}.run-result-screen .result-actions>*{flex:1 1 42%}}
+@media(prefers-reduced-motion:reduce){.mascot-orbit,.mode-art:before,.track-grid,.runner-track:before,.gate,.runner-dori svg{animation:none!important}.runner-dori,.gate{transition:none!important}}
 </style>
 </head>
 <body>
@@ -222,149 +244,159 @@ h1 span{color:#9bc1ff}
 </nav>
 
 <section class="stats" aria-label="나의 학습 기록">
-  <div class="stat"><span class="stat-label">연구원 경험치</span><strong class="stat-value" id="statGames">0</strong><span class="stat-note">누적 획득 XP</span></div>
+  <div class="stat"><span class="stat-label">레이스 플레이</span><strong class="stat-value" id="statGames">0</strong><span class="stat-note">누적 플레이 횟수</span></div>
   <div class="stat"><span class="stat-label">원소 도감 수집</span><strong class="stat-value" id="statAccuracy">—</strong><span class="stat-note">수집한 원소 / 118개</span></div>
-  <div class="stat"><span class="stat-label">전투 승리</span><strong class="stat-value" id="statStreak">0</strong><span class="stat-note">격파한 수호자</span></div>
-  <div class="stat"><span class="stat-label">최고 전투 점수</span><strong class="stat-value" id="statBest">0</strong><span class="stat-note">한 판 최고 기록</span></div>
+  <div class="stat"><span class="stat-label">최고 연속 정답</span><strong class="stat-value" id="statStreak">0</strong><span class="stat-note">최대 콤보 기록</span></div>
+  <div class="stat"><span class="stat-label">최고 레이스 점수</span><strong class="stat-value" id="statBest">0</strong><span class="stat-note">한 판 최고 기록</span></div>
 </section>
 
 <section id="homeView">
-  <div class="command-center">
-    <div class="command-copy">
-      <div class="command-kicker">MISSION CONTROL · ELEMENT FRONTIER</div>
-      <h2>원소 탐험대, 출동 준비 완료?</h2>
-      <p>주기율표의 에너지를 훔쳐 간 원소 수호자들을 물리쳐라. 정답을 맞히면 공격하고, 콤보를 이어 보스를 쓰러뜨려 원소를 되찾아!</p>
-      <div class="command-metrics"><span>⚔ 3개의 탐험 구역</span><span>✦ 5개 보스 단계</span><span>◈ 118개 원소 수집</span></div>
+  <div class="runner-home-hero">
+    <div class="runner-home-copy">
+      <div class="runner-eyebrow"><i></i> ELEMENT RUN · PERIODIC TABLE ARCADE</div>
+      <h2>돌이와 함께<br><span>원소 레이스에 도전해!</span></h2>
+      <p>4개의 원소 게이트 중 정답을 골라 돌이를 통과시켜 줘. 빠르게 정답을 고르고 콤보를 이어 가며 10개 구간을 완주해 보자!</p>
+      <div class="runner-home-tags"><span>← → 레인 이동</span><span>SPACE 대시</span><span>10개 구간 완주</span></div>
     </div>
-    <div class="pilot-card">
-      <div class="pilot-emblem"><span>R</span><i></i></div>
-      <div class="pilot-label">YOUR RESEARCHER</div>
-      <div class="pilot-name">원소 연구원 <strong id="homePlayerLevel">LV. 1</strong></div>
-      <div class="pilot-xp"><span id="homeXpText">0 / 200 XP</span><i><b id="homeXpBar"></b></i></div>
-      <div class="pilot-rank" id="homeRank">견습 연구원</div>
+    <div class="runner-mascot" aria-hidden="true">
+      <div class="mascot-orbit"></div><div class="mascot-platform"></div>
+      <svg viewBox="0 0 180 160" class="dori-art">
+        <ellipse cx="91" cy="143" rx="49" ry="9" fill="#020b19" opacity=".48"/>
+        <path d="M48 101Q39 87 29 93Q21 100 34 111Q43 118 55 112" fill="#c98b50" stroke="#f0c18c" stroke-width="3"/>
+        <ellipse cx="91" cy="105" rx="47" ry="31" fill="#c98b50" stroke="#f0c18c" stroke-width="3"/><ellipse cx="90" cy="115" rx="30" ry="17" fill="#fff0d8"/>
+        <path d="M58 117Q55 134 67 137Q79 138 79 122M105 122Q104 138 117 137Q129 135 124 116" fill="#fff0d8" stroke="#e8bf91" stroke-width="2"/>
+        <path d="M50 56Q32 19 24 34Q17 51 42 76Z" fill="#bd7840" stroke="#f0c18c" stroke-width="3"/><path d="M128 56Q151 17 158 35Q164 53 136 77Z" fill="#bd7840" stroke="#f0c18c" stroke-width="3"/>
+        <path d="M57 58Q60 27 91 26Q123 25 132 59L125 94Q115 115 91 116Q66 114 55 93Z" fill="#d69a5c" stroke="#f3c996" stroke-width="3"/>
+        <path d="M73 82Q61 95 75 108Q90 116 106 107Q120 95 108 82Q92 88 73 82Z" fill="#fff0d8"/>
+        <ellipse cx="74" cy="73" rx="4" ry="5" fill="#241b18"/><ellipse cx="109" cy="73" rx="4" ry="5" fill="#241b18"/><ellipse cx="91" cy="91" rx="7" ry="5" fill="#35221c"/>
+        <path d="M91 96Q88 103 82 101M91 96Q95 103 101 101" fill="none" stroke="#79503a" stroke-width="2" stroke-linecap="round"/>
+        <path d="M60 46Q91 24 125 47" fill="none" stroke="#8ddcf0" stroke-width="5" stroke-linecap="round"/><path d="M79 37L91 28L103 37" fill="none" stroke="#d9f5ff" stroke-width="3" stroke-linecap="round"/><circle cx="91" cy="30" r="5" fill="#8de4ef" stroke="#e7fbff" stroke-width="2"/>
+      </svg>
+      <div class="mascot-caption">DORI · RUNNER UNIT 01</div>
     </div>
   </div>
-
-  <div class="map-heading">
-    <div><span class="map-eyebrow">SELECT YOUR OPERATION</span><h2>탐험 구역 선택</h2><p>지역을 선택해 보스전을 시작해. 전투에서 승리하면 다음 보스가 등장해.</p></div>
-    <span class="map-coordinates">SECTOR MAP / 03</span>
+  <div class="section-head mode-heading">
+    <div><h2>플레이 난이도 선택</h2><p>원래 학습 범위와 문제 유형은 그대로야. 난이도마다 제한 시간이 달라져.</p></div>
+    <span class="section-tag">SELECT DIFFICULTY</span>
   </div>
-  <div class="level-grid">
-    <button class="level-card" data-level="easy" type="button" style="--accent:#8fe0c1">
-      <span class="zone-art zone-art-one"><i></i><b></b><em>H</em></span>
-      <span class="level-top"><span class="level-number">SECTOR 01 · STARTER FIELD</span><span class="level-icon">✦</span></span>
-      <h3>기초 원소 평원</h3>
-      <p>수소부터 칼슘까지. 기초 원소를 익히고 첫 수호자를 물리쳐라.</p>
-      <span class="level-meta"><span>1~20번 원소</span><span>20초 제한</span><span>기초 전투</span></span>
-      <span class="zone-progress"><span id="easyProgress">BOSS 0 / 5</span><i><b id="easyProgressBar"></b></i></span>
-      <span class="level-start">탐험 시작하기　⚔</span>
+  <div class="level-grid run-mode-grid">
+    <button class="level-card run-mode-card easy-mode" data-level="easy" type="button">
+      <span class="mode-art"><span>H</span><i></i><b></b></span><span class="mode-kicker">LEVEL 01 · STARTER</span><h3>쉬움</h3>
+      <p>가장 먼저 익히는 1~20번 원소. 기호를 보고 이름을 골라 기초 레이스를 완주해 봐.</p>
+      <span class="mode-facts"><i>1~20번 원소</i><i>20초 / 문제</i><i>기호 → 이름</i></span>
+      <span class="mode-best" id="easyBest">최고 기록 · 아직 없음</span><span class="level-start">쉬움으로 달리기　<em>↗</em></span>
     </button>
-    <button class="level-card" data-level="normal" type="button" style="--accent:#9fc3ff">
-      <span class="zone-art zone-art-two"><i></i><b></b><em>Fe</em></span>
-      <span class="level-top"><span class="level-number">SECTOR 02 · METAL FORTRESS</span><span class="level-icon">◇</span></span>
-      <h3>전이금속 요새</h3>
-      <p>54번 제논까지 확장된 구역. 이름과 기호, 원자번호를 섞어 공격하라.</p>
-      <span class="level-meta"><span>1~54번 원소</span><span>15초 제한</span><span>혼합 전투</span></span>
-      <span class="zone-progress"><span id="normalProgress">BOSS 0 / 5</span><i><b id="normalProgressBar"></b></i></span>
-      <span class="level-start">요새 진입하기　⚔</span>
+    <button class="level-card run-mode-card normal-mode" data-level="normal" type="button">
+      <span class="mode-art"><span>Fe</span><i></i><b></b></span><span class="mode-kicker">LEVEL 02 · BUILDER</span><h3>보통</h3>
+      <p>1~54번 원소를 대상으로 이름과 기호, 원자번호를 연결하는 혼합 레이스!</p>
+      <span class="mode-facts"><i>1~54번 원소</i><i>15초 / 문제</i><i>3종 문제 유형</i></span>
+      <span class="mode-best" id="normalBest">최고 기록 · 아직 없음</span><span class="level-start">보통으로 달리기　<em>↗</em></span>
     </button>
-    <button class="level-card" data-level="hard" type="button" style="--accent:#ffdc8e">
-      <span class="zone-art zone-art-three"><i></i><b></b><em>Og</em></span>
-      <span class="level-top"><span class="level-number">SECTOR 03 · DEEP SPACE</span><span class="level-icon">✧</span></span>
-      <h3>초중원소 심연</h3>
-      <p>118개 전체 원소가 등장한다. 제한 시간 10초, 최종 수호자에 도전하라.</p>
-      <span class="level-meta"><span>전체 118개 원소</span><span>10초 제한</span><span>엘리트 전투</span></span>
-      <span class="zone-progress"><span id="hardProgress">BOSS 0 / 5</span><i><b id="hardProgressBar"></b></i></span>
-      <span class="level-start">심연 진입하기　⚔</span>
+    <button class="level-card run-mode-card hard-mode" data-level="hard" type="button">
+      <span class="mode-art"><span>Og</span><i></i><b></b></span><span class="mode-kicker">LEVEL 03 · EXPERT</span><h3>어려움</h3>
+      <p>1~118번 전체 원소가 등장해. 네 가지 유형의 문제를 10초 안에 통과해 봐.</p>
+      <span class="mode-facts"><i>전체 118개</i><i>10초 / 문제</i><i>4종 문제 유형</i></span>
+      <span class="mode-best" id="hardBest">최고 기록 · 아직 없음</span><span class="level-start">어려움으로 달리기　<em>↗</em></span>
     </button>
   </div>
-
-  <div class="base-grid">
-    <div class="base-card collection-card">
-      <div class="base-card-head"><div><span class="map-eyebrow">RECOVERED ELEMENTS</span><h3>원소 수집 도감</h3></div><span class="collection-number"><strong id="collectionCount">0</strong><small> / 118</small></span></div>
+  <div class="run-bottom-grid">
+    <div class="run-info-card">
+      <span class="info-kicker">HOW TO PLAY</span><h3>레인 선택 → 대시!</h3>
+      <div class="how-row"><kbd>←</kbd><kbd>→</kbd><span>레인을 바꾸며 정답 게이트로 이동</span></div>
+      <div class="how-row"><kbd>SPACE</kbd><span>대시해 선택한 게이트 통과</span></div>
+      <div class="how-row"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd><span>번호로 레인 바로 선택</span></div>
+      <p>모바일에서는 게이트를 터치하고 아래 대시 버튼을 눌러 줘. 오답이나 시간 초과는 하트 1개를 잃어.</p>
+    </div>
+    <div class="run-info-card collection-card">
+      <div class="collection-head"><div><span class="info-kicker">ELEMENT COLLECTION</span><h3>원소 수집 도감</h3></div><strong><span id="collectionCount">0</span><small> / 118</small></strong></div>
       <div class="collection-track"><i id="collectionBar"></i></div>
-      <div class="collection-preview" id="collectionPreview"><span class="empty-crystal">◇</span><span>전투에서 승리하고 원소를 수집해 봐.</span></div>
-      <button class="base-link" id="openAlbumButton" type="button">원소 도감 확인하기　↗</button>
-    </div>
-    <div class="base-card briefing-card">
-      <span class="map-eyebrow">FIELD MANUAL</span><h3>전투 방법</h3>
-      <div class="manual-row"><span class="manual-key">01</span><span><strong>정답 선택</strong><small>정답을 맞히면 보스에게 에너지 공격!</small></span></div>
-      <div class="manual-row"><span class="manual-key">02</span><span><strong>콤보 유지</strong><small>연속 정답일수록 공격력이 강해져.</small></span></div>
-      <div class="manual-row"><span class="manual-key">03</span><span><strong>실드 보호</strong><small>오답 3회면 전투가 종료돼.</small></span></div>
-      <div class="manual-row"><span class="manual-key">04</span><span><strong>원소 스캔</strong><small>한 전투에 한 번, 오답 선택지 2개 제거!</small></span></div>
+      <div class="collection-preview" id="collectionPreview"><span class="empty-crystal">◇</span><span>정답을 맞히고 원소를 모아 봐.</span></div>
+      <button class="base-link" id="openAlbumButton" type="button">주기율표 도감 열기　↗</button>
     </div>
   </div>
-  <div class="home-bottom"><span>ROCKEY SCIENCE CORPS</span><span>LEARN · FIGHT · COLLECT</span></div>
 </section>
 
 <section id="quizView" hidden>
-  <div class="battle-header">
-    <button class="text-button" id="quitButton" type="button">← 기지로 후퇴</button>
-    <div class="battle-chapter"><span class="battle-live"></span><span id="gameLevelName">기초 원소 평원</span><small id="battleStage">BOSS 01 / 05</small></div>
-    <div class="battle-xp"><span>전투 XP</span><strong id="battleXp">0</strong></div>
+  <div class="run-topbar">
+    <button class="text-button" id="quitButton" type="button">← 그만하기</button>
+    <div class="run-level"><span class="run-live"></span><strong id="gameLevelName">쉬움</strong><small id="gameScope">1~20번 원소</small></div>
+    <div class="run-question-count" id="questionCount">01 <span>/ 10</span></div>
   </div>
-  <div class="battlefield">
-    <div class="battlefield-stars"></div>
-    <div class="arena-caption"><span>HOSTILE ENTITY DETECTED</span><span id="bossPhase">PHASE 01</span></div>
-    <div class="guardian">
-      <div class="guardian-rings"><i></i><b></b><em></em></div>
-      <div class="guardian-orb" id="guardianOrb"><span id="guardianSymbol">Ne</span><small>ELEMENT CORE</small></div>
-      <div class="guardian-name" id="bossName">네온 수호자</div>
-      <div class="guardian-state" id="bossState">ENERGY SHIELD ACTIVE</div>
-      <div class="damage-pop" id="damagePop">-18</div>
-      <div class="guardian-hp"><div class="hp-caption"><span>BOSS INTEGRITY</span><strong id="bossHpText">100 / 100</strong></div><i><b id="bossHpFill"></b></i></div>
-    </div>
-    <div class="battle-hud">
-      <div class="hud-cell"><span class="hud-label">RESEARCHER SHIELD</span><strong id="playerLives">♥ ♥ ♥</strong></div>
-      <div class="hud-cell"><span class="hud-label">COMBO CHAIN</span><strong id="comboValue">×0</strong></div>
-      <div class="hud-cell"><span class="hud-label">BATTLE SCORE</span><strong id="battleScore">0</strong></div>
-    </div>
+  <div class="run-hud">
+    <div class="run-hud-cell"><span>남은 하트</span><strong id="playerLives">♥ ♥ ♥</strong></div>
+    <div class="run-hud-cell"><span>연속 정답</span><strong id="comboValue">×0</strong></div>
+    <div class="run-hud-cell"><span>획득 점수</span><strong id="battleScore">0</strong></div>
+    <div class="run-hud-cell"><span>레이스 진행</span><strong id="runProgressText">0%</strong></div>
   </div>
-  <div class="battle-console">
-    <div class="console-top">
-      <div class="mission-tag"><span>MISSION</span><strong id="gameScope">원소 데이터 회수 작전</strong></div>
-      <div class="wave-tag" id="questionCount">WAVE 01 / 10</div>
+  <div class="runner-stage" id="runnerStage">
+    <div class="runner-sky-glow"></div><div class="runner-stars"></div>
+    <div class="runner-horizon"><span>ELEMENT RUNWAY</span><i></i><b></b></div>
+    <div class="runner-track">
+      <div class="track-grid"></div><div class="track-lane-lines"><i></i><i></i><i></i></div>
+      <div class="gate-grid" id="optionGrid" aria-label="정답 게이트 선택"></div>
+      <div class="runner-dori" id="runnerDori" style="--lane:1" aria-label="달리는 돌이">
+        <span class="dori-shadow"></span>
+        <svg viewBox="0 0 180 160" aria-hidden="true">
+          <ellipse cx="91" cy="143" rx="49" ry="9" fill="#020b19" opacity=".48"/>
+          <path d="M48 101Q39 87 29 93Q21 100 34 111Q43 118 55 112" fill="#c98b50" stroke="#f0c18c" stroke-width="3"/>
+          <ellipse cx="91" cy="105" rx="47" ry="31" fill="#c98b50" stroke="#f0c18c" stroke-width="3"/><ellipse cx="90" cy="115" rx="30" ry="17" fill="#fff0d8"/>
+          <path d="M58 117Q55 134 67 137Q79 138 79 122M105 122Q104 138 117 137Q129 135 124 116" fill="#fff0d8" stroke="#e8bf91" stroke-width="2"/>
+          <path d="M50 56Q32 19 24 34Q17 51 42 76Z" fill="#bd7840" stroke="#f0c18c" stroke-width="3"/><path d="M128 56Q151 17 158 35Q164 53 136 77Z" fill="#bd7840" stroke="#f0c18c" stroke-width="3"/>
+          <path d="M57 58Q60 27 91 26Q123 25 132 59L125 94Q115 115 91 116Q66 114 55 93Z" fill="#d69a5c" stroke="#f3c996" stroke-width="3"/>
+          <path d="M73 82Q61 95 75 108Q90 116 106 107Q120 95 108 82Q92 88 73 82Z" fill="#fff0d8"/>
+          <ellipse cx="74" cy="73" rx="4" ry="5" fill="#241b18"/><ellipse cx="109" cy="73" rx="4" ry="5" fill="#241b18"/><ellipse cx="91" cy="91" rx="7" ry="5" fill="#35221c"/>
+          <path d="M91 96Q88 103 82 101M91 96Q95 103 101 101" fill="none" stroke="#79503a" stroke-width="2" stroke-linecap="round"/>
+          <path d="M60 46Q91 24 125 47" fill="none" stroke="#8ddcf0" stroke-width="5" stroke-linecap="round"/><path d="M79 37L91 28L103 37" fill="none" stroke="#d9f5ff" stroke-width="3" stroke-linecap="round"/><circle cx="91" cy="30" r="5" fill="#8de4ef" stroke="#e7fbff" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="runner-fx" id="runnerFx" aria-live="polite"></div>
+      <div class="runner-distance"><span id="distanceText">DIST 0000 m</span><span id="speedText">SPEED 1.0×</span></div>
     </div>
-    <div class="mission-progress"><i><b id="questionProgress"></b></i><span id="waveStatus">TARGET LOCKED</span></div>
-    <div class="combat-question">
-      <div class="question-info"><span>IDENTIFY THE ELEMENT</span><div class="timer-wrap" id="timerWrap"><span id="timerText">20초</span><i><b id="timerBar"></b></i></div></div>
-      <div class="question-prompt" id="questionPrompt">기호 <strong>H</strong>인 원소의 이름은?</div>
-      <p class="question-hint" id="questionHint">정답을 맞히면 에너지 공격이 발사돼.</p>
+    <div class="runner-stage-footer"><span>← → 레인 변경</span><span>정답 게이트를 골라 통과해!</span><span>SPACE 대시</span></div>
+  </div>
+  <div class="run-question-panel">
+    <div class="run-question-top">
+      <span class="run-question-kicker">NEXT GATE · ELEMENT IDENTIFICATION</span>
+      <div class="timer-wrap" id="timerWrap"><strong id="timerText">20.0</strong><span>SEC</span><i><b id="timerBar"></b></i></div>
     </div>
-    <div class="option-grid" id="optionGrid" aria-label="공격 타깃 선택"></div>
-    <div class="console-bottom">
-      <button class="scanner-button" id="scannerButton" type="button"><span>⌕</span><strong>원소 스캔</strong><small>이번 전투 1회</small></button>
-      <div class="key-guide"><span>키보드 <b>1</b> <b>2</b> <b>3</b> <b>4</b> 로 선택</span><small id="scannerStatus">스캐너 준비 완료</small></div>
+    <div class="question-prompt" id="questionPrompt">기호 <strong>H</strong>인 원소의 이름은?</div>
+    <p class="question-hint" id="questionHint">정답이 있는 게이트로 이동한 뒤 대시해!</p>
+    <div class="run-controls">
+      <button class="lane-move-button" id="moveLeftBtn" type="button" aria-label="왼쪽 레인으로 이동">←</button>
+      <div class="selected-lane-label" id="selectedLaneLabel">LANE 02 SELECTED</div>
+      <button class="lane-move-button" id="moveRightBtn" type="button" aria-label="오른쪽 레인으로 이동">→</button>
+      <button class="dash-button" id="dashButton" type="button"><span>⚡</span> DASH</button>
     </div>
-    <div class="feedback" id="questionFeedback" hidden aria-live="polite">
-      <div class="feedback-copy"><strong class="feedback-title" id="feedbackTitle">직격!</strong><span class="feedback-detail" id="feedbackDetail"></span></div>
-      <button class="primary-button" id="nextButton" type="button">다음 웨이브　→</button>
+    <div class="feedback run-feedback" id="questionFeedback" hidden aria-live="polite">
+      <div class="feedback-copy"><strong class="feedback-title" id="feedbackTitle">게이트 통과!</strong><span class="feedback-detail" id="feedbackDetail"></span></div>
+      <button class="primary-button" id="nextButton" type="button">다음 구간　→</button>
     </div>
   </div>
 </section>
 
 <section id="resultView" hidden>
-  <div class="result-screen">
-    <div class="result-aura"></div>
-    <div class="result-stamp" id="resultStamp">MISSION COMPLETE</div>
-    <div class="result-title" id="resultTitle">보스 격파!</div>
-    <p class="result-description" id="resultCaption">구역의 원소 에너지를 되찾았어.</p>
+  <div class="result-screen run-result-screen">
+    <div class="result-aura"></div><div class="result-stamp" id="resultStamp">RUN COMPLETE</div>
+    <div class="result-title" id="resultTitle">레이스 완주!</div>
+    <p class="result-description" id="resultCaption">10개 게이트를 통과했어.</p>
     <div class="result-score" id="resultScore">820<span> PTS</span></div>
     <div class="loot-row">
       <div class="loot-card"><span>획득 경험치</span><strong id="resultXp">+180 XP</strong></div>
       <div class="loot-card"><span>정답 횟수</span><strong id="resultCorrect">8 / 10</strong></div>
       <div class="loot-card"><span>최고 콤보</span><strong id="resultStreak">5 HIT</strong></div>
     </div>
-    <div class="loot-unlock" id="lootUnlock"><span class="loot-icon">✦</span><div><strong id="lootName">원소 데이터 획득!</strong><small id="lootDetail">원소 도감에 새로운 기록이 추가됐어.</small></div></div>
+    <div class="loot-unlock"><span class="loot-icon">✦</span><div><strong id="lootName">새 원소 데이터 획득!</strong><small id="lootDetail">정답을 맞힌 원소가 도감에 추가됐어.</small></div></div>
+    <div class="section-head" style="text-align:left"><div><h2>다시 연습할 문제</h2><p>틀린 문제를 확인하고 다음 레이스에서 통과해 보자.</p></div></div>
+    <div id="reviewEmpty" class="empty-note">모든 게이트를 완벽하게 통과했어! ✦</div><ul class="review-list" id="reviewList"></ul>
     <div class="result-actions">
-      <button class="primary-button" id="retryButton" type="button">다시 도전　↻</button>
-      <button class="secondary-button" id="homeButton" type="button">기지로 돌아가기</button>
-      <button class="secondary-button" id="resultAlbumButton" type="button">원소 도감 보기</button>
+      <button class="primary-button" id="retryButton" type="button">같은 난이도로 재도전　↻</button>
+      <button class="secondary-button" id="homeButton" type="button">난이도 선택</button>
+      <button class="secondary-button" id="resultAlbumButton" type="button">주기율표 도감</button>
     </div>
   </div>
 </section>
 
-<section id="tableView" hidden>
+<section id="tableView"<section id="tableView" hidden>
   <div class="panel"><div class="panel-inner">
     <div class="section-head" style="margin:0 0 17px">
       <div><h2>118개 원소 탐험</h2><p>원소를 누르면 이름과 기호, 원자번호, 분류가 표시돼.</p></div>
@@ -431,32 +463,27 @@ function loadStats(){
  try{const v=JSON.parse(localStorage.getItem(STORE_KEY)||"{}");return {games:Number(v.games)||0,questions:Number(v.questions)||0,correct:Number(v.correct)||0,bestStreak:Number(v.bestStreak)||0,bestScore:Number(v.bestScore)||0,levelBest:v.levelBest&&typeof v.levelBest==="object"?v.levelBest:{},xp:Number(v.xp)||0,wins:Number(v.wins)||0,clears:v.clears&&typeof v.clears==="object"?v.clears:{},collected:Array.isArray(v.collected)?v.collected.filter(function(n){return Number.isInteger(n)&&n>=1&&n<=118;}):[]};}
  catch(_){return {games:0,questions:0,correct:0,bestStreak:0,bestScore:0,levelBest:{},xp:0,wins:0,clears:{},collected:[]};}
 }
-function playerLevel(xp){return Math.floor(Math.max(0,xp)/200)+1;}
 function updateStats(){
  const s=loadStats();
- $("statGames").textContent=s.xp.toLocaleString("ko-KR");
+ $("statGames").textContent=s.games;
  $("statAccuracy").textContent=s.collected.length+"/118";
- $("statStreak").textContent=s.wins;
+ $("statStreak").textContent=s.bestStreak;
  $("statBest").textContent=s.bestScore.toLocaleString("ko-KR");
- const lv=playerLevel(s.xp),within=s.xp%200;
- $("homePlayerLevel").textContent="LV. "+lv;
- $("homeXpText").textContent=within+" / 200 XP";
- $("homeXpBar").style.width=(within/200*100)+"%";
- const ranks=["견습 연구원","원소 분석가","분자 설계자","핵심 연구원","주기율표 수호자","원소 마스터"];
- $("homeRank").textContent=ranks[Math.min(ranks.length-1,Math.floor((lv-1)/3))];
  ["easy","normal","hard"].forEach(function(mode){
-  const n=Math.min(5,Number(s.clears[mode])||0),label=$(mode+"Progress"),bar=$(mode+"ProgressBar");
-  if(label)label.textContent="BOSS "+n+" / 5";
-  if(bar)bar.style.width=(n/5*100)+"%";
+  const best=Number(s.levelBest[mode])||0,el=$(mode+"Best");
+  if(el)el.textContent=best?"최고 기록 · "+best.toLocaleString("ko-KR")+" PTS":"최고 기록 · 아직 없음";
  });
  $("collectionCount").textContent=s.collected.length;
  $("collectionBar").style.width=(s.collected.length/118*100)+"%";
  const preview=$("collectionPreview");preview.innerHTML="";
  if(!s.collected.length){
   const icon=document.createElement("span");icon.className="empty-crystal";icon.textContent="◇";
-  const msg=document.createElement("span");msg.textContent="전투에서 승리하고 원소를 수집해 봐.";preview.append(icon,msg);
+  const msg=document.createElement("span");msg.textContent="정답을 맞히고 원소를 모아 봐.";preview.append(icon,msg);
  }else{
-  s.collected.slice(-8).reverse().forEach(function(z){const e=ELEMENTS[z-1],chip=document.createElement("span");chip.className="crystal-chip";chip.textContent=e.symbol;chip.title=e.ko+" · "+e.z+"번";preview.appendChild(chip);});
+  s.collected.slice(-8).reverse().forEach(function(z){
+   const e=ELEMENTS[z-1],chip=document.createElement("span");chip.className="crystal-chip";
+   chip.textContent=e.symbol;chip.title=e.ko+" · "+e.z+"번";preview.appendChild(chip);
+  });
  }
 }
 function makeQuestion(element,pool,index,mode){
@@ -473,124 +500,128 @@ function makeQuestion(element,pool,index,mode){
   });
   return {element:element,kind:kind,prompt:prompt,promptText:prompt.replace(/<[^>]*>/g,""),answer:answer,label:label,hint:hint,choices:chosen};
 }
-const BOSS_NAMES={
- easy:["헬륨 스카웃","리튬 골렘","산소 워든","마그네슘 나이트","칼슘 타이탄"],
- normal:["철의 거상","은빛 센티널","제논 드래곤","백금 수호자","세슘 콜로서스"],
- hard:["란타넘 망령","악티늄 감시자","우라늄 드래곤","초중원소 집행자","오가네손 오버로드"]
-};
-const BOSS_SYMBOLS={easy:["He","Li","O","Mg","Ca"],normal:["Fe","Ag","Xe","Pt","Cs"],hard:["La","Ac","U","Og","Og"]};
-const BOSS_HP={easy:86,normal:101,hard:118};
-function renderBattleHud(){
+let transitionTimer=null,timerStartedAt=0;
+function renderRunHud(){
  if(!game)return;
- $("bossHpText").textContent=Math.max(0,game.bossHp)+" / "+game.bossMax;
- $("bossHpFill").style.width=(Math.max(0,game.bossHp)/game.bossMax*100)+"%";
  $("playerLives").textContent=Array.from({length:3},function(_,i){return i<game.lives?"♥":"♡";}).join(" ");
  $("comboValue").textContent="×"+game.streak;
  $("battleScore").textContent=game.score.toLocaleString("ko-KR");
- $("battleXp").textContent=game.xpRun;
+ $("runProgressText").textContent=Math.round(game.index/10*100)+"%";
+ $("distanceText").textContent="DIST "+String(game.distance).padStart(4,"0")+" m";
+ $("speedText").textContent="SPEED "+(1+game.streak*.08).toFixed(1)+"×";
+ $("runnerDori").style.setProperty("--lane",game.selectedLane);
+ $("selectedLaneLabel").textContent="LANE "+String(game.selectedLane+1).padStart(2,"0")+" SELECTED";
+ Array.from($("optionGrid").querySelectorAll(".gate")).forEach(function(gate,index){gate.classList.toggle("selected",index===game.selectedLane);});
 }
+function selectLane(index){
+ if(!game||game.questions[game.index].answered)return;
+ game.selectedLane=Math.max(0,Math.min(3,index));renderRunHud();
+}
+function moveLane(delta){if(!game||game.questions[game.index].answered)return;selectLane(game.selectedLane+delta);}
 function startGame(mode){
- clearInterval(timerId);
+ clearInterval(timerId);clearTimeout(transitionTimer);
  const config=LEVELS[mode],pool=ELEMENTS.filter(function(e){return e.z<=config.max;});
- const s=loadStats(),stage=Math.min(5,(Number(s.clears[mode])||0)+1),bossName=BOSS_NAMES[mode][stage-1];
  const questions=shuffle(pool).slice(0,10).map(function(e,i){return makeQuestion(e,pool,i,mode);});
- game={mode:mode,stage:stage,bossName:bossName,questions:questions,index:0,score:0,correct:0,answeredCount:0,streak:0,bestStreak:0,wrong:[],lives:3,bossMax:BOSS_HP[mode]+(stage-1)*7,bossHp:BOSS_HP[mode]+(stage-1)*7,scanned:false,xpRun:0,collected:[]};
- $("gameLevelName").textContent=({easy:"기초 원소 평원",normal:"전이금속 요새",hard:"초중원소 심연"})[mode];
- $("gameScope").textContent=config.scope+" · "+bossName;
- $("battleStage").textContent="BOSS "+String(stage).padStart(2,"0")+" / 05";
- $("bossName").textContent=bossName;$("guardianSymbol").textContent=BOSS_SYMBOLS[mode][stage-1];
- $("bossPhase").textContent="PHASE "+String(stage).padStart(2,"0");
- $("scannerButton").disabled=false;$("scannerStatus").textContent="스캐너 준비 완료";
- $("scannerButton").querySelector("small").textContent="이번 전투 1회";
- $("guardianOrb").classList.remove("hit","shake");
- renderBattleHud();setView("quizView");renderQuestion();
+ game={mode:mode,questions:questions,index:0,score:0,correct:0,answeredCount:0,streak:0,bestStreak:0,wrong:[],lives:3,selectedLane:1,xpRun:0,collected:[],distance:0,answered:false};
+ $("gameLevelName").textContent=config.name;$("gameScope").textContent=config.scope;
+ $("runnerStage").classList.remove("is-dashing","is-hit","is-success");
+ setView("quizView");renderQuestion();
 }
 function renderQuestion(){
  clearInterval(timerId);
- const q=game.questions[game.index],config=LEVELS[game.mode];q.answered=false;
- $("questionCount").textContent="WAVE "+String(game.index+1).padStart(2,"0")+" / 10";
- $("questionProgress").style.width=(game.index/10*100)+"%";$("waveStatus").textContent="TARGET LOCKED";
- $("questionPrompt").innerHTML=q.prompt;$("questionHint").textContent=q.hint+" 정답을 맞히면 에너지 공격이 발사돼.";
- $("questionFeedback").hidden=true;$("optionGrid").innerHTML="";
+ const q=game.questions[game.index],config=LEVELS[game.mode];
+ game.answered=false;game.selectedLane=1;
+ $("questionCount").innerHTML=String(game.index+1).padStart(2,"0")+' <span>/ 10</span>';
+ $("questionPrompt").innerHTML=q.prompt;
+ $("questionHint").textContent=q.hint+" 정답이 있는 게이트로 이동한 뒤 대시해!";
+ $("questionFeedback").hidden=true;$("runnerStage").classList.remove("is-dashing","is-hit","is-success");
+ $("runnerFx").classList.remove("show");$("optionGrid").innerHTML="";
  q.choices.forEach(function(choice,index){
-  const button=document.createElement("button");button.type="button";button.className="option";button.dataset.value=choice.value;
-  const key=document.createElement("span");key.className="option-key";key.textContent=String(index+1);
-  const label=document.createElement("span");label.className="option-label";label.textContent=choice.label;
-  button.append(key,label);button.addEventListener("click",function(){answerQuestion(choice.value);});$("optionGrid").appendChild(button);
+  const gate=document.createElement("button");gate.type="button";gate.className="gate";gate.dataset.value=choice.value;
+  const key=document.createElement("span");key.className="gate-key";key.textContent=String(index+1);
+  const label=document.createElement("strong");label.className="gate-value";label.textContent=choice.label;
+  gate.append(key,label);gate.addEventListener("click",function(){selectLane(index);});$("optionGrid").appendChild(gate);
  });
- $("scannerButton").disabled=game.scanned;remaining=config.seconds;updateTimer();renderBattleHud();
- timerId=setInterval(function(){remaining=Math.max(0,remaining-1);updateTimer();if(remaining<=0){clearInterval(timerId);answerQuestion(null);}},1000);
+ $("dashButton").disabled=false;$("moveLeftBtn").disabled=false;$("moveRightBtn").disabled=false;
+ renderRunHud();
+ remaining=config.seconds;timerStartedAt=Date.now();updateTimer();
+ timerId=setInterval(function(){
+  remaining=Math.max(0,config.seconds-(Date.now()-timerStartedAt)/1000);updateTimer();
+  if(remaining<=0){clearInterval(timerId);answerQuestion(null);}
+ },60);
 }
 function updateTimer(){
- const total=LEVELS[game.mode].seconds,ratio=remaining/total;
- $("timerText").textContent=remaining+"초";$("timerBar").style.width=(ratio*100)+"%";
- $("timerWrap").classList.toggle("urgent",remaining<=Math.max(4,Math.ceil(total*.3)));
+ const total=LEVELS[game.mode].seconds,ratio=Math.max(0,remaining/total);
+ $("timerText").textContent=remaining.toFixed(1);$("timerBar").style.width=(ratio*100)+"%";
+ $("timerWrap").classList.toggle("urgent",remaining<=Math.max(4,total*.28));
 }
-function animateGuardian(correct,damage){
- const orb=$("guardianOrb"),pop=$("damagePop");orb.classList.remove("hit","shake");void orb.offsetWidth;orb.classList.add(correct?"hit":"shake");
- if(correct){pop.textContent="-"+damage;pop.classList.remove("show");void pop.offsetWidth;pop.classList.add("show");}
+function dash(){
+ if(!game||game.questions[game.index].answered)return;
+ const selected=game.questions[game.index].choices[game.selectedLane];if(!selected)return;
+ $("runnerStage").classList.remove("is-dashing","is-hit","is-success");void $("runnerStage").offsetWidth;
+ $("runnerStage").classList.add("is-dashing");
+ $("dashButton").disabled=true;$("moveLeftBtn").disabled=true;$("moveRightBtn").disabled=true;
+ answerQuestion(selected.value);
 }
 function answerQuestion(value){
- if(!game)return;
- const q=game.questions[game.index];if(q.answered)return;q.answered=true;clearInterval(timerId);game.answeredCount++;
- const correct=value===q.answer;let gained=0,damage=0;
+ if(!game||game.questions[game.index].answered)return;
+ const q=game.questions[game.index];q.answered=true;game.answered=true;clearInterval(timerId);game.answeredCount++;
+ const correct=value===q.answer;let gained=0;
+ const correctLane=q.choices.findIndex(function(choice){return choice.value===q.answer;});
  if(correct){
   game.correct++;game.streak++;game.bestStreak=Math.max(game.bestStreak,game.streak);
-  damage=11+Math.min(game.streak,5)*2+Math.min(4,Math.floor(remaining/5));
-  game.bossHp=Math.max(0,game.bossHp-damage);gained=100+remaining*6+game.streak*12;
-  game.score+=gained;game.xpRun+=20;game.collected.push(q.element.z);
-  $("bossState").textContent=game.bossHp===0?"CORE DESTABILIZED":"ARMOR BREACHED · "+damage+" DAMAGE";
-  $("waveStatus").textContent="DIRECT HIT  -"+damage;animateGuardian(true,damage);
+  gained=100+Math.max(0,Math.floor(remaining))*5+Math.min(game.streak-1,5)*20;
+  game.score+=gained;game.xpRun+=25;game.collected.push(q.element.z);game.distance+=125;
+  $("runnerStage").classList.remove("is-hit");$("runnerStage").classList.add("is-success");
+  $("runnerFx").textContent="GATE CLEAR! +"+gained;$("runnerFx").classList.remove("show");void $("runnerFx").offsetWidth;$("runnerFx").classList.add("show");
  }else{
-  game.streak=0;game.lives--;game.wrong.push(q);
-  $("bossState").textContent=value===null?"TIMEOUT · SHIELD DAMAGED":"COUNTER ATTACK · SHIELD DAMAGED";
-  $("waveStatus").textContent=value===null?"TARGET LOST":"SHIELD IMPACT";animateGuardian(false,0);
+  game.streak=0;game.lives--;game.wrong.push(q);game.distance+=45;
+  $("runnerStage").classList.remove("is-success");$("runnerStage").classList.add("is-hit");
+  $("runnerFx").textContent=value===null?"TIME UP!":"CRASH! -1 HEART";$("runnerFx").classList.remove("show");void $("runnerFx").offsetWidth;$("runnerFx").classList.add("show");
  }
- Array.from($("optionGrid").querySelectorAll(".option")).forEach(function(button){
-  button.disabled=true;if(button.dataset.value===q.answer)button.classList.add("correct");
-  if(value!==null&&button.dataset.value===value&&value!==q.answer)button.classList.add("wrong");
+ Array.from($("optionGrid").querySelectorAll(".gate")).forEach(function(gate,index){
+  gate.disabled=true;if(index===correctLane)gate.classList.add("gate-correct");
+  if(index===game.selectedLane&&!correct)gate.classList.add("gate-wrong");
  });
- renderBattleHud();
+ renderRunHud();$("dashButton").disabled=true;$("moveLeftBtn").disabled=true;$("moveRightBtn").disabled=true;
  const feedback=$("questionFeedback");feedback.hidden=false;feedback.classList.toggle("wrong",!correct);
- $("feedbackTitle").textContent=correct?"직격 성공! +"+gained+" PTS":(value===null?"시간 초과! 실드 -1":"반격을 맞았어! 실드 -1");
- $("feedbackDetail").textContent="정답 데이터: "+q.element.ko+" ("+q.element.symbol+") · 원자번호 "+q.element.z+"번";
- $("nextButton").textContent=game.bossHp<=0?"보스 격파 확인　✦":(game.index===9?"전투 결과　→":"다음 웨이브　→");
- $("questionProgress").style.width=((game.index+1)/10*100)+"%";
- $("scannerButton").disabled=true;
+ $("feedbackTitle").textContent=correct?"완벽하게 통과! +"+gained+" PTS":(value===null?"시간 초과! 하트 1개 감소":"충돌! 하트 1개 감소");
+ $("feedbackDetail").textContent="원소 데이터: "+q.element.ko+" ("+q.element.symbol+") · 원자번호 "+q.element.z+"번";
+ $("nextButton").textContent=(game.lives<=0||game.index===9)?"레이스 결과 보기　✦":"다음 구간으로　→";
+ $("questionHint").textContent=correct?"멋진 조종이야! 정답 게이트를 통과했어.":"괜찮아. 초록색으로 표시된 게 정답 게이트야.";
+ transitionTimer=setTimeout(advanceRun,1450);
 }
-function nextQuestion(){
- if(!game)return;
- if(game.bossHp<=0){finishGame(true);return;}
- if(game.lives<=0||game.index>=9){finishGame(false);return;}
+function advanceRun(){
+ clearTimeout(transitionTimer);if(!game)return;
+ if(game.lives<=0||game.index>=9){finishGame();return;}
  game.index++;renderQuestion();
 }
-function finishGame(victory){
- if(!game)return;clearInterval(timerId);
- const s=loadStats(),mode=game.mode,reward=game.xpRun+(victory?100:25)+game.bestStreak*5;
- s.games++;s.questions+=game.answeredCount;s.correct+=game.correct;
- s.bestStreak=Math.max(s.bestStreak,game.bestStreak);s.bestScore=Math.max(s.bestScore,game.score);
- s.levelBest[mode]=Math.max(Number(s.levelBest[mode])||0,game.score);s.xp+=reward;
- if(victory){s.wins++;s.clears[mode]=Math.min(5,(Number(s.clears[mode])||0)+1);}
+function finishGame(){
+ if(!game)return;clearInterval(timerId);clearTimeout(transitionTimer);
+ const s=loadStats(),mode=game.mode,reward=game.xpRun+Math.max(0,game.bestStreak*5)+(game.answeredCount===10?60:0);
+ s.games++;s.questions+=game.answeredCount;s.correct+=game.correct;s.bestStreak=Math.max(s.bestStreak,game.bestStreak);
+ s.bestScore=Math.max(s.bestScore,game.score);s.levelBest[mode]=Math.max(Number(s.levelBest[mode])||0,game.score);s.xp+=reward;
  const previous=new Set(s.collected);game.collected.forEach(function(z){previous.add(z);});
  s.collected=Array.from(previous).sort(function(a,b){return a-b;});
  try{localStorage.setItem(STORE_KEY,JSON.stringify(s));}catch(_){showToast("기록 저장 공간이 부족해. 브라우저 저장 공간을 확인해 줘.");}
- updateStats();
- $("resultStamp").textContent=victory?"SECTOR CLEARED · MISSION COMPLETE":"MISSION FAILED · RETREAT";
- $("resultTitle").textContent=victory?"보스 격파!":"작전 실패…";
- $("resultCaption").textContent=victory?"수호자의 코어가 무너졌어. 원소 에너지를 회수했어!":"실드가 소진되었거나 보스가 버텼어. 회수한 데이터로 장비를 강화하고 재도전하자.";
+ updateStats();const complete=game.answeredCount===10;
+ $("resultStamp").textContent=complete?"RUN COMPLETE":"RUN OVER";
+ $("resultTitle").textContent=complete?"레이스 완주!":"레이스 종료";
+ $("resultCaption").textContent=complete?"10개 게이트를 모두 통과했어. 다음 난이도에도 도전해 봐!":"하트가 모두 소진됐어. 틀린 원소를 복습하고 다시 출발해 보자.";
  $("resultScore").innerHTML=game.score.toLocaleString("ko-KR")+'<span> PTS</span>';
  $("resultXp").textContent="+"+reward+" XP";$("resultCorrect").textContent=game.correct+" / "+game.answeredCount;
- $("resultStreak").textContent=game.bestStreak+" HIT";$("lootName").textContent=game.collected.length+"개 원소 데이터 회수";
+ $("resultStreak").textContent=game.bestStreak+" HIT";$("lootName").textContent=game.collected.length+"개 원소 데이터 획득";
  const fresh=game.collected.filter(function(z){return !previous.has(z);});
- $("lootDetail").textContent=fresh.length?fresh.map(function(z){return ELEMENTS[z-1].symbol;}).join(" · ")+" 도감 신규 등록!":"수집한 원소 데이터가 연구 도감에 저장됐어.";
- $("retryButton").textContent="같은 구역 재도전　↻";setView("resultView");
-}
-function useScanner(){
- if(!game||game.scanned||game.questions[game.index].answered)return;
- game.scanned=true;$("scannerButton").disabled=true;$("scannerStatus").textContent="스캔 완료 · 후보 2개 제거";
- const q=game.questions[game.index],wrong=shuffle(Array.from($("optionGrid").querySelectorAll(".option")).filter(function(b){return b.dataset.value!==q.answer;})).slice(0,2);
- wrong.forEach(function(button){button.style.opacity=".18";button.disabled=true;button.querySelector(".option-label").textContent="SCAN CLEAR";});
- showToast("원소 스캔 완료! 오답 후보 2개를 제거했어.");
+ $("lootDetail").textContent=fresh.length?fresh.map(function(z){return ELEMENTS[z-1].symbol;}).join(" · ")+" 신규 도감 등록!":"이번에 맞힌 원소를 포함해 수집 현황을 저장했어.";
+ $("reviewList").innerHTML="";$("reviewEmpty").hidden=game.wrong.length!==0;
+ game.wrong.forEach(function(q){
+  const li=document.createElement("li");li.className="review-item";
+  const copy=document.createElement("div"),prompt=document.createElement("strong"),answer=document.createElement("span");
+  prompt.textContent=q.promptText;answer.textContent="정답: "+q.element.ko+" ("+q.element.symbol+") · 원자번호 "+q.element.z+"번";
+  copy.append(prompt,answer);const mark=document.createElement("span");mark.className="review-mark";mark.textContent="다시 연습";
+  li.append(copy,mark);$("reviewList").appendChild(li);
+ });
+ $("retryButton").textContent=LEVELS[mode].name+" 다시 달리기　↻";setView("resultView");
 }
 function renderPeriodicTable(){
  const grid=$("periodicGrid"),owned=new Set(loadStats().collected);
@@ -622,31 +653,43 @@ function filterElements(){
   $("elementCount").textContent=q?(matches+"개 일치"):"118개 원소";
 }
 function showTable(){
-  if(game&&$("quizView").hidden===false){if(!window.confirm("진행 중인 퀴즈를 끝내고 주기율표로 이동할까?"))return;clearInterval(timerId);game=null;}
+  if(game&&$("quizView").hidden===false){if(!window.confirm("진행 중인 레이스를 끝내고 주기율표로 이동할까?"))return;clearInterval(timerId);clearTimeout(transitionTimer);game=null;}
   setView("tableView");
 }
 function showHome(){
-  if(game&&$("quizView").hidden===false){if(!window.confirm("진행 중인 퀴즈를 종료할까?"))return;clearInterval(timerId);game=null;}
+  if(game&&$("quizView").hidden===false){if(!window.confirm("진행 중인 레이스를 종료할까?"))return;clearInterval(timerId);clearTimeout(transitionTimer);game=null;}
   setView("homeView");
 }
 $("quizTab").addEventListener("click",showHome);
 $("tableTab").addEventListener("click",showTable);
-
 $("quitButton").addEventListener("click",showHome);
-$("nextButton").addEventListener("click",nextQuestion);
+$("nextButton").addEventListener("click",advanceRun);
+$("dashButton").addEventListener("click",dash);
+$("moveLeftBtn").addEventListener("click",function(){moveLane(-1);});
+$("moveRightBtn").addEventListener("click",function(){moveLane(1);});
 $("homeButton").addEventListener("click",function(){game=null;setView("homeView");});
 $("retryButton").addEventListener("click",function(){if(game)startGame(game.mode);});
 $("elementSearch").addEventListener("input",filterElements);
-$("scannerButton").addEventListener("click",useScanner);
 $("openAlbumButton").addEventListener("click",showTable);
 $("resultAlbumButton").addEventListener("click",showTable);
 document.querySelectorAll("[data-level]").forEach(function(button){button.addEventListener("click",function(){startGame(button.dataset.level);});});
 document.addEventListener("keydown",function(event){
-  if(event.key==="Escape"&&$("tableView").hidden===false){$("elementDetail").hidden=true;$("elementSearch").value="";filterElements();}
-  if(/^[1-4]$/.test(event.key)&&$("quizView").hidden===false&&game&&!game.questions[game.index].answered){
-    const index=Number(event.key)-1,button=$("optionGrid").querySelectorAll(".option")[index];if(button)button.click();
-  }
+ if($("tableView").hidden===false&&event.key==="Escape"){$("elementDetail").hidden=true;$("elementSearch").value="";filterElements();}
+ if($("quizView").hidden!==false||!game||game.questions[game.index].answered)return;
+ if(event.key==="ArrowLeft"||event.key.toLowerCase()==="a"){event.preventDefault();moveLane(-1);}
+ else if(event.key==="ArrowRight"||event.key.toLowerCase()==="d"){event.preventDefault();moveLane(1);}
+ else if(event.key===" "||event.key==="Enter"){event.preventDefault();dash();}
+ else if(/^[1-4]$/.test(event.key)){selectLane(Number(event.key)-1);}
 });
+let touchStartX=null;
+$("runnerStage").addEventListener("touchstart",function(event){
+ if(event.touches&&event.touches.length===1)touchStartX=event.touches[0].clientX;
+},{passive:true});
+$("runnerStage").addEventListener("touchend",function(event){
+ if(touchStartX===null||!event.changedTouches||!event.changedTouches.length)return;
+ const dx=event.changedTouches[0].clientX-touchStartX;touchStartX=null;
+ if(Math.abs(dx)>24)moveLane(dx>0?1:-1);
+},{passive:true});
 renderPeriodicTable();updateStats();
 })();
 </script>
