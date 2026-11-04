@@ -236,7 +236,7 @@ try {
   assert.equal(miningSetup.miner, true, "An iron drill must install on a matching underground iron deposit");
   assert.equal(miningSetup.deposit.amount, 28, "Installing a drill must not consume the deposit");
   const miningResult = await desktop.evaluate(() => window.__doroniumFactoryTest.runMiningAutomationTest());
-  assert.equal(miningResult.output.id, "ironOre", "The automatic miner must extract its matching mineral");
+  assert.equal(miningResult.output.id, "ITEM_IRON_ORE", "The automatic miner must extract its matching mineral");
   assert.equal(miningResult.output.qty, 1, "One extraction cycle must produce exactly one ore");
   assert.equal(miningResult.depositAmount, 27, "One extraction cycle must reduce the source deposit exactly once");
   assert.ok(miningResult.drillDurability < 1000, "Extraction must wear the drill");
