@@ -1213,6 +1213,16 @@ if(E2E_MODE){
    const get=id=>S.buildings.find(b=>b.uid===id);
    return {tankLiters:get("F-TANK")?.fluidAmountL||0,pipeOneLiters:get("F-PIPE-1")?.fluidAmountL||0,pipeTwoLiters:get("F-PIPE-2")?.fluidAmountL||0,valveOpen:!!valve?.valveOpen,pumpPower:currentPower().allocations["F-PUMP"]?.status||"NO_POWER",massBalance:S.lastFluidBalance,networkIDs:S.buildings.filter(b=>b.type.startsWith("fluid")).map(b=>b.fluidNetworkID)};
   },
+  runFusionDiagnosticsTest(powered=true){
+   S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);S.fusionDiagnostics=null;
+   S.buildings=powered?[
+    {uid:"FD-GEN",type:"coalgen",x:1,y:1,dir:1,fuelTimer:24,status:"RUNNING",condition:100},
+    {uid:"FD-COOL",type:"cooling",x:2,y:1,dir:1,status:"IDLE",condition:100},
+    {uid:"FD-FUSION",type:"fusion",x:3,y:1,dir:1,status:"IDLE",condition:100,pressureSensorHealth:100,pressureSensorOffsetMPa:0,temp:25,pressure:0}
+   ]:[{uid:"FD-COOL",type:"cooling",x:2,y:1,dir:1,status:"IDLE",condition:100},{uid:"FD-FUSION",type:"fusion",x:3,y:1,dir:1,status:"IDLE",condition:100,pressureSensorHealth:100,pressureSensorOffsetMPa:0,temp:25,pressure:0}];
+   const passed=runFusionDiagnostics();
+   return {passed,diagnostics:structuredClone(S.fusionDiagnostics),reservations:Object.keys(S.runtime.reservations||{}).length};
+  },
   runFusionReservationCancelTest(){
    S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
    for(const id of VARIANTS)addItemStack(S,id,100,{quality:95,purity:95,synthetic:false});
