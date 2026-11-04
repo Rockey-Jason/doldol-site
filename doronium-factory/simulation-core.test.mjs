@@ -5,7 +5,7 @@ import {
   calculateOutputQuality, calculateOutputPurity, accuracyQuality,
   reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations,
   splitItemStack, mergeItemStacks, validateRuntimeState, availableItemCount,
-  runCanonicalTick, TICK_STAGE_ORDER
+  runCanonicalTick, TICK_STAGE_ORDER, stackTotals
 } from "./simulation-core.js";
 
 test("legacy inventory migrates to stable unique stack IDs",()=>{
