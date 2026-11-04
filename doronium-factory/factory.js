@@ -1403,6 +1403,13 @@ if(E2E_MODE){
    S.buildings.push(machine);tickBuilding(machine,STEP,1);
    return {status:machine.status,fluidAmountL:machine.fluidAmountL,fluidType:machine.fluidType,progress:machine.progress,normalRemaining:availableItemCount(S,"ITEM_DORONUM_NORMAL"),ironOreRemaining:availableItemCount(S,"ITEM_IRON_ORE"),activeMeta:!!machine.activeMeta};
   },
+  setupReservedInventoryTest(){
+   S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
+   addItemStack(S,"ironOre",10,{quality:95,purity:96,synthetic:false});
+   const reservation=reserveItemStacks(S,"ironOre",7,"INVENTORY-LOCK-TEST");
+   syncLegacyInventory(S);renderInventory();
+   return {reservation,total:S.inventory.ironOre,available:itemCount("ironOre"),reserved:S.inventory.ironOre-itemCount("ironOre")};
+  },
   setupQuarantineInventoryTest(){
    S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
    addItemStack(S,"ITEM_DORONUM_NORMAL",3,{quality:95,purity:96,synthetic:false});
