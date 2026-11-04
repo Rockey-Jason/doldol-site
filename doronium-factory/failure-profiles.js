@@ -1,5 +1,5 @@
 /* Tunable machine-specific failure data. Probabilities are per reference exposure window. */
-export const FAILURE_PROFILES=Object.freeze({
+const CORE_FAILURE_PROFILES={
  smelter:{baseFailureProbability:.0012,referenceDurationSec:3600,loadRiskRange:{optimalRatio:1,criticalRatio:1.8},weights:{temperature:1.1,pressure:.25,powerInstability:.8,wear:1.4,load:.5},gradeDistribution:{minor:.72,major:.23,critical:.05},outcomes:{
   minor:{conditionDamage:3,repairSeconds:12,repairCondition:82,repairMaterials:{ironPlate:1},residue:{type:"maintenance_dust",amount:1}},
   major:{conditionDamage:16,repairSeconds:38,repairCondition:76,repairMaterials:{ironPlate:3,wire:1},residue:{type:"metal_scale",amount:2}},
@@ -25,4 +25,52 @@ export const FAILURE_PROFILES=Object.freeze({
   major:{conditionDamage:19,repairSeconds:56,repairCondition:72,repairMaterials:{ironPlate:4,circuit:2},residue:{type:"alignment_coil",amount:1}},
   critical:{conditionDamage:42,broken:true,repairSeconds:135,repairCondition:64,repairMaterials:{ironPlate:8,circuit:4},residue:{type:"crystal_chamber",amount:1}}
  }}
+};
+const supportProfile=(baseFailureProbability,repairMaterials,residue)=>({
+ baseFailureProbability,referenceDurationSec:3600,loadRiskRange:{optimalRatio:1,criticalRatio:1.8},
+ weights:{temperature:.8,pressure:1,powerInstability:.9,wear:1.2,load:.7},
+ gradeDistribution:{minor:.72,major:.23,critical:.05},
+ outcomes:{
+  minor:{conditionDamage:2,repairSeconds:12,repairCondition:85,repairMaterials:{ironPlate:1},residue:{type:residue,amount:1}},
+  major:{conditionDamage:12,repairSeconds:34,repairCondition:76,repairMaterials:{...repairMaterials},residue:{type:residue,amount:2}},
+  critical:{conditionDamage:32,broken:true,repairSeconds:82,repairCondition:66,repairMaterials:{...repairMaterials,ironPlate:(repairMaterials.ironPlate||0)+3,circuit:(repairMaterials.circuit||0)+1},residue:{type:residue,amount:3}}
+ }
+});
+const SUPPORT_PROFILE_TYPES={
+ pump:[.0011,{ironPlate:2,wire:1},"pump_seal"],
+ doriFarm:[.0008,{ironPlate:1,wire:1},"bio_filter"],
+ minerIron:[.0014,{ironPlate:3,wire:1},"drill_bit"],
+ minerCopper:[.0014,{ironPlate:3,wire:1},"drill_bit"],
+ minerCoal:[.0017,{ironPlate:4,wire:1},"drill_bit"],
+ mineGen:[.0018,{ironPlate:5,circuit:1},"mine_generator_coil"],
+ coalgen:[.0017,{ironPlate:5,circuit:1},"boiler_scale"],
+ cooling:[.0015,{ironPlate:4,circuit:2},"coolant_seal"],
+ fusion:[.0022,{ironPlate:10,circuit:5},"fusion_liner"],
+ fluidPipe:[.0007,{ironPlate:2,wire:1},"pipe_section"],
+ fluidValve:[.0009,{ironPlate:2,wire:1},"valve_seal"],
+ fluidTank:[.0008,{ironPlate:4,wire:1},"tank_liner"],
+ fluidPump:[.0013,{ironPlate:4,wire:2},"pump_impeller"],
+ solar:[.0005,{wire:2,ironPlate:1},"panel_cell"],
+ wind:[.0008,{ironPlate:3,wire:2},"turbine_bearing"],
+ battery:[.001,{ironPlate:3,circuit:1},"battery_cell"],
+ transformer:[.0011,{wire:4,circuit:2},"transformer_winding"],
+ powerCable:[.0005,{wire:2},"cable_insulation"],
+ belt:[.0007,{ironPlate:1},"belt_link"],
+ beltAdaptive:[.0009,{ironPlate:2},"adaptive_joint"],
+ sorter:[.001,{ironPlate:2,circuit:1},"sorter_actuator"],
+ splitter:[.0009,{ironPlate:2,wire:1},"splitter_gate"],
+ merger:[.0009,{ironPlate:2,wire:1},"merger_roller"],
+ conveyorLift:[.0012,{ironPlate:3,wire:1},"lift_chain"],
+ curvedConveyor:[.0009,{ironPlate:2},"curve_roller"],
+ multiLaneConveyor:[.0012,{ironPlate:3,circuit:1},"lane_selector"],
+ storage:[.0004,{ironPlate:1},"storage_hinge"],
+ warehouse:[.0006,{ironPlate:3,wire:1},"warehouse_motor"],
+ market:[.0005,{wire:1,circuit:1},"market_terminal"],
+ relay:[.001,{ironPlate:3,circuit:2},"relay_antenna"],
+ core:[.0015,{ironPlate:6,circuit:4},"core_stabilizer"],
+ lab:[.0006,{wire:1,circuit:1},"lab_sensor"]
+};
+export const FAILURE_PROFILES=Object.freeze({
+ ...CORE_FAILURE_PROFILES,
+ ...Object.fromEntries(Object.entries(SUPPORT_PROFILE_TYPES).map(([type,[rate,materials,residue]])=>[type,supportProfile(rate,materials,residue)]))
 });
