@@ -68,15 +68,15 @@ const BUILDINGS=[
 {id:"solar",name:"태양광 발전기",icon:"☀️",cat:"power",cost:140,materials:{wood:8,stone:4,copperOre:2},desc:"낮에 전력을 생산합니다. 밤에는 발전량이 감소합니다.",unlock:null,kind:"power",power:0,gen:8},
 {id:"wind",name:"풍력 발전기",icon:"🌬️",cat:"power",cost:280,materials:{wood:10,stone:8,ironPlate:2},desc:"날씨에 영향을 받지만 밤에도 전력을 공급합니다.",unlock:"electricity",kind:"power",power:0,gen:7},
  {id:"powerCable",name:"전력 케이블",icon:"〰️",cat:"power",cost:18,materials:{wire:2},desc:"인접 케이블과 발전·소비 설비를 연결해 독립 전력망을 구성합니다.",unlock:null,kind:"powerCable",power:0},
- {id:"transformer",name:"산업용 변압기",icon:"⚡",cat:"power",cost:480,materials:{ironPlate:8,wire:10,circuit:2},desc:"연결된 전력망의 최대 전송 용량을 30kW로 제한합니다.",unlock:"electricity",kind:"transformer",power:0,throughput:30},
- {id:"battery",name:"산업용 배터리",icon:"🔋",cat:"power",cost:550,materials:{ironPlate:6,wire:4,quartz:2},desc:"120,000kJ를 저장하고 최대 8kW로 방전, 4kW로 충전합니다.",unlock:"electricity",kind:"battery",power:0,capacityKJ:120000,maxDischargeKW:8,maxChargeKW:4},
+ {id:"transformer",name:"산업용 변압기",icon:"⚡",cat:"power",cost:480,materials:{ironPlate:8,wire:10,circuit:2},desc:"연결된 전력망의 최대 전송 용량을 3MW(3,000kW)로 제한합니다.",unlock:"electricity",kind:"transformer",power:0,throughput:30},
+ {id:"battery",name:"산업용 배터리",icon:"🔋",cat:"power",cost:550,materials:{ironPlate:6,wire:4,quartz:2},desc:"120,000kJ를 저장하고 최대 800kW로 방전, 400kW로 충전합니다.",unlock:"electricity",kind:"battery",power:0,capacityKJ:120000,maxDischargeKW:8,maxChargeKW:4},
 
 {id:"coalgen",name:"석탄 화력 발전소",icon:"♨️",cat:"power",cost:520,materials:{ironPlate:6,stone:10},desc:"석탄을 태워 안정적으로 대량의 전력을 생산합니다.",unlock:"metallurgy",kind:"power",power:0,gen:18},
 {id:"pump",name:"정수 펌프",icon:"💧",cat:"resource",cost:150,materials:{wood:7,stone:5},desc:"수원지에서 물을 끌어올립니다. 물 타일 위에 설치하세요.",unlock:null,kind:"pump",power:1},
 {id:"minerIron",name:"철광석 채굴기",icon:"⛏️",cat:"resource",cost:180,materials:{wood:8,stone:5,ironOre:2},desc:"철 광맥에서 철광석을 자동 채굴합니다.",unlock:null,kind:"miner",resource:"ironOre",power:2},
 {id:"minerCopper",name:"구리 채굴기",icon:"🟠",cat:"resource",cost:205,materials:{wood:8,stone:5,copperOre:2},desc:"구리 광맥에서 구리 광석을 자동 채굴합니다.",unlock:"mining",kind:"miner",resource:"copperOre",power:2},
 {id:"minerCoal",name:"심층 석탄 채굴기",icon:"⬛",cat:"resource",cost:240,materials:{wood:8,ironPlate:2},desc:"석탄 광맥을 자동 채굴합니다.",unlock:"mining",kind:"miner",resource:"coal",power:3},
-{id:"mineGen",name:"광산 지열 발전기",icon:"♨️",cat:"power",cost:420,materials:{ironPlate:5,wire:3,stone:8},desc:"석탄 1개로 24초 동안 12kW를 공급하는 지하 발전 설비입니다.",unlock:"mining",kind:"power",power:0,gen:12},
+{id:"mineGen",name:"광산 지열 발전기",icon:"♨️",cat:"power",cost:420,materials:{ironPlate:5,wire:3,stone:8},desc:"석탄 1개로 24초 동안 1.2MW(1,200kW)를 공급하는 지하 발전 설비입니다.",unlock:"mining",kind:"power",power:0,gen:12},
 {id:"doriFarm",name:"돌이 나무 재배기",icon:"🌳",cat:"resource",cost:290,materials:{wood:8,stone:6,ironPlate:2},desc:"인접한 돌이 고기 나무를 관리합니다. 60초마다 물 2L를 사용해 열매 1개를 수확합니다.",unlock:"bio",kind:"doriFarm",power:2},
 {id:"smelter",name:"고온 제련로",icon:"🔥",cat:"process",cost:280,materials:{stone:10,ironOre:6},desc:"철광석 2개와 석탄 1개를 철판 1개로 제련합니다.",unlock:null,kind:"machine",power:4,recipe:"smelt"},
 {id:"wiremill",name:"전선 압연기",icon:"〰️",cat:"process",cost:250,materials:{wood:8,stone:4},desc:"구리 광석 1개를 전선 2개로 가공합니다.",unlock:null,kind:"machine",power:3,recipe:"wire"},
@@ -86,7 +86,7 @@ const BUILDINGS=[
 {id:"reactor",name:"도로늄 압력 반응로",icon:"🔷",cat:"advanced",cost:1450,materials:{ironPlate:12,circuit:8,wire:6},desc:"비합성 돌이 고기 10개를 고온·고압 공명 공정으로 합성해 일반 도로늄 1개를 만듭니다.",unlock:"doronium",kind:"reactor",power:14,recipe:"doronium"},
 {id:"variantLab",name:"결정 변환 연구로",icon:"💎",cat:"advanced",cost:2600,materials:{ironPlate:20,circuit:12,quartz:8},desc:"일반 도로늄을 14가지 특수 결정 계열로 변환합니다. 설비를 선택해 제조 레시피를 설정하세요.",unlock:"variant",kind:"variant",power:18},
 {id:"cooling",name:"초전도 냉각탑",icon:"❄️",cat:"power",cost:950,materials:{ironPlate:10,circuit:4},desc:"고압 설비와 퓨전 반응로의 열을 안정화합니다.",unlock:"pressure",kind:"cooling",power:5},
-{id:"fusion",name:"인피니티 퓨전 설비",icon:"🌌",cat:"advanced",cost:12000,materials:{ironPlate:100,circuit:50,quartz:30},desc:"15종의 정식 도로늄을 각 100개씩 투입해 7단계 퓨전을 수행합니다.",unlock:"fusion",kind:"fusion",power:40},
+{id:"fusion",name:"인피니티 퓨전 설비",icon:"🌌",cat:"advanced",cost:12000,materials:{ironPlate:100,circuit:50,quartz:30},desc:"최대 5MW 전력과 7단계 안전 공정을 사용해 정식 도로늄 1,500개를 융합합니다.",unlock:"fusion",kind:"fusion",power:50},
 {id:"relay",name:"행성 안정화 릴레이",icon:"📡",cat:"advanced",cost:1500,materials:{ironPlate:25,circuit:15,doronium_normal:10},desc:"행성 에너지 노드에 설치하는 안정화 장치입니다.",unlock:"relay",kind:"relay",power:3},
 {id:"core",name:"중앙 안정화 코어",icon:"💠",cat:"advanced",cost:4800,materials:{ironPlate:45,circuit:30,doronium_special:5},desc:"인피니티 도로늄을 장착해 행성의 에너지 네트워크를 동기화합니다.",unlock:"infinity",kind:"core",power:12},
 {id:"fluidPipe",name:"산업용 유체 파이프",icon:"━",cat:"fluid",cost:24,materials:{ironPlate:1},desc:"인접한 파이프·밸브·탱크·펌프를 연결해 압력 기반 유체를 운송합니다.",unlock:"chemistry",kind:"fluidPipe",power:0},
@@ -149,13 +149,13 @@ const RESEARCH=[
 
 
 const FUSION_STAGES=[
-{name:"물질·공명 분석",temp:500,pressure:100,power:5,time:20},
-{name:"에너지 분리",temp:1200,pressure:500,power:10,time:25},
-{name:"분자 평형",temp:1800,pressure:1000,power:15,time:30},
-{name:"초고압 압축",temp:2500,pressure:5000,power:22,powerUnused:0,time:35},
-{name:"결정 융합",temp:3500,pressure:10000,power:28,time:40},
-{name:"결정 핵 형성",temp:4500,pressure:15000,power:34,time:50},
-{name:"인피니티 결정화",temp:5000,pressure:20000,power:40,time:60}
+{name:"물질·공명 분석",temp:500,pressure:100,power:500,time:20},
+{name:"에너지 분리",temp:1200,pressure:500,power:1000,time:25},
+{name:"분자 평형",temp:1800,pressure:1000,power:1500,time:30},
+{name:"초고압 압축",temp:2500,pressure:5000,power:2500,time:35},
+{name:"결정 융합",temp:3500,pressure:10000,power:3500,time:40},
+{name:"결정 핵 형성",temp:4500,pressure:15000,power:4500,time:50},
+{name:"인피니티 결정화",temp:5000,pressure:20000,power:5000,time:60}
 ];
 const DATA_VALIDATION=validateGameData({resources:RESOURCE,recipes:RECIPES,variantRecipes:VARIANT_RECIPES,buildings:BUILDINGS,research:RESEARCH});
 if(!DATA_VALIDATION.valid)console.error("Doronium Factory data validation failed",DATA_VALIDATION.errors);
@@ -285,12 +285,12 @@ function currentPower(){
  for(const b of S.buildings){
   const def=buildingDef(b.type);if(!def)continue;let node=null;
   if(b.type==="powerCable")node={id:b.uid,type:"CABLE",buildingType:b.type};
-  else if(b.type==="transformer")node={id:b.uid,type:"TRANSFORMER",maxThroughputKW:Number(def.throughput)||30,buildingType:b.type};
-  else if(b.type==="battery")node={id:b.uid,type:"BATTERY",energyKJ:Math.max(0,Number(b.energyKJ)||0),capacityKJ:Number(def.capacityKJ)||120000,maxDischargeKW:Number(def.maxDischargeKW)||8,maxChargeKW:Number(def.maxChargeKW)||4,priority:80,buildingType:b.type};
-  else if(b.type==="solar")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1),buildingType:b.type};
-  else if(b.type==="wind")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05),buildingType:b.type};
-  else if(b.type==="coalgen"||b.type==="mineGen")node={id:b.uid,type:"GENERATOR",generationKW:b.fuelTimer>0?(b.type==="mineGen"?Number(def.gen)||12:18):0,buildingType:b.type};
-  else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["fluidPump"].includes(b.type)?55:["pump","doriFarm"].includes(b.type)?45:20;node={id:b.uid,type:"CONSUMER",demandKW:b.type==="fusion"?(S.fusionJob?FUSION_STAGES[S.fusionJob.stage]?.power||40:4):def.power,priority,transmissionLoss:0,buildingType:b.type}}
+  else if(b.type==="transformer")node={id:b.uid,type:"TRANSFORMER",maxThroughputKW:(Number(def.throughput)||30)*100,buildingType:b.type};
+  else if(b.type==="battery")node={id:b.uid,type:"BATTERY",energyKJ:Math.max(0,Number(b.energyKJ)||0),capacityKJ:Number(def.capacityKJ)||120000,maxDischargeKW:(Number(def.maxDischargeKW)||8)*100,maxChargeKW:(Number(def.maxChargeKW)||4)*100,priority:80,buildingType:b.type};
+  else if(b.type==="solar")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*100*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1),buildingType:b.type};
+  else if(b.type==="wind")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*100*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05),buildingType:b.type};
+  else if(b.type==="coalgen"||b.type==="mineGen")node={id:b.uid,type:"GENERATOR",generationKW:b.fuelTimer>0?(Number(def.gen)|| (b.type==="mineGen"?12:18))*100:0,buildingType:b.type};
+  else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["fluidPump"].includes(b.type)?55:["pump","doriFarm"].includes(b.type)?45:20;const fusionStage=S.fusionJob&&Number.isInteger(S.fusionJob.stage)?FUSION_STAGES[S.fusionJob.stage]:null;const demandKW=b.type==="fusion"?(fusionStage?.power||0):def.power*100;node={id:b.uid,type:"CONSUMER",demandKW,priority,transmissionLoss:0,buildingType:b.type}}
   if(node){node.layer=b.layer||"surface";node.mineLevel=b.mineLevel||0;nodes.push(node);powerBuildings.push(b)}
  }
  const edges=[];
@@ -730,8 +730,9 @@ function updateFusion(dt){
  }
  const p=currentPower();b.temp+=(stage.temp-b.temp)*Math.min(1,dt*.045);b.pressure+=(stage.pressure-b.pressure)*Math.min(1,dt*.06);
  const tempOK=Math.abs(b.temp-stage.temp)<=Math.max(50,stage.temp*.1),pressureOK=Math.abs(b.pressure-stage.pressure)<=Math.max(25,stage.pressure*.1);
- if(p.ratio>=.8&&p.gen>=stage.power&&tempOK&&pressureOK){job.progress+=dt*(p.ratio>=1?1:p.ratio);job.status="RUNNING";b.status="RUNNING"}
- else{job.status=p.ratio<.8||p.gen<stage.power?"PAUSED_POWER":"CALIBRATING";b.status=job.status}
+ const allocation=p.allocations?.[String(b.uid)]||{ratio:0,deliveredKW:0};
+ if(allocation.ratio>=.8&&tempOK&&pressureOK){job.progress+=dt*(allocation.ratio>=1?1:allocation.ratio);job.status="RUNNING";b.status="RUNNING"}
+ else{job.status=allocation.ratio<.8?"PAUSED_POWER":"CALIBRATING";b.status=job.status}
  if(job.progress<stage.time)return;
  log("퓨전 단계 완료 · "+stage.name,"good");job.stage++;job.progress=0;job.status="RUNNING";
  if(job.stage>=FUSION_STAGES.length){
@@ -751,7 +752,7 @@ function startFusion(){
  if(active){toast("이미 퓨전 작업이 진행 중입니다.");return}
  if(!S.buildings.some(b=>b.type==="fusion")){toast("인피니티 퓨전 설비가 필요합니다.","warn");return}
  if(!S.buildings.some(b=>b.type==="cooling")){toast("초전도 냉각탑을 먼저 건설하세요.","warn");return}
- const p=currentPower();if(p.gen<40||p.ratio<.8){toast("퓨전에 필요한 전력 40kW 이상을 확보하세요.","warn");return}
+ const p=currentPower();if(p.gen<1000||p.ratio<.8){toast("퓨전 시작에는 냉각 설비를 포함해 최소 1MW의 안정적인 전력 공급이 필요합니다.","warn");return}
  const requirements=Object.fromEntries(VARIANTS.map(id=>[id,100]));
  const invalid=VARIANTS.filter(id=>{
   const stacks=(S.runtime?.itemStacks||[]).filter(stack=>stack.itemID===id&&stack.quantity>0);
