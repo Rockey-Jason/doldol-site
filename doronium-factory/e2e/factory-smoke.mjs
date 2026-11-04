@@ -245,6 +245,18 @@ try {
   assert.equal(repairResult.ok, true, "A worn drill must consume repair materials and return to service");
   assert.equal(repairResult.drillDurability, 1000, "Repair must restore drill durability");
 
+  const advancedMiningSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.setupAdvancedMiningTest());
+  assert.equal(advancedMiningSetup.generator, true, "The mine generator must be placeable beside advanced mineral deposits");
+  assert.equal(advancedMiningSetup.miner, true, "The advanced miner must accept supported special mineral deposits");
+  const advancedMiningResult = await desktop.evaluate(() => window.__doroniumFactoryTest.runAdvancedMiningTest());
+  assert.equal(advancedMiningResult.output.id, "ITEM_COLD_CRYSTAL_RAW", "Advanced mining must extract the selected canonical raw crystal");
+  assert.equal(advancedMiningResult.depositAmount, advancedMiningSetup.deposit.amount - 1, "Advanced extraction must reduce its deposit exactly once");
+  assert.equal(advancedMiningResult.power.status, "RUNNING", "The underground generator must power the advanced miner");
+
+  const rawMaterialResults = await desktop.evaluate(() => window.__doroniumFactoryTest.runRawMaterialProductionTest());
+  assert.equal(rawMaterialResults.length, 5, "All five canonical raw-material production lines must execute");
+  for (const result of rawMaterialResults) assert.equal(result.actual, result.expected, result.type + " must produce its canonical material");
+
   const synthetic = await desktop.evaluate(() => window.__doroniumFactoryTest.syntheticGuard());
   assert.equal(synthetic.status, "ERROR", "Reactor must reject synthetic Dori Meat");
   assert.equal(synthetic.remaining, 10, "Rejected synthetic inputs must not be consumed");
