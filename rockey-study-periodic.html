@@ -188,6 +188,7 @@ h1 span{color:#9bc1ff}
 @media(max-width:480px){.command-center{padding:19px;border-radius:21px}.command-copy h2{font-size:23px}.command-copy p{font-size:10px}.command-metrics span{font-size:8px}.pilot-card{padding:13px}.map-heading{align-items:flex-start;flex-direction:column}.map-coordinates{display:none}.level-card{padding:15px}.base-card{padding:16px}.battle-header{flex-wrap:wrap}.battle-chapter{order:3;width:100%;justify-content:center}.battle-xp{font-size:7px}.battlefield{min-height:260px;padding:12px}.guardian-orb{width:78px;height:78px}.guardian-rings{transform:scale(.78)}.damage-pop{left:calc(50% + 48px)}.battle-hud{gap:5px}.hud-cell{padding:7px}.hud-label{font-size:6px}.hud-cell strong{font-size:11px}.battle-console{padding:14px}.combat-question{align-items:flex-start;flex-direction:column;gap:8px}.question-info{width:100%;justify-content:space-between}.question-prompt{font-size:18px}.timer-wrap>i{width:85px}.option{min-height:61px;padding:9px}.option-label{font-size:11px}.console-bottom{gap:8px}.scanner-button{padding:7px 9px}.scanner-button small{display:none}.key-guide{font-size:7px}.loot-row{gap:5px}.loot-card{padding:10px 5px}.loot-card strong{font-size:13px}.result-screen{padding:23px 15px}.result-actions>*{flex:1 1 42%}.home-bottom{font-size:7px}}
 @media(prefers-reduced-motion:reduce){.guardian-rings i,.guardian-rings b,.guardian-rings em,.zone-art:before,.zone-art:after{animation:none!important}}
 
+.element.collected{box-shadow:inset 0 0 13px color-mix(in srgb,var(--tile) 16%,transparent)}.element.collected:after{content:"";position:absolute;right:3px;top:3px;width:4px;height:4px;border-radius:50%;background:#a8edcb;box-shadow:0 0 7px #a8edcb}.element.collected .symbol{text-shadow:0 0 8px color-mix(in srgb,var(--tile) 35%,transparent)}
 </style>
 </head>
 <body>
@@ -426,10 +427,38 @@ const LEVELS={easy:{name:"쉬움",max:20,seconds:20,scope:"1~20번 원소"},norm
 const $=function(id){return document.getElementById(id);};
 let game=null,timerId=null,remaining=0,toastId=null;
 function shuffle(list){const a=list.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;}
-function loadStats(){try{const value=JSON.parse(localStorage.getItem(STORE_KEY)||"{}");return {games:Number(value.games)||0,questions:Number(value.questions)||0,correct:Number(value.correct)||0,bestStreak:Number(value.bestStreak)||0,bestScore:Number(value.bestScore)||0,levelBest:value.levelBest&&typeof value.levelBest==="object"?value.levelBest:{}};}catch(_){return {games:0,questions:0,correct:0,bestStreak:0,bestScore:0,levelBest:{}};}}
-function updateStats(){const s=loadStats();$("statGames").textContent=s.games;$("statAccuracy").textContent=s.questions?Math.round(s.correct/s.questions*100)+"%":"—";$("statStreak").textContent=s.bestStreak;$("statBest").textContent=s.bestScore;}
-function showToast(message){const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toastId);toastId=setTimeout(function(){el.classList.remove("show");},2200);}
-function setView(name){["homeView","quizView","resultView","tableView"].forEach(function(id){$(id).hidden=id!==name;});$("quizTab").classList.toggle("active",name==="homeView"||name==="quizView"||name==="resultView");$("tableTab").classList.toggle("active",name==="tableView");window.scrollTo({top:0,behavior:"smooth"});}
+function loadStats(){
+ try{const v=JSON.parse(localStorage.getItem(STORE_KEY)||"{}");return {games:Number(v.games)||0,questions:Number(v.questions)||0,correct:Number(v.correct)||0,bestStreak:Number(v.bestStreak)||0,bestScore:Number(v.bestScore)||0,levelBest:v.levelBest&&typeof v.levelBest==="object"?v.levelBest:{},xp:Number(v.xp)||0,wins:Number(v.wins)||0,clears:v.clears&&typeof v.clears==="object"?v.clears:{},collected:Array.isArray(v.collected)?v.collected.filter(function(n){return Number.isInteger(n)&&n>=1&&n<=118;}):[]};}
+ catch(_){return {games:0,questions:0,correct:0,bestStreak:0,bestScore:0,levelBest:{},xp:0,wins:0,clears:{},collected:[]};}
+}
+function playerLevel(xp){return Math.floor(Math.max(0,xp)/200)+1;}
+function updateStats(){
+ const s=loadStats();
+ $("statGames").textContent=s.xp.toLocaleString("ko-KR");
+ $("statAccuracy").textContent=s.collected.length+"/118";
+ $("statStreak").textContent=s.wins;
+ $("statBest").textContent=s.bestScore.toLocaleString("ko-KR");
+ const lv=playerLevel(s.xp),within=s.xp%200;
+ $("homePlayerLevel").textContent="LV. "+lv;
+ $("homeXpText").textContent=within+" / 200 XP";
+ $("homeXpBar").style.width=(within/200*100)+"%";
+ const ranks=["견습 연구원","원소 분석가","분자 설계자","핵심 연구원","주기율표 수호자","원소 마스터"];
+ $("homeRank").textContent=ranks[Math.min(ranks.length-1,Math.floor((lv-1)/3))];
+ ["easy","normal","hard"].forEach(function(mode){
+  const n=Math.min(5,Number(s.clears[mode])||0),label=$(mode+"Progress"),bar=$(mode+"ProgressBar");
+  if(label)label.textContent="BOSS "+n+" / 5";
+  if(bar)bar.style.width=(n/5*100)+"%";
+ });
+ $("collectionCount").textContent=s.collected.length;
+ $("collectionBar").style.width=(s.collected.length/118*100)+"%";
+ const preview=$("collectionPreview");preview.innerHTML="";
+ if(!s.collected.length){
+  const icon=document.createElement("span");icon.className="empty-crystal";icon.textContent="◇";
+  const msg=document.createElement("span");msg.textContent="전투에서 승리하고 원소를 수집해 봐.";preview.append(icon,msg);
+ }else{
+  s.collected.slice(-8).reverse().forEach(function(z){const e=ELEMENTS[z-1],chip=document.createElement("span");chip.className="crystal-chip";chip.textContent=e.symbol;chip.title=e.ko+" · "+e.z+"번";preview.appendChild(chip);});
+ }
+}
 function makeQuestion(element,pool,index,mode){
   const kind=mode==="hard"?index%4:(mode==="normal"?index%3:0);
   let prompt="",answer="",label="",hint="";
@@ -444,98 +473,146 @@ function makeQuestion(element,pool,index,mode){
   });
   return {element:element,kind:kind,prompt:prompt,promptText:prompt.replace(/<[^>]*>/g,""),answer:answer,label:label,hint:hint,choices:chosen};
 }
+const BOSS_NAMES={
+ easy:["헬륨 스카웃","리튬 골렘","산소 워든","마그네슘 나이트","칼슘 타이탄"],
+ normal:["철의 거상","은빛 센티널","제논 드래곤","백금 수호자","세슘 콜로서스"],
+ hard:["란타넘 망령","악티늄 감시자","우라늄 드래곤","초중원소 집행자","오가네손 오버로드"]
+};
+const BOSS_SYMBOLS={easy:["He","Li","O","Mg","Ca"],normal:["Fe","Ag","Xe","Pt","Cs"],hard:["La","Ac","U","Og","Og"]};
+const BOSS_HP={easy:86,normal:101,hard:118};
+function renderBattleHud(){
+ if(!game)return;
+ $("bossHpText").textContent=Math.max(0,game.bossHp)+" / "+game.bossMax;
+ $("bossHpFill").style.width=(Math.max(0,game.bossHp)/game.bossMax*100)+"%";
+ $("playerLives").textContent=Array.from({length:3},function(_,i){return i<game.lives?"♥":"♡";}).join(" ");
+ $("comboValue").textContent="×"+game.streak;
+ $("battleScore").textContent=game.score.toLocaleString("ko-KR");
+ $("battleXp").textContent=game.xpRun;
+}
 function startGame(mode){
-  clearInterval(timerId);
-  const config=LEVELS[mode],pool=ELEMENTS.filter(function(e){return e.z<=config.max;});
-  const questions=shuffle(pool).slice(0,10).map(function(e,i){return makeQuestion(e,pool,i,mode);});
-  game={mode:mode,questions:questions,index:0,score:0,correct:0,streak:0,bestStreak:0,wrong:[]};
-  $("gameLevelName").textContent=config.name;$("gameScope").textContent=config.scope;
-  setView("quizView");renderQuestion();
+ clearInterval(timerId);
+ const config=LEVELS[mode],pool=ELEMENTS.filter(function(e){return e.z<=config.max;});
+ const s=loadStats(),stage=Math.min(5,(Number(s.clears[mode])||0)+1),bossName=BOSS_NAMES[mode][stage-1];
+ const questions=shuffle(pool).slice(0,10).map(function(e,i){return makeQuestion(e,pool,i,mode);});
+ game={mode:mode,stage:stage,bossName:bossName,questions:questions,index:0,score:0,correct:0,answeredCount:0,streak:0,bestStreak:0,wrong:[],lives:3,bossMax:BOSS_HP[mode]+(stage-1)*7,bossHp:BOSS_HP[mode]+(stage-1)*7,scanned:false,xpRun:0,collected:[]};
+ $("gameLevelName").textContent=({easy:"기초 원소 평원",normal:"전이금속 요새",hard:"초중원소 심연"})[mode];
+ $("gameScope").textContent=config.scope+" · "+bossName;
+ $("battleStage").textContent="BOSS "+String(stage).padStart(2,"0")+" / 05";
+ $("bossName").textContent=bossName;$("guardianSymbol").textContent=BOSS_SYMBOLS[mode][stage-1];
+ $("bossPhase").textContent="PHASE "+String(stage).padStart(2,"0");
+ $("scannerButton").disabled=false;$("scannerStatus").textContent="스캐너 준비 완료";
+ $("scannerButton").querySelector("small").textContent="이번 전투 1회";
+ $("guardianOrb").classList.remove("hit","shake");
+ renderBattleHud();setView("quizView");renderQuestion();
 }
 function renderQuestion(){
-  clearInterval(timerId);
-  const q=game.questions[game.index],config=LEVELS[game.mode];
-  q.answered=false;
-  $("questionCount").textContent="QUESTION "+String(game.index+1).padStart(2,"0")+" / 10";
-  $("questionProgress").style.width=(game.index/10*100)+"%";
-  $("questionPrompt").innerHTML=q.prompt;
-  $("questionHint").textContent=q.hint;
-  $("questionFeedback").hidden=true;
-  $("optionGrid").innerHTML="";
-  q.choices.forEach(function(choice,index){
-    const button=document.createElement("button");button.type="button";button.className="option";button.dataset.value=choice.value;
-    const key=document.createElement("span");key.className="option-key";key.textContent=String.fromCharCode(65+index);
-    const text=document.createElement("span");text.className="option-label";text.textContent=choice.label;
-    button.append(key,text);button.addEventListener("click",function(){answerQuestion(choice.value);});$("optionGrid").appendChild(button);
-  });
-  remaining=config.seconds;updateTimer();
-  timerId=setInterval(function(){remaining=Math.max(0,remaining-1);updateTimer();if(remaining<=0){clearInterval(timerId);answerQuestion(null);}},1000);
+ clearInterval(timerId);
+ const q=game.questions[game.index],config=LEVELS[game.mode];q.answered=false;
+ $("questionCount").textContent="WAVE "+String(game.index+1).padStart(2,"0")+" / 10";
+ $("questionProgress").style.width=(game.index/10*100)+"%";$("waveStatus").textContent="TARGET LOCKED";
+ $("questionPrompt").innerHTML=q.prompt;$("questionHint").textContent=q.hint+" 정답을 맞히면 에너지 공격이 발사돼.";
+ $("questionFeedback").hidden=true;$("optionGrid").innerHTML="";
+ q.choices.forEach(function(choice,index){
+  const button=document.createElement("button");button.type="button";button.className="option";button.dataset.value=choice.value;
+  const key=document.createElement("span");key.className="option-key";key.textContent=String(index+1);
+  const label=document.createElement("span");label.className="option-label";label.textContent=choice.label;
+  button.append(key,label);button.addEventListener("click",function(){answerQuestion(choice.value);});$("optionGrid").appendChild(button);
+ });
+ $("scannerButton").disabled=game.scanned;remaining=config.seconds;updateTimer();renderBattleHud();
+ timerId=setInterval(function(){remaining=Math.max(0,remaining-1);updateTimer();if(remaining<=0){clearInterval(timerId);answerQuestion(null);}},1000);
 }
 function updateTimer(){
-  const total=LEVELS[game.mode].seconds,ratio=remaining/total;
-  $("timerText").textContent=remaining+"초";
-  $("timerBar").style.width=(ratio*100)+"%";
-  $("timerWrap").classList.toggle("urgent",remaining<=Math.max(4,Math.ceil(total*.3)));
+ const total=LEVELS[game.mode].seconds,ratio=remaining/total;
+ $("timerText").textContent=remaining+"초";$("timerBar").style.width=(ratio*100)+"%";
+ $("timerWrap").classList.toggle("urgent",remaining<=Math.max(4,Math.ceil(total*.3)));
+}
+function animateGuardian(correct,damage){
+ const orb=$("guardianOrb"),pop=$("damagePop");orb.classList.remove("hit","shake");void orb.offsetWidth;orb.classList.add(correct?"hit":"shake");
+ if(correct){pop.textContent="-"+damage;pop.classList.remove("show");void pop.offsetWidth;pop.classList.add("show");}
 }
 function answerQuestion(value){
-  if(!game)return;
-  const q=game.questions[game.index];if(q.answered)return;
-  q.answered=true;clearInterval(timerId);
-  const correct=value===q.answer;
-  if(correct){game.correct++;game.streak++;game.bestStreak=Math.max(game.bestStreak,game.streak);game.score+=10+Math.min(game.streak-1,5)*2;}
-  else{game.streak=0;game.wrong.push(q);}
-  Array.from($("optionGrid").querySelectorAll(".option")).forEach(function(button){
-    button.disabled=true;
-    if(button.dataset.value===q.answer)button.classList.add("correct");
-    if(value!==null&&button.dataset.value===value&&value!==q.answer)button.classList.add("wrong");
-  });
-  const feedback=$("questionFeedback");feedback.hidden=false;feedback.classList.toggle("wrong",!correct);
-  $("feedbackTitle").textContent=correct?"정답이야! ✦":(value===null?"시간 초과!":"아쉽지만 정답은 따로 있어.");
-  $("feedbackDetail").textContent="정답: "+q.element.ko+" ("+q.element.symbol+") · 원자번호 "+q.element.z+"번";
-  $("nextButton").textContent=game.index===9?"결과 확인하기　✦":"다음 문제　→";
-  $("questionProgress").style.width=((game.index+1)/10*100)+"%";
-  $("questionHint").textContent=correct?"좋아! 다음 문제도 이어서 도전해 봐.":"정답을 확인했어. 기억해 두고 다음 문제로 가 보자.";
+ if(!game)return;
+ const q=game.questions[game.index];if(q.answered)return;q.answered=true;clearInterval(timerId);game.answeredCount++;
+ const correct=value===q.answer;let gained=0,damage=0;
+ if(correct){
+  game.correct++;game.streak++;game.bestStreak=Math.max(game.bestStreak,game.streak);
+  damage=11+Math.min(game.streak,5)*2+Math.min(4,Math.floor(remaining/5));
+  game.bossHp=Math.max(0,game.bossHp-damage);gained=100+remaining*6+game.streak*12;
+  game.score+=gained;game.xpRun+=20;game.collected.push(q.element.z);
+  $("bossState").textContent=game.bossHp===0?"CORE DESTABILIZED":"ARMOR BREACHED · "+damage+" DAMAGE";
+  $("waveStatus").textContent="DIRECT HIT  -"+damage;animateGuardian(true,damage);
+ }else{
+  game.streak=0;game.lives--;game.wrong.push(q);
+  $("bossState").textContent=value===null?"TIMEOUT · SHIELD DAMAGED":"COUNTER ATTACK · SHIELD DAMAGED";
+  $("waveStatus").textContent=value===null?"TARGET LOST":"SHIELD IMPACT";animateGuardian(false,0);
+ }
+ Array.from($("optionGrid").querySelectorAll(".option")).forEach(function(button){
+  button.disabled=true;if(button.dataset.value===q.answer)button.classList.add("correct");
+  if(value!==null&&button.dataset.value===value&&value!==q.answer)button.classList.add("wrong");
+ });
+ renderBattleHud();
+ const feedback=$("questionFeedback");feedback.hidden=false;feedback.classList.toggle("wrong",!correct);
+ $("feedbackTitle").textContent=correct?"직격 성공! +"+gained+" PTS":(value===null?"시간 초과! 실드 -1":"반격을 맞았어! 실드 -1");
+ $("feedbackDetail").textContent="정답 데이터: "+q.element.ko+" ("+q.element.symbol+") · 원자번호 "+q.element.z+"번";
+ $("nextButton").textContent=game.bossHp<=0?"보스 격파 확인　✦":(game.index===9?"전투 결과　→":"다음 웨이브　→");
+ $("questionProgress").style.width=((game.index+1)/10*100)+"%";
+ $("scannerButton").disabled=true;
 }
-function nextQuestion(){if(!game)return;if(game.index>=9){finishGame();return;}game.index++;renderQuestion();}
-function finishGame(){
-  clearInterval(timerId);const s=loadStats();
-  s.games++;s.questions+=game.questions.length;s.correct+=game.correct;s.bestStreak=Math.max(s.bestStreak,game.bestStreak);s.bestScore=Math.max(s.bestScore,game.score);s.levelBest[game.mode]=Math.max(Number(s.levelBest[game.mode])||0,game.score);
-  try{localStorage.setItem(STORE_KEY,JSON.stringify(s));}catch(_){showToast("기록 저장 공간이 부족해. 브라우저 저장 공간을 확인해 줘.");}
-  updateStats();
-  const accuracy=Math.round(game.correct/10*100);
-  $("resultScore").innerHTML=game.score+'<span> / 170</span>';
-  $("resultCorrect").textContent=game.correct+"/10";$("resultAccuracy").textContent=accuracy+"%";$("resultStreak").textContent=game.bestStreak;
-  $("resultCaption").textContent=accuracy===100?"완벽해! 원소 마스터에 한 걸음 더 가까워졌어.":accuracy>=80?"훌륭해! 원소 정보가 점점 익숙해지고 있어.":accuracy>=50?"좋은 도전이야. 틀린 문제를 복습하면 더 탄탄해질 거야.":"괜찮아. 정답을 다시 확인하고 한 번 더 도전해 보자.";
-  $("reviewList").innerHTML="";$("reviewEmpty").hidden=game.wrong.length!==0;
-  game.wrong.forEach(function(q){
-    const li=document.createElement("li");li.className="review-item";
-    const copy=document.createElement("div");const prompt=document.createElement("strong");prompt.textContent=q.promptText;
-    const answer=document.createElement("span");answer.textContent="정답: "+q.element.ko+" ("+q.element.symbol+") · "+q.element.z+"번";
-    copy.append(prompt,answer);const mark=document.createElement("span");mark.className="review-mark";mark.textContent="다시 보기";li.append(copy,mark);$("reviewList").appendChild(li);
-  });
-  $("retryButton").textContent=LEVELS[game.mode].name+" 다시 도전　↻";
-  setView("resultView");
+function nextQuestion(){
+ if(!game)return;
+ if(game.bossHp<=0){finishGame(true);return;}
+ if(game.lives<=0||game.index>=9){finishGame(false);return;}
+ game.index++;renderQuestion();
+}
+function finishGame(victory){
+ if(!game)return;clearInterval(timerId);
+ const s=loadStats(),mode=game.mode,reward=game.xpRun+(victory?100:25)+game.bestStreak*5;
+ s.games++;s.questions+=game.answeredCount;s.correct+=game.correct;
+ s.bestStreak=Math.max(s.bestStreak,game.bestStreak);s.bestScore=Math.max(s.bestScore,game.score);
+ s.levelBest[mode]=Math.max(Number(s.levelBest[mode])||0,game.score);s.xp+=reward;
+ if(victory){s.wins++;s.clears[mode]=Math.min(5,(Number(s.clears[mode])||0)+1);}
+ const previous=new Set(s.collected);game.collected.forEach(function(z){previous.add(z);});
+ s.collected=Array.from(previous).sort(function(a,b){return a-b;});
+ try{localStorage.setItem(STORE_KEY,JSON.stringify(s));}catch(_){showToast("기록 저장 공간이 부족해. 브라우저 저장 공간을 확인해 줘.");}
+ updateStats();
+ $("resultStamp").textContent=victory?"SECTOR CLEARED · MISSION COMPLETE":"MISSION FAILED · RETREAT";
+ $("resultTitle").textContent=victory?"보스 격파!":"작전 실패…";
+ $("resultCaption").textContent=victory?"수호자의 코어가 무너졌어. 원소 에너지를 회수했어!":"실드가 소진되었거나 보스가 버텼어. 회수한 데이터로 장비를 강화하고 재도전하자.";
+ $("resultScore").innerHTML=game.score.toLocaleString("ko-KR")+'<span> PTS</span>';
+ $("resultXp").textContent="+"+reward+" XP";$("resultCorrect").textContent=game.correct+" / "+game.answeredCount;
+ $("resultStreak").textContent=game.bestStreak+" HIT";$("lootName").textContent=game.collected.length+"개 원소 데이터 회수";
+ const fresh=game.collected.filter(function(z){return !previous.has(z);});
+ $("lootDetail").textContent=fresh.length?fresh.map(function(z){return ELEMENTS[z-1].symbol;}).join(" · ")+" 도감 신규 등록!":"수집한 원소 데이터가 연구 도감에 저장됐어.";
+ $("retryButton").textContent="같은 구역 재도전　↻";setView("resultView");
+}
+function useScanner(){
+ if(!game||game.scanned||game.questions[game.index].answered)return;
+ game.scanned=true;$("scannerButton").disabled=true;$("scannerStatus").textContent="스캔 완료 · 후보 2개 제거";
+ const q=game.questions[game.index],wrong=shuffle(Array.from($("optionGrid").querySelectorAll(".option")).filter(function(b){return b.dataset.value!==q.answer;})).slice(0,2);
+ wrong.forEach(function(button){button.style.opacity=".18";button.disabled=true;button.querySelector(".option-label").textContent="SCAN CLEAR";});
+ showToast("원소 스캔 완료! 오답 후보 2개를 제거했어.");
 }
 function renderPeriodicTable(){
-  const grid=$("periodicGrid");
-  ELEMENTS.forEach(function(e){
-    const button=document.createElement("button");button.type="button";button.className="element";button.dataset.z=e.z;button.dataset.search=(e.ko+" "+e.en+" "+e.symbol+" "+e.z).toLowerCase();button.style.setProperty("--tile",TYPE_COLORS[e.type]);
-    if(e.type==="lanth"){button.style.gridColumn=String(4+(e.z-57));button.style.gridRow="8";}
-    else if(e.type==="act"){button.style.gridColumn=String(4+(e.z-89));button.style.gridRow="9";}
-    else{button.style.gridColumn=String(e.group);button.style.gridRow=String(e.period);}
-    button.setAttribute("aria-label",e.z+"번 "+e.ko+" ("+e.symbol+")");
-    const number=document.createElement("span");number.className="atomic-number";number.textContent=e.z;
-    const symbol=document.createElement("strong");symbol.className="symbol";symbol.textContent=e.symbol;
-    const short=document.createElement("span");short.className="element-short";short.textContent=e.ko;
-    button.append(number,symbol,short);button.addEventListener("click",function(){showElement(e);});
-    grid.appendChild(button);
-  });
+ const grid=$("periodicGrid"),owned=new Set(loadStats().collected);
+ ELEMENTS.forEach(function(e){
+  const button=document.createElement("button");button.type="button";button.className="element";button.dataset.z=e.z;
+  button.dataset.search=(e.ko+" "+e.en+" "+e.symbol+" "+e.z).toLowerCase();button.style.setProperty("--tile",TYPE_COLORS[e.type]);
+  if(e.type==="lanth"){button.style.gridColumn=String(4+(e.z-57));button.style.gridRow="8";}
+  else if(e.type==="act"){button.style.gridColumn=String(4+(e.z-89));button.style.gridRow="9";}
+  else{button.style.gridColumn=String(e.group);button.style.gridRow=String(e.period);}
+  button.classList.toggle("collected",owned.has(e.z));
+  button.setAttribute("aria-label",e.z+"번 "+e.ko+" ("+e.symbol+")"+(owned.has(e.z)?" 수집 완료":""));
+  const number=document.createElement("span");number.className="atomic-number";number.textContent=e.z;
+  const symbol=document.createElement("strong");symbol.className="symbol";symbol.textContent=e.symbol;
+  const short=document.createElement("span");short.className="element-short";short.textContent=e.ko;
+  button.append(number,symbol,short);button.addEventListener("click",function(){showElement(e);});grid.appendChild(button);
+ });
 }
 function showElement(e){
   $("elementDetail").hidden=false;$("detailSymbol").textContent=e.symbol;$("detailName").textContent=e.ko+" · "+e.en;
   const place=e.period+"주기"+(e.group?" · "+e.group+"족":" · 계열 원소");
   $("detailInfo").textContent="원자번호 "+e.z+"번 · "+place;
-  $("detailCategory").textContent=TYPE_NAMES[e.type];
+  $("detailCategory").textContent=TYPE_NAMES[e.type]+(loadStats().collected.indexOf(e.z)>=0?" · 수집 완료":" · 미수집");
 }
 function filterElements(){
   const q=$("elementSearch").value.trim().toLowerCase();let matches=0;
@@ -560,6 +637,9 @@ $("nextButton").addEventListener("click",nextQuestion);
 $("homeButton").addEventListener("click",function(){game=null;setView("homeView");});
 $("retryButton").addEventListener("click",function(){if(game)startGame(game.mode);});
 $("elementSearch").addEventListener("input",filterElements);
+$("scannerButton").addEventListener("click",useScanner);
+$("openAlbumButton").addEventListener("click",showTable);
+$("resultAlbumButton").addEventListener("click",showTable);
 document.querySelectorAll("[data-level]").forEach(function(button){button.addEventListener("click",function(){startGame(button.dataset.level);});});
 document.addEventListener("keydown",function(event){
   if(event.key==="Escape"&&$("tableView").hidden===false){$("elementDetail").hidden=true;$("elementSearch").value="";filterElements();}
