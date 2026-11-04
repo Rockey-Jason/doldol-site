@@ -15,7 +15,7 @@ test("canonical recipes retain the locked Normal 10:1 ratio and specified stage 
  const normal=CANONICAL_DORONUM_CATALOG.find(item=>item.id==="ITEM_DORONUM_NORMAL");
  const ultra=CANONICAL_DORONUM_CATALOG.find(item=>item.id==="ITEM_DORONUM_ULTRA");
  const rusted=CANONICAL_DORONUM_CATALOG.find(item=>item.id==="ITEM_DORONUM_RUSTED");
- assert.equal(normal.recipe.inputs.doriMeat,10);
+ assert.equal(normal.recipe.inputs.ITEM_DORI_MEAT,10);
  assert.equal(normal.recipe.outputQuantity,1);
  assert.equal(normal.recipe.lockedRatio,"10:1");
  assert.equal(ultra.recipe.durationSec,90);
