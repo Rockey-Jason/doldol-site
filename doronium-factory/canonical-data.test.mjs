@@ -51,12 +51,12 @@ test("save migration remaps unambiguous aliases, preserves active reservations a
   runtime:{itemStacks:[
    {runtimeID:"IS-1",itemID:"doronium_normal",quantity:100,quality:95,purity:96,synthetic:false},
    {runtimeID:"IS-2",itemID:"doronium_void",quantity:7,quality:95,purity:96,synthetic:false}
-  ],reservations:{RS-1:{reservationID:"RS-1",itemID:"doronium_normal",status:"reserved",allocations:[{stackID:"IS-1",quantity:10}]}}}
+  ],reservations:{"RS-1":{reservationID:"RS-1",itemID:"doronium_normal",status:"reserved",allocations:[{stackID:"IS-1",quantity:10}]}}}
  };
  const result=applyDoronumMigration(state);
  assert.equal(result.changes.length,1);
  assert.equal(state.runtime.itemStacks[0].itemID,"ITEM_DORONUM_NORMAL");
- assert.equal(state.runtime.reservations.RS-1.itemID,"ITEM_DORONUM_NORMAL");
+ assert.equal(state.runtime.reservations["RS-1"].itemID,"ITEM_DORONUM_NORMAL");
  assert.equal(state.runtime.itemStacks[1].itemID,"doronium_void");
  assert.equal(state.runtime.itemStacks[1].quarantined,true);
  assert.equal(state.runtime.itemStacks[1].quarantineReason,"canonical-equivalence-not-defined");
