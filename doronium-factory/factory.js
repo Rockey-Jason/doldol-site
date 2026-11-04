@@ -1175,7 +1175,16 @@ function centerCamera(){camera.x=S.player.x+.5;camera.y=S.player.y+.5;world3d.ce
 function setZoom(z){camera.zoom=clamp(z,.55,1.8);world3d.setZoom(camera.zoom);$("zoom-value").textContent=Math.round(camera.zoom*100)+"%";drawWorld()}
 function showModal(title,body,buttons=[]){$("modal-card").innerHTML='<div class="modal-head"><h2>'+title+'</h2><button class="modal-close" id="modal-x">×</button></div><div class="modal-body">'+body+'</div><div class="modal-foot">'+buttons.map((b,i)=>'<button class="action-button '+(b.cls||"secondary")+'" data-modal-action="'+i+'">'+b.label+'</button>').join("")+'</div>';$("modal-overlay").classList.add("show");$("modal-x").onclick=closeModal;$("modal-card").querySelectorAll("[data-modal-action]").forEach(el=>el.onclick=()=>{const btn=buttons[Number(el.dataset.modalAction)];if(btn?.action)btn.action();else closeModal()})}
 function closeModal(){if(crystalViewer){crystalViewer.dispose();crystalViewer=null}$("modal-overlay").classList.remove("show")}
-function settingsModal(){const body='<div class="setting-row"><div><strong>효과음</strong><small>건설·채집·연구 알림 소리</small></div><button class="toggle '+(S.settings.sound?"on":"")+'" id="setting-sound"><i></i></button></div><div class="setting-row"><div><strong>모션 감소</strong><small>반짝임과 화면 효과를 줄입니다.</small></div><button class="toggle '+(S.settings.reducedMotion?"on":"")+'" id="setting-motion"><i></i></button></div><p>저장 방식: 로그인 상태에서는 돌이사이트 계정의 개인 클라우드에 저장됩니다. 로그아웃 상태에서는 이 브라우저에만 저장됩니다. 오프라인 생산은 진행되지 않습니다.</p><p id="account-line">계정 연결 상태 확인 중…</p>';showModal("게임 설정",body,[{label:"닫기",cls:"primary"}]);$("setting-sound").onclick=()=>{S.settings.sound=!S.settings.sound;settingsModal();markDirty()};$("setting-motion").onclick=()=>{S.settings.reducedMotion=!S.settings.reducedMotion;settingsModal();markDirty()};$("account-line").textContent=authSession?"돌이사이트 계정 클라우드 연결됨":"로그인이 필요합니다. 돌이사이트에서 로그인 후 다시 접속하세요."}
+function settingsModal(){
+ const backups=listConflictBackups();
+ const backupSection='<div class="backup-panel"><div class="subheading"><h3>충돌 백업</h3><span class="muted-small">'+backups.length+' SAVED</span></div><p>클라우드 충돌 해결 과정에서 보존한 이전 진행도를 복원할 수 있습니다.</p>'+(backups.map(item=>'<div class="backup-row"><div><strong>'+escapeHTML(item.label||"save")+'</strong><small>'+escapeHTML(item.savedAt||"")+'</small></div><button type="button" class="action-button secondary" data-conflict-backup="'+escapeHTML(item.key)+'">복원</button></div>').join("")||'<div class="backup-empty">복원 가능한 충돌 백업이 없습니다.</div>')+'</div>';
+ const body='<div class="setting-row"><div><strong>효과음</strong><small>건설·채집·연구 알림 소리</small></div><button class="toggle '+(S.settings.sound?"on":"")+'" id="setting-sound"><i></i></button></div><div class="setting-row"><div><strong>모션 감소</strong><small>반짝임과 화면 효과를 줄입니다.</small></div><button class="toggle '+(S.settings.reducedMotion?"on":"")+'" id="setting-motion"><i></i></button></div><p>저장 방식: 로그인 상태에서는 돌이사이트 계정의 개인 클라우드에 저장됩니다. 로그아웃 상태에서는 이 브라우저에만 저장됩니다. 오프라인 생산은 진행되지 않습니다.</p><p id="account-line">계정 연결 상태 확인 중…</p>'+backupSection;
+ showModal("게임 설정",body,[{label:"닫기",cls:"primary"}]);
+ $("setting-sound").onclick=()=>{S.settings.sound=!S.settings.sound;settingsModal();markDirty()};
+ $("setting-motion").onclick=()=>{S.settings.reducedMotion=!S.settings.reducedMotion;settingsModal();markDirty()};
+ $("account-line").textContent=authSession?"돌이사이트 계정 클라우드 연결됨":"로그인이 필요합니다. 돌이사이트에서 로그인 후 다시 접속하세요.";
+ document.querySelectorAll("[data-conflict-backup]").forEach(button=>button.addEventListener("click",()=>restoreConflictBackup(button.dataset.conflictBackup)));
+}
 function sellItems(){const id=$("sell-resource").value,qty=Math.floor(Number($("sell-amount").value)||0);if(!id||qty<1||itemCount(id)<qty){toast("판매 수량이 부족합니다.","warn");return}takeItem(id,qty);const earned=Math.floor(qty*RESOURCE[id].price);S.money+=earned;S.stats.sold+=qty;log(RESOURCE[id].name+" "+fmt(qty)+"개 판매 · "+fmt(earned)+" D");toast("판매 완료 · +"+fmt(earned)+" D");playTone(680,.1,"triangle");markDirty();renderAll()}
 function setTabFromKey(key){const map={b:"build",o:"factory",i:"inventory",t:"research",j:"mission"};if(map[key])toggleControlPanel(map[key])}
 function movePlayer(dx,dy){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y};const x=clamp(origin.x+dx,0,WORLD_W-1),y=clamp(origin.y+dy,0,WORLD_H-1);if(!isWalkable(x,y)){toast("시설 또는 지형에 막혀 있습니다.","warn");return}movePlayerTo(x,y)}
@@ -1328,9 +1337,36 @@ function setSaveMessage(value){$("save-message").textContent=value}
 function saveLocal(){if(saveBlockedForFutureSchema){setSaveMessage("최신 버전에서 생성된 저장 데이터는 이 버전에서 덮어쓸 수 없습니다.");return null}const savedAt=nowISO();S.lastSavedAt=savedAt;try{const audit=validateRuntimeState(S);if(!audit.valid)throw new Error("저장 전 인벤토리 검증 실패: "+audit.errors.join(", "));const skills=validateSkillState(S.skills);if(!skills.valid)throw new Error("저장 전 스킬 검증 실패: "+skills.errors.join(", "));const snapshot=requestSaveSnapshot(S);S.runtime.saveSnapshotRequested=false;writeSaveEnvelope(localStorage,activeLocalKey,snapshot,savedAt);return savedAt}catch(e){setSaveMessage("저장 검증 또는 저장 공간 오류");console.error(e);return null}}
 async function loadCloudForUser(session){if(!cloudClient||!session?.user?.id)return false;setCloud("syncing","클라우드 확인");try{const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at,save_revision").eq("storage_key",CLOUD_KEY).eq("is_deleted",false).maybeSingle();if(error)throw error;if(!data){cloudUpdatedAt=null;cloudSaveRevision=0;setCloud("online","계정 연결됨");return false}const envelope=data.storage_value||{};if(!envelope.state)throw new Error("저장 형식이 올바르지 않습니다.");const remoteValidation=validateSaveEnvelope(envelope);if(!remoteValidation.valid)throw new Error("클라우드 저장 데이터 검증 실패: "+remoteValidation.reason);const remoteTime=Date.parse(data.updated_at||envelope.savedAt||0),localTime=Date.parse(S.lastSavedAt||0);cloudUpdatedAt=data.updated_at||envelope.savedAt||null;cloudSaveRevision=Math.max(0,Number(data.save_revision)||0);if(remoteTime>localTime){hydrateState(envelope.state);S.lastSavedAt=cloudUpdatedAt;writeSaveEnvelope(localStorage,activeLocalKey,S,cloudUpdatedAt);renderAll();setViewMode(S.player.viewMode);toast("클라우드 저장 데이터를 불러왔습니다.");setCloud("online","클라우드 동기화")}else{setCloud("online","클라우드 연결됨");if(localTime>remoteTime){cloudSaveConflict={expectedRevision:cloudSaveRevision,remoteRevision:cloudSaveRevision,remoteUpdatedAt:cloudUpdatedAt,detectedAt:nowISO(),localSavedAt:S.lastSavedAt,reason:"LOCAL_NEWER_THAN_CLOUD"};dirty=true;setCloud("error","저장 충돌");setSaveMessage("기기와 클라우드 저장 시간이 다릅니다. 자동 덮어쓰기를 차단했습니다.");if(!E2E_MODE)showCloudSaveConflict()}}return true}catch(e){if(String(e).includes("UNSUPPORTED_FUTURE_SCHEMA")){saveBlockedForFutureSchema=true;setCloud("error","최신 버전 필요");setSaveMessage("클라우드 저장 데이터가 더 최신 버전입니다. 덮어쓰기를 차단했습니다.");toast("최신 버전의 클라우드 저장 데이터가 있어 저장을 잠갔습니다.","warn");return true}console.error("Cloud load failed",e);setCloud("error","클라우드 오류");setSaveMessage("로컬 저장 사용 중");return false}}
 async function initCloud(){try{const mod=await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/+esm");createClient=mod.createClient;cloudClient=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"sb-scttowfhygcpdirrekqm-auth-token"}});const {data,error}=await cloudClient.auth.getSession();if(error)throw error;authSession=data.session;if(authSession){activeLocalKey=LOCAL_KEY+"_"+authSession.user.id;cloudSaveRevision=0;cloudUpdatedAt=null;cloudSaveConflict=null;saveBlockedForFutureSchema=false;const accountLocal=loadLocal();if(!accountLocal)S=freshState();const found=await loadCloudForUser(authSession);if(!found){renderAll();await saveGame(true)}}else setCloud("","로그인 필요");cloudClient.auth.onAuthStateChange((event,session)=>{queueMicrotask(async()=>{const previous=authSession?.user?.id;authSession=session;if(session?.user?.id&&session.user.id!==previous){activeLocalKey=LOCAL_KEY+"_"+session.user.id;cloudSaveRevision=0;cloudUpdatedAt=null;cloudSaveConflict=null;saveBlockedForFutureSchema=false;const accountLocal=loadLocal();if(!accountLocal)S=freshState();dirty=false;const found=await loadCloudForUser(session);if(!found){renderAll();await saveGame(true)}}else if(!session){activeLocalKey=LOCAL_KEY;cloudSaveRevision=0;cloudUpdatedAt=null;cloudSaveConflict=null;saveBlockedForFutureSchema=false;const guestLocal=loadLocal();if(!guestLocal)S=freshState();renderAll();setCloud("","로그인 필요");saveLocal()}else if(event==="TOKEN_REFRESHED"){setCloud("online","클라우드 연결됨")}})});return true}catch(e){console.warn("Supabase client unavailable; using local save",e);cloudClient=null;authSession=null;setCloud("error","로컬 저장");return false}}
+function listConflictBackups(){
+ try{
+  const value=JSON.parse(localStorage.getItem(activeLocalKey+"_conflict_backups")||"[]");
+  return Array.isArray(value)?value.filter(item=>item&&typeof item.key==="string"&&item.key.startsWith(activeLocalKey+"_conflict_")).slice(0,12):[];
+ }catch{return []}
+}
 function saveConflictBackup(state,label){
  const key=activeLocalKey+"_conflict_"+label+"_"+Date.now();
- const savedAt=nowISO();writeSaveEnvelope(localStorage,key,state,savedAt);return {key,savedAt};
+ const savedAt=nowISO();writeSaveEnvelope(localStorage,key,state,savedAt);
+ try{
+  const entries=listConflictBackups().filter(item=>item.key!==key);
+  entries.unshift({key,label:String(label),savedAt});
+  localStorage.setItem(activeLocalKey+"_conflict_backups",JSON.stringify(entries.slice(0,12)));
+ }catch(error){console.warn("Conflict backup index could not be updated",error)}
+ return {key,savedAt};
+}
+function restoreConflictBackup(key){
+ const entry=listConflictBackups().find(item=>item.key===key);if(!entry)return false;
+ const raw=localStorage.getItem(key);if(!raw){toast("선택한 충돌 백업 파일을 찾을 수 없습니다.","warn");return false}
+ const candidate=decodeSave(raw);if(!candidate.valid){toast("충돌 백업 검증 실패 · "+candidate.reason,"warn");return false}
+ try{
+  saveConflictBackup(requestSaveSnapshot(S),"pre_restore");
+  hydrateState(candidate.state);S.lastSavedAt=candidate.savedAt||nowISO();
+  writeSaveEnvelope(localStorage,activeLocalKey,requestSaveSnapshot(S),S.lastSavedAt);
+  dirty=true;closeModal();renderAll();setViewMode(S.player.viewMode);
+  if(cloudSaveConflict){setCloud("error","저장 충돌 해결 필요");setSaveMessage("충돌 백업 복원됨 · 클라우드 동기화 잠금 유지")}
+  else{setSaveMessage("충돌 백업 복원됨 · 클라우드 동기화 대기");setCloud(cloudClient?"syncing":"",cloudClient?"백업 복원됨":"로그인 필요")}
+  toast("충돌 백업을 복원했습니다. 기존 현재 상태도 별도 백업에 보존했습니다.");
+  return true;
+ }catch(error){console.error("Conflict backup restore failed",error);toast("백업 복원 실패 · 기존 진행도는 보존했습니다.","warn");return false}
 }
 function showCloudSaveConflict(){
  if(!cloudSaveConflict||$("modal-overlay")?.classList.contains("show"))return;
