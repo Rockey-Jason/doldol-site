@@ -1272,6 +1272,15 @@ if(E2E_MODE){
    const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],batteryBefore:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ}
   },
   powerTopologyTick(){tick(STEP);const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],battery:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ,farStatus:S.buildings.find(b=>b.uid==="P-SMELTER-2").status}},
+  runRustedPurificationTest(){
+   S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);S.buildings=[];S.research=[];
+   addItemStack(S,"ITEM_DORONUM_RUSTED",1,{quality:58,purity:42,synthetic:false});
+   addItemStack(S,"ITEM_CARBON_POWDER",2,{quality:95,purity:95,synthetic:false});
+   const machine={uid:"RUSTED-PURIFIER-E2E",type:"variantLab",variant:"PURIFY_RUSTED_DORONUM",x:20,y:20,dir:1,condition:100,status:"IDLE",input:{},inputMeta:{},output:null,progress:0,temp:25,pressure:0,fluidAmountL:2,fluidType:"WATER"};
+   S.buildings.push(machine);
+   for(let i=0;i<1400&&!machine.output;i++)tickBuilding(machine,STEP,1);
+   return {output:machine.output?structuredClone(machine.output):null,fluidAmountL:machine.fluidAmountL,fluidType:machine.fluidType,rustedRemaining:availableItemCount(S,"ITEM_DORONUM_RUSTED"),carbonRemaining:availableItemCount(S,"ITEM_CARBON_POWDER"),status:machine.status};
+  },
   setupFluidRecipeConsumerTest(){
    S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);S.buildings=[];
    addItemStack(S,"ITEM_DORONUM_NORMAL",1,{quality:95,purity:95,synthetic:false});
