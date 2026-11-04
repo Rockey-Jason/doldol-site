@@ -26,8 +26,9 @@ export async function readCloudSaveSnapshot(client,{storageKey="doronium_factory
  if(!data.storage_value||typeof data.storage_value!=="object"||!data.storage_value.state)throw new Error("INVALID_REMOTE_SAVE_ENVELOPE");
  return {exists:true,revision,updatedAt:data.updated_at||data.storage_value.savedAt||null,envelope:data.storage_value};
 }
-export async function replaceCloudSaveAfterExplicitConflict(client,{storageKey="doronium_factory_infinite_industry_v1",userId,value}={}){
+export async function replaceCloudSaveAfterExplicitConflict(client,{storageKey="doronium_factory_infinite_industry_v1",userId,value,beforeWrite}={}){
  const latest=await readCloudSaveSnapshot(client,{storageKey});
+ if(typeof beforeWrite==="function")await beforeWrite(latest);
  const result=await writeCloudSave(client,{storageKey,userId,value,expectedRevision:latest.revision});
  return {...result,previous:latest};
 }
