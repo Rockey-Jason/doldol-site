@@ -97,7 +97,7 @@ const doronumEntry=(id,name,role,recipeRefs,useCaseTags,recipe=null,acquisition=
 });
 export const CANONICAL_DORONUM_CATALOG=Object.freeze([
  doronumEntry("ITEM_DORONUM_NORMAL","Normal Doronum","high-density energy storage",["RECIPE_DORONUM_COMPRESSOR_NORMAL"],["energy-storage","variant-base","research-sample"],{
-  machineID:"BUILDING_DORONUM_COMPRESSOR",inputs:{"ITEM_DORI_MEAT":10},outputQuantity:1,durationSec:null,targetTemperatureC:null,targetPressureMPa:null,
+  machineID:"BUILDING_DORONUM_COMPRESSOR",inputs:{doriMeat:10},outputQuantity:1,durationSec:null,targetTemperatureC:null,targetPressureMPa:null,
   stabilization:["THERMAL","PRESSURE","RESONANCE"],syntheticInputForbidden:true,lockedRatio:"10:1",requiresFinalRecipeData:true
  }),
  doronumEntry("ITEM_DORONUM_YELLOW","Yellow Doronum","energy conduction and precision output stabilization",["RECIPE_DORONUM_YELLOW"],["circuitry","power-regulation"],{
