@@ -183,6 +183,31 @@ h1 span{color:#9bc1ff}
 @media(max-width:480px){.runner-home-hero{padding:17px;border-radius:21px}.runner-home-copy h2{font-size:27px}.runner-home-copy p{font-size:10px}.runner-home-tags span{font-size:8px}.run-mode-card{padding:15px}.mode-art{height:48px}.run-topbar{grid-template-columns:auto 1fr auto;gap:6px}.run-topbar .text-button{min-height:34px;padding:0 8px;font-size:9px}.run-level{gap:5px;font-size:10px}.run-level small{font-size:7px;padding:4px 5px}.run-question-count{font-size:14px}.run-hud{gap:5px}.run-hud-cell{padding:7px 8px}.run-hud-cell>span{font-size:7px}.run-hud-cell>strong{font-size:11px}.runner-stage{height:292px;border-radius:16px}.gate-grid{top:22%;height:49%;gap:1%;padding:0 .4%}.gate{border-radius:9px 9px 6px 6px;gap:4px}.gate:before{left:4px;right:4px;top:5px}.gate-key{width:17px;height:17px;border-radius:5px;font-size:7px}.gate-value{font-size:clamp(8px,2.5vw,12px)}.runner-track{top:40px;bottom:17px;left:0;right:0;clip-path:polygon(17% 0,83% 0,100% 100%,0 100%)}.runner-dori{width:72px;height:68px;bottom:10px}.runner-distance{font-size:6px}.runner-stage-footer{font-size:7px}.run-question-panel{padding:14px;border-radius:15px}.run-question-kicker{font-size:7px}.run-question-panel .timer-wrap>i{width:55px}.run-question-panel .question-prompt{font-size:17px}.run-controls{grid-template-columns:40px 1fr 40px;gap:6px}.lane-move-button{height:40px}.dash-button{grid-column:1/-1;height:43px}.selected-lane-label{font-size:7px}.run-feedback{align-items:flex-start;flex-direction:column}.run-feedback .primary-button{width:100%}.run-result-screen{padding:23px 14px}.run-result-screen .result-actions>*{flex:1 1 42%}}
 @media(prefers-reduced-motion:reduce){.mascot-orbit,.mode-art:before,.track-grid,.runner-track:before,.gate,.runner-dori svg{animation:none!important}.runner-dori,.gate{transition:none!important}}
 .element.collected{box-shadow:inset 0 0 13px color-mix(in srgb,var(--tile) 16%,transparent)}.element.collected:after{content:"";position:absolute;right:3px;top:3px;width:4px;height:4px;border-radius:50%;background:#a8edcb;box-shadow:0 0 7px #a8edcb}.element.collected .symbol{text-shadow:0 0 8px color-mix(in srgb,var(--tile) 35%,transparent)}
+
+.dori-art{display:block;width:clamp(118px,18vw,170px);height:auto;aspect-ratio:320/318;object-fit:contain;object-position:center;flex:0 0 auto;animation:mascotBounce 2s ease-in-out infinite}
+.runner-dori{width:clamp(76px,12vw,112px);height:auto;aspect-ratio:320/318;bottom:14px}
+.runner-dori img{width:100%;height:100%;aspect-ratio:320/318;object-fit:contain;object-position:center bottom;display:block;animation:doriRun .33s ease-in-out infinite alternate}
+.approach-wall{position:absolute;z-index:1;left:11%;right:11%;top:8%;height:64%;border:3px solid rgba(126,223,244,.25);border-bottom:7px solid rgba(115,207,239,.34);border-radius:20px 20px 8px 8px;background:linear-gradient(180deg,rgba(110,205,238,.06),rgba(42,135,171,.025) 68%,rgba(117,218,241,.12));box-shadow:inset 0 0 22px rgba(91,195,233,.12),0 0 24px rgba(67,177,218,.1);opacity:.1;transform:translate3d(0,-22px,-250px) scale(.46);transform-origin:center 8%;pointer-events:none;overflow:hidden}
+.approach-wall:before{content:"";position:absolute;inset:9px;border:1px solid rgba(154,226,246,.22);border-radius:12px 12px 4px 4px;box-shadow:inset 0 0 22px rgba(127,221,245,.07)}
+.approach-wall i{position:absolute;top:0;bottom:0;width:5px;background:linear-gradient(180deg,rgba(142,226,247,.05),rgba(131,223,245,.48),rgba(142,226,247,.08));box-shadow:0 0 12px rgba(105,218,244,.4)}
+.approach-wall i:nth-child(1){left:24%}.approach-wall i:nth-child(2){left:50%}.approach-wall i:nth-child(3){left:76%}
+.approach-wall b{position:absolute;left:0;right:0;top:50%;height:3px;background:rgba(140,221,244,.25);box-shadow:0 0 12px rgba(105,218,244,.4)}
+#optionGrid.gate-approaching{transform-origin:50% 6%;will-change:transform,opacity;animation:gateApproach var(--approach-duration,12s) cubic-bezier(.18,.62,.3,1) forwards}
+#approachWall.wall-approaching{will-change:transform,opacity;animation:wallApproach var(--approach-duration,12s) cubic-bezier(.18,.62,.3,1) forwards}
+#optionGrid.gate-approaching .gate{animation:gateVibrate 1.2s ease-in-out infinite alternate}
+.runner-particles{position:absolute;z-index:8;inset:0;overflow:hidden;pointer-events:none}
+.runner-particles i{position:absolute;width:5px;height:5px;border-radius:50%;background:var(--particle-color,#9af1e6);box-shadow:0 0 12px var(--particle-color,#9af1e6);animation:particleBurst .78s ease-out forwards}
+.runner-stage.gate-crossing{border-color:rgba(150,226,247,.6);box-shadow:inset 0 0 65px rgba(104,204,235,.22),0 0 35px rgba(68,180,220,.18)}
+.runner-stage.is-success.gate-crossing{box-shadow:inset 0 0 75px rgba(86,243,174,.18),0 0 35px rgba(74,226,164,.22)}
+.runner-stage.is-hit.gate-crossing{animation:runnerImpact .36s linear 2}
+.runner-stage.gate-crossing .runner-track:before{animation-duration:.19s}
+.runner-stage.gate-crossing .track-grid{animation-duration:.22s}
+@keyframes gateApproach{0%{transform:translate3d(0,-20px,-250px) scale(.46);opacity:.28;filter:brightness(.55) saturate(.65)}18%{opacity:.62}55%{opacity:.92;filter:brightness(1)}100%{transform:translate3d(0,122px,78px) scale(1.08);opacity:1;filter:brightness(1.2)}}
+@keyframes wallApproach{0%{transform:translate3d(0,-20px,-250px) scale(.46);opacity:.08}25%{opacity:.25}75%{opacity:.48}100%{transform:translate3d(0,112px,72px) scale(1.08);opacity:.7}}
+@keyframes gateVibrate{from{filter:brightness(.92)}to{filter:brightness(1.18)}}
+@keyframes particleBurst{0%{transform:translate(-50%,-50%) scale(.2);opacity:0}18%{opacity:1}100%{transform:translate(var(--dx),var(--dy)) scale(.08);opacity:0}}
+@keyframes runnerImpact{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}50%{transform:translateX(4px)}75%{transform:translateX(-2px)}}
+@media(max-width:760px){.runner-dori{width:84px;height:auto;aspect-ratio:320/318;bottom:12px}.approach-wall{left:8%;right:8%;height:62%}#optionGrid.gate-approaching{transform-origin:50% 6%}}
 </style>
 </head>
 <body>
@@ -232,7 +257,7 @@ h1 span{color:#9bc1ff}
     </div>
     <div class="runner-mascot" aria-hidden="true">
       <div class="mascot-orbit"></div><div class="mascot-platform"></div>
-      <img src="assets/dori-mascot.webp" class="dori-art" alt="돌이" draggable="false">
+      <img src="./assets/dori-mascot.webp?v=29" class="dori-art" alt="돌이" width="320" height="318" loading="eager" decoding="async" draggable="false">
       <div class="mascot-caption">DORI · RUNNER UNIT 01</div>
     </div>
   </div>
@@ -306,10 +331,12 @@ h1 span{color:#9bc1ff}
     <div class="runner-horizon"><span>ELEMENT RUNWAY</span><i></i><b></b></div>
     <div class="runner-track">
       <div class="track-grid"></div><div class="track-lane-lines"><i></i><i></i><i></i></div>
+      <div class="approach-wall" id="approachWall" aria-hidden="true"><i></i><i></i><i></i><b></b></div>
       <div class="gate-grid" id="optionGrid" aria-label="정답 게이트 선택"></div>
       <div class="runner-dori" id="runnerDori" style="--lane:1" aria-label="달리는 돌이">
         <span class="dori-shadow"></span>
         <img src="assets/dori-mascot.webp" class="dori-art" alt="돌이" draggable="false">      </div>
+      <div class="runner-particles" id="runnerParticles" aria-hidden="true"></div>
       <div class="runner-fx" id="runnerFx" aria-live="polite"></div>
       <div class="runner-distance"><span id="distanceText">DIST 0000 m</span><span id="speedText">SPEED 1.0×</span></div>
     </div>
@@ -518,6 +545,8 @@ function startGame(mode){
 }
 function renderQuestion(){
  clearInterval(timerId);
+ ["optionGrid","approachWall"].forEach(function(id){const el=$(id);el.classList.remove("gate-approaching","wall-approaching");el.style.animation="";el.style.transition="";el.style.transform="";el.style.opacity="";el.style.setProperty("--approach-duration","");});
+ $("runnerStage").classList.remove("gate-crossing");$("runnerParticles").innerHTML="";
  const q=game.questions[game.index],config=LEVELS[game.mode];
  game.answered=false;game.selectedLane=1;
  $("questionCount").innerHTML=String(game.index+1).padStart(2,"0")+' <span>/ '+(game.mode==="infinite"?"∞":"10")+'</span>';
@@ -532,6 +561,8 @@ function renderQuestion(){
   gate.append(key,label);gate.addEventListener("click",function(){selectLane(index);});$("optionGrid").appendChild(gate);
  });
  $("dashButton").disabled=false;$("moveLeftBtn").disabled=false;$("moveRightBtn").disabled=false;
+ const duration=config.seconds+"s";$("optionGrid").style.setProperty("--approach-duration",duration);$("approachWall").style.setProperty("--approach-duration",duration);
+ void $("runnerStage").offsetWidth;$("optionGrid").classList.add("gate-approaching");$("approachWall").classList.add("wall-approaching");
  renderRunHud();
  remaining=config.seconds;timerStartedAt=Date.now();updateTimer();
  timerId=setInterval(function(){
@@ -551,6 +582,14 @@ function dash(){
  $("runnerStage").classList.add("is-dashing");
  $("dashButton").disabled=true;$("moveLeftBtn").disabled=true;$("moveRightBtn").disabled=true;
  answerQuestion(selected.value);
+}
+function passGateVisual(correct){
+ const nodes=[$("optionGrid"),$("approachWall")];
+ nodes.forEach(function(el){const st=getComputedStyle(el),transform=st.transform,opacity=st.opacity;el.style.animation="none";el.classList.remove("gate-approaching","wall-approaching");el.style.transform=transform==="none"?"translate3d(0,0,0)":transform;el.style.opacity=opacity;el.style.transition="transform .62s cubic-bezier(.35,.02,.8,.35),opacity .55s ease";void el.offsetWidth;requestAnimationFrame(function(){el.style.transform="translate3d(0,190px,150px) scale(1.18)";el.style.opacity="0";});});
+ $("runnerStage").classList.add("gate-crossing");
+ const layer=$("runnerParticles");layer.innerHTML="";
+ for(let i=0;i<20;i++){const spark=document.createElement("i");spark.style.left=(35+Math.random()*30)+"%";spark.style.top=(48+Math.random()*24)+"%";spark.style.setProperty("--dx",(Math.random()*210-105)+"px");spark.style.setProperty("--dy",(Math.random()*180-120)+"px");spark.style.setProperty("--particle-color",correct?"#8ff0bf":"#ff9eaa");layer.appendChild(spark);}
+ setTimeout(function(){layer.innerHTML="";},900);
 }
 function answerQuestion(value){
  if(!game||game.questions[game.index].answered)return;
@@ -572,6 +611,7 @@ function answerQuestion(value){
   gate.disabled=true;if(index===correctLane)gate.classList.add("gate-correct");
   if(index===game.selectedLane&&!correct)gate.classList.add("gate-wrong");
  });
+ passGateVisual(correct);
  renderRunHud();$("dashButton").disabled=true;$("moveLeftBtn").disabled=true;$("moveRightBtn").disabled=true;
  const feedback=$("questionFeedback");feedback.hidden=false;feedback.classList.toggle("wrong",!correct);
  $("feedbackTitle").textContent=correct?"완벽하게 통과! +"+gained+" PTS":(value===null?"시간 초과! 하트 1개 감소":"충돌! 하트 1개 감소");
