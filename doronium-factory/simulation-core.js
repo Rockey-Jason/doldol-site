@@ -20,7 +20,7 @@ export function createRuntimeState(){
 function normalizeStack(stack){
   return {runtimeID:String(stack.runtimeID),itemID:String(stack.itemID),quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
     quality:clamp(stack.quality??90,0,100),purity:clamp(stack.purity??90,0,100),
-    synthetic:!!stack.synthetic,packaging:stack.packaging||null,createdTick:Math.max(0,Number(stack.createdTick)||0)};
+    synthetic:!!stack.synthetic,packaging:stack.packaging||null,createdTick:Math.max(0,Number(stack.createdTick)||0),quarantined:stack.quarantined===true,quarantineReason:stack.quarantineReason||null,sourceItemID:stack.sourceItemID||null,migrationVersion:Math.max(0,Math.floor(Number(stack.migrationVersion)||0))};
 }
 export function ensureItemStacks(state){
   if(!state.runtime||typeof state.runtime!=="object")state.runtime=createRuntimeState();
@@ -83,7 +83,7 @@ export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-trans
   if(!itemID||qty<=0)return null;
   const reserved=reservedByStack(rt);let remaining=qty;const allocations=[];
   for(const stack of rt.itemStacks){
-    if(stack.itemID!==itemID||remaining<=0)continue;
+    if(stack.itemID!==itemID||stack.quarantined||remaining<=0)continue;
     const free=Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0));
     const take=Math.min(free,remaining);if(take>0){allocations.push({stackID:stack.runtimeID,quantity:take});remaining-=take}
   }
@@ -97,7 +97,7 @@ export function reserveQualifiedItemStacks(state,itemID,quantity,ownerID="qualif
  if(!itemID||qty<=0||typeof predicate!=="function")return null;
  const reserved=reservedByStack(rt);let remaining=qty;const allocations=[];
  for(const stack of rt.itemStacks){
-  if(stack.itemID!==itemID||remaining<=0)continue;
+  if(stack.itemID!==itemID||stack.quarantined||remaining<=0)continue;
   let eligible=false;try{eligible=predicate({...stack})===true}catch{eligible=false}
   if(!eligible)continue;
   const free=Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0));
@@ -193,7 +193,7 @@ export function validateRuntimeState(state){
   for(const stack of rt.itemStacks){
     if(ids.has(stack.runtimeID))errors.push("duplicate-stack-id:"+stack.runtimeID);
     ids.add(stack.runtimeID);stackByID.set(stack.runtimeID,stack);
-    if(!stack.itemID||!Number.isInteger(stack.quantity)||stack.quantity<=0||stack.quantity>ITEM_STACK_LIMIT)errors.push("invalid-stack:"+stack.runtimeID);
+    if(!stack.itemID||!Number.isInteger(stack.quantity)||stack.quantity<=0||stack.quantity>ITEM_STACK_LIMIT)errors.push("invalid-stack:"+stack.runtimeID);if(stack.quarantined&&(!stack.quarantineReason||!stack.sourceItemID))errors.push("invalid-quarantined-stack:"+stack.runtimeID);
   }
   const reserved=reservedByStack(rt);
   for(const [stackID,quantity] of reserved){
@@ -216,7 +216,7 @@ export function validateRuntimeState(state){
 }
 export function availableItemCount(state,itemID){
   const rt=ensureItemStacks(state),reserved=reservedByStack(rt);
-  return rt.itemStacks.filter(stack=>stack.itemID===itemID).reduce((total,stack)=>total+Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0)),0);
+  return rt.itemStacks.filter(stack=>stack.itemID===itemID&&!stack.quarantined).reduce((total,stack)=>total+Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0)),0);
 }
 export function stackTotals(state){
   const totals={};
