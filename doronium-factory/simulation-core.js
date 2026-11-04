@@ -1,3 +1,4 @@
+import {canonicalItemID} from "./canonical-data.js";
 /* DORONIUM FACTORY — canonical simulation and item-stack runtime
  * Deterministic, renderer-independent core. Legacy aggregate inventory remains
  * a compatibility projection while stack records become the source of metadata.
@@ -18,7 +19,7 @@ export function createRuntimeState(){
   return {schemaVersion:4,nextStackId:1,nextReservationId:1,nextEntityID:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
 }
 function normalizeStack(stack){
-  return {runtimeID:String(stack.runtimeID),itemID:String(stack.itemID),quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
+  return {runtimeID:String(stack.runtimeID),itemID:canonicalItemID(stack.itemID),quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
     quality:clamp(stack.quality??90,0,100),purity:clamp(stack.purity??90,0,100),
     synthetic:!!stack.synthetic,packaging:stack.packaging||null,createdTick:Math.max(0,Number(stack.createdTick)||0),quarantined:stack.quarantined===true,quarantineReason:stack.quarantineReason||null,sourceItemID:stack.sourceItemID||null,migrationVersion:Math.max(0,Math.floor(Number(stack.migrationVersion)||0))};
 }
@@ -59,7 +60,7 @@ export function allocateEntityID(state,prefix="E"){
  return String(prefix).replace(/[^A-Za-z0-9_-]/g,"").slice(0,12)+"-"+seed.toString(36).toUpperCase()+"-"+String(sequence).padStart(8,"0");
 }
 export function addItemStack(state,itemID,quantity,meta={}){
-  const rt=ensureItemStacks(state);let remaining=Math.floor(Number(quantity)||0),firstID=null;
+  const rt=ensureItemStacks(state);itemID=canonicalItemID(itemID);let remaining=Math.floor(Number(quantity)||0),firstID=null;
   if(!itemID||remaining<=0)return null;
   while(remaining>0){
     const qty=Math.min(ITEM_STACK_LIMIT,remaining),runtimeID="IS-"+rt.nextStackId++;
@@ -79,7 +80,7 @@ function reservedByStack(rt,excludeReservationID=null){
   return totals;
 }
 export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-transaction"){
-  const rt=ensureItemStacks(state),qty=Math.floor(Number(quantity)||0);
+  const rt=ensureItemStacks(state),qty=Math.floor(Number(quantity)||0);itemID=canonicalItemID(itemID);
   if(!itemID||qty<=0)return null;
   const reserved=reservedByStack(rt);let remaining=qty;const allocations=[];
   for(const stack of rt.itemStacks){
@@ -93,7 +94,7 @@ export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-trans
   return reservationID;
 }
 export function reserveQualifiedItemStacks(state,itemID,quantity,ownerID="qualified-transaction",predicate=()=>true){
- const rt=ensureItemStacks(state),qty=Math.floor(Number(quantity)||0);
+ const rt=ensureItemStacks(state),qty=Math.floor(Number(quantity)||0);itemID=canonicalItemID(itemID);
  if(!itemID||qty<=0||typeof predicate!=="function")return null;
  const reserved=reservedByStack(rt);let remaining=qty;const allocations=[];
  for(const stack of rt.itemStacks){
@@ -173,7 +174,7 @@ export function mergeItemStacks(state,sourceID,targetID){
   target.quantity+=source.quantity;rt.itemStacks=rt.itemStacks.filter(s=>s.runtimeID!==sourceID);return true;
 }
 export function removeItemStacks(state,itemID,quantity){
-  const rt=ensureItemStacks(state);let remaining=Math.floor(Number(quantity)||0);
+  const rt=ensureItemStacks(state);itemID=canonicalItemID(itemID);let remaining=Math.floor(Number(quantity)||0);
   if(remaining<=0)return [];
   const reserved=reservedByStack(rt);
   const available=rt.itemStacks.filter(s=>s.itemID===itemID).reduce((n,s)=>n+Math.max(0,s.quantity-(reserved.get(s.runtimeID)||0)),0);
@@ -215,7 +216,7 @@ export function validateRuntimeState(state){
   return {valid:errors.length===0,errors,stackCount:rt.itemStacks.length,reservationCount:Object.values(rt.reservations).filter(r=>r.status==="reserved").length,failureEventCount:rt.failureEvents.length};
 }
 export function availableItemCount(state,itemID){
-  const rt=ensureItemStacks(state),reserved=reservedByStack(rt);
+  itemID=canonicalItemID(itemID);const rt=ensureItemStacks(state),reserved=reservedByStack(rt);
   return rt.itemStacks.filter(stack=>stack.itemID===itemID&&!stack.quarantined).reduce((total,stack)=>total+Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0)),0);
 }
 export function stackTotals(state){
