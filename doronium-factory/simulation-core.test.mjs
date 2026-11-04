@@ -20,7 +20,7 @@ test("legacy inventory migrates to stable unique stack IDs",()=>{
 });
 
 test("legacy saves without a runtime migrate from their saved inventory, not starter defaults",()=>{
-  const state={inventory:{"ITEM_IRON_ORE":11,water:4},meta:{ironOre:{quality:75,purity:83}},tick:2};
+  const state={inventory:{ironOre:11,water:4},meta:{ironOre:{quality:75,purity:83}},tick:2};
   ensureItemStacks(state);
   const totals=state.runtime.itemStacks.reduce((out,stack)=>{out[stack.itemID]=(out[stack.itemID]||0)+stack.quantity;return out},{});
   assert.deepEqual(totals,{"ITEM_IRON_ORE":11,water:4});
