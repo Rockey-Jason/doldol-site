@@ -302,25 +302,25 @@ h1 span{color:#9bc1ff}
     <button class="level-card run-mode-card easy-mode" data-level="easy" type="button">
       <span class="mode-art"><span>H</span><i></i><b></b></span><span class="mode-kicker">LEVEL 01 · STARTER</span><h3>쉬움</h3>
       <p>가장 먼저 익히는 1~20번 원소. 기호를 보고 이름을 골라 기초 레이스를 완주해 봐.</p>
-      <span class="mode-facts"><i>1~20번 원소</i><i>20초 / 문제</i><i>8종 문제 유형</i></span>
+      <span class="mode-facts"><i>1~20번 원소</i><i>15문제</i><i>20초 / 문제</i><i>3종 문제 유형</i></span>
       <span class="mode-best" id="easyBest">최고 기록 · 아직 없음</span><span class="level-start">쉬움으로 달리기　<em>↗</em></span>
     </button>
     <button class="level-card run-mode-card normal-mode" data-level="normal" type="button">
       <span class="mode-art"><span>Fe</span><i></i><b></b></span><span class="mode-kicker">LEVEL 02 · BUILDER</span><h3>보통</h3>
       <p>1~54번 원소를 대상으로 이름과 기호, 원자번호를 연결하는 혼합 레이스!</p>
-      <span class="mode-facts"><i>1~54번 원소</i><i>15초 / 문제</i><i>3종 문제 유형</i></span>
+      <span class="mode-facts"><i>1~54번 원소</i><i>20문제</i><i>15초 / 문제</i><i>6종 문제 유형</i></span>
       <span class="mode-best" id="normalBest">최고 기록 · 아직 없음</span><span class="level-start">보통으로 달리기　<em>↗</em></span>
     </button>
     <button class="level-card run-mode-card hard-mode" data-level="hard" type="button">
       <span class="mode-art"><span>Og</span><i></i><b></b></span><span class="mode-kicker">LEVEL 03 · EXPERT</span><h3>어려움</h3>
       <p>1~118번 전체 원소가 등장해. 여덟 가지 유형의 문제를 10초 안에 통과해 봐.</p>
-      <span class="mode-facts"><i>전체 118개</i><i>10초 / 문제</i><i>8종 문제 유형</i></span>
+      <span class="mode-facts"><i>전체 118개</i><i>25문제</i><i>10초 / 문제</i><i>8종 문제 유형</i></span>
       <span class="mode-best" id="hardBest">최고 기록 · 아직 없음</span><span class="level-start">어려움으로 달리기　<em>↗</em></span>
     </button>
     <button class="level-card run-mode-card practice-mode" data-level="practice" type="button">
       <span class="mode-art"><span>118</span><i></i><b></b></span><span class="mode-kicker">FREE PRACTICE · ALL TOPICS</span><h3>연습 모드</h3>
       <p>시간에 쫓기지 말고 전체 원소를 천천히 복습해 봐. 이름·기호·원자번호는 물론 족과 주기까지 골고루 출제돼.</p>
-      <span class="mode-facts"><i>전체 118개 원소</i><i>60초 / 문제</i><i>6종 문제 유형</i></span>
+      <span class="mode-facts"><i>전체 118개 원소</i><i>30문제</i><i>60초 / 문제</i><i>8종 문제 유형</i></span>
       <span class="mode-best" id="practiceBest">최고 기록 · 아직 없음</span><span class="level-start">여유롭게 연습하기　<em>↗</em></span>
     </button>
     <button class="level-card run-mode-card infinite-mode" data-level="infinite" type="button">
@@ -625,11 +625,10 @@ function answerQuestion(value,source){
  const stage=$("runnerStage"),dori=$("runnerDori");
  stage.classList.remove("is-dashing","is-hit","is-success","gate-crossing","door-clear","door-crash","final-impact","impact-success","impact-fail");
  void stage.offsetWidth;stage.classList.add("is-dashing","door-rushing",correct?"door-clear":"door-crash");
- if(lastLife)stage.classList.add("final-impact");
  dori.classList.remove("dori-recoil","dori-final-bounce");dori.classList.add("dori-launch");
  Array.from($("optionGrid").querySelectorAll(".gate")).forEach(function(gate){gate.disabled=true;});
  $("dashButton").disabled=true;$("moveLeftBtn").disabled=true;$("moveRightBtn").disabled=true;
- $("runnerFx").textContent=source==="timeout"?"TIME! WALL INCOMING":"GATE IMPACT!";
+ $("runnerFx").textContent=source==="timeout"?"TIME! WALL INCOMING":"GATE INCOMING...";
  $("runnerFx").classList.remove("show");void $("runnerFx").offsetWidth;$("runnerFx").classList.add("show");
  impactTimer=setTimeout(resolveGateImpact,correct?820:760);
 }
