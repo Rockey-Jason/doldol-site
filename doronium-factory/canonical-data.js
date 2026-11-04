@@ -39,7 +39,7 @@ export function planDoronumMigration(stacks=[]){
 }
 export function applyDoronumMigration(state){
  if(!state||typeof state!=="object"||!state.runtime||!Array.isArray(state.runtime.itemStacks))return {version:CANONICAL_ITEM_MIGRATION_VERSION,changes:[],quarantined:[],requiresUserResolution:false};
- const plan=planDoronumMigration(state.runtime.itemStacks),map=new Map(plan.changes.map(x=>[x.from,x.to]));
+ const plan=planDoronumMigration(state.runtime.itemStacks),map=new Map(Object.entries(LEGACY_DORONUM_ID_MAP));
  for(const change of plan.changes){
   const stack=state.runtime.itemStacks.find(x=>x.runtimeID===change.stackID);if(!stack)continue;
   stack.sourceItemID??=change.from;stack.itemID=change.to;stack.migrationVersion=CANONICAL_ITEM_MIGRATION_VERSION;
