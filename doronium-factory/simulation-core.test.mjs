@@ -5,7 +5,7 @@ import {
   calculateOutputQuality, calculateOutputPurity, accuracyQuality,
   reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations,
   splitItemStack, mergeItemStacks, validateRuntimeState, availableItemCount,
-  runCanonicalTick, TICK_STAGE_ORDER, stackTotals
+  runCanonicalTick, TICK_STAGE_ORDER, stackTotals, syncLegacyInventory
 } from "./simulation-core.js";
 
 test("legacy inventory migrates to stable unique stack IDs",()=>{
@@ -166,4 +166,20 @@ test("quarantined legacy stacks remain visible in totals but cannot be reserved 
  assert.equal(availableItemCount(s,"doronium_void"),0);
  assert.equal(reserveItemStacks(s,"doronium_void",1),null);
  assert.equal(validateRuntimeState(s).valid,true);
+});
+
+test("quarantined legacy stock is kept for recovery but excluded from spendable inventory",()=>{
+ const s={inventory:{},meta:{},runtime:createRuntimeState()};
+ addItemStack(s,"ITEM_DORONUM_NORMAL",3,{quality:95,purity:96,synthetic:false});
+ addItemStack(s,"doronium_void",5,{quality:82,purity:88,synthetic:false});
+ const quarantined=s.runtime.itemStacks.find(x=>x.itemID==="doronium_void");
+ quarantined.quarantined=true;quarantined.quarantineReason="canonical-equivalence-not-defined";quarantined.sourceItemID="doronium_void";
+ syncLegacyInventory(s);
+ assert.equal(s.inventory.ITEM_DORONUM_NORMAL,3);
+ assert.equal(s.inventory.doronium_void,undefined);
+ assert.equal(s.quarantinedInventory.doronium_void,5);
+ assert.equal(s.meta.doronium_void,undefined);
+ assert.equal(s.quarantinedMeta.doronium_void.quality,82);
+ assert.equal(availableItemCount(s,"doronium_void"),0);
+ assert.equal(availableItemCount(s,"ITEM_DORONUM_NORMAL"),3);
 });
