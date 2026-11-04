@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v25-periodic-study-20261104";
+const CACHE_NAME = "doldol-site-pwa-v26-periodic-study-20261104";
 const APP_SHELL = [
   "/doldol-site/",
   "/doldol-site/index.html",
