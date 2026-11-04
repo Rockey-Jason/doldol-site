@@ -31,7 +31,7 @@ export function tickInfinityFusion(state,{deltaSeconds=.1,machineExists=true,pow
  try{
   const consumed=commitItemReservations(state,job.reservationIDs);
   if(!consumed||consumed.reduce((n,x)=>n+x.quantity,0)!==INFINITY_TOTAL_INPUT)throw new Error("INPUT_COMMIT_FAILED");
-  const outputStackID=addItemStack(state,"ITEM_DORONUM_INFINITY",1,{quality:100,purity:100,synthetic:false});
+  const outputStackID=addItemStack(state,"infinity",1,{quality:100,purity:100,synthetic:false});
   if(!outputStackID)throw new Error("OUTPUT_CREATE_FAILED");
   job.status="COMPLETED";job.outputStackID=outputStackID;job.completedTick=Number(state.tick)||0;job.reservationIDs=[];
   state.completionBuffer=state.completionBuffer||[];state.completionBuffer.push({completionID:"FUSION:"+job.jobID,stackID:outputStackID,itemID:"ITEM_DORONUM_INFINITY",quantity:1});
