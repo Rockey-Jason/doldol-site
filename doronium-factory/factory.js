@@ -1548,14 +1548,13 @@ async function resolveCloudSaveConflict(choice){
   if(choice==="LOCAL"){
    rebuildOwnershipLedger(S);
    const savedAt=nowISO(),localEnvelope=createSaveEnvelope(requestSaveSnapshot(S),savedAt);
-   const result=await replaceCloudSaveAfterExplicitConflict(cloudClient,{storageKey:CLOUD_KEY,userId:authSession.user.id,value:localEnvelope});
+   const result=await replaceCloudSaveAfterExplicitConflict(cloudClient,{storageKey:CLOUD_KEY,userId:authSession.user.id,value:localEnvelope,beforeWrite:remote=>{if(remote.exists&&remote.envelope?.state)saveConflictBackup(remote.envelope.state,"cloud")}});
    if(!result.saved){
     cloudSaveConflict={...cloudSaveConflict,remoteRevision:result.revision,remoteUpdatedAt:result.updatedAt,expectedRevision:cloudSaveRevision};
     dirty=true;setCloud("error","저장 충돌 재발");setSaveMessage("클라우드가 다시 변경되었습니다. 두 저장본을 보존했습니다.");
     toast("덮어쓰기 중 다른 기기에서 다시 저장되었습니다. 아무 데이터도 덮어쓰지 않았습니다.","warn");
     closeModal();showCloudSaveConflict();return false;
    }
-   if(result.previous?.exists&&result.previous.envelope?.state)saveConflictBackup(result.previous.envelope.state,"cloud");
    cloudSaveRevision=result.revision;cloudUpdatedAt=result.updatedAt||savedAt;cloudSaveConflict=null;dirty=false;
    S.lastSavedAt=savedAt;writeSaveEnvelope(localStorage,activeLocalKey,requestSaveSnapshot(S),savedAt);
    closeModal();setCloud("online","모든 기기 동기화");setSaveMessage("충돌 해결 완료 · 클라우드 R"+cloudSaveRevision);
