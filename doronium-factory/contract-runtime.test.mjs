@@ -10,9 +10,8 @@ test("delivery and reward claim are idempotent",()=>{const {game,contracts}=setU
 test("cancel before dispatch releases cargo reservations",()=>{const {game,contracts}=setUp();startContractShipment(game,contracts,contract);const s=contracts.shipments[0];assert.equal(cancelContractShipment(game,contracts,s.shipmentID),true);assert.equal(cancelContractShipment(game,contracts,s.shipmentID),false);assert.equal(stackTotals(game).ironPlate,8)});
 
 test("dispatch rejects corrupted cargo reservation before consuming the reserved stack",()=>{
- const game=gameState(),contracts=createContractState(9),contract={id:"CARGO_GUARD",itemID:"ironPlate",quantity:2,minQuality:80,minPurity:80,reward:100,deadlineSeconds:1000,transitSeconds:1};
- addItemStack(game,"ironPlate",2,{quality:95,purity:95,synthetic:false});
- const started=startContractShipment(game,contracts,contract);assert.equal(started.ok,true);
+ const {game,contracts}=setUp(),cargoContract={...contract,id:"CARGO_GUARD",minQuality:80,minPurity:80};
+ const started=startContractShipment(game,contracts,cargoContract);assert.equal(started.ok,true);
  const shipment=contracts.shipments[0],reservation=game.runtime.reservations[shipment.reservationID];
  reservation.allocations[0].quantity=1;
  const before=stackTotals(game).ironPlate;
