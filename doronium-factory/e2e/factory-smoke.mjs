@@ -274,6 +274,16 @@ try {
   assert.equal(fusionRollback.totalAvailable, 1500, "Cancelling Fusion must return all 1,500 inputs to available inventory");
   assert.equal(fusionRollback.remainingReservations, 0, "Fusion cancellation must release every reservation");
   assert.equal(fusionRollback.secondCancel, false, "Repeating cancellation must not duplicate returned items");
+  const fusionSettlement = await desktop.evaluate(() => window.__doroniumFactoryTest.runFusionSettlementTest());
+  assert.equal(fusionSettlement.ok, true, "The live settlement must commit a seven-stage job exactly once");
+  assert.equal(fusionSettlement.fusionDone, true, "The global Fusion completion flag must be set only after the output commit");
+  assert.equal(fusionSettlement.jobStatus, "COMPLETED", "The job must persist its completed state");
+  assert.equal(fusionSettlement.outputCount, 1, "Exactly one Infinity output stack must be available");
+  assert.equal(fusionSettlement.produced, 1, "Production statistics must increment exactly once");
+  assert.equal(fusionSettlement.inputsRemaining, 0, "All 1,500 required canonical inputs must be consumed");
+  assert.equal(fusionSettlement.reservationsRemaining, 0, "All Fusion reservations must be closed after settlement");
+  assert.equal(fusionSettlement.second.duplicate, true, "Repeating the same settlement ID must return the prior result without issuing another output");
+  assert.equal(fusionSettlement.settlement.outputQuantity, 1, "The settlement journal must record exactly one output");
 
   const miningSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningAutomationTest());
   assert.equal(miningSetup.generator, true, "A mine generator must be placeable in an underground tunnel");
