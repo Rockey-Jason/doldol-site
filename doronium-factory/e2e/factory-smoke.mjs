@@ -61,7 +61,7 @@ try {
   assert.equal(audit.canonicalCrystalModelShapes, 15, "Canonical Doronum variants must use 15 distinct geometry families");
   assert.equal(audit.allCanonicalCrystalModels, true, "Every canonical Doronum ID must resolve to a 3D crystal model");
   assert.equal(audit.canonicalDoronumIntegration.complete, false, "Unimplemented live canonical dependencies must remain visible as an explicit release blocker");
-  assert.equal(audit.canonicalDoronumIntegration.missingCanonicalItems.length, 15, "All canonical item IDs must be surfaced as not yet migrated into the live resource registry");
+  assert.equal(audit.canonicalDoronumIntegration.missingCanonicalItems.length, 0, "All 15 canonical Doronum IDs must exist in the active resource registry");
   assert.equal(audit.canonicalDoronumIntegration.missingModels.length, 0, "Every canonical item must resolve to an actual Three.js crystal model profile");
   assert.equal(audit.runtimeValidation.valid, true, "Initial item stacks and reservations must validate");
   assert.equal(audit.variantCount, 15, "15 canonical Doronium variants must be present");
@@ -84,7 +84,7 @@ try {
   assert.ok(audit.terrainHeightRange[1] - audit.terrainHeightRange[0] > 90, "Terrain must have pronounced valleys, ridgelines and highlands");
   assert.equal(audit.surfaceHasExposedOre, false, "Surface mineral deposits must be removed");
   assert.equal(audit.simulationStep, 0.1, "Simulation must use a fixed 0.1-second step");
-  assert.equal(audit.variantRecipeCount, 14, "All fourteen non-base crystal recipes must be defined");
+  assert.equal(audit.variantRecipeCount, 12, "Twelve recipe-driven variants must be defined; Special and Limited are campaign acquisitions");
   assert.equal(audit.variantRecipesValid, true, "All variant recipe inputs must resolve");
   assert.equal(audit.researchGraphValid, true, "Research prerequisites must exist and form an acyclic graph");
   assert.equal(audit.fusionStageCount, 7, "Infinity fusion must contain seven stages");
@@ -94,7 +94,7 @@ try {
 
   await openPanel(desktop, "inventory");
   assert.equal(await desktop.locator("[data-crystal]").count(), 16, "15 normal variants plus Infinity must be listed");
-  await desktop.locator('[data-crystal="doronium_blue"]').click();
+  await desktop.locator('[data-crystal="ITEM_DORONUM_BLUE"]').click();
   await desktop.waitForSelector("#crystal-preview-canvas");
   const preview = await desktop.evaluate(() => {
     const c = document.querySelector("#crystal-preview-canvas");
