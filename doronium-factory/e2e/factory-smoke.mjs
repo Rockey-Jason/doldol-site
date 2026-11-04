@@ -108,6 +108,13 @@ try {
   assert.equal(audit.buildingMaterialsValid, true, "All construction material IDs must resolve");
 
   await openPanel(desktop, "inventory");
+  const quarantineCase = await desktop.evaluate(() => window.__doroniumFactoryTest.setupQuarantineInventoryTest());
+  assert.equal(quarantineCase.tradable.ITEM_DORONUM_NORMAL, 3, "Canonical stock must remain tradable");
+  assert.equal(quarantineCase.tradable.doronium_void, undefined, "Ambiguous legacy stock must not leak into spendable inventory");
+  assert.equal(quarantineCase.quarantined.doronium_void, 5, "Ambiguous legacy stock must remain recoverable in quarantine");
+  assert.equal(await desktop.locator("#quarantine-grid .quarantine-item").count(), 1, "The player must be able to see quarantined stock separately");
+  assert.equal(await desktop.locator('#sell-resource option[value="doronium_void"]').count(), 0, "Quarantined stock must never be offered for market sale");
+  assert.equal(await desktop.locator("#inventory-grid").innerText().then(text => text.includes("DORONIUM_VOID")), false, "Quarantined stock must not appear in normal inventory");
   assert.equal(await desktop.locator("[data-crystal]").count(), 16, "15 normal variants plus Infinity must be listed");
   await desktop.locator('[data-crystal="ITEM_DORONUM_BLUE"]').click();
   await desktop.waitForSelector("#crystal-preview-canvas");
