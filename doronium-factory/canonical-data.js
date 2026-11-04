@@ -22,8 +22,10 @@ export const LEGACY_DORONUM_ID_MAP=Object.freeze({
  doronium_black:"ITEM_DORONUM_BLACK",
  doronium_clear:"ITEM_DORONUM_TRANSLUCENT",
  doronium_special:"ITEM_DORONUM_SPECIAL_EDITION",
- doronium_limited:"ITEM_DORONUM_LIMITED_EDITION"
+ doronium_limited:"ITEM_DORONUM_LIMITED_EDITION",
+ doriMeat:"ITEM_DORI_MEAT",ironOre:"ITEM_IRON_ORE",quartz:"ITEM_QUARTZ",diamond:"ITEM_DIAMOND",wire:"ITEM_COPPER_WIRE"
 });
+export function canonicalItemID(itemID){const id=String(itemID??"");return LEGACY_DORONUM_ID_MAP[id]||id}
 export const UNRESOLVED_LEGACY_DORONUM_IDS=Object.freeze([
  "doronium_crystal","doronium_resonant","doronium_prismatic","doronium_void"
 ]);
@@ -97,7 +99,7 @@ const doronumEntry=(id,name,role,recipeRefs,useCaseTags,recipe=null,acquisition=
 });
 export const CANONICAL_DORONUM_CATALOG=Object.freeze([
  doronumEntry("ITEM_DORONUM_NORMAL","Normal Doronum","high-density energy storage",["RECIPE_DORONUM_COMPRESSOR_NORMAL"],["energy-storage","variant-base","research-sample"],{
-  machineID:"BUILDING_DORONUM_COMPRESSOR",inputs:{doriMeat:10},outputQuantity:1,durationSec:null,targetTemperatureC:null,targetPressureMPa:null,
+  machineID:"BUILDING_DORONUM_COMPRESSOR",inputs:{"ITEM_DORI_MEAT":10},outputQuantity:1,durationSec:null,targetTemperatureC:null,targetPressureMPa:null,
   stabilization:["THERMAL","PRESSURE","RESONANCE"],syntheticInputForbidden:true,lockedRatio:"10:1",requiresFinalRecipeData:true
  }),
  doronumEntry("ITEM_DORONUM_YELLOW","Yellow Doronum","energy conduction and precision output stabilization",["RECIPE_DORONUM_YELLOW"],["circuitry","power-regulation"],{
