@@ -32,3 +32,10 @@ test("pressurized water propagates across a serial pipe valve and tank chain in 
  ],deltaSeconds:.1});
  assert.equal(result.flows.length,4);assert.ok(tank.amountL>0);assert.equal(result.massBalance.valid,true);
 });
+
+test("consumeFluid debits a live building fluidAmountL buffer",()=>{
+ const building={fluidAmountL:3,fluidType:"WATER"};
+ const result=consumeFluid(building,1,"WATER");
+ assert.equal(result.ok,true);assert.equal(result.movedL,1);assert.equal(building.fluidAmountL,2);assert.equal(building.fluidType,"WATER");
+ assert.equal(consumeFluid(building,3,"WATER").ok,false);assert.equal(building.fluidAmountL,2);
+});
