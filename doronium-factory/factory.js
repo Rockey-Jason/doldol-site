@@ -1507,15 +1507,15 @@ if(E2E_MODE){
    return {tradable:structuredClone(S.inventory),quarantined:structuredClone(S.quarantinedInventory),quarantineMeta:structuredClone(S.quarantinedMeta)};
   },
   async runCloudConflictGuardTest(){
-   const old={cloudClient,authSession,cloudSaveRevision,cloudSaveConflict,dirty,activeLocalKey};
+   const old={state:S,playerMotion,cloudClient,authSession,cloudSaveRevision,cloudSaveConflict,dirty,activeLocalKey,cloudBusy};
    let rpcCalls=0;S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
    cloudClient={rpc:async()=>{rpcCalls++;return {data:[{saved:true,revision:99}],error:null}}};
    authSession={user:{id:"cloud-conflict-e2e"}};
-   activeLocalKey=LOCAL_KEY+"_cloud-conflict-e2e";cloudSaveRevision=7;
+   activeLocalKey=LOCAL_KEY+"_cloud-conflict-e2e";cloudSaveRevision=7;cloudBusy=false;
    cloudSaveConflict={expectedRevision:7,remoteRevision:8,remoteUpdatedAt:"2026-11-05T00:00:00Z",detectedAt:nowISO()};
    dirty=true;await saveGame(true);
    const result={rpcCalls,revision:cloudSaveRevision,conflictLocked:!!cloudSaveConflict,dirty,saveMessage:$("save-message").textContent};
-   cloudClient=old.cloudClient;authSession=old.authSession;cloudSaveRevision=old.cloudSaveRevision;cloudSaveConflict=old.cloudSaveConflict;dirty=old.dirty;activeLocalKey=old.activeLocalKey;
+   S=old.state;playerMotion=old.playerMotion;cloudClient=old.cloudClient;authSession=old.authSession;cloudSaveRevision=old.cloudSaveRevision;cloudSaveConflict=old.cloudSaveConflict;dirty=old.dirty;activeLocalKey=old.activeLocalKey;cloudBusy=old.cloudBusy;
    return result;
   },
   setupOwnershipLedgerTest(){
