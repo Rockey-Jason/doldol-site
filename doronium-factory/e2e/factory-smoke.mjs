@@ -258,6 +258,8 @@ try {
   assert.equal(fluidRecipe.fluidType, null, "An empty fluid buffer must clear its fluid type");
   assert.equal(fluidRecipe.normalRemaining, 0, "The recipe must consume its reserved canonical Doronum input");
   assert.equal(fluidRecipe.ironOreRemaining, 0, "The recipe must consume its canonical iron ore input");
+  assert.equal(fluidRecipe.activeMeta, true, "The recipe must begin an active job through the staged machine pipeline");
+  assert.equal(fluidRecipe.tickStages.length, 18, "The fluid-dependent recipe must execute inside the complete canonical tick");
 
   const fluidSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.setupFluidNetworkTest());
   assert.equal(fluidSetup.power.allocations["F-PUMP"].status, "RUNNING", "The water pump must receive power");
