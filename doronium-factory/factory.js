@@ -1399,6 +1399,15 @@ if(E2E_MODE){
    S.buildings.push(machine);tickBuilding(machine,STEP,1);
    return {status:machine.status,fluidAmountL:machine.fluidAmountL,fluidType:machine.fluidType,progress:machine.progress,normalRemaining:availableItemCount(S,"ITEM_DORONUM_NORMAL"),ironOreRemaining:availableItemCount(S,"ITEM_IRON_ORE"),activeMeta:!!machine.activeMeta};
   },
+  setupQuarantineInventoryTest(){
+   S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
+   addItemStack(S,"ITEM_DORONUM_NORMAL",3,{quality:95,purity:96,synthetic:false});
+   addItemStack(S,"doronium_void",5,{quality:82,purity:88,synthetic:false});
+   const legacy=S.runtime.itemStacks.find(stack=>stack.itemID==="doronium_void");
+   legacy.quarantined=true;legacy.quarantineReason="canonical-equivalence-not-defined";legacy.sourceItemID="doronium_void";
+   syncLegacyInventory(S);renderInventory();
+   return {tradable:structuredClone(S.inventory),quarantined:structuredClone(S.quarantinedInventory),quarantineMeta:structuredClone(S.quarantinedMeta)};
+  },
   setupOwnershipLedgerTest(){
    S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);S.buildings=[];S.contractRuntime=createContractState(456);
    addItemStack(S,"ironOre",10,{quality:96,purity:97,synthetic:false});
