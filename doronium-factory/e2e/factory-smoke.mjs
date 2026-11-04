@@ -115,6 +115,13 @@ try {
   assert.equal(await desktop.locator("#quarantine-grid .quarantine-item").count(), 1, "The player must be able to see quarantined stock separately");
   assert.equal(await desktop.locator('#sell-resource option[value="doronium_void"]').count(), 0, "Quarantined stock must never be offered for market sale");
   assert.equal(await desktop.locator("#inventory-grid").innerText().then(text => text.includes("DORONIUM_VOID")), false, "Quarantined stock must not appear in normal inventory");
+  const reservedInventoryCase = await desktop.evaluate(() => window.__doroniumFactoryTest.setupReservedInventoryTest());
+  assert.ok(reservedInventoryCase.reservation, "The stock locking scenario must reserve a real item batch");
+  assert.equal(reservedInventoryCase.total, 10, "The inventory mirror must preserve total physical stock");
+  assert.equal(reservedInventoryCase.available, 3, "The spendable count must exclude reserved stock");
+  assert.equal(reservedInventoryCase.reserved, 7, "The locked count must match the reservation ledger");
+  assert.ok((await desktop.locator("#inventory-grid").innerText()).includes("사용 가능 3 · 예약 7"), "The inventory UI must distinguish spendable and reserved quantities");
+  assert.equal(await desktop.locator('#sell-resource option[value="ironOre"]').count(), 1, "Only the three spendable ore units may be offered for sale");
   assert.equal(await desktop.locator("[data-crystal]").count(), 16, "15 normal variants plus Infinity must be listed");
   await desktop.locator('[data-crystal="ITEM_DORONUM_BLUE"]').click();
   await desktop.waitForSelector("#crystal-preview-canvas");
