@@ -12,8 +12,8 @@ test("cancel before dispatch releases cargo reservations",()=>{const {game,contr
 test("dispatch rejects corrupted cargo reservation before consuming the reserved stack",()=>{
  const {game,contracts}=setUp(),cargoContract={...contract,id:"CARGO_GUARD",minQuality:80,minPurity:80};
  const started=startContractShipment(game,contracts,cargoContract);assert.equal(started.ok,true);
- const shipment=contracts.shipments[0],reservation=game.runtime.reservations[shipment.reservationID];
- reservation.allocations[0].quantity=1;
+ const shipment=contracts.shipments[0];for(let i=0;i<5;i++)assert.equal(advancePackagingStage(game,contracts,shipment.shipmentID).ok,true);
+ const reservation=game.runtime.reservations[shipment.reservationID];reservation.allocations[0].quantity=1;
  const before=stackTotals(game).ironPlate;
  const result=dispatchContractShipment(game,contracts,shipment.shipmentID);
  assert.equal(result.ok,false);assert.equal(result.reason,"CARGO_ALLOCATION_MISMATCH");
