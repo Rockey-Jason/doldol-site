@@ -19,9 +19,10 @@ export function createRuntimeState(){
   return {schemaVersion:4,nextStackId:1,nextReservationId:1,nextEntityID:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
 }
 function normalizeStack(stack){
-  return {runtimeID:String(stack.runtimeID),itemID:canonicalItemID(stack.itemID),quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
+  const originalItemID=String(stack.itemID),normalizedItemID=canonicalItemID(originalItemID);
+  return {runtimeID:String(stack.runtimeID),itemID:normalizedItemID,quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
     quality:clamp(stack.quality??90,0,100),purity:clamp(stack.purity??90,0,100),
-    synthetic:!!stack.synthetic,packaging:stack.packaging||null,createdTick:Math.max(0,Number(stack.createdTick)||0),quarantined:stack.quarantined===true,quarantineReason:stack.quarantineReason||null,sourceItemID:stack.sourceItemID||null,migrationVersion:Math.max(0,Math.floor(Number(stack.migrationVersion)||0))};
+    synthetic:!!stack.synthetic,packaging:stack.packaging||null,createdTick:Math.max(0,Number(stack.createdTick)||0),quarantined:stack.quarantined===true,quarantineReason:stack.quarantineReason||null,sourceItemID:stack.sourceItemID||(normalizedItemID!==originalItemID?originalItemID:null),migrationVersion:Math.max(0,Math.floor(Number(stack.migrationVersion)||0))};
 }
 export function ensureItemStacks(state){
   if(!state.runtime||typeof state.runtime!=="object")state.runtime=createRuntimeState();
@@ -47,13 +48,13 @@ export function ensureItemStacks(state){
     const grouped=new Map();
     for(const [rawID,rawQuantity] of Object.entries(state.inventory||{})){
       const itemID=canonicalItemID(rawID),quantity=Math.max(0,Math.floor(Number(rawQuantity)||0));if(!quantity)continue;
-      const meta=state.meta?.[rawID]||state.meta?.[itemID]||{},entry=grouped.get(itemID)||{quantity:0,qualityWeight:0,purityWeight:0,synthetic:false};
-      entry.quantity+=quantity;entry.qualityWeight+=clamp(meta.quality??90,0,100)*quantity;entry.purityWeight+=clamp(meta.purity??90,0,100)*quantity;entry.synthetic=entry.synthetic||!!meta.synthetic;grouped.set(itemID,entry);
+      const meta=state.meta?.[rawID]||state.meta?.[itemID]||{},entry=grouped.get(itemID)||{quantity:0,qualityWeight:0,purityWeight:0,synthetic:false,sourceAliases:new Set()};
+      entry.sourceAliases.add(rawID);entry.quantity+=quantity;entry.qualityWeight+=clamp(meta.quality??90,0,100)*quantity;entry.purityWeight+=clamp(meta.purity??90,0,100)*quantity;entry.synthetic=entry.synthetic||!!meta.synthetic;grouped.set(itemID,entry);
     }
     for(const [itemID,entry] of grouped){
       const total=rt.itemStacks.filter(s=>s.itemID===itemID).reduce((n,s)=>n+s.quantity,0),missing=Math.max(0,entry.quantity-total);
       if(missing){rt.itemStacks.push({runtimeID:"IS-"+rt.nextStackId++,itemID,quantity:missing,
-        quality:entry.quantity?entry.qualityWeight/entry.quantity:90,purity:entry.quantity?entry.purityWeight/entry.quantity:90,synthetic:entry.synthetic,packaging:null,createdTick:state.tick||0})}
+        quality:entry.quantity?entry.qualityWeight/entry.quantity:90,purity:entry.quantity?entry.purityWeight/entry.quantity:90,synthetic:entry.synthetic,packaging:null,createdTick:state.tick||0,sourceItemID:entry.sourceAliases.size===1&&canonicalItemID([...entry.sourceAliases][0])!==[...entry.sourceAliases][0]?[...entry.sourceAliases][0]:null})}
     }
     rt.legacyInventoryMigrated=true;
   }
