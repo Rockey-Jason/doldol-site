@@ -862,15 +862,32 @@ function cancelFusion(){
 function installCore(b){if(!S.fusionDone||itemCount("infinity")<1){toast("인피니티 도로늄 1개가 필요합니다.","warn");return}if(!S.research.includes("planet")){toast("행성 안정화 프로토콜 연구를 완료하세요.","warn");return}if(!S.relaySites.every(Boolean)){toast("행성 안정화 릴레이 3개가 모두 필요합니다.","warn");return}if(!takeItem("infinity",1))return;S.coreInstalled=true;b.status="INSTALLED";log("인피니티 도로늄을 중앙 코어에 설치");toast("중앙 안정화 코어 설치 완료");showModal("행성 안정화 준비 완료","<p>3개 릴레이와 중앙 코어가 연결되었습니다. ORBIT의 최종 동기화 프로토콜을 실행할 수 있습니다.</p>",[{label:"계속",cls:"secondary"},{label:"행성 안정화 실행",cls:"gold",action:()=>{closeModal();finishPlanetary()}}]);markDirty();renderAll()}
 function finishPlanetary(){if(!S.coreInstalled||!S.relaySites.every(Boolean)){toast("안정화 필수 조건을 충족하지 못했습니다.","warn");return}S.victory=true;S.questIndex=QUESTS.length;log("PLANETARY STABILIZATION COMPLETE","good");$("orbit-dialogue").textContent="“Energy network synchronization complete. Planetary instability: decreasing. Factory status: OPERATIONAL.”";markDirty();renderAll();showModal("PLANETARY STABILIZATION COMPLETE","<div class='ending-visual'>💠</div><h3>돌돌행성의 에너지 네트워크가 안정화되었습니다.</h3><p>공장 전체에 푸른 에너지 흐름이 연결되었습니다. 폐허에서 시작한 작은 산업 기지가 행성을 지키는 거대한 산업 네트워크로 성장했습니다.</p><p><b>DORONIUM FACTORY · INFINITE INDUSTRY</b><br>FINAL STATUS: OPERATIONAL</p>",[{label:"엔딩 보기",cls:"gold",action:closeModal}]);playTone(920,.5,"sine")}
 
+function tickSupportFailure(b,dt,ratio,profile=FAILURE_PROFILES[b.type]){
+ if(!profile||b.failureRepair)return false;
+ const temperature=Number(b.temp??b.fluidTemperatureC??25),pressure=Number(b.pressure??b.fluidPressureKPa??0);
+ const targetTemperature=Number.isFinite(Number(b.targetTemperatureC))?Number(b.targetTemperatureC):temperature;
+ const targetPressure=Number.isFinite(Number(b.targetPressureKPa))?Number(b.targetPressureKPa):pressure;
+ const tempBand=Math.max(35,Math.abs(targetTemperature)*.15),pressureBand=Math.max(20,Math.abs(targetPressure)*.15);
+ const risks=calculateFailureRisks({profile,temperature,targetTemperature,safeTemperatureMin:targetTemperature-tempBand,safeTemperatureMax:targetTemperature+tempBand,pressure,targetPressure,safePressureMin:Math.max(0,targetPressure-pressureBand),safePressureMax:targetPressure+pressureBand,powerRatio:ratio,condition:Number(b.condition??b.durability??100),actualLoad:1,nominalLoad:1});
+ b.tick=Number(S.tick)||0;advanceFailureExposure(b,dt,true);
+ const hazard=calculateFailureHazard(profile,risks,dt),event=rollMachineFailure(S.runtime,b,profile,hazard);
+ if(event&&applyMachineFailure(b,event)){log("설비 고장 · "+(buildingDef(b.type)?.name||b.type)+" / "+event.grade.toUpperCase(),"warn");markDirty();return true}
+ return false;
+}
 function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;
- if(b.layer==="mine"&&b.failureRepair){if(b.maintenanceTimer>0){b.maintenanceTimer=Math.max(0,b.maintenanceTimer-dt);b.status="MAINTENANCE";if(b.maintenanceTimer<=0&&completeMachineRepair(b)){b.drillDurability=1000;log("채굴 드릴 정비 완료 · 내구도 복구","good");markDirty()}return}b.status="BROKEN";return}
- if(b.type==="coalgen"||b.type==="mineGen"){if(b.fuelTimer<=0){if(takeItem("coal",1)){b.fuelTimer=24;log((b.type==="mineGen"?"광산 지열 발전기":"화력 발전소")+" 석탄 투입")}else b.status="NO_INPUT"}else{b.fuelTimer=Math.max(0,b.fuelTimer-dt);b.status="RUNNING"}return}
- if(["fluidPipe","fluidValve","fluidTank","fluidPump","solar","wind","cooling","storage","warehouse","market","battery","transformer","powerCable","relay","core","lab"].includes(b.type)||isBeltType(b.type))return;
+ if(b.failureRepair){
+  if(b.maintenanceTimer>0){b.maintenanceTimer=Math.max(0,b.maintenanceTimer-dt);b.status="MAINTENANCE";if(b.maintenanceTimer<=0&&completeMachineRepair(b)){if(b.layer==="mine"&&d.kind==="miner")b.drillDurability=1000;log("기계 정비 완료 · "+d.name,"good");markDirty()}return}
+  b.status=b.failureRepair.broken?"BROKEN":"MAINTENANCE";return;
+ }
+ if(b.type==="coalgen"||b.type==="mineGen"){if(tickSupportFailure(b,dt,1))return;if(b.fuelTimer<=0){if(takeItem("coal",1)){b.fuelTimer=24;log((b.type==="mineGen"?"광산 지열 발전기":"화력 발전소")+" 석탄 투입")}else b.status="NO_INPUT"}else{b.fuelTimer=Math.max(0,b.fuelTimer-dt);b.status="RUNNING"}return}
+ if(["fluidPipe","fluidValve","fluidTank","fluidPump","solar","wind","storage","warehouse","market","battery","transformer","powerCable","relay","core","lab"].includes(b.type)||isBeltType(b.type)){const ratio=power.allocations?.[String(b.uid)]?.ratio??1;if(tickSupportFailure(b,dt,ratio))return;return;}
+ if(b.type==="cooling"){const ratio=power.allocations?.[String(b.uid)]?.ratio??0;if(ratio<.8){b.status="PAUSED_POWER";return}if(tickSupportFailure(b,dt,ratio))return;b.status="RUNNING";return;}
  const ratio=power.allocations?.[String(b.uid)]?.ratio??((d.power||0)>0?0:1);
  if(b.output){b.status="PAUSED_OUTPUT";return}
  if(b.type==="minerIron"||b.type==="minerCopper"||b.type==="minerCoal"||d.kind==="miner"){
   if(b.layer!=="mine"){b.status="ERROR";b.errorCode="MINER_REQUIRES_MINE_LAYER";return}
   if(ratio<.8){b.status="PAUSED_POWER";return}
+  if(tickSupportFailure(b,dt,ratio))return;
   const deposit=S.mineDeposits?.[b.targetDepositKey||mineDepositKey(b.mineLevel,b.x,b.y)];
   if(!deposit||deposit.type!==d.resource||deposit.amount<=0){b.status="DEPLETED";return}
   if(Number(b.drillDurability??1000)<=0){if(!b.failureRepair)b.failureRepair={grade:"major",repairSeconds:30,repairCondition:100,repairMaterials:{ironPlate:2},residue:{type:"drill_bit",amount:1},broken:true};b.status="BROKEN";return}
@@ -878,8 +895,8 @@ function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;
   if(b.progress>=8){b.progress=0;deposit.amount=Math.max(0,deposit.amount-1);b.drillDurability=Math.max(0,Number(b.drillDurability??1000)-1);const id=d.resource;createOutput(b,id,1,{quality:clamp(84+Math.floor((deposit.seed%1200)/100)+Math.max(0,deposit.level-2),80,99),purity:Math.min(99,86+deposit.level*2),synthetic:false});b.lastDepositYieldTick=Number(S.tick)||0;if((deposit.max-deposit.amount)%5===0){addItem("stone",1,{quality:82,purity:85,synthetic:false});b.byproductsProduced=(Number(b.byproductsProduced)||0)+1}if(deposit.amount<=0)b.status="DEPLETED"}
   return;
  }
- if(b.type==="pump"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=5){b.progress=0;node.amount=Math.max(0,node.amount-3);createOutput(b,"water",3,{quality:100,purity:100,synthetic:false})}return}
- if(b.type==="doriFarm"){if(ratio<.8){b.status="PAUSED_POWER";return}const target=findNearbyDoriNode(b.x,b.y),node=target?.node;if(!node){b.status="NO_INPUT";return}if(node.cooldown>0){b.status="GROWING";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=60){const fluidAvailable=b.fluidType==="WATER"?Math.max(0,Number(b.fluidAmountL)||0):0;const fromFluid=Math.min(2,fluidAvailable),fromItems=2-fromFluid;if(itemCount("water")<fromItems){b.status="NO_INPUT";b.progress=59;return}if(fromFluid>0){b.fluidAmountL=fluidAvailable-fromFluid;if(b.fluidAmountL<=1e-9){b.fluidAmountL=0;b.fluidType=null}}if(fromItems>0)takeItem("water",fromItems);startNodeCooldown(target.x,target.y,node,60);b.progress=0;createOutput(b,"doriMeat",1,{quality:S.research.includes("bio")?95:92,purity:90,synthetic:false})}return}
+ if(b.type==="pump"){if(tickSupportFailure(b,dt,ratio))return;if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=5){b.progress=0;node.amount=Math.max(0,node.amount-3);createOutput(b,"water",3,{quality:100,purity:100,synthetic:false})}return}
+ if(b.type==="doriFarm"){if(tickSupportFailure(b,dt,ratio))return;if(ratio<.8){b.status="PAUSED_POWER";return}const target=findNearbyDoriNode(b.x,b.y),node=target?.node;if(!node){b.status="NO_INPUT";return}if(node.cooldown>0){b.status="GROWING";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=60){const fluidAvailable=b.fluidType==="WATER"?Math.max(0,Number(b.fluidAmountL)||0):0;const fromFluid=Math.min(2,fluidAvailable),fromItems=2-fromFluid;if(itemCount("water")<fromItems){b.status="NO_INPUT";b.progress=59;return}if(fromFluid>0){b.fluidAmountL=fluidAvailable-fromFluid;if(b.fluidAmountL<=1e-9){b.fluidAmountL=0;b.fluidType=null}}if(fromItems>0)takeItem("water",fromItems);startNodeCooldown(target.x,target.y,node,60);b.progress=0;createOutput(b,"doriMeat",1,{quality:S.research.includes("bio")?95:92,purity:90,synthetic:false})}return}
  if(d.kind==="machine"||d.kind==="reactor"||d.kind==="variant"){tickMachine(b,dt,ratio);return}
 }
 function recipeHasSyntheticInput(b,r){for(const[id,n]of Object.entries(r.inputs)){let remaining=n;const buffered=Math.min(remaining,b.input?.[id]||0);if(buffered&&b.inputMeta?.[id]?.synthetic)return true;remaining-=buffered;if(remaining&&S.meta[id]?.synthetic)return true}return false}
