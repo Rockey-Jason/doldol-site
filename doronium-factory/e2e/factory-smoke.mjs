@@ -65,6 +65,18 @@ try {
   assert.equal(audit.canonicalDoronumIntegration.missingCanonicalItems.length, 0, "All 15 canonical Doronum IDs must exist in the active resource registry");
   assert.equal(audit.canonicalDoronumIntegration.missingModels.length, 0, "Every canonical item must resolve to an actual Three.js crystal model profile");
   assert.equal(audit.runtimeValidation.valid, true, "Initial item stacks and reservations must validate");
+  const ownershipCase = await desktop.evaluate(() => window.__doroniumFactoryTest.setupOwnershipLedgerTest());
+  assert.equal(ownershipCase.reservation !== null, true, "The custody scenario must create a real item reservation");
+  assert.equal(ownershipCase.validation.valid, true, "Every item must have exactly one valid custody owner");
+  assert.equal(ownershipCase.itemTotals.ironOre, 11, "Reserved ore and in-process ore must both be represented exactly once");
+  assert.equal(ownershipCase.itemTotals.coal, 2, "Machine input buffers must be represented in custody");
+  assert.equal(ownershipCase.itemTotals.ironPlate, 2, "Machine output buffers must be represented in custody");
+  assert.equal(ownershipCase.itemTotals.circuit, 4, "Conveyor cargo must be represented in custody");
+  assert.equal(ownershipCase.itemTotals.wood, 5, "Shipment cargo must be represented in custody");
+  assert.equal(ownershipCase.itemTotals.infinity, 1, "Completion-buffer items must be represented in custody");
+  const ownershipOwners = ownershipCase.ownership.custody.map(x => x.ownerType);
+  for (const owner of ["PLAYER_INVENTORY","ACTIVE_JOB","MACHINE_INPUT","MACHINE_OUTPUT","CONVEYOR","COMPLETION_BUFFER"]) assert.ok(ownershipOwners.includes(owner), "Missing custody owner type: " + owner);
+
   assert.equal(audit.variantCount, 15, "15 canonical Doronium variants must be present");
   assert.equal(audit.uniqueVariants, 15, "Variant IDs must be unique");
   assert.equal(audit.uniqueCrystalModels, 15, "All 15 variants must have 3D models");
