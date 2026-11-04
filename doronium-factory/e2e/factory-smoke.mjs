@@ -204,6 +204,9 @@ try {
   assert.ok(openedValve.tankLiters > 0, "Opening the valve must let water reach the tank through downstream pipes");
   assert.equal(openedValve.massBalance.valid, true, "Live fluid transfer must conserve the simulated water volume");
   assert.equal(openedValve.valveOpen, true, "Valve state must remain open after live simulation");
+  const fluidDrain = await desktop.evaluate(() => window.__doroniumFactoryTest.runFluidDrainTest());
+  assert.equal(fluidDrain.ok, true, "Buffered fluid must transfer to a compatible tank without loss before demolition");
+  assert.equal(fluidDrain.before, fluidDrain.after, "Fluid drain must conserve total liters");
 
   const fusionRollback = await desktop.evaluate(() => window.__doroniumFactoryTest.runFusionReservationCancelTest());
   assert.equal(fusionRollback.ok, true, "A 15-item Fusion reservation must be atomic and fully reversible on cancellation");
