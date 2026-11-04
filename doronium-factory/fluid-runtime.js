@@ -93,9 +93,9 @@ export function tickFluidNetwork({nodes=[],edges=[],deltaSeconds=.1,ambientTempe
  return {networks:graph.networks,networkByID:Object.fromEntries(graph.networkByID),flows,leaks,faults,before,after,massBalance:{beforeL:massBefore,afterL:massAfter,lostL:lost,deltaL:massBefore-massAfter-lost,valid:Math.abs(massBefore-massAfter-lost)<=1e-8}};
 }
 export function consumeFluid(node,requestedLiters,expectedFluidType){
- const request=Math.max(0,finite(requestedLiters)),amount=Math.max(0,finite(node?.amountL));
+ const request=Math.max(0,finite(requestedLiters)),field=node&&Object.hasOwn(node,"amountL")?"amountL":"fluidAmountL",amount=Math.max(0,finite(node?.[field]));
  if(!node||!FLUID_TYPES.includes(String(node.fluidType||""))||expectedFluidType&&node.fluidType!==expectedFluidType||amount<request)return {ok:false,movedL:0,reason:"FLUID_UNAVAILABLE"};
- node.amountL=amount-request;if(node.amountL===0)node.fluidType=null;
+ node[field]=amount-request;if(node[field]===0)node.fluidType=null;
  return {ok:true,movedL:request,fluidType:expectedFluidType||node.fluidType};
 }
 export function transferFluidDirect({source,target,requestedLiters,deltaSeconds=1,maxFlowLps=Infinity}={}){
