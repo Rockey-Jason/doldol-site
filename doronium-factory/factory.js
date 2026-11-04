@@ -1,4 +1,4 @@
-import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=19";
+import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES, CANONICAL_DORONUM_CRYSTAL_MODELS } from "./world3d.js?v=19";
 import { createRuntimeState, ensureItemStacks, addItemStack, allocateEntityID, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, reserveQualifiedItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=5";
 import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=3";
 import { validateGameData } from "./game-data-validation.js?v=3";
@@ -1277,6 +1277,7 @@ if(E2E_MODE){
    uniqueCrystalModels:DORONIUM_CRYSTAL_MODELS.filter(id=>id!=="infinity").length,
    uniqueCrystalShapes:new Set(VARIANTS.map(id=>DORONIUM_CRYSTAL_MODEL_SHAPES[id])).size,
    allCrystalModels:VARIANTS.every(id=>DORONIUM_CRYSTAL_MODELS.includes(id)&&!!DORONIUM_CRYSTAL_MODEL_SHAPES[id]),
+   canonicalCrystalModelCount:CANONICAL_DORONUM_CRYSTAL_MODELS.length,canonicalCrystalModelShapes:new Set(CANONICAL_DORONUM_CRYSTAL_MODELS.map(id=>DORONIUM_CRYSTAL_MODEL_SHAPES[id])).size,allCanonicalCrystalModels:CANONICAL_DORONUM_CRYSTAL_MODELS.every(id=>!!DORONIUM_CRYSTAL_MODEL_SHAPES[id]),
    researchCount:RESEARCH.length,
    buildingCount:BUILDINGS.length,buildingIDs:BUILDINGS.map(b=>b.id),worldWidth:WORLD_W,worldHeight:WORLD_H,outerResourceCount:Object.entries(S.nodes).filter(([key,n])=>{const [x,z]=key.split(",").map(Number);return (x>=128||z>=96)&&["wood","dori","water"].includes(n.type)}).length,mineLevels:MINE_LEVELS,biomeCount:new Set(Array.from({length:WORLD_H},(_,z)=>Array.from({length:WORLD_W},(_,x)=>biomeAt(x,z))).flat()).size,terrainHeightRange:[Math.min(...Array.from({length:WORLD_H},(_,z)=>Math.min(...Array.from({length:WORLD_W},(_,x)=>terrainHeightAt(x,z))))),Math.max(...Array.from({length:WORLD_H},(_,z)=>Math.max(...Array.from({length:WORLD_W},(_,x)=>terrainHeightAt(x,z)))))],surfaceHasExposedOre:Object.values(S.nodes).some(n=>["stone","ironOre","copperOre","coal","quartz","goldOre","diamond"].includes(n.type)),
    simulationStep:STEP,
