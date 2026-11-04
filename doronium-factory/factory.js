@@ -1443,6 +1443,7 @@ async function saveGame(force=false){
    cloudSaveConflict={expectedRevision,remoteRevision:Math.max(0,Number(result.revision)||0),remoteUpdatedAt:result.updatedAt||null,detectedAt:nowISO(),localSavedAt:savedAt};
    setCloud("error","저장 충돌");setSaveMessage("다른 기기의 최신 저장 감지 · 두 사본 보존");
    toast("저장 충돌이 감지되었습니다. 자동 덮어쓰기를 잠갔습니다.","warn");
+   showCloudSaveConflict();
    return;
   }
   cloudSaveRevision=result.revision;cloudUpdatedAt=result.updatedAt||savedAt;setCloud("online","모든 기기 동기화");setSaveMessage("계정 클라우드 저장 완료 · R"+cloudSaveRevision);
