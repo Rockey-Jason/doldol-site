@@ -162,7 +162,7 @@ const DATA_VALIDATION=validateGameData({resources:RESOURCE,recipes:RECIPES,varia
 if(!DATA_VALIDATION.valid)console.error("Doronium Factory data validation failed",DATA_VALIDATION.errors);
 const CANONICAL_DORONUM_VALIDATION=validateCanonicalDoronumCatalog(CANONICAL_DORONUM_CATALOG);
 if(!CANONICAL_DORONUM_VALIDATION.valid)console.error("Canonical Doronum catalog validation failed",CANONICAL_DORONUM_VALIDATION.errors);
-const CANONICAL_DORONUM_INTEGRATION=auditCanonicalDoronumIntegration({catalog:CANONICAL_DORONUM_CATALOG,resources:RESOURCE,buildings:BUILDINGS,recipes:RECIPES,research:RESEARCH,fluidTypes:FLUID_TYPES});
+const CANONICAL_DORONUM_INTEGRATION=auditCanonicalDoronumIntegration({catalog:CANONICAL_DORONUM_CATALOG,resources:RESOURCE,buildings:BUILDINGS,recipes:RECIPES,research:RESEARCH,fluidTypes:FLUID_TYPES,modelIDs:CANONICAL_DORONUM_CRYSTAL_MODELS});
 const QUESTS=[
 {id:"q1",chapter:0,title:"폐허의 첫걸음",desc:"숲에서 도끼로 목재 10개를 벌목하고, 첫 번째 광산에서 곡괭이로 석재 10개를 채굴하세요.",reward:250,check:s=>s.stats.gathered.wood>=10&&s.stats.gathered.stone>=10,progress:s=>Math.min(10,s.stats.gathered.wood)+Math.min(10,s.stats.gathered.stone),max:20,orbit:"“기초 자원 확보 확인. 이곳은 아직 충분히 복구할 수 있습니다.”"},
 {id:"q2",chapter:0,title:"첫 번째 전력망",desc:"작업 구역을 평탄화하고 기초 타일을 설치한 뒤 태양광 발전기를 건설하세요. 광산에서 철광석 8개도 확보해야 합니다.",reward:400,check:s=>Object.keys(s.foundation||{}).length>0&&hasBuilding(s,"solar")&&(s.stats.gathered.ironOre||0)>=8,progress:s=>(Object.keys(s.foundation||{}).length>0?1:0)+(hasBuilding(s,"solar")?1:0)+Math.min(1,Math.floor((s.stats.gathered.ironOre||0)/8)),max:3,orbit:"“전력 계통이 연결되었습니다. 산업 설비를 가동할 수 있습니다.”"},
