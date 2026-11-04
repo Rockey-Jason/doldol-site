@@ -1165,25 +1165,6 @@ if(E2E_MODE){
    const get=id=>S.buildings.find(b=>b.uid===id);
    return {tankLiters:get("F-TANK")?.fluidAmountL||0,pipeOneLiters:get("F-PIPE-1")?.fluidAmountL||0,pipeTwoLiters:get("F-PIPE-2")?.fluidAmountL||0,valveOpen:!!valve?.valveOpen,pumpPower:currentPower().allocations["F-PUMP"]?.status||"NO_POWER",massBalance:S.lastFluidBalance,networkIDs:S.buildings.filter(b=>b.type.startsWith("fluid")).map(b=>b.fluidNetworkID)};
   },
-  setupFluidNetworkTest(){
-   S=freshState();S.player={...S.player,viewMode:"map",layer:"surface"};S.seconds=8*3600;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=false;
-   S.nodes["15,15"]={type:"water",amount:0,seed:123};
-   S.buildings=[
-    {uid:"F-GEN",type:"solar",x:10,y:10,dir:1,status:"IDLE"},
-    {uid:"F-PUMP",type:"fluidPump",x:15,y:15,layer:"surface",fluidAmountL:0,fluidType:null,status:"IDLE"},
-    {uid:"F-PIPE-1",type:"fluidPipe",x:16,y:15,layer:"surface",fluidAmountL:0,fluidType:null,status:"IDLE"},
-    {uid:"F-VALVE",type:"fluidValve",x:17,y:15,layer:"surface",valveOpen:false,fluidAmountL:0,fluidType:null,status:"IDLE"},
-    {uid:"F-PIPE-2",type:"fluidPipe",x:18,y:15,layer:"surface",fluidAmountL:0,fluidType:null,status:"IDLE"},
-    {uid:"F-TANK",type:"fluidTank",x:19,y:15,layer:"surface",fluidAmountL:0,fluidType:null,status:"IDLE"}
-   ];
-   return {power:currentPower(),types:S.buildings.filter(b=>b.type.startsWith("fluid")).map(b=>b.type)};
-  },
-  runFluidNetworkTest(openValve=false,steps=12){
-   const valve=S.buildings.find(b=>b.type==="fluidValve");if(valve)valve.valveOpen=!!openValve;
-   for(let i=0;i<steps;i++)tick(STEP);
-   const get=id=>S.buildings.find(b=>b.uid===id);
-   return {tankLiters:get("F-TANK")?.fluidAmountL||0,pipeOneLiters:get("F-PIPE-1")?.fluidAmountL||0,pipeTwoLiters:get("F-PIPE-2")?.fluidAmountL||0,valveOpen:!!valve?.valveOpen,pumpPower:currentPower().allocations["F-PUMP"]?.status||"NO_POWER",massBalance:S.lastFluidBalance,networkIDs:S.buildings.filter(b=>b.type.startsWith("fluid")).map(b=>b.fluidNetworkID)};
-  },
   setupMiningAutomationTest(){
    S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,viewMode:"first",x:3,y:12};playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[]};S.money=1000000;S.inventory={coal:20,ironPlate:10,wood:50,stone:50,wire:10,ironOre:20};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.mineDeposits=makeMineDeposits();S.powerTopologyEnabled=false;S.research.push("mining");playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],yaw:0,pitch:-.06};
    const generator=placeMineBuilding("mineGen",11,15),miner=placeMineBuilding("minerIron",12,15);
