@@ -1381,6 +1381,19 @@ if(E2E_MODE){
    S.buildings.push(machine);tickBuilding(machine,STEP,1);
    return {status:machine.status,fluidAmountL:machine.fluidAmountL,fluidType:machine.fluidType,progress:machine.progress,normalRemaining:availableItemCount(S,"ITEM_DORONUM_NORMAL"),ironOreRemaining:availableItemCount(S,"ITEM_IRON_ORE"),activeMeta:!!machine.activeMeta};
   },
+  setupOwnershipLedgerTest(){
+   S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);S.buildings=[];S.contractRuntime=createContractState(456);
+   addItemStack(S,"ironOre",10,{quality:96,purity:97,synthetic:false});
+   const reservation=reserveItemStacks(S,"ironOre",3,"OWNERSHIP-TEST-JOB");
+   S.buildings=[
+    {uid:"OWN-MACHINE",type:"smelter",input:{coal:2},inputMeta:{coal:{quality:90,purity:92,synthetic:false}},activeInputQuantities:[{itemID:"ironOre",quantity:1,quality:96,purity:97,synthetic:false}],output:{id:"ironPlate",qty:2,meta:{quality:95,purity:96,synthetic:false}}},
+    {uid:"OWN-BELT",type:"belt",item:{id:"circuit",qty:4,meta:{quality:94,purity:95,synthetic:false}}}
+   ];
+   S.contractRuntime.shipments=[{shipmentID:"OWN-SHIP",status:"IN_TRANSIT",cargo:[{itemID:"wood",quantity:5,quality:90,purity:91,synthetic:false}]}];
+   S.completionBuffer=[{completionID:"OWN-COMPLETE",itemID:"infinity",quantity:1}];
+   const validation=rebuildOwnershipLedger(S);
+   return {reservation,validation,ownership:structuredClone(S.ownershipLedger),itemTotals:validation.itemTotals};
+  },
   setupFluidNetworkTest(){
    S=freshState();S.player={...S.player,viewMode:"map",layer:"surface"};S.seconds=8*3600;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=false;
    S.nodes["15,15"]={type:"water",amount:0,seed:123};
