@@ -32,7 +32,7 @@ export function settleInfinityFusionOutput(state,{jobID,outputItemID="infinity",
   syncLegacyInventory(state);
   state.stats??={};state.stats.produced??={};
   state.stats.produced[outputItemID]=(Number(state.stats.produced[outputItemID])||0)+1;
-  job.status="COMPLETED";job.outputStackID=outputStackID;job.completedTick=Math.max(0,Number(state.tick)||0);
+  job.status="COMPLETED";job.outputStackID=outputStackID;job.completedTick=Math.max(0,Number(state.tick)||0);job.completedAt=Number(state.seconds)||0;
   job.outputIssued=true;job.reservationIDs=[];
   state.fusionDone=true;
   state.fusionSettlements[String(jobID)]={
