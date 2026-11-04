@@ -149,7 +149,7 @@ export const CANONICAL_DORONUM_CATALOG=Object.freeze([
   researchID:"SPECIAL_EDITION_BATCH",contractID:"SECURITY_MANUFACTURING_CONTRACT",productionLineID:"BUILDING_SPECIAL_EDITION_LINE",campaignSupplyMustCoverInfinityQuantity:100,bonusSupplyMayBeLimited:true
  }),
  doronumEntry("ITEM_DORONUM_LIMITED_EDITION","Limited Edition Doronum","limited-supply campaign and high-difficulty contracts",["RECIPE_LIMITED_EDITION_BATCH"],["limited-contract","legacy-batch","infinity-input-test"],null,{
-  productionLineID:"BUILDING_FIRST_FACTORY_LEGACY_BATCH_LINE",requiresLineRepair:true,contractID:"LIMITED_EDITION_CONTRACT",maximumCampaignSupply:100,repeatableRecipe:false
+  productionLineID:"BUILDING_FIRST_FACTORY_LEGACY_BATCH_LINE",researchID:"infinity",requiresLineRepair:true,contractID:"LIMITED_EDITION_CONTRACT",maximumCampaignSupply:100,repeatableRecipe:false
  })
 ]);
 export function validateCanonicalDoronumCatalog(catalog=CANONICAL_DORONUM_CATALOG){
@@ -178,10 +178,10 @@ export function validateCanonicalDoronumCatalog(catalog=CANONICAL_DORONUM_CATALO
 }
 
 export function auditCanonicalDoronumIntegration({
- catalog=CANONICAL_DORONUM_CATALOG,resources={},buildings=[],recipes={},research=[],fluidTypes=[],modelIDs=[]
+ catalog=CANONICAL_DORONUM_CATALOG,resources={},buildings=[],recipes={},research=[],fluidTypes=[],modelIDs=[],campaignContractIDs=[]
 }={}){
- const resourceIDs=new Set(Object.keys(resources)),buildingIDs=new Set(buildings.map(x=>x?.id)),recipeIDs=new Set(Object.keys(recipes)),researchIDs=new Set(research.map(x=>x?.id));
- const missingCanonicalItems=[],missingModels=[],missingRawResources=new Set(),missingMachines=new Set(),missingRecipes=new Set(),missingResearch=new Set(),missingFluids=new Set();
+ const resourceIDs=new Set(Object.keys(resources)),buildingIDs=new Set(buildings.map(x=>x?.id)),recipeIDs=new Set(Object.keys(recipes)),researchIDs=new Set(research.map(x=>x?.id)),contractIDs=new Set(campaignContractIDs);
+ const missingCanonicalItems=[],missingModels=[],missingRawResources=new Set(),missingMachines=new Set(),missingRecipes=new Set(),missingResearch=new Set(),missingFluids=new Set(),missingContracts=new Set(),missingProductionLines=new Set();
  for(const item of catalog||[]){
   if(!resourceIDs.has(item.id))missingCanonicalItems.push(item.id);
   if(!new Set(modelIDs).has(item.modelProfileID))missingModels.push(item.modelProfileID);
@@ -196,16 +196,20 @@ export function auditCanonicalDoronumIntegration({
    }
   }
   if(item.acquisition?.researchID&&!researchIDs.has(item.acquisition.researchID))missingResearch.add(item.acquisition.researchID);
+  if(item.acquisition?.contractID&&!contractIDs.has(item.acquisition.contractID))missingContracts.add(item.acquisition.contractID);
+  if(item.acquisition?.productionLineID&&!buildingIDs.has(item.acquisition.productionLineID))missingProductionLines.add(item.acquisition.productionLineID);
  }
  const result={
-  complete:!missingCanonicalItems.length&&!missingModels.length&&!missingRawResources.size&&!missingMachines.size&&!missingRecipes.size&&!missingResearch.size&&!missingFluids.size,
+  complete:!missingCanonicalItems.length&&!missingModels.length&&!missingRawResources.size&&!missingMachines.size&&!missingRecipes.size&&!missingResearch.size&&!missingFluids.size&&!missingContracts.size&&!missingProductionLines.size,
   missingCanonicalItems:missingCanonicalItems.sort(),
   missingModels:missingModels.sort(),
   missingRawResources:[...missingRawResources].sort(),
   missingMachines:[...missingMachines].sort(),
   missingRecipes:[...missingRecipes].sort(),
   missingResearch:[...missingResearch].sort(),
-  missingFluids:[...missingFluids].sort()
+  missingFluids:[...missingFluids].sort(),
+  missingContracts:[...missingContracts].sort(),
+  missingProductionLines:[...missingProductionLines].sort()
  };
  result.missingCount=Object.values(result).filter(Array.isArray).reduce((n,values)=>n+values.length,0);
  return result;
