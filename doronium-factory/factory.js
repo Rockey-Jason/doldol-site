@@ -1679,7 +1679,7 @@ if(E2E_MODE){
    addItemStack(S,"ironOre",10,{quality:95,purity:96,synthetic:false});
    const reservation=reserveItemStacks(S,"ironOre",7,"INVENTORY-LOCK-TEST");
    syncLegacyInventory(S);renderInventory();
-   return {reservation,total:S.inventory.ironOre,available:itemCount("ironOre"),reserved:S.inventory.ironOre-itemCount("ironOre")};
+   return {reservation,total:S.inventory.ITEM_IRON_ORE,available:itemCount("ironOre"),reserved:S.inventory.ITEM_IRON_ORE-itemCount("ironOre")};
   },
   setupQuarantineInventoryTest(){
    S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
