@@ -74,8 +74,8 @@ try {
   assert.equal(audit.skillGroupCount, 5, "The skill tree must contain five specialization groups");
   assert.equal(audit.skillTreeValidation.valid, true, "All skill prerequisites and tiers must validate");
   assert.equal(audit.skillStateValidation.valid, true, "Skill points and unlocked nodes must validate");
-  assert.equal(audit.buildingCount, 31, "The original 23 facilities plus power, mine and fluid infrastructure must be present");
-  for (const id of ["powerCable","transformer","battery","mineGen","fluidPipe","fluidValve","fluidTank","fluidPump"]) assert.ok(audit.buildingIDs.includes(id), `Missing v4.5 facility: ${id}`);
+  assert.equal(audit.buildingCount, 37, "The original facilities plus power, mine, fluid and advanced mineral processing infrastructure must be present");
+  for (const id of ["powerCable","transformer","battery","mineGen","fluidPipe","fluidValve","fluidTank","fluidPump","minerAdvanced","goldSmelter","chromeSmelter","steelForge","titaniumPress","carbonMill"]) assert.ok(audit.buildingIDs.includes(id), `Missing v4.5 facility: ${id}`);
   assert.equal(audit.worldWidth, 192, "The world must be expanded to 192 tiles wide");
   assert.ok(audit.outerResourceCount > 20, "The expanded continent must contain natural resource patches");
   assert.equal(audit.worldHeight, 160, "The world must be expanded to 160 tiles high");
