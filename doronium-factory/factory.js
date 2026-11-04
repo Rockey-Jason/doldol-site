@@ -82,6 +82,7 @@ const RESOURCE={
  "ITEM_MAGNETITE":{name:"자철석",icon:"🪨",price:45,kind:"raw"},
  "ITEM_TITANIUM_PLATE":{name:"티타늄판",icon:"▱",price:180,kind:"part"},
  "ITEM_CARBON_POWDER":{name:"탄소 분말",icon:"⬛",price:35,kind:"raw"},
+ titaniumOre:{name:"티타늄 광석",icon:"⛏️",price:95,kind:"raw"},chromiteOre:{name:"크로마이트 광석",icon:"🪨",price:85,kind:"raw"},
  infinity:{name:"인피니티 도로늄",icon:"💠",price:1000000,kind:"final"}
 };
 const VARIANTS=["ITEM_DORONUM_NORMAL","ITEM_DORONUM_YELLOW","ITEM_DORONUM_ULTRA","ITEM_DORONUM_BLUE","ITEM_DORONUM_RED","ITEM_DORONUM_IRON","ITEM_DORONUM_ORANGE","ITEM_DORONUM_SLIGHTLY_RUSTED","ITEM_DORONUM_RUSTED","ITEM_DORONUM_TRANSLUCENT","ITEM_DORONUM_THERMAL_CRYSTAL","ITEM_DORONUM_COLD_CRYSTAL","ITEM_DORONUM_BLACK","ITEM_DORONUM_SPECIAL_EDITION","ITEM_DORONUM_LIMITED_EDITION"];
@@ -101,9 +102,15 @@ const BUILDINGS=[
 {id:"minerIron",name:"철광석 채굴기",icon:"⛏️",cat:"resource",cost:180,materials:{wood:8,stone:5,ironOre:2},desc:"철 광맥에서 철광석을 자동 채굴합니다.",unlock:null,kind:"miner",resource:"ironOre",power:2},
 {id:"minerCopper",name:"구리 채굴기",icon:"🟠",cat:"resource",cost:205,materials:{wood:8,stone:5,copperOre:2},desc:"구리 광맥에서 구리 광석을 자동 채굴합니다.",unlock:"mining",kind:"miner",resource:"copperOre",power:2},
 {id:"minerCoal",name:"심층 석탄 채굴기",icon:"⬛",cat:"resource",cost:240,materials:{wood:8,ironPlate:2},desc:"석탄 광맥을 자동 채굴합니다.",unlock:"mining",kind:"miner",resource:"coal",power:3},
+{id:"minerAdvanced",name:"심층 특수광물 채굴기",icon:"💎",cat:"resource",cost:480,materials:{ironPlate:5,circuit:2,wire:3},desc:"냉각 결정·열 결정·자철석·티타늄·크로마이트 등 특수 광맥을 자동 채굴합니다.",unlock:"mining",kind:"miner",resource:"advanced",power:5},
 {id:"mineGen",name:"광산 지열 발전기",icon:"♨️",cat:"power",cost:420,materials:{ironPlate:5,wire:3,stone:8},desc:"석탄 1개로 24초 동안 1.2MW(1,200kW)를 공급하는 지하 발전 설비입니다.",unlock:"mining",kind:"power",power:0,gen:12},
 {id:"doriFarm",name:"돌이 나무 재배기",icon:"🌳",cat:"resource",cost:290,materials:{wood:8,stone:6,ironPlate:2},desc:"인접한 돌이 고기 나무를 관리합니다. 60초마다 물 2L를 사용해 열매 1개를 수확합니다.",unlock:"bio",kind:"doriFarm",power:2},
 {id:"smelter",name:"고온 제련로",icon:"🔥",cat:"process",cost:280,materials:{stone:10,ironOre:6},desc:"철광석 2개와 석탄 1개를 철판 1개로 제련합니다.",unlock:null,kind:"machine",power:4,recipe:"smelt"},
+{id:"goldSmelter",name:"금 주괴 제련로",icon:"🟨",cat:"process",cost:620,materials:{ironPlate:8,circuit:2},desc:"금 광석과 석탄으로 금괴를 생산합니다.",unlock:"mining",kind:"machine",power:7,recipe:"goldIngot"},
+{id:"chromeSmelter",name:"크롬 합금 제련로",icon:"🔩",cat:"process",cost:760,materials:{ironPlate:10,circuit:3},desc:"크로마이트 광석을 정제해 크롬 주괴를 생산합니다.",unlock:"mining",kind:"machine",power:8,recipe:"chromeIngot"},
+{id:"steelForge",name:"강철 압연 단조로",icon:"▰",cat:"process",cost:540,materials:{ironPlate:8,wire:2},desc:"철광석과 석탄을 사용해 강철판을 생산합니다.",unlock:"metallurgy",kind:"machine",power:6,recipe:"steelPlate"},
+{id:"titaniumPress",name:"티타늄 고압 프레스",icon:"▱",cat:"process",cost:920,materials:{ironPlate:12,circuit:4},desc:"티타늄 광석을 고압 가공해 티타늄판을 생산합니다.",unlock:"mining",kind:"machine",power:9,recipe:"titaniumPlate"},
+{id:"carbonMill",name:"탄소 분말 분쇄기",icon:"⬛",cat:"process",cost:420,materials:{ironPlate:5,wire:2},desc:"석탄을 미세 분쇄해 탄소 분말을 생산합니다.",unlock:"mining",kind:"machine",power:4,recipe:"carbonPowder"},
 {id:"wiremill",name:"전선 압연기",icon:"〰️",cat:"process",cost:250,materials:{wood:8,stone:4},desc:"구리 광석 1개를 전선 2개로 가공합니다.",unlock:null,kind:"machine",power:3,recipe:"wire"},
 {id:"assembler",name:"회로 조립기",icon:"▦",cat:"process",cost:430,materials:{ironPlate:4,wire:5},desc:"철판 1개와 전선 2개로 산업 회로를 조립합니다.",unlock:"mechanical",kind:"machine",power:5,recipe:"circuit"},
 {id:"lab",name:"기술 연구소",icon:"🔬",cat:"advanced",cost:360,materials:{ironPlate:4,wire:3},desc:"산업 회로와 자금을 사용해 신기술을 연구합니다.",unlock:null,kind:"lab",power:4},
@@ -125,7 +132,12 @@ const RECIPES={
 smelt:{name:"철 제련",inputs:{ironOre:2,coal:1},output:"ironPlate",qty:1,time:12,temp:1538,pressure:100},
 wire:{name:"구리 전선 압연",inputs:{copperOre:1},output:"wire",qty:2,time:8,temp:250,pressure:50},
 circuit:{name:"산업 회로 조립",inputs:{ironPlate:1,wire:2},output:"circuit",qty:1,time:14,temp:120,pressure:20},
-doronium:{name:"도로늄 공명 합성",inputs:{doriMeat:10},output:"ITEM_DORONUM_NORMAL",qty:1,time:42,temp:1800,pressure:1000}
+doronium:{name:"도로늄 공명 합성",inputs:{doriMeat:10},output:"ITEM_DORONUM_NORMAL",qty:1,time:42,temp:1800,pressure:1000},
+ goldIngot:{name:"금괴 제련",inputs:{goldOre:2,coal:1},output:"ITEM_GOLD_INGOT",qty:1,time:30,temp:950,pressure:10},
+ chromeIngot:{name:"크롬 정제",inputs:{chromiteOre:2,coal:2},output:"ITEM_CHROME_INGOT",qty:1,time:45,temp:1250,pressure:30},
+ steelPlate:{name:"강철 합금",inputs:{ironOre:3,coal:2},output:"ITEM_STEEL_PLATE",qty:2,time:35,temp:1050,pressure:20},
+ titaniumPlate:{name:"티타늄 압착",inputs:{titaniumOre:2,coal:1},output:"ITEM_TITANIUM_PLATE",qty:1,time:50,temp:1450,pressure:40},
+ carbonPowder:{name:"탄소 미분화",inputs:{coal:3},output:"ITEM_CARBON_POWDER",qty:2,time:20,temp:500,pressure:5}
 };
 const VARIANT_RECIPES={
  "ITEM_DORONUM_YELLOW":{name:"옐로 결정화",inputs:{"ITEM_DORONUM_NORMAL":1,"ITEM_GOLD_INGOT":2,quartz:1},time:45,temp:700,pressure:300},
@@ -501,7 +513,7 @@ function consumeRecipe(b,r){
 }
 function createOutput(b,id,qty,meta){if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(RESOURCE[id].name+" 생산 · "+fmt(qty)+"개");markDirty();return true}
 const BUILDING_FOOTPRINTS=Object.freeze({
- storage:{width:2,height:2},warehouse:{width:3,height:2},smelter:{width:2,height:2},wiremill:{width:2,height:2},assembler:{width:2,height:2},lab:{width:2,height:2},
+ storage:{width:2,height:2},warehouse:{width:3,height:2},smelter:{width:2,height:2},goldSmelter:{width:2,height:2},chromeSmelter:{width:2,height:2},steelForge:{width:2,height:2},titaniumPress:{width:2,height:2},carbonMill:{width:2,height:2},wiremill:{width:2,height:2},assembler:{width:2,height:2},lab:{width:2,height:2},
  reactor:{width:3,height:3},variantLab:{width:3,height:3},cooling:{width:2,height:2},fluidTank:{width:2,height:2},fusion:{width:4,height:4},relay:{width:2,height:2},core:{width:3,height:3},transformer:{width:2,height:2},battery:{width:2,height:2}
 });
 function getBuildingFootprint(type){return BUILDING_FOOTPRINTS[type]||{width:1,height:1}}
@@ -573,7 +585,7 @@ function placeMineBuilding(type,x,y){
  if(px<0||py<0||px>=MINE_W||py>=MINE_H||!mineTunnelAt(px,py)){toast("광산 터널 안에 설치해야 합니다.","warn");return false}
  if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}
  const key=mineDepositKey(level,px,py),deposit=S.mineDeposits?.[key];
- if(isMiner&&(!deposit||deposit.amount<=0||deposit.type!==def.resource)){toast("선택한 채굴기와 일치하는 광맥이 이 위치에 없습니다.","warn");return false}
+ if(isMiner&&(!deposit||deposit.amount<=0||(def.resource==="advanced"?!["ITEM_COLD_CRYSTAL_RAW","ITEM_HEAT_CRYSTAL","ITEM_MAGNETITE","titaniumOre","chromiteOre"].includes(deposit.type):deposit.type!==def.resource))){toast("선택한 채굴기와 일치하는 광맥이 이 위치에 없습니다.","warn");return false}
  if(!unlockOk(def)){toast("필요한 기술 연구를 먼저 완료하세요.","warn");return false}
  const footprint=getBuildingFootprint(type),occupied=[];
  for(const b of S.buildings)if(b.layer==="mine"&&Number(b.mineLevel||1)===level)occupied.push(...buildingFootprintCells(b));
@@ -892,7 +904,7 @@ function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;
   if(ratio<.8){b.status="PAUSED_POWER";return}
   if(tickSupportFailure(b,dt,ratio))return;
   const deposit=S.mineDeposits?.[b.targetDepositKey||mineDepositKey(b.mineLevel,b.x,b.y)];
-  if(!deposit||deposit.type!==d.resource||deposit.amount<=0){b.status="DEPLETED";return}
+  if(!deposit||(d.resource==="advanced"?!["ITEM_COLD_CRYSTAL_RAW","ITEM_HEAT_CRYSTAL","ITEM_MAGNETITE","titaniumOre","chromiteOre"].includes(deposit.type):deposit.type!==d.resource)||deposit.amount<=0){b.status="DEPLETED";return}
   if(Number(b.drillDurability??1000)<=0){if(!b.failureRepair)b.failureRepair={grade:"major",repairSeconds:30,repairCondition:100,repairMaterials:{ironPlate:2},residue:{type:"drill_bit",amount:1},broken:true};b.status="BROKEN";return}
   b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";
   if(b.progress>=8){b.progress=0;deposit.amount=Math.max(0,deposit.amount-1);b.drillDurability=Math.max(0,Number(b.drillDurability??1000)-1);const id=d.resource;createOutput(b,id,1,{quality:clamp(84+Math.floor((deposit.seed%1200)/100)+Math.max(0,deposit.level-2),80,99),purity:Math.min(99,86+deposit.level*2),synthetic:false});b.lastDepositYieldTick=Number(S.tick)||0;if((deposit.max-deposit.amount)%5===0){addItem("stone",1,{quality:82,purity:85,synthetic:false});b.byproductsProduced=(Number(b.byproductsProduced)||0)+1}if(deposit.amount<=0)b.status="DEPLETED"}
