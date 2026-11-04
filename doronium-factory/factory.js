@@ -312,13 +312,13 @@ function currentPower(){
  const daylight=(S.seconds%86400)/86400,sun=daylight>.25&&daylight<.78?1:.22,weather=weatherNow(),nodes=[],powerBuildings=[];
  for(const b of S.buildings){
   const def=buildingDef(b.type);if(!def)continue;let node=null;
-  if(b.type==="powerCable")node={id:b.uid,type:"CABLE",buildingType:b.type};
-  else if(b.type==="transformer")node={id:b.uid,type:"TRANSFORMER",maxThroughputKW:(Number(def.throughput)||30)*100,buildingType:b.type};
-  else if(b.type==="battery")node={id:b.uid,type:"BATTERY",energyKJ:Math.max(0,Number(b.energyKJ)||0),capacityKJ:Number(def.capacityKJ)||120000,maxDischargeKW:(Number(def.maxDischargeKW)||8)*100,maxChargeKW:(Number(def.maxChargeKW)||4)*100,priority:80,buildingType:b.type};
-  else if(b.type==="solar")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*100*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1),buildingType:b.type};
-  else if(b.type==="wind")node={id:b.uid,type:"GENERATOR",generationKW:def.gen*100*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05),buildingType:b.type};
-  else if(b.type==="coalgen"||b.type==="mineGen")node={id:b.uid,type:"GENERATOR",generationKW:b.fuelTimer>0?(Number(def.gen)|| (b.type==="mineGen"?12:18))*100:0,buildingType:b.type};
-  else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["fluidPump"].includes(b.type)?55:["pump","doriFarm"].includes(b.type)?45:20;const fusionActive=S.fusionJob&&["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","PREFLIGHT"].includes(S.fusionJob.status||"RUNNING");const fusionStage=fusionActive&&Number.isInteger(S.fusionJob.stage)?FUSION_STAGES[S.fusionJob.stage]:null;const demandKW=b.type==="fusion"?(fusionStage?.power||0):def.power*100;node={id:b.uid,type:"CONSUMER",demandKW,priority,transmissionLoss:0,buildingType:b.type}}
+  if(b.type==="powerCable"&&!b.failureRepair)node={id:b.uid,type:"CABLE",buildingType:b.type};
+  else if(b.type==="transformer")node={id:b.uid,type:"TRANSFORMER",maxThroughputKW:b.failureRepair?0:(Number(def.throughput)||30)*100,buildingType:b.type};
+  else if(b.type==="battery")node={id:b.uid,type:"BATTERY",energyKJ:Math.max(0,Number(b.energyKJ)||0),capacityKJ:Number(def.capacityKJ)||120000,maxDischargeKW:b.failureRepair?0:(Number(def.maxDischargeKW)||8)*100,maxChargeKW:b.failureRepair?0:(Number(def.maxChargeKW)||4)*100,priority:80,buildingType:b.type};
+  else if(b.type==="solar")node={id:b.uid,type:"GENERATOR",generationKW:b.failureRepair?0:def.gen*100*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1),buildingType:b.type};
+  else if(b.type==="wind")node={id:b.uid,type:"GENERATOR",generationKW:b.failureRepair?0:def.gen*100*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05),buildingType:b.type};
+  else if(b.type==="coalgen"||b.type==="mineGen")node={id:b.uid,type:"GENERATOR",generationKW:!b.failureRepair&&b.fuelTimer>0?(Number(def.gen)|| (b.type==="mineGen"?12:18))*100:0,buildingType:b.type};
+  else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["fluidPump"].includes(b.type)?55:["pump","doriFarm"].includes(b.type)?45:20;const fusionActive=S.fusionJob&&["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","PREFLIGHT"].includes(S.fusionJob.status||"RUNNING");const fusionStage=fusionActive&&Number.isInteger(S.fusionJob.stage)?FUSION_STAGES[S.fusionJob.stage]:null;const demandKW=b.failureRepair?0:b.type==="fusion"?(fusionStage?.power||0):def.power*100;node={id:b.uid,type:"CONSUMER",demandKW,priority,transmissionLoss:0,buildingType:b.type}}
   if(node){node.layer=b.layer||"surface";node.mineLevel=b.mineLevel||0;nodes.push(node);powerBuildings.push(b)}
  }
  const edges=[];
@@ -792,6 +792,9 @@ function updateFusion(dt){
  const p=currentPower();b.temp+=(stage.temp-b.temp)*Math.min(1,dt*.045);b.pressure+=(stage.pressure-b.pressure)*Math.min(1,dt*.06);
  const tempOK=Math.abs(b.temp-stage.temp)<=Math.max(50,stage.temp*.1),pressureOK=Math.abs(b.pressure-stage.pressure)<=Math.max(25,stage.pressure*.1);
  const allocation=p.allocations?.[String(b.uid)]||{ratio:0,deliveredKW:0};
+ if(b.failureRepair){job.status="ERROR";job.errorCode="MAINTENANCE_REQUIRED";return}
+ if(job.errorCode==="MAINTENANCE_REQUIRED"&&!b.failureRepair){delete job.errorCode;job.status="RESERVED"}
+ if(tickSupportFailure(b,dt,allocation.ratio,FAILURE_PROFILES.fusion)){job.status="ERROR";job.errorCode="MAINTENANCE_REQUIRED";return}
  if(allocation.ratio>=.8&&tempOK&&pressureOK){job.progress+=dt*(allocation.ratio>=1?1:allocation.ratio);job.status="RUNNING";b.status="RUNNING"}
  else{job.status=allocation.ratio<.8?"PAUSED_POWER":"CALIBRATING";b.status=job.status}
  if(job.progress<stage.time)return;
@@ -981,11 +984,11 @@ function tickFluidSystems(dt,power){
   const capacity=b.type==="fluidTank"?2000:(b.type==="doriFarm"||b.type==="variantLab")?20:b.type==="fluidPump"?120:100;
   if(b.type==="fluidPump"){
    const ratio=power?.allocations?.[String(b.uid)]?.ratio??0,water=tileNode(b.x,b.y)?.type==="water";
-   if(water&&ratio>=.8){b.fluidAmountL=Math.min(capacity,Math.max(0,Number(b.fluidAmountL)||0)+12*dt*Math.min(1,ratio));b.fluidType="WATER";b.status="RUNNING"}
+   if(water&&ratio>=.8&&!b.failureRepair){b.fluidAmountL=Math.min(capacity,Math.max(0,Number(b.fluidAmountL)||0)+12*dt*Math.min(1,ratio));b.fluidType="WATER";b.status="RUNNING"}
    else if(!water)b.status="NO_INPUT";
    else b.status="PAUSED_POWER";
   }
-  return {id:String(b.uid),type,amountL:Math.max(0,Number(b.fluidAmountL)||0),capacityL:capacity,fluidType:b.fluidType||null,pressureKPa:Math.max(0,Number(b.fluidPressureKPa)||0),temperatureC:Number.isFinite(Number(b.fluidTemperatureC))?Number(b.fluidTemperatureC):20,pumpHeadKPa:b.type==="fluidPump"?180:0,maxPressureKPa:b.type==="fluidTank"?600:350,pressureVolumeL:capacity,insulation:b.type==="fluidTank"?.5:0,thermalExchangePerSecond:.008,allowMixing:false,contaminants:Array.isArray(b.fluidContaminants)?b.fluidContaminants:[],ports:["IN","OUT"]};
+  return {id:String(b.uid),type,amountL:Math.max(0,Number(b.fluidAmountL)||0),capacityL:capacity,fluidType:b.fluidType||null,pressureKPa:Math.max(0,Number(b.fluidPressureKPa)||0),temperatureC:Number.isFinite(Number(b.fluidTemperatureC))?Number(b.fluidTemperatureC):20,pumpHeadKPa:b.type==="fluidPump"&&!b.failureRepair?180:0,maxPressureKPa:b.type==="fluidTank"?600:350,pressureVolumeL:capacity,insulation:b.type==="fluidTank"?.5:0,thermalExchangePerSecond:.008,allowMixing:false,contaminants:Array.isArray(b.fluidContaminants)?b.fluidContaminants:[],ports:["IN","OUT"]};
  });
  const nodesByID=new Map(nodes.map(n=>[n.id,n])),positions=new Map(relevant.map(b=>[surfaceKey(b.x,b.y),b])),edges=[];
  for(const b of relevant){
@@ -993,7 +996,7 @@ function tickFluidSystems(dt,power){
   for(const [dx,dy,dir] of [[0,-1,0],[1,0,1],[0,1,2],[-1,0,3]]){
    const target=positions.get(surfaceKey(b.x+dx,b.y+dy));if(!target||String(target.uid)<=String(b.uid))continue;
    const t=nodesByID.get(String(target.uid));if(!t)continue;
-   const closed=b.type==="fluidValve"&&b.valveOpen===false||target.type==="fluidValve"&&target.valveOpen===false;
+   const closed=b.failureRepair||target.failureRepair||b.type==="fluidValve"&&b.valveOpen===false||target.type==="fluidValve"&&target.valveOpen===false;
    edges.push({id:"F:"+b.uid+":"+target.uid,from:String(b.uid),to:String(target.uid),oneWay:false,open:!closed,maxFlowLps:20,conductanceLpsPerKPa:50,referencePressureKPa:100,maxPressureKPa:Math.min(a.maxPressureKPa,t.maxPressureKPa),breakOnOverpressure:false});
   }
  }
