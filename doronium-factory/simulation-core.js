@@ -1,4 +1,4 @@
-import {canonicalItemID} from "./canonical-data.js";
+import {canonicalItemID} from "./canonical-data.js?v=3";
 /* DORONIUM FACTORY — canonical simulation and item-stack runtime
  * Deterministic, renderer-independent core. Legacy aggregate inventory remains
  * a compatibility projection while stack records become the source of metadata.
