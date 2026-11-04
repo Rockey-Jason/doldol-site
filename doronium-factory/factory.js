@@ -746,6 +746,7 @@ function updateFusion(dt){
  markDirty();renderMissions();
 }
 function startFusion(){
+ if(S.fusionDone){toast("이 세이브에서는 인피니티 도로늄 제작이 이미 완료되었습니다.","warn");return}
  const active=["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","ERROR"].includes(S.fusionJob?.status);
  if(active){toast("이미 퓨전 작업이 진행 중입니다.");return}
  if(!S.buildings.some(b=>b.type==="fusion")){toast("인피니티 퓨전 설비가 필요합니다.","warn");return}
