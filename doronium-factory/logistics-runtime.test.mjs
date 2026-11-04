@@ -6,3 +6,13 @@ test("routing uses empty lane and never overwrites an occupied conveyor",()=>{co
 test("splitter and sorter route deterministically by cursor and item rule",()=>{const splitter={...belt("SP",1,1,0,{id:"wire"}),type:"splitter",routeCursor:1},n=belt("N",1,0),e=belt("E",2,1),s=belt("S",1,2),w=belt("W",0,1);const g=buildLogisticsGraph([splitter,n,e,s,w]);assert.deepEqual(g.outgoing.get("SP").map(x=>x.to),["E","S","W","N"]);const sorter={...belt("SO",1,1,0,{id:"ore"}),type:"sorter",routes:{ore:2}},g2=buildLogisticsGraph([sorter,n,e,s,w]);assert.equal(g2.outgoing.get("SO")[0].to,"S")});
 test("path preview returns graph path and rejects unreachable targets",()=>{const a=belt("A",0,0),b=belt("B",1,0),c=belt("C",2,0),g=buildLogisticsGraph([a,b,c]);assert.deepEqual(previewLogisticsPath(g,"A","C"),["A","B","C"]);assert.equal(previewLogisticsPath(g,"C","A"),null)});
 test("full directed loops are detected without consuming or deleting cargo",()=>{const a=belt("A",0,0,1,{id:"ironOre",qty:1}),b=belt("B",1,0,2,{id:"ironOre",qty:1}),c=belt("C",1,1,3,{id:"ironOre",qty:1}),d=belt("D",0,1,0,{id:"ironOre",qty:1});const g=buildLogisticsGraph([a,b,c,d]);const pressure=analyzeLogisticsPressure(g);assert.equal(pressure.cycleCount,1);assert.equal(pressure.deadlocked.length,1);assert.equal([a,b,c,d].reduce((n,x)=>n+(x.item?.qty||0),0),4)});
+
+test("machine output can feed the first conveyor without corrupting conveyor components",()=>{
+ const machine={uid:"M",x:0,y:0,type:"smelter",output:{id:"ironPlate",qty:1,meta:{quality:90,purity:90}}};
+ const first=belt("B1",1,0),second=belt("B2",2,0),sink={uid:"S",x:3,y:0,type:"storage"};
+ const g=buildLogisticsGraph([machine,first,second,sink]);
+ assert.equal(g.outgoing.get("M").length,1);
+ assert.equal(g.outgoing.get("M")[0].to,"B1");
+ assert.equal(g.networkByID.get("B1"),g.networkByID.get("B2"));
+ assert.equal(g.edges.some(edge=>edge.from==="B2"&&edge.to==="S"),true);
+});
