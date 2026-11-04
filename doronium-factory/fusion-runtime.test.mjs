@@ -31,7 +31,7 @@ test("output failure rolls back the 1500-input commit and preserves reservations
  const result=settleInfinityFusionOutput(failed,{jobID:"JOB-FAIL",outputItemID:""});
  assert.equal(result.ok,false);
  assert.deepEqual(stackTotals(failed),before);
- assert.equal(failed.fusionDone,undefined);
+ assert.equal(failed.fusionDone,false);
  assert.equal(failed.runtime.itemStacks.reduce((n,x)=>n+x.quantity,0),1500);
  for(const id of reservations)assert.equal(failed.runtime.reservations[id].status,"reserved");
  assert.equal(failed.fusionJob.status,"ERROR");
