@@ -483,7 +483,7 @@ function renderInventory(){
   const total=Math.max(0,Number(S.inventory[id])||0),reserved=Math.max(0,total-itemCount(id));
   return '<button class="crystal-codex-card" data-crystal="'+id+'"><span>'+RESOURCE[id].icon+'</span><strong>'+RESOURCE[id].name+'</strong><small>'+(total>0?"보유 "+fmt(total)+(reserved>0?" · 예약 "+fmt(reserved):""):"도감 미발견")+'</small></button>';
  }).join("")+'<button class="crystal-codex-card infinity-card" data-crystal="infinity"><span>💠</span><strong>인피니티 도로늄</strong><small>'+(Math.max(0,Number(S.inventory.infinity)||0)>0?"보유 "+fmt(S.inventory.infinity):"최종 결정")+'</small></button>';
- const sellable=items.filter(([,available])=>available>0&&_[0]!=="infinity");
+ const sellable=items.filter(([id,available])=>available>0&&id!=="infinity");
  const sel=$("sell-resource"),old=sel.value;
  sel.innerHTML=sellable.map(([id,available])=>'<option value="'+id+'">'+(RESOURCE[id]?.icon||"◈")+" "+escapeHTML(RESOURCE[id]?.name||id)+" ("+fmt(available)+")</option>").join("");
  if(sellable.some(([id])=>id===old))sel.value=old;
