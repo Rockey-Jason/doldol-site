@@ -57,6 +57,9 @@ try {
   assert.equal(audit.dataValidation.valid, true, "All game data references and research dependencies must validate");
   assert.equal(audit.canonicalDoronumValidation.valid, true, "All 15 canonical Doronum definitions and their model/recipe/acquisition references must validate");
   assert.equal(audit.canonicalDoronumValidation.count, 15, "The canonical Doronum catalog must contain exactly 15 IDs");
+  assert.equal(audit.canonicalCrystalModelCount, 15, "All 15 canonical Doronum variants must have separate model profiles");
+  assert.equal(audit.canonicalCrystalModelShapes, 15, "Canonical Doronum variants must use 15 distinct geometry families");
+  assert.equal(audit.allCanonicalCrystalModels, true, "Every canonical Doronum ID must resolve to a 3D crystal model");
   assert.equal(audit.canonicalDoronumIntegration.complete, false, "Unimplemented live canonical dependencies must remain visible as an explicit release blocker");
   assert.equal(audit.canonicalDoronumIntegration.missingCanonicalItems.length, 15, "All canonical item IDs must be surfaced as not yet migrated into the live resource registry");
   assert.equal(audit.runtimeValidation.valid, true, "Initial item stacks and reservations must validate");
