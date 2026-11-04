@@ -58,10 +58,13 @@ export function applyDoronumMigration(state){
  remapRecord(state.inventory);remapRecord(state.meta);remapRecord(state.stats?.produced);remapRecord(state.stats?.gathered);
  for(const building of state.buildings||[]){
   if(building.input)remapRecord(building.input);
+  if(building.inputMeta)remapRecord(building.inputMeta);
   if(building.output&&map.has(building.output.id))building.output.id=map.get(building.output.id);
   if(map.has(building.variant))building.variant=map.get(building.variant);
  }
- for(const shipment of state.contractRuntime?.shipments||[])if(map.has(shipment.itemID))shipment.itemID=map.get(shipment.itemID);
+ for(const shipment of state.contractRuntime?.shipments||[]){if(map.has(shipment.itemID))shipment.itemID=map.get(shipment.itemID);for(const stack of shipment.cargo||[])if(map.has(stack.itemID))stack.itemID=map.get(stack.itemID)}
+ if(state.fusionJob?.requirements)remapRecord(state.fusionJob.requirements);
+ if(state.fusionJob?.inputs)remapRecord(state.fusionJob.inputs);
  for(const transaction of Object.values(state.constructionLedger||{}))if(transaction.materials)remapRecord(transaction.materials);
  state.canonicalDoronumMigrationVersion=CANONICAL_ITEM_MIGRATION_VERSION;
  state.canonicalDoronumQuarantine=plan.quarantined.map(x=>({stackID:x.stackID,itemID:x.itemID,quantity:x.quantity,reason:x.reason}));
