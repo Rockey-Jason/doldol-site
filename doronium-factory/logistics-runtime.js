@@ -34,7 +34,7 @@ export function buildLogisticsGraph(buildings=[],{conveyorTypeIDs}={}){
  }
  // Undirected components identify isolated belt networks even when belt arrows point one-way.
  const undirected=new Map(conveyors.map(b=>[String(b.uid),new Set()]));
- for(const e of edges)if(e.targetIsConveyor){undirected.get(e.from).add(e.to);undirected.get(e.to).add(e.from)}
+ for(const e of edges)if(e.targetIsConveyor&&undirected.has(e.from)&&undirected.has(e.to)){undirected.get(e.from).add(e.to);undirected.get(e.to).add(e.from)}
  const networkByID=new Map(),visited=new Set();let networkIndex=0;
  for(const id of [...undirected.keys()].sort())if(!visited.has(id)){
   const queue=[id],members=[];visited.add(id);while(queue.length){const at=queue.shift();members.push(at);for(const n of undirected.get(at))if(!visited.has(n)){visited.add(n);queue.push(n)}}
