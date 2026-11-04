@@ -1,5 +1,5 @@
 import test from "node:test";import assert from "node:assert/strict";
-import {CANONICAL_DORONUM_IDS,INFINITY_REQUIREMENTS,CANONICAL_DORONUM_CATALOG,validateCanonicalDoronumCatalog,planDoronumMigration,validateInfinityManifest} from "./canonical-data.js";
+import {CANONICAL_DORONUM_IDS,INFINITY_REQUIREMENTS,CANONICAL_DORONUM_CATALOG,validateCanonicalDoronumCatalog,auditCanonicalDoronumIntegration,planDoronumMigration,validateInfinityManifest} from "./canonical-data.js";
 test("canonical manifest is exactly 15 unique IDs and 1500 total inputs",()=>{assert.equal(CANONICAL_DORONUM_IDS.length,15);assert.equal(new Set(CANONICAL_DORONUM_IDS).size,15);assert.equal(Object.values(INFINITY_REQUIREMENTS).reduce((a,b)=>a+b,0),1500)});
 test("ambiguous legacy IDs are quarantined rather than guessed",()=>{const p=planDoronumMigration([{runtimeID:"S1",itemID:"doronium_crystal",quantity:10},{runtimeID:"S2",itemID:"doronium_normal",quantity:10}]);assert.equal(p.changes[0].to,"ITEM_DORONUM_NORMAL");assert.equal(p.quarantined[0].itemID,"doronium_crystal");assert.equal(p.requiresUserResolution,true)});
 test("Infinity requires per-stack quality, purity, non-synthetic canonical inputs",()=>{const stacks=CANONICAL_DORONUM_IDS.map(itemID=>({runtimeID:itemID,itemID,quantity:100,quality:95,purity:95,synthetic:false}));assert.equal(validateInfinityManifest(stacks).valid,true);stacks[0].synthetic=true;assert.equal(validateInfinityManifest(stacks).valid,false)});
@@ -30,4 +30,13 @@ test("Special and Limited Doronum require campaign acquisition and cannot be sil
  assert.equal(special.acquisition.campaignSupplyMustCoverInfinityQuantity,100);
  assert.equal(limited.acquisition.maximumCampaignSupply,100);
  assert.equal(limited.acquisition.repeatableRecipe,false);
+});
+
+test("integration audit exposes canonical dependencies that are not yet in the live registries",()=>{
+ const result=auditCanonicalDoronumIntegration({resources:{},buildings:[],recipes:{},research:[],fluidTypes:["WATER","OIL"]});
+ assert.equal(result.complete,false);
+ assert.equal(result.missingCanonicalItems.length,15);
+ assert.ok(result.missingMachines.length>0);
+ assert.ok(result.missingRawResources.length>0);
+ assert.ok(result.missingRecipes.length>0);
 });
