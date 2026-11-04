@@ -217,7 +217,7 @@ function makeWorld(seed=827142){
 }
 function freshState(seed=generateWorldSeed()){
  const world=makeWorld(seed);
- const state={runtime:createRuntimeState(),contractRuntime:createContractState((seed^0x4c4f4749)>>>0),constructionLedger:{},moneyReservations:{},blueprints:[],powerTopologyEnabled:false,version:1,worldVersion:4,seed:seed>>>0,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},money:1100,inventory:{wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
+ const state={runtime:createRuntimeState(),contractRuntime:createContractState((seed^0x4c4f4749)>>>0),constructionLedger:{},moneyReservations:{},blueprints:[],powerTopologyEnabled:false,powerTopologyLayers:{surface:false,mine:{}},version:1,worldVersion:4,seed:seed>>>0,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},money:1100,inventory:{wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
  ensureItemStacks(state);return state;
 }
 let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, frameRenderAccumulator=0, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, activeBlueprintID=null, activeBlueprintRotation=0, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudSaveRevision=0, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
@@ -294,14 +294,19 @@ function currentPower(){
   if(node){node.layer=b.layer||"surface";node.mineLevel=b.mineLevel||0;nodes.push(node);powerBuildings.push(b)}
  }
  const edges=[];
- if(S.powerTopologyEnabled){
-  for(let i=0;i<powerBuildings.length;i++)for(let j=i+1;j<powerBuildings.length;j++){
-   const a=powerBuildings[i],b=powerBuildings[j],distance=Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
-   if((a.layer||"surface")===(b.layer||"surface")&&(a.layer!=="mine"||Number(a.mineLevel||1)===Number(b.mineLevel||1))&&distance===1&&(a.type==="powerCable"||b.type==="powerCable"))edges.push({id:"P:"+a.uid+":"+b.uid,from:String(a.uid),to:String(b.uid)});
-  }
- }else{
-  // Preserve legacy shared-grid behavior until a player builds the first explicit cable.
-  for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++)if(nodes[i].layer===nodes[j].layer&&(nodes[i].layer!=="mine"||Number(nodes[i].mineLevel)===Number(nodes[j].mineLevel)))edges.push({id:"LEGACY:"+nodes[i].id+":"+nodes[j].id,from:String(nodes[i].id),to:String(nodes[j].id)});
+ const topologyEnabledFor=(node)=>{
+  const layer=node.layer||"surface";
+  if(!S.powerTopologyLayers||typeof S.powerTopologyLayers!=="object")return !!S.powerTopologyEnabled;
+  return layer==="mine"?!!S.powerTopologyLayers.mine?.[Number(node.mineLevel)||1]:!!S.powerTopologyLayers.surface;
+ };
+ for(let i=0;i<powerBuildings.length;i++)for(let j=i+1;j<powerBuildings.length;j++){
+  const a=powerBuildings[i],b=powerBuildings[j],sameLayer=(a.layer||"surface")===(b.layer||"surface"),sameMineLevel=(a.layer!=="mine"||Number(a.mineLevel||1)===Number(b.mineLevel||1));
+  if(!sameLayer||!sameMineLevel)continue;
+  const explicit=topologyEnabledFor({layer:a.layer||"surface",mineLevel:a.mineLevel||0});
+  if(explicit){
+   const distance=Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
+   if(distance===1&&(a.type==="powerCable"||b.type==="powerCable"))edges.push({id:"P:"+a.uid+":"+b.uid,from:String(a.uid),to:String(b.uid)});
+  }else edges.push({id:"LEGACY:"+a.uid+":"+b.uid,from:String(a.uid),to:String(b.uid)});
  }
  const networks=solvePowerNetworks({nodes,edges,deltaSeconds:STEP}),allocations={},batteryChanges=[];
  for(const network of networks){for(const item of network.allocations)allocations[item.id]=item;for(const change of network.batteryChanges||[])batteryChanges.push(change)}
@@ -505,7 +510,7 @@ function placeBlueprintAt(x,y){
    const b={uid,type:item.type,x:item.x,y:item.y,dir:((Number(item.dir)||1)%4+4)%4,footprint:{...item.footprint},footprintRotation:0,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:item.dir??1,status:"IDLE",autoFeed:true,variant:item.variant||"doronium_blue",temp:25,pressure:0,fuelTimer:0,moveTimer:0};
    state.buildings.push(b);state.stats.built[item.type]=(state.stats.built[item.type]||0)+1;uids.push(uid);
    if(item.type==="relay"){const idx=state.sites.relay.findIndex(p=>p.x===item.x&&p.y===item.y);if(idx>=0)state.relaySites[idx]=true}
-   if(item.type==="core")state.corePlaced=true;if(item.type==="powerCable")state.powerTopologyEnabled=true;
+   if(item.type==="core")state.corePlaced=true;if(item.type==="powerCable"){state.powerTopologyLayers??={surface:false,mine:{}};state.powerTopologyLayers.surface=true;state.powerTopologyEnabled=true}
   }
   return {uids};
  });
@@ -534,7 +539,7 @@ function placeMineBuilding(type,x,y){
   state.buildings.push(b);return {uid};
  });
  if(!committed.ok){cancelConstruction(S,transactionID);toast("광산 설비 설치가 실패했습니다. 자금과 재료는 보존했습니다.","warn");return false}
- if(type==="powerCable")S.powerTopologyEnabled=true;
+ if(type==="powerCable"){S.powerTopologyLayers??={surface:false,mine:{}};S.powerTopologyLayers.mine??={};S.powerTopologyLayers.mine[level]=true;S.powerTopologyEnabled=true}
  syncLegacyInventory(S);markSceneDirty();S.stats.built[type]=(S.stats.built[type]||0)+1;selectedBuilding=uid;selectedBuild=null;
  log(def.name+" 설치 · 광산 "+level+"층");markDirty();renderAll();toast(def.name+" 설치 완료");return true;
 }
@@ -576,7 +581,7 @@ function placeBuilding(type,x,y){
   built.uid=uid;state.buildings.push(built);return {uid};
  });
  if(!committed.ok){cancelConstruction(S,transactionID);toast("건설 트랜잭션을 커밋하지 못했습니다. 자금과 재료는 보존했습니다.","warn");return false}
- if(type==="powerCable")S.powerTopologyEnabled=true;syncLegacyInventory(S);
+ if(type==="powerCable"){S.powerTopologyLayers??={surface:false,mine:{}};S.powerTopologyLayers.surface=true;S.powerTopologyEnabled=true}syncLegacyInventory(S);
  markSceneDirty();S.stats.built[type]=(S.stats.built[type]||0)+1;
  if(type==="relay"){const index=S.sites.relay.findIndex(p=>p.x===x&&p.y===y);if(index>=0)S.relaySites[index]=true}
  if(type==="core")S.corePlaced=true;
@@ -1022,7 +1027,7 @@ function wireControls(){
 function renderQuickObjectives(){const q=getQuest();if($("active-mission-hud")){$("active-mission-hud").innerHTML=q?'<small>ACTIVE DIRECTIVE · '+String(S.questIndex+1).padStart(2,"0")+'</small><strong>'+q.title+'</strong><span>'+q.desc+'</span>':'<small>CAMPAIGN COMPLETE</small><strong>행성 안정화 완료</strong><span>메인 스토리가 완료되었습니다.</span>'}if(!q){$("quick-objectives").innerHTML='<div class="objective-mini"><small>CAMPAIGN COMPLETE</small><strong>행성 안정화 완료</strong><div class="mini-progress"><i style="width:100%"></i></div></div>';return}const p=Math.min(q.max,q.progress(S));$("quick-objectives").innerHTML='<div class="objective-mini"><small>ACTIVE OBJECTIVE</small><strong>'+q.title+'</strong><div class="mini-progress"><i style="width:'+Math.round(p/q.max*100)+'%"></i></div></div><div class="objective-mini"><small>ORBIT DIRECTIVE</small><strong>'+q.desc+'</strong><div class="mini-progress"><i style="width:'+Math.round(p/q.max*100)+'%"></i></div></div><div class="objective-mini"><small>COMPLETION REWARD</small><strong>'+fmt(q.reward)+' D · 자금 보상</strong><div class="mini-progress"><i style="width:'+Math.round(p/q.max*100)+'%"></i></div></div>'}
 function renderAll(){renderHud();renderBuildList();renderFactory();renderInventory();renderResearch();renderMissions();renderQuickObjectives();drawWorld()}
 function hydrateState(input){markSceneDirty();const base=freshState(),incoming=input&&typeof input==="object"?input:{},migrate=Number(incoming.worldVersion||0)<3,expandSurface=Number(incoming.worldVersion||0)<4;
- S={...base,...incoming,worldVersion:4,player:{...base.player,...incoming.player},inventory:{...base.inventory,...incoming.inventory},meta:{...incoming.meta},tools:{...base.tools,...incoming.tools},activeTool:incoming.activeTool||"pickaxe",campaign:{...base.campaign,...incoming.campaign},flattened:{...incoming.flattened},foundation:{...incoming.foundation},mineDeposits:incoming.mineDeposits&&Object.keys(incoming.mineDeposits).length?incoming.mineDeposits:base.mineDeposits,buildings:Array.isArray(incoming.buildings)?incoming.buildings:[],nodes:migrate?base.nodes:(expandSurface?{...base.nodes,...(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:{})}:(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:base.nodes)),sites:base.sites,seen:incoming.seen||{},research:Array.isArray(incoming.research)?incoming.research:[],stats:{...base.stats,...incoming.stats,gathered:{...base.stats.gathered,...incoming.stats?.gathered},built:{...base.stats.built,...incoming.stats?.built},produced:{...base.stats.produced,...incoming.stats?.produced}},settings:{...base.settings,...incoming.settings},survival:{...base.survival,...incoming.survival},relaySites:Array.isArray(incoming.relaySites)?incoming.relaySites:[false,false,false],skills:normalizeSkillState(incoming.skills),contractRuntime:incoming.contractRuntime&&Array.isArray(incoming.contractRuntime.shipments)?incoming.contractRuntime:base.contractRuntime,constructionLedger:incoming.constructionLedger&&typeof incoming.constructionLedger==="object"?incoming.constructionLedger:{},moneyReservations:incoming.moneyReservations&&typeof incoming.moneyReservations==="object"?incoming.moneyReservations:{},blueprints:Array.isArray(incoming.blueprints)?incoming.blueprints.filter(b=>b&&b.version===1&&Array.isArray(b.buildings)):[],powerTopologyEnabled:incoming.powerTopologyEnabled===true};
+ S={...base,...incoming,worldVersion:4,player:{...base.player,...incoming.player},inventory:{...base.inventory,...incoming.inventory},meta:{...incoming.meta},tools:{...base.tools,...incoming.tools},activeTool:incoming.activeTool||"pickaxe",campaign:{...base.campaign,...incoming.campaign},flattened:{...incoming.flattened},foundation:{...incoming.foundation},mineDeposits:incoming.mineDeposits&&Object.keys(incoming.mineDeposits).length?incoming.mineDeposits:base.mineDeposits,buildings:Array.isArray(incoming.buildings)?incoming.buildings:[],nodes:migrate?base.nodes:(expandSurface?{...base.nodes,...(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:{})}:(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:base.nodes)),sites:base.sites,seen:incoming.seen||{},research:Array.isArray(incoming.research)?incoming.research:[],stats:{...base.stats,...incoming.stats,gathered:{...base.stats.gathered,...incoming.stats?.gathered},built:{...base.stats.built,...incoming.stats?.built},produced:{...base.stats.produced,...incoming.stats?.produced}},settings:{...base.settings,...incoming.settings},survival:{...base.survival,...incoming.survival},relaySites:Array.isArray(incoming.relaySites)?incoming.relaySites:[false,false,false],skills:normalizeSkillState(incoming.skills),contractRuntime:incoming.contractRuntime&&Array.isArray(incoming.contractRuntime.shipments)?incoming.contractRuntime:base.contractRuntime,constructionLedger:incoming.constructionLedger&&typeof incoming.constructionLedger==="object"?incoming.constructionLedger:{},moneyReservations:incoming.moneyReservations&&typeof incoming.moneyReservations==="object"?incoming.moneyReservations:{},blueprints:Array.isArray(incoming.blueprints)?incoming.blueprints.filter(b=>b&&b.version===1&&Array.isArray(b.buildings)):[],powerTopologyEnabled:incoming.powerTopologyEnabled===true,powerTopologyLayers:incoming.powerTopologyLayers&&typeof incoming.powerTopologyLayers==="object"?incoming.powerTopologyLayers:{surface:incoming.powerTopologyEnabled===true,mine:{}}};
  if(!incoming.runtime)S.runtime=createRuntimeState();
  ensureItemStacks(S);if(!S.contractRuntime||!Array.isArray(S.contractRuntime.shipments))S.contractRuntime=createContractState((Number(S.seed)^0x4c4f4749)>>>0);if(!S.contractRuntime.claims||typeof S.contractRuntime.claims!=="object")S.contractRuntime.claims={};reconcileSkillMilestones();
  if(migrate){const ox=38,oz=32;S.player.x=clamp(Number(incoming.player?.x??18)+ox,0,WORLD_W-1);S.player.y=clamp(Number(incoming.player?.y??14)+oz,0,WORLD_H-1);S.player.layer="surface";S.player.mineLevel=1;S.player.surfacePosition=null;for(const b of S.buildings){b.x=clamp((Number(b.x)||0)+ox,0,WORLD_W-1);b.y=clamp((Number(b.y)||0)+oz,0,WORLD_H-1);const k=surfaceKey(b.x,b.y);delete S.nodes[k];S.flattened[k]={height:terrainHeightAt(b.x,b.y)};S.foundation[k]=true}S.player.x=clamp(S.player.x,1,WORLD_W-2);S.player.y=clamp(S.player.y,1,WORLD_H-2)}
@@ -1080,7 +1085,7 @@ if(E2E_MODE){
    return {standardWithoutFoundation,adaptiveWithoutFoundation,standardWithFoundation,placed:S.buildings.map(b=>b.type),adaptiveBeltTilts:world3d.inspect().adaptiveBeltTilts}
   },
   setupPowerTopologyTest(){
-   S=freshState();S.player={...S.player,viewMode:"map"};S.seconds=8*3600;S.money=1000000;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=true;S.buildings=[
+   S=freshState();S.player={...S.player,viewMode:"map"};S.seconds=8*3600;S.money=1000000;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=true;S.powerTopologyLayers={surface:true,mine:{}};S.buildings=[
     {uid:"P-GEN",type:"solar",x:1,y:1,dir:1,status:"IDLE"},
     {uid:"P-CABLE-1",type:"powerCable",x:2,y:1,dir:1,status:"IDLE"},
     {uid:"P-CABLE-2",type:"powerCable",x:3,y:1,dir:1,status:"IDLE"},
