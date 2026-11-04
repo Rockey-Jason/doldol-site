@@ -1182,6 +1182,21 @@ if(E2E_MODE){
    const get=id=>S.buildings.find(b=>b.uid===id);
    return {tankLiters:get("F-TANK")?.fluidAmountL||0,pipeOneLiters:get("F-PIPE-1")?.fluidAmountL||0,pipeTwoLiters:get("F-PIPE-2")?.fluidAmountL||0,valveOpen:!!valve?.valveOpen,pumpPower:currentPower().allocations["F-PUMP"]?.status||"NO_POWER",massBalance:S.lastFluidBalance,networkIDs:S.buildings.filter(b=>b.type.startsWith("fluid")).map(b=>b.fluidNetworkID)};
   },
+  runFusionReservationCancelTest(){
+   S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
+   for(const id of VARIANTS)addItemStack(S,id,100,{quality:95,purity:95,synthetic:false});
+   syncLegacyInventory(S);
+   const requirements=Object.fromEntries(VARIANTS.map(id=>[id,100]));
+   const predicates=Object.fromEntries(VARIANTS.map(id=>[id,stack=>Number(stack.quality)>=90&&Number(stack.purity)>=90&&!stack.synthetic]));
+   const reservationIDs=reserveQualifiedItemBatch(S,requirements,"E2E-FUSION-CANCEL",predicates);
+   if(!reservationIDs||reservationIDs.length!==15)return {ok:false,reason:"RESERVATION_FAILED"};
+   S.fusionJob={status:"RUNNING",stage:0,progress:4,reservationIDs,inputQuantity:1500,outputIssued:false};
+   const locked=VARIANTS.every(id=>availableItemCount(S,id)===0);
+   const cancelled=cancelFusion();
+   const returned=VARIANTS.every(id=>availableItemCount(S,id)===100);
+   const secondCancel=cancelFusion();
+   return {ok:locked&&cancelled&&returned&&!secondCancel,reservationCount:reservationIDs.length,locked,returned,secondCancel,remainingReservations:Object.keys(S.runtime.reservations||{}).length,totalAvailable:VARIANTS.reduce((n,id)=>n+availableItemCount(S,id),0)};
+  },
   setupMiningAutomationTest(){
    S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,viewMode:"first",x:3,y:12};playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[]};S.money=1000000;S.inventory={coal:20,ironPlate:10,wood:50,stone:50,wire:10,ironOre:20};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.mineDeposits=makeMineDeposits();S.powerTopologyEnabled=false;S.research.push("mining");playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],yaw:0,pitch:-.06};
    const generator=placeMineBuilding("mineGen",11,15),miner=placeMineBuilding("minerIron",12,15);
