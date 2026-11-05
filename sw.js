@@ -1,17 +1,19 @@
-const CACHE_NAME = "doldol-site-pwa-v35-mobile-runner-fit-20261105";
+const CACHE_NAME = "doldol-site-pwa-v36-cross-platform-links-20261106";
+const SITE_SCOPE = new URL(self.registration.scope);
+const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
-  "/doldol-site/",
-  "/doldol-site/index.html",
-  "/doldol-site/rockey-study.html",
-  "/doldol-site/rockey-study-periodic.html",
-  "/doldol-site/assets/dori-mascot.webp",
-  "/doldol-site/rockey-time-attack.html",
-  "/doldol-site/rockey-study-planner.html",
-  "/doldol-site/rockey-study-focus.html",
-  "/doldol-site/rockey-study-exam-room.html",
-  "/doldol-site/rockey-study-rewards.html",
-  "/doldol-site/rockeysite-icon-3.png",
-  "/doldol-site/manifest.json"
+  scopedUrl("./"),
+  scopedUrl("index.html"),
+  scopedUrl("rockey-study.html"),
+  scopedUrl("rockey-study-periodic.html"),
+  scopedUrl("assets/dori-mascot.webp"),
+  scopedUrl("rockey-time-attack.html"),
+  scopedUrl("rockey-study-planner.html"),
+  scopedUrl("rockey-study-focus.html"),
+  scopedUrl("rockey-study-exam-room.html"),
+  scopedUrl("rockey-study-rewards.html"),
+  scopedUrl("rockeysite-icon-3.png"),
+  scopedUrl("manifest.json")
 ];
 
 self.addEventListener("install", (event) => {
@@ -79,8 +81,8 @@ self.addEventListener("push", (event) => {
   const data = payload && payload.data && typeof payload.data === "object" ? payload.data : {};
   const options = {
     body: typeof payload.body === "string" ? payload.body : "돌이 은행에 새 거래가 도착했어요.",
-    icon: typeof payload.icon === "string" ? payload.icon : "/doldol-site/rockeysite-icon-3.png",
-    badge: typeof payload.badge === "string" ? payload.badge : "/doldol-site/rockeysite-icon-3.png",
+    icon: (() => { const raw = typeof payload.icon === "string" ? payload.icon : "rockeysite-icon-3.png"; const url = new URL(raw, SITE_SCOPE); if (SITE_SCOPE.pathname === "/" && url.origin === SITE_SCOPE.origin && url.pathname.startsWith("/doldol-site/")) url.pathname = url.pathname.slice("/doldol-site".length); return url.href; })(),
+    badge: (() => { const raw = typeof payload.badge === "string" ? payload.badge : "rockeysite-icon-3.png"; const url = new URL(raw, SITE_SCOPE); if (SITE_SCOPE.pathname === "/" && url.origin === SITE_SCOPE.origin && url.pathname.startsWith("/doldol-site/")) url.pathname = url.pathname.slice("/doldol-site".length); return url.href; })(),
     tag: typeof payload.tag === "string" ? payload.tag : "doldol-site-notification",
     renotify: payload.renotify === true,
     data,
