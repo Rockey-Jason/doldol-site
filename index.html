@@ -2444,6 +2444,7 @@ const EXP레벨필요경험치 = {
 
 const 사진 =
     document.getElementById("돌이사진");
+const 사진틀 = document.getElementById("돌이프로필고정틀");
 
 const 로그인버튼 =
     document.getElementById("로그인");
@@ -4822,6 +4823,7 @@ if (!session) {
 
     if (사진) {
         사진.style.display = "none";
+        if (사진틀) 사진틀.style.display = "none";
     }
 
     if (메뉴) {
@@ -4863,6 +4865,7 @@ if (!session) {
 // 프로필 표시
 if (사진) {
     사진.style.display = "block";
+    if (사진틀) 사진틀.style.display = "block";
 }
 
 
