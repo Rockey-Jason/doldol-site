@@ -280,20 +280,14 @@ button:focus-visible{
   letter-spacing:4px;
 }
 
-#돌이사진{
-  position:fixed;
-  top:18px;right:20px;
-  width:58px;height:58px;
-  object-fit:cover;
-  border-radius:50%;
-  border:2px solid rgba(255,255,255,.75);
-  box-shadow:0 10px 35px rgba(0,0,0,.35);
-  cursor:pointer;
-  display:none;
-  z-index:100;
-  transition:transform .35s var(--ease),box-shadow .35s ease;
-}
-#돌이사진:hover{transform:scale(1.08);box-shadow:0 14px 45px rgba(100,95,255,.32)}
+#돌이프로필고정틀{position:fixed;top:18px;right:20px;width:58px;height:58px;z-index:100;display:none;isolation:isolate}
+#돌이사진{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;border:2px solid rgba(255,255,255,.75);box-shadow:0 10px 35px rgba(0,0,0,.35);cursor:pointer;display:block;box-sizing:border-box;transition:transform .35s var(--ease),box-shadow .35s ease;z-index:1}
+#돌이프로필고정틀:hover #돌이사진{transform:scale(1.05);box-shadow:0 14px 45px rgba(100,95,255,.32)}
+#돌이프로필프레임{position:absolute;inset:-5px;border-radius:50%;pointer-events:none;z-index:2;box-sizing:border-box}
+#돌이프로필프레임[data-frame]{border:5px solid #d6b66e;box-shadow:inset 0 0 0 2px #fff,0 0 0 2px rgba(214,182,110,.55),0 0 22px rgba(214,182,110,.45)}
+#돌이프로필프레임[data-frame*="DIAMOND"]{border-color:#85dcff;box-shadow:inset 0 0 0 2px #e9fbff,0 0 0 2px #4384ad,0 0 22px rgba(90,190,255,.65)}
+#돌이프로필프레임[data-frame*="ROYAL"]{border-color:#e9c86d;box-shadow:inset 0 0 0 2px #fff4c9,0 0 0 2px #9b7435,0 0 22px rgba(233,200,109,.65)}
+@media(max-width:600px){#돌이프로필고정틀{top:12px;right:12px;width:52px;height:52px}#돌이프로필프레임{inset:-4px}}
 
 /* Membership coupon VIP profile effects */
 body.vip-profile-basic{--vip-color:#67ddff;--vip-soft:rgba(64,205,255,.26)}
@@ -2224,9 +2218,10 @@ body.로그인상태 #회원가입 {
      돌이 AI
 ===================================================== -->
 
-  <img id="돌이사진"
-       src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png"
-       alt="돌이 프로필">
+  <div id="돌이프로필고정틀" aria-label="내 프로필">
+    <img id="돌이사진" src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png" alt="돌이 프로필">
+    <span id="돌이프로필프레임" aria-hidden="true"></span>
+  </div>
 
   <div id="메뉴">
     <button id="업적버튼" class="프로필버튼" type="button">🏆 업적</button>
@@ -2364,6 +2359,23 @@ const supabase = window.doriSupabase || createClient(
 
 // 업적 모듈과 동일한 인증 세션/클라이언트를 공유
 window.doriSupabase = supabase;
+
+// 계정에 저장된 프로필 프레임을 일반 사이트 프로필에 동기화
+(async()=>{
+  try{
+    const {data:{session}}=await supabase.auth.getSession();
+    if(!session)return;
+    const {data,error}=await supabase.from("dori_site_customization").select("equipped_frame").eq("user_id",session.user.id).maybeSingle();
+    if(error)throw error;
+    const selected=data?.equipped_frame;
+    const frame=selected&&typeof selected==="object"?selected.item_code:selected;
+    const frameNode=document.getElementById("돌이프로필프레임");
+    if(frameNode&&frame){
+      frameNode.dataset.frame=String(frame).toUpperCase();
+      frameNode.title=selected?.item_name||"장착한 프로필 프레임";
+    }
+  }catch(error){console.warn("프로필 프레임을 불러오지 못했습니다:",error);}
+})();
 
 
 // =====================================================
