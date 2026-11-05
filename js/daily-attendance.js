@@ -107,19 +107,23 @@
     const streak = Number(data.streak_count || 1);
     const reward = Number(data.reward || 0);
     const bonus = Number(data.bonus_reward || 0);
+    const couponMultiplier = Math.max(1, Number(data.coupon_multiplier) || 1);
+    const couponBonusPercent = Math.round((couponMultiplier - 1) * 100);
     const cycle = ((streak - 1) % 7) + 1;
     const rewardTrack = [3000,3000,3000,3000,3000,3000,53000].map((amount,i) => {
       const day=i+1, current=day===cycle;
-      return '<div class="da-day '+(current?'da-current':'')+'"><div class="da-day-icon">'+(day===7?'👑':current?'✦':'◈')+'</div><div class="da-day-label">'+day+'일차</div><div class="da-day-amount">'+money(amount)+'</div></div>';
+      const boostedAmount=Math.floor(amount*couponMultiplier);
+      return '<div class="da-day '+(current?'da-current':'')+'"><div class="da-day-icon">'+(day===7?'👑':current?'✦':'◈')+'</div><div class="da-day-label">'+day+'일차</div><div class="da-day-amount">'+money(boostedAmount)+'</div></div>';
     }).join("");
     const milestone = String(data.milestone||"");
     const notes = [];
-    if (milestone.includes("weekly")) notes.push("🎉 7일 연속 출석 보너스 +50,000 코인");
-    if (milestone.includes("monthly")) notes.push("🏆 한 달 개근 보너스 +500,000 코인");
+    if (milestone.includes("weekly")) notes.push("🎉 7일 연속 출석 보너스 +"+money(Math.floor(50000*couponMultiplier))+" 코인");
+    if (milestone.includes("monthly")) notes.push("🏆 한 달 개근 보너스 +"+money(Math.floor(500000*couponMultiplier))+" 코인");
     if (milestone.includes("three_months")) notes.push("⚡ 3개월 개근 달성 · 코인 수급량 5배 버프");
     if (milestone.includes("six_months")) notes.push("💎 6개월 개근 달성 · 코인 수급량 10배 버프");
     if (milestone.includes("year")) notes.push("👑 1년 개근 달성 · 코인 수급량 100배 버프");
-    overlay.innerHTML = '<section class="da-modal"><button class="da-close" type="button" aria-label="닫기">×</button><div class="da-eyebrow">✦ DOLDOL ATTENDANCE SYSTEM</div><div class="da-orb">🗓️</div><h2 class="da-title">'+streak+'일 '+(streak>1?'연속 ':'')+'출석 완료!</h2><p class="da-subtitle">오늘의 출석이 기록되었어요. 하루하루 쌓인 기록이 특별한 보상으로 이어집니다.</p><div class="da-stats"><div class="da-stat"><strong>'+streak+'일</strong><span>연속 출석</span></div><div class="da-stat"><strong>'+money(data.total_days)+'일</strong><span>누적 출석</span></div><div class="da-stat"><strong>'+Number(data.multiplier||1)+'배</strong><span>현재 코인 버프</span></div></div><div class="da-reward"><div class="da-reward-label">TODAY’S ATTENDANCE REWARD</div><div class="da-reward-amount">+ '+money(reward)+' <span style="font-size:.42em">돌돌코인</span></div><div class="da-reward-note">'+(bonus>0?'추가 특별 보상 +'+money(bonus)+' 코인까지 지급했어요.':'매일 기본 출석 보상 3,000 코인이 지급되었어요.')+'</div>'+(notes.length?'<div class="da-reward-note" style="margin-top:9px;color:#ffe69b">'+notes.join('<br>')+'</div>':'')+'</div><div class="da-track-title"><span>7일 연속 출석 보상</span><span>7일마다 반복</span></div><div class="da-track">'+rewardTrack+'</div><div class="da-claim-calendar"><div class="da-track-title"><span>이번 달 출석 달력</span><span>날짜별 기록</span></div><div id="da-claim-calendar-content" class="da-error">출석 달력을 불러오는 중...</div></div><div class="da-track-title"><span>현재 잔액</span><span>'+money(data.balance)+' 돌돌코인</span></div><button class="da-continue" type="button">확인하고 계속하기</button></section>';
+    if (couponBonusPercent > 0) notes.push("🎟️ VIP 쿠폰 코인 보너스 +"+couponBonusPercent+"% 적용");
+    overlay.innerHTML = '<section class="da-modal"><button class="da-close" type="button" aria-label="닫기">×</button><div class="da-eyebrow">✦ DOLDOL ATTENDANCE SYSTEM</div><div class="da-orb">🗓️</div><h2 class="da-title">'+streak+'일 '+(streak>1?'연속 ':'')+'출석 완료!</h2><p class="da-subtitle">오늘의 출석이 기록되었어요. 하루하루 쌓인 기록이 특별한 보상으로 이어집니다.</p><div class="da-stats"><div class="da-stat"><strong>'+streak+'일</strong><span>연속 출석</span></div><div class="da-stat"><strong>'+money(data.total_days)+'일</strong><span>누적 출석</span></div><div class="da-stat"><strong>'+Number(data.multiplier||1)+'배</strong><span>현재 코인 버프</span></div></div><div class="da-reward"><div class="da-reward-label">TODAY’S ATTENDANCE REWARD</div><div class="da-reward-amount">+ '+money(reward)+' <span style="font-size:.42em">돌돌코인</span></div><div class="da-reward-note">'+(bonus>0?'추가 특별 보상 +'+money(bonus)+' 코인까지 지급했어요.':(couponBonusPercent>0?'VIP 쿠폰 혜택이 반영된 출석 보상을 지급했어요.':'매일 기본 출석 보상 3,000 코인이 지급되었어요.'))+'</div>'+(notes.length?'<div class="da-reward-note" style="margin-top:9px;color:#ffe69b">'+notes.join('<br>')+'</div>':'')+'</div><div class="da-track-title"><span>7일 연속 출석 보상</span><span>7일마다 반복</span></div><div class="da-track">'+rewardTrack+'</div><div class="da-claim-calendar"><div class="da-track-title"><span>이번 달 출석 달력</span><span>날짜별 기록</span></div><div id="da-claim-calendar-content" class="da-error">출석 달력을 불러오는 중...</div></div><div class="da-track-title"><span>현재 잔액</span><span>'+money(data.balance)+' 돌돌코인</span></div><button class="da-continue" type="button">확인하고 계속하기</button></section>';
     overlay.querySelector(".da-close").addEventListener("click",close);
     overlay.querySelector(".da-continue").addEventListener("click",close);
     renderInlineCalendar(overlay.querySelector("#da-claim-calendar-content"), client).catch(err => {
