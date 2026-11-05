@@ -441,6 +441,15 @@ button:focus-visible {
   border-color: rgba(81, 220, 171, 0.25);
 }
 
+
+/* 쿠폰 혜택 안내 */
+.product-benefits{position:relative;z-index:1;display:grid;gap:7px;margin:0 0 18px;padding:12px 13px;border:1px solid rgba(122,157,255,.18);border-radius:14px;background:rgba(7,12,38,.52);color:#cbd8ff;font-size:13px;line-height:1.45}
+.product-benefits span{display:block}
+.product-benefits .vip-benefit{color:#ffe7a1;font-weight:700}
+.product-card{min-height:370px}
+@media(max-width:780px){.product-card{min-height:350px}}
+@media(max-width:480px){.product-card{min-height:0}}
+
 /* 안내 */
 
 .notice {
@@ -864,6 +873,17 @@ function 토스트메시지(message, type = "success") {
   }, 3500);
 }
 
+function 쿠폰혜택HTML(level) {
+  const coin = level >= 8 ? 30 : level >= 5 ? 15 : 5;
+  const exp = level >= 8 ? 40 : level >= 5 ? 20 : 5;
+  const tier = level >= 8 ? "ROYAL VIP" : level >= 5 ? "ELITE VIP" : "VIP";
+  return `<div class="product-benefits">
+    <span class="vip-benefit">✦ ${tier} 프로필 테두리 · 닉네임 효과</span>
+    <span>🪙 출석 · 일일 미션 코인 +${coin}%</span>
+    <span>✨ 일일 미션 · 퀴즈 EXP +${exp}%</span>
+  </div>`;
+}
+
 function 상품카드생성(상품, index, 현재레벨) {
   const card = document.createElement("article");
   card.className = "product-card";
@@ -881,6 +901,8 @@ function 상품카드생성(상품, index, 현재레벨) {
     <h3 class="product-title">
       ${상품.name}
     </h3>
+
+    ${쿠폰혜택HTML(상품.level)}
 
     <div class="product-price">
       ${숫자표시(상품.price)} 돌돌코인
