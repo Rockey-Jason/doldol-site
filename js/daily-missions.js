@@ -179,7 +179,7 @@ async function load() {
     if (ring) ring.style.setProperty("--p", percent);
 
     const boostBanner = activeMultiplier > 1 || couponExpMultiplier > 1
-      ? '<div role="status" style="margin:0 0 16px;padding:14px 16px;border:1px solid rgba(94,221,255,.42);border-radius:16px;background:linear-gradient(120deg,rgba(20,96,145,.24),rgba(19,36,83,.65));color:#eafaff;box-shadow:0 0 24px rgba(45,190,255,.10)"><strong style="display:block;font-size:15px">✦ 회원 쿠폰 혜택 활성화</strong><span style="display:block;margin-top:5px;font-size:12px;color:#b8d7ef">코인 ' + activeMultiplier.toFixed(2).replace(/0+$/,"").replace(/\\.$/,"") + '배 · EXP +' + Math.round((couponExpMultiplier-1)*100) + '% · 등급 혜택은 쿠폰 등급을 유지하는 동안 적용됩니다.</span></div>'
+      ? '<div role="status" style="margin:0 0 16px;padding:14px 16px;border:1px solid rgba(94,221,255,.42);border-radius:16px;background:linear-gradient(120deg,rgba(20,96,145,.24),rgba(19,36,83,.65));color:#eafaff;box-shadow:0 0 24px rgba(45,190,255,.10)"><strong style="display:block;font-size:15px">✦ 회원 쿠폰 혜택 활성화</strong><span style="display:block;margin-top:5px;font-size:12px;color:#b8d7ef">코인 ' + activeMultiplier.toFixed(2) + '배 · EXP +' + Math.round((couponExpMultiplier-1)*100) + '% · 등급 혜택은 쿠폰 등급을 유지하는 동안 적용됩니다.</span></div>'
       : '';
 
     container.innerHTML = boostBanner + missions
