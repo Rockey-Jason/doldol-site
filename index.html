@@ -295,6 +295,16 @@ button:focus-visible{
 }
 #돌이사진:hover{transform:scale(1.08);box-shadow:0 14px 45px rgba(100,95,255,.32)}
 
+/* Membership coupon VIP profile effects */
+body.vip-profile-basic{--vip-color:#67ddff;--vip-soft:rgba(64,205,255,.26)}
+body.vip-profile-elite{--vip-color:#c39aff;--vip-soft:rgba(172,108,255,.3)}
+body.vip-profile-royal{--vip-color:#ffda79;--vip-soft:rgba(255,190,66,.32)}
+body[class*="vip-profile-"] #돌이사진{border:2px solid var(--vip-color);box-shadow:0 0 0 3px var(--vip-soft),0 0 24px var(--vip-soft),0 10px 35px rgba(0,0,0,.35);animation:vipAvatarPulse 3.4s ease-in-out infinite}
+body[class*="vip-profile-"] #프로필요약카드 .프로필요약제목 strong{color:var(--vip-color);text-shadow:0 0 12px var(--vip-soft),0 0 24px var(--vip-soft);transition:color .25s ease,text-shadow .25s ease}
+body[class*="vip-profile-"] #프로필요약카드 .프로필요약제목 strong::after{content:"VIP";display:inline-block;margin-left:8px;padding:3px 7px;border:1px solid var(--vip-color);border-radius:999px;color:var(--vip-color);background:var(--vip-soft);font:800 9px/1.2 Arial,sans-serif;letter-spacing:.12em;vertical-align:middle;text-shadow:none;box-shadow:0 0 12px var(--vip-soft)}
+@keyframes vipAvatarPulse{0%,100%{box-shadow:0 0 0 3px var(--vip-soft),0 0 16px var(--vip-soft),0 10px 35px rgba(0,0,0,.35)}50%{box-shadow:0 0 0 4px var(--vip-soft),0 0 28px var(--vip-soft),0 10px 35px rgba(0,0,0,.35)}}
+@media(prefers-reduced-motion:reduce){body[class*="vip-profile-"] #돌이사진{animation:none!important}}
+
 #메뉴{
   position:fixed;
   top:88px;right:20px;
@@ -3426,6 +3436,9 @@ async function 유저정보불러오기() {
 
 function 화면업데이트() {
 
+    document.body.classList.remove("vip-profile-basic","vip-profile-elite","vip-profile-royal");
+    if (사진) delete 사진.dataset.vipTier;
+
     // 관리자 바로가기는 DB에서 읽은 실제 권한 정보로만 표시합니다.
     // user_level만 높거나 is_admin만 true인 계정은 관리자 계정으로 취급하지 않습니다.
     const 관리자권한있음 = Boolean(
@@ -3441,6 +3454,8 @@ function 화면업데이트() {
     }
 
     if (!현재유저정보) {
+        const profileName = document.querySelector("#프로필요약카드 .프로필요약제목 strong");
+        if (profileName) profileName.textContent = "내 계정 상태";
         return;
     }
 
@@ -3462,6 +3477,13 @@ function 화면업데이트() {
             현재유저정보.user_level ?? 1
         );
 
+    const vipTier = 회원레벨 >= 8 ? "royal" : 회원레벨 >= 5 ? "elite" : 회원레벨 >= 2 ? "basic" : null;
+    if (vipTier) {
+        document.body.classList.add("vip-profile-" + vipTier);
+        if (사진) 사진.dataset.vipTier = vipTier;
+    }
+    const profileName = document.querySelector("#프로필요약카드 .프로필요약제목 strong");
+    if (profileName) profileName.textContent = String(현재유저정보.name || "내 계정 상태");
 
     if (레벨버튼) {
 
@@ -3603,13 +3625,13 @@ async function 일일미션화면표시(){
    {data:streakInfo,error:e4}
   ]=await Promise.all([
    supabase.from("daily_mission_definitions")
-    .select("mission_key,title,description,reward_coins,sort_order,active")
+    .select("mission_key,title,description,reward_coins,reward_exp,sort_order,active")
     .eq("active",true).order("sort_order"),
    supabase.from("user_daily_missions")
     .select("mission_key,completed_at,reward_claimed")
     .eq("user_id",session.user.id).eq("mission_date",오늘날짜()),
    supabase.from("users")
-    .select("doldolcoin_multiplier,doldolcoin_multiplier_expires_at")
+    .select("doldolcoin_multiplier,doldolcoin_multiplier_expires_at,user_level")
     .eq("user_id",session.user.id).maybeSingle(),
    supabase.rpc("get_daily_mission_streak")
   ]);
@@ -3618,15 +3640,21 @@ async function 일일미션화면표시(){
 
   const boostExpiry=boost?.doldolcoin_multiplier_expires_at
    ?new Date(boost.doldolcoin_multiplier_expires_at):null;
-  const activeMultiplier=!e3&&boostExpiry&&boostExpiry.getTime()>Date.now()
+  const legacyMultiplier=!e3&&boostExpiry&&boostExpiry.getTime()>Date.now()
    ?Math.max(1,Number(boost?.doldolcoin_multiplier)||1):1;
+  const couponLevel=Math.max(1,Number(boost?.user_level)||1);
+  const couponCoinMultiplier=couponLevel>=8?1.30:couponLevel>=5?1.15:couponLevel>=2?1.05:1;
+  const couponExpMultiplier=couponLevel>=8?1.40:couponLevel>=5?1.20:couponLevel>=2?1.05:1;
+  const activeMultiplier=legacyMultiplier*couponCoinMultiplier;
 
-  const showReward=(base)=>{
+  const showReward=(base,baseExp=0)=>{
    const amount=Math.max(0,Number(base)||0);
    const total=Math.floor(amount*activeMultiplier);
    const extra=total-amount;
+   const expTotal=Math.floor(Math.max(0,Number(baseExp)||0)*couponExpMultiplier);
    return '<div class="일일미션코인">+'+total.toLocaleString()+' 🪙</div>'+
-    (extra>0?'<small style="display:block;color:#79e5ff;font-size:11px;font-weight:800;margin-top:-3px;margin-bottom:5px">⚡ 버프 +'+extra.toLocaleString()+' ('+activeMultiplier+'배)</small>':'');
+    (extra>0?'<small style="display:block;color:#79e5ff;font-size:11px;font-weight:800;margin-top:-3px;margin-bottom:5px">⚡ 코인 버프 +'+extra.toLocaleString()+'</small>':'')+
+    (expTotal>0?'<small style="display:block;color:#d2b8ff;font-size:11px;font-weight:800;margin:0 0 5px">✨ +'+expTotal.toLocaleString()+' EXP</small>':'');
   };
 
   const definitions=defs||[];
@@ -3644,6 +3672,7 @@ async function 일일미션화면표시(){
   const streakBonus=Math.max(0,nextStreakDays-1)*1000;
   const baseAllReward=Math.max(0,Number(allDefinition?.reward_coins??30000)||0);
   const allReward=Math.floor((baseAllReward+streakBonus)*activeMultiplier);
+  const allExp=Math.floor(Math.max(0,Number(allDefinition?.reward_exp??300)||0)*couponExpMultiplier);
 
   const streakTitle=completedAllToday
    ?"🔥 "+streakDays.toLocaleString()+"일 연속 성공"
@@ -3685,7 +3714,7 @@ async function 일일미션화면표시(){
     '<div><div class="일일미션이름2">'+일일HTML안전(m.title)+'</div>'+
     '<div class="일일미션설명2">'+일일HTML안전(m.description||"오늘의 미션")+'</div>'+
     '<div class="일일미션상태2">'+(received?"보상을 이미 수령했습니다.":complete?"미션 완료 · 보상을 받을 수 있습니다.":"아직 완료되지 않았습니다.")+'</div></div>'+
-    '<div class="일일미션보상영역">'+showReward(m.reward_coins)+goButton+action+'</div></article>';
+    '<div class="일일미션보상영역">'+showReward(m.reward_coins,m.reward_exp)+goButton+action+'</div></article>';
   }).join("");
 
   const bonus=allClaimed
@@ -3698,7 +3727,8 @@ async function 일일미션화면표시(){
   bonusDetails.push("기본 보상 "+baseAllReward.toLocaleString());
   if(streakBonus>0) bonusDetails.push("연속 성공 보너스 +"+streakBonus.toLocaleString()+" ("+nextStreakDays+"일째)");
   else bonusDetails.push("1일째는 추가 연속 보너스 없음");
-  if(activeMultiplier>1) bonusDetails.push("⚡ "+activeMultiplier+"배 버프 적용");
+  if(activeMultiplier>1) bonusDetails.push("⚡ 코인 "+activeMultiplier.toFixed(2).replace(/0+$/,"").replace(/\.$/,"")+"배 적용");
+  if(couponExpMultiplier>1) bonusDetails.push("✨ EXP "+Math.round((couponExpMultiplier-1)*100)+"% 추가");
   const bonusDetailHtml='<small class="일일미션보너스상세">'+일일HTML안전(bonusDetails.join(" · "))+'</small>';
 
   패널내용.innerHTML=
@@ -3709,7 +3739,7 @@ async function 일일미션화면표시(){
     streakHtml+
     '<div class="일일미션리스트">'+cards+'</div>'+
     '<div class="일일미션보너스2"><div><strong>🏆 ALL CLEAR BONUS</strong><small>오늘의 4개 미션을 모두 완료하면 추가 보상</small></div>'+
-    '<div><div class="보너스코인">+'+allReward.toLocaleString()+' 🪙</div>'+bonusDetailHtml+bonus+'</div></div>'+
+    '<div><div class="보너스코인">+'+allReward.toLocaleString()+' 🪙</div><small style="display:block;color:#d2b8ff;font-size:12px;font-weight:800;margin:3px 0 7px">✨ +'+allExp.toLocaleString()+' EXP</small>'+bonusDetailHtml+bonus+'</div></div>'+
    '</div>';
 
   패널내용.querySelectorAll("[data-claim]").forEach(btn=>btn.addEventListener("click",async()=>{
@@ -3729,6 +3759,8 @@ async function 일일미션화면표시(){
    const paidAmount=Number(result.reward_coins||0);
    const streakBonusAmount=Number(result.streak_bonus_coins||0);
    const rewardMultiplier=Number(result.multiplier||1);
+   const paidExp=Number(result.reward_exp||0);
+   const expMultiplier=Number(result.exp_multiplier||1);
    let description="일일 미션 보상입니다!";
    if(claimKey==="all_complete"){
     const details=["기본 "+baseAmount.toLocaleString()];
@@ -3737,11 +3769,13 @@ async function 일일미션화면표시(){
     }else{
      details.push("첫날은 기본 보상 그대로 지급");
     }
-    if(rewardMultiplier>1) details.push(rewardMultiplier+"배 버프 적용");
+    if(rewardMultiplier>1) details.push("코인 "+rewardMultiplier.toFixed(2).replace(/0+$/,"").replace(/\.$/,"")+"배 버프 적용");
+    if(paidExp>0) details.push("✨ +"+paidExp.toLocaleString()+" EXP (+"+Math.round((expMultiplier-1)*100)+"%)");
     description=details.join(" · ");
    }else if(rewardMultiplier>1){
-    description="돌돌코인 "+rewardMultiplier+"배 버프가 적용되었습니다.";
+    description="돌돌코인 "+rewardMultiplier.toFixed(2).replace(/0+$/,"").replace(/\.$/,"")+"배 버프가 적용되었습니다.";
    }
+   if(claimKey!=="all_complete"&&paidExp>0) description+=" · ✨ +"+paidExp.toLocaleString()+" EXP";
 
    일일미션보상팝업표시({
     title:"일일 미션 보상 획득!",
