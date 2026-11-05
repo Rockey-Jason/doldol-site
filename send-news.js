@@ -19,7 +19,9 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-const NEWS_PAGE_URL = "https://rockey-jason.github.io/doldol-site/rockeynews.html";
+const configuredSiteBase = String(process.env.DORI_SITE_BASE_URL || "https://rockey-jason.github.io/doldol-site/").trim();
+const normalizedSiteBase = configuredSiteBase.endsWith("/") ? configuredSiteBase : configuredSiteBase + "/";
+const NEWS_PAGE_URL = new URL("rockeynews.html", normalizedSiteBase).href;
 
 const delayMap = {
   1: 7, 2: 6, 3: 5, 4: 4, 5: 3,

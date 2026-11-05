@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  base: '/doldol-site/rockey/',
+  base: './',
   build: {
     outDir: '../rockey',
     emptyOutDir: true,
