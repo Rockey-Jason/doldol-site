@@ -2721,6 +2721,11 @@ function 코인보상표시(
         ? `${설명} 기본 ${기본액.toLocaleString("ko-KR")} + 버프 추가 ${추가액.toLocaleString("ko-KR")} (총 ${배수}배)`
         : 설명;
 
+    const expAmount = Math.max(0, Number(상세.exp_amount) || 0);
+    if (expAmount > 0) {
+        설명표시.textContent += ` · ✨ +${expAmount.toLocaleString("ko-KR")} EXP`;
+    }
+
 
     팝업.classList.remove(
         "표시"
