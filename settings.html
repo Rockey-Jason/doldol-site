@@ -1069,6 +1069,9 @@ body::before {
     transform: translateY(-5px) scale(1.025);
 }
 
+.preview-dori.has-profile-frame::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:5;box-sizing:border-box;border:8px solid #d6b66e;box-shadow:inset 0 0 0 3px rgba(255,255,255,.9),0 0 0 3px rgba(214,182,110,.45),0 0 24px rgba(214,182,110,.45)}
+.preview-dori.has-profile-frame[class*="frame-frame_royal"]::after{border-color:#e9c86d;box-shadow:inset 0 0 0 3px #fff4c9,0 0 0 4px #9b7435,0 0 28px rgba(233,200,109,.65)}
+.preview-dori.has-profile-frame[class*="frame-frame_diamond"]::after{border-color:#85dcff;box-shadow:inset 0 0 0 3px #e9fbff,0 0 0 4px #4384ad,0 0 28px rgba(90,190,255,.65)}
 .preview-dori img {
     width: 100%;
     height: 100%;
@@ -2642,7 +2645,8 @@ let 꾸미기상태 = {
     clothes: null,
     background: null,
     skin: null,
-    effect: null
+    effect: null,
+    frame: null
 };
 
 const 꾸미기카테고리정보 = {
@@ -2651,7 +2655,8 @@ const 꾸미기카테고리정보 = {
     clothes: { label: "옷", emoji: "👕" },
     background: { label: "배경", emoji: "🖼️" },
     skin: { label: "스킨", emoji: "🐶" },
-    effect: { label: "효과", emoji: "✨" }
+    effect: { label: "효과", emoji: "✨" },
+    frame: { label: "프로필 프레임", emoji: "🖼️" }
 };
 
 const 꾸미기저장테이블 = "dori_site_customization";
@@ -3902,6 +3907,7 @@ function 아이템꾸미기카테고리(item) {
     if (code.startsWith("BACKGROUND_") || name.includes("배경") || type === "background") return "background";
     if (code.startsWith("SKIN_") || name.includes("스킨") || type === "skin") return "skin";
     if (code.startsWith("EFFECT_") || name.includes("효과") || type === "effect") return "effect";
+    if (code.startsWith("FRAME_") || name.includes("프레임") || name.includes("테두리") || type === "frame") return "frame";
 
     return null;
 }
@@ -3991,7 +3997,8 @@ function 꾸미기상태정규화(data) {
         clothes: null,
         background: null,
         skin: null,
-        effect: null
+        effect: null,
+        frame: null
     };
 
     for (const category of Object.keys(result)) {
@@ -4023,7 +4030,8 @@ async function 꾸미기정보가져오기(user) {
                     equipped_clothes,
                     equipped_background,
                     equipped_skin,
-                    equipped_effect
+                    equipped_effect,
+                    equipped_frame
                 `)
                 .eq("user_id", user.id)
                 .maybeSingle();
@@ -4035,7 +4043,8 @@ async function 꾸미기정보가져오기(user) {
                 clothes: data.equipped_clothes,
                 background: data.equipped_background,
                 skin: data.equipped_skin,
-                effect: data.equipped_effect
+                effect: data.equipped_effect,
+                frame: data.equipped_frame
             });
             dbLoaded = true;
         }
@@ -4090,7 +4099,8 @@ async function 꾸미기저장() {
         equipped_clothes: 꾸미기상태.clothes,
         equipped_background: 꾸미기상태.background,
         equipped_skin: 꾸미기상태.skin,
-        equipped_effect: 꾸미기상태.effect
+        equipped_effect: 꾸미기상태.effect,
+        equipped_frame: 꾸미기상태.frame
     };
 
     let savedToDb = false;
@@ -4267,12 +4277,13 @@ function 꾸미기화면표시() {
     const 현재모자 = 꾸미기상태.hat?.item_name ?? "기본 모자";
     const 현재안경 = 꾸미기상태.glasses?.item_name ?? "기본 안경";
     const 현재옷 = 꾸미기상태.clothes?.item_name ?? "기본 옷";
+    const 프레임코드 = String(꾸미기상태.frame?.item_code || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
 
     상태내용요소.innerHTML = `
         <div class="customization-layout">
             <div class="custom-preview">
                 <div class="preview-stage">
-                    <div class="preview-dori">
+                    <div class="preview-dori ${프레임코드 ? `has-profile-frame frame-${프레임코드}` : ""}">
                         <img src="${HTML이스케이프(현재유저정보?.profile_image || "https://i.postimg.cc/qB2wnCCq/1000004618-(2).png")}" alt="돌이 미리보기">
                         <div class="preview-layer preview-hat ${꾸미기상태.hat ? "" : "preview-empty"}" title="${HTML이스케이프(현재모자)}">${꾸미기상태.hat ? "🎩" : "모자 없음"}</div>
                         <div class="preview-layer preview-glasses ${꾸미기상태.glasses ? "" : "preview-empty"}" title="${HTML이스케이프(현재안경)}">${꾸미기상태.glasses ? "👓" : "안경 없음"}</div>
