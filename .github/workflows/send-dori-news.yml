@@ -38,3 +38,4 @@ jobs:
           GMAIL_USER: ${{ secrets.GMAIL_USER }}
           GMAIL_APP_PASSWORD: ${{ secrets.GMAIL_APP_PASSWORD }}
           TEST_EMAIL: ${{ inputs.test_email }}
+          DORI_SITE_BASE_URL: ${{ vars.DORI_SITE_BASE_URL }}
