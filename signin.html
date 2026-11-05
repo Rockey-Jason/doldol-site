@@ -904,7 +904,7 @@
   <header class="topbar">
     <a
       class="brand"
-      href="https://rockey-jason.github.io/doldol-site/"
+      href="./"
       aria-label="돌이 사이트 홈으로 이동"
     >
       <div class="brand-mark">돌</div>
@@ -1302,7 +1302,7 @@
           password,
           options: {
             emailRedirectTo:
-              "https://rockey-jason.github.io/doldol-site/login.html",
+              new URL("./login.html", window.location.href).href,
 
             data: {
               name: name,

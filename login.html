@@ -1177,7 +1177,7 @@
     <div class="glow glow-three"></div>
   </div>  <header class="topbar"><a
   class="brand"
-  href="https://rockey-jason.github.io/doldol-site/"
+  href="./"
   aria-label="돌이 사이트 홈으로 이동"
 >
 
@@ -1592,7 +1592,7 @@
       result.textContent = "";
       try {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: "https://rockey-jason.github.io/doldol-site/reset-password.html"
+          redirectTo: new URL("./reset-password.html", window.location.href).href
         });
         if (error) throw error;
         result.textContent = "요청을 처리했어요. 이메일함과 스팸함에서 비밀번호 재설정 메일을 확인해 주세요. 메일이 오지 않으면 잠시 후 다시 시도해 주세요.";

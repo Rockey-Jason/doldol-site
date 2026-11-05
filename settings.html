@@ -2102,7 +2102,7 @@ body::after{
     <div class="hero-inner">
         <a
             class="site-brand"
-            href="https://rockey-jason.github.io/doldol-site/"
+            href="./"
             aria-label="돌이사이트 메인으로 이동"
         >
             <span class="brand-mark">D</span>
@@ -3000,12 +3000,12 @@ function 업적바로가기URL(id) {
  first_chess:"https://rockey-jason.github.io/rockey-chess/",chess_10_win:"https://rockey-jason.github.io/rockey-chess/",chess_100_win:"https://rockey-jason.github.io/rockey-chess/",
  chess_win_army:"https://rockey-jason.github.io/rockey-chess/",chess_win_brilliant:"https://rockey-jason.github.io/rockey-chess/",chess_win_doronum:"https://rockey-jason.github.io/rockey-chess/",
  chess_win_fur:"https://rockey-jason.github.io/rockey-chess/",chess_win_rockey:"https://rockey-jason.github.io/rockey-chess/",chess_win_sleeping:"https://rockey-jason.github.io/rockey-chess/",chess_win_talc:"https://rockey-jason.github.io/rockey-chess/",
- first_box:"https://rockey-jason.github.io/doldol-site/Randombox.html",tenth_box:"https://rockey-jason.github.io/doldol-site/Randombox.html",hundred_box:"https://rockey-jason.github.io/doldol-site/Randombox.html",thousand_box:"https://rockey-jason.github.io/doldol-site/Randombox.html",
- first_stock:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_bandoche:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_food:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_rockeycloth:"https://rockey-jason.github.io/doldol-site/doldolstock.html",first_rockeypaper:"https://rockey-jason.github.io/doldol-site/doldolstock.html",
- read_news:"https://rockey-jason.github.io/doldol-site/rockeynews.html",read_1_news:"https://rockey-jason.github.io/doldol-site/rockeynews.html",read_10_news:"https://rockey-jason.github.io/doldol-site/rockeynews.html",quiz_correct:"https://rockey-jason.github.io/doldol-site/rockeynews.html",
- rich:"https://rockey-jason.github.io/doldol-site/Randombox.html",very_rich:"https://rockey-jason.github.io/doldol-site/Randombox.html",super_rich:"https://rockey-jason.github.io/doldol-site/Randombox.html",rockey_7777777:"https://rockey-jason.github.io/doldol-site/Randombox.html",first_login:"https://rockey-jason.github.io/doldol-site/"
+ first_box:"./Randombox.html",tenth_box:"./Randombox.html",hundred_box:"./Randombox.html",thousand_box:"./Randombox.html",
+ first_stock:"./doldolstock.html",first_bandoche:"./doldolstock.html",first_food:"./doldolstock.html",first_rockeycloth:"./doldolstock.html",first_rockeypaper:"./doldolstock.html",
+ read_news:"./rockeynews.html",read_1_news:"./rockeynews.html",read_10_news:"./rockeynews.html",quiz_correct:"./rockeynews.html",
+ rich:"./Randombox.html",very_rich:"./Randombox.html",super_rich:"./Randombox.html",rockey_7777777:"./Randombox.html",first_login:"./"
  };
- return routes[String(id||"").toLowerCase()] || "https://rockey-jason.github.io/doldol-site/";
+ return routes[String(id||"").toLowerCase()] || "./";
 }
 function 업적바로가기버튼HTML(id, unlocked) {
  return unlocked ? "" : '<a class="업적바로가기버튼" href="' + 업적바로가기URL(id) + '">바로가기 ↗</a>';

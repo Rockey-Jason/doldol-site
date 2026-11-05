@@ -2,7 +2,12 @@
 (() => {
   "use strict";
   const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const HOME_URL = "https://rockey-jason.github.io/doldol-site/";
+  const sharedScript = document.currentScript;
+  const SITE_ROOT = sharedScript && sharedScript.src
+    ? new URL("../", sharedScript.src).href
+    : new URL("./", window.location.href).href;
+  const HOME_URL = SITE_ROOT;
+  const siteAssetUrl = (path) => new URL(path, SITE_ROOT).href;
   const body = document.body;
   if (!body) return;
   if (!reduceMotion && !document.querySelector(".dori-world")) {
@@ -219,7 +224,7 @@
   }
   if (!document.querySelector('script[data-dori-daily-attendance]')) {
     const attendanceScript = document.createElement("script");
-    attendanceScript.src = "https://rockey-jason.github.io/doldol-site/js/daily-attendance.js?v=20261023-shared-client-2";
+    attendanceScript.src = siteAssetUrl("js/daily-attendance.js?v=20261023-shared-client-2");
     attendanceScript.dataset.doriDailyAttendance = "true"; attendanceScript.async = true;
     (document.head || document.documentElement).appendChild(attendanceScript);
   }
@@ -227,7 +232,7 @@
   /* Keep the authenticated notification center available across site pages. */
   if (!document.querySelector('script[data-dori-notification-center]')) {
     const notificationScript = document.createElement("script");
-    notificationScript.src = "https://rockey-jason.github.io/doldol-site/js/dori-notification-center.js?v=20261023-notifications-4";
+    notificationScript.src = siteAssetUrl("js/dori-notification-center.js?v=20261023-notifications-4");
     notificationScript.dataset.doriNotificationCenter = "true";
     notificationScript.async = true;
     (document.head || document.documentElement).appendChild(notificationScript);

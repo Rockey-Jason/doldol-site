@@ -2013,7 +2013,7 @@ body.로그인상태 #회원가입 {
 
   <div class="상단영역">
     <div>
-      <a id="사이트로고" class="dori-main-site-button" data-dori-main-home="true" data-dori-main-home-normalized="true" href="https://rockey-jason.github.io/doldol-site/" aria-label="돌이사이트 메인으로 이동" title="돌이사이트 메인으로 이동">
+      <a id="사이트로고" class="dori-main-site-button" data-dori-main-home="true" data-dori-main-home-normalized="true" href="./" aria-label="돌이사이트 메인으로 이동" title="돌이사이트 메인으로 이동">
         <span class="dori-main-home-mark" aria-hidden="true">D</span>
         <span class="dori-main-home-label">돌이사이트 메인</span>
         <span class="dori-main-home-arrow" aria-hidden="true">↗</span>
@@ -3581,7 +3581,7 @@ function 프로필메뉴열기() {
 const 일일미션버튼=document.getElementById("일일미션버튼");
 const 프로필정보탭=document.getElementById("프로필정보탭");
 const 일일미션아이콘={visit_site:"🏠",play_chess:"♟️",play_card_war:"🃏",open_randombox:"🎁"};
-const 일일미션바로가기URL={visit_site:"https://rockey-jason.github.io/doldol-site/",play_chess:"https://rockey-jason.github.io/rockey-chess/",play_card_war:"https://rockey-jason.github.io/rockeywar-card/",open_randombox:"https://rockey-jason.github.io/doldol-site/Randombox.html"};
+const 일일미션바로가기URL={visit_site:"./",play_chess:"https://rockey-jason.github.io/rockey-chess/",play_card_war:"https://rockey-jason.github.io/rockeywar-card/",open_randombox:"./Randombox.html"};
 const 오늘날짜=()=>new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Seoul"}).format(new Date());
 const 일일HTML안전=v=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
 async function 일일미션화면표시(){
@@ -3672,7 +3672,7 @@ async function 일일미션화면표시(){
    const row=map.get(m.mission_key);
    const complete=!!row?.completed_at;
    const received=!!row?.reward_claimed;
-   const goURL=일일미션바로가기URL[m.mission_key]||"https://rockey-jason.github.io/doldol-site/";
+   const goURL=일일미션바로가기URL[m.mission_key]||"./";
    const goButton=complete?'':'<a class="일일미션바로가기" href="'+goURL+'">바로가기 ↗</a>';
    const action=received
     ?'<span class="일일미션받음">✓ 보상 수령 완료</span>'
@@ -3803,7 +3803,7 @@ function 패널닫기() {
 
 function 업적바로가기URL(id) {
  const value = String(id || "").toLowerCase();
- const base = "https://rockey-jason.github.io/doldol-site/";
+ const base = "./";
  if (/^chess_|^first_chess$/.test(value)) return "https://rockey-jason.github.io/rockey-chess/";
  if (/box|rockey_7777777/.test(value)) return base + "Randombox.html";
  if (/^stock_|^first_stock$|^first_bandoche$|^first_food$|^first_rockeycloth$|^first_rockeypaper$|^first_dori_electronics$|^first_rockey_doronium$/.test(value)) return base + "doldolstock.html";
