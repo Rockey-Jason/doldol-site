@@ -237,6 +237,12 @@ $("copyCollection").addEventListener("click",()=>copy("돌이 라운지 컬렉�
 $("shopSearch").addEventListener("input",paintShop);
 $("faqSearch").addEventListener("input",()=>{const q=$("faqSearch").value.trim().toLowerCase();document.querySelectorAll("#faqList details").forEach(d=>d.classList.toggle("hidden",!d.textContent.toLowerCase().includes(q)))});
 const hash=location.hash.slice(1);if(["home","salon","library","gallery","concierge","shop"].includes(hash))nav(hash);
-read();setTimer();greeting();void load();
+read();setTimer();greeting();
+$("retryAccount").addEventListener("click",async()=>{
+ const button=$("retryAccount");
+ button.disabled=true;button.textContent="다시 확인하는 중…";
+ try{await load()}finally{button.disabled=false;button.textContent="다시 확인"}
+});
+void load();
 window.addEventListener("pagehide",()=>clearInterval(timer),{once:true});
 })();
