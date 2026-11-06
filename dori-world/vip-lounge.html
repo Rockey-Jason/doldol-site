@@ -63,7 +63,7 @@
     <div class="home-grid">
       <article class="panel welcome-panel"><div class="section-kicker">YOUR PRIVATE RETREAT</div><h2 id="greeting">오늘도 특별한 하루를 보내세요.</h2><p>이곳에서는 마음에 드는 분위기를 고르고, 개인 메모를 남기고, 수집품을 살펴보고, 나만의 속도로 쉬어갈 수 있어요. 라운지의 각 공간을 둘러보세요.</p><div class="welcome-actions"><button class="primary-btn" type="button" data-open-view="salon">라운지 둘러보기 ✦</button><button class="secondary-btn" type="button" data-open-view="shop">VIP 상점 보기</button></div></article>
       <article class="panel"><div class="panel-title"><h3>빠른 이동</h3><small>QUICK ACCESS</small></div><div class="quick-grid">
-        <button class="quick-card" type="button" data-open-view="library"><span class="quick-icon">▤</span><strong>나의 서재</strong><small>메모와 집중 타이머</small></button>
+        <button class="quick-card" type="button" data-open-view="library"><span class="quick-icon">▤</span><strong>나의 서재</strong><small>책 읽기와 독서 기록</small></button>
         <button class="quick-card" type="button" data-open-view="gallery"><span class="quick-icon">◇</span><strong>수집품 갤러리</strong><small>보유 아이템과 즐겨찾기</small></button>
         <button class="quick-card" type="button" data-open-view="concierge"><span class="quick-icon">♧</span><strong>컨시어지</strong><small>이용 안내와 문의 초안</small></button>
         <button class="quick-card" type="button" data-open-view="salon"><span class="quick-icon">✧</span><strong>분위기 설정</strong><small>테마와 장식 효과</small></button>
@@ -72,11 +72,11 @@
     <div class="section-head"><div><div class="section-kicker">EXPLORE THE LOUNGE</div><h2>라운지 공간</h2></div><p>원하는 공간을 선택해 바로 이동할 수 있습니다.</p></div>
     <div class="room-grid">
       <button class="room-card" type="button" data-open-view="salon"><span class="room-icon">✧</span><h3>로열 살롱</h3><p>마블과 골드의 세 가지 테마, 잔잔한 장식 효과를 설정하는 공간</p><span class="room-arrow">살롱 입장 →</span></button>
-      <button class="room-card" type="button" data-open-view="library"><span class="room-icon">▤</span><h3>프라이빗 서재</h3><p>개인 메모를 보관하고 15·25·45분 집중 타이머를 이용하는 공간</p><span class="room-arrow">서재 입장 →</span></button>
+      <button class="room-card" type="button" data-open-view="library"><span class="room-icon">▤</span><h3>로열 서재</h3><p>돌이 월드의 이야기를 읽고 읽던 장과 책갈피를 이어가는 전자 도서관</p><span class="room-arrow">서재 입장 →</span></button>
       <button class="room-card" type="button" data-open-view="gallery"><span class="room-icon">◇</span><h3>컬렉션 갤러리</h3><p>VIP 한정 수집품을 확인하고 마음에 드는 아이템을 즐겨찾기</p><span class="room-arrow">갤러리 입장 →</span></button>
       <button class="room-card" type="button" data-open-view="concierge"><span class="room-icon">♧</span><h3>로열 컨시어지</h3><p>멤버십, 보관함, 구매 관련 안내와 문의 초안 작성</p><span class="room-arrow">컨시어지 입장 →</span></button>
       <button class="room-card" type="button" data-open-view="shop"><span class="room-icon">♛</span><h3>VIP 전용 상점</h3><p>라운지에서만 만날 수 있는 한정 수집품을 둘러보세요.</p><span class="room-arrow">상점 입장 →</span></button>
-      <button class="room-card" type="button" data-open-view="library"><span class="room-icon">◷</span><h3>포커스 스위트</h3><p>방해 없이 목표에 집중할 수 있는 나만의 타이머</p><span class="room-arrow">집중 시작 →</span></button>
+      <button class="room-card" type="button" data-open-view="library"><span class="room-icon">◷</span><h3>책갈피 보관함</h3><p>읽다가 표시해 둔 장을 모아 빠르게 다시 펼쳐볼 수 있는 공간</p><span class="room-arrow">책갈피 모아보기 →</span></button>
     </div>
     <div class="today-strip"><div><div class="section-kicker">A LITTLE MOMENT FOR YOU</div><strong id="dailyQuote">천천히 둘러보세요. 이 공간은 당신의 속도에 맞춰 열려 있습니다.</strong><p id="visitSummary">오늘의 방문 기록을 준비하고 있어요.</p></div><div class="today-mark">✦</div></div>
   </section>
@@ -104,6 +104,7 @@
         <button class="book-filter active" type="button" data-book-filter="all">전체 도서</button>
         <button class="book-filter" type="button" data-book-filter="continue">읽던 책</button>
         <button class="book-filter" type="button" data-book-filter="favorites">즐겨찾기</button>
+        <button class="book-filter" type="button" data-book-filter="bookmarks">책갈피</button>
       </div>
       <label class="book-search-wrap"><span aria-hidden="true">⌕</span><input id="bookSearch" type="search" placeholder="책 제목, 장르, 내용 검색…" aria-label="도서 검색"></label>
     </div>
@@ -130,7 +131,7 @@
         <div class="faq-list" id="faqList">
           <details class="faq-card"><summary>누가 VIP 라운지를 이용할 수 있나요?</summary><p>돌이사이트 계정의 회원 등급이 프리미엄(2레벨) 이상이거나 관리자 권한이 확인된 계정이 이용할 수 있습니다. 권한은 서버의 회원 정보를 기준으로 확인합니다.</p></details>
           <details class="faq-card"><summary>구매한 수집품은 어디에서 확인하나요?</summary><p>수집품 갤러리에서 보유 상태를 확인할 수 있습니다. 아이템 지급은 구매가 성공한 뒤 계정 인벤토리에 반영됩니다.</p></details>
-          <details class="faq-card"><summary>테마나 메모는 다른 기기에서도 보이나요?</summary><p>현재 테마, 즐겨찾기, 메모, 방문 기록은 이 브라우저의 로컬 저장 공간에 저장됩니다. 다른 기기와 자동으로 동기화되지는 않습니다.</p></details>
+          <details class="faq-card"><summary>독서 진행도와 책갈피는 다른 기기에서도 보이나요?</summary><p>현재 독서 진행도와 책갈피는 이 브라우저의 계정별 로컬 저장 공간에 저장됩니다. 다른 기기와 자동으로 동기화되지는 않습니다.</p></details>
           <details class="faq-card"><summary>구매가 실패했는데 코인이 차감되었나요?</summary><p>구매 처리는 서버에서 코인 차감과 아이템 지급을 함께 처리합니다. 구매가 실패하면 인벤토리와 잔액을 새로고침해 확인해 주세요.</p></details>
           <details class="faq-card"><summary>회원 정보가 표시되지 않으면 어떻게 하나요?</summary><p>메인 사이트에서 로그인 상태를 확인한 다음 다시 시도해 주세요. 반복되면 아래 문의 초안에 발생 화면과 오류 문구를 적어두면 원인 확인에 도움이 됩니다.</p></details>
         </div>
