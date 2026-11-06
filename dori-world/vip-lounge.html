@@ -4,238 +4,159 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#f4f0e7">
-<title>VIP 라운지 | 돌이 월드</title>
+<meta name="description" content="돌이 월드 프리미엄 회원을 위한 로열 라운지">
+<title>돌이 라운지 | DORI ROYAL LOUNGE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
-<style>
-@font-face{font-family:HancomMalrangmalrang;src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
-:root{--ink:#25231f;--muted:#80786d;--gold:#b78b3c;--gold2:#e8cc8b;--deep:#101b30;--cream:#f7f4ed;--line:rgba(157,119,53,.25);--ease:cubic-bezier(.2,.8,.2,1)}
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;min-height:100vh;color:var(--ink);font-family:HancomMalrangmalrang,'Jua',sans-serif;font-weight:400;background:radial-gradient(ellipse at 50% -15%,#fff 0,transparent 42%),linear-gradient(135deg,#f7f4ed,#e8e0d1 55%,#f9f7f1);overflow-x:hidden}
-button,a{font:inherit;-webkit-tap-highlight-color:transparent}
-button:focus-visible,a:focus-visible{outline:3px solid #b78b3c;outline-offset:3px}
-.shell{width:min(1380px,calc(100% - 40px));margin:auto;padding:22px 0 76px}
-.topbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px}
-.brand{display:flex;align-items:center;gap:12px;color:#29251e;text-decoration:none}
-.brand-mark{display:grid;place-items:center;width:42px;height:42px;border:1px solid rgba(183,139,60,.55);border-radius:14px;background:linear-gradient(145deg,#fff,#eee4d1);box-shadow:0 5px 17px rgba(104,77,32,.1);color:#a47b32;font-size:22px}
-.brand strong{display:block;font-size:15px;font-weight:400;letter-spacing:.08em}
-.brand small{display:block;margin-top:3px;color:#817768;font:9px/1.2 Arial,sans-serif;letter-spacing:.2em}
-.nav-actions{display:flex;gap:8px}
-.nav-btn{display:inline-flex;align-items:center;gap:8px;min-height:42px;padding:0 16px;border:1px solid rgba(105,83,48,.17);border-radius:999px;background:rgba(255,255,255,.65);color:#5b5141;text-decoration:none;transition:.25s var(--ease);backdrop-filter:blur(12px)}
-.nav-btn:hover{transform:translateY(-2px);border-color:rgba(183,139,60,.48);box-shadow:0 8px 22px rgba(105,83,48,.1)}
-.hero{position:relative;isolation:isolate;overflow:hidden;min-height:570px;border:1px solid rgba(173,137,72,.45);border-radius:34px;background:linear-gradient(125deg,rgba(255,255,255,.96),rgba(242,237,226,.97));box-shadow:0 28px 75px rgba(91,72,41,.15),inset 0 1px 0 #fff}
-.hero:before{content:"";position:absolute;inset:0;z-index:-2;background:radial-gradient(ellipse at 50% 5%,rgba(255,255,255,.98),transparent 36%),radial-gradient(ellipse at 12% 70%,rgba(216,199,167,.23),transparent 35%),radial-gradient(ellipse at 92% 33%,rgba(231,218,192,.3),transparent 40%),linear-gradient(125deg,#fff 0%,#f4f0e7 50%,#fff 100%)}
-.hero:after{content:"";position:absolute;inset:-20%;z-index:-1;opacity:.28;background:repeating-linear-gradient(118deg,transparent 0 105px,rgba(169,151,121,.16) 106px,transparent 108px 238px),repeating-linear-gradient(28deg,transparent 0 190px,rgba(169,151,121,.12) 191px,transparent 194px 330px);filter:blur(1.2px);transform:rotate(-5deg)}
-.hero-scene{position:absolute;inset:0;pointer-events:none;overflow:hidden}
-.scene-arch{position:absolute;left:50%;top:-155px;width:min(75vw,930px);height:650px;transform:translateX(-50%);border:14px solid rgba(190,151,76,.63);border-bottom:0;border-radius:50% 50% 0 0;box-shadow:inset 0 0 0 10px rgba(255,255,255,.8),0 0 0 1px rgba(255,255,255,.85),0 0 45px rgba(190,151,76,.17)}
-.scene-arch:before{content:"";position:absolute;inset:23px 23px 0;border:2px solid rgba(199,166,105,.5);border-bottom:0;border-radius:50% 50% 0 0}
-.scene-pillar{position:absolute;top:60px;bottom:38px;width:78px;border:1px solid rgba(177,139,70,.55);border-radius:22px 22px 8px 8px;background:linear-gradient(90deg,rgba(210,202,187,.18),rgba(255,255,255,.8) 22%,rgba(224,216,200,.48) 80%,rgba(255,255,255,.8));box-shadow:inset 0 0 0 7px rgba(255,255,255,.45),0 12px 25px rgba(89,72,42,.07)}
-.scene-pillar:before,.scene-pillar:after{content:"";position:absolute;left:-9px;right:-9px;height:13px;border:1px solid rgba(177,139,70,.55);border-radius:6px;background:linear-gradient(#fff,#e6d9bf)}
-.scene-pillar:before{top:0}.scene-pillar:after{bottom:0}
-.scene-pillar.left{left:8%}.scene-pillar.right{right:8%}
-.scene-chandelier{position:absolute;top:0;left:50%;width:300px;height:170px;transform:translateX(-50%);filter:drop-shadow(0 14px 14px rgba(153,116,50,.16))}
-.scene-floor{position:absolute;left:-5%;right:-5%;bottom:-100px;height:310px;border-top:2px solid rgba(186,148,78,.42);background:repeating-linear-gradient(0deg,rgba(201,185,154,.16) 0 1px,transparent 1px 72px),repeating-linear-gradient(90deg,rgba(201,185,154,.14) 0 1px,transparent 1px 130px),linear-gradient(180deg,rgba(255,255,255,.0),rgba(207,195,171,.28));transform:perspective(450px) rotateX(16deg);transform-origin:top}
-.scene-medallion{position:absolute;bottom:52px;left:50%;width:min(56vw,520px);height:95px;transform:translateX(-50%);border:3px solid rgba(181,138,59,.76);border-radius:50%;background:radial-gradient(ellipse,#fff 0,#f1e6d0 55%,#d4bd91 57%,#fff 63%);box-shadow:0 10px 35px rgba(133,100,45,.16),inset 0 0 0 8px rgba(255,255,255,.65)}
-.scene-medallion:after{content:"♛  VIP  ♛";position:absolute;inset:0;display:grid;place-items:center;color:#b08a42;font:22px/1 Georgia,serif;letter-spacing:.16em}
-.hero-copy{position:relative;z-index:2;width:min(730px,92%);margin:0 auto;padding:185px 22px 190px;text-align:center}
-.eyebrow{display:inline-flex;align-items:center;gap:9px;padding:8px 14px;border:1px solid rgba(181,138,59,.38);border-radius:999px;background:rgba(255,255,255,.72);color:#96743a;font:10px/1 Arial,sans-serif;letter-spacing:.25em;box-shadow:0 5px 16px rgba(115,88,41,.06)}
-.hero h1{margin:18px 0 9px;color:#30291d;font-size:clamp(44px,7vw,82px);font-weight:400;letter-spacing:-.055em;line-height:1.04;text-shadow:0 4px 25px rgba(255,255,255,.9)}
-.hero h1 span{display:block;margin-top:10px;color:#b38a43;font:16px/1.2 Georgia,serif;letter-spacing:.36em;text-transform:uppercase}
-.hero-desc{max-width:550px;margin:20px auto 0;color:#6e675d;font-size:clamp(14px,1.6vw,17px);line-height:1.85}
-.hero-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:11px;margin-top:28px}
-.gold-btn,.light-btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:50px;padding:0 23px;border-radius:999px;text-decoration:none;cursor:pointer;transition:transform .25s var(--ease),box-shadow .25s,border-color .25s}
-.gold-btn{border:1px solid #a87d32;background:linear-gradient(105deg,#8d682c,#d3ad65 54%,#a47b34);color:#fff;box-shadow:0 10px 25px rgba(154,117,49,.23),inset 0 1px 0 rgba(255,255,255,.4)}
-.gold-btn:hover{transform:translateY(-3px);box-shadow:0 15px 32px rgba(154,117,49,.32)}
-.light-btn{border:1px solid rgba(125,103,68,.23);background:rgba(255,255,255,.73);color:#605543}
-.light-btn:hover{transform:translateY(-3px);border-color:rgba(183,139,60,.5)}
-.member-strip{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:12px;margin:18px 0 0}
-.member-card{display:flex;align-items:center;gap:13px;min-width:0;padding:17px 19px;border:1px solid rgba(171,139,82,.22);border-radius:18px;background:rgba(255,255,255,.72);box-shadow:0 9px 25px rgba(93,73,41,.06);backdrop-filter:blur(12px)}
-.member-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border:1px solid rgba(176,137,65,.3);border-radius:14px;background:linear-gradient(145deg,#fff,#eee4d1);color:#a57d39;font-size:20px}
-.member-meta{min-width:0}
-.member-meta span{display:block;color:#8c806e;font-size:11px}
-.member-meta strong{display:block;margin-top:4px;overflow:hidden;color:#4c3d23;font-size:15px;font-weight:400;text-overflow:ellipsis;white-space:nowrap}
-.section{margin-top:55px}
-.section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:19px}
-.section-kicker{color:#a27b3d;font:10px/1 Arial,sans-serif;letter-spacing:.24em}
-.section h2{margin:8px 0 0;color:#2f2a22;font-size:clamp(25px,3vw,34px);font-weight:400;letter-spacing:-.04em}
-.section-head p{margin:0;color:#83796c;font-size:13px}
-.lounge-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:17px}
-.feature-panel{position:relative;overflow:hidden;min-height:225px;padding:28px;border:1px solid rgba(179,143,81,.28);border-radius:24px;background:linear-gradient(135deg,rgba(255,255,255,.9),rgba(238,230,214,.88));box-shadow:0 12px 30px rgba(89,73,46,.07)}
-.feature-panel:after{content:"";position:absolute;right:-32px;bottom:-75px;width:230px;height:230px;border:1px solid rgba(178,141,73,.32);border-radius:50%;box-shadow:0 0 0 16px rgba(178,141,73,.05),0 0 0 34px rgba(178,141,73,.035)}
-.feature-panel h3{position:relative;z-index:1;margin:14px 0 8px;color:#44371f;font-size:21px;font-weight:400}
-.feature-panel p{position:relative;z-index:1;max-width:410px;margin:0;color:#796f60;font-size:13px;line-height:1.75}
-.feature-chip{display:inline-flex;padding:6px 10px;border:1px solid rgba(179,143,81,.28);border-radius:999px;background:rgba(255,255,255,.7);color:#9a7538;font:9px/1 Arial,sans-serif;letter-spacing:.15em}
-.feature-icon{position:relative;z-index:1;display:grid;place-items:center;width:52px;height:52px;border:1px solid rgba(178,141,73,.36);border-radius:17px;background:linear-gradient(145deg,#fff,#e9ddc6);color:#a8803c;font-size:25px;box-shadow:0 10px 22px rgba(106,79,38,.08)}
-.shop-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px}
-.shop-card{position:relative;display:flex;flex-direction:column;min-width:0;min-height:275px;padding:22px;border:1px solid rgba(174,140,77,.32);border-radius:22px;background:linear-gradient(145deg,rgba(255,255,255,.94),rgba(239,232,218,.91));box-shadow:0 13px 30px rgba(94,75,42,.075);transition:transform .3s var(--ease),box-shadow .3s,border-color .3s}
-.shop-card:hover{transform:translateY(-5px);border-color:rgba(174,140,77,.65);box-shadow:0 19px 38px rgba(94,75,42,.12)}
-.item-art{display:grid;place-items:center;width:72px;height:72px;margin-bottom:18px;border:1px solid rgba(177,139,70,.35);border-radius:22px;background:radial-gradient(circle,#fff 0,#f0e5ce 72%);color:#b18a44;font-size:34px;box-shadow:inset 0 1px 0 #fff,0 8px 20px rgba(107,81,41,.08)}
-.shop-card h3{margin:0;color:#3d3323;font-size:17px;font-weight:400}
-.shop-card p{margin:8px 0 17px;color:#837969;font-size:12px;line-height:1.65}
-.item-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:auto}
-.item-price{color:#987138;font-size:14px;white-space:nowrap}
-.buy-btn{min-height:39px;padding:0 15px;border:1px solid #a47a35;border-radius:12px;background:linear-gradient(105deg,#9b7535,#c9a35e);color:#fff;cursor:pointer;transition:.2s}
-.buy-btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
-.buy-btn:disabled{border-color:rgba(110,100,80,.18);background:#e3ded4;color:#817a70;cursor:default;transform:none}
-.empty-state{padding:20px;border:1px dashed rgba(168,135,78,.4);border-radius:18px;background:rgba(255,255,255,.6);color:#827866;text-align:center;font-size:13px;line-height:1.7}
-.toast{position:fixed;left:50%;bottom:24px;z-index:10010;max-width:calc(100vw - 30px);padding:13px 19px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:rgba(26,31,43,.92);color:#fff;box-shadow:0 12px 35px rgba(0,0,0,.2);transform:translate(-50%,18px);opacity:0;pointer-events:none;transition:.28s}
-.toast.show{opacity:1;transform:translate(-50%,0)}
-#lockedPanel{display:none;margin-top:20px;padding:26px;border:1px solid rgba(174,140,77,.32);border-radius:24px;background:linear-gradient(130deg,rgba(255,255,255,.94),rgba(238,231,218,.95));box-shadow:0 15px 35px rgba(94,75,42,.08)}
-#lockedPanel.show{display:flex;align-items:center;justify-content:space-between;gap:22px;flex-wrap:wrap}
-#lockedPanel h2{margin:0 0 8px;color:#45371f;font-size:23px;font-weight:400}
-#lockedPanel p{margin:0;color:#7c7161;font-size:13px;line-height:1.7}
-#vipContent{display:none}
-#vipContent.show{display:block}
-.notice{margin-top:30px;color:#887e70;font-size:11px;line-height:1.7;text-align:center}
-@media(max-width:800px){.hero{min-height:530px}.hero-copy{padding-top:165px;padding-bottom:175px}.member-strip{grid-template-columns:1fr 1fr}.member-card:first-child{grid-column:1/-1}.lounge-grid{grid-template-columns:1fr}.shop-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.scene-pillar{width:52px}.scene-pillar.left{left:3%}.scene-pillar.right{right:3%}}
-@media(max-width:540px){.shell{width:min(100% - 24px,1380px);padding-top:13px}.topbar{margin-bottom:13px}.brand-mark{width:38px;height:38px}.brand strong{font-size:13px}.brand small{font-size:8px}.nav-btn{min-height:38px;padding:0 11px;font-size:12px}.hero{min-height:495px;border-radius:25px}.hero-copy{padding:145px 12px 155px}.hero h1{font-size:50px}.hero h1 span{font-size:12px;letter-spacing:.22em}.hero-desc{font-size:13px}.scene-arch{top:-105px;height:520px;width:100vw;border-width:9px}.scene-pillar{top:75px;bottom:25px;width:33px;border-radius:13px 13px 4px 4px}.scene-pillar:before,.scene-pillar:after{left:-5px;right:-5px;height:8px}.scene-chandelier{width:205px;height:120px}.scene-floor{height:225px;bottom:-85px}.scene-medallion{bottom:38px;height:67px;width:66vw}.scene-medallion:after{font-size:15px}.hero-actions{gap:8px}.gold-btn,.light-btn{min-height:44px;padding:0 16px;font-size:12px}.member-strip{grid-template-columns:1fr 1fr;gap:8px}.member-card{padding:13px 11px;gap:9px;border-radius:15px}.member-icon{width:34px;height:34px;flex-basis:34px;border-radius:11px;font-size:16px}.member-meta span{font-size:10px}.member-meta strong{font-size:12px}.section{margin-top:39px}.section-head{align-items:start;flex-direction:column}.section-head p{font-size:12px}.feature-panel{min-height:190px;padding:21px;border-radius:19px}.feature-panel h3{font-size:18px}.shop-grid{grid-template-columns:1fr}.shop-card{min-height:0;padding:18px;border-radius:18px}.item-art{width:60px;height:60px;font-size:28px;margin-bottom:14px}.item-bottom{margin-top:15px}#lockedPanel{padding:20px}.notice{font-size:10px}}
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
-</style>
+<link rel="stylesheet" href="./vip-lounge.css?v=20261107-royal-2">
 <script src="../js/supabase.min.js?v=2.117.2"></script>
 </head>
-<body>
+<body data-theme="marble">
+<div class="ambient" aria-hidden="true"></div>
 <div class="shell">
 <header class="topbar">
-  <a class="brand" href="./index.html" aria-label="돌이 월드로 돌아가기"><span class="brand-mark">♛</span><span><strong>돌이 월드</strong><small>DORI WORLD · ROYAL DISTRICT</small></span></a>
-  <nav class="nav-actions"><a class="nav-btn" href="./index.html">← 월드로</a><a class="nav-btn" href="../">메인</a></nav>
+  <a class="brand" href="./index.html"><span class="brand-mark">♛</span><span class="brand-copy"><strong>돌이 라운지</strong><small>DORI WORLD · ROYAL DISTRICT</small></span></a>
+  <div class="top-actions">
+    <button class="theme-trigger" type="button" data-open-view="salon">✧ 라운지 설정</button>
+    <a class="top-link" href="./index.html">월드 지도 ↗</a>
+    <a class="top-link" href="../">메인 사이트</a>
+  </div>
 </header>
-
-<main>
 <section class="hero" aria-labelledby="heroTitle">
-  <div class="hero-scene" aria-hidden="true">
-    <div class="scene-arch"></div><div class="scene-pillar left"></div><div class="scene-pillar right"></div>
-    <svg class="scene-chandelier" viewBox="0 0 300 170" fill="none">
-      <path d="M150 0V34M110 34H190M125 34L97 70M175 34L203 70M150 34V75" stroke="#c5a05b" stroke-width="2"/>
-      <path d="M60 70H240L225 98H75L60 70Z" fill="#fff8e9" stroke="#c5a05b" stroke-width="2"/>
-      <path d="M80 98L98 132H202L220 98" stroke="#c5a05b" stroke-width="2"/>
-      <path d="M98 132H202M122 132L110 151M178 132L190 151" stroke="#c5a05b" stroke-width="1.5"/>
-      <g fill="#f4dfae" stroke="#b58a42"><path d="M58 68L68 52L78 68Z"/><path d="M222 68L232 52L242 68Z"/><path d="M139 76L150 52L161 76Z"/></g>
-      <g fill="#fff" stroke="#c5a05b"><circle cx="75" cy="97" r="6"/><circle cx="225" cy="97" r="6"/><circle cx="110" cy="132" r="7"/><circle cx="190" cy="132" r="7"/><circle cx="150" cy="151" r="8"/></g>
+  <div class="hero-ornament" aria-hidden="true">
+    <div class="hero-arch"></div><div class="hero-lines"></div>
+    <svg class="hero-chandelier" viewBox="0 0 245 140" fill="none">
+      <path d="M122 0V28M90 28H154M101 28L76 58M143 28L168 58M122 28V64" stroke="#bd9858" stroke-width="1.7"/>
+      <path d="M49 58H196L185 80H60L49 58Z" fill="#fff8e9" stroke="#bd9858" stroke-width="1.7"/>
+      <path d="M65 80L82 108H164L180 80M82 108H164" stroke="#bd9858" stroke-width="1.5"/>
+      <g fill="#f4dfae" stroke="#b58a42"><path d="M48 57L58 43L68 57Z"/><path d="M177 57L187 43L197 57Z"/><path d="M112 64L122 43L132 64Z"/></g>
+      <g fill="#fff" stroke="#c5a05b"><circle cx="61" cy="80" r="5"/><circle cx="184" cy="80" r="5"/><circle cx="91" cy="108" r="6"/><circle cx="155" cy="108" r="6"/><circle cx="122" cy="128" r="7"/></g>
     </svg>
-    <div class="scene-floor"></div><div class="scene-medallion"></div>
   </div>
   <div class="hero-copy">
     <div class="eyebrow">✦ EXCLUSIVE MEMBERS CLUB ✦</div>
     <h1 id="heroTitle">VIP 라운지<span>THE ROYAL LOUNGE</span></h1>
-    <p class="hero-desc">화이트 마블과 따스한 골드가 어우러진, 프리미엄 회원만을 위한 특별한 휴식 공간.<br>돌이 월드의 가장 품격 있는 라운지에 오신 것을 환영합니다.</p>
-    <div class="hero-actions">
-      <a class="gold-btn" href="#vipShop">♛ 전용 상점 둘러보기</a>
-      <a class="light-btn" href="./index.html">월드 메인으로</a>
+    <p class="hero-desc">화이트 마블과 로열 골드가 어우러진 프리미엄 공간.<br>휴식과 수집, 집중과 발견을 위한 나만의 특별한 라운지입니다.</p>
+    <div class="hero-meta"><span class="meta-pill"><i class="meta-dot"></i> MEMBERS AREA</span><span class="meta-pill">♛ PREMIUM ACCESS</span><span class="meta-pill" id="todayLabel">오늘의 라운지</span></div>
+  </div>
+</section>
+<section class="member-overview" aria-label="회원 대시보드">
+  <article class="member-card"><div class="avatar" id="memberAvatar" aria-hidden="true">♛</div><div class="member-info"><div class="member-label">WELCOME BACK</div><strong class="member-name" id="memberName">회원 정보 확인 중…</strong><div class="member-sub" id="memberSub">로열 라운지에 오신 것을 환영합니다.</div></div></article>
+  <article class="stat-card"><span class="stat-label">MEMBERSHIP</span><strong class="stat-value" id="memberLevel">—</strong><span class="stat-foot" id="memberNumber">회원 번호 확인 중</span></article>
+  <article class="stat-card"><span class="stat-label">DOLDOLCOIN</span><strong class="stat-value" id="memberCoins">—</strong><span class="stat-foot">현재 보유 잔액</span></article>
+  <article class="stat-card"><span class="stat-label">COLLECTION</span><strong class="stat-value" id="ownedCount">—</strong><span class="stat-foot">VIP 전용 수집품</span></article>
+</section>
+<section class="lock-panel" id="lockPanel" aria-live="polite">
+  <div><h2 id="lockTitle">VIP 멤버십이 필요합니다</h2><p id="lockDescription">로그인한 뒤 프리미엄 회원 등급을 확인해 주세요.</p></div>
+  <a class="primary-btn" href="../doldolcoinmart.html">멤버십 확인하기 ↗</a>
+</section>
+<div class="lounge-app" id="loungeApp">
+  <nav class="room-nav" aria-label="라운지 공간">
+    <button class="room-tab active" type="button" data-view="home">⌂ 라운지 홈</button>
+    <button class="room-tab" type="button" data-view="salon">✧ 살롱</button>
+    <button class="room-tab" type="button" data-view="library">▤ 서재</button>
+    <button class="room-tab" type="button" data-view="gallery">◇ 갤러리</button>
+    <button class="room-tab" type="button" data-view="concierge">♧ 컨시어지</button>
+    <button class="room-tab" type="button" data-view="shop">♛ 전용 상점</button>
+  </nav>
+  <section class="view active" id="view-home" data-view-panel="home">
+    <div class="home-grid">
+      <article class="panel welcome-panel"><div class="section-kicker">YOUR PRIVATE RETREAT</div><h2 id="greeting">오늘도 특별한 하루를 보내세요.</h2><p>이곳에서는 마음에 드는 분위기를 고르고, 개인 메모를 남기고, 수집품을 살펴보고, 나만의 속도로 쉬어갈 수 있어요. 라운지의 각 공간을 둘러보세요.</p><div class="welcome-actions"><button class="primary-btn" type="button" data-open-view="salon">라운지 둘러보기 ✦</button><button class="secondary-btn" type="button" data-open-view="shop">VIP 상점 보기</button></div></article>
+      <article class="panel"><div class="panel-title"><h3>빠른 이동</h3><small>QUICK ACCESS</small></div><div class="quick-grid">
+        <button class="quick-card" type="button" data-open-view="library"><span class="quick-icon">▤</span><strong>나의 서재</strong><small>메모와 집중 타이머</small></button>
+        <button class="quick-card" type="button" data-open-view="gallery"><span class="quick-icon">◇</span><strong>수집품 갤러리</strong><small>보유 아이템과 즐겨찾기</small></button>
+        <button class="quick-card" type="button" data-open-view="concierge"><span class="quick-icon">♧</span><strong>컨시어지</strong><small>이용 안내와 문의 초안</small></button>
+        <button class="quick-card" type="button" data-open-view="salon"><span class="quick-icon">✧</span><strong>분위기 설정</strong><small>테마와 장식 효과</small></button>
+      </div></article>
     </div>
-  </div>
-</section>
-
-<section class="member-strip" aria-label="회원 정보">
-  <div class="member-card"><span class="member-icon">♛</span><div class="member-meta"><span>현재 방문자</span><strong id="memberName">계정 확인 중…</strong></div></div>
-  <div class="member-card"><span class="member-icon">✧</span><div class="member-meta"><span>회원 등급</span><strong id="memberLevel">확인 중</strong></div></div>
-  <div class="member-card"><span class="member-icon">◈</span><div class="member-meta"><span>보유 돌돌코인</span><strong id="memberCoins">확인 중</strong></div></div>
-</section>
-
-<section id="lockedPanel" aria-live="polite">
-  <div><h2 id="lockTitle">VIP 멤버십이 필요합니다</h2><p id="lockDescription">돌돌코인 상점에서 프리미엄 등급 이상 쿠폰을 구매하면 VIP 라운지를 이용할 수 있습니다.</p></div>
-  <a class="gold-btn" href="../doldolcoinmart.html">멤버십 등급 확인 ↗</a>
-</section>
-
-<div id="vipContent">
-<section class="section">
-  <div class="section-head"><div><div class="section-kicker">A PLACE TO RELAX</div><h2>라운지의 특별한 공간</h2></div><p>프리미엄 회원에게만 열리는 전용 공간</p></div>
-  <div class="lounge-grid">
-    <article class="feature-panel"><span class="feature-chip">ROYAL RECEPTION</span><div class="feature-icon">♛</div><h3>로열 리셉션</h3><p>왕관 문양과 골드 트림으로 장식된 라운지의 중심 공간입니다. 회원 전용 안내와 새로운 혜택 소식을 확인할 수 있습니다.</p></article>
-    <article class="feature-panel"><span class="feature-chip">MARBLE SALON</span><div class="feature-icon">✧</div><h3>마블 살롱</h3><p>부드러운 대리석 톤과 은은한 조명으로 꾸며진 휴식 공간입니다. 돌이 월드의 특별한 소식을 가장 먼저 만나보세요.</p></article>
-  </div>
-</section>
-
-<section class="section" id="vipShop">
-  <div class="section-head"><div><div class="section-kicker">VIP MEMBERS ONLY</div><h2>VIP 전용 상점</h2></div><p>라운지에서만 만날 수 있는 한정 수집품</p></div>
-  <div class="shop-grid" id="shopGrid">
-    <article class="shop-card" data-item="vip_marble_corgi_statue"><div class="item-art">♜</div><h3>화이트 마블 돌이 조각상</h3><p>라운지의 상징을 담은 화이트 마블 컬렉션 오브제.</p><div class="item-bottom"><span class="item-price">50,000 코인</span><button class="buy-btn" type="button">구매하기</button></div></article>
-    <article class="shop-card" data-item="vip_royal_crown_collectible"><div class="item-art">♛</div><h3>로열 골드 왕관 오브제</h3><p>정교한 골드 장식으로 완성한 로열 컬렉션.</p><div class="item-bottom"><span class="item-price">120,000 코인</span><button class="buy-btn" type="button">구매하기</button></div></article>
-    <article class="shop-card" data-item="vip_aurora_crystal_collectible"><div class="item-art">◇</div><h3>오로라 크리스탈 장식</h3><p>빛을 머금은 오로라 크리스탈 수집품.</p><div class="item-bottom"><span class="item-price">250,000 코인</span><button class="buy-btn" type="button">구매하기</button></div></article>
-  </div>
-  <p class="notice">구매한 수집품은 계정의 아이템 보관함(user_inventory)에 저장됩니다. 중복 구매는 제한되며 코인 차감과 아이템 지급은 서버에서 한 번에 처리됩니다.</p>
-</section>
+    <div class="section-head"><div><div class="section-kicker">EXPLORE THE LOUNGE</div><h2>라운지 공간</h2></div><p>원하는 공간을 선택해 바로 이동할 수 있습니다.</p></div>
+    <div class="room-grid">
+      <button class="room-card" type="button" data-open-view="salon"><span class="room-icon">✧</span><h3>로열 살롱</h3><p>마블과 골드의 세 가지 테마, 잔잔한 장식 효과를 설정하는 공간</p><span class="room-arrow">살롱 입장 →</span></button>
+      <button class="room-card" type="button" data-open-view="library"><span class="room-icon">▤</span><h3>프라이빗 서재</h3><p>개인 메모를 보관하고 15·25·45분 집중 타이머를 이용하는 공간</p><span class="room-arrow">서재 입장 →</span></button>
+      <button class="room-card" type="button" data-open-view="gallery"><span class="room-icon">◇</span><h3>컬렉션 갤러리</h3><p>VIP 한정 수집품을 확인하고 마음에 드는 아이템을 즐겨찾기</p><span class="room-arrow">갤러리 입장 →</span></button>
+      <button class="room-card" type="button" data-open-view="concierge"><span class="room-icon">♧</span><h3>로열 컨시어지</h3><p>멤버십, 보관함, 구매 관련 안내와 문의 초안 작성</p><span class="room-arrow">컨시어지 입장 →</span></button>
+      <button class="room-card" type="button" data-open-view="shop"><span class="room-icon">♛</span><h3>VIP 전용 상점</h3><p>라운지에서만 만날 수 있는 한정 수집품을 둘러보세요.</p><span class="room-arrow">상점 입장 →</span></button>
+      <button class="room-card" type="button" data-open-view="library"><span class="room-icon">◷</span><h3>포커스 스위트</h3><p>방해 없이 목표에 집중할 수 있는 나만의 타이머</p><span class="room-arrow">집중 시작 →</span></button>
+    </div>
+    <div class="today-strip"><div><div class="section-kicker">A LITTLE MOMENT FOR YOU</div><strong id="dailyQuote">천천히 둘러보세요. 이 공간은 당신의 속도에 맞춰 열려 있습니다.</strong><p id="visitSummary">오늘의 방문 기록을 준비하고 있어요.</p></div><div class="today-mark">✦</div></div>
+  </section>
+  <section class="view" id="view-salon" data-view-panel="salon">
+    <div class="section-head"><div><div class="section-kicker">ROYAL SALON</div><h2>나만의 라운지 분위기</h2></div><p>선택한 테마는 현재 브라우저에 저장됩니다.</p></div>
+    <article class="panel"><div class="panel-title"><h3>시그니처 테마</h3><small>PERSONAL STYLE</small></div>
+      <div class="theme-grid">
+        <button class="theme-card selected" type="button" data-theme-choice="marble"><span class="theme-swatch"></span><strong>화이트 마블</strong><small>부드러운 아이보리와 샴페인 골드</small></button>
+        <button class="theme-card" type="button" data-theme-choice="midnight"><span class="theme-swatch"></span><strong>미드나이트 골드</strong><small>깊은 네이비와 은은한 골드</small></button>
+        <button class="theme-card" type="button" data-theme-choice="rose"><span class="theme-swatch"></span><strong>로즈 마블</strong><small>웜 핑크와 로즈 골드</small></button>
+      </div>
+      <div class="ambient-row"><div><strong>은은한 라운지 효과</strong><p>배경의 부드러운 빛 장식을 켜거나 끕니다.</p></div><button class="switch" type="button" id="ambientToggle" role="switch" aria-checked="true" aria-label="은은한 라운지 효과"></button></div>
+    </article>
+    <div class="section-head"><div><div class="section-kicker">SALON ETIQUETTE</div><h2>살롱 이용 안내</h2></div></div>
+    <div class="feature-grid"><article class="feature-box"><h3>✧ 나만의 공간</h3><p>테마와 효과 설정은 이 브라우저에 저장되며 다음 방문에도 적용됩니다. 공용 기기에서는 개인 설정을 정리해 주세요.</p></article><article class="feature-box"><h3>♛ 프리미엄 멤버십</h3><p>라운지와 전용 상점은 프리미엄 등급 이상 회원에게 제공됩니다. 계정의 실제 등급과 구매 자격은 서버에서 확인합니다.</p></article></div>
+  </section>
+  <section class="view" id="view-library" data-view-panel="library">
+    <div class="section-head"><div><div class="section-kicker">PRIVATE LIBRARY</div><h2>나의 서재와 포커스 스위트</h2></div><p>메모와 타이머는 이 브라우저의 현재 계정 공간에만 저장됩니다.</p></div>
+    <div class="library-grid">
+      <article class="panel"><div class="panel-title"><h3>프라이빗 노트</h3><small>MY PRIVATE NOTES</small></div>
+        <label class="field-label" for="privateNote">기억하고 싶은 내용이나 오늘의 생각을 적어보세요.</label>
+        <textarea class="textarea" id="privateNote" maxlength="2000" placeholder="이곳에 작성한 메모는 현재 브라우저에만 저장됩니다."></textarea>
+        <div class="field-foot"><span id="noteStatus">자동 저장 준비</span><span id="noteCount">0 / 2,000</span></div>
+        <div class="action-row" style="justify-content:flex-start;margin-top:13px"><button class="secondary-btn" type="button" id="copyNote">메모 복사</button><button class="quiet-btn" type="button" id="clearNote">메모 비우기</button></div>
+        <p class="local-note">🔒 개인 메모는 서버에 업로드되지 않습니다. 브라우저 데이터 삭제 시 사라질 수 있습니다.</p>
+      </article>
+      <article class="panel timer-card"><div class="section-kicker">FOCUS SUITE</div><h3 style="margin:8px 0 0;font-size:19px;font-weight:400">집중 타이머</h3>
+        <div class="timer-ring"><div><div class="timer-value" id="timerValue">25:00</div><div class="timer-sub" id="timerStatus">집중할 시간을 골라보세요</div></div></div>
+        <div class="preset-row"><button class="preset-btn" type="button" data-minutes="15">15분</button><button class="preset-btn active" type="button" data-minutes="25">25분</button><button class="preset-btn" type="button" data-minutes="45">45분</button></div>
+        <div class="timer-actions"><button class="primary-btn" type="button" id="timerStart">시작</button><button class="secondary-btn" type="button" id="timerReset">초기화</button></div>
+      </article>
+    </div>
+  </section>
+  <section class="view" id="view-gallery" data-view-panel="gallery">
+    <div class="section-head"><div><div class="section-kicker">ROYAL COLLECTION</div><h2>수집품 갤러리</h2></div><p>보유 아이템은 계정의 인벤토리 기록으로 표시됩니다.</p></div>
+    <div class="shop-tools"><input class="text-input" id="collectionSearch" type="search" placeholder="수집품 이름 검색…" aria-label="수집품 검색"><button class="secondary-btn" type="button" id="copyCollection">컬렉션 목록 복사</button></div>
+    <div class="collection-grid" id="collectionGrid">
+      <article class="collection-card" data-collection-item="vip_marble_corgi_statue" data-name="화이트 마블 돌이 조각상"><div class="collection-art">♜</div><div class="collection-body"><h3>화이트 마블 돌이 조각상</h3><p>라운지의 상징을 담은 마블 컬렉션 오브제.</p><div class="collection-meta"><span class="not-owned" data-owned-label>보유 여부 확인 중</span><button class="favorite-btn" type="button" data-favorite="vip_marble_corgi_statue" aria-pressed="false" aria-label="즐겨찾기에 추가">♡</button></div></div></article>
+      <article class="collection-card" data-collection-item="vip_royal_crown_collectible" data-name="로열 골드 왕관 오브제"><div class="collection-art">♛</div><div class="collection-body"><h3>로열 골드 왕관 오브제</h3><p>정교한 골드 장식으로 완성한 로열 컬렉션.</p><div class="collection-meta"><span class="not-owned" data-owned-label>보유 여부 확인 중</span><button class="favorite-btn" type="button" data-favorite="vip_royal_crown_collectible" aria-pressed="false" aria-label="즐겨찾기에 추가">♡</button></div></div></article>
+      <article class="collection-card" data-collection-item="vip_aurora_crystal_collectible" data-name="오로라 크리스탈 장식"><div class="collection-art">◇</div><div class="collection-body"><h3>오로라 크리스탈 장식</h3><p>빛을 머금은 오로라 크리스탈 수집품.</p><div class="collection-meta"><span class="not-owned" data-owned-label>보유 여부 확인 중</span><button class="favorite-btn" type="button" data-favorite="vip_aurora_crystal_collectible" aria-pressed="false" aria-label="즐겨찾기에 추가">♡</button></div></div></article>
+    </div>
+    <p class="local-note">즐겨찾기는 이 브라우저에만 저장됩니다. 아이템 보유 상태는 실제 계정 인벤토리와 연결됩니다.</p>
+  </section>
+  <section class="view" id="view-concierge" data-view-panel="concierge">
+    <div class="section-head"><div><div class="section-kicker">ROYAL CONCIERGE</div><h2>컨시어지 데스크</h2></div><p>자주 묻는 질문을 확인하고 문의 내용을 정리할 수 있습니다.</p></div>
+    <div class="home-grid">
+      <article class="panel"><div class="panel-title"><h3>자주 묻는 질문</h3><small>HELP DESK</small></div><input class="text-input" id="faqSearch" type="search" placeholder="질문 검색…" aria-label="자주 묻는 질문 검색" style="margin-bottom:12px">
+        <div class="faq-list" id="faqList">
+          <details class="faq-card"><summary>누가 VIP 라운지를 이용할 수 있나요?</summary><p>돌이사이트 계정의 회원 등급이 프리미엄(2레벨) 이상이거나 관리자 권한이 확인된 계정이 이용할 수 있습니다. 권한은 서버의 회원 정보를 기준으로 확인합니다.</p></details>
+          <details class="faq-card"><summary>구매한 수집품은 어디에서 확인하나요?</summary><p>수집품 갤러리에서 보유 상태를 확인할 수 있습니다. 아이템 지급은 구매가 성공한 뒤 계정 인벤토리에 반영됩니다.</p></details>
+          <details class="faq-card"><summary>테마나 메모는 다른 기기에서도 보이나요?</summary><p>현재 테마, 즐겨찾기, 메모, 방문 기록은 이 브라우저의 로컬 저장 공간에 저장됩니다. 다른 기기와 자동으로 동기화되지는 않습니다.</p></details>
+          <details class="faq-card"><summary>구매가 실패했는데 코인이 차감되었나요?</summary><p>구매 처리는 서버에서 코인 차감과 아이템 지급을 함께 처리합니다. 구매가 실패하면 인벤토리와 잔액을 새로고침해 확인해 주세요.</p></details>
+          <details class="faq-card"><summary>회원 정보가 표시되지 않으면 어떻게 하나요?</summary><p>메인 사이트에서 로그인 상태를 확인한 다음 다시 시도해 주세요. 반복되면 아래 문의 초안에 발생 화면과 오류 문구를 적어두면 원인 확인에 도움이 됩니다.</p></details>
+        </div>
+      </article>
+      <article class="panel"><div class="panel-title"><h3>문의 초안 작성</h3><small>PRIVATE DRAFT</small></div><label class="field-label" for="supportDraft">전달할 내용을 정리해 보세요.</label>
+        <textarea class="textarea" id="supportDraft" maxlength="1500" placeholder="예: VIP 라운지에서 회원 정보가 표시되지 않습니다."></textarea>
+        <div class="field-foot"><span id="draftStatus">현재 기기에 임시 저장</span><span id="draftCount">0 / 1,500</span></div>
+        <div class="action-row" style="justify-content:flex-start;margin-top:13px"><button class="primary-btn" type="button" id="copyInquiry">문의 내용 복사</button><button class="secondary-btn" type="button" id="clearDraft">비우기</button></div>
+        <p class="local-note">문의 초안은 자동 전송되지 않습니다. 내용을 복사한 뒤 공식 문의 경로에 직접 전달해 주세요.</p>
+      </article>
+    </div>
+  </section>
+  <section class="view" id="view-shop" data-view-panel="shop">
+    <div class="section-head"><div><div class="section-kicker">VIP MEMBERS ONLY</div><h2>VIP 전용 상점</h2></div><p>구매 시 서버에서 등급, 잔액, 중복 보유 여부를 다시 확인합니다.</p></div>
+    <div class="shop-tools"><input class="text-input" id="shopSearch" type="search" placeholder="상품 이름 검색…" aria-label="VIP 상품 검색"><span class="meta-pill" id="shopCount">상품 3종</span></div>
+    <div class="shop-grid collection-grid" id="shopGrid">
+      <article class="shop-card" data-item="vip_marble_corgi_statue" data-name="화이트 마블 돌이 조각상"><div class="shop-art">♜</div><h3>화이트 마블 돌이 조각상</h3><p>라운지의 상징을 담은 화이트 마블 컬렉션 오브제.</p><div class="shop-bottom"><span class="price">50,000 코인</span><button class="buy-btn" type="button" data-buy>구매하기</button></div></article>
+      <article class="shop-card" data-item="vip_royal_crown_collectible" data-name="로열 골드 왕관 오브제"><div class="shop-art">♛</div><h3>로열 골드 왕관 오브제</h3><p>정교한 골드 장식으로 완성한 로열 컬렉션.</p><div class="shop-bottom"><span class="price">120,000 코인</span><button class="buy-btn" type="button" data-buy>구매하기</button></div></article>
+      <article class="shop-card" data-item="vip_aurora_crystal_collectible" data-name="오로라 크리스탈 장식"><div class="shop-art">◇</div><h3>오로라 크리스탈 장식</h3><p>빛을 머금은 오로라 크리스탈 수집품.</p><div class="shop-bottom"><span class="price">250,000 코인</span><button class="buy-btn" type="button" data-buy>구매하기</button></div></article>
+    </div>
+    <p class="local-note">구매한 아이템은 계정 인벤토리에 저장됩니다. 구매 버튼을 여러 번 눌러도 서버에서 중복 지급을 방지합니다.</p>
+  </section>
 </div>
-
-<p class="notice">DORI WORLD · VIP ROYAL DISTRICT · MEMBER ACCESS LEVEL 2+</p>
-</main>
+<footer class="footer">DORI WORLD · ROYAL DISTRICT · PRIVATE MEMBERS CLUB<br>PERSONAL SETTINGS ARE STORED LOCALLY ON THIS DEVICE</footer>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
-<script>
-(() => {
-  "use strict";
-  const SUPABASE_URL = "https://scttowfhygcpdirrekqm.supabase.co";
-  const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
-  const { createClient } = window.supabase || {};
-  const supabase = createClient ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-  const $ = (id) => document.getElementById(id);
-  const toastNode = $("toast");
-  let toastTimer = 0;
-  const ITEMS = ["vip_marble_corgi_statue","vip_royal_crown_collectible","vip_aurora_crystal_collectible"];
-  const LEVELS = {1:"일반",2:"프리미엄",3:"돌프리미엄",4:"돌돌프리미엄",5:"돌돌돌프리미엄",6:"돌돌돌돌프리미엄",7:"돌돌돌돌돌프리미엄",8:"유사돌이",9:"돌이",10:"관리자"};
-  function toast(message){toastNode.textContent=message;toastNode.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>toastNode.classList.remove("show"),3000);}
-  function format(n){return Number(n||0).toLocaleString("ko-KR");}
-  function showLock(title,description){$("lockTitle").textContent=title;$("lockDescription").textContent=description;$("lockedPanel").classList.add("show");$("vipContent").classList.remove("show");}
-  function renderItems(owned){
-    document.querySelectorAll(".shop-card").forEach(card=>{
-      const item=card.dataset.item, button=card.querySelector("button");
-      const isOwned=owned.has(item);
-      button.disabled=isOwned;
-      button.textContent=isOwned?"✓ 보유 중":"구매하기";
-      button.onclick=()=>purchase(item,button);
-    });
-  }
-  async function loadAccount(){
-    if(!supabase){showLock("상점 연결 오류","회원 정보를 불러오지 못했습니다. 페이지를 새로고침해 주세요.");return;}
-    try{
-      const {data:{session},error:sessionError}=await supabase.auth.getSession();
-      if(sessionError)throw sessionError;
-      if(!session){$("memberName").textContent="로그인이 필요합니다";$("memberLevel").textContent="비회원";$("memberCoins").textContent="—";showLock("먼저 로그인해 주세요","돌이사이트 메인에서 로그인한 뒤 다시 방문해 주세요.");return;}
-      const {data:profile,error}=await supabase.from("users").select("name,user_level,is_admin,doldolcoin").eq("user_id",session.user.id).single();
-      if(error)throw error;
-      const level=Number(profile.user_level||1), isVip=Boolean(profile.is_admin)||level>=2;
-      $("memberName").textContent=profile.name||"돌이 월드 회원";
-      $("memberLevel").textContent=LEVELS[level]||("레벨 "+level);
-      $("memberCoins").textContent=format(profile.doldolcoin)+" 코인";
-      if(!isVip){showLock("VIP 멤버십이 필요합니다","현재 등급은 "+(LEVELS[level]||"일반")+"입니다. 프리미엄 등급(2레벨) 이상부터 라운지와 전용 상점을 이용할 수 있습니다.");return;}
-      $("lockedPanel").classList.remove("show");$("vipContent").classList.add("show");
-      const {data:inventory,error:inventoryError}=await supabase.from("user_inventory").select("item_id,purchased_at").eq("user_id",session.user.id).in("item_id",ITEMS);
-      if(inventoryError)throw inventoryError;
-      renderItems(new Set((inventory||[]).map(x=>x.item_id)));
-    }catch(error){
-      console.error("VIP Lounge load error:",error);
-      showLock("회원 정보를 불러오지 못했습니다","계정 정보 연결 중 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.");
-    }
-  }
-  async function purchase(item,button){
-    if(!supabase)return;
-    const original=button.textContent;
-    button.disabled=true;button.textContent="구매 처리 중…";
-    try{
-      const {data,error}=await supabase.rpc("purchase_vip_lounge_item",{p_item_id:item});
-      if(error)throw error;
-      const result=Array.isArray(data)?data[0]:data;
-      if(!result||result.success!==true)throw new Error("상품 구매를 완료하지 못했습니다.");
-      toast(result.item_name+" 구매 완료 · 잔액 "+format(result.doldolcoin)+" 코인");
-      await loadAccount();
-    }catch(error){
-      console.error("VIP item purchase failed:",error);
-      const message=String(error?.message||"");
-      toast(message.includes("돌돌코인")?"돌돌코인이 부족합니다.":message.includes("이미 보유")?"이미 보유한 상품입니다.":"구매에 실패했습니다. 로그인과 VIP 등급을 확인해 주세요.");
-      button.disabled=false;button.textContent=original;
-    }
-  }
-  if(supabase){
-    void loadAccount();
-    supabase.auth.onAuthStateChange(()=>{setTimeout(()=>void loadAccount(),0);});
-  }else{
-    showLock("상점 연결 오류","필수 인증 모듈을 불러오지 못했습니다.");
-  }
-})();
-</script>
 <script src="../js/doldol-theme.js?v=20261023-notification-center-4"></script>
 <script src="../js/dori-sound.js?v=20261009-5"></script>
 <script src="../js/hancom-weight-normalizer.js?v=20261014-1"></script>
+<script src="./vip-lounge.js?v=20261107-royal-2"></script>
 </body>
 </html>
