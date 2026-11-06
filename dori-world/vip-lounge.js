@@ -2,9 +2,29 @@
 "use strict";
 const URL="https://scttowfhygcpdirrekqm.supabase.co";
 const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
-const createClient=window.supabase&&window.supabase.createClient;
-const db=window.doriSupabase||(createClient?createClient(URL,KEY):null);
-if(db&&!window.doriSupabase)window.doriSupabase=db;
+let db=null,clientPromise=null,authBound=false;
+function sharedClient(){return window.doriSupabase||window.supabaseClient||window.sb||null}
+async function getClient(){
+ if(db)return db;
+ if(!clientPromise)clientPromise=(async()=>{
+  for(let i=0;i<120;i++){
+   const shared=sharedClient();
+   if(shared){db=shared;return db}
+   await new Promise(resolve=>setTimeout(resolve,25));
+  }
+  let createClient=window.supabase&&window.supabase.createClient;
+  if(!createClient){
+   const module=await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+   createClient=module.createClient;
+  }
+  const latest=sharedClient();
+  const client=latest||createClient(URL,KEY);
+  if(!window.doriSupabase)window.doriSupabase=client;
+  db=sharedClient()||client;
+  return db;
+ })();
+ return clientPromise;
+}
 const $=id=>document.getElementById(id);
 const items=[
 {id:"vip_marble_corgi_statue",name:"화이트 마블 돌이 조각상"},
@@ -84,25 +104,87 @@ function paintShop(){
  $("shopCount").textContent="검색 결과 "+count+"종";
 }
 async function load(){
- if(!db){showLock("인증 모듈을 불러오지 못했습니다","로그인 모듈을 불러오지 못했습니다. 새로고침한 뒤 다시 시도해 주세요.");return}
+ let stage="인증 모듈 초기화";
  try{
-  const {data:{session},error:authError}=await db.auth.getSession();if(authError)throw authError;
-  if(!session){user=null;$("memberName").textContent="로그인이 필요합니다";$("memberSub").textContent="메인 사이트에서 로그인해 주세요.";$("memberLevel").textContent="비회원";$("memberNumber").textContent="회원 번호 —";$("memberCoins").textContent="—";showLock("먼저 로그인해 주세요","돌이사이트 메인에서 로그인한 뒤 이 페이지를 다시 방문해 주세요.");return}
-  user=session.user;storeKey="dori-lounge:v2:"+user.id;read();
-  const {data:p,error}=await db.from("users").select("name,user_number,user_level,is_admin,doldolcoin,exp,exp_level,equipped_title,profile_image,user_achievement").eq("user_id",user.id).maybeSingle();
-  if(error)throw error;if(!p){showLock("회원 프로필을 찾을 수 없습니다","로그인은 확인했지만 회원 정보를 찾지 못했습니다. 메인 사이트 계정 상태를 확인해 주세요.");return}
-  member(p,session);const level=Number(p.user_level||1);
-  if(p.is_admin!==true&&level<2){showLock("VIP 멤버십이 필요합니다","현재 등급은 "+(levels[level]||"일반")+"입니다. 프리미엄 등급 이상부터 라운지를 이용할 수 있습니다.");return}
-  $("lockPanel").classList.remove("show");$("loungeApp").classList.add("show");
-  const {data:list,error:invError}=await db.from("user_inventory").select("item_id,purchased_at").eq("user_id",user.id).in("item_id",items.map(x=>x.id));
-  if(invError)throw invError;owned=new Set((list||[]).map(x=>x.item_id));paintOwned();paintShop();updateVisit();greeting();
+  const client=await getClient();
+  if(!client)throw new Error("Supabase client unavailable");
+  if(!authBound){
+   authBound=true;
+   client.auth.onAuthStateChange(event=>{
+    if(["SIGNED_IN","SIGNED_OUT","TOKEN_REFRESHED","USER_UPDATED"].includes(event))setTimeout(()=>void load(),0);
+   });
+  }
+  stage="로그인 세션 확인";
+  const {data:{session},error:authError}=await client.auth.getSession();
+  if(authError)throw authError;
+  if(!session){
+   user=null;
+   $("memberName").textContent="로그인이 필요합니다";
+   $("memberSub").textContent="메인 사이트에서 로그인해 주세요.";
+   $("memberLevel").textContent="비회원";
+   $("memberNumber").textContent="회원 번호 —";
+   $("memberCoins").textContent="—";
+   $("ownedCount").textContent="—";
+   setLock("먼저 로그인해 주세요","돌이사이트 메인에서 로그인한 뒤 이 페이지를 다시 방문해 주세요.");
+   return;
+  }
+  user=session.user;
+  storeKey="dori-lounge:v2:"+user.id;
+  read();
+
+  stage="회원 프로필 조회";
+  let profileResult=await client.from("users")
+   .select("name,user_number,user_level,is_admin,doldolcoin,equipped_title,profile_image")
+   .eq("user_id",user.id).maybeSingle();
+  if(profileResult.error && (Number(profileResult.error.status)===401 || /invalid jwt|jwt expired|token expired/i.test(String(profileResult.error.message||"")))){
+   const refreshed=await client.auth.refreshSession();
+   if(!refreshed.error&&refreshed.data&&refreshed.data.session){
+    profileResult=await client.from("users")
+     .select("name,user_number,user_level,is_admin,doldolcoin,equipped_title,profile_image")
+     .eq("user_id",user.id).maybeSingle();
+   }
+  }
+  if(profileResult.error)throw profileResult.error;
+  const p=profileResult.data;
+  if(!p){
+   setLock("회원 프로필을 찾을 수 없습니다","로그인은 확인됐지만 현재 로그인 ID와 일치하는 users 회원 정보가 없습니다. 회원 프로필 연결이 필요합니다. 이 화면의 오류 코드는 PROFILE_NOT_FOUND 입니다.");
+   console.error("Dori Lounge profile missing for authenticated user",user.id);
+   return;
+  }
+
+  member(p,session);
+  const level=Number(p.user_level||1);
+  if(p.is_admin!==true&&level<2){
+   setLock("VIP 멤버십이 필요합니다","현재 등급은 "+(levels[level]||"일반")+"입니다. 프리미엄 등급 이상부터 라운지를 이용할 수 있습니다.");
+   return;
+  }
+
+  $("lockPanel").classList.remove("show");
+  $("loungeApp").classList.add("show");
+
+  stage="수집품 인벤토리 조회";
+  const inventoryResult=await client.from("user_inventory")
+   .select("item_id,purchased_at").eq("user_id",user.id).in("item_id",items.map(x=>x.id));
+  if(inventoryResult.error){
+   console.error("Dori Lounge inventory lookup failed",inventoryResult.error);
+   owned=new Set();
+   paintOwned();
+   toast("회원 정보는 확인됐지만 수집품 보유 여부를 불러오지 못했습니다.");
+  }else{
+   owned=new Set((inventoryResult.data||[]).map(x=>x.item_id));
+   paintOwned();
+  }
+  paintShop();
+  updateVisit();
+  greeting();
  }catch(e){
-  console.error("Dori Lounge account error",e);
-  let desc="회원 정보 조회에 실패했습니다. 로그인과 네트워크 연결을 확인한 뒤 다시 시도해 주세요.";
-  if(/permission|policy|row.level|rls/i.test(String(e.message)))desc="회원 정보 조회 권한을 확인하지 못했습니다. 계정 데이터 접근 정책을 확인해 주세요.";
-  else if(/network|fetch|timeout/i.test(String(e.message)))desc="서버 연결이 원활하지 않습니다. 네트워크 연결을 확인해 주세요.";
-  else if(/column|schema cache/i.test(String(e.message)))desc="회원 정보의 데이터 구조를 확인할 수 없습니다.";
-  showLock("회원 정보 연결 오류",desc);
+  console.error("Dori Lounge account load failed at: "+stage,e);
+  const code=String(e&&e.code||e&&e.status||"UNKNOWN");
+  let desc="단계: "+stage+" · 오류 코드: "+code+". 로그인 상태를 다시 확인하고 새로고침해 주세요.";
+  if(/permission|policy|row.level|rls/i.test(String(e&&e.message||"")))desc="단계: "+stage+" · 회원 데이터 조회 권한이 거부되었습니다. 로그인 계정의 RLS 접근 정책을 확인해야 합니다. 오류 코드: "+code;
+  else if(/network|fetch|timeout/i.test(String(e&&e.message||"")))desc="단계: "+stage+" · Supabase 서버에 연결하지 못했습니다. 네트워크 연결 후 다시 시도해 주세요.";
+  else if(/column|schema cache|does not exist/i.test(String(e&&e.message||"")))desc="단계: "+stage+" · 요청한 데이터 필드가 DB 구조와 일치하지 않습니다. 오류 코드: "+code;
+  setLock("회원 정보 연결 오류",desc);
  }
 }
 async function buy(id,button){
@@ -155,7 +237,6 @@ $("copyCollection").addEventListener("click",()=>copy("돌이 라운지 컬렉�
 $("shopSearch").addEventListener("input",paintShop);
 $("faqSearch").addEventListener("input",()=>{const q=$("faqSearch").value.trim().toLowerCase();document.querySelectorAll("#faqList details").forEach(d=>d.classList.toggle("hidden",!d.textContent.toLowerCase().includes(q)))});
 const hash=location.hash.slice(1);if(["home","salon","library","gallery","concierge","shop"].includes(hash))nav(hash);
-read();setTimer();greeting();load();
-if(db)db.auth.onAuthStateChange(event=>{if(["SIGNED_IN","SIGNED_OUT","TOKEN_REFRESHED","USER_UPDATED"].includes(event))setTimeout(load,0)});
+read();setTimer();greeting();void load();
 window.addEventListener("pagehide",()=>clearInterval(timer),{once:true});
 })();
