@@ -94,22 +94,25 @@
     <div class="feature-grid"><article class="feature-box"><h3>✧ 나만의 공간</h3><p>테마와 효과 설정은 이 브라우저에 저장되며 다음 방문에도 적용됩니다. 공용 기기에서는 개인 설정을 정리해 주세요.</p></article><article class="feature-box"><h3>♛ 프리미엄 멤버십</h3><p>라운지와 전용 상점은 프리미엄 등급 이상 회원에게 제공됩니다. 계정의 실제 등급과 구매 자격은 서버에서 확인합니다.</p></article></div>
   </section>
   <section class="view" id="view-library" data-view-panel="library">
-    <div class="section-head"><div><div class="section-kicker">PRIVATE LIBRARY</div><h2>나의 서재와 포커스 스위트</h2></div><p>메모와 타이머는 이 브라우저의 현재 계정 공간에만 저장됩니다.</p></div>
-    <div class="library-grid">
-      <article class="panel"><div class="panel-title"><h3>프라이빗 노트</h3><small>MY PRIVATE NOTES</small></div>
-        <label class="field-label" for="privateNote">기억하고 싶은 내용이나 오늘의 생각을 적어보세요.</label>
-        <textarea class="textarea" id="privateNote" maxlength="2000" placeholder="이곳에 작성한 메모는 현재 브라우저에만 저장됩니다."></textarea>
-        <div class="field-foot"><span id="noteStatus">자동 저장 준비</span><span id="noteCount">0 / 2,000</span></div>
-        <div class="action-row" style="justify-content:flex-start;margin-top:13px"><button class="secondary-btn" type="button" id="copyNote">메모 복사</button><button class="quiet-btn" type="button" id="clearNote">메모 비우기</button></div>
-        <p class="local-note">🔒 개인 메모는 서버에 업로드되지 않습니다. 브라우저 데이터 삭제 시 사라질 수 있습니다.</p>
-      </article>
-      <article class="panel timer-card"><div class="section-kicker">FOCUS SUITE</div><h3 style="margin:8px 0 0;font-size:19px;font-weight:400">집중 타이머</h3>
-        <div class="timer-ring"><div><div class="timer-value" id="timerValue">25:00</div><div class="timer-sub" id="timerStatus">집중할 시간을 골라보세요</div></div></div>
-        <div class="preset-row"><button class="preset-btn" type="button" data-minutes="15">15분</button><button class="preset-btn active" type="button" data-minutes="25">25분</button><button class="preset-btn" type="button" data-minutes="45">45분</button></div>
-        <div class="timer-actions"><button class="primary-btn" type="button" id="timerStart">시작</button><button class="secondary-btn" type="button" id="timerReset">초기화</button></div>
-      </article>
+    <div class="section-head"><div><div class="section-kicker">THE ROYAL LIBRARY</div><h2>돌이 월드 도서관</h2></div><p>이곳에서 돌이 월드의 이야기를 골라 읽고, 읽던 페이지와 책갈피를 이어갈 수 있습니다.</p></div>
+    <div class="library-intro">
+      <div class="library-intro-copy"><span class="library-overline">A QUIET PLACE FOR STORIES</span><h3>오늘은 어떤 이야기를 펼쳐 볼까요?</h3><p>책을 선택하면 집중해서 읽을 수 있는 독서 화면이 열립니다. 읽은 위치와 책갈피는 계정별로 이 브라우저에 저장됩니다.</p></div>
+      <div class="library-intro-mark" aria-hidden="true">✦</div>
     </div>
+    <div class="book-toolbar">
+      <div class="book-filter-row" role="group" aria-label="도서 필터">
+        <button class="book-filter active" type="button" data-book-filter="all">전체 도서</button>
+        <button class="book-filter" type="button" data-book-filter="continue">읽던 책</button>
+        <button class="book-filter" type="button" data-book-filter="favorites">즐겨찾기</button>
+      </div>
+      <label class="book-search-wrap"><span aria-hidden="true">⌕</span><input id="bookSearch" type="search" placeholder="책 제목, 장르, 내용 검색…" aria-label="도서 검색"></label>
+    </div>
+    <div class="book-shelf-summary"><span id="bookShelfCount">등록 도서 2권</span><span id="bookShelfProgress">독서 기록을 불러오는 중…</span></div>
+    <div class="book-grid" id="bookshelfGrid" aria-live="polite"></div>
+    <div class="book-shelf-empty hidden" id="bookshelfEmpty">조건에 맞는 책이 없습니다. 검색어나 필터를 바꿔 보세요.</div>
+    <p class="local-note">독서 진행도와 책갈피는 현재 브라우저의 계정별 저장 공간에 저장됩니다. 다른 기기와 자동 동기화되지는 않습니다.</p>
   </section>
+
   <section class="view" id="view-gallery" data-view-panel="gallery">
     <div class="section-head"><div><div class="section-kicker">ROYAL COLLECTION</div><h2>수집품 갤러리</h2></div><p>보유 아이템은 계정의 인벤토리 기록으로 표시됩니다.</p></div>
     <div class="shop-tools"><input class="text-input" id="collectionSearch" type="search" placeholder="수집품 이름 검색…" aria-label="수집품 검색"><button class="secondary-btn" type="button" id="copyCollection">컬렉션 목록 복사</button></div>
@@ -153,10 +156,46 @@
 </div>
 <footer class="footer">DORI WORLD · ROYAL DISTRICT · PRIVATE MEMBERS CLUB<br>PERSONAL SETTINGS ARE STORED LOCALLY ON THIS DEVICE</footer>
 </div>
+<div class="book-reader-overlay" id="bookReader" aria-hidden="true">
+  <section class="book-reader-dialog" role="dialog" aria-modal="true" aria-labelledby="bookReaderTitle">
+    <header class="book-reader-topbar">
+      <button class="reader-back" type="button" id="bookReaderClose" aria-label="도서관으로 돌아가기">← 도서관</button>
+      <div class="reader-topbar-label">DORI WORLD · DIGITAL LIBRARY</div>
+      <div class="reader-type-tools">
+        <button class="reader-tool" type="button" id="readerFontDown" aria-label="글자 작게">A−</button>
+        <button class="reader-tool" type="button" id="readerFontUp" aria-label="글자 크게">A＋</button>
+      </div>
+    </header>
+    <div class="book-reader-progress"><span id="bookReaderProgressBar"></span></div>
+    <div class="book-reader-heading">
+      <div class="reader-book-meta" id="bookReaderMeta">DORI LIBRARY</div>
+      <h2 id="bookReaderTitle">책 제목</h2>
+      <p id="bookReaderSubtitle">책 소개</p>
+      <div class="reader-chapter-row">
+        <label for="readerChapterSelect">목차</label>
+        <select id="readerChapterSelect" aria-label="읽을 장 선택"></select>
+        <span id="bookReaderPercent">0%</span>
+      </div>
+    </div>
+    <article class="book-reader-paper">
+      <div class="reader-paper-ornament" aria-hidden="true">✦</div>
+      <div class="reader-chapter-kicker" id="readerChapterKicker">CHAPTER 01</div>
+      <h3 id="readerChapterTitle">제1장</h3>
+      <div class="book-reader-body" id="bookReaderBody" tabindex="0"></div>
+      <div class="reader-endmark" aria-hidden="true">❦</div>
+    </article>
+    <footer class="book-reader-footer">
+      <button class="secondary-btn" type="button" id="readerPrev">이전 장</button>
+      <button class="reader-bookmark-btn" type="button" id="readerBookmark" aria-pressed="false">♡ 이 장 책갈피</button>
+      <button class="primary-btn" type="button" id="readerNext">다음 장 →</button>
+    </footer>
+  </section>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="../js/doldol-theme.js?v=20261023-notification-center-4"></script>
 <script src="../js/dori-sound.js?v=20261009-5"></script>
 <script src="../js/hancom-weight-normalizer.js?v=20261014-1"></script>
+<script src="./vip-lounge-books.js?v=20261107-books-1"></script>
 <script src="./vip-lounge.js?v=20261107-royal-2"></script>
 </body>
 </html>
