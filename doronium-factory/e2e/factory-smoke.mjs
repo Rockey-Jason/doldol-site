@@ -192,7 +192,7 @@ try {
   const fed = await desktop.evaluate(() => ({ survival: window.__doroniumFactoryTest.survival(), inventory: window.__doroniumFactoryTest.snapshot().inventory }));
   assert.equal(fed.survival.hunger, 88, "Clicking the desktop Eat button must restore hunger");
   assert.equal(fed.survival.health, 100, "Eating Dori Meat must restore a small amount of health");
-  assert.equal(fed.inventory.doriMeat, 1, "Clicking Eat must consume exactly one Dori Meat");
+  assert.equal(fed.inventory.ITEM_DORI_MEAT, 1, "Clicking Eat must consume exactly one canonical Dori Meat item");
   await desktop.locator("#drink-button").click();
   const hydrated = await desktop.evaluate(() => ({ survival: window.__doroniumFactoryTest.survival(), inventory: window.__doroniumFactoryTest.snapshot().inventory }));
   assert.equal(hydrated.survival.thirst, 92, "Clicking the desktop Drink button must restore thirst");
