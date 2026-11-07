@@ -237,4 +237,20 @@
     notificationScript.async = true;
     (document.head || document.documentElement).appendChild(notificationScript);
   }
+
+  /* Shared service finder: loaded once by the existing global site shell. */
+  if (!document.querySelector('link[data-dori-command-center-style]')) {
+    const hubStyle = document.createElement("link");
+    hubStyle.rel = "stylesheet";
+    hubStyle.href = siteAssetUrl("css/dori-command-center.css?v=20261108-1");
+    hubStyle.dataset.doriCommandCenterStyle = "true";
+    (document.head || document.documentElement).appendChild(hubStyle);
+  }
+  if (!document.querySelector('script[data-dori-command-center]')) {
+    const hubScript = document.createElement("script");
+    hubScript.src = siteAssetUrl("js/dori-command-center.js?v=20261108-1");
+    hubScript.dataset.doriCommandCenter = "true";
+    hubScript.async = true;
+    (document.head || document.documentElement).appendChild(hubScript);
+  }
 })();
