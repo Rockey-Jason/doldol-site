@@ -69,7 +69,7 @@ function paintPrefs(){
  document.querySelectorAll("[data-favorite]").forEach(b=>{const yes=prefs.favorites.includes(b.dataset.favorite);b.setAttribute("aria-pressed",String(yes));b.textContent=yes?"♥":"♡"});
 }
 function counter(){$("draftCount").textContent=$("supportDraft").value.length+" / 1,500"}
-function showLock(title,desc){$("lockTitle").textContent=title;$("lockDescription").textContent=desc;$("lockPanel").classList.add("show");$("loungeApp").classList.remove("show");$("loungeMusicPlayer").hidden=true}
+function showLock(title,desc){clearMusicIdleTimer();$("lockTitle").textContent=title;$("lockDescription").textContent=desc;$("lockPanel").classList.add("show");$("loungeApp").classList.remove("show");$("loungeMusicPlayer").hidden=true;document.body.classList.remove("lounge-music-expanded")}
 const setLock=showLock;
 function nav(name){
  const panel=document.querySelector('[data-view-panel="'+name+'"]');if(!panel)return;
@@ -123,6 +123,63 @@ function paintShop(){
  paintMusicShop();
 }
 
+const MUSIC_IDLE_DELAY=20000;
+let musicIdleTimer=0,musicMiniObserver=null;
+function clearMusicIdleTimer(){
+ if(musicIdleTimer){clearTimeout(musicIdleTimer);musicIdleTimer=0}
+}
+function positionMusicMini(){
+ const dock=$("loungeMusicPlayer");if(!dock)return;
+ const bell=document.querySelector("#dori-notification-root .dn-bell, .dn-bell");
+ const small=window.innerWidth<=600,size=small?46:52;
+ dock.style.setProperty("--music-mini-size",size+"px");
+ if(bell){
+  const rect=bell.getBoundingClientRect();
+  const right=Math.max(6,window.innerWidth-rect.left+10);
+  const bottom=Math.max(6,window.innerHeight-(rect.top+rect.height/2)-size/2);
+  dock.style.setProperty("--music-mini-right",right+"px");
+  dock.style.setProperty("--music-mini-bottom",bottom+"px");
+ }else{
+  dock.style.setProperty("--music-mini-right",(small?82:86)+"px");
+  dock.style.setProperty("--music-mini-bottom",(small?26:25)+"px");
+ }
+}
+function collapseMusicPlayer(){
+ const dock=$("loungeMusicPlayer");if(!dock||dock.hidden)return;
+ clearMusicIdleTimer();positionMusicMini();dock.classList.add("is-collapsed");
+ document.body.classList.remove("lounge-music-expanded");
+ const button=$("musicMiniExpand");
+ if(button){button.tabIndex=0;button.setAttribute("aria-expanded","false")}
+}
+function expandMusicPlayer(){
+ const dock=$("loungeMusicPlayer");if(!dock||dock.hidden)return;
+ clearMusicIdleTimer();positionMusicMini();dock.classList.remove("is-collapsed");
+ document.body.classList.add("lounge-music-expanded");
+ const button=$("musicMiniExpand");
+ if(button){button.tabIndex=-1;button.setAttribute("aria-expanded","true")}
+ armMusicIdleTimer();
+}
+function armMusicIdleTimer(){
+ clearMusicIdleTimer();
+ const dock=$("loungeMusicPlayer");
+ if(!dock||dock.hidden||dock.classList.contains("is-collapsed"))return;
+ musicIdleTimer=setTimeout(()=>{musicIdleTimer=0;collapseMusicPlayer()},MUSIC_IDLE_DELAY);
+}
+function noteMusicActivity(){
+ const dock=$("loungeMusicPlayer");
+ if(!dock||dock.hidden||dock.classList.contains("is-collapsed"))return;
+ armMusicIdleTimer();
+}
+function observeNotificationBell(){
+ positionMusicMini();
+ if(musicMiniObserver||!document.body)return;
+ musicMiniObserver=new MutationObserver(()=>{
+  if(document.querySelector("#dori-notification-root .dn-bell, .dn-bell")){
+   positionMusicMini();musicMiniObserver.disconnect();musicMiniObserver=null;
+  }
+ });
+ musicMiniObserver.observe(document.body,{childList:true,subtree:true});
+}
 function ownedMusicTracks(){return musicCatalog.filter(track=>ownedMusic.has(track.id))}
 function selectedMusic(){return musicCatalog.find(track=>track.id===prefs.musicTrack)||musicCatalog[0]}
 function renderMusicPlayer(){
@@ -167,12 +224,14 @@ function paintMusicShop(){
  $("musicShopCount").textContent="음악 "+tracks.length+"종 · 보유 "+ownedMusic.size+"종";
 }
 async function chooseAndPlayMusic(trackId){
+ expandMusicPlayer();
  if(!ownedMusic.has(trackId)){toast("구매한 음악만 재생할 수 있습니다.");return}
  prefs.musicTrack=trackId;save();renderMusicPlayer();paintMusicShop();
  try{await window.DoriLoungeAudio.play(trackId)}
  catch(error){console.error("Lounge music playback failed",error);toast("음악을 재생하지 못했습니다. 플레이어의 재생 버튼을 다시 눌러 주세요.")}
 }
 async function toggleLoungeMusic(){
+ expandMusicPlayer();
  const engine=window.DoriLoungeAudio;if(!engine){toast("음악 엔진을 불러오지 못했습니다.");return}
  try{const state=engine.getState();if(state.playing){engine.pause();return}await engine.play(prefs.musicTrack||"lounge_music_royal_piano")}
  catch(error){console.error("Lounge music playback failed",error);toast("브라우저에서 음악을 시작하지 못했습니다. 다시 눌러 주세요.")}
@@ -555,6 +614,10 @@ async function load(){
   $("lockPanel").classList.remove("show");
   $("loungeApp").classList.add("show");
   $("loungeMusicPlayer").hidden=false;
+  $("loungeMusicPlayer").classList.remove("is-collapsed");
+  document.body.classList.add("lounge-music-expanded");
+  observeNotificationBell();
+  armMusicIdleTimer();
 
   stage="수집품 및 음악 인벤토리 조회";
   const inventoryIds=items.map(item=>item.id).concat(musicCatalog.filter(track=>!track.free).map(track=>track.id));
@@ -630,8 +693,16 @@ $("retryAccount").addEventListener("click",async()=>{
  try{await load()}finally{button.disabled=false;button.textContent="다시 확인"}
 });
 wireBookReader();
+const musicDock=$("loungeMusicPlayer");
+["pointerdown","keydown","input","change","click"].forEach(type=>musicDock.addEventListener(type,noteMusicActivity,{passive:true}));
+$("musicMiniExpand").addEventListener("click",event=>{
+ event.stopPropagation();expandMusicPlayer();
+ $("musicPlayToggle").focus({preventScroll:true});
+});
+window.addEventListener("resize",positionMusicMini,{passive:true});
 $("musicPlayToggle").addEventListener("click",()=>void toggleLoungeMusic());
 $("musicTrackSelect").addEventListener("change",()=>{
+ expandMusicPlayer();
  const id=$("musicTrackSelect").value;
  const wasPlaying=window.DoriLoungeAudio&&window.DoriLoungeAudio.getState().playing;
  prefs.musicTrack=id;save();renderMusicPlayer();paintMusicShop();
@@ -657,5 +728,9 @@ window.addEventListener("dori-lounge-music-state",event=>{
 renderMusicPlayer();
 window.DoriLoungeAudio.setVolume(prefs.musicVolume);
 void load();
-window.addEventListener("pagehide",()=>{if(readerScrollTimer)clearTimeout(readerScrollTimer)},{once:true});
+window.addEventListener("pagehide",()=>{
+ if(readerScrollTimer)clearTimeout(readerScrollTimer);
+ clearMusicIdleTimer();
+ if(musicMiniObserver){musicMiniObserver.disconnect();musicMiniObserver=null}
+},{once:true});
 })();
