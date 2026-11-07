@@ -31,10 +31,18 @@ const items=[
 {id:"vip_royal_crown_collectible",name:"로열 골드 왕관 오브제"},
 {id:"vip_aurora_crystal_collectible",name:"오로라 크리스탈 장식"}
 ];
+const musicCatalog=[
+ {id:"lounge_music_royal_piano",name:"로열 피아노",mood:"화이트 마블 라운지에 어울리는 부드러운 피아노와 따뜻한 패드",style:"SIGNATURE · FREE",price:0,free:true,icon:"♬"},
+ {id:"lounge_music_velvet_jazz",name:"벨벳 재즈 라운지",mood:"부드러운 로즈 피아노와 은은한 재즈 코드",style:"VELVET JAZZ",price:18000,icon:"♫"},
+ {id:"lounge_music_rainy_library",name:"비 내리는 로열 서재",mood:"느린 피아노 선율과 깊은 잔향이 있는 독서 음악",style:"RAINY READING",price:14000,icon:"☂"},
+ {id:"lounge_music_midnight_gold",name:"미드나이트 골드",mood:"늦은 밤을 위한 낮고 포근한 라운지 사운드",style:"MIDNIGHT",price:32000,icon:"✧"},
+ {id:"lounge_music_crystal_atrium",name:"크리스탈 아트리움",mood:"맑은 벨 톤과 넓은 공간감을 가진 우아한 연주",style:"CRYSTAL",price:28000,icon:"◇"},
+ {id:"lounge_music_garden_terrace",name:"가든 테라스",mood:"햇살이 들어오는 테라스처럼 가벼운 어쿠스틱 톤",style:"GARDEN",price:22000,icon:"❋"}
+];
 const levels={1:"일반",2:"프리미엄",3:"돌프리미엄",4:"돌돌프리미엄",5:"돌돌돌프리미엄",6:"돌돌돌돌프리미엄",7:"돌돌돌돌돌프리미엄",8:"유사돌이",9:"돌이",10:"관리자"};
 const BOOKS=window.DoriLoungeBooks||[];
 const BOOK_DEFAULTS=BOOKS.map(book=>({...book,chapters:(book.chapters||[]).map(chapter=>({...chapter}))}));
-let user=null,profile=null,owned=new Set(),prefs={theme:"marble",ambient:true,draft:"",favorites:[],visit:null};
+let user=null,profile=null,owned=new Set(),ownedMusic=new Set(["lounge_music_royal_piano"]),prefs={theme:"marble",ambient:true,draft:"",favorites:[],visit:null,musicTrack:"lounge_music_royal_piano",musicVolume:0.62};
 let storeKey="dori-lounge:guest",bookStoreKey="dori-lounge-books:guest",toastTimer=0;
 let bookState={progress:{},favorites:[],bookmarks:{},fontScale:1};
 let activeBook=null,activeChapter=0,savedReaderScroll=0,readerScrollTimer=0,editorDraft=null;
@@ -45,6 +53,8 @@ function read(){
  try{const v=JSON.parse(localStorage.getItem(storeKey)||"null");if(v&&typeof v==="object")prefs={...prefs,...v}}catch(e){}
  if(!["marble","midnight","rose"].includes(prefs.theme))prefs.theme="marble";
  if(!Array.isArray(prefs.favorites))prefs.favorites=[];
+ if(!musicCatalog.some(track=>track.id===prefs.musicTrack))prefs.musicTrack="lounge_music_royal_piano";
+ prefs.musicVolume=Math.max(0,Math.min(1,Number(prefs.musicVolume??0.62)));
  delete prefs.note;
  document.body.dataset.theme=prefs.theme;
  document.body.classList.toggle("ambient-on",prefs.ambient!==false);
@@ -65,7 +75,7 @@ function nav(name){
  document.querySelectorAll("[data-view-panel]").forEach(p=>p.classList.toggle("active",p===panel));
  document.querySelectorAll(".room-tab").forEach(b=>b.classList.toggle("active",b.dataset.view===name));
  try{history.replaceState(null,"","#"+name)}catch(e){}
- if(name==="shop")paintShop();
+ if(name==="shop"){paintShop();paintMusicShop()}
  if(name==="library")renderBooks();
  window.scrollTo({top:document.querySelector(".room-nav").offsetTop-10,behavior:matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth"});
 }
@@ -109,8 +119,97 @@ function paintShop(){
   button.onclick=()=>buy(card.dataset.item,button);
  });
  $("shopCount").textContent="검색 결과 "+count+"종";
+ paintMusicShop();
 }
 
+function ownedMusicTracks(){return musicCatalog.filter(track=>ownedMusic.has(track.id))}
+function selectedMusic(){return musicCatalog.find(track=>track.id===prefs.musicTrack)||musicCatalog[0]}
+function renderMusicPlayer(){
+ const select=$("musicTrackSelect");if(!select)return;
+ const tracks=ownedMusicTracks();
+ if(!tracks.some(track=>track.id===prefs.musicTrack))prefs.musicTrack=tracks[0]?.id||musicCatalog[0].id;
+ select.replaceChildren();
+ tracks.forEach(track=>{const option=document.createElement("option");option.value=track.id;option.textContent=track.name;select.append(option)});
+ select.value=prefs.musicTrack;
+ const state=window.DoriLoungeAudio?window.DoriLoungeAudio.getState():{trackId:null,playing:false,volume:prefs.musicVolume};
+ const displayId=state.playing?state.trackId:prefs.musicTrack;
+ const track=musicCatalog.find(item=>item.id===displayId)||selectedMusic();
+ $("musicNowTitle").textContent=track.name;
+ $("musicNowMood").textContent=track.mood;
+ $("musicPlayToggle").textContent=state.playing?"Ⅱ":"▶";
+ $("musicPlayToggle").setAttribute("aria-label",state.playing?"음악 일시 정지":"음악 재생");
+ $("musicPlayerStatus").textContent=state.playing?"NOW PLAYING · ORIGINAL LOUNGE MUSIC":"재생 버튼을 눌러 라운지 음악을 시작하세요.";
+ $("loungeMusicPlayer").classList.toggle("is-playing",Boolean(state.playing));
+ $("musicVolume").value=String(Math.round((prefs.musicVolume??0.62)*100));
+}
+function paintMusicShop(){
+ const grid=$("musicShopGrid");if(!grid)return;
+ const query=String($("musicShopSearch").value||"").trim().toLocaleLowerCase("ko-KR");
+ const tracks=musicCatalog.filter(track=>!query||[track.name,track.mood,track.style].join(" ").toLocaleLowerCase("ko-KR").includes(query));
+ grid.replaceChildren();
+ tracks.forEach(track=>{
+  const isOwned=ownedMusic.has(track.id);
+  const card=document.createElement("article");card.className="music-shop-card"+(isOwned?" owned":"");
+  const art=document.createElement("div");art.className="music-shop-art music-art-"+track.id.replace("lounge_music_","");
+  const symbol=document.createElement("span");symbol.textContent=track.icon;art.append(symbol);
+  const content=document.createElement("div");content.className="music-shop-content";
+  const style=document.createElement("div");style.className="music-shop-style";style.textContent=track.style;
+  const title=document.createElement("h3");title.textContent=track.name;
+  const mood=document.createElement("p");mood.textContent=track.mood;
+  const footer=document.createElement("div");footer.className="music-shop-footer";
+  const price=document.createElement("span");price.className="music-shop-price";price.textContent=track.free?"무료 기본 음악":format(track.price)+" 코인";
+  const button=document.createElement("button");button.type="button";button.className="music-shop-action";
+  if(isOwned){button.textContent=prefs.musicTrack===track.id?"선택됨 · 재생":"보유 중 · 재생";button.addEventListener("click",()=>void chooseAndPlayMusic(track.id))}
+  else{button.textContent="구매하기";button.addEventListener("click",()=>void buyMusic(track.id,button))}
+  footer.append(price,button);content.append(style,title,mood,footer);card.append(art,content);grid.append(card);
+ });
+ $("musicShopCount").textContent="음악 "+tracks.length+"종 · 보유 "+ownedMusic.size+"종";
+}
+async function chooseAndPlayMusic(trackId){
+ if(!ownedMusic.has(trackId)){toast("구매한 음악만 재생할 수 있습니다.");return}
+ prefs.musicTrack=trackId;save();renderMusicPlayer();paintMusicShop();
+ try{await window.DoriLoungeAudio.play(trackId)}
+ catch(error){console.error("Lounge music playback failed",error);toast("음악을 재생하지 못했습니다. 플레이어의 재생 버튼을 다시 눌러 주세요.")}
+}
+async function toggleLoungeMusic(){
+ const engine=window.DoriLoungeAudio;if(!engine){toast("음악 엔진을 불러오지 못했습니다.");return}
+ try{const state=engine.getState();if(state.playing){engine.pause();return}await engine.play(prefs.musicTrack||"lounge_music_royal_piano")}
+ catch(error){console.error("Lounge music playback failed",error);toast("브라우저에서 음악을 시작하지 못했습니다. 다시 눌러 주세요.")}
+}
+function stepMusic(direction){
+ const tracks=ownedMusicTracks();if(!tracks.length)return;
+ let index=tracks.findIndex(track=>track.id===prefs.musicTrack);
+ index=(index+direction+tracks.length)%tracks.length;
+ const id=tracks[index].id;
+ const playing=window.DoriLoungeAudio&&window.DoriLoungeAudio.getState().playing;
+ if(playing)void chooseAndPlayMusic(id);
+ else{prefs.musicTrack=id;save();renderMusicPlayer();paintMusicShop()}
+}
+async function buyMusic(id,button){
+ if(!db||!user){toast("로그인 상태를 확인해 주세요.");return}
+ const track=musicCatalog.find(item=>item.id===id);
+ if(!track||track.free){toast("구매할 수 없는 음악입니다.");return}
+ if(ownedMusic.has(id)){toast("이미 보유한 음악입니다.");return}
+ button.disabled=true;button.textContent="구매 처리 중…";
+ try{
+  const {data,error}=await db.rpc("purchase_vip_lounge_music",{p_music_id:id});
+  if(error)throw error;
+  const result=Array.isArray(data)?data[0]:data;
+  if(!result||result.success!==true)throw new Error("Purchase not completed");
+  ownedMusic.add(id);prefs.musicTrack=id;save();
+  $("memberCoins").textContent=format(result.doldolcoin)+" C";
+  renderMusicPlayer();paintMusicShop();
+  toast((result.item_name||track.name)+" 구매 완료! 아래 플레이어에서 재생할 수 있어요.");
+  if(window.DoriSound)window.DoriSound.play("success");
+ }catch(error){
+  const message=String(error&&error.message||"");
+  if(/돌돌코인|부족/.test(message))toast("돌돌코인이 부족합니다.");
+  else if(/이미 보유|duplicate|23505/i.test(message))toast("이미 보유한 음악입니다.");
+  else if(/로그인|JWT|42501|VIP/i.test(message))toast("로그인 또는 VIP 회원 권한을 확인해 주세요.");
+  else toast("음악 구매에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+  console.error("Lounge music purchase failed",error);
+ }finally{button.disabled=false;paintMusicShop()}
+}
 function hasBookContent(book){
  return Boolean(book&&Array.isArray(book.chapters)&&book.chapters.some(chapter=>String(chapter.content||"").trim()));
 }
@@ -455,17 +554,21 @@ async function load(){
   $("lockPanel").classList.remove("show");
   $("loungeApp").classList.add("show");
 
-  stage="수집품 인벤토리 조회";
+  stage="수집품 및 음악 인벤토리 조회";
+  const inventoryIds=items.map(item=>item.id).concat(musicCatalog.filter(track=>!track.free).map(track=>track.id));
   const inventoryResult=await client.from("user_inventory")
-   .select("item_id,purchased_at").eq("user_id",user.id).in("item_id",items.map(x=>x.id));
+   .select("item_id,purchased_at").eq("user_id",user.id).in("item_id",inventoryIds);
   if(inventoryResult.error){
    console.error("Dori Lounge inventory lookup failed",inventoryResult.error);
    owned=new Set();
-   paintOwned();
-   toast("회원 정보는 확인됐지만 수집품 보유 여부를 불러오지 못했습니다.");
+   ownedMusic=new Set(["lounge_music_royal_piano"]);
+   paintOwned();renderMusicPlayer();paintMusicShop();
+   toast("회원 정보는 확인됐지만 보유 음악을 불러오지 못했습니다.");
   }else{
-   owned=new Set((inventoryResult.data||[]).map(x=>x.item_id));
-   paintOwned();
+   const inventoryFound=new Set((inventoryResult.data||[]).map(item=>item.item_id));
+   owned=new Set(items.map(item=>item.id).filter(id=>inventoryFound.has(id)));
+   ownedMusic=new Set(["lounge_music_royal_piano",...musicCatalog.filter(track=>!track.free&&inventoryFound.has(track.id)).map(track=>track.id)]);
+   paintOwned();renderMusicPlayer();paintMusicShop();
   }
   paintShop();
   renderBooks();
@@ -525,6 +628,32 @@ $("retryAccount").addEventListener("click",async()=>{
  try{await load()}finally{button.disabled=false;button.textContent="다시 확인"}
 });
 wireBookReader();
+$("musicPlayToggle").addEventListener("click",()=>void toggleLoungeMusic());
+$("musicTrackSelect").addEventListener("change",()=>{
+ const id=$("musicTrackSelect").value;
+ const wasPlaying=window.DoriLoungeAudio&&window.DoriLoungeAudio.getState().playing;
+ prefs.musicTrack=id;save();renderMusicPlayer();paintMusicShop();
+ if(wasPlaying)void chooseAndPlayMusic(id);
+});
+$("musicPrev").addEventListener("click",()=>stepMusic(-1));
+$("musicNext").addEventListener("click",()=>stepMusic(1));
+$("musicVolume").addEventListener("input",()=>{
+ prefs.musicVolume=Number($("musicVolume").value)/100;
+ window.DoriLoungeAudio.setVolume(prefs.musicVolume);
+});
+$("musicVolume").addEventListener("change",save);
+$("musicShopSearch").addEventListener("input",paintMusicShop);
+$("musicShopJump").addEventListener("click",()=>{
+ nav("shop");
+ setTimeout(()=>$("musicStore").scrollIntoView({behavior:"smooth",block:"start"}),180);
+});
+window.addEventListener("dori-lounge-music-state",event=>{
+ const state=event.detail||{};
+ if(state.trackId&&ownedMusic.has(state.trackId))prefs.musicTrack=state.trackId;
+ renderMusicPlayer();
+});
+renderMusicPlayer();
+window.DoriLoungeAudio.setVolume(prefs.musicVolume);
 void load();
 window.addEventListener("pagehide",()=>{if(readerScrollTimer)clearTimeout(readerScrollTimer)},{once:true});
 })();
