@@ -452,3 +452,12 @@ body[data-theme="rose"] .lounge-music-player.is-collapsed{background:linear-grad
  .lounge-music-player.is-collapsed .music-mini-expand{font-size:25px}
 }
 @media(prefers-reduced-motion:reduce){.lounge-music-player,.lounge-music-player *{transition:none!important;animation:none!important}}
+
+
+/* Keep the same center anchor while the dock travels toward the bell. */
+.lounge-music-player.is-collapsed{left:50%;right:auto;transform:translateX(calc(-50% + var(--music-mini-shift,0px)))}
+.lounge-music-player.is-collapsed .music-player-art>span{opacity:0;visibility:hidden}
+@media(max-width:620px){
+ .lounge-music-player{left:50%;right:auto;width:calc(100vw - 16px);transform:translateX(-50%)}
+ .lounge-music-player.is-collapsed{left:50%;right:auto;width:var(--music-mini-size,46px);transform:translateX(calc(-50% + var(--music-mini-shift,0px)))}
+}
