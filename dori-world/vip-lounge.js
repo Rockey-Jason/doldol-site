@@ -318,20 +318,23 @@ async function saveBookEdit(){
  }));
  if(!chapters.length)chapters.push({title:"제1장",content:""});
  const subtitle=String($("editorBookSubtitle").value||"").trim().slice(0,300);
+ const targetBook=activeBook;
  const button=$("saveBookEdit");button.disabled=true;button.textContent="저장 중…";
  try{
   const client=db||await getClient();
   const {error}=await client.from("dori_library_books").upsert({
-   book_id:activeBook.id,
+   book_id:targetBook.id,
    subtitle,
    chapters,
    updated_by:user.id,
    updated_at:new Date().toISOString()
   },{onConflict:"book_id"});
   if(error)throw error;
-  activeBook.subtitle=subtitle;activeBook.chapters=chapters;
-  delete bookState.progress[activeBook.id];delete bookState.bookmarks[activeBook.id];
-  saveBookState();editorDraft=null;renderReader();renderBooks();
+  targetBook.subtitle=subtitle;targetBook.chapters=chapters;
+  delete bookState.progress[targetBook.id];delete bookState.bookmarks[targetBook.id];
+  saveBookState();editorDraft=null;
+  if(activeBook===targetBook)renderReader();
+  renderBooks();
   toast("원고를 저장했습니다. 모든 회원에게 반영됩니다.");
  }catch(error){
   console.error("VIP Library manuscript save failed",error);
@@ -388,6 +391,8 @@ function wireBookReader(){
 }
 
 async function load(){
+ profile=null;
+ renderBooks();
  let stage="인증 모듈 초기화";
  try{
   const client=await getClient();
