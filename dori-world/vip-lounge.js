@@ -152,7 +152,10 @@ function collapseMusicPlayer(){
  clearMusicIdleTimer();positionMusicMini();dock.classList.add("is-collapsed");
  document.body.classList.remove("lounge-music-expanded");
  const button=$("musicMiniExpand");
- if(button){button.tabIndex=0;button.setAttribute("aria-expanded","false")}
+ if(button){
+  button.tabIndex=0;button.setAttribute("aria-expanded","false");
+  if(dock.contains(document.activeElement))button.focus({preventScroll:true});
+ }
 }
 function expandMusicPlayer(){
  const dock=$("loungeMusicPlayer");if(!dock||dock.hidden)return;
