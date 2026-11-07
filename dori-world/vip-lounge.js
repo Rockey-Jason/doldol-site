@@ -33,11 +33,12 @@ const items=[
 ];
 const musicCatalog=[
  {id:"lounge_music_royal_piano",name:"로열 피아노",mood:"화이트 마블 라운지에 어울리는 부드러운 피아노와 따뜻한 패드",style:"SIGNATURE · FREE",price:0,free:true,icon:"♬"},
- {id:"lounge_music_velvet_jazz",name:"벨벳 재즈 라운지",mood:"부드러운 로즈 피아노와 은은한 재즈 코드",style:"VELVET JAZZ",price:18000,icon:"♫"},
- {id:"lounge_music_rainy_library",name:"비 내리는 로열 서재",mood:"느린 피아노 선율과 깊은 잔향이 있는 독서 음악",style:"RAINY READING",price:14000,icon:"☂"},
- {id:"lounge_music_midnight_gold",name:"미드나이트 골드",mood:"늦은 밤을 위한 낮고 포근한 라운지 사운드",style:"MIDNIGHT",price:32000,icon:"✧"},
- {id:"lounge_music_crystal_atrium",name:"크리스탈 아트리움",mood:"맑은 벨 톤과 넓은 공간감을 가진 우아한 연주",style:"CRYSTAL",price:28000,icon:"◇"},
- {id:"lounge_music_garden_terrace",name:"가든 테라스",mood:"햇살이 들어오는 테라스처럼 가벼운 어쿠스틱 톤",style:"GARDEN",price:22000,icon:"❋"}
+ {id:"lounge_music_velvet_jazz",name:"벨벳 재즈 라운지",mood:"따뜻한 로즈 피아노와 싱코페이션이 있는 세련된 재즈 멜로디",style:"VELVET JAZZ",price:18000,icon:"♫"},
+ {id:"lounge_music_rainy_library",name:"비 내리는 로열 서재",mood:"여백이 있는 하행 피아노 선율과 긴 잔향으로 만든 고요한 독서 음악",style:"RAINY READING",price:14000,icon:"☂"},
+ {id:"lounge_music_midnight_gold",name:"미드나이트 골드",mood:"낮은 음역의 깊은 코드와 은은하게 이어지는 밤의 피아노 멜로디",style:"MIDNIGHT",price:32000,icon:"✧"},
+ {id:"lounge_music_crystal_atrium",name:"크리스탈 아트리움",mood:"높은 셀레스타 멜로디와 반짝이는 화음이 층층이 쌓이는 연주",style:"CRYSTAL",price:28000,icon:"◇"},
+ {id:"lounge_music_garden_terrace",name:"가든 테라스",mood:"나른한 오후의 정원처럼 산뜻한 아르페지오와 부드러운 현악 패드",style:"GARDEN",price:22000,icon:"❋"},
+ {id:"lounge_music_christmas_hotel",name:"눈 내리는 크리스마스 호텔",mood:"창밖의 눈과 벽난로의 온기를 담은 오리지널 캐럴풍 피아노와 셀레스타",style:"WINTER SIGNATURE",price:36000,icon:"❄"}
 ];
 const levels={1:"일반",2:"프리미엄",3:"돌프리미엄",4:"돌돌프리미엄",5:"돌돌돌프리미엄",6:"돌돌돌돌프리미엄",7:"돌돌돌돌돌프리미엄",8:"유사돌이",9:"돌이",10:"관리자"};
 const BOOKS=window.DoriLoungeBooks||[];
@@ -188,6 +189,29 @@ function observeNotificationBell(){
 }
 function ownedMusicTracks(){return musicCatalog.filter(track=>ownedMusic.has(track.id))}
 function selectedMusic(){return musicCatalog.find(track=>track.id===prefs.musicTrack)||musicCatalog[0]}
+function formatMusicTime(seconds){
+ const total=Math.max(0,Math.floor(Number(seconds)||0));
+ return Math.floor(total/60)+":"+String(total%60).padStart(2,"0");
+}
+function renderMusicProgress(stateOverride){
+ const engine=window.DoriLoungeAudio;
+ const state=stateOverride||(engine?engine.getState():{});
+ const track=musicCatalog.find(item=>item.id===prefs.musicTrack)||musicCatalog[0];
+ const matchesCurrent=Boolean(state.trackId&&state.trackId===track.id);
+ const info=engine&&engine.getTrackInfo?engine.getTrackInfo(track.id):null;
+ const duration=matchesCurrent?Number(state.duration||0):Number(info?.duration||0);
+ const elapsed=matchesCurrent?Math.min(duration,Number(state.elapsed||0)):0;
+ const progress=duration?Math.max(0,Math.min(1,elapsed/duration)):0;
+ const remaining=Math.max(0,duration-elapsed);
+ const bar=$("musicProgressTrack"),fill=$("musicProgressFill");
+ if(bar){
+  bar.setAttribute("aria-valuenow",String(Math.round(progress*100)));
+  bar.setAttribute("aria-valuetext",formatMusicTime(elapsed)+" 경과, "+formatMusicTime(remaining)+" 남음");
+ }
+ if(fill)fill.style.transform="scaleX("+progress+")";
+ if($("musicElapsed"))$("musicElapsed").textContent=formatMusicTime(elapsed);
+ if($("musicRemaining"))$("musicRemaining").textContent=(state.finished&&matchesCurrent)?"재생 완료":"남음 "+formatMusicTime(remaining);
+}
 function renderMusicPlayer(){
  const select=$("musicTrackSelect");if(!select)return;
  const tracks=ownedMusicTracks();
@@ -198,13 +222,15 @@ function renderMusicPlayer(){
  const state=window.DoriLoungeAudio?window.DoriLoungeAudio.getState():{trackId:null,playing:false,volume:prefs.musicVolume};
  const displayId=state.playing?state.trackId:prefs.musicTrack;
  const track=musicCatalog.find(item=>item.id===displayId)||selectedMusic();
+ const isCurrent=state.trackId===displayId;
  $("musicNowTitle").textContent=track.name;
  $("musicNowMood").textContent=track.mood;
  $("musicPlayToggle").textContent=state.playing?"Ⅱ":"▶";
- $("musicPlayToggle").setAttribute("aria-label",state.playing?"음악 일시 정지":"음악 재생");
- $("musicPlayerStatus").textContent=state.playing?"NOW PLAYING · ORIGINAL LOUNGE MUSIC":"재생 버튼을 눌러 라운지 음악을 시작하세요.";
+ $("musicPlayToggle").setAttribute("aria-label",state.playing?"음악 일시 정지":state.finished&&isCurrent?"음악 처음부터 재생":"음악 재생");
+ $("musicPlayerStatus").textContent=state.playing&&isCurrent?"NOW PLAYING · ORIGINAL LOUNGE MUSIC":state.finished&&isCurrent?"FINISHED · PLAY TO RESTART":!state.playing&&isCurrent?"PAUSED · YOUR PLACE IS SAVED":"재생 버튼을 눌러 라운지 음악을 시작하세요.";
  $("loungeMusicPlayer").classList.toggle("is-playing",Boolean(state.playing));
  $("musicVolume").value=String(Math.round((prefs.musicVolume??0.62)*100));
+ renderMusicProgress(state);
 }
 function paintMusicShop(){
  const grid=$("musicShopGrid");if(!grid)return;
@@ -748,6 +774,7 @@ $("musicShopJump").addEventListener("click",()=>{
 window.addEventListener("dori-lounge-music-state",event=>{
  const state=event.detail||{};
  if(state.trackId&&ownedMusic.has(state.trackId))prefs.musicTrack=state.trackId;
+ if(state.progressTick){renderMusicProgress(state);return}
  renderMusicPlayer();
 });
 renderMusicPlayer();
