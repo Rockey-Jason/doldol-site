@@ -135,12 +135,15 @@ function positionMusicMini(){
  dock.style.setProperty("--music-mini-size",size+"px");
  if(bell){
   const rect=bell.getBoundingClientRect();
-  const right=Math.max(6,window.innerWidth-rect.left+10);
+  const targetLeft=rect.left-size-10;
+  const shift=targetLeft+size/2-window.innerWidth/2;
   const bottom=Math.max(6,window.innerHeight-(rect.top+rect.height/2)-size/2);
-  dock.style.setProperty("--music-mini-right",right+"px");
+  dock.style.setProperty("--music-mini-shift",shift+"px");
   dock.style.setProperty("--music-mini-bottom",bottom+"px");
  }else{
-  dock.style.setProperty("--music-mini-right",(small?82:86)+"px");
+  const targetLeft=window.innerWidth-(small?82:86)-size;
+  const shift=targetLeft+size/2-window.innerWidth/2;
+  dock.style.setProperty("--music-mini-shift",shift+"px");
   dock.style.setProperty("--music-mini-bottom",(small?26:25)+"px");
  }
 }
