@@ -32,13 +32,13 @@ const items=[
 {id:"vip_aurora_crystal_collectible",name:"오로라 크리스탈 장식",price:250000}
 ];
 const musicCatalog=[
- {id:"lounge_music_royal_piano",name:"로열 피아노",mood:"화이트 마블 라운지에 어울리는 부드러운 피아노와 따뜻한 패드",style:"SIGNATURE · FREE",price:0,free:true,icon:"♬"},
- {id:"lounge_music_velvet_jazz",name:"벨벳 재즈 라운지",mood:"따뜻한 로즈 피아노와 싱코페이션이 있는 세련된 재즈 멜로디",style:"VELVET JAZZ",price:18000,icon:"♫"},
- {id:"lounge_music_rainy_library",name:"비 내리는 로열 서재",mood:"여백이 있는 하행 피아노 선율과 긴 잔향으로 만든 고요한 독서 음악",style:"RAINY READING",price:14000,icon:"☂"},
- {id:"lounge_music_midnight_gold",name:"미드나이트 골드",mood:"낮은 음역의 깊은 코드와 은은하게 이어지는 밤의 피아노 멜로디",style:"MIDNIGHT",price:32000,icon:"✧"},
- {id:"lounge_music_crystal_atrium",name:"크리스탈 아트리움",mood:"높은 셀레스타 멜로디와 반짝이는 화음이 층층이 쌓이는 연주",style:"CRYSTAL",price:28000,icon:"◇"},
- {id:"lounge_music_garden_terrace",name:"가든 테라스",mood:"나른한 오후의 정원처럼 산뜻한 아르페지오와 부드러운 현악 패드",style:"GARDEN",price:22000,icon:"❋"},
- {id:"lounge_music_christmas_hotel",name:"눈 내리는 크리스마스 호텔",mood:"창밖의 눈과 벽난로의 온기를 담은 오리지널 캐럴풍 피아노와 셀레스타",style:"WINTER SIGNATURE",price:36000,icon:"❄"}
+ {id:"lounge_music_royal_piano",name:"로열 피아노",mood:"호텔 로비의 그랜드 피아노처럼 따뜻한 선율과 은은한 현악 패드",style:"SIGNATURE · FREE",price:0,free:true,icon:"♬"},
+ {id:"lounge_music_velvet_jazz",name:"벨벳 재즈 라운지",mood:"부드러운 로즈 피아노와 가벼운 스윙, 세련된 재즈 화음이 흐르는 이브닝 라운지",style:"VELVET JAZZ",price:18000,icon:"♫"},
+ {id:"lounge_music_rainy_library",name:"비 내리는 로열 서재",mood:"비 오는 호텔 창가를 떠올리게 하는 펠트 피아노와 잔잔한 코드 보이싱",style:"RAINY READING",price:14000,icon:"☂"},
+ {id:"lounge_music_midnight_gold",name:"미드나이트 골드",mood:"깊은 로즈 피아노와 낮은 베이스가 어우러지는 조용한 나이트 라운지",style:"MIDNIGHT",price:32000,icon:"✧"},
+ {id:"lounge_music_crystal_atrium",name:"크리스탈 아트리움",mood:"따뜻한 그랜드 피아노와 넓은 공간감의 화음으로 완성한 아트리움 라운지",style:"CRYSTAL",price:28000,icon:"◇"},
+ {id:"lounge_music_garden_terrace",name:"가든 테라스",mood:"햇살 드는 호텔 테라스처럼 부드러운 피아노 컴핑과 산뜻한 재즈 선율",style:"GARDEN",price:22000,icon:"❋"},
+ {id:"lounge_music_christmas_hotel",name:"눈 내리는 크리스마스 호텔",mood:"눈 내리는 호텔 라운지의 온기를 담은 부드러운 피아노와 은은한 겨울 장식음",style:"WINTER SIGNATURE",price:36000,icon:"❄"}
 ];
 const levels={1:"일반",2:"프리미엄",3:"돌프리미엄",4:"돌돌프리미엄",5:"돌돌돌프리미엄",6:"돌돌돌돌프리미엄",7:"돌돌돌돌돌프리미엄",8:"유사돌이",9:"돌이",10:"관리자"};
 const BOOKS=window.DoriLoungeBooks||[];
