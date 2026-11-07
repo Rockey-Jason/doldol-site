@@ -173,6 +173,34 @@
 </div>
 <footer class="footer">DORI WORLD · ROYAL DISTRICT · PRIVATE MEMBERS CLUB<br>PERSONAL SETTINGS ARE STORED LOCALLY ON THIS DEVICE</footer>
 </div>
+<aside class="lounge-music-player" id="loungeMusicPlayer" aria-label="라운지 음악 플레이어">
+  <div class="music-player-art" aria-hidden="true">
+    <span>♫</span>
+    <div class="music-player-bars"><i></i><i></i><i></i><i></i><i></i></div>
+  </div>
+  <div class="music-player-info">
+    <div class="music-player-kicker">THE ROYAL LOUNGE · ORIGINAL SOUND</div>
+    <strong id="musicNowTitle">로열 피아노</strong>
+    <span id="musicNowMood">화이트 마블 라운지에 어울리는 부드러운 피아노와 따뜻한 패드</span>
+    <small id="musicPlayerStatus">재생 버튼을 눌러 라운지 음악을 시작하세요.</small>
+  </div>
+  <div class="music-player-transport">
+    <button type="button" id="musicPrev" class="music-transport-btn" aria-label="이전 음악">Ⅱ◀</button>
+    <button type="button" id="musicPlayToggle" class="music-play-btn" aria-label="음악 재생">▶</button>
+    <button type="button" id="musicNext" class="music-transport-btn" aria-label="다음 음악">▶Ⅱ</button>
+  </div>
+  <div class="music-player-select">
+    <label class="music-select-label" for="musicTrackSelect">MY MUSIC</label>
+    <select id="musicTrackSelect" aria-label="보유 음악 선택">
+      <option value="lounge_music_royal_piano">로열 피아노</option>
+    </select>
+    <button type="button" id="musicShopJump" class="music-more-btn">음악 상점 ↗</button>
+  </div>
+  <label class="music-volume-control" for="musicVolume">
+    <span aria-hidden="true">◖</span>
+    <input id="musicVolume" type="range" min="0" max="100" step="1" value="62" aria-label="음악 음량">
+  </label>
+</aside>
 <div class="book-reader-overlay" id="bookReader" aria-hidden="true">
   <section class="book-reader-dialog" role="dialog" aria-modal="true" aria-labelledby="bookReaderTitle">
     <header class="book-reader-topbar">
