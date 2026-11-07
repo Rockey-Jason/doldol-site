@@ -4,7 +4,7 @@ if (window.DoriLoungeAudio) return;
 
 /*
  * Original Royal Lounge arrangements.
- * Every track has its own chord journey, melodic phrases, tempo and lead timbre.
+ * Every track has its own chord journey and melodic phrases, arranged for an elegant, welcoming hotel lobby.
  * The music is synthesized locally with Web Audio; no external recordings are used.
  */
 const phrase = entries => {
@@ -17,7 +17,7 @@ const phrase = entries => {
 
 const TRACKS = {
  lounge_music_royal_piano: {
-  bpm:70,timbre:"felt",reverb:0.22,leadKind:"key",bassHits:[0,4],arpSlots:[2,5,7],compSlots:[2,6],swing:0.025,pan:0.10,sectionOrders:[[0,1,2,3,4,5,6,7],[0,3,1,4,2,5,7,6],[2,3,0,5,4,6,1,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
+  bpm:84,timbre:"concertGrand",reverb:0.22,leadKind:"key",bassHits:[0,4],arpSlots:[1,5],compSlots:[2,6],swing:0.035,pan:0.10,sectionOrders:[[0,1,2,3,4,5,6,7],[0,3,1,4,2,5,7,6],[2,3,0,5,4,6,1,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [48,55,59,62,64,67],[45,52,55,59,62,64],[41,48,52,55,57,60],[43,50,54,57,59,62],
    [40,47,50,54,57,59],[45,52,55,59,62,64],[41,48,52,55,57,60],[43,50,54,57,59,62]
@@ -28,7 +28,7 @@ const TRACKS = {
   ]
  },
  lounge_music_velvet_jazz: {
-  bpm:76,timbre:"rhodes",reverb:0.19,leadKind:"key",bassHits:[0,3,6],arpSlots:[1,4,7],compSlots:[2,6],swing:0.075,pan:0.16,sectionOrders:[[0,1,2,3,4,5,6,7],[1,3,5,2,4,6,0,7],[4,5,2,3,0,1,6,7],[0,2,1,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
+  bpm:94,timbre:"concertGrand",reverb:0.19,leadKind:"key",bassHits:[0,3,6],arpSlots:[1,5],compSlots:[2,6],swing:0.085,pan:0.16,sectionOrders:[[0,1,2,3,4,5,6,7],[1,3,5,2,4,6,0,7],[4,5,2,3,0,1,6,7],[0,2,1,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [41,48,52,55,57,60],[46,53,56,60,62,65],[39,46,50,53,55,58],[44,51,55,58,60,63],
    [37,44,48,51,53,56],[42,49,53,56,58,61],[39,46,50,53,55,58],[44,51,55,58,60,63]
@@ -39,7 +39,7 @@ const TRACKS = {
   ]
  },
  lounge_music_rainy_library: {
-  bpm:58,timbre:"felt",reverb:0.27,leadKind:"key",bassHits:[0,5],arpSlots:[4],compSlots:[4],swing:0.012,pan:0.06,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,4,6,5,7],[4,3,2,1,0,5,6,7],[0,1,2,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
+  bpm:76,timbre:"concertGrand",reverb:0.27,leadKind:"key",bassHits:[0,5],arpSlots:[4],compSlots:[2,6],swing:0.02,pan:0.06,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,4,6,5,7],[4,3,2,1,0,5,6,7],[0,1,2,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [38,45,48,52,55,57],[43,50,53,57,60,62],[36,43,46,50,53,55],[41,48,52,55,57,60],
    [34,41,45,48,50,53],[39,46,50,53,55,58],[36,43,46,50,53,55],[41,48,52,55,57,60]
@@ -50,7 +50,7 @@ const TRACKS = {
   ]
  },
  lounge_music_midnight_gold: {
-  bpm:66,timbre:"softRhodes",reverb:0.24,leadKind:"key",bassHits:[0,4],arpSlots:[2,6],compSlots:[2,6],swing:0.035,pan:0.08,sectionOrders:[[0,1,2,3,4,5,6,7],[1,2,4,3,5,6,0,7],[4,3,2,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
+  bpm:82,timbre:"concertGrand",reverb:0.24,leadKind:"key",bassHits:[0,4],arpSlots:[2,6],compSlots:[2,6],swing:0.035,pan:0.08,sectionOrders:[[0,1,2,3,4,5,6,7],[1,2,4,3,5,6,0,7],[4,3,2,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
   chords:[
    [43,50,53,57,60,62],[41,48,52,55,57,60],[38,45,48,52,55,57],[36,43,47,50,52,55],
    [34,41,45,48,50,53],[39,46,50,53,55,58],[41,48,52,55,57,60],[38,45,48,52,55,57]
@@ -61,7 +61,7 @@ const TRACKS = {
   ]
  },
  lounge_music_crystal_atrium: {
-  bpm:72,timbre:"warmGrand",reverb:0.24,leadKind:"key",bassHits:[0,4],arpSlots:[1,3,5,7],compSlots:[2,6],swing:0.02,pan:0.18,sectionOrders:[[0,1,2,3,4,5,6,7],[2,1,3,4,6,5,0,7],[4,5,3,2,0,1,6,7],[0,2,1,3,5,4,6,7],[0,1,2,3,4,5,6,7]],
+  bpm:88,timbre:"concertGrand",reverb:0.24,leadKind:"key",bassHits:[0,4],arpSlots:[1,5],compSlots:[2,6],swing:0.025,pan:0.18,sectionOrders:[[0,1,2,3,4,5,6,7],[2,1,3,4,6,5,0,7],[4,5,3,2,0,1,6,7],[0,2,1,3,5,4,6,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [47,54,58,61,64,66],[52,59,63,66,68,71],[45,52,56,59,61,64],[50,57,61,64,66,69],
    [42,49,53,56,59,61],[47,54,58,61,64,66],[45,52,56,59,61,64],[50,57,61,64,66,69]
@@ -72,7 +72,7 @@ const TRACKS = {
   ]
  },
  lounge_music_garden_terrace: {
-  bpm:74,timbre:"mellowKeys",reverb:0.21,leadKind:"key",bassHits:[0,3,5],arpSlots:[1,2,4,6],compSlots:[2,5],swing:0.055,pan:0.12,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,4,1,3,5,6,7],[2,3,4,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
+  bpm:96,timbre:"concertGrand",reverb:0.21,leadKind:"key",bassHits:[0,3,5],arpSlots:[1,4,6],compSlots:[2,5],swing:0.06,pan:0.12,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,4,1,3,5,6,7],[2,3,4,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
   chords:[
    [43,50,54,57,59,62],[38,45,49,52,54,57],[40,47,50,54,57,59],[45,52,55,59,62,64],
    [43,50,54,57,59,62],[47,54,57,61,64,66],[45,52,55,59,62,64],[40,47,50,54,57,59]
@@ -83,7 +83,7 @@ const TRACKS = {
   ]
  },
  lounge_music_christmas_hotel: {
-  bpm:68,timbre:"warmGrand",reverb:0.26,leadKind:"key",bassHits:[0,4],arpSlots:[2,5],compSlots:[2,6],swing:0.02,pan:0.14,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,5,4,6,7],[4,3,2,1,0,5,6,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
+  bpm:86,timbre:"concertGrand",reverb:0.26,leadKind:"key",bassHits:[0,4],arpSlots:[2,5],compSlots:[2,6],swing:0.025,pan:0.14,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,5,4,6,7],[4,3,2,1,0,5,6,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [45,52,56,59,61,64],[40,47,50,54,57,59],[41,48,52,55,57,60],[36,43,47,50,52,55],
    [38,45,49,52,54,57],[43,50,54,57,59,62],[40,47,50,54,57,59],[45,52,56,59,61,64]
@@ -216,6 +216,12 @@ function ramp(param,value,time=0.45){
 }
 const WAVE_CACHE=new Map();
 const SPECTRA={
+ concertGrand:{
+  key:[0,1,.24,.17,.10,.055,.025,.012,.005],
+  bell:[0,1,.12,.10,.055,.025],
+  pad:[0,1,.10,.04,.015],
+  bass:[0,1,.045,.012]
+ },
  felt:{
   key:[0,1,.30,.13,.055,.024,.010,.004],
   bell:[0,1,.18,.08,.035,.015],
@@ -259,7 +265,49 @@ function getWave(ctx,timbre,kind,secondary){
  WAVE_CACHE.set(key,wave);
  return wave;
 }
+function pianoVoice(note,when,duration,kind,state,level=1,pan=0){
+ const ctx=audioContext;
+ const base=midiHz(note);
+ const panner=ctx.createStereoPanner?ctx.createStereoPanner():ctx.createGain();
+ const filter=ctx.createBiquadFilter();
+ const partials=[
+  {ratio:1,gain:0.74,decay:1.00},
+  {ratio:2.002,gain:0.22,decay:0.42},
+  {ratio:3.006,gain:0.085,decay:0.25},
+  {ratio:4.012,gain:0.032,decay:0.16},
+  {ratio:5.025,gain:0.012,decay:0.075}
+ ];
+ const peak=(kind==="comp"?0.058:0.068)*level;
+ const length=Math.max(0.72,duration+0.72);
+ filter.type="lowpass";
+ filter.frequency.setValueAtTime(6800,when);
+ filter.frequency.exponentialRampToValueAtTime(3300,when+Math.min(1.1,length));
+ filter.Q.value=0.22;
+ panner.pan.setValueAtTime(clamp(pan,-0.34,0.34),when);
+ panner.connect(state.bus);
+ panner.connect(state.send);
+ partials.forEach((partial,index)=>{
+  const osc=ctx.createOscillator(),gain=ctx.createGain();
+  osc.type="sine";
+  osc.frequency.setValueAtTime(base*partial.ratio,when);
+  if(index===1)osc.detune.setValueAtTime(-1.8,when);
+  gain.gain.setValueAtTime(0.0001,when);
+  const attack=index===0?0.006:0.004;
+  const initial=peak*partial.gain;
+  gain.gain.linearRampToValueAtTime(initial,when+attack);
+  const decayTime=index===0?0.22:0.055+index*0.018;
+  gain.gain.exponentialRampToValueAtTime(Math.max(0.0001,initial*partial.decay),when+decayTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001,when+length);
+  osc.connect(gain);gain.connect(filter);
+  osc.start(when);osc.stop(when+length+0.04);
+ });
+ filter.connect(panner);
+}
 function voice(note,when,duration,kind,state,level=1,pan=0){
+ if(track.timbre==="concertGrand"&&(kind==="key"||kind==="comp")){
+  pianoVoice(note,when,duration,kind,state,level,pan);
+  return;
+ }
  const ctx=audioContext,track=state.track;
  const frequency=midiHz(note);
  const amp=ctx.createGain(),filter=ctx.createBiquadFilter();
