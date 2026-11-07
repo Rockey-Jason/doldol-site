@@ -8,7 +8,7 @@
 <title>돌이 라운지 | DORI ROYAL LOUNGE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="./vip-lounge.css?v=20261107-authoring-1">
+<link rel="stylesheet" href="./vip-lounge.css?v=20261107-audio-1">
 <script src="../js/supabase.min.js?v=2.117.2"></script>
 </head>
 <body data-theme="marble">
@@ -152,6 +152,22 @@
       <article class="shop-card" data-item="vip_royal_crown_collectible" data-name="로열 골드 왕관 오브제"><div class="shop-art">♛</div><h3>로열 골드 왕관 오브제</h3><p>정교한 골드 장식으로 완성한 로열 컬렉션.</p><div class="shop-bottom"><span class="price">120,000 코인</span><button class="buy-btn" type="button" data-buy>구매하기</button></div></article>
       <article class="shop-card" data-item="vip_aurora_crystal_collectible" data-name="오로라 크리스탈 장식"><div class="shop-art">◇</div><h3>오로라 크리스탈 장식</h3><p>빛을 머금은 오로라 크리스탈 수집품.</p><div class="shop-bottom"><span class="price">250,000 코인</span><button class="buy-btn" type="button" data-buy>구매하기</button></div></article>
     </div>
+    <section class="music-store" id="musicStore" aria-labelledby="musicStoreTitle">
+      <div class="music-store-heading">
+        <div>
+          <div class="section-kicker">THE ROYAL SOUND COLLECTION</div>
+          <h3 id="musicStoreTitle">라운지 음악 상점</h3>
+          <p>라운지의 분위기를 완성하는 오리지널 연주곡을 소장해 보세요. 구매한 음악은 아래 플레이어에서 언제든 선택할 수 있습니다.</p>
+        </div>
+        <div class="music-store-mark" aria-hidden="true">♫</div>
+      </div>
+      <div class="music-store-tools">
+        <label class="music-store-search"><span aria-hidden="true">⌕</span><input id="musicShopSearch" type="search" placeholder="음악 제목이나 분위기 검색…" aria-label="라운지 음악 검색"></label>
+        <span class="meta-pill" id="musicShopCount">음악 6종</span>
+      </div>
+      <div class="music-shop-grid" id="musicShopGrid" aria-live="polite"></div>
+      <p class="local-note">모든 트랙은 돌이 라운지를 위해 새로 구성한 오리지널 생성형 연주입니다. 기본 로열 피아노는 무료이며, 나머지 음악은 돌돌코인으로 한 번 구매하면 계속 보유할 수 있습니다.</p>
+    </section>
     <p class="local-note">구매한 아이템은 계정 인벤토리에 저장됩니다. 구매 버튼을 여러 번 눌러도 서버에서 중복 지급을 방지합니다.</p>
   </section>
 </div>
@@ -216,6 +232,7 @@
 <script src="../js/dori-sound.js?v=20261009-5"></script>
 <script src="../js/hancom-weight-normalizer.js?v=20261014-1"></script>
 <script src="./vip-lounge-books.js?v=20261107-empty-author-1"></script>
+<script src="./vip-lounge-audio.js?v=20261107-audio-1"></script>
 <script src="./vip-lounge.js?v=20261107-admin-only-2"></script>
 </body>
 </html>
