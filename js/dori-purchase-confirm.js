@@ -60,7 +60,7 @@
         const row = $(".dpc-balance");
         row.hidden = false;
         $(".dpc-balance-value").textContent = format(balance) + " " + (options.currency || "돌돌코인");
-        $(".dpc-after-value").textContent = (balance >= amount ? format(balance - amount) : format(0)) + " " + (options.currency || "돌돌코인");
+        $(".dpc-after-value").textContent = balance >= amount ? format(balance - amount) + " " + (options.currency || "돌돌코인") : "부족 " + format(amount - balance) + " " + (options.currency || "돌돌코인");
       }
       if (options.detail) {
         const detail = $(".dpc-detail");
