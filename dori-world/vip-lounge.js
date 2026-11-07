@@ -32,13 +32,13 @@ const items=[
 {id:"vip_aurora_crystal_collectible",name:"오로라 크리스탈 장식",price:250000}
 ];
 const musicCatalog=[
- {id:"lounge_music_royal_piano",name:"로열 피아노",mood:"호텔 로비의 그랜드 피아노처럼 따뜻한 선율과 은은한 현악 패드",style:"SIGNATURE · FREE",price:0,free:true,icon:"♬"},
- {id:"lounge_music_velvet_jazz",name:"벨벳 재즈 라운지",mood:"부드러운 로즈 피아노와 가벼운 스윙, 세련된 재즈 화음이 흐르는 이브닝 라운지",style:"VELVET JAZZ",price:18000,icon:"♫"},
- {id:"lounge_music_rainy_library",name:"비 내리는 로열 서재",mood:"비 오는 호텔 창가를 떠올리게 하는 펠트 피아노와 잔잔한 코드 보이싱",style:"RAINY READING",price:14000,icon:"☂"},
- {id:"lounge_music_midnight_gold",name:"미드나이트 골드",mood:"깊은 로즈 피아노와 낮은 베이스가 어우러지는 조용한 나이트 라운지",style:"MIDNIGHT",price:32000,icon:"✧"},
- {id:"lounge_music_crystal_atrium",name:"크리스탈 아트리움",mood:"따뜻한 그랜드 피아노와 넓은 공간감의 화음으로 완성한 아트리움 라운지",style:"CRYSTAL",price:28000,icon:"◇"},
- {id:"lounge_music_garden_terrace",name:"가든 테라스",mood:"햇살 드는 호텔 테라스처럼 부드러운 피아노 컴핑과 산뜻한 재즈 선율",style:"GARDEN",price:22000,icon:"❋"},
- {id:"lounge_music_christmas_hotel",name:"눈 내리는 크리스마스 호텔",mood:"눈 내리는 호텔 라운지의 온기를 담은 부드러운 피아노와 은은한 겨울 장식음",style:"WINTER SIGNATURE",price:36000,icon:"❄"}
+ {id:"lounge_music_royal_piano",name:"로열 피아노",mood:"호텔 메인 로비에서 흐르는 품격 있는 그랜드 피아노와 풍성한 화음",style:"SIGNATURE · FREE",price:0,free:true,icon:"♬"},
+ {id:"lounge_music_velvet_jazz",name:"벨벳 재즈 라운지",mood:"체크인 라운지의 세련된 재즈 피아노와 경쾌한 스윙 리듬",style:"VELVET JAZZ",price:18000,icon:"♫"},
+ {id:"lounge_music_rainy_library",name:"비 내리는 로열 서재",mood:"비 오는 날 호텔 로비의 따뜻한 그랜드 피아노와 여유로운 재즈 화음",style:"RAINY READING",price:14000,icon:"☂"},
+ {id:"lounge_music_midnight_gold",name:"미드나이트 골드",mood:"저녁 호텔 로비의 깊은 피아노 선율과 우아한 베이스 라인",style:"MIDNIGHT",price:32000,icon:"✧"},
+ {id:"lounge_music_crystal_atrium",name:"크리스탈 아트리움",mood:"대리석 아트리움에 울리는 풍성한 그랜드 피아노와 웅장한 화음",style:"CRYSTAL",price:28000,icon:"◇"},
+ {id:"lounge_music_garden_terrace",name:"가든 테라스",mood:"호텔 테라스 라운지의 산뜻한 피아노와 활기 있는 재즈 리듬",style:"GARDEN",price:22000,icon:"❋"},
+ {id:"lounge_music_christmas_hotel",name:"눈 내리는 크리스마스 호텔",mood:"크리스마스 시즌 호텔 로비의 따뜻한 피아노와 축제 분위기의 화음",style:"WINTER SIGNATURE",price:36000,icon:"❄"}
 ];
 const levels={1:"일반",2:"프리미엄",3:"돌프리미엄",4:"돌돌프리미엄",5:"돌돌돌프리미엄",6:"돌돌돌돌프리미엄",7:"돌돌돌돌돌프리미엄",8:"유사돌이",9:"돌이",10:"관리자"};
 const BOOKS=window.DoriLoungeBooks||[];
