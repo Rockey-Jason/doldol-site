@@ -46,7 +46,7 @@ let user=null,profile=null,owned=new Set(),ownedMusic=new Set(["lounge_music_roy
 let storeKey="dori-lounge:guest",bookStoreKey="dori-lounge-books:guest",toastTimer=0;
 let bookState={progress:{},favorites:[],bookmarks:{},fontScale:1};
 let activeBook=null,activeChapter=0,savedReaderScroll=0,readerScrollTimer=0,editorDraft=null;
-const format=n=>Number(n||0).toLocaleString("ko-KR");
+const format=n=>{try{const value=String(n??0).trim();if(/^-?[0-9]+$/.test(value))return BigInt(value).toLocaleString("ko-KR")}catch(e){}return Number(n||0).toLocaleString("ko-KR")};
 function toast(msg){const el=$("toast");el.textContent=msg;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2600)}
 function save(){try{localStorage.setItem(storeKey,JSON.stringify(prefs))}catch(e){toast("브라우저 저장 공간을 확인해 주세요.")}}
 function read(){
