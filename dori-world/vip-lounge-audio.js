@@ -17,7 +17,7 @@ const phrase = entries => {
 
 const TRACKS = {
  lounge_music_royal_piano: {
-  bpm:70,timbre:"felt",reverb:0.22,leadKind:"key",bassHits:[0,4],arpSlots:[2,5,7],compSlots:[2,6],pan:0.10,sectionOrders:[[0,1,2,3,4,5,6,7],[0,3,1,4,2,5,7,6],[2,3,0,5,4,6,1,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
+  bpm:70,timbre:"felt",reverb:0.22,leadKind:"key",bassHits:[0,4],arpSlots:[2,5,7],compSlots:[2,6],swing:0.025,pan:0.10,sectionOrders:[[0,1,2,3,4,5,6,7],[0,3,1,4,2,5,7,6],[2,3,0,5,4,6,1,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [48,55,59,62,64,67],[45,52,55,59,62,64],[41,48,52,55,57,60],[43,50,54,57,59,62],
    [40,47,50,54,57,59],[45,52,55,59,62,64],[41,48,52,55,57,60],[43,50,54,57,59,62]
@@ -28,7 +28,7 @@ const TRACKS = {
   ]
  },
  lounge_music_velvet_jazz: {
-  bpm:76,timbre:"rhodes",reverb:0.19,leadKind:"key",bassHits:[0,3,6],arpSlots:[1,4,7],compSlots:[2,6],pan:0.16,sectionOrders:[[0,1,2,3,4,5,6,7],[1,3,5,2,4,6,0,7],[4,5,2,3,0,1,6,7],[0,2,1,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
+  bpm:76,timbre:"rhodes",reverb:0.19,leadKind:"key",bassHits:[0,3,6],arpSlots:[1,4,7],compSlots:[2,6],swing:0.075,pan:0.16,sectionOrders:[[0,1,2,3,4,5,6,7],[1,3,5,2,4,6,0,7],[4,5,2,3,0,1,6,7],[0,2,1,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [41,48,52,55,57,60],[46,53,56,60,62,65],[39,46,50,53,55,58],[44,51,55,58,60,63],
    [37,44,48,51,53,56],[42,49,53,56,58,61],[39,46,50,53,55,58],[44,51,55,58,60,63]
@@ -39,7 +39,7 @@ const TRACKS = {
   ]
  },
  lounge_music_rainy_library: {
-  bpm:58,timbre:"felt",reverb:0.27,leadKind:"key",bassHits:[0,5],arpSlots:[4],compSlots:[4],pan:0.06,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,4,6,5,7],[4,3,2,1,0,5,6,7],[0,1,2,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
+  bpm:58,timbre:"felt",reverb:0.27,leadKind:"key",bassHits:[0,5],arpSlots:[4],compSlots:[4],swing:0.012,pan:0.06,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,4,6,5,7],[4,3,2,1,0,5,6,7],[0,1,2,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [38,45,48,52,55,57],[43,50,53,57,60,62],[36,43,46,50,53,55],[41,48,52,55,57,60],
    [34,41,45,48,50,53],[39,46,50,53,55,58],[36,43,46,50,53,55],[41,48,52,55,57,60]
@@ -50,7 +50,7 @@ const TRACKS = {
   ]
  },
  lounge_music_midnight_gold: {
-  bpm:66,timbre:"softRhodes",reverb:0.24,leadKind:"key",bassHits:[0,4],arpSlots:[2,6],compSlots:[2,6],pan:0.08,sectionOrders:[[0,1,2,3,4,5,6,7],[1,2,4,3,5,6,0,7],[4,3,2,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
+  bpm:66,timbre:"softRhodes",reverb:0.24,leadKind:"key",bassHits:[0,4],arpSlots:[2,6],compSlots:[2,6],swing:0.035,pan:0.08,sectionOrders:[[0,1,2,3,4,5,6,7],[1,2,4,3,5,6,0,7],[4,3,2,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
   chords:[
    [43,50,53,57,60,62],[41,48,52,55,57,60],[38,45,48,52,55,57],[36,43,47,50,52,55],
    [34,41,45,48,50,53],[39,46,50,53,55,58],[41,48,52,55,57,60],[38,45,48,52,55,57]
@@ -61,7 +61,7 @@ const TRACKS = {
   ]
  },
  lounge_music_crystal_atrium: {
-  bpm:72,timbre:"warmGrand",reverb:0.24,leadKind:"key",bassHits:[0,4],arpSlots:[1,3,5,7],compSlots:[2,6],pan:0.18,sectionOrders:[[0,1,2,3,4,5,6,7],[2,1,3,4,6,5,0,7],[4,5,3,2,0,1,6,7],[0,2,1,3,5,4,6,7],[0,1,2,3,4,5,6,7]],
+  bpm:72,timbre:"warmGrand",reverb:0.24,leadKind:"key",bassHits:[0,4],arpSlots:[1,3,5,7],compSlots:[2,6],swing:0.02,pan:0.18,sectionOrders:[[0,1,2,3,4,5,6,7],[2,1,3,4,6,5,0,7],[4,5,3,2,0,1,6,7],[0,2,1,3,5,4,6,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [47,54,58,61,64,66],[52,59,63,66,68,71],[45,52,56,59,61,64],[50,57,61,64,66,69],
    [42,49,53,56,59,61],[47,54,58,61,64,66],[45,52,56,59,61,64],[50,57,61,64,66,69]
@@ -72,7 +72,7 @@ const TRACKS = {
   ]
  },
  lounge_music_garden_terrace: {
-  bpm:74,timbre:"mellowKeys",reverb:0.21,leadKind:"key",bassHits:[0,3,5],arpSlots:[1,2,4,6],compSlots:[2,5],pan:0.12,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,4,1,3,5,6,7],[2,3,4,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
+  bpm:74,timbre:"mellowKeys",reverb:0.21,leadKind:"key",bassHits:[0,3,5],arpSlots:[1,2,4,6],compSlots:[2,5],swing:0.055,pan:0.12,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,4,1,3,5,6,7],[2,3,4,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
   chords:[
    [43,50,54,57,59,62],[38,45,49,52,54,57],[40,47,50,54,57,59],[45,52,55,59,62,64],
    [43,50,54,57,59,62],[47,54,57,61,64,66],[45,52,55,59,62,64],[40,47,50,54,57,59]
@@ -83,7 +83,7 @@ const TRACKS = {
   ]
  },
  lounge_music_christmas_hotel: {
-  bpm:68,timbre:"warmGrand",reverb:0.26,leadKind:"key",bassHits:[0,4],arpSlots:[2,5],compSlots:[2,6],pan:0.14,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,5,4,6,7],[4,3,2,1,0,5,6,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
+  bpm:68,timbre:"warmGrand",reverb:0.26,leadKind:"key",bassHits:[0,4],arpSlots:[2,5],compSlots:[2,6],swing:0.02,pan:0.14,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,5,4,6,7],[4,3,2,1,0,5,6,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [45,52,56,59,61,64],[40,47,50,54,57,59],[41,48,52,55,57,60],[36,43,47,50,52,55],
    [38,45,49,52,54,57],[43,50,54,57,59,62],[40,47,50,54,57,59],[45,52,56,59,61,64]
@@ -183,11 +183,11 @@ function ensureContext(){
  master=audioContext.createGain();
  master.gain.value=0.0001;
  compressor=audioContext.createDynamicsCompressor();
- compressor.threshold.value=-20;
- compressor.knee.value=18;
- compressor.ratio.value=2.8;
- compressor.attack.value=0.018;
- compressor.release.value=0.30;
+ compressor.threshold.value=-18;
+ compressor.knee.value=20;
+ compressor.ratio.value=3.2;
+ compressor.attack.value=0.012;
+ compressor.release.value=0.26;
  master.connect(compressor);
  compressor.connect(audioContext.destination);
  return audioContext;
@@ -331,7 +331,7 @@ function startScheduler(state){
 
  const scheduleStep=()=>{
   const slot=state.step,bar=state.bar;
-  const time=state.nextTime;
+  const time=state.nextTime+(slot%2?beat*(track.swing||0):0);
   const phraseIndex=Math.min(4,Math.floor(bar/track.chords.length));
   const chordOrder=track.sectionOrders[phraseIndex]||track.sectionOrders[0];
   const chord=track.chords[chordOrder[bar%track.chords.length]];
@@ -402,7 +402,7 @@ async function play(trackId){
    current.elapsedOffset=0;current.step=0;current.bar=0;
   }
   current.playing=true;
-  ramp(current.bus.gain,0.66,0.75);
+  ramp(current.bus.gain,0.76,0.75);
   ramp(current.wet.gain,0.42+track.reverb*0.22,0.7);
   startScheduler(current);
   emit();
@@ -414,8 +414,8 @@ async function play(trackId){
   id:trackId,track,playing:true,step:0,bar:0,elapsedOffset:0,
   nextTime:ctx.currentTime+0.16,timer:null,...createOutput(track)
  };
- ramp(master.gain,0.36*volume,0.9);
- ramp(current.bus.gain,0.66,1.35);
+ ramp(master.gain,0.46*volume,0.9);
+ ramp(current.bus.gain,0.76,1.35);
  ramp(current.wet.gain,0.42+track.reverb*0.22,1.25);
  startScheduler(current);
  emit();
@@ -445,7 +445,7 @@ function setVolume(value){
  if(master&&audioContext){
   const now=audioContext.currentTime;
   master.gain.cancelScheduledValues(now);
-  master.gain.setTargetAtTime(0.36*volume,now,0.12);
+  master.gain.setTargetAtTime(0.46*volume,now,0.12);
  }
  emit();
 }
