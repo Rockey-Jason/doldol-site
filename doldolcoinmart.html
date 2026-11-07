@@ -984,6 +984,19 @@ async function 상품구매(상품, buyButton) {
       return;
     }
 
+    const confirmed = await window.DoriPurchaseConfirm?.ask({
+      itemName: 상품.name + " · " + 상품.levelName + " 등급",
+      amount: 상품.price,
+      currency: "돌돌코인",
+      currentBalance: 최신정보.doldolcoin,
+      detail: "구매가 확정되면 계정의 회원 등급이 " + 상품.levelName + "으로 변경됩니다."
+    });
+    if (!confirmed) {
+      buyButton.disabled = false;
+      buyButton.textContent = "구매하기";
+      return;
+    }
+
     // The server verifies the current balance and level, then charges atomically.
     const { data: purchaseResult, error: purchaseError } = await supabase
       .rpc("purchase_membership_level", {
@@ -1063,5 +1076,6 @@ async function 시작하기() {
 <script src="js/hancom-weight-normalizer.js?v=20261014-1"></script>
 
 <script type="module" src="js/achievements.js?v=20261025-cross-site-1"></script>
+  <script src="js/dori-purchase-confirm.js?v=20261107-1"></script>
 </body>
 </html>
