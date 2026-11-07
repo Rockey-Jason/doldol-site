@@ -1615,6 +1615,10 @@ function boot(){const localTime=loadLocal();playerMotion={x:S.player.x,z:S.playe
 
 boot();
 if(E2E_MODE){
+ function resetE2EWorldAfterStateFixture(){
+  playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Number(S.player.yaw)||0,pitch:Number(S.player.pitch??-.12),path:[],moving:false,facing:0,onArrive:null};
+  revealAround();markSceneDirty();renderAll();
+ }
  window.__doroniumFactoryTest={
   snapshot:()=>structuredClone(S),
   backend:world3d.backend,
@@ -1679,7 +1683,7 @@ if(E2E_MODE){
    S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
    addItemStack(S,"ironOre",10,{quality:95,purity:96,synthetic:false});
    const reservation=reserveItemStacks(S,"ironOre",7,"INVENTORY-LOCK-TEST");
-   syncLegacyInventory(S);renderInventory();
+   syncLegacyInventory(S);resetE2EWorldAfterStateFixture();
    return {reservation,total:S.inventory.ITEM_IRON_ORE,available:itemCount("ironOre"),reserved:S.inventory.ITEM_IRON_ORE-itemCount("ironOre")};
   },
   setupQuarantineInventoryTest(){
@@ -1688,7 +1692,7 @@ if(E2E_MODE){
    addItemStack(S,"doronium_void",5,{quality:82,purity:88,synthetic:false});
    const legacy=S.runtime.itemStacks.find(stack=>stack.itemID==="doronium_void");
    legacy.quarantined=true;legacy.quarantineReason="canonical-equivalence-not-defined";legacy.sourceItemID="doronium_void";
-   syncLegacyInventory(S);renderInventory();
+   syncLegacyInventory(S);resetE2EWorldAfterStateFixture();
    return {tradable:structuredClone(S.inventory),quarantined:structuredClone(S.quarantinedInventory),quarantineMeta:structuredClone(S.quarantinedMeta)};
   },
   async runCloudConflictGuardTest(){
