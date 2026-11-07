@@ -69,7 +69,8 @@ function paintPrefs(){
  document.querySelectorAll("[data-favorite]").forEach(b=>{const yes=prefs.favorites.includes(b.dataset.favorite);b.setAttribute("aria-pressed",String(yes));b.textContent=yes?"♥":"♡"});
 }
 function counter(){$("draftCount").textContent=$("supportDraft").value.length+" / 1,500"}
-function showLock(title,desc){$("lockTitle").textContent=title;$("lockDescription").textContent=desc;$("lockPanel").classList.add("show");$("loungeApp").classList.remove("show")}
+function showLock(title,desc){$("lockTitle").textContent=title;$("lockDescription").textContent=desc;$("lockPanel").classList.add("show");$("loungeApp").classList.remove("show");$("loungeMusicPlayer").hidden=true}
+const setLock=showLock;
 function nav(name){
  const panel=document.querySelector('[data-view-panel="'+name+'"]');if(!panel)return;
  document.querySelectorAll("[data-view-panel]").forEach(p=>p.classList.toggle("active",p===panel));
@@ -553,6 +554,7 @@ async function load(){
 
   $("lockPanel").classList.remove("show");
   $("loungeApp").classList.add("show");
+  $("loungeMusicPlayer").hidden=false;
 
   stage="수집품 및 음악 인벤토리 조회";
   const inventoryIds=items.map(item=>item.id).concat(musicCatalog.filter(track=>!track.free).map(track=>track.id));
