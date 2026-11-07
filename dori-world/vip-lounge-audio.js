@@ -95,8 +95,35 @@ const TRACKS = {
  }
 };
 
-// Five eight-bar phrases form a complete, finite hotel-lounge arrangement.
+// Five contrasting sections form a composed arrangement: A, B, bridge, reprise and coda.
+const SECTION_CHORDS=[
+ [0,1,2,3,4,5,6,7],
+ [0,2,4,3,5,1,6,7],
+ [2,3,0,5,4,6,1,7],
+ [0,1,3,2,4,5,7,6],
+ [0,1,2,3,4,5,6,7]
+];
+function makeSectionMelody(track,section){
+ const source=track.melodies[section===1||section===3?1:0];
+ const out=Object.create(null);
+ const entries=Object.entries(source);
+ entries.forEach(([rawStep,event],index)=>{
+  if(section===4&&index%2===1)return;
+  if(section===2&&index%6===4)return;
+  const step=Number(rawStep);
+  const shift=section===2?2:section===3?-2:section===4?-2:0;
+  const rhythmShift=section===2?(index%3===0?1:0):section===3?(index%4===0?-1:0):0;
+  const nextStep=Math.max(0,Math.min(63,step+rhythmShift));
+  const level=event.level*(section===4?0.48:section===2?0.82:section===3?0.78:1);
+  out[nextStep]={...event,note:event.note+shift,gate:event.gate*(section===4?1.18:0.94),level};
+  if(section===2&&index%4===1&&nextStep<62){
+   out[nextStep+2]={note:event.note+shift+2,gate:0.62,level:level*0.38,kind:event.kind};
+  }
+ });
+ return out;
+}
 Object.values(TRACKS).forEach(track=>{
+ track.sections=Array.from({length:5},(_,index)=>makeSectionMelody(track,index));
  track.duration=track.chords.length*5*4*60/track.bpm;
 });
 
@@ -144,11 +171,11 @@ function ensureContext(){
  master=audioContext.createGain();
  master.gain.value=0.0001;
  compressor=audioContext.createDynamicsCompressor();
- compressor.threshold.value=-22;
- compressor.knee.value=18;
- compressor.ratio.value=3;
- compressor.attack.value=0.018;
- compressor.release.value=0.28;
+ compressor.threshold.value=-25;
+ compressor.knee.value=24;
+ compressor.ratio.value=2.25;
+ compressor.attack.value=0.035;
+ compressor.release.value=0.42;
  master.connect(compressor);
  compressor.connect(audioContext.destination);
  return audioContext;
@@ -161,7 +188,7 @@ function createOutput(track){
  const wet=ctx.createGain();
  convolver.buffer=makeImpulse(ctx);
  bus.gain.value=0.0001;
- send.gain.value=0.30+track.reverb*0.18;
+ send.gain.value=0.19+track.reverb*0.12;
  wet.gain.value=0.0001;
  bus.connect(master);
  send.connect(convolver);
@@ -181,26 +208,26 @@ function voice(note,when,duration,kind,state,level=1){
  const amp=ctx.createGain(),filter=ctx.createBiquadFilter();
  const a=ctx.createOscillator(),b=ctx.createOscillator();
  const mixA=ctx.createGain(),mixB=ctx.createGain();
- let peak=0.043,attack=0.02,release=0.72,cutoff=2500,detune=3;
- if(kind==="pad"){peak=0.009;attack=0.8;release=1.2;cutoff=1050;detune=5}
- if(kind==="bass"){peak=0.046;attack=0.04;release=0.52;cutoff=590;detune=1}
- if(kind==="bell"){peak=0.020;attack=0.008;release=1.25;cutoff=4100;detune=1}
- if(track.timbre==="felt"){cutoff*=0.79;release*=1.13}
- if(track.timbre==="glass"){cutoff*=1.18;release*=1.25}
- if(track.timbre==="plucked"){cutoff*=0.91;if(kind==="key"){attack=0.008;release=0.52}}
- if(track.timbre==="celeste"){cutoff*=1.12;release*=1.16}
+ let peak=0.026,attack=0.045,release=0.92,cutoff=1850,detune=1.4;
+ if(kind==="pad"){peak=0.0055;attack=1.05;release=1.55;cutoff=880;detune=2.2}
+ if(kind==="bass"){peak=0.027;attack=0.065;release=0.68;cutoff=390;detune=0.5}
+ if(kind==="bell"){peak=0.011;attack=0.025;release=1.35;cutoff=2750;detune=0.6}
+ if(track.timbre==="felt"){cutoff*=0.82;release*=1.12}
+ if(track.timbre==="glass"){cutoff*=0.94;release*=1.16}
+ if(track.timbre==="plucked"){cutoff*=0.88;if(kind==="key"){attack=0.025;release=0.68}}
+ if(track.timbre==="celeste"){cutoff*=0.96;release*=1.12}
  filter.type="lowpass";
  filter.frequency.setValueAtTime(cutoff,when);
- filter.Q.value=0.42;
- const primaryWave=kind==="bass"?"sine":track.timbre==="rhodes"||track.timbre==="plucked"?"triangle":"sine";
+ filter.Q.value=0.24;
+ const primaryWave="sine";
  a.type=primaryWave;
- b.type=kind==="pad"?"triangle":track.timbre==="rhodes"?"sine":track.timbre==="plucked"?"sine":"triangle";
+ b.type=kind==="pad"?"sine":"triangle";
  a.frequency.setValueAtTime(frequency,when);
  const overtone=kind==="bell"&&(track.timbre==="glass"||track.timbre==="celeste")?2:1;
  b.frequency.setValueAtTime(frequency*overtone,when);
  b.detune.setValueAtTime(kind==="pad"?-detune:detune,when);
- mixA.gain.value=track.timbre==="glass"||track.timbre==="celeste"?0.78:0.87;
- mixB.gain.value=kind==="pad"?0.18:track.timbre==="rhodes"?0.3:track.timbre==="plucked"?0.12:0.18;
+ mixA.gain.value=0.82;
+ mixB.gain.value=kind==="pad"?0.11:0.14;
  a.connect(mixA);b.connect(mixB);mixA.connect(filter);mixB.connect(filter);
  filter.connect(amp);
  amp.gain.setValueAtTime(0.0001,when);
@@ -242,13 +269,15 @@ function startScheduler(state){
   const slot=state.step,bar=state.bar;
   const chord=track.chords[bar%track.chords.length];
   const time=state.nextTime;
-  const phraseIndex=Math.floor(bar/track.chords.length);
-  const melody=track.melodies[phraseIndex%track.melodies.length];
+  const phraseIndex=Math.min(4,Math.floor(bar/track.chords.length));
+  const chordOrder=SECTION_CHORDS[phraseIndex];
+  const chord=track.chords[chordOrder[bar%track.chords.length]];
+  const melody=track.sections[phraseIndex];
   const stepIndex=(bar%track.chords.length)*8+slot;
-  const phraseLevel=phraseIndex===4?0.68:phraseIndex===0?0.74:0.84;
+  const phraseLevel=phraseIndex===4?0.62:phraseIndex===0?0.70:phraseIndex===2?0.78:0.82;
 
   if(slot===0){
-   chord.slice(1,6).forEach((note,index)=>voice(note+12,time,beat*3.8,"pad",state,(index===0?0.72:0.54)*phraseLevel));
+   chord.slice(1,5).forEach((note,index)=>voice(note+12,time,beat*3.7,"pad",state,(index===0?0.62:0.42)*phraseLevel));
   }
   if(track.bassHits.includes(slot)){
    const bassNote=chord[0]-12+(slot===0?0:12);
@@ -261,7 +290,7 @@ function startScheduler(state){
   }
   if(slot===2||slot===6){
    const note=chord[(bar+slot/2)%Math.min(5,chord.length)];
-   voice(note+12,time+0.012,beat*0.66,"key",state,0.25*phraseLevel);
+   voice(note+12,time+0.012,beat*0.72,"key",state,0.15*phraseLevel);
   }
   state.step++;
   if(state.step>=8){state.step=0;state.bar++}
@@ -304,7 +333,7 @@ async function play(trackId){
    current.elapsedOffset=0;current.step=0;current.bar=0;
   }
   current.playing=true;
-  ramp(current.bus.gain,0.88,0.55);
+  ramp(current.bus.gain,0.66,0.75);
   ramp(current.wet.gain,0.42+track.reverb*0.22,0.7);
   startScheduler(current);
   emit();
@@ -316,8 +345,8 @@ async function play(trackId){
   id:trackId,track,playing:true,step:0,bar:0,elapsedOffset:0,
   nextTime:ctx.currentTime+0.16,timer:null,...createOutput(track)
  };
- ramp(master.gain,0.20*volume,0.8);
- ramp(current.bus.gain,0.88,1.1);
+ ramp(master.gain,0.145*volume,0.9);
+ ramp(current.bus.gain,0.66,1.35);
  ramp(current.wet.gain,0.42+track.reverb*0.22,1.25);
  startScheduler(current);
  emit();
@@ -338,7 +367,7 @@ async function resume(){
  if(current.elapsedOffset>=current.track.duration){current.elapsedOffset=0;current.step=0;current.bar=0}
  const ctx=ensureContext();await ctx.resume();
  current.playing=true;
- ramp(current.bus.gain,0.88,0.55);
+ ramp(current.bus.gain,0.66,0.75);
  ramp(current.wet.gain,0.42+current.track.reverb*0.22,0.7);
  startScheduler(current);emit();return getState();
 }
