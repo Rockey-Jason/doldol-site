@@ -304,11 +304,11 @@ function pianoVoice(note,when,duration,kind,state,level=1,pan=0){
  filter.connect(panner);
 }
 function voice(note,when,duration,kind,state,level=1,pan=0){
+ const ctx=audioContext,track=state.track;
  if(track.timbre==="concertGrand"&&(kind==="key"||kind==="comp")){
   pianoVoice(note,when,duration,kind,state,level,pan);
   return;
  }
- const ctx=audioContext,track=state.track;
  const frequency=midiHz(note);
  const amp=ctx.createGain(),filter=ctx.createBiquadFilter();
  const a=ctx.createOscillator(),b=ctx.createOscillator();
