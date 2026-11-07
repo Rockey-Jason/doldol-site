@@ -33,6 +33,7 @@ const items=[
 ];
 const levels={1:"일반",2:"프리미엄",3:"돌프리미엄",4:"돌돌프리미엄",5:"돌돌돌프리미엄",6:"돌돌돌돌프리미엄",7:"돌돌돌돌돌프리미엄",8:"유사돌이",9:"돌이",10:"관리자"};
 const BOOKS=window.DoriLoungeBooks||[];
+const BOOK_DEFAULTS=BOOKS.map(book=>({...book,chapters:(book.chapters||[]).map(chapter=>({...chapter}))}));
 let user=null,profile=null,owned=new Set(),prefs={theme:"marble",ambient:true,draft:"",favorites:[],visit:null};
 let storeKey="dori-lounge:guest",bookStoreKey="dori-lounge-books:guest",toastTimer=0;
 let bookState={progress:{},favorites:[],bookmarks:{},fontScale:1};
@@ -114,6 +115,15 @@ function hasBookContent(book){
  return Boolean(book&&Array.isArray(book.chapters)&&book.chapters.some(chapter=>String(chapter.content||"").trim()));
 }
 function applyBookManuscripts(){
+ BOOKS.forEach(book=>{
+  const original=BOOK_DEFAULTS.find(item=>item.id===book.id);
+  if(original){
+   book.subtitle=original.subtitle||"";
+   book.description=original.description||"";
+   book.author=original.author||"";
+   book.chapters=original.chapters.map(chapter=>({...chapter}));
+  }
+ });
  const manuscripts=bookState.manuscripts&&typeof bookState.manuscripts==="object"?bookState.manuscripts:{};
  BOOKS.forEach(book=>{
   const saved=manuscripts[book.id];if(!saved||typeof saved!=="object")return;
@@ -272,10 +282,16 @@ function saveBookEdit(){
  }));
  if(!chapters.length)chapters.push({title:"제1장",content:""});
  const subtitle=String($("editorBookSubtitle").value||"").trim().slice(0,300);
- const oldSubtitle=activeBook.subtitle,oldChapters=activeBook.chapters;
+ const bookId=activeBook.id,oldSubtitle=activeBook.subtitle,oldChapters=activeBook.chapters;
+ const oldManuscript=bookState.manuscripts[bookId],oldProgress=bookState.progress[bookId],oldMarks=bookState.bookmarks[bookId];
  activeBook.subtitle=subtitle;activeBook.chapters=chapters;
- bookState.manuscripts[activeBook.id]={subtitle,chapters};delete bookState.progress[activeBook.id];delete bookState.bookmarks[activeBook.id];
- if(!saveBookState()){activeBook.subtitle=oldSubtitle;activeBook.chapters=oldChapters;return}
+ bookState.manuscripts[bookId]={subtitle,chapters};delete bookState.progress[bookId];delete bookState.bookmarks[bookId];
+ if(!saveBookState()){
+  activeBook.subtitle=oldSubtitle;activeBook.chapters=oldChapters;
+  if(oldManuscript)bookState.manuscripts[bookId]=oldManuscript;else delete bookState.manuscripts[bookId];
+  if(oldProgress)bookState.progress[bookId]=oldProgress;if(oldMarks)bookState.bookmarks[bookId]=oldMarks;
+  return;
+ }
  activeChapter=0;editorDraft=null;renderReader();renderBooks();toast("원고를 현재 브라우저에 저장했습니다.");
 }
 function openBook(bookId,chapterIndex){
