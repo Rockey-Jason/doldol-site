@@ -1282,6 +1282,7 @@ let 보상목록 = [];
 let 인벤토리 = {};
 let 기록 = [];
 let 뽑는중 = false;
+let 구매확인중 = false;
 
 /* =====================================================
    DOM
@@ -1834,7 +1835,7 @@ function 오류메시지추출(error) {
 ===================================================== */
 
 async function 뽑기() {
-    if (뽑는중) return;
+    if (뽑는중 || 구매확인중) return;
 
     if (!현재사용자) {
         alert("로그인 후 이용해주세요.");
@@ -1849,6 +1850,28 @@ async function 뽑기() {
         `;
         return;
     }
+
+    구매확인중 = true;
+    let 구매확정 = false;
+    try {
+        if (!window.DoriPurchaseConfirm?.ask) {
+            throw new Error("구매 확인 기능을 불러오지 못했습니다.");
+        }
+        구매확정 = await window.DoriPurchaseConfirm.ask({
+            itemName: "돌이 랜덤 박스 1회 열기",
+            amount: 뽑기가격,
+            currency: "돌돌코인",
+            currentBalance: 사용자정보.doldolcoin,
+            detail: "랜덤 보상 1개를 획득합니다. 결과는 무작위이며 구매 후 되돌릴 수 없습니다."
+        });
+    } catch (confirmError) {
+        console.error("랜덤 박스 구매 확인 오류:", confirmError);
+        alert("구매 확인창을 열지 못했습니다. 다시 시도해 주세요.");
+        return;
+    } finally {
+        구매확인중 = false;
+    }
+    if (!구매확정) return;
 
     뽑는중 = true;
     뽑기버튼.disabled = true;
@@ -2066,5 +2089,6 @@ async function 시작() {
 <script src="js/hancom-weight-normalizer.js?v=20261014-1"></script>
 
 <script type="module" src="js/achievements.js?v=20261025-cross-site-1"></script>
+  <script src="js/dori-purchase-confirm.js?v=20261107-1"></script>
 </body>
 </html>
