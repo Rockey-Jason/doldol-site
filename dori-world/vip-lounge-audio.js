@@ -267,7 +267,6 @@ function startScheduler(state){
 
  const scheduleStep=()=>{
   const slot=state.step,bar=state.bar;
-  const chord=track.chords[bar%track.chords.length];
   const time=state.nextTime;
   const phraseIndex=Math.min(4,Math.floor(bar/track.chords.length));
   const chordOrder=SECTION_CHORDS[phraseIndex];
@@ -376,7 +375,7 @@ function setVolume(value){
  if(master&&audioContext){
   const now=audioContext.currentTime;
   master.gain.cancelScheduledValues(now);
-  master.gain.setTargetAtTime(0.20*volume,now,0.08);
+  master.gain.setTargetAtTime(0.145*volume,now,0.12);
  }
  emit();
 }
