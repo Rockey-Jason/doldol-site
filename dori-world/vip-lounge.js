@@ -254,7 +254,7 @@ function renderBookEditor(){
   const head=document.createElement("div");head.className="book-editor-chapter-head";
   const label=document.createElement("span");label.textContent="CHAPTER "+String(index+1).padStart(2,"0");
   const remove=document.createElement("button");remove.type="button";remove.className="book-editor-remove";remove.textContent="장 삭제";remove.disabled=editorDraft.chapters.length<=1;
-  remove.addEventListener("click",()=>{editorDraft.chapters.splice(index,1);renderBookEditor()});head.append(label,remove);
+  remove.addEventListener("click",()=>{syncBookEditorDraft();editorDraft.chapters.splice(index,1);renderBookEditor()});head.append(label,remove);
   const titleLabel=document.createElement("label");titleLabel.className="book-editor-field";
   const titleCaption=document.createElement("span");titleCaption.textContent="장 제목";
   const titleInput=document.createElement("input");titleInput.type="text";titleInput.maxLength=100;titleInput.className="book-editor-input";titleInput.value=chapter.title||("제"+(index+1)+"장");titleInput.placeholder="예: 제1장. 첫 번째 이야기";titleInput.setAttribute("aria-label","제"+(index+1)+"장 제목");titleLabel.append(titleCaption,titleInput);
@@ -263,6 +263,14 @@ function renderBookEditor(){
   const bodyInput=document.createElement("textarea");bodyInput.className="book-editor-textarea";bodyInput.rows=10;bodyInput.value=chapter.content||"";bodyInput.placeholder="이곳에 직접 이야기를 작성하세요. 문단을 나눌 때는 빈 줄을 넣으면 됩니다.";bodyInput.setAttribute("aria-label","제"+(index+1)+"장 본문");bodyLabel.append(bodyCaption,bodyInput);
   card.append(head,titleLabel,bodyLabel);list.append(card);
  });
+}
+function syncBookEditorDraft(){
+ if(!editorDraft)return;
+ editorDraft.subtitle=String($("editorBookSubtitle").value||"");
+ editorDraft.chapters=Array.from($("bookEditorChapters").querySelectorAll(".book-editor-chapter")).map((card,index)=>({
+  title:String(card.querySelector(".book-editor-input").value||"").trim().slice(0,100)||("제"+(index+1)+"장"),
+  content:String(card.querySelector(".book-editor-textarea").value||"")
+ }));
 }
 function beginBookEdit(){
  if(!activeBook)return;
@@ -321,7 +329,7 @@ function wireBookReader(){
  $("bookReaderClose").addEventListener("click",closeBookReader);
  $("bookReader").addEventListener("click",event=>{if(event.target===$("bookReader"))closeBookReader()});
  $("readerEditToggle").addEventListener("click",beginBookEdit);
- $("addBookChapter").addEventListener("click",()=>{if(!editorDraft)return;editorDraft.chapters.push({title:"제"+(editorDraft.chapters.length+1)+"장",content:""});renderBookEditor();const inputs=$("bookEditorChapters").querySelectorAll(".book-editor-input");if(inputs.length)inputs[inputs.length-1].focus()});
+ $("addBookChapter").addEventListener("click",()=>{if(!editorDraft)return;syncBookEditorDraft();editorDraft.chapters.push({title:"제"+(editorDraft.chapters.length+1)+"장",content:""});renderBookEditor();const inputs=$("bookEditorChapters").querySelectorAll(".book-editor-input");if(inputs.length)inputs[inputs.length-1].focus()});
  $("cancelBookEdit").addEventListener("click",cancelBookEdit);$("saveBookEdit").addEventListener("click",saveBookEdit);
  $("readerPrev").addEventListener("click",()=>changeReaderChapter(activeChapter-1));$("readerNext").addEventListener("click",()=>changeReaderChapter(activeChapter+1));
  $("readerChapterSelect").addEventListener("change",event=>changeReaderChapter(Number(event.target.value)));
