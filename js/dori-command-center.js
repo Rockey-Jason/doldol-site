@@ -16,7 +16,6 @@
     {id:"bank",title:"돌이은행",category:"금융",description:"계좌, 송금, 예금 및 대출 관리",path:"dori-bank.html",keywords:"은행 계좌 송금 예금 대출"},
     {id:"stocks",title:"돌돌증권",category:"금융",description:"종목, 주문 및 보유 현황",path:"doldolstock.html",keywords:"주식 증권 종목 거래 포트폴리오"},
     {id:"factory",title:"도로늄 공장",category:"산업",description:"3D 공장 건설과 생산 운영",path:"doronium-factory/",keywords:"도로늄 공장 산업 생산 건설"},
-    {id:"arena",title:"ROCKEY",category:"게임",description:"3D 슈팅 게임",path:"rockey/",keywords:"FPS 전투 슈팅 멀티플레이"},
     {id:"clicker",title:"로키 클릭커",category:"게임",description:"로키 코인과 업그레이드",path:"rockey-clicker.html",keywords:"클릭커 코인 업그레이드"},
     {id:"full-throttle",title:"DORI: FULL THROTTLE",category:"게임",description:"돌이 액션 게임",path:"dori-full-throttle.html",keywords:"액션 게임 돌이"},
     {id:"games",title:"돌이게임",category:"게임",description:"게임 허브와 플레이 메뉴",path:"gamepage.html",keywords:"게임 목록 플레이"},
@@ -62,7 +61,7 @@
     link.href = resolveUrl(item);
     link.dataset.hubDestination = item.id;
     if (item.url) { link.target = "_blank"; link.rel = "noopener noreferrer"; }
-    const icons = {home:"⌂",world:"✦",bank:"₩",stocks:"↗",factory:"◇",arena:"◎",clicker:"◉","full-throttle":"⚡",games:"▣",study:"✎",news:"▤",knowledge:"i",shop:"◆",vip:"♛",settings:"⚙",admin:"⛨"};
+    const icons = {home:"⌂",world:"✦",bank:"₩",stocks:"↗",factory:"◇",clicker:"◉","full-throttle":"⚡",games:"▣",study:"✎",news:"▤",knowledge:"i",shop:"◆",vip:"♛",settings:"⚙",admin:"⛨"};
     const icon = make("span", "dori-hub-icon", icons[item.id] || "•");
     icon.setAttribute("aria-hidden", "true");
     const copy = make("span", "dori-hub-copy");
