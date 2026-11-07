@@ -95,6 +95,11 @@ const TRACKS = {
  }
 };
 
+// Five eight-bar phrases form a complete, finite hotel-lounge arrangement.
+Object.values(TRACKS).forEach(track=>{
+ track.duration=track.chords.length*5*4*60/track.bpm;
+});
+
 let audioContext=null,master=null,compressor=null,current=null,volume=0.62;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 const midiHz=note=>440*Math.pow(2,(note-69)/12);
