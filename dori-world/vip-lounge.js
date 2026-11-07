@@ -27,9 +27,9 @@ async function getClient(){
 }
 const $=id=>document.getElementById(id);
 const items=[
-{id:"vip_marble_corgi_statue",name:"화이트 마블 돌이 조각상"},
-{id:"vip_royal_crown_collectible",name:"로열 골드 왕관 오브제"},
-{id:"vip_aurora_crystal_collectible",name:"오로라 크리스탈 장식"}
+{id:"vip_marble_corgi_statue",name:"화이트 마블 돌이 조각상",price:50000},
+{id:"vip_royal_crown_collectible",name:"로열 골드 왕관 오브제",price:120000},
+{id:"vip_aurora_crystal_collectible",name:"오로라 크리스탈 장식",price:250000}
 ];
 const musicCatalog=[
  {id:"lounge_music_royal_piano",name:"로열 피아노",mood:"화이트 마블 라운지에 어울리는 부드러운 피아노와 따뜻한 패드",style:"SIGNATURE · FREE",price:0,free:true,icon:"♬"},
@@ -256,14 +256,23 @@ async function buyMusic(id,button){
  const track=musicCatalog.find(item=>item.id===id);
  if(!track||track.free){toast("구매할 수 없는 음악입니다.");return}
  if(ownedMusic.has(id)){toast("이미 보유한 음악입니다.");return}
- button.disabled=true;button.textContent="구매 처리 중…";
+ button.disabled=true;button.textContent="구매 확인 중…";
  try{
+  const confirmed=await window.DoriPurchaseConfirm?.ask({
+   itemName:track.name,
+   amount:track.price,
+   currency:"돌돌코인",
+   currentBalance:profile?.doldolcoin,
+   detail:"구매가 확정되면 이 음악이 계정에 영구 보관됩니다."
+  });
+  if(!confirmed)return;
+  button.textContent="구매 처리 중…";
   const {data,error}=await db.rpc("purchase_vip_lounge_music",{p_music_id:id});
   if(error)throw error;
   const result=Array.isArray(data)?data[0]:data;
   if(!result||result.success!==true)throw new Error("Purchase not completed");
   ownedMusic.add(id);prefs.musicTrack=id;save();
-  $("memberCoins").textContent=format(result.doldolcoin)+" C";
+  $("memberCoins").textContent=format(result.doldolcoin)+" C";if(profile)profile.doldolcoin=result.doldolcoin;
   renderMusicPlayer();paintMusicShop();
   toast((result.item_name||track.name)+" 구매 완료! 아래 플레이어에서 재생할 수 있어요.");
   if(window.DoriSound)window.DoriSound.play("success");
@@ -658,11 +667,21 @@ async function load(){
 async function buy(id,button){
  if(!db||!user){toast("로그인 상태를 확인해 주세요.");return}
  if(owned.has(id)){toast("이미 보유한 상품입니다.");return}
- button.disabled=true;button.dataset.loading="true";button.textContent="구매 처리 중…";
+ const item=items.find(entry=>entry.id===id);if(!item){toast("상품 정보를 찾을 수 없습니다.");return}
+ button.disabled=true;button.dataset.loading="true";button.textContent="구매 확인 중…";
  try{
+  const confirmed=await window.DoriPurchaseConfirm?.ask({
+   itemName:item.name,
+   amount:item.price,
+   currency:"돌돌코인",
+   currentBalance:profile?.doldolcoin,
+   detail:"구매가 확정되면 수집품이 계정 인벤토리에 영구 보관됩니다."
+  });
+  if(!confirmed)return;
+  button.textContent="구매 처리 중…";
   const {data,error}=await db.rpc("purchase_vip_lounge_item",{p_item_id:id});if(error)throw error;
   const result=Array.isArray(data)?data[0]:data;if(!result||result.success!==true)throw new Error("Purchase not completed");
-  $("memberCoins").textContent=format(result.doldolcoin)+" C";owned.add(id);paintOwned();paintShop();toast((result.item_name||"VIP 상품")+" 구매 완료!");
+  $("memberCoins").textContent=format(result.doldolcoin)+" C";if(profile)profile.doldolcoin=result.doldolcoin;owned.add(id);paintOwned();paintShop();toast((result.item_name||"VIP 상품")+" 구매 완료!");
   if(window.DoriSound)window.DoriSound.play("success");
  }catch(e){
   const msg=String(e.message||"");
