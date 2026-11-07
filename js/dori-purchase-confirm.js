@@ -119,7 +119,7 @@
     .dpc-product-name{color:#f7edda;font-size:15px;font-weight:400;overflow-wrap:anywhere}
     .dpc-price-card{display:flex;flex-direction:column;gap:6px;margin-top:10px;padding:17px 16px;border:1px solid rgba(218,184,111,.35);border-radius:16px;background:linear-gradient(120deg,rgba(194,155,82,.15),rgba(255,255,255,.035))}
     .dpc-price-value{display:flex;align-items:baseline;gap:8px;color:#f2d79d;font:400 clamp(24px,6vw,32px)/1.15 Georgia,serif;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
-    .dpc-price-value small{color:#d3bd8a;font:400 11px/1.4 inherit}
+    .dpc-price-value small{color:#d3bd8a;font-family:inherit;font-size:11px;font-weight:400;line-height:1.4}
     .dpc-price-caption{color:#8d9bb0;font-size:9px}
     .dpc-balance{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;padding:12px 14px;border:1px solid rgba(255,255,255,.08);border-radius:13px;background:rgba(255,255,255,.025)}
     .dpc-balance div{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -129,7 +129,7 @@
     .dpc-detail{margin:12px 1px 0;color:#abb7c8;font-size:10px;line-height:1.7;overflow-wrap:anywhere}
     .dpc-warning{margin:11px 0 0;padding:10px 12px;border:1px solid rgba(237,157,126,.28);border-radius:11px;background:rgba(196,103,74,.11);color:#f2b79c;font-size:10px}
     .dpc-actions{display:grid;grid-template-columns:1fr 1.25fr;gap:9px;margin-top:22px}
-    .dpc-actions button{min-height:46px;padding:0 13px;border-radius:12px;font:400 12px inherit;cursor:pointer;transition:transform .2s ease,filter .2s ease,background .2s ease}
+    .dpc-actions button{min-height:46px;padding:0 13px;border-radius:12px;font-family:inherit;font-size:12px;font-weight:400;cursor:pointer;transition:transform .2s ease,filter .2s ease,background .2s ease}
     .dpc-cancel{border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.055);color:#d2d9e4}
     .dpc-confirm{border:1px solid #c9a363;background:linear-gradient(110deg,#9a743d,#d3b36f 55%,#a47c40);color:#fffdf7;box-shadow:0 7px 21px rgba(189,146,70,.2)}
     .dpc-actions button:hover:not(:disabled){transform:translateY(-2px);filter:brightness(1.08)}
