@@ -5088,6 +5088,24 @@ if (submitTradeButton) {
         submitTradeButton.textContent = side === "BUY" ? "매수 체결 중…" : "매도 체결 중…";
 
         try {
+            if (side === "BUY") {
+                const unitPrice = Math.max(0, Number(stock.current_price || 0));
+                const subtotal = quantity * unitPrice;
+                const estimatedFee = Math.floor(subtotal * 0.0015);
+                const estimatedPayment = Math.round(subtotal) + estimatedFee;
+                const confirmed = await window.DoriPurchaseConfirm?.ask({
+                    itemName: stock.name + " · " + formatNumber(quantity) + "주 매수",
+                    amount: estimatedPayment,
+                    currency: "돌돌코인",
+                    currentBalance: state.account?.doldolcoin,
+                    disableWhenInsufficient: false,
+                    detail: "현재 표시 주가 기준 주식 대금 " + formatCoin(subtotal) +
+                        " + 예상 수수료 " + formatCoin(estimatedFee) +
+                        ". 실제 체결 금액은 체결 시점의 가격에 따라 달라질 수 있습니다."
+                });
+                if (!confirmed) return;
+            }
+
             const { data, error } = await sb.rpc("execute_dori_stock_instant", {
                 p_stock_id: Number(stock.id),
                 p_side: side,
@@ -5215,5 +5233,6 @@ document.addEventListener(
 <script src="js/hancom-weight-normalizer.js?v=20261014-1"></script>
 
 <script type="module" src="js/achievements.js?v=20261025-cross-site-1"></script>
+    <script src="js/dori-purchase-confirm.js?v=20261107-1"></script>
 </body>
 </html>
