@@ -197,7 +197,7 @@ function renderBooks(){
   const volume=document.createElement("span");volume.textContent=[book.part,book.volume].filter(Boolean).join(" · ");meta.append(genre,volume);
   const title=document.createElement("h3");title.textContent=book.title;
   const subtitle=document.createElement("p");subtitle.className="book-card-subtitle"+(book.subtitle?"":" book-empty-copy");subtitle.textContent=book.subtitle||"책 소개를 직접 작성할 수 있습니다.";
-  const desc=document.createElement("p");desc.className="book-card-description"+(written?"":" book-empty-copy");desc.textContent=book.description||(written?"본문이 준비되었습니다.":"아직 본문이 비어 있습니다. 편집하기를 눌러 이야기를 써 보세요.");
+  const desc=document.createElement("p");desc.className="book-card-description"+(written?"":" book-empty-copy");desc.textContent=book.description||(written?"본문이 준비되었습니다.":canEditLibrary()?"아직 본문이 비어 있습니다. 편집하기를 눌러 직접 작성해 주세요.":"아직 관리자가 원고를 작성하지 않았습니다.");
   const progressBlock=document.createElement("div");progressBlock.className="book-progress-block";
   const label=document.createElement("div");label.className="book-progress-label";
   const status=document.createElement("span");status.textContent=!written?"원고 작성 대기":completed?"완독":progress?"독서 진행 중":"아직 읽지 않음";
