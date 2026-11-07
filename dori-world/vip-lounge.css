@@ -413,3 +413,5 @@ body[data-theme="rose"] .lounge-music-player{background:rgba(255,247,244,.96);co
  .music-more-btn{padding:0 6px}
 }
 @media(prefers-reduced-motion:reduce){.music-shop-card,.music-player-bars i,.music-play-btn{animation:none!important;transition:none!important}}
+
+.lounge-music-player[hidden]{display:none!important}
