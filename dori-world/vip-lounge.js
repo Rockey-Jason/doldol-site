@@ -114,29 +114,48 @@ function paintShop(){
 function hasBookContent(book){
  return Boolean(book&&Array.isArray(book.chapters)&&book.chapters.some(chapter=>String(chapter.content||"").trim()));
 }
-function applyBookManuscripts(){
+function canEditLibrary(){
+ return Boolean(profile&&profile.is_admin===true&&Number(profile.user_level||0)>=10);
+}
+function resetBookDefaults(){
  BOOKS.forEach(book=>{
   const original=BOOK_DEFAULTS.find(item=>item.id===book.id);
-  if(original){
-   book.subtitle=original.subtitle||"";
-   book.description=original.description||"";
-   book.author=original.author||"";
-   book.chapters=original.chapters.map(chapter=>({...chapter}));
+  if(!original)return;
+  book.subtitle=original.subtitle||"";
+  book.description=original.description||"";
+  book.author=original.author||"";
+  book.chapters=original.chapters.map(chapter=>({...chapter}));
+ });
+}
+async function loadSharedBooks(client){
+ const {data,error}=await client.from("dori_library_books").select("book_id,subtitle,chapters,updated_at");
+ if(error)throw error;
+ resetBookDefaults();
+ (data||[]).forEach(row=>{
+  const book=BOOKS.find(item=>item.id===row.book_id);
+  if(!book)return;
+  book.subtitle=String(row.subtitle||"");
+  book.description="";
+  if(Array.isArray(row.chapters)&&row.chapters.length){
+   book.chapters=row.chapters.slice(0,200).map((chapter,index)=>({
+    title:String(chapter&&chapter.title||("제"+(index+1)+"장")).slice(0,100),
+    content:String(chapter&&chapter.content||"")
+   }));
   }
  });
- const manuscripts=bookState.manuscripts&&typeof bookState.manuscripts==="object"?bookState.manuscripts:{};
- BOOKS.forEach(book=>{
-  const saved=manuscripts[book.id];if(!saved||typeof saved!=="object")return;
-  if(typeof saved.subtitle==="string")book.subtitle=saved.subtitle;
-  if(Array.isArray(saved.chapters)&&saved.chapters.length)book.chapters=saved.chapters.slice(0,200).map((chapter,index)=>({title:String(chapter&&chapter.title||("제"+(index+1)+"장")).slice(0,100),content:String(chapter&&chapter.content||"")}));
- });
+ renderBooks();
 }
 function loadBookState(){
  let saved=null,legacy=null;
  try{saved=JSON.parse(localStorage.getItem(bookStoreKey)||"null");legacy=JSON.parse(localStorage.getItem(bookStoreKey.replace(":v2:",":v1:"))||"null")}catch(e){}
  const source=saved&&typeof saved==="object"?saved:{};
- bookState={progress:{},favorites:Array.isArray(source.favorites)?source.favorites:(Array.isArray(legacy&&legacy.favorites)?legacy.favorites:[]),bookmarks:{},fontScale:Math.max(.85,Math.min(1.4,Number(source.fontScale||legacy&&legacy.fontScale)||1)),manuscripts:source.manuscripts&&typeof source.manuscripts==="object"?source.manuscripts:{}};
- applyBookManuscripts();renderBooks();
+ bookState={
+  progress:{},
+  favorites:Array.isArray(source.favorites)?source.favorites:(Array.isArray(legacy&&legacy.favorites)?legacy.favorites:[]),
+  bookmarks:{},
+  fontScale:Math.max(.85,Math.min(1.4,Number(source.fontScale||legacy&&legacy.fontScale)||1))
+ };
+ renderBooks();
 }
 function saveBookState(){
  try{localStorage.setItem(bookStoreKey,JSON.stringify(bookState));return true}
@@ -186,13 +205,20 @@ function renderBooks(){
   const track=document.createElement("div");track.className="book-progress-track";track.hidden=!written;
   const fill=document.createElement("span");fill.style.width=percent+"%";track.append(fill);progressBlock.append(label,track);
   const actions=document.createElement("div");actions.className="book-card-actions";
-  const read=document.createElement("button");read.type="button";read.className="book-read-btn";read.textContent=!written?"원고 작성하기":progress?"이어서 읽기":"읽기";
+  const read=document.createElement("button");read.type="button";read.className="book-read-btn";
+  read.textContent=!written?(canEditLibrary()?"원고 작성하기":"원고 준비 중"):progress?"이어서 읽기":"읽기";
+  read.disabled=!written&&!canEditLibrary();
+  if(read.disabled)read.title="관리자가 원고를 등록하면 읽을 수 있습니다.";
   read.addEventListener("click",()=>openBook(book.id,progress?chapter:0));
-  const edit=document.createElement("button");edit.type="button";edit.className="book-edit-btn";edit.textContent="편집";
-  edit.addEventListener("click",()=>{openBook(book.id,progress?chapter:0);if(written)beginBookEdit()});
+  actions.append(read);
+  if(canEditLibrary()){
+   const edit=document.createElement("button");edit.type="button";edit.className="book-edit-btn";edit.textContent="편집";
+   edit.addEventListener("click",()=>{openBook(book.id,progress?chapter:0);if(written)beginBookEdit()});
+   actions.append(edit);
+  }
   const fav=document.createElement("button");fav.type="button";fav.className="book-favorite";fav.setAttribute("aria-pressed",String(favorite));fav.setAttribute("aria-label",favorite?"즐겨찾기에서 제거":"즐겨찾기에 추가");fav.textContent=favorite?"♥":"♡";
   fav.addEventListener("click",()=>{bookState.favorites=favorite?bookState.favorites.filter(id=>id!==book.id):[...bookState.favorites,book.id];saveBookState();renderBooks();toast(favorite?"즐겨찾기에서 제거했어요.":"즐겨찾기에 추가했어요.")});
-  actions.append(read,edit,fav);
+  actions.append(fav);
   const state=document.createElement("div");state.className="book-card-status";state.textContent=count+"개 장 · "+(written?"원고 작성됨":"원고 비어 있음")+" · 책갈피 "+bookmarkList(book.id).length+"개";
   content.append(meta,title,subtitle,desc,progressBlock,actions,state);card.append(cover,content);grid.append(card);
  });
@@ -224,7 +250,7 @@ function renderReader(){
  activeBook.chapters=chapters;activeChapter=Math.max(0,Math.min(chapters.length-1,activeChapter));
  const chapter=chapters[activeChapter],dialog=document.querySelector(".book-reader-dialog");
  dialog.classList.remove("editing");$("bookEditorPanel").hidden=true;
- $("readerEditToggle").hidden=false;$("readerFontDown").hidden=false;$("readerFontUp").hidden=false;
+ $("readerEditToggle").hidden=!canEditLibrary();$("readerFontDown").hidden=false;$("readerFontUp").hidden=false;
  $("bookReaderMeta").textContent=[activeBook.part,activeBook.volume,activeBook.author||"직접 집필"].filter(Boolean).join(" · ");
  $("bookReaderTitle").textContent=activeBook.title;$("bookReaderSubtitle").textContent=activeBook.subtitle||"";$("bookReaderSubtitle").hidden=!activeBook.subtitle;
  $("readerChapterKicker").textContent="CHAPTER "+String(activeChapter+1).padStart(2,"0")+" / "+String(chapters.length).padStart(2,"0");
@@ -237,7 +263,7 @@ function renderReader(){
   String(chapter.content).split(/\n\s*\n/).filter(Boolean).forEach(paragraph=>{const p=document.createElement("p");p.textContent=paragraph;body.append(p)});
   const end=document.createElement("div");end.className="reader-endmark";end.textContent="❦";body.append(end);
  }else{
-  const empty=document.createElement("p");empty.className="reader-empty-state";empty.textContent="아직 작성된 내용이 없습니다. 상단의 ‘원고 편집’을 눌러 직접 이야기를 작성해 주세요.";body.append(empty);
+  const empty=document.createElement("p");empty.className="reader-empty-state";empty.textContent=canEditLibrary()?"아직 작성된 내용이 없습니다. 상단의 ‘원고 편집’을 눌러 직접 이야기를 작성해 주세요.":"아직 관리자가 원고를 등록하지 않았습니다. 원고가 준비되면 이곳에서 읽을 수 있습니다.";body.append(empty);
  }
  const progress=bookProgress(activeBook);savedReaderScroll=progress&&progress.chapter===activeChapter?Math.max(0,Math.min(1,Number(progress.scroll)||0)):0;
  dialog.style.setProperty("--reader-font-scale",String(bookState.fontScale));
@@ -273,6 +299,7 @@ function syncBookEditorDraft(){
  }));
 }
 function beginBookEdit(){
+ if(!canEditLibrary()){toast("책 원고 편집은 관리자 계정만 사용할 수 있습니다.");return}
  if(!activeBook)return;
  if(hasBookContent(activeBook))saveReaderProgress();
  editorDraft={subtitle:String(activeBook.subtitle||""),chapters:(activeBook.chapters&&activeBook.chapters.length?activeBook.chapters:[{title:"제1장",content:""}]).map(chapter=>({title:String(chapter.title||""),content:String(chapter.content||"")}))};
@@ -282,7 +309,8 @@ function beginBookEdit(){
  $("editorBookSubtitle").focus({preventScroll:true});
 }
 function cancelBookEdit(){if(!activeBook)return;editorDraft=null;renderReader()}
-function saveBookEdit(){
+async function saveBookEdit(){
+ if(!canEditLibrary()){toast("관리자 계정만 원고를 저장할 수 있습니다.");return}
  if(!activeBook||!editorDraft)return;
  const chapters=Array.from($("bookEditorChapters").querySelectorAll(".book-editor-chapter")).map((card,index)=>({
   title:String(card.querySelector(".book-editor-input").value||"").trim().slice(0,100)||("제"+(index+1)+"장"),
@@ -290,17 +318,26 @@ function saveBookEdit(){
  }));
  if(!chapters.length)chapters.push({title:"제1장",content:""});
  const subtitle=String($("editorBookSubtitle").value||"").trim().slice(0,300);
- const bookId=activeBook.id,oldSubtitle=activeBook.subtitle,oldChapters=activeBook.chapters;
- const oldManuscript=bookState.manuscripts[bookId],oldProgress=bookState.progress[bookId],oldMarks=bookState.bookmarks[bookId];
- activeBook.subtitle=subtitle;activeBook.chapters=chapters;
- bookState.manuscripts[bookId]={subtitle,chapters};delete bookState.progress[bookId];delete bookState.bookmarks[bookId];
- if(!saveBookState()){
-  activeBook.subtitle=oldSubtitle;activeBook.chapters=oldChapters;
-  if(oldManuscript)bookState.manuscripts[bookId]=oldManuscript;else delete bookState.manuscripts[bookId];
-  if(oldProgress)bookState.progress[bookId]=oldProgress;if(oldMarks)bookState.bookmarks[bookId]=oldMarks;
-  return;
- }
- activeChapter=0;editorDraft=null;renderReader();renderBooks();toast("원고를 현재 브라우저에 저장했습니다.");
+ const button=$("saveBookEdit");button.disabled=true;button.textContent="저장 중…";
+ try{
+  const client=db||await getClient();
+  const {error}=await client.from("dori_library_books").upsert({
+   book_id:activeBook.id,
+   subtitle,
+   chapters,
+   updated_by:user.id,
+   updated_at:new Date().toISOString()
+  },{onConflict:"book_id"});
+  if(error)throw error;
+  activeBook.subtitle=subtitle;activeBook.chapters=chapters;
+  delete bookState.progress[activeBook.id];delete bookState.bookmarks[activeBook.id];
+  saveBookState();editorDraft=null;renderReader();renderBooks();
+  toast("원고를 저장했습니다. 모든 회원에게 반영됩니다.");
+ }catch(error){
+  console.error("VIP Library manuscript save failed",error);
+  toast(/row.level|policy|permission|403/i.test(String(error&&error.message||""))?
+   "관리자 권한이 확인되지 않아 저장하지 못했습니다.":"원고 저장에 실패했습니다. 연결 상태를 확인하고 다시 시도해 주세요.");
+ }finally{button.disabled=false;button.textContent="원고 저장"}
 }
 function openBook(bookId,chapterIndex){
  const book=BOOKS.find(item=>item.id===bookId);if(!book)return;
@@ -308,7 +345,7 @@ function openBook(bookId,chapterIndex){
  activeChapter=Math.max(0,Math.min(Math.max(0,book.chapters.length-1),Number(chapterIndex!=null?chapterIndex:progress&&progress.chapter)||0));
  $("bookReader").classList.add("open");$("bookReader").setAttribute("aria-hidden","false");document.body.style.overflow="hidden";
  renderReader();
- if(!hasBookContent(book)){beginBookEdit();return}
+ if(!hasBookContent(book)&&canEditLibrary()){beginBookEdit();return}
  if(!progress){bookState.progress[book.id]={chapter:activeChapter,scroll:0,completed:false,updatedAt:new Date().toISOString()};saveBookState();renderBooks()}
 }
 function closeBookReader(){
@@ -402,6 +439,8 @@ async function load(){
   }
 
   member(p,session);
+  stage="공용 도서 원고 조회";
+  await loadSharedBooks(client);
   const level=Number(p.user_level||1);
   if(p.is_admin!==true&&level<2){
    setLock("VIP 멤버십이 필요합니다","현재 등급은 "+(levels[level]||"일반")+"입니다. 프리미엄 등급 이상부터 라운지를 이용할 수 있습니다.");
