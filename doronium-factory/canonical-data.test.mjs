@@ -74,7 +74,7 @@ test("save migration remaps unambiguous aliases, preserves active reservations a
 test("legacy Infinity output ID migrates to the canonical finished-product ID without losing saved state",()=>{
  const state={
   inventory:{infinity:1},meta:{infinity:{quality:100,purity:100,synthetic:false}},
-  stats:{produced:{infinity:1},gathered:{}},
+  stats:{produced:{infinity:1},gathered:{},soldByItem:{infinity:2}},
   runtime:{itemStacks:[{runtimeID:"IS-1",itemID:"infinity",quantity:1,quality:100,purity:100,synthetic:false}],reservations:{}},
   fusionJob:{outputItemID:"infinity"},
   fusionSettlements:{JOB:{outputItemID:"infinity",outputQuantity:1}},
@@ -88,6 +88,7 @@ test("legacy Infinity output ID migrates to the canonical finished-product ID wi
  assert.equal(state.inventory.infinity,undefined);
  assert.equal(state.meta[CANONICAL_INFINITY_DORONUM_ID].quality,100);
  assert.equal(state.stats.produced[CANONICAL_INFINITY_DORONUM_ID],1);
+ assert.equal(state.stats.soldByItem[CANONICAL_INFINITY_DORONUM_ID],2);
  assert.equal(state.fusionJob.outputItemID,CANONICAL_INFINITY_DORONUM_ID);
  assert.equal(state.fusionSettlements.JOB.outputItemID,CANONICAL_INFINITY_DORONUM_ID);
  assert.equal(state.completionBuffer[0].itemID,CANONICAL_INFINITY_DORONUM_ID);
