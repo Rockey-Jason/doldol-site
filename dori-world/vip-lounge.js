@@ -125,28 +125,16 @@ function paintShop(){
 }
 
 const MUSIC_IDLE_DELAY=20000;
-let musicIdleTimer=0,musicMiniObserver=null;
+let musicIdleTimer=0;
 function clearMusicIdleTimer(){
  if(musicIdleTimer){clearTimeout(musicIdleTimer);musicIdleTimer=0}
 }
 function positionMusicMini(){
  const dock=$("loungeMusicPlayer");if(!dock)return;
- const bell=document.querySelector("#dori-notification-root .dn-bell, .dn-bell");
  const small=window.innerWidth<=600,size=small?46:52;
  dock.style.setProperty("--music-mini-size",size+"px");
- if(bell){
-  const rect=bell.getBoundingClientRect();
-  const targetLeft=rect.left-size-10;
-  const shift=targetLeft+size/2-window.innerWidth/2;
-  const bottom=Math.max(6,window.innerHeight-(rect.top+rect.height/2)-size/2);
-  dock.style.setProperty("--music-mini-shift",shift+"px");
-  dock.style.setProperty("--music-mini-bottom",bottom+"px");
- }else{
-  const targetLeft=window.innerWidth-(small?82:86)-size;
-  const shift=targetLeft+size/2-window.innerWidth/2;
-  dock.style.setProperty("--music-mini-shift",shift+"px");
-  dock.style.setProperty("--music-mini-bottom",(small?26:25)+"px");
- }
+ dock.style.setProperty("--music-mini-right",(small?14:18)+"px");
+ dock.style.setProperty("--music-mini-bottom",(small?18:22)+"px");
 }
 function collapseMusicPlayer(){
  const dock=$("loungeMusicPlayer");if(!dock||dock.hidden)return;
@@ -176,16 +164,6 @@ function noteMusicActivity(){
  const dock=$("loungeMusicPlayer");
  if(!dock||dock.hidden||dock.classList.contains("is-collapsed"))return;
  armMusicIdleTimer();
-}
-function observeNotificationBell(){
- positionMusicMini();
- if(musicMiniObserver||!document.body)return;
- musicMiniObserver=new MutationObserver(()=>{
-  if(document.querySelector("#dori-notification-root .dn-bell, .dn-bell")){
-   positionMusicMini();musicMiniObserver.disconnect();musicMiniObserver=null;
-  }
- });
- musicMiniObserver.observe(document.body,{childList:true,subtree:true});
 }
 function ownedMusicTracks(){return musicCatalog.filter(track=>ownedMusic.has(track.id))}
 function selectedMusic(){return musicCatalog.find(track=>track.id===prefs.musicTrack)||musicCatalog[0]}
@@ -657,7 +635,6 @@ async function load(){
   $("loungeMusicPlayer").hidden=false;
   $("loungeMusicPlayer").classList.remove("is-collapsed");
   document.body.classList.add("lounge-music-expanded");
-  observeNotificationBell();
   armMusicIdleTimer();
 
   stage="수집품 및 음악 인벤토리 조회";
@@ -783,6 +760,6 @@ void load();
 window.addEventListener("pagehide",()=>{
  if(readerScrollTimer)clearTimeout(readerScrollTimer);
  clearMusicIdleTimer();
- if(musicMiniObserver){musicMiniObserver.disconnect();musicMiniObserver=null}
+ 
 },{once:true});
 })();
