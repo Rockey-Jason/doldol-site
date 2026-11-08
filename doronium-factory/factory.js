@@ -1952,14 +1952,21 @@ if(E2E_MODE){
    return {status:b.status,ironOreBefore:before,ironOreAfter:itemCount("ironOre")};
   },
   ledger(){
-   const total=id=>S.inventory[id]||0;
+   const total=id=>(S.runtime?.itemStacks||[]).filter(stack=>!stack.quarantined&&canonicalItemID(stack.itemID)===canonicalItemID(id)).reduce((n,stack)=>n+Math.max(0,Math.floor(Number(stack.quantity)||0)),0);
+   const countRecord=(record,id)=>Object.entries(record||{}).reduce((n,[rawID,quantity])=>n+(canonicalItemID(rawID)===canonicalItemID(id)?Math.max(0,Math.floor(Number(quantity)||0)):0),0);
+   const countStack=(stack,id)=>stack&&canonicalItemID(stack.id)===canonicalItemID(id)?Math.max(0,Math.floor(Number(stack.qty)||0)):0;
    const result={ironOre:total("ironOre"),coal:total("coal"),ironPlate:total("ironPlate")};
    for(const b of S.buildings){
-    result.ironOre+=(b.input?.ironOre||0)+(b.output?.id==="ironOre"?b.output.qty:0)+(b.item?.id==="ironOre"?b.item.qty:0);
-    result.coal+=(b.input?.coal||0)+(b.output?.id==="coal"?b.output.qty:0)+(b.item?.id==="coal"?b.item.qty:0);
-    result.ironPlate+=(b.input?.ironPlate||0)+(b.output?.id==="ironPlate"?b.output.qty:0)+(b.item?.id==="ironPlate"?b.item.qty:0);
-    if(b.activeMeta&&b.type==="smelter"){result.ironOre+=2;result.coal+=1;}
+    for(const id of ["ironOre","coal","ironPlate"]){
+     result[id]+=countRecord(b.input,id)+countStack(b.output,id)+countStack(b.item,id);
+    }
+    const inProcess=Array.isArray(b.activeInputQuantities)?b.activeInputQuantities:Array.isArray(b.activeMeta?.consumedInputs)?b.activeMeta.consumedInputs:[];
+    for(const input of inProcess){
+     if(input?.itemID&&Object.hasOwn(result,canonicalItemID(input.itemID))){const key=canonicalItemID(input.itemID);result[key]+=Math.max(0,Math.floor(Number(input.quantity)||0))}
+    }
    }
+   for(const item of S.completionBuffer||[])if(item?.itemID&&Object.hasOwn(result,canonicalItemID(item.itemID)))result[canonicalItemID(item.itemID)]+=Math.max(0,Math.floor(Number(item.quantity)||0));
+   for(const shipment of S.contractRuntime?.shipments||[])for(const stack of shipment.cargo||[])if(stack?.itemID&&Object.hasOwn(result,canonicalItemID(stack.itemID)))result[canonicalItemID(stack.itemID)]+=Math.max(0,Math.floor(Number(stack.quantity)||0));
    return {...result,oreBalance:result.ironOre+2*result.ironPlate,coalBalance:result.coal+result.ironPlate};
   },
   interactAt(x,y){selectTile(x,y);return {selectedBuilding,path:playerMotion.path.length,player:{x:S.player.x,y:S.player.y}};},
