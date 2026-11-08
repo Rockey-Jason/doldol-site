@@ -236,14 +236,14 @@
       <div class="book-editor-intro">
         <div class="reader-book-meta">YOUR OWN MANUSCRIPT</div>
         <h3>나만의 원고 작성</h3>
-        <p>관리자 계정에서만 원고를 수정할 수 있습니다. 저장한 원고는 도서관에 공유되어 모든 회원에게 반영됩니다.</p>
+        <p>장 제목만 정하면 본문은 자유롭게 이어서 작성할 수 있습니다. 한 페이지를 채우면 다음 페이지가 자동으로 이어집니다.</p>
       </div>
       <label class="book-editor-field book-editor-subtitle-field">
         <span>책 소개 (선택)</span>
         <input class="book-editor-input" id="editorBookSubtitle" type="text" maxlength="300" placeholder="책의 소개를 직접 적어 주세요.">
       </label>
       <label class="book-editor-field book-editor-toc-field"><span>목차 작성</span><textarea class="book-editor-textarea" id="editorBookToc" rows="6" maxlength="6000" placeholder="프롤로그&#10;제1장: 로키랜드&#10;제2장: 돌돌바이러스&#10;제3장: 도주&#10;에필로그"></textarea><small>한 줄에 목차 항목 하나씩 작성하세요. 프롤로그, 에필로그, 부록 등도 자유롭게 적을 수 있습니다.</small></label>
-      <div class="book-editor-chapters" id="bookEditorChapters"></div>
+      <div class="book-editor-chapters" id="bookEditorChapters" aria-label="챕터 원고"></div>
       <div class="book-editor-add-row"><button class="secondary-btn" type="button" id="addBookChapter">＋ 장 추가</button></div>
       <div class="book-editor-actions">
         <button class="secondary-btn" type="button" id="cancelBookEdit">취소</button>
