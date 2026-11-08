@@ -68,6 +68,7 @@ export function tickInfinityFusion(state,{deltaSeconds=.1,machineExists=true,pow
  if(!machineExists){job.status="ERROR";job.errorCode="MACHINE_MISSING";return {status:job.status,completed:false,recoverable:true}}
  if(maintenanceRequired){job.status="ERROR";job.errorCode="MAINTENANCE_REQUIRED";return {status:job.status,completed:false,recoverable:true}}
  if(!Number.isFinite(deltaSeconds)||deltaSeconds<0)return {status:job.status,completed:false,error:"INVALID_DELTA"};
+ if(!job.legacyConsumedInput){const reservationIDs=job.reservationIDs||[],live=state.runtime?.reservations||{};if(reservationIDs.length!==15||reservationIDs.some(id=>live[id]?.status!=="reserved")){job.status="ERROR";job.errorCode="RESERVATION_LEDGER_MISMATCH";return {status:job.status,completed:false,recoverable:false,error:job.errorCode}}}
  if(!Number.isFinite(powerRatio)||powerRatio<POWER_FLOOR){job.status="WAITING_POWER";return {status:job.status,completed:false}}
  job.status="RUNNING";let remaining=deltaSeconds;
  while(remaining>0&&job.stageIndex<7){
