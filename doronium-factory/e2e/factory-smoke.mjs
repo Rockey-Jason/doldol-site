@@ -74,6 +74,10 @@ try {
   const ownershipCase = await desktop.evaluate(() => window.__doroniumFactoryTest.setupOwnershipLedgerTest());
   assert.equal(ownershipCase.reservation !== null, true, "The custody scenario must create a real item reservation");
   assert.equal(ownershipCase.validation.valid, true, "Every item must have exactly one valid custody owner");
+  assert.deepEqual(ownershipCase.journalAfter, ownershipCase.journalBefore, "Rebuilding a custody snapshot must preserve committed transactions, consumed records and monotonic ledger IDs");
+  assert.equal(ownershipCase.journalAfter.transactions, 1, "The idempotency journal must survive custody snapshot rebuilds");
+  assert.equal(ownershipCase.journalAfter.consumed, 1, "The consumed-item journal must survive custody snapshot rebuilds");
+  assert.ok(ownershipCase.journalAfter.nextLedgerID >= ownershipCase.journalBefore.nextLedgerID, "Rebuilding a custody snapshot must never rewind the ledger ID counter");
   assert.equal(ownershipCase.itemTotals.ITEM_IRON_ORE, 11, "Reserved ore and in-process ore must both be represented exactly once");
   assert.equal(ownershipCase.itemTotals.coal, 2, "Machine input buffers must be represented in custody");
   assert.equal(ownershipCase.itemTotals.ironPlate, 2, "Machine output buffers must be represented in custody");
