@@ -1,3 +1,16 @@
+## 2026-11-08 — simulation integrity and browser regression corrections (in progress)
+
+- Corrected two isolated E2E production fixtures. Powered machine tests now instantiate coal generators and pass the real `currentPower()` allocation object into machine ticks; they no longer pass a numeric placeholder that the runtime cannot interpret.
+- Ported the missing deterministic runtime primitives from the separate integrity branch without replacing v4.5's newer qualified reservation, quarantine or canonical-data implementation:
+  - named deterministic RNG streams persisted in save state;
+  - bounded event queue with stable sequence IDs, idempotency keys, retryable failed events and bounded journal;
+  - deterministic fixed-step budget capped at ten ticks per animation frame while retaining backlog.
+- Quest rewards now enter the simulation event queue and are applied through an idempotent event handler, rather than directly mutating the economy from the quest-check function.
+- Added unit tests for ordered/idempotent reward events, retry behavior, deterministic RNG streams, event counter validation and maximum ten-tick catch-up.
+- Commits on `codex/doronium-v4.5-completion`: `09149a1d` (E2E power fixtures), `d73de1f` (runtime primitives), `14c504a` (unit tests), `a24a7fb` (quest/catch-up integration).
+- Static validation passed on commit `a24a7fb` in run [42428272002](https://github.com/Rockey-Jason/doldol-site/actions/runs/42428272002). The browser-regression job was still running at the time this entry was written; do not treat it as passed until the run concludes.
+
+The above closes only the event/step-budget gap. It does not finish the full 12-phase master roadmap: the 2048m world conversion, all-fluid live networks, all-machine failure coverage, global ownership-ledger adoption, canonical recipes/models and complete Infinity migration/interlocks, full contract catalog, real multi-device account conflict tests, physical mobile-device testing and 60-minute wall-clock soak remain open. The v4.5 branch remains a development candidate, not a completed release.
 
 
 ## 2026-11-04 — v4.5 completion implementation pass (work in progress)
