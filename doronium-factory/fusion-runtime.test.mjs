@@ -6,6 +6,36 @@ function state(){const s={tick:0,inventory:{},runtime:createRuntimeState()};for(
 const plan={jobID:"JOB-1",machineID:"FUSION-1",stageDurationsSeconds:[30,35,40,45,45,35,30],stagePowerMW:[.5,1,1.5,2,3,4,5]};
 test("Fusion reserves all 1500 canonical inputs without consuming them",()=>{const s=state(),before=stackTotals(s);const r=startInfinityFusion(s,plan);assert.equal(r.ok,true);assert.equal(s.fusionJob.reservationIDs.length,15);assert.deepEqual(stackTotals(s),before)});
 test("missing machine preserves job and reservations for recovery",()=>{const s=state();startInfinityFusion(s,plan);const r=tickInfinityFusion(s,{machineExists:false});assert.equal(r.recoverable,true);assert.equal(recoverInfinityFusion(s).recoverable,true);assert.equal(s.fusionJob.status,"RESERVED")});
+test("qualified canonical inputs ignore unrelated low-quality stock and reserve exactly 100 each",()=>{
+ const s=state(),first=CANONICAL_DORONUM_IDS[0];
+ addItemStack(s,first,50,{quality:70,purity:99,synthetic:false});
+ const result=startInfinityFusion(s,plan);
+ assert.equal(result.ok,true);
+ const reservationIDs=result.job.reservationIDs;
+ assert.equal(reservationIDs.length,15);
+ const reservation=Object.values(s.runtime.reservations).filter(item=>reservationIDs.includes(item.reservationID));
+ const selected=reservation.flatMap(item=>item.allocations||[]).filter(item=>item.itemID===first);
+ assert.equal(selected.reduce((n,item)=>n+item.quantity,0),100);
+ assert.equal(s.runtime.itemStacks.filter(item=>item.itemID===first&&item.quality<90).reduce((n,item)=>n+item.quantity,0),50);
+ assert.equal(s.fusionJob.inputQuantity,1500);
+});
+test("a deficient qualified canonical item blocks Fusion without creating reservations",()=>{
+ const s=state(),first=CANONICAL_DORONUM_IDS[0];
+ s.runtime.itemStacks=s.runtime.itemStacks.filter(item=>item.itemID!==first);
+ addItemStack(s,first,99,{quality:95,purity:95,synthetic:false});
+ const result=startInfinityFusion(s,plan);
+ assert.equal(result.ok,false);
+ assert.equal(result.reason,"manifest-invalid");
+ assert.equal(Object.keys(s.runtime.reservations).length,0);
+});
+test("saved calibration state can recover when its 15 reservations remain valid",()=>{
+ const s=state();const started=startInfinityFusion(s,plan);
+ s.fusionJob.status="CALIBRATING";
+ const recovered=recoverInfinityFusion(s);
+ assert.equal(recovered.recoverable,true);
+ assert.equal(s.fusionJob.status,"RESERVED");
+ assert.equal(s.fusionJob.reservationIDs.length,15);
+});
 test("power interruption pauses without losing reserved inputs",()=>{const s=state();startInfinityFusion(s,plan);assert.equal(tickInfinityFusion(s,{powerRatio:.5}).status,"WAITING_POWER");assert.equal(s.fusionJob.reservationIDs.length,15)});
 test("completed seven-stage fusion creates exactly one output",()=>{const s=state();startInfinityFusion(s,plan);for(let i=0;i<2600;i++)tickInfinityFusion(s,{deltaSeconds:.1,powerRatio:1});assert.equal(s.fusionJob.status,"COMPLETED");assert.equal(s.runtime.itemStacks.filter(x=>x.itemID===CANONICAL_INFINITY_DORONUM_ID).reduce((n,x)=>n+x.quantity,0),1);assert.equal(s.runtime.itemStacks.reduce((n,x)=>n+x.quantity,0),1)});
 test("cancel releases all inputs and is idempotently unavailable afterwards",()=>{const s=state();startInfinityFusion(s,plan);assert.equal(cancelInfinityFusion(s,{jobID:"JOB-1"}),true);assert.equal(cancelInfinityFusion(s,{jobID:"JOB-1"}),false);assert.equal(s.runtime.itemStacks.reduce((n,x)=>n+x.quantity,0),1500);assert.equal(Object.keys(s.runtime.reservations).length,0)});
