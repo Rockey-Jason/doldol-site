@@ -22,3 +22,10 @@ The current development branch adds live integrations beyond the 2026-11-03 audi
 The latest branch checkpoint passed static validation and Playwright browser regression (run 41778308536). It passed desktop/mobile-emulation WebGL smoke, the virtual one-hour scenario, and the newly added power/fluid/Fusion/mining/logistics regression checks. This is not a physical Android/iOS test or a 60-minute wall-clock soak. No live main-branch deployment is claimed here.
 
 **Overall v4.5.0 status remains Partial/Conflict.** The incremental work above must not be mistaken for release completion. The original completion declaration rule remains in force.
+
+
+## 2026-11-08 runtime integrity update — partial
+
+The branch now includes a persisted deterministic RNG-stream API, an ordered/idempotent event queue with bounded retry journal, idempotent quest reward processing, and a maximum-ten-fixed-tick catch-up budget. Unit coverage has been added for event ordering/deduplication/retry, RNG replay, and catch-up backlog preservation. The latest static validation passed; browser regression is pending. These changes do not close the separate ownership-ledger, all-fluid, world-scale, canonical-recipe/model or Infinity interlock gates above.
+
+**Do not mark the project complete from this update.** Remaining gates and the distinction between virtual and physical tests continue to apply.
