@@ -304,6 +304,7 @@ try {
   assert.equal(miningSetup.miner, true, "An iron drill must install on a matching underground iron deposit");
   assert.equal(miningSetup.deposit.amount, 28, "Installing a drill must not consume the deposit");
   const miningResult = await desktop.evaluate(() => window.__doroniumFactoryTest.runMiningAutomationTest());
+  assert.ok(miningResult.output, "Automatic mining did not produce output: "+JSON.stringify(miningResult));
   assert.equal(miningResult.output.id, "ITEM_IRON_ORE", "The automatic miner must extract its matching mineral");
   assert.equal(miningResult.output.qty, 1, "One extraction cycle must produce exactly one ore");
   assert.equal(miningResult.depositAmount, 27, "One extraction cycle must reduce the source deposit exactly once");
@@ -317,6 +318,7 @@ try {
   assert.equal(advancedMiningSetup.generator, true, "The mine generator must be placeable beside advanced mineral deposits");
   assert.equal(advancedMiningSetup.miner, true, "The advanced miner must accept supported special mineral deposits");
   const advancedMiningResult = await desktop.evaluate(() => window.__doroniumFactoryTest.runAdvancedMiningTest());
+  assert.ok(advancedMiningResult.output, "Advanced mining did not produce output: "+JSON.stringify(advancedMiningResult));
   assert.equal(advancedMiningResult.output.id, "ITEM_COLD_CRYSTAL_RAW", "Advanced mining must extract the selected canonical raw crystal");
   assert.equal(advancedMiningResult.depositAmount, advancedMiningSetup.deposit.amount - 1, "Advanced extraction must reduce its deposit exactly once");
   assert.equal(advancedMiningResult.power.status, "RUNNING", "The underground generator must power the advanced miner");
