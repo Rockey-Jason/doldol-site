@@ -1,3 +1,13 @@
+## 2026-11-08 follow-up — canonical Infinity output migration (in progress)
+
+- Separated the finished Infinity product ID from the 15 canonical input IDs as `ITEM_DORONUM_INFINITY`; the fifteen input types and their total requirement remain exactly 15 × 100 = 1,500.
+- Added the old `infinity` item key as an explicit, unambiguous migration alias. Existing inventory, metadata, produced/gathered/sold counters, machine output buffers, contract cargo, active fusion output fields, completion buffers and prior fusion settlement records are remapped without discarding saved quantities.
+- The live fusion settlement default and in-game final output now write the canonical product ID. The codex retains its legacy display alias for 3D preview compatibility while displaying canonical inventory counts.
+- Added save-migration and fusion-output regression assertions, and updated the ownership E2E assertion to expect the canonical output ID.
+- Commits: `027ab950` (canonical alias and save migration), `da92fd74` (fusion settlement default), `d1c3fc04` (factory UI/live output), `c7e57a68` (migration test), `8e9521c9` (fusion tests), `6ac98336` (ownership E2E expectation), `025a3efc` and `d7daf2ee` (sales-ledger migration and test).
+- Static validation was green on the earlier checkpoint; the latest browser regression and full validation for the current branch head must finish before this update can be treated as green.
+
+This is an ID/data-integrity correction, not completion of the complete Infinity safety/interlock path or the remaining v4.5 master roadmap.
 ## 2026-11-08 — simulation integrity and browser regression corrections (in progress)
 
 - Corrected two isolated E2E production fixtures. Powered machine tests now instantiate coal generators and pass the real `currentPower()` allocation object into machine ticks; they no longer pass a numeric placeholder that the runtime cannot interpret.
