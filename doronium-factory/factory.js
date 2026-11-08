@@ -1053,7 +1053,36 @@ function tickBuilding(b,dt,power,context=null){const d=buildingDef(b.type);if(!d
  if(d.kind==="machine"||d.kind==="reactor"||d.kind==="variant"){if(context?.machinePipelineActive)return;tickMachine(b,dt,ratio);return}
  if(d.kind==="campaignLine"){if(tickSupportFailure(b,dt,ratio))return;b.status="IDLE";return}
 }
-function recipeHasSyntheticInput(b,r){for(const[rawID,n]of Object.entries(r.inputs)){const id=canonicalItemID(rawID);let remaining=n;const buffered=Math.min(remaining,b.input?.[id]||0);if(buffered&&b.inputMeta?.[id]?.synthetic)return true;remaining-=buffered;if(remaining&&S.meta[id]?.synthetic)return true}return false}
+function recipeHasSyntheticInput(b,r){
+ const runtime=ensureItemStacks(S),reservedByStack=new Map();
+ for(const reservation of Object.values(runtime.reservations||{})){
+  if(reservation?.status!=="reserved")continue;
+  for(const allocation of reservation.allocations||[]){
+   const stackID=String(allocation.stackID);
+   reservedByStack.set(stackID,(reservedByStack.get(stackID)||0)+Math.max(0,Math.floor(Number(allocation.quantity)||0)));
+  }
+ }
+ for(const[rawID,requiredRaw]of Object.entries(r.inputs||{})){
+  const id=canonicalItemID(rawID);let remaining=Math.max(0,Math.floor(Number(requiredRaw)||0));
+  if(!id||remaining<=0)continue;
+  const buffered=Math.min(remaining,Math.max(0,Math.floor(Number(b.input?.[id])||0)));
+  const bufferedMeta=b.inputMeta?.[id]||b.inputMeta?.[rawID];
+  if(buffered>0&&bufferedMeta?.synthetic===true)return true;
+  remaining-=buffered;
+  if(remaining<=0)continue;
+  // Mirror reserveItemStacks() exactly: inventory order, canonical ID,
+  // unquarantined stock, and quantity left after outstanding reservations.
+  for(const stack of runtime.itemStacks){
+   if(remaining<=0)break;
+   if(stack.itemID!==id||stack.quarantined)continue;
+   const free=Math.max(0,Math.floor(Number(stack.quantity)||0)-(reservedByStack.get(String(stack.runtimeID))||0));
+   const take=Math.min(free,remaining);
+   if(take>0&&stack.synthetic===true)return true;
+   remaining-=take;
+  }
+ }
+ return false;
+}
 function tickMachine(b,dt,ratio){
  if(b.failureRepair){
   if(b.maintenanceTimer>0){b.maintenanceTimer=Math.max(0,b.maintenanceTimer-dt);b.status="MAINTENANCE";if(b.maintenanceTimer<=0){completeMachineRepair(b);log("기계 정비 완료 · "+(buildingDef(b.type)?.name||b.type),"good");markDirty()}return}
