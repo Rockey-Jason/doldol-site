@@ -302,6 +302,7 @@ function resetBookDefaults(){
   const original=BOOK_DEFAULTS.find(item=>item.id===book.id);
   if(!original)return;
   book.subtitle=original.subtitle||"";
+   book.tableOfContents=original.tableOfContents||"";
   book.description=original.description||"";
   book.author=original.author||"";
   book.chapters=original.chapters.map(chapter=>({...chapter}));
@@ -315,6 +316,7 @@ async function loadSharedBooks(client){
   const book=BOOKS.find(item=>item.id===row.book_id);
   if(!book)return;
   book.subtitle=String(row.subtitle||"");
+   book.tableOfContents=String(row.chapters?.[0]?.tableOfContents||"");
   book.description="";
   if(Array.isArray(row.chapters)&&row.chapters.length){
    book.chapters=row.chapters.slice(0,200).map((chapter,index)=>({
@@ -438,7 +440,8 @@ function renderReader(){
  const select=$("readerChapterSelect");select.replaceChildren();
  chapters.forEach((item,index)=>{const option=document.createElement("option");option.value=String(index);option.textContent=item.title||("제"+(index+1)+"장");select.append(option)});
  select.value=String(activeChapter);select.disabled=!hasBookContent(activeBook);
- const body=$("bookReaderBody");body.replaceChildren();
+ renderReaderToc();
+  const body=$("bookReaderBody");body.replaceChildren();
  if(String(chapter.content||"").trim()){
   String(chapter.content).split(/\n\s*\n/).filter(Boolean).forEach(paragraph=>{const p=document.createElement("p");p.textContent=paragraph;body.append(p)});
   const end=document.createElement("div");end.className="reader-endmark";end.textContent="❦";body.append(end);
@@ -452,6 +455,13 @@ function renderReader(){
  $("readerPrev").disabled=activeChapter===0;$("readerNext").disabled=activeChapter===chapters.length-1||!hasBookContent(activeBook);
  $("readerNext").textContent=activeChapter===chapters.length-1?"마지막 장":"다음 장 →";
  requestAnimationFrame(()=>{const max=Math.max(0,body.scrollHeight-body.clientHeight);body.scrollTop=max*savedReaderScroll;updateReaderProgress()});
+}
+function renderReaderToc(){
+ const panel=$("readerTocPanel"),list=$("readerTocList"),button=$("readerTocToggle");if(!panel||!list||!button||!activeBook)return;
+ const custom=String(activeBook.tableOfContents||"").split(/\\r?\\n/).map(line=>line.trim()).filter(Boolean);
+ const entries=custom.length?custom:(activeBook.chapters||[]).map(chapter=>chapter.title).filter(Boolean);
+ list.replaceChildren();entries.forEach(entry=>{const li=document.createElement("li");li.textContent=entry;list.append(li)});
+ panel.hidden=button.getAttribute("aria-expanded")!=="true";button.hidden=!entries.length;
 }
 function renderBookEditor(){
  const list=$("bookEditorChapters");list.replaceChildren();
@@ -472,7 +482,7 @@ function renderBookEditor(){
 }
 function syncBookEditorDraft(){
  if(!editorDraft)return;
- editorDraft.subtitle=String($("editorBookSubtitle").value||"");
+ editorDraft.subtitle=String($("editorBookSubtitle").value||"");editorDraft.tableOfContents=String($("editorBookToc").value||"");
  editorDraft.chapters=Array.from($("bookEditorChapters").querySelectorAll(".book-editor-chapter")).map((card,index)=>({
   title:String(card.querySelector(".book-editor-input").value||"").trim().slice(0,100)||("제"+(index+1)+"장"),
   content:String(card.querySelector(".book-editor-textarea").value||"")
@@ -482,8 +492,8 @@ function beginBookEdit(){
  if(!canEditLibrary()){toast("책 원고 편집은 관리자 계정만 사용할 수 있습니다.");return}
  if(!activeBook)return;
  if(hasBookContent(activeBook))saveReaderProgress();
- editorDraft={subtitle:String(activeBook.subtitle||""),chapters:(activeBook.chapters&&activeBook.chapters.length?activeBook.chapters:[{title:"제1장",content:""}]).map(chapter=>({title:String(chapter.title||""),content:String(chapter.content||"")}))};
- $("editorBookSubtitle").value=editorDraft.subtitle;renderBookEditor();$("bookEditorPanel").hidden=false;
+ editorDraft={subtitle:String(activeBook.subtitle||""),tableOfContents:String(activeBook.tableOfContents||""),chapters:(activeBook.chapters&&activeBook.chapters.length?activeBook.chapters:[{title:"제1장",content:""}]).map(chapter=>({title:String(chapter.title||""),content:String(chapter.content||"")}))};
+ $("editorBookSubtitle").value=editorDraft.subtitle;$("editorBookToc").value=editorDraft.tableOfContents;renderBookEditor();$("bookEditorPanel").hidden=false;
  const dialog=document.querySelector(".book-reader-dialog");dialog.classList.add("editing");
  $("readerEditToggle").hidden=true;$("readerFontDown").hidden=true;$("readerFontUp").hidden=true;$("readerChapterSelect").disabled=true;
  $("editorBookSubtitle").focus({preventScroll:true});
@@ -498,6 +508,7 @@ async function saveBookEdit(){
  }));
  if(!chapters.length)chapters.push({title:"제1장",content:""});
  const subtitle=String($("editorBookSubtitle").value||"").trim().slice(0,300);
+  const tableOfContents=String($("editorBookToc").value||"").trim().slice(0,6000);chapters[0].tableOfContents=tableOfContents;
  const targetBook=activeBook;
  const button=$("saveBookEdit");button.disabled=true;button.textContent="저장 중…";
  try{
@@ -510,7 +521,7 @@ async function saveBookEdit(){
    updated_at:new Date().toISOString()
   },{onConflict:"book_id"});
   if(error)throw error;
-  targetBook.subtitle=subtitle;targetBook.chapters=chapters;
+  targetBook.subtitle=subtitle;targetBook.tableOfContents=tableOfContents;targetBook.chapters=chapters;
   delete bookState.progress[targetBook.id];delete bookState.bookmarks[targetBook.id];
   saveBookState();editorDraft=null;
   if(activeBook===targetBook)renderReader();
@@ -549,6 +560,7 @@ function wireBookReader(){
  $("bookReaderClose").addEventListener("click",closeBookReader);
  $("bookReader").addEventListener("click",event=>{if(event.target===$("bookReader"))closeBookReader()});
  $("readerEditToggle").addEventListener("click",beginBookEdit);
+ $("readerTocToggle").addEventListener("click",()=>{const button=$("readerTocToggle"),open=button.getAttribute("aria-expanded")!=="true";button.setAttribute("aria-expanded",String(open));renderReaderToc()});
  $("addBookChapter").addEventListener("click",()=>{if(!editorDraft)return;syncBookEditorDraft();editorDraft.chapters.push({title:"제"+(editorDraft.chapters.length+1)+"장",content:""});renderBookEditor();const inputs=$("bookEditorChapters").querySelectorAll(".book-editor-input");if(inputs.length)inputs[inputs.length-1].focus()});
  $("cancelBookEdit").addEventListener("click",cancelBookEdit);$("saveBookEdit").addEventListener("click",saveBookEdit);
  $("readerPrev").addEventListener("click",()=>changeReaderChapter(activeChapter-1));$("readerNext").addEventListener("click",()=>changeReaderChapter(activeChapter+1));
