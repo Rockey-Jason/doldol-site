@@ -5,7 +5,9 @@ import {
   calculateOutputQuality, calculateOutputPurity, accuracyQuality,
   reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations,
   splitItemStack, mergeItemStacks, validateRuntimeState, availableItemCount,
-  runCanonicalTick, TICK_STAGE_ORDER, stackTotals, syncLegacyInventory
+  runCanonicalTick, TICK_STAGE_ORDER, stackTotals, syncLegacyInventory,
+  nextDeterministicRandom, enqueueSimulationEvent, processSimulationEvents,
+  consumeFixedStepBudget
 } from "./simulation-core.js";
 
 test("legacy inventory migrates to stable unique stack IDs",()=>{
@@ -182,4 +184,70 @@ test("quarantined legacy stock is kept for recovery but excluded from spendable 
  assert.equal(s.quarantinedMeta.doronium_void.quality,82);
  assert.equal(availableItemCount(s,"doronium_void"),0);
  assert.equal(availableItemCount(s,"ITEM_DORONUM_NORMAL"),3);
+});
+
+test("simulation events are ordered and idempotency keys prevent duplicate rewards",()=>{
+ const state={runtime:createRuntimeState(),tick:3,money:0};
+ const first=enqueueSimulationEvent(state,{type:"REWARD",payload:{amount:250},idempotencyKey:"quest:q1",source:"quest"});
+ const duplicate=enqueueSimulationEvent(state,{type:"REWARD",payload:{amount:250},idempotencyKey:"quest:q1",source:"quest"});
+ assert.equal(first.accepted,true);
+ assert.equal(duplicate.duplicate,true);
+ const result=processSimulationEvents(state,{REWARD:payload=>{state.money+=payload.amount}});
+ assert.equal(result.processed,1);
+ assert.equal(state.money,250);
+ assert.equal(state.runtime.eventQueue.length,0);
+ const again=enqueueSimulationEvent(state,{type:"REWARD",payload:{amount:250},idempotencyKey:"quest:q1"});
+ assert.equal(again.duplicate,true);
+ assert.equal(processSimulationEvents(state,{REWARD:()=>{state.money+=250}}).processed,0);
+ assert.equal(state.money,250);
+ assert.equal(state.runtime.eventJournal[0].status,"processed");
+});
+
+test("failed simulation event remains queued for retry without losing its payload",()=>{
+ const state={runtime:createRuntimeState(),tick:4};
+ enqueueSimulationEvent(state,{type:"RETRY",payload:{token:"preserved"},idempotencyKey:"retry:1"});
+ const failed=processSimulationEvents(state,{RETRY:()=>{throw new Error("temporary") }});
+ assert.equal(failed.processed,0);
+ assert.equal(state.runtime.eventQueue.length,1);
+ assert.equal(state.runtime.eventQueue[0].attempts,1);
+ assert.equal(state.runtime.eventQueue[0].payload.token,"preserved");
+ const succeeded=processSimulationEvents(state,{RETRY:payload=>{assert.equal(payload.token,"preserved")}});
+ assert.equal(succeeded.processed,1);
+ assert.equal(state.runtime.eventQueue.length,0);
+});
+
+test("deterministic RNG streams replay independently from saved state",()=>{
+ const stateA={runtime:createRuntimeState(),worldSeed:12345};
+ const stateB={runtime:createRuntimeState(),worldSeed:12345};
+ const a1=nextDeterministicRandom(stateA,"machine-failure");
+ const a2=nextDeterministicRandom(stateA,"machine-failure");
+ const b1=nextDeterministicRandom(stateB,"machine-failure");
+ const b2=nextDeterministicRandom(stateB,"machine-failure");
+ assert.equal(a1,b1);
+ assert.equal(a2,b2);
+ assert.notEqual(a1,a2);
+ const independent=nextDeterministicRandom(stateA,"quality");
+ const restored={runtime:structuredClone(stateA.runtime),worldSeed:12345};
+ assert.equal(nextDeterministicRandom(restored,"machine-failure"),nextDeterministicRandom(stateA,"machine-failure"));
+ assert.ok(independent>=0&&independent<1);
+});
+
+test("fixed-step catch-up executes at most ten ticks while retaining all backlog",()=>{
+ const first=consumeFixedStepBudget(3.25,.1,10);
+ assert.equal(first.steps,10);
+ assert.ok(Math.abs(first.remaining-2.25)<1e-9);
+ const second=consumeFixedStepBudget(first.remaining,.1,10);
+ assert.equal(second.steps,10);
+ assert.ok(Math.abs(second.remaining-1.25)<1e-9);
+ const tiny=consumeFixedStepBudget(.05,.1,10);
+ assert.equal(tiny.steps,0);
+ assert.equal(tiny.remaining,.05);
+});
+
+test("event IDs and event queue state are validated",()=>{
+ const state={runtime:createRuntimeState(),tick:1};
+ enqueueSimulationEvent(state,{type:"NOOP",payload:{}});
+ assert.equal(validateRuntimeState(state).valid,true);
+ state.runtime.nextEventSequence=1;
+ assert.ok(validateRuntimeState(state).errors.includes("event-sequence-counter-not-advanced"));
 });
