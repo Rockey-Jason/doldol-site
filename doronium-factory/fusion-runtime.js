@@ -1,6 +1,6 @@
 /* Resumable, all-input-reserved Infinity Fusion transaction. */
 import {INFINITY_REQUIREMENTS,INFINITY_TOTAL_INPUT,CANONICAL_INFINITY_DORONUM_ID,validateInfinityManifest} from "./canonical-data.js";
-import {reserveItemBatch,releaseItemReservation,commitItemReservations,addItemStack,syncLegacyInventory} from "./simulation-core.js";
+import {reserveQualifiedItemBatch,releaseItemReservation,commitItemReservations,addItemStack,syncLegacyInventory} from "./simulation-core.js";
 const clone=v=>typeof structuredClone==="function"?structuredClone(v):JSON.parse(JSON.stringify(v));
 const POWER_FLOOR=.8;
 export function settleInfinityFusionOutput(state,{jobID,outputItemID=CANONICAL_INFINITY_DORONUM_ID,quality=100,purity=100}={}){
@@ -50,18 +50,21 @@ export function settleInfinityFusionOutput(state,{jobID,outputItemID=CANONICAL_I
  }
 }
 export function startInfinityFusion(state,{jobID,machineID,stageDurationsSeconds,stagePowerMW}={}){
- if(state.fusionJob&&["RESERVED","RUNNING","WAITING_POWER","ERROR"].includes(state.fusionJob.status))return {ok:false,reason:"job-already-active"};
+ if(state.fusionJob&&["RESERVED","RUNNING","WAITING_POWER","CALIBRATING","ERROR"].includes(state.fusionJob.status))return {ok:false,reason:"job-already-active"};
  if(!jobID||!machineID||!Array.isArray(stageDurationsSeconds)||stageDurationsSeconds.length!==7||stageDurationsSeconds.some(x=>!Number.isFinite(x)||x<=0)||Math.abs(stageDurationsSeconds.reduce((a,b)=>a+b,0)-260)>.001)return {ok:false,reason:"invalid-seven-stage-plan"};
  if(!Array.isArray(stagePowerMW)||stagePowerMW.length!==7||stagePowerMW.some(x=>!Number.isFinite(x)||x<=0))return {ok:false,reason:"invalid-stage-power-plan"};
- const stacks=state.runtime?.itemStacks||[],manifest=validateInfinityManifest(stacks);
- if(!manifest.valid||manifest.total!==INFINITY_TOTAL_INPUT)return {ok:false,reason:"manifest-invalid",errors:manifest.errors};
- const reservationIDs=reserveItemBatch(state,INFINITY_REQUIREMENTS,"INFINITY:"+jobID);
- if(!reservationIDs)return {ok:false,reason:"reservation-failed"};
- state.fusionJob={jobID:String(jobID),machineID:String(machineID),status:"RESERVED",stageIndex:0,stageElapsedSeconds:0,totalElapsedSeconds:0,stageDurationsSeconds:[...stageDurationsSeconds],stagePowerMW:[...stagePowerMW],reservationIDs:[...reservationIDs],inputQuantity:INFINITY_TOTAL_INPUT,outputStackID:null,createdTick:Number(state.tick)||0};
+ const requirements=INFINITY_REQUIREMENTS;
+ const predicates=Object.fromEntries(Object.keys(requirements).map(id=>[id,stack=>Number(stack.quality)>=90&&Number(stack.purity)>=90&&stack.synthetic!==true&&stack.quarantined!==true]));
+ const eligible=(state.runtime?.itemStacks||[]).filter(stack=>stack&&!stack.quarantined&&predicates[stack.itemID]?.(stack));
+ const manifest=validateInfinityManifest(eligible);
+ if(!manifest.valid||Object.values(manifest.totals).some(quantity=>quantity<100)||manifest.total<INFINITY_TOTAL_INPUT)return {ok:false,reason:"manifest-invalid",errors:manifest.errors};
+ const reservationIDs=reserveQualifiedItemBatch(state,requirements,"INFINITY:"+jobID,predicates);
+ if(!reservationIDs||reservationIDs.length!==15)return {ok:false,reason:"reservation-failed"};
+ state.fusionJob={runtimeVersion:2,jobID:String(jobID),machineID:String(machineID),status:"RESERVED",stageIndex:0,stageElapsedSeconds:0,totalElapsedSeconds:0,stageDurationsSeconds:[...stageDurationsSeconds],stagePowerMW:[...stagePowerMW],reservationIDs:[...reservationIDs],inputQuantity:INFINITY_TOTAL_INPUT,outputStackID:null,createdTick:Number(state.tick)||0};
  return {ok:true,job:clone(state.fusionJob)};
 }
 export function tickInfinityFusion(state,{deltaSeconds=.1,machineExists=true,powerRatio=1,maintenanceRequired=false}={}){
- const job=state.fusionJob;if(!job||!["RESERVED","RUNNING","WAITING_POWER","ERROR"].includes(job.status))return {status:job?.status||"IDLE",completed:false};
+ const job=state.fusionJob;if(!job||!["RESERVED","RUNNING","WAITING_POWER","CALIBRATING","ERROR"].includes(job.status))return {status:job?.status||"IDLE",completed:false};
  if(!machineExists){job.status="ERROR";job.errorCode="MACHINE_MISSING";return {status:job.status,completed:false,recoverable:true}}
  if(maintenanceRequired){job.status="ERROR";job.errorCode="MAINTENANCE_REQUIRED";return {status:job.status,completed:false,recoverable:true}}
  if(!Number.isFinite(deltaSeconds)||deltaSeconds<0)return {status:job.status,completed:false,error:"INVALID_DELTA"};
@@ -78,7 +81,7 @@ export function tickInfinityFusion(state,{deltaSeconds=.1,machineExists=true,pow
  return {status:"COMPLETED",completed:true,outputStackID:settlement.outputStackID,duplicate:!!settlement.duplicate};
 }
 export function cancelInfinityFusion(state,{jobID}={}){
- const job=state.fusionJob;if(!job||job.jobID!==jobID||!["RESERVED","RUNNING","WAITING_POWER","ERROR"].includes(job.status))return false;
+ const job=state.fusionJob;if(!job||job.jobID!==jobID||!["RESERVED","RUNNING","WAITING_POWER","CALIBRATING","ERROR"].includes(job.status))return false;
  for(const id of job.reservationIDs||[])releaseItemReservation(state,id);
  job.reservationIDs=[];job.status="CANCELLED";job.cancelledTick=Number(state.tick)||0;return true;
 }
@@ -87,6 +90,6 @@ export function recoverInfinityFusion(state){
  const reservations=job.reservationIDs||[],live=state.runtime?.reservations||{};
  const valid=reservations.length===15&&reservations.every(id=>live[id]?.status==="reserved");
  if(!valid){job.status="ERROR";job.errorCode="RESERVATION_LEDGER_MISMATCH";return {recoverable:false,reason:job.errorCode}}
- if(job.errorCode==="MACHINE_MISSING"||job.errorCode==="MAINTENANCE_REQUIRED"){job.status="RESERVED";delete job.errorCode}
+ if(job.errorCode==="MACHINE_MISSING"||job.errorCode==="MAINTENANCE_REQUIRED"||job.status==="CALIBRATING"){job.status="RESERVED";delete job.errorCode}
  return {recoverable:true,job:clone(job)};
 }
