@@ -99,6 +99,14 @@ try {
   assert.equal(ownershipCase.itemTotals.ITEM_DORONUM_INFINITY, 1, "Completion-buffer items must be represented in custody");
   const ownershipOwners = ownershipCase.ownership.custody.map(x => x.ownerType);
   for (const owner of ["PLAYER_INVENTORY","ACTIVE_JOB","MACHINE_INPUT","MACHINE_OUTPUT","CONVEYOR","COMPLETION_BUFFER"]) assert.ok(ownershipOwners.includes(owner), "Missing custody owner type: " + owner);
+  const ownershipGate = await desktop.evaluate(() => window.__doroniumFactoryTest.runOwnershipIntegrityGateTest());
+  assert.equal(ownershipGate.tick, 10, "The ownership failure scenario must execute on the scheduled fixed-tick audit");
+  assert.equal(ownershipGate.ownershipValid, false, "Duplicate live custody identifiers must fail the ownership snapshot");
+  assert.ok(ownershipGate.ownershipErrors.some(error => error.includes("OWNERSHIP_REBUILD_FAILED:stack-already-owned")), "Snapshot construction failures must be recorded rather than crash the simulation");
+  assert.equal(ownershipGate.blocked, true, "An invalid custody snapshot must stop automated item-consuming production");
+  assert.ok(ownershipGate.blockedBuildings.some(building => building.errorCode === "ITEM_OWNERSHIP_INTEGRITY"), "Affected production machines must show an ownership-integrity fault");
+  assert.equal(ownershipGate.ironBefore, ownershipGate.ironAfter, "Blocked production must not consume inventory ingredients");
+  assert.equal(ownershipGate.coalBefore, ownershipGate.coalAfter, "Blocked production must not consume fuel or recipe coal");
   const conflictGuard = await desktop.evaluate(() => window.__doroniumFactoryTest.runCloudConflictGuardTest());
   assert.equal(conflictGuard.rpcCalls, 0, "Autosaves must not call Supabase RPC while a cloud conflict is unresolved");
   assert.equal(conflictGuard.revision, 7, "A conflict must not advance the stale local revision to the newer remote revision");
