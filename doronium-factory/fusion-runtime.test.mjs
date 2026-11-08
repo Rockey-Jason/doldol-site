@@ -38,6 +38,16 @@ test("saved calibration state can recover when its 15 reservations remain valid"
  assert.equal(s.fusionJob.reservationIDs.length,15);
 });
 test("power interruption pauses without losing reserved inputs",()=>{const s=state();startInfinityFusion(s,plan);assert.equal(tickInfinityFusion(s,{powerRatio:.5}).status,"WAITING_POWER");assert.equal(s.fusionJob.reservationIDs.length,15)});
+test("a missing reserved input stops the next Fusion tick before progress or consumption",()=>{
+ const s=state();const started=startInfinityFusion(s,plan);
+ delete s.runtime.reservations[started.job.reservationIDs[4]];
+ const before=stackTotals(s);
+ const result=tickInfinityFusion(s,{deltaSeconds:1,powerRatio:1});
+ assert.equal(result.status,"ERROR");
+ assert.equal(result.error,"RESERVATION_LEDGER_MISMATCH");
+ assert.deepEqual(stackTotals(s),before);
+ assert.equal(s.fusionJob.stageIndex,0);
+});
 test("completed seven-stage fusion creates exactly one output",()=>{const s=state();startInfinityFusion(s,plan);for(let i=0;i<2600;i++)tickInfinityFusion(s,{deltaSeconds:.1,powerRatio:1});assert.equal(s.fusionJob.status,"COMPLETED");assert.equal(s.runtime.itemStacks.filter(x=>x.itemID===CANONICAL_INFINITY_DORONUM_ID).reduce((n,x)=>n+x.quantity,0),1);assert.equal(s.runtime.itemStacks.reduce((n,x)=>n+x.quantity,0),1)});
 test("cancel releases all inputs and is idempotently unavailable afterwards",()=>{const s=state();startInfinityFusion(s,plan);assert.equal(cancelInfinityFusion(s,{jobID:"JOB-1"}),true);assert.equal(cancelInfinityFusion(s,{jobID:"JOB-1"}),false);assert.equal(s.runtime.itemStacks.reduce((n,x)=>n+x.quantity,0),1500);assert.equal(Object.keys(s.runtime.reservations).length,0)});
 
