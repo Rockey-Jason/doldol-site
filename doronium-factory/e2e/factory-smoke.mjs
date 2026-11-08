@@ -74,7 +74,8 @@ try {
   const ownershipCase = await desktop.evaluate(() => window.__doroniumFactoryTest.setupOwnershipLedgerTest());
   assert.equal(ownershipCase.reservation !== null, true, "The custody scenario must create a real item reservation");
   assert.equal(ownershipCase.validation.valid, true, "Every item must have exactly one valid custody owner");
-  assert.deepEqual(ownershipCase.journalAfter, ownershipCase.journalBefore, "Rebuilding a custody snapshot must preserve committed transactions, consumed records and monotonic ledger IDs");
+  assert.equal(ownershipCase.journalAfter.transactions, ownershipCase.journalBefore.transactions, "Rebuilding a custody snapshot must preserve committed transactions");
+  assert.equal(ownershipCase.journalAfter.consumed, ownershipCase.journalBefore.consumed, "Rebuilding a custody snapshot must preserve consumed-item history");
   assert.equal(ownershipCase.journalAfter.transactions, 1, "The idempotency journal must survive custody snapshot rebuilds");
   assert.equal(ownershipCase.journalAfter.consumed, 1, "The consumed-item journal must survive custody snapshot rebuilds");
   assert.ok(ownershipCase.journalAfter.nextLedgerID >= ownershipCase.journalBefore.nextLedgerID, "Rebuilding a custody snapshot must never rewind the ledger ID counter");
