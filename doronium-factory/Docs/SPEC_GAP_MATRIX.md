@@ -32,3 +32,25 @@ The branch now includes a persisted deterministic RNG-stream API, an ordered/ide
 
 
 The legacy Infinity finished-product migration is now implemented and covered by migration/fusion tests on the development branch. Its final verification is pending; this does not close the recipe/model source-of-truth or full Infinity interlock gates.
+
+
+## 2026-11-08 — 12-area master roadmap status
+
+The complete deficiency assessment is recorded in `Docs/PROJECT_AUDIT.md`. Current result: **all 12 areas remain PARTIAL, blocked or UNVERIFIED; no overall completion claim is valid**.
+
+| Master area | Current status | Acceptance blocker |
+|---|---|---|
+| 1 World/terrain | Partial | 192×160 tile world does not meet 2,048m×2,048m contract; coordinate/save migration and streaming unresolved |
+| 2 Exploration/survival | Partial | Full PC/mobile, death/recovery and long-session regression |
+| 3 Construction | Partial | All ports/footprints/dismantle/cancel/crash recovery not covered |
+| 4 Mining | Partial / regression | Latest browser test failed on null mining output; precision fix requires green rerun |
+| 5 Production/canonical data | Partial | Canonical manifest not yet universal live recipe/model/research source |
+| 6 Power | Partial | Transmission losses, all devices, diagnostics and topology regression |
+| 7 Fluids | Partial | Only water path is substantially live; five other fluid paths incomplete |
+| 8 Logistics | Partial | Full transport asset catalog and automated deadlock/custody recovery |
+| 9 Ownership | Partial / critical | Custody ledger is not yet the single source of truth across every item domain |
+| 10 Failure/skills | Partial | Full failure and skill-effect integration/coverage |
+| 11 Shipping/Fusion/ending | Partial / critical | Full contract catalog, live resumable Fusion integration, interlocks and ending regression |
+| 12 Saves/security/performance/release | Partial / unverified | Real two-device, physical-device, 60-minute wall-clock and final release tests |
+
+Release gates: cancelled or pending CI is not a pass. Mobile emulation is not a physical-device test. A virtual one-hour test is not a 60-minute wall-clock soak. PR-only work is not main/deployed work.
