@@ -12,7 +12,7 @@ import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commi
 import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, awardSkillPoints, unlockSkill, skillNodeStatus, calculateSkillBonuses, validateSkillTree, validateSkillState } from "./skill-runtime.js?v=1";
 import { createSaveEnvelope, decodeSave, readBestSave, restoreSaveCandidate, validateSaveEnvelope, writeSaveEnvelope } from "./save-store.js?v=1";
 import { writeCloudSave, readCloudSaveSnapshot, replaceCloudSaveAfterExplicitConflict } from "./cloud-save-runtime.js?v=2";
-import { settleInfinityFusionOutput } from "./fusion-runtime.js?v=3";
+import { startInfinityFusion, tickInfinityFusion, cancelInfinityFusion, recoverInfinityFusion, settleInfinityFusionOutput } from "./fusion-runtime.js?v=4";
 import { evaluatePlanetaryStabilization } from "./planetary-stabilization.js?v=1";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=1";
@@ -370,7 +370,7 @@ function currentPower(){
   else if(b.type==="solar")node={id:b.uid,type:"GENERATOR",generationKW:b.failureRepair?0:def.gen*100*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1),buildingType:b.type};
   else if(b.type==="wind")node={id:b.uid,type:"GENERATOR",generationKW:b.failureRepair?0:def.gen*100*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05),buildingType:b.type};
   else if(b.type==="coalgen"||b.type==="mineGen")node={id:b.uid,type:"GENERATOR",generationKW:!b.failureRepair&&b.fuelTimer>0?(Number(def.gen)|| (b.type==="mineGen"?12:18))*100:0,buildingType:b.type};
-  else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["fluidPump"].includes(b.type)?55:["pump","doriFarm"].includes(b.type)?45:20;const fusionActive=S.fusionJob&&["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","PREFLIGHT"].includes(S.fusionJob.status||"RUNNING");const fusionStage=fusionActive&&Number.isInteger(S.fusionJob.stage)?FUSION_STAGES[S.fusionJob.stage]:null;const demandKW=b.failureRepair?0:b.type==="fusion"?(fusionStage?.power||0):def.power*100;node={id:b.uid,type:"CONSUMER",demandKW,priority,transmissionLoss:0,buildingType:b.type}}
+  else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["fluidPump"].includes(b.type)?55:["pump","doriFarm"].includes(b.type)?45:20;const fusionActive=S.fusionJob&&["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","PREFLIGHT"].includes(S.fusionJob.status||"RUNNING");const fusionStageIndex=Number.isInteger(S.fusionJob?.stageIndex)?S.fusionJob.stageIndex:S.fusionJob?.stage;const fusionStage=fusionActive&&Number.isInteger(fusionStageIndex)?FUSION_STAGES[fusionStageIndex]:null;const demandKW=b.failureRepair?0:b.type==="fusion"?(fusionStage?.power||0):def.power*100;node={id:b.uid,type:"CONSUMER",demandKW,priority,transmissionLoss:0,buildingType:b.type}}
   if(node){node.layer=b.layer||"surface";node.mineLevel=b.mineLevel||0;nodes.push(node);powerBuildings.push(b)}
  }
  const edges=[];
@@ -926,12 +926,78 @@ function drainFluidToTank(source){
  source.fluidAmountL=amount-moved;if(source.fluidAmountL<=1e-9){source.fluidAmountL=0;source.fluidType=null;source.fluidContaminants=[]}
  markDirty();renderMachineDetails();toast(moved.toFixed(1)+"L를 연결된 탱크로 배출했습니다.");return true;
 }
-function removeBuilding(b){const d=buildingDef(b.type);if(!d)return false;const activeFusion=b.type==="fusion"&&["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","ERROR"].includes(S.fusionJob?.status);const hasBufferedFluid=Number(b.fluidAmountL)>1e-9;const hasCargo=!!b.item;if(activeFusion||hasBufferedFluid||hasCargo||b.output||Object.values(b.input||{}).some(q=>Number(q)>0)||b.failureRepair||Number(b.progress)>0){toast(activeFusion?"진행 중인 Infinity Fusion 작업이 있어 설비를 철거할 수 없습니다.":hasBufferedFluid?"유체를 먼저 배출해야 설비를 철거할 수 있습니다.":hasCargo?"컨베이어 화물을 먼저 회수해야 합니다.":"출력·입력 버퍼가 비었고 작업이 정지된 상태에서만 철거할 수 있습니다.","warn");return false}markSceneDirty();const refund=Math.floor(d.cost*.55);S.money+=refund;for(const[id,n]of Object.entries(d.materials||{})){addItem(id,Math.floor(n*.5),{},false)}S.buildings=S.buildings.filter(x=>x.uid!==b.uid);if(b.type==="relay"){const i=S.sites.relay.findIndex(p=>p.x===b.x&&p.y===b.y);if(i>=0)S.relaySites[i]=false}if(b.type==="core")S.corePlaced=false;if(b.type==="powerCable")S.powerTopologyEnabled=S.buildings.some(x=>x.type==="powerCable");selectedBuilding=null;log(d.name+" 해체 · "+refund+" D 환급");toast("시설 해체 · "+refund+" D 환급");markDirty();renderAll()}
+function removeBuilding(b){const d=buildingDef(b.type);if(!d)return false;const activeFusion=b.type==="fusion"&&["RESERVED","RUNNING","PAUSED_POWER","WAITING_POWER","CALIBRATING","ERROR"].includes(S.fusionJob?.status);const hasBufferedFluid=Number(b.fluidAmountL)>1e-9;const hasCargo=!!b.item;if(activeFusion||hasBufferedFluid||hasCargo||b.output||Object.values(b.input||{}).some(q=>Number(q)>0)||b.failureRepair||Number(b.progress)>0){toast(activeFusion?"진행 중인 Infinity Fusion 작업이 있어 설비를 철거할 수 없습니다.":hasBufferedFluid?"유체를 먼저 배출해야 설비를 철거할 수 있습니다.":hasCargo?"컨베이어 화물을 먼저 회수해야 합니다.":"출력·입력 버퍼가 비었고 작업이 정지된 상태에서만 철거할 수 있습니다.","warn");return false}markSceneDirty();const refund=Math.floor(d.cost*.55);S.money+=refund;for(const[id,n]of Object.entries(d.materials||{})){addItem(id,Math.floor(n*.5),{},false)}S.buildings=S.buildings.filter(x=>x.uid!==b.uid);if(b.type==="relay"){const i=S.sites.relay.findIndex(p=>p.x===b.x&&p.y===b.y);if(i>=0)S.relaySites[i]=false}if(b.type==="core")S.corePlaced=false;if(b.type==="powerCable")S.powerTopologyEnabled=S.buildings.some(x=>x.type==="powerCable");selectedBuilding=null;log(d.name+" 해체 · "+refund+" D 환급");toast("시설 해체 · "+refund+" D 환급");markDirty();renderAll()}
 function chooseVariant(b){const choices=[...VARIANTS.filter(id=>id!=="ITEM_DORONUM_NORMAL"&&!!VARIANT_RECIPES[id]),"PURIFY_RUSTED_DORONUM"];const body='<p>결정 생산 또는 부식 도로늄 정제를 선택하세요. 정제는 품질·순도 조건을 충족한 인피니티 원료를 만들기 위한 별도 공정입니다.</p><select id="variant-select" class="modal-select">'+choices.map(id=>'<option value="'+id+'" '+(b.variant===id?"selected":"")+'>'+(id==="PURIFY_RUSTED_DORONUM"?"부식 도로늄 정제":RESOURCE[id].name)+'</option>').join("")+'</select>';showModal("결정 변환 레시피",body,[{label:"취소",cls:"secondary"},{label:"설정",cls:"primary",action:()=>{b.variant=$("variant-select").value;markDirty();renderMachineDetails();closeModal();toast("레시피 변경 완료")}}])}
 function startResearch(id){const r=RESEARCH.find(x=>x.id===id);if(!r||S.research.includes(id))return;if(!hasBuilding(S,"lab")){toast("먼저 기술 연구소를 건설하세요.","warn");return}if(r.requires&&!r.requires.every(v=>S.research.includes(v))){toast("선행 연구가 완료되지 않았습니다.","warn");return}if(S.activeResearch){toast("다른 연구가 이미 진행 중입니다.","warn");return}if(S.money<r.cost||!hasItems(r.need)){toast("연구 자원 또는 자금이 부족합니다.","warn");return}S.money-=r.cost;takeItems(r.need);S.activeResearch=id;S.researchProgress=0;log("연구 시작 · "+r.name);toast(r.name+" 연구를 시작합니다.");markDirty();renderResearch();renderHud()}
 function tickResearch(dt,ratio){if(!S.activeResearch)return;const r=RESEARCH.find(x=>x.id===S.activeResearch);if(!r){S.activeResearch=null;return}const labs=S.buildings.filter(b=>b.type==="lab").length;if(!labs)return;S.researchProgress+=dt*Math.max(.0,ratio)*Math.min(2,1+(labs-1)*.35)*(S.research.includes("automation")?1.15:1);if(S.researchProgress>=r.time){S.research.push(r.id);awardResearchTierSkillPoints();S.activeResearch=null;S.researchProgress=0;log("연구 완료 · "+r.name,"good");toast("기술 연구 완료 · "+r.name);$("orbit-dialogue").textContent="“"+r.name+" 연구 데이터가 연구소에 등록되었습니다.”";playTone(820,.22,"triangle");markDirty();renderResearch();renderBuildList();renderMissions();questCheck()}}
+function updateManagedFusion(dt,job){
+ const machine=S.buildings.find(x=>String(x.uid)===String(job.machineID))||S.buildings.find(x=>x.type==="fusion");
+ if(!machine){
+  tickInfinityFusion(S,{deltaSeconds:dt,machineExists:false,powerRatio:0});
+  job.lastErrorAt=S.seconds;markDirty();return;
+ }
+ if(job.status==="ERROR"){
+  const recoverable=job.errorCode==="MACHINE_MISSING"||job.errorCode==="MAINTENANCE_REQUIRED";
+  if(!recoverable){machine.status="ERROR";return}
+  const recovery=recoverInfinityFusion(S);
+  if(!recovery.recoverable||job.status==="ERROR"){machine.status="ERROR";return}
+ }
+ const stageIndex=Number.isInteger(job.stageIndex)?job.stageIndex:0;
+ const stage=FUSION_STAGES[stageIndex];
+ if(!stage){job.status="ERROR";job.errorCode="INVALID_STAGE";machine.status="ERROR";markDirty();return}
+ if(machine.failureRepair){
+  tickInfinityFusion(S,{deltaSeconds:dt,machineExists:true,powerRatio:0,maintenanceRequired:true});
+  machine.status="MAINTENANCE";return;
+ }
+ const power=currentPower(),allocation=power.allocations?.[String(machine.uid)]||{ratio:0,deliveredKW:0};
+ if(tickSupportFailure(machine,dt,allocation.ratio,FAILURE_PROFILES.fusion)){
+  tickInfinityFusion(S,{deltaSeconds:dt,machineExists:true,powerRatio:0,maintenanceRequired:true});
+  machine.status=machine.failureRepair?.broken?"BROKEN":"MAINTENANCE";return;
+ }
+ machine.temp=Number.isFinite(Number(machine.temp))?Number(machine.temp):25;
+ machine.pressure=Number.isFinite(Number(machine.pressure))?Number(machine.pressure):0;
+ machine.temp+=(stage.temp-machine.temp)*Math.min(1,dt*.045);
+ machine.pressure+=(stage.pressure-machine.pressure)*Math.min(1,dt*.06);
+ const tempOK=Math.abs(machine.temp-stage.temp)<=Math.max(50,stage.temp*.1);
+ const pressureOK=Math.abs(machine.pressure-stage.pressure)<=Math.max(25,stage.pressure*.1);
+ const coolingReady=S.buildings.some(unit=>{
+  if(unit.type!=="cooling"||unit.failureRepair||Number(unit.condition??100)<80)return false;
+  const coolingAllocation=power.allocations?.[String(unit.uid)];
+  return !!coolingAllocation&&Number(coolingAllocation.ratio)>=.8;
+ });
+ const effectivePowerRatio=coolingReady?Number(allocation.ratio)||0:0;
+ if(!tempOK||!pressureOK){
+  job.status="CALIBRATING";job.stage=stageIndex;job.progress=Number(job.stageElapsedSeconds)||0;machine.status="CALIBRATING";return;
+ }
+ const priorStage=stageIndex;
+ const result=tickInfinityFusion(S,{
+  deltaSeconds:dt*Math.min(1,Math.max(0,effectivePowerRatio)),
+  machineExists:true,
+  powerRatio:effectivePowerRatio
+ });
+ job.stage=Number(job.stageIndex)||0;job.progress=Number(job.stageElapsedSeconds)||0;
+ machine.status=result.status==="WAITING_POWER"?"PAUSED_POWER":result.status;
+ if(result.status==="WAITING_POWER"){job.status="WAITING_POWER";return}
+ if(result.status==="ERROR"||job.status==="ERROR"){
+  job.lastErrorAt=S.seconds;log("인피니티 퓨전 일시 중단 · "+(result.error||job.errorCode||"UNKNOWN"),"warn");markDirty();return;
+ }
+ if(result.completed){
+  log("인피니티 도로늄 결정화 성공 · 원료 1,500개 소비 · 출력 1개","good");toast("인피니티 도로늄 제작 성공!");
+  $("orbit-dialogue").textContent="“Infinity Doronum secured. Three stabilization relays are still required.”";
+  showModal("INFINITY DORONUM 생성 완료","<p>7단계 결정화 공정이 완료되었습니다. 인피니티 도로늄 1개가 창고에 등록되었습니다.</p><p>이제 지정된 행성 에너지 노드 3곳에 릴레이를 설치하고 중앙 코어를 완성하세요.</p>",[{label:"계속 진행",cls:"primary",action:closeModal}]);
+  markDirty();renderMissions();renderInventory();renderFactory();return;
+ }
+ if(job.stageIndex>priorStage){
+  const completed=FUSION_STAGES[priorStage];
+  log("퓨전 단계 완료 · "+completed.name,"good");toast("퓨전 "+job.stageIndex+"/7 단계 완료");
+  markDirty();renderMissions();renderMachineDetails();
+ }
+}
 function updateFusion(dt){
- const job=S.fusionJob;if(!job)return;if(!job.status&&Number.isInteger(job.stage)&&Number.isFinite(Number(job.progress))){job.status="RUNNING";job.legacyConsumedInput=true;job.outputIssued=false}if(!["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","ERROR"].includes(job.status))return;
+ const job=S.fusionJob;if(!job)return;
+ if(job.runtimeVersion===2){updateManagedFusion(dt,job);return}
+ if(!job.status&&Number.isInteger(job.stage)&&Number.isFinite(Number(job.progress))){job.status="RUNNING";job.legacyConsumedInput=true;job.outputIssued=false}
+ if(!["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","ERROR"].includes(job.status))return;
  const b=S.buildings.find(x=>x.type==="fusion");
  if(!b){job.status="ERROR";job.errorCode="MACHINE_MISSING";job.lastErrorAt=S.seconds;return}
  if(job.errorCode==="MACHINE_MISSING"){delete job.errorCode;job.status="RESERVED"}
@@ -985,33 +1051,42 @@ function runFusionDiagnostics(){
 }
 function startFusion(){
  if(S.fusionDone){toast("이 세이브에서는 인피니티 도로늄 제작이 이미 완료되었습니다.","warn");return}
- const active=!!S.fusionJob&&!["COMPLETED","CANCELLED"].includes(S.fusionJob.status);
+ const active=!!S.fusionJob&& !["COMPLETED","CANCELLED"].includes(S.fusionJob.status);
  if(active){toast("이미 퓨전 작업이 진행 중입니다.");return}
- if(!S.buildings.some(b=>b.type==="fusion")){toast("인피니티 퓨전 설비가 필요합니다.","warn");return}
+ const fusionMachine=S.buildings.find(b=>b.type==="fusion");
+ if(!fusionMachine){toast("인피니티 퓨전 설비가 필요합니다.","warn");return}
  if(!S.buildings.some(b=>b.type==="cooling")){toast("초전도 냉각탑을 먼저 건설하세요.","warn");return}
- const preflight=fusionPowerPreflight();if(!preflight.ok){toast("퓨전 전력 사전 진단 실패 · 퓨전 설비 500kW와 냉각 설비에 독립적으로 안정된 전력망을 연결하세요.","warn");return}if(!S.fusionDiagnostics?.allPassed){toast("생산 전 진단 3종(전력 안정성·압력 센서 교정·비상 냉각)을 먼저 통과하세요.","warn");return}
- const requirements=INFINITY_REQUIREMENTS;
+ const preflight=fusionPowerPreflight();
+ if(!preflight.ok){toast("퓨전 전력 사전 진단 실패 · 퓨전 설비와 냉각 설비에 안정된 전력망을 연결하세요.","warn");return}
+ if(!S.fusionDiagnostics?.allPassed){toast("생산 전 진단 3종(전력 안정성·압력 센서 교정·비상 냉각)을 먼저 통과하세요.","warn");return}
  const invalid=VARIANTS.filter(id=>{
-  const stacks=(S.runtime?.itemStacks||[]).filter(stack=>stack.itemID===id&&stack.quantity>0);
-  const eligible=stacks.reduce((n,stack)=>n+(Number(stack.quality)>=90&&Number(stack.purity)>=90&&!stack.synthetic?stack.quantity:0),0);
+  const stacks=(S.runtime?.itemStacks||[]).filter(stack=>stack.itemID===id&&stack.quantity>0&&!stack.quarantined);
+  const eligible=stacks.reduce((n,stack)=>n+(Number(stack.quality)>=90&&Number(stack.purity)>=90&&stack.synthetic!==true?stack.quantity:0),0);
   return eligible<100;
  });
- if(invalid.length){toast("개별 스택 품질·순도·비합성 조건을 충족하지 못한 재료: "+invalid.map(id=>RESOURCE[id]?.name||id).slice(0,3).join(", ")+" 외 "+Math.max(0,invalid.length-3)+"종","warn");return}
- showModal("인피니티 퓨전 시작","<p>정식 투입 목록 15종을 각 100개씩 원자적으로 예약합니다.</p><p>각 스택은 품질 90 이상, 순도 90 이상, 비합성 조건을 개별적으로 통과해야 합니다. 7단계 공정 중 입력은 잠기며 중단·기계 철거 시에도 작업 기록과 예약을 보존합니다.</p>",[{label:"취소",cls:"secondary"},{label:"퓨전 시작",cls:"gold",action:()=>{
-  const confirmPreflight=fusionPowerPreflight();if(!confirmPreflight.ok||!S.fusionDiagnostics?.allPassed){toast("확인 중 전력·냉각 또는 진단 상태가 변경되었습니다. 진단을 다시 실행하세요.","warn");return}
-  const predicates=Object.fromEntries(VARIANTS.map(id=>[id,stack=>Number(stack.quality)>=90&&Number(stack.purity)>=90&&!stack.synthetic]));
-  const reservationIDs=reserveQualifiedItemBatch(S,requirements,"INFINITY-FUSION:"+String(S.tick||0),predicates);
-  if(!reservationIDs||reservationIDs.length!==15){toast("원료 예약에 실패했습니다. 모든 재료와 인벤토리는 그대로 보존됩니다.","warn");return}
-  const b=S.buildings.find(x=>x.type==="fusion");
-  S.fusionJob={jobID:"IF-"+String(S.seed||0)+"-"+String(S.tick||0),status:"RESERVED",stage:0,progress:0,startedAt:S.seconds,reservationIDs,inputQuantity:1500,outputIssued:false};
-  if(b){b.temp=25;b.pressure=0;b.status="IDLE"}
-  log("인피니티 퓨전 시작 · 재료 1,500개 원자적 예약");toast("INFINITY FUSION STARTED");closeModal();markDirty();renderFactory();
+ if(invalid.length){toast("품질·순도 90 이상이며 비합성인 원료가 부족합니다: "+invalid.map(id=>RESOURCE[id]?.name||id).slice(0,3).join(", ")+ " 외 "+Math.max(0,invalid.length-3)+"종","warn");return}
+ showModal("인피니티 퓨전 시작","<p>정식 원료 15종을 각각 100개씩 예약합니다.</p><p>품질 90 이상·순도 90 이상·비합성 조건을 통과한 스택만 잠그며, 전력 중단·설비 정비·저장 후 재접속 시 작업 단계와 원료 예약을 보존합니다.</p>",[{label:"취소",cls:"secondary"},{label:"퓨전 시작",cls:"gold",action:()=>{
+  const confirmPreflight=fusionPowerPreflight();
+  if(!confirmPreflight.ok||!S.fusionDiagnostics?.allPassed){toast("확인 중 전력·냉각 또는 진단 상태가 변경되었습니다. 진단을 다시 실행하세요.","warn");return}
+  const machine=S.buildings.find(x=>x.type==="fusion");
+  if(!machine){toast("퓨전 설비가 사라졌습니다.","warn");return}
+  const jobID="IF-"+String(S.seed||0)+"-"+String(S.tick||0)+"-"+String(S.runtime?.nextReservationId||1);
+  const started=startInfinityFusion(S,{jobID,machineID:String(machine.uid),stageDurationsSeconds:FUSION_STAGES.map(stage=>stage.time),stagePowerMW:FUSION_STAGES.map(stage=>stage.power/1000)});
+  if(!started.ok){toast("퓨전 원료 예약 실패 · "+(started.reason||"UNKNOWN"),"warn");return}
+  S.fusionJob.startedAt=S.seconds;S.fusionJob.stage=0;S.fusionJob.progress=0;
+  machine.temp=25;machine.pressure=0;machine.status="IDLE";
+  log("인피니티 퓨전 시작 · 정식 원료 1,500개 원자적 예약");toast("INFINITY FUSION STARTED");closeModal();markDirty();renderFactory();
  }}]);
-}
-function cancelFusion(){
- const job=S.fusionJob;if(!job||job.legacyConsumedInput||!Array.isArray(job.reservationIDs)||!job.reservationIDs.length||["COMPLETED","CANCELLED"].includes(job.status))return false;
- for(const id of job.reservationIDs)releaseItemReservation(S,id);
- job.reservationIDs=[];job.status="CANCELLED";job.cancelledAt=S.seconds;job.cancelReason="PLAYER_CANCELLED";
+}function cancelFusion(){
+ const job=S.fusionJob;
+ if(!job||job.legacyConsumedInput||!Array.isArray(job.reservationIDs)||!job.reservationIDs.length||["COMPLETED","CANCELLED"].includes(job.status))return false;
+ if(job.runtimeVersion===2){
+  const cancelled=cancelInfinityFusion(S,{jobID:job.jobID});
+  if(!cancelled)return false;
+ }else{
+  for(const id of job.reservationIDs)releaseItemReservation(S,id);
+  job.reservationIDs=[];job.status="CANCELLED";job.cancelledAt=S.seconds;job.cancelReason="PLAYER_CANCELLED";
+ }
  log("인피니티 퓨전 취소 · 예약 원료 전량 반환");markDirty();renderAll();toast("퓨전이 취소되었고 예약 원료가 인벤토리로 반환되었습니다.");return true;
 }
 const PLANETARY_BLOCKER_LABELS=Object.freeze({
