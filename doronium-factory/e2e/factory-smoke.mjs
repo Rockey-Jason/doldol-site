@@ -304,7 +304,7 @@ try {
   assert.equal(liveFusion.powerPause.reservations, 15, "Power loss must preserve all 15 qualified input reservations");
   assert.equal(liveFusion.jobStatus, "COMPLETED", "The integrated seven-stage Fusion job must resume and complete");
   assert.equal(liveFusion.stageIndex, 7, "The integrated job must finish all seven stages");
-  assert.equal(liveFusion.totalElapsedSeconds, 260, "The live Fusion job must execute the full 260-second ideal process");
+  assert.ok(Math.abs(liveFusion.totalElapsedSeconds - 260) < 1e-8, "The live Fusion job must execute the full 260-second ideal process within floating-point tolerance");
   assert.equal(liveFusion.fusionDone, true, "The live completion path must set the global Fusion flag");
   assert.equal(liveFusion.output, 1, "The live game loop must issue exactly one canonical Infinity output");
   assert.equal(liveFusion.inputsRemaining, 0, "The live job must consume exactly 1,500 qualified inputs");
