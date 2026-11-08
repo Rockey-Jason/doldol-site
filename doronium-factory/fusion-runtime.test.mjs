@@ -48,6 +48,27 @@ test("a missing reserved input stops the next Fusion tick before progress or con
  assert.deepEqual(stackTotals(s),before);
  assert.equal(s.fusionJob.stageIndex,0);
 });
+test("a reservation cannot substitute another item ID for a canonical Fusion input",()=>{
+ const s=state(),started=startInfinityFusion(s,plan);
+ const reservation=s.runtime.reservations[started.job.reservationIDs[0]];
+ reservation.itemID="ITEM_IRON_ORE";
+ const before=stackTotals(s);
+ const result=tickInfinityFusion(s,{deltaSeconds:1,powerRatio:1});
+ assert.equal(result.error,"RESERVATION_LEDGER_MISMATCH");
+ assert.deepEqual(stackTotals(s),before);
+ assert.equal(s.fusionJob.stageIndex,0);
+});
+test("a reserved stack that loses its quality qualification stops Fusion",()=>{
+ const s=state(),started=startInfinityFusion(s,plan);
+ const reservation=s.runtime.reservations[started.job.reservationIDs[0]];
+ const allocation=reservation.allocations[0];
+ const stack=s.runtime.itemStacks.find(item=>item.runtimeID===allocation.stackID);
+ stack.quality=89;
+ const result=tickInfinityFusion(s,{deltaSeconds:1,powerRatio:1});
+ assert.equal(result.error,"RESERVATION_LEDGER_MISMATCH");
+ assert.equal(s.fusionJob.stageIndex,0);
+ assert.equal(stackTotals(s)[reservation.itemID],100);
+});
 test("completed seven-stage fusion creates exactly one output",()=>{const s=state();startInfinityFusion(s,plan);for(let i=0;i<2600;i++)tickInfinityFusion(s,{deltaSeconds:.1,powerRatio:1});assert.equal(s.fusionJob.status,"COMPLETED");assert.equal(s.runtime.itemStacks.filter(x=>x.itemID===CANONICAL_INFINITY_DORONUM_ID).reduce((n,x)=>n+x.quantity,0),1);assert.equal(s.runtime.itemStacks.reduce((n,x)=>n+x.quantity,0),1)});
 test("cancel releases all inputs and is idempotently unavailable afterwards",()=>{const s=state();startInfinityFusion(s,plan);assert.equal(cancelInfinityFusion(s,{jobID:"JOB-1"}),true);assert.equal(cancelInfinityFusion(s,{jobID:"JOB-1"}),false);assert.equal(s.runtime.itemStacks.reduce((n,x)=>n+x.quantity,0),1500);assert.equal(Object.keys(s.runtime.reservations).length,0)});
 
