@@ -6,6 +6,7 @@ const sameRequest=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 function validID(value){return typeof value==="string"&&value.trim().length>0}
 function ensureState(state){
  if(!plainObject(state))throw new Error("invalid-ownership-state");
+ state.version=2;
  if(!Number.isSafeInteger(state.nextLedgerID)||state.nextLedgerID<1)state.nextLedgerID=1;
  if(!Array.isArray(state.custody))state.custody=[];
  if(!plainObject(state.transactions))state.transactions={};
