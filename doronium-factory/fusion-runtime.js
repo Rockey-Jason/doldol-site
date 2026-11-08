@@ -1,9 +1,9 @@
 /* Resumable, all-input-reserved Infinity Fusion transaction. */
-import {INFINITY_REQUIREMENTS,INFINITY_TOTAL_INPUT,validateInfinityManifest} from "./canonical-data.js";
+import {INFINITY_REQUIREMENTS,INFINITY_TOTAL_INPUT,CANONICAL_INFINITY_DORONUM_ID,validateInfinityManifest} from "./canonical-data.js";
 import {reserveItemBatch,releaseItemReservation,commitItemReservations,addItemStack,syncLegacyInventory} from "./simulation-core.js";
 const clone=v=>typeof structuredClone==="function"?structuredClone(v):JSON.parse(JSON.stringify(v));
 const POWER_FLOOR=.8;
-export function settleInfinityFusionOutput(state,{jobID,outputItemID="infinity",quality=100,purity=100}={}){
+export function settleInfinityFusionOutput(state,{jobID,outputItemID=CANONICAL_INFINITY_DORONUM_ID,quality=100,purity=100}={}){
  const job=state?.fusionJob;
  if(!job||!jobID||String(job.jobID)!==String(jobID))return {ok:false,reason:"JOB_NOT_FOUND"};
  state.fusionSettlements??={};
@@ -73,7 +73,7 @@ export function tickInfinityFusion(state,{deltaSeconds=.1,machineExists=true,pow
   if(job.stageElapsedSeconds+1e-9>=job.stageDurationsSeconds[job.stageIndex]){job.stageIndex++;job.stageElapsedSeconds=0}
  }
  if(job.stageIndex<7)return {status:job.status,completed:false,stage:job.stageIndex+1,totalElapsedSeconds:job.totalElapsedSeconds};
- const settlement=settleInfinityFusionOutput(state,{jobID:job.jobID,outputItemID:"infinity",quality:100,purity:100});
+ const settlement=settleInfinityFusionOutput(state,{jobID:job.jobID,outputItemID:CANONICAL_INFINITY_DORONUM_ID,quality:100,purity:100});
  if(!settlement.ok)return {status:"ERROR",completed:false,recoverable:true,error:settlement.reason};
  return {status:"COMPLETED",completed:true,outputStackID:settlement.outputStackID,duplicate:!!settlement.duplicate};
 }
