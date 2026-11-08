@@ -86,7 +86,8 @@ const RESOURCE={
  "ITEM_TITANIUM_PLATE":{name:"티타늄판",icon:"▱",price:180,kind:"part"},
  "ITEM_CARBON_POWDER":{name:"탄소 분말",icon:"⬛",price:35,kind:"raw"},
  titaniumOre:{name:"티타늄 광석",icon:"⛏️",price:95,kind:"raw"},chromiteOre:{name:"크로마이트 광석",icon:"🪨",price:85,kind:"raw"},
- infinity:{name:"인피니티 도로늄",icon:"💠",price:1000000,kind:"final"}
+ infinity:{name:"인피니티 도로늄",icon:"💠",price:1000000,kind:"final"},
+ ITEM_DORONUM_INFINITY:{name:"인피니티 도로늄",icon:"💠",price:1000000,kind:"final"}
 };
 const VARIANTS=["ITEM_DORONUM_NORMAL","ITEM_DORONUM_YELLOW","ITEM_DORONUM_ULTRA","ITEM_DORONUM_BLUE","ITEM_DORONUM_RED","ITEM_DORONUM_IRON","ITEM_DORONUM_ORANGE","ITEM_DORONUM_SLIGHTLY_RUSTED","ITEM_DORONUM_RUSTED","ITEM_DORONUM_TRANSLUCENT","ITEM_DORONUM_THERMAL_CRYSTAL","ITEM_DORONUM_COLD_CRYSTAL","ITEM_DORONUM_BLACK","ITEM_DORONUM_SPECIAL_EDITION","ITEM_DORONUM_LIMITED_EDITION"];
 const BUILDINGS=[
@@ -245,7 +246,7 @@ const QUESTS=[
 {id:"q6",chapter:2,title:"결정의 다변화",desc:"결정 변환 연구로를 건설하고 특수 도로늄 3종을 제조하세요.",reward:2600,check:s=>hasBuilding(s,"variantLab")&&VARIANTS.filter(id=>id!=="ITEM_DORONUM_NORMAL"&&(s.stats.produced[id]||0)>0).length>=3,progress:s=>Math.min(3,VARIANTS.filter(id=>id!=="ITEM_DORONUM_NORMAL"&&(s.stats.produced[id]||0)>0).length)+(hasBuilding(s,"variantLab")?1:0),max:4,orbit:"“15개의 결정 공명 계열이 확인되었습니다. 최초 공장의 기록과 일치합니다.”"},
 {id:"q7",chapter:3,title:"인피니티 프로젝트",desc:"인피니티 퓨전 이론을 연구하고 퓨전 설비를 건설하세요.",reward:6000,check:s=>s.research.includes("fusion")&&hasBuilding(s,"fusion"),progress:s=>(s.research.includes("fusion")?1:0)+(hasBuilding(s,"fusion")?1:0),max:2,orbit:"“INFINITE PROJECT identified. 행성 에너지 네트워크 자료를 복구했습니다.”"},
 {id:"q8",chapter:3,title:"완벽한 재료",desc:"정식 도로늄 15종을 각각 100개씩 확보하세요. 모든 재료는 품질·순도 90 이상이어야 합니다.",reward:12000,check:s=>VARIANTS.every(id=>(s.inventory[id]||0)>=100&&quality(s,id)>=90&&purity(s,id)>=90&&!synthetic(s,id)),progress:s=>VARIANTS.filter(id=>(s.inventory[id]||0)>=100&&quality(s,id)>=90&&purity(s,id)>=90&&!synthetic(s,id)).length,max:15,orbit:"“모든 입력 결정의 순도와 품질이 기준을 통과했습니다. 퓨전을 시작할 수 있습니다.”"},
-{id:"q9",chapter:4,title:"인피니티 결정화",desc:"7단계 퓨전을 완료해 인피니티 도로늄을 제작하세요.",reward:25000,check:s=>(s.inventory.infinity||0)>=1||s.fusionDone,progress:s=>s.fusionDone?1:0,max:1,orbit:"“Infinity Doronum secured. 이제 행성 안정화 장치를 구축해야 합니다.”"},
+{id:"q9",chapter:4,title:"인피니티 결정화",desc:"7단계 퓨전을 완료해 인피니티 도로늄을 제작하세요.",reward:25000,check:s=>(s.inventory.ITEM_DORONUM_INFINITY||0)>=1||s.fusionDone,progress:s=>s.fusionDone?1:0,max:1,orbit:"“Infinity Doronum secured. 이제 행성 안정화 장치를 구축해야 합니다.”"},
 {id:"q10",chapter:4,title:"행성의 심장",desc:"3개의 릴레이와 중앙 코어를 설치하고 행성 안정화 프로토콜을 실행하세요.",reward:100000,check:s=>s.victory===true,progress:s=>(s.relaySites||[]).filter(Boolean).length+(s.coreInstalled?1:0),max:4,orbit:"“Energy network synchronization complete. Planetary instability: decreasing. Factory status: OPERATIONAL.”"}
 ];
 function hasBuilding(s,id){return s.buildings.some(b=>b.type===id)}
@@ -498,8 +499,8 @@ function renderInventory(){
  $("crystal-codex").innerHTML=VARIANTS.map(id=>{
   const total=Math.max(0,Number(S.inventory[id])||0),reserved=Math.max(0,total-itemCount(id));
   return '<button class="crystal-codex-card" data-crystal="'+id+'"><span>'+RESOURCE[id].icon+'</span><strong>'+RESOURCE[id].name+'</strong><small>'+(total>0?"보유 "+fmt(total)+(reserved>0?" · 예약 "+fmt(reserved):""):"도감 미발견")+'</small></button>';
- }).join("")+'<button class="crystal-codex-card infinity-card" data-crystal="infinity"><span>💠</span><strong>인피니티 도로늄</strong><small>'+(Math.max(0,Number(S.inventory.infinity)||0)>0?"보유 "+fmt(S.inventory.infinity):"최종 결정")+'</small></button>';
- const sellable=items.filter(([id,available])=>available>0&&id!=="infinity");
+ }).join("")+'<button class="crystal-codex-card infinity-card" data-crystal="infinity"><span>💠</span><strong>인피니티 도로늄</strong><small>'+(Math.max(0,Number(S.inventory.ITEM_DORONUM_INFINITY)||0)>0?"보유 "+fmt(S.inventory.ITEM_DORONUM_INFINITY):"최종 결정")+'</small></button>';
+ const sellable=items.filter(([id,available])=>available>0&&id!=="ITEM_DORONUM_INFINITY");
  const sel=$("sell-resource"),old=sel.value;
  sel.innerHTML=sellable.map(([id,available])=>'<option value="'+id+'">'+(RESOURCE[id]?.icon||"◈")+" "+escapeHTML(RESOURCE[id]?.name||id)+" ("+fmt(available)+")</option>").join("");
  if(sellable.some(([id])=>id===old))sel.value=old;
@@ -904,7 +905,7 @@ function updateSurvival(dt){
  else if(v.hunger>70&&v.thirst>70)v.health=Math.min(100,v.health+dt*.12);
  if(v.health<=0)respawnEngineer();
 }
-function showCrystalPreview(id){if(!RESOURCE[id]||(!id.startsWith("doronium_")&&!id.startsWith("ITEM_DORONUM_")&&id!=="infinity"))return;if(crystalViewer){crystalViewer.dispose();crystalViewer=null}const title=RESOURCE[id].name,body='<div class="crystal-preview-wrap"><canvas id="crystal-preview-canvas" class="crystal-preview-canvas" aria-label="'+title+' 3D 결정 모델"></canvas><div class="crystal-preview-info"><strong>'+title+'</strong><p>보유량 '+fmt(itemCount(id))+'개 · 품질 '+Math.round(quality(S,id))+' · 순도 '+Math.round(purity(S,id))+'</p><small>결정 계열마다 서로 다른 3D 형상·재질·발광 특성을 적용했습니다.</small></div></div>';showModal("도로늄 3D 결정 도감",body,[{label:"닫기",cls:"primary"}]);crystalViewer=createCrystalViewer($("crystal-preview-canvas"),id)}
+function showCrystalPreview(id){if(!RESOURCE[id]||(!id.startsWith("doronium_")&&!id.startsWith("ITEM_DORONUM_")&&id!=="infinity"&&id!=="ITEM_DORONUM_INFINITY"))return;if(crystalViewer){crystalViewer.dispose();crystalViewer=null}const title=RESOURCE[id].name,body='<div class="crystal-preview-wrap"><canvas id="crystal-preview-canvas" class="crystal-preview-canvas" aria-label="'+title+' 3D 결정 모델"></canvas><div class="crystal-preview-info"><strong>'+title+'</strong><p>보유량 '+fmt(itemCount(id))+'개 · 품질 '+Math.round(quality(S,id))+' · 순도 '+Math.round(purity(S,id))+'</p><small>결정 계열마다 서로 다른 3D 형상·재질·발광 특성을 적용했습니다.</small></div></div>';showModal("도로늄 3D 결정 도감",body,[{label:"닫기",cls:"primary"}]);crystalViewer=createCrystalViewer($("crystal-preview-canvas"),id)}
 function selectTile(x,y){if(S.player.layer==="mine")return;const key=surfaceKey(x,y);if(selectedLandTool==="flatten"){const n=tileNode(x,y);if(n&&["water","wood","mineEntrance","relaySite","coreSite","dori"].includes(n.type)){toast("이 지형은 평탄화할 수 없습니다.","warn");return}if(buildingAt(x,y)){toast("시설이 있는 타일은 먼저 해체해야 합니다.","warn");return}const area=[];for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const ax=x+dx,ay=y+dz,n=tileNode(ax,ay);if(ax<0||ay<0||ax>=WORLD_W||ay>=WORLD_H||buildingAt(ax,ay)||(n&&["water","wood","mineEntrance","dori","relaySite","coreSite"].includes(n.type)))continue;area.push({x:ax,y:ay})}const targetHeight=Math.round(area.reduce((v,p)=>v+terrainHeightAt(p.x,p.y),0)/Math.max(1,area.length)/3)*3;for(const p of area)S.flattened[surfaceKey(p.x,p.y)]={height:targetHeight};markSceneDirty();log("지표 평탄화 · "+key+" · "+area.length+"타일");markDirty();drawWorld();toast("지형 평탄화 완료 · 기초 타일을 설치하세요.");return}if(selectedLandTool==="foundation"){if(!S.flattened[key]){toast("기초 타일은 평탄화된 지형에만 설치할 수 있습니다.","warn");return}if(S.foundation[key]){toast("이미 기초 타일이 설치되어 있습니다.");return}if(!hasItems({wood:2,stone:2})){toast("기초 타일에는 목재 2개와 석재 2개가 필요합니다.","warn");return}takeItems({wood:2,stone:2});S.foundation[key]=true;markSceneDirty();log("기초 타일 설치 · "+key);markDirty();drawWorld();toast("산업용 기초 타일 설치 완료");return}const b=buildingAt(x,y);if(b){selectedBuild=null;selectedBuilding=b.uid;changePanel("factory");renderBuildList();renderMachineDetails();approachTile(x,y);drawWorld();return}if(selectedBuild||activeBlueprintID){if(placeBuilding(selectedBuild,x,y))approachTile(x,y);return}const node=tileNode(x,y);if(node){approachTile(x,y,()=>{const current=tileNode(x,y);if(current)harvestNode(x,y,current)});return}selectedBuilding=null;renderMachineDetails();movePlayerTo(x,y)}
 function harvestNode(x,y,node){if(S.player.layer!=="surface"){toast("지하 광물은 광산 채굴 도구로 채취하세요.");return}if(node.amount<=0){toast("이 자원은 고갈되었습니다.","warn");return}if(["wood","dori"].includes(node.type)&&S.activeTool!=="axe"){toast("도끼를 장착해야 나무를 벌목할 수 있습니다.","warn");return}if(node.type==="dori"){if(node.cooldown>0){toast("돌이 고기 나무가 열매를 다시 키우고 있습니다. "+Math.ceil(node.cooldown)+"초 남음","warn");return}if(itemCount("water")<2){toast("돌이 고기 수확에는 물 2L가 필요합니다.","warn");return}takeItem("water",2);startNodeCooldown(x,y,node,60);addItem("doriMeat",1,{quality:90,purity:90,synthetic:false});S.stats.gathered.ITEM_DORI_MEAT=(S.stats.gathered.ITEM_DORI_MEAT||0)+1;log("돌이 고기 열매 수확 · 비합성 원료");toast("돌이 고기 +1 · 순도 90");playTone(760,.12,"sine");questCheck();renderAll();drawWorld();return}
 const map={wood:"wood",water:"water"};const id=map[node.type];if(!id)return;const amount=Math.min(node.amount,node.type==="wood"||node.type==="stone"?3:node.type==="water"?5:node.type==="diamond"?1:2);node.amount-=amount;if(node.amount<=0)markVisibilityDirty();const q=80+Math.floor((node.seed%1900)/100);addItem(id,amount,{quality:q,purity:node.type==="water"?100:85,synthetic:false});S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;log(RESOURCE[id].name+" 채집 · "+fmt(amount)+"개");toast(RESOURCE[id].name+" +"+fmt(amount));playTone(420,.07,"triangle");questCheck();renderAll();drawWorld()}
@@ -948,7 +949,7 @@ function updateFusion(dt){
  if(job.progress<stage.time)return;
  log("퓨전 단계 완료 · "+stage.name,"good");job.stage++;job.progress=0;job.status="RUNNING";
  if(job.stage>=FUSION_STAGES.length){
-  const settlement=settleInfinityFusionOutput(S,{jobID:job.jobID,outputItemID:"infinity",quality:100,purity:100});
+  const settlement=settleInfinityFusionOutput(S,{jobID:job.jobID,outputItemID:"ITEM_DORONUM_INFINITY",quality:100,purity:100});
   if(!settlement.ok){S.fusionJob.status="ERROR";S.fusionJob.errorCode=settlement.reason||"FUSION_SETTLEMENT_FAILED";S.fusionJob.lastErrorAt=S.seconds;log("인피니티 퓨전 정산 실패 · "+S.fusionJob.errorCode,"warn");markDirty();return}
   if(!settlement.duplicate){
    log("인피니티 도로늄 결정화 성공 · 원료 1,500개 소비 · 출력 1개","good");toast("인피니티 도로늄 제작 성공!");
@@ -1757,7 +1758,7 @@ if(E2E_MODE){
     {uid:"OWN-BELT",type:"belt",item:{id:"circuit",qty:4,meta:{quality:94,purity:95,synthetic:false}}}
    ];
    S.contractRuntime.shipments=[{shipmentID:"OWN-SHIP",status:"IN_TRANSIT",cargo:[{itemID:"wood",quantity:5,quality:90,purity:91,synthetic:false}]}];
-   S.completionBuffer=[{completionID:"OWN-COMPLETE",itemID:"infinity",quantity:1}];
+   S.completionBuffer=[{completionID:"OWN-COMPLETE",itemID:"ITEM_DORONUM_INFINITY",quantity:1}];
    const validation=rebuildOwnershipLedger(S);
    return {reservation,validation,ownership:structuredClone(S.ownershipLedger),itemTotals:validation.itemTotals};
   },
@@ -1806,9 +1807,9 @@ if(E2E_MODE){
    const reservationIDs=reserveQualifiedItemBatch(S,requirements,"LIVE-FUSION-E2E",predicates);
    if(!reservationIDs||reservationIDs.length!==15)return {ok:false,reason:"RESERVATION_FAILED"};
    S.fusionJob={jobID:"LIVE-FUSION-E2E",status:"RUNNING",stage:7,progress:0,reservationIDs,inputQuantity:1500,legacyConsumedInput:false,outputIssued:false};
-   const first=settleInfinityFusionOutput(S,{jobID:S.fusionJob.jobID,outputItemID:"infinity",quality:100,purity:100});
-   const second=settleInfinityFusionOutput(S,{jobID:S.fusionJob.jobID,outputItemID:"infinity",quality:100,purity:100});
-   return {ok:first.ok&&second.ok&&second.duplicate&&S.fusionDone&&S.fusionJob.status==="COMPLETED",first,second,fusionDone:S.fusionDone,jobStatus:S.fusionJob.status,outputCount:availableItemCount(S,"infinity"),outputStackID:S.fusionJob.outputStackID,reservationsRemaining:Object.values(S.runtime.reservations).filter(x=>x.status==="reserved").length,inputsRemaining:VARIANTS.reduce((n,id)=>n+availableItemCount(S,id),0),settlement:Object.values(S.fusionSettlements||{})[0]||null,produced:S.stats.produced.infinity};
+   const first=settleInfinityFusionOutput(S,{jobID:S.fusionJob.jobID,outputItemID:"ITEM_DORONUM_INFINITY",quality:100,purity:100});
+   const second=settleInfinityFusionOutput(S,{jobID:S.fusionJob.jobID,outputItemID:"ITEM_DORONUM_INFINITY",quality:100,purity:100});
+   return {ok:first.ok&&second.ok&&second.duplicate&&S.fusionDone&&S.fusionJob.status==="COMPLETED",first,second,fusionDone:S.fusionDone,jobStatus:S.fusionJob.status,outputCount:availableItemCount(S,"infinity"),outputStackID:S.fusionJob.outputStackID,reservationsRemaining:Object.values(S.runtime.reservations).filter(x=>x.status==="reserved").length,inputsRemaining:VARIANTS.reduce((n,id)=>n+availableItemCount(S,id),0),settlement:Object.values(S.fusionSettlements||{})[0]||null,produced:S.stats.produced.ITEM_DORONUM_INFINITY};
   },
   runFusionReservationCancelTest(){
    S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
