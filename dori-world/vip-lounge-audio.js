@@ -17,7 +17,7 @@ const phrase = entries => {
 
 const TRACKS = {
  lounge_music_royal_piano: {
-  bpm:84,timbre:"concertGrand",reverb:0.22,leadKind:"key",bassHits:[0,4],arpSlots:[1,5],compSlots:[2,6],swing:0.035,pan:0.10,sectionOrders:[[0,1,2,3,4,5,6,7],[0,3,1,4,2,5,7,6],[2,3,0,5,4,6,1,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
+  bpm:84,timbre:"concertGrand",reverb:0.22,leadKind:"piano",compKind:"pianoComp",padKind:"strings",bassKind:"uprightBass",arpKind:"vibraphone",bassHits:[0,4],arpSlots:[1,5],compSlots:[2,6],swing:0.035,pan:0.10,sectionOrders:[[0,1,2,3,4,5,6,7],[0,3,1,4,2,5,7,6],[2,3,0,5,4,6,1,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [48,55,59,62,64,67],[45,52,55,59,62,64],[41,48,52,55,57,60],[43,50,54,57,59,62],
    [40,47,50,54,57,59],[45,52,55,59,62,64],[41,48,52,55,57,60],[43,50,54,57,59,62]
@@ -28,7 +28,7 @@ const TRACKS = {
   ]
  },
  lounge_music_velvet_jazz: {
-  bpm:94,timbre:"concertGrand",reverb:0.19,leadKind:"key",bassHits:[0,3,6],arpSlots:[1,5],compSlots:[2,6],swing:0.085,pan:0.16,sectionOrders:[[0,1,2,3,4,5,6,7],[1,3,5,2,4,6,0,7],[4,5,2,3,0,1,6,7],[0,2,1,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
+  bpm:94,timbre:"rhodes",reverb:0.19,leadKind:"sax",compKind:"rhodes",padKind:"strings",bassKind:"uprightBass",arpKind:"vibraphone",rhythmKind:"brush",rhythmSlots:[2,6],rhythmLevel:0.22,bassHits:[0,3,6],arpSlots:[1,5],compSlots:[2,6],swing:0.085,pan:0.16,sectionOrders:[[0,1,2,3,4,5,6,7],[1,3,5,2,4,6,0,7],[4,5,2,3,0,1,6,7],[0,2,1,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [41,48,52,55,57,60],[46,53,56,60,62,65],[39,46,50,53,55,58],[44,51,55,58,60,63],
    [37,44,48,51,53,56],[42,49,53,56,58,61],[39,46,50,53,55,58],[44,51,55,58,60,63]
@@ -39,7 +39,7 @@ const TRACKS = {
   ]
  },
  lounge_music_rainy_library: {
-  bpm:76,timbre:"concertGrand",reverb:0.27,leadKind:"key",bassHits:[0,5],arpSlots:[4],compSlots:[2,6],swing:0.02,pan:0.06,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,4,6,5,7],[4,3,2,1,0,5,6,7],[0,1,2,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
+  bpm:76,timbre:"felt",reverb:0.29,leadKind:"rhodes",compKind:"strings",padKind:"strings",bassKind:"uprightBass",arpKind:"flute",rhythmKind:"brush",rhythmSlots:[5],rhythmLevel:0.10,bassHits:[0,5],arpSlots:[4],compSlots:[2,6],swing:0.02,pan:0.06,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,4,6,5,7],[4,3,2,1,0,5,6,7],[0,1,2,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [38,45,48,52,55,57],[43,50,53,57,60,62],[36,43,46,50,53,55],[41,48,52,55,57,60],
    [34,41,45,48,50,53],[39,46,50,53,55,58],[36,43,46,50,53,55],[41,48,52,55,57,60]
@@ -50,7 +50,7 @@ const TRACKS = {
   ]
  },
  lounge_music_midnight_gold: {
-  bpm:82,timbre:"concertGrand",reverb:0.24,leadKind:"key",bassHits:[0,4],arpSlots:[2,6],compSlots:[2,6],swing:0.035,pan:0.08,sectionOrders:[[0,1,2,3,4,5,6,7],[1,2,4,3,5,6,0,7],[4,3,2,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
+  bpm:82,timbre:"warmGrand",reverb:0.24,leadKind:"mutedTrumpet",compKind:"rhodes",padKind:"strings",bassKind:"uprightBass",arpKind:"vibraphone",rhythmKind:"brush",rhythmSlots:[3,7],rhythmLevel:0.14,bassHits:[0,4],arpSlots:[2,6],compSlots:[2,6],swing:0.035,pan:0.08,sectionOrders:[[0,1,2,3,4,5,6,7],[1,2,4,3,5,6,0,7],[4,3,2,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
   chords:[
    [43,50,53,57,60,62],[41,48,52,55,57,60],[38,45,48,52,55,57],[36,43,47,50,52,55],
    [34,41,45,48,50,53],[39,46,50,53,55,58],[41,48,52,55,57,60],[38,45,48,52,55,57]
@@ -61,7 +61,7 @@ const TRACKS = {
   ]
  },
  lounge_music_crystal_atrium: {
-  bpm:88,timbre:"concertGrand",reverb:0.24,leadKind:"key",bassHits:[0,4],arpSlots:[1,5],compSlots:[2,6],swing:0.025,pan:0.18,sectionOrders:[[0,1,2,3,4,5,6,7],[2,1,3,4,6,5,0,7],[4,5,3,2,0,1,6,7],[0,2,1,3,5,4,6,7],[0,1,2,3,4,5,6,7]],
+  bpm:88,timbre:"mellowKeys",reverb:0.30,leadKind:"celeste",compKind:"strings",padKind:"strings",bassKind:"softBass",arpKind:"harp",bassHits:[0,4],arpSlots:[1,5],compSlots:[2,6],swing:0.025,pan:0.18,sectionOrders:[[0,1,2,3,4,5,6,7],[2,1,3,4,6,5,0,7],[4,5,3,2,0,1,6,7],[0,2,1,3,5,4,6,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [47,54,58,61,64,66],[52,59,63,66,68,71],[45,52,56,59,61,64],[50,57,61,64,66,69],
    [42,49,53,56,59,61],[47,54,58,61,64,66],[45,52,56,59,61,64],[50,57,61,64,66,69]
@@ -72,7 +72,7 @@ const TRACKS = {
   ]
  },
  lounge_music_garden_terrace: {
-  bpm:96,timbre:"concertGrand",reverb:0.21,leadKind:"key",bassHits:[0,3,5],arpSlots:[1,4,6],compSlots:[2,5],swing:0.06,pan:0.12,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,4,1,3,5,6,7],[2,3,4,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
+  bpm:96,timbre:"softRhodes",reverb:0.20,leadKind:"nylonGuitar",compKind:"rhodes",padKind:"strings",bassKind:"uprightBass",arpKind:"flute",rhythmKind:"shaker",rhythmSlots:[1,3,5,7],rhythmLevel:0.22,bassHits:[0,3,5],arpSlots:[1,4,6],compSlots:[2,5],swing:0.06,pan:0.12,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,4,1,3,5,6,7],[2,3,4,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
   chords:[
    [43,50,54,57,59,62],[38,45,49,52,54,57],[40,47,50,54,57,59],[45,52,55,59,62,64],
    [43,50,54,57,59,62],[47,54,57,61,64,66],[45,52,55,59,62,64],[40,47,50,54,57,59]
@@ -83,7 +83,7 @@ const TRACKS = {
   ]
  },
  lounge_music_christmas_hotel: {
-  bpm:86,timbre:"concertGrand",reverb:0.26,leadKind:"key",bassHits:[0,4],arpSlots:[2,5],compSlots:[2,6],swing:0.025,pan:0.14,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,5,4,6,7],[4,3,2,1,0,5,6,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
+  bpm:86,timbre:"mellowKeys",reverb:0.29,leadKind:"musicBox",compKind:"strings",padKind:"strings",bassKind:"softBass",arpKind:"sleighBell",bassHits:[0,4],arpSlots:[2,5],compSlots:[2,6],swing:0.025,pan:0.14,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,5,4,6,7],[4,3,2,1,0,5,6,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
   chords:[
    [45,52,56,59,61,64],[40,47,50,54,57,59],[41,48,52,55,57,60],[36,43,47,50,52,55],
    [38,45,49,52,54,57],[43,50,54,57,59,62],[40,47,50,54,57,59],[45,52,56,59,61,64]
@@ -303,12 +303,87 @@ function pianoVoice(note,when,duration,kind,state,level=1,pan=0){
  });
  filter.connect(panner);
 }
+
+const INSTRUMENTS={
+ sax:{parts:[[1,.56,"sawtooth"],[1.004,.22,"sawtooth"],[2,.13,"triangle"],[3,.055,"sawtooth"]],attack:.075,release:.30,sustain:.68,peak:.034,cutoff:2450,q:.68,vibrato:4.8,depth:3.2,mode:"held"},
+ mutedTrumpet:{parts:[[1,.64,"sawtooth"],[2,.21,"square"],[3,.085,"sawtooth"],[4,.025,"triangle"]],attack:.055,release:.25,sustain:.58,peak:.030,cutoff:1850,q:.82,vibrato:5.2,depth:2.2,mode:"held"},
+ flute:{parts:[[1,.84,"sine"],[2,.12,"sine"],[3,.025,"sine"]],attack:.09,release:.34,sustain:.58,peak:.027,cutoff:4300,q:.22,mode:"held"},
+ harp:{parts:[[1,.70,"sine"],[2,.21,"triangle"],[3,.065,"sine"],[4,.025,"sine"]],attack:.006,release:.62,sustain:.10,peak:.035,cutoff:5600,q:.2,mode:"pluck"},
+ nylonGuitar:{parts:[[1,.72,"triangle"],[2,.18,"sine"],[3,.07,"triangle"],[4,.018,"sine"]],attack:.008,release:.48,sustain:.10,peak:.030,cutoff:3900,q:.22,mode:"pluck"},
+ celeste:{parts:[[1,.72,"sine"],[2.76,.20,"sine"],[5.42,.07,"sine"],[8.9,.025,"sine"]],attack:.004,release:1.25,sustain:.035,peak:.025,cutoff:7200,q:.18,mode:"pluck"},
+ musicBox:{parts:[[1,.64,"sine"],[2.71,.22,"sine"],[5.31,.095,"sine"],[8.7,.035,"sine"]],attack:.003,release:1.05,sustain:.025,peak:.026,cutoff:7600,q:.16,mode:"pluck"},
+ sleighBell:{parts:[[1,.46,"sine"],[2.76,.30,"sine"],[5.6,.17,"sine"],[9.4,.07,"sine"]],attack:.002,release:.76,sustain:.015,peak:.014,cutoff:8500,q:.14,mode:"pluck"},
+ vibraphone:{parts:[[1,.68,"sine"],[3,.22,"sine"],[4.18,.075,"sine"]],attack:.008,release:1.30,sustain:.08,peak:.020,cutoff:6500,q:.18,mode:"pluck"},
+ rhodes:{parts:[[1,.66,"triangle"],[2,.24,"sine"],[3,.08,"triangle"],[4,.025,"sine"]],attack:.012,release:.48,sustain:.16,peak:.029,cutoff:3100,q:.25,mode:"pluck"},
+ strings:{parts:[[1,.54,"sawtooth"],[1.006,.25,"sawtooth"],[2,.12,"triangle"],[3,.045,"sawtooth"]],attack:.34,release:.82,sustain:.78,peak:.013,cutoff:2350,q:.22,mode:"held"},
+ uprightBass:{parts:[[1,.76,"triangle"],[2,.18,"sine"],[3,.045,"triangle"]],attack:.018,release:.30,sustain:.20,peak:.035,cutoff:690,q:.2,mode:"pluck"},
+ softBass:{parts:[[1,.82,"sine"],[2,.13,"sine"]],attack:.06,release:.44,sustain:.26,peak:.022,cutoff:440,q:.2,mode:"held"}
+};
+let noiseBuffer=null;
+function percussionVoice(when,instrument,state,level=1,pan=0){
+ const ctx=audioContext;
+ if(!noiseBuffer){
+  noiseBuffer=ctx.createBuffer(1,Math.floor(ctx.sampleRate*.35),ctx.sampleRate);
+  const data=noiseBuffer.getChannelData(0);
+  for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;
+ }
+ const source=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();
+ const panner=ctx.createStereoPanner?ctx.createStereoPanner():ctx.createGain();
+ const shaker=instrument==="shaker";
+ source.buffer=noiseBuffer;
+ filter.type=shaker?"highpass":"bandpass";
+ filter.frequency.setValueAtTime(shaker?5600:1250,when);
+ filter.Q.value=shaker?.55:0.72;
+ gain.gain.setValueAtTime(.0001,when);
+ gain.gain.linearRampToValueAtTime((shaker?.0065:.0048)*level,when+.004);
+ gain.gain.exponentialRampToValueAtTime(.0001,when+(shaker?.075:.145));
+ if(panner.pan)panner.pan.setValueAtTime(clamp(pan,-.4,.4),when);
+ source.connect(filter);filter.connect(gain);gain.connect(panner);
+ panner.connect(state.bus);panner.connect(state.send);
+ source.start(when);source.stop(when+.19);
+}
+function instrumentVoice(note,when,duration,kind,state,level=1,pan=0){
+ const ctx=audioContext,preset=INSTRUMENTS[kind];
+ if(!preset)return false;
+ const base=midiHz(note),filter=ctx.createBiquadFilter();
+ const panner=ctx.createStereoPanner?ctx.createStereoPanner():ctx.createGain();
+ filter.type=preset.q>.5?"bandpass":"lowpass";
+ filter.frequency.setValueAtTime(preset.cutoff,when);
+ filter.Q.value=preset.q;
+ if(panner.pan)panner.pan.setValueAtTime(clamp(pan,-.4,.4),when);
+ filter.connect(panner);panner.connect(state.bus);panner.connect(state.send);
+ const safeDuration=Math.max(.16,duration);
+ preset.parts.forEach(([ratio,weight,wave],index)=>{
+  const osc=ctx.createOscillator(),gain=ctx.createGain();
+  osc.type=wave;osc.frequency.setValueAtTime(base*ratio,when);
+  if(kind==="sax"&&index===1)osc.detune.setValueAtTime(-2.4,when);
+  const peak=Math.max(.0001,preset.peak*level*weight);
+  gain.gain.setValueAtTime(.0001,when);
+  gain.gain.linearRampToValueAtTime(peak,when+preset.attack);
+  if(preset.mode==="pluck"){
+   gain.gain.exponentialRampToValueAtTime(.0001,when+Math.max(preset.attack+.035,safeDuration));
+  }else{
+   const releaseStart=Math.max(when+preset.attack+.04,when+safeDuration-preset.release);
+   gain.gain.setTargetAtTime(Math.max(.00012,peak*preset.sustain),when+preset.attack,.075);
+   gain.gain.setValueAtTime(Math.max(.00012,peak*preset.sustain),releaseStart);
+   gain.gain.exponentialRampToValueAtTime(.0001,when+safeDuration);
+  }
+  osc.connect(gain);gain.connect(filter);osc.start(when);osc.stop(when+safeDuration+.05);
+  if(preset.vibrato&&index===0){
+   const lfo=ctx.createOscillator(),depth=ctx.createGain();
+   lfo.frequency.value=preset.vibrato;depth.gain.value=preset.depth;
+   lfo.connect(depth);depth.connect(osc.detune);
+   lfo.start(when);lfo.stop(when+safeDuration+.03);
+  }
+ });
+ return true;
+}
+
 function voice(note,when,duration,kind,state,level=1,pan=0){
  const ctx=audioContext,track=state.track;
- if(track.timbre==="concertGrand"&&(kind==="key"||kind==="comp")){
-  pianoVoice(note,when,duration,kind,state,level,pan);
-  return;
- }
+ if(kind==="piano"||kind==="pianoComp"){pianoVoice(note,when,duration,kind==="pianoComp"?"comp":"key",state,level,pan);return;}
+ if(kind==="brush"||kind==="shaker"){percussionVoice(when,kind,state,level,pan);return;}
+ if(instrumentVoice(note,when,duration,kind,state,level,pan))return;
  const frequency=midiHz(note);
  const amp=ctx.createGain(),filter=ctx.createBiquadFilter();
  const a=ctx.createOscillator(),b=ctx.createOscillator();
@@ -388,11 +463,11 @@ function startScheduler(state){
   const phraseLevel=phraseIndex===4?0.62:phraseIndex===0?0.70:phraseIndex===2?0.78:0.82;
 
   if(slot===0){
-   chord.slice(1,4).forEach((note,index)=>voice(note+12,time,beat*3.7,"pad",state,(index===0?0.58:0.38)*phraseLevel,(index-1)*0.13));
+   chord.slice(1,4).forEach((note,index)=>voice(note+12,time,beat*3.7,track.padKind||"pad",state,(index===0?0.58:0.38)*phraseLevel,(index-1)*0.13));
   }
   if(track.bassHits.includes(slot)){
    const bassNote=chord[0]-12+(slot===0?0:12);
-   voice(bassNote,time,beat*(slot===0?1.8:1.4),"bass",state,(slot===0?0.66:0.42)*phraseLevel,0);
+   voice(bassNote,time,beat*(slot===0?1.8:1.4),track.bassKind||"bass",state,(slot===0?0.66:0.42)*phraseLevel,0);
   }
   const event=melody[stepIndex];
   if(event){
@@ -401,13 +476,16 @@ function startScheduler(state){
   }
   if(track.compSlots.includes(slot)){
    chord.slice(1,4).forEach((note,index)=>{
-    voice(note+12,time+0.006,beat*0.82,"comp",state,(index===0?0.46:0.36)*phraseLevel,(index-1)*0.12);
+    voice(note+12,time+0.006,beat*0.82,track.compKind||"comp",state,(index===0?0.46:0.36)*phraseLevel,(index-1)*0.12);
    });
   }
   if(track.arpSlots.includes(slot)){
    const arpIndex=track.arpSlots.indexOf(slot);
    const chordTone=chord[1+((bar+arpIndex)%Math.min(4,chord.length-1))];
-   voice(chordTone+12,time+0.008,beat*0.76,"key",state,0.10*phraseLevel,-track.pan*0.7);
+   voice(chordTone+12,time+0.008,beat*0.76,track.arpKind||"key",state,0.10*phraseLevel,-track.pan*0.7);
+  }
+  if(track.rhythmKind&&track.rhythmSlots&&track.rhythmSlots.includes(slot)){
+   voice(76,time,beat*0.22,track.rhythmKind,state,(track.rhythmLevel||0.16)*phraseLevel,track.pan*.5);
   }
   state.step++;
   if(state.step>=8){state.step=0;state.bar++}
