@@ -14,9 +14,17 @@ export const TICK_STAGE_ORDER = Object.freeze([
 ]);
 const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number(v)||0));
 const clone=value=>typeof structuredClone==="function"?structuredClone(value):JSON.parse(JSON.stringify(value));
+const EVENT_QUEUE_LIMIT=4096;
+const EVENT_JOURNAL_LIMIT=512;
+const IDEMPOTENCY_LIMIT=2048;
+function stableHash32(value){
+ let hash=0x811c9dc5;
+ for(const char of String(value)){hash^=char.codePointAt(0);hash=Math.imul(hash,0x01000193)}
+ return hash>>>0||0x6d2b79f5;
+}
 
 export function createRuntimeState(){
-  return {schemaVersion:4,nextStackId:1,nextReservationId:1,nextEntityID:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
+  return {schemaVersion:4,nextStackId:1,nextReservationId:1,nextEntityID:1,nextEventSequence:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],eventQueue:[],eventJournal:[],processedEventKeys:[],rngStreams:{},tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
 }
 function normalizeStack(stack){
   const originalItemID=String(stack.itemID),normalizedItemID=canonicalItemID(originalItemID);
@@ -43,6 +51,14 @@ export function ensureItemStacks(state){
   if(!Number.isSafeInteger(rt.failureRngIndex)||rt.failureRngIndex<0)rt.failureRngIndex=0;
   if(!Number.isSafeInteger(rt.nextFailureEventId)||rt.nextFailureEventId<1)rt.nextFailureEventId=1;
   rt.nextReservationId=Math.max(1,Math.floor(Number(rt.nextReservationId)||1));
+  rt.nextEventSequence=Math.max(1,Math.floor(Number(rt.nextEventSequence)||1));
+  if(!Array.isArray(rt.eventQueue))rt.eventQueue=[];
+  if(rt.eventQueue.length>EVENT_QUEUE_LIMIT)rt.eventQueue=rt.eventQueue.slice(0,EVENT_QUEUE_LIMIT);
+  if(!Array.isArray(rt.eventJournal))rt.eventJournal=[];
+  if(rt.eventJournal.length>EVENT_JOURNAL_LIMIT)rt.eventJournal=rt.eventJournal.slice(-EVENT_JOURNAL_LIMIT);
+  if(!Array.isArray(rt.processedEventKeys))rt.processedEventKeys=[];
+  if(rt.processedEventKeys.length>IDEMPOTENCY_LIMIT)rt.processedEventKeys=rt.processedEventKeys.slice(-IDEMPOTENCY_LIMIT);
+  if(!rt.rngStreams||typeof rt.rngStreams!=="object"||Array.isArray(rt.rngStreams))rt.rngStreams={};
   // One-time migration from the legacy item-count map. Never replace existing stacks.
   if(!rt.legacyInventoryMigrated){
     const grouped=new Map();
@@ -59,6 +75,60 @@ export function ensureItemStacks(state){
     rt.legacyInventoryMigrated=true;
   }
   return rt;
+}
+export function nextDeterministicRandom(state,streamName="simulation"){
+ const rt=ensureItemStacks(state),key=String(streamName||"simulation").slice(0,64);
+ let seed=Number(rt.rngStreams[key])>>>0;
+ if(!seed)seed=stableHash32(String(state.worldSeed??state.seed??0)+":"+key);
+ seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;seed>>>=0;
+ if(!seed)seed=0x6d2b79f5;
+ rt.rngStreams[key]=seed;
+ return seed/4294967296;
+}
+export function enqueueSimulationEvent(state,{type,payload=null,idempotencyKey=null,source="simulation"}={}){
+ const rt=ensureItemStacks(state);
+ if(typeof type!=="string"||!type.trim())throw new Error("SIMULATION_EVENT_TYPE_REQUIRED");
+ const key=idempotencyKey==null?null:String(idempotencyKey).slice(0,160);
+ if(key&&(rt.processedEventKeys.includes(key)||rt.eventQueue.some(event=>event.idempotencyKey===key))){
+  const existing=rt.eventQueue.find(event=>event.idempotencyKey===key);
+  return {accepted:false,duplicate:true,eventID:existing?.eventID||null};
+ }
+ if(rt.eventQueue.length>=EVENT_QUEUE_LIMIT)throw new Error("SIMULATION_EVENT_QUEUE_FULL");
+ const eventID="EVT-"+String(rt.nextEventSequence++).padStart(10,"0");
+ const event={eventID,type:type.trim().slice(0,80),payload:clone(payload),idempotencyKey:key,source:String(source||"simulation").slice(0,80),createdTick:Math.max(0,Number(state.tick)||0),attempts:0};
+ rt.eventQueue.push(event);
+ return {accepted:true,duplicate:false,eventID};
+}
+export function processSimulationEvents(state,handlers={},limit=128){
+ const rt=ensureItemStacks(state),maximum=Math.max(1,Math.min(1024,Math.floor(Number(limit)||128)));
+ const snapshotCount=Math.min(rt.eventQueue.length,maximum);
+ let processed=0,duplicates=0,visited=0;const errors=[];
+ while(rt.eventQueue.length&&visited<snapshotCount){
+  const event=rt.eventQueue[0],key=event.idempotencyKey;visited++;
+  if(key&&rt.processedEventKeys.includes(key)){rt.eventQueue.shift();duplicates++;continue}
+  const handler=handlers[event.type];
+  if(typeof handler!=="function"){errors.push({eventID:event.eventID,reason:"UNHANDLED_EVENT_TYPE"});break}
+  try{
+   handler(clone(event.payload),event,state);
+   rt.eventQueue.shift();
+   if(key){rt.processedEventKeys.push(key);if(rt.processedEventKeys.length>IDEMPOTENCY_LIMIT)rt.processedEventKeys.splice(0,rt.processedEventKeys.length-IDEMPOTENCY_LIMIT)}
+   rt.eventJournal.push({...event,processedTick:Math.max(0,Number(state.tick)||0),status:"processed"});
+   if(rt.eventJournal.length>EVENT_JOURNAL_LIMIT)rt.eventJournal.splice(0,rt.eventJournal.length-EVENT_JOURNAL_LIMIT);
+   processed++;
+  }catch(error){
+   event.attempts=Math.max(0,Number(event.attempts)||0)+1;
+   event.lastError=String(error?.message||error).slice(0,240);
+   errors.push({eventID:event.eventID,reason:event.lastError});
+   break;
+  }
+ }
+ return {processed,duplicates,remaining:rt.eventQueue.length,errors};
+}
+export function consumeFixedStepBudget(accumulator,stepSeconds=SIMULATION_STEP_SECONDS,maxSteps=10){
+ const value=Math.max(0,Number(accumulator)||0),step=Math.max(.001,Number(stepSeconds)||SIMULATION_STEP_SECONDS);
+ const budget=Math.max(1,Math.floor(Number(maxSteps)||10)),available=Math.floor((value+1e-9)/step);
+ const steps=Math.min(available,budget);
+ return {steps,remaining:Math.max(0,value-steps*step)};
 }
 export function allocateEntityID(state,prefix="E"){
  const rt=ensureItemStacks(state),sequence=rt.nextEntityID++;
@@ -219,7 +289,21 @@ export function validateRuntimeState(state){
   const failureIDs=new Set();let maxFailureID=0;
   for(const event of rt.failureEvents){if(!event?.failureEventID||failureIDs.has(event.failureEventID))errors.push("duplicate-failure-event:"+event?.failureEventID);failureIDs.add(event?.failureEventID);const n=Number(String(event?.failureEventID||"").replace(/^FAIL-/,""));if(Number.isSafeInteger(n))maxFailureID=Math.max(maxFailureID,n)}
   if(rt.nextFailureEventId<=maxFailureID)errors.push("failure-event-counter-not-advanced");
-  return {valid:errors.length===0,errors,stackCount:rt.itemStacks.length,reservationCount:Object.values(rt.reservations).filter(r=>r.status==="reserved").length,failureEventCount:rt.failureEvents.length};
+  if(!Number.isSafeInteger(rt.nextEventSequence)||rt.nextEventSequence<1)errors.push("invalid-event-sequence-counter");
+  if(!Array.isArray(rt.eventQueue)||rt.eventQueue.length>EVENT_QUEUE_LIMIT)errors.push("invalid-event-queue");
+  const eventIDs=new Set();let maxEventSequence=0;
+  for(const event of rt.eventQueue){
+    if(!event?.eventID||eventIDs.has(event.eventID))errors.push("duplicate-event-id:"+event?.eventID);
+    eventIDs.add(event?.eventID);
+    const sequence=Number(String(event?.eventID||"").replace(/^EVT-/,""));
+    if(Number.isSafeInteger(sequence))maxEventSequence=Math.max(maxEventSequence,sequence);
+    if(typeof event?.type!=="string"||!event.type)errors.push("invalid-event-type:"+event?.eventID);
+  }
+  if(rt.nextEventSequence<=maxEventSequence)errors.push("event-sequence-counter-not-advanced");
+  if(!Array.isArray(rt.eventJournal)||rt.eventJournal.length>EVENT_JOURNAL_LIMIT)errors.push("invalid-event-journal");
+  if(!Array.isArray(rt.processedEventKeys)||rt.processedEventKeys.length>IDEMPOTENCY_LIMIT||rt.processedEventKeys.some(k=>typeof k!=="string"))errors.push("invalid-processed-event-keys");
+  if(!rt.rngStreams||typeof rt.rngStreams!=="object"||Array.isArray(rt.rngStreams))errors.push("invalid-rng-streams");
+  return {valid:errors.length===0,errors,stackCount:rt.itemStacks.length,reservationCount:Object.values(rt.reservations).filter(r=>r.status==="reserved").length,failureEventCount:rt.failureEvents.length,eventQueueCount:rt.eventQueue.length};
 }
 export function availableItemCount(state,itemID){
   itemID=canonicalItemID(itemID);const rt=ensureItemStacks(state),reserved=reservedByStack(rt);
