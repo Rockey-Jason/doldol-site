@@ -61,7 +61,7 @@ export function applyDoronumMigration(state){
   if(!record||typeof record!=="object")return;
   for(const [from,to] of map)if(Object.hasOwn(record,from)){const source=record[from],target=record[to];if(!target)record[to]=source;else if(source&&target&&typeof source==="object"&&typeof target==="object")record[to]={...target,quality:Math.min(Number(target.quality??90),Number(source.quality??90)),purity:Math.min(Number(target.purity??90),Number(source.purity??90)),synthetic:!!target.synthetic||!!source.synthetic};delete record[from]}
  };
- remapRecord(state.inventory);remapMetadata(state.meta);remapRecord(state.stats?.produced);remapRecord(state.stats?.gathered);
+ remapRecord(state.inventory);remapMetadata(state.meta);remapRecord(state.stats?.produced);remapRecord(state.stats?.gathered);remapRecord(state.stats?.soldByItem);
  for(const building of state.buildings||[]){
   if(building.input)remapRecord(building.input);
   if(building.inputMeta)remapMetadata(building.inputMeta);
