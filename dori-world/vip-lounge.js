@@ -493,6 +493,43 @@ function renderBookEditor(){
   const bodyInput=document.createElement("textarea");bodyInput.className="book-editor-textarea";bodyInput.rows=10;bodyInput.value=chapter.content||"";bodyInput.placeholder="이곳에 자유롭게 이야기를 이어서 작성하세요. 페이지가 차면 아래쪽으로 다음 페이지가 자동 생성됩니다.";bodyInput.setAttribute("aria-label","제"+(index+1)+"장 본문");
   const pageMeta=document.createElement("div");pageMeta.className="book-editor-page-meta";pageMeta.setAttribute("aria-live","polite");
   bodyInput.addEventListener("input",()=>fitBookEditorPages(bodyInput,pageMeta));
+  bodyInput.addEventListener("paste",event=>{
+   const pasted=event.clipboardData&&event.clipboardData.getData("text/plain");
+   if(typeof pasted!=="string"||!pasted.trim())return;
+   const start=bodyInput.selectionStart??bodyInput.value.length;
+   const end=bodyInput.selectionEnd??start;
+   const combined=bodyInput.value.slice(0,start)+pasted+bodyInput.value.slice(end);
+   const lines=combined.replace(/\r\n?/g,"\n").split("\n");
+   const headingPattern=/^\s*(?:(제\s*\d+\s*장|\d+\s*장|chapter\s+\d+)(?:\s*[:：.．)\]—–-]?\s*.*)?|(프롤로그|에필로그|서문|맺음말|부록))\s*$/i;
+   const sections=[];let current=null;let headingCount=0;let prefix=[];
+   lines.forEach(line=>{
+    const match=line.match(headingPattern);
+    if(match){
+     headingCount++;
+     if(current)sections.push(current);
+     current={title:line.trim(),content:""};
+    }else if(current)current.content+=(current.content?"\n":"")+line;
+    else prefix.push(line);
+   });
+   if(current)sections.push(current);
+   const firstHeading=lines.findIndex(line=>headingPattern.test(line));
+   const headingAtStart=firstHeading>=0&&lines.slice(0,firstHeading).join("\n").trim()==="";
+   if(headingCount<1||(!headingAtStart&&headingCount<2))return;
+   event.preventDefault();
+   syncBookEditorDraft();
+   const chapterIndex=Array.from($("bookEditorChapters").querySelectorAll(".book-editor-chapter")).indexOf(card);
+   if(chapterIndex<0)return;
+   if(prefix.join("\n").trim()){
+    sections.unshift({title:editorDraft.chapters[chapterIndex].title,content:prefix.join("\n").trim()});
+   }
+   editorDraft.chapters.splice(chapterIndex,1,...sections.map(section=>({title:section.title.slice(0,100),content:section.content})));
+   renderBookEditor();
+   const cards=$("bookEditorChapters").querySelectorAll(".book-editor-chapter");
+   const focusIndex=Math.min(chapterIndex+sections.length-1,cards.length-1);
+   const target=cards[focusIndex]?.querySelector(".book-editor-textarea");
+   if(target){target.focus();target.setSelectionRange(target.value.length,target.value.length)}
+   toast(sections.length+"개 장으로 자동 분리했습니다.");
+  });
   bodyLabel.append(bodyCaption,bodyInput,pageMeta);
   card.append(head,titleLabel,bodyLabel);list.append(card);fitBookEditorPages(bodyInput,pageMeta);
  });
