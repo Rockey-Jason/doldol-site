@@ -417,13 +417,13 @@ body[data-theme="rose"] .lounge-music-player{background:rgba(255,247,244,.96);co
 .lounge-music-player[hidden]{display:none!important}
 
 
-/* Elegant inactivity collapse: dock becomes a note button beside notifications */
+/* Elegant inactivity collapse: compact music control replaces the notification-center position on this page. */
 .lounge-music-player{
  transition:left .66s cubic-bezier(.22,1,.36,1),right .66s cubic-bezier(.22,1,.36,1),bottom .66s cubic-bezier(.22,1,.36,1),width .66s cubic-bezier(.22,1,.36,1),height .66s cubic-bezier(.22,1,.36,1),min-height .66s cubic-bezier(.22,1,.36,1),padding .55s cubic-bezier(.22,1,.36,1),gap .45s cubic,border-radius .56s cubic-bezier(.22,1,.36,1),box-shadow .5s ease,background .5s ease,transform .66s cubic-bezier(.22,1,.36,1);
  transform-origin:bottom right;
 }
 .lounge-music-player.is-collapsed{
- left:auto;right:var(--music-mini-right,86px);bottom:var(--music-mini-bottom,25px);
+ left:auto;right:var(--music-mini-right,18px);bottom:var(--music-mini-bottom,22px);
  width:var(--music-mini-size,52px);height:var(--music-mini-size,52px);min-height:var(--music-mini-size,52px);
  padding:0;grid-template-columns:1fr;gap:0;overflow:hidden;border-radius:18px;z-index:2147482498;
  background:linear-gradient(145deg,rgba(255,253,248,.98),rgba(226,210,177,.96));
@@ -446,7 +446,7 @@ body[data-theme="rose"] .lounge-music-player.is-collapsed{background:linear-grad
 .lounge-music-player.is-collapsed.is-playing{box-shadow:0 10px 28px rgba(27,28,35,.22),0 0 23px rgba(181,139,70,.22),0 0 0 1px rgba(181,139,70,.12)}
 @media(max-width:620px){
  body.lounge-music-expanded{padding-bottom:190px}
- .lounge-music-player.is-collapsed{left:auto;right:var(--music-mini-right,82px);bottom:var(--music-mini-bottom,26px);width:var(--music-mini-size,46px);height:var(--music-mini-size,46px);min-height:var(--music-mini-size,46px);padding:0;border-radius:16px}
+ .lounge-music-player.is-collapsed{left:auto;right:var(--music-mini-right,14px);bottom:var(--music-mini-bottom,18px);width:var(--music-mini-size,46px);height:var(--music-mini-size,46px);min-height:var(--music-mini-size,46px);padding:0;border-radius:16px}
  .lounge-music-player.is-collapsed .music-player-art>span{font-size:24px}
  .lounge-music-player.is-collapsed .music-player-art:before,.lounge-music-player.is-collapsed .music-player-art:after{width:37px;height:37px}
  .lounge-music-player.is-collapsed .music-mini-expand{font-size:25px}
