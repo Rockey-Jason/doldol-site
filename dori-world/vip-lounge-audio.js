@@ -17,80 +17,129 @@ const phrase = entries => {
 
 const TRACKS = {
  lounge_music_royal_piano: {
+  keyName:"C Major",scale:[0,2,4,5,7,9,11],
   bpm:84,timbre:"concertGrand",reverb:0.22,leadKind:"piano",compKind:"pianoComp",padKind:"strings",bassKind:"uprightBass",arpKind:"vibraphone",bassHits:[0,4],arpSlots:[1,5],compSlots:[2,6],swing:0.035,pan:0.10,sectionOrders:[[0,1,2,3,4,5,6,7],[0,3,1,4,2,5,7,6],[2,3,0,5,4,6,1,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
   chords:[
-   [48,55,59,62,64,67],[45,52,55,59,62,64],[41,48,52,55,57,60],[43,50,54,57,59,62],
-   [40,47,50,54,57,59],[45,52,55,59,62,64],[41,48,52,55,57,60],[43,50,54,57,59,62]
+   [48,52,55,59,62,64],
+   [45,48,52,55,59,62],
+   [41,45,48,52,55,59],
+   [43,47,50,53,57,60],
+   [40,43,47,50,55,59],
+   [45,48,52,55,59,62],
+   [38,41,45,48,52,55],
+   [43,47,50,53,57,60]
   ],
   melodies:[
-   phrase([[1,76],[4,79],[7,81],[11,79],[14,76],[18,74],[21,76],[25,79],[28,83],[31,81],[34,79],[38,76],[42,74],[45,72],[49,74],[53,76],[56,79],[60,76],[62,74]]),
-   phrase([[0,72],[3,76],[6,79],[10,83],[13,81],[17,79],[20,76],[24,74],[27,76],[30,79],[35,81],[39,79],[43,76],[46,74],[50,72],[54,74],[58,76],[61,72]])
+   phrase([[0,76,3.55,0.78],[8,79,3.55,0.74],[16,81,3.6,0.76],[24,79,3.55,0.72],[32,76,3.6,0.76],[40,74,3.55,0.72],[48,72,3.7,0.74],[56,74,3.6,0.7]]),
+   phrase([[0,72,3.6,0.72],[8,76,3.6,0.74],[16,79,3.6,0.76],[24,83,3.55,0.72],[32,81,3.6,0.74],[40,79,3.55,0.72],[48,76,3.65,0.7],[56,72,3.8,0.7]])
   ]
  },
  lounge_music_velvet_jazz: {
+  keyName:"F Dorian",scale:[0,2,3,5,7,8,10],
   bpm:94,timbre:"rhodes",reverb:0.19,leadKind:"sax",compKind:"rhodes",padKind:"strings",bassKind:"uprightBass",arpKind:"vibraphone",rhythmKind:"brush",rhythmSlots:[2,6],rhythmLevel:0.22,bassHits:[0,3,6],arpSlots:[1,5],compSlots:[2,6],swing:0.085,pan:0.16,sectionOrders:[[0,1,2,3,4,5,6,7],[1,3,5,2,4,6,0,7],[4,5,2,3,0,1,6,7],[0,2,1,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
   chords:[
-   [41,48,52,55,57,60],[46,53,56,60,62,65],[39,46,50,53,55,58],[44,51,55,58,60,63],
-   [37,44,48,51,53,56],[42,49,53,56,58,61],[39,46,50,53,55,58],[44,51,55,58,60,63]
+   [41,44,48,51,55,58],
+   [46,50,53,56,60,63],
+   [39,43,46,50,53,56],
+   [44,48,51,55,58,60],
+   [38,41,44,48,51,55],
+   [43,46,50,53,58,60],
+   [36,41,43,46,50,53],
+   [41,44,48,51,55,58]
   ],
   melodies:[
-   phrase([[0,77],[2,80],[5,82],[9,84],[12,82],[15,79],[18,77],[20,74],[23,77],[27,80],[29,84],[32,82],[35,79],[37,77],[41,74],[44,76],[47,80],[50,82],[54,80],[57,77],[60,74],[63,72]]),
-   phrase([[1,72],[4,76],[7,79],[10,82],[13,84],[16,82],[19,80],[22,77],[25,76],[28,79],[31,82],[34,86],[37,84],[40,80],[43,77],[46,74],[49,76],[52,79],[55,82],[58,80],[61,77]])
+   phrase([[0,77,3.4,0.74],[8,80,3.35,0.78],[16,82,3.45,0.74],[24,84,3.35,0.78],[32,82,3.45,0.74],[40,80,3.35,0.76],[48,77,3.6,0.72],[56,74,3.8,0.7]]),
+   phrase([[0,72,3.4,0.7],[8,75,3.5,0.74],[16,77,3.45,0.76],[24,80,3.4,0.74],[32,82,3.45,0.76],[40,80,3.5,0.72],[48,77,3.6,0.7],[56,75,3.8,0.68]])
   ]
  },
  lounge_music_rainy_library: {
-  bpm:76,timbre:"felt",reverb:0.29,leadKind:"rhodes",compKind:"strings",padKind:"strings",bassKind:"uprightBass",arpKind:"flute",rhythmKind:"brush",rhythmSlots:[5],rhythmLevel:0.10,bassHits:[0,5],arpSlots:[4],compSlots:[2,6],swing:0.02,pan:0.06,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,4,6,5,7],[4,3,2,1,0,5,6,7],[0,1,2,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
+  keyName:"D Major",scale:[1,2,4,6,7,9,11],
+  bpm:76,timbre:"felt",reverb:0.29,leadKind:"flute",compKind:"rhodes",padKind:"strings",bassKind:"uprightBass",arpKind:"vibraphone",rhythmKind:"brush",rhythmSlots:[5],rhythmLevel:0.10,bassHits:[0,5],arpSlots:[4],compSlots:[2,6],swing:0.02,pan:0.06,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,4,6,5,7],[4,3,2,1,0,5,6,7],[0,1,2,3,4,6,5,7],[0,1,2,3,4,5,6,7]],
   chords:[
-   [38,45,48,52,55,57],[43,50,53,57,60,62],[36,43,46,50,53,55],[41,48,52,55,57,60],
-   [34,41,45,48,50,53],[39,46,50,53,55,58],[36,43,46,50,53,55],[41,48,52,55,57,60]
+   [50,54,57,61,64,67],
+   [47,50,54,57,61,64],
+   [43,47,50,54,57,61],
+   [45,49,52,55,59,62],
+   [42,45,49,52,55,59],
+   [40,43,47,50,54,57],
+   [43,47,50,54,57,61],
+   [45,49,52,55,59,62]
   ],
   melodies:[
-   phrase([[3,74,1.5,.52],[10,77,1.4,.55],[17,76,1.2,.56],[23,72,1.5,.5],[29,69,1.4,.58],[35,72,1.3,.52],[42,74,1.5,.55],[49,72,1.5,.48],[57,69,1.7,.5],[62,67,1.5,.42]]),
-   phrase([[1,69,1.5,.48],[8,72,1.4,.52],[15,74,1.4,.55],[22,77,1.5,.52],[28,76,1.6,.5],[34,72,1.4,.54],[41,69,1.6,.5],[48,67,1.5,.46],[55,69,1.7,.48],[61,65,1.8,.4]])
+   phrase([[0,74,3.65,0.72],[8,78,3.55,0.76],[16,81,3.65,0.74],[24,83,3.55,0.76],[32,81,3.65,0.74],[40,78,3.55,0.74],[48,76,3.65,0.72],[56,74,3.85,0.7]]),
+   phrase([[0,71,3.65,0.7],[8,74,3.6,0.72],[16,78,3.65,0.74],[24,81,3.55,0.76],[32,85,3.6,0.74],[40,83,3.65,0.72],[48,81,3.65,0.7],[56,78,3.85,0.68]])
   ]
  },
  lounge_music_midnight_gold: {
+  keyName:"Eb Dorian",scale:[0,1,3,5,6,8,10],
   bpm:82,timbre:"warmGrand",reverb:0.24,leadKind:"mutedTrumpet",compKind:"rhodes",padKind:"strings",bassKind:"uprightBass",arpKind:"vibraphone",rhythmKind:"brush",rhythmSlots:[3,7],rhythmLevel:0.14,bassHits:[0,4],arpSlots:[2,6],compSlots:[2,6],swing:0.035,pan:0.08,sectionOrders:[[0,1,2,3,4,5,6,7],[1,2,4,3,5,6,0,7],[4,3,2,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
   chords:[
-   [43,50,53,57,60,62],[41,48,52,55,57,60],[38,45,48,52,55,57],[36,43,47,50,52,55],
-   [34,41,45,48,50,53],[39,46,50,53,55,58],[41,48,52,55,57,60],[38,45,48,52,55,57]
+   [51,54,58,61,65,68],
+   [44,48,51,54,58,61],
+   [49,53,56,60,63,66],
+   [42,46,49,53,56,61],
+   [48,51,54,58,61,65],
+   [46,49,53,56,60,63],
+   [44,48,51,54,58,61],
+   [51,54,58,61,65,68]
   ],
   melodies:[
-   phrase([[0,71],[5,74],[8,77],[12,76],[16,74],[21,69],[24,71],[29,74],[32,77],[36,81],[40,79],[44,76],[48,74],[52,71],[56,69],[60,71]]),
-   phrase([[2,67],[6,71],[9,74],[13,77],[17,76],[20,74],[25,72],[28,69],[33,71],[37,76],[41,79],[45,77],[49,74],[53,72],[57,69],[61,67]])
+   phrase([[0,70,3.55,0.72],[8,73,3.45,0.76],[16,75,3.55,0.74],[24,78,3.45,0.78],[32,80,3.55,0.76],[40,78,3.45,0.74],[48,77,3.6,0.72],[56,75,3.85,0.7]]),
+   phrase([[0,75,3.55,0.7],[8,77,3.5,0.74],[16,80,3.55,0.76],[24,82,3.45,0.78],[32,85,3.55,0.76],[40,82,3.5,0.74],[48,80,3.65,0.72],[56,78,3.85,0.68]])
   ]
  },
  lounge_music_crystal_atrium: {
+  keyName:"F# Lydian",scale:[0,1,3,5,6,8,10],
   bpm:88,timbre:"mellowKeys",reverb:0.30,leadKind:"celeste",compKind:"strings",padKind:"strings",bassKind:"softBass",arpKind:"harp",bassHits:[0,4],arpSlots:[1,5],compSlots:[2,6],swing:0.025,pan:0.18,sectionOrders:[[0,1,2,3,4,5,6,7],[2,1,3,4,6,5,0,7],[4,5,3,2,0,1,6,7],[0,2,1,3,5,4,6,7],[0,1,2,3,4,5,6,7]],
   chords:[
-   [47,54,58,61,64,66],[52,59,63,66,68,71],[45,52,56,59,61,64],[50,57,61,64,66,69],
-   [42,49,53,56,59,61],[47,54,58,61,64,66],[45,52,56,59,61,64],[50,57,61,64,66,69]
+   [54,58,61,65,68,72],
+   [56,60,63,66,70,73],
+   [58,61,65,68,72,75],
+   [51,54,58,61,65,68],
+   [49,53,56,60,63,66],
+   [54,58,61,65,68,72],
+   [56,60,63,66,70,73],
+   [54,58,61,65,68,72]
   ],
   melodies:[
-   phrase([[1,83],[3,86],[7,90],[10,88],[14,86],[18,83],[21,81],[25,86],[28,90],[31,93],[34,90],[38,88],[42,86],[45,83],[49,81],[53,83],[57,86],[61,90]]),
-   phrase([[0,78],[4,83],[8,86],[12,90],[16,88],[20,86],[24,83],[27,81],[30,83],[34,86],[38,91],[42,90],[46,86],[50,83],[54,81],[58,78],[62,83]])
+   phrase([[0,78,3.45,0.72],[8,80,3.4,0.74],[16,84,3.45,0.78],[24,85,3.4,0.76],[32,87,3.45,0.78],[40,85,3.4,0.76],[48,82,3.5,0.74],[56,78,3.85,0.7]]),
+   phrase([[0,75,3.45,0.7],[8,78,3.4,0.72],[16,80,3.45,0.76],[24,82,3.4,0.78],[32,84,3.45,0.76],[40,82,3.4,0.74],[48,80,3.55,0.72],[56,78,3.85,0.68]])
   ]
  },
  lounge_music_garden_terrace: {
-  bpm:96,timbre:"softRhodes",reverb:0.20,leadKind:"nylonGuitar",compKind:"rhodes",padKind:"strings",bassKind:"uprightBass",arpKind:"flute",rhythmKind:"shaker",rhythmSlots:[1,3,5,7],rhythmLevel:0.22,bassHits:[0,3,5],arpSlots:[1,4,6],compSlots:[2,5],swing:0.06,pan:0.12,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,4,1,3,5,6,7],[2,3,4,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
+  keyName:"E Mixolydian",scale:[1,2,4,6,8,9,11],
+  bpm:96,timbre:"softRhodes",reverb:0.20,leadKind:"flute",compKind:"nylonGuitar",padKind:"strings",bassKind:"uprightBass",arpKind:"vibraphone",rhythmKind:"shaker",rhythmSlots:[1,3,5,7],rhythmLevel:0.22,bassHits:[0,3,5],arpSlots:[1,4,6],compSlots:[2,5],swing:0.06,pan:0.12,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,4,1,3,5,6,7],[2,3,4,5,0,1,6,7],[0,1,3,2,4,5,7,6],[0,1,2,3,4,5,6,7]],
   chords:[
-   [43,50,54,57,59,62],[38,45,49,52,54,57],[40,47,50,54,57,59],[45,52,55,59,62,64],
-   [43,50,54,57,59,62],[47,54,57,61,64,66],[45,52,55,59,62,64],[40,47,50,54,57,59]
+   [52,56,59,62,66,69],
+   [45,49,52,56,59,62],
+   [42,45,49,52,56,59],
+   [47,50,54,57,61,64],
+   [50,54,57,61,64,69],
+   [52,56,59,62,66,69],
+   [45,49,52,56,59,62],
+   [47,50,54,57,61,64]
   ],
   melodies:[
-   phrase([[0,79],[3,83],[6,81],[9,78],[12,76],[15,79],[19,83],[22,86],[25,83],[28,81],[31,79],[34,76],[37,74],[40,76],[44,79],[47,83],[50,81],[54,78],[57,76],[60,74],[63,71]]),
-   phrase([[1,74],[4,78],[7,81],[11,83],[14,81],[17,79],[20,76],[23,74],[26,78],[29,81],[32,86],[35,83],[38,81],[42,79],[45,76],[48,74],[51,78],[55,81],[58,79],[61,76]])
+   phrase([[0,76,3.45,0.72],[8,80,3.4,0.76],[16,83,3.45,0.78],[24,86,3.4,0.76],[32,85,3.45,0.78],[40,83,3.4,0.76],[48,81,3.5,0.74],[56,80,3.85,0.7]]),
+   phrase([[0,78,3.45,0.7],[8,81,3.4,0.74],[16,85,3.45,0.78],[24,86,3.4,0.76],[32,85,3.45,0.76],[40,83,3.4,0.74],[48,81,3.55,0.72],[56,76,3.85,0.68]])
   ]
  },
  lounge_music_christmas_hotel: {
+  keyName:"Bb Major",scale:[0,2,3,5,7,9,10],
   bpm:86,timbre:"mellowKeys",reverb:0.29,leadKind:"musicBox",compKind:"strings",padKind:"strings",bassKind:"softBass",arpKind:"sleighBell",bassHits:[0,4],arpSlots:[2,5],compSlots:[2,6],swing:0.025,pan:0.14,sectionOrders:[[0,1,2,3,4,5,6,7],[0,2,1,3,5,4,6,7],[4,3,2,1,0,5,6,7],[0,1,3,2,4,5,6,7],[0,1,2,3,4,5,6,7]],
   chords:[
-   [45,52,56,59,61,64],[40,47,50,54,57,59],[41,48,52,55,57,60],[36,43,47,50,52,55],
-   [38,45,49,52,54,57],[43,50,54,57,59,62],[40,47,50,54,57,59],[45,52,56,59,61,64]
+   [46,50,53,57,60,65],
+   [43,46,50,53,57,60],
+   [48,51,55,58,62,65],
+   [41,45,48,51,55,58],
+   [39,43,46,50,53,57],
+   [38,41,45,48,53,57],
+   [41,45,48,51,55,58],
+   [46,50,53,57,60,65]
   ],
   melodies:[
-   phrase([[0,76],[3,79],[7,84],[10,83],[14,79],[17,76],[21,72],[24,74],[27,79],[31,83],[34,81],[38,79],[41,76],[45,72],[48,74],[52,76],[55,79],[59,84],[62,81]]),
-   phrase([[1,72],[4,76],[8,79],[11,84],[15,86],[18,84],[22,81],[25,79],[29,76],[32,79],[36,83],[39,86],[43,84],[46,81],[50,79],[53,76],[57,72],[60,76],[63,79]])
+   phrase([[0,77,3.5,0.74],[8,81,3.45,0.78],[16,84,3.5,0.76],[24,86,3.45,0.78],[32,87,3.5,0.76],[40,86,3.45,0.76],[48,84,3.55,0.74],[56,81,3.85,0.7]]),
+   phrase([[0,74,3.5,0.7],[8,77,3.45,0.74],[16,79,3.5,0.76],[24,82,3.45,0.78],[32,84,3.5,0.76],[40,86,3.45,0.74],[48,84,3.55,0.72],[56,81,3.85,0.68]])
   ]
  }
 };
@@ -112,12 +161,11 @@ function moveInScale(note,steps,scale){
 }
 function makeSectionMelody(track,section){
  const source=track.melodies[section===1||section===3?1:0];
- const scale=[...new Set(track.chords.flatMap(chord=>chord).map(note=>((note%12)+12)%12))].sort((a,b)=>a-b);
+ const scale=track.scale||[...new Set(track.chords.flatMap(chord=>chord).map(note=>((note%12)+12)%12))].sort((a,b)=>a-b);
  const out=Object.create(null);
  const entries=Object.entries(source);
  entries.forEach(([rawStep,event],index)=>{
   if(section===4&&index%2===1)return;
-  if(section===2&&index%7===5)return;
   const step=Number(rawStep);
   const degreeShift=section===2?1:section===3?-1:section===4?-2:0;
   const rhythmShift=section===2?(index%3===0?1:0):section===3?(index%4===0?-1:0):0;
@@ -126,11 +174,7 @@ function makeSectionMelody(track,section){
   if(out[nextStep])return;
   const note=moveInScale(event.note,degreeShift,scale);
   const level=event.level*(section===4?0.43:section===2?0.76:section===3?0.82:1);
-  out[nextStep]={...event,note,gate:event.gate*(section===4?1.24:section===2?0.90:0.96),level};
-  if(section===2&&index%4===1&&nextStep<61){
-   const ornamentStep=nextStep+2;
-   if(!out[ornamentStep])out[ornamentStep]={note:moveInScale(note,1,scale),gate:0.56,level:level*0.31,kind:event.kind};
-  }
+  out[nextStep]={...event,note,gate:event.gate*(section===4?1.10:section===2?0.98:0.99),level};
  });
  return out;
 }
@@ -305,9 +349,9 @@ function pianoVoice(note,when,duration,kind,state,level=1,pan=0){
 }
 
 const INSTRUMENTS={
- sax:{parts:[[1,.56,"sawtooth"],[1.004,.22,"sawtooth"],[2,.13,"triangle"],[3,.055,"sawtooth"]],attack:.075,release:.30,sustain:.68,peak:.034,cutoff:2450,q:.68,vibrato:4.8,depth:3.2,mode:"held"},
- mutedTrumpet:{parts:[[1,.64,"sawtooth"],[2,.21,"square"],[3,.085,"sawtooth"],[4,.025,"triangle"]],attack:.055,release:.25,sustain:.58,peak:.030,cutoff:1850,q:.82,vibrato:5.2,depth:2.2,mode:"held"},
- flute:{parts:[[1,.84,"sine"],[2,.12,"sine"],[3,.025,"sine"]],attack:.09,release:.34,sustain:.58,peak:.027,cutoff:4300,q:.22,mode:"held"},
+ sax:{parts:[[1,.56,"sawtooth"],[1.004,.22,"sawtooth"],[2,.13,"triangle"],[3,.055,"sawtooth"]],attack:.12,release:.52,sustain:.72,peak:.034,cutoff:2450,q:.68,vibrato:4.8,depth:2.6,mode:"held"},
+ mutedTrumpet:{parts:[[1,.64,"sawtooth"],[2,.21,"square"],[3,.085,"sawtooth"],[4,.025,"triangle"]],attack:.10,release:.48,sustain:.64,peak:.030,cutoff:1850,q:.82,vibrato:5.2,depth:1.8,mode:"held"},
+ flute:{parts:[[1,.84,"sine"],[2,.12,"sine"],[3,.025,"sine"]],attack:.14,release:.58,sustain:.66,peak:.027,cutoff:4300,q:.22,mode:"held"},
  harp:{parts:[[1,.70,"sine"],[2,.21,"triangle"],[3,.065,"sine"],[4,.025,"sine"]],attack:.006,release:.62,sustain:.10,peak:.035,cutoff:5600,q:.2,mode:"pluck"},
  nylonGuitar:{parts:[[1,.72,"triangle"],[2,.18,"sine"],[3,.07,"triangle"],[4,.018,"sine"]],attack:.008,release:.48,sustain:.10,peak:.030,cutoff:3900,q:.22,mode:"pluck"},
  celeste:{parts:[[1,.72,"sine"],[2.76,.20,"sine"],[5.42,.07,"sine"],[8.9,.025,"sine"]],attack:.004,release:1.25,sustain:.035,peak:.025,cutoff:7200,q:.18,mode:"pluck"},
@@ -315,7 +359,7 @@ const INSTRUMENTS={
  sleighBell:{parts:[[1,.46,"sine"],[2.76,.30,"sine"],[5.6,.17,"sine"],[9.4,.07,"sine"]],attack:.002,release:.76,sustain:.015,peak:.014,cutoff:8500,q:.14,mode:"pluck"},
  vibraphone:{parts:[[1,.68,"sine"],[3,.22,"sine"],[4.18,.075,"sine"]],attack:.008,release:1.30,sustain:.08,peak:.020,cutoff:6500,q:.18,mode:"pluck"},
  rhodes:{parts:[[1,.66,"triangle"],[2,.24,"sine"],[3,.08,"triangle"],[4,.025,"sine"]],attack:.012,release:.48,sustain:.16,peak:.029,cutoff:3100,q:.25,mode:"pluck"},
- strings:{parts:[[1,.54,"sawtooth"],[1.006,.25,"sawtooth"],[2,.12,"triangle"],[3,.045,"sawtooth"]],attack:.34,release:.82,sustain:.78,peak:.013,cutoff:2350,q:.22,mode:"held"},
+ strings:{parts:[[1,.54,"sawtooth"],[1.006,.25,"sawtooth"],[2,.12,"triangle"],[3,.045,"sawtooth"]],attack:.48,release:1.05,sustain:.82,peak:.013,cutoff:2350,q:.22,mode:"held"},
  uprightBass:{parts:[[1,.76,"triangle"],[2,.18,"sine"],[3,.045,"triangle"]],attack:.018,release:.30,sustain:.20,peak:.035,cutoff:690,q:.2,mode:"pluck"},
  softBass:{parts:[[1,.82,"sine"],[2,.13,"sine"]],attack:.06,release:.44,sustain:.26,peak:.022,cutoff:440,q:.2,mode:"held"}
 };
@@ -371,9 +415,9 @@ function instrumentVoice(note,when,duration,kind,state,level=1,pan=0){
   osc.connect(gain);gain.connect(filter);osc.start(when);osc.stop(when+safeDuration+.05);
   if(preset.vibrato&&index===0){
    const lfo=ctx.createOscillator(),depth=ctx.createGain();
-   lfo.frequency.value=preset.vibrato;depth.gain.value=preset.depth;
+   lfo.frequency.value=preset.vibrato;depth.gain.setValueAtTime(0,when);depth.gain.linearRampToValueAtTime(preset.depth,when+0.42);
    lfo.connect(depth);depth.connect(osc.detune);
-   lfo.start(when);lfo.stop(when+safeDuration+.03);
+   lfo.start(when+0.08);lfo.stop(when+safeDuration+.03);
   }
  });
  return true;
@@ -582,7 +626,7 @@ function stop(){
 }
 function getTrackInfo(trackId){
  const track=TRACKS[trackId];
- return track?{id:trackId,duration:track.duration,bpm:track.bpm}:null;
+ return track?{id:trackId,duration:track.duration,bpm:track.bpm,key:track.keyName,scale:track.scale.slice()}:null;
 }
 window.DoriLoungeAudio={
  play,pause,resume,stop,setVolume,getState,getTrackInfo,
