@@ -994,7 +994,7 @@ function updateManagedFusion(dt,job){
  }
 }
 function updateFusion(dt){
- const job=S.fusionJob;if(!job)return;
+ const job=S.fusionJob;if(!job||["COMPLETED","CANCELLED"].includes(job.status))return;
  if(job.runtimeVersion===2){updateManagedFusion(dt,job);return}
  if(!job.status&&Number.isInteger(job.stage)&&Number.isFinite(Number(job.progress))){job.status="RUNNING";job.legacyConsumedInput=true;job.outputIssued=false}
  if(!["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","ERROR"].includes(job.status))return;
