@@ -65,6 +65,18 @@ try {
   assert.equal(audit.canonicalDoronumIntegration.missingCanonicalItems.length, 0, "All 15 canonical Doronum IDs must exist in the active resource registry");
   assert.equal(audit.canonicalDoronumIntegration.missingModels.length, 0, "Every canonical item must resolve to an actual Three.js crystal model profile");
   assert.equal(audit.runtimeValidation.valid, true, "Initial item stacks and reservations must validate");
+  const planetaryGate = await desktop.evaluate(() => window.__doroniumFactoryTest.runPlanetaryStabilizationGateTest());
+  assert.equal(planetaryGate.noPower.ready, false, "The planet must not stabilize without live generator output");
+  assert.ok(planetaryGate.noPower.blockers.includes("RELAY_POWER_UNSTABLE"), "Unpowered relay sites must block stabilization");
+  assert.equal(planetaryGate.missingPhysicalRelay.ready, false, "Saved relay flags cannot replace real relay buildings");
+  assert.ok(planetaryGate.missingPhysicalRelay.blockers.includes("RELAY_BUILDING_MISSING"), "A missing physical relay must be identified");
+  assert.equal(planetaryGate.preflight.ready, true, "All three physical relays and the core must share a stable powered network before core installation");
+  assert.equal(planetaryGate.installSucceeded, true, "Qualified Infinity Doronum must install exactly once after the power preflight");
+  assert.equal(planetaryGate.consumedInfinity, true, "Core installation must consume the one reserved Infinity output");
+  assert.equal(planetaryGate.endingGate.ready, true, "The final ending gate must revalidate the installed core and shared powered network");
+  assert.equal(planetaryGate.endingSucceeded, true, "The complete planetary stabilization action must succeed when every gate passes");
+  assert.equal(planetaryGate.victory, true, "The final campaign flag must be set only after network validation");
+  assert.equal(planetaryGate.questIndex, planetaryGate.questCount, "The ending must close the campaign quest chain");
   const tickStages = await desktop.evaluate(() => window.__doroniumFactoryTest.runTickStageCoverageTest());
   assert.equal(tickStages.tickNumber, 1, "One fixed tick must execute in the stage coverage scenario");
   assert.equal(tickStages.count, 18, "Every canonical simulation phase must execute once in a fixed tick");
