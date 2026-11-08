@@ -747,7 +747,7 @@ body[data-theme="rose"] .music-progress-meta{color:#9a7970}
 
 /* Continuous manuscript writing with automatic visual page flow */
 .book-editor-chapter .book-editor-textarea{
- --editor-page-height:920px;
+ --editor-page-height:940px;
  min-height:62vh;
  height:62vh;
  padding:34px 36px;
@@ -757,9 +757,10 @@ body[data-theme="rose"] .music-progress-meta{color:#9a7970}
  font-size:14px;
  white-space:pre-wrap;
  overflow-wrap:anywhere;
- background-color:#fffefa;
- background-image:linear-gradient(to bottom,#fffefa 0,#fffefa calc(100% - 2px),rgba(164,131,78,.34) calc(100% - 2px),rgba(164,131,78,.34) calc(100% - 1px),#fffefa calc(100% - 1px));
- background-size:100% var(--editor-page-height);
+ background-color:#e9e1d2;
+ background-image:linear-gradient(#fffefa,#fffefa);
+ background-size:100% calc(var(--editor-page-height) - 22px);
+ background-position:0 0;
  background-repeat:repeat-y;
  background-attachment:local;
  box-shadow:0 2px 12px rgba(91,70,38,.045);
@@ -767,12 +768,17 @@ body[data-theme="rose"] .music-progress-meta{color:#9a7970}
 .book-editor-page-meta{
  display:flex;
  align-items:center;
- justify-content:space-between;
+ justify-content:flex-end;
  gap:8px;
  margin-top:-2px;
+ padding:0 3px;
  color:#9a8768;
  font-size:10px;
  line-height:1.6;
+}
+.book-editor-chapter .book-editor-textarea:focus{
+ background-color:#e7decd;
+ background-image:linear-gradient(#fffefa,#fffefa);
 }
 .book-editor-page-meta strong{color:#9a7844;font-weight:400}
 @media(max-width:600px){
