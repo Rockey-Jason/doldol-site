@@ -6,6 +6,7 @@ export const CANONICAL_DORONUM_IDS=Object.freeze([
  "ITEM_DORONUM_TRANSLUCENT","ITEM_DORONUM_THERMAL_CRYSTAL","ITEM_DORONUM_COLD_CRYSTAL",
  "ITEM_DORONUM_BLACK","ITEM_DORONUM_SPECIAL_EDITION","ITEM_DORONUM_LIMITED_EDITION"
 ]);
+export const CANONICAL_INFINITY_DORONUM_ID="ITEM_DORONUM_INFINITY";
 export const INFINITY_REQUIREMENTS=Object.freeze(Object.fromEntries(CANONICAL_DORONUM_IDS.map(id=>[id,100])));
 export const INFINITY_TOTAL_INPUT=1500;
 export const CANONICAL_ITEM_MIGRATION_VERSION=1;
@@ -23,7 +24,8 @@ export const LEGACY_DORONUM_ID_MAP=Object.freeze({
  doronium_clear:"ITEM_DORONUM_TRANSLUCENT",
  doronium_special:"ITEM_DORONUM_SPECIAL_EDITION",
  doronium_limited:"ITEM_DORONUM_LIMITED_EDITION",
- doriMeat:"ITEM_DORI_MEAT",ironOre:"ITEM_IRON_ORE",quartz:"ITEM_QUARTZ",diamond:"ITEM_DIAMOND",wire:"ITEM_COPPER_WIRE"
+ doriMeat:"ITEM_DORI_MEAT",ironOre:"ITEM_IRON_ORE",quartz:"ITEM_QUARTZ",diamond:"ITEM_DIAMOND",wire:"ITEM_COPPER_WIRE",
+ infinity:CANONICAL_INFINITY_DORONUM_ID
 });
 export function canonicalItemID(itemID){const id=String(itemID??"");return LEGACY_DORONUM_ID_MAP[id]||id}
 export const UNRESOLVED_LEGACY_DORONUM_IDS=Object.freeze([
@@ -69,6 +71,9 @@ export function applyDoronumMigration(state){
  for(const shipment of state.contractRuntime?.shipments||[]){if(map.has(shipment.itemID))shipment.itemID=map.get(shipment.itemID);for(const stack of shipment.cargo||[])if(map.has(stack.itemID))stack.itemID=map.get(stack.itemID)}
  if(state.fusionJob?.requirements)remapRecord(state.fusionJob.requirements);
  if(state.fusionJob?.inputs)remapRecord(state.fusionJob.inputs);
+ if(state.fusionJob?.outputItemID&&map.has(state.fusionJob.outputItemID))state.fusionJob.outputItemID=map.get(state.fusionJob.outputItemID);
+ if(Array.isArray(state.completionBuffer))for(const item of state.completionBuffer)if(map.has(item?.itemID))item.itemID=map.get(item.itemID);
+ for(const settlement of Object.values(state.fusionSettlements||{}))if(map.has(settlement?.outputItemID))settlement.outputItemID=map.get(settlement.outputItemID);
  for(const transaction of Object.values(state.constructionLedger||{}))if(transaction.materials)remapRecord(transaction.materials);
  state.canonicalDoronumMigrationVersion=CANONICAL_ITEM_MIGRATION_VERSION;
  state.canonicalDoronumQuarantine=plan.quarantined.map(x=>({stackID:x.stackID,itemID:x.itemID,quantity:x.quantity,reason:x.reason}));
