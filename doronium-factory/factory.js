@@ -15,7 +15,7 @@ import { writeCloudSave, readCloudSaveSnapshot, replaceCloudSaveAfterExplicitCon
 import { settleInfinityFusionOutput } from "./fusion-runtime.js?v=3";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=1";
-import { createOwnershipState, addCustody, validateOwnershipState } from "./ownership-runtime.js?v=2";
+import { createOwnershipState, addCustody, consumeCustody, validateOwnershipState, resetCustodySnapshot } from "./ownership-runtime.js?v=3";
 let createClient = null;
 
 /* DORONIUM FACTORY — INFINITE INDUSTRY
@@ -593,7 +593,9 @@ function consumeRecipe(b,r){
 }
 function rebuildOwnershipLedger(state=S){
  if(!state||typeof state!=="object")return {valid:false,errors:["missing-state"]};
- const ledger=createOwnershipState(),runtime=state.runtime||{},stacks=Array.isArray(runtime.itemStacks)?runtime.itemStacks:[];
+ const existing=state.ownershipLedger&&typeof state.ownershipLedger==="object"?state.ownershipLedger:null;
+ const ledger=existing?resetCustodySnapshot(structuredClone(existing)):createOwnershipState();
+ const runtime=state.runtime||{},stacks=Array.isArray(runtime.itemStacks)?runtime.itemStacks:[];
  const reservedByStack=new Map();
  for(const reservation of Object.values(runtime.reservations||{})){
   if(reservation?.status!=="reserved")continue;
