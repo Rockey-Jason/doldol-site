@@ -464,6 +464,19 @@ function renderReaderToc(){
  list.replaceChildren();entries.forEach(entry=>{const li=document.createElement("li");li.textContent=entry;list.append(li)});
  panel.hidden=button.getAttribute("aria-expanded")!=="true";button.hidden=!entries.length;
 }
+function fitBookEditorPages(textarea,meta){
+ if(!textarea||!meta)return;
+ textarea.style.height="auto";
+ const minimum=Math.max(280,Math.floor(window.innerHeight*.58));
+ textarea.style.height=Math.max(minimum,textarea.scrollHeight)+"px";
+ const style=getComputedStyle(textarea);
+ const pageHeight=parseFloat(style.getPropertyValue("--editor-page-height"))||920;
+ const verticalPadding=(parseFloat(style.paddingTop)||0)+(parseFloat(style.paddingBottom)||0);
+ const usablePageHeight=Math.max(240,pageHeight-verticalPadding);
+ const contentHeight=Math.max(0,textarea.scrollHeight-verticalPadding);
+ const pages=Math.max(1,Math.ceil(contentHeight/usablePageHeight));
+ meta.textContent=pages+"페이지 · 한 챕터 안에서 자동으로 이어집니다";
+}
 function renderBookEditor(){
  const list=$("bookEditorChapters");list.replaceChildren();
  editorDraft.chapters.forEach((chapter,index)=>{
@@ -477,8 +490,11 @@ function renderBookEditor(){
   const titleInput=document.createElement("input");titleInput.type="text";titleInput.maxLength=100;titleInput.className="book-editor-input";titleInput.value=chapter.title||("제"+(index+1)+"장");titleInput.placeholder="예: 제1장. 첫 번째 이야기";titleInput.setAttribute("aria-label","제"+(index+1)+"장 제목");titleLabel.append(titleCaption,titleInput);
   const bodyLabel=document.createElement("label");bodyLabel.className="book-editor-field";
   const bodyCaption=document.createElement("span");bodyCaption.textContent="본문";
-  const bodyInput=document.createElement("textarea");bodyInput.className="book-editor-textarea";bodyInput.rows=10;bodyInput.value=chapter.content||"";bodyInput.placeholder="이곳에 직접 이야기를 작성하세요. 문단을 나눌 때는 빈 줄을 넣으면 됩니다.";bodyInput.setAttribute("aria-label","제"+(index+1)+"장 본문");bodyLabel.append(bodyCaption,bodyInput);
-  card.append(head,titleLabel,bodyLabel);list.append(card);
+  const bodyInput=document.createElement("textarea");bodyInput.className="book-editor-textarea";bodyInput.rows=10;bodyInput.value=chapter.content||"";bodyInput.placeholder="이곳에 자유롭게 이야기를 이어서 작성하세요. 페이지가 차면 아래쪽으로 다음 페이지가 자동 생성됩니다.";bodyInput.setAttribute("aria-label","제"+(index+1)+"장 본문");
+  const pageMeta=document.createElement("div");pageMeta.className="book-editor-page-meta";pageMeta.setAttribute("aria-live","polite");
+  bodyInput.addEventListener("input",()=>fitBookEditorPages(bodyInput,pageMeta));
+  bodyLabel.append(bodyCaption,bodyInput,pageMeta);
+  card.append(head,titleLabel,bodyLabel);list.append(card);fitBookEditorPages(bodyInput,pageMeta);
  });
 }
 function syncBookEditorDraft(){
