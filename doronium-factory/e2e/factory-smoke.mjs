@@ -79,7 +79,7 @@ try {
   assert.equal(ownershipCase.itemTotals.ironPlate, 2, "Machine output buffers must be represented in custody");
   assert.equal(ownershipCase.itemTotals.circuit, 4, "Conveyor cargo must be represented in custody");
   assert.equal(ownershipCase.itemTotals.wood, 5, "Shipment cargo must be represented in custody");
-  assert.equal(ownershipCase.itemTotals.infinity, 1, "Completion-buffer items must be represented in custody");
+  assert.equal(ownershipCase.itemTotals.ITEM_DORONUM_INFINITY, 1, "Completion-buffer items must be represented in custody");
   const ownershipOwners = ownershipCase.ownership.custody.map(x => x.ownerType);
   for (const owner of ["PLAYER_INVENTORY","ACTIVE_JOB","MACHINE_INPUT","MACHINE_OUTPUT","CONVEYOR","COMPLETION_BUFFER"]) assert.ok(ownershipOwners.includes(owner), "Missing custody owner type: " + owner);
   const conflictGuard = await desktop.evaluate(() => window.__doroniumFactoryTest.runCloudConflictGuardTest());
