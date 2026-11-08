@@ -298,6 +298,17 @@ try {
   const passedFusionDiagnostics = await desktop.evaluate(() => window.__doroniumFactoryTest.runFusionDiagnosticsTest(true));
   assert.equal(passedFusionDiagnostics.passed, true, "A powered Fusion machine with calibrated pressure sensor and emergency cooling must pass all three diagnostics");
   assert.equal(passedFusionDiagnostics.diagnostics.allPassed, true, "All three Fusion diagnostic results must be persisted");
+  const liveFusion = await desktop.evaluate(() => window.__doroniumFactoryTest.runLiveFusionRuntimeTest());
+  assert.equal(liveFusion.preflight, true, "The live Fusion power preflight must see stable independent generation and cooling");
+  assert.equal(liveFusion.powerPause.status, "WAITING_POWER", "The integrated live game loop must pause Fusion when generation is cut");
+  assert.equal(liveFusion.powerPause.reservations, 15, "Power loss must preserve all 15 qualified input reservations");
+  assert.equal(liveFusion.jobStatus, "COMPLETED", "The integrated seven-stage Fusion job must resume and complete");
+  assert.equal(liveFusion.stageIndex, 7, "The integrated job must finish all seven stages");
+  assert.equal(liveFusion.totalElapsedSeconds, 260, "The live Fusion job must execute the full 260-second ideal process");
+  assert.equal(liveFusion.fusionDone, true, "The live completion path must set the global Fusion flag");
+  assert.equal(liveFusion.output, 1, "The live game loop must issue exactly one canonical Infinity output");
+  assert.equal(liveFusion.inputsRemaining, 0, "The live job must consume exactly 1,500 qualified inputs");
+  assert.equal(liveFusion.reservationsRemaining, 0, "The live job must close all input reservations at settlement");
 
   const fusionRollback = await desktop.evaluate(() => window.__doroniumFactoryTest.runFusionReservationCancelTest());
   assert.equal(fusionRollback.ok, true, "A 15-item Fusion reservation must be atomic and fully reversible on cancellation");
