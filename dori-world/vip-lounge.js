@@ -132,9 +132,11 @@ function clearMusicIdleTimer(){
 function positionMusicMini(){
  const dock=$("loungeMusicPlayer");if(!dock)return;
  const small=window.innerWidth<=600,size=small?46:52;
+ const right=small?14:18;
  dock.style.setProperty("--music-mini-size",size+"px");
- dock.style.setProperty("--music-mini-right",(small?14:18)+"px");
+ dock.style.setProperty("--music-mini-right",right+"px");
  dock.style.setProperty("--music-mini-bottom",(small?18:22)+"px");
+ dock.style.setProperty("--music-mini-shift",(window.innerWidth/2-right-size/2)+"px");
 }
 function collapseMusicPlayer(){
  const dock=$("loungeMusicPlayer");if(!dock||dock.hidden)return;
