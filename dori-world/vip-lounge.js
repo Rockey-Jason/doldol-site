@@ -32,13 +32,13 @@ const items=[
 {id:"vip_aurora_crystal_collectible",name:"오로라 크리스탈 장식",price:250000}
 ];
 const musicCatalog=[
- {id:"lounge_music_royal_piano",name:"로열 피아노",mood:"호텔 메인 로비의 콘서트 그랜드 피아노와 은은한 현악 앙상블",style:"SIGNATURE · FREE",price:0,free:true,icon:"♬"},
- {id:"lounge_music_velvet_jazz",name:"벨벳 재즈 라운지",mood:"재즈 색소폰 리드와 로즈 일렉트릭 피아노, 콘트라베이스와 브러시 드럼의 스윙",style:"VELVET JAZZ",price:18000,icon:"♫"},
- {id:"lounge_music_rainy_library",name:"비 내리는 로열 서재",mood:"부드러운 로즈 피아노와 포근한 현악, 멀리서 흐르는 플루트의 빗소리 같은 선율",style:"RAINY READING",price:14000,icon:"☂"},
- {id:"lounge_music_midnight_gold",name:"미드나이트 골드",mood:"뮤트 트럼펫의 깊은 재즈 선율과 따뜻한 로즈 코드, 더블베이스의 야간 라운지 무드",style:"MIDNIGHT",price:32000,icon:"✧"},
- {id:"lounge_music_crystal_atrium",name:"크리스탈 아트리움",mood:"맑은 첼레스타와 하프 아르페지오, 넓게 펼쳐지는 현악 앙상블의 반짝이는 울림",style:"CRYSTAL",price:28000,icon:"◇"},
- {id:"lounge_music_garden_terrace",name:"가든 테라스",mood:"나일론 기타와 플루트, 산뜻한 셰이커 리듬이 어우러지는 밝은 보사노바 라운지",style:"GARDEN",price:22000,icon:"❋"},
- {id:"lounge_music_christmas_hotel",name:"눈 내리는 크리스마스 호텔",mood:"오르골과 썰매 방울, 포근한 스트링이 만드는 화사하고 따뜻한 크리스마스 호텔 로비",style:"WINTER SIGNATURE",price:36000,icon:"❄"}
+ {id:"lounge_music_royal_piano",name:"로열 피아노",mood:"C장조의 따뜻한 그랜드 피아노 선율이 길게 흐르고 현악 앙상블이 부드럽게 감싸는 클래식 호텔 로비",style:"SIGNATURE · FREE",price:0,free:true,icon:"♬"},
+ {id:"lounge_music_velvet_jazz",name:"벨벳 재즈 라운지",mood:"F 도리안 재즈 색소폰이 긴 호흡으로 노래하고 로즈 피아노·콘트라베이스·브러시가 스윙을 만드는 벨벳 라운지",style:"VELVET JAZZ",price:18000,icon:"♫"},
+ {id:"lounge_music_rainy_library",name:"비 내리는 로열 서재",mood:"D장조 플루트가 길게 이어지는 서정적인 선율을 맡고 로즈 피아노와 현악이 비를 바라보는 듯 포근하게 받쳐 주는 서재",style:"RAINY READING",price:14000,icon:"☂"},
+ {id:"lounge_music_midnight_gold",name:"미드나이트 골드",mood:"E♭ 도리안 뮤트 트럼펫의 깊고 긴 재즈 프레이즈, 로즈 코드와 더블베이스가 어우러지는 심야 라운지",style:"MIDNIGHT",price:32000,icon:"✧"},
+ {id:"lounge_music_crystal_atrium",name:"크리스탈 아트리움",mood:"F♯ 리디안의 긴 첼레스타 선율과 하프 아르페지오, 넓고 투명한 현악 앙상블이 펼쳐지는 크리스탈 아트리움",style:"CRYSTAL",price:28000,icon:"◇"},
+ {id:"lounge_music_garden_terrace",name:"가든 테라스",mood:"E 믹솔리디안 플루트의 여유로운 긴 선율 위로 나일론 기타와 셰이커가 가볍게 흐르는 보사노바 테라스",style:"GARDEN",price:22000,icon:"❋"},
+ {id:"lounge_music_christmas_hotel",name:"눈 내리는 크리스마스 호텔",mood:"B♭ 장조의 긴 오르골 테마와 은은한 썰매 방울, 포근한 스트링이 만드는 크리스마스 호텔",style:"WINTER SIGNATURE",price:36000,icon:"❄"}
 ];
 const levels={1:"일반",2:"프리미엄",3:"돌프리미엄",4:"돌돌프리미엄",5:"돌돌돌프리미엄",6:"돌돌돌돌프리미엄",7:"돌돌돌돌돌프리미엄",8:"유사돌이",9:"돌이",10:"관리자"};
 const BOOKS=window.DoriLoungeBooks||[];
