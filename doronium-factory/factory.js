@@ -15,7 +15,7 @@ import { writeCloudSave, readCloudSaveSnapshot, replaceCloudSaveAfterExplicitCon
 import { settleInfinityFusionOutput } from "./fusion-runtime.js?v=3";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=1";
-import { createOwnershipState, addCustody, consumeCustody, validateOwnershipState, resetCustodySnapshot } from "./ownership-runtime.js?v=3";
+import { createOwnershipState, addCustody, consumeCustody, validateOwnershipState, resetCustodySnapshot } from "./ownership-runtime.js?v=4";
 let createClient = null;
 
 /* DORONIUM FACTORY — INFINITE INDUSTRY
@@ -1790,8 +1790,13 @@ if(E2E_MODE){
    ];
    S.contractRuntime.shipments=[{shipmentID:"OWN-SHIP",status:"IN_TRANSIT",cargo:[{itemID:"wood",quantity:5,quality:90,purity:91,synthetic:false}]}];
    S.completionBuffer=[{completionID:"OWN-COMPLETE",itemID:CANONICAL_INFINITY_DORONUM_ID,quantity:1}];
+   const firstValidation=rebuildOwnershipLedger(S);
+   addCustody(S.ownershipLedger,{stackID:"OWN-E2E-JOURNAL",itemID:"ITEM_JOURNAL_TEST",quantity:1,ownerType:"ACTIVE_JOB",ownerID:"ownership-journal-test"});
+   consumeCustody(S.ownershipLedger,{transactionID:"OWN-E2E-JOURNAL-CONSUME",stackID:"OWN-E2E-JOURNAL",quantity:1,expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:"ownership-journal-test",reason:"e2e-journal-check"});
+   const journalBefore={transactions:Object.keys(S.ownershipLedger.transactions).length,consumed:S.ownershipLedger.consumed.length,nextLedgerID:S.ownershipLedger.nextLedgerID};
    const validation=rebuildOwnershipLedger(S);
-   return {reservation,validation,ownership:structuredClone(S.ownershipLedger),itemTotals:validation.itemTotals};
+   const journalAfter={transactions:Object.keys(S.ownershipLedger.transactions).length,consumed:S.ownershipLedger.consumed.length,nextLedgerID:S.ownershipLedger.nextLedgerID};
+   return {reservation,firstValidation,validation,ownership:structuredClone(S.ownershipLedger),itemTotals:validation.itemTotals,journalBefore,journalAfter};
   },
   setupFluidNetworkTest(){
    S=freshState();S.player={...S.player,viewMode:"map",layer:"surface"};S.seconds=8*3600;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=false;
