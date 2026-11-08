@@ -230,7 +230,7 @@
   }
 
   /* Keep the authenticated notification center available across site pages. */
-  if (!document.querySelector('script[data-dori-notification-center]')) {
+  if (document.body?.dataset.disableNotificationCenter !== "true" && !document.querySelector('script[data-dori-notification-center]')) {
     const notificationScript = document.createElement("script");
     notificationScript.src = siteAssetUrl("js/dori-notification-center.js?v=20261023-notifications-4");
     notificationScript.dataset.doriNotificationCenter = "true";
