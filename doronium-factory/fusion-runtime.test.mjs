@@ -14,7 +14,8 @@ test("qualified canonical inputs ignore unrelated low-quality stock and reserve 
  const reservationIDs=result.job.reservationIDs;
  assert.equal(reservationIDs.length,15);
  const reservation=Object.values(s.runtime.reservations).filter(item=>reservationIDs.includes(item.reservationID));
- const selected=reservation.flatMap(item=>item.allocations||[]).filter(item=>item.itemID===first);
+ const stacksByID=new Map(s.runtime.itemStacks.map(item=>[item.runtimeID,item]));
+ const selected=reservation.flatMap(item=>item.allocations||[]).filter(item=>stacksByID.get(item.stackID)?.itemID===first);
  assert.equal(selected.reduce((n,item)=>n+item.quantity,0),100);
  assert.equal(s.runtime.itemStacks.filter(item=>item.itemID===first&&item.quality<90).reduce((n,item)=>n+item.quantity,0),50);
  assert.equal(s.fusionJob.inputQuantity,1500);
