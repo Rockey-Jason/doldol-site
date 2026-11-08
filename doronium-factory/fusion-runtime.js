@@ -86,7 +86,7 @@ export function cancelInfinityFusion(state,{jobID}={}){
  job.reservationIDs=[];job.status="CANCELLED";job.cancelledTick=Number(state.tick)||0;return true;
 }
 export function recoverInfinityFusion(state){
- const job=state.fusionJob;if(!job||!["RESERVED","RUNNING","WAITING_POWER","ERROR"].includes(job.status))return {recoverable:false,reason:"no-active-job"};
+ const job=state.fusionJob;if(!job||!["RESERVED","RUNNING","WAITING_POWER","CALIBRATING","ERROR"].includes(job.status))return {recoverable:false,reason:"no-active-job"};
  const reservations=job.reservationIDs||[],live=state.runtime?.reservations||{};
  const valid=reservations.length===15&&reservations.every(id=>live[id]?.status==="reserved");
  if(!valid){job.status="ERROR";job.errorCode="RESERVATION_LEDGER_MISMATCH";return {recoverable:false,reason:job.errorCode}}
