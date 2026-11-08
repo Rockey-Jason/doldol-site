@@ -1,5 +1,5 @@
 import test from "node:test";import assert from "node:assert/strict";
-import {CANONICAL_DORONUM_IDS,INFINITY_REQUIREMENTS,CANONICAL_DORONUM_CATALOG,validateCanonicalDoronumCatalog,auditCanonicalDoronumIntegration,planDoronumMigration,validateInfinityManifest,applyDoronumMigration} from "./canonical-data.js";
+import {CANONICAL_DORONUM_IDS,CANONICAL_INFINITY_DORONUM_ID,INFINITY_REQUIREMENTS,CANONICAL_DORONUM_CATALOG,validateCanonicalDoronumCatalog,auditCanonicalDoronumIntegration,planDoronumMigration,validateInfinityManifest,applyDoronumMigration} from "./canonical-data.js";
 test("canonical manifest is exactly 15 unique IDs and 1500 total inputs",()=>{assert.equal(CANONICAL_DORONUM_IDS.length,15);assert.equal(new Set(CANONICAL_DORONUM_IDS).size,15);assert.equal(Object.values(INFINITY_REQUIREMENTS).reduce((a,b)=>a+b,0),1500)});
 test("ambiguous legacy IDs are quarantined rather than guessed",()=>{const p=planDoronumMigration([{runtimeID:"S1",itemID:"doronium_crystal",quantity:10},{runtimeID:"S2",itemID:"doronium_normal",quantity:10}]);assert.equal(p.changes[0].to,"ITEM_DORONUM_NORMAL");assert.equal(p.quarantined[0].itemID,"doronium_crystal");assert.equal(p.requiresUserResolution,true)});
 test("Infinity requires per-stack quality, purity, non-synthetic canonical inputs",()=>{const stacks=CANONICAL_DORONUM_IDS.map(itemID=>({runtimeID:itemID,itemID,quantity:100,quality:95,purity:95,synthetic:false}));assert.equal(validateInfinityManifest(stacks).valid,true);stacks[0].synthetic=true;assert.equal(validateInfinityManifest(stacks).valid,false)});
@@ -69,4 +69,27 @@ test("save migration remaps unambiguous aliases, preserves active reservations a
  assert.equal(state.buildings[0].output.id,"ITEM_DORONUM_NORMAL");
  assert.equal(state.contractRuntime.shipments[0].itemID,"ITEM_DORONUM_NORMAL");
  assert.equal(applyDoronumMigration(state).changes.length,0,"migration must be idempotent");
+});
+
+test("legacy Infinity output ID migrates to the canonical finished-product ID without losing saved state",()=>{
+ const state={
+  inventory:{infinity:1},meta:{infinity:{quality:100,purity:100,synthetic:false}},
+  stats:{produced:{infinity:1},gathered:{}},
+  runtime:{itemStacks:[{runtimeID:"IS-1",itemID:"infinity",quantity:1,quality:100,purity:100,synthetic:false}],reservations:{}},
+  fusionJob:{outputItemID:"infinity"},
+  fusionSettlements:{JOB:{outputItemID:"infinity",outputQuantity:1}},
+  completionBuffer:[{completionID:"C1",itemID:"infinity",quantity:1}]
+ };
+ const result=applyDoronumMigration(state);
+ assert.equal(result.changes.length,1);
+ assert.equal(CANONICAL_INFINITY_DORONUM_ID,"ITEM_DORONUM_INFINITY");
+ assert.equal(state.runtime.itemStacks[0].itemID,CANONICAL_INFINITY_DORONUM_ID);
+ assert.equal(state.inventory[CANONICAL_INFINITY_DORONUM_ID],1);
+ assert.equal(state.inventory.infinity,undefined);
+ assert.equal(state.meta[CANONICAL_INFINITY_DORONUM_ID].quality,100);
+ assert.equal(state.stats.produced[CANONICAL_INFINITY_DORONUM_ID],1);
+ assert.equal(state.fusionJob.outputItemID,CANONICAL_INFINITY_DORONUM_ID);
+ assert.equal(state.fusionSettlements.JOB.outputItemID,CANONICAL_INFINITY_DORONUM_ID);
+ assert.equal(state.completionBuffer[0].itemID,CANONICAL_INFINITY_DORONUM_ID);
+ assert.equal(applyDoronumMigration(state).changes.length,0);
 });
