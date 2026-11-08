@@ -223,7 +223,8 @@ function ensureContext(){
  if(audioContext)return audioContext;
  const Ctor=window.AudioContext||window.webkitAudioContext;
  if(!Ctor)throw new Error("이 브라우저는 Web Audio를 지원하지 않습니다.");
- audioContext=new Ctor({latencyHint:"playback"});
+ try{audioContext=new Ctor({latencyHint:"interactive"});}catch(error){audioContext=new Ctor();}
+ if(!audioContext)throw new Error("오디오 장치를 초기화하지 못했습니다.");
  master=audioContext.createGain();
  master.gain.value=0.0001;
  compressor=audioContext.createDynamicsCompressor();
@@ -305,7 +306,9 @@ function getWave(ctx,timbre,kind,secondary){
  const harmonics=secondary?source.map((value,index)=>index<2?0:value*(index%2?0.36:0.22)):source;
  const real=new Float32Array(harmonics.length);
  const imag=Float32Array.from(harmonics);
- const wave=ctx.createPeriodicWave(real,imag,{disableNormalization:true});
+ let wave;
+ try{wave=ctx.createPeriodicWave(real,imag,{disableNormalization:true});}
+ catch(error){wave=null;}
  WAVE_CACHE.set(key,wave);
  return wave;
 }
@@ -327,7 +330,7 @@ function pianoVoice(note,when,duration,kind,state,level=1,pan=0){
  filter.frequency.setValueAtTime(6800,when);
  filter.frequency.exponentialRampToValueAtTime(3300,when+Math.min(1.1,length));
  filter.Q.value=0.22;
- panner.pan.setValueAtTime(clamp(pan,-0.34,0.34),when);
+ if(panner.pan)panner.pan.setValueAtTime(clamp(pan,-0.34,0.34),when);
  panner.connect(state.bus);
  panner.connect(state.send);
  partials.forEach((partial,index)=>{
@@ -446,8 +449,11 @@ function voice(note,when,duration,kind,state,level=1,pan=0){
  filter.frequency.setValueAtTime(Math.max(420,cutoff*0.76),when);
  filter.frequency.exponentialRampToValueAtTime(cutoff,when+Math.max(0.025,attack*2.5));
  filter.Q.value=0.32;
- a.setPeriodicWave(getWave(ctx,track.timbre,kind,false));
- b.setPeriodicWave(getWave(ctx,track.timbre,kind,true));
+ try{
+  const waveA=getWave(ctx,track.timbre,kind,false),waveB=getWave(ctx,track.timbre,kind,true);
+  if(waveA&&waveB){a.setPeriodicWave(waveA);b.setPeriodicWave(waveB)}
+  else{a.type="triangle";b.type="sine"}
+ }catch(error){a.type="triangle";b.type="sine"}
  a.frequency.setValueAtTime(frequency,when);
  const overtone=kind==="bell"?2:1;
  b.frequency.setValueAtTime(frequency*overtone,when);
@@ -564,7 +570,8 @@ async function play(trackId){
  const track=TRACKS[trackId];
  if(!track)throw new Error("선택한 음악을 찾을 수 없습니다.");
  const ctx=ensureContext();
- await ctx.resume();
+ if(ctx.state!=="running")await ctx.resume();
+ if(ctx.state!=="running")throw new Error("브라우저 오디오가 활성화되지 않았습니다. 화면을 한 번 더 누른 뒤 재생해 주세요.");
 
  if(current&&current.id===trackId){
   if(current.playing)return getState();
@@ -604,7 +611,8 @@ function pause(){
 async function resume(){
  if(!current)return null;
  if(current.elapsedOffset>=current.track.duration){current.elapsedOffset=0;current.step=0;current.bar=0}
- const ctx=ensureContext();await ctx.resume();
+ const ctx=ensureContext();if(ctx.state!=="running")await ctx.resume();
+ if(ctx.state!=="running")throw new Error("브라우저 오디오가 활성화되지 않았습니다.");
  current.playing=true;
  ramp(current.bus.gain,0.66,0.75);
  ramp(current.wet.gain,0.42+current.track.reverb*0.22,0.7);
