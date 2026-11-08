@@ -1666,8 +1666,13 @@ if(E2E_MODE){
    addItemStack(S,"ITEM_DORONUM_RUSTED",1,{quality:58,purity:42,synthetic:false});
    addItemStack(S,"ITEM_CARBON_POWDER",2,{quality:95,purity:95,synthetic:false});
    const machine={uid:"RUSTED-PURIFIER-E2E",type:"variantLab",variant:"PURIFY_RUSTED_DORONUM",x:20,y:20,dir:1,condition:100,status:"IDLE",input:{},inputMeta:{},output:null,progress:0,temp:25,pressure:0,fluidAmountL:2,fluidType:"WATER"};
-   S.buildings.push(machine);
-   for(let i=0;i<1400&&!machine.output;i++)tickBuilding(machine,STEP,1);
+   const generator={uid:"RUSTED-PURIFIER-GEN",type:"coalgen",x:19,y:20,dir:1,fuelTimer:1000,status:"RUNNING",condition:100};
+   S.buildings=[generator,machine];
+   for(let i=0;i<1400&&!machine.output;i++){
+    const power=currentPower();
+    tickBuilding(generator,STEP,power);
+    tickBuilding(machine,STEP,power);
+   }
    return {output:machine.output?structuredClone(machine.output):null,fluidAmountL:machine.fluidAmountL,fluidType:machine.fluidType,rustedRemaining:availableItemCount(S,"ITEM_DORONUM_RUSTED"),carbonRemaining:availableItemCount(S,"ITEM_CARBON_POWDER"),status:machine.status};
   },
   setupFluidRecipeConsumerTest(){
@@ -1821,8 +1826,13 @@ if(E2E_MODE){
     S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);S.buildings=[];
     for(const[id,qty]of Object.entries(entry.inputs))addItemStack(S,id,qty,{quality:95,purity:95,synthetic:false});
     const b={uid:"RAW-"+entry.type,type:entry.type,x:10,y:10,dir:1,condition:100,status:"IDLE",input:{},inputMeta:{},output:null,progress:0,temp:25,pressure:0};
-    S.buildings.push(b);
-    for(let i=0;i<900&&!b.output;i++)tickBuilding(b,STEP,1);
+    const generators=Array.from({length:4},(_,i)=>({uid:"RAW-TEST-GEN-"+i,type:"coalgen",x:2+i,y:20,dir:1,fuelTimer:1000,status:"RUNNING",condition:100}));
+    S.buildings=[...generators,b];
+    for(let i=0;i<900&&!b.output;i++){
+     const power=currentPower();
+     for(const generator of generators)tickBuilding(generator,STEP,power);
+     tickBuilding(b,STEP,power);
+    }
     results.push({type:entry.type,expected:entry.output,actual:b.output?.id||null,quantity:b.output?.qty||0});
    }
    return results;
