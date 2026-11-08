@@ -3,6 +3,26 @@ import {INFINITY_REQUIREMENTS,INFINITY_TOTAL_INPUT,CANONICAL_INFINITY_DORONUM_ID
 import {reserveQualifiedItemBatch,releaseItemReservation,commitItemReservations,addItemStack,syncLegacyInventory} from "./simulation-core.js";
 const clone=v=>typeof structuredClone==="function"?structuredClone(v):JSON.parse(JSON.stringify(v));
 const POWER_FLOOR=.8;
+function hasValidQualifiedReservations(state,job){
+ if(job?.legacyConsumedInput===true)return true;
+ const ids=Array.isArray(job?.reservationIDs)?job.reservationIDs:[];
+ if(ids.length!==15||new Set(ids).size!==15)return false;
+ const runtime=state?.runtime,live=runtime?.reservations||{},stackByID=new Map((runtime?.itemStacks||[]).map(stack=>[String(stack.runtimeID),stack]));
+ const active=ids.map(id=>live[id]);
+ if(active.some(reservation=>!reservation||reservation.status!=="reserved"))return false;
+ for(const [itemID,required] of Object.entries(INFINITY_REQUIREMENTS)){
+  const matches=active.filter(reservation=>reservation.itemID===itemID);
+  if(matches.length!==1)return false;
+  const reservation=matches[0],allocations=Array.isArray(reservation.allocations)?reservation.allocations:[];
+  if(reservation.quantity!==required||allocations.reduce((total,item)=>total+Math.max(0,Number(item.quantity)||0),0)!==required)return false;
+  for(const allocation of allocations){
+   const stack=stackByID.get(String(allocation.stackID));
+   if(!stack||stack.itemID!==itemID||!Number.isSafeInteger(allocation.quantity)||allocation.quantity<=0||stack.quantity<allocation.quantity)return false;
+   if(Number(stack.quality)<90||Number(stack.purity)<90||stack.synthetic===true||stack.quarantined===true)return false;
+  }
+ }
+ return true;
+}
 export function settleInfinityFusionOutput(state,{jobID,outputItemID=CANONICAL_INFINITY_DORONUM_ID,quality=100,purity=100}={}){
  const job=state?.fusionJob;
  if(!job||!jobID||String(job.jobID)!==String(jobID))return {ok:false,reason:"JOB_NOT_FOUND"};
@@ -14,6 +34,7 @@ export function settleInfinityFusionOutput(state,{jobID,outputItemID=CANONICAL_I
   return {ok:true,duplicate:true,outputStackID:existing.outputStackID};
  }
  if(job.outputIssued||state.fusionDone)return {ok:false,reason:"OUTPUT_ALREADY_ISSUED"};
+ if(!hasValidQualifiedReservations(state,job))return {ok:false,reason:"RESERVATION_LEDGER_MISMATCH"};
  const snapshot={
   runtime:clone(state.runtime),inventory:clone(state.inventory||{}),meta:clone(state.meta||{}),
   stats:clone(state.stats||{}),fusionDone:!!state.fusionDone,
@@ -68,7 +89,7 @@ export function tickInfinityFusion(state,{deltaSeconds=.1,machineExists=true,pow
  if(!machineExists){job.status="ERROR";job.errorCode="MACHINE_MISSING";return {status:job.status,completed:false,recoverable:true}}
  if(maintenanceRequired){job.status="ERROR";job.errorCode="MAINTENANCE_REQUIRED";return {status:job.status,completed:false,recoverable:true}}
  if(!Number.isFinite(deltaSeconds)||deltaSeconds<0)return {status:job.status,completed:false,error:"INVALID_DELTA"};
- if(!job.legacyConsumedInput){const reservationIDs=job.reservationIDs||[],live=state.runtime?.reservations||{};if(reservationIDs.length!==15||reservationIDs.some(id=>live[id]?.status!=="reserved")){job.status="ERROR";job.errorCode="RESERVATION_LEDGER_MISMATCH";return {status:job.status,completed:false,recoverable:false,error:job.errorCode}}}
+ if(!hasValidQualifiedReservations(state,job)){job.status="ERROR";job.errorCode="RESERVATION_LEDGER_MISMATCH";return {status:job.status,completed:false,recoverable:false,error:job.errorCode}}
  if(!Number.isFinite(powerRatio)||powerRatio<POWER_FLOOR){job.status="WAITING_POWER";return {status:job.status,completed:false}}
  job.status="RUNNING";let remaining=deltaSeconds;
  while(remaining>0&&job.stageIndex<7){
@@ -88,8 +109,7 @@ export function cancelInfinityFusion(state,{jobID}={}){
 }
 export function recoverInfinityFusion(state){
  const job=state.fusionJob;if(!job||!["RESERVED","RUNNING","WAITING_POWER","CALIBRATING","ERROR"].includes(job.status))return {recoverable:false,reason:"no-active-job"};
- const reservations=job.reservationIDs||[],live=state.runtime?.reservations||{};
- const valid=reservations.length===15&&reservations.every(id=>live[id]?.status==="reserved");
+ const valid=hasValidQualifiedReservations(state,job);
  if(!valid){job.status="ERROR";job.errorCode="RESERVATION_LEDGER_MISMATCH";return {recoverable:false,reason:job.errorCode}}
  if(job.errorCode==="MACHINE_MISSING"||job.errorCode==="MAINTENANCE_REQUIRED"||job.status==="CALIBRATING"){job.status="RESERVED";delete job.errorCode}
  return {recoverable:true,job:clone(job)};
