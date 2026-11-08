@@ -57,6 +57,9 @@ jobs:
           node --check doronium-factory/skill-runtime.test.mjs
           node --check doronium-factory/save-store.js
           node --check doronium-factory/save-store.test.mjs
+          node --test doronium-factory/planetary-stabilization.test.mjs
+          node --check doronium-factory/planetary-stabilization.js
+          node --check doronium-factory/planetary-stabilization.test.mjs
           node --test doronium-factory/construction-runtime.test.mjs doronium-factory/fluid-runtime.test.mjs doronium-factory/contract-runtime.test.mjs doronium-factory/logistics-runtime.test.mjs doronium-factory/cloud-save-runtime.test.mjs doronium-factory/canonical-data.test.mjs doronium-factory/fusion-runtime.test.mjs doronium-factory/ownership-runtime.test.mjs doronium-factory/network-runtime.test.mjs doronium-factory/simulation-core.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs doronium-factory/failure-runtime.test.mjs doronium-factory/skill-runtime.test.mjs doronium-factory/save-store.test.mjs
           node --check doronium-factory/world3d.js
           node --check doronium-factory/terrain-system.js
@@ -97,6 +100,8 @@ jobs:
           test -s doronium-factory/skill-runtime.test.mjs
           test -s doronium-factory/save-store.js
           test -s doronium-factory/save-store.test.mjs
+          test -s doronium-factory/planetary-stabilization.js
+          test -s doronium-factory/planetary-stabilization.test.mjs
           test -s doronium-factory/world3d.js
           test -s doronium-factory/terrain-system.js
           grep -q 'WORLD_W = 192' doronium-factory/terrain-system.js
