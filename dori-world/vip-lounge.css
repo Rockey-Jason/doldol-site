@@ -454,7 +454,7 @@ body[data-theme="rose"] .lounge-music-player.is-collapsed{background:linear-grad
 @media(prefers-reduced-motion:reduce){.lounge-music-player,.lounge-music-player *{transition:none!important;animation:none!important}}
 
 
-/* Keep the same center anchor while the dock travels toward the bell. */
+/* Keep the compact music control aligned to the former notification-center position. */
 .lounge-music-player.is-collapsed{left:50%;right:auto;transform:translateX(calc(-50% + var(--music-mini-shift,0px)))}
 .lounge-music-player.is-collapsed .music-player-art>span{opacity:0;visibility:hidden}
 @media(max-width:620px){
