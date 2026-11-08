@@ -594,6 +594,7 @@ function consumeRecipe(b,r){
 }
 function rebuildOwnershipLedger(state=S){
  if(!state||typeof state!=="object")return {valid:false,errors:["missing-state"]};
+ try{
  const existing=state.ownershipLedger&&typeof state.ownershipLedger==="object"?state.ownershipLedger:null;
  const ledger=existing?resetCustodySnapshot(structuredClone(existing)):createOwnershipState();
  const runtime=state.runtime||{},stacks=Array.isArray(runtime.itemStacks)?runtime.itemStacks:[];
@@ -650,6 +651,12 @@ function rebuildOwnershipLedger(state=S){
  const validation=validateOwnershipState(ledger);
  state.ownershipLedger=ledger;state.ownershipLedgerValidation=validation;
  return validation;
+ }catch(error){
+  const reason=String(error?.message||error||"unknown").slice(0,220);
+  const validation={valid:false,errors:["OWNERSHIP_REBUILD_FAILED:"+reason],itemTotals:{}};
+  state.ownershipLedgerValidation=validation;
+  return validation;
+ }
 }
 function createOutput(b,id,qty,meta){id=canonicalItemID(id);const resource=RESOURCE[id];if(!resource){b.status="ERROR";b.errorCode="UNKNOWN_RESOURCE_OUTPUT:"+String(id);return false}if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(resource.name+" 생산 · "+fmt(qty)+"개");markDirty();return true}
 const BUILDING_FOOTPRINTS=Object.freeze({
@@ -1312,12 +1319,18 @@ function isProductionMachine(building){
  return kind==="machine"||kind==="reactor"||kind==="variant";
 }
 function reservationIntegrityPhase(context){
- const audit=(S.tick%10===0)?validateRuntimeState(S):{valid:true,skipped:true,errors:[]};
- context.reservationAudit=audit;context.reservationBlocked=!audit.valid;
+ const auditDue=S.tick%10===0||!S.ownershipLedgerValidation;
+ const audit=auditDue?validateRuntimeState(S):{valid:true,skipped:true,errors:[]};
+ const ownershipAudit=auditDue?rebuildOwnershipLedger(S):(S.ownershipLedgerValidation||{valid:true,skipped:true,errors:[]});
+ context.reservationAudit=audit;context.ownershipAudit=ownershipAudit;
+ context.ownershipBlocked=ownershipAudit.valid===false;
+ context.reservationBlocked=!audit.valid||context.ownershipBlocked;
  if(!audit.valid){
   S.runtime.reservationIntegrityErrors=audit.errors.slice(0,30);
   for(const building of S.buildings)if(isProductionMachine(building)&&!building.activeMeta){building.status="ERROR";building.errorCode="ITEM_RESERVATION_INTEGRITY"}
  }else if(S.runtime.reservationIntegrityErrors?.length){S.runtime.reservationIntegrityErrors=[]}
+ if(context.ownershipBlocked)S.runtime.ownershipIntegrityErrors=(ownershipAudit.errors||["ownership-validation-failed"]).slice(0,30);
+ else if(S.runtime.ownershipIntegrityErrors?.length)S.runtime.ownershipIntegrityErrors=[];
  context.machineWork=new Map();
  for(const building of S.buildings){
   if(!isProductionMachine(building))continue;
@@ -1343,7 +1356,10 @@ function reservationIntegrityPhase(context){
 function speedResolvePhase(context){
  const allocations=context.power?.allocations||{};
  for(const [id,work] of context.machineWork||[]){
-  const b=work.building;if(work.blocked||!work.recipe)continue;
+  const b=work.building;
+  if(context.ownershipBlocked){b.status="ERROR";b.errorCode="ITEM_OWNERSHIP_INTEGRITY";work.blocked=true;continue}
+  if(b.errorCode==="ITEM_OWNERSHIP_INTEGRITY"){delete b.errorCode;if(b.status==="ERROR")b.status="IDLE"}
+  if(work.blocked||!work.recipe)continue;
   const ratio=allocations[id]?.ratio??((buildingDef(b.type)?.power||0)>0?0:1);
   work.power=resolveMachinePower(ratio,buildingDef(b.type)?.power||0);
   if(!b.activeMeta){
@@ -1448,7 +1464,7 @@ function tick(dt){
    if(events.errors.length)S.runtime.lastEventErrors=events.errors.slice(0,8);
   },
   POWER_RESOLVE(){context.power=currentPower()},
-  PRODUCTION_STATE(){for(const b of S.buildings){if((b.type==="coalgen"||b.type==="mineGen")&&b.fuelTimer<=0&&itemCount("coal")>0){takeItem("coal",1);b.fuelTimer=24;b.status="RUNNING"}}},
+  PRODUCTION_STATE(){if(!context.ownershipBlocked)for(const b of S.buildings){if((b.type==="coalgen"||b.type==="mineGen")&&b.fuelTimer<=0&&itemCount("coal")>0){takeItem("coal",1);b.fuelTimer=24;b.status="RUNNING"}}},
   SPEED_RESOLVE(){speedResolvePhase(context)},
   TEMPERATURE_UPDATE(){temperatureUpdatePhase(context)},
   PRESSURE_UPDATE(){context.fluid=tickFluidSystems(dt,context.power||currentPower())},
@@ -1459,10 +1475,10 @@ function tick(dt){
   FAILURE_CHECK(){machineFailureCheckPhase(context)},
   FAILURE_RESOLUTION(){machineFailureResolutionPhase(context)},
   OUTPUT_QUALITY_PURITY(){outputQualityPurityPhase(context)},
-  COMPLETION_BUFFER(){completionBufferPhase(context)},
-  CONVEYOR_TRANSFER(){tickBelts(dt)},
-  METRICS(){tickResearch(dt,(context.power||currentPower()).ratio);if(S.fusionJob)updateFusion(dt);const arrived=advanceShipments(S,S.contractRuntime,dt);if(arrived.length){for(const shipment of arrived)log((shipment.status==="DELIVERED"?"배송 성공":"배송 실패")+" · "+shipment.contractID,shipment.status==="DELIVERED"?"good":"warn");markDirty()}if(S.tick%10===0){questCheck();if(!E2E_MODE){renderHud();if(activePanel==="factory")renderFactory();if(activePanel==="inventory")renderInventory();if(activePanel==="mission")renderMissions();if(activePanel==="research")renderResearch()}}},
-  SAVE_SNAPSHOT_REQUEST(){if(S.tick%10===0){rebuildOwnershipLedger(S);S.runtime.saveSnapshotRequested=true;markDirty()}else S.runtime.saveSnapshotRequested=false}
+  COMPLETION_BUFFER(){if(!context.ownershipBlocked)completionBufferPhase(context)},
+  CONVEYOR_TRANSFER(){if(!context.ownershipBlocked)tickBelts(dt)},
+  METRICS(){tickResearch(dt,(context.power||currentPower()).ratio);if(!context.ownershipBlocked){if(S.fusionJob)updateFusion(dt);const arrived=advanceShipments(S,S.contractRuntime,dt);if(arrived.length){for(const shipment of arrived)log((shipment.status==="DELIVERED"?"배송 성공":"배송 실패")+" · "+shipment.contractID,shipment.status==="DELIVERED"?"good":"warn");markDirty()}}if(S.tick%10===0){questCheck();if(!E2E_MODE){renderHud();if(activePanel==="factory")renderFactory();if(activePanel==="inventory")renderInventory();if(activePanel==="mission")renderMissions();if(activePanel==="research")renderResearch()}}},
+  SAVE_SNAPSHOT_REQUEST(){if(S.tick%10===0){S.runtime.saveSnapshotRequested=true;markDirty()}else S.runtime.saveSnapshotRequested=false}
  };
  const missing=TICK_STAGE_ORDER.filter(stage=>typeof handlers[stage]!=="function");
  if(missing.length)throw new Error("MISSING_TICK_STAGE_HANDLERS:"+missing.join(","));
@@ -1925,6 +1941,30 @@ if(E2E_MODE){
     closeModal();S=oldState;playerMotion=oldMotion;renderAll();
    }
    return result;
+  },
+  runOwnershipIntegrityGateTest(){
+   const oldState=S,oldMotion=playerMotion;
+   try{
+    S=freshState();S.tick=9;S.buildings=[
+     {uid:"OWN-DUPLICATE",type:"smelter",x:2,y:2,condition:100,status:"IDLE",input:{coal:1},inputMeta:{}},
+     {uid:"OWN-DUPLICATE",type:"smelter",x:4,y:2,condition:100,status:"IDLE",input:{coal:1},inputMeta:{}}
+    ];
+    ensureItemStacks(S);syncLegacyInventory(S);
+    const ironBefore=availableItemCount(S,"ITEM_IRON_ORE"),coalBefore=availableItemCount(S,"coal");
+    tick(STEP);
+    const ironAfter=availableItemCount(S,"ITEM_IRON_ORE"),coalAfter=availableItemCount(S,"coal");
+    return {
+     tick:S.tick,
+     ownershipValid:S.ownershipLedgerValidation?.valid===true,
+     ownershipErrors:S.ownershipLedgerValidation?.errors||[],
+     integrityErrors:S.runtime.ownershipIntegrityErrors||[],
+     blockedBuildings:S.buildings.map(building=>({uid:building.uid,status:building.status,errorCode:building.errorCode})),
+     ironBefore,ironAfter,coalBefore,coalAfter,
+     blocked:S.ownershipLedgerValidation?.valid===false&&
+       S.buildings.some(building=>building.errorCode==="ITEM_OWNERSHIP_INTEGRITY")&&
+       ironBefore===ironAfter&&coalBefore===coalAfter
+    };
+   }finally{S=oldState;playerMotion=oldMotion;renderAll()}
   },
   runTickStageCoverageTest(){
    const oldState=S,oldMotion=playerMotion;
