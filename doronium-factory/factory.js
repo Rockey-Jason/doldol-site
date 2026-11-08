@@ -13,6 +13,7 @@ import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, award
 import { createSaveEnvelope, decodeSave, readBestSave, restoreSaveCandidate, validateSaveEnvelope, writeSaveEnvelope } from "./save-store.js?v=1";
 import { writeCloudSave, readCloudSaveSnapshot, replaceCloudSaveAfterExplicitConflict } from "./cloud-save-runtime.js?v=2";
 import { settleInfinityFusionOutput } from "./fusion-runtime.js?v=3";
+import { evaluatePlanetaryStabilization } from "./planetary-stabilization.js?v=1";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=1";
 import { createOwnershipState, addCustody, consumeCustody, validateOwnershipState, resetCustodySnapshot } from "./ownership-runtime.js?v=4";
@@ -1013,8 +1014,52 @@ function cancelFusion(){
  job.reservationIDs=[];job.status="CANCELLED";job.cancelledAt=S.seconds;job.cancelReason="PLAYER_CANCELLED";
  log("인피니티 퓨전 취소 · 예약 원료 전량 반환");markDirty();renderAll();toast("퓨전이 취소되었고 예약 원료가 인벤토리로 반환되었습니다.");return true;
 }
-function installCore(b){if(!S.fusionDone||itemCount(CANONICAL_INFINITY_DORONUM_ID)<1){toast("인피니티 도로늄 1개가 필요합니다.","warn");return}if(!S.research.includes("planet")){toast("행성 안정화 프로토콜 연구를 완료하세요.","warn");return}if(!S.relaySites.every(Boolean)){toast("행성 안정화 릴레이 3개가 모두 필요합니다.","warn");return}if(!takeItem(CANONICAL_INFINITY_DORONUM_ID,1))return;S.coreInstalled=true;b.status="INSTALLED";log("인피니티 도로늄을 중앙 코어에 설치");toast("중앙 안정화 코어 설치 완료");showModal("행성 안정화 준비 완료","<p>3개 릴레이와 중앙 코어가 연결되었습니다. ORBIT의 최종 동기화 프로토콜을 실행할 수 있습니다.</p>",[{label:"계속",cls:"secondary"},{label:"행성 안정화 실행",cls:"gold",action:()=>{closeModal();finishPlanetary()}}]);markDirty();renderAll()}
-function finishPlanetary(){if(!S.coreInstalled||!S.relaySites.every(Boolean)){toast("안정화 필수 조건을 충족하지 못했습니다.","warn");return}S.victory=true;S.questIndex=QUESTS.length;log("PLANETARY STABILIZATION COMPLETE","good");$("orbit-dialogue").textContent="“Energy network synchronization complete. Planetary instability: decreasing. Factory status: OPERATIONAL.”";markDirty();renderAll();showModal("PLANETARY STABILIZATION COMPLETE","<div class='ending-visual'>💠</div><h3>돌돌행성의 에너지 네트워크가 안정화되었습니다.</h3><p>공장 전체에 푸른 에너지 흐름이 연결되었습니다. 폐허에서 시작한 작은 산업 기지가 행성을 지키는 거대한 산업 네트워크로 성장했습니다.</p><p><b>DORONIUM FACTORY · INFINITE INDUSTRY</b><br>FINAL STATUS: OPERATIONAL</p>",[{label:"엔딩 보기",cls:"gold",action:closeModal}]);playTone(920,.5,"sine")}
+const PLANETARY_BLOCKER_LABELS=Object.freeze({
+ INFINITY_FUSION_INCOMPLETE:"인피니티 퓨전 미완료",
+ PLANETARY_RESEARCH_LOCKED:"행성 안정화 연구 미완료",
+ RELAY_SITE_CONFIGURATION_INVALID:"릴레이 설치 지점 정보 오류",
+ RELAY_PROGRESS_INCOMPLETE:"3개 릴레이 설치 미완료",
+ RELAY_SITE_DUPLICATED:"릴레이 중복 설치",
+ RELAY_BUILDING_MISSING:"릴레이 실물 설비 누락",
+ RELAY_UNAVAILABLE:"릴레이 고장 또는 사용 불가",
+ RELAY_ID_INVALID:"릴레이 식별 정보 오류",
+ CORE_SITE_DUPLICATED:"중앙 코어 중복 설치",
+ CORE_BUILDING_MISSING:"중앙 코어 설비 누락",
+ CORE_ID_INVALID:"중앙 코어 식별 정보 오류",
+ CORE_NOT_INSTALLED:"인피니티 코어 설치 미완료",
+ CORE_UNAVAILABLE:"중앙 코어 고장 또는 사용 불가",
+ RELAY_POWER_UNSTABLE:"릴레이 전력 80% 미만",
+ CORE_POWER_UNSTABLE:"중앙 코어 전력 80% 미만",
+ PLANETARY_NETWORK_DISCONNECTED:"행성 전력망 단절",
+ PLANETARY_NETWORK_SPLIT:"릴레이와 코어가 서로 다른 전력망에 연결됨",
+ PLANETARY_NETWORK_INCOMPLETE:"행성 전력망 구성 불완전",
+ PLANETARY_GENERATION_UNAVAILABLE:"지속 발전 전력 부족",
+ PLANETARY_GENERATOR_MISSING:"행성 전력망 발전기 누락"
+});
+function planetaryBlockerText(check){return (check?.blockers||[]).map(code=>PLANETARY_BLOCKER_LABELS[code]||code).join(" · ")}
+function installCore(b){
+ if(b?.type!=="core"){toast("중앙 안정화 코어 설비를 선택하세요.","warn");return false}
+ if(S.coreInstalled){toast("인피니티 코어는 이미 설치되었습니다.");return false}
+ if(itemCount(CANONICAL_INFINITY_DORONUM_ID)<1){toast("인피니티 도로늄 1개가 필요합니다.","warn");return false}
+ const check=evaluatePlanetaryStabilization(S,currentPower(),{requireCoreInstalled:false});
+ if(!check.ready){toast("행성 안정화 준비 부족 · "+planetaryBlockerText(check),"warn");return false}
+ if(!takeItem(CANONICAL_INFINITY_DORONUM_ID,1)){toast("인피니티 도로늄을 안전하게 예약·소비하지 못했습니다.","warn");return false}
+ S.coreInstalled=true;b.status="INSTALLED";b.coreInstalledAtTick=Number(S.tick)||0;
+ log("인피니티 도로늄을 연결된 중앙 코어에 설치");toast("중앙 안정화 코어 설치 완료");
+ showModal("행성 안정화 준비 완료","<p>3개 릴레이와 중앙 코어가 하나의 안정된 발전 전력망에 연결되었습니다.</p><p>모든 필수 설비가 80% 이상의 전력을 공급받는지 최종 동기화 단계에서 다시 검사합니다.</p>",[{label:"계속",cls:"secondary"},{label:"행성 안정화 실행",cls:"gold",action:()=>{closeModal();finishPlanetary()}}]);
+ markDirty();renderAll();return true
+}
+function finishPlanetary(){
+ if(S.victory)return false;
+ const check=evaluatePlanetaryStabilization(S,currentPower());
+ if(!check.ready){toast("행성 안정화 중단 · "+planetaryBlockerText(check),"warn");return false}
+ S.victory=true;S.questIndex=QUESTS.length;S.planetaryStabilization={completed:true,completedAtTick:Number(S.tick)||0,powerNetworkID:check.powerNetworkID,generationKW:check.generationKW,relayNodeIDs:check.relayNodeIDs.slice(),coreNodeID:check.coreNodeID};
+ log("PLANETARY STABILIZATION COMPLETE","good");
+ $("orbit-dialogue").textContent="“Energy network synchronization complete. Planetary instability: decreasing. Factory status: OPERATIONAL.”";
+ markDirty();renderAll();
+ showModal("PLANETARY STABILIZATION COMPLETE","<div class='ending-visual'>💠</div><h3>돌돌행성의 에너지 네트워크가 안정화되었습니다.</h3><p>세 릴레이와 중앙 코어가 하나의 안정된 발전망으로 동기화되었습니다. 폐허에서 시작한 산업 기지가 행성 전체를 지키는 에너지 네트워크로 완성되었습니다.</p><p><b>DORONIUM FACTORY · INFINITE INDUSTRY</b><br>FINAL STATUS: OPERATIONAL</p>",[{label:"엔딩 보기",cls:"gold",action:closeModal}]);
+ playTone(920,.5,"sine");return true
+}
 
 function tickSupportFailure(b,dt,ratio,profile=FAILURE_PROFILES[b.type]){
  if(!profile||b.failureRepair)return false;
@@ -1770,6 +1815,40 @@ if(E2E_MODE){
    dirty=true;await saveGame(true);
    const result={rpcCalls,revision:cloudSaveRevision,conflictLocked:!!cloudSaveConflict,dirty,saveMessage:$("save-message").textContent};
    S=old.state;playerMotion=old.playerMotion;cloudClient=old.cloudClient;authSession=old.authSession;cloudSaveRevision=old.cloudSaveRevision;cloudSaveConflict=old.cloudSaveConflict;dirty=old.dirty;activeLocalKey=old.activeLocalKey;cloudBusy=old.cloudBusy;
+   return result;
+  },
+  runPlanetaryStabilizationGateTest(){
+   const oldState=S,oldMotion=playerMotion;
+   let result;
+   try{
+    S=freshState();S.seconds=8*3600;S.research.push("planet");S.fusionDone=true;S.relaySites=[true,true,true];
+    S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
+    addItemStack(S,CANONICAL_INFINITY_DORONUM_ID,1,{quality:100,purity:100,synthetic:false});syncLegacyInventory(S);
+    const relaySites=S.sites.relay;
+    S.buildings=[
+     {uid:"PLANET-GEN-A",type:"coalgen",x:4,y:4,dir:1,fuelTimer:120,condition:100,status:"RUNNING"},
+     {uid:"PLANET-GEN-B",type:"coalgen",x:5,y:4,dir:1,fuelTimer:120,condition:100,status:"RUNNING"},
+     ...relaySites.map((site,index)=>({uid:"PLANET-RELAY-"+(index+1),type:"relay",x:site.x,y:site.y,layer:"surface",condition:100,status:"RUNNING"})),
+     {uid:"PLANET-CORE",type:"core",x:S.sites.core.x,y:S.sites.core.y,layer:"surface",condition:100,status:"IDLE"}
+    ];
+    S.powerTopologyEnabled=false;S.powerTopologyLayers={surface:false,mine:{}};
+    const noPowerGenerators=S.buildings.filter(building=>building.type==="coalgen");
+    for(const generator of noPowerGenerators)generator.fuelTimer=0;
+    const noPower=evaluatePlanetaryStabilization(S,currentPower(),{requireCoreInstalled:false});
+    for(const generator of noPowerGenerators)generator.fuelTimer=120;
+    const relays=S.buildings.filter(building=>building.type==="relay"),removed=relays[1];
+    S.buildings=S.buildings.filter(building=>building!==removed);
+    const missingPhysicalRelay=evaluatePlanetaryStabilization(S,currentPower(),{requireCoreInstalled:false});
+    S.buildings.push(removed);
+    const preflight=evaluatePlanetaryStabilization(S,currentPower(),{requireCoreInstalled:false});
+    const core=S.buildings.find(building=>building.type==="core");
+    const installSucceeded=installCore(core);
+    const endingGate=evaluatePlanetaryStabilization(S,currentPower());
+    const endingSucceeded=finishPlanetary();
+    result={noPower,missingPhysicalRelay,preflight,installSucceeded,endingGate,endingSucceeded,victory:S.victory,questIndex:S.questIndex,questCount:QUESTS.length,consumedInfinity:itemCount(CANONICAL_INFINITY_DORONUM_ID)===0,endingRecord:structuredClone(S.planetaryStabilization||null)};
+   }finally{
+    closeModal();S=oldState;playerMotion=oldMotion;renderAll();
+   }
    return result;
   },
   runTickStageCoverageTest(){
