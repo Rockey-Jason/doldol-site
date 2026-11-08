@@ -783,7 +783,7 @@ body[data-theme="rose"] .music-progress-meta{color:#9a7970}
 .book-editor-page-meta strong{color:#9a7844;font-weight:400}
 @media(max-width:600px){
  .book-editor-chapter .book-editor-textarea{
-  --editor-page-height:760px;
+  --editor-page-height:860px;
   min-height:58vh;
   height:58vh;
   padding:24px 18px;
