@@ -743,3 +743,46 @@ body[data-theme="rose"] .music-progress-meta{color:#9a7970}
 
 
 .book-editor-toc-field .book-editor-textarea{min-height:126px;line-height:1.8}.book-editor-toc-field small{color:#93846d;font-size:10px;line-height:1.6}.reader-toc-toggle{min-height:32px;padding:0 10px;border:1px solid rgba(164,131,78,.24);border-radius:9px;background:rgba(255,255,255,.72);color:#947342;font:inherit;font-size:10px;cursor:pointer}.reader-toc-toggle[aria-expanded="true"]{background:#eadfc9;border-color:#b8955b}.reader-toc-panel{flex:0 0 auto;max-height:34vh;overflow:auto;margin:0 25px 12px;padding:17px 24px;border:1px solid rgba(167,135,80,.2);border-radius:14px;background:linear-gradient(140deg,#fffdf8,#f5edde);color:#51432d}.reader-toc-panel[hidden]{display:none!important}.reader-toc-kicker{color:#a08048;font:8px Arial,sans-serif;letter-spacing:.2em}.reader-toc-panel h3{margin:5px 0 10px;font-size:17px;font-weight:400}.reader-toc-panel ol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 24px;margin:0;padding-left:22px}.reader-toc-panel li{padding:3px 0;color:#766448;font-size:11px;line-height:1.5;overflow-wrap:anywhere}@media(max-width:620px){.reader-chapter-row{flex-wrap:wrap}.reader-toc-panel{margin:0 9px 9px;padding:13px}.reader-toc-panel ol{grid-template-columns:1fr;gap:3px}}
+
+
+/* Continuous manuscript writing with automatic visual page flow */
+.book-editor-chapter .book-editor-textarea{
+ --editor-page-height:920px;
+ min-height:62vh;
+ height:62vh;
+ padding:34px 36px;
+ resize:none;
+ overflow:hidden;
+ line-height:1.95;
+ font-size:14px;
+ white-space:pre-wrap;
+ overflow-wrap:anywhere;
+ background-color:#fffefa;
+ background-image:linear-gradient(to bottom,#fffefa 0,#fffefa calc(100% - 2px),rgba(164,131,78,.34) calc(100% - 2px),rgba(164,131,78,.34) calc(100% - 1px),#fffefa calc(100% - 1px));
+ background-size:100% var(--editor-page-height);
+ background-repeat:repeat-y;
+ background-attachment:local;
+ box-shadow:0 2px 12px rgba(91,70,38,.045);
+}
+.book-editor-page-meta{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:8px;
+ margin-top:-2px;
+ color:#9a8768;
+ font-size:10px;
+ line-height:1.6;
+}
+.book-editor-page-meta strong{color:#9a7844;font-weight:400}
+@media(max-width:600px){
+ .book-editor-chapter .book-editor-textarea{
+  --editor-page-height:760px;
+  min-height:58vh;
+  height:58vh;
+  padding:24px 18px;
+  font-size:13px;
+  line-height:1.9;
+ }
+ .book-editor-page-meta{font-size:9px}
+}
