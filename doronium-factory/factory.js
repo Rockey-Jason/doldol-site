@@ -2012,6 +2012,8 @@ if(E2E_MODE){
      machine.temp=stage.temp;machine.pressure=stage.pressure;
      updateFusion(STEP);ticks++;
     }
+    if(S.fusionJob.status==="COMPLETED")updateFusion(STEP);
+    const terminalStatus=S.fusionJob.status;
     const output=availableItemCount(S,CANONICAL_INFINITY_DORONUM_ID);
     const inputsRemaining=CANONICAL_DORONUM_IDS.reduce((total,id)=>total+availableItemCount(S,id),0);
     const reservationsRemaining=Object.values(S.runtime.reservations||{}).filter(item=>item.status==="reserved").length;
@@ -2022,7 +2024,7 @@ if(E2E_MODE){
      ticks,
      stageIndex:S.fusionJob.stageIndex,
      totalElapsedSeconds:S.fusionJob.totalElapsedSeconds,
-     jobStatus:S.fusionJob.status,
+     jobStatus:terminalStatus,
      fusionDone:S.fusionDone,
      output,
      inputsRemaining,
