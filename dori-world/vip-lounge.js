@@ -475,7 +475,7 @@ function fitBookEditorPages(textarea,meta){
  const usablePageHeight=Math.max(240,pageHeight-verticalPadding);
  const contentHeight=Math.max(0,textarea.scrollHeight-verticalPadding);
  const pages=Math.max(1,Math.ceil(contentHeight/usablePageHeight));
- meta.textContent=pages+"페이지 · 한 챕터 안에서 자동으로 이어집니다";
+ meta.textContent=pages+"페이지 · 페이지 끝에 도달하면 다음 페이지로 자동 이어집니다";
 }
 function renderBookEditor(){
  const list=$("bookEditorChapters");list.replaceChildren();
