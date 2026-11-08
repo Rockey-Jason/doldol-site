@@ -302,6 +302,7 @@ function resetBookDefaults(){
   const original=BOOK_DEFAULTS.find(item=>item.id===book.id);
   if(!original)return;
   book.subtitle=original.subtitle||"";
+  book.tableOfContents=original.tableOfContents||"";
    book.tableOfContents=original.tableOfContents||"";
   book.description=original.description||"";
   book.author=original.author||"";
@@ -458,7 +459,7 @@ function renderReader(){
 }
 function renderReaderToc(){
  const panel=$("readerTocPanel"),list=$("readerTocList"),button=$("readerTocToggle");if(!panel||!list||!button||!activeBook)return;
- const custom=String(activeBook.tableOfContents||"").split(/\\r?\\n/).map(line=>line.trim()).filter(Boolean);
+ const custom=String(activeBook.tableOfContents||"").split(/\r?\n/).map(line=>line.trim()).filter(Boolean);
  const entries=custom.length?custom:(activeBook.chapters||[]).map(chapter=>chapter.title).filter(Boolean);
  list.replaceChildren();entries.forEach(entry=>{const li=document.createElement("li");li.textContent=entry;list.append(li)});
  panel.hidden=button.getAttribute("aria-expanded")!=="true";button.hidden=!entries.length;
