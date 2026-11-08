@@ -329,7 +329,16 @@ try {
 
   const synthetic = await desktop.evaluate(() => window.__doroniumFactoryTest.syntheticGuard());
   assert.equal(synthetic.status, "ERROR", "Reactor must reject synthetic Dori Meat");
+  assert.equal(synthetic.errorCode, "SYNTHETIC_DORONUM_INPUT", "Synthetic rejection must expose a stable machine error code");
   assert.equal(synthetic.remaining, 10, "Rejected synthetic inputs must not be consumed");
+  assert.equal(synthetic.stackQuantity, 10, "Rejected synthetic stack quantity must remain unchanged");
+  assert.equal(synthetic.syntheticStacks, 1, "The test must prove the preserved input is actually marked synthetic");
+  assert.equal(synthetic.activeMeta, false, "Rejected synthetic inputs must not create an active recipe job");
+  assert.equal(synthetic.reservations, 0, "Rejected synthetic inputs must not create item reservations");
+  const cleanDoriMeat = await desktop.evaluate(() => window.__doroniumFactoryTest.cleanDoriMeatGuard());
+  assert.equal(cleanDoriMeat.activeMeta, true, "The reactor must still accept qualified non-synthetic Dori Meat");
+  assert.equal(cleanDoriMeat.activeSynthetic, false, "A valid input batch must retain non-synthetic provenance");
+  assert.equal(cleanDoriMeat.remaining, 0, "A valid non-synthetic recipe may consume its exact ten inputs");
 
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupSoak());
   const beltRebuildBefore = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D().rebuildCount);
