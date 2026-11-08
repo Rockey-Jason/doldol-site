@@ -55,3 +55,12 @@ test("ownership validator detects duplicate ledger IDs and stale counters",()=>{
  assert.ok(result.errors.includes("duplicate-ledger-id:"+s.custody[0].ledgerID));
  assert.ok(result.errors.includes("ledger-id-counter-not-advanced"));
 });
+
+test("legacy ownership snapshots are upgraded to the current ledger schema without losing history",()=>{
+ const legacy={version:1,nextLedgerID:4,custody:[],transactions:{LEGACY:{status:"COMMITTED",request:{type:"LEGACY"},result:{ok:true}}},consumed:[]};
+ resetCustodySnapshot(legacy);
+ assert.equal(legacy.version,2);
+ assert.equal(legacy.nextLedgerID,4);
+ assert.ok(legacy.transactions.LEGACY);
+ assert.equal(validateOwnershipState(legacy).valid,true);
+});
