@@ -1988,7 +1988,14 @@ if(E2E_MODE){
    S=freshState();S.inventory={doriMeat:10};S.meta={doriMeat:{quality:90,purity:90,synthetic:true}};S.runtime=createRuntimeState();ensureItemStacks(S);
    const b={uid:"test-reactor",type:"reactor",x:1,y:1,dir:1,progress:0,input:{},inputMeta:{},output:null,activeMeta:null,temp:25,pressure:0,status:"IDLE"};
    S.buildings=[b];S.paused=false;tickMachine(b,STEP,1);
-   return {status:b.status,remaining:itemCount("doriMeat"),activeMeta:!!b.activeMeta}
+   const stacks=S.runtime.itemStacks.filter(stack=>stack.itemID==="ITEM_DORI_MEAT");
+   return {status:b.status,errorCode:b.errorCode||null,remaining:itemCount("doriMeat"),activeMeta:!!b.activeMeta,stackQuantity:stacks.reduce((n,stack)=>n+stack.quantity,0),syntheticStacks:stacks.filter(stack=>stack.synthetic).length,reservations:Object.keys(S.runtime.reservations||{}).length}
+  },
+  cleanDoriMeatGuard(){
+   S=freshState();S.inventory={doriMeat:10};S.meta={doriMeat:{quality:95,purity:95,synthetic:false}};S.runtime=createRuntimeState();ensureItemStacks(S);
+   const b={uid:"test-reactor-clean",type:"reactor",x:1,y:1,dir:1,progress:0,input:{},inputMeta:{},output:null,activeMeta:null,temp:25,pressure:0,status:"IDLE"};
+   S.buildings=[b];S.paused=false;tickMachine(b,STEP,1);
+   return {status:b.status,errorCode:b.errorCode||null,remaining:itemCount("doriMeat"),activeMeta:!!b.activeMeta,activeSynthetic:!!b.activeMeta?.synthetic};
   }
  };
 }
