@@ -1945,9 +1945,11 @@ if(E2E_MODE){
   runOwnershipIntegrityGateTest(){
    const oldState=S,oldMotion=playerMotion;
    try{
-    S=freshState();S.tick=9;S.buildings=[
-     {uid:"OWN-DUPLICATE",type:"smelter",x:2,y:2,condition:100,status:"IDLE",input:{coal:1},inputMeta:{}},
-     {uid:"OWN-DUPLICATE",type:"smelter",x:4,y:2,condition:100,status:"IDLE",input:{coal:1},inputMeta:{}}
+    S=freshState();S.tick=9;
+    S.buildings=[{uid:"OWN-GATE-SMELTER",type:"smelter",x:2,y:2,condition:100,status:"IDLE"}];
+    S.contractRuntime.shipments=[
+     {shipmentID:"OWN-DUPLICATE-SHIP",status:"IN_TRANSIT",cargo:[{itemID:"wood",quantity:2,quality:90,purity:90,synthetic:false}]},
+     {shipmentID:"OWN-DUPLICATE-SHIP",status:"IN_TRANSIT",cargo:[{itemID:"wood",quantity:2,quality:90,purity:90,synthetic:false}]}
     ];
     ensureItemStacks(S);syncLegacyInventory(S);
     const ironBefore=availableItemCount(S,"ITEM_IRON_ORE"),coalBefore=availableItemCount(S,"coal");
