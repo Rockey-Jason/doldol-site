@@ -1,5 +1,5 @@
 import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES, CANONICAL_DORONUM_CRYSTAL_MODELS } from "./world3d.js?v=20";
-import { createRuntimeState, ensureItemStacks, addItemStack, allocateEntityID, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, reserveQualifiedItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, TICK_STAGE_ORDER, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=6";
+import { createRuntimeState, ensureItemStacks, addItemStack, allocateEntityID, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, reserveQualifiedItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, TICK_STAGE_ORDER, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState, enqueueSimulationEvent, processSimulationEvents, consumeFixedStepBudget } from "./simulation-core.js?v=7";
 import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=4";
 import { validateGameData } from "./game-data-validation.js?v=3";
 import { CANONICAL_DORONUM_CATALOG, validateCanonicalDoronumCatalog, auditCanonicalDoronumIntegration, applyDoronumMigration, canonicalItemID } from "./canonical-data.js?v=3";
@@ -397,7 +397,22 @@ function settlePowerStorage(power){
 function weatherNow(){const day=Math.floor(S.seconds/86400);return ["Clear","Clear","Rain","Clear","Storm","Clear","Snow"][day%7]}
 function revealAround(){if(S.player.layer==="mine")return;let changed=false;const radius=11*calculateSkillBonuses(S.skills).scannerRangeMultiplier,limit=radius*radius;for(let y=-Math.ceil(radius);y<=Math.ceil(radius);y++)for(let x=-Math.ceil(radius);x<=Math.ceil(radius);x++){if(x*x+y*y>limit)continue;const xx=S.player.x+x,yy=S.player.y+y;if(xx>=0&&yy>=0&&xx<WORLD_W&&yy<WORLD_H){const key=xx+","+yy;if(!S.seen[key]){S.seen[key]=true;changed=true}}}if(biomeAt(S.player.x,S.player.y)==="crystal")claimSkillPoint("EXPLORATION_CRYSTAL_CAVERN");if(changed)markVisibilityDirty()}
 function getQuest(){return S.questIndex>=QUESTS.length?null:QUESTS[S.questIndex]}
-function questCheck(){const q=getQuest();if(!q||S.victory)return;const ok=q.check(S);if(ok){S.money+=q.reward;S.questIndex=Math.min(QUESTS.length,S.questIndex+1);const oldChapter=Math.max(0,Number(S.chapter)||0);S.chapter=Math.max(oldChapter,q.chapter);for(let chapter=oldChapter+1;chapter<=Math.min(4,S.chapter);chapter++)claimSkillPoint("STORY_CHAPTER_"+chapter);log("임무 완료: "+q.title,"good");toast("임무 완료 · "+q.title+"  +"+fmt(q.reward)+" D");$("orbit-dialogue").textContent=q.orbit;playTone(720,.18,"triangle");markDirty();$("active-mission-hud")?.classList.remove("mission-hud-visible");renderMissions();renderHud();renderQuickObjectives();setTimeout(()=>notifyNewMission(getQuest()),650)}}
+function applyQuestRewardEvent(payload){
+ if(!payload||S.victory||S.questIndex!==payload.questIndex)return;
+ const q=QUESTS[payload.questIndex];if(!q||q.id!==payload.questID)return;
+ S.money+=Math.max(0,Math.floor(Number(payload.reward)||0));
+ S.questIndex=Math.min(QUESTS.length,S.questIndex+1);
+ const oldChapter=Math.max(0,Number(S.chapter)||0);S.chapter=Math.max(oldChapter,Math.max(0,Math.floor(Number(payload.chapter)||0)));
+ for(let chapter=oldChapter+1;chapter<=Math.min(4,S.chapter);chapter++)claimSkillPoint("STORY_CHAPTER_"+chapter);
+ log("임무 완료: "+q.title,"good");toast("임무 완료 · "+q.title+"  +"+fmt(payload.reward)+" D");
+ const dialogue=$("orbit-dialogue");if(dialogue)dialogue.textContent=String(payload.orbit||"");
+ playTone(720,.18,"triangle");markDirty();$("active-mission-hud")?.classList.remove("mission-hud-visible");
+ renderMissions();renderHud();renderQuickObjectives();setTimeout(()=>notifyNewMission(getQuest()),650);
+}
+function questCheck(){
+ const q=getQuest();if(!q||S.victory||!q.check(S))return;
+ enqueueSimulationEvent(S,{type:"QUEST_REWARD",payload:{questIndex:S.questIndex,questID:q.id,title:q.title,reward:q.reward,chapter:q.chapter,orbit:q.orbit},idempotencyKey:"quest:"+q.id+":complete",source:"quest-check"});
+}
 function changePanel(name){activePanel=name;document.querySelectorAll(".main-tab").forEach(b=>b.classList.toggle("active",b.dataset.panel===name));document.querySelectorAll(".panel-view").forEach(p=>p.classList.toggle("active",p.id==="panel-"+name));if(name==="inventory")renderInventory();if(name==="research")renderResearch();if(name==="mission")renderMissions();if(name==="factory")renderFactory()}
 function renderHud(){const p=currentPower();$("hud-money").textContent=short(S.money)+" D";$("hud-doronium").textContent=short(VARIANTS.reduce((a,id)=>a+itemCount(id),0));$("hud-power").textContent=(p.used?Math.round(p.ratio*100):Math.round(p.gen))+"%";$("hud-tier").textContent="TIER "+Math.min(7,Math.floor(S.research.length/2));$("build-count").textContent=S.buildings.length+" / "+BUILDING_LIMIT;$("active-machines").textContent="가동 기계 "+S.buildings.filter(b=>b.status==="RUNNING").length;$("world-population").textContent="엔지니어 1";$("system-state").textContent=p.used>p.gen?"전력 부족":S.victory?"행성 안정화 완료":"시스템 정상";$("sim-speed").textContent="시뮬레이션 "+S.simSpeed+"×";$("pause-sim").textContent=S.paused?"▶ 재개":"Ⅱ 일시정지";$("speed-sim").textContent="속도 "+S.simSpeed+"×";const day=Math.floor(S.seconds/86400)+1,sec=S.seconds%86400,h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);$("world-clock-text").textContent="DAY "+String(day).padStart(2,"0")+" · "+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");$("day-icon").textContent=h>=6&&h<18?"☀":"☾";$("weather-label").textContent=({Clear:"맑음",Rain:"비",Storm:"폭풍",Snow:"눈",Heat:"폭염"})[weatherNow()]||"맑음";$("world-coordinate").textContent="SECTOR "+String(Math.floor(S.player.x/16)+1).padStart(2,"0")+" / X: "+(S.player.x*32-2048)+"m · Z: "+(S.player.y*32-1536)+"m";const biome=biomeAt(S.player.x,S.player.y);const biomeName=({forest:"고대 숲",meadow:"초원",wetland:"습지",desert:"붉은 사막",highlands:"고산 지대",frost:"빙설 산맥",crystal:"수정 협곡",volcanic:"화산 지대"})[biome]||"탐사 구역";$("region-title").innerHTML=biomeName+' <span>SECTOR '+String(Math.floor(S.player.x/16)+1).padStart(2,"0")+"-"+String(Math.floor(S.player.y/16)+1).padStart(2,"0")+"</span>";
  const v=S.survival||{health:100,hunger:100,thirst:100};
@@ -1275,7 +1290,11 @@ function tick(dt){
  const context={state:S,dt,power:null,machinePipelineActive:true,machineWork:new Map()};
  const handlers={
   STATE_READ(){S.seconds+=dt;S.tick++;if(!E2E_MODE)updateSurvival(dt);ensureCooldownIndex();for(const key of activeCooldownKeys){const node=S.nodes?.[key];if(!node||!(node.cooldown>0)){activeCooldownKeys.delete(key);continue}node.cooldown=Math.max(0,node.cooldown-dt);if(node.cooldown<=0)activeCooldownKeys.delete(key)}},
-  RESERVATION_RESOLVE(){reservationIntegrityPhase(context)},
+  RESERVATION_RESOLVE(){
+   reservationIntegrityPhase(context);
+   const events=processSimulationEvents(S,{QUEST_REWARD:payload=>applyQuestRewardEvent(payload)},128);
+   if(events.errors.length)S.runtime.lastEventErrors=events.errors.slice(0,8);
+  },
   POWER_RESOLVE(){context.power=currentPower()},
   PRODUCTION_STATE(){for(const b of S.buildings){if((b.type==="coalgen"||b.type==="mineGen")&&b.fuelTimer<=0&&itemCount("coal")>0){takeItem("coal",1);b.fuelTimer=24;b.status="RUNNING"}}},
   SPEED_RESOLVE(){speedResolvePhase(context)},
@@ -1606,7 +1625,16 @@ function animationFrame(time){
  world3d.adaptPerformanceFrame?.(frameMs);
  const elapsed=frameMs/1000;
  updatePlayerMotion(elapsed);
- if(!S.paused&&!S.victory){accumulator+=elapsed*S.simSpeed;while(accumulator>=STEP){tick(STEP);accumulator-=STEP}}
+ if(!S.paused&&!S.victory){
+  accumulator+=elapsed*S.simSpeed;
+  const budget=consumeFixedStepBudget(accumulator,STEP,10);
+  for(let i=0;i<budget.steps;i++)tick(STEP);
+  accumulator=budget.remaining;
+  if(accumulator>=2){
+   const lastDiagnostic=Number(S.runtime.simulationBehindDiagnosticMs)||0;
+   if(time-lastDiagnostic>=5000){S.runtime.simulationBehindDiagnosticMs=time;S.runtime.simulationBehindCount=(Number(S.runtime.simulationBehindCount)||0)+1;console.warn("[Doronium Factory] SimulationBehind",{backlogSeconds:Number(accumulator.toFixed(2)),count:S.runtime.simulationBehindCount})}
+  }
+ }
  frameRenderAccumulator=Math.min(50,frameRenderAccumulator+frameMs);
  if(frameRenderAccumulator>=1000/60){frameRenderAccumulator-=1000/60;drawWorld()}
  requestAnimationFrame(animationFrame);
