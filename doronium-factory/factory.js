@@ -370,7 +370,7 @@ function currentPower(){
   else if(b.type==="solar")node={id:b.uid,type:"GENERATOR",generationKW:b.failureRepair?0:def.gen*100*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1),buildingType:b.type};
   else if(b.type==="wind")node={id:b.uid,type:"GENERATOR",generationKW:b.failureRepair?0:def.gen*100*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05),buildingType:b.type};
   else if(b.type==="coalgen"||b.type==="mineGen")node={id:b.uid,type:"GENERATOR",generationKW:!b.failureRepair&&b.fuelTimer>0?(Number(def.gen)|| (b.type==="mineGen"?12:18))*100:0,buildingType:b.type};
-  else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["fluidPump"].includes(b.type)?55:["pump","doriFarm"].includes(b.type)?45:20;const fusionActive=S.fusionJob&&["RESERVED","RUNNING","PAUSED_POWER","CALIBRATING","PREFLIGHT"].includes(S.fusionJob.status||"RUNNING");const fusionStageIndex=Number.isInteger(S.fusionJob?.stageIndex)?S.fusionJob.stageIndex:S.fusionJob?.stage;const fusionStage=fusionActive&&Number.isInteger(fusionStageIndex)?FUSION_STAGES[fusionStageIndex]:null;const demandKW=b.failureRepair?0:b.type==="fusion"?(fusionStage?.power||0):def.power*100;node={id:b.uid,type:"CONSUMER",demandKW,priority,transmissionLoss:0,buildingType:b.type}}
+  else if((def.power||0)>0){const priority=["relay","core"].includes(b.type)?120:b.type==="cooling"?100:b.type==="fusion"?90:b.type==="lab"?60:["fluidPump"].includes(b.type)?55:["pump","doriFarm"].includes(b.type)?45:20;const fusionActive=S.fusionJob&&["RESERVED","RUNNING","PAUSED_POWER","WAITING_POWER","CALIBRATING","PREFLIGHT"].includes(S.fusionJob.status||"RUNNING");const fusionStageIndex=Number.isInteger(S.fusionJob?.stageIndex)?S.fusionJob.stageIndex:S.fusionJob?.stage;const fusionStage=fusionActive&&Number.isInteger(fusionStageIndex)?FUSION_STAGES[fusionStageIndex]:null;const demandKW=b.failureRepair?0:b.type==="fusion"?(fusionStage?.power||0):def.power*100;node={id:b.uid,type:"CONSUMER",demandKW,priority,transmissionLoss:0,buildingType:b.type}}
   if(node){node.layer=b.layer||"surface";node.mineLevel=b.mineLevel||0;nodes.push(node);powerBuildings.push(b)}
  }
  const edges=[];
@@ -1987,6 +1987,51 @@ if(E2E_MODE){
    ]:[{uid:"FD-COOL",type:"cooling",x:2,y:1,dir:1,status:"IDLE",condition:100},{uid:"FD-FUSION",type:"fusion",x:3,y:1,dir:1,status:"IDLE",condition:100,pressureSensorHealth:100,pressureSensorOffsetMPa:0,temp:25,pressure:0}];
    const passed=runFusionDiagnostics();
    return {passed,diagnostics:structuredClone(S.fusionDiagnostics),reservations:Object.keys(S.runtime.reservations||{}).length};
+  },
+  runLiveFusionRuntimeTest(){
+   const oldState=S,oldMotion=playerMotion;
+   try{
+    S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.seconds=8*3600;
+    for(const id of CANONICAL_DORONUM_IDS)addItemStack(S,id,100,{quality:95,purity:95,synthetic:false});
+    const generators=Array.from({length:6},(_,index)=>({uid:"LIVE-FUSION-GEN-"+index,type:"coalgen",x:index+1,y:1,dir:1,fuelTimer:99999,status:"RUNNING",condition:100}));
+    const cooling={uid:"LIVE-FUSION-COOL",type:"cooling",x:8,y:1,dir:1,status:"IDLE",condition:100};
+    const machine={uid:"LIVE-FUSION-MACHINE",type:"fusion",x:9,y:1,dir:1,status:"IDLE",condition:100,temp:25,pressure:0,pressureSensorHealth:100,pressureSensorOffsetMPa:0};
+    S.buildings=[...generators,cooling,machine];S.fusionDiagnostics={allPassed:true};
+    const preflight=fusionPowerPreflight();
+    const started=startInfinityFusion(S,{jobID:"LIVE-FACTORY-FUSION",machineID:machine.uid,stageDurationsSeconds:FUSION_STAGES.map(stage=>stage.time),stagePowerMW:FUSION_STAGES.map(stage=>stage.power/1000)});
+    if(!started.ok)return {ok:false,reason:started.reason||"START_FAILED",preflight};
+    S.fusionJob.startedAt=S.seconds;S.fusionJob.stage=0;S.fusionJob.progress=0;
+    machine.temp=FUSION_STAGES[0].temp;machine.pressure=FUSION_STAGES[0].pressure;
+    for(const generator of generators)generator.fuelTimer=0;
+    updateFusion(STEP);
+    const powerPause={status:S.fusionJob.status,reservations:S.fusionJob.reservationIDs.length,stage:S.fusionJob.stageIndex};
+    for(const generator of generators)generator.fuelTimer=99999;
+    let ticks=0;
+    while(S.fusionJob.status!=="COMPLETED"&&ticks<2610){
+     const stage=FUSION_STAGES[Math.min(6,S.fusionJob.stageIndex||0)];
+     machine.temp=stage.temp;machine.pressure=stage.pressure;
+     updateFusion(STEP);ticks++;
+    }
+    const output=availableItemCount(S,CANONICAL_INFINITY_DORONUM_ID);
+    const inputsRemaining=CANONICAL_DORONUM_IDS.reduce((total,id)=>total+availableItemCount(S,id),0);
+    const reservationsRemaining=Object.values(S.runtime.reservations||{}).filter(item=>item.status==="reserved").length;
+    return {
+     ok:preflight.ok&&powerPause.status==="WAITING_POWER"&&powerPause.reservations===15&&S.fusionJob.status==="COMPLETED"&&S.fusionDone&&output===1&&inputsRemaining===0&&reservationsRemaining===0,
+     preflight:preflight.ok,
+     powerPause,
+     ticks,
+     stageIndex:S.fusionJob.stageIndex,
+     totalElapsedSeconds:S.fusionJob.totalElapsedSeconds,
+     jobStatus:S.fusionJob.status,
+     fusionDone:S.fusionDone,
+     output,
+     inputsRemaining,
+     reservationsRemaining,
+     outputID:S.runtime.itemStacks.find(item=>item.itemID===CANONICAL_INFINITY_DORONUM_ID)?.itemID||null
+    };
+   }finally{
+    closeModal();S=oldState;playerMotion=oldMotion;renderAll();
+   }
   },
   runFusionSettlementTest(){
    S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
