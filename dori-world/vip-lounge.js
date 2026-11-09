@@ -46,7 +46,7 @@ const BOOK_DEFAULTS=BOOKS.map(book=>({...book,chapters:(book.chapters||[]).map(c
 let user=null,profile=null,owned=new Set(),ownedMusic=new Set(["lounge_music_royal_piano"]),prefs={theme:"marble",ambient:true,draft:"",favorites:[],visit:null,musicTrack:"lounge_music_royal_piano",musicVolume:0.62};
 let storeKey="dori-lounge:guest",bookStoreKey="dori-lounge-books:guest",toastTimer=0;
 let bookState={progress:{},favorites:[],bookmarks:{},fontScale:1};
-let activeBook=null,activeChapter=0,savedReaderScroll=0,readerScrollTimer=0,editorDraft=null,readerPages=[],readerPageIndex=0;
+let activeBook=null,activeChapter=0,savedReaderScroll=0,readerScrollTimer=0,editorDraft=null,readerPages=[],readerPageIndex=0,readerTouchStart=null;
 const format=n=>{try{const value=String(n??0).trim();if(/^-?[0-9]+$/.test(value))return BigInt(value).toLocaleString("ko-KR")}catch(e){}return Number(n||0).toLocaleString("ko-KR")};
 function toast(msg){const el=$("toast");el.textContent=msg;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2600)}
 function save(){try{localStorage.setItem(storeKey,JSON.stringify(prefs))}catch(e){toast("브라우저 저장 공간을 확인해 주세요.")}}
@@ -440,6 +440,13 @@ function paginateReaderChapter(content){
  if(current.length||!pages.length)pages.push(current);
  measure.remove();return pages;
 }
+function reflowReaderPages(){
+ if(!activeBook)return;
+ const keep=readerPageIndex;
+ readerPages=paginateReaderChapter(activeBook.chapters[activeChapter].content||"");
+ readerPageIndex=Math.min(keep,readerPages.length-1);
+ renderReaderPage();
+}
 function renderReaderPage(){
  const body=$("bookReaderBody");body.replaceChildren();
  const page=readerPages[readerPageIndex]||[];
@@ -660,18 +667,20 @@ function wireBookReader(){
  $("bookReaderClose").addEventListener("click",closeBookReader);
  $("bookReader").addEventListener("click",event=>{if(event.target===$("bookReader"))closeBookReader()});
  $("readerEditToggle").addEventListener("click",beginBookEdit);
- $("readerTocToggle").addEventListener("click",()=>{const button=$("readerTocToggle"),open=button.getAttribute("aria-expanded")!=="true";button.setAttribute("aria-expanded",String(open));renderReaderToc()});
+ $("readerTocToggle").addEventListener("click",()=>{const button=$("readerTocToggle"),open=button.getAttribute("aria-expanded")!=="true";button.setAttribute("aria-expanded",String(open));renderReaderToc();requestAnimationFrame(reflowReaderPages)});
  $("addBookChapter").addEventListener("click",()=>{if(!editorDraft)return;syncBookEditorDraft();editorDraft.chapters.push({title:"제"+(editorDraft.chapters.length+1)+"장",content:""});renderBookEditor();const inputs=$("bookEditorChapters").querySelectorAll(".book-editor-input");if(inputs.length)inputs[inputs.length-1].focus()});
  $("cancelBookEdit").addEventListener("click",cancelBookEdit);$("saveBookEdit").addEventListener("click",saveBookEdit);
  $("readerPrev").addEventListener("click",()=>changeReaderPage(-1));$("readerNext").addEventListener("click",()=>changeReaderPage(1));
+ $("bookReaderBody").addEventListener("touchstart",event=>{const touch=event.touches&&event.touches[0];if(touch)readerTouchStart={x:touch.clientX,y:touch.clientY}},{passive:true});
+ $("bookReaderBody").addEventListener("touchend",event=>{if(!readerTouchStart)return;const touch=event.changedTouches&&event.changedTouches[0];if(touch){const dx=touch.clientX-readerTouchStart.x,dy=touch.clientY-readerTouchStart.y;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.25)changeReaderPage(dx<0?1:-1)}readerTouchStart=null},{passive:true});
  $("readerChapterSelect").addEventListener("change",event=>changeReaderChapter(Number(event.target.value)));
  $("readerBookmark").addEventListener("click",()=>{
   if(!activeBook||!hasBookContent(activeBook))return;
   const list=bookmarkList(activeBook.id);bookState.bookmarks[activeBook.id]=list.includes(activeChapter)?list.filter(index=>index!==activeChapter):[...list,activeChapter].sort((a,b)=>a-b);
   saveBookState();renderReader();renderBooks();toast(bookmarkList(activeBook.id).includes(activeChapter)?"이 장을 책갈피에 저장했어요.":"책갈피를 해제했어요.");
  });
- $("readerFontDown").addEventListener("click",()=>{bookState.fontScale=Math.max(.85,Math.round((bookState.fontScale-.05)*100)/100);document.querySelector(".book-reader-dialog").style.setProperty("--reader-font-scale",String(bookState.fontScale));saveBookState()});
- $("readerFontUp").addEventListener("click",()=>{bookState.fontScale=Math.min(1.4,Math.round((bookState.fontScale+.05)*100)/100);document.querySelector(".book-reader-dialog").style.setProperty("--reader-font-scale",String(bookState.fontScale));saveBookState()});
+ $("readerFontDown").addEventListener("click",()=>{bookState.fontScale=Math.max(.85,Math.round((bookState.fontScale-.05)*100)/100);document.querySelector(".book-reader-dialog").style.setProperty("--reader-font-scale",String(bookState.fontScale));saveBookState();requestAnimationFrame(reflowReaderPages)});
+ $("readerFontUp").addEventListener("click",()=>{bookState.fontScale=Math.min(1.4,Math.round((bookState.fontScale+.05)*100)/100);document.querySelector(".book-reader-dialog").style.setProperty("--reader-font-scale",String(bookState.fontScale));saveBookState();requestAnimationFrame(reflowReaderPages)});
  $("bookReaderBody").addEventListener("scroll",()=>{updateReaderProgress();if(readerScrollTimer)clearTimeout(readerScrollTimer);readerScrollTimer=setTimeout(()=>{readerScrollTimer=0;saveReaderProgress()},220)},{passive:true});
  document.addEventListener("keydown",event=>{
   if(!$("bookReader").classList.contains("open"))return;
