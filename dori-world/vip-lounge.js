@@ -471,7 +471,7 @@ function renderReaderPage(){
  if(!hasBookContent(activeBook)){
   const empty=document.createElement("p");empty.className="reader-empty-state";empty.textContent=canEditLibrary()?"아직 작성된 내용이 없습니다. 상단의 ‘원고 편집’을 눌러 직접 이야기를 작성해 주세요.":"아직 관리자가 원고를 등록하지 않았습니다. 원고가 준비되면 이곳에서 읽을 수 있습니다.";body.append(empty);
  }else{
-  page.forEach(paragraph=>{const p=document.createElement("p");p.textContent=paragraph;body.append(p)});
+  page.forEach((paragraph,index)=>{const p=document.createElement("p");if(readerPageIndex===0&&index===0)p.classList.add("reader-chapter-opening");p.textContent=paragraph;body.append(p)});
   if(readerPageIndex===readerPages.length-1){const end=document.createElement("div");end.className="reader-endmark";end.textContent="❦";body.append(end)}
  }
  const total=readerPages.length||1;
