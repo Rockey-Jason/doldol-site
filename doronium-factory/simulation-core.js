@@ -15,7 +15,7 @@ const clamp=(v,min,max)=>Math.max(min,Math.min(max,Number(v)||0));
 const clone=value=>typeof structuredClone==="function"?structuredClone(value):JSON.parse(JSON.stringify(value));
 
 export function createRuntimeState(){
-  return {schemaVersion:4,nextStackId:1,nextReservationId:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
+  return {schemaVersion:4,nextStackId:1,nextReservationId:1,itemStacks:[],reservations:{},reservationHistory:[],failureRngState:0x6d2b79f5,failureRngIndex:0,nextFailureEventId:1,failureEvents:[],nextEntityID:1,nextEventSequence:1,eventQueue:[],eventJournal:[],processedEventKeys:[],rngStreams:{},tickStageOrder:[...TICK_STAGE_ORDER],lastTickStages:[],saveSnapshotRequested:false};
 }
 function normalizeStack(stack){
   return {runtimeID:String(stack.runtimeID),itemID:String(stack.itemID),quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
@@ -40,6 +40,13 @@ export function ensureItemStacks(state){
   if(!Number.isSafeInteger(rt.failureRngIndex)||rt.failureRngIndex<0)rt.failureRngIndex=0;
   if(!Number.isSafeInteger(rt.nextFailureEventId)||rt.nextFailureEventId<1)rt.nextFailureEventId=1;
   rt.nextReservationId=Math.max(1,Math.floor(Number(rt.nextReservationId)||1));
+  rt.nextEntityID=Math.max(1,Math.floor(Number(rt.nextEntityID)||1));
+  rt.nextEventSequence=Math.max(1,Math.floor(Number(rt.nextEventSequence)||1));
+  if(!Array.isArray(rt.eventQueue))rt.eventQueue=[];
+  if(!Array.isArray(rt.eventJournal))rt.eventJournal=[];
+  if(rt.eventJournal.length>512)rt.eventJournal=rt.eventJournal.slice(-512);
+  if(!Array.isArray(rt.processedEventKeys))rt.processedEventKeys=[];
+  if(!rt.rngStreams||typeof rt.rngStreams!=="object"||Array.isArray(rt.rngStreams))rt.rngStreams={};
   // One-time migration from the legacy item-count map. Never replace existing stacks.
   if(!rt.legacyInventoryMigrated){
     for(const [itemID,quantity] of Object.entries(state.inventory||{})){
@@ -85,6 +92,38 @@ export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-trans
   const reservationID="RS-"+rt.nextReservationId++;
   rt.reservations[reservationID]={reservationID,ownerID:String(ownerID),itemID:String(itemID),quantity:qty,allocations,status:"reserved",createdTick:Math.max(0,Number(state.tick)||0)};
   return reservationID;
+}
+export function availableEligibleItemCount(state,itemID,{minQuality=0,minPurity=0,allowSynthetic=true}={}) {
+  const rt=ensureItemStacks(state),reserved=reservedByStack(rt);
+  const q=clamp(minQuality,0,100),p=clamp(minPurity,0,100);
+  return rt.itemStacks.filter(stack=>stack.itemID===itemID&&stack.quality>=q&&stack.purity>=p&&(allowSynthetic||!stack.synthetic))
+    .reduce((total,stack)=>total+Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0)),0);
+}
+export function reserveEligibleItemStacks(state,itemID,quantity,ownerID="eligible-item-transaction",criteria={}) {
+  const rt=ensureItemStacks(state),qty=Math.floor(Number(quantity)||0);
+  if(!itemID||qty<=0)return null;
+  const minQuality=clamp(criteria.minQuality??0,0,100),minPurity=clamp(criteria.minPurity??0,0,100),allowSynthetic=criteria.allowSynthetic!==false;
+  const reserved=reservedByStack(rt);let remaining=qty;const allocations=[];
+  for(const stack of rt.itemStacks){
+    if(stack.itemID!==itemID||stack.quality<minQuality||stack.purity<minPurity||(!allowSynthetic&&stack.synthetic)||remaining<=0)continue;
+    const free=Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0));
+    const take=Math.min(free,remaining);
+    if(take>0){allocations.push({stackID:stack.runtimeID,quantity:take});remaining-=take}
+  }
+  if(remaining>0)return null;
+  const reservationID="RS-"+rt.nextReservationId++;
+  rt.reservations[reservationID]={reservationID,ownerID:String(ownerID),itemID:String(itemID),quantity:qty,allocations,status:"reserved",criteria:{minQuality,minPurity,allowSynthetic},createdTick:Math.max(0,Number(state.tick)||0)};
+  return reservationID;
+}
+export function reserveEligibleItemBatch(state,requirements,ownerID="eligible-item-batch",criteria={}) {
+  const created=[];
+  for(const [itemID,quantity] of Object.entries(requirements||{})){
+    const qty=Math.floor(Number(quantity)||0);if(qty<=0)continue;
+    const id=reserveEligibleItemStacks(state,itemID,qty,ownerID,criteria);
+    if(!id){for(const prior of created)releaseItemReservation(state,prior);return null}
+    created.push(id);
+  }
+  return created;
 }
 export function reserveItemBatch(state,requirements,ownerID="inventory-transaction"){
   const created=[];
@@ -175,10 +214,88 @@ export function validateRuntimeState(state){
   if(!Number.isSafeInteger(rt.failureRngState)||rt.failureRngState<=0)errors.push("invalid-failure-rng-state");
   if(!Number.isSafeInteger(rt.failureRngIndex)||rt.failureRngIndex<0)errors.push("invalid-failure-rng-index");
   if(!Number.isSafeInteger(rt.nextFailureEventId)||rt.nextFailureEventId<1)errors.push("invalid-failure-event-counter");
+  if(!Number.isSafeInteger(rt.nextEntityID)||rt.nextEntityID<1)errors.push("invalid-entity-id-counter");
+  if(!Number.isSafeInteger(rt.nextEventSequence)||rt.nextEventSequence<1)errors.push("invalid-event-sequence-counter");
+  if(!Array.isArray(rt.eventQueue)||rt.eventQueue.length>EVENT_QUEUE_LIMIT)errors.push("invalid-event-queue");
+  const eventIDs=new Set();for(const event of rt.eventQueue){if(!event?.eventID||eventIDs.has(event.eventID))errors.push("duplicate-event-id:"+event?.eventID);eventIDs.add(event?.eventID)}
   const failureIDs=new Set();let maxFailureID=0;
   for(const event of rt.failureEvents){if(!event?.failureEventID||failureIDs.has(event.failureEventID))errors.push("duplicate-failure-event:"+event?.failureEventID);failureIDs.add(event?.failureEventID);const n=Number(String(event?.failureEventID||"").replace(/^FAIL-/,""));if(Number.isSafeInteger(n))maxFailureID=Math.max(maxFailureID,n)}
   if(rt.nextFailureEventId<=maxFailureID)errors.push("failure-event-counter-not-advanced");
   return {valid:errors.length===0,errors,stackCount:rt.itemStacks.length,reservationCount:Object.values(rt.reservations).filter(r=>r.status==="reserved").length,failureEventCount:rt.failureEvents.length};
+}
+const EVENT_QUEUE_LIMIT=4096;
+const EVENT_JOURNAL_LIMIT=512;
+const IDEMPOTENCY_LIMIT=2048;
+function stableHash32(value){
+  let h=0x811c9dc5;
+  for(const ch of String(value)){h^=ch.codePointAt(0);h=Math.imul(h,0x01000193)}
+  return h>>>0||0x6d2b79f5;
+}
+export function nextDeterministicRandom(state,streamName="simulation"){
+  const rt=ensureItemStacks(state),key=String(streamName||"simulation").slice(0,64);
+  let seed=Number(rt.rngStreams[key])>>>0;
+  if(!seed)seed=stableHash32(String(state.worldSeed??state.seed??0)+":"+key);
+  seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;seed>>>=0;
+  if(!seed)seed=0x6d2b79f5;
+  rt.rngStreams[key]=seed;
+  return seed/4294967296;
+}
+export function enqueueSimulationEvent(state,{type,payload=null,idempotencyKey=null,source="simulation"}={}){
+  const rt=ensureItemStacks(state);
+  if(typeof type!=="string"||!type.trim())throw new Error("SIMULATION_EVENT_TYPE_REQUIRED");
+  const key=idempotencyKey==null?null:String(idempotencyKey).slice(0,160);
+  if(key&&(rt.processedEventKeys.includes(key)||rt.eventQueue.some(event=>event.idempotencyKey===key))){
+    const existing=rt.eventQueue.find(event=>event.idempotencyKey===key);
+    return {accepted:false,duplicate:true,eventID:existing?.eventID||null};
+  }
+  if(rt.eventQueue.length>=EVENT_QUEUE_LIMIT)throw new Error("SIMULATION_EVENT_QUEUE_FULL");
+  const eventID="EVT-"+String(rt.nextEventSequence++).padStart(10,"0");
+  const event={eventID,type:type.trim().slice(0,80),payload:clone(payload),idempotencyKey:key,source:String(source||"simulation").slice(0,80),createdTick:Math.max(0,Number(state.tick)||0),attempts:0};
+  rt.eventQueue.push(event);
+  return {accepted:true,duplicate:false,eventID};
+}
+export function processSimulationEvents(state,handlers={},limit=128){
+  const rt=ensureItemStacks(state),maximum=Math.max(1,Math.min(1024,Math.floor(Number(limit)||128)));
+  const snapshotCount=Math.min(rt.eventQueue.length,maximum);
+  let processed=0,duplicates=0,visited=0;const errors=[];
+  while(rt.eventQueue.length&&visited<snapshotCount){
+    const event=rt.eventQueue[0],key=event.idempotencyKey;
+    visited++;
+    if(key&&rt.processedEventKeys.includes(key)){rt.eventQueue.shift();duplicates++;continue}
+    const handler=handlers[event.type];
+    if(typeof handler!=="function"){errors.push({eventID:event.eventID,reason:"UNHANDLED_EVENT_TYPE"});break}
+    try{
+      handler(clone(event.payload),event,state);
+      rt.eventQueue.shift();
+      if(key){rt.processedEventKeys.push(key);if(rt.processedEventKeys.length>IDEMPOTENCY_LIMIT)rt.processedEventKeys.splice(0,rt.processedEventKeys.length-IDEMPOTENCY_LIMIT)}
+      rt.eventJournal.push({...event,processedTick:Math.max(0,Number(state.tick)||0),status:"processed"});
+      if(rt.eventJournal.length>EVENT_JOURNAL_LIMIT)rt.eventJournal.splice(0,rt.eventJournal.length-EVENT_JOURNAL_LIMIT);
+      processed++;
+    }catch(error){
+      event.attempts=Math.max(0,Number(event.attempts)||0)+1;
+      event.lastError=String(error?.message||error).slice(0,240);
+      errors.push({eventID:event.eventID,reason:event.lastError});
+      break;
+    }
+  }
+  return {processed,duplicates,remaining:rt.eventQueue.length,errors};
+}
+export function consumeFixedStepBudget(accumulator,stepSeconds=SIMULATION_STEP_SECONDS,maxSteps=10){
+  const accumulatorValue=Math.max(0,Number(accumulator)||0);
+  const step=Math.max(0.001,Number(stepSeconds)||SIMULATION_STEP_SECONDS);
+  const budget=Math.max(1,Math.floor(Number(maxSteps)||10));
+  const available=Math.floor((accumulatorValue+1e-9)/step);
+  const steps=Math.min(available,budget);
+  const remaining=Math.max(0,accumulatorValue-steps*step);
+  return {steps,remaining};
+}
+export function allocateEntityID(state,prefix="ENT") {
+  const rt=ensureItemStacks(state);
+  const safePrefix=String(prefix||"ENT").toUpperCase().replace(/[^A-Z0-9_-]/g,"").slice(0,16)||"ENT";
+  if(!Number.isSafeInteger(rt.nextEntityID)||rt.nextEntityID<1)throw new Error("INVALID_ENTITY_ID_COUNTER");
+  const id=safePrefix+"-"+String(rt.nextEntityID).padStart(8,"0");
+  rt.nextEntityID++;
+  return id;
 }
 export function availableItemCount(state,itemID){
   const rt=ensureItemStacks(state),reserved=reservedByStack(rt);

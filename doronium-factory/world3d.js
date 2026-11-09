@@ -51,6 +51,22 @@ const buildingColor = {
   relay:0x4e9fa7, core:0x8b72c5
 };
 const crystalSpecs={
+ ITEM_DORONUM_NORMAL:{color:0x63d8e8,shape:"octa",emissive:0x0a5265},
+ ITEM_DORONUM_YELLOW:{color:0xf0c54c,shape:"pent",emissive:0x795b12},
+ ITEM_DORONUM_ULTRA:{color:0xd8f3ff,shape:"faceted",emissive:0x4d76a5},
+ ITEM_DORONUM_BLUE:{color:0x288ff0,shape:"hex",emissive:0x082a70},
+ ITEM_DORONUM_RED:{color:0xf05a65,shape:"tetra",emissive:0x6a0b18},
+ ITEM_DORONUM_IRON:{color:0x9aa9b7,shape:"dodeca",emissive:0x343b48},
+ ITEM_DORONUM_ORANGE:{color:0xffa344,shape:"knot",emissive:0x703007},
+ ITEM_DORONUM_SLIGHTLY_RUSTED:{color:0x6f9cae,shape:"tri",emissive:0x4e3025},
+ ITEM_DORONUM_RUSTED:{color:0x936a55,shape:"block",emissive:0x432316},
+ ITEM_DORONUM_TRANSLUCENT:{color:0xc7f7ff,shape:"square",emissive:0x427c9b},
+ ITEM_DORONUM_THERMAL_CRYSTAL:{color:0xffb24a,shape:"icosa",emissive:0x8b4a06},
+ ITEM_DORONUM_COLD_CRYSTAL:{color:0x8feaff,shape:"spike",emissive:0x17618a},
+ ITEM_DORONUM_BLACK:{color:0x343044,shape:"void",emissive:0x401274},
+ ITEM_DORONUM_SPECIAL_EDITION:{color:0xf4d66d,shape:"ring",emissive:0x76520b},
+ ITEM_DORONUM_LIMITED_EDITION:{color:0xe7e9f0,shape:"crown",emissive:0x8a8caa},
+ ITEM_DORONUM_INFINITY:{color:0xb5f5ff,shape:"infinity",emissive:0x347bcb},
  doronium_normal:{color:0x63d8e8,shape:"octa",emissive:0x0a5265},
  doronium_blue:{color:0x288ff0,shape:"hex",emissive:0x082a70},
  doronium_red:{color:0xf05a65,shape:"tetra",emissive:0x6a0b18},
@@ -95,7 +111,7 @@ function crystalGeometry(id){
 }
 function makeCrystal(parent,id,x,y,z,size=4){
  const spec=crystalSpecs[id]||crystalSpecs.doronium_normal;
- const material=new THREE.MeshPhysicalMaterial({color:spec.color,metalness:.4,roughness:.15,transmission:(id==="doronium_clear"||id==="doronium_cold") ? .22 : .03,transparent:id==="doronium_clear"||id==="doronium_cold"||id==="doronium_void",opacity:id==="doronium_clear" ? .78 : .95,emissive:spec.emissive,emissiveIntensity:.55,clearcoat:.9,clearcoatRoughness:.12});
+ const material=new THREE.MeshPhysicalMaterial({color:spec.color,metalness:.4,roughness:.15,transmission:(id==="doronium_clear"||id==="doronium_cold") ? .22 : .03,transparent:id==="doronium_clear"||id==="doronium_cold"||id==="doronium_void"||id==="ITEM_DORONUM_TRANSLUCENT"||id==="ITEM_DORONUM_COLD_CRYSTAL"||id==="ITEM_DORONUM_BLACK",opacity:id==="doronium_clear"||id==="ITEM_DORONUM_TRANSLUCENT" ? .78 : .95,emissive:spec.emissive,emissiveIntensity:.55,clearcoat:.9,clearcoatRoughness:.12});
  const mesh=new THREE.Mesh(crystalGeometry(id),material);mesh.position.set(x,y,z);mesh.scale.set(size,size*1.25,size);mesh.rotation.set(.18,.22,.08);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);
  const edges=new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry,24),new THREE.LineBasicMaterial({color:spec.color,transparent:true,opacity:.38}));mesh.add(edges);
  mesh.userData.baseScale=mesh.scale.clone();return mesh;
