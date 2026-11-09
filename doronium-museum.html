@@ -25,7 +25,7 @@
     <a class="header-factory" href="./doronium-factory/">공장으로 <span>↗</span></a>
   </header>
 
-  <main>
+  <main class="museum-deck" id="museum-deck">
     <section class="museum-hero" aria-labelledby="hero-title">
       <div class="hero-grid"></div>
       <div class="hero-copy">
@@ -92,6 +92,11 @@
       </div>
       <div class="collection-status"><span id="collection-count">11개 표본 전시 중</span><span>카드를 선택하면 제조 기록과 근거 신문 회차를 확인할 수 있습니다.</span></div>
       <div class="specimen-grid" id="specimen-grid" aria-live="polite"></div>
+      <div class="specimen-pagination" id="specimen-pagination" aria-label="표본 페이지 이동">
+        <button class="specimen-page-arrow" id="specimen-prev" type="button" aria-label="이전 표본 페이지">←</button>
+        <div class="specimen-page-center"><strong id="specimen-page-indicator">01 / 04</strong><div class="specimen-page-dots" id="specimen-page-dots"></div></div>
+        <button class="specimen-page-arrow" id="specimen-next" type="button" aria-label="다음 표본 페이지">→</button>
+      </div>
       <div class="empty-state" id="empty-state" hidden>검색 결과가 없습니다. 다른 이름으로 검색해 보세요.</div>
       <div class="view-progress">
         <div class="progress-copy"><span>VISITOR'S FIELD NOTES</span><strong>관람한 표본 <b id="visited-count">0</b> / 11</strong></div>
@@ -150,9 +155,9 @@
           <svg viewBox="0 0 300 330">
             <defs><linearGradient id="yinYangGem" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f3f5f0"/><stop offset=".48" stop-color="#b8c4d0"/><stop offset=".52" stop-color="#44536a"/><stop offset="1" stop-color="#111c32"/></linearGradient><filter id="yinYangGlow"><feGaussianBlur stdDeviation="12"/></filter></defs>
             <ellipse cx="150" cy="279" rx="78" ry="16" fill="#99c9dc" opacity=".35" filter="url(#yinYangGlow)"/>
-            <circle cx="150" cy="150" r="91" fill="url(#yinYangGem)" stroke="#e7f3f2" stroke-width="2"/>
-            <path d="M150 59a45.5 45.5 0 0 1 0 91 45.5 45.5 0 0 0 0 91 91 91 0 0 0 0-182Z" fill="#101c31"/>
-            <circle cx="150" cy="104.5" r="12" fill="#101c31"/><circle cx="150" cy="195.5" r="12" fill="#e7eff0"/>
+            <path d="M150 18 242 75 226 242 150 306 74 242 58 75Z" fill="url(#yinYangGem)" stroke="#e7f3f2" stroke-width="2"/>
+            <path d="M150 18 242 75 150 130 58 75Z" fill="#ffffff" opacity=".2"/><path d="M58 75 150 130 74 242Z" fill="#eafcff" opacity=".14"/><path d="M242 75 150 130 226 242Z" fill="#101c31" opacity=".5"/><path d="M74 242 150 130 150 306Z" fill="#ffffff" opacity=".12"/><path d="M226 242 150 130 150 306Z" fill="#061326" opacity=".55"/>
+            <path d="M150 47a44 44 0 0 1 0 88 44 44 0 0 0 0 88 88 88 0 0 0 0-176Z" fill="#101c31" opacity=".86"/><circle cx="150" cy="91" r="11" fill="#101c31"/><circle cx="150" cy="179" r="11" fill="#eaf5f5" opacity=".94"/><path d="M150 18V306M58 75 242 75M74 242 226 242" stroke="#efffff" stroke-opacity=".42" fill="none"/>
           </svg>
           <div class="infinity-art-label"><b>☯</b><span>NEWSPAPER SPECIMEN<br>BLACK HOLE / WHITE HOLE</span></div>
         </div>
@@ -165,14 +170,28 @@
       <a class="button-quiet" href="./">돌이사이트로 돌아가기 ↗</a>
     </section>
   </main>
+  <nav class="chapter-dock" id="chapter-dock" aria-label="전시실 페이지 이동">
+    <button class="chapter-arrow" id="chapter-prev" type="button" aria-label="이전 전시실"><span>←</span><small>PREVIOUS</small></button>
+    <div class="chapter-dock-center">
+      <div class="chapter-dock-top"><span id="chapter-counter">01 / 06</span><strong id="chapter-current-title">입장 · INTRODUCTION</strong></div>
+      <div class="chapter-steps" id="chapter-steps"></div>
+    </div>
+    <button class="chapter-arrow" id="chapter-next" type="button" aria-label="다음 전시실"><span>→</span><small>NEXT</small></button>
+  </nav>
   <footer class="museum-footer"><span>© ROCKEY INDUSTRIES · DORONIUM MUSEUM</span><span>ARCHIVE OF CRYSTAL RESONANCE</span></footer>
 </div>
 
 <dialog class="specimen-dialog" id="specimen-dialog" aria-labelledby="dialog-title">
   <form method="dialog"><button class="dialog-close" aria-label="닫기">×</button></form>
   <div class="dialog-layout">
-    <div class="dialog-model"><div class="model-topline">3D REFERENCE MODEL <span>ILLUSTRATIVE</span></div><canvas id="specimen-canvas" aria-label="일반 도로늄 참고 3D 모형"></canvas><div class="model-caption">REFERENCE MODEL · NOT AN EXACT SPECIMEN SHAPE</div></div>
-    <div class="dialog-info"><div class="eyebrow" id="dialog-class">SPECIMEN / 001</div><h2 id="dialog-title">일반 도로늄</h2><p class="dialog-lead" id="dialog-lead"></p><div class="dialog-tags" id="dialog-tags"></div><div class="dialog-rule"></div><div class="detail-row"><small>신문의 외형 기록</small><strong id="dialog-shape"></strong></div><div class="detail-row"><small>신문에 기록된 제조법</small><strong id="dialog-process"></strong></div><div class="detail-note" id="dialog-note"></div><button class="button-primary dialog-done" type="button" id="dialog-done">전시관으로 돌아가기</button></div>
+    <div class="dialog-model"><div class="model-topline">FACETED GLASS MODEL <span>EXHIBITION RENDER</span></div><canvas id="specimen-canvas" aria-label="일반 도로늄 참고 3D 모형"></canvas><div class="model-caption">SEMI-TRANSLUCENT GEM · ILLUSTRATIVE FORM ONLY</div></div>
+    <div class="dialog-info"><div class="eyebrow" id="dialog-class">SPECIMEN / 001</div><h2 id="dialog-title">일반 도로늄</h2><p class="dialog-lead" id="dialog-lead"></p><div class="dialog-tags" id="dialog-tags"></div><div class="dialog-rule"></div>
+      <div class="specimen-detail-grid">
+        <section class="specimen-detail-block"><small>01 · CHARACTERISTICS</small><h3>도로늄 특징</h3><p id="dialog-characteristics"></p></section>
+        <section class="specimen-detail-block"><small>02 · CAPABILITIES</small><h3>도로늄 능력</h3><p id="dialog-abilities"></p></section>
+        <section class="specimen-detail-block"><small>03 · FORMATION</small><h3>제조법</h3><p id="dialog-process"></p></section>
+        <section class="specimen-detail-block specimen-source-block"><small>04 · ARCHIVE</small><h3>출처</h3><p id="dialog-source"></p></section>
+      </div><button class="button-primary dialog-done" type="button" id="dialog-done">전시관으로 돌아가기</button></div>
   </div>
 </dialog>
 <div class="toast" id="museum-toast" role="status" aria-live="polite"></div>
