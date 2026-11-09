@@ -30,7 +30,7 @@ try{
 
 const filterNames={base:"기초 재료",variant:"변형 도로늄",special:"특수 도로늄",stones:"돌피니티 스톤"};
 const SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
-const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiMTc4MDE5ODQyNiwibmJmIjoxNzgwMTk4NDI2LCJleHAiOjIwOTU3NzQ0MjZ9.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";;
 const legacyIds={
  "dn-doronium":"dn","rotten-doronium":"rotten","red-doronium":"red","rusted-doronium":"rusted",
  "yin-yang-doronium":"yinyang","legendary-hard-doronium":"legendary-hard","doronium-special-edition":"special-edition",
