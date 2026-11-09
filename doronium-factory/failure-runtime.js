@@ -75,3 +75,34 @@ export function advanceFailureExposure(machine,deltaSeconds,isExposed){
  machine.failureExposureSec=Math.max(0,finite(machine.failureExposureSec,0))+(isExposed?dt:0);
  return machine.failureExposureSec;
 }
+
+export function applyMachineFailure(machine,event){
+ if(!machine||!event?.failureEventID||!event.outcome||typeof event.outcome!=="object")return false;
+ if(machine.lastFailureEventID===event.failureEventID)return false;
+ const outcome=event.outcome;
+ if(!Number.isFinite(Number(outcome.conditionDamage))||Number(outcome.conditionDamage)<0||
+    !Number.isFinite(Number(outcome.repairSeconds))||Number(outcome.repairSeconds)<=0||
+    !Number.isFinite(Number(outcome.repairCondition))||Number(outcome.repairCondition)<=0||
+    !outcome.repairMaterials||typeof outcome.repairMaterials!=="object")return false;
+ machine.condition=clamp(finite(machine.condition,100)-Number(outcome.conditionDamage),0,100);
+ machine.lastFailureEventID=String(event.failureEventID);
+ machine.failureRepair={failureEventID:String(event.failureEventID),grade:String(event.grade||"major"),
+  repairSeconds:Number(outcome.repairSeconds),repairCondition:clamp(Number(outcome.repairCondition),1,100),
+  repairMaterials:{...outcome.repairMaterials},residue:outcome.residue?{...outcome.residue}:null,
+  broken:!!outcome.broken};
+ machine.status=machine.failureRepair.broken||machine.condition<=0?"BROKEN":"MAINTENANCE";
+ machine.activeFailureReason="FAILURE_"+String(event.grade||"MAJOR").toUpperCase();
+ machine.failureResidue=machine.failureRepair.residue;
+ machine.maintenanceTimer=0;
+ return true;
+}
+export function completeMachineRepair(machine){
+ if(!machine?.failureRepair||!(machine.maintenanceTimer<=0))return false;
+ machine.condition=Math.max(clamp(finite(machine.condition,0),0,100),machine.failureRepair.repairCondition);
+ machine.maintenanceTimer=0;
+ machine.status="IDLE";
+ machine.activeFailureReason=null;
+ machine.maintenanceRecommended=false;
+ machine.failureRepair=null;
+ return true;
+}

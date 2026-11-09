@@ -87,7 +87,12 @@ export function makeMineDeposits(){
     [3,8,12,"quartz",35,-102],[3,20,8,"goldOre",20,-108],[3,22,15,"coal",42,-116],[3,32,12,"goldOre",25,-112],
     [4,12,12,"diamond",8,-144],[4,22,8,"goldOre",32,-150],[4,32,12,"diamond",10,-158],
     [5,8,12,"goldOre",18,-186],[5,12,7,"diamond",8,-192],[5,22,15,"quartz",8,-198],
-    [5,25,8,"coal",6,-204],[5,31,12,"diamond",3,-202],[5,34,17,"goldOre",6,-188]
+    [5,25,8,"coal",6,-204],[5,31,12,"diamond",3,-202],[5,34,17,"goldOre",6,-188],
+    [2,29,8,"ITEM_COLD_CRYSTAL_RAW",18,-78],[3,13,17,"ITEM_HEAT_CRYSTAL",20,-124],
+    [3,29,8,"ITEM_MAGNETITE",26,-128],[4,8,17,"titaniumOre",22,-166],
+    [4,24,17,"chromiteOre",24,-174],[5,20,6,"ITEM_COLD_CRYSTAL_RAW",28,-194],
+    [5,29,17,"ITEM_HEAT_CRYSTAL",16,-196],[5,35,8,"ITEM_MAGNETITE",30,-208],
+    [4,34,18,"titaniumOre",18,-162],[5,5,16,"chromiteOre",20,-200]
   ];
   return Object.fromEntries(rows.map(([level,x,z,type,amount,depthY],i)=>{
     const key=mineDepositKey(level,x,z);
