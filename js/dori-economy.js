@@ -28,7 +28,7 @@ const SECTOR_LABELS = {semiconductor:'반도체',doronium:'도로늄',logistics:
 const CATEGORY_LABELS = {raw:'원자재',component:'산업 부품',doronium:'도로늄',utility:'유틸리티'};
 let sb;
 let sessionUser = null;
-let data = {profile:null,catalog:[],inventory:[],companies:[],listings:[],myListings:[],stocks:[],holdings:[],ledger:[]};
+let data = {profile:null,bank:null,catalog:[],inventory:[],companies:[],listings:[],myListings:[],stocks:[],holdings:[],ledger:[]};
 let toastTimer = null;
 let refreshQueued = false;
 
@@ -124,6 +124,11 @@ async function loadAll(showMessage) {
     const failed = results.findIndex(result => result.error);
     if (failed >= 0) throw new Error(labels[failed] + ' 조회 실패: ' + results[failed].error.message);
     data.profile = results[0].data;
+    if (!data.bank) {
+      const {data:bankData,error:bankError}=await sb.rpc('dori_bank_dashboard');
+      if (bankError) throw new Error('돌이은행 자산 조회 실패: ' + bankError.message);
+      data.bank=bankData;
+    }
     data.catalog = results[1].data || [];
     data.inventory = results[2].data || [];
     data.companies = results[3].data || [];
@@ -173,12 +178,13 @@ function calculateTotals() {
     inventoryQty += qty;
   });
   const companyValue = data.companies.reduce((sum,row) => sum + asBig(row.cash_balance),0n);
-  const assets = wallet + stockValue + inventoryValue + companyValue;
+  const deposits = asBig(data.bank?.deposit_principal_total);
+  const assets = wallet + deposits + stockValue + inventoryValue + companyValue;
   const marketCap = data.stocks.reduce((sum,row) => sum + (asBig(row.current_price) * asBig(row.total_shares)),0n);
   const turnover = data.stocks.reduce((sum,row) => sum + asBig(row.turnover_24h),0n);
   const changes = data.stocks.map(row => Number(row.change_percent)).filter(Number.isFinite);
   const indexChange = changes.length ? changes.reduce((a,b)=>a+b,0)/changes.length : null;
-  return {wallet,stockValue,stockCost,shareCount,inventoryValue,inventoryQty,companyValue,assets,marketCap,turnover,indexChange};
+  return {wallet,deposits,stockValue,stockCost,shareCount,inventoryValue,inventoryQty,companyValue,assets,marketCap,turnover,indexChange};
 }
 function renderAll() {
   const t = calculateTotals();
@@ -188,6 +194,7 @@ function renderAll() {
   $('memberTier').textContent = data.profile.equipped_title || ('LEVEL ' + (data.profile.exp_level || 1) + ' · PERSONAL ECONOMY ACCOUNT');
   $('walletBalance').textContent = fmt(t.wallet);
   $('bankViewBalance').textContent = fmtCoin(t.wallet);
+  $('bankViewDeposits').textContent = fmtCoin(t.deposits);
   $('totalAssets').textContent = fmtShort(t.assets) + ' D';
   $('stockValue').textContent = fmtShort(t.stockValue) + ' D';
   $('stockCount').textContent = '보유 주식 ' + data.holdings.length.toLocaleString('ko-KR') + '종 · ' + fmt(t.shareCount) + '주';
@@ -267,7 +274,7 @@ function renderHoldingsTable() {
   $('holdingsTable').innerHTML = rows.length ? '<table class="holdings-table"><thead><tr><th>종목</th><th>보유 수량</th><th>평균 매입가</th><th>현재가</th><th>평가액</th></tr></thead><tbody>'+rows.map(row=>{
     const stock=maps().stocks.get(String(row.stock_id));
     const value=asBig(row.quantity)*asBig(stock?.current_price);
-    return '<tr><td>'+escapeHtml(stock?.name || ('종목 #'+row.stock_id))+' <small>'+escapeHtml(stock?.ticker || '')+'</small></td><td>'+fmt(row.quantity)+'주</td><td>'+fmtCoin(row.average_price)+'</td><td>'+fmtCoin(stock?.current_price)+'</td><td>'+fmtCoin(value)+'</td></tr>';
+    return '<tr><td>'+escapeHtml(stock?.name || ('종목 #'+row.stock_id))+' <small>'+escapeHtml(stock?.ticker || '')+'</small></td><td>'+fmt(row.quantity)+'주</td><td>'+escapeHtml(number(Number(row.average_price)))+' D'+'</td><td>'+fmtCoin(stock?.current_price)+'</td><td>'+fmtCoin(value)+'</td></tr>';
   }).join('')+'</tbody></table>' : '<div class="empty-state">보유한 주식이 없습니다. 돌돌증권에서 투자 종목을 선택해 보세요.</div>';
 }
 function renderSupply() {
