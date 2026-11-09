@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#071225">
+<meta name="description" content="껌•송 연합국, 돌이 왕국, 식빵이 왕국, 윈터 연방. 네 나라가 함께하는 DORI WORLD INFINITE KINGDOM 세계관 아틀라스.">
+<title>INFINITE KINGDOM | DORI WORLD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="./kingdom.css?v=20261110-four-nations-1">
+</head>
+<body>
+<div class="ambient ambient-one"></div><div class="ambient ambient-two"></div>
+<div class="app-shell">
+  <header class="topbar">
+    <a class="brand" href="./index.html" aria-label="돌이 월드 홈">
+      <span class="brand-mark">✦</span><span><b>DORI WORLD</b><small>INFINITE KINGDOM</small></span>
+    </a>
+    <nav class="top-actions" aria-label="주요 메뉴">
+      <span class="world-live"><i></i> WORLD ARCHIVE</span>
+      <a class="back-link" href="./index.html">월드 허브 <span>↗</span></a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="eyebrow-line"></span> FOUR SOVEREIGN NATIONS · ONE CIVILIZATION</div>
+        <h1>하나의 세계,<br><em>네 개의 문명.</em></h1>
+        <p>서로 다른 역사와 자연, 문화를 가진 네 주권국이 각자의 방식으로 성장하며 하나의 세계를 만들어 갑니다. 국가를 선택해 영토와 수도, 문명 지표, 외교와 역사를 살펴보세요.</p>
+        <div class="hero-tags"><span>4 NATIONS</span><span>19 REGIONS</span><span>6 DIPLOMATIC PACTS</span></div>
+      </div>
+      <div class="hero-seal" aria-hidden="true">
+        <div class="seal-orbit orbit-a"></div><div class="seal-orbit orbit-b"></div>
+        <div class="seal-core"><span>✦</span><b>DW</b><small>YEAR 100</small></div>
+        <span class="seal-caption">THE FOUR REALMS</span>
+      </div>
+      <div class="hero-foot"><span>EST. KINGDOM YEAR 001</span><span>THE INFINITY ERA · 100</span></div>
+    </section>
+
+    <section class="world-stats" aria-label="세계 현황">
+      <div class="world-stat"><span class="stat-kicker">SOVEREIGN NATIONS</span><strong id="world-nation-count">04</strong><small>독립 주권국</small></div>
+      <div class="world-stat"><span class="stat-kicker">MAPPED TERRITORY</span><strong id="world-area-share">100<span>%</span></strong><small>전체 영토 구성</small></div>
+      <div class="world-stat"><span class="stat-kicker">CIVILIZATION COUNCIL</span><strong class="stat-text">ACTIVE</strong><small id="world-council">4국 문명협의회</small></div>
+      <div class="world-stat"><span class="stat-kicker">CURRENT ERA</span><strong class="stat-text" id="world-era-short">INFINITY</strong><small id="world-era-label">왕국력 100년 · 인피니티 시대</small></div>
+    </section>
+
+    <section class="section-block">
+      <div class="section-heading">
+        <div><div class="eyebrow">01 / WORLD ATLAS</div><h2>인피니티 대륙 지도</h2><p>지도에서 국가를 선택하면 해당 국가의 상세 정보가 열립니다.</p></div>
+        <div class="data-status" id="data-status" role="status"><i></i><span>세계관 데이터 확인 중</span></div>
+      </div>
+      <div class="atlas-layout">
+        <div class="map-card">
+          <div class="map-card-top"><span>WORLD MAP <b>·</b> KINGDOM YEAR 100</span><span class="map-coordinates">NORTH 42° · EAST 18°</span></div>
+          <div class="map-wrap">
+            <svg class="world-map" viewBox="0 0 1000 570" role="group" aria-label="네 나라로 구성된 인피니티 대륙 지도">
+              <defs>
+                <linearGradient id="sea" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#112d4c"/><stop offset="1" stop-color="#07172c"/></linearGradient>
+                <linearGradient id="ggumFill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d6bd83"/><stop offset="1" stop-color="#927444"/></linearGradient>
+                <linearGradient id="doriFill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8da6cd"/><stop offset="1" stop-color="#435f8b"/></linearGradient>
+                <linearGradient id="sikFill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e9cda0"/><stop offset="1" stop-color="#a27d5d"/></linearGradient>
+                <linearGradient id="winterFill" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9f0f4"/><stop offset="1" stop-color="#789eb4"/></linearGradient>
+                <pattern id="mapGrid" width="42" height="42" patternUnits="userSpaceOnUse"><path d="M42 0H0V42" fill="none" stroke="#c3d4e6" stroke-opacity=".055" stroke-width="1"/></pattern>
+                <filter id="landShadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="12"/></filter>
+              </defs>
+              <rect x="0" y="0" width="1000" height="570" rx="22" fill="url(#sea)"/>
+              <rect x="0" y="0" width="1000" height="570" rx="22" fill="url(#mapGrid)"/>
+              <g class="map-sea-lines" fill="none" stroke="#8ba7c2" stroke-opacity=".12">
+                <path d="M0 120C170 170 240 70 420 120S700 180 1000 95"/><path d="M0 420C180 350 300 470 500 410S780 350 1000 440"/><path d="M100 0C170 160 100 300 190 570"/><path d="M830 0C760 190 870 350 790 570"/>
+              </g>
+              <g class="map-compass"><circle cx="900" cy="94" r="36"/><path d="M900 52V136M858 94H942M900 64L911 94L900 124L889 94Z"/><text x="900" y="42">N</text></g>
+              <g class="map-nation nation-ggum" data-nation="ggum_song_union" role="button" tabindex="0" aria-label="껌•송 연합국 선택">
+                <path d="M166 128L208 88L266 79L310 97L352 74L411 91L452 75L503 103L555 91L604 117L650 108L688 145L675 190L707 222L685 265L701 306L666 341L632 351L605 388L557 394L532 426L485 414L450 440L406 419L363 438L327 410L284 420L249 383L207 378L194 342L155 318L166 277L137 247L157 206L137 168Z" fill="url(#ggumFill)"/>
+                <path d="M204 145L253 111L301 126L347 104L395 123L445 104L492 133L550 119L606 147L645 157L632 207L661 237L642 280L657 309L614 340L577 352L548 381L503 380L466 400L426 383L382 402L343 383L302 391L270 359L228 353L216 320L179 296L190 261L165 237L185 206L169 178Z" fill="none" stroke="#fff2d2" stroke-opacity=".28" stroke-width="2"/>
+                <text x="401" y="246" class="map-label">껌•송 연합국</text><text x="401" y="270" class="map-sub">GGUM-SONG UNION</text>
+                <circle cx="402" cy="190" r="7" class="capital-dot"/><circle cx="402" cy="190" r="17" class="capital-ring"/><text x="423" y="194" class="capital-label">아우렐리온</text>
+              </g>
+              <g class="map-nation nation-winter" data-nation="winter_federation" role="button" tabindex="0" aria-label="윈터 연방 선택">
+                <path d="M703 86L746 61L795 74L826 55L866 78L908 68L938 103L921 139L946 173L923 209L883 217L855 244L813 225L780 241L746 216L713 224L689 193L704 159L680 126Z" fill="url(#winterFill)"/>
+                <path d="M734 104L773 84L813 97L845 78L883 100L912 111L899 145L922 176L896 196L861 207L837 221L799 207L772 222L744 199L713 197L725 165L705 137Z" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2"/>
+                <text x="818" y="151" class="map-label">윈터 연방</text><text x="818" y="172" class="map-sub">WINTER FEDERATION</text>
+                <circle cx="817" cy="112" r="6" class="capital-dot"/><circle cx="817" cy="112" r="15" class="capital-ring"/><text x="837" y="116" class="capital-label">설휘아</text>
+              </g>
+              <g class="map-nation nation-dori is-selected" data-nation="dori_kingdom" role="button" tabindex="0" aria-label="돌이 왕국 선택">
+                <path d="M680 293L720 278L761 296L793 278L834 297L850 335L830 369L843 407L812 436L793 476L754 470L730 493L693 467L666 438L678 402L654 374L672 340Z" fill="url(#doriFill)"/>
+                <path d="M697 313L727 300L761 317L792 300L818 318L833 348L815 373L827 406L800 431L783 458L751 454L728 471L697 448L681 421L691 396L669 372L687 345Z" fill="none" stroke="#e2ebfb" stroke-opacity=".35" stroke-width="2"/>
+                <text x="750" y="377" class="map-label">돌이 왕국</text><text x="750" y="398" class="map-sub">DORI KINGDOM</text>
+                <circle cx="750" cy="330" r="6" class="capital-dot"/><circle cx="750" cy="330" r="15" class="capital-ring"/><text x="770" y="334" class="capital-label">로키아</text>
+              </g>
+              <g class="map-nation nation-sik" data-nation="sikbbangi_kingdom" role="button" tabindex="0" aria-label="식빵이 왕국 선택">
+                <path d="M294 438L332 419L372 430L401 419L440 436L465 464L459 501L426 519L397 514L363 531L330 512L295 516L273 484Z" fill="url(#sikFill)"/>
+                <path d="M311 447L342 434L372 445L403 434L432 448L451 473L445 495L416 507L395 500L363 517L335 499L305 503L289 480Z" fill="none" stroke="#fff2df" stroke-opacity=".45" stroke-width="2"/>
+                <text x="369" y="474" class="map-label">식빵이 왕국</text><text x="369" y="495" class="map-sub">SIKBBANGI KINGDOM</text>
+                <circle cx="370" cy="448" r="6" class="capital-dot"/><circle cx="370" cy="448" r="15" class="capital-ring"/><text x="390" y="452" class="capital-label">브레드하임</text>
+              </g>
+              <g class="map-route" fill="none" stroke="#e9d19b" stroke-width="2" stroke-dasharray="5 8" opacity=".62"><path d="M402 190Q580 140 817 112"/><path d="M402 190Q570 285 750 330"/><path d="M402 190Q380 340 370 448"/><path d="M750 330Q650 410 370 448"/></g>
+              <g class="map-notes"><text x="44" y="524">INFINITY CONTINENT</text><text x="956" y="524" text-anchor="end">FOUR NATIONS · SHARED HISTORY</text></g>
+            </svg>
+          </div>
+          <div class="map-legend"><span><i class="legend-dot dot-ggum"></i>껌•송 연합국</span><span><i class="legend-dot dot-dori"></i>돌이 왕국</span><span><i class="legend-dot dot-sik"></i>식빵이 왕국</span><span><i class="legend-dot dot-winter"></i>윈터 연방</span></div>
+        </div>
+
+        <aside class="selected-card" id="selected-panel" aria-live="polite">
+          <div class="selected-loading"><span class="loading-orb"></span><p>국가 기록을 불러오고 있습니다.</p></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section-block nation-section">
+      <div class="section-heading">
+        <div><div class="eyebrow">02 / SOVEREIGN PROFILES</div><h2>네 개의 주권국</h2><p>각 국가는 고유한 정체성과 발전 방향을 가진 독립 문명입니다.</p></div>
+        <span class="section-count">FOUR REALMS <b>04 / 04</b></span>
+      </div>
+      <div class="nation-grid" id="nation-grid"></div>
+    </section>
+
+    <section class="bottom-grid">
+      <section class="info-panel">
+        <div class="panel-heading"><div><div class="eyebrow">03 / DIPLOMATIC NETWORK</div><h2>4국 외교 관계</h2><p>주권을 존중하는 여섯 개의 양자 협정</p></div><span class="panel-icon">◎</span></div>
+        <div class="relation-list" id="relation-list"></div>
+      </section>
+      <section class="info-panel event-panel">
+        <div class="panel-heading"><div><div class="eyebrow">04 / WORLD EVENTS</div><h2>세계의 현재</h2><p>네 나라가 함께 만들어 가는 주요 행사</p></div><span class="panel-icon">✧</span></div>
+        <div class="event-list" id="event-list"></div>
+      </section>
+    </section>
+
+    <section class="section-block chronicle-section">
+      <div class="section-heading"><div><div class="eyebrow">05 / LIVING HISTORY</div><h2>세계 연대기</h2><p>왕국력 1년부터 인피니티 시대까지 이어지는 네 나라의 공동 역사.</p></div><span class="section-count">CHRONICLES <b id="chronicle-count">11 RECORDS</b></span></div>
+      <div class="chronicle-track" id="chronicle-track"></div>
+    </section>
+
+    <section class="council-banner">
+      <div class="council-seal">✦</div><div><div class="eyebrow">THE FOUR-NATION CIVILIZATION COUNCIL</div><h2>서로 다른 네 나라, 함께 이어지는 하나의 세계.</h2><p>껌•송 연합국 · 돌이 왕국 · 식빵이 왕국 · 윈터 연방</p></div>
+      <div class="council-year">YEAR <b>100</b><small>INFINITY ERA</small></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>DORI WORLD · INFINITE KINGDOM</span>
+    <span>FOUR SOVEREIGN NATIONS · ONE SHARED WORLD</span>
+  </footer>
+</div>
+<script defer src="../js/supabase.min.js"></script>
+<script defer src="./kingdom.js?v=20261110-four-nations-1"></script>
+<script defer src="../js/doldol-theme.js?v=20261023-notification-center-4"></script>
+<script defer src="../js/dori-sound.js?v=20261009-5"></script>
+<script defer src="../js/hancom-weight-normalizer.js?v=20261014-1"></script>
+</body>
+</html>
