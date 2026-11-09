@@ -11,6 +11,10 @@ const applicationGrid=document.querySelector("#application-grid");
 const loreNote=document.querySelector("#doronium-lore-note");
 const archiveStatus=document.querySelector("#museum-archive-status");
 const specimenPagination=document.querySelector("#specimen-pagination");
+const randomSpecimenButton=document.querySelector("#random-specimen");
+const dialogFavoriteButton=document.querySelector("#dialog-favorite");
+const dialogPrevButton=document.querySelector("#dialog-prev");
+const dialogNextButton=document.querySelector("#dialog-next");
 const specimenPrev=document.querySelector("#specimen-prev");
 const specimenNext=document.querySelector("#specimen-next");
 const specimenPageIndicator=document.querySelector("#specimen-page-indicator");
@@ -22,13 +26,14 @@ const visitedProgress=document.querySelector("#visited-progress");
 const dialog=document.querySelector("#specimen-dialog");
 const dialogCanvas=document.querySelector("#specimen-canvas");
 const toastEl=document.querySelector("#museum-toast");
-let activeFilter="all",activeViewer=null,toastTimer=0,viewed=new Set(),activeSpecimenPage=0,lastSpecimenPageSize=0;
+let activeFilter="all",activeViewer=null,toastTimer=0,viewed=new Set(),favorites=new Set(),activeSpecimenPage=0,lastSpecimenPageSize=0,activeDialogItem=null;
 try{
  const saved=JSON.parse(localStorage.getItem("doriMuseumViewed.v2")||"[]");
  if(Array.isArray(saved))viewed=new Set(saved.filter(id=>typeof id==="string"));
 }catch{viewed=new Set();}
+try{const saved=JSON.parse(localStorage.getItem("doriMuseumFavorites.v1")||"[]");if(Array.isArray(saved))favorites=new Set(saved.filter(id=>typeof id==="string"));}catch{favorites=new Set();}
 
-const filterNames={base:"기초 재료",variant:"변형 도로늄",special:"특수 도로늄",stones:"돌피니티 스톤"};
+const filterNames={base:"기초 재료",variant:"변형 도로늄",special:"특수 도로늄",stones:"돌피니티 스톤",favorites:"즐겨찾기"};
 const SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
 const SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";;
 const legacyIds={
@@ -149,7 +154,7 @@ function renderGem(item){
 function visibleSpecimens(){
  const q=searchInput.value.trim().toLocaleLowerCase();
  return specimens.filter(item=>{
-  const matchesFilter=activeFilter==="all"||item.group===activeFilter;
+  const matchesFilter=activeFilter==="all"||(activeFilter==="favorites"?favorites.has(item.id):item.group===activeFilter);
   const matchesText=!q||[item.name,item.en,item.desc,item.abilities,item.process,item.recipe,item.sources,item.note].some(value=>String(value??"").toLocaleLowerCase().includes(q));
   return matchesFilter&&matchesText;
  });
@@ -178,9 +183,9 @@ function renderCards(){
  grid.classList.remove("page-turn-in");void grid.offsetWidth;grid.classList.add("page-turn-in");
  grid.innerHTML=pageItems.map(item=>{
   const number=String(specimens.indexOf(item)+1).padStart(3,"0");
-  const seen=viewed.has(item.id);
+  const seen=viewed.has(item.id),saved=favorites.has(item.id);
   return `<button class="specimen-card" type="button" data-specimen="${item.id}" style="--gem:${item.color};--gem-glow:${item.glow}" aria-label="${item.name} 상세 정보 열기">
-   <div class="specimen-visual"><span class="specimen-number">NO. ${number}</span><span class="specimen-grade">${item.grade}</span>${renderGem(item)}<small class="visual-disclaimer">반투명 보석 · 전시용 참고 모형</small></div>
+   <div class="specimen-visual"><span class="specimen-number">NO. ${number}</span><span class="specimen-grade">${item.grade}</span><span class="specimen-favorite-mark" aria-label="${saved?"즐겨찾기 저장됨":"즐겨찾기 미저장"}">${saved?"★":"☆"}</span>${renderGem(item)}<small class="visual-disclaimer">반투명 보석 · 전시용 참고 모형</small></div>
    <div class="specimen-copy"><small>${item.en}</small><strong>${item.name}</strong><span>${item.desc}</span></div>
    <div class="specimen-open"><span>${seen?"관람한 표본":"전시 기록 · 상세 보기"}</span><b>↗</b></div>
   </button>`;
@@ -193,12 +198,14 @@ function updateProgress(){
  visitedCount.textContent=String(viewed.size);
  visitedProgress.style.width=(specimens.length?viewed.size/specimens.length*100:0)+"%";
  try{localStorage.setItem("doriMuseumViewed.v2",JSON.stringify([...viewed]));}catch{}
+ try{localStorage.setItem("doriMuseumFavorites.v1",JSON.stringify([...favorites]));}catch{}
 }
 function showToast(message){
  toastEl.textContent=message;toastEl.classList.add("show");clearTimeout(toastTimer);
  toastTimer=setTimeout(()=>toastEl.classList.remove("show"),2200);
 }
 function fillDialog(item){
+ activeDialogItem=item;
  const index=specimens.indexOf(item)+1;
  document.querySelector("#dialog-class").textContent=`NEWSPAPER SPECIMEN / ${String(index).padStart(3,"0")} · ${item.grade}`;
  document.querySelector("#dialog-title").textContent=item.name;
@@ -208,6 +215,8 @@ function fillDialog(item){
  document.querySelector("#dialog-abilities").textContent=item.abilities;
  document.querySelector("#dialog-process").textContent=item.manufacturing+"\n\n추가 기록: "+item.note;
  document.querySelector("#dialog-source").textContent=item.sources+" 돌이신문. "+item.note+" 신문 원문에서 확인되는 기록만 반영했습니다.";
+ if(dialogFavoriteButton){dialogFavoriteButton.textContent=favorites.has(item.id)?"★ 즐겨찾기 저장됨":"☆ 즐겨찾기 추가";dialogFavoriteButton.setAttribute("aria-pressed",String(favorites.has(item.id)));}
+ const position=specimens.indexOf(item);if(dialogPrevButton)dialogPrevButton.disabled=position<=0;if(dialogNextButton)dialogNextButton.disabled=position>=specimens.length-1;
 }
 function openSpecimen(item){
  if(activeViewer){activeViewer.dispose();activeViewer=null;}
@@ -244,6 +253,10 @@ searchInput.addEventListener("input",()=>{activeSpecimenPage=0;renderCards();});
 specimenPrev?.addEventListener("click",()=>setSpecimenPage(activeSpecimenPage-1));
 specimenNext?.addEventListener("click",()=>setSpecimenPage(activeSpecimenPage+1));
 document.querySelector("#dialog-done").addEventListener("click",()=>dialog.close());
+dialogFavoriteButton?.addEventListener("click",()=>{if(!activeDialogItem)return;const id=activeDialogItem.id;if(favorites.has(id))favorites.delete(id);else favorites.add(id);updateProgress();fillDialog(activeDialogItem);renderCards();showToast(favorites.has(id)?"즐겨찾기에 보관했습니다.":"즐겨찾기에서 제거했습니다.");});
+function moveDialogSpecimen(direction){if(!activeDialogItem)return;const list=visibleSpecimens();const index=list.findIndex(item=>item.id===activeDialogItem.id);const target=list[index+direction];if(target)openSpecimen(target);}
+dialogPrevButton?.addEventListener("click",()=>moveDialogSpecimen(-1));dialogNextButton?.addEventListener("click",()=>moveDialogSpecimen(1));
+randomSpecimenButton?.addEventListener("click",()=>{const pool=visibleSpecimens();if(!pool.length){showToast("선택한 조건에 표본이 없습니다.");return;}const item=pool[Math.floor(Math.random()*pool.length)];openSpecimen(item);});
 dialog.addEventListener("close",()=>{if(activeViewer){activeViewer.dispose();activeViewer=null;}});
 document.querySelector("#reset-visit").addEventListener("click",()=>{
  viewed.clear();updateProgress();renderCards();showToast("관람 기록을 초기화했습니다.");
@@ -263,7 +276,7 @@ function setupChapterDeck(){
  pages.forEach((page,index)=>{page.classList.add("museum-page");page.dataset.chapter=String(index);page.setAttribute("aria-label",chapterNames[index]||`전시실 ${index+1}`);});
  const steps=document.querySelector("#chapter-steps"),counter=document.querySelector("#chapter-counter"),currentTitle=document.querySelector("#chapter-current-title");
  const previous=document.querySelector("#chapter-prev"),next=document.querySelector("#chapter-next");
- let current=0,scrollFrame=0;
+ let current=0,scrollFrame=0,swipeStart=null,suppressSwipeClick=false;
  steps.innerHTML=pages.map((page,index)=>`<button type="button" class="chapter-step" data-chapter-step="${index}" aria-label="${index+1}번 전시실: ${chapterNames[index]}" aria-current="${index===0?"step":"false"}"><span></span></button>`).join("");
  function paint(index){
   current=Math.max(0,Math.min(pages.length-1,index));
@@ -276,6 +289,10 @@ function setupChapterDeck(){
  previous.addEventListener("click",()=>go(current-1));next.addEventListener("click",()=>go(current+1));
  steps.addEventListener("click",event=>{const button=event.target.closest("[data-chapter-step]");if(button)go(Number(button.dataset.chapterStep));});
  deck.addEventListener("scroll",()=>{if(scrollFrame)return;scrollFrame=requestAnimationFrame(()=>{scrollFrame=0;if(deck.clientWidth)paint(Math.round(deck.scrollLeft/deck.clientWidth));});},{passive:true});
+ deck.addEventListener("pointerdown",event=>{if(event.pointerType==="mouse"&&event.button!==0)return;if(event.target.closest("input,button,a,dialog"))return;swipeStart={x:event.clientX,y:event.clientY,target:event.target};},{passive:true});
+ deck.addEventListener("pointerup",event=>{if(!swipeStart)return;const dx=event.clientX-swipeStart.x,dy=event.clientY-swipeStart.y,startTarget=swipeStart.target;swipeStart=null;if(Math.abs(dx)<58||Math.abs(dx)<Math.abs(dy)*1.25)return;suppressSwipeClick=true;setTimeout(()=>{suppressSwipeClick=false;},450);if(startTarget.closest(".specimen-grid")){setSpecimenPage(activeSpecimenPage+(dx<0?1:-1));return;}go(current+(dx<0?1:-1));});
+ deck.addEventListener("pointercancel",()=>{swipeStart=null;});
+ deck.addEventListener("click",event=>{if(!suppressSwipeClick)return;event.preventDefault();event.stopPropagation();},true);
  deck.addEventListener("wheel",event=>{
   if(Math.abs(event.deltaY)<Math.abs(event.deltaX)||Math.abs(event.deltaY)<18)return;
   const page=pages[current];if(!page)return;
@@ -288,6 +305,8 @@ function setupChapterDeck(){
   if(["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName))return;
   if(event.key==="ArrowRight"){event.preventDefault();go(current+1);}
   if(event.key==="ArrowLeft"){event.preventDefault();go(current-1);}
+  if(event.key==="Home"){event.preventDefault();go(0);}
+  if(event.key==="End"){event.preventDefault();go(pages.length-1);}
  });
  document.addEventListener("click",event=>{
   const anchor=event.target.closest('a[href^="#"]');if(!anchor)return;
