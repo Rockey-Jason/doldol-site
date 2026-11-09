@@ -654,6 +654,7 @@ async function load(){
   if(authError)throw authError;
   if(!session){
    user=null;
+   window.dispatchEvent(new CustomEvent("dori:lounge-member-locked"));
    $("memberName").textContent="로그인이 필요합니다";
    $("memberSub").textContent="메인 사이트에서 로그인해 주세요.";
    $("memberLevel").textContent="비회원";
@@ -684,6 +685,7 @@ async function load(){
   if(profileResult.error)throw profileResult.error;
   const p=profileResult.data;
   if(!p){
+   window.dispatchEvent(new CustomEvent("dori:lounge-member-locked"));
    setLock("회원 프로필을 찾을 수 없습니다","로그인은 확인됐지만 현재 로그인 ID와 일치하는 users 회원 정보가 없습니다. 회원 프로필 연결이 필요합니다. 이 화면의 오류 코드는 PROFILE_NOT_FOUND 입니다.");
    console.error("Dori Lounge profile missing for authenticated user",user.id);
    return;
@@ -694,6 +696,7 @@ async function load(){
   await loadSharedBooks(client);
   const level=Number(p.user_level||1);
   if(p.is_admin!==true&&level<2){
+   window.dispatchEvent(new CustomEvent("dori:lounge-member-locked"));
    setLock("VIP 멤버십이 필요합니다","현재 등급은 "+(levels[level]||"일반")+"입니다. 프리미엄 등급 이상부터 라운지를 이용할 수 있습니다.");
    return;
   }
@@ -725,6 +728,7 @@ async function load(){
   renderBooks();
   updateVisit();
   greeting();
+  window.dispatchEvent(new CustomEvent("dori:lounge-member-ready",{detail:{userId:user.id,name:p.name||session.user.email||"회원",level:Number(p.user_level||1),isAdmin:p.is_admin===true}}));
  }catch(e){
   console.error("Dori Lounge account load failed at: "+stage,e);
   const code=String(e&&e.code||e&&e.status||"UNKNOWN");
@@ -732,6 +736,7 @@ async function load(){
   if(/permission|policy|row.level|rls/i.test(String(e&&e.message||"")))desc="단계: "+stage+" · 회원 데이터 조회 권한이 거부되었습니다. 로그인 계정의 RLS 접근 정책을 확인해야 합니다. 오류 코드: "+code;
   else if(/network|fetch|timeout/i.test(String(e&&e.message||"")))desc="단계: "+stage+" · Supabase 서버에 연결하지 못했습니다. 네트워크 연결 후 다시 시도해 주세요.";
   else if(/column|schema cache|does not exist/i.test(String(e&&e.message||"")))desc="단계: "+stage+" · 요청한 데이터 필드가 DB 구조와 일치하지 않습니다. 오류 코드: "+code;
+  window.dispatchEvent(new CustomEvent("dori:lounge-member-locked"));
   setLock("회원 정보 연결 오류",desc);
  }
 }
@@ -781,7 +786,7 @@ $("collectionSearch").addEventListener("input",()=>{const q=$("collectionSearch"
 $("copyCollection").addEventListener("click",()=>copy("돌이 라운지 컬렉션\n"+items.map(x=>x.name+" · "+(owned.has(x.id)?"보유":"미보유")+(prefs.favorites.includes(x.id)?" · 즐겨찾기":"")).join("\n"),"컬렉션 목록을 복사했어요."));
 $("shopSearch").addEventListener("input",paintShop);
 $("faqSearch").addEventListener("input",()=>{const q=$("faqSearch").value.trim().toLowerCase();document.querySelectorAll("#faqList details").forEach(d=>d.classList.toggle("hidden",!d.textContent.toLowerCase().includes(q)))});
-const hash=location.hash.slice(1);if(["home","salon","library","gallery","concierge","shop"].includes(hash))nav(hash);
+const hash=location.hash.slice(1);if(["home","salon","library","gallery","concierge","hotel","shop"].includes(hash))nav(hash);
 read();loadBookState();greeting();
 $("retryAccount").addEventListener("click",async()=>{
  const button=$("retryAccount");
