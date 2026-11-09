@@ -45,6 +45,34 @@
     { id: "concierge", icon: "♧", name: "컨시어지", desc: "맞춤 안내 요청" }
   ];
 
+  const rewards = [
+    { id: "door-sign", name: "로열 골드 도어 플레이트", icon: "⌂", price: 120, description: "객실 입구에 골드 시그니처 명패를 장식합니다." },
+    { id: "crystal-orb", name: "오로라 크리스탈 오브", icon: "◇", price: 220, description: "객실에 은은한 크리스탈 빛을 더합니다." },
+    { id: "gold-tray", name: "로열 웰컴 트레이", icon: "♜", price: 280, description: "침대 옆 테이블을 특별한 웰컴 데스크로 꾸밉니다." },
+    { id: "garden-flower", name: "시크릿 가든 플라워", icon: "❋", price: 250, description: "객실 한편에 시그니처 꽃 장식을 놓습니다." }
+  ];
+  const events = [
+    { id: "tea", icon: "♨", category: "CULINARY EXPERIENCE", season: "THE AFTERNOON COLLECTION", title: "로열 애프터눈 티 세레머니", description: "호텔 파티시에가 준비한 오늘의 디저트와 시그니처 블렌딩 티를 즐기는 특별한 오후입니다." },
+    { id: "garden", icon: "❋", category: "GARDEN FESTIVAL", season: "THE SECRET GARDEN SERIES", title: "시크릿 가든 라이트 워크", description: "정원 산책로의 조명이 켜지는 시간, 고요한 가든 코스를 따라 특별한 순간을 기록해 보세요." },
+    { id: "piano", icon: "♫", category: "MUSIC GALA", season: "THE ROYAL SOUND SERIES", title: "로열 피아노 갈라 나이트", description: "로열 살롱의 오리지널 연주곡과 함께 여유로운 음악 감상 시간을 가져 보세요." },
+    { id: "gallery", icon: "◇", category: "ART & CULTURE", season: "THE CRYSTAL ART SERIES", title: "크리스탈 아트 프라이빗 투어", description: "호텔 갤러리에 전시된 오브제와 크리스탈 컬렉션을 둘러보는 프라이빗 투어입니다." },
+    { id: "midnight", icon: "✧", category: "NIGHT EXPERIENCE", season: "THE MIDNIGHT COLLECTION", title: "미드나이트 코코아 라운지", description: "잔잔한 음악과 따뜻한 코코아가 있는 심야 라운지 프로그램에 참여해 보세요." }
+  ];
+  const missions = [
+    { id: "attendance", icon: "♛", title: "웰컴 혜택 수령", detail: "오늘의 출석 선물을 받아 보세요.", points: 45, exp: 12 },
+    { id: "checkin", icon: "⌂", title: "객실 체크인", detail: "오늘의 객실에 체크인해 보세요.", points: 35, exp: 10 },
+    { id: "room-design", icon: "✧", title: "나만의 객실 꾸미기", detail: "객실 테마나 인테리어를 변경해 보세요.", points: 40, exp: 12 },
+    { id: "music", icon: "♫", title: "뮤직 리셉션", detail: "로열 라운지 음악을 재생해 보세요.", points: 35, exp: 10 },
+    { id: "service", icon: "♧", title: "호텔 서비스 이용", detail: "체크인 후 호텔 서비스를 한 번 요청하세요.", points: 45, exp: 12 },
+    { id: "event", icon: "✦", title: "오늘의 이벤트 참여", detail: "오늘 준비된 호텔 이벤트에 참여해 보세요.", points: 50, exp: 15 }
+  ];
+  const activities = [
+    { id: "tea", points: 35, exp: 10, name: "애프터눈 티 세레머니" },
+    { id: "garden", points: 35, exp: 10, name: "시크릿 가든 산책" },
+    { id: "reading", points: 35, exp: 10, name: "로열 독서 클럽" },
+    { id: "concert", points: 35, exp: 10, name: "피아노 리사이틀" }
+  ];
+
   const $ = id => document.getElementById(id);
   let member = null;
   let storageKey = "";
@@ -52,17 +80,23 @@
 
   function createDefaultState() {
     return {
-      version: 1,
+      version: 2,
       selectedRoom: "marble-suite",
       rooms: {},
       activeStay: null,
       history: [],
-      requests: []
+      requests: [],
+      hotelPoints: 0,
+      hotelExp: 0,
+      attendance: { lastDate: "", streak: 0, total: 0, dates: [] },
+      daily: { date: "", attendanceClaimed: false, eventClaimed: false, missions: {}, activityClaims: [], activityBonusClaimed: false, missionBonusClaimed: false },
+      rewardOwned: [],
+      totalActivities: 0
     };
   }
 
   function defaultRoomSettings() {
-    return { theme: "marble", bed: "classic", light: "warm", decor: "crystal" };
+    return { theme: "marble", bed: "classic", light: "warm", decor: "crystal", reward: "none" };
   }
 
   function roomSettings(roomId) {
@@ -72,8 +106,13 @@
     const saved = state.rooms[roomId];
     const defaults = defaultRoomSettings();
     Object.keys(defaults).forEach(key => {
-      const valid = choices[key].some(option => option.value === saved[key]);
-      if (!valid) saved[key] = defaults[key];
+      if (key === "reward") {
+        const valid = saved.reward === "none" || (rewards.some(item => item.id === saved.reward) && state.rewardOwned.includes(saved.reward));
+        if (!valid) saved.reward = "none";
+      } else {
+        const valid = choices[key].some(option => option.value === saved[key]);
+        if (!valid) saved[key] = defaults[key];
+      }
     });
     return saved;
   }
@@ -143,13 +182,30 @@
     state = createDefaultState();
     try {
       const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
-      if (saved && typeof saved === "object" && saved.version === 1) {
+      if (saved && typeof saved === "object" && [1, 2].includes(Number(saved.version))) {
         state = {
           ...createDefaultState(),
           ...saved,
+          version: 2,
           rooms: saved.rooms && typeof saved.rooms === "object" ? saved.rooms : {},
           history: Array.isArray(saved.history) ? saved.history.slice(0, 30) : [],
-          requests: Array.isArray(saved.requests) ? saved.requests.slice(0, 30) : []
+          requests: Array.isArray(saved.requests) ? saved.requests.slice(0, 30) : [],
+          hotelPoints: Math.max(0, Math.floor(Number(saved.hotelPoints) || 0)),
+          hotelExp: Math.max(0, Math.floor(Number(saved.hotelExp) || 0)),
+          attendance: {
+            lastDate: String(saved.attendance && saved.attendance.lastDate || ""),
+            streak: Math.max(0, Math.floor(Number(saved.attendance && saved.attendance.streak) || 0)),
+            total: Math.max(0, Math.floor(Number(saved.attendance && saved.attendance.total) || 0)),
+            dates: Array.isArray(saved.attendance && saved.attendance.dates) ? saved.attendance.dates.slice(-30) : []
+          },
+          daily: saved.daily && typeof saved.daily === "object" ? {
+            ...createDefaultState().daily,
+            ...saved.daily,
+            missions: saved.daily.missions && typeof saved.daily.missions === "object" ? saved.daily.missions : {},
+            activityClaims: Array.isArray(saved.daily.activityClaims) ? saved.daily.activityClaims : []
+          } : createDefaultState().daily,
+          rewardOwned: Array.isArray(saved.rewardOwned) ? saved.rewardOwned.filter(id => rewards.some(item => item.id === id)) : [],
+          totalActivities: Math.max(0, Math.floor(Number(saved.totalActivities) || 0))
         };
       }
     } catch (error) {
@@ -160,6 +216,7 @@
       state.selectedRoom = rooms.find(canUseRoom)?.id || "marble-suite";
     }
     rooms.forEach(room => roomSettings(room.id));
+    ensureDailyState();
     if (state.activeStay && !rooms.some(room => room.id === state.activeStay.roomId)) {
       state.activeStay = null;
     }
@@ -251,6 +308,13 @@
       scene.dataset.light = settings.light;
       scene.dataset.bed = settings.bed;
       scene.dataset.decor = settings.decor;
+      scene.dataset.reward = settings.reward || "none";
+      const reward = rewards.find(item => item.id === settings.reward);
+      if ($("hotelRewardObject")) {
+        $("hotelRewardObject").textContent = reward ? reward.icon : "";
+        $("hotelRewardObject").hidden = !reward;
+        $("hotelRewardObject").setAttribute("aria-label", reward ? reward.name : "");
+      }
     }
     if ($("hotelSelectedRoomName")) $("hotelSelectedRoomName").textContent = room.name;
     if ($("hotelSelectedRoomDescription")) $("hotelSelectedRoomDescription").textContent = room.description;
@@ -390,6 +454,7 @@
     renderStay();
     renderServiceLog();
     renderHistory();
+    renderEngagement();
     syncMusicText();
   }
 
@@ -416,6 +481,7 @@
     roomSettings(room.id)[key] = value;
     save();
     renderScene();
+    completeMission("room-design");
     showToast("객실 인테리어를 저장했어요.");
   }
 
@@ -433,6 +499,7 @@
     const now = new Date().toISOString();
     state.activeStay = { roomId: room.id, checkInAt: now, services: [] };
     save();
+    completeMission("checkin");
     render();
     showToast(room.name + " 가상 체크인 완료!");
   }
@@ -479,8 +546,10 @@
     state.activeStay.services = Array.isArray(state.activeStay.services) ? state.activeStay.services : [];
     state.activeStay.services.push(entry.id);
     save();
+    completeMission("service");
     renderServiceLog();
     renderStay();
+    renderEngagement();
     showToast(service.name + " 요청이 이용 기록에 저장됐어요.");
   }
 
