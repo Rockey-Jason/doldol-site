@@ -268,3 +268,15 @@
 .hotel-experience-footer>span{color:#947543;font-size:10px}
 .hotel-experience-footer button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:600px){.hotel-experience-dialog{padding:23px 18px 18px;border-radius:19px}.hotel-experience-dialog h3{font-size:20px}.hotel-experience-footer{align-items:flex-start;flex-direction:column}.hotel-experience-footer button{width:100%}}
+
+
+.hotel-member-rate{margin-top:-5px;margin-bottom:10px;color:rgba(255,231,184,.76);font:8px/1.4 Arial,sans-serif;letter-spacing:.13em}
+.hotel-experience-history-panel{margin-top:16px}
+.hotel-experience-log{display:grid;gap:8px}
+.hotel-experience-log-item{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line,rgba(75,66,47,.12));border-radius:12px;background:rgba(255,255,255,.52)}
+.hotel-experience-log-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:11px;background:rgba(176,145,89,.12);color:#947542;font-size:15px}
+.hotel-experience-log-copy{display:grid;gap:4px;min-width:0}
+.hotel-experience-log-copy strong{overflow:hidden;font-size:10px;font-weight:400;text-overflow:ellipsis;white-space:nowrap}
+.hotel-experience-log-copy small{overflow:hidden;color:var(--muted,#77736a);font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.hotel-experience-log-time{color:#8a7046;font-size:9px;white-space:nowrap}
+@media(max-width:650px){.hotel-experience-log-item{grid-template-columns:32px minmax(0,1fr);gap:8px}.hotel-experience-log-icon{width:32px;height:32px}.hotel-experience-log-time{grid-column:2}}
