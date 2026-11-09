@@ -506,18 +506,158 @@ function renderReaderToc(){
  list.replaceChildren();entries.forEach(entry=>{const li=document.createElement("li");li.textContent=entry;list.append(li)});
  panel.hidden=button.getAttribute("aria-expanded")!=="true";button.hidden=!entries.length;
 }
-function fitBookEditorPages(textarea,meta){
- if(!textarea||!meta)return;
- textarea.style.height="auto";
- const minimum=Math.max(280,Math.floor(window.innerHeight*.58));
- textarea.style.height=Math.max(minimum,textarea.scrollHeight)+"px";
- const style=getComputedStyle(textarea);
- const pageHeight=parseFloat(style.getPropertyValue("--editor-page-height"))||920;
- const verticalPadding=(parseFloat(style.paddingTop)||0)+(parseFloat(style.paddingBottom)||0);
- const usablePageHeight=Math.max(240,pageHeight-verticalPadding);
- const contentHeight=Math.max(0,textarea.scrollHeight-verticalPadding);
- const pages=Math.max(1,Math.ceil(contentHeight/usablePageHeight));
- meta.textContent=pages+"페이지 · 페이지 끝에 도달하면 다음 페이지로 자동 이어집니다";
+
+function getEditorPageInputs(card){
+ return Array.from(card.querySelectorAll(".book-editor-page-input"));
+}
+function getEditorChapterText(card){
+ return getEditorPageInputs(card).map(input=>input.value||"").join("");
+}
+function paginateBookEditorText(content,template){
+ const style=getComputedStyle(template),sheet=template.closest(".book-editor-page-sheet");
+ const sheetStyle=getComputedStyle(sheet);
+ const paddingTop=parseFloat(style.paddingTop)||0,paddingBottom=parseFloat(style.paddingBottom)||0;
+ const borderTop=parseFloat(style.borderTopWidth)||0,borderBottom=parseFloat(style.borderBottomWidth)||0;
+ const usableHeight=Math.max(120,template.clientHeight-paddingTop-paddingBottom-borderTop-borderBottom);
+ const usableWidth=Math.max(80,template.clientWidth-(parseFloat(style.paddingLeft)||0)-(parseFloat(style.paddingRight)||0));
+ const measure=document.createElement("div");
+ measure.style.cssText=[
+  "position:fixed","left:-20000px","top:0","visibility:hidden","pointer-events:none",
+  "box-sizing:border-box","display:block","margin:0","padding:0","border:0",
+  "width:"+usableWidth+"px","height:auto","min-height:0","max-height:none",
+  "overflow:visible","white-space:pre-wrap","overflow-wrap:anywhere","word-break:normal",
+  "font-family:"+style.fontFamily,"font-size:"+style.fontSize,"font-weight:"+style.fontWeight,
+  "font-style:"+style.fontStyle,"line-height:"+style.lineHeight,"letter-spacing:"+style.letterSpacing
+ ].join(";");
+ document.body.append(measure);
+ const pages=[];let offset=0;
+ while(offset<content.length){
+  let low=1,high=content.length-offset,best=0;
+  const fits=count=>{
+   measure.textContent=content.slice(offset,offset+count)||"\u200b";
+   return measure.getBoundingClientRect().height<=usableHeight+1;
+  };
+  if(fits(high))best=high;
+  else{
+   while(low<=high){
+    const mid=Math.floor((low+high)/2);
+    if(fits(mid)){best=mid;low=mid+1}else high=mid-1;
+   }
+  }
+  best=Math.max(1,best);
+  let cut=best;
+  if(offset+best<content.length){
+   const minBreak=Math.max(offset+1,offset+best-150);
+   const limit=offset+best-1;
+   const newline=content.lastIndexOf("\n",limit);
+   const space=content.lastIndexOf(" ",limit);
+   const tab=content.lastIndexOf("\t",limit);
+   const boundary=Math.max(newline,space,tab);
+   if(boundary>=minBreak)cut=boundary+1-offset;
+  }
+  pages.push(content.slice(offset,offset+cut));
+  offset+=cut;
+ }
+ measure.remove();
+ return pages.length?pages:[""];
+}
+function makeBookEditorPage(card,content,index,total){
+ const sheet=document.createElement("section");sheet.className="book-editor-page-sheet";
+ const top=document.createElement("div");top.className="book-editor-page-heading";
+ const brand=document.createElement("span");brand.textContent="DORI ROYAL LIBRARY";
+ const number=document.createElement("span");number.textContent="PAGE "+String(index+1).padStart(2,"0");
+ top.append(brand,number);
+ const input=document.createElement("textarea");input.className="book-editor-textarea book-editor-page-input";
+ input.rows=10;input.value=content;input.placeholder="이곳에서 자유롭게 이어서 작성하세요. 페이지가 채워지면 다음 페이지로 자동 이동합니다.";
+ input.setAttribute("aria-label","원고 "+(index+1)+"페이지");
+ const bottom=document.createElement("div");bottom.className="book-editor-page-footer";
+ const hint=document.createElement("span");hint.textContent="CONTINUOUS MANUSCRIPT";
+ const pageNo=document.createElement("span");pageNo.textContent=(index+1)+" / "+total;
+ bottom.append(hint,pageNo);
+ input.addEventListener("input",event=>handleBookEditorPageInput(card,input,event));
+ input.addEventListener("compositionend",event=>handleBookEditorPageInput(card,input,event));
+ input.addEventListener("paste",event=>handleBookEditorPaste(event,card,input));
+ sheet.append(top,input,bottom);return sheet;
+}
+function updateBookEditorPageMeta(card){
+ const count=getEditorPageInputs(card).length;
+ const meta=card.querySelector(".book-editor-page-meta");
+ if(meta)meta.textContent=count+"페이지 · 자동 페이지 넘김 켜짐";
+ card.querySelectorAll(".book-editor-page-footer span:last-child").forEach((el,index)=>{el.textContent=(index+1)+" / "+count});
+ card.querySelectorAll(".book-editor-page-heading span:last-child").forEach((el,index)=>{el.textContent="PAGE "+String(index+1).padStart(2,"0")});
+}
+function renderBookEditorPages(card,segments,caret){
+ const pages=card.querySelector(".book-editor-pages");
+ pages.replaceChildren();
+ segments.forEach((segment,index)=>pages.append(makeBookEditorPage(card,segment,index,segments.length)));
+ updateBookEditorPageMeta(card);
+ if(caret){
+  let pageIndex=0,localStart=caret.start,localEnd=caret.end;
+  while(pageIndex<segments.length-1&&(localStart>=segments[pageIndex].length)){
+   localStart-=segments[pageIndex].length;localEnd=Math.max(0,localEnd-segments[pageIndex].length);pageIndex++;
+  }
+  localStart=Math.max(0,Math.min(segments[pageIndex].length,localStart));
+  localEnd=Math.max(localStart,Math.min(segments[pageIndex].length,localEnd));
+  const target=pages.querySelectorAll(".book-editor-page-input")[pageIndex];
+  if(target){
+   target.focus({preventScroll:true});target.setSelectionRange(localStart,localEnd);
+   target.scrollIntoView({block:"center",behavior:"auto"});
+  }
+ }
+}
+function handleBookEditorPageInput(card,activeInput,event){
+ if(event&&event.isComposing)return;
+ const inputs=getEditorPageInputs(card),pageIndex=inputs.indexOf(activeInput);
+ if(pageIndex<0)return;
+ const cursorStart=activeInput.selectionStart??activeInput.value.length;
+ const cursorEnd=activeInput.selectionEnd??cursorStart;
+ const prefix=inputs.slice(0,pageIndex).reduce((sum,input)=>sum+input.value.length,0);
+ const caret={start:prefix+cursorStart,end:prefix+cursorEnd};
+ const content=inputs.map(input=>input.value||"").join("");
+ const nextPages=paginateBookEditorText(content,activeInput);
+ const currentPages=inputs.map(input=>input.value||"");
+ if(nextPages.length===currentPages.length&&nextPages.every((value,index)=>value===currentPages[index])){
+  updateBookEditorPageMeta(card);return;
+ }
+ renderBookEditorPages(card,nextPages,caret);
+}
+function handleBookEditorPaste(event,card,activeInput){
+ const pasted=event.clipboardData&&event.clipboardData.getData("text/plain");
+ if(typeof pasted!=="string"||!pasted.trim())return;
+ const inputs=getEditorPageInputs(card),pageIndex=inputs.indexOf(activeInput);
+ if(pageIndex<0)return;
+ const prefix=inputs.slice(0,pageIndex).reduce((sum,input)=>sum+input.value.length,0);
+ const localStart=activeInput.selectionStart??activeInput.value.length;
+ const localEnd=activeInput.selectionEnd??localStart;
+ const start=prefix+localStart,end=prefix+localEnd;
+ const existing=inputs.map(input=>input.value||"").join("");
+ const combined=existing.slice(0,start)+pasted+existing.slice(end);
+ const lines=combined.replace(/\r\n?/g,"\n").split("\n");
+ const headingPattern=/^\s*(?:(제\s*\d+\s*장|\d+\s*장|chapter\s+\d+)(?:\s*[:：.．)\]—–-]?\s*.*)?|(프롤로그|에필로그|서문|맺음말|부록))\s*$/i;
+ const sections=[];let current=null,headingCount=0,prefixLines=[];
+ lines.forEach(line=>{
+  const match=line.match(headingPattern);
+  if(match){headingCount++;if(current)sections.push(current);current={title:line.trim(),content:""}}
+  else if(current)current.content+=(current.content?"\n":"")+line;
+  else prefixLines.push(line);
+ });
+ if(current)sections.push(current);
+ const firstHeading=lines.findIndex(line=>headingPattern.test(line));
+ const headingAtStart=firstHeading>=0&&lines.slice(0,firstHeading).join("\n").trim()==="";
+ if(headingCount<1||(!headingAtStart&&headingCount<2))return;
+ event.preventDefault();
+ syncBookEditorDraft();
+ const chapterIndex=Array.from($("bookEditorChapters").querySelectorAll(".book-editor-chapter")).indexOf(card);
+ if(chapterIndex<0)return;
+ if(prefixLines.join("\n").trim())sections.unshift({title:editorDraft.chapters[chapterIndex].title,content:prefixLines.join("\n").trim()});
+ editorDraft.chapters.splice(chapterIndex,1,...sections.map(section=>({title:section.title.slice(0,100),content:section.content})));
+ renderBookEditor();
+ const cards=$("bookEditorChapters").querySelectorAll(".book-editor-chapter");
+ const focusIndex=Math.min(chapterIndex+sections.length-1,cards.length-1);
+ const targetPages=cards[focusIndex]?.querySelectorAll(".book-editor-page-input");
+ const target=targetPages&&targetPages[targetPages.length-1];
+ if(target){target.focus();target.setSelectionRange(target.value.length,target.value.length)}
+ toast(sections.length+"개 장으로 자동 분리했습니다.");
 }
 function renderBookEditor(){
  const list=$("bookEditorChapters");list.replaceChildren();
@@ -530,50 +670,16 @@ function renderBookEditor(){
   const titleLabel=document.createElement("label");titleLabel.className="book-editor-field";
   const titleCaption=document.createElement("span");titleCaption.textContent="장 제목";
   const titleInput=document.createElement("input");titleInput.type="text";titleInput.maxLength=100;titleInput.className="book-editor-input";titleInput.value=chapter.title||("제"+(index+1)+"장");titleInput.placeholder="예: 제1장. 첫 번째 이야기";titleInput.setAttribute("aria-label","제"+(index+1)+"장 제목");titleLabel.append(titleCaption,titleInput);
-  const bodyLabel=document.createElement("label");bodyLabel.className="book-editor-field";
-  const bodyCaption=document.createElement("span");bodyCaption.textContent="본문";
-  const bodyInput=document.createElement("textarea");bodyInput.className="book-editor-textarea";bodyInput.rows=10;bodyInput.value=chapter.content||"";bodyInput.placeholder="이곳에 자유롭게 이야기를 이어서 작성하세요. 페이지가 차면 아래쪽으로 다음 페이지가 자동 생성됩니다.";bodyInput.setAttribute("aria-label","제"+(index+1)+"장 본문");
+  const bodyLabel=document.createElement("div");bodyLabel.className="book-editor-field";
+  const bodyCaption=document.createElement("span");bodyCaption.textContent="본문 · 연속 페이지 작성";
+  const pages=document.createElement("div");pages.className="book-editor-pages";
   const pageMeta=document.createElement("div");pageMeta.className="book-editor-page-meta";pageMeta.setAttribute("aria-live","polite");
-  bodyInput.addEventListener("input",()=>fitBookEditorPages(bodyInput,pageMeta));
-  bodyInput.addEventListener("paste",event=>{
-   const pasted=event.clipboardData&&event.clipboardData.getData("text/plain");
-   if(typeof pasted!=="string"||!pasted.trim())return;
-   const start=bodyInput.selectionStart??bodyInput.value.length;
-   const end=bodyInput.selectionEnd??start;
-   const combined=bodyInput.value.slice(0,start)+pasted+bodyInput.value.slice(end);
-   const lines=combined.replace(/\r\n?/g,"\n").split("\n");
-   const headingPattern=/^\s*(?:(제\s*\d+\s*장|\d+\s*장|chapter\s+\d+)(?:\s*[:：.．)\]—–-]?\s*.*)?|(프롤로그|에필로그|서문|맺음말|부록))\s*$/i;
-   const sections=[];let current=null;let headingCount=0;let prefix=[];
-   lines.forEach(line=>{
-    const match=line.match(headingPattern);
-    if(match){
-     headingCount++;
-     if(current)sections.push(current);
-     current={title:line.trim(),content:""};
-    }else if(current)current.content+=(current.content?"\n":"")+line;
-    else prefix.push(line);
-   });
-   if(current)sections.push(current);
-   const firstHeading=lines.findIndex(line=>headingPattern.test(line));
-   const headingAtStart=firstHeading>=0&&lines.slice(0,firstHeading).join("\n").trim()==="";
-   if(headingCount<1||(!headingAtStart&&headingCount<2))return;
-   event.preventDefault();
-   syncBookEditorDraft();
-   const chapterIndex=Array.from($("bookEditorChapters").querySelectorAll(".book-editor-chapter")).indexOf(card);
-   if(chapterIndex<0)return;
-   if(prefix.join("\n").trim()){
-    sections.unshift({title:editorDraft.chapters[chapterIndex].title,content:prefix.join("\n").trim()});
-   }
-   editorDraft.chapters.splice(chapterIndex,1,...sections.map(section=>({title:section.title.slice(0,100),content:section.content})));
-   renderBookEditor();
-   const cards=$("bookEditorChapters").querySelectorAll(".book-editor-chapter");
-   const focusIndex=Math.min(chapterIndex+sections.length-1,cards.length-1);
-   const target=cards[focusIndex]?.querySelector(".book-editor-textarea");
-   if(target){target.focus();target.setSelectionRange(target.value.length,target.value.length)}
-   toast(sections.length+"개 장으로 자동 분리했습니다.");
-  });
-  bodyLabel.append(bodyCaption,bodyInput,pageMeta);
-  card.append(head,titleLabel,bodyLabel);list.append(card);fitBookEditorPages(bodyInput,pageMeta);
+  bodyLabel.append(bodyCaption,pages,pageMeta);
+  card.append(head,titleLabel,bodyLabel);list.append(card);
+  const first=makeBookEditorPage(card,String(chapter.content||""),0,1);pages.append(first);
+  const initialInput=first.querySelector(".book-editor-page-input");
+  const segments=paginateBookEditorText(String(chapter.content||""),initialInput);
+  renderBookEditorPages(card,segments,null);
  });
 }
 function syncBookEditorDraft(){
@@ -581,7 +687,7 @@ function syncBookEditorDraft(){
  editorDraft.subtitle=String($("editorBookSubtitle").value||"");editorDraft.tableOfContents=String($("editorBookToc").value||"");
  editorDraft.chapters=Array.from($("bookEditorChapters").querySelectorAll(".book-editor-chapter")).map((card,index)=>({
   title:String(card.querySelector(".book-editor-input").value||"").trim().slice(0,100)||("제"+(index+1)+"장"),
-  content:String(card.querySelector(".book-editor-textarea").value||"")
+  content:getEditorChapterText(card)
  }));
 }
 function beginBookEdit(){
@@ -600,7 +706,7 @@ async function saveBookEdit(){
  if(!activeBook||!editorDraft)return;
  const chapters=Array.from($("bookEditorChapters").querySelectorAll(".book-editor-chapter")).map((card,index)=>({
   title:String(card.querySelector(".book-editor-input").value||"").trim().slice(0,100)||("제"+(index+1)+"장"),
-  content:String(card.querySelector(".book-editor-textarea").value||"")
+  content:getEditorChapterText(card)
  }));
  if(!chapters.length)chapters.push({title:"제1장",content:""});
  const subtitle=String($("editorBookSubtitle").value||"").trim().slice(0,300);
