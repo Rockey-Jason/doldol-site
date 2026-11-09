@@ -246,7 +246,7 @@ body[data-theme="midnight"] .hero:before{background:radial-gradient(ellipse at 5
 .reader-paper-ornament{position:absolute;right:23px;top:17px;color:#c6a56d;font:18px Georgia,serif;opacity:.55}
 .reader-chapter-kicker{margin:36px 65px 9px;color:#b18c4c;font:9px Arial,sans-serif;letter-spacing:.2em}
 .book-reader-paper h3{margin:0 65px 23px;color:#392f22;font-size:24px;font-weight:400;letter-spacing:-.04em}
-.book-reader-body{height:calc(100% - 120px);overflow:auto;padding:0 65px 52px;color:#514b40;font-size:calc(15px * var(--reader-font-scale,1));line-height:2.05;letter-spacing:.01em;white-space:normal;overscroll-behavior:contain;scrollbar-color:#d8c7a7 transparent;scrollbar-width:thin}
+.book-reader-body{height:calc(100% - 120px);overflow:hidden;padding:0 65px 30px;color:#514b40;font-size:calc(15px * var(--reader-font-scale,1));line-height:2.05;letter-spacing:.01em;white-space:normal;overscroll-behavior:none;touch-action:pan-x}
 .book-reader-body p{margin:0 0 1.25em;text-indent:1em}
 .book-reader-body p:first-child:first-letter{float:left;margin:.05em .1em 0 0;color:#ad8849;font:44px/1 Georgia,serif}
 .reader-endmark{margin:18px 0 0;color:#bd9a61;text-align:center;font:23px Georgia,serif}
@@ -792,3 +792,6 @@ body[data-theme="rose"] .music-progress-meta{color:#9a7970}
  }
  .book-editor-page-meta{font-size:9px}
 }
+
+.reader-page-indicator{flex:0 0 auto;min-width:76px;color:#9a7b49;text-align:center;font:9px/1.2 Arial,sans-serif;letter-spacing:.08em;font-variant-numeric:tabular-nums}
+@media(max-width:600px){.book-reader-body{height:calc(100% - 105px);padding:0 23px 24px;overflow:hidden;touch-action:pan-x}.book-reader-footer{justify-content:space-between}.reader-page-indicator{min-width:54px;font-size:8px}.book-reader-footer .secondary-btn,.book-reader-footer .primary-btn,.reader-bookmark-btn{padding:0 7px;font-size:9px}}
