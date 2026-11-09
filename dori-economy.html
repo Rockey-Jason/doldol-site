@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07172e">
+<meta name="description" content="DORI ECONOMY GRAND CAPITAL — 돌이 월드 통합 가상 경제 플랫폼">
+<title>DORI ECONOMY | GRAND CAPITAL</title>
+<link rel="icon" href="./rockeysite-icon-3.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./css/doldol-theme.css?v=20261025-unified-1">
+<link rel="stylesheet" href="./css/dori-economy.css?v=20261109-grand-capital-1">
+<script src="./js/supabase.min.js?v=2.117.2"></script>
+</head>
+<body>
+<div class="economy-atmosphere" aria-hidden="true"><i></i><i></i><i></i><div class="economy-grid"></div></div>
+<div class="economy-shell">
+  <header class="economy-topbar">
+    <a class="economy-brand" href="./dori-economy.html">
+      <span class="brand-seal"><svg viewBox="0 0 48 48" fill="none"><path d="M24 4 42 14v20L24 44 6 34V14L24 4Z" stroke="currentColor" stroke-width="1.5"/><path d="M24 12 34 18v12L24 36 14 30V18l10-6Z" stroke="currentColor" stroke-width="1.4"/><path d="m17 25 5 5 10-12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      <span><strong>DORI ECONOMY</strong><small>THE GRAND CAPITAL</small></span>
+    </a>
+    <div class="topbar-meta"><span class="market-live"><i></i> ECONOMY ONLINE</span><span id="lastUpdated">데이터 연결 대기</span></div>
+    <div class="topbar-actions">
+      <a href="./dori-bank.html" class="top-link">돌이은행</a>
+      <a href="./doldolstock.html" class="top-link">돌돌증권</a>
+      <a href="./index.html" class="top-home">사이트 메인 ↗</a>
+      <button id="refreshButton" class="icon-button" type="button" aria-label="새로고침" title="새로고침">↻</button>
+    </div>
+  </header>
+
+  <main class="economy-main">
+    <section class="grand-hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span></span> DORI WORLD · INTEGRATED ECONOMIC NETWORK</div>
+        <h1>자본이 움직이고,<br><em>세계가 성장합니다.</em></h1>
+        <p>생산과 거래, 기업과 금융을 하나로 연결하는 돌이 월드의 통합 경제 본부.</p>
+        <div class="hero-actions">
+          <button class="primary-button" type="button" data-open-view="market">시장 둘러보기 <span>↗</span></button>
+          <a class="quiet-link" href="./dori-bank.html">내 금융 계좌 <span>→</span></a>
+        </div>
+      </div>
+      <div class="hero-art" aria-hidden="true">
+        <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+        <div class="hero-core"><span>D</span><i></i></div>
+        <div class="hero-float float-a"><small>WORLD INDEX</small><strong>GRAND CAPITAL</strong></div>
+        <div class="hero-float float-b"><small>TRADE · INDUSTRY · FINANCE</small><strong>ONE ECONOMY</strong></div>
+      </div>
+      <div class="hero-foot"><span>EST. DORI WORLD</span><span>TRUST · INDUSTRY · PROSPERITY</span><span>VIRTUAL ECONOMY</span></div>
+    </section>
+
+    <section id="authGate" class="auth-gate" hidden>
+      <div class="gate-mark">D</div><div class="eyebrow">SECURE MEMBER ACCESS</div>
+      <h2>경제 본부에 입장하려면 로그인이 필요해요.</h2>
+      <p>내 돌돌코인 잔액, 보유 자산, 기업과 거래 내역은 로그인한 계정에 연결됩니다.</p>
+      <a class="primary-button" href="./index.html">돌이사이트에서 로그인하기 ↗</a>
+    </section>
+
+    <div id="economyApp" hidden>
+      <section class="account-strip">
+        <div class="account-welcome"><span class="avatar-mark" id="profileInitial">D</span><div><small>WELCOME BACK</small><strong id="memberName">돌이 월드 회원</strong><span id="memberTier">PERSONAL ECONOMY ACCOUNT</span></div></div>
+        <div class="account-balance"><small>AVAILABLE DOLDOLCOIN</small><strong><span id="walletBalance">—</span><i>D</i></strong></div>
+        <div class="account-quick-links"><a href="./dori-bank.html">금융 관리 ↗</a><a href="./doldolstock.html">투자 관리 ↗</a></div>
+      </section>
+
+      <nav class="economy-nav" id="economyNav" aria-label="경제 메뉴">
+        <button type="button" class="active" data-view="overview"><span>◈</span> Overview</button>
+        <button type="button" data-view="bank"><span>⌂</span> Banking</button>
+        <button type="button" data-view="exchange"><span>⌁</span> Exchange</button>
+        <button type="button" data-view="market"><span>◇</span> Marketplace</button>
+        <button type="button" data-view="companies"><span>▥</span> Corporations</button>
+        <button type="button" data-view="industry"><span>⌬</span> Industry</button>
+        <button type="button" data-view="treasury"><span>◎</span> World Index</button>
+      </nav>
+
+      <section class="view-panel active" id="view-overview">
+        <div class="section-heading"><div><div class="eyebrow">PERSONAL WEALTH OVERVIEW</div><h2>나의 경제 현황</h2><p>보유 자산과 경제 활동을 한 화면에서 확인하세요.</p></div><span class="updated-chip" id="overviewStatus">LIVE DATA</span></div>
+        <div class="metric-grid">
+          <article class="metric-card metric-primary"><small>총 추정 자산</small><strong id="totalAssets">—</strong><span>돌돌코인 + 주식 + 자원 + 기업 현금</span><i class="metric-watermark">D</i></article>
+          <article class="metric-card"><small>주식 평가액</small><strong id="stockValue">—</strong><span id="stockCount">보유 종목 0개</span><i>↗</i></article>
+          <article class="metric-card"><small>보유 산업 자원</small><strong id="inventoryValue">—</strong><span id="inventoryCount">보유 자원 0종</span><i>⬡</i></article>
+          <article class="metric-card"><small>기업 현금 자산</small><strong id="companyValue">—</strong><span id="companyCount">운영 기업 0개</span><i>▥</i></article>
+        </div>
+        <div class="content-grid overview-grid">
+          <article class="surface-panel wide-panel">
+            <div class="panel-heading"><div><small>MARKET SNAPSHOT</small><h3>돌이 월드 시장 현황</h3></div><button class="text-button" type="button" data-open-view="treasury">전체 지수 보기 ↗</button></div>
+            <div class="index-summary" id="overviewIndices"><div class="loading-line">시장 데이터를 불러오는 중입니다.</div></div>
+          </article>
+          <article class="surface-panel">
+            <div class="panel-heading"><div><small>MY PORTFOLIO</small><h3>주요 보유 주식</h3></div><button class="text-button" type="button" data-open-view="exchange">전체 보기 ↗</button></div>
+            <div id="overviewHoldings" class="compact-list"><div class="empty-state">보유 주식 데이터를 불러오는 중입니다.</div></div>
+          </article>
+          <article class="surface-panel">
+            <div class="panel-heading"><div><small>INDUSTRIAL ASSETS</small><h3>내 자원 창고</h3></div><button class="text-button" type="button" data-open-view="market">시장 열기 ↗</button></div>
+            <div id="overviewInventory" class="compact-list"><div class="empty-state">자원 창고를 확인하고 있습니다.</div></div>
+          </article>
+          <article class="surface-panel wide-panel">
+            <div class="panel-heading"><div><small>RECENT ACTIVITY</small><h3>최근 경제 활동</h3></div><span class="subtle-label">MY TRANSACTION JOURNAL</span></div>
+            <div id="activityList" class="activity-list"><div class="empty-state">거래 기록을 불러오는 중입니다.</div></div>
+          </article>
+        </div>
+      </section>
+
+      <section class="view-panel" id="view-bank" hidden>
+        <div class="section-heading"><div><div class="eyebrow">DORI PRIVATE BANKING</div><h2>프라이빗 뱅킹</h2><p>계좌, 예금, 송금과 금융 상품은 기존 돌이은행의 안전한 금융 시스템에서 관리합니다.</p></div></div>
+        <div class="bank-feature surface-panel"><div class="bank-emblem">D</div><div class="bank-feature-copy"><small>PERSONAL FINANCE · SECURE LEDGER</small><h3>돌이은행에서 자산을 관리하세요.</h3><p>현재 사용 가능한 돌돌코인과 별도 예치 자산을 구분해 관리할 수 있어요. 예금과 송금은 기존 은행 서버 검증 절차를 이용합니다.</p><div class="bank-mini-balance"><span>사용 가능한 잔액</span><strong id="bankViewBalance">— D</strong></div><div class="bank-mini-balance"><span>활성 정기예금 원금</span><strong id="bankViewDeposits">— D</strong></div><a class="primary-button" href="./dori-bank.html">돌이은행 열기 ↗</a></div></div>
+        <div class="feature-grid"><article class="surface-panel feature-tile"><span>01</span><h3>계좌와 송금</h3><p>내 계좌 정보와 안전한 사용자 간 송금, 거래 내역을 관리합니다.</p></article><article class="surface-panel feature-tile"><span>02</span><h3>정기예금</h3><p>가상 정기예금 상품과 만기, 예상 이자 정보를 확인합니다.</p></article><article class="surface-panel feature-tile"><span>03</span><h3>대출 및 상환</h3><p>기존 가상 금융 상품과 상환 일정은 돌이은행에서 확인합니다.</p></article></div>
+      </section>
+
+      <section class="view-panel" id="view-exchange" hidden>
+        <div class="section-heading"><div><div class="eyebrow">DORI STOCK EXCHANGE</div><h2>통합 증권거래소</h2><p>돌이 월드 상장 기업과 나의 보유 주식 현황입니다.</p></div><a class="primary-button" href="./doldolstock.html">돌돌증권에서 거래하기 ↗</a></div>
+        <div class="metric-grid slim-metrics"><article class="metric-card"><small>상장 종목</small><strong id="listedCount">—</strong><span>활성 거래 종목</span></article><article class="metric-card"><small>내 보유 종목</small><strong id="myStockCount">—</strong><span>보유 주식 기준</span></article><article class="metric-card"><small>시장 시가총액</small><strong id="exchangeMarketCap">—</strong><span>현재가 × 발행 주식</span></article><article class="metric-card"><small>24시간 거래대금</small><strong id="exchangeTurnover">—</strong><span>거래소 집계 데이터</span></article></div>
+        <article class="surface-panel"><div class="panel-heading"><div><small>LISTED COMPANIES</small><h3>상장 기업</h3></div><span class="subtle-label">LIVE EXCHANGE DATA</span></div><div id="stockGrid" class="stock-grid"><div class="loading-line">상장 종목을 불러오는 중입니다.</div></div></article>
+        <article class="surface-panel section-gap"><div class="panel-heading"><div><small>MY HOLDINGS</small><h3>나의 주식 포트폴리오</h3></div></div><div id="holdingsTable" class="table-wrap"><div class="empty-state">보유 주식이 없습니다.</div></div></article>
+      </section>
+
+      <section class="view-panel" id="view-market" hidden>
+        <div class="section-heading"><div><div class="eyebrow">DORI WORLD MARKETPLACE</div><h2>통합 상거래 시장</h2><p>월드 공급처에서 자원을 구매하고, 보유 자원을 다른 사용자에게 판매하세요.</p></div><span class="updated-chip">2% MARKET FEE</span></div>
+        <div class="market-note"><span>◇</span><div><strong>실물 재고 기반 거래</strong><p>상품은 보유 창고에서 판매 등록 시 에스크로로 이동하고, 구매가 체결되면 잔액과 재고가 서버에서 함께 정산됩니다.</p></div></div>
+        <article class="surface-panel"><div class="panel-heading"><div><small>WORLD RESERVE · FIXED SUPPLY</small><h3>월드 공급처</h3></div><span class="subtle-label">기준 가격 · 수량 구매 가능</span></div><div id="supplyGrid" class="supply-grid"><div class="loading-line">공급 품목을 불러오는 중입니다.</div></div></article>
+        <div class="market-columns section-gap">
+          <article class="surface-panel"><div class="panel-heading"><div><small>MY INVENTORY</small><h3>내 산업 자원</h3></div></div><div id="marketInventory" class="inventory-list"><div class="empty-state">창고를 불러오는 중입니다.</div></div></article>
+          <article class="surface-panel"><div class="panel-heading"><div><small>USER EXCHANGE</small><h3>사용자 판매 상품</h3></div></div><div id="marketListings" class="listing-list"><div class="empty-state">판매 상품을 불러오는 중입니다.</div></div></article>
+        </div>
+        <article class="surface-panel section-gap"><div class="panel-heading"><div><small>MY OPEN ORDERS</small><h3>내 판매 등록</h3></div></div><div id="myListings" class="listing-list"><div class="empty-state">등록된 판매 상품이 없습니다.</div></div></article>
+      </section>
+
+      <section class="view-panel" id="view-companies" hidden>
+        <div class="section-heading"><div><div class="eyebrow">DORI INDUSTRIES · CORPORATE GROUP</div><h2>기업 및 산업</h2><p>돌이 월드에 나만의 회사를 설립하고 기업 자본을 운영하세요.</p></div><button type="button" class="primary-button" id="createCompanyButton">새 기업 설립 +</button></div>
+        <div class="corporate-banner"><div><small>BUILD YOUR LEGACY</small><h3>나만의 기업으로<br><em>경제의 주인공이 되세요.</em></h3><p>기업 설립 자본금은 개인 가용 잔액에서 기업 현금 자산으로 이동합니다. 한 계정에서 최대 5개 기업까지 운영할 수 있습니다.</p></div><div class="corporate-seal">DORI<br><span>INDUSTRIES</span></div></div>
+        <div class="company-summary"><div><small>MY CORPORATIONS</small><strong id="companyTotal">0</strong></div><div><small>PAID-IN CAPITAL</small><strong id="companyCapitalTotal">0 D</strong></div><div><small>ACTIVE SECTORS</small><strong id="companySectorTotal">0</strong></div></div>
+        <div id="companyGrid" class="company-grid"><div class="empty-state">아직 설립한 기업이 없습니다. 첫 번째 기업을 만들어 보세요.</div></div>
+        <div class="sector-grid"><div><span>01</span><strong>반도체</strong><small>SEMICONDUCTOR</small></div><div><span>02</span><strong>도로늄</strong><small>DORONIUM</small></div><div><span>03</span><strong>물류</strong><small>LOGISTICS</small></div><div><span>04</span><strong>유통</strong><small>RETAIL</small></div><div><span>05</span><strong>에너지</strong><small>ENERGY</small></div><div><span>06</span><strong>건설</strong><small>CONSTRUCTION</small></div></div>
+      </section>
+
+      <section class="view-panel" id="view-industry" hidden>
+        <div class="section-heading"><div><div class="eyebrow">INDUSTRIAL NETWORK</div><h2>산업 및 공급망</h2><p>공장 생산, 원자재 조달과 기업 활동을 연결하는 산업 네트워크입니다.</p></div></div>
+        <div class="industry-hero"><div class="industry-core">⬡</div><div><small>ROCKEY INDUSTRIES · DORONIUM FACTORY</small><h3>생산이 시작되는 곳에서<br><em>경제가 움직입니다.</em></h3><p>도로늄 공장에서 생산을 진행하고, 경제 시장에서 호환 품목을 거래하며, 기업 운영 자금과 생산 계획을 관리하세요.</p><a class="primary-button" href="./doronium-factory/">도로늄 공장 입장 ↗</a></div></div>
+        <div class="feature-grid"><article class="surface-panel feature-tile"><span>SUPPLY</span><h3>원자재 조달</h3><p>목재, 석재, 광석과 산업 부품을 시장에서 구매하고 보유 재고를 관리합니다.</p></article><article class="surface-panel feature-tile"><span>PRODUCTION</span><h3>생산 활동</h3><p>도로늄 공장에서 자원을 채굴하고 기계를 운영해 생산 기반을 확장합니다.</p></article><article class="surface-panel feature-tile"><span>TRADE</span><h3>공급 계약</h3><p>시장에 판매 상품을 등록해 다른 사용자와 산업 자원을 거래합니다.</p></article></div>
+        <div class="integration-disclaimer">현재 시장 창고와 도로늄 공장의 기존 세이브 파일은 별도 데이터입니다. 공장 재고의 자동 반입·반출은 추후 서버 측 검증형 브리지 연동이 완료되어야 활성화됩니다. 이 페이지는 공장 데이터를 임의로 수정하지 않습니다.</div>
+      </section>
+
+      <section class="view-panel" id="view-treasury" hidden>
+        <div class="section-heading"><div><div class="eyebrow">DORI WORLD INDEX · TREASURY</div><h2>월드 경제 지수</h2><p>현재 돌돌증권의 실제 상장 데이터와 신규 경제 시장 데이터를 바탕으로 계산합니다.</p></div><span class="updated-chip">CALCULATED FROM LIVE DATA</span></div>
+        <div class="world-index-hero"><div><small>DORI MARKET INDEX</small><strong id="worldIndexChange">—</strong><span id="worldIndexLabel">상장 종목 평균 등락률</span></div><div class="index-orbit">D</div></div>
+        <div class="metric-grid slim-metrics"><article class="metric-card"><small>상장 시가총액</small><strong id="treasuryMarketCap">—</strong><span>현재가 × 총 발행 주식</span></article><article class="metric-card"><small>24시간 거래대금</small><strong id="treasuryTurnover">—</strong><span>상장 종목 집계</span></article><article class="metric-card"><small>활성 상장 종목</small><strong id="treasuryListedCount">—</strong><span>거래 활성 기준</span></article><article class="metric-card"><small>거래 가능 원자재</small><strong id="treasuryAssetCount">—</strong><span>월드 공급처 품목</span></article></div>
+        <article class="surface-panel"><div class="panel-heading"><div><small>MARKET LEADERS</small><h3>시장 주요 종목</h3></div></div><div id="leaderboard" class="leaderboard"><div class="empty-state">지수 데이터를 불러오는 중입니다.</div></div></article>
+        <div class="treasury-footnote"><strong>지수 산정 기준</strong><p>DORI MARKET INDEX는 현재 활성 상장 종목의 등락률 단순 평균입니다. 시가총액은 현재가와 총 발행 주식 수의 곱이며, 거래대금은 각 종목의 거래소 집계값을 합산합니다. GDP·물가·고용 등 아직 수집되지 않는 지표는 임의의 숫자로 표시하지 않습니다.</p></div>
+      </section>
+
+      <footer class="economy-footer"><span>DORI ECONOMY · GRAND CAPITAL</span><span>VIRTUAL ECONOMY SYSTEM · ALL VALUES ARE IN-GAME ASSETS</span><a href="./index.html">돌이사이트 메인으로 돌아가기 ↑</a></footer>
+    </div>
+  </main>
+</div>
+<dialog id="actionDialog" class="economy-dialog"><div id="dialogContent"></div></dialog>
+<div id="economyToast" class="economy-toast" role="status" aria-live="polite"></div>
+<script src="./js/dori-economy.js?v=20261109-grand-capital-1"></script>
+<script src="./js/hancom-weight-normalizer.js?v=20261014-1"></script>
+</body>
+</html>
