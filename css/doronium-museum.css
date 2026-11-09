@@ -332,3 +332,38 @@ body{overflow:hidden;background:radial-gradient(ellipse at 50% 0%,rgba(56,128,15
 .archive-lore-card>small:not(:first-child){display:block;font-size:9px;line-height:1.7;color:#91a8ae;margin-top:8px}
 .archive-lore-card .archive-lore-source{color:var(--gold2)}
 @media(max-width:760px){.archive-lore-card{margin:18px 0;padding:15px}.application-card-database{gap:10px}}
+
+
+/* Premium interactive exhibition controls */
+.collection-tools{display:flex;align-items:center;gap:14px;justify-content:flex-end;min-width:min(420px,100%)}
+.collection-tool{min-height:38px;padding:0 13px;border:1px solid rgba(216,189,128,.27);background:linear-gradient(135deg,rgba(216,189,128,.12),rgba(12,34,49,.72));color:var(--gold2);font-size:11px;white-space:nowrap;cursor:pointer;transition:transform .25s var(--ease),border-color .25s ease,box-shadow .25s ease}
+.collection-tool:hover{transform:translateY(-2px);border-color:rgba(216,189,128,.65);box-shadow:0 8px 25px rgba(216,189,128,.09)}
+.collection-tool span{margin-left:8px;color:#fff1c5}
+.swipe-guide{display:flex;align-items:center;justify-content:center;gap:13px;margin:12px auto 2px;color:#718e9a;font:9px Arial,sans-serif;letter-spacing:1.2px;text-align:center}
+.swipe-guide span{color:var(--gold2);font-size:13px;animation:swipeNudge 1.8s ease-in-out infinite}
+.swipe-guide span:last-child{animation-delay:.9s}
+.specimen-favorite-mark{position:absolute;z-index:2;right:14px;top:13px;color:#f3d99d;font:18px Georgia,serif;text-shadow:0 0 12px rgba(243,217,157,.42)}
+.dialog-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:17px 0 0}
+.dialog-favorite{min-height:36px;padding:0 13px;border:1px solid rgba(216,189,128,.28);background:rgba(216,189,128,.07);color:var(--gold2);font-size:11px;cursor:pointer;transition:all .2s ease}
+.dialog-favorite[aria-pressed="true"]{background:rgba(216,189,128,.17);border-color:rgba(216,189,128,.65)}
+.dialog-specimen-nav{display:flex;gap:7px}
+.dialog-specimen-nav button{width:36px;height:36px;border:1px solid rgba(173,211,217,.2);border-radius:50%;background:rgba(12,34,49,.65);color:#d9e9e9;font-size:17px;cursor:pointer;transition:all .2s ease}
+.dialog-specimen-nav button:hover:not(:disabled){border-color:var(--gold);color:var(--gold2);transform:translateY(-2px)}
+.dialog-specimen-nav button:disabled{opacity:.25;cursor:default}
+.museum-deck{touch-action:pan-y pinch-zoom;cursor:grab}
+.museum-deck:active{cursor:grabbing}
+.specimen-grid{touch-action:pan-y pinch-zoom}
+.specimen-card{backface-visibility:hidden;transform-style:preserve-3d}
+.specimen-favorite-mark{pointer-events:none}
+.chapter-dock{backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.chapter-step.active span{box-shadow:0 0 16px rgba(216,189,128,.58)}
+@keyframes swipeNudge{0%,100%{transform:translateX(0);opacity:.55}50%{transform:translateX(4px);opacity:1}}
+@media(max-width:760px){
+ .collection-tools{width:100%;min-width:0;justify-content:space-between;gap:9px}
+ .collection-tool{font-size:10px;padding:0 10px}
+ .collection-toolbar{align-items:stretch;flex-direction:column;gap:10px}
+ .search-box{width:100%}
+ .swipe-guide{font-size:8px;letter-spacing:.7px;margin-top:9px}
+ .dialog-actions{margin-top:13px}
+}
+@media(prefers-reduced-motion:reduce){.swipe-guide span{animation:none!important}}
