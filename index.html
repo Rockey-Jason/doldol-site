@@ -2004,6 +2004,19 @@ body.로그인상태 #회원가입 {
 
 @keyframes 돌이은행후광{from{transform:scale(.96);opacity:.6}to{transform:scale(1.06);opacity:1}}
 @media(prefers-reduced-motion:reduce){.돌이은행카드후광{animation:none}.돌이은행카드문양{transition:none}}
+
+.doriEconomyPortal .economyPortalArt{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;overflow:hidden;border-color:rgba(218,192,132,.27);background:radial-gradient(circle at 50% 45%,rgba(97,160,185,.2),transparent 47%),linear-gradient(145deg,#173c58,#0a1c32 72%)}
+.doriEconomyPortal .economyPortalOrbit{position:absolute;width:69%;aspect-ratio:1;border:1px solid rgba(224,203,154,.22);border-radius:50%;box-shadow:0 0 0 12px rgba(224,203,154,.025),0 0 38px rgba(113,182,199,.1)}
+.doriEconomyPortal .economyPortalSeal{position:relative;display:grid;place-items:center;width:88px;height:88px;border:1px solid rgba(228,207,157,.5);border-radius:25px;transform:rotate(45deg);background:linear-gradient(145deg,rgba(220,196,138,.19),rgba(5,23,42,.9));box-shadow:inset 0 1px rgba(255,255,255,.15),0 16px 36px rgba(0,0,0,.28);transition:transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .4s}
+.doriEconomyPortal .economyPortalSeal svg{width:61px;color:#e4cf9c;transform:rotate(-45deg);filter:drop-shadow(0 0 9px rgba(218,192,132,.2))}
+.doriEconomyPortal .economyPortalKicker{color:#9eb6c7;font:600 7px Arial,sans-serif;letter-spacing:1.7px}
+.doriEconomyPortal .economyPortalTitle{color:#f0dfb8;font:700 17px Arial,sans-serif;letter-spacing:2.1px;text-shadow:0 0 19px rgba(218,192,132,.16)}
+.doriEconomyPortal .economyPortalSub{color:#879daf;font:600 7px Arial,sans-serif;letter-spacing:2.3px}
+.doriEconomyPortal:hover .economyPortalSeal{transform:rotate(45deg) translateY(-4px) scale(1.045);box-shadow:inset 0 1px rgba(255,255,255,.2),0 20px 43px rgba(0,0,0,.36),0 0 28px rgba(218,192,132,.12)}
+.doriEconomyPortal .economyPortalLink{display:block;text-decoration:none!important}
+.doriEconomyPortal .economyPortalLink:hover{color:#f2dfb0!important}
+@media(prefers-reduced-motion:reduce){.doriEconomyPortal .economyPortalSeal{transition:none}}
+
 </style>
 
 </head>
@@ -2155,6 +2168,22 @@ body.로그인상태 #회원가입 {
       </div>
       <a class="메인버튼 돌이은행링크" href="./dori-bank.html" aria-label="돌이 은행 열기">돌이 은행 확인 ↗</a>
       <div class="카드설명">돌돌코인 계좌이체, 정기예금, 내 계좌 잔액과 전체 거래 내역을 안전하게 관리하세요.</div>
+    </article>
+
+<article class="메뉴카드 doriEconomyPortal">
+      <a href="./dori-economy.html" aria-label="DORI ECONOMY GRAND CAPITAL 열기" style="display:block;text-decoration:none">
+        <div class="이미지틀 economyPortalArt">
+          <div class="economyPortalOrbit"></div>
+          <div class="economyPortalSeal" aria-hidden="true">
+            <svg viewBox="0 0 80 80" fill="none"><path d="M40 7 68 23v34L40 73 12 57V23L40 7Z" stroke="currentColor" stroke-width="1.5"/><path d="M40 18 58 29v22L40 62 22 51V29l18-11Z" stroke="currentColor" stroke-width="1.5"/><path d="m29 40 8 8 15-18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="economyPortalKicker">DORI WORLD · GRAND CAPITAL</span>
+          <strong class="economyPortalTitle">DORI ECONOMY</strong>
+          <span class="economyPortalSub">THE GRAND CAPITAL</span>
+        </div>
+      </a>
+      <a class="메인버튼 economyPortalLink" href="./dori-economy.html" aria-label="DORI ECONOMY 입장">경제 본부 입장 ↗</a>
+      <div class="카드설명">돌이은행, 돌돌증권, 산업 자원 시장과 기업을 연결하는 통합 경제 플랫폼입니다.</div>
     </article>
 
 <article class="메뉴카드 도로늄공장카드">
