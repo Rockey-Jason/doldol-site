@@ -25,7 +25,7 @@ const toastEl=document.querySelector("#museum-toast");
 let activeFilter="all",activeViewer=null,toastTimer=0,viewed=new Set(),activeSpecimenPage=0,lastSpecimenPageSize=0;
 try{
  const saved=JSON.parse(localStorage.getItem("doriMuseumViewed.v2")||"[]");
- if(Array.isArray(saved))viewed=new Set(saved.filter(id=>specimens.some(item=>item.id===id)));
+ if(Array.isArray(saved))viewed=new Set(saved.filter(id=>typeof id==="string"));
 }catch{viewed=new Set();}
 
 const filterNames={base:"기초 재료",variant:"변형 도로늄",special:"특수 도로늄",stones:"돌피니티 스톤"};
@@ -87,6 +87,7 @@ async function loadMuseumArchive(){
   loreRecord=rows.find(row=>row.record_type==="lore")||null;
   if(collection.length!==11)console.warn("Expected 11 newspaper specimens; received",collection.length);
   specimens=collection.map(mapArchiveRecord);
+  viewed=new Set([...viewed].filter(id=>specimens.some(item=>item.id===id)));
   renderCards();updateProgress();renderApplications();renderLore();
   archiveStatus.textContent=`Supabase 원본 아카이브 연결 완료 · 표본 ${specimens.length}개 · 파생 기록 ${applicationRecords.length}개`;
   if(!specimens.length)throw new Error("전시 표본 자료가 비어 있습니다.");
@@ -206,7 +207,7 @@ function fillDialog(item){
  document.querySelector("#dialog-characteristics").textContent=item.characteristics+"\n\n신문의 외형 기록: "+item.appearance;
  document.querySelector("#dialog-abilities").textContent=item.abilities;
  document.querySelector("#dialog-process").textContent=item.manufacturing+"\n\n추가 기록: "+item.note;
- document.querySelector("#dialog-source").textContent=item.sources+" 돌이신문. 신문 원문에서 확인되는 기록만 반영했습니다.";
+ document.querySelector("#dialog-source").textContent=item.sources+" 돌이신문. "+item.note+" 신문 원문에서 확인되는 기록만 반영했습니다.";
 }
 function openSpecimen(item){
  if(activeViewer){activeViewer.dispose();activeViewer=null;}
