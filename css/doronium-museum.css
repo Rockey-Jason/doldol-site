@@ -313,3 +313,5 @@ body{overflow:hidden;background:radial-gradient(ellipse at 50% 0%,rgba(56,128,15
 }
 @media(max-width:390px){.museum-header{flex-basis:64px;height:64px}.brand-copy small{font-size:7px}.museum-brand{gap:7px}.hero-bottomline span:last-child{display:none}}
 @media(prefers-reduced-motion:reduce){.page-turn-in,.specimen-gem,.chapter-step span,.specimen-card{animation:none!important;transition:none!important}
+
+}
