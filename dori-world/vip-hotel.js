@@ -139,24 +139,24 @@
         name: "IMPERIAL CIRCLE",
         korean: "임페리얼 앰배서더",
         description: "관리자 전용 최상위 권한으로 모든 객실과 호텔 기능을 이용할 수 있습니다.",
-        benefits: ["모든 시그니처 객실 이용", "모든 객실 인테리어 프리셋", "프라이빗 컨시어지 및 전체 호텔 서비스"]
+        benefits: ["모든 시그니처 객실 이용", "모든 객실 인테리어 프리셋", "호텔 활동 포인트 +50% 추가 적립", "프라이빗 컨시어지 및 전체 호텔 서비스"]
       };
     }
     const level = Number(member && member.level || 1);
     if (level >= 9) return {
       name: "IMPERIAL CIRCLE", korean: "임페리얼 게스트",
       description: "돌이사이트 최상위 회원 등급에 연결된 호텔 멤버십입니다.",
-      benefits: ["스카이 시그니처 빌라 이용", "모든 객실 및 인테리어 선택", "프라이빗 컨시어지 및 전체 서비스"]
+      benefits: ["스카이 시그니처 빌라 이용", "모든 객실 및 인테리어 선택", "호텔 활동 포인트 +35% 추가 적립", "프라이빗 컨시어지 및 전체 서비스"]
     };
     if (level >= 6) return {
       name: "ROYAL AMBASSADOR", korean: "로열 앰배서더",
       description: "로열 객실과 프리미엄 컨시어지 혜택을 이용할 수 있습니다.",
-      benefits: ["로열 팰리스 스위트 이용", "객실별 테마와 가구 커스터마이징", "룸서비스·하우스키핑·스파 요청"]
+      benefits: ["로열 팰리스 스위트 이용", "객실별 테마와 가구 커스터마이징", "호텔 활동 포인트 +25% 추가 적립", "룸서비스·하우스키핑·스파 요청"]
     };
     if (level >= 4) return {
       name: "GRAND PREMIER", korean: "그랜드 프리미어",
       description: "가든 테라스 객실과 호텔의 주요 서비스를 이용할 수 있습니다.",
-      benefits: ["가든 테라스 스위트 이용", "개별 조명과 장식 설정", "룸서비스·하우스키핑 요청"]
+      benefits: ["가든 테라스 스위트 이용", "개별 조명과 장식 설정", "호텔 활동 포인트 +10% 추가 적립", "룸서비스·하우스키핑 요청"]
     };
     return {
       name: "PREMIER GUEST", korean: "프리미어 게스트",
@@ -662,9 +662,18 @@
     const current=thresholds[index],next=thresholds[index+1]||thresholds[index];
     return {level:index+1,name:names[index],current,nextThreshold:next,progress:next>current?Math.max(0,Math.min(100,((xp-current)/(next-current))*100)):100,remaining:Math.max(0,next-xp)};
   }
+  function memberPointMultiplier() {
+    if(member&&member.isAdmin)return 1.5;
+    const level=Number(member&&member.level||1);
+    if(level>=9)return 1.35;
+    if(level>=6)return 1.25;
+    if(level>=4)return 1.1;
+    return 1;
+  }
   function addHotelReward(points,exp) {
     if(!member)return;
-    state.hotelPoints=Math.max(0,Math.floor(Number(state.hotelPoints)||0)+Math.max(0,Math.floor(Number(points)||0)));
+    const awardedPoints=Math.floor(Math.max(0,Number(points)||0)*memberPointMultiplier());
+    state.hotelPoints=Math.max(0,Math.floor(Number(state.hotelPoints)||0)+awardedPoints);
     state.hotelExp=Math.max(0,Math.floor(Number(state.hotelExp)||0)+Math.max(0,Math.floor(Number(exp)||0)));
     save();renderWallet();
   }
@@ -684,6 +693,7 @@
     if($("hotelRankProgressText"))$("hotelRankProgressText").textContent=rank.current.toLocaleString("ko-KR")+" / "+rank.nextThreshold.toLocaleString("ko-KR")+" EXP";
     if($("hotelRankNext"))$("hotelRankNext").textContent=rank.remaining?"다음 등급까지 "+rank.remaining.toLocaleString("ko-KR")+" EXP":"최고 등급 달성";
     if($("hotelShopPoints"))$("hotelShopPoints").textContent=Number(state.hotelPoints||0).toLocaleString("ko-KR");
+    if($("hotelPointMultiplier"))$("hotelPointMultiplier").textContent="MEMBER REWARD BONUS ×"+memberPointMultiplier().toFixed(2);
   }
   function renderAttendance() {
     ensureDailyState();const attendance=state.attendance,claimed=state.daily.attendanceClaimed;
@@ -729,8 +739,39 @@
     const equipped=roomSettings(getRoom(state.selectedRoom).id).reward||"none";
     rewards.forEach(item=>{const owned=state.rewardOwned.includes(item.id),active=equipped===item.id,card=document.createElement("article");card.className="hotel-reward-card"+(owned?" is-owned":"");const art=document.createElement("div");art.className="hotel-reward-art";art.textContent=item.icon;const title=document.createElement("strong");title.textContent=item.name;const desc=document.createElement("p");desc.textContent=item.description;const footer=document.createElement("div");footer.className="hotel-reward-foot";const price=document.createElement("span");price.textContent=owned?"영구 보유":item.price+" HOTEL P";const button=document.createElement("button");button.type="button";button.dataset.rewardId=item.id;button.dataset.hotelRewardAction=owned?"equip":"buy";button.textContent=owned?(active?"장착 중":"장착하기"):"교환하기";button.disabled=owned?active:Number(state.hotelPoints||0)<item.price;footer.append(price,button);card.append(art,title,desc,footer);grid.append(card);});
   }
+  function renderExperienceLog() {
+    const list=$("hotelExperienceLog");if(!list)return;list.replaceChildren();
+    const activityRows=(state.activityLog||[]).map(item=>({
+      kind:"activity",title:item.activityName||"호텔 프로그램",choice:item.choice||"",date:item.completedAt||"",icon:"✧"
+    }));
+    const eventRows=(state.eventLog||[]).map(item=>({
+      kind:"event",title:item.eventTitle||"호텔 이벤트",choice:item.choice||"",date:item.completedAt||"",icon:"♛"
+    }));
+    const entries=activityRows.concat(eventRows).sort((a,b)=>Date.parse(b.date)-Date.parse(a.date)).slice(0,8);
+    if($("hotelExperienceTotal"))$("hotelExperienceTotal").textContent=entries.length+"개 기록";
+    if(!entries.length){const empty=document.createElement("div");empty.className="hotel-empty-state";empty.textContent="첫 프로그램에 참여하면 이곳에 호텔 경험이 기록됩니다.";list.append(empty);return;}
+    const choicesMap={
+      "earl-grey":"얼그레이 티 세트","chamomile":"캐모마일 티 세트","royal":"로열 디저트 세트",
+      "pond":"연못 산책로","rose":"장미 아치 길","greenhouse":"유리 온실 길",
+      "mystery":"미스터리와 추리","history":"역사와 인물","fantasy":"판타지와 모험",
+      "classical":"클래식 피아노","jazz":"벨벳 재즈","seasonal":"시즌 시그니처",
+      "classic":"클래식 티 페어링","floral":"플로럴 블렌딩","glass":"글라스하우스 코스",
+      "piano":"그랜드 피아노","crystal":"크리스탈 컬렉션","sculpture":"로열 조각 갤러리",
+      "garden":"보태니컬 아트","cocoa":"시그니처 코코아","vanilla":"바닐라 밀크","spice":"스파이스 블렌드"
+    };
+    entries.forEach(entry=>{
+      const row=document.createElement("article");row.className="hotel-experience-log-item";
+      const icon=document.createElement("span");icon.className="hotel-experience-log-icon";icon.textContent=entry.icon;
+      const copy=document.createElement("span");copy.className="hotel-experience-log-copy";
+      const title=document.createElement("strong");title.textContent=entry.title;
+      const detail=document.createElement("small");detail.textContent=(entry.kind==="event"?"이벤트 참여":"프로그램 참여")+" · "+(choicesMap[entry.choice]||entry.choice);
+      copy.append(title,detail);
+      const time=document.createElement("span");time.className="hotel-experience-log-time";time.textContent=entry.date?formatDate(entry.date,true):"기록됨";
+      row.append(icon,copy,time);list.append(row);
+    });
+  }
   function renderEngagement() {
-    if(!member)return;ensureDailyState();renderWallet();renderAttendance();renderDailyEvent();renderMissions();renderActivities();renderRewards();
+    if(!member)return;ensureDailyState();renderWallet();renderAttendance();renderDailyEvent();renderMissions();renderActivities();renderRewards();renderExperienceLog();
   }
   function claimAttendance() {
     if(!member)return;ensureDailyState();if(state.daily.attendanceClaimed){showToast("오늘의 웰컴 혜택은 이미 받았어요.");return;}
@@ -826,7 +867,7 @@
         if(state.daily.activityClaims.length===activities.length&&!state.daily.activityBonusClaimed){
           state.daily.activityBonusClaimed=true;addHotelReward(100,30);showToast("오늘의 액티비티 완료! 올 데이 리트리트 보너스 +100P!");
         }
-        save();renderActivities();renderRewards();
+        save();renderActivities();renderRewards();renderExperienceLog();
       }
     });
   }
