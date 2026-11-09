@@ -104,7 +104,7 @@ This section supersedes the **immediate mining-regression blocker** and the stat
 | 6. Power | PARTIAL | Connected networks, priority allocation, battery kJ and transformer caps exist; current solver applies consumer-level loss rather than full edge-by-edge path loss, and persistent stable IDs/diagnostics need work |
 | 7. Fluids | PARTIAL | Six fluid types, pressure/temperature/leak/mass-balance helpers exist; the actual game path is still predominantly water, without all five other source/consumer chains and fluid reservations |
 | 8. Logistics | PARTIAL | Conveyor graph, machine output and manual inventory-to-machine input transfers exist; persistent parcel custody, full sorter/splitter/merger/lift/curve/multi-lane assets and automated deadlock recovery remain |
-| 9. Item ownership | PARTIAL / CRITICAL | Live direct/batch consumption and machine supply are journaled; all other owner-domain transfers and cross-domain conservation are not authoritative yet |
+| 9. Item ownership | PARTIAL / CRITICAL | Live direct/batch consumption, machine supply, recipe-buffer/inventory-to-active-job transfers, and atomic active-job-to-machine-output completion are journaled and E2E-tested; conveyor, drops, warehouse, shipment, demolition, Fusion and recovery remain non-authoritative |
 | 10. Failures and skills | PARTIAL | Five machine failure profiles, repair path and 20 skill nodes exist; all-machine failure coverage and every skill effect are not live/verified |
 | 11. Shipping, Fusion and ending | PARTIAL / CRITICAL | Live 7-stage/260-second Fusion and exactly-once in-memory output pass E2E; shipping still has 3 sample contracts, while Fusion save/restart recovery, complete critical interlocks and the 3-relay/core/planet-ending regression remain |
 | 12. Saves, security, performance and release | PARTIAL / UNVERIFIED | Owner-scoped CAS/RLS and local recovery exist; authenticated two-device conflicts, complete server-authoritative rewards, physical hardware, memory leak and 60-minute wall-clock soak remain unverified |
@@ -118,7 +118,7 @@ This section supersedes the **immediate mining-regression blocker** and the stat
 5. Flattening and foundations: **PARTIAL** — live placement rules exist; all footprints/ports/rollback/dismantle cases are incomplete.
 6. Underground mining: **PARTIAL** — automatic and advanced mine E2E passes; complete deposit/miner catalog and session recovery remain.
 7. Canonical 15 Doronum inputs: **PARTIAL** — manifest/15 models validate, but not every live recipe/research/model/UI source is canonical.
-8. No item duplication/loss: **PARTIAL** — direct/batch consumption and manual machine supply are journaled; other custody domains remain separate.
+8. No item duplication/loss: **PARTIAL** — direct/batch consumption, machine supply and the live recipe active-job-to-output lifecycle are journaled; conveyors, drops, warehouse, shipment, demolition, Fusion and recovery remain separate.
 9. Conveyors and automatic mining: **PARTIAL** — mine output passes and graph routing exists; full parcel custody/asset catalog/deadlock recovery remain.
 10. Power and batteries: **PARTIAL** — kW/kJ allocation and batteries exist; edge-loss solver and stable network identity remain.
 11. Six fluids/pressure/temperature: **PARTIAL** — six types and generic solver exist; only water is substantially live in-game.
@@ -133,3 +133,30 @@ This section supersedes the **immediate mining-regression blocker** and the stat
 20. Start-to-ending full regression: **PARTIAL** — mining/Fusion subflows pass, but full campaign, three relays, core and planet stabilization are not end-to-end complete.
 
 No overall release completion is claimed. Main, GitHub Pages, Render, production DB/schema, balances, rewards and real-user save data remain untouched.
+
+
+## 2026-11-09 latest production-custody and repository checkpoint
+
+This section supersedes the prior ownership wording above. The earlier audit checkpoints remain historical; the following is the current development-branch evidence.
+
+### Repository / PR reconciliation
+
+- Main HEAD: `c4e7c3d685eaa9dff41449a02ed1f398f3ec6a5f`.
+- Development branch HEAD: `dffb359d5910402e42e6bf614958f42b42e860e2`; production code checkpoint: `88604b631b9fbf68b9f797f77fdbd822bf2e0a6e`.
+- PR #11 remains open and draft, with GitHub's mergeable flag true. It still targets the old base `26e88058b6d416d79459fee107aff4a5beb3d7e3`; current main comparison is **339 commits ahead / 168 behind**, merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`. No merge was attempted.
+- PR #8 remains the separate Godot implementation; PR #9 remains draft and PR #10 remains open/non-draft. All three are unmerged. Their histories and factory/runtime files differ from the current branch; no broad cherry-pick or merge was performed.
+- Latest code-checkpoint push/PR CI: [42550511913](https://github.com/Rockey-Jason/doldol-site/actions/runs/42550511913) and [42550516843](https://github.com/Rockey-Jason/doldol-site/actions/runs/42550516843), both successful. Documentation-checkpoint push/PR CI: [42550885030](https://github.com/Rockey-Jason/doldol-site/actions/runs/42550885030) and [42550889500](https://github.com/Rockey-Jason/doldol-site/actions/runs/42550889500), both successful.
+
+### Live production custody result
+
+- Recipe start now transfers buffered machine ingredients and reserved player-inventory ingredients into the same `ACTIVE_JOB` owner, with exact transfer journal entries and rollback of item/fluid/runtime state if any reservation or audit fails.
+- Recipe completion now commits one `PRODUCTION_COMPLETE` transaction: every active-job input is consumed exactly once through child journal entries, then exactly one `MACHINE_OUTPUT` custody record is created. Failed input validation/output creation rolls back the entire ledger operation; transaction replay is idempotent and payload conflicts are rejected.
+- The Playwright live-smelter fixture verifies one buffered iron-ore unit plus one inventory iron-ore unit and one coal unit (three total) enter the active job, are consumed exactly once, and become one iron plate. It verifies no active-job custody remains and the final rebuilt ownership snapshot is valid.
+- Node suite: **130 passed, 0 failed, 0 cancelled, 0 skipped**. Playwright browser regression: **PASS** on desktop WebGL and 390×844 mobile viewport emulation; virtual soak **36,000 fixed ticks / 32,400 simulated seconds**. This is not a physical Android/iOS test or a 60-minute wall-clock soak.
+
+### Remaining status
+
+- Item ownership is still **PARTIAL / CRITICAL**: conveyor parcel movement, storage/warehouse, world drops, shipment cargo settlement, demolition/salvage, Fusion output custody, and crash/reconnect recovery still need authoritative transactions and cross-domain conservation tests.
+- The other blockers remain: 2,048m×2,048m world conversion/streaming; five non-water fluid paths; complete canonical recipe source; 19-vs-18 research-count reconciliation; all skill effects and all-machine failure coverage; complete contract catalog and route risk; Fusion cloud/process-restart recovery and complete interlocks; authenticated two-device saves; physical hardware, memory-leak and wall-clock soak; complete start-to-ending campaign regression.
+- **All 12 roadmap areas remain PARTIAL, blocked or UNVERIFIED.** The 20 acceptance checks are not all green. No release-ready or overall-complete claim is made.
+- No main merge, GitHub Pages/Render deployment, production database/schema change, balances/rewards change, or real-user save mutation was performed.

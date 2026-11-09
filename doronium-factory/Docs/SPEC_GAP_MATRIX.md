@@ -48,7 +48,7 @@ The complete deficiency assessment is recorded in `Docs/PROJECT_AUDIT.md`. Curre
 | 6 Power | Partial | Transmission losses, all devices, diagnostics and topology regression |
 | 7 Fluids | Partial | Only water path is substantially live; five other fluid paths incomplete |
 | 8 Logistics | Partial | Manual inventory-to-machine supply is journaled; full transport asset catalog, conveyor custody, deadlock recovery and end-to-end logistics conservation remain |
-| 9 Ownership | Partial / critical | Direct/batch inventory consumption and manual machine-input transfers are journaled; the ledger is not yet the single source of truth across production, belts, drops, warehouse, shipping, fusion and recovery |
+| 9 Ownership | Partial / critical | Direct/batch consumption, manual machine supply, recipe buffer/inventory transfers into active jobs, and atomic active-job-to-machine-output completion are journaled and E2E-tested; belts, drops, warehouse, shipping, demolition, fusion and recovery are still not authoritative |
 | 10 Failure/skills | Partial | Full failure and skill-effect integration/coverage |
 | 11 Shipping/Fusion/ending | Partial / critical | Full shipping contract catalog and server-authoritative settlement; Fusion save/reload recovery and complete safety/failure interlocks; full planetary ending regression |
 | 12 Saves/security/performance/release | Partial / unverified | Real two-device, physical-device, 60-minute wall-clock and final release tests |
