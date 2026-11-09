@@ -47,8 +47,8 @@ The complete deficiency assessment is recorded in `Docs/PROJECT_AUDIT.md`. Curre
 | 5 Production/canonical data | Partial | Canonical manifest is not yet the universal live recipe/model/research source; current live research catalog has 19 entries while the master acceptance target states 18, so the count contract must be reconciled |
 | 6 Power | Partial | Transmission losses, all devices, diagnostics and topology regression |
 | 7 Fluids | Partial | Only water path is substantially live; five other fluid paths incomplete |
-| 8 Logistics | Partial | Manual inventory-to-machine supply is journaled; full transport asset catalog, conveyor custody, deadlock recovery and end-to-end logistics conservation remain |
-| 9 Ownership | Partial / critical | Direct/batch consumption, manual machine supply, recipe buffer/inventory transfers into active jobs, and atomic active-job-to-machine-output completion are journaled and E2E-tested; belts, drops, warehouse, shipping, demolition, fusion and recovery are still not authoritative |
+| 8 Logistics | Partial | Machine output → conveyor → conveyor → storage/player-inventory custody transfers and market-sale consumption are journaled; conveyor-to-machine, partial parcel splits, full sorter/splitter/merger/lift/curve/multi-lane assets and deadlock recovery remain |
+| 9 Ownership | Partial / critical | Direct/batch consumption, manual supply, recipe active-job completion, machine-output/conveyor segment transfers and storage-to-inventory collection are journaled and E2E-tested; conveyor-to-machine, independent warehouse, drops, shipment, demolition, Fusion and recovery remain non-authoritative |
 | 10 Failure/skills | Partial | Full failure and skill-effect integration/coverage |
 | 11 Shipping/Fusion/ending | Partial / critical | Full shipping contract catalog and server-authoritative settlement; Fusion save/reload recovery and complete safety/failure interlocks; full planetary ending regression |
 | 12 Saves/security/performance/release | Partial / unverified | Real two-device, physical-device, 60-minute wall-clock and final release tests |
@@ -84,3 +84,10 @@ The live recipe lifecycle is now journaled end-to-end for the current machine pr
 - **Remaining ownership gate:** the output still needs journaled transfer through conveyor segments into machines, storage/warehouse, and market; independent warehouse stock, world drops, shipment cargo and delivery settlement, demolition, Fusion output, and crash/reconnect recovery still need the same authoritative transaction boundary.
 
 **Overall status remains PARTIAL / NOT RELEASE-READY.** No production or main-branch changes were made.
+
+
+## 2026-11-09 — live conveyor custody checkpoint
+
+The machine-output-to-storage route now uses the same item identity across three committed ownership transfers: MACHINE_OUTPUT → CONVEYOR (belt 1) → CONVEYOR (belt 2) → PLAYER_INVENTORY (storage collection). The live Playwright fixture verifies that quantity 2 remains quantity 2, the original stack ID is unchanged, no source/segment custody remains, and the final ownership snapshot is valid. The automated market route also journals a consumeCustody sale before crediting money, but its dedicated E2E test remains outstanding.
+
+Updated status: roadmap area 8 Logistics and area 9 Item ownership remain PARTIAL / CRITICAL. Conveyor-to-machine transfer, partial-stack parcels, independent warehouse stock, world drops, shipment settlement, demolition, Fusion output and recovery are still open. This is not a global conservation proof or release-completion claim.

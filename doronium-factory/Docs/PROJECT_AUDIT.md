@@ -118,8 +118,8 @@ This section supersedes the **immediate mining-regression blocker** and the stat
 5. Flattening and foundations: **PARTIAL** — live placement rules exist; all footprints/ports/rollback/dismantle cases are incomplete.
 6. Underground mining: **PARTIAL** — automatic and advanced mine E2E passes; complete deposit/miner catalog and session recovery remain.
 7. Canonical 15 Doronum inputs: **PARTIAL** — manifest/15 models validate, but not every live recipe/research/model/UI source is canonical.
-8. No item duplication/loss: **PARTIAL** — direct/batch consumption, machine supply and the live recipe active-job-to-output lifecycle are journaled; conveyors, drops, warehouse, shipment, demolition, Fusion and recovery remain separate.
-9. Conveyors and automatic mining: **PARTIAL** — mine output passes and graph routing exists; full parcel custody/asset catalog/deadlock recovery remain.
+8. No item duplication/loss: **PARTIAL** — direct/batch consumption, machine supply, recipe completion and machine-output → two conveyor segments → storage/player-inventory custody are journaled and E2E-tested; conveyor-to-machine, drops, warehouse, shipment, demolition, Fusion and recovery remain open.
+9. Conveyors and automatic mining: **PARTIAL** — automatic mining passes and a live machine-output → belt → belt → storage route preserves one stack ID and quantity; conveyor-to-machine, parcel splitting, full asset catalog and deadlock recovery remain.
 10. Power and batteries: **PARTIAL** — kW/kJ allocation and batteries exist; edge-loss solver and stable network identity remain.
 11. Six fluids/pressure/temperature: **PARTIAL** — six types and generic solver exist; only water is substantially live in-game.
 12. Machine states/failure/maintenance: **PARTIAL** — five profiles and repair path exist; not all machines/states/failures are covered.
@@ -160,3 +160,15 @@ This section supersedes the prior ownership wording above. The earlier audit che
 - The other blockers remain: 2,048m×2,048m world conversion/streaming; five non-water fluid paths; complete canonical recipe source; 19-vs-18 research-count reconciliation; all skill effects and all-machine failure coverage; complete contract catalog and route risk; Fusion cloud/process-restart recovery and complete interlocks; authenticated two-device saves; physical hardware, memory-leak and wall-clock soak; complete start-to-ending campaign regression.
 - **All 12 roadmap areas remain PARTIAL, blocked or UNVERIFIED.** The 20 acceptance checks are not all green. No release-ready or overall-complete claim is made.
 - No main merge, GitHub Pages/Render deployment, production database/schema change, balances/rewards change, or real-user save mutation was performed.
+
+
+## 2026-11-09 latest live logistics custody checkpoint
+
+This update supersedes the previous conveyor-ownership status for the development branch only.
+
+- Development code checkpoint: 1be3e174248d59b74b49ff650d4e7cf1ea628bc7; main remains c4e7c3d685eaa9dff41449a02ed1f398f3ec6a5f.
+- The live output and belt snapshot now carry stable explicit custody stack IDs. Actual machine-output → belt 1 → belt 2 → storage/player inventory movement commits three idempotent transfer transactions with one unchanged stack ID. The storage handoff creates the inventory runtime stack using that same ID rather than minting a replacement. The market sink uses a consumption journal before adding proceeds.
+- Playwright verified the full tested path with exact quantity conservation and a valid final owner. Node suite 131/131; push CI https://github.com/Rockey-Jason/doldol-site/actions/runs/42553161038 and PR CI https://github.com/Rockey-Jason/doldol-site/actions/runs/42553165969 succeeded. Desktop WebGL and 390×844 mobile-emulation WebGL passed. The 36,000-tick run is virtual simulation time only.
+- Still partial: conveyor-to-machine input is legacy/un-journaled; sale needs a dedicated E2E; independent warehouse stock, world drops, shipment, demolition, Fusion output and recovery remain open. No cross-domain all-item conservation claim is justified.
+- Repository comparison: current main c4e7c3d; development code checkpoint 1be3e17; PR #11 remains open/draft, 341 ahead / 168 behind from old merge base 26e8805. PR #8/#9 are draft, #10 is open/non-draft. No merge or deployment was attempted.
+- All 12 master roadmap areas and 20 acceptance checks are still PARTIAL, blocked or UNVERIFIED. No release-ready claim is made. Main, Pages, Render, production database, balances, rewards and live saves remain untouched.
