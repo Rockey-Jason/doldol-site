@@ -167,6 +167,62 @@
       <div class="hotel-member-seal" aria-hidden="true"><strong>♛</strong><small>DORI HOTEL</small></div>
     </section>
 
+
+    <section class="hotel-engagement-grid" aria-label="호텔 혜택과 이벤트">
+      <article class="hotel-panel hotel-wallet-panel">
+        <div class="hotel-panel-heading"><div><small>ROYAL REWARDS ACCOUNT</small><h3>로열 리워드 지갑</h3><p>호텔 활동과 이벤트로 모으는 전용 포인트입니다.</p></div><span class="hotel-wallet-icon">✧</span></div>
+        <div class="hotel-wallet-balance"><strong id="hotelPointsBalance">0</strong><span>HOTEL POINTS</span></div>
+        <div class="hotel-rank-row"><div><small>HOTEL GUEST RANK</small><strong id="hotelGuestRank">신입 게스트</strong></div><strong id="hotelGuestLevel">RANK 1</strong></div>
+        <div class="hotel-rank-track"><span id="hotelRankProgress"></span></div>
+        <div class="hotel-rank-foot"><span id="hotelRankProgressText">0 / 100 EXP</span><span id="hotelRankNext">다음 등급까지 100 EXP</span></div>
+        <p class="hotel-footnote">호텔 포인트는 호텔 내부 꾸미기 보상에만 사용할 수 있으며 돌돌코인·현금으로 교환되지 않습니다.</p>
+      </article>
+
+      <article class="hotel-panel hotel-attendance-panel">
+        <div class="hotel-panel-heading"><div><small>DAILY HOTEL BENEFIT</small><h3>오늘의 웰컴 혜택</h3><p>매일 호텔에 방문해 출석 선물을 받아 보세요.</p></div><span class="hotel-attendance-icon">♛</span></div>
+        <div class="hotel-attendance-reward"><strong>+100</strong><span>호텔 포인트</span><small>+30 호텔 경험치</small></div>
+        <div class="hotel-attendance-streak"><span>연속 출석</span><strong id="hotelAttendanceStreak">0일</strong><span>누적 출석 <b id="hotelAttendanceTotal">0회</b></span></div>
+        <button class="hotel-action-btn hotel-full-btn" type="button" id="hotelAttendanceClaim">오늘의 혜택 받기</button>
+        <p class="hotel-footnote" id="hotelAttendanceMessage">7일 연속 출석하면 특별 보너스가 기다립니다.</p>
+      </article>
+
+      <article class="hotel-panel hotel-event-panel">
+        <div class="hotel-event-top"><span class="hotel-kicker">TODAY AT DORI ROYAL HOTEL</span><span class="hotel-event-tag" id="hotelEventCategory">DAILY EVENT</span></div>
+        <div class="hotel-event-art" id="hotelEventArt" aria-hidden="true">✧</div>
+        <div class="hotel-event-copy"><small id="hotelEventSeason">ROYAL HOTEL SEASON</small><h3 id="hotelEventTitle">로열 애프터눈 티 세레머니</h3><p id="hotelEventDescription">오늘의 시그니처 이벤트에 참여하고 호텔 포인트를 모아 보세요.</p></div>
+        <div class="hotel-event-footer"><span id="hotelEventReward">참여 보상 · 80 포인트 + 25 EXP</span><button class="hotel-action-btn" type="button" id="hotelEventJoin">이벤트 참여</button></div>
+      </article>
+    </section>
+
+    <section class="hotel-panel hotel-passport-panel" aria-labelledby="hotelPassportTitle">
+      <div class="hotel-panel-heading"><div><small>THE ROYAL HOTEL PASSPORT</small><h3 id="hotelPassportTitle">나의 호텔 여권</h3><p>매일 출석 도장을 모아 연속 방문 보너스에 도전해 보세요.</p></div><span class="meta-pill" id="hotelPassportCount">이번 주 0 / 7</span></div>
+      <div class="hotel-passport-stamps" id="hotelPassportStamps" aria-label="최근 7일 출석 기록"></div>
+      <div class="hotel-passport-footer"><span id="hotelPassportStatus">첫 번째 도장을 기다리고 있어요.</span><strong id="hotelPassportBonus">7일 연속 달성 보너스 +250P</strong></div>
+    </section>
+
+    <section class="hotel-panel hotel-missions-panel" aria-labelledby="hotelMissionsTitle">
+      <div class="hotel-panel-heading"><div><small>YOUR DAILY ITINERARY</small><h3 id="hotelMissionsTitle">오늘의 호텔 미션</h3><p>하루에 주어지는 작은 미션을 완료하고 추가 보상을 획득하세요.</p></div><span class="meta-pill" id="hotelMissionCount">0 / 5 완료</span></div>
+      <div class="hotel-mission-grid" id="hotelMissionGrid"></div>
+      <div class="hotel-mission-bonus"><div><strong>DAILY GRAND BONUS</strong><small>오늘의 미션을 모두 완료하면 추가 보상을 받을 수 있어요.</small></div><span id="hotelMissionBonusReward">+250P · +50 EXP</span><button class="hotel-action-btn" type="button" id="hotelMissionBonus" disabled>전체 완료 보상</button></div>
+    </section>
+
+    <section class="hotel-panel hotel-activities-panel" aria-labelledby="hotelActivitiesTitle">
+      <div class="hotel-panel-heading"><div><small>MAKE YOUR STAY SPECIAL</small><h3 id="hotelActivitiesTitle">호텔에서 즐길 거리</h3><p>객실 밖에서도 다양한 호텔 프로그램을 체험할 수 있습니다. 각 프로그램은 하루 한 번 보상을 제공합니다.</p></div><span class="meta-pill">DAILY EXPERIENCES</span></div>
+      <div class="hotel-activity-grid">
+        <article class="hotel-activity-card"><div class="hotel-activity-art tea">♨</div><div class="hotel-activity-copy"><small>AFTERNOON TEA</small><h4>애프터눈 티 세레머니</h4><p>오늘의 블렌딩 티와 디저트 페어링을 즐겨 보세요.</p><button class="hotel-activity-btn" type="button" data-hotel-activity="tea">티 세레머니 참여 <span>+35P</span></button></div></article>
+        <article class="hotel-activity-card"><div class="hotel-activity-art garden">❋</div><div class="hotel-activity-copy"><small>PRIVATE GARDEN</small><h4>시크릿 가든 산책</h4><p>정원 산책 코스를 따라 고요한 휴식의 순간을 모아 보세요.</p><button class="hotel-activity-btn" type="button" data-hotel-activity="garden">정원 산책하기 <span>+35P</span></button></div></article>
+        <article class="hotel-activity-card"><div class="hotel-activity-art reading">▤</div><div class="hotel-activity-copy"><small>ROYAL READING CLUB</small><h4>로열 독서 클럽</h4><p>호텔 서재에서 책을 읽고 오늘의 문장을 발견해 보세요.</p><button class="hotel-activity-btn" type="button" data-hotel-activity="reading">서재 둘러보기 <span>+35P</span></button></div></article>
+        <article class="hotel-activity-card"><div class="hotel-activity-art music">♫</div><div class="hotel-activity-copy"><small>EVENING RECITAL</small><h4>피아노 리사이틀</h4><p>로열 라운지의 오리지널 연주곡으로 작은 음악회를 즐겨 보세요.</p><button class="hotel-activity-btn" type="button" data-hotel-activity="concert">음악회 감상하기 <span>+35P</span></button></div></article>
+      </div>
+      <div class="hotel-activity-foot" id="hotelActivityStatus">오늘 참여한 프로그램은 호텔 여권에 기록됩니다.</div>
+    </section>
+
+    <section class="hotel-panel hotel-rewards-panel" aria-labelledby="hotelRewardsTitle">
+      <div class="hotel-panel-heading"><div><small>THE ROYAL REWARD BOUTIQUE</small><h3 id="hotelRewardsTitle">로열 리워드 부티크</h3><p>미션과 이벤트로 모은 호텔 포인트를 객실 전용 장식으로 교환하세요.</p></div><span class="meta-pill"><b id="hotelShopPoints">0</b> P 보유</span></div>
+      <div class="hotel-reward-grid" id="hotelRewardGrid"></div>
+      <p class="hotel-footnote">교환한 장식은 계정에 영구 보관되며 객실 인테리어에서 장착할 수 있습니다. 실제 결제나 돌돌코인 차감은 없습니다.</p>
+    </section>
+
     <div class="hotel-layout">
       <div class="hotel-main-column">
         <section class="hotel-panel" aria-labelledby="hotelRoomSelectTitle">
