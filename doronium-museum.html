@@ -72,7 +72,7 @@
       <div><strong>07<span>종</span></strong><small>신문에 이름이 나온 도로늄</small></div>
       <div><strong>04<span>개</span></strong><small>명칭이 확인된 돌피니티 스톤</small></div>
       <div><strong>82<span>회</span></strong><small>Supabase 돌이신문 원문 검토</small></div>
-      <div><strong>04<span>가지</span></strong><small>신문에 기록된 파생 가공·용해</small></div>
+      <div><strong>05<span>가지</span></strong><small>신문에 기록된 파생 가공·용해</small></div>
     </section>
 
     <section class="collection-section section-wrap" id="collection">
@@ -90,7 +90,7 @@
         </div>
         <label class="search-box"><span aria-hidden="true">⌕</span><input id="specimen-search" type="search" placeholder="이름·제조법·신문 회차 검색" autocomplete="off"><kbd>/</kbd></label>
       </div>
-      <div class="collection-status"><span id="collection-count">11개 표본 전시 중</span><span>카드를 선택하면 제조 기록과 근거 신문 회차를 확인할 수 있습니다.</span></div>
+      <div class="collection-status"><span id="collection-count">Supabase 아카이브 연결 중</span><span id="museum-archive-status">돌이신문 원문에서 정리한 전시 자료를 불러오고 있습니다.</span></div>
       <div class="specimen-grid" id="specimen-grid" aria-live="polite"></div>
       <div class="specimen-pagination" id="specimen-pagination" aria-label="표본 페이지 이동">
         <button class="specimen-page-arrow" id="specimen-prev" type="button" aria-label="이전 표본 페이지">←</button>
@@ -111,7 +111,7 @@
         <div><div class="eyebrow"><span class="eyebrow-line"></span> NEWSPAPER PROCESSING RECORDS</div><h2>도로늄의 파생 가공</h2></div>
         <p>도로늄의 종류가 아니라<br>신문에 따로 기록된 가공품과 활용 예시입니다.</p>
       </div>
-      <div class="application-grid">
+      <div class="application-grid" id="application-grid"><p class="archive-loading">Supabase에서 파생 가공 기록을 불러오는 중입니다.</p></div>
         <article class="application-card"><span class="application-index">01 · FOOD</span><h3>도로늄 스테이크</h3><p>제41회에는 도로늄을 많이 때리면 질기지 않고 부드러워진다고 적혀 있습니다. 제42회는 웰던 도로늄 스테이크가 매우 질기다고 덧붙입니다.</p><div class="application-recipe"><small>신문에 기록된 조리 단서</small><strong>많이 두드리면 부드러워짐 · 웰던은 질김</strong></div><small class="application-source">근거: 제41·42회 돌이신문</small></article>
         <article class="application-card"><span class="application-index">02 · DRINK</span><h3>도로늄 블렌디드 스무디</h3><p>제78회에는 간 도로늄을 황금 돌이 주스에 넣어 2일간 숙성한다고 적혀 있습니다. 제79회에는 스무디 완성이 나옵니다.</p><div class="application-recipe"><small>신문에 기록된 조리 단서</small><strong>간 도로늄 + 황금 돌이 주스 · 2일 숙성</strong></div><small class="application-source">근거: 제78·79회 돌이신문</small></article>
         <article class="application-card"><span class="application-index">03 · WRITING</span><h3>도로늄 샤프심과 샤프</h3><p>제82회에는 도로늄을 갈아서 샤프심을 개발하고, 도로늄 샤프도 만든다고 나옵니다. 세부 배합이나 가공 조건은 공개되어 있지 않습니다.</p><div class="application-recipe"><small>신문에 기록된 제조 단서</small><strong>도로늄을 갈아 샤프심으로 가공</strong></div><small class="application-source">근거: 제82회 돌이신문</small></article>
@@ -126,6 +126,7 @@
           <h2>신문에 적힌<br><em>도로늄의 역사.</em></h2>
           <p>이 전시관은 Supabase의 public.rockey_news에 저장된 돌이신문 82개 원문을 기준으로 정리했습니다. 도로늄이라는 단어만 등장한 기사와, 실제 종류·재료·제조 과정을 설명한 기사를 구분했습니다.</p>
           <div class="origin-callout"><span class="callout-icon">⌁</span><div><strong>CURATOR'S NOTE</strong><p>신문은 돌피니티 스톤이 6개라고 언급하지만, 이름이 확인되는 4개만 전시하고 나머지는 추측하지 않았습니다. 제63·64회의 고품질·고급 도로늄은 등급 표현으로만 나와 별도 종류로 세지 않았습니다. 제45·50회의 도로늄 분출·분열·융합·증폭·인피니티 도로늄 분출은 기술 이름이지 별도 재료로 설명되지 않아 표본에서 제외했습니다. 제조법이 공개되지 않은 이름은 미공개로 표시합니다.</p></div></div>
+          <div id="doronium-lore-note"></div>
           <a class="text-link" href="./doronium-factory/">도로늄 공장으로 돌아가기 <span>↗</span></a>
         </div>
         <div class="timeline">
@@ -195,6 +196,7 @@
   </div>
 </dialog>
 <div class="toast" id="museum-toast" role="status" aria-live="polite"></div>
-<script type="module" src="./js/doronium-museum.js?v=4"></script>
+<script src="./js/supabase.min.js"></script>
+<script type="module" src="./js/doronium-museum.js?v=5"></script>
 </body>
 </html>
