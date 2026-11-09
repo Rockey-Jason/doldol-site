@@ -11,11 +11,11 @@ The current development branch adds live integrations beyond the 2026-11-03 audi
 | Blueprint | Save current selection/factory, duplicate, rotate and atomic placement UI | Port connectivity validation, complete blueprint migration/import/export UX and all special placement rules |
 | Power | Live per-consumer allocations, explicit cable-connected networks, transformer cap and battery kJ charge/discharge; generator/consumer/transformer/battery ratings now convert internal design units to kW; Infinity stage demands are 500kW→5MW | Transmission-loss calibration, storage dispatch policy review, grid diagnostics/visualizer, full generator/relay hardware integration and current browser regression |
 | Mine automation | Underground layer-specific miners, coal-fuelled mine generator, per-deposit depletion, byproducts, drill wear and repair | All mineral deposits/levels, mining profile failures, drill component crafting, actual in-device/browser regression and mine logistics |
-| Logistics | Live graph-based conveyor routing and machine-output entry; fixed a graph crash when a non-conveyor machine feeds the first belt; regression test added | All sorter/splitter/merger/lift/curve/multi-lane buildings as player-usable assets, automated deadlock recovery, global ownership transfer ledger and latest browser regression |
+| Logistics | Live graph-based conveyor routing and machine-output entry; manual inventory-to-machine-input transfers now journaled and browser-tested; non-conveyor-to-first-belt crash regression remains covered | All sorter/splitter/merger/lift/curve/multi-lane buildings as player-usable assets, automated deadlock recovery, stable stack identity across belts and full logistics custody recovery |
 | Shipping | Three sample contracts, five packaging steps, qualified reservation, transit outcome/insurance and idempotent reward | Full contract catalog, route-derived risk, packaging model/assets, server-side reward authority and comprehensive delivery recovery tests |
 | Failure | Five production machine profiles are connected to live machine processing and repair UI | Profiles/outcomes for every machine, failure distribution validation, failure/residue loss ledger and hardware/session regression |
 | Fluid | Pipe/pump/valve/tank are placeable and connected to live fixed-tick water flow; valve controls, live volume/pressure inspector, pump power and Dori Farm fluid-buffer consumption are connected | Oil/petroleum/molten-metal/lava/chemical source/extractor paths, port-direction validation, leak/failure integration, persistent fluid ownership ledger and full conservation/browser regression |
-| Item ownership | Custody ledger primitives exist and are tested | Migrate inventory, drops, all machine buffers, conveyors, warehouse, delivery, active jobs and consumed ledger into one source of truth |
+| Item ownership | Live single/batch inventory consumption journals `consumeCustody`; manual inventory-to-machine-input supply journals `transferCustody`; invalid custody blocks consumption without inventory loss; Playwright E2E passes | Still not one source of truth: production buffer/active-job/completion transitions, conveyors, world drops, independent warehouse, shipment cargo, demolition, fusion and recovery remain separate snapshot or mutation paths; preserve stack identity and add cross-domain conservation/rollback tests |
 | Canonical Doronum | Canonical 15 input IDs; separate `ITEM_DORONUM_INFINITY` finished-product ID; legacy `infinity` alias migrates inventory, metadata, counters, buffers and settlement records; ambiguous legacy IDs quarantined | Make the manifest the active ItemData/recipe/model source everywhere; explicit review UI for quarantined stacks; finish end-to-end canonical recipe and Infinity safety/interlock integration |
 | Infinity | Live UI/tick now atomically reserves 15 individually qualified legacy variant IDs, holds inputs during seven stages, preserves missing-machine jobs, supports reservation cancellation, and commits one output once; stage power demands now match 500kW–5MW | Replace legacy IDs with exact canonical manifest, add all stage safety/interlock/diagnostic checks and failure exposure, canonical output CompletionBuffer/ledger, crash/resume and exactly-once end-to-end tests |
 
@@ -43,14 +43,23 @@ The complete deficiency assessment is recorded in `Docs/PROJECT_AUDIT.md`. Curre
 | 1 World/terrain | Partial | 192×160 tile world does not meet 2,048m×2,048m contract; coordinate/save migration and streaming unresolved |
 | 2 Exploration/survival | Partial | Full PC/mobile, death/recovery and long-session regression |
 | 3 Construction | Partial | All ports/footprints/dismantle/cancel/crash recovery not covered |
-| 4 Mining | Partial / regression | Latest browser test failed on null mining output; precision fix requires green rerun |
-| 5 Production/canonical data | Partial | Canonical manifest not yet universal live recipe/model/research source |
+| 4 Mining | Partial | The previously failing automatic-mine output regression now passes the latest Playwright run; all deposits/levels, byproducts, failure profiles and hardware testing remain incomplete |
+| 5 Production/canonical data | Partial | Canonical manifest is not yet the universal live recipe/model/research source; current live research catalog has 19 entries while the master acceptance target states 18, so the count contract must be reconciled |
 | 6 Power | Partial | Transmission losses, all devices, diagnostics and topology regression |
 | 7 Fluids | Partial | Only water path is substantially live; five other fluid paths incomplete |
-| 8 Logistics | Partial | Full transport asset catalog and automated deadlock/custody recovery |
-| 9 Ownership | Partial / critical | Custody ledger is not yet the single source of truth across every item domain |
+| 8 Logistics | Partial | Manual inventory-to-machine supply is journaled; full transport asset catalog, conveyor custody, deadlock recovery and end-to-end logistics conservation remain |
+| 9 Ownership | Partial / critical | Direct/batch inventory consumption and manual machine-input transfers are journaled; the ledger is not yet the single source of truth across production, belts, drops, warehouse, shipping, fusion and recovery |
 | 10 Failure/skills | Partial | Full failure and skill-effect integration/coverage |
 | 11 Shipping/Fusion/ending | Partial / critical | Full contract catalog, live resumable Fusion integration, interlocks and ending regression |
 | 12 Saves/security/performance/release | Partial / unverified | Real two-device, physical-device, 60-minute wall-clock and final release tests |
 
 Release gates: cancelled or pending CI is not a pass. Mobile emulation is not a physical-device test. A virtual one-hour test is not a 60-minute wall-clock soak. PR-only work is not main/deployed work.
+
+
+## 2026-11-09 — live item transaction checkpoint
+
+The latest corrected code commit `4ce7ad0` passed both push and PR validation workflows (128/128 Node tests and Playwright PASS). The new browser case verifies real manual inventory-to-machine custody transfers, single/batch consumption journaling, exact inventory deltas, and fail-closed behavior when a duplicate shipment custody key corrupts the snapshot. The earlier automatic mining output-null browser regression is also green in this checkpoint.
+
+This improves one important ownership path but does **not** close global item ownership. The ledger still mirrors several independently mutated domains. Continue with recipe-buffer/active-job/completion transitions and then conveyor, warehouse, world-drop, shipment, demolition and Fusion custody. Keep the 2,048m×2,048m world, five non-water fluid types, 19-vs-18 research count, complete canonical recipe/model source, full Fusion interlocks/recovery, physical-device tests and real 60-minute soak open.
+
+**Current result remains PARTIAL / NOT RELEASE-READY.** Mobile viewport emulation and 36,000 virtual ticks are not substitutes for physical devices or a wall-clock soak. Main, Pages deployment and production data remain unchanged.
