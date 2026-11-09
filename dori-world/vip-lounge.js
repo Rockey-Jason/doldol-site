@@ -46,7 +46,7 @@ const BOOK_DEFAULTS=BOOKS.map(book=>({...book,chapters:(book.chapters||[]).map(c
 let user=null,profile=null,owned=new Set(),ownedMusic=new Set(["lounge_music_royal_piano"]),prefs={theme:"marble",ambient:true,draft:"",favorites:[],visit:null,musicTrack:"lounge_music_royal_piano",musicVolume:0.62};
 let storeKey="dori-lounge:guest",bookStoreKey="dori-lounge-books:guest",toastTimer=0;
 let bookState={progress:{},favorites:[],bookmarks:{},fontScale:1};
-let activeBook=null,activeChapter=0,savedReaderScroll=0,readerScrollTimer=0,editorDraft=null,readerPages=[],readerPageIndex=0,readerTouchStart=null;
+let activeBook=null,activeChapter=0,editorDraft=null,readerPages=[],readerPageIndex=0,readerTouchStart=null;
 const format=n=>{try{const value=String(n??0).trim();if(/^-?[0-9]+$/.test(value))return BigInt(value).toLocaleString("ko-KR")}catch(e){}return Number(n||0).toLocaleString("ko-KR")};
 function toast(msg){const el=$("toast");el.textContent=msg;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2600)}
 function save(){try{localStorage.setItem(storeKey,JSON.stringify(prefs))}catch(e){toast("브라우저 저장 공간을 확인해 주세요.")}}
@@ -681,7 +681,7 @@ function wireBookReader(){
  });
  $("readerFontDown").addEventListener("click",()=>{bookState.fontScale=Math.max(.85,Math.round((bookState.fontScale-.05)*100)/100);document.querySelector(".book-reader-dialog").style.setProperty("--reader-font-scale",String(bookState.fontScale));saveBookState();requestAnimationFrame(reflowReaderPages)});
  $("readerFontUp").addEventListener("click",()=>{bookState.fontScale=Math.min(1.4,Math.round((bookState.fontScale+.05)*100)/100);document.querySelector(".book-reader-dialog").style.setProperty("--reader-font-scale",String(bookState.fontScale));saveBookState();requestAnimationFrame(reflowReaderPages)});
- $("bookReaderBody").addEventListener("scroll",()=>{updateReaderProgress();if(readerScrollTimer)clearTimeout(readerScrollTimer);readerScrollTimer=setTimeout(()=>{readerScrollTimer=0;saveReaderProgress()},220)},{passive:true});
+  window.addEventListener("resize",()=>{if(!$("bookReader").classList.contains("open")||!activeBook||document.querySelector(".book-reader-dialog").classList.contains("editing"))return;requestAnimationFrame(reflowReaderPages)});
  document.addEventListener("keydown",event=>{
   if(!$("bookReader").classList.contains("open"))return;
   if(event.key==="Escape"){if(document.querySelector(".book-reader-dialog").classList.contains("editing"))cancelBookEdit();else closeBookReader();return}
