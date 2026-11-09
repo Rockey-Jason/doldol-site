@@ -171,7 +171,7 @@
     <section class="hotel-engagement-grid" aria-label="호텔 혜택과 이벤트">
       <article class="hotel-panel hotel-wallet-panel">
         <div class="hotel-panel-heading"><div><small>ROYAL REWARDS ACCOUNT</small><h3>로열 리워드 지갑</h3><p>호텔 활동과 이벤트로 모으는 전용 포인트입니다.</p></div><span class="hotel-wallet-icon">✧</span></div>
-        <div class="hotel-wallet-balance"><strong id="hotelPointsBalance">0</strong><span>HOTEL POINTS</span></div>
+        <div class="hotel-wallet-balance"><strong id="hotelPointsBalance">0</strong><span>HOTEL POINTS</span></div><div class="hotel-member-rate" id="hotelPointMultiplier">MEMBER REWARD BONUS ×1.00</div>
         <div class="hotel-rank-row"><div><small>HOTEL GUEST RANK</small><strong id="hotelGuestRank">신입 게스트</strong></div><strong id="hotelGuestLevel">RANK 1</strong></div>
         <div class="hotel-rank-track"><span id="hotelRankProgress"></span></div>
         <div class="hotel-rank-foot"><span id="hotelRankProgressText">0 / 100 EXP</span><span id="hotelRankNext">다음 등급까지 100 EXP</span></div>
@@ -215,6 +215,12 @@
         <article class="hotel-activity-card"><div class="hotel-activity-art music">♫</div><div class="hotel-activity-copy"><small>EVENING RECITAL</small><h4>피아노 리사이틀</h4><p>로열 라운지의 오리지널 연주곡으로 작은 음악회를 즐겨 보세요.</p><button class="hotel-activity-btn" type="button" data-hotel-activity="concert">음악회 감상하기 <span>+35P</span></button></div></article>
       </div>
       <div class="hotel-activity-foot" id="hotelActivityStatus">오늘 참여한 프로그램은 호텔 여권에 기록됩니다.</div>
+    </section>
+
+
+    <section class="hotel-panel hotel-experience-history-panel" aria-labelledby="hotelExperienceHistoryTitle">
+      <div class="hotel-panel-heading"><div><small>YOUR HOTEL MOMENTS</small><h3 id="hotelExperienceHistoryTitle">나의 호텔 경험 기록</h3><p>참여한 이벤트와 프로그램 선택이 나만의 호텔 다이어리에 차곡차곡 저장됩니다.</p></div><span class="meta-pill" id="hotelExperienceTotal">0개 기록</span></div>
+      <div class="hotel-experience-log" id="hotelExperienceLog"><div class="hotel-empty-state">첫 프로그램에 참여하면 이곳에 호텔 경험이 기록됩니다.</div></div>
     </section>
 
     <section class="hotel-panel hotel-rewards-panel" aria-labelledby="hotelRewardsTitle">
