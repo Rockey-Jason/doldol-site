@@ -615,8 +615,9 @@ function handleBookEditorPageInput(card,activeInput,event){
  const caret={start:prefix+cursorStart,end:prefix+cursorEnd};
  const content=inputs.map(input=>input.value||"").join("");
  const nextPages=paginateBookEditorText(content,activeInput);
- const currentPages=inputs.map(input=>input.value||"");
- if(nextPages.length===currentPages.length&&nextPages.every((value,index)=>value===currentPages[index])){
+ const currentPageLengths=inputs.map(input=>input.value.length);
+ const samePageBreaks=nextPages.length===currentPageLengths.length&&nextPages.every((value,index)=>value.length===currentPageLengths[index]);
+ if(samePageBreaks){
   updateBookEditorPageMeta(card);return;
  }
  renderBookEditorPages(card,nextPages,caret);
