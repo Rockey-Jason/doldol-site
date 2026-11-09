@@ -1,7 +1,7 @@
 (() => {
 'use strict';
 const SUPABASE_URL = 'https://scttowfhygcpdirrekqm.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY';
 const $ = id => document.getElementById(id);
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const asBig = value => { try { return BigInt(String(value ?? '0').replaceAll(',','')); } catch (_) { return 0n; } };
