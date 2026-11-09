@@ -91,7 +91,9 @@
       attendance: { lastDate: "", streak: 0, total: 0, dates: [] },
       daily: { date: "", attendanceClaimed: false, eventClaimed: false, missions: {}, activityClaims: [], activityBonusClaimed: false, missionBonusClaimed: false },
       rewardOwned: [],
-      totalActivities: 0
+      totalActivities: 0,
+      activityLog: [],
+      eventLog: []
     };
   }
 
@@ -205,7 +207,9 @@
             activityClaims: Array.isArray(saved.daily.activityClaims) ? saved.daily.activityClaims : []
           } : createDefaultState().daily,
           rewardOwned: Array.isArray(saved.rewardOwned) ? saved.rewardOwned.filter(id => rewards.some(item => item.id === id)) : [],
-          totalActivities: Math.max(0, Math.floor(Number(saved.totalActivities) || 0))
+          totalActivities: Math.max(0, Math.floor(Number(saved.totalActivities) || 0)),
+          activityLog: Array.isArray(saved.activityLog) ? saved.activityLog.slice(0, 50) : [],
+          eventLog: Array.isArray(saved.eventLog) ? saved.eventLog.slice(0, 30) : []
         };
       }
     } catch (error) {
@@ -736,9 +740,59 @@
     const bonus=state.attendance.streak%7===0;addHotelReward(100+(bonus?250:0),30+(bonus?50:0));completeMission("attendance");renderEngagement();
     showToast(bonus?"7일 연속 출석 달성! 특별 보너스를 받았어요.":"오늘의 웰컴 혜택을 받았어요!");
   }
+  function showExperience(config) {
+    const overlay=$("hotelExperienceDialog"),optionsBox=$("hotelExperienceOptions"),confirm=$("hotelExperienceConfirm");
+    if(!overlay||!optionsBox||!confirm)return;
+    activeExperienceCallback=config.onConfirm;
+    selectedExperienceChoice="";
+    $("hotelExperienceKicker").textContent=config.kicker||"DORI ROYAL HOTEL EXPERIENCE";
+    $("hotelExperienceTitle").textContent=config.title||"호텔 프로그램";
+    $("hotelExperienceDescription").textContent=config.description||"원하는 프로그램을 선택해 주세요.";
+    $("hotelExperienceReward").textContent=config.reward||"참여 보상";
+    optionsBox.replaceChildren();
+    (config.options||[]).forEach(option=>{
+      const button=document.createElement("button");button.type="button";button.className="hotel-experience-option";button.dataset.experienceChoice=option.value;
+      const icon=document.createElement("span");icon.className="experience-option-icon";icon.textContent=option.icon||"✧";
+      const copy=document.createElement("span");copy.className="experience-option-copy";
+      const title=document.createElement("strong");title.textContent=option.label;
+      const detail=document.createElement("small");detail.textContent=option.detail||"";
+      copy.append(title,detail);button.append(icon,copy);optionsBox.append(button);
+    });
+    confirm.disabled=true;confirm.textContent=config.confirmLabel||"선택 확정";
+    overlay.hidden=false;document.body.classList.add("hotel-experience-open");
+    $("hotelExperienceClose")?.focus({preventScroll:true});
+  }
+
+  function closeExperience() {
+    const overlay=$("hotelExperienceDialog");if(overlay)overlay.hidden=true;
+    document.body.classList.remove("hotel-experience-open");
+    activeExperienceCallback=null;selectedExperienceChoice="";
+  }
+
   function joinDailyEvent() {
-    if(!member)return;ensureDailyState();if(state.daily.eventClaimed){showToast("오늘의 이벤트는 이미 참여했어요. 내일 새로운 이벤트가 열립니다.");return;}
-    state.daily.eventClaimed=true;addHotelReward(80,25);completeMission("event");renderEngagement();showToast(activeDailyEvent().title+" 참여 완료! 호텔 포인트를 받았어요.");
+    if(!member)return;ensureDailyState();
+    if(state.daily.eventClaimed){showToast("오늘의 이벤트는 이미 참여했어요. 내일 새로운 이벤트가 열립니다.");return;}
+    const event=activeDailyEvent();
+    const optionSets={
+      tea:[{value:"classic",label:"클래식 티 페어링",detail:"얼그레이와 레몬 타르트",icon:"☕"},{value:"floral",label:"플로럴 블렌딩",detail:"캐모마일과 마들렌",icon:"❋"},{value:"royal",label:"로열 디저트 코스",detail:"루이보스와 허니 케이크",icon:"♛"}],
+      garden:[{value:"pond",label:"미러 폰드 코스",detail:"수면 위 조명을 감상하는 산책",icon:"◇"},{value:"rose",label:"로즈 아치 코스",detail:"장미 정원을 지나는 산책",icon:"❋"},{value:"glass",label:"글라스하우스 코스",detail:"온실 속 작은 식물 정원",icon:"♧"}],
+      piano:[{value:"piano",label:"그랜드 피아노",detail:"잔잔한 클래식 피아노 리사이틀",icon:"♫"},{value:"jazz",label:"벨벳 재즈 트리오",detail:"재즈 피아노와 콘트라베이스",icon:"♬"},{value:"crystal",label:"크리스탈 앙상블",detail:"맑은 첼레스타와 현악 연주",icon:"◇"}],
+      gallery:[{value:"crystal",label:"크리스탈 컬렉션",detail:"빛과 투명함을 주제로 한 전시",icon:"◇"},{value:"sculpture",label:"로열 조각 갤러리",detail:"호텔 시그니처 오브제 전시",icon:"♜"},{value:"garden",label:"보태니컬 아트",detail:"식물과 자연에서 영감을 받은 작품",icon:"❋"}],
+      midnight:[{value:"cocoa",label:"시그니처 코코아",detail:"다크 코코아와 바닐라",icon:"☕"},{value:"vanilla",label:"바닐라 밀크",detail:"따뜻하고 부드러운 밀크 라운지",icon:"♡"},{value:"spice",label:"스파이스 블렌드",detail:"시나몬 향을 더한 야간 음료",icon:"✧"}]
+    };
+    showExperience({
+      kicker:event.category,title:event.title,description:event.description,
+      reward:"이벤트 참여 보상 · 80P + 25 EXP",
+      options:optionSets[event.id]||optionSets.tea,
+      confirmLabel:"이벤트 참여 확정",
+      onConfirm:choice=>{
+        state.daily.eventClaimed=true;
+        state.eventLog.unshift({date:hotelDateKey(),eventId:event.id,eventTitle:event.title,choice,completedAt:new Date().toISOString()});
+        state.eventLog=state.eventLog.slice(0,30);
+        addHotelReward(80,25);completeMission("event");renderEngagement();
+        showToast(event.title+" 참여 완료! 호텔 포인트를 받았어요.");
+      }
+    });
   }
   function claimMissionBonus() {
     ensureDailyState();if(!missions.every(item=>state.daily.missions[item.id])){showToast("오늘의 미션을 모두 완료하면 보상을 받을 수 있어요.");return;}
@@ -746,12 +800,35 @@
     state.daily.missionBonusClaimed=true;addHotelReward(250,50);renderEngagement();showToast("오늘의 그랜드 보너스 +250P · +50 EXP!");
   }
   function takeActivity(id) {
-    if(!member)return;ensureDailyState();const activity=activities.find(item=>item.id===id);if(!activity)return;
+    if(!member)return;ensureDailyState();
+    const activity=activities.find(item=>item.id===id);if(!activity)return;
     if(state.daily.activityClaims.includes(id)){showToast("이 프로그램은 오늘 이미 참여했어요.");return;}
-    state.daily.activityClaims.push(id);state.totalActivities+=1;addHotelReward(activity.points,activity.exp);
-    if(id==="reading")openExistingView("library");else if(id==="concert")$("musicPlayToggle")?.click();else if(id==="garden")showToast("시크릿 가든 산책을 기록했어요. 오늘의 휴식을 즐겨 보세요.");else showToast("애프터눈 티 세레머니 참여 완료!");
-    if(state.daily.activityClaims.length===activities.length&&!state.daily.activityBonusClaimed){state.daily.activityBonusClaimed=true;addHotelReward(100,30);showToast("오늘의 액티비티 완료! 올 데이 리트리트 보너스 +100P!");}
-    save();renderActivities();renderRewards();
+    const optionSets={
+      tea:[{value:"earl-grey",label:"얼그레이 티 세트",detail:"시트러스 향과 레몬 타르트",icon:"☕"},{value:"chamomile",label:"캐모마일 티 세트",detail:"마들렌과 허브 블렌딩",icon:"❋"},{value:"royal",label:"로열 디저트 세트",detail:"허니 케이크와 루이보스",icon:"♛"}],
+      garden:[{value:"pond",label:"연못 산책로",detail:"물결 정원과 작은 분수",icon:"◇"},{value:"rose",label:"장미 아치 길",detail:"꽃과 향기가 가득한 아치",icon:"❋"},{value:"greenhouse",label:"유리 온실 길",detail:"햇빛이 드는 보태니컬 온실",icon:"♧"}],
+      reading:[{value:"mystery",label:"미스터리와 추리",detail:"단서를 따라가는 이야기",icon:"⌕"},{value:"history",label:"역사와 인물",detail:"시간을 따라가는 교양 독서",icon:"▤"},{value:"fantasy",label:"판타지와 모험",detail:"새로운 세계를 만나는 이야기",icon:"✧"}],
+      concert:[{value:"classical",label:"클래식 피아노",detail:"차분하고 서정적인 선율",icon:"♫"},{value:"jazz",label:"벨벳 재즈",detail:"따뜻한 재즈 라운지 사운드",icon:"♬"},{value:"seasonal",label:"시즌 시그니처",detail:"계절의 분위기를 담은 연주",icon:"❄"}]
+    };
+    showExperience({
+      kicker:"DAILY HOTEL EXPERIENCE",title:activity.name,
+      description:id==="tea"?"오늘 즐길 티와 디저트 페어링을 선택해 주세요.":id==="garden"?"마음에 드는 정원 산책 코스를 선택해 주세요.":id==="reading"?"오늘의 독서 클럽 테마를 선택해 주세요.":"오늘 감상할 음악회의 분위기를 선택해 주세요.",
+      reward:"프로그램 완료 보상 · +"+activity.points+"P + "+activity.exp+" EXP",
+      options:optionSets[id]||optionSets.tea,confirmLabel:id==="reading"?"독서 테마 선택 후 서재로":"프로그램 참여 확정",
+      onConfirm:choice=>{
+        state.daily.activityClaims.push(id);state.totalActivities+=1;
+        state.activityLog.unshift({date:hotelDateKey(),activityId:id,activityName:activity.name,choice,completedAt:new Date().toISOString()});
+        state.activityLog=state.activityLog.slice(0,50);
+        addHotelReward(activity.points,activity.exp);
+        save();renderActivities();renderRewards();
+        if(id==="reading")openExistingView("library");
+        else if(id==="concert")$("musicPlayToggle")?.click();
+        else showToast(activity.name+" 참여 완료! 오늘의 기록에 저장했어요.");
+        if(state.daily.activityClaims.length===activities.length&&!state.daily.activityBonusClaimed){
+          state.daily.activityBonusClaimed=true;addHotelReward(100,30);showToast("오늘의 액티비티 완료! 올 데이 리트리트 보너스 +100P!");
+        }
+        save();renderActivities();renderRewards();
+      }
+    });
   }
   function handleRewardAction(id,action) {
     const item=rewards.find(reward=>reward.id===id);if(!item)return;
@@ -766,5 +843,21 @@
     }
   }
 
+  let activeExperienceCallback = null;
+  let selectedExperienceChoice = "";
+  $("hotelExperienceClose")?.addEventListener("click",closeExperience);
+  $("hotelExperienceDialog")?.addEventListener("click",event=>{if(event.target.id==="hotelExperienceDialog")closeExperience();});
+  $("hotelExperienceOptions")?.addEventListener("click",event=>{
+    const option=event.target.closest("[data-experience-choice]");if(!option)return;
+    selectedExperienceChoice=option.dataset.experienceChoice;
+    document.querySelectorAll(".hotel-experience-option").forEach(button=>button.classList.toggle("selected",button===option));
+    const confirm=$("hotelExperienceConfirm");if(confirm)confirm.disabled=false;
+  });
+  $("hotelExperienceConfirm")?.addEventListener("click",()=>{
+    if(!selectedExperienceChoice||typeof activeExperienceCallback!=="function")return;
+    const callback=activeExperienceCallback,choice=selectedExperienceChoice;
+    closeExperience();callback(choice);
+  });
+  document.addEventListener("keydown",event=>{if(event.key==="Escape"&&$("hotelExperienceDialog")&&!$("hotelExperienceDialog").hidden)closeExperience();});
   window.setInterval(syncMusicText, 3000);
 })();
