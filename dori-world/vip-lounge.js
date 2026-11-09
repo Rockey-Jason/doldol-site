@@ -778,7 +778,7 @@ document.querySelectorAll("[data-view]").forEach(b=>b.addEventListener("click",(
 document.querySelectorAll("[data-open-view]").forEach(b=>b.addEventListener("click",()=>nav(b.dataset.openView)));
 document.querySelectorAll("[data-theme-choice]").forEach(b=>b.addEventListener("click",()=>{prefs.theme=b.dataset.themeChoice;paintPrefs();save();toast("라운지 테마를 변경했어요.")}));
 $("ambientToggle").addEventListener("click",()=>{prefs.ambient=!(prefs.ambient!==false);paintPrefs();save();toast(prefs.ambient?"장식 효과를 켰어요.":"장식 효과를 껐어요.")});
-$("supportDraft").addEventListener("input",()=>{prefs.draft=$("supportDraft").value;save();counter();$("draftStatus").textContent="현재 기기에 저장됨"});
+$("supportDraft").addEventListener("input",()=>{prefs.draft=$("supportDraft").value;save();counter();$("draftStatus").textContent="회원 계정 저장 · 클라우드 동기화"});
 $("copyInquiry").addEventListener("click",()=>{if(!$("supportDraft").value.trim()){toast("문의 내용을 먼저 작성해 주세요.");return}copy("돌이 라운지 문의\n회원: "+(profile&&profile.name||"회원")+"\n내용:\n"+$("supportDraft").value,"문의 내용을 복사했어요. 공식 문의 경로에 직접 전달해 주세요.")});
 $("clearDraft").addEventListener("click",()=>{$("supportDraft").value="";prefs.draft="";save();counter();toast("문의 초안을 비웠어요.")});
 document.querySelectorAll("[data-favorite]").forEach(b=>b.addEventListener("click",()=>{const id=b.dataset.favorite;prefs.favorites=prefs.favorites.includes(id)?prefs.favorites.filter(x=>x!==id):prefs.favorites.concat(id);paintPrefs();save();toast(prefs.favorites.includes(id)?"즐겨찾기에 추가했어요.":"즐겨찾기에서 제거했어요.")}));
