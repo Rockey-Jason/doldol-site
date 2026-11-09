@@ -18,7 +18,9 @@ const specimens = [
  {id:"doronium_void",name:"보이드 도로늄",en:"VOID DORONIUM",grade:"VOID",group:"advanced",color:"#5b3b86",glow:"rgba(91,59,134,.33)",shape:"Void Dodecahedron",shapeKo:"공허 십이면체",process:"일반 도로늄 10개 · 블랙 도로늄 2개 · 산업 회로 10개 · 석탄 15개",temp:"공허 압축 · 75초",desc:"깊은 보랏빛을 품은 고밀도 결정입니다. 공허 압축 공정으로 복잡한 내부 구조를 가진 표본을 제작합니다.",note:"15종의 정식 변형 중 마지막 계열로 보존되는 고난도 표본입니다.",recipe:"일반 도로늄 10개 + 블랙 도로늄 2개 + 산업 회로 10개 + 석탄 15개"}
 ];
 
-const shapeKeys = {doronium_normal:"octa",doronium_blue:"hex",doronium_red:"tetra",doronium_iron:"dodeca",doronium_orange:"pent",doronium_thermal:"icosa",doronium_cold:"spike",doronium_black:"block",doronium_clear:"square",doronium_special:"ring",doronium_limited:"crown",doronium_crystal:"faceted",doronium_resonant:"knot",doronium_prismatic:"tri",doronium_void:"void"};\n\nconst shapeSvg = {
+const shapeKeys = {doronium_normal:"octa",doronium_blue:"hex",doronium_red:"tetra",doronium_iron:"dodeca",doronium_orange:"pent",doronium_thermal:"icosa",doronium_cold:"spike",doronium_black:"block",doronium_clear:"square",doronium_special:"ring",doronium_limited:"crown",doronium_crystal:"faceted",doronium_resonant:"knot",doronium_prismatic:"tri",doronium_void:"void"};
+
+const shapeSvg = {
  octa:'<path class="gem-face" d="M50 4 89 32 72 91 50 115 28 91 11 32Z"/><path class="gem-light" d="M50 4 50 57 11 32Z"/><path class="gem-dark" d="M50 57 72 91 50 115Z"/><path class="gem-line" d="M11 32 50 57 89 32M50 4V115M28 91 50 57 72 91"/>',
  hex:'<path class="gem-face" d="M50 4 86 25 86 83 50 114 14 83 14 25Z"/><path class="gem-light" d="M50 4 50 61 14 25Z"/><path class="gem-dark" d="M50 61 86 25 86 83 50 114Z"/><path class="gem-line" d="M14 25 50 61 86 25M50 4V114M14 83 50 61 86 83"/>',
  tetra:'<path class="gem-face" d="M50 7 94 94 50 114 6 94Z"/><path class="gem-light" d="M50 7 50 114 6 94Z"/><path class="gem-dark" d="M50 7 94 94 50 114Z"/><path class="gem-line" d="M6 94 50 67 94 94"/>',
