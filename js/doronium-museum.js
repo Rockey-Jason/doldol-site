@@ -257,7 +257,7 @@ dialogFavoriteButton?.addEventListener("click",()=>{if(!activeDialogItem)return;
 function moveDialogSpecimen(direction){if(!activeDialogItem)return;const list=visibleSpecimens();const index=list.findIndex(item=>item.id===activeDialogItem.id);const target=list[index+direction];if(target)openSpecimen(target);}
 dialogPrevButton?.addEventListener("click",()=>moveDialogSpecimen(-1));dialogNextButton?.addEventListener("click",()=>moveDialogSpecimen(1));
 randomSpecimenButton?.addEventListener("click",()=>{const pool=visibleSpecimens();if(!pool.length){showToast("선택한 조건에 표본이 없습니다.");return;}const item=pool[Math.floor(Math.random()*pool.length)];openSpecimen(item);});
-dialog.addEventListener("close",()=>{if(activeViewer){activeViewer.dispose();activeViewer=null;}});
+dialog.addEventListener("close",()=>{if(activeViewer){activeViewer.dispose();activeViewer=null;}activeDialogItem=null;});
 document.querySelector("#reset-visit").addEventListener("click",()=>{
  viewed.clear();updateProgress();renderCards();showToast("관람 기록을 초기화했습니다.");
 });
@@ -289,7 +289,7 @@ function setupChapterDeck(){
  previous.addEventListener("click",()=>go(current-1));next.addEventListener("click",()=>go(current+1));
  steps.addEventListener("click",event=>{const button=event.target.closest("[data-chapter-step]");if(button)go(Number(button.dataset.chapterStep));});
  deck.addEventListener("scroll",()=>{if(scrollFrame)return;scrollFrame=requestAnimationFrame(()=>{scrollFrame=0;if(deck.clientWidth)paint(Math.round(deck.scrollLeft/deck.clientWidth));});},{passive:true});
- deck.addEventListener("pointerdown",event=>{if(event.pointerType==="mouse"&&event.button!==0)return;if(event.target.closest("input,button,a,dialog"))return;swipeStart={x:event.clientX,y:event.clientY,target:event.target};},{passive:true});
+ deck.addEventListener("pointerdown",event=>{if(event.pointerType==="mouse"&&event.button!==0)return;if(event.target.closest("input,a,dialog")||(event.target.closest("button")&&!event.target.closest(".specimen-grid")))return;swipeStart={x:event.clientX,y:event.clientY,target:event.target};},{passive:true});
  deck.addEventListener("pointerup",event=>{if(!swipeStart)return;const dx=event.clientX-swipeStart.x,dy=event.clientY-swipeStart.y,startTarget=swipeStart.target;swipeStart=null;if(Math.abs(dx)<58||Math.abs(dx)<Math.abs(dy)*1.25)return;suppressSwipeClick=true;setTimeout(()=>{suppressSwipeClick=false;},450);if(startTarget.closest(".specimen-grid")){setSpecimenPage(activeSpecimenPage+(dx<0?1:-1));return;}go(current+(dx<0?1:-1));});
  deck.addEventListener("pointercancel",()=>{swipeStart=null;});
  deck.addEventListener("click",event=>{if(!suppressSwipeClick)return;event.preventDefault();event.stopPropagation();},true);
