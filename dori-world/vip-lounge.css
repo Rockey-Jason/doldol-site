@@ -745,51 +745,41 @@ body[data-theme="rose"] .music-progress-meta{color:#9a7970}
 .book-editor-toc-field .book-editor-textarea{min-height:126px;line-height:1.8}.book-editor-toc-field small{color:#93846d;font-size:10px;line-height:1.6}.reader-toc-toggle{min-height:32px;padding:0 10px;border:1px solid rgba(164,131,78,.24);border-radius:9px;background:rgba(255,255,255,.72);color:#947342;font:inherit;font-size:10px;cursor:pointer}.reader-toc-toggle[aria-expanded="true"]{background:#eadfc9;border-color:#b8955b}.reader-toc-panel{flex:0 0 auto;max-height:34vh;overflow:auto;margin:0 25px 12px;padding:17px 24px;border:1px solid rgba(167,135,80,.2);border-radius:14px;background:linear-gradient(140deg,#fffdf8,#f5edde);color:#51432d}.reader-toc-panel[hidden]{display:none!important}.reader-toc-kicker{color:#a08048;font:8px Arial,sans-serif;letter-spacing:.2em}.reader-toc-panel h3{margin:5px 0 10px;font-size:17px;font-weight:400}.reader-toc-panel ol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 24px;margin:0;padding-left:22px}.reader-toc-panel li{padding:3px 0;color:#766448;font-size:11px;line-height:1.5;overflow-wrap:anywhere}@media(max-width:620px){.reader-chapter-row{flex-wrap:wrap}.reader-toc-panel{margin:0 9px 9px;padding:13px}.reader-toc-panel ol{grid-template-columns:1fr;gap:3px}}
 
 
-/* Continuous manuscript writing with automatic visual page flow */
-.book-editor-chapter .book-editor-textarea{
+/* Continuous multi-page manuscript editor — pages are always active */
+.book-editor-chapter{padding:17px;background:rgba(245,237,222,.52)}
+.book-editor-pages{display:flex;flex-direction:column;gap:18px;min-width:0}
+.book-editor-page-sheet{
  --editor-page-height:940px;
- min-height:62vh;
- height:62vh;
- padding:34px 36px;
- resize:none;
- overflow:hidden;
- line-height:1.95;
- font-size:14px;
- white-space:pre-wrap;
- overflow-wrap:anywhere;
- background-color:#e9e1d2;
- background-image:linear-gradient(#fffefa,#fffefa);
- background-size:100% calc(var(--editor-page-height) - 22px);
- background-position:0 0;
- background-repeat:repeat-y;
- background-attachment:local;
- box-shadow:0 2px 12px rgba(91,70,38,.045);
+ display:flex;flex-direction:column;box-sizing:border-box;
+ width:100%;height:var(--editor-page-height);min-height:var(--editor-page-height);
+ overflow:hidden;padding:26px 36px 20px;
+ border:1px solid rgba(164,131,78,.2);border-radius:7px;
+ background:linear-gradient(180deg,#fffefa,#fffdf8);
+ box-shadow:0 7px 22px rgba(91,70,38,.07),inset 0 1px #fff;
 }
-.book-editor-page-meta{
- display:flex;
- align-items:center;
- justify-content:flex-end;
- gap:8px;
- margin-top:-2px;
- padding:0 3px;
- color:#9a8768;
- font-size:10px;
- line-height:1.6;
+.book-editor-page-heading,.book-editor-page-footer{
+ display:flex;align-items:center;justify-content:space-between;gap:10px;
+ flex:0 0 auto;color:#a18a65;font:8px/1.3 Arial,sans-serif;letter-spacing:.16em
 }
-.book-editor-chapter .book-editor-textarea:focus{
- background-color:#e7decd;
- background-image:linear-gradient(#fffefa,#fffefa);
+.book-editor-page-heading{padding-bottom:12px;border-bottom:1px solid rgba(164,131,78,.17)}
+.book-editor-page-footer{padding-top:11px;border-top:1px solid rgba(164,131,78,.15)}
+.book-editor-page-input{
+ display:block;flex:1 1 auto;box-sizing:border-box;width:100%;height:auto;min-height:0;
+ margin:0;padding:23px 0 18px;border:0;border-radius:0;
+ outline:none;background:transparent;color:#443a2c;
+ font:400 14px/1.95 HancomMalrangmalrang,'Malgun Gothic',sans-serif;
+ letter-spacing:.005em;white-space:pre-wrap;overflow-wrap:anywhere;
+ overflow:hidden;resize:none;overscroll-behavior:none;
 }
+.book-editor-page-input:focus{border:0;outline:none;box-shadow:none;background:transparent}
+.book-editor-page-meta{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:0;padding:0 3px;color:#9a8768;font-size:10px;line-height:1.6}
 .book-editor-page-meta strong{color:#9a7844;font-weight:400}
 @media(max-width:600px){
- .book-editor-chapter .book-editor-textarea{
-  --editor-page-height:860px;
-  min-height:58vh;
-  height:58vh;
-  padding:24px 18px;
-  font-size:13px;
-  line-height:1.9;
- }
+ .book-editor-chapter{padding:11px}
+ .book-editor-page-sheet{--editor-page-height:860px;padding:21px 18px 17px}
+ .book-editor-page-heading,.book-editor-page-footer{font-size:7px;letter-spacing:.12em}
+ .book-editor-page-input{padding:19px 0 14px;font-size:13px;line-height:1.9}
+ .book-editor-pages{gap:13px}
  .book-editor-page-meta{font-size:9px}
 }
 
