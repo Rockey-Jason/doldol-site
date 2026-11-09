@@ -2067,6 +2067,7 @@ if(E2E_MODE){
     const transfers=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="TRANSFER");
     const transferTargets=transfers.filter(tx=>tx.result?.to?.type==="MACHINE_INPUT");
     const machineInput={...machine.input};
+    const inventoryAfterTransfer={ironOre:availableItemCount(S,"ironOre"),coal:availableItemCount(S,"coal"),wood:availableItemCount(S,"wood")};
     const singleConsumed=takeItem("wood",1),batchConsumed=takeItems({wood:1});
     const consumptionValidation=rebuildOwnershipLedger(S);
     const consumed=S.ownershipLedger.consumed.filter(entry=>entry.itemID==="wood");
@@ -2078,7 +2079,7 @@ if(E2E_MODE){
     const blockedBefore=availableItemCount(S,"wood"),blocked=takeItem("wood",1),blockedAfter=availableItemCount(S,"wood");
     return {
      transferValid:transferValidation.valid,transferCount:transfers.length,transferTargetCount:transferTargets.length,machineInput,
-     inventoryAfterTransfer:{ironOre:availableItemCount(S,"ironOre"),coal:availableItemCount(S,"coal"),wood:availableItemCount(S,"wood")},
+     inventoryAfterTransfer,
      singleConsumed,batchConsumed,consumptionValid:consumptionValidation.valid,consumedWood:consumed.reduce((n,entry)=>n+entry.quantity,0),
      inventoryAfterConsumption,blocked,blockedBefore,blockedAfter,blockedReservations:Object.keys(S.runtime.reservations||{}).length,
      blockedByInvalidCustody:S.ownershipLedgerValidation?.valid===false,finalValidationValid:consumptionValidation.valid
