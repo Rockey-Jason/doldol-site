@@ -248,7 +248,7 @@ body[data-theme="midnight"] .hero:before{background:radial-gradient(ellipse at 5
 .book-reader-paper h3{margin:0 65px 23px;color:#392f22;font-size:24px;font-weight:400;letter-spacing:-.04em}
 .book-reader-body{height:calc(100% - 120px);overflow:hidden;padding:0 65px 30px;color:#514b40;font-size:calc(15px * var(--reader-font-scale,1));line-height:2.05;letter-spacing:.01em;white-space:normal;overscroll-behavior:none;touch-action:pan-y}
 .book-reader-body p{margin:0 0 1.25em;text-indent:1em}
-.book-reader-body p:first-child:first-letter{float:left;margin:.05em .1em 0 0;color:#ad8849;font:44px/1 Georgia,serif}
+.book-reader-body p.reader-chapter-opening:first-letter{float:left;margin:.05em .1em 0 0;color:#ad8849;font:44px/1 Georgia,serif}
 .reader-endmark{margin:18px 0 0;color:#bd9a61;text-align:center;font:23px Georgia,serif}
 .book-reader-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 20px;border-top:1px solid rgba(149,117,63,.18);background:linear-gradient(100deg,#f4edde,#fffaf0)}
 .book-reader-footer .secondary-btn,.book-reader-footer .primary-btn{min-height:40px}
