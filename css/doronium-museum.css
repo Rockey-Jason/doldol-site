@@ -315,3 +315,20 @@ body{overflow:hidden;background:radial-gradient(ellipse at 50% 0%,rgba(56,128,15
 @media(prefers-reduced-motion:reduce){.page-turn-in,.specimen-gem,.chapter-step span,.specimen-card{animation:none!important;transition:none!important}
 
 }
+
+
+/* Supabase archive detail cards */
+.application-card-database{gap:13px}
+.application-card-database h3{line-height:1.4;overflow-wrap:anywhere}
+.application-detail{display:grid;gap:6px;padding:11px 12px;border:1px solid rgba(172,207,211,.1);background:rgba(5,19,31,.34)}
+.application-detail small{font-size:9px;color:var(--gold2);letter-spacing:.4px}
+.application-detail p{font-size:10px;line-height:1.8;color:#a5b9bf;margin:0;overflow-wrap:anywhere}
+.application-card-database .application-source{margin-top:auto;line-height:1.7;white-space:normal}
+.archive-loading{grid-column:1/-1;padding:24px;color:#89a4ad;text-align:center;border:1px dashed var(--line)}
+.archive-lore-card{margin:24px 0 25px;padding:18px 20px;border:1px solid rgba(216,189,128,.2);background:linear-gradient(140deg,rgba(216,189,128,.06),rgba(10,29,43,.45));max-width:560px}
+.archive-lore-card>small:first-child{font:8px Arial,sans-serif;letter-spacing:1.5px;color:var(--gold)}
+.archive-lore-card h3{font-size:17px;font-weight:400;color:#e6e5d8;margin:10px 0}
+.archive-lore-card p{font-size:10px;line-height:1.85;color:#a8bcc0;margin:8px 0}
+.archive-lore-card>small:not(:first-child){display:block;font-size:9px;line-height:1.7;color:#91a8ae;margin-top:8px}
+.archive-lore-card .archive-lore-source{color:var(--gold2)}
+@media(max-width:760px){.archive-lore-card{margin:18px 0;padding:15px}.application-card-database{gap:10px}}
