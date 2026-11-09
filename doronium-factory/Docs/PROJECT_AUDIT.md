@@ -71,3 +71,65 @@ The 2026-11-04 static CI job passed at checkpoint run [41742193482](https://gith
 The following remain explicitly unverified or incomplete: FluidNetwork is not wired to live pipes/pumps/tanks/recipes; ItemOwnershipLedger is not yet the source of truth across every domain; canonical Doronum IDs are not the active registry/recipe source; the existing live Infinity entry points have not been replaced by the resumable fusion runtime; full failure profiles for every machine, all story/ORBIT/lore/music assets, every building/automation asset, the 2048m world conversion and physical-device soak are not complete. The RLS/CAS inspection does not constitute a real authenticated multi-device production user test.
 
 Therefore the whole v4.5.0 release still fails the completion gate at this point. Keep the PR as draft and do not deploy/merge on the basis of partial module coverage.
+
+
+## 2026-11-09 follow-up — current evidence supersedes earlier blockers above
+
+This section supersedes the **immediate mining-regression blocker** and the statement that the live resumable Fusion runtime was not connected. The earlier 2026-11-08 audit remains as historical evidence, but its open-blocker wording is no longer the current branch status.
+
+### Repository and CI checkpoint
+
+- Code commit: 4ce7ad0089bebe71cd61e6bbaf136c3d175a2a9f; subsequent documentation checkpoints: e09c8c230adfa6002c1e44fabef8d650ff8cba2b and current pre-audit-update branch HEAD ea1868eb241d509cb71934e3c38f3c1dcda7cbbd.
+- Main HEAD: c4e7c3d685eaa9dff41449a02ed1f398f3ec6a5f. Development and main remain diverged: **333 commits ahead / 168 behind** at the current pre-audit-update comparison; merge base 26e88058b6d416d79459fee107aff4a5beb3d7e3.
+- PR #11 remains open and draft. GitHub reports mergeable=true, but the merge base is old and the histories are diverged; no merge or deployment was attempted.
+- Code validation: push run [42547328811](https://github.com/Rockey-Jason/doldol-site/actions/runs/42547328811) and PR run [42547333131](https://github.com/Rockey-Jason/doldol-site/actions/runs/42547333131) both **SUCCESS**. The following documentation checkpoints also passed both push and PR workflows: [42547722392](https://github.com/Rockey-Jason/doldol-site/actions/runs/42547722392), [42547726569](https://github.com/Rockey-Jason/doldol-site/actions/runs/42547726569), [42548204968](https://github.com/Rockey-Jason/doldol-site/actions/runs/42548204968), [42548208865](https://github.com/Rockey-Jason/doldol-site/actions/runs/42548208865).
+- Latest static suite: **128 tests passed, 0 failed, 0 cancelled, 0 skipped**. Latest Playwright browser run: **PASS**, WebGL desktop and 390×844 mobile viewport emulation. The soak executed 36,000 fixed 0.1-second ticks; the accelerated in-game clock reached 32,400 seconds. This is still a virtual run, not a 60-minute wall-clock test.
+
+### Corrected live regressions
+
+- Automatic iron mining no longer fails the browser output assertion. The live test places a mine generator and iron drill, confirms the deposit remains 28 at installation, then confirms exactly one ITEM_IRON_ORE is emitted, the deposit becomes 27, drill durability decreases, and the connected generator reports RUNNING. Advanced mining and drill repair E2E also pass.
+- Live Fusion is connected to the game loop through startInfinityFusion, tickInfinityFusion, cancelInfinityFusion and recoverInfinityFusion. Playwright verifies 15 individually qualified canonical reservations (100 each), seven stages totaling 260 simulated seconds, a power-loss pause below the 0.80 floor with all reservations retained, successful resume, exactly 1,500 inputs consumed, and one canonical Infinity output. Independent cooling/pressure diagnostics, cancellation and idempotent settlement replay are also tested.
+- Live inventory ownership integration was expanded: takeItem and takeItems journal actual reservation consumption; manual supplyMachine journals transfers from reserved inventory into the machine-input owner. E2E confirms two exact input transfers, direct and batch consumption of two wood, one wood remaining, and fail-closed behavior when duplicate shipment custody IDs corrupt the ownership snapshot.
+- The ledger is **not yet authoritative across all domains**. Production recipe buffer → active job → completion output, conveyor parcels, world drops, independent warehouse, shipment cargo, demolition, fusion output custody and crash/reconnect restoration remain separately mutated or snapshot-rebuilt.
+
+### Updated 12-area status
+
+| Area | Status | Current evidence and remaining blocker |
+|---|---|---|
+| 1. World and terrain | PARTIAL | 192×160 tile world, two continents, 8 biomes, elevations, 5 mine levels and chunk culling; still does not meet the 2,048m×2,048m target or full streaming/unit migration |
+| 2. Exploration and survival | PARTIAL | First-/third-person, movement, mining, health/hunger/thirst and touch controls exist; complete PC/mobile playthrough, death/recovery and long-session save restore remain |
+| 3. Construction and blueprints | PARTIAL | Flattening/foundation, footprint checks, escrow/rollback and blueprints exist; all port/footprint/dismantle/crash cases remain |
+| 4. Mining and resources | PARTIAL | Automatic and advanced mining, depletion, power, drill wear/repair E2E now pass; all deposit classes, levels, byproducts and full-session cases remain |
+| 5. Production and canonical recipes | PARTIAL | 15-input manifest and canonical models validate, but live recipes still read legacy maps; current research data has 19 entries while the master target states 18 |
+| 6. Power | PARTIAL | Connected networks, priority allocation, battery kJ and transformer caps exist; current solver applies consumer-level loss rather than full edge-by-edge path loss, and persistent stable IDs/diagnostics need work |
+| 7. Fluids | PARTIAL | Six fluid types, pressure/temperature/leak/mass-balance helpers exist; the actual game path is still predominantly water, without all five other source/consumer chains and fluid reservations |
+| 8. Logistics | PARTIAL | Conveyor graph, machine output and manual inventory-to-machine input transfers exist; persistent parcel custody, full sorter/splitter/merger/lift/curve/multi-lane assets and automated deadlock recovery remain |
+| 9. Item ownership | PARTIAL / CRITICAL | Live direct/batch consumption and machine supply are journaled; all other owner-domain transfers and cross-domain conservation are not authoritative yet |
+| 10. Failures and skills | PARTIAL | Five machine failure profiles, repair path and 20 skill nodes exist; all-machine failure coverage and every skill effect are not live/verified |
+| 11. Shipping, Fusion and ending | PARTIAL / CRITICAL | Live 7-stage/260-second Fusion and exactly-once in-memory output pass E2E; shipping still has 3 sample contracts, while Fusion save/restart recovery, complete critical interlocks and the 3-relay/core/planet-ending regression remain |
+| 12. Saves, security, performance and release | PARTIAL / UNVERIFIED | Owner-scoped CAS/RLS and local recovery exist; authenticated two-device conflicts, complete server-authoritative rewards, physical hardware, memory leak and 60-minute wall-clock soak remain unverified |
+
+### Updated 20 acceptance checks
+
+1. PC full campaign: **PARTIAL** — desktop WebGL smoke passes; full start-to-ending playthrough is not complete.
+2. Mobile full campaign: **UNVERIFIED** — 390×844 touch/WebGL emulation passes; no physical Android/iOS device was available.
+3. First-/third-person switching: **PARTIAL** — modes exist, but complete campaign/input regression remains.
+4. 2,048m×2,048m world: **NOT IMPLEMENTED** — current world remains 192×160 tiles.
+5. Flattening and foundations: **PARTIAL** — live placement rules exist; all footprints/ports/rollback/dismantle cases are incomplete.
+6. Underground mining: **PARTIAL** — automatic and advanced mine E2E passes; complete deposit/miner catalog and session recovery remain.
+7. Canonical 15 Doronum inputs: **PARTIAL** — manifest/15 models validate, but not every live recipe/research/model/UI source is canonical.
+8. No item duplication/loss: **PARTIAL** — direct/batch consumption and manual machine supply are journaled; other custody domains remain separate.
+9. Conveyors and automatic mining: **PARTIAL** — mine output passes and graph routing exists; full parcel custody/asset catalog/deadlock recovery remain.
+10. Power and batteries: **PARTIAL** — kW/kJ allocation and batteries exist; edge-loss solver and stable network identity remain.
+11. Six fluids/pressure/temperature: **PARTIAL** — six types and generic solver exist; only water is substantially live in-game.
+12. Machine states/failure/maintenance: **PARTIAL** — five profiles and repair path exist; not all machines/states/failures are covered.
+13. 18 research / 20 skills: **PARTIAL** — 20 skill nodes exist but effects are incomplete; live research count is 19, not the stated 18.
+14. Seven-stage Fusion: **COMPLETE for the live in-memory runtime path** — E2E executes all seven stages for 260 simulated seconds, including power pause/resume; save/restart recovery remains under check 16.
+15. Exactly one Infinity output: **COMPLETE for the tested in-memory settlement path** — live E2E verifies one output and idempotent settlement replay; restored-save replay remains under check 16.
+16. Cloud save/recovery: **PARTIAL** — owner-scoped CAS/revision conflict and local backup exist; two-device/process-restart E2E remains.
+17. Server authority/security: **PARTIAL** — RLS/CAS save boundary exists; game rewards and all economy mutations are not proven fully server-authoritative.
+18. 60-minute wall-clock test: **UNVERIFIED** — 36,000 virtual ticks are not 60 minutes of elapsed wall time.
+19. Physical PC/mobile performance: **UNVERIFIED** — browser WebGL and mobile emulation only; no physical device/thermal/memory soak.
+20. Start-to-ending full regression: **PARTIAL** — mining/Fusion subflows pass, but full campaign, three relays, core and planet stabilization are not end-to-end complete.
+
+No overall release completion is claimed. Main, GitHub Pages, Render, production DB/schema, balances, rewards and real-user save data remain untouched.
