@@ -695,8 +695,9 @@ function beginBookEdit(){
  if(!activeBook)return;
  if(hasBookContent(activeBook))saveReaderProgress();
  editorDraft={subtitle:String(activeBook.subtitle||""),tableOfContents:String(activeBook.tableOfContents||""),chapters:(activeBook.chapters&&activeBook.chapters.length?activeBook.chapters:[{title:"제1장",content:""}]).map(chapter=>({title:String(chapter.title||""),content:String(chapter.content||"")}))};
- $("editorBookSubtitle").value=editorDraft.subtitle;$("editorBookToc").value=editorDraft.tableOfContents;renderBookEditor();$("bookEditorPanel").hidden=false;
  const dialog=document.querySelector(".book-reader-dialog");dialog.classList.add("editing");
+ $("bookEditorPanel").hidden=false;
+ $("editorBookSubtitle").value=editorDraft.subtitle;$("editorBookToc").value=editorDraft.tableOfContents;renderBookEditor();
  $("readerEditToggle").hidden=true;$("readerFontDown").hidden=true;$("readerFontUp").hidden=true;$("readerChapterSelect").disabled=true;
  $("editorBookSubtitle").focus({preventScroll:true});
 }
