@@ -418,27 +418,45 @@ function readerPageFits(paragraphs,measure){
  return measure.scrollHeight<=measure.clientHeight+1;
 }
 function paginateReaderChapter(content){
- const body=$("bookReaderBody"),measure=body.cloneNode(false);
- measure.removeAttribute("id");
- measure.style.cssText="position:fixed;left:-12000px;top:0;visibility:hidden;pointer-events:none;overflow:hidden;z-index:-1;width:"+body.clientWidth+"px;height:"+body.clientHeight+"px;max-height:"+body.clientHeight+"px;";
- document.body.append(measure);
- const source=String(content||"").split(/\\n\\s*\\n/).map(value=>value.trim()).filter(Boolean);
+ const body=$("bookReaderBody"),dialog=document.querySelector(".book-reader-dialog");
+ const rect=body.getBoundingClientRect(),style=getComputedStyle(body);
+ const measure=body.cloneNode(false);
+ measure.removeAttribute("id");measure.replaceChildren();
+ measure.style.cssText=[
+  "position:fixed","left:-12000px","top:0","visibility:hidden","pointer-events:none","z-index:-1",
+  "display:block","box-sizing:border-box","margin:0",
+  "width:"+rect.width+"px","height:"+rect.height+"px","min-height:0","max-height:"+rect.height+"px",
+  "padding:"+style.paddingTop+" "+style.paddingRight+" "+style.paddingBottom+" "+style.paddingLeft,
+  "border:0","overflow:hidden","font-family:"+style.fontFamily,"font-size:"+style.fontSize,
+  "font-weight:"+style.fontWeight,"font-style:"+style.fontStyle,"line-height:"+style.lineHeight,
+  "letter-spacing:"+style.letterSpacing,"text-indent:"+style.textIndent,"white-space:"+style.whiteSpace,
+  "overflow-wrap:"+style.overflowWrap,"word-break:"+style.wordBreak
+ ].join(";");
+ dialog.append(measure);
+ const source=String(content||"").split(/\r?\n\s*\r?\n/).map(value=>value.trim()).filter(Boolean);
  if(!source.length){measure.remove();return [[]]}
  const pages=[];let current=[];
  const fits=parts=>readerPageFits(parts,measure);
+ const pushPage=()=>{if(current.length){pages.push(current);current=[]}};
  source.forEach(paragraph=>{
-  const words=paragraph.split(/\\s+/);let segment="";
+  const words=paragraph.split(/\s+/);let segment="";
   words.forEach(word=>{
-   const candidate=segment?segment+" "+word:word;
+   let candidate=segment?segment+" "+word:word;
    if(fits([...current,candidate])){segment=candidate;return}
-   if(segment){current.push(segment);pages.push(current);current=[];segment=word;return}
-   if(current.length){pages.push(current);current=[];segment=word;return}
-   current=[word];pages.push(current);current=[];
+   if(segment){current.push(segment);pushPage();segment="";candidate=word}
+   if(fits([...current,candidate])){segment=candidate;return}
+   let fragment="";
+   for(const char of word){
+    const next=fragment+char;
+    if(fits([...current,next]))fragment=next;
+    else{if(fragment){current.push(fragment);pushPage()}fragment=char}
+   }
+   segment=fragment;
   });
   if(segment)current.push(segment);
  });
- if(current.length||!pages.length)pages.push(current);
- measure.remove();return pages;
+ pushPage();measure.remove();
+ return pages.length?pages:[[]];
 }
 function reflowReaderPages(){
  if(!activeBook)return;
