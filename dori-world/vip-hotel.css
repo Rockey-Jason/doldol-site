@@ -138,3 +138,105 @@
 .hotel-room-scene[data-bed="cloud"] .hotel-scene-duvet{border-radius:15px 15px 8px 8px;background:linear-gradient(155deg,#fffdf8,#d6d9dc)}
 .hotel-room-scene[data-decor="floral"] .hotel-scene-plant:before{background:radial-gradient(ellipse at 20% 70%,#a16e7d 0 22%,transparent 24%),radial-gradient(ellipse at 75% 40%,#d3a8a2 0 24%,transparent 26%),radial-gradient(ellipse at 50% 5%,#8b9b73 0 23%,transparent 25%)}
 .hotel-room-scene[data-decor="sculpture"] .hotel-scene-plant:before{background:linear-gradient(145deg,#f2e5c5,#a98e61 48%,#64543f);clip-path:polygon(50% 0,78% 34%,66% 100%,33% 100%,22% 34%)}
+
+
+/* ROYAL HOTEL EXPERIENCES — benefits, events, missions and rewards */
+.hotel-engagement-grid{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,.9fr) minmax(0,1.35fr);gap:14px;margin:0 0 17px}
+.hotel-wallet-panel,.hotel-attendance-panel,.hotel-event-panel{min-height:215px}
+.hotel-wallet-panel{background:linear-gradient(145deg,#19283e,#263d59 72%,#4e513f);color:#f8f1e3;border-color:rgba(201,172,118,.28)}
+.hotel-wallet-panel .hotel-panel-heading h3{color:#fff0d1}
+.hotel-wallet-panel .hotel-panel-heading p,.hotel-wallet-panel .hotel-footnote{color:rgba(248,241,227,.58)}
+.hotel-wallet-panel .hotel-panel-heading small{color:#ddc28a}
+.hotel-wallet-icon,.hotel-attendance-icon{display:grid;place-items:center;width:36px;height:36px;border:1px solid rgba(213,183,127,.3);border-radius:12px;color:#e4c98f;background:rgba(255,255,255,.055);font-size:17px}
+.hotel-wallet-balance{display:flex;align-items:baseline;gap:9px;margin:10px 0 14px}
+.hotel-wallet-balance strong{font:400 clamp(32px,4vw,42px)/1 Georgia,serif;letter-spacing:-.045em;color:#ffe5ae;font-variant-numeric:tabular-nums}
+.hotel-wallet-balance span{font:8px/1 Arial,sans-serif;letter-spacing:.18em;color:rgba(255,242,211,.57)}
+.hotel-rank-row{display:flex;justify-content:space-between;align-items:flex-end;gap:10px}
+.hotel-rank-row div{display:grid;gap:4px}
+.hotel-rank-row small{font:8px/1.3 Arial,sans-serif;letter-spacing:.15em;color:rgba(255,242,211,.52)}
+.hotel-rank-row strong{font-size:12px;font-weight:400;color:#fff0d1}
+.hotel-rank-row>strong{font:9px/1 Arial,sans-serif;color:#e7cb91}
+.hotel-rank-track{height:5px;margin-top:9px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden}
+.hotel-rank-track span{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#b08c50,#f2dcac);transition:width .5s ease}
+.hotel-rank-foot{display:flex;justify-content:space-between;gap:8px;margin-top:6px;color:rgba(255,242,211,.55);font-size:9px}
+.hotel-wallet-panel .hotel-footnote{margin-top:10px}
+.hotel-attendance-panel{background:linear-gradient(150deg,#fffdf8,#f0e8d8)}
+.hotel-attendance-reward{display:flex;align-items:baseline;gap:8px;margin:13px 0 11px}
+.hotel-attendance-reward strong{font:400 34px/1 Georgia,serif;color:#967541}
+.hotel-attendance-reward span{font-size:11px;color:var(--muted,#77736a)}
+.hotel-attendance-reward small{margin-left:auto;color:#8d7856;font-size:9px}
+.hotel-attendance-streak{display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid rgba(126,105,68,.12);border-bottom:1px solid rgba(126,105,68,.12);font-size:10px;color:var(--muted,#77736a)}
+.hotel-attendance-streak strong{font-size:14px;font-weight:400;color:#927447}
+.hotel-attendance-streak span:last-child{margin-left:auto}
+.hotel-attendance-streak b{font-weight:400;color:#716044}
+.hotel-full-btn{width:100%;margin-top:12px}
+.hotel-attendance-panel .hotel-footnote{margin-top:8px;font-size:9px}
+.hotel-event-panel{position:relative;display:flex;flex-direction:column;overflow:hidden;color:#f6efdf;border:1px solid rgba(196,163,106,.22);background:linear-gradient(135deg,#29374a,#1a283c 58%,#594c3a)}
+.hotel-event-panel:after{content:"";position:absolute;right:-46px;top:-74px;width:190px;height:190px;border:1px solid rgba(239,214,164,.18);border-radius:50%;box-shadow:0 0 0 22px rgba(239,214,164,.035),0 0 0 47px rgba(239,214,164,.025);pointer-events:none}
+.hotel-event-top{position:relative;z-index:1;display:flex;justify-content:space-between;gap:10px}
+.hotel-event-top .hotel-kicker{font-size:8px}
+.hotel-event-tag{padding:5px 8px;border:1px solid rgba(237,208,151,.25);border-radius:999px;color:#e6ca93;font:8px/1 Arial,sans-serif;letter-spacing:.12em}
+.hotel-event-art{position:absolute;right:23px;top:57px;display:grid;place-items:center;width:78px;height:78px;border:1px solid rgba(239,214,164,.24);border-radius:50%;background:radial-gradient(circle,rgba(236,207,148,.15),transparent 67%);color:#edcf98;font-size:33px;box-shadow:0 0 40px rgba(238,205,144,.08)}
+.hotel-event-copy{position:relative;z-index:1;max-width:calc(100% - 75px);margin-top:16px}
+.hotel-event-copy small{font:8px/1.4 Arial,sans-serif;letter-spacing:.18em;color:#d2b77f}
+.hotel-event-copy h3{margin:7px 0 6px;color:#fff1d1;font-size:19px;font-weight:400;line-height:1.35}
+.hotel-event-copy p{margin:0;color:rgba(249,241,222,.7);font-size:10px;line-height:1.7}
+.hotel-event-footer{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;gap:9px;margin-top:auto;padding-top:14px}
+.hotel-event-footer>span{color:#e7d4ac;font-size:9px}
+.hotel-event-footer .hotel-action-btn{min-height:34px;padding:8px 12px;background:linear-gradient(120deg,#aa8954,#c0a16c);white-space:nowrap}
+.hotel-event-panel.is-complete .hotel-event-footer .hotel-action-btn{background:rgba(255,255,255,.09);border-color:rgba(255,255,255,.2);color:#f3e7ca}
+.hotel-passport-panel,.hotel-missions-panel,.hotel-activities-panel,.hotel-rewards-panel{margin-top:16px}
+.hotel-passport-panel{background:linear-gradient(145deg,#fffdf8,#f3eee4)}
+.hotel-passport-stamps{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:9px;margin:15px 0 12px}
+.hotel-passport-stamp{display:grid;justify-items:center;gap:7px;min-width:0;padding:12px 4px;border:1px dashed rgba(148,125,82,.25);border-radius:12px;background:rgba(255,255,255,.44);color:#aaa08f}
+.hotel-passport-stamp .stamp-mark{display:grid;place-items:center;width:33px;height:33px;border:1px solid rgba(148,125,82,.2);border-radius:50%;font-size:14px}
+.hotel-passport-stamp small{font:8px/1 Arial,sans-serif;letter-spacing:.04em}
+.hotel-passport-stamp.done{border-style:solid;border-color:rgba(165,132,75,.36);background:linear-gradient(145deg,#fbf4e3,#eee0c4);color:#8d6e3d}
+.hotel-passport-stamp.done .stamp-mark{border-color:#b79860;background:rgba(183,152,96,.12);color:#886a39;box-shadow:0 0 0 3px rgba(183,152,96,.07)}
+.hotel-passport-footer{display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;color:var(--muted,#77736a);font-size:10px}
+.hotel-passport-footer strong{font-weight:400;color:#927447}
+.hotel-mission-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.hotel-mission-card{display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:9px;align-items:center;padding:12px;border:1px solid var(--line,rgba(75,66,47,.13));border-radius:13px;background:rgba(255,255,255,.56);min-width:0}
+.hotel-mission-card.is-done{border-color:rgba(136,157,116,.38);background:linear-gradient(145deg,rgba(239,246,232,.8),rgba(255,255,255,.7))}
+.hotel-mission-icon{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:rgba(173,143,88,.12);color:#967541;font-size:15px}
+.hotel-mission-card.is-done .hotel-mission-icon{background:rgba(126,157,106,.13);color:#69835c}
+.hotel-mission-copy{display:grid;gap:4px;min-width:0}
+.hotel-mission-copy strong{overflow:hidden;font-size:10px;font-weight:400;text-overflow:ellipsis;white-space:nowrap}
+.hotel-mission-copy small{color:var(--muted,#77736a);font-size:9px;line-height:1.45}
+.hotel-mission-reward{color:#927447;font-size:9px;white-space:nowrap}
+.hotel-mission-card.is-done .hotel-mission-reward{color:#6e885f}
+.hotel-mission-bonus{display:flex;align-items:center;gap:13px;margin-top:13px;padding:12px 14px;border:1px solid rgba(166,135,82,.2);border-radius:13px;background:linear-gradient(100deg,rgba(223,208,177,.2),rgba(255,255,255,.5))}
+.hotel-mission-bonus>div{display:grid;gap:4px;min-width:0}
+.hotel-mission-bonus strong{font:8px/1.2 Arial,sans-serif;letter-spacing:.13em;color:#8b6d3f}
+.hotel-mission-bonus small{color:var(--muted,#77736a);font-size:9px}
+.hotel-mission-bonus>span{margin-left:auto;color:#927447;font-size:10px;white-space:nowrap}
+.hotel-mission-bonus .hotel-action-btn{min-height:33px;padding:7px 10px;white-space:nowrap}
+.hotel-mission-bonus .hotel-action-btn:disabled{filter:grayscale(.3);opacity:.5}
+.hotel-activity-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.hotel-activity-card{overflow:hidden;border:1px solid var(--line,rgba(75,66,47,.13));border-radius:15px;background:rgba(255,255,255,.6)}
+.hotel-activity-art{display:grid;place-items:center;height:75px;color:#fff0d5;font-size:27px;background:linear-gradient(140deg,#35455a,#8b7757)}
+.hotel-activity-art.garden{background:linear-gradient(140deg,#485b4d,#a8a67d)}
+.hotel-activity-art.reading{background:linear-gradient(140deg,#5b4a3e,#ad8e65)}
+.hotel-activity-art.music{background:linear-gradient(140deg,#31344f,#8b789d)}
+.hotel-activity-copy{padding:12px}
+.hotel-activity-copy>small{font:7px/1.2 Arial,sans-serif;letter-spacing:.13em;color:#98794b}
+.hotel-activity-copy h4{margin:5px 0 5px;font-size:11px;font-weight:400}
+.hotel-activity-copy p{min-height:42px;margin:0;color:var(--muted,#77736a);font-size:9px;line-height:1.6}
+.hotel-activity-btn{display:flex;justify-content:space-between;align-items:center;gap:6px;width:100%;margin-top:10px;padding:8px 9px;border:1px solid rgba(159,128,74,.26);border-radius:9px;background:rgba(186,157,108,.1);color:#84663a;font:inherit;font-size:9px;cursor:pointer}
+.hotel-activity-btn span{font-size:8px;color:#9d804f;white-space:nowrap}
+.hotel-activity-btn:disabled{opacity:.5;cursor:not-allowed;background:rgba(127,148,111,.1);border-color:rgba(127,148,111,.22);color:#728767}
+.hotel-activity-foot{margin-top:12px;color:var(--muted,#77736a);font-size:9px}
+.hotel-reward-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.hotel-reward-card{display:grid;gap:9px;padding:13px;border:1px solid var(--line,rgba(75,66,47,.13));border-radius:14px;background:linear-gradient(145deg,#fffdf9,#f4eee3)}
+.hotel-reward-art{display:grid;place-items:center;min-height:66px;border:1px solid rgba(165,132,75,.18);border-radius:10px;background:radial-gradient(circle,rgba(204,177,123,.22),transparent 68%),linear-gradient(140deg,#f4eee2,#e6dcc9);color:#987743;font-size:25px}
+.hotel-reward-card strong{font-size:10px;font-weight:400;line-height:1.45}
+.hotel-reward-card p{min-height:30px;margin:0;color:var(--muted,#77736a);font-size:9px;line-height:1.55}
+.hotel-reward-foot{display:flex;justify-content:space-between;align-items:center;gap:5px}
+.hotel-reward-foot span{color:#8c7045;font-size:9px}
+.hotel-reward-foot button{padding:7px 9px;border:1px solid rgba(159,128,74,.3);border-radius:999px;background:rgba(178,148,96,.11);color:#896d43;font:inherit;font-size:9px;cursor:pointer}
+.hotel-reward-foot button:disabled{opacity:.45;cursor:not-allowed}
+.hotel-reward-card.is-owned{border-color:rgba(130,155,113,.35)}
+.hotel-reward-card.is-owned .hotel-reward-art{background:linear-gradient(140deg,#ecf2e7,#d9e3cf);color:#748d67}
+.hotel-footnote{overflow-wrap:anywhere}
+@media(max-width:1050px){.hotel-engagement-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hotel-event-panel{grid-column:1/-1;min-height:205px}.hotel-mission-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hotel-reward-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.hotel-engagement-grid{grid-template-columns:1fr;gap:10px}.hotel-event-panel{grid-column:auto}.hotel-wallet-panel,.hotel-attendance-panel,.hotel-event-panel{min-height:auto}.hotel-passport-stamps{gap:5px}.hotel-passport-stamp{padding:9px 2px}.hotel-passport-stamp .stamp-mark{width:29px;height:29px;font-size:12px}.hotel-passport-stamp small{font-size:7px}.hotel-mission-grid{grid-template-columns:1fr}.hotel-mission-bonus{flex-wrap:wrap}.hotel-mission-bonus>span{margin-left:auto}.hotel-mission-bonus .hotel-action-btn{width:100%}.hotel-activity-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hotel-activity-copy p{min-height:50px}.hotel-reward-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.hotel-event-copy{max-width:calc(100% - 62px)}.hotel-event-art{right:14px;top:55px;width:62px;height:62px;font-size:26px}.hotel-event-footer{align-items:flex-start}.hotel-event-footer>span{max-width:56%;line-height:1.5}}
