@@ -1,4 +1,4 @@
-import { createCrystalViewer } from "../doronium-factory/world3d.js?v=19";
+import { createCrystalViewer } from "../doronium-factory/world3d.js?v=20";
 
 const specimens = [
  {id:"dn",name:"일반 도로늄 · Dn / Dr",en:"DORONIUM · Dn / Dr",grade:"BASE MATERIAL",group:"base",color:"#65d8e7",glow:"rgba(101,216,231,.22)",visual:"crystal",appearance:"신문에는 일반 도로늄의 결정 외형이 구체적으로 묘사되어 있지 않습니다.",desc:"압축된 돌이 고기를 Dn(Doronium)라고 부른다고 제11회 돌이신문이 명시합니다. 제12회에는 Dr(도로늄) 표기도 등장합니다.",process:"돌이 고기를 강한 열과 압력으로 압축해 Dn을 만듭니다. 이어 다이아몬드·돌이털·압축된 돌이 고기·황금·돌이가 먹던 돌을 섞고 다시 압축한다고 제16회에 기록되어 있습니다.",recipe:"① 돌이 고기를 강한 열과 압력으로 압축한다. ② 다이아몬드, 돌이털, 압축된 돌이 고기, 황금, 돌이가 먹던 돌을 섞는다. ③ 혼합물을 다시 압축한다.",note:"제9·10·33·37회는 돌이 고기의 열·압력·압축 기록을 보충합니다. 제33회에 따르면 압력이 약하면 약간 압축된 돌이 고기 스테이크가 되고, 열이 약하면 썩은 도로늄이 됩니다. 이 부산물은 일반 도로늄과 구별해 전시합니다.",sources:"제9·10·11·12·16·33·37회",sourceIds:[9,10,11,12,16,33,37]},
