@@ -249,6 +249,8 @@
       scene.dataset.room = room.id;
       scene.dataset.theme = settings.theme;
       scene.dataset.light = settings.light;
+      scene.dataset.bed = settings.bed;
+      scene.dataset.decor = settings.decor;
     }
     if ($("hotelSelectedRoomName")) $("hotelSelectedRoomName").textContent = room.name;
     if ($("hotelSelectedRoomDescription")) $("hotelSelectedRoomDescription").textContent = room.description;
@@ -356,7 +358,7 @@
       const title = document.createElement("strong");
       title.textContent = room.name;
       const subtitle = document.createElement("small");
-      subtitle.textContent = formatDate(entry.checkInAt, true) + " 입실 · " + formatDate(entry.checkOutAt, true) + " 퇴실";
+      subtitle.textContent = formatDate(entry.checkInAt, true) + " 입실 · " + formatDate(entry.checkOutAt, true) + " 퇴실 · 서비스 " + Number(entry.serviceCount || 0) + "건";
       copy.append(title, subtitle);
 
       const duration = document.createElement("span");
