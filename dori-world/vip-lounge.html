@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="./vip-lounge.css?v=20261109-auto-page-flow-2">
+<link rel="stylesheet" href="./vip-hotel.css?v=20261109-hotel-suite-1">
 <script src="../js/supabase.min.js?v=2.117.2"></script>
 </head>
 <body data-theme="marble" data-disable-notification-center="true">
@@ -57,6 +58,7 @@
     <button class="room-tab" type="button" data-view="library">▤ 서재</button>
     <button class="room-tab" type="button" data-view="gallery">◇ 갤러리</button>
     <button class="room-tab" type="button" data-view="concierge">♧ 컨시어지</button>
+    <button class="room-tab" type="button" data-view="hotel">♛ 호텔</button>
     <button class="room-tab" type="button" data-view="shop">♛ 전용 상점</button>
   </nav>
   <section class="view active" id="view-home" data-view-panel="home">
@@ -144,6 +146,97 @@
       </article>
     </div>
   </section>
+  <section class="view" id="view-hotel" data-view-panel="hotel">
+    <div class="hotel-page-intro">
+      <div><div class="hotel-kicker">DORI ROYAL HOTEL · PRIVATE RETREAT</div><h2>돌이 로열 호텔</h2><p>객실을 선택하고 나만의 분위기로 꾸며 보세요. 체크인부터 서비스와 숙박 기록까지 이곳에서 관리할 수 있습니다.</p></div>
+      <span class="hotel-live-pill">MEMBER EXPERIENCE</span>
+    </div>
+
+    <section class="hotel-member-banner" aria-label="호텔 멤버십">
+      <div class="hotel-member-copy">
+        <div class="hotel-kicker">YOUR HOTEL MEMBERSHIP</div>
+        <h3 id="hotelTierKorean">프리미어 게스트</h3>
+        <div class="hotel-kicker" id="hotelTierName">PREMIER GUEST</div>
+        <p id="hotelTierDescription">돌이 라운지 프리미엄 회원에게 제공되는 호텔 멤버십입니다.</p>
+        <div class="hotel-member-stats">
+          <span><small>ACCOUNT LEVEL</small><b id="hotelAccountLevel">—</b></span>
+          <span><small>COMPLETED STAYS</small><b id="hotelStayCount">0회</b></span>
+          <span><small>LAST VISIT</small><b id="hotelLastStay">첫 방문</b></span>
+        </div>
+      </div>
+      <div class="hotel-member-seal" aria-hidden="true"><strong>♛</strong><small>DORI HOTEL</small></div>
+    </section>
+
+    <div class="hotel-layout">
+      <div class="hotel-main-column">
+        <section class="hotel-panel" aria-labelledby="hotelRoomSelectTitle">
+          <div class="hotel-panel-heading"><div><small>THE ROOM COLLECTION</small><h3 id="hotelRoomSelectTitle">시그니처 객실 선택</h3><p>회원 등급에 따라 이용할 수 있는 객실이 열립니다.</p></div></div>
+          <div class="hotel-room-grid" id="hotelRoomGrid"></div>
+        </section>
+
+        <section class="hotel-panel hotel-suite-panel" aria-labelledby="hotelSelectedRoomName">
+          <div class="hotel-suite-head"><div><div class="hotel-kicker">YOUR PRIVATE ROOM</div><h3 id="hotelSelectedRoomName">그랜드 마블 스위트</h3><p id="hotelSelectedRoomDescription">정제된 화이트 마블과 따뜻한 골드 디테일이 어우러지는 시그니처 객실입니다.</p></div></div>
+          <div class="hotel-room-scene" id="hotelRoomScene" data-room="marble-suite" data-theme="marble" data-light="warm" role="img" aria-label="선택한 객실의 인테리어 미리보기">
+            <div class="hotel-scene-window"><span></span></div>
+            <div class="hotel-scene-lamp"></div>
+            <div class="hotel-scene-bed"><div class="hotel-scene-pillows"></div><div class="hotel-scene-duvet"></div></div>
+            <div class="hotel-scene-side-table"></div>
+            <div class="hotel-scene-plant"></div>
+            <div class="hotel-scene-caption" id="hotelSceneCaption">WHITE MARBLE · CLASSIC LUXURY</div>
+          </div>
+          <div class="hotel-suite-details">
+            <div><p class="hotel-suite-description">객실을 선택하면 해당 객실에 저장된 인테리어가 미리보기에 반영됩니다.</p><div class="hotel-stay-status is-away" id="hotelStayStatus">현재 체크인한 객실이 없습니다.</div></div>
+            <div class="hotel-stay-actions"><button class="hotel-action-btn" type="button" id="hotelCheckIn">객실 체크인</button><button class="hotel-action-btn secondary" type="button" id="hotelCheckOut" hidden>체크아웃</button></div>
+          </div>
+        </section>
+
+        <section class="hotel-panel" aria-labelledby="hotelInteriorTitle">
+          <div class="hotel-panel-heading"><div><small>DESIGN YOUR STAY</small><h3 id="hotelInteriorTitle">객실 인테리어</h3><p>각 객실마다 서로 다른 테마와 가구 구성을 저장합니다.</p></div><span class="meta-pill" id="hotelRoomThemeName">화이트 마블</span></div>
+          <div class="hotel-customizer-grid">
+            <label class="hotel-customizer-field"><span>객실 테마</span><select id="hotelTheme" data-hotel-setting="theme"><option value="marble">화이트 마블</option><option value="garden">가든 보태니컬</option><option value="midnight">미드나이트 블루</option><option value="aurora">오로라 크리스탈</option></select></label>
+            <label class="hotel-customizer-field"><span>침대 스타일</span><select id="hotelBed" data-hotel-setting="bed"><option value="classic">클래식 실크 베딩</option><option value="canopy">로열 캐노피 베드</option><option value="cloud">클라우드 모던 베드</option></select></label>
+            <label class="hotel-customizer-field"><span>조명 연출</span><select id="hotelLight" data-hotel-setting="light"><option value="warm">웜 골드 조명</option><option value="candle">캔들 앰비언트</option><option value="cool">쿨 문라이트</option><option value="aurora">오로라 글로우</option></select></label>
+            <label class="hotel-customizer-field"><span>시그니처 장식</span><select id="hotelDecor" data-hotel-setting="decor"><option value="crystal">오로라 크리스탈</option><option value="sculpture">마블 조각상</option><option value="floral">시그니처 플라워</option></select></label>
+          </div>
+          <p class="hotel-footnote" id="hotelSaveStatus">객실 설정은 회원 계정에 저장됩니다.</p>
+        </section>
+      </div>
+
+      <aside class="hotel-side-column">
+        <section class="hotel-panel hotel-side-card vip-card">
+          <div class="hotel-panel-heading"><div><small>EXCLUSIVE MEMBER PRIVILEGES</small><h3>VIP 라운지</h3></div></div>
+          <ul class="hotel-benefit-list" id="hotelBenefits"><li>프리미엄 객실 이용</li><li>객실별 인테리어 설정</li><li>가상 호텔 숙박 기록</li></ul>
+          <p class="hotel-tier-note">현재 돌이사이트 회원 등급과 관리자 권한을 기준으로 혜택이 결정됩니다. 별도 결제나 중복 멤버십은 필요하지 않습니다.</p>
+          <div class="action-row" style="justify-content:flex-start;margin-top:15px"><button class="hotel-action-btn" type="button" data-hotel-open="salon">VIP 라운지 입장 ↗</button></div>
+        </section>
+
+        <section class="hotel-panel hotel-music-card">
+          <div class="hotel-panel-heading"><div><small>THE ROYAL SOUND</small><h3>호텔 뮤직 라운지</h3><p>기존 라운지 플레이어와 연결됩니다.</p></div></div>
+          <div class="hotel-music-now"><span class="hotel-music-art">♫</span><span class="hotel-music-copy"><strong id="hotelMusicTitle">로열 피아노</strong><small id="hotelMusicStatus">라운지 음악 플레이어</small></span></div>
+          <div class="hotel-music-actions"><button class="hotel-action-btn" type="button" id="hotelMusicToggle">▶ 재생</button><button class="hotel-action-btn secondary" type="button" id="hotelMusicStore">음악 컬렉션</button></div>
+        </section>
+      </aside>
+    </div>
+
+    <div class="hotel-lower-grid">
+      <section class="hotel-panel" aria-labelledby="hotelServiceTitle">
+        <div class="hotel-panel-heading"><div><small>IN-ROOM SERVICE</small><h3 id="hotelServiceTitle">호텔 서비스</h3><p>체크인한 객실에서 필요한 서비스를 요청해 보세요.</p></div></div>
+        <div class="hotel-service-grid">
+          <button class="hotel-service-btn" type="button" data-hotel-service="room-service"><span class="hotel-service-icon">♨</span><span class="hotel-service-copy"><strong>룸서비스</strong><small>객실 다이닝 요청</small></span></button>
+          <button class="hotel-service-btn" type="button" data-hotel-service="housekeeping"><span class="hotel-service-icon">✧</span><span class="hotel-service-copy"><strong>하우스키핑</strong><small>객실 정돈 요청</small></span></button>
+          <button class="hotel-service-btn" type="button" data-hotel-service="spa"><span class="hotel-service-icon">❋</span><span class="hotel-service-copy"><strong>스파 예약 요청</strong><small>릴랙스 프로그램</small></span></button>
+          <button class="hotel-service-btn" type="button" data-hotel-service="concierge"><span class="hotel-service-icon">♧</span><span class="hotel-service-copy"><strong>컨시어지 호출</strong><small>맞춤 안내 요청</small></span></button>
+        </div>
+        <div class="hotel-service-log" id="hotelServiceLog"><div class="hotel-empty-state">체크인 후 호텔 서비스를 이용할 수 있습니다.</div></div>
+      </section>
+
+      <section class="hotel-panel" aria-labelledby="hotelHistoryTitle">
+        <div class="hotel-panel-heading"><div><small>YOUR STAY JOURNAL</small><h3 id="hotelHistoryTitle">호텔 이용 기록</h3><p>최근 체크인·체크아웃 기록을 계정별로 보관합니다.</p></div></div>
+        <div class="hotel-history-list" id="hotelHistory"><div class="hotel-empty-state">첫 체크아웃을 완료하면 이곳에 숙박 기록이 표시됩니다.</div></div>
+      </section>
+    </div>
+    <p class="hotel-footnote">호텔 체크인, 서비스 신청 및 숙박 기록은 돌이사이트 안에서 사용하는 가상 기능입니다. 실제 호텔 예약이나 외부 서비스 주문·결제는 발생하지 않습니다. 객실 설정과 기록은 로그인한 회원 계정에 저장되며 클라우드 동기화를 지원합니다.</p>
+  </section>
   <section class="view" id="view-shop" data-view-panel="shop">
     <div class="section-head"><div><div class="section-kicker">VIP MEMBERS ONLY</div><h2>VIP 전용 상점</h2></div><p>구매 시 서버에서 등급, 잔액, 중복 보유 여부를 다시 확인합니다.</p></div>
     <div class="shop-tools"><input class="text-input" id="shopSearch" type="search" placeholder="상품 이름 검색…" aria-label="VIP 상품 검색"><span class="meta-pill" id="shopCount">상품 3종</span></div>
@@ -171,7 +264,7 @@
     <p class="local-note">구매한 아이템은 계정 인벤토리에 저장됩니다. 구매 버튼을 여러 번 눌러도 서버에서 중복 지급을 방지합니다.</p>
   </section>
 </div>
-<footer class="footer">DORI WORLD · ROYAL DISTRICT · PRIVATE MEMBERS CLUB<br>PERSONAL SETTINGS ARE STORED LOCALLY ON THIS DEVICE</footer>
+<footer class="footer">DORI ROYAL HOTEL · PRIVATE MEMBERS CLUB<br>HOTEL SETTINGS ARE SAVED TO YOUR MEMBER ACCOUNT</footer>
 </div>
 <aside class="lounge-music-player" id="loungeMusicPlayer" hidden aria-label="라운지 음악 플레이어">
   <div class="music-player-art" aria-hidden="true">
@@ -267,11 +360,13 @@
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <script src="../js/doldol-theme.js?v=20261108-lounge-no-notifications-1"></script>
+<script src="../js/dori-cloud-sync.js?v=20261109-hotel-account-sync-1"></script>
 <script src="../js/dori-sound.js?v=20261009-5"></script>
 <script src="../js/hancom-weight-normalizer.js?v=20261014-1"></script>
 <script src="./vip-lounge-books.js?v=20261107-empty-author-1"></script>
 <script src="./vip-lounge-audio.js?v=20261108-audio-mobile-compat-1"></script>
 <script src="../js/dori-purchase-confirm.js?v=20261107-1"></script>
-<script src="./vip-lounge.js?v=20261109-auto-page-flow-2"></script>
+<script src="./vip-hotel.js?v=20261109-hotel-suite-1"></script>
+<script src="./vip-lounge.js?v=20261109-hotel-suite-1"></script>
 </body>
 </html>
