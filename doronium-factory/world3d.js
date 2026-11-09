@@ -93,15 +93,18 @@ function crystalGeometry(id){
   default:return new THREE.OctahedronGeometry(1,0);
  }
 }
-function makeCrystal(parent,id,x,y,z,size=4){
+function makeCrystal(parent,id,x,y,z,size=4,appearance={}){
  const spec=crystalSpecs[id]||crystalSpecs.doronium_normal;
- const material=new THREE.MeshPhysicalMaterial({color:spec.color,metalness:.4,roughness:.15,transmission:(id==="doronium_clear"||id==="doronium_cold") ? .22 : .03,transparent:id==="doronium_clear"||id==="doronium_cold"||id==="doronium_void",opacity:id==="doronium_clear" ? .78 : .95,emissive:spec.emissive,emissiveIntensity:.55,clearcoat:.9,clearcoatRoughness:.12});
+ const glass=appearance.glass===true,crystalColor=appearance.color||spec.color;
+ const material=glass
+  ? new THREE.MeshPhysicalMaterial({color:new THREE.Color(crystalColor),metalness:.015,roughness:.065,transmission:.94,transparent:false,opacity:1,thickness:2.5,ior:1.52,attenuationColor:new THREE.Color(crystalColor),attenuationDistance:.82,emissive:spec.emissive,emissiveIntensity:.28,clearcoat:1,clearcoatRoughness:.035})
+  : new THREE.MeshPhysicalMaterial({color:spec.color,metalness:.4,roughness:.15,transmission:(id==="doronium_clear"||id==="doronium_cold") ? .22 : .03,transparent:id==="doronium_clear"||id==="doronium_cold"||id==="doronium_void",opacity:id==="doronium_clear" ? .78 : .95,emissive:spec.emissive,emissiveIntensity:.55,clearcoat:.9,clearcoatRoughness:.12});
  const mesh=new THREE.Mesh(crystalGeometry(id),material);mesh.position.set(x,y,z);mesh.scale.set(size,size*1.25,size);mesh.rotation.set(.18,.22,.08);mesh.castShadow=true;mesh.receiveShadow=true;parent.add(mesh);
  const edges=new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry,24),new THREE.LineBasicMaterial({color:spec.color,transparent:true,opacity:.38}));mesh.add(edges);
  mesh.userData.baseScale=mesh.scale.clone();return mesh;
 }
 
-export function createCrystalViewer(canvas,id){
+export function createCrystalViewer(canvas,id,appearance={}){
   if(!THREE){
     const ctx=canvas.getContext("2d");let raf=0;
     const draw=()=>{const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,1.5);canvas.width=r.width*dpr;canvas.height=r.height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,r.width,r.height);const spec=crystalSpecs[id]||crystalSpecs.doronium_normal;ctx.fillStyle="#0b1b2b";ctx.fillRect(0,0,r.width,r.height);ctx.shadowColor="#"+spec.color.toString(16).padStart(6,"0");ctx.shadowBlur=25;ctx.fillStyle="#"+spec.color.toString(16).padStart(6,"0");ctx.beginPath();ctx.moveTo(r.width/2,r.height*.18);ctx.lineTo(r.width*.68,r.height*.53);ctx.lineTo(r.width/2,r.height*.83);ctx.lineTo(r.width*.32,r.height*.53);ctx.closePath();ctx.fill();ctx.shadowBlur=0;};
@@ -118,7 +121,8 @@ export function createCrystalViewer(canvas,id){
   const rim=new THREE.PointLight((crystalSpecs[id]||crystalSpecs.doronium_normal).color,2.2,12);rim.position.set(2,2.8,-2);scene.add(rim);
   const pedestal=new THREE.Mesh(new THREE.CylinderGeometry(1.15,1.35,.34,48),new THREE.MeshStandardMaterial({color:0x243c50,metalness:.8,roughness:.28}));pedestal.position.y=-.48;pedestal.castShadow=true;pedestal.receiveShadow=true;scene.add(pedestal);
   const trim=new THREE.Mesh(new THREE.TorusGeometry(1.14,.035,8,48),new THREE.MeshStandardMaterial({color:0xc9a969,metalness:.7,roughness:.25,emissive:0x4a3108}));trim.position.y=-.28;scene.add(trim);
-  const model=new THREE.Group();scene.add(model);const stone=makeCrystal(model,id,0,.72,0,1.05);
+  const model=new THREE.Group();scene.add(model);const stone=makeCrystal(model,id,0,.72,0,1.05,{glass:appearance.glass===true,color:appearance.color});
+  if(appearance.glass){const core=new THREE.Mesh(new THREE.SphereGeometry(.28,24,18),new THREE.MeshBasicMaterial({color:new THREE.Color(appearance.color||0x63d8e8),transparent:true,opacity:.42}));core.position.set(0,.72,0);model.add(core);}
   const floor=new THREE.Mesh(new THREE.CircleGeometry(3,48),new THREE.MeshStandardMaterial({color:0x10283b,metalness:.35,roughness:.78}));floor.rotation.x=-Math.PI/2;floor.position.y=-.67;scene.add(floor);
   let raf=0,alive=true;const start=performance.now();
   function resize(){const r=canvas.getBoundingClientRect();const w=Math.max(1,r.width),h=Math.max(1,r.height);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();}
