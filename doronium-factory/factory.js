@@ -16,7 +16,7 @@ import { startInfinityFusion, tickInfinityFusion, cancelInfinityFusion, recoverI
 import { evaluatePlanetaryStabilization } from "./planetary-stabilization.js?v=1";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=1";
-import { createOwnershipState, addCustody, consumeCustody, validateOwnershipState, resetCustodySnapshot } from "./ownership-runtime.js?v=4";
+import { createOwnershipState, addCustody, transferCustody, consumeCustody, validateOwnershipState, resetCustodySnapshot } from "./ownership-runtime.js?v=4";
 let createClient = null;
 
 /* DORONIUM FACTORY — INFINITE INDUSTRY
@@ -351,9 +351,69 @@ function setCloud(state,label){const el=$("cloud-state");el.className="cloud-sta
 function itemCount(id){return availableItemCount(S,canonicalItemID(id))}
 function itemQuarantined(id){id=canonicalItemID(id);const stacks=(S.runtime?.itemStacks||[]).filter(s=>s.itemID===id);return stacks.length>0&&stacks.every(s=>s.quarantined===true)}
 function addItem(id,qty,meta={},record=true){id=canonicalItemID(id);if(!RESOURCE[id]||qty<=0)return;ensureItemStacks(S);addItemStack(S,id,qty,meta);syncLegacyInventory(S);if(record)S.stats.produced[id]=(S.stats.produced[id]||0)+qty;markDirty()}
-function takeItem(id,qty){if(itemCount(id)<qty)return false;const reservation=reserveItemStacks(S,id,qty,"direct-consume");if(!reservation)return false;const removed=commitItemReservations(S,[reservation]);if(!removed){releaseItemReservation(S,reservation);return false}syncLegacyInventory(S);markDirty();return true}
+function restoreOwnedMutation(snapshot,validationOverride=null){
+ S.runtime=snapshot.runtime;S.ownershipLedger=snapshot.ownershipLedger;S.inventory=snapshot.inventory;
+ if(snapshot.validation===undefined)delete S.ownershipLedgerValidation;else S.ownershipLedgerValidation=snapshot.validation;
+ if(validationOverride)S.ownershipLedgerValidation=validationOverride;
+}
+function commitOwnedItemReservations(reservationIDs,{mode="consume",destinationType=null,destinationID=null,reason="inventory-consume"}={}){
+ const ids=[...new Set((reservationIDs||[]).map(String))];if(!ids.length)return null;
+ const snapshot={runtime:structuredClone(S.runtime),ownershipLedger:structuredClone(S.ownershipLedger||createOwnershipState()),inventory:structuredClone(S.inventory||{}),validation:S.ownershipLedgerValidation===undefined?undefined:structuredClone(S.ownershipLedgerValidation)};
+ const audit=rebuildOwnershipLedger(S);
+ if(!audit.valid){restoreOwnedMutation(snapshot,audit);return null}
+ const reservations=ids.map(id=>S.runtime.reservations?.[id]);
+ if(reservations.some(r=>!r||r.status!=="reserved")){restoreOwnedMutation(snapshot);return null}
+ let operationIndex=0;
+ for(const reservation of reservations)for(const allocation of reservation.allocations||[]){
+  const quantity=Math.max(0,Math.floor(Number(allocation.quantity)||0));
+  if(!quantity){restoreOwnedMutation(snapshot);return null}
+  const stackID=String(allocation.stackID)+"@"+String(reservation.reservationID);
+  const transactionID="OWN:"+String(reservation.reservationID)+":"+String(operationIndex++);
+  const operation=mode==="transfer"
+   ?transferCustody(S.ownershipLedger,{transactionID,stackID,quantity,toType:destinationType,toID:String(destinationID||""),expectedFromType:"ACTIVE_JOB",expectedFromID:String(reservation.ownerID||"")})
+   :consumeCustody(S.ownershipLedger,{transactionID,stackID,quantity,expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:String(reservation.ownerID||""),reason});
+  if(!operation){restoreOwnedMutation(snapshot);return null}
+ }
+ const removed=commitItemReservations(S,ids);
+ if(!removed){restoreOwnedMutation(snapshot);return null}
+ syncLegacyInventory(S);
+ if(mode!=="transfer"){
+  const post=rebuildOwnershipLedger(S);
+  if(!post.valid){restoreOwnedMutation(snapshot,post);return null}
+ }
+ return removed;
+}
+function takeItem(id,qty){
+ qty=Math.floor(Number(qty)||0);if(qty<=0||itemCount(id)<qty)return false;
+ const reservation=reserveItemStacks(S,id,qty,"direct-consume");if(!reservation)return false;
+ const removed=commitOwnedItemReservations([reservation],{reason:"direct-consume"});
+ if(!removed){releaseItemReservation(S,reservation);return false}
+ markDirty();return true;
+}
 function hasItems(items){return Object.entries(items||{}).every(([id,n])=>availableItemCount(S,id)>=n)}
-function takeItems(items){if(!hasItems(items))return false;const reservations=reserveItemBatch(S,items,"multi-item-transaction");if(!reservations)return false;const removed=commitItemReservations(S,reservations);if(!removed){for(const id of reservations)releaseItemReservation(S,id);return false}syncLegacyInventory(S);markDirty();return true}
+function takeItems(items){
+ if(!hasItems(items))return false;
+ const reservations=reserveItemBatch(S,items,"multi-item-transaction");if(!reservations)return false;
+ const removed=commitOwnedItemReservations(reservations,{reason:"multi-item-consume"});
+ if(!removed){for(const id of reservations)releaseItemReservation(S,id);return false}
+ markDirty();return true;
+}
+function moveInventoryToMachine(b,id,qty){
+ id=canonicalItemID(id);qty=Math.floor(Number(qty)||0);if(!b||qty<=0||itemCount(id)<qty)return false;
+ const snapshot={runtime:structuredClone(S.runtime),ownershipLedger:structuredClone(S.ownershipLedger||createOwnershipState()),inventory:structuredClone(S.inventory||{}),validation:S.ownershipLedgerValidation===undefined?undefined:structuredClone(S.ownershipLedgerValidation),input:structuredClone(b.input||{}),inputMeta:structuredClone(b.inputMeta||{})};
+ const reservation=reserveItemStacks(S,id,qty,"machine-input:"+String(b.uid));if(!reservation)return false;
+ const removed=commitOwnedItemReservations([reservation],{mode:"transfer",destinationType:"MACHINE_INPUT",destinationID:String(b.uid),reason:"machine-input"});
+ if(!removed){releaseItemReservation(S,reservation);return false}
+ const total=removed.reduce((n,stack)=>n+stack.quantity,0);
+ if(total!==qty){restoreOwnedMutation(snapshot);b.input=snapshot.input;b.inputMeta=snapshot.inputMeta;return false}
+ const quality=removed.reduce((n,stack)=>n+Number(stack.quality||90)*stack.quantity,0)/total;
+ const purity=removed.reduce((n,stack)=>n+Number(stack.purity||90)*stack.quantity,0)/total;
+ const synthetic=removed.some(stack=>stack.synthetic===true);
+ addInput(b,id,total,{quality,purity,synthetic});
+ const auditAfterTransfer=rebuildOwnershipLedger(S);
+ if(!auditAfterTransfer.valid){restoreOwnedMutation(snapshot,auditAfterTransfer);b.input=snapshot.input;b.inputMeta=snapshot.inputMeta;return false}
+ markDirty();return true;
+}
 function buildingMoneyCost(b){const discounted=["storage","warehouse"].includes(b.id)&&S.skills?.unlockedSkillIDs?.includes("BUFFER_ENGINEER");return discounted?Math.max(0,Math.floor(b.cost*.95)):b.cost}
 function canAfford(b){return S.money>=buildingMoneyCost(b)&&hasItems(b.materials)}
 function unlockOk(b){return !b.unlock||S.research.includes(b.unlock)}
@@ -920,7 +980,7 @@ function selectTile(x,y){if(S.player.layer==="mine")return;const key=surfaceKey(
 function harvestNode(x,y,node){if(S.player.layer!=="surface"){toast("지하 광물은 광산 채굴 도구로 채취하세요.");return}if(node.amount<=0){toast("이 자원은 고갈되었습니다.","warn");return}if(["wood","dori"].includes(node.type)&&S.activeTool!=="axe"){toast("도끼를 장착해야 나무를 벌목할 수 있습니다.","warn");return}if(node.type==="dori"){if(node.cooldown>0){toast("돌이 고기 나무가 열매를 다시 키우고 있습니다. "+Math.ceil(node.cooldown)+"초 남음","warn");return}if(itemCount("water")<2){toast("돌이 고기 수확에는 물 2L가 필요합니다.","warn");return}takeItem("water",2);startNodeCooldown(x,y,node,60);addItem("doriMeat",1,{quality:90,purity:90,synthetic:false});S.stats.gathered.ITEM_DORI_MEAT=(S.stats.gathered.ITEM_DORI_MEAT||0)+1;log("돌이 고기 열매 수확 · 비합성 원료");toast("돌이 고기 +1 · 순도 90");playTone(760,.12,"sine");questCheck();renderAll();drawWorld();return}
 const map={wood:"wood",water:"water"};const id=map[node.type];if(!id)return;const amount=Math.min(node.amount,node.type==="wood"||node.type==="stone"?3:node.type==="water"?5:node.type==="diamond"?1:2);node.amount-=amount;if(node.amount<=0)markVisibilityDirty();const q=80+Math.floor((node.seed%1900)/100);addItem(id,amount,{quality:q,purity:node.type==="water"?100:85,synthetic:false});S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;log(RESOURCE[id].name+" 채집 · "+fmt(amount)+"개");toast(RESOURCE[id].name+" +"+fmt(amount));playTone(420,.07,"triangle");questCheck();renderAll();drawWorld()}
 function collectOutput(b){if(!b.output){toast("회수할 출력물이 없습니다.","warn");return}addItem(b.output.id,b.output.qty,b.output.meta,false);toast(RESOURCE[b.output.id].name+" "+fmt(b.output.qty)+"개 회수");log("출력 회수 · "+RESOURCE[b.output.id].name);clearCompletionBuffer(b);b.status="IDLE";markDirty();renderAll()}
-function supplyMachine(b){const r=recipeFor(b);if(!r){toast("이 시설은 수동 투입을 지원하지 않습니다.");return}let moved=0;for(const[id,n]of Object.entries(r.inputs)){const need=Math.max(0,n-(b.input?.[id]||0));const amount=Math.min(need,itemCount(id));if(amount>0){const m=S.meta[id]||{quality:90,purity:90,synthetic:false};takeItem(id,amount);addInput(b,id,amount,m);moved+=amount}}if(moved){toast("원료 "+moved+"개 투입 완료");markDirty()}else toast("투입 가능한 원료가 없습니다.","warn");renderMachineDetails();renderInventory()}
+function supplyMachine(b){const r=recipeFor(b);if(!r){toast("이 시설은 수동 투입을 지원하지 않습니다.");return}let moved=0;for(const[rawID,n]of Object.entries(r.inputs)){const id=canonicalItemID(rawID),need=Math.max(0,n-(b.input?.[id]||0)),amount=Math.min(need,itemCount(id));if(amount>0&&moveInventoryToMachine(b,id,amount))moved+=amount}if(moved){toast("원료 "+moved+"개 투입 완료");markDirty()}else toast("투입 가능한 원료가 없습니다.","warn");renderMachineDetails();renderInventory()}
 function drainFluidToTank(source){
  const amount=Math.max(0,Number(source?.fluidAmountL)||0),type=source?.fluidType;
  if(amount<=1e-9||!type){toast("배출할 유체가 없습니다.","warn");return false}
@@ -1993,6 +2053,37 @@ if(E2E_MODE){
    const validation=rebuildOwnershipLedger(S);
    const journalAfter={transactions:Object.keys(S.ownershipLedger.transactions).length,consumed:S.ownershipLedger.consumed.length,nextLedgerID:S.ownershipLedger.nextLedgerID};
    return {reservation,firstValidation,validation,ownership:structuredClone(S.ownershipLedger),itemTotals:validation.itemTotals,journalBefore,journalAfter};
+  },
+  runLiveInventoryCustodyTest(){
+   const oldState=S,oldMotion=playerMotion,oldSelectedBuilding=selectedBuilding;
+   try{
+    S=freshState();S.runtime=createRuntimeState();S.inventory={};S.meta={};ensureItemStacks(S);S.contractRuntime=createContractState(789);
+    const machine={uid:"LIVE-OWN-MACHINE",type:"smelter",x:2,y:2,input:{},inputMeta:{},status:"IDLE"};S.buildings=[machine];selectedBuilding=machine.uid;
+    addItemStack(S,"ironOre",4,{quality:96,purity:97,synthetic:false});
+    addItemStack(S,"coal",2,{quality:92,purity:94,synthetic:false});
+    addItemStack(S,"wood",3,{quality:95,purity:96,synthetic:false});syncLegacyInventory(S);
+    supplyMachine(machine);
+    const transferValidation=rebuildOwnershipLedger(S);
+    const transfers=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="TRANSFER");
+    const transferTargets=transfers.filter(tx=>tx.result?.to?.type==="MACHINE_INPUT");
+    const machineInput={...machine.input};
+    const singleConsumed=takeItem("wood",1),batchConsumed=takeItems({wood:1});
+    const consumptionValidation=rebuildOwnershipLedger(S);
+    const consumed=S.ownershipLedger.consumed.filter(entry=>entry.itemID==="wood");
+    const inventoryAfterConsumption=availableItemCount(S,"wood");
+    S.contractRuntime.shipments=[
+     {shipmentID:"LIVE-DUPLICATE",status:"IN_TRANSIT",cargo:[{itemID:"wood",quantity:1,quality:95,purity:96,synthetic:false}]},
+     {shipmentID:"LIVE-DUPLICATE",status:"IN_TRANSIT",cargo:[{itemID:"wood",quantity:1,quality:95,purity:96,synthetic:false}]}
+    ];
+    const blockedBefore=availableItemCount(S,"wood"),blocked=takeItem("wood",1),blockedAfter=availableItemCount(S,"wood");
+    return {
+     transferValid:transferValidation.valid,transferCount:transfers.length,transferTargetCount:transferTargets.length,machineInput,
+     inventoryAfterTransfer:{ironOre:availableItemCount(S,"ironOre"),coal:availableItemCount(S,"coal"),wood:availableItemCount(S,"wood")},
+     singleConsumed,batchConsumed,consumptionValid:consumptionValidation.valid,consumedWood:consumed.reduce((n,entry)=>n+entry.quantity,0),
+     inventoryAfterConsumption,blocked,blockedBefore,blockedAfter,blockedReservations:Object.keys(S.runtime.reservations||{}).length,
+     blockedByInvalidCustody:S.ownershipLedgerValidation?.valid===false,finalValidationValid:consumptionValidation.valid
+    };
+   }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
   },
   setupFluidNetworkTest(){
    S=freshState();S.player={...S.player,viewMode:"map",layer:"surface"};S.seconds=8*3600;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=false;
