@@ -238,6 +238,7 @@
             <div class="hotel-scene-bed"><div class="hotel-scene-pillows"></div><div class="hotel-scene-duvet"></div></div>
             <div class="hotel-scene-side-table"></div>
             <div class="hotel-scene-plant"></div>
+            <div class="hotel-reward-object" id="hotelRewardObject" hidden aria-hidden="true"></div>
             <div class="hotel-scene-caption" id="hotelSceneCaption">WHITE MARBLE · CLASSIC LUXURY</div>
           </div>
           <div class="hotel-suite-details">
@@ -320,6 +321,18 @@
     <p class="local-note">구매한 아이템은 계정 인벤토리에 저장됩니다. 구매 버튼을 여러 번 눌러도 서버에서 중복 지급을 방지합니다.</p>
   </section>
 </div>
+
+  <div class="hotel-experience-overlay" id="hotelExperienceDialog" hidden>
+    <section class="hotel-experience-dialog" role="dialog" aria-modal="true" aria-labelledby="hotelExperienceTitle">
+      <button class="hotel-experience-close" type="button" id="hotelExperienceClose" aria-label="닫기">×</button>
+      <div class="hotel-kicker" id="hotelExperienceKicker">DORI ROYAL HOTEL EXPERIENCE</div>
+      <h3 id="hotelExperienceTitle">호텔 프로그램</h3>
+      <p id="hotelExperienceDescription">오늘의 프로그램을 선택해 주세요.</p>
+      <div class="hotel-experience-options" id="hotelExperienceOptions"></div>
+      <div class="hotel-experience-footer"><span id="hotelExperienceReward">참여 보상 안내</span><button class="hotel-action-btn" id="hotelExperienceConfirm" type="button" disabled>선택 확정</button></div>
+    </section>
+  </div>
+
 <footer class="footer">DORI ROYAL HOTEL · PRIVATE MEMBERS CLUB<br>HOTEL SETTINGS ARE SAVED TO YOUR MEMBER ACCOUNT</footer>
 </div>
 <aside class="lounge-music-player" id="loungeMusicPlayer" hidden aria-label="라운지 음악 플레이어">
