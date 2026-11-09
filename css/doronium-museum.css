@@ -208,3 +208,108 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .dialog-info h2{overflow-wrap:anywhere;word-break:normal}
 .dialog-detail-note{overflow-wrap:anywhere}
 @media(max-width:760px){.application-grid{grid-template-columns:1fr;gap:10px}.application-card{padding:19px 17px}.collection-source-note{font-size:9px}}
+
+
+/* Premium museum: page-turning chapters, glass gemstones and editorial specimen cards */
+:root{--museum-glass:rgba(179,239,244,.12);--museum-line:rgba(190,220,224,.18)}
+html,body{height:100%;overscroll-behavior:none}
+body{overflow:hidden;background:radial-gradient(ellipse at 50% 0%,rgba(56,128,153,.18),transparent 42%),radial-gradient(ellipse at 92% 70%,rgba(126,101,154,.08),transparent 34%),linear-gradient(145deg,#06111e 0%,#091c2d 48%,#071321 100%)}
+.museum-shell{height:100dvh;min-height:540px;display:flex;flex-direction:column;overflow:hidden}
+.museum-header{flex:0 0 78px;height:78px}
+.museum-deck{position:relative;display:flex;flex:1 1 auto;min-height:0;width:100%;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scroll-snap-stop:always;scroll-behavior:smooth;scrollbar-width:none;overscroll-behavior-x:contain}
+.museum-deck::-webkit-scrollbar{display:none}
+.museum-deck>.museum-page{position:relative;flex:0 0 100%;width:100%;height:100%;min-height:100%;max-height:100%;overflow-x:hidden;overflow-y:auto;scroll-snap-align:start;scroll-snap-stop:always;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(216,189,128,.28) transparent}
+.museum-deck>.museum-page::-webkit-scrollbar{width:5px}
+.museum-deck>.museum-page::-webkit-scrollbar-thumb{background:rgba(216,189,128,.25);border-radius:8px}
+.museum-hero{grid-template-columns:1fr 1fr;overflow-y:auto}
+.museum-hero>.museum-facts{grid-column:1/-1;width:100%;margin-top:6px;background:linear-gradient(90deg,rgba(7,24,39,.72),rgba(17,42,57,.48),rgba(7,24,39,.72));border-top:1px solid var(--line)}
+.museum-facts>div{padding-top:20px;padding-bottom:20px}
+.chapter-dock{flex:0 0 auto;min-height:66px;display:grid;grid-template-columns:minmax(90px,1fr) minmax(180px,2fr) minmax(90px,1fr);align-items:center;gap:18px;padding:8px 18px;border-top:1px solid rgba(190,220,224,.12);background:linear-gradient(180deg,rgba(12,31,47,.97),rgba(6,17,29,.98));box-shadow:0 -12px 38px rgba(0,0,0,.16)}
+.chapter-arrow{display:flex;align-items:center;gap:11px;width:max-content;border:0;background:none;color:#91a9b2;cursor:pointer;transition:color .25s ease,transform .25s ease}
+.chapter-arrow:first-child{justify-self:start}.chapter-arrow:last-child{justify-self:end;flex-direction:row-reverse}
+.chapter-arrow span{width:32px;height:32px;display:grid;place-items:center;border:1px solid rgba(216,189,128,.26);border-radius:50%;color:var(--gold2);font-size:17px;transition:background .25s ease,border-color .25s ease,transform .25s ease}
+.chapter-arrow small{font:8px Arial,sans-serif;letter-spacing:1.6px}
+.chapter-arrow:hover:not(:disabled){color:var(--gold2)}.chapter-arrow:hover:not(:disabled) span{background:rgba(216,189,128,.1);border-color:rgba(216,189,128,.65);transform:scale(1.06)}
+.chapter-arrow:disabled{opacity:.28;cursor:default}
+.chapter-dock-center{min-width:0;display:grid;justify-items:center;gap:7px}
+.chapter-dock-top{display:flex;align-items:center;justify-content:center;gap:12px;min-width:0}
+.chapter-dock-top span{font:10px Georgia,serif;color:var(--gold2);letter-spacing:1px;white-space:nowrap}
+.chapter-dock-top strong{font:8px Arial,sans-serif;font-weight:400;letter-spacing:1.8px;color:#8ca7b1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chapter-steps{display:flex;justify-content:center;align-items:center;gap:8px;width:100%}
+.chapter-step{width:20px;height:13px;display:grid;place-items:center;border:0;background:transparent;cursor:pointer;padding:0}
+.chapter-step span{display:block;width:13px;height:2px;background:rgba(180,209,214,.26);transition:width .35s var(--ease),background .35s ease,box-shadow .35s ease}
+.chapter-step.active span{width:20px;background:var(--gold2);box-shadow:0 0 12px rgba(216,189,128,.35)}
+.museum-footer{flex:0 0 auto;padding:11px 0 13px;background:#061321;border-top:0}
+.specimen-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;min-height:350px;perspective:1400px}
+.specimen-card{border-color:rgba(186,222,226,.17);background:linear-gradient(150deg,rgba(27,57,73,.72),rgba(7,22,36,.96));box-shadow:0 22px 46px rgba(0,0,0,.13),inset 0 1px rgba(255,255,255,.035)}
+.specimen-card:hover{transform:translateY(-7px) rotateX(1deg);border-color:color-mix(in srgb,var(--gem) 65%,transparent);box-shadow:0 25px 52px rgba(0,0,0,.3),0 0 36px var(--gem-glow)}
+.specimen-visual{height:218px;background:radial-gradient(ellipse at 50% 58%,var(--gem-glow),transparent 58%),linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,0) 52%),linear-gradient(180deg,rgba(11,35,52,.6),rgba(4,16,28,.8))}
+.specimen-visual::before{width:138px;height:138px;border-color:color-mix(in srgb,var(--gem) 35%,transparent);box-shadow:0 0 0 14px rgba(255,255,255,.014),0 0 0 31px rgba(255,255,255,.008),inset 0 0 32px var(--gem-glow)}
+.specimen-gem{width:116px;height:145px;filter:drop-shadow(0 10px 15px var(--gem-glow)) drop-shadow(0 0 20px rgba(185,248,255,.17));animation:gemHover 6.2s ease-in-out infinite;transform-origin:50% 65%}
+.specimen-card:nth-child(2) .specimen-gem{animation-delay:-1.4s}.specimen-card:nth-child(3) .specimen-gem{animation-delay:-2.7s}
+.specimen-copy{padding:18px 18px 19px;gap:9px;min-height:132px}
+.specimen-copy small{font-size:8px;letter-spacing:1.6px;color:#90aab4}
+.specimen-copy strong{font-size:17px;white-space:normal;min-height:1.45em;line-height:1.45}
+.specimen-copy span{font-size:10px;line-height:1.75;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.specimen-open{padding:13px 18px;border-top-color:rgba(190,220,224,.13)}.specimen-open b{transition:transform .25s ease}.specimen-card:hover .specimen-open b{transform:translate(3px,-2px)}
+.specimen-pagination{display:flex;align-items:center;justify-content:center;gap:24px;margin:26px auto 0;padding:14px 22px;width:max-content;max-width:100%;border:1px solid rgba(185,216,221,.14);background:linear-gradient(120deg,rgba(18,43,59,.55),rgba(7,21,34,.72));box-shadow:0 12px 30px rgba(0,0,0,.12)}
+.specimen-pagination[hidden]{display:none}
+.specimen-page-arrow{width:32px;height:32px;border:1px solid rgba(216,189,128,.28);border-radius:50%;background:transparent;color:var(--gold2);font-size:17px;cursor:pointer;transition:background .2s ease,transform .2s ease}
+.specimen-page-arrow:hover:not(:disabled){background:rgba(216,189,128,.1);transform:scale(1.06)}.specimen-page-arrow:disabled{opacity:.25;cursor:default}
+.specimen-page-center{display:grid;justify-items:center;gap:8px;min-width:100px}
+.specimen-page-center>strong{font:10px Georgia,serif;font-weight:400;letter-spacing:1.7px;color:#d8c596}
+.specimen-page-dots{display:flex;align-items:center;justify-content:center;gap:6px}
+.specimen-page-dots button{width:5px;height:5px;padding:0;border:0;border-radius:50%;background:rgba(199,223,225,.28);cursor:pointer;transition:all .25s ease}
+.specimen-page-dots button[aria-current="page"]{width:17px;border-radius:8px;background:var(--gold2);box-shadow:0 0 10px rgba(216,189,128,.32)}
+.page-turn-in{animation:specimenPageTurn .42s var(--ease) both}
+.collection-status{font-size:11px}
+.collection-source-note{border-left-color:rgba(216,189,128,.58);background:linear-gradient(90deg,rgba(216,189,128,.055),transparent);padding:16px 18px}
+.specimen-dialog{width:min(1080px,calc(100% - 34px));max-height:min(860px,calc(100% - 28px));border-color:rgba(165,223,229,.3);border-radius:5px;background:radial-gradient(ellipse at 5% 5%,rgba(66,153,176,.16),transparent 42%),linear-gradient(145deg,#0c2336,#071624 75%);box-shadow:0 36px 120px rgba(0,0,0,.78),0 0 70px rgba(72,184,199,.08)}
+.dialog-layout{grid-template-columns:.94fr 1.06fr;min-height:650px}
+.dialog-model{min-height:650px;background:radial-gradient(ellipse at 50% 48%,rgba(81,196,213,.2),transparent 55%),linear-gradient(145deg,#102d43,#071522)}
+#specimen-canvas{height:560px;min-height:430px}
+.dialog-info{padding:68px 42px 34px;overflow:auto}
+.dialog-info h2{font-size:clamp(29px,3vw,42px);margin:13px 0 11px}
+.dialog-lead{font-size:12px;line-height:1.95;color:#afc2c8}
+.specimen-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:2px 0 22px}
+.specimen-detail-block{min-width:0;padding:15px 15px 14px;border:1px solid rgba(180,217,222,.14);background:linear-gradient(145deg,rgba(25,56,73,.52),rgba(7,23,38,.6))}
+.specimen-detail-block>small{font:8px Arial,sans-serif;letter-spacing:1.45px;color:#8aa9b1}
+.specimen-detail-block h3{margin:9px 0 7px;font-size:15px;font-weight:400;color:var(--gold2)}
+.specimen-detail-block p{margin:0;color:#b0c3c8;font-size:10px;line-height:1.9;white-space:pre-line;overflow-wrap:anywhere}
+.specimen-source-block{grid-column:1/-1;background:rgba(216,189,128,.045);border-color:rgba(216,189,128,.18)}
+.specimen-detail-block p#dialog-source{color:#d5c79f}
+.dialog-done{margin-top:auto}
+@keyframes gemHover{0%,100%{transform:translateY(0) rotate(-1.2deg)}50%{transform:translateY(-9px) rotate(1.2deg)}}
+@keyframes specimenPageTurn{0%{opacity:0;transform:perspective(1000px) rotateY(-5deg) translateX(12px);filter:blur(2px)}100%{opacity:1;transform:perspective(1000px) rotateY(0) translateX(0);filter:blur(0)}}
+@media(max-width:1050px){.specimen-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){
+ .museum-shell{height:100dvh;min-height:0;padding:0 14px}
+ .museum-header{flex-basis:68px;height:68px}
+ .museum-deck>.museum-page{padding-right:1px}
+ .museum-hero{grid-template-columns:1fr;min-height:100%}
+ .museum-hero>.museum-facts{grid-column:1}
+ .hero-copy{padding-top:40px}.hero-art{min-height:330px}
+ .museum-facts>div{padding:16px 11px}.museum-facts strong{font-size:27px}
+ .chapter-dock{min-height:58px;grid-template-columns:34px minmax(0,1fr) 34px;gap:6px;padding:6px 3px}
+ .chapter-arrow{width:32px;justify-content:center;gap:0}.chapter-arrow span{width:29px;height:29px}.chapter-arrow small{display:none}
+ .chapter-dock-top{gap:8px}.chapter-dock-top span{font-size:9px}.chapter-dock-top strong{font-size:7px;letter-spacing:1.1px}
+ .chapter-steps{gap:5px}.chapter-step{width:15px}.chapter-step span{width:8px}.chapter-step.active span{width:15px}
+ .museum-footer{padding:8px 0 10px;font-size:6px;letter-spacing:.7px}
+ .collection-section{padding:42px 0 48px}.section-heading{margin-bottom:20px}.section-heading h2,.origin-copy h2{font-size:34px}
+ .collection-toolbar{padding:10px 0}.filter-tabs{margin-bottom:10px}.filter-tab{font-size:10px;padding:7px 8px}
+ .collection-status{gap:10px;padding:12px 1px;font-size:9px}.collection-status span:last-child{display:none}
+ .specimen-grid{grid-template-columns:1fr;min-height:0;gap:12px}.specimen-card{max-width:460px;width:100%;margin:0 auto}
+ .specimen-visual{height:190px}.specimen-gem{width:118px;height:148px}.specimen-copy{min-height:0;padding:15px}
+ .specimen-copy strong{font-size:16px}.specimen-copy span{-webkit-line-clamp:2}
+ .specimen-pagination{margin-top:18px;padding:10px 17px;gap:20px}
+ .view-progress{margin-top:18px;padding:14px 0}.collection-source-note{margin-top:12px;padding:11px 13px}
+ .application-grid{grid-template-columns:1fr;gap:9px;margin-top:22px}.application-card{padding:17px 16px}
+ .origin-layout{padding:45px 0;gap:30px}.origin-copy h2{margin:16px 0}.origin-callout{padding:14px;margin:19px 0}.timeline-item{padding-bottom:20px}
+ .infinity-section{padding:38px 0}.infinity-card{min-height:0}.infinity-copy{padding:30px 20px 6px}.infinity-art{min-height:250px}
+ .visit-section{gap:14px;padding:24px 0 35px}.visit-section h2{font-size:19px}
+ .dialog-layout{grid-template-columns:1fr;min-height:0}.dialog-model{min-height:310px}#specimen-canvas{height:280px;min-height:250px}
+ .dialog-info{padding:25px 19px 22px;min-height:0}.specimen-detail-grid{grid-template-columns:1fr;gap:8px}
+ .specimen-source-block{grid-column:auto}.specimen-detail-block{padding:13px}.dialog-done{margin-top:20px}
+}
+@media(max-width:390px){.museum-header{flex-basis:64px;height:64px}.brand-copy small{font-size:7px}.museum-brand{gap:7px}.hero-bottomline span:last-child{display:none}}
+@media(prefers-reduced-motion:reduce){.page-turn-in,.specimen-gem,.chapter-step span,.specimen-card{animation:none!important;transition:none!important}
