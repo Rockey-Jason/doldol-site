@@ -107,7 +107,7 @@ function makeCrystal(parent,id,x,y,z,size=4,appearance={}){
 export function createCrystalViewer(canvas,id,appearance={}){
   if(!THREE){
     const ctx=canvas.getContext("2d");let raf=0;
-    const draw=()=>{const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,1.5);canvas.width=r.width*dpr;canvas.height=r.height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,r.width,r.height);const spec=crystalSpecs[id]||crystalSpecs.doronium_normal;ctx.fillStyle="#0b1b2b";ctx.fillRect(0,0,r.width,r.height);ctx.shadowColor="#"+spec.color.toString(16).padStart(6,"0");ctx.shadowBlur=25;ctx.fillStyle="#"+spec.color.toString(16).padStart(6,"0");ctx.beginPath();ctx.moveTo(r.width/2,r.height*.18);ctx.lineTo(r.width*.68,r.height*.53);ctx.lineTo(r.width/2,r.height*.83);ctx.lineTo(r.width*.32,r.height*.53);ctx.closePath();ctx.fill();ctx.shadowBlur=0;};
+    const draw=()=>{const r=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,1.5);canvas.width=r.width*dpr;canvas.height=r.height*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,r.width,r.height);const spec=crystalSpecs[id]||crystalSpecs.doronium_normal;const gemColor=appearance.color||("#"+spec.color.toString(16).padStart(6,"0"));ctx.fillStyle="#0b1b2b";ctx.fillRect(0,0,r.width,r.height);ctx.shadowColor=gemColor;ctx.shadowBlur=25;ctx.fillStyle=gemColor;ctx.beginPath();ctx.moveTo(r.width/2,r.height*.18);ctx.lineTo(r.width*.68,r.height*.53);ctx.lineTo(r.width/2,r.height*.83);ctx.lineTo(r.width*.32,r.height*.53);ctx.closePath();ctx.fill();ctx.shadowBlur=0;};
     draw();return {dispose(){cancelAnimationFrame(raf);}};
   }
   let renderer;
