@@ -117,7 +117,8 @@ try {
   const liveProduction = await desktop.evaluate(() => window.__doroniumFactoryTest.runLiveProductionCustodyTest());
   assert.equal(liveProduction.beforeAuditValid, true, "The production fixture must start from a valid custody snapshot");
   assert.equal(liveProduction.activeAuditValid, true, "Recipe start must preserve a valid active-job custody snapshot");
-  assert.equal(liveProduction.activeAfterStart, true, "The smelter must enter a real active production job");
+  assert.equal(liveProduction.canConsumeBefore, true, "The smelter fixture must satisfy its real recipe inputs: " + JSON.stringify(liveProduction));
+  assert.equal(liveProduction.activeAfterStart, true, "The smelter must enter a real active production job: " + JSON.stringify(liveProduction));
   assert.equal(liveProduction.activeQuantity, liveProduction.totalInputQuantity, "Every buffered and inventory ingredient must be represented exactly once in active-job custody");
   assert.ok(liveProduction.bufferTransferCount >= 1, "Buffered machine inputs must be journaled as machine-input to active-job transfers");
   assert.ok(liveProduction.inventoryTransferCount >= 1, "Inventory ingredients must be journaled as reservation to active-job transfers");

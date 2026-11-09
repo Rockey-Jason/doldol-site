@@ -2144,7 +2144,7 @@ if(E2E_MODE){
     }
     machine.temp=Number.isFinite(Number(recipe.temp))?Number(recipe.temp):25;
     machine.pressure=Number.isFinite(Number(recipe.pressure))?Number(recipe.pressure):0;syncLegacyInventory(S);
-    const beforeAudit=rebuildOwnershipLedger(S);tickMachine(machine,STEP,1);const activeAudit=rebuildOwnershipLedger(S);
+    const beforeAudit=rebuildOwnershipLedger(S),canConsumeBefore=canConsumeRecipe(machine,recipe);tickMachine(machine,STEP,1);const machineStatusAfterStart=machine.status,activeAudit=rebuildOwnershipLedger(S);
     const activeCustody=S.ownershipLedger.custody.filter(entry=>entry.ownerType==="ACTIVE_JOB"&&entry.ownerID===machine.uid);
     const activeQuantity=activeCustody.reduce((n,entry)=>n+entry.quantity,0);
     const transferTransactions=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="TRANSFER"&&tx.result?.to?.type==="ACTIVE_JOB"&&tx.result?.to?.id===machine.uid);
@@ -2157,7 +2157,7 @@ if(E2E_MODE){
     const outputCustody=S.ownershipLedger.custody.filter(entry=>entry.ownerType==="MACHINE_OUTPUT"&&entry.ownerID===machine.uid);
     const activeCustodyAfter=S.ownershipLedger.custody.filter(entry=>entry.ownerType==="ACTIVE_JOB"&&entry.ownerID===machine.uid);
     const consumed=S.ownershipLedger.consumed.filter(entry=>String(entry.reason||"").startsWith("production-input:"));
-    return {beforeAuditValid:beforeAudit.valid,activeAuditValid:activeAudit.valid,activeAfterStart:!!machine.activeMeta,totalInputQuantity,bufferedQuantity,inventoryQuantity,activeQuantity,bufferTransferCount,inventoryTransferCount,outputReady:!!machine.output,outputItemID:machine.output?.id||null,outputQty:machine.output?.qty||0,productionTransactionCount:productionTransactions.length,consumedInputQuantity:consumed.reduce((n,entry)=>n+entry.quantity,0),activeCustodyAfter:activeCustodyAfter.reduce((n,entry)=>n+entry.quantity,0),outputCustodyQuantity:outputCustody.reduce((n,entry)=>n+entry.quantity,0),finalAuditValid:finalAudit.valid,productionSequence:machine.productionSequence||0};
+    return {beforeAuditValid:beforeAudit.valid,canConsumeBefore,activeAuditValid:activeAudit.valid,activeAfterStart:!!machine.activeMeta,machineStatusAfterStart,errorCode:machine.errorCode||null,machineInput:{...machine.input},inventoryAvailable:Object.fromEntries(Object.keys(recipe.inputs||{}).map(id=>[id,availableItemCount(S,canonicalItemID(id))])),ownershipErrors:activeAudit.errors||[],reservationCount:Object.keys(S.runtime.reservations||{}).length,totalInputQuantity,bufferedQuantity,inventoryQuantity,activeQuantity,bufferTransferCount,inventoryTransferCount,outputReady:!!machine.output,outputItemID:machine.output?.id||null,outputQty:machine.output?.qty||0,productionTransactionCount:productionTransactions.length,consumedInputQuantity:consumed.reduce((n,entry)=>n+entry.quantity,0),activeCustodyAfter:activeCustodyAfter.reduce((n,entry)=>n+entry.quantity,0),outputCustodyQuantity:outputCustody.reduce((n,entry)=>n+entry.quantity,0),finalAuditValid:finalAudit.valid,productionSequence:machine.productionSequence||0};
    }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
   },
 
