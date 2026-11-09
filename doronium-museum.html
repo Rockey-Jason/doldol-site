@@ -8,7 +8,7 @@
 <title>도로늄 박물관 | ROCKEY INDUSTRIES</title>
 <link rel="icon" href="./rockeysite-icon-3.png" type="image/png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net">
-<link rel="stylesheet" href="./css/doronium-museum.css?v=3">
+<link rel="stylesheet" href="./css/doronium-museum.css?v=4">
 </head>
 <body>
 <div class="museum-shell">
@@ -87,10 +87,12 @@
           <button class="filter-tab" type="button" data-filter="variant" aria-pressed="false">변형</button>
           <button class="filter-tab" type="button" data-filter="special" aria-pressed="false">특수</button>
           <button class="filter-tab" type="button" data-filter="stones" aria-pressed="false">돌피니티 스톤</button>
+          <button class="filter-tab" type="button" data-filter="favorites" aria-pressed="false">★ 즐겨찾기</button>
         </div>
-        <label class="search-box"><span aria-hidden="true">⌕</span><input id="specimen-search" type="search" placeholder="이름·제조법·신문 회차 검색" autocomplete="off"><kbd>/</kbd></label>
+        <div class="collection-tools"><label class="search-box"><span aria-hidden="true">⌕</span><input id="specimen-search" type="search" placeholder="이름·제조법·신문 회차 검색" autocomplete="off"><kbd>/</kbd></label><button class="collection-tool" id="random-specimen" type="button">오늘의 표본 <span>✧</span></button></div>
       </div>
       <div class="collection-status"><span id="collection-count">Supabase 아카이브 연결 중</span><span id="museum-archive-status">돌이신문 원문에서 정리한 전시 자료를 불러오고 있습니다.</span></div>
+      <div class="swipe-guide" aria-hidden="true"><span>←</span> 좌우로 밀어 표본과 전시실을 전환하세요 <span>→</span></div>
       <div class="specimen-grid" id="specimen-grid" aria-live="polite"></div>
       <div class="specimen-pagination" id="specimen-pagination" aria-label="표본 페이지 이동">
         <button class="specimen-page-arrow" id="specimen-prev" type="button" aria-label="이전 표본 페이지">←</button>
@@ -181,7 +183,7 @@
   <form method="dialog"><button class="dialog-close" aria-label="닫기">×</button></form>
   <div class="dialog-layout">
     <div class="dialog-model"><div class="model-topline">FACETED GLASS MODEL <span>EXHIBITION RENDER</span></div><canvas id="specimen-canvas" aria-label="일반 도로늄 참고 3D 모형"></canvas><div class="model-caption">SEMI-TRANSLUCENT GEM · ILLUSTRATIVE FORM ONLY</div></div>
-    <div class="dialog-info"><div class="eyebrow" id="dialog-class">SPECIMEN / 001</div><h2 id="dialog-title">일반 도로늄</h2><p class="dialog-lead" id="dialog-lead"></p><div class="dialog-tags" id="dialog-tags"></div><div class="dialog-rule"></div>
+    <div class="dialog-info"><div class="eyebrow" id="dialog-class">SPECIMEN / 001</div><h2 id="dialog-title">일반 도로늄</h2><p class="dialog-lead" id="dialog-lead"></p><div class="dialog-tags" id="dialog-tags"></div><div class="dialog-actions"><button class="dialog-favorite" id="dialog-favorite" type="button">☆ 즐겨찾기 추가</button><div class="dialog-specimen-nav"><button id="dialog-prev" type="button" aria-label="이전 표본">←</button><button id="dialog-next" type="button" aria-label="다음 표본">→</button></div></div><div class="dialog-rule"></div>
       <div class="specimen-detail-grid">
         <section class="specimen-detail-block"><small>01 · CHARACTERISTICS</small><h3>도로늄 특징</h3><p id="dialog-characteristics"></p></section>
         <section class="specimen-detail-block"><small>02 · CAPABILITIES</small><h3>도로늄 능력</h3><p id="dialog-abilities"></p></section>
@@ -192,6 +194,6 @@
 </dialog>
 <div class="toast" id="museum-toast" role="status" aria-live="polite"></div>
 <script src="./js/supabase.min.js"></script>
-<script type="module" src="./js/doronium-museum.js?v=6"></script>
+<script type="module" src="./js/doronium-museum.js?v=7"></script>
 </body>
 </html>
