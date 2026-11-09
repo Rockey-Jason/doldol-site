@@ -94,3 +94,23 @@ test("failed production completion rolls back every input and journal entry",()=
  ],output:{stackID:"MACHINE_OUTPUT:SMELTER-2",itemID:"ironPlate",quantity:1,ownerType:"MACHINE_OUTPUT",ownerID:"SMELTER-2"}});
  assert.equal(result,null);assert.deepEqual(s,before);assert.equal(validateOwnershipState(s).valid,true);
 });
+
+
+test("conveyor custody preserves one stable stack identity across two belts and inventory",()=>{
+ const s=createOwnershipState();
+ addCustody(s,{stackID:"MACHINE_OUTPUT:M1:1",itemID:"ironPlate",quantity:2,ownerType:"MACHINE_OUTPUT",ownerID:"M1",metadata:{quality:96,purity:97,synthetic:false}});
+ const first=transferCustody(s,{transactionID:"LOGISTICS:M1:1",stackID:"MACHINE_OUTPUT:M1:1",quantity:2,toType:"CONVEYOR",toID:"B1",expectedFromType:"MACHINE_OUTPUT",expectedFromID:"M1"});
+ assert.equal(first.to.id,"B1");
+ const second=transferCustody(s,{transactionID:"LOGISTICS:B1:1",stackID:"MACHINE_OUTPUT:M1:1",quantity:2,toType:"CONVEYOR",toID:"B2",expectedFromType:"CONVEYOR",expectedFromID:"B1"});
+ assert.equal(second.to.id,"B2");
+ const third=transferCustody(s,{transactionID:"LOGISTICS:B2:1",stackID:"MACHINE_OUTPUT:M1:1",quantity:2,toType:"PLAYER_INVENTORY",toID:"player",expectedFromType:"CONVEYOR",expectedFromID:"B2"});
+ assert.equal(third.to.type,"PLAYER_INVENTORY");
+ assert.equal(transferCustody(s,{transactionID:"LOGISTICS:B2:1",stackID:"MACHINE_OUTPUT:M1:1",quantity:2,toType:"PLAYER_INVENTORY",toID:"player",expectedFromType:"CONVEYOR",expectedFromID:"B2"}).duplicate,true);
+ assert.equal(transferCustody(s,{transactionID:"LOGISTICS:B2:1",stackID:"MACHINE_OUTPUT:M1:1",quantity:2,toType:"WAREHOUSE",toID:"W1",expectedFromType:"CONVEYOR",expectedFromID:"B2"}),null);
+ assert.equal(s.custody.length,1);
+ assert.equal(s.custody[0].stackID,"MACHINE_OUTPUT:M1:1");
+ assert.equal(s.custody[0].ownerType,"PLAYER_INVENTORY");
+ assert.equal(s.custody[0].quantity,2);
+ assert.deepEqual(validateOwnershipState(s).itemTotals,{ironPlate:2});
+ assert.equal(validateOwnershipState(s).valid,true);
+});

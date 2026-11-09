@@ -721,8 +721,14 @@ function rebuildOwnershipLedger(state=S){
    const input=activeInputs[i],itemID=canonicalItemID(input.itemID),qty=Math.max(0,Math.floor(Number(input.quantity)||0));if(!itemID||!qty)continue;
    addCustody(ledger,{stackID:"ACTIVE_INPUT:"+uid+":"+i+":"+itemID,itemID,quantity:qty,ownerType:"ACTIVE_JOB",ownerID:uid,metadata:{quality:input.quality,purity:input.purity,synthetic:input.synthetic}});
   }
-  if(building.output&&Number(building.output.qty)>0)addCustody(ledger,{stackID:"MACHINE_OUTPUT:"+uid,itemID:building.output.id,quantity:Math.floor(building.output.qty),ownerType:"MACHINE_OUTPUT",ownerID:uid,metadata:building.output.meta||{}});
-  if(building.item&&Number(building.item.qty)>0)addCustody(ledger,{stackID:"CONVEYOR:"+uid,itemID:building.item.id,quantity:Math.floor(building.item.qty),ownerType:"CONVEYOR",ownerID:uid,metadata:building.item.meta||{}});
+  if(building.output&&Number(building.output.qty)>0){
+   const stackID=String(building.output.custodyStackID||("MACHINE_OUTPUT:"+uid));
+   addCustody(ledger,{stackID,itemID:building.output.id,quantity:Math.floor(building.output.qty),ownerType:"MACHINE_OUTPUT",ownerID:uid,metadata:building.output.meta||{}});
+  }
+  if(building.item&&Number(building.item.qty)>0){
+   const stackID=String(building.item.custodyStackID||("CONVEYOR:"+uid));
+   addCustody(ledger,{stackID,itemID:building.item.id,quantity:Math.floor(building.item.qty),ownerType:"CONVEYOR",ownerID:uid,metadata:building.item.meta||{}});
+  }
  }
  for(const shipment of state.contractRuntime?.shipments||[]){
   for(let i=0;i<(shipment.cargo||[]).length;i++){
@@ -745,22 +751,111 @@ function rebuildOwnershipLedger(state=S){
   return validation;
  }
 }
+function buildingCargoStackID(source,sourceField){
+ const explicit=String(source?.[sourceField]?.custodyStackID||"").trim();
+ if(explicit)return explicit;
+ const uid=String(source?.uid||source?.type||"unknown");
+ return sourceField==="output"?"MACHINE_OUTPUT:"+uid:"CONVEYOR:"+uid;
+}
+function nextCargoTransactionID(source,prefix){
+ const sequence=Math.max(0,Math.floor(Number(source?.custodyTransferSequence)||0))+1;
+ source.custodyTransferSequence=sequence;
+ return {sequence,transactionID:String(prefix)+":"+String(source?.uid||source?.type||"unknown")+":"+String(S.tick||0)+":"+sequence};
+}
+function restoreCargoMutation(source,target,sourceField,snapshot){
+ S.runtime=snapshot.runtime;S.inventory=snapshot.inventory;S.meta=snapshot.meta;
+ S.ownershipLedger=snapshot.ownershipLedger;S.ownershipLedgerValidation=snapshot.validation;
+ source[sourceField]=snapshot.sourceItem;
+ source.status=snapshot.sourceStatus;source.logisticsStatus=snapshot.sourceLogisticsStatus;
+ source.custodyTransferSequence=snapshot.sourceSequence;
+ if(target){target.item=snapshot.targetItem;target.moveTimer=snapshot.targetMoveTimer;target.logisticsStatus=snapshot.targetLogisticsStatus}
+}
+function transferBuildingCargo(source,target,sourceField,fromType,toType,toID){
+ const item=source?.[sourceField],quantity=Math.floor(Number(item?.qty)||0);
+ if(!item||!Number.isSafeInteger(quantity)||quantity<=0||!source?.uid)return false;
+ if(toType==="CONVEYOR"&&(!target||target.item))return false;
+ const beforeAudit=rebuildOwnershipLedger(S);
+ if(!beforeAudit.valid)return false;
+ const stackID=buildingCargoStackID(source,sourceField),uid=String(source.uid);
+ if(toType==="PLAYER_INVENTORY"&&(S.runtime?.itemStacks||[]).some(stack=>String(stack.runtimeID)===stackID))return false;
+ const snapshot={
+  runtime:structuredClone(S.runtime),inventory:structuredClone(S.inventory||{}),meta:structuredClone(S.meta||{}),
+  ownershipLedger:structuredClone(S.ownershipLedger),validation:structuredClone(S.ownershipLedgerValidation),
+  sourceItem:structuredClone(item),sourceStatus:source.status,sourceLogisticsStatus:source.logisticsStatus,
+  sourceSequence:source.custodyTransferSequence,targetItem:target?structuredClone(target.item):null,
+  targetMoveTimer:target?.moveTimer,targetLogisticsStatus:target?.logisticsStatus
+ };
+ const tx=nextCargoTransactionID(source,"LOGISTICS");
+ const moved=transferCustody(S.ownershipLedger,{transactionID:tx.transactionID,stackID,quantity,toType,toID:String(toID||""),expectedFromType:fromType,expectedFromID:uid});
+ if(!moved){source.custodyTransferSequence=snapshot.sourceSequence;return false}
+ if(toType==="CONVEYOR"){
+  target.item={...item,custodyStackID:stackID};target.moveTimer=.45;target.logisticsStatus="MOVING";
+ }else if(toType==="PLAYER_INVENTORY"){
+  ensureItemStacks(S);
+  const metadata=item.meta||{};
+  S.runtime.itemStacks.push({runtimeID:stackID,itemID:canonicalItemID(item.id),quantity,
+   quality:clamp(metadata.quality??90,0,100),purity:clamp(metadata.purity??90,0,100),
+   synthetic:metadata.synthetic===true,packaging:metadata.packaging||null,createdTick:Math.max(0,Number(S.tick)||0)});
+  syncLegacyInventory(S);
+ }else{
+  restoreCargoMutation(source,target,sourceField,snapshot);return false;
+ }
+ if(sourceField==="output"){
+  if(!clearCompletionBuffer(source)){restoreCargoMutation(source,target,sourceField,snapshot);return false}
+  source.status="IDLE";
+ }else source.item=null;
+ source.logisticsStatus="MOVING";
+ const afterAudit=rebuildOwnershipLedger(S);
+ if(!afterAudit.valid){restoreCargoMutation(source,target,sourceField,snapshot);return false}
+ markDirty();
+ return {ok:true,stackID,quantity,itemID:canonicalItemID(item.id),transactionID:tx.transactionID};
+}
+function consumeBuildingCargoForSale(source,sourceField,ownerType){
+ const item=source?.[sourceField],quantity=Math.floor(Number(item?.qty)||0);
+ if(!item||!Number.isSafeInteger(quantity)||quantity<=0||!source?.uid)return null;
+ const beforeAudit=rebuildOwnershipLedger(S);
+ if(!beforeAudit.valid)return null;
+ const stackID=buildingCargoStackID(source,sourceField),uid=String(source.uid);
+ const snapshot={
+  runtime:structuredClone(S.runtime),inventory:structuredClone(S.inventory||{}),meta:structuredClone(S.meta||{}),
+  ownershipLedger:structuredClone(S.ownershipLedger),validation:structuredClone(S.ownershipLedgerValidation),
+  sourceItem:structuredClone(item),sourceStatus:source.status,sourceLogisticsStatus:source.logisticsStatus,
+  sourceSequence:source.custodyTransferSequence
+ };
+ const tx=nextCargoTransactionID(source,"LOGISTICS_SALE");
+ const consumed=consumeCustody(S.ownershipLedger,{transactionID:tx.transactionID,stackID,quantity,expectedOwnerType:ownerType,expectedOwnerID:uid,reason:"market-sale"});
+ if(!consumed){source.custodyTransferSequence=snapshot.sourceSequence;return null}
+ if(sourceField==="output"){
+  if(!clearCompletionBuffer(source)){restoreCargoMutation(source,null,sourceField,snapshot);return null}
+  source.status="IDLE";
+ }else source.item=null;
+ source.logisticsStatus="SOLD";
+ const afterAudit=rebuildOwnershipLedger(S);
+ if(!afterAudit.valid){restoreCargoMutation(source,null,sourceField,snapshot);return null}
+ const itemID=canonicalItemID(item.id),earned=Math.floor(quantity*(RESOURCE[itemID]?.price||0)*.8);
+ S.money+=earned;S.stats.sold+=quantity;markDirty();
+ return {ok:true,amount:quantity,earned,stackID,transactionID:tx.transactionID};
+}
 function createOutput(b,id,qty,meta){
  id=canonicalItemID(id);const resource=RESOURCE[id];
  if(!resource){b.status="ERROR";b.errorCode="UNKNOWN_RESOURCE_OUTPUT:"+String(id);return false}
  const auditBefore=rebuildOwnershipLedger(S);
  if(!auditBefore.valid){b.status="ERROR";b.errorCode="ITEM_OWNERSHIP_INTEGRITY";return false}
  const uid=String(b.uid||b.type||"unknown"),sequence=Math.max(1,Math.floor(Number(b.productionSequence)||1));
+ const previousOutputSequence=Math.max(0,Math.floor(Number(b.custodyOutputSequence)||0));
+ const outputSequence=previousOutputSequence+1,outputStackID="MACHINE_OUTPUT:"+uid+":"+outputSequence;
  const activeInputs=Array.isArray(b.activeInputQuantities)?b.activeInputQuantities:Array.isArray(b.activeMeta?.consumedInputs)?b.activeMeta.consumedInputs:[];
  const ledgerBefore=structuredClone(S.ownershipLedger),validationBefore=structuredClone(S.ownershipLedgerValidation);
  if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}
- const completed=completeProductionCustody(S.ownershipLedger,{transactionID:"PRODUCTION_COMPLETE:"+uid+":"+sequence,inputs:activeInputs.map((input,index)=>({stackID:"ACTIVE_INPUT:"+uid+":"+index+":"+canonicalItemID(input.itemID),quantity:Math.max(0,Math.floor(Number(input.quantity)||0)),expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:uid})),output:{stackID:"MACHINE_OUTPUT:"+uid,itemID:id,quantity:qty,ownerType:"MACHINE_OUTPUT",ownerID:uid,metadata:meta||{}}});
+ const completed=completeProductionCustody(S.ownershipLedger,{transactionID:"PRODUCTION_COMPLETE:"+uid+":"+sequence+":"+outputSequence,inputs:activeInputs.map((input,index)=>({stackID:"ACTIVE_INPUT:"+uid+":"+index+":"+canonicalItemID(input.itemID),quantity:Math.max(0,Math.floor(Number(input.quantity)||0)),expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:uid})),output:{stackID:outputStackID,itemID:id,quantity:qty,ownerType:"MACHINE_OUTPUT",ownerID:uid,metadata:meta||{}}});
  if(!completed){clearCompletionBuffer(b);S.ownershipLedger=ledgerBefore;S.ownershipLedgerValidation=validationBefore;b.status="ERROR";b.errorCode="ITEM_OWNERSHIP_INTEGRITY";return false}
+ b.output.custodyStackID=outputStackID;b.custodyOutputSequence=outputSequence;
  const previousActiveInputs=structuredClone(b.activeInputQuantities||[]);b.activeInputQuantities=[];
  const auditAfter=rebuildOwnershipLedger(S);
- if(!auditAfter.valid){clearCompletionBuffer(b);b.activeInputQuantities=previousActiveInputs;S.ownershipLedger=ledgerBefore;S.ownershipLedgerValidation=validationBefore;b.status="ERROR";b.errorCode="ITEM_OWNERSHIP_INTEGRITY";return false}
+ if(!auditAfter.valid){clearCompletionBuffer(b);b.activeInputQuantities=previousActiveInputs;b.custodyOutputSequence=previousOutputSequence;S.ownershipLedger=ledgerBefore;S.ownershipLedgerValidation=validationBefore;b.status="ERROR";b.errorCode="ITEM_OWNERSHIP_INTEGRITY";return false}
  b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(resource.name+" 생산 · "+fmt(qty)+"개");markDirty();return true;
- }
+}
+
 const BUILDING_FOOTPRINTS=Object.freeze({
  storage:{width:2,height:2},warehouse:{width:3,height:2},smelter:{width:2,height:2},goldSmelter:{width:2,height:2},chromeSmelter:{width:2,height:2},steelForge:{width:2,height:2},titaniumPress:{width:2,height:2},carbonMill:{width:2,height:2},wiremill:{width:2,height:2},assembler:{width:2,height:2},lab:{width:2,height:2},
  reactor:{width:3,height:3},variantLab:{width:3,height:3},BUILDING_DORONUM_COMPRESSOR:{width:3,height:3},BUILDING_DORONUM_REFINEMENT_CHAMBER:{width:3,height:3},BUILDING_ULTRA_MATERIAL_PRESS:{width:3,height:3},BUILDING_REINFORCED_DORONUM_PRESS:{width:3,height:3},BUILDING_CONTROLLED_ATMOSPHERE_CHAMBER:{width:3,height:3},BUILDING_OPTICAL_REFINEMENT_CHAMBER:{width:3,height:3},BUILDING_THERMAL_STABILIZER:{width:2,height:2},BUILDING_COOLING_STABILIZER:{width:2,height:2},BUILDING_ABSORPTION_PRESS:{width:3,height:3},BUILDING_SPECIAL_EDITION_LINE:{width:3,height:3},BUILDING_FIRST_FACTORY_LEGACY_BATCH_LINE:{width:3,height:3},cooling:{width:2,height:2},fluidTank:{width:2,height:2},fusion:{width:4,height:4},relay:{width:2,height:2},core:{width:3,height:3},transformer:{width:2,height:2},battery:{width:2,height:2}
@@ -1371,18 +1466,33 @@ function tickBelts(dt){
   const route=selectLogisticsTarget(graph,b,b.item,{canAccept:()=>true});
   if(!route){const report=analyzeLogisticsPressure(graph),isDeadlocked=report.deadlocked.some(x=>x.buildingIDs.includes(String(b.uid)));b.logisticsStatus=isDeadlocked?"DEADLOCK":"BACKPRESSURE";continue}
   const target=route.target;b.logisticsStatus="MOVING";
-  if(isBeltType(target.type)){target.item=b.item;b.item=null;target.moveTimer=.45;target.logisticsStatus="MOVING";markDirty();continue}
-  if(target.type==="storage"||target.type==="warehouse"){addItem(b.item.id,b.item.qty,b.item.meta,false);log("물류 센터 회수 · "+(RESOURCE[b.item.id]?.name||b.item.id));b.item=null;markDirty()}
-  else if(target.type==="market"){const amount=b.item.qty,earned=Math.floor(amount*(RESOURCE[b.item.id]?.price||0)*.8);S.money+=earned;S.stats.sold+=amount;b.item=null;log("자동 거래 · "+fmt(earned)+" D");markDirty()}
-  else if(["machine","reactor","variantLab"].includes(buildingDef(target.type)?.kind)||["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.item.id,b.item.qty,b.item.meta);b.item=null;target.status="WAITING_INPUT";markDirty()}
+  if(isBeltType(target.type)){
+   const moved=transferBuildingCargo(b,target,"item","CONVEYOR","CONVEYOR",String(target.uid));
+   if(!moved)b.logisticsStatus="CUSTODY_BLOCKED";
+   continue;
+  }
+  if(target.type==="storage"||target.type==="warehouse"){
+   const moved=transferBuildingCargo(b,null,"item","CONVEYOR","PLAYER_INVENTORY","player");
+   if(moved)log("물류 센터 회수 · "+(RESOURCE[moved.itemID]?.name||moved.itemID));
+   else b.logisticsStatus="CUSTODY_BLOCKED";
+  }else if(target.type==="market"){
+   const sale=consumeBuildingCargoForSale(b,"item","CONVEYOR");
+   if(sale)log("자동 거래 · "+fmt(sale.earned)+" D");else b.logisticsStatus="CUSTODY_BLOCKED";
+  }else if(["machine","reactor","variantLab"].includes(buildingDef(target.type)?.kind)||["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.item.id,b.item.qty,b.item.meta);b.item=null;target.status="WAITING_INPUT";markDirty()}
  }
  for(const b of S.buildings){if(!b.output)continue;
   const route=selectLogisticsTarget(graph,b,b.output,{canAccept:()=>true});if(!route)continue;
   const target=route.target;
-  if(isBeltType(target.type)&&!target.item){target.item={...b.output};target.moveTimer=.45;clearCompletionBuffer(b);b.status="IDLE";markDirty()}
-  else if(target.type==="storage"||target.type==="warehouse"){addItem(b.output.id,b.output.qty,b.output.meta,false);clearCompletionBuffer(b);b.status="IDLE";log("창고 자동 적재 · 생산품 회수");markDirty()}
-  else if(target.type==="market"){const earned=Math.floor(b.output.qty*(RESOURCE[b.output.id]?.price||0)*.8);S.money+=earned;S.stats.sold+=b.output.qty;log("산업 거래소 자동 판매 · "+fmt(earned)+" D");clearCompletionBuffer(b);b.status="IDLE";markDirty()}
-  else if(["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.output.id,b.output.qty,b.output.meta);clearCompletionBuffer(b);b.status="IDLE";markDirty()}
+  if(isBeltType(target.type)&&!target.item){
+   const moved=transferBuildingCargo(b,target,"output","MACHINE_OUTPUT","CONVEYOR",String(target.uid));
+   if(!moved)b.logisticsStatus="CUSTODY_BLOCKED";
+  }else if(target.type==="storage"||target.type==="warehouse"){
+   const moved=transferBuildingCargo(b,null,"output","MACHINE_OUTPUT","PLAYER_INVENTORY","player");
+   if(moved)log("창고 자동 적재 · 생산품 회수");else b.logisticsStatus="CUSTODY_BLOCKED";
+  }else if(target.type==="market"){
+   const sale=consumeBuildingCargoForSale(b,"output","MACHINE_OUTPUT");
+   if(sale)log("산업 거래소 자동 판매 · "+fmt(sale.earned)+" D");else b.logisticsStatus="CUSTODY_BLOCKED";
+  }else if(["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.output.id,b.output.qty,b.output.meta);clearCompletionBuffer(b);b.status="IDLE";markDirty()}
  }
 }
 
@@ -2159,6 +2269,42 @@ if(E2E_MODE){
     const consumed=S.ownershipLedger.consumed.filter(entry=>String(entry.reason||"").startsWith("production-input:"));
     return {beforeAuditValid:beforeAudit.valid,canConsumeBefore,activeAuditValid:activeAudit.valid,activeAfterStart,machineStatusAfterStart,errorCode:machine.errorCode||null,machineInput:{...machine.input},inventoryAvailable:Object.fromEntries(Object.keys(recipe.inputs||{}).map(id=>[id,availableItemCount(S,canonicalItemID(id))])),ownershipErrors:activeAudit.errors||[],reservationCount:Object.keys(S.runtime.reservations||{}).length,totalInputQuantity,bufferedQuantity,inventoryQuantity,activeQuantity,bufferTransferCount,inventoryTransferCount,outputReady:!!machine.output,outputItemID:machine.output?.id||null,outputQty:machine.output?.qty||0,productionTransactionCount:productionTransactions.length,consumedInputQuantity:consumed.reduce((n,entry)=>n+entry.quantity,0),activeCustodyAfter:activeCustodyAfter.reduce((n,entry)=>n+entry.quantity,0),outputCustodyQuantity:outputCustody.reduce((n,entry)=>n+entry.quantity,0),finalAuditValid:finalAudit.valid,productionSequence:machine.productionSequence||0};
    }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
+  },
+  runLiveConveyorCustodyTest(){
+   const oldState=S,oldMotion=playerMotion;
+   try{
+    S=freshState();S.runtime=createRuntimeState();S.inventory={};S.meta={};ensureItemStacks(S);
+    const machine={uid:"LIVE-LOGISTICS-MACHINE",type:"smelter",x:0,y:0,dir:1,output:null,activeInputQuantities:[],activeMeta:null,productionSequence:1,condition:100,status:"IDLE"};
+    const belt2={uid:"LIVE-LOGISTICS-BELT-2",type:"belt",x:2,y:0,dir:1,item:null,moveTimer:0};
+    const belt1={uid:"LIVE-LOGISTICS-BELT-1",type:"belt",x:1,y:0,dir:1,item:null,moveTimer:0};
+    const storage={uid:"LIVE-LOGISTICS-STORAGE",type:"storage",x:3,y:0,dir:1,status:"IDLE"};
+    S.buildings=[machine,belt2,belt1,storage];
+    const outputCreated=createOutput(machine,"ironPlate",2,{quality:96,purity:97,synthetic:false});
+    const stackID=machine.output?.custodyStackID||null;
+    const before=rebuildOwnershipLedger(S);
+    tickBelts(.1);
+    const afterMachineToBelt=rebuildOwnershipLedger(S);
+    const machineToBelt=!!belt1.item&&!machine.output&&belt1.item.custodyStackID===stackID;
+    tickBelts(.8);
+    const afterBeltToBelt=rebuildOwnershipLedger(S);
+    const beltToBelt=!!belt2.item&&!belt1.item&&belt2.item.custodyStackID===stackID;
+    tickBelts(.8);
+    const afterBeltToInventory=rebuildOwnershipLedger(S);
+    const transfers=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="TRANSFER"&&String(tx.request?.stackID||"")===stackID);
+    const finalOwner=S.ownershipLedger.custody.find(entry=>entry.stackID===stackID)||null;
+    const inventoryStack=S.runtime.itemStacks.find(stack=>stack.runtimeID===stackID)||null;
+    return {
+     outputCreated,stackID,beforeValid:before.valid,machineToBelt,afterMachineToBeltValid:afterMachineToBelt.valid,
+     beltToBelt,afterBeltToBeltValid:afterBeltToBelt.valid,afterBeltToInventoryValid:afterBeltToInventory.valid,
+     transferCount:transfers.length,transferPath:transfers.map(tx=>({from:tx.result.from.type+":"+tx.result.from.id,to:tx.result.to.type+":"+tx.result.to.id,stackID:tx.result.stackID})),
+     machineOutputRemaining:!!machine.output,beltOneRemaining:!!belt1.item,beltTwoRemaining:!!belt2.item,
+     inventoryQuantity:availableItemCount(S,"ironPlate"),inventoryStackID:inventoryStack?.runtimeID||null,
+     finalOwner:finalOwner?{type:finalOwner.ownerType,id:finalOwner.ownerID}:null,
+     finalItemTotal:afterBeltToInventory.itemTotals?.ironPlate||0,
+     remainingConveyorCustody:S.ownershipLedger.custody.filter(entry=>entry.ownerType==="CONVEYOR").length,
+     finalAuditValid:afterBeltToInventory.valid,consumedCount:S.ownershipLedger.consumed.length
+    };
+   }finally{S=oldState;playerMotion=oldMotion;renderAll()}
   },
 
   setupFluidNetworkTest(){
