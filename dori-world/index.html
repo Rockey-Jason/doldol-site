@@ -23,6 +23,13 @@ a{font:inherit;color:inherit;text-decoration:none}a:focus-visible{outline:3px so
 .footer{margin-top:38px;color:#6f7d93;font:9px Arial,sans-serif;letter-spacing:.2em;text-align:center}
 @media(max-width:650px){.shell{width:calc(100% - 24px);padding-top:15px}.hero{margin-top:18px;border-radius:24px}.hero p{font-size:13px}.heading{align-items:start;flex-direction:column;margin-top:35px}.grid{grid-template-columns:1fr}.zone.vip{grid-column:auto}.zone{min-height:135px;padding:18px;gap:15px}.zone-icon{width:54px;height:54px;flex-basis:54px;border-radius:17px;font-size:24px}.zone-copy h3{font-size:18px}.zone-copy p{font-size:11px}.badge{right:12px;top:12px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition:none!important;animation:none!important}}
+
+.zone.kingdom{grid-column:1/-1;min-height:190px;border-color:rgba(222,192,124,.42);background:radial-gradient(circle at 92% 12%,rgba(213,180,105,.2),transparent 29%),linear-gradient(120deg,rgba(255,255,255,.12),rgba(255,255,255,.035))}
+.zone.kingdom .zone-icon{border-color:rgba(224,196,133,.48);background:linear-gradient(145deg,rgba(223,197,141,.18),rgba(255,255,255,.025));color:#f0dba9;font-size:34px}
+.zone.kingdom .zone-copy h3{color:#f0dfbd}
+.zone.kingdom .zone-copy p{max-width:650px}
+@media(max-width:650px){.zone.kingdom{grid-column:auto;min-height:150px}}
+
 </style>
 </head>
 <body><div class="shell">
@@ -31,6 +38,7 @@ a{font:inherit;color:inherit;text-decoration:none}a:focus-visible{outline:3px so
 <section class="hero"><div class="eyebrow">WELCOME TO DORI WORLD</div><h1>돌이 월드 <span>지도</span></h1><p>돌이 세계의 금융과 산업, 그리고 특별한 멤버십 공간이 하나로 이어지는 통합 허브입니다. 각 구역을 선택해 원하는 활동을 시작해 보세요.</p><div class="mapline"><i></i> FINANCE · BANKING · INDUSTRY · ROYAL LOUNGE</div></section>
 <div class="heading"><h2>월드 구역</h2><p>원하는 구역을 선택해 입장하세요.</p></div>
 <section class="grid" aria-label="돌이 월드 구역">
+<a class="zone kingdom" href="./kingdom.html"><span class="zone-icon">✦</span><span class="zone-copy"><small>INFINITE KINGDOM · FOUR SOVEREIGN NATIONS</small><h3>DORI WORLD: INFINITE KINGDOM</h3><p>껌•송 연합국, 돌이 왕국, 식빵이 왕국, 윈터 연방. 네 나라의 영토와 수도, 문명 지표, 외교 관계, 공동 역사를 탐험하는 왕국 아틀라스.</p></span><span class="badge">FOUR NATIONS</span><span class="arrow">↗</span></a>
 <a class="zone" href="../doldolstock.html"><span class="zone-icon">▥</span><span class="zone-copy"><small>FINANCE DISTRICT</small><h3>금융 구역 · 돌돌증권</h3><p>돌이 세계의 기업과 주가 정보를 확인하는 금융 중심지.</p></span><span class="arrow">↗</span></a>
 <a class="zone" href="../dori-bank.html"><span class="zone-icon">⌂</span><span class="zone-copy"><small>BANKING DISTRICT</small><h3>은행 구역 · 돌이 은행</h3><p>계좌 잔액과 이체, 예금 등 자산을 관리하는 공간.</p></span><span class="arrow">↗</span></a>
 <a class="zone" href="../doronium-factory/"><span class="zone-icon">◇</span><span class="zone-copy"><small>INDUSTRY DISTRICT</small><h3>산업 구역 · 도로늄 공장</h3><p>자원을 모으고 생산 라인을 구축하는 산업 시설.</p></span><span class="arrow">↗</span></a>
