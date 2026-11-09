@@ -73,6 +73,37 @@ export function consumeCustody(state,{transactionID,stackID,quantity,expectedOwn
  s.consumed.push({...result,transactionID:tx});
  saveTransaction(s,tx,request,result);return clone(result);
 }
+function restoreOwnershipState(target,snapshot){
+ target.version=snapshot.version;target.nextLedgerID=snapshot.nextLedgerID;
+ target.custody=snapshot.custody;target.transactions=snapshot.transactions;target.consumed=snapshot.consumed;
+}
+export function completeProductionCustody(state,{transactionID,inputs=[],output}={}){
+ const s=ensureState(state),tx=String(transactionID||"");
+ if(!validID(tx)||!Array.isArray(inputs)||!plainObject(output))return null;
+ const normalizedInputs=inputs.map(input=>({stackID:String(input?.stackID||""),quantity:Number(input?.quantity),expectedOwnerType:String(input?.expectedOwnerType||"ACTIVE_JOB"),expectedOwnerID:String(input?.expectedOwnerID||"")}));
+ const normalizedOutput={stackID:String(output.stackID||""),itemID:String(output.itemID||""),quantity:Number(output.quantity),ownerType:String(output.ownerType||"MACHINE_OUTPUT"),ownerID:String(output.ownerID||""),metadata:plainObject(output.metadata)?clone(output.metadata):null};
+ if(normalizedInputs.some(input=>!validID(input.stackID)||!Number.isSafeInteger(input.quantity)||input.quantity<=0||!OWNER_TYPES.includes(input.expectedOwnerType)||!validID(input.expectedOwnerID)))return null;
+ if(new Set(normalizedInputs.map(input=>input.stackID)).size!==normalizedInputs.length)return null;
+ if(!validID(normalizedOutput.stackID)||!validID(normalizedOutput.itemID)||!Number.isSafeInteger(normalizedOutput.quantity)||normalizedOutput.quantity<=0||!OWNER_TYPES.includes(normalizedOutput.ownerType)||!validID(normalizedOutput.ownerID)||!plainObject(normalizedOutput.metadata))return null;
+ if(normalizedInputs.some(input=>input.stackID===normalizedOutput.stackID))return null;
+ const request={type:"PRODUCTION_COMPLETE",inputs:normalizedInputs,output:normalizedOutput};
+ const replay=transactionReplay(s,tx,request);if(replay)return replay.conflict?null:replay;
+ const snapshot=clone(s);
+ try{
+  const consumed=[];
+  for(let i=0;i<normalizedInputs.length;i++){
+   const input=normalizedInputs[i];
+   const result=consumeCustody(s,{transactionID:tx+":INPUT:"+i,stackID:input.stackID,quantity:input.quantity,expectedOwnerType:input.expectedOwnerType,expectedOwnerID:input.expectedOwnerID,reason:"production-input:"+tx});
+   if(!result)throw new Error("production-input-custody-rejected:"+i);
+   consumed.push(result);
+  }
+  const created=addCustody(s,{stackID:normalizedOutput.stackID,itemID:normalizedOutput.itemID,quantity:normalizedOutput.quantity,ownerType:normalizedOutput.ownerType,ownerID:normalizedOutput.ownerID,metadata:normalizedOutput.metadata});
+  return saveTransaction(s,tx,request,{transactionID:tx,consumed,output:created});
+ }catch{
+  restoreOwnershipState(s,snapshot);return null;
+ }
+}
+
 export function validateOwnershipState(input){
  const state=ensureState(input),errors=[],seenStacks=new Set(),seenLedgerIDs=new Set(),totals=new Map();
  let maxLedgerID=0;

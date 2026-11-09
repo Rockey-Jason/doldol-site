@@ -16,7 +16,7 @@ import { startInfinityFusion, tickInfinityFusion, cancelInfinityFusion, recoverI
 import { evaluatePlanetaryStabilization } from "./planetary-stabilization.js?v=1";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=1";
-import { createOwnershipState, addCustody, transferCustody, consumeCustody, validateOwnershipState, resetCustodySnapshot } from "./ownership-runtime.js?v=4";
+import { createOwnershipState, addCustody, transferCustody, consumeCustody, completeProductionCustody, validateOwnershipState, resetCustodySnapshot } from "./ownership-runtime.js?v=5";
 let createClient = null;
 
 /* DORONIUM FACTORY — INFINITE INDUSTRY
@@ -632,25 +632,47 @@ function canConsumeRecipe(b,r){
 }
 function consumeRecipe(b,r){
  if(!canConsumeRecipe(b,r))return null;
- const fluidSnapshot={amountL:Number(b.fluidAmountL)||0,fluidType:b.fluidType||null};
+ const uid=String(b.uid||b.type||"unknown"),jobSequence=Math.max(0,Math.floor(Number(b.productionSequence)||0))+1;
+ const snapshot={runtime:structuredClone(S.runtime),ownershipLedger:structuredClone(S.ownershipLedger||createOwnershipState()),inventory:structuredClone(S.inventory||{}),validation:S.ownershipLedgerValidation===undefined?undefined:structuredClone(S.ownershipLedgerValidation),input:structuredClone(b.input||{}),inputMeta:structuredClone(b.inputMeta||{}),activeInputQuantities:structuredClone(b.activeInputQuantities||[]),productionSequence:b.productionSequence,fluidAmountL:b.fluidAmountL,fluidType:b.fluidType};
+ const rollback=()=>{
+  S.runtime=snapshot.runtime;S.ownershipLedger=snapshot.ownershipLedger;S.inventory=snapshot.inventory;
+  if(snapshot.validation===undefined)delete S.ownershipLedgerValidation;else S.ownershipLedgerValidation=snapshot.validation;
+  b.input=snapshot.input;b.inputMeta=snapshot.inputMeta;b.activeInputQuantities=snapshot.activeInputQuantities;
+  if(snapshot.productionSequence===undefined)delete b.productionSequence;else b.productionSequence=snapshot.productionSequence;
+  if(snapshot.fluidAmountL===undefined)delete b.fluidAmountL;else b.fluidAmountL=snapshot.fluidAmountL;
+  if(snapshot.fluidType===undefined)delete b.fluidType;else b.fluidType=snapshot.fluidType;
+ };
  for(const[type,liters]of Object.entries(r.fluidInputs||{})){
-  const fluidNode={amountL:Math.max(0,Number(b.fluidAmountL)||0),fluidType:b.fluidType||null};
-  const consumed=consumeFluid(fluidNode,liters,type);
-  if(!consumed.ok){b.fluidAmountL=fluidSnapshot.amountL;b.fluidType=fluidSnapshot.fluidType;return null}
-  b.fluidAmountL=fluidNode.amountL;
-  b.fluidType=fluidNode.fluidType||null;
+  const fluidNode={amountL:Math.max(0,Number(b.fluidAmountL)||0),fluidType:b.fluidType||null},consumed=consumeFluid(fluidNode,liters,type);
+  if(!consumed.ok){rollback();return null}
+  b.fluidAmountL=fluidNode.amountL;b.fluidType=fluidNode.fluidType||null;
  }
- const inventoryNeed={};
- for(const[rawID,n]of Object.entries(r.inputs||{})){const id=canonicalItemID(rawID),buffered=Math.min(n,b.input?.[id]||0),remaining=n-buffered;if(remaining>0)inventoryNeed[id]=remaining}
- const reservations=reserveItemBatch(S,inventoryNeed,"recipe:"+String(b.uid||b.type));
- if(!reservations){b.fluidAmountL=fluidSnapshot.amountL;b.fluidType=fluidSnapshot.fluidType;return null}
- const committed=reservations.length?commitItemReservations(S,reservations):[];
- if(!committed){for(const id of reservations)releaseItemReservation(S,id);b.fluidAmountL=fluidSnapshot.amountL;b.fluidType=fluidSnapshot.fluidType;return null}
+ const auditBefore=rebuildOwnershipLedger(S);if(!auditBefore.valid){rollback();return null}
+ const inventoryNeed={},bufferInputs=[];
+ for(const[rawID,n]of Object.entries(r.inputs||{})){
+  const id=canonicalItemID(rawID),buffered=Math.min(n,b.input?.[id]||0),remaining=n-buffered;
+  if(buffered>0){
+   const moved=transferCustody(S.ownershipLedger,{transactionID:"PRODUCTION_START:"+uid+":"+jobSequence+":"+id,stackID:"MACHINE_INPUT:"+uid+":"+id,quantity:buffered,toType:"ACTIVE_JOB",toID:uid,expectedFromType:"MACHINE_INPUT",expectedFromID:uid});
+   if(!moved){rollback();return null}
+   const meta=b.inputMeta?.[id]||{quality:90,purity:90,synthetic:false};
+   bufferInputs.push({itemID:id,quantity:buffered,quality:Number(meta.quality)||90,purity:Number(meta.purity)||90,synthetic:meta.synthetic===true});
+   b.input[id]-=buffered;if(b.input[id]<=0){delete b.input[id];delete b.inputMeta[id]}
+  }
+  if(remaining>0)inventoryNeed[id]=remaining;
+ }
+ b.activeInputQuantities=bufferInputs.map(input=>({...input}));
+ const reservations=Object.keys(inventoryNeed).length?reserveItemBatch(S,inventoryNeed,"recipe:"+uid):[];
+ if(!reservations){rollback();return null}
+ const committed=reservations.length?commitOwnedItemReservations(reservations,{mode:"transfer",destinationType:"ACTIVE_JOB",destinationID:uid,reason:"production-input"}):[];
+ if(!committed){for(const reservationID of reservations)releaseItemReservation(S,reservationID);rollback();return null}
  let qsum=0,psum=0,weight=0,hasSynthetic=false;const consumedInputs=[];
- const absorb=(m,itemID)=>{qsum+=m.quality*m.quantity;psum+=m.purity*m.quantity;weight+=m.quantity;hasSynthetic=hasSynthetic||m.synthetic;consumedInputs.push({itemID:String(itemID),quantity:m.quantity,quality:m.quality,purity:m.purity,synthetic:!!m.synthetic})};
- for(const[rawID,n]of Object.entries(r.inputs||{})){const id=canonicalItemID(rawID),fromBuffer=Math.min(n,b.input?.[id]||0);if(fromBuffer>0){const m=b.inputMeta?.[id]||{quality:90,purity:90,synthetic:false};absorb({...m,quantity:fromBuffer},id);b.input[id]-=fromBuffer;if(b.input[id]<=0){delete b.input[id];delete b.inputMeta[id]}}}
+ const absorb=(m,itemID)=>{qsum+=Number(m.quality||90)*m.quantity;psum+=Number(m.purity||90)*m.quantity;weight+=m.quantity;hasSynthetic=hasSynthetic||m.synthetic===true;consumedInputs.push({itemID:String(itemID),quantity:m.quantity,quality:Number(m.quality)||90,purity:Number(m.purity)||90,synthetic:m.synthetic===true})};
+ for(const input of bufferInputs)absorb(input,input.itemID);
  for(const stack of committed)absorb(stack,stack.itemID);
- syncLegacyInventory(S);return {quality:weight?qsum/weight:90,purity:weight?psum/weight:90,synthetic:hasSynthetic,consumedInputs}
+ b.activeInputQuantities=consumedInputs.map(input=>({...input}));b.productionSequence=jobSequence;
+ syncLegacyInventory(S);
+ const auditAfter=rebuildOwnershipLedger(S);if(!auditAfter.valid){rollback();return null}
+ return {quality:weight?qsum/weight:90,purity:weight?psum/weight:90,synthetic:hasSynthetic,consumedInputs};
 }
 function rebuildOwnershipLedger(state=S){
  if(!state||typeof state!=="object")return {valid:false,errors:["missing-state"]};
@@ -685,14 +707,19 @@ function rebuildOwnershipLedger(state=S){
  }
  for(const building of state.buildings||[]){
   const uid=String(building.uid||building.type||"unknown");
-  for(const [itemID,quantity] of Object.entries(building.input||{})){
-   const qty=Math.max(0,Math.floor(Number(quantity)||0));if(!qty)continue;
-   addCustody(ledger,{stackID:"MACHINE_INPUT:"+uid+":"+itemID,itemID,quantity:qty,ownerType:"MACHINE_INPUT",ownerID:uid,metadata:building.inputMeta?.[itemID]||{}});
+  const normalizedInputs=new Map();
+  for(const [rawID,quantity] of Object.entries(building.input||{})){
+   const itemID=canonicalItemID(rawID),qty=Math.max(0,Math.floor(Number(quantity)||0));if(!itemID||!qty)continue;
+   const entry=normalizedInputs.get(itemID)||{quantity:0,metadata:building.inputMeta?.[rawID]||building.inputMeta?.[itemID]||{}};
+   entry.quantity+=qty;normalizedInputs.set(itemID,entry);
+  }
+  for(const [itemID,entry] of normalizedInputs){
+   addCustody(ledger,{stackID:"MACHINE_INPUT:"+uid+":"+itemID,itemID,quantity:entry.quantity,ownerType:"MACHINE_INPUT",ownerID:uid,metadata:entry.metadata});
   }
   const activeInputs=Array.isArray(building.activeInputQuantities)?building.activeInputQuantities:Array.isArray(building.activeMeta?.consumedInputs)?building.activeMeta.consumedInputs:[];
   for(let i=0;i<activeInputs.length;i++){
-   const input=activeInputs[i],qty=Math.max(0,Math.floor(Number(input.quantity)||0));if(!input.itemID||!qty)continue;
-   addCustody(ledger,{stackID:"ACTIVE_INPUT:"+uid+":"+i+":"+input.itemID,itemID:input.itemID,quantity:qty,ownerType:"ACTIVE_JOB",ownerID:uid,metadata:{quality:input.quality,purity:input.purity,synthetic:input.synthetic}});
+   const input=activeInputs[i],itemID=canonicalItemID(input.itemID),qty=Math.max(0,Math.floor(Number(input.quantity)||0));if(!itemID||!qty)continue;
+   addCustody(ledger,{stackID:"ACTIVE_INPUT:"+uid+":"+i+":"+itemID,itemID,quantity:qty,ownerType:"ACTIVE_JOB",ownerID:uid,metadata:{quality:input.quality,purity:input.purity,synthetic:input.synthetic}});
   }
   if(building.output&&Number(building.output.qty)>0)addCustody(ledger,{stackID:"MACHINE_OUTPUT:"+uid,itemID:building.output.id,quantity:Math.floor(building.output.qty),ownerType:"MACHINE_OUTPUT",ownerID:uid,metadata:building.output.meta||{}});
   if(building.item&&Number(building.item.qty)>0)addCustody(ledger,{stackID:"CONVEYOR:"+uid,itemID:building.item.id,quantity:Math.floor(building.item.qty),ownerType:"CONVEYOR",ownerID:uid,metadata:building.item.meta||{}});
@@ -718,7 +745,22 @@ function rebuildOwnershipLedger(state=S){
   return validation;
  }
 }
-function createOutput(b,id,qty,meta){id=canonicalItemID(id);const resource=RESOURCE[id];if(!resource){b.status="ERROR";b.errorCode="UNKNOWN_RESOURCE_OUTPUT:"+String(id);return false}if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(resource.name+" 생산 · "+fmt(qty)+"개");markDirty();return true}
+function createOutput(b,id,qty,meta){
+ id=canonicalItemID(id);const resource=RESOURCE[id];
+ if(!resource){b.status="ERROR";b.errorCode="UNKNOWN_RESOURCE_OUTPUT:"+String(id);return false}
+ const auditBefore=rebuildOwnershipLedger(S);
+ if(!auditBefore.valid){b.status="ERROR";b.errorCode="ITEM_OWNERSHIP_INTEGRITY";return false}
+ const uid=String(b.uid||b.type||"unknown"),sequence=Math.max(1,Math.floor(Number(b.productionSequence)||1));
+ const activeInputs=Array.isArray(b.activeInputQuantities)?b.activeInputQuantities:Array.isArray(b.activeMeta?.consumedInputs)?b.activeMeta.consumedInputs:[];
+ const ledgerBefore=structuredClone(S.ownershipLedger),validationBefore=structuredClone(S.ownershipLedgerValidation);
+ if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}
+ const completed=completeProductionCustody(S.ownershipLedger,{transactionID:"PRODUCTION_COMPLETE:"+uid+":"+sequence,inputs:activeInputs.map((input,index)=>({stackID:"ACTIVE_INPUT:"+uid+":"+index+":"+canonicalItemID(input.itemID),quantity:Math.max(0,Math.floor(Number(input.quantity)||0)),expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:uid})),output:{stackID:"MACHINE_OUTPUT:"+uid,itemID:id,quantity:qty,ownerType:"MACHINE_OUTPUT",ownerID:uid,metadata:meta||{}}});
+ if(!completed){clearCompletionBuffer(b);S.ownershipLedger=ledgerBefore;S.ownershipLedgerValidation=validationBefore;b.status="ERROR";b.errorCode="ITEM_OWNERSHIP_INTEGRITY";return false}
+ const previousActiveInputs=structuredClone(b.activeInputQuantities||[]);b.activeInputQuantities=[];
+ const auditAfter=rebuildOwnershipLedger(S);
+ if(!auditAfter.valid){clearCompletionBuffer(b);b.activeInputQuantities=previousActiveInputs;S.ownershipLedger=ledgerBefore;S.ownershipLedgerValidation=validationBefore;b.status="ERROR";b.errorCode="ITEM_OWNERSHIP_INTEGRITY";return false}
+ b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(resource.name+" 생산 · "+fmt(qty)+"개");markDirty();return true;
+ }
 const BUILDING_FOOTPRINTS=Object.freeze({
  storage:{width:2,height:2},warehouse:{width:3,height:2},smelter:{width:2,height:2},goldSmelter:{width:2,height:2},chromeSmelter:{width:2,height:2},steelForge:{width:2,height:2},titaniumPress:{width:2,height:2},carbonMill:{width:2,height:2},wiremill:{width:2,height:2},assembler:{width:2,height:2},lab:{width:2,height:2},
  reactor:{width:3,height:3},variantLab:{width:3,height:3},BUILDING_DORONUM_COMPRESSOR:{width:3,height:3},BUILDING_DORONUM_REFINEMENT_CHAMBER:{width:3,height:3},BUILDING_ULTRA_MATERIAL_PRESS:{width:3,height:3},BUILDING_REINFORCED_DORONUM_PRESS:{width:3,height:3},BUILDING_CONTROLLED_ATMOSPHERE_CHAMBER:{width:3,height:3},BUILDING_OPTICAL_REFINEMENT_CHAMBER:{width:3,height:3},BUILDING_THERMAL_STABILIZER:{width:2,height:2},BUILDING_COOLING_STABILIZER:{width:2,height:2},BUILDING_ABSORPTION_PRESS:{width:3,height:3},BUILDING_SPECIAL_EDITION_LINE:{width:3,height:3},BUILDING_FIRST_FACTORY_LEGACY_BATCH_LINE:{width:3,height:3},cooling:{width:2,height:2},fluidTank:{width:2,height:2},fusion:{width:4,height:4},relay:{width:2,height:2},core:{width:3,height:3},transformer:{width:2,height:2},battery:{width:2,height:2}
@@ -2086,6 +2128,39 @@ if(E2E_MODE){
     };
    }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
   },
+  runLiveProductionCustodyTest(){
+   const oldState=S,oldMotion=playerMotion,oldSelectedBuilding=selectedBuilding;
+   try{
+    S=freshState();S.runtime=createRuntimeState();S.inventory={};S.meta={};ensureItemStacks(S);S.contractRuntime=createContractState(987);
+    const machine={uid:"LIVE-PRODUCTION-MACHINE",type:"smelter",x:3,y:3,input:{},inputMeta:{},activeInputQuantities:[],output:null,activeMeta:null,progress:0,temp:25,pressure:0,condition:100,status:"IDLE"};
+    S.buildings=[machine];selectedBuilding=machine.uid;
+    const recipe=recipeFor(machine);if(!recipe)throw new Error("live production recipe missing");
+    let totalInputQuantity=0,bufferedQuantity=0,inventoryQuantity=0;
+    for(const[rawID,quantity]of Object.entries(recipe.inputs||{})){
+     const id=canonicalItemID(rawID),buffered=Math.floor(Number(quantity)/2),remaining=Number(quantity)-buffered;
+     totalInputQuantity+=Number(quantity);
+     if(buffered>0){machine.input[id]=buffered;machine.inputMeta[id]={quality:97,purity:98,synthetic:false};bufferedQuantity+=buffered}
+     if(remaining>0){addItemStack(S,id,remaining,{quality:95,purity:96,synthetic:false});inventoryQuantity+=remaining}
+    }
+    machine.temp=Number.isFinite(Number(recipe.temp))?Number(recipe.temp):25;
+    machine.pressure=Number.isFinite(Number(recipe.pressure))?Number(recipe.pressure):0;syncLegacyInventory(S);
+    const beforeAudit=rebuildOwnershipLedger(S);tickMachine(machine,STEP,1);const activeAudit=rebuildOwnershipLedger(S);
+    const activeCustody=S.ownershipLedger.custody.filter(entry=>entry.ownerType==="ACTIVE_JOB"&&entry.ownerID===machine.uid);
+    const activeQuantity=activeCustody.reduce((n,entry)=>n+entry.quantity,0);
+    const transferTransactions=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="TRANSFER"&&tx.result?.to?.type==="ACTIVE_JOB"&&tx.result?.to?.id===machine.uid);
+    const bufferTransferCount=transferTransactions.filter(tx=>tx.result?.from?.type==="MACHINE_INPUT").length;
+    const inventoryTransferCount=transferTransactions.filter(tx=>tx.result?.from?.type==="ACTIVE_JOB").length;
+    const maxTicks=Math.min(5000,Math.ceil(Math.max(.1,Number(recipe.time)||1)*10)+100);
+    for(let i=0;i<maxTicks&&!machine.output;i++){S.tick++;S.seconds+=STEP;tickMachine(machine,STEP,1)}
+    const finalAudit=rebuildOwnershipLedger(S);
+    const productionTransactions=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="PRODUCTION_COMPLETE");
+    const outputCustody=S.ownershipLedger.custody.filter(entry=>entry.ownerType==="MACHINE_OUTPUT"&&entry.ownerID===machine.uid);
+    const activeCustodyAfter=S.ownershipLedger.custody.filter(entry=>entry.ownerType==="ACTIVE_JOB"&&entry.ownerID===machine.uid);
+    const consumed=S.ownershipLedger.consumed.filter(entry=>String(entry.reason||"").startsWith("production-input:"));
+    return {beforeAuditValid:beforeAudit.valid,activeAuditValid:activeAudit.valid,activeAfterStart:!!machine.activeMeta,totalInputQuantity,bufferedQuantity,inventoryQuantity,activeQuantity,bufferTransferCount,inventoryTransferCount,outputReady:!!machine.output,outputItemID:machine.output?.id||null,outputQty:machine.output?.qty||0,productionTransactionCount:productionTransactions.length,consumedInputQuantity:consumed.reduce((n,entry)=>n+entry.quantity,0),activeCustodyAfter:activeCustodyAfter.reduce((n,entry)=>n+entry.quantity,0),outputCustodyQuantity:outputCustody.reduce((n,entry)=>n+entry.quantity,0),finalAuditValid:finalAudit.valid,productionSequence:machine.productionSequence||0};
+   }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
+  },
+
   setupFluidNetworkTest(){
    S=freshState();S.player={...S.player,viewMode:"map",layer:"surface"};S.seconds=8*3600;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=false;
    S.nodes["15,15"]={type:"water",amount:0,seed:123};

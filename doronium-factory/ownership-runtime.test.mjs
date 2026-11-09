@@ -1,5 +1,5 @@
 import test from "node:test";import assert from "node:assert/strict";
-import {createOwnershipState,addCustody,splitCustody,transferCustody,consumeCustody,validateOwnershipState,resetCustodySnapshot} from "./ownership-runtime.js";
+import {createOwnershipState,addCustody,splitCustody,transferCustody,consumeCustody,completeProductionCustody,validateOwnershipState,resetCustodySnapshot} from "./ownership-runtime.js";
 test("one stack has one custody owner and transfers idempotently",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S1",itemID:"iron",quantity:5,ownerType:"PLAYER_INVENTORY",ownerID:"p1"});const a=transferCustody(s,{transactionID:"T1",stackID:"S1",quantity:5,toType:"MACHINE_INPUT",toID:"M1",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"p1"});assert.equal(a.to.id,"M1");assert.equal(transferCustody(s,{transactionID:"T1",stackID:"S1",quantity:5,toType:"MACHINE_INPUT",toID:"M1",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"p1"}).duplicate,true);assert.equal(s.custody.length,1);assert.equal(validateOwnershipState(s).valid,true)});
 test("invalid owner and duplicate stack are rejected",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S1",itemID:"ore",quantity:1,ownerType:"WORLD_DROP",ownerID:"x"});assert.throws(()=>addCustody(s,{stackID:"S1",itemID:"ore",quantity:1,ownerType:"WORLD_DROP",ownerID:"y"}));assert.equal(transferCustody(s,{transactionID:"T2",stackID:"S1",quantity:2,toType:"WAREHOUSE",toID:"w"}),null)});
 test("consumption has an idempotent ledger entry",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S",itemID:"ore",quantity:2,ownerType:"MACHINE_INPUT",ownerID:"M"});assert.equal(consumeCustody(s,{transactionID:"C",stackID:"S",quantity:2,expectedOwnerType:"MACHINE_INPUT",expectedOwnerID:"M"}).quantity,2);assert.equal(consumeCustody(s,{transactionID:"C",stackID:"S",quantity:2,expectedOwnerType:"MACHINE_INPUT",expectedOwnerID:"M"}).duplicate,true);assert.equal(s.consumed.length,1)});
@@ -63,4 +63,34 @@ test("legacy ownership snapshots are upgraded to the current ledger schema witho
  assert.equal(legacy.nextLedgerID,4);
  assert.ok(legacy.transactions.LEGACY);
  assert.equal(validateOwnershipState(legacy).valid,true);
+});
+
+
+test("production completion atomically consumes active-job inputs and creates one machine output",()=>{
+ const s=createOwnershipState();
+ addCustody(s,{stackID:"ACTIVE-IRON",itemID:"ironOre",quantity:2,ownerType:"ACTIVE_JOB",ownerID:"SMELTER-1"});
+ addCustody(s,{stackID:"ACTIVE-COAL",itemID:"coal",quantity:1,ownerType:"ACTIVE_JOB",ownerID:"SMELTER-1"});
+ const request={transactionID:"PROD:SMELTER-1:1",inputs:[
+  {stackID:"ACTIVE-IRON",quantity:2,expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:"SMELTER-1"},
+  {stackID:"ACTIVE-COAL",quantity:1,expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:"SMELTER-1"}
+ ],output:{stackID:"MACHINE_OUTPUT:SMELTER-1",itemID:"ironPlate",quantity:1,ownerType:"MACHINE_OUTPUT",ownerID:"SMELTER-1",metadata:{quality:96,purity:94,synthetic:false}}};
+ const first=completeProductionCustody(s,request);
+ assert.equal(first.output.itemID,"ironPlate");assert.equal(s.custody.length,1);
+ assert.equal(s.custody[0].stackID,"MACHINE_OUTPUT:SMELTER-1");
+ assert.equal(s.consumed.reduce((n,x)=>n+x.quantity,0),3);
+ assert.equal(completeProductionCustody(s,request).duplicate,true);
+ assert.equal(s.custody.length,1);assert.equal(s.consumed.length,2);
+ assert.equal(completeProductionCustody(s,{...request,output:{...request.output,quantity:2}}),null);
+ assert.equal(validateOwnershipState(s).valid,true);
+});
+
+test("failed production completion rolls back every input and journal entry",()=>{
+ const s=createOwnershipState();
+ addCustody(s,{stackID:"ACTIVE-IRON",itemID:"ironOre",quantity:2,ownerType:"ACTIVE_JOB",ownerID:"SMELTER-2"});
+ const before=structuredClone(s);
+ const result=completeProductionCustody(s,{transactionID:"PROD:SMELTER-2:1",inputs:[
+  {stackID:"ACTIVE-IRON",quantity:2,expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:"SMELTER-2"},
+  {stackID:"MISSING-COAL",quantity:1,expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:"SMELTER-2"}
+ ],output:{stackID:"MACHINE_OUTPUT:SMELTER-2",itemID:"ironPlate",quantity:1,ownerType:"MACHINE_OUTPUT",ownerID:"SMELTER-2"}});
+ assert.equal(result,null);assert.deepEqual(s,before);assert.equal(validateOwnershipState(s).valid,true);
 });
