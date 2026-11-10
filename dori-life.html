@@ -56,20 +56,104 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 .scene[data-event="snow"] .snow-fx{opacity:1}
 .scene[data-event="rainbow"] .rainbow-fx{opacity:1}
 .scene[data-pose="sleep"] .sleep-z{opacity:1}
-#doriSprite{transform-box:fill-box;transform-origin:50% 75%;animation:doriBreathe 4.6s ease-in-out infinite;transition:transform 1s cubic-bezier(.2,.8,.2,1)}
-@keyframes doriBreathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-3px) scale(1.008)}}
-.scene[data-pose="sleep"] #doriSprite{transform:translateY(20px) rotate(-5deg)}
-.scene[data-pose="eat"] #doriSprite{animation:doriNibble .55s ease-in-out infinite}
-@keyframes doriNibble{0%,100%{transform:rotate(0)}50%{transform:rotate(4deg) translateY(2px)}}
-.scene[data-pose="play"] #doriSprite{animation:doriBounce 1.25s ease-in-out infinite}
-@keyframes doriBounce{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-12px) rotate(4deg)}}
-.scene[data-pose="dance"] #doriSprite{animation:doriDance .72s ease-in-out infinite alternate}
-@keyframes doriDance{from{transform:rotate(-9deg) translateY(1px)}to{transform:rotate(9deg) translateY(-7px)}}
-.scene[data-pose="alert"] #doriSprite{animation:doriAlert .45s ease-in-out 3}
-@keyframes doriAlert{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px) rotate(-3deg)}75%{transform:translateX(4px) rotate(3deg)}}
-.scene[data-pose="stretch"] #doriSprite{animation:doriStretch 2.4s ease-in-out infinite}
-@keyframes doriStretch{0%,100%{transform:scale(1)}50%{transform:scale(1.07,.95) translateY(5px)}}
-.scene[data-pose="idle"] #doriSprite{animation:doriBreathe 4.6s ease-in-out infinite}
+#doriSprite{transform-box:fill-box;transform-origin:50% 80%;animation:doriBreath 4.8s ease-in-out infinite;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+#doriBody,#doriHead,#doriTail,#doriEarLeft,#doriEarRight,#doriFrontPawNear,#doriFrontPawFar,#doriBackPawNear,#doriBackPawFar,#doriGroomPaw{transform-box:fill-box}
+#doriHead{transform-origin:58% 80%;animation:doriHeadIdle 6.2s ease-in-out infinite}
+#doriTail{transform-origin:8% 52%;animation:doriTailWag 2s ease-in-out infinite}
+#doriEarLeft{transform-origin:82% 95%;animation:doriEarLeftIdle 5.8s ease-in-out infinite}
+#doriEarRight{transform-origin:18% 95%;animation:doriEarRightIdle 6.4s ease-in-out infinite}
+#doriFrontPawNear,#doriFrontPawFar,#doriBackPawNear,#doriBackPawFar{transform-origin:50% 8%}
+.dori-eye-open{animation:doriBlink 5.1s linear infinite}
+.dori-eye-closed{opacity:0;animation:doriBlinkClosed 5.1s linear infinite}
+.dori-tongue{opacity:0;transform-box:fill-box;transform-origin:50% 0}
+.scene[data-pose="idle"] #doriSprite{animation:doriBreath 4.8s ease-in-out infinite}
+.scene[data-pose="idle"] #doriTail{animation:doriTailWag 2.1s ease-in-out infinite}
+.scene[data-pose="sleep"] #doriSprite{animation:doriSleepFloat 5.6s ease-in-out infinite}
+.scene[data-pose="sleep"] #doriHead{animation:doriSleepNod 4.8s ease-in-out infinite}
+.scene[data-pose="sleep"] #doriTail{animation:doriTailSleep 4s ease-in-out infinite}
+.scene[data-pose="sleep"] .dori-eye-open{opacity:0;animation:none}
+.scene[data-pose="sleep"] .dori-eye-closed{opacity:1;animation:none}
+.scene[data-pose="sleep"] .sleep-z{opacity:1;animation:floatZ 3s ease-in-out infinite}
+.scene[data-pose="eat"] #doriSprite{animation:doriEatBody .7s ease-in-out infinite}
+.scene[data-pose="eat"] #doriHead{animation:doriEatNod .62s ease-in-out infinite}
+.scene[data-pose="eat"] #doriTail{animation:doriTailWag 1.35s ease-in-out infinite}
+.scene[data-pose="eat"] .dori-tongue{opacity:.95;animation:doriTongueFlick .62s ease-in-out infinite}
+.scene[data-pose="play"] #doriSprite{animation:doriHop 1.12s cubic-bezier(.35,.05,.55,.95) infinite}
+.scene[data-pose="play"] #doriHead{animation:doriPlayHead 1.12s ease-in-out infinite}
+.scene[data-pose="play"] #doriTail{animation:doriTailFast .32s ease-in-out infinite}
+.scene[data-pose="play"] #doriEarLeft{animation:doriEarBounce .56s ease-in-out infinite}
+.scene[data-pose="play"] #doriEarRight{animation:doriEarBounce .62s ease-in-out infinite reverse}
+.scene[data-pose="play"] #doriFrontPawNear{animation:doriPawTap .56s ease-in-out infinite}
+.scene[data-pose="play"] #doriBackPawNear{animation:doriPawTap .56s ease-in-out infinite reverse}
+.scene[data-pose="dance"] #doriSprite{animation:doriDance .78s ease-in-out infinite alternate}
+.scene[data-pose="dance"] #doriHead{animation:doriDanceHead .78s ease-in-out infinite alternate}
+.scene[data-pose="dance"] #doriTail{animation:doriTailFast .27s ease-in-out infinite}
+.scene[data-pose="dance"] #doriEarLeft{animation:doriEarBounce .42s ease-in-out infinite}
+.scene[data-pose="dance"] #doriEarRight{animation:doriEarBounce .48s ease-in-out infinite reverse}
+.scene[data-pose="dance"] #doriFrontPawNear{animation:doriDancePaw .78s ease-in-out infinite alternate}
+.scene[data-pose="alert"] #doriSprite{animation:doriAlert .55s ease-in-out 2}
+.scene[data-pose="alert"] #doriHead{animation:doriLook .8s ease-in-out 2}
+.scene[data-pose="alert"] #doriTail{animation:doriTailFast .38s ease-in-out 4}
+.scene[data-pose="alert"] #doriEarLeft{animation:doriEarPerk .4s ease-out 2}
+.scene[data-pose="alert"] #doriEarRight{animation:doriEarPerk .42s ease-out 2}
+.scene[data-pose="stretch"] #doriSprite{animation:doriStretch 2.7s cubic-bezier(.45,0,.55,1) infinite}
+.scene[data-pose="stretch"] #doriHead{animation:doriStretchHead 2.7s ease-in-out infinite}
+.scene[data-pose="stretch"] #doriTail{animation:doriTailStretch 2.7s ease-in-out infinite}
+.scene[data-pose="walk"] #doriSprite{animation:doriWalkBody .66s ease-in-out infinite}
+.scene[data-pose="walk"] #doriHead{animation:doriWalkHead .66s ease-in-out infinite}
+.scene[data-pose="walk"] #doriTail{animation:doriTailWag .7s ease-in-out infinite}
+.scene[data-pose="walk"] #doriFrontPawNear{animation:doriWalkStep .66s ease-in-out infinite}
+.scene[data-pose="walk"] #doriFrontPawFar{animation:doriWalkStep .66s ease-in-out infinite reverse}
+.scene[data-pose="walk"] #doriBackPawNear{animation:doriWalkStep .66s ease-in-out infinite reverse}
+.scene[data-pose="walk"] #doriBackPawFar{animation:doriWalkStep .66s ease-in-out infinite}
+.scene[data-pose="sniff"] #doriSprite{animation:doriSniffBody 2s ease-in-out infinite}
+.scene[data-pose="sniff"] #doriHead{animation:doriSniff 1.15s ease-in-out infinite}
+.scene[data-pose="sniff"] #doriTail{animation:doriTailWag 2.5s ease-in-out infinite}
+.scene[data-pose="groom"] #doriHead{animation:doriGroomHead 1.2s ease-in-out infinite}
+.scene[data-pose="groom"] #doriGroomPaw{opacity:1;animation:doriGroomPaw 1.2s ease-in-out infinite}
+.scene[data-pose="groom"] .dori-tongue{opacity:1;animation:doriTongueFlick .6s ease-in-out infinite}
+.scene[data-pose="yawn"] #doriHead{animation:doriYawnHead 2.8s ease-in-out infinite}
+.scene[data-pose="yawn"] #doriEyes{opacity:.9}
+.scene[data-pose="yawn"] #yawnMarks{opacity:1;animation:doriYawnMarks 2.8s ease-in-out infinite}
+.scene[data-pose="yawn"] .dori-tongue{opacity:1;animation:doriYawnTongue 2.8s ease-in-out infinite}
+@keyframes doriBreath{0%,100%{transform:translateY(0) scale(1)}48%{transform:translateY(-2.4px) scale(1.012,1.006)}}
+@keyframes doriHeadIdle{0%,100%{transform:rotate(0)}34%{transform:rotate(-1.2deg)}68%{transform:rotate(.8deg)}}
+@keyframes doriTailWag{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(13deg)}}
+@keyframes doriTailFast{0%,100%{transform:rotate(-13deg)}50%{transform:rotate(18deg)}}
+@keyframes doriTailSleep{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(4deg)}}
+@keyframes doriTailStretch{0%,100%{transform:rotate(-4deg)}35%,55%{transform:rotate(17deg)}}
+@keyframes doriEarLeftIdle{0%,88%,100%{transform:rotate(0)}92%{transform:rotate(-5deg)}96%{transform:rotate(2deg)}}
+@keyframes doriEarRightIdle{0%,92%,100%{transform:rotate(0)}95%{transform:rotate(5deg)}}
+@keyframes doriEarBounce{0%,100%{transform:rotate(0)}50%{transform:rotate(9deg)}}
+@keyframes doriEarPerk{0%,100%{transform:rotate(0)}45%{transform:rotate(-8deg)}}
+@keyframes doriBlink{0%,94%,100%{opacity:1}95%,97%{opacity:0}}
+@keyframes doriBlinkClosed{0%,94%,100%{opacity:0}95%,97%{opacity:1}}
+@keyframes doriSleepFloat{0%,100%{transform:translateY(7px) scale(1)}50%{transform:translateY(10px) scale(1.012,.992)}}
+@keyframes doriSleepNod{0%,100%{transform:rotate(2deg)}50%{transform:rotate(4deg) translateY(2px)}}
+@keyframes doriEatBody{0%,100%{transform:translateY(0)}50%{transform:translateY(2px) scale(1,.99)}}
+@keyframes doriEatNod{0%,100%{transform:rotate(0)}45%{transform:rotate(7deg) translate(3px,5px)}}
+@keyframes doriTongueFlick{0%,70%,100%{transform:scaleY(.15);opacity:.4}82%{transform:scaleY(1);opacity:1}}
+@keyframes doriHop{0%,100%{transform:translateY(0) rotate(0)}36%{transform:translateY(-15px) rotate(-2deg)}55%{transform:translateY(-18px) rotate(2deg)}}
+@keyframes doriPlayHead{0%,100%{transform:rotate(0)}40%{transform:rotate(-6deg)}70%{transform:rotate(3deg)}}
+@keyframes doriPawTap{0%,100%{transform:rotate(0)}50%{transform:rotate(-15deg) translateY(-2px)}}
+@keyframes doriDance{from{transform:rotate(-7deg) translateY(1px)}to{transform:rotate(7deg) translateY(-5px)}}
+@keyframes doriDanceHead{from{transform:rotate(6deg)}to{transform:rotate(-6deg) translateY(-2px)}}
+@keyframes doriDancePaw{from{transform:rotate(-10deg)}to{transform:rotate(12deg)}}
+@keyframes doriAlert{0%,100%{transform:translateX(0)}22%{transform:translateX(-3px) rotate(-2deg)}46%{transform:translateX(2px) rotate(1deg)}}
+@keyframes doriLook{0%,100%{transform:rotate(0)}35%{transform:rotate(-5deg) translateY(-2px)}70%{transform:rotate(3deg)}}
+@keyframes doriStretch{0%,100%{transform:translateY(0) scale(1)}35%{transform:translateY(3px) scale(1.08,.94)}62%{transform:translateY(-2px) scale(.97,1.04)}}
+@keyframes doriStretchHead{0%,100%{transform:rotate(0)}34%{transform:rotate(9deg) translate(5px,6px)}62%{transform:rotate(-4deg)}}
+@keyframes doriWalkBody{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes doriWalkHead{0%,100%{transform:rotate(1deg)}50%{transform:rotate(-2deg) translateY(-1px)}}
+@keyframes doriWalkStep{0%,100%{transform:rotate(7deg)}50%{transform:rotate(-7deg)}}
+@keyframes doriSniffBody{0%,100%{transform:translateY(0)}50%{transform:translateY(1px)}}
+@keyframes doriSniff{0%,100%{transform:rotate(0) translateY(0)}50%{transform:rotate(8deg) translate(3px,5px)}}
+@keyframes doriGroomHead{0%,100%{transform:rotate(0)}50%{transform:rotate(10deg) translate(5px,4px)}}
+@keyframes doriGroomPaw{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-27px) rotate(22deg)}}
+@keyframes doriYawnHead{0%,70%,100%{transform:rotate(0)}18%{transform:rotate(3deg)}40%{transform:rotate(7deg) translateY(2px)}}
+@keyframes doriYawnMarks{0%,30%,100%{opacity:0;transform:translateY(3px)}45%,65%{opacity:1;transform:translateY(-4px)}}
+@keyframes doriYawnTongue{0%,35%,100%{transform:scaleY(.1)}48%,75%{transform:scaleY(1)}}
+@keyframes floatZ{0%,100%{transform:translateY(3px);opacity:.45}50%{transform:translateY(-8px);opacity:1}}
 .scene[data-pose="sleep"] .sleep-z{animation:floatZ 3s ease-in-out infinite}
 @keyframes floatZ{0%,100%{transform:translateY(3px);opacity:.45}50%{transform:translateY(-8px);opacity:1}}
 .scene[data-phase="night"] .room-lamp-glow,.scene[data-phase="dawn"] .room-lamp-glow{opacity:.8}
@@ -138,6 +222,10 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 @media(max-width:820px){.dashboard{grid-template-columns:1fr}.timeline{max-height:310px}}
 @media(max-width:600px){.shell{padding:15px 11px 42px}.topbar{margin-bottom:22px}.brand{font-size:9px;letter-spacing:.12em}.brand-mark{width:30px;height:30px}.hero{align-items:flex-start;flex-direction:column;gap:13px;margin-bottom:17px}.hero-side{padding:0}.studio{border-radius:19px}.studio-head{padding:11px 12px}.cam-title{font-size:10px}.cam-meta{gap:8px;font-size:9px}.live-label{padding:5px 7px;font-size:9px}.scene-footer{grid-template-columns:1fr;gap:11px;padding:14px}.pose-pill{justify-self:start}.event-bubble{max-width:58%;padding:8px 10px;border-radius:12px}.event-bubble strong{font-size:10px}.event-bubble span{font-size:9px}.camera-stamp{left:13px;bottom:12px;padding:6px 8px;font-size:8px}.camera-corner{width:18px;height:18px}.panel{padding:15px;border-radius:17px}.clock-grid{gap:8px}.progress-ring{width:70px;height:70px}.event-row{grid-template-columns:46px 28px minmax(0,1fr) auto;gap:6px;padding:9px 8px}.event-time{font-size:10px}.event-copy strong{font-size:10px}.event-copy span{font-size:9px}.event-status{font-size:8px}.newyear{padding:18px}.time-unit{min-width:67px}.time-unit strong{font-size:21px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+@media(prefers-reduced-motion:reduce){
+  #doriSprite,#doriHead,#doriTail,#doriEarLeft,#doriEarRight,#doriFrontPawNear,#doriFrontPawFar,#doriBackPawNear,#doriBackPawFar,#doriGroomPaw,.dori-eye-open,.dori-eye-closed,.sleep-z,#yawnMarks{animation-duration:12s!important;animation-iteration-count:1!important;transition:none!important}
+}
 </style>
 </head>
 <body>
@@ -308,55 +396,101 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
             <circle cx="0" cy="0" r="24" fill="#e6a96f"/><path d="M-20 -9 Q0 6 20 -9 M-11 -21 Q-5 -5 -11 19" stroke="#fff1d5" stroke-width="4" fill="none"/>
           </g>
 
-          <!-- Dori: anatomically grounded Pembroke Welsh Corgi illustration -->
+          <!-- Dori: warm hand-drawn Welsh Corgi with independently animated parts -->
           <g transform="translate(660 420)"><g id="doriSprite">
-            <ellipse cx="0" cy="174" rx="111" ry="13" fill="#493326" opacity=".22" filter="url(#softShadow)"/>
-            <path d="M-82 94 Q-112 76 -121 89 Q-127 99 -113 108 Q-99 114 -82 106Z" fill="#c88a4d" stroke="#99633b" stroke-width="2.8" stroke-linejoin="round"/>
-            <path d="M-119 91 Q-112 87 -105 94" fill="none" stroke="#e7b879" stroke-width="3" stroke-linecap="round"/>
-            <path d="M-83 73 Q-63 55 -28 57 L48 60 Q84 61 98 86 Q111 105 98 139 Q90 158 66 163 L-65 163 Q-93 157 -100 133 Q-108 103 -83 73Z" fill="url(#corgiFur)" stroke="#8e5a34" stroke-width="3.4" stroke-linejoin="round"/>
-            <path d="M-85 92 Q-74 72 -52 70 Q-69 91 -65 124 Q-61 147 -43 158 Q-79 158 -91 137 Q-103 112 -85 92Z" fill="#d99d5d" opacity=".72"/>
-            <path d="M44 72 Q81 70 93 96 Q105 123 83 149 Q75 158 59 160 Q75 131 66 105 Q60 86 44 72Z" fill="#b87940" opacity=".55"/>
-            <path d="M-42 111 Q-12 119 24 112 Q56 108 79 119 Q78 145 56 157 Q18 169 -33 157 Q-51 148 -54 129Z" fill="url(#corgiCream)" stroke="#d6bd9b" stroke-width="1.5"/>
-            <path d="M-36 121 Q-4 130 27 121" fill="none" stroke="#fffaf0" stroke-width="5" opacity=".7" stroke-linecap="round"/>
-            <path d="M-65 132 Q-54 139 -39 135 L-35 163 Q-36 173 -49 174 L-67 172 Q-74 168 -70 157Z" fill="#bd8047" stroke="#95603a" stroke-width="2.5"/>
-            <path d="M-70 161 Q-53 166 -36 161 L-35 171 Q-42 179 -64 176 Q-74 174 -70 161Z" fill="#fff1dc" stroke="#c9ad8c" stroke-width="1.8"/>
-            <path d="M35 133 Q51 136 66 128 L72 160 Q73 173 60 175 L42 174 Q34 170 36 158Z" fill="#bd8047" stroke="#95603a" stroke-width="2.5"/>
-            <path d="M36 160 Q54 165 71 158 L73 169 Q69 178 47 177 Q36 176 36 160Z" fill="#fff1dc" stroke="#c9ad8c" stroke-width="1.8"/>
-            <path d="M-61 169 l9 1 M-49 170 l8 0 M47 170 l8 1 M60 169 l7 -1" stroke="#d7c2a8" stroke-width="1.5" stroke-linecap="round"/>
-            <path d="M-52 66 Q-36 42 -5 48 Q28 45 48 70 Q58 88 46 119 Q26 139 -4 136 Q-38 134 -53 108 Q-63 85 -52 66Z" fill="url(#corgiFur)" stroke="#95603a" stroke-width="3"/>
-            <path d="M-41 79 Q-27 68 -17 78 Q-11 96 -17 118 Q-24 133 -39 126 Q-54 111 -49 91Z" fill="#fff3df" opacity=".95"/>
-            <path d="M-30 112 Q-22 135 -5 143 Q13 149 29 135 Q41 123 38 105 Q28 119 12 121 Q-7 124 -30 112Z" fill="url(#corgiCream)"/>
-            <path d="M-57 16 Q-61 -10 -45 -29 Q-26 -52 3 -49 Q34 -51 52 -29 Q69 -8 59 22 Q54 51 31 67 Q7 83 -20 69 Q-47 57 -57 16Z" fill="url(#corgiFur)" stroke="#8f5a35" stroke-width="3.5" stroke-linejoin="round"/>
-            <path d="M-48 -25 Q-73 -74 -66 -103 Q-62 -116 -50 -108 Q-20 -87 -13 -48 Q-28 -34 -48 -25Z" fill="#c88a4e" stroke="#8e5a35" stroke-width="3.5" stroke-linejoin="round"/>
-            <path d="M-54 -43 Q-66 -78 -59 -99 Q-39 -84 -29 -51Z" fill="#e5aa99" stroke="#c58c78" stroke-width="1.5"/>
-            <path d="M35 -29 Q43 -72 67 -101 Q77 -111 83 -96 Q91 -66 60 -22 Q47 -20 35 -29Z" fill="#c88a4e" stroke="#8e5a35" stroke-width="3.5" stroke-linejoin="round"/>
-            <path d="M49 -39 Q62 -72 76 -91 Q80 -64 59 -38Z" fill="#e5aa99" stroke="#c58c78" stroke-width="1.5"/>
-            <path d="M-12 -43 Q-3 -48 8 -43 Q16 -25 12 -6 Q9 10 2 21 Q-9 9 -13 -7 Q-18 -28 -12 -43Z" fill="#fff2dc" opacity=".98"/>
-            <path d="M-50 10 Q-49 34 -30 48 Q-17 59 -3 58 Q-16 39 -14 22 Q-32 13 -50 10Z" fill="#f5e4ca" opacity=".95"/>
-            <path d="M13 20 Q20 39 6 58 Q30 59 45 39 Q56 23 52 5 Q32 13 13 20Z" fill="#f5e4ca" opacity=".95"/>
-            <path d="M-39 31 Q-31 17 -13 19 Q-3 21 0 34 Q-3 55 -19 62 Q-38 59 -45 47Z" fill="#fff4e5"/>
-            <path d="M2 34 Q8 19 25 20 Q43 20 48 36 Q46 55 27 62 Q8 58 2 44Z" fill="#fff4e5"/>
-            <path d="M-30 42 Q-18 35 -5 43 Q-2 55 -16 61 Q-30 59 -35 50Z M8 43 Q21 35 36 43 Q34 58 20 61 Q6 56 8 43Z" fill="#fffaf1" opacity=".9"/>
-            <path d="M-42 7 Q-31 -1 -19 7 M15 7 Q29 -2 41 7" fill="none" stroke="#87532f" stroke-width="3.2" stroke-linecap="round"/>
-            <ellipse cx="-29" cy="15" rx="6.2" ry="8.2" fill="#35251f"/>
-            <ellipse cx="29" cy="15" rx="6.2" ry="8.2" fill="#35251f"/>
-            <ellipse cx="-30.5" cy="12.5" rx="2.1" ry="2.5" fill="#fff"/>
-            <ellipse cx="27.5" cy="12.5" rx="2.1" ry="2.5" fill="#fff"/>
-            <path d="M-40 24 Q-29 29 -18 24 M18 24 Q29 29 40 24" fill="none" stroke="#d69a65" stroke-width="2" opacity=".6"/>
-            <path d="M-10 39 Q0 32 10 39 Q12 46 0 49 Q-11 46 -10 39Z" fill="#392722" stroke="#2c1e1a" stroke-width="1.2"/>
-            <path d="M-1 48 Q-3 58 -13 59 M1 48 Q4 58 14 58" fill="none" stroke="#815548" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M-17 50 Q-23 54 -28 51 M17 50 Q23 54 28 51" fill="none" stroke="#c99c85" stroke-width="1.3" opacity=".8"/>
-            <g fill="#8c6654"><circle cx="-25" cy="42" r="1.3"/><circle cx="-19" cy="46" r="1.1"/><circle cx="25" cy="42" r="1.3"/><circle cx="19" cy="46" r="1.1"/></g>
-            <g fill="none" stroke-linecap="round">
-              <path d="M-83 91 q-8 10 -5 21 M-72 78 q-8 10 -8 18 M74 82 q11 11 11 22 M84 111 q4 10 -2 20" stroke="#f0c58d" stroke-width="2.5" opacity=".62"/>
-              <path d="M-44 -5 q-5 8 -3 15 M-36 -17 q-4 8 -2 13 M43 -12 q5 8 3 15" stroke="#f2c88f" stroke-width="2" opacity=".7"/>
-              <path d="M-45 85 q8 8 8 17 M-27 76 q7 5 8 11 M48 82 q-5 8 -4 15" stroke="#f7d5a4" stroke-width="2.1" opacity=".55"/>
+            <ellipse cx="-2" cy="174" rx="119" ry="13" fill="#493326" opacity=".19" filter="url(#softShadow)"/>
+
+            <!-- tiny Pembroke tail -->
+            <g id="doriTail" class="dori-part">
+              <path d="M82 47 Q105 29 119 39 Q131 47 122 61 Q114 72 98 65 Q91 62 92 54Z" fill="#ffdf98" stroke="#252525" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M101 48 Q111 43 118 49" fill="none" stroke="#f7c96f" stroke-width="4" stroke-linecap="round"/>
             </g>
-            <path d="M-43 91 Q-15 107 16 99 Q34 95 43 83" fill="none" stroke="#d8aa59" stroke-width="8" stroke-linecap="round"/>
-            <path d="M-43 91 Q-15 107 16 99 Q34 95 43 83" fill="none" stroke="#f4d99c" stroke-width="2" stroke-linecap="round" opacity=".9"/>
-            <path d="M1 101 Q10 103 14 112 L7 122 Q-1 117 -5 108Z" fill="#e5c174" stroke="#9b7540" stroke-width="1.5"/>
-            <circle cx="5" cy="111" r="3.2" fill="#fff2c8"/>
-            <g id="sleepZ" class="sleep-z" fill="#fff8dc" font-size="25"><text x="78" y="-48">Z</text><text x="101" y="-70" font-size="18">z</text><text x="117" y="-87" font-size="13">z</text></g>
+
+            <!-- far legs, behind the body -->
+            <g id="doriBackPawFar" class="dori-part" transform="translate(63 91)">
+              <path d="M-8 0 Q-1 12 -3 31 L-5 54 Q-5 65 7 67 L22 67 Q32 66 28 54 L24 17 Q21 4 12 0Z" fill="#f6cf82" stroke="#252525" stroke-width="8" stroke-linejoin="round"/>
+              <path d="M-4 49 Q9 55 26 49 L29 59 Q27 68 10 68 L-2 64Z" fill="#fffaf2" stroke="#252525" stroke-width="6" stroke-linejoin="round"/>
+            </g>
+            <g id="doriFrontPawFar" class="dori-part" transform="translate(-83 88)">
+              <path d="M-6 0 Q2 12 0 30 L-3 53 Q-4 65 8 66 L22 66 Q31 65 27 53 L23 17 Q20 4 11 0Z" fill="#f6cf82" stroke="#252525" stroke-width="8" stroke-linejoin="round"/>
+              <path d="M-2 49 Q11 55 25 49 L28 59 Q26 68 9 68 L-1 64Z" fill="#fffaf2" stroke="#252525" stroke-width="6" stroke-linejoin="round"/>
+            </g>
+
+            <!-- low, long corgi body -->
+            <g id="doriBody" class="dori-part">
+              <path d="M-91 42 Q-72 18 -39 18 L54 26 Q96 29 111 55 Q121 76 108 105 Q99 128 73 129 L-62 124 Q-97 120 -111 91 Q-122 62 -91 42Z" fill="#ffdf98" stroke="#252525" stroke-width="8.5" stroke-linejoin="round"/>
+              <path d="M-101 67 Q-89 48 -71 49 Q-54 50 -47 69 Q-38 94 -54 116 Q-69 127 -87 113 Q-107 98 -108 80Z" fill="#fffaf2" stroke="#252525" stroke-width="6.5" stroke-linejoin="round"/>
+              <path d="M-42 112 Q-9 121 24 113 Q51 107 73 115" fill="none" stroke="#f6c96f" stroke-width="4" stroke-linecap="round" opacity=".9"/>
+              <path d="M18 39 Q43 32 66 42" fill="none" stroke="#f6c96f" stroke-width="3.5" stroke-linecap="round" opacity=".9"/>
+              <path d="M-14 31 Q-8 39 -10 48 M-1 29 Q6 37 5 47 M84 62 Q94 71 91 83" fill="none" stroke="#f3c56d" stroke-width="3" stroke-linecap="round" opacity=".76"/>
+            </g>
+
+            <!-- near legs, in front of the body -->
+            <g id="doriBackPawNear" class="dori-part" transform="translate(44 101)">
+              <path d="M-7 0 Q1 10 0 28 L-4 53 Q-5 64 7 66 L23 66 Q32 65 28 52 L23 16 Q20 3 11 0Z" fill="#f6cf82" stroke="#252525" stroke-width="8" stroke-linejoin="round"/>
+              <path d="M-3 48 Q10 54 27 48 L30 59 Q28 68 11 68 L-1 64Z" fill="#fffaf2" stroke="#252525" stroke-width="6" stroke-linejoin="round"/>
+            </g>
+            <g id="doriFrontPawNear" class="dori-part" transform="translate(-75 99)">
+              <path d="M-7 0 Q1 11 0 29 L-3 53 Q-4 65 8 66 L23 66 Q32 65 28 52 L23 16 Q20 3 11 0Z" fill="#f6cf82" stroke="#252525" stroke-width="8" stroke-linejoin="round"/>
+              <path d="M-3 48 Q10 54 27 48 L30 59 Q28 68 11 68 L-1 64Z" fill="#fffaf2" stroke="#252525" stroke-width="6" stroke-linejoin="round"/>
+              <path d="M5 61 l5 1 M17 61 l4 -1" fill="none" stroke="#d8c9b7" stroke-width="2.2" stroke-linecap="round"/>
+            </g>
+
+            <!-- head and ears -->
+            <g id="doriHead" class="dori-part">
+              <g id="doriEarLeft" class="dori-part">
+                <path d="M-72 -66 Q-83 -100 -77 -132 Q-73 -157 -55 -158 Q-37 -156 -31 -132 Q-22 -101 -28 -65 Q-50 -53 -72 -66Z" fill="#ffdf98" stroke="#252525" stroke-width="8.5" stroke-linejoin="round"/>
+                <path d="M-64 -82 Q-72 -117 -61 -143 Q-49 -135 -43 -111 L-41 -75Z" fill="#f3bd91" stroke="#252525" stroke-width="4.5" stroke-linejoin="round"/>
+              </g>
+              <g id="doriEarRight" class="dori-part">
+                <path d="M8 -78 Q14 -117 39 -143 Q58 -162 75 -144 Q91 -124 81 -95 Q73 -68 49 -48Z" fill="#ffdf98" stroke="#252525" stroke-width="8.5" stroke-linejoin="round"/>
+                <path d="M30 -86 Q43 -119 64 -145 Q72 -126 61 -100 L45 -72Z" fill="#f3bd91" stroke="#252525" stroke-width="4.5" stroke-linejoin="round"/>
+              </g>
+
+              <path d="M-94 -66 Q-99 -97 -75 -113 Q-51 -130 -20 -111 Q-2 -123 26 -113 Q61 -101 68 -72 Q76 -43 57 -13 Q41 13 9 21 Q-27 31 -60 12 Q-91 -5 -97 -35 Q-100 -51 -94 -66Z" fill="#ffdf98" stroke="#252525" stroke-width="8.5" stroke-linejoin="round"/>
+
+              <!-- clean cream blaze, cheek and muzzle -->
+              <path d="M-30 -113 Q-22 -93 -29 -73 Q-36 -53 -56 -38 Q-72 -24 -75 -5 Q-90 2 -98 -13 Q-103 -33 -92 -55 Q-76 -84 -30 -113Z" fill="#fffaf2"/>
+              <path d="M-91 -37 Q-75 -48 -59 -37 Q-47 -27 -51 -8 Q-55 12 -77 15 Q-98 15 -105 -1 Q-111 -19 -91 -37Z" fill="#fffaf2" stroke="#252525" stroke-width="7" stroke-linejoin="round"/>
+              <path d="M-69 -5 Q-54 6 -38 -2 Q-31 -5 -27 -14" fill="none" stroke="#fffaf2" stroke-width="9" stroke-linecap="round"/>
+
+              <!-- eyes: slow natural blinking -->
+              <g id="doriEyes">
+                <g class="dori-eye-open">
+                  <ellipse cx="-56" cy="-57" rx="7.2" ry="9" fill="#252525"/>
+                  <ellipse cx="12" cy="-57" rx="7.2" ry="9" fill="#252525"/>
+                  <circle cx="-58" cy="-60" r="2.1" fill="#fff"/>
+                  <circle cx="10" cy="-60" r="2.1" fill="#fff"/>
+                </g>
+                <g class="dori-eye-closed" fill="none" stroke="#252525" stroke-width="6" stroke-linecap="round">
+                  <path d="M-65 -55 Q-56 -48 -47 -55"/>
+                  <path d="M3 -55 Q12 -48 21 -55"/>
+                </g>
+              </g>
+
+              <!-- nose, smile, freckles and tiny tongue -->
+              <g id="doriMouth">
+                <ellipse cx="-101" cy="-14" rx="8.5" ry="6.5" fill="#252525"/>
+                <path d="M-101 -8 Q-98 5 -84 7 Q-72 8 -67 0" fill="none" stroke="#252525" stroke-width="5.2" stroke-linecap="round"/>
+                <g fill="#252525"><circle cx="-83" cy="-22" r="2.1"/><circle cx="-74" cy="-19" r="1.8"/><circle cx="-90" cy="-17" r="1.7"/></g>
+                <path class="dori-tongue" d="M-88 7 Q-82 17 -75 8 Q-76 21 -84 22 Q-91 19 -88 7Z" fill="#ed9c9d" stroke="#252525" stroke-width="3" stroke-linejoin="round"/>
+              </g>
+              <path d="M-20 -94 Q-11 -101 -1 -96" fill="none" stroke="#f6c96f" stroke-width="3" stroke-linecap="round"/>
+              <path d="M43 -35 Q52 -42 58 -51" fill="none" stroke="#f6c96f" stroke-width="3" stroke-linecap="round"/>
+
+              <!-- gentle cheek blush -->
+              <ellipse cx="-69" cy="-2" rx="9" ry="5" fill="#f5b2a0" opacity=".42"/>
+              <ellipse cx="29" cy="-13" rx="9" ry="5" fill="#f5b2a0" opacity=".34"/>
+            </g>
+
+            <!-- little paw lifted for grooming -->
+            <g id="doriGroomPaw" class="dori-part" transform="translate(-55 108)" opacity="0">
+              <path d="M-3 30 Q-10 13 -5 -2 Q0 -13 13 -9 Q21 -5 17 8 L14 29Z" fill="#ffdf98" stroke="#252525" stroke-width="7" stroke-linejoin="round"/>
+              <path d="M-3 21 Q5 25 15 20 L17 30 Q12 38 0 33Z" fill="#fffaf2" stroke="#252525" stroke-width="5"/>
+            </g>
+
+            <g id="sleepZ" class="sleep-z" fill="#252525" font-size="25" font-weight="700"><text x="87" y="-83">Z</text><text x="111" y="-105" font-size="18">z</text><text x="126" y="-119" font-size="13">z</text></g>
+            <g id="yawnMarks" opacity="0" fill="#252525" font-size="22"><text x="-126" y="-53">…</text></g>
           </g></g>
 
           <!-- Event-only animated details -->
@@ -510,14 +644,19 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     photo:{title:'오늘의 기념사진',desc:'돌이가 카메라를 바라보며 귀여운 포즈를 취했어요.',icon:'📸',pose:'alert',tag:'기록'},
     sunbeam:{title:'햇살이 거실을 가득 채워요',desc:'따뜻한 빛이 카페트 위로 길게 내려앉았어요.',icon:'☀️',pose:'sleep',tag:'휴식'},
     socks:{title:'짝 잃은 양말을 찾았어요',desc:'소파 밑에서 작은 양말 한 짝을 발견했어요.',icon:'🧦',pose:'play',tag:'작은 발견'},
-    toy:{title:'새 장난감 탐험',desc:'처음 보는 장난감의 냄새를 맡고 조심스럽게 다가가요.',icon:'🧸',pose:'play',tag:'놀이'},
+    toy:{title:'새 장난감 탐험',desc:'처음 보는 장난감의 냄새를 맡고 조심스럽게 다가가요.',icon:'🧸',pose:'sniff',tag:'놀이'},
+   
     firefly:{title:'반딧불이가 반짝여요',desc:'창밖의 작은 불빛들이 밤을 포근하게 밝혀줘요.',icon:'🪲',pose:'alert',tag:'밤하늘'},
     'friendly-ghost':{title:'귀여운 유령 손님',desc:'작은 유령이 인사를 건네고 별가루를 남긴 채 사라졌어요.',icon:'👻',pose:'alert',tag:'깜짝 손님'},
     thief:{title:'장난꾸러기 도둑 소동!',desc:'검은 망토를 두른 장난꾸러기가 나타났어요. 돌이가 발견하자 깜짝 놀라 사과하고 황급히 사라졌답니다.',icon:'🕵️',pose:'alert',tag:'깜짝 소동',fx:'thief'},
     parade:{title:'창밖의 작은 퍼레이드',desc:'알록달록 풍선들이 창밖을 지나가며 거실을 축제처럼 만들어요.',icon:'🎈',pose:'dance',tag:'축제'},
     movie:{title:'포근한 영화 감상',desc:'소파 쿠션에 기대어 잔잔한 영화를 보고 있어요.',icon:'🍿',pose:'idle',tag:'휴식'},
     dinner:{title:'저녁 식사 시간',desc:'하루를 마무리하며 맛있는 저녁을 먹고 있어요.',icon:'🍽️',pose:'eat',tag:'식사'},
-    grooming:{title:'보송보송 털 정리',desc:'돌이가 앞발을 가지런히 하고 깔끔하게 몸단장을 해요.',icon:'✨',pose:'idle',tag:'일상'},
+    grooming:{title:'보송보송 털 정리',desc:'앞발을 살짝 들어 얼굴을 쓱쓱 닦으며 몸단장을 해요.',icon:'✨',pose:'groom',tag:'일상'},
+    walk:{title:'거실을 천천히 산책해요',desc:'짧은 다리를 종종 움직이며 집 안을 한 바퀴 둘러봐요.',icon:'🐾',pose:'walk',tag:'산책'},
+    yawn:{title:'하품이 크게 나왔어요',desc:'하루의 피로가 몰려와 입을 크게 벌리고 하품해요.',icon:'🥱',pose:'yawn',tag:'휴식'},
+    sniff:{title:'새 장난감 냄새를 맡아요',desc:'코를 가까이 대고 킁킁, 새로운 냄새를 천천히 살펴봐요.',icon:'👃',pose:'sniff',tag:'탐험'},
+   
     moon:{title:'달님에게 인사해요',desc:'창문 너머 둥근 달을 바라보며 조용히 인사해요.',icon:'🌙',pose:'alert',tag:'밤하늘'},
     yawn:{title:'하품이 크게 나왔어요',desc:'하루의 피로가 몰려와 입을 크게 벌리고 하품해요.',icon:'🥱',pose:'idle',tag:'휴식'}
   };
@@ -525,7 +664,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   var GROUPS = [
     {from:12,to:340,keys:['stars','dream','ufo','meteor','firefly','moon','party','friendly-ghost']},
     {from:365,to:555,keys:['wake','breakfast','stretch','sunbeam','bird','mail','grooming']},
-    {from:575,to:755,keys:['ball','toy','butterfly','delivery','bubble','photo','socks','bread']},
+    {from:575,to:755,keys:['ball','toy','butterfly','delivery','bubble','photo','socks','bread','walk']},
     {from:775,to:955,keys:['nap','rain','rainbow','plant','robot','treat','pillow','friendly-ghost']},
     {from:975,to:1110,keys:['dinner','grooming','movie','bread','delivery','treat','mail']},
     {from:1130,to:1300,keys:['party','dance','story','stars','moon','ufo','meteor','parade','movie']},
@@ -575,7 +714,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     if(hour>=9&&hour<12)return {title:'장난감과 신나게 놀아요',desc:'카페트 위에서 좋아하는 장난감을 가지고 놀고 있어요.',pose:'play',tag:'놀이 시간',icon:'🎾'};
     if(hour>=12&&hour<14)return {title:'맛있는 점심을 먹어요',desc:'작은 그릇 앞에서 여유롭게 식사하는 중이에요.',pose:'eat',tag:'점심 시간',icon:'🥣'};
     if(hour>=14&&hour<17)return {title:'오후의 낮잠 시간',desc:'포근한 카페트와 쿠션이 돌이의 오후를 감싸줘요.',pose:'sleep',tag:'오후 휴식',icon:'💤'};
-    if(hour>=17&&hour<20)return {title:'느긋한 저녁 시간',desc:'창밖의 빛이 부드러워지고 돌이도 차분해져요.',pose:'idle',tag:'저녁 휴식',icon:'🍵'};
+    if(hour>=17&&hour<20)return {title:'집 안을 천천히 산책해요',desc:'저녁빛이 부드러워질 무렵, 돌이가 짧은 다리로 거실을 종종 걸어요.',pose:'walk',tag:'저녁 산책',icon:'🐾'};
     if(hour>=20&&hour<24)return {title:'밤의 작은 축제가 열릴지도 몰라요',desc:'조명이 따뜻하게 켜졌어요. 오늘 밤에는 어떤 일이 생길까요?',pose:'dance',tag:'밤의 시간',icon:'✨'};
     return {title:'돌이는 편안하게 쉬고 있어요',desc:'조용한 새벽, 돌이가 포근한 집에서 쉬고 있어요.',pose:'sleep',tag:'새벽 휴식',icon:'🌙'};
   }
