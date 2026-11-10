@@ -51,7 +51,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 .scene[data-phase="night"] .stars,.scene[data-phase="dawn"] .stars,.scene[data-phase="night"] .moon,.scene[data-phase="dawn"] .moon{opacity:1}
 .scene[data-event="ufo"] .ufo-fx,.scene[data-event="mystery-ufo"] .ufo-fx{opacity:1}
 .scene[data-event="party"] .party-fx,.scene[data-event="party"] .party-fx{opacity:1}
-.scene[data-event="thief"] .thief-fx{opacity:1}
+.scene[data-event="thief"] .thief-fx{opacity:1;animation:thiefSneak 1.35s cubic-bezier(.18,.72,.2,1) both;transform-box:fill-box;transform-origin:center bottom}@keyframes thiefSneak{0%{transform:translate(-150px,18px);opacity:0}62%{transform:translate(-10px,0);opacity:1}100%{transform:translate(0,0);opacity:1}}
 .scene[data-event="rain"] .rain-fx{opacity:1}
 .scene[data-event="snow"] .snow-fx{opacity:1}
 .scene[data-event="rainbow"] .rainbow-fx{opacity:1}
@@ -347,7 +347,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
             <g fill="#ffe6aa" stroke="none"><circle cx="548" cy="304" r="9"/><circle cx="821" cy="335" r="8"/><circle cx="733" cy="274" r="6"/><circle cx="591" cy="220" r="5"/><circle cx="880" cy="290" r="6"/></g>
             <g fill="#fff2c9" stroke="none" font-size="35"><text x="530" y="235">♪</text><text x="855" y="245">♫</text><text x="750" y="195">✦</text></g>
           </g>
-          <g class="thief-fx" transform="translate(175 345)">
+          <g transform="translate(175 345)"><g class="thief-fx">
             <ellipse cx="0" cy="121" rx="39" ry="9" fill="#5a4436" opacity=".25"/>
             <path d="M-36 112 Q-31 65 -18 36 L-25 7 Q-1 -15 25 7 L18 36 Q33 65 38 112Z" fill="#4d4a4b" stroke="#34343a" stroke-width="5"/>
             <path d="M-28 10 Q0 -18 29 10 L15 22 H-18Z" fill="#393942"/>
@@ -357,7 +357,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
             <path d="M-11 47 Q0 54 11 47" fill="none" stroke="#8d5b4d" stroke-width="3" stroke-linecap="round"/>
             <path d="M-9 66 Q0 74 9 66" fill="none" stroke="#dfbd91" stroke-width="5" stroke-linecap="round"/>
             <g fill="#fff6df" font-size="24"><text x="34" y="-5">!</text></g>
-          </g>
+          </g></g>
           <g class="rain-fx" stroke="#d8eff9" stroke-width="4" stroke-linecap="round" opacity=".75">
             <path d="M800 92 l-14 33 M845 130 l-14 33 M901 83 l-14 33 M1000 116 l-14 33 M1060 84 l-14 33"/>
           </g>
