@@ -232,6 +232,10 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 .scene[data-pose="yawn"] .dori-smile-mouth{opacity:0}
 .scene[data-pose="yawn"] .dori-yawn-mouth{opacity:1;transform:scale(1.1,1.18)}
 @keyframes doriSniffNose{from{transform:translateX(0) scale(1)}to{transform:translateX(-1.8px) scale(1.035)}}
+
+/* Keep Dori comfortably prominent in the room while preserving floor clearance. */
+#doriCollar{transform-box:fill-box;transform-origin:50% 0;animation:doriCollarSway 4.8s ease-in-out infinite}
+@keyframes doriCollarSway{0%,100%{transform:rotate(0)}50%{transform:rotate(1.4deg)}}
 </style>
 </head>
 <body>
@@ -403,7 +407,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
           </g>
 
           <!-- Dori: warm hand-drawn Welsh Corgi with independently animated parts -->
-          <g transform="translate(660 420)"><g id="doriSprite">
+          <g transform="translate(660 395) scale(1.32)"><g id="doriSprite">
             <ellipse cx="-2" cy="174" rx="119" ry="13" fill="#493326" opacity=".19" filter="url(#softShadow)"/>
 
             <!-- tiny Pembroke tail -->
@@ -488,6 +492,14 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
               <!-- gentle cheek blush -->
               <ellipse cx="-69" cy="-2" rx="9" ry="5" fill="#f5b2a0" opacity=".42"/>
               <ellipse cx="29" cy="-13" rx="9" ry="5" fill="#f5b2a0" opacity=".34"/>
+            </g>
+
+            <!-- signature little collar and bell, kept above the chest -->
+            <g id="doriCollar" class="dori-part">
+              <path d="M-27 7 Q-12 17 7 7 L10 22 Q-8 34 -25 21Z" fill="#fffaf2" stroke="#252525" stroke-width="5.5" stroke-linejoin="round"/>
+              <path d="M-24 12 Q-9 22 8 12" fill="none" stroke="#d8b46e" stroke-width="3" stroke-linecap="round"/>
+              <circle cx="-7" cy="28" r="6.5" fill="#e8bd62" stroke="#252525" stroke-width="3"/>
+              <circle cx="-9" cy="26" r="1.6" fill="#fff4cf"/>
             </g>
 
             <!-- little paw lifted for grooming -->
