@@ -810,6 +810,51 @@ function transferBuildingCargo(source,target,sourceField,fromType,toType,toID){
  markDirty();
  return {ok:true,stackID,quantity,itemID:canonicalItemID(item.id),transactionID:tx.transactionID};
 }
+function transferBuildingCargoToMachine(source,target,sourceField,fromType){
+ const item=source?.[sourceField],quantity=Math.floor(Number(item?.qty)||0);
+ if(!item||!Number.isSafeInteger(quantity)||quantity<=0||!source?.uid||!target?.uid||!isProductionMachine(target))return false;
+ const beforeAudit=rebuildOwnershipLedger(S);
+ if(!beforeAudit.valid)return false;
+ const stackID=buildingCargoStackID(source,sourceField),sourceUID=String(source.uid),targetUID=String(target.uid);
+ const snapshot={
+  runtime:structuredClone(S.runtime),inventory:structuredClone(S.inventory||{}),meta:structuredClone(S.meta||{}),
+  ownershipLedger:structuredClone(S.ownershipLedger),validation:structuredClone(S.ownershipLedgerValidation),
+  sourceItem:structuredClone(item),sourceStatus:source.status,sourceLogisticsStatus:source.logisticsStatus,
+  sourceSequence:source.custodyTransferSequence,targetInput:structuredClone(target.input||{}),
+  targetInputMeta:structuredClone(target.inputMeta||{}),targetStatus:target.status,dirty
+ };
+ const restore=()=>{
+  S.runtime=snapshot.runtime;S.inventory=snapshot.inventory;S.meta=snapshot.meta;
+  S.ownershipLedger=snapshot.ownershipLedger;S.ownershipLedgerValidation=snapshot.validation;
+  source[sourceField]=snapshot.sourceItem;source.status=snapshot.sourceStatus;
+  source.logisticsStatus=snapshot.sourceLogisticsStatus;source.custodyTransferSequence=snapshot.sourceSequence;
+  target.input=snapshot.targetInput;target.inputMeta=snapshot.targetInputMeta;target.status=snapshot.targetStatus;
+  dirty=snapshot.dirty;
+ };
+ const tx=nextCargoTransactionID(source,"LOGISTICS_MACHINE_INPUT");
+ const moved=transferCustody(S.ownershipLedger,{
+  transactionID:tx.transactionID,stackID,quantity,toType:"MACHINE_INPUT",toID:targetUID,
+  expectedFromType:fromType,expectedFromID:sourceUID
+ });
+ if(!moved){source.custodyTransferSequence=snapshot.sourceSequence;return false}
+ const metadata=item.meta||{};
+ addInput(target,item.id,quantity,{
+  quality:clamp(metadata.quality??90,0,100),
+  purity:clamp(metadata.purity??90,0,100),
+  synthetic:metadata.synthetic===true
+ });
+ if(sourceField==="output"){
+  if(!clearCompletionBuffer(source)){restore();return false}
+  source.status="IDLE";
+ }else source.item=null;
+ source.logisticsStatus="TRANSFERRED";
+ target.status="WAITING_INPUT";
+ const afterAudit=rebuildOwnershipLedger(S);
+ if(!afterAudit.valid){restore();return false}
+ markDirty();
+ return {ok:true,stackID,quantity,itemID:canonicalItemID(item.id),transactionID:tx.transactionID};
+}
+
 function consumeBuildingCargoForSale(source,sourceField,ownerType){
  const item=source?.[sourceField],quantity=Math.floor(Number(item?.qty)||0);
  if(!item||!Number.isSafeInteger(quantity)||quantity<=0||!source?.uid)return null;
@@ -1478,7 +1523,7 @@ function tickBelts(dt){
   }else if(target.type==="market"){
    const sale=consumeBuildingCargoForSale(b,"item","CONVEYOR");
    if(sale)log("자동 거래 · "+fmt(sale.earned)+" D");else b.logisticsStatus="CUSTODY_BLOCKED";
-  }else if(["machine","reactor","variantLab"].includes(buildingDef(target.type)?.kind)||["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.item.id,b.item.qty,b.item.meta);b.item=null;target.status="WAITING_INPUT";markDirty()}
+  }else if(["machine","reactor","variantLab"].includes(buildingDef(target.type)?.kind)||["machine","reactor","variantLab"].includes(target.type)){const moved=transferBuildingCargoToMachine(b,target,"item","CONVEYOR");if(!moved)b.logisticsStatus="CUSTODY_BLOCKED"}
  }
  for(const b of S.buildings){if(!b.output)continue;
   const route=selectLogisticsTarget(graph,b,b.output,{canAccept:()=>true});if(!route)continue;
@@ -1492,7 +1537,7 @@ function tickBelts(dt){
   }else if(target.type==="market"){
    const sale=consumeBuildingCargoForSale(b,"output","MACHINE_OUTPUT");
    if(sale)log("산업 거래소 자동 판매 · "+fmt(sale.earned)+" D");else b.logisticsStatus="CUSTODY_BLOCKED";
-  }else if(["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.output.id,b.output.qty,b.output.meta);clearCompletionBuffer(b);b.status="IDLE";markDirty()}
+  }else if(["machine","reactor","variantLab"].includes(target.type)){const moved=transferBuildingCargoToMachine(b,target,"output","MACHINE_OUTPUT");if(!moved)b.logisticsStatus="CUSTODY_BLOCKED"}
  }
 }
 
@@ -2307,6 +2352,45 @@ if(E2E_MODE){
    }finally{S=oldState;playerMotion=oldMotion;renderAll()}
   },
 
+  runLiveConveyorToMachineCustodyTest(){
+   const oldState=S,oldMotion=playerMotion,oldSelectedBuilding=selectedBuilding;
+   try{
+    S=freshState();S.runtime=createRuntimeState();S.inventory={};S.meta={};ensureItemStacks(S);S.tick=0;
+    const belt={uid:"LIVE-INPUT-BELT",type:"belt",x:0,y:0,dir:1,item:{id:"ironOre",qty:2,meta:{quality:97,purity:98,synthetic:false},custodyStackID:"LIVE-INPUT-STACK"},moveTimer:0,custodyTransferSequence:0};
+    const machine={uid:"LIVE-INPUT-MACHINE",type:"smelter",x:1,y:0,dir:1,input:{},inputMeta:{},status:"IDLE",condition:100};
+    S.buildings=[belt,machine];
+    const before=rebuildOwnershipLedger(S);
+    tickBelts(.8);
+    const after=rebuildOwnershipLedger(S);
+    const transferEntries=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="TRANSFER"&&tx.request?.stackID==="LIVE-INPUT-STACK");
+    const transfer=transferEntries[0]||null;
+    const finalOwner=S.ownershipLedger.custody.find(entry=>entry.ownerType==="MACHINE_INPUT"&&entry.ownerID===machine.uid&&entry.itemID===canonicalItemID("ironOre"))||null;
+    const liveResult={
+     beforeValid:before.valid,transferred:!belt.item&&machine.input?.[canonicalItemID("ironOre")]===2,
+     sourceRemaining:!!belt.item,machineInputQuantity:machine.input?.[canonicalItemID("ironOre")]||0,
+     machineInputQuality:machine.inputMeta?.[canonicalItemID("ironOre")]?.quality||0,
+     machineInputPurity:machine.inputMeta?.[canonicalItemID("ironOre")]?.purity||0,
+     machineInputSynthetic:machine.inputMeta?.[canonicalItemID("ironOre")]?.synthetic===true,
+     transferCount:transferEntries.length,
+     transferPath:transfer?{from:transfer.result.from.type+":"+transfer.result.from.id,to:transfer.result.to.type+":"+transfer.result.to.id,stackID:transfer.result.stackID}:null,
+     finalOwner:finalOwner?{type:finalOwner.ownerType,id:finalOwner.ownerID}:null,
+     finalItemTotal:after.itemTotals?.[canonicalItemID("ironOre")]||0,
+     remainingConveyorCustody:S.ownershipLedger.custody.filter(entry=>entry.ownerType==="CONVEYOR").length,
+     finalAuditValid:after.valid,targetStatus:machine.status
+    };
+    S=freshState();S.runtime=createRuntimeState();S.inventory={};S.meta={};ensureItemStacks(S);S.tick=0;
+    const rollbackBelt={uid:"LIVE-INPUT-ROLLBACK-BELT",type:"belt",x:0,y:0,dir:1,item:{id:"ironOre",qty:1,meta:{quality:91,purity:92,synthetic:false},custodyStackID:"LIVE-ROLLBACK-STACK"},moveTimer:0,custodyTransferSequence:0};
+    const rollbackMachine={uid:"LIVE-INPUT-ROLLBACK-MACHINE",type:"smelter",x:1,y:0,input:{},inputMeta:{},status:"IDLE"};
+    S.buildings=[rollbackBelt,rollbackMachine];S.ownershipLedger=createOwnershipState();
+    const conflictID="LOGISTICS_MACHINE_INPUT:"+rollbackBelt.uid+":0:1";
+    S.ownershipLedger.transactions[conflictID]={status:"COMMITTED",request:{type:"TRANSFER",stackID:"DIFFERENT-STACK",quantity:1,toType:"MACHINE_INPUT",toID:rollbackMachine.uid,expectedFromType:"CONVEYOR",expectedFromID:rollbackBelt.uid},result:{stackID:"DIFFERENT-STACK"}};
+    const rollbackBefore=rebuildOwnershipLedger(S),originalItem=structuredClone(rollbackBelt.item);
+    const rejected=transferBuildingCargoToMachine(rollbackBelt,rollbackMachine,"item","CONVEYOR");
+    const rollbackAfter=rebuildOwnershipLedger(S);
+    const rollbackPreserved=rejected===false&&JSON.stringify(rollbackBelt.item)===JSON.stringify(originalItem)&&Object.keys(rollbackMachine.input||{}).length===0&&rollbackBelt.custodyTransferSequence===0&&rollbackAfter.valid;
+    return {...liveResult,rollbackBeforeValid:rollbackBefore.valid,conflictingTransactionRejected:rejected===false,rollbackPreserved};
+   }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
+  },
   setupFluidNetworkTest(){
    S=freshState();S.player={...S.player,viewMode:"map",layer:"surface"};S.seconds=8*3600;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=false;
    S.nodes["15,15"]={type:"water",amount:0,seed:123};

@@ -129,6 +129,7 @@ jobs:
           grep -q 'SAVE_BACKUP_COUNT=3' doronium-factory/save-store.js
           grep -q 'calculateOutputQuality' doronium-factory/simulation-core.js
           grep -q 'function tickBelts' doronium-factory/factory.js
+          grep -q 'function transferBuildingCargoToMachine' doronium-factory/factory.js
           grep -q 'function startFusion' doronium-factory/factory.js
           grep -q 'function recipeHasSyntheticInput' doronium-factory/factory.js
           grep -q 'function updatePlayerMotion' doronium-factory/factory.js
