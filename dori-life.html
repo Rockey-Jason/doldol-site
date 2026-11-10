@@ -428,107 +428,187 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
             <circle cx="0" cy="0" r="24" fill="#e6a96f"/><path d="M-20 -9 Q0 6 20 -9 M-11 -21 Q-5 -5 -11 19" stroke="#fff1d5" stroke-width="4" fill="none"/>
           </g>
 
-          <!-- Dori: simple, bold doodle-style Welsh Corgi matching the reference drawing -->
+          <!-- Dori: clean side-profile Pembroke corgi doodle, proportioned like the reference -->
           <g id="doriBed" opacity="0" pointer-events="none">
-            <ellipse cx="860" cy="600" rx="158" ry="23" fill="#5c4030" opacity=".20"/>
-            <rect x="708" y="510" width="304" height="112" rx="52" fill="#d4b895" stroke="#292929" stroke-width="5"/>
-            <rect x="725" y="521" width="270" height="86" rx="42" fill="#f3e4cf" stroke="#b39370" stroke-width="3"/>
-            <path d="M748 565 Q790 535 833 565 T918 565 T980 561" fill="none" stroke="#d1b99b" stroke-width="3" stroke-linecap="round"/>
-            <ellipse cx="855" cy="545" rx="70" ry="26" fill="#fff7e8" stroke="#c9ad8d" stroke-width="3"/>
-            <path d="M792 586 Q860 600 933 584" fill="none" stroke="#b99b79" stroke-width="3" stroke-linecap="round"/>
+            <ellipse cx="858" cy="607" rx="154" ry="18" fill="#594332" opacity=".16"/>
+            <rect x="711" y="515" width="294" height="112" rx="52" fill="#d5b998" stroke="#262626" stroke-width="5"/>
+            <rect x="727" y="525" width="262" height="87" rx="42" fill="#f8edda" stroke="#b99a78" stroke-width="3"/>
+            <ellipse cx="858" cy="552" rx="73" ry="24" fill="#fffaf0" stroke="#c8ad8c" stroke-width="3"/>
+            <path d="M755 584 Q818 601 879 585 T976 584" fill="none" stroke="#d5c0a3" stroke-width="3" stroke-linecap="round"/>
           </g>
 
-          <g id="doriActor" transform="translate(660 405) scale(1.12)">
+          <g id="doriActor" transform="translate(660 405) scale(1.00)">
             <g id="doriSprite">
-              <ellipse cx="8" cy="151" rx="130" ry="12" fill="#513d30" opacity=".16"/>
+              <ellipse cx="15" cy="153" rx="145" ry="12" fill="#46372f" opacity=".16"/>
 
-              <!-- tiny bobtail -->
+              <!-- tiny natural bobtail -->
               <g id="doriTail" class="dori-part">
-                <path d="M112 20 Q132 0 151 9 Q166 17 157 34 Q146 48 128 37 Q118 32 112 20Z" fill="#ffe5a6" stroke="#242424" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M139 -16 Q157 -34 172 -21 Q184 -10 174 3 Q163 16 149 6 Q141 1 139 -16Z"
+                  fill="#ffe6a8" stroke="#242424" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
               </g>
 
-              <!-- far legs -->
-              <g id="doriBackPawFar" class="dori-part" transform="translate(83 64)">
-                <path d="M0 0 Q8 17 5 39 L2 69 Q2 83 17 84 L37 83 Q49 80 43 65 L37 17 Q34 3 22 0Z" fill="#ffe5a6" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
-                <path d="M3 64 Q22 71 43 63 L47 76 Q44 88 22 87 L3 83Z" fill="#fffdf8" stroke="#242424" stroke-width="7" stroke-linejoin="round"/>
-              </g>
-              <g id="doriFrontPawFar" class="dori-part" transform="translate(-61 65)">
-                <path d="M0 0 Q8 17 5 39 L2 69 Q2 83 17 84 L37 83 Q49 80 43 65 L37 17 Q34 3 22 0Z" fill="#ffe5a6" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
-                <path d="M3 64 Q22 71 43 63 L47 76 Q44 88 22 87 L3 83Z" fill="#fffdf8" stroke="#242424" stroke-width="7" stroke-linejoin="round"/>
-              </g>
-
-              <!-- low, long body -->
-              <g id="doriBody" class="dori-part">
-                <path d="M-87 -5 Q-69 -36 -25 -38 L79 -34 Q127 -31 143 3 Q158 37 141 75 Q126 103 91 104 L-47 101 Q-91 98 -108 66 Q-124 34 -87 -5Z"
-                  fill="#ffe5a6" stroke="#242424" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M-83 30 Q-58 16 -35 31 Q-15 45 -18 75 Q-22 101 -52 101 Q-88 98 -103 69 Q-111 47 -83 30Z"
+              <!-- far legs behind the long body -->
+              <g id="doriBackPawFar" class="dori-part" transform="translate(105 49)">
+                <path d="M-10 0 Q-3 17 -5 40 L-7 66 Q-7 81 8 83 L27 82 Q40 79 34 64 L26 14 Q22 1 11 0Z"
+                  fill="#ffe6a8" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
+                <path d="M-5 63 Q12 70 34 62 L38 74 Q35 87 14 87 L-3 83Z"
                   fill="#fffdf8" stroke="#242424" stroke-width="7" stroke-linejoin="round"/>
-                <path d="M-12 88 Q31 96 71 88" fill="none" stroke="#f6d88f" stroke-width="4" stroke-linecap="round" opacity=".65"/>
+              </g>
+              <g id="doriFrontPawFar" class="dori-part" transform="translate(-46 46)">
+                <path d="M-9 0 Q-2 17 -4 40 L-7 66 Q-7 81 8 83 L27 82 Q40 79 34 64 L26 14 Q22 1 11 0Z"
+                  fill="#ffe6a8" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
+                <path d="M-5 63 Q12 70 34 62 L38 74 Q35 87 14 87 L-3 83Z"
+                  fill="#fffdf8" stroke="#242424" stroke-width="7" stroke-linejoin="round"/>
               </g>
 
-              <!-- near legs -->
-              <g id="doriBackPawNear" class="dori-part" transform="translate(64 70)">
-                <path d="M0 0 Q8 17 5 39 L2 69 Q2 83 17 84 L37 83 Q49 80 43 65 L37 17 Q34 3 22 0Z" fill="#ffe5a6" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
-                <path d="M3 64 Q22 71 43 63 L47 76 Q44 88 22 87 L3 83Z" fill="#fffdf8" stroke="#242424" stroke-width="7" stroke-linejoin="round"/>
-              </g>
-              <g id="doriFrontPawNear" class="dori-part" transform="translate(-78 70)">
-                <path d="M0 0 Q8 17 5 39 L2 69 Q2 83 17 84 L37 83 Q49 80 43 65 L37 17 Q34 3 22 0Z" fill="#ffe5a6" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
-                <path d="M3 64 Q22 71 43 63 L47 76 Q44 88 22 87 L3 83Z" fill="#fffdf8" stroke="#242424" stroke-width="7" stroke-linejoin="round"/>
+              <!-- long, low Pembroke body -->
+              <g id="doriBody" class="dori-part">
+                <path d="M-72 -26
+                  Q-49 -52 -10 -53
+                  L91 -47
+                  Q140 -43 159 -10
+                  Q174 18 163 57
+                  Q156 91 128 99
+                  Q111 105 88 101
+                  L-43 98
+                  Q-83 96 -101 65
+                  Q-115 33 -98 0
+                  Q-89 -17 -72 -26Z"
+                  fill="#ffe6a8" stroke="#242424" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+
+                <!-- white bib and belly flowing into the face -->
+                <path d="M-94 24
+                  Q-75 7 -55 18
+                  Q-37 27 -36 51
+                  Q-35 78 -15 89
+                  Q16 106 58 96
+                  Q83 89 105 88
+                  Q129 88 157 67
+                  Q155 93 130 101
+                  Q111 108 86 104
+                  L-45 102
+                  Q-83 99 -101 68
+                  Q-108 44 -94 24Z"
+                  fill="#fffdf8"/>
+                <path d="M-15 92 Q28 101 68 91" fill="none" stroke="#f6d996" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>
               </g>
 
-              <!-- head, ears and white face -->
+              <!-- short near legs with white socks -->
+              <g id="doriBackPawNear" class="dori-part" transform="translate(91 54)">
+                <path d="M-10 0 Q-3 17 -5 40 L-7 66 Q-7 81 8 83 L27 82 Q40 79 34 64 L26 14 Q22 1 11 0Z"
+                  fill="#ffe6a8" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
+                <path d="M-5 63 Q12 70 34 62 L38 74 Q35 87 14 87 L-3 83Z"
+                  fill="#fffdf8" stroke="#242424" stroke-width="7" stroke-linejoin="round"/>
+              </g>
+              <g id="doriFrontPawNear" class="dori-part" transform="translate(-64 50)">
+                <path d="M-10 0 Q-3 17 -5 40 L-7 66 Q-7 81 8 83 L27 82 Q40 79 34 64 L26 14 Q22 1 11 0Z"
+                  fill="#ffe6a8" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
+                <path d="M-5 63 Q12 70 34 62 L38 74 Q35 87 14 87 L-3 83Z"
+                  fill="#fffdf8" stroke="#242424" stroke-width="7" stroke-linejoin="round"/>
+                <path d="M7 76 l5 1 M20 76 l5 -1" fill="none" stroke="#d8c9b7" stroke-width="2.2" stroke-linecap="round"/>
+              </g>
+
+              <!-- head: upright ears, tapered muzzle, white facial marking -->
               <g id="doriHead" class="dori-part">
                 <g id="doriEarLeft" class="dori-part">
-                  <path d="M-88 -83 Q-101 -124 -88 -178 Q-78 -216 -55 -216 Q-28 -213 -25 -181 L-23 -128 Q-41 -103 -67 -85Z"
-                    fill="#ffe5a6" stroke="#242424" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M-75 -112 Q-82 -160 -62 -195 Q-45 -176 -42 -137 L-48 -108Z" fill="#ffe5a6"/>
+                  <path d="M-91 -125
+                    Q-105 -160 -99 -205
+                    Q-95 -242 -75 -247
+                    Q-51 -251 -41 -221
+                    Q-32 -191 -37 -150
+                    Q-56 -131 -91 -125Z"
+                    fill="#ffe6a8" stroke="#242424" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M-82 -151 Q-91 -193 -78 -226 Q-59 -207 -55 -171 L-61 -145Z"
+                    fill="#f7d48f"/>
                 </g>
                 <g id="doriEarRight" class="dori-part">
-                  <path d="M-5 -99 Q7 -145 44 -177 Q78 -205 99 -183 Q122 -159 106 -116 Q92 -79 55 -55Z"
-                    fill="#ffe5a6" stroke="#242424" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M20 -111 Q46 -158 80 -184 Q88 -153 63 -116 L42 -88Z" fill="#ffe5a6"/>
+                  <path d="M-9 -144
+                    Q7 -188 44 -216
+                    Q77 -241 96 -217
+                    Q113 -193 94 -158
+                    Q77 -129 44 -105Z"
+                    fill="#ffe6a8" stroke="#242424" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M18 -157 Q44 -202 75 -222 Q83 -191 61 -158 L41 -130Z"
+                    fill="#f7d48f"/>
                 </g>
 
-                <path d="M-105 -84 Q-104 -127 -69 -145 Q-37 -160 -7 -144 Q31 -163 67 -139 Q103 -114 89 -68 Q80 -18 41 7 Q-4 33 -48 9 Q-91 -12 -103 -51 Q-107 -68 -105 -84Z"
-                  fill="#ffe5a6" stroke="#242424" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M-110 -139
+                  Q-102 -178 -69 -190
+                  Q-40 -201 -12 -185
+                  Q20 -201 52 -179
+                  Q85 -155 82 -116
+                  Q80 -75 52 -47
+                  Q25 -19 -15 -22
+                  Q-58 -25 -88 -57
+                  Q-117 -89 -110 -139Z"
+                  fill="#ffe6a8" stroke="#242424" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
 
-                <!-- large cream-white blaze from forehead to muzzle and chest -->
-                <path d="M-25 -148 Q-8 -128 -15 -101 Q-24 -72 -8 -48 Q7 -21 -3 5 Q-21 27 -48 12 Q-77 -3 -85 -34 Q-94 -69 -72 -104 Q-55 -132 -25 -148Z"
+                <!-- white blaze and cheek that blend into the chest -->
+                <path d="M-53 -190
+                  Q-35 -177 -40 -151
+                  Q-45 -127 -60 -111
+                  Q-75 -95 -78 -77
+                  Q-79 -55 -61 -43
+                  Q-42 -31 -20 -42
+                  Q-2 -51 5 -70
+                  Q-17 -98 -8 -125
+                  Q2 -155 -13 -181
+                  Q-34 -195 -53 -190Z"
                   fill="#fffdf8"/>
-                <path d="M-99 -60 Q-81 -81 -59 -68 Q-40 -55 -45 -30 Q-49 -3 -73 7 Q-98 11 -111 -10 Q-121 -34 -99 -60Z"
+                <path d="M-99 -101
+                  Q-119 -112 -137 -98
+                  Q-154 -84 -143 -64
+                  Q-134 -47 -111 -49
+                  Q-89 -50 -79 -68
+                  Q-68 -87 -82 -100
+                  Q-90 -106 -99 -101Z"
                   fill="#fffdf8" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
-                <path d="M-80 0 Q-63 17 -40 13 Q-20 11 -11 -4" fill="none" stroke="#fffdf8" stroke-width="12" stroke-linecap="round"/>
+                <path d="M-104 -52
+                  Q-91 -33 -68 -39
+                  Q-48 -43 -39 -62"
+                  fill="none" stroke="#fffdf8" stroke-width="13" stroke-linecap="round"/>
 
-                <!-- simple dot eyes and friendly muzzle -->
+                <!-- small dot eyes, like the supplied drawing -->
                 <g id="doriEyes">
                   <g class="dori-eye-open" fill="#242424">
-                    <circle cx="-63" cy="-75" r="9"/>
-                    <circle cx="26" cy="-67" r="9"/>
+                    <circle cx="-72" cy="-137" r="8.5"/>
+                    <circle cx="22" cy="-130" r="8.5"/>
                   </g>
                   <g class="dori-eye-closed" fill="none" stroke="#242424" stroke-width="7" stroke-linecap="round">
-                    <path d="M-75 -74 Q-63 -65 -51 -74"/>
-                    <path d="M14 -66 Q26 -57 38 -66"/>
+                    <path d="M-84 -136 Q-72 -126 -60 -136"/>
+                    <path d="M10 -129 Q22 -119 34 -129"/>
                   </g>
                 </g>
+
+                <!-- button nose and gentle smile -->
                 <g id="doriMouth">
-                  <ellipse cx="-96" cy="-27" rx="10" ry="8" fill="#242424"/>
-                  <path class="dori-smile-mouth" d="M-94 -18 Q-89 -3 -74 -3 Q-60 -4 -56 -16" fill="none" stroke="#242424" stroke-width="7" stroke-linecap="round"/>
-                  <ellipse class="dori-yawn-mouth" cx="-74" cy="-3" rx="9" ry="12" fill="#242424" opacity="0"/>
-                  <path class="dori-tongue" d="M-80 1 Q-73 14 -65 2 Q-65 19 -74 19 Q-83 17 -80 1Z" fill="#f0a2a1" stroke="#242424" stroke-width="3"/>
-                  <g fill="#242424"><circle cx="-83" cy="-20" r="2.1"/><circle cx="-76" cy="-17" r="1.8"/></g>
+                  <ellipse cx="-143" cy="-79" rx="9.5" ry="7.5" fill="#242424"/>
+                  <path class="dori-smile-mouth" d="M-140 -70 Q-133 -57 -117 -59 Q-106 -60 -101 -72"
+                    fill="none" stroke="#242424" stroke-width="7" stroke-linecap="round"/>
+                  <ellipse class="dori-yawn-mouth" cx="-119" cy="-60" rx="8" ry="11" fill="#242424" opacity="0"/>
+                  <path class="dori-tongue" d="M-125 -55 Q-117 -42 -109 -55 Q-108 -39 -117 -39 Q-127 -42 -125 -55Z"
+                    fill="#f0a2a1" stroke="#242424" stroke-width="3"/>
+                  <g fill="#242424"><circle cx="-120" cy="-90" r="2.1"/><circle cx="-111" cy="-87" r="1.8"/></g>
                 </g>
               </g>
 
+              <!-- simple collar and tiny bell -->
               <g id="doriCollar" class="dori-part">
-                <path d="M-24 12 Q-4 24 16 12 L13 30 Q-4 42 -21 29Z" fill="#fffdf8" stroke="#242424" stroke-width="5" stroke-linejoin="round"/>
-                <circle cx="-4" cy="37" r="6" fill="#f1cf7d" stroke="#242424" stroke-width="3"/>
+                <path d="M-44 -22 Q-17 -7 9 -22 L6 -5 Q-17 10 -41 -6Z"
+                  fill="#fffdf8" stroke="#242424" stroke-width="5" stroke-linejoin="round"/>
+                <circle cx="-17" cy="8" r="6" fill="#f1cf7d" stroke="#242424" stroke-width="3"/>
               </g>
-              <g id="doriGroomPaw" class="dori-part" transform="translate(-51 68)" opacity="0">
-                <path d="M0 25 Q-8 9 -1 -7 Q7 -17 20 -7 Q28 3 20 19 L17 29Z" fill="#ffe5a6" stroke="#242424" stroke-width="7"/>
-                <path d="M0 21 Q10 26 21 19 L24 29 Q18 37 4 33Z" fill="#fffdf8" stroke="#242424" stroke-width="6"/>
+
+              <g id="doriGroomPaw" class="dori-part" transform="translate(-48 52)" opacity="0">
+                <path d="M-8 38 Q-17 19 -8 0 Q0 -11 14 -2 Q23 8 15 27 L11 42Z"
+                  fill="#ffe6a8" stroke="#242424" stroke-width="7"/>
+                <path d="M-7 31 Q4 36 17 28 L19 39 Q13 47 -2 43Z"
+                  fill="#fffdf8" stroke="#242424" stroke-width="6"/>
               </g>
-              <g id="sleepZ" class="sleep-z" fill="#242424" font-size="25" font-weight="700"><text x="103" y="-116">Z</text><text x="127" y="-138" font-size="18">z</text></g>
-              <g id="yawnMarks" opacity="0" fill="#242424" font-size="22"><text x="-143" y="-82">…</text></g>
+              <g id="sleepZ" class="sleep-z" fill="#242424" font-size="24" font-weight="700">
+                <text x="82" y="-182">Z</text><text x="105" y="-204" font-size="17">z</text>
+              </g>
+              <g id="yawnMarks" opacity="0" fill="#242424" font-size="21"><text x="-154" y="-120">…</text></g>
             </g>
           </g>
 
@@ -817,7 +897,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   }
   function doriDestination(state,now){
     var pose=state.pose||'idle';
-    if(pose==='sleep')return {x:860,y:378,s:.94,key:'sleep-bed'};
+    if(pose==='sleep')return {x:858,y:392,s:.88,key:'sleep-bed'};
     if(pose==='eat')return {x:795,y:405,s:1.02,key:'food-bowl'};
     if(pose==='alert')return {x:900,y:400,s:1.00,key:'window-watch'};
     if(pose==='play')return {x:700,y:405,s:1.08,key:'rug-play'};
