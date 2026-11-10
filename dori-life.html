@@ -834,7 +834,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var target=doriDestination(state,now);
     if(!doriActor||doriActor._targetKey===target.key)return;
     doriActor._targetKey=target.key;
-    tweenSvgPosition(doriActor,target,pose=== 'walk'?2400:1700);
+    tweenSvgPosition(doriActor,target,state.pose==='walk'?2400:1700);
   }
   function updateFriendArrival(evt){
     var shouldVisit=!!(evt&&evt.kind==='bread');
