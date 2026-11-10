@@ -226,6 +226,12 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 @media(prefers-reduced-motion:reduce){
   #doriSprite,#doriHead,#doriTail,#doriEarLeft,#doriEarRight,#doriFrontPawNear,#doriFrontPawFar,#doriBackPawNear,#doriBackPawFar,#doriGroomPaw,.dori-eye-open,.dori-eye-closed,.sleep-z,#yawnMarks{animation-duration:12s!important;animation-iteration-count:1!important;transition:none!important}
 }
+
+#doriMouth{transform-box:fill-box;transform-origin:88% 50%}
+.scene[data-pose="sniff"] #doriMouth{animation:doriSniffNose .34s ease-in-out infinite alternate}
+.scene[data-pose="yawn"] .dori-smile-mouth{opacity:0}
+.scene[data-pose="yawn"] .dori-yawn-mouth{opacity:1;transform:scale(1.1,1.18)}
+@keyframes doriSniffNose{from{transform:translateX(0) scale(1)}to{transform:translateX(-1.8px) scale(1.035)}}
 </style>
 </head>
 <body>
@@ -471,7 +477,8 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
               <!-- nose, smile, freckles and tiny tongue -->
               <g id="doriMouth">
                 <ellipse cx="-101" cy="-14" rx="8.5" ry="6.5" fill="#252525"/>
-                <path d="M-101 -8 Q-98 5 -84 7 Q-72 8 -67 0" fill="none" stroke="#252525" stroke-width="5.2" stroke-linecap="round"/>
+                <path class="dori-smile-mouth" d="M-101 -8 Q-98 5 -84 7 Q-72 8 -67 0" fill="none" stroke="#252525" stroke-width="5.2" stroke-linecap="round"/>
+                <ellipse class="dori-yawn-mouth" cx="-84" cy="7" rx="8" ry="11" fill="#252525" stroke="#252525" stroke-width="2.5" opacity="0"/>
                 <g fill="#252525"><circle cx="-83" cy="-22" r="2.1"/><circle cx="-74" cy="-19" r="1.8"/><circle cx="-90" cy="-17" r="1.7"/></g>
                 <path class="dori-tongue" d="M-88 7 Q-82 17 -75 8 Q-76 21 -84 22 Q-91 19 -88 7Z" fill="#ed9c9d" stroke="#252525" stroke-width="3" stroke-linejoin="round"/>
               </g>
