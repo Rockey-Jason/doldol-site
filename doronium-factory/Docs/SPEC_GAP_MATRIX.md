@@ -91,3 +91,69 @@ The live recipe lifecycle is now journaled end-to-end for the current machine pr
 The machine-output-to-storage route now uses the same item identity across three committed ownership transfers: MACHINE_OUTPUT → CONVEYOR (belt 1) → CONVEYOR (belt 2) → PLAYER_INVENTORY (storage collection). The live Playwright fixture verifies that quantity 2 remains quantity 2, the original stack ID is unchanged, no source/segment custody remains, and the final ownership snapshot is valid. The automated market route also journals a consumeCustody sale before crediting money, but its dedicated E2E test remains outstanding.
 
 Updated status: roadmap area 8 Logistics and area 9 Item ownership remain PARTIAL / CRITICAL. Conveyor-to-machine transfer, partial-stack parcels, independent warehouse stock, world drops, shipment settlement, demolition, Fusion output and recovery are still open. This is not a global conservation proof or release-completion claim.
+
+
+## 2026-11-10 — master acceptance status and conveyor custody hardening
+
+**Code checkpoint:** `ad114a4d18b42ef33ff1679efd593c3a4dbc0acf`  
+**Documentation checkpoint before this matrix update:** `45e68499754fcc3938a12eda5e78bb6b65644a4e`  
+**Main HEAD at comparison:** `a66f653b0ad597bfa6b2a0e900a4a8928dbce3fc`  
+**PR #11:** open, draft, not merged. The comparison is still diverged: 347 commits ahead / 254 behind from merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`. No merge-base refresh or main merge was attempted.
+
+### 12 master roadmap areas
+
+| # | Area | Status | Current evidence / remaining acceptance blocker |
+|---:|---|---|---|
+| 1 | Code, data, dependencies, entry points and save audit | PARTIAL | Audit and versioned local/cloud save paths exist; full legacy-save/device conflict and complete runtime-domain audit remain open. |
+| 2 | World and terrain | PARTIAL | Three.js terrain, height variation, two landmasses and underground layers exist; actual map remains 192×160 tiles, not 2,048m×2,048m. Coordinate/save migration and full streaming/unloading remain open. |
+| 3 | Player, exploration, survival and mining | PARTIAL | First/third-person, PC controls, mobile controls/emulation, survival values and underground miners exist; full campaign, death/recovery, all deposits and physical-device coverage remain open. |
+| 4 | Terrain preparation and construction | PARTIAL | Flattening, foundations, footprint checks, blueprint rotation/placement and escrow rollback exist; all building port/collision/dismantle/crash-recovery cases are not complete. |
+| 5 | Items, ownership and logistics | PARTIAL / CRITICAL | Inventory consumption, production lifecycle, machine-output/conveyor/storage and conveyor-to-machine custody paths have transaction journaling. The ledger is still a rebuilt snapshot, not the authoritative source for warehouse stock, world drops, shipments, demolition, Fusion and recovery; partial-stack parcel flow remains open. |
+| 6 | Power grid | PARTIAL | Network allocation, generators, batteries, transformers and kW/kJ handling exist; transmission losses, stable network diagnostics and complete dispatch/priority validation remain open. |
+| 7 | Fluid grid | PARTIAL | Water pump/pipe/valve/tank flow is live; OIL, PETROLEUM, MOLTEN_METAL, LAVA and CHEMICAL still lack complete live source-to-consumer conservation paths. |
+| 8 | Machine state, failures and maintenance | PARTIAL | State transitions and five production-machine failure profiles are connected; every production/support machine, residue ledger and full failure/recovery coverage remain open. |
+| 9 | Production, research and skills | PARTIAL | Production and skill runtimes exist; the live research count is 19 while the master target says 18, and all 20 skill effects are not yet proven in live gameplay. |
+| 10 | Canonical Doronum and Infinity | PARTIAL / CRITICAL | Fifteen canonical input IDs, quality/purity/synthetic checks, reservation, seven stages and exactly-once output logic exist; the manifest is not the sole live recipe source, and cloud/process-restart recovery, complete interlocks and output custody remain open. |
+| 11 | Shipping, contracts and economy | PARTIAL | Three sample contracts and staged packaging/transit/reward logic exist; full contract catalog, route-derived risk and server-authoritative settlement remain open. |
+| 12 | Save, security, performance and release | PARTIAL / UNVERIFIED | Owner-scoped CAS and local versioned saves exist; two-device conflict/recovery, server-authoritative gameplay, physical hardware and wall-clock soak evidence remain unverified. |
+
+### 20 final acceptance checklist
+
+| # | Acceptance item | Status | Evidence / blocker |
+|---:|---|---|---|
+| 1 | Complete PC playthrough | PARTIAL | Desktop WebGL/browser smoke exists; full campaign from new save through ending is not demonstrated. |
+| 2 | Complete mobile playthrough | PARTIAL | Mobile viewport/WebGL emulation exists; real Android/iOS playthrough is unverified. |
+| 3 | First/third-person switching | PARTIAL | Both view modes are implemented; full-playthrough input/camera regression remains. |
+| 4 | 2,048m×2,048m world | NOT IMPLEMENTED | Current world is 192×160 tiles; target-scale conversion is not complete. |
+| 5 | Flattening and foundations | PARTIAL | Runtime and browser scenarios exist; all slopes, footprints, ports, cancel and reload rollback are not proven. |
+| 6 | Underground mining | PARTIAL | Layer-specific miners, fuelled generator, depletion, byproducts, drill wear/repair and browser assertions exist; latest-head browser rerun is not verified. |
+| 7 | Fifteen canonical Doronum IDs | PARTIAL | Canonical validation and 15 models pass audit assertions; universal manifest-driven recipe/model/research integration is incomplete. |
+| 8 | No item duplication or loss | PARTIAL / CRITICAL | Several live paths are journaled, including conveyor-to-machine; independent domains and cross-domain conservation are incomplete. |
+| 9 | Conveyors and automatic mining | PARTIAL | Graph routing and mining exist; full sorter/splitter/merger/lift/curve/multi-lane behavior, deadlock recovery and full custody remain open. |
+| 10 | Power and batteries | PARTIAL | Live allocations, batteries and transformer behavior exist; transmission-loss and diagnostic acceptance remain. |
+| 11 | Six fluids, pressure and temperature | PARTIAL | Water flow only is substantially live; five other fluid paths and complete thermal/leak/failure conservation are open. |
+| 12 | Machine states, failures and maintenance | PARTIAL | Runtime state/failure logic exists for a subset of machines; all-machine coverage is incomplete. |
+| 13 | Research 18 / skills 20 | PARTIAL | Current research catalog has 19 entries (contract mismatch); skill tree has 20 nodes but all effects are not live-verified. |
+| 14 | Seven-stage Fusion | PARTIAL | Live seven-stage / 260 simulated-second path exists; complete interlock and restart recovery acceptance remains. |
+| 15 | Exactly one Infinity output | PARTIAL | Exactly-once settlement and browser assertions exist; latest-head browser rerun and authoritative output custody/recovery remain. |
+| 16 | Cloud save and recovery | PARTIAL | Owner-scoped revision CAS exists; real two-device conflict, reload and process-restart recovery are not verified. |
+| 17 | Server authority and security | PARTIAL | Owner-scoped CAS/RLS boundary exists; gameplay reward/state authority is not fully server-side. |
+| 18 | 60-minute wall-clock test | UNVERIFIED | 36,000 virtual ticks are simulated time, not a 60-minute elapsed-time soak. |
+| 19 | Physical PC/mobile performance | UNVERIFIED | Browser/viewport emulation is not physical PC, Android or iOS hardware validation. |
+| 20 | Full new-save-to-ending regression | PARTIAL | Individual gates and the planetary stabilization fixture exist; a complete campaign playthrough is still missing. |
+
+**No checklist item is COMPLETE.** The world-size requirement is not implemented; physical-device and wall-clock requirements remain unverified. Do not equate emulation, virtual ticks, helper tests or PR-only code with release acceptance.
+
+### 2026-11-10 code change and verification boundary
+
+- `transferBuildingCargoToMachine` now rejects exact committed replays before applying machine-input projection and rolls back the source, target, item projections, ownership journal and sequence when destination projection throws.
+- The browser fixture now asserts successful conveyor-to-machine transfer, transaction-key conflict rollback, exact replay rejection and exception rollback.
+- Isolated V8 execution of the fetched production helper with the actual ownership-runtime functions passed: success transfer, exact replay rejection and exception rollback (**3/3**). Factory and Playwright smoke source syntax compilation passed (**2/2**).
+- This is not the Node suite or a real Playwright run. No Actions run was returned for code checkpoint `ad114a4d18b42ef33ff1679efd593c3a4dbc0acf`; latest-head Node/browser status remains **UNVERIFIED**. The previously successful run [42433376139](https://github.com/Rockey-Jason/doldol-site/actions/runs/42433376139) belongs to earlier checkpoint `924c054555911aa38fe8e105c346f61231c0f8b4` and is not evidence for the new transfer code.
+- The mine-output-null browser regression remains asserted in `e2e/factory-smoke.mjs` after 81 fixed ticks; it passed in the earlier browser checkpoint but has not been rerun on the current code checkpoint.
+
+### Cross-PR and deployment boundary
+
+- Main is currently `a66f653b0ad597bfa6b2a0e900a4a8928dbce3fc`; PR #11 still has an old merge base and is 347 ahead / 254 behind. Do not use GitHub's mergeable flag as a safety proof.
+- PR #10 is open/non-draft and PR #9 is open/draft; their older catalog, factory, simulation, world, power, fluid, logistics and custody files were not blindly merged. PR #8 remains the separate Godot project and was not merged into the Three.js/WebGL game.
+- PR #11 remains draft/open. No main merge, Pages/Render deployment, production database mutation, production save mutation or real-user reward/balance change was performed.
