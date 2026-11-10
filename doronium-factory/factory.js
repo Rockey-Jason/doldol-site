@@ -2397,7 +2397,31 @@ if(E2E_MODE){
     const rejected=transferBuildingCargoToMachine(rollbackBelt,rollbackMachine,"item","CONVEYOR");
     const rollbackAfter=rebuildOwnershipLedger(S);
     const rollbackPreserved=rejected===false&&JSON.stringify(rollbackBelt.item)===JSON.stringify(originalItem)&&Object.keys(rollbackMachine.input||{}).length===0&&rollbackBelt.custodyTransferSequence===0&&rollbackAfter.valid;
-    return {...liveResult,rollbackBeforeValid:rollbackBefore.valid,conflictingTransactionRejected:rejected===false,rollbackPreserved};
+
+    S=freshState();S.runtime=createRuntimeState();S.inventory={};S.meta={};ensureItemStacks(S);S.tick=0;
+    const replayBelt={uid:"LIVE-INPUT-REPLAY-BELT",type:"belt",x:0,y:0,dir:1,item:{id:"ironOre",qty:1,meta:{quality:93,purity:94,synthetic:false},custodyStackID:"LIVE-REPLAY-STACK"},moveTimer:0,custodyTransferSequence:0};
+    const replayMachine={uid:"LIVE-INPUT-REPLAY-MACHINE",type:"smelter",x:1,y:0,input:{},inputMeta:{},status:"IDLE"};
+    S.buildings=[replayBelt,replayMachine];S.ownershipLedger=createOwnershipState();
+    const replayID="LOGISTICS_MACHINE_INPUT:"+replayBelt.uid+":0:1";
+    S.ownershipLedger.transactions[replayID]={status:"COMMITTED",request:{type:"TRANSFER",stackID:"LIVE-REPLAY-STACK",quantity:1,toType:"MACHINE_INPUT",toID:replayMachine.uid,expectedFromType:"CONVEYOR",expectedFromID:replayBelt.uid},result:{stackID:"LIVE-REPLAY-STACK",quantity:1,from:{type:"CONVEYOR",id:replayBelt.uid},to:{type:"MACHINE_INPUT",id:replayMachine.uid}}};
+    const replayBefore=rebuildOwnershipLedger(S),replayOriginal=structuredClone(replayBelt.item);
+    const replayResult=transferBuildingCargoToMachine(replayBelt,replayMachine,"item","CONVEYOR");
+    const replayAfter=rebuildOwnershipLedger(S);
+    const replayPreserved=replayResult===false&&JSON.stringify(replayBelt.item)===JSON.stringify(replayOriginal)&&Object.keys(replayMachine.input||{}).length===0&&replayBelt.custodyTransferSequence===0&&Object.keys(S.ownershipLedger.transactions).length===1&&replayAfter.valid;
+
+    S=freshState();S.runtime=createRuntimeState();S.inventory={};S.meta={};ensureItemStacks(S);S.tick=0;
+    const throwingBelt={uid:"LIVE-INPUT-THROW-BELT",type:"belt",x:0,y:0,dir:1,item:{id:"ironOre",qty:1,meta:{quality:92,purity:93,synthetic:false},custodyStackID:"LIVE-THROW-STACK"},moveTimer:0,custodyTransferSequence:0};
+    const throwingMachine={uid:"LIVE-INPUT-THROW-MACHINE",type:"smelter",x:1,y:0,input:Object.freeze({}),inputMeta:{},status:"IDLE"};
+    S.buildings=[throwingBelt,throwingMachine];
+    const throwBefore=rebuildOwnershipLedger(S),throwOriginal=structuredClone(throwingBelt.item),throwTxCount=Object.keys(S.ownershipLedger.transactions).length;
+    const throwResult=transferBuildingCargoToMachine(throwingBelt,throwingMachine,"item","CONVEYOR");
+    const throwAfter=rebuildOwnershipLedger(S);
+    const exceptionRollback=throwResult===false&&JSON.stringify(throwingBelt.item)===JSON.stringify(throwOriginal)&&Object.keys(throwingMachine.input||{}).length===0&&throwingBelt.custodyTransferSequence===0&&Object.keys(S.ownershipLedger.transactions).length===throwTxCount&&throwAfter.valid;
+    return {
+     ...liveResult,rollbackBeforeValid:rollbackBefore.valid,conflictingTransactionRejected:rejected===false,rollbackPreserved,
+     replayBeforeValid:replayBefore.valid,replayRejected:replayResult===false,replayPreserved,replayAfterValid:replayAfter.valid,
+     throwBeforeValid:throwBefore.valid,exceptionRejected:throwResult===false,exceptionRollback,throwAfterValid:throwAfter.valid
+    };
    }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
   },
   setupFluidNetworkTest(){
