@@ -167,7 +167,15 @@ try {
   assert.equal(conveyorToMachine.rollbackBeforeValid, true, "The rollback fixture must start with a valid custody snapshot");
   assert.equal(conveyorToMachine.conflictingTransactionRejected, true, "A conflicting transaction key must fail closed");
   assert.equal(conveyorToMachine.rollbackPreserved, true, "A rejected conveyor-to-machine transaction must preserve source cargo, target input and transaction sequence");
-   assert.equal(liveConveyorCustody.consumedCount, 0, "A logistics transfer must not be misrecorded as item consumption");
+  assert.equal(conveyorToMachine.replayBeforeValid, true, "The exact-replay fixture must start from valid custody");
+  assert.equal(conveyorToMachine.replayRejected, true, "An already-committed conveyor transfer must not apply its destination projection twice");
+  assert.equal(conveyorToMachine.replayPreserved, true, "An exact transaction replay must preserve source cargo, destination input and the journal");
+  assert.equal(conveyorToMachine.replayAfterValid, true, "The exact-replay rejection must leave valid custody");
+  assert.equal(conveyorToMachine.throwBeforeValid, true, "The exception fixture must start from valid custody");
+  assert.equal(conveyorToMachine.exceptionRejected, true, "A destination-buffer exception must reject the transfer instead of escaping the simulation tick");
+  assert.equal(conveyorToMachine.exceptionRollback, true, "A destination-buffer exception must roll back source cargo, ledger journal and sequence");
+  assert.equal(conveyorToMachine.throwAfterValid, true, "Exception rollback must leave a valid ownership snapshot");
+  assert.equal(liveConveyorCustody.consumedCount, 0, "A logistics transfer must not be misrecorded as item consumption");
    const ownershipGate = await desktop.evaluate(() => window.__doroniumFactoryTest.runOwnershipIntegrityGateTest());
   assert.equal(ownershipGate.tick, 10, "The ownership failure scenario must execute on the scheduled fixed-tick audit");
   assert.equal(ownershipGate.ownershipValid, false, "Duplicate live custody identifiers must fail the ownership snapshot");
