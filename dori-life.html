@@ -55,7 +55,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 .scene[data-event="rain"] .rain-fx{opacity:1}
 .scene[data-event="snow"] .snow-fx{opacity:1}
 .scene[data-event="rainbow"] .rainbow-fx{opacity:1}
-.scene[data-pose="sleep"] .sleep-z{opacity:1}
+.scene[data-pose="sleep"] .sleep-z{opacity:1}.scene #doriBed{opacity:0;transition:opacity .5s ease}.scene[data-pose="sleep"] #doriBed{opacity:1}
 #doriSprite{transform-box:fill-box;transform-origin:50% 80%;animation:doriBreath 4.8s ease-in-out infinite;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
 #doriBody,#doriHead,#doriTail,#doriEarLeft,#doriEarRight,#doriFrontPawNear,#doriFrontPawFar,#doriBackPawNear,#doriBackPawFar,#doriGroomPaw{transform-box:fill-box}
 #doriHead{transform-origin:58% 80%;animation:doriHeadIdle 6.2s ease-in-out infinite}
@@ -172,7 +172,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 .camera-corner.bl{bottom:15px;left:15px;border-width:0 0 1px 1px;border-radius:0 0 0 5px}
 .camera-corner.br{bottom:15px;right:15px;border-width:0 1px 1px 0;border-radius:0 0 5px}
 .camera-stamp{position:absolute;left:25px;bottom:22px;padding:8px 11px;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:rgba(24,29,30,.36);backdrop-filter:blur(8px);color:#fff5e5;font-size:10px;letter-spacing:.14em}
-.event-bubble{position:absolute;right:clamp(14px,3vw,36px);top:clamp(14px,3vw,30px);max-width:min(330px,52%);padding:12px 15px;border:1px solid rgba(255,255,255,.38);border-radius:16px;background:rgba(40,47,51,.63);backdrop-filter:blur(12px);box-shadow:0 12px 30px rgba(31,30,22,.16);color:#fff8eb;opacity:0;transform:translateY(-6px);transition:opacity .35s,transform .35s;pointer-events:none}
+.event-bubble{position:absolute;left:clamp(14px,3vw,36px);right:auto;top:clamp(14px,3vw,30px);max-width:min(310px,44%);padding:12px 15px;border:1px solid rgba(255,255,255,.38);border-radius:16px;background:rgba(40,47,51,.63);backdrop-filter:blur(12px);box-shadow:0 12px 30px rgba(31,30,22,.16);color:#fff8eb;opacity:0;transform:translateY(-6px);transition:opacity .35s,transform .35s;pointer-events:none}
 .event-bubble.show{opacity:1;transform:translateY(0)}
 .event-bubble strong{display:block;margin-bottom:4px;font-size:13px;font-weight:400}
 .event-bubble span{display:block;color:rgba(255,248,235,.82);font-size:11px;line-height:1.55}
@@ -297,8 +297,8 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
             <linearGradient id="sofa" x2="0" y2="1"><stop stop-color="#9b826f"/><stop offset="1" stop-color="#6d5a50"/></linearGradient>
             <linearGradient id="rug" x2="0" y2="1"><stop stop-color="#e7d4b9"/><stop offset="1" stop-color="#c8ad8e"/></linearGradient>
             <radialGradient id="lampGlow"><stop stop-color="#fff0b5" stop-opacity=".56"/><stop offset="1" stop-color="#fff0b5" stop-opacity="0"/></radialGradient>
-            <linearGradient id="corgiFur" x2="0" y2="1"><stop stop-color="#e6b16e"/><stop offset="1" stop-color="#b8793f"/></linearGradient>
-            <linearGradient id="corgiCream" x2="0" y2="1"><stop stop-color="#fff7e8"/><stop offset="1" stop-color="#e9d7b9"/></linearGradient>
+            <linearGradient id="corgiFur" x2="0" y2="1"><stop stop-color="#ffe6ad"/><stop offset=".54" stop-color="#f4cd88"/><stop offset="1" stop-color="#e5b46d"/></linearGradient>
+            <linearGradient id="corgiCream" x2="0" y2="1"><stop stop-color="#fffefa"/><stop offset="1" stop-color="#efe6d8"/></linearGradient>
             <filter id="softShadow" x="-30%" y="-30%" width="160%" height="180%"><feGaussianBlur stdDeviation="9"/></filter>
             <filter id="warmGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="22"/></filter>
           </defs>
@@ -428,192 +428,181 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
             <circle cx="0" cy="0" r="24" fill="#e6a96f"/><path d="M-20 -9 Q0 6 20 -9 M-11 -21 Q-5 -5 -11 19" stroke="#fff1d5" stroke-width="4" fill="none"/>
           </g>
 
-          <!-- Dori: clean side-profile Pembroke corgi doodle, proportioned like the reference -->
+          <!-- Dori: compact, soft and friendly Pembroke Welsh Corgi plush -->
           <g id="doriBed" opacity="0" pointer-events="none">
-            <ellipse cx="858" cy="607" rx="154" ry="18" fill="#594332" opacity=".16"/>
-            <rect x="711" y="515" width="294" height="112" rx="52" fill="#d5b998" stroke="#262626" stroke-width="5"/>
-            <rect x="727" y="525" width="262" height="87" rx="42" fill="#f8edda" stroke="#b99a78" stroke-width="3"/>
-            <ellipse cx="858" cy="552" rx="73" ry="24" fill="#fffaf0" stroke="#c8ad8c" stroke-width="3"/>
-            <path d="M755 584 Q818 601 879 585 T976 584" fill="none" stroke="#d5c0a3" stroke-width="3" stroke-linecap="round"/>
+            <ellipse cx="858" cy="608" rx="132" ry="14" fill="#594332" opacity=".13"/>
+            <rect x="720" y="516" width="276" height="108" rx="48" fill="#d5b998" stroke="#8e7359" stroke-width="4"/>
+            <rect x="734" y="526" width="248" height="85" rx="39" fill="#fbf2e5" stroke="#c4a889" stroke-width="2.5"/>
+            <ellipse cx="858" cy="551" rx="65" ry="18" fill="#fffdf7" opacity=".82"/>
+            <path d="M758 584 Q813 599 864 585 T962 584" fill="none" stroke="#dfc9ad" stroke-width="2.5" stroke-linecap="round"/>
           </g>
 
-          <g id="doriActor" transform="translate(660 405) scale(1.00)">
+          <g id="doriActor" transform="translate(660 425) scale(.90)">
+            <ellipse id="doriGroundShadow" cx="7" cy="86" rx="82" ry="7" fill="#49362d" opacity=".16" filter="url(#softShadow)"/>
             <g id="doriSprite">
-              <ellipse cx="15" cy="139" rx="145" ry="10" fill="#46372f" opacity=".16"/>
-              <g id="doriTorsoScale" transform="translate(-4 0) scale(1.12 1)">
-
-              <!-- tiny natural bobtail -->
+              <!-- tiny Pembroke bobtail -->
               <g id="doriTail" class="dori-part">
-                <path d="M139 -16 Q157 -34 172 -21 Q184 -10 174 3 Q163 16 149 6 Q141 1 139 -16Z"
-                  fill="#ffe6a8" stroke="#242424" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M75 -31 Q87 -46 100 -37 Q110 -29 101 -17 Q92 -8 80 -18 Q73 -23 75 -31Z"
+                  fill="url(#corgiFur)" stroke="#4b392f" stroke-width="5.2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M83 -29 Q91 -37 99 -33" fill="none" stroke="#fff0c7" stroke-width="2.8" stroke-linecap="round" opacity=".72"/>
               </g>
 
-              <!-- far legs behind the long body -->
-              <g id="doriBackPawFar" class="dori-part" transform="translate(105 49)">
-                <path d="M-10 0 Q-3 12 -5 27 L-7 43 Q-7 57 8 59 L27 58 Q40 55 34 43 L26 11 Q22 1 11 0Z"
-                  fill="#ffe6a8" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
-                <path d="M-5 43 Q12 50 34 42 L38 54 Q35 66 14 66 L-3 62Z"
-                  fill="#fffdf8" stroke="#242424" stroke-width="7" stroke-linejoin="round"/>
+              <!-- far short legs -->
+              <g id="doriBackPawFar" class="dori-part" transform="translate(59 8)">
+                <path d="M-7 0 Q-5 11 -7 25 L-8 43 Q-8 53 2 56 L11 56 Q20 54 18 44 L14 21 Q12 8 7 0Z"
+                  fill="url(#corgiFur)" stroke="#4b392f" stroke-width="4.8" stroke-linejoin="round"/>
+                <path d="M-8 39 Q3 46 18 39 L21 48 Q21 58 10 60 L1 60 Q-9 58 -8 48Z"
+                  fill="url(#corgiCream)" stroke="#4b392f" stroke-width="4.2" stroke-linejoin="round"/>
               </g>
-              <g id="doriFrontPawFar" class="dori-part" transform="translate(-46 46)">
-                <path d="M-9 0 Q-2 12 -4 27 L-7 43 Q-7 57 8 59 L27 58 Q40 55 34 43 L26 11 Q22 1 11 0Z"
-                  fill="#ffe6a8" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
-                <path d="M-5 43 Q12 50 34 42 L38 54 Q35 66 14 66 L-3 62Z"
-                  fill="#fffdf8" stroke="#242424" stroke-width="7" stroke-linejoin="round"/>
+              <g id="doriFrontPawFar" class="dori-part" transform="translate(-59 8)">
+                <path d="M-7 0 Q-5 11 -7 25 L-8 43 Q-8 53 2 56 L11 56 Q20 54 18 44 L14 21 Q12 8 7 0Z"
+                  fill="url(#corgiFur)" stroke="#4b392f" stroke-width="4.8" stroke-linejoin="round"/>
+                <path d="M-8 39 Q3 46 18 39 L21 48 Q21 58 10 60 L1 60 Q-9 58 -8 48Z"
+                  fill="url(#corgiCream)" stroke="#4b392f" stroke-width="4.2" stroke-linejoin="round"/>
               </g>
 
-              <!-- long, low Pembroke body -->
+              <!-- long, low and softly rounded body -->
               <g id="doriBody" class="dori-part">
-                <path d="M-72 -26
-                  Q-49 -52 -10 -53
-                  L91 -47
-                  Q140 -43 159 -10
-                  Q174 18 163 57
-                  Q156 91 128 99
-                  Q111 105 88 101
-                  L-43 98
-                  Q-83 96 -101 65
-                  Q-115 33 -98 0
-                  Q-89 -17 -72 -26Z"
-                  fill="#ffe6a8" stroke="#242424" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
-
-                <!-- white bib and belly flowing into the face -->
-                <path d="M-94 24
-                  Q-75 7 -55 18
-                  Q-37 27 -36 51
-                  Q-35 78 -15 89
-                  Q16 106 58 96
-                  Q83 89 105 88
-                  Q129 88 157 67
-                  Q155 93 130 101
-                  Q111 108 86 104
-                  L-45 102
-                  Q-83 99 -101 68
-                  Q-108 44 -94 24Z"
-                  fill="#fffdf8"/>
-                <path d="M-15 92 Q28 101 68 91" fill="none" stroke="#f6d996" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>
+                <path d="M-78 -35
+                  Q-64 -56 -34 -58
+                  L46 -54
+                  Q80 -52 96 -28
+                  Q109 -7 98 23
+                  Q90 51 65 58
+                  Q38 65 4 59
+                  L-53 57
+                  Q-84 55 -98 31
+                  Q-109 8 -98 -16
+                  Q-91 -30 -78 -35Z"
+                  fill="url(#corgiFur)" stroke="#4b392f" stroke-width="5.7" stroke-linejoin="round"/>
+                <path d="M-91 -5
+                  Q-75 -22 -59 -15
+                  Q-45 -8 -42 13
+                  Q-39 36 -24 49
+                  Q-4 63 31 56
+                  Q50 52 68 43
+                  Q61 59 39 63
+                  L-47 60
+                  Q-80 56 -97 29
+                  Q-103 9 -91 -5Z"
+                  fill="url(#corgiCream)"/>
+                <path d="M-63 -42 Q-17 -56 42 -48" fill="none" stroke="#fff4d8" stroke-width="3" opacity=".64" stroke-linecap="round"/>
+                <path d="M21 -40 Q52 -40 70 -26" fill="none" stroke="#d9a35d" stroke-width="2.3" opacity=".35" stroke-linecap="round"/>
+                <path d="M42 32 Q60 28 75 17" fill="none" stroke="#f9dfa9" stroke-width="2.5" opacity=".55" stroke-linecap="round"/>
               </g>
 
-              <!-- short near legs with white socks -->
-              <g id="doriBackPawNear" class="dori-part" transform="translate(91 54)">
-                <path d="M-10 0 Q-3 12 -5 27 L-7 43 Q-7 57 8 59 L27 58 Q40 55 34 43 L26 11 Q22 1 11 0Z"
-                  fill="#ffe6a8" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
-                <path d="M-5 43 Q12 50 34 42 L38 54 Q35 66 14 66 L-3 62Z"
-                  fill="#fffdf8" stroke="#242424" stroke-width="7" stroke-linejoin="round"/>
+              <!-- near legs: very short, rounded paws with cream socks -->
+              <g id="doriBackPawNear" class="dori-part" transform="translate(75 17)">
+                <path d="M-7 0 Q-5 11 -7 25 L-8 43 Q-8 53 2 56 L11 56 Q20 54 18 44 L14 21 Q12 8 7 0Z"
+                  fill="url(#corgiFur)" stroke="#4b392f" stroke-width="4.8" stroke-linejoin="round"/>
+                <path d="M-8 39 Q3 46 18 39 L21 48 Q21 58 10 60 L1 60 Q-9 58 -8 48Z"
+                  fill="url(#corgiCream)" stroke="#4b392f" stroke-width="4.2" stroke-linejoin="round"/>
+                <path d="M1 54 Q5 56 9 54" fill="none" stroke="#d7c8b6" stroke-width="1.8" stroke-linecap="round"/>
               </g>
-              <g id="doriFrontPawNear" class="dori-part" transform="translate(-64 50)">
-                <path d="M-10 0 Q-3 12 -5 27 L-7 43 Q-7 57 8 59 L27 58 Q40 55 34 43 L26 11 Q22 1 11 0Z"
-                  fill="#ffe6a8" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
-                <path d="M-5 43 Q12 50 34 42 L38 54 Q35 66 14 66 L-3 62Z"
-                  fill="#fffdf8" stroke="#242424" stroke-width="7" stroke-linejoin="round"/>
-                <path d="M7 76 l5 1 M20 76 l5 -1" fill="none" stroke="#d8c9b7" stroke-width="2.2" stroke-linecap="round"/>
+              <g id="doriFrontPawNear" class="dori-part" transform="translate(-40 17)">
+                <path d="M-7 0 Q-5 11 -7 25 L-8 43 Q-8 53 2 56 L11 56 Q20 54 18 44 L14 21 Q12 8 7 0Z"
+                  fill="url(#corgiFur)" stroke="#4b392f" stroke-width="4.8" stroke-linejoin="round"/>
+                <path d="M-8 39 Q3 46 18 39 L21 48 Q21 58 10 60 L1 60 Q-9 58 -8 48Z"
+                  fill="url(#corgiCream)" stroke="#4b392f" stroke-width="4.2" stroke-linejoin="round"/>
+                <path d="M1 54 Q5 56 9 54" fill="none" stroke="#d7c8b6" stroke-width="1.8" stroke-linecap="round"/>
               </g>
 
-              <!-- head: upright ears, tapered muzzle, white facial marking -->
-              </g><!-- longer torso and short-legged silhouette -->
-              <g id="doriHeadScale" transform="translate(-14 -4) scale(.78 .82)">
+              <!-- round corgi face and short, upright ears -->
               <g id="doriHead" class="dori-part">
                 <g id="doriEarLeft" class="dori-part">
-                  <path d="M-91 -125
-                    Q-105 -160 -99 -205
-                    Q-95 -242 -75 -247
-                    Q-51 -251 -41 -221
-                    Q-32 -191 -37 -150
-                    Q-56 -131 -91 -125Z"
-                    fill="#ffe6a8" stroke="#242424" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M-82 -151 Q-91 -193 -78 -226 Q-59 -207 -55 -171 L-61 -145Z"
-                    fill="#f7d48f"/>
+                  <path d="M-72 -145 Q-85 -167 -80 -190 Q-76 -205 -62 -201 Q-47 -197 -43 -179 Q-40 -162 -49 -143Z"
+                    fill="url(#corgiFur)" stroke="#4b392f" stroke-width="5.4" stroke-linejoin="round"/>
+                  <path d="M-68 -154 Q-77 -176 -72 -195 Q-59 -192 -54 -174 L-56 -151Z"
+                    fill="#e7a3a0" opacity=".9"/>
+                  <path d="M-70 -160 Q-74 -180 -68 -190" fill="none" stroke="#fff1ca" stroke-width="2.7" stroke-linecap="round" opacity=".55"/>
                 </g>
                 <g id="doriEarRight" class="dori-part">
-                  <path d="M-9 -144
-                    Q7 -188 44 -216
-                    Q77 -241 96 -217
-                    Q113 -193 94 -158
-                    Q77 -129 44 -105Z"
-                    fill="#ffe6a8" stroke="#242424" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
-                  <path d="M18 -157 Q44 -202 75 -222 Q83 -191 61 -158 L41 -130Z"
-                    fill="#f7d48f"/>
+                  <path d="M-4 -151 Q1 -176 20 -193 Q36 -205 46 -191 Q54 -177 41 -155 Q30 -139 14 -129Z"
+                    fill="url(#corgiFur)" stroke="#4b392f" stroke-width="5.4" stroke-linejoin="round"/>
+                  <path d="M8 -154 Q16 -177 35 -191 Q39 -178 28 -158 L16 -141Z"
+                    fill="#e7a3a0" opacity=".86"/>
                 </g>
 
-                <path d="M-110 -139
-                  Q-102 -178 -69 -190
-                  Q-40 -201 -12 -185
-                  Q20 -201 52 -179
-                  Q85 -155 82 -116
-                  Q80 -75 52 -47
-                  Q25 -19 -15 -22
-                  Q-58 -25 -88 -57
-                  Q-117 -89 -110 -139Z"
-                  fill="#ffe6a8" stroke="#242424" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M-86 -113
+                  Q-90 -145 -63 -164
+                  Q-42 -180 -11 -169
+                  Q17 -173 37 -151
+                  Q57 -128 48 -96
+                  Q43 -63 18 -44
+                  Q-9 -27 -43 -40
+                  Q-76 -53 -86 -83
+                  Q-92 -99 -86 -113Z"
+                  fill="url(#corgiFur)" stroke="#4b392f" stroke-width="5.8" stroke-linejoin="round"/>
 
-                <!-- white blaze and cheek that blend into the chest -->
-                <path d="M-53 -190
-                  Q-35 -177 -40 -151
-                  Q-45 -127 -60 -111
-                  Q-75 -95 -78 -77
-                  Q-79 -55 -61 -43
-                  Q-42 -31 -20 -42
-                  Q-2 -51 5 -70
-                  Q-17 -98 -8 -125
-                  Q2 -155 -13 -181
-                  Q-34 -195 -53 -190Z"
-                  fill="#fffdf8"/>
-                <path d="M-99 -101
-                  Q-119 -112 -137 -98
-                  Q-154 -84 -143 -64
-                  Q-134 -47 -111 -49
-                  Q-89 -50 -79 -68
-                  Q-68 -87 -82 -100
-                  Q-90 -106 -99 -101Z"
-                  fill="#fffdf8" stroke="#242424" stroke-width="8" stroke-linejoin="round"/>
-                <path d="M-104 -52
-                  Q-91 -33 -68 -39
-                  Q-48 -43 -39 -62"
-                  fill="none" stroke="#fffdf8" stroke-width="13" stroke-linecap="round"/>
+                <!-- white blaze down the forehead, plus a soft cream muzzle -->
+                <path d="M-25 -166
+                  Q-10 -154 -12 -134
+                  Q-13 -116 -24 -99
+                  Q-37 -81 -34 -65
+                  Q-31 -52 -15 -45
+                  Q-32 -43 -46 -56
+                  Q-59 -70 -54 -88
+                  Q-50 -106 -39 -124
+                  Q-34 -143 -40 -158
+                  Q-34 -168 -25 -166Z"
+                  fill="url(#corgiCream)"/>
+                <path d="M-58 -96 Q-76 -102 -88 -90
+                  Q-97 -77 -87 -64
+                  Q-78 -52 -61 -55
+                  Q-45 -58 -40 -72
+                  Q-37 -86 -47 -93
+                  Q-52 -97 -58 -96Z"
+                  fill="url(#corgiCream)" stroke="#4b392f" stroke-width="4.2" stroke-linejoin="round"/>
+                <path d="M-69 -78 Q-60 -70 -49 -77" fill="none" stroke="#d7cabb" stroke-width="2" stroke-linecap="round"/>
 
-                <!-- small dot eyes, like the supplied drawing -->
                 <g id="doriEyes">
-                  <g class="dori-eye-open" fill="#242424">
-                    <circle cx="-72" cy="-137" r="8.5"/>
-                    <circle cx="22" cy="-130" r="8.5"/>
+                  <g class="dori-eye-open">
+                    <ellipse cx="-51" cy="-119" rx="6.2" ry="7.8" fill="#382721"/>
+                    <ellipse cx="7" cy="-122" rx="6.2" ry="7.8" fill="#382721"/>
+                    <circle cx="-53" cy="-123" r="2.2" fill="#fff"/>
+                    <circle cx="5" cy="-126" r="2.2" fill="#fff"/>
                   </g>
-                  <g class="dori-eye-closed" fill="none" stroke="#242424" stroke-width="7" stroke-linecap="round">
-                    <path d="M-84 -136 Q-72 -126 -60 -136"/>
-                    <path d="M10 -129 Q22 -119 34 -129"/>
+                  <g class="dori-eye-closed" fill="none" stroke="#4b392f" stroke-width="4.5" stroke-linecap="round">
+                    <path d="M-59 -118 Q-51 -111 -43 -118"/>
+                    <path d="M-1 -121 Q7 -114 15 -121"/>
                   </g>
                 </g>
 
-                <!-- button nose and gentle smile -->
+                <ellipse cx="-72" cy="-70" rx="7" ry="4" fill="#eeb0a5" opacity=".62"/>
+                <ellipse cx="22" cy="-77" rx="6.5" ry="3.8" fill="#eeb0a5" opacity=".54"/>
+
                 <g id="doriMouth">
-                  <ellipse cx="-143" cy="-79" rx="9.5" ry="7.5" fill="#242424"/>
-                  <path class="dori-smile-mouth" d="M-140 -70 Q-133 -57 -117 -59 Q-106 -60 -101 -72"
-                    fill="none" stroke="#242424" stroke-width="7" stroke-linecap="round"/>
-                  <ellipse class="dori-yawn-mouth" cx="-119" cy="-60" rx="8" ry="11" fill="#242424" opacity="0"/>
-                  <path class="dori-tongue" d="M-125 -55 Q-117 -42 -109 -55 Q-108 -39 -117 -39 Q-127 -42 -125 -55Z"
-                    fill="#f0a2a1" stroke="#242424" stroke-width="3"/>
-                  <g fill="#242424"><circle cx="-120" cy="-90" r="2.1"/><circle cx="-111" cy="-87" r="1.8"/></g>
+                  <ellipse cx="-90" cy="-81" rx="6.1" ry="4.8" fill="#382721"/>
+                  <path class="dori-smile-mouth" d="M-87 -75 Q-81 -63 -69 -65 Q-61 -66 -57 -75"
+                    fill="none" stroke="#4b392f" stroke-width="3.8" stroke-linecap="round"/>
+                  <path class="dori-tongue" d="M-77 -63 Q-71 -50 -64 -63 Q-64 -50 -71 -49 Q-79 -51 -77 -63Z"
+                    fill="#e88f98" stroke="#4b392f" stroke-width="2"/>
+                  <ellipse class="dori-yawn-mouth" cx="-71" cy="-63" rx="5.5" ry="8" fill="#59332e" opacity="0"/>
                 </g>
+
+                <path d="M-47 -157 Q-27 -165 -5 -157 M25 -145 Q37 -137 39 -124"
+                  fill="none" stroke="#fff0c8" stroke-width="2.4" stroke-linecap="round" opacity=".55"/>
               </g>
-              </g><!-- head proportion wrapper -->
 
-
-              <!-- simple collar and tiny bell -->
+              <!-- simple cream collar and a tiny golden bell -->
               <g id="doriCollar" class="dori-part">
-                <path d="M-44 -22 Q-17 -7 9 -22 L6 -5 Q-17 10 -41 -6Z"
-                  fill="#fffdf8" stroke="#242424" stroke-width="5" stroke-linejoin="round"/>
-                <circle cx="-17" cy="8" r="6" fill="#f1cf7d" stroke="#242424" stroke-width="3"/>
+                <path d="M-52 -43 Q-24 -25 4 -42 L1 -30 Q-24 -13 -49 -32Z"
+                  fill="#fffdf8" stroke="#4b392f" stroke-width="3.2" stroke-linejoin="round"/>
+                <circle cx="-23" cy="-21" r="5.2" fill="#e6c16e" stroke="#4b392f" stroke-width="2.5"/>
+                <circle cx="-24.5" cy="-22.5" r="1.5" fill="#fff2c6"/>
               </g>
 
-              <g id="doriGroomPaw" class="dori-part" transform="translate(-48 52)" opacity="0">
-                <path d="M-8 38 Q-17 19 -8 0 Q0 -11 14 -2 Q23 8 15 27 L11 42Z"
-                  fill="#ffe6a8" stroke="#242424" stroke-width="7"/>
-                <path d="M-7 31 Q4 36 17 28 L19 39 Q13 47 -2 43Z"
-                  fill="#fffdf8" stroke="#242424" stroke-width="6"/>
+              <g id="doriGroomPaw" class="dori-part" transform="translate(-39 17)" opacity="0">
+                <path d="M-8 48 Q-15 32 -9 10 Q-4 -3 7 1 Q18 6 14 24 L12 48Z"
+                  fill="url(#corgiFur)" stroke="#4b392f" stroke-width="4.5"/>
+                <path d="M-8 40 Q4 45 15 38 L18 49 Q13 56 0 55 Q-10 53 -8 40Z"
+                  fill="url(#corgiCream)" stroke="#4b392f" stroke-width="3.5"/>
               </g>
-              <g id="sleepZ" class="sleep-z" fill="#242424" font-size="24" font-weight="700">
-                <text x="82" y="-182">Z</text><text x="105" y="-204" font-size="17">z</text>
+
+              <g id="sleepZ" class="sleep-z" fill="#5b4737" font-size="20" font-weight="700">
+                <text x="73" y="-133">Z</text><text x="93" y="-153" font-size="14">z</text>
               </g>
-              <g id="yawnMarks" opacity="0" fill="#242424" font-size="21"><text x="-154" y="-120">…</text></g>
+              <g id="yawnMarks" opacity="0" fill="#5b4737" font-size="18"><text x="-122" y="-127">…</text></g>
             </g>
           </g>
 
@@ -876,7 +865,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   var doriActor = document.getElementById('doriActor');
   var friendBread = document.getElementById('friendBread');
   var friendIsHere = false;
-  if(doriActor){doriActor._doriPosition={x:660,y:405,s:1.12};}
+  if(doriActor){doriActor._doriPosition={x:660,y:425,s:.90};}
   if(friendBread){friendBread._doriPosition={x:1240,y:520,s:.88};friendBread.style.opacity='0';}
 
   function tweenSvgPosition(el,target,duration,done){
@@ -902,18 +891,18 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   }
   function doriDestination(state,now){
     var pose=state.pose||'idle';
-    if(pose==='sleep')return {x:858,y:392,s:.88,key:'sleep-bed'};
-    if(pose==='eat')return {x:795,y:405,s:1.02,key:'food-bowl'};
-    if(pose==='alert')return {x:900,y:400,s:1.00,key:'window-watch'};
-    if(pose==='play')return {x:700,y:405,s:1.08,key:'rug-play'};
-    if(pose==='dance')return {x:670,y:405,s:1.08,key:'dance-center'};
+    if(pose==='sleep')return {x:858,y:448,s:.82,key:'sleep-bed'};
+    if(pose==='eat')return {x:795,y:425,s:.88,key:'food-bowl'};
+    if(pose==='alert')return {x:900,y:425,s:.88,key:'window-watch'};
+    if(pose==='play')return {x:700,y:425,s:.92,key:'rug-play'};
+    if(pose==='dance')return {x:670,y:425,s:.92,key:'dance-center'};
     if(pose==='walk'){
-      var stops=[{x:555,y:405,s:1.00},{x:710,y:405,s:1.04},{x:845,y:405,s:.98},{x:680,y:405,s:1.06}];
+      var stops=[{x:555,y:425,s:.86},{x:710,y:425,s:.90},{x:845,y:425,s:.85},{x:680,y:425,s:.91}];
       var stop=stops[Math.floor(now.getTime()/5200)%stops.length];
       return {x:stop.x,y:stop.y,s:stop.s,key:'walk-'+Math.floor(now.getTime()/5200)%stops.length};
     }
-    if(pose==='sniff')return {x:780,y:405,s:1.02,key:'sniff-rug'};
-    return {x:660,y:405,s:1.08,key:'home-center'};
+    if(pose==='sniff')return {x:780,y:425,s:.88,key:'sniff-rug'};
+    return {x:660,y:425,s:.90,key:'home-center'};
   }
   function updateDoriMovement(state,now){
     var target=doriDestination(state,now);
