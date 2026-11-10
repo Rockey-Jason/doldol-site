@@ -832,27 +832,36 @@ function transferBuildingCargoToMachine(source,target,sourceField,fromType){
   dirty=snapshot.dirty;
  };
  const tx=nextCargoTransactionID(source,"LOGISTICS_MACHINE_INPUT");
- const moved=transferCustody(S.ownershipLedger,{
-  transactionID:tx.transactionID,stackID,quantity,toType:"MACHINE_INPUT",toID:targetUID,
-  expectedFromType:fromType,expectedFromID:sourceUID
- });
- if(!moved){source.custodyTransferSequence=snapshot.sourceSequence;return false}
- const metadata=item.meta||{};
- addInput(target,item.id,quantity,{
-  quality:clamp(metadata.quality??90,0,100),
-  purity:clamp(metadata.purity??90,0,100),
-  synthetic:metadata.synthetic===true
- });
- if(sourceField==="output"){
-  if(!clearCompletionBuffer(source)){restore();return false}
-  source.status="IDLE";
- }else source.item=null;
- source.logisticsStatus="TRANSFERRED";
- target.status="WAITING_INPUT";
- const afterAudit=rebuildOwnershipLedger(S);
- if(!afterAudit.valid){restore();return false}
- markDirty();
- return {ok:true,stackID,quantity,itemID:canonicalItemID(item.id),transactionID:tx.transactionID};
+ try{
+  const moved=transferCustody(S.ownershipLedger,{
+   transactionID:tx.transactionID,stackID,quantity,toType:"MACHINE_INPUT",toID:targetUID,
+   expectedFromType:fromType,expectedFromID:sourceUID
+  });
+  // A replay is evidence that this transaction already committed. Never apply
+  // its projection a second time when the source snapshot is stale.
+  if(!moved||moved.duplicate){source.custodyTransferSequence=snapshot.sourceSequence;return false}
+  const metadata=item.meta||{};
+  addInput(target,item.id,quantity,{
+   quality:clamp(metadata.quality??90,0,100),
+   purity:clamp(metadata.purity??90,0,100),
+   synthetic:metadata.synthetic===true
+  });
+  if(sourceField==="output"){
+   if(!clearCompletionBuffer(source)){restore();return false}
+   source.status="IDLE";
+  }else source.item=null;
+  source.logisticsStatus="TRANSFERRED";
+  target.status="WAITING_INPUT";
+  const afterAudit=rebuildOwnershipLedger(S);
+  if(!afterAudit.valid){restore();return false}
+  markDirty();
+  return {ok:true,stackID,quantity,itemID:canonicalItemID(item.id),transactionID:tx.transactionID};
+ }catch{
+  // Restore the source projection, destination buffer, transaction journal,
+  // item-stack metadata and sequence counter as one failed transfer.
+  restore();
+  return false;
+ }
 }
 
 function consumeBuildingCargoForSale(source,sourceField,ownerType){
