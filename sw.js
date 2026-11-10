@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v36-cross-platform-links-20261106";
+const CACHE_NAME = "doldol-site-pwa-v37-dori-life-20261110";
 const SITE_SCOPE = new URL(self.registration.scope);
 const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
@@ -6,6 +6,8 @@ const APP_SHELL = [
   scopedUrl("index.html"),
   scopedUrl("rockey-study.html"),
   scopedUrl("rockey-study-periodic.html"),
+  scopedUrl("rockeynews.html"),
+  scopedUrl("dori-life.html"),
   scopedUrl("assets/dori-mascot.webp"),
   scopedUrl("rockey-time-attack.html"),
   scopedUrl("rockey-study-planner.html"),
