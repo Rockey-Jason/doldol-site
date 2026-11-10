@@ -437,7 +437,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
             <path d="M758 584 Q813 599 864 585 T962 584" fill="none" stroke="#dfc9ad" stroke-width="2.5" stroke-linecap="round"/>
           </g>
 
-          <g id="doriActor" transform="translate(660 425) scale(.90)">
+          <g id="doriActor" transform="translate(660 432) scale(.90)">
             <ellipse id="doriGroundShadow" cx="7" cy="86" rx="82" ry="7" fill="#49362d" opacity=".16" filter="url(#softShadow)"/>
             <g id="doriSprite">
               <!-- tiny Pembroke bobtail -->
@@ -865,7 +865,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   var doriActor = document.getElementById('doriActor');
   var friendBread = document.getElementById('friendBread');
   var friendIsHere = false;
-  if(doriActor){doriActor._doriPosition={x:660,y:425,s:.90};}
+  if(doriActor){doriActor._doriPosition={x:660,y:432,s:.90};}
   if(friendBread){friendBread._doriPosition={x:1240,y:520,s:.88};friendBread.style.opacity='0';}
 
   function tweenSvgPosition(el,target,duration,done){
@@ -891,18 +891,18 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   }
   function doriDestination(state,now){
     var pose=state.pose||'idle';
-    if(pose==='sleep')return {x:858,y:448,s:.82,key:'sleep-bed'};
-    if(pose==='eat')return {x:795,y:425,s:.88,key:'food-bowl'};
-    if(pose==='alert')return {x:900,y:425,s:.88,key:'window-watch'};
-    if(pose==='play')return {x:700,y:425,s:.92,key:'rug-play'};
-    if(pose==='dance')return {x:670,y:425,s:.92,key:'dance-center'};
+    if(pose==='sleep')return {x:858,y:453,s:.82,key:'sleep-bed'};
+    if(pose==='eat')return {x:795,y:432,s:.88,key:'food-bowl'};
+    if(pose==='alert')return {x:900,y:432,s:.88,key:'window-watch'};
+    if(pose==='play')return {x:700,y:432,s:.92,key:'rug-play'};
+    if(pose==='dance')return {x:670,y:432,s:.92,key:'dance-center'};
     if(pose==='walk'){
-      var stops=[{x:555,y:425,s:.86},{x:710,y:425,s:.90},{x:845,y:425,s:.85},{x:680,y:425,s:.91}];
+      var stops=[{x:555,y:432,s:.86},{x:710,y:432,s:.90},{x:845,y:432,s:.85},{x:680,y:432,s:.91}];
       var stop=stops[Math.floor(now.getTime()/5200)%stops.length];
       return {x:stop.x,y:stop.y,s:stop.s,key:'walk-'+Math.floor(now.getTime()/5200)%stops.length};
     }
-    if(pose==='sniff')return {x:780,y:425,s:.88,key:'sniff-rug'};
-    return {x:660,y:425,s:.90,key:'home-center'};
+    if(pose==='sniff')return {x:780,y:432,s:.88,key:'sniff-rug'};
+    return {x:660,y:432,s:.90,key:'home-center'};
   }
   function updateDoriMovement(state,now){
     var target=doriDestination(state,now);
