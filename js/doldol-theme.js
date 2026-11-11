@@ -241,7 +241,7 @@
   /* Account-wide Random Box background: read the authenticated user's equipped_background. */
   (() => {
     const PROJECT_URL = "https://scttowfhygcpdirrekqm.supabase.co";
-    const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwiaWF0IjoxNzgwMTk4NDI2LCJleHAiOjIwOTU3NzQ0MjZ9.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+    const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
     if (!document.getElementById("dori-site-background-style")) {
       const style = document.createElement("style");
       style.id = "dori-site-background-style";
