@@ -287,7 +287,16 @@ button:focus-visible{
 #돌이프로필프레임[data-frame]{border:5px solid #d6b66e;box-shadow:inset 0 0 0 2px #fff,0 0 0 2px rgba(214,182,110,.55),0 0 22px rgba(214,182,110,.45)}
 #돌이프로필프레임[data-frame*="DIAMOND"]{border-color:#85dcff;box-shadow:inset 0 0 0 2px #e9fbff,0 0 0 2px #4384ad,0 0 22px rgba(90,190,255,.65)}
 #돌이프로필프레임[data-frame*="ROYAL"]{border-color:#e9c86d;box-shadow:inset 0 0 0 2px #fff4c9,0 0 0 2px #9b7435,0 0 22px rgba(233,200,109,.65)}
-@media(max-width:600px){#돌이프로필고정틀{top:12px;right:12px;width:52px;height:52px}#돌이프로필프레임{inset:-4px}}
+#돌이프로필꾸미기{position:absolute;right:-5px;bottom:-13px;z-index:5;display:flex;align-items:center;gap:2px;max-width:126px;flex-wrap:wrap;pointer-events:none}
+#돌이프로필꾸미기 span{display:grid;place-items:center;width:17px;height:17px;border:1px solid rgba(255,255,255,.3);border-radius:50%;background:rgba(10,15,40,.92);font-size:10px;line-height:1;box-shadow:0 3px 9px rgba(0,0,0,.3)}
+#돌이사진[data-skin*="RARE"]{filter:saturate(1.22) contrast(1.04)}
+#돌이사진[data-skin*="LEGENDARY"],#돌이사진[data-skin*="MYTHIC"]{filter:saturate(1.38) brightness(1.05) contrast(1.06)}
+#돌이프로필고정틀[data-background*="DORONIUM"]{filter:drop-shadow(0 0 9px rgba(75,210,255,.65))}
+#돌이프로필고정틀[data-background*="DORI"]{filter:drop-shadow(0 0 8px rgba(255,215,140,.55))}
+#돌이프로필고정틀[data-background*="LEGENDARY"],#돌이프로필고정틀[data-background*="MYTHIC"]{filter:drop-shadow(0 0 10px rgba(185,133,255,.7))}
+#돌이프로필고정틀[data-background*="RARE"]{filter:drop-shadow(0 0 8px rgba(100,165,255,.65))}
+#돌이프로필고정틀[data-effect] #돌이사진{box-shadow:0 0 0 3px rgba(139,154,255,.22),0 0 22px rgba(125,141,255,.55),0 10px 35px rgba(0,0,0,.35)}
+@media(max-width:600px){#돌이프로필고정틀{top:12px;right:12px;width:52px;height:52px}#돌이프로필프레임{inset:-4px}#돌이프로필꾸미기{right:-4px;bottom:-12px}}
 
 /* Membership coupon VIP profile effects */
 body.vip-profile-basic{--vip-color:#67ddff;--vip-soft:rgba(64,205,255,.26)}
@@ -2269,6 +2278,7 @@ body.로그인상태 #회원가입 {
   <div id="돌이프로필고정틀" aria-label="내 프로필">
     <img id="돌이사진" src="https://i.postimg.cc/qB2wnCCq/1000004618-(2).png" alt="돌이 프로필">
     <span id="돌이프로필프레임" aria-hidden="true"></span>
+    <span id="돌이프로필꾸미기" aria-label="장착한 꾸미기 아이템"></span>
   </div>
 
   <div id="메뉴">
@@ -2408,21 +2418,61 @@ const supabase = window.doriSupabase || createClient(
 // 업적 모듈과 동일한 인증 세션/클라이언트를 공유
 window.doriSupabase = supabase;
 
-// 계정에 저장된 프로필 프레임을 일반 사이트 프로필에 동기화
+// 계정에 저장된 랜덤 박스 꾸미기를 사이트 프로필에도 적용
 (async()=>{
   try{
     const {data:{session}}=await supabase.auth.getSession();
     if(!session)return;
-    const {data,error}=await supabase.from("dori_site_customization").select("equipped_frame").eq("user_id",session.user.id).maybeSingle();
+    const {data,error}=await supabase
+      .from("dori_site_customization")
+      .select("equipped_hat,equipped_glasses,equipped_clothes,equipped_cape,equipped_background,equipped_skin,equipped_effect,equipped_frame")
+      .eq("user_id",session.user.id)
+      .maybeSingle();
     if(error)throw error;
-    const selected=data?.equipped_frame;
-    const frame=selected&&typeof selected==="object"?selected.item_code:selected;
-    const frameNode=document.getElementById("돌이프로필프레임");
-    if(frameNode&&frame){
-      frameNode.dataset.frame=String(frame).toUpperCase();
-      frameNode.title=selected?.item_name||"장착한 프로필 프레임";
+    const codeOf=value=>String(value&&typeof value==="object"?value.item_code||"":value||"").toUpperCase();
+    const fields=[
+      ["equipped_hat","🎩","모자"],
+      ["equipped_glasses","👓","안경"],
+      ["equipped_clothes","👕","옷"],
+      ["equipped_cape","🦸","망토"]
+    ];
+    const decorations=document.getElementById("돌이프로필꾸미기");
+    if(decorations){
+      decorations.replaceChildren();
+      fields.forEach(([field,emoji,label])=>{
+        const code=codeOf(data?.[field]);
+        if(!code)return;
+        const chip=document.createElement("span");
+        chip.textContent=emoji;
+        chip.title=label+" · "+code;
+        decorations.appendChild(chip);
+      });
     }
-  }catch(error){console.warn("프로필 프레임을 불러오지 못했습니다:",error);}
+    const avatar=document.getElementById("돌이사진");
+    const frameNode=document.getElementById("돌이프로필프레임");
+    if(avatar){
+      ["skin","effect"].forEach(key=>{
+        const code=codeOf(data?.["equipped_"+key]);
+        if(code)avatar.dataset[key]=code; else delete avatar.dataset[key];
+      });
+    }
+    const wrap=document.getElementById("돌이프로필고정틀");
+    if(wrap){
+      const code=codeOf(data?.equipped_background);
+      if(code)wrap.dataset.background=code; else delete wrap.dataset.background;
+    }
+    const selected=data?.equipped_frame;
+    const frame=codeOf(selected);
+    if(frameNode){
+      if(frame){
+        frameNode.dataset.frame=frame;
+        frameNode.title=(selected&&typeof selected==="object"&&selected.item_name)||"장착한 프로필 프레임";
+      }else{
+        delete frameNode.dataset.frame;
+        frameNode.removeAttribute("title");
+      }
+    }
+  }catch(error){console.warn("프로필 꾸미기를 불러오지 못했습니다:",error);}
 })();
 
 
