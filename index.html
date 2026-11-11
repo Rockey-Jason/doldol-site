@@ -2009,6 +2009,17 @@ body.로그인상태 #회원가입 {
 </style>
 
 <link rel="stylesheet" href="css/dori-convenience.css?v=20261111-1">
+<style id="doriFeedbackHomeBanner">
+.dori-feedback-home-link{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:-28px 0 30px;padding:16px 18px;border:1px solid rgba(119,188,233,.24);border-radius:17px;background:radial-gradient(circle at 0 50%,rgba(76,156,206,.13),transparent 43%),linear-gradient(110deg,rgba(15,42,69,.88),rgba(8,17,39,.82));box-shadow:0 12px 36px rgba(0,0,0,.16)}
+.dori-feedback-home-copy{display:flex;flex-direction:column;gap:4px;min-width:0}
+.dori-feedback-home-kicker{color:#8dcdf3;font:700 8px/1.2 Arial,sans-serif;letter-spacing:.18em}
+.dori-feedback-home-copy strong{color:#f0f7ff;font-size:14px;font-weight:400}
+.dori-feedback-home-copy small{color:#a4b9cf;font-size:10px;line-height:1.6}
+.dori-feedback-home-link>a{display:inline-flex;align-items:center;justify-content:center;gap:12px;min-height:38px;flex:0 0 auto;padding:8px 13px;border:1px solid rgba(122,193,241,.36);border-radius:11px;color:#e8f6ff;background:rgba(34,91,133,.33);text-decoration:none;font-size:11px}
+.dori-feedback-home-link>a:hover{border-color:rgba(164,218,255,.7);background:rgba(41,115,162,.45)}
+.dori-feedback-home-link>a span{font-size:15px}
+@media(max-width:650px){.dori-feedback-home-link{margin:-12px 0 22px;padding:13px;gap:8px}.dori-feedback-home-copy strong{font-size:12px}.dori-feedback-home-copy small{font-size:9px}.dori-feedback-home-link>a{min-height:36px;padding:8px 10px;font-size:10px;gap:6px}}
+</style>
 </head>
 
 
@@ -2033,6 +2044,11 @@ body.로그인상태 #회원가입 {
       <button id="회원가입" type="button">회원가입</button>
     </div>
   </div>
+
+  <section class="dori-feedback-home-link" aria-label="사용자 의견 건의함">
+    <div class="dori-feedback-home-copy"><span class="dori-feedback-home-kicker">DORI USER VOICE</span><strong>더 편리한 돌이사이트, 함께 만들어 가자.</strong><small>버그 신고 · 불편한 점 · 새로운 기능 아이디어를 자유롭게 건의해 줘.</small></div>
+    <a href="./dori-feedback.html" aria-label="버그 및 아이디어 건의함 열기">의견 남기기 <span aria-hidden="true">↗</span></a>
+  </section>
 
   <div class="메뉴영역">
 
