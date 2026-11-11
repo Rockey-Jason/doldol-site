@@ -2262,43 +2262,7 @@ body::after{
      상태
 ===================================================== -->
 
-<section class="site-preferences-card glass-card" id="site-preferences" aria-labelledby="site-preferences-title">
-    <div class="site-preferences-heading">
-        <div>
-            <span class="section-eyebrow">DETAILED SETTINGS</span>
-            <h2 id="site-preferences-title">세부 설정</h2>
-            <p>돌이사이트의 세부 사용 환경을 이 섹션에서 직접 조절할 수 있습니다. 아래 항목을 변경하면 이 기기에 자동 저장되고 사이트 전체에 적용됩니다.</p>
-        </div>
-        <span class="site-preferences-device">이 기기에 저장</span>
-    </div>
-    <div class="site-preferences-grid">
-        <div class="site-preferences-item">
-            <div class="site-preferences-copy"><strong>글자 크기</strong><span>사이트 본문과 메뉴의 기본 글자 크기를 조절합니다.</span></div>
-            <div class="site-pref-options" role="group" aria-label="글자 크기">
-                <button type="button" data-site-pref="font" data-value="small" aria-pressed="false">작게</button>
-                <button type="button" data-site-pref="font" data-value="normal" aria-pressed="true">보통</button>
-                <button type="button" data-site-pref="font" data-value="large" aria-pressed="false">크게</button>
-                <button type="button" data-site-pref="font" data-value="largest" aria-pressed="false">아주 크게</button>
-            </div>
-        </div>
-        <div class="site-preferences-item">
-            <div class="site-preferences-copy"><strong>고대비 화면</strong><span>텍스트와 테두리의 대비를 높여 가독성을 개선합니다.</span></div>
-            <button type="button" class="site-pref-toggle" data-site-pref-toggle="contrast" aria-pressed="false">고대비 켜기</button>
-        </div>
-        <div class="site-preferences-item">
-            <div class="site-preferences-copy"><strong>넓은 줄 간격</strong><span>본문과 목록의 줄 간격을 넓혀 편하게 읽을 수 있습니다.</span></div>
-            <button type="button" class="site-pref-toggle" data-site-pref-toggle="reader" aria-pressed="false">줄 간격 넓히기</button>
-        </div>
-        <div class="site-preferences-item">
-            <div class="site-preferences-copy"><strong>애니메이션 줄이기</strong><span>화면 전환과 움직임 효과를 최소화합니다.</span></div>
-            <button type="button" class="site-pref-toggle" data-site-pref-toggle="motion" aria-pressed="false">모션 줄이기</button>
-        </div>
-    </div>
-    <div class="site-preferences-footer">
-        <p id="site-pref-status" role="status" aria-live="polite">설정은 변경 즉시 자동 저장됩니다.</p>
-        <button type="button" id="site-pref-reset">기본값으로 초기화</button>
-    </div>
-</section>
+
 
 <div class="status-box">
 
@@ -2344,6 +2308,14 @@ body::after{
             🎨 돌이 꾸미기
         </button>
 
+        <button
+            id="세부설정버튼"
+            class="status-tab-button"
+            data-tab="세부설정"
+        >
+            ⚙️ 세부 설정
+        </button>
+
     </div>
 
 
@@ -2359,6 +2331,45 @@ body::after{
     </div>
 
 </div>
+
+<section class="site-preferences-card glass-card" hidden id="site-preferences" aria-labelledby="site-preferences-title">
+    <div class="site-preferences-heading">
+        <div>
+            <span class="section-eyebrow">DETAILED SETTINGS</span>
+            <h2 id="site-preferences-title">세부 설정</h2>
+            <p>돌이사이트의 세부 사용 환경을 이 섹션에서 직접 조절할 수 있습니다. 아래 항목을 변경하면 이 기기에 자동 저장되고 사이트 전체에 적용됩니다.</p>
+        </div>
+        <span class="site-preferences-device">이 기기에 저장</span>
+    </div>
+    <div class="site-preferences-grid">
+        <div class="site-preferences-item">
+            <div class="site-preferences-copy"><strong>글자 크기</strong><span>사이트 본문과 메뉴의 기본 글자 크기를 조절합니다.</span></div>
+            <div class="site-pref-options" role="group" aria-label="글자 크기">
+                <button type="button" data-site-pref="font" data-value="small" aria-pressed="false">작게</button>
+                <button type="button" data-site-pref="font" data-value="normal" aria-pressed="true">보통</button>
+                <button type="button" data-site-pref="font" data-value="large" aria-pressed="false">크게</button>
+                <button type="button" data-site-pref="font" data-value="largest" aria-pressed="false">아주 크게</button>
+            </div>
+        </div>
+        <div class="site-preferences-item">
+            <div class="site-preferences-copy"><strong>고대비 화면</strong><span>텍스트와 테두리의 대비를 높여 가독성을 개선합니다.</span></div>
+            <button type="button" class="site-pref-toggle" data-site-pref-toggle="contrast" aria-pressed="false">고대비 켜기</button>
+        </div>
+        <div class="site-preferences-item">
+            <div class="site-preferences-copy"><strong>넓은 줄 간격</strong><span>본문과 목록의 줄 간격을 넓혀 편하게 읽을 수 있습니다.</span></div>
+            <button type="button" class="site-pref-toggle" data-site-pref-toggle="reader" aria-pressed="false">줄 간격 넓히기</button>
+        </div>
+        <div class="site-preferences-item">
+            <div class="site-preferences-copy"><strong>애니메이션 줄이기</strong><span>화면 전환과 움직임 효과를 최소화합니다.</span></div>
+            <button type="button" class="site-pref-toggle" data-site-pref-toggle="motion" aria-pressed="false">모션 줄이기</button>
+        </div>
+    </div>
+    <div class="site-preferences-footer">
+        <p id="site-pref-status" role="status" aria-live="polite">설정은 변경 즉시 자동 저장됩니다.</p>
+        <button type="button" id="site-pref-reset">기본값으로 초기화</button>
+    </div>
+</section>
+
 
 
 <script type="module">
@@ -2690,6 +2701,16 @@ const 내아이템버튼 =
 const 꾸미기버튼 =
     document.getElementById(
         "꾸미기버튼"
+    );
+
+const 세부설정버튼 =
+    document.getElementById(
+        "세부설정버튼"
+    );
+
+const 세부설정요소 =
+    document.getElementById(
+        "site-preferences"
     );
 
 
@@ -3901,7 +3922,8 @@ function 상태탭변경(탭) {
         "상세설명",
         "칭호",
         "내아이템",
-        "꾸미기"
+        "꾸미기",
+        "세부설정"
     ];
 
     if (!허용탭.includes(탭)) {
@@ -3915,6 +3937,7 @@ function 상태탭변경(탭) {
     칭호버튼.classList.toggle("active", 탭 === "칭호");
     내아이템버튼.classList.toggle("active", 탭 === "내아이템");
     꾸미기버튼.classList.toggle("active", 탭 === "꾸미기");
+    세부설정버튼.classList.toggle("active", 탭 === "세부설정");
 
     상태화면업데이트();
 }
@@ -3948,6 +3971,13 @@ function 상태화면업데이트() {
 
     if (현재상태탭 === "꾸미기") {
         꾸미기화면표시();
+        return;
+    }
+
+    if (현재상태탭 === "세부설정") {
+        상태내용요소.innerHTML = "";
+        세부설정요소.hidden = false;
+        상태내용요소.appendChild(세부설정요소);
     }
 }
 
