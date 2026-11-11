@@ -106,7 +106,10 @@ textarea.fb-control{min-height:165px;resize:vertical;line-height:1.75}
     <section class="fb-panel active" id="panel-write">
       <div class="fb-auth">
         <div class="fb-auth-text" id="authDescription">로그인 상태를 확인하고 있어. 건의 내용은 계정에 연결되어 저장돼.</div>
-        <span class="fb-auth-status" id="authStatus">확인 중</span>
+        <div style="display:flex;align-items:center;gap:9px;flex-wrap:wrap">
+          <span class="fb-auth-status" id="authStatus">확인 중</span>
+          <a class="fb-top-link" id="loginLink" href="./login.html" hidden>로그인하기 ↗</a>
+        </div>
       </div>
       <div class="fb-notice" id="writeNotice" role="status" aria-live="polite"></div>
       <form id="feedbackForm">
@@ -183,6 +186,7 @@ textarea.fb-control{min-height:165px;resize:vertical;line-height:1.75}
   let currentUser = null;
   let verifiedAdmin = false;
   let activeTab = "write";
+  let authListenerRegistered = false;
 
   async function getClient() {
     if (sb?.auth) return sb;
@@ -339,11 +343,18 @@ textarea.fb-control{min-height:165px;resize:vertical;line-height:1.75}
   async function start() {
     try {
       const client=await getClient();
+      if(!authListenerRegistered) {
+        client.auth.onAuthStateChange(() => {
+          window.setTimeout(() => { void start(); }, 0);
+        });
+        authListenerRegistered=true;
+      }
       const {data,error}=await client.auth.getSession();
       if(error) throw error;
       const session=data?.session||null;
       currentUser=session?.user||null;
       if(!currentUser) {
+        $("loginLink").hidden=false;
         $("authStatus").textContent="로그인 필요";
         $("authStatus").style.color="#f0c78d";
         $("authDescription").textContent="건의 제출과 내역 확인은 계정 로그인이 필요해.";
@@ -353,6 +364,7 @@ textarea.fb-control{min-height:165px;resize:vertical;line-height:1.75}
         $("adminTab").hidden=true;
         return;
       }
+      $("loginLink").hidden=true;
       $("authStatus").textContent="계정 연결됨";
       $("authDescription").textContent="로그인 확인이 완료됐어. 건의는 현재 접속한 계정에 안전하게 저장돼.";
       $("submitFeedback").disabled=false;
