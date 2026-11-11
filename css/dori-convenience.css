@@ -85,3 +85,7 @@ html[data-dori-motion="reduced"] *,html[data-dori-motion="reduced"] *::before,ht
  #dori-quick-menu[data-open="true"] { animation:none; }
  #dori-conv-toast,.dori-conv-result,#dori-quick-launcher { transition:none; }
 }
+
+/* Lift the helper above the legacy fixed chat composer so typing stays unobstructed. */
+body:has(.composer-wrap) #dori-quick-access-root{bottom:calc(148px + env(safe-area-inset-bottom))}
+@media(max-width:560px){body:has(.composer-wrap) #dori-quick-access-root{bottom:calc(144px + env(safe-area-inset-bottom))}}
