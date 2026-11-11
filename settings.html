@@ -4208,7 +4208,7 @@ function 프레임출처판별(frame, fallback = "기타") {
     const source = String(frame?.source || "").toLowerCase();
     const key = String(frame?.item_code || "").toLowerCase();
     const name = String(frame?.item_name || "").toLowerCase();
-    if (source.includes("lounge") || source.includes("라운지") || key.includes("lounge") || name.includes("라운지")) return "라운지";
+    if (source.includes("lounge") || source.includes("vip") || source.includes("라운지") || key.includes("lounge") || key.includes("vip") || name.includes("라운지")) return "라운지";
     if (source.includes("event") || source.includes("이벤트") || key.includes("event") || name.includes("이벤트")) return "이벤트";
     if (source.includes("season") || source.includes("시즌") || key.includes("season")) return "시즌 보상";
     if (source.includes("pass") || source.includes("패스") || key.includes("2026-") || key.includes("2026_")) return "돌이 패스";
@@ -4289,7 +4289,7 @@ async function 프레임목록가져오기(user) {
         ).forEach(row => addFrame({
             ...row,
             source: 프레임출처판별({item_code:row.item_code,item_name:row.item_name,item_type:row.item_type},
-                /lounge|라운지/i.test(String(row.item_type)+" "+String(row.item_code)) ? "라운지" :
+                /lounge|vip|라운지/i.test(String(row.item_type)+" "+String(row.item_code)) ? "라운지" :
                 /event|이벤트/i.test(String(row.item_type)+" "+String(row.item_code)) ? "이벤트" : "기타")
         }));
     } else if (userItems?.error) {
@@ -4299,7 +4299,7 @@ async function 프레임목록가져오기(user) {
     const seasonResult = jobs[2].status === "fulfilled" ? jobs[2].value : null;
     if (seasonResult && !seasonResult.error) {
         (seasonResult.data || []).filter(row => /frame|프레임/i.test(String(row.item_code || "")))
-            .forEach(row => addFrame({ item_code:row.item_code, item_name:String(row.item_code).replace(/[_-]/g," "), source:"이벤트", rarity:"희귀" }));
+            .forEach(row => addFrame({ item_code:row.item_code, item_name:String(row.item_code).replace(/[_-]/g," "), source:"시즌 보상", rarity:"희귀" }));
     } else if (seasonResult?.error) {
         console.warn("시즌 보상 프레임 조회:", seasonResult.error.message);
     }
