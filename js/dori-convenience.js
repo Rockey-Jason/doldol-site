@@ -10,6 +10,23 @@
   const homeHref = rootHref("index.html");
   const feedbackHref = rootHref("dori-feedback.html");
   const PREF_KEY = "dori-convenience-preferences-v1";
+  const NAV_KEY = "dori-convenience-navigation-v1";
+  let navState = {recent:[],favorites:[]};
+  try { navState = {...navState,...JSON.parse(localStorage.getItem(NAV_KEY) || "{}")}; } catch (_) {}
+  const currentPathKey = location.pathname.endsWith("/")
+    ? new URL("index.html",ROOT).pathname
+    : location.pathname;
+  const saveNavigation = () => {
+    try { localStorage.setItem(NAV_KEY,JSON.stringify(navState)); } catch (_) {}
+  };
+  if (!/(?:login|signin|reset-password)\.html$/i.test(currentPathKey)) {
+    navState.recent = [
+      {url:currentPathKey,label:document.title || "현재 페이지",desc:"최근 방문한 페이지",icon:"◷"},
+      ...(Array.isArray(navState.recent)?navState.recent:[]).filter(item=>item && item.url!==currentPathKey)
+    ].slice(0,8);
+    navState.favorites = Array.isArray(navState.favorites) ? navState.favorites.slice(0,30) : [];
+    saveNavigation();
+  }
   const pageItems = [
     {label:"돌이사이트 메인",path:"index.html",icon:"⌂",desc:"모든 메뉴가 모여 있는 첫 화면",keywords:"홈 메인 처음 시작"},
     {label:"돌이신문",path:"readingrockeynews.html",icon:"▤",desc:"신문 기사와 돌이 세계 소식",keywords:"뉴스 기사 읽기"},
@@ -55,7 +72,7 @@
   overlay.id = "dori-convenience-overlay";
   overlay.dataset.open = "false";
   overlay.hidden = true;
-  overlay.innerHTML = '<section class="dori-conv-dialog" role="dialog" aria-modal="true" aria-labelledby="dori-conv-title"><header class="dori-conv-head"><div><div class="dori-conv-heading" id="dori-conv-title">돌이사이트 통합 검색</div><div class="dori-conv-subtitle" id="dori-conv-subtitle">메뉴와 현재 페이지의 항목을 한 번에 찾아봐.</div></div><button class="dori-conv-close" type="button" aria-label="닫기">×</button></header><div class="dori-conv-body" id="dori-conv-search-view"><input id="dori-conv-search" type="search" autocomplete="off" placeholder="어떤 메뉴나 기능을 찾고 있어?" aria-label="사이트 통합 검색"><div class="dori-conv-search-hint">메뉴 이름, 기능 이름, 현재 페이지의 제목을 입력해 봐.</div><div id="dori-conv-results" role="listbox" aria-label="검색 결과"></div></div><div class="dori-conv-body" id="dori-conv-preferences-view" hidden><div class="dori-pref-grid"><div class="dori-pref-card"><span class="dori-pref-label">글자 크기</span><div class="dori-pref-options" data-pref="font"><button data-value="small" type="button">작게</button><button data-value="normal" type="button">보통</button><button data-value="large" type="button">크게</button><button data-value="largest" type="button">아주 크게</button></div><p>제목과 본문에서 사용하는 상대 글자 크기에 적용돼.</p></div><div class="dori-pref-card"><span class="dori-pref-label">화면 가독성</span><button class="dori-pref-toggle" type="button" data-pref-toggle="contrast">고대비 화면</button><p>글자와 테두리의 대비를 높여 읽기 쉽게 해.</p></div><div class="dori-pref-card"><span class="dori-pref-label">읽기 편한 간격</span><button class="dori-pref-toggle" type="button" data-pref-toggle="reader">넓은 줄 간격</button><p>본문과 목록의 줄 간격을 넓혀 줘.</p></div><div class="dori-pref-card"><span class="dori-pref-label">움직임 효과</span><button class="dori-pref-toggle" type="button" data-pref-toggle="motion">애니메이션 줄이기</button><p>화면 전환과 움직임을 최소화해.</p></div></div><div class="dori-pref-footer"><button class="dori-pref-reset" id="dori-pref-reset" type="button">기본 설정으로 초기화</button><button class="dori-pref-save" id="dori-pref-save" type="button">설정 저장 완료</button></div></div></section>';
+  overlay.innerHTML = '<section class="dori-conv-dialog" role="dialog" aria-modal="true" aria-labelledby="dori-conv-title"><header class="dori-conv-head"><div><div class="dori-conv-heading" id="dori-conv-title">돌이사이트 통합 검색</div><div class="dori-conv-subtitle" id="dori-conv-subtitle">메뉴와 현재 페이지의 항목을 한 번에 찾아봐.</div></div><button class="dori-conv-close" type="button" aria-label="닫기">×</button></header><div class="dori-conv-body" id="dori-conv-search-view"><input id="dori-conv-search" type="search" autocomplete="off" placeholder="어떤 메뉴나 기능을 찾고 있어?" aria-label="사이트 통합 검색"><div class="dori-conv-search-hint">메뉴 이름, 기능 이름, 현재 페이지의 제목을 입력해 봐.</div><div class="dori-conv-filters" role="group" aria-label="검색 결과 범위"><button type="button" data-search-filter="all">전체 메뉴</button><button type="button" data-search-filter="favorites">★ 즐겨찾기</button><button type="button" data-search-filter="recent">◷ 최근 방문</button></div><div id="dori-conv-results" role="listbox" aria-label="검색 결과"></div></div><div class="dori-conv-body" id="dori-conv-preferences-view" hidden><div class="dori-pref-grid"><div class="dori-pref-card"><span class="dori-pref-label">글자 크기</span><div class="dori-pref-options" data-pref="font"><button data-value="small" type="button">작게</button><button data-value="normal" type="button">보통</button><button data-value="large" type="button">크게</button><button data-value="largest" type="button">아주 크게</button></div><p>제목과 본문에서 사용하는 상대 글자 크기에 적용돼.</p></div><div class="dori-pref-card"><span class="dori-pref-label">화면 가독성</span><button class="dori-pref-toggle" type="button" data-pref-toggle="contrast">고대비 화면</button><p>글자와 테두리의 대비를 높여 읽기 쉽게 해.</p></div><div class="dori-pref-card"><span class="dori-pref-label">읽기 편한 간격</span><button class="dori-pref-toggle" type="button" data-pref-toggle="reader">넓은 줄 간격</button><p>본문과 목록의 줄 간격을 넓혀 줘.</p></div><div class="dori-pref-card"><span class="dori-pref-label">움직임 효과</span><button class="dori-pref-toggle" type="button" data-pref-toggle="motion">애니메이션 줄이기</button><p>화면 전환과 움직임을 최소화해.</p></div></div><div class="dori-pref-footer"><button class="dori-pref-reset" id="dori-pref-reset" type="button">기본 설정으로 초기화</button><button class="dori-pref-save" id="dori-pref-save" type="button">설정 저장 완료</button></div></div></section>';
   document.body.appendChild(overlay);
   const toast = document.createElement("div");
   toast.id = "dori-conv-toast";
@@ -77,6 +94,8 @@
   let toastTimer = 0;
   let previousFocus = null;
   let searchItems = [];
+  let searchFilter = "all";
+  const filterNav = overlay.querySelector(".dori-conv-filters");
 
   const showToast = (message) => {
     toast.textContent = message;
@@ -92,7 +111,7 @@
     menu.dataset.open = "true";
     launcher.setAttribute("aria-expanded","true");
   };
-  const openOverlay = (view="search") => {
+  const openOverlay = (view="search",filter="all") => {
     closeMenu();
     previousFocus = document.activeElement;
     activeView = view;
@@ -103,8 +122,10 @@
     overlay.hidden = false;
     overlay.dataset.open = "true";
     if (view === "search") {
+      searchFilter = ["all","favorites","recent"].includes(filter) ? filter : "all";
       buildSearchItems();
       searchInput.value = "";
+      updateFilterButtons();
       renderResults("");
       window.setTimeout(() => searchInput.focus(),30);
     } else {
@@ -127,6 +148,7 @@
     const mark=document.createElement("span"); mark.textContent=icon;
     const text=document.createElement("span"); text.textContent=label;
     button.append(mark,text); button.addEventListener("click",action); menuGrid.appendChild(button);
+    return button;
   };
   makeQuickAction("⌕","전체 메뉴 검색",()=>openOverlay("search"));
   makeQuickAction("⌂","돌이사이트 홈",()=>location.assign(homeHref));
@@ -142,6 +164,23 @@
       else showToast("이 브라우저에서는 공유 기능을 사용할 수 없어.");
     } catch(error) { if(error?.name!=="AbortError") showToast("공유를 완료하지 못했어."); }
   });
+  makeQuickAction("★","즐겨찾기 모아보기",()=>openOverlay("search","favorites"));
+  makeQuickAction("◷","최근 방문 페이지",()=>openOverlay("search","recent"));
+  const favoritePageAction = makeQuickAction("☆","현재 페이지 즐겨찾기",()=>{
+    const found = navState.favorites.includes(currentPathKey);
+    navState.favorites = found
+      ? navState.favorites.filter(path=>path!==currentPathKey)
+      : [currentPathKey,...navState.favorites].slice(0,30);
+    saveNavigation();
+    updateFavoriteAction();
+    showToast(found ? "즐겨찾기에서 뺐어." : "이 페이지를 즐겨찾기에 저장했어.");
+  });
+  function updateFavoriteAction(){
+    const found=navState.favorites.includes(currentPathKey);
+    favoritePageAction.children[0].textContent=found?"★":"☆";
+    favoritePageAction.children[1].textContent=found?"즐겨찾기 해제":"현재 페이지 즐겨찾기";
+  }
+  updateFavoriteAction();
 
   const safeLabel = (node) => (node?.getAttribute("aria-label") || node?.innerText || node?.textContent || "").replace(/\s+/g," ").trim().slice(0,100);
   function buildSearchItems() {
@@ -172,10 +211,25 @@
     });
     searchItems=items;
   }
+  function updateFilterButtons(){
+    filterNav.querySelectorAll("button[data-search-filter]").forEach(button=>{
+      button.setAttribute("aria-pressed",String(button.dataset.searchFilter===searchFilter));
+    });
+  }
   function renderResults(query) {
     const q=String(query||"").trim().toLocaleLowerCase("ko");
     const words=q.split(/\s+/).filter(Boolean);
-    const matched=searchItems.map(item=>{
+    let baseItems=searchItems;
+    if(searchFilter==="favorites"){
+      const fav=new Set(navState.favorites||[]);
+      baseItems=searchItems.filter(item=>{try{return fav.has(new URL(item.url).pathname);}catch(_){return false;}});
+    }else if(searchFilter==="recent"){
+      baseItems=(navState.recent||[]).map(entry=>{
+        const existing=searchItems.find(item=>{try{return new URL(item.url).pathname===entry.url;}catch(_){return false;}});
+        return existing || {label:entry.label||"최근 방문 페이지",url:new URL(entry.url,location.origin).href,icon:"◷",desc:entry.desc||"최근 방문한 페이지",keywords:"최근 방문"};
+      });
+    }
+    const matched=baseItems.map(item=>{
       const content=(item.label+" "+item.desc+" "+item.keywords).toLocaleLowerCase("ko");
       let score=0;
       words.forEach(word=>{if(item.label.toLocaleLowerCase("ko").includes(word))score+=4;else if(content.includes(word))score+=1;});
@@ -197,6 +251,13 @@
       resultBox.appendChild(link);
     });
   }
+  filterNav.querySelectorAll("button[data-search-filter]").forEach(button=>{
+    button.addEventListener("click",()=>{
+      searchFilter=button.dataset.searchFilter;
+      updateFilterButtons();
+      renderResults(searchInput.value);
+    });
+  });
   searchInput.addEventListener("input",()=>renderResults(searchInput.value));
   searchInput.addEventListener("keydown",(event)=>{
     const options=Array.from(resultBox.querySelectorAll("a"));
@@ -251,6 +312,10 @@
   window.addEventListener("storage",(event)=>{
     if(event.key===PREF_KEY){
       try { prefs={...defaults,...JSON.parse(event.newValue||"{}")};applyPrefs(); }
+      catch (_) {}
+    }
+    if(event.key===NAV_KEY){
+      try { navState={recent:[],favorites:[],...JSON.parse(event.newValue||"{}")};updateFavoriteAction(); }
       catch (_) {}
     }
   });
