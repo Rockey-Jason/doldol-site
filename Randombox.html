@@ -1016,6 +1016,8 @@ button {
         transition-duration: 0.01ms !important;
     }
 }
+
+.box-item-art{display:inline-grid;place-items:center;width:34px;height:34px;flex:0 0 34px;vertical-align:middle;margin-right:7px;border-radius:9px;background:rgba(255,255,255,.06);overflow:hidden}.box-item-art img{width:100%;height:100%;object-fit:contain;padding:3px}.box-item-art b{font-size:20px}
 </style>
 
 <link rel="stylesheet" href="css/doldol-theme.css?v=20261112-site-background-1">
@@ -1345,6 +1347,13 @@ function 아이콘결정(보상) {
     return "🎁";
 }
 
+function 보상이미지경로(보상) {
+    const code = String(보상?.item_code || "").toUpperCase();
+    return /^[A-Z0-9_-]{2,80}$/.test(code)
+        ? "assets/dori-items/" + code + ".svg"
+        : "assets/dori-items/FRAME_GENERIC.svg";
+}
+
 /* =====================================================
    로컬 기록
 ===================================================== */
@@ -1658,7 +1667,7 @@ function 확률목록표시() {
 
         항목.innerHTML = `
             <div class="아이템이름">
-                <span>${HTML문자열(보상.아이콘)}</span>
+                <span class="box-item-art"><img src="${보상이미지경로(보상)}" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><b hidden>${HTML문자열(보상.아이콘)}</b></span>
                 <span>${HTML문자열(보상.이름)}</span>
             </div>
             <span class="확률">
@@ -1703,7 +1712,7 @@ function 인벤토리표시() {
         const 수량 = 인벤토리[코드] || 0;
 
         항목.innerHTML = `
-            ${HTML문자열(보상.아이콘)}
+            <span class="box-item-art"><img src="${보상이미지경로(보상)}" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><b hidden>${HTML문자열(보상.아이콘)}</b></span>
             ${HTML문자열(보상.이름)}
             <span class="아이템수량">×${수량}</span>
         `;
