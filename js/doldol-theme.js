@@ -237,4 +237,84 @@
     notificationScript.async = true;
     (document.head || document.documentElement).appendChild(notificationScript);
   }
+
+  /* Account-wide Random Box background: read the authenticated user's equipped_background. */
+  (() => {
+    const PROJECT_URL = "https://scttowfhygcpdirrekqm.supabase.co";
+    const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwiaWF0IjoxNzgwMTk4NDI2LCJleHAiOjIwOTU3NzQ0MjZ9.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+    const ALLOWED = new Set(["BACKGROUND_RARE","BACKGROUND_SUPER_RARE","BACKGROUND_MYTHIC","BACKGROUND_LEGENDARY","BACKGROUND_DORI","BACKGROUND_DORONIUM"]);
+    const apply = (rawCode) => {
+      const code = String(rawCode || "").toUpperCase();
+      const valid = ALLOWED.has(code) ? code : "";
+      let layer = document.querySelector(".dori-site-background-layer");
+      if (!valid) {
+        if (layer) layer.remove();
+        document.body?.classList.remove("dori-site-background-active");
+        delete document.body?.dataset.doriSiteBackground;
+        return;
+      }
+      if (!layer) {
+        layer = document.createElement("div");
+        layer.className = "dori-site-background-layer";
+        layer.setAttribute("aria-hidden","true");
+        document.body?.prepend(layer);
+      }
+      layer.dataset.background = valid;
+      document.body?.classList.add("dori-site-background-active");
+      document.body.dataset.doriSiteBackground = valid;
+    };
+    window.applyDoriSiteBackground = apply;
+    const clientReady = async () => {
+      const shared = () => window.doriSupabase || window.supabaseClient || window.sb || null;
+      for (let i=0;i<120;i++) {
+        const client=shared();
+        if(client) return client;
+        await new Promise(resolve=>window.setTimeout(resolve,25));
+      }
+      if (window.__doriSiteBackgroundClient) return window.__doriSiteBackgroundClient;
+      let createClient = window.supabase && window.supabase.createClient;
+      if (!createClient) {
+        const module = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+        createClient = module.createClient;
+      }
+      const client = createClient(PROJECT_URL,ANON_KEY);
+      if (!window.doriSupabase) window.doriSupabase = client;
+      window.__doriSiteBackgroundClient = window.doriSupabase || client;
+      return window.__doriSiteBackgroundClient;
+    };
+    let loadSequence = 0;
+    const load = async () => {
+      const sequence = ++loadSequence;
+      try {
+        const client = await clientReady();
+        const {data:{session},error:sessionError} = await client.auth.getSession();
+        if(sessionError) throw sessionError;
+        if(!session) { apply(""); return; }
+        const {data,error} = await client.from("dori_site_customization")
+          .select("equipped_background").eq("user_id",session.user.id).maybeSingle();
+        if(error) throw error;
+        if(sequence!==loadSequence) return;
+        apply(data?.equipped_background || "");
+      } catch(error) {
+        console.warn("돌이사이트 배경을 불러오지 못했습니다:",error);
+      }
+    };
+    const start = () => {
+      if(!document.body) return;
+      load();
+      const existing = window.doriSupabase || window.supabaseClient || window.sb;
+      if(existing?.auth?.onAuthStateChange) {
+        existing.auth.onAuthStateChange((event) => {
+          if(event==="SIGNED_OUT") apply("");
+          else if(event==="SIGNED_IN" || event==="TOKEN_REFRESHED" || event==="USER_UPDATED") load();
+        });
+      }
+      window.addEventListener("storage",event=>{
+        if(event.key && event.key.includes("auth-token")) load();
+      });
+    };
+    if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",start,{once:true});
+    else start();
+  })();
+
 })();
