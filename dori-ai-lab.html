@@ -157,8 +157,8 @@ td{color:#d9e6f4}tr:last-child td{border-bottom:0}
   <section class="panel" id="panel-report">
     <div class="grid2">
       <div>
-        <div class="field"><label for="reportTitle">보고서 주제</label><input id="reportTitle" maxlength="180" placeholder="예: 돌이 세계 도로늄 산업의 현황과 발전 방향"></div>
-        <div class="field"><label for="reportContext">포함할 내용과 요청사항</label><textarea id="reportContext" maxlength="1200" placeholder="보고서에서 다루고 싶은 질문, 자료, 기간, 비교 대상 등을 적어줘."></textarea></div>
+        <div class="field"><label for="reportTitle">보고서 주제</label><input id="reportTitle" maxlength="150" placeholder="예: 돌이 세계 도로늄 산업의 현황과 발전 방향"></div>
+        <div class="field"><label for="reportContext">포함할 내용과 요청사항</label><textarea id="reportContext" maxlength="700" placeholder="보고서에서 다루고 싶은 질문, 자료, 기간, 비교 대상 등을 적어줘."></textarea></div>
         <div class="field"><label for="reportAudience">보고서 대상</label><select id="reportAudience"><option>일반 독자</option><option>돌이사이트 관리자</option><option>연구원</option><option>학생</option></select></div>
         <div class="field"><label for="reportLength">분량</label><select id="reportLength"><option value="간결한 요약형">간결한 요약형</option><option value="표준 보고서형" selected>표준 보고서형</option><option value="상세 분석형">상세 분석형</option></select></div>
         <button class="primary" id="reportBtn">AI 보고서 생성 ↗</button>
@@ -265,6 +265,7 @@ function appendLinks(node, text) {
   node.appendChild(document.createTextNode(text.slice(last)));
 }
 async function askAI(prompt, onText, mode) {
+  if (String(prompt || "").length > 1950) throw new Error("요청이 너무 길어. 입력 내용을 조금 줄여 줘.");
   if (busy) throw new Error("이미 답변을 생성하고 있어.");
   busy = true;
   abortController = new AbortController();
@@ -472,16 +473,15 @@ async function loadEconomy() {
 $("refreshEconomy").addEventListener("click", async () => {
   const button = $("refreshEconomy"); button.disabled = true; button.textContent = "조회 중...";
   try { await loadEconomy(); }
-  catch (error) { $("stockRows").innerHTML = '<tr><td colspan="5">조회 실패: ' + String(error.message || error) + '</td></tr>'; }
+  catch (error) { const tr=document.createElement("tr"); const td=document.createElement("td"); td.colSpan=5; td.textContent="조회 실패: "+String(error.message || error); tr.appendChild(td); $("stockRows").replaceChildren(tr); }
   finally { button.disabled = false; button.textContent = "데이터 새로고침 ↻"; }
 });
 $("economyBtn").addEventListener("click", async () => {
   const topic = $("economyTopic").value.trim();
   if (!topic || busy) { if (!topic) $("economyTopic").focus(); return; }
-  const market = stocks.map(x => ({
+  const market = stocks.slice(0, 8).map(x => ({
     name:x.name, ticker:x.ticker, current_price:x.current_price, previous_price:x.previous_price,
-    description:x.description, characteristics:x.characteristics,
-    change_percent: Number(x.previous_price) > 0 ? ((Number(x.current_price)-Number(x.previous_price))/Number(x.previous_price))*100 : null
+    change_percent: Number(x.previous_price) > 0 ? Number((((Number(x.current_price)-Number(x.previous_price))/Number(x.previous_price))*100).toFixed(2)) : null
   }));
   const prompt = "경제·산업 분석 보고서를 작성해 줘. 분석 주제: " + topic +
     "\n\n아래는 돌돌증권에서 실제 조회한 돌이 세계 시뮬레이션 종목 데이터야. 이 수치는 현실의 주식시장이나 실제 기업 데이터가 아니라 돌이사이트 내부의 가상 세계 데이터야.\n" +
@@ -501,7 +501,7 @@ $("economyBtn").addEventListener("click", async () => {
   setStatus(auth.user ? "로그인 연결됨" : "게스트 모드 · 로그인하면 개인 권한 자료 사용 가능");
   try { await loadEconomy(); }
   catch (error) {
-    $("stockRows").innerHTML = '<tr><td colspan="5">돌돌증권 데이터 조회를 사용할 수 없어: ' + String(error.message || error) + '</td></tr>';
+    const tr=document.createElement("tr"); const td=document.createElement("td"); td.colSpan=5; td.textContent="돌돌증권 데이터 조회를 사용할 수 없어: "+String(error.message || error); tr.appendChild(td); $("stockRows").replaceChildren(tr);
     $("economyUpdated").textContent = "데이터 연결 확인 필요";
   }
   try {
