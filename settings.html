@@ -2234,6 +2234,11 @@ body::after{
 .site-preferences-footer button{border-color:rgba(154,174,212,.17);color:#b8c9e7;background:rgba(255,255,255,.035)}
 #site-preferences{scroll-margin-top:24px}
 @media(max-width:650px){.site-preferences-card{padding:19px 15px;border-radius:21px}.site-preferences-heading{flex-direction:column;gap:10px}.site-preferences-grid{grid-template-columns:1fr}.site-preferences-item{min-height:unset}.site-preferences-footer{align-items:flex-start;flex-direction:column}.site-preferences-footer button{width:100%}.site-background-settings{padding:15px}.site-background-heading{flex-direction:column}.site-background-options{grid-template-columns:1fr}.site-background-preview{height:112px}}
+
+/* Keep the full Dori figure at a readable size on compact screens. */
+.dori-character-stage{width:min(100%,330px);height:390px;position:relative;overflow:visible}
+@media(max-width:760px){.dori-character-stage{width:min(100%,300px);height:350px}}
+@media(max-width:460px){.dori-character-stage{height:320px}}
 </style>
 
 
