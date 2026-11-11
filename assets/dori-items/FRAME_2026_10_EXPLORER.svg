@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="FRAME_2026_10_EXPLORER">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e8dcff"/><stop offset=".48" stop-color="#9c7bff"/><stop offset="1" stop-color="#e8dcff"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+<circle cx="90" cy="90" r="76" fill="none" stroke="#9c7bff" stroke-width="14" opacity=".2"/>
+<circle cx="90" cy="90" r="72" fill="none" stroke="url(#g)" stroke-width="9" filter="url(#glow)"/>
+<circle cx="90" cy="90" r="62" fill="none" stroke="#e8dcff" stroke-width="2" stroke-dasharray="3 6" opacity=".9"/>
+<path d="M90 3 L98 17 L114 13 L114 29 L130 36 L122 51 L136 64 L122 77 L128 93 L110 98 L108 115 L91 112 L80 128 L67 114 L51 121 L47 103 L30 97 L37 81 L23 68 L38 55 L33 39 L51 34 L55 17 L73 21Z" fill="none" stroke="#9c7bff" stroke-width="2" opacity=".85"/>
+<g fill="#e8dcff"><circle cx="90" cy="9" r="4"/><circle cx="171" cy="90" r="4"/><circle cx="90" cy="171" r="4"/><circle cx="9" cy="90" r="4"/></g>
+</svg>
