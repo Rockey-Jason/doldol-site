@@ -1431,6 +1431,58 @@ body::before {
 }
 
 
+
+/* DORI CUSTOM STUDIO UPGRADE */
+.custom-studio-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;margin:0 0 16px;padding:15px;border:1px solid rgba(255,255,255,.1);border-radius:18px;background:linear-gradient(135deg,rgba(87,139,211,.12),rgba(143,105,222,.08)),rgba(255,255,255,.025)}
+.custom-studio-search{width:100%;min-height:44px;padding:0 14px;border:1px solid rgba(255,255,255,.13);border-radius:12px;outline:none;color:#fff;background:rgba(3,7,28,.5);font:inherit}
+.custom-studio-search:focus{border-color:rgba(115,204,255,.75);box-shadow:0 0 0 3px rgba(115,204,255,.12)}
+.custom-studio-filters{display:flex;gap:7px;flex-wrap:wrap}
+.custom-studio-filters button,.custom-studio-action{min-height:39px;padding:0 12px;border:1px solid rgba(255,255,255,.11);border-radius:11px;color:#dce8ff;background:rgba(255,255,255,.055);font:inherit;font-size:12px;cursor:pointer;transition:.2s ease}
+.custom-studio-filters button.active{border-color:rgba(113,207,255,.55);color:#eaf9ff;background:rgba(73,169,225,.2)}
+.custom-studio-filters button:hover,.custom-studio-action:hover:not(:disabled){transform:translateY(-2px);border-color:rgba(255,255,255,.27);background:rgba(255,255,255,.1)}
+.custom-studio-action:disabled{opacity:.4;cursor:not-allowed}
+.custom-studio-toolbar-bottom{grid-column:1/-1;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}
+.custom-studio-count{color:var(--muted);font-size:12px}
+.custom-studio-actions{display:flex;gap:7px;flex-wrap:wrap}
+.custom-studio-action.primary{border-color:rgba(126,207,255,.35);color:#eaf9ff;background:linear-gradient(120deg,rgba(62,147,203,.28),rgba(117,102,207,.28))}
+.custom-studio-intro{position:relative;z-index:1;width:100%;display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:15px}
+.custom-studio-kicker{color:#92cfff;font-size:10px;letter-spacing:.18em}
+.custom-studio-equipped-count{padding:6px 10px;border:1px solid rgba(147,207,255,.2);border-radius:999px;color:#d8f4ff;background:rgba(67,151,207,.12);font-size:11px}
+.custom-preview{min-height:490px}
+.preview-stage{width:min(100%,260px);height:265px}
+.preview-dori{width:200px;height:200px}
+.preview-layer{display:flex;align-items:center;justify-content:center;gap:5px;max-width:88%;padding:6px 9px;font-size:10px;line-height:1.2}
+.preview-layer b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:500}
+.preview-cape{left:50%;top:auto;bottom:48px;transform:translateX(-50%)}
+.preview-hat{top:9px}
+.preview-glasses{top:89px}
+.preview-clothes{bottom:10px}
+.custom-preview-slots{position:relative;z-index:1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;width:100%;max-width:320px;margin-top:13px}
+.custom-preview-slot{min-width:0;padding:8px 9px;border:1px solid rgba(255,255,255,.075);border-radius:11px;background:rgba(3,7,28,.32)}
+.custom-preview-slot small{display:block;color:var(--muted);font-size:10px}
+.custom-preview-slot strong{display:block;margin-top:3px;overflow:hidden;color:#f4f7ff;font-size:11px;font-weight:500;text-overflow:ellipsis;white-space:nowrap}
+.custom-category{position:relative}
+.custom-category-head{align-items:center}
+.custom-category-tools{display:flex;align-items:center;gap:8px}
+.custom-category-clear{min-height:28px;padding:0 9px;border:1px solid rgba(255,255,255,.09);border-radius:8px;color:#cbd7ec;background:rgba(255,255,255,.035);font:inherit;font-size:10px;cursor:pointer}
+.custom-category-clear:disabled{opacity:.35;cursor:not-allowed}
+.custom-item-button{position:relative;min-width:0;text-align:left}
+.custom-item-button .custom-item-emoji{width:34px;height:34px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.1);border-radius:10px;background:rgba(255,255,255,.055)}
+.custom-item-button .custom-item-name{display:block;max-width:100%;margin-top:7px}
+.custom-item-button .custom-item-qty{display:flex;justify-content:space-between;gap:5px;align-items:center}
+.custom-item-rarity{display:inline-flex;align-items:center;gap:4px;padding:3px 6px;border-radius:999px;border:1px solid rgba(255,255,255,.1);color:#cbd7ec;background:rgba(255,255,255,.045);font-size:9px;white-space:nowrap}
+.custom-item-rarity[data-rarity="희귀"]{color:#a9dcff;border-color:rgba(100,185,255,.35);background:rgba(73,155,230,.1)}
+.custom-item-rarity[data-rarity="영웅"]{color:#c9b5ff;border-color:rgba(173,131,255,.35);background:rgba(131,92,224,.12)}
+.custom-item-rarity[data-rarity="전설"]{color:#ffda91;border-color:rgba(255,199,99,.38);background:rgba(203,145,52,.12)}
+.custom-item-rarity[data-rarity="신화"]{color:#ffb0dd;border-color:rgba(255,118,197,.38);background:rgba(199,75,151,.12)}
+.custom-item-equipped{display:block;margin-top:5px;color:#9fe7ff;font-size:10px}
+.custom-item-button.selected{border-color:rgba(126,211,255,.74);background:linear-gradient(145deg,rgba(72,159,216,.17),rgba(130,103,218,.12));box-shadow:0 0 0 1px rgba(105,201,255,.12),0 10px 24px rgba(0,0,0,.15)}
+.custom-category-empty{grid-column:1/-1;padding:16px;border:1px dashed rgba(255,255,255,.1);border-radius:12px;color:var(--muted);font-size:12px;text-align:center}
+.custom-studio-empty{padding:25px;border:1px dashed rgba(255,255,255,.15);border-radius:16px;color:var(--muted);text-align:center}
+.custom-status{min-height:18px}
+@media(max-width:760px){.custom-studio-toolbar{grid-template-columns:1fr}.custom-studio-toolbar-bottom{grid-column:auto}.custom-preview{position:relative;top:auto;min-height:0}.custom-preview-slots{max-width:100%}}
+@media(max-width:480px){.custom-studio-filters button{flex:1}.custom-studio-actions{width:100%}.custom-studio-action{flex:1}.custom-item-row{grid-template-columns:repeat(2,minmax(0,1fr))}.custom-category{padding:13px}.preview-stage{height:240px}}
+
 @media (max-width: 900px) {
     .status-tabs {
         grid-template-columns: repeat(3, 1fr);
@@ -2777,6 +2829,9 @@ const 세부설정요소 =
 
 let 보유아이템목록 = [];
 let 아이템필터 = "전체";
+let 꾸미기이전상태 = null;
+let 꾸미기검색어 = "";
+let 꾸미기표시필터 = "전체";
 let 꾸미기상태 = {
     hat: null,
     glasses: null,
@@ -4567,129 +4622,223 @@ function 내아이템화면표시() {
 // 꾸미기 화면
 // =====================================================
 
+function 꾸미기상태복사() {
+    const copied = {};
+    for (const key of Object.keys(꾸미기상태)) {
+        copied[key] = 꾸미기상태[key] ? { ...꾸미기상태[key] } : null;
+    }
+    return copied;
+}
+
+function 꾸미기이전상태저장() {
+    꾸미기이전상태 = 꾸미기상태복사();
+}
+
+
 function 꾸미기화면표시() {
     보유아이템으로꾸미기상태검증();
 
     const categories = Object.keys(꾸미기카테고리정보);
+    const rarityRank = { "일반":1, "고급":2, "희귀":3, "영웅":4, "전설":5, "신화":6, "초월":7, "도로늄":8 };
+    const rankOf = value => rarityRank[String(value || "일반")] || 0;
+    const search = String(꾸미기검색어 || "").trim().toLocaleLowerCase("ko-KR");
+    const equippedCount = categories.filter(category => Boolean(꾸미기상태[category])).length;
+    const customItems = 보유아이템목록.filter(item => 아이템꾸미기카테고리(item));
+    const filterButtons = ["전체", "장착 중", "미장착"].map(filter =>
+        '<button type="button" data-custom-filter="' + filter + '" class="' + (꾸미기표시필터 === filter ? "active" : "") + '" aria-pressed="' + String(꾸미기표시필터 === filter) + '">' + filter + '</button>'
+    ).join("");
 
     const categoryHTML = categories.map(category => {
         const info = 꾸미기카테고리정보[category];
-        const items = 보유아이템목록.filter(
-            item => 아이템꾸미기카테고리(item) === category
-        );
-
+        const allItems = 보유아이템목록.filter(item => 아이템꾸미기카테고리(item) === category && 숫자정리(item.quantity) > 0);
         const selectedCode = 꾸미기상태[category]?.item_code ?? "";
+        const items = allItems.filter(item => {
+            const isEquipped = selectedCode === item.item_code;
+            if (꾸미기표시필터 === "장착 중" && !isEquipped) return false;
+            if (꾸미기표시필터 === "미장착" && isEquipped) return false;
+            if (search) {
+                const haystack = [item.item_name, item.item_code, item.rarity, info.label].join(" ").toLocaleLowerCase("ko-KR");
+                if (!haystack.includes(search)) return false;
+            }
+            return true;
+        }).sort((a,b) => rankOf(b.rarity) - rankOf(a.rarity) || String(a.item_name || "").localeCompare(String(b.item_name || ""), "ko"));
+
+        if (!items.length && (search || 꾸미기표시필터 !== "전체")) return "";
 
         const itemsHTML = items.length
-            ? items.map(item => `
-                <button
-                    class="custom-item-button ${selectedCode === item.item_code ? "selected" : ""}"
-                    data-custom-code="${HTML이스케이프(item.item_code)}"
-                    data-custom-category="${category}"
-                >
-                    <div class="custom-item-emoji">${info.emoji}</div>
-                    <div class="custom-item-name">${HTML이스케이프(item.item_name ?? "이름 없는 아이템")}</div>
-                    <div class="custom-item-qty">${HTML이스케이프(item.rarity ?? "일반")} · ×${숫자정리(item.quantity).toLocaleString()}</div>
-                </button>
-            `).join("")
-            : `<div class="empty" style="padding:20px;grid-column:1/-1;">아직 보유한 ${info.label}이 없습니다.</div>`;
+            ? items.map(item => {
+                const selected = selectedCode === item.item_code;
+                const rarity = String(item.rarity || "일반");
+                return '<button type="button" class="custom-item-button ' + (selected ? "selected" : "") + '" data-custom-code="' + HTML이스케이프(item.item_code) + '" data-custom-category="' + category + '" aria-pressed="' + String(selected) + '" title="' + HTML이스케이프(item.item_name || item.item_code) + '">' +
+                    '<span class="custom-item-emoji">' + info.emoji + '</span>' +
+                    '<span class="custom-item-name">' + HTML이스케이프(item.item_name || "이름 없는 아이템") + '</span>' +
+                    '<span class="custom-item-qty"><span class="custom-item-rarity" data-rarity="' + HTML이스케이프(rarity) + '">' + HTML이스케이프(rarity) + '</span><span>×' + 숫자정리(item.quantity).toLocaleString() + '</span></span>' +
+                    (selected ? '<span class="custom-item-equipped">✓ 현재 장착 중 · 다시 누르면 해제</span>' : '') +
+                    '</button>';
+            }).join("")
+            : '<div class="custom-category-empty">이 카테고리에는 아직 보유한 아이템이 없습니다.</div>';
 
-        return `
-            <section class="custom-category">
-                <div class="custom-category-head">
-                    <div class="custom-category-title">${info.emoji} ${info.label}</div>
-                    <div class="custom-category-count">${items.length}종 보유</div>
-                </div>
-                <div class="custom-item-row">${itemsHTML}</div>
-            </section>
-        `;
+        return '<section class="custom-category" data-custom-section="' + category + '">' +
+            '<div class="custom-category-head"><div><div class="custom-category-title">' + info.emoji + ' ' + info.label + '</div><div class="custom-category-count">보유 ' + allItems.length + '종 · 표시 ' + items.length + '종</div></div>' +
+            '<div class="custom-category-tools"><button type="button" class="custom-category-clear" data-clear-category="' + category + '" ' + (꾸미기상태[category] ? "" : "disabled") + '>이 슬롯 해제</button></div></div>' +
+            '<div class="custom-item-row">' + itemsHTML + '</div></section>';
     }).join("");
 
-    const 현재모자 = 꾸미기상태.hat?.item_name ?? "기본 모자";
-    const 현재안경 = 꾸미기상태.glasses?.item_name ?? "기본 안경";
-    const 현재옷 = 꾸미기상태.clothes?.item_name ?? "기본 옷";
-    const 현재망토 = 꾸미기상태.cape?.item_name ?? "기본 망토";
+    const slots = [
+        ["hat","🎩 모자"], ["glasses","👓 안경"], ["clothes","👕 옷"], ["cape","🦸 망토"],
+        ["skin","🐶 스킨"], ["effect","✨ 효과"], ["frame","🖼️ 프레임"]
+    ].map(([key,label]) => '<div class="custom-preview-slot"><small>' + label + '</small><strong>' + HTML이스케이프(꾸미기상태[key]?.item_name || "기본 상태") + '</strong></div>').join("");
+
     const 프레임코드 = String(꾸미기상태.frame?.item_code || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
     const 스킨코드 = String(꾸미기상태.skin?.item_code || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
     const 효과코드 = String(꾸미기상태.effect?.item_code || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    const currentImage = 현재유저정보?.profile_image || "https://i.postimg.cc/qB2wnCCq/1000004618-(2).png";
 
-    상태내용요소.innerHTML = `
-        <div class="customization-layout">
-            <div class="custom-preview">
-                <div class="preview-stage">
-                    <div class="preview-dori ${프레임코드 ? `has-profile-frame frame-${프레임코드}` : ""} ${스킨코드 ? "preview-" + 스킨코드 : ""} ${효과코드 ? "preview-" + 효과코드 : ""}">
-                        <img src="${HTML이스케이프(현재유저정보?.profile_image || "https://i.postimg.cc/qB2wnCCq/1000004618-(2).png")}" alt="돌이 미리보기">
-                        <div class="preview-layer preview-hat ${꾸미기상태.hat ? "" : "preview-empty"}" title="${HTML이스케이프(현재모자)}">${꾸미기상태.hat ? "🎩" : "모자 없음"}</div>
-                        <div class="preview-layer preview-glasses ${꾸미기상태.glasses ? "" : "preview-empty"}" title="${HTML이스케이프(현재안경)}">${꾸미기상태.glasses ? "👓" : "안경 없음"}</div>
-                        <div class="preview-layer preview-clothes ${꾸미기상태.clothes ? "" : "preview-empty"}" title="${HTML이스케이프(현재옷)}">${꾸미기상태.clothes ? "👕" : "옷 없음"}</div>
-                        <div class="preview-layer preview-cape ${꾸미기상태.cape ? "" : "preview-empty"}" title="${HTML이스케이프(현재망토)}">${꾸미기상태.cape ? "🦸 망토" : "망토 없음"}</div>
-                    </div>
-                </div>
-                <div class="preview-title">🐶 돌이 꾸미기</div>
-                <div class="preview-subtitle">보유한 아이템을 선택하면 미리보기에 즉시 반영됩니다.</div>
-                <div class="custom-actions" style="width:100%;max-width:320px;">
-                    <button class="custom-save" id="꾸미기저장버튼">💾 장착 저장</button>
-                    <button class="custom-reset" id="꾸미기초기화버튼">↺ 전체 해제</button>
-                </div>
-                <div class="custom-status" id="꾸미기상태문구">현재 장착 상태를 관리하고 있습니다.</div>
-            </div>
-            <div class="custom-controls">
-                ${categoryHTML}
-            </div>
-        </div>
-    `;
+    상태내용요소.innerHTML =
+        '<div class="custom-studio-toolbar">' +
+            '<input id="꾸미기검색" class="custom-studio-search" type="search" value="' + HTML이스케이프(꾸미기검색어) + '" placeholder="🔎 아이템 이름·등급 검색" aria-label="꾸미기 아이템 검색">' +
+            '<div class="custom-studio-filters" role="group" aria-label="아이템 필터">' + filterButtons + '</div>' +
+            '<div class="custom-studio-toolbar-bottom"><span class="custom-studio-count">보유 꾸미기 ' + customItems.length + '종 · ' + equippedCount + '/7 슬롯 장착</span>' +
+            '<div class="custom-studio-actions"><button type="button" class="custom-studio-action primary" id="꾸미기랜덤버튼">🎲 랜덤 코디</button><button type="button" class="custom-studio-action" id="꾸미기되돌리기" ' + (꾸미기이전상태 ? "" : "disabled") + '>↶ 실행 취소</button></div></div>' +
+        '</div>' +
+        '<div class="customization-layout">' +
+            '<div class="custom-preview">' +
+                '<div class="custom-studio-intro"><div><div class="custom-studio-kicker">DORI PERSONAL STUDIO</div><div class="preview-title">🐶 돌이 꾸미기</div></div><span class="custom-studio-equipped-count">' + equippedCount + ' / 7 장착</span></div>' +
+                '<div class="preview-stage">' +
+                    '<div class="preview-dori ' + (프레임코드 ? "has-profile-frame frame-" + 프레임코드 : "") + ' ' + (스킨코드 ? "preview-" + 스킨코드 : "") + ' ' + (효과코드 ? "preview-" + 효과코드 : "") + '">' +
+                        '<img src="' + HTML이스케이프(currentImage) + '" alt="돌이 미리보기">' +
+                        '<div class="preview-layer preview-hat ' + (꾸미기상태.hat ? "" : "preview-empty") + '" title="' + HTML이스케이프(꾸미기상태.hat?.item_name || "모자 없음") + '">🎩 <b>' + HTML이스케이프(꾸미기상태.hat?.item_name || "모자 없음") + '</b></div>' +
+                        '<div class="preview-layer preview-glasses ' + (꾸미기상태.glasses ? "" : "preview-empty") + '" title="' + HTML이스케이프(꾸미기상태.glasses?.item_name || "안경 없음") + '">👓 <b>' + HTML이스케이프(꾸미기상태.glasses?.item_name || "안경 없음") + '</b></div>' +
+                        '<div class="preview-layer preview-clothes ' + (꾸미기상태.clothes ? "" : "preview-empty") + '" title="' + HTML이스케이프(꾸미기상태.clothes?.item_name || "옷 없음") + '">👕 <b>' + HTML이스케이프(꾸미기상태.clothes?.item_name || "옷 없음") + '</b></div>' +
+                        '<div class="preview-layer preview-cape ' + (꾸미기상태.cape ? "" : "preview-empty") + '" title="' + HTML이스케이프(꾸미기상태.cape?.item_name || "망토 없음") + '">🦸 <b>' + HTML이스케이프(꾸미기상태.cape?.item_name || "망토 없음") + '</b></div>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="preview-subtitle">선택한 아이템은 미리보기에 즉시 반영되며, 저장 버튼을 눌러 계정에 적용할 수 있습니다.</div>' +
+                '<div class="custom-preview-slots">' + slots + '</div>' +
+                '<div class="custom-actions" style="width:100%;max-width:320px;">' +
+                    '<button class="custom-save" id="꾸미기저장버튼">💾 코디 저장</button>' +
+                    '<button class="custom-reset" id="꾸미기초기화버튼">↺ 기본 모습</button>' +
+                '</div>' +
+                '<div class="custom-status" id="꾸미기상태문구" aria-live="polite">기본 사이트 배경은 별도로 유지됩니다.</div>' +
+            '</div>' +
+            '<div class="custom-controls">' +
+                (categoryHTML || '<div class="custom-studio-empty">검색 조건에 맞는 아이템이 없습니다.<br>검색어를 지우거나 필터를 바꿔보세요.</div>') +
+            '</div>' +
+        '</div>';
+
+    const searchInput = document.getElementById("꾸미기검색");
+    searchInput?.addEventListener("input", event => {
+        const cursor = event.target.selectionStart;
+        꾸미기검색어 = event.target.value;
+        꾸미기화면표시();
+        const nextInput = document.getElementById("꾸미기검색");
+        if (nextInput) {
+            nextInput.focus();
+            try { nextInput.setSelectionRange(cursor, cursor); } catch (_) {}
+        }
+    });
+
+    상태내용요소.querySelectorAll("[data-custom-filter]").forEach(button => {
+        button.addEventListener("click", () => {
+            꾸미기표시필터 = button.dataset.customFilter || "전체";
+            꾸미기화면표시();
+        });
+    });
 
     상태내용요소.querySelectorAll("[data-custom-code]").forEach(button => {
         button.addEventListener("click", () => {
-            const item = 보유아이템목록.find(
-                value => value.item_code === button.dataset.customCode
-            );
-            if (!item) return;
-            꾸미기아이템선택(item);
+            const item = 보유아이템목록.find(value => value.item_code === button.dataset.customCode);
+            if (item) 꾸미기아이템선택(item);
         });
+    });
+
+    상태내용요소.querySelectorAll("[data-clear-category]").forEach(button => {
+        button.addEventListener("click", () => {
+            const category = button.dataset.clearCategory;
+            if (!Object.prototype.hasOwnProperty.call(꾸미기상태, category) || !꾸미기상태[category]) return;
+            꾸미기이전상태저장();
+            꾸미기상태[category] = null;
+            꾸미기화면표시();
+            const status = document.getElementById("꾸미기상태문구");
+            if (status) status.textContent = "✓ 선택한 슬롯을 해제했습니다. 저장하면 계정에 반영됩니다.";
+        });
+    });
+
+    document.getElementById("꾸미기랜덤버튼")?.addEventListener("click", () => {
+        꾸미기이전상태저장();
+        let changed = 0;
+        categories.forEach(category => {
+            const pool = 보유아이템목록.filter(item => 아이템꾸미기카테고리(item) === category && 숫자정리(item.quantity) > 0);
+            if (!pool.length) return;
+            const chosen = pool[Math.floor(Math.random() * pool.length)];
+            꾸미기상태[category] = { item_code:chosen.item_code, item_name:chosen.item_name || chosen.item_code, rarity:chosen.rarity || "일반" };
+            changed++;
+        });
+        꾸미기화면표시();
+        const status = document.getElementById("꾸미기상태문구");
+        if (status) status.textContent = changed ? "🎲 보유 아이템으로 랜덤 코디를 만들었습니다. 저장 버튼을 눌러 적용하세요." : "랜덤 코디에 사용할 꾸미기 아이템이 없습니다.";
+    });
+
+    document.getElementById("꾸미기되돌리기")?.addEventListener("click", () => {
+        if (!꾸미기이전상태) return;
+        꾸미기상태 = 꾸미기상태복사.call(null) && { ...꾸미기이전상태 };
+        for (const key of Object.keys(꾸미기상태)) {
+            꾸미기상태[key] = 꾸미기이전상태[key] ? { ...꾸미기이전상태[key] } : null;
+        }
+        꾸미기이전상태 = null;
+        꾸미기화면표시();
+        const status = document.getElementById("꾸미기상태문구");
+        if (status) status.textContent = "↶ 직전 코디 변경을 되돌렸습니다. 저장하면 계정에 반영됩니다.";
     });
 
     document.getElementById("꾸미기저장버튼")?.addEventListener("click", async () => {
         const button = document.getElementById("꾸미기저장버튼");
         const status = document.getElementById("꾸미기상태문구");
         if (button) button.disabled = true;
-        if (status) status.textContent = "저장 중...";
-
+        if (status) status.textContent = "코디를 계정에 저장하고 있습니다...";
         try {
             const savedToDb = await 꾸미기저장();
-            if (status) {
-                status.textContent = savedToDb
-                    ? "✓ 계정에 저장되었습니다. 다른 기기에서도 사용할 수 있습니다."
-                    : "✓ 브라우저에 저장되었습니다. DB 테이블을 연결하면 기기 간 동기화가 가능합니다.";
-            }
-        }
-        catch (error) {
+            if (status) status.textContent = savedToDb
+                ? "✓ 코디 저장 완료! 다른 기기에서도 같은 돌이 꾸미기를 사용할 수 있습니다."
+                : "✓ 이 브라우저에 임시 저장했습니다. 계정 동기화는 연결 상태를 확인해 주세요.";
+            꾸미기이전상태 = null;
+        } catch (error) {
             console.error("꾸미기 저장 오류:", error);
-            if (status) status.textContent = "저장 중 문제가 발생했습니다.";
-        }
-        finally {
+            if (status) status.textContent = error?.message || "저장 중 문제가 발생했습니다.";
+        } finally {
             if (button) button.disabled = false;
         }
     });
 
     document.getElementById("꾸미기초기화버튼")?.addEventListener("click", () => {
+        꾸미기이전상태저장();
         꾸미기상태초기화();
         꾸미기화면표시();
+        const status = document.getElementById("꾸미기상태문구");
+        if (status) status.textContent = "기본 모습으로 되돌렸습니다. 사이트 배경은 그대로 유지됩니다.";
     });
 }
 
 
 function 꾸미기아이템선택(item) {
     const category = 아이템꾸미기카테고리(item);
-    if (!category) return;
+    if (!category || !꾸미기상태[category] && 숫자정리(item.quantity) <= 0) return;
 
-    꾸미기상태[category] = {
-        item_code: item.item_code,
-        item_name: item.item_name ?? item.item_code,
-        rarity: item.rarity ?? "일반"
-    };
-
+    꾸미기이전상태저장();
+    if (꾸미기상태[category]?.item_code === item.item_code) {
+        꾸미기상태[category] = null;
+    } else {
+        꾸미기상태[category] = {
+            item_code: item.item_code,
+            item_name: item.item_name ?? item.item_code,
+            rarity: item.rarity ?? "일반"
+        };
+    }
     꾸미기화면표시();
+    const status = document.getElementById("꾸미기상태문구");
+    if (status) status.textContent = 꾸미기상태[category]
+        ? "✓ " + (item.item_name || item.item_code) + " 선택 완료 · 저장 전 미리보기"
+        : "✓ " + (item.item_name || item.item_code) + " 장착을 해제했습니다.";
 }
 
 
