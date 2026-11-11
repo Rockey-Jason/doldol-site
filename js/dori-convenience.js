@@ -57,22 +57,18 @@
     document.body.classList.toggle("dori-conv-high-contrast",!!prefs.contrast);
     document.body.classList.toggle("dori-conv-reader",!!prefs.reader);
   };
-  const savePrefs = () => {
-    try { localStorage.setItem(PREF_KEY,JSON.stringify(prefs)); } catch (_) {}
-    applyPrefs();
-  };
   applyPrefs();
 
   const root = document.createElement("div");
   root.id = "dori-quick-access-root";
-  root.innerHTML = '<button id="dori-quick-launcher" type="button" aria-expanded="false" aria-controls="dori-quick-menu" aria-label="돌이사이트 빠른 메뉴 열기"><span id="dori-quick-mark" aria-hidden="true">D</span><span id="dori-quick-copy">빠른 메뉴<small>검색 · 이동 · 편의 설정</small></span><span id="dori-quick-caret" aria-hidden="true">⌃</span></button><nav id="dori-quick-menu" aria-label="빠른 실행 메뉴" data-open="false"><div class="dori-quick-menu-title">어디로 이동하거나 무엇을 할까?</div><div class="dori-quick-menu-grid"></div><div class="dori-quick-menu-tip">검색 단축키: Ctrl + K 또는 / · 닫기: Esc</div></nav>';
+  root.innerHTML = '<button id="dori-quick-launcher" type="button" aria-expanded="false" aria-controls="dori-quick-menu" aria-label="돌이사이트 빠른 메뉴 열기"><span id="dori-quick-mark" aria-hidden="true">D</span><span id="dori-quick-copy">빠른 메뉴<small>검색 · 즐겨찾기 · 이동</small></span><span id="dori-quick-caret" aria-hidden="true">⌃</span></button><nav id="dori-quick-menu" aria-label="빠른 실행 메뉴" data-open="false"><div class="dori-quick-menu-title">어디로 이동하거나 무엇을 할까?</div><div class="dori-quick-menu-grid"></div><div class="dori-quick-menu-tip">검색 단축키: Ctrl + K 또는 / · 닫기: Esc</div></nav>';
   (document.body || document.documentElement).appendChild(root);
 
   const overlay = document.createElement("div");
   overlay.id = "dori-convenience-overlay";
   overlay.dataset.open = "false";
   overlay.hidden = true;
-  overlay.innerHTML = '<section class="dori-conv-dialog" role="dialog" aria-modal="true" aria-labelledby="dori-conv-title"><header class="dori-conv-head"><div><div class="dori-conv-heading" id="dori-conv-title">돌이사이트 통합 검색</div><div class="dori-conv-subtitle" id="dori-conv-subtitle">메뉴와 현재 페이지의 항목을 한 번에 찾아봐.</div></div><button class="dori-conv-close" type="button" aria-label="닫기">×</button></header><div class="dori-conv-body" id="dori-conv-search-view"><input id="dori-conv-search" type="search" autocomplete="off" placeholder="어떤 메뉴나 기능을 찾고 있어?" aria-label="사이트 통합 검색"><div class="dori-conv-search-hint">메뉴 이름, 기능 이름, 현재 페이지의 제목을 입력해 봐.</div><div class="dori-conv-filters" role="group" aria-label="검색 결과 범위"><button type="button" data-search-filter="all">전체 메뉴</button><button type="button" data-search-filter="favorites">★ 즐겨찾기</button><button type="button" data-search-filter="recent">◷ 최근 방문</button></div><div id="dori-conv-results" role="listbox" aria-label="검색 결과"></div></div><div class="dori-conv-body" id="dori-conv-preferences-view" hidden><div class="dori-pref-grid"><div class="dori-pref-card"><span class="dori-pref-label">글자 크기</span><div class="dori-pref-options" data-pref="font"><button data-value="small" type="button">작게</button><button data-value="normal" type="button">보통</button><button data-value="large" type="button">크게</button><button data-value="largest" type="button">아주 크게</button></div><p>제목과 본문에서 사용하는 상대 글자 크기에 적용돼.</p></div><div class="dori-pref-card"><span class="dori-pref-label">화면 가독성</span><button class="dori-pref-toggle" type="button" data-pref-toggle="contrast">고대비 화면</button><p>글자와 테두리의 대비를 높여 읽기 쉽게 해.</p></div><div class="dori-pref-card"><span class="dori-pref-label">읽기 편한 간격</span><button class="dori-pref-toggle" type="button" data-pref-toggle="reader">넓은 줄 간격</button><p>본문과 목록의 줄 간격을 넓혀 줘.</p></div><div class="dori-pref-card"><span class="dori-pref-label">움직임 효과</span><button class="dori-pref-toggle" type="button" data-pref-toggle="motion">애니메이션 줄이기</button><p>화면 전환과 움직임을 최소화해.</p></div></div><div class="dori-pref-footer"><button class="dori-pref-reset" id="dori-pref-reset" type="button">기본 설정으로 초기화</button><button class="dori-pref-save" id="dori-pref-save" type="button">설정 저장 완료</button></div></div></section>';
+  overlay.innerHTML = '<section class="dori-conv-dialog" role="dialog" aria-modal="true" aria-labelledby="dori-conv-title"><header class="dori-conv-head"><div><div class="dori-conv-heading" id="dori-conv-title">돌이사이트 통합 검색</div><div class="dori-conv-subtitle" id="dori-conv-subtitle">메뉴와 현재 페이지의 항목을 한 번에 찾아봐.</div></div><button class="dori-conv-close" type="button" aria-label="닫기">×</button></header><div class="dori-conv-body" id="dori-conv-search-view"><input id="dori-conv-search" type="search" autocomplete="off" placeholder="어떤 메뉴나 기능을 찾고 있어?" aria-label="사이트 통합 검색"><div class="dori-conv-search-hint">메뉴 이름, 기능 이름, 현재 페이지의 제목을 입력해 봐.</div><div class="dori-conv-filters" role="group" aria-label="검색 결과 범위"><button type="button" data-search-filter="all">전체 메뉴</button><button type="button" data-search-filter="favorites">★ 즐겨찾기</button><button type="button" data-search-filter="recent">◷ 최근 방문</button></div><div id="dori-conv-results" role="listbox" aria-label="검색 결과"></div></div></section>';
   document.body.appendChild(overlay);
   const toast = document.createElement("div");
   toast.id = "dori-conv-toast";
@@ -87,10 +83,6 @@
   const searchInput = overlay.querySelector("#dori-conv-search");
   const resultBox = overlay.querySelector("#dori-conv-results");
   const searchView = overlay.querySelector("#dori-conv-search-view");
-  const prefView = overlay.querySelector("#dori-conv-preferences-view");
-  const titleNode = overlay.querySelector("#dori-conv-title");
-  const subtitleNode = overlay.querySelector("#dori-conv-subtitle");
-  let activeView = "search";
   let toastTimer = 0;
   let previousFocus = null;
   let searchItems = [];
@@ -111,27 +103,17 @@
     menu.dataset.open = "true";
     launcher.setAttribute("aria-expanded","true");
   };
-  const openOverlay = (view="search",filter="all") => {
+  const openOverlay = (filter="all") => {
     closeMenu();
     previousFocus = document.activeElement;
-    activeView = view;
-    searchView.hidden = view !== "search";
-    prefView.hidden = view !== "preferences";
-    titleNode.textContent = view === "search" ? "돌이사이트 통합 검색" : "내 편의 설정";
-    subtitleNode.textContent = view === "search" ? "메뉴와 현재 페이지의 항목을 한 번에 찾아봐." : "이 기기에 저장되어 다음 방문에도 유지돼.";
+    searchFilter = ["all","favorites","recent"].includes(filter) ? filter : "all";
     overlay.hidden = false;
     overlay.dataset.open = "true";
-    if (view === "search") {
-      searchFilter = ["all","favorites","recent"].includes(filter) ? filter : "all";
-      buildSearchItems();
-      searchInput.value = "";
-      updateFilterButtons();
-      renderResults("");
-      window.setTimeout(() => searchInput.focus(),30);
-    } else {
-      renderPreferences();
-      window.setTimeout(() => overlay.querySelector(".dori-pref-options button[aria-pressed='true'],.dori-pref-toggle")?.focus(),30);
-    }
+    buildSearchItems();
+    searchInput.value = "";
+    updateFilterButtons();
+    renderResults("");
+    window.setTimeout(() => searchInput.focus(),30);
   };
   const closeOverlay = () => {
     overlay.dataset.open = "false";
@@ -150,10 +132,10 @@
     button.append(mark,text); button.addEventListener("click",action); menuGrid.appendChild(button);
     return button;
   };
-  makeQuickAction("⌕","전체 메뉴 검색",()=>openOverlay("search"));
+  makeQuickAction("⌕","전체 메뉴 검색",()=>openOverlay());
   makeQuickAction("⌂","돌이사이트 홈",()=>location.assign(homeHref));
   makeQuickAction("✎","버그·아이디어 건의함",()=>location.assign(feedbackHref));
-  makeQuickAction("⚙","편의 설정",()=>openOverlay("preferences"));
+  makeQuickAction("⚙","사이트 설정",()=>location.assign(rootHref("settings.html#site-preferences")));
   makeQuickAction("↑","페이지 맨 위로",()=>{closeMenu();window.scrollTo({top:0,behavior:prefs.motion?"auto":"smooth"});});
   makeQuickAction("←","이전 페이지",()=>{closeMenu();if(history.length>1)history.back();else location.assign(homeHref);});
   makeQuickAction("↗","현재 페이지 공유",async()=>{
@@ -164,8 +146,8 @@
       else showToast("이 브라우저에서는 공유 기능을 사용할 수 없어.");
     } catch(error) { if(error?.name!=="AbortError") showToast("공유를 완료하지 못했어."); }
   });
-  makeQuickAction("★","즐겨찾기 모아보기",()=>openOverlay("search","favorites"));
-  makeQuickAction("◷","최근 방문 페이지",()=>openOverlay("search","recent"));
+  makeQuickAction("★","즐겨찾기 모아보기",()=>openOverlay("favorites"));
+  makeQuickAction("◷","최근 방문 페이지",()=>openOverlay("recent"));
   const favoritePageAction = makeQuickAction("☆","현재 페이지 즐겨찾기",()=>{
     const found = navState.favorites.includes(currentPathKey);
     navState.favorites = found
@@ -267,35 +249,13 @@
     else if(event.key==="Enter"&&options.length){event.preventDefault();options[0].click();}
   });
 
-  function renderPreferences() {
-    overlay.querySelectorAll("[data-pref]").forEach(group=>{
-      const key=group.dataset.pref;
-      group.querySelectorAll("button[data-value]").forEach(button=>button.setAttribute("aria-pressed",String(prefs[key]===button.dataset.value)));
-    });
-    overlay.querySelectorAll("[data-pref-toggle]").forEach(button=>{
-      const key=button.dataset.prefToggle;
-      const enabled=!!prefs[key];
-      button.setAttribute("aria-pressed",String(enabled));
-      button.textContent=button.dataset.prefToggle==="contrast"?(enabled?"고대비 사용 중":"고대비 화면 켜기"):
-        button.dataset.prefToggle==="reader"?(enabled?"넓은 줄 간격 사용 중":"넓은 줄 간격 켜기"):
-        (enabled?"애니메이션 줄이는 중":"애니메이션 줄이기");
-    });
-  }
-  overlay.querySelectorAll(".dori-pref-options button[data-value]").forEach(button=>{
-    button.addEventListener("click",()=>{prefs.font=button.dataset.value;savePrefs();renderPreferences();});
-  });
-  overlay.querySelectorAll("[data-pref-toggle]").forEach(button=>{
-    button.addEventListener("click",()=>{const key=button.dataset.prefToggle;prefs[key]=!prefs[key];savePrefs();renderPreferences();});
-  });
-  overlay.querySelector("#dori-pref-reset").addEventListener("click",()=>{prefs={...defaults};savePrefs();renderPreferences();showToast("편의 설정을 기본값으로 돌렸어.");});
-  overlay.querySelector("#dori-pref-save").addEventListener("click",()=>{savePrefs();closeOverlay();showToast("편의 설정을 저장했어.");});
 
   document.addEventListener("keydown",(event)=>{
     const target=event.target;
     const editing=target && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
     if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){
       event.preventDefault();
-      if(overlay.dataset.open==="true") closeOverlay(); else openOverlay("search");
+      if(overlay.dataset.open==="true") closeOverlay(); else openOverlay();
       return;
     }
     if(event.key==="/"&&!editing&&!event.ctrlKey&&!event.metaKey&&!event.altKey){
