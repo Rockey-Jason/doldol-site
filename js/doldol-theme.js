@@ -289,10 +289,20 @@
       return window.__doriSiteBackgroundClient;
     };
     let loadSequence = 0;
+    let subscribedClient = null;
+    const attachAuthListener = client => {
+      if (!client?.auth?.onAuthStateChange || subscribedClient === client) return;
+      subscribedClient = client;
+      client.auth.onAuthStateChange(event => {
+        if (event === "SIGNED_OUT") apply("");
+        else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED") load();
+      });
+    };
     const load = async () => {
       const sequence = ++loadSequence;
       try {
         const client = await clientReady();
+        attachAuthListener(client);
         const {data:{session},error:sessionError} = await client.auth.getSession();
         if(sessionError) throw sessionError;
         if(!session) { apply(""); return; }
@@ -308,13 +318,6 @@
     const start = () => {
       if(!document.body) return;
       load();
-      const existing = window.doriSupabase || window.supabaseClient || window.sb;
-      if(existing?.auth?.onAuthStateChange) {
-        existing.auth.onAuthStateChange((event) => {
-          if(event==="SIGNED_OUT") apply("");
-          else if(event==="SIGNED_IN" || event==="TOKEN_REFRESHED" || event==="USER_UPDATED") load();
-        });
-      }
       window.addEventListener("storage",event=>{
         if(event.key && event.key.includes("auth-token")) load();
       });
