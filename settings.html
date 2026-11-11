@@ -4781,10 +4781,11 @@ function 꾸미기화면표시() {
 
     document.getElementById("꾸미기되돌리기")?.addEventListener("click", () => {
         if (!꾸미기이전상태) return;
-        꾸미기상태 = 꾸미기상태복사.call(null) && { ...꾸미기이전상태 };
-        for (const key of Object.keys(꾸미기상태)) {
-            꾸미기상태[key] = 꾸미기이전상태[key] ? { ...꾸미기이전상태[key] } : null;
+        const restored = {};
+        for (const key of Object.keys(꾸미기이전상태)) {
+            restored[key] = 꾸미기이전상태[key] ? { ...꾸미기이전상태[key] } : null;
         }
+        꾸미기상태 = restored;
         꾸미기이전상태 = null;
         꾸미기화면표시();
         const status = document.getElementById("꾸미기상태문구");
