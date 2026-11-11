@@ -157,3 +157,43 @@ Updated status: roadmap area 8 Logistics and area 9 Item ownership remain PARTIA
 - Main is currently `a66f653b0ad597bfa6b2a0e900a4a8928dbce3fc`; PR #11 still has an old merge base and is 347 ahead / 254 behind. Do not use GitHub's mergeable flag as a safety proof.
 - PR #10 is open/non-draft and PR #9 is open/draft; their older catalog, factory, simulation, world, power, fluid, logistics and custody files were not blindly merged. PR #8 remains the separate Godot project and was not merged into the Three.js/WebGL game.
 - PR #11 remains draft/open. No main merge, Pages/Render deployment, production database mutation, production save mutation or real-user reward/balance change was performed.
+
+
+## 2026-11-11 — shipment custody integration checkpoint
+
+**Code checkpoint:** `c397cf171db9e5ba6da3e51f9a1e475ec7076252`  
+**Main HEAD:** `293a1e8a147648763777abb6e41dd903fa22a82c`  
+**Branch divergence:** 355 ahead / 280 behind from merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`.
+
+### Updated roadmap evidence
+
+| Master area | Status | New evidence | Remaining acceptance blocker |
+|---|---|---|---|
+| 5. Items, ownership and logistics | PARTIAL / CRITICAL | Shipment reservation allocations now transfer into explicit `SHIPMENT_CARGO` custody; delivery consumes the cargo journal exactly once; failed delivery moves the same stack identity into persisted `WORLD_DROP` custody; dispatch/settlement rollback and rebuild checks are covered by unit and live-fixture source. | World-drop pickup/rendering, independent warehouse stock, partial conveyor parcels, demolition, Fusion output custody, restart/reconnect recovery and global cross-domain conservation remain open. |
+| 11. Shipping, contracts and economy | PARTIAL | Shipment cargo no longer disappears from custody or masquerades as warehouse stock; failed cargo has a persisted world-drop record. | Full contract catalog, route-derived risk, server-authoritative reward settlement, world-drop recovery UX and full delivery/reload E2E remain open. |
+
+### Updated 20-item acceptance evidence
+
+| # | Item | Status | Update |
+|---:|---|---|---|
+| 8 | No item duplication or loss | PARTIAL / CRITICAL | Dispatch, delivered-cargo consumption and failed-cargo world-drop transitions now have explicit transaction IDs and rollback; this is not a proof across every owner domain. |
+| 9 | Conveyors and automatic mining | PARTIAL | No change to sorter/splitter/merger/lift/curve/multi-lane, deadlock recovery or full logistics custody acceptance. |
+| 11 | Six fluids, pressure and temperature | PARTIAL | No change; five non-water live fluid paths remain incomplete. |
+| 15 | Exactly one Infinity output | PARTIAL | No change; authoritative output custody and restart recovery remain open. |
+
+All 12 roadmap areas remain PARTIAL or UNVERIFIED; no final checklist item is COMPLETE.
+
+### Verification boundary
+
+- Production contract-runtime test source executed against the current fetched runtime modules in an isolated V8 harness: **8/8 passed**.
+- The current factory's actual `rebuildOwnershipLedger` function was exercised with the current ownership/contract/simulation modules: delivery consumed 2 units once; failed delivery preserved 2 units as a world drop; rebuilt ledgers validated.
+- Factory source and Playwright smoke source syntax compilation: **2/2 passed**.
+- GitHub Actions lookup for code checkpoint `c397cf171db9e5ba6da3e51f9a1e475ec7076252` returned no workflow runs and no combined status entries. Full Node CI and actual Playwright browser regression remain **UNVERIFIED**. The new browser scenario is committed but has not been observed running.
+- Physical Android/iOS playthrough and 60-minute wall-clock soak remain **UNVERIFIED**.
+
+### Integration boundary
+
+- New shipment records use custody version 1 and the `SHIPMENT_CARGO` owner type. Legacy shipment records without this marker retain the earlier snapshot mapping to avoid silently rewriting existing saves.
+- The `worldDrops` state is now a persisted custody source, but no player pickup/render/cleanup path has been completed.
+- Contract reward application is still client-side and is not server-authoritative.
+- PR #11 remains open and unmerged. Main remains `293a1e8a147648763777abb6e41dd903fa22a82c`; no merge, deployment, production DB change or user-save mutation was performed.
