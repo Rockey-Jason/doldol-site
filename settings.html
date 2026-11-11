@@ -1484,6 +1484,7 @@ body::before {
 @media(max-width:480px){.custom-studio-filters button{flex:1}.custom-studio-actions{width:100%}.custom-studio-action{flex:1}.custom-item-row{grid-template-columns:repeat(2,minmax(0,1fr))}.custom-category{padding:13px}.preview-stage{height:240px}}
 
 
+.inventory-icon img{display:block;width:100%;height:100%;object-fit:contain;padding:5px}.inventory-icon span{font-size:27px}
 /* REAL DORI CHARACTER + FRAME ARCHIVE */
 .dori-character-stage{position:relative;isolation:isolate;width:min(100%,330px);height:390px;margin:8px auto 12px;overflow:visible;border:1px solid rgba(255,255,255,.1);border-radius:30px;background:radial-gradient(ellipse at 50% 48%,rgba(211,164,111,.18),transparent 55%),linear-gradient(155deg,rgba(255,255,255,.055),rgba(5,10,35,.16));box-shadow:inset 0 1px rgba(255,255,255,.08),0 18px 48px rgba(0,0,0,.22)}
 .dori-real-base{position:absolute;z-index:2;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;pointer-events:none;filter:drop-shadow(0 12px 15px rgba(0,0,0,.18))}
@@ -4184,6 +4185,7 @@ function 아이템꾸미기카테고리(item) {
 
 function 꾸미기이미지경로(item) {
     const code = String(item?.item_code || "").toUpperCase();
+    if (아이템꾸미기카테고리(item) === "frame") return 프레임이미지경로(item);
     if (!/^[A-Z0-9_-]{2,80}$/.test(code)) return "assets/dori-items/FRAME_GENERIC.svg";
     return "assets/dori-items/" + code + ".svg";
 }
@@ -4242,7 +4244,7 @@ async function 프레임목록가져오기(user) {
 
     const jobs = await Promise.allSettled([
         supabase.from("dori_pass_cosmetics")
-            .select("season_key,tier,cosmetic_key,kind,display_name,rarity,icon,claimed_at")
+            .select("season_key,tier,cosmetic_key,kind,display_name,rarity,icon,is_equipped,claimed_at")
             .eq("user_id", user.id).eq("kind", "profile_frame"),
         supabase.from("user_items")
             .select("item_code,item_name,item_type,rarity,quantity")
@@ -4256,7 +4258,7 @@ async function 프레임목록가져오기(user) {
 
     const passResult = jobs[0].status === "fulfilled" ? jobs[0].value : null;
     if (passResult && !passResult.error) {
-        (passResult.data || []).filter(row => row.claimed_at || row.is_equipped || row.kind === "profile_frame")
+        (passResult.data || []).filter(row => Boolean(row.claimed_at || row.is_equipped))
             .forEach(row => addFrame({
                 item_code: row.cosmetic_key,
                 item_name: row.display_name,
@@ -4764,7 +4766,7 @@ function 내아이템화면표시() {
             }
             return '<article class="inventory-card ' + (category ? "custom-item" : "") + " " +
                 (equipped ? "equipped" : "") + '" data-item-code="' + HTML이스케이프(item.item_code) + '">' +
-                '<div class="inventory-icon">' + 아이템아이콘(item) + '</div>' +
+                '<div class="inventory-icon"><img src="' + 꾸미기이미지경로(item) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>' + 아이템아이콘(item) + '</span></div>' +
                 '<div class="inventory-type">' + HTML이스케이프(아이템용도(item)) + '</div>' +
                 '<div class="inventory-name">' + HTML이스케이프(item.item_name ?? "이름 없는 아이템") + '</div>' +
                 '<div class="inventory-meta"><span class="rarity-badge">' +
