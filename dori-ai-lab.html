@@ -361,7 +361,7 @@ $("searchBtn").addEventListener("click", async () => {
   const query = $("searchQuery").value.trim();
   if (!query || busy) return;
   const scope = $("searchScope").value;
-  const scopeText = scope === "world" ? "공개 세계 지식을 중심으로" : scope === "dori" ? "돌이사이트 내부 자료만을 중심으로" : "돌이사이트 내부 자료와 공개 세계 지식을 함께 활용해서";
+  const scopeText = scope === "world" ? "공개 세계 지식을 중심으로" : "돌이 세계의 설정과 공개 세계 지식을 함께 고려해서";
   const prompt = scope === "dori"
     ? query + "에 대해 돌이사이트 내부 자료에서 확인 가능한 정보를 찾아 핵심 내용을 알려줘? 확인되지 않는 내용은 추측하지 말고, 계정 권한이 필요한 자료는 권한 범위 밖으로 접근하지 마."
     : query + "에 대해 " + scopeText + " 조사해 알려줘? 확인 가능한 문서 제목, 원문 링크(URL), 핵심 요약을 제시해. 최신 자료인지 확인하지 못하면 최신이라고 단정하지 말고, 출처가 없는 사실은 추측하지 마. 돌이사이트 자료는 권한이 확인된 범위 안에서만 사용해.";
@@ -484,10 +484,10 @@ $("economyBtn").addEventListener("click", async () => {
     name:x.name, ticker:x.ticker, current_price:x.current_price, previous_price:x.previous_price,
     change_percent: Number(x.previous_price) > 0 ? Number((((Number(x.current_price)-Number(x.previous_price))/Number(x.previous_price))*100).toFixed(2)) : null
   }));
-  const prompt = topic + "의 최근 경제·산업 동향과 관련된 공개 자료를 조사해 알려줘? 아래 돌돌증권 데이터도 함께 분석해 줘.\n\n" +
-    "아래는 돌돌증권에서 실제 조회한 돌이 세계 시뮬레이션 종목 데이터야. 이 수치는 현실의 주식시장이나 실제 기업 데이터가 아니라 돌이사이트 내부의 가상 세계 데이터야.\n" +
+  const prompt = topic + "의 최근 경제·산업 동향과 관련된 공개 자료를 조사해 알려줘? 아래 제공된 가상 시장 데이터도 함께 분석해 줘.\n\n" +
+    "아래는 가상 세계의 기업 가격 데이터야. 현실의 주식시장이나 실제 기업의 실적을 나타내는 값이 아니야.\n" +
     JSON.stringify(market) +
-    "\n\n요구사항: 1) 데이터 관찰 요약 2) 상승·하락 종목 및 계산 가능한 변화 3) 산업 간 관계와 공급망 4) 기회와 위험 5) 추가로 필요한 지표 6) 결론. 현실 세계 산업을 설명할 때는 별도 공개 출처를 제시하고, 돌이 세계 자료와 절대 혼동하지 마. 제공되지 않은 매출·고용·생산량·시장점유율은 만들어내지 마. 자료가 부족한 분석은 한계를 밝혀.";
+    "\n\n요구사항: 1) 데이터 관찰 요약 2) 상승·하락 종목 및 계산 가능한 변화 3) 산업 간 관계와 공급망 4) 기회와 위험 5) 추가로 필요한 지표 6) 결론. 현실 세계 산업을 설명할 때는 별도 공개 출처를 제시하고, 가상 세계 자료와 혼동하지 마. 제공되지 않은 매출·고용·생산량·시장점유율은 만들어내지 마. 자료가 부족한 분석은 한계를 밝혀.";
   setOutput("economyOutput", "시장 데이터와 관련 지식을 분석 중...", false);
   setBusyButton($("economyBtn"), true, "경제·산업 분석 실행 ↗");
   try {
