@@ -4312,12 +4312,13 @@ async function 꾸미기저장() {
 
 
 function 꾸미기상태초기화() {
+    const 현재사이트배경 = 꾸미기상태.background;
     꾸미기상태 = {
         hat: null,
         glasses: null,
         clothes: null,
         cape: null,
-        background: null,
+        background: 현재사이트배경,
         skin: null,
         effect: null,
         frame: null
@@ -4406,6 +4407,7 @@ function 내아이템화면표시() {
     const filtered = 보유아이템목록.filter(item => {
         if (아이템필터 === "전체") return true;
         if (아이템필터 === "꾸미기") return Boolean(아이템꾸미기카테고리(item));
+        if (아이템필터 === "배경") return 아이템사이트배경인가(item);
         return 아이템꾸미기카테고리(item) === 아이템필터;
     });
 
@@ -4416,6 +4418,7 @@ function 내아이템화면표시() {
         ["glasses", "안경"],
         ["clothes", "옷"],
         ["cape", "망토"],
+        ["배경", "배경"],
         ["skin", "스킨"],
         ["effect", "효과"]
     ];
