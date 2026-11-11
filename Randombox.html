@@ -568,6 +568,9 @@ button {
     border-top: 1px solid rgba(255,255,255,0.08);
     flex-shrink: 0;
 }
+.인벤토리안내{margin:-9px 0 12px;color:rgba(235,239,255,.68);font-size:12px;line-height:1.55}
+.인벤토리바로가기{display:inline-flex;align-items:center;justify-content:center;margin-top:8px;padding:8px 12px;border:1px solid rgba(132,158,255,.28);border-radius:10px;color:#e8edff;background:rgba(101,119,255,.13);text-decoration:none;font-size:13px;transition:.2s ease}
+.인벤토리바로가기:hover{transform:translateY(-2px);border-color:rgba(173,185,255,.58);background:rgba(101,119,255,.22)}
 
 .아이템그리드 {
     display: grid;
@@ -1154,7 +1157,10 @@ button {
         <h2 class="패널제목">
             🎒 내 아이템
         </h2>
-
+        <div class="인벤토리안내">
+            코인·경험치는 획득 즉시 지급되고 특별 칭호는 자동 장착됩니다. 보관 중인 꾸미기·배율 아이템은 아래에서 사용할 수 있어요.
+            <br><a class="인벤토리바로가기" href="settings.html">🎨 내 아이템 사용 / 장착하기</a>
+        </div>
 
         <div
             class="아이템그리드"
