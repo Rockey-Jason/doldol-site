@@ -132,3 +132,36 @@ This pass adds and wires the following additional behavior on branch `codex/doro
 - The automatic-mine regression remains in `e2e/factory-smoke.mjs`: after 81 fixed ticks it asserts a non-null `ITEM_IRON_ORE` output, exact one-unit yield, deposit decrement, power RUNNING, and drill wear. The earlier browser run passed, but the same scenario has not yet been re-executed on this code checkpoint.
 - Ownership remains **PARTIAL / CRITICAL**. The new conveyor-to-machine path is implemented and covered by a browser scenario, but independent warehouse stock, world drops, partial-stack parcel transfers, shipment settlement, demolition/salvage, Fusion output custody, and crash/reconnect recovery remain outside one authoritative live transaction boundary.
 - No main merge, Pages/Render deployment, production database/schema/permission/function change, or live-user save mutation was performed.
+
+
+## 2026-11-11 — shipment cargo custody and failed-delivery recovery (partial)
+
+**Code checkpoint before documentation:** `c397cf171db9e5ba6da3e51f9a1e475ec7076252`  
+**Main HEAD at comparison:** `293a1e8a147648763777abb6e41dd903fa22a82c`  
+**Main comparison:** development branch is 355 commits ahead / 280 behind; common merge base remains `26e88058b6d416d79459fee107aff4a5beb3d7e3`. PR #11 remains open and unmerged.
+
+### Live code changes
+
+- Added `SHIPMENT_CARGO` as an explicit ownership domain. Shipment dispatch now requires a valid ownership ledger and verifies the exact qualified reservation allocations before mutation.
+- Each reservation allocation is transferred from its reservation-scoped `ACTIVE_JOB` custody record into `SHIPMENT_CARGO` using a deterministic transaction ID. The reservation is committed only after every custody transfer succeeds.
+- Dispatch snapshots runtime inventory, metadata, ownership journal, shipment fields and contract events. Any transfer/commit/post-validation failure restores the original reservation, item quantities, ledger and shipment state.
+- Qualified delivery consumes each shipment custody stack into the consumed journal exactly once. Failed delivery transfers each cargo stack into a persisted `worldDrops` entry with the same custody stack ID and `WORLD_DROP` owner, rather than falsely labeling the cargo as warehouse stock.
+- `rebuildOwnershipLedger` now reconstructs in-transit `SHIPMENT_CARGO` records and persisted world-drop records. New delivered/failed shipments are excluded from the active custody snapshot after their consumed/drop transfer; their journal history remains. Legacy shipments without the new custody version retain the prior snapshot interpretation for save compatibility.
+- The live dispatch UI rebuilds and validates the custody snapshot before committing a shipment. Runtime module cache versions were bumped.
+
+### Tests and evidence
+
+- Contract runtime test source executed against the fetched production modules in an isolated V8 harness: **8/8 passed**. This includes reservation qualification, packaging, shipment dispatch, delivery consumption, cancellation, corrupt-reservation rejection, custody-failure rollback and failed-shipment world-drop transfer.
+- The exact live `rebuildOwnershipLedger` function was extracted from the current factory source and exercised with the production runtime modules: delivered cargo (2 units) was consumed once; failed cargo (2 units) moved to `WORLD_DROP`; both rebuilt snapshots and the final ledger validated.
+- Factory source syntax and Playwright smoke source async syntax compilation: **2/2 passed**.
+- GitHub Actions lookup for the current code checkpoint returned no workflow runs and no combined status entries. Therefore the full Node workflow and real Playwright browser regression remain **UNVERIFIED**; the isolated V8 checks are not reported as Node or Playwright passes.
+- The browser regression now includes a live fixture for successful delivery, consumed-journal conservation, failed delivery and world-drop custody. It must still run in GitHub Actions before this change is considered browser-verified.
+
+### Remaining ownership and shipping gaps
+
+- World drops now have a persisted custody domain, but player pickup/rendering and drop cleanup are not yet integrated.
+- Independent warehouse stock, partial-stack conveyor parcels, demolition/salvage, Fusion output custody, and crash/reconnect recovery remain open.
+- Contract rewards are still client-applied; server-authoritative settlement, full contract catalog and route-derived risk remain open.
+- Overall item ownership and shipping remain **PARTIAL / CRITICAL**. No global conservation or release-completion claim is made.
+
+No main merge, GitHub Pages/Render deployment, production database/schema/permission/function change, or real-user save/balance/reward mutation was performed.
