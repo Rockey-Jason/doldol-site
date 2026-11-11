@@ -2735,6 +2735,7 @@ let 꾸미기상태 = {
     hat: null,
     glasses: null,
     clothes: null,
+    cape: null,
     background: null,
     skin: null,
     effect: null,
@@ -2745,6 +2746,7 @@ const 꾸미기카테고리정보 = {
     hat: { label: "모자", emoji: "🎩" },
     glasses: { label: "안경", emoji: "👓" },
     clothes: { label: "옷", emoji: "👕" },
+    cape: { label: "망토", emoji: "🦸" },
     background: { label: "배경", emoji: "🖼️" },
     skin: { label: "스킨", emoji: "🐶" },
     effect: { label: "효과", emoji: "✨" },
@@ -4015,6 +4017,7 @@ function 아이템꾸미기카테고리(item) {
 
     if (code.startsWith("HAT_") || name.includes("모자")) return "hat";
     if (code.startsWith("GLASSES_") || name.includes("안경")) return "glasses";
+    if (code.startsWith("CAPE_") || name.includes("망토") || type === "cape") return "cape";
     if (code.startsWith("CLOTHES_") || name.includes("옷") || type === "clothes") return "clothes";
     if (code.startsWith("BACKGROUND_") || name.includes("배경") || type === "background") return "background";
     if (code.startsWith("SKIN_") || name.includes("스킨") || type === "skin") return "skin";
@@ -4104,26 +4107,32 @@ function 꾸미기저장키(userId) {
 
 function 꾸미기상태정규화(data) {
     const result = {
-        hat: null,
-        glasses: null,
-        clothes: null,
-        background: null,
-        skin: null,
-        effect: null,
-        frame: null
+        hat: null, glasses: null, clothes: null, cape: null,
+        background: null, skin: null, effect: null, frame: null
     };
 
     for (const category of Object.keys(result)) {
-        const value = data?.[category];
-        if (value && typeof value === "object" && value.item_code) {
-            result[category] = {
-                item_code: value.item_code,
-                item_name: value.item_name ?? value.item_code,
-                rarity: value.rarity ?? "일반"
-            };
+        let value = data?.[category];
+        // TEXT 컬럼은 코드 문자열, 프레임은 JSONB 객체일 수 있습니다.
+        if (typeof value === "string" && value.trim().startsWith("{")) {
+            try { value = JSON.parse(value); } catch (_) {}
         }
-    }
+        const code = value && typeof value === "object" ? value.item_code : value;
+        if (!code) continue;
 
+        const owned = 보유아이템목록.find(item =>
+            item.item_code === String(code) &&
+            아이템꾸미기카테고리(item) === category &&
+            숫자정리(item.quantity) > 0
+        );
+        if (!owned) continue;
+
+        result[category] = {
+            item_code: String(code),
+            item_name: (value && typeof value === "object" ? value.item_name : null) || owned.item_name || String(code),
+            rarity: (value && typeof value === "object" ? value.rarity : null) || owned.rarity || "일반"
+        };
+    }
     return result;
 }
 
@@ -4140,6 +4149,7 @@ async function 꾸미기정보가져오기(user) {
                     equipped_hat,
                     equipped_glasses,
                     equipped_clothes,
+                    equipped_cape,
                     equipped_background,
                     equipped_skin,
                     equipped_effect,
@@ -4153,6 +4163,7 @@ async function 꾸미기정보가져오기(user) {
                 hat: data.equipped_hat,
                 glasses: data.equipped_glasses,
                 clothes: data.equipped_clothes,
+                cape: data.equipped_cape,
                 background: data.equipped_background,
                 skin: data.equipped_skin,
                 effect: data.equipped_effect,
@@ -4206,12 +4217,13 @@ async function 꾸미기저장() {
     const userId = 현재유저정보.user_id;
     const payload = {
         user_id: userId,
-        equipped_hat: 꾸미기상태.hat,
-        equipped_glasses: 꾸미기상태.glasses,
-        equipped_clothes: 꾸미기상태.clothes,
-        equipped_background: 꾸미기상태.background,
-        equipped_skin: 꾸미기상태.skin,
-        equipped_effect: 꾸미기상태.effect,
+        equipped_hat: 꾸미기상태.hat?.item_code ?? null,
+        equipped_glasses: 꾸미기상태.glasses?.item_code ?? null,
+        equipped_clothes: 꾸미기상태.clothes?.item_code ?? null,
+        equipped_cape: 꾸미기상태.cape?.item_code ?? null,
+        equipped_background: 꾸미기상태.background?.item_code ?? null,
+        equipped_skin: 꾸미기상태.skin?.item_code ?? null,
+        equipped_effect: 꾸미기상태.effect?.item_code ?? null,
         equipped_frame: 꾸미기상태.frame
     };
 
@@ -4248,6 +4260,7 @@ function 꾸미기상태초기화() {
         hat: null,
         glasses: null,
         clothes: null,
+        cape: null,
         background: null,
         skin: null,
         effect: null,
@@ -4277,6 +4290,7 @@ function 내아이템화면표시() {
         ["hat", "모자"],
         ["glasses", "안경"],
         ["clothes", "옷"],
+        ["cape", "망토"],
         ["background", "배경"],
         ["skin", "스킨"],
         ["effect", "효과"]
