@@ -2083,6 +2083,27 @@ body::after{
 @media(prefers-reduced-motion:reduce){.achievement-progress-fill{animation:none}}
 
 .업적바로가기버튼{display:inline-flex;align-items:center;justify-content:center;margin-top:10px;padding:8px 12px;border-radius:10px;border:1px solid rgba(105,217,255,.28);background:rgba(105,217,255,.1);color:#c8f4ff;text-decoration:none;font-size:12px;font-weight:700}.업적바로가기버튼:hover{background:rgba(105,217,255,.2)}
+
+/* Centralized site-wide preferences: settings page is the only editor. */
+.site-preferences-card{margin:0 0 22px;padding:25px;border-radius:24px;animation:settingsCardIn .7s .18s var(--settings-ease) both}
+.site-preferences-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px}
+.site-preferences-heading h2{margin:0;color:#f5f7ff;font-size:clamp(20px,3vw,27px)}
+.site-preferences-heading p{max-width:700px;margin:9px 0 0;color:var(--muted);font-size:13px;line-height:1.7}
+.site-preferences-device{flex:0 0 auto;padding:7px 11px;border:1px solid rgba(105,201,255,.25);border-radius:999px;background:rgba(105,201,255,.08);color:#aee8ff;font-size:10px;white-space:nowrap}
+.site-preferences-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+.site-preferences-item{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:14px;min-width:0;min-height:126px;padding:16px;border:1px solid rgba(255,255,255,.11);border-radius:17px;background:linear-gradient(145deg,rgba(32,49,88,.47),rgba(8,17,39,.52))}
+.site-preferences-copy{display:flex;flex-direction:column;gap:6px}
+.site-preferences-copy strong{color:#f3f6ff;font-size:14px;font-weight:500}
+.site-preferences-copy span{color:rgba(229,236,255,.58);font-size:11px;line-height:1.6}
+.site-pref-options{display:flex;gap:6px;flex-wrap:wrap}
+.site-pref-options button,.site-pref-toggle,.site-preferences-footer button{min-height:36px;padding:8px 12px;border:1px solid rgba(153,180,255,.2);border-radius:10px;color:#cbd8f2;background:rgba(255,255,255,.045);font-family:inherit;font-size:11px;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
+.site-pref-options button[aria-pressed="true"],.site-pref-toggle[aria-pressed="true"]{border-color:rgba(105,201,255,.58);color:#f5fbff;background:linear-gradient(135deg,rgba(47,126,176,.35),rgba(83,93,183,.22));box-shadow:inset 0 0 0 1px rgba(105,201,255,.08)}
+.site-pref-options button:hover,.site-pref-toggle:hover,.site-preferences-footer button:hover{transform:translateY(-1px);border-color:rgba(142,205,255,.48)}
+.site-preferences-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:16px}
+#site-pref-status{margin:0;color:rgba(220,232,255,.55);font-size:11px;line-height:1.5}
+.site-preferences-footer button{border-color:rgba(154,174,212,.17);color:#b8c9e7;background:rgba(255,255,255,.035)}
+#site-preferences{scroll-margin-top:24px}
+@media(max-width:650px){.site-preferences-card{padding:19px 15px;border-radius:21px}.site-preferences-heading{flex-direction:column;gap:10px}.site-preferences-grid{grid-template-columns:1fr}.site-preferences-item{min-height:unset}.site-preferences-footer{align-items:flex-start;flex-direction:column}.site-preferences-footer button{width:100%}}
 </style>
 
 
@@ -2240,6 +2261,44 @@ body::after{
 <!-- =====================================================
      상태
 ===================================================== -->
+
+<section class="site-preferences-card glass-card" id="site-preferences" aria-labelledby="site-preferences-title">
+    <div class="site-preferences-heading">
+        <div>
+            <span class="section-eyebrow">SITE EXPERIENCE</span>
+            <h2 id="site-preferences-title">사이트 표시 및 접근성 설정</h2>
+            <p>돌이사이트 전체에서 사용할 화면 환경을 이곳에서 관리할 수 있습니다. 설정을 바꾸면 이 기기에 자동 저장되고 사이트에 바로 적용됩니다.</p>
+        </div>
+        <span class="site-preferences-device">이 기기에 저장</span>
+    </div>
+    <div class="site-preferences-grid">
+        <div class="site-preferences-item">
+            <div class="site-preferences-copy"><strong>글자 크기</strong><span>사이트 본문과 메뉴의 기본 글자 크기를 조절합니다.</span></div>
+            <div class="site-pref-options" role="group" aria-label="글자 크기">
+                <button type="button" data-site-pref="font" data-value="small" aria-pressed="false">작게</button>
+                <button type="button" data-site-pref="font" data-value="normal" aria-pressed="true">보통</button>
+                <button type="button" data-site-pref="font" data-value="large" aria-pressed="false">크게</button>
+                <button type="button" data-site-pref="font" data-value="largest" aria-pressed="false">아주 크게</button>
+            </div>
+        </div>
+        <div class="site-preferences-item">
+            <div class="site-preferences-copy"><strong>고대비 화면</strong><span>텍스트와 테두리의 대비를 높여 가독성을 개선합니다.</span></div>
+            <button type="button" class="site-pref-toggle" data-site-pref-toggle="contrast" aria-pressed="false">고대비 켜기</button>
+        </div>
+        <div class="site-preferences-item">
+            <div class="site-preferences-copy"><strong>넓은 줄 간격</strong><span>본문과 목록의 줄 간격을 넓혀 편하게 읽을 수 있습니다.</span></div>
+            <button type="button" class="site-pref-toggle" data-site-pref-toggle="reader" aria-pressed="false">줄 간격 넓히기</button>
+        </div>
+        <div class="site-preferences-item">
+            <div class="site-preferences-copy"><strong>애니메이션 줄이기</strong><span>화면 전환과 움직임 효과를 최소화합니다.</span></div>
+            <button type="button" class="site-pref-toggle" data-site-pref-toggle="motion" aria-pressed="false">모션 줄이기</button>
+        </div>
+    </div>
+    <div class="site-preferences-footer">
+        <p id="site-pref-status" role="status" aria-live="polite">설정은 변경 즉시 자동 저장됩니다.</p>
+        <button type="button" id="site-pref-reset">기본값으로 초기화</button>
+    </div>
+</section>
 
 <div class="status-box">
 
@@ -5058,6 +5117,7 @@ supabase.auth.onAuthStateChange(
 
 
 <script type="module" src="js/achievements.js?v=20261025-cross-site-1"></script>
-<script src="js/dori-convenience.js?v=20261111-2"></script>
+<script src="js/dori-settings-preferences.js?v=20261111-1"></script>
+<script src="js/dori-convenience.js?v=20261111-3"></script>
 </body>
 </html>
