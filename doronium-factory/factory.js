@@ -503,6 +503,8 @@ function packageDeliveryContract(shipmentID){
  log("배송 포장 완료 · "+(PACKAGING_STAGES.find(x=>x.id===result.stage)?.name||result.stage));markDirty();renderContracts();renderInventory();
 }
 function dispatchDeliveryContract(shipmentID){
+ const custodyAudit=rebuildOwnershipLedger(S);
+ if(!custodyAudit.valid){toast("출고 실패 · 아이템 소유권 검증 오류","warn");return}
  const result=dispatchContractShipment(S,S.contractRuntime,shipmentID);
  if(!result.ok){toast("출고 실패 · "+result.reason,"warn");return}
  log("운송 출고 완료 · "+result.shipment.quantity+"개");markDirty();renderContracts();renderInventory();
@@ -731,11 +733,20 @@ function rebuildOwnershipLedger(state=S){
   }
  }
  for(const shipment of state.contractRuntime?.shipments||[]){
+  if(shipment.custodyVersion===1&&shipment.cargoSettled===true)continue;
   for(let i=0;i<(shipment.cargo||[]).length;i++){
    const stack=shipment.cargo[i],qty=Math.max(0,Math.floor(Number(stack.quantity)||0));if(!stack.itemID||!qty)continue;
-   const ownerType=shipment.status==="DELIVERED"?"WAREHOUSE":shipment.status==="FAILED"?"WORLD_DROP":"ACTIVE_JOB";
-   addCustody(ledger,{stackID:"SHIPMENT:"+String(shipment.shipmentID)+":"+i,itemID:stack.itemID,quantity:qty,ownerType,ownerID:String(shipment.shipmentID),metadata:{quality:stack.quality,purity:stack.purity,synthetic:stack.synthetic,status:shipment.status}});
+   const custodyStackID=shipment.custodyVersion===1?String(stack.custodyStackID||("SHIPMENT:"+String(shipment.shipmentID)+":"+i)):"SHIPMENT:"+String(shipment.shipmentID)+":"+i;
+   const ownerType=shipment.custodyVersion===1?"SHIPMENT_CARGO":shipment.status==="DELIVERED"?"WAREHOUSE":shipment.status==="FAILED"?"WORLD_DROP":"ACTIVE_JOB";
+   addCustody(ledger,{stackID:custodyStackID,itemID:stack.itemID,quantity:qty,ownerType,ownerID:String(shipment.shipmentID),metadata:{quality:stack.quality,purity:stack.purity,synthetic:stack.synthetic,status:shipment.status}});
   }
+ }
+ for(let i=0;i<(state.worldDrops||[]).length;i++){
+  const drop=state.worldDrops[i],qty=Math.max(0,Math.floor(Number(drop?.quantity)||0));
+  const stackID=String(drop?.custodyStackID||drop?.stackID||"");
+  const itemID=canonicalItemID(drop?.itemID);
+  if(!stackID||!itemID||!qty)continue;
+  addCustody(ledger,{stackID,itemID,quantity:qty,ownerType:"WORLD_DROP",ownerID:String(drop.dropID||drop.id||("WORLD_DROP:"+i)),metadata:{quality:drop.quality,purity:drop.purity,synthetic:drop.synthetic===true,source:drop.source||"world-drop"}});
  }
  for(let i=0;i<(state.completionBuffer||[]).length;i++){
   const item=state.completionBuffer[i],qty=Math.max(0,Math.floor(Number(item.quantity)||0));if(!item.itemID||!qty)continue;
@@ -2289,6 +2300,48 @@ if(E2E_MODE){
      singleConsumed,batchConsumed,consumptionValid:consumptionValidation.valid,consumedWood:consumed.reduce((n,entry)=>n+entry.quantity,0),
      inventoryAfterConsumption,blocked,blockedBefore,blockedAfter,blockedReservations:Object.keys(S.runtime.reservations||{}).length,
      blockedByInvalidCustody:S.ownershipLedgerValidation?.valid===false,finalValidationValid:consumptionValidation.valid
+    };
+   }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
+  },
+  runLiveShipmentCustodyTest(){
+   const oldState=S,oldMotion=playerMotion,oldSelectedBuilding=selectedBuilding;
+   try{
+    S=freshState();S.runtime=createRuntimeState();S.inventory={};S.meta={};ensureItemStacks(S);S.contractRuntime=createContractState(123);
+    addItemStack(S,"ironPlate",10,{quality:95,purity:96,synthetic:false});
+    for(const[id,quantity]of Object.entries({wood:12,wire:4,circuit:6,quartz:8}))addItemStack(S,id,quantity,{quality:95,purity:95,synthetic:false});
+    syncLegacyInventory(S);
+    const makeContract=id=>({id,itemID:"ironPlate",quantity:2,minQuality:90,minPurity:90,forbidSynthetic:true,reward:500,deadlineSeconds:900,transitSeconds:1,insuranceRate:.75});
+    const firstStart=startContractShipment(S,S.contractRuntime,makeContract("E2E-SHIP-DELIVER"),{routeRisk:0,insured:true,nowSeconds:S.seconds});
+    const firstShipment=S.contractRuntime.shipments.find(x=>x.contractID==="E2E-SHIP-DELIVER");
+    if(!firstStart.ok||!firstShipment)throw new Error("shipment delivery fixture could not start");
+    for(let i=0;i<PACKAGING_STAGES.length;i++)if(!advancePackagingStage(S,S.contractRuntime,firstShipment.shipmentID).ok)throw new Error("shipment delivery packaging failed");
+    const firstReadyAudit=rebuildOwnershipLedger(S),firstDispatch=dispatchContractShipment(S,S.contractRuntime,firstShipment.shipmentID);
+    if(!firstDispatch.ok)throw new Error("shipment delivery dispatch failed:"+firstDispatch.reason);
+    const firstStackID=firstShipment.cargo[0].custodyStackID,firstDispatchAudit=rebuildOwnershipLedger(S);
+    const firstOwner= S.ownershipLedger.custody.find(x=>x.stackID===firstStackID);
+    S.seconds+=1;const firstArrival=advanceShipments(S,S.contractRuntime,1);
+    const deliveredAudit=rebuildOwnershipLedger(S);
+    const deliveredConsumed=S.ownershipLedger.consumed.filter(x=>String(x.transactionID).startsWith("SHIPMENT_DELIVERED:"+firstShipment.shipmentID+":"));
+    const deliveredCargoStillOwned=S.ownershipLedger.custody.some(x=>x.stackID===firstStackID);
+    const secondStart=startContractShipment(S,S.contractRuntime,makeContract("E2E-SHIP-FAILED"),{routeRisk:1,insured:true,nowSeconds:S.seconds});
+    const secondShipment=S.contractRuntime.shipments.find(x=>x.contractID==="E2E-SHIP-FAILED");
+    if(!secondStart.ok||!secondShipment)throw new Error("failed shipment fixture could not start");
+    for(let i=0;i<PACKAGING_STAGES.length;i++)if(!advancePackagingStage(S,S.contractRuntime,secondShipment.shipmentID).ok)throw new Error("failed shipment packaging failed");
+    const secondReadyAudit=rebuildOwnershipLedger(S),secondDispatch=dispatchContractShipment(S,S.contractRuntime,secondShipment.shipmentID);
+    if(!secondDispatch.ok)throw new Error("failed shipment dispatch failed:"+secondDispatch.reason);
+    const secondStackID=secondShipment.cargo[0].custodyStackID;
+    rebuildOwnershipLedger(S);secondShipment.protection=0;S.contractRuntime.randomState=1;S.seconds+=1;
+    const secondArrival=advanceShipments(S,S.contractRuntime,1),finalAudit=rebuildOwnershipLedger(S);
+    const drop=S.worldDrops?.find(x=>x.custodyStackID===secondStackID);
+    const dropOwner=drop&&S.ownershipLedger.custody.find(x=>x.stackID===drop.custodyStackID);
+    return {
+     firstReadyAuditValid:firstReadyAudit.valid,firstDispatch:firstDispatch.ok,firstDispatchAuditValid:firstDispatchAudit.valid,
+     firstOwnerType:firstOwner?.ownerType,firstOwnerID:firstOwner?.ownerID,firstArrivalCount:firstArrival.length,
+     deliveredStatus:firstShipment.status,deliveredConsumedQuantity:deliveredConsumed.reduce((n,x)=>n+x.quantity,0),
+     deliveredCargoStillOwned,deliveredAuditValid:deliveredAudit.valid,
+     secondReadyAuditValid:secondReadyAudit.valid,secondDispatch:secondDispatch.ok,secondArrivalCount:secondArrival.length,
+     failedStatus:secondShipment.status,worldDropCount:S.worldDrops?.length||0,worldDropQuantity:drop?.quantity||0,
+     worldDropOwnerType:dropOwner?.ownerType,worldDropOwnerID:dropOwner?.ownerID,finalAuditValid:finalAudit.valid
     };
    }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
   },
