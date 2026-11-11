@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07162b">
+<meta name="description" content="돌이사이트 버그 신고 및 아이디어 건의함">
+<title>버그 및 아이디어 건의함 | 돌이사이트</title>
+<link rel="icon" href="rockeysite-icon-3.png?v=20261009-icon3" type="image/png">
+<link rel="stylesheet" href="css/doldol-theme.css?v=20261025-unified-1">
+<link rel="stylesheet" href="css/dori-convenience.css?v=20261111-1">
+<style>
+@font-face{font-family:HancomMalrangmalrang;src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+:root{color-scheme:dark;--fb-line:rgba(157,190,226,.16);--fb-muted:#93a9c2;--fb-blue:#86c7ff}
+*{box-sizing:border-box}
+body{font-family:HancomMalrangmalrang,"Noto Sans KR",sans-serif!important}
+.fb-shell{width:min(1080px,100%);margin:0 auto;padding:25px clamp(13px,3vw,34px) 90px}
+.fb-top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-bottom:18px;border-bottom:1px solid var(--fb-line)}
+.fb-brand{display:flex;align-items:center;gap:12px}.fb-mark{width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(144,198,243,.3);border-radius:14px;background:linear-gradient(145deg,#1a4066,#0a1b31);color:#e4f4ff;font:700 18px Arial,sans-serif}
+.fb-brand-title{font-size:16px;color:#eff7ff}.fb-brand-sub{margin-top:3px;color:#8ea6c2;font-size:10px}
+.fb-top-link{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:8px 12px;border:1px solid var(--fb-line);border-radius:11px;color:#d6e9fb;text-decoration:none;background:rgba(17,37,61,.7);font-size:11px}
+.fb-hero{position:relative;overflow:hidden;margin:22px 0 18px;padding:24px;border:1px solid rgba(134,189,232,.18);border-radius:21px;background:radial-gradient(circle at 100% 0,rgba(66,146,202,.17),transparent 38%),linear-gradient(130deg,rgba(19,47,77,.9),rgba(8,22,41,.92))}
+.fb-eyebrow{font:700 9px Arial,sans-serif;letter-spacing:.2em;color:#a4d6fb}
+.fb-hero h1{margin:10px 0 8px;font-size:clamp(25px,5vw,36px);font-weight:400;letter-spacing:-.03em;color:#f3f8ff}
+.fb-hero p{max-width:730px;margin:0;color:#a9bfd5;font-size:12px;line-height:1.8}
+.fb-principles{display:flex;gap:7px;flex-wrap:wrap;margin-top:15px}
+.fb-chip{padding:6px 9px;border:1px solid rgba(143,189,229,.18);border-radius:999px;background:rgba(4,16,31,.35);color:#bfd7ed;font-size:10px}
+.fb-card{overflow:hidden;border:1px solid var(--fb-line);border-radius:20px;background:linear-gradient(150deg,rgba(12,28,49,.97),rgba(6,16,31,.98));box-shadow:0 18px 65px rgba(0,0,0,.18)}
+.fb-tabs{display:flex;gap:6px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid var(--fb-line);background:rgba(8,21,39,.7)}
+.fb-tab{min-height:38px;padding:8px 13px;border:1px solid transparent;border-radius:10px;color:#9db2c9;background:transparent;font-size:11px;cursor:pointer}
+.fb-tab[aria-selected="true"]{border-color:rgba(117,190,241,.3);color:#eff8ff;background:linear-gradient(120deg,rgba(44,104,151,.42),rgba(30,69,105,.25))}
+.fb-panel{display:none;padding:19px}.fb-panel.active{display:block}
+.fb-auth{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;padding:13px 14px;border:1px solid rgba(117,178,225,.17);border-radius:13px;background:rgba(12,36,59,.54)}
+.fb-auth-text{color:#bfd1e4;font-size:11px;line-height:1.6}
+.fb-auth-status{display:inline-flex;align-items:center;gap:6px;color:#9bdcbf;font-size:10px;white-space:nowrap}
+.fb-auth-status::before{content:"";width:6px;height:6px;border-radius:50%;background:#65d9aa;box-shadow:0 0 8px rgba(101,217,170,.5)}
+.fb-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fb-field{display:flex;flex-direction:column;gap:7px;min-width:0;margin-bottom:13px}
+.fb-field.full{grid-column:1/-1}
+.fb-label{color:#c5d8eb;font-size:11px}
+.fb-control{width:100%;min-width:0;min-height:43px;padding:11px 12px;border:1px solid rgba(147,180,213,.2);border-radius:11px;outline:none;color:#edf6ff;background:#08192d;font:inherit;font-size:12px}
+.fb-control:focus{border-color:rgba(117,190,241,.65);box-shadow:0 0 0 3px rgba(81,155,208,.1)}
+.fb-control::placeholder{color:#6f87a2}
+textarea.fb-control{min-height:165px;resize:vertical;line-height:1.75}
+.fb-help{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#7891aa;font-size:9px;line-height:1.6}
+.fb-count{white-space:nowrap;font-variant-numeric:tabular-nums}
+.fb-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:5px}
+.fb-primary,.fb-secondary{min-height:42px;padding:10px 15px;border-radius:11px;font-size:11px;cursor:pointer}
+.fb-primary{border:1px solid rgba(144,207,255,.38);color:#f6fbff;background:linear-gradient(125deg,#286d9e,#1c4e79);box-shadow:0 8px 22px rgba(20,75,117,.18)}
+.fb-primary:hover{filter:brightness(1.12);transform:translateY(-1px)}
+.fb-primary:disabled{opacity:.5;cursor:wait;transform:none}
+.fb-secondary{border:1px solid var(--fb-line);color:#c8d8e8;background:rgba(23,44,67,.7)}
+.fb-privacy{margin-top:15px;padding:11px 12px;border:1px solid rgba(208,185,123,.17);border-radius:11px;background:rgba(75,61,28,.12);color:#c8b98f;font-size:10px;line-height:1.7}
+.fb-notice{display:none;margin:0 0 13px;padding:11px 13px;border:1px solid rgba(111,190,229,.24);border-radius:11px;color:#c7e7fb;background:rgba(27,89,127,.16);font-size:11px;line-height:1.6}
+.fb-notice.show{display:block}
+.fb-notice.error{border-color:rgba(255,135,151,.25);color:#ffc4cb;background:rgba(104,34,48,.2)}
+.fb-notice.success{border-color:rgba(106,221,174,.25);color:#baf3d7;background:rgba(24,91,66,.18)}
+.fb-entry{padding:15px;margin-bottom:10px;border:1px solid rgba(144,178,211,.15);border-radius:14px;background:rgba(15,34,55,.62)}
+.fb-entry-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.fb-entry-title{color:#eff7ff;font-size:13px;line-height:1.5}
+.fb-entry-meta{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:6px;color:#829ab4;font-size:9px}
+.fb-tag{display:inline-flex;align-items:center;padding:5px 8px;border:1px solid rgba(132,179,218,.16);border-radius:999px;color:#b7d3eb;background:rgba(72,122,164,.13);font-size:9px;white-space:nowrap}
+.fb-tag.status-submitted{color:#b2dcff;border-color:rgba(114,185,237,.28);background:rgba(45,116,168,.16)}
+.fb-tag.status-reviewing{color:#f2d89b;border-color:rgba(227,190,106,.26);background:rgba(128,91,24,.16)}
+.fb-tag.status-in_progress{color:#d4c1ff;border-color:rgba(176,143,243,.27);background:rgba(103,71,160,.17)}
+.fb-tag.status-resolved{color:#a7e6c4;border-color:rgba(106,221,174,.25);background:rgba(24,91,66,.18)}
+.fb-entry-body{margin:12px 0 0;color:#bbccde;font-size:11px;line-height:1.8;white-space:pre-wrap;overflow-wrap:anywhere}
+.fb-entry-note{margin-top:12px;padding:10px 11px;border-left:2px solid #78bde9;border-radius:0 9px 9px 0;background:rgba(55,115,158,.13);color:#d7e9f8;font-size:10px;line-height:1.7;white-space:pre-wrap}
+.fb-entry-admin{display:grid;grid-template-columns:minmax(0,180px) minmax(0,1fr) auto;gap:7px;margin-top:13px;padding-top:12px;border-top:1px solid var(--fb-line)}
+.fb-entry-admin input,.fb-entry-admin select{min-width:0;width:100%;height:36px;padding:7px 9px;border:1px solid rgba(145,180,215,.2);border-radius:9px;color:#e7f4ff;background:#091a2e;font:inherit;font-size:10px}
+.fb-entry-admin button{min-height:36px;padding:7px 10px;border:1px solid rgba(125,190,238,.3);border-radius:9px;color:#e8f6ff;background:rgba(41,93,135,.45);font-size:10px;cursor:pointer}
+.fb-empty{padding:34px 14px;border:1px dashed rgba(142,179,213,.2);border-radius:13px;color:#8199b3;font-size:11px;line-height:1.8;text-align:center}
+.fb-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.fb-section-title{color:#eff7ff;font-size:14px}.fb-section-desc{margin-top:4px;color:#829ab4;font-size:10px}
+.fb-count-summary{color:#9dc8e8;font-size:10px;white-space:nowrap}
+.fb-loading{padding:20px;text-align:center;color:#8fa8c1;font-size:11px}
+.fb-footer{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:15px 3px 0;color:#6f88a3;font-size:9px;line-height:1.7}
+@media(max-width:620px){.fb-shell{padding:14px 11px 75px}.fb-top{align-items:flex-start}.fb-brand-title{font-size:14px}.fb-hero{padding:19px 16px;border-radius:17px}.fb-form-grid{grid-template-columns:1fr;gap:0}.fb-field.full{grid-column:auto}.fb-panel{padding:13px}.fb-auth{align-items:flex-start;flex-direction:column}.fb-entry-admin{grid-template-columns:1fr}.fb-entry-admin button{width:100%}.fb-tabs{gap:3px;padding:9px}.fb-tab{flex:1;padding:8px 7px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.fb-primary,.fb-entry,.fb-tab{transition:none}}
+</style>
+</head>
+<body>
+<div class="fb-shell">
+  <header class="fb-top">
+    <div class="fb-brand">
+      <div class="fb-mark" aria-hidden="true">D·</div>
+      <div><div class="fb-brand-title">돌이사이트 사용자 의견 센터</div><div class="fb-brand-sub">BUG REPORT · IDEAS · IMPROVEMENT</div></div>
+    </div>
+    <a class="fb-top-link" href="./index.html">← 돌이사이트 메인</a>
+  </header>
+
+  <section class="fb-hero">
+    <div class="fb-eyebrow">DORI USER VOICE</div>
+    <h1>더 편리한 돌이사이트,<br>함께 만들어 가자.</h1>
+    <p>불편했던 점, 발견한 오류, 새롭게 있었으면 하는 기능을 자유롭게 알려줘. 접수된 의견은 실제 개선 작업의 참고 자료가 되고, 처리 상태와 답변도 이곳에서 확인할 수 있어.</p>
+    <div class="fb-principles"><span class="fb-chip">오류 신고</span><span class="fb-chip">새 아이디어</span><span class="fb-chip">사용성 개선</span><span class="fb-chip">내 건의 처리 상태 확인</span></div>
+  </section>
+
+  <section class="fb-card">
+    <nav class="fb-tabs" aria-label="건의함 메뉴">
+      <button class="fb-tab" type="button" data-tab="write" aria-selected="true">✎ 새 건의 작성</button>
+      <button class="fb-tab" type="button" data-tab="mine" aria-selected="false">▤ 내 건의 내역</button>
+      <button class="fb-tab" type="button" data-tab="admin" id="adminTab" aria-selected="false" hidden>▣ 관리자 접수함</button>
+    </nav>
+
+    <section class="fb-panel active" id="panel-write">
+      <div class="fb-auth">
+        <div class="fb-auth-text" id="authDescription">로그인 상태를 확인하고 있어. 건의 내용은 계정에 연결되어 저장돼.</div>
+        <span class="fb-auth-status" id="authStatus">확인 중</span>
+      </div>
+      <div class="fb-notice" id="writeNotice" role="status" aria-live="polite"></div>
+      <form id="feedbackForm">
+        <div class="fb-form-grid">
+          <div class="fb-field">
+            <label class="fb-label" for="category">건의 종류</label>
+            <select class="fb-control" id="category" required>
+              <option value="bug">🐛 버그 및 오류 신고</option>
+              <option value="idea">💡 새로운 기능 아이디어</option>
+              <option value="usability">✨ 편의성 및 사용성 개선</option>
+              <option value="other">📝 기타 의견</option>
+            </select>
+          </div>
+          <div class="fb-field">
+            <label class="fb-label" for="severity">중요도</label>
+            <select class="fb-control" id="severity" required>
+              <option value="normal">일반</option>
+              <option value="important">중요</option>
+              <option value="urgent">사용에 큰 지장이 있음</option>
+            </select>
+          </div>
+          <div class="fb-field full">
+            <label class="fb-label" for="title">제목</label>
+            <input class="fb-control" id="title" maxlength="120" minlength="5" required placeholder="예: 모바일에서 메뉴 버튼이 화면 밖으로 나가요">
+            <div class="fb-help"><span>문제를 알아보기 쉬운 제목을 적어줘.</span><span class="fb-count" id="titleCount">0 / 120</span></div>
+          </div>
+          <div class="fb-field full">
+            <label class="fb-label" for="description">자세한 내용</label>
+            <textarea class="fb-control" id="description" maxlength="4000" minlength="20" required placeholder="어떤 페이지에서 어떤 행동을 했을 때 문제가 생겼는지, 기대한 결과와 실제 결과가 어떻게 달랐는지 적어줘. 새로운 아이디어라면 어떤 점이 편리해지는지도 설명해 줘."></textarea>
+            <div class="fb-help"><span>비밀번호, 인증 코드, 전화번호 등 개인정보는 적지 말아줘.</span><span class="fb-count" id="descriptionCount">0 / 4000</span></div>
+          </div>
+        </div>
+        <div class="fb-actions">
+          <button class="fb-primary" id="submitFeedback" type="submit">건의 제출하기 ↗</button>
+          <button class="fb-secondary" type="reset">내용 지우기</button>
+        </div>
+      </form>
+      <div class="fb-privacy">🔒 건의는 로그인한 계정에 연결돼. 다른 사용자는 네 건의 내용을 볼 수 없고, 관리자도 돌이사이트에서 검증된 관리자 세션으로 접속했을 때만 전체 접수함을 관리할 수 있어. 연락처나 비밀번호는 수집하지 않아.</div>
+    </section>
+
+    <section class="fb-panel" id="panel-mine">
+      <div class="fb-section-head"><div><div class="fb-section-title">내가 제출한 건의</div><div class="fb-section-desc">접수된 의견과 처리 상태, 관리자 답변을 확인할 수 있어.</div></div><span class="fb-count-summary" id="mineCount">0건</span></div>
+      <div class="fb-notice" id="mineNotice" role="status" aria-live="polite"></div>
+      <div id="mineList"><div class="fb-loading">로그인 정보를 확인하고 있어.</div></div>
+      <div class="fb-actions"><button class="fb-secondary" id="refreshMine" type="button">내역 새로고침 ↻</button></div>
+    </section>
+
+    <section class="fb-panel" id="panel-admin">
+      <div class="fb-section-head"><div><div class="fb-section-title">관리자 접수함</div><div class="fb-section-desc">새 의견을 확인하고 검토·수정·완료 상태를 관리해.</div></div><span class="fb-count-summary" id="adminCount">0건</span></div>
+      <div class="fb-notice" id="adminNotice" role="status" aria-live="polite"></div>
+      <div id="adminList"><div class="fb-loading">관리자 권한을 확인하고 있어.</div></div>
+      <div class="fb-actions"><button class="fb-secondary" id="refreshAdmin" type="button">접수함 새로고침 ↻</button></div>
+    </section>
+  </section>
+  <footer class="fb-footer"><span>돌이사이트 사용자 의견 센터</span><span>모든 의견이 즉시 반영되는 것은 아니며, 검토 후 처리 상태를 업데이트해.</span></footer>
+</div>
+
+<script src="js/supabase.min.js?v=2.117.2"></script>
+<script src="js/doldol-theme.js?v=20261111-feedback-1"></script>
+<script src="js/dori-convenience.js?v=20261111-1"></script>
+<script>
+(() => {
+  "use strict";
+  const SUPABASE_URL = "https://scttowfhygcpdirrekqm.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+  const $ = (id) => document.getElementById(id);
+  const STATUS = {
+    submitted:"접수 완료", reviewing:"검토 중", in_progress:"수정 진행 중",
+    resolved:"처리 완료", declined:"반영 어려움"
+  };
+  const CATEGORY = {bug:"버그 및 오류",idea:"아이디어",usability:"편의성 개선",other:"기타 의견"};
+  const SEVERITY = {normal:"일반",important:"중요",urgent:"긴급"};
+  let sb = null;
+  let currentUser = null;
+  let verifiedAdmin = false;
+  let activeTab = "write";
+
+  async function getClient() {
+    if (sb?.auth) return sb;
+    if (window.doriSupabase?.auth) { sb = window.doriSupabase; return sb; }
+    if (!window.supabase?.createClient) throw new Error("Supabase 연결 도구를 불러오지 못했어. 페이지를 새로고침해 줘.");
+    sb = window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY,{
+      auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"sb-scttowfhygcpdirrekqm-auth-token"}
+    });
+    window.doriSupabase = sb;
+    return sb;
+  }
+  function showNotice(id,message,type="") {
+    const node=$(id); node.textContent=message; node.className="fb-notice show"+(type?" "+type:"");
+  }
+  function hideNotice(id) { const node=$(id); node.textContent=""; node.className="fb-notice"; }
+  function textCell(tag,className,value) {
+    const node=document.createElement(tag);
+    if(className) node.className=className;
+    node.textContent=value ?? "";
+    return node;
+  }
+  function localDate(value) {
+    const date=new Date(value);
+    if(Number.isNaN(date.getTime())) return "날짜 정보 없음";
+    return date.toLocaleString("ko-KR",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+  }
+  function statusTag(status) {
+    return textCell("span","fb-tag status-"+status,STATUS[status]||"상태 확인 중");
+  }
+  function renderEntry(row,isAdmin=false) {
+    const card=document.createElement("article"); card.className="fb-entry";
+    const top=document.createElement("div"); top.className="fb-entry-top";
+    const left=document.createElement("div");
+    left.appendChild(textCell("div","fb-entry-title",row.title));
+    const meta=document.createElement("div"); meta.className="fb-entry-meta";
+    meta.append(textCell("span","fb-tag",CATEGORY[row.category]||"기타"),textCell("span","fb-tag",SEVERITY[row.severity]||"일반"));
+    meta.appendChild(document.createTextNode(localDate(row.created_at)));
+    if(isAdmin) meta.appendChild(document.createTextNode(" · 접수 계정 식별 정보 비공개"));
+    left.appendChild(meta);
+    top.append(left,statusTag(row.status)); card.appendChild(top);
+    card.appendChild(textCell("p","fb-entry-body",row.description));
+    if(row.admin_note) {
+      const note=textCell("div","fb-entry-note","관리자 답변 · "+row.admin_note);
+      card.appendChild(note);
+    }
+    if(isAdmin) {
+      const controls=document.createElement("div"); controls.className="fb-entry-admin";
+      const state=document.createElement("select"); state.setAttribute("aria-label","처리 상태");
+      Object.entries(STATUS).forEach(([value,label])=>{const option=document.createElement("option");option.value=value;option.textContent=label;state.appendChild(option);});
+      state.value=row.status;
+      const note=document.createElement("input"); note.type="text"; note.maxLength=1600; note.placeholder="사용자에게 남길 답변 또는 처리 메모"; note.setAttribute("aria-label","관리자 답변");
+      note.value=row.admin_note||"";
+      const save=document.createElement("button"); save.type="button"; save.textContent="상태 저장";
+      save.addEventListener("click",async()=>{
+        save.disabled=true;save.textContent="저장 중...";
+        try {
+          const result=await sb.from("dori_feedback").update({status:state.value,admin_note:note.value.trim()||null}).eq("id",row.id);
+          if(result.error) throw result.error;
+          showNotice("adminNotice","처리 상태와 답변을 저장했어.","success");
+          await loadAdmin();
+        } catch(error) {
+          showNotice("adminNotice","저장하지 못했어: "+(error.message||"권한 또는 연결을 확인해 줘."),"error");
+          save.disabled=false;save.textContent="상태 저장";
+        }
+      });
+      controls.append(state,note,save);card.appendChild(controls);
+    }
+    return card;
+  }
+  function switchTab(name) {
+    if(name==="admin"&&!verifiedAdmin) return;
+    activeTab=name;
+    document.querySelectorAll(".fb-tab").forEach(button=>button.setAttribute("aria-selected",String(button.dataset.tab===name)));
+    document.querySelectorAll(".fb-panel").forEach(panel=>panel.classList.toggle("active",panel.id==="panel-"+name));
+    if(name==="mine") loadMine();
+    if(name==="admin") loadAdmin();
+  }
+  document.querySelectorAll(".fb-tab").forEach(button=>button.addEventListener("click",()=>switchTab(button.dataset.tab)));
+
+  async function loadMine() {
+    if(!currentUser) { $("mineList").replaceChildren(textCell("div","fb-empty","내 건의를 확인하려면 로그인해 줘.")); $("mineCount").textContent="0건"; return; }
+    $("mineList").replaceChildren(textCell("div","fb-loading","내 건의 내역을 불러오는 중..."));
+    try {
+      const {data,error}=await sb.from("dori_feedback")
+        .select("id,category,title,description,severity,source_page,status,admin_note,created_at,updated_at")
+        .order("created_at",{ascending:false}).limit(30);
+      if(error) throw error;
+      const rows=Array.isArray(data)?data:[];
+      $("mineCount").textContent=rows.length+"건";
+      const list=$("mineList");list.textContent="";
+      if(!rows.length) list.appendChild(textCell("div","fb-empty","아직 제출한 건의가 없어. 불편했던 점이나 새로운 아이디어가 생기면 첫 의견을 남겨 줘."));
+      else rows.forEach(row=>list.appendChild(renderEntry(row,false)));
+      hideNotice("mineNotice");
+    } catch(error) {
+      $("mineList").replaceChildren(textCell("div","fb-empty","내역을 불러오지 못했어. 잠시 후 다시 시도해 줘."));
+      showNotice("mineNotice","내역 조회 오류: "+(error.message||"권한 또는 연결 상태를 확인해 줘."),"error");
+    }
+  }
+  async function loadAdmin() {
+    if(!verifiedAdmin) return;
+    $("adminList").replaceChildren(textCell("div","fb-loading","모든 건의를 불러오는 중..."));
+    try {
+      const {data,error}=await sb.from("dori_feedback")
+        .select("id,user_id,category,title,description,severity,source_page,status,admin_note,created_at,updated_at")
+        .order("created_at",{ascending:false}).limit(100);
+      if(error) throw error;
+      const rows=Array.isArray(data)?data:[];
+      $("adminCount").textContent=rows.length+"건";
+      const list=$("adminList");list.textContent="";
+      if(!rows.length) list.appendChild(textCell("div","fb-empty","아직 접수된 의견이 없어."));
+      else rows.forEach(row=>list.appendChild(renderEntry(row,true)));
+      hideNotice("adminNotice");
+    } catch(error) {
+      $("adminList").replaceChildren(textCell("div","fb-empty","접수함을 불러오지 못했어."));
+      showNotice("adminNotice","관리자 접수함 오류: "+(error.message||"검증된 관리자 세션과 데이터 권한을 확인해 줘."),"error");
+    }
+  }
+
+  $("feedbackForm").addEventListener("submit",async(event)=>{
+    event.preventDefault();
+    hideNotice("writeNotice");
+    if(!currentUser) {showNotice("writeNotice","로그인한 사용자만 건의를 제출할 수 있어. 먼저 로그인해 줘.","error");return;}
+    const title=$("title").value.trim();
+    const description=$("description").value.trim();
+    if(title.length<5||description.length<20) {showNotice("writeNotice","제목은 5자 이상, 자세한 내용은 20자 이상 적어 줘.","error");return;}
+    const button=$("submitFeedback");button.disabled=true;button.textContent="건의를 안전하게 저장하는 중...";
+    try {
+      const payload={
+        user_id:currentUser.id,
+        category:$("category").value,
+        severity:$("severity").value,
+        title,
+        description,
+        source_page:String(location.pathname||"/").slice(0,300)
+      };
+      const {error}=await sb.from("dori_feedback").insert(payload);
+      if(error) throw error;
+      $("feedbackForm").reset();
+      $("titleCount").textContent="0 / 120";
+      $("descriptionCount").textContent="0 / 4000";
+      showNotice("writeNotice","건의가 정상적으로 접수됐어. 내 건의 내역에서 처리 상태를 확인할 수 있어.","success");
+      switchTab("mine");
+    } catch(error) {
+      console.error("Dori feedback submit error:",error);
+      showNotice("writeNotice","접수에 실패했어: "+(error.message||"잠시 후 다시 시도해 줘."),"error");
+    } finally {button.disabled=false;button.textContent="건의 제출하기 ↗";}
+  });
+
+  $("title").addEventListener("input",()=>{$("titleCount").textContent=$("title").value.length+" / 120";});
+  $("description").addEventListener("input",()=>{$("descriptionCount").textContent=$("description").value.length+" / 4000";});
+  $("refreshMine").addEventListener("click",loadMine);
+  $("refreshAdmin").addEventListener("click",loadAdmin);
+
+  async function start() {
+    try {
+      const client=await getClient();
+      const {data,error}=await client.auth.getSession();
+      if(error) throw error;
+      const session=data?.session||null;
+      currentUser=session?.user||null;
+      if(!currentUser) {
+        $("authStatus").textContent="로그인 필요";
+        $("authStatus").style.color="#f0c78d";
+        $("authDescription").textContent="건의 제출과 내역 확인은 계정 로그인이 필요해.";
+        showNotice("writeNotice","로그인 후 버그 신고와 아이디어를 접수할 수 있어. 로그인 화면에서 먼저 계정에 접속해 줘.","error");
+        $("submitFeedback").disabled=true;
+        $("mineList").replaceChildren(textCell("div","fb-empty","로그인 후 제출한 건의 내역을 확인할 수 있어."));
+        $("adminTab").hidden=true;
+        return;
+      }
+      $("authStatus").textContent="계정 연결됨";
+      $("authDescription").textContent="로그인 확인이 완료됐어. 건의는 현재 접속한 계정에 안전하게 저장돼.";
+      $("submitFeedback").disabled=false;
+      const {data:adminResult,error:adminError}=await client.rpc("admin_is_authorized");
+      verifiedAdmin=!adminError&&adminResult===true;
+      if(verifiedAdmin) $("adminTab").hidden=false;
+      $("mineList").replaceChildren(textCell("div","fb-empty","내 건의 내역을 불러오려면 위의 내 건의 내역 탭을 눌러 줘."));
+    } catch(error) {
+      $("authStatus").textContent="연결 확인 필요";
+      $("authStatus").style.color="#ffb2ba";
+      $("authDescription").textContent="계정 연결을 완료하지 못했어. 인터넷 연결과 로그인을 확인해 줘.";
+      showNotice("writeNotice","초기화 오류: "+(error.message||"페이지를 새로고침해 줘."),"error");
+      $("submitFeedback").disabled=true;
+    }
+  }
+  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",start,{once:true});else void start();
+  window.addEventListener("dori-auth-changed",()=>{currentUser=null;verifiedAdmin=false;void start();});
+})();
+</script>
+</body>
+</html>
