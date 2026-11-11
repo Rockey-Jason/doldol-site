@@ -4205,6 +4205,7 @@ function 프레임출처판별(frame, fallback = "기타") {
     const name = String(frame?.item_name || "").toLowerCase();
     if (source.includes("lounge") || source.includes("라운지") || key.includes("lounge") || name.includes("라운지")) return "라운지";
     if (source.includes("event") || source.includes("이벤트") || key.includes("event") || name.includes("이벤트")) return "이벤트";
+    if (source.includes("season") || source.includes("시즌") || key.includes("season")) return "시즌 보상";
     if (source.includes("pass") || source.includes("패스") || key.includes("2026-") || key.includes("2026_")) return "돌이 패스";
     return fallback;
 }
@@ -4634,7 +4635,7 @@ function 프레임설정화면표시() {
         ? (꾸미기상태.frame.item_name || "프레임 적용 중")
         : "기본 프레임 사용 중";
 
-    const filters = ["전체","이벤트","라운지","돌이 패스","랜덤 박스","기타"];
+    const filters = ["전체","이벤트","라운지","돌이 패스","시즌 보상","랜덤 박스","기타"];
     filterRoot.innerHTML = filters.map(value =>
         '<button type="button" data-frame-source="' + value + '" class="' + (프레임출처필터 === value ? "active" : "") + '" aria-pressed="' + String(프레임출처필터 === value) + '">' + value + '</button>'
     ).join("");
