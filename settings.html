@@ -4259,7 +4259,9 @@ async function 프레임목록가져오기(user) {
             .select("item_code,claimed_at")
             .eq("auth_user_id", user.id),
         supabase.from("dori_site_customization")
-            .select("equipped_frame").eq("user_id", user.id).maybeSingle()
+            .select("equipped_frame").eq("user_id", user.id).maybeSingle(),
+        supabase.from("user_inventory")
+            .select("item_id,purchased_at").eq("user_id", user.id)
     ]);
 
     const passResult = jobs[0].status === "fulfilled" ? jobs[0].value : null;
@@ -4300,6 +4302,23 @@ async function 프레임목록가져오기(user) {
             .forEach(row => addFrame({ item_code:row.item_code, item_name:String(row.item_code).replace(/[_-]/g," "), source:"이벤트", rarity:"희귀" }));
     } else if (seasonResult?.error) {
         console.warn("시즌 보상 프레임 조회:", seasonResult.error.message);
+    }
+
+    const legacyInventory = jobs[4].status === "fulfilled" ? jobs[4].value : null;
+    if (legacyInventory && !legacyInventory.error) {
+        (legacyInventory.data || []).filter(row => /frame|프레임/i.test(String(row.item_id || "")))
+            .forEach(row => {
+                const key = String(row.item_id || "");
+                const fallback = /lounge|vip|라운지/i.test(key) ? "라운지" : /event|이벤트/i.test(key) ? "이벤트" : "기타";
+                addFrame({
+                    item_code: key,
+                    item_name: key.replace(/[_-]/g, " "),
+                    source: 프레임출처판별({item_code:key}, fallback),
+                    rarity: "일반"
+                });
+            });
+    } else if (legacyInventory?.error) {
+        console.warn("기존 상점 프레임 조회:", legacyInventory.error.message);
     }
 
     const current = jobs[3].status === "fulfilled" ? jobs[3].value?.data?.equipped_frame : null;
