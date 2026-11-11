@@ -2104,9 +2104,9 @@ body.로그인상태 #회원가입 {
     <img id="돌이AI이미지" class="메인이미지" src="" alt="돌이 AI">
   </div>
   <button id="돌이AI버튼" class="메인버튼" type="button">
-    돌이 AI와 대화하기
+    DORI AI 연구소 입장
   </button>
-  <div class="카드설명">궁금한 것을 물어보세요. 돌이 AI가 함께 생각해줄게요.</div>
+  <div class="카드설명">자체 AI 비서, 돌이 세계 검색, AI 보고서, 경제·산업 분석을 한곳에서.</div>
 </article>
 
     <!-- 로키 스터디: 학습 도구 포털 -->
@@ -4783,7 +4783,7 @@ if (돌이AI버튼) {
 
     돌이AI버튼.onclick = () => {
 
-        페이지이동("dori-ai.html");
+        페이지이동("dori-ai-lab.html");
 
     };
 
@@ -5122,7 +5122,7 @@ if ("serviceWorker" in navigator) {
 (function(){
   const destinations = [
     {selector:".돌돌증권비주얼",buttonId:"돌돌증권버튼",label:"돌돌증권 확인하기"},
-    {selector:".돌이AI비주얼",buttonId:"돌이AI버튼",label:"돌이 AI와 대화하기"}
+    {selector:".돌이AI비주얼",buttonId:"돌이AI버튼",label:"DORI AI 연구소 입장"}
   ];
   destinations.forEach(item=>{
     const visual=document.querySelector(item.selector);
