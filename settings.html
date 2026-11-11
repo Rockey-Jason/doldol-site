@@ -2285,6 +2285,15 @@ body::after{
         </button>
 
         <button
+            id="세부설정버튼"
+            class="status-tab-button"
+            data-tab="세부설정"
+            type="button"
+        >
+            ⚙️ 세부 설정
+        </button>
+
+        <button
             id="칭호버튼"
             class="status-tab-button"
             data-tab="칭호"
@@ -2332,6 +2341,7 @@ body::after{
 
 </div>
 
+<template id="site-preferences-template">
 <section class="site-preferences-card glass-card" hidden id="site-preferences" aria-labelledby="site-preferences-title">
     <div class="site-preferences-heading">
         <div>
@@ -2369,6 +2379,7 @@ body::after{
         <button type="button" id="site-pref-reset">기본값으로 초기화</button>
     </div>
 </section>
+</template>
 
 
 
@@ -2626,6 +2637,9 @@ const 상세설명버튼 =
     document.getElementById(
         "상세설명버튼"
     );
+
+const 세부설정버튼 =
+    document.getElementById("세부설정버튼");
 
 const 칭호버튼 =
     document.getElementById(
@@ -3920,6 +3934,7 @@ function 상태탭변경(탭) {
     const 허용탭 = [
         "업적",
         "상세설명",
+        "세부설정",
         "칭호",
         "내아이템",
         "꾸미기",
@@ -3934,6 +3949,7 @@ function 상태탭변경(탭) {
 
     업적버튼.classList.toggle("active", 탭 === "업적");
     상세설명버튼.classList.toggle("active", 탭 === "상세설명");
+    세부설정버튼.classList.toggle("active", 탭 === "세부설정");
     칭호버튼.classList.toggle("active", 탭 === "칭호");
     내아이템버튼.classList.toggle("active", 탭 === "내아이템");
     꾸미기버튼.classList.toggle("active", 탭 === "꾸미기");
@@ -3956,6 +3972,15 @@ function 상태화면업데이트() {
 
     if (현재상태탭 === "상세설명") {
         상세설명화면표시();
+        return;
+    }
+
+    if (현재상태탭 === "세부설정") {
+        const template = document.getElementById("site-preferences-template");
+        if (template) {
+            상태내용요소.replaceChildren(template.content.cloneNode(true));
+            window.initDoriSettingsPreferences?.();
+        }
         return;
     }
 
@@ -4913,6 +4938,10 @@ window.doriSupabase = supabase;
         상태탭변경("상세설명");
     }
 );
+
+세부설정버튼.addEventListener("click", () => {
+    상태탭변경("세부설정");
+});
 
 
 칭호버튼.addEventListener(
