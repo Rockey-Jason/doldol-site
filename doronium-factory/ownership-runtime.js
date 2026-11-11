@@ -1,6 +1,6 @@
 /* Single-custody item ledger. Renderer-independent and transaction-idempotent. */
 const clone=v=>typeof structuredClone==="function"?structuredClone(v):JSON.parse(JSON.stringify(v));
-export const OWNER_TYPES=Object.freeze(["PLAYER_INVENTORY","WORLD_DROP","MACHINE_INPUT","MACHINE_OUTPUT","CONVEYOR","WAREHOUSE","ACTIVE_JOB","COMPLETION_BUFFER","QUARANTINE"]);
+export const OWNER_TYPES=Object.freeze(["PLAYER_INVENTORY","WORLD_DROP","MACHINE_INPUT","MACHINE_OUTPUT","CONVEYOR","WAREHOUSE","SHIPMENT_CARGO","ACTIVE_JOB","COMPLETION_BUFFER","QUARANTINE"]);
 const plainObject=value=>!!value&&typeof value==="object"&&!Array.isArray(value);
 const sameRequest=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
 function validID(value){return typeof value==="string"&&value.trim().length>0}
