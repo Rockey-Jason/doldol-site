@@ -4203,9 +4203,9 @@ function 프레임출처판별(frame, fallback = "기타") {
     const source = String(frame?.source || "").toLowerCase();
     const key = String(frame?.item_code || "").toLowerCase();
     const name = String(frame?.item_name || "").toLowerCase();
-    if (source.includes("pass") || source.includes("패스") || key.includes("2026-") || key.includes("2026_")) return "돌이 패스";
     if (source.includes("lounge") || source.includes("라운지") || key.includes("lounge") || name.includes("라운지")) return "라운지";
     if (source.includes("event") || source.includes("이벤트") || key.includes("event") || name.includes("이벤트")) return "이벤트";
+    if (source.includes("pass") || source.includes("패스") || key.includes("2026-") || key.includes("2026_")) return "돌이 패스";
     return fallback;
 }
 
@@ -4740,6 +4740,7 @@ function 내아이템화면표시() {
         ["cape", "망토"],
         ["배경", "배경"],
         ["skin", "스킨"],
+        ["frame", "프레임"],
         ["effect", "효과"]
     ];
 
