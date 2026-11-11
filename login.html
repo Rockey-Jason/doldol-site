@@ -823,6 +823,34 @@
       transform: none;
     }
 
+    .passkey-login-wrap {
+      margin-top: 17px;
+      padding-top: 17px;
+      border-top: 1px solid rgba(150, 170, 255, 0.12);
+    }
+    .passkey-login-button {
+      width: 100%;
+      min-height: 54px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      border: 1px solid rgba(160, 190, 255, 0.28);
+      border-radius: 15px;
+      color: #eaf0ff;
+      background: linear-gradient(135deg, rgba(43, 65, 127, 0.78), rgba(35, 35, 91, 0.86));
+      font-size: 15px;
+      transition: transform .22s ease, border-color .22s ease, filter .22s ease;
+    }
+    .passkey-login-button:hover {
+      transform: translateY(-2px);
+      border-color: rgba(180, 200, 255, 0.52);
+      filter: brightness(1.12);
+    }
+    .passkey-login-button:disabled { cursor: wait; opacity: .62; transform: none; }
+    .passkey-login-icon { font-size: 21px; line-height: 1; }
+    .passkey-login-help { min-height: 18px; margin: 9px 3px 0; color: #8796c0; font-size: 12px; line-height: 1.6; text-align: center; }
+
     .button-content {
       display: inline-flex;
 
@@ -1397,6 +1425,16 @@
 
       </button>
 
+      <div class="passkey-login-wrap">
+        <button id="adminPasskeyLogin" class="passkey-login-button" type="button">
+          <span class="passkey-login-icon" aria-hidden="true">🔐</span>
+          <span>관리자 패스키 로그인</span>
+        </button>
+        <p class="passkey-login-help" id="adminPasskeyStatus" role="status" aria-live="polite">
+          처음 한 번 관리자 계정으로 패스키를 등록하면 이메일 입력 없이 로그인할 수 있어요.
+        </p>
+      </div>
+
     </form>
 
 
@@ -1462,7 +1500,16 @@
 
     const supabase = window.doriSupabase || createClient(
         "https://scttowfhygcpdirrekqm.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY"
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY",
+        {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: "sb-scttowfhygcpdirrekqm-auth-token",
+            experimental: { passkey: true }
+          }
+        }
       );
     if (!window.doriSupabase) window.doriSupabase = supabase;
 
@@ -1604,6 +1651,54 @@
       } finally {
         button.disabled = false;
         button.textContent = "재설정 이메일 보내기";
+      }
+    });
+
+
+    /* =========================
+       관리자 패스키 로그인
+       WebAuthn 생체 인식 / Windows Hello PIN
+    ========================= */
+    const adminPasskeyButton = document.getElementById("adminPasskeyLogin");
+    const adminPasskeyStatus = document.getElementById("adminPasskeyStatus");
+
+    adminPasskeyButton.addEventListener("click", async () => {
+      if (!navigator.credentials || !window.PublicKeyCredential) {
+        adminPasskeyStatus.textContent = "이 브라우저에서는 패스키를 지원하지 않아요. 최신 Chrome 또는 Edge를 사용해 주세요.";
+        return;
+      }
+      adminPasskeyButton.disabled = true;
+      adminPasskeyStatus.textContent = "기기에 저장된 패스키를 확인하고 있어요...";
+      try {
+        const { data, error } = await supabase.auth.signInWithPasskey();
+        if (error) throw error;
+        if (!data?.session || !data?.user) throw new Error("패스키 인증 세션을 만들지 못했습니다.");
+
+        const { data: verified, error: verifyError } =
+          await supabase.functions.invoke("admin-passkey-verify-session", { body: {} });
+        if (verifyError || !verified?.ok) {
+          await supabase.auth.signOut();
+          throw new Error(verified?.message || verifyError?.message || "관리자 패스키 인증에 실패했습니다.");
+        }
+
+        const { data: isAdmin, error: adminError } =
+          await supabase.rpc("admin_is_authorized");
+        if (adminError || isAdmin !== true) {
+          await supabase.auth.signOut();
+          throw new Error("관리자 권한을 확인하지 못했습니다. 관리자 계정으로 등록된 패스키인지 확인해 주세요.");
+        }
+
+        adminPasskeyStatus.textContent = "관리자 인증 완료! 관리자 접수함으로 이동합니다.";
+        location.href = "dori-feedback.html?tab=admin";
+      } catch (error) {
+        console.error("Admin passkey login failed:", error);
+        const message = String(error?.message || "");
+        adminPasskeyStatus.textContent =
+          /cancel|abort|notallowed/i.test(message)
+            ? "인증이 취소되었어요. 다시 눌러 인증할 수 있어요."
+            : (message || "패스키 로그인에 실패했어요. 기존 관리자 로그인을 이용해 주세요.");
+      } finally {
+        adminPasskeyButton.disabled = false;
       }
     });
 
