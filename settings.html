@@ -1049,6 +1049,7 @@ body::before {
 .inventory-action-button:disabled{opacity:.65;cursor:default}
 .inventory-action-button.multiplier-action{border-color:rgba(255,211,119,.35);color:#ffe8b0;background:linear-gradient(135deg,rgba(168,119,43,.24),rgba(115,83,38,.2))}
 .inventory-action-status{margin:0 0 16px;padding:11px 14px;border:1px solid rgba(130,164,255,.18);border-radius:12px;color:#cbd9fa;background:rgba(98,117,210,.08);font-size:13px;line-height:1.55}
+.inventory-buff-status{margin:0 0 14px;padding:12px 14px;border:1px solid rgba(255,205,115,.24);border-radius:12px;color:#ffe6ad;background:linear-gradient(120deg,rgba(177,124,42,.12),rgba(95,70,34,.08));font-size:13px;line-height:1.5}
 .preview-cape{left:12px;top:auto;bottom:58px;transform:none;padding:5px 8px}
 .preview-dori[class*="preview-skin_"] img{filter:saturate(1.2) contrast(1.04)}
 .preview-dori.preview-skin_legendary img,.preview-dori.preview-skin_mythic img{filter:saturate(1.35) brightness(1.06) contrast(1.06)}
@@ -4291,6 +4292,15 @@ function 꾸미기상태초기화() {
 // =====================================================
 
 function 내아이템화면표시() {
+    const activeMultiplier = Number(현재유저정보?.doldolcoin_multiplier ?? 1);
+    const multiplierExpiry = 현재유저정보?.doldolcoin_multiplier_expires_at
+        ? new Date(현재유저정보.doldolcoin_multiplier_expires_at)
+        : null;
+    const multiplierActive = activeMultiplier > 1 && multiplierExpiry && multiplierExpiry.getTime() > Date.now();
+    const multiplierStatus = multiplierActive
+        ? "⚡ 현재 코인 보상 " + activeMultiplier.toLocaleString("ko-KR") + "배 · " +
+          multiplierExpiry.toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) + "까지"
+        : "현재 활성화된 코인 배율이 없습니다.";
     const customCount = 보유아이템목록.filter(
         item => 아이템꾸미기카테고리(item)
     ).length;
@@ -4351,6 +4361,7 @@ function 내아이템화면표시() {
             꾸미기 아이템은 바로 장착할 수 있고, 배율 아이템은 사용하면 1시간 동안 코인 보상에 적용됩니다.
             코인·경험치는 랜덤 박스를 여는 즉시 지급되며, 특별 칭호는 자동으로 장착됩니다.
         </div>
+        <div class="inventory-buff-status" aria-live="polite">${HTML이스케이프(multiplierStatus)}</div>
         <div class="inventory-action-status" id="inventoryActionStatus" aria-live="polite">아이템을 선택해 바로 사용하거나 장착하세요.</div>
         <div class="inventory-toolbar">
             <div class="inventory-summary">
@@ -4406,6 +4417,8 @@ function 내아이템화면표시() {
                 });
                 if (error) throw error;
                 if (!data?.success) throw new Error("배율 아이템을 사용하지 못했습니다.");
+                현재유저정보.doldolcoin_multiplier = Number(data.multiplier);
+                현재유저정보.doldolcoin_multiplier_expires_at = data.expires_at;
                 await 인벤토리가져오기({ id: 현재유저정보.user_id });
                 내아이템화면표시();
                 const expires = new Date(data.expires_at);
@@ -4683,6 +4696,8 @@ async function 사용자정보가져오기(
                 read_dori_news,
                 read_dori_news_numbers,
                 doldolcoin,
+                doldolcoin_multiplier,
+                doldolcoin_multiplier_expires_at,
                 special_title_draws,
                 equipped_title
             `)
