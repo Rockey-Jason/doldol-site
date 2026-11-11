@@ -1483,6 +1483,47 @@ body::before {
 @media(max-width:760px){.custom-studio-toolbar{grid-template-columns:1fr}.custom-studio-toolbar-bottom{grid-column:auto}.custom-preview{position:relative;top:auto;min-height:0}.custom-preview-slots{max-width:100%}}
 @media(max-width:480px){.custom-studio-filters button{flex:1}.custom-studio-actions{width:100%}.custom-studio-action{flex:1}.custom-item-row{grid-template-columns:repeat(2,minmax(0,1fr))}.custom-category{padding:13px}.preview-stage{height:240px}}
 
+
+/* REAL DORI CHARACTER + FRAME ARCHIVE */
+.dori-character-stage{position:relative;isolation:isolate;width:min(100%,330px);height:390px;margin:8px auto 12px;overflow:visible;border:1px solid rgba(255,255,255,.1);border-radius:30px;background:radial-gradient(ellipse at 50% 48%,rgba(211,164,111,.18),transparent 55%),linear-gradient(155deg,rgba(255,255,255,.055),rgba(5,10,35,.16));box-shadow:inset 0 1px rgba(255,255,255,.08),0 18px 48px rgba(0,0,0,.22)}
+.dori-real-base{position:absolute;z-index:2;inset:0;width:100%;height:100%;object-fit:contain;user-select:none;pointer-events:none;filter:drop-shadow(0 12px 15px rgba(0,0,0,.18))}
+.dori-real-layer{position:absolute;object-fit:contain;pointer-events:none;user-select:none}
+.dori-cape-layer{z-index:1;left:12%;top:22%;width:76%;height:62%;opacity:.98}
+.dori-clothes-layer{z-index:3;left:28%;top:51%;width:44%;height:32%;filter:drop-shadow(0 3px 2px rgba(0,0,0,.2))}
+.dori-hat-layer{z-index:4;left:30%;top:1%;width:40%;height:20%;filter:drop-shadow(0 5px 3px rgba(0,0,0,.22))}
+.dori-glasses-layer{z-index:5;left:30%;top:25%;width:40%;height:15%;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+.dori-effect-layer{z-index:6;inset:0;width:100%;height:100%;object-fit:contain;opacity:.72;mix-blend-mode:screen;animation:doriItemAura 4s ease-in-out infinite}
+.dori-real-base.skin-SKIN_RARE{filter:drop-shadow(0 12px 15px rgba(0,0,0,.18)) saturate(1.2) hue-rotate(7deg)}
+.dori-real-base.skin-SKIN_SUPER_RARE{filter:drop-shadow(0 12px 15px rgba(0,0,0,.18)) saturate(1.45) hue-rotate(165deg) brightness(1.08)}
+.dori-real-base.skin-SKIN_MYTHIC{filter:drop-shadow(0 12px 15px rgba(0,0,0,.18)) saturate(1.55) hue-rotate(220deg) brightness(1.04)}
+.dori-real-base.skin-SKIN_LEGENDARY{filter:drop-shadow(0 12px 15px rgba(0,0,0,.18)) saturate(1.4) sepia(.48) hue-rotate(355deg) brightness(1.08)}
+.dori-real-frame{position:absolute;z-index:7;inset:5% 8% 4%;border:4px solid transparent;border-radius:47% 47% 36% 36%;pointer-events:none;filter:drop-shadow(0 0 10px rgba(130,210,255,.35))}
+.dori-real-frame img{position:absolute;inset:-7%;width:114%;height:114%;object-fit:fill;opacity:.92}
+.dori-real-frame[data-frame-rarity="Rare"]{border-color:rgba(120,190,255,.65)}
+.dori-real-frame[data-frame-rarity="Epic"]{border-color:rgba(179,135,255,.72)}
+.dori-real-frame[data-frame-rarity="Legendary"]{border-color:rgba(255,210,116,.82)}
+.dori-real-frame[data-frame-rarity="Myth"]{border-color:rgba(255,127,197,.82)}
+.dori-real-frame[data-frame-rarity="Doronum"]{border-color:rgba(92,244,255,.9);box-shadow:0 0 24px rgba(75,235,255,.35),inset 0 0 20px rgba(75,235,255,.12)}
+.custom-item-emoji{overflow:hidden}
+.custom-item-emoji img{display:block;width:100%;height:100%;object-fit:contain}
+.custom-item-emoji span{font-size:22px}
+.dori-frame-filters{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0}
+.dori-frame-filters button{min-height:36px;padding:0 12px;border:1px solid rgba(255,255,255,.1);border-radius:999px;color:#dbe8ff;background:rgba(255,255,255,.045);font:inherit;font-size:12px;cursor:pointer}
+.dori-frame-filters button.active{border-color:rgba(120,205,255,.55);color:#eafaff;background:rgba(67,157,213,.2)}
+.dori-frame-options{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+.dori-frame-card{display:flex;align-items:center;gap:12px;min-width:0;padding:12px;border:1px solid rgba(255,255,255,.09);border-radius:16px;text-align:left;color:#edf4ff;background:rgba(255,255,255,.035);cursor:pointer;transition:.2s ease}
+.dori-frame-card:hover{transform:translateY(-2px);border-color:rgba(140,205,255,.4)}
+.dori-frame-card.is-active{border-color:rgba(115,220,255,.7);background:linear-gradient(135deg,rgba(60,157,208,.18),rgba(135,104,216,.12));box-shadow:0 0 0 1px rgba(115,220,255,.1)}
+.dori-frame-art{flex:0 0 62px;width:62px;height:62px;display:grid;place-items:center;border-radius:14px;background:rgba(0,0,0,.2)}
+.dori-frame-art img{width:100%;height:100%;object-fit:contain}
+.dori-frame-copy{display:flex;flex-direction:column;gap:4px;min-width:0}
+.dori-frame-copy strong{font-size:12px;font-weight:500;overflow-wrap:anywhere}
+.dori-frame-copy small{font-size:10px;color:var(--muted)}
+.dori-frame-copy em{font-size:10px;color:#9de9ff;font-style:normal}
+@keyframes doriItemAura{0%,100%{opacity:.58;transform:scale(.98)}50%{opacity:.9;transform:scale(1.025)}}
+@media(max-width:760px){.dori-character-stage{height:350px;width:min(100%,300px)}.dori-frame-options{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:460px){.dori-character-stage{height:320px}.dori-frame-options{grid-template-columns:1fr}}
+
 @media (max-width: 900px) {
     .status-tabs {
         grid-template-columns: repeat(3, 1fr);
@@ -2471,6 +2512,16 @@ body::after{
         <div id="dori-site-background-options" class="site-background-options" aria-live="polite"><div class="site-background-empty">보유한 배경을 불러오는 중...</div></div>
         <p class="site-background-hint">등급이 높을수록 빛·입자·오로라 등 더 풍부한 시각 효과가 적용됩니다. 변경 사항은 계정에 저장되어 다른 기기에서도 유지됩니다.</p>
     </section>
+    <section class="site-background-settings dori-frame-settings" aria-labelledby="dori-frame-title">
+        <div class="site-background-heading">
+            <div><span class="section-eyebrow">DORI FRAME ARCHIVE</span><h3 id="dori-frame-title">🖼️ 획득한 돌이 프레임</h3>
+            <p>이벤트·라운지·돌이 패스·랜덤 박스 등에서 획득한 프레임을 한곳에서 확인하고 돌이에게 적용합니다.</p></div>
+            <span class="site-background-current" id="dori-frame-current">프레임 확인 중</span>
+        </div>
+        <div class="dori-frame-filters" id="dori-frame-filters" role="group" aria-label="프레임 출처 필터"></div>
+        <div id="dori-frame-options" class="dori-frame-options" aria-live="polite"><div class="site-background-empty">획득한 프레임을 불러오는 중...</div></div>
+        <p class="site-background-hint">프레임은 프로필 사진이 아니라 돌이 캐릭터 주위에 적용됩니다. 획득한 프레임만 선택할 수 있습니다.</p>
+    </section>
     <div class="site-preferences-footer">
         <p id="site-pref-status" role="status" aria-live="polite">설정은 변경 즉시 자동 저장됩니다.</p>
         <button type="button" id="site-pref-reset">기본값으로 초기화</button>
@@ -2828,6 +2879,8 @@ const 세부설정요소 =
 // =====================================================
 
 let 보유아이템목록 = [];
+let 획득프레임목록 = [];
+let 프레임출처필터 = "전체";
 let 아이템필터 = "전체";
 let 꾸미기이전상태 = null;
 let 꾸미기검색어 = "";
@@ -4080,6 +4133,7 @@ function 상태화면업데이트() {
             상태내용요소.replaceChildren(template.content.cloneNode(true));
             window.initDoriSettingsPreferences?.();
             사이트배경설정화면표시();
+            프레임설정화면표시();
         }
         return;
     }
@@ -4122,11 +4176,138 @@ function 아이템꾸미기카테고리(item) {
     if (code.startsWith("CLOTHES_") || name.includes("옷") || type === "clothes") return "clothes";
     if (code.startsWith("SKIN_") || name.includes("스킨") || type === "skin") return "skin";
     if (code.startsWith("EFFECT_") || name.includes("효과") || type === "effect") return "effect";
-    if (code.startsWith("FRAME_") || name.includes("프레임") || name.includes("테두리") || type === "frame") return "frame";
+    if (code.startsWith("FRAME_") || name.includes("프레임") || name.includes("테두리") || type === "frame" || type === "profile_frame") return "frame";
 
     return null;
 }
 
+
+function 꾸미기이미지경로(item) {
+    const code = String(item?.item_code || "").toUpperCase();
+    if (!/^[A-Z0-9_-]{2,80}$/.test(code)) return "assets/dori-items/FRAME_GENERIC.svg";
+    return "assets/dori-items/" + code + ".svg";
+}
+
+function 프레임이미지경로(frame) {
+    const key = String(frame?.item_code || "").toUpperCase();
+    if (/DORONUM|DORONIUM/.test(key)) return "assets/dori-items/FRAME_DORONIUM.svg";
+    if (/2026[-_]?10|EXPLORER|EXPLORER/.test(key)) return "assets/dori-items/FRAME_2026_10_EXPLORER.svg";
+    if (/2026[-_]?11|AURORA/.test(key)) return "assets/dori-items/FRAME_2026_11_AURORA.svg";
+    if (/MEGA|GALAXY|MILESTONE/.test(key)) return "assets/dori-items/FRAME_MEGA_GALAXY.svg";
+    return "assets/dori-items/FRAME_GENERIC.svg";
+}
+
+function 프레임출처판별(frame, fallback = "기타") {
+    const source = String(frame?.source || "").toLowerCase();
+    const key = String(frame?.item_code || "").toLowerCase();
+    const name = String(frame?.item_name || "").toLowerCase();
+    if (source.includes("pass") || source.includes("패스") || key.includes("2026-") || key.includes("2026_")) return "돌이 패스";
+    if (source.includes("lounge") || source.includes("라운지") || key.includes("lounge") || name.includes("라운지")) return "라운지";
+    if (source.includes("event") || source.includes("이벤트") || key.includes("event") || name.includes("이벤트")) return "이벤트";
+    return fallback;
+}
+
+async function 프레임목록가져오기(user) {
+    const gathered = [];
+    const addFrame = (frame) => {
+        if (!frame || !frame.item_code) return;
+        const code = String(frame.item_code);
+        if (!/^[A-Za-z0-9_-]{2,100}$/.test(code)) return;
+        const normalized = {
+            item_code: code,
+            item_name: frame.item_name || frame.display_name || code,
+            rarity: frame.rarity || "일반",
+            item_type: "frame",
+            quantity: Math.max(1, Number(frame.quantity || 1)),
+            source: frame.source || 프레임출처판별(frame),
+            season_key: frame.season_key || null,
+            tier: frame.tier ?? null,
+            icon: frame.icon || "🖼️"
+        };
+        const existing = gathered.find(item => item.item_code === normalized.item_code);
+        if (existing) {
+            if (existing.source === "기타" && normalized.source !== "기타") existing.source = normalized.source;
+            existing.quantity = Math.max(existing.quantity, normalized.quantity);
+            return;
+        }
+        gathered.push(normalized);
+    };
+
+    // Random Box and the legacy general inventory.
+    보유아이템목록.filter(item =>
+        String(item.item_type || "").toLowerCase().includes("frame") ||
+        String(item.item_code || "").toUpperCase().startsWith("FRAME_") ||
+        String(item.item_name || "").includes("프레임")
+    ).forEach(item => addFrame({ ...item, source: "랜덤 박스" }));
+
+    const jobs = await Promise.allSettled([
+        supabase.from("dori_pass_cosmetics")
+            .select("season_key,tier,cosmetic_key,kind,display_name,rarity,icon,claimed_at")
+            .eq("user_id", user.id).eq("kind", "profile_frame"),
+        supabase.from("user_items")
+            .select("item_code,item_name,item_type,rarity,quantity")
+            .eq("user_id", user.id).gt("quantity", 0),
+        supabase.from("rockey_season_reward_claims")
+            .select("item_code,claimed_at")
+            .eq("auth_user_id", user.id),
+        supabase.from("dori_site_customization")
+            .select("equipped_frame").eq("user_id", user.id).maybeSingle()
+    ]);
+
+    const passResult = jobs[0].status === "fulfilled" ? jobs[0].value : null;
+    if (passResult && !passResult.error) {
+        (passResult.data || []).filter(row => row.claimed_at || row.is_equipped || row.kind === "profile_frame")
+            .forEach(row => addFrame({
+                item_code: row.cosmetic_key,
+                item_name: row.display_name,
+                rarity: row.rarity,
+                source: "돌이 패스",
+                season_key: row.season_key,
+                tier: row.tier,
+                icon: row.icon
+            }));
+    } else if (passResult?.error) {
+        console.warn("돌이 패스 프레임 조회:", passResult.error.message);
+    }
+
+    const userItems = jobs[1].status === "fulfilled" ? jobs[1].value : null;
+    if (userItems && !userItems.error) {
+        (userItems.data || []).filter(row =>
+            String(row.item_type || "").toLowerCase().includes("frame") ||
+            String(row.item_code || "").toUpperCase().includes("FRAME") ||
+            String(row.item_name || "").includes("프레임")
+        ).forEach(row => addFrame({
+            ...row,
+            source: 프레임출처판별({item_code:row.item_code,item_name:row.item_name,item_type:row.item_type},
+                /lounge|라운지/i.test(String(row.item_type)+" "+String(row.item_code)) ? "라운지" :
+                /event|이벤트/i.test(String(row.item_type)+" "+String(row.item_code)) ? "이벤트" : "기타")
+        }));
+    } else if (userItems?.error) {
+        console.warn("공용 아이템 프레임 조회:", userItems.error.message);
+    }
+
+    const seasonResult = jobs[2].status === "fulfilled" ? jobs[2].value : null;
+    if (seasonResult && !seasonResult.error) {
+        (seasonResult.data || []).filter(row => /frame|프레임/i.test(String(row.item_code || "")))
+            .forEach(row => addFrame({ item_code:row.item_code, item_name:String(row.item_code).replace(/[_-]/g," "), source:"이벤트", rarity:"희귀" }));
+    } else if (seasonResult?.error) {
+        console.warn("시즌 보상 프레임 조회:", seasonResult.error.message);
+    }
+
+    const current = jobs[3].status === "fulfilled" ? jobs[3].value?.data?.equipped_frame : null;
+    let currentFrame = current;
+    if (typeof currentFrame === "string") {
+        try { currentFrame = JSON.parse(currentFrame); } catch (_) {}
+    }
+    if (currentFrame && typeof currentFrame === "object") {
+        addFrame({ ...currentFrame, source: currentFrame.source || "기존 장착 프레임" });
+    }
+
+    획득프레임목록 = gathered.sort((a,b) =>
+        String(a.source).localeCompare(String(b.source), "ko") ||
+        String(a.item_name).localeCompare(String(b.item_name), "ko")
+    );
+}
 
 function 아이템사이트배경인가(item) {
     const code = String(item?.item_code ?? "").toUpperCase();
@@ -4230,9 +4411,9 @@ function 꾸미기상태정규화(data) {
         const code = value && typeof value === "object" ? value.item_code : value;
         if (!code) continue;
 
-        const owned = 보유아이템목록.find(item =>
+        const owned = (category === "frame" ? 획득프레임목록 : 보유아이템목록).find(item =>
             item.item_code === String(code) &&
-            (category === "background" ? 아이템사이트배경인가(item) : 아이템꾸미기카테고리(item) === category) &&
+            (category === "background" ? 아이템사이트배경인가(item) : category === "frame" ? true : 아이템꾸미기카테고리(item) === category) &&
             숫자정리(item.quantity) > 0
         );
         if (!owned) continue;
@@ -4307,9 +4488,9 @@ function 보유아이템으로꾸미기상태검증() {
         const selected = 꾸미기상태[category];
         if (!selected) continue;
 
-        const owned = 보유아이템목록.some(
+        const owned = (category === "frame" ? 획득프레임목록 : 보유아이템목록).some(
             item =>
-                (category === "background" ? 아이템사이트배경인가(item) : 아이템꾸미기카테고리(item) === category) &&
+                (category === "background" ? 아이템사이트배경인가(item) : category === "frame" ? true : 아이템꾸미기카테고리(item) === category) &&
                 item.item_code === selected.item_code &&
                 숫자정리(item.quantity) > 0
         );
@@ -4440,6 +4621,91 @@ function 사이트배경설정화면표시() {
 }
 
 
+
+function 프레임설정화면표시() {
+    const root = document.getElementById("dori-frame-options");
+    const filterRoot = document.getElementById("dori-frame-filters");
+    const current = document.getElementById("dori-frame-current");
+    if (!root || !filterRoot) return;
+    const selected = 꾸미기상태.frame?.item_code || "";
+    if (current) current.textContent = selected
+        ? (꾸미기상태.frame.item_name || "프레임 적용 중")
+        : "기본 프레임 사용 중";
+
+    const filters = ["전체","이벤트","라운지","돌이 패스","랜덤 박스","기타"];
+    filterRoot.innerHTML = filters.map(value =>
+        '<button type="button" data-frame-source="' + value + '" class="' + (프레임출처필터 === value ? "active" : "") + '" aria-pressed="' + String(프레임출처필터 === value) + '">' + value + '</button>'
+    ).join("");
+
+    const visible = 획득프레임목록.filter(frame =>
+        프레임출처필터 === "전체" || frame.source === 프레임출처필터
+    );
+    const cards = visible.map(frame => {
+        const active = frame.item_code === selected;
+        const image = 프레임이미지경로(frame);
+        return '<button type="button" class="dori-frame-card ' + (active ? "is-active" : "") + '" data-frame-code="' + HTML이스케이프(frame.item_code) + '" aria-pressed="' + String(active) + '">' +
+            '<span class="dori-frame-art"><img src="' + image + '" alt="" loading="lazy"></span>' +
+            '<span class="dori-frame-copy"><strong>' + HTML이스케이프(frame.item_name) + '</strong><small>' + HTML이스케이프(frame.source) + ' · ' + HTML이스케이프(frame.rarity) + '</small>' +
+            (frame.season_key ? '<small>' + HTML이스케이프(frame.season_key) + (frame.tier ? ' · ' + Number(frame.tier) + '단계' : '') + '</small>' : '') +
+            (active ? '<em>✓ 돌이에게 적용 중</em>' : '') + '</span></button>';
+    }).join("");
+
+    root.innerHTML = (cards || '<div class="site-background-empty">' +
+        (획득프레임목록.length ? '이 출처에서 획득한 프레임이 없습니다.' : '아직 확인 가능한 프레임이 없습니다. 프레임 보상은 획득 기록이 계정에 저장된 경우 이곳에 표시됩니다.') +
+        '</div>') +
+        '<button type="button" class="site-background-default" data-frame-default>↺ 돌이 기본 프레임 사용</button>';
+
+    filterRoot.querySelectorAll("[data-frame-source]").forEach(button => button.addEventListener("click", () => {
+        프레임출처필터 = button.dataset.frameSource || "전체";
+        프레임설정화면표시();
+    }));
+
+    root.querySelectorAll("[data-frame-code]").forEach(button => button.addEventListener("click", async () => {
+        const frame = 획득프레임목록.find(value => value.item_code === button.dataset.frameCode);
+        if (!frame || button.disabled) return;
+        const previous = 꾸미기상태.frame ? { ...꾸미기상태.frame } : null;
+        꾸미기상태.frame = {
+            item_code: frame.item_code,
+            item_name: frame.item_name,
+            rarity: frame.rarity,
+            source: frame.source,
+            season_key: frame.season_key,
+            tier: frame.tier
+        };
+        root.querySelectorAll("button").forEach(node => node.disabled = true);
+        if (current) current.textContent = "프레임 저장 중...";
+        try {
+            const saved = await 꾸미기저장();
+            if (!saved) throw new Error("프레임을 계정에 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.");
+            프레임설정화면표시();
+            const status = document.getElementById("site-pref-status");
+            if (status) status.textContent = "✓ " + frame.item_name + " 프레임을 돌이에게 적용했습니다.";
+        } catch (error) {
+            꾸미기상태.frame = previous;
+            console.error("프레임 적용 오류:", error);
+            프레임설정화면표시();
+            if (current) current.textContent = error?.message || "프레임 저장에 실패했습니다.";
+        }
+    }));
+
+    root.querySelector("[data-frame-default]")?.addEventListener("click", async () => {
+        const previous = 꾸미기상태.frame ? { ...꾸미기상태.frame } : null;
+        꾸미기상태.frame = null;
+        try {
+            const saved = await 꾸미기저장();
+            if (!saved) throw new Error("기본 프레임 설정을 저장하지 못했습니다.");
+            프레임설정화면표시();
+            const status = document.getElementById("site-pref-status");
+            if (status) status.textContent = "✓ 돌이 기본 프레임으로 변경했습니다.";
+        } catch (error) {
+            꾸미기상태.frame = previous;
+            프레임설정화면표시();
+            if (current) current.textContent = error?.message || "기본 프레임 변경에 실패했습니다.";
+        }
+    });
+}
+
+
 // =====================================================
 // 내 아이템 화면
 // =====================================================
@@ -4454,9 +4720,7 @@ function 내아이템화면표시() {
         ? "⚡ 현재 코인 보상 " + activeMultiplier.toLocaleString("ko-KR") + "배 · " +
           multiplierExpiry.toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) + "까지"
         : "현재 활성화된 코인 배율이 없습니다.";
-    const customCount = 보유아이템목록.filter(
-        item => 아이템꾸미기카테고리(item)
-    ).length;
+    const customCount = 보유아이템목록.filter(item => 아이템꾸미기카테고리(item)).length + 획득프레임목록.length;
 
     const filtered = 보유아이템목록.filter(item => {
         if (아이템필터 === "전체") return true;
@@ -4643,14 +4907,14 @@ function 꾸미기화면표시() {
     const rankOf = value => rarityRank[String(value || "일반")] || 0;
     const search = String(꾸미기검색어 || "").trim().toLocaleLowerCase("ko-KR");
     const equippedCount = categories.filter(category => Boolean(꾸미기상태[category])).length;
-    const customItems = 보유아이템목록.filter(item => 아이템꾸미기카테고리(item));
+    const customItems = [...보유아이템목록.filter(item => 아이템꾸미기카테고리(item)), ...획득프레임목록];
     const filterButtons = ["전체", "장착 중", "미장착"].map(filter =>
         '<button type="button" data-custom-filter="' + filter + '" class="' + (꾸미기표시필터 === filter ? "active" : "") + '" aria-pressed="' + String(꾸미기표시필터 === filter) + '">' + filter + '</button>'
     ).join("");
 
     const categoryHTML = categories.map(category => {
         const info = 꾸미기카테고리정보[category];
-        const allItems = 보유아이템목록.filter(item => 아이템꾸미기카테고리(item) === category && 숫자정리(item.quantity) > 0);
+        const allItems = (category === "frame" ? 획득프레임목록 : 보유아이템목록.filter(item => 아이템꾸미기카테고리(item) === category && 숫자정리(item.quantity) > 0));
         const selectedCode = 꾸미기상태[category]?.item_code ?? "";
         const items = allItems.filter(item => {
             const isEquipped = selectedCode === item.item_code;
@@ -4670,7 +4934,7 @@ function 꾸미기화면표시() {
                 const selected = selectedCode === item.item_code;
                 const rarity = String(item.rarity || "일반");
                 return '<button type="button" class="custom-item-button ' + (selected ? "selected" : "") + '" data-custom-code="' + HTML이스케이프(item.item_code) + '" data-custom-category="' + category + '" aria-pressed="' + String(selected) + '" title="' + HTML이스케이프(item.item_name || item.item_code) + '">' +
-                    '<span class="custom-item-emoji">' + info.emoji + '</span>' +
+                    '<span class="custom-item-emoji"><img src="' + 꾸미기이미지경로(item) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>' + info.emoji + '</span></span>' +
                     '<span class="custom-item-name">' + HTML이스케이프(item.item_name || "이름 없는 아이템") + '</span>' +
                     '<span class="custom-item-qty"><span class="custom-item-rarity" data-rarity="' + HTML이스케이프(rarity) + '">' + HTML이스케이프(rarity) + '</span><span>×' + 숫자정리(item.quantity).toLocaleString() + '</span></span>' +
                     (selected ? '<span class="custom-item-equipped">✓ 현재 장착 중 · 다시 누르면 해제</span>' : '') +
@@ -4689,10 +4953,15 @@ function 꾸미기화면표시() {
         ["skin","🐶 스킨"], ["effect","✨ 효과"], ["frame","🖼️ 프레임"]
     ].map(([key,label]) => '<div class="custom-preview-slot"><small>' + label + '</small><strong>' + HTML이스케이프(꾸미기상태[key]?.item_name || "기본 상태") + '</strong></div>').join("");
 
-    const 프레임코드 = String(꾸미기상태.frame?.item_code || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
-    const 스킨코드 = String(꾸미기상태.skin?.item_code || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
-    const 효과코드 = String(꾸미기상태.effect?.item_code || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
-    const currentImage = 현재유저정보?.profile_image || "https://i.postimg.cc/qB2wnCCq/1000004618-(2).png";
+    const 프레임코드 = String(꾸미기상태.frame?.item_code || "");
+    const 스킨코드 = String(꾸미기상태.skin?.item_code || "");
+    const 프레임이미지 = 꾸미기상태.frame ? 프레임이미지경로(꾸미기상태.frame) : "";
+    const layer = (category, className) => {
+        const item = 꾸미기상태[category];
+        return item
+            ? '<img class="dori-real-layer ' + className + '" src="' + 꾸미기이미지경로(item) + '" alt="" draggable="false">'
+            : "";
+    };
 
     상태내용요소.innerHTML =
         '<div class="custom-studio-toolbar">' +
@@ -4703,23 +4972,23 @@ function 꾸미기화면표시() {
         '</div>' +
         '<div class="customization-layout">' +
             '<div class="custom-preview">' +
-                '<div class="custom-studio-intro"><div><div class="custom-studio-kicker">DORI PERSONAL STUDIO</div><div class="preview-title">🐶 돌이 꾸미기</div></div><span class="custom-studio-equipped-count">' + equippedCount + ' / 7 장착</span></div>' +
-                '<div class="preview-stage">' +
-                    '<div class="preview-dori ' + (프레임코드 ? "has-profile-frame frame-" + 프레임코드 : "") + ' ' + (스킨코드 ? "preview-" + 스킨코드 : "") + ' ' + (효과코드 ? "preview-" + 효과코드 : "") + '">' +
-                        '<img src="' + HTML이스케이프(currentImage) + '" alt="돌이 미리보기">' +
-                        '<div class="preview-layer preview-hat ' + (꾸미기상태.hat ? "" : "preview-empty") + '" title="' + HTML이스케이프(꾸미기상태.hat?.item_name || "모자 없음") + '">🎩 <b>' + HTML이스케이프(꾸미기상태.hat?.item_name || "모자 없음") + '</b></div>' +
-                        '<div class="preview-layer preview-glasses ' + (꾸미기상태.glasses ? "" : "preview-empty") + '" title="' + HTML이스케이프(꾸미기상태.glasses?.item_name || "안경 없음") + '">👓 <b>' + HTML이스케이프(꾸미기상태.glasses?.item_name || "안경 없음") + '</b></div>' +
-                        '<div class="preview-layer preview-clothes ' + (꾸미기상태.clothes ? "" : "preview-empty") + '" title="' + HTML이스케이프(꾸미기상태.clothes?.item_name || "옷 없음") + '">👕 <b>' + HTML이스케이프(꾸미기상태.clothes?.item_name || "옷 없음") + '</b></div>' +
-                        '<div class="preview-layer preview-cape ' + (꾸미기상태.cape ? "" : "preview-empty") + '" title="' + HTML이스케이프(꾸미기상태.cape?.item_name || "망토 없음") + '">🦸 <b>' + HTML이스케이프(꾸미기상태.cape?.item_name || "망토 없음") + '</b></div>' +
-                    '</div>' +
+                '<div class="custom-studio-intro"><div><div class="custom-studio-kicker">DORI CHARACTER STUDIO</div><div class="preview-title">🐶 진짜 돌이 꾸미기</div></div><span class="custom-studio-equipped-count">' + equippedCount + ' / 7 장착</span></div>' +
+                '<div class="preview-stage dori-character-stage">' +
+                    (꾸미기상태.cape ? '<img class="dori-real-layer dori-cape-layer" src="' + 꾸미기이미지경로(꾸미기상태.cape) + '" alt="" draggable="false">' : '') +
+                    '<img class="dori-real-base ' + (스킨코드 ? "skin-" + 스킨코드 : "") + '" src="assets/dori-character.svg" alt="웰시코기 봉제인형 돌이 캐릭터" draggable="false">' +
+                    layer("clothes","dori-clothes-layer") +
+                    layer("hat","dori-hat-layer") +
+                    layer("glasses","dori-glasses-layer") +
+                    (꾸미기상태.effect ? '<img class="dori-real-layer dori-effect-layer" src="' + 꾸미기이미지경로(꾸미기상태.effect) + '" alt="" draggable="false">' : '') +
+                    (꾸미기상태.frame ? '<div class="dori-real-frame" data-frame-rarity="' + HTML이스케이프(꾸미기상태.frame.rarity || "일반") + '" data-frame-code="' + HTML이스케이프(프레임코드) + '"><img src="' + 프레임이미지 + '" alt="" draggable="false"></div>' : '') +
                 '</div>' +
-                '<div class="preview-subtitle">선택한 아이템은 미리보기에 즉시 반영되며, 저장 버튼을 눌러 계정에 적용할 수 있습니다.</div>' +
+                '<div class="preview-subtitle">프로필 사진이 아닌 돌이 캐릭터에 아이템을 직접 겹쳐 입히는 미리보기입니다. 선택한 코디는 저장 후 계정에 적용됩니다.</div>' +
                 '<div class="custom-preview-slots">' + slots + '</div>' +
                 '<div class="custom-actions" style="width:100%;max-width:320px;">' +
                     '<button class="custom-save" id="꾸미기저장버튼">💾 코디 저장</button>' +
                     '<button class="custom-reset" id="꾸미기초기화버튼">↺ 기본 모습</button>' +
                 '</div>' +
-                '<div class="custom-status" id="꾸미기상태문구" aria-live="polite">기본 사이트 배경은 별도로 유지됩니다.</div>' +
+                '<div class="custom-status" id="꾸미기상태문구" aria-live="polite">돌이 캐릭터 자체에 꾸미기 아이템이 적용됩니다. 사이트 배경은 별도로 유지됩니다.</div>' +
             '</div>' +
             '<div class="custom-controls">' +
                 (categoryHTML || '<div class="custom-studio-empty">검색 조건에 맞는 아이템이 없습니다.<br>검색어를 지우거나 필터를 바꿔보세요.</div>') +
@@ -4747,7 +5016,7 @@ function 꾸미기화면표시() {
 
     상태내용요소.querySelectorAll("[data-custom-code]").forEach(button => {
         button.addEventListener("click", () => {
-            const item = 보유아이템목록.find(value => value.item_code === button.dataset.customCode);
+            const item = [...보유아이템목록, ...획득프레임목록].find(value => value.item_code === button.dataset.customCode);
             if (item) 꾸미기아이템선택(item);
         });
     });
@@ -4768,7 +5037,7 @@ function 꾸미기화면표시() {
         꾸미기이전상태저장();
         let changed = 0;
         categories.forEach(category => {
-            const pool = 보유아이템목록.filter(item => 아이템꾸미기카테고리(item) === category && 숫자정리(item.quantity) > 0);
+            const pool = category === "frame" ? 획득프레임목록 : 보유아이템목록.filter(item => 아이템꾸미기카테고리(item) === category && 숫자정리(item.quantity) > 0);
             if (!pool.length) return;
             const chosen = pool[Math.floor(Math.random() * pool.length)];
             꾸미기상태[category] = { item_code:chosen.item_code, item_name:chosen.item_name || chosen.item_code, rarity:chosen.rarity || "일반" };
@@ -5420,6 +5689,9 @@ async function 페이지초기화() {
             console.error("랜덤박스 인벤토리 조회 오류:", error);
             보유아이템목록 = [];
         }
+
+        // 이벤트·라운지·패스 등에서 획득한 프레임을 통합 수집
+        await 프레임목록가져오기(user);
 
         // 돌이사이트 전용 꾸미기 저장값
         await 꾸미기정보가져오기(user);
