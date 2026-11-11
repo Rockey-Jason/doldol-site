@@ -1043,6 +1043,23 @@ body::before {
     animation: previewGlow 4s ease-in-out infinite;
 }
 
+.inventory-action-row{display:flex;gap:8px;margin-top:13px}
+.inventory-action-button{width:100%;min-height:38px;padding:8px 12px;border:1px solid rgba(126,210,255,.32);border-radius:11px;color:#e9f8ff;background:linear-gradient(135deg,rgba(76,145,210,.24),rgba(88,89,190,.22));font:inherit;font-size:13px;cursor:pointer;transition:transform .2s ease,background .2s ease,border-color .2s ease}
+.inventory-action-button:hover:not(:disabled){transform:translateY(-2px);background:linear-gradient(135deg,rgba(76,145,210,.38),rgba(88,89,190,.34));border-color:rgba(126,210,255,.58)}
+.inventory-action-button:disabled{opacity:.65;cursor:default}
+.inventory-action-button.multiplier-action{border-color:rgba(255,211,119,.35);color:#ffe8b0;background:linear-gradient(135deg,rgba(168,119,43,.24),rgba(115,83,38,.2))}
+.inventory-action-status{margin:0 0 16px;padding:11px 14px;border:1px solid rgba(130,164,255,.18);border-radius:12px;color:#cbd9fa;background:rgba(98,117,210,.08);font-size:13px;line-height:1.55}
+.preview-cape{left:12px;top:auto;bottom:58px;transform:none;padding:5px 8px}
+.preview-dori[class*="preview-skin_"] img{filter:saturate(1.2) contrast(1.04)}
+.preview-dori.preview-skin_legendary img,.preview-dori.preview-skin_mythic img{filter:saturate(1.35) brightness(1.06) contrast(1.06)}
+.preview-dori[class*="preview-effect_"]{box-shadow:0 24px 55px rgba(0,0,0,.32),0 0 0 4px rgba(145,155,255,.22),0 0 38px rgba(131,144,255,.4)}
+.preview-stage[class*="preview-bg-background_"]{border:1px solid rgba(255,255,255,.12);border-radius:20px}
+.preview-stage.preview-bg-background_doronium{background:radial-gradient(circle,rgba(78,213,255,.3),rgba(10,31,73,.2) 65%,transparent 100%)}
+.preview-stage.preview-bg-background_dori{background:radial-gradient(circle,rgba(255,220,151,.25),rgba(60,49,91,.18) 65%,transparent 100%)}
+.preview-stage.preview-bg-background_legendary,.preview-stage.preview-bg-background_mythic{background:radial-gradient(circle,rgba(182,137,255,.3),rgba(57,41,105,.18) 65%,transparent 100%)}
+.preview-stage.preview-bg-background_rare,.preview-stage.preview-bg-background_super_rare{background:radial-gradient(circle,rgba(98,177,255,.25),rgba(28,61,111,.16) 65%,transparent 100%)}
+@media(max-width:520px){.inventory-action-button{min-height:40px}.preview-cape{left:7px;bottom:55px}}
+
 .preview-stage {
     position: relative;
     width: 220px;
@@ -4302,34 +4319,39 @@ function 내아이템화면표시() {
 
     const cards = filtered.length
         ? filtered.map(item => {
-            const custom = Boolean(아이템꾸미기카테고리(item));
+            const category = 아이템꾸미기카테고리(item);
             const equipped = 장착아이템인가(item);
-            return `
-                <article class="inventory-card ${custom ? "custom-item" : ""} ${equipped ? "equipped" : ""}" data-item-code="${HTML이스케이프(item.item_code)}">
-                    <div class="inventory-icon">${아이템아이콘(item)}</div>
-                    <div class="inventory-type">${HTML이스케이프(아이템용도(item))}</div>
-                    <div class="inventory-name">${HTML이스케이프(item.item_name ?? "이름 없는 아이템")}</div>
-                    <div class="inventory-meta">
-                        <span class="rarity-badge">${HTML이스케이프(item.rarity ?? "일반")}</span>
-                        <span class="inventory-quantity">×${숫자정리(item.quantity).toLocaleString()}</span>
-                    </div>
-                    <div class="inventory-code">${HTML이스케이프(item.item_code ?? "-")}</div>
-                </article>
-            `;
+            const multiplier = String(item.item_type || "").toLowerCase() === "multiplier";
+            let action = "";
+            if (category) {
+                action = '<button type="button" class="inventory-action-button" data-inventory-equip="' +
+                    HTML이스케이프(item.item_code) + '"' + (equipped ? " disabled" : "") + '>' +
+                    (equipped ? "✓ 장착 중" : "🎨 장착하기") + '</button>';
+            } else if (multiplier) {
+                action = '<button type="button" class="inventory-action-button multiplier-action" data-inventory-multiplier="' +
+                    HTML이스케이프(item.item_code) + '">⚡ 1시간 사용</button>';
+            }
+            return '<article class="inventory-card ' + (category ? "custom-item" : "") + " " +
+                (equipped ? "equipped" : "") + '" data-item-code="' + HTML이스케이프(item.item_code) + '">' +
+                '<div class="inventory-icon">' + 아이템아이콘(item) + '</div>' +
+                '<div class="inventory-type">' + HTML이스케이프(아이템용도(item)) + '</div>' +
+                '<div class="inventory-name">' + HTML이스케이프(item.item_name ?? "이름 없는 아이템") + '</div>' +
+                '<div class="inventory-meta"><span class="rarity-badge">' +
+                HTML이스케이프(item.rarity ?? "일반") + '</span><span class="inventory-quantity">×' +
+                숫자정리(item.quantity).toLocaleString() + '</span></div>' +
+                '<div class="inventory-code">' + HTML이스케이프(item.item_code ?? "-") + '</div>' +
+                (action ? '<div class="inventory-action-row">' + action + '</div>' : "") +
+                '</article>';
         }).join("")
-        : `
-            <div class="empty" style="grid-column:1/-1;">
-                🎁 아직 보유한 아이템이 없습니다.<br>
-                랜덤박스에서 새로운 아이템을 획득해보세요!
-            </div>
-        `;
+        : '<div class="empty" style="grid-column:1/-1;">🎁 아직 보유한 아이템이 없습니다.<br>랜덤박스에서 새로운 아이템을 획득해보세요!</div>';
 
     상태내용요소.innerHTML = `
         <div class="inventory-notice">
-            <strong>🎒 내 아이템</strong><br>
-            랜덤박스에서 획득한 아이템을 한곳에서 확인할 수 있습니다.
-            꾸미기 아이템은 <strong>🎨 돌이 꾸미기</strong>에서 장착할 수 있습니다.
+            <strong>🎒 내 아이템 보관함</strong><br>
+            꾸미기 아이템은 바로 장착할 수 있고, 배율 아이템은 사용하면 1시간 동안 코인 보상에 적용됩니다.
+            코인·경험치는 랜덤 박스를 여는 즉시 지급되며, 특별 칭호는 자동으로 장착됩니다.
         </div>
+        <div class="inventory-action-status" id="inventoryActionStatus" aria-live="polite">아이템을 선택해 바로 사용하거나 장착하세요.</div>
         <div class="inventory-toolbar">
             <div class="inventory-summary">
                 전체 <strong>${보유아이템목록.length}</strong>종 · 꾸미기 <strong>${customCount}</strong>종
@@ -4343,6 +4365,66 @@ function 내아이템화면표시() {
         button.addEventListener("click", () => {
             아이템필터 = button.dataset.inventoryFilter;
             내아이템화면표시();
+        });
+    });
+
+    상태내용요소.querySelectorAll("[data-inventory-equip]").forEach(button => {
+        button.addEventListener("click", async event => {
+            event.stopPropagation();
+            const item = 보유아이템목록.find(value => value.item_code === button.dataset.inventoryEquip);
+            if (!item) return;
+            const previous = JSON.parse(JSON.stringify(꾸미기상태));
+            꾸미기아이템선택(item);
+            button.disabled = true;
+            try {
+                const saved = await 꾸미기저장();
+                if (!saved) {
+                    꾸미기상태 = previous;
+                    throw new Error("장착 정보를 계정에 저장하지 못했습니다. 다시 시도해 주세요.");
+                }
+                alert("🎉 " + item.item_name + " 장착 완료!");
+                내아이템화면표시();
+            } catch (error) {
+                console.error("랜덤 박스 아이템 장착 오류:", error);
+                alert(error?.message || "아이템 장착 중 오류가 발생했습니다.");
+                내아이템화면표시();
+            }
+        });
+    });
+
+    상태내용요소.querySelectorAll("[data-inventory-multiplier]").forEach(button => {
+        button.addEventListener("click", async event => {
+            event.stopPropagation();
+            const item = 보유아이템목록.find(value => value.item_code === button.dataset.inventoryMultiplier);
+            if (!item || button.disabled) return;
+            button.disabled = true;
+            const status = document.getElementById("inventoryActionStatus");
+            if (status) status.textContent = item.item_name + " 사용 중...";
+            try {
+                const { data, error } = await supabase.rpc("activate_dori_box_multiplier", {
+                    p_item_code: item.item_code
+                });
+                if (error) throw error;
+                if (!data?.success) throw new Error("배율 아이템을 사용하지 못했습니다.");
+                await 인벤토리가져오기({ id: 현재유저정보.user_id });
+                내아이템화면표시();
+                const expires = new Date(data.expires_at);
+                const expiryLabel = Number.isNaN(expires.getTime())
+                    ? "시간 정보 없음"
+                    : expires.toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+                const message = "⚡ " + Number(data.multiplier).toLocaleString("ko-KR") +
+                    "배 코인 보상 활성화 · " + expiryLabel + "까지";
+                const newStatus = document.getElementById("inventoryActionStatus");
+                if (newStatus) newStatus.textContent = message;
+                alert(message);
+            } catch (error) {
+                console.error("배율 아이템 사용 오류:", error);
+                const currentStatus = document.getElementById("inventoryActionStatus");
+                if (currentStatus) currentStatus.textContent = error?.message || "배율 아이템 사용에 실패했습니다.";
+                alert(error?.message || "배율 아이템 사용에 실패했습니다.");
+                await 인벤토리가져오기({ id: 현재유저정보.user_id });
+                내아이템화면표시();
+            }
         });
     });
 
@@ -4404,17 +4486,22 @@ function 꾸미기화면표시() {
     const 현재모자 = 꾸미기상태.hat?.item_name ?? "기본 모자";
     const 현재안경 = 꾸미기상태.glasses?.item_name ?? "기본 안경";
     const 현재옷 = 꾸미기상태.clothes?.item_name ?? "기본 옷";
+    const 현재망토 = 꾸미기상태.cape?.item_name ?? "기본 망토";
     const 프레임코드 = String(꾸미기상태.frame?.item_code || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    const 배경코드 = String(꾸미기상태.background?.item_code || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    const 스킨코드 = String(꾸미기상태.skin?.item_code || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
+    const 효과코드 = String(꾸미기상태.effect?.item_code || "").toLowerCase().replace(/[^a-z0-9_-]/g, "");
 
     상태내용요소.innerHTML = `
         <div class="customization-layout">
             <div class="custom-preview">
-                <div class="preview-stage">
-                    <div class="preview-dori ${프레임코드 ? `has-profile-frame frame-${프레임코드}` : ""}">
+                <div class="preview-stage ${배경코드 ? "preview-bg-" + 배경코드 : ""}">
+                    <div class="preview-dori ${프레임코드 ? `has-profile-frame frame-${프레임코드}` : ""} ${스킨코드 ? "preview-" + 스킨코드 : ""} ${효과코드 ? "preview-" + 효과코드 : ""}">
                         <img src="${HTML이스케이프(현재유저정보?.profile_image || "https://i.postimg.cc/qB2wnCCq/1000004618-(2).png")}" alt="돌이 미리보기">
                         <div class="preview-layer preview-hat ${꾸미기상태.hat ? "" : "preview-empty"}" title="${HTML이스케이프(현재모자)}">${꾸미기상태.hat ? "🎩" : "모자 없음"}</div>
                         <div class="preview-layer preview-glasses ${꾸미기상태.glasses ? "" : "preview-empty"}" title="${HTML이스케이프(현재안경)}">${꾸미기상태.glasses ? "👓" : "안경 없음"}</div>
                         <div class="preview-layer preview-clothes ${꾸미기상태.clothes ? "" : "preview-empty"}" title="${HTML이스케이프(현재옷)}">${꾸미기상태.clothes ? "👕" : "옷 없음"}</div>
+                        <div class="preview-layer preview-cape ${꾸미기상태.cape ? "" : "preview-empty"}" title="${HTML이스케이프(현재망토)}">${꾸미기상태.cape ? "🦸 망토" : "망토 없음"}</div>
                     </div>
                 </div>
                 <div class="preview-title">🐶 돌이 꾸미기</div>
