@@ -1678,7 +1678,7 @@
         // a stale, unverified password session.
         const { data: existingSession } = await supabase.auth.getSession();
         if (existingSession?.session) {
-          const { error: signOutError } = await supabase.auth.signOut();
+          const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
           if (signOutError) throw signOutError;
         }
         const { data, error } = await supabase.auth.signInWithPasskey();
@@ -1688,14 +1688,14 @@
         const { data: verified, error: verifyError } =
           await supabase.functions.invoke("admin-passkey-verify-session", { body: {} });
         if (verifyError || !verified?.ok) {
-          await supabase.auth.signOut();
+          await supabase.auth.signOut({ scope: "local" });
           throw new Error(verified?.message || verifyError?.message || "관리자 패스키 인증에 실패했습니다.");
         }
 
         const { data: isAdmin, error: adminError } =
           await supabase.rpc("admin_is_authorized");
         if (adminError || isAdmin !== true) {
-          await supabase.auth.signOut();
+          await supabase.auth.signOut({ scope: "local" });
           throw new Error("관리자 권한을 확인하지 못했습니다. 관리자 계정으로 등록된 패스키인지 확인해 주세요.");
         }
 
