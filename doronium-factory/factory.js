@@ -1,4 +1,4 @@
-import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES, CANONICAL_DORONUM_CRYSTAL_MODELS } from "./world3d.js?v=20";
+import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES, CANONICAL_DORONUM_CRYSTAL_MODELS } from "./world3d.js?v=21";
 import { createRuntimeState, ensureItemStacks, addItemStack, allocateEntityID, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, reserveQualifiedItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, TICK_STAGE_ORDER, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState, enqueueSimulationEvent, processSimulationEvents, consumeFixedStepBudget } from "./simulation-core.js?v=7";
 import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=4";
 import { validateGameData } from "./game-data-validation.js?v=3";
@@ -1130,8 +1130,77 @@ function exitMine(){if(S.player.layer!=="mine")return;const pos=S.player.surface
 function descendMine(){if(S.player.mineLevel>=MINE_LEVELS){toast("현재 도달 가능한 최심부입니다.","warn");return}S.player.mineLevel++;if(S.player.mineLevel>=3)claimSkillPoint("EXPLORATION_MINE_DEPTH_3");if(S.player.mineLevel>=5)claimSkillPoint("EXPLORATION_MINE_DEPTH_5");S.player.x=3;S.player.y=12;playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false};toast("광산 "+S.player.mineLevel+"층 · Y "+mineFloorY(S.player.mineLevel)+"m");log("광산 심층 진입 · "+S.player.mineLevel+"층 · Y="+mineFloorY(S.player.mineLevel)+"m");markDirty();drawWorld()}
 function harvestMineDeposit(node){if(S.player.layer!=="mine"||S.activeTool!=="pickaxe"){toast("곡괭이를 장착해야 광물을 채굴할 수 있습니다.","warn");return}if(node.amount<=0){toast("광맥이 고갈되었습니다.","warn");return}const amount=Math.min(node.amount,node.type.startsWith("doronium_")?1:node.type==="diamond"?1:2),id=node.type;node.amount-=amount;if(node.amount<=0)markSceneDirty();if(RESOURCE[id]){const qualityValue=clamp(82+Math.floor((node.seed%1700)/100)+Math.max(0,node.level-2),80,99);addItem(id,amount,{quality:qualityValue,purity:Math.min(99,86+node.level*2),synthetic:false});S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;log(RESOURCE[id].name+" 채굴 · "+amount+"개 · Y="+node.depthY+"m");toast(RESOURCE[id].name+" +"+amount+" · Y="+node.depthY+"m");playTone(480+node.level*50,.08,"triangle");questCheck();renderInventory();renderHud();markDirty();drawWorld()}}
 function selectTool(tool){if(!["axe","pickaxe"].includes(tool)||!S.tools?.[tool])return;S.activeTool=tool;document.querySelectorAll("[data-tool]").forEach(b=>b.classList.toggle("active",b.dataset.tool===tool));const label=$("equipped-tool-label");if(label)label.textContent=tool==="axe"?"도끼 장착":"곡괭이 장착";toast(label?.textContent||"도구 변경")}
+function pickupNearbyWorldDrop(){
+ if(!adventureMode()||S.paused)return false;
+ const layer=S.player.layer==="mine"?"mine":"surface";
+ const px=Number.isFinite(Number(playerMotion.x))?Number(playerMotion.x):Number(S.player.x)||0;
+ const pz=Number.isFinite(Number(playerMotion.z))?Number(playerMotion.z):Number(S.player.y)||0;
+ let index=-1,bestDistance=1.35;
+ for(let i=0;i<(S.worldDrops||[]).length;i++){
+  const drop=S.worldDrops[i];
+  if((drop?.layer||"surface")!==layer)continue;
+  if(layer==="mine"&&Number(drop.mineLevel||1)!==Number(S.player.mineLevel||1))continue;
+  const x=Number(drop?.x),z=Number(drop?.y);
+  if(!Number.isFinite(x)||!Number.isFinite(z))continue;
+  const distance=Math.hypot(x-px,z-pz);
+  if(distance<=bestDistance){bestDistance=distance;index=i}
+ }
+ if(index<0)return false;
+ const drop=S.worldDrops[index],dropID=String(drop.dropID||drop.id||""),stackID=String(drop.custodyStackID||drop.stackID||"");
+ const itemID=canonicalItemID(drop.itemID),quantity=Math.floor(Number(drop.quantity)||0);
+ if(!dropID||!stackID||!RESOURCE[itemID]||!Number.isSafeInteger(quantity)||quantity<=0){
+  toast("월드 드롭 데이터가 유효하지 않아 회수할 수 없습니다.","warn");return false;
+ }
+ ensureItemStacks(S);
+ const snapshot={
+  runtime:structuredClone(S.runtime),worldDrops:structuredClone(S.worldDrops),
+  inventory:structuredClone(S.inventory||{}),meta:structuredClone(S.meta||{}),
+  hadLedger:Object.hasOwn(S,"ownershipLedger"),
+  ownershipLedger:S.ownershipLedger?structuredClone(S.ownershipLedger):null,
+  hadValidation:Object.hasOwn(S,"ownershipLedgerValidation"),
+  validation:S.ownershipLedgerValidation===undefined?undefined:structuredClone(S.ownershipLedgerValidation)
+ };
+ const rollback=()=>{
+  S.runtime=snapshot.runtime;S.worldDrops=snapshot.worldDrops;S.inventory=snapshot.inventory;S.meta=snapshot.meta;
+  if(snapshot.hadLedger)S.ownershipLedger=snapshot.ownershipLedger;else delete S.ownershipLedger;
+  if(snapshot.hadValidation)S.ownershipLedgerValidation=snapshot.validation;else delete S.ownershipLedgerValidation;
+ };
+ const before=rebuildOwnershipLedger(S);
+ if(!before.valid){rollback();toast("소유권 검증에 실패해 월드 드롭을 회수하지 않았습니다.","warn");return false}
+ const owner=S.ownershipLedger.custody.find(record=>record.stackID===stackID);
+ if(!owner||owner.ownerType!=="WORLD_DROP"||owner.ownerID!==dropID||owner.itemID!==itemID||owner.quantity!==quantity||
+    S.runtime.itemStacks.some(stack=>String(stack.runtimeID)===stackID)){
+  rollback();toast("월드 드롭 소유권이 일치하지 않아 회수를 차단했습니다.","warn");return false;
+ }
+ const moved=transferCustody(S.ownershipLedger,{
+  transactionID:"WORLD_DROP_PICKUP:"+dropID,stackID,quantity,
+  toType:"PLAYER_INVENTORY",toID:"player",
+  expectedFromType:"WORLD_DROP",expectedFromID:dropID
+ });
+ if(!moved||moved.duplicate){rollback();toast("월드 드롭 소유권 이전이 거부되었습니다.","warn");return false}
+ try{
+  S.runtime.itemStacks.push({
+   runtimeID:stackID,itemID,quantity,
+   quality:clamp(drop.quality??90,0,100),purity:clamp(drop.purity??90,0,100),
+   synthetic:drop.synthetic===true,packaging:null,createdTick:Math.max(0,Number(S.tick)||0),
+   sourceWorldDropID:dropID
+  });
+  S.worldDrops.splice(index,1);
+  syncLegacyInventory(S);
+  const after=rebuildOwnershipLedger(S);
+  if(!after.valid)throw new Error("WORLD_DROP_PICKUP_AUDIT_FAILED");
+ }catch{
+  rollback();toast("월드 드롭 회수 중 오류가 발생해 원상 복구했습니다.","warn");return false;
+ }
+ markSceneDirty();markDirty();
+ log(RESOURCE[itemID].name+" "+quantity+"개 회수 · 원래 Stack ID 유지");
+ toast(RESOURCE[itemID].name+" "+quantity+"개를 회수했습니다.");
+ questCheck();renderAll();
+ return true;
+}
 function performAdventureAction(){
  if(!adventureMode()||S.paused)return;
+ if(adventureKeys.has("e")&&pickupNearbyWorldDrop())return;
  const target=world3d.pickTarget(190);
  if(target?.kind==="mineEntrance"){enterMine();return}
  if(target?.kind==="mineExit"){exitMine();return}
@@ -1905,7 +1974,7 @@ function wireControls(){
  };
  bindAdventureButton("eat-button",consumeFood);
  bindAdventureButton("drink-button",drinkWater);
- bindAdventureButton("action-button",performAdventureAction);
+ bindAdventureButton("action-button",()=>{adventureKeys.add("e");try{performAdventureAction()}finally{adventureKeys.delete("e")}});
  $("jump-button").addEventListener("pointerdown",e=>{e.preventDefault();adventureKeys.add(" ")});
  $("jump-button").addEventListener("pointerup",()=>adventureKeys.delete(" "));
  $("jump-button").addEventListener("pointercancel",()=>adventureKeys.delete(" "));
@@ -2731,6 +2800,19 @@ if(E2E_MODE){
    S.buildings=[b];S.paused=false;tickMachine(b,STEP,1);
    const stacks=S.runtime.itemStacks.filter(stack=>stack.itemID==="ITEM_DORI_MEAT");
    return {status:b.status,errorCode:b.errorCode||null,remaining:itemCount("doriMeat"),activeMeta:!!b.activeMeta,stackQuantity:stacks.reduce((n,stack)=>n+stack.quantity,0),syntheticStacks:stacks.filter(stack=>stack.synthetic).length,reservations:Object.keys(S.runtime.reservations||{}).length}
+  },
+  setupWorldDropPickupTest(){
+   S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
+   S.player={...S.player,x:72,y:52,layer:"surface",viewMode:"first",mineLevel:1};
+   S.worldDrops=[{dropID:"WORLD_DROP:E2E:1",custodyStackID:"IS-WORLD-DROP-E2E-1",itemID:"ITEM_IRON_ORE",quantity:2,quality:97,purity:98,synthetic:false,x:72,y:52,layer:"surface",createdAt:S.seconds,source:"E2E"}];
+   playerMotion={x:72,z:52,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};
+   const audit=rebuildOwnershipLedger(S);world3d.center(72,52);world3d.setViewMode("first");markSceneDirty();renderAll();
+   return {audit,dropCount:S.worldDrops.length,owner:S.ownershipLedger?.custody?.find(record=>record.stackID==="IS-WORLD-DROP-E2E-1")||null,visualCount:world3d.inspect().worldDropCount};
+  },
+  worldDropPickupState(){
+   const audit=rebuildOwnershipLedger(S),stack=S.runtime.itemStacks.find(item=>item.runtimeID==="IS-WORLD-DROP-E2E-1");
+   const owner=S.ownershipLedger?.custody?.find(record=>record.stackID==="IS-WORLD-DROP-E2E-1");
+   return {audit,dropCount:(S.worldDrops||[]).length,inventory:S.inventory?.ITEM_IRON_ORE||0,stack:stack?structuredClone(stack):null,owner:owner?structuredClone(owner):null,visualCount:world3d.inspect().worldDropCount,pickupTransactions:Object.keys(S.ownershipLedger?.transactions||{}).filter(id=>id.startsWith("WORLD_DROP_PICKUP:")).length};
   },
   cleanDoriMeatGuard(){
    S=freshState();S.inventory={doriMeat:10};S.meta={doriMeat:{quality:95,purity:95,synthetic:false}};S.runtime=createRuntimeState();ensureItemStacks(S);
