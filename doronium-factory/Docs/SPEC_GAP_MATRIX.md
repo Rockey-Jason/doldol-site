@@ -197,3 +197,43 @@ All 12 roadmap areas remain PARTIAL or UNVERIFIED; no final checklist item is CO
 - The `worldDrops` state is now a persisted custody source, but no player pickup/render/cleanup path has been completed.
 - Contract reward application is still client-side and is not server-authoritative.
 - PR #11 remains open and unmerged. Main remains `293a1e8a147648763777abb6e41dd903fa22a82c`; no merge, deployment, production DB change or user-save mutation was performed.
+
+
+## 2026-11-12 — world-drop pickup and recovery checkpoint
+
+**Code checkpoint:** `5704223f163a8fc478422a40cecb30fc3978aeaf`  
+**Main HEAD:** `cde4215b05413d627dbacb86e8a2683a708788f4`  
+**PR #11:** open / draft; old base `26e88058b6d416d79459fee107aff4a5beb3d7e3`  
+**Current divergence:** 364 ahead / 578 behind from that merge base.
+
+### Roadmap status updates
+
+| Master area | Status | New code evidence | Remaining acceptance blocker |
+|---|---|---|---|
+| 5. Items, ownership and logistics | PARTIAL / CRITICAL | Failed-shipment cargo now has a layer-aware persisted world drop, a WebGL/fallback visual, E/action-button pickup, same-Stack-ID transfer to player inventory, transaction journal entry, post-transfer ledger rebuild and rollback on failure. | Independent warehouse stock, every owner-domain transfer, partial parcel movement, demolition/salvage, Fusion custody, reconnect recovery, global conservation and real browser E2E remain open. |
+| 11. Shipping, contracts and economy | PARTIAL | Failed cargo can now be recovered in the player's current surface/mine layer; its original quantity and metadata survive pickup. | Full contract catalog, route-derived risk/insurance, server-authoritative reward settlement and full delivery/reload browser E2E remain open. |
+
+### 20-item acceptance updates
+
+| # | Item | Status | Evidence / limitation |
+|---:|---|---|---|
+| 8 | Item duplication/loss prevention | PARTIAL / CRITICAL | World-drop-to-player pickup now has exact Stack ID preservation, transaction idempotency, custody validation and rollback in the live function harness. This does not prove conservation across every owner domain. |
+| 9 | Conveyors and automatic mining | PARTIAL | No change to advanced routing/deadlock completeness. Existing mine-output-null Playwright regression still needs a current-head browser run. |
+| 16 | Cloud save/recovery | PARTIAL | World drops are part of the state snapshot and rebuild from saved state, but reload/reconnect recovery has not been browser-verified. |
+| 18 | 60-minute wall-clock test | UNVERIFIED | No physical 60-minute run was performed. |
+| 19 | PC/mobile hardware performance | UNVERIFIED | No physical Android/iOS device run was performed. |
+
+### Verification record
+
+- Contract runtime test source against fetched production modules: **8/8 passed** in an isolated V8 harness.
+- Actual factory pickup/rebuild functions against production ownership/simulation modules: success, duplicate-input rejection, simulated inventory-sync rollback and conflicting transaction rejection all passed; custody validation remained valid.
+- Syntax compilation of the five changed runtime/test sources: **5/5 passed**.
+- No GitHub Actions run or combined status entry was returned for `5704223f163a8fc478422a40cecb30fc3978aeaf`. Native Node test-runner results and actual Playwright browser regression are **UNVERIFIED**, not passed.
+- Physical Android/iOS and 60-minute wall-clock acceptance remain **UNVERIFIED**.
+
+### PR reconciliation
+
+- PR #9 overlaps `factory.js` and `e2e/factory-smoke.mjs`; PR #10 overlaps `factory.js` and `world3d.js`. Their PR-head files were inspected; they are older implementations and do not contain this shipment/world-drop pickup path. No broad cherry-pick was made.
+- PR #8 is the separate Godot project; it remains excluded from the chosen Three.js/WebGL architecture.
+- Main has advanced to `cde4215b05413d627dbacb86e8a2683a708788f4`. The development branch is 364 commits ahead and 578 behind. PR #11 is still open/draft with the old merge base; no merge or deployment is authorized.
+- Overall project remains **PARTIAL / NOT RELEASE-READY**. All 12 master roadmap stages remain PARTIAL or UNVERIFIED.
