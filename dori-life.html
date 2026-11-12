@@ -594,6 +594,76 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 @keyframes doriSafeWait{0%,100%{transform:translateY(0) scale(1,1)}50%{transform:translateY(-.45px) scale(1.002,1.003)}}
 @media(prefers-reduced-motion:reduce){#doriReferenceArtwork{animation:none!important;transition:none!important}}
 
+
+/* DORI LIFE — activity archive */
+.activity-archive{margin-top:16px;padding:clamp(17px,2.5vw,25px);border:1px solid rgba(228,198,141,.2);background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.018))}
+.activity-archive-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.history-eyebrow{margin-bottom:8px;color:#d7bb86;font-size:9px;letter-spacing:.2em}
+.activity-archive-head h2{margin:0;color:#f4ead9;font-size:clamp(20px,3vw,27px);font-weight:400;letter-spacing:-.025em}
+.activity-archive-head p{margin:8px 0 0;color:#aaa496;font-size:11px;line-height:1.7}
+.history-live-mark{display:flex;align-items:center;gap:7px;padding:7px 10px;border:1px solid rgba(221,193,143,.19);border-radius:99px;color:#d5c39f;font-size:9px;letter-spacing:.12em;white-space:nowrap}
+.history-live-mark span{width:6px;height:6px;border-radius:50%;background:#d8b878;box-shadow:0 0 12px rgba(216,184,120,.6)}
+.history-range{display:flex;flex-wrap:wrap;gap:7px;margin:20px 0 14px}
+.history-range button{padding:8px 13px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(255,255,255,.035);color:#bbb3a5;font-size:10px;cursor:pointer;transition:background .2s,border-color .2s,color .2s}
+.history-range button:hover{border-color:rgba(226,198,146,.35);color:#f5e6c9}
+.history-range button.active,.history-range button[aria-pressed="true"]{border-color:rgba(226,198,146,.48);background:rgba(213,183,126,.15);color:#f1d8a9}
+.history-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.history-stat{min-width:0;padding:14px 14px 13px;border:1px solid rgba(255,255,255,.075);border-radius:15px;background:rgba(8,15,23,.27)}
+.history-stat span{display:block;color:#aaa396;font-size:10px}
+.history-stat strong{display:block;overflow:hidden;margin-top:8px;color:#f1dfbd;font-size:clamp(18px,2.6vw,25px);font-weight:400;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+.history-stat:nth-child(3) strong{font-size:clamp(14px,2vw,19px)}
+.history-stat small{display:block;margin-top:5px;color:#837f76;font-size:9px}
+.history-chart-card,.history-category-card,.history-records-card{margin-top:12px;padding:16px;border:1px solid rgba(255,255,255,.075);border-radius:16px;background:rgba(8,15,23,.24)}
+.history-chart-head,.history-subhead,.history-records-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.history-chart-head>div strong,.history-subhead strong,.history-records-head>div strong{display:block;color:#eee2ce;font-size:12px;font-weight:400}
+.history-chart-head>div span,.history-subhead>span,.history-records-head>div span{display:block;margin-top:4px;color:#938e84;font-size:9px}
+.history-chart-total{color:#e4c68d;font-size:12px;font-variant-numeric:tabular-nums}
+.history-chart{width:100%;min-height:210px;margin-top:14px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:rgba(220,193,143,.28) transparent}
+.history-chart svg{display:block;width:100%;min-width:560px;height:auto;overflow:visible}
+.history-chart .chart-grid-line{stroke:rgba(255,255,255,.075);stroke-width:1}
+.history-chart .chart-y-label,.history-chart .chart-x-label{fill:#938e84;font-family:HancomMalrangmalrang,'Jua',sans-serif;font-size:10px}
+.history-chart .chart-x-label{font-size:9px}
+.history-chart .chart-bar{stroke:rgba(255,255,255,.13);stroke-width:.55}
+.history-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px}
+.history-legend span{display:inline-flex;align-items:center;gap:6px;color:#a9a294;font-size:9px}
+.history-legend i{width:7px;height:7px;border-radius:2px}
+.history-categories{display:grid;gap:12px;margin-top:15px}
+.history-category-row{display:grid;grid-template-columns:78px minmax(0,1fr) 56px;gap:10px;align-items:center}
+.history-category-name{color:#bcb4a7;font-size:10px}
+.history-category-track{height:7px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.07)}
+.history-category-fill{height:100%;border-radius:99px;transition:width .35s ease}
+.history-category-value{color:#e2d2b5;text-align:right;font-size:10px;font-variant-numeric:tabular-nums}
+.history-records-head{align-items:flex-end}
+.history-filter-label{display:flex;align-items:center;gap:7px;color:#9e988c;font-size:9px}
+.history-filter-label select{max-width:125px;padding:7px 26px 7px 9px;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:#182333;color:#e6dccb;font:inherit;font-size:10px}
+.history-records{display:grid;gap:7px;margin-top:13px}
+.history-entry{display:grid;grid-template-columns:70px 31px minmax(0,1fr) auto;gap:9px;align-items:center;padding:9px 10px;border:1px solid rgba(255,255,255,.055);border-radius:12px;background:rgba(255,255,255,.025)}
+.history-entry-date{color:#b5a98f;font-size:9px;font-variant-numeric:tabular-nums}
+.history-entry-icon{display:grid;place-items:center;width:29px;height:29px;border-radius:9px;background:rgba(255,255,255,.06);font-size:15px}
+.history-entry-copy{min-width:0}
+.history-entry-copy strong{display:block;overflow:hidden;color:#e9e0d2;font-size:10px;font-weight:400;text-overflow:ellipsis;white-space:nowrap}
+.history-entry-copy span{display:block;margin-top:3px;overflow:hidden;color:#918b80;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.history-entry-meta{color:#b2a58c;text-align:right;font-size:9px;white-space:nowrap}
+.history-entry-meta small{display:block;margin-top:3px;color:#8c877d;font-size:8px}
+.history-more{display:block;width:100%;margin-top:10px;padding:10px;border:1px solid rgba(226,198,146,.2);border-radius:11px;background:rgba(213,183,126,.08);color:#e6d1a8;font:inherit;font-size:10px;cursor:pointer}
+.history-more:hover{background:rgba(213,183,126,.14)}
+.history-loading,.history-empty{padding:28px 12px;color:#948e82;text-align:center;font-size:10px}
+.history-disclaimer{margin:12px 2px 0;color:#888378;font-size:9px;line-height:1.7}
+@media(max-width:720px){
+ .history-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .history-chart-card,.history-category-card,.history-records-card{padding:12px}
+ .history-category-row{grid-template-columns:66px minmax(0,1fr) 48px;gap:7px}
+}
+@media(max-width:420px){
+ .activity-archive-head{gap:8px}
+ .history-live-mark{padding:6px 8px;font-size:8px}
+ .history-entry{grid-template-columns:58px 28px minmax(0,1fr) auto;gap:6px;padding:8px}
+ .history-entry-date{font-size:8px}
+ .history-entry-meta{font-size:8px}
+ .history-filter-label{gap:4px}
+ .history-filter-label select{max-width:105px}
+}
+
 </style>
 </head>
 <body>
@@ -1078,6 +1148,69 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     <div class="timeline" id="eventTimeline" aria-live="polite"><div class="event-row"><span class="event-time">--:--</span><span class="event-icon">🐶</span><span class="event-copy"><strong>돌이의 하루</strong><span>오늘의 일정을 불러오는 중이에요.</span></span></div></div>
   </section>
 
+  <section class="panel activity-archive" id="doriActivityArchive" aria-labelledby="activityArchiveTitle">
+    <div class="activity-archive-head">
+      <div>
+        <div class="history-eyebrow">DORI LIFE · ACTIVITY ARCHIVE</div>
+        <h2 id="activityArchiveTitle">돌이의 모든 활동 기록</h2>
+        <p>돌이가 하루 동안 어떤 장면을 보냈는지 누적 통계와 그래프로 살펴봐요.</p>
+      </div>
+      <div class="history-live-mark"><span></span> HISTORY</div>
+    </div>
+
+    <div class="history-range" role="group" aria-label="활동 기록 기간 선택">
+      <button type="button" data-history-range="7" aria-pressed="false">최근 7일</button>
+      <button type="button" data-history-range="30" aria-pressed="true">최근 30일</button>
+      <button type="button" data-history-range="90" aria-pressed="false">최근 90일</button>
+      <button type="button" data-history-range="all" aria-pressed="false">전체 기간</button>
+    </div>
+
+    <div class="history-stats" aria-live="polite">
+      <article class="history-stat"><span>누적 장면 수</span><strong id="historyTotal">—</strong><small>선택한 기간</small></article>
+      <article class="history-stat"><span>활동한 날짜</span><strong id="historyDays">—</strong><small>하루에 하나 이상</small></article>
+      <article class="history-stat"><span>가장 자주 한 행동</span><strong id="historyTopAction">—</strong><small id="historyTopCount">최다 기록</small></article>
+      <article class="history-stat"><span>장면 예정 시간</span><strong id="historyDuration">—</strong><small>일정에 등록된 시간 합계</small></article>
+    </div>
+
+    <div class="history-chart-card">
+      <div class="history-chart-head">
+        <div><strong>활동 변화 그래프</strong><span id="historyChartCaption">최근 30일 · 날짜별 장면 수</span></div>
+        <span class="history-chart-total" id="historyChartTotal">—</span>
+      </div>
+      <div id="historyChart" class="history-chart" role="img" aria-label="기간별 돌이의 활동 장면 수 그래프">
+        <div class="history-loading">돌이의 활동 기록을 정리하고 있어요.</div>
+      </div>
+      <div id="historyLegend" class="history-legend"></div>
+    </div>
+
+    <div class="history-category-card">
+      <div class="history-subhead"><strong>행동 유형별 분포</strong><span>전체 장면 중 비율</span></div>
+      <div id="historyCategories" class="history-categories"></div>
+    </div>
+
+    <div class="history-records-card">
+      <div class="history-records-head">
+        <div><strong>상세 활동 내역</strong><span id="historyRecordCount">—</span></div>
+        <label class="history-filter-label" for="historyCategoryFilter">행동 유형
+          <select id="historyCategoryFilter">
+            <option value="all">전체 보기</option>
+            <option value="rest">휴식</option>
+            <option value="move">이동</option>
+            <option value="play">놀이</option>
+            <option value="react">반응·교감</option>
+            <option value="care">일상·돌봄</option>
+          </select>
+        </label>
+      </div>
+      <div id="historyRecords" class="history-records" aria-live="polite">
+        <div class="history-loading">활동 내역을 불러오는 중이에요.</div>
+      </div>
+      <button type="button" id="historyMore" class="history-more" hidden>이전 기록 더 보기</button>
+    </div>
+
+    <p class="history-disclaimer">기록 범위: 2026년 1월 1일부터 현재까지. 기존에는 과거 장면을 개별 저장하지 않았기 때문에 날짜별 고정 일정 생성 규칙으로 재구성한 기록이에요. 실제 페이지 접속 시간이나 애니메이션 재생 여부를 녹화한 기록은 아니며, 현재 날짜는 시작 시간이 지난 장면만 집계해요.</p>
+  </section>
+
   <section class="newyear">
     <div class="newyear-head"><span>✧</span> A NEW CHAPTER IS WAITING</div>
     <div class="newyear-title"><span id="newYearHeading">돌이와 함께 맞이하는 다음 새해</span></div>
@@ -1471,6 +1604,231 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var values=[[''+days,'DAYS'],[String(hours).padStart(2,'0'),'HOURS'],[String(minutes).padStart(2,'0'),'MINUTES'],[String(seconds).padStart(2,'0'),'SECONDS']];
     newYearCountdown.innerHTML=values.map(function(v){return '<div class="time-unit"><strong>'+v[0]+'</strong><span>'+v[1]+'</span></div>';}).join('');
   }
+
+  var historyRange='30';
+  var historyCategory='all';
+  var historyVisible=18;
+  var historyRows=[];
+  var HISTORY_CATEGORIES=[
+    {id:'rest',label:'휴식',color:'#9db9cf'},
+    {id:'move',label:'이동',color:'#d5b77e'},
+    {id:'play',label:'놀이',color:'#c49bcf'},
+    {id:'react',label:'반응·교감',color:'#e39b88'},
+    {id:'care',label:'일상·돌봄',color:'#9fc3a4'}
+  ];
+
+  function historyCategoryFor(kind,data){
+    var pose=data&&data.pose||'idle';
+    if(['sleep','cuddle','doze','dream','flop','sit','wait'].indexOf(pose)>=0||['nap','sunbeam','stars','story','movie'].indexOf(kind)>=0)return 'rest';
+    if(['walk','trot','gallop','zoomies','explore','follow','circle','chase'].indexOf(pose)>=0)return 'move';
+    if(['play','dance','hop','pounce','boop','happy'].indexOf(pose)>=0)return 'play';
+    if(['eat','groom','scratch','stretch','sniff','shake','sneeze','yawn'].indexOf(pose)>=0)return 'care';
+    return 'react';
+  }
+  function buildActivityHistory(now){
+    var todayKey=dayKey(now);
+    var todayParts=parts(now);
+    var todayMinute=Number(todayParts.hour)*60+Number(todayParts.minute);
+    var endUtc=Date.UTC(Number(todayParts.year),Number(todayParts.month)-1,Number(todayParts.day),12);
+    var rows=[];
+    for(var cursor=Date.UTC(2026,0,1,12);cursor<=endUtc;cursor+=86400000){
+      var date=new Date(cursor);
+      var key=dayKey(date);
+      var dateParts=key.split('-').map(Number);
+      var dayStartUtc=Date.UTC(dateParts[0],dateParts[1]-1,dateParts[2])-9*60*60*1000;
+      var limit=key===todayKey?todayMinute:1440;
+      var events=buildEvents(key);
+      events.forEach(function(event){
+        if(event.start>limit)return;
+        var data=BANK[event.kind]||BANK.sleep;
+        rows.push({
+          id:event.id,date:key,time:formatMinute(event.start),timestamp:dayStartUtc+event.start*60000,
+          kind:event.kind,title:data.title||event.kind,desc:data.desc||'',icon:data.icon||'🐾',
+          tag:data.tag||'일상',duration:event.duration||22,special:!!event.special,
+          category:historyCategoryFor(event.kind,data),
+          status:key===todayKey&&event.end>todayMinute?'진행 중':'완료'
+        });
+      });
+    }
+    rows.sort(function(a,b){return b.timestamp-a.timestamp;});
+    return rows;
+  }
+  function historyRangeStart(now){
+    if(historyRange==='all')return '2026-01-01';
+    var p=parts(now);var days=Number(historyRange);
+    var start=new Date(Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day),12)-(days-1)*86400000);
+    return dayKey(start);
+  }
+  function historyRowsForRange(now){
+    var start=historyRangeStart(now);
+    return historyRows.filter(function(row){return row.date>=start;});
+  }
+  function historyEscape(value){
+    return String(value==null?'':value).replace(/[&<>"']/g,function(ch){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch];});
+  }
+  function renderHistoryChart(rows,now){
+    var chart=document.getElementById('historyChart');
+    var caption=document.getElementById('historyChartCaption');
+    var legend=document.getElementById('historyLegend');
+    if(!chart||!caption||!legend)return;
+    var today=dayKey(now);
+    var rangeStart=historyRangeStart(now);
+    var buckets=[];
+    if(historyRange==='all'){
+      var startMonth=rangeStart.slice(0,7);
+      var currentMonth=today.slice(0,7);
+      var cursor=new Date(Date.UTC(Number(startMonth.slice(0,4)),Number(startMonth.slice(5,7))-1,15,12));
+      var end=new Date(Date.UTC(Number(currentMonth.slice(0,4)),Number(currentMonth.slice(5,7))-1,15,12));
+      while(cursor<=end){
+        var monthKey=dayKey(cursor).slice(0,7);
+        buckets.push({key:monthKey,label:(Number(monthKey.slice(5,7)))+'월',total:0,counts:{rest:0,move:0,play:0,react:0,care:0}});
+        cursor.setUTCMonth(cursor.getUTCMonth()+1);
+      }
+      caption.textContent='전체 기간 · 월별 장면 수';
+    }else if(historyRange==='90'){
+      var startParts=rangeStart.split('-').map(Number);
+      var startTime=Date.UTC(startParts[0],startParts[1]-1,startParts[2],12);
+      var totalDays=Math.floor((Date.UTC(Number(parts(now).year),Number(parts(now).month)-1,Number(parts(now).day),12)-startTime)/86400000)+1;
+      var weekCount=Math.ceil(totalDays/7);
+      for(var w=0;w<weekCount;w++){
+        var weekDate=new Date(startTime+w*7*86400000);
+        buckets.push({key:String(w),label:(Number(dayKey(weekDate).slice(5,7)))+'/'+Number(dayKey(weekDate).slice(8,10)),total:0,counts:{rest:0,move:0,play:0,react:0,care:0}});
+      }
+      caption.textContent='최근 90일 · 7일 단위 장면 수';
+    }else{
+      var count=Number(historyRange);
+      var p=parts(now);
+      var rangeTime=Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day),12)-(count-1)*86400000;
+      for(var n=0;n<count;n++){
+        var d=new Date(rangeTime+n*86400000);
+        var k=dayKey(d);
+        buckets.push({key:k,label:k.slice(5).replace('-','.'),total:0,counts:{rest:0,move:0,play:0,react:0,care:0}});
+      }
+      caption.textContent='최근 '+count+'일 · 날짜별 장면 수';
+    }
+    var bucketMap={};
+    buckets.forEach(function(bucket,index){bucketMap[bucket.key]=index;});
+    var rangeStartParts=rangeStart.split('-').map(Number);
+    var rangeStartTime=Date.UTC(rangeStartParts[0],rangeStartParts[1]-1,rangeStartParts[2],12);
+    rows.forEach(function(row){
+      var key;
+      if(historyRange==='all')key=row.date.slice(0,7);
+      else if(historyRange==='90'){
+        var partsDate=row.date.split('-').map(Number);
+        var dateTime=Date.UTC(partsDate[0],partsDate[1]-1,partsDate[2],12);
+        key=String(Math.floor((dateTime-rangeStartTime)/86400000/7));
+      }else key=row.date;
+      var index=bucketMap[key];
+      if(index==null)return;
+      buckets[index].total++;
+      buckets[index].counts[row.category]++;
+    });
+    var max=Math.max(4,...buckets.map(function(b){return b.total;}));
+    var top=Math.ceil(max/4)*4;
+    var width=900,height=275,left=48,right=16,topY=18,plotH=194,plotW=width-left-right;
+    var slot=plotW/Math.max(1,buckets.length);
+    var barW=Math.min(36,slot*.62);
+    var categories=HISTORY_CATEGORIES;
+    var svg=['<svg viewBox="0 0 '+width+' '+height+'" role="img" aria-label="선택한 기간의 행동 장면 통계 그래프">'];
+    for(var grid=0;grid<=4;grid++){
+      var value=top-grid*top/4;
+      var y=topY+plotH*grid/4;
+      svg.push('<line class="chart-grid-line" x1="'+left+'" y1="'+y.toFixed(2)+'" x2="'+(width-right)+'" y2="'+y.toFixed(2)+'"/>');
+      svg.push('<text class="chart-y-label" x="'+(left-10)+'" y="'+(y+3).toFixed(2)+'" text-anchor="end">'+Math.round(value)+'</text>');
+    }
+    buckets.forEach(function(bucket,index){
+      var x=left+slot*index+(slot-barW)/2;
+      var yBase=topY+plotH;
+      categories.forEach(function(category){
+        var value=bucket.counts[category.id];
+        if(!value)return;
+        var barH=value/top*plotH;
+        yBase-=barH;
+        svg.push('<rect class="chart-bar" x="'+x.toFixed(2)+'" y="'+yBase.toFixed(2)+'" width="'+barW.toFixed(2)+'" height="'+Math.max(1,barH).toFixed(2)+'" rx="3" fill="'+category.color+'"><title>'+historyEscape(bucket.label)+' · '+category.label+': '+value+'회</title></rect>');
+      });
+      var showLabel=buckets.length<=13||index===0||index===buckets.length-1||index%(buckets.length<=30?5:3)===0;
+      if(showLabel)svg.push('<text class="chart-x-label" x="'+(x+barW/2).toFixed(2)+'" y="'+(topY+plotH+22)+'" text-anchor="middle">'+historyEscape(bucket.label)+'</text>');
+    });
+    svg.push('</svg>');
+    chart.innerHTML=svg.join('');
+    legend.innerHTML=categories.map(function(category){return '<span><i style="background:'+category.color+'"></i>'+category.label+'</span>';}).join('');
+    document.getElementById('historyChartTotal').textContent=rows.length.toLocaleString('ko-KR')+'개 장면';
+  }
+  function renderHistoryCategories(rows){
+    var target=document.getElementById('historyCategories');
+    if(!target)return;
+    var totals={rest:0,move:0,play:0,react:0,care:0};
+    rows.forEach(function(row){totals[row.category]++;});
+    var total=rows.length||1;
+    target.innerHTML=HISTORY_CATEGORIES.map(function(category){
+      var count=totals[category.id];
+      var percent=Math.round(count/total*100);
+      return '<div class="history-category-row"><span class="history-category-name">'+category.label+'</span><div class="history-category-track"><div class="history-category-fill" style="width:'+percent+'%;background:'+category.color+'"></div></div><span class="history-category-value">'+count.toLocaleString('ko-KR')+'회</span></div>';
+    }).join('');
+  }
+  function renderHistoryRecords(rows){
+    var target=document.getElementById('historyRecords');
+    var more=document.getElementById('historyMore');
+    var countLabel=document.getElementById('historyRecordCount');
+    if(!target||!more||!countLabel)return;
+    var filtered=historyCategory==='all'?rows:rows.filter(function(row){return row.category===historyCategory;});
+    countLabel.textContent='총 '+filtered.length.toLocaleString('ko-KR')+'개';
+    if(!filtered.length){
+      target.innerHTML='<div class="history-empty">이 기간에는 해당 행동 기록이 없어요.</div>';
+      more.hidden=true;
+      return;
+    }
+    var visible=filtered.slice(0,historyVisible);
+    target.innerHTML=visible.map(function(row){
+      var dateLabel=row.date.slice(5).replace('-','.')+' · '+row.time;
+      var status=row.status==='진행 중'?'진행 중':(row.special?'특별 장면':'완료');
+      return '<article class="history-entry"><span class="history-entry-date">'+dateLabel+'</span><span class="history-entry-icon">'+row.icon+'</span><span class="history-entry-copy"><strong>'+historyEscape(row.title)+'</strong><span>'+historyEscape(row.tag)+' · '+historyEscape(row.desc)+'</span></span><span class="history-entry-meta">'+status+'<small>'+row.duration+'분 예정</small></span></article>';
+    }).join('');
+    more.hidden=filtered.length<=historyVisible;
+    more.textContent=historyVisible>=filtered.length?'모든 기록을 확인했어요':'이전 기록 더 보기';
+  }
+  function renderActivityHistory(now){
+    historyRows=buildActivityHistory(now);
+    var rows=historyRowsForRange(now);
+    var days={};
+    var actions={};
+    var minutes=0;
+    rows.forEach(function(row){days[row.date]=true;actions[row.kind]=(actions[row.kind]||0)+1;minutes+=row.duration;});
+    var topKind=Object.keys(actions).sort(function(a,b){return actions[b]-actions[a]||a.localeCompare(b);})[0];
+    var topData=topKind?(BANK[topKind]||BANK.sleep):null;
+    document.getElementById('historyTotal').textContent=rows.length.toLocaleString('ko-KR')+'회';
+    document.getElementById('historyDays').textContent=Object.keys(days).length.toLocaleString('ko-KR')+'일';
+    document.getElementById('historyTopAction').textContent=topData?topData.title:'기록 없음';
+    document.getElementById('historyTopCount').textContent=topKind?actions[topKind].toLocaleString('ko-KR')+'회 등장':'아직 기록이 없어요';
+    document.getElementById('historyDuration').textContent=Math.floor(minutes/60)+'시간 '+(minutes%60)+'분';
+    renderHistoryChart(rows,now);
+    renderHistoryCategories(rows);
+    renderHistoryRecords(rows);
+    document.querySelectorAll('[data-history-range]').forEach(function(button){
+      var active=button.getAttribute('data-history-range')===historyRange;
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-pressed',active?'true':'false');
+    });
+  }
+  document.querySelectorAll('[data-history-range]').forEach(function(button){
+    button.addEventListener('click',function(){
+      historyRange=button.getAttribute('data-history-range');
+      historyVisible=18;
+      renderActivityHistory(new Date());
+    });
+  });
+  var historyFilter=document.getElementById('historyCategoryFilter');
+  if(historyFilter)historyFilter.addEventListener('change',function(){
+    historyCategory=historyFilter.value;
+    historyVisible=18;
+    renderHistoryRecords(historyRowsForRange(new Date()));
+  });
+  var historyMoreButton=document.getElementById('historyMore');
+  if(historyMoreButton)historyMoreButton.addEventListener('click',function(){
+    historyVisible+=18;
+    renderHistoryRecords(historyRowsForRange(new Date()));
+  });
+  
   function update(){
     var now=new Date();var p=parts(now);var key=dayKey(now);
     var hour=Number(p.hour);var minute=Number(p.minute);var second=Number(p.second);
@@ -1484,9 +1842,10 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var evt=activeEvent(now);var routine=routineFor(hour,minute);
     setRoom(evt,routine,phaseFor(hour),now);
     renderNext(now);renderNewYear(now);
-    if(second===0)renderTimeline(now);
+    if(second===0){renderTimeline(now);renderActivityHistory(now);}
   }
   update();
+  renderActivityHistory(new Date());
   window.setInterval(update,1000);
   document.addEventListener('visibilitychange',function(){if(!document.hidden)update();});
   window.addEventListener('pageshow',update);
