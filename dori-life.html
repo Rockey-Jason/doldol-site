@@ -2165,13 +2165,15 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       var blink=0,blinkPhase=t%4.7;
       if(blinkPhase>4.46)blink=Math.sin((blinkPhase-4.46)/.24*Math.PI);
       if(pose==='sleep'||pose==='doze'||pose==='dream')blink=1;
-      set('body',.012*breath,1+.003*breath,1+.017*breath);
-      set('chest',0,1,1);
-      set('neck',.018*Math.sin(t*.9),1,1);
-      set('head',.025*Math.sin(t*.8),1,1);
-      set('earL',.025*Math.sin(t*1.7),1,1);
-      set('earR',-.022*Math.sin(t*1.5),1,1);
-      set('tail',.12*Math.sin(t*2.4),1,1);
+      // A clearly visible living idle loop, even when no scheduled activity is active.
+      set('root',0,1,1,0,1.25*Math.sin(t*1.35));
+      set('body',.028*breath,1+.006*breath,1+.022*breath,0,.7*Math.sin(t*1.35));
+      set('chest',.012*Math.sin(t*1.35),1,1);
+      set('neck',.032*Math.sin(t*.9),1,1);
+      set('head',.052*Math.sin(t*.8),1,1);
+      set('earL',.045*Math.sin(t*1.7),1,1);
+      set('earR',-.04*Math.sin(t*1.5),1,1);
+      set('tail',.28*Math.sin(t*2.4),1,1);
       set('eyeL',0,1,1-.94*blink);
       set('eyeR',0,1,1-.94*blink);
       var gait=Math.sin(cycle*1.25);
