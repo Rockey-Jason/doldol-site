@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v47-dori-joints-activity-20261113";;;;
+const CACHE_NAME = "doldol-site-pwa-v48-official-dori-mesh-20261113";
 const SITE_SCOPE = new URL(self.registration.scope);
 const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
@@ -8,13 +8,7 @@ const APP_SHELL = [
   scopedUrl("rockey-study-periodic.html"),
   scopedUrl("rockeynews.html"),
   scopedUrl("dori-life.html"),
-  scopedUrl("assets/dori-life/reference-1.txt"),
-  scopedUrl("assets/dori-life/reference-2.txt"),
-  scopedUrl("assets/dori-life/reference-3.txt"),
-  scopedUrl("assets/dori-life/reference-4.txt"),
-  scopedUrl("assets/dori-life/reference-5.txt"),
-  scopedUrl("assets/dori-life/reference-6.txt"),
-  scopedUrl("assets/dori-life/reference-7.txt"),
+  scopedUrl("assets/dori-life/dori-official.webp"),
   scopedUrl("assets/dori-mascot.webp"),
   scopedUrl("rockey-time-attack.html"),
   scopedUrl("rockey-study-planner.html"),
