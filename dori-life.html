@@ -2138,13 +2138,15 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       return {x:x,y:y};
     }
     function drawTriangle(p0,p1,p2,q0,q1,q2){
-      var sx1=p1.x-p0.x,sy1=p1.y-p0.y,sx2=p2.x-p0.x,sy2=p2.y-p0.y;
+      var px0=p0.sx,py0=p0.sy,px1=p1.sx,py1=p1.sy,px2=p2.sx,py2=p2.sy;
+      var sx1=px1-px0,sy1=py1-py0,sx2=px2-px0,sy2=py2-py0;
       var det=sx1*sy2-sx2*sy1;
-      if(Math.abs(det)<.0001)return;
+      if(!Number.isFinite(det)||Math.abs(det)<.0001)return;
       var dx1=q1.x-q0.x,dy1=q1.y-q0.y,dx2=q2.x-q0.x,dy2=q2.y-q0.y;
       var a=(dx1*sy2-dx2*sy1)/det,c=(dx2*sx1-dx1*sx2)/det;
       var b=(dy1*sy2-dy2*sy1)/det,d=(dy2*sx1-dy1*sx2)/det;
-      var e=q0.x-a*p0.x-c*p0.y,f=q0.y-b*p0.x-d*p0.y;
+      var e=q0.x-a*px0-c*py0,f=q0.y-b*px0-d*py0;
+      if(![a,b,c,d,e,f].every(Number.isFinite))return;
       ctx.save();
       ctx.setTransform(1,0,0,1,0,0);
       ctx.beginPath();ctx.moveTo(q0.x,q0.y);ctx.lineTo(q1.x,q1.y);ctx.lineTo(q2.x,q2.y);ctx.closePath();ctx.clip();
@@ -2302,9 +2304,16 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     }
     function showImage(url){
       texture.onload=function(){
-        ready=true;
-        if(fallback){fallback.src=url;fallback.hidden=true;}
-        makeVertices();resetBones();requestAnimationFrame(loop);
+        try{
+          makeVertices();resetBones();
+          ready=true;failed=false;canvas.hidden=false;lastFrame=0;
+          if(fallback){fallback.src=url;fallback.hidden=true;}
+          requestAnimationFrame(loop);
+        }catch(err){
+          failed=true;ready=false;canvas.hidden=true;
+          console.error('Dori mesh initialization failed',err);
+          if(fallback){fallback.src=url;fallback.hidden=false;}
+        }
       };
       texture.onerror=function(){
         failed=true;
