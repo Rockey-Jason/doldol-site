@@ -230,11 +230,15 @@ body::before {
 .profile-image-wrapper.has-profile-frame::before {
     content: "";
     position: absolute;
-    inset: -10px;
-    z-index: 0;
+    inset: -16px;
+    z-index: 2;
     border-radius: 50%;
-    background: conic-gradient(from 18deg, #fff8df, var(--profile-frame-color, #9fdcff) 18%, #fff 35%, var(--profile-frame-color, #9fdcff) 55%, #fff8df 72%, var(--profile-frame-color, #9fdcff));
-    box-shadow: 0 0 12px var(--profile-frame-color, rgba(143,126,255,.45)), 0 0 28px color-mix(in srgb, var(--profile-frame-color, #9fdcff) 50%, transparent);
+    background-image: var(--profile-frame-art, none);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100% 100%;
+    filter: drop-shadow(0 0 9px var(--profile-frame-color, rgba(143,126,255,.4)));
+    pointer-events: none;
 }
 .profile-image-wrapper.has-profile-frame::after {
     inset: -13px;
@@ -4611,11 +4615,13 @@ function 프로필프레임적용() {
     wrapper.classList.toggle("has-profile-frame", Boolean(frame));
     if (!frame) {
         wrapper.style.removeProperty("--profile-frame-color");
+        wrapper.style.removeProperty("--profile-frame-art");
         delete wrapper.dataset.profileFrameCode;
         delete wrapper.dataset.profileFrameRarity;
         return;
     }
     wrapper.style.setProperty("--profile-frame-color", 돌이오버레이색상(frame));
+    wrapper.style.setProperty("--profile-frame-art", 'url("' + 프레임이미지경로(frame) + '")');
     wrapper.dataset.profileFrameCode = String(frame.item_code || "");
     wrapper.dataset.profileFrameRarity = String(frame.rarity || "일반");
 }
