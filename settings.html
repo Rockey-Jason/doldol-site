@@ -2245,6 +2245,52 @@ body::after{
 <link rel="stylesheet" href="css/doldol-theme.css?v=20261112-site-background-1">
   <script src="js/supabase.min.js?v=2.117.2"></script>
 <link rel="stylesheet" href="css/dori-convenience.css?v=20261111-3">
+
+<style id="dori-silhouette-fit">
+/* 사용자가 제공한 돌이 원본 비율(506:493)에 맞춘 의상·효과 레이어 */
+.dori-character-stage{
+    width:min(100%,420px)!important;
+    height:405px!important;
+    border-radius:28px!important;
+    background:radial-gradient(ellipse at 50% 52%,rgba(250,218,155,.18),transparent 62%),linear-gradient(155deg,rgba(255,255,255,.055),rgba(5,10,35,.16))!important;
+}
+.dori-character-stage .dori-real-base,
+.dori-character-stage .dori-real-layer{
+    position:absolute!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    object-fit:contain!important;
+}
+.dori-character-stage .dori-real-base{z-index:2!important;filter:drop-shadow(0 12px 15px rgba(0,0,0,.2))}
+.dori-character-stage .dori-cape-layer{z-index:1!important;opacity:.98}
+.dori-character-stage .dori-clothes-layer{z-index:3!important;filter:drop-shadow(0 3px 3px rgba(0,0,0,.2))}
+.dori-character-stage .dori-hat-layer{z-index:4!important;filter:drop-shadow(0 4px 3px rgba(0,0,0,.22))}
+.dori-character-stage .dori-glasses-layer{z-index:5!important;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+.dori-character-stage .dori-effect-layer{z-index:6!important;opacity:.82;mix-blend-mode:screen;animation:doriItemAura 4s ease-in-out infinite}
+.dori-character-stage .dori-real-frame{z-index:7!important;inset:0!important;border:0!important;border-radius:0!important;filter:none!important}
+.dori-character-stage .dori-real-frame img{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;object-fit:contain!important;opacity:.97}
+.custom-preview .preview-stage.dori-character-stage{flex:0 0 auto}
+.custom-item-button{min-height:116px!important}
+.custom-item-button .custom-item-emoji.dori-item-thumb{
+    position:relative;display:block;width:100%;height:60px;overflow:hidden;
+    border:0;border-radius:9px;background:rgba(255,255,255,.025);
+}
+.dori-item-thumb .dori-item-thumb-base,
+.dori-item-thumb .dori-item-thumb-overlay{
+    position:absolute;inset:0;display:block;width:100%;height:100%;object-fit:contain;
+}
+.dori-item-thumb .dori-item-thumb-base{z-index:1}
+.dori-item-thumb .dori-item-thumb-overlay{z-index:2}
+@media(max-width:760px){
+    .dori-character-stage{width:min(100%,370px)!important;height:360px!important}
+}
+@media(max-width:460px){
+    .dori-character-stage{width:min(100%,330px)!important;height:320px!important}
+    .custom-item-button{min-height:112px!important}
+}
+</style>
+
 </head>
 
 
@@ -4204,6 +4250,68 @@ function 프레임이미지경로(frame) {
     return "assets/dori-items/FRAME_GENERIC.svg";
 }
 
+function 돌이오버레이색상(item) {
+    const key = (String(item?.item_code || "") + " " + String(item?.item_name || "")).toUpperCase();
+    if (/DORON|DORONIUM|CYAN|AQUA|ICE|BLUE/.test(key)) return "#62dff4";
+    if (/GOLD|ROYAL|CROWN|SUN|황금|왕관/.test(key)) return "#f0bd55";
+    if (/FIRE|FLAME|RED|불꽃|화염/.test(key)) return "#ed786c";
+    if (/FOREST|LEAF|NATURE|GREEN|숲|잎/.test(key)) return "#83c58e";
+    if (/GALAXY|SPACE|STAR|PURPLE|은하|별/.test(key)) return "#aa91ef";
+    if (/PINK|HEART|LOVE|분홍|핑크/.test(key)) return "#e58dbd";
+    let hash = 0;
+    for (const char of key) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+    return ["#74b8ee","#e2a36f","#9b91e9","#78bca2","#dc8a91","#d1b45d"][hash % 6];
+}
+
+function 돌이꾸미기오버레이경로(item, category) {
+    if (category === "frame") return 돌이프레임오버레이경로(item);
+    const key = (String(item?.item_code || "") + " " + String(item?.item_name || "")).toUpperCase();
+    const color = 돌이오버레이색상(item);
+    const dark = "#292929";
+    let art = "";
+
+    if (category === "hat") {
+        if (/CROWN|ROYAL|왕관/.test(key)) {
+            art = '<path d="M145 132 L153 91 L184 112 L207 75 L232 112 L262 91 L271 137 Q207 153 145 139Z" fill="' + color + '" stroke="' + dark + '" stroke-width="7" stroke-linejoin="round"/><path d="M153 137 Q207 148 267 137 L266 151 Q207 162 153 151Z" fill="#f7d987" stroke="' + dark + '" stroke-width="5"/><circle cx="207" cy="125" r="9" fill="#6ed9f4" stroke="' + dark + '" stroke-width="4"/>';
+        } else if (/WITCH|WIZARD|마법|마녀/.test(key)) {
+            art = '<path d="M157 137 Q195 102 253 137 L278 146 Q210 161 142 148Z" fill="' + color + '" stroke="' + dark + '" stroke-width="7" stroke-linejoin="round"/><path d="M174 126 Q194 54 214 55 Q234 78 246 130Z" fill="' + color + '" stroke="' + dark + '" stroke-width="7" stroke-linejoin="round"/><path d="M190 99 Q211 106 237 96" fill="none" stroke="#fff1bf" stroke-width="7" stroke-linecap="round"/>';
+        } else if (/HELMET|ARMOR|헬멧/.test(key)) {
+            art = '<path d="M133 139 Q133 79 207 79 Q269 83 276 140 L255 153 Q205 134 150 153Z" fill="' + color + '" stroke="' + dark + '" stroke-width="8" stroke-linejoin="round"/><path d="M150 144 Q207 131 261 145" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="6"/><path d="M178 86 L207 71 L236 88" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round"/>';
+        } else {
+            art = '<path d="M137 139 Q146 93 197 91 Q245 91 266 132 L254 148 Q197 132 146 151Z" fill="' + color + '" stroke="' + dark + '" stroke-width="8" stroke-linejoin="round"/><path d="M140 139 Q205 126 271 146 Q253 164 196 157 Q158 154 140 139Z" fill="#fff" fill-opacity=".3" stroke="' + dark + '" stroke-width="6"/><path d="M201 94 Q225 91 243 105" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="6" stroke-linecap="round"/>';
+        }
+    } else if (category === "glasses") {
+        const sunglasses = /SUN|DARK|SHADOW|선글라스|블랙/.test(key);
+        const lens = sunglasses ? "#263044" : "#8edcff";
+        const lensOpacity = sunglasses ? ".88" : ".30";
+        art = '<g stroke="' + dark + '" stroke-width="7" stroke-linejoin="round"><path d="M91 171 Q116 155 143 172 L141 193 Q133 212 113 208 Q94 202 91 171Z" fill="' + lens + '" fill-opacity="' + lensOpacity + '"/><path d="M211 194 Q235 179 260 197 L257 217 Q248 237 228 231 Q211 225 211 194Z" fill="' + lens + '" fill-opacity="' + lensOpacity + '"/><path d="M142 180 Q176 166 212 198" fill="none" stroke-width="8" stroke-linecap="round"/><path d="M91 169 L79 166 M260 195 L274 191" fill="none" stroke-width="7" stroke-linecap="round"/></g><path d="M101 176 L119 170 M222 200 L239 194" stroke="#fff" stroke-opacity=".75" stroke-width="5" stroke-linecap="round"/>';
+    } else if (category === "clothes") {
+        if (/ARMOR|KNIGHT|방어구|갑옷/.test(key)) {
+            art = '<path d="M244 278 Q270 260 299 272 L328 285 Q372 274 403 298 Q434 318 447 352 L437 400 Q407 416 375 405 L329 397 Q293 385 263 366 L235 337Z" fill="' + color + '" stroke="' + dark + '" stroke-width="8" stroke-linejoin="round"/><path d="M280 283 L309 304 L341 283 L362 397 Q326 391 293 371Z" fill="#f7e6b3" fill-opacity=".9" stroke="' + dark + '" stroke-width="5"/><path d="M304 315 L329 331 L350 315 L341 360 L322 375 L306 357Z" fill="#6ed9f4" stroke="' + dark + '" stroke-width="5"/>';
+        } else {
+            art = '<path d="M242 278 Q270 264 299 274 L324 288 Q365 279 397 294 Q431 309 446 342 L438 398 Q408 413 375 405 L329 395 Q293 382 264 363 L236 337Z" fill="' + color + '" stroke="' + dark + '" stroke-width="8" stroke-linejoin="round"/><path d="M260 279 Q278 292 296 304 Q315 292 327 282" fill="none" stroke="#fff5e8" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><path d="M337 303 L333 386 M368 306 L364 394" stroke="#fff" stroke-opacity=".45" stroke-width="6" stroke-linecap="round"/><circle cx="330" cy="326" r="5" fill="#fff4d7"/><circle cx="326" cy="351" r="5" fill="#fff4d7"/>';
+        }
+    } else if (category === "cape") {
+        art = '<path d="M279 250 Q327 226 376 236 Q427 241 458 278 Q475 317 457 372 L442 435 Q408 418 383 393 Q357 366 330 346 L285 315Z" fill="' + color + '" fill-opacity=".94" stroke="' + dark + '" stroke-width="8" stroke-linejoin="round"/><path d="M306 263 Q359 245 411 267 M332 285 Q372 284 430 315" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="7" stroke-linecap="round"/><path d="M285 260 L307 286" stroke="#f7e6b3" stroke-width="10" stroke-linecap="round"/>';
+    } else if (category === "effect") {
+        art = '<ellipse cx="256" cy="253" rx="194" ry="214" fill="none" stroke="' + color + '" stroke-width="8" stroke-dasharray="13 15" opacity=".74"/><ellipse cx="256" cy="253" rx="181" ry="201" fill="none" stroke="#fff" stroke-width="3" stroke-dasharray="3 17" opacity=".7"/><path d="M105 94 L113 115 L135 122 L113 130 L105 151 L97 130 L76 122 L97 115Z M392 150 L400 169 L419 176 L400 183 L392 202 L385 183 L365 176 L385 169Z M113 361 L120 380 L140 387 L120 394 L113 414 L105 394 L86 387 L105 380Z" fill="' + color + '" stroke="#fff" stroke-width="3"/><circle cx="421" cy="352" r="8" fill="' + color + '" stroke="#fff" stroke-width="3"/><circle cx="80" cy="236" r="7" fill="' + color + '" stroke="#fff" stroke-width="3"/>';
+    } else if (category === "skin") {
+        art = '<ellipse cx="257" cy="256" rx="184" ry="207" fill="' + color + '" fill-opacity=".11" style="mix-blend-mode:color"/>';
+    }
+
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 506 493" preserveAspectRatio="xMidYMid meet">' + art + '</svg>';
+    return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
+function 돌이프레임오버레이경로(frame) {
+    const color = 돌이오버레이색상(frame);
+    const code = String(frame?.item_code || "").toUpperCase();
+    const special = /DORON|DORONIUM/.test(code) ? "#64f2ff" : color;
+    const outline = "M91 151 C101 99 112 48 139 39 C159 34 171 54 174 78 L176 102 Q199 92 225 101 Q240 93 263 87 L301 74 C333 71 350 103 350 137 Q352 171 329 202 L319 250 Q353 218 397 236 Q444 250 462 280 Q472 298 463 330 L455 424 Q454 461 428 461 L386 460 Q369 455 376 429 L390 392 Q374 381 354 398 Q326 417 299 414 L283 414 Q298 442 284 463 Q264 482 226 475 L202 466 Q194 457 207 437 L220 418 L166 406 L157 445 Q150 478 111 473 Q70 472 71 438 L81 365 Q79 349 65 348 L81 328 L68 310 L83 274 L81 172";
+    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 506 493" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="frameGlow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff7ca"/><stop offset=".48" stop-color="' + special + '"/><stop offset="1" stop-color="' + color + '"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path d="' + outline + '" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/><path d="' + outline + '" fill="none" stroke="url(#frameGlow)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M177 104 Q199 96 225 104 M351 243 Q395 225 431 258" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width="4" stroke-linecap="round"/></svg>';
+    return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
+}
+
 function 프레임출처판별(frame, fallback = "기타") {
     const source = String(frame?.source || "").toLowerCase();
     const key = String(frame?.item_code || "").toLowerCase();
@@ -4962,7 +5070,7 @@ function 꾸미기화면표시() {
                 const selected = selectedCode === item.item_code;
                 const rarity = String(item.rarity || "일반");
                 return '<button type="button" class="custom-item-button ' + (selected ? "selected" : "") + '" data-custom-code="' + HTML이스케이프(item.item_code) + '" data-custom-category="' + category + '" aria-pressed="' + String(selected) + '" title="' + HTML이스케이프(item.item_name || item.item_code) + '">' +
-                    '<span class="custom-item-emoji"><img src="' + 꾸미기이미지경로(item) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.hidden=false"><span hidden>' + info.emoji + '</span></span>' +
+                    '<span class="custom-item-emoji dori-item-thumb"><img class="dori-item-thumb-base" src="assets/dori-character.svg" alt="" loading="lazy"><img class="dori-item-thumb-overlay" src="' + 돌이꾸미기오버레이경로(item, category) + '" alt="" loading="lazy"></span>' +
                     '<span class="custom-item-name">' + HTML이스케이프(item.item_name || "이름 없는 아이템") + '</span>' +
                     '<span class="custom-item-qty"><span class="custom-item-rarity" data-rarity="' + HTML이스케이프(rarity) + '">' + HTML이스케이프(rarity) + '</span><span>×' + 숫자정리(item.quantity).toLocaleString() + '</span></span>' +
                     (selected ? '<span class="custom-item-equipped">✓ 현재 장착 중 · 다시 누르면 해제</span>' : '') +
@@ -4983,11 +5091,11 @@ function 꾸미기화면표시() {
 
     const 프레임코드 = String(꾸미기상태.frame?.item_code || "");
     const 스킨코드 = String(꾸미기상태.skin?.item_code || "");
-    const 프레임이미지 = 꾸미기상태.frame ? 프레임이미지경로(꾸미기상태.frame) : "";
+    const 프레임이미지 = 꾸미기상태.frame ? 돌이프레임오버레이경로(꾸미기상태.frame) : "";
     const layer = (category, className) => {
         const item = 꾸미기상태[category];
         return item
-            ? '<img class="dori-real-layer ' + className + '" src="' + 꾸미기이미지경로(item) + '" alt="" draggable="false">'
+            ? '<img class="dori-real-layer ' + className + '" src="' + 돌이꾸미기오버레이경로(item, category) + '" alt="" draggable="false">'
             : "";
     };
 
@@ -5002,12 +5110,12 @@ function 꾸미기화면표시() {
             '<div class="custom-preview">' +
                 '<div class="custom-studio-intro"><div><div class="custom-studio-kicker">DORI CHARACTER STUDIO</div><div class="preview-title">🐶 진짜 돌이 꾸미기</div></div><span class="custom-studio-equipped-count">' + equippedCount + ' / 7 장착</span></div>' +
                 '<div class="preview-stage dori-character-stage">' +
-                    (꾸미기상태.cape ? '<img class="dori-real-layer dori-cape-layer" src="' + 꾸미기이미지경로(꾸미기상태.cape) + '" alt="" draggable="false">' : '') +
+                    (꾸미기상태.cape ? '<img class="dori-real-layer dori-cape-layer" src="' + 돌이꾸미기오버레이경로(꾸미기상태.cape, "cape") + '" alt="" draggable="false">' : '') +
                     '<img class="dori-real-base ' + (스킨코드 ? "skin-" + 스킨코드 : "") + '" src="assets/dori-character.svg" alt="웰시코기 봉제인형 돌이 캐릭터" draggable="false">' +
                     layer("clothes","dori-clothes-layer") +
                     layer("hat","dori-hat-layer") +
                     layer("glasses","dori-glasses-layer") +
-                    (꾸미기상태.effect ? '<img class="dori-real-layer dori-effect-layer" src="' + 꾸미기이미지경로(꾸미기상태.effect) + '" alt="" draggable="false">' : '') +
+                    (꾸미기상태.effect ? '<img class="dori-real-layer dori-effect-layer" src="' + 돌이꾸미기오버레이경로(꾸미기상태.effect, "effect") + '" alt="" draggable="false">' : '') +
                     (꾸미기상태.frame ? '<div class="dori-real-frame" data-frame-rarity="' + HTML이스케이프(꾸미기상태.frame.rarity || "일반") + '" data-frame-code="' + HTML이스케이프(프레임코드) + '"><img src="' + 프레임이미지 + '" alt="" draggable="false"></div>' : '') +
                 '</div>' +
                 '<div class="preview-subtitle">프로필 사진이 아닌 돌이 캐릭터에 아이템을 직접 겹쳐 입히는 미리보기입니다. 선택한 코디는 저장 후 계정에 적용됩니다.</div>' +
