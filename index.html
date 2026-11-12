@@ -5323,5 +5323,24 @@ if ("serviceWorker" in navigator) {
 <script type="module" src="js/achievements.js?v=20261025-achievement-navigation-3"></script>
 <script type="module" src="js/dori-pass-entry.js?v=20261025-3"></script>
 <script src="js/dori-convenience.js?v=20261111-3"></script>
+
+<style id="dori-profile-viewport-anchor">
+/* 일반 돌이사이트 프로필을 문서 흐름이 아닌 화면 좌표에 고정 */
+#돌이프로필고정틀 {
+  position: fixed !important;
+  top: max(12px, env(safe-area-inset-top, 0px)) !important;
+  right: max(12px, env(safe-area-inset-right, 0px)) !important;
+  left: auto !important;
+  bottom: auto !important;
+  z-index: 10000 !important;
+  transform: none;
+}
+@media (min-width: 601px) {
+  #돌이프로필고정틀 {
+    top: max(18px, env(safe-area-inset-top, 0px)) !important;
+    right: max(20px, env(safe-area-inset-right, 0px)) !important;
+  }
+}
+</style>
 </body>
 </html>
