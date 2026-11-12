@@ -1321,17 +1321,30 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     yawn:{title:'하품이 크게 나왔어요',desc:'하루의 피로가 몰려와 입을 크게 벌리고 하품해요.',icon:'🥱',pose:'yawn',tag:'휴식'},
     sniff:{title:'새 장난감 냄새를 맡아요',desc:'코를 가까이 대고 킁킁, 새로운 냄새를 천천히 살펴봐요.',icon:'👃',pose:'sniff',tag:'탐험'},
    
+    doorbell:{title:'초인종 소리가 들렸어요',desc:'귀가 먼저 쫑긋 서고, 돌이가 문 쪽을 바라보며 누구인지 살펴봐요.',icon:'🔔',pose:'alert',tag:'깜짝 소리'},
+    sneeze:{title:'에취! 작은 재채기를 했어요',desc:'코끝이 간질간질했나 봐요. 몸을 살짝 움찔하고 다시 편안해져요.',icon:'🤧',pose:'sneeze',tag:'작은 반응'},
+    curious:{title:'새로운 소리가 궁금해요',desc:'고개를 천천히 갸웃하고 양쪽 귀를 번갈아 움직이며 소리를 찾아요.',icon:'❔',pose:'curious',tag:'호기심'},
+    listen:{title:'가만히 귀 기울여요',desc:'주변의 작은 소리에 귀를 세우고 잠깐 움직임을 멈춰요.',icon:'👂',pose:'listen',tag:'집중'},
+    greet:{title:'반가운 인사를 해요',desc:'머리를 살짝 들고 앞발을 들어 반갑게 인사해요.',icon:'🐾',pose:'greet',tag:'인사'},
+    scratch:{title:'귀 뒤가 간질간질해요',desc:'뒷발을 조심스럽게 움직이며 잠깐 몸을 긁어요.',icon:'🐕',pose:'scratch',tag:'몸단장'},
+    sit:{title:'잠깐 앉아서 쉬어요',desc:'발에 실린 무게를 천천히 내려놓고 주변을 바라봐요.',icon:'🪑',pose:'sit',tag:'휴식'},
+    cuddle:{title:'포근하게 몸을 웅크려요',desc:'몸을 편안하게 내려놓고 느린 호흡으로 쉬어요.',icon:'🤎',pose:'cuddle',tag:'포근한 휴식'},
+    shake:{title:'몸을 한 번 털어요',desc:'머리와 귀, 몸통을 짧게 흔들어 털을 정리해요.',icon:'💫',pose:'shake',tag:'몸 털기'},
+    paw:{title:'앞발을 살짝 들어요',desc:'누군가를 부르는 듯 앞발을 들고 꼬리를 살랑여요.',icon:'🐾',pose:'paw',tag:'관심 표현'},
+    trot:{title:'종종걸음으로 이동해요',desc:'짧은 다리를 빠르게 교차하며 작은 걸음으로 이동해요.',icon:'🐾',pose:'trot',tag:'종종걸음'},
+    zoomies:{title:'신나서 짧게 뛰어다녀요',desc:'기분이 좋아진 돌이가 잠깐 빠르게 움직인 뒤 다시 멈춰요.',icon:'💨',pose:'zoomies',tag:'신나는 순간'},
+    water:{title:'물을 한 모금 마셔요',desc:'그릇 가까이 다가가 고개를 낮추고 천천히 물을 마셔요.',icon:'💧',pose:'eat',tag:'물 마시기'},
     moon:{title:'달님에게 인사해요',desc:'창문 너머 둥근 달을 바라보며 조용히 인사해요.',icon:'🌙',pose:'alert',tag:'밤하늘'},
   };
 
   var GROUPS = [
     {from:12,to:340,keys:['stars','dream','ufo','meteor','firefly','moon','party','friendly-ghost']},
-    {from:365,to:555,keys:['wake','breakfast','stretch','sunbeam','bird','mail','grooming']},
-    {from:575,to:755,keys:['ball','toy','butterfly','delivery','bubble','photo','socks','bread','walk']},
-    {from:775,to:955,keys:['nap','rain','rainbow','plant','robot','treat','pillow','friendly-ghost']},
-    {from:975,to:1110,keys:['dinner','grooming','movie','bread','delivery','treat','mail']},
-    {from:1130,to:1300,keys:['party','dance','story','stars','moon','ufo','meteor','parade','movie']},
-    {from:1320,to:1437,keys:['sleep','yawn','dream','party','firefly','mystery-ufo','friendly-ghost']}
+    {from:365,to:555,keys:['wake','breakfast','stretch','sunbeam','bird','mail','grooming','sneeze','sit','greet','shake']},
+    {from:575,to:755,keys:['ball','toy','butterfly','delivery','bubble','photo','socks','bread','walk','trot','zoomies','paw']},
+    {from:775,to:955,keys:['nap','rain','rainbow','plant','robot','treat','pillow','friendly-ghost','curious','scratch','cuddle','listen']},
+    {from:975,to:1110,keys:['dinner','grooming','movie','bread','delivery','treat','mail','water','shake','sneeze']},
+    {from:1130,to:1300,keys:['party','dance','story','stars','moon','ufo','meteor','parade','movie','doorbell','listen','greet','paw']},
+    {from:1320,to:1437,keys:['sleep','yawn','dream','party','firefly','mystery-ufo','friendly-ghost','cuddle','listen','sit','grooming']}
   ];
   BANK.sleep = {title:'돌이가 새근새근 잠들었어요',desc:'포근한 침대에서 오늘의 피로를 풀며 달콤한 꿈을 꾸고 있어요.',icon:'🌙',pose:'sleep',tag:'수면'};
   BANK.dream = {title:'돌이의 달콤한 꿈나라',desc:'작은 발을 꼼지락거리며 아주 행복한 꿈을 꾸는 중이에요.',icon:'💭',pose:'sleep',tag:'수면'};
@@ -1381,6 +1394,32 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     if(hour>=20&&hour<24)return {title:'밤의 작은 축제가 열릴지도 몰라요',desc:'조명이 따뜻하게 켜졌어요. 오늘 밤에는 어떤 일이 생길까요?',pose:'dance',tag:'밤의 시간',icon:'✨'};
     return {title:'돌이는 편안하게 쉬고 있어요',desc:'조용한 새벽, 돌이가 포근한 집에서 쉬고 있어요.',pose:'sleep',tag:'새벽 휴식',icon:'🌙'};
   }
+  function ambientRoutine(now,base){
+    var seconds=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
+    var cycle=Math.floor(seconds/180);
+    var offset=seconds%180;
+    if(offset<112||offset>127)return base;
+    var gentle=now.getHours()<6||now.getHours()>=22;
+    var choices=gentle
+      ?[
+        {pose:'cuddle',title:'돌이가 포근하게 몸을 웅크려요',desc:'조용한 시간, 숨을 천천히 고르며 편안히 쉬어요.',icon:'🤎',tag:'작은 휴식'},
+        {pose:'yawn',title:'작은 하품을 해요',desc:'눈을 살짝 감고 몸의 긴장을 풀어요.',icon:'🥱',tag:'졸음'},
+        {pose:'listen',title:'작은 소리에 귀 기울여요',desc:'잠깐 귀를 세웠다가 다시 편안해져요.',icon:'👂',tag:'조용한 반응'},
+        {pose:'groom',title:'앞발로 얼굴을 닦아요',desc:'잠들기 전 짧게 털을 정리해요.',icon:'✨',tag:'몸단장'}
+      ]
+      :[
+        {pose:'curious',title:'고개를 갸웃해요',desc:'무언가 궁금한 듯 고개를 천천히 기울여요.',icon:'❔',tag:'호기심'},
+        {pose:'sniff',title:'주변 냄새를 살펴봐요',desc:'코를 가까이 대고 킁킁거리며 확인해요.',icon:'👃',tag:'탐색'},
+        {pose:'scratch',title:'잠깐 몸을 긁어요',desc:'뒷발을 움직여 귀 뒤를 살짝 긁어요.',icon:'🐕',tag:'몸단장'},
+        {pose:'shake',title:'몸을 가볍게 털어요',desc:'귀와 몸통을 짧게 흔들고 다시 멈춰요.',icon:'💫',tag:'작은 반응'},
+        {pose:'greet',title:'반가운 듯 앞발을 들어요',desc:'고개를 들고 앞발을 살짝 움직여요.',icon:'🐾',tag:'인사'},
+        {pose:'listen',title:'소리에 집중해요',desc:'양쪽 귀를 세우고 주변을 살펴봐요.',icon:'👂',tag:'집중'},
+        {pose:'paw',title:'앞발을 살짝 들어요',desc:'관심을 끌려는 듯 앞발을 조심스럽게 들어요.',icon:'🐾',tag:'관심 표현'}
+      ];
+    var chosen=choices[cycle%choices.length];
+    return Object.assign({},base,chosen);
+  }
+
   function eventTimestampToday(event,now){
     var p=parts(now);
     return Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day),0,0,0,0)-9*60*60*1000+event.start*60000;
@@ -1423,6 +1462,16 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     if(pose==='alert')return {x:900,y:432,s:.88,key:'window-watch'};
     if(pose==='play')return {x:700,y:432,s:.92,key:'rug-play'};
     if(pose==='dance')return {x:670,y:432,s:.92,key:'dance-center'};
+    if(pose==='zoomies'){
+      var zoomStops=[{x:540,y:432,s:.87},{x:825,y:432,s:.90},{x:650,y:432,s:.92},{x:875,y:432,s:.86}];
+      var zi=Math.floor(now.getTime()/1150)%zoomStops.length;var zs=zoomStops[zi];
+      return {x:zs.x,y:zs.y,s:zs.s,key:'zoom-'+zi};
+    }
+    if(pose==='trot'){
+      var trotStops=[{x:575,y:432,s:.88},{x:735,y:432,s:.90},{x:835,y:432,s:.87},{x:675,y:432,s:.91}];
+      var ti=Math.floor(now.getTime()/3900)%trotStops.length;var ts=trotStops[ti];
+      return {x:ts.x,y:ts.y,s:ts.s,key:'trot-'+ti};
+    }
     if(pose==='walk'){
       var stops=[{x:555,y:432,s:.86},{x:710,y:432,s:.90},{x:845,y:432,s:.85},{x:680,y:432,s:.91}];
       var stop=stops[Math.floor(now.getTime()/5200)%stops.length];
@@ -1435,7 +1484,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var target=doriDestination(state,now);
     if(!doriActor||doriActor._targetKey===target.key)return;
     doriActor._targetKey=target.key;
-    tweenSvgPosition(doriActor,target,state.pose==='walk'?2400:1700);
+    tweenSvgPosition(doriActor,target,state.pose==='walk'?2400:state.pose==='trot'?1550:state.pose==='zoomies'?650:1700);
   }
   function updateFriendArrival(evt){
     var shouldVisit=!!(evt&&evt.kind==='bread');
