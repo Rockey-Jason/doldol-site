@@ -874,6 +874,12 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
  .history-filter-label select{max-width:105px}
 }
 
+
+/* Missing motion curves used by the wake-up and friend greeting sequences */
+@keyframes doriTailTipWake{0%,100%{transform:rotate(0)}22%{transform:rotate(-9deg)}48%{transform:rotate(14deg)}74%{transform:rotate(-5deg)}}
+@keyframes doriWakeEar{0%,100%{transform:rotate(0)}28%{transform:rotate(-9deg)}58%{transform:rotate(5deg)}82%{transform:rotate(-2deg)}}
+@keyframes friendAffectionFloat{0%,100%{transform:translateY(0) scale(.94);opacity:.62}45%{transform:translateY(-7px) scale(1.05);opacity:1}75%{transform:translateY(-4px) scale(1);opacity:.9}}
+
 </style>
 </head>
 <body>
