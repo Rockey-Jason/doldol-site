@@ -1592,14 +1592,21 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       var start=Math.floor(group.from+random()*(group.to-group.from-20));
       var duration=15+Math.floor(random()*13);
       return {id:key+'-'+index+'-'+kind,kind:kind,start:start,end:Math.min(1439,start+duration),duration:duration};
-    });
-    events=events.filter(Boolean);
+    }).filter(Boolean);
     var day=ordinal(key);
     var specialIndex=((day*7)%SPECIALS.length+SPECIALS.length)%SPECIALS.length;
-    var specialKind=SPECIALS[specialIndex];
-    var specialStart=450+Math.floor(random()*850);
-    if(events.some(function(e){return e.kind===specialKind;}))specialKind=SPECIALS[(specialIndex+5)%SPECIALS.length];
-    events.push({id:key+'-special-'+specialKind,kind:specialKind,start:specialStart,end:Math.min(1439,specialStart+22),duration:22,special:true});
+    var specialKind=null;
+    for(var offset=0;offset<SPECIALS.length;offset++){
+      var candidate=SPECIALS[(specialIndex+offset)%SPECIALS.length];
+      if(!events.some(function(e){return e.kind===candidate;})){
+        specialKind=candidate;
+        break;
+      }
+    }
+    if(specialKind){
+      var specialStart=450+Math.floor(random()*850);
+      events.push({id:key+'-special-'+specialKind,kind:specialKind,start:specialStart,end:Math.min(1439,specialStart+22),duration:22,special:true});
+    }
     events.sort(function(a,b){return a.start-b.start;});
     return events;
   }
@@ -2043,9 +2050,16 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var endParts=endKey.split('-').map(Number);
     var startUtc=Date.UTC(startParts[0],startParts[1]-1,startParts[2],12);
     var endUtc=Date.UTC(endParts[0],endParts[1]-1,endParts[2],12);
-    var counts={};
-    var max=0;
-    rows.forEach(function(row){counts[row.date]=(counts[row.date]||0)+1;max=Math.max(max,counts[row.date]);});
+    var daily={};
+    rows.forEach(function(row){
+      if(!daily[row.date])daily[row.date]={scenes:0,minutes:0};
+      daily[row.date].scenes++;
+      daily[row.date].minutes+=row.duration||0;
+    });
+    var volume=Object.keys(daily).map(function(key){return daily[key].minutes;}).sort(function(a,b){return a-b;});
+    var q1=volume.length?volume[Math.floor((volume.length-1)*.25)]:0;
+    var q2=volume.length?volume[Math.floor((volume.length-1)*.5)]:0;
+    var q3=volume.length?volume[Math.floor((volume.length-1)*.75)]:0;
     var startDay=new Date(startUtc).getUTCDay();
     var mondayOffset=(startDay+6)%7;
     var gridStart=startUtc-mondayOffset*86400000;
@@ -2057,10 +2071,11 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         var d=new Date(stamp+12*60*60*1000);
         var key=d.getUTCFullYear()+'-'+String(d.getUTCMonth()+1).padStart(2,'0')+'-'+String(d.getUTCDate()).padStart(2,'0');
         if(key<startKey||key>endKey){grid.push('<span class="heatmap-day heat-level-0 heatmap-blank"></span>');continue;}
-        var value=counts[key]||0;
-        var level=value===0?0:Math.max(1,Math.min(4,Math.ceil(value/Math.max(1,max)*4)));
+        var item=daily[key]||{scenes:0,minutes:0};
+        var value=item.minutes;
+        var level=value===0?0:(value>=q3?4:value>=q2?3:value>=q1?2:1);
         var selected=historySelectedDate===key?' selected':'';
-        var title=key+' · '+value+'개 장면';
+        var title=key+' · '+item.scenes+'개 장면 · '+item.minutes+'분 예정';
         grid.push('<button type="button" class="heatmap-day heat-level-'+level+selected+'" data-history-date="'+key+'" title="'+title+'" aria-label="'+title+'"></button>');
       }
       grid.push('</div>');
