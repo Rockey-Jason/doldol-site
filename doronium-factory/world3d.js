@@ -6,7 +6,7 @@ catch (error) { console.warn("Three.js CDN unavailable; using the compatibility 
 
 function createFallbackWorld(canvas) {
   const ctx = canvas.getContext("2d");
-  let cx=64, cy=52, zoom=1, width=1, height=1;
+  let cx=64, cy=52, zoom=1, width=1, height=1, fallbackWorldDropCount=0;
   const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
   function render(state) {
     if(!ctx)return;
@@ -17,6 +17,7 @@ function createFallbackWorld(canvas) {
     const size=34*zoom,left=width/2-cx*size,top=height/2-cy*size;
     const minX=Math.max(0,Math.floor(-left/size)),maxX=Math.min(WORLD_W-1,Math.ceil((width-left)/size));
     const minY=Math.max(0,Math.floor(-top/size)),maxY=Math.min(WORLD_H-1,Math.ceil((height-top)/size));
+    fallbackWorldDropCount=(state.worldDrops||[]).filter(drop=>(drop.layer||"surface")==="surface").length;
     const buildingByCell=new Map((state.buildings||[]).filter(b=>b.layer!=="mine").map(b=>[b.x+","+b.y,b]));
     for(let y=minY;y<=maxY;y++)for(let x=minX;x<=maxX;x++){
       const px=left+x*size,py=top+y*size,key=x+","+y,node=state.nodes?.[key],seen=!!state.seen?.[key];
@@ -42,7 +43,7 @@ function createFallbackWorld(canvas) {
     ctx.fillStyle="#d8e8ec";ctx.font="11px sans-serif";ctx.textAlign="left";ctx.fillText("WebGL 미지원 · 호환 모드",12,height-14);
   }
   function pickTile(x,y){const r=canvas.getBoundingClientRect(),size=34*zoom,left=r.width/2-cx*size,top=r.height/2-cy*size;const tx=Math.floor((x-r.left-left)/size),ty=Math.floor((y-r.top-top)/size);return tx>=0&&ty>=0&&tx<WORLD_W&&ty<WORLD_H?{x:tx,y:ty,z:ty}:null;}
-  return {backend:"canvas2d-fallback",render,pickTile,pickTarget(){return null},pan(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},orbit(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},setZoom(v){zoom=clamp(v,.55,1.8);},center(x,y){cx=x;cy=y;},setViewMode(){},inspect(){return {machineCount:0,beltCount:0,beltItemMeshes:0,viewMode:"map",playerVisible:true,firstPersonHandsVisible:false,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5}},get zoom(){return zoom;}};
+  return {backend:"canvas2d-fallback",render,pickTile,pickTarget(){return null},pan(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},orbit(dx,dy){cx-=dx/(34*zoom);cy-=dy/(34*zoom);},setZoom(v){zoom=clamp(v,.55,1.8);},center(x,y){cx=x;cy=y;},setViewMode(){},inspect(){return {machineCount:0,beltCount:0,beltItemMeshes:0,viewMode:"map",playerVisible:true,firstPersonHandsVisible:false,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,worldDropCount:fallbackWorldDropCount}},get zoom(){return zoom;}};
 }
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
