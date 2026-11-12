@@ -887,6 +887,32 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 @keyframes doriWakeEar{0%,100%{transform:rotate(0)}28%{transform:rotate(-9deg)}58%{transform:rotate(5deg)}82%{transform:rotate(-2deg)}}
 @keyframes friendAffectionFloat{0%,100%{transform:translateY(0) scale(.94);opacity:.62}45%{transform:translateY(-7px) scale(1.05);opacity:1}75%{transform:translateY(-4px) scale(1);opacity:.9}}
 
+
+/* DORI OFFICIAL CUTOUT · high-density 2D skeletal mesh */
+#doriSprite{animation:none!important;transform:none!important;transition:none!important;opacity:1!important;visibility:visible!important}
+.dori-mesh-host{display:block;width:100%;height:100%;overflow:visible;position:relative}
+#doriRigCanvas{display:block;width:100%;height:100%;overflow:visible;image-rendering:auto;filter:drop-shadow(0 1px 0 rgba(58,38,27,.04))}
+#doriRigFallback{display:none;width:100%;height:100%;object-fit:contain}
+#doriRigCanvas[hidden]{display:none}
+#doriInteractiveProps{pointer-events:none}
+#doriFoodBowl,#doriWaterBowl,#doriPlayBall,#doriToyBone{transform-box:fill-box;transform-origin:center;transition:filter .35s,opacity .35s}
+.scene[data-interaction="food"] #doriFoodBowl{animation:doriBowlNudge .8s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(244,203,133,.48))}
+.scene[data-interaction="water"] #doriWaterBowl{animation:doriWaterRipple 1.4s ease-in-out infinite;filter:drop-shadow(0 0 8px rgba(139,193,208,.48))}
+.scene[data-interaction="toy"] #doriPlayBall{animation:doriToyBounce .75s ease-in-out infinite;filter:drop-shadow(0 0 7px rgba(238,204,128,.46))}
+.scene[data-interaction="bone"] #doriToyBone{animation:doriToyBounce .8s ease-in-out infinite}
+.scene[data-interaction="bed"] #doriBed{animation:doriBedSoft 4.8s ease-in-out infinite}
+.scene[data-interaction="sofa"] #sofa{animation:doriSofaCushion 3.4s ease-in-out infinite}
+.scene[data-interaction="friend"] #friendBreadBody{animation:doriFriendBounce .9s ease-in-out infinite}
+.scene[data-interaction="window"] #warmGlow{animation:doriWindowGlimmer 3.2s ease-in-out infinite}
+.scene[data-interaction="rug"] #rug{filter:drop-shadow(0 0 5px rgba(231,212,185,.2))}
+@keyframes doriBowlNudge{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px)}}
+@keyframes doriWaterRipple{0%,100%{filter:drop-shadow(0 0 3px rgba(139,193,208,.18))}50%{filter:drop-shadow(0 0 9px rgba(139,193,208,.58))}}
+@keyframes doriToyBounce{0%,100%{transform:translateY(0) rotate(0)}45%{transform:translateY(-6px) rotate(10deg)}70%{transform:translateY(0) rotate(-4deg)}}
+@keyframes doriBedSoft{0%,100%{filter:brightness(1)}50%{filter:brightness(1.045)}}
+@keyframes doriSofaCushion{0%,100%{filter:brightness(1)}50%{filter:brightness(1.025)}}
+@keyframes doriWindowGlimmer{0%,100%{opacity:.82}50%{opacity:1}}
+@media(prefers-reduced-motion:reduce){#doriRigCanvas,#doriFoodBowl,#doriWaterBowl,#doriPlayBall,#doriToyBone{animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -1065,189 +1091,41 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
             <ellipse cx="858" cy="551" rx="65" ry="18" fill="#fffdf7" opacity=".82"/>
             <path d="M758 584 Q813 599 864 585 T962 584" fill="none" stroke="#dfc9ad" stroke-width="2.5" stroke-linecap="round"/>
           </g>
+          <g id="doriInteractiveProps">
+            <g id="doriFoodBowl" transform="translate(795 545)">
+              <ellipse cx="0" cy="8" rx="42" ry="8" fill="#594332" opacity=".16"/>
+              <path d="M-39 -3 Q-34 25 0 25 Q34 25 39 -3Z" fill="#e2c9a9" stroke="#8d6f55" stroke-width="2.4"/>
+              <ellipse cx="0" cy="-3" rx="39" ry="9" fill="#fbf4e9" stroke="#b99975" stroke-width="2"/>
+              <ellipse cx="0" cy="-4" rx="25" ry="4.5" fill="#d7b78d" opacity=".7"/>
+              <path d="M-5 -6 Q0 -11 5 -6 M0 -12 L0 -2" fill="none" stroke="#bd9060" stroke-width="1.6" stroke-linecap="round"/>
+            </g>
+            <g id="doriWaterBowl" transform="translate(900 545)">
+              <ellipse cx="0" cy="8" rx="35" ry="7" fill="#594332" opacity=".14"/>
+              <path d="M-32 -2 Q-28 21 0 21 Q28 21 32 -2Z" fill="#9bbaca" stroke="#617e91" stroke-width="2"/>
+              <ellipse cx="0" cy="-2" rx="32" ry="7" fill="#e5f1ef" stroke="#7898a6" stroke-width="1.8"/>
+              <ellipse cx="0" cy="-3" rx="22" ry="3.8" fill="#8bc1d0" opacity=".88"/>
+            </g>
+            <g id="doriPlayBall" transform="translate(675 528)">
+              <ellipse cx="0" cy="21" rx="20" ry="4" fill="#594332" opacity=".13"/>
+              <circle r="18" fill="#5c82b5" stroke="#344c70" stroke-width="2.4"/>
+              <path d="M-10 -14 Q3 -4 10 15 M-16 3 Q-2 10 13 1" fill="none" stroke="#f0cb78" stroke-width="4" stroke-linecap="round"/>
+            </g>
+            <g id="doriToyBone" transform="translate(570 548) rotate(-12)">
+              <path d="M-20 -5 Q-28 -18 -38 -8 Q-46 1 -34 10 Q-26 18 -18 8 L18 8 Q26 18 34 10 Q46 1 38 -8 Q28 -18 20 -5Z" fill="#f1e3ca" stroke="#ba9e7d" stroke-width="2"/>
+            </g>
+          </g>
+          
 
-          <g id="doriActor" transform="translate(660 432) scale(.90)" data-character-version="2">
+          <g id="doriActor" transform="translate(660 432) scale(.90)" data-character-version="3">
             <ellipse id="doriGroundShadow" cx="0" cy="91" rx="102" ry="10" fill="#49362d" opacity=".16" filter="url(#softShadow)"/>
-            <g id="doriSprite">
-              <!-- Short, rounded Pembroke tail: a small natural bobtail, not a long tail -->
-              <g id="doriTail" class="dori-part">
-                <path d="M78 -27 Q91 -43 104 -31 Q113 -22 103 -9 Q91 1 80 -10 Q72 -17 78 -27Z"
-                  fill="url(#corgiFur)" stroke="#543a2b" stroke-width="5.2" stroke-linejoin="round"/>
-                <g id="doriTailTip" class="dori-joint dori-tail-tip"><path d="M87 -25 Q96 -34 103 -27" fill="none" stroke="#ffe9ba" stroke-width="3" stroke-linecap="round" opacity=".78"/></g>
-              </g>
-
-              <!-- Far hind legs, kept short and tucked under the long corgi body -->
-              <g id="doriBackPawFar" class="dori-part" transform="translate(57 25)"><g id="doriKneeBackPawFar" class="dori-joint dori-knee"><path d="M-17 -21 Q-8 -30 5 -24 Q15 -17 14 1 L12 32 Q10 45 -3 46 L-13 43 Q-22 38 -20 25Z"
-                  fill="url(#corgiFur)" stroke="#543a2b" stroke-width="4.7" stroke-linejoin="round"/><g id="doriAnkleBackPawFar" class="dori-joint dori-ankle"><path d="M-20 25 Q-7 31 13 25 L16 39 Q12 51 -4 52 Q-19 51 -22 40Z"
-                  fill="url(#corgiCream)" stroke="#543a2b" stroke-width="4.1" stroke-linejoin="round"/><g id="doriToesBackPawFar" class="dori-joint dori-toes"><path d="M-9 43 Q-7 46 -5 46 M1 43 Q3 46 5 46" fill="none" stroke="#d8c4ab" stroke-width="1.8" stroke-linecap="round" opacity=".5"/></g></g></g></g>
-              <g id="doriBackPawNear" class="dori-part" transform="translate(-57 25)"><g id="doriKneeBackPawNear" class="dori-joint dori-knee"><path d="M-17 -21 Q-8 -30 5 -24 Q15 -17 14 1 L12 32 Q10 45 -3 46 L-13 43 Q-22 38 -20 25Z"
-                  fill="url(#corgiFur)" stroke="#543a2b" stroke-width="4.7" stroke-linejoin="round"/><g id="doriAnkleBackPawNear" class="dori-joint dori-ankle"><path d="M-20 25 Q-7 31 13 25 L16 39 Q12 51 -4 52 Q-19 51 -22 40Z"
-                  fill="url(#corgiCream)" stroke="#543a2b" stroke-width="4.1" stroke-linejoin="round"/><g id="doriToesBackPawNear" class="dori-joint dori-toes"><path d="M-9 43 Q-7 46 -5 46 M1 43 Q3 46 5 46" fill="none" stroke="#d8c4ab" stroke-width="1.8" stroke-linecap="round" opacity=".5"/></g></g></g></g>
-
-              <!-- Broad, low, plush body -->
-              <g id="doriBody" class="dori-part">
-                <path d="M-82 -38
-                  Q-103 -53 -96 -27
-                  Q-106 -3 -91 25
-                  Q-77 53 -40 59
-                  Q-3 67 42 59
-                  Q83 51 99 21
-                  Q112 -5 96 -33
-                  Q83 -58 52 -65
-                  Q10 -77 -43 -67
-                  Q-72 -63 -82 -38Z"
-                  fill="url(#corgiFur)" stroke="#543a2b" stroke-width="5.7" stroke-linejoin="round"/>
-                <g id="doriChestJoint" class="dori-joint"><path d="M-47 -57
-                  Q-26 -72 0 -68
-                  Q27 -72 47 -57
-                  Q63 -40 51 -11
-                  Q43 20 20 43
-                  Q2 57 -17 43
-                  Q-42 21 -52 -10
-                  Q-61 -39 -47 -57Z"
-                  fill="url(#corgiCream)" stroke="#e8d9c5" stroke-width="1.8"/></g>
-                <path d="M-78 -12 Q-72 10 -57 22 M76 -13 Q70 11 55 22"
-                  fill="none" stroke="#d99b54" stroke-width="3" stroke-linecap="round" opacity=".48"/>
-                <path d="M-62 -45 Q-35 -58 -11 -55 M15 -56 Q43 -59 64 -43"
-                  fill="none" stroke="#ffe6b3" stroke-width="3.2" stroke-linecap="round" opacity=".7"/>
-                <path d="M-83 7 Q-72 35 -47 43 M84 7 Q72 35 48 43"
-                  fill="none" stroke="#d9954a" stroke-width="2.6" stroke-linecap="round" opacity=".3"/>
-              </g>
-
-              <!-- Front legs: tiny paws with rounded cream socks and visible toes -->
-              <g id="doriFrontPawFar" class="dori-part" transform="translate(-39 30)"><g id="doriKneeFrontPawFar" class="dori-joint dori-knee"><path d="M-15 -24 Q-14 -37 0 -38 Q14 -37 15 -22 L14 27 Q14 43 4 48 L-8 48 Q-19 43 -18 28Z"
-                  fill="url(#corgiFur)" stroke="#543a2b" stroke-width="4.7" stroke-linejoin="round"/><g id="doriAnkleFrontPawFar" class="dori-joint dori-ankle"><path d="M-18 25 Q-2 32 15 25 L18 39 Q14 53 -2 53 Q-17 53 -21 40Z"
-                  fill="url(#corgiCream)" stroke="#543a2b" stroke-width="4.2" stroke-linejoin="round"/><g id="doriToesFrontPawFar" class="dori-joint dori-toes"><path d="M-9 45 Q-7 48 -5 49 M1 46 Q3 49 5 49" fill="none" stroke="#cdbba6" stroke-width="2" stroke-linecap="round"/></g></g></g></g>
-              <g id="doriFrontPawNear" class="dori-part" transform="translate(39 30)"><g id="doriKneeFrontPawNear" class="dori-joint dori-knee"><path d="M-15 -24 Q-14 -37 0 -38 Q14 -37 15 -22 L14 27 Q14 43 4 48 L-8 48 Q-19 43 -18 28Z"
-                  fill="url(#corgiFur)" stroke="#543a2b" stroke-width="4.7" stroke-linejoin="round"/><g id="doriAnkleFrontPawNear" class="dori-joint dori-ankle"><path d="M-18 25 Q-2 32 15 25 L18 39 Q14 53 -2 53 Q-17 53 -21 40Z"
-                  fill="url(#corgiCream)" stroke="#543a2b" stroke-width="4.2" stroke-linejoin="round"/><g id="doriToesFrontPawNear" class="dori-joint dori-toes"><path d="M-9 45 Q-7 48 -5 49 M1 46 Q3 49 5 49" fill="none" stroke="#cdbba6" stroke-width="2" stroke-linecap="round"/></g></g></g></g>
-
-              <!-- Oversized rounded corgi head and independent soft ears -->
-              <g id="doriNeckJoint" class="dori-joint dori-neck"><g id="doriHead" class="dori-part">
-                <g id="doriEarLeft" class="dori-part">
-                  <path d="M-52 -172
-                    Q-78 -208 -88 -254
-                    Q-94 -282 -77 -291
-                    Q-59 -300 -42 -275
-                    Q-20 -242 -13 -194
-                    Q-27 -175 -52 -172Z"
-                    fill="url(#corgiFur)" stroke="#543a2b" stroke-width="5.8" stroke-linejoin="round"/>
-                  <g id="doriEarLeftInner" class="dori-joint dori-ear-inner"><path d="M-57 -190
-                    Q-76 -224 -80 -268
-                    Q-64 -272 -49 -247
-                    Q-32 -218 -27 -190
-                    Q-42 -183 -57 -190Z"
-                    fill="#eea0a0" stroke="#d98f83" stroke-width="2.4" stroke-linejoin="round"/><path d="M-69 -220 Q-77 -249 -72 -267" fill="none" stroke="#ffecc7" stroke-width="3.2" stroke-linecap="round" opacity=".72"/></g>
-                </g>
-                <g id="doriEarRight" class="dori-part">
-                  <path d="M52 -172
-                    Q78 -208 88 -254
-                    Q94 -282 77 -291
-                    Q59 -300 42 -275
-                    Q20 -242 13 -194
-                    Q27 -175 52 -172Z"
-                    fill="url(#corgiFur)" stroke="#543a2b" stroke-width="5.8" stroke-linejoin="round"/>
-                  <g id="doriEarRightInner" class="dori-joint dori-ear-inner"><path d="M57 -190
-                    Q76 -224 80 -268
-                    Q64 -272 49 -247
-                    Q32 -218 27 -190
-                    Q42 -183 57 -190Z"
-                    fill="#eea0a0" stroke="#d98f83" stroke-width="2.4" stroke-linejoin="round"/><path d="M69 -220 Q77 -249 72 -267" fill="none" stroke="#ffecc7" stroke-width="3.2" stroke-linecap="round" opacity=".72"/></g>
-                </g>
-
-                <!-- Rounded golden face. Deliberately no white forehead stripe. -->
-                <path id="doriFaceShape" d="M-91 -143
-                  Q-101 -178 -75 -203
-                  Q-53 -225 -20 -218
-                  Q0 -225 20 -218
-                  Q53 -225 75 -203
-                  Q101 -178 91 -143
-                  Q99 -110 76 -80
-                  Q52 -51 16 -48
-                  Q0 -45 -16 -48
-                  Q-52 -51 -76 -80
-                  Q-99 -110 -91 -143Z"
-                  fill="url(#corgiFur)" stroke="#543a2b" stroke-width="6" stroke-linejoin="round"/>
-
-                <!-- Soft cheek fur tufts -->
-                <path d="M-85 -103 Q-103 -95 -92 -78 Q-81 -69 -69 -78 M85 -103 Q103 -95 92 -78 Q81 -69 69 -78"
-                  fill="none" stroke="#e8ae67" stroke-width="5" stroke-linecap="round"/>
-
-                <!-- Cream muzzle and cheeks, kept below the eyes -->
-                <path id="doriMuzzle" d="M-59 -124
-                  Q-50 -145 -25 -143
-                  Q-10 -149 0 -139
-                  Q10 -149 25 -143
-                  Q50 -145 59 -124
-                  Q61 -105 43 -91
-                  Q26 -77 0 -80
-                  Q-26 -77 -43 -91
-                  Q-61 -105 -59 -124Z"
-                  fill="url(#corgiCream)" stroke="#e7d9c7" stroke-width="2.2"/>
-
-                <g id="doriEyes">
-                  <g class="dori-eye-open">
-                    <ellipse cx="-36" cy="-158" rx="12.5" ry="16.5" fill="#30221d"/>
-                    <ellipse cx="36" cy="-158" rx="12.5" ry="16.5" fill="#30221d"/>
-                    <ellipse cx="-39.5" cy="-164" rx="4.2" ry="5.2" fill="#fff"/>
-                    <ellipse cx="32.5" cy="-164" rx="4.2" ry="5.2" fill="#fff"/>
-                    <circle cx="-30" cy="-151" r="2" fill="#fff" opacity=".72"/>
-                    <circle cx="42" cy="-151" r="2" fill="#fff" opacity=".72"/>
-                  </g>
-                  <g class="dori-eye-closed" fill="none" stroke="#543a2b" stroke-width="5" stroke-linecap="round">
-                    <path d="M-50 -157 Q-36 -145 -22 -157"/>
-                    <path d="M22 -157 Q36 -145 50 -157"/>
-                  </g>
-                </g>
-
-                <g id="doriBrows" fill="none" stroke="#a96e3e" stroke-width="3.2" stroke-linecap="round" opacity=".62">
-                  <path d="M-52 -181 Q-37 -188 -23 -181"/>
-                  <path d="M23 -181 Q37 -188 52 -181"/>
-                </g>
-
-                <g id="doriCheeks">
-                  <ellipse cx="-60" cy="-112" rx="10" ry="5.5" fill="#f0a4a0" opacity=".58"/>
-                  <ellipse cx="60" cy="-112" rx="10" ry="5.5" fill="#f0a4a0" opacity=".58"/>
-                </g>
-
-                <g id="doriJawJoint" class="dori-joint"><g id="doriMouth">
-                  <path d="M-19 -119 Q-10 -108 0 -116 Q10 -108 19 -119"
-                    fill="none" stroke="#543a2b" stroke-width="4.2" stroke-linecap="round"/>
-                  <path class="dori-smile-mouth" d="M-18 -116 Q-11 -99 0 -101 Q11 -99 18 -116"
-                    fill="none" stroke="#543a2b" stroke-width="4" stroke-linecap="round"/>
-                  <ellipse cx="0" cy="-131" rx="11.5" ry="8.5" fill="#30221d"/>
-                  <ellipse cx="-3.5" cy="-134" rx="3.2" ry="2.1" fill="#fff" opacity=".55"/>
-                  <path class="dori-tongue" d="M-10 -104 Q-8 -83 0 -84 Q9 -84 10 -104 Q4 -99 0 -101 Q-5 -99 -10 -104Z"
-                    fill="#ed8f9b" stroke="#9f5860" stroke-width="2.2" stroke-linejoin="round"/>
-                  <path class="dori-yawn-mouth" d="M-12 -117 Q-13 -91 0 -88 Q13 -91 12 -117 Q5 -111 0 -113 Q-5 -111 -12 -117Z"
-                    fill="#60352f" stroke="#543a2b" stroke-width="3" opacity="0"/>
-                  <path class="dori-yawn-tongue" d="M-6 -96 Q0 -91 6 -96 L4 -88 Q0 -84 -4 -88Z"
-                    fill="#ef9aa1" opacity="0"/>
-                </g></g>
-
-                <!-- Fine fur tufts around the lower cheeks -->
-                <path d="M-51 -84 Q-39 -72 -29 -77 M29 -77 Q39 -72 51 -84"
-                  fill="none" stroke="#fff8eb" stroke-width="3" stroke-linecap="round" opacity=".9"/>
-              </g>
-
-              <g id="doriCollar" class="dori-part">
-                <path d="M-44 -55 Q0 -37 44 -55 L40 -42 Q0 -24 -40 -42Z"
-                  fill="#f8eee0" stroke="#c9aa85" stroke-width="2.8" stroke-linejoin="round"/>
-                <circle cx="0" cy="-34" r="5.2" fill="#e8c16d" stroke="#9b7146" stroke-width="2.2"/>
-                <circle cx="-1.7" cy="-35.5" r="1.5" fill="#fff4d1"/>
-              </g>
-
-              </g>
-              <!-- A little paw can lift naturally to the cheek while grooming -->
-              <g id="doriGroomPaw" class="dori-part" transform="translate(43 -108)" opacity="0">
-                <path d="M-12 39 Q-20 19 -13 2 Q-8 -9 2 -5 Q14 0 10 17 L10 39Z"
-                  fill="url(#corgiFur)" stroke="#543a2b" stroke-width="4.2" stroke-linejoin="round"/>
-                <path d="M-13 30 Q0 35 11 29 L14 41 Q8 49 -2 49 Q-13 48 -13 30Z"
-                  fill="url(#corgiCream)" stroke="#543a2b" stroke-width="3.4"/>
-              </g>
-
-
-                            </g>
+            <g id="doriSprite" class="dori-mesh-character">
+              <foreignObject id="doriMeshHost" x="-140" y="-225" width="280" height="308" overflow="visible">
+                <div xmlns="http://www.w3.org/1999/xhtml" class="dori-mesh-host">
+                  <canvas id="doriRigCanvas" width="361" height="397" aria-label="돌이 캐릭터"></canvas>
+                  <img id="doriRigFallback" alt="돌이 캐릭터" hidden="hidden"/>
+                </div>
+              </foreignObject>
+            </g>
 
               
 
@@ -1704,16 +1582,18 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   function doriDestination(state,now){
     var pose=state.pose||'idle';
     var second=Math.floor(now.getTime()/1000);
-    if(pose==='friendPlay'||pose==='reunion')return {x:535,y:432,s:.90,key:'friend-interaction'};
-    if(pose==='wake')return {x:780,y:432,s:.88,key:'morning-wake'};
-    if(pose==='sleep'||pose==='doze'||pose==='dream'||pose==='cuddle'||pose==='flop')return {x:858,y:453,s:.82,key:'soft-rest'};
-    if(pose==='eat'||pose==='water')return {x:795,y:432,s:.88,key:'food-bowl'};
-    if(pose==='alert'||pose==='guard'||pose==='lookUp')return {x:900,y:432,s:.88,key:'window-watch'};
-    if(pose==='play'||pose==='boop'||pose==='pounce')return {x:700,y:432,s:.92,key:'rug-play'};
-    if(pose==='dance')return {x:670,y:432,s:.92,key:'dance-center'};
-    if(pose==='follow')return friendIsHere?{x:470,y:470,s:.86,key:'follow-bread'}:{x:595,y:432,s:.89,key:'follow-toy'};
-    if(pose==='peek'||pose==='hide'||pose==='shy')return {x:485,y:438,s:.86,key:'peek-sofa'};
-    if(pose==='sit'||pose==='beg'||pose==='wait')return {x:730,y:432,s:.88,key:'quiet-wait'};
+    if(pose==='friendPlay'||pose==='reunion'||pose==='greet'||pose==='paw')return {x:535,y:432,s:.90,key:'friend-interaction'};
+    if(pose==='wake')return {x:840,y:453,s:.84,key:'morning-bed-exit'};
+    if(pose==='sleep'||pose==='doze'||pose==='dream'||pose==='cuddle'||pose==='flop'||pose==='yawn')return {x:858,y:453,s:.82,key:'soft-rest'};
+    if(pose==='eat')return {x:795,y:432,s:.86,key:'food-bowl'};
+    if(pose==='water')return {x:900,y:432,s:.84,key:'water-bowl'};
+    if(pose==='alert'||pose==='guard'||pose==='lookUp'||pose==='bird')return {x:930,y:432,s:.86,key:'window-watch'};
+    if(pose==='play'||pose==='boop'||pose==='pounce'||pose==='hop')return {x:675,y:432,s:.91,key:'rug-toy'};
+    if(pose==='dance')return {x:675,y:432,s:.92,key:'dance-center'};
+    if(pose==='sniff')return {x:575,y:432,s:.87,key:'bone-find'};
+    if(pose==='follow')return friendIsHere?{x:470,y:470,s:.86,key:'follow-bread'}:{x:610,y:432,s:.89,key:'follow-toy'};
+    if(pose==='peek'||pose==='hide'||pose==='shy'||pose==='sit'||pose==='beg'||pose==='wait'||pose==='groom')return {x:485,y:438,s:.86,key:'sofa-side'};
+    if(pose==='stretch'||pose==='scratch'||pose==='curious'||pose==='listen'||pose==='sneeze'||pose==='shake')return {x:780,y:432,s:.88,key:'daily-reaction'};
     if(pose==='zoomies'){
       var zoomStops=[{x:540,y:432,s:.87},{x:825,y:432,s:.90},{x:650,y:418,s:.92},{x:875,y:432,s:.86}];
       var zi=Math.floor(second/1.15)%zoomStops.length;var zs=zoomStops[zi];
@@ -1734,8 +1614,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       var ci=Math.floor(second/1.35)%circleStops.length;var cs=circleStops[ci];
       return {x:cs.x,y:cs.y,s:cs.s,key:'circle-'+ci};
     }
-    if(pose==='hop'||pose==='happy'||pose==='reunion')return {x:680,y:432,s:.92,key:'happy-center'};
-    if(pose==='stretch'||pose==='sniff'||pose==='scratch'||pose==='curious'||pose==='listen'||pose==='groom'||pose==='yawn'||pose==='sneeze'||pose==='shake'||pose==='paw'||pose==='greet')return {x:780,y:432,s:.88,key:'daily-reaction'};
+    if(pose==='happy')return {x:680,y:432,s:.92,key:'happy-center'};
     return {x:660,y:432,s:.90,key:'home-center'};
   }
   function updateDoriMovement(state,now){
@@ -1743,7 +1622,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     if(!doriActor||doriActor._targetKey===target.key)return;
     doriActor._targetKey=target.key;
     var pose=state.pose||'idle';
-    var duration=pose==='zoomies'?650:(pose==='circle'?900:(pose==='trot'||pose==='gallop'||pose==='chase'?1250:(pose==='walk'?2200:(pose==='explore'?1750:1700))));
+    var duration=pose==='zoomies'?650:(pose==='circle'?900:(pose==='trot'||pose==='gallop'||pose==='chase'?1250:(pose==='walk'||pose==='explore'?1900:1700)));
     tweenSvgPosition(doriActor,target,duration);
   }
   function updateFriendArrival(evt){
@@ -1768,6 +1647,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     room.dataset.event=state.fx||kind;
     room.dataset.pose=state.pose||'idle';
     updateDoriMovement(state,now||new Date());
+    updateFurnitureInteraction(state);
     updateFriendArrival(evt);
     nowTitle.textContent=state.title;
     nowDescription.textContent=state.desc;
@@ -2175,6 +2055,296 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     renderHistoryRecords(historyRowsForRange(new Date()));
   });
   
+  /* Official Dori texture loader and continuous 2D skinning rig */
+  function initDoriMeshRig(){
+    var canvas=document.getElementById('doriRigCanvas');
+    var fallback=document.getElementById('doriRigFallback');
+    var host=document.getElementById('doriMeshHost');
+    if(!canvas||!host)return;
+    var ctx=canvas.getContext('2d',{alpha:true,desynchronized:true});
+    var texture=new Image();
+    var W=361,H=397;
+    var COLS=22,ROWS=24;
+    var vertices=[],triangles=[];
+    var ready=false,failed=false,lastFrame=0,lastPose='',poseStarted=0;
+    var fpsInterval=1000/30;
+    var motionNames=['root','body','spine','neck','head','earL','earR','tail','jaw','eyeL','eyeR','frontFarUpper','frontFarLower','frontNearUpper','frontNearLower','hindFarUpper','hindFarLower','hindNearUpper','hindNearLower'];
+    var defs=[
+      {id:'root',a:[180,245],b:[180,280],r:330,base:.22},
+      {id:'body',a:[160,255],b:[300,285],r:155,base:.12},
+      {id:'spine',a:[150,265],b:[315,280],r:105,base:.04},
+      {id:'neck',a:[137,205],b:[176,238],r:76},
+      {id:'head',a:[117,128],b:[157,205],r:112},
+      {id:'earL',a:[91,20],b:[96,88],r:48},
+      {id:'earR',a:[237,56],b:[238,120],r:56},
+      {id:'tail',a:[326,194],b:[349,219],r:44},
+      {id:'jaw',a:[110,174],b:[118,201],r:38},
+      {id:'eyeL',a:[86,158],b:[86,158],r:23},
+      {id:'eyeR',a:[143,176],b:[143,176],r:23},
+      {id:'frontFarUpper',a:[64,288],b:[70,342],r:47},
+      {id:'frontFarLower',a:[70,342],b:[71,386],r:34},
+      {id:'frontNearUpper',a:[139,303],b:[140,354],r:48},
+      {id:'frontNearLower',a:[140,354],b:[142,393],r:35},
+      {id:'hindFarUpper',a:[251,314],b:[256,352],r:48},
+      {id:'hindFarLower',a:[256,352],b:[260,389],r:34},
+      {id:'hindNearUpper',a:[316,299],b:[320,355],r:48},
+      {id:'hindNearLower',a:[320,355],b:[323,392],r:34}
+    ];
+    var bone={};
+    function resetBones(){
+      bone={};
+      defs.forEach(function(d){bone[d.id]={angle:0,sx:1,sy:1,tx:0,ty:0};});
+    }
+    function segDistance(px,py,a,b){
+      var vx=b[0]-a[0],vy=b[1]-a[1],wx=px-a[0],wy=py-a[1];
+      var den=vx*vx+vy*vy;
+      var t=den?Math.max(0,Math.min(1,(wx*vx+wy*vy)/den)):0;
+      var dx=px-(a[0]+t*vx),dy=py-(a[1]+t*vy);
+      return Math.sqrt(dx*dx+dy*dy);
+    }
+    function makeVertices(){
+      vertices=[];
+      for(var y=0;y<=ROWS;y++){
+        for(var x=0;x<=COLS;x++){
+          var sx=W*x/COLS,sy=H*y/ROWS;
+          var weighted=defs.map(function(d){
+            var dist=segDistance(sx,sy,d.a,d.b);
+            var v=Math.exp(-.5*Math.pow(dist/d.r,2));
+            if(d.base)v=Math.max(v,d.base);
+            return {id:d.id,value:v};
+          }).sort(function(a,b){return b.value-a.value;}).slice(0,5);
+          var sum=weighted.reduce(function(n,w){return n+w.value;},0)||1;
+          vertices.push({sx:sx,sy:sy,weights:weighted.map(function(w){return {id:w.id,value:w.value/sum};})});
+        }
+      }
+      triangles=[];
+      for(var row=0;row<ROWS;row++){
+        for(var col=0;col<COLS;col++){
+          var i=row*(COLS+1)+col;
+          triangles.push([i,i+1,i+COLS+1],[i+1,i+COLS+2,i+COLS+1]);
+        }
+      }
+    }
+    function transformPoint(v){
+      var x=0,y=0;
+      v.weights.forEach(function(w){
+        var d=defs.find(function(bd){return bd.id===w.id;});
+        var b=bone[w.id]||{angle:0,sx:1,sy:1,tx:0,ty:0};
+        var dx=v.sx-d.a[0],dy=v.sy-d.a[1],c=Math.cos(b.angle),s=Math.sin(b.angle);
+        var tx=d.a[0]+c*dx*b.sx-s*dy*b.sy+b.tx;
+        var ty=d.a[1]+s*dx*b.sx+c*dy*b.sy+b.ty;
+        x+=tx*w.value;y+=ty*w.value;
+      });
+      return {x:x,y:y};
+    }
+    function drawTriangle(p0,p1,p2,q0,q1,q2){
+      var sx1=p1.x-p0.x,sy1=p1.y-p0.y,sx2=p2.x-p0.x,sy2=p2.y-p0.y;
+      var det=sx1*sy2-sx2*sy1;
+      if(Math.abs(det)<.0001)return;
+      var dx1=q1.x-q0.x,dy1=q1.y-q0.y,dx2=q2.x-q0.x,dy2=q2.y-q0.y;
+      var a=(dx1*sy2-dx2*sy1)/det,c=(dx2*sx1-dx1*sx2)/det;
+      var b=(dy1*sy2-dy2*sy1)/det,d=(dy2*sx1-dy1*sx2)/det;
+      var e=q0.x-a*p0.x-c*p0.y,f=q0.y-b*p0.x-d*p0.y;
+      ctx.save();
+      ctx.setTransform(1,0,0,1,0,0);
+      ctx.beginPath();ctx.moveTo(q0.x,q0.y);ctx.lineTo(q1.x,q1.y);ctx.lineTo(q2.x,q2.y);ctx.closePath();ctx.clip();
+      ctx.setTransform(a,b,c,d,e,f);ctx.drawImage(texture,0,0,W,H);ctx.restore();
+    }
+    function set(id,angle,sx,sy,tx,ty){
+      var b=bone[id];if(!b)return;
+      b.angle=angle||0;b.sx=sx==null?1:sx;b.sy=sy==null?1:sy;b.tx=tx||0;b.ty=ty||0;
+    }
+    function poseMotion(now){
+      var pose=room.getAttribute('data-pose')||'idle';
+      if(pose!==lastPose){lastPose=pose;poseStarted=now;}
+      var t=now/1000,age=(now-poseStarted)/1000,cycle=t*2*Math.PI;
+      resetBones();
+      var breath=Math.sin(t*1.35);
+      var blink=0,blinkPhase=t%4.7;
+      if(blinkPhase>4.46)blink=Math.sin((blinkPhase-4.46)/.24*Math.PI);
+      if(pose==='sleep'||pose==='doze'||pose==='dream')blink=1;
+      set('body',.012*breath,1+.003*breath,1+.017*breath);
+      set('chest',0,1,1);
+      set('neck',.018*Math.sin(t*.9),1,1);
+      set('head',.025*Math.sin(t*.8),1,1);
+      set('earL',.025*Math.sin(t*1.7),1,1);
+      set('earR',-.022*Math.sin(t*1.5),1,1);
+      set('tail',.12*Math.sin(t*2.4),1,1);
+      set('eyeL',0,1,1-.94*blink);
+      set('eyeR',0,1,1-.94*blink);
+      var gait=Math.sin(cycle*1.25);
+      if(pose==='sleep'||pose==='doze'||pose==='dream'||pose==='cuddle'||pose==='flop'){
+        var slow=Math.sin(t*.8);
+        set('body',.025*slow,1+.003*slow,1+.022*slow);
+        set('head',.035,1,1);
+        set('neck',.035,1,1);
+        set('tail',.025*Math.sin(t*.35),1,1);
+        set('frontFarUpper',-.12,1,1);set('frontFarLower',.22,1,1);
+        set('frontNearUpper',-.1,1,1);set('frontNearLower',.2,1,1);
+        set('hindFarUpper',.18,1,1);set('hindFarLower',-.12,1,1);
+        set('hindNearUpper',.14,1,1);set('hindNearLower',-.1,1,1);
+        if(pose==='dream'){var tw=Math.sin(t*6)*.07;set('frontNearLower',.2+tw,1,1);set('tail',tw*1.3,1,1);}
+      }else if(pose==='wake'){
+        var p=Math.max(0,Math.min(1,age/2.25)),ease=1-Math.pow(1-p,3);
+        blink=age<.58?1-ease:0;
+        set('eyeL',0,1,1-.92*blink);set('eyeR',0,1,1-.92*blink);
+        set('body',-.02*(1-ease),1+.015*(1-ease),1-.026*(1-ease));
+        set('neck',.07*(1-ease)-.015*ease,1,1);
+        set('head',.11*(1-ease)-.012*ease,1,1);
+        set('frontFarUpper',-.05-.12*Math.sin(p*Math.PI),1,1);
+        set('frontNearUpper',-.04-.14*Math.sin(p*Math.PI),1,1);
+        set('frontFarLower',.1+.11*Math.sin(p*Math.PI),1,1);
+        set('frontNearLower',.1+.12*Math.sin(p*Math.PI),1,1);
+        set('hindFarUpper',.06*(1-ease),1,1);set('hindNearUpper',.06*(1-ease),1,1);
+        set('tail',.18*Math.sin(t*5),1,1);
+        set('earL',-.13*Math.sin(t*3)*Math.exp(-age),1,1);set('earR',.1*Math.sin(t*3.2)*Math.exp(-age),1,1);
+      }else if(pose==='walk'||pose==='follow'||pose==='explore'||pose==='chase'){
+        var g=Math.sin(t*8.2);
+        set('body',.018*Math.sin(t*16),1,1-.013*Math.max(0,Math.sin(t*16)));
+        set('head',.025*Math.sin(t*8.2),1,1);
+        set('frontFarUpper',g*.24,1,1);set('frontNearUpper',-g*.24,1,1);
+        set('hindFarUpper',-g*.21,1,1);set('hindNearUpper',g*.21,1,1);
+        set('frontFarLower',Math.max(0,-g)*.28,1,1);set('frontNearLower',Math.max(0,g)*.28,1,1);
+        set('hindFarLower',Math.max(0,g)*.24,1,1);set('hindNearLower',Math.max(0,-g)*.24,1,1);
+        set('tail',.16*Math.sin(t*5),1,1);
+      }else if(pose==='trot'||pose==='gallop'||pose==='zoomies'){
+        var g2=Math.sin(t*(pose==='zoomies'?17:12));
+        set('body',.045*Math.sin(t*(pose==='zoomies'?34:24)),1+.012*Math.abs(g2),1-.04*Math.max(0,Math.sin(t*(pose==='zoomies'?34:24))));
+        set('frontFarUpper',g2*.42,1,1);set('frontNearUpper',-g2*.42,1,1);
+        set('hindFarUpper',-g2*.38,1,1);set('hindNearUpper',g2*.38,1,1);
+        set('frontFarLower',Math.max(0,-g2)*.48,1,1);set('frontNearLower',Math.max(0,g2)*.48,1,1);
+        set('hindFarLower',Math.max(0,g2)*.42,1,1);set('hindNearLower',Math.max(0,-g2)*.42,1,1);
+        set('tail',.32*Math.sin(t*9),1,1);
+        set('head',.04*Math.sin(t*8),1,1);
+      }else if(pose==='eat'||pose==='water'){
+        var chew=Math.sin(t*(pose==='water'?4:8));
+        set('neck',pose==='water'?.2:.13,1,1);
+        set('head',pose==='water'?.15:.1,1,1);
+        set('jaw',.13*Math.max(0,chew),1,1);
+        set('frontFarUpper',-.035,1,1);set('frontNearUpper',-.025,1,1);
+        set('frontFarLower',.09,1,1);set('frontNearLower',.1,1,1);
+        set('body',.008*Math.sin(t*3),1,1+.01*Math.sin(t*3));
+        set('tail',.035*Math.sin(t*2),1,1);
+      }else if(pose==='play'||pose==='pounce'||pose==='hop'||pose==='happy'||pose==='boop'){
+        var bounce=Math.sin(t*(pose==='boop'?5:7));
+        set('body',-.025*Math.max(0,bounce),1+.015*Math.max(0,bounce),1-.04*Math.max(0,bounce));
+        set('head',-.06*Math.max(0,bounce),1,1);
+        set('neck',-.045*Math.max(0,bounce),1,1);
+        set('frontFarUpper',-.22+.18*bounce,1,1);set('frontNearUpper',-.25-.18*bounce,1,1);
+        set('frontFarLower',.2+.22*Math.max(0,bounce),1,1);set('frontNearLower',.16+.24*Math.max(0,-bounce),1,1);
+        set('hindFarUpper',.12-.15*bounce,1,1);set('hindNearUpper',.14+.15*bounce,1,1);
+        set('tail',.35*Math.sin(t*7),1,1);
+        if(pose==='boop')set('head',.13+.03*Math.sin(t*5),1,1);
+      }else if(pose==='friendPlay'||pose==='reunion'||pose==='greet'||pose==='paw'){
+        var wag=Math.sin(t*10);
+        set('head',-.07+.04*Math.sin(t*2.5),1,1);set('neck',-.045,1,1);
+        set('frontNearUpper',-.35+.12*wag,1,1);set('frontNearLower',.3+.15*Math.max(0,wag),1,1);
+        set('frontFarUpper',-.16-.1*wag,1,1);set('frontFarLower',.18,1,1);
+        set('hindNearUpper',.05,1,1);set('hindFarUpper',.05,1,1);
+        set('tail',.42*wag,1,1);set('earL',.08*wag,1,1);set('earR',-.06*wag,1,1);
+        if(pose==='reunion'||pose==='happy')set('body',-.025*Math.abs(wag),1.012,.99);
+      }else if(pose==='dance'){
+        var beat=Math.sin(t*6);
+        set('body',.045*beat,1+.012*Math.abs(beat),1);
+        set('head',-.08*beat,1,1);set('neck',.045*beat,1,1);
+        set('frontFarUpper',-.25*beat,1,1);set('frontNearUpper',.25*beat,1,1);
+        set('frontFarLower',.2*Math.max(0,beat),1,1);set('frontNearLower',.2*Math.max(0,-beat),1,1);
+        set('hindFarUpper',.14*beat,1,1);set('hindNearUpper',-.14*beat,1,1);
+        set('tail',.48*Math.sin(t*11),1,1);
+        set('earL',.08*beat,1,1);set('earR',-.08*beat,1,1);
+      }else if(pose==='curious'||pose==='listen'||pose==='alert'||pose==='guard'||pose==='lookUp'){
+        var tilt=Math.sin(t*1.3);
+        set('head',pose==='lookUp'?.12:(-.12+.025*tilt),1,1);
+        set('neck',pose==='lookUp'?.08:(-.06+.02*tilt),1,1);
+        set('earL',.1+.08*Math.sin(t*1.6),1,1);set('earR',-.12-.05*Math.sin(t*1.4),1,1);
+        set('tail',.08*Math.sin(t*2),1,1);
+        set('eyeL',-.02,1,1-.65*blink);set('eyeR',.02,1,1-.65*blink);
+      }else if(pose==='stretch'){
+        var ext=(Math.sin(t*1.1)+1)/2;
+        set('body',-.04*ext,1+.05*ext,1-.02*ext);
+        set('head',.08*ext,1,1);set('neck',.06*ext,1,1);
+        set('frontFarUpper',-.38*ext,1,1);set('frontNearUpper',-.36*ext,1,1);
+        set('frontFarLower',.24*ext,1,1);set('frontNearLower',.24*ext,1,1);
+        set('hindFarUpper',.2*ext,1,1);set('hindNearUpper',.2*ext,1,1);
+        set('tail',.1*Math.sin(t*1.4),1,1);
+      }else if(pose==='sniff'||pose==='groom'||pose==='yawn'||pose==='sneeze'||pose==='shake'||pose==='scratch'){
+        var twitch=Math.sin(t*(pose==='scratch'?18:pose==='shake'?15:5));
+        set('head',pose==='yawn'?.08:(pose==='sniff'?.18:pose==='groom'?.1:.025*twitch),1,pose==='yawn'?1.04:1);
+        set('neck',pose==='sniff'?.16:pose==='groom'?.09:.04*twitch,1,1);
+        set('jaw',pose==='yawn'?.35:(pose==='sneeze'?.12*Math.max(0,twitch):pose==='sniff'?.05*Math.max(0,twitch):.08*Math.max(0,twitch)),1,1);
+        if(pose==='scratch'){set('hindNearUpper',-.4,1,1);set('hindNearLower',.65*Math.max(0,twitch),1,1);}
+        if(pose==='shake'){set('earL',.26*twitch,1,1);set('earR',-.24*twitch,1,1);set('tail',.12*twitch,1,1);}
+        if(pose==='sneeze'){set('body',-.025*Math.max(0,twitch),1,1);set('earL',.12*twitch,1,1);set('earR',-.12*twitch,1,1);}
+      }else if(pose==='sit'||pose==='beg'||pose==='wait'){
+        set('body',.035,1,1.02);set('head',pose==='beg'?.12:0,1,1);
+        set('hindFarUpper',.38,1,1);set('hindNearUpper',.4,1,1);
+        set('hindFarLower',-.35,1,1);set('hindNearLower',-.38,1,1);
+        if(pose==='beg'){set('frontFarUpper',-.3,1,1);set('frontNearUpper',-.28,1,1);}
+        set('tail',.13*Math.sin(t*3),1,1);
+      }else if(pose==='peek'||pose==='hide'||pose==='shy'){
+        set('body',.03*Math.sin(t*1.5),1,1);set('head',-.12+.03*Math.sin(t*1.5),1,1);
+        set('neck',-.08,1,1);set('frontNearUpper',-.1,1,1);
+      }
+      if(pose!=='sleep'&&pose!=='doze'&&pose!=='dream'){
+        var blinkPhase=t%4.7;
+        if(blinkPhase>4.48){var amt=Math.sin((blinkPhase-4.48)/.22*Math.PI);set('eyeL',0,1,1-.95*amt);set('eyeR',0,1,1-.95*amt);}
+      }else{set('eyeL',0,1,.03);set('eyeR',0,1,.03);}
+      var pts=vertices.map(transformPoint);
+      ctx.clearRect(0,0,W,H);
+      for(var i=0;i<triangles.length;i++){
+        var tri=triangles[i];drawTriangle(vertices[tri[0]],vertices[tri[1]],vertices[tri[2]],pts[tri[0]],pts[tri[1]],pts[tri[2]]);
+      }
+    }
+    function loop(now){
+      if(!ready||failed)return;
+      if(now-lastFrame>=fpsInterval){lastFrame=now;try{poseMotion(now);}catch(err){failed=true;console.error('Dori mesh rendering failed',err);if(fallback){fallback.hidden=false;canvas.hidden=true;}}}
+      requestAnimationFrame(loop);
+    }
+    function showImage(dataUrl){
+      texture.onload=function(){
+        ready=true;
+        if(fallback){fallback.src=dataUrl;fallback.hidden=true;}
+        makeVertices();resetBones();requestAnimationFrame(loop);
+      };
+      texture.onerror=function(){
+        failed=true;
+        canvas.hidden=true;
+        if(fallback){fallback.src=dataUrl;fallback.hidden=false;}
+        console.error('Dori official cutout could not decode.');
+      };
+      texture.src=dataUrl;
+    }
+    var urls=[1,2,3,4,5,6,7].map(function(n){return './assets/dori-life/reference-'+n+'.txt?v=20261113-official-cutout';});
+    Promise.all(urls.map(function(url){return fetch(url,{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('Dori image segment fetch failed: '+url);return r.text();});}))
+      .then(function(parts){
+        var base64=parts.join('').trim();
+        if(base64.length!==18988||base64.slice(0,4)!=='UklG')throw new Error('Official Dori cutout data integrity check failed');
+        showImage('data:image/webp;base64,'+base64);
+      }).catch(function(error){
+        failed=true;canvas.hidden=true;
+        if(fallback){
+          fallback.hidden=false;
+          fallback.alt='돌이 공식 캐릭터 이미지를 불러오지 못했습니다.';
+        }
+        console.error('Official Dori cutout unavailable; check the source assets.',error);
+      });
+  }
+  initDoriMeshRig();
+
+  function updateFurnitureInteraction(state){
+    var pose=state&&state.pose||'idle';
+    var map={
+      sleep:'bed',doze:'bed',dream:'bed',cuddle:'bed',flop:'bed',
+      eat:'food',water:'water',play:'toy',boop:'toy',pounce:'toy',hop:'toy',chase:'toy',
+      dance:'rug',stretch:'rug',walk:'roam',trot:'roam',gallop:'roam',zoomies:'roam',explore:'roam',circle:'roam',
+      friendPlay:'friend',reunion:'friend',follow:'friend',greet:'friend',paw:'friend',
+      peek:'sofa',hide:'sofa',shy:'sofa',sit:'sofa',beg:'sofa',wait:'sofa',groom:'sofa',
+      alert:'window',guard:'window',lookUp:'window',curious:'window',listen:'window',bird:'window',
+      sniff:'bone',scratch:'rug',yawn:'bed',wake:'bed'
+    };
+    room.dataset.interaction=map[pose]||'home';
+  }
+
   function update(){
     var now=new Date();var p=parts(now);var key=dayKey(now);
     var hour=Number(p.hour);var minute=Number(p.minute);var second=Number(p.second);
