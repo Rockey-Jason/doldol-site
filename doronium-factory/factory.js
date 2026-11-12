@@ -1172,11 +1172,16 @@ function pickupNearbyWorldDrop(){
     S.runtime.itemStacks.some(stack=>String(stack.runtimeID)===stackID)){
   rollback();toast("월드 드롭 소유권이 일치하지 않아 회수를 차단했습니다.","warn");return false;
  }
- const moved=transferCustody(S.ownershipLedger,{
-  transactionID:"WORLD_DROP_PICKUP:"+dropID,stackID,quantity,
-  toType:"PLAYER_INVENTORY",toID:"player",
-  expectedFromType:"WORLD_DROP",expectedFromID:dropID
- });
+ let moved=null;
+ try{
+  moved=transferCustody(S.ownershipLedger,{
+   transactionID:"WORLD_DROP_PICKUP:"+dropID,stackID,quantity,
+   toType:"PLAYER_INVENTORY",toID:"player",
+   expectedFromType:"WORLD_DROP",expectedFromID:dropID
+  });
+ }catch{
+  rollback();toast("월드 드롭 소유권 이전 중 오류가 발생해 회수를 취소했습니다.","warn");return false;
+ }
  if(!moved||moved.duplicate){rollback();toast("월드 드롭 소유권 이전이 거부되었습니다.","warn");return false}
  try{
   S.runtime.itemStacks.push({
