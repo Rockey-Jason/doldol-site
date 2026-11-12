@@ -163,6 +163,7 @@ export function advanceShipments(gameState,contractState,deltaSeconds){
        dropID,custodyStackID:String(stack.custodyStackID),itemID:String(stack.itemID),
        quantity:stack.quantity,quality:Number(stack.quality)||0,purity:Number(stack.purity)||0,
        synthetic:stack.synthetic===true,x:Number(gameState.player?.x)||0,y:Number(gameState.player?.y)||0,
+       layer:gameState.player?.layer==="mine"?"mine":"surface",mineLevel:gameState.player?.layer==="mine"?Math.max(1,Math.floor(Number(gameState.player.mineLevel)||1)):null,
        createdAt:Number(gameState.seconds)||0,source:"FAILED_SHIPMENT"
       });
      }
