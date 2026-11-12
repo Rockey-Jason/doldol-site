@@ -227,6 +227,26 @@ body::before {
     animation: pulseRing 3s ease-in-out infinite;
 }
 
+.profile-image-wrapper.has-profile-frame::before {
+    content: "";
+    position: absolute;
+    inset: -10px;
+    z-index: 0;
+    border-radius: 50%;
+    background: conic-gradient(from 18deg, #fff8df, var(--profile-frame-color, #9fdcff) 18%, #fff 35%, var(--profile-frame-color, #9fdcff) 55%, #fff8df 72%, var(--profile-frame-color, #9fdcff));
+    box-shadow: 0 0 12px var(--profile-frame-color, rgba(143,126,255,.45)), 0 0 28px color-mix(in srgb, var(--profile-frame-color, #9fdcff) 50%, transparent);
+}
+.profile-image-wrapper.has-profile-frame::after {
+    inset: -13px;
+    border-color: var(--profile-frame-color, rgba(143,126,255,.55));
+    box-shadow: 0 0 18px var(--profile-frame-color, rgba(143,126,255,.35));
+}
+.profile-image-wrapper.has-profile-frame #돌이사진 {
+    border-color: #fff !important;
+    box-shadow: 0 0 0 2px rgba(5,5,28,.9);
+}
+
+
 #돌이사진 {
     position: relative !important;
     top: auto !important;
@@ -2571,12 +2591,12 @@ body::after{
     <section class="site-background-settings dori-frame-settings" aria-labelledby="dori-frame-title">
         <div class="site-background-heading">
             <div><span class="section-eyebrow">DORI FRAME ARCHIVE</span><h3 id="dori-frame-title">🖼️ 획득한 돌이 프레임</h3>
-            <p>이벤트·라운지·돌이 패스·랜덤 박스 등에서 획득한 프레임을 한곳에서 확인하고 돌이에게 적용합니다.</p></div>
+            <p>이벤트·라운지·돌이 패스·랜덤 박스 등에서 획득한 프레임을 모아 내 프로필 사진 테두리로 적용합니다.</p></div>
             <span class="site-background-current" id="dori-frame-current">프레임 확인 중</span>
         </div>
         <div class="dori-frame-filters" id="dori-frame-filters" role="group" aria-label="프레임 출처 필터"></div>
         <div id="dori-frame-options" class="dori-frame-options" aria-live="polite"><div class="site-background-empty">획득한 프레임을 불러오는 중...</div></div>
-        <p class="site-background-hint">프레임은 프로필 사진이 아니라 돌이 캐릭터 주위에 적용됩니다. 획득한 프레임만 선택할 수 있습니다.</p>
+        <p class="site-background-hint">선택한 프레임은 프로필 카드의 사진 바깥 테두리에 적용됩니다. 돌이 캐릭터 꾸미기와는 별도로 저장됩니다.</p>
     </section>
     <div class="site-preferences-footer">
         <p id="site-pref-status" role="status" aria-live="polite">설정은 변경 즉시 자동 저장됩니다.</p>
@@ -2948,9 +2968,10 @@ let 꾸미기상태 = {
     cape: null,
     background: null,
     skin: null,
-    effect: null,
-    frame: null
+    effect: null
 };
+
+let 장착프로필프레임 = null;
 
 const 꾸미기카테고리정보 = {
     hat: { label: "모자", emoji: "🎩" },
@@ -2958,8 +2979,7 @@ const 꾸미기카테고리정보 = {
     clothes: { label: "옷", emoji: "👕" },
     cape: { label: "망토", emoji: "🦸" },
     skin: { label: "스킨", emoji: "🐶" },
-    effect: { label: "효과", emoji: "✨" },
-    frame: { label: "프로필 프레임", emoji: "🖼️" }
+    effect: { label: "효과", emoji: "✨" }
 };
 
 const 꾸미기저장테이블 = "dori_site_customization";
@@ -4232,15 +4252,22 @@ function 아이템꾸미기카테고리(item) {
     if (code.startsWith("CLOTHES_") || name.includes("옷") || type === "clothes") return "clothes";
     if (code.startsWith("SKIN_") || name.includes("스킨") || type === "skin") return "skin";
     if (code.startsWith("EFFECT_") || name.includes("효과") || type === "effect") return "effect";
-    if (code.startsWith("FRAME_") || name.includes("프레임") || name.includes("테두리") || type === "frame" || type === "profile_frame") return "frame";
 
     return null;
 }
 
 
+function 프로필프레임아이템인가(item) {
+    const code = String(item?.item_code || "").toUpperCase();
+    const name = String(item?.item_name || "");
+    const type = String(item?.item_type || "").toLowerCase();
+    return code.includes("FRAME") || name.includes("프레임") || name.includes("테두리") ||
+        type.includes("frame") || type === "profile_frame";
+}
+
 function 꾸미기이미지경로(item) {
     const code = String(item?.item_code || "").toUpperCase();
-    if (아이템꾸미기카테고리(item) === "frame") return 프레임이미지경로(item);
+    if (프로필프레임아이템인가(item)) return 프레임이미지경로(item);
     if (!/^[A-Z0-9_-]{2,80}$/.test(code)) return "assets/dori-items/FRAME_GENERIC.svg";
     return "assets/dori-items/" + code + ".svg";
 }
@@ -4304,15 +4331,6 @@ function 돌이꾸미기오버레이경로(item, category) {
     }
 
     const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 506 493" preserveAspectRatio="xMidYMid meet">' + art + '</svg>';
-    return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
-}
-
-function 돌이프레임오버레이경로(frame) {
-    const color = 돌이오버레이색상(frame);
-    const code = String(frame?.item_code || "").toUpperCase();
-    const special = /DORON|DORONIUM/.test(code) ? "#64f2ff" : color;
-    const outline = "M91 151 C101 99 112 48 139 39 C159 34 171 54 174 78 L176 102 Q199 92 225 101 Q240 93 263 87 L301 74 C333 71 350 103 350 137 Q352 171 329 202 L319 250 Q353 218 397 236 Q444 250 462 280 Q472 298 463 330 L455 424 Q454 461 428 461 L386 460 Q369 455 376 429 L390 392 Q374 381 354 398 Q326 417 299 414 L283 414 Q298 442 284 463 Q264 482 226 475 L202 466 Q194 457 207 437 L220 418 L166 406 L157 445 Q150 478 111 473 Q70 472 71 438 L81 365 Q79 349 65 348 L81 328 L68 310 L83 274 L81 172";
-    const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 506 493" preserveAspectRatio="xMidYMid meet"><defs><linearGradient id="frameGlow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff7ca"/><stop offset=".48" stop-color="' + special + '"/><stop offset="1" stop-color="' + color + '"/></linearGradient><filter id="glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><path d="' + outline + '" fill="none" stroke="#fff" stroke-opacity=".75" stroke-width="13" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/><path d="' + outline + '" fill="none" stroke="url(#frameGlow)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/><path d="M177 104 Q199 96 225 104 M351 243 Q395 225 431 258" fill="none" stroke="#fff" stroke-opacity=".9" stroke-width="4" stroke-linecap="round"/></svg>';
     return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
 }
 
@@ -4459,7 +4477,7 @@ function 아이템사이트배경인가(item) {
 function 아이템아이콘(item) {
     const category = 아이템꾸미기카테고리(item);
 
-    if (아이템사이트배경인가(item)) return "🖼️";
+    if (아이템사이트배경인가(item) || 프로필프레임아이템인가(item)) return "🖼️";
     if (category && 꾸미기카테고리정보[category]) {
         return 꾸미기카테고리정보[category].emoji;
     }
@@ -4475,6 +4493,7 @@ function 아이템아이콘(item) {
 function 아이템용도(item) {
     const category = 아이템꾸미기카테고리(item);
     if (아이템사이트배경인가(item)) return "돌이사이트 전체 배경";
+    if (프로필프레임아이템인가(item)) return "프로필 사진 테두리";
     if (category) return `꾸미기 · ${꾸미기카테고리정보[category].label}`;
 
     const type = String(item?.item_type ?? "").toLowerCase();
@@ -4485,6 +4504,7 @@ function 아이템용도(item) {
 
 
 function 장착아이템인가(item) {
+    if (프로필프레임아이템인가(item)) return 장착프로필프레임?.item_code === item.item_code;
     const category = 아이템꾸미기카테고리(item);
     return Boolean(
         category &&
@@ -4538,7 +4558,7 @@ function 꾸미기저장키(userId) {
 function 꾸미기상태정규화(data) {
     const result = {
         hat: null, glasses: null, clothes: null, cape: null,
-        background: null, skin: null, effect: null, frame: null
+        background: null, skin: null, effect: null
     };
 
     for (const category of Object.keys(result)) {
@@ -4550,9 +4570,9 @@ function 꾸미기상태정규화(data) {
         const code = value && typeof value === "object" ? value.item_code : value;
         if (!code) continue;
 
-        const owned = (category === "frame" ? 획득프레임목록 : 보유아이템목록).find(item =>
+        const owned = 보유아이템목록.find(item =>
             item.item_code === String(code) &&
-            (category === "background" ? 아이템사이트배경인가(item) : category === "frame" ? true : 아이템꾸미기카테고리(item) === category) &&
+            (category === "background" ? 아이템사이트배경인가(item) : 아이템꾸미기카테고리(item) === category) &&
             숫자정리(item.quantity) > 0
         );
         if (!owned) continue;
@@ -4566,6 +4586,39 @@ function 꾸미기상태정규화(data) {
     return result;
 }
 
+
+function 프로필프레임정규화(value) {
+    if (typeof value === "string" && value.trim().startsWith("{")) {
+        try { value = JSON.parse(value); } catch (_) {}
+    }
+    const code = value && typeof value === "object" ? value.item_code : value;
+    if (!code) return null;
+    const owned = 획득프레임목록.find(item => item.item_code === String(code));
+    if (!owned) return null;
+    return {
+        ...owned,
+        ...(value && typeof value === "object" ? value : {}),
+        item_code: String(code),
+        item_name: (value && typeof value === "object" ? value.item_name : null) || owned.item_name,
+        rarity: (value && typeof value === "object" ? value.rarity : null) || owned.rarity || "일반"
+    };
+}
+
+function 프로필프레임적용() {
+    const wrapper = 사진요소?.closest(".profile-image-wrapper");
+    if (!wrapper) return;
+    const frame = 장착프로필프레임;
+    wrapper.classList.toggle("has-profile-frame", Boolean(frame));
+    if (!frame) {
+        wrapper.style.removeProperty("--profile-frame-color");
+        delete wrapper.dataset.profileFrameCode;
+        delete wrapper.dataset.profileFrameRarity;
+        return;
+    }
+    wrapper.style.setProperty("--profile-frame-color", 돌이오버레이색상(frame));
+    wrapper.dataset.profileFrameCode = String(frame.item_code || "");
+    wrapper.dataset.profileFrameRarity = String(frame.rarity || "일반");
+}
 
 async function 꾸미기정보가져오기(user) {
     let dbLoaded = false;
@@ -4596,9 +4649,9 @@ async function 꾸미기정보가져오기(user) {
                 cape: data.equipped_cape,
                 background: data.equipped_background,
                 skin: data.equipped_skin,
-                effect: data.equipped_effect,
-                frame: data.equipped_frame
+                effect: data.equipped_effect
             });
+            장착프로필프레임 = 프로필프레임정규화(data.equipped_frame);
             dbLoaded = true;
         }
     }
@@ -4610,7 +4663,9 @@ async function 꾸미기정보가져오기(user) {
         try {
             const raw = localStorage.getItem(꾸미기저장키(user.id));
             if (raw) {
-                꾸미기상태 = 꾸미기상태정규화(JSON.parse(raw));
+                const saved = JSON.parse(raw);
+                꾸미기상태 = 꾸미기상태정규화(saved);
+                장착프로필프레임 = 프로필프레임정규화(saved?.frame);
             }
         }
         catch (error) {
@@ -4627,9 +4682,9 @@ function 보유아이템으로꾸미기상태검증() {
         const selected = 꾸미기상태[category];
         if (!selected) continue;
 
-        const owned = (category === "frame" ? 획득프레임목록 : 보유아이템목록).some(
+        const owned = 보유아이템목록.some(
             item =>
-                (category === "background" ? 아이템사이트배경인가(item) : category === "frame" ? true : 아이템꾸미기카테고리(item) === category) &&
+                (category === "background" ? 아이템사이트배경인가(item) : 아이템꾸미기카테고리(item) === category) &&
                 item.item_code === selected.item_code &&
                 숫자정리(item.quantity) > 0
         );
@@ -4654,7 +4709,7 @@ async function 꾸미기저장() {
         equipped_background: 꾸미기상태.background?.item_code ?? null,
         equipped_skin: 꾸미기상태.skin?.item_code ?? null,
         equipped_effect: 꾸미기상태.effect?.item_code ?? null,
-        equipped_frame: 꾸미기상태.frame
+        equipped_frame: 장착프로필프레임
     };
 
     let savedToDb = false;
@@ -4678,7 +4733,7 @@ async function 꾸미기저장() {
 
     localStorage.setItem(
         꾸미기저장키(userId),
-        JSON.stringify(꾸미기상태)
+        JSON.stringify({ ...꾸미기상태, frame: 장착프로필프레임 })
     );
 
     return savedToDb;
@@ -4694,8 +4749,7 @@ function 꾸미기상태초기화() {
         cape: null,
         background: 현재사이트배경,
         skin: null,
-        effect: null,
-        frame: null
+        effect: null
     };
 }
 
@@ -4766,10 +4820,10 @@ function 프레임설정화면표시() {
     const filterRoot = document.getElementById("dori-frame-filters");
     const current = document.getElementById("dori-frame-current");
     if (!root || !filterRoot) return;
-    const selected = 꾸미기상태.frame?.item_code || "";
+    const selected = 장착프로필프레임?.item_code || "";
     if (current) current.textContent = selected
-        ? (꾸미기상태.frame.item_name || "프레임 적용 중")
-        : "기본 프레임 사용 중";
+        ? (장착프로필프레임.item_name || "프로필 프레임 적용 중")
+        : "기본 프로필 테두리 사용 중";
 
     const filters = ["전체","이벤트","라운지","돌이 패스","시즌 보상","랜덤 박스","기타"];
     filterRoot.innerHTML = filters.map(value =>
@@ -4786,13 +4840,13 @@ function 프레임설정화면표시() {
             '<span class="dori-frame-art"><img src="' + image + '" alt="" loading="lazy"></span>' +
             '<span class="dori-frame-copy"><strong>' + HTML이스케이프(frame.item_name) + '</strong><small>' + HTML이스케이프(frame.source) + ' · ' + HTML이스케이프(frame.rarity) + '</small>' +
             (frame.season_key ? '<small>' + HTML이스케이프(frame.season_key) + (frame.tier ? ' · ' + Number(frame.tier) + '단계' : '') + '</small>' : '') +
-            (active ? '<em>✓ 돌이에게 적용 중</em>' : '') + '</span></button>';
+            (active ? '<em>✓ 프로필 사진에 적용 중</em>' : '') + '</span></button>';
     }).join("");
 
     root.innerHTML = (cards || '<div class="site-background-empty">' +
         (획득프레임목록.length ? '이 출처에서 획득한 프레임이 없습니다.' : '아직 확인 가능한 프레임이 없습니다. 프레임 보상은 획득 기록이 계정에 저장된 경우 이곳에 표시됩니다.') +
         '</div>') +
-        '<button type="button" class="site-background-default" data-frame-default>↺ 돌이 기본 프레임 사용</button>';
+        '<button type="button" class="site-background-default" data-frame-default>↺ 기본 프로필 테두리 사용</button>';
 
     filterRoot.querySelectorAll("[data-frame-source]").forEach(button => button.addEventListener("click", () => {
         프레임출처필터 = button.dataset.frameSource || "전체";
@@ -4802,8 +4856,8 @@ function 프레임설정화면표시() {
     root.querySelectorAll("[data-frame-code]").forEach(button => button.addEventListener("click", async () => {
         const frame = 획득프레임목록.find(value => value.item_code === button.dataset.frameCode);
         if (!frame || button.disabled) return;
-        const previous = 꾸미기상태.frame ? { ...꾸미기상태.frame } : null;
-        꾸미기상태.frame = {
+        const previous = 장착프로필프레임 ? { ...장착프로필프레임 } : null;
+        장착프로필프레임 = {
             item_code: frame.item_code,
             item_name: frame.item_name,
             rarity: frame.rarity,
@@ -4811,6 +4865,7 @@ function 프레임설정화면표시() {
             season_key: frame.season_key,
             tier: frame.tier
         };
+        프로필프레임적용();
         root.querySelectorAll("button").forEach(node => node.disabled = true);
         if (current) current.textContent = "프레임 저장 중...";
         try {
@@ -4818,9 +4873,10 @@ function 프레임설정화면표시() {
             if (!saved) throw new Error("프레임을 계정에 저장하지 못했습니다. 잠시 후 다시 시도해 주세요.");
             프레임설정화면표시();
             const status = document.getElementById("site-pref-status");
-            if (status) status.textContent = "✓ " + frame.item_name + " 프레임을 돌이에게 적용했습니다.";
+            if (status) status.textContent = "✓ " + frame.item_name + " 프레임을 프로필 사진 테두리에 적용했습니다.";
         } catch (error) {
-            꾸미기상태.frame = previous;
+            장착프로필프레임 = previous;
+            프로필프레임적용();
             console.error("프레임 적용 오류:", error);
             프레임설정화면표시();
             if (current) current.textContent = error?.message || "프레임 저장에 실패했습니다.";
@@ -4828,16 +4884,18 @@ function 프레임설정화면표시() {
     }));
 
     root.querySelector("[data-frame-default]")?.addEventListener("click", async () => {
-        const previous = 꾸미기상태.frame ? { ...꾸미기상태.frame } : null;
-        꾸미기상태.frame = null;
+        const previous = 장착프로필프레임 ? { ...장착프로필프레임 } : null;
+        장착프로필프레임 = null;
+        프로필프레임적용();
         try {
             const saved = await 꾸미기저장();
             if (!saved) throw new Error("기본 프레임 설정을 저장하지 못했습니다.");
             프레임설정화면표시();
             const status = document.getElementById("site-pref-status");
-            if (status) status.textContent = "✓ 돌이 기본 프레임으로 변경했습니다.";
+            if (status) status.textContent = "✓ 프로필 사진의 기본 테두리로 변경했습니다.";
         } catch (error) {
-            꾸미기상태.frame = previous;
+            장착프로필프레임 = previous;
+            프로필프레임적용();
             프레임설정화면표시();
             if (current) current.textContent = error?.message || "기본 프레임 변경에 실패했습니다.";
         }
@@ -4859,12 +4917,13 @@ function 내아이템화면표시() {
         ? "⚡ 현재 코인 보상 " + activeMultiplier.toLocaleString("ko-KR") + "배 · " +
           multiplierExpiry.toLocaleString("ko-KR", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" }) + "까지"
         : "현재 활성화된 코인 배율이 없습니다.";
-    const customCount = 보유아이템목록.filter(item => 아이템꾸미기카테고리(item)).length + 획득프레임목록.length;
+    const customCount = 보유아이템목록.filter(item => 아이템꾸미기카테고리(item)).length;
 
     const filtered = 보유아이템목록.filter(item => {
         if (아이템필터 === "전체") return true;
         if (아이템필터 === "꾸미기") return Boolean(아이템꾸미기카테고리(item));
         if (아이템필터 === "배경") return 아이템사이트배경인가(item);
+        if (아이템필터 === "frame") return 프로필프레임아이템인가(item);
         return 아이템꾸미기카테고리(item) === 아이템필터;
     });
 
@@ -4877,7 +4936,7 @@ function 내아이템화면표시() {
         ["cape", "망토"],
         ["배경", "배경"],
         ["skin", "스킨"],
-        ["frame", "프레임"],
+        ["frame", "프로필 프레임"],
         ["effect", "효과"]
     ];
 
@@ -4894,6 +4953,10 @@ function 내아이템화면표시() {
             if (아이템사이트배경인가(item)) {
                 action = '<button type="button" class="inventory-action-button" data-inventory-background="' +
                     HTML이스케이프(item.item_code) + '">🖼️ 사이트 배경 설정</button>';
+            } else if (프로필프레임아이템인가(item)) {
+                action = '<button type="button" class="inventory-action-button" data-inventory-frame' +
+                    (equipped ? ' disabled' : '') + '>' +
+                    (equipped ? '✓ 프로필 적용 중' : '🖼️ 프로필 테두리 설정') + '</button>';
             } else if (category) {
                 action = '<button type="button" class="inventory-action-button" data-inventory-equip="' +
                     HTML이스케이프(item.item_code) + '"' + (equipped ? " disabled" : "") + '>' +
@@ -4919,7 +4982,7 @@ function 내아이템화면표시() {
     상태내용요소.innerHTML = `
         <div class="inventory-notice">
             <strong>🎒 내 아이템 보관함</strong><br>
-            모자·안경·옷·망토·스킨·효과·프레임은 돌이 꾸미기에서 사용하고, 배경은 세부 설정에서 돌이사이트 전체 화면에 적용합니다.
+            모자·안경·옷·망토·스킨·효과는 돌이 꾸미기에, 프로필 프레임은 프로필 사진 테두리에, 배경은 돌이사이트 전체 화면에 적용합니다.
             배율 아이템은 사용하면 1시간 동안 코인 보상에 적용되며, 코인·경험치는 즉시 지급됩니다.
         </div>
         <div class="inventory-buff-status" aria-live="polite">${HTML이스케이프(multiplierStatus)}</div>
@@ -4968,6 +5031,13 @@ function 내아이템화면표시() {
         button.addEventListener("click", () => {
             상태탭변경("세부설정");
             requestAnimationFrame(() => document.getElementById("site-background-title")?.scrollIntoView({behavior:"smooth",block:"start"}));
+        });
+    });
+
+    상태내용요소.querySelectorAll("[data-inventory-frame]").forEach(button => {
+        button.addEventListener("click", () => {
+            상태탭변경("세부설정");
+            requestAnimationFrame(() => document.getElementById("dori-frame-title")?.scrollIntoView({behavior:"smooth",block:"start"}));
         });
     });
 
@@ -5047,14 +5117,14 @@ function 꾸미기화면표시() {
     const rankOf = value => rarityRank[String(value || "일반")] || 0;
     const search = String(꾸미기검색어 || "").trim().toLocaleLowerCase("ko-KR");
     const equippedCount = categories.filter(category => Boolean(꾸미기상태[category])).length;
-    const customItems = [...보유아이템목록.filter(item => 아이템꾸미기카테고리(item)), ...획득프레임목록];
+    const customItems = 보유아이템목록.filter(item => 아이템꾸미기카테고리(item));
     const filterButtons = ["전체", "장착 중", "미장착"].map(filter =>
         '<button type="button" data-custom-filter="' + filter + '" class="' + (꾸미기표시필터 === filter ? "active" : "") + '" aria-pressed="' + String(꾸미기표시필터 === filter) + '">' + filter + '</button>'
     ).join("");
 
     const categoryHTML = categories.map(category => {
         const info = 꾸미기카테고리정보[category];
-        const allItems = (category === "frame" ? 획득프레임목록 : 보유아이템목록.filter(item => 아이템꾸미기카테고리(item) === category && 숫자정리(item.quantity) > 0));
+        const allItems = 보유아이템목록.filter(item => 아이템꾸미기카테고리(item) === category && 숫자정리(item.quantity) > 0);
         const selectedCode = 꾸미기상태[category]?.item_code ?? "";
         const items = allItems.filter(item => {
             const isEquipped = selectedCode === item.item_code;
@@ -5090,12 +5160,10 @@ function 꾸미기화면표시() {
 
     const slots = [
         ["hat","🎩 모자"], ["glasses","👓 안경"], ["clothes","👕 옷"], ["cape","🦸 망토"],
-        ["skin","🐶 스킨"], ["effect","✨ 효과"], ["frame","🖼️ 프레임"]
+        ["skin","🐶 스킨"], ["effect","✨ 효과"]
     ].map(([key,label]) => '<div class="custom-preview-slot"><small>' + label + '</small><strong>' + HTML이스케이프(꾸미기상태[key]?.item_name || "기본 상태") + '</strong></div>').join("");
 
-    const 프레임코드 = String(꾸미기상태.frame?.item_code || "");
     const 스킨코드 = String(꾸미기상태.skin?.item_code || "");
-    const 프레임이미지 = 꾸미기상태.frame ? 돌이프레임오버레이경로(꾸미기상태.frame) : "";
     const layer = (category, className) => {
         const item = 꾸미기상태[category];
         return item
@@ -5107,12 +5175,12 @@ function 꾸미기화면표시() {
         '<div class="custom-studio-toolbar">' +
             '<input id="꾸미기검색" class="custom-studio-search" type="search" value="' + HTML이스케이프(꾸미기검색어) + '" placeholder="🔎 아이템 이름·등급 검색" aria-label="꾸미기 아이템 검색">' +
             '<div class="custom-studio-filters" role="group" aria-label="아이템 필터">' + filterButtons + '</div>' +
-            '<div class="custom-studio-toolbar-bottom"><span class="custom-studio-count">보유 꾸미기 ' + customItems.length + '종 · ' + equippedCount + '/7 슬롯 장착</span>' +
+            '<div class="custom-studio-toolbar-bottom"><span class="custom-studio-count">보유 꾸미기 ' + customItems.length + '종 · ' + equippedCount + '/6 슬롯 장착</span>' +
             '<div class="custom-studio-actions"><button type="button" class="custom-studio-action primary" id="꾸미기랜덤버튼">🎲 랜덤 코디</button><button type="button" class="custom-studio-action" id="꾸미기되돌리기" ' + (꾸미기이전상태 ? "" : "disabled") + '>↶ 실행 취소</button></div></div>' +
         '</div>' +
         '<div class="customization-layout">' +
             '<div class="custom-preview">' +
-                '<div class="custom-studio-intro"><div><div class="custom-studio-kicker">DORI CHARACTER STUDIO</div><div class="preview-title">🐶 진짜 돌이 꾸미기</div></div><span class="custom-studio-equipped-count">' + equippedCount + ' / 7 장착</span></div>' +
+                '<div class="custom-studio-intro"><div><div class="custom-studio-kicker">DORI CHARACTER STUDIO</div><div class="preview-title">🐶 진짜 돌이 꾸미기</div></div><span class="custom-studio-equipped-count">' + equippedCount + ' / 6 장착</span></div>' +
                 '<div class="preview-stage dori-character-stage">' +
                     (꾸미기상태.cape ? '<img class="dori-real-layer dori-cape-layer" src="' + 돌이꾸미기오버레이경로(꾸미기상태.cape, "cape") + '" alt="" draggable="false">' : '') +
                     '<img class="dori-real-base ' + (스킨코드 ? "skin-" + 스킨코드 : "") + '" src="assets/dori-character.svg" alt="웰시코기 봉제인형 돌이 캐릭터" draggable="false">' +
@@ -5120,7 +5188,6 @@ function 꾸미기화면표시() {
                     layer("hat","dori-hat-layer") +
                     layer("glasses","dori-glasses-layer") +
                     (꾸미기상태.effect ? '<img class="dori-real-layer dori-effect-layer" src="' + 돌이꾸미기오버레이경로(꾸미기상태.effect, "effect") + '" alt="" draggable="false">' : '') +
-                    (꾸미기상태.frame ? '<div class="dori-real-frame" data-frame-rarity="' + HTML이스케이프(꾸미기상태.frame.rarity || "일반") + '" data-frame-code="' + HTML이스케이프(프레임코드) + '"><img src="' + 프레임이미지 + '" alt="" draggable="false"></div>' : '') +
                 '</div>' +
                 '<div class="preview-subtitle">프로필 사진이 아닌 돌이 캐릭터에 아이템을 직접 겹쳐 입히는 미리보기입니다. 선택한 코디는 저장 후 계정에 적용됩니다.</div>' +
                 '<div class="custom-preview-slots">' + slots + '</div>' +
@@ -5274,6 +5341,7 @@ function 사용자화면업데이트(
 
     }
 
+    프로필프레임적용();
 
     이름요소.textContent =
         `${
