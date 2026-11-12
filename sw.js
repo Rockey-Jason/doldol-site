@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v45-dori-motion-20261112";;;;
+const CACHE_NAME = "doldol-site-pwa-v46-dori-activity-archive-20261112";;;;
 const SITE_SCOPE = new URL(self.registration.scope);
 const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
