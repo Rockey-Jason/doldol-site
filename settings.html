@@ -5141,7 +5141,7 @@ function 꾸미기화면표시() {
                 const selected = selectedCode === item.item_code;
                 const rarity = String(item.rarity || "일반");
                 return '<button type="button" class="custom-item-button ' + (selected ? "selected" : "") + '" data-custom-code="' + HTML이스케이프(item.item_code) + '" data-custom-category="' + category + '" aria-pressed="' + String(selected) + '" title="' + HTML이스케이프(item.item_name || item.item_code) + '">' +
-                    '<span class="custom-item-emoji dori-item-thumb"><img class="dori-item-thumb-base" src="assets/dori-character.svg" alt="" loading="lazy"><img class="dori-item-thumb-overlay" src="' + 돌이꾸미기오버레이경로(item, category) + '" alt="" loading="lazy"></span>' +
+                    '<span class="custom-item-emoji dori-item-thumb"><img class="dori-item-thumb-base" src="assets/dori-life/dori-official.webp" alt="" loading="lazy"><img class="dori-item-thumb-overlay" src="' + 돌이꾸미기오버레이경로(item, category) + '" alt="" loading="lazy"></span>' +
                     '<span class="custom-item-name">' + HTML이스케이프(item.item_name || "이름 없는 아이템") + '</span>' +
                     '<span class="custom-item-qty"><span class="custom-item-rarity" data-rarity="' + HTML이스케이프(rarity) + '">' + HTML이스케이프(rarity) + '</span><span>×' + 숫자정리(item.quantity).toLocaleString() + '</span></span>' +
                     (selected ? '<span class="custom-item-equipped">✓ 현재 장착 중 · 다시 누르면 해제</span>' : '') +
@@ -5180,7 +5180,7 @@ function 꾸미기화면표시() {
                 '<div class="custom-studio-intro"><div><div class="custom-studio-kicker">DORI CHARACTER STUDIO</div><div class="preview-title">🐶 진짜 돌이 꾸미기</div></div><span class="custom-studio-equipped-count">' + equippedCount + ' / 6 장착</span></div>' +
                 '<div class="preview-stage dori-character-stage">' +
                     (꾸미기상태.cape ? '<img class="dori-real-layer dori-cape-layer" src="' + 돌이꾸미기오버레이경로(꾸미기상태.cape, "cape") + '" alt="" draggable="false">' : '') +
-                    '<img class="dori-real-base ' + (스킨코드 ? "skin-" + 스킨코드 : "") + '" src="assets/dori-character.svg" alt="웰시코기 봉제인형 돌이 캐릭터" draggable="false">' +
+                    '<img class="dori-real-base ' + (스킨코드 ? "skin-" + 스킨코드 : "") + '" src="assets/dori-life/dori-official.webp" alt="웰시코기 봉제인형 돌이 캐릭터" draggable="false">' +
                     layer("clothes","dori-clothes-layer") +
                     layer("hat","dori-hat-layer") +
                     layer("glasses","dori-glasses-layer") +
