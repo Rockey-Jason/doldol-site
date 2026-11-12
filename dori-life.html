@@ -747,6 +747,133 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 @keyframes doriFlopSettle{0%,100%{transform:translateY(1px) scale(1,.99)}42%{transform:translateY(3px) scale(1.008,.98)}68%{transform:translateY(2px) scale(1.004,.985)}}
 @keyframes doriNeckSleep{0%,100%{transform:rotate(2deg) translateY(2px)}50%{transform:rotate(4deg) translateY(3px)}}
 
+
+/* DORI ACTIVITY ARCHIVE — premium behavior intelligence dashboard */
+.activity-archive{
+ position:relative;overflow:hidden;margin-top:18px;padding:clamp(18px,2.8vw,30px);
+ border:1px solid rgba(224,194,142,.2);border-radius:26px;
+ background:
+  radial-gradient(ellipse at 92% 0%,rgba(209,176,119,.12),transparent 36%),
+  radial-gradient(ellipse at 0% 24%,rgba(111,145,171,.11),transparent 38%),
+  linear-gradient(145deg,rgba(26,42,58,.97),rgba(14,24,37,.98) 62%,rgba(22,31,43,.98));
+ box-shadow:0 24px 70px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.08)
+}
+.activity-archive:before{content:"";position:absolute;inset:0 0 auto;height:1px;background:linear-gradient(90deg,transparent,rgba(240,211,161,.56),transparent);pointer-events:none}
+.activity-archive-head{position:relative;display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:4px 2px 18px;border-bottom:1px solid rgba(255,255,255,.075)}
+.history-eyebrow{margin-bottom:9px;color:#d8bd8b;font-size:9px;letter-spacing:.24em}
+.activity-archive-head h2{margin:0;color:#fff0d6;font-size:clamp(22px,3.4vw,32px);font-weight:400;letter-spacing:-.045em}
+.activity-archive-head p{max-width:620px;margin:9px 0 0;color:#aeb9c4;font-size:11px;line-height:1.75}
+.history-header-meta{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+.history-header-meta span{padding:5px 9px;border:1px solid rgba(232,208,164,.12);border-radius:999px;background:rgba(255,255,255,.025);color:#b9ad98;font-size:9px}
+.history-live-mark{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-width:86px;padding:12px 13px;border:1px solid rgba(226,197,148,.24);border-radius:15px;background:linear-gradient(145deg,rgba(222,191,139,.12),rgba(255,255,255,.025));color:#f1d8a8;font-size:9px;letter-spacing:.16em}
+.history-live-mark span{width:7px;height:7px;border-radius:50%;background:#d9bd86;box-shadow:0 0 0 4px rgba(217,189,134,.12),0 0 13px rgba(217,189,134,.6)}
+.history-live-mark small{color:#9c9b97;font-size:8px;letter-spacing:.04em}
+.history-range{display:flex;flex-wrap:wrap;gap:6px;margin:17px 0 13px;padding:5px;border:1px solid rgba(255,255,255,.065);border-radius:14px;background:rgba(4,12,21,.3);width:max-content;max-width:100%}
+.history-range button{padding:8px 14px;border:1px solid transparent;border-radius:10px;background:transparent;color:#9daab5;font-size:10px;cursor:pointer;transition:all .2s}
+.history-range button:hover{color:#f5e8d0;background:rgba(255,255,255,.055)}
+.history-range button.active,.history-range button[aria-pressed="true"]{border-color:rgba(226,198,146,.24);background:linear-gradient(140deg,rgba(216,185,129,.2),rgba(216,185,129,.08));color:#f5dba9;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.history-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.history-stat{position:relative;min-width:0;min-height:92px;padding:14px 15px 12px;border:1px solid rgba(255,255,255,.07);border-radius:15px;background:linear-gradient(145deg,rgba(255,255,255,.045),rgba(255,255,255,.012));overflow:hidden}
+.history-stat:after{content:"";position:absolute;right:-15px;top:-20px;width:64px;height:64px;border:1px solid rgba(226,197,148,.08);border-radius:50%;box-shadow:0 0 0 9px rgba(226,197,148,.025),0 0 0 19px rgba(226,197,148,.018)}
+.history-stat span{display:block;color:#aab6c0;font-size:9px;letter-spacing:.04em}
+.history-stat strong{display:block;position:relative;z-index:1;overflow:hidden;margin-top:9px;color:#f2dfbc;font-size:clamp(19px,2.8vw,27px);font-weight:400;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+.history-stat:nth-child(4) strong{font-size:clamp(14px,2vw,19px)}
+.history-stat small{display:block;margin-top:5px;color:#818f9a;font-size:8px}
+.history-chart-card,.history-heatmap-card,.history-category-card,.history-records-card{margin-top:12px;padding:16px;border:1px solid rgba(255,255,255,.07);border-radius:17px;background:linear-gradient(145deg,rgba(7,16,28,.48),rgba(9,17,27,.23));box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+.history-chart-head,.history-subhead,.history-records-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.history-chart-head>div strong,.history-subhead strong,.history-records-head>div strong{display:block;color:#f0e4d1;font-size:12px;font-weight:400;letter-spacing:.02em}
+.history-chart-head>div span,.history-subhead>div span,.history-subhead>span,.history-records-head>div span{display:block;margin-top:5px;color:#8e9aa4;font-size:9px}
+.history-chart-metrics{display:flex;align-items:center;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+#historyCompare{padding:5px 8px;border:1px solid rgba(226,198,146,.12);border-radius:99px;color:#b9c5ca;font-size:8px}
+.history-chart-total{color:#e4c68d;font-size:11px;font-variant-numeric:tabular-nums}
+.history-chart{width:100%;min-height:210px;margin-top:13px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin;scrollbar-color:rgba(220,193,143,.28) transparent}
+.history-chart svg{display:block;width:100%;min-width:560px;height:auto;overflow:visible}
+.history-chart .chart-grid-line{stroke:rgba(255,255,255,.075);stroke-width:1;stroke-dasharray:3 5}
+.history-chart .chart-y-label,.history-chart .chart-x-label{fill:#8e9aa4;font-family:HancomMalrangmalrang,'Jua',sans-serif;font-size:10px}
+.history-chart .chart-x-label{font-size:9px}
+.history-chart .chart-bar{stroke:rgba(255,255,255,.12);stroke-width:.6;transition:opacity .18s,filter .18s}
+.history-chart .chart-bar:hover{opacity:.82;filter:brightness(1.18)}
+.history-legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:8px}
+.history-legend span{display:inline-flex;align-items:center;gap:6px;color:#aab5be;font-size:9px}
+.history-legend i{width:7px;height:7px;border-radius:3px;box-shadow:0 0 9px currentColor}
+.history-heatmap-card .history-subhead{align-items:flex-end}
+.heatmap-current{color:#d9bd89;font-size:9px;white-space:nowrap}
+.history-heatmap{margin-top:15px;overflow-x:auto;padding:2px 0 8px;scrollbar-width:thin;scrollbar-color:rgba(220,193,143,.24) transparent}
+.history-heatmap-grid{display:flex;gap:4px;width:max-content;min-width:100%}
+.history-heatmap-week{display:grid;grid-template-rows:repeat(7,12px);gap:4px}
+.history-heatmap-weekday{display:grid;grid-template-rows:repeat(7,12px);gap:4px;margin-right:5px;color:#83919c;font-size:8px}
+.heatmap-day{width:12px;height:12px;padding:0;border:1px solid rgba(255,255,255,.05);border-radius:3px;background:rgba(255,255,255,.025);cursor:pointer;transition:transform .15s,border-color .15s,box-shadow .15s}
+.heatmap-day:hover{z-index:1;transform:scale(1.28);border-color:rgba(240,211,161,.65);box-shadow:0 0 10px rgba(240,211,161,.24)}
+.heatmap-day.selected{outline:1px solid #f0d39c;outline-offset:2px}
+.heat-level-0{background:rgba(255,255,255,.025)}
+.heat-level-1{background:rgba(127,166,174,.3)}
+.heat-level-2{background:rgba(122,166,171,.55)}
+.heat-level-3{background:rgba(191,168,120,.7)}
+.heat-level-4{background:linear-gradient(145deg,#efd49c,#c69e61);box-shadow:0 0 8px rgba(239,212,156,.2)}
+.heatmap-legend{display:flex;align-items:center;gap:5px;margin-top:5px;color:#8d9aa5;font-size:8px}
+.heatmap-legend i{display:inline-block;width:10px;height:10px;border-radius:3px}
+.heatmap-legend small{margin-left:auto;color:#808e99;font-size:8px}
+.history-category-layout{display:grid;grid-template-columns:180px minmax(0,1fr);gap:20px;align-items:center;margin-top:12px}
+.history-donut-wrap{display:grid;justify-items:center;gap:6px;color:#85939d;font-size:8px;letter-spacing:.16em}
+.history-donut{width:148px;height:148px;display:grid;place-items:center}
+.history-donut svg{width:100%;height:100%;overflow:visible}
+.history-donut .donut-track{fill:none;stroke:rgba(255,255,255,.075);stroke-width:12}
+.history-donut .donut-segment{fill:none;stroke-width:12;stroke-linecap:round;transition:stroke-dasharray .35s,stroke-dashoffset .35s}
+.history-donut .donut-number{fill:#f3e0bf;font-size:22px;font-family:HancomMalrangmalrang,'Jua',sans-serif}
+.history-donut .donut-label{fill:#9aa7b1;font-size:8px;font-family:HancomMalrangmalrang,'Jua',sans-serif}
+.history-categories{display:grid;gap:10px;min-width:0;margin-top:0}
+.history-category-row{display:grid;grid-template-columns:70px minmax(0,1fr) 52px;gap:9px;align-items:center}
+.history-category-name{color:#c0c6c8;font-size:9px}
+.history-category-track{height:6px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.07)}
+.history-category-fill{height:100%;border-radius:99px;transition:width .35s ease;box-shadow:0 0 9px rgba(255,255,255,.08)}
+.history-category-value{color:#dfd1b9;text-align:right;font-size:9px;font-variant-numeric:tabular-nums}
+.category-total{color:#c8b38f;font-size:9px;white-space:nowrap}
+.history-records-head{align-items:flex-end}
+.history-filter-label{display:flex;align-items:center;gap:7px;color:#a8b2b9;font-size:9px}
+.history-filter-label select{max-width:130px;padding:8px 25px 8px 10px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:#172637;color:#ece3d2;font:inherit;font-size:9px}
+.history-date-selection{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:8px 10px;border:1px solid rgba(224,194,142,.18);border-radius:10px;background:rgba(216,185,129,.07);color:#ead6b2;font-size:9px}
+.history-date-selection[hidden]{display:none}
+.history-date-selection button{border:0;background:transparent;color:#aebbc3;font:inherit;font-size:8px;text-decoration:underline;cursor:pointer}
+.history-records{display:grid;gap:7px;margin-top:13px}
+.history-entry{display:grid;grid-template-columns:70px 31px minmax(0,1fr) auto;gap:9px;align-items:center;padding:10px 11px;border:1px solid rgba(255,255,255,.055);border-radius:12px;background:rgba(255,255,255,.025);transition:background .18s,border-color .18s}
+.history-entry:hover{border-color:rgba(226,198,146,.16);background:rgba(255,255,255,.045)}
+.history-entry-date{color:#c3b18f;font-size:9px;font-variant-numeric:tabular-nums}
+.history-entry-icon{display:grid;place-items:center;width:30px;height:30px;border:1px solid rgba(255,255,255,.06);border-radius:10px;background:rgba(255,255,255,.05);font-size:15px}
+.history-entry-copy{min-width:0}
+.history-entry-copy strong{display:block;overflow:hidden;color:#eee5d8;font-size:10px;font-weight:400;text-overflow:ellipsis;white-space:nowrap}
+.history-entry-copy span{display:block;margin-top:3px;overflow:hidden;color:#8e9aa4;font-size:8px;text-overflow:ellipsis;white-space:nowrap}
+.history-entry-meta{color:#c1b08e;text-align:right;font-size:8px;white-space:nowrap}
+.history-entry-meta small{display:block;margin-top:3px;color:#87929b;font-size:8px}
+.history-more{display:block;width:100%;margin-top:10px;padding:11px;border:1px solid rgba(226,198,146,.18);border-radius:11px;background:linear-gradient(120deg,rgba(213,183,126,.12),rgba(213,183,126,.035));color:#e6d1a8;font:inherit;font-size:9px;cursor:pointer}
+.history-more:hover{background:rgba(213,183,126,.17)}
+.history-loading,.history-empty{padding:28px 12px;color:#94a0a8;text-align:center;font-size:10px}
+.history-disclaimer{margin:13px 2px 0;color:#7f8d98;font-size:8px;line-height:1.8}
+@media(max-width:720px){
+ .activity-archive{padding:16px;border-radius:20px}
+ .history-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .history-chart-card,.history-heatmap-card,.history-category-card,.history-records-card{padding:12px}
+ .history-category-layout{grid-template-columns:112px minmax(0,1fr);gap:10px}
+ .history-donut{width:106px;height:106px}
+ .history-category-row{grid-template-columns:60px minmax(0,1fr) 45px;gap:6px}
+ .history-category-name,.history-category-value{font-size:8px}
+ .history-heatmap-grid{min-width:max-content}
+ .history-entry{grid-template-columns:58px 28px minmax(0,1fr) auto;gap:6px;padding:8px}
+}
+@media(max-width:420px){
+ .activity-archive-head{gap:8px}
+ .history-live-mark{min-width:65px;padding:8px;font-size:8px}
+ .history-live-mark small{font-size:7px}
+ .history-range{width:100%}
+ .history-range button{flex:1;padding:8px 5px}
+ .history-chart-metrics{gap:5px}
+ .history-category-layout{grid-template-columns:90px minmax(0,1fr)}
+ .history-donut{width:86px;height:86px}
+ .history-entry-date{font-size:8px}
+ .history-entry-meta{font-size:8px}
+ .history-filter-label{gap:4px}
+ .history-filter-label select{max-width:105px}
+}
+
 </style>
 </head>
 <body>
@@ -1219,11 +1346,12 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   <section class="panel activity-archive" id="doriActivityArchive" aria-labelledby="activityArchiveTitle">
     <div class="activity-archive-head">
       <div>
-        <div class="history-eyebrow">DORI LIFE · ACTIVITY ARCHIVE</div>
-        <h2 id="activityArchiveTitle">돌이의 모든 활동 기록</h2>
-        <p>돌이가 하루 동안 어떤 장면을 보냈는지 누적 통계와 그래프로 살펴봐요.</p>
+        <div class="history-eyebrow">DORI LIFE / BEHAVIOR INTELLIGENCE</div>
+        <h2 id="activityArchiveTitle">돌이의 생활 분석 아카이브</h2>
+        <p>돌이의 하루를 장면, 행동 유형, 날짜별 활동 밀도로 살펴보는 개인 생활 리포트예요.</p>
+        <div class="history-header-meta"><span>기록 시작 · 2026.01.01</span><span id="historyRangeSummary">최근 30일 분석 중</span></div>
       </div>
-      <div class="history-live-mark"><span></span> HISTORY</div>
+      <div class="history-live-mark"><span></span><b>ARCHIVE</b><small>한국 표준시</small></div>
     </div>
 
     <div class="history-range" role="group" aria-label="활동 기록 기간 선택">
@@ -1234,16 +1362,18 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     </div>
 
     <div class="history-stats" aria-live="polite">
-      <article class="history-stat"><span>누적 장면 수</span><strong id="historyTotal">—</strong><small>선택한 기간</small></article>
-      <article class="history-stat"><span>활동한 날짜</span><strong id="historyDays">—</strong><small>하루에 하나 이상</small></article>
-      <article class="history-stat"><span>가장 자주 한 행동</span><strong id="historyTopAction">—</strong><small id="historyTopCount">최다 기록</small></article>
-      <article class="history-stat"><span>장면 예정 시간</span><strong id="historyDuration">—</strong><small>일정에 등록된 시간 합계</small></article>
+      <article class="history-stat" data-stat="total"><span>누적 장면 수</span><strong id="historyTotal">—</strong><small>선택한 기간</small></article>
+      <article class="history-stat" data-stat="days"><span>활동한 날짜</span><strong id="historyDays">—</strong><small>하루에 하나 이상</small></article>
+      <article class="history-stat" data-stat="average"><span>하루 평균 장면</span><strong id="historyAverage">—</strong><small>기간 내 일평균</small></article>
+      <article class="history-stat" data-stat="top"><span>가장 자주 한 행동</span><strong id="historyTopAction">—</strong><small id="historyTopCount">최다 기록</small></article>
+      <article class="history-stat" data-stat="friend"><span>친구와 함께한 장면</span><strong id="historyFriendCount">—</strong><small>식빵이와 교감</small></article>
+      <article class="history-stat" data-stat="duration"><span>장면 예정 시간</span><strong id="historyDuration">—</strong><small>일정에 등록된 시간 합계</small></article>
     </div>
 
     <div class="history-chart-card">
       <div class="history-chart-head">
         <div><strong>활동 변화 그래프</strong><span id="historyChartCaption">최근 30일 · 날짜별 장면 수</span></div>
-        <span class="history-chart-total" id="historyChartTotal">—</span>
+        <div class="history-chart-metrics"><span id="historyCompare">이전 기간과 비교 중</span><strong class="history-chart-total" id="historyChartTotal">—</strong></div>
       </div>
       <div id="historyChart" class="history-chart" role="img" aria-label="기간별 돌이의 활동 장면 수 그래프">
         <div class="history-loading">돌이의 활동 기록을 정리하고 있어요.</div>
@@ -1251,9 +1381,17 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       <div id="historyLegend" class="history-legend"></div>
     </div>
 
+
+    <div class="history-heatmap-card">
+      <div class="history-subhead"><div><strong>돌이의 활동 캘린더</strong><span>하루에 얼마나 다양한 장면이 있었는지 확인해요</span></div><span class="heatmap-current" id="historyHeatmapCaption">최근 30일</span></div>
+      <div id="historyHeatmap" class="history-heatmap" aria-label="날짜별 돌이 활동 히트맵">
+        <div class="history-loading">날짜별 활동을 모으고 있어요.</div>
+      </div>
+      <div class="heatmap-legend"><span>적음</span><i class="heat-level-0"></i><i class="heat-level-1"></i><i class="heat-level-2"></i><i class="heat-level-3"></i><i class="heat-level-4"></i><span>많음</span><small>날짜를 선택하면 해당 일자의 상세 내역을 볼 수 있어요.</small></div>
+    </div>
     <div class="history-category-card">
-      <div class="history-subhead"><strong>행동 유형별 분포</strong><span>전체 장면 중 비율</span></div>
-      <div id="historyCategories" class="history-categories"></div>
+      <div class="history-subhead"><div><strong>행동 유형별 분포</strong><span>선택한 기간의 행동 구성을 한눈에 확인해요</span></div><span class="category-total" id="historyCategoryTotal">—</span></div>
+      <div class="history-category-layout"><div class="history-donut-wrap"><div id="historyDonut" class="history-donut"></div><span>ACTIVITY MIX</span></div><div id="historyCategories" class="history-categories"></div></div>
     </div>
 
     <div class="history-records-card">
@@ -1267,9 +1405,11 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
             <option value="play">놀이</option>
             <option value="react">반응·교감</option>
             <option value="care">일상·돌봄</option>
+            <option value="social">친구·교감</option>
           </select>
         </label>
       </div>
+      <div id="historyDateSelection" class="history-date-selection" hidden><span id="historyDateLabel"></span><button type="button" id="historyDateClear">날짜 필터 해제</button></div>
       <div id="historyRecords" class="history-records" aria-live="polite">
         <div class="history-loading">활동 내역을 불러오는 중이에요.</div>
       </div>
