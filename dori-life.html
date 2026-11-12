@@ -2071,9 +2071,10 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var motionNames=['root','body','spine','neck','head','earL','earR','tail','jaw','eyeL','eyeR','frontFarUpper','frontFarLower','frontNearUpper','frontNearLower','hindFarUpper','hindFarLower','hindNearUpper','hindNearLower'];
     var defs=[
       {id:'root',a:[180,245],b:[180,280],r:330,base:.22},
-      {id:'body',a:[160,255],b:[300,285],r:155,base:.12},
-      {id:'spine',a:[150,265],b:[315,280],r:105,base:.04},
-      {id:'neck',a:[137,205],b:[176,238],r:76},
+      {id:'body',a:[160,255],b:[300,285],r:128,base:.10},
+      {id:'spine',a:[150,265],b:[315,280],r:82,base:.025},
+      {id:'chest',a:[145,220],b:[158,270],r:66},
+      {id:'neck',a:[137,205],b:[176,238],r:68},
       {id:'head',a:[117,128],b:[157,205],r:112},
       {id:'earL',a:[91,20],b:[96,88],r:48},
       {id:'earR',a:[237,56],b:[238,120],r:56},
@@ -2107,12 +2108,13 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       for(var y=0;y<=ROWS;y++){
         for(var x=0;x<=COLS;x++){
           var sx=W*x/COLS,sy=H*y/ROWS;
-          var weighted=defs.map(function(d){
+          // Root is global motion, not a competing skinning influence.
+          var weighted=defs.filter(function(d){return d.id!=='root';}).map(function(d){
             var dist=segDistance(sx,sy,d.a,d.b);
             var v=Math.exp(-.5*Math.pow(dist/d.r,2));
             if(d.base)v=Math.max(v,d.base);
             return {id:d.id,value:v};
-          }).sort(function(a,b){return b.value-a.value;}).slice(0,5);
+          }).sort(function(a,b){return b.value-a.value;}).slice(0,4);
           var sum=weighted.reduce(function(n,w){return n+w.value;},0)||1;
           vertices.push({sx:sx,sy:sy,weights:weighted.map(function(w){return {id:w.id,value:w.value/sum};})});
         }
@@ -2130,12 +2132,13 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       v.weights.forEach(function(w){
         var d=defs.find(function(bd){return bd.id===w.id;});
         var b=bone[w.id]||{angle:0,sx:1,sy:1,tx:0,ty:0};
-        var dx=v.sx-d.a[0],dy=v.sy-d.a[1],c=Math.cos(b.angle),s=Math.sin(b.angle);
-        var tx=d.a[0]+c*dx*b.sx-s*dy*b.sy+b.tx;
-        var ty=d.a[1]+s*dx*b.sx+c*dy*b.sy+b.ty;
+        var dx=v.sx-d.a[0],dy=v.sy-d.a[1],c=Math.cos(b.angle),sn=Math.sin(b.angle);
+        var tx=d.a[0]+c*dx*b.sx-sn*dy*b.sy+b.tx;
+        var ty=d.a[1]+sn*dx*b.sx+c*dy*b.sy+b.ty;
         x+=tx*w.value;y+=ty*w.value;
       });
-      return {x:x,y:y};
+      var root=bone.root||{tx:0,ty:0};
+      return {x:x+root.tx,y:y+root.ty};
     }
     function drawTriangle(p0,p1,p2,q0,q1,q2){
       var px0=p0.sx,py0=p0.sy,px1=p1.sx,py1=p1.sy,px2=p2.sx,py2=p2.sy;
@@ -2167,8 +2170,13 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       if(pose==='sleep'||pose==='doze'||pose==='dream')blink=1;
       // A clearly visible living idle loop, even when no scheduled activity is active.
       set('root',0,1,1,0,1.25*Math.sin(t*1.35));
-      set('body',.028*breath,1+.006*breath,1+.022*breath,0,.7*Math.sin(t*1.35));
-      set('chest',.012*Math.sin(t*1.35),1,1);
+      set('body',.035*breath,1+.012*breath,1+.035*breath,0,1.15*Math.sin(t*1.35));
+      set('spine',.018*breath,1+.008*breath,1+.018*breath);
+      set('chest',.025*breath,1+.012*breath,1+.035*breath);
+      set('frontFarUpper',.018*Math.sin(t*1.35),1,1);
+      set('frontNearUpper',-.016*Math.sin(t*1.35),1,1);
+      set('hindFarUpper',.012*Math.sin(t*1.35),1,1);
+      set('hindNearUpper',-.012*Math.sin(t*1.35),1,1);
       set('neck',.032*Math.sin(t*.9),1,1);
       set('head',.052*Math.sin(t*.8),1,1);
       set('earL',.045*Math.sin(t*1.7),1,1);
