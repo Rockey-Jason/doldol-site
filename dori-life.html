@@ -524,223 +524,65 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   .scene[data-pose="sleep"] .dori-eye-open{opacity:0}
 }
 
-/* DORI RIG v4 — single source texture and expanded alpha masks */
-#doriReferenceArtwork{display:none!important;opacity:0!important}
-#doriRigAssembly{opacity:0;visibility:hidden;pointer-events:none}
-#doriSprite.reference-art-ready> :not(#doriReferenceArtwork):not(#doriRigAssembly):not(#sleepZ):not(#yawnMarks){opacity:0!important;visibility:hidden!important;pointer-events:none!important}
-#doriSprite.reference-art-ready #doriRigAssembly{opacity:1!important;visibility:visible!important}
-.dori-bone{transform-box:fill-box;backface-visibility:hidden;transform-style:flat;filter:none}
-#doriRigCanvas{shape-rendering:geometricPrecision;isolation:isolate}
-#doriRigCanvas svg{overflow:visible}
-#doriRigCanvas use{image-rendering:auto}
-#doriRigBody{transform-origin:52% 80%}
-#doriBoneHead{transform-origin:52% 84%}
-#doriBoneTailRoot{transform-origin:83% 60%}
-#doriBoneTailTip{transform-origin:18% 52%}
-#doriBoneEarLeft{transform-origin:62% 92%}
-#doriBoneEarRight{transform-origin:36% 90%}
-#doriRigBlink{pointer-events:none;animation:doriRigNaturalBlink 5.8s linear infinite}
-.scene[data-pose="idle"] #doriBoneBody{animation:rigIdleBody 4.5s ease-in-out infinite}
-.scene[data-pose="idle"] #doriBoneHead{animation:rigIdleHead 7.2s ease-in-out infinite}
-.scene[data-pose="idle"] #doriBoneTailRoot{animation:rigIdleTail 2.4s ease-in-out infinite}
-.scene[data-pose="idle"] #doriBoneTailTip{animation:rigIdleTailTip 2.4s ease-in-out infinite}
-.scene[data-pose="idle"] #doriBoneEarLeft{animation:rigEarTwitchLeft 7s ease-in-out infinite}
-.scene[data-pose="idle"] #doriBoneEarRight{animation:rigEarTwitchRight 7.4s ease-in-out infinite}
-.scene[data-pose="walk"] #doriBoneBody,.scene[data-pose="trot"] #doriBoneBody{animation:rigWalkBody .62s ease-in-out infinite}
-.scene[data-pose="walk"] #doriBoneHead,.scene[data-pose="trot"] #doriBoneHead{animation:rigWalkHead .62s ease-in-out infinite}
-.scene[data-pose="walk"] #doriBoneTailRoot,.scene[data-pose="trot"] #doriBoneTailRoot{animation:rigWalkTail .62s ease-in-out infinite}
-.scene[data-pose="walk"] #doriBoneTailTip,.scene[data-pose="trot"] #doriBoneTailTip{animation:rigWalkTailTip .62s ease-in-out infinite}
-.scene[data-pose="walk"] #doriBoneForeFarUpper,.scene[data-pose="walk"] #doriBoneHindNearUpper{animation:rigGaitUpper .62s ease-in-out infinite}
-.scene[data-pose="walk"] #doriBoneForeNearUpper,.scene[data-pose="walk"] #doriBoneHindFarUpper{animation:rigGaitUpper .62s ease-in-out infinite reverse}
-.scene[data-pose="walk"] #doriBoneForeFarLower,.scene[data-pose="walk"] #doriBoneHindNearLower{animation:rigGaitLower .62s ease-in-out infinite}
-.scene[data-pose="walk"] #doriBoneForeNearLower,.scene[data-pose="walk"] #doriBoneHindFarLower{animation:rigGaitLower .62s ease-in-out infinite reverse}
-.scene[data-pose="walk"] #doriBoneForeFarPaw,.scene[data-pose="walk"] #doriBoneHindNearPaw{animation:rigGaitPaw .62s ease-in-out infinite}
-.scene[data-pose="walk"] #doriBoneForeNearPaw,.scene[data-pose="walk"] #doriBoneHindFarPaw{animation:rigGaitPaw .62s ease-in-out infinite reverse}
-.scene[data-pose="trot"] #doriBoneForeFarUpper,.scene[data-pose="trot"] #doriBoneHindNearUpper,.scene[data-pose="trot"] #doriBoneForeNearUpper,.scene[data-pose="trot"] #doriBoneHindFarUpper{animation-duration:.42s}
-.scene[data-pose="trot"] #doriBoneForeFarLower,.scene[data-pose="trot"] #doriBoneHindNearLower,.scene[data-pose="trot"] #doriBoneForeNearLower,.scene[data-pose="trot"] #doriBoneHindFarLower{animation-duration:.42s}
-.scene[data-pose="trot"] #doriBoneForeFarPaw,.scene[data-pose="trot"] #doriBoneHindNearPaw,.scene[data-pose="trot"] #doriBoneForeNearPaw,.scene[data-pose="trot"] #doriBoneHindFarPaw{animation-duration:.42s}
-.scene[data-pose="sleep"] #doriBoneBody{animation:rigSleepBreath 5.2s ease-in-out infinite}
-.scene[data-pose="sleep"] #doriBoneHead{animation:rigSleepHead 5.6s ease-in-out infinite}
-.scene[data-pose="sleep"] #doriBoneTailRoot{animation:rigSleepTail 5.4s ease-in-out infinite}
-.scene[data-pose="sleep"] #doriBoneTailTip{animation:rigSleepTailTip 5.4s ease-in-out infinite}
-.scene[data-pose="sleep"] #doriBoneEarLeft,.scene[data-pose="sleep"] #doriBoneEarRight{animation:rigSleepEars 5.4s ease-in-out infinite}
-.scene[data-pose="eat"] #doriBoneBody{animation:rigEatBody 1.05s ease-in-out infinite}
-.scene[data-pose="eat"] #doriBoneHead{animation:rigEatHead .82s ease-in-out infinite}
-.scene[data-pose="eat"] #doriBoneForeNearUpper{animation:rigEatFore .96s ease-in-out infinite}
-.scene[data-pose="eat"] #doriBoneForeNearLower{animation:rigEatForeLower .96s ease-in-out infinite}
-.scene[data-pose="eat"] #doriBoneTailRoot{animation:rigHappyTail 1.1s ease-in-out infinite}
-.scene[data-pose="eat"] #doriBoneTailTip{animation:rigHappyTailTip 1.1s ease-in-out infinite}
-.scene[data-pose="play"] #doriBoneBody,.scene[data-pose="zoomies"] #doriBoneBody{animation:rigPlayBody 1.12s ease-in-out infinite}
-.scene[data-pose="play"] #doriBoneHead,.scene[data-pose="zoomies"] #doriBoneHead{animation:rigPlayHead 1.12s ease-in-out infinite}
-.scene[data-pose="play"] #doriBoneForeFarUpper,.scene[data-pose="play"] #doriBoneForeNearUpper{animation:rigPlayFore .56s ease-in-out infinite}
-.scene[data-pose="play"] #doriBoneForeFarLower,.scene[data-pose="play"] #doriBoneForeNearLower{animation:rigPlayForeLower .56s ease-in-out infinite}
-.scene[data-pose="play"] #doriBoneHindFarLower,.scene[data-pose="play"] #doriBoneHindNearLower{animation:rigPlayHind .56s ease-in-out infinite}
-.scene[data-pose="play"] #doriBoneTailRoot,.scene[data-pose="zoomies"] #doriBoneTailRoot{animation:rigFastTail .3s ease-in-out infinite}
-.scene[data-pose="play"] #doriBoneTailTip,.scene[data-pose="zoomies"] #doriBoneTailTip{animation:rigFastTailTip .3s ease-in-out infinite}
-.scene[data-pose="play"] #doriBoneEarLeft,.scene[data-pose="play"] #doriBoneEarRight{animation:rigBouncyEars .48s ease-in-out infinite alternate}
-.scene[data-pose="dance"] #doriBoneBody{animation:rigDanceBody .84s ease-in-out infinite alternate}
-.scene[data-pose="dance"] #doriBoneHead{animation:rigDanceHead .84s ease-in-out infinite alternate}
-.scene[data-pose="dance"] #doriBoneTailRoot{animation:rigFastTail .28s ease-in-out infinite}
-.scene[data-pose="dance"] #doriBoneTailTip{animation:rigFastTailTip .28s ease-in-out infinite}
-.scene[data-pose="dance"] #doriBoneForeFarUpper,.scene[data-pose="dance"] #doriBoneForeNearUpper{animation:rigDanceFore .84s ease-in-out infinite alternate}
-.scene[data-pose="dance"] #doriBoneForeFarLower,.scene[data-pose="dance"] #doriBoneForeNearLower{animation:rigDanceForeLower .84s ease-in-out infinite alternate}
-.scene[data-pose="dance"] #doriBoneEarLeft,.scene[data-pose="dance"] #doriBoneEarRight{animation:rigBouncyEars .5s ease-in-out infinite alternate}
-.scene[data-pose="alert"] #doriBoneBody,.scene[data-pose="sneeze"] #doriBoneBody{animation:rigStartleBody .58s ease-out 2}
-.scene[data-pose="alert"] #doriBoneHead{animation:rigAlertHead .82s ease-in-out 2}
-.scene[data-pose="sneeze"] #doriBoneHead{animation:rigSneezeHead .85s ease-in-out 2}
-.scene[data-pose="alert"] #doriBoneEarLeft,.scene[data-pose="alert"] #doriBoneEarRight{animation:rigPerkEars .42s ease-out 2}
-.scene[data-pose="sneeze"] #doriBoneEarLeft,.scene[data-pose="sneeze"] #doriBoneEarRight{animation:rigPerkEars .42s ease-out 2 reverse}
-.scene[data-pose="alert"] #doriBoneTailRoot,.scene[data-pose="greet"] #doriBoneTailRoot{animation:rigAlertTail .4s ease-in-out infinite}
-.scene[data-pose="alert"] #doriBoneTailTip,.scene[data-pose="greet"] #doriBoneTailTip{animation:rigAlertTailTip .4s ease-in-out infinite}
-.scene[data-pose="stretch"] #doriBoneBody{animation:rigStretchBody 2.8s ease-in-out infinite}
-.scene[data-pose="stretch"] #doriBoneHead{animation:rigStretchHead 2.8s ease-in-out infinite}
-.scene[data-pose="stretch"] #doriBoneForeFarUpper,.scene[data-pose="stretch"] #doriBoneForeNearUpper{animation:rigStretchLeg 2.8s ease-in-out infinite}
-.scene[data-pose="stretch"] #doriBoneForeFarLower,.scene[data-pose="stretch"] #doriBoneForeNearLower{animation:rigStretchLower 2.8s ease-in-out infinite}
-.scene[data-pose="stretch"] #doriBoneTailRoot{animation:rigHappyTail 2.8s ease-in-out infinite}
-.scene[data-pose="stretch"] #doriBoneTailTip{animation:rigHappyTailTip 2.8s ease-in-out infinite}
-.scene[data-pose="sniff"] #doriBoneBody{animation:rigSniffBody 1.8s ease-in-out infinite}
-.scene[data-pose="sniff"] #doriBoneHead{animation:rigSniffHead 1.2s ease-in-out infinite}
-.scene[data-pose="sniff"] #doriBoneEarLeft,.scene[data-pose="sniff"] #doriBoneEarRight{animation:rigSniffEars 1.3s ease-in-out infinite}
-.scene[data-pose="sniff"] #doriBoneTailRoot{animation:rigSoftTail 2.4s ease-in-out infinite}
-.scene[data-pose="sniff"] #doriBoneTailTip{animation:rigSoftTailTip 2.4s ease-in-out infinite}
-.scene[data-pose="groom"] #doriBoneHead{animation:rigGroomHead 1.25s ease-in-out infinite}
-.scene[data-pose="groom"] #doriBoneForeNearUpper{animation:rigGroomUpper 1.25s ease-in-out infinite}
-.scene[data-pose="groom"] #doriBoneForeNearLower{animation:rigGroomLower 1.25s ease-in-out infinite}
-.scene[data-pose="yawn"] #doriBoneHead{animation:rigYawnHead 2.8s ease-in-out infinite}
-.scene[data-pose="yawn"] #doriBoneBody{animation:rigYawnBody 2.8s ease-in-out infinite}
-.scene[data-pose="curious"] #doriBoneHead,.scene[data-pose="listen"] #doriBoneHead{animation:rigCuriousHead 2.8s ease-in-out infinite}
-.scene[data-pose="curious"] #doriBoneEarLeft,.scene[data-pose="listen"] #doriBoneEarLeft{animation:rigListenEarLeft 1.8s ease-in-out infinite}
-.scene[data-pose="curious"] #doriBoneEarRight,.scene[data-pose="listen"] #doriBoneEarRight{animation:rigListenEarRight 1.8s ease-in-out infinite}
-.scene[data-pose="greet"] #doriBoneHead{animation:rigGreetHead 1.4s ease-in-out infinite}
-.scene[data-pose="greet"] #doriBoneForeNearUpper{animation:rigGreetUpper 1.4s ease-in-out infinite}
-.scene[data-pose="greet"] #doriBoneForeNearLower{animation:rigGreetLower 1.4s ease-in-out infinite}
-.scene[data-pose="scratch"] #doriBoneBody{animation:rigScratchBody 1.1s ease-in-out infinite}
-.scene[data-pose="scratch"] #doriBoneHindNearUpper{animation:rigScratchUpper 1.1s ease-in-out infinite}
-.scene[data-pose="scratch"] #doriBoneHindNearLower{animation:rigScratchLower .22s ease-in-out infinite}
-.scene[data-pose="scratch"] #doriBoneHindNearPaw{animation:rigScratchPaw .22s ease-in-out infinite}
-.scene[data-pose="sit"] #doriBoneBody{animation:rigSitBody 2s ease-in-out infinite}
-.scene[data-pose="sit"] #doriBoneHead{animation:rigSitHead 3.6s ease-in-out infinite}
-.scene[data-pose="sit"] #doriBoneHindNearUpper,.scene[data-pose="sit"] #doriBoneHindFarUpper{animation:rigSitHind 2s ease-in-out infinite}
-.scene[data-pose="cuddle"] #doriBoneBody{animation:rigCuddleBody 4s ease-in-out infinite}
-.scene[data-pose="cuddle"] #doriBoneHead{animation:rigCuddleHead 4s ease-in-out infinite}
-.scene[data-pose="cuddle"] #doriBoneTailRoot{animation:rigSleepTail 4s ease-in-out infinite}
-.scene[data-pose="cuddle"] #doriBoneTailTip{animation:rigSleepTailTip 4s ease-in-out infinite}
-.scene[data-pose="shake"] #doriBoneBody{animation:rigShakeBody .42s ease-in-out 3}
-.scene[data-pose="shake"] #doriBoneHead{animation:rigShakeHead .42s ease-in-out 3}
-.scene[data-pose="shake"] #doriBoneEarLeft,.scene[data-pose="shake"] #doriBoneEarRight{animation:rigShakeEars .42s ease-in-out 3}
-.scene[data-pose="shake"] #doriBoneTailRoot{animation:rigFastTail .26s ease-in-out 4}
-.scene[data-pose="shake"] #doriBoneTailTip{animation:rigFastTailTip .26s ease-in-out 4}
-.scene[data-pose="paw"] #doriBoneForeNearUpper{animation:rigGreetUpper 1.4s ease-in-out infinite}
-.scene[data-pose="paw"] #doriBoneForeNearLower{animation:rigGreetLower 1.4s ease-in-out infinite}
-.scene[data-pose="paw"] #doriBoneHead{animation:rigCuriousHead 3s ease-in-out infinite}
-.scene[data-pose="paw"] #doriBoneTailRoot{animation:rigHappyTail 1s ease-in-out infinite}
-.scene[data-pose="paw"] #doriBoneTailTip{animation:rigHappyTailTip 1s ease-in-out infinite}
-@keyframes doriRigNaturalBlink{0%,43%,45%,88%,90%,100%{opacity:0}44%,44.6%,89%,89.6%{opacity:1}}
-@keyframes rigIdleBody{0%,100%{transform:translateY(0) scale(1,1)}30%{transform:translateY(-.45px) scale(1.003,1.005)}58%{transform:translateY(-1.1px) scale(1.008,1.012)}82%{transform:translateY(-.3px) scale(1.002,1.003)}}
-@keyframes rigIdleHead{0%,100%{transform:rotate(0)}27%{transform:rotate(-.8deg) translateY(-.3px)}52%{transform:rotate(.5deg) translateY(-.6px)}78%{transform:rotate(-.3deg)}}
-@keyframes rigIdleTail{0%,100%{transform:rotate(-4deg)}28%{transform:rotate(2deg)}55%{transform:rotate(9deg)}82%{transform:rotate(1deg)}}
-@keyframes rigIdleTailTip{0%,100%{transform:rotate(-5deg)}48%{transform:rotate(11deg)}}
-@keyframes rigEarTwitchLeft{0%,88%,100%{transform:rotate(0)}91%{transform:rotate(-3deg)}95%{transform:rotate(1.2deg)}}
-@keyframes rigEarTwitchRight{0%,91%,100%{transform:rotate(0)}94%{transform:rotate(3deg)}97%{transform:rotate(-1deg)}}
-@keyframes rigWalkBody{0%,100%{transform:translateY(0) scale(1,1)}23%{transform:translateY(-1.2px) scale(1.004,.997)}50%{transform:translateY(0) scale(1.008,.991)}76%{transform:translateY(-.8px) scale(1.002,1.003)}}
-@keyframes rigWalkHead{0%,100%{transform:rotate(0)}25%{transform:rotate(1deg) translateY(-.4px)}50%{transform:rotate(-.6deg) translateY(-.9px)}75%{transform:rotate(.3deg)}}
-@keyframes rigWalkTail{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(13deg)}}
-@keyframes rigWalkTailTip{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(15deg)}}
-@keyframes rigGaitUpper{0%,100%{transform:rotate(7deg) translateY(1px)}25%{transform:rotate(2deg)}50%{transform:rotate(-9deg) translateY(-1px)}75%{transform:rotate(-3deg)}}
-@keyframes rigGaitLower{0%,100%{transform:rotate(-7deg)}27%{transform:rotate(4deg)}52%{transform:rotate(12deg) translateY(-1px)}78%{transform:rotate(2deg)}}
-@keyframes rigGaitPaw{0%,100%{transform:rotate(2deg)}25%{transform:rotate(-4deg)}50%{transform:rotate(7deg)}75%{transform:rotate(-2deg)}}
-@keyframes rigSleepBreath{0%,100%{transform:translateY(0) scale(1,1)}27%{transform:translateY(-.5px) scale(1.004,1.008)}56%{transform:translateY(-1.3px) scale(1.01,1.016)}80%{transform:translateY(-.2px) scale(1.002,1.003)}}
-@keyframes rigSleepHead{0%,100%{transform:rotate(2deg) translateY(2px)}50%{transform:rotate(3.6deg) translateY(3px)}}
-@keyframes rigSleepTail{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
-@keyframes rigSleepTailTip{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(3deg)}}
-@keyframes rigSleepEars{0%,100%{transform:rotate(2deg)}50%{transform:rotate(4deg)}}
-@keyframes rigEatBody{0%,100%{transform:translateY(0) scaleY(1)}50%{transform:translateY(1px) scaleY(.994)}}
-@keyframes rigEatHead{0%,100%{transform:rotate(0) translateY(0)}32%{transform:rotate(2.5deg) translateY(2px)}58%{transform:rotate(1deg) translateY(3px)}82%{transform:rotate(-.5deg) translateY(1px)}}
-@keyframes rigEatFore{0%,100%{transform:rotate(0)}50%{transform:rotate(-2deg)}}
-@keyframes rigEatForeLower{0%,100%{transform:rotate(0)}50%{transform:rotate(4deg)}}
-@keyframes rigHappyTail{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(14deg)}}
-@keyframes rigHappyTailTip{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(16deg)}}
-@keyframes rigPlayBody{0%,100%{transform:translateY(0) scale(1,1)}18%{transform:translateY(1px) scale(1.024,.965)}41%{transform:translateY(-5px) scale(.986,1.03)}61%{transform:translateY(-7px) scale(.992,1.02)}80%{transform:translateY(-1px) scale(1.014,.985)}}
-@keyframes rigPlayHead{0%,100%{transform:rotate(0)}32%{transform:rotate(-2deg) translateY(-2px)}58%{transform:rotate(2deg) translateY(-1px)}82%{transform:rotate(-.5deg)}}
-@keyframes rigPlayFore{0%,100%{transform:rotate(0)}50%{transform:rotate(-12deg) translateY(-3px)}}
-@keyframes rigPlayForeLower{0%,100%{transform:rotate(0)}50%{transform:rotate(16deg) translateY(-2px)}}
-@keyframes rigPlayHind{0%,100%{transform:rotate(2deg)}50%{transform:rotate(-12deg)}}
-@keyframes rigFastTail{0%,100%{transform:rotate(-16deg)}50%{transform:rotate(20deg)}}
-@keyframes rigFastTailTip{0%,100%{transform:rotate(-13deg)}50%{transform:rotate(24deg)}}
-@keyframes rigBouncyEars{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(6deg)}}
-@keyframes rigDanceBody{0%{transform:rotate(-2deg) translateY(0) scaleY(1)}50%{transform:rotate(2deg) translateY(-3px) scaleY(1.022)}100%{transform:rotate(-1deg) translateY(0) scaleY(.99)}}
-@keyframes rigDanceHead{0%{transform:rotate(5deg)}50%{transform:rotate(-5deg) translateY(-2px)}100%{transform:rotate(4deg)}}
-@keyframes rigDanceFore{0%{transform:rotate(-10deg)}100%{transform:rotate(10deg)}}
-@keyframes rigDanceForeLower{0%{transform:rotate(8deg)}100%{transform:rotate(-8deg)}}
-@keyframes rigStartleBody{0%,100%{transform:translateY(0) scale(1)}20%{transform:translateY(-2px) scale(1.012)}45%{transform:translateY(1px) scale(.995)}75%{transform:translateY(-.5px)}}
-@keyframes rigAlertHead{0%,100%{transform:rotate(0)}28%{transform:rotate(-4deg)}56%{transform:rotate(3deg)}82%{transform:rotate(0)}}
-@keyframes rigSneezeHead{0%,100%{transform:rotate(0)}20%{transform:rotate(3deg) translateY(1px)}42%{transform:rotate(-4deg) translateY(3px)}68%{transform:rotate(1deg)}}
-@keyframes rigPerkEars{0%,100%{transform:rotate(0)}40%{transform:rotate(-7deg)}70%{transform:rotate(2deg)}}
-@keyframes rigAlertTail{0%,100%{transform:rotate(0)}33%{transform:rotate(-12deg)}66%{transform:rotate(17deg)}}
-@keyframes rigAlertTailTip{0%,100%{transform:rotate(0)}50%{transform:rotate(20deg)}}
-@keyframes rigStretchBody{0%,100%{transform:scale(1,1) translateY(0)}25%{transform:scale(1.012,.992) translateY(1px)}55%{transform:scale(1.03,.965) translateY(2px)}78%{transform:scale(1.008,1.01) translateY(-1px)}}
-@keyframes rigStretchHead{0%,100%{transform:rotate(0)}42%{transform:rotate(5deg) translateY(4px)}65%{transform:rotate(2deg) translateY(2px)}}
-@keyframes rigStretchLeg{0%,100%{transform:rotate(0)}50%{transform:rotate(-8deg)}}
-@keyframes rigStretchLower{0%,100%{transform:rotate(0)}55%{transform:rotate(8deg)}}
-@keyframes rigSniffBody{0%,100%{transform:translateY(0) scaleY(1)}45%{transform:translateY(1px) scaleY(.993)}72%{transform:translateY(0) scaleY(1.004)}}
-@keyframes rigSniffHead{0%,100%{transform:rotate(0) translateY(0)}40%{transform:rotate(5deg) translateY(3px)}72%{transform:rotate(2deg) translateY(1px)}}
-@keyframes rigSniffEars{0%,100%{transform:rotate(0)}50%{transform:rotate(3deg)}}
-@keyframes rigSoftTail{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(8deg)}}
-@keyframes rigSoftTailTip{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(9deg)}}
-@keyframes rigGroomHead{0%,100%{transform:rotate(0)}38%{transform:rotate(-5deg) translateY(2px)}68%{transform:rotate(-2deg) translateY(1px)}}
-@keyframes rigGroomUpper{0%,100%{transform:rotate(0)}40%,70%{transform:rotate(-12deg)}}
-@keyframes rigGroomLower{0%,100%{transform:rotate(0)}40%,70%{transform:rotate(19deg) translateY(-3px)}}
-@keyframes rigYawnHead{0%,100%{transform:rotate(0)}35%{transform:rotate(3deg) translateY(2px)}57%{transform:rotate(2deg) translateY(3px)}}
-@keyframes rigYawnBody{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.986) translateY(1px)}}
-@keyframes rigCuriousHead{0%,100%{transform:rotate(0)}28%{transform:rotate(-7deg)}65%{transform:rotate(5deg)}}
-@keyframes rigListenEarLeft{0%,100%{transform:rotate(0)}50%{transform:rotate(-9deg)}}
-@keyframes rigListenEarRight{0%,100%{transform:rotate(0)}50%{transform:rotate(7deg)}}
-@keyframes rigGreetHead{0%,100%{transform:rotate(0)}30%{transform:rotate(-3deg) translateY(-1px)}60%{transform:rotate(2deg)}}
-@keyframes rigGreetUpper{0%,100%{transform:rotate(0)}30%,65%{transform:rotate(-22deg)}}
-@keyframes rigGreetLower{0%,100%{transform:rotate(0)}30%,65%{transform:rotate(28deg)}}
-@keyframes rigScratchBody{0%,100%{transform:rotate(0)}50%{transform:rotate(-1.5deg) translateY(1px)}}
-@keyframes rigScratchUpper{0%,100%{transform:rotate(0)}50%{transform:rotate(-7deg)}}
-@keyframes rigScratchLower{0%,100%{transform:rotate(0)}50%{transform:rotate(17deg)}}
-@keyframes rigScratchPaw{0%,100%{transform:rotate(0)}50%{transform:rotate(-9deg)}}
-@keyframes rigSitBody{0%,100%{transform:translateY(1px) scaleY(.975)}50%{transform:translateY(2px) scaleY(.965)}}
-@keyframes rigSitHead{0%,100%{transform:rotate(0)}50%{transform:rotate(-2.5deg)}}
-@keyframes rigSitHind{0%,100%{transform:rotate(0)}50%{transform:rotate(8deg)}}
-@keyframes rigCuddleBody{0%,100%{transform:translateY(1px) scaleY(.985)}50%{transform:translateY(2px) scaleY(.978)}}
-@keyframes rigCuddleHead{0%,100%{transform:rotate(2deg) translateY(2px)}50%{transform:rotate(4deg) translateY(3px)}}
-@keyframes rigShakeBody{0%,100%{transform:rotate(0)}20%{transform:rotate(-2deg)}40%{transform:rotate(2.5deg)}60%{transform:rotate(-2deg)}80%{transform:rotate(1deg)}}
-@keyframes rigShakeHead{0%,100%{transform:rotate(0)}20%{transform:rotate(7deg)}40%{transform:rotate(-7deg)}60%{transform:rotate(6deg)}80%{transform:rotate(-3deg)}}
-@keyframes rigShakeEars{0%,100%{transform:rotate(0)}25%{transform:rotate(8deg)}50%{transform:rotate(-8deg)}75%{transform:rotate(5deg)}}
-@media(prefers-reduced-motion:reduce){.dori-bone,#doriRigBlink{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
+/* DORI LIFE stable artwork rendering — preserve the original character as one clean texture */
+#doriRigAssembly,.dori-bone{display:none!important}
+#doriReferenceArtwork{
+  display:none;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform-box:fill-box;
+  transform-origin:50% 90%;
+  image-rendering:auto;
+}
+#doriSprite.reference-art-ready{
+  animation:none!important;
+  transform:none!important;
+  will-change:auto!important;
+}
+#doriSprite.reference-art-ready> :not(#doriReferenceArtwork){
+  opacity:0!important;
+  visibility:hidden!important;
+  pointer-events:none!important;
+}
+#doriSprite.reference-art-ready #doriReferenceArtwork{
+  display:block!important;
+  opacity:1!important;
+  visibility:visible!important;
+}
+.scene[data-pose="idle"] #doriReferenceArtwork{animation:doriArtworkIdle 5.8s ease-in-out infinite}
+.scene[data-pose="walk"] #doriReferenceArtwork,.scene[data-pose="trot"] #doriReferenceArtwork{animation:doriArtworkWalk .72s ease-in-out infinite}
+.scene[data-pose="sleep"] #doriReferenceArtwork,.scene[data-pose="cuddle"] #doriReferenceArtwork{animation:doriArtworkSleep 5.4s ease-in-out infinite}
+.scene[data-pose="eat"] #doriReferenceArtwork{animation:doriArtworkEat 1.15s ease-in-out infinite}
+.scene[data-pose="play"] #doriReferenceArtwork{animation:doriArtworkPlay 1.12s cubic-bezier(.34,.05,.56,.95) infinite}
+.scene[data-pose="zoomies"] #doriReferenceArtwork{animation:doriArtworkPlay .78s cubic-bezier(.34,.05,.56,.95) infinite}
+.scene[data-pose="dance"] #doriReferenceArtwork{animation:doriArtworkDance .9s ease-in-out infinite alternate}
+.scene[data-pose="alert"] #doriReferenceArtwork,.scene[data-pose="curious"] #doriReferenceArtwork,.scene[data-pose="listen"] #doriReferenceArtwork{animation:doriArtworkCurious 2.5s ease-in-out infinite}
+.scene[data-pose="stretch"] #doriReferenceArtwork{animation:doriArtworkStretch 2.8s ease-in-out infinite}
+.scene[data-pose="sniff"] #doriReferenceArtwork{animation:doriArtworkSniff 1.5s ease-in-out infinite}
+.scene[data-pose="greet"] #doriReferenceArtwork,.scene[data-pose="paw"] #doriReferenceArtwork{animation:doriArtworkGreet 1.5s ease-in-out infinite}
+.scene[data-pose="groom"] #doriReferenceArtwork{animation:doriArtworkGroom 1.3s ease-in-out infinite}
+.scene[data-pose="yawn"] #doriReferenceArtwork{animation:doriArtworkYawn 2.8s ease-in-out infinite}
+.scene[data-pose="sneeze"] #doriReferenceArtwork,.scene[data-pose="shake"] #doriReferenceArtwork{animation:doriArtworkShake 1s ease-in-out 2}
+.scene[data-pose="scratch"] #doriReferenceArtwork{animation:doriArtworkScratch 1.1s ease-in-out infinite}
+.scene[data-pose="sit"] #doriReferenceArtwork{animation:doriArtworkSit 3.6s ease-in-out infinite}
+@keyframes doriArtworkIdle{0%,100%{transform:translateY(0)}48%{transform:translateY(-.7px)}}
+@keyframes doriArtworkWalk{0%,100%{transform:translateY(0)}25%{transform:translateY(-.8px)}50%{transform:translateY(0)}75%{transform:translateY(-.5px)}}
+@keyframes doriArtworkSleep{0%,100%{transform:translateY(1px) scale(1,.998)}52%{transform:translateY(1.7px) scale(1.003,.997)}}
+@keyframes doriArtworkEat{0%,100%{transform:translateY(0) rotate(0)}32%{transform:translateY(1px) rotate(.25deg)}66%{transform:translateY(1.4px) rotate(.1deg)}}
+@keyframes doriArtworkPlay{0%,100%{transform:translateY(0) scale(1)}38%{transform:translateY(-2px) scale(1.004,.998)}62%{transform:translateY(-2.5px) scale(.999,1.003)}}
+@keyframes doriArtworkDance{0%{transform:rotate(-.45deg) translateY(0)}100%{transform:rotate(.45deg) translateY(-1.2px)}}
+@keyframes doriArtworkCurious{0%,100%{transform:rotate(0)}32%{transform:rotate(-.5deg) translateY(-.3px)}66%{transform:rotate(.45deg)}}
+@keyframes doriArtworkStretch{0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(1px) scale(1.004,.998)}70%{transform:translateY(-.7px) scale(1.002,1.002)}}
+@keyframes doriArtworkSniff{0%,100%{transform:translateY(0) rotate(0)}42%{transform:translateY(1px) rotate(.4deg)}74%{transform:translateY(.4px) rotate(-.2deg)}}
+@keyframes doriArtworkGreet{0%,100%{transform:translateY(0) rotate(0)}35%{transform:translateY(-.8px) rotate(-.4deg)}65%{transform:translateY(0) rotate(.3deg)}}
+@keyframes doriArtworkGroom{0%,100%{transform:rotate(0)}40%,68%{transform:rotate(.35deg) translateY(.3px)}}
+@keyframes doriArtworkYawn{0%,100%{transform:translateY(0)}45%{transform:translateY(1px)}62%{transform:translateY(1.2px)}}
+@keyframes doriArtworkShake{0%,100%{transform:rotate(0)}20%{transform:rotate(-.6deg)}40%{transform:rotate(.65deg)}60%{transform:rotate(-.45deg)}80%{transform:rotate(.25deg)}}
+@keyframes doriArtworkScratch{0%,100%{transform:translateY(0) rotate(0)}45%{transform:translateY(.8px) rotate(.25deg)}}
+@keyframes doriArtworkSit{0%,100%{transform:translateY(.5px)}50%{transform:translateY(1px)}}
+@media(prefers-reduced-motion:reduce){#doriReferenceArtwork{animation:none!important;transition:none!important}}
 
-/* Four-beat walk offsets: each paw lands at a slightly different moment. */
-.scene[data-pose="walk"] #doriBoneForeFarUpper{animation-delay:0s}
-.scene[data-pose="walk"] #doriBoneForeNearUpper{animation-delay:-.17s}
-.scene[data-pose="walk"] #doriBoneHindFarUpper{animation-delay:-.34s}
-.scene[data-pose="walk"] #doriBoneHindNearUpper{animation-delay:-.51s}
-.scene[data-pose="walk"] #doriBoneForeFarLower{animation-delay:-.07s}
-.scene[data-pose="walk"] #doriBoneForeNearLower{animation-delay:-.24s}
-.scene[data-pose="walk"] #doriBoneHindFarLower{animation-delay:-.41s}
-.scene[data-pose="walk"] #doriBoneHindNearLower{animation-delay:-.58s}
-.scene[data-pose="walk"] #doriBoneForeFarPaw{animation-delay:-.12s}
-.scene[data-pose="walk"] #doriBoneForeNearPaw{animation-delay:-.29s}
-.scene[data-pose="walk"] #doriBoneHindFarPaw{animation-delay:-.46s}
-.scene[data-pose="walk"] #doriBoneHindNearPaw{animation-delay:-.63s}
-/* One-shot reactions settle into small, occasional movements instead of freezing. */
-.scene[data-pose="alert"] #doriBoneBody{animation-duration:3.8s;animation-iteration-count:infinite}
-.scene[data-pose="alert"] #doriBoneHead{animation-duration:3.2s;animation-iteration-count:infinite}
-.scene[data-pose="alert"] #doriBoneEarLeft,.scene[data-pose="alert"] #doriBoneEarRight{animation-duration:3.6s;animation-iteration-count:infinite}
-.scene[data-pose="alert"] #doriBoneTailRoot,.scene[data-pose="alert"] #doriBoneTailTip{animation-duration:1.8s;animation-iteration-count:infinite}
-.scene[data-pose="sneeze"] #doriBoneBody{animation-duration:5.2s;animation-iteration-count:infinite}
-.scene[data-pose="sneeze"] #doriBoneHead{animation-duration:5.2s;animation-iteration-count:infinite}
-.scene[data-pose="sneeze"] #doriBoneEarLeft,.scene[data-pose="sneeze"] #doriBoneEarRight{animation-duration:5.2s;animation-iteration-count:infinite}
-.scene[data-pose="shake"] #doriBoneBody,.scene[data-pose="shake"] #doriBoneHead,.scene[data-pose="shake"] #doriBoneEarLeft,.scene[data-pose="shake"] #doriBoneEarRight{animation-duration:7s;animation-iteration-count:infinite}
-.scene[data-pose="greet"] #doriBoneHead,.scene[data-pose="greet"] #doriBoneForeNearUpper,.scene[data-pose="greet"] #doriBoneForeNearLower{animation-duration:3.4s}
-.scene[data-pose="scratch"] #doriBoneBody,.scene[data-pose="scratch"] #doriBoneHindNearUpper{animation-duration:3.8s}
-.scene[data-pose="scratch"] #doriBoneHindNearLower,.scene[data-pose="scratch"] #doriBoneHindNearPaw{animation-duration:.62s}
-.scene[data-pose="paw"] #doriBoneForeNearUpper,.scene[data-pose="paw"] #doriBoneForeNearLower{animation-duration:2.6s}
-.scene[data-pose="paw"] #doriBoneHead{animation-duration:4.2s}
-.scene[data-pose="yawn"] #doriBoneHead,.scene[data-pose="yawn"] #doriBoneBody{animation-duration:18s}
-@media(prefers-reduced-motion:reduce){.dori-bone{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 </style>
 </head>
 <body>
@@ -1116,39 +958,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
               </g>
 
 
-              <!-- Reference-exact 2D cutout rig. Every part samples the same source artwork. -->
-
-              <g id="doriRigAssembly">
-                <g id="doriRigCanvas" transform="translate(-116 -185) scale(.79725086 .79640719)">
-                  <defs><image id="doriRigSource" data-dori-reference="1" x="0" y="0" width="291" height="334" preserveAspectRatio="none" href=""/><mask id="doriMask_tailRoot" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M242 151 C249 142 264 143 275 151 C284 157 287 170 283 181 C279 191 265 191 254 184 C245 178 238 164 242 151Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_tailTip" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M270 150 C281 145 292 155 294 168 C297 183 290 195 279 192 C269 189 263 177 265 164 C266 158 267 153 270 150Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_hindFarUpper" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M177 273 C189 269 205 273 220 282 C232 289 239 299 236 311 C231 317 216 317 201 314 L176 308 C168 300 169 282 177 273Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_hindFarLower" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M176 297 C191 303 215 304 237 299 C241 307 239 323 232 332 C218 339 192 338 179 328 C170 320 170 306 176 297Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_hindFarPaw" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M173 315 C191 324 216 325 239 314 C243 324 238 336 225 341 C207 346 184 341 176 331 C172 326 171 320 173 315Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_hindNearUpper" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M222 265 C239 259 260 263 277 276 C290 285 296 298 291 310 C283 318 263 317 244 312 L220 305 C213 293 214 275 222 265Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_hindNearLower" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M220 296 C241 303 267 303 292 297 C297 309 292 326 282 335 C265 342 240 338 228 329 C219 322 216 307 220 296Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_hindNearPaw" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M218 314 C241 324 270 324 292 312 C296 324 289 337 276 342 C257 347 233 341 222 331 C218 326 216 320 218 314Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_foreFarUpper" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M38 270 C50 264 67 269 82 278 C94 286 102 298 98 310 C91 318 75 317 59 312 L37 304 C30 294 31 278 38 270Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_foreFarLower" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M37 296 C55 304 78 304 99 298 C105 311 101 326 92 335 C76 342 53 337 42 327 C34 319 32 306 37 296Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_foreFarPaw" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M31 315 C53 324 80 324 99 313 C104 324 99 338 85 343 C66 348 43 341 34 331 C30 326 29 320 31 315Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_foreNearUpper" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M90 267 C106 263 128 272 145 285 C158 295 164 306 158 316 C148 322 127 317 109 312 L87 301 C80 290 82 274 90 267Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_foreNearLower" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M87 294 C108 303 137 304 160 298 C167 311 162 328 150 337 C132 344 108 337 95 326 C87 318 82 304 87 294Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_foreNearPaw" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M82 314 C105 326 139 328 162 314 C169 326 161 339 147 344 C125 350 96 341 85 329 C81 324 79 319 82 314Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_body" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M52 179 C60 163 82 158 111 162 C142 164 164 170 191 170 C224 169 257 172 278 186 C294 198 299 220 294 246 C291 266 279 286 260 296 C242 306 222 296 203 290 C183 286 165 301 142 306 C119 309 103 292 88 282 C74 289 59 280 52 265 C43 241 41 197 52 179Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/><path d="M177 273 C189 269 205 273 220 282 C232 289 239 299 236 311 C231 317 216 317 201 314 L176 308 C168 300 169 282 177 273Z" fill="black" stroke="black" stroke-width="3" stroke-linejoin="round"/><path d="M176 297 C191 303 215 304 237 299 C241 307 239 323 232 332 C218 339 192 338 179 328 C170 320 170 306 176 297Z" fill="black" stroke="black" stroke-width="3" stroke-linejoin="round"/><path d="M173 315 C191 324 216 325 239 314 C243 324 238 336 225 341 C207 346 184 341 176 331 C172 326 171 320 173 315Z" fill="black" stroke="black" stroke-width="3" stroke-linejoin="round"/><path d="M222 265 C239 259 260 263 277 276 C290 285 296 298 291 310 C283 318 263 317 244 312 L220 305 C213 293 214 275 222 265Z" fill="black" stroke="black" stroke-width="3" stroke-linejoin="round"/><path d="M220 296 C241 303 267 303 292 297 C297 309 292 326 282 335 C265 342 240 338 228 329 C219 322 216 307 220 296Z" fill="black" stroke="black" stroke-width="3" stroke-linejoin="round"/><path d="M218 314 C241 324 270 324 292 312 C296 324 289 337 276 342 C257 347 233 341 222 331 C218 326 216 320 218 314Z" fill="black" stroke="black" stroke-width="3" stroke-linejoin="round"/><path d="M38 270 C50 264 67 269 82 278 C94 286 102 298 98 310 C91 318 75 317 59 312 L37 304 C30 294 31 278 38 270Z" fill="black" stroke="black" stroke-width="3" stroke-linejoin="round"/><path d="M37 296 C55 304 78 304 99 298 C105 311 101 326 92 335 C76 342 53 337 42 327 C34 319 32 306 37 296Z" fill="black" stroke="black" stroke-width="3" stroke-linejoin="round"/><path d="M31 315 C53 324 80 324 99 313 C104 324 99 338 85 343 C66 348 43 341 34 331 C30 326 29 320 31 315Z" fill="black" stroke="black" stroke-width="3" stroke-linejoin="round"/><path d="M90 267 C106 263 128 272 145 285 C158 295 164 306 158 316 C148 322 127 317 109 312 L87 301 C80 290 82 274 90 267Z" fill="black" stroke="black" stroke-width="3" stroke-linejoin="round"/><path d="M87 294 C108 303 137 304 160 298 C167 311 162 328 150 337 C132 344 108 337 95 326 C87 318 82 304 87 294Z" fill="black" stroke="black" stroke-width="3" stroke-linejoin="round"/><path d="M82 314 C105 326 139 328 162 314 C169 326 161 339 147 344 C125 350 96 341 85 329 C81 324 79 319 82 314Z" fill="black" stroke="black" stroke-width="3" stroke-linejoin="round"/></mask><mask id="doriMask_head" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M3 72 C17 62 38 57 58 58 C78 53 99 58 119 63 C143 68 163 80 176 100 C188 119 190 145 185 166 C180 189 166 207 147 219 C129 232 100 235 76 226 C54 219 34 207 17 192 C4 179 -3 160 -1 139 C-1 111 0 87 3 72Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_earLeft" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M38 0 C54 -4 75 2 88 17 C102 33 109 56 117 78 C115 91 100 99 86 96 C68 91 53 83 42 69 C34 56 33 28 38 0Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask><mask id="doriMask_earRight" maskUnits="userSpaceOnUse" maskContentUnits="userSpaceOnUse" x="0" y="0" width="291" height="334" style="mask-type:luminance"><rect width="291" height="334" fill="black"/><path d="M145 72 C151 53 169 35 192 31 C211 28 230 42 229 63 C228 89 215 117 201 141 C192 157 178 172 163 172 C152 165 150 148 151 130 C151 110 143 91 145 72Z" fill="white" stroke="white" stroke-width="4" stroke-linejoin="round"/></mask></defs>
-                  <g id="doriBoneTailRoot" class="dori-bone" style="transform-origin:84% 58%"><svg x="238" y="139" width="52" height="59" viewBox="238 139 52 59" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_tailRoot)"/></svg></g>
-                  <g id="doriBoneTailTip" class="dori-bone" style="transform-origin:18% 54%"><svg x="262" y="143" width="34" height="58" viewBox="262 143 34 58" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_tailTip)"/></svg></g>
-                  <g id="doriBoneHindFarUpper" class="dori-bone" style="transform-origin:48% 10%"><svg x="164" y="264" width="78" height="61" viewBox="164 264 78 61" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_hindFarUpper)"/></svg></g>
-                  <g id="doriBoneHindNearUpper" class="dori-bone" style="transform-origin:48% 10%"><svg x="211" y="256" width="84" height="66" viewBox="211 256 84 66" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_hindNearUpper)"/></svg></g>
-                  <g id="doriBoneForeFarUpper" class="dori-bone" style="transform-origin:48% 8%"><svg x="25" y="260" width="82" height="66" viewBox="25 260 82 66" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_foreFarUpper)"/></svg></g>
-                  <g id="doriBoneForeNearUpper" class="dori-bone" style="transform-origin:48% 8%"><svg x="75" y="256" width="93" height="67" viewBox="75 256 93 67" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_foreNearUpper)"/></svg></g>
-                  <g id="doriBoneBody" class="dori-bone" style="transform-origin:50% 82%"><svg x="43" y="155" width="255" height="158" viewBox="43 155 255 158" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_body)"/></svg></g>
-                  <g id="doriBoneHindFarLower" class="dori-bone" style="transform-origin:52% 7%"><svg x="166" y="293" width="76" height="48" viewBox="166 293 76 48" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_hindFarLower)"/></svg></g>
-                  <g id="doriBoneHindNearLower" class="dori-bone" style="transform-origin:52% 7%"><svg x="213" y="291" width="82" height="50" viewBox="213 291 82 50" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_hindNearLower)"/></svg></g>
-                  <g id="doriBoneForeFarLower" class="dori-bone" style="transform-origin:52% 7%"><svg x="30" y="292" width="78" height="48" viewBox="30 292 78 48" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_foreFarLower)"/></svg></g>
-                  <g id="doriBoneForeNearLower" class="dori-bone" style="transform-origin:52% 7%"><svg x="78" y="290" width="87" height="53" viewBox="78 290 87 53" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_foreNearLower)"/></svg></g>
-                  <g id="doriBoneHindFarPaw" class="dori-bone" style="transform-origin:53% 6%"><svg x="165" y="310" width="80" height="42" viewBox="165 310 80 42" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_hindFarPaw)"/></svg></g>
-                  <g id="doriBoneHindNearPaw" class="dori-bone" style="transform-origin:53% 6%"><svg x="213" y="309" width="83" height="43" viewBox="213 309 83 43" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_hindNearPaw)"/></svg></g>
-                  <g id="doriBoneForeFarPaw" class="dori-bone" style="transform-origin:53% 6%"><svg x="26" y="309" width="81" height="43" viewBox="26 309 81 43" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_foreFarPaw)"/></svg></g>
-                  <g id="doriBoneForeNearPaw" class="dori-bone" style="transform-origin:53% 6%"><svg x="76" y="309" width="92" height="45" viewBox="76 309 92 45" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_foreNearPaw)"/></svg></g>
-                  <g id="doriBoneEarLeft" class="dori-bone" style="transform-origin:62% 92%"><svg x="30" y="0" width="92" height="105" viewBox="30 0 92 105" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_earLeft)"/></svg></g>
-                  <g id="doriBoneEarRight" class="dori-bone" style="transform-origin:36% 90%"><svg x="139" y="24" width="96" height="153" viewBox="139 24 96 153" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_earRight)"/></svg></g>
-                  <g id="doriBoneHead" class="dori-bone" style="transform-origin:50% 84%"><svg x="-3" y="52" width="195" height="188" viewBox="-3 52 195 188" preserveAspectRatio="none" overflow="visible"><use href="#doriRigSource" mask="url(#doriMask_head)"/></svg></g>
-                </g>
-                <g id="doriRigBlink" opacity="0">
-                  <ellipse cx="-61" cy="-91" rx="7" ry="7" fill="#fff1df"/>
-                  <ellipse cx="-13" cy="-82" rx="7" ry="7" fill="#f2c37d"/>
-                  <path d="M-68 -91 Q-61 -85 -54 -91 M-20 -82 Q-13 -76 -6 -82" fill="none" stroke="#30221d" stroke-width="2.4" stroke-linecap="round"/>
-                </g>
-              </g>
-
-              
-              </g>
+              <image id="doriReferenceArtwork" x="-116" y="-185" width="232" height="258" href="" preserveAspectRatio="none"/>              </g>
 
               
 
@@ -1626,30 +1436,39 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 <script>
 (function loadReferenceDoriArtwork(){
   var sprite=document.getElementById('doriSprite');
-  var rig=document.getElementById('doriRigAssembly');
-  var source=rig&&rig.querySelector('#doriRigSource');
-  if(!sprite||!rig||!source)return;
+  var image=document.getElementById('doriReferenceArtwork');
+  if(!sprite||!image)return;
   var files=[
-    './assets/dori-life/reference-1.txt?v=20261112-rig4',
-    './assets/dori-life/reference-2.txt?v=20261112-rig4',
-    './assets/dori-life/reference-3.txt?v=20261112-rig4',
-    './assets/dori-life/reference-4.txt?v=20261112-rig4',
-    './assets/dori-life/reference-5.txt?v=20261112-rig4',
-    './assets/dori-life/reference-6.txt?v=20261112-rig4',
-    './assets/dori-life/reference-7.txt?v=20261112-rig4'
+    './assets/dori-life/reference-1.txt?v=20261112-cleanfix1',
+    './assets/dori-life/reference-2.txt?v=20261112-cleanfix1',
+    './assets/dori-life/reference-3.txt?v=20261112-cleanfix1',
+    './assets/dori-life/reference-4.txt?v=20261112-cleanfix1',
+    './assets/dori-life/reference-5.txt?v=20261112-cleanfix1',
+    './assets/dori-life/reference-6.txt?v=20261112-cleanfix1',
+    './assets/dori-life/reference-7.txt?v=20261112-cleanfix1'
   ];
   Promise.all(files.map(function(url){
     return fetch(url,{cache:'no-store'}).then(function(response){
-      if(!response.ok)throw new Error('Dori artwork data unavailable: '+url);
+      if(!response.ok)throw new Error('Dori artwork chunk unavailable: '+url);
       return response.text();
     });
   })).then(function(parts){
     var encoded=parts.join('').trim();
-    if(encoded.slice(0,4)!=='UklG')throw new Error('Invalid Dori artwork data');
-    source.addEventListener('load',function(){sprite.classList.add('reference-art-ready');},{once:true});
-    source.addEventListener('error',function(){console.error('Dori reference texture failed to decode.');},{once:true});
-    source.setAttribute('href','data:image/webp;base64,'+encoded);
-  }).catch(function(error){console.error('Dori reference texture unavailable; fallback model retained.',error);});
+    if(encoded.length!==21728||encoded.slice(0,4)!=='UklG')throw new Error('Invalid transparent Dori artwork data');
+    var binary=atob(encoded);
+    if(binary.length!==16294||binary.slice(0,4)!=='RIFF'||binary.slice(8,12)!=='WEBP')throw new Error('Dori artwork is not a valid WebP image');
+    image.addEventListener('load',function(){
+      sprite.classList.add('reference-art-ready');
+    },{once:true});
+    image.addEventListener('error',function(){
+      console.error('Dori artwork failed to decode; the built-in fallback character remains visible.');
+    },{once:true});
+    var uri='data:image/webp;base64,'+encoded;
+    image.setAttribute('href',uri);
+    image.setAttributeNS('http://www.w3.org/1999/xlink','xlink:href',uri);
+  }).catch(function(error){
+    console.error('Dori artwork could not be loaded; the built-in fallback character remains visible.',error);
+  });
 })();
 </script>
 </body>
