@@ -57,9 +57,121 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 .scene[data-event="rainbow"] .rainbow-fx{opacity:1}
 .scene[data-pose="sleep"] .sleep-z{opacity:1}.scene #doriBed{opacity:0;transition:opacity .5s ease}.scene[data-pose="sleep"] #doriBed{opacity:1}
 #doriSprite{transform-box:fill-box;transform-origin:50% 80%;animation:doriBreath 4.8s ease-in-out infinite;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
-#doriReferenceArtwork{opacity:0;visibility:hidden;pointer-events:none}
-#doriSprite.reference-art-ready> :not(#doriReferenceArtwork):not(#sleepZ):not(#yawnMarks){opacity:0!important;visibility:hidden!important;pointer-events:none!important}
-#doriSprite.reference-art-ready #doriReferenceArtwork{opacity:1!important;visibility:visible!important}
+
+#doriReferenceArtwork{opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+#doriRigAssembly{opacity:0;visibility:hidden;pointer-events:none}
+#doriSprite.reference-art-ready> :not(#doriReferenceArtwork):not(#doriRigAssembly):not(#sleepZ):not(#yawnMarks){opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+#doriSprite.reference-art-ready #doriRigAssembly{opacity:1!important;visibility:visible!important}
+.dori-rig-part{transform-box:fill-box;transform-origin:50% 50%;will-change:transform}
+#doriRigTail{transform-origin:90% 67%;animation:doriRigTailIdle 2.05s ease-in-out infinite}
+#doriRigBody{transform-origin:58% 78%;animation:doriRigBreath 4.8s cubic-bezier(.37,0,.63,1) infinite}
+#doriRigHead{transform-origin:49% 84%;animation:doriRigHeadIdle 6.3s cubic-bezier(.45,0,.55,1) infinite}
+#doriRigEarLeft{transform-origin:31% 30%;animation:doriRigEarLeftIdle 5.9s ease-in-out infinite}
+#doriRigEarRight{transform-origin:72% 40%;animation:doriRigEarRightIdle 6.7s ease-in-out infinite}
+#doriRigForeFar{transform-origin:31% 92%}
+#doriRigForeNear{transform-origin:51% 94%}
+#doriRigHindFar{transform-origin:73% 92%}
+#doriRigHindNear{transform-origin:89% 92%}
+#doriRigBlink{transform-origin:center;animation:doriRigBlink 5.3s linear infinite}
+.scene[data-pose="sleep"] #doriRigBody{animation:doriRigSleepBody 5.8s ease-in-out infinite}
+.scene[data-pose="sleep"] #doriRigHead{animation:doriRigSleepHead 5.2s ease-in-out infinite}
+.scene[data-pose="sleep"] #doriRigEarLeft,.scene[data-pose="sleep"] #doriRigEarRight{animation:doriRigSleepEars 6s ease-in-out infinite}
+.scene[data-pose="sleep"] #doriRigTail{animation:doriRigSleepTail 5s ease-in-out infinite}
+.scene[data-pose="sleep"] #doriRigBlink{animation:doriRigSleepBlink 7s linear infinite}
+.scene[data-pose="eat"] #doriRigBody{animation:doriRigEatBody .9s ease-in-out infinite}
+.scene[data-pose="eat"] #doriRigHead{animation:doriRigEatHead .72s cubic-bezier(.35,0,.65,1) infinite}
+.scene[data-pose="eat"] #doriRigTail{animation:doriRigEatTail 1.3s ease-in-out infinite}
+.scene[data-pose="eat"] #doriRigForeNear{animation:doriRigEatPaw 1.1s ease-in-out infinite}
+.scene[data-pose="play"] #doriRigBody{animation:doriRigPlayBody 1.08s cubic-bezier(.35,0,.45,1) infinite}
+.scene[data-pose="play"] #doriRigHead{animation:doriRigPlayHead 1.08s ease-in-out infinite}
+.scene[data-pose="play"] #doriRigTail{animation:doriRigPlayTail .34s ease-in-out infinite}
+.scene[data-pose="play"] #doriRigEarLeft{animation:doriRigPlayEar .52s ease-in-out infinite}
+.scene[data-pose="play"] #doriRigEarRight{animation:doriRigPlayEar .57s ease-in-out infinite reverse}
+.scene[data-pose="play"] #doriRigForeNear{animation:doriRigPlayFore .54s ease-in-out infinite}
+.scene[data-pose="play"] #doriRigForeFar{animation:doriRigPlayFore .54s ease-in-out infinite reverse}
+.scene[data-pose="play"] #doriRigHindNear{animation:doriRigPlayHind .54s ease-in-out infinite reverse}
+.scene[data-pose="play"] #doriRigHindFar{animation:doriRigPlayHind .54s ease-in-out infinite}
+.scene[data-pose="walk"] #doriRigBody{animation:doriRigWalkBody .68s cubic-bezier(.36,0,.64,1) infinite}
+.scene[data-pose="walk"] #doriRigHead{animation:doriRigWalkHead .68s ease-in-out infinite}
+.scene[data-pose="walk"] #doriRigTail{animation:doriRigWalkTail .52s ease-in-out infinite}
+.scene[data-pose="walk"] #doriRigForeNear{animation:doriRigWalkStep .68s ease-in-out infinite}
+.scene[data-pose="walk"] #doriRigForeFar{animation:doriRigWalkStep .68s ease-in-out infinite reverse}
+.scene[data-pose="walk"] #doriRigHindNear{animation:doriRigWalkStep .68s ease-in-out infinite reverse}
+.scene[data-pose="walk"] #doriRigHindFar{animation:doriRigWalkStep .68s ease-in-out infinite}
+.scene[data-pose="dance"] #doriRigBody{animation:doriRigDanceBody .82s ease-in-out infinite alternate}
+.scene[data-pose="dance"] #doriRigHead{animation:doriRigDanceHead .82s ease-in-out infinite alternate}
+.scene[data-pose="dance"] #doriRigTail{animation:doriRigDanceTail .28s ease-in-out infinite}
+.scene[data-pose="dance"] #doriRigEarLeft,.scene[data-pose="dance"] #doriRigEarRight{animation:doriRigDanceEar .46s ease-in-out infinite alternate}
+.scene[data-pose="dance"] #doriRigForeNear{animation:doriRigDancePaw .82s ease-in-out infinite alternate}
+.scene[data-pose="dance"] #doriRigForeFar{animation:doriRigDancePaw .82s ease-in-out infinite alternate-reverse}
+.scene[data-pose="dance"] #doriRigHindNear{animation:doriRigDanceHind .82s ease-in-out infinite alternate}
+.scene[data-pose="dance"] #doriRigHindFar{animation:doriRigDanceHind .82s ease-in-out infinite alternate-reverse}
+.scene[data-pose="alert"] #doriRigBody{animation:doriRigAlertBody .6s ease-in-out 2}
+.scene[data-pose="alert"] #doriRigHead{animation:doriRigAlertHead .8s ease-in-out 2}
+.scene[data-pose="alert"] #doriRigTail{animation:doriRigAlertTail .42s ease-in-out 4}
+.scene[data-pose="alert"] #doriRigEarLeft,.scene[data-pose="alert"] #doriRigEarRight{animation:doriRigAlertEar .42s ease-out 2}
+.scene[data-pose="stretch"] #doriRigBody{animation:doriRigStretchBody 2.8s cubic-bezier(.45,0,.55,1) infinite}
+.scene[data-pose="stretch"] #doriRigHead{animation:doriRigStretchHead 2.8s ease-in-out infinite}
+.scene[data-pose="stretch"] #doriRigForeNear,.scene[data-pose="stretch"] #doriRigForeFar{animation:doriRigStretchPaw 2.8s ease-in-out infinite}
+.scene[data-pose="stretch"] #doriRigTail{animation:doriRigStretchTail 2.8s ease-in-out infinite}
+.scene[data-pose="sniff"] #doriRigBody{animation:doriRigSniffBody 2.1s ease-in-out infinite}
+.scene[data-pose="sniff"] #doriRigHead{animation:doriRigSniffHead 1.2s ease-in-out infinite}
+.scene[data-pose="sniff"] #doriRigTail{animation:doriRigSniffTail 2.5s ease-in-out infinite}
+.scene[data-pose="groom"] #doriRigHead{animation:doriRigGroomHead 1.2s ease-in-out infinite}
+.scene[data-pose="groom"] #doriRigForeNear{animation:doriRigGroomPaw 1.2s ease-in-out infinite}
+.scene[data-pose="groom"] #doriRigTail{animation:doriRigGroomTail 2s ease-in-out infinite}
+.scene[data-pose="yawn"] #doriRigHead{animation:doriRigYawnHead 2.8s ease-in-out infinite}
+.scene[data-pose="yawn"] #doriRigBody{animation:doriRigYawnBody 2.8s ease-in-out infinite}
+.scene[data-pose="yawn"] #doriRigBlink{animation:doriRigSleepBlink 7s linear infinite}
+@keyframes doriRigBreath{0%,100%{transform:translateY(0) scale(1,1)}32%{transform:translateY(-.45px) scale(1.003,1.004)}58%{transform:translateY(-1.25px) scale(1.008,1.012)}78%{transform:translateY(-.55px) scale(1.004,1.006)}}
+@keyframes doriRigHeadIdle{0%,100%{transform:rotate(0deg) translateY(0)}24%{transform:rotate(-.8deg) translateY(-.3px)}47%{transform:rotate(.45deg) translateY(-.8px)}73%{transform:rotate(-.35deg) translateY(-.15px)}}
+@keyframes doriRigTailIdle{0%,100%{transform:rotate(-5deg)}25%{transform:rotate(3deg)}50%{transform:rotate(8deg)}76%{transform:rotate(1deg)}}
+@keyframes doriRigEarLeftIdle{0%,82%,100%{transform:rotate(0)}86%{transform:rotate(-2.8deg)}90%{transform:rotate(1deg)}95%{transform:rotate(-.5deg)}}
+@keyframes doriRigEarRightIdle{0%,100%{transform:rotate(0)}34%{transform:rotate(1.4deg)}68%{transform:rotate(-1.8deg)}}
+@keyframes doriRigBlink{0%,44%,46%,89%,91%,100%{opacity:0}44.7%,45.3%,89.7%,90.3%{opacity:1}}
+@keyframes doriRigSleepBlink{0%,15%,18%,50%,53%,88%,91%,100%{opacity:0}16%,17%,51%,52%,89%,90%{opacity:1}}
+@keyframes doriRigSleepBody{0%,100%{transform:translateY(0) scale(1,1)}25%{transform:translateY(-.5px) scale(1.002,1.004)}55%{transform:translateY(-1.5px) scale(1.006,1.01)}80%{transform:translateY(-.4px) scale(1.001,1.003)}}
+@keyframes doriRigSleepHead{0%,100%{transform:rotate(2.2deg) translateY(2px)}48%{transform:rotate(3.5deg) translateY(3px)}62%{transform:rotate(1.5deg) translateY(1px)}}
+@keyframes doriRigSleepEars{0%,100%{transform:rotate(2deg)}50%{transform:rotate(4deg)}}
+@keyframes doriRigSleepTail{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(2deg)}}
+@keyframes doriRigEatBody{0%,100%{transform:translateY(0) scaleY(1)}50%{transform:translateY(1.2px) scaleY(.994)}}
+@keyframes doriRigEatHead{0%,100%{transform:rotate(0) translateY(0)}28%{transform:rotate(2deg) translateY(2px)}56%{transform:rotate(1deg) translateY(3px)}78%{transform:rotate(-1deg) translateY(1px)}}
+@keyframes doriRigEatTail{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(12deg)}}
+@keyframes doriRigEatPaw{0%,100%{transform:rotate(0)}50%{transform:rotate(-1.8deg)}}
+@keyframes doriRigPlayBody{0%,100%{transform:translateY(0) scale(1,1)}18%{transform:translateY(1px) scale(1.025,.965)}40%{transform:translateY(-5px) scale(.985,1.035)}58%{transform:translateY(-7px) scale(.99,1.02)}76%{transform:translateY(-2px) scale(1.015,.985)}}
+@keyframes doriRigPlayHead{0%,100%{transform:rotate(0) translateY(0)}32%{transform:rotate(-2deg) translateY(-2px)}58%{transform:rotate(2.5deg) translateY(-1px)}82%{transform:rotate(-.8deg)}}
+@keyframes doriRigPlayTail{0%,100%{transform:rotate(-15deg)}50%{transform:rotate(20deg)}}
+@keyframes doriRigPlayEar{0%,100%{transform:rotate(-2deg)}50%{transform:rotate(5deg)}}
+@keyframes doriRigPlayFore{0%,100%{transform:rotate(0) translateY(0)}50%{transform:rotate(-7deg) translateY(-4px)}}
+@keyframes doriRigPlayHind{0%,100%{transform:rotate(0)}50%{transform:rotate(5deg)}}
+@keyframes doriRigWalkBody{0%,100%{transform:translateY(0) scale(1,1)}25%{transform:translateY(-1.5px) scale(1.004,.998)}50%{transform:translateY(0) scale(1.008,.992)}75%{transform:translateY(-1px) scale(1.002,1.002)}}
+@keyframes doriRigWalkHead{0%,100%{transform:rotate(0)}25%{transform:rotate(1.1deg) translateY(-.5px)}50%{transform:rotate(-.7deg) translateY(-1px)}75%{transform:rotate(.5deg)}}
+@keyframes doriRigWalkTail{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(15deg)}}
+@keyframes doriRigWalkStep{0%,100%{transform:rotate(7deg) translateY(1px)}50%{transform:rotate(-10deg) translateY(-2px)}}
+@keyframes doriRigDanceBody{0%{transform:rotate(-2deg) translateY(0) scaleY(1)}50%{transform:rotate(2deg) translateY(-3px) scaleY(1.025)}100%{transform:rotate(-1deg) translateY(0) scaleY(.99)}}
+@keyframes doriRigDanceHead{0%{transform:rotate(5deg) translateY(0)}50%{transform:rotate(-5deg) translateY(-2px)}100%{transform:rotate(4deg) translateY(0)}}
+@keyframes doriRigDanceTail{0%,100%{transform:rotate(-18deg)}50%{transform:rotate(22deg)}}
+@keyframes doriRigDanceEar{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(5deg)}}
+@keyframes doriRigDancePaw{0%{transform:rotate(-9deg) translateY(-2px)}100%{transform:rotate(8deg) translateY(1px)}}
+@keyframes doriRigDanceHind{0%{transform:rotate(5deg)}100%{transform:rotate(-5deg)}}
+@keyframes doriRigAlertBody{0%,100%{transform:translateY(0) scale(1)}18%{transform:translateY(-2px) scale(1.01)}42%{transform:translateY(1px) scale(.995)}65%{transform:translateY(-1px)}}
+@keyframes doriRigAlertHead{0%,100%{transform:rotate(0)}25%{transform:rotate(-4deg)}55%{transform:rotate(3deg)}78%{transform:rotate(0)}}
+@keyframes doriRigAlertTail{0%,100%{transform:rotate(0)}30%{transform:rotate(-12deg)}65%{transform:rotate(18deg)}}
+@keyframes doriRigAlertEar{0%,100%{transform:rotate(0)}40%{transform:rotate(-6deg)}70%{transform:rotate(3deg)}}
+@keyframes doriRigStretchBody{0%,100%{transform:scale(1,1) translateY(0)}25%{transform:scale(1.015,.99) translateY(1px)}55%{transform:scale(1.035,.96) translateY(2px)}78%{transform:scale(1.01,1.01) translateY(-1px)}}
+@keyframes doriRigStretchHead{0%,100%{transform:rotate(0)}42%{transform:rotate(5deg) translateY(5px)}65%{transform:rotate(2deg) translateY(2px)}}
+@keyframes doriRigStretchPaw{0%,100%{transform:rotate(0)}50%{transform:rotate(-7deg) translateY(3px)}}
+@keyframes doriRigStretchTail{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(15deg)}}
+@keyframes doriRigSniffBody{0%,100%{transform:translateY(0) scale(1)}45%{transform:translateY(1px) scale(1,.993)}70%{transform:translateY(0) scale(1.004,1)}}
+@keyframes doriRigSniffHead{0%,100%{transform:rotate(0) translateY(0)}40%{transform:rotate(5deg) translateY(3px)}70%{transform:rotate(2deg) translateY(1px)}}
+@keyframes doriRigSniffTail{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(7deg)}}
+@keyframes doriRigGroomHead{0%,100%{transform:rotate(0)}38%{transform:rotate(-5deg) translateY(2px)}68%{transform:rotate(-2deg) translateY(1px)}}
+@keyframes doriRigGroomPaw{0%,100%{transform:rotate(0) translateY(0)}40%,70%{transform:rotate(-15deg) translateY(-7px)}}
+@keyframes doriRigGroomTail{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes doriRigYawnHead{0%,100%{transform:rotate(0)}35%{transform:rotate(3deg) translateY(2px)}57%{transform:rotate(2deg) translateY(3px)}}
+@keyframes doriRigYawnBody{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.985) translateY(1px)}}
+@media(prefers-reduced-motion:reduce){.dori-rig-part,#doriRigBlink{animation:none!important;transition:none!important}}
+
 #doriBody,#doriHead,#doriTail,#doriEarLeft,#doriEarRight,#doriFrontPawNear,#doriFrontPawFar,#doriBackPawNear,#doriBackPawFar,#doriGroomPaw{transform-box:fill-box}
 #doriHead{transform-origin:58% 80%;animation:doriHeadIdle 6.2s ease-in-out infinite}
 #doriTail{transform-origin:8% 52%;animation:doriTailWag 2s ease-in-out infinite}
@@ -786,6 +898,57 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
                   fill="url(#corgiCream)" stroke="#543a2b" stroke-width="3.4"/>
               </g>
 
+
+              <!-- Reference-exact 2D cutout rig. Every part samples the same source artwork. -->
+              <g id="doriRigAssembly" opacity="0" pointer-events="none">
+                <g id="doriRigCanvas" transform="translate(-116 -185) scale(.79725086 .79640719)">
+                  <defs>
+                    <clipPath id="doriClipTail" clipPathUnits="userSpaceOnUse">
+                      <path d="M245 158 C258 151 279 154 289 170 C297 183 293 205 283 216 C270 224 251 215 242 202 C237 189 238 169 245 158Z"/>
+                    </clipPath>
+                    <clipPath id="doriClipHindFar" clipPathUnits="userSpaceOnUse">
+                      <path d="M178 276 C189 273 205 277 220 285 C234 292 239 307 230 321 C223 332 203 335 188 329 C176 323 171 308 172 295 C172 286 173 280 178 276Z"/>
+                    </clipPath>
+                    <clipPath id="doriClipHindNear" clipPathUnits="userSpaceOnUse">
+                      <path d="M221 270 C238 264 260 267 277 278 C291 288 296 310 286 325 C278 337 251 338 236 329 C222 321 215 305 216 289 C216 280 217 274 221 270Z"/>
+                    </clipPath>
+                    <clipPath id="doriClipBody" clipPathUnits="userSpaceOnUse">
+                      <path d="M57 184 C71 168 101 164 131 167 C157 169 176 173 197 174 C226 174 255 175 276 187 C292 198 296 217 292 242 C289 262 282 278 267 286 C252 294 238 281 224 278 C211 274 198 281 183 286 C167 293 154 302 136 302 C117 302 107 286 94 278 C81 286 68 281 58 270 C48 252 45 209 57 184Z"/>
+                    </clipPath>
+                    <clipPath id="doriClipForeFar" clipPathUnits="userSpaceOnUse">
+                      <path d="M39 274 C51 267 68 272 83 281 C97 290 105 305 96 320 C88 334 63 337 46 328 C31 320 27 304 30 289 C31 282 34 277 39 274Z"/>
+                    </clipPath>
+                    <clipPath id="doriClipForeNear" clipPathUnits="userSpaceOnUse">
+                      <path d="M91 270 C106 267 128 275 145 289 C161 302 162 320 148 331 C134 341 111 336 96 325 C82 314 78 296 83 282 C85 276 87 272 91 270Z"/>
+                    </clipPath>
+                    <clipPath id="doriClipHead" clipPathUnits="userSpaceOnUse">
+                      <path d="M3 72 C17 62 38 57 58 58 C78 53 99 58 119 63 C143 68 163 80 176 100 C188 119 190 145 185 166 C180 189 166 207 147 219 C129 232 100 235 76 226 C54 219 34 207 17 192 C4 179 -3 160 -1 139 C-1 111 0 87 3 72Z"/>
+                    </clipPath>
+                    <clipPath id="doriClipEarLeft" clipPathUnits="userSpaceOnUse">
+                      <path d="M38 0 C54 -4 75 2 88 17 C102 33 109 56 117 78 C115 91 100 99 86 96 C68 91 53 83 42 69 C34 56 33 28 38 0Z"/>
+                    </clipPath>
+                    <clipPath id="doriClipEarRight" clipPathUnits="userSpaceOnUse">
+                      <path d="M145 72 C151 53 169 35 192 31 C211 28 230 42 229 63 C228 89 215 117 201 141 C192 157 178 172 163 172 C152 165 150 148 151 130 C151 110 143 91 145 72Z"/>
+                    </clipPath>
+                  </defs>
+
+                  <g id="doriRigTail" class="dori-rig-part"><image class="doriRigImage" data-dori-reference="1" x="0" y="0" width="291" height="334" clip-path="url(#doriClipTail)" preserveAspectRatio="none"/></g>
+                  <g id="doriRigHindFar" class="dori-rig-part"><image class="doriRigImage" data-dori-reference="1" x="0" y="0" width="291" height="334" clip-path="url(#doriClipHindFar)" preserveAspectRatio="none"/></g>
+                  <g id="doriRigHindNear" class="dori-rig-part"><image class="doriRigImage" data-dori-reference="1" x="0" y="0" width="291" height="334" clip-path="url(#doriClipHindNear)" preserveAspectRatio="none"/></g>
+                  <g id="doriRigBody" class="dori-rig-part"><image class="doriRigImage" data-dori-reference="1" x="0" y="0" width="291" height="334" clip-path="url(#doriClipBody)" preserveAspectRatio="none"/></g>
+                  <g id="doriRigForeFar" class="dori-rig-part"><image class="doriRigImage" data-dori-reference="1" x="0" y="0" width="291" height="334" clip-path="url(#doriClipForeFar)" preserveAspectRatio="none"/></g>
+                  <g id="doriRigForeNear" class="dori-rig-part"><image class="doriRigImage" data-dori-reference="1" x="0" y="0" width="291" height="334" clip-path="url(#doriClipForeNear)" preserveAspectRatio="none"/></g>
+                  <g id="doriRigHead" class="dori-rig-part"><image class="doriRigImage" data-dori-reference="1" x="0" y="0" width="291" height="334" clip-path="url(#doriClipHead)" preserveAspectRatio="none"/></g>
+                  <g id="doriRigEarLeft" class="dori-rig-part"><image class="doriRigImage" data-dori-reference="1" x="0" y="0" width="291" height="334" clip-path="url(#doriClipEarLeft)" preserveAspectRatio="none"/></g>
+                  <g id="doriRigEarRight" class="dori-rig-part"><image class="doriRigImage" data-dori-reference="1" x="0" y="0" width="291" height="334" clip-path="url(#doriClipEarRight)" preserveAspectRatio="none"/></g>
+                </g>
+                <g id="doriRigBlink" opacity="0">
+                  <ellipse cx="-75.5" cy="-76" rx="6.9" ry="7.5" fill="#f9cc8b"/>
+                  <ellipse cx="-23.6" cy="-67.5" rx="6.9" ry="7.5" fill="#f5c77e"/>
+                  <path d="M-82 -76 Q-75.5 -70 -68.5 -76 M-30.5 -67.5 Q-23.6 -61.5 -16.7 -67.5" fill="none" stroke="#30221d" stroke-width="2.2" stroke-linecap="round"/>
+                </g>
+              </g>
+
               <image id="doriReferenceArtwork" x="-116" y="-185" width="232" height="266" href="" preserveAspectRatio="none" opacity="0"/>
 
               <g id="sleepZ" class="sleep-z" fill="#5878b8" font-size="22" font-weight="700">
@@ -1213,8 +1376,9 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 <script>
 (function loadReferenceDoriArtwork(){
   var sprite=document.getElementById('doriSprite');
-  var image=document.getElementById('doriReferenceArtwork');
-  if(!sprite||!image)return;
+  var rig=document.getElementById('doriRigAssembly');
+  var images=rig?Array.from(rig.querySelectorAll('[data-dori-reference]')):[];
+  if(!sprite||!rig||!images.length)return;
   var files=[
     './assets/dori-life/reference-1.txt',
     './assets/dori-life/reference-2.txt',
@@ -1232,8 +1396,18 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   })).then(function(parts){
     var encoded=parts.join('').trim();
     if(encoded.slice(0,4)!=='UklG')throw new Error('Invalid Dori artwork data');
-    image.addEventListener('load',function(){sprite.classList.add('reference-art-ready');},{once:true});
-    image.setAttribute('href','data:image/webp;base64,'+encoded);
+    var uri='data:image/webp;base64,'+encoded;
+    var loaded=0;
+    images.forEach(function(image){
+      image.addEventListener('load',function(){
+        loaded+=1;
+        if(loaded===images.length)sprite.classList.add('reference-art-ready');
+      },{once:true});
+      image.addEventListener('error',function(){
+        console.error('A Dori rig part failed to load.');
+      },{once:true});
+      image.setAttribute('href',uri);
+    });
   }).catch(function(error){
     console.error('Dori reference artwork could not be loaded; using the built-in character.',error);
   });
