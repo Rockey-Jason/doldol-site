@@ -165,3 +165,49 @@ This pass adds and wires the following additional behavior on branch `codex/doro
 - Overall item ownership and shipping remain **PARTIAL / CRITICAL**. No global conservation or release-completion claim is made.
 
 No main merge, GitHub Pages/Render deployment, production database/schema/permission/function change, or real-user save/balance/reward mutation was performed.
+
+
+## 2026-11-12 — failed-shipment world-drop recovery interaction
+
+**Code checkpoint:** `5704223f163a8fc478422a40cecb30fc3978aeaf`  
+**Main HEAD at comparison:** `cde4215b05413d627dbacb86e8a2683a708788f4`  
+**PR #11:** open / draft, base `26e88058b6d416d79459fee107aff4a5beb3d7e3`  
+**Branch divergence:** 364 commits ahead / 578 behind; common merge base remains `26e88058b6d416d79459fee107aff4a5beb3d7e3`.
+
+### Live code changes
+
+- Failed-shipment world drops now preserve the player's current layer and mine depth as well as their tile coordinates. A failed shipment in mine layer 3 therefore remains a mine-layer drop rather than being relocated to the surface.
+- Added visible world-drop markers to the Three.js scene and the 2D compatibility renderer. The WebGL scene signature now includes world-drop identity, quantity, coordinates and layer, so adding/removing a drop rebuilds the marker set instead of leaving stale meshes.
+- Added proximity pickup through the existing E interaction and action button. The action button temporarily uses the same E interaction path, so touch users can collect a drop without relying on a physical keyboard.
+- Pickup validates the current custody snapshot and requires the exact `WORLD_DROP` owner, drop ID, canonical item ID, quantity and unused runtime Stack ID.
+- The same custody Stack ID becomes the inventory runtime Stack ID. Quantity, quality, purity and `synthetic` metadata are preserved; the drop is removed only after the custody transfer, inventory projection and rebuilt ledger all validate.
+- Pickup uses the deterministic transaction key `WORLD_DROP_PICKUP:<dropID>`. Duplicate input cannot create a second inventory stack. Transfer conflicts and failures during inventory projection fail closed and restore the original runtime, world-drop list, inventory projection and ownership journal.
+- Added E2E fixtures for visual materialization, action-button pickup, keyboard pickup, exact Stack ID/metadata preservation and repeated-input idempotency. The fallback renderer now reports its visible surface-drop count for diagnostics.
+- Runtime cache version for `world3d.js` was advanced to `v=21`.
+
+### Tests and evidence
+
+- Current `contract-runtime.test.mjs` source executed against the fetched production canonical-data, simulation-core, ownership-runtime and contract-runtime modules in an isolated V8 harness: **8/8 passed**, including failed-shipment world-drop layer/depth preservation.
+- The exact live `rebuildOwnershipLedger` and `pickupNearbyWorldDrop` functions were extracted from the current factory source and exercised with the production ownership and simulation modules:
+  - successful pickup preserved Stack ID, 2-unit quantity, quality 97, purity 98 and `synthetic=false`;
+  - repeated pickup returned false and left one transfer journal entry;
+  - an injected inventory-sync exception rolled back the drop, inventory, runtime stack and transaction;
+  - a conflicting transaction ID was rejected without consuming or duplicating the drop.
+  - all resulting custody snapshots validated.
+- Async JavaScript syntax compilation for `factory.js`, `world3d.js`, `contract-runtime.js`, `contract-runtime.test.mjs` and `e2e/factory-smoke.mjs`: **5/5 passed**. This is a V8 syntax check, not the Node CI workflow.
+- GitHub Actions lookup and combined commit-status lookup for code checkpoint `5704223f163a8fc478422a40cecb30fc3978aeaf` returned no workflow runs and no status entries. Native Node `--test` and the real Playwright browser regression therefore remain **UNVERIFIED**; the new browser scenarios are committed but have not been observed running.
+- Android/iOS hardware playthrough and a 60-minute physical wall-clock soak remain **UNVERIFIED**.
+
+### Current ownership and release gaps
+
+- World drops are now persisted, rendered and recoverable through the live E/action interaction, but the full pickup flow still needs the committed Playwright browser regression to run.
+- Independent warehouse stock and warehouse-to-inventory transactions remain incomplete. The current storage collection path still projects back into player inventory.
+- Partial-stack conveyor parcels, sorter/splitter/merger/lift/curve/multi-lane routing, deadlock recovery, demolition/salvage, Infinity output custody, and restart/reconnect conservation across all owner domains remain open.
+- The six-fluid live network, canonical catalog integration across every recipe/model/research/UI, live Fusion runtime integration, 2,048m × 2,048m save-safe world migration, full contract catalog and server-authoritative rewards remain incomplete.
+- All 12 roadmap stages remain PARTIAL or UNVERIFIED; no final 20-item checklist entry is promoted to COMPLETE by this change.
+
+### Cross-PR and deployment boundary
+
+- PR #9 overlaps this work in `factory.js` and `e2e/factory-smoke.mjs`; PR #10 overlaps in `factory.js` and `world3d.js`. Their current PR-head versions were compared file by file and do not contain the current shipment-custody/world-drop pickup implementation. No older file was wholesale copied or cherry-picked over the current branch.
+- PR #8 remains a separate Godot 4 implementation and was not integrated into the selected Three.js/WebGL game.
+- Main remains `cde4215b05413d627dbacb86e8a2683a708788f4`. PR #11 remains open/draft and unmerged. No main merge, Pages/Render deployment, production DB/schema/permission/function change, user-save mutation, or real-user balance/reward mutation was performed.
