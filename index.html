@@ -5342,5 +5342,41 @@ if ("serviceWorker" in navigator) {
   }
 }
 </style>
+
+<style id="dori-profile-overlap-guard">
+/* Keep the fixed avatar in its own visual lane on narrow screens. */
+#돌이프로필고정틀{
+  position:fixed !important;
+  top:calc(env(safe-area-inset-top, 0px) + 12px) !important;
+  right:calc(env(safe-area-inset-right, 0px) + 12px) !important;
+  left:auto !important;
+  bottom:auto !important;
+  z-index:1000 !important;
+  width:52px !important;
+  height:52px !important;
+  transform:none !important;
+}
+.상단영역{min-width:0}
+.상단영역>div:first-child{min-width:0}
+@media(max-width:650px){
+  .상단영역>div:first-child{
+    width:100%;
+    padding-right:76px;
+  }
+  #사이트설명{
+    max-width:100%;
+    overflow-wrap:anywhere;
+  }
+}
+@media(min-width:651px){
+  #돌이프로필고정틀{
+    top:calc(env(safe-area-inset-top, 0px) + 18px) !important;
+    right:calc(env(safe-area-inset-right, 0px) + 20px) !important;
+    width:58px !important;
+    height:58px !important;
+  }
+  .상단영역>div:first-child{padding-right:84px}
+}
+</style>
 </body>
 </html>
