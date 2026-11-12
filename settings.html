@@ -2263,6 +2263,10 @@ body::after{
     object-fit:contain!important;
 }
 .dori-character-stage .dori-real-base{z-index:2!important;filter:drop-shadow(0 12px 15px rgba(0,0,0,.2))}
+.dori-character-stage .dori-real-base.skin-SKIN_RARE{filter:drop-shadow(0 12px 15px rgba(0,0,0,.2)) saturate(1.2) hue-rotate(7deg)}
+.dori-character-stage .dori-real-base.skin-SKIN_SUPER_RARE{filter:drop-shadow(0 12px 15px rgba(0,0,0,.2)) saturate(1.45) hue-rotate(165deg) brightness(1.08)}
+.dori-character-stage .dori-real-base.skin-SKIN_MYTHIC{filter:drop-shadow(0 12px 15px rgba(0,0,0,.2)) saturate(1.55) hue-rotate(220deg) brightness(1.04)}
+.dori-character-stage .dori-real-base.skin-SKIN_LEGENDARY{filter:drop-shadow(0 12px 15px rgba(0,0,0,.2)) saturate(1.4) sepia(.48) hue-rotate(355deg) brightness(1.08)}
 .dori-character-stage .dori-cape-layer{z-index:1!important;opacity:.98}
 .dori-character-stage .dori-clothes-layer{z-index:3!important;filter:drop-shadow(0 3px 3px rgba(0,0,0,.2))}
 .dori-character-stage .dori-hat-layer{z-index:4!important;filter:drop-shadow(0 4px 3px rgba(0,0,0,.22))}
@@ -4284,7 +4288,7 @@ function 돌이꾸미기오버레이경로(item, category) {
         const sunglasses = /SUN|DARK|SHADOW|선글라스|블랙/.test(key);
         const lens = sunglasses ? "#263044" : "#8edcff";
         const lensOpacity = sunglasses ? ".88" : ".30";
-        art = '<g stroke="' + dark + '" stroke-width="7" stroke-linejoin="round"><path d="M91 171 Q116 155 143 172 L141 193 Q133 212 113 208 Q94 202 91 171Z" fill="' + lens + '" fill-opacity="' + lensOpacity + '"/><path d="M211 194 Q235 179 260 197 L257 217 Q248 237 228 231 Q211 225 211 194Z" fill="' + lens + '" fill-opacity="' + lensOpacity + '"/><path d="M142 180 Q176 166 212 198" fill="none" stroke-width="8" stroke-linecap="round"/><path d="M91 169 L79 166 M260 195 L274 191" fill="none" stroke-width="7" stroke-linecap="round"/></g><path d="M101 176 L119 170 M222 200 L239 194" stroke="#fff" stroke-opacity=".75" stroke-width="5" stroke-linecap="round"/>';
+        art = '<g stroke="' + dark + '" stroke-width="7" stroke-linejoin="round"><path d="M91 158 Q116 142 143 159 L141 180 Q133 199 113 195 Q94 189 91 158Z" fill="' + lens + '" fill-opacity="' + lensOpacity + '"/><path d="M211 180 Q235 165 260 183 L257 203 Q248 223 228 216 Q211 210 211 180Z" fill="' + lens + '" fill-opacity="' + lensOpacity + '"/><path d="M142 166 Q176 152 212 184" fill="none" stroke-width="8" stroke-linecap="round"/><path d="M91 156 L79 153 M260 181 L274 177" fill="none" stroke-width="7" stroke-linecap="round"/></g><path d="M101 176 L119 170 M222 200 L239 194" stroke="#fff" stroke-opacity=".75" stroke-width="5" stroke-linecap="round"/>';
     } else if (category === "clothes") {
         if (/ARMOR|KNIGHT|방어구|갑옷/.test(key)) {
             art = '<path d="M244 278 Q270 260 299 272 L328 285 Q372 274 403 298 Q434 318 447 352 L437 400 Q407 416 375 405 L329 397 Q293 385 263 366 L235 337Z" fill="' + color + '" stroke="' + dark + '" stroke-width="8" stroke-linejoin="round"/><path d="M280 283 L309 304 L341 283 L362 397 Q326 391 293 371Z" fill="#f7e6b3" fill-opacity=".9" stroke="' + dark + '" stroke-width="5"/><path d="M304 315 L329 331 L350 315 L341 360 L322 375 L306 357Z" fill="#6ed9f4" stroke="' + dark + '" stroke-width="5"/>';
