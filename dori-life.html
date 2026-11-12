@@ -2300,35 +2300,21 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       if(now-lastFrame>=fpsInterval){lastFrame=now;try{poseMotion(now);}catch(err){failed=true;console.error('Dori mesh rendering failed',err);if(fallback){fallback.hidden=false;canvas.hidden=true;}}}
       requestAnimationFrame(loop);
     }
-    function showImage(dataUrl){
+    function showImage(url){
       texture.onload=function(){
         ready=true;
-        if(fallback){fallback.src=dataUrl;fallback.hidden=true;}
+        if(fallback){fallback.src=url;fallback.hidden=true;}
         makeVertices();resetBones();requestAnimationFrame(loop);
       };
       texture.onerror=function(){
         failed=true;
         canvas.hidden=true;
-        if(fallback){fallback.src=dataUrl;fallback.hidden=false;}
-        console.error('Dori official cutout could not decode.');
+        if(fallback){fallback.src=url;fallback.hidden=false;}
+        console.error('Official Dori cutout could not decode or load.');
       };
-      texture.src=dataUrl;
+      texture.src=url;
     }
-    var urls=[1,2,3,4,5,6,7].map(function(n){return './assets/dori-life/reference-'+n+'.txt?v=20261113-official-cutout';});
-    Promise.all(urls.map(function(url){return fetch(url,{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('Dori image segment fetch failed: '+url);return r.text();});}))
-      .then(function(parts){
-        var base64=parts.join('').trim();
-        if(base64.length!==18988||base64.slice(0,4)!=='UklG')throw new Error('Official Dori cutout data integrity check failed');
-        showImage('data:image/webp;base64,'+base64);
-      }).catch(function(error){
-        failed=true;canvas.hidden=true;
-        if(fallback){
-          fallback.hidden=false;
-          fallback.alt='돌이 공식 캐릭터 이미지를 불러오지 못했습니다.';
-        }
-        console.error('Official Dori cutout unavailable; check the source assets.',error);
-      });
-  }
+    showImage('./assets/dori-life/dori-official.webp?v=20261113-official-cutout');
   initDoriMeshRig();
 
   function updateFurnitureInteraction(state){
