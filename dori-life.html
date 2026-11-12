@@ -529,7 +529,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 #doriRigAssembly{opacity:0;visibility:hidden;pointer-events:none}
 #doriSprite.reference-art-ready> :not(#doriReferenceArtwork):not(#doriRigAssembly):not(#sleepZ):not(#yawnMarks){opacity:0!important;visibility:hidden!important;pointer-events:none!important}
 #doriSprite.reference-art-ready #doriRigAssembly{opacity:1!important;visibility:visible!important}
-.dori-bone{transform-box:fill-box;backface-visibility:hidden;transform-style:flat;will-change:transform;filter:none}
+.dori-bone{transform-box:fill-box;backface-visibility:hidden;transform-style:flat;filter:none}
 #doriRigCanvas{shape-rendering:geometricPrecision;isolation:isolate}
 #doriRigCanvas svg{overflow:visible}
 #doriRigCanvas use{image-rendering:auto}
@@ -711,6 +711,36 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 @keyframes rigShakeHead{0%,100%{transform:rotate(0)}20%{transform:rotate(7deg)}40%{transform:rotate(-7deg)}60%{transform:rotate(6deg)}80%{transform:rotate(-3deg)}}
 @keyframes rigShakeEars{0%,100%{transform:rotate(0)}25%{transform:rotate(8deg)}50%{transform:rotate(-8deg)}75%{transform:rotate(5deg)}}
 @media(prefers-reduced-motion:reduce){.dori-bone,#doriRigBlink{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
+
+/* Four-beat walk offsets: each paw lands at a slightly different moment. */
+.scene[data-pose="walk"] #doriBoneForeFarUpper{animation-delay:0s}
+.scene[data-pose="walk"] #doriBoneForeNearUpper{animation-delay:-.17s}
+.scene[data-pose="walk"] #doriBoneHindFarUpper{animation-delay:-.34s}
+.scene[data-pose="walk"] #doriBoneHindNearUpper{animation-delay:-.51s}
+.scene[data-pose="walk"] #doriBoneForeFarLower{animation-delay:-.07s}
+.scene[data-pose="walk"] #doriBoneForeNearLower{animation-delay:-.24s}
+.scene[data-pose="walk"] #doriBoneHindFarLower{animation-delay:-.41s}
+.scene[data-pose="walk"] #doriBoneHindNearLower{animation-delay:-.58s}
+.scene[data-pose="walk"] #doriBoneForeFarPaw{animation-delay:-.12s}
+.scene[data-pose="walk"] #doriBoneForeNearPaw{animation-delay:-.29s}
+.scene[data-pose="walk"] #doriBoneHindFarPaw{animation-delay:-.46s}
+.scene[data-pose="walk"] #doriBoneHindNearPaw{animation-delay:-.63s}
+/* One-shot reactions settle into small, occasional movements instead of freezing. */
+.scene[data-pose="alert"] #doriBoneBody{animation-duration:3.8s;animation-iteration-count:infinite}
+.scene[data-pose="alert"] #doriBoneHead{animation-duration:3.2s;animation-iteration-count:infinite}
+.scene[data-pose="alert"] #doriBoneEarLeft,.scene[data-pose="alert"] #doriBoneEarRight{animation-duration:3.6s;animation-iteration-count:infinite}
+.scene[data-pose="alert"] #doriBoneTailRoot,.scene[data-pose="alert"] #doriBoneTailTip{animation-duration:1.8s;animation-iteration-count:infinite}
+.scene[data-pose="sneeze"] #doriBoneBody{animation-duration:5.2s;animation-iteration-count:infinite}
+.scene[data-pose="sneeze"] #doriBoneHead{animation-duration:5.2s;animation-iteration-count:infinite}
+.scene[data-pose="sneeze"] #doriBoneEarLeft,.scene[data-pose="sneeze"] #doriBoneEarRight{animation-duration:5.2s;animation-iteration-count:infinite}
+.scene[data-pose="shake"] #doriBoneBody,.scene[data-pose="shake"] #doriBoneHead,.scene[data-pose="shake"] #doriBoneEarLeft,.scene[data-pose="shake"] #doriBoneEarRight{animation-duration:7s;animation-iteration-count:infinite}
+.scene[data-pose="greet"] #doriBoneHead,.scene[data-pose="greet"] #doriBoneForeNearUpper,.scene[data-pose="greet"] #doriBoneForeNearLower{animation-duration:3.4s}
+.scene[data-pose="scratch"] #doriBoneBody,.scene[data-pose="scratch"] #doriBoneHindNearUpper{animation-duration:3.8s}
+.scene[data-pose="scratch"] #doriBoneHindNearLower,.scene[data-pose="scratch"] #doriBoneHindNearPaw{animation-duration:.62s}
+.scene[data-pose="paw"] #doriBoneForeNearUpper,.scene[data-pose="paw"] #doriBoneForeNearLower{animation-duration:2.6s}
+.scene[data-pose="paw"] #doriBoneHead{animation-duration:4.2s}
+.scene[data-pose="yawn"] #doriBoneHead,.scene[data-pose="yawn"] #doriBoneBody{animation-duration:18s}
+@media(prefers-reduced-motion:reduce){.dori-bone{animation-duration:.01ms!important;animation-iteration-count:1!important}}
 </style>
 </head>
 <body>
