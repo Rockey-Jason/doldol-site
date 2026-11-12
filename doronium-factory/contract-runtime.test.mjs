@@ -52,7 +52,7 @@ test("dispatch custody failure rolls back the reservation, source inventory and 
 });
 
 test("failed shipment transfers its cargo to an explicit world-drop owner",()=>{
- const {game,contracts}=setUp();startContractShipment(game,contracts,{...contract,id:"FAILED-IRON"}, {routeRisk:1});
+ const {game,contracts}=setUp();game.player={x:12,y:14,layer:"mine",mineLevel:3};startContractShipment(game,contracts,{...contract,id:"FAILED-IRON"}, {routeRisk:1});
  const shipment=contracts.shipments[0];for(let i=0;i<5;i++)advancePackagingStage(game,contracts,shipment.shipmentID);
  seedShipmentCustody(game,shipment);assert.equal(dispatchContractShipment(game,contracts,shipment.shipmentID).ok,true);
  shipment.protection=0;contracts.randomState=1;game.seconds+=30;
@@ -61,5 +61,5 @@ test("failed shipment transfers its cargo to an explicit world-drop owner",()=>{
  assert.equal(game.worldDrops.length,1);assert.equal(game.worldDrops[0].quantity,2);
  const owner=game.ownershipLedger.custody.find(x=>x.stackID===game.worldDrops[0].custodyStackID);
  assert.equal(owner.ownerType,"WORLD_DROP");assert.equal(owner.ownerID,game.worldDrops[0].dropID);
- assert.equal(owner.quantity,2);assert.equal(validateOwnershipState(game.ownershipLedger).valid,true);
+ assert.equal(owner.quantity,2);assert.equal(game.worldDrops[0].layer,"mine");assert.equal(game.worldDrops[0].mineLevel,3);assert.equal(validateOwnershipState(game.ownershipLedger).valid,true);
 });
