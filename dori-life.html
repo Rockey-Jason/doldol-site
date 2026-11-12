@@ -57,6 +57,9 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 .scene[data-event="rainbow"] .rainbow-fx{opacity:1}
 .scene[data-pose="sleep"] .sleep-z{opacity:1}.scene #doriBed{opacity:0;transition:opacity .5s ease}.scene[data-pose="sleep"] #doriBed{opacity:1}
 #doriSprite{transform-box:fill-box;transform-origin:50% 80%;animation:doriBreath 4.8s ease-in-out infinite;transition:transform .7s cubic-bezier(.2,.8,.2,1)}
+#doriReferenceArtwork{opacity:0;visibility:hidden;pointer-events:none}
+#doriSprite.reference-art-ready> :not(#doriReferenceArtwork):not(#sleepZ):not(#yawnMarks){opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+#doriSprite.reference-art-ready #doriReferenceArtwork{opacity:1!important;visibility:visible!important}
 #doriBody,#doriHead,#doriTail,#doriEarLeft,#doriEarRight,#doriFrontPawNear,#doriFrontPawFar,#doriBackPawNear,#doriBackPawFar,#doriGroomPaw{transform-box:fill-box}
 #doriHead{transform-origin:58% 80%;animation:doriHeadIdle 6.2s ease-in-out infinite}
 #doriTail{transform-origin:8% 52%;animation:doriTailWag 2s ease-in-out infinite}
@@ -783,6 +786,8 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
                   fill="url(#corgiCream)" stroke="#543a2b" stroke-width="3.4"/>
               </g>
 
+              <image id="doriReferenceArtwork" x="-116" y="-185" width="232" height="266" href="" preserveAspectRatio="none" opacity="0"/>
+
               <g id="sleepZ" class="sleep-z" fill="#5878b8" font-size="22" font-weight="700">
                 <text x="78" y="-208">Z</text><text x="102" y="-231" font-size="15">z</text><text x="118" y="-246" font-size="11">z</text>
               </g>
@@ -1203,6 +1208,35 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   document.addEventListener('visibilitychange',function(){if(!document.hidden)update();});
   window.addEventListener('pageshow',update);
   window.addEventListener('focus',update);
+})();
+</script>
+<script>
+(function loadReferenceDoriArtwork(){
+  var sprite=document.getElementById('doriSprite');
+  var image=document.getElementById('doriReferenceArtwork');
+  if(!sprite||!image)return;
+  var files=[
+    './assets/dori-life/reference-1.txt',
+    './assets/dori-life/reference-2.txt',
+    './assets/dori-life/reference-3.txt',
+    './assets/dori-life/reference-4.txt',
+    './assets/dori-life/reference-5.txt',
+    './assets/dori-life/reference-6.txt',
+    './assets/dori-life/reference-7.txt'
+  ];
+  Promise.all(files.map(function(url){
+    return fetch(url,{cache:'force-cache'}).then(function(response){
+      if(!response.ok)throw new Error('Dori artwork data unavailable: '+url);
+      return response.text();
+    });
+  })).then(function(parts){
+    var encoded=parts.join('').trim();
+    if(encoded.slice(0,4)!=='UklG')throw new Error('Invalid Dori artwork data');
+    image.addEventListener('load',function(){sprite.classList.add('reference-art-ready');},{once:true});
+    image.setAttribute('href','data:image/webp;base64,'+encoded);
+  }).catch(function(error){
+    console.error('Dori reference artwork could not be loaded; using the built-in character.',error);
+  });
 })();
 </script>
 </body>
