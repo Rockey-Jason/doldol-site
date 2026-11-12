@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v49-dori-mesh-render-fix-20261113";
+const CACHE_NAME = "doldol-site-pwa-v50-dori-local-joints-20261113";
 const SITE_SCOPE = new URL(self.registration.scope);
 const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
