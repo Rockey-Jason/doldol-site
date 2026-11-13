@@ -2414,7 +2414,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       var curious=['curious','listen','alert','guard','lookUp','peek','explore','follow'].indexOf(pose)>=0;
       var shy=pose==='shy'||pose==='hide';
       var yawn=pose==='yawn';
-      var surprised=pose==='sneeze'||pose==='shake'||pose==='bird';
+      var surprised=pose==='sneeze'||pose==='shake'||pose==='bird'||pose==='alert';
       var focused=['eat','water','sniff','groom'].indexOf(pose)>=0;
       var left=skinPoint(62,162),right=skinPoint(139,179),mouth=skinPoint(91,198);
       var leftBrow=skinPoint(62,145),rightBrow=skinPoint(139,162);
@@ -2467,6 +2467,11 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       }else if(sleepy||focused){
         ctx.strokeStyle='#4a3028';ctx.lineWidth=2.2;
         ctx.beginPath();ctx.moveTo(mouth.x-5,mouth.y+1);ctx.quadraticCurveTo(mouth.x,mouth.y+4,mouth.x+5,mouth.y+1);ctx.stroke();
+        if(pose==='groom'){
+          var lick=(Math.sin(t*5)+1)/2;
+          ctx.fillStyle='#ef8994';
+          ctx.beginPath();ctx.ellipse(mouth.x+2,mouth.y+4+lick*2,2.6,2.2+lick*1.4,.2,0,Math.PI*2);ctx.fill();
+        }
       }
       if(sleepy&&Math.sin(t*1.4)>.2){
         var drift=Math.sin(t*.7)*1.4;
