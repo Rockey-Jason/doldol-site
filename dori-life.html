@@ -913,6 +913,10 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 @keyframes doriWindowGlimmer{0%,100%{opacity:.82}50%{opacity:1}}
 @media(prefers-reduced-motion:reduce){#doriRigCanvas,#doriFoodBowl,#doriWaterBowl,#doriPlayBall,#doriToyBone{animation:none!important}}
 
+/* Expression state transitions: eyes, brows, muzzle and paw animation */
+#doriRigCanvas{will-change:contents}
+.scene[data-pose="sleep"] #doriRigCanvas,.scene[data-pose="doze"] #doriRigCanvas,.scene[data-pose="dream"] #doriRigCanvas{filter:drop-shadow(0 1px 0 rgba(58,38,27,.04)) drop-shadow(0 0 3px rgba(123,151,190,.08))}
+.scene[data-pose="happy"] #doriRigCanvas,.scene[data-pose="friendPlay"] #doriRigCanvas,.scene[data-pose="reunion"] #doriRigCanvas{filter:drop-shadow(0 1px 0 rgba(58,38,27,.04)) drop-shadow(0 0 4px rgba(244,194,139,.12))}
 </style>
 </head>
 <body>
@@ -2105,6 +2109,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     sourceCanvas.width=W;sourceCanvas.height=H;
     var sourceCtx=sourceCanvas.getContext('2d',{willReadFrequently:true});
     var sourcePixelsReady=false;
+    var faceColorCache={};
     function prepareSourcePixels(){
       sourceCtx.clearRect(0,0,W,H);
       sourceCtx.drawImage(texture,0,0,W,H);
@@ -2112,6 +2117,8 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     }
     function sampledFurColor(x,y,rx,ry){
       if(!sourcePixelsReady)return 'rgba(245,225,194,.96)';
+      var cacheKey=[x,y,rx,ry].join(':');
+      if(faceColorCache[cacheKey])return faceColorCache[cacheKey];
       var rr=0,gg=0,bb=0,count=0;
       for(var a=0;a<16;a++){
         var angle=a*Math.PI/8;
@@ -2121,7 +2128,8 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         if(pix[3]>180){rr+=pix[0];gg+=pix[1];bb+=pix[2];count++;}
       }
       if(!count)return 'rgba(245,225,194,.96)';
-      return 'rgb('+Math.round(rr/count)+','+Math.round(gg/count)+','+Math.round(bb/count)+')';
+      faceColorCache[cacheKey]='rgb('+Math.round(rr/count)+','+Math.round(gg/count)+','+Math.round(bb/count)+')';
+      return faceColorCache[cacheKey];
     }
     function pointWeights(x,y){
       var weighted=defs.filter(function(d){return d.id!=='root';}).map(function(d){
@@ -2337,6 +2345,53 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       }else if(pose==='peek'||pose==='hide'||pose==='shy'){
         set('body',.03*Math.sin(t*1.5),1,1);set('head',-.12+.03*Math.sin(t*1.5),1,1);
         set('neck',-.08,1,1);set('frontNearUpper',-.1,1,1);
+      }
+      var footBeat=t*8.2;
+      if(['walk','follow','explore','chase'].indexOf(pose)>=0){
+        set('frontFarPaw',.13*Math.sin(footBeat+Math.PI),1,1,0,Math.max(0,-Math.sin(footBeat))*1.6);
+        set('frontNearPaw',.13*Math.sin(footBeat),1,1,0,Math.max(0,Math.sin(footBeat))*1.6);
+        set('hindFarPaw',.11*Math.sin(footBeat),1,1,0,Math.max(0,Math.sin(footBeat))*1.2);
+        set('hindNearPaw',.11*Math.sin(footBeat+Math.PI),1,1,0,Math.max(0,-Math.sin(footBeat))*1.2);
+      }else if(['trot','gallop','zoomies'].indexOf(pose)>=0){
+        var pawBeat=t*(pose==='zoomies'?17:12);
+        set('frontFarPaw',.25*Math.sin(pawBeat+Math.PI),1,1);
+        set('frontNearPaw',.25*Math.sin(pawBeat),1,1);
+        set('hindFarPaw',.22*Math.sin(pawBeat),1,1);
+        set('hindNearPaw',.22*Math.sin(pawBeat+Math.PI),1,1);
+      }else if(['sleep','doze','dream','cuddle','flop'].indexOf(pose)>=0){
+        var sleepyTwitch=Math.max(0,Math.sin(t*1.7+1));
+        set('frontFarPaw',.04*sleepyTwitch,1,1);
+        set('frontNearPaw',-.05*sleepyTwitch,1,1);
+        set('hindFarPaw',.025*sleepyTwitch,1,1);
+        set('hindNearPaw',-.025*sleepyTwitch,1,1);
+      }else if(['play','pounce','hop','happy','friendPlay','reunion'].indexOf(pose)>=0){
+        var playBeat=Math.sin(t*7);
+        set('frontFarPaw',-.18*playBeat,1,1);
+        set('frontNearPaw',.2*playBeat,1,1);
+        set('hindFarPaw',.1*playBeat,1,1);
+        set('hindNearPaw',-.1*playBeat,1,1);
+      }else if(pose==='dance'){
+        var danceBeat=Math.sin(t*6);
+        set('frontFarPaw',.28*danceBeat,1,1);
+        set('frontNearPaw',-.28*danceBeat,1,1);
+        set('hindFarPaw',.18*danceBeat,1,1);
+        set('hindNearPaw',-.18*danceBeat,1,1);
+      }
+      if(['curious','listen','alert','guard','lookUp','peek'].indexOf(pose)>=0){
+        set('browL',-.13,1,1);set('browR',.13,1,1);
+        set('eyeL',0,1,1.08);set('eyeR',0,1,1.08);
+      }else if(pose==='shy'||pose==='hide'){
+        set('browL',.09,1,1);set('browR',-.09,1,1);
+        set('eyeL',0,1,.9);set('eyeR',0,1,.9);
+        set('muzzle',-.025,1,1);
+      }else if(['happy','play','dance','friendPlay','reunion','greet','paw'].indexOf(pose)>=0){
+        set('browL',-.04,1,1);set('browR',.04,1,1);
+        set('muzzle',.035,1,1);
+      }else if(pose==='yawn'){
+        set('muzzle',.14,1,1.1);set('jaw',.3,1,1);
+        set('eyeL',0,1,.72);set('eyeR',0,1,.72);
+      }else if(pose==='eat'||pose==='water'){
+        set('muzzle',.07*Math.sin(t*8),1,1);
       }
       if(pose!=='sleep'&&pose!=='doze'&&pose!=='dream'){
         var blinkPhase=t%4.7;
