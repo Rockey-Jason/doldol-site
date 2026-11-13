@@ -2084,10 +2084,10 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       {id:'head',a:[117,128],b:[157,205],r:112},
       {id:'earL',a:[91,20],b:[96,88],r:48},
       {id:'earR',a:[237,56],b:[238,120],r:56},
-      {id:'tail',a:[326,194],b:[349,219],r:44},
-      {id:'jaw',a:[110,174],b:[118,201],r:38},
-      {id:'eyeL',a:[86,158],b:[86,158],r:23},
-      {id:'eyeR',a:[143,176],b:[143,176],r:23},
+      {id:'tail',a:[316,215],b:[330,231],r:36},
+      {id:'jaw',a:[88,187],b:[94,207],r:32},
+      {id:'eyeL',a:[62,162],b:[62,162],r:19},
+      {id:'eyeR',a:[139,179],b:[139,179],r:19},
       {id:'frontFarUpper',a:[64,288],b:[70,342],r:47},
       {id:'frontFarLower',a:[70,342],b:[71,386],r:34},
       {id:'frontNearUpper',a:[139,303],b:[140,354],r:48},
@@ -2100,9 +2100,9 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       {id:'frontNearPaw',a:[137,367],b:[142,394],r:26},
       {id:'hindFarPaw',a:[251,363],b:[260,392],r:25},
       {id:'hindNearPaw',a:[315,365],b:[323,394],r:25},
-      {id:'muzzle',a:[108,176],b:[114,193],r:29},
-      {id:'browL',a:[86,143],b:[86,151],r:18},
-      {id:'browR',a:[143,162],b:[143,171],r:18}
+      {id:'muzzle',a:[89,183],b:[94,200],r:26},
+      {id:'browL',a:[62,145],b:[62,152],r:16},
+      {id:'browR',a:[139,162],b:[139,169],r:16}
     ];
     var bone={};
     var sourceCanvas=document.createElement('canvas');
@@ -2390,6 +2390,10 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       }else if(pose==='yawn'){
         set('muzzle',.14,1,1.1);set('jaw',.3,1,1);
         set('eyeL',0,1,.72);set('eyeR',0,1,.72);
+      }else if(pose==='sneeze'||pose==='shake'||pose==='alert'){
+        set('eyeL',0,1,1.12);set('eyeR',0,1,1.12);
+        set('browL',-.17,1,1);set('browR',.17,1,1);
+        set('muzzle',pose==='sneeze'?.12:.035,1,1);
       }else if(pose==='eat'||pose==='water'){
         set('muzzle',.07*Math.sin(t*8),1,1);
       }
@@ -2412,17 +2416,17 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       var yawn=pose==='yawn';
       var surprised=pose==='sneeze'||pose==='shake'||pose==='bird';
       var focused=['eat','water','sniff','groom'].indexOf(pose)>=0;
-      var left=skinPoint(86,158),right=skinPoint(143,176),mouth=skinPoint(111,190);
-      var leftBrow=skinPoint(86,145),rightBrow=skinPoint(143,163);
+      var left=skinPoint(62,162),right=skinPoint(139,179),mouth=skinPoint(91,198);
+      var leftBrow=skinPoint(62,145),rightBrow=skinPoint(139,162);
       ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.lineCap='round';ctx.lineJoin='round';
       if(!sleepy){
         ctx.fillStyle='rgba(255,250,239,.9)';
         ctx.beginPath();ctx.ellipse(left.x-2.2,left.y-3.1,1.8,2.2,-.2,0,Math.PI*2);ctx.fill();
         ctx.beginPath();ctx.ellipse(right.x-2.2,right.y-3.1,1.8,2.2,-.2,0,Math.PI*2);ctx.fill();
       }else{
-        var patchL=skinPoint(86,158),patchR=skinPoint(143,176);
-        ctx.fillStyle=sampledFurColor(86,158,12,10);ctx.beginPath();ctx.ellipse(patchL.x,patchL.y,8.7,7.5,0,0,Math.PI*2);ctx.fill();
-        ctx.fillStyle=sampledFurColor(143,176,12,10);ctx.beginPath();ctx.ellipse(patchR.x,patchR.y,8.7,7.5,0,0,Math.PI*2);ctx.fill();
+        var patchL=skinPoint(62,162),patchR=skinPoint(139,179);
+        ctx.fillStyle=sampledFurColor(62,162,11,9);ctx.beginPath();ctx.ellipse(patchL.x,patchL.y,8.7,7.5,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=sampledFurColor(139,179,11,9);ctx.beginPath();ctx.ellipse(patchR.x,patchR.y,8.7,7.5,0,0,Math.PI*2);ctx.fill();
         ctx.strokeStyle='#35251f';ctx.lineWidth=3.1;
         ctx.beginPath();ctx.moveTo(left.x-7,left.y+1);ctx.quadraticCurveTo(left.x,left.y+6,left.x+7,left.y);ctx.stroke();
         ctx.beginPath();ctx.moveTo(right.x-7,right.y+1);ctx.quadraticCurveTo(right.x,right.y+6,right.x+7,right.y);ctx.stroke();
@@ -2436,14 +2440,14 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         ctx.beginPath();ctx.moveTo(rightBrow.x-5,rightBrow.y+1);ctx.quadraticCurveTo(rightBrow.x,rightBrow.y-3,rightBrow.x+6,rightBrow.y-1);ctx.stroke();
       }
       if(happy||shy){
-        var cheekA=skinPoint(70,184),cheekB=skinPoint(158,198);
+        var cheekA=skinPoint(43,194),cheekB=skinPoint(164,202);
         ctx.fillStyle=shy?'rgba(238,126,137,.23)':'rgba(245,151,137,.16)';
         ctx.beginPath();ctx.ellipse(cheekA.x,cheekA.y,7,3.2,-.15,0,Math.PI*2);ctx.fill();
         ctx.beginPath();ctx.ellipse(cheekB.x,cheekB.y,7,3.2,.15,0,Math.PI*2);ctx.fill();
       }
       if(yawn||happy||surprised||shy){
-        var patch=skinPoint(111,190);
-        ctx.fillStyle=sampledFurColor(111,190,15,11);ctx.beginPath();ctx.ellipse(patch.x,patch.y,11.5,8.2,0,0,Math.PI*2);ctx.fill();
+        var patch=skinPoint(91,198);
+        ctx.fillStyle=sampledFurColor(91,198,12,10);ctx.beginPath();ctx.ellipse(patch.x,patch.y,11.5,8.2,0,0,Math.PI*2);ctx.fill();
         if(yawn){
           var open=1+.16*Math.sin(t*2.1);
           ctx.fillStyle='#30211e';ctx.beginPath();ctx.ellipse(mouth.x,mouth.y+1,7.4,8.4*open,0,0,Math.PI*2);ctx.fill();
