@@ -1487,6 +1487,83 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   addEventChoreography(["curious","listen","sit","beg","shy","wait","peek","hide","sniff"],{"destination":{"x":485,"y":438,"s":0.86},"route":false,"interaction":"sofa","approachPose":4300,"sequence":["walk","curious","listen","peek","sit"],"faces":["curious","attentive","curious","cautious","content"],"moveMs":4600});
   addEventChoreography(["rain"],{"destination":{"x":930,"y":432,"s":0.86},"route":false,"interaction":"window","approachPose":5000,"sequence":["walk","listen","lookUp","sleep"],"faces":["curious","attentive","relaxed","sleepy"],"moveMs":4600});
 
+  // Repair and validate every profile before the timeline can execute it.
+  Object.keys(EVENT_CHOREOGRAPHY).forEach(function(kind){
+    var plan=EVENT_CHOREOGRAPHY[kind];
+    var legacyApproach=plan.approachPose;
+    if(plan.stepMs==='trot'){
+      plan.approachPose='trot';
+      plan.stepMs=typeof legacyApproach==='number'?legacyApproach:3900;
+      plan.moveMs=3900;
+    }else if(typeof legacyApproach==='number'){
+      plan.approachPose='walk';
+      plan.stepMs=legacyApproach;
+    }
+    if(typeof plan.approachPose!=='string')plan.approachPose='walk';
+    if(!Number.isFinite(plan.stepMs)||plan.stepMs<1200)plan.stepMs=4300;
+    if(!Number.isFinite(plan.moveMs)||plan.moveMs<800)plan.moveMs=4600;
+    if(!Array.isArray(plan.sequence)||!plan.sequence.length)plan.sequence=['curious','listen','happy'];
+    if(!Array.isArray(plan.faces)||plan.faces.length!==plan.sequence.length)plan.faces=plan.sequence.map(function(){return 'curious';});
+  });
+  function customizeEventChoreography(kind,changes){
+    if(EVENT_CHOREOGRAPHY[kind])Object.assign(EVENT_CHOREOGRAPHY[kind],changes);
+  }
+  customizeEventChoreography('bird',{sequence:['walk','alert','lookUp','listen'],faces:['curious','surprised','attentive','curious']});
+  customizeEventChoreography('snow',{sequence:['walk','curious','lookUp','happy'],faces:['curious','surprised','delighted','happy']});
+  customizeEventChoreography('rainbow',{sequence:['walk','lookUp','curious','happy'],faces:['curious','surprised','curious','delighted']});
+  customizeEventChoreography('ufo',{sequence:['walk','alert','lookUp','guard'],faces:['curious','surprised','attentive','alert']});
+  customizeEventChoreography('mystery-ufo',{sequence:['listen','peek','alert','lookUp'],faces:['attentive','cautious','surprised','curious']});
+  customizeEventChoreography('meteor',{sequence:['walk','lookUp','sit','lookUp'],faces:['curious','surprised','content','delighted']});
+  customizeEventChoreography('moon',{sequence:['walk','lookUp','sit'],faces:['curious','content','relaxed']});
+  customizeEventChoreography('firefly',{sequence:['curious','peek','lookUp','sit'],faces:['curious','surprised','delighted','content']});
+  customizeEventChoreography('butterfly',{sequence:['walk','lookUp','hop','play'],faces:['curious','delighted','playful','happy']});
+  customizeEventChoreography('plant',{destination:{x:1010,y:432,s:.84},interaction:'plant',sequence:['walk','sniff','curious','sit'],faces:['curious','focused','surprised','content']});
+  customizeEventChoreography('robot',{destination:{x:900,y:432,s:.86},interaction:'robot',sequence:['walk','curious','peek','hide'],faces:['curious','surprised','cautious','shy']});
+  customizeEventChoreography('music',{sequence:['listen','dance','happy','dance'],faces:['attentive','playful','delighted','happy']});
+  customizeEventChoreography('party',{sequence:['walk','dance','hop','dance'],faces:['curious','delighted','playful','happy']});
+  customizeEventChoreography('dance',{sequence:['dance','hop','dance','happy'],faces:['playful','delighted','happy','delighted']});
+  customizeEventChoreography('parade',{destination:{x:930,y:432,s:.86},interaction:'window',sequence:['walk','lookUp','alert','dance'],faces:['curious','surprised','delighted','happy']});
+  customizeEventChoreography('nap',{sequence:['walk','flop','sleep','dream'],faces:['relaxed','sleepy','sleepy','sleepy']});
+  customizeEventChoreography('sleep',{sequence:['flop','sleep','dream','sleep'],faces:['sleepy','sleepy','sleepy','sleepy']});
+  customizeEventChoreography('dream',{sequence:['sleep','dream','doze'],faces:['sleepy','sleepy','sleepy']});
+  customizeEventChoreography('rain',{destination:{x:930,y:432,s:.86},interaction:'window',sequence:['walk','listen','lookUp','sleep'],faces:['curious','attentive','relaxed','sleepy']});
+  customizeEventChoreography('sunbeam',{destination:{x:858,y:453,s:.82},interaction:'bed',sequence:['walk','flop','sleep'],faces:['relaxed','sleepy','sleepy']});
+  customizeEventChoreography('story',{destination:{x:485,y:438,s:.86},interaction:'sofa',sequence:['walk','sit','listen','doze'],faces:['curious','content','attentive','sleepy']});
+  customizeEventChoreography('movie',{destination:{x:485,y:438,s:.86},interaction:'sofa',sequence:['walk','sit','doze'],faces:['curious','content','sleepy']});
+  customizeEventChoreography('delivery',{destination:{x:430,y:432,s:.88},interaction:'door',sequence:['listen','walk','alert','sniff'],faces:['attentive','curious','surprised','focused']});
+  customizeEventChoreography('mail',{destination:{x:520,y:432,s:.87},interaction:'letter',sequence:['walk','sniff','sit','happy'],faces:['curious','focused','attentive','delighted']});
+  customizeEventChoreography('doorbell',{destination:{x:430,y:432,s:.88},interaction:'door',sequence:['listen','alert','lookUp','wait'],faces:['attentive','surprised','curious','alert']});
+  customizeEventChoreography('thief',{destination:{x:430,y:432,s:.88},interaction:'door',sequence:['listen','hide','alert','guard'],faces:['attentive','cautious','surprised','alert']});
+  customizeEventChoreography('friendly-ghost',{destination:{x:430,y:432,s:.88},interaction:'door',sequence:['peek','shy','curious','happy'],faces:['curious','shy','surprised','delighted']});
+  customizeEventChoreography('bread',{destination:{x:535,y:432,s:.90},interaction:'friend',sequence:['walk','greet','sit','happy'],faces:['curious','delighted','content','affectionate']});
+  customizeEventChoreography('friend-play',{destination:{x:535,y:432,s:.90},interaction:'friend',sequence:['greet','friendPlay','play','friendPlay'],faces:['happy','affectionate','playful','delighted']});
+  customizeEventChoreography('follow',{destination:{x:535,y:432,s:.90},interaction:'friend',sequence:['walk','follow','friendPlay'],faces:['curious','attentive','happy']});
+  customizeEventChoreography('reunion',{destination:{x:535,y:432,s:.90},interaction:'friend',sequence:['alert','greet','happy','friendPlay'],faces:['surprised','delighted','affectionate','playful']});
+  customizeEventChoreography('walk',{route:true,interaction:'roam',approachPose:'walk',sequence:['walk','sniff','explore','walk'],faces:['curious','focused','attentive','content']});
+  customizeEventChoreography('trot',{route:true,interaction:'roam',approachPose:'trot',sequence:['trot','trot','walk'],faces:['playful','delighted','curious'],stepMs:3600,moveMs:3900});
+  customizeEventChoreography('zoomies',{route:true,interaction:'roam',approachPose:'trot',sequence:['zoomies','trot','zoomies','happy'],faces:['delighted','playful','happy','delighted'],stepMs:2600,moveMs:3900});
+  customizeEventChoreography('explore',{route:true,interaction:'roam',sequence:['walk','explore','sniff','curious'],faces:['curious','attentive','focused','curious']});
+  customizeEventChoreography('gallop',{route:true,interaction:'roam',approachPose:'trot',sequence:['gallop','trot','gallop'],faces:['playful','delighted','happy'],stepMs:3000,moveMs:3900});
+  customizeEventChoreography('stretch',{destination:{x:675,y:432,s:.90},interaction:'rug',sequence:['sit','stretch','stretch','walk'],faces:['sleepy','content','relaxed','curious']});
+  customizeEventChoreography('yawn',{destination:{x:858,y:453,s:.82},interaction:'bed',sequence:['sit','yawn','doze'],faces:['sleepy','yawn','sleepy']});
+  customizeEventChoreography('sneeze',{destination:{x:780,y:432,s:.88},interaction:'rug',sequence:['curious','sneeze','shake'],faces:['curious','surprised','content']});
+  customizeEventChoreography('grooming',{destination:{x:485,y:438,s:.86},interaction:'sofa',sequence:['sit','groom','groom'],faces:['relaxed','focused','content']});
+  customizeEventChoreography('scratch',{destination:{x:485,y:438,s:.86},interaction:'sofa',sequence:['sit','scratch','groom'],faces:['relaxed','focused','content']});
+  customizeEventChoreography('shake',{destination:{x:675,y:432,s:.90},interaction:'rug',sequence:['sit','shake','shake'],faces:['content','surprised','content']});
+  customizeEventChoreography('photo',{destination:{x:710,y:432,s:.89},interaction:'camera',sequence:['sit','lookUp','happy','sit'],faces:['attentive','curious','delighted','content']});
+  customizeEventChoreography('sniff',{destination:{x:575,y:432,s:.87},interaction:'bone',sequence:['walk','sniff','sniff','curious'],faces:['curious','focused','focused','curious']});
+  customizeEventChoreography('water',{destination:{x:900,y:432,s:.84},interaction:'water',sequence:['walk','sniff','water','water'],faces:['curious','focused','focused','content']});
+  customizeEventChoreography('beg',{destination:{x:485,y:438,s:.86},interaction:'sofa',sequence:['walk','sit','beg','beg'],faces:['curious','content','hopeful','delighted']});
+  customizeEventChoreography('hide',{destination:{x:485,y:438,s:.86},interaction:'sofa',sequence:['peek','hide','shy'],faces:['curious','cautious','shy']});
+  customizeEventChoreography('peek',{destination:{x:485,y:438,s:.86},interaction:'sofa',sequence:['hide','peek','curious'],faces:['cautious','curious','surprised']});
+  customizeEventChoreography('shy',{destination:{x:485,y:438,s:.86},interaction:'sofa',sequence:['walk','shy','peek'],faces:['curious','shy','cautious']});
+  customizeEventChoreography('sit',{destination:{x:485,y:438,s:.86},interaction:'sofa',sequence:['walk','sit','sit'],faces:['curious','content','relaxed']});
+  customizeEventChoreography('wait',{destination:{x:485,y:438,s:.86},interaction:'sofa',sequence:['walk','sit','wait'],faces:['curious','content','attentive']});
+  customizeEventChoreography('curious',{destination:{x:780,y:432,s:.88},interaction:'rug',sequence:['walk','curious','lookUp','listen'],faces:['curious','curious','surprised','attentive']});
+  customizeEventChoreography('listen',{destination:{x:780,y:432,s:.88},interaction:'rug',sequence:['walk','listen','curious','listen'],faces:['curious','attentive','curious','attentive']});
+  customizeEventChoreography('paw',{destination:{x:535,y:432,s:.90},interaction:'friend',sequence:['sit','paw','happy'],faces:['curious','delighted','affectionate']});
+  customizeEventChoreography('happy',{destination:{x:675,y:432,s:.91},interaction:'rug',approachPose:'trot',sequence:['happy','hop','play'],faces:['delighted','playful','happy'],moveMs:3900});
+
   function buildEvents(key){
     var random=rng(hash('DORI-LIFE-'+key));
     var used={};
