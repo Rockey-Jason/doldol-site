@@ -237,3 +237,65 @@ All 12 roadmap areas remain PARTIAL or UNVERIFIED; no final checklist item is CO
 - PR #8 is the separate Godot project; it remains excluded from the chosen Three.js/WebGL architecture.
 - Main has advanced to `cde4215b05413d627dbacb86e8a2683a708788f4`. The development branch is 364 commits ahead and 578 behind. PR #11 is still open/draft with the old merge base; no merge or deployment is authorized.
 - Overall project remains **PARTIAL / NOT RELEASE-READY**. All 12 master roadmap stages remain PARTIAL or UNVERIFIED.
+
+
+## 2026-11-13 — stable network identity and current acceptance status
+
+### Implemented in this checkpoint
+
+- `solvePowerNetworks` and `buildFluidNetworks` now derive each network ID from the encoded smallest sorted node ID in that connected component. Unrelated network insertion and input-order changes no longer renumber an unchanged component.
+- New unit tests cover both power and fluid network identity stability.
+- Current code commit: `1b097e9c727666c34ff3d84e6308269e09d052cd`.
+- Main HEAD: `759e02e7425499ac86ab89b364963f7f13f10230`.
+- PR #11 remains open/draft. Current comparison: **367 ahead / 661 behind** from merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`. No merge or deployment was attempted.
+
+### 12-stage master roadmap status
+
+| Stage | Status | Current evidence / blocker |
+|---:|---|---|
+| 1. Code/data/save audit and stabilization | PARTIAL | Runtime modules, save compatibility and CI are audited; complete account/device recovery is not verified. |
+| 2. World and terrain | PARTIAL | 192×160 finite tile world, terrain variation and underground levels exist; 2,048m×2,048m target and full chunk streaming/unit migration remain incomplete. |
+| 3. Player, exploration, survival and mining | PARTIAL | First/third person, survival, mine interaction and automated mining exist; full PC/mobile campaign and physical-device validation remain. |
+| 4. Terrain preparation and construction | PARTIAL | Flattening, foundations, footprints, blueprints and rollback helpers exist; complete port, dismantle and crash-recovery coverage remains. |
+| 5. Items, ownership and logistics | PARTIAL / CRITICAL | Stack IDs, reservations, production custody, conveyors, shipment cargo and world-drop pickup exist; one authoritative ledger across every domain and global conservation remain incomplete. |
+| 6. Power network | PARTIAL | kW/kJ allocation, batteries, transformers and stable component IDs exist; edge-by-edge loss, persistent merge/split identity and diagnostics remain. |
+| 7. Six-fluid network | PARTIAL | Six fluid types, pressure/temperature, leak and conservation solver exist; live source/extraction/recipe/consumer integration is still water-dominant. |
+| 8. Machine states, failures and maintenance | PARTIAL | Failure profiles and repair paths exist; all-machine state/failure/residue coverage remains incomplete. |
+| 9. Production, research and skills | PARTIAL | Production and 20 skill nodes exist; canonical recipe source-of-truth integration, all skill effects and the 18-stage research target remain unresolved. |
+| 10. Canonical Doronum and Infinity | PARTIAL | Canonical input validation and live seven-stage/260-second Fusion path exist; complete interlocks, save/restart recovery and end-to-end output custody remain. |
+| 11. Shipping, contracts and economy | PARTIAL | Three sample contracts, packaging and custody-aware dispatch exist; full catalog, route risk/insurance and server-authoritative rewards remain. |
+| 12. Save, security, performance and release | PARTIAL / UNVERIFIED | Local/cloud CAS and RLS foundations exist; two-device conflict recovery, physical devices, memory soak and 60-minute wall-clock test remain unverified. |
+
+### 20-item acceptance checklist
+
+| # | Acceptance item | Status | Evidence / remaining blocker |
+|---:|---|---|---|
+| 1 | PC full campaign | PARTIAL | Desktop WebGL smoke/regression exists; full start-to-ending playthrough remains. |
+| 2 | Mobile full campaign | UNVERIFIED | Browser viewport/touch emulation is not a physical Android/iOS playthrough. |
+| 3 | First-/third-person switching | PARTIAL | Both modes exist; full campaign and all input paths remain. |
+| 4 | 2,048m×2,048m world | NOT IMPLEMENTED | Current world remains 192×160 tiles. |
+| 5 | Flattening and foundations | PARTIAL | Core placement rules exist; all footprints, ports, dismantle and rollback cases remain. |
+| 6 | Underground mining | PARTIAL | Automatic/advanced miner scenarios are in browser regression; all deposits, levels, failures and recovery remain. |
+| 7 | Canonical 15 Doronum inputs | PARTIAL | Manifest and input qualification exist; all live recipe/model/research/UI sources are not yet canonical. |
+| 8 | No item duplication/loss | PARTIAL / CRITICAL | Several live transitions are journaled; global cross-domain conservation is not proven. |
+| 9 | Conveyors and automatic mining | PARTIAL | Basic routing and mining exist; parcel splitting, full belt catalog and automated deadlock recovery remain. |
+| 10 | Power and batteries | PARTIAL | Allocation, storage settlement and stable component IDs exist; edge loss and full diagnostic behavior remain. |
+| 11 | Six fluids, pressure and temperature | PARTIAL | Generic six-fluid solver exists; five non-water live source/consumer chains remain incomplete. |
+| 12 | Machine states, failures and repair | PARTIAL | Core states and repair path exist; all-machine coverage remains. |
+| 13 | 18 research / 20 skills | PARTIAL | 20 skill nodes exist but effects are incomplete; current research data count does not match the 18-stage target. |
+| 14 | Seven-stage Fusion | PARTIAL | Live in-memory 260-second path is tested; full safety interlocks and restart recovery remain. |
+| 15 | Exactly one Infinity output | PARTIAL | In-memory settlement is idempotent; save/reconnect replay and custody recovery remain. |
+| 16 | Cloud save and recovery | PARTIAL | Owner-scoped CAS/RLS and local backup exist; two-device/process-restart recovery remains. |
+| 17 | Server authority and security | PARTIAL | Save boundary has owner-scoped controls; all economy/reward mutations are not proven server-authoritative. |
+| 18 | 60-minute wall-clock test | UNVERIFIED | Virtual 36,000 ticks are not 60 minutes of elapsed time. |
+| 19 | Physical PC/mobile performance | UNVERIFIED | No physical PC, Android or iOS soak was run. |
+| 20 | Full start-to-ending regression | PARTIAL | Subflows are covered; full campaign, three relays, core and planetary ending remain. |
+
+### CI and release boundary
+
+- Run [43348303525](https://github.com/Rockey-Jason/doldol-site/actions/runs/43348303525): static/runtime validation **SUCCESS**; Node unit suite **135/135 passed, 0 failed**; browser-regression was still **IN_PROGRESS** when this matrix entry was written and is not counted as a pass.
+- Prior full run [43135156090](https://github.com/Rockey-Jason/doldol-site/actions/runs/43135156090) succeeded on the previous HEAD, but does not replace current-HEAD E2E evidence.
+- PR #8 remains the separate Godot branch and is not integrated. PR #9 and #10 remain unmerged older development branches; no wholesale merge/cherry-pick was performed.
+- No main merge, deployment, production DB mutation, real-user save mutation, or balance/reward mutation was performed.
+
+**Overall: NOT COMPLETE / NOT RELEASE-READY.** No final acceptance item is promoted to COMPLETE by this checkpoint.

@@ -211,3 +211,35 @@ No main merge, GitHub Pages/Render deployment, production database/schema/permis
 - PR #9 overlaps this work in `factory.js` and `e2e/factory-smoke.mjs`; PR #10 overlaps in `factory.js` and `world3d.js`. Their current PR-head versions were compared file by file and do not contain the current shipment-custody/world-drop pickup implementation. No older file was wholesale copied or cherry-picked over the current branch.
 - PR #8 remains a separate Godot 4 implementation and was not integrated into the selected Three.js/WebGL game.
 - Main remains `cde4215b05413d627dbacb86e8a2683a708788f4`. PR #11 remains open/draft and unmerged. No main merge, Pages/Render deployment, production DB/schema/permission/function change, user-save mutation, or real-user balance/reward mutation was performed.
+
+
+## 2026-11-13 — deterministic power/fluid network identity
+
+**Code commit:** `1b097e9c727666c34ff3d84e6308269e09d052cd`  
+**Main HEAD:** `759e02e7425499ac86ab89b364963f7f13f10230`  
+**PR #11:** open / draft; recorded base `26e88058b6d416d79459fee107aff4a5beb3d7e3`  
+**Current comparison:** 367 commits ahead / 661 behind main; merge base remains `26e88058b6d416d79459fee107aff4a5beb3d7e3`.
+
+### Code changes
+
+- Power network IDs no longer depend on the current component's ordinal position. Each connected component now uses its lexicographically smallest stable node ID as its encoded anchor.
+- Fluid network IDs use the same deterministic anchor rule. Adding an unrelated network or changing input array order no longer renumbers an unchanged network.
+- Added a power-network regression test and a fluid-network regression test for unrelated-component insertion and reversed input order.
+- No save schema, item ownership, inventory, account, production database, or live-user data was changed.
+
+### Verification
+
+- GitHub Actions run [43348303525](https://github.com/Rockey-Jason/doldol-site/actions/runs/43348303525) was triggered for this code commit.
+- `validate-web-game`: **SUCCESS**. JavaScript parsing and required runtime-contract checks completed.
+- Node unit suite: **135/135 passed, 0 failed**. Both new stable-network-ID tests are included in this count.
+- `browser-regression`: **IN_PROGRESS at the time of this log entry**. It is not counted as a pass; current-head Playwright and virtual-soak acceptance remain pending.
+- The prior code checkpoint `e5ccc9291126f27fe5e07d4bab906f4cf27b10f2` had a successful full validation/browser run [43135156090](https://github.com/Rockey-Jason/doldol-site/actions/runs/43135156090), including the automatic mine-output assertion. That prior result is not substituted for the current commit's pending browser job.
+- Physical Android/iOS testing and a 60-minute elapsed wall-clock soak remain **UNVERIFIED**.
+
+### Remaining highest-priority gaps
+
+- Power: actual edge-by-edge transmission loss, persistent topology identity across topology merges/splits, and diagnostic/priority behavior still need broader integration.
+- Fluids: six fluid types exist in the solver, but live extraction and consumption remain predominantly WATER; the five non-water source/consumer chains are not complete.
+- Ownership remains PARTIAL / CRITICAL across conveyor parcels, independent warehouse stock, demolition, Fusion output custody, and restart/reconnect conservation.
+
+No main merge, GitHub Pages/Render deployment, production database/schema/permission/function change, or real-user save/balance/reward mutation was performed.
