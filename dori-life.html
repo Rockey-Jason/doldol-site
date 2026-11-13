@@ -2066,7 +2066,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var ctx=canvas.getContext('2d',{alpha:true,desynchronized:true});
     var texture=new Image();
     var W=361,H=397;
-    var COLS=22,ROWS=24;
+    var COLS=30,ROWS=34;
     var vertices=[],triangles=[];
     var ready=false,failed=false,lastFrame=0,lastPose='',poseStarted=0;
     var fpsInterval=1000/30;
@@ -2091,9 +2091,48 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       {id:'hindFarUpper',a:[251,314],b:[256,352],r:48},
       {id:'hindFarLower',a:[256,352],b:[260,389],r:34},
       {id:'hindNearUpper',a:[316,299],b:[320,355],r:48},
-      {id:'hindNearLower',a:[320,355],b:[323,392],r:34}
+      {id:'hindNearLower',a:[320,355],b:[323,392],r:34},
+      {id:'frontFarPaw',a:[67,364],b:[71,389],r:25},
+      {id:'frontNearPaw',a:[137,367],b:[142,394],r:26},
+      {id:'hindFarPaw',a:[251,363],b:[260,392],r:25},
+      {id:'hindNearPaw',a:[315,365],b:[323,394],r:25},
+      {id:'muzzle',a:[108,176],b:[114,193],r:29},
+      {id:'browL',a:[86,143],b:[86,151],r:18},
+      {id:'browR',a:[143,162],b:[143,171],r:18}
     ];
     var bone={};
+    var sourceCanvas=document.createElement('canvas');
+    sourceCanvas.width=W;sourceCanvas.height=H;
+    var sourceCtx=sourceCanvas.getContext('2d',{willReadFrequently:true});
+    var sourcePixelsReady=false;
+    function prepareSourcePixels(){
+      sourceCtx.clearRect(0,0,W,H);
+      sourceCtx.drawImage(texture,0,0,W,H);
+      sourcePixelsReady=true;
+    }
+    function sampledFurColor(x,y,rx,ry){
+      if(!sourcePixelsReady)return 'rgba(245,225,194,.96)';
+      var rr=0,gg=0,bb=0,count=0;
+      for(var a=0;a<16;a++){
+        var angle=a*Math.PI/8;
+        var xx=Math.max(0,Math.min(W-1,Math.round(x+Math.cos(angle)*rx)));
+        var yy=Math.max(0,Math.min(H-1,Math.round(y+Math.sin(angle)*ry)));
+        var pix=sourceCtx.getImageData(xx,yy,1,1).data;
+        if(pix[3]>180){rr+=pix[0];gg+=pix[1];bb+=pix[2];count++;}
+      }
+      if(!count)return 'rgba(245,225,194,.96)';
+      return 'rgb('+Math.round(rr/count)+','+Math.round(gg/count)+','+Math.round(bb/count)+')';
+    }
+    function pointWeights(x,y){
+      var weighted=defs.filter(function(d){return d.id!=='root';}).map(function(d){
+        var dist=segDistance(x,y,d.a,d.b),v=Math.exp(-.5*Math.pow(dist/d.r,2));
+        if(d.base)v=Math.max(v,d.base);
+        return {id:d.id,value:v};
+      }).sort(function(a,b){return b.value-a.value;}).slice(0,4);
+      var sum=weighted.reduce(function(n,w){return n+w.value;},0)||1;
+      return weighted.map(function(w){return {id:w.id,value:w.value/sum};});
+    }
+    function skinPoint(x,y){return transformPoint({sx:x,sy:y,weights:pointWeights(x,y)});}
     function resetBones(){
       bone={};
       defs.forEach(function(d){bone[d.id]={angle:0,sx:1,sy:1,tx:0,ty:0};});
@@ -2308,6 +2347,78 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       for(var i=0;i<triangles.length;i++){
         var tri=triangles[i];drawTriangle(vertices[tri[0]],vertices[tri[1]],vertices[tri[2]],pts[tri[0]],pts[tri[1]],pts[tri[2]]);
       }
+      drawDoriExpression(pose,t,age);
+    }
+    function drawDoriExpression(pose,t,age){
+      var sleepy=['sleep','doze','dream','cuddle','flop'].indexOf(pose)>=0;
+      var happy=['happy','play','dance','friendPlay','reunion','greet','paw','pounce','hop'].indexOf(pose)>=0;
+      var curious=['curious','listen','alert','guard','lookUp','peek','explore','follow'].indexOf(pose)>=0;
+      var shy=pose==='shy'||pose==='hide';
+      var yawn=pose==='yawn';
+      var surprised=pose==='sneeze'||pose==='shake'||pose==='bird';
+      var focused=['eat','water','sniff','groom'].indexOf(pose)>=0;
+      var left=skinPoint(86,158),right=skinPoint(143,176),mouth=skinPoint(111,190);
+      var leftBrow=skinPoint(86,145),rightBrow=skinPoint(143,163);
+      ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.lineCap='round';ctx.lineJoin='round';
+      if(!sleepy){
+        ctx.fillStyle='rgba(255,250,239,.9)';
+        ctx.beginPath();ctx.ellipse(left.x-2.2,left.y-3.1,1.8,2.2,-.2,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.ellipse(right.x-2.2,right.y-3.1,1.8,2.2,-.2,0,Math.PI*2);ctx.fill();
+      }else{
+        var patchL=skinPoint(86,158),patchR=skinPoint(143,176);
+        ctx.fillStyle=sampledFurColor(86,158,12,10);ctx.beginPath();ctx.ellipse(patchL.x,patchL.y,8.7,7.5,0,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle=sampledFurColor(143,176,12,10);ctx.beginPath();ctx.ellipse(patchR.x,patchR.y,8.7,7.5,0,0,Math.PI*2);ctx.fill();
+        ctx.strokeStyle='#35251f';ctx.lineWidth=3.1;
+        ctx.beginPath();ctx.moveTo(left.x-7,left.y+1);ctx.quadraticCurveTo(left.x,left.y+6,left.x+7,left.y);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(right.x-7,right.y+1);ctx.quadraticCurveTo(right.x,right.y+6,right.x+7,right.y);ctx.stroke();
+      }
+      ctx.strokeStyle='#70492f';ctx.lineWidth=2.8;
+      if(curious||surprised){
+        ctx.beginPath();ctx.moveTo(leftBrow.x-7,leftBrow.y+1);ctx.quadraticCurveTo(leftBrow.x,leftBrow.y-5,leftBrow.x+7,leftBrow.y+1);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(rightBrow.x-7,rightBrow.y+1);ctx.quadraticCurveTo(rightBrow.x,rightBrow.y-5,rightBrow.x+7,rightBrow.y+1);ctx.stroke();
+      }else if(shy){
+        ctx.beginPath();ctx.moveTo(leftBrow.x-6,leftBrow.y-1);ctx.quadraticCurveTo(leftBrow.x,leftBrow.y-3,leftBrow.x+5,leftBrow.y+1);ctx.stroke();
+        ctx.beginPath();ctx.moveTo(rightBrow.x-5,rightBrow.y+1);ctx.quadraticCurveTo(rightBrow.x,rightBrow.y-3,rightBrow.x+6,rightBrow.y-1);ctx.stroke();
+      }
+      if(happy||shy){
+        var cheekA=skinPoint(70,184),cheekB=skinPoint(158,198);
+        ctx.fillStyle=shy?'rgba(238,126,137,.23)':'rgba(245,151,137,.16)';
+        ctx.beginPath();ctx.ellipse(cheekA.x,cheekA.y,7,3.2,-.15,0,Math.PI*2);ctx.fill();
+        ctx.beginPath();ctx.ellipse(cheekB.x,cheekB.y,7,3.2,.15,0,Math.PI*2);ctx.fill();
+      }
+      if(yawn||happy||surprised||shy){
+        var patch=skinPoint(111,190);
+        ctx.fillStyle=sampledFurColor(111,190,15,11);ctx.beginPath();ctx.ellipse(patch.x,patch.y,11.5,8.2,0,0,Math.PI*2);ctx.fill();
+        if(yawn){
+          var open=1+.16*Math.sin(t*2.1);
+          ctx.fillStyle='#30211e';ctx.beginPath();ctx.ellipse(mouth.x,mouth.y+1,7.4,8.4*open,0,0,Math.PI*2);ctx.fill();
+          ctx.fillStyle='#ee8d98';ctx.beginPath();ctx.ellipse(mouth.x,mouth.y+5,4.6,3.1,0,0,Math.PI);ctx.fill();
+        }else if(happy){
+          ctx.strokeStyle='#30211e';ctx.lineWidth=2.6;
+          ctx.beginPath();ctx.moveTo(mouth.x-8,mouth.y-1);ctx.quadraticCurveTo(mouth.x,mouth.y+8,mouth.x+8,mouth.y-1);ctx.stroke();
+          if(['play','dance','friendPlay','reunion','happy'].indexOf(pose)>=0){
+            ctx.fillStyle='#ef8994';ctx.beginPath();ctx.ellipse(mouth.x+1,mouth.y+5,3.7,3.3,0,0,Math.PI);ctx.fill();
+          }
+        }else if(surprised){
+          ctx.fillStyle='#30211e';ctx.beginPath();ctx.ellipse(mouth.x,mouth.y+1,4.2,5.2,0,0,Math.PI*2);ctx.fill();
+        }else{
+          ctx.strokeStyle='#30211e';ctx.lineWidth=2.4;
+          ctx.beginPath();ctx.moveTo(mouth.x-6,mouth.y+1);ctx.quadraticCurveTo(mouth.x,mouth.y+5,mouth.x+5,mouth.y+1);ctx.stroke();
+        }
+      }else if(sleepy||focused){
+        ctx.strokeStyle='#4a3028';ctx.lineWidth=2.2;
+        ctx.beginPath();ctx.moveTo(mouth.x-5,mouth.y+1);ctx.quadraticCurveTo(mouth.x,mouth.y+4,mouth.x+5,mouth.y+1);ctx.stroke();
+      }
+      if(sleepy&&Math.sin(t*1.4)>.2){
+        var drift=Math.sin(t*.7)*1.4;
+        ctx.globalAlpha=.6;ctx.fillStyle='#6d83ae';ctx.font='bold 8px sans-serif';
+        ctx.fillText('z',right.x+12+drift,right.y-11);ctx.globalAlpha=1;
+      }
+      if(curious){
+        ctx.globalAlpha=.5+.35*Math.sin(t*3.2);ctx.fillStyle='#fff6d8';
+        ctx.beginPath();ctx.arc(right.x+9,right.y-10,1.7,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+      }
+      ctx.restore();
     }
     function loop(now){
       if(!ready||failed)return;
@@ -2317,7 +2428,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     function showImage(url){
       texture.onload=function(){
         try{
-          makeVertices();resetBones();
+          makeVertices();resetBones();prepareSourcePixels();
           ready=true;failed=false;canvas.hidden=false;lastFrame=0;
           if(fallback){fallback.src=url;fallback.hidden=true;}
           requestAnimationFrame(loop);
