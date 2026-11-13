@@ -1,5 +1,9 @@
 /* Deterministic topology solvers for isolated power and conserved fluid networks. */
 const finite=(v,d=0)=>Number.isFinite(Number(v))?Number(v):d;
+function stableNetworkID(prefix,nodeIDs){
+ const anchor=(nodeIDs||[]).map(String).sort()[0];
+ return prefix+"-"+(anchor?encodeURIComponent(anchor):"EMPTY");
+}
 function components(nodes,edges){
  const ids=new Set(nodes.map(n=>String(n.id))),adj=new Map([...ids].map(id=>[id,[]]));
  for(const e of edges||[])if(ids.has(String(e.from))&&ids.has(String(e.to))){adj.get(String(e.from)).push(String(e.to));adj.get(String(e.to)).push(String(e.from))}
@@ -37,7 +41,7 @@ export function solvePowerNetworks({nodes=[],edges=[],deltaSeconds=1}={}){
    const after=Math.min(capacity,Math.max(0,before-discharge*dt+charge*dt));
    batteryChanges.push({id:String(battery.id),beforeKJ:before,afterKJ:after,dischargeKW:discharge,chargeKW:charge,deltaKJ:after-before});
   }
-  results.push({networkID:"POWER-"+(i+1),nodeIDs:ids,generationKW:generators,transformerLimitKW:transformerLimit,storageAvailableKW:batteryAvailable,storageDischargeKW:batteryChanges.reduce((n,x)=>n+x.dischargeKW,0),storageChargeKW:batteryChanges.reduce((n,x)=>n+x.chargeKW,0),availableKW:available,allocatedKW:allocated,allocations,batteryChanges});
+  results.push({networkID:stableNetworkID("POWER",ids),nodeIDs:ids,generationKW:generators,transformerLimitKW:transformerLimit,storageAvailableKW:batteryAvailable,storageDischargeKW:batteryChanges.reduce((n,x)=>n+x.dischargeKW,0),storageChargeKW:batteryChanges.reduce((n,x)=>n+x.chargeKW,0),availableKW:available,allocatedKW:allocated,allocations,batteryChanges});
  }
  return results;
 }

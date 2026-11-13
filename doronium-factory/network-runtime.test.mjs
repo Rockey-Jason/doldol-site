@@ -20,3 +20,13 @@ test("transformer throughput caps a connected grid and priority consumers receiv
  const result=solvePowerNetworks({nodes,edges:[{from:"G",to:"T"},{from:"T",to:"SAFE"},{from:"T",to:"IND"}]})[0];
  assert.equal(result.availableKW,8);assert.equal(result.allocations[0].status,"RUNNING");assert.equal(result.allocations[1].deliveredKW,2);assert.equal(result.allocations[1].status,"PAUSED_POWER");
 });
+
+
+test("power network IDs remain stable when unrelated networks are added or input order changes",()=>{
+ const nodes=[{id:"GEN-ALPHA",type:"GENERATOR",generationKW:12},{id:"LOAD-ALPHA",type:"CONSUMER",demandKW:8,priority:1}];
+ const edges=[{id:"EDGE-ALPHA",from:"GEN-ALPHA",to:"LOAD-ALPHA"}];
+ const initial=solvePowerNetworks({nodes,edges}).find(network=>network.nodeIDs.includes("GEN-ALPHA")).networkID;
+ const expanded=solvePowerNetworks({nodes:[{id:"0-ISOLATED",type:"GENERATOR",generationKW:0},...nodes].reverse(),edges}).find(network=>network.nodeIDs.includes("GEN-ALPHA")).networkID;
+ assert.equal(initial,"POWER-GEN-ALPHA");
+ assert.equal(expanded,initial);
+});

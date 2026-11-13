@@ -4,6 +4,10 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 export const FLUID_TYPES=Object.freeze(["WATER","OIL","PETROLEUM","MOLTEN_METAL","LAVA","CHEMICAL"]);
 export const FLUID_NODE_TYPES=Object.freeze(["PIPE","PUMP","VALVE","TANK","SOURCE","CONSUMER"]);
 const idOf=x=>String(x?.id??"");
+function stableNetworkID(prefix,nodeIDs){
+ const anchor=(nodeIDs||[]).map(String).sort()[0];
+ return prefix+"-"+(anchor?encodeURIComponent(anchor):"EMPTY");
+}
 function adjacency(nodes,edges){
  const ids=new Set(nodes.map(idOf)),map=new Map([...ids].map(id=>[id,[]]));
  for(const e of edges||[])if(ids.has(String(e.from))&&ids.has(String(e.to))&&e.open!==false){
@@ -13,11 +17,11 @@ function adjacency(nodes,edges){
 }
 export function buildFluidNetworks(nodes=[],edges=[]){
  const byID=new Map((nodes||[]).map(n=>[idOf(n),n])),adj=adjacency(nodes,edges);
- const networkByID=new Map(),networks=[];const seen=new Set();let index=0;
+ const networkByID=new Map(),networks=[];const seen=new Set();
  for(const id of [...adj.keys()].sort())if(!seen.has(id)){
   const queue=[id],members=[];seen.add(id);
   while(queue.length){const at=queue.shift();members.push(at);for(const next of adj.get(at)||[])if(!seen.has(next)){seen.add(next);queue.push(next)}}
-  index++;members.sort();const networkID="FLUID-"+index;for(const member of members)networkByID.set(member,networkID);networks.push({networkID,nodeIDs:members});
+  members.sort();const networkID=stableNetworkID("FLUID",members);for(const member of members)networkByID.set(member,networkID);networks.push({networkID,nodeIDs:members});
  }
  return {byID,adj,networkByID,networks,edges:(edges||[]).filter(e=>e.open!==false).slice().sort((a,b)=>String(a.id).localeCompare(String(b.id)))};
 }

@@ -39,3 +39,13 @@ test("consumeFluid debits a live building fluidAmountL buffer",()=>{
  assert.equal(result.ok,true);assert.equal(result.movedL,1);assert.equal(building.fluidAmountL,2);assert.equal(building.fluidType,"WATER");
  assert.equal(consumeFluid(building,3,"WATER").ok,false);assert.equal(building.fluidAmountL,2);
 });
+
+
+test("fluid network IDs remain stable when unrelated networks are added or input order changes",()=>{
+ const nodes=[node("PUMP-ALPHA","PUMP",10),node("TANK-ALPHA","TANK",0)];
+ const edges=[{id:"EDGE-ALPHA",from:"PUMP-ALPHA",to:"TANK-ALPHA"}];
+ const initial=buildFluidNetworks(nodes,edges).networkByID.get("PUMP-ALPHA");
+ const expanded=buildFluidNetworks([node("0-ISOLATED","PIPE",0),...nodes].reverse(),edges).networkByID.get("PUMP-ALPHA");
+ assert.equal(initial,"FLUID-PUMP-ALPHA");
+ assert.equal(expanded,initial);
+});
