@@ -301,11 +301,11 @@ button:focus-visible{
 body.vip-profile-basic{--vip-color:#67ddff;--vip-soft:rgba(64,205,255,.26)}
 body.vip-profile-elite{--vip-color:#c39aff;--vip-soft:rgba(172,108,255,.3)}
 body.vip-profile-royal{--vip-color:#ffda79;--vip-soft:rgba(255,190,66,.32)}
-body[class*="vip-profile-"] #돌이사진{animation:vipAvatarPulse 3.4s ease-in-out infinite}
+/* VIP pulse belongs to the frame layer, never to the photo itself. */
 body[class*="vip-profile-"] #프로필요약카드 .프로필요약제목 strong{color:var(--vip-color);text-shadow:0 0 12px var(--vip-soft),0 0 24px var(--vip-soft);transition:color .25s ease,text-shadow .25s ease}
 body[class*="vip-profile-"] #프로필요약카드 .프로필요약제목 strong::after{content:"VIP";display:inline-block;margin-left:8px;padding:3px 7px;border:1px solid var(--vip-color);border-radius:999px;color:var(--vip-color);background:var(--vip-soft);font:800 9px/1.2 Arial,sans-serif;letter-spacing:.12em;vertical-align:middle;text-shadow:none;box-shadow:0 0 12px var(--vip-soft)}
 @keyframes vipAvatarPulse{0%,100%{box-shadow:0 0 0 3px var(--vip-soft),0 0 16px var(--vip-soft),0 10px 35px rgba(0,0,0,.35)}50%{box-shadow:0 0 0 4px var(--vip-soft),0 0 28px var(--vip-soft),0 10px 35px rgba(0,0,0,.35)}}
-@media(prefers-reduced-motion:reduce){body[class*="vip-profile-"] #돌이사진{animation:none!important}}
+
 
 #메뉴{
   position:fixed;
@@ -2028,7 +2028,7 @@ body.로그인상태 #회원가입 {
 .dori-feedback-home-link>a span{font-size:15px}
 @media(max-width:650px){.dori-feedback-home-link{margin:-12px 0 22px;padding:13px;gap:8px}.dori-feedback-home-copy strong{font-size:12px}.dori-feedback-home-copy small{font-size:9px}.dori-feedback-home-link>a{min-height:36px;padding:8px 10px;font-size:10px;gap:6px}}
 </style>
-<link rel="stylesheet" href="css/dori-profile-frame.css?v=20261113-1">
+<link rel="stylesheet" href="css/dori-profile-frame.css?v=20261113-unified-2">
 </head>
 
 
