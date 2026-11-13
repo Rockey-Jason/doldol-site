@@ -1450,6 +1450,8 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     {from:775,to:955,keys:['nap','rain','rainbow','plant','robot','treat','pillow','friendly-ghost','curious','scratch','cuddle','listen','flop','beg','peek','shy','follow']},
     {from:975,to:1110,keys:['dinner','grooming','movie','bread','delivery','treat','mail','water','shake','sneeze','boop','happy','follow']},
     {from:1130,to:1300,keys:['party','dance','story','stars','moon','ufo','meteor','parade','movie','doorbell','listen','greet','paw','reunion','friend-play','guard','hop','pounce']},
+    {from:575,to:755,keys:['music','sniff']},
+    {from:775,to:955,keys:['snow','thief']},
     {from:1320,to:1437,keys:['sleep','yawn','dream','party','firefly','mystery-ufo','friendly-ghost','cuddle','listen','sit','grooming','doze','flop','shy','wait']}
   ];
   BANK.sleep = {title:'돌이가 새근새근 잠들었어요',desc:'포근한 침대에서 오늘의 피로를 풀며 달콤한 꿈을 꾸고 있어요.',icon:'🌙',pose:'sleep',tag:'수면'};
@@ -1462,6 +1464,29 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   function rng(seed){var state=seed>>>0;return function(){state+=0x6D2B79F5;var t=state;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
   function formatMinute(n){return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');}
   function ordinal(key){var a=key.split('-').map(Number);return Math.floor((Date.UTC(a[0],a[1]-1,a[2])-START)/86400000);}
+  // Per-event choreography: destination, approach, action loop and expression.
+  var EVENT_CHOREOGRAPHY=Object.create(null);
+  function addEventChoreography(keys,profile){
+    keys.forEach(function(kind,index){EVENT_CHOREOGRAPHY[kind]=Object.assign({kind:kind,slot:index,approachPose:'walk',approachMs:4600,stepMs:4300,moveMs:4600},profile);});
+  }
+  addEventChoreography(["wake"],{"destination":{"x":840,"y":453,"s":0.84},"route":false,"interaction":"bed","approachPose":4800,"sequence":["wake","stretch","walk"],"faces":["sleepy","content","curious"],"moveMs":4600});
+  addEventChoreography(["breakfast","treat","dinner"],{"destination":{"x":795,"y":432,"s":0.86},"route":false,"interaction":"food","approachPose":5000,"sequence":["sniff","eat","eat","sit"],"faces":["curious","focused","content","happy"],"moveMs":4600});
+  addEventChoreography(["water"],{"destination":{"x":900,"y":432,"s":0.84},"route":false,"interaction":"water","approachPose":5000,"sequence":["sniff","water","water"],"faces":["curious","focused","content"],"moveMs":4600});
+  addEventChoreography(["ball","pillow","bubble","socks","toy","boop","pounce","hop","circle","happy"],{"destination":{"x":675,"y":432,"s":0.91},"route":false,"interaction":"toy","approachPose":3900,"sequence":["sniff","curious","pounce","play","hop"],"faces":["focused","curious","surprised","playful","delighted"],"stepMs":"trot","moveMs":4600});
+  addEventChoreography(["bread","friend-play","follow","greet","paw","reunion"],{"destination":{"x":535,"y":432,"s":0.9},"route":false,"interaction":"friend","approachPose":4200,"sequence":["walk","greet","friendPlay","happy","friendPlay"],"faces":["curious","happy","affectionate","delighted","playful"],"moveMs":4600});
+  addEventChoreography(["bird","snow","rainbow","ufo","mystery-ufo","meteor","stars","firefly","moon","butterfly","guard","look-up"],{"destination":{"x":930,"y":432,"s":0.86},"route":false,"interaction":"window","approachPose":4400,"sequence":["walk","curious","listen","alert","lookUp"],"faces":["curious","attentive","alert","surprised","delighted"],"moveMs":4600});
+  addEventChoreography(["plant"],{"destination":{"x":1010,"y":432,"s":0.84},"route":false,"interaction":"plant","approachPose":4300,"sequence":["walk","sniff","curious","lookUp"],"faces":["curious","focused","curious","happy"],"moveMs":4600});
+  addEventChoreography(["robot"],{"destination":{"x":900,"y":432,"s":0.86},"route":false,"interaction":"robot","approachPose":4200,"sequence":["walk","curious","listen","peek"],"faces":["curious","attentive","surprised","cautious"],"moveMs":4600});
+  addEventChoreography(["music","party","dance","parade"],{"destination":{"x":675,"y":432,"s":0.92},"route":false,"interaction":"rug","approachPose":4000,"sequence":["walk","dance","happy","dance","hop"],"faces":["curious","playful","delighted","happy","playful"],"moveMs":4600});
+  addEventChoreography(["nap","sleep","dream","doze","cuddle","flop","sunbeam"],{"destination":{"x":858,"y":453,"s":0.82},"route":false,"interaction":"bed","approachPose":5200,"sequence":["walk","flop","sleep","dream","doze"],"faces":["relaxed","sleepy","sleepy","sleepy","sleepy"],"moveMs":4600});
+  addEventChoreography(["story","movie"],{"destination":{"x":485,"y":438,"s":0.86},"route":false,"interaction":"sofa","approachPose":5200,"sequence":["walk","sit","doze"],"faces":["curious","content","sleepy"],"moveMs":4600});
+  addEventChoreography(["delivery","mail","doorbell","thief","friendly-ghost"],{"destination":{"x":430,"y":432,"s":0.88},"route":false,"interaction":"door","approachPose":4200,"sequence":["walk","listen","curious","alert","sniff"],"faces":["curious","attentive","surprised","alert","focused"],"moveMs":4600});
+  addEventChoreography(["photo"],{"destination":{"x":710,"y":432,"s":0.89},"route":false,"interaction":"camera","approachPose":4300,"sequence":["walk","sit","lookUp","happy"],"faces":["curious","attentive","curious","happy"],"moveMs":4600});
+  addEventChoreography(["grooming","scratch","shake","sneeze","yawn"],{"destination":{"x":485,"y":438,"s":0.86},"route":false,"interaction":"sofa","approachPose":4200,"sequence":["walk","sit","groom","scratch","shake"],"faces":["relaxed","content","focused","focused","surprised"],"moveMs":4600});
+  addEventChoreography(["walk","trot","zoomies","explore","gallop","stretch"],{"destination":null,"route":true,"interaction":"roam","approachPose":4800,"sequence":["walk","explore","sniff","stretch","walk"],"faces":["curious","attentive","focused","content","curious"],"moveMs":4600});
+  addEventChoreography(["curious","listen","sit","beg","shy","wait","peek","hide","sniff"],{"destination":{"x":485,"y":438,"s":0.86},"route":false,"interaction":"sofa","approachPose":4300,"sequence":["walk","curious","listen","peek","sit"],"faces":["curious","attentive","curious","cautious","content"],"moveMs":4600});
+  addEventChoreography(["rain"],{"destination":{"x":930,"y":432,"s":0.86},"route":false,"interaction":"window","approachPose":5000,"sequence":["walk","listen","lookUp","sleep"],"faces":["curious","attentive","relaxed","sleepy"],"moveMs":4600});
+
   function buildEvents(key){
     var random=rng(hash('DORI-LIFE-'+key));
     var used={};
@@ -1582,6 +1607,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     el._moveFrame=requestAnimationFrame(frame);
   }
   function doriDestination(state,now){
+    if(state&&state.destination)return {x:state.destination.x,y:state.destination.y,s:state.destination.s,key:'event-'+(state.eventKey||'active')};
     var pose=state.pose||'idle';
     var second=Math.floor(now.getTime()/1000);
     if(pose==='friendPlay'||pose==='reunion'||pose==='greet'||pose==='paw')return {x:535,y:432,s:.90,key:'friend-interaction'};
@@ -1628,7 +1654,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     if(!doriActor||doriActor._targetKey===target.key)return;
     doriActor._targetKey=target.key;
     var pose=state.pose||'idle';
-    var duration=pose==='zoomies'?650:(pose==='circle'?900:(pose==='trot'||pose==='gallop'||pose==='chase'?1250:(pose==='walk'||pose==='explore'?10500:pose==='sniff'?2300:1700)));
+    var duration=state&&state.moveDuration?state.moveDuration:(pose==='zoomies'?650:(pose==='circle'?900:(pose==='trot'||pose==='gallop'||pose==='chase'?1250:(pose==='walk'||pose==='explore'?10500:pose==='sniff'?2300:1700))));
     tweenSvgPosition(doriActor,target,duration);
   }
   function updateFriendArrival(evt){
@@ -1646,12 +1672,35 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       }
     }
   }
+  function eventChoreographyState(evt,now,base){
+    if(!evt){
+      if(doriActor){doriActor._choreoEventId='';doriActor._choreoStartedAt=0;}
+      return Object.assign({},base,{expression:'neutral',eventKey:'',destination:null,interaction:null,moveDuration:0});
+    }
+    var plan=EVENT_CHOREOGRAPHY[evt.kind]||{approachPose:'walk',approachMs:4600,stepMs:4300,moveMs:4600,destination:{x:660,y:432,s:.90},sequence:['curious','listen','happy'],faces:['curious','attentive','content'],interaction:'home'};
+    if(doriActor._choreoEventId!==evt.id){doriActor._choreoEventId=evt.id;doriActor._choreoStartedAt=performance.now();}
+    var elapsed=Math.max(0,performance.now()-(doriActor._choreoStartedAt||performance.now()));
+    var approaching=elapsed<plan.approachMs;
+    var actionTime=Math.max(0,elapsed-plan.approachMs);
+    var slot=plan.sequence.length?Math.floor(actionTime/plan.stepMs)%plan.sequence.length:0;
+    return Object.assign({},base,{
+      pose:approaching?plan.approachPose:plan.sequence[slot],
+      expression:approaching?'attentive':(plan.faces[slot]||'neutral'),
+      eventKey:evt.id,eventStage:approaching?'approach':'perform',
+      interaction:plan.interaction||'home',moveDuration:plan.moveMs||4600,
+      destination:plan.route?null:(plan.destination?Object.assign({},plan.destination):null),actionIndex:slot
+    });
+  }
   function setRoom(evt,routine,phase,now){
     var kind=evt?evt.kind:'none';
-    var state=evt?(BANK[evt.kind]||BANK.sleep):routine;
+    var base=evt?(BANK[evt.kind]||BANK.sleep):routine;
+    var state=eventChoreographyState(evt,now||new Date(),base);
     room.dataset.phase=phase;
     room.dataset.event=state.fx||kind;
     room.dataset.pose=state.pose||'idle';
+    room.dataset.expression=state.expression||'neutral';
+    room.dataset.eventStage=state.eventStage||'routine';
+    room.dataset.action=state.interaction||'home';
     updateDoriMovement(state,now||new Date());
     updateFurnitureInteraction(state);
     updateFriendArrival(evt);
@@ -2409,13 +2458,14 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       drawDoriExpression(pose,t,age);
     }
     function drawDoriExpression(pose,t,age){
-      var sleepy=['sleep','doze','dream','cuddle','flop'].indexOf(pose)>=0;
-      var happy=['happy','play','dance','friendPlay','reunion','greet','paw','pounce','hop'].indexOf(pose)>=0;
-      var curious=['curious','listen','alert','guard','lookUp','peek','explore','follow'].indexOf(pose)>=0;
-      var shy=pose==='shy'||pose==='hide';
-      var yawn=pose==='yawn';
-      var surprised=pose==='sneeze'||pose==='shake'||pose==='bird'||pose==='alert';
-      var focused=['eat','water','sniff','groom'].indexOf(pose)>=0;
+      var expression=room.dataset.expression||'neutral';
+      var sleepy=expression==='sleepy'||(expression==='neutral'&&['sleep','doze','dream','cuddle','flop'].indexOf(pose)>=0);
+      var happy=['happy','delighted','playful','affectionate','content'].indexOf(expression)>=0||(expression==='neutral'&&['happy','play','dance','friendPlay','reunion','greet','paw','pounce','hop'].indexOf(pose)>=0);
+      var curious=['curious','attentive','alert','surprised','cautious'].indexOf(expression)>=0||(expression==='neutral'&&['curious','listen','alert','guard','lookUp','peek','explore','follow'].indexOf(pose)>=0);
+      var shy=expression==='shy'||expression==='cautious'||pose==='shy'||pose==='hide';
+      var yawn=expression==='yawn'||pose==='yawn';
+      var surprised=expression==='surprised'||pose==='sneeze'||pose==='shake'||pose==='bird'||pose==='alert';
+      var focused=expression==='focused'||(expression==='neutral'&&['eat','water','sniff','groom'].indexOf(pose)>=0);
       var left=skinPoint(62,162),right=skinPoint(139,179),mouth=skinPoint(91,198);
       var leftBrow=skinPoint(62,145),rightBrow=skinPoint(139,162);
       ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.lineCap='round';ctx.lineJoin='round';
@@ -2525,7 +2575,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       alert:'window',guard:'window',lookUp:'window',curious:'window',listen:'window',bird:'window',
       sniff:'bone',scratch:'rug',yawn:'bed',wake:'bed'
     };
-    room.dataset.interaction=map[pose]||'home';
+    room.dataset.interaction=(state&&state.interaction)||map[pose]||'home';
   }
 
   function update(){
