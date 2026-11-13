@@ -1,0 +1,12 @@
+/* Shared Dori profile-frame presentation. Custom frames override the VIP fallback. */
+#돌이프로필프레임{position:absolute;inset:-13px;z-index:2;box-sizing:border-box;border-radius:50%;pointer-events:none;background-image:var(--profile-frame-art,none);background-position:center;background-repeat:no-repeat;background-size:100% 100%}
+#돌이프로필프레임[data-frame]{filter:drop-shadow(0 0 9px var(--profile-frame-glow,rgba(143,126,255,.4)))}
+#돌이프로필프레임[data-frame]::after{content:"";position:absolute;inset:2px;border:1px solid var(--profile-frame-color,rgba(143,126,255,.55));border-radius:50%;box-shadow:0 0 12px var(--profile-frame-glow,rgba(143,126,255,.35))}
+#돌이프로필프레임[data-vip-tier]{inset:-5px;border:2px solid var(--profile-frame-color);box-shadow:0 0 0 3px color-mix(in srgb,var(--profile-frame-color) 28%,transparent),0 0 22px var(--profile-frame-glow);animation:vipAvatarPulse 3.4s ease-in-out infinite}
+#돌이프로필프레임[data-vip-tier="basic"]{border-color:#67ddff}
+#돌이프로필프레임[data-vip-tier="elite"]{border-color:#c39aff}
+#돌이프로필프레임[data-vip-tier="royal"]{border-color:#ffda79}
+.profile-image-wrapper.has-profile-frame::before{background-image:var(--profile-frame-art,none);filter:drop-shadow(0 0 9px var(--profile-frame-glow,rgba(143,126,255,.4)))}
+.profile-image-wrapper.has-profile-frame::after{border-color:var(--profile-frame-color,rgba(143,126,255,.55));box-shadow:0 0 18px var(--profile-frame-glow,rgba(143,126,255,.35))}
+.profile-image-wrapper.has-profile-frame[data-vip-tier]::after{border-width:2px;animation:vipAvatarPulse 3.4s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){#돌이프로필프레임[data-vip-tier],.profile-image-wrapper.has-profile-frame[data-vip-tier]::after{animation:none!important}}
