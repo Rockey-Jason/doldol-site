@@ -227,8 +227,12 @@ function renderCollection(data){
  if(!items.length){$("#collectionGrid").innerHTML='<div class="empty-collection">아직 보유한 패스 꾸미기 아이템이 없어요.<br>5단계부터 특별 아이콘, 10단계부터 시즌 칭호, 20단계부터 프로필 프레임을 모을 수 있어요.</div>';return}
  const kinds={title:"시즌 칭호",profile_frame:"프로필 프레임",special_icon:"특별 아이콘"};
  $("#collectionGrid").innerHTML=items.map(item=>{
-  const equipped=item.equipped===true,rarity=["Rare","Epic","Legendary","Myth","Doronum"].includes(item.rarity)?item.rarity:"Rare";
-  return '<article class="cosmetic-card '+(equipped?"equipped":"")+'"><div class="cosmetic-icon">'+escapeHtml(item.icon||"✦")+'</div><span class="cosmetic-rarity '+rarity+'">'+escapeHtml(rarity.toUpperCase())+'</span><h3>'+escapeHtml(item.name)+'</h3><span class="cosmetic-detail">'+escapeHtml(kinds[item.kind]||"시즌 보상")+' · '+escapeHtml(item.season_key||"")+'</span><button class="cosmetic-equip" type="button" data-equip-cosmetic="'+escapeHtml(item.key)+'" '+(equipped?"disabled":"")+'>'+(equipped?"✓ 장착 중":"장착하기")+'</button></article>';
+  const isFrame=item.kind==="profile_frame";
+  const equipped=!isFrame&&item.equipped===true,rarity=["Rare","Epic","Legendary","Myth","Doronum"].includes(item.rarity)?item.rarity:"Rare";
+  const action=isFrame
+   ? '<div class="cosmetic-equip cosmetic-frame-note">🖼️ 설정의 통합 프레임 보관함에서 장착</div>'
+   : '<button class="cosmetic-equip" type="button" data-equip-cosmetic="'+escapeHtml(item.key)+'" '+(equipped?"disabled":"")+' >'+(equipped?"✓ 장착 중":"장착하기")+'</button>';
+  return '<article class="cosmetic-card '+(equipped?"equipped":"")+'"><div class="cosmetic-icon">'+escapeHtml(item.icon||"✦")+'</div><span class="cosmetic-rarity '+rarity+'">'+escapeHtml(rarity.toUpperCase())+'</span><h3>'+escapeHtml(item.name)+'</h3><span class="cosmetic-detail">'+escapeHtml(kinds[item.kind]||"시즌 보상")+' · '+escapeHtml(item.season_key||"")+'</span>'+action+'</article>';
  }).join("");
 }
 function render(data){
