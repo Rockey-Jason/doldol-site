@@ -1111,9 +1111,7 @@ body::before {
     transform: translateY(-5px) scale(1.025);
 }
 
-.preview-dori.has-profile-frame::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;z-index:5;box-sizing:border-box;border:8px solid #d6b66e;box-shadow:inset 0 0 0 3px rgba(255,255,255,.9),0 0 0 3px rgba(214,182,110,.45),0 0 24px rgba(214,182,110,.45)}
-.preview-dori.has-profile-frame[class*="frame-frame_royal"]::after{border-color:#e9c86d;box-shadow:inset 0 0 0 3px #fff4c9,0 0 0 4px #9b7435,0 0 28px rgba(233,200,109,.65)}
-.preview-dori.has-profile-frame[class*="frame-frame_diamond"]::after{border-color:#85dcff;box-shadow:inset 0 0 0 3px #e9fbff,0 0 0 4px #4384ad,0 0 28px rgba(90,190,255,.65)}
+/* Profile frames are intentionally excluded from Dori character customization. */
 .preview-dori img {
     width: 100%;
     height: 100%;
@@ -4288,7 +4286,6 @@ function 돌이오버레이색상(item) {
 }
 
 function 돌이꾸미기오버레이경로(item, category) {
-    if (category === "frame") return 돌이프레임오버레이경로(item);
     const key = (String(item?.item_code || "") + " " + String(item?.item_name || "")).toUpperCase();
     const color = 돌이오버레이색상(item);
     const dark = "#292929";
