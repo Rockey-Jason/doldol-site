@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v52-dori-face-expressions-20261113";
+const CACHE_NAME = "doldol-site-pwa-v53-event-choreography-20261114";
 const SITE_SCOPE = new URL(self.registration.scope);
 const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
