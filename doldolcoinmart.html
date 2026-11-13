@@ -879,7 +879,7 @@ function 쿠폰혜택HTML(level) {
   const exp = level >= 8 ? 40 : level >= 5 ? 20 : 5;
   const tier = level >= 8 ? "ROYAL VIP" : level >= 5 ? "ELITE VIP" : "VIP";
   return `<div class="product-benefits">
-    <span class="vip-benefit">✦ ${tier} 프로필 테두리 · 닉네임 효과</span>
+    <span class="vip-benefit">✦ ${tier} 기본 프로필 프레임 · 닉네임 효과</span>
     <span>🪙 출석 · 일일 미션 코인 +${coin}%</span>
     <span>✨ 일일 미션 · 퀴즈 EXP +${exp}%</span>
   </div>`;
