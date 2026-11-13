@@ -2310,6 +2310,7 @@ body::after{
 }
 </style>
 
+<link rel="stylesheet" href="css/dori-profile-frame.css?v=20261113-1">
 </head>
 
 
@@ -2603,6 +2604,8 @@ body::after{
 
 
 <script type="module">
+
+import { applyDoriProfileFrame, getDoriProfileFrameAsset, getDoriVipProfileTier } from "./js/dori-profile-frame.js";
 
 const { createClient } = window.supabase;
 
@@ -4268,12 +4271,7 @@ function 꾸미기이미지경로(item) {
 }
 
 function 프레임이미지경로(frame) {
-    const key = String(frame?.item_code || "").toUpperCase();
-    if (/DORONUM|DORONIUM/.test(key)) return "assets/dori-items/FRAME_DORONIUM.svg";
-    if (/2026[-_]?10|EXPLORER|EXPLORER/.test(key)) return "assets/dori-items/FRAME_2026_10_EXPLORER.svg";
-    if (/2026[-_]?11|AURORA/.test(key)) return "assets/dori-items/FRAME_2026_11_AURORA.svg";
-    if (/MEGA|GALAXY|MILESTONE/.test(key)) return "assets/dori-items/FRAME_MEGA_GALAXY.svg";
-    return "assets/dori-items/FRAME_GENERIC.svg";
+    return getDoriProfileFrameAsset(frame);
 }
 
 function 돌이오버레이색상(item) {
@@ -4449,8 +4447,10 @@ async function 프레임목록가져오기(user) {
     const current = jobs[3].status === "fulfilled" ? jobs[3].value?.data?.equipped_frame : null;
     let currentFrame = current;
     if (typeof currentFrame === "string") {
-        try { currentFrame = JSON.parse(currentFrame); } catch (_) {}
+        try { currentFrame = JSON.parse(currentFrame); }
+        catch (_) { currentFrame = currentFrame.trim() ? { item_code: currentFrame.trim() } : null; }
     }
+    if (typeof currentFrame === "string" && currentFrame.trim()) currentFrame = { item_code: currentFrame.trim() };
     if (currentFrame && typeof currentFrame === "object") {
         addFrame({ ...currentFrame, source: currentFrame.source || "기존 장착 프레임" });
     }
@@ -4602,19 +4602,9 @@ function 프로필프레임정규화(value) {
 function 프로필프레임적용() {
     const wrapper = 사진요소?.closest(".profile-image-wrapper");
     if (!wrapper) return;
-    const frame = 장착프로필프레임;
-    wrapper.classList.toggle("has-profile-frame", Boolean(frame));
-    if (!frame) {
-        wrapper.style.removeProperty("--profile-frame-color");
-        wrapper.style.removeProperty("--profile-frame-art");
-        delete wrapper.dataset.profileFrameCode;
-        delete wrapper.dataset.profileFrameRarity;
-        return;
-    }
-    wrapper.style.setProperty("--profile-frame-color", 돌이오버레이색상(frame));
-    wrapper.style.setProperty("--profile-frame-art", 'url("' + 프레임이미지경로(frame) + '")');
-    wrapper.dataset.profileFrameCode = String(frame.item_code || "");
-    wrapper.dataset.profileFrameRarity = String(frame.rarity || "일반");
+    applyDoriProfileFrame(wrapper, 장착프로필프레임, Number(현재유저정보?.user_level ?? 1));
+    if (장착프로필프레임?.rarity) wrapper.dataset.profileFrameRarity = String(장착프로필프레임.rarity);
+    else delete wrapper.dataset.profileFrameRarity;
 }
 
 async function 꾸미기정보가져오기(user) {
@@ -4818,9 +4808,11 @@ function 프레임설정화면표시() {
     const current = document.getElementById("dori-frame-current");
     if (!root || !filterRoot) return;
     const selected = 장착프로필프레임?.item_code || "";
+    const vipTier = getDoriVipProfileTier(현재유저정보?.user_level ?? 1);
+    const vipLabel = vipTier === "royal" ? "ROYAL VIP" : vipTier === "elite" ? "ELITE VIP" : vipTier === "basic" ? "VIP" : "";
     if (current) current.textContent = selected
         ? (장착프로필프레임.item_name || "프로필 프레임 적용 중")
-        : "기본 프로필 테두리 사용 중";
+        : vipTier ? vipLabel + " 기본 프레임 적용 중" : "기본 프로필 테두리 사용 중";
 
     const filters = ["전체","이벤트","라운지","돌이 패스","시즌 보상","랜덤 박스","기타"];
     filterRoot.innerHTML = filters.map(value =>
@@ -4953,7 +4945,7 @@ function 내아이템화면표시() {
             } else if (프로필프레임아이템인가(item)) {
                 action = '<button type="button" class="inventory-action-button" data-inventory-frame' +
                     (equipped ? ' disabled' : '') + '>' +
-                    (equipped ? '✓ 프로필 적용 중' : '🖼️ 프로필 테두리 설정') + '</button>';
+                    (equipped ? '✓ 프로필 적용 중' : '🖼️ 통합 프레임 보관함 열기') + '</button>';
             } else if (category) {
                 action = '<button type="button" class="inventory-action-button" data-inventory-equip="' +
                     HTML이스케이프(item.item_code) + '"' + (equipped ? " disabled" : "") + '>' +
