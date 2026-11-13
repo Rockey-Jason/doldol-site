@@ -1649,6 +1649,24 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       events.push({id:key+'-special-'+specialKind,kind:specialKind,start:specialStart,end:Math.min(1439,specialStart+22),duration:22,special:true});
     }
     events.sort(function(a,b){return a.start-b.start;});
+    // Resolve overlaps so every timeline event gets its own visible turn.
+    // First move overlapping events forward; then pull back from the day boundary if needed.
+    for(var i=1;i<events.length;i++){
+      var previous=events[i-1],current=events[i];
+      var minStart=previous.end+4;
+      if(current.start<minStart){
+        current.start=minStart;
+        current.end=current.start+current.duration;
+      }
+    }
+    for(var j=events.length-2;j>=0;j--){
+      var next=events[j+1],item=events[j];
+      var maxStart=next.start-4-item.duration;
+      if(item.start>maxStart){
+        item.start=Math.max(0,maxStart);
+        item.end=item.start+item.duration;
+      }
+    }
     return events;
   }
   function phaseFor(hour){
