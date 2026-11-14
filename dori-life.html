@@ -1740,23 +1740,64 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   function tweenSvgPosition(el,target,duration,done){
     if(!el)return;
     if(el._moveFrame)cancelAnimationFrame(el._moveFrame);
+    var isDori=el===doriActor;
     var from=el._doriPosition||target;
     var start=0;
-    function frame(ts){
-      if(!start)start=ts;
-      var t=Math.min(1,(ts-start)/duration);
-      var ease=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-      var p={
-        x:from.x+(target.x-from.x)*ease,
-        y:from.y+(target.y-from.y)*ease,
-        s:from.s+(target.s-from.s)*ease
-      };
-      el.setAttribute('transform','translate('+p.x.toFixed(2)+' '+p.y.toFixed(2)+') scale('+p.s.toFixed(3)+')');
-      el._doriPosition=p;
-      if(t<1){el._moveFrame=requestAnimationFrame(frame);}
-      else{el._moveFrame=0;el._doriPosition={x:target.x,y:target.y,s:target.s};if(done)done();}
+    var dx=target.x-from.x,dy=target.y-from.y;
+    var distance=Math.hypot(dx,dy);
+    var currentFacing=el._facing||'left';
+    var desiredFacing=isDori&&Math.abs(dx)>7?(dx>0?'right':'left'):currentFacing;
+    var facingChanged=isDori&&desiredFacing!==currentFacing;
+    var currentSign=currentFacing==='right'?-1:1;
+    var desiredSign=desiredFacing==='right'?-1:1;
+    if(isDori){
+      el._isMoving=false;el._isTurning=false;
+      var speed=distance/Math.max(.25,duration/1000);
+      el._motionCadence=Math.max(3.8,Math.min(9.5,3.6+speed*.13));
     }
-    el._moveFrame=requestAnimationFrame(frame);
+    function writeTransform(p,faceScale){
+      var f=isDori?(faceScale==null?(el._facing==='right'?-1:1):faceScale):1;
+      el.setAttribute('transform','translate('+p.x.toFixed(2)+' '+p.y.toFixed(2)+') scale('+(p.s*f).toFixed(4)+' '+p.s.toFixed(3)+')');
+      el._doriPosition={x:p.x,y:p.y,s:p.s};
+    }
+    function move(){
+      if(isDori){el._facing=desiredFacing;el._isTurning=false;el._isMoving=distance>3;}
+      start=0;
+      function frame(ts){
+        if(!start)start=ts;
+        var t=Math.min(1,(ts-start)/Math.max(1,duration));
+        var ease=t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+        var p={x:from.x+dx*ease,y:from.y+dy*ease,s:from.s+(target.s-from.s)*ease};
+        writeTransform(p);
+        if(t<1){el._moveFrame=requestAnimationFrame(frame);}
+        else{
+          el._moveFrame=0;el._doriPosition={x:target.x,y:target.y,s:target.s};
+          if(isDori)el._isMoving=false;
+          writeTransform(el._doriPosition);
+          if(done)done();
+        }
+      }
+      if(distance<=3){
+        writeTransform({x:target.x,y:target.y,s:target.s});
+        if(isDori)el._isMoving=false;
+        el._moveFrame=0;if(done)done();
+      }else el._moveFrame=requestAnimationFrame(frame);
+    }
+    if(facingChanged){
+      el._isTurning=true;
+      var turnStart=0,turnDuration=Math.max(180,Math.min(380,duration*.18));
+      function turnFrame(ts){
+        if(!turnStart)turnStart=ts;
+        var t=Math.min(1,(ts-turnStart)/turnDuration);
+        var eased=t*t*(3-2*t);
+        var faceScale=currentSign*Math.cos(Math.PI*eased);
+        if(Math.abs(faceScale)<.055)faceScale=faceScale<0?-.055:.055;
+        writeTransform(from,faceScale);
+        if(t<1){el._moveFrame=requestAnimationFrame(turnFrame);}
+        else{writeTransform(from,desiredSign);move();}
+      }
+      el._moveFrame=requestAnimationFrame(turnFrame);
+    }else move();
   }
   function doriDestination(state,now){
     if(state&&state.destination)return {x:state.destination.x,y:state.destination.y,s:state.destination.s,key:'event-'+(state.eventKey||'active')};
@@ -1806,7 +1847,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     if(!doriActor||doriActor._targetKey===target.key)return;
     doriActor._targetKey=target.key;
     var pose=state.pose||'idle';
-    var duration=state&&state.moveDuration?state.moveDuration:(pose==='zoomies'?650:(pose==='circle'?900:(pose==='trot'||pose==='gallop'||pose==='chase'?1250:(pose==='walk'||pose==='explore'?10500:pose==='sniff'?2300:1700))));
+    var duration=state&&state.moveDuration?state.moveDuration:(pose==='zoomies'?650:(pose==='circle'?900:(pose==='trot'||pose==='gallop'||pose==='chase'?1250:(pose==='walk'||pose==='explore'?5200:pose==='sniff'?2300:1700))));
     tweenSvgPosition(doriActor,target,duration);
   }
   function updateFriendArrival(evt){
@@ -2271,18 +2312,25 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var ctx=canvas.getContext('2d',{alpha:true,desynchronized:true});
     var texture=new Image();
     var W=361,H=397;
-    var COLS=30,ROWS=34;
+    var COLS=36,ROWS=40;
     var vertices=[],triangles=[];
     var ready=false,failed=false,lastFrame=0,lastPose='',poseStarted=0;
     var fpsInterval=1000/30;
-    var motionNames=['root','body','spine','neck','head','earL','earR','tail','jaw','eyeL','eyeR','frontFarUpper','frontFarLower','frontNearUpper','frontNearLower','hindFarUpper','hindFarLower','hindNearUpper','hindNearLower'];
+    var motionNames=['root','body','spine','chest','neck','neckBase','neckMid','neckUpper','poll','head','headTilt','muzzleTip','jawHinge','earL','earR','tail','jaw','eyeL','eyeR','frontFarUpper','frontFarLower','frontNearUpper','frontNearLower','hindFarUpper','hindFarLower','hindNearUpper','hindNearLower'];
     var defs=[
       {id:'root',a:[180,245],b:[180,280],r:330,base:.22},
       {id:'body',a:[160,255],b:[300,285],r:128,base:.10},
       {id:'spine',a:[150,265],b:[315,280],r:82,base:.025},
-      {id:'chest',a:[145,220],b:[158,270],r:66},
-      {id:'neck',a:[137,205],b:[176,238],r:68},
-      {id:'head',a:[117,128],b:[157,205],r:112},
+      {id:'chest',a:[145,220],b:[158,270],r:58},
+      {id:'neck',a:[137,205],b:[176,238],r:52},
+      {id:'neckBase',a:[151,216],b:[172,240],r:39,base:.012},
+      {id:'neckMid',a:[143,199],b:[162,226],r:36},
+      {id:'neckUpper',a:[132,181],b:[151,207],r:34},
+      {id:'poll',a:[119,160],b:[139,190],r:37},
+      {id:'head',a:[117,128],b:[157,205],r:88},
+      {id:'headTilt',a:[91,143],b:[127,177],r:48},
+      {id:'muzzleTip',a:[78,178],b:[103,200],r:29},
+      {id:'jawHinge',a:[88,188],b:[95,207],r:20},
       {id:'earL',a:[91,20],b:[96,88],r:48},
       {id:'earR',a:[237,56],b:[238,120],r:56},
       {id:'tail',a:[316,215],b:[330,231],r:36},
@@ -2413,11 +2461,13 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       var pose=room.getAttribute('data-pose')||'idle';
       if(pose!==lastPose){lastPose=pose;poseStarted=now;}
       var t=now/1000,age=(now-poseStarted)/1000,cycle=t*2*Math.PI;
+      var isDoriMoving=!!(doriActor&&doriActor._isMoving&&!doriActor._isTurning);
+      var walkCadence=(doriActor&&Number.isFinite(doriActor._motionCadence))?doriActor._motionCadence:5.2;
       resetBones();
       var breath=Math.sin(t*1.35);
       var blink=0,blinkPhase=t%4.7;
       if(blinkPhase>4.46)blink=Math.sin((blinkPhase-4.46)/.24*Math.PI);
-      if(pose==='sleep'||pose==='doze'||pose==='dream')blink=1;
+      if(pose==='sleep'||pose==='doze'||pose==='dream'||pose==='cuddle'||pose==='flop')blink=1;
       // A clearly visible living idle loop, even when no scheduled activity is active.
       set('root',0,1,1,0,1.25*Math.sin(t*1.35));
       set('body',.035*breath,1+.012*breath,1+.035*breath,0,1.15*Math.sin(t*1.35));
@@ -2478,8 +2528,8 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         set('hindFarUpper',.06*(1-ease),1,1);set('hindNearUpper',.06*(1-ease),1,1);
         set('tail',.18*Math.sin(t*5),1,1);
         set('earL',-.13*Math.sin(t*3)*Math.exp(-age),1,1);set('earR',.1*Math.sin(t*3.2)*Math.exp(-age),1,1);
-      }else if(pose==='walk'||pose==='follow'||pose==='explore'||pose==='chase'){
-        var g=Math.sin(t*8.2);
+      }else if((pose==='walk'||pose==='follow'||pose==='explore'||pose==='chase'||pose==='circle')&&isDoriMoving){
+        var g=Math.sin(t*walkCadence);
         set('body',.018*Math.sin(t*16),1,1-.013*Math.max(0,Math.sin(t*16)));
         set('head',.025*Math.sin(t*8.2),1,1);
         set('frontFarUpper',g*.24,1,1);set('frontNearUpper',-g*.24,1,1);
@@ -2487,9 +2537,10 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         set('frontFarLower',Math.max(0,-g)*.28,1,1);set('frontNearLower',Math.max(0,g)*.28,1,1);
         set('hindFarLower',Math.max(0,g)*.24,1,1);set('hindNearLower',Math.max(0,-g)*.24,1,1);
         set('tail',.16*Math.sin(t*5),1,1);
-      }else if(pose==='trot'||pose==='gallop'||pose==='zoomies'){
-        var g2=Math.sin(t*(pose==='zoomies'?17:12));
-        set('body',.045*Math.sin(t*(pose==='zoomies'?34:24)),1+.012*Math.abs(g2),1-.04*Math.max(0,Math.sin(t*(pose==='zoomies'?34:24))));
+      }else if((pose==='trot'||pose==='gallop'||pose==='zoomies')&&isDoriMoving){
+        var fastCadence=Math.max(8,Math.min(17,walkCadence*1.45));
+        var g2=Math.sin(t*fastCadence);
+        set('body',.045*Math.sin(t*fastCadence*2),1+.012*Math.abs(g2),1-.04*Math.max(0,Math.sin(t*fastCadence*2)));
         set('frontFarUpper',g2*.42,1,1);set('frontNearUpper',-g2*.42,1,1);
         set('hindFarUpper',-g2*.38,1,1);set('hindNearUpper',g2*.38,1,1);
         set('frontFarLower',Math.max(0,-g2)*.48,1,1);set('frontNearLower',Math.max(0,g2)*.48,1,1);
@@ -2565,14 +2616,76 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         set('body',.03*Math.sin(t*1.5),1,1);set('head',-.12+.03*Math.sin(t*1.5),1,1);
         set('neck',-.08,1,1);set('frontNearUpper',-.1,1,1);
       }
-      var footBeat=t*8.2;
-      if(['walk','follow','explore','chase'].indexOf(pose)>=0){
+      // Secondary cervical chain: several small joints bend together instead of
+      // rotating the whole head as one stiff piece. Applied to every scene pose.
+      var neckBreath=Math.sin(t*1.35),headSway=Math.sin(t*1.05),headNod=Math.sin(t*walkCadence);
+      var nBase=.008*neckBreath,nMid=.012*headSway,nUpper=.012*headSway,poll=.009*headSway;
+      var headTilt=.012*Math.sin(t*.82),muzzleFlex=0,jawFlex=0;
+      if(pose==='sleep'||pose==='doze'||pose==='dream'||pose==='cuddle'||pose==='flop'){
+        nBase=-.025+.004*neckBreath;nMid=-.045+.005*neckBreath;nUpper=-.065+.006*neckBreath;
+        poll=-.035+.004*neckBreath;headTilt=.025+.004*headSway;muzzleFlex=-.018;
+        if(pose==='dream'){headTilt+=.025*Math.sin(t*5.8);muzzleFlex=.025*Math.max(0,Math.sin(t*5.8));}
+      }else if(pose==='wake'){
+        var wakeBlend=Math.max(0,Math.min(1,age/2.2));
+        nBase=-.11*(1-wakeBlend);nMid=-.14*(1-wakeBlend);nUpper=-.10*(1-wakeBlend);
+        poll=-.08*(1-wakeBlend);headTilt=.06*(1-wakeBlend)-.015*wakeBlend;
+      }else if((pose==='walk'||pose==='follow'||pose==='explore'||pose==='chase'||pose==='circle')&&isDoriMoving){
+        nBase=.018*headNod;nMid=.035*headNod;nUpper=.028*headNod;
+        poll=.02*Math.sin(t*walkCadence+.7);headTilt=.018*Math.sin(t*walkCadence-.4);
+      }else if((pose==='trot'||pose==='gallop'||pose==='zoomies')&&isDoriMoving){
+        var fastNeckPhase=t*walkCadence*1.45;
+        nBase=.035*Math.sin(fastNeckPhase+Math.PI);nMid=.045*Math.sin(fastNeckPhase+Math.PI);
+        nUpper=.04*Math.sin(fastNeckPhase);poll=.03*Math.sin(fastNeckPhase);headTilt=.025*Math.sin(fastNeckPhase);
+      }else if(pose==='eat'||pose==='water'){
+        nBase=-.075;nMid=-.115;nUpper=-.14-.018*Math.max(0,Math.sin(t*(pose==='water'?4:8)));
+        poll=-.105-.025*Math.max(0,Math.sin(t*(pose==='water'?4:8)));headTilt=.035*Math.sin(t*2.2);
+        muzzleFlex=.04*Math.sin(t*(pose==='water'?4:8));jawFlex=.075*Math.max(0,Math.sin(t*(pose==='water'?4:8)));
+      }else if(pose==='sniff'||pose==='boop'){
+        nBase=-.10;nMid=-.16;nUpper=-.20;poll=-.16;headTilt=-.07+.018*Math.sin(t*2.4);muzzleFlex=-.04;
+      }else if(pose==='groom'||pose==='scratch'){
+        nBase=-.035;nMid=-.09;nUpper=-.16;poll=-.12;headTilt=.12+.025*Math.sin(t*3);muzzleFlex=.025*Math.sin(t*5);
+      }else if(pose==='yawn'){
+        nBase=.035;nMid=.07;nUpper=.10;poll=.12;headTilt=.075+.02*Math.sin(t*2);jawFlex=.22+.05*Math.sin(t*2.1);
+      }else if(pose==='curious'||pose==='listen'||pose==='alert'||pose==='guard'||pose==='lookUp'){
+        var attentiveTilt=Math.sin(t*1.3);
+        nBase=.018;nMid=.035+.025*attentiveTilt;nUpper=.07+.025*attentiveTilt;
+        poll=.055+.025*attentiveTilt;headTilt=.10*attentiveTilt;
+      }else if(pose==='peek'||pose==='hide'||pose==='shy'){
+        nBase=-.035;nMid=-.055;nUpper=-.09;poll=-.065;headTilt=-.11+.025*Math.sin(t*1.5);
+      }else if(pose==='play'||pose==='pounce'||pose==='hop'||pose==='happy'||pose==='friendPlay'||pose==='reunion'||pose==='greet'||pose==='paw'){
+        var playfulNeck=Math.sin(t*(pose==='friendPlay'?10:7));
+        nBase=.025*playfulNeck;nMid=.045*playfulNeck;nUpper=.035*playfulNeck;
+        poll=-.025+.035*playfulNeck;headTilt=.045*Math.sin(t*3.1);
+      }else if(pose==='dance'){
+        var neckBeat=Math.sin(t*6);
+        nBase=.04*neckBeat;nMid=.075*neckBeat;nUpper=.06*neckBeat;
+        poll=-.035*neckBeat;headTilt=-.08*neckBeat;
+      }else if(pose==='stretch'){
+        var neckReach=(Math.sin(t*1.1)+1)/2;
+        nBase=.035*neckReach;nMid=.08*neckReach;nUpper=.12*neckReach;
+        poll=.08*neckReach;headTilt=.04*neckReach;
+      }else if(pose==='sneeze'||pose==='shake'){
+        var neckTwitch=Math.sin(t*(pose==='shake'?15:5));
+        nBase=.045*neckTwitch;nMid=.075*neckTwitch;nUpper=.09*neckTwitch;
+        poll=.07*neckTwitch;headTilt=.11*neckTwitch;muzzleFlex=.08*Math.max(0,neckTwitch);
+      }else if(pose==='sit'||pose==='beg'||pose==='wait'){
+        nBase=.025;nMid=.045;nUpper=.065;poll=.045;headTilt=.025*Math.sin(t*1.2);
+      }
+      set('neckBase',nBase+.004*neckBreath,1,1);
+      set('neckMid',nMid+.005*neckBreath,1,1);
+      set('neckUpper',nUpper+.005*neckBreath,1,1);
+      set('poll',poll+.004*neckBreath,1,1);
+      set('headTilt',headTilt,1,1);
+      set('muzzleTip',muzzleFlex,1,1);
+      set('jawHinge',jawFlex,1,1);
+      var footBeat=t*walkCadence;
+      if(['walk','follow','explore','chase','circle'].indexOf(pose)>=0&&isDoriMoving){
         set('frontFarPaw',.13*Math.sin(footBeat+Math.PI),1,1,0,Math.max(0,-Math.sin(footBeat))*1.6);
         set('frontNearPaw',.13*Math.sin(footBeat),1,1,0,Math.max(0,Math.sin(footBeat))*1.6);
         set('hindFarPaw',.11*Math.sin(footBeat),1,1,0,Math.max(0,Math.sin(footBeat))*1.2);
         set('hindNearPaw',.11*Math.sin(footBeat+Math.PI),1,1,0,Math.max(0,-Math.sin(footBeat))*1.2);
-      }else if(['trot','gallop','zoomies'].indexOf(pose)>=0){
-        var pawBeat=t*(pose==='zoomies'?17:12);
+      }else if(['trot','gallop','zoomies'].indexOf(pose)>=0&&isDoriMoving){
+        var pawBeat=t*Math.max(8,Math.min(17,walkCadence*1.45));
         set('frontFarPaw',.25*Math.sin(pawBeat+Math.PI),1,1);
         set('frontNearPaw',.25*Math.sin(pawBeat),1,1);
         set('hindFarPaw',.22*Math.sin(pawBeat),1,1);
@@ -2635,10 +2748,10 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         set('eyeL',0,1,.94);set('eyeR',0,1,.94);
         set('head',.025,1,1);
       }
-      if(pose!=='sleep'&&pose!=='doze'&&pose!=='dream'){
+      if(pose!=='sleep'&&pose!=='doze'&&pose!=='dream'&&pose!=='cuddle'&&pose!=='flop'){
         var blinkPhase=t%4.7;
         if(blinkPhase>4.48){var amt=Math.sin((blinkPhase-4.48)/.22*Math.PI);set('eyeL',0,1,1-.95*amt);set('eyeR',0,1,1-.95*amt);}
-      }else{set('eyeL',0,1,.03);set('eyeR',0,1,.03);}
+      }else{set('eyeL',0,1,.025);set('eyeR',0,1,.025);}
       var pts=vertices.map(transformPoint);
       ctx.clearRect(0,0,W,H);
       for(var i=0;i<triangles.length;i++){
