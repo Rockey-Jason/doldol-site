@@ -512,7 +512,7 @@ function renderReplayList(records){
   const title=document.createElement("strong"),sub=document.createElement("small");
   title.textContent=(record.is_perfect?"✨ PERFECT":record.success?"성공 착지":"착지 실패")+" · "+Number(record.angle_error_deg).toFixed(1)+"°";
   const modeName=GAME_MODE_INFO[record.mode]?.title||"기본 플레이";
-  sub.textContent=modeName+" · 힘 "+record.charge+"% · "+new Date(record.created_at).toLocaleString("ko-KR",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+  sub.textContent=modeName+" · 힘 "+record.charge+"% · "+new Date(record.created_at).toLocaleString("ko-KR",{timeZone:"Asia/Seoul",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
   meta.append(title,sub);
   const button=document.createElement("button");button.type="button";button.className="replay-play";button.textContent="▶ 재생";
   button.dataset.replayId=record.record_id;
@@ -594,7 +594,7 @@ async function claimDailyMission(key,button){
   const {data,error}=await supabase.rpc("dori_throw_game_claim_daily_mission",{p_mission_key:key});
   if(error)throw error;if(!data?.ok)throw new Error("아직 보상을 받을 수 없는 미션이야.");
   toast("미션 보상 +"+fmt(data.reward_seugi_coin)+" 세우기 코인!","success");playSfx("coin");
-  await Promise.all([loadState(),loadDailyMissions()]);
+  await loadState();
  }catch(error){toast(error.message||"미션 보상을 받지 못했어.","error");button.disabled=false}
 }
 async function playReplay(recordId){
