@@ -176,6 +176,14 @@ body:after{width:460px;height:460px;right:-300px;bottom:-80px;background:#8f64ff
 @media(max-width:600px){.balance-card{min-width:0;width:100%;gap:10px}.account-block{gap:8px}.profile-avatar{width:39px;height:39px;flex-basis:39px}.profile-info span{max-width:120px;font-size:12px}.balance-value strong{font-size:18px}.balance-value small{font-size:8px}}
 @media(prefers-reduced-motion:reduce){body:before,body:after,body,.panel,.upgrade-card,.guide-card,.state-chip.live,.charge-control.charging,.spin-control.spin-queued,#dailyFill:after{animation:none!important}}
 
+
+.round-action-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:9px;padding:10px 12px;border:1px solid rgba(141,169,231,.14);border-radius:12px;background:rgba(255,255,255,.025)}
+.round-action-row>span{color:#7f93bb;font-size:10px}
+.round-restart{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:7px 13px;border:1px solid rgba(255,220,134,.29);border-radius:10px;background:linear-gradient(110deg,rgba(240,206,120,.18),rgba(190,143,67,.1));color:#ffe3a0;font-size:11px;white-space:nowrap;transition:transform .18s,border-color .18s,background .18s}
+.round-restart:not(:disabled):hover{transform:translateY(-2px);border-color:rgba(255,220,134,.55);background:rgba(255,220,134,.16)}
+.round-restart:disabled{opacity:.38;cursor:not-allowed}
+@media(max-width:420px){.round-action-row{align-items:stretch;flex-direction:column}.round-restart{width:100%}}
+
 </style>
 <script type="module">
 import {createClient} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -477,6 +485,10 @@ $("rewardResult").textContent="아직 던지지 않았어";loadingAccount();init
   <div class="login-note" id="loginNote">체험 플레이는 가능해. 로그인하면 돌돌코인을 적립하고 강화 레벨을 계정에 저장할 수 있어. <a href="./login.html" style="color:#ffe3a2">로그인하기</a></div>
   <button class="retry-load" id="retryLoad" type="button" hidden>↻ 사용자 정보 다시 불러오기</button>
   <div class="controls-hint" id="rewardResult" aria-live="polite">아직 던지지 않았어</div>
+  <div class="round-action-row">
+   <span>착지 후 다시 도전해 보자</span>
+   <button class="round-restart" id="restartButton" type="button" disabled>↻ 다시 던지기</button>
+  </div>
  </section>
  <aside class="side">
   <section class="panel upgrade-panel">
