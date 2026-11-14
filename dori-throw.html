@@ -117,262 +117,327 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 25px #ffdc8622}
  .stage-caption{font-size:9px}
 }
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
+/* DORI THROW · premium motion & clarity pass */
+body{position:relative;background-color:#040918;background-image:radial-gradient(ellipse at 13% 2%,rgba(71,117,255,.24),transparent 36%),radial-gradient(ellipse at 92% 28%,rgba(126,88,255,.17),transparent 34%),radial-gradient(ellipse at 52% 105%,rgba(65,181,226,.11),transparent 37%),linear-gradient(155deg,#09152f,#030714 75%);background-size:140% 140%;animation:ambientShift 18s ease-in-out infinite alternate}
+body:before,body:after{content:"";position:fixed;z-index:-1;pointer-events:none;border-radius:50%;filter:blur(70px);opacity:.13;animation:orbFloat 17s ease-in-out infinite alternate}
+body:before{width:380px;height:380px;top:16%;left:-230px;background:#52b9ff}
+body:after{width:460px;height:460px;right:-300px;bottom:-80px;background:#8f64ff;animation-delay:-8s}
+.shell{position:relative;z-index:1}
+@keyframes ambientShift{0%{background-position:0% 0%}100%{background-position:100% 100%}}
+@keyframes orbFloat{0%{transform:translate3d(0,-15px,0) scale(.9)}100%{transform:translate3d(75px,40px,0) scale(1.12)}}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.topbar{animation:fadeInUp .65s cubic-bezier(.2,.8,.2,1) both}.hero{animation:fadeInUp .7s .08s cubic-bezier(.2,.8,.2,1) both}
+.dashboard{animation:fadeInUp .75s .15s cubic-bezier(.2,.8,.2,1) both}.guide{animation:fadeInUp .8s .23s cubic-bezier(.2,.8,.2,1) both}
+.panel{position:relative;overflow:hidden;isolation:isolate;background:linear-gradient(145deg,rgba(19,34,70,.96),rgba(7,14,31,.97));border-color:rgba(145,177,255,.22);box-shadow:0 25px 80px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.045);transition:transform .28s,border-color .28s,box-shadow .28s}
+.panel:before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background:linear-gradient(125deg,rgba(111,233,255,.055),transparent 38%,rgba(165,130,255,.045))}
+.panel>*{position:relative;z-index:1}.panel:hover{border-color:rgba(123,206,255,.38);box-shadow:0 28px 90px rgba(0,0,0,.34),0 0 32px rgba(93,169,255,.055),inset 0 1px 0 rgba(255,255,255,.06)}
+.balance-card{min-width:310px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:14px 16px;border-color:rgba(255,220,134,.24);background:linear-gradient(145deg,rgba(40,44,70,.76),rgba(11,19,38,.94));box-shadow:0 15px 44px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.05);text-align:left;transition:transform .25s,border-color .25s}
+.balance-card:hover{transform:translateY(-3px);border-color:rgba(255,220,134,.43)}
+.account-block{display:flex;align-items:center;gap:10px;min-width:0}
+.profile-avatar{width:43px;height:43px;flex:0 0 43px;display:grid;place-items:center;overflow:hidden;border:1px solid rgba(255,220,134,.35);border-radius:14px;background:linear-gradient(145deg,#2a3c67,#111b35);box-shadow:0 0 22px rgba(111,233,255,.08);font-size:21px}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-info{display:flex;flex-direction:column;gap:3px;min-width:0}
+.profile-info small,.balance-value small{display:block;color:#a8b7d5;font-size:9px;letter-spacing:1.25px}
+.profile-info span{max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f4f6ff;font-size:13px}
+.profile-info em{font-style:normal;color:#8498bf;font-size:9px}
+.balance-value{text-align:right;min-width:0}.balance-value strong{display:block;margin-top:4px;color:var(--gold);font-size:23px;font-weight:400;white-space:nowrap;font-variant-numeric:tabular-nums;text-shadow:0 0 20px rgba(255,220,134,.12)}
+.canvas-wrap{border-color:rgba(111,198,255,.27);box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 10px 32px rgba(0,0,0,.2);background:#09152f}
+.canvas-wrap:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(96,160,255,.045),transparent 30%,transparent 75%,rgba(1,7,19,.12));box-shadow:inset 0 0 45px rgba(0,0,0,.16)}
+#arenaCanvas{filter:saturate(1.08) contrast(1.02)}
+.state-chip{transition:all .2s}.state-chip.live{color:#b8f5ff;border-color:rgba(111,233,255,.5);background:rgba(111,233,255,.12);box-shadow:0 0 20px rgba(111,233,255,.12);animation:statePulse 1.8s ease-in-out infinite}
+@keyframes statePulse{50%{box-shadow:0 0 28px rgba(111,233,255,.22)}}
+.charge-control,.spin-control{position:relative;overflow:hidden;isolation:isolate;box-shadow:inset 0 1px rgba(255,255,255,.12),0 8px 26px rgba(0,0,0,.17);transition:transform .18s,border-color .2s,filter .2s,box-shadow .2s}
+.charge-control:before,.spin-control:before{content:"";position:absolute;inset:-60% auto -60% -45%;width:40%;transform:rotate(22deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.16),transparent);transition:left .65s;z-index:0}
+.charge-control:hover:before,.spin-control:not(:disabled):hover:before{left:120%}
+.charge-control:hover,.spin-control:not(:disabled):hover{transform:translateY(-2px);box-shadow:inset 0 1px rgba(255,255,255,.15),0 12px 32px rgba(0,0,0,.24),0 0 24px rgba(111,233,255,.08)}
+.charge-control.charging{border-color:#a2f4ff;box-shadow:inset 0 0 25px rgba(111,233,255,.18),0 0 24px rgba(111,233,255,.15);animation:chargePulse .9s ease-in-out infinite alternate}
+@keyframes chargePulse{to{filter:brightness(1.22)}}
+.spin-control:not(:disabled){border-color:rgba(189,161,255,.58);box-shadow:inset 0 1px rgba(255,255,255,.12),0 0 22px rgba(167,135,255,.1)}
+.spin-control.spin-queued{animation:spinReady .9s ease-in-out infinite alternate}
+@keyframes spinReady{to{box-shadow:inset 0 1px rgba(255,255,255,.18),0 0 28px rgba(167,135,255,.23);filter:brightness(1.13)}}
+.upgrade-card{position:relative;overflow:hidden;transition:transform .22s,border-color .22s,background .22s,box-shadow .22s}
+.upgrade-card:hover{transform:translateY(-2px);border-color:rgba(132,203,255,.35);background:rgba(92,144,220,.07);box-shadow:0 10px 26px rgba(0,0,0,.13)}
+.upgrade-card:hover .upgrade-icon{transform:rotate(-7deg) scale(1.08);box-shadow:0 0 18px rgba(111,233,255,.12)}
+.upgrade-icon{transition:transform .28s,box-shadow .28s}.upgrade-btn{transition:transform .18s,filter .18s,box-shadow .18s}
+.upgrade-btn:not(:disabled):hover{transform:translateY(-2px);filter:brightness(1.1);box-shadow:0 7px 20px rgba(255,210,116,.16)}
+.upgrade-btn:not(:disabled):active{transform:scale(.96)}
+.stat,.guide-card{transition:transform .23s,border-color .23s,background .23s,box-shadow .23s}
+.stat:hover,.guide-card:hover{transform:translateY(-3px);border-color:rgba(111,233,255,.28);box-shadow:0 13px 30px rgba(0,0,0,.16)}
+.daily-bar{height:8px;background:rgba(255,255,255,.1);box-shadow:inset 0 1px 3px rgba(0,0,0,.28)}
+#dailyFill{position:relative;overflow:hidden;box-shadow:0 0 14px rgba(94,223,255,.22)}
+#dailyFill:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.42),transparent);transform:translateX(-100%);animation:meterShine 2.7s ease-in-out infinite}
+@keyframes meterShine{to{transform:translateX(100%)}}
+.retry-load{display:inline-flex;margin-top:9px;padding:8px 12px;border:1px solid rgba(111,233,255,.28);border-radius:10px;background:rgba(111,233,255,.07);color:#c9f7ff;font-size:11px}
+.retry-load[hidden]{display:none}.login-note{border-color:rgba(255,220,134,.25);background:rgba(255,220,134,.06)}
+.toast{z-index:100;backdrop-filter:blur(14px)}.toast[data-type="success"]{border-color:rgba(120,239,192,.42);color:#c5ffe7}.toast[data-type="error"]{border-color:rgba(255,135,152,.45);color:#ffe0e5}
+.upgrade-modal{animation:modalIn .24s cubic-bezier(.2,.8,.2,1) both}
+@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:600px){.balance-card{min-width:0;width:100%;gap:10px}.account-block{gap:8px}.profile-avatar{width:39px;height:39px;flex-basis:39px}.profile-info span{max-width:120px;font-size:12px}.balance-value strong{font-size:18px}.balance-value small{font-size:8px}}
+@media(prefers-reduced-motion:reduce){body:before,body:after,body,.panel,.upgrade-card,.guide-card,.state-chip.live,.charge-control.charging,.spin-control.spin-queued,#dailyFill:after{animation:none!important}}
+
 </style>
 <script type="module">
 import {createClient} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-const SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
-const SUPABASE_KEY="sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
-const supabase=window.doriSupabase||(createClient?createClient(SUPABASE_URL,SUPABASE_KEY):null);
+const URL="https://scttowfhygcpdirrekqm.supabase.co";
+const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcmVrek" + "qmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+const supabase=window.doriSupabase||createClient(URL,KEY,{auth:{storageKey:"sb-scttowfhygcpdirrekqm-auth-token",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 if(supabase&&!window.doriSupabase)window.doriSupabase=supabase;
-const $=id=>document.getElementById(id);
-const fmt=value=>{try{return BigInt(String(value??0)).toLocaleString("ko-KR")}catch{return "0"}};
-const uuid=()=>window.crypto&&crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)});
-let session=null,gameState=null,mode="idle",chargeStarted=0,charge=0,flightStarted=0,flightDuration=4.1,flightX=0,flightY=0,spinRequested=0,spinCompleted=0,rotationAngle=0,rotationTime=0,launchOffset=0,throwPending=false,toastTimer=0,history=[],pendingUpgrade=null;
-const canvas=$("arenaCanvas"),ctx=canvas.getContext("2d");
-const dori=new Image();dori.src="./assets/dori-character.svg";
-const TAU=Math.PI*2;
-const MAX_DAILY=25000;
-function toast(message){const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2300)}
-function nextCost(type,level){if(level>=20)return null;return Math.ceil((type==="power"?150:180)*Math.pow(1.48,level))}
-function showGuest(){ $("loginNote").classList.add("show"); $("coinBalance").textContent="로그인 필요"; $("chargeHint").textContent="체험 모드 · 로그인하면 돌돌코인 적립"; $("powerUpgrade").disabled=true; $("accuracyUpgrade").disabled=true; $("spinButton").disabled=true; }
+const $=id=>document.getElementById(id),TAU=Math.PI*2,MAX_DAILY=25000;
+const fmt=v=>{try{return BigInt(String(v??0)).toLocaleString("ko-KR")}catch{return "0"}};
+const uuid=()=>crypto?.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)});
+const canvas=$("arenaCanvas"),ctx=canvas.getContext("2d"),dori=new Image();
+dori.decoding="async";dori.src="./assets/dori-life/dori-official.webp";
+let session=null,gameState=null,mode="idle",charge=0,chargeStarted=0,flightStarted=0,flightDuration=4;
+let spinRequested=0,spinCompleted=0,rotationAngle=0,rotationTime=0,launchOffset=0,throwPending=false;
+let toastTimer=0,history=[],pendingUpgrade=null,authSubscription=null,authSeq=0,particles=[],impactAt=0,lastFrame=0;
+function toast(message,type="normal"){
+ const el=$("toast");el.textContent=message;el.dataset.type=type;el.classList.remove("show");void el.offsetWidth;el.classList.add("show");
+ clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2600);
+}
+function nextCost(type,level){return level>=20?null:Math.ceil((type==="power"?150:180)*Math.pow(1.48,level))}
+function setAvatar(url){
+ const el=$("profileAvatar");el.replaceChildren();
+ if(!url){el.textContent="🐾";return}
+ const img=document.createElement("img");img.alt="프로필 이미지";img.loading="lazy";img.referrerPolicy="no-referrer";img.src=url;
+ img.onerror=()=>{el.replaceChildren();el.textContent="🐾"};el.append(img);
+}
+function loadingAccount(){
+ $("accountLabel").textContent="ACCOUNT CONNECTION";$("profileName").textContent="사용자 정보 확인 중…";
+ $("profileLevel").textContent="프로필을 불러오고 있어";$("coinBalance").textContent="연결 중…";setAvatar(null);
+}
+function showGuest(){
+ gameState=null;$("accountLabel").textContent="GUEST MODE";$("profileName").textContent="게스트 플레이";
+ $("profileLevel").textContent="로그인하면 기록과 코인이 저장돼";$("coinBalance").textContent="로그인 필요";
+ $("loginNote").classList.add("show");$("retryLoad").hidden=true;setAvatar(null);
+ $("chargeHint").textContent="체험 모드 · 로그인하면 돌돌코인과 강화가 계정에 저장돼.";
+ $("powerUpgrade").disabled=true;$("accuracyUpgrade").disabled=true;
+ $("throwsCount").textContent="—";$("bestSpin").textContent="—";$("totalEarned").textContent="—";
+ $("dailyText").textContent="로그인 후 표시";$("dailyFill").style.width="0%";
+}
+function showProfileError(error){
+ console.error("[DORI THROW] account sync:",error);
+ $("accountLabel").textContent="ACCOUNT SYNC ISSUE";$("profileName").textContent="사용자 정보 연결 오류";
+ $("profileLevel").textContent="로그인 상태를 확인해 줘";$("coinBalance").textContent="조회 실패";
+ $("loginNote").classList.remove("show");$("retryLoad").hidden=false;
+ $("chargeHint").textContent=error?.message||"계정 정보를 가져오지 못했어. 다시 불러와 줘.";
+ toast("사용자 정보를 불러오지 못했어. 다시 시도해 줘.","error");
+}
 function refreshUI(){
  if(!gameState)return;
- $("coinBalance").textContent=fmt(gameState.balance)+" D";
- $("powerLevel").textContent="Lv. "+gameState.power_level+" / 20";
- $("accuracyLevel").textContent="Lv. "+gameState.accuracy_level+" / 20";
+ $("accountLabel").textContent="MY DOLDOLCOIN";$("profileName").textContent=String(gameState.user_name||"돌이 사용자");
+ $("profileLevel").textContent="SITE LV. "+Number(gameState.user_level||1)+" · EXP LV. "+Number(gameState.exp_level||1);
+ setAvatar(gameState.profile_image||null);$("coinBalance").textContent=fmt(gameState.balance)+" D";
+ $("powerLevel").textContent="Lv. "+gameState.power_level+" / 20";$("accuracyLevel").textContent="Lv. "+gameState.accuracy_level+" / 20";
  const pc=nextCost("power",gameState.power_level),ac=nextCost("accuracy",gameState.accuracy_level);
- $("powerCost").textContent=pc===null?"MAX":fmt(pc)+" D";
- $("accuracyCost").textContent=ac===null?"MAX":fmt(ac)+" D";
- $("powerUpgrade").disabled=pc===null||BigInt(String(gameState.balance||0))<BigInt(pc)||mode==="flying"||throwPending;
- $("accuracyUpgrade").disabled=ac===null||BigInt(String(gameState.balance||0))<BigInt(ac)||mode==="flying"||throwPending;
- $("throwsCount").textContent=fmt(gameState.total_throws);
- $("bestSpin").textContent=gameState.best_spins+"바퀴";
+ $("powerCost").textContent=pc===null?"MAX":fmt(pc)+" D";$("accuracyCost").textContent=ac===null?"MAX":fmt(ac)+" D";
+ const canUpgrade=!!session&&mode!=="flying"&&mode!=="charging"&&!throwPending;
+ $("powerUpgrade").disabled=!canUpgrade||pc===null||BigInt(String(gameState.balance||0))<BigInt(pc);
+ $("accuracyUpgrade").disabled=!canUpgrade||ac===null||BigInt(String(gameState.balance||0))<BigInt(ac);
+ $("throwsCount").textContent=fmt(gameState.total_throws);$("bestSpin").textContent=Number(gameState.best_spins||0)+"바퀴";
  $("totalEarned").textContent=fmt(gameState.total_earned);
  const daily=Number(gameState.daily_earned||0),limit=Number(gameState.daily_limit||MAX_DAILY);
- $("dailyText").textContent=fmt(daily)+" / "+fmt(limit)+" D";
- $("dailyFill").style.width=Math.min(100,daily/limit*100)+"%";
+ $("dailyText").textContent=fmt(daily)+" / "+fmt(limit)+" D";$("dailyFill").style.width=Math.min(100,daily/limit*100)+"%";
+ $("retryLoad").hidden=true;
 }
-async function loadState(){
- if(!session){gameState=null;showGuest();return}
- const {data,error}=await supabase.rpc("dori_throw_game_get_state");
- if(error){console.error(error);toast("게임 정보를 불러오지 못했습니다.");return}
- gameState=data;
- $("loginNote").classList.remove("show");
- $("chargeHint").textContent="누르고 있는 동안 기가 차오르고, 손을 떼면 날아가!";
- refreshUI();
+async function loadState(options={}){
+ const seq=++authSeq;if(!session){showGuest();return false}if(options.showLoading)loadingAccount();
+ try{
+  let {data,error}=await supabase.rpc("dori_throw_game_get_state");
+  if(error&&/jwt|token|unauthorized|401|refresh/i.test(String(error.message||""))){
+   const refreshed=await supabase.auth.refreshSession();
+   if(!refreshed.error&&refreshed.data?.session){session=refreshed.data.session;({data,error}=await supabase.rpc("dori_throw_game_get_state"))}
+  }
+  if(error)throw error;if(seq!==authSeq)return false;
+  if(!data?.ok||data.balance===undefined)throw new Error("계정 정보 응답이 올바르지 않습니다.");
+  gameState=data;$("loginNote").classList.remove("show");$("chargeHint").textContent="누르고 있는 동안 기가 차오르고, 손을 떼면 날아가!";
+  refreshUI();return true;
+ }catch(error){if(seq===authSeq)showProfileError(error);return false}
+}
+async function handleAuthChange(nextSession){
+ session=nextSession||null;
+ if(session)await loadState({showLoading:true});else{authSeq++;gameState=null;showGuest()}
 }
 async function initAuth(){
- if(!supabase){showGuest();return}
+ if(!supabase){showProfileError(new Error("계정 연결 모듈을 불러오지 못했습니다."));return}
  try{
-  const {data,error}=await supabase.auth.getSession();
-  if(error)throw error;
-  session=data.session;
-  if(session)await loadState();else showGuest();
-  supabase.auth.onAuthStateChange((_event,nextSession)=>{session=nextSession;loadState()});
- }catch(error){console.warn("Dori Throw auth:",error);showGuest()}
+  const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,next)=>{session=next||null;queueMicrotask(()=>handleAuthChange(next))});
+  authSubscription=subscription;
+  const {data,error}=await supabase.auth.getSession();if(error)throw error;
+  session=data?.session||null;if(session)await loadState({showLoading:true});else showGuest();
+ }catch(error){showProfileError(error)}
 }
 function addHistory(spins,reward,chargeValue){
- history.unshift({spins,reward,chargeValue});
- history=history.slice(0,4);
- const list=$("historyList");
- list.replaceChildren();
- history.forEach(item=>{
-  const row=document.createElement("div");row.className="history-row";
-  const left=document.createElement("span");left.textContent=item.chargeValue+"% 장전 · "+item.spins+"바퀴";
-  const right=document.createElement("b");right.textContent="+"+fmt(reward)+" D";
-  row.append(left,right);list.append(row);
- });
+ history.unshift({spins,reward,chargeValue});history=history.slice(0,4);
+ const list=$("historyList");list.replaceChildren();
+ history.forEach(item=>{const row=document.createElement("div");row.className="history-row";
+  const left=document.createElement("span"),right=document.createElement("b");
+  left.textContent=item.chargeValue+"% 장전 · "+item.spins+"바퀴";right.textContent="+"+fmt(item.reward)+" D";row.append(left,right);list.append(row)});
 }
-function startCharge(event){
- if(mode!=="idle"&&mode!=="landed")return;
- $("chargeValue").textContent="누르고 있으면 기 장전 · 놓으면 발사";
- $("chargeFill").style.width="0%";
- $("rewardResult").textContent="던질 준비 완료";
- if(!session){toast("로그인하면 돌돌코인을 적립할 수 있어요.");}
- mode="charging";charge=0;chargeStarted=performance.now();
- $("chargeButton").classList.add("charging");
- $("chargeButton").setAttribute("aria-label","기가 장전 중");
- $("chargeButton").disabled=false;$("spinButton").disabled=true;
- $("chargeHint").textContent="기를 모으는 중... 원하는 순간 손을 떼어 던져!";
- $("stateChip").textContent="기 장전 중";
+function spawnParticles(x,y,count,color="cyan",spread=1){
+ const colors=color==="gold"?["#ffe6a3","#ffca66","#fff4ce"]:color==="purple"?["#c5a7ff","#8e7cff","#e1d4ff"]:["#72e8ff","#b6f5ff","#729eff"];
+ for(let i=0;i<count;i++){const a=Math.random()*TAU,s=(1.2+Math.random()*4.4)*spread;
+  particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1.4,life:.5+Math.random()*.75,maxLife:.5+Math.random()*.75,size:1.4+Math.random()*3.2,color:colors[i%colors.length]})}
+ if(particles.length>180)particles.splice(0,particles.length-180);
+}
+function updateParticles(dt){particles=particles.filter(p=>p.life>0);for(const p of particles){p.life-=dt;p.x+=p.vx;p.y+=p.vy;p.vx*=.99;p.vy=p.vy*.985+.055}}
+function startCharge(){
+ if((mode!=="idle"&&mode!=="landed")||throwPending)return;closeUpgradeConfirm();
+ $("chargeValue").textContent="기를 모으는 중…";$("chargeFill").style.width="0%";$("rewardResult").textContent="던질 준비 완료";
+ mode="charging";charge=0;chargeStarted=performance.now();$("chargeButton").classList.add("charging");
+ $("chargeButton").setAttribute("aria-label","기가 장전 중");$("chargeButton").disabled=false;$("spinButton").disabled=true;$("restartButton").disabled=true;
+ $("chargeHint").textContent="기를 모으는 중… 원하는 순간 손을 떼어 발사!";$("stateChip").textContent="기 장전 중";$("stateChip").classList.add("live");refreshUI();
 }
 function releaseCharge(){
- if(mode!=="charging")return;
- const elapsed=performance.now()-chargeStarted;
- charge=Math.max(5,Math.min(100,Math.round(elapsed/2100*100)));
- $("chargeButton").classList.remove("charging");
- $("chargeButton").setAttribute("aria-label","돌이 던지기 · 누르고 있다가 놓기");
- launch();
+ if(mode!=="charging")return;charge=Math.max(5,Math.min(100,Math.round((performance.now()-chargeStarted)/2100*100)));
+ $("chargeButton").classList.remove("charging");$("chargeButton").setAttribute("aria-label","돌이 던지기 · 누르고 있다가 놓기");launch();
 }
 function launch(){
- mode="flying";flightStarted=performance.now();flightDuration=3.8+charge/100*.42+(gameState?gameState.power_level*.05:0);
+ mode="flying";flightStarted=performance.now();flightDuration=3.55+charge/100*.52+Number(gameState?.power_level||0)*.035;
  spinRequested=0;spinCompleted=0;rotationAngle=0;rotationTime=0;throwPending=false;
- launchOffset=(Math.random()*2-1)*Math.max(1,16-((gameState?.accuracy_level||0)*.7));
+ launchOffset=(Math.random()*2-1)*Math.max(1,16-Number(gameState?.accuracy_level||0)*.7);
+ spawnParticles(190,322,28,charge>=96?"gold":"cyan",1.15);
  $("chargeButton").disabled=true;$("spinButton").disabled=false;$("restartButton").disabled=true;
- $("spinButton").textContent="↻ 회전하기";
- $("spinCount").textContent="0 / 3 완료";
- $("stateChip").textContent="공중 비행 중";
- $("chargeHint").textContent=charge+"% 기 장전 · 공중에서 회전 버튼을 눌러!";
- toast(charge>=96?"PERFECT CHARGE!":"기가 장전되어 날아갔어!");
+ $("spinButton").innerHTML="<strong>↻ 회전하기</strong><small>공중에서 최대 3바퀴</small>";
+ $("spinCount").textContent="0 / 3 완료";$("stateChip").textContent="공중 비행 중";$("stateChip").classList.add("live");
+ $("chargeHint").textContent=charge+"% 장전 · 공중에서 회전 버튼을 눌러!";$("chargeValue").textContent=charge+"% 완충";
+ toast(charge>=96?"PERFECT CHARGE! · 완벽 장전":"돌이가 날아갔어! · 회전 타이밍을 잡아 봐");refreshUI();
 }
 function requestSpin(){
- if(mode!=="flying")return;
- if(spinRequested>=3){toast("이번 던지기의 회전은 최대 3바퀴야!");return}
- spinRequested++;
- $("spinCount").textContent=spinCompleted+" / 3 완료 · "+(spinRequested-spinCompleted)+" 진행 중";
- $("spinButton").textContent="↻ 회전 "+spinRequested+"/3";
- if(spinRequested===3)$("spinButton").disabled=true;
+ if(mode!=="flying")return;if(spinRequested>=3){toast("이번 던지기의 회전은 최대 3바퀴야!");return}
+ spinRequested++;$("spinCount").textContent=spinCompleted+" / 3 완료 · "+(spinRequested-spinCompleted)+" 진행 중";
+ $("spinButton").innerHTML="<strong>↻ 회전 "+spinRequested+"/3</strong><small>회전 동작 진행 중</small>";
+ $("spinButton").classList.add("spin-queued");if(spinRequested===3)$("spinButton").disabled=true;
 }
-function drawBackground(){
- const g=ctx.createLinearGradient(0,0,0,470);g.addColorStop(0,"#101f46");g.addColorStop(.63,"#142b4c");g.addColorStop(1,"#0a1930");ctx.fillStyle=g;ctx.fillRect(0,0,1120,470);
- for(let i=0;i<48;i++){const x=(i*173)%1120,y=(i*67)%255,r=(i%3)*.45+.6;ctx.fillStyle="rgba(210,229,255,"+(.13+(i%4)*.06)+")";ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill()}
- ctx.fillStyle="rgba(95,150,211,.11)";ctx.beginPath();ctx.ellipse(245,375,320,110,0,0,TAU);ctx.fill();ctx.beginPath();ctx.ellipse(900,365,300,120,0,0,TAU);ctx.fill();
- const horizon=ctx.createLinearGradient(0,370,0,470);horizon.addColorStop(0,"#203c58");horizon.addColorStop(1,"#0d1b30");ctx.fillStyle=horizon;ctx.fillRect(0,390,1120,80);
- ctx.strokeStyle="rgba(124,183,231,.18)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,390);ctx.lineTo(1120,390);ctx.stroke();
- for(let i=0;i<18;i++){let x=i*72;ctx.strokeStyle="rgba(124,183,231,.08)";ctx.beginPath();ctx.moveTo(x,390);ctx.lineTo(x-22,470);ctx.stroke()}
+function drawBackground(now=0){
+ const g=ctx.createLinearGradient(0,0,0,470);g.addColorStop(0,"#0c193b");g.addColorStop(.55,"#12294b");g.addColorStop(1,"#08162a");
+ ctx.fillStyle=g;ctx.fillRect(0,0,1120,470);
+ const glow=ctx.createRadialGradient(560,205,20,560,205,560);glow.addColorStop(0,"rgba(72,157,235,.17)");glow.addColorStop(1,"rgba(35,73,130,0)");
+ ctx.fillStyle=glow;ctx.fillRect(0,0,1120,420);
+ for(let i=0;i<56;i++){const speed=.004+(i%5)*.0018,x=((i*173-now*speed)%1140+1140)%1140-10,y=i*67%275,r=(i%3)*.42+.65;
+  ctx.fillStyle="rgba(220,239,255,"+(.16+.12*Math.sin(now*.0015+i*1.7))+")";ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill()}
+ ctx.fillStyle="rgba(95,150,211,.1)";ctx.beginPath();ctx.ellipse(245,375,320,110,0,0,TAU);ctx.fill();ctx.beginPath();ctx.ellipse(900,365,300,120,0,0,TAU);ctx.fill();
+ const floor=ctx.createLinearGradient(0,370,0,470);floor.addColorStop(0,"#203c58");floor.addColorStop(1,"#0a172b");ctx.fillStyle=floor;ctx.fillRect(0,390,1120,80);
+ ctx.strokeStyle="rgba(124,183,231,.2)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,390);ctx.lineTo(1120,390);ctx.stroke();
+ const drift=now*.025%72;for(let i=-1;i<19;i++){const x=i*72-drift;ctx.strokeStyle="rgba(124,183,231,.095)";ctx.beginPath();ctx.moveTo(x,390);ctx.lineTo(x-22,470);ctx.stroke()}
 }
-function drawTarget(){
- ctx.save();ctx.translate(935,390);ctx.strokeStyle="rgba(255,220,134,.55)";ctx.lineWidth=2;
- for(let r of [25,49,74]){ctx.beginPath();ctx.ellipse(0,0,r,r*.3,0,0,TAU);ctx.stroke()}
- ctx.fillStyle="rgba(255,220,134,.78)";ctx.font="12px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("LANDING ZONE",0,56);ctx.restore();
+function drawTarget(now=0){
+ ctx.save();ctx.translate(935,390);ctx.scale(1+Math.sin(now*.003)*.055,1+Math.sin(now*.003)*.055);
+ ctx.strokeStyle="rgba(255,220,134,.62)";ctx.lineWidth=2;for(const r of [25,49,74]){ctx.beginPath();ctx.ellipse(0,0,r,r*.3,0,0,TAU);ctx.stroke()}
+ ctx.strokeStyle="rgba(255,220,134,.12)";ctx.beginPath();ctx.ellipse(0,0,93,28,0,0,TAU);ctx.stroke();
+ ctx.fillStyle="rgba(255,220,134,.83)";ctx.font="12px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("LANDING ZONE",0,56);ctx.restore();
 }
-function drawDori(x,y,angle,scale=1){
- if(!dori.complete||!dori.naturalWidth){ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.fillStyle="#c88d50";ctx.beginPath();ctx.ellipse(0,0,47,37,0,0,TAU);ctx.fill();ctx.restore();return}
- const w=145*scale,h=160*scale;ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.shadowColor="rgba(0,0,0,.35)";ctx.shadowBlur=18;ctx.shadowOffsetY=12;ctx.drawImage(dori,-w/2,-h/2,w,h);ctx.restore();
+function drawDori(x,y,angle,scale=1,alpha=1){
+ const w=148*scale,h=162*scale;ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);ctx.rotate(angle);
+ if(dori.complete&&dori.naturalWidth){ctx.shadowColor="rgba(0,0,0,.42)";ctx.shadowBlur=22*scale;ctx.shadowOffsetY=13*scale;ctx.drawImage(dori,-w/2,-h/2,w,h)}
+ else{ctx.fillStyle="#c88d50";ctx.beginPath();ctx.ellipse(0,0,44*scale,36*scale,0,0,TAU);ctx.fill();ctx.fillStyle="#f8e9d3";ctx.beginPath();ctx.ellipse(0,14*scale,25*scale,15*scale,0,0,TAU);ctx.fill()}
+ ctx.restore();
 }
-function render(){
- ctx.clearRect(0,0,1120,470);drawBackground();drawTarget();
+function drawChargeAura(x,y,now){
+ const strength=charge/100;if(strength<=0)return;ctx.save();ctx.translate(x,y);
+ const radius=52+strength*65,pulse=1+Math.sin(now*.012)*.06,aura=ctx.createRadialGradient(0,0,8,0,0,radius*1.9);
+ aura.addColorStop(0,"rgba(95,226,255,"+(.22+strength*.18)+")");aura.addColorStop(.55,"rgba(95,178,255,"+(.08+strength*.08)+")");aura.addColorStop(1,"rgba(95,178,255,0)");
+ ctx.fillStyle=aura;ctx.beginPath();ctx.arc(0,0,radius*1.9,0,TAU);ctx.fill();
+ ctx.strokeStyle="rgba(123,233,255,"+(.28+strength*.5)+")";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,0,radius*pulse,radius*.34*pulse,now*.001,0,TAU);ctx.stroke();
+ for(let i=0;i<8;i++){const a=now*.003+i*TAU/8,r=radius*(.68+.12*Math.sin(now*.004+i));ctx.fillStyle=i%2?"#baf6ff":"#ffe5a5";ctx.beginPath();ctx.arc(Math.cos(a)*r,Math.sin(a)*r*.48,2+strength*2,0,TAU);ctx.fill()}
+ ctx.restore();
+}
+function positionAt(now){
+ const t=Math.max(0,Math.min(1,(now-flightStarted)/(flightDuration*1000))),power=Number(gameState?.power_level||0),accuracy=Number(gameState?.accuracy_level||0);
+ return{x:190+(710+power*3)*t,y:322-Math.sin(Math.PI*t)*(265+charge*.23+power*1.5)+Math.sin(now/150)*Math.max(0,16-accuracy*.7),t};
+}
+function drawTrail(x,y,now){
+ for(let i=4;i>=1;i--)drawDori(x-i*35,y+i*13,rotationAngle-i*.08,1-i*.065,(1-i/5)*.34);
+ const grad=ctx.createLinearGradient(x-150,y+12,x+20,y+12);grad.addColorStop(0,"rgba(101,220,255,0)");grad.addColorStop(.65,"rgba(101,220,255,.18)");grad.addColorStop(1,"rgba(180,244,255,.45)");
+ ctx.strokeStyle=grad;ctx.lineWidth=3;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(x-142,y+18);ctx.quadraticCurveTo(x-70,y+9,x-22,y+5);ctx.stroke();
+ ctx.strokeStyle="rgba(255,226,158,"+(.13+.24*Math.sin(now*.02))+")";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(x,y+36,75,17,0,0,TAU);ctx.stroke();
+}
+function drawEffects(){
+ for(const p of particles){ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,p.life/p.maxLife));ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=10;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,TAU);ctx.fill();ctx.restore()}
+ if(impactAt){const elapsed=performance.now()-impactAt;if(elapsed>900)impactAt=0;else{const t=elapsed/900;ctx.save();ctx.globalAlpha=1-t;ctx.strokeStyle="#ffe3a0";ctx.lineWidth=3-t*2;ctx.beginPath();ctx.ellipse(900,390,28+t*155,10+t*40,0,0,TAU);ctx.stroke();ctx.strokeStyle="rgba(116,229,255,.8)";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(900,390,18+t*112,7+t*28,0,0,TAU);ctx.stroke();ctx.restore()}}
+}
+function render(now=performance.now()){
+ ctx.clearRect(0,0,1120,470);drawBackground(now);drawTarget(now);
  let x=190,y=322,angle=0,scale=1;
- if(mode==="charging"){
-  const power=charge/100;x=190;y=322-Math.sin(power*Math.PI)*14;scale=1+power*.05;
- }else if(mode==="flying"){
-  const t=Math.min(1,(performance.now()-flightStarted)/(flightDuration*1000));
-  const powerLevel=gameState?.power_level||0;
-  x=190+(710+powerLevel*3)*t;
-  y=322-Math.sin(Math.PI*t)*(265+charge*.23+powerLevel*1.5)+Math.sin(performance.now()/150)*Math.max(0,16-(gameState?.accuracy_level||0)*.7);
-  angle=rotationAngle;
- }else if(mode==="landed"){x=900+(gameState?.power_level||0)*3+launchOffset*2;y=322;angle=rotationAngle}
- drawDori(x,y,angle,scale);
- if(mode==="charging"){
-  ctx.fillStyle="rgba(255,255,255,.12)";ctx.fillRect(130,425,860,8);
-  const cg=ctx.createLinearGradient(130,0,990,0);cg.addColorStop(0,"#60dfff");cg.addColorStop(1,"#ffdc86");ctx.fillStyle=cg;ctx.fillRect(130,425,860*charge/100,8);
-  ctx.fillStyle="#e8f5ff";ctx.font="14px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("CHARGE "+charge+"%",560,414);
- }else if(mode==="flying"){
-  ctx.fillStyle="rgba(255,255,255,.75)";ctx.font="14px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("SPIN "+spinCompleted+" / 3",560,54);
-  ctx.fillStyle="rgba(255,220,134,.7)";ctx.font="11px HancomMalrangmalrang";ctx.fillText("회전 버튼을 눌러 공중에서 돌려!",560,75);
- }
+ if(mode==="charging"){const p=charge/100;x=190;y=322-Math.sin(p*Math.PI)*14;scale=1+p*.05;drawChargeAura(x,y,now)}
+ else if(mode==="flying"){const pos=positionAt(now);x=pos.x;y=pos.y;angle=rotationAngle;drawTrail(x,y,now);const halo=ctx.createRadialGradient(x,y,10,x,y,118);halo.addColorStop(0,"rgba(102,220,255,.19)");halo.addColorStop(1,"rgba(102,220,255,0)");ctx.fillStyle=halo;ctx.beginPath();ctx.arc(x,y,118,0,TAU);ctx.fill();ctx.strokeStyle="rgba(122,230,255,.37)";ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(x,y+28,80,20,0,0,TAU);ctx.stroke()}
+ else if(mode==="landed"){x=900+Number(gameState?.power_level||0)*3+launchOffset*2;y=322;angle=rotationAngle}
+ drawDori(x,y,angle,scale,1);
+ if(mode==="charging"){ctx.fillStyle="rgba(255,255,255,.1)";ctx.fillRect(130,425,860,8);const cg=ctx.createLinearGradient(130,0,990,0);cg.addColorStop(0,"#60dfff");cg.addColorStop(.65,"#8e9fff");cg.addColorStop(1,"#ffdc86");ctx.fillStyle=cg;ctx.fillRect(130,425,860*charge/100,8);ctx.fillStyle="#e8f5ff";ctx.font="14px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("CHARGE  "+charge+"%",560,414)}
+ else if(mode==="flying"){ctx.fillStyle="rgba(255,255,255,.9)";ctx.font="14px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("SPIN  "+spinCompleted+" / 3",560,54);ctx.fillStyle="rgba(255,220,134,.9)";ctx.font="11px HancomMalrangmalrang";ctx.fillText("회전 버튼을 눌러 공중에서 돌려!",560,75)}
+ drawEffects();
 }
 function completeFlight(){
- if(mode!=="flying")return;
- mode="landed";$("spinButton").disabled=true;$("restartButton").disabled=true;$("chargeButton").disabled=true;
- $("stateChip").textContent="착지 완료";$("chargeHint").textContent=spinCompleted+"바퀴 회전 완료 · 다시 던져 더 높은 보상에 도전!";
- submitThrow();
+ if(mode!=="flying")return;const pos=positionAt(performance.now());
+ mode="landed";impactAt=performance.now();spawnParticles(pos.x,390,42,"gold",1.5);
+ $("spinButton").disabled=true;$("restartButton").disabled=true;$("chargeButton").disabled=true;
+ $("stateChip").textContent="착지 완료";$("stateChip").classList.remove("live");
+ $("chargeHint").textContent=spinCompleted+"바퀴 회전 완료 · 보상을 정산하고 있어!";submitThrow();
 }
 async function submitThrow(){
- if(throwPending)return;
- throwPending=true;
+ if(throwPending)return;throwPending=true;
  if(!session){$("rewardResult").textContent="로그인 시 코인이 적립됩니다.";throwPending=false;if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}refreshUI();return}
+ $("rewardResult").textContent="코인 보상 정산 중…";
  try{
-  const {data,error}=await supabase.rpc("dori_throw_game_throw",{p_charge:charge,p_spins:spinCompleted,p_request_id:uuid()});
-  if(error)throw error;
-  gameState.balance=data.balance;gameState.total_throws=data.total_throws;gameState.total_spins=data.total_spins;gameState.best_spins=data.best_spins;gameState.total_earned=data.total_earned??String(BigInt(String(gameState.total_earned||0))+BigInt(String(data.coin_reward||0)));gameState.daily_earned=data.daily_earned;
-  refreshUI();addHistory(spinCompleted,data.coin_reward,charge);
-  $("rewardResult").textContent="+"+fmt(data.coin_reward)+" D 획득";
-  $("chargeHint").textContent="획득 코인 "+fmt(data.coin_reward)+" D · 다시 던져 보자!";
-  toast("돌돌코인 +"+fmt(data.coin_reward)+" 획득!");
- }catch(error){
-  console.error("Dori Throw reward:",error);
-  $("rewardResult").textContent="보상 처리 실패";
-  $("chargeHint").textContent=error.message||"잠시 후 다시 시도해 주세요.";
-  toast(error.message||"코인을 지급하지 못했습니다.");
- }finally{throwPending=false;if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}refreshUI()}
+  const {data,error}=await supabase.rpc("dori_throw_game_throw",{p_charge:charge,p_spins:spinCompleted,p_request_id:uuid()});if(error)throw error;
+  gameState.balance=data.balance;gameState.total_throws=data.total_throws;gameState.total_spins=data.total_spins;gameState.best_spins=data.best_spins;
+  gameState.total_earned=String(BigInt(String(gameState.total_earned||0))+BigInt(String(data.coin_reward||0)));gameState.daily_earned=data.daily_earned;
+  refreshUI();addHistory(spinCompleted,data.coin_reward,charge);$("rewardResult").textContent="+"+fmt(data.coin_reward)+" D 획득";
+  $("chargeHint").textContent="획득 코인 "+fmt(data.coin_reward)+" D · 다시 던져 보자!";toast("돌돌코인 +"+fmt(data.coin_reward)+" 획득!","success");
+ }catch(error){console.error("[DORI THROW] reward:",error);$("rewardResult").textContent="보상 처리 실패";$("chargeHint").textContent=error.message||"잠시 후 다시 시도해 주세요.";toast(error.message||"코인을 지급하지 못했습니다.","error");await loadState()}
+ finally{throwPending=false;if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}refreshUI()}
 }
 function openUpgradeConfirm(type){
- if(!session||!gameState){toast("로그인 후 강화할 수 있어요.");return}
- if(mode==="flying"||mode==="charging"||throwPending)return;
- const level=type==="power"?gameState.power_level:gameState.accuracy_level;
- const cost=nextCost(type,level);
- if(cost===null){toast("이미 최대 레벨입니다.");return}
- if(BigInt(String(gameState.balance||0))<BigInt(cost)){toast("돌돌코인이 부족합니다.");return}
- pendingUpgrade=type;
- $("upgradeModalTitle").textContent=type==="power"?"힘 강화":"정확도 강화";
- $("upgradeModalText").textContent=type==="power"?"다음 레벨로 강화하면 던지는 힘과 비행 거리가 늘어나고 코인 획득 효율이 3.5% 상승해.":"다음 레벨로 강화하면 비행 흔들림이 줄어들고 코인 획득 효율이 2.5% 상승해.";
- $("upgradeModalPrice").textContent=fmt(cost)+" D";
- $("upgradeConfirm").disabled=false;
- $("upgradeModal").classList.add("open");
- $("upgradeModal").setAttribute("aria-hidden","false");
- $("upgradeConfirm").focus();
+ if(!session||!gameState){toast("로그인 후 강화할 수 있어요.");return}if(mode==="flying"||mode==="charging"||throwPending)return;
+ const level=type==="power"?gameState.power_level:gameState.accuracy_level,cost=nextCost(type,level);
+ if(cost===null){toast("이미 최대 레벨입니다.");return}if(BigInt(String(gameState.balance||0))<BigInt(cost)){toast("돌돌코인이 부족합니다.");return}
+ pendingUpgrade=type;$("upgradeModalTitle").textContent=type==="power"?"힘 강화":"정확도 강화";
+ $("upgradeModalText").textContent=type==="power"?"던지는 힘과 비행 거리가 늘어나고 코인 획득 효율이 3.5% 상승해.":"비행 흔들림이 줄어들고 코인 획득 효율이 2.5% 상승해.";
+ $("upgradeModalPrice").textContent=fmt(cost)+" D";$("upgradeConfirm").disabled=false;$("upgradeModal").classList.add("open");$("upgradeModal").setAttribute("aria-hidden","false");$("upgradeConfirm").focus();
 }
-function closeUpgradeConfirm(){
- pendingUpgrade=null;
- $("upgradeModal").classList.remove("open");
- $("upgradeModal").setAttribute("aria-hidden","true");
-}
-async function confirmUpgrade(){
- const type=pendingUpgrade;
- if(!type)return;
- closeUpgradeConfirm();
- await buyUpgrade(type);
-}
+function closeUpgradeConfirm(){pendingUpgrade=null;$("upgradeModal").classList.remove("open");$("upgradeModal").setAttribute("aria-hidden","true")}
+async function confirmUpgrade(){const type=pendingUpgrade;if(!type)return;closeUpgradeConfirm();await buyUpgrade(type)}
 async function buyUpgrade(type){
- if(!session){toast("로그인 후 강화할 수 있어요.");return}
- if(mode==="flying"||mode==="charging"||throwPending)return;
- const button=type==="power"?$("powerUpgrade"):$("accuracyUpgrade");
- button.disabled=true;
+ if(!session||!gameState){toast("로그인 후 강화할 수 있어요.");return}if(mode==="flying"||mode==="charging"||throwPending)return;
+ const button=type==="power"?$("powerUpgrade"):$("accuracyUpgrade");button.disabled=true;
  try{
-  const {data,error}=await supabase.rpc("dori_throw_game_upgrade",{p_upgrade:type,p_request_id:uuid()});
-  if(error)throw error;
-  gameState.balance=data.balance;gameState.power_level=data.power_level;gameState.accuracy_level=data.accuracy_level;
-  refreshUI();toast((type==="power"?"힘":"정확도")+" 강화 완료 · Lv."+data.level);
- }catch(error){console.error(error);toast(error.message||"강화하지 못했습니다.");refreshUI()}
+  const {data,error}=await supabase.rpc("dori_throw_game_upgrade",{p_upgrade:type,p_request_id:uuid()});if(error)throw error;
+  gameState.balance=data.balance;gameState.power_level=data.power_level;gameState.accuracy_level=data.accuracy_level;refreshUI();
+  spawnParticles(type==="power"?250:820,180,22,type==="power"?"gold":"purple",1.2);toast((type==="power"?"힘":"정확도")+" 강화 완료 · Lv."+data.level,"success");
+ }catch(error){console.error("[DORI THROW] upgrade:",error);toast(error.message||"강화하지 못했습니다.","error");await loadState()}
+ finally{refreshUI()}
 }
 function resetForNext(){
- if(mode!=="landed")return;
- mode="idle";charge=0;spinRequested=0;spinCompleted=0;rotationAngle=0;
- $("rewardResult").textContent="아직 던지지 않았어";
- $("stateChip").textContent="준비 완료";
- $("chargeHint").textContent="누르고 있는 동안 기가 차오르고, 손을 떼면 날아가!";
- $("chargeValue").textContent="누르고 있으면 기 장전 · 놓으면 발사";$("chargeFill").style.width="0%";
- $("chargeButton").disabled=false;$("spinButton").disabled=true;$("restartButton").disabled=true;
+ if(mode!=="landed"||throwPending)return;mode="idle";charge=0;spinRequested=0;spinCompleted=0;rotationAngle=0;rotationTime=0;
+ $("rewardResult").textContent="새로운 도전을 시작해 보자!";$("stateChip").textContent="준비 완료";$("stateChip").classList.remove("live");
+ $("chargeHint").textContent="버튼을 누르고 있으면 기가 차오르고, 놓으면 발사돼!";$("chargeValue").textContent="누르고 있으면 기 장전 · 놓으면 발사";$("chargeFill").style.width="0%";
+ $("chargeButton").disabled=false;$("spinButton").disabled=true;$("spinButton").classList.remove("spin-queued");$("spinButton").innerHTML="<strong>↻ 회전하기</strong><small>공중에서 최대 3바퀴</small>";$("restartButton").disabled=true;refreshUI();
 }
-function update(now){
- if(mode==="charging"){
-  charge=Math.min(100,Math.floor((now-chargeStarted)/21));
-  $("chargeFill").style.width=charge+"%";
-  $("chargeValue").textContent=charge+"%";
-  if(charge>=100)releaseCharge();
- }else if(mode==="flying"){
-  const dt=Math.min(.04,Math.max(0,(now-(update.last||now))/1000));update.last=now;
-  if(spinCompleted<spinRequested){
-   rotationTime+=dt;
-   rotationAngle=spinCompleted*TAU+Math.min(TAU,rotationTime/0.82*TAU);
-   if(rotationTime>=.82){spinCompleted++;rotationTime-=.82;rotationAngle=spinCompleted*TAU+Math.min(TAU,rotationTime/.82*TAU);$("spinCount").textContent=spinCompleted+" / 3 완료";}
-  }
-  if(now-flightStarted>=flightDuration*1000)completeFlight();
- }else{update.last=now}
- render();
- requestAnimationFrame(update);
+function frame(now){
+ const dt=lastFrame?Math.min(.04,Math.max(0,(now-lastFrame)/1000)):0;lastFrame=now;
+ if(mode==="charging"){charge=Math.min(100,Math.floor((now-chargeStarted)/21));$("chargeFill").style.width=charge+"%";$("chargeValue").textContent=charge+"% · "+(charge>=96?"PERFECT":"CHARGING");if(charge>=100)releaseCharge()}
+ else if(mode==="flying"){
+  if(spinCompleted<spinRequested){rotationTime+=dt;rotationAngle=spinCompleted*TAU+Math.min(TAU,rotationTime/.82*TAU);
+   if(rotationTime>=.82){spinCompleted++;rotationTime-=.82;rotationAngle=spinCompleted*TAU+Math.min(TAU,rotationTime/.82*TAU);$("spinCount").textContent=spinCompleted+" / 3 완료";const pos=positionAt(now);spawnParticles(pos.x,pos.y,14,"cyan",.8);if(spinCompleted===3)toast("3바퀴 완성! 최고 회전 보상!")}}
+  if(now-flightStarted>=flightDuration*1000)completeFlight()
+ }
+ particles=particles.filter(p=>p.life>0);for(const p of particles){p.life-=dt;p.x+=p.vx;p.y+=p.vy;p.vx*=.99;p.vy=p.vy*.985+.055}
+ render(now);requestAnimationFrame(frame);
 }
-$("chargeButton").addEventListener("pointerdown",event=>{event.preventDefault();if($("chargeButton").setPointerCapture)try{$("chargeButton").setPointerCapture(event.pointerId)}catch{}startCharge(event)});
-window.addEventListener("pointerup",releaseCharge);
-window.addEventListener("pointercancel",releaseCharge);
-$("spinButton").addEventListener("click",requestSpin);
-$("restartButton").addEventListener("click",resetForNext);
-$("powerUpgrade").addEventListener("click",()=>openUpgradeConfirm("power"));
-$("accuracyUpgrade").addEventListener("click",()=>openUpgradeConfirm("accuracy"));
-$("upgradeConfirm").addEventListener("click",confirmUpgrade);
-$("upgradeCancel").addEventListener("click",closeUpgradeConfirm);
+$("chargeButton").addEventListener("pointerdown",event=>{event.preventDefault();if($("chargeButton").setPointerCapture)try{$("chargeButton").setPointerCapture(event.pointerId)}catch{}startCharge()});
+window.addEventListener("pointerup",releaseCharge);window.addEventListener("pointercancel",releaseCharge);
+$("spinButton").addEventListener("click",requestSpin);$("restartButton").addEventListener("click",resetForNext);
+$("powerUpgrade").addEventListener("click",()=>openUpgradeConfirm("power"));$("accuracyUpgrade").addEventListener("click",()=>openUpgradeConfirm("accuracy"));
+$("upgradeConfirm").addEventListener("click",confirmUpgrade);$("upgradeCancel").addEventListener("click",closeUpgradeConfirm);
 $("upgradeModal").addEventListener("click",event=>{if(event.target.id==="upgradeModal")closeUpgradeConfirm()});
+$("retryLoad").addEventListener("click",()=>loadState({showLoading:true}));
 document.addEventListener("keydown",event=>{
- if(event.code==="Space"&&!event.repeat&&!["INPUT","TEXTAREA"].includes(document.activeElement.tagName)){event.preventDefault();if(mode==="idle"||mode==="landed")startCharge(event)}
- if(event.code==="KeyR"&&!event.repeat){requestSpin()}
- if(event.key==="Escape")closeUpgradeConfirm();
+ if(event.code==="Space"&&!event.repeat&&!["INPUT","TEXTAREA","BUTTON"].includes(document.activeElement?.tagName)){event.preventDefault();if(mode==="idle"||mode==="landed")startCharge()}
+ if(event.code==="KeyR"&&!event.repeat)requestSpin();if(event.key==="Escape")closeUpgradeConfirm();
 });
-document.addEventListener("keyup",event=>{if(event.code==="Space")releaseCharge()});
-window.addEventListener("blur",releaseCharge);
-$("rewardResult").textContent="아직 던지지 않았어";
-initAuth();
-requestAnimationFrame(update);
+document.addEventListener("keyup",event=>{if(event.code==="Space")releaseCharge()});window.addEventListener("blur",releaseCharge);
+window.addEventListener("pagehide",()=>authSubscription?.unsubscribe());
+$("rewardResult").textContent="아직 던지지 않았어";loadingAccount();initAuth();requestAnimationFrame(frame);
 </script>
 </head>
 <body>
@@ -390,7 +455,11 @@ requestAnimationFrame(update);
   <h1>돌이 <em>세우기</em></h1>
   <p>기를 가득 모아 돌이를 날려 보자! 공중에서 회전한 횟수가 많을수록 더 많은 돌돌코인을 얻고, 힘과 정확도를 강화할 수 있어.</p>
  </div>
- <div class="balance-card"><small>MY DOLDOLCOIN</small><strong id="coinBalance">불러오는 중…</strong></div>
+ <div class="balance-card">
+ <div class="account-block"><div class="profile-avatar" id="profileAvatar">🐾</div>
+  <div class="profile-info"><small id="accountLabel">ACCOUNT CONNECTION</small><span id="profileName">사용자 정보 확인 중…</span><em id="profileLevel">프로필을 불러오고 있어</em></div>
+ </div><div class="balance-value"><small>MY DOLDOLCOIN</small><strong id="coinBalance">연결 중…</strong></div>
+</div>
 </section>
 <section class="dashboard">
  <section class="panel arena">
@@ -405,7 +474,8 @@ requestAnimationFrame(update);
   </div>
   <div class="controls-hint" id="chargeHint">누르고 있는 동안 기가 차오르고, 손을 떼면 날아가!</div>
   <div class="spin-reward-guide"><span>1바퀴 <b>×1.55</b></span><span>2바퀴 <b>×2.55</b></span><span class="three">3바퀴 <b>×4.00</b> · 최고 보상</span></div>
-  <div class="login-note" id="loginNote">체험 플레이는 가능해. 로그인하면 돌돌코인을 적립하고 강화 레벨을 계정에 저장할 수 있어. <a href="./signin.html" style="color:#ffe3a2">로그인하기</a></div>
+  <div class="login-note" id="loginNote">체험 플레이는 가능해. 로그인하면 돌돌코인을 적립하고 강화 레벨을 계정에 저장할 수 있어. <a href="./login.html" style="color:#ffe3a2">로그인하기</a></div>
+  <button class="retry-load" id="retryLoad" type="button" hidden>↻ 사용자 정보 다시 불러오기</button>
   <div class="controls-hint" id="rewardResult" aria-live="polite">아직 던지지 않았어</div>
  </section>
  <aside class="side">
