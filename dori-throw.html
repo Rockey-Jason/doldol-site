@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#050a1c">
+<meta name="description" content="돌이를 장전해 던지고 공중에서 회전시켜 돌돌코인을 모으는 돌이 세우기">
+<title>돌이 세우기 | 돌이 게임</title>
+<link rel="icon" href="./rockeysite-icon-3.png" type="image/png">
+<style>
+@font-face{font-family:HancomMalrangmalrang;src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
+:root{color-scheme:dark;--bg:#050a1b;--panel:#0c1530;--panel2:#111d3c;--line:rgba(135,166,255,.2);--text:#f3f6ff;--muted:#9eadd0;--cyan:#6fe9ff;--blue:#7597ff;--gold:#ffdc86;--green:#78efc0;--red:#ff8798;font-family:HancomMalrangmalrang,system-ui,sans-serif}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;min-height:100vh;color:var(--text);background:radial-gradient(ellipse at 12% -5%,rgba(76,112,255,.22),transparent 38%),radial-gradient(ellipse at 92% 28%,rgba(95,68,205,.15),transparent 34%),linear-gradient(155deg,#0a1430,#040815 75%);overflow-x:hidden}
+button,a{font:inherit}button{color:inherit;cursor:pointer;touch-action:manipulation}button:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
+.shell{width:min(1320px,calc(100% - 28px));margin:auto;padding:20px 0 42px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px}
+.brand{display:flex;align-items:center;gap:11px;color:var(--text);text-decoration:none}
+.brand-mark{width:42px;height:42px;display:grid;place-items:center;border:1px solid rgba(255,220,134,.4);border-radius:14px;background:linear-gradient(145deg,#26365f,#10182d);font-size:22px;box-shadow:0 0 25px rgba(111,233,255,.08)}
+.brand-copy{display:grid;gap:3px}.brand-copy strong{font-size:14px;letter-spacing:1.8px;font-weight:400}.brand-copy small{font-size:10px;color:var(--muted);letter-spacing:1.4px}
+.back{padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#ffffff08;color:#dbe6ff;text-decoration:none;font-size:12px;white-space:nowrap}
+.hero{display:flex;align-items:end;justify-content:space-between;gap:18px;margin:0 0 18px}
+.eyebrow{font-size:10px;letter-spacing:3px;color:var(--cyan)}
+h1{margin:8px 0 8px;font-size:clamp(30px,5vw,49px);line-height:1.08;font-weight:400;letter-spacing:-1.6px}
+h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 25px #ffdc8622}
+.hero p{max-width:650px;margin:0;color:var(--muted);font-size:13px;line-height:1.7}
+.balance-card{flex-shrink:0;min-width:180px;padding:13px 17px;border:1px solid rgba(255,220,134,.25);border-radius:15px;background:linear-gradient(145deg,rgba(48,41,39,.68),rgba(14,20,38,.9));text-align:right}
+.balance-card small{display:block;color:#b9b7a9;font-size:10px;letter-spacing:1.5px}
+.balance-card strong{display:block;margin-top:4px;color:var(--gold);font-size:24px;font-weight:400;font-variant-numeric:tabular-nums}
+.dashboard{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(300px,.75fr);gap:15px;align-items:stretch}
+.panel{min-width:0;border:1px solid var(--line);border-radius:20px;background:linear-gradient(145deg,rgba(17,29,61,.94),rgba(7,14,31,.97));box-shadow:0 24px 65px rgba(0,0,0,.24)}
+.arena{padding:16px;display:flex;flex-direction:column}
+.panel-head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:2px 3px 13px}
+.panel-head h2{margin:0;font-size:13px;font-weight:400;letter-spacing:1.3px}
+.state-chip{padding:6px 10px;border:1px solid rgba(111,233,255,.2);border-radius:99px;color:var(--cyan);background:rgba(111,233,255,.06);font-size:10px}
+.canvas-wrap{position:relative;overflow:hidden;border:1px solid rgba(134,171,255,.2);border-radius:15px;background:#0a1530}
+#arenaCanvas{display:block;width:100%;height:auto;aspect-ratio:1120/470;touch-action:pan-y}
+.stage-caption{display:flex;justify-content:space-between;gap:12px;padding:9px 3px 0;color:#8498c1;font-size:10px}
+.stage-caption span:last-child{color:#b4c4e6}
+.controls{display:grid;grid-template-columns:minmax(0,1fr) 142px;gap:10px;margin-top:14px}
+.charge-control,.spin-control{min-height:62px;border:1px solid rgba(111,233,255,.27);border-radius:14px;background:linear-gradient(110deg,#203d6b,#244c7a);box-shadow:inset 0 1px rgba(255,255,255,.06);transition:filter .16s,transform .16s,border-color .16s;user-select:none}
+.charge-control{position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;touch-action:none}
+.charge-control:active,.charge-control.charging{filter:brightness(1.2);border-color:var(--cyan);transform:translateY(1px)}
+.charge-control:disabled,.spin-control:disabled{opacity:.42;cursor:not-allowed;filter:saturate(.5)}
+.charge-control .charge-title{position:relative;z-index:2;font-size:16px;color:white}
+.charge-control small{position:relative;z-index:2;font-size:10px;color:#d6e8ff}
+#chargeFill{position:absolute;left:0;bottom:0;height:5px;width:0;background:linear-gradient(90deg,#65dfff,#ffe08d);box-shadow:0 0 16px #78eaff88;transition:width .04s linear}
+.spin-control{display:grid;place-items:center;align-content:center;gap:3px;background:linear-gradient(145deg,#3f326f,#1b2651);border-color:rgba(181,146,255,.35)}
+.spin-control strong{font-size:15px;font-weight:400}.spin-control small{font-size:10px;color:#d2c7ff}
+.controls-hint{min-height:20px;margin:9px 2px 0;color:#8296bd;font-size:10px;line-height:1.6}
+.side{display:flex;flex-direction:column;gap:15px}
+.upgrade-panel{padding:16px}
+.upgrade-panel h2,.stats-panel h2{margin:1px 0 13px;font-size:14px;font-weight:400;letter-spacing:1px}
+.upgrade-card{padding:13px;border:1px solid rgba(144,171,238,.14);border-radius:14px;background:rgba(255,255,255,.025);margin-top:9px}
+.upgrade-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.upgrade-name{display:flex;align-items:center;gap:9px;font-size:13px}
+.upgrade-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:11px;background:#ffffff0c;border:1px solid #ffffff12;font-size:17px}
+.level{color:var(--gold);font-size:11px;white-space:nowrap}
+.upgrade-desc{margin:9px 0 11px;color:#95a8cf;font-size:10px;line-height:1.6}
+.upgrade-bottom{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cost{font-size:10px;color:#c8d3eb}.cost b{color:var(--gold);font-weight:400}
+.upgrade-btn{padding:9px 12px;border:1px solid rgba(255,220,134,.35);border-radius:10px;background:linear-gradient(110deg,#f0ce78,#be8f43);color:#241b0c;font-size:11px;white-space:nowrap}
+.upgrade-btn:disabled{opacity:.38;filter:grayscale(.8);cursor:not-allowed}
+.stats-panel{padding:16px;flex:1}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{padding:11px;border:1px solid #ffffff0e;border-radius:12px;background:#ffffff05}
+.stat span{display:block;color:#91a2c7;font-size:9px;margin-bottom:6px}
+.stat strong{display:block;color:#ecf2ff;font-size:16px;font-weight:400;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.daily{margin-top:13px}
+.daily-top{display:flex;justify-content:space-between;gap:8px;color:#91a2c7;font-size:10px;margin-bottom:7px}
+.daily-top strong{color:#c6d6f5;font-weight:400}
+.daily-bar{height:6px;border-radius:99px;background:#ffffff12;overflow:hidden}
+#dailyFill{height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,#5edfff,#9a8bff);transition:width .25s}
+.history{margin-top:13px;padding-top:12px;border-top:1px solid #ffffff12}
+.history h3{margin:0 0 7px;font-size:10px;font-weight:400;color:#9daed0;letter-spacing:1px}
+#historyList{display:grid;gap:6px}
+.history-row{display:flex;justify-content:space-between;gap:8px;color:#91a3c8;font-size:10px}
+.history-row b{color:var(--green);font-weight:400;white-space:nowrap}
+.history-empty{color:#697da5;font-size:10px;line-height:1.6}
+.guide{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:15px}
+.guide-card{padding:15px;border:1px solid rgba(139,169,245,.14);border-radius:15px;background:rgba(255,255,255,.025)}
+.guide-card .number{color:var(--cyan);font-size:10px;letter-spacing:2px}
+.guide-card h3{margin:7px 0 5px;font-size:13px;font-weight:400}
+.guide-card p{margin:0;color:#91a2c7;font-size:10px;line-height:1.65}
+.footer-note{margin:18px 0 0;text-align:center;color:#6e81a8;font-size:10px;line-height:1.7}
+.toast{position:fixed;z-index:50;left:50%;bottom:22px;transform:translate(-50%,18px);opacity:0;pointer-events:none;max-width:calc(100% - 28px);padding:12px 17px;border:1px solid rgba(111,233,255,.25);border-radius:12px;background:#111f3b;color:#e7f5ff;font-size:12px;box-shadow:0 14px 40px #0008;text-align:center;transition:opacity .2s,transform .2s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.login-note{display:none;margin-top:11px;padding:10px 12px;border:1px solid rgba(255,220,134,.2);border-radius:11px;background:rgba(255,220,134,.05);color:#cfc4a7;font-size:10px;line-height:1.6}
+.login-note.show{display:block}
+@media(max-width:900px){.dashboard{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.stats-panel{min-height:100%}}
+@media(max-width:600px){
+ .shell{width:calc(100% - 20px);padding-top:13px}
+ .topbar{margin-bottom:21px}.brand-mark{width:38px;height:38px}.brand-copy strong{font-size:12px}.back{padding:9px 11px;font-size:11px}
+ .hero{display:block}.hero p{font-size:12px}
+ .balance-card{display:flex;align-items:center;justify-content:space-between;text-align:left;margin-top:14px;padding:10px 13px}
+ .balance-card strong{font-size:19px;margin:0}
+ .dashboard{gap:10px}.arena,.upgrade-panel,.stats-panel{padding:12px}
+ .panel{border-radius:16px}.panel-head{padding-bottom:10px}
+ .controls{grid-template-columns:minmax(0,1fr) 112px;gap:8px}
+ .charge-control,.spin-control{min-height:60px}.charge-control .charge-title{font-size:14px}.spin-control strong{font-size:13px}
+ .side{grid-template-columns:1fr;gap:10px}
+ .stats-panel{min-height:0}
+ .guide{grid-template-columns:1fr;gap:8px;margin-top:10px}
+ .guide-card{padding:12px}.guide-card h3{margin:5px 0}
+ .stage-caption{font-size:9px}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+</style>
+<script type="module">
+import {createClient} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+const SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
+const SUPABASE_KEY="sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
+const supabase=window.doriSupabase||(createClient?createClient(SUPABASE_URL,SUPABASE_KEY):null);
+if(supabase&&!window.doriSupabase)window.doriSupabase=supabase;
+const $=id=>document.getElementById(id);
+const fmt=value=>{try{return BigInt(String(value??0)).toLocaleString("ko-KR")}catch{return "0"}};
+const uuid=()=>window.crypto&&crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)});
+let session=null,gameState=null,mode="idle",chargeStarted=0,charge=0,flightStarted=0,flightDuration=4.1,flightX=0,flightY=0,spinRequested=0,spinCompleted=0,rotationAngle=0,rotationTime=0,launchOffset=0,throwPending=false,toastTimer=0,history=[];
+const canvas=$("arenaCanvas"),ctx=canvas.getContext("2d");
+const dori=new Image();dori.src="./assets/dori-character.svg";
+const TAU=Math.PI*2;
+const MAX_DAILY=25000;
+function toast(message){const el=$("toast");el.textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2300)}
+function nextCost(type,level){if(level>=20)return null;return Math.ceil((type==="power"?150:180)*Math.pow(1.48,level))}
+function showGuest(){ $("loginNote").classList.add("show"); $("coinBalance").textContent="로그인 필요"; $("chargeHint").textContent="체험 모드 · 로그인하면 돌돌코인 적립"; $("powerUpgrade").disabled=true; $("accuracyUpgrade").disabled=true; $("spinButton").disabled=true; }
+function refreshUI(){
+ if(!gameState)return;
+ $("coinBalance").textContent=fmt(gameState.balance)+" D";
+ $("powerLevel").textContent="Lv. "+gameState.power_level+" / 20";
+ $("accuracyLevel").textContent="Lv. "+gameState.accuracy_level+" / 20";
+ const pc=nextCost("power",gameState.power_level),ac=nextCost("accuracy",gameState.accuracy_level);
+ $("powerCost").textContent=pc===null?"MAX":fmt(pc)+" D";
+ $("accuracyCost").textContent=ac===null?"MAX":fmt(ac)+" D";
+ $("powerUpgrade").disabled=pc===null||BigInt(String(gameState.balance||0))<BigInt(pc)||mode==="flying"||throwPending;
+ $("accuracyUpgrade").disabled=ac===null||BigInt(String(gameState.balance||0))<BigInt(ac)||mode==="flying"||throwPending;
+ $("throwsCount").textContent=fmt(gameState.total_throws);
+ $("bestSpin").textContent=gameState.best_spins+"바퀴";
+ $("totalEarned").textContent=fmt(gameState.total_earned);
+ const daily=Number(gameState.daily_earned||0),limit=Number(gameState.daily_limit||MAX_DAILY);
+ $("dailyText").textContent=fmt(daily)+" / "+fmt(limit)+" D";
+ $("dailyFill").style.width=Math.min(100,daily/limit*100)+"%";
+}
+async function loadState(){
+ if(!session){gameState=null;showGuest();return}
+ const {data,error}=await supabase.rpc("dori_throw_game_get_state");
+ if(error){console.error(error);toast("게임 정보를 불러오지 못했습니다.");return}
+ gameState=data;
+ $("loginNote").classList.remove("show");
+ $("chargeHint").textContent="누르고 있는 동안 기가 차오르고, 손을 떼면 날아가!";
+ refreshUI();
+}
+async function initAuth(){
+ if(!supabase){showGuest();return}
+ try{
+  const {data,error}=await supabase.auth.getSession();
+  if(error)throw error;
+  session=data.session;
+  if(session)await loadState();else showGuest();
+  supabase.auth.onAuthStateChange((_event,nextSession)=>{session=nextSession;loadState()});
+ }catch(error){console.warn("Dori Throw auth:",error);showGuest()}
+}
+function addHistory(spins,reward,chargeValue){
+ history.unshift({spins,reward,chargeValue});
+ history=history.slice(0,4);
+ const list=$("historyList");
+ list.replaceChildren();
+ history.forEach(item=>{
+  const row=document.createElement("div");row.className="history-row";
+  const left=document.createElement("span");left.textContent=item.chargeValue+"% 장전 · "+item.spins+"바퀴";
+  const right=document.createElement("b");right.textContent="+"+fmt(reward)+" D";
+  row.append(left,right);list.append(row);
+ });
+}
+function startCharge(event){
+ if(mode!=="idle"&&mode!=="landed")return;
+ if(!session){toast("로그인하면 돌돌코인을 적립할 수 있어요.");}
+ mode="charging";charge=0;chargeStarted=performance.now();
+ $("chargeButton").classList.add("charging");
+ $("chargeButton").setAttribute("aria-label","기가 장전 중");
+ $("chargeButton").disabled=false;$("spinButton").disabled=true;
+ $("chargeHint").textContent="기를 모으는 중... 원하는 순간 손을 떼어 던져!";
+ $("stateChip").textContent="기 장전 중";
+}
+function releaseCharge(){
+ if(mode!=="charging")return;
+ const elapsed=performance.now()-chargeStarted;
+ charge=Math.max(5,Math.min(100,Math.round(elapsed/2100*100)));
+ $("chargeButton").classList.remove("charging");
+ $("chargeButton").setAttribute("aria-label","돌이 던지기 · 누르고 있다가 놓기");
+ launch();
+}
+function launch(){
+ mode="flying";flightStarted=performance.now();flightDuration=3.8+charge/100*.42+(gameState?gameState.power_level*.025:0);
+ spinRequested=0;spinCompleted=0;rotationAngle=0;rotationTime=0;throwPending=false;
+ launchOffset=(Math.random()*2-1)*Math.max(1,16-((gameState?.accuracy_level||0)*.7));
+ $("chargeButton").disabled=true;$("spinButton").disabled=false;$("restartButton").disabled=true;
+ $("spinButton").textContent="↻ 회전하기";
+ $("spinCount").textContent="0 / 3 완료";
+ $("stateChip").textContent="공중 비행 중";
+ $("chargeHint").textContent=charge+"% 기 장전 · 공중에서 회전 버튼을 눌러!";
+ toast(charge>=96?"PERFECT CHARGE!":"기가 장전되어 날아갔어!");
+}
+function requestSpin(){
+ if(mode!=="flying")return;
+ if(spinRequested>=3){toast("이번 던지기의 회전은 최대 3바퀴야!");return}
+ spinRequested++;
+ $("spinCount").textContent=spinCompleted+" / 3 완료 · "+(spinRequested-spinCompleted)+" 진행 중";
+ $("spinButton").textContent="↻ 회전 "+spinRequested+"/3";
+ if(spinRequested===3)$("spinButton").disabled=true;
+}
+function drawBackground(){
+ const g=ctx.createLinearGradient(0,0,0,470);g.addColorStop(0,"#101f46");g.addColorStop(.63,"#142b4c");g.addColorStop(1,"#0a1930");ctx.fillStyle=g;ctx.fillRect(0,0,1120,470);
+ for(let i=0;i<48;i++){const x=(i*173)%1120,y=(i*67)%255,r=(i%3)*.45+.6;ctx.fillStyle="rgba(210,229,255,"+(.13+(i%4)*.06)+")";ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill()}
+ ctx.fillStyle="rgba(95,150,211,.11)";ctx.beginPath();ctx.ellipse(245,375,320,110,0,0,TAU);ctx.fill();ctx.beginPath();ctx.ellipse(900,365,300,120,0,0,TAU);ctx.fill();
+ const horizon=ctx.createLinearGradient(0,370,0,470);horizon.addColorStop(0,"#203c58");horizon.addColorStop(1,"#0d1b30");ctx.fillStyle=horizon;ctx.fillRect(0,390,1120,80);
+ ctx.strokeStyle="rgba(124,183,231,.18)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,390);ctx.lineTo(1120,390);ctx.stroke();
+ for(let i=0;i<18;i++){let x=i*72;ctx.strokeStyle="rgba(124,183,231,.08)";ctx.beginPath();ctx.moveTo(x,390);ctx.lineTo(x-22,470);ctx.stroke()}
+}
+function drawTarget(){
+ ctx.save();ctx.translate(935,390);ctx.strokeStyle="rgba(255,220,134,.55)";ctx.lineWidth=2;
+ for(let r of [25,49,74]){ctx.beginPath();ctx.ellipse(0,0,r,r*.3,0,0,TAU);ctx.stroke()}
+ ctx.fillStyle="rgba(255,220,134,.78)";ctx.font="12px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("LANDING ZONE",0,56);ctx.restore();
+}
+function drawDori(x,y,angle,scale=1){
+ if(!dori.complete||!dori.naturalWidth){ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.fillStyle="#c88d50";ctx.beginPath();ctx.ellipse(0,0,47,37,0,0,TAU);ctx.fill();ctx.restore();return}
+ const w=145*scale,h=160*scale;ctx.save();ctx.translate(x,y);ctx.rotate(angle);ctx.shadowColor="rgba(0,0,0,.35)";ctx.shadowBlur=18;ctx.shadowOffsetY=12;ctx.drawImage(dori,-w/2,-h/2,w,h);ctx.restore();
+}
+function render(){
+ ctx.clearRect(0,0,1120,470);drawBackground();drawTarget();
+ let x=190,y=322,angle=0,scale=1;
+ if(mode==="charging"){
+  const power=charge/100;x=190;y=322-Math.sin(power*Math.PI)*14;scale=1+power*.05;
+ }else if(mode==="flying"){
+  const t=Math.min(1,(performance.now()-flightStarted)/(flightDuration*1000));
+  x=190+710*t;
+  y=322-Math.sin(Math.PI*t)*265+Math.sin(performance.now()/150)*Math.max(0,16-(gameState?.accuracy_level||0)*.7);
+  angle=rotationAngle;
+ }else if(mode==="landed"){x=900+launchOffset*2;y=322;angle=rotationAngle}
+ drawDori(x,y,angle,scale);
+ if(mode==="charging"){
+  ctx.fillStyle="rgba(255,255,255,.12)";ctx.fillRect(130,425,860,8);
+  const cg=ctx.createLinearGradient(130,0,990,0);cg.addColorStop(0,"#60dfff");cg.addColorStop(1,"#ffdc86");ctx.fillStyle=cg;ctx.fillRect(130,425,860*charge/100,8);
+  ctx.fillStyle="#e8f5ff";ctx.font="14px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("CHARGE "+charge+"%",560,414);
+ }else if(mode==="flying"){
+  ctx.fillStyle="rgba(255,255,255,.75)";ctx.font="14px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("SPIN "+spinCompleted+" / 3",560,54);
+  ctx.fillStyle="rgba(255,220,134,.7)";ctx.font="11px HancomMalrangmalrang";ctx.fillText("회전 버튼을 눌러 공중에서 돌려!",560,75);
+ }
+}
+function completeFlight(){
+ if(mode!=="flying")return;
+ mode="landed";$("spinButton").disabled=true;$("restartButton").disabled=false;$("chargeButton").disabled=false;
+ $("stateChip").textContent="착지 완료";$("chargeHint").textContent=spinCompleted+"바퀴 회전 완료 · 다시 던져 더 높은 보상에 도전!";
+ submitThrow();
+}
+async function submitThrow(){
+ if(throwPending)return;
+ throwPending=true;
+ if(!session){$("rewardResult").textContent="로그인 시 코인이 적립됩니다.";refreshUI();return}
+ try{
+  const {data,error}=await supabase.rpc("dori_throw_game_throw",{p_charge:charge,p_spins:spinCompleted,p_request_id:uuid()});
+  if(error)throw error;
+  gameState.balance=data.balance;gameState.total_throws=data.total_throws;gameState.total_spins=data.total_spins;gameState.best_spins=data.best_spins;gameState.total_earned=data.total_earned??String(BigInt(String(gameState.total_earned||0))+BigInt(String(data.coin_reward||0)));gameState.daily_earned=data.daily_earned;
+  refreshUI();addHistory(spinCompleted,data.coin_reward,charge);
+  $("rewardResult").textContent="+"+fmt(data.coin_reward)+" D 획득";
+  $("chargeHint").textContent="획득 코인 "+fmt(data.coin_reward)+" D · 다시 던져 보자!";
+  toast("돌돌코인 +"+fmt(data.coin_reward)+" 획득!");
+ }catch(error){
+  console.error("Dori Throw reward:",error);
+  $("rewardResult").textContent="보상 처리 실패";
+  $("chargeHint").textContent=error.message||"잠시 후 다시 시도해 주세요.";
+  toast(error.message||"코인을 지급하지 못했습니다.");
+ }finally{throwPending=false;refreshUI()}
+}
+async function buyUpgrade(type){
+ if(!session){toast("로그인 후 강화할 수 있어요.");return}
+ if(mode==="flying"||mode==="charging"||throwPending)return;
+ const button=type==="power"?$("powerUpgrade"):$("accuracyUpgrade");
+ button.disabled=true;
+ try{
+  const {data,error}=await supabase.rpc("dori_throw_game_upgrade",{p_upgrade:type,p_request_id:uuid()});
+  if(error)throw error;
+  gameState.balance=data.balance;gameState.power_level=data.power_level;gameState.accuracy_level=data.accuracy_level;
+  refreshUI();toast((type==="power"?"힘":"정확도")+" 강화 완료 · Lv."+data.level);
+ }catch(error){console.error(error);toast(error.message||"강화하지 못했습니다.");refreshUI()}
+}
+function resetForNext(){
+ if(mode!=="landed")return;
+ mode="idle";charge=0;spinRequested=0;spinCompleted=0;rotationAngle=0;
+ $("rewardResult").textContent="아직 던지지 않았어";
+ $("stateChip").textContent="준비 완료";
+ $("chargeHint").textContent="누르고 있는 동안 기가 차오르고, 손을 떼면 날아가!";
+ $("chargeButton").disabled=false;$("spinButton").disabled=true;$("restartButton").disabled=true;
+}
+function update(now){
+ if(mode==="charging"){
+  charge=Math.min(100,Math.floor((now-chargeStarted)/21));
+  $("chargeFill").style.width=charge+"%";
+  $("chargeValue").textContent=charge+"%";
+  if(charge>=100)releaseCharge();
+ }else if(mode==="flying"){
+  const dt=Math.min(.04,Math.max(0,(now-(update.last||now))/1000));update.last=now;
+  if(spinCompleted<spinRequested){
+   rotationTime+=dt;
+   rotationAngle=spinCompleted*TAU+Math.min(TAU,rotationTime/0.82*TAU);
+   if(rotationTime>=.82){spinCompleted++;rotationTime-=.82;rotationAngle=spinCompleted*TAU+Math.min(TAU,rotationTime/.82*TAU);$("spinCount").textContent=spinCompleted+" / 3 완료";}
+  }
+  if(now-flightStarted>=flightDuration*1000)completeFlight();
+ }else{update.last=now}
+ render();
+ requestAnimationFrame(update);
+}
+$("chargeButton").addEventListener("pointerdown",event=>{event.preventDefault();if($("chargeButton").setPointerCapture)try{$("chargeButton").setPointerCapture(event.pointerId)}catch{}startCharge(event)});
+window.addEventListener("pointerup",releaseCharge);
+window.addEventListener("pointercancel",releaseCharge);
+$("spinButton").addEventListener("click",requestSpin);
+$("restartButton").addEventListener("click",resetForNext);
+$("powerUpgrade").addEventListener("click",()=>buyUpgrade("power"));
+$("accuracyUpgrade").addEventListener("click",()=>buyUpgrade("accuracy"));
+document.addEventListener("keydown",event=>{
+ if(event.code==="Space"&&!event.repeat&&!["INPUT","TEXTAREA"].includes(document.activeElement.tagName)){event.preventDefault();if(mode==="idle"||mode==="landed")startCharge(event)}
+ if(event.code==="KeyR"&&!event.repeat){requestSpin()}
+});
+document.addEventListener("keyup",event=>{if(event.code==="Space")releaseCharge()});
+window.addEventListener("blur",releaseCharge);
+$("rewardResult").textContent="아직 던지지 않았어";
+initAuth();
+requestAnimationFrame(update);
+</script>
+</head>
+<body>
+<main class="shell">
+<header class="topbar">
+ <a class="brand" href="./gamepage.html">
+  <span class="brand-mark">🐾</span>
+  <span class="brand-copy"><strong>DORI GAME CENTER</strong><small>THROW & SPIN ARENA</small></span>
+ </a>
+ <a class="back" href="./gamepage.html">← 돌이게임으로</a>
+</header>
+<section class="hero">
+ <div>
+  <div class="eyebrow">DORI MINI GAME · CHARGE / FLIGHT / SPIN</div>
+  <h1>돌이 <em>세우기</em></h1>
+  <p>기를 가득 모아 돌이를 날려 보자! 공중에서 회전한 횟수가 많을수록 더 많은 돌돌코인을 얻고, 힘과 정확도를 강화할 수 있어.</p>
+ </div>
+ <div class="balance-card"><small>MY DOLDOLCOIN</small><strong id="coinBalance">불러오는 중…</strong></div>
+</section>
+<section class="dashboard">
+ <section class="panel arena">
+  <div class="panel-head"><h2>✦ FLIGHT ARENA</h2><span class="state-chip" id="stateChip">준비 완료</span></div>
+  <div class="canvas-wrap"><canvas id="arenaCanvas" width="1120" height="470" aria-label="돌이가 기를 장전하고 공중에서 회전하는 게임 화면"></canvas></div>
+  <div class="stage-caption"><span>CHARGE → LAUNCH → SPIN</span><span id="spinCount">0 / 3 완료</span></div>
+  <div class="controls">
+   <button class="charge-control" id="chargeButton" type="button" aria-label="돌이 던지기 · 누르고 있다가 놓기">
+    <span class="charge-title">🐾 돌이 던지기</span><small id="chargeValue">누르고 있으면 기 장전 · 놓으면 발사</small><span id="chargeFill"></span>
+   </button>
+   <button class="spin-control" id="spinButton" type="button" disabled><strong>↻ 회전하기</strong><small>공중에서 최대 3바퀴</small></button>
+  </div>
+  <div class="controls-hint" id="chargeHint">누르고 있는 동안 기가 차오르고, 손을 떼면 날아가!</div>
+  <div class="login-note" id="loginNote">체험 플레이는 가능해. 로그인하면 돌돌코인을 적립하고 강화 레벨을 계정에 저장할 수 있어. <a href="./signin.html" style="color:#ffe3a2">로그인하기</a></div>
+  <div class="controls-hint" id="rewardResult" aria-live="polite">아직 던지지 않았어</div>
+ </section>
+ <aside class="side">
+  <section class="panel upgrade-panel">
+   <h2>⚙ 돌이 강화 연구소</h2>
+   <div class="upgrade-card">
+    <div class="upgrade-top"><div class="upgrade-name"><span class="upgrade-icon">💪</span>힘 강화</div><span class="level" id="powerLevel">Lv. 0 / 20</span></div>
+    <p class="upgrade-desc">던지는 힘과 비행 거리가 늘어나. 레벨이 오르면 코인 획득 효율도 3.5%씩 상승해.</p>
+    <div class="upgrade-bottom"><span class="cost">다음 강화 <b id="powerCost">150 D</b></span><button class="upgrade-btn" id="powerUpgrade" type="button">힘 강화</button></div>
+   </div>
+   <div class="upgrade-card">
+    <div class="upgrade-top"><div class="upgrade-name"><span class="upgrade-icon">🎯</span>정확도 강화</div><span class="level" id="accuracyLevel">Lv. 0 / 20</span></div>
+    <p class="upgrade-desc">비행 흔들림이 줄어들어 목표 지점에 더 안정적으로 도달해. 코인 획득 효율도 2.5%씩 상승해.</p>
+    <div class="upgrade-bottom"><span class="cost">다음 강화 <b id="accuracyCost">180 D</b></span><button class="upgrade-btn" id="accuracyUpgrade" type="button">정확도 강화</button></div>
+   </div>
+  </section>
+  <section class="panel stats-panel">
+   <h2>✧ 나의 기록</h2>
+   <div class="stats-grid">
+    <div class="stat"><span>총 던지기</span><strong id="throwsCount">0</strong></div>
+    <div class="stat"><span>최고 회전</span><strong id="bestSpin">0바퀴</strong></div>
+    <div class="stat"><span>누적 획득</span><strong id="totalEarned">0</strong></div>
+    <div class="stat"><span>회전 보상</span><strong>최대 ×4.00</strong></div>
+   </div>
+   <div class="daily"><div class="daily-top"><span>일일 코인 적립 한도</span><strong id="dailyText">0 / 25,000 D</strong></div><div class="daily-bar"><div id="dailyFill"></div></div></div>
+   <div class="history"><h3>RECENT THROWS</h3><div id="historyList"><div class="history-empty">첫 던지기를 완료하면 기록이 여기에 표시돼.</div></div></div>
+  </section>
+ </aside>
+</section>
+<section class="guide">
+ <article class="guide-card"><div class="number">STEP 01</div><h3>기를 장전해!</h3><p>‘돌이 던지기’를 누르고 있으면 기가 모여. 오래 누를수록 장전량과 기본 보상이 커져.</p></article>
+ <article class="guide-card"><div class="number">STEP 02</div><h3>공중에서 회전!</h3><p>날아가는 동안 ‘회전하기’를 눌러 한 바퀴씩 완성해. 완료한 회전만 보상에 반영돼.</p></article>
+ <article class="guide-card"><div class="number">STEP 03</div><h3>코인으로 강화!</h3><p>모은 돌돌코인으로 힘과 정확도를 올려. 강화할수록 더 높은 보상에 도전할 수 있어.</p></article>
+</section>
+<p class="footer-note">계정 코인과 강화 기록은 로그인한 사용자 계정에 저장돼. 3바퀴 회전 보상은 1바퀴 보상보다 높게 계산돼.</p>
+</main>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
