@@ -40,6 +40,16 @@ async function boot(page) {
 }
 
 try {
+  const productionMode = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+  await productionMode.goto(baseURL, { waitUntil: "domcontentloaded", timeout: 45000 });
+  await productionMode.waitForFunction(() => {
+    const canvas = document.querySelector("#world-canvas");
+    return canvas && canvas.width > 0 && canvas.height > 0;
+  }, { timeout: 30000 });
+  assert.equal(await productionMode.evaluate(() => window.__doroniumFactoryTest), undefined,
+    "Production mode must not expose mutable E2E test hooks, even when served from localhost without the explicit test mode");
+  await productionMode.close();
+
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
   desktop.setDefaultTimeout(120000);
   capture(desktop, "desktop");

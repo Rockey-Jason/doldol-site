@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  createRuntimeState, ensureItemStacks, addItemStack, removeItemStacks,
+  createRuntimeState, ensureItemStacks, allocateRuntimeID, addItemStack, removeItemStacks,
   calculateOutputQuality, calculateOutputPurity, accuracyQuality,
   reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations,
   splitItemStack, mergeItemStacks, validateRuntimeState, availableItemCount,
@@ -136,4 +136,35 @@ test("runtime save validation checks deterministic failure journal counters and 
  assert.equal(validateRuntimeState(state).valid,true);
  state.runtime.failureEvents.push({failureEventID:"FAIL-1"});
  assert.ok(validateRuntimeState(state).errors.some(x=>x.startsWith("duplicate-failure-event:")));
+});
+
+
+test("entity IDs are monotonically allocated and survive save hydration",()=>{
+ const state={runtime:createRuntimeState(),buildings:[]};
+ const first=allocateRuntimeID(state,"BLD");
+ const second=allocateRuntimeID(state,"BLD");
+ assert.equal(first,"BLD-00000001");
+ assert.equal(second,"BLD-00000002");
+ const restored={runtime:structuredClone(state.runtime),buildings:[{uid:first},{uid:second}]};
+ assert.equal(allocateRuntimeID(restored,"BLD"),"BLD-00000003");
+});
+
+test("qualified reservations select only individually valid stacks and roll back shortages",()=>{
+ const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:10};
+ addItemStack(state,"doronium_blue",4,{quality:89,purity:100,synthetic:false});
+ addItemStack(state,"doronium_blue",3,{quality:99,purity:99,synthetic:true});
+ addItemStack(state,"doronium_blue",5,{quality:95,purity:95,synthetic:false});
+ const eligible=stack=>stack.quality>=90&&stack.purity>=90&&stack.synthetic===false;
+ const failed=reserveItemBatch(state,{doronium_blue:6},"fusion-short",eligible);
+ assert.equal(failed,null);
+ assert.equal(Object.keys(state.runtime.reservations).length,0);
+ const accepted=reserveItemBatch(state,{doronium_blue:5},"fusion-good",eligible);
+ assert.equal(accepted.length,1);
+ const committed=commitItemReservations(state,accepted);
+ assert.equal(committed.length,1);
+ assert.equal(committed[0].quantity,5);
+ assert.equal(committed[0].quality,95);
+ assert.equal(committed[0].synthetic,false);
+ assert.equal(availableItemCount(state,"doronium_blue"),7);
+ assert.equal(validateRuntimeState(state).valid,true);
 });
