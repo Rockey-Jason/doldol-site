@@ -800,8 +800,34 @@ async function checkSiteAchievements() {
     if (bankNums.length) txs = (await allRows("dori_bank_transactions","tx_type,account_number",[q=>q.in("account_number",bankNums)])) || [];
     const divs = dividends || [];
     const divTotal = divs.reduce((s,x)=>s+Math.max(0,Number(x.amount)||0),0);
+
+    // 돌이 세우기 업적은 비공개 게임 기록 테이블을 직접 조회하지 않는다.
+    // 인증된 대시보드 RPC로 진행 수치만 읽고, 보상 조건은 claim_achievement가 DB에서 재검증한다.
+    let seugiThrows = 0;
+    let seugiStats = {};
+    try {
+      const [seugiStateResult, seugiDashboardResult] = await Promise.all([
+        supabase.rpc("dori_throw_game_get_state"),
+        supabase.rpc("dori_throw_game_get_dashboard")
+      ]);
+      if (seugiStateResult.error) throw seugiStateResult.error;
+      if (seugiDashboardResult.error) throw seugiDashboardResult.error;
+      seugiThrows = Math.max(0, Number(seugiStateResult.data?.total_throws || 0));
+      seugiStats = seugiDashboardResult.data?.stats || {};
+    } catch (seugiError) {
+      console.warn("[Dori Achievement] 세우기 진행도 조회 실패:", seugiError);
+    }
     
     const checks = [
+      ["seugi_first_throw",seugiThrows>=1],
+      ["seugi_100_throws",seugiThrows>=100],
+      ["seugi_500_throws",seugiThrows>=500],
+      ["seugi_1000_throws",seugiThrows>=1000],
+      ["seugi_perfect_1",Number(seugiStats.perfect_landings||0)>=1],
+      ["seugi_perfect_10",Number(seugiStats.perfect_landings||0)>=10],
+      ["seugi_perfect_50",Number(seugiStats.perfect_landings||0)>=50],
+      ["seugi_perfect_streak_10",Number(seugiStats.best_perfect_streak||0)>=10],
+      ["seugi_challenge_25",Number(seugiStats.challenge_throws||0)>=25],
       ["attendance_200_days",attCount>=200],["attendance_365_days",attCount>=365],["attendance_streak_14",Number(att?.streak_count||0)>=14],["attendance_streak_100",Number(att?.streak_count||0)>=100],
       ["mission_200",ms.length>=200],["mission_500",ms.length>=500],["mission_1000",ms.length>=1000],["mission_100_days",days.size>=100],["mission_365_days",days.size>=365],
       ["study_focus_100h",seconds>=360000],["study_focus_200h",seconds>=720000],["study_sessions_100",fs.length>=100],["study_sessions_250",fs.length>=250],["study_exam_10",exams>=10],["study_exam_25",exams>=25],
