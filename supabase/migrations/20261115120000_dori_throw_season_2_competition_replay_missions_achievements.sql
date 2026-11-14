@@ -92,13 +92,16 @@ streaks as (
   where is_perfect
   group by user_id,(seq_all-seq_state)
 ),
-summary as (
-  select user_id,
-    count(*) filter(where is_perfect) as perfect_count,
-    coalesce(max(streak_len),0) as best_streak
-  from public.dori_throw_game_records r
-  left join streaks s using(user_id)
+counts as (
+  select user_id,count(*) filter(where is_perfect) as perfect_count
+  from public.dori_throw_game_records
   group by user_id
+),
+summary as (
+  select c.user_id,c.perfect_count,coalesce(max(s.streak_len),0) as best_streak
+  from counts c
+  left join streaks s using(user_id)
+  group by c.user_id,c.perfect_count
 ),
 trailing as (
   select r.user_id,count(*) as current_streak
@@ -1160,10 +1163,10 @@ values
 on conflict(id) do nothing;
 
 revoke all on function public.dori_throw_game_record_result() from public,anon,authenticated;
-revoke all on function public.dori_throw_game_get_daily_missions() from public,anon;
-revoke all on function public.dori_throw_game_claim_daily_mission(text) from public,anon;
-revoke all on function public.dori_throw_game_get_dashboard() from public,anon;
-revoke all on function public.dori_throw_game_throw(integer,uuid,text) from public,anon;
+revoke all on function public.dori_throw_game_get_daily_missions() from public,anon,authenticated;
+revoke all on function public.dori_throw_game_claim_daily_mission(text) from public,anon,authenticated;
+revoke all on function public.dori_throw_game_get_dashboard() from public,anon,authenticated;
+revoke all on function public.dori_throw_game_throw(integer,uuid,text) from public,anon,authenticated;
 grant execute on function public.dori_throw_game_get_daily_missions() to authenticated;
 grant execute on function public.dori_throw_game_claim_daily_mission(text) to authenticated;
 grant execute on function public.dori_throw_game_get_dashboard() to authenticated;
