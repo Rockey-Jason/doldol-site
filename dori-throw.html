@@ -394,6 +394,209 @@ let landingFlashTimer=0;
 let selectedGameMode="classic",challengeRun=null,season2Dashboard=null,activeLeaderboard="best",currentReplayRecordId=null;
 let flightParams={duration:2.85,height:108,speed:710/2.85,spinRate:2.35,landingAngle:0,tolerance:12},lastAnglePaint=0;
 let toastTimer=0,history=[],pendingUpgrade=null,authSubscription=null,authSeq=0,particles=[],impactAt=0,impactX=560,lastFrame=0,lastPaint=0,rafId=0,hiddenAt=0,arenaObserver=null;
+
+const GAME_MODE_INFO={
+ classic:{title:"기본 플레이",description:"원하는 만큼 던지며 기존 세우기 코인을 모아 봐."},
+ time_attack:{title:"타임어택 · 60초",description:"60초 동안 가능한 한 많은 성공 착지와 PERFECT를 기록해 봐."},
+ endless:{title:"무한 도전",description:"성공 착지를 이어 가자. 한 번 실패하면 도전이 끝나."},
+ precision:{title:"정밀 착지 · 10회",description:"10번의 기회 안에서 PERFECT 착지를 최대한 많이 만들어 봐."}
+};
+function updateModeUi(){
+ document.querySelectorAll("[data-game-mode]").forEach(button=>{
+  button.classList.toggle("active",button.dataset.gameMode===selectedGameMode);
+  button.disabled=mode==="flying"||mode==="charging"||mode==="replay"||throwPending||!!(challengeRun&&!challengeRun.finished);
+ });
+ const info=GAME_MODE_INFO[selectedGameMode]||GAME_MODE_INFO.classic;
+ $("modeTitle").textContent=info.title;$("modeDescription").textContent=info.description;
+ $("challengeStartButton").disabled=selectedGameMode==="classic"||mode==="flying"||mode==="charging"||mode==="replay"||throwPending||!!(challengeRun&&!challengeRun.finished);
+ $("challengeStartButton").textContent=challengeRun&&!challengeRun.finished?"도전 진행 중":challengeRun?.finished?"다시 도전":"도전 시작";
+ if(selectedGameMode==="classic"||!challengeRun||challengeRun.mode!==selectedGameMode){
+  $("challengeStatusText").textContent=selectedGameMode==="classic"?"기본 플레이 · 제한 없음":info.description;
+  $("challengeStatusValue").textContent="READY";return;
+ }
+ const c=challengeRun;
+ const summary=selectedGameMode==="time_attack"?"성공 "+c.successes+"회 · PERFECT "+c.perfects+"회"
+  :selectedGameMode==="endless"?"연속 성공 "+c.streak+"회 · 최고 "+c.bestStreak+"회"
+  :"PERFECT "+c.perfects+"회 · 시도 "+c.attempts+"/10";
+ $("challengeStatusText").textContent=c.finished?"도전 종료 · "+summary:summary;
+ $("challengeStatusValue").textContent=c.finished?"FINISHED":selectedGameMode==="time_attack"
+  ?Math.max(0,(c.endsAt-performance.now())/1000).toFixed(1)+"s"
+  :selectedGameMode==="precision"?Math.max(0,10-c.attempts)+"회 남음":c.attempts+"회 진행";
+}
+function chooseGameMode(nextMode){
+ if(!GAME_MODE_INFO[nextMode]||mode==="flying"||mode==="charging"||mode==="replay"||throwPending||challengeRun&&!challengeRun.finished)return;
+ selectedGameMode=nextMode;challengeRun=null;
+ if(mode==="landed")resetForNext();
+ updateModeUi();playSfx("ui");
+}
+function startChallenge(){
+ if(selectedGameMode==="classic"||mode==="flying"||mode==="charging"||mode==="replay"||throwPending)return;
+ if(mode==="landed")resetForNext();
+ const now=performance.now();
+ challengeRun={mode:selectedGameMode,startedAt:now,endsAt:selectedGameMode==="time_attack"?now+60000:Infinity,
+  attempts:0,successes:0,perfects:0,streak:0,bestStreak:0,finished:false};
+ $("chargeHint").textContent=GAME_MODE_INFO[selectedGameMode].title+" 시작! 매 던지기의 기존 세우기 코인 보상은 그대로 지급돼.";
+ updateModeUi();playSfx("success");
+}
+function finishChallenge(reason){
+ if(!challengeRun||challengeRun.finished)return;
+ challengeRun.finished=true;challengeRun.finishReason=reason;
+ const c=challengeRun;
+ const summary=c.mode==="time_attack"?"성공 "+c.successes+"회 · PERFECT "+c.perfects+"회"
+  :c.mode==="endless"?"최고 연속 성공 "+c.bestStreak+"회 · 총 시도 "+c.attempts+"회"
+  :"10회 중 PERFECT "+c.perfects+"회 · 성공 "+c.successes+"회";
+ $("chargeHint").textContent="도전 종료! "+summary+" · 다시 도전할 수 있어.";
+ $("stateChip").textContent="CHALLENGE COMPLETE";toast("도전 완료 · "+summary,"success");
+ updateModeUi();refreshUI();
+}
+function recordChallengeResult(success,perfect){
+ if(!challengeRun||challengeRun.finished)return;
+ const c=challengeRun;c.attempts++;
+ if(success)c.successes++;
+ if(perfect)c.perfects++;
+ if(success){c.streak++;c.bestStreak=Math.max(c.bestStreak,c.streak)}else c.streak=0;
+ if(c.mode==="endless"&&!success)finishChallenge("failed");
+ else if(c.mode==="precision"&&c.attempts>=10)finishChallenge("attempts");
+ else if(c.mode==="time_attack"&&performance.now()>=c.endsAt)finishChallenge("time");
+ updateModeUi();
+}
+function tickChallenge(now){
+ if(!challengeRun||challengeRun.finished||challengeRun.mode!=="time_attack"||now<challengeRun.endsAt)return;
+ if(mode==="flying"||mode==="charging"||throwPending){
+  $("challengeStatusValue").textContent="FINISHING";
+  if(mode==="charging")$("chargeHint").textContent="시간 종료! 현재 장전한 던지기를 마치면 도전이 끝나.";
+  return;
+ }
+ finishChallenge("time");
+}
+function renderWeeklyChart(rows){
+ const el=$("weeklyChart");el.replaceChildren();
+ if(!Array.isArray(rows)||!rows.length){el.textContent="아직 기록이 없어.";return}
+ const max=Math.max(1,...rows.map(row=>Number(row.throws)||0));
+ rows.forEach(row=>{
+  const column=document.createElement("div");column.className="weekly-column";
+  const stack=document.createElement("div");stack.className="weekly-stack";
+  const total=Number(row.throws)||0,perfect=Number(row.perfects)||0;
+  const totalHeight=total?Math.max(3,Math.round(total/max*85)):0;
+  const perfectHeight=total?Math.min(totalHeight,Math.round(perfect/max*85)):0;
+  const regular=document.createElement("div");regular.className="weekly-bar";regular.style.height=Math.max(0,totalHeight-perfectHeight)+"px";
+  const gold=document.createElement("div");gold.className="weekly-perfect";gold.style.height=perfectHeight+"px";
+  stack.append(regular,gold);
+  const label=document.createElement("small");label.textContent=String(row.day||"");
+  column.title=total+"회 던지기 · PERFECT "+perfect+"회";column.append(stack,label);el.append(column);
+ });
+}
+function renderReplayList(records){
+ const list=$("replayList");list.replaceChildren();
+ if(!records?.length){list.innerHTML='<div class="replay-empty">첫 기록을 만들면 리플레이가 여기에 저장돼.</div>';return}
+ records.slice(0,6).forEach(record=>{
+  const row=document.createElement("div");row.className="replay-item";
+  const meta=document.createElement("div");meta.className="replay-meta";
+  const title=document.createElement("strong"),sub=document.createElement("small");
+  title.textContent=(record.is_perfect?"✨ PERFECT":record.success?"성공 착지":"착지 실패")+" · "+Number(record.angle_error_deg).toFixed(1)+"°";
+  const modeName=GAME_MODE_INFO[record.mode]?.title||"기본 플레이";
+  sub.textContent=modeName+" · 힘 "+record.charge+"% · "+new Date(record.created_at).toLocaleString("ko-KR",{month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit"});
+  meta.append(title,sub);
+  const button=document.createElement("button");button.type="button";button.className="replay-play";button.textContent="▶ 재생";
+  button.dataset.replayId=record.record_id;
+  button.disabled=mode==="flying"||mode==="charging"||mode==="replay"||throwPending||!!(challengeRun&&!challengeRun.finished);
+  row.append(meta,button);list.append(row);
+ });
+}
+function renderLeaderboard(){
+ const list=$("leaderboardList");list.replaceChildren();
+ const rows=season2Dashboard?.leaderboards?.[activeLeaderboard]||[];
+ if(!rows.length){list.innerHTML='<div class="panel-empty">아직 랭킹 기록이 없어. 첫 기록의 주인공이 되어 봐!</div>';return}
+ rows.forEach(row=>{
+  const line=document.createElement("div");line.className="leader-row";
+  const rank=document.createElement("span");rank.className="leader-rank";rank.textContent=String(row.rank).padStart(2,"0");
+  const meta=document.createElement("div");meta.className="leader-meta";
+  const name=document.createElement("strong"),detail=document.createElement("small");
+  name.textContent=row.name||"돌이 사용자";detail.textContent="돌이 세우기 공식 랭킹";
+  meta.append(name,detail);
+  const value=document.createElement("span");value.className="leader-value";
+  value.textContent=activeLeaderboard==="best"?Number(row.best_error).toFixed(1)+"°"
+   :activeLeaderboard==="perfect"?Number(row.perfect_count).toLocaleString("ko-KR")+"회"
+   :"성공 "+Number(row.success_count).toLocaleString("ko-KR")+"회";
+  line.append(rank,meta,value);list.append(line);
+ });
+ $("leaderboardCaption").textContent=activeLeaderboard==="best"?"가장 작은 착지 오차를 기록한 사용자 순위"
+  :activeLeaderboard==="perfect"?"PERFECT 착지 횟수가 많은 사용자 순위":"성공 착지 횟수가 많은 사용자 순위";
+}
+function renderSeason2Dashboard(data){
+ season2Dashboard=data||null;const stats=data?.stats||{};
+ $("perfectTotal").textContent=fmt(stats.perfect_landings||0);
+ $("perfectCurrentStreak").textContent=fmt(stats.current_perfect_streak||0)+"회";
+ $("perfectBestStreak").textContent=fmt(stats.best_perfect_streak||0)+"회";
+ $("averageError7d").textContent=Number(stats.average_error_7d||0).toFixed(1)+"°";
+ $("challengeThrowTotal").textContent=fmt(stats.challenge_throws||0);
+ const best=gameState?.best_landing_error_deg;
+ $("roomBestError").textContent=best===null||best===undefined?"—":Number(best).toFixed(1)+"°";
+ renderWeeklyChart(data?.weekly_stats||[]);
+ renderReplayList(data?.recent_records||[]);
+ renderLeaderboard();
+}
+async function loadSeason2Dashboard(){
+ if(!session||!supabase){renderSeason2Dashboard(null);return}
+ try{
+  const {data,error}=await supabase.rpc("dori_throw_game_get_dashboard");
+  if(error)throw error;renderSeason2Dashboard(data);
+ }catch(error){console.warn("[DORI THROW] Season 2 dashboard:",error);$("weeklyChart").textContent="기록을 불러오지 못했어."}
+}
+function renderDailyMissions(missions){
+ const list=$("dailyMissionList");list.replaceChildren();
+ if(!Array.isArray(missions)||!missions.length){list.innerHTML='<div class="panel-empty">로그인하면 오늘의 미션이 표시돼.</div>';return}
+ missions.forEach(mission=>{
+  const row=document.createElement("div");row.className="mission-item"+(mission.completed?" done":"");
+  const icon=document.createElement("span");icon.className="mission-icon";
+  icon.textContent=mission.key==="perfect_1"?"✨":mission.key==="success_3"?"🎯":mission.key==="challenge_3"?"⚡":"🐾";
+  const meta=document.createElement("div");meta.className="mission-meta";
+  const title=document.createElement("strong"),desc=document.createElement("small"),bar=document.createElement("div"),fill=document.createElement("span");
+  title.textContent=mission.title||"세우기 미션";
+  desc.textContent=Number(mission.progress||0)+" / "+Number(mission.target||1)+" · "+(mission.description||"");
+  bar.className="mission-progress";fill.style.width=Math.min(100,Number(mission.progress||0)/Math.max(1,Number(mission.target||1))*100)+"%";bar.append(fill);
+  meta.append(title,desc,bar);
+  const reward=document.createElement("span");reward.className="mission-reward";reward.textContent="+"+fmt(mission.reward_seugi_coin)+" S";
+  const button=document.createElement("button");button.type="button";button.className="mission-claim"+(mission.completed&&!mission.claimed?" ready":"");
+  button.textContent=mission.claimed?"수령 완료":mission.completed?"받기":"진행 중";
+  button.disabled=!mission.completed||mission.claimed||!session;button.dataset.missionKey=mission.key;
+  row.append(icon,meta,reward,button);list.append(row);
+ });
+}
+async function loadDailyMissions(){
+ if(!session||!supabase){renderDailyMissions([]);return}
+ try{
+  const {data,error}=await supabase.rpc("dori_throw_game_get_daily_missions");
+  if(error)throw error;renderDailyMissions(data?.missions||[]);
+ }catch(error){console.warn("[DORI THROW] daily missions:",error);$("dailyMissionList").textContent="오늘의 미션을 불러오지 못했어."}
+}
+async function claimDailyMission(key,button){
+ if(!session||!key||button.disabled)return;button.disabled=true;
+ try{
+  const {data,error}=await supabase.rpc("dori_throw_game_claim_daily_mission",{p_mission_key:key});
+  if(error)throw error;if(!data?.ok)throw new Error("아직 보상을 받을 수 없는 미션이야.");
+  toast("미션 보상 +"+fmt(data.reward_seugi_coin)+" 세우기 코인!","success");playSfx("coin");
+  await Promise.all([loadState(),loadDailyMissions()]);
+ }catch(error){toast(error.message||"미션 보상을 받지 못했어.","error");button.disabled=false}
+}
+async function playReplay(recordId){
+ if(mode==="flying"||mode==="charging"||mode==="replay"||throwPending||challengeRun&&!challengeRun.finished)return;
+ const record=season2Dashboard?.recent_records?.find(item=>item.record_id===recordId);if(!record)return;
+ const params={
+  duration:Number(record.flight_duration_sec),distance:Number(record.flight_distance_px),height:Number(record.flight_height),
+  speed:Number(record.flight_speed),spinRate:Number(record.spin_rate_rad_sec),landingX:Number(record.landing_x_px),
+  landingAngle:Number(record.landing_angle_deg),tolerance:Number(record.angle_tolerance_deg)
+ };
+ if(!Number.isFinite(params.duration)||params.duration<=0||!Number.isFinite(params.spinRate))return;
+ if(mode==="landed")resetForNext();
+ currentReplayRecordId=recordId;flightParams=params;mode="replay";
+ flightStarted=performance.now();rotationAngle=0;landingAngle=0;impactAt=0;particles=[];
+ $("stateChip").textContent="REPLAY · 재생 중";$("chargeButton").disabled=true;$("restartButton").disabled=true;
+ $("chargeHint").textContent="저장된 착지 리플레이를 재생하고 있어.";
+ setAngleGauge(0,flightParams.tolerance,"리플레이 · 착지 순간까지 각도 변화를 다시 보는 중");
+ updateModeUi();startAnimationLoop();
+}
+
 function toast(message,type="normal"){
  const el=$("toast");el.textContent=message;el.dataset.type=type;el.classList.remove("show");void el.offsetWidth;el.classList.add("show");
  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2600);
