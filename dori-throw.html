@@ -420,7 +420,7 @@ function getFlightParams(chargeValue){
  const height=105+q*125+power*7;
  const speed=distance/duration;
  const spinRate=3.80+q*15+power*1.00;
- const landingX=190+distance;
+ const landingX=190+Math.min(distance,850);
  const finalAngle=normalizeDegrees(spinRate*duration*180/Math.PI);
  return {duration,distance,height,speed,spinRate,landingX,landingAngle:finalAngle,tolerance:18+accuracy*2.4};
 }
@@ -552,7 +552,7 @@ function positionAt(now){
  const verticalOffset=t<=apexT
   ?flightParams.height*(1-Math.pow(1-t/apexT,2))
   :flightParams.height*(1-Math.pow((t-apexT)/(1-apexT),2));
- return{x:190+flightParams.distance*t,y:322-verticalOffset,t,landingX:flightParams.landingX};
+ return{x:190+(flightParams.landingX-190)*t,y:322-verticalOffset,t,landingX:flightParams.landingX};
 }
 function drawTrail(x,y,now){
  const lag=flightParams.spinRate*.045;
@@ -861,7 +861,7 @@ $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loading
     <div class="stat"><span>누적 세우기 코인</span><strong id="totalEarned">0</strong></div>
     <div class="stat"><span>최소 착지 오차</span><strong id="bestLandingError">기록 없음</strong></div>
    </div>
-   <div class="daily"><div class="daily-top"><span>일일 세우기 코인 적립 한도</span><strong id="dailyText">0 / 25,000 D</strong></div><div class="daily-bar"><div id="dailyFill"></div></div></div>
+   <div class="daily"><div class="daily-top"><span>일일 세우기 코인 적립 한도</span><strong id="dailyText">0 / 25,000 S</strong></div><div class="daily-bar"><div id="dailyFill"></div></div></div>
    <div class="history"><h3>RECENT THROWS</h3><div id="historyList"><div class="history-empty">첫 착지 판정이 끝나면 기록이 여기에 표시돼.</div></div></div>
   </section>
  </aside>
