@@ -103,7 +103,8 @@ assert.ok(html.includes("el._gaitPhase=ease*el._gaitCycles*Math.PI*2;"), "Gait p
 assert.ok(html.includes("function gaitFootStep(phase,stride)"), "A planted stance and lifted swing foot cycle must be defined.");
 assert.ok(html.includes("function animateGaitLeg(prefix,phase,stride,amplitude)"), "Each leg must be individually articulated.");
 assert.ok(html.includes("animateGaitLeg('frontNear',gaitPhase,gaitStride,.92)"), "Walking must move the near front leg.");
-assert.ok(html.includes("animateGaitLeg('hindFar',gaitPhase,gaitStride,.92)"), "Walking must move the diagonal hind leg.");
+assert.ok(html.includes("animateGaitLeg('hindFar',gaitPhase+Math.PI*.5,gaitStride*.92,.82)"), "Walking must move the rear far leg.");
+assert.ok(html.includes("animateGaitLeg('hindNear',gaitPhase+Math.PI*1.5,gaitStride*.92,.82)"), "Walking must move the rear near leg.");
 assert.ok(html.includes("['walk','실제 보행','walk']"), "The pose test must include walking.");
 assert.ok(html.includes("['trot','빠른 보행','trot']"), "The pose test must include trotting.");
 assert.ok(html.includes("if(pose==='flop')"), "Flop must have its own side-rest pose.");
