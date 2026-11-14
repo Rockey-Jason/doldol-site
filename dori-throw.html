@@ -366,9 +366,12 @@ function signedDegrees(value){const n=normalizeDegrees(value);return n>180?n-360
 function getFlightParams(chargeValue){
  const q=clamp(Number(chargeValue||1),1,100)/100;
  const power=Number(gameState?.power_level||0),accuracy=Number(gameState?.accuracy_level||0);
- const duration=2.90-q*.45-power*.010;
+ const gravityMultiplier=1.60;
+ const baseDuration=2.90-q*.45-power*.010;
+ const duration=baseDuration/gravityMultiplier;
  const distance=260+q*450+power*4.5;
- const height=105+q*125+power*1.75;
+ const baseHeight=105+q*125+power*1.75;
+ const height=baseHeight/gravityMultiplier;
  const speed=distance/duration;
  const spinRate=3.80+q*15+power*.35;
  const landingX=190+distance;
@@ -465,7 +468,9 @@ function drawChargeAura(x,y,now){
 function positionAt(now){
  const elapsed=Math.max(0,Math.min(flightParams.duration,(now-flightStarted)/1000));
  const t=elapsed/flightParams.duration;
- return{x:190+flightParams.distance*t,y:322-Math.sin(Math.PI*t)*flightParams.height,t,landingX:flightParams.landingX};
+ // Constant-acceleration ballistic arc; server and preview use the same 1.6x gravity-adjusted duration and height.
+ const verticalOffset=4*flightParams.height*t*(1-t);
+ return{x:190+flightParams.distance*t,y:322-verticalOffset,t,landingX:flightParams.landingX};
 }
 function drawTrail(x,y,now){
  const lag=flightParams.spinRate*.045;
