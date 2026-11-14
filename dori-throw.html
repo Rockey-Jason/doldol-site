@@ -239,7 +239,7 @@ function buildBackground(){
 buildBackground();
 let session=null,gameState=null,mode="idle",charge=0,chargeStarted=0,flightStarted=0,flightDuration=4;
 let spinRequested=0,spinCompleted=0,rotationAngle=0,rotationTime=0,launchOffset=0,throwPending=false;
-let toastTimer=0,history=[],pendingUpgrade=null,authSubscription=null,authSeq=0,particles=[],impactAt=0,lastFrame=0,lastPaint=0,rafId=0,hiddenAt=0;
+let toastTimer=0,history=[],pendingUpgrade=null,authSubscription=null,authSeq=0,particles=[],impactAt=0,lastFrame=0,lastPaint=0,rafId=0,hiddenAt=0,arenaObserver=null;
 function toast(message,type="normal"){
  const el=$("toast");el.textContent=message;el.dataset.type=type;el.classList.remove("show");void el.offsetWidth;el.classList.add("show");
  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2600);
@@ -499,7 +499,7 @@ document.addEventListener("visibilitychange",()=>{
  if(mode==="charging")chargeStarted+=paused;if(mode==="flying")flightStarted+=paused;if(impactAt)impactAt+=paused;
  hiddenAt=0;resizeArena();lastFrame=0;lastPaint=0;startAnimationLoop();
 });
-if(typeof ResizeObserver!=="undefined"){const arenaObserver=new ResizeObserver(resizeArena);arenaObserver.observe(canvas)}
+if(typeof ResizeObserver!=="undefined"){arenaObserver=new ResizeObserver(resizeArena);arenaObserver.observe(canvas)}
 else window.addEventListener("resize",resizeArena,{passive:true});
 window.addEventListener("pagehide",()=>authSubscription?.unsubscribe());
 $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loadingAccount();initAuth();startAnimationLoop();
