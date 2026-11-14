@@ -247,6 +247,16 @@ body:before,body:after{animation:none;filter:blur(54px);opacity:.1}
 }
 @media(max-width:600px){.landing-verdict{padding:12px}.verdict-title{font-size:18px}.verdict-description{font-size:10px}.landing-flash strong{font-size:34px}}
 @media(prefers-reduced-motion:reduce){.landing-verdict,.landing-flash.show{animation:none!important}.landing-flash.show{opacity:1;visibility:visible}}
+
+/* PERFECT LANDING · gold-tier result for a displayed 0.0 degree landing */
+.landing-verdict[data-state="perfect"]{border-color:rgba(255,220,134,.72);background:linear-gradient(135deg,rgba(112,79,23,.42),rgba(30,24,13,.97));box-shadow:0 0 34px rgba(255,205,93,.17),inset 0 1px rgba(255,244,194,.12)}
+.landing-verdict[data-state="perfect"] .verdict-tag{color:#ffe3a0}
+.landing-verdict[data-state="perfect"] .verdict-title{color:#fff0bd;text-shadow:0 0 20px rgba(255,210,111,.3)}
+.landing-verdict[data-state="perfect"] .verdict-pulse{background:#ffdc86;box-shadow:0 0 18px rgba(255,220,134,.9)}
+.landing-flash.perfect{background:radial-gradient(ellipse at center,rgba(255,205,83,.36),rgba(67,43,9,.2) 55%,transparent 82%)}
+.landing-flash.perfect strong{color:#fff0b9;font-size:clamp(38px,7vw,70px);letter-spacing:2px;text-shadow:0 0 12px rgba(255,235,166,.95),0 0 34px rgba(255,190,65,.8),0 4px 18px rgba(0,0,0,.85)}
+.landing-flash.perfect span{color:#fff1c7;font-size:clamp(12px,2vw,17px)}
+
 </style>
 <script type="module">
 import {createClient} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -419,27 +429,31 @@ function setAngleGauge(angle,tolerance,status){
  $("angleReadout").textContent=(signed>0?"+":"")+signed.toFixed(1)+"°";
  if(status)$("landingMessage").textContent=status;
 }
+function isPerfectLanding(errorAngle){
+ // PERFECT is reserved for landings displayed as exactly 0.0° on the angle gauge.
+ return Number.isFinite(Number(errorAngle))&&Math.abs(Number(errorAngle)).toFixed(1)==="0.0";
+}
 function setLandingVerdict(stage,details={}){
  const panel=$("landingVerdict");
  panel.hidden=false;
  panel.dataset.state=stage;
  panel.classList.remove("reveal");
- const isSuccess=stage==="success";
- $("verdictTag").textContent=isSuccess?"LANDING RESULT · SUCCESS":stage==="failure"?"LANDING RESULT · FAILED":"LANDING RESULT · ERROR";
- $("verdictTitle").textContent=isSuccess?"착지 성공!":"이번 착지는 실패했어";
- $("verdictDescription").textContent=details.description||(isSuccess?"목표 각도에 정확하게 착지했어!":"각도가 허용 범위를 벗어났어. 다시 도전해 보자!");
+ const isPerfect=stage==="perfect",isSuccess=stage==="success"||isPerfect;
+ $("verdictTag").textContent=isPerfect?"LANDING RESULT · PERFECT":isSuccess?"LANDING RESULT · SUCCESS":stage==="failure"?"LANDING RESULT · FAILED":"LANDING RESULT · ERROR";
+ $("verdictTitle").textContent=isPerfect?"완벽한 착지! PERFECT!":isSuccess?"착지 성공!":"이번 착지는 실패했어";
+ $("verdictDescription").textContent=details.description||(isPerfect?"착지 각도 오차 0.0° · 완벽해!":isSuccess?"목표 각도에 착지했어!":"각도가 허용 범위를 벗어났어. 다시 도전해 보자!");
  panel.classList.add("reveal");
 }
-function showLandingFlash(success,subtitle){
+function showLandingFlash(success,subtitle,perfect=false){
  const flash=$("landingFlash");
  clearTimeout(landingFlashTimer);
- flash.classList.remove("show","success","failure");
- flash.classList.add(success?"success":"failure");
- $("landingFlashTitle").textContent=success?"SUCCESS!":"FAILED";
- $("landingFlashSubtitle").textContent=subtitle|| (success?"목표 각도에 착지했어!":"착지 각도가 맞지 않았어.");
+ flash.classList.remove("show","success","failure","perfect");
+ flash.classList.add(perfect?"perfect":success?"success":"failure");
+ $("landingFlashTitle").textContent=perfect?"PERFECT!":success?"SUCCESS!":"FAILED";
+ $("landingFlashSubtitle").textContent=subtitle||(perfect?"정확히 0.0° · 완벽한 착지!":success?"목표 각도에 착지했어!":"착지 각도가 맞지 않았어.");
  void flash.offsetWidth;
  flash.classList.add("show");
- landingFlashTimer=setTimeout(()=>flash.classList.remove("show"),1600);
+ landingFlashTimer=setTimeout(()=>flash.classList.remove("show"),1800);
 }
 function updateFlightPreview(chargeValue=charge){
  const tolerance=18+Number(gameState?.accuracy_level||0)*.75;
@@ -591,19 +605,21 @@ function completeFlight(){
  const displayedAngle=normalizeDegrees(flightParams.landingAngle);
  const angleError=Math.min(displayedAngle,360-displayedAngle);
  const predictedSuccess=angleError<=flightParams.tolerance;
- spawnParticles(pos.x,390,predictedSuccess?72:34,predictedSuccess?"gold":"red",predictedSuccess?1.5:.85);
+ const predictedPerfect=predictedSuccess&&isPerfectLanding(angleError);
+ spawnParticles(pos.x,390,predictedPerfect?120:predictedSuccess?72:34,predictedSuccess?"gold":"red",predictedPerfect?1.85:predictedSuccess?1.5:.85);
  $("restartButton").disabled=true;$("chargeButton").disabled=true;
- $("stateChip").textContent=predictedSuccess?"착지 성공 · 기록 저장 중":"착지 실패 · 기록 저장 중";
+ $("stateChip").textContent=predictedPerfect?"PERFECT! · 기록 저장 중":predictedSuccess?"착지 성공 · 기록 저장 중":"착지 실패 · 기록 저장 중";
  $("stateChip").classList.remove("live");
- setAngleGauge(displayedAngle,flightParams.tolerance,predictedSuccess
-  ?"성공! 목표 각도 오차 "+angleError.toFixed(1)+"°"
+ setAngleGauge(displayedAngle,flightParams.tolerance,predictedPerfect
+  ?"PERFECT! · 착지 각도 오차 0.0°"
+  :predictedSuccess?"성공! 목표 각도 오차 "+angleError.toFixed(1)+"°"
   :"실패 · 목표 각도에서 "+angleError.toFixed(1)+"° 벗어났어.");
- setLandingVerdict(predictedSuccess?"success":"failure",{description:
-  "목표각 0° · 오차 "+angleError.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°"+
+ setLandingVerdict(predictedPerfect?"perfect":predictedSuccess?"success":"failure",{description:
+  (predictedPerfect?"PERFECT! · 착지 각도 오차 0.0° · 완벽한 착지야!":"목표각 0° · 오차 "+angleError.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°")+
   (session?"\n세우기 코인 기록을 저장하고 있어.":"\n체험 모드 · 로그인하면 코인 적립 가능")});
- showLandingFlash(predictedSuccess,"목표 0° · 오차 "+angleError.toFixed(1)+"°");
- $("chargeHint").textContent=predictedSuccess?"돌이가 목표 각도에 착지했어! 서버 기록을 저장하고 있어.":"착지 각도가 허용 범위를 벗어났어. 다음 도전을 준비해 봐!";
- $("rewardResult").textContent=predictedSuccess?"착지 성공! 세우기 코인 기록 저장 중…":"착지 실패 · 세우기 코인 0개";
+ showLandingFlash(predictedSuccess,predictedPerfect?"정확히 0.0° · 완벽한 착지!":"목표 0° · 오차 "+angleError.toFixed(1)+"°",predictedPerfect);
+ $("chargeHint").textContent=predictedPerfect?"PERFECT! 정확히 0.0°로 착지했어!":predictedSuccess?"돌이가 목표 각도에 착지했어! 서버 기록을 저장하고 있어.":"착지 각도가 허용 범위를 벗어났어. 다음 도전을 준비해 봐!";
+ $("rewardResult").textContent=predictedPerfect?"PERFECT! · 세우기 코인 기록 저장 중…":predictedSuccess?"착지 성공! 세우기 코인 기록 저장 중…":"착지 실패 · 세우기 코인 0개";
  submitThrow();
 }
 async function submitThrow(){
@@ -611,12 +627,11 @@ async function submitThrow(){
  const localAngle=normalizeDegrees(flightParams.landingAngle);
  const localError=Math.min(localAngle,360-localAngle);
  const localSuccess=localError<=flightParams.tolerance;
+ const localPerfect=localSuccess&&isPerfectLanding(localError);
  if(!session){
-  $("stateChip").textContent=localSuccess?"착지 성공 · 체험 모드":"착지 실패 · 체험 모드";
-  $("chargeHint").textContent=localSuccess
-   ?"체험 모드 성공! 로그인하면 세우기 코인을 적립할 수 있어."
-   :"체험 모드 실패 · 허용 범위 ±"+flightParams.tolerance.toFixed(1)+"°에 맞춰 다시 도전해 봐.";
-  $("rewardResult").textContent=localSuccess?"체험 착지 성공! 로그인하면 보상 기록이 저장돼.":"착지 실패 · 세우기 코인 0개";
+  $("stateChip").textContent=localPerfect?"PERFECT! · 체험 모드":localSuccess?"착지 성공 · 체험 모드":"착지 실패 · 체험 모드";
+  $("chargeHint").textContent=localPerfect?"PERFECT! 정확히 0.0°로 착지했어!":localSuccess?"체험 모드 성공! 로그인하면 세우기 코인을 적립할 수 있어.":"체험 모드 실패 · 허용 범위 ±"+flightParams.tolerance.toFixed(1)+"°에 맞춰 다시 도전해 봐.";
+  $("rewardResult").textContent=localPerfect?"PERFECT! · 로그인하면 보상 기록이 저장돼.":localSuccess?"체험 착지 성공! 로그인하면 보상 기록이 저장돼.":"착지 실패 · 세우기 코인 0개";
   throwPending=false;
   if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}
   refreshUI();return
@@ -638,6 +653,7 @@ async function submitThrow(){
   flightParams.spinRate=Number(data.spin_rate_rad_sec);
   flightParams.landingAngle=landingAngle;rotationAngle=landingAngle*Math.PI/180;impactX=flightParams.landingX;
   const errorAngle=Number(data.angle_error_deg),success=!!data.success,reward=Number(data.coin_reward||0);
+  const serverPerfect=success&&isPerfectLanding(errorAngle);
   const previousBest=gameState.best_landing_error_deg;
   gameState.best_landing_error_deg=previousBest===null||previousBest===undefined
    ?errorAngle:Math.min(Number(previousBest),errorAngle);
@@ -645,13 +661,13 @@ async function submitThrow(){
    ?"성공! 목표각 오차 "+errorAngle.toFixed(1)+"° · 서버 확인 완료"
    :"실패 · 목표각에서 "+errorAngle.toFixed(1)+"° 벗어났어.");
   const serverDisagrees=success!==localSuccess;
-  setLandingVerdict(success?"success":"failure",{description:
-   "목표각 0° · 실제 오차 "+errorAngle.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°"+
+  setLandingVerdict(serverPerfect?"perfect":success?"success":"failure",{description:
+   (serverPerfect?"PERFECT! · 착지 각도 오차 0.0° · 완벽한 착지야!":"목표각 0° · 실제 오차 "+errorAngle.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°")+
    (success?"\n+"+fmt(reward)+" 세우기 코인 획득!":"\n이번 착지 보상은 0 세우기 코인이야.")});
-  if(serverDisagrees)showLandingFlash(success,"서버 최종 판정 · 오차 "+errorAngle.toFixed(1)+"°");
-  $("stateChip").textContent=success?"착지 성공":"착지 실패";
-  $("rewardResult").textContent=success?"+"+fmt(reward)+" 세우기 코인 획득!":"착지 실패 · 세우기 코인 0개";
-  $("chargeHint").textContent=success
+  if(serverDisagrees||predictedPerfect!==serverPerfect)showLandingFlash(success,serverPerfect?"정확히 0.0° · PERFECT!":"서버 최종 판정 · 오차 "+errorAngle.toFixed(1)+"°",serverPerfect);
+  $("stateChip").textContent=serverPerfect?"PERFECT!":success?"착지 성공":"착지 실패";
+  $("rewardResult").textContent=serverPerfect?"PERFECT! · +"+fmt(reward)+" 세우기 코인 획득!":success?"+"+fmt(reward)+" 세우기 코인 획득!":"착지 실패 · 세우기 코인 0개";
+  $("chargeHint").textContent=serverPerfect?"PERFECT! 완벽한 0.0° 착지 · "+fmt(reward)+" 세우기 코인 획득!":success
    ?"서버 판정 완료 · "+fmt(reward)+" 세우기 코인을 획득했어."
    :"서버 판정 완료 · 허용 각도 ±"+flightParams.tolerance.toFixed(1)+"° 밖이야.";
   refreshUI();addHistory(success,reward,charge,landingAngle,errorAngle);
