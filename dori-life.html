@@ -1621,6 +1621,14 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   customizeEventChoreography('paw',{destination:{x:535,y:432,s:.90},interaction:'friend',sequence:['sit','paw','happy'],faces:['curious','delighted','affectionate']});
   customizeEventChoreography('happy',{destination:{x:675,y:432,s:.91},interaction:'rug',approachPose:'trot',sequence:['happy','hop','play'],faces:['delighted','playful','happy'],moveMs:3900});
 
+  // Let recognizable poses remain visible long enough instead of cycling through them in a blur.
+  Object.keys(EVENT_CHOREOGRAPHY).forEach(function(kind){
+    var plan=EVENT_CHOREOGRAPHY[kind];
+    var fastRoute=['trot','gallop','zoomies'].indexOf(kind)>=0;
+    plan.approachMs=plan.approachMs||4600;
+    plan.stepMs=fastRoute?Math.max(4200,plan.stepMs):Math.max(6400,plan.stepMs);
+  });
+
   function buildEvents(key){
     var random=rng(hash('DORI-LIFE-'+key));
     var used={};
@@ -1690,38 +1698,74 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var hour=now.getHours();
     var seconds=hour*3600+now.getMinutes()*60+now.getSeconds();
     if(hour<6||hour>=22){
-      var nightCycle=Math.floor(seconds/240)%3;
-      if(nightCycle===0)return Object.assign({},base,{pose:'sleep',title:'돌이가 포근하게 잠들었어요',desc:'침대에서 옆으로 편안히 누워 천천히 숨을 쉬며 자고 있어요.',icon:'🌙',tag:'밤잠'});
-      if(nightCycle===1)return Object.assign({},base,{pose:'dream',title:'꿈나라를 여행하고 있어요',desc:'잠든 채 발끝을 살짝 움직이며 꿈을 꾸고 있어요.',icon:'💤',tag:'꿈나라'});
-      return Object.assign({},base,{pose:'cuddle',title:'이불 속에서 몸을 웅크려요',desc:'따뜻한 잠자리에서 몸을 웅크리고 다시 잠들어요.',icon:'🤎',tag:'포근한 휴식'});
+      var nightPhase=seconds%300;
+      if(nightPhase<92)return Object.assign({},base,{pose:'sleep',title:'돌이가 포근하게 잠들었어요',desc:'옆으로 편안히 누워 가슴이 천천히 오르내리며 깊이 쉬어요.',icon:'🌙',tag:'밤잠'});
+      if(nightPhase<132)return Object.assign({},base,{pose:'dream',title:'꿈속에서 발끝을 꼼지락거려요',desc:'잠든 채 앞발과 꼬리를 작게 움직이며 즐거운 꿈을 꾸어요.',icon:'💤',tag:'꿈나라'});
+      if(nightPhase<222)return Object.assign({},base,{pose:'cuddle',title:'몸을 동그랗게 말고 쉬어요',desc:'코를 몸 가까이 가져오고 네 다리를 접어 포근하게 웅크려요.',icon:'🤎',tag:'포근한 휴식'});
+      return Object.assign({},base,{pose:'doze',title:'잠깐 꾸벅꾸벅 졸아요',desc:'고개가 천천히 내려갔다가 다시 편안한 자세로 돌아와요.',icon:'😴',tag:'졸음'});
     }
-    var phase=seconds%210;
-    if(phase<112){
-      var routeStep=Math.floor(phase/14)%8;
+
+    // A five-minute home-life cycle gives each action enough screen time to read clearly.
+    // Roaming is deliberately brief; the rest of the cycle is spent performing visible actions.
+    var phase=seconds%300;
+    if(phase<36){
+      var walkStep=Math.floor(phase/12)%3;
       var routes=[
-        ['walk','거실을 천천히 산책해요','짧은 다리로 소파와 러그 주변을 여유롭게 걸어요.','🐾','집 안 산책'],
-        ['explore','가구 주변을 살펴봐요','익숙한 집 안을 천천히 둘러보고 냄새도 맡아요.','🔎','느긋한 탐험'],
-        ['walk','창가 쪽으로 걸어가요','창가 쪽으로 천천히 걸어가 바깥을 구경해요.','🐾','창가 산책'],
-        ['sniff','바닥 냄새를 킁킁 맡아요','잠깐 멈춰 코를 가까이 대고 주변 냄새를 살펴봐요.','👃','냄새 탐색'],
-        ['walk','장난감 옆을 지나가요','장난감 곁을 지나 러그 반대편으로 걸어가요.','🐾','거실 산책'],
-        ['explore','소파 주변을 탐험해요','소파와 쿠션 주변을 차분히 살펴봐요.','🛋️','소파 주변'],
-        ['walk','물그릇 근처로 이동해요','물그릇 쪽으로 천천히 걸어가 주변을 둘러봐요.','🐾','물그릇 산책'],
-        ['curious','잠깐 멈춰 귀를 기울여요','작은 소리가 들린 듯 귀를 세우고 주변을 살펴봐요.','👂','주변 관찰']
+        ['walk','거실을 천천히 산책해요','짧은 다리를 번갈아 움직이며 소파와 러그 사이를 걸어요.','🐾','집 안 산책'],
+        ['explore','가구 주변을 살펴봐요','걷다가 잠시 멈춰 가구와 장난감 주변을 탐험해요.','🔎','느긋한 탐험'],
+        ['walk','창가 쪽으로 걸어가요','목적지를 바라보고 방향을 돌린 다음 창가 쪽으로 걸어가요.','🐾','창가 산책']
       ];
-      var r=routes[routeStep];
-      return Object.assign({},base,{pose:r[0],title:r[1],desc:r[2],icon:r[3],tag:r[4]});
+      var route=routes[walkStep];
+      return Object.assign({},base,{pose:route[0],title:route[1],desc:route[2],icon:route[3],tag:route[4]});
     }
-    if(phase<190){
-      var restPhase=Math.floor((phase-112)/26)%3;
+    if(phase<58)return Object.assign({},base,{pose:'sniff',title:'바닥 냄새를 킁킁 맡아요',desc:'걸음을 멈추고 목을 낮춰 코끝으로 바닥 냄새를 살펴봐요.',icon:'👃',tag:'냄새 탐색'});
+    if(phase<88)return Object.assign({},base,{pose:'play',title:'장난감과 신나게 놀아요',desc:'앞발로 장난감을 건드리고 몸을 낮췄다가 통통 뛰어요.',icon:'🎾',tag:'놀이 시간'});
+    if(phase<110){
+      if(hour>=11&&hour<14)return Object.assign({},base,{pose:'eat',title:'맛있는 식사 시간이에요',desc:'그릇 앞으로 다가가 목을 숙이고 한입씩 먹어요.',icon:'🥣',tag:'식사'});
+      return Object.assign({},base,{pose:'water',title:'물을 한 모금 마셔요',desc:'물그릇 가까이 다가가 머리와 목을 낮추고 물을 마셔요.',icon:'💧',tag:'물 마시기'});
+    }
+    if(phase<134){
+      var careStep=Math.floor((phase-110)/12)%2;
+      if(careStep===0)return Object.assign({},base,{pose:'groom',title:'앞발로 얼굴을 깨끗이 닦아요',desc:'앞발을 들어 얼굴 쪽으로 가져가고 고개를 숙여 몸단장을 해요.',icon:'✨',tag:'몸단장'});
+      return Object.assign({},base,{pose:'scratch',title:'귀 뒤를 뒷발로 긁어요',desc:'몸을 살짝 기울이고 뒷발을 들어 귀 뒤를 톡톡 긁어요.',icon:'🐕',tag:'몸단장'});
+    }
+    if(phase<176){
+      var restStep=Math.floor((phase-134)/10.5)%4;
       var rests=[
-        ['doze','잠깐 누워 쉬어요','산책을 마치고 푹신한 침대나 쿠션에 몸을 낮춰 쉬어요.','😴','짧은 낮잠'],
-        ['sleep','옆으로 누워 낮잠을 자요','몸을 편하게 내려놓고 배와 가슴을 천천히 움직이며 자요.','💤','포근한 낮잠'],
-        ['cuddle','몸을 동그랗게 말고 쉬어요','따뜻한 자리를 찾아 몸을 웅크리고 편안하게 쉬어요.','🤎','휴식 시간']
+        ['flop','푹신한 곳에 털썩 누워요','몸의 힘을 빼고 옆으로 편안하게 누워요.','🛋️','편안한 휴식'],
+        ['sleep','옆으로 누워 낮잠을 자요','눈을 감고 가슴과 배를 천천히 움직이며 쉬어요.','💤','포근한 낮잠'],
+        ['cuddle','몸을 동그랗게 말고 쉬어요','머리를 몸 쪽으로 당기고 네 다리를 접어 동그랗게 웅크려요.','🤎','웅크린 휴식'],
+        ['doze','꾸벅꾸벅 졸아요','목과 머리가 천천히 아래로 내려가며 졸아요.','😴','짧은 졸음']
       ];
-      var rest=rests[restPhase];
+      var rest=rests[restStep];
       return Object.assign({},base,{pose:rest[0],title:rest[1],desc:rest[2],icon:rest[3],tag:rest[4]});
     }
-    return Object.assign({},base,{pose:'wake',title:'낮잠에서 천천히 깨어나요',desc:'앞발을 뻗어 기지개를 켜고 다시 집 안을 둘러볼 준비를 해요.',icon:'🌤️',tag:'기상'});
+    if(phase<200){
+      if(phase<188)return Object.assign({},base,{pose:'wake',title:'잠에서 천천히 깨어나요',desc:'눈을 뜨고 머리를 든 다음 앞발에 힘을 주며 일어나요.',icon:'🌤️',tag:'기상'});
+      return Object.assign({},base,{pose:'stretch',title:'앞다리와 등을 쭉 펴요',desc:'앞발을 앞으로 뻗고 등을 길게 늘이며 기지개를 켜요.',icon:'🐾',tag:'기지개'});
+    }
+    if(phase<230){
+      var lookStep=Math.floor((phase-200)/10)%3;
+      var looks=[
+        ['curious','고개를 갸웃하며 궁금해해요','목을 살짝 기울이고 귀를 번갈아 움직여요.','❔','호기심'],
+        ['listen','작은 소리에 귀를 기울여요','몸을 멈추고 머리와 귀를 소리가 나는 쪽으로 향해요.','👂','집중'],
+        ['lookUp','창문 위쪽을 올려다봐요','목을 길게 펴고 머리를 들어 창밖을 바라봐요.','⬆️','관찰']
+      ];
+      var look=looks[lookStep];
+      return Object.assign({},base,{pose:look[0],title:look[1],desc:look[2],icon:look[3],tag:look[4]});
+    }
+    if(phase<260){
+      var calmStep=Math.floor((phase-230)/10)%3;
+      var calm=[
+        ['sit','잠깐 앉아서 쉬어요','뒷다리를 접고 엉덩이를 내려 편안하게 앉아요.','🪑','앉아서 휴식'],
+        ['beg','기대하는 눈으로 바라봐요','몸을 세우고 앞발을 가슴 쪽으로 들어 간식을 기다려요.','🥺','기대하는 순간'],
+        ['wait','얌전히 기다려요','네 발을 안정적으로 두고 귀를 세워 다음 소리를 기다려요.','⏳','기다리기']
+      ];
+      var calmPose=calm[calmStep];
+      return Object.assign({},base,{pose:calmPose[0],title:calmPose[1],desc:calmPose[2],icon:calmPose[3],tag:calmPose[4]});
+    }
+    if(hour>=20)return Object.assign({},base,{pose:'dance',title:'밤의 작은 춤을 춰요',desc:'리듬에 맞춰 앞발과 몸통을 번갈아 움직여요.',icon:'🪩',tag:'ROCKEY PARTY'});
+    return Object.assign({},base,{pose:'happy',title:'기분이 좋아 꼬리를 흔들어요',desc:'몸을 가볍게 들썩이고 꼬리를 살랑살랑 흔들어요.',icon:'💛',tag:'신나는 순간'});
   }
   function eventTimestampToday(event,now){
     var p=parts(now);
@@ -2802,6 +2846,86 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         var blinkPhase=t%4.7;
         if(blinkPhase>4.48){var amt=Math.sin((blinkPhase-4.48)/.22*Math.PI);set('eyeL',0,1,1-.95*amt);set('eyeR',0,1,1-.95*amt);}
       }else{set('eyeL',0,1,.025);set('eyeR',0,1,.025);}
+      // High-visibility action pass. These final joint targets deliberately take
+      // precedence over the small idle sway so each activity reads as a real action.
+      var actionBeat=Math.sin(t*5.6),actionPulse=(Math.sin(t*3.2)+1)/2;
+      if(pose==='eat'){
+        var bite=Math.max(0,Math.sin(t*6.4));
+        set('neckBase',-.10,1,1);set('neckMid',-.17,1,1);set('neckUpper',-.20-.025*bite,1,1);
+        set('poll',-.16-.025*bite,1,1);set('headTilt',.045*Math.sin(t*2.4),1,1);
+        set('jaw',.25*bite,1,1);set('jawHinge',.04*bite,1,1);
+        set('frontFarUpper',-.08,1,1);set('frontNearUpper',-.10,1,1);
+        set('body',.025*Math.sin(t*6.4),1,1,0,1.1*bite);
+      }else if(pose==='water'){
+        var sip=Math.max(0,Math.sin(t*3.8));
+        set('neckBase',-.12,1,1);set('neckMid',-.19,1,1);set('neckUpper',-.24,1,1);
+        set('poll',-.20-.025*sip,1,1);set('headTilt',.025*Math.sin(t*3.8),1,1);
+        set('jaw',.045*sip,1,1);set('body',.012*Math.sin(t*3.8),1,1,0,sip*.6);
+        set('frontFarUpper',-.06,1,1);set('frontNearUpper',-.08,1,1);
+      }else if(pose==='groom'){
+        var groomBeat=(Math.sin(t*5.2)+1)/2;
+        set('frontNearUpper',-.58,1,1);set('frontNearLower',.92+.12*groomBeat,1,1);
+        set('frontNearPaw',-.20,1,1,0,-18-7*groomBeat);
+        set('neckBase',-.06,1,1);set('neckMid',-.13,1,1);set('neckUpper',-.18,1,1);
+        set('headTilt',.12+.045*Math.sin(t*5.2),1,1);set('jaw',.12*groomBeat,1,1);
+        set('earL',.035*Math.sin(t*5.2),1,1);set('earR',-.03*Math.sin(t*5.2),1,1);
+      }else if(pose==='scratch'){
+        var scratchMotion=(Math.sin(t*17)+1)/2;
+        set('hindNearUpper',-.60,1,1);set('hindNearLower',.82+.5*scratchMotion,1,1);
+        set('hindNearPaw',.22*Math.sin(t*17),1,1,0,-7-12*scratchMotion);
+        set('body',.025*Math.sin(t*17),1,1,0,2*scratchMotion);
+        set('neckBase',-.02,1,1);set('headTilt',.13+.025*Math.sin(t*4),1,1);
+      }else if(pose==='play'||pose==='hop'||pose==='pounce'||pose==='happy'||pose==='boop'){
+        var playWave=Math.sin(t*(pose==='boop'?4.5:6.8));
+        var lift=Math.max(0,playWave);
+        set('root',0,1,1,0,-(pose==='hop'?15:pose==='pounce'?10:7)*lift);
+        set('body',-.07*lift,1+.025*lift,1-.06*lift);
+        set('frontFarUpper',-.34+.16*playWave,1,1);set('frontNearUpper',-.38-.18*playWave,1,1);
+        set('frontFarLower',.28+.22*lift,1,1);set('frontNearLower',.26+.24*Math.max(0,-playWave),1,1);
+        set('hindFarUpper',.20-.14*playWave,1,1);set('hindNearUpper',.22+.14*playWave,1,1);
+        set('tail',.42*Math.sin(t*7.5),1,1);set('head',-.07*lift,1,1);
+      }else if(pose==='greet'||pose==='paw'||pose==='friendPlay'||pose==='reunion'){
+        var greeting=Math.sin(t*5.5);
+        set('frontNearUpper',-.52+.09*greeting,1,1);set('frontNearLower',.55+.12*Math.max(0,greeting),1,1);
+        set('frontNearPaw',-.10,1,1,0,-10-4*Math.max(0,greeting));
+        set('frontFarUpper',-.22-.08*greeting,1,1);set('frontFarLower',.24,1,1);
+        set('neckBase',-.035,1,1);set('neckMid',-.075,1,1);set('neckUpper',-.045,1,1);
+        set('head',-.09+.035*Math.sin(t*2.6),1,1);set('tail',.5*Math.sin(t*9),1,1);
+      }else if(pose==='dance'){
+        var danceWave=Math.sin(t*5.5);
+        set('body',.10*danceWave,1+.015*Math.abs(danceWave),1,0,2.5*danceWave);
+        set('frontFarUpper',-.36*danceWave,1,1);set('frontNearUpper',.36*danceWave,1,1);
+        set('frontFarLower',.26*Math.max(0,danceWave),1,1);set('frontNearLower',.26*Math.max(0,-danceWave),1,1);
+        set('hindFarUpper',.20*danceWave,1,1);set('hindNearUpper',-.20*danceWave,1,1);
+        set('head',-.12*danceWave,1,1);set('neckMid',.08*danceWave,1,1);
+        set('tail',.56*Math.sin(t*10),1,1);
+      }else if(pose==='sit'||pose==='wait'||pose==='beg'){
+        set('body',.075,1,1.04,0,2);
+        set('hindFarUpper',.52,1,1);set('hindNearUpper',.55,1,1);
+        set('hindFarLower',-.48,1,1);set('hindNearLower',-.50,1,1);
+        if(pose==='beg'){
+          var begWave=.04*Math.sin(t*2.8);
+          set('frontFarUpper',-.46+begWave,1,1);set('frontNearUpper',-.48-begWave,1,1);
+          set('frontFarLower',.34,1,1);set('frontNearLower',.36,1,1);
+          set('frontFarPaw',.02,1,1,0,-9);set('frontNearPaw',-.02,1,1,0,-10);
+          set('head',.10,1,1);
+        }
+      }else if(pose==='curious'||pose==='listen'||pose==='lookUp'||pose==='alert'||pose==='guard'){
+        var attention=Math.sin(t*1.1);
+        set('neckBase',.025,1,1);set('neckMid',.055+.025*attention,1,1);
+        set('neckUpper',pose==='lookUp'?.16:.11+.025*attention,1,1);
+        set('poll',pose==='lookUp'?.14:.085+.025*attention,1,1);
+        set('headTilt',pose==='lookUp'?.12:.14*attention,1,1);
+        set('earL',.15+.06*Math.sin(t*1.7),1,1);set('earR',-.15-.05*Math.sin(t*1.5),1,1);
+      }else if(pose==='stretch'){
+        var stretchWave=(Math.sin(t*1.2)+1)/2;
+        set('body',-.10*stretchWave,1+.06*stretchWave,1-.035*stretchWave,0,3*stretchWave);
+        set('frontFarUpper',-.52*stretchWave,1,1);set('frontNearUpper',-.50*stretchWave,1,1);
+        set('frontFarLower',.38*stretchWave,1,1);set('frontNearLower',.38*stretchWave,1,1);
+        set('hindFarUpper',.28*stretchWave,1,1);set('hindNearUpper',.28*stretchWave,1,1);
+        set('neckBase',.07*stretchWave,1,1);set('neckMid',.12*stretchWave,1,1);
+        set('neckUpper',.15*stretchWave,1,1);set('poll',.11*stretchWave,1,1);
+      }
       var pts=vertices.map(transformPoint);
       ctx.clearRect(0,0,W,H);
       for(var i=0;i<triangles.length;i++){
@@ -2941,6 +3065,21 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     dayPercent.textContent=Math.floor(pct)+'%';
     if(key!==lastDayKey){lastDayKey=key;dayEvents=buildEvents(key);renderTimeline(now);}
     var evt=activeEvent(now);var routine=ambientRoutine(now,routineFor(hour,minute));
+    if(window.location.search.indexOf('motion-test=1')>=0){
+      var demo=[
+        ['grooming','몸단장'],['scratch','긁기'],['eat','식사'],['water','물 마시기'],
+        ['play','놀이'],['pounce','폴짝 뛰기'],['greet','인사'],['dance','춤추기'],
+        ['sit','앉기'],['beg','기대기'],['curious','호기심'],['look-up','올려다보기'],
+        ['wake','기상'],['stretch','기지개'],['doze','졸기'],['sleep','수면'],
+        ['cuddle','웅크리기'],['flop','옆으로 눕기'],['dream','꿈꾸기']
+      ];
+      var demoIndex=Math.floor(now.getTime()/6500)%demo.length;
+      var demoItem=demo[demoIndex];
+      var demoKey=demoItem[0];
+      var demoData=BANK[demoKey]||BANK.sleep;
+      routine=Object.assign({},demoData,{pose:demoData.pose,title:'동작 검사 · '+demoItem[1],desc:'각 관절 동작을 확인하는 시연 장면이에요.',tag:'MOTION TEST',icon:demoData.icon});
+      evt=null;
+    }
     setRoom(evt,routine,phaseFor(hour),now);
     renderNext(now);renderNewYear(now);
     if(second===0){renderTimeline(now);renderActivityHistory(now);}
