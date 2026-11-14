@@ -818,33 +818,8 @@ async function checkSiteAchievements() {
       }
     }
 
-    // 돌이 세우기 업적은 비공개 게임 기록 테이블을 직접 조회하지 않는다.
-    // 인증된 대시보드 RPC로 진행 수치만 읽고, 보상 조건은 claim_achievement가 DB에서 재검증한다.
-    let seugiThrows = 0;
-    let seugiStats = {};
-    try {
-      const [seugiStateResult, seugiDashboardResult] = await Promise.all([
-        supabase.rpc("dori_throw_game_get_state"),
-        supabase.rpc("dori_throw_game_get_dashboard")
-      ]);
-      if (seugiStateResult.error) throw seugiStateResult.error;
-      if (seugiDashboardResult.error) throw seugiDashboardResult.error;
-      seugiThrows = Math.max(0, Number(seugiStateResult.data?.total_throws || 0));
-      seugiStats = seugiDashboardResult.data?.stats || {};
-    } catch (seugiError) {
-      console.warn("[Dori Achievement] 세우기 진행도 조회 실패:", seugiError);
-    }
     
     const checks = [
-      ["seugi_first_throw",seugiThrows>=1],
-      ["seugi_100_throws",seugiThrows>=100],
-      ["seugi_500_throws",seugiThrows>=500],
-      ["seugi_1000_throws",seugiThrows>=1000],
-      ["seugi_perfect_1",Number(seugiStats.perfect_landings||0)>=1],
-      ["seugi_perfect_10",Number(seugiStats.perfect_landings||0)>=10],
-      ["seugi_perfect_50",Number(seugiStats.perfect_landings||0)>=50],
-      ["seugi_perfect_streak_10",Number(seugiStats.best_perfect_streak||0)>=10],
-      ["seugi_challenge_25",Number(seugiStats.challenge_throws||0)>=25],
       ["seugi_first_throw",seugiThrows>=1],
       ["seugi_100_throws",seugiThrows>=100],
       ["seugi_500_throws",seugiThrows>=500],
