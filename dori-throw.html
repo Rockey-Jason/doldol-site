@@ -357,10 +357,13 @@ function ensureSound(){
   if(!soundContext){
    soundContext=new AudioEngine();
    soundMaster=soundContext.createGain();
-   soundMaster.gain.value=(soundVolume/100)*.16;
+   soundMaster.gain.value=(soundVolume/100)*.24;
    soundMaster.connect(soundContext.destination);
   }
-  if(soundContext.state==="suspended")soundContext.resume().catch(()=>{});
+  if(soundContext.state==="suspended"){
+   // Resume immediately from the user's interaction; scheduling waits for running state.
+   soundContext.resume().catch(error=>console.warn("[DORI THROW] audio resume:",error));
+  }
   return true;
  }catch(error){console.warn("[DORI THROW] audio unavailable:",error);return false}
 }
@@ -368,25 +371,30 @@ function updateSoundVolume(){
  if(soundMaster&&soundContext){
   const now=soundContext.currentTime;
   soundMaster.gain.cancelScheduledValues(now);
-  soundMaster.gain.setTargetAtTime(soundEnabled?(soundVolume/100)*.16:0,now,.035);
+  soundMaster.gain.setTargetAtTime(soundEnabled?(soundVolume/100)*.24:0,now,.035);
  }
  syncSoundControls();
  saveSoundSettings();
 }
 function soundTone(frequency,delay,duration,level=.1,wave="sine",endFrequency=null){
  if(!ensureSound())return;
- try{
-  const osc=soundContext.createOscillator(),envelope=soundContext.createGain();
-  const start=soundContext.currentTime+delay,finish=start+duration;
-  osc.type=wave;
-  osc.frequency.setValueAtTime(Math.max(30,frequency),start);
-  if(endFrequency&&endFrequency>0)osc.frequency.exponentialRampToValueAtTime(Math.max(30,endFrequency),finish);
-  envelope.gain.setValueAtTime(.0001,start);
-  envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,level),start+Math.min(.025,duration*.24));
-  envelope.gain.exponentialRampToValueAtTime(.0001,finish);
-  osc.connect(envelope);envelope.connect(soundMaster);
-  osc.start(start);osc.stop(finish+.025);
- }catch{}
+ const schedule=()=>{
+  if(!soundEnabled||!soundContext||soundContext.state!=="running"||!soundMaster)return;
+  try{
+   const osc=soundContext.createOscillator(),envelope=soundContext.createGain();
+   const start=soundContext.currentTime+delay,finish=start+duration;
+   osc.type=wave;
+   osc.frequency.setValueAtTime(Math.max(30,frequency),start);
+   if(endFrequency&&endFrequency>0)osc.frequency.exponentialRampToValueAtTime(Math.max(30,endFrequency),finish);
+   envelope.gain.setValueAtTime(.0001,start);
+   envelope.gain.exponentialRampToValueAtTime(Math.max(.0002,level),start+Math.min(.025,duration*.24));
+   envelope.gain.exponentialRampToValueAtTime(.0001,finish);
+   osc.connect(envelope);envelope.connect(soundMaster);
+   osc.start(start);osc.stop(finish+.025);
+  }catch(error){console.warn("[DORI THROW] sound scheduling:",error)}
+ };
+ if(soundContext.state==="running"){schedule();return}
+ soundContext.resume().then(schedule).catch(error=>console.warn("[DORI THROW] audio resume:",error));
 }
 function playSfx(name,detail=0){
  if(!ensureSound())return;
@@ -885,6 +893,16 @@ document.addEventListener("visibilitychange",()=>{
 if(typeof ResizeObserver!=="undefined"){arenaObserver=new ResizeObserver(resizeArena);arenaObserver.observe(canvas)}
 else window.addEventListener("resize",resizeArena,{passive:true});
 window.addEventListener("pagehide",()=>authSubscription?.unsubscribe());
+// Unlock/resume Web Audio synchronously on the first real user gesture (mobile Safari/Chrome).
+function unlockSoundFromGesture(){
+ if(!soundEnabled)return;
+ if(ensureSound()&&soundContext&&soundContext.state!=="running"){
+  soundContext.resume().catch(error=>console.warn("[DORI THROW] audio unlock:",error));
+ }
+}
+document.addEventListener("pointerdown",unlockSoundFromGesture,{capture:true,passive:true});
+document.addEventListener("touchstart",unlockSoundFromGesture,{capture:true,passive:true});
+document.addEventListener("keydown",unlockSoundFromGesture,{capture:true});
 $("soundToggle").addEventListener("click",()=>{
   soundEnabled=!soundEnabled;
   if(soundEnabled){ensureSound();updateSoundVolume();playSfx("ui")}
