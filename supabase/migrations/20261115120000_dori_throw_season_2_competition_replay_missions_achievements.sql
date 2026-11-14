@@ -541,8 +541,7 @@ begin
 
   return v_result;
 end;
-$function$
-
+$function$;
 
 CREATE OR REPLACE FUNCTION public.claim_achievement(p_achievement_id text)
  RETURNS jsonb
