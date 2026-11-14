@@ -2536,7 +2536,8 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       var pose=room.getAttribute('data-pose')||'idle';
       if(pose!==lastPose){lastPose=pose;poseStarted=now;}
       var t=now/1000,age=(now-poseStarted)/1000,cycle=t*2*Math.PI;
-      var isDoriMoving=!!(doriActor&&doriActor._isMoving&&!doriActor._isTurning);
+      var isDoriTurning=!!(doriActor&&doriActor._isTurning);
+      var isDoriMoving=!!(doriActor&&doriActor._isMoving&&!isDoriTurning);
       var walkCadence=(doriActor&&Number.isFinite(doriActor._motionCadence))?doriActor._motionCadence:5.2;
       var gaitPhase=(doriActor&&Number.isFinite(doriActor._gaitPhase))?doriActor._gaitPhase:0;
       var gaitStride=(doriActor&&Number.isFinite(doriActor._gaitStride))?doriActor._gaitStride:17;
