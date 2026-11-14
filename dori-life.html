@@ -2445,6 +2445,24 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         set('frontNearUpper',-.1,1,1);set('frontNearLower',.2,1,1);
         set('hindFarUpper',.18,1,1);set('hindFarLower',-.12,1,1);
         set('hindNearUpper',.14,1,1);set('hindNearLower',-.1,1,1);
+        if(pose==='cuddle'){
+          // A true curled-up resting pose: lower and compact the torso, fold all four
+          // legs inward, tuck the muzzle, and wrap the tail toward the hindquarters.
+          var curlBreath=Math.sin(t*.78);
+          set('root',0,.985,.985,0,5.5+curlBreath*.7);
+          set('body',.105+.008*curlBreath,.925,.91,0,2.8+curlBreath*.55);
+          set('spine',.075, .96,.94,0,1.2);
+          set('chest',.11+.006*curlBreath,.94,.93,0,1.1);
+          set('neck',.29+.012*curlBreath,.96,.95,0,1.2);
+          set('head',.17+.012*curlBreath,.97,.96,0,1.8);
+          set('frontFarUpper',-.48,1,1);set('frontFarLower',.88,1,1);
+          set('frontNearUpper',-.56,1,1);set('frontNearLower',1.02,1,1);
+          set('hindFarUpper',.62,1,1);set('hindFarLower',-.92,1,1);
+          set('hindNearUpper',.7,1,1);set('hindNearLower',-1.02,1,1);
+          set('tail',.72+.06*Math.sin(t*.5),.92,.92,0,1);
+          set('earL',.12,1,1);set('earR',-.1,1,1);
+          set('eyeL',0,1,.025);set('eyeR',0,1,.025);
+        }
         if(pose==='dream'){var tw=Math.sin(t*6)*.07;set('frontNearLower',.2+tw,1,1);set('tail',tw*1.3,1,1);}
       }else if(pose==='wake'){
         var p=Math.max(0,Math.min(1,age/2.25)),ease=1-Math.pow(1-p,3);
