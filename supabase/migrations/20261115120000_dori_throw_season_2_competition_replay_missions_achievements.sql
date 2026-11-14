@@ -103,7 +103,7 @@ summary as (
   left join streaks s using(user_id)
   group by c.user_id,c.perfect_count
 ),
-trailing as (
+trailing_streak as (
   select r.user_id,count(*) as current_streak
   from public.dori_throw_game_records r
   where r.is_perfect
@@ -119,7 +119,7 @@ set perfect_landings=coalesce(s.perfect_count,0),
     best_perfect_streak=coalesce(s.best_streak,0),
     current_perfect_streak=coalesce(t.current_streak,0)
 from summary s
-left join trailing t using(user_id)
+left join trailing_streak t using(user_id)
 where p.user_id=s.user_id;
 
 create or replace function public.dori_throw_game_record_result()
