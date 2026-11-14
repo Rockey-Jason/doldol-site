@@ -197,6 +197,23 @@ body:before,body:after{animation:none;filter:blur(54px);opacity:.1}
 #dailyFill:after{animation:none;opacity:.2;transform:none}
 @media(hover:none){.panel:hover,.upgrade-card:hover,.stat:hover,.guide-card:hover{transform:none;box-shadow:inherit}.balance-card:hover{transform:none}}
 @media(prefers-reduced-motion:reduce){body:before,body:after{display:none}}
+.spin-control{cursor:default;pointer-events:none}
+.flight-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 2px 2px}
+.flight-metric{min-width:0;padding:10px 11px;border:1px solid rgba(128,176,255,.16);border-radius:11px;background:linear-gradient(140deg,rgba(111,233,255,.055),rgba(255,255,255,.02))}
+.flight-metric small{display:block;color:#8fa5cc;font-size:9px;margin-bottom:5px}
+.flight-metric strong{display:block;color:#e8f4ff;font-size:13px;font-weight:400;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.landing-panel{margin-top:10px;padding:12px 13px;border:1px solid rgba(255,220,134,.22);border-radius:13px;background:linear-gradient(135deg,rgba(255,220,134,.055),rgba(111,233,255,.035))}
+.landing-head{display:flex;align-items:center;justify-content:space-between;gap:9px;color:#aebfe0;font-size:10px}
+.landing-head strong{color:var(--gold);font-size:11px;font-weight:400}
+.angle-track{position:relative;height:17px;margin:12px 3px 4px;border:1px solid rgba(164,190,238,.2);border-radius:99px;background:linear-gradient(90deg,rgba(255,135,152,.08),rgba(255,255,255,.06) 48%,rgba(120,239,192,.09) 50%,rgba(255,255,255,.06) 52%,rgba(255,135,152,.08));overflow:hidden}
+.angle-midline{position:absolute;left:50%;top:0;bottom:0;width:1px;background:rgba(255,220,134,.9);box-shadow:0 0 8px rgba(255,220,134,.8)}
+.angle-target-range{position:absolute;top:0;bottom:0;background:rgba(120,239,192,.25);border-left:1px solid rgba(120,239,192,.75);border-right:1px solid rgba(120,239,192,.75);transition:left .12s,width .12s}
+.angle-pointer{position:absolute;z-index:2;top:-2px;bottom:-2px;width:3px;margin-left:-1.5px;border-radius:4px;background:#f7fbff;box-shadow:0 0 10px rgba(111,233,255,.9);transition:left .08s linear}
+.angle-labels{display:flex;justify-content:space-between;align-items:center;color:#778db7;font-size:9px;font-variant-numeric:tabular-nums}
+.angle-labels strong{color:#d8eaff;font-size:11px;font-weight:400}
+.landing-message{margin-top:9px;color:#9eb2d7;font-size:10px;line-height:1.55}
+@media(max-width:600px){.flight-metrics{gap:5px;margin-top:9px}.flight-metric{padding:9px 7px}.flight-metric small{font-size:8px}.flight-metric strong{font-size:11px}.landing-panel{padding:11px}.landing-head{font-size:9px}.landing-head strong{font-size:10px}}
+@media(prefers-reduced-motion:reduce){.angle-target-range,.angle-pointer{transition:none}}
 </style>
 <script type="module">
 import {createClient} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -237,8 +254,8 @@ function buildBackground(){
  for(let i=-1;i<19;i++){const x=i*72;sceneCtx.beginPath();sceneCtx.moveTo(x,390);sceneCtx.lineTo(x-22,470);sceneCtx.stroke()}
 }
 buildBackground();
-let session=null,gameState=null,mode="idle",charge=0,chargeStarted=0,flightStarted=0,flightDuration=4;
-let spinRequested=0,spinCompleted=0,rotationAngle=0,rotationTime=0,launchOffset=0,throwPending=false;
+let session=null,gameState=null,mode="idle",charge=0,chargeStarted=0,flightStarted=0,rotationAngle=0,landingAngle=0,throwPending=false;
+let flightParams={duration:2.85,height:108,speed:710/2.85,spinRate:2.35,landingAngle:0,tolerance:12},lastAnglePaint=0;
 let toastTimer=0,history=[],pendingUpgrade=null,authSubscription=null,authSeq=0,particles=[],impactAt=0,lastFrame=0,lastPaint=0,rafId=0,hiddenAt=0,arenaObserver=null;
 function toast(message,type="normal"){
  const el=$("toast");el.textContent=message;el.dataset.type=type;el.classList.remove("show");void el.offsetWidth;el.classList.add("show");
@@ -257,11 +274,11 @@ function loadingAccount(){
 }
 function showGuest(){
  gameState=null;$("accountLabel").textContent="GUEST MODE";$("profileName").textContent="게스트 플레이";
- $("profileLevel").textContent="로그인하면 기록과 코인이 저장돼";$("coinBalance").textContent="로그인 필요";
+ $("profileLevel").textContent="로그인하면 세우기 코인과 기록이 저장돼";$("coinBalance").textContent="로그인 필요";
  $("loginNote").classList.add("show");$("retryLoad").hidden=true;setAvatar(null);
- $("chargeHint").textContent="체험 모드 · 로그인하면 돌돌코인과 강화가 계정에 저장돼.";
+ $("chargeHint").textContent="체험 모드 · 로그인하면 세우기 코인과 강화 레벨이 저장돼.";
  $("powerUpgrade").disabled=true;$("accuracyUpgrade").disabled=true;
- $("throwsCount").textContent="—";$("bestSpin").textContent="—";$("totalEarned").textContent="—";
+ $("throwsCount").textContent="—";$("successfulLandings").textContent="—";$("bestLandingError").textContent="—";$("totalEarned").textContent="—";
  $("dailyText").textContent="로그인 후 표시";$("dailyFill").style.width="0%";
 }
 function showProfileError(error){
@@ -274,19 +291,23 @@ function showProfileError(error){
 }
 function refreshUI(){
  if(!gameState)return;
- $("accountLabel").textContent="MY DOLDOLCOIN";$("profileName").textContent=String(gameState.user_name||"돌이 사용자");
+ $("accountLabel").textContent="MY SEUGI COIN";$("profileName").textContent=String(gameState.user_name||"돌이 사용자");
  $("profileLevel").textContent="SITE LV. "+Number(gameState.user_level||1)+" · EXP LV. "+Number(gameState.exp_level||1);
- setAvatar(gameState.profile_image||null);$("coinBalance").textContent=fmt(gameState.balance)+" D";
+ setAvatar(gameState.profile_image||null);
+ const coinBalance=gameState.seugi_coin_balance??gameState.balance??0;
+ $("coinBalance").textContent=fmt(coinBalance)+" S";
  $("powerLevel").textContent="Lv. "+gameState.power_level+" / 20";$("accuracyLevel").textContent="Lv. "+gameState.accuracy_level+" / 20";
  const pc=nextCost("power",gameState.power_level),ac=nextCost("accuracy",gameState.accuracy_level);
- $("powerCost").textContent=pc===null?"MAX":fmt(pc)+" D";$("accuracyCost").textContent=ac===null?"MAX":fmt(ac)+" D";
+ $("powerCost").textContent=pc===null?"MAX":fmt(pc)+" S";$("accuracyCost").textContent=ac===null?"MAX":fmt(ac)+" S";
  const canUpgrade=!!session&&mode!=="flying"&&mode!=="charging"&&!throwPending;
- $("powerUpgrade").disabled=!canUpgrade||pc===null||BigInt(String(gameState.balance||0))<BigInt(pc);
- $("accuracyUpgrade").disabled=!canUpgrade||ac===null||BigInt(String(gameState.balance||0))<BigInt(ac);
- $("throwsCount").textContent=fmt(gameState.total_throws);$("bestSpin").textContent=Number(gameState.best_spins||0)+"바퀴";
- $("totalEarned").textContent=fmt(gameState.total_earned);
- const daily=Number(gameState.daily_earned||0),limit=Number(gameState.daily_limit||MAX_DAILY);
- $("dailyText").textContent=fmt(daily)+" / "+fmt(limit)+" D";$("dailyFill").style.width=Math.min(100,daily/limit*100)+"%";
+ $("powerUpgrade").disabled=!canUpgrade||pc===null||BigInt(String(coinBalance))<BigInt(pc);
+ $("accuracyUpgrade").disabled=!canUpgrade||ac===null||BigInt(String(coinBalance))<BigInt(ac);
+ $("throwsCount").textContent=fmt(gameState.total_throws);$("successfulLandings").textContent=fmt(gameState.successful_landings||0);
+ $("totalEarned").textContent=fmt(gameState.seugi_coin_earned??gameState.total_earned??0);
+ const best=gameState.best_landing_error_deg;
+ $("bestLandingError").textContent=best===null||best===undefined?"기록 없음":Number(best).toFixed(1)+"°";
+ const daily=Number(gameState.daily_seugi_coin_earned??gameState.daily_earned??0),limit=Number(gameState.daily_limit||10000);
+ $("dailyText").textContent=fmt(daily)+" / "+fmt(limit)+" S";$("dailyFill").style.width=Math.min(100,daily/limit*100)+"%";
  $("retryLoad").hidden=true;
 }
 async function loadState(options={}){
@@ -299,7 +320,7 @@ async function loadState(options={}){
   }
   if(error)throw error;if(seq!==authSeq)return false;
   if(!data?.ok||data.balance===undefined)throw new Error("계정 정보 응답이 올바르지 않습니다.");
-  gameState=data;$("loginNote").classList.remove("show");$("chargeHint").textContent="누르고 있는 동안 기가 차오르고, 손을 떼면 날아가!";
+  gameState=data;$("loginNote").classList.remove("show");$("chargeHint").textContent="힘을 장전하고 놓으면 돌이가 자동 회전하며 날아가!";
   refreshUI();return true;
  }catch(error){if(seq===authSeq)showProfileError(error);return false}
 }
@@ -316,12 +337,15 @@ async function initAuth(){
   session=data?.session||null;if(session)await loadState({showLoading:true});else showGuest();
  }catch(error){showProfileError(error)}
 }
-function addHistory(spins,reward,chargeValue){
- history.unshift({spins,reward,chargeValue});history=history.slice(0,4);
+function addHistory(success,reward,chargeValue,angle,errorAngle){
+ history.unshift({success,reward,chargeValue,angle,errorAngle});history=history.slice(0,4);
  const list=$("historyList");list.replaceChildren();
  history.forEach(item=>{const row=document.createElement("div");row.className="history-row";
   const left=document.createElement("span"),right=document.createElement("b");
-  left.textContent=item.chargeValue+"% 장전 · "+item.spins+"바퀴";right.textContent="+"+fmt(item.reward)+" D";row.append(left,right);list.append(row)});
+  left.textContent=item.chargeValue+"% 힘 · "+signedDegrees(item.angle).toFixed(1)+"° 착지";
+  right.textContent=item.success?"+"+fmt(item.reward)+" S":"실패";
+  if(!item.success)right.style.color="var(--red)";
+  row.append(left,right);list.append(row)});
 }
 function spawnParticles(x,y,count,color="cyan",spread=1){
  const colors=color==="gold"?["#ffe6a3","#ffca66","#fff4ce"]:color==="purple"?["#c5a7ff","#8e7cff","#e1d4ff"]:["#72e8ff","#b6f5ff","#729eff"];
@@ -336,33 +360,72 @@ function updateParticles(dt){
  }
  particles.length=write;
 }
+function clamp(value,min,max){return Math.max(min,Math.min(max,value))}
+function normalizeDegrees(value){return ((value%360)+360)%360}
+function signedDegrees(value){const n=normalizeDegrees(value);return n>180?n-360:n}
+function getFlightParams(chargeValue){
+ const q=clamp(Number(chargeValue||1),1,100)/100;
+ const power=Number(gameState?.power_level||0),accuracy=Number(gameState?.accuracy_level||0);
+ const duration=2.85-q*.58-power*.016;
+ const height=108+q*72+power*2;
+ const speed=710/duration;
+ const spinRate=2.35+q*8.4+power*.28;
+ const finalAngle=normalizeDegrees(spinRate*duration*180/Math.PI);
+ return {duration,height,speed,spinRate,landingAngle:finalAngle,tolerance:12+accuracy*.75};
+}
+function setAngleGauge(angle,tolerance,status){
+ const signed=signedDegrees(angle),pointer=clamp((signed+180)/360*100,0,100);
+ $("anglePointer").style.left=pointer+"%";
+ $("angleTargetRange").style.left=((180-tolerance)/360*100)+"%";
+ $("angleTargetRange").style.width=(tolerance*2/360*100)+"%";
+ $("angleReadout").textContent=(signed>0?"+":"")+signed.toFixed(1)+"°";
+ if(status)$("landingMessage").textContent=status;
+}
+function updateFlightPreview(chargeValue=charge){
+ const tolerance=12+Number(gameState?.accuracy_level||0)*.75;
+ $("spinCount").textContent="목표 0° ±"+tolerance.toFixed(0)+"°";
+ $("angleTargetRange").style.left=((180-tolerance)/360*100)+"%";
+ $("angleTargetRange").style.width=(tolerance*2/360*100)+"%";
+ if(!chargeValue){
+  $("flightSpeed").textContent="장전 대기";$("flightHeight").textContent="장전 대기";$("flightSpinRate").textContent="장전 대기";
+  $("anglePointer").style.left="50%";$("angleReadout").textContent="장전 대기";
+  $("landingMessage").textContent="힘을 장전하면 예상 착지각이 표시돼. 목표는 0°야.";
+  return;
+ }
+ const params=getFlightParams(chargeValue);
+ $("flightSpeed").textContent=Math.round(params.speed)+" px/s";
+ $("flightHeight").textContent=Math.round(params.height)+" px";
+ $("flightSpinRate").textContent=(params.spinRate/TAU).toFixed(2)+" 바퀴/s";
+ const angle=signedDegrees(params.landingAngle);
+ setAngleGauge(params.landingAngle,params.tolerance,"예상 착지각 "+(angle>0?"+":"")+angle.toFixed(1)+"° · 장전량을 조절해 0°에 가까이 맞춰 봐.");
+}
 function startCharge(){
  if((mode!=="idle"&&mode!=="landed")||throwPending)return;closeUpgradeConfirm();
- $("chargeValue").textContent="기를 모으는 중…";$("chargeFill").style.width="0%";$("rewardResult").textContent="던질 준비 완료";
+ $("chargeValue").textContent="힘을 모으는 중…";$("chargeFill").style.width="0%";$("rewardResult").textContent="던질 준비 완료";
  mode="charging";charge=0;chargeStarted=performance.now();$("chargeButton").classList.add("charging");
- $("chargeButton").setAttribute("aria-label","기가 장전 중");$("chargeButton").disabled=false;$("spinButton").disabled=true;$("restartButton").disabled=true;
- $("chargeHint").textContent="기를 모으는 중… 원하는 순간 손을 떼어 발사!";$("stateChip").textContent="기 장전 중";$("stateChip").classList.add("live");refreshUI();
+ $("chargeButton").setAttribute("aria-label","힘 장전 중");$("chargeButton").disabled=false;$("restartButton").disabled=true;
+ $("spinButton").innerHTML="<strong>↻ 자동 회전 대기</strong><small>던지는 순간부터 자동으로 회전해</small>";
+ $("chargeHint").textContent="힘을 모으는 중… 원하는 순간 손을 떼어 발사!";$("stateChip").textContent="힘 장전 중";$("stateChip").classList.add("live");
+ updateFlightPreview(0);refreshUI();
 }
 function releaseCharge(){
- if(mode!=="charging")return;charge=Math.max(5,Math.min(100,Math.round((performance.now()-chargeStarted)/2100*100)));
- $("chargeButton").classList.remove("charging");$("chargeButton").setAttribute("aria-label","돌이 던지기 · 누르고 있다가 놓기");launch();
+ if(mode!=="charging")return;
+ charge=Math.max(5,Math.min(100,Math.round((performance.now()-chargeStarted)/2100*100)));
+ $("chargeButton").classList.remove("charging");$("chargeButton").setAttribute("aria-label","돌이 던지기 · 누르고 있다가 놓기");
+ updateFlightPreview(charge);launch();
 }
 function launch(){
- mode="flying";flightStarted=performance.now();flightDuration=3.55+charge/100*.52+Number(gameState?.power_level||0)*.035;
- spinRequested=0;spinCompleted=0;rotationAngle=0;rotationTime=0;throwPending=false;
- launchOffset=(Math.random()*2-1)*Math.max(1,16-Number(gameState?.accuracy_level||0)*.7);
+ flightParams=getFlightParams(charge);
+ mode="flying";flightStarted=performance.now();rotationAngle=0;landingAngle=0;throwPending=false;
  spawnParticles(190,322,28,charge>=96?"gold":"cyan",1.15);
- $("chargeButton").disabled=true;$("spinButton").disabled=false;$("restartButton").disabled=true;
- $("spinButton").innerHTML="<strong>↻ 회전하기</strong><small>공중에서 최대 3바퀴</small>";
- $("spinCount").textContent="0 / 3 완료";$("stateChip").textContent="공중 비행 중";$("stateChip").classList.add("live");
- $("chargeHint").textContent=charge+"% 장전 · 공중에서 회전 버튼을 눌러!";$("chargeValue").textContent=charge+"% 완충";
- toast(charge>=96?"PERFECT CHARGE! · 완벽 장전":"돌이가 날아갔어! · 회전 타이밍을 잡아 봐");refreshUI();
-}
-function requestSpin(){
- if(mode!=="flying")return;if(spinRequested>=3){toast("이번 던지기의 회전은 최대 3바퀴야!");return}
- spinRequested++;$("spinCount").textContent=spinCompleted+" / 3 완료 · "+(spinRequested-spinCompleted)+" 진행 중";
- $("spinButton").innerHTML="<strong>↻ 회전 "+spinRequested+"/3</strong><small>회전 동작 진행 중</small>";
- $("spinButton").classList.add("spin-queued");if(spinRequested===3)$("spinButton").disabled=true;
+ $("chargeButton").disabled=true;$("restartButton").disabled=true;
+ $("spinButton").innerHTML="<strong>↻ 자동 회전 중</strong><small>"+(flightParams.spinRate/TAU).toFixed(2)+" 바퀴/s</small>";
+ $("stateChip").textContent="자동 회전 비행 중";$("stateChip").classList.add("live");
+ $("chargeHint").textContent=charge+"% 힘으로 비행 중 · 착지 순간 0°에 가까워야 성공!";
+ $("chargeValue").textContent=charge+"% 장전 완료";
+ setAngleGauge(0,flightParams.tolerance,"돌이가 회전 중이야. 착지 각도는 계속 바뀌어!");
+ toast(charge>=96?"최대 힘으로 발사!":"돌이가 자동 회전을 시작했어!");
+ refreshUI();
 }
 function drawBackground(now=0){
  ctx.drawImage(sceneLayer,0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);
@@ -392,13 +455,14 @@ function drawChargeAura(x,y,now){
  ctx.restore();
 }
 function positionAt(now){
- const t=Math.max(0,Math.min(1,(now-flightStarted)/(flightDuration*1000))),power=Number(gameState?.power_level||0),accuracy=Number(gameState?.accuracy_level||0);
- return{x:190+(710+power*3)*t,y:322-Math.sin(Math.PI*t)*(265+charge*.23+power*1.5)+Math.sin(now/150)*Math.max(0,16-accuracy*.7),t};
+ const elapsed=Math.max(0,Math.min(flightParams.duration,(now-flightStarted)/1000));
+ const t=elapsed/flightParams.duration;
+ return{x:190+flightParams.speed*elapsed,y:322-Math.sin(Math.PI*t)*flightParams.height,t};
 }
 function drawTrail(x,y,now){
- for(let i=3;i>=1;i--)drawDori(x-i*35,y+i*13,rotationAngle-i*.08,1-i*.075,(1-i/4)*.3);
- const grad=ctx.createLinearGradient(x-150,y+12,x+20,y+12);grad.addColorStop(0,"rgba(101,220,255,0)");grad.addColorStop(.65,"rgba(101,220,255,.18)");grad.addColorStop(1,"rgba(180,244,255,.45)");
- ctx.strokeStyle=grad;ctx.lineWidth=3;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(x-142,y+18);ctx.quadraticCurveTo(x-70,y+9,x-22,y+5);ctx.stroke();
+ for(let i=3;i>=1;i--)drawDori(x-i*30,y+i*10,rotationAngle-i*.12,1-i*.075,(1-i/4)*.3);
+ const grad=ctx.createLinearGradient(x-135,y+12,x+20,y+12);grad.addColorStop(0,"rgba(101,220,255,0)");grad.addColorStop(.65,"rgba(101,220,255,.18)");grad.addColorStop(1,"rgba(180,244,255,.45)");
+ ctx.strokeStyle=grad;ctx.lineWidth=3;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(x-128,y+16);ctx.quadraticCurveTo(x-65,y+8,x-22,y+5);ctx.stroke();
  ctx.strokeStyle="rgba(255,226,158,"+(.13+.24*Math.sin(now*.02))+")";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(x,y+36,75,17,0,0,TAU);ctx.stroke();
 }
 function drawEffects(){
@@ -406,43 +470,86 @@ function drawEffects(){
  if(impactAt){const elapsed=performance.now()-impactAt;if(elapsed>900)impactAt=0;else{const t=elapsed/900;ctx.save();ctx.globalAlpha=1-t;ctx.strokeStyle="#ffe3a0";ctx.lineWidth=3-t*2;ctx.beginPath();ctx.ellipse(900,390,28+t*155,10+t*40,0,0,TAU);ctx.stroke();ctx.strokeStyle="rgba(116,229,255,.8)";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(900,390,18+t*112,7+t*28,0,0,TAU);ctx.stroke();ctx.restore()}}
 }
 function render(now=performance.now()){
- ctx.clearRect(0,0,1120,470);drawBackground(now);drawTarget(now);
+ ctx.clearRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);drawBackground(now);drawTarget(now);
  let x=190,y=322,angle=0,scale=1;
  if(mode==="charging"){const p=charge/100;x=190;y=322-Math.sin(p*Math.PI)*14;scale=1+p*.05;drawChargeAura(x,y,now)}
- else if(mode==="flying"){const pos=positionAt(now);x=pos.x;y=pos.y;angle=rotationAngle;drawTrail(x,y,now);const halo=ctx.createRadialGradient(x,y,10,x,y,118);halo.addColorStop(0,"rgba(102,220,255,.19)");halo.addColorStop(1,"rgba(102,220,255,0)");ctx.fillStyle=halo;ctx.beginPath();ctx.arc(x,y,118,0,TAU);ctx.fill();ctx.strokeStyle="rgba(122,230,255,.37)";ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(x,y+28,80,20,0,0,TAU);ctx.stroke()}
- else if(mode==="landed"){x=900+Number(gameState?.power_level||0)*3+launchOffset*2;y=322;angle=rotationAngle}
+ else if(mode==="flying"){
+  const pos=positionAt(now);x=pos.x;y=pos.y;angle=rotationAngle;drawTrail(x,y,now);
+  const halo=ctx.createRadialGradient(x,y,10,x,y,118);halo.addColorStop(0,"rgba(102,220,255,.19)");halo.addColorStop(1,"rgba(102,220,255,0)");
+  ctx.fillStyle=halo;ctx.beginPath();ctx.arc(x,y,118,0,TAU);ctx.fill();
+  ctx.strokeStyle="rgba(122,230,255,.37)";ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(x,y+28,80,20,0,0,TAU);ctx.stroke();
+ }else if(mode==="landed"){x=900;y=322;angle=rotationAngle}
  drawDori(x,y,angle,scale,1);
- if(mode==="charging"){ctx.fillStyle="rgba(255,255,255,.1)";ctx.fillRect(130,425,860,8);const cg=ctx.createLinearGradient(130,0,990,0);cg.addColorStop(0,"#60dfff");cg.addColorStop(.65,"#8e9fff");cg.addColorStop(1,"#ffdc86");ctx.fillStyle=cg;ctx.fillRect(130,425,860*charge/100,8);ctx.fillStyle="#e8f5ff";ctx.font="14px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("CHARGE  "+charge+"%",560,414)}
- else if(mode==="flying"){ctx.fillStyle="rgba(255,255,255,.9)";ctx.font="14px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("SPIN  "+spinCompleted+" / 3",560,54);ctx.fillStyle="rgba(255,220,134,.9)";ctx.font="11px HancomMalrangmalrang";ctx.fillText("회전 버튼을 눌러 공중에서 돌려!",560,75)}
+ if(mode==="charging"){
+  ctx.fillStyle="rgba(255,255,255,.1)";ctx.fillRect(130,425,860,8);
+  const cg=ctx.createLinearGradient(130,0,990,0);cg.addColorStop(0,"#60dfff");cg.addColorStop(.65,"#8e9fff");cg.addColorStop(1,"#ffdc86");
+  ctx.fillStyle=cg;ctx.fillRect(130,425,860*charge/100,8);ctx.fillStyle="#e8f5ff";ctx.font="14px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("POWER  "+charge+"%",560,414)
+ }else if(mode==="flying"){
+  ctx.fillStyle="rgba(255,255,255,.9)";ctx.font="14px HancomMalrangmalrang";ctx.textAlign="center";
+  ctx.fillText("AUTO SPIN  "+(flightParams.spinRate/TAU).toFixed(2)+" turns/s",560,54);
+  ctx.fillStyle="rgba(255,220,134,.9)";ctx.font="11px HancomMalrangmalrang";ctx.fillText("착지 목표각 0°",560,75)
+ }
  drawEffects();
 }
 function completeFlight(){
- if(mode!=="flying")return;const pos=positionAt(performance.now());
+ if(mode!=="flying")return;
+ const pos=positionAt(flightStarted+flightParams.duration*1000);
+ landingAngle=flightParams.landingAngle;rotationAngle=landingAngle*Math.PI/180;
  mode="landed";impactAt=performance.now();spawnParticles(pos.x,390,42,"gold",1.5);
- $("spinButton").disabled=true;$("restartButton").disabled=true;$("chargeButton").disabled=true;
- $("stateChip").textContent="착지 완료";$("stateChip").classList.remove("live");
- $("chargeHint").textContent=spinCompleted+"바퀴 회전 완료 · 보상을 정산하고 있어!";submitThrow();
+ $("restartButton").disabled=true;$("chargeButton").disabled=true;
+ $("stateChip").textContent="착지 각도 판정 중";$("stateChip").classList.remove("live");
+ setAngleGauge(landingAngle,flightParams.tolerance,"착지 완료 · 서버에서 목표 각도와 비교하고 있어!");
+ $("chargeHint").textContent="착지 각도 "+signedDegrees(landingAngle).toFixed(1)+"° · 성공 판정 중…";
+ submitThrow();
 }
 async function submitThrow(){
  if(throwPending)return;throwPending=true;
- if(!session){$("rewardResult").textContent="로그인 시 코인이 적립됩니다.";throwPending=false;if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}refreshUI();return}
- $("rewardResult").textContent="코인 보상 정산 중…";
+ if(!session){
+  $("rewardResult").textContent="로그인하면 세우기 코인이 적립돼.";throwPending=false;
+  if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}
+  refreshUI();return
+ }
+ $("rewardResult").textContent="착지 각도 판정 중…";
  try{
-  const {data,error}=await supabase.rpc("dori_throw_game_throw",{p_charge:charge,p_spins:spinCompleted,p_request_id:uuid()});if(error)throw error;
-  gameState.balance=data.balance;gameState.total_throws=data.total_throws;gameState.total_spins=data.total_spins;gameState.best_spins=data.best_spins;
-  gameState.total_earned=String(BigInt(String(gameState.total_earned||0))+BigInt(String(data.coin_reward||0)));gameState.daily_earned=data.daily_earned;
-  refreshUI();addHistory(spinCompleted,data.coin_reward,charge);$("rewardResult").textContent="+"+fmt(data.coin_reward)+" D 획득";
-  $("chargeHint").textContent="획득 코인 "+fmt(data.coin_reward)+" D · 다시 던져 보자!";toast("돌돌코인 +"+fmt(data.coin_reward)+" 획득!","success");
- }catch(error){console.error("[DORI THROW] reward:",error);$("rewardResult").textContent="보상 처리 실패";$("chargeHint").textContent=error.message||"잠시 후 다시 시도해 주세요.";toast(error.message||"코인을 지급하지 못했습니다.","error");await loadState()}
- finally{throwPending=false;if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}refreshUI()}
+  const {data,error}=await supabase.rpc("dori_throw_game_throw",{p_charge:charge,p_request_id:uuid()});if(error)throw error;
+  gameState.seugi_coin_balance=data.seugi_coin_balance;gameState.balance=data.seugi_coin_balance;
+  gameState.seugi_coin_earned=data.seugi_coin_earned;gameState.total_earned=data.seugi_coin_earned;
+  gameState.total_throws=data.total_throws;gameState.successful_landings=data.successful_landings;
+  gameState.daily_seugi_coin_earned=data.daily_seugi_coin_earned;
+  landingAngle=Number(data.landing_angle_deg);flightParams.tolerance=Number(data.angle_tolerance_deg);
+  flightParams.landingAngle=landingAngle;rotationAngle=landingAngle*Math.PI/180;
+  const errorAngle=Number(data.angle_error_deg),success=!!data.success,reward=Number(data.coin_reward||0);
+  const oldBest=gameState.best_landing_error_deg;
+  gameState.best_landing_error_deg=oldBest===null||oldBest===undefined?errorAngle:Math.min(Number(oldBest),errorAngle);
+  setAngleGauge(landingAngle,flightParams.tolerance,success
+   ?"성공! 목표각 오차 "+errorAngle.toFixed(1)+"° · 세우기 코인 지급"
+   :"실패 · 목표각에서 "+errorAngle.toFixed(1)+"° 벗어났어. 다음엔 장전량을 조절해 봐.");
+  $("stateChip").textContent=success?"착지 성공":"각도 불일치";
+  refreshUI();addHistory(success,reward,charge,landingAngle,errorAngle);
+  if(success){
+   $("rewardResult").textContent="+"+fmt(reward)+" 세우기 코인 획득!";
+   $("chargeHint").textContent="돌이를 "+signedDegrees(landingAngle).toFixed(1)+"°로 세웠어! 정확한 착지야.";
+   toast("세우기 코인 +"+fmt(reward)+" 획득!","success");
+  }else{
+   $("rewardResult").textContent="착지 실패 · 세우기 코인 0개";
+   $("chargeHint").textContent="목표 각도 0° · 실제 오차 "+errorAngle.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°";
+   toast("각도가 맞지 않아 코인을 얻지 못했어.","error");
+  }
+ }catch(error){
+  console.error("[DORI THROW] landing result:",error);$("rewardResult").textContent="착지 판정 실패";
+  $("chargeHint").textContent=error.message||"잠시 후 다시 시도해 주세요.";
+  toast(error.message||"착지 기록을 저장하지 못했습니다.","error");await loadState()
+ }finally{
+  throwPending=false;if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}refreshUI()
+ }
 }
 function openUpgradeConfirm(type){
  if(!session||!gameState){toast("로그인 후 강화할 수 있어요.");return}if(mode==="flying"||mode==="charging"||throwPending)return;
  const level=type==="power"?gameState.power_level:gameState.accuracy_level,cost=nextCost(type,level);
- if(cost===null){toast("이미 최대 레벨입니다.");return}if(BigInt(String(gameState.balance||0))<BigInt(cost)){toast("돌돌코인이 부족합니다.");return}
+ if(cost===null){toast("이미 최대 레벨입니다.");return}if(BigInt(String(gameState.seugi_coin_balance??gameState.balance??0))<BigInt(cost)){toast("세우기 코인이 부족합니다.");return}
  pendingUpgrade=type;$("upgradeModalTitle").textContent=type==="power"?"힘 강화":"정확도 강화";
- $("upgradeModalText").textContent=type==="power"?"던지는 힘과 비행 거리가 늘어나고 코인 획득 효율이 3.5% 상승해.":"비행 흔들림이 줄어들고 코인 획득 효율이 2.5% 상승해.";
- $("upgradeModalPrice").textContent=fmt(cost)+" D";$("upgradeConfirm").disabled=false;$("upgradeModal").classList.add("open");$("upgradeModal").setAttribute("aria-hidden","false");$("upgradeConfirm").focus();
+ $("upgradeModalText").textContent=type==="power"?"비행 속도와 최고 높이, 자동 회전 속도가 함께 올라가.":"착지 목표각 0°의 허용 범위가 넓어져 성공하기 쉬워져.";
+ $("upgradeModalPrice").textContent=fmt(cost)+" S";$("upgradeConfirm").disabled=false;$("upgradeModal").classList.add("open");$("upgradeModal").setAttribute("aria-hidden","false");$("upgradeConfirm").focus();
 }
 function closeUpgradeConfirm(){pendingUpgrade=null;$("upgradeModal").classList.remove("open");$("upgradeModal").setAttribute("aria-hidden","true")}
 async function confirmUpgrade(){const type=pendingUpgrade;if(!type)return;closeUpgradeConfirm();await buyUpgrade(type)}
@@ -451,16 +558,20 @@ async function buyUpgrade(type){
  const button=type==="power"?$("powerUpgrade"):$("accuracyUpgrade");button.disabled=true;
  try{
   const {data,error}=await supabase.rpc("dori_throw_game_upgrade",{p_upgrade:type,p_request_id:uuid()});if(error)throw error;
-  gameState.balance=data.balance;gameState.power_level=data.power_level;gameState.accuracy_level=data.accuracy_level;refreshUI();
+  gameState.seugi_coin_balance=data.seugi_coin_balance;gameState.balance=data.seugi_coin_balance;gameState.power_level=data.power_level;gameState.accuracy_level=data.accuracy_level;refreshUI();updateFlightPreview(charge);
   spawnParticles(type==="power"?250:820,180,22,type==="power"?"gold":"purple",1.2);toast((type==="power"?"힘":"정확도")+" 강화 완료 · Lv."+data.level,"success");
  }catch(error){console.error("[DORI THROW] upgrade:",error);toast(error.message||"강화하지 못했습니다.","error");await loadState()}
  finally{refreshUI()}
 }
 function resetForNext(){
- if(mode!=="landed"||throwPending)return;mode="idle";charge=0;spinRequested=0;spinCompleted=0;rotationAngle=0;rotationTime=0;
+ if(mode!=="landed"||throwPending)return;
+ mode="idle";charge=0;rotationAngle=0;landingAngle=0;
  $("rewardResult").textContent="새로운 도전을 시작해 보자!";$("stateChip").textContent="준비 완료";$("stateChip").classList.remove("live");
- $("chargeHint").textContent="버튼을 누르고 있으면 기가 차오르고, 놓으면 발사돼!";$("chargeValue").textContent="누르고 있으면 기 장전 · 놓으면 발사";$("chargeFill").style.width="0%";
- $("chargeButton").disabled=false;$("spinButton").disabled=true;$("spinButton").classList.remove("spin-queued");$("spinButton").innerHTML="<strong>↻ 회전하기</strong><small>공중에서 최대 3바퀴</small>";$("restartButton").disabled=true;refreshUI();
+ $("chargeHint").textContent="힘을 장전하고 놓으면 돌이가 자동으로 회전하며 날아가!";
+ $("chargeValue").textContent="누르고 있으면 힘 장전 · 놓으면 자동 회전";
+ $("chargeFill").style.width="0%";$("chargeButton").disabled=false;$("restartButton").disabled=true;
+ $("spinButton").innerHTML="<strong>↻ 자동 회전</strong><small>던진 순간부터 회전 속도 변화</small>";
+ updateFlightPreview(0);refreshUI();
 }
 function frame(now){
  if(document.hidden){rafId=0;return}
@@ -469,12 +580,13 @@ function frame(now){
   const dt=lastFrame?Math.min(.05,Math.max(0,(now-lastFrame)/1000)):0;lastFrame=now;lastPaint=now;
   if(mode==="charging"){
    const nextCharge=Math.min(100,Math.floor((now-chargeStarted)/21));
-   if(nextCharge!==charge){charge=nextCharge;$("chargeFill").style.width=charge+"%";$("chargeValue").textContent=charge+"% · "+(charge>=96?"PERFECT":"CHARGING")}
+   if(nextCharge!==charge){charge=nextCharge;$("chargeFill").style.width=charge+"%";$("chargeValue").textContent=charge+"% · "+(charge>=96?"최대 힘":"힘 장전 중");updateFlightPreview(charge)}
    if(charge>=100)releaseCharge()
   }else if(mode==="flying"){
-   if(spinCompleted<spinRequested){rotationTime+=dt;rotationAngle=spinCompleted*TAU+Math.min(TAU,rotationTime/.82*TAU);
-    if(rotationTime>=.82){spinCompleted++;rotationTime-=.82;rotationAngle=spinCompleted*TAU+Math.min(TAU,rotationTime/.82*TAU);$("spinCount").textContent=spinCompleted+" / 3 완료";const pos=positionAt(now);spawnParticles(pos.x,pos.y,14,"cyan",.8);if(spinCompleted===3)toast("3바퀴 완성! 최고 회전 보상!")}}
-   if(now-flightStarted>=flightDuration*1000)completeFlight()
+   const elapsed=Math.min(flightParams.duration,Math.max(0,(now-flightStarted)/1000));
+   rotationAngle=flightParams.spinRate*elapsed;
+   if(now-lastAnglePaint>80){lastAnglePaint=now;setAngleGauge(normalizeDegrees(rotationAngle*180/Math.PI),flightParams.tolerance,"자동 회전 중 · 착지 목표각 0°")}
+   if(elapsed>=flightParams.duration)completeFlight()
   }
   updateParticles(dt);render(now);
  }
@@ -483,14 +595,14 @@ function frame(now){
 function startAnimationLoop(){if(!rafId&&!document.hidden)rafId=requestAnimationFrame(frame);}
 $("chargeButton").addEventListener("pointerdown",event=>{event.preventDefault();if($("chargeButton").setPointerCapture)try{$("chargeButton").setPointerCapture(event.pointerId)}catch{}startCharge()});
 window.addEventListener("pointerup",releaseCharge);window.addEventListener("pointercancel",releaseCharge);
-$("spinButton").addEventListener("click",requestSpin);$("restartButton").addEventListener("click",resetForNext);
+$("restartButton").addEventListener("click",resetForNext);
 $("powerUpgrade").addEventListener("click",()=>openUpgradeConfirm("power"));$("accuracyUpgrade").addEventListener("click",()=>openUpgradeConfirm("accuracy"));
 $("upgradeConfirm").addEventListener("click",confirmUpgrade);$("upgradeCancel").addEventListener("click",closeUpgradeConfirm);
 $("upgradeModal").addEventListener("click",event=>{if(event.target.id==="upgradeModal")closeUpgradeConfirm()});
 $("retryLoad").addEventListener("click",()=>loadState({showLoading:true}));
 document.addEventListener("keydown",event=>{
  if(event.code==="Space"&&!event.repeat&&!["INPUT","TEXTAREA","BUTTON"].includes(document.activeElement?.tagName)){event.preventDefault();if(mode==="idle"||mode==="landed")startCharge()}
- if(event.code==="KeyR"&&!event.repeat)requestSpin();if(event.key==="Escape")closeUpgradeConfirm();
+ if(event.key==="Escape")closeUpgradeConfirm();
 });
 document.addEventListener("keyup",event=>{if(event.code==="Space")releaseCharge()});window.addEventListener("blur",releaseCharge);
 document.addEventListener("visibilitychange",()=>{
@@ -518,27 +630,38 @@ $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loading
  <div>
   <div class="eyebrow">DORI MINI GAME · CHARGE / FLIGHT / SPIN</div>
   <h1>돌이 <em>세우기</em></h1>
-  <p>기를 가득 모아 돌이를 날려 보자! 공중에서 회전한 횟수가 많을수록 더 많은 돌돌코인을 얻고, 힘과 정확도를 강화할 수 있어.</p>
+  <p>기를 모아 돌이를 던져 보자! 장전한 힘과 강화 레벨에 따라 비행 속도·높이·자동 회전 속도가 달라져. 착지 순간 목표 각도에 맞춰 돌이를 세우면 전용 세우기 코인을 얻을 수 있어.</p>
  </div>
  <div class="balance-card">
  <div class="account-block"><div class="profile-avatar" id="profileAvatar">🐾</div>
   <div class="profile-info"><small id="accountLabel">ACCOUNT CONNECTION</small><span id="profileName">사용자 정보 확인 중…</span><em id="profileLevel">프로필을 불러오고 있어</em></div>
- </div><div class="balance-value"><small>MY DOLDOLCOIN</small><strong id="coinBalance">연결 중…</strong></div>
+ </div><div class="balance-value"><small>MY SEUGI COIN · 게임 전용 재화</small><strong id="coinBalance">연결 중…</strong></div>
 </div>
 </section>
 <section class="dashboard">
  <section class="panel arena">
   <div class="panel-head"><h2>✦ FLIGHT ARENA</h2><span class="state-chip" id="stateChip">준비 완료</span></div>
   <div class="canvas-wrap"><canvas id="arenaCanvas" width="1120" height="470" aria-label="돌이가 기를 장전하고 공중에서 회전하는 게임 화면"></canvas></div>
-  <div class="stage-caption"><span>CHARGE → LAUNCH → SPIN</span><span id="spinCount">0 / 3 완료</span></div>
+  <div class="flight-metrics" aria-label="예상 비행 정보">
+   <div class="flight-metric"><small>비행 속도</small><strong id="flightSpeed">장전 대기</strong></div>
+   <div class="flight-metric"><small>최고 높이</small><strong id="flightHeight">장전 대기</strong></div>
+   <div class="flight-metric"><small>자동 회전 속도</small><strong id="flightSpinRate">장전 대기</strong></div>
+  </div>
+  <div class="stage-caption"><span>CHARGE → AUTO SPIN → UPRIGHT LANDING</span><span id="spinCount">목표 착지각 0°</span></div>
+  <div class="landing-panel">
+   <div class="landing-head"><span>착지 각도 조준</span><strong>목표 0° · 똑바로 세우기</strong></div>
+   <div class="angle-track" aria-hidden="true"><span class="angle-midline"></span><span id="angleTargetRange" class="angle-target-range"></span><span id="anglePointer" class="angle-pointer"></span></div>
+   <div class="angle-labels"><span>−180°</span><strong id="angleReadout">예상 각도 대기 중</strong><span>+180°</span></div>
+   <div id="landingMessage" class="landing-message">착지 순간 돌이의 각도가 0° ±12° 안에 들어오면 세우기 코인을 획득해.</div>
+  </div>
   <div class="controls">
    <button class="charge-control" id="chargeButton" type="button" aria-label="돌이 던지기 · 누르고 있다가 놓기">
     <span class="charge-title">🐾 돌이 던지기</span><small id="chargeValue">누르고 있으면 기 장전 · 놓으면 발사</small><span id="chargeFill"></span>
    </button>
-   <button class="spin-control" id="spinButton" type="button" disabled><strong>↻ 회전하기</strong><small>공중에서 최대 3바퀴</small></button>
+   <div class="spin-control" id="spinButton" aria-live="polite"><strong>↻ 자동 회전</strong><small>던진 순간부터 회전 속도가 달라져</small></div>
   </div>
-  <div class="controls-hint" id="chargeHint">누르고 있는 동안 기가 차오르고, 손을 떼면 날아가!</div>
-  <div class="spin-reward-guide"><span>1바퀴 <b>×1.55</b></span><span>2바퀴 <b>×2.55</b></span><span class="three">3바퀴 <b>×4.00</b> · 최고 보상</span></div>
+  <div class="controls-hint" id="chargeHint">힘을 장전하고 놓으면 돌이가 자동 회전하며 날아가!</div>
+  <div class="spin-reward-guide"><span>목표 착지각 <b>0°</b></span><span>기본 허용 범위 <b>±12°</b></span><span class="three">정확히 세우면 <b>세우기 코인</b></span></div>
   <div class="login-note" id="loginNote">체험 플레이는 가능해. 로그인하면 돌돌코인을 적립하고 강화 레벨을 계정에 저장할 수 있어. <a href="./login.html" style="color:#ffe3a2">로그인하기</a></div>
   <button class="retry-load" id="retryLoad" type="button" hidden>↻ 사용자 정보 다시 불러오기</button>
   <div class="controls-hint" id="rewardResult" aria-live="polite">아직 던지지 않았어</div>
@@ -552,12 +675,12 @@ $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loading
    <h2>⚙ 돌이 강화 연구소</h2>
    <div class="upgrade-card">
     <div class="upgrade-top"><div class="upgrade-name"><span class="upgrade-icon">💪</span>힘 강화</div><span class="level" id="powerLevel">Lv. 0 / 20</span></div>
-    <p class="upgrade-desc">던지는 힘과 비행 거리가 늘어나. 레벨이 오르면 코인 획득 효율도 3.5%씩 상승해.</p>
+    <p class="upgrade-desc">던지는 힘이 강해져 비행 속도와 최고 높이, 자동 회전 속도가 함께 증가해.</p>
     <div class="upgrade-bottom"><span class="cost">다음 강화 <b id="powerCost">150 D</b></span><button class="upgrade-btn" id="powerUpgrade" type="button">힘 강화</button></div>
    </div>
    <div class="upgrade-card">
     <div class="upgrade-top"><div class="upgrade-name"><span class="upgrade-icon">🎯</span>정확도 강화</div><span class="level" id="accuracyLevel">Lv. 0 / 20</span></div>
-    <p class="upgrade-desc">비행 흔들림이 줄어들어 목표 지점에 더 안정적으로 도달해. 코인 획득 효율도 2.5%씩 상승해.</p>
+    <p class="upgrade-desc">착지 목표인 0° 주변의 성공 허용 범위가 넓어져. 각도 맞추기가 조금 더 쉬워져.</p>
     <div class="upgrade-bottom"><span class="cost">다음 강화 <b id="accuracyCost">180 D</b></span><button class="upgrade-btn" id="accuracyUpgrade" type="button">정확도 강화</button></div>
    </div>
   </section>
@@ -565,12 +688,12 @@ $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loading
    <h2>✧ 나의 기록</h2>
    <div class="stats-grid">
     <div class="stat"><span>총 던지기</span><strong id="throwsCount">0</strong></div>
-    <div class="stat"><span>최고 회전</span><strong id="bestSpin">0바퀴</strong></div>
-    <div class="stat"><span>누적 획득</span><strong id="totalEarned">0</strong></div>
-    <div class="stat"><span>회전 보상</span><strong>최대 ×4.00</strong></div>
+    <div class="stat"><span>성공 착지</span><strong id="successfulLandings">0</strong></div>
+    <div class="stat"><span>누적 세우기 코인</span><strong id="totalEarned">0</strong></div>
+    <div class="stat"><span>최소 착지 오차</span><strong id="bestLandingError">기록 없음</strong></div>
    </div>
-   <div class="daily"><div class="daily-top"><span>일일 코인 적립 한도</span><strong id="dailyText">0 / 25,000 D</strong></div><div class="daily-bar"><div id="dailyFill"></div></div></div>
-   <div class="history"><h3>RECENT THROWS</h3><div id="historyList"><div class="history-empty">첫 던지기를 완료하면 기록이 여기에 표시돼.</div></div></div>
+   <div class="daily"><div class="daily-top"><span>일일 세우기 코인 적립 한도</span><strong id="dailyText">0 / 25,000 D</strong></div><div class="daily-bar"><div id="dailyFill"></div></div></div>
+   <div class="history"><h3>RECENT THROWS</h3><div id="historyList"><div class="history-empty">첫 착지 판정이 끝나면 기록이 여기에 표시돼.</div></div></div>
   </section>
  </aside>
 </section>
