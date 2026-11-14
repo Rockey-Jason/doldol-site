@@ -801,6 +801,23 @@ async function checkSiteAchievements() {
     const divs = dividends || [];
     const divTotal = divs.reduce((s,x)=>s+Math.max(0,Number(x.amount)||0),0);
 
+    // 세우기 업적은 게임 기록 테이블을 직접 읽지 않는다.
+    // 인증된 게임 RPC에서 진행 수치만 확인하고, 실제 달성/보상 조건은 claim_achievement가 서버에서 재검증한다.
+    let seugiThrows = 0;
+    let seugiStats = {};
+    if (document.getElementById("perfectComboStrip")) {
+      try {
+        const { data: seugiState, error: seugiStateError } = await supabase.rpc("dori_throw_game_get_state");
+        if (seugiStateError) throw seugiStateError;
+        const { data: seugiDashboard, error: seugiDashboardError } = await supabase.rpc("dori_throw_game_get_dashboard");
+        if (seugiDashboardError) throw seugiDashboardError;
+        seugiThrows = Math.max(0, Number(seugiState?.total_throws || 0));
+        seugiStats = seugiDashboard?.stats || {};
+      } catch (seugiError) {
+        console.warn("[Dori Achievement] 세우기 진행도 조회 실패:", seugiError);
+      }
+    }
+
     // 돌이 세우기 업적은 비공개 게임 기록 테이블을 직접 조회하지 않는다.
     // 인증된 대시보드 RPC로 진행 수치만 읽고, 보상 조건은 claim_achievement가 DB에서 재검증한다.
     let seugiThrows = 0;
@@ -819,6 +836,15 @@ async function checkSiteAchievements() {
     }
     
     const checks = [
+      ["seugi_first_throw",seugiThrows>=1],
+      ["seugi_100_throws",seugiThrows>=100],
+      ["seugi_500_throws",seugiThrows>=500],
+      ["seugi_1000_throws",seugiThrows>=1000],
+      ["seugi_perfect_1",Number(seugiStats.perfect_landings||0)>=1],
+      ["seugi_perfect_10",Number(seugiStats.perfect_landings||0)>=10],
+      ["seugi_perfect_50",Number(seugiStats.perfect_landings||0)>=50],
+      ["seugi_perfect_streak_10",Number(seugiStats.best_perfect_streak||0)>=10],
+      ["seugi_challenge_25",Number(seugiStats.challenge_throws||0)>=25],
       ["seugi_first_throw",seugiThrows>=1],
       ["seugi_100_throws",seugiThrows>=100],
       ["seugi_500_throws",seugiThrows>=500],
@@ -899,6 +925,12 @@ window.setInterval(() => {
 window.addEventListener("focus", () => checkSiteAchievements());
 window.addEventListener("pageshow", () => checkSiteAchievements());
 window.addEventListener("dori:coin-changed", () => checkSiteAchievements());
+
+// 돌이 세우기 기록이 서버에 저장된 직후 공용 업적 목록을 다시 검사한다.
+window.addEventListener("dori:seugi-progress-changed", async () => {
+  if (state.checkPromise) await state.checkPromise.catch(() => {});
+  await checkSiteAchievements();
+});
 
 supabase.auth.onAuthStateChange((event) => {
   if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
