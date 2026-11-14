@@ -1103,6 +1103,7 @@ async function submitThrow(){
   if(success){playSfx("coin");toast("세우기 코인 +"+fmt(reward)+" 획득!","success");}
   else toast("착지 실패 · 다음에는 각도를 맞춰 봐!","error");
   await Promise.all([loadSeason2Dashboard(),loadDailyMissions()]);
+  window.dispatchEvent(new Event("dori:seugi-progress-changed"));
  }catch(error){
   console.error("[DORI THROW] landing result:",error);
   $("stateChip").textContent=localSuccess?"착지 성공 · 기록 저장 실패":"착지 실패 · 기록 저장 실패";
@@ -1435,5 +1436,6 @@ $("soundToggle").addEventListener("click",()=>{
  </section>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script type="module" src="./js/achievements.js?v=20261115-seugi-global-achievements-1"></script>
 </body>
 </html>
