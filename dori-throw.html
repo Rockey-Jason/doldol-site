@@ -173,6 +173,9 @@ function addHistory(spins,reward,chargeValue){
 }
 function startCharge(event){
  if(mode!=="idle"&&mode!=="landed")return;
+ $("chargeValue").textContent="누르고 있으면 기 장전 · 놓으면 발사";
+ $("chargeFill").style.width="0%";
+ $("rewardResult").textContent="던질 준비 완료";
  if(!session){toast("로그인하면 돌돌코인을 적립할 수 있어요.");}
  mode="charging";charge=0;chargeStarted=performance.now();
  $("chargeButton").classList.add("charging");
@@ -190,7 +193,7 @@ function releaseCharge(){
  launch();
 }
 function launch(){
- mode="flying";flightStarted=performance.now();flightDuration=3.8+charge/100*.42+(gameState?gameState.power_level*.025:0);
+ mode="flying";flightStarted=performance.now();flightDuration=3.8+charge/100*.42+(gameState?gameState.power_level*.05:0);
  spinRequested=0;spinCompleted=0;rotationAngle=0;rotationTime=0;throwPending=false;
  launchOffset=(Math.random()*2-1)*Math.max(1,16-((gameState?.accuracy_level||0)*.7));
  $("chargeButton").disabled=true;$("spinButton").disabled=false;$("restartButton").disabled=true;
@@ -232,10 +235,11 @@ function render(){
   const power=charge/100;x=190;y=322-Math.sin(power*Math.PI)*14;scale=1+power*.05;
  }else if(mode==="flying"){
   const t=Math.min(1,(performance.now()-flightStarted)/(flightDuration*1000));
-  x=190+710*t;
-  y=322-Math.sin(Math.PI*t)*265+Math.sin(performance.now()/150)*Math.max(0,16-(gameState?.accuracy_level||0)*.7);
+  const powerLevel=gameState?.power_level||0;
+  x=190+(710+powerLevel*3)*t;
+  y=322-Math.sin(Math.PI*t)*(265+charge*.23+powerLevel*1.5)+Math.sin(performance.now()/150)*Math.max(0,16-(gameState?.accuracy_level||0)*.7);
   angle=rotationAngle;
- }else if(mode==="landed"){x=900+launchOffset*2;y=322;angle=rotationAngle}
+ }else if(mode==="landed"){x=900+(gameState?.power_level||0)*3+launchOffset*2;y=322;angle=rotationAngle}
  drawDori(x,y,angle,scale);
  if(mode==="charging"){
   ctx.fillStyle="rgba(255,255,255,.12)";ctx.fillRect(130,425,860,8);
@@ -255,7 +259,7 @@ function completeFlight(){
 async function submitThrow(){
  if(throwPending)return;
  throwPending=true;
- if(!session){$("rewardResult").textContent="로그인 시 코인이 적립됩니다.";refreshUI();return}
+ if(!session){$("rewardResult").textContent="로그인 시 코인이 적립됩니다.";throwPending=false;refreshUI();return}
  try{
   const {data,error}=await supabase.rpc("dori_throw_game_throw",{p_charge:charge,p_spins:spinCompleted,p_request_id:uuid()});
   if(error)throw error;
@@ -289,6 +293,7 @@ function resetForNext(){
  $("rewardResult").textContent="아직 던지지 않았어";
  $("stateChip").textContent="준비 완료";
  $("chargeHint").textContent="누르고 있는 동안 기가 차오르고, 손을 떼면 날아가!";
+ $("chargeValue").textContent="누르고 있으면 기 장전 · 놓으면 발사";$("chargeFill").style.width="0%";
  $("chargeButton").disabled=false;$("spinButton").disabled=true;$("restartButton").disabled=true;
 }
 function update(now){
