@@ -268,6 +268,20 @@ body:before,body:after{animation:none;filter:blur(54px);opacity:.1}
 .sound-console-hint{margin-left:auto;color:#7186ad;font-size:9px;white-space:nowrap}
 @media(max-width:600px){.sound-console{gap:8px;padding:8px 9px}.sound-volume{width:clamp(65px,24vw,130px)}.sound-console-hint{display:none}}
 
+
+/* Prevent text/image selection and copying on this game page */
+html,body,body *{
+  -webkit-user-select:none!important;
+  user-select:none!important;
+  -webkit-touch-callout:none!important;
+}
+img,svg,canvas,video{
+  -webkit-user-drag:none!important;
+  user-drag:none!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
+}
+
 </style>
 <script type="module">
 import {createClient} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -882,6 +896,31 @@ $("soundToggle").addEventListener("click",()=>{
   updateSoundVolume();
  });
  syncSoundControls();
+ 
+// Selection / copy protection for the game interface (keeps controls interactive).
+(function(){
+  const isEditable = target => target instanceof Element &&
+    (target.closest('input,textarea,[contenteditable="true"],[contenteditable=""]'));
+  document.addEventListener('selectstart', event => {
+    if (!isEditable(event.target)) event.preventDefault();
+  }, true);
+  document.addEventListener('copy', event => event.preventDefault(), true);
+  document.addEventListener('cut', event => event.preventDefault(), true);
+  document.addEventListener('paste', event => event.preventDefault(), true);
+  document.addEventListener('contextmenu', event => event.preventDefault(), true);
+  document.addEventListener('dragstart', event => {
+    if (event.target instanceof Element && event.target.closest('img,svg,canvas,video,a')) event.preventDefault();
+  }, true);
+  document.addEventListener('keydown', event => {
+    const key = String(event.key || '').toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && ['a','c','x','v'].includes(key)) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  }, true);
+  document.querySelectorAll('img,svg,canvas,video').forEach(el => el.setAttribute('draggable','false'));
+})();
+
  $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loadingAccount();initAuth();startAnimationLoop();
 </script>
 </head>
