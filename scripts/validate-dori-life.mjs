@@ -99,6 +99,8 @@ assert.ok(html.includes("var actionBeat=Math.sin(t*5.6)"), "The high-visibility 
 assert.ok(html.includes("motion-test=1"), "The pose demonstration mode must be available.");
 assert.ok(html.includes("['breakfast','식사','eat']"), "The motion test must drive the eating pose explicitly.");
 assert.ok(html.includes("el._gaitCycles=distance>3?"), "Gait cycles must be derived from actual movement distance.");
+assert.ok(html.includes("distance*.62/(el._gaitStride*Math.max(.62,from.s))"), "Stance foot travel must match actual body displacement.");
+assert.ok(html.includes("var demoIndex=Math.floor(performance.now()/6500)%demo.length;"), "Motion test must start at walking for immediate review.");
 assert.ok(html.includes("el._gaitPhase=ease*el._gaitCycles*Math.PI*2;"), "Gait phase must stay synchronized with travel progress.");
 assert.ok(html.includes("function gaitFootStep(phase,stride)"), "A planted stance and lifted swing foot cycle must be defined.");
 assert.ok(html.includes("function animateGaitLeg(prefix,phase,stride,amplitude)"), "Each leg must be individually articulated.");
