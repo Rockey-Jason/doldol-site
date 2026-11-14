@@ -3,16 +3,6 @@ name: Deploy ROCKEY to GitHub Pages
 on:
   push:
     branches: [main]
-    paths:
-      - 'doronium-factory/**'
-      - 'rockey-client/**'
-      - 'rockey/**'
-      - '.github/workflows/deploy-rockey-pages.yml'
-      - 'docs/rockey/**'
-      - 'gamepage.html'
-      - 'rockey-clicker.html'
-      - 'scripts/validate-dori-life.mjs'
-      - '*.html'
   workflow_dispatch:
 
 permissions:
@@ -44,6 +34,8 @@ jobs:
         run: npm run build
       - name: Validate Dori Life animation data and inline JavaScript
         run: node scripts/validate-dori-life.mjs
+      - name: Run repository-wide quality checks
+        run: node scripts/site-quality-check.mjs
       - name: Commit built ROCKEY files for branch-based Pages fallback
         run: |
           git config user.name "github-actions[bot]"

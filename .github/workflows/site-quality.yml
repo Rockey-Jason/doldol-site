@@ -1,0 +1,53 @@
+name: Dori Site Quality Gate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dori-site-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check site files, inline scripts, local assets and JSON
+        run: node scripts/site-quality-check.mjs
+
+      - name: Validate Dori Life animation choreography
+        run: node scripts/validate-dori-life.mjs
+
+      - name: Install ROCKEY client dependencies
+        working-directory: rockey-client
+        run: npm install
+
+      - name: Typecheck and build ROCKEY client
+        working-directory: rockey-client
+        run: npm run build
+
+      - name: Install ROCKEY server dependencies
+        working-directory: rockey-server
+        run: npm install
+
+      - name: Run ROCKEY server tests
+        working-directory: rockey-server
+        run: npm test
+
+      - name: Build ROCKEY server
+        working-directory: rockey-server
+        run: npm run build
