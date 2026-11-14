@@ -1108,6 +1108,7 @@ async function submitThrow(){
   else toast("착지 실패 · 다음에는 각도를 맞춰 봐!","error");
   await Promise.all([loadSeason2Dashboard(),loadDailyMissions()]);
   window.dispatchEvent(new Event("dori:seugi-progress-changed"));
+  window.doriCheckAchievements?.();
  }catch(error){
   console.error("[DORI THROW] landing result:",error);
   $("stateChip").textContent=localSuccess?"착지 성공 · 기록 저장 실패":"착지 실패 · 기록 저장 실패";
