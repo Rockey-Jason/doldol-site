@@ -87,6 +87,18 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 25px #ffdc8622}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .login-note{display:none;margin-top:11px;padding:10px 12px;border:1px solid rgba(255,220,134,.2);border-radius:11px;background:rgba(255,220,134,.05);color:#cfc4a7;font-size:10px;line-height:1.6}
 .login-note.show{display:block}
+.upgrade-modal-backdrop{position:fixed;z-index:60;inset:0;display:none;place-items:center;padding:20px;background:rgba(2,6,18,.76);backdrop-filter:blur(12px)}
+.upgrade-modal-backdrop.open{display:grid}
+.upgrade-modal{width:min(430px,100%);padding:22px;border:1px solid rgba(255,220,134,.27);border-radius:19px;background:linear-gradient(145deg,#17264a,#0b1328);box-shadow:0 30px 100px #000b}
+.upgrade-modal .eyebrow{font-size:9px}.upgrade-modal h2{margin:8px 0;font-size:21px;font-weight:400}
+.upgrade-modal p{margin:0;color:#a6b6d6;font-size:12px;line-height:1.7}
+.upgrade-price{margin-top:16px;padding:13px;border:1px solid #ffffff14;border-radius:12px;background:#ffffff06;display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#9aaccf}
+.upgrade-price strong{color:var(--gold);font-size:15px;font-weight:400}
+.upgrade-modal-actions{display:grid;grid-template-columns:1fr 1.3fr;gap:9px;margin-top:16px}
+.upgrade-modal-actions button{padding:11px;border:1px solid #ffffff1b;border-radius:11px;background:#ffffff08;font-size:11px}
+.upgrade-modal-actions .confirm{background:linear-gradient(110deg,#f0ce78,#be8f43);color:#241b0c;border-color:#ffdc8666}
+.upgrade-modal-actions button:disabled{opacity:.45;cursor:not-allowed}
+
 @media(max-width:900px){.dashboard{grid-template-columns:1fr}.side{display:grid;grid-template-columns:1fr 1fr}.stats-panel{min-height:100%}}
 @media(max-width:600px){
  .shell{width:calc(100% - 20px);padding-top:13px}
@@ -115,7 +127,7 @@ if(supabase&&!window.doriSupabase)window.doriSupabase=supabase;
 const $=id=>document.getElementById(id);
 const fmt=value=>{try{return BigInt(String(value??0)).toLocaleString("ko-KR")}catch{return "0"}};
 const uuid=()=>window.crypto&&crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)});
-let session=null,gameState=null,mode="idle",chargeStarted=0,charge=0,flightStarted=0,flightDuration=4.1,flightX=0,flightY=0,spinRequested=0,spinCompleted=0,rotationAngle=0,rotationTime=0,launchOffset=0,throwPending=false,toastTimer=0,history=[];
+let session=null,gameState=null,mode="idle",chargeStarted=0,charge=0,flightStarted=0,flightDuration=4.1,flightX=0,flightY=0,spinRequested=0,spinCompleted=0,rotationAngle=0,rotationTime=0,launchOffset=0,throwPending=false,toastTimer=0,history=[],pendingUpgrade=null;
 const canvas=$("arenaCanvas"),ctx=canvas.getContext("2d");
 const dori=new Image();dori.src="./assets/dori-character.svg";
 const TAU=Math.PI*2;
@@ -252,14 +264,14 @@ function render(){
 }
 function completeFlight(){
  if(mode!=="flying")return;
- mode="landed";$("spinButton").disabled=true;$("restartButton").disabled=false;$("chargeButton").disabled=false;
+ mode="landed";$("spinButton").disabled=true;$("restartButton").disabled=true;$("chargeButton").disabled=true;
  $("stateChip").textContent="착지 완료";$("chargeHint").textContent=spinCompleted+"바퀴 회전 완료 · 다시 던져 더 높은 보상에 도전!";
  submitThrow();
 }
 async function submitThrow(){
  if(throwPending)return;
  throwPending=true;
- if(!session){$("rewardResult").textContent="로그인 시 코인이 적립됩니다.";throwPending=false;refreshUI();return}
+ if(!session){$("rewardResult").textContent="로그인 시 코인이 적립됩니다.";throwPending=false;if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}refreshUI();return}
  try{
   const {data,error}=await supabase.rpc("dori_throw_game_throw",{p_charge:charge,p_spins:spinCompleted,p_request_id:uuid()});
   if(error)throw error;
@@ -273,7 +285,34 @@ async function submitThrow(){
   $("rewardResult").textContent="보상 처리 실패";
   $("chargeHint").textContent=error.message||"잠시 후 다시 시도해 주세요.";
   toast(error.message||"코인을 지급하지 못했습니다.");
- }finally{throwPending=false;refreshUI()}
+ }finally{throwPending=false;if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}refreshUI()}
+}
+function openUpgradeConfirm(type){
+ if(!session||!gameState){toast("로그인 후 강화할 수 있어요.");return}
+ if(mode==="flying"||mode==="charging"||throwPending)return;
+ const level=type==="power"?gameState.power_level:gameState.accuracy_level;
+ const cost=nextCost(type,level);
+ if(cost===null){toast("이미 최대 레벨입니다.");return}
+ if(BigInt(String(gameState.balance||0))<BigInt(cost)){toast("돌돌코인이 부족합니다.");return}
+ pendingUpgrade=type;
+ $("upgradeModalTitle").textContent=type==="power"?"힘 강화":"정확도 강화";
+ $("upgradeModalText").textContent=type==="power"?"다음 레벨로 강화하면 던지는 힘과 비행 거리가 늘어나고 코인 획득 효율이 3.5% 상승해.":"다음 레벨로 강화하면 비행 흔들림이 줄어들고 코인 획득 효율이 2.5% 상승해.";
+ $("upgradeModalPrice").textContent=fmt(cost)+" D";
+ $("upgradeConfirm").disabled=false;
+ $("upgradeModal").classList.add("open");
+ $("upgradeModal").setAttribute("aria-hidden","false");
+ $("upgradeConfirm").focus();
+}
+function closeUpgradeConfirm(){
+ pendingUpgrade=null;
+ $("upgradeModal").classList.remove("open");
+ $("upgradeModal").setAttribute("aria-hidden","true");
+}
+async function confirmUpgrade(){
+ const type=pendingUpgrade;
+ if(!type)return;
+ closeUpgradeConfirm();
+ await buyUpgrade(type);
 }
 async function buyUpgrade(type){
  if(!session){toast("로그인 후 강화할 수 있어요.");return}
@@ -319,11 +358,15 @@ window.addEventListener("pointerup",releaseCharge);
 window.addEventListener("pointercancel",releaseCharge);
 $("spinButton").addEventListener("click",requestSpin);
 $("restartButton").addEventListener("click",resetForNext);
-$("powerUpgrade").addEventListener("click",()=>buyUpgrade("power"));
-$("accuracyUpgrade").addEventListener("click",()=>buyUpgrade("accuracy"));
+$("powerUpgrade").addEventListener("click",()=>openUpgradeConfirm("power"));
+$("accuracyUpgrade").addEventListener("click",()=>openUpgradeConfirm("accuracy"));
+$("upgradeConfirm").addEventListener("click",confirmUpgrade);
+$("upgradeCancel").addEventListener("click",closeUpgradeConfirm);
+$("upgradeModal").addEventListener("click",event=>{if(event.target.id==="upgradeModal")closeUpgradeConfirm()});
 document.addEventListener("keydown",event=>{
  if(event.code==="Space"&&!event.repeat&&!["INPUT","TEXTAREA"].includes(document.activeElement.tagName)){event.preventDefault();if(mode==="idle"||mode==="landed")startCharge(event)}
  if(event.code==="KeyR"&&!event.repeat){requestSpin()}
+ if(event.key==="Escape")closeUpgradeConfirm();
 });
 document.addEventListener("keyup",event=>{if(event.code==="Space")releaseCharge()});
 window.addEventListener("blur",releaseCharge);
@@ -399,6 +442,15 @@ requestAnimationFrame(update);
 </section>
 <p class="footer-note">계정 코인과 강화 기록은 로그인한 사용자 계정에 저장돼. 3바퀴 회전 보상은 1바퀴 보상보다 높게 계산돼.</p>
 </main>
+<div class="upgrade-modal-backdrop" id="upgradeModal" aria-hidden="true">
+ <section class="upgrade-modal" role="dialog" aria-modal="true" aria-labelledby="upgradeModalTitle">
+  <div class="eyebrow">CONFIRM UPGRADE</div>
+  <h2 id="upgradeModalTitle">강화 확인</h2>
+  <p id="upgradeModalText">강화 효과를 확인해 주세요.</p>
+  <div class="upgrade-price"><span>사용할 돌돌코인</span><strong id="upgradeModalPrice">0 D</strong></div>
+  <div class="upgrade-modal-actions"><button id="upgradeCancel" type="button">취소</button><button class="confirm" id="upgradeConfirm" type="button">확인하고 강화</button></div>
+ </section>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 </body>
 </html>
