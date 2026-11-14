@@ -1799,7 +1799,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       var speed=distance/Math.max(.25,duration/1000);
       el._motionCadence=Math.max(3.8,Math.min(9.5,3.6+speed*.13));
       el._gaitProgress=0;el._gaitPhase=0;el._gaitStride=17;
-      el._gaitCycles=distance>3?Math.max(1,Math.min(12,distance/(2*el._gaitStride*Math.max(.62,from.s)))):0;
+      el._gaitCycles=distance>3?Math.max(1,Math.min(12,distance*.62/(el._gaitStride*Math.max(.62,from.s)))):0;
     }
     function writeTransform(p,faceScale){
       var f=isDori?(faceScale==null?(el._facing==='right'?-1:1):faceScale):1;
@@ -2808,10 +2808,10 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         animateGaitLeg('hindNear',gaitPhase+Math.PI*1.5,gaitStride*.92,.82);
       }else if(['trot','gallop','zoomies'].indexOf(pose)>=0&&isDoriMoving){
         // Trot/run uses diagonal pairs, with a longer flight phase and stronger lift.
-        animateGaitLeg('frontNear',gaitPhase,gaitStride*1.18,1.24);
-        animateGaitLeg('hindFar',gaitPhase,gaitStride*1.18,1.16);
-        animateGaitLeg('frontFar',gaitPhase+Math.PI,gaitStride*1.18,1.24);
-        animateGaitLeg('hindNear',gaitPhase+Math.PI,gaitStride*1.18,1.16);
+        animateGaitLeg('frontNear',gaitPhase,gaitStride,1.24);
+        animateGaitLeg('hindFar',gaitPhase,gaitStride,1.16);
+        animateGaitLeg('frontFar',gaitPhase+Math.PI,gaitStride,1.24);
+        animateGaitLeg('hindNear',gaitPhase+Math.PI,gaitStride,1.16);
       }else if(['sleep','doze','dream','cuddle','flop'].indexOf(pose)>=0){
         var sleepyTwitch=Math.max(0,Math.sin(t*1.7+1));
         set('frontFarPaw',.04*sleepyTwitch,1,1);
@@ -3102,7 +3102,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         ['wake','기상','wake'],['stretch','기지개','stretch'],['doze','졸기','doze'],['sleep','수면','sleep'],
         ['cuddle','웅크리기','cuddle'],['flop','옆으로 눕기','flop'],['dream','꿈꾸기','dream']
       ];
-      var demoIndex=Math.floor(now.getTime()/6500)%demo.length;
+      var demoIndex=Math.floor(performance.now()/6500)%demo.length;
       var demoItem=demo[demoIndex];
       var demoData=BANK[demoItem[0]]||BANK.sleep;
       routine=Object.assign({},demoData,{pose:demoItem[2],title:'동작 검사 · '+demoItem[1],desc:'각 관절 동작을 확인하는 시연 장면이에요.',tag:'MOTION TEST',icon:demoData.icon});
