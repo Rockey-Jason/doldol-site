@@ -283,9 +283,9 @@ button:focus-visible{
 #돌이프로필고정틀{position:fixed;top:18px;right:20px;width:58px;height:58px;z-index:100;display:none;isolation:isolate}
 #돌이사진{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%;border:2px solid rgba(255,255,255,.75);box-shadow:0 10px 35px rgba(0,0,0,.35);cursor:pointer;display:block;box-sizing:border-box;transition:transform .35s var(--ease),box-shadow .35s ease;z-index:1}
 #돌이프로필고정틀:hover #돌이사진{transform:scale(1.05);box-shadow:0 14px 45px rgba(100,95,255,.32)}
-#돌이프로필프레임{position:absolute;inset:-13px;border-radius:50%;pointer-events:none;z-index:2;box-sizing:border-box;background:var(--profile-frame-art,none) center/100% 100% no-repeat}
+#돌이프로필프레임{position:absolute;inset:-12.5%;border-radius:50%;pointer-events:none;z-index:3;box-sizing:border-box;background:var(--profile-frame-art,none) center/100% 100% no-repeat}
 #돌이프로필프레임[data-frame]{filter:drop-shadow(0 0 9px var(--profile-frame-glow,rgba(143,126,255,.4)))}
-#돌이프로필프레임[data-frame]::after{content:"";position:absolute;inset:2px;border:1px solid var(--profile-frame-color,rgba(143,126,255,.55));border-radius:50%;box-shadow:0 0 12px var(--profile-frame-glow,rgba(143,126,255,.35))}
+#돌이프로필프레임[data-frame]::after{content:none!important}
 #돌이프로필꾸미기{position:absolute;right:-5px;bottom:-13px;z-index:5;display:flex;align-items:center;gap:2px;max-width:126px;flex-wrap:wrap;pointer-events:none}
 #돌이프로필꾸미기 span{display:grid;place-items:center;width:17px;height:17px;border:1px solid rgba(255,255,255,.3);border-radius:50%;background:rgba(10,15,40,.92);font-size:10px;line-height:1;box-shadow:0 3px 9px rgba(0,0,0,.3)}
 #돌이사진[data-skin*="RARE"]{filter:saturate(1.22) contrast(1.04)}
@@ -295,13 +295,14 @@ button:focus-visible{
 #돌이프로필고정틀[data-background*="LEGENDARY"],#돌이프로필고정틀[data-background*="MYTHIC"]{filter:drop-shadow(0 0 10px rgba(185,133,255,.7))}
 #돌이프로필고정틀[data-background*="RARE"]{filter:drop-shadow(0 0 8px rgba(100,165,255,.65))}
 #돌이프로필고정틀[data-effect] #돌이사진{box-shadow:0 0 0 3px rgba(139,154,255,.22),0 0 22px rgba(125,141,255,.55),0 10px 35px rgba(0,0,0,.35)}
-@media(max-width:600px){#돌이프로필고정틀{top:12px;right:12px;width:52px;height:52px}#돌이프로필프레임{inset:-4px}#돌이프로필꾸미기{right:-4px;bottom:-12px}}
+@media(max-width:600px){#돌이프로필고정틀{top:12px;right:12px;width:52px;height:52px}#돌이프로필꾸미기{right:-4px;bottom:-12px}}
 
 /* Membership coupon VIP profile effects */
 body.vip-profile-basic{--vip-color:#67ddff;--vip-soft:rgba(64,205,255,.26)}
 body.vip-profile-elite{--vip-color:#c39aff;--vip-soft:rgba(172,108,255,.3)}
 body.vip-profile-royal{--vip-color:#ffda79;--vip-soft:rgba(255,190,66,.32)}
 /* VIP pulse belongs to the frame layer, never to the photo itself. */
+#돌이프로필고정틀.profile-frame-equipped > #돌이사진{border-color:transparent!important;box-shadow:none!important}
 body[class*="vip-profile-"] #프로필요약카드 .프로필요약제목 strong{color:var(--vip-color);text-shadow:0 0 12px var(--vip-soft),0 0 24px var(--vip-soft);transition:color .25s ease,text-shadow .25s ease}
 body[class*="vip-profile-"] #프로필요약카드 .프로필요약제목 strong::after{content:"VIP";display:inline-block;margin-left:8px;padding:3px 7px;border:1px solid var(--vip-color);border-radius:999px;color:var(--vip-color);background:var(--vip-soft);font:800 9px/1.2 Arial,sans-serif;letter-spacing:.12em;vertical-align:middle;text-shadow:none;box-shadow:0 0 12px var(--vip-soft)}
 @keyframes vipAvatarPulse{0%,100%{box-shadow:0 0 0 3px var(--vip-soft),0 0 16px var(--vip-soft),0 10px 35px rgba(0,0,0,.35)}50%{box-shadow:0 0 0 4px var(--vip-soft),0 0 28px var(--vip-soft),0 10px 35px rgba(0,0,0,.35)}}
@@ -2028,7 +2029,7 @@ body.로그인상태 #회원가입 {
 .dori-feedback-home-link>a span{font-size:15px}
 @media(max-width:650px){.dori-feedback-home-link{margin:-12px 0 22px;padding:13px;gap:8px}.dori-feedback-home-copy strong{font-size:12px}.dori-feedback-home-copy small{font-size:9px}.dori-feedback-home-link>a{min-height:36px;padding:8px 10px;font-size:10px;gap:6px}}
 </style>
-<link rel="stylesheet" href="css/dori-profile-frame.css?v=20261113-unified-2">
+<link rel="stylesheet" href="css/dori-profile-frame.css?v=20261114-frame-geometry-1">
 </head>
 
 
