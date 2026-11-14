@@ -1,13 +1,79 @@
-/* Shared Dori profile-frame presentation. Custom frames override the VIP fallback. */
-#돌이프로필프레임{position:absolute;inset:-13px;z-index:2;box-sizing:border-box;border-radius:50%;pointer-events:none;background-image:var(--profile-frame-art,none);background-position:center;background-repeat:no-repeat;background-size:100% 100%}
-#돌이프로필프레임[data-frame]{filter:drop-shadow(0 0 9px var(--profile-frame-glow,rgba(143,126,255,.4)))}
-#돌이프로필프레임[data-frame]::after{content:"";position:absolute;inset:2px;border:1px solid var(--profile-frame-color,rgba(143,126,255,.55));border-radius:50%;box-shadow:0 0 12px var(--profile-frame-glow,rgba(143,126,255,.35))}
-#돌이프로필프레임[data-vip-tier]{inset:-5px;border:2px solid var(--profile-frame-color);box-shadow:0 0 0 3px color-mix(in srgb,var(--profile-frame-color) 28%,transparent),0 0 22px var(--profile-frame-glow);animation:vipAvatarPulse 3.4s ease-in-out infinite}
+/* One exact frame geometry for the fixed avatar and the Settings profile.
+   The SVG artwork ring is centered at 80% of the SVG radius, so the
+   overlay canvas is 125% of the photo box: 0.80 × 1.25 = 1.00. */
+#돌이프로필프레임{
+  position:absolute;
+  inset:-12.5%;
+  z-index:3;
+  display:block;
+  box-sizing:border-box;
+  border:0;
+  border-radius:50%;
+  outline:0;
+  pointer-events:none;
+  background-image:var(--profile-frame-art,none);
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:100% 100%;
+  filter:none;
+}
+#돌이프로필프레임[data-frame]{
+  filter:drop-shadow(0 0 9px var(--profile-frame-glow,rgba(143,126,255,.4)));
+}
+/* The SVG already contains its own complete ring. Never draw a second ring. */
+#돌이프로필프레임::after{content:none!important}
+#돌이프로필프레임[data-vip-tier]{
+  inset:-3%;
+  background-image:none;
+  border:2px solid var(--profile-frame-color);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--profile-frame-color) 28%,transparent),0 0 22px var(--profile-frame-glow);
+  animation:vipAvatarPulse 3.4s ease-in-out infinite;
+}
 #돌이프로필프레임[data-vip-tier="basic"]{border-color:#67ddff}
 #돌이프로필프레임[data-vip-tier="elite"]{border-color:#c39aff}
 #돌이프로필프레임[data-vip-tier="royal"]{border-color:#ffda79}
-.profile-image-wrapper.has-profile-frame::before{background-image:var(--profile-frame-art,none);filter:drop-shadow(0 0 9px var(--profile-frame-glow,rgba(143,126,255,.4)))}
-.profile-image-wrapper.has-profile-frame::after{border-color:var(--profile-frame-color,rgba(143,126,255,.55));box-shadow:0 0 18px var(--profile-frame-glow,rgba(143,126,255,.35))}
-.profile-image-wrapper.has-profile-frame::after{animation:none}
-.profile-image-wrapper.has-profile-frame[data-vip-tier]::after{border-width:2px;animation:vipAvatarPulse 3.4s ease-in-out infinite}
-@media(prefers-reduced-motion:reduce){#돌이프로필프레임[data-vip-tier],.profile-image-wrapper.has-profile-frame[data-vip-tier]::after{animation:none!important}}
+#돌이프로필고정틀.profile-frame-equipped > #돌이사진{
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+#돌이프로필고정틀.profile-vip-frame > #돌이사진{
+  border-color:rgba(255,255,255,.75);
+}
+.profile-image-wrapper.has-profile-frame::before{
+  content:"";
+  position:absolute;
+  inset:-12.5%;
+  z-index:3;
+  box-sizing:border-box;
+  border:0;
+  border-radius:50%;
+  background-image:var(--profile-frame-art,none);
+  background-position:center;
+  background-repeat:no-repeat;
+  background-size:100% 100%;
+  filter:drop-shadow(0 0 9px var(--profile-frame-glow,rgba(143,126,255,.4)));
+  pointer-events:none;
+}
+/* The generic avatar halo is suppressed while a frame is present. */
+.profile-image-wrapper.has-profile-frame::after{content:none!important;animation:none!important}
+.profile-image-wrapper.has-profile-frame[data-vip-tier]::before{
+  inset:-3%;
+  background-image:none;
+  border:2px solid var(--profile-frame-color);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--profile-frame-color) 28%,transparent),0 0 22px var(--profile-frame-glow);
+  animation:vipAvatarPulse 3.4s ease-in-out infinite;
+}
+.profile-image-wrapper.has-profile-frame[data-vip-tier="basic"]::before{border-color:#67ddff}
+.profile-image-wrapper.has-profile-frame[data-vip-tier="elite"]::before{border-color:#c39aff}
+.profile-image-wrapper.has-profile-frame[data-vip-tier="royal"]::before{border-color:#ffda79}
+.profile-image-wrapper.profile-frame-equipped > #돌이사진{
+  border-color:transparent!important;
+  box-shadow:none!important;
+}
+.profile-image-wrapper.profile-vip-frame > #돌이사진{
+  border-color:rgba(255,255,255,.86)!important;
+}
+@media(prefers-reduced-motion:reduce){
+  #돌이프로필프레임[data-vip-tier],
+  .profile-image-wrapper.has-profile-frame[data-vip-tier]::before{animation:none!important}
+}
