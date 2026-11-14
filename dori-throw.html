@@ -505,8 +505,9 @@ function renderWeeklyChart(rows){
 }
 function renderReplayList(records){
  const list=$("replayList");list.replaceChildren();
- if(!records?.length){list.innerHTML='<div class="replay-empty">첫 기록을 만들면 리플레이가 여기에 저장돼.</div>';return}
- records.slice(0,6).forEach(record=>{
+ const playable=(records||[]).filter(record=>Number(record.flight_duration_sec)>0&&Number(record.flight_distance_px)>0&&Number(record.spin_rate_rad_sec)>0);
+ if(!playable.length){list.innerHTML='<div class="replay-empty">재생 가능한 착지 기록이 아직 없어. 새로운 던지기를 완료하면 리플레이가 저장돼.</div>';return}
+ playable.slice(0,6).forEach(record=>{
   const row=document.createElement("div");row.className="replay-item";
   const meta=document.createElement("div");meta.className="replay-meta";
   const title=document.createElement("strong"),sub=document.createElement("small");
