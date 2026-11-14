@@ -474,7 +474,11 @@ function recordChallengeResult(success,perfect){
  updateModeUi();
 }
 function tickChallenge(now){
- if(!challengeRun||challengeRun.finished||challengeRun.mode!=="time_attack"||now<challengeRun.endsAt)return;
+ if(!challengeRun||challengeRun.finished||challengeRun.mode!=="time_attack")return;
+ const remaining=Math.max(0,(challengeRun.endsAt-now)/1000);
+ const timerText=remaining.toFixed(1)+"s";
+ if($("challengeStatusValue").textContent!==timerText&&remaining>0)$("challengeStatusValue").textContent=timerText;
+ if(now<challengeRun.endsAt)return;
  if(mode==="flying"||mode==="charging"||throwPending){
   $("challengeStatusValue").textContent="FINISHING";
   if(mode==="charging")$("chargeHint").textContent="시간 종료! 현재 장전한 던지기를 마치면 도전이 끝나.";
@@ -1147,7 +1151,7 @@ function resetForNext(){
  $("chargeValue").textContent="누르고 있으면 힘 장전 · 놓으면 자동 회전";
  $("chargeFill").style.width="0%";$("chargeButton").disabled=false;$("restartButton").disabled=true;
  $("spinButton").innerHTML="<strong>↻ 자동 회전</strong><small>던진 순간부터 회전 속도 변화</small>";
- updateFlightPreview(0);refreshUI();
+ updateFlightPreview(0);refreshUI();updateModeUi();
 }
 function frame(now){
  if(document.hidden){rafId=0;return}
