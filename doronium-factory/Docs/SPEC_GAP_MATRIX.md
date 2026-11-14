@@ -299,3 +299,16 @@ All 12 roadmap areas remain PARTIAL or UNVERIFIED; no final checklist item is CO
 - No main merge, deployment, production DB mutation, real-user save mutation, or balance/reward mutation was performed.
 
 **Overall: NOT COMPLETE / NOT RELEASE-READY.** No final acceptance item is promoted to COMPLETE by this checkpoint.
+
+
+## 2026-11-14 — current-head battery regression status
+
+- **Main:** `918311b833aed6c66f8e4ead899d08f973cfed57`.
+- **PR #11 branch starting HEAD:** `4a3d364115543d50f370b44ac613db79d1ab0c0f`; PR remains open/draft and unmerged.
+- **Divergence:** 368 ahead / 710 behind from merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`. Do not merge or rebase this broad divergent branch without a file-by-file reconciliation plan.
+- **CI run 43348668440:** static validation passed; Playwright browser regression failed at the one-tick battery charge assertion (expected 40kJ from 400kW over 0.1 seconds). The new diagnostics and matching solver unit case are being added; battery live settlement is not yet marked fixed.
+- **Automatic mining output and advanced mining E2E checks occur later in the smoke file and were not reached after the battery failure. Current-head mining acceptance is therefore **UNVERIFIED**, not failed or passed.
+- Checklist #10 (power/batteries) remains **PARTIAL / REGRESSION** until the live settlement test passes. Checklist #6 and #9 remain PARTIAL; their current-head browser scenarios must run after the battery gate is fixed.
+- All 12 roadmap stages remain PARTIAL or UNVERIFIED; no 20-item acceptance criterion is COMPLETE. The 2,048m×2,048m world, complete six-fluid live topology, global item ownership conservation, full contract catalog, complete Fusion recovery/interlocks, full skill effects, real-device validation and elapsed 60-minute soak remain open.
+- PR #8 remains the separate Godot project and is excluded. PR #9/#10 remain unmerged overlapping branches; no wholesale cherry-pick was made.
+- No main merge, deployment, production DB change or live-user save/economy mutation was performed.

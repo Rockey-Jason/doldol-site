@@ -243,3 +243,35 @@ No main merge, GitHub Pages/Render deployment, production database/schema/permis
 - Ownership remains PARTIAL / CRITICAL across conveyor parcels, independent warehouse stock, demolition, Fusion output custody, and restart/reconnect conservation.
 
 No main merge, GitHub Pages/Render deployment, production database/schema/permission/function change, or real-user save/balance/reward mutation was performed.
+
+
+## 2026-11-14 — current-head battery settlement regression investigation
+
+**Starting code checkpoint:** `4a3d364115543d50f370b44ac613db79d1ab0c0f`  
+**Main HEAD at inspection:** `918311b833aed6c66f8e4ead899d08f973cfed57`  
+**PR #11:** open / draft / unmerged; recorded base `26e88058b6d416d79459fee107aff4a5beb3d7e3`  
+**Comparison:** 368 commits ahead / 710 behind main; merge base remains `26e88058b6d416d79459fee107aff4a5beb3d7e3`.
+
+### Current-head CI evidence
+
+- Run [43348668440](https://github.com/Rockey-Jason/doldol-site/actions/runs/43348668440) completed on the starting HEAD.
+- `validate-web-game`: **SUCCESS**.
+- `browser-regression`: **FAILURE** at `doronium-factory/e2e/factory-smoke.mjs:392`: the live 400kW battery charger did not satisfy the expected 40kJ storage increase after one 0.1-second tick.
+- The browser run stopped at this battery assertion. The later automatic-mine and advanced-miner output assertions (smoke lines 461–483) were **not reached** on this HEAD. The previously reported mine-output regression therefore remains **UNVERIFIED on the current HEAD**.
+- Run [43348303525](https://github.com/Rockey-Jason/doldol-site/actions/runs/43348303525) was **CANCELLED**, not a successful browser run. Run [43135156090](https://github.com/Rockey-Jason/doldol-site/actions/runs/43135156090) succeeded on older code checkpoint `e5ccc9291126f27fe5e07d4bab906f4cf27b10f2` and is not current-head evidence.
+
+### Code/test changes in this checkpoint
+
+- The power browser regression now separately asserts that the battery is in the generator's cable-connected component and that the pure solver calculates 400kW / 40kJ before testing live tick settlement.
+- The failing assertion now prints the battery's live energy, connected network and battery-change journal so the next CI run identifies whether the defect is topology, allocation or settlement.
+- Added a Node unit test reproducing the same cable topology and 0.1-second 400kW charging case, including the explicit `applyPowerBatteryChanges` settlement boundary.
+- This is diagnostic hardening, **not a claim that the live settlement defect is fixed**. The live cause must be isolated from the next CI evidence before changing production power logic.
+
+### Remaining blockers
+
+- Highest priority: isolate and fix the live battery settlement failure, then rerun the full Playwright browser regression.
+- Automatic mine output and advanced mining assertions must be reached and pass on the new current HEAD.
+- Power edge transmission loss and diagnostics, non-water fluid integration, global ownership conservation, Fusion restart/interlock recovery, full research/skill coverage, 2,048m world migration and full contract catalog remain incomplete.
+- Physical Android/iOS, two-device cloud recovery and 60-minute elapsed wall-clock soak remain **UNVERIFIED**.
+
+No main merge, Pages/Render deployment, production database/schema/permission/function change, real-user save mutation, or balance/reward mutation was performed.

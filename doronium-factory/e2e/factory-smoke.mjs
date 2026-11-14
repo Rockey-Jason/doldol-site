@@ -388,8 +388,22 @@ try {
     powerSetup.power.networks.find(n => n.nodeIDs.includes("P-SMELTER-2"))?.networkID,
     "Cable topology must create separate power network IDs"
   );
+  const batteryNetwork = powerSetup.power.networks.find(network => network.nodeIDs.includes("P-BATTERY"));
+  assert.ok(batteryNetwork, "The battery must belong to a solved power network: " + JSON.stringify(powerSetup.power.networks));
+  assert.ok(batteryNetwork.nodeIDs.includes("P-GEN"), "The battery must share the generator's cable-connected network: " + JSON.stringify(batteryNetwork));
+  const initialBatteryCharge = batteryNetwork.batteryChanges.find(change => change.id === "P-BATTERY");
+  assert.equal(initialBatteryCharge?.chargeKW, 400, "The connected battery must receive the full 400kW surplus: " + JSON.stringify(batteryNetwork));
+  assert.equal(initialBatteryCharge?.afterKJ, 40, "The pure solver must calculate 40kJ for a 0.1-second charge: " + JSON.stringify(initialBatteryCharge));
   const powerTick = await desktop.evaluate(() => window.__doroniumFactoryTest.powerTopologyTick());
-  assert.ok(powerTick.battery > 39.9 && powerTick.battery < 40.1, "The 400kW battery charger must store 40kJ during one 0.1-second tick");
+  assert.ok(
+    powerTick.battery > 39.9 && powerTick.battery < 40.1,
+    "The 400kW battery charger must persist 40kJ during one 0.1-second tick; live result: " +
+      JSON.stringify({
+        batteryKJ: powerTick.battery,
+        batteryNetwork: powerTick.power?.networks?.find(network => network.nodeIDs.includes("P-BATTERY")) || null,
+        batteryChanges: powerTick.power?.batteryChanges || []
+      })
+  );
   assert.equal(powerTick.far.ratio, 0, "A remote grid must remain isolated after a simulation tick");
 
   const purifiedRusted = await desktop.evaluate(() => window.__doroniumFactoryTest.runRustedPurificationTest());
