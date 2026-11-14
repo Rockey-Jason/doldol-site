@@ -721,6 +721,7 @@ function showGuest(){
  $("powerUpgrade").disabled=true;$("accuracyUpgrade").disabled=true;
  $("throwsCount").textContent="—";$("successfulLandings").textContent="—";$("bestLandingError").textContent="—";$("totalEarned").textContent="—";
  $("dailyText").textContent="오늘 적립 · 로그인 후 표시";
+ renderSeason2Dashboard(null);renderDailyMissions([]);
 }
 function showProfileError(error){
  console.error("[DORI THROW] account sync:",error);
@@ -761,7 +762,9 @@ async function loadState(options={}){
   if(error)throw error;if(seq!==authSeq)return false;
   if(!data?.ok||data.balance===undefined)throw new Error("계정 정보 응답이 올바르지 않습니다.");
   gameState=data;$("loginNote").classList.remove("show");$("chargeHint").textContent="힘을 장전하고 놓으면 돌이가 자동 회전하며 날아가!";
-  refreshUI();return true;
+  refreshUI();
+  await Promise.all([loadSeason2Dashboard(),loadDailyMissions()]);
+  return true;
  }catch(error){if(seq===authSeq)showProfileError(error);return false}
 }
 async function handleAuthChange(nextSession){
@@ -881,14 +884,18 @@ function updateFlightPreview(chargeValue=charge){
   "예상 착지각 "+(angle>0?"+":"")+angle.toFixed(1)+"° · 예상 이동 거리 "+Math.round(params.distance)+" px");
 }
 function startCharge(){
- if((mode!=="idle"&&mode!=="landed")||throwPending)return;playSfx("chargeStart");closeUpgradeConfirm();
+ if((mode!=="idle"&&mode!=="landed")||throwPending||mode==="replay")return;
+ if(selectedGameMode!=="classic"&&(!challengeRun||challengeRun.finished))return;
+ if(selectedGameMode==="time_attack"&&challengeRun&&performance.now()>=challengeRun.endsAt){finishChallenge("time");return;}
+ if(selectedGameMode==="precision"&&challengeRun&&challengeRun.attempts>=10){finishChallenge("attempts");return;}
+ playSfx("chargeStart");closeUpgradeConfirm();
  clearTimeout(landingFlashTimer);$("landingFlash").classList.remove("show");$("landingVerdict").hidden=true;
  $("chargeValue").textContent="힘을 모으는 중…";$("chargeFill").style.width="0%";$("rewardResult").textContent="던질 준비 완료";
  mode="charging";charge=0;chargeStarted=performance.now();$("chargeButton").classList.add("charging");
  $("chargeButton").setAttribute("aria-label","힘 장전 중");$("chargeButton").disabled=false;$("restartButton").disabled=true;
  $("spinButton").innerHTML="<strong>↻ 자동 회전 대기</strong><small>던지는 순간부터 자동으로 회전해</small>";
  $("chargeHint").textContent="힘을 모으는 중… 원하는 순간 손을 떼어 발사!";$("stateChip").textContent="힘 장전 중";$("stateChip").classList.add("live");
- updateFlightPreview(0);refreshUI();
+ updateFlightPreview(0);refreshUI();updateModeUi();
 }
 function releaseCharge(){
  if(mode!=="charging")return;
@@ -980,11 +987,11 @@ function render(now=performance.now()){
  ctx.clearRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);
  let targetX=560;
  if(mode==="charging")targetX=getFlightParams(Math.max(1,charge)).landingX;
- else if(mode==="flying"||mode==="landed")targetX=flightParams.landingX;
+ else if(mode==="flying"||mode==="landed"||mode==="replay")targetX=flightParams.landingX;
  drawBackground(now);drawTarget(now,targetX);
  let x=190,y=322,angle=0,scale=1;
  if(mode==="charging"){const p=charge/100;x=190;y=322-Math.sin(p*Math.PI)*14;scale=1+p*.05;drawChargeAura(x,y,now)}
- else if(mode==="flying"){
+ else if(mode==="flying"||mode==="replay"){
   const pos=positionAt(now);x=pos.x;y=pos.y;angle=rotationAngle;drawTrail(x,y,now);drawSpinEffects(x,y,now);
   const halo=ctx.createRadialGradient(x,y,10,x,y,118);halo.addColorStop(0,"rgba(102,220,255,.23)");halo.addColorStop(1,"rgba(102,220,255,0)");
   ctx.fillStyle=halo;ctx.beginPath();ctx.arc(x,y,118,0,TAU);ctx.fill();
@@ -995,7 +1002,7 @@ function render(now=performance.now()){
   ctx.fillStyle="rgba(255,255,255,.1)";ctx.fillRect(130,425,860,8);
   const cg=ctx.createLinearGradient(130,0,990,0);cg.addColorStop(0,"#60dfff");cg.addColorStop(.65,"#8e9fff");cg.addColorStop(1,"#ffdc86");
   ctx.fillStyle=cg;ctx.fillRect(130,425,860*charge/100,8);ctx.fillStyle="#e8f5ff";ctx.font="14px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("POWER  "+charge+"%",560,414)
- }else if(mode==="flying"){
+ }else if(mode==="flying"||mode==="replay"){
   ctx.fillStyle="rgba(255,255,255,.9)";ctx.font="14px HancomMalrangmalrang";ctx.textAlign="center";
   ctx.fillText("AUTO SPIN  "+(flightParams.spinRate/TAU).toFixed(2)+" turns/s",560,54);
   ctx.fillStyle="rgba(255,220,134,.9)";ctx.font="11px HancomMalrangmalrang";ctx.fillText("LANDING DISTANCE  "+Math.round(flightParams.distance)+" px",560,75)
@@ -1035,6 +1042,7 @@ async function submitThrow(){
  const localSuccess=isLandingSuccessful(localError,flightParams.tolerance);
  const localPerfect=localSuccess&&isPerfectLanding(localError);
  if(!session){
+  recordChallengeResult(localSuccess,localPerfect);
   $("stateChip").textContent=localPerfect?"PERFECT! · 체험 모드":localSuccess?"착지 성공 · 체험 모드":"착지 실패 · 체험 모드";
   $("chargeHint").textContent=localPerfect?"PERFECT! 오차 ±2.0° 이내로 착지했어!":localSuccess?"체험 모드 성공! 로그인하면 세우기 코인을 적립할 수 있어.":"체험 모드 실패 · 허용 범위 ±"+flightParams.tolerance.toFixed(1)+"°에 맞춰 다시 도전해 봐.";
   $("rewardResult").textContent=localPerfect?"PERFECT! · 로그인하면 보상 기록이 저장돼.":localSuccess?"체험 착지 성공! 로그인하면 보상 기록이 저장돼.":"착지 실패 · 세우기 코인 0개";
@@ -1043,7 +1051,7 @@ async function submitThrow(){
   refreshUI();return
  }
  try{
-  const {data,error}=await supabase.rpc("dori_throw_game_throw",{p_charge:charge,p_request_id:uuid()});
+  const {data,error}=await supabase.rpc("dori_throw_game_throw",{p_charge:charge,p_request_id:uuid(),p_mode:selectedGameMode});
   if(error)throw error;
   gameState.seugi_coin_balance=data.seugi_coin_balance;gameState.balance=data.seugi_coin_balance;
   gameState.seugi_coin_earned=data.seugi_coin_earned;gameState.total_earned=data.seugi_coin_earned;
@@ -1060,6 +1068,7 @@ async function submitThrow(){
   flightParams.landingAngle=landingAngle;rotationAngle=landingAngle*Math.PI/180;impactX=flightParams.landingX;
   const errorAngle=Number(data.angle_error_deg),success=!!data.success,reward=Number(data.coin_reward||0);
   const serverPerfect=success&&isPerfectLanding(errorAngle);
+  recordChallengeResult(success,serverPerfect);
   const previousBest=gameState.best_landing_error_deg;
   gameState.best_landing_error_deg=previousBest===null||previousBest===undefined
    ?errorAngle:Math.min(Number(previousBest),errorAngle);
@@ -1079,6 +1088,7 @@ async function submitThrow(){
   refreshUI();addHistory(success,reward,charge,landingAngle,errorAngle);
   if(success){playSfx("coin");toast("세우기 코인 +"+fmt(reward)+" 획득!","success");}
   else toast("착지 실패 · 다음에는 각도를 맞춰 봐!","error");
+  await Promise.all([loadSeason2Dashboard(),loadDailyMissions()]);
  }catch(error){
   console.error("[DORI THROW] landing result:",error);
   $("stateChip").textContent=localSuccess?"착지 성공 · 기록 저장 실패":"착지 실패 · 기록 저장 실패";
@@ -1089,7 +1099,7 @@ async function submitThrow(){
  }finally{
   throwPending=false;
   if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}
-  refreshUI();
+  refreshUI();updateModeUi();
  }
 }
 function openUpgradeConfirm(type){
@@ -1114,6 +1124,7 @@ async function buyUpgrade(type){
 }
 function resetForNext(){
  if(mode!=="landed"||throwPending)return;playSfx("ui");
+ currentReplayRecordId=null;
  clearTimeout(landingFlashTimer);$("landingFlash").classList.remove("show");$("landingVerdict").hidden=true;
  mode="idle";charge=0;rotationAngle=0;landingAngle=0;
  $("rewardResult").textContent="새로운 도전을 시작해 보자!";$("stateChip").textContent="준비 완료";$("stateChip").classList.remove("live");
@@ -1125,7 +1136,8 @@ function resetForNext(){
 }
 function frame(now){
  if(document.hidden){rafId=0;return}
- const active=mode==="charging"||mode==="flying"||particles.length>0||impactAt>0,interval=active?1000/60:1000/30;
+ const active=mode==="charging"||mode==="flying"||mode==="replay"||particles.length>0||impactAt>0,interval=active?1000/60:1000/30;
+  tickChallenge(now);
  if(!lastPaint||now-lastPaint>=interval){
   const dt=lastFrame?Math.min(.05,Math.max(0,(now-lastFrame)/1000)):0;lastFrame=now;lastPaint=now;
   if(mode==="charging"){
@@ -1137,12 +1149,38 @@ function frame(now){
    rotationAngle=flightParams.spinRate*elapsed;
    if(now-lastAnglePaint>80){lastAnglePaint=now;setAngleGauge(normalizeDegrees(rotationAngle*180/Math.PI),flightParams.tolerance,"자동 회전 중 · 착지 목표각 0°")}
    if(elapsed>=flightParams.duration)completeFlight()
+  }else if(mode==="replay"){
+   const elapsed=Math.min(flightParams.duration,Math.max(0,(now-flightStarted)/1000));
+   rotationAngle=flightParams.spinRate*elapsed;
+   if(now-lastAnglePaint>80){lastAnglePaint=now;setAngleGauge(normalizeDegrees(rotationAngle*180/Math.PI),flightParams.tolerance,"리플레이 재생 중 · 원본 착지각을 다시 보는 중")}
+   if(elapsed>=flightParams.duration){
+    mode="landed";landingAngle=flightParams.landingAngle;rotationAngle=landingAngle*Math.PI/180;impactAt=performance.now();
+    const replayRecord=season2Dashboard?.recent_records?.find(item=>item.record_id===currentReplayRecordId);
+    const replayError=Math.abs(Number(replayRecord?.angle_error_deg??0));
+    setAngleGauge(landingAngle,flightParams.tolerance,"리플레이 완료 · 착지 오차 "+replayError.toFixed(1)+"°");
+    setLandingVerdict(replayRecord?.is_perfect?"perfect":replayRecord?.success?"success":"failure",{description:"저장된 착지 결과 · 오차 "+replayError.toFixed(1)+"° · "+(replayRecord?.is_perfect?"PERFECT!":replayRecord?.success?"성공":"실패")});
+    $("stateChip").textContent="REPLAY COMPLETE";$("chargeHint").textContent="리플레이가 끝났어. 다시 도전하거나 다른 기록을 재생해 봐.";
+    $("chargeButton").disabled=false;$("restartButton").disabled=false;updateModeUi();
+   }
   }
   updateParticles(dt);render(now);
  }
  rafId=requestAnimationFrame(frame);
 }
 function startAnimationLoop(){if(!rafId&&!document.hidden)rafId=requestAnimationFrame(frame);}
+document.querySelectorAll("[data-game-mode]").forEach(button=>button.addEventListener("click",()=>chooseGameMode(button.dataset.gameMode)));
+$("challengeStartButton").addEventListener("click",startChallenge);
+document.querySelectorAll("[data-leaderboard]").forEach(button=>button.addEventListener("click",()=>{
+ activeLeaderboard=button.dataset.leaderboard;
+ document.querySelectorAll("[data-leaderboard]").forEach(tab=>tab.classList.toggle("active",tab===button));
+ renderLeaderboard();playSfx("ui");
+}));
+$("replayList").addEventListener("click",event=>{
+ const button=event.target.closest("[data-replay-id]");if(button)playReplay(button.dataset.replayId);
+});
+$("dailyMissionList").addEventListener("click",event=>{
+ const button=event.target.closest("[data-mission-key]");if(button)claimDailyMission(button.dataset.missionKey,button);
+});
 $("chargeButton").addEventListener("pointerdown",event=>{event.preventDefault();if($("chargeButton").setPointerCapture)try{$("chargeButton").setPointerCapture(event.pointerId)}catch{}startCharge()});
 window.addEventListener("pointerup",releaseCharge);window.addEventListener("pointercancel",releaseCharge);
 $("restartButton").addEventListener("click",resetForNext);
@@ -1210,7 +1248,7 @@ $("soundToggle").addEventListener("click",()=>{
   document.querySelectorAll('img,svg,canvas,video').forEach(el => el.setAttribute('draggable','false'));
 })();
 
- $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loadingAccount();initAuth();startAnimationLoop();
+ $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loadingAccount();updateModeUi();initAuth();startAnimationLoop();
 </script>
 </head>
 <body>
