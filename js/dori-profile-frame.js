@@ -1,4 +1,4 @@
-// Dori Profile Frame — single source of truth for profile-photo frames.
+// Dori Profile Frame — the only renderer and equipment-state adapter.
 const FRAME_VISUALS = [
   { test: /DORONUM|DORONIUM/, asset: "assets/dori-items/FRAME_DORONIUM.svg", color: "#5df4ff", glow: "rgba(93,244,255,.55)" },
   { test: /2026[-_]?10|EXPLORER/, asset: "assets/dori-items/FRAME_2026_10_EXPLORER.svg", color: "#9c7bff", glow: "rgba(156,123,255,.52)" },
@@ -48,8 +48,15 @@ export function applyDoriProfileFrame(target, frame, userLevel = 1) {
   const code = frameKey(normalized);
   const tier = code ? null : getDoriVipProfileTier(userLevel);
   const visual = code ? visualFor(normalized) : (VIP_FRAME[tier] || null);
-  const enabled = Boolean(code || tier);
-  target.classList.toggle("has-profile-frame", enabled);
+  const kind = code ? "custom" : tier ? "vip" : "default";
+  const host = target.matches?.(".profile-image-wrapper")
+    ? target
+    : target.parentElement;
+
+  target.classList.toggle("has-profile-frame", kind !== "default");
+  host?.classList.toggle("profile-frame-equipped", kind === "custom");
+  host?.classList.toggle("profile-vip-frame", kind === "vip");
+
   if (code) {
     target.dataset.frame = code;
     target.dataset.profileFrameCode = code;
@@ -59,11 +66,14 @@ export function applyDoriProfileFrame(target, frame, userLevel = 1) {
   }
   if (tier) target.dataset.vipTier = tier;
   else delete target.dataset.vipTier;
+
   target.style.setProperty("--profile-frame-art", code ? 'url("' + visual.asset + '")' : "none");
   target.style.setProperty("--profile-frame-color", visual?.color || "rgba(143,126,255,.55)");
   target.style.setProperty("--profile-frame-glow", visual?.glow || "rgba(143,126,255,.35)");
+
   const name = normalized && typeof normalized === "object" ? normalized.item_name || normalized.name : "";
   if (name) target.dataset.profileFrameName = String(name);
   else delete target.dataset.profileFrameName;
-  return { kind: code ? "custom" : tier ? "vip" : "default", code, tier, asset: code ? visual.asset : null, color: visual?.color || null };
+
+  return { kind, code, tier, asset: code ? visual.asset : null, color: visual?.color || null };
 }
