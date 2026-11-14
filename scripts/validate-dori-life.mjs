@@ -94,6 +94,10 @@ assert.ok(html.includes("var desiredFacing=isDori&&Math.abs(dx)>7?(dx>0?'right':
 assert.ok(html.includes("function turnFrame(ts)"));
 assert.ok(html.includes("set('frontNearPaw',-.16,1,1,0,-12-5*lickPhase)"), "Grooming must lift the front paw.");
 assert.ok(html.includes("set('hindNearPaw',.18*Math.sin(t*17),1,1,0,-2-7*scratchBeat)"), "Scratching must animate the hind paw.");
+assert.ok(html.includes("var phase=seconds%300;"), "The daily routine must include visible action blocks.");
+assert.ok(html.includes("var actionBeat=Math.sin(t*5.6)"), "The high-visibility action pass must be present.");
+assert.ok(html.includes("motion-test=1"), "The pose demonstration mode must be available.");
+assert.ok(html.includes("['breakfast','식사','eat']"), "The motion test must drive the eating pose explicitly.");
 assert.ok(html.includes("if(pose==='flop')"), "Flop must have its own side-rest pose.");
 assert.ok(html.includes("if(pose==='doze')"), "Dozing must have its own head nod.");
 assert.ok(html.includes("if(pose==='shake')"), "Shaking must animate the full upper body.");
