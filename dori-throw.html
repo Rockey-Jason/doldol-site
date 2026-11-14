@@ -226,22 +226,6 @@ body:before,body:after{animation:none;filter:blur(54px);opacity:.1}
 @media(max-width:600px){.flight-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:9px}.flight-metric{padding:9px 7px}.flight-metric small{font-size:8px}.flight-metric strong{font-size:11px}.landing-panel{padding:11px}.landing-head{font-size:9px}.landing-head strong{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.angle-target-range,.angle-pointer{transition:none}}
  
-/* INSTANT LANDING RESULT · immediate on-screen verdict */
-.landing-verdict{margin:10px 2px 0;padding:13px 14px;border:1px solid rgba(111,233,255,.25);border-radius:14px;background:linear-gradient(135deg,rgba(34,67,108,.34),rgba(10,20,42,.94));overflow:hidden;animation:instantVerdictIn .22s ease-out both}
-.landing-verdict[hidden]{display:none}
-@keyframes instantVerdictIn{from{opacity:0;transform:translateY(4px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
-.verdict-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.verdict-tag{color:#9edfff;font-size:9px;letter-spacing:1.7px}
-.verdict-pulse{width:9px;height:9px;border-radius:50%;background:#75e7ff;box-shadow:0 0 12px currentColor}
-.verdict-title{margin-top:5px;color:#f0f7ff;font-size:20px;line-height:1.35;font-weight:400}
-.verdict-description{margin-top:4px;color:#b2c3df;font-size:11px;line-height:1.6;white-space:pre-line}
-.verdict-progress,.verdict-steps{display:none}
-.landing-verdict[data-state="success"]{border-color:rgba(120,239,192,.55);background:linear-gradient(135deg,rgba(24,91,76,.34),rgba(9,25,35,.96));box-shadow:0 0 26px rgba(120,239,192,.1)}
-.landing-verdict[data-state="success"] .verdict-tag,.landing-verdict[data-state="success"] .verdict-title{color:#baffdf}
-.landing-verdict[data-state="success"] .verdict-pulse{background:#78efc0;box-shadow:0 0 16px rgba(120,239,192,.8)}
-.landing-verdict[data-state="failure"],.landing-verdict[data-state="error"]{border-color:rgba(255,135,152,.5);background:linear-gradient(135deg,rgba(104,39,61,.32),rgba(25,13,32,.96));box-shadow:0 0 26px rgba(255,135,152,.08)}
-.landing-verdict[data-state="failure"] .verdict-tag,.landing-verdict[data-state="failure"] .verdict-title,.landing-verdict[data-state="error"] .verdict-title{color:#ffd0d8}
-.landing-verdict[data-state="failure"] .verdict-pulse,.landing-verdict[data-state="error"] .verdict-pulse{background:#ff8798;box-shadow:0 0 16px rgba(255,135,152,.7)}
 .landing-flash{position:absolute;z-index:5;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:18px;text-align:center;pointer-events:none;opacity:0;visibility:hidden;backdrop-filter:blur(2px)}
 .landing-flash.show{visibility:visible;animation:landingFlashIn 1.55s cubic-bezier(.18,.8,.25,1) both}
 .landing-flash strong{font-size:clamp(30px,6vw,58px);line-height:1.05;font-weight:400;letter-spacing:1px;text-shadow:0 4px 26px rgba(0,0,0,.7)}
@@ -256,14 +240,10 @@ body:before,body:after{animation:none;filter:blur(54px);opacity:.1}
  70%{opacity:1}
  100%{opacity:0;transform:scale(.98);visibility:hidden}
 }
-@media(max-width:600px){.landing-verdict{padding:12px}.verdict-title{font-size:18px}.verdict-description{font-size:10px}.landing-flash strong{font-size:34px}}
-@media(prefers-reduced-motion:reduce){.landing-verdict,.landing-flash.show{animation:none!important}.landing-flash.show{opacity:1;visibility:visible}}
+@media(max-width:600px){.landing-flash strong{font-size:34px}}
+@media(prefers-reduced-motion:reduce){.landing-flash.show{animation:none!important;opacity:1;visibility:visible}}
 
 /* PERFECT LANDING · gold-tier result for a displayed 0.0 degree landing */
-.landing-verdict[data-state="perfect"]{border-color:rgba(255,220,134,.72);background:linear-gradient(135deg,rgba(112,79,23,.42),rgba(30,24,13,.97));box-shadow:0 0 34px rgba(255,205,93,.17),inset 0 1px rgba(255,244,194,.12)}
-.landing-verdict[data-state="perfect"] .verdict-tag{color:#ffe3a0}
-.landing-verdict[data-state="perfect"] .verdict-title{color:#fff0bd;text-shadow:0 0 20px rgba(255,210,111,.3)}
-.landing-verdict[data-state="perfect"] .verdict-pulse{background:#ffdc86;box-shadow:0 0 18px rgba(255,220,134,.9)}
 .landing-flash.perfect{background:radial-gradient(ellipse at center,rgba(255,205,83,.36),rgba(67,43,9,.2) 55%,transparent 82%)}
 .landing-flash.perfect strong{color:#fff0b9;font-size:clamp(38px,7vw,70px);letter-spacing:2px;text-shadow:0 0 12px rgba(255,235,166,.95),0 0 34px rgba(255,190,65,.8),0 4px 18px rgba(0,0,0,.85)}
 .landing-flash.perfect span{color:#fff1c7;font-size:clamp(12px,2vw,17px)}
