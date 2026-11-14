@@ -2308,7 +2308,7 @@ body::after{
 }
 </style>
 
-<link rel="stylesheet" href="css/dori-profile-frame.css?v=20261113-unified-2">
+<link rel="stylesheet" href="css/dori-profile-frame.css?v=20261114-frame-geometry-1">
 </head>
 
 
@@ -4693,7 +4693,6 @@ async function 꾸미기저장() {
         equipped_background: 꾸미기상태.background?.item_code ?? null,
         equipped_skin: 꾸미기상태.skin?.item_code ?? null,
         equipped_effect: 꾸미기상태.effect?.item_code ?? null,
-        equipped_frame: 장착프로필프레임
     };
 
     let savedToDb = false;
@@ -4713,6 +4712,19 @@ async function 꾸미기저장() {
     }
     catch (error) {
         console.warn("돌이 꾸미기 DB 저장을 건너뜁니다:", error);
+    }
+
+    if (savedToDb) {
+        try {
+            const { data: frameResult, error: frameError } = await supabase.rpc("dori_set_profile_frame", {
+                p_frame: 장착프로필프레임
+            });
+            if (frameError) throw frameError;
+            if (!frameResult?.ok) throw new Error(frameResult?.message || "프레임 상태를 하나로 저장하지 못했습니다.");
+        } catch (error) {
+            savedToDb = false;
+            console.error("통합 프로필 프레임 저장 오류:", error);
+        }
     }
 
     localStorage.setItem(
