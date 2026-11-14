@@ -11,6 +11,7 @@ on:
       - 'docs/rockey/**'
       - 'gamepage.html'
       - 'rockey-clicker.html'
+      - 'scripts/validate-dori-life.mjs'
       - '*.html'
   workflow_dispatch:
 
@@ -41,6 +42,8 @@ jobs:
       - name: Build ROCKEY
         working-directory: rockey-client
         run: npm run build
+      - name: Validate Dori Life animation data and inline JavaScript
+        run: node scripts/validate-dori-life.mjs
       - name: Commit built ROCKEY files for branch-based Pages fallback
         run: |
           git config user.name "github-actions[bot]"
