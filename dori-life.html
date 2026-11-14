@@ -1526,7 +1526,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   function addEventChoreography(keys,profile){
     keys.forEach(function(kind,index){EVENT_CHOREOGRAPHY[kind]=Object.assign({kind:kind,slot:index,approachPose:'walk',approachMs:4600,stepMs:4300,moveMs:4600},profile);});
   }
-  addEventChoreography(["wake"],{"destination":{"x":840,"y":453,"s":0.84},"route":false,"interaction":"bed","approachPose":4800,"sequence":["wake","stretch","walk"],"faces":["sleepy","content","curious"],"moveMs":4600});
+  addEventChoreography(["wake"],{"destination":{"x":840,"y":453,"s":0.84},"route":false,"interaction":"bed","approachPose":4800,"sequence":["wake","stretch","sit"],"faces":["sleepy","content","relaxed"],"moveMs":4600});
   addEventChoreography(["breakfast","treat","dinner"],{"destination":{"x":795,"y":432,"s":0.86},"route":false,"interaction":"food","approachPose":5000,"sequence":["sniff","eat","eat","sit"],"faces":["curious","focused","content","happy"],"moveMs":4600});
   addEventChoreography(["water"],{"destination":{"x":900,"y":432,"s":0.84},"route":false,"interaction":"water","approachPose":5000,"sequence":["sniff","water","water"],"faces":["curious","focused","content"],"moveMs":4600});
   addEventChoreography(["ball","pillow","bubble","socks","toy","boop","pounce","hop","circle","happy"],{"destination":{"x":675,"y":432,"s":0.91},"route":false,"interaction":"toy","approachPose":3900,"sequence":["sniff","curious","pounce","play","hop"],"faces":["focused","curious","surprised","playful","delighted"],"stepMs":"trot","moveMs":4600});
@@ -1594,7 +1594,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   customizeEventChoreography('friendly-ghost',{destination:{x:430,y:432,s:.88},interaction:'door',sequence:['peek','shy','curious','happy'],faces:['curious','shy','surprised','delighted']});
   customizeEventChoreography('bread',{destination:{x:535,y:432,s:.90},interaction:'friend',sequence:['greet','sit','happy','friendPlay'],faces:['delighted','content','affectionate','playful']});
   customizeEventChoreography('friend-play',{destination:{x:535,y:432,s:.90},interaction:'friend',sequence:['greet','friendPlay','play','friendPlay'],faces:['happy','affectionate','playful','delighted']});
-  customizeEventChoreography('follow',{destination:{x:535,y:432,s:.90},interaction:'friend',sequence:['walk','follow','friendPlay'],faces:['curious','attentive','happy']});
+  customizeEventChoreography('follow',{route:true,interaction:'friend',approachPose:'walk',sequence:['follow','friendPlay','happy'],faces:['attentive','affectionate','delighted'],stepMs:3200,moveMs:3900});
   customizeEventChoreography('reunion',{destination:{x:535,y:432,s:.90},interaction:'friend',sequence:['alert','greet','happy','friendPlay'],faces:['surprised','delighted','affectionate','playful']});
   customizeEventChoreography('walk',{route:true,interaction:'roam',approachPose:'walk',sequence:['walk','sniff','explore','walk'],faces:['curious','focused','attentive','content']});
   customizeEventChoreography('trot',{route:true,interaction:'roam',approachPose:'trot',sequence:['trot','trot','walk'],faces:['playful','delighted','curious'],stepMs:3600,moveMs:3900});
@@ -1853,7 +1853,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     tweenSvgPosition(doriActor,target,duration);
   }
   function updateFriendArrival(evt){
-    var shouldVisit=!!(evt&&['bread','friend-play','reunion'].indexOf(evt.kind)>=0);
+    var shouldVisit=!!(evt&&['bread','friend-play','reunion','follow'].indexOf(evt.kind)>=0);
     if(shouldVisit&&!friendIsHere){
       friendIsHere=true;
       if(friendBread){
