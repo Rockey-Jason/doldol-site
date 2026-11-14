@@ -381,16 +381,19 @@ async function initAuth(){
   session=data?.session||null;if(session)await loadState({showLoading:true});else showGuest();
  }catch(error){showProfileError(error)}
 }
-function addHistory(success,reward,chargeValue,angle,errorAngle){
- history.unshift({success,reward,chargeValue,angle,errorAngle});history=history.slice(0,4);
- const list=$("historyList");list.replaceChildren();
- history.forEach(item=>{const row=document.createElement("div");row.className="history-row";
-  const left=document.createElement("span"),right=document.createElement("b");
-  left.textContent=item.chargeValue+"% 힘 · "+signedDegrees(item.angle).toFixed(1)+"° 착지";
-  right.textContent=item.success?"+"+fmt(item.reward)+" S":"실패";
-  if(!item.success)right.style.color="var(--red)";
-  row.append(left,right);list.append(row)});
-}
+ function addHistory(success,reward,chargeValue,angle,errorAngle,dailyLimitReached=false){
+  history.unshift({success,reward,chargeValue,angle,errorAngle,dailyLimitReached});history=history.slice(0,4);
+  const list=$("historyList");list.replaceChildren();
+  history.forEach(item=>{
+   const row=document.createElement("div");row.className="history-row";
+   const left=document.createElement("span"),right=document.createElement("b");
+   left.textContent=item.chargeValue+"% 힘 · "+signedDegrees(item.angle).toFixed(1)+"° 착지";
+   right.textContent=item.success?(item.reward>0?"+"+fmt(item.reward)+" S":item.dailyLimitReached?"일일 한도":"지급 확인"):"실패";
+   if(!item.success)right.style.color="var(--red)";
+   else if(item.dailyLimitReached)right.style.color="var(--gold)";
+   row.append(left,right);list.append(row);
+  });
+ }
 function spawnParticles(x,y,count,color="cyan",spread=1){
  const colors=color==="gold"?["#ffe6a3","#ffca66","#fff4ce"]:color==="purple"?["#c5a7ff","#8e7cff","#e1d4ff"]:color==="red"?["#ff8798","#ffc0c9","#ffe0e5"]:["#72e8ff","#b6f5ff","#729eff"];
  for(let i=0;i<count;i++){const a=Math.random()*TAU,s=(1.2+Math.random()*4.4)*spread;
@@ -411,15 +414,15 @@ function getFlightParams(chargeValue){
  const q=clamp(Number(chargeValue||1),1,100)/100;
  const power=Number(gameState?.power_level||0),accuracy=Number(gameState?.accuracy_level||0);
  const gravityMultiplier=9.00;
- const baseDuration=2.90-q*.45-power*.012;
+ const baseDuration=2.90-q*.45-power*.018;
  const duration=baseDuration/Math.sqrt(gravityMultiplier);
- const distance=260+q*450+power*12;
- const height=105+q*125+power*4.5;
+ const distance=260+q*450+power*20;
+ const height=105+q*125+power*7;
  const speed=distance/duration;
- const spinRate=3.80+q*15+power*.60;
+ const spinRate=3.80+q*15+power*1.00;
  const landingX=190+distance;
  const finalAngle=normalizeDegrees(spinRate*duration*180/Math.PI);
- return {duration,distance,height,speed,spinRate,landingX,landingAngle:finalAngle,tolerance:18+accuracy*1.5};
+ return {duration,distance,height,speed,spinRate,landingX,landingAngle:finalAngle,tolerance:18+accuracy*2.4};
 }
 function setAngleGauge(angle,tolerance,status){
  const signed=signedDegrees(angle),pointer=clamp((signed+180)/360*100,0,100);
@@ -429,10 +432,16 @@ function setAngleGauge(angle,tolerance,status){
  $("angleReadout").textContent=(signed>0?"+":"")+signed.toFixed(1)+"°";
  if(status)$("landingMessage").textContent=status;
 }
-function isPerfectLanding(errorAngle){
- // PERFECT is reserved for landings displayed as exactly 0.0° on the angle gauge.
- return Number.isFinite(Number(errorAngle))&&Math.abs(Number(errorAngle)).toFixed(1)==="0.0";
-}
+ function roundedLandingTenth(value){
+  return Math.round((Number(value)+1e-9)*10)/10;
+ }
+ function isLandingSuccessful(errorAngle,tolerance){
+  return Number.isFinite(Number(errorAngle))&&roundedLandingTenth(errorAngle)<=roundedLandingTenth(tolerance);
+ }
+ function isPerfectLanding(errorAngle){
+  // PERFECT is reserved for landings displayed as exactly 0.0° on the angle gauge.
+  return Number.isFinite(Number(errorAngle))&&roundedLandingTenth(Math.abs(Number(errorAngle)))===0;
+ }
 function setLandingVerdict(stage,details={}){
  const panel=$("landingVerdict");
  panel.hidden=false;
@@ -456,7 +465,7 @@ function showLandingFlash(success,subtitle,perfect=false){
  landingFlashTimer=setTimeout(()=>flash.classList.remove("show"),1800);
 }
 function updateFlightPreview(chargeValue=charge){
- const tolerance=18+Number(gameState?.accuracy_level||0)*1.5;
+ const tolerance=18+Number(gameState?.accuracy_level||0)*2.4;
  $("spinCount").textContent="목표 0° ±"+tolerance.toFixed(1)+"°";
  $("angleTargetRange").style.left=((180-tolerance)/360*100)+"%";
  $("angleTargetRange").style.width=(tolerance*2/360*100)+"%";
@@ -604,7 +613,7 @@ function completeFlight(){
  mode="landed";impactAt=performance.now();
  const displayedAngle=normalizeDegrees(flightParams.landingAngle);
  const angleError=Math.min(displayedAngle,360-displayedAngle);
- const predictedSuccess=angleError<=flightParams.tolerance;
+ const predictedSuccess=isLandingSuccessful(angleError,flightParams.tolerance);
  const predictedPerfect=predictedSuccess&&isPerfectLanding(angleError);
  spawnParticles(pos.x,390,predictedPerfect?120:predictedSuccess?72:34,predictedSuccess?"gold":"red",predictedPerfect?1.85:predictedSuccess?1.5:.85);
  $("restartButton").disabled=true;$("chargeButton").disabled=true;
@@ -626,7 +635,7 @@ async function submitThrow(){
  if(throwPending)return;throwPending=true;
  const localAngle=normalizeDegrees(flightParams.landingAngle);
  const localError=Math.min(localAngle,360-localAngle);
- const localSuccess=localError<=flightParams.tolerance;
+ const localSuccess=isLandingSuccessful(localError,flightParams.tolerance);
  const localPerfect=localSuccess&&isPerfectLanding(localError);
  if(!session){
   $("stateChip").textContent=localPerfect?"PERFECT! · 체험 모드":localSuccess?"착지 성공 · 체험 모드":"착지 실패 · 체험 모드";
@@ -652,7 +661,7 @@ async function submitThrow(){
   flightParams.height=Number(data.flight_height);
   flightParams.spinRate=Number(data.spin_rate_rad_sec);
   flightParams.landingAngle=landingAngle;rotationAngle=landingAngle*Math.PI/180;impactX=flightParams.landingX;
-  const errorAngle=Number(data.angle_error_deg),success=!!data.success,reward=Number(data.coin_reward||0);
+  const errorAngle=Number(data.angle_error_deg),success=!!data.success,reward=Number(data.coin_reward||0),dailyLimitReached=!!data.daily_limit_reached;
   const serverPerfect=success&&isPerfectLanding(errorAngle);
   const previousBest=gameState.best_landing_error_deg;
   gameState.best_landing_error_deg=previousBest===null||previousBest===undefined
@@ -663,15 +672,17 @@ async function submitThrow(){
   const serverDisagrees=success!==localSuccess;
   setLandingVerdict(serverPerfect?"perfect":success?"success":"failure",{description:
    (serverPerfect?"PERFECT! · 착지 각도 오차 0.0° · 완벽한 착지야!":"목표각 0° · 실제 오차 "+errorAngle.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°")+
-   (success?"\n+"+fmt(reward)+" 세우기 코인 획득!":"\n이번 착지 보상은 0 세우기 코인이야.")});
+   (success?(reward>0?"\n+"+fmt(reward)+" 세우기 코인 획득!":dailyLimitReached?"\n오늘 일일 적립 한도 25,000 S에 도달했어.":"\n착지 성공 · 보상 지급액을 확인해 줘."):"\n이번 착지 보상은 0 세우기 코인이야.")});
   if(serverDisagrees||localPerfect!==serverPerfect)showLandingFlash(success,serverPerfect?"정확히 0.0° · PERFECT!":"서버 최종 판정 · 오차 "+errorAngle.toFixed(1)+"°",serverPerfect);
   $("stateChip").textContent=serverPerfect?"PERFECT!":success?"착지 성공":"착지 실패";
-  $("rewardResult").textContent=serverPerfect?"PERFECT! · +"+fmt(reward)+" 세우기 코인 획득!":success?"+"+fmt(reward)+" 세우기 코인 획득!":"착지 실패 · 세우기 코인 0개";
-  $("chargeHint").textContent=serverPerfect?"PERFECT! 완벽한 0.0° 착지 · "+fmt(reward)+" 세우기 코인 획득!":success
-   ?"서버 판정 완료 · "+fmt(reward)+" 세우기 코인을 획득했어."
+  $("rewardResult").textContent=success?(reward>0?(serverPerfect?"PERFECT! · +":"+")+fmt(reward)+" 세우기 코인 획득!":dailyLimitReached?"착지 성공! 오늘 한도 25,000 S 도달":"착지 성공! 코인 지급 내역 확인 필요"):"착지 실패 · 세우기 코인 0개";
+  $("chargeHint").textContent=success
+   ?(reward>0?(serverPerfect?"PERFECT! 완벽한 0.0° 착지 · ":"서버 판정 완료 · ")+fmt(reward)+" 세우기 코인을 획득했어.":dailyLimitReached?"착지 성공! 오늘 세우기 코인 일일 한도 25,000 S에 도달했어.":"착지는 성공했지만 보상 지급액이 0이야. 계정 기록을 새로 불러와 줘.")
    :"서버 판정 완료 · 허용 각도 ±"+flightParams.tolerance.toFixed(1)+"° 밖이야.";
-  refreshUI();addHistory(success,reward,charge,landingAngle,errorAngle);
-  if(success)toast("세우기 코인 +"+fmt(reward)+" 획득!","success");
+  refreshUI();addHistory(success,reward,charge,landingAngle,errorAngle,dailyLimitReached);
+  if(success&&reward>0)toast("세우기 코인 +"+fmt(reward)+" 획득!","success");
+  else if(success&&dailyLimitReached)toast("오늘 세우기 코인 적립 한도 25,000 S에 도달했어.","error");
+  else if(success)toast("착지 성공 · 코인 지급 내역을 확인해 줘.","error");
   else toast("착지 실패 · 다음에는 각도를 맞춰 봐!","error");
  }catch(error){
   console.error("[DORI THROW] landing result:",error);
@@ -691,7 +702,7 @@ function openUpgradeConfirm(type){
  const level=type==="power"?gameState.power_level:gameState.accuracy_level,cost=nextCost(type,level);
  if(cost===null){toast("이미 최대 레벨입니다.");return}if(BigInt(String(gameState.seugi_coin_balance??gameState.balance??0))<BigInt(cost)){toast("세우기 코인이 부족합니다.");return}
  pendingUpgrade=type;$("upgradeModalTitle").textContent=type==="power"?"힘 강화":"정확도 강화";
- $("upgradeModalText").textContent=type==="power"?"레벨마다 비행 거리 +12px, 최고 높이 +4.5px, 회전 속도 +0.60rad/s로 강화돼.":"레벨마다 성공 허용 각도가 +1.5° 넓어져. 최대 레벨에서는 0° 기준 ±48°까지 허용돼.";
+ $("upgradeModalText").textContent=type==="power"?"레벨마다 비행 거리 +20px, 최고 높이 +7px, 회전 속도 +1.00rad/s로 강화돼.":"레벨마다 성공 허용 각도가 +2.4° 넓어져. 최대 레벨에서는 0° 기준 ±66°까지 허용돼.";
  $("upgradeModalPrice").textContent=fmt(cost)+" S";$("upgradeConfirm").disabled=false;$("upgradeModal").classList.add("open");$("upgradeModal").setAttribute("aria-hidden","false");$("upgradeConfirm").focus();
 }
 function closeUpgradeConfirm(){pendingUpgrade=null;$("upgradeModal").classList.remove("open");$("upgradeModal").setAttribute("aria-hidden","true")}
@@ -833,12 +844,12 @@ $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loading
    <h2>⚙ 돌이 강화 연구소</h2>
    <div class="upgrade-card">
     <div class="upgrade-top"><div class="upgrade-name"><span class="upgrade-icon">💪</span>힘 강화</div><span class="level" id="powerLevel">Lv. 0 / 20</span></div>
-    <p class="upgrade-desc">레벨마다 비행 거리 +12px, 최고 높이 +4.5px, 회전 속도 +0.60rad/s가 추가돼. 비행 속도도 함께 빨라져.</p>
+    <p class="upgrade-desc">레벨마다 비행 거리 +20px, 최고 높이 +7px, 회전 속도 +1.00rad/s가 추가돼. 비행 속도도 함께 빨라져.</p>
     <div class="upgrade-bottom"><span class="cost">다음 강화 <b id="powerCost">150 S</b></span><button class="upgrade-btn" id="powerUpgrade" type="button">힘 강화</button></div>
    </div>
    <div class="upgrade-card">
     <div class="upgrade-top"><div class="upgrade-name"><span class="upgrade-icon">🎯</span>정확도 강화</div><span class="level" id="accuracyLevel">Lv. 0 / 20</span></div>
-    <p class="upgrade-desc">레벨마다 성공 허용 범위가 1.5°씩 넓어져. 최대 Lv.20에서는 목표 0° 기준 ±48°까지 허용돼.</p>
+    <p class="upgrade-desc">레벨마다 성공 허용 범위가 2.4°씩 넓어져. 최대 Lv.20에서는 목표 0° 기준 ±66°까지 허용돼.</p>
     <div class="upgrade-bottom"><span class="cost">다음 강화 <b id="accuracyCost">180 S</b></span><button class="upgrade-btn" id="accuracyUpgrade" type="button">정확도 강화</button></div>
    </div>
   </section>
