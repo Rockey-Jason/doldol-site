@@ -1625,8 +1625,9 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   Object.keys(EVENT_CHOREOGRAPHY).forEach(function(kind){
     var plan=EVENT_CHOREOGRAPHY[kind];
     var fastRoute=['trot','gallop','zoomies'].indexOf(kind)>=0;
-    plan.approachMs=plan.approachMs||4600;
-    plan.stepMs=fastRoute?Math.max(4200,plan.stepMs):Math.max(6400,plan.stepMs);
+    plan.approachMs=Math.max(7600,plan.approachMs||0);
+    plan.moveMs=Math.max(8200,plan.moveMs||0);
+    plan.stepMs=Math.max(9000,plan.stepMs||0);
   });
 
   function buildEvents(key){
@@ -1806,7 +1807,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       el.setAttribute('transform','translate('+p.x.toFixed(2)+' '+p.y.toFixed(2)+') scale('+(p.s*f).toFixed(4)+' '+p.s.toFixed(3)+')');
       el._doriPosition={x:p.x,y:p.y,s:p.s};
     }
-    var turnDuration=facingChanged?Math.max(180,Math.min(380,duration*.18)):0;
+    var turnDuration=facingChanged?Math.max(650,Math.min(1050,duration*.12)):0;
     function move(){
       if(isDori){el._facing=desiredFacing;el._isTurning=false;el._isMoving=distance>3;}
       var travelDuration=Math.max(450,duration-turnDuration);
@@ -1871,12 +1872,12 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     if(pose==='stretch'||pose==='scratch'||pose==='curious'||pose==='listen'||pose==='sneeze'||pose==='shake')return {x:780,y:432,s:.88,key:'daily-reaction'};
     if(pose==='zoomies'){
       var zoomStops=[{x:540,y:432,s:.87},{x:825,y:432,s:.90},{x:650,y:418,s:.92},{x:875,y:432,s:.86}];
-      var zi=Math.floor(second/1.15)%zoomStops.length;var zs=zoomStops[zi];
+      var zi=Math.floor(second/10)%zoomStops.length;var zs=zoomStops[zi];
       return {x:zs.x,y:zs.y,s:zs.s,key:'zoom-'+zi};
     }
     if(pose==='trot'||pose==='gallop'||pose==='chase'){
       var trotStops=[{x:575,y:432,s:.88},{x:735,y:426,s:.90},{x:835,y:432,s:.87},{x:675,y:426,s:.91}];
-      var ti=Math.floor(second/2.6)%trotStops.length;var ts=trotStops[ti];
+      var ti=Math.floor(second/10)%trotStops.length;var ts=trotStops[ti];
       return {x:ts.x,y:ts.y,s:ts.s,key:'trot-'+ti};
     }
     if(pose==='walk'||pose==='explore'){
@@ -1885,12 +1886,12 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         {x:790,y:426,s:.88},{x:845,y:432,s:.85},{x:760,y:438,s:.89},
         {x:665,y:432,s:.91},{x:585,y:438,s:.87}
       ];
-      var step=Math.floor(second/14)%stops.length;var stop=stops[step];
+      var step=Math.floor(second/18)%stops.length;var stop=stops[step];
       return {x:stop.x,y:stop.y,s:stop.s,key:pose+'-'+step};
     }
     if(pose==='circle'){
       var circleStops=[{x:620,y:432,s:.88},{x:680,y:426,s:.89},{x:740,y:432,s:.88},{x:680,y:438,s:.87}];
-      var ci=Math.floor(second/1.35)%circleStops.length;var cs=circleStops[ci];
+      var ci=Math.floor(second/9)%circleStops.length;var cs=circleStops[ci];
       return {x:cs.x,y:cs.y,s:cs.s,key:'circle-'+ci};
     }
     if(pose==='happy')return {x:680,y:432,s:.92,key:'happy-center'};
@@ -1901,7 +1902,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     if(!doriActor||doriActor._targetKey===target.key)return;
     doriActor._targetKey=target.key;
     var pose=state.pose||'idle';
-    var duration=state&&state.moveDuration?state.moveDuration:(pose==='zoomies'?850:(pose==='circle'?1250:(pose==='trot'||pose==='gallop'||pose==='chase'?1700:(pose==='walk'||pose==='explore'?6400:pose==='sniff'?2300:1700))));
+    var duration=state&&state.moveDuration?Math.max(7600,state.moveDuration):(pose==='zoomies'?9000:(pose==='circle'?8200:(pose==='trot'||pose==='gallop'||pose==='chase'?9000:(pose==='walk'||pose==='explore'?9800:pose==='sniff'?8200:7800))));
     tweenSvgPosition(doriActor,target,duration);
   }
   function updateFriendArrival(evt){
@@ -2532,6 +2533,30 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       set(prefix+'Paw',-.16*foot.lift,1,1,foot.x,foot.y);
     }
 
+    function applyLifeLegMotion(pose,t,isMoving,isTurning){
+      if(isMoving)return;
+      var resting=['sleep','doze','dream','cuddle','flop'].indexOf(pose)>=0;
+      var playful=['play','pounce','hop','happy','boop','friendPlay','reunion','greet','paw','dance'].indexOf(pose)>=0;
+      var focused=['eat','water','sniff','curious','listen','alert','guard','lookUp','peek','hide','shy'].indexOf(pose)>=0;
+      var amplitude=resting?(pose==='dream'?.042:.012):(playful?.018:(focused?.032:.024));
+      if(isTurning)amplitude=.045;
+      var phase=t*(resting?.72:1.65);
+      var legs=[
+        ['frontFar',0],['frontNear',Math.PI],['hindFar',Math.PI*.5],['hindNear',Math.PI*1.5]
+      ];
+      legs.forEach(function(item){
+        var name=item[0],offset=item[1];
+        // Keep the paw currently performing a specific grooming/scratching gesture clean.
+        if((pose==='groom'&&name==='frontNear')||(pose==='scratch'&&name==='hindNear'))return;
+        var wave=Math.sin(phase+offset);
+        var lower=Math.sin(phase+offset+1.05);
+        var upperBone=bone[name+'Upper'],lowerBone=bone[name+'Lower'],pawBone=bone[name+'Paw'];
+        if(upperBone)upperBone.angle+=amplitude*wave;
+        if(lowerBone)lowerBone.angle+=amplitude*.72*lower;
+        if(pawBone)pawBone.angle+=amplitude*.28*Math.sin(phase+offset+1.8);
+      });
+    }
+
     function poseMotion(now){
       var pose=room.getAttribute('data-pose')||'idle';
       if(pose!==lastPose){lastPose=pose;poseStarted=now;}
@@ -2955,7 +2980,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         set('neckBase',.07*stretchWave,1,1);set('neckMid',.12*stretchWave,1,1);
         set('neckUpper',.15*stretchWave,1,1);set('poll',.11*stretchWave,1,1);
       }
-      var pts=vertices.map(transformPoint);
+      // Subtle weight shifts, paw adjustments and dream twitches keep all four legs alive during every non-travel action.\n      applyLifeLegMotion(pose,t,isDoriMoving,isDoriTurning);\n      var pts=vertices.map(transformPoint);
       ctx.clearRect(0,0,W,H);
       for(var i=0;i<triangles.length;i++){
         var tri=triangles[i];drawTriangle(vertices[tri[0]],vertices[tri[1]],vertices[tri[2]],pts[tri[0]],pts[tri[1]],pts[tri[2]]);
@@ -3083,6 +3108,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     room.dataset.interaction=(state&&state.interaction)||map[pose]||'home';
   }
 
+  var motionTestStartedAt=performance.now();
   function update(){
     var now=new Date();var p=parts(now);var key=dayKey(now);
     var hour=Number(p.hour);var minute=Number(p.minute);var second=Number(p.second);
@@ -3103,7 +3129,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         ['wake','기상','wake'],['stretch','기지개','stretch'],['doze','졸기','doze'],['sleep','수면','sleep'],
         ['cuddle','웅크리기','cuddle'],['flop','옆으로 눕기','flop'],['dream','꿈꾸기','dream']
       ];
-      var demoIndex=Math.floor(performance.now()/6500)%demo.length;
+      var demoIndex=Math.floor((performance.now()-motionTestStartedAt)/11000)%demo.length;
       var demoItem=demo[demoIndex];
       var demoData=BANK[demoItem[0]]||BANK.sleep;
       routine=Object.assign({},demoData,{pose:demoItem[2],title:'동작 검사 · '+demoItem[1],desc:'각 관절 동작을 확인하는 시연 장면이에요.',tag:'MOTION TEST',icon:demoData.icon});
