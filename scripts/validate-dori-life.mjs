@@ -89,7 +89,8 @@ assert.deepEqual(stationaryWalking, [], "Fixed-destination events contain in-pla
 
 // Protect the actual fixes: movement is gated, direction turns precede travel,
 // and the most easily-confused maintenance/rest actions each have a distinct rig.
-assert.ok(html.includes("var isDoriMoving=!!(doriActor&&doriActor._isMoving&&!doriActor._isTurning)"));
+assert.ok(html.includes("var isDoriTurning=!!(doriActor&&doriActor._isTurning);"), "The turning state used by the rig must be declared.");
+assert.ok(html.includes("var isDoriMoving=!!(doriActor&&doriActor._isMoving&&!isDoriTurning);"), "Movement state must be derived from the declared turning state.");
 assert.ok(html.includes("var desiredFacing=isDori&&Math.abs(dx)>7?(dx>0?'right':'left'):currentFacing"));
 assert.ok(html.includes("function turnFrame(ts)"));
 assert.ok(html.includes("set('frontNearPaw',-.16,1,1,0,-12-5*lickPhase)"), "Grooming must lift the front paw.");
