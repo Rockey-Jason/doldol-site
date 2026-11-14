@@ -264,7 +264,7 @@ const URL="https://scttowfhygcpdirrekqm.supabase.co";
 const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
 const supabase=window.doriSupabase||createClient(URL,KEY,{auth:{storageKey:"sb-scttowfhygcpdirrekqm-auth-token",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 if(supabase&&!window.doriSupabase)window.doriSupabase=supabase;
-const $=id=>document.getElementById(id),TAU=Math.PI*2,MAX_DAILY=25000;
+const $=id=>document.getElementById(id),TAU=Math.PI*2;
 const fmt=v=>{try{return BigInt(String(v??0)).toLocaleString("ko-KR")}catch{return "0"}};
 const uuid=()=>crypto?.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)});
 const canvas=$("arenaCanvas"),ctx=canvas.getContext("2d",{alpha:false,desynchronized:true})||canvas.getContext("2d"),dori=new Image(),doriSpriteCanvas=document.createElement("canvas");
@@ -323,7 +323,7 @@ function showGuest(){
  $("chargeHint").textContent="체험 모드 · 로그인하면 세우기 코인과 강화 레벨이 저장돼.";
  $("powerUpgrade").disabled=true;$("accuracyUpgrade").disabled=true;
  $("throwsCount").textContent="—";$("successfulLandings").textContent="—";$("bestLandingError").textContent="—";$("totalEarned").textContent="—";
- $("dailyText").textContent="로그인 후 표시";$("dailyFill").style.width="0%";
+ $("dailyText").textContent="오늘 적립 · 로그인 후 표시";
 }
 function showProfileError(error){
  console.error("[DORI THROW] account sync:",error);
@@ -350,8 +350,7 @@ function refreshUI(){
  $("totalEarned").textContent=fmt(gameState.seugi_coin_earned??gameState.total_earned??0);
  const best=gameState.best_landing_error_deg;
  $("bestLandingError").textContent=best===null||best===undefined?"기록 없음":Number(best).toFixed(1)+"°";
- const daily=Number(gameState.daily_seugi_coin_earned??gameState.daily_earned??0),limit=Number(gameState.daily_limit||10000);
- $("dailyText").textContent=fmt(daily)+" / "+fmt(limit)+" S";$("dailyFill").style.width=Math.min(100,daily/limit*100)+"%";
+ const daily=Number(gameState.daily_seugi_coin_earned??gameState.daily_earned??0);$("dailyText").textContent=fmt(daily)+" S · 무제한";
  $("retryLoad").hidden=true;
 }
 async function loadState(options={}){
@@ -381,16 +380,15 @@ async function initAuth(){
   session=data?.session||null;if(session)await loadState({showLoading:true});else showGuest();
  }catch(error){showProfileError(error)}
 }
- function addHistory(success,reward,chargeValue,angle,errorAngle,dailyLimitReached=false){
-  history.unshift({success,reward,chargeValue,angle,errorAngle,dailyLimitReached});history=history.slice(0,4);
+ function addHistory(success,reward,chargeValue,angle,errorAngle){
+  history.unshift({success,reward,chargeValue,angle,errorAngle});history=history.slice(0,4);
   const list=$("historyList");list.replaceChildren();
   history.forEach(item=>{
    const row=document.createElement("div");row.className="history-row";
    const left=document.createElement("span"),right=document.createElement("b");
    left.textContent=item.chargeValue+"% 힘 · "+signedDegrees(item.angle).toFixed(1)+"° 착지";
-   right.textContent=item.success?(item.reward>0?"+"+fmt(item.reward)+" S":item.dailyLimitReached?"일일 한도":"지급 확인"):"실패";
+   right.textContent=item.success?"+"+fmt(item.reward)+" S":"실패";
    if(!item.success)right.style.color="var(--red)";
-   else if(item.dailyLimitReached)right.style.color="var(--gold)";
    row.append(left,right);list.append(row);
   });
  }
@@ -661,7 +659,7 @@ async function submitThrow(){
   flightParams.height=Number(data.flight_height);
   flightParams.spinRate=Number(data.spin_rate_rad_sec);
   flightParams.landingAngle=landingAngle;rotationAngle=landingAngle*Math.PI/180;impactX=flightParams.landingX;
-  const errorAngle=Number(data.angle_error_deg),success=!!data.success,reward=Number(data.coin_reward||0),dailyLimitReached=!!data.daily_limit_reached;
+  const errorAngle=Number(data.angle_error_deg),success=!!data.success,reward=Number(data.coin_reward||0);
   const serverPerfect=success&&isPerfectLanding(errorAngle);
   const previousBest=gameState.best_landing_error_deg;
   gameState.best_landing_error_deg=previousBest===null||previousBest===undefined
@@ -672,17 +670,15 @@ async function submitThrow(){
   const serverDisagrees=success!==localSuccess;
   setLandingVerdict(serverPerfect?"perfect":success?"success":"failure",{description:
    (serverPerfect?"PERFECT! · 착지 각도 오차 0.0° · 완벽한 착지야!":"목표각 0° · 실제 오차 "+errorAngle.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°")+
-   (success?(reward>0?"\n+"+fmt(reward)+" 세우기 코인 획득!":dailyLimitReached?"\n오늘 일일 적립 한도 25,000 S에 도달했어.":"\n착지 성공 · 보상 지급액을 확인해 줘."):"\n이번 착지 보상은 0 세우기 코인이야.")});
+   (success?"\\n+"+fmt(reward)+" 세우기 코인 획득!":"\\n이번 착지 보상은 0 세우기 코인이야.")});
   if(serverDisagrees||localPerfect!==serverPerfect)showLandingFlash(success,serverPerfect?"정확히 0.0° · PERFECT!":"서버 최종 판정 · 오차 "+errorAngle.toFixed(1)+"°",serverPerfect);
   $("stateChip").textContent=serverPerfect?"PERFECT!":success?"착지 성공":"착지 실패";
-  $("rewardResult").textContent=success?(reward>0?(serverPerfect?"PERFECT! · +":"+")+fmt(reward)+" 세우기 코인 획득!":dailyLimitReached?"착지 성공! 오늘 한도 25,000 S 도달":"착지 성공! 코인 지급 내역 확인 필요"):"착지 실패 · 세우기 코인 0개";
+  $("rewardResult").textContent=success?(serverPerfect?"PERFECT! · +":"+")+fmt(reward)+" 세우기 코인 획득!":"착지 실패 · 세우기 코인 0개";
   $("chargeHint").textContent=success
-   ?(reward>0?(serverPerfect?"PERFECT! 완벽한 0.0° 착지 · ":"서버 판정 완료 · ")+fmt(reward)+" 세우기 코인을 획득했어.":dailyLimitReached?"착지 성공! 오늘 세우기 코인 일일 한도 25,000 S에 도달했어.":"착지는 성공했지만 보상 지급액이 0이야. 계정 기록을 새로 불러와 줘.")
+   ?(serverPerfect?"PERFECT! 완벽한 0.0° 착지 · ":"서버 판정 완료 · ")+fmt(reward)+" 세우기 코인을 획득했어."
    :"서버 판정 완료 · 허용 각도 ±"+flightParams.tolerance.toFixed(1)+"° 밖이야.";
-  refreshUI();addHistory(success,reward,charge,landingAngle,errorAngle,dailyLimitReached);
-  if(success&&reward>0)toast("세우기 코인 +"+fmt(reward)+" 획득!","success");
-  else if(success&&dailyLimitReached)toast("오늘 세우기 코인 적립 한도 25,000 S에 도달했어.","error");
-  else if(success)toast("착지 성공 · 코인 지급 내역을 확인해 줘.","error");
+  refreshUI();addHistory(success,reward,charge,landingAngle,errorAngle);
+  if(success)toast("세우기 코인 +"+fmt(reward)+" 획득!","success");
   else toast("착지 실패 · 다음에는 각도를 맞춰 봐!","error");
  }catch(error){
   console.error("[DORI THROW] landing result:",error);
@@ -861,7 +857,7 @@ $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loading
     <div class="stat"><span>누적 세우기 코인</span><strong id="totalEarned">0</strong></div>
     <div class="stat"><span>최소 착지 오차</span><strong id="bestLandingError">기록 없음</strong></div>
    </div>
-   <div class="daily"><div class="daily-top"><span>일일 세우기 코인 적립 한도</span><strong id="dailyText">0 / 25,000 S</strong></div><div class="daily-bar"><div id="dailyFill"></div></div></div>
+   <div class="daily"><div class="daily-top"><span>오늘 획득한 세우기 코인</span><strong id="dailyText">0 S · 무제한</strong></div><div class="daily-top" style="margin-top:5px;color:#78efc0">일일 적립 제한 없음 · 성공할 때마다 보상 지급</div></div>
    <div class="history"><h3>RECENT THROWS</h3><div id="historyList"><div class="history-empty">첫 착지 판정이 끝나면 기록이 여기에 표시돼.</div></div></div>
   </section>
  </aside>
