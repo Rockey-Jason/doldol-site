@@ -90,6 +90,13 @@ assert.deepEqual(stationaryWalking, [], "Fixed-destination events contain in-pla
 // Protect the actual fixes: movement is gated, direction turns precede travel,
 // and the most easily-confused maintenance/rest actions each have a distinct rig.
 assert.ok(html.includes("var isDoriTurning=!!(doriActor&&doriActor._isTurning);"), "The turning state used by the rig must be declared.");
+assert.ok(html.includes("function applyLifeLegMotion(pose,t,isMoving,isTurning)"), "Every non-travel activity must animate the four leg joints.");
+assert.ok(html.includes("applyLifeLegMotion(pose,t,isDoriMoving,isDoriTurning);"), "Secondary leg motion must run for each rendered pose.");
+assert.ok(html.includes("Math.max(7600,state.moveDuration)"), "Event travel must not use fast short movement durations.");
+assert.ok(html.includes("Math.max(9000,plan.stepMs||0)"), "Event actions must remain visible long enough to read.");
+assert.ok(html.includes("var zi=Math.floor(second/10)%zoomStops.length;"), "Zoomies route changes must not cause rapid sliding.");
+assert.ok(html.includes("var ti=Math.floor(second/10)%trotStops.length;"), "Trot route changes must be slow and deliberate.");
+assert.ok(html.includes("var demoIndex=Math.floor((performance.now()-motionTestStartedAt)/11000)%demo.length;"), "Motion test clips must last eleven seconds and start at walking.");
 assert.ok(html.includes("var isDoriMoving=!!(doriActor&&doriActor._isMoving&&!isDoriTurning);"), "Movement state must be derived from the declared turning state.");
 assert.ok(html.includes("var desiredFacing=isDori&&Math.abs(dx)>7?(dx>0?'right':'left'):currentFacing"));
 assert.ok(html.includes("function turnFrame(ts)"));
