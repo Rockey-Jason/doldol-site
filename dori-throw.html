@@ -282,6 +282,73 @@ img,svg,canvas,video{
   -webkit-user-select:none!important;
 }
 
+
+/* SEASON 2 · challenge modes, replay, leaderboard and personal record room */
+.mode-panel,.record-panel{border:1px solid rgba(135,166,255,.18);border-radius:15px;background:linear-gradient(145deg,rgba(14,25,52,.84),rgba(7,14,31,.82))}
+.mode-panel{margin:13px 0 0;padding:13px}
+.mode-panel-head,.record-panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.mode-panel-head strong,.record-panel-head h2{margin:0;font-size:12px;font-weight:400;letter-spacing:1px}
+.mode-panel-head small,.record-panel-head small{color:#8fa2ca;font-size:10px}
+.mode-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:11px}
+.mode-choice{min-width:0;padding:10px 6px;border:1px solid rgba(143,169,238,.17);border-radius:11px;background:#ffffff05;color:#aabadd;text-align:center;font-size:11px}
+.mode-choice small{display:block;margin-top:4px;color:#778bb4;font-size:9px}
+.mode-choice.active{border-color:rgba(255,220,134,.6);background:linear-gradient(145deg,rgba(255,220,134,.14),rgba(111,233,255,.06));color:#fff0c4}
+.mode-choice:disabled{opacity:.45;cursor:not-allowed}
+.challenge-toolbar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;margin-top:10px}
+.challenge-description{min-width:0;color:#93a5ca;font-size:10px;line-height:1.6}
+.challenge-description strong{display:block;color:#dce8ff;font-size:11px;font-weight:400;margin-bottom:3px}
+.challenge-start{padding:10px 15px;border:1px solid rgba(255,220,134,.42);border-radius:10px;background:linear-gradient(110deg,#f0ce78,#be8f43);color:#241b0c;font-size:11px;white-space:nowrap}
+.challenge-start:disabled{opacity:.42;cursor:not-allowed}
+.challenge-status{display:flex;align-items:center;justify-content:space-between;gap:9px;margin-top:9px;padding:8px 10px;border-radius:9px;background:#ffffff06;color:#94a7cc;font-size:10px}
+.challenge-status strong{font-weight:400;color:var(--gold);font-variant-numeric:tabular-nums}
+.season2-grid{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr) minmax(270px,.88fr);gap:14px;margin-top:15px;align-items:stretch}
+.record-panel{min-width:0;padding:15px}
+.record-panel-head{margin-bottom:13px}
+.record-panel-head h2{font-size:13px}
+.record-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.record-kpi{padding:10px;border:1px solid #ffffff10;border-radius:11px;background:#ffffff05;min-width:0}
+.record-kpi span{display:block;color:#8fa2c8;font-size:9px;line-height:1.4;min-height:24px}
+.record-kpi strong{display:block;margin-top:4px;color:#f0f4ff;font-size:17px;font-weight:400;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.record-kpi.gold strong{color:var(--gold)}
+.chart-title{margin:14px 0 8px;color:#aab9d8;font-size:10px;letter-spacing:.7px}
+.weekly-chart{height:116px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:7px;align-items:end;padding:7px 5px 0;border-bottom:1px solid #ffffff13}
+.weekly-column{height:100%;display:flex;flex-direction:column;justify-content:end;align-items:center;gap:5px;min-width:0}
+.weekly-stack{height:85px;width:min(24px,74%);display:flex;flex-direction:column;justify-content:end;overflow:hidden;border-radius:6px 6px 2px 2px;background:#ffffff07}
+.weekly-bar{width:100%;min-height:0;background:linear-gradient(180deg,#72e8ff,#5684db);border-radius:6px 6px 0 0}
+.weekly-perfect{width:100%;background:linear-gradient(180deg,#ffe8a9,#c18c3c);min-height:0}
+.weekly-column small{color:#788caf;font-size:9px;white-space:nowrap}
+.chart-legend{display:flex;gap:12px;margin-top:7px;color:#8fa2c8;font-size:9px}
+.chart-legend span{display:inline-flex;align-items:center;gap:5px}
+.chart-dot{width:7px;height:7px;border-radius:2px;background:#6ddcf4}.chart-dot.perfect{background:#e8bd6a}
+.replay-list,.daily-mission-list,.leaderboard-list{display:grid;gap:7px}
+.replay-item,.mission-item,.leader-row{display:flex;align-items:center;gap:9px;padding:9px;border:1px solid #ffffff10;border-radius:10px;background:#ffffff04;min-width:0}
+.replay-meta,.mission-meta,.leader-meta{min-width:0;flex:1}
+.replay-meta strong,.mission-meta strong,.leader-meta strong{display:block;color:#e5edff;font-size:10px;font-weight:400;overflow-wrap:anywhere}
+.replay-meta small,.mission-meta small,.leader-meta small{display:block;margin-top:4px;color:#8296bd;font-size:9px;line-height:1.4}
+.replay-play,.mission-claim{flex-shrink:0;padding:7px 10px;border:1px solid rgba(111,233,255,.22);border-radius:8px;background:rgba(111,233,255,.08);color:#a9f0ff;font-size:9px}
+.replay-play:disabled,.mission-claim:disabled{opacity:.38;cursor:not-allowed}
+.replay-empty,.panel-empty{padding:13px 8px;color:#788caf;font-size:10px;line-height:1.6;text-align:center}
+.leader-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+.leader-tab{padding:8px 5px;border:1px solid #ffffff13;border-radius:8px;background:#ffffff04;color:#8ea1c7;font-size:9px}
+.leader-tab.active{border-color:#ffdc8655;background:#ffdc8610;color:#ffe3a0}
+.leader-rank{width:25px;flex-shrink:0;color:#9aadd4;text-align:center;font-size:12px;font-variant-numeric:tabular-nums}
+.leader-row:nth-child(1) .leader-rank{color:#ffe3a0}.leader-row:nth-child(2) .leader-rank{color:#d4e3f7}.leader-row:nth-child(3) .leader-rank{color:#dba778}
+.leader-value{flex-shrink:0;color:#dce8ff;font-size:10px;text-align:right}
+.mission-icon{width:29px;height:29px;flex-shrink:0;display:grid;place-items:center;border-radius:9px;background:#ffffff0a;color:var(--gold);font-size:14px}
+.mission-progress{height:4px;margin-top:6px;overflow:hidden;border-radius:99px;background:#ffffff12}
+.mission-progress span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#69dff2,#a990ff);transition:width .25s}
+.mission-item.done{border-color:#78efc033}
+.mission-item.done .mission-progress span{background:linear-gradient(90deg,#78efc0,#b9f6d9)}
+.mission-claim.ready{border-color:#ffdc8677;background:#ffdc8617;color:#ffe4a0}
+.mission-reward{flex-shrink:0;color:#ffe2a0;font-size:9px;white-space:nowrap}
+@media(max-width:1050px){.season2-grid{grid-template-columns:1fr 1fr}.record-panel:last-child{grid-column:1/-1}}
+@media(max-width:600px){
+ .mode-panel{padding:10px}.mode-options{gap:5px}.mode-choice{padding:9px 3px;font-size:10px}.mode-choice small{font-size:8px}
+ .challenge-toolbar{grid-template-columns:1fr}.challenge-start{width:100%}.season2-grid{grid-template-columns:1fr;gap:10px;margin-top:10px}
+ .record-panel:last-child{grid-column:auto}.record-panel{padding:12px}.record-kpi{padding:8px}.record-kpi strong{font-size:15px}
+ .weekly-chart{height:102px}.weekly-stack{height:73px}.replay-item,.mission-item,.leader-row{padding:8px}
+}
+
 </style>
 <script type="module">
 import {createClient} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -324,6 +391,7 @@ function buildBackground(){
 buildBackground();
 let session=null,gameState=null,mode="idle",charge=0,chargeStarted=0,flightStarted=0,rotationAngle=0,landingAngle=0,throwPending=false;
 let landingFlashTimer=0;
+let selectedGameMode="classic",challengeRun=null,season2Dashboard=null,activeLeaderboard="best",currentReplayRecordId=null;
 let flightParams={duration:2.85,height:108,speed:710/2.85,spinRate:2.35,landingAngle:0,tolerance:12},lastAnglePaint=0;
 let toastTimer=0,history=[],pendingUpgrade=null,authSubscription=null,authSeq=0,particles=[],impactAt=0,impactX=560,lastFrame=0,lastPaint=0,rafId=0,hiddenAt=0,arenaObserver=null;
 function toast(message,type="normal"){
@@ -976,6 +1044,22 @@ $("soundToggle").addEventListener("click",()=>{
    <div class="flight-metric"><small>예상 착지 거리</small><strong id="flightDistance">장전 대기</strong></div>
   </div>
   <div class="stage-caption"><span>CHARGE → AUTO SPIN → UPRIGHT LANDING</span><span id="spinCount">목표 착지각 0°</span></div>
+
+  <section class="mode-panel" aria-label="게임 모드">
+   <div class="mode-panel-head"><strong>✦ CHALLENGE MODES</strong><small>기본 보상·강화 시스템 그대로 적용</small></div>
+   <div class="mode-options">
+    <button class="mode-choice active" type="button" data-game-mode="classic">기본 플레이<small>자유롭게 플레이</small></button>
+    <button class="mode-choice" type="button" data-game-mode="time_attack">타임어택<small>60초 기록전</small></button>
+    <button class="mode-choice" type="button" data-game-mode="endless">무한 도전<small>실패 전까지</small></button>
+    <button class="mode-choice" type="button" data-game-mode="precision">정밀 착지<small>10회 집중 도전</small></button>
+   </div>
+   <div class="challenge-toolbar">
+    <div class="challenge-description"><strong id="modeTitle">기본 플레이</strong><span id="modeDescription">원하는 만큼 던지며 기존 세우기 코인을 모아 봐.</span></div>
+    <button class="challenge-start" id="challengeStartButton" type="button" disabled>도전 시작</button>
+   </div>
+   <div class="challenge-status"><span id="challengeStatusText">기본 플레이 · 제한 없음</span><strong id="challengeStatusValue">READY</strong></div>
+  </section>
+
   <div class="landing-panel">
    <div class="landing-head"><span>착지 각도 조준</span><strong>목표 0° · 똑바로 세우기</strong></div>
    <div class="angle-track" aria-hidden="true"><span class="angle-midline"></span><span id="angleTargetRange" class="angle-target-range"></span><span id="anglePointer" class="angle-pointer"></span></div>
@@ -1044,6 +1128,40 @@ $("soundToggle").addEventListener("click",()=>{
   </section>
  </aside>
 </section>
+
+<section class="season2-grid" aria-label="돌이 세우기 시즌 2 기록과 경쟁">
+ <section class="record-panel">
+  <div class="record-panel-head"><h2>✧ PERSONAL RECORD ROOM</h2><small>MY SEUGI STATS</small></div>
+  <div class="record-kpis">
+   <div class="record-kpi gold"><span>누적 PERFECT</span><strong id="perfectTotal">—</strong></div>
+   <div class="record-kpi"><span>현재 PERFECT 연속</span><strong id="perfectCurrentStreak">—</strong></div>
+   <div class="record-kpi"><span>최고 PERFECT 연속</span><strong id="perfectBestStreak">—</strong></div>
+   <div class="record-kpi"><span>최근 7일 평균 오차</span><strong id="averageError7d">—</strong></div>
+   <div class="record-kpi"><span>도전 모드 던지기</span><strong id="challengeThrowTotal">—</strong></div>
+   <div class="record-kpi"><span>최고 착지 오차</span><strong id="roomBestError">—</strong></div>
+  </div>
+  <div class="chart-title">최근 7일 착지 기록</div>
+  <div class="weekly-chart" id="weeklyChart"><div class="panel-empty">기록을 불러오는 중이야.</div></div>
+  <div class="chart-legend"><span><i class="chart-dot"></i>일반 던지기</span><span><i class="chart-dot perfect"></i>PERFECT</span></div>
+  <div class="chart-title">최근 리플레이</div>
+  <div class="replay-list" id="replayList"><div class="replay-empty">로그인하면 최근 착지 장면을 다시 볼 수 있어.</div></div>
+ </section>
+ <section class="record-panel">
+  <div class="record-panel-head"><h2>🏆 GLOBAL LEADERBOARD</h2><small>TOP 10</small></div>
+  <div class="leader-tabs" role="tablist" aria-label="랭킹 종류">
+   <button class="leader-tab active" type="button" data-leaderboard="best">최고 정밀도</button>
+   <button class="leader-tab" type="button" data-leaderboard="perfect">PERFECT</button>
+   <button class="leader-tab" type="button" data-leaderboard="success">성공 횟수</button>
+  </div>
+  <div class="leaderboard-list" id="leaderboardList"><div class="panel-empty">랭킹 정보를 불러오고 있어.</div></div>
+  <div class="chart-title" id="leaderboardCaption">가장 작은 착지 오차를 기록한 사용자 순위</div>
+ </section>
+ <section class="record-panel">
+  <div class="record-panel-head"><h2>📋 TODAY'S MISSIONS</h2><small>ASIA / SEOUL</small></div>
+  <div class="daily-mission-list" id="dailyMissionList"><div class="panel-empty">오늘의 미션을 불러오고 있어.</div></div>
+ </section>
+</section>
+
 <section class="guide">
  <article class="guide-card"><div class="number">STEP 01</div><h3>기를 장전해!</h3><p>‘돌이 던지기’를 누르고 있으면 기가 모여. 오래 누를수록 장전량과 기본 보상이 커져.</p></article>
  <article class="guide-card"><div class="number">STEP 02</div><h3>공중에서 회전!</h3><p>던진 순간부터 돌이가 자동으로 회전해. 장전한 힘에 따라 회전 속도가 달라지니 착지 각도를 잘 맞춰 봐.</p></article>
