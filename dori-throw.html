@@ -563,8 +563,8 @@ function setAngleGauge(angle,tolerance,status){
   return Number.isFinite(Number(errorAngle))&&roundedLandingTenth(errorAngle)<=roundedLandingTenth(tolerance);
  }
  function isPerfectLanding(errorAngle){
-  // PERFECT is reserved for landings displayed as exactly 0.0° on the angle gauge.
-  return Number.isFinite(Number(errorAngle))&&roundedLandingTenth(Math.abs(Number(errorAngle)))===0;
+  // PERFECT applies to an inclusive landing-error range of -2.0° through +2.0°.
+  return Number.isFinite(Number(errorAngle))&&Math.abs(Number(errorAngle))<=2.0;
  }
 function setLandingVerdict(stage,details={}){
  const panel=$("landingVerdict");
@@ -574,7 +574,7 @@ function setLandingVerdict(stage,details={}){
  const isPerfect=stage==="perfect",isSuccess=stage==="success"||isPerfect;
  $("verdictTag").textContent=isPerfect?"LANDING RESULT · PERFECT":isSuccess?"LANDING RESULT · SUCCESS":stage==="failure"?"LANDING RESULT · FAILED":"LANDING RESULT · ERROR";
  $("verdictTitle").textContent=isPerfect?"완벽한 착지! PERFECT!":isSuccess?"착지 성공!":"이번 착지는 실패했어";
- $("verdictDescription").textContent=details.description||(isPerfect?"착지 각도 오차 0.0° · 완벽해!":isSuccess?"목표 각도에 착지했어!":"각도가 허용 범위를 벗어났어. 다시 도전해 보자!");
+ $("verdictDescription").textContent=details.description||(isPerfect?"착지 각도 오차 ±2.0° 이내 · 완벽해!":isSuccess?"목표 각도에 착지했어!":"각도가 허용 범위를 벗어났어. 다시 도전해 보자!");
  panel.classList.add("reveal");
 }
 function showLandingFlash(success,subtitle,perfect=false){
@@ -583,7 +583,7 @@ function showLandingFlash(success,subtitle,perfect=false){
  flash.classList.remove("show","success","failure","perfect");
  flash.classList.add(perfect?"perfect":success?"success":"failure");
  $("landingFlashTitle").textContent=perfect?"PERFECT!":success?"SUCCESS!":"FAILED";
- $("landingFlashSubtitle").textContent=subtitle||(perfect?"정확히 0.0° · 완벽한 착지!":success?"목표 각도에 착지했어!":"착지 각도가 맞지 않았어.");
+ $("landingFlashSubtitle").textContent=subtitle||(perfect?"오차 ±2.0° 이내 · PERFECT 착지!":success?"목표 각도에 착지했어!":"착지 각도가 맞지 않았어.");
  void flash.offsetWidth;
  flash.classList.add("show");
  landingFlashTimer=setTimeout(()=>flash.classList.remove("show"),1800);
@@ -746,14 +746,14 @@ function completeFlight(){
  $("stateChip").textContent=predictedPerfect?"PERFECT! · 기록 저장 중":predictedSuccess?"착지 성공 · 기록 저장 중":"착지 실패 · 기록 저장 중";
  $("stateChip").classList.remove("live");
  setAngleGauge(displayedAngle,flightParams.tolerance,predictedPerfect
-  ?"PERFECT! · 착지 각도 오차 0.0°"
+  ?"PERFECT! · 착지 각도 오차 ±2.0° 이내"
   :predictedSuccess?"성공! 목표 각도 오차 "+angleError.toFixed(1)+"°"
   :"실패 · 목표 각도에서 "+angleError.toFixed(1)+"° 벗어났어.");
  setLandingVerdict(predictedPerfect?"perfect":predictedSuccess?"success":"failure",{description:
-  (predictedPerfect?"PERFECT! · 착지 각도 오차 0.0° · 완벽한 착지야!":"목표각 0° · 오차 "+angleError.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°")+
+  (predictedPerfect?"PERFECT! · 착지 각도 오차 ±2.0° 이내 · 완벽한 착지야!":"목표각 0° · 오차 "+angleError.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°")+
   (session?"\n세우기 코인 기록을 저장하고 있어.":"\n체험 모드 · 로그인하면 코인 적립 가능")});
- showLandingFlash(predictedSuccess,predictedPerfect?"정확히 0.0° · 완벽한 착지!":"목표 0° · 오차 "+angleError.toFixed(1)+"°",predictedPerfect);
- $("chargeHint").textContent=predictedPerfect?"PERFECT! 정확히 0.0°로 착지했어!":predictedSuccess?"돌이가 목표 각도에 착지했어! 서버 기록을 저장하고 있어.":"착지 각도가 허용 범위를 벗어났어. 다음 도전을 준비해 봐!";
+ showLandingFlash(predictedSuccess,predictedPerfect?"오차 ±2.0° 이내 · PERFECT 착지!":"목표 0° · 오차 "+angleError.toFixed(1)+"°",predictedPerfect);
+ $("chargeHint").textContent=predictedPerfect?"PERFECT! 오차 ±2.0° 이내로 착지했어!":predictedSuccess?"돌이가 목표 각도에 착지했어! 서버 기록을 저장하고 있어.":"착지 각도가 허용 범위를 벗어났어. 다음 도전을 준비해 봐!";
  $("rewardResult").textContent=predictedPerfect?"PERFECT! · 세우기 코인 기록 저장 중…":predictedSuccess?"착지 성공! 세우기 코인 기록 저장 중…":"착지 실패 · 세우기 코인 0개";
  submitThrow();
 }
@@ -765,7 +765,7 @@ async function submitThrow(){
  const localPerfect=localSuccess&&isPerfectLanding(localError);
  if(!session){
   $("stateChip").textContent=localPerfect?"PERFECT! · 체험 모드":localSuccess?"착지 성공 · 체험 모드":"착지 실패 · 체험 모드";
-  $("chargeHint").textContent=localPerfect?"PERFECT! 정확히 0.0°로 착지했어!":localSuccess?"체험 모드 성공! 로그인하면 세우기 코인을 적립할 수 있어.":"체험 모드 실패 · 허용 범위 ±"+flightParams.tolerance.toFixed(1)+"°에 맞춰 다시 도전해 봐.";
+  $("chargeHint").textContent=localPerfect?"PERFECT! 오차 ±2.0° 이내로 착지했어!":localSuccess?"체험 모드 성공! 로그인하면 세우기 코인을 적립할 수 있어.":"체험 모드 실패 · 허용 범위 ±"+flightParams.tolerance.toFixed(1)+"°에 맞춰 다시 도전해 봐.";
   $("rewardResult").textContent=localPerfect?"PERFECT! · 로그인하면 보상 기록이 저장돼.":localSuccess?"체험 착지 성공! 로그인하면 보상 기록이 저장돼.":"착지 실패 · 세우기 코인 0개";
   throwPending=false;
   if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}
@@ -797,13 +797,13 @@ async function submitThrow(){
    :"실패 · 목표각에서 "+errorAngle.toFixed(1)+"° 벗어났어.");
   const serverDisagrees=success!==localSuccess;
   setLandingVerdict(serverPerfect?"perfect":success?"success":"failure",{description:
-   (serverPerfect?"PERFECT! · 착지 각도 오차 0.0° · 완벽한 착지야!":"목표각 0° · 실제 오차 "+errorAngle.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°")+
+   (serverPerfect?"PERFECT! · 착지 각도 오차 ±2.0° 이내 · 완벽한 착지야!":"목표각 0° · 실제 오차 "+errorAngle.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°")+
    (success?"\\n+"+fmt(reward)+" 세우기 코인 획득!":"\\n이번 착지 보상은 0 세우기 코인이야.")});
-  if(serverDisagrees||localPerfect!==serverPerfect){playSfx(serverPerfect?"perfect":success?"success":"failure");showLandingFlash(success,serverPerfect?"정확히 0.0° · PERFECT!":"서버 최종 판정 · 오차 "+errorAngle.toFixed(1)+"°",serverPerfect);}
+  if(serverDisagrees||localPerfect!==serverPerfect){playSfx(serverPerfect?"perfect":success?"success":"failure");showLandingFlash(success,serverPerfect?"오차 ±2.0° 이내 · PERFECT!":"서버 최종 판정 · 오차 "+errorAngle.toFixed(1)+"°",serverPerfect);}
   $("stateChip").textContent=serverPerfect?"PERFECT!":success?"착지 성공":"착지 실패";
   $("rewardResult").textContent=success?(serverPerfect?"PERFECT! · +":"+")+fmt(reward)+" 세우기 코인 획득!":"착지 실패 · 세우기 코인 0개";
   $("chargeHint").textContent=success
-   ?(serverPerfect?"PERFECT! 완벽한 0.0° 착지 · ":"서버 판정 완료 · ")+fmt(reward)+" 세우기 코인을 획득했어."
+   ?(serverPerfect?"PERFECT! 오차 ±2.0° 이내 착지 · ":"서버 판정 완료 · ")+fmt(reward)+" 세우기 코인을 획득했어."
    :"서버 판정 완료 · 허용 각도 ±"+flightParams.tolerance.toFixed(1)+"° 밖이야.";
   refreshUI();addHistory(success,reward,charge,landingAngle,errorAngle);
   if(success){playSfx("coin");toast("세우기 코인 +"+fmt(reward)+" 획득!","success");}
