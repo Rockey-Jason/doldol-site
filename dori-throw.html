@@ -411,15 +411,15 @@ function getFlightParams(chargeValue){
  const q=clamp(Number(chargeValue||1),1,100)/100;
  const power=Number(gameState?.power_level||0),accuracy=Number(gameState?.accuracy_level||0);
  const gravityMultiplier=9.00;
- const baseDuration=2.90-q*.45-power*.010;
+ const baseDuration=2.90-q*.45-power*.012;
  const duration=baseDuration/Math.sqrt(gravityMultiplier);
- const distance=260+q*450+power*4.5;
- const height=105+q*125+power*1.75;
+ const distance=260+q*450+power*12;
+ const height=105+q*125+power*4.5;
  const speed=distance/duration;
- const spinRate=3.80+q*15+power*.35;
+ const spinRate=3.80+q*15+power*.60;
  const landingX=190+distance;
  const finalAngle=normalizeDegrees(spinRate*duration*180/Math.PI);
- return {duration,distance,height,speed,spinRate,landingX,landingAngle:finalAngle,tolerance:18+accuracy*.75};
+ return {duration,distance,height,speed,spinRate,landingX,landingAngle:finalAngle,tolerance:18+accuracy*1.5};
 }
 function setAngleGauge(angle,tolerance,status){
  const signed=signedDegrees(angle),pointer=clamp((signed+180)/360*100,0,100);
@@ -456,8 +456,8 @@ function showLandingFlash(success,subtitle,perfect=false){
  landingFlashTimer=setTimeout(()=>flash.classList.remove("show"),1800);
 }
 function updateFlightPreview(chargeValue=charge){
- const tolerance=18+Number(gameState?.accuracy_level||0)*.75;
- $("spinCount").textContent="목표 0° ±"+tolerance.toFixed(0)+"°";
+ const tolerance=18+Number(gameState?.accuracy_level||0)*1.5;
+ $("spinCount").textContent="목표 0° ±"+tolerance.toFixed(1)+"°";
  $("angleTargetRange").style.left=((180-tolerance)/360*100)+"%";
  $("angleTargetRange").style.width=(tolerance*2/360*100)+"%";
  if(!chargeValue){
@@ -691,7 +691,7 @@ function openUpgradeConfirm(type){
  const level=type==="power"?gameState.power_level:gameState.accuracy_level,cost=nextCost(type,level);
  if(cost===null){toast("이미 최대 레벨입니다.");return}if(BigInt(String(gameState.seugi_coin_balance??gameState.balance??0))<BigInt(cost)){toast("세우기 코인이 부족합니다.");return}
  pendingUpgrade=type;$("upgradeModalTitle").textContent=type==="power"?"힘 강화":"정확도 강화";
- $("upgradeModalText").textContent=type==="power"?"비행 속도와 최고 높이, 자동 회전 속도가 함께 올라가.":"착지 목표각 0°의 허용 범위가 넓어져 성공하기 쉬워져.";
+ $("upgradeModalText").textContent=type==="power"?"레벨마다 비행 거리 +12px, 최고 높이 +4.5px, 회전 속도 +0.60rad/s로 강화돼.":"레벨마다 성공 허용 각도가 +1.5° 넓어져. 최대 레벨에서는 0° 기준 ±48°까지 허용돼.";
  $("upgradeModalPrice").textContent=fmt(cost)+" S";$("upgradeConfirm").disabled=false;$("upgradeModal").classList.add("open");$("upgradeModal").setAttribute("aria-hidden","false");$("upgradeConfirm").focus();
 }
 function closeUpgradeConfirm(){pendingUpgrade=null;$("upgradeModal").classList.remove("open");$("upgradeModal").setAttribute("aria-hidden","true")}
@@ -833,12 +833,12 @@ $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loading
    <h2>⚙ 돌이 강화 연구소</h2>
    <div class="upgrade-card">
     <div class="upgrade-top"><div class="upgrade-name"><span class="upgrade-icon">💪</span>힘 강화</div><span class="level" id="powerLevel">Lv. 0 / 20</span></div>
-    <p class="upgrade-desc">던지는 힘이 강해져 비행 속도와 최고 높이, 자동 회전 속도가 함께 증가해.</p>
+    <p class="upgrade-desc">레벨마다 비행 거리 +12px, 최고 높이 +4.5px, 회전 속도 +0.60rad/s가 추가돼. 비행 속도도 함께 빨라져.</p>
     <div class="upgrade-bottom"><span class="cost">다음 강화 <b id="powerCost">150 S</b></span><button class="upgrade-btn" id="powerUpgrade" type="button">힘 강화</button></div>
    </div>
    <div class="upgrade-card">
     <div class="upgrade-top"><div class="upgrade-name"><span class="upgrade-icon">🎯</span>정확도 강화</div><span class="level" id="accuracyLevel">Lv. 0 / 20</span></div>
-    <p class="upgrade-desc">착지 목표인 0° 주변의 성공 허용 범위가 넓어져. 각도 맞추기가 조금 더 쉬워져.</p>
+    <p class="upgrade-desc">레벨마다 성공 허용 범위가 1.5°씩 넓어져. 최대 Lv.20에서는 목표 0° 기준 ±48°까지 허용돼.</p>
     <div class="upgrade-bottom"><span class="cost">다음 강화 <b id="accuracyCost">180 S</b></span><button class="upgrade-btn" id="accuracyUpgrade" type="button">정확도 강화</button></div>
    </div>
   </section>
