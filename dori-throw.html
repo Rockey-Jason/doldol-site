@@ -124,6 +124,7 @@ body:before,body:after{content:"";position:fixed;z-index:-1;pointer-events:none;
 body:before{width:380px;height:380px;top:16%;left:-230px;background:#52b9ff}
 body:after{width:460px;height:460px;right:-300px;bottom:-80px;background:#8f64ff;animation-delay:-8s}
 .shell{position:relative;z-index:1}
+#rewardResult{display:none!important}
 @keyframes ambientShift{0%{background-position:0% 0%}100%{background-position:100% 100%}}
 @keyframes orbFloat{0%{transform:translate3d(0,-15px,0) scale(.9)}100%{transform:translate3d(75px,40px,0) scale(1.12)}}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
@@ -142,6 +143,16 @@ body:after{width:460px;height:460px;right:-300px;bottom:-80px;background:#8f64ff
 .profile-info span{max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f4f6ff;font-size:13px}
 .profile-info em{font-style:normal;color:#8498bf;font-size:9px}
 .balance-value{text-align:right;min-width:0}.balance-value strong{display:block;margin-top:4px;color:var(--gold);font-size:23px;font-weight:400;white-space:nowrap;font-variant-numeric:tabular-nums;text-shadow:0 0 20px rgba(255,220,134,.12)}
+.balance-amount-row{display:flex;align-items:center;justify-content:flex-end;gap:9px;min-height:34px;margin-top:3px}
+.balance-value .balance-amount-row strong{margin:0}
+.balance-value strong.counting{color:#fff1bb;text-shadow:0 0 10px rgba(255,220,134,.62),0 0 26px rgba(255,220,134,.3);animation:coinBalancePulse .68s ease-in-out infinite alternate}
+.coin-gain-float{display:inline-flex;align-items:center;justify-content:center;min-height:27px;padding:4px 9px;border:1px solid rgba(120,239,192,.5);border-radius:999px;background:linear-gradient(115deg,rgba(38,116,91,.94),rgba(21,70,68,.96));color:#c9ffe9;font-size:12px;font-weight:400;white-space:nowrap;font-variant-numeric:tabular-nums;box-shadow:0 0 18px rgba(120,239,192,.17),inset 0 1px rgba(255,255,255,.12);pointer-events:none}
+.coin-gain-float[hidden]{display:none}
+.coin-gain-float.show{animation:coinGainLift 2.35s cubic-bezier(.2,.72,.24,1) both}
+@keyframes coinGainLift{0%{opacity:0;transform:translate3d(10px,8px,0) scale(.82);filter:blur(3px)}13%{opacity:1;transform:translate3d(0,0,0) scale(1);filter:blur(0)}70%{opacity:1;transform:translate3d(0,-2px,0) scale(1.02)}100%{opacity:0;transform:translate3d(0,-15px,0) scale(.94);filter:blur(1px)}}
+@keyframes coinBalancePulse{from{transform:scale(1);text-shadow:0 0 8px rgba(255,220,134,.36)}to{transform:scale(1.035);text-shadow:0 0 16px rgba(255,220,134,.72),0 0 30px rgba(255,220,134,.25)}}
+@media(max-width:600px){.balance-amount-row{gap:6px}.coin-gain-float{min-height:24px;padding:3px 7px;font-size:10px}.balance-value strong{font-size:19px}}
+@media(prefers-reduced-motion:reduce){.coin-gain-float.show,.balance-value strong.counting{animation:none!important}}
 .canvas-wrap{border-color:rgba(111,198,255,.27);box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 10px 32px rgba(0,0,0,.2);background:#09152f}
 .canvas-wrap:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(96,160,255,.045),transparent 30%,transparent 75%,rgba(1,7,19,.12));box-shadow:inset 0 0 45px rgba(0,0,0,.16)}
 #arenaCanvas{filter:saturate(1.08) contrast(1.02)}
@@ -400,6 +411,7 @@ let landingFlashTimer=0;
 let selectedGameMode="classic",challengeRun=null,season2Dashboard=null,activeLeaderboard="best",currentReplayRecordId=null,livePerfectCombo=0;
 let flightParams={duration:2.85,height:108,speed:710/2.85,spinRate:2.35,landingAngle:0,tolerance:12},lastAnglePaint=0;
 let toastTimer=0,history=[],pendingUpgrade=null,authSubscription=null,authSeq=0,particles=[],impactAt=0,impactX=560,lastFrame=0,lastPaint=0,rafId=0,hiddenAt=0,arenaObserver=null;
+let coinBalanceAnimation=null,coinBalanceRaf=0;
 
 function updatePerfectCombo(count,animate=false){
  livePerfectCombo=Math.max(0,Number(count)||0);
@@ -722,6 +734,37 @@ function playSfx(name,detail=0){
 }
 
 function nextCost(type,level){return level>=20?null:Math.ceil((type==="power"?150:180)*Math.pow(1.48,level))}
+function animateSeugiCoin(previousBalance,nextBalance,reward){
+ const amount=Math.max(0,Math.round(Number(reward)||0));
+ if(!amount)return;
+ if(coinBalanceRaf)cancelAnimationFrame(coinBalanceRaf);
+ const from=Math.max(0,Number(previousBalance)||0);
+ const to=Math.max(from,Number(nextBalance)||from+amount);
+ const reducedMotion=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+ const animation={from,to,reward:amount,startAt:performance.now()+(reducedMotion?0:420),duration:reducedMotion?180:1900};
+ coinBalanceAnimation=animation;
+ const popup=$("coinGainFloat");
+ popup.hidden=false;popup.classList.remove("show");popup.textContent="+"+fmt(amount)+" S";
+ void popup.offsetWidth;popup.classList.add("show");
+ $("coinBalance").classList.add("counting");
+ const tick=now=>{
+  if(coinBalanceAnimation!==animation)return;
+  const progress=clamp((now-animation.startAt)/animation.duration,0,1);
+  const eased=1-Math.pow(1-progress,3.2);
+  const current=Math.round(animation.from+(animation.to-animation.from)*eased);
+  const remaining=Math.max(0,Math.ceil(animation.reward*(1-eased)));
+  $("coinBalance").textContent=fmt(current)+" S";
+  popup.textContent="+"+fmt(remaining)+" S";
+  if(progress>=1){
+   $("coinBalance").textContent=fmt(animation.to)+" S";
+   $("coinBalance").classList.remove("counting");
+   popup.classList.remove("show");popup.hidden=true;
+   coinBalanceAnimation=null;coinBalanceRaf=0;return;
+  }
+  coinBalanceRaf=requestAnimationFrame(tick);
+ };
+ coinBalanceRaf=requestAnimationFrame(tick);
+}
 function setAvatar(url){
  const el=$("profileAvatar");el.replaceChildren();
  if(!url){el.textContent="🐾";return}
@@ -756,7 +799,7 @@ function refreshUI(){
  $("profileLevel").textContent="SITE LV. "+Number(gameState.user_level||1)+" · EXP LV. "+Number(gameState.exp_level||1);
  setAvatar(gameState.profile_image||null);
  const coinBalance=gameState.seugi_coin_balance??gameState.balance??0;
- $("coinBalance").textContent=fmt(coinBalance)+" S";
+ if(!coinBalanceAnimation)$("coinBalance").textContent=fmt(coinBalance)+" S";
  $("powerLevel").textContent="Lv. "+gameState.power_level+" / 20";$("accuracyLevel").textContent="Lv. "+gameState.accuracy_level+" / 20";
  const pc=nextCost("power",gameState.power_level),ac=nextCost("accuracy",gameState.accuracy_level);
  $("powerCost").textContent=pc===null?"MAX":fmt(pc)+" S";$("accuracyCost").textContent=ac===null?"MAX":fmt(ac)+" S";
@@ -858,19 +901,7 @@ function setAngleGauge(angle,tolerance,status){
  function isPerfectLanding(errorAngle){
   // PERFECT applies to an inclusive landing-error range of -2.0° through +2.0°.
   return Number.isFinite(Number(errorAngle))&&Math.abs(Number(errorAngle))<=2.0;
- }
-function setLandingVerdict(stage,details={}){
- const panel=$("landingVerdict");
- panel.hidden=false;
- panel.dataset.state=stage;
- panel.classList.remove("reveal");
- const isPerfect=stage==="perfect",isSuccess=stage==="success"||isPerfect;
- $("verdictTag").textContent=isPerfect?"LANDING RESULT · PERFECT":isSuccess?"LANDING RESULT · SUCCESS":stage==="failure"?"LANDING RESULT · FAILED":"LANDING RESULT · ERROR";
- $("verdictTitle").textContent=isPerfect?"완벽한 착지! PERFECT!":isSuccess?"착지 성공!":"이번 착지는 실패했어";
- $("verdictDescription").textContent=details.description||(isPerfect?"착지 각도 오차 ±2.0° 이내 · 완벽해!":isSuccess?"목표 각도에 착지했어!":"각도가 허용 범위를 벗어났어. 다시 도전해 보자!");
- panel.classList.add("reveal");
-}
-function showLandingFlash(success,subtitle,perfect=false){
+ }function showLandingFlash(success,subtitle,perfect=false){
  const flash=$("landingFlash");
  clearTimeout(landingFlashTimer);
  flash.classList.remove("show","success","failure","perfect");
@@ -908,7 +939,7 @@ function startCharge(){
  if(selectedGameMode==="time_attack"&&challengeRun&&performance.now()>=challengeRun.endsAt){finishChallenge("time");return;}
  if(selectedGameMode==="precision"&&challengeRun&&challengeRun.attempts>=10){finishChallenge("attempts");return;}
  playSfx("chargeStart");closeUpgradeConfirm();
- clearTimeout(landingFlashTimer);$("landingFlash").classList.remove("show");$("landingVerdict").hidden=true;
+ clearTimeout(landingFlashTimer);$("landingFlash").classList.remove("show");
  $("chargeValue").textContent="힘을 모으는 중…";$("chargeFill").style.width="0%";$("rewardResult").textContent="던질 준비 완료";
  mode="charging";charge=0;chargeStarted=performance.now();$("chargeButton").classList.add("charging");
  $("chargeButton").setAttribute("aria-label","힘 장전 중");$("chargeButton").disabled=false;$("restartButton").disabled=true;
@@ -1046,9 +1077,6 @@ function completeFlight(){
   ?"PERFECT! · 착지 각도 오차 ±2.0° 이내"
   :predictedSuccess?"성공! 목표 각도 오차 "+angleError.toFixed(1)+"°"
   :"실패 · 목표 각도에서 "+angleError.toFixed(1)+"° 벗어났어.");
- setLandingVerdict(predictedPerfect?"perfect":predictedSuccess?"success":"failure",{description:
-  (predictedPerfect?"PERFECT! · 착지 각도 오차 ±2.0° 이내 · 완벽한 착지야!":"목표각 0° · 오차 "+angleError.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°")+
-  (session?"\n세우기 코인 기록을 저장하고 있어.":"\n체험 모드 · 로그인하면 코인 적립 가능")});
  showLandingFlash(predictedSuccess,predictedPerfect?"오차 ±2.0° 이내 · PERFECT 착지!":"목표 0° · 오차 "+angleError.toFixed(1)+"°",predictedPerfect);
  $("chargeHint").textContent=predictedPerfect?"PERFECT! 오차 ±2.0° 이내로 착지했어!":predictedSuccess?"돌이가 목표 각도에 착지했어! 서버 기록을 저장하고 있어.":"착지 각도가 허용 범위를 벗어났어. 다음 도전을 준비해 봐!";
  $("rewardResult").textContent=predictedPerfect?"PERFECT! · 세우기 코인 기록 저장 중…":predictedSuccess?"착지 성공! 세우기 코인 기록 저장 중…":"착지 실패 · 세우기 코인 0개";
@@ -1072,6 +1100,7 @@ async function submitThrow(){
  try{
   const {data,error}=await supabase.rpc("dori_throw_game_throw",{p_charge:charge,p_request_id:uuid(),p_mode:selectedGameMode});
   if(error)throw error;
+  const previousCoinBalance=Number(gameState.seugi_coin_balance??gameState.balance??0);
   gameState.seugi_coin_balance=data.seugi_coin_balance;gameState.balance=data.seugi_coin_balance;
   gameState.seugi_coin_earned=data.seugi_coin_earned;gameState.total_earned=data.seugi_coin_earned;
   gameState.total_throws=data.total_throws;gameState.successful_landings=data.successful_landings;
@@ -1095,9 +1124,6 @@ async function submitThrow(){
    ?"성공! 목표각 오차 "+errorAngle.toFixed(1)+"° · 서버 확인 완료"
    :"실패 · 목표각에서 "+errorAngle.toFixed(1)+"° 벗어났어.");
   const serverDisagrees=success!==localSuccess;
-  setLandingVerdict(serverPerfect?"perfect":success?"success":"failure",{description:
-   (serverPerfect?"PERFECT! · 착지 각도 오차 ±2.0° 이내 · 완벽한 착지야!":"목표각 0° · 실제 오차 "+errorAngle.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°")+
-   (success?"\\n+"+fmt(reward)+" 세우기 코인 획득!":"\\n이번 착지 보상은 0 세우기 코인이야.")});
   if(serverDisagrees||localPerfect!==serverPerfect){playSfx(serverPerfect?"perfect":success?"success":"failure");showLandingFlash(success,serverPerfect?"오차 ±2.0° 이내 · PERFECT!":"서버 최종 판정 · 오차 "+errorAngle.toFixed(1)+"°",serverPerfect);}
   $("stateChip").textContent=serverPerfect?"PERFECT!":success?"착지 성공":"착지 실패";
   $("rewardResult").textContent=success?(serverPerfect?"PERFECT! · +":"+")+fmt(reward)+" 세우기 코인 획득!":"착지 실패 · 세우기 코인 0개";
@@ -1105,8 +1131,10 @@ async function submitThrow(){
    ?(serverPerfect?"PERFECT! 오차 ±2.0° 이내 착지 · ":"서버 판정 완료 · ")+fmt(reward)+" 세우기 코인을 획득했어."
    :"서버 판정 완료 · 허용 각도 ±"+flightParams.tolerance.toFixed(1)+"° 밖이야.";
   refreshUI();addHistory(success,reward,charge,landingAngle,errorAngle);
-  if(success){playSfx("coin");toast("세우기 코인 +"+fmt(reward)+" 획득!","success");}
-  else toast("착지 실패 · 다음에는 각도를 맞춰 봐!","error");
+  if(success&&reward>0){
+    playSfx("coin");
+    animateSeugiCoin(previousCoinBalance,Number(gameState.seugi_coin_balance??gameState.balance??previousCoinBalance+reward),reward);
+   }
   await Promise.all([loadSeason2Dashboard(),loadDailyMissions()]);
   window.dispatchEvent(new Event("dori:seugi-progress-changed"));
   window.doriCheckAchievements?.();
@@ -1146,7 +1174,7 @@ async function buyUpgrade(type){
 function resetForNext(){
  if(mode!=="landed"||throwPending)return;playSfx("ui");
  currentReplayRecordId=null;
- clearTimeout(landingFlashTimer);$("landingFlash").classList.remove("show");$("landingVerdict").hidden=true;
+ clearTimeout(landingFlashTimer);$("landingFlash").classList.remove("show");
  mode="idle";charge=0;rotationAngle=0;landingAngle=0;
  $("rewardResult").textContent="새로운 도전을 시작해 보자!";$("stateChip").textContent="준비 완료";$("stateChip").classList.remove("live");
  $("chargeHint").textContent="힘을 장전하고 놓으면 돌이가 자동으로 회전하며 날아가!";
@@ -1179,7 +1207,6 @@ function frame(now){
     const replayRecord=season2Dashboard?.recent_records?.find(item=>item.record_id===currentReplayRecordId);
     const replayError=Math.abs(Number(replayRecord?.angle_error_deg??0));
     setAngleGauge(landingAngle,flightParams.tolerance,"리플레이 완료 · 착지 오차 "+replayError.toFixed(1)+"°");
-    setLandingVerdict(replayRecord?.is_perfect?"perfect":replayRecord?.success?"success":"failure",{description:"저장된 착지 결과 · 오차 "+replayError.toFixed(1)+"° · "+(replayRecord?.is_perfect?"PERFECT!":replayRecord?.success?"성공":"실패")});
     $("stateChip").textContent="REPLAY COMPLETE";$("chargeHint").textContent="리플레이가 끝났어. 다시 도전하거나 다른 기록을 재생해 봐.";
     $("chargeButton").disabled=false;$("restartButton").disabled=false;updateModeUi();
    }
@@ -1290,7 +1317,7 @@ $("soundToggle").addEventListener("click",()=>{
  <div class="balance-card">
  <div class="account-block"><div class="profile-avatar" id="profileAvatar">🐾</div>
   <div class="profile-info"><small id="accountLabel">ACCOUNT CONNECTION</small><span id="profileName">사용자 정보 확인 중…</span><em id="profileLevel">프로필을 불러오고 있어</em></div>
- </div><div class="balance-value"><small>MY SEUGI COIN · 게임 전용 재화</small><strong id="coinBalance">연결 중…</strong></div>
+ </div><div class="balance-value"><small>MY SEUGI COIN · 게임 전용 재화</small><div class="balance-amount-row"><strong id="coinBalance">연결 중…</strong><span class="coin-gain-float" id="coinGainFloat" aria-hidden="true" hidden>+0 S</span></div></div>
 </div>
 </section>
 <section class="dashboard">
@@ -1329,18 +1356,7 @@ $("soundToggle").addEventListener("click",()=>{
    <div class="angle-labels"><span>−180°</span><strong id="angleReadout">예상 각도 대기 중</strong><span>+180°</span></div>
    <div id="landingMessage" class="landing-message">착지 순간 돌이의 각도가 0° ±12° 안에 들어오면 세우기 코인을 획득해.</div>
   </div>
-  <section class="landing-verdict" id="landingVerdict" data-state="pending" aria-live="polite" hidden>
-   <div class="verdict-top"><span class="verdict-tag" id="verdictTag">LANDING · WAITING</span><span class="verdict-pulse" aria-hidden="true"></span></div>
-   <div class="verdict-title" id="verdictTitle">착지 결과 대기</div>
-   <div class="verdict-description" id="verdictDescription">돌이가 착지하면 충격과 각도를 차례로 확인해.</div>
-   <div class="verdict-progress"><span id="verdictProgressFill"></span></div>
-   <div class="verdict-steps">
-    <span class="verdict-step" id="verdictStepImpact">01 · 충격</span>
-    <span class="verdict-step" id="verdictStepMeasure">02 · 각도 측정</span>
-    <span class="verdict-step" id="verdictStepResult">03 · 최종 판정</span>
-   </div>
-  </section>
-  <div class="controls">
+    <div class="controls">
    <button class="charge-control" id="chargeButton" type="button" aria-label="돌이 던지기 · 누르고 있다가 놓기">
     <span class="charge-title">🐾 돌이 던지기</span><small id="chargeValue">누르고 있으면 기 장전 · 놓으면 발사</small><span id="chargeFill"></span>
    </button>
