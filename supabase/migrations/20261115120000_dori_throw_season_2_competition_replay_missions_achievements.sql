@@ -1145,7 +1145,7 @@ begin
     'new_level', v_new_level
   );
 end;
-$function$
+$function$;
 
 
 insert into public.achievements(id,name,description,rarity,reward_exp,reward_doldolcoin,icon,enabled,title)
