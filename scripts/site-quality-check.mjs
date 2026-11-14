@@ -50,7 +50,7 @@ function checkNodeSource(source, label, module = false) {
 function resolveLocalAsset(fromFile, rawValue, label) {
   const value = String(rawValue || "").trim();
   if (!value || value.startsWith("#") || /^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(value)) return;
-  if (/[{}<>]/.test(value) || value.includes("$(") || value.includes("${")) return;
+  if (/[{}<>]/.test(value) || value.includes("$(") || value.includes("${") || value.includes(" + ")) return;
   let pathname = value.split("#", 1)[0].split("?", 1)[0];
   if (!pathname) return;
   try { pathname = decodeURIComponent(pathname); } catch { errors.push(label + ": malformed URL encoding in " + value); return; }
@@ -60,6 +60,10 @@ function resolveLocalAsset(fromFile, rawValue, label) {
     pathname = pathname.replace(/^\/+/, "");
     if (pathname.startsWith("doldol-site/")) pathname = pathname.slice("doldol-site/".length);
     candidate = path.resolve(ROOT, pathname);
+    if (!fs.existsSync(candidate)) {
+      const pageRelative = path.resolve(path.dirname(fromFile), pathname);
+      if (fs.existsSync(pageRelative)) candidate = pageRelative;
+    }
   } else {
     candidate = path.resolve(path.dirname(fromFile), pathname);
   }
@@ -101,7 +105,7 @@ for (const file of htmlFiles) {
     const attrs = match[2] || "";
     let attrName = null;
     if (["script", "img", "iframe", "source", "audio", "track"].includes(tag)) attrName = "src";
-    if (tag === "video") attrName = "poster";
+    if (tag === "video") attrName = "src";
     if (tag === "object") attrName = "data";
     if (tag === "input" && (getAttr(attrs, "type") || "").toLowerCase() === "image") attrName = "src";
     if (tag === "link") {
@@ -111,6 +115,10 @@ for (const file of htmlFiles) {
     if (attrName) {
       const value = getAttr(attrs, attrName);
       if (value !== null) resolveLocalAsset(file, value, name);
+    }
+    if (tag === "video") {
+      const poster = getAttr(attrs, "poster");
+      if (poster !== null) resolveLocalAsset(file, poster, name);
     }
   }
 
