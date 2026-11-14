@@ -184,6 +184,19 @@ body:after{width:460px;height:460px;right:-300px;bottom:-80px;background:#8f64ff
 .round-restart:disabled{opacity:.38;cursor:not-allowed}
 @media(max-width:420px){.round-action-row{align-items:stretch;flex-direction:column}.round-restart{width:100%}}
 
+/* PERFORMANCE PASS · keep the premium look without continuous full-page repaints */
+body{background-size:auto;animation:none}
+body:before,body:after{animation:none;filter:blur(54px);opacity:.1}
+.panel{transition:border-color .22s}
+.panel:hover{border-color:rgba(123,206,255,.38)}
+#arenaCanvas{filter:none}
+.toast{backdrop-filter:none}
+.state-chip.live{animation:none;box-shadow:0 0 18px rgba(111,233,255,.14)}
+.charge-control.charging{animation:none;filter:brightness(1.12)}
+.spin-control.spin-queued{animation:none;box-shadow:inset 0 1px rgba(255,255,255,.18),0 0 24px rgba(167,135,255,.18)}
+#dailyFill:after{animation:none;opacity:.2;transform:none}
+@media(hover:none){.panel:hover,.upgrade-card:hover,.stat:hover,.guide-card:hover{transform:none;box-shadow:inherit}.balance-card:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){body:before,body:after{display:none}}
 </style>
 <script type="module">
 import {createClient} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -194,11 +207,39 @@ if(supabase&&!window.doriSupabase)window.doriSupabase=supabase;
 const $=id=>document.getElementById(id),TAU=Math.PI*2,MAX_DAILY=25000;
 const fmt=v=>{try{return BigInt(String(v??0)).toLocaleString("ko-KR")}catch{return "0"}};
 const uuid=()=>crypto?.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==="x"?r:(r&3|8)).toString(16)});
-const canvas=$("arenaCanvas"),ctx=canvas.getContext("2d"),dori=new Image();
-dori.decoding="async";dori.src="./assets/dori-life/dori-official.webp";
+const canvas=$("arenaCanvas"),ctx=canvas.getContext("2d",{alpha:false,desynchronized:true})||canvas.getContext("2d"),dori=new Image(),doriSpriteCanvas=document.createElement("canvas");
+doriSpriteCanvas.width=296;doriSpriteCanvas.height=324;
+const doriSpriteCtx=doriSpriteCanvas.getContext("2d");
+let doriReady=false;
+dori.decoding="async";
+dori.onload=()=>{doriSpriteCtx.clearRect(0,0,doriSpriteCanvas.width,doriSpriteCanvas.height);doriSpriteCtx.drawImage(dori,0,0,doriSpriteCanvas.width,doriSpriteCanvas.height);doriReady=true};
+dori.src="./assets/dori-life/dori-official.webp";
+const LOGICAL_WIDTH=1120,LOGICAL_HEIGHT=470,sceneLayer=document.createElement("canvas"),sceneCtx=sceneLayer.getContext("2d");
+sceneLayer.width=LOGICAL_WIDTH;sceneLayer.height=LOGICAL_HEIGHT;
+const starField=Array.from({length:48},(_,i)=>({x:(i*173+47)%1120,y:(i*67+29)%275,r:.65+(i%3)*.42,speed:.004+(i%5)*.0018,phase:i*1.7}));
+function resizeArena(){
+ const rect=canvas.getBoundingClientRect();if(rect.width<1||rect.height<1)return;
+ const cores=Number(navigator.hardwareConcurrency||8),memory=Number(navigator.deviceMemory||8),dprCap=cores<=4||memory<=4?1.2:1.6;
+ const dpr=Math.min(window.devicePixelRatio||1,dprCap),width=Math.max(1,Math.round(rect.width*dpr)),height=Math.max(1,Math.round(rect.height*dpr));
+ if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height}
+ ctx.setTransform(canvas.width/LOGICAL_WIDTH,0,0,canvas.height/LOGICAL_HEIGHT,0,0);
+ ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality="high";
+}
+function buildBackground(){
+ const g=sceneCtx.createLinearGradient(0,0,0,LOGICAL_HEIGHT);g.addColorStop(0,"#0c193b");g.addColorStop(.55,"#12294b");g.addColorStop(1,"#08162a");
+ sceneCtx.fillStyle=g;sceneCtx.fillRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);
+ const glow=sceneCtx.createRadialGradient(560,205,20,560,205,560);glow.addColorStop(0,"rgba(72,157,235,.17)");glow.addColorStop(1,"rgba(35,73,130,0)");
+ sceneCtx.fillStyle=glow;sceneCtx.fillRect(0,0,LOGICAL_WIDTH,420);
+ sceneCtx.fillStyle="rgba(95,150,211,.1)";sceneCtx.beginPath();sceneCtx.ellipse(245,375,320,110,0,0,TAU);sceneCtx.fill();sceneCtx.beginPath();sceneCtx.ellipse(900,365,300,120,0,0,TAU);sceneCtx.fill();
+ const floor=sceneCtx.createLinearGradient(0,370,0,LOGICAL_HEIGHT);floor.addColorStop(0,"#203c58");floor.addColorStop(1,"#0a172b");sceneCtx.fillStyle=floor;sceneCtx.fillRect(0,390,LOGICAL_WIDTH,80);
+ sceneCtx.strokeStyle="rgba(124,183,231,.2)";sceneCtx.lineWidth=2;sceneCtx.beginPath();sceneCtx.moveTo(0,390);sceneCtx.lineTo(LOGICAL_WIDTH,390);sceneCtx.stroke();
+ sceneCtx.strokeStyle="rgba(124,183,231,.095)";sceneCtx.lineWidth=1;
+ for(let i=-1;i<19;i++){const x=i*72;sceneCtx.beginPath();sceneCtx.moveTo(x,390);sceneCtx.lineTo(x-22,470);sceneCtx.stroke()}
+}
+buildBackground();
 let session=null,gameState=null,mode="idle",charge=0,chargeStarted=0,flightStarted=0,flightDuration=4;
 let spinRequested=0,spinCompleted=0,rotationAngle=0,rotationTime=0,launchOffset=0,throwPending=false;
-let toastTimer=0,history=[],pendingUpgrade=null,authSubscription=null,authSeq=0,particles=[],impactAt=0,lastFrame=0;
+let toastTimer=0,history=[],pendingUpgrade=null,authSubscription=null,authSeq=0,particles=[],impactAt=0,lastFrame=0,lastPaint=0,rafId=0,hiddenAt=0;
 function toast(message,type="normal"){
  const el=$("toast");el.textContent=message;el.dataset.type=type;el.classList.remove("show");void el.offsetWidth;el.classList.add("show");
  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2600);
@@ -288,7 +329,13 @@ function spawnParticles(x,y,count,color="cyan",spread=1){
   particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1.4,life:.5+Math.random()*.75,maxLife:.5+Math.random()*.75,size:1.4+Math.random()*3.2,color:colors[i%colors.length]})}
  if(particles.length>180)particles.splice(0,particles.length-180);
 }
-function updateParticles(dt){particles=particles.filter(p=>p.life>0);for(const p of particles){p.life-=dt;p.x+=p.vx;p.y+=p.vy;p.vx*=.99;p.vy=p.vy*.985+.055}}
+function updateParticles(dt){
+ const step=Math.min(2.4,Math.max(0,dt)*60);let write=0;
+ for(let i=0;i<particles.length;i++){const p=particles[i];p.life-=dt;if(p.life<=0)continue;
+  p.x+=p.vx*step;p.y+=p.vy*step;p.vx*=Math.pow(.99,step);p.vy=p.vy*Math.pow(.985,step)+.055*step;particles[write++]=p
+ }
+ particles.length=write;
+}
 function startCharge(){
  if((mode!=="idle"&&mode!=="landed")||throwPending)return;closeUpgradeConfirm();
  $("chargeValue").textContent="기를 모으는 중…";$("chargeFill").style.width="0%";$("rewardResult").textContent="던질 준비 완료";
@@ -318,16 +365,10 @@ function requestSpin(){
  $("spinButton").classList.add("spin-queued");if(spinRequested===3)$("spinButton").disabled=true;
 }
 function drawBackground(now=0){
- const g=ctx.createLinearGradient(0,0,0,470);g.addColorStop(0,"#0c193b");g.addColorStop(.55,"#12294b");g.addColorStop(1,"#08162a");
- ctx.fillStyle=g;ctx.fillRect(0,0,1120,470);
- const glow=ctx.createRadialGradient(560,205,20,560,205,560);glow.addColorStop(0,"rgba(72,157,235,.17)");glow.addColorStop(1,"rgba(35,73,130,0)");
- ctx.fillStyle=glow;ctx.fillRect(0,0,1120,420);
- for(let i=0;i<56;i++){const speed=.004+(i%5)*.0018,x=((i*173-now*speed)%1140+1140)%1140-10,y=i*67%275,r=(i%3)*.42+.65;
-  ctx.fillStyle="rgba(220,239,255,"+(.16+.12*Math.sin(now*.0015+i*1.7))+")";ctx.beginPath();ctx.arc(x,y,r,0,TAU);ctx.fill()}
- ctx.fillStyle="rgba(95,150,211,.1)";ctx.beginPath();ctx.ellipse(245,375,320,110,0,0,TAU);ctx.fill();ctx.beginPath();ctx.ellipse(900,365,300,120,0,0,TAU);ctx.fill();
- const floor=ctx.createLinearGradient(0,370,0,470);floor.addColorStop(0,"#203c58");floor.addColorStop(1,"#0a172b");ctx.fillStyle=floor;ctx.fillRect(0,390,1120,80);
- ctx.strokeStyle="rgba(124,183,231,.2)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,390);ctx.lineTo(1120,390);ctx.stroke();
- const drift=now*.025%72;for(let i=-1;i<19;i++){const x=i*72-drift;ctx.strokeStyle="rgba(124,183,231,.095)";ctx.beginPath();ctx.moveTo(x,390);ctx.lineTo(x-22,470);ctx.stroke()}
+ ctx.drawImage(sceneLayer,0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);
+ ctx.save();ctx.fillStyle="#dcefff";
+ for(const star of starField){const x=((star.x-now*star.speed)%1140+1140)%1140-10;ctx.globalAlpha=.16+.13*Math.sin(now*.0015+star.phase);ctx.beginPath();ctx.arc(x,star.y,star.r,0,TAU);ctx.fill()}
+ ctx.restore();
 }
 function drawTarget(now=0){
  ctx.save();ctx.translate(935,390);ctx.scale(1+Math.sin(now*.003)*.055,1+Math.sin(now*.003)*.055);
@@ -337,7 +378,7 @@ function drawTarget(now=0){
 }
 function drawDori(x,y,angle,scale=1,alpha=1){
  const w=148*scale,h=162*scale;ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);ctx.rotate(angle);
- if(dori.complete&&dori.naturalWidth){ctx.shadowColor="rgba(0,0,0,.42)";ctx.shadowBlur=22*scale;ctx.shadowOffsetY=13*scale;ctx.drawImage(dori,-w/2,-h/2,w,h)}
+ if(doriReady){if(alpha>.8){ctx.shadowColor="rgba(0,0,0,.42)";ctx.shadowBlur=22*scale;ctx.shadowOffsetY=13*scale}else{ctx.shadowBlur=0;ctx.shadowOffsetY=0}ctx.drawImage(doriSpriteCanvas,-w/2,-h/2,w,h)}
  else{ctx.fillStyle="#c88d50";ctx.beginPath();ctx.ellipse(0,0,44*scale,36*scale,0,0,TAU);ctx.fill();ctx.fillStyle="#f8e9d3";ctx.beginPath();ctx.ellipse(0,14*scale,25*scale,15*scale,0,0,TAU);ctx.fill()}
  ctx.restore();
 }
@@ -355,13 +396,13 @@ function positionAt(now){
  return{x:190+(710+power*3)*t,y:322-Math.sin(Math.PI*t)*(265+charge*.23+power*1.5)+Math.sin(now/150)*Math.max(0,16-accuracy*.7),t};
 }
 function drawTrail(x,y,now){
- for(let i=4;i>=1;i--)drawDori(x-i*35,y+i*13,rotationAngle-i*.08,1-i*.065,(1-i/5)*.34);
+ for(let i=3;i>=1;i--)drawDori(x-i*35,y+i*13,rotationAngle-i*.08,1-i*.075,(1-i/4)*.3);
  const grad=ctx.createLinearGradient(x-150,y+12,x+20,y+12);grad.addColorStop(0,"rgba(101,220,255,0)");grad.addColorStop(.65,"rgba(101,220,255,.18)");grad.addColorStop(1,"rgba(180,244,255,.45)");
  ctx.strokeStyle=grad;ctx.lineWidth=3;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(x-142,y+18);ctx.quadraticCurveTo(x-70,y+9,x-22,y+5);ctx.stroke();
  ctx.strokeStyle="rgba(255,226,158,"+(.13+.24*Math.sin(now*.02))+")";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(x,y+36,75,17,0,0,TAU);ctx.stroke();
 }
 function drawEffects(){
- for(const p of particles){ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,p.life/p.maxLife));ctx.fillStyle=p.color;ctx.shadowColor=p.color;ctx.shadowBlur=10;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,TAU);ctx.fill();ctx.restore()}
+ if(particles.length){ctx.save();for(const p of particles){ctx.globalAlpha=Math.max(0,Math.min(1,p.life/p.maxLife));ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,TAU);ctx.fill()}ctx.restore()}
  if(impactAt){const elapsed=performance.now()-impactAt;if(elapsed>900)impactAt=0;else{const t=elapsed/900;ctx.save();ctx.globalAlpha=1-t;ctx.strokeStyle="#ffe3a0";ctx.lineWidth=3-t*2;ctx.beginPath();ctx.ellipse(900,390,28+t*155,10+t*40,0,0,TAU);ctx.stroke();ctx.strokeStyle="rgba(116,229,255,.8)";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(900,390,18+t*112,7+t*28,0,0,TAU);ctx.stroke();ctx.restore()}}
 }
 function render(now=performance.now()){
@@ -422,16 +463,24 @@ function resetForNext(){
  $("chargeButton").disabled=false;$("spinButton").disabled=true;$("spinButton").classList.remove("spin-queued");$("spinButton").innerHTML="<strong>↻ 회전하기</strong><small>공중에서 최대 3바퀴</small>";$("restartButton").disabled=true;refreshUI();
 }
 function frame(now){
- const dt=lastFrame?Math.min(.04,Math.max(0,(now-lastFrame)/1000)):0;lastFrame=now;
- if(mode==="charging"){charge=Math.min(100,Math.floor((now-chargeStarted)/21));$("chargeFill").style.width=charge+"%";$("chargeValue").textContent=charge+"% · "+(charge>=96?"PERFECT":"CHARGING");if(charge>=100)releaseCharge()}
- else if(mode==="flying"){
-  if(spinCompleted<spinRequested){rotationTime+=dt;rotationAngle=spinCompleted*TAU+Math.min(TAU,rotationTime/.82*TAU);
-   if(rotationTime>=.82){spinCompleted++;rotationTime-=.82;rotationAngle=spinCompleted*TAU+Math.min(TAU,rotationTime/.82*TAU);$("spinCount").textContent=spinCompleted+" / 3 완료";const pos=positionAt(now);spawnParticles(pos.x,pos.y,14,"cyan",.8);if(spinCompleted===3)toast("3바퀴 완성! 최고 회전 보상!")}}
-  if(now-flightStarted>=flightDuration*1000)completeFlight()
+ if(document.hidden){rafId=0;return}
+ const active=mode==="charging"||mode==="flying"||particles.length>0||impactAt>0,interval=active?1000/60:1000/30;
+ if(!lastPaint||now-lastPaint>=interval){
+  const dt=lastFrame?Math.min(.05,Math.max(0,(now-lastFrame)/1000)):0;lastFrame=now;lastPaint=now;
+  if(mode==="charging"){
+   const nextCharge=Math.min(100,Math.floor((now-chargeStarted)/21));
+   if(nextCharge!==charge){charge=nextCharge;$("chargeFill").style.width=charge+"%";$("chargeValue").textContent=charge+"% · "+(charge>=96?"PERFECT":"CHARGING")}
+   if(charge>=100)releaseCharge()
+  }else if(mode==="flying"){
+   if(spinCompleted<spinRequested){rotationTime+=dt;rotationAngle=spinCompleted*TAU+Math.min(TAU,rotationTime/.82*TAU);
+    if(rotationTime>=.82){spinCompleted++;rotationTime-=.82;rotationAngle=spinCompleted*TAU+Math.min(TAU,rotationTime/.82*TAU);$("spinCount").textContent=spinCompleted+" / 3 완료";const pos=positionAt(now);spawnParticles(pos.x,pos.y,14,"cyan",.8);if(spinCompleted===3)toast("3바퀴 완성! 최고 회전 보상!")}}
+   if(now-flightStarted>=flightDuration*1000)completeFlight()
+  }
+  updateParticles(dt);render(now);
  }
- particles=particles.filter(p=>p.life>0);for(const p of particles){p.life-=dt;p.x+=p.vx;p.y+=p.vy;p.vx*=.99;p.vy=p.vy*.985+.055}
- render(now);requestAnimationFrame(frame);
+ rafId=requestAnimationFrame(frame);
 }
+function startAnimationLoop(){if(!rafId&&!document.hidden)rafId=requestAnimationFrame(frame);}
 $("chargeButton").addEventListener("pointerdown",event=>{event.preventDefault();if($("chargeButton").setPointerCapture)try{$("chargeButton").setPointerCapture(event.pointerId)}catch{}startCharge()});
 window.addEventListener("pointerup",releaseCharge);window.addEventListener("pointercancel",releaseCharge);
 $("spinButton").addEventListener("click",requestSpin);$("restartButton").addEventListener("click",resetForNext);
@@ -444,8 +493,16 @@ document.addEventListener("keydown",event=>{
  if(event.code==="KeyR"&&!event.repeat)requestSpin();if(event.key==="Escape")closeUpgradeConfirm();
 });
 document.addEventListener("keyup",event=>{if(event.code==="Space")releaseCharge()});window.addEventListener("blur",releaseCharge);
+document.addEventListener("visibilitychange",()=>{
+ if(document.hidden){hiddenAt=performance.now();if(rafId)cancelAnimationFrame(rafId);rafId=0;lastFrame=0;lastPaint=0;return}
+ const paused=hiddenAt?Math.max(0,performance.now()-hiddenAt):0;
+ if(mode==="charging")chargeStarted+=paused;if(mode==="flying")flightStarted+=paused;if(impactAt)impactAt+=paused;
+ hiddenAt=0;resizeArena();lastFrame=0;lastPaint=0;startAnimationLoop();
+});
+if(typeof ResizeObserver!=="undefined"){const arenaObserver=new ResizeObserver(resizeArena);arenaObserver.observe(canvas)}
+else window.addEventListener("resize",resizeArena,{passive:true});
 window.addEventListener("pagehide",()=>authSubscription?.unsubscribe());
-$("rewardResult").textContent="아직 던지지 않았어";loadingAccount();initAuth();requestAnimationFrame(frame);
+$("rewardResult").textContent="아직 던지지 않았어";resizeArena();loadingAccount();initAuth();startAnimationLoop();
 </script>
 </head>
 <body>
