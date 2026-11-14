@@ -312,3 +312,18 @@ All 12 roadmap areas remain PARTIAL or UNVERIFIED; no final checklist item is CO
 - All 12 roadmap stages remain PARTIAL or UNVERIFIED; no 20-item acceptance criterion is COMPLETE. The 2,048m×2,048m world, complete six-fluid live topology, global item ownership conservation, full contract catalog, complete Fusion recovery/interlocks, full skill effects, real-device validation and elapsed 60-minute soak remain open.
 - PR #8 remains the separate Godot project and is excluded. PR #9/#10 remain unmerged overlapping branches; no wholesale cherry-pick was made.
 - No main merge, deployment, production DB change or live-user save/economy mutation was performed.
+
+
+## 2026-11-14 — retest outcome for battery and mining
+
+- **Validated code checkpoint:** `c6971ed215d58b2c68ff75e3f262d6ded222c87b`.
+- **CI:** [43543405015](https://github.com/Rockey-Jason/doldol-site/actions/runs/43543405015) **SUCCESS**; static validation succeeded, Node unit suite **136/136 passed**, and Playwright browser regression **passed**.
+- The current Playwright run verifies the battery's cable-connected network, 400kW charging allocation, 40kJ calculation over 0.1 seconds, and live tick settlement. The prior battery failure on checkpoint `4a3d364115543d50f370b44ac613db79d1ab0c0f` did not reproduce; no speculative production-power rewrite was made.
+- The same successful full smoke run passed both the basic automatic iron-miner output and advanced canonical raw-crystal miner output checks. This supersedes the earlier unverified current-head mine regression status.
+- Checklist #6 (underground mining) and #9 (conveyors/automatic mining) remain **PARTIAL**, not COMPLETE: the tested miner scenarios pass, but the full mining catalog, recovery, logistics routing and all-layer gameplay remain open.
+- Checklist #10 (power/batteries) remains **PARTIAL**: the 400kW / 40kJ one-tick charge integration passes; transmission loss, topology merge/split persistence and diagnostics remain.
+- Virtual soak reached **36,000 simulated ticks** and passed; checklist #18 remains **UNVERIFIED** because this was not 60 minutes of elapsed wall-clock time. Checklist #2 and #19 remain **UNVERIFIED** for physical Android/iOS/PC hardware.
+- Main remains `918311b833aed6c66f8e4ead899d08f973cfed57`; PR #11 remains open/draft. The branch is 369 ahead / 710 behind main from merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`. PR #8 remains separate Godot; PR #9/#10 were not wholesale merged.
+- Overall status remains **NOT COMPLETE / NOT RELEASE-READY**. No checklist item is promoted to COMPLETE by this retest.
+
+No main merge, deployment, production database change, or live-user save/economy mutation was performed.

@@ -275,3 +275,37 @@ No main merge, GitHub Pages/Render deployment, production database/schema/permis
 - Physical Android/iOS, two-device cloud recovery and 60-minute elapsed wall-clock soak remain **UNVERIFIED**.
 
 No main merge, Pages/Render deployment, production database/schema/permission/function change, real-user save mutation, or balance/reward mutation was performed.
+
+
+## 2026-11-14 — current-head battery and automatic-mining regression passed
+
+**Validated code checkpoint:** `c6971ed215d58b2c68ff75e3f262d6ded222c87b`  
+**Main HEAD at validation:** `918311b833aed6c66f8e4ead899d08f973cfed57`  
+**PR #11:** open / draft / unmerged; base `26e88058b6d416d79459fee107aff4a5beb3d7e3`  
+**Comparison:** 369 commits ahead / 710 behind main; merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`.
+
+### Code and test changes
+
+- Added a 0.1-second power-network unit case for the actual fixture topology: an 800kW solar generator supplies a 400kW smelter and charges the connected battery at 400kW, producing 40kJ.
+- Added an explicit settlement check using `applyPowerBatteryChanges`; the solver remains pure before settlement and changes the battery to 40kJ only when settlement is applied.
+- Strengthened the Playwright power fixture to verify that the battery and generator are in the same cable-connected network, that the solver reports 400kW / 40kJ, and that the live tick persists approximately 40kJ. Failure output now includes the network and battery journal.
+- No production power formula, save format, inventory, ownership, account or cloud-save code was changed. The previous 4a3 checkpoint's battery assertion failure did **not** reproduce on this diagnostic checkpoint; the retained regression now passes.
+
+### Verified CI
+
+- GitHub Actions run [43543405015](https://github.com/Rockey-Jason/doldol-site/actions/runs/43543405015): **SUCCESS** on the exact code checkpoint above.
+- `validate-web-game`: **SUCCESS**.
+- Node unit tests: **136/136 passed, 0 failed, 0 cancelled, 0 skipped**. The new 400kW / 40kJ battery case is included.
+- Playwright `browser-regression`: **SUCCESS**. The smoke result reported `PASS`, desktop renderer `webgl`, and mobile-emulation renderer `webgl`.
+- The complete browser smoke continued beyond the battery gate and passed the automatic iron-miner and advanced canonical-crystal-miner output assertions. The earlier mine-output-null failure is therefore **not reproduced on this current code checkpoint**.
+- Virtual soak: **36,000 simulated ticks / approximately 32,400 simulated seconds** passed. This is not a 60-minute elapsed wall-clock soak and is not physical-device evidence.
+
+### Current acceptance status
+
+- Stage 6 (power) remains **PARTIAL**: battery charge/settlement smoke now passes, but edge-by-edge transmission loss, persistent topology identity through merges/splits and full diagnostics remain.
+- Stage 5 (ownership/logistics) remains **PARTIAL / CRITICAL**: not every item owner domain and restart/reconnect path is authoritative or globally conservation-verified.
+- Stage 7 (fluids) remains **PARTIAL**: the generic six-fluid solver exists, but live non-water extraction/production/consumption chains remain incomplete.
+- Stages 1–4 and 8–12 remain PARTIAL or UNVERIFIED as recorded in the gap matrix. The 2,048m×2,048m world, all-machine failure coverage, full research/skill effects, complete Fusion interlocks/recovery/output custody, full contract catalog and server-authoritative rewards remain open.
+- Physical Android/iOS and PC hardware validation, two-device cloud-save recovery and a 60-minute elapsed wall-clock soak remain **UNVERIFIED**.
+
+No main merge, Pages/Render deployment, production DB/schema/permission/function change, real-user save mutation, or balance/reward mutation was performed.
