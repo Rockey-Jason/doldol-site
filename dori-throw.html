@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#050a1c">
-<meta name="description" content="돌이를 장전해 던지고 공중에서 회전시켜 돌돌코인을 모으는 돌이 세우기">
+<meta name="description" content="돌이의 자동 회전과 착지 각도를 조절해 전용 세우기 코인을 모으는 게임">
 <title>돌이 세우기 | 돌이 게임</title>
 <link rel="icon" href="./rockeysite-icon-3.png" type="image/png">
 <style>
@@ -662,7 +662,7 @@ $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loading
   </div>
   <div class="controls-hint" id="chargeHint">힘을 장전하고 놓으면 돌이가 자동 회전하며 날아가!</div>
   <div class="spin-reward-guide"><span>목표 착지각 <b>0°</b></span><span>기본 허용 범위 <b>±12°</b></span><span class="three">정확히 세우면 <b>세우기 코인</b></span></div>
-  <div class="login-note" id="loginNote">체험 플레이는 가능해. 로그인하면 돌돌코인을 적립하고 강화 레벨을 계정에 저장할 수 있어. <a href="./login.html" style="color:#ffe3a2">로그인하기</a></div>
+  <div class="login-note" id="loginNote">체험 플레이는 가능해. 로그인하면 세우기 코인을 적립하고 강화 레벨을 계정에 저장할 수 있어. <a href="./login.html" style="color:#ffe3a2">로그인하기</a></div>
   <button class="retry-load" id="retryLoad" type="button" hidden>↻ 사용자 정보 다시 불러오기</button>
   <div class="controls-hint" id="rewardResult" aria-live="polite">아직 던지지 않았어</div>
   <div class="round-action-row">
@@ -676,12 +676,12 @@ $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loading
    <div class="upgrade-card">
     <div class="upgrade-top"><div class="upgrade-name"><span class="upgrade-icon">💪</span>힘 강화</div><span class="level" id="powerLevel">Lv. 0 / 20</span></div>
     <p class="upgrade-desc">던지는 힘이 강해져 비행 속도와 최고 높이, 자동 회전 속도가 함께 증가해.</p>
-    <div class="upgrade-bottom"><span class="cost">다음 강화 <b id="powerCost">150 D</b></span><button class="upgrade-btn" id="powerUpgrade" type="button">힘 강화</button></div>
+    <div class="upgrade-bottom"><span class="cost">다음 강화 <b id="powerCost">150 S</b></span><button class="upgrade-btn" id="powerUpgrade" type="button">힘 강화</button></div>
    </div>
    <div class="upgrade-card">
     <div class="upgrade-top"><div class="upgrade-name"><span class="upgrade-icon">🎯</span>정확도 강화</div><span class="level" id="accuracyLevel">Lv. 0 / 20</span></div>
     <p class="upgrade-desc">착지 목표인 0° 주변의 성공 허용 범위가 넓어져. 각도 맞추기가 조금 더 쉬워져.</p>
-    <div class="upgrade-bottom"><span class="cost">다음 강화 <b id="accuracyCost">180 D</b></span><button class="upgrade-btn" id="accuracyUpgrade" type="button">정확도 강화</button></div>
+    <div class="upgrade-bottom"><span class="cost">다음 강화 <b id="accuracyCost">180 S</b></span><button class="upgrade-btn" id="accuracyUpgrade" type="button">정확도 강화</button></div>
    </div>
   </section>
   <section class="panel stats-panel">
@@ -699,17 +699,17 @@ $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loading
 </section>
 <section class="guide">
  <article class="guide-card"><div class="number">STEP 01</div><h3>기를 장전해!</h3><p>‘돌이 던지기’를 누르고 있으면 기가 모여. 오래 누를수록 장전량과 기본 보상이 커져.</p></article>
- <article class="guide-card"><div class="number">STEP 02</div><h3>공중에서 회전!</h3><p>날아가는 동안 ‘회전하기’를 눌러 한 바퀴씩 완성해. 완료한 회전만 보상에 반영돼.</p></article>
- <article class="guide-card"><div class="number">STEP 03</div><h3>코인으로 강화!</h3><p>모은 돌돌코인으로 힘과 정확도를 올려. 강화할수록 더 높은 보상에 도전할 수 있어.</p></article>
+ <article class="guide-card"><div class="number">STEP 02</div><h3>공중에서 회전!</h3><p>던진 순간부터 돌이가 자동으로 회전해. 장전한 힘에 따라 회전 속도가 달라지니 착지 각도를 잘 맞춰 봐.</p></article>
+ <article class="guide-card"><div class="number">STEP 03</div><h3>코인으로 강화!</h3><p>모은 세우기 코인으로 힘과 정확도를 강화해. 힘은 비행 속도·높이·회전 속도를 높이고, 정확도는 성공 허용 각도를 넓혀 줘.</p></article>
 </section>
-<p class="footer-note">계정 코인과 강화 기록은 로그인한 사용자 계정에 저장돼. 3바퀴 회전 보상은 1바퀴 보상보다 높게 계산돼.</p>
+<p class="footer-note">세우기 코인과 강화 레벨은 돌돌코인과 별도로 저장돼. 착지 각도가 목표 0°의 허용 범위 안에 들어와야만 보상을 받아.</p>
 </main>
 <div class="upgrade-modal-backdrop" id="upgradeModal" aria-hidden="true">
  <section class="upgrade-modal" role="dialog" aria-modal="true" aria-labelledby="upgradeModalTitle">
   <div class="eyebrow">CONFIRM UPGRADE</div>
   <h2 id="upgradeModalTitle">강화 확인</h2>
   <p id="upgradeModalText">강화 효과를 확인해 주세요.</p>
-  <div class="upgrade-price"><span>사용할 돌돌코인</span><strong id="upgradeModalPrice">0 D</strong></div>
+  <div class="upgrade-price"><span>사용할 세우기 코인</span><strong id="upgradeModalPrice">0 D</strong></div>
   <div class="upgrade-modal-actions"><button id="upgradeCancel" type="button">취소</button><button class="confirm" id="upgradeConfirm" type="button">확인하고 강화</button></div>
  </section>
 </div>
