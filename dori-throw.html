@@ -283,6 +283,12 @@ img,svg,canvas,video{
 }
 
 
+/* PERFECT COMBO · consecutive upright landings */
+.combo-strip{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:9px 0 0;padding:10px 13px;border:1px solid rgba(255,220,134,.28);border-radius:11px;background:linear-gradient(100deg,rgba(255,220,134,.1),rgba(111,233,255,.035));color:#b8c7e6;font-size:10px}
+.combo-strip[hidden]{display:none}
+.combo-strip strong{color:var(--gold);font-size:14px;font-weight:400;font-variant-numeric:tabular-nums}
+.combo-strip.combo-pulse{animation:comboPulse .65s ease-out}
+@keyframes comboPulse{0%{box-shadow:0 0 0 rgba(255,220,134,0);transform:scale(1)}35%{box-shadow:0 0 22px rgba(255,220,134,.2);transform:scale(1.012)}100%{box-shadow:0 0 0 rgba(255,220,134,0);transform:scale(1)}}
 /* SEASON 2 · challenge modes, replay, leaderboard and personal record room */
 .mode-panel,.record-panel{border:1px solid rgba(135,166,255,.18);border-radius:15px;background:linear-gradient(145deg,rgba(14,25,52,.84),rgba(7,14,31,.82))}
 .mode-panel{margin:13px 0 0;padding:13px}
@@ -391,10 +397,17 @@ function buildBackground(){
 buildBackground();
 let session=null,gameState=null,mode="idle",charge=0,chargeStarted=0,flightStarted=0,rotationAngle=0,landingAngle=0,throwPending=false;
 let landingFlashTimer=0;
-let selectedGameMode="classic",challengeRun=null,season2Dashboard=null,activeLeaderboard="best",currentReplayRecordId=null;
+let selectedGameMode="classic",challengeRun=null,season2Dashboard=null,activeLeaderboard="best",currentReplayRecordId=null,livePerfectCombo=0;
 let flightParams={duration:2.85,height:108,speed:710/2.85,spinRate:2.35,landingAngle:0,tolerance:12},lastAnglePaint=0;
 let toastTimer=0,history=[],pendingUpgrade=null,authSubscription=null,authSeq=0,particles=[],impactAt=0,impactX=560,lastFrame=0,lastPaint=0,rafId=0,hiddenAt=0,arenaObserver=null;
 
+function updatePerfectCombo(count,animate=false){
+ livePerfectCombo=Math.max(0,Number(count)||0);
+ const strip=$("perfectComboStrip");strip.hidden=livePerfectCombo<=0;
+ $("perfectComboCount").textContent="x"+livePerfectCombo;
+ strip.classList.remove("combo-pulse");if(animate&&livePerfectCombo>=2){void strip.offsetWidth;strip.classList.add("combo-pulse")}
+}
+function recordPerfectCombo(perfect){updatePerfectCombo(perfect?livePerfectCombo+1:0,!!perfect)}
 const GAME_MODE_INFO={
  classic:{title:"기본 플레이",description:"원하는 만큼 던지며 기존 세우기 코인을 모아 봐."},
  time_attack:{title:"타임어택 · 60초",description:"60초 동안 가능한 한 많은 성공 착지와 PERFECT를 기록해 봐."},
@@ -525,6 +538,7 @@ function renderLeaderboard(){
 }
 function renderSeason2Dashboard(data){
  season2Dashboard=data||null;const stats=data?.stats||{};
+ updatePerfectCombo(Number(stats.current_perfect_streak||0));
  $("perfectTotal").textContent=fmt(stats.perfect_landings||0);
  $("perfectCurrentStreak").textContent=fmt(stats.current_perfect_streak||0)+"회";
  $("perfectBestStreak").textContent=fmt(stats.best_perfect_streak||0)+"회";
@@ -1042,7 +1056,7 @@ async function submitThrow(){
  const localSuccess=isLandingSuccessful(localError,flightParams.tolerance);
  const localPerfect=localSuccess&&isPerfectLanding(localError);
  if(!session){
-  recordChallengeResult(localSuccess,localPerfect);
+  recordChallengeResult(localSuccess,localPerfect);recordPerfectCombo(localPerfect);
   $("stateChip").textContent=localPerfect?"PERFECT! · 체험 모드":localSuccess?"착지 성공 · 체험 모드":"착지 실패 · 체험 모드";
   $("chargeHint").textContent=localPerfect?"PERFECT! 오차 ±2.0° 이내로 착지했어!":localSuccess?"체험 모드 성공! 로그인하면 세우기 코인을 적립할 수 있어.":"체험 모드 실패 · 허용 범위 ±"+flightParams.tolerance.toFixed(1)+"°에 맞춰 다시 도전해 봐.";
   $("rewardResult").textContent=localPerfect?"PERFECT! · 로그인하면 보상 기록이 저장돼.":localSuccess?"체험 착지 성공! 로그인하면 보상 기록이 저장돼.":"착지 실패 · 세우기 코인 0개";
@@ -1068,7 +1082,7 @@ async function submitThrow(){
   flightParams.landingAngle=landingAngle;rotationAngle=landingAngle*Math.PI/180;impactX=flightParams.landingX;
   const errorAngle=Number(data.angle_error_deg),success=!!data.success,reward=Number(data.coin_reward||0);
   const serverPerfect=success&&isPerfectLanding(errorAngle);
-  recordChallengeResult(success,serverPerfect);
+  recordChallengeResult(success,serverPerfect);recordPerfectCombo(serverPerfect);
   const previousBest=gameState.best_landing_error_deg;
   gameState.best_landing_error_deg=previousBest===null||previousBest===undefined
    ?errorAngle:Math.min(Number(previousBest),errorAngle);
@@ -1285,6 +1299,7 @@ $("soundToggle").addEventListener("click",()=>{
    <div class="flight-metric"><small>예상 착지 거리</small><strong id="flightDistance">장전 대기</strong></div>
   </div>
   <div class="stage-caption"><span>CHARGE → AUTO SPIN → UPRIGHT LANDING</span><span id="spinCount">목표 착지각 0°</span></div>
+  <div class="combo-strip" id="perfectComboStrip" hidden aria-live="polite"><span>✨ PERFECT COMBO · 연속 완벽 착지</span><strong id="perfectComboCount">x0</strong></div>
 
   <section class="mode-panel" aria-label="게임 모드">
    <div class="mode-panel-head"><strong>✦ CHALLENGE MODES</strong><small>기본 보상·강화 시스템 그대로 적용</small></div>
