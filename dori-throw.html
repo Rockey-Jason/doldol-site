@@ -380,7 +380,7 @@ function addHistory(success,reward,chargeValue,angle,errorAngle){
   row.append(left,right);list.append(row)});
 }
 function spawnParticles(x,y,count,color="cyan",spread=1){
- const colors=color==="gold"?["#ffe6a3","#ffca66","#fff4ce"]:color==="purple"?["#c5a7ff","#8e7cff","#e1d4ff"]:["#72e8ff","#b6f5ff","#729eff"];
+ const colors=color==="gold"?["#ffe6a3","#ffca66","#fff4ce"]:color==="purple"?["#c5a7ff","#8e7cff","#e1d4ff"]:color==="red"?["#ff8798","#ffc0c9","#ffe0e5"]:["#72e8ff","#b6f5ff","#729eff"];
  for(let i=0;i<count;i++){const a=Math.random()*TAU,s=(1.2+Math.random()*4.4)*spread;
   particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1.4,life:.5+Math.random()*.75,maxLife:.5+Math.random()*.75,size:1.4+Math.random()*3.2,color:colors[i%colors.length]})}
  if(particles.length>180)particles.splice(0,particles.length-180);
@@ -620,6 +620,7 @@ async function submitThrow(){
   await waitForLandingReveal();
   setLandingVerdict(guestSuccess?"success":"failure",{description:
    "목표각 0° · 오차 "+guestError.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°\n체험 모드에서는 코인이 적립되지 않아. 로그인하면 기록과 보상을 저장할 수 있어."});
+  spawnParticles(impactX,390,guestSuccess?58:28,guestSuccess?"gold":"red",guestSuccess?1.35:.8);
   setAngleGauge(guestAngle,flightParams.tolerance,guestSuccess?"체험 착지 성공 · 로그인하면 코인 적립 가능":"체험 착지 실패 · 목표각에서 "+guestError.toFixed(1)+"° 벗어났어.");
   $("stateChip").textContent=guestSuccess?"착지 성공 · 체험 모드":"착지 실패 · 체험 모드";
   $("rewardResult").textContent=guestSuccess?"체험 착지 성공! 로그인하면 보상 기록이 저장돼.":"착지 실패 · 세우기 코인 0개";
@@ -656,6 +657,7 @@ async function submitThrow(){
   setLandingVerdict(success?"success":"failure",{description:
    "목표각 0° · 실제 오차 "+errorAngle.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°"+
    (success?"\n+"+fmt(reward)+" 세우기 코인을 획득했어!":"\n이번 착지 보상은 0 세우기 코인이야. 다시 도전해 보자!")});
+  spawnParticles(impactX,390,success?72:34,success?"gold":"red",success?1.5:.85);
   $("stateChip").textContent=success?"착지 성공":"각도 불일치";
   refreshUI();addHistory(success,reward,charge,landingAngle,errorAngle);
   if(success){
