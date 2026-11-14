@@ -180,7 +180,7 @@ body:after{width:460px;height:460px;right:-300px;bottom:-80px;background:#8f64ff
 <script type="module">
 import {createClient} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 const URL="https://scttowfhygcpdirrekqm.supabase.co";
-const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJIUzI1NiIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcmVrek" + "qmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
 const supabase=window.doriSupabase||createClient(URL,KEY,{auth:{storageKey:"sb-scttowfhygcpdirrekqm-auth-token",persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
 if(supabase&&!window.doriSupabase)window.doriSupabase=supabase;
 const $=id=>document.getElementById(id),TAU=Math.PI*2,MAX_DAILY=25000;
