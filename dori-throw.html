@@ -198,7 +198,7 @@ body:before,body:after{animation:none;filter:blur(54px);opacity:.1}
 @media(hover:none){.panel:hover,.upgrade-card:hover,.stat:hover,.guide-card:hover{transform:none;box-shadow:inherit}.balance-card:hover{transform:none}}
 @media(prefers-reduced-motion:reduce){body:before,body:after{display:none}}
 .spin-control{cursor:default;pointer-events:none}
-.flight-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 2px 2px}
+.flight-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 2px 2px}
 .flight-metric{min-width:0;padding:10px 11px;border:1px solid rgba(128,176,255,.16);border-radius:11px;background:linear-gradient(140deg,rgba(111,233,255,.055),rgba(255,255,255,.02))}
 .flight-metric small{display:block;color:#8fa5cc;font-size:9px;margin-bottom:5px}
 .flight-metric strong{display:block;color:#e8f4ff;font-size:13px;font-weight:400;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -212,7 +212,7 @@ body:before,body:after{animation:none;filter:blur(54px);opacity:.1}
 .angle-labels{display:flex;justify-content:space-between;align-items:center;color:#778db7;font-size:9px;font-variant-numeric:tabular-nums}
 .angle-labels strong{color:#d8eaff;font-size:11px;font-weight:400}
 .landing-message{margin-top:9px;color:#9eb2d7;font-size:10px;line-height:1.55}
-@media(max-width:600px){.flight-metrics{gap:5px;margin-top:9px}.flight-metric{padding:9px 7px}.flight-metric small{font-size:8px}.flight-metric strong{font-size:11px}.landing-panel{padding:11px}.landing-head{font-size:9px}.landing-head strong{font-size:10px}}
+@media(max-width:600px){.flight-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:9px}.flight-metric{padding:9px 7px}.flight-metric small{font-size:8px}.flight-metric strong{font-size:11px}.landing-panel{padding:11px}.landing-head{font-size:9px}.landing-head strong{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.angle-target-range,.angle-pointer{transition:none}}
 </style>
 <script type="module">
@@ -256,7 +256,7 @@ function buildBackground(){
 buildBackground();
 let session=null,gameState=null,mode="idle",charge=0,chargeStarted=0,flightStarted=0,rotationAngle=0,landingAngle=0,throwPending=false;
 let flightParams={duration:2.85,height:108,speed:710/2.85,spinRate:2.35,landingAngle:0,tolerance:12},lastAnglePaint=0;
-let toastTimer=0,history=[],pendingUpgrade=null,authSubscription=null,authSeq=0,particles=[],impactAt=0,lastFrame=0,lastPaint=0,rafId=0,hiddenAt=0,arenaObserver=null;
+let toastTimer=0,history=[],pendingUpgrade=null,authSubscription=null,authSeq=0,particles=[],impactAt=0,impactX=560,lastFrame=0,lastPaint=0,rafId=0,hiddenAt=0,arenaObserver=null;
 function toast(message,type="normal"){
  const el=$("toast");el.textContent=message;el.dataset.type=type;el.classList.remove("show");void el.offsetWidth;el.classList.add("show");
  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),2600);
@@ -366,12 +366,14 @@ function signedDegrees(value){const n=normalizeDegrees(value);return n>180?n-360
 function getFlightParams(chargeValue){
  const q=clamp(Number(chargeValue||1),1,100)/100;
  const power=Number(gameState?.power_level||0),accuracy=Number(gameState?.accuracy_level||0);
- const duration=2.85-q*.58-power*.016;
- const height=108+q*72+power*2;
- const speed=710/duration;
- const spinRate=2.35+q*8.4+power*.28;
+ const duration=2.90-q*.45-power*.010;
+ const distance=260+q*450+power*4.5;
+ const height=105+q*125+power*1.75;
+ const speed=distance/duration;
+ const spinRate=3.80+q*15+power*.35;
+ const landingX=190+distance;
  const finalAngle=normalizeDegrees(spinRate*duration*180/Math.PI);
- return {duration,height,speed,spinRate,landingAngle:finalAngle,tolerance:12+accuracy*.75};
+ return {duration,distance,height,speed,spinRate,landingX,landingAngle:finalAngle,tolerance:18+accuracy*.75};
 }
 function setAngleGauge(angle,tolerance,status){
  const signed=signedDegrees(angle),pointer=clamp((signed+180)/360*100,0,100);
@@ -382,22 +384,25 @@ function setAngleGauge(angle,tolerance,status){
  if(status)$("landingMessage").textContent=status;
 }
 function updateFlightPreview(chargeValue=charge){
- const tolerance=12+Number(gameState?.accuracy_level||0)*.75;
+ const tolerance=18+Number(gameState?.accuracy_level||0)*.75;
  $("spinCount").textContent="목표 0° ±"+tolerance.toFixed(0)+"°";
  $("angleTargetRange").style.left=((180-tolerance)/360*100)+"%";
  $("angleTargetRange").style.width=(tolerance*2/360*100)+"%";
  if(!chargeValue){
-  $("flightSpeed").textContent="장전 대기";$("flightHeight").textContent="장전 대기";$("flightSpinRate").textContent="장전 대기";
+  $("flightSpeed").textContent="장전 대기";$("flightHeight").textContent="장전 대기";
+  $("flightSpinRate").textContent="장전 대기";$("flightDistance").textContent="장전 대기";
   $("anglePointer").style.left="50%";$("angleReadout").textContent="장전 대기";
-  $("landingMessage").textContent="힘을 장전하면 예상 착지각이 표시돼. 목표는 0°야.";
+  $("landingMessage").textContent="힘을 장전하면 비행 거리와 예상 착지각이 함께 표시돼.";
   return;
  }
  const params=getFlightParams(chargeValue);
  $("flightSpeed").textContent=Math.round(params.speed)+" px/s";
  $("flightHeight").textContent=Math.round(params.height)+" px";
  $("flightSpinRate").textContent=(params.spinRate/TAU).toFixed(2)+" 바퀴/s";
+ $("flightDistance").textContent=Math.round(params.distance)+" px";
  const angle=signedDegrees(params.landingAngle);
- setAngleGauge(params.landingAngle,params.tolerance,"예상 착지각 "+(angle>0?"+":"")+angle.toFixed(1)+"° · 장전량을 조절해 0°에 가까이 맞춰 봐.");
+ setAngleGauge(params.landingAngle,params.tolerance,
+  "예상 착지각 "+(angle>0?"+":"")+angle.toFixed(1)+"° · 예상 이동 거리 "+Math.round(params.distance)+" px");
 }
 function startCharge(){
  if((mode!=="idle"&&mode!=="landed")||throwPending)return;closeUpgradeConfirm();
@@ -416,7 +421,7 @@ function releaseCharge(){
 }
 function launch(){
  flightParams=getFlightParams(charge);
- mode="flying";flightStarted=performance.now();rotationAngle=0;landingAngle=0;throwPending=false;
+ mode="flying";flightStarted=performance.now();rotationAngle=0;landingAngle=0;impactX=flightParams.landingX;throwPending=false;
  spawnParticles(190,322,28,charge>=96?"gold":"cyan",1.15);
  $("chargeButton").disabled=true;$("restartButton").disabled=true;
  $("spinButton").innerHTML="<strong>↻ 자동 회전 중</strong><small>"+(flightParams.spinRate/TAU).toFixed(2)+" 바퀴/s</small>";
@@ -433,11 +438,14 @@ function drawBackground(now=0){
  for(const star of starField){const x=((star.x-now*star.speed)%1140+1140)%1140-10;ctx.globalAlpha=.16+.13*Math.sin(now*.0015+star.phase);ctx.beginPath();ctx.arc(x,star.y,star.r,0,TAU);ctx.fill()}
  ctx.restore();
 }
-function drawTarget(now=0){
- ctx.save();ctx.translate(935,390);ctx.scale(1+Math.sin(now*.003)*.055,1+Math.sin(now*.003)*.055);
- ctx.strokeStyle="rgba(255,220,134,.62)";ctx.lineWidth=2;for(const r of [25,49,74]){ctx.beginPath();ctx.ellipse(0,0,r,r*.3,0,0,TAU);ctx.stroke()}
- ctx.strokeStyle="rgba(255,220,134,.12)";ctx.beginPath();ctx.ellipse(0,0,93,28,0,0,TAU);ctx.stroke();
- ctx.fillStyle="rgba(255,220,134,.83)";ctx.font="12px HancomMalrangmalrang";ctx.textAlign="center";ctx.fillText("LANDING ZONE",0,56);ctx.restore();
+function drawTarget(now=0,targetX=560){
+ const x=clamp(targetX,250,1040);
+ ctx.save();ctx.translate(x,390);ctx.scale(1+Math.sin(now*.003)*.055,1+Math.sin(now*.003)*.055);
+ ctx.strokeStyle="rgba(255,220,134,.72)";ctx.lineWidth=2;
+ for(const r of [25,49,74]){ctx.beginPath();ctx.ellipse(0,0,r,r*.3,0,0,TAU);ctx.stroke()}
+ ctx.strokeStyle="rgba(255,220,134,.18)";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,0,93,28,0,0,TAU);ctx.stroke();
+ ctx.fillStyle="rgba(255,220,134,.92)";ctx.font="12px HancomMalrangmalang";ctx.textAlign="center";ctx.fillText("LANDING ZONE",0,56);
+ ctx.fillStyle="rgba(255,220,134,.45)";ctx.beginPath();ctx.arc(0,-3,5,0,TAU);ctx.fill();ctx.restore();
 }
 function drawDori(x,y,angle,scale=1,alpha=1){
  const w=148*scale,h=162*scale;ctx.save();ctx.globalAlpha=alpha;ctx.translate(x,y);ctx.rotate(angle);
@@ -457,28 +465,48 @@ function drawChargeAura(x,y,now){
 function positionAt(now){
  const elapsed=Math.max(0,Math.min(flightParams.duration,(now-flightStarted)/1000));
  const t=elapsed/flightParams.duration;
- return{x:190+flightParams.speed*elapsed,y:322-Math.sin(Math.PI*t)*flightParams.height,t};
+ return{x:190+flightParams.distance*t,y:322-Math.sin(Math.PI*t)*flightParams.height,t,landingX:flightParams.landingX};
 }
 function drawTrail(x,y,now){
- for(let i=3;i>=1;i--)drawDori(x-i*30,y+i*10,rotationAngle-i*.12,1-i*.075,(1-i/4)*.3);
- const grad=ctx.createLinearGradient(x-135,y+12,x+20,y+12);grad.addColorStop(0,"rgba(101,220,255,0)");grad.addColorStop(.65,"rgba(101,220,255,.18)");grad.addColorStop(1,"rgba(180,244,255,.45)");
- ctx.strokeStyle=grad;ctx.lineWidth=3;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(x-128,y+16);ctx.quadraticCurveTo(x-65,y+8,x-22,y+5);ctx.stroke();
- ctx.strokeStyle="rgba(255,226,158,"+(.13+.24*Math.sin(now*.02))+")";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(x,y+36,75,17,0,0,TAU);ctx.stroke();
+ const lag=flightParams.spinRate*.045;
+ for(let i=3;i>=1;i--)drawDori(x-i*30,y+i*10,rotationAngle-lag*i,1-i*.075,(1-i/4)*.34);
+ const grad=ctx.createLinearGradient(x-150,y+12,x+20,y+12);grad.addColorStop(0,"rgba(101,220,255,0)");grad.addColorStop(.55,"rgba(101,220,255,.16)");grad.addColorStop(1,"rgba(180,244,255,.5)");
+ ctx.strokeStyle=grad;ctx.lineWidth=3.5;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(x-145,y+18);ctx.quadraticCurveTo(x-72,y+8,x-22,y+5);ctx.stroke();
+ ctx.strokeStyle="rgba(255,226,158,"+(.12+.22*Math.sin(now*.02))+")";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(x,y+36,78,17,0,0,TAU);ctx.stroke();
+}
+function drawSpinEffects(x,y,now){
+ const intensity=clamp(flightParams.spinRate/22,.28,1);
+ ctx.save();ctx.translate(x,y);
+ for(let i=0;i<3;i++){
+  ctx.save();ctx.rotate(rotationAngle*.62+i*TAU/3);
+  ctx.globalAlpha=.18+intensity*.2;
+  ctx.strokeStyle=i===1?"#ffe3a0":"#8deeff";ctx.lineWidth=1.5+intensity*.7;
+  ctx.setLineDash([19+intensity*8,12]);ctx.lineDashOffset=-rotationAngle*13-i*9;
+  ctx.beginPath();ctx.ellipse(0,0,84+i*11,22+i*5,0,-Math.PI*.25,Math.PI*1.28);ctx.stroke();
+  ctx.setLineDash([]);ctx.restore();
+ }
+ ctx.globalAlpha=.22+intensity*.22;ctx.strokeStyle="#b7f4ff";ctx.lineWidth=1;
+ ctx.beginPath();ctx.ellipse(0,0,112,34,rotationAngle*.18,0,TAU);ctx.stroke();
+ ctx.restore();
 }
 function drawEffects(){
  if(particles.length){ctx.save();for(const p of particles){ctx.globalAlpha=Math.max(0,Math.min(1,p.life/p.maxLife));ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,TAU);ctx.fill()}ctx.restore()}
- if(impactAt){const elapsed=performance.now()-impactAt;if(elapsed>900)impactAt=0;else{const t=elapsed/900;ctx.save();ctx.globalAlpha=1-t;ctx.strokeStyle="#ffe3a0";ctx.lineWidth=3-t*2;ctx.beginPath();ctx.ellipse(900,390,28+t*155,10+t*40,0,0,TAU);ctx.stroke();ctx.strokeStyle="rgba(116,229,255,.8)";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(900,390,18+t*112,7+t*28,0,0,TAU);ctx.stroke();ctx.restore()}}
+ if(impactAt){const elapsed=performance.now()-impactAt;if(elapsed>900)impactAt=0;else{const t=elapsed/900;ctx.save();ctx.globalAlpha=1-t;ctx.strokeStyle="#ffe3a0";ctx.lineWidth=3-t*2;ctx.beginPath();ctx.ellipse(impactX,390,28+t*155,10+t*40,0,0,TAU);ctx.stroke();ctx.strokeStyle="rgba(116,229,255,.8)";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(impactX,390,18+t*112,7+t*28,0,0,TAU);ctx.stroke();ctx.restore()}}
 }
 function render(now=performance.now()){
- ctx.clearRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);drawBackground(now);drawTarget(now);
+ ctx.clearRect(0,0,LOGICAL_WIDTH,LOGICAL_HEIGHT);
+ let targetX=560;
+ if(mode==="charging")targetX=getFlightParams(Math.max(1,charge)).landingX;
+ else if(mode==="flying"||mode==="landed")targetX=flightParams.landingX;
+ drawBackground(now);drawTarget(now,targetX);
  let x=190,y=322,angle=0,scale=1;
  if(mode==="charging"){const p=charge/100;x=190;y=322-Math.sin(p*Math.PI)*14;scale=1+p*.05;drawChargeAura(x,y,now)}
  else if(mode==="flying"){
-  const pos=positionAt(now);x=pos.x;y=pos.y;angle=rotationAngle;drawTrail(x,y,now);
-  const halo=ctx.createRadialGradient(x,y,10,x,y,118);halo.addColorStop(0,"rgba(102,220,255,.19)");halo.addColorStop(1,"rgba(102,220,255,0)");
+  const pos=positionAt(now);x=pos.x;y=pos.y;angle=rotationAngle;drawTrail(x,y,now);drawSpinEffects(x,y,now);
+  const halo=ctx.createRadialGradient(x,y,10,x,y,118);halo.addColorStop(0,"rgba(102,220,255,.23)");halo.addColorStop(1,"rgba(102,220,255,0)");
   ctx.fillStyle=halo;ctx.beginPath();ctx.arc(x,y,118,0,TAU);ctx.fill();
-  ctx.strokeStyle="rgba(122,230,255,.37)";ctx.lineWidth=1.6;ctx.beginPath();ctx.ellipse(x,y+28,80,20,0,0,TAU);ctx.stroke();
- }else if(mode==="landed"){x=900;y=322;angle=rotationAngle}
+  ctx.strokeStyle="rgba(122,230,255,.43)";ctx.lineWidth=1.8;ctx.beginPath();ctx.ellipse(x,y+28,80,20,0,0,TAU);ctx.stroke();
+ }else if(mode==="landed"){x=flightParams.landingX;y=322;angle=rotationAngle}
  drawDori(x,y,angle,scale,1);
  if(mode==="charging"){
   ctx.fillStyle="rgba(255,255,255,.1)";ctx.fillRect(130,425,860,8);
@@ -487,13 +515,13 @@ function render(now=performance.now()){
  }else if(mode==="flying"){
   ctx.fillStyle="rgba(255,255,255,.9)";ctx.font="14px HancomMalrangmalrang";ctx.textAlign="center";
   ctx.fillText("AUTO SPIN  "+(flightParams.spinRate/TAU).toFixed(2)+" turns/s",560,54);
-  ctx.fillStyle="rgba(255,220,134,.9)";ctx.font="11px HancomMalrangmalrang";ctx.fillText("착지 목표각 0°",560,75)
+  ctx.fillStyle="rgba(255,220,134,.9)";ctx.font="11px HancomMalrangmalrang";ctx.fillText("LANDING DISTANCE  "+Math.round(flightParams.distance)+" px",560,75)
  }
  drawEffects();
 }
 function completeFlight(){
  if(mode!=="flying")return;
- const pos=positionAt(flightStarted+flightParams.duration*1000);
+ const pos=positionAt(flightStarted+flightParams.duration*1000);impactX=pos.x;
  landingAngle=flightParams.landingAngle;rotationAngle=landingAngle*Math.PI/180;
  mode="landed";impactAt=performance.now();spawnParticles(pos.x,390,42,"gold",1.5);
  $("restartButton").disabled=true;$("chargeButton").disabled=true;
@@ -516,8 +544,15 @@ async function submitThrow(){
   gameState.seugi_coin_earned=data.seugi_coin_earned;gameState.total_earned=data.seugi_coin_earned;
   gameState.total_throws=data.total_throws;gameState.successful_landings=data.successful_landings;
   gameState.daily_seugi_coin_earned=data.daily_seugi_coin_earned;
-  landingAngle=Number(data.landing_angle_deg);flightParams.tolerance=Number(data.angle_tolerance_deg);
-  flightParams.landingAngle=landingAngle;rotationAngle=landingAngle*Math.PI/180;
+  landingAngle=Number(data.landing_angle_deg);
+  flightParams.tolerance=Number(data.angle_tolerance_deg);
+  flightParams.duration=Number(data.flight_duration_sec);
+  flightParams.distance=Number(data.flight_distance_px);
+  flightParams.landingX=Number(data.landing_x_px);
+  flightParams.speed=Number(data.flight_speed);
+  flightParams.height=Number(data.flight_height);
+  flightParams.spinRate=Number(data.spin_rate_rad_sec);
+  flightParams.landingAngle=landingAngle;rotationAngle=landingAngle*Math.PI/180;impactX=flightParams.landingX;
   const errorAngle=Number(data.angle_error_deg),success=!!data.success,reward=Number(data.coin_reward||0);
   const oldBest=gameState.best_landing_error_deg;
   gameState.best_landing_error_deg=oldBest===null||oldBest===undefined?errorAngle:Math.min(Number(oldBest),errorAngle);
@@ -646,6 +681,7 @@ $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loading
    <div class="flight-metric"><small>비행 속도</small><strong id="flightSpeed">장전 대기</strong></div>
    <div class="flight-metric"><small>최고 높이</small><strong id="flightHeight">장전 대기</strong></div>
    <div class="flight-metric"><small>자동 회전 속도</small><strong id="flightSpinRate">장전 대기</strong></div>
+   <div class="flight-metric"><small>예상 착지 거리</small><strong id="flightDistance">장전 대기</strong></div>
   </div>
   <div class="stage-caption"><span>CHARGE → AUTO SPIN → UPRIGHT LANDING</span><span id="spinCount">목표 착지각 0°</span></div>
   <div class="landing-panel">
