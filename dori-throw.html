@@ -215,36 +215,38 @@ body:before,body:after{animation:none;filter:blur(54px);opacity:.1}
 @media(max-width:600px){.flight-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin-top:9px}.flight-metric{padding:9px 7px}.flight-metric small{font-size:8px}.flight-metric strong{font-size:11px}.landing-panel{padding:11px}.landing-head{font-size:9px}.landing-head strong{font-size:10px}}
 @media(prefers-reduced-motion:reduce){.angle-target-range,.angle-pointer{transition:none}}
  
-/* LANDING VERDICT · staged impact, measurement and result reveal */
-.landing-verdict{margin:10px 2px 0;padding:13px 14px;border:1px solid rgba(111,233,255,.22);border-radius:14px;background:linear-gradient(135deg,rgba(34,67,108,.34),rgba(10,20,42,.9));overflow:hidden;animation:verdictEnter .38s cubic-bezier(.2,.8,.2,1) both}
+/* INSTANT LANDING RESULT · immediate on-screen verdict */
+.landing-verdict{margin:10px 2px 0;padding:13px 14px;border:1px solid rgba(111,233,255,.25);border-radius:14px;background:linear-gradient(135deg,rgba(34,67,108,.34),rgba(10,20,42,.94));overflow:hidden;animation:instantVerdictIn .22s ease-out both}
 .landing-verdict[hidden]{display:none}
-@keyframes verdictEnter{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes instantVerdictIn{from{opacity:0;transform:translateY(4px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
 .verdict-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.verdict-tag{color:#9edfff;font-size:9px;letter-spacing:1.9px}
-.verdict-pulse{width:8px;height:8px;border-radius:50%;background:#75e7ff;box-shadow:0 0 12px currentColor;animation:verdictPulse .9s ease-in-out infinite}
-@keyframes verdictPulse{50%{opacity:.35;transform:scale(.72)}}
-.verdict-title{margin-top:7px;color:#f0f7ff;font-size:18px;line-height:1.35;font-weight:400;letter-spacing:-.3px}
-.verdict-description{margin-top:4px;color:#a9bbdc;font-size:10px;line-height:1.65;white-space:pre-line}
-.verdict-progress{height:5px;margin-top:12px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
-.verdict-progress>span{display:block;width:14%;height:100%;border-radius:99px;background:linear-gradient(90deg,#5edfff,#b8e8ff);box-shadow:0 0 12px rgba(111,233,255,.35);transition:width .48s cubic-bezier(.2,.8,.2,1),background .25s}
-.verdict-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:9px}
-.verdict-step{padding:6px 4px;border:1px solid rgba(151,177,224,.1);border-radius:8px;background:rgba(255,255,255,.025);color:#7186ad;font-size:9px;text-align:center;transition:all .25s}
-.verdict-step.done{border-color:rgba(111,233,255,.2);color:#b6d9ec;background:rgba(111,233,255,.06)}
-.verdict-step.active{border-color:rgba(111,233,255,.48);color:#e0faff;background:rgba(111,233,255,.11);box-shadow:0 0 15px rgba(111,233,255,.08)}
-.landing-verdict[data-state="success"]{border-color:rgba(120,239,192,.48);background:linear-gradient(135deg,rgba(24,91,76,.3),rgba(9,25,35,.94));box-shadow:0 0 25px rgba(120,239,192,.08)}
+.verdict-tag{color:#9edfff;font-size:9px;letter-spacing:1.7px}
+.verdict-pulse{width:9px;height:9px;border-radius:50%;background:#75e7ff;box-shadow:0 0 12px currentColor}
+.verdict-title{margin-top:5px;color:#f0f7ff;font-size:20px;line-height:1.35;font-weight:400}
+.verdict-description{margin-top:4px;color:#b2c3df;font-size:11px;line-height:1.6;white-space:pre-line}
+.verdict-progress,.verdict-steps{display:none}
+.landing-verdict[data-state="success"]{border-color:rgba(120,239,192,.55);background:linear-gradient(135deg,rgba(24,91,76,.34),rgba(9,25,35,.96));box-shadow:0 0 26px rgba(120,239,192,.1)}
 .landing-verdict[data-state="success"] .verdict-tag,.landing-verdict[data-state="success"] .verdict-title{color:#baffdf}
-.landing-verdict[data-state="success"] .verdict-pulse{background:#78efc0}
-.landing-verdict[data-state="success"] .verdict-progress>span{background:linear-gradient(90deg,#4fcea1,#baffdf);box-shadow:0 0 14px rgba(120,239,192,.38)}
-.landing-verdict[data-state="failure"],.landing-verdict[data-state="error"]{border-color:rgba(255,135,152,.42);background:linear-gradient(135deg,rgba(104,39,61,.3),rgba(25,13,32,.94))}
+.landing-verdict[data-state="success"] .verdict-pulse{background:#78efc0;box-shadow:0 0 16px rgba(120,239,192,.8)}
+.landing-verdict[data-state="failure"],.landing-verdict[data-state="error"]{border-color:rgba(255,135,152,.5);background:linear-gradient(135deg,rgba(104,39,61,.32),rgba(25,13,32,.96));box-shadow:0 0 26px rgba(255,135,152,.08)}
 .landing-verdict[data-state="failure"] .verdict-tag,.landing-verdict[data-state="failure"] .verdict-title,.landing-verdict[data-state="error"] .verdict-title{color:#ffd0d8}
-.landing-verdict[data-state="failure"] .verdict-pulse,.landing-verdict[data-state="error"] .verdict-pulse{background:#ff8798}
-.landing-verdict[data-state="failure"] .verdict-progress>span,.landing-verdict[data-state="error"] .verdict-progress>span{background:linear-gradient(90deg,#ee728a,#ffc0c9);box-shadow:0 0 14px rgba(255,135,152,.32)}
-.landing-verdict.reveal .verdict-title{animation:verdictReveal .52s cubic-bezier(.18,.9,.25,1.3) both}
-.landing-verdict.reveal .verdict-progress>span{width:100%!important}
-@keyframes verdictReveal{0%{opacity:.35;transform:translateY(7px) scale(.96)}65%{opacity:1;transform:translateY(-2px) scale(1.025)}100%{opacity:1;transform:translateY(0) scale(1)}}
-@media(max-width:600px){.landing-verdict{padding:12px}.verdict-title{font-size:16px}.verdict-step{font-size:8px}}
-@media(prefers-reduced-motion:reduce){.landing-verdict,.verdict-pulse,.landing-verdict.reveal .verdict-title{animation:none!important}.verdict-progress>span,.verdict-step{transition:none!important}}
-
+.landing-verdict[data-state="failure"] .verdict-pulse,.landing-verdict[data-state="error"] .verdict-pulse{background:#ff8798;box-shadow:0 0 16px rgba(255,135,152,.7)}
+.landing-flash{position:absolute;z-index:5;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:18px;text-align:center;pointer-events:none;opacity:0;visibility:hidden;backdrop-filter:blur(2px)}
+.landing-flash.show{visibility:visible;animation:landingFlashIn 1.55s cubic-bezier(.18,.8,.25,1) both}
+.landing-flash strong{font-size:clamp(30px,6vw,58px);line-height:1.05;font-weight:400;letter-spacing:1px;text-shadow:0 4px 26px rgba(0,0,0,.7)}
+.landing-flash span{font-size:clamp(11px,1.7vw,16px);color:#f4f7ff;text-shadow:0 2px 12px rgba(0,0,0,.9)}
+.landing-flash.success{background:radial-gradient(ellipse at center,rgba(48,218,151,.24),rgba(3,18,25,.18) 58%,transparent 80%)}
+.landing-flash.success strong{color:#baffdf;text-shadow:0 0 24px rgba(92,255,188,.72),0 3px 16px rgba(0,0,0,.8)}
+.landing-flash.failure{background:radial-gradient(ellipse at center,rgba(255,77,111,.23),rgba(28,5,18,.2) 58%,transparent 80%)}
+.landing-flash.failure strong{color:#ffd0d8;text-shadow:0 0 24px rgba(255,104,137,.68),0 3px 16px rgba(0,0,0,.8)}
+@keyframes landingFlashIn{
+ 0%{opacity:0;transform:scale(1.08)}
+ 12%{opacity:1;transform:scale(1)}
+ 70%{opacity:1}
+ 100%{opacity:0;transform:scale(.98);visibility:hidden}
+}
+@media(max-width:600px){.landing-verdict{padding:12px}.verdict-title{font-size:18px}.verdict-description{font-size:10px}.landing-flash strong{font-size:34px}}
+@media(prefers-reduced-motion:reduce){.landing-verdict,.landing-flash.show{animation:none!important}.landing-flash.show{opacity:1;visibility:visible}}
 </style>
 <script type="module">
 import {createClient} from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -286,7 +288,7 @@ function buildBackground(){
 }
 buildBackground();
 let session=null,gameState=null,mode="idle",charge=0,chargeStarted=0,flightStarted=0,rotationAngle=0,landingAngle=0,throwPending=false;
-let landingSequenceStarted=0,landingSequenceTimer=0,landingResultShown=false;
+let landingFlashTimer=0;
 let flightParams={duration:2.85,height:108,speed:710/2.85,spinRate:2.35,landingAngle:0,tolerance:12},lastAnglePaint=0;
 let toastTimer=0,history=[],pendingUpgrade=null,authSubscription=null,authSeq=0,particles=[],impactAt=0,impactX=560,lastFrame=0,lastPaint=0,rafId=0,hiddenAt=0,arenaObserver=null;
 function toast(message,type="normal"){
@@ -422,33 +424,22 @@ function setLandingVerdict(stage,details={}){
  panel.hidden=false;
  panel.dataset.state=stage;
  panel.classList.remove("reveal");
- const config={
-  impact:{tag:"01 / IMPACT",title:"착지 충격 감지!",description:"돌이가 땅에 닿았어. 자세를 잠깐 고정하고 있어.",progress:22,step:0},
-  measuring:{tag:"02 / MEASURING",title:"착지 각도 측정 중",description:"돌이의 기울기를 읽고 목표 각도 0°와 비교하고 있어.",progress:55,step:1},
-  verifying:{tag:"03 / VERIFYING",title:"최종 판정 확인 중",description:"서버가 실제 착지 각도와 성공 조건을 확인하고 있어.",progress:84,step:2},
-  success:{tag:"03 / SUCCESS",title:"착지 성공!",description:details.description||"목표 각도에 정확하게 착지했어!",progress:100,step:3},
-  failure:{tag:"03 / RESULT",title:"이번 착지는 실패했어",description:details.description||"각도가 허용 범위를 벗어났어. 다시 도전해 보자!",progress:100,step:3},
-  error:{tag:"03 / CONNECTION",title:"착지 판정을 완료하지 못했어",description:details.description||"서버 연결을 확인한 뒤 다시 시도해 줘.",progress:100,step:3}
- };
- const item=config[stage]||config.impact;
- $("verdictTag").textContent=item.tag;
- $("verdictTitle").textContent=item.title;
- $("verdictDescription").textContent=item.description;
- $("verdictProgressFill").style.width=item.progress+"%";
- const steps=[$("verdictStepImpact"),$("verdictStepMeasure"),$("verdictStepResult")];
- steps.forEach((step,index)=>{
-  step.classList.toggle("done",index<item.step);
-  step.classList.toggle("active",index===item.step&&item.step<3);
-  if(item.step===3)step.classList.add("done");
- });
- if(stage==="success"||stage==="failure"||stage==="error"){
-  landingResultShown=true;
-  requestAnimationFrame(()=>panel.classList.add("reveal"));
- }
+ const isSuccess=stage==="success";
+ $("verdictTag").textContent=isSuccess?"LANDING RESULT · SUCCESS":stage==="failure"?"LANDING RESULT · FAILED":"LANDING RESULT · ERROR";
+ $("verdictTitle").textContent=isSuccess?"착지 성공!":"이번 착지는 실패했어";
+ $("verdictDescription").textContent=details.description||(isSuccess?"목표 각도에 정확하게 착지했어!":"각도가 허용 범위를 벗어났어. 다시 도전해 보자!");
+ panel.classList.add("reveal");
 }
-function waitForLandingReveal(){
- const elapsed=performance.now()-landingSequenceStarted;
- return new Promise(resolve=>setTimeout(resolve,Math.max(0,1750-elapsed)));
+function showLandingFlash(success,subtitle){
+ const flash=$("landingFlash");
+ clearTimeout(landingFlashTimer);
+ flash.classList.remove("show","success","failure");
+ flash.classList.add(success?"success":"failure");
+ $("landingFlashTitle").textContent=success?"SUCCESS!":"FAILED";
+ $("landingFlashSubtitle").textContent=subtitle|| (success?"목표 각도에 착지했어!":"착지 각도가 맞지 않았어.");
+ void flash.offsetWidth;
+ flash.classList.add("show");
+ landingFlashTimer=setTimeout(()=>flash.classList.remove("show"),1600);
 }
 function updateFlightPreview(chargeValue=charge){
  const tolerance=18+Number(gameState?.accuracy_level||0)*.75;
@@ -473,7 +464,7 @@ function updateFlightPreview(chargeValue=charge){
 }
 function startCharge(){
  if((mode!=="idle"&&mode!=="landed")||throwPending)return;closeUpgradeConfirm();
- clearTimeout(landingSequenceTimer);landingResultShown=false;$("landingVerdict").hidden=true;
+ clearTimeout(landingFlashTimer);$("landingFlash").classList.remove("show");$("landingVerdict").hidden=true;
  $("chargeValue").textContent="힘을 모으는 중…";$("chargeFill").style.width="0%";$("rewardResult").textContent="던질 준비 완료";
  mode="charging";charge=0;chargeStarted=performance.now();$("chargeButton").classList.add("charging");
  $("chargeButton").setAttribute("aria-label","힘 장전 중");$("chargeButton").disabled=false;$("restartButton").disabled=true;
@@ -596,45 +587,43 @@ function completeFlight(){
  if(mode!=="flying")return;
  const pos=positionAt(flightStarted+flightParams.duration*1000);impactX=pos.x;
  landingAngle=flightParams.landingAngle;rotationAngle=landingAngle*Math.PI/180;
- mode="landed";impactAt=performance.now();landingSequenceStarted=performance.now();landingResultShown=false;
- spawnParticles(pos.x,390,42,"gold",1.5);
+ mode="landed";impactAt=performance.now();
+ const displayedAngle=normalizeDegrees(flightParams.landingAngle);
+ const angleError=Math.min(displayedAngle,360-displayedAngle);
+ const predictedSuccess=angleError<=flightParams.tolerance;
+ spawnParticles(pos.x,390,predictedSuccess?72:34,predictedSuccess?"gold":"red",predictedSuccess?1.5:.85);
  $("restartButton").disabled=true;$("chargeButton").disabled=true;
- $("stateChip").textContent="착지 충격 확인 중";$("stateChip").classList.remove("live");
- setAngleGauge(landingAngle,flightParams.tolerance,"착지 완료 · 충격 확인 후 각도를 측정하고 있어.");
- $("chargeHint").textContent="착지 충격 확인 중…";
- $("rewardResult").textContent="착지 충격 확인 → 각도 측정 → 최종 판정 순서로 진행돼.";
- setLandingVerdict("impact");
- clearTimeout(landingSequenceTimer);
- landingSequenceTimer=setTimeout(()=>{
-  if(mode==="landed"&&!landingResultShown)setLandingVerdict("measuring");
- },430);
+ $("stateChip").textContent=predictedSuccess?"착지 성공 · 기록 저장 중":"착지 실패 · 기록 저장 중";
+ $("stateChip").classList.remove("live");
+ setAngleGauge(displayedAngle,flightParams.tolerance,predictedSuccess
+  ?"성공! 목표 각도 오차 "+angleError.toFixed(1)+"°"
+  :"실패 · 목표 각도에서 "+angleError.toFixed(1)+"° 벗어났어.");
+ setLandingVerdict(predictedSuccess?"success":"failure",{description:
+  "목표각 0° · 오차 "+angleError.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°"+
+  (session?"\n세우기 코인 기록을 저장하고 있어.":"\n체험 모드 · 로그인하면 코인 적립 가능")});
+ showLandingFlash(predictedSuccess,"목표 0° · 오차 "+angleError.toFixed(1)+"°");
+ $("chargeHint").textContent=predictedSuccess?"돌이가 목표 각도에 착지했어! 서버 기록을 저장하고 있어.":"착지 각도가 허용 범위를 벗어났어. 다음 도전을 준비해 봐!";
+ $("rewardResult").textContent=predictedSuccess?"착지 성공! 세우기 코인 기록 저장 중…":"착지 실패 · 세우기 코인 0개";
  submitThrow();
 }
 async function submitThrow(){
  if(throwPending)return;throwPending=true;
+ const localAngle=normalizeDegrees(flightParams.landingAngle);
+ const localError=Math.min(localAngle,360-localAngle);
+ const localSuccess=localError<=flightParams.tolerance;
  if(!session){
-  const guestAngle=normalizeDegrees(flightParams.landingAngle),guestError=Math.min(guestAngle,360-guestAngle);
-  const guestSuccess=guestError<=flightParams.tolerance;
-  clearTimeout(landingSequenceTimer);
-  setLandingVerdict("verifying");
-  await waitForLandingReveal();
-  setLandingVerdict(guestSuccess?"success":"failure",{description:
-   "목표각 0° · 오차 "+guestError.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°\n체험 모드에서는 코인이 적립되지 않아. 로그인하면 기록과 보상을 저장할 수 있어."});
-  spawnParticles(impactX,390,guestSuccess?58:28,guestSuccess?"gold":"red",guestSuccess?1.35:.8);
-  setAngleGauge(guestAngle,flightParams.tolerance,guestSuccess?"체험 착지 성공 · 로그인하면 코인 적립 가능":"체험 착지 실패 · 목표각에서 "+guestError.toFixed(1)+"° 벗어났어.");
-  $("stateChip").textContent=guestSuccess?"착지 성공 · 체험 모드":"착지 실패 · 체험 모드";
-  $("rewardResult").textContent=guestSuccess?"체험 착지 성공! 로그인하면 보상 기록이 저장돼.":"착지 실패 · 세우기 코인 0개";
-  $("chargeHint").textContent="체험 모드 · "+(guestSuccess?"성공 판정이야. 로그인하면 코인을 적립할 수 있어.":"허용 범위 ±"+flightParams.tolerance.toFixed(1)+"°에 들어오도록 다시 도전해 봐.");
+  $("stateChip").textContent=localSuccess?"착지 성공 · 체험 모드":"착지 실패 · 체험 모드";
+  $("chargeHint").textContent=localSuccess
+   ?"체험 모드 성공! 로그인하면 세우기 코인을 적립할 수 있어."
+   :"체험 모드 실패 · 허용 범위 ±"+flightParams.tolerance.toFixed(1)+"°에 맞춰 다시 도전해 봐.";
+  $("rewardResult").textContent=localSuccess?"체험 착지 성공! 로그인하면 보상 기록이 저장돼.":"착지 실패 · 세우기 코인 0개";
   throwPending=false;
   if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}
   refreshUI();return
  }
- $("rewardResult").textContent="서버가 착지 각도를 측정하고 있어…";
  try{
-  const {data,error}=await supabase.rpc("dori_throw_game_throw",{p_charge:charge,p_request_id:uuid()});if(error)throw error;
-  clearTimeout(landingSequenceTimer);
-  setLandingVerdict("verifying");
-  await waitForLandingReveal();
+  const {data,error}=await supabase.rpc("dori_throw_game_throw",{p_charge:charge,p_request_id:uuid()});
+  if(error)throw error;
   gameState.seugi_coin_balance=data.seugi_coin_balance;gameState.balance=data.seugi_coin_balance;
   gameState.seugi_coin_earned=data.seugi_coin_earned;gameState.total_earned=data.seugi_coin_earned;
   gameState.total_throws=data.total_throws;gameState.successful_landings=data.successful_landings;
@@ -649,34 +638,36 @@ async function submitThrow(){
   flightParams.spinRate=Number(data.spin_rate_rad_sec);
   flightParams.landingAngle=landingAngle;rotationAngle=landingAngle*Math.PI/180;impactX=flightParams.landingX;
   const errorAngle=Number(data.angle_error_deg),success=!!data.success,reward=Number(data.coin_reward||0);
-  const oldBest=gameState.best_landing_error_deg;
-  gameState.best_landing_error_deg=oldBest===null||oldBest===undefined?errorAngle:Math.min(Number(oldBest),errorAngle);
+  const previousBest=gameState.best_landing_error_deg;
+  gameState.best_landing_error_deg=previousBest===null||previousBest===undefined
+   ?errorAngle:Math.min(Number(previousBest),errorAngle);
   setAngleGauge(landingAngle,flightParams.tolerance,success
-   ?"성공! 목표각 오차 "+errorAngle.toFixed(1)+"° · 세우기 코인 지급"
-   :"실패 · 목표각에서 "+errorAngle.toFixed(1)+"° 벗어났어. 다음엔 장전량을 조절해 봐.");
+   ?"성공! 목표각 오차 "+errorAngle.toFixed(1)+"° · 서버 확인 완료"
+   :"실패 · 목표각에서 "+errorAngle.toFixed(1)+"° 벗어났어.");
+  const serverDisagrees=success!==localSuccess;
   setLandingVerdict(success?"success":"failure",{description:
    "목표각 0° · 실제 오차 "+errorAngle.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°"+
-   (success?"\n+"+fmt(reward)+" 세우기 코인을 획득했어!":"\n이번 착지 보상은 0 세우기 코인이야. 다시 도전해 보자!")});
-  spawnParticles(impactX,390,success?72:34,success?"gold":"red",success?1.5:.85);
-  $("stateChip").textContent=success?"착지 성공":"각도 불일치";
+   (success?"\n+"+fmt(reward)+" 세우기 코인 획득!":"\n이번 착지 보상은 0 세우기 코인이야.")});
+  if(serverDisagrees)showLandingFlash(success,"서버 최종 판정 · 오차 "+errorAngle.toFixed(1)+"°");
+  $("stateChip").textContent=success?"착지 성공":"착지 실패";
+  $("rewardResult").textContent=success?"+"+fmt(reward)+" 세우기 코인 획득!":"착지 실패 · 세우기 코인 0개";
+  $("chargeHint").textContent=success
+   ?"서버 판정 완료 · "+fmt(reward)+" 세우기 코인을 획득했어."
+   :"서버 판정 완료 · 허용 각도 ±"+flightParams.tolerance.toFixed(1)+"° 밖이야.";
   refreshUI();addHistory(success,reward,charge,landingAngle,errorAngle);
-  if(success){
-   $("rewardResult").textContent="+"+fmt(reward)+" 세우기 코인 획득!";
-   $("chargeHint").textContent="돌이를 "+signedDegrees(landingAngle).toFixed(1)+"°로 세웠어! 정확한 착지야.";
-   toast("세우기 코인 +"+fmt(reward)+" 획득!","success");
-  }else{
-   $("rewardResult").textContent="착지 실패 · 세우기 코인 0개";
-   $("chargeHint").textContent="목표 각도 0° · 실제 오차 "+errorAngle.toFixed(1)+"° · 허용 ±"+flightParams.tolerance.toFixed(1)+"°";
-   toast("각도가 맞지 않아 코인을 얻지 못했어.","error");
-  }
+  if(success)toast("세우기 코인 +"+fmt(reward)+" 획득!","success");
+  else toast("착지 실패 · 다음에는 각도를 맞춰 봐!","error");
  }catch(error){
-  console.error("[DORI THROW] landing result:",error);clearTimeout(landingSequenceTimer);
-  setLandingVerdict("error",{description:error.message||"서버에서 착지 판정 결과를 가져오지 못했어. 다시 시도해 줘."});
-  $("stateChip").textContent="착지 판정 연결 오류";$("rewardResult").textContent="착지 판정 실패 · 보상은 지급되지 않았어.";
-  $("chargeHint").textContent=error.message||"잠시 후 다시 시도해 주세요.";
-  toast(error.message||"착지 기록을 저장하지 못했습니다.","error");await loadState()
+  console.error("[DORI THROW] landing result:",error);
+  $("stateChip").textContent=localSuccess?"착지 성공 · 기록 저장 실패":"착지 실패 · 기록 저장 실패";
+  $("rewardResult").textContent="화면 판정은 표시됐지만 서버 기록 저장에 실패했어.";
+  $("chargeHint").textContent=error.message||"착지 결과 기록을 저장하지 못했어. 다시 확인해 줘.";
+  toast("착지 기록 저장 실패 · 코인 내역을 확인해 줘.","error");
+  await loadState();
  }finally{
-  throwPending=false;if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}refreshUI()
+  throwPending=false;
+  if(mode==="landed"){$("restartButton").disabled=false;$("chargeButton").disabled=false}
+  refreshUI();
  }
 }
 function openUpgradeConfirm(type){
@@ -701,7 +692,7 @@ async function buyUpgrade(type){
 }
 function resetForNext(){
  if(mode!=="landed"||throwPending)return;
- clearTimeout(landingSequenceTimer);landingResultShown=false;$("landingVerdict").hidden=true;
+ clearTimeout(landingFlashTimer);$("landingFlash").classList.remove("show");$("landingVerdict").hidden=true;
  mode="idle";charge=0;rotationAngle=0;landingAngle=0;
  $("rewardResult").textContent="새로운 도전을 시작해 보자!";$("stateChip").textContent="준비 완료";$("stateChip").classList.remove("live");
  $("chargeHint").textContent="힘을 장전하고 놓으면 돌이가 자동으로 회전하며 날아가!";
@@ -778,7 +769,9 @@ $("rewardResult").textContent="아직 던지지 않았어";resizeArena();loading
 <section class="dashboard">
  <section class="panel arena">
   <div class="panel-head"><h2>✦ FLIGHT ARENA</h2><span class="state-chip" id="stateChip">준비 완료</span></div>
-  <div class="canvas-wrap"><canvas id="arenaCanvas" width="1120" height="470" aria-label="돌이가 기를 장전하고 공중에서 회전하는 게임 화면"></canvas></div>
+  <div class="canvas-wrap"><canvas id="arenaCanvas" width="1120" height="470" aria-label="돌이가 기를 장전하고 공중에서 회전하는 게임 화면"></canvas>
+   <div class="landing-flash" id="landingFlash" aria-hidden="true"><strong id="landingFlashTitle">SUCCESS!</strong><span id="landingFlashSubtitle">목표 각도에 착지했어</span></div>
+  </div>
   <div class="flight-metrics" aria-label="예상 비행 정보">
    <div class="flight-metric"><small>비행 속도</small><strong id="flightSpeed">장전 대기</strong></div>
    <div class="flight-metric"><small>최고 높이</small><strong id="flightHeight">장전 대기</strong></div>
