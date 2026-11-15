@@ -116,6 +116,11 @@ assert.ok(html.includes("var isDoriTurning=!!(doriActor&&doriActor._isTurning);"
 assert.ok(html.includes("animateGaitLeg('frontNear',gaitPhase,gaitStride,.92)"), "Walking must move the near front leg.");
 assert.ok(html.includes("animateGaitLeg('hindFar',gaitPhase+Math.PI*.5,gaitStride*.92,.82)"), "Walking must move the rear far leg.");
 assert.ok(html.includes("animateGaitLeg('hindNear',gaitPhase+Math.PI*1.5,gaitStride*.92,.82)"), "Walking must move the rear near leg.");
+assert.ok(html.includes("if(isDoriMoving){"), "Every actual Dori translation must trigger the shared gait dispatcher.");
+assert.ok(html.includes("var fastTravel=['trot','gallop','zoomies','chase','pounce','hop'].indexOf(pose)>=0;"), "Fast movement actions must use a diagonal-pair gait while all other movement uses a four-beat walk.");
+assert.ok(html.includes("Locomotion is driven by the actor's real translation, not by the current activity label."), "Event poses must not suppress locomotion while Dori moves.");
+assert.ok(html.includes("}else if(isDoriTurning){"), "Turns must include articulated pivot steps instead of freezing the legs.");
+assert.ok(html.includes("A small alternating pivot-step prevents the feet from freezing while Dori turns."), "Pivot stepping must remain present for direction changes.");
 assert.ok(html.includes("['walk','실제 보행','walk']"), "The pose test must include walking.");
 assert.ok(html.includes("['trot','빠른 보행','trot']"), "The pose test must include trotting.");
 assert.ok(html.includes("if(pose==='flop')"), "Flop must have its own side-rest pose.");
