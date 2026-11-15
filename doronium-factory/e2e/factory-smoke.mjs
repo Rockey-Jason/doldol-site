@@ -385,6 +385,7 @@ try {
   assert.equal(blueprintResult.money, 999976, "Blueprint money must be charged once for the complete transaction");
 
   const powerSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.setupPowerTopologyTest());
+  assert.equal(powerSetup.batteryBefore, 0, "The deterministic battery fixture must be paused before the single-tick settlement check");
   assert.equal(powerSetup.near.ratio, 1, "A smelter connected to the solar generator through cables must receive full power");
   assert.equal(powerSetup.far.ratio, 0, "A disconnected smelter must not receive power from another network");
   assert.notEqual(

@@ -2197,7 +2197,7 @@ if(E2E_MODE){
    return {standardWithoutFoundation,adaptiveWithoutFoundation,standardWithFoundation,placed:S.buildings.map(b=>b.type),adaptiveBeltTilts:world3d.inspect().adaptiveBeltTilts}
   },
   setupPowerTopologyTest(){
-   S=freshState();S.player={...S.player,viewMode:"map"};S.seconds=8*3600;S.money=1000000;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=true;S.powerTopologyLayers={surface:true,mine:{}};S.buildings=[
+   S=freshState();S.paused=true;S.player={...S.player,viewMode:"map"};S.seconds=8*3600;S.money=1000000;S.runtime=createRuntimeState();ensureItemStacks(S);S.powerTopologyEnabled=true;S.powerTopologyLayers={surface:true,mine:{}};S.buildings=[
     {uid:"P-GEN",type:"solar",x:1,y:1,dir:1,status:"IDLE"},
     {uid:"P-CABLE-1",type:"powerCable",x:2,y:1,dir:1,status:"IDLE"},
     {uid:"P-CABLE-2",type:"powerCable",x:3,y:1,dir:1,status:"IDLE"},
@@ -2207,7 +2207,7 @@ if(E2E_MODE){
    ];
    const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],batteryBefore:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ}
   },
-  powerTopologyTick(){tick(STEP);const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],battery:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ,farStatus:S.buildings.find(b=>b.uid==="P-SMELTER-2").status}},
+  powerTopologyTick(){const wasPaused=S.paused;try{S.paused=false;tick(STEP)}finally{S.paused=wasPaused}const power=currentPower();return {power,near:power.allocations["P-SMELTER-1"],far:power.allocations["P-SMELTER-2"],battery:S.buildings.find(b=>b.uid==="P-BATTERY").energyKJ,farStatus:S.buildings.find(b=>b.uid==="P-SMELTER-2").status}},
   runRustedPurificationTest(){
    S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);S.buildings=[];S.research=[];
    addItemStack(S,"ITEM_DORONUM_RUSTED",1,{quality:58,purity:42,synthetic:false});
