@@ -3005,7 +3005,9 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         set('neckBase',.07*stretchWave,1,1);set('neckMid',.12*stretchWave,1,1);
         set('neckUpper',.15*stretchWave,1,1);set('poll',.11*stretchWave,1,1);
       }
-      // Subtle weight shifts, paw adjustments and dream twitches keep all four legs alive during every non-travel action.\n      applyLifeLegMotion(pose,t,isDoriMoving,isDoriTurning);\n      var pts=vertices.map(transformPoint);
+      // Subtle weight shifts, paw adjustments and dream twitches keep all four legs alive during every non-travel action.
+      applyLifeLegMotion(pose,t,isDoriMoving,isDoriTurning);
+      var pts=vertices.map(transformPoint);
       ctx.clearRect(0,0,W,H);
       for(var i=0;i<triangles.length;i++){
         var tri=triangles[i];drawTriangle(vertices[tri[0]],vertices[tri[1]],vertices[tri[2]],pts[tri[0]],pts[tri[1]],pts[tri[2]]);
