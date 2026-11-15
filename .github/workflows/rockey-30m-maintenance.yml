@@ -1,4 +1,4 @@
-name: ROCKEY 30-minute maintenance
+name: ROCKEY 30-minute free quality checks
 
 on:
   schedule:
@@ -9,105 +9,57 @@ on:
       - main
     paths:
       - ".github/workflows/rockey-30m-maintenance.yml"
-      - ".github/prompts/rockey-maintenance.md"
-      - "docs/rockey/30_MINUTE_MAINTENANCE.md"
+      - "rockey-client/**"
+      - "rockey-server/**"
+      - "dori-life.html"
+      - "scripts/validate-dori-life.mjs"
+      - "scripts/site-quality-check.mjs"
 
 concurrency:
-  group: rockey-30-minute-maintenance
+  group: rockey-30-minute-free-checks
   cancel-in-progress: false
 
 jobs:
-  inspect-and-repair:
+  verify:
     if: github.repository == 'Rockey-Jason/doldol-site'
     runs-on: ubuntu-latest
-    timeout-minutes: 24
+    timeout-minutes: 20
     permissions:
       contents: read
-    outputs:
-      changed: ${{ steps.scope.outputs.changed }}
 
     steps:
       - name: Check out the default branch
         uses: actions/checkout@v4
         with:
           ref: main
-          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Check whether the Codex API secret is configured
-        id: api-key
-        shell: bash
-        env:
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: |
-          if [[ -n "${OPENAI_API_KEY:-}" ]]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "::warning title=One-time setup required::Add the OPENAI_API_KEY repository secret to enable automatic code repair. Build and QA checks will still run."
-          fi
-
-      - name: Install client dependencies
+      - name: Install ROCKEY client dependencies
         working-directory: rockey-client
         run: npm install --package-lock=false --no-audit --no-fund
 
-      - name: Install server dependencies
-        working-directory: rockey-server
-        run: npm install --package-lock=false --no-audit --no-fund
-
-      - name: Prepare a dedicated unprivileged Codex account
-        if: steps.api-key.outputs.enabled == 'true'
-        shell: bash
-        run: |
-          sudo adduser --system --home /home/codex --shell /bin/bash --group codex
-          sudo usermod -a -G codex runner
-          sudo usermod -a -G runner codex
-          sudo chown -R runner:codex "$GITHUB_WORKSPACE"
-          sudo chmod -R g+rwX "$GITHUB_WORKSPACE"
-          sudo find "$GITHUB_WORKSPACE" -type d -exec chmod g+s {} +
-
-      - name: Run Codex maintenance
-        id: codex
-        if: steps.api-key.outputs.enabled == 'true'
-        uses: openai/codex-action@v1
-        timeout-minutes: 14
-        continue-on-error: true
-        with:
-          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
-          prompt-file: .github/prompts/rockey-maintenance.md
-          output-file: ${{ github.workspace }}/.rockey-maintenance-report.md
-          working-directory: ${{ github.workspace }}
-          permission-profile: ":workspace"
-          safety-strategy: unprivileged-user
-          codex-user: codex
-
-      - name: Move the maintenance report to the upload directory
-        if: always()
-        shell: bash
-        run: |
-          if [[ -f "$GITHUB_WORKSPACE/.rockey-maintenance-report.md" ]]; then
-            mv "$GITHUB_WORKSPACE/.rockey-maintenance-report.md" "$RUNNER_TEMP/rockey-maintenance-report.md"
-          fi
-
-      - name: Warn when AI maintenance is unavailable
-        if: steps.codex.outcome == 'failure'
-        shell: bash
-        run: |
-          echo "::warning title=AI maintenance unavailable::Codex could not produce a patch in this cycle. The client build, server build and non-combat QA checks will continue."
-
-      - name: Build and type-check the client
+      - name: Build and type-check ROCKEY client
         working-directory: rockey-client
         run: npm run build
 
-      - name: Build the server and run non-combat network QA tests
+      - name: Install ROCKEY server dependencies
+        working-directory: rockey-server
+        run: npm install --package-lock=false --no-audit --no-fund
+
+      - name: Build server and run non-combat network QA
         working-directory: rockey-server
         run: |
           npm run build
           node --import tsx --test src/qa-simulation.test.ts
+
+      - name: Validate Dori Life animation choreography and site files
+        run: |
+          node scripts/validate-dori-life.mjs
+          node scripts/site-quality-check.mjs
 
       - name: Remove generated build output and installed dependencies
         if: always()
@@ -115,154 +67,3 @@ jobs:
         run: |
           git restore --worktree --staged -- rockey/ 2>/dev/null || true
           git clean -fd -- rockey/ rockey-client/node_modules rockey-server/node_modules rockey-server/dist >/dev/null 2>&1 || true
-
-      - name: Reject changes outside the maintenance allowlist and export a patch
-        id: scope
-        shell: bash
-        run: |
-          mapfile -t untracked < <(git ls-files --others --exclude-standard)
-          if (( ${#untracked[@]} > 0 )); then
-            printf 'Rejected newly-created files:\n' >&2
-            printf ' - %s\n' "${untracked[@]}" >&2
-            exit 1
-          fi
-
-          mapfile -t changed < <(git diff --name-only HEAD | sort -u)
-          disallowed=()
-          for path in "${changed[@]}"; do
-            case "$path" in
-              rockey-client/src/style.css|rockey-client/src/network/GameSocket.ts|rockey-client/index.html|rockey-server/src/auth.ts|rockey-server/src/qa-simulation.ts|rockey-server/src/qa-simulation.test.ts)
-                ;;
-              *)
-                disallowed+=("$path")
-                ;;
-            esac
-          done
-
-          if (( ${#disallowed[@]} > 0 )); then
-            printf 'Rejected out-of-scope files:\n' >&2
-            printf ' - %s\n' "${disallowed[@]}" >&2
-            exit 1
-          fi
-
-          git diff HEAD --check
-          if (( ${#changed[@]} > 0 )); then
-            git diff --binary HEAD > "${{ runner.temp }}/rockey-maintenance.patch"
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-            printf 'Approved files changed:\n%s\n' "${changed[*]}"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            echo "No safe, evidence-backed code change was needed in this cycle."
-          fi
-
-      - name: Upload the tested patch
-        if: steps.scope.outputs.changed == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: rockey-maintenance-patch
-          path: ${{ runner.temp }}/rockey-maintenance.patch
-          if-no-files-found: error
-          retention-days: 2
-
-      - name: Upload the maintenance report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: rockey-maintenance-report-${{ github.run_number }}
-          path: ${{ runner.temp }}/rockey-maintenance-report.md
-          if-no-files-found: ignore
-          retention-days: 14
-
-  create-draft-pr:
-    needs: inspect-and-repair
-    if: needs.inspect-and-repair.outputs.changed == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 12
-    permissions:
-      contents: write
-      pull-requests: write
-
-    steps:
-      - name: Check out the default branch
-        uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Download the tested patch
-        uses: actions/download-artifact@v4
-        with:
-          name: rockey-maintenance-patch
-          path: ${{ runner.temp }}/rockey-patch
-
-      - name: Apply the patch
-        run: git apply --check "${{ runner.temp }}/rockey-patch/rockey-maintenance.patch" && git apply "${{ runner.temp }}/rockey-patch/rockey-maintenance.patch"
-
-      - name: Install client dependencies
-        working-directory: rockey-client
-        run: npm install --package-lock=false --no-audit --no-fund
-
-      - name: Install server dependencies
-        working-directory: rockey-server
-        run: npm install --package-lock=false --no-audit --no-fund
-
-      - name: Re-run client build and type-check
-        working-directory: rockey-client
-        run: npm run build
-
-      - name: Re-run server build and non-combat network QA tests
-        working-directory: rockey-server
-        run: |
-          npm run build
-          node --import tsx --test src/qa-simulation.test.ts
-
-      - name: Remove generated Pages bundle and verify patch scope
-        shell: bash
-        run: |
-          git restore --worktree --staged -- rockey/ 2>/dev/null || true
-          git clean -fd -- rockey/ >/dev/null 2>&1 || true
-          git diff HEAD --check
-
-          mapfile -t changed < <(git diff --name-only HEAD | sort -u)
-          for path in "${changed[@]}"; do
-            case "$path" in
-              rockey-client/src/style.css|rockey-client/src/network/GameSocket.ts|rockey-client/index.html|rockey-server/src/auth.ts|rockey-server/src/qa-simulation.ts|rockey-server/src/qa-simulation.test.ts)
-                ;;
-              *)
-                echo "Rejected out-of-scope file: $path" >&2
-                exit 1
-                ;;
-            esac
-          done
-
-      - name: Open or update the single draft maintenance PR
-        uses: peter-evans/create-pull-request@v7
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: codex/rockey-30m-maintenance
-          base: main
-          delete-branch: false
-          draft: true
-          commit-message: "chore(rockey): apply verified maintenance improvements"
-          title: "ROCKEY maintenance: verified stability and UX improvements"
-          body: |
-            This draft PR was prepared by the scheduled ROCKEY maintenance workflow.
-
-            - Scope is limited to styling, accessibility, connection reliability, account authentication and non-combat QA.
-            - Changes outside the approved file allowlist are rejected.
-            - Client build, server build and non-combat network QA tests pass on the exact patch.
-            - No automatic merge or production deployment is performed.
-
-            Review the Actions run and its maintenance report before merging.
-          add-paths: |
-            rockey-client/src/style.css
-            rockey-client/src/network/GameSocket.ts
-            rockey-client/index.html
-            rockey-server/src/auth.ts
-            rockey-server/src/qa-simulation.ts
-            rockey-server/src/qa-simulation.test.ts
