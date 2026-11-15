@@ -309,3 +309,36 @@ No main merge, Pages/Render deployment, production database/schema/permission/fu
 - Physical Android/iOS and PC hardware validation, two-device cloud-save recovery and a 60-minute elapsed wall-clock soak remain **UNVERIFIED**.
 
 No main merge, Pages/Render deployment, production DB/schema/permission/function change, real-user save mutation, or balance/reward mutation was performed.
+
+
+## 2026-11-15 — live contract packaging material custody journal
+
+**Validated code checkpoint:** `3f77fb0cf36836004f1137c3e24164a3c6ec6528`  
+**Main HEAD:** `4fa34b0fa1eb3afee4d858488af344a91e632e2b`  
+**PR #11:** open / draft / unmerged; base `main`; mergeable `false`  
+**Comparison:** 372 commits ahead / 793 behind main; merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`.
+
+### Code changes
+
+- `advancePackagingStage` now accepts an explicit atomic reservation-commit callback. When a live `ownershipLedger` exists, the stage fails closed with `OWNERSHIP_COMMIT_REQUIRED` if no custody-aware callback is supplied; only the package-material reservations are released, while the qualified cargo reservation and shipment stage remain unchanged.
+- The live `packageDeliveryContract` UI path and browser E2E use `commitOwnedItemReservations(..., { reason: "contract-packaging" })`. Package-material inputs now create `CONSUME` transaction records and consumed-journal entries before the inventory projection is committed. Ownership snapshot rebuilds retain those journals.
+- Added three unit regressions: missing custody callback fails closed, the callback is invoked for package material, and callback failure releases only the package reservation without consuming inventory.
+- The live shipment E2E now verifies that one five-stage package consumes exactly 18 material units across 7 custody transactions, and two shipments retain 36 units across 14 transactions after snapshot rebuilds.
+- The first browser run [43662223596](https://github.com/Rockey-Jason/doldol-site/actions/runs/43662223596) exposed a separate nondeterministic battery fixture: the live animation loop advanced the fixture battery before the explicit one-tick assertion, so the test observed 80kJ rather than the isolated 40kJ delta. The E2E fixture now pauses the background loop and executes exactly one explicit tick, with an assertion that the starting battery charge is zero. No production power formula was changed.
+
+### Verification
+
+- Final CI run [43662545937](https://github.com/Rockey-Jason/doldol-site/actions/runs/43662545937): **SUCCESS** on the validated code checkpoint.
+- `validate-web-game`: **SUCCESS**; Node unit tests **139/139 passed, 0 failed, 0 cancelled, 0 skipped**.
+- Playwright `browser-regression`: **SUCCESS**; complete smoke result `PASS`, desktop renderer `webgl`, mobile-emulation renderer `webgl`.
+- The browser run passed the new packaging-consumption assertions and completed the virtual soak at **36,000 fixed ticks / approximately 3,600 simulated seconds**. The conservation fixture reported ore balance 50,000 and coal balance 30,000.
+- Mobile viewport/touch emulation and virtual soak are not physical-device tests or a 60-minute elapsed wall-clock soak.
+
+### Remaining highest-priority gaps
+
+- Stage 5 remains **PARTIAL / CRITICAL**: package-material consumption is now journaled, but independent warehouse stock, every owner-domain transfer, demolition/salvage, Fusion custody, restart/reconnect recovery and global cross-domain conservation remain open.
+- Stage 11 remains **PARTIAL**: all five packaging stages now use custody transactions, but the full contract catalog, route-derived risk/insurance and server-authoritative reward settlement remain open.
+- Six-fluid live integration, canonical recipe source-of-truth, full Fusion interlocks/recovery, all skill effects, 2,048m world migration, full campaign and all-machine failure coverage remain incomplete.
+- Physical Android/iOS/PC validation, two-device cloud recovery and the 60-minute elapsed wall-clock soak remain **UNVERIFIED**.
+
+PR #8 remains the separate Godot implementation and was not integrated. PR #9 overlaps five files with PR #11 and PR #10 overlaps five files; neither was wholesale merged or cherry-picked. No main merge, GitHub Pages/Render deployment, production DB/schema/permission/function change, real-user save mutation, or balance/reward mutation was performed.

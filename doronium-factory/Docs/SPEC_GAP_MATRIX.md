@@ -257,13 +257,13 @@ All 12 roadmap areas remain PARTIAL or UNVERIFIED; no final checklist item is CO
 | 2. World and terrain | PARTIAL | 192×160 finite tile world, terrain variation and underground levels exist; 2,048m×2,048m target and full chunk streaming/unit migration remain incomplete. |
 | 3. Player, exploration, survival and mining | PARTIAL | First/third person, survival, mine interaction and automated mining exist; full PC/mobile campaign and physical-device validation remain. |
 | 4. Terrain preparation and construction | PARTIAL | Flattening, foundations, footprints, blueprints and rollback helpers exist; complete port, dismantle and crash-recovery coverage remains. |
-| 5. Items, ownership and logistics | PARTIAL / CRITICAL | Stack IDs, reservations, production custody, conveyors, shipment cargo and world-drop pickup exist; one authoritative ledger across every domain and global conservation remain incomplete. |
+| 5. Items, ownership and logistics | PARTIAL / CRITICAL | Stack IDs, reservations, production custody, package-material consumption, conveyors, shipment cargo and world-drop pickup are journaled in live paths; independent warehouse stock, every owner-domain transfer, demolition/salvage, Fusion custody, restart/reconnect and global conservation remain incomplete. |
 | 6. Power network | PARTIAL | kW/kJ allocation, batteries, transformers and stable component IDs exist; edge-by-edge loss, persistent merge/split identity and diagnostics remain. |
 | 7. Six-fluid network | PARTIAL | Six fluid types, pressure/temperature, leak and conservation solver exist; live source/extraction/recipe/consumer integration is still water-dominant. |
 | 8. Machine states, failures and maintenance | PARTIAL | Failure profiles and repair paths exist; all-machine state/failure/residue coverage remains incomplete. |
 | 9. Production, research and skills | PARTIAL | Production and 20 skill nodes exist; canonical recipe source-of-truth integration, all skill effects and the 18-stage research target remain unresolved. |
 | 10. Canonical Doronum and Infinity | PARTIAL | Canonical input validation and live seven-stage/260-second Fusion path exist; complete interlocks, save/restart recovery and end-to-end output custody remain. |
-| 11. Shipping, contracts and economy | PARTIAL | Three sample contracts, packaging and custody-aware dispatch exist; full catalog, route risk/insurance and server-authoritative rewards remain. |
+| 11. Shipping, contracts and economy | PARTIAL | Five-stage packaging now commits all reserved material through custody transactions; dispatch and delivery custody exist. Full contract catalog, route-derived risk/insurance and server-authoritative rewards remain. |
 | 12. Save, security, performance and release | PARTIAL / UNVERIFIED | Local/cloud CAS and RLS foundations exist; two-device conflict recovery, physical devices, memory soak and 60-minute wall-clock test remain unverified. |
 
 ### 20-item acceptance checklist
@@ -277,7 +277,7 @@ All 12 roadmap areas remain PARTIAL or UNVERIFIED; no final checklist item is CO
 | 5 | Flattening and foundations | PARTIAL | Core placement rules exist; all footprints, ports, dismantle and rollback cases remain. |
 | 6 | Underground mining | PARTIAL | Automatic/advanced miner scenarios are in browser regression; all deposits, levels, failures and recovery remain. |
 | 7 | Canonical 15 Doronum inputs | PARTIAL | Manifest and input qualification exist; all live recipe/model/research/UI sources are not yet canonical. |
-| 8 | No item duplication/loss | PARTIAL / CRITICAL | Several live transitions are journaled; global cross-domain conservation is not proven. |
+| 8 | No item duplication/loss | PARTIAL / CRITICAL | Live reservations, production completion, package-material consumption, conveyor transfers, shipment cargo and world-drop pickup are journaled; global cross-domain conservation is not proven. |
 | 9 | Conveyors and automatic mining | PARTIAL | Basic routing and mining exist; parcel splitting, full belt catalog and automated deadlock recovery remain. |
 | 10 | Power and batteries | PARTIAL | Allocation, storage settlement and stable component IDs exist; edge loss and full diagnostic behavior remain. |
 | 11 | Six fluids, pressure and temperature | PARTIAL | Generic six-fluid solver exists; five non-water live source/consumer chains remain incomplete. |
@@ -327,3 +327,17 @@ All 12 roadmap areas remain PARTIAL or UNVERIFIED; no final checklist item is CO
 - Overall status remains **NOT COMPLETE / NOT RELEASE-READY**. No checklist item is promoted to COMPLETE by this retest.
 
 No main merge, deployment, production database change, or live-user save/economy mutation was performed.
+
+
+## 2026-11-15 — contract packaging custody integration
+
+- **Stage 5:** remains **PARTIAL / CRITICAL**. Package-material reservations now commit through the same custody-aware transaction boundary as live inventory consumption. The consumed journal survives ownership snapshot rebuilds. Independent warehouse stock, demolition, Fusion output custody, restart/reconnect and global conservation are still open.
+- **Stage 11:** remains **PARTIAL**. The five packaging stages are connected to custody transactions and have browser coverage for exact quantities and transaction counts. The full contract catalog, route-derived risk/insurance and server-authoritative rewards are still incomplete.
+- **Checklist #8:** remains **PARTIAL / CRITICAL**; no claim of global no-duplication/no-loss acceptance is made. All 20 acceptance items remain PARTIAL or UNVERIFIED; none is promoted to COMPLETE.
+- **Code checkpoint:** `3f77fb0cf36836004f1137c3e24164a3c6ec6528`.
+- **CI:** [43662545937](https://github.com/Rockey-Jason/doldol-site/actions/runs/43662545937) **SUCCESS**. Static/runtime validation succeeded; Node suite **139/139**; Playwright browser regression **PASS**.
+- The Playwright smoke passed desktop and mobile-emulation WebGL, the 18-unit / 7-transaction first package, the 36-unit / 14-transaction two-package journal, and the virtual 36,000-tick conservation soak. This does not count as physical Android/iOS/PC testing or a 60-minute wall-clock soak.
+- The earlier run [43662223596](https://github.com/Rockey-Jason/doldol-site/actions/runs/43662223596) failed at the battery test because the live animation loop advanced the unpaused fixture before the explicit one-tick assertion. The fixture is now paused during setup and explicitly runs one tick; the corrected current-head full browser run passed.
+- **Main:** `4fa34b0fa1eb3afee4d858488af344a91e632e2b`. **PR #11:** open/draft/unmerged, mergeable false; 372 ahead / 793 behind main from merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`.
+- PR #8 remains separate Godot with no file overlap. PR #9 and #10 each overlap five files with PR #11; no wholesale merge/cherry-pick was performed.
+- No main merge, deployment, production DB change or live-user save/economy mutation was performed.
