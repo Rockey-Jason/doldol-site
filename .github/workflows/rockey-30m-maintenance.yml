@@ -82,12 +82,12 @@ jobs:
           npm run build
           node --import tsx --test src/qa-simulation.test.ts
 
-      - name: Remove generated Pages bundle from the working diff
+      - name: Remove generated build output and installed dependencies
         if: always()
         shell: bash
         run: |
           git restore --worktree --staged -- rockey/ 2>/dev/null || true
-          git clean -fd -- rockey/ >/dev/null 2>&1 || true
+          git clean -fd -- rockey/ rockey-client/node_modules rockey-server/node_modules rockey-server/dist >/dev/null 2>&1 || true
 
       - name: Reject changes outside the maintenance allowlist and export a patch
         id: scope
