@@ -11,7 +11,7 @@
 @font-face{font-family:HancomMalrangmalrang;src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2") format("woff2");font-weight:400;font-display:swap}
 :root{color-scheme:dark;--bg:#050a1b;--panel:#0c1530;--panel2:#111d3c;--line:rgba(135,166,255,.2);--text:#f3f6ff;--muted:#9eadd0;--cyan:#6fe9ff;--blue:#7597ff;--gold:#ffdc86;--green:#78efc0;--red:#ff8798;font-family:HancomMalrangmalrang,system-ui,sans-serif}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;min-height:100vh;color:var(--text);background:radial-gradient(ellipse at 12% -5%,rgba(76,112,255,.22),transparent 38%),radial-gradient(ellipse at 92% 28%,rgba(95,68,205,.15),transparent 34%),linear-gradient(155deg,#0a1430,#040815 75%);overflow-x:hidden}
+body{margin:0;min-height:100vh;color:var(--text);background:radial-gradient(ellipse at 12% -5%,rgba(76,112,255,.22),transparent 38%),radial-gradient(ellipse at 92% 28%,rgba(95,68,205,.15),transparent 34%),linear-gradient(155deg,#0a1430,#040815 75%);overflow-x:clip}
 button,a{font:inherit}button{color:inherit;cursor:pointer;touch-action:manipulation}button:focus-visible,a:focus-visible{outline:2px solid var(--cyan);outline-offset:3px}
 .shell{width:min(1320px,calc(100% - 28px));margin:auto;padding:20px 0 42px}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:26px}
@@ -431,6 +431,7 @@ function buildBackground(){
 }
 buildBackground();
 let session=null,gameState=null,mode="idle",charge=0,chargeStarted=0,flightStarted=0,rotationAngle=0,landingAngle=0,throwPending=false;
+let replayLaunchPending=false;
 let landingFlashTimer=0;
 let selectedGameMode="classic",challengeRun=null,season2Dashboard=null,activeLeaderboard="best",currentReplayRecordId=null,livePerfectCombo=0;
 let flightParams={duration:2.85,height:108,speed:710/2.85,spinRate:2.35,landingAngle:0,tolerance:12},lastAnglePaint=0;
@@ -453,11 +454,11 @@ const GAME_MODE_INFO={
 function updateModeUi(){
  document.querySelectorAll("[data-game-mode]").forEach(button=>{
   button.classList.toggle("active",button.dataset.gameMode===selectedGameMode);
-  button.disabled=mode==="flying"||mode==="charging"||mode==="replay"||throwPending||!!(challengeRun&&!challengeRun.finished);
+  button.disabled=replayLaunchPending||mode==="flying"||mode==="charging"||mode==="replay"||throwPending||!!(challengeRun&&!challengeRun.finished);
  });
  const info=GAME_MODE_INFO[selectedGameMode]||GAME_MODE_INFO.classic;
  $("modeTitle").textContent=info.title;$("modeDescription").textContent=info.description;
- $("challengeStartButton").disabled=selectedGameMode==="classic"||mode==="flying"||mode==="charging"||mode==="replay"||throwPending||!!(challengeRun&&!challengeRun.finished);
+ $("challengeStartButton").disabled=replayLaunchPending||selectedGameMode==="classic"||mode==="flying"||mode==="charging"||mode==="replay"||throwPending||!!(challengeRun&&!challengeRun.finished);
  $("challengeStartButton").textContent=challengeRun&&!challengeRun.finished?"도전 진행 중":challengeRun?.finished?"다시 도전":"도전 시작";
  if(selectedGameMode==="classic"||!challengeRun||challengeRun.mode!==selectedGameMode){
   $("challengeStatusText").textContent=selectedGameMode==="classic"?"기본 플레이 · 제한 없음":info.description;
@@ -479,7 +480,7 @@ function chooseGameMode(nextMode){
  updateModeUi();playSfx("ui");
 }
 function startChallenge(){
- if(selectedGameMode==="classic"||mode==="flying"||mode==="charging"||mode==="replay"||throwPending)return;
+ if(replayLaunchPending||selectedGameMode==="classic"||mode==="flying"||mode==="charging"||mode==="replay"||throwPending)return;
  if(mode==="landed")resetForNext();
  const now=performance.now();
  challengeRun={mode:selectedGameMode,startedAt:now,endsAt:selectedGameMode==="time_attack"?now+60000:Infinity,
@@ -637,68 +638,41 @@ async function claimDailyMission(key,button){
 async function waitForArenaScroll(){
  const target=$(".canvas-wrap");
  if(!target)return;
- const isRootScroller=element=>element===document.documentElement||element===document.body||element===document.scrollingElement;
- let scroller=null;
- // The page uses overflow-x:hidden on body, which can make body itself the
- // vertical scroll container on some mobile browsers. Find the real scroller.
- for(let node=target.parentElement;node&&node!==document.documentElement;node=node.parentElement){
-  const style=getComputedStyle(node);
-  if(/auto|scroll|overlay/.test(style.overflowY)&&node.scrollHeight>node.clientHeight+4){
-   scroller=node;break;
-  }
- }
- if(!scroller)scroller=document.scrollingElement||document.documentElement;
- const root=isRootScroller(scroller);
- const getCurrent=()=>root
-  ?Math.max(window.pageYOffset||0,document.documentElement.scrollTop||0,document.body.scrollTop||0)
-  :scroller.scrollTop;
- const setCurrent=value=>{
-  if(root){
-   window.scrollTo(0,value);
-   document.documentElement.scrollTop=value;
-   document.body.scrollTop=value;
-  }else scroller.scrollTop=value;
- };
- const rect=target.getBoundingClientRect();
- const current=getCurrent();
- const viewportTop=root?0:scroller.getBoundingClientRect().top;
- const viewportHeight=root?window.innerHeight:scroller.clientHeight;
- const targetTop=current+rect.top-viewportTop-(viewportHeight-rect.height)/2;
- const maxScroll=root
-  ?Math.max(0,Math.max(document.documentElement.scrollHeight,document.body.scrollHeight)-window.innerHeight)
-  :Math.max(0,scroller.scrollHeight-scroller.clientHeight);
- const destination=Math.max(0,Math.min(maxScroll,targetTop));
- const distance=destination-current;
+ const root=document.scrollingElement||document.documentElement;
  const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
- if(reduced||Math.abs(distance)<2){
-  setCurrent(destination);
+ const viewportHeight=Math.max(1,window.innerHeight||root.clientHeight);
+ const rect=target.getBoundingClientRect();
+ const currentY=window.scrollY||root.scrollTop||0;
+ const absoluteTop=rect.top+currentY;
+ const offset=rect.height>=viewportHeight?12:(viewportHeight-rect.height)/2;
+ const maxY=Math.max(0,root.scrollHeight-root.clientHeight);
+ const destination=Math.max(0,Math.min(maxY,absoluteTop-offset));
+ if(reduced||Math.abs(destination-currentY)<2){
+  window.scrollTo(0,destination);root.scrollTop=destination;
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   return;
  }
+ window.scrollTo({top:destination,behavior:"smooth"});
  await new Promise(resolve=>{
-  const started=performance.now(),duration=680;
-  const step=now=>{
-   const progress=Math.min(1,(now-started)/duration);
-   const eased=1-Math.pow(1-progress,3);
-   setCurrent(current+distance*eased);
-   if(progress<1){requestAnimationFrame(step);return}
-   setCurrent(destination);
-   resolve();
+  const started=performance.now();let lastY=window.scrollY||root.scrollTop||0,stableFrames=0;
+  const check=now=>{
+   const y=window.scrollY||root.scrollTop||0;
+   stableFrames=Math.abs(y-lastY)<.6?stableFrames+1:0;lastY=y;
+   const centered=Math.abs(target.getBoundingClientRect().top-offset)<7;
+   if((centered&&stableFrames>=3)||(stableFrames>=10&&now-started>450)||now-started>2800){resolve();return}
+   requestAnimationFrame(check);
   };
-  requestAnimationFrame(step);
+  requestAnimationFrame(check);
  });
- // Confirm that the canvas is now in the visible viewport before the 1s pause.
- await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
  const finalRect=target.getBoundingClientRect();
- const visibleTop=root?0:scroller.getBoundingClientRect().top;
- const visibleBottom=visibleTop+viewportHeight;
- if(finalRect.bottom<visibleTop+8||finalRect.top>visibleBottom-8){
-  target.scrollIntoView({behavior:reduced?"auto":"smooth",block:"center"});
-  await new Promise(resolve=>setTimeout(resolve,reduced?0:750));
+ if(finalRect.bottom<8||finalRect.top>viewportHeight-8){
+  const fallbackY=Math.max(0,Math.min(maxY,(window.scrollY||root.scrollTop||0)+finalRect.top-offset));
+  root.scrollTop=fallbackY;window.scrollTo(0,fallbackY);
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
  }
 }
 async function playReplay(recordId){
- if(mode==="flying"||mode==="charging"||mode==="replay"||throwPending||challengeRun&&!challengeRun.finished)return;
+ if(replayLaunchPending||mode==="flying"||mode==="charging"||mode==="replay"||throwPending||challengeRun&&!challengeRun.finished)return;
  const record=season2Dashboard?.recent_records?.find(item=>item.record_id===recordId);if(!record)return;
  const params={
   duration:Number(record.flight_duration_sec),distance:Number(record.flight_distance_px),height:Number(record.flight_height),
@@ -707,26 +681,34 @@ async function playReplay(recordId){
  };
  if(!Number.isFinite(params.duration)||params.duration<=0||!Number.isFinite(params.spinRate))return;
  if(mode==="landed")resetForNext();
- currentReplayRecordId=recordId;flightParams=params;mode="replay";
- flightStarted=0;rotationAngle=0;landingAngle=0;impactAt=0;particles=[];
- $("stateChip").textContent="REPLAY · 화면 이동 중";$("chargeButton").disabled=true;$("restartButton").disabled=true;
- $("chargeHint").textContent="게임 화면으로 이동하고 있어. 도착하면 1초 후 재생할게.";
+ replayLaunchPending=true;
+ currentReplayRecordId=recordId;flightParams=params;
+ rotationAngle=0;landingAngle=0;impactAt=0;particles=[];
+ $("stateChip").textContent="REPLAY · 화면 이동 중";
+ $("chargeButton").disabled=true;$("restartButton").disabled=true;
+ $("chargeHint").textContent="게임 화면으로 이동하고 있어. 도착한 뒤 1초 후 재생할게.";
  $("replayPreparing").hidden=false;
  setAngleGauge(0,flightParams.tolerance,"리플레이 준비 중 · 화면 이동 후 자동 재생");
- updateModeUi();
+ updateModeUi();refreshUI();
  try{
   await waitForArenaScroll();
   await new Promise(resolve=>setTimeout(resolve,1000));
-  if(mode!=="replay")return;
+  if(!replayLaunchPending)return;
   $("replayPreparing").hidden=true;
+  replayLaunchPending=false;
+  mode="replay";
   flightStarted=performance.now();
   $("stateChip").textContent="REPLAY · 재생 중";
   $("chargeHint").textContent="저장된 착지 리플레이를 재생하고 있어.";
   setAngleGauge(0,flightParams.tolerance,"리플레이 · 착지 순간까지 각도 변화를 다시 보는 중");
-  startAnimationLoop();
+  updateModeUi();refreshUI();startAnimationLoop();
  }catch(error){
+  console.error("[DORI THROW] replay start:",error);
+  replayLaunchPending=false;
   $("replayPreparing").hidden=true;
-  mode="idle";updateModeUi();
+  if(mode==="replay")mode="idle";
+  $("chargeButton").disabled=false;$("restartButton").disabled=true;
+  updateModeUi();refreshUI();
   toast("리플레이를 시작하지 못했어. 다시 시도해 줘.","error");
  }
 }
@@ -906,7 +888,7 @@ function refreshUI(){
  $("powerLevel").textContent="Lv. "+gameState.power_level+" / 20";$("accuracyLevel").textContent="Lv. "+gameState.accuracy_level+" / 20";
  const pc=nextCost("power",gameState.power_level),ac=nextCost("accuracy",gameState.accuracy_level);
  $("powerCost").textContent=pc===null?"MAX":fmt(pc)+" S";$("accuracyCost").textContent=ac===null?"MAX":fmt(ac)+" S";
- const canUpgrade=!!session&&mode!=="flying"&&mode!=="charging"&&!throwPending;
+ const canUpgrade=!!session&&!replayLaunchPending&&mode!=="flying"&&mode!=="charging"&&!throwPending;
  $("powerUpgrade").disabled=!canUpgrade||pc===null||BigInt(String(coinBalance))<BigInt(pc);
  $("accuracyUpgrade").disabled=!canUpgrade||ac===null||BigInt(String(coinBalance))<BigInt(ac);
  $("throwsCount").textContent=fmt(gameState.total_throws);$("successfulLandings").textContent=fmt(gameState.successful_landings||0);
@@ -1037,7 +1019,7 @@ function updateFlightPreview(chargeValue=charge){
   "예상 착지각 "+(angle>0?"+":"")+angle.toFixed(1)+"° · 예상 이동 거리 "+Math.round(params.distance)+" px");
 }
 function startCharge(){
- if((mode!=="idle"&&mode!=="landed")||throwPending||mode==="replay")return;
+ if(replayLaunchPending||(mode!=="idle"&&mode!=="landed")||throwPending||mode==="replay")return;
  if(selectedGameMode!=="classic"&&(!challengeRun||challengeRun.finished))return;
  if(selectedGameMode==="time_attack"&&challengeRun&&performance.now()>=challengeRun.endsAt){finishChallenge("time");return;}
  if(selectedGameMode==="precision"&&challengeRun&&challengeRun.attempts>=10){finishChallenge("attempts");return;}
@@ -1255,7 +1237,7 @@ async function submitThrow(){
  }
 }
 function openUpgradeConfirm(type){
- if(!session||!gameState){toast("로그인 후 강화할 수 있어요.");return}if(mode==="flying"||mode==="charging"||throwPending)return;playSfx("ui");
+ if(!session||!gameState){toast("로그인 후 강화할 수 있어요.");return}if(replayLaunchPending||mode==="flying"||mode==="charging"||throwPending)return;playSfx("ui");
  const level=type==="power"?gameState.power_level:gameState.accuracy_level,cost=nextCost(type,level);
  if(cost===null){toast("이미 최대 레벨입니다.");return}if(BigInt(String(gameState.seugi_coin_balance??gameState.balance??0))<BigInt(cost)){toast("세우기 코인이 부족합니다.");return}
  pendingUpgrade=type;$("upgradeModalTitle").textContent=type==="power"?"힘 강화":"정확도 강화";
@@ -1265,7 +1247,7 @@ function openUpgradeConfirm(type){
 function closeUpgradeConfirm(){pendingUpgrade=null;$("upgradeModal").classList.remove("open");$("upgradeModal").setAttribute("aria-hidden","true")}
 async function confirmUpgrade(){const type=pendingUpgrade;if(!type)return;closeUpgradeConfirm();await buyUpgrade(type)}
 async function buyUpgrade(type){
- if(!session||!gameState){toast("로그인 후 강화할 수 있어요.");return}if(mode==="flying"||mode==="charging"||throwPending)return;
+ if(!session||!gameState){toast("로그인 후 강화할 수 있어요.");return}if(replayLaunchPending||mode==="flying"||mode==="charging"||throwPending)return;
  const button=type==="power"?$("powerUpgrade"):$("accuracyUpgrade");button.disabled=true;
  try{
   const {data,error}=await supabase.rpc("dori_throw_game_upgrade",{p_upgrade:type,p_request_id:uuid()});if(error)throw error;
