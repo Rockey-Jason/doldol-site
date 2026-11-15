@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 const file = "dori-life.html";
 const html = fs.readFileSync(file, "utf8");
 const lines = html.split(/\r?\n/);
+const normalizedHtml = html.replace(/\s+/g, " ");
 
 // Parse every inline script before the site is published.
 const inlineScripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
@@ -118,7 +119,7 @@ assert.ok(html.includes("animateGaitLeg('hindFar',gaitPhase+Math.PI*.5,gaitStrid
 assert.ok(html.includes("animateGaitLeg('hindNear',gaitPhase+Math.PI*1.5,gaitStride*.92,.82)"), "Walking must move the rear near leg.");
 assert.ok(html.includes("if(isDoriMoving){"), "Every actual Dori translation must trigger the shared gait dispatcher.");
 assert.ok(html.includes("var fastTravel=['trot','gallop','zoomies','chase','pounce','hop'].indexOf(pose)>=0;"), "Fast movement actions must use a diagonal-pair gait while all other movement uses a four-beat walk.");
-assert.ok(html.includes("Locomotion is driven by the actor's real translation, not by the current activity label."), "Event poses must not suppress locomotion while Dori moves.");
+assert.ok(normalizedHtml.includes("Locomotion is driven by the actor's real translation, not by the current activity label."), "Event poses must not suppress locomotion while Dori moves.");
 assert.ok(html.includes("}else if(isDoriTurning){"), "Turns must include articulated pivot steps instead of freezing the legs.");
 assert.ok(html.includes("A small alternating pivot-step prevents the feet from freezing while Dori turns."), "Pivot stepping must remain present for direction changes.");
 assert.ok(html.includes("['walk','실제 보행','walk']"), "The pose test must include walking.");
