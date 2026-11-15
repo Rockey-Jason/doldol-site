@@ -122,4 +122,64 @@ assert.ok(html.includes("if(pose==='flop')"), "Flop must have its own side-rest 
 assert.ok(html.includes("if(pose==='doze')"), "Dozing must have its own head nod.");
 assert.ok(html.includes("if(pose==='shake')"), "Shaking must animate the full upper body.");
 
-console.log("DORI LIFE QA passed: " + bankKeys.length + " events, " + profiles.size + " choreography profiles, inline JavaScript parsed, all action poses supported.");
+// KST is the single source of truth for the clock, routines and roaming destinations.
+assert.ok(html.includes("function kstSecondsOfDay(now){var p=parts(now);return Number(p.hour)*3600+Number(p.minute)*60+Number(p.second);}"), "A shared KST seconds-of-day clock must drive all daily behavior.");
+assert.ok(html.includes("var seconds=kstSecondsOfDay(now);"), "Ambient routines must use Korean Standard Time.");
+assert.ok(!html.includes("var hour=now.getHours();"), "Ambient routines must not fall back to the visitor device's local timezone.");
+assert.ok(html.includes("var second=kstSecondsOfDay(now);"), "Roaming destinations must use the same KST time source.");
+assert.ok(html.includes("if(phase<60){"), "The daytime home patrol must last a full minute.");
+assert.ok(html.includes("var walkStep=Math.floor(phase/15)%4;"), "The home patrol must use four deliberate 15-second route segments.");
+assert.ok(html.includes("var roamPhase=second%300;"), "Roaming route segments must align with the five-minute daily routine.");
+assert.ok(html.includes("var step=Math.floor(roamPhase/15)%stops.length;"), "Walk destinations must change at the route segment boundary.");
+assert.ok(html.includes("var lastMinuteKey = '';"), "Minute-based UI updates need a persistent KST minute key.");
+assert.ok(html.includes("if(minuteKey!==lastMinuteKey){"), "Timeline/history updates must not depend on hitting second zero exactly.");
+assert.ok(!html.includes("if(second===0){renderTimeline(now);renderActivityHistory(now);}"), "The drift-prone exact-second refresh must be removed.");
+assert.ok(html.includes("var defById=Object.create(null);"), "The mesh rig must cache joint definitions for fast vertex transforms.");
+assert.ok(html.includes("var w=v.weights[i],d=defById[w.id],b=bone[w.id];"), "Per-frame skinning must use constant-time joint lookups.");
+assert.ok(!html.includes("defs.find(function(bd){return bd.id===w.id;})"), "The render loop must not linearly scan the skeleton for every vertex weight.");
+assert.ok(html.includes("if(document.hidden){requestAnimationFrame(loop);return;}"), "The character renderer must pause expensive drawing while the tab is hidden.");
+
+// Test the actual timezone helper against UTC instants, independent of the test machine's timezone.
+const clockStart = html.indexOf("function parts(now)");
+const clockEnd = html.indexOf("\n  function hash", clockStart);
+assert.ok(clockStart >= 0 && clockEnd > clockStart, "Could not isolate the KST clock helpers.");
+const clockContext = {
+  partFormatter: new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
+  })
+};
+vm.runInNewContext(html.slice(clockStart, clockEnd), clockContext);
+const midnightKst = vm.runInNewContext("kstSecondsOfDay(new Date('2026-11-14T15:00:00.000Z'))", clockContext);
+const morningKst = vm.runInNewContext("kstSecondsOfDay(new Date('2026-11-15T00:30:00.000Z'))", clockContext);
+assert.equal(midnightKst, 0, "15:00 UTC must be midnight in Korea.");
+assert.equal(morningKst, 9 * 3600 + 30 * 60, "00:30 UTC must be 09:30 in Korea.");
+
+// Execute the real ambient routine across every second of its five-minute cycle.
+// This catches accidental shadowing where a longer walk window removes later actions.
+const routineStart = html.indexOf("function ambientRoutine(now,base){");
+const routineEnd = html.indexOf("\n  function eventTimestampToday", routineStart);
+assert.ok(routineStart >= 0 && routineEnd > routineStart, "Could not isolate the ambient routine.");
+const ambientFactory = new Function("kstSecondsOfDay", html.slice(routineStart, routineEnd) + "\nreturn ambientRoutine;");
+const ambientRoutine = ambientFactory((now) => now.kstSeconds);
+const baseRoutine = { title: "base", desc: "base", pose: "idle", tag: "base", icon: "🐾" };
+function poseAt(second) {
+  return ambientRoutine({ kstSeconds: 9 * 3600 + second }, baseRoutine).pose;
+}
+for (let second = 0; second < 300; second++) {
+  const pose = poseAt(second);
+  let valid = false;
+  if (second < 60) valid = pose === "walk" || pose === "explore";
+  else if (second < 82) valid = pose === "sniff";
+  else if (second < 112) valid = pose === "play";
+  else if (second < 134) valid = pose === "water";
+  else if (second < 158) valid = pose === "groom" || pose === "scratch";
+  else if (second < 200) valid = ["flop", "sleep", "cuddle", "doze"].includes(pose);
+  else if (second < 224) valid = pose === "wake" || pose === "stretch";
+  else if (second < 254) valid = ["curious", "listen", "lookUp"].includes(pose);
+  else if (second < 284) valid = ["sit", "beg", "wait"].includes(pose);
+  else valid = pose === "happy";
+  assert.ok(valid, "Unexpected or missing routine pose at " + second + " seconds: " + pose);
+}
+
+console.log("DORI LIFE QA passed: " + bankKeys.length + " events, " + profiles.size + " choreography profiles, inline JavaScript parsed, all action poses supported.");console.log("DORI LIFE QA passed: " + bankKeys.length + " events, " + profiles.size + " choreography profiles, inline JavaScript parsed, all action poses supported.");
