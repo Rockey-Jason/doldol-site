@@ -3065,140 +3065,196 @@ async function 마지막신문불러오기() {
 
 
 /* =====================================================
-   돌이신문 본문 자동 페이지 나누기
+   돌이신문 실제 화면 줄 수 기준 페이지 나누기
 ===================================================== */
 
-// 페이지당 최대 글자 수. HTML 태그는 제외하고 실제 표시되는 글자만 계산합니다.
-const 신문페이지당글자수 = 1200;
+// 실제 렌더링된 줄 수를 기준으로 페이지를 나눕니다.
+// 모바일/PC의 본문 폭과 글꼴 크기, 줄 간격에 따라 자동 계산됩니다.
+const 신문페이지당줄수 = 15;
 let 신문페이지목록 = [];
 let 현재신문페이지 = 0;
 
-function 신문글자수세기(문자열) {
-    return Array.from(String(문자열 || "")).length;
+function 신문페이지측정용본문만들기(본문) {
+    const 측정본문 = 본문.cloneNode(true);
+    측정본문.removeAttribute("id");
+    측정본문.setAttribute("aria-hidden", "true");
+
+    const 스타일 = getComputedStyle(본문);
+    측정본문.style.cssText = [
+        "position:fixed",
+        "left:-100000px",
+        "top:0",
+        "display:block",
+        "visibility:hidden",
+        "pointer-events:none",
+        "box-sizing:" + 스타일.boxSizing,
+        "width:" + 본문.getBoundingClientRect().width + "px",
+        "min-width:0",
+        "max-width:none",
+        "height:auto",
+        "max-height:none",
+        "margin:0",
+        "padding:" + 스타일.padding,
+        "border:" + 스타일.border,
+        "font-family:" + 스타일.fontFamily,
+        "font-size:" + 스타일.fontSize,
+        "font-weight:" + 스타일.fontWeight,
+        "font-style:" + 스타일.fontStyle,
+        "line-height:" + 스타일.lineHeight,
+        "letter-spacing:" + 스타일.letterSpacing,
+        "word-spacing:" + 스타일.wordSpacing,
+        "white-space:" + 스타일.whiteSpace,
+        "overflow-wrap:" + 스타일.overflowWrap,
+        "word-break:" + 스타일.wordBreak,
+        "text-align:" + 스타일.textAlign
+    ].join(";");
+
+    document.body.appendChild(측정본문);
+    return 측정본문;
 }
 
-// 가능하면 문장 끝이나 공백에서 나누고, 긴 문장만 글자 수 기준으로 나눕니다.
-function 신문텍스트조각나누기(문자열, 최대글자수) {
-    const 문자들 = Array.from(String(문자열 || ""));
-    const 조각들 = [];
-    let 시작 = 0;
+// 텍스트의 각 글자가 실제 화면에서 어느 줄에 표시되는지 측정합니다.
+function 신문실제줄정보수집(측정본문) {
+    const 워커 = document.createTreeWalker(측정본문, NodeFilter.SHOW_TEXT);
+    const 텍스트정보 = [];
+    let 마지막줄위치 = null;
+    let 전체줄수 = 0;
+    let 노드;
 
-    while (시작 < 문자들.length) {
-        let 끝 = Math.min(시작 + 최대글자수, 문자들.length);
+    while ((노드 = 워커.nextNode())) {
+        const 문자열 = 노드.nodeValue || "";
+        const 글자줄번호 = [];
 
-        if (끝 < 문자들.length) {
-            const 최소경계 = 시작 + Math.floor(최대글자수 * 0.55);
-            let 문장경계 = -1;
+        for (let i = 0; i < 문자열.length; i++) {
+            const 범위 = document.createRange();
+            범위.setStart(노드, i);
+            범위.setEnd(노드, i + 1);
 
-            for (let i = 끝 - 1; i >= 최소경계; i--) {
-                if (/[.!?。！？\n]/.test(문자들[i])) {
-                    문장경계 = i + 1;
-                    break;
-                }
+            const 사각형들 = Array.from(범위.getClientRects());
+            범위.detach?.();
+
+            if (!사각형들.length) {
+                글자줄번호.push(Math.max(0, 전체줄수 - 1));
+                continue;
             }
 
-            if (문장경계 > 시작) {
-                끝 = 문장경계;
-            } else {
-                let 공백경계 = -1;
-                for (let i = 끝 - 1; i >= 최소경계; i--) {
-                    if (/\s/.test(문자들[i])) {
-                        공백경계 = i + 1;
-                        break;
-                    }
-                }
-                if (공백경계 > 시작) 끝 = 공백경계;
+            const 사각형 = 사각형들[0];
+            const 줄위치 = Math.round(사각형.top * 2) / 2;
+
+            if (마지막줄위치 === null || Math.abs(줄위치 - 마지막줄위치) > 1) {
+                전체줄수++;
+                마지막줄위치 = 줄위치;
             }
+
+            글자줄번호.push(Math.max(0, 전체줄수 - 1));
         }
 
-        if (끝 <= 시작) 끝 = Math.min(시작 + 최대글자수, 문자들.length);
-        조각들.push(문자들.slice(시작, 끝).join(""));
-        시작 = 끝;
+        텍스트정보.push({ node: 노드, lineIndexes: 글자줄번호 });
     }
 
-    return 조각들;
+    return { 텍스트정보, 전체줄수 };
 }
 
-// 본문을 자를 때 부모 HTML 태그를 각 조각에 복제해 서식을 보존합니다.
-function 신문DOM노드나누기(노드, 최대글자수) {
-    if (노드.nodeType === 3) {
-        return 신문텍스트조각나누기(노드.nodeValue || "", 최대글자수).map(문자열 => ({
-            node: document.createTextNode(문자열),
-            chars: 신문글자수세기(문자열)
-        }));
-    }
+// 원래 DOM의 부모 태그와 서식을 복제하면서 페이지별 글자만 추출합니다.
+function 신문페이지DOM재구성(원본본문, 줄정보, 페이지번호) {
+    const 줄별페이지 = 줄번호 => Math.floor(줄번호 / 신문페이지당줄수);
+    const 줄정보맵 = new WeakMap();
 
-    if (노드.nodeType !== 1) {
-        return [{ node: 노드.cloneNode(true), chars: 0 }];
-    }
-
-    const 노드글자수 = 신문글자수세기(노드.textContent || "");
-    if (노드글자수 <= 최대글자수) {
-        return [{ node: 노드.cloneNode(true), chars: 노드글자수 }];
-    }
-
-    const 조각들 = [];
-    let 현재묶음 = 노드.cloneNode(false);
-    let 현재글자수 = 0;
-
-    const 묶음내보내기 = () => {
-        if (현재묶음.childNodes.length) {
-            조각들.push({ node: 현재묶음, chars: 현재글자수 });
-        }
-        현재묶음 = 노드.cloneNode(false);
-        현재글자수 = 0;
-    };
-
-    Array.from(노드.childNodes).forEach(자식노드 => {
-        신문DOM노드나누기(자식노드, 최대글자수).forEach(조각 => {
-            if (조각.chars > 0 && 현재글자수 > 0 && 현재글자수 + 조각.chars > 최대글자수) {
-                묶음내보내기();
-            }
-
-            현재묶음.appendChild(조각.node);
-            현재글자수 += 조각.chars;
-
-            if (현재글자수 >= 최대글자수) {
-                묶음내보내기();
-            }
-        });
+    줄정보.텍스트정보.forEach(항목 => {
+        줄정보맵.set(항목.node, 항목.lineIndexes);
     });
 
-    if (현재묶음.childNodes.length) {
-        조각들.push({ node: 현재묶음, chars: 현재글자수 });
+    function 노드복제(노드) {
+        if (노드.nodeType === Node.TEXT_NODE) {
+            const 줄번호들 = 줄정보맵.get(노드);
+            if (!줄번호들) return null;
+
+            const 원본문자열 = 노드.nodeValue || "";
+            let 추출문자열 = "";
+
+            for (let i = 0; i < 원본문자열.length; i++) {
+                if (줄별페이지(줄번호들[i] ?? 0) === 페이지번호) {
+                    추출문자열 += 원본문자열[i];
+                }
+            }
+
+            return 추출문자열 ? document.createTextNode(추출문자열) : null;
+        }
+
+        if (노드.nodeType === Node.COMMENT_NODE) return null;
+        if (노드.nodeType !== Node.ELEMENT_NODE && 노드.nodeType !== Node.DOCUMENT_FRAGMENT_NODE) {
+            return 노드.cloneNode(true);
+        }
+
+        const 복제본 = 노드.cloneNode(false);
+
+        Array.from(노드.childNodes).forEach(자식 => {
+            const 복제된자식 = 노드복제(자식);
+            if (복제된자식) 복제본.appendChild(복제된자식);
+        });
+
+        if (노드.nodeType === Node.ELEMENT_NODE) {
+            const 태그 = 노드.tagName.toLowerCase();
+            const 비텍스트요소 = ["img", "video", "audio", "iframe", "svg", "canvas", "hr"];
+            if (!복제본.childNodes.length && 비텍스트요소.includes(태그)) {
+                const 정보 = 노드.getBoundingClientRect();
+                if (정보.height > 0) return 노드.cloneNode(true);
+            }
+        }
+
+        return 복제본.childNodes.length ? 복제본 : null;
     }
 
-    return 조각들.length ? 조각들 : [{ node: 노드.cloneNode(true), chars: 노드글자수 }];
+    const 페이지본문 = document.createElement("div");
+    Array.from(원본본문.childNodes).forEach(노드 => {
+        const 복제본 = 노드복제(노드);
+        if (복제본) 페이지본문.appendChild(복제본);
+    });
+
+    return 페이지본문;
 }
 
 function 신문본문페이지구성(본문HTML) {
-    const 임시본문 = document.createElement("div");
-    임시본문.innerHTML = String(본문HTML || "");
+    const 본문 = $("내용");
+    if (!본문) return [{ html: String(본문HTML || ""), chars: 0, lines: 0 }];
 
-    const 페이지들 = [];
-    let 현재페이지 = document.createElement("div");
-    let 현재글자수 = 0;
+    const 원본HTML = String(본문HTML || "");
+    const 임시원본 = document.createElement("div");
+    임시원본.innerHTML = 원본HTML;
 
-    const 페이지내보내기 = () => {
-        if (!현재페이지.childNodes.length) return;
-        페이지들.push({ html: 현재페이지.innerHTML, chars: 현재글자수 });
-        현재페이지 = document.createElement("div");
-        현재글자수 = 0;
-    };
+    const 측정본문 = 신문페이지측정용본문만들기(본문);
+    측정본문.innerHTML = 원본HTML;
 
-    Array.from(임시본문.childNodes).forEach(노드 => {
-        신문DOM노드나누기(노드, 신문페이지당글자수).forEach(조각 => {
-            if (조각.chars > 0 && 현재글자수 > 0 && 현재글자수 + 조각.chars > 신문페이지당글자수) {
-                페이지내보내기();
-            }
-            현재페이지.appendChild(조각.node);
-            현재글자수 += 조각.chars;
-        });
-    });
+    try {
+        const 줄정보 = 신문실제줄정보수집(측정본문);
+        const 전체줄수 = 줄정보.전체줄수;
 
-    페이지내보내기();
-    if (!페이지들.length) 페이지들.push({ html: "", chars: 0 });
-    return 페이지들;
+        if (전체줄수 <= 신문페이지당줄수) {
+            return [{
+                html: 원본HTML,
+                chars: Array.from(임시원본.textContent || "").length,
+                lines: 전체줄수
+            }];
+        }
+
+        const 전체페이지수 = Math.ceil(전체줄수 / 신문페이지당줄수);
+        const 페이지들 = [];
+
+        for (let i = 0; i < 전체페이지수; i++) {
+            const 페이지DOM = 신문페이지DOM재구성(측정본문, 줄정보, i);
+            const 텍스트 = 페이지DOM.textContent || "";
+
+            페이지들.push({
+                html: 페이지DOM.innerHTML,
+                chars: Array.from(텍스트).length,
+                lines: Math.min(신문페이지당줄수, 전체줄수 - i * 신문페이지당줄수)
+            });
+        }
+
+        return 페이지들.length ? 페이지들 : [{ html: "", chars: 0, lines: 0 }];
+    } finally {
+        측정본문.remove();
+    }
 }
 
 function 신문페이지렌더링(부드럽게이동 = false) {
@@ -3225,7 +3281,7 @@ function 신문페이지렌더링(부드럽게이동 = false) {
     const 다음 = $("신문페이지다음");
 
     if (상태) 상태.textContent = (현재신문페이지 + 1) + " / " + 전체페이지수 + " 페이지";
-    if (글자수) 글자수.textContent = 페이지.chars.toLocaleString() + "자 · 전체 " + 전체글자수.toLocaleString() + "자";
+    if (글자수) 글자수.textContent = 페이지.lines + "줄 · " + 페이지.chars.toLocaleString() + "자";
 
     const 진행률 = Math.round(((현재신문페이지 + 1) / 전체페이지수) * 100);
     if (진행바) 진행바.style.width = 진행률 + "%";
