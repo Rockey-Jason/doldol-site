@@ -1,0 +1,165 @@
+name: ROCKEY 30-minute maintenance
+
+on:
+  schedule:
+    - cron: "7,37 * * * *"
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - ".github/workflows/rockey-30m-maintenance.yml"
+      - ".github/prompts/rockey-maintenance.md"
+      - "docs/rockey/30_MINUTE_MAINTENANCE.md"
+
+concurrency:
+  group: rockey-30-minute-maintenance
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  maintenance:
+    if: github.repository == 'Rockey-Jason/doldol-site'
+    runs-on: ubuntu-latest
+    timeout-minutes: 24
+
+    steps:
+      - name: Check out the default branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check whether the Codex API secret is configured
+        id: api-key
+        shell: bash
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: |
+          if [[ -n "${OPENAI_API_KEY:-}" ]]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+            echo "Codex maintenance is enabled."
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "::warning title=One-time setup required::Add the OPENAI_API_KEY repository secret to enable automatic code repair. Build and QA checks will still run."
+          fi
+
+      - name: Install client dependencies
+        working-directory: rockey-client
+        run: npm install --package-lock=false --no-audit --no-fund
+
+      - name: Install server dependencies
+        working-directory: rockey-server
+        run: npm install --package-lock=false --no-audit --no-fund
+
+      - name: Run Codex maintenance
+        id: codex
+        if: steps.api-key.outputs.enabled == 'true'
+        uses: openai/codex-action@v1
+        timeout-minutes: 14
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: .github/prompts/rockey-maintenance.md
+          output-file: ${{ runner.temp }}/rockey-maintenance-report.md
+          working-directory: ${{ github.workspace }}
+          permission-profile: ":workspace"
+          safety-strategy: drop-sudo
+
+      - name: Build and type-check the client
+        working-directory: rockey-client
+        run: npm run build
+
+      - name: Build the server and run non-combat network QA tests
+        working-directory: rockey-server
+        run: |
+          npm run build
+          node --import tsx --test src/qa-simulation.test.ts
+
+      - name: Remove generated Pages bundle from the working diff
+        if: always()
+        shell: bash
+        run: |
+          git restore --worktree --staged -- rockey/ 2>/dev/null || true
+          git clean -fd -- rockey/ >/dev/null 2>&1 || true
+
+      - name: Reject changes outside the maintenance allowlist
+        id: scope
+        shell: bash
+        run: |
+          mapfile -t changed < <(
+            { git diff --name-only; git ls-files --others --exclude-standard; } |
+            sort -u
+          )
+
+          disallowed=()
+          for path in "${changed[@]}"; do
+            case "$path" in
+              rockey-client/src/RockeyHub.ts|              rockey-client/src/style.css|              rockey-client/src/config.ts|              rockey-client/src/network/GameSocket.ts|              rockey-client/index.html|              rockey-server/src/auth.ts|              rockey-server/src/qa-simulation.ts|              rockey-server/src/qa-simulation.test.ts)
+                ;;
+              *)
+                disallowed+=("$path")
+                ;;
+            esac
+          done
+
+          if (( ${#disallowed[@]} > 0 )); then
+            printf 'Rejected out-of-scope files:\n' >&2
+            printf ' - %s\n' "${disallowed[@]}" >&2
+            exit 1
+          fi
+
+          git diff --check
+          if (( ${#changed[@]} > 0 )); then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            printf 'Approved files changed:\n%s\n' "${changed[*]}"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No safe, evidence-backed code change was needed in this cycle."
+          fi
+
+      - name: Upload the maintenance report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rockey-maintenance-report-${{ github.run_number }}
+          path: ${{ runner.temp }}/rockey-maintenance-report.md
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Open or update the single draft maintenance PR
+        if: steps.api-key.outputs.enabled == 'true' && steps.scope.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: codex/rockey-30m-maintenance
+          base: main
+          delete-branch: false
+          draft: true
+          commit-message: "chore(rockey): apply verified maintenance improvements"
+          title: "ROCKEY maintenance: verified stability and UX improvements"
+          body: |
+            This draft PR was prepared by the scheduled ROCKEY maintenance workflow.
+
+            - Scope is limited to account, lobby/social UI, responsiveness, accessibility, connection reliability and non-combat QA.
+            - Changes outside the approved file allowlist are rejected.
+            - Client build, server build and non-combat network QA tests must pass before this PR is updated.
+            - No automatic merge or production deployment is performed.
+
+            Review the Actions run and its maintenance report before merging.
+          add-paths: |
+            rockey-client/src/RockeyHub.ts
+            rockey-client/src/style.css
+            rockey-client/src/config.ts
+            rockey-client/src/network/GameSocket.ts
+            rockey-client/index.html
+            rockey-server/src/auth.ts
+            rockey-server/src/qa-simulation.ts
+            rockey-server/src/qa-simulation.test.ts
