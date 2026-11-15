@@ -3384,8 +3384,7 @@ async function 신문불러오기() {
         "제" + 신문번호 + "회 돌이신문";
 
     const 본문HTML = String(news.rockey_news || "")
-        .replace(/\\n/g, "<br>")
-        .replace(/\/n/g, "");
+        .replace(/\\n|\/n/g, " ");
 
     신문페이지목록 = 신문본문페이지구성(본문HTML);
     현재신문페이지 = 0;
