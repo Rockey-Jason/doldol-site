@@ -104,7 +104,7 @@ jobs:
           disallowed=()
           for path in "${changed[@]}"; do
             case "$path" in
-              rockey-client/src/RockeyHub.ts|rockey-client/src/style.css|rockey-client/src/config.ts|rockey-client/src/network/GameSocket.ts|rockey-client/index.html|rockey-server/src/auth.ts|rockey-server/src/qa-simulation.ts|rockey-server/src/qa-simulation.test.ts)
+              rockey-client/src/style.css|rockey-client/src/network/GameSocket.ts|rockey-client/index.html|rockey-server/src/auth.ts|rockey-server/src/qa-simulation.ts|rockey-server/src/qa-simulation.test.ts)
                 ;;
               *)
                 disallowed+=("$path")
@@ -204,7 +204,7 @@ jobs:
           mapfile -t changed < <(git diff --name-only HEAD | sort -u)
           for path in "${changed[@]}"; do
             case "$path" in
-              rockey-client/src/RockeyHub.ts|rockey-client/src/style.css|rockey-client/src/config.ts|rockey-client/src/network/GameSocket.ts|rockey-client/index.html|rockey-server/src/auth.ts|rockey-server/src/qa-simulation.ts|rockey-server/src/qa-simulation.test.ts)
+              rockey-client/src/style.css|rockey-client/src/network/GameSocket.ts|rockey-client/index.html|rockey-server/src/auth.ts|rockey-server/src/qa-simulation.ts|rockey-server/src/qa-simulation.test.ts)
                 ;;
               *)
                 echo "Rejected out-of-scope file: $path" >&2
@@ -226,16 +226,14 @@ jobs:
           body: |
             This draft PR was prepared by the scheduled ROCKEY maintenance workflow.
 
-            - Scope is limited to account, lobby/social UI, responsiveness, accessibility, connection reliability and non-combat QA.
+            - Scope is limited to styling, accessibility, connection reliability, account authentication and non-combat QA.
             - Changes outside the approved file allowlist are rejected.
             - Client build, server build and non-combat network QA tests pass on the exact patch.
             - No automatic merge or production deployment is performed.
 
             Review the Actions run and its maintenance report before merging.
           add-paths: |
-            rockey-client/src/RockeyHub.ts
             rockey-client/src/style.css
-            rockey-client/src/config.ts
             rockey-client/src/network/GameSocket.ts
             rockey-client/index.html
             rockey-server/src/auth.ts
