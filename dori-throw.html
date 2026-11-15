@@ -637,18 +637,40 @@ async function claimDailyMission(key,button){
 async function waitForArenaScroll(){
  const target=$(".canvas-wrap");
  if(!target)return;
- target.scrollIntoView({behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches?"auto":"smooth",block:"center",inline:"nearest"});
- const started=performance.now();let previousY=window.scrollY,stableFrames=0;
+ const root=document.scrollingElement||document.documentElement;
+ const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
+ // Calculate the destination from the real document position; this works more
+ // consistently on mobile browsers than relying on scrollIntoView alone.
+ const rect=target.getBoundingClientRect();
+ const pageTop=rect.top+(window.pageYOffset||root.scrollTop||0);
+ const viewportHeight=window.visualViewport?.height||window.innerHeight;
+ const maxScroll=Math.max(0,root.scrollHeight-viewportHeight);
+ const destination=Math.max(0,Math.min(maxScroll,pageTop-(viewportHeight-rect.height)/2));
+ const start=window.pageYOffset||root.scrollTop||0;
+ const distance=destination-start;
+ if(reduced||Math.abs(distance)<2){
+  window.scrollTo(0,destination);
+  root.scrollTop=destination;
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  return;
+ }
  await new Promise(resolve=>{
-  const check=()=>{
-   const currentY=window.scrollY;
-   if(Math.abs(currentY-previousY)<1)stableFrames++;else stableFrames=0;
-   previousY=currentY;
-   if(stableFrames>=7||performance.now()-started>2300){resolve();return}
-   requestAnimationFrame(check);
+  const duration=720,started=performance.now();
+  const step=now=>{
+   const progress=Math.min(1,(now-started)/duration);
+   const eased=1-Math.pow(1-progress,3);
+   const next=start+distance*eased;
+   window.scrollTo(0,next);
+   root.scrollTop=next;
+   if(progress<1){requestAnimationFrame(step);return}
+   window.scrollTo(0,destination);
+   root.scrollTop=destination;
+   resolve();
   };
-  requestAnimationFrame(check);
+  requestAnimationFrame(step);
  });
+ // Let the browser finish layout/viewport settling before starting the delay.
+ await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
 }
 async function playReplay(recordId){
  if(mode==="flying"||mode==="charging"||mode==="replay"||throwPending||challengeRun&&!challengeRun.finished)return;
