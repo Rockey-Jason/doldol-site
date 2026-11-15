@@ -75,6 +75,7 @@ jobs:
         if: steps.api-key.outputs.enabled == 'true'
         uses: openai/codex-action@v1
         timeout-minutes: 14
+        continue-on-error: true
         with:
           openai-api-key: ${{ secrets.OPENAI_API_KEY }}
           prompt-file: .github/prompts/rockey-maintenance.md
@@ -91,6 +92,12 @@ jobs:
           if [[ -f "$GITHUB_WORKSPACE/.rockey-maintenance-report.md" ]]; then
             mv "$GITHUB_WORKSPACE/.rockey-maintenance-report.md" "$RUNNER_TEMP/rockey-maintenance-report.md"
           fi
+
+      - name: Warn when AI maintenance is unavailable
+        if: steps.codex.outcome == 'failure'
+        shell: bash
+        run: |
+          echo "::warning title=AI maintenance unavailable::Codex could not produce a patch in this cycle. The client build, server build and non-combat QA checks will continue."
 
       - name: Build and type-check the client
         working-directory: rockey-client
