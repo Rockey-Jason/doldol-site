@@ -639,35 +639,49 @@ async function waitForArenaScroll(){
  const target=$(".canvas-wrap");
  if(!target)return;
  const root=document.scrollingElement||document.documentElement;
+ const viewportHeight=Math.max(1,window.innerHeight||root.clientHeight||1);
  const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
- const viewportHeight=Math.max(1,window.innerHeight||root.clientHeight);
- const rect=target.getBoundingClientRect();
- const currentY=window.scrollY||root.scrollTop||0;
- const absoluteTop=rect.top+currentY;
- const offset=rect.height>=viewportHeight?12:(viewportHeight-rect.height)/2;
- const maxY=Math.max(0,root.scrollHeight-root.clientHeight);
- const destination=Math.max(0,Math.min(maxY,absoluteTop-offset));
- if(reduced||Math.abs(destination-currentY)<2){
-  window.scrollTo(0,destination);root.scrollTop=destination;
-  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-  return;
- }
- window.scrollTo({top:destination,behavior:"smooth"});
- await new Promise(resolve=>{
-  const started=performance.now();let lastY=window.scrollY||root.scrollTop||0,stableFrames=0;
+ const getBlock=()=>target.getBoundingClientRect().height>=viewportHeight-24?"start":"center";
+ const getAlignmentError=()=>{
+  const rect=target.getBoundingClientRect();
+  return getBlock()==="start"
+   ?Math.abs(rect.top-12)
+   :Math.abs(rect.top+rect.height/2-viewportHeight/2);
+ };
+ const getScrollY=()=>Math.max(window.pageYOffset||0,root.scrollTop||0,document.documentElement.scrollTop||0);
+ const waitUntilAligned=timeout=>new Promise(resolve=>{
+  const started=performance.now();let lastError=getAlignmentError(),stableFrames=0;
   const check=now=>{
-   const y=window.scrollY||root.scrollTop||0;
-   stableFrames=Math.abs(y-lastY)<.6?stableFrames+1:0;lastY=y;
-   const centered=Math.abs(target.getBoundingClientRect().top-offset)<7;
-   if((centered&&stableFrames>=3)||(stableFrames>=10&&now-started>450)||now-started>2800){resolve();return}
+   const error=getAlignmentError();
+   stableFrames=Math.abs(error-lastError)<.5?stableFrames+1:0;
+   lastError=error;
+   if(error<=18&&stableFrames>=2){resolve(true);return}
+   if(now-started>=timeout){resolve(error<=24);return}
    requestAnimationFrame(check);
   };
   requestAnimationFrame(check);
  });
- const finalRect=target.getBoundingClientRect();
- if(finalRect.bottom<8||finalRect.top>viewportHeight-8){
-  const fallbackY=Math.max(0,Math.min(maxY,(window.scrollY||root.scrollTop||0)+finalRect.top-offset));
-  root.scrollTop=fallbackY;window.scrollTo(0,fallbackY);
+ const block=getBlock();
+ try{
+  target.scrollIntoView({behavior:reduced?"auto":"smooth",block,inline:"nearest"});
+ }catch(error){
+  console.warn("[DORI THROW] native scrollIntoView:",error);
+ }
+ let aligned=await waitUntilAligned(reduced?350:1700);
+ if(!aligned){
+  const rect=target.getBoundingClientRect();
+  const currentY=getScrollY();
+  const offset=block==="start"?12:(viewportHeight-rect.height)/2;
+  const totalHeight=Math.max(document.documentElement.scrollHeight,document.body.scrollHeight,root.scrollHeight);
+  const maxScroll=Math.max(0,totalHeight-(root.clientHeight||viewportHeight));
+  const destination=Math.max(0,Math.min(maxScroll,currentY+rect.top-offset));
+  window.scrollTo({top:destination,behavior:"auto"});
+  root.scrollTop=destination;
+  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+  aligned=await waitUntilAligned(450);
+ }
+ if(!aligned){
+  try{target.scrollIntoView({behavior:"auto",block,inline:"nearest"})}catch{}
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
  }
 }
