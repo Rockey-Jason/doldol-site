@@ -16,15 +16,15 @@ concurrency:
   group: rockey-30-minute-maintenance
   cancel-in-progress: false
 
-permissions:
-  contents: write
-  pull-requests: write
-
 jobs:
-  maintenance:
+  inspect-and-repair:
     if: github.repository == 'Rockey-Jason/doldol-site'
     runs-on: ubuntu-latest
     timeout-minutes: 24
+    permissions:
+      contents: read
+    outputs:
+      changed: ${{ steps.scope.outputs.changed }}
 
     steps:
       - name: Check out the default branch
@@ -90,7 +90,7 @@ jobs:
           git restore --worktree --staged -- rockey/ 2>/dev/null || true
           git clean -fd -- rockey/ >/dev/null 2>&1 || true
 
-      - name: Reject changes outside the maintenance allowlist
+      - name: Reject changes outside the maintenance allowlist and export a patch
         id: scope
         shell: bash
         run: |
@@ -118,12 +118,22 @@ jobs:
 
           git diff --check
           if (( ${#changed[@]} > 0 )); then
+            git diff --binary > "${{ runner.temp }}/rockey-maintenance.patch"
             echo "changed=true" >> "$GITHUB_OUTPUT"
             printf 'Approved files changed:\n%s\n' "${changed[*]}"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No safe, evidence-backed code change was needed in this cycle."
           fi
+
+      - name: Upload the tested patch
+        if: steps.scope.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: rockey-maintenance-patch
+          path: ${{ runner.temp }}/rockey-maintenance.patch
+          if-no-files-found: error
+          retention-days: 2
 
       - name: Upload the maintenance report
         if: always()
@@ -134,8 +144,73 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  create-draft-pr:
+    needs: inspect-and-repair
+    if: needs.inspect-and-repair.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Check out the default branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download the tested patch
+        uses: actions/download-artifact@v4
+        with:
+          name: rockey-maintenance-patch
+          path: ${{ runner.temp }}/rockey-patch
+
+      - name: Apply the patch
+        run: git apply --check "${{ runner.temp }}/rockey-patch/rockey-maintenance.patch" && git apply "${{ runner.temp }}/rockey-patch/rockey-maintenance.patch"
+
+      - name: Install client dependencies
+        working-directory: rockey-client
+        run: npm install --package-lock=false --no-audit --no-fund
+
+      - name: Install server dependencies
+        working-directory: rockey-server
+        run: npm install --package-lock=false --no-audit --no-fund
+
+      - name: Re-run client build and type-check
+        working-directory: rockey-client
+        run: npm run build
+
+      - name: Re-run server build and non-combat network QA tests
+        working-directory: rockey-server
+        run: |
+          npm run build
+          node --import tsx --test src/qa-simulation.test.ts
+
+      - name: Remove generated Pages bundle and verify patch scope
+        shell: bash
+        run: |
+          git restore --worktree --staged -- rockey/ 2>/dev/null || true
+          git clean -fd -- rockey/ >/dev/null 2>&1 || true
+          git diff --check
+
+          while IFS= read -r path; do
+            case "$path" in
+              rockey-client/src/RockeyHub.ts|              rockey-client/src/style.css|              rockey-client/src/config.ts|              rockey-client/src/network/GameSocket.ts|              rockey-client/index.html|              rockey-server/src/auth.ts|              rockey-server/src/qa-simulation.ts|              rockey-server/src/qa-simulation.test.ts)
+                ;;
+              *)
+                echo "Rejected out-of-scope file: $path" >&2
+                exit 1
+                ;;
+            esac
+          done < <(git diff --name-only)
+
       - name: Open or update the single draft maintenance PR
-        if: steps.api-key.outputs.enabled == 'true' && steps.scope.outputs.changed == 'true'
         uses: peter-evans/create-pull-request@v7
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -150,7 +225,7 @@ jobs:
 
             - Scope is limited to account, lobby/social UI, responsiveness, accessibility, connection reliability and non-combat QA.
             - Changes outside the approved file allowlist are rejected.
-            - Client build, server build and non-combat network QA tests must pass before this PR is updated.
+            - Client build, server build and non-combat network QA tests pass on the exact patch.
             - No automatic merge or production deployment is performed.
 
             Review the Actions run and its maintenance report before merging.
