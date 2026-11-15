@@ -130,7 +130,7 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 25px #ffdc8622}
   .arena{padding:10px;border-radius:15px}
   .panel-head h2{font-size:12px}.state-chip{font-size:9px;padding:5px 8px}
   .canvas-wrap{border-radius:12px}
-  #arenaCanvas{aspect-ratio:1120/650}
+  #arenaCanvas{width:100%;height:auto;aspect-ratio:1120/470}
   .flight-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}
   .flight-metric{padding:8px 9px;min-width:0}
   .flight-metric small{font-size:9px}.flight-metric strong{font-size:12px}
@@ -637,40 +637,65 @@ async function claimDailyMission(key,button){
 async function waitForArenaScroll(){
  const target=$(".canvas-wrap");
  if(!target)return;
- const root=document.scrollingElement||document.documentElement;
- const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
- // Calculate the destination from the real document position; this works more
- // consistently on mobile browsers than relying on scrollIntoView alone.
+ const isRootScroller=element=>element===document.documentElement||element===document.body||element===document.scrollingElement;
+ let scroller=null;
+ // The page uses overflow-x:hidden on body, which can make body itself the
+ // vertical scroll container on some mobile browsers. Find the real scroller.
+ for(let node=target.parentElement;node&&node!==document.documentElement;node=node.parentElement){
+  const style=getComputedStyle(node);
+  if(/auto|scroll|overlay/.test(style.overflowY)&&node.scrollHeight>node.clientHeight+4){
+   scroller=node;break;
+  }
+ }
+ if(!scroller)scroller=document.scrollingElement||document.documentElement;
+ const root=isRootScroller(scroller);
+ const getCurrent=()=>root
+  ?Math.max(window.pageYOffset||0,document.documentElement.scrollTop||0,document.body.scrollTop||0)
+  :scroller.scrollTop;
+ const setCurrent=value=>{
+  if(root){
+   window.scrollTo(0,value);
+   document.documentElement.scrollTop=value;
+   document.body.scrollTop=value;
+  }else scroller.scrollTop=value;
+ };
  const rect=target.getBoundingClientRect();
- const pageTop=rect.top+(window.pageYOffset||root.scrollTop||0);
- const viewportHeight=window.visualViewport?.height||window.innerHeight;
- const maxScroll=Math.max(0,root.scrollHeight-viewportHeight);
- const destination=Math.max(0,Math.min(maxScroll,pageTop-(viewportHeight-rect.height)/2));
- const start=window.pageYOffset||root.scrollTop||0;
- const distance=destination-start;
+ const current=getCurrent();
+ const viewportTop=root?0:scroller.getBoundingClientRect().top;
+ const viewportHeight=root?window.innerHeight:scroller.clientHeight;
+ const targetTop=current+rect.top-viewportTop-(viewportHeight-rect.height)/2;
+ const maxScroll=root
+  ?Math.max(0,Math.max(document.documentElement.scrollHeight,document.body.scrollHeight)-window.innerHeight)
+  :Math.max(0,scroller.scrollHeight-scroller.clientHeight);
+ const destination=Math.max(0,Math.min(maxScroll,targetTop));
+ const distance=destination-current;
+ const reduced=window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches;
  if(reduced||Math.abs(distance)<2){
-  window.scrollTo(0,destination);
-  root.scrollTop=destination;
+  setCurrent(destination);
   await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
   return;
  }
  await new Promise(resolve=>{
-  const duration=720,started=performance.now();
+  const started=performance.now(),duration=680;
   const step=now=>{
    const progress=Math.min(1,(now-started)/duration);
    const eased=1-Math.pow(1-progress,3);
-   const next=start+distance*eased;
-   window.scrollTo(0,next);
-   root.scrollTop=next;
+   setCurrent(current+distance*eased);
    if(progress<1){requestAnimationFrame(step);return}
-   window.scrollTo(0,destination);
-   root.scrollTop=destination;
+   setCurrent(destination);
    resolve();
   };
   requestAnimationFrame(step);
  });
- // Let the browser finish layout/viewport settling before starting the delay.
+ // Confirm that the canvas is now in the visible viewport before the 1s pause.
  await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+ const finalRect=target.getBoundingClientRect();
+ const visibleTop=root?0:scroller.getBoundingClientRect().top;
+ const visibleBottom=visibleTop+viewportHeight;
+ if(finalRect.bottom<visibleTop+8||finalRect.top>visibleBottom-8){
+  target.scrollIntoView({behavior:reduced?"auto":"smooth",block:"center"});
+  await new Promise(resolve=>setTimeout(resolve,reduced?0:750));
+ }
 }
 async function playReplay(recordId){
  if(mode==="flying"||mode==="charging"||mode==="replay"||throwPending||challengeRun&&!challengeRun.finished)return;
