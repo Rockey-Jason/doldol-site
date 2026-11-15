@@ -116,7 +116,45 @@ h1 em{font-style:normal;color:var(--gold);text-shadow:0 0 25px #ffdc8622}
  .guide-card{padding:12px}.guide-card h3{margin:5px 0}
  .stage-caption{font-size:9px}
 }
-@media(prefers-reduced-motion:reduce){*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+@media(max-width:600px){
+  html{scroll-padding-top:12px}
+  .shell{width:calc(100% - 16px);padding:10px 0 28px}
+  .topbar{margin-bottom:14px;gap:8px}
+  .brand{gap:8px}.brand-mark{width:35px;height:35px;border-radius:11px;font-size:19px}
+  .brand-copy strong{font-size:11px;letter-spacing:1.1px}.brand-copy small{font-size:8px;letter-spacing:1px}
+  .back{padding:8px 9px;font-size:10px}
+  .hero{margin-bottom:12px}.hero h1{font-size:32px;margin:6px 0}
+  .hero p{font-size:11px;line-height:1.55}
+  .balance-card{min-width:0;margin-top:10px;padding:9px 11px;gap:8px}
+  .dashboard{gap:9px}
+  .arena{padding:10px;border-radius:15px}
+  .panel-head h2{font-size:12px}.state-chip{font-size:9px;padding:5px 8px}
+  .canvas-wrap{border-radius:12px}
+  #arenaCanvas{aspect-ratio:1120/650}
+  .flight-metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:8px}
+  .flight-metric{padding:8px 9px;min-width:0}
+  .flight-metric small{font-size:9px}.flight-metric strong{font-size:12px}
+  .stage-caption{font-size:8px;padding-top:7px;gap:6px}
+  .controls{grid-template-columns:minmax(0,1fr) 100px;gap:7px;margin-top:11px}
+  .charge-control,.spin-control{min-height:72px;border-radius:13px}
+  .charge-control .charge-title{font-size:15px}.charge-control small,.spin-control small{font-size:9px;line-height:1.35;text-align:center;padding:0 5px}
+  .spin-control strong{font-size:13px}
+  .controls-hint{font-size:10px;margin-top:7px}
+  .spin-reward-guide{gap:5px;font-size:9px}.spin-reward-guide span{padding:5px 7px}
+  .sound-console{flex-wrap:wrap;gap:7px;padding:9px}
+  .sound-console-hint{display:none}
+  .round-action-row{gap:8px;align-items:center}
+  .round-restart{min-height:42px;padding:9px 12px}
+  .replay-preparing{padding:15px;gap:6px}
+  .replay-preparing strong{font-size:15px}
+ }
+ @media(max-width:380px){
+  .controls{grid-template-columns:minmax(0,1fr) 88px}
+  .charge-control small{font-size:8px}
+  .flight-metric{padding:7px}
+  .flight-metric strong{font-size:11px}
+ }
+ @media(prefers-reduced-motion:reduce){*,*:before,*:after{transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 /* DORI THROW · premium motion & clarity pass */
 body{position:relative;background-color:#040918;background-image:radial-gradient(ellipse at 13% 2%,rgba(71,117,255,.24),transparent 36%),radial-gradient(ellipse at 92% 28%,rgba(126,88,255,.17),transparent 34%),radial-gradient(ellipse at 52% 105%,rgba(65,181,226,.11),transparent 37%),linear-gradient(155deg,#09152f,#030714 75%);background-size:140% 140%;animation:ambientShift 18s ease-in-out infinite alternate}
@@ -155,6 +193,12 @@ body:after{width:460px;height:460px;right:-300px;bottom:-80px;background:#8f64ff
 @media(prefers-reduced-motion:reduce){.coin-gain-float.show,.balance-value strong.counting{animation:none!important}}
 .canvas-wrap{border-color:rgba(111,198,255,.27);box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 10px 32px rgba(0,0,0,.2);background:#09152f}
 .canvas-wrap:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(96,160,255,.045),transparent 30%,transparent 75%,rgba(1,7,19,.12));box-shadow:inset 0 0 45px rgba(0,0,0,.16)}
+.replay-preparing{position:absolute;z-index:5;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:20px;text-align:center;background:radial-gradient(ellipse at center,rgba(24,47,89,.93),rgba(5,12,29,.94));backdrop-filter:blur(9px);opacity:1;transition:opacity .35s ease}
+.replay-preparing[hidden]{display:none}
+.replay-preparing .replay-orb{width:34px;height:34px;border:1px solid rgba(111,233,255,.45);border-radius:50%;display:grid;place-items:center;color:#b9f7ff;box-shadow:0 0 28px rgba(111,233,255,.2);animation:replayOrbPulse 1s ease-in-out infinite alternate}
+.replay-preparing strong{font-size:17px;font-weight:400;color:#f1f6ff}
+.replay-preparing small{font-size:10px;color:#a6bbdf}
+@keyframes replayOrbPulse{to{transform:scale(1.12);box-shadow:0 0 36px rgba(111,233,255,.42)}}
 #arenaCanvas{filter:saturate(1.08) contrast(1.02)}
 .state-chip{transition:all .2s}.state-chip.live{color:#b8f5ff;border-color:rgba(111,233,255,.5);background:rgba(111,233,255,.12);box-shadow:0 0 20px rgba(111,233,255,.12);animation:statePulse 1.8s ease-in-out infinite}
 @keyframes statePulse{50%{box-shadow:0 0 28px rgba(111,233,255,.22)}}
@@ -590,6 +634,22 @@ async function claimDailyMission(key,button){
   await loadState();
  }catch(error){toast(error.message||"미션 보상을 받지 못했어.","error");button.disabled=false}
 }
+async function waitForArenaScroll(){
+ const target=$(".canvas-wrap");
+ if(!target)return;
+ target.scrollIntoView({behavior:window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches?"auto":"smooth",block:"center",inline:"nearest"});
+ const started=performance.now();let previousY=window.scrollY,stableFrames=0;
+ await new Promise(resolve=>{
+  const check=()=>{
+   const currentY=window.scrollY;
+   if(Math.abs(currentY-previousY)<1)stableFrames++;else stableFrames=0;
+   previousY=currentY;
+   if(stableFrames>=7||performance.now()-started>2300){resolve();return}
+   requestAnimationFrame(check);
+  };
+  requestAnimationFrame(check);
+ });
+}
 async function playReplay(recordId){
  if(mode==="flying"||mode==="charging"||mode==="replay"||throwPending||challengeRun&&!challengeRun.finished)return;
  const record=season2Dashboard?.recent_records?.find(item=>item.record_id===recordId);if(!record)return;
@@ -601,11 +661,27 @@ async function playReplay(recordId){
  if(!Number.isFinite(params.duration)||params.duration<=0||!Number.isFinite(params.spinRate))return;
  if(mode==="landed")resetForNext();
  currentReplayRecordId=recordId;flightParams=params;mode="replay";
- flightStarted=performance.now();rotationAngle=0;landingAngle=0;impactAt=0;particles=[];
- $("stateChip").textContent="REPLAY · 재생 중";$("chargeButton").disabled=true;$("restartButton").disabled=true;
- $("chargeHint").textContent="저장된 착지 리플레이를 재생하고 있어.";
- setAngleGauge(0,flightParams.tolerance,"리플레이 · 착지 순간까지 각도 변화를 다시 보는 중");
- updateModeUi();startAnimationLoop();
+ flightStarted=0;rotationAngle=0;landingAngle=0;impactAt=0;particles=[];
+ $("stateChip").textContent="REPLAY · 화면 이동 중";$("chargeButton").disabled=true;$("restartButton").disabled=true;
+ $("chargeHint").textContent="게임 화면으로 이동하고 있어. 도착하면 1초 후 재생할게.";
+ $("replayPreparing").hidden=false;
+ setAngleGauge(0,flightParams.tolerance,"리플레이 준비 중 · 화면 이동 후 자동 재생");
+ updateModeUi();
+ try{
+  await waitForArenaScroll();
+  await new Promise(resolve=>setTimeout(resolve,1000));
+  if(mode!=="replay")return;
+  $("replayPreparing").hidden=true;
+  flightStarted=performance.now();
+  $("stateChip").textContent="REPLAY · 재생 중";
+  $("chargeHint").textContent="저장된 착지 리플레이를 재생하고 있어.";
+  setAngleGauge(0,flightParams.tolerance,"리플레이 · 착지 순간까지 각도 변화를 다시 보는 중");
+  startAnimationLoop();
+ }catch(error){
+  $("replayPreparing").hidden=true;
+  mode="idle";updateModeUi();
+  toast("리플레이를 시작하지 못했어. 다시 시도해 줘.","error");
+ }
 }
 
 function toast(message,type="normal"){
@@ -1304,6 +1380,7 @@ $("soundToggle").addEventListener("click",()=>{
  <section class="panel arena">
   <div class="panel-head"><h2>✦ FLIGHT ARENA</h2><span class="state-chip" id="stateChip">준비 완료</span></div>
   <div class="canvas-wrap"><canvas id="arenaCanvas" width="1120" height="470" aria-label="돌이가 기를 장전하고 공중에서 회전하는 게임 화면"></canvas>
+   <div class="replay-preparing" id="replayPreparing" hidden><span class="replay-orb">↻</span><strong>리플레이를 준비하고 있어</strong><small>게임 화면으로 이동한 뒤 잠시 후 자동 재생돼.</small></div>
    <div class="landing-flash" id="landingFlash" aria-hidden="true"><strong id="landingFlashTitle">SUCCESS!</strong><span id="landingFlashSubtitle">목표 각도에 착지했어</span></div>
   </div>
   <div class="flight-metrics" aria-label="예상 비행 정보">
