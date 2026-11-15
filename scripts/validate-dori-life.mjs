@@ -144,6 +144,16 @@ assert.ok(html.includes("var w=v.weights[i],d=defById[w.id],b=bone[w.id];"), "Pe
 assert.ok(!html.includes("defs.find(function(bd){return bd.id===w.id;})"), "The render loop must not linearly scan the skeleton for every vertex weight.");
 assert.ok(html.includes("if(document.hidden){requestAnimationFrame(loop);return;}"), "The character renderer must pause expensive drawing while the tab is hidden.");
 
+// The skinning/render loop must keep executable statements outside line comments.
+// A literal "\\n" inserted after // would comment out the animation call and pts assignment;
+// the next triangle pass would then throw ReferenceError and permanently stop all motion.
+const renderBlockStart = html.indexOf("// Subtle weight shifts, paw adjustments and dream twitches");
+const renderBlockEnd = html.indexOf("ctx.clearRect(0,0,W,H);", renderBlockStart);
+assert.ok(renderBlockStart >= 0 && renderBlockEnd > renderBlockStart, "Could not isolate the final mesh render block.");
+const renderBlock = html.slice(renderBlockStart, renderBlockEnd);
+assert.ok(renderBlock.includes("action.\\n") === false, "The mesh render block must not contain escaped pseudo-newlines.");
+assert.ok(renderBlock.includes(`action.\n      applyLifeLegMotion(pose,t,isDoriMoving,isDoriTurning);\n      var pts=vertices.map(transformPoint);`), "Leg motion and vertex transforms must be executable statements on separate source lines.");
+
 // Test the actual timezone helper against UTC instants, independent of the test machine's timezone.
 const clockStart = html.indexOf("function parts(now)");
 const clockEnd = html.indexOf("\n  function hash", clockStart);
