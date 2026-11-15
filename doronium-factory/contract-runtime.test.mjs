@@ -1,5 +1,5 @@
 import test from "node:test";import assert from "node:assert/strict";
-import {createRuntimeState,addItemStack,stackTotals} from "./simulation-core.js";
+import {createRuntimeState,addItemStack,stackTotals,commitItemReservations} from "./simulation-core.js";
 import {createContractState,PACKAGING_STAGES,startContractShipment,advancePackagingStage,dispatchContractShipment,advanceShipments,claimContractReward,cancelContractShipment} from "./contract-runtime.js";
 import {createOwnershipState,addCustody,validateOwnershipState} from "./ownership-runtime.js";
 const contract={id:"IRON-25",itemID:"ironPlate",quantity:2,minQuality:90,minPurity:90,forbidSynthetic:true,reward:500,deadlineSeconds:600,transitSeconds:30,insuranceRate:.75};
@@ -62,4 +62,45 @@ test("failed shipment transfers its cargo to an explicit world-drop owner",()=>{
  const owner=game.ownershipLedger.custody.find(x=>x.stackID===game.worldDrops[0].custodyStackID);
  assert.equal(owner.ownerType,"WORLD_DROP");assert.equal(owner.ownerID,game.worldDrops[0].dropID);
  assert.equal(owner.quantity,2);assert.equal(game.worldDrops[0].layer,"mine");assert.equal(game.worldDrops[0].mineLevel,3);assert.equal(validateOwnershipState(game.ownershipLedger).valid,true);
+});
+
+
+test("live ownership ledger refuses packaging without a custody-aware reservation commit",()=>{
+ const {game,contracts}=setUp();
+ const started=startContractShipment(game,contracts,contract);assert.equal(started.ok,true);
+ const shipment=contracts.shipments[0];game.ownershipLedger=createOwnershipState();
+ const before=stackTotals(game);
+ const result=advancePackagingStage(game,contracts,shipment.shipmentID);
+ assert.deepEqual(result,{ok:false,reason:"OWNERSHIP_COMMIT_REQUIRED"});
+ assert.deepEqual(stackTotals(game),before);
+ assert.equal(shipment.packageStage,0);assert.equal(shipment.status,"PACKAGING");
+ assert.ok(game.runtime.reservations[shipment.reservationID],"the qualified cargo reservation must remain intact");
+ assert.equal(Object.values(game.runtime.reservations).filter(r=>String(r.ownerID).startsWith("PACKAGE:")).length,0);
+});
+
+test("packaging delegates its material commit to the supplied transaction boundary",()=>{
+ const {game,contracts}=setUp();
+ startContractShipment(game,contracts,contract);
+ const shipment=contracts.shipments[0];game.ownershipLedger=createOwnershipState();
+ const before=stackTotals(game);let committedIDs=[];
+ const result=advancePackagingStage(game,contracts,shipment.shipmentID,{
+  commitReservations:ids=>{committedIDs=[...ids];return commitItemReservations(game,ids)}
+ });
+ assert.equal(result.ok,true);assert.equal(committedIDs.length,1);
+ assert.equal(shipment.packageStage,1);
+ assert.equal(stackTotals(game).wood,before.wood-2);
+ assert.ok(game.runtime.reservations[shipment.reservationID]);
+});
+
+test("failed packaging transaction releases only its own reservation and preserves inventory",()=>{
+ const {game,contracts}=setUp();
+ startContractShipment(game,contracts,contract);
+ const shipment=contracts.shipments[0];game.ownershipLedger=createOwnershipState();
+ const before=stackTotals(game);
+ const result=advancePackagingStage(game,contracts,shipment.shipmentID,{commitReservations:()=>{throw new Error("simulated-commit-failure")}});
+ assert.deepEqual(result,{ok:false,reason:"PACKAGING_COMMIT_FAILED"});
+ assert.deepEqual(stackTotals(game),before);
+ assert.equal(shipment.packageStage,0);
+ assert.ok(game.runtime.reservations[shipment.reservationID]);
+ assert.equal(Object.values(game.runtime.reservations).filter(r=>String(r.ownerID).startsWith("PACKAGE:")).length,0);
 });

@@ -15,7 +15,7 @@ import { writeCloudSave, readCloudSaveSnapshot, replaceCloudSaveAfterExplicitCon
 import { startInfinityFusion, tickInfinityFusion, cancelInfinityFusion, recoverInfinityFusion, settleInfinityFusionOutput } from "./fusion-runtime.js?v=4";
 import { evaluatePlanetaryStabilization } from "./planetary-stabilization.js?v=1";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
-import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=2";
+import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=3";
 import { createOwnershipState, addCustody, transferCustody, consumeCustody, completeProductionCustody, validateOwnershipState, resetCustodySnapshot } from "./ownership-runtime.js?v=6";
 let createClient = null;
 
@@ -498,7 +498,7 @@ function startDeliveryContract(contractID){
  log("배송 계약 수락 · "+contract.title);markDirty();renderContracts();
 }
 function packageDeliveryContract(shipmentID){
- const result=advancePackagingStage(S,S.contractRuntime,shipmentID);
+ const result=advancePackagingStage(S,S.contractRuntime,shipmentID,{commitReservations:reservationIDs=>commitOwnedItemReservations(reservationIDs,{reason:"contract-packaging"})});
  if(!result.ok){toast(result.reason==="PACKAGING_MATERIALS_MISSING"?"포장 재료가 부족합니다. 창고에서 재료를 준비하세요.":"포장 단계를 진행할 수 없습니다.","warn");return}
  log("배송 포장 완료 · "+(PACKAGING_STAGES.find(x=>x.id===result.stage)?.name||result.stage));markDirty();renderContracts();renderInventory();
 }
@@ -2385,10 +2385,14 @@ if(E2E_MODE){
     for(const[id,quantity]of Object.entries({wood:12,wire:4,circuit:6,quartz:8}))addItemStack(S,id,quantity,{quality:95,purity:95,synthetic:false});
     syncLegacyInventory(S);
     const makeContract=id=>({id,itemID:"ironPlate",quantity:2,minQuality:90,minPurity:90,forbidSynthetic:true,reward:500,deadlineSeconds:900,transitSeconds:1,insuranceRate:.75});
+    const packageShipment=shipmentID=>advancePackagingStage(S,S.contractRuntime,shipmentID,{commitReservations:reservationIDs=>commitOwnedItemReservations(reservationIDs,{reason:"contract-packaging"})});
     const firstStart=startContractShipment(S,S.contractRuntime,makeContract("E2E-SHIP-DELIVER"),{routeRisk:0,insured:true,nowSeconds:S.seconds});
     const firstShipment=S.contractRuntime.shipments.find(x=>x.contractID==="E2E-SHIP-DELIVER");
     if(!firstStart.ok||!firstShipment)throw new Error("shipment delivery fixture could not start");
-    for(let i=0;i<PACKAGING_STAGES.length;i++)if(!advancePackagingStage(S,S.contractRuntime,firstShipment.shipmentID).ok)throw new Error("shipment delivery packaging failed");
+    for(let i=0;i<PACKAGING_STAGES.length;i++)if(!packageShipment(firstShipment.shipmentID).ok)throw new Error("shipment delivery packaging failed");
+    const firstPackagingEntries=S.ownershipLedger.consumed.filter(entry=>entry.reason==="contract-packaging");
+    const firstPackagingConsumedQuantity=firstPackagingEntries.reduce((n,entry)=>n+entry.quantity,0);
+    const firstPackagingConsumptionTransactionCount=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="CONSUME"&&tx.request?.reason==="contract-packaging").length;
     const firstReadyAudit=rebuildOwnershipLedger(S),firstDispatch=dispatchContractShipment(S,S.contractRuntime,firstShipment.shipmentID);
     if(!firstDispatch.ok)throw new Error("shipment delivery dispatch failed:"+firstDispatch.reason);
     const firstStackID=firstShipment.cargo[0].custodyStackID,firstDispatchAudit=rebuildOwnershipLedger(S);
@@ -2400,7 +2404,10 @@ if(E2E_MODE){
     const secondStart=startContractShipment(S,S.contractRuntime,makeContract("E2E-SHIP-FAILED"),{routeRisk:1,insured:true,nowSeconds:S.seconds});
     const secondShipment=S.contractRuntime.shipments.find(x=>x.contractID==="E2E-SHIP-FAILED");
     if(!secondStart.ok||!secondShipment)throw new Error("failed shipment fixture could not start");
-    for(let i=0;i<PACKAGING_STAGES.length;i++)if(!advancePackagingStage(S,S.contractRuntime,secondShipment.shipmentID).ok)throw new Error("failed shipment packaging failed");
+    for(let i=0;i<PACKAGING_STAGES.length;i++)if(!packageShipment(secondShipment.shipmentID).ok)throw new Error("failed shipment packaging failed");
+    const totalPackagingEntries=S.ownershipLedger.consumed.filter(entry=>entry.reason==="contract-packaging");
+    const totalPackagingConsumedQuantity=totalPackagingEntries.reduce((n,entry)=>n+entry.quantity,0);
+    const totalPackagingConsumptionTransactionCount=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="CONSUME"&&tx.request?.reason==="contract-packaging").length;
     const secondReadyAudit=rebuildOwnershipLedger(S),secondDispatch=dispatchContractShipment(S,S.contractRuntime,secondShipment.shipmentID);
     if(!secondDispatch.ok)throw new Error("failed shipment dispatch failed:"+secondDispatch.reason);
     const secondStackID=secondShipment.cargo[0].custodyStackID;
@@ -2410,6 +2417,7 @@ if(E2E_MODE){
     const dropOwner=drop&&S.ownershipLedger.custody.find(x=>x.stackID===drop.custodyStackID);
     return {
      firstReadyAuditValid:firstReadyAudit.valid,firstDispatch:firstDispatch.ok,firstDispatchAuditValid:firstDispatchAudit.valid,
+     firstPackagingConsumedQuantity,firstPackagingConsumptionTransactionCount,totalPackagingConsumedQuantity,totalPackagingConsumptionTransactionCount,
      firstOwnerType:firstOwner?.ownerType,firstOwnerID:firstOwner?.ownerID,firstArrivalCount:firstArrival.length,
      deliveredStatus:firstShipment.status,deliveredConsumedQuantity:deliveredConsumed.reduce((n,x)=>n+x.quantity,0),
      deliveredCargoStillOwned,deliveredAuditValid:deliveredAudit.valid,

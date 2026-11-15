@@ -176,6 +176,10 @@ try {
   assert.equal(conveyorToMachine.exceptionRollback, true, "A destination-buffer exception must roll back source cargo, ledger journal and sequence");
   assert.equal(conveyorToMachine.throwAfterValid, true, "Exception rollback must leave a valid ownership snapshot");
   const liveShipmentCustody = await desktop.evaluate(() => window.__doroniumFactoryTest.runLiveShipmentCustodyTest());
+  assert.equal(liveShipmentCustody.firstPackagingConsumedQuantity, 18, "The first five-stage package must consume exactly 18 material units through custody");
+  assert.equal(liveShipmentCustody.firstPackagingConsumptionTransactionCount, 7, "Each package-material reservation must create one committed consumption transaction");
+  assert.equal(liveShipmentCustody.totalPackagingConsumedQuantity, 36, "Two shipments must consume exactly 36 package-material units without losing the journal");
+  assert.equal(liveShipmentCustody.totalPackagingConsumptionTransactionCount, 14, "Both package runs must retain all 14 consumption transactions after custody snapshots rebuild");
   assert.equal(liveShipmentCustody.firstReadyAuditValid, true, "A ready shipment must begin from a valid reservation custody snapshot");
   assert.equal(liveShipmentCustody.firstDispatch, true, "Qualified cargo must dispatch through a committed shipment-custody transfer");
   assert.equal(liveShipmentCustody.firstDispatchAuditValid, true, "Shipment cargo must remain valid after the custody snapshot is rebuilt");

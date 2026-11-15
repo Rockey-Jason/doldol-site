@@ -25,7 +25,7 @@ export function startContractShipment(gameState,contractState,contract,{routeRis
  contractState.shipments.push(shipment);record(contractState,{eventID:"SHIPMENT_START:"+shipmentID,type:"STARTED",shipmentID,tick:Number(gameState.tick)||0});
  return {ok:true,shipment:clone(shipment)};
 }
-export function advancePackagingStage(gameState,contractState,shipmentID){
+export function advancePackagingStage(gameState,contractState,shipmentID,{commitReservations:commitReservedItems}={}){
  const shipment=contractState.shipments.find(s=>s.shipmentID===shipmentID);
  if(!shipment||shipment.status!=="PACKAGING")return {ok:false,reason:"NOT_PACKAGING"};
  if(shipment.packageStage>=PACKAGING_STAGES.length)return {ok:false,reason:"PACKAGING_COMPLETE"};
@@ -33,8 +33,15 @@ export function advancePackagingStage(gameState,contractState,shipmentID){
  if(contractState.claims[claimID])return {ok:false,reason:"STAGE_ALREADY_CLAIMED"};
  const reservations=reserveItemBatch(gameState,stage.inputs,"PACKAGE:"+shipmentID+":"+stage.id);
  if(!reservations)return {ok:false,reason:"PACKAGING_MATERIALS_MISSING"};
- const consumed=commitItemReservations(gameState,reservations);
- if(!consumed){for(const id of reservations)releaseItemReservation(gameState,id);return {ok:false,reason:"PACKAGING_COMMIT_FAILED"}}
+ let consumed=null;
+ try{
+  if(typeof commitReservedItems==="function")consumed=commitReservedItems(reservations);
+  else if(gameState.ownershipLedger){
+   for(const id of reservations)releaseItemReservation(gameState,id);
+   return {ok:false,reason:"OWNERSHIP_COMMIT_REQUIRED"};
+  }else consumed=commitItemReservations(gameState,reservations);
+ }catch{consumed=null}
+ if(!Array.isArray(consumed)||!consumed.length){for(const id of reservations)releaseItemReservation(gameState,id);return {ok:false,reason:"PACKAGING_COMMIT_FAILED"}}
  syncLegacyInventory(gameState);
  contractState.claims[claimID]={claimedAt:Number(gameState.seconds)||0};
  shipment.protection=clamp(shipment.protection+stage.protection,0,.95);
