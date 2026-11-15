@@ -1,36 +1,31 @@
-# ROCKEY 30-minute maintenance cycle
+# ROCKEY 30-minute free quality checks
 
-This repository contains a scheduled, AI-assisted maintenance workflow for ROCKEY.
+ROCKEY uses a scheduled GitHub Actions workflow for automated checks. The workflow is deliberately configured **without OpenAI API, Codex, paid AI services, or API keys**.
 
 ## Schedule
-- GitHub Actions cron: `7,37 * * * *` (UTC), requesting a run every 30 minutes.
+- GitHub Actions requests a run every 30 minutes using `7,37 * * * *` (UTC).
 - GitHub may delay scheduled starts during platform load; this is not a hard real-time guarantee.
-- Scheduled workflows run from the latest commit on the default branch.
+- A run can also be started manually from the Actions tab.
+- Pushes to ROCKEY client/server files and the Dori Life/site validation files trigger checks.
 
-## Each maintenance cycle
-1. Installs existing client and server dependencies without changing lockfiles.
-2. Runs the client build, server build, and non-combat network QA simulation tests.
-3. When the repository secret `OPENAI_API_KEY` exists, runs the official Codex GitHub Action with a strict non-combat scope.
-4. Allows inspection and edits only to:
-   - `rockey-client/src/style.css`
-   - `rockey-client/src/network/GameSocket.ts`
-   - `rockey-client/index.html`
-   - `rockey-server/src/auth.ts`
-   - `rockey-server/src/qa-simulation.ts`
-   - `rockey-server/src/qa-simulation.test.ts`
-5. Rejects new files and changes outside that allowlist.
-6. Runs the build and allowed tests, exports the patch, then applies it in a separate job and repeats the checks.
-7. Opens or updates one **draft** pull request. It never merges or deploys automatically.
+## Each cycle
+1. Installs the existing client and server dependencies without changing package lockfiles.
+2. Builds and type-checks the ROCKEY client.
+3. Builds the ROCKEY server and runs the non-combat network QA tests.
+4. Validates Dori Life animation choreography and site files.
+5. Removes temporary dependencies and generated build output from the runner.
 
-The maintenance agent is forbidden from inspecting or changing combat/gameplay source. Work is limited to presentation styling, accessibility, responsive layout, connection resilience, account authentication and non-combat QA. Each cycle makes at most one evidence-based improvement; when no safe improvement is justified, it records that no change was needed.
+## Cost and AI behavior
+- This workflow does not read or use OPENAI_API_KEY.
+- It does not call the OpenAI API or Codex.
+- It does not create AI-generated code changes or pull requests.
+- The repository is public and the workflow uses standard GitHub-hosted runners. GitHub documents standard runner usage on public repositories as free.
+- This configuration removes OpenAI API usage charges from the recurring ROCKEY checks. It does not change any separate billing settings on external accounts.
 
-## One-time setup required
-Add an `OPENAI_API_KEY` as a repository Actions secret under **Settings → Secrets and variables → Actions**. Never put the key in source files, workflow YAML, issues, or chat. Until the secret is configured, the scheduled workflow still runs build and QA checks, but skips AI-assisted code repair and draft PR creation.
+For additional safety, delete the now-unused OPENAI_API_KEY repository secret from **Settings → Secrets and variables → Actions**. The workflow no longer references it, so leaving it stored does not cause API usage, but removing unused secrets is recommended.
 
-API use may incur charges; review the account and billing settings with a parent or guardian before enabling it.
-
-## Review and release
-Review the single draft PR and its Actions report. Only merge changes after reviewing the diff and successful checks. The existing Pages deployment workflow handles publishing after a human-reviewed merge.
+## What this workflow does not do
+These runs perform build, static validation, and automated tests only. They do not autonomously edit ROCKEY source code, merge changes, or deploy the site. Site deployment remains controlled by the separate Pages workflow.
 
 ## Manual run
-Open the repository's **Actions** tab, select **ROCKEY 30-minute maintenance**, and choose **Run workflow**.
+Open the repository's **Actions** tab, select **ROCKEY 30-minute free quality checks**, and choose **Run workflow**.
