@@ -553,7 +553,7 @@ textarea {
         100%;
 
     min-height:
-        820px;
+        620px;
 
     display:
         flex;
@@ -638,44 +638,32 @@ textarea {
 
 
 /* =====================================================
-   신문 본문 페이지 이동
+   신문 본문 상단 진행 표시
 ===================================================== */
-.신문페이지컨트롤{
-    display:flex;flex-direction:column;gap:13px;margin:30px 0 0;padding:17px 19px;
-    border:1px solid rgba(154,174,255,.15);border-radius:18px;
-    background:linear-gradient(135deg,rgba(29,36,80,.66),rgba(12,17,43,.82));
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 9px 26px rgba(0,0,0,.13);
+.신문상단진행{
+    flex:0 0 auto;
+    width:100%;
+    height:4px;
+    margin:0 0 26px;
+    overflow:hidden;
+    border-radius:99px;
+    background:rgba(255,255,255,.075);
 }
-.신문페이지컨트롤[hidden]{display:none!important}
-.신문페이지상단{display:flex;align-items:center;justify-content:space-between;gap:12px;min-width:0}
-.신문페이지설명{color:#9eadd2;font-size:11px;letter-spacing:.08em}
-.신문페이지메타{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0;color:#eef1ff;font-size:13px;text-align:right}
-#신문페이지상태{color:#f4e3b2;white-space:nowrap}
-#신문페이지글자수{color:#9daacb;font-size:11px;white-space:nowrap}
-.신문페이지진행{width:100%;height:5px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.075)}
-#신문페이지진행바{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#7888ff,#87c9ff 65%,#c2e7ff);box-shadow:0 0 13px rgba(116,174,255,.38);transition:width .35s cubic-bezier(.22,1,.36,1)}
-.신문페이지버튼영역{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.신문페이지버튼{
-    display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:132px;min-height:42px;padding:10px 15px;
-    border:1px solid rgba(148,169,255,.2);border-radius:12px;
-    background:linear-gradient(135deg,rgba(84,105,194,.2),rgba(50,65,127,.13));color:#e8edff;
-    font-family:"HancomMalrangmalrang";font-size:13px;font-weight:400;cursor:pointer;
-    transition:transform .2s ease,border-color .2s ease,background .2s ease,opacity .2s ease;
+#신문상단진행바{
+    display:block;
+    width:100%;
+    height:100%;
+    border-radius:inherit;
+    background:linear-gradient(90deg,#7888ff,#87c9ff 65%,#c2e7ff);
+    box-shadow:0 0 13px rgba(116,174,255,.38);
+    transition:width .35s cubic-bezier(.22,1,.36,1);
 }
-.신문페이지버튼:hover:not(:disabled){transform:translateY(-2px);border-color:rgba(167,190,255,.48);background:linear-gradient(135deg,rgba(104,130,235,.3),rgba(65,84,162,.2))}
-.신문페이지버튼:active:not(:disabled){transform:translateY(0) scale(.98)}
-.신문페이지버튼:disabled{opacity:.38;cursor:not-allowed}
 #내용.신문페이지등장{animation:신문페이지등장 .28s cubic-bezier(.22,1,.36,1) both}
 @keyframes 신문페이지등장{from{opacity:.35;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:700px){
-    .신문페이지컨트롤{gap:12px;margin-top:23px;padding:14px;border-radius:15px}
-    .신문페이지설명{font-size:10px;letter-spacing:.035em}
-    .신문페이지메타{gap:7px;font-size:12px}
-    #신문페이지글자수{font-size:10px}
-    .신문페이지버튼영역{gap:8px}
-    .신문페이지버튼{flex:1;min-width:0;min-height:42px;padding:10px 8px;font-size:12px}
+    .신문상단진행{height:4px;margin-bottom:22px}
 }
-@media(prefers-reduced-motion:reduce){#신문페이지진행바,.신문페이지버튼{transition:none}#내용.신문페이지등장{animation:none}}
+@media(prefers-reduced-motion:reduce){#신문상단진행바{transition:none}#내용.신문페이지등장{animation:none}}
 
 /* =====================================================
    퀴즈
@@ -1682,7 +1670,7 @@ textarea {
     .본문카드 {
 
         min-height:
-            730px;
+            520px;
 
         padding:
             27px 23px;
@@ -2361,28 +2349,16 @@ textarea {
 
         <section class="본문카드">
 
+            <div id="신문상단진행" class="신문상단진행" role="progressbar" aria-label="신문 본문 읽기 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
+                <span id="신문상단진행바"></span>
+            </div>
+
             <div id="내용">
 
                 돌이신문을 불러오는 중...
 
             </div>
 
-            <nav id="신문페이지컨트롤" class="신문페이지컨트롤" aria-label="신문 본문 페이지 이동" hidden>
-                <div class="신문페이지상단">
-                    <span class="신문페이지설명">ARTICLE READING PROGRESS</span>
-                    <div class="신문페이지메타">
-                        <span id="신문페이지상태" aria-live="polite">1 / 1 페이지</span>
-                        <span id="신문페이지글자수">0자</span>
-                    </div>
-                </div>
-                <div id="신문페이지진행" class="신문페이지진행" role="progressbar" aria-label="신문 본문 읽기 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-                    <span id="신문페이지진행바"></span>
-                </div>
-                <div class="신문페이지버튼영역">
-                    <button id="신문페이지이전" class="신문페이지버튼" type="button" disabled>← 이전 페이지</button>
-                    <button id="신문페이지다음" class="신문페이지버튼" type="button">다음 페이지 →</button>
-                </div>
-            </nav>
 
         </section>
 
@@ -3300,44 +3276,24 @@ function 신문본문페이지구성(본문HTML) {
 
 function 신문페이지렌더링(부드럽게이동 = false) {
     const 본문 = $("내용");
-    const 페이지컨트롤 = $("신문페이지컨트롤");
-    if (!본문 || !페이지컨트롤 || !신문페이지목록.length) return;
+    const 진행 = $("신문상단진행");
+    const 진행바 = $("신문상단진행바");
+    if (!본문 || !진행 || !진행바 || !신문페이지목록.length) return;
 
     신문스와이프설정();
 
     현재신문페이지 = Math.max(0, Math.min(현재신문페이지, 신문페이지목록.length - 1));
     const 페이지 = 신문페이지목록[현재신문페이지];
     const 전체페이지수 = 신문페이지목록.length;
-    const 전체글자수 = 신문페이지목록.reduce((합계, 항목) => 합계 + 항목.chars, 0);
 
     본문.innerHTML = 페이지.html;
     본문.classList.remove("신문페이지등장");
     void 본문.offsetWidth;
     본문.classList.add("신문페이지등장");
-    페이지컨트롤.hidden = 전체페이지수 <= 1;
-
-    const 상태 = $("신문페이지상태");
-    const 글자수 = $("신문페이지글자수");
-    const 진행 = $("신문페이지진행");
-    const 진행바 = $("신문페이지진행바");
-    const 이전 = $("신문페이지이전");
-    const 다음 = $("신문페이지다음");
-
-    if (상태) 상태.textContent = (현재신문페이지 + 1) + " / " + 전체페이지수 + " 페이지";
-    if (글자수) 글자수.textContent = 페이지.lines + "줄 · " + 페이지.chars.toLocaleString() + "자";
 
     const 진행률 = Math.round(((현재신문페이지 + 1) / 전체페이지수) * 100);
-    if (진행바) 진행바.style.width = 진행률 + "%";
-    if (진행) 진행.setAttribute("aria-valuenow", String(진행률));
-
-    if (이전) {
-        이전.disabled = 현재신문페이지 <= 0;
-        이전.onclick = () => 신문페이지이동(-1);
-    }
-    if (다음) {
-        다음.disabled = 현재신문페이지 >= 전체페이지수 - 1;
-        다음.onclick = () => 신문페이지이동(1);
-    }
+    진행바.style.width = 진행률 + "%";
+    진행.setAttribute("aria-valuenow", String(진행률));
 
     if (부드럽게이동) {
         const 본문카드 = document.querySelector(".본문카드");
