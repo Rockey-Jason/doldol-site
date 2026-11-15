@@ -46,7 +46,6 @@ jobs:
         run: |
           if [[ -n "${OPENAI_API_KEY:-}" ]]; then
             echo "enabled=true" >> "$GITHUB_OUTPUT"
-            echo "Codex maintenance is enabled."
           else
             echo "enabled=false" >> "$GITHUB_OUTPUT"
             echo "::warning title=One-time setup required::Add the OPENAI_API_KEY repository secret to enable automatic code repair. Build and QA checks will still run."
@@ -94,15 +93,18 @@ jobs:
         id: scope
         shell: bash
         run: |
-          mapfile -t changed < <(
-            { git diff --name-only; git ls-files --others --exclude-standard; } |
-            sort -u
-          )
+          mapfile -t untracked < <(git ls-files --others --exclude-standard)
+          if (( ${#untracked[@]} > 0 )); then
+            printf 'Rejected newly-created files:\n' >&2
+            printf ' - %s\n' "${untracked[@]}" >&2
+            exit 1
+          fi
 
+          mapfile -t changed < <(git diff --name-only HEAD | sort -u)
           disallowed=()
           for path in "${changed[@]}"; do
             case "$path" in
-              rockey-client/src/RockeyHub.ts|              rockey-client/src/style.css|              rockey-client/src/config.ts|              rockey-client/src/network/GameSocket.ts|              rockey-client/index.html|              rockey-server/src/auth.ts|              rockey-server/src/qa-simulation.ts|              rockey-server/src/qa-simulation.test.ts)
+              rockey-client/src/RockeyHub.ts|rockey-client/src/style.css|rockey-client/src/config.ts|rockey-client/src/network/GameSocket.ts|rockey-client/index.html|rockey-server/src/auth.ts|rockey-server/src/qa-simulation.ts|rockey-server/src/qa-simulation.test.ts)
                 ;;
               *)
                 disallowed+=("$path")
@@ -116,9 +118,9 @@ jobs:
             exit 1
           fi
 
-          git diff --check
+          git diff HEAD --check
           if (( ${#changed[@]} > 0 )); then
-            git diff --binary > "${{ runner.temp }}/rockey-maintenance.patch"
+            git diff --binary HEAD > "${{ runner.temp }}/rockey-maintenance.patch"
             echo "changed=true" >> "$GITHUB_OUTPUT"
             printf 'Approved files changed:\n%s\n' "${changed[*]}"
           else
@@ -197,18 +199,19 @@ jobs:
         run: |
           git restore --worktree --staged -- rockey/ 2>/dev/null || true
           git clean -fd -- rockey/ >/dev/null 2>&1 || true
-          git diff --check
+          git diff HEAD --check
 
-          while IFS= read -r path; do
+          mapfile -t changed < <(git diff --name-only HEAD | sort -u)
+          for path in "${changed[@]}"; do
             case "$path" in
-              rockey-client/src/RockeyHub.ts|              rockey-client/src/style.css|              rockey-client/src/config.ts|              rockey-client/src/network/GameSocket.ts|              rockey-client/index.html|              rockey-server/src/auth.ts|              rockey-server/src/qa-simulation.ts|              rockey-server/src/qa-simulation.test.ts)
+              rockey-client/src/RockeyHub.ts|rockey-client/src/style.css|rockey-client/src/config.ts|rockey-client/src/network/GameSocket.ts|rockey-client/index.html|rockey-server/src/auth.ts|rockey-server/src/qa-simulation.ts|rockey-server/src/qa-simulation.test.ts)
                 ;;
               *)
                 echo "Rejected out-of-scope file: $path" >&2
                 exit 1
                 ;;
             esac
-          done < <(git diff --name-only)
+          done
 
       - name: Open or update the single draft maintenance PR
         uses: peter-evans/create-pull-request@v7
