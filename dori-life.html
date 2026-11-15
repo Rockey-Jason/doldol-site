@@ -1410,6 +1410,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   var timeline = document.getElementById('eventTimeline');
   var newYearCountdown = document.getElementById('newYearCountdown');
   var lastDayKey = '';
+  var lastMinuteKey = '';
   var lastActiveId = '';
   var dayEvents = [];
 
@@ -1517,6 +1518,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 
   function parts(now){var out={};partFormatter.formatToParts(now).forEach(function(p){if(p.type!=='literal')out[p.type]=p.value;});return out;}
   function dayKey(now){return dateFormatter.format(now);}
+  function kstSecondsOfDay(now){var p=parts(now);return Number(p.hour)*3600+Number(p.minute)*60+Number(p.second);}
   function hash(s){var h=2166136261;for(var i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return h>>>0;}
   function rng(seed){var state=seed>>>0;return function(){state+=0x6D2B79F5;var t=state;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
   function formatMinute(n){return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0');}
@@ -1696,8 +1698,9 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     return {title:'돌이는 편안하게 쉬고 있어요',desc:'조용한 새벽, 돌이가 포근한 집에서 쉬고 있어요.',pose:'sleep',tag:'새벽 휴식',icon:'🌙'};
   }
   function ambientRoutine(now,base){
-    var hour=now.getHours();
-    var seconds=hour*3600+now.getMinutes()*60+now.getSeconds();
+    // Keep lighting, daily actions and the visible KST clock on one shared time source.
+    var seconds=kstSecondsOfDay(now);
+    var hour=Math.floor(seconds/3600);
     if(hour<6||hour>=22){
       var nightPhase=seconds%300;
       if(nightPhase<92)return Object.assign({},base,{pose:'sleep',title:'돌이가 포근하게 잠들었어요',desc:'옆으로 편안히 누워 가슴이 천천히 오르내리며 깊이 쉬어요.',icon:'🌙',tag:'밤잠'});
@@ -1706,15 +1709,16 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       return Object.assign({},base,{pose:'doze',title:'잠깐 꾸벅꾸벅 졸아요',desc:'고개가 천천히 내려갔다가 다시 편안한 자세로 돌아와요.',icon:'😴',tag:'졸음'});
     }
 
-    // A five-minute home-life cycle gives each action enough screen time to read clearly.
-    // Roaming is deliberately brief; the rest of the cycle is spent performing visible actions.
+    // A five-minute home-life cycle. One minute is reserved for a calm, four-stop home patrol.
+    // Each route segment lasts 15 seconds; movement itself remains slow and joint-driven.
     var phase=seconds%300;
-    if(phase<36){
-      var walkStep=Math.floor(phase/12)%3;
+    if(phase<60){
+      var walkStep=Math.floor(phase/15)%4;
       var routes=[
         ['walk','거실을 천천히 산책해요','짧은 다리를 번갈아 움직이며 소파와 러그 사이를 걸어요.','🐾','집 안 산책'],
-        ['explore','가구 주변을 살펴봐요','걷다가 잠시 멈춰 가구와 장난감 주변을 탐험해요.','🔎','느긋한 탐험'],
-        ['walk','창가 쪽으로 걸어가요','목적지를 바라보고 방향을 돌린 다음 창가 쪽으로 걸어가요.','🐾','창가 산책']
+        ['explore','소파와 러그 주변을 살펴봐요','걸음을 천천히 옮기며 가구와 장난감 주변을 탐험해요.','🔎','느긋한 탐험'],
+        ['walk','러그 가장자리를 따라 걸어요','짧은 보폭으로 러그 주변을 천천히 걸어요.','🐾','거실 산책'],
+        ['walk','창가 쪽으로 천천히 걸어가요','목적지를 바라보고 방향을 돌린 다음 창가 쪽으로 걸어가요.','🐾','창가 산책']
       ];
       var route=routes[walkStep];
       return Object.assign({},base,{pose:route[0],title:route[1],desc:route[2],icon:route[3],tag:route[4]});
@@ -1857,7 +1861,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   function doriDestination(state,now){
     if(state&&state.destination)return {x:state.destination.x,y:state.destination.y,s:state.destination.s,key:'event-'+(state.eventKey||'active')};
     var pose=state.pose||'idle';
-    var second=Math.floor(now.getTime()/1000);
+    var second=kstSecondsOfDay(now);
     if(pose==='friendPlay'||pose==='reunion'||pose==='greet'||pose==='paw')return {x:535,y:432,s:.90,key:'friend-interaction'};
     if(pose==='wake')return {x:840,y:453,s:.84,key:'morning-bed-exit'};
     if(pose==='sleep'||pose==='doze'||pose==='dream'||pose==='cuddle'||pose==='flop'||pose==='yawn')return {x:858,y:453,s:.82,key:'soft-rest'};
@@ -1882,11 +1886,11 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     }
     if(pose==='walk'||pose==='explore'){
       var stops=[
-        {x:555,y:432,s:.86},{x:625,y:425,s:.89},{x:710,y:432,s:.90},
-        {x:790,y:426,s:.88},{x:845,y:432,s:.85},{x:760,y:438,s:.89},
-        {x:665,y:432,s:.91},{x:585,y:438,s:.87}
+        {x:585,y:432,s:.87},{x:655,y:426,s:.89},
+        {x:730,y:432,s:.90},{x:795,y:438,s:.87}
       ];
-      var step=Math.floor(second/18)%stops.length;var stop=stops[step];
+      var roamPhase=second%300;
+      var step=Math.floor(roamPhase/15)%stops.length;var stop=stops[step];
       return {x:stop.x,y:stop.y,s:stop.s,key:pose+'-'+step};
     }
     if(pose==='circle'){
@@ -2409,6 +2413,8 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       {id:'browR',a:[139,162],b:[139,169],r:16}
     ];
     var bone={};
+    var defById=Object.create(null);
+    defs.forEach(function(def){defById[def.id]=def;});
     var sourceCanvas=document.createElement('canvas');
     sourceCanvas.width=W;sourceCanvas.height=H;
     var sourceCtx=sourceCanvas.getContext('2d',{willReadFrequently:true});
@@ -2482,14 +2488,16 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     }
     function transformPoint(v){
       var x=0,y=0;
-      v.weights.forEach(function(w){
-        var d=defs.find(function(bd){return bd.id===w.id;});
-        var b=bone[w.id]||{angle:0,sx:1,sy:1,tx:0,ty:0};
+      // The vertex weights are reused for every frame. Resolve each joint in O(1)
+      // instead of scanning the complete skeleton for every weighted vertex.
+      for(var i=0;i<v.weights.length;i++){
+        var w=v.weights[i],d=defById[w.id],b=bone[w.id];
+        if(!d||!b)continue;
         var dx=v.sx-d.a[0],dy=v.sy-d.a[1],c=Math.cos(b.angle),sn=Math.sin(b.angle);
         var tx=d.a[0]+c*dx*b.sx-sn*dy*b.sy+b.tx;
         var ty=d.a[1]+sn*dx*b.sx+c*dy*b.sy+b.ty;
         x+=tx*w.value;y+=ty*w.value;
-      });
+      }
       var root=bone.root||{tx:0,ty:0};
       return {x:x+root.tx,y:y+root.ty};
     }
@@ -3066,6 +3074,8 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     }
     function loop(now){
       if(!ready||failed)return;
+      // Do not spend CPU drawing a hidden tab; the next visible frame resumes from live state.
+      if(document.hidden){requestAnimationFrame(loop);return;}
       if(now-lastFrame>=fpsInterval){lastFrame=now;try{poseMotion(now);}catch(err){failed=true;console.error('Dori mesh rendering failed',err);if(fallback){fallback.hidden=false;canvas.hidden=true;}}}
       requestAnimationFrame(loop);
     }
@@ -3118,7 +3128,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var total=hour*3600+minute*60+second;var pct=total/86400*100;
     dayProgress.style.setProperty('--day-progress',pct.toFixed(2)+'%');
     dayPercent.textContent=Math.floor(pct)+'%';
-    if(key!==lastDayKey){lastDayKey=key;dayEvents=buildEvents(key);renderTimeline(now);}
+    if(key!==lastDayKey){lastDayKey=key;dayEvents=buildEvents(key);}
     var evt=activeEvent(now);var routine=ambientRoutine(now,routineFor(hour,minute));
     if(window.location.search.indexOf('motion-test=1')>=0){
       var demo=[
@@ -3137,10 +3147,15 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     }
     setRoom(evt,routine,phaseFor(hour),now);
     renderNext(now);renderNewYear(now);
-    if(second===0){renderTimeline(now);renderActivityHistory(now);}
+    // Refresh minute-based UI once per KST minute, even if setInterval drifts past second 00.
+    var minuteKey=key+'-'+String(hour).padStart(2,'0')+':'+String(minute).padStart(2,'0');
+    if(minuteKey!==lastMinuteKey){
+      lastMinuteKey=minuteKey;
+      renderTimeline(now);
+      renderActivityHistory(now);
+    }
   }
   update();
-  renderActivityHistory(new Date());
   window.setInterval(update,1000);
   document.addEventListener('visibilitychange',function(){if(!document.hidden)update();});
   window.addEventListener('pageshow',update);
