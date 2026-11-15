@@ -7,6 +7,15 @@
   const script = document.currentScript;
   const ROOT = script && script.src ? new URL("../", script.src) : new URL("./", location.href);
   const rootHref = (path) => new URL(path, ROOT).href;
+  // Keep the shared site typography and interaction rules available on every page
+  // that loads the convenience engine, without replacing that page's own layout.
+  if (!document.querySelector('link[href*="doldol-theme.css"],link[href*="dori-foundation.css"]')) {
+    const foundation = document.createElement("link");
+    foundation.rel = "stylesheet";
+    foundation.href = rootHref("css/dori-foundation.css?v=20261115-unified-ui-1");
+    foundation.dataset.doriFoundation = "true";
+    (document.head || document.documentElement).appendChild(foundation);
+  }
   const homeHref = rootHref("index.html");
   const feedbackHref = rootHref("dori-feedback.html");
   const PREF_KEY = "dori-convenience-preferences-v1";

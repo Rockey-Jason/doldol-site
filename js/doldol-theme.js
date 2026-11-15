@@ -8,6 +8,14 @@
     : new URL("./", window.location.href).href;
   const HOME_URL = SITE_ROOT;
   const siteAssetUrl = (path) => new URL(path, SITE_ROOT).href;
+  // Load the shared foundation on pages that use the transition engine but do not link the full theme.
+  if (!document.querySelector('link[href*="doldol-theme.css"],link[href*="dori-foundation.css"]')) {
+    const foundation = document.createElement("link");
+    foundation.rel = "stylesheet";
+    foundation.href = siteAssetUrl("css/dori-foundation.css?v=20261115-unified-ui-1");
+    foundation.dataset.doriFoundation = "true";
+    (document.head || document.documentElement).appendChild(foundation);
+  }
   const body = document.body;
   if (!body) return;
   if (!reduceMotion && !document.querySelector(".dori-world")) {
