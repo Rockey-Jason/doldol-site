@@ -549,6 +549,21 @@ textarea {
     position:
         relative;
 
+    width:
+        100%;
+
+    min-height:
+        820px;
+
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    touch-action:
+        pan-y pinch-zoom;
+
     margin-top:
         18px;
 
@@ -584,6 +599,12 @@ textarea {
 
     position:
         relative;
+
+    width:
+        100%;
+
+    flex:
+        1 0 auto;
 
     margin:
         0;
@@ -1659,6 +1680,9 @@ textarea {
 
 
     .본문카드 {
+
+        min-height:
+            730px;
 
         padding:
             27px 23px;
@@ -3279,6 +3303,8 @@ function 신문페이지렌더링(부드럽게이동 = false) {
     const 페이지컨트롤 = $("신문페이지컨트롤");
     if (!본문 || !페이지컨트롤 || !신문페이지목록.length) return;
 
+    신문스와이프설정();
+
     현재신문페이지 = Math.max(0, Math.min(현재신문페이지, 신문페이지목록.length - 1));
     const 페이지 = 신문페이지목록[현재신문페이지];
     const 전체페이지수 = 신문페이지목록.length;
@@ -3324,6 +3350,49 @@ function 신문페이지이동(방향) {
     if (다음페이지 < 0 || 다음페이지 >= 신문페이지목록.length) return;
     현재신문페이지 = 다음페이지;
     신문페이지렌더링(true);
+}
+
+// 터치 화면에서 본문 카드를 좌우로 밀어 신문 페이지를 넘깁니다.
+// 세로 스크롤과 확대 제스처는 브라우저가 계속 처리합니다.
+function 신문스와이프설정() {
+    const 카드 = document.querySelector(".본문카드");
+    if (!카드 || 카드.dataset.newsSwipeBound === "true") return;
+
+    카드.dataset.newsSwipeBound = "true";
+    let 시작위치 = null;
+    const 무시할대상 = "button, a, input, textarea, select, [contenteditable='true']";
+
+    카드.addEventListener("pointerdown", event => {
+        if (!event.isPrimary || event.pointerType === "mouse" || event.button !== 0) return;
+        if (신문페이지목록.length <= 1) return;
+
+        const 대상 = event.target instanceof Element ? event.target : event.target?.parentElement;
+        if (대상?.closest(무시할대상)) return;
+
+        시작위치 = {
+            pointerId: event.pointerId,
+            x: event.clientX,
+            y: event.clientY
+        };
+    }, { passive: true });
+
+    window.addEventListener("pointerup", event => {
+        if (!시작위치 || 시작위치.pointerId !== event.pointerId) return;
+
+        const 이동X = event.clientX - 시작위치.x;
+        const 이동Y = event.clientY - 시작위치.y;
+        시작위치 = null;
+
+        const 기준거리 = Math.max(55, Math.min(95, 카드.clientWidth * 0.12));
+        if (Math.abs(이동X) < 기준거리) return;
+        if (Math.abs(이동X) <= Math.abs(이동Y) * 1.25) return;
+
+        신문페이지이동(이동X < 0 ? 1 : -1);
+    }, { passive: true });
+
+    window.addEventListener("pointercancel", () => {
+        시작위치 = null;
+    }, { passive: true });
 }
 
 
