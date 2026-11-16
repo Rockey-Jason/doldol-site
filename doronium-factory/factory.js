@@ -912,6 +912,15 @@ if(E2E_MODE){
    const moneyBeforeBuild=S.money,buildingsBefore=S.buildings.length;
    const reservedMaterialBuild=constructionPosition?placeBuilding("beltAdaptive",constructionPosition.x,constructionPosition.y):false;
    const construction={attempted:!!constructionPosition,placed:reservedMaterialBuild,moneyBefore:moneyBeforeBuild,moneyAfter:S.money,buildingsBefore,buildingsAfter:S.buildings.length};
+   const reservationResults={
+    machineInput:{...machine.input},moneyBefore,moneyAfter:S.money,soldBefore,soldAfter:S.stats.sold,
+    survivalBefore,survivalAfter:structuredClone(S.survival),
+    tree:{cooldown:tree.cooldown,meat:itemCount("doriMeat")},
+    farm:{status:farm.status,progress:farm.progress,meat:itemCount("doriMeat")},
+    stock:{water:itemCount("water"),doriMeat:itemCount("doriMeat"),blue:itemCount("doronium_blue")},
+    available:{water:availableItemCount(S,"water"),doriMeat:availableItemCount(S,"doriMeat"),blue:availableItemCount(S,"doronium_blue")},
+    runtimeValid:validateRuntimeState(S).valid
+   };
    S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
    addItem("coal",1,{quality:96,purity:95,synthetic:false},false);
    const coalReservation=reserveItemStacks(S,"coal",1,"reservation-guard-e2e");
@@ -920,17 +929,7 @@ if(E2E_MODE){
    S.buildings=[{uid:"test-reserved-coalgen",type:"coalgen",x:12,y:12,dir:1,progress:0,condition:100,fuelTimer:0,status:"IDLE"}];
    S.paused=false;S.victory=false;tick(STEP);
    const coalGenerator={fuelTimer:S.buildings[0].fuelTimer,status:S.buildings[0].status,power:currentPower().gen,stock:itemCount("coal"),available:availableItemCount(S,"coal"),runtimeValid:validateRuntimeState(S).valid};
-   return {
-    construction,coalGenerator,
-    machineInput:{...machine.input},
-    moneyBefore,moneyAfter:S.money,soldBefore,soldAfter:S.stats.sold,
-    survivalBefore,survivalAfter:structuredClone(S.survival),
-    tree:{cooldown:tree.cooldown,meat:itemCount("doriMeat")},
-    farm:{status:farm.status,progress:farm.progress,meat:itemCount("doriMeat")},
-    stock:{water:itemCount("water"),doriMeat:itemCount("doriMeat"),blue:itemCount("doronium_blue")},
-    available:{water:availableItemCount(S,"water"),doriMeat:availableItemCount(S,"doriMeat"),blue:availableItemCount(S,"doronium_blue")},
-    runtimeValid:validateRuntimeState(S).valid
-   };
+   return {construction,coalGenerator,...reservationResults};
   },
   removeFusionMachineForRecoveryTest(){
    S.buildings=S.buildings.filter(b=>b.type!=="fusion");markSceneDirty();updateFusion(STEP);return {status:window.__doroniumFactoryTest.fusionStatus(),toast:document.querySelector("#toast-stack")?.textContent||""};
