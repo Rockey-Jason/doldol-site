@@ -919,7 +919,7 @@ if(E2E_MODE){
    harvestNode(72,52,tree);
    const farm={uid:"test-dori-farm",type:"doriFarm",x:72,y:52,progress:59,condition:100,status:"IDLE"};
    tickBuilding(farm,1,{ratio:1});
-   S.money=10000;S.research.push("logistics");
+   S.nodes={};S.money=10000;S.research.push("logistics");
    let constructionPosition=null;
    for(let y=20;y<WORLD_H-2&&!constructionPosition;y++)for(let x=20;x<WORLD_W-2;x++)if(!tileNode(x,y)&&!buildingAt(x,y)){constructionPosition={x,y};break}
    const moneyBeforeBuild=S.money,buildingsBefore=S.buildings.length;
