@@ -133,3 +133,69 @@ html[data-dori-motion="reduced"] *::after{
   scroll-behavior:auto!important;
   transition-duration:.01ms!important;
 }
+
+
+/* =========================================================
+   DORI PREMIUM UI POLISH — shared interaction and motion layer
+   Applied after each page's own styles; layout remains page-owned.
+========================================================= */
+:root{
+  --dori-premium-line:rgba(186,205,244,.17);
+  --dori-premium-glow:rgba(103,147,255,.16);
+}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{
+  font-synthesis:none;
+  text-rendering:optimizeLegibility;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+button:not(:disabled),a[href],[role="button"],input,select,textarea{
+  transition:
+    color .22s ease,
+    background-color .22s ease,
+    border-color .22s ease,
+    box-shadow .28s ease,
+    filter .22s ease,
+    transform .28s cubic-bezier(.2,.8,.2,1),
+    opacity .22s ease;
+}
+@media(hover:hover){
+  button:not(:disabled):hover,[role="button"]:hover{filter:brightness(1.075)}
+  a[href]:hover{filter:brightness(1.06)}
+}
+button:not(:disabled):active,[role="button"]:active{filter:brightness(.96)}
+input:not([type="checkbox"]):not([type="radio"]),
+select,textarea{
+  accent-color:#91b2ff;
+}
+input:focus-visible,select:focus-visible,textarea:focus-visible{
+  border-color:rgba(240,210,143,.72)!important;
+  box-shadow:0 0 0 4px rgba(240,210,143,.12),0 8px 26px rgba(0,0,0,.12);
+}
+:where(.dori-glass,.dori-card,.dori-surface,[data-dori-card]){
+  border-color:var(--dori-premium-line);
+  box-shadow:0 18px 48px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.045);
+  transition:border-color .3s ease,box-shadow .35s ease,transform .35s cubic-bezier(.2,.8,.2,1),background-color .3s ease;
+}
+@media(hover:hover){
+  :where(.dori-glass,.dori-card,.dori-surface,[data-dori-card]):hover{
+    border-color:rgba(165,190,255,.32);
+    box-shadow:0 24px 58px rgba(0,0,0,.28),0 0 28px var(--dori-premium-glow),inset 0 1px 0 rgba(255,255,255,.06);
+  }
+}
+:where(.dori-glass,.dori-card,.dori-surface,[data-dori-card]):focus-within{
+  border-color:rgba(165,190,255,.34);
+}
+::selection{background:rgba(117,156,255,.34);color:#fff}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:rgba(2,7,24,.45)}
+::-webkit-scrollbar-thumb{border:2px solid transparent;border-radius:99px;background:rgba(135,161,215,.35);background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:rgba(164,190,245,.56);background-clip:padding-box}
+@media(prefers-reduced-motion:no-preference){
+  :where(button:not(:disabled),a[href],[role="button"]):focus-visible{animation:doriFocusHalo 1.8s ease-in-out infinite}
+  @keyframes doriFocusHalo{0%,100%{outline-offset:3px}50%{outline-offset:5px}}
+}
+@media(prefers-reduced-motion:reduce){
+  :where(button,a,[role="button"],input,select,textarea){transition:none!important}
+}
