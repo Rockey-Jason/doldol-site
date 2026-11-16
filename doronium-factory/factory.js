@@ -866,6 +866,25 @@ if(E2E_MODE){
    playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};
    revealAround();renderAll();return structuredClone(S)
   },
+  prepareFusionTest(){
+   S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
+   for(const id of VARIANTS)addItem(id,100,{quality:96,purity:95,synthetic:false},false);
+   S.buildings=Array.from({length:5},(_,i)=>({uid:"test-coal-"+i,type:"coalgen",x:10+i,y:10,dir:1,progress:0,condition:100,fuelTimer:24,status:"RUNNING"}));
+   S.buildings.push(
+    {uid:"test-fusion",type:"fusion",x:20,y:10,dir:1,progress:0,condition:100,temp:25,pressure:0,status:"IDLE"},
+    {uid:"test-cooling",type:"cooling",x:21,y:10,dir:1,progress:0,condition:100,status:"IDLE"}
+   );
+   S.fusionJob=null;S.fusionDone=false;S.paused=false;S.victory=false;
+   selectedBuild=null;selectedBuilding="test-fusion";markSceneDirty();changePanel("factory");renderMachineDetails();renderHud();drawWorld();
+   return {power:currentPower(),items:VARIANTS.length,stock:VARIANTS.map(id=>itemCount(id))};
+  },
+  fusionStatus(){
+   return {job:S.fusionJob?structuredClone(S.fusionJob):null,stock:Object.fromEntries(VARIANTS.map(id=>[id,itemCount(id)])),available:Object.fromEntries(VARIANTS.map(id=>[id,availableItemCount(S,id)])),activeReservations:Object.keys(S.runtime.reservations||{}).length,valid:validateRuntimeState(S).valid};
+  },
+  attemptSpendFusionInput(){return takeItem(VARIANTS[0],1)},
+  removeFusionMachineForRecoveryTest(){
+   S.buildings=S.buildings.filter(b=>b.type!=="fusion");markSceneDirty();updateFusion(STEP);return {status:window.__doroniumFactoryTest.fusionStatus(),toast:document.querySelector("#toast-stack")?.textContent||""};
+  },
   syntheticGuard(){
    S=freshState();S.inventory={doriMeat:10};S.meta={doriMeat:{quality:90,purity:90,synthetic:true}};S.runtime=createRuntimeState();ensureItemStacks(S);
    const b={uid:"test-reactor",type:"reactor",x:1,y:1,dir:1,progress:0,input:{},inputMeta:{},output:null,activeMeta:null,temp:25,pressure:0,status:"IDLE"};
