@@ -8,6 +8,7 @@ const lines = html.split(/\r?\n/);
 const normalizedHtml = html.replace(/\s+/g, " ");
 
 // Parse every inline script before the site is published.
+assert.ok(html.includes("css/dori-foundation.css"), "Dori Life must load the shared UI foundation.");
 const inlineScripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
   .filter((match) => !/\bsrc\s*=/i.test(match[1]) && match[2].trim());
 assert.ok(inlineScripts.length > 0, "Dori Life must contain an inline controller script.");
