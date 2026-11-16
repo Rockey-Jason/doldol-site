@@ -10,7 +10,11 @@ const normalizedHtml = html.replace(/\s+/g, " ");
 // Parse every inline script before the site is published.
 assert.ok(html.includes("css/dori-foundation.css"), "Dori Life must load the shared UI foundation.");
 const inlineScripts = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)]
-  .filter((match) => !/\bsrc\s*=/i.test(match[1]) && match[2].trim());
+  .filter((match) => {
+    if (/\bsrc\s*=/i.test(match[1]) || !match[2].trim()) return false;
+    const type = (match[1].match(/\btype\s*=\s*["']?([^"'\s>]+)/i)?.[1] || "").toLowerCase();
+    return !type || ["module", "text/javascript", "application/javascript", "text/ecmascript", "application/ecmascript"].includes(type);
+  });
 assert.ok(inlineScripts.length > 0, "Dori Life must contain an inline controller script.");
 inlineScripts.forEach((match, index) => {
   new vm.Script(match[2], { filename: file + ":inline-" + (index + 1) });
