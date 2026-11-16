@@ -265,6 +265,11 @@ try {
   assert.deepEqual(reservationGuards.stock, { water: 8, doriMeat: 2, blue: 100 }, "All reserved inventory totals must remain intact");
   assert.deepEqual(reservationGuards.available, { water: 0, doriMeat: 0, blue: 0 }, "All test inputs must remain reserved");
   assert.equal(reservationGuards.runtimeValid, true, "All reservation-guard checks must preserve valid runtime state");
+  assert.equal(reservationGuards.construction.attempted, true, "A clear building site must be found for the reserved-material test");
+  assert.equal(reservationGuards.construction.placed, false, "Reserved materials must not pay for a new building");
+  assert.equal(reservationGuards.construction.moneyAfter, reservationGuards.construction.moneyBefore, "A rejected construction must not charge currency");
+  assert.equal(reservationGuards.construction.buildingsAfter, reservationGuards.construction.buildingsBefore, "A rejected construction must not place a free building");
+  assert.deepEqual(reservationGuards.coalGenerator, { fuelTimer: 0, status: "NO_INPUT", power: 0, stock: 1, available: 0, runtimeValid: true }, "A coal generator must not receive free fuel from a reserved coal stack");
 
   await desktop.screenshot({ path: path.join(artifactDir, "doronium-desktop.png"), fullPage: true });
   // Free the desktop WebGL context before creating the mobile WebGL context.
