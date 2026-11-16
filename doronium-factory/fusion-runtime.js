@@ -1,6 +1,7 @@
 /* Resumable, all-input-reserved Infinity Fusion transaction. */
 import {INFINITY_REQUIREMENTS,INFINITY_TOTAL_INPUT,CANONICAL_INFINITY_DORONUM_ID,validateInfinityManifest} from "./canonical-data.js";
 import {reserveQualifiedItemBatch,releaseItemReservation,commitItemReservations,addItemStack,syncLegacyInventory} from "./simulation-core.js";
+import {completeProductionCustody,validateOwnershipState} from "./ownership-runtime.js";
 const clone=v=>typeof structuredClone==="function"?structuredClone(v):JSON.parse(JSON.stringify(v));
 const POWER_FLOOR=.8;
 function hasValidQualifiedReservations(state,job){
@@ -14,6 +15,7 @@ function hasValidQualifiedReservations(state,job){
   const matches=active.filter(reservation=>reservation.itemID===itemID);
   if(matches.length!==1)return false;
   const reservation=matches[0],allocations=Array.isArray(reservation.allocations)?reservation.allocations:[];
+  if(reservation.ownerID!=="INFINITY:"+String(job.jobID))return false;
   if(reservation.quantity!==required||allocations.reduce((total,item)=>total+Math.max(0,Number(item.quantity)||0),0)!==required)return false;
   for(const allocation of allocations){
    const stack=stackByID.get(String(allocation.stackID));
@@ -38,10 +40,23 @@ export function settleInfinityFusionOutput(state,{jobID,outputItemID=CANONICAL_I
  const snapshot={
   runtime:clone(state.runtime),inventory:clone(state.inventory||{}),meta:clone(state.meta||{}),
   stats:clone(state.stats||{}),fusionDone:!!state.fusionDone,
-  fusionSettlements:clone(state.fusionSettlements||{}),job:clone(job)
+  fusionSettlements:clone(state.fusionSettlements||{}),job:clone(job),
+  hadOwnershipLedger:Object.hasOwn(state,"ownershipLedger"),
+  ownershipLedger:state.ownershipLedger?clone(state.ownershipLedger):null,
+  ownershipLedgerValidation:state.ownershipLedgerValidation===undefined?undefined:clone(state.ownershipLedgerValidation)
  };
  try{
   let consumedQuantity=0;
+  const custodyInputs=[];
+  if(state.ownershipLedger&&!job.legacyConsumedInput){
+   for(const reservationID of job.reservationIDs||[]){
+    const reservation=state.runtime?.reservations?.[reservationID];
+    if(!reservation)throw new Error("RESERVATION_LEDGER_MISMATCH");
+    for(const allocation of reservation.allocations||[]){
+     custodyInputs.push({stackID:String(allocation.stackID)+"@"+String(reservation.reservationID),quantity:Number(allocation.quantity),expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:String(reservation.ownerID||"")});
+    }
+   }
+  }
   if(!job.legacyConsumedInput){
    const consumed=commitItemReservations(state,job.reservationIDs||[]);
    if(!consumed)throw new Error("INPUT_COMMIT_FAILED");
@@ -50,6 +65,18 @@ export function settleInfinityFusionOutput(state,{jobID,outputItemID=CANONICAL_I
   }else consumedQuantity=Math.max(INFINITY_TOTAL_INPUT,Math.floor(Number(job.inputQuantity)||0));
   const outputStackID=addItemStack(state,outputItemID,1,{quality,purity,synthetic:false});
   if(!outputStackID)throw new Error("OUTPUT_CREATE_FAILED");
+  const custodyTransactionID="FUSION_COMPLETE:"+String(jobID);
+  if(state.ownershipLedger){
+   const custodyCommit=completeProductionCustody(state.ownershipLedger,{
+    transactionID:custodyTransactionID,
+    inputs:custodyInputs,
+    output:{stackID:outputStackID,itemID:String(outputItemID),quantity:1,ownerType:"PLAYER_INVENTORY",ownerID:"player",metadata:{quality,purity,synthetic:false,source:"infinity-fusion",jobID:String(jobID)}}
+   });
+   if(!custodyCommit)throw new Error("FUSION_CUSTODY_COMMIT_FAILED");
+   const custodyValidation=validateOwnershipState(state.ownershipLedger);
+   if(!custodyValidation.valid)throw new Error("FUSION_CUSTODY_VALIDATION_FAILED:"+custodyValidation.errors.join(","));
+   state.ownershipLedgerValidation=custodyValidation;
+  }
   syncLegacyInventory(state);
   state.stats??={};state.stats.produced??={};
   state.stats.produced[outputItemID]=(Number(state.stats.produced[outputItemID])||0)+1;
@@ -59,12 +86,14 @@ export function settleInfinityFusionOutput(state,{jobID,outputItemID=CANONICAL_I
   state.fusionSettlements[String(jobID)]={
    settlementID:"FUSION-SETTLEMENT:"+String(jobID),jobID:String(jobID),
    outputStackID,outputItemID:String(outputItemID),outputQuantity:1,
-   inputQuantity:consumedQuantity,completedTick:job.completedTick
+   inputQuantity:consumedQuantity,custodyTransactionID:state.ownershipLedger?custodyTransactionID:null,completedTick:job.completedTick
   };
   return {ok:true,duplicate:false,outputStackID,inputQuantity:consumedQuantity};
  }catch(error){
   state.runtime=snapshot.runtime;state.inventory=snapshot.inventory;state.meta=snapshot.meta;
   state.stats=snapshot.stats;state.fusionDone=snapshot.fusionDone;state.fusionSettlements=snapshot.fusionSettlements;
+  if(snapshot.hadOwnershipLedger)state.ownershipLedger=snapshot.ownershipLedger;else delete state.ownershipLedger;
+  if(snapshot.ownershipLedgerValidation===undefined)delete state.ownershipLedgerValidation;else state.ownershipLedgerValidation=snapshot.ownershipLedgerValidation;
   state.fusionJob=snapshot.job;state.fusionJob.status="ERROR";
   state.fusionJob.errorCode=String(error?.message||"FUSION_SETTLEMENT_FAILED");
   return {ok:false,reason:state.fusionJob.errorCode};

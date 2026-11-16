@@ -1313,8 +1313,14 @@ function updateManagedFusion(dt,job){
   job.status="CALIBRATING";job.stage=stageIndex;job.progress=Number(job.stageElapsedSeconds)||0;machine.status="CALIBRATING";return;
  }
  const priorStage=stageIndex;
+ const fusionDeltaSeconds=dt*Math.min(1,Math.max(0,effectivePowerRatio));
+ const finalStageDuration=Number(job.stageDurationsSeconds?.[6]??stage.time);
+ if(stageIndex===6&&Number(job.stageElapsedSeconds||0)+fusionDeltaSeconds+1e-9>=finalStageDuration){
+  const custodyAudit=rebuildOwnershipLedger(S);
+  if(!custodyAudit.valid){job.status="ERROR";job.errorCode="OWNERSHIP_LEDGER_INVALID";job.lastErrorAt=S.seconds;machine.status="ERROR";log("인피니티 퓨전 정산 중단 · 소유권 원장 검증 실패","warn");markDirty();return}
+ }
  const result=tickInfinityFusion(S,{
-  deltaSeconds:dt*Math.min(1,Math.max(0,effectivePowerRatio)),
+  deltaSeconds:fusionDeltaSeconds,
   machineExists:true,
   powerRatio:effectivePowerRatio
  });
@@ -1416,6 +1422,8 @@ function startFusion(){
   const jobID="IF-"+String(S.seed||0)+"-"+String(S.tick||0)+"-"+String(S.runtime?.nextReservationId||1);
   const started=startInfinityFusion(S,{jobID,machineID:String(machine.uid),stageDurationsSeconds:FUSION_STAGES.map(stage=>stage.time),stagePowerMW:FUSION_STAGES.map(stage=>stage.power/1000)});
   if(!started.ok){toast("퓨전 원료 예약 실패 · "+(started.reason||"UNKNOWN"),"warn");return}
+  const ownershipAudit=rebuildOwnershipLedger(S);
+  if(!ownershipAudit.valid){cancelInfinityFusion(S,{jobID});rebuildOwnershipLedger(S);toast("소유권 검증 실패 · 퓨전 예약 원료를 모두 반환했습니다.","warn");return}
   S.fusionJob.startedAt=S.seconds;S.fusionJob.stage=0;S.fusionJob.progress=0;
   machine.temp=25;machine.pressure=0;machine.status="IDLE";
   log("인피니티 퓨전 시작 · 정식 원료 1,500개 원자적 예약");toast("INFINITY FUSION STARTED");closeModal();markDirty();renderFactory();
@@ -2607,6 +2615,8 @@ if(E2E_MODE){
     const preflight=fusionPowerPreflight();
     const started=startInfinityFusion(S,{jobID:"LIVE-FACTORY-FUSION",machineID:machine.uid,stageDurationsSeconds:FUSION_STAGES.map(stage=>stage.time),stagePowerMW:FUSION_STAGES.map(stage=>stage.power/1000)});
     if(!started.ok)return {ok:false,reason:started.reason||"START_FAILED",preflight};
+    const startOwnershipAudit=rebuildOwnershipLedger(S);
+    if(!startOwnershipAudit.valid)return {ok:false,reason:"OWNERSHIP_START_AUDIT_FAILED",ownershipErrors:startOwnershipAudit.errors,preflight};
     S.fusionJob.startedAt=S.seconds;S.fusionJob.stage=0;S.fusionJob.progress=0;
     machine.temp=FUSION_STAGES[0].temp;machine.pressure=FUSION_STAGES[0].pressure;
     for(const generator of generators)generator.fuelTimer=0;
@@ -2620,12 +2630,17 @@ if(E2E_MODE){
      updateFusion(STEP);ticks++;
     }
     if(S.fusionJob.status==="COMPLETED")updateFusion(STEP);
+    const finalOwnershipAudit=rebuildOwnershipLedger(S);
+    const fusionCustodyTransactionID="FUSION_COMPLETE:"+String(S.fusionJob.jobID);
+    const fusionCustodyConsumed=S.ownershipLedger.consumed.filter(entry=>entry.reason==="production-input:"+fusionCustodyTransactionID);
+    const fusionOutputCustody=S.ownershipLedger.custody.find(entry=>entry.stackID===S.fusionJob.outputStackID)||null;
+    const fusionCustodyTransactionCount=Object.keys(S.ownershipLedger.transactions).filter(id=>id===fusionCustodyTransactionID||id.startsWith(fusionCustodyTransactionID+":INPUT:")).length;
     const terminalStatus=S.fusionJob.status;
     const output=availableItemCount(S,CANONICAL_INFINITY_DORONUM_ID);
     const inputsRemaining=CANONICAL_DORONUM_IDS.reduce((total,id)=>total+availableItemCount(S,id),0);
     const reservationsRemaining=Object.values(S.runtime.reservations||{}).filter(item=>item.status==="reserved").length;
     return {
-     ok:preflight.ok&&powerPause.status==="WAITING_POWER"&&powerPause.reservations===15&&S.fusionJob.status==="COMPLETED"&&S.fusionDone&&output===1&&inputsRemaining===0&&reservationsRemaining===0,
+     ok:preflight.ok&&powerPause.status==="WAITING_POWER"&&powerPause.reservations===15&&S.fusionJob.status==="COMPLETED"&&S.fusionDone&&output===1&&inputsRemaining===0&&reservationsRemaining===0&&finalOwnershipAudit.valid&&fusionCustodyConsumed.reduce((n,entry)=>n+entry.quantity,0)===1500&&fusionOutputCustody?.quantity===1,
      preflight:preflight.ok,
      powerPause,
      ticks,
@@ -2636,7 +2651,11 @@ if(E2E_MODE){
      output,
      inputsRemaining,
      reservationsRemaining,
-     outputID:S.runtime.itemStacks.find(item=>item.itemID===CANONICAL_INFINITY_DORONUM_ID)?.itemID||null
+     outputID:S.runtime.itemStacks.find(item=>item.itemID===CANONICAL_INFINITY_DORONUM_ID)?.itemID||null,
+     custodyValid:finalOwnershipAudit.valid,custodyErrors:finalOwnershipAudit.errors||[],
+     custodyConsumedQuantity:fusionCustodyConsumed.reduce((n,entry)=>n+entry.quantity,0),
+     custodyOutputQuantity:fusionOutputCustody?.quantity||0,custodyOutputOwnerType:fusionOutputCustody?.ownerType||null,custodyOutputOwnerID:fusionOutputCustody?.ownerID||null,
+     custodyTransactionCount:fusionCustodyTransactionCount
     };
    }finally{
     closeModal();S=oldState;playerMotion=oldMotion;renderAll();
@@ -2648,12 +2667,17 @@ if(E2E_MODE){
    syncLegacyInventory(S);
    const requirements=INFINITY_REQUIREMENTS;
    const predicates=Object.fromEntries(VARIANTS.map(id=>[id,stack=>Number(stack.quality)>=90&&Number(stack.purity)>=90&&!stack.synthetic]));
-   const reservationIDs=reserveQualifiedItemBatch(S,requirements,"LIVE-FUSION-E2E",predicates);
+   const reservationIDs=reserveQualifiedItemBatch(S,requirements,"INFINITY:LIVE-FUSION-E2E",predicates);
    if(!reservationIDs||reservationIDs.length!==15)return {ok:false,reason:"RESERVATION_FAILED"};
-   S.fusionJob={jobID:"LIVE-FUSION-E2E",status:"RUNNING",stage:7,progress:0,reservationIDs,inputQuantity:1500,legacyConsumedInput:false,outputIssued:false};
+   S.fusionJob={runtimeVersion:2,jobID:"LIVE-FUSION-E2E",status:"RUNNING",stage:7,stageIndex:7,progress:0,reservationIDs,inputQuantity:1500,legacyConsumedInput:false,outputIssued:false};
+   const ownershipBefore=rebuildOwnershipLedger(S);
    const first=settleInfinityFusionOutput(S,{jobID:S.fusionJob.jobID,outputItemID:CANONICAL_INFINITY_DORONUM_ID,quality:100,purity:100});
    const second=settleInfinityFusionOutput(S,{jobID:S.fusionJob.jobID,outputItemID:CANONICAL_INFINITY_DORONUM_ID,quality:100,purity:100});
-   return {ok:first.ok&&second.ok&&second.duplicate&&S.fusionDone&&S.fusionJob.status==="COMPLETED",first,second,fusionDone:S.fusionDone,jobStatus:S.fusionJob.status,outputCount:availableItemCount(S,"infinity"),outputStackID:S.fusionJob.outputStackID,reservationsRemaining:Object.values(S.runtime.reservations).filter(x=>x.status==="reserved").length,inputsRemaining:VARIANTS.reduce((n,id)=>n+availableItemCount(S,id),0),settlement:Object.values(S.fusionSettlements||{})[0]||null,produced:S.stats.produced[CANONICAL_INFINITY_DORONUM_ID]};
+   const custodyAudit=rebuildOwnershipLedger(S),custodyTransactionID="FUSION_COMPLETE:"+S.fusionJob.jobID;
+   const custodyConsumed=S.ownershipLedger.consumed.filter(entry=>entry.reason==="production-input:"+custodyTransactionID);
+   const outputCustody=S.ownershipLedger.custody.find(entry=>entry.stackID===S.fusionJob.outputStackID)||null;
+   const custodyTransactionCount=Object.keys(S.ownershipLedger.transactions).filter(id=>id===custodyTransactionID||id.startsWith(custodyTransactionID+":INPUT:")).length;
+   return {ok:ownershipBefore.valid&&first.ok&&second.ok&&second.duplicate&&S.fusionDone&&S.fusionJob.status==="COMPLETED"&&custodyAudit.valid&&custodyConsumed.reduce((n,entry)=>n+entry.quantity,0)===1500&&outputCustody?.quantity===1,first,second,fusionDone:S.fusionDone,jobStatus:S.fusionJob.status,outputCount:availableItemCount(S,"infinity"),outputStackID:S.fusionJob.outputStackID,reservationsRemaining:Object.values(S.runtime.reservations).filter(x=>x.status==="reserved").length,inputsRemaining:VARIANTS.reduce((n,id)=>n+availableItemCount(S,id),0),settlement:Object.values(S.fusionSettlements||{})[0]||null,produced:S.stats.produced[CANONICAL_INFINITY_DORONUM_ID],custodyBeforeValid:ownershipBefore.valid,custodyValid:custodyAudit.valid,custodyConsumedQuantity:custodyConsumed.reduce((n,entry)=>n+entry.quantity,0),custodyOutputQuantity:outputCustody?.quantity||0,custodyOutputOwnerType:outputCustody?.ownerType||null,custodyOutputOwnerID:outputCustody?.ownerID||null,custodyTransactionCount};
   },
   runFusionReservationCancelTest(){
    S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);

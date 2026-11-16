@@ -459,6 +459,12 @@ try {
   assert.equal(liveFusion.output, 1, "The live game loop must issue exactly one canonical Infinity output");
   assert.equal(liveFusion.inputsRemaining, 0, "The live job must consume exactly 1,500 qualified inputs");
   assert.equal(liveFusion.reservationsRemaining, 0, "The live job must close all input reservations at settlement");
+  assert.equal(liveFusion.custodyValid, true, "The final Fusion ownership snapshot and journal must validate");
+  assert.equal(liveFusion.custodyConsumedQuantity, 1500, "Fusion custody must journal all 1,500 consumed input units");
+  assert.equal(liveFusion.custodyOutputQuantity, 1, "The Fusion output must have exactly one custody record");
+  assert.equal(liveFusion.custodyOutputOwnerType, "PLAYER_INVENTORY", "The canonical output must enter player inventory custody");
+  assert.equal(liveFusion.custodyOutputOwnerID, "player", "The output custody owner must be the player");
+  assert.equal(liveFusion.custodyTransactionCount, 16, "Fusion custody must retain one parent transaction and fifteen input-consumption entries");
 
   const fusionRollback = await desktop.evaluate(() => window.__doroniumFactoryTest.runFusionReservationCancelTest());
   assert.equal(fusionRollback.ok, true, "A 15-item Fusion reservation must be atomic and fully reversible on cancellation");
@@ -476,6 +482,12 @@ try {
   assert.equal(fusionSettlement.reservationsRemaining, 0, "All Fusion reservations must be closed after settlement");
   assert.equal(fusionSettlement.second.duplicate, true, "Repeating the same settlement ID must return the prior result without issuing another output");
   assert.equal(fusionSettlement.settlement.outputQuantity, 1, "The settlement journal must record exactly one output");
+  assert.equal(fusionSettlement.custodyBeforeValid, true, "All reserved inputs must be represented in the active-job custody snapshot");
+  assert.equal(fusionSettlement.custodyValid, true, "The post-settlement Fusion custody snapshot must validate");
+  assert.equal(fusionSettlement.custodyConsumedQuantity, 1500, "The settlement harness must journal every consumed input unit");
+  assert.equal(fusionSettlement.custodyOutputQuantity, 1, "The settlement harness must expose exactly one output custody record");
+  assert.equal(fusionSettlement.custodyOutputOwnerType, "PLAYER_INVENTORY", "The settlement output must be owned by the player");
+  assert.equal(fusionSettlement.custodyTransactionCount, 16, "The settlement journal must contain one parent and fifteen input transactions");
 
   const miningSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningAutomationTest());
   assert.equal(miningSetup.generator, true, "A mine generator must be placeable in an underground tunnel");
