@@ -257,12 +257,12 @@ All 12 roadmap areas remain PARTIAL or UNVERIFIED; no final checklist item is CO
 | 2. World and terrain | PARTIAL | 192×160 finite tile world, terrain variation and underground levels exist; 2,048m×2,048m target and full chunk streaming/unit migration remain incomplete. |
 | 3. Player, exploration, survival and mining | PARTIAL | First/third person, survival, mine interaction and automated mining exist; full PC/mobile campaign and physical-device validation remain. |
 | 4. Terrain preparation and construction | PARTIAL | Flattening, foundations, footprints, blueprints and rollback helpers exist; complete port, dismantle and crash-recovery coverage remains. |
-| 5. Items, ownership and logistics | PARTIAL / CRITICAL | Stack IDs, reservations, production custody, package-material consumption, conveyors, shipment cargo and world-drop pickup are journaled in live paths; independent warehouse stock, every owner-domain transfer, demolition/salvage, Fusion custody, restart/reconnect and global conservation remain incomplete. |
+| 5. Items, ownership and logistics | PARTIAL / CRITICAL | Stack IDs, reservations, production custody, package-material consumption, conveyors, shipment cargo, world-drop pickup and live Infinity Fusion settlement (1,500 input units to one output stack) are journaled; independent warehouse stock, every owner-domain transfer, demolition/salvage, restart/reconnect and global conservation remain incomplete. |
 | 6. Power network | PARTIAL | kW/kJ allocation, batteries, transformers and stable component IDs exist; edge-by-edge loss, persistent merge/split identity and diagnostics remain. |
 | 7. Six-fluid network | PARTIAL | Six fluid types, pressure/temperature, leak and conservation solver exist; live source/extraction/recipe/consumer integration is still water-dominant. |
 | 8. Machine states, failures and maintenance | PARTIAL | Failure profiles and repair paths exist; all-machine state/failure/residue coverage remains incomplete. |
 | 9. Production, research and skills | PARTIAL | Production and 20 skill nodes exist; canonical recipe source-of-truth integration, all skill effects and the 18-stage research target remain unresolved. |
-| 10. Canonical Doronum and Infinity | PARTIAL | Canonical input validation and live seven-stage/260-second Fusion path exist; complete interlocks, save/restart recovery and end-to-end output custody remain. |
+| 10. Canonical Doronum and Infinity | PARTIAL | Canonical input validation and live seven-stage/260-second Fusion now journal all 1,500 reserved input units and exactly one canonical player-inventory output; complete safety interlocks, save/restart recovery and end-to-end campaign acceptance remain. |
 | 11. Shipping, contracts and economy | PARTIAL | Five-stage packaging now commits all reserved material through custody transactions; dispatch and delivery custody exist. Full contract catalog, route-derived risk/insurance and server-authoritative rewards remain. |
 | 12. Save, security, performance and release | PARTIAL / UNVERIFIED | Local/cloud CAS and RLS foundations exist; two-device conflict recovery, physical devices, memory soak and 60-minute wall-clock test remain unverified. |
 
@@ -277,14 +277,14 @@ All 12 roadmap areas remain PARTIAL or UNVERIFIED; no final checklist item is CO
 | 5 | Flattening and foundations | PARTIAL | Core placement rules exist; all footprints, ports, dismantle and rollback cases remain. |
 | 6 | Underground mining | PARTIAL | Automatic/advanced miner scenarios are in browser regression; all deposits, levels, failures and recovery remain. |
 | 7 | Canonical 15 Doronum inputs | PARTIAL | Manifest and input qualification exist; all live recipe/model/research/UI sources are not yet canonical. |
-| 8 | No item duplication/loss | PARTIAL / CRITICAL | Live reservations, production completion, package-material consumption, conveyor transfers, shipment cargo and world-drop pickup are journaled; global cross-domain conservation is not proven. |
+| 8 | No item duplication/loss | PARTIAL / CRITICAL | Live reservations, production completion, package-material consumption, conveyor transfers, shipment cargo, world-drop pickup and Infinity Fusion input/output custody are journaled; global cross-domain conservation is not proven. |
 | 9 | Conveyors and automatic mining | PARTIAL | Basic routing and mining exist; parcel splitting, full belt catalog and automated deadlock recovery remain. |
 | 10 | Power and batteries | PARTIAL | Allocation, storage settlement and stable component IDs exist; edge loss and full diagnostic behavior remain. |
 | 11 | Six fluids, pressure and temperature | PARTIAL | Generic six-fluid solver exists; five non-water live source/consumer chains remain incomplete. |
 | 12 | Machine states, failures and repair | PARTIAL | Core states and repair path exist; all-machine coverage remains. |
 | 13 | 18 research / 20 skills | PARTIAL | 20 skill nodes exist but effects are incomplete; current research data count does not match the 18-stage target. |
-| 14 | Seven-stage Fusion | PARTIAL | Live in-memory 260-second path is tested; full safety interlocks and restart recovery remain. |
-| 15 | Exactly one Infinity output | PARTIAL | In-memory settlement is idempotent; save/reconnect replay and custody recovery remain. |
+| 14 | Seven-stage Fusion | PARTIAL | Live 260-second path and 1,500-input custody settlement are tested; full safety interlocks and restart recovery remain. |
+| 15 | Exactly one Infinity output | PARTIAL | Settlement creates one canonical output stack and one player-inventory custody record with idempotent replay; save/reconnect replay and custody recovery remain. |
 | 16 | Cloud save and recovery | PARTIAL | Owner-scoped CAS/RLS and local backup exist; two-device/process-restart recovery remains. |
 | 17 | Server authority and security | PARTIAL | Save boundary has owner-scoped controls; all economy/reward mutations are not proven server-authoritative. |
 | 18 | 60-minute wall-clock test | UNVERIFIED | Virtual 36,000 ticks are not 60 minutes of elapsed time. |
@@ -293,9 +293,12 @@ All 12 roadmap areas remain PARTIAL or UNVERIFIED; no final checklist item is CO
 
 ### CI and release boundary
 
-- Run [43348303525](https://github.com/Rockey-Jason/doldol-site/actions/runs/43348303525): static/runtime validation **SUCCESS**; Node unit suite **135/135 passed, 0 failed**; browser-regression was still **IN_PROGRESS** when this matrix entry was written and is not counted as a pass.
-- Prior full run [43135156090](https://github.com/Rockey-Jason/doldol-site/actions/runs/43135156090) succeeded on the previous HEAD, but does not replace current-HEAD E2E evidence.
-- PR #8 remains the separate Godot branch and is not integrated. PR #9 and #10 remain unmerged older development branches; no wholesale merge/cherry-pick was performed.
+- Current CI run [43787044004](https://github.com/Rockey-Jason/doldol-site/actions/runs/43787044004) **SUCCESS** on code checkpoint `3a4c8c57cb7420508471e524cb0145e19c3291c6`: static/runtime validation passed; Node suite **141/141 passed, 0 failed, 0 cancelled, 0 skipped**; Playwright browser regression **PASS**.
+- Browser smoke reported desktop `webgl` and mobile-emulation `webgl`; live Fusion tests verified 1,500 consumed input units, one canonical output custody record, idempotent replay and rollback on custody mismatch. Virtual soak passed **36,000 ticks** with ore balance 50,000 and coal balance 30,000.
+- The 36,000-tick run is virtual simulation, not 60 minutes of elapsed wall-clock time. Mobile viewport emulation is not physical Android/iOS testing; physical PC/mobile validation remains **UNVERIFIED**.
+- First attempt [43786962282](https://github.com/Rockey-Jason/doldol-site/actions/runs/43786962282) exposed a test-only assertion (`undefined` for an absent output key versus expected zero); the assertion was normalized and the full rerun above passed.
+- Main HEAD: `ac459063e65675bcddadde25babe447346b34043`. PR #11 remains open/draft/unmerged, mergeable false; current comparison is **375 ahead / 822 behind** from merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`.
+- PR #8 remains separate Godot with no file overlap. PR #9 overlaps `factory.js` and `e2e/factory-smoke.mjs`; PR #10 overlaps `factory.js`. Their older overlapping implementations were reviewed but not wholesale merged/cherry-picked.
 - No main merge, deployment, production DB mutation, real-user save mutation, or balance/reward mutation was performed.
 
 **Overall: NOT COMPLETE / NOT RELEASE-READY.** No final acceptance item is promoted to COMPLETE by this checkpoint.
@@ -341,3 +344,12 @@ No main merge, deployment, production database change, or live-user save/economy
 - **Main:** `4fa34b0fa1eb3afee4d858488af344a91e632e2b`. **PR #11:** open/draft/unmerged, mergeable false; 372 ahead / 793 behind main from merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`.
 - PR #8 remains separate Godot with no file overlap. PR #9 and #10 each overlap five files with PR #11; no wholesale merge/cherry-pick was performed.
 - No main merge, deployment, production DB change or live-user save/economy mutation was performed.
+## 2026-11-16 — live Infinity Fusion custody settlement
+
+- **Stage 5:** remains **PARTIAL / CRITICAL**. Live Infinity Fusion now consumes all 1,500 reserved input units through `completeProductionCustody` and records exactly one output stack under `PLAYER_INVENTORY` custody. The parent settlement transaction and 15 input-consumption entries survive custody snapshot rebuilds. Independent warehouse stock, demolition/salvage, all other owner-domain transfers, restart/reconnect recovery and global conservation remain open.
+- **Stage 10:** remains **PARTIAL**. The seven-stage / 260-second live path now has atomic input/output custody settlement. Full temperature/pressure/cooling/sensor/failure interlock acceptance, persisted restart/reconnect recovery and full campaign completion remain open.
+- **Checklist #8, #14 and #15:** remain **PARTIAL**; the new tests do not prove global item conservation, all safety interlocks or save/reconnect recovery. No acceptance item is promoted to COMPLETE.
+- **Code checkpoint:** `3a4c8c57cb7420508471e524cb0145e19c3291c6`.
+- **CI:** [43787044004](https://github.com/Rockey-Jason/doldol-site/actions/runs/43787044004) **SUCCESS**; Node **141/141**, Playwright **PASS**; desktop and mobile-emulation WebGL; virtual soak **36,000 ticks**, ore 50,000 / coal 30,000.
+- **Main:** `ac459063e65675bcddadde25babe447346b34043`. **PR #11:** open/draft/unmerged, mergeable false; **375 ahead / 822 behind** from merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`. PR #8 remains separate Godot; overlapping PR #9/#10 changes were reviewed and not cherry-picked.
+- Physical PC/Android/iOS tests, two-device cloud recovery and 60-minute elapsed wall-clock soak remain **UNVERIFIED**. No main merge, deployment, production DB change or live-user save/economy mutation was performed.

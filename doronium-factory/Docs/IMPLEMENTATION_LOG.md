@@ -342,3 +342,35 @@ No main merge, Pages/Render deployment, production DB/schema/permission/function
 - Physical Android/iOS/PC validation, two-device cloud recovery and the 60-minute elapsed wall-clock soak remain **UNVERIFIED**.
 
 PR #8 remains the separate Godot implementation and was not integrated. PR #9 overlaps five files with PR #11 and PR #10 overlaps five files; neither was wholesale merged or cherry-picked. No main merge, GitHub Pages/Render deployment, production DB/schema/permission/function change, real-user save mutation, or balance/reward mutation was performed.
+## 2026-11-16 — live Infinity Fusion custody settlement
+
+### Code changes
+
+- `fusion-runtime.js` now settles the canonical Infinity output through `completeProductionCustody`: every reserved allocation is consumed from its exact `ACTIVE_JOB` custody record under a stable `FUSION_COMPLETE:<jobID>` transaction, then exactly one output stack is registered as `PLAYER_INVENTORY` owned by `player`.
+- Qualified Fusion reservations must belong to `INFINITY:<jobID>`. The settlement records its custody transaction ID, validates the resulting ledger, and rolls back runtime inventory, reservations, output, stats, settlement journal and ownership ledger together if any custody step fails.
+- The live factory rebuilds the ownership snapshot immediately after reservation and immediately before the final Fusion tick. If the snapshot is invalid, Fusion is cancelled before starting or fails closed before consuming inputs.
+- Unit and browser tests now verify 1,500 consumed input units, one output custody record, 16 idempotent transaction entries (one parent plus 15 input entries), snapshot-rebuild journal retention, duplicate-settlement protection and preservation of all reserved inputs when custody validation fails.
+- First CI attempt [43786962282](https://github.com/Rockey-Jason/doldol-site/actions/runs/43786962282) failed only because the new rollback test expected zero where `stackTotals` intentionally returned `undefined` for an absent output key. The test assertion was normalized; no production-code defect was indicated by that failure.
+
+### Verification
+
+- **Code checkpoint:** `3a4c8c57cb7420508471e524cb0145e19c3291c6`.
+- Final CI run [43787044004](https://github.com/Rockey-Jason/doldol-site/actions/runs/43787044004): **SUCCESS**.
+- `validate-web-game`: **SUCCESS**; Node unit tests **141/141 passed, 0 failed, 0 cancelled, 0 skipped**.
+- Playwright `browser-regression`: **SUCCESS**; smoke result `PASS`; desktop renderer `webgl`, mobile-emulation renderer `webgl`.
+- The browser run passed the live Fusion custody assertions and virtual soak at **36,000 fixed ticks**; conservation fixture reported ore balance **50,000** and coal balance **30,000**.
+- This virtual soak is not a 60-minute elapsed wall-clock test. Mobile emulation is not physical Android/iOS hardware testing.
+
+### Remaining highest-priority gaps
+
+- Stage 5 remains **PARTIAL / CRITICAL**: independent warehouse stock, demolition/salvage, every other owner-domain transfer, restart/reconnect recovery and global cross-domain conservation remain open.
+- Stage 10 remains **PARTIAL**: full safety interlocks, fault/cooling/sensor coverage and persisted restart/reconnect recovery remain open; legacy already-consumed jobs do not retroactively gain per-input consumption records.
+- Six-fluid live integration, canonical recipe source-of-truth, all skill effects, the 2,048m×2,048m world migration, full contract catalog, all-machine failure coverage and the complete campaign remain incomplete.
+- Physical PC/Android/iOS validation, two-device cloud recovery and the 60-minute elapsed wall-clock soak remain **UNVERIFIED**.
+
+### Branch and release boundary
+
+- Main HEAD: `ac459063e65675bcddadde25babe447346b34043`.
+- PR #11 remains open/draft/unmerged and is not mergeable. It is **375 commits ahead / 822 behind** main from merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`.
+- PR #8 remains the separate Godot implementation and was not integrated. PR #9 overlaps `factory.js` and `e2e/factory-smoke.mjs`; PR #10 overlaps `factory.js`. Their older overlapping changes were reviewed but not wholesale merged or cherry-picked.
+- No main merge, GitHub Pages/Render deployment, production DB/schema/permission/function change, real-user save mutation or balance/reward mutation was performed.
