@@ -2286,6 +2286,155 @@ textarea {
 @media(max-height:520px) and (orientation:landscape){#achievementPopup{top:max(6px,env(safe-area-inset-top));max-height:calc(100dvh - 12px)}#achievementPopup .업적알림-inner{padding:10px 13px}}
 @media(prefers-reduced-motion:reduce){#achievementPopup,#achievementPopup::after,#achievementPopup .업적알림아이콘,#achievementPopup .업적알림아이콘 span,#achievementPopup .업적알림아이콘::after,#achievementPopup .업적파티클::before{animation:none!important}}
 
+
+/* =========================================================
+   DORI NEWS — premium editorial redesign
+========================================================= */
+.신문헤더{
+  overflow:hidden;
+  border:1px solid rgba(173,190,255,.2);
+  border-radius:28px;
+  background:
+    radial-gradient(ellipse at 92% 0%,rgba(132,151,255,.2),transparent 38%),
+    linear-gradient(145deg,rgba(25,34,78,.94),rgba(8,12,39,.9));
+  box-shadow:0 28px 80px rgba(0,0,0,.38),0 0 42px rgba(102,126,255,.075),inset 0 1px 0 rgba(255,255,255,.08);
+  transition:border-color .35s ease,box-shadow .4s ease,transform .4s cubic-bezier(.2,.8,.2,1);
+}
+.신문헤더::before{
+  width:280px;height:280px;right:-100px;top:-165px;
+  background:radial-gradient(circle,rgba(154,169,255,.25),rgba(94,117,255,.08) 45%,transparent 72%);
+  filter:blur(22px);
+  animation:신문헤더빛 12s ease-in-out infinite alternate;
+}
+.신문헤더작은글{
+  color:#c3ceff;
+  letter-spacing:.16em;
+  text-shadow:0 0 22px rgba(142,160,255,.28);
+}
+#제목{
+  letter-spacing:-.045em;
+  text-shadow:0 8px 34px rgba(0,0,0,.24);
+}
+.본문카드{
+  overflow:hidden;
+  isolation:isolate;
+  border:1px solid rgba(165,186,239,.17);
+  border-radius:28px;
+  background:
+    radial-gradient(ellipse at 8% 0%,rgba(92,118,207,.13),transparent 34%),
+    radial-gradient(ellipse at 100% 100%,rgba(60,111,171,.09),transparent 36%),
+    linear-gradient(145deg,rgba(12,19,52,.94),rgba(6,10,31,.94));
+  box-shadow:0 30px 85px rgba(0,0,0,.4),0 0 44px rgba(72,105,210,.065),inset 0 1px 0 rgba(255,255,255,.065);
+  transition:border-color .35s ease,box-shadow .4s ease;
+}
+.본문카드::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  top:0;left:8%;right:8%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(191,207,255,.42),transparent);
+  pointer-events:none;
+}
+.신문상단정보{position:relative;z-index:1;margin-bottom:12px}
+.신문페이지번호{
+  display:inline-flex;
+  align-items:center;
+  min-height:30px;
+  padding:5px 12px;
+  border:1px solid rgba(237,211,151,.25);
+  border-radius:999px;
+  color:#f2dfb3;
+  background:linear-gradient(120deg,rgba(231,196,123,.12),rgba(255,255,255,.035));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+  font-size:12px;
+  letter-spacing:.025em;
+}
+.신문페이지안내{
+  color:rgba(191,204,233,.72);
+  letter-spacing:.005em;
+}
+.신문상단진행{
+  position:relative;
+  height:5px;
+  margin-bottom:30px;
+  border:1px solid rgba(173,192,245,.09);
+  background:rgba(2,7,24,.72);
+  box-shadow:inset 0 1px 4px rgba(0,0,0,.35),0 5px 18px rgba(0,0,0,.12);
+}
+#신문상단진행바{
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(90deg,#6f83ed 0%,#7ab9ff 48%,#d8c48f 100%);
+  background-size:180% 100%;
+  box-shadow:0 0 12px rgba(119,164,255,.4),0 0 24px rgba(113,151,255,.18);
+  animation:신문진행빛 4s ease-in-out infinite alternate;
+}
+#신문상단진행바::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(105deg,transparent 25%,rgba(255,255,255,.52) 50%,transparent 72%);
+  transform:translateX(-110%);
+  animation:신문진행반짝 3.6s ease-in-out infinite;
+}
+#내용{
+  color:rgba(245,247,255,.94);
+  font-size:clamp(17px,1.45vw,20px);
+  line-height:1.98;
+  letter-spacing:.008em;
+  text-wrap:pretty;
+}
+#내용.신문페이지등장{
+  animation:신문페이지고급등장 .48s cubic-bezier(.16,1,.3,1) both;
+}
+#퀴즈{
+  border:1px solid rgba(140,162,245,.2);
+  border-radius:26px;
+  background:
+    radial-gradient(ellipse at 100% 0%,rgba(102,127,239,.14),transparent 42%),
+    linear-gradient(145deg,rgba(22,29,72,.95),rgba(8,13,39,.94));
+  box-shadow:0 24px 68px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.055);
+  transition:border-color .3s ease,box-shadow .35s ease,transform .35s cubic-bezier(.2,.8,.2,1);
+}
+#객관식 label{
+  border-color:rgba(169,188,238,.12);
+  background:linear-gradient(110deg,rgba(255,255,255,.045),rgba(255,255,255,.018));
+  transition:transform .25s cubic-bezier(.2,.8,.2,1),border-color .25s ease,background .25s ease,box-shadow .25s ease;
+}
+#객관식 label:has(input:checked){
+  border-color:rgba(139,170,255,.55);
+  background:linear-gradient(110deg,rgba(92,128,220,.2),rgba(255,255,255,.04));
+  box-shadow:0 0 0 3px rgba(112,150,255,.08);
+}
+#제출,#읽음버튼,.신문버튼{
+  transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease,filter .25s ease,background .25s ease;
+}
+#제출:hover:not(:disabled),#읽음버튼:hover:not(:disabled),.신문버튼:hover:not(:disabled){
+  transform:translateY(-2px);
+  filter:brightness(1.08);
+  box-shadow:0 12px 30px rgba(73,104,210,.2);
+}
+#제출:active:not(:disabled),#읽음버튼:active:not(:disabled),.신문버튼:active:not(:disabled){transform:translateY(0) scale(.985)}
+@keyframes 신문헤더빛{from{transform:translate3d(-10px,0,0) scale(.94);opacity:.7}to{transform:translate3d(8px,10px,0) scale(1.08);opacity:1}}
+@keyframes 신문진행빛{from{background-position:0% 50%}to{background-position:100% 50%}}
+@keyframes 신문진행반짝{0%,35%{transform:translateX(-110%)}70%,100%{transform:translateX(110%)}}
+@keyframes 신문페이지고급등장{
+  0%{opacity:.12;filter:blur(3px);transform:translate3d(0,13px,0) scale(.992)}
+  65%{opacity:1;filter:blur(0);transform:translate3d(0,-2px,0) scale(1.002)}
+  100%{opacity:1;filter:blur(0);transform:translate3d(0,0,0) scale(1)}
+}
+@media(max-width:700px){
+  .신문헤더,.본문카드,#퀴즈{border-radius:21px}
+  .신문상단진행{margin-bottom:22px}
+  #내용{font-size:17px;line-height:1.9}
+  .신문페이지안내{max-width:100%;text-align:left}
+}
+@media(prefers-reduced-motion:reduce){
+  .신문헤더::before,#신문상단진행바,#신문상단진행바::after{animation:none!important}
+  #내용.신문페이지등장{animation:none!important}
+}
+
 </style>
 
 <link rel="stylesheet" href="css/doldol-theme.css?v=20261112-site-background-1">
