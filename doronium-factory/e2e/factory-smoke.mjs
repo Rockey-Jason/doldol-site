@@ -221,6 +221,25 @@ try {
   assert.ok(soak.inventory > 0, "Conveyor must route finished plates into storage");
   assert.equal(soak.ledger.oreBalance, 50000, "Ore + in-process and finished-plate equivalent must be conserved");
   assert.equal(soak.ledger.coalBalance, 30000, "Coal + in-process and finished-plate equivalent must be conserved");
+
+  const fusionSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.prepareFusionTest());
+  assert.ok(fusionSetup.power.gen >= 40 && fusionSetup.power.ratio >= 0.8, "Fusion test rig must have sufficient power");
+  await openPanel(desktop, "factory");
+  await desktop.locator("#machine-fusion").click();
+  await desktop.locator('[data-modal-action="1"]').click();
+  const fusionReserved = await desktop.evaluate(() => window.__doroniumFactoryTest.fusionStatus());
+  assert.equal(fusionReserved.job.inputCustody, "reserved", "Starting Fusion must reserve inputs instead of immediately consuming them");
+  assert.equal(fusionReserved.activeReservations, 15, "Every one of the 15 variant inputs must receive one reservation");
+  assert.equal(fusionReserved.valid, true, "Fusion reservations must preserve runtime invariants");
+  assert.ok(Object.values(fusionReserved.stock).every(value => value === 100), "Reserved inputs must remain visible in warehouse totals");
+  assert.ok(Object.values(fusionReserved.available).every(value => value === 0), "Reserved inputs must not be spendable elsewhere");
+  assert.equal(await desktop.evaluate(() => window.__doroniumFactoryTest.attemptSpendFusionInput()), false, "Other transactions must not spend a reserved Fusion input");
+  const fusionRecovery = await desktop.evaluate(() => window.__doroniumFactoryTest.removeFusionMachineForRecoveryTest());
+  assert.equal(fusionRecovery.status.job, null, "A missing Fusion machine must safely cancel the job");
+  assert.equal(fusionRecovery.status.activeReservations, 0, "Recovery must release all 15 reservations");
+  assert.equal(fusionRecovery.status.valid, true, "Recovered Fusion state must pass runtime validation");
+  assert.ok(Object.values(fusionRecovery.status.available).every(value => value === 100), "Recovery must return all 1,500 reserved inputs unchanged");
+
   await desktop.screenshot({ path: path.join(artifactDir, "doronium-desktop.png"), fullPage: true });
   // Free the desktop WebGL context before creating the mobile WebGL context.
   await desktop.close();
