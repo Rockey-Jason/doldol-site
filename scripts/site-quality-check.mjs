@@ -163,7 +163,9 @@ for (const page of sharedUiPages) {
     continue;
   }
   const html = fs.readFileSync(absolute, "utf8");
-  if (!/(?:doldol-theme\\.css|dori-foundation\\.css|doldol-theme\\.js)/i.test(html)) {
+  const hasSharedUi = ["doldol-theme.css", "dori-foundation.css", "doldol-theme.js"]
+    .some(token => html.toLowerCase().includes(token));
+  if (!hasSharedUi) {
     errors.push(page + ": missing the shared Dori UI foundation or transition engine");
   }
 }
