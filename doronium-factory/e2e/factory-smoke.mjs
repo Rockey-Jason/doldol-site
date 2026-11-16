@@ -271,6 +271,17 @@ try {
   assert.equal(reservationGuards.construction.buildingsAfter, reservationGuards.construction.buildingsBefore, "A rejected construction must not place a free building");
   assert.deepEqual(reservationGuards.coalGenerator, { fuelTimer: 0, status: "NO_INPUT", power: 0, stock: 1, available: 0, runtimeValid: true }, "A coal generator must not receive free fuel from a reserved coal stack");
 
+  const provenance = await desktop.evaluate(() => window.__doroniumFactoryTest.reservationMetadataTest());
+  assert.ok(Math.abs(provenance.aggregateMeta.quality - 84.5) < 0.001, "The compatibility inventory metadata should reflect both high-grade reserved and lower-grade free stacks");
+  assert.equal(provenance.suppliedMeta.quality, 70, "Machine input quality must come from the actual free stacks consumed, not the aggregate inventory average");
+  assert.equal(provenance.suppliedMeta.purity, 75, "Machine input purity must preserve the actual consumed stack provenance");
+  assert.equal(provenance.suppliedMeta.synthetic, false, "Machine input synthetic status must come from the actual consumed stacks");
+  assert.equal(provenance.reservedStack[0].stack.quality, 99, "Reserved high-grade material must remain in its original stack");
+  assert.equal(provenance.stock, 3, "Manual supply must leave the reserved quantity untouched");
+  assert.equal(provenance.available, 0, "The remaining high-grade stack must remain locked");
+  assert.deepEqual(provenance.machineInput, { doronium_normal: 3, quartz: 2, water: 8 }, "Machine supply must transfer the intended recipe quantities");
+  assert.equal(provenance.runtimeValid, true, "Provenance-preserving supply must maintain valid runtime state");
+
   await desktop.screenshot({ path: path.join(artifactDir, "doronium-desktop.png"), fullPage: true });
   // Free the desktop WebGL context before creating the mobile WebGL context.
   await desktop.close();
