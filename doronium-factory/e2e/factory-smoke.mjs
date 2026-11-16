@@ -234,6 +234,21 @@ try {
   assert.ok(Object.values(fusionReserved.stock).every(value => value === 100), "Reserved inputs must remain visible in warehouse totals");
   assert.ok(Object.values(fusionReserved.available).every(value => value === 0), "Reserved inputs must not be spendable elsewhere");
   assert.equal(await desktop.evaluate(() => window.__doroniumFactoryTest.attemptSpendFusionInput()), false, "Other transactions must not spend a reserved Fusion input");
+
+  await desktop.locator("#machine-fusion-cancel").click();
+  const fusionCancelled = await desktop.evaluate(() => window.__doroniumFactoryTest.fusionStatus());
+  assert.equal(fusionCancelled.job, null, "The player must be able to cancel an active Fusion job");
+  assert.equal(fusionCancelled.activeReservations, 0, "Manual cancellation must release all 15 input reservations");
+  assert.equal(fusionCancelled.valid, true, "Manually cancelled Fusion state must remain valid");
+  assert.ok(Object.values(fusionCancelled.available).every(value => value === 100), "Manual cancellation must return all 1,500 inputs");
+
+  await desktop.locator("#machine-fusion").click();
+  await desktop.locator('[data-modal-action="1"]').click();
+  const fusionRestarted = await desktop.evaluate(() => window.__doroniumFactoryTest.fusionStatus());
+  assert.equal(fusionRestarted.job.inputCustody, "reserved", "Fusion must be restartable after a safe cancellation");
+  assert.equal(fusionRestarted.activeReservations, 15, "Restart must create one fresh reservation per variant");
+  assert.equal(await desktop.evaluate(() => window.__doroniumFactoryTest.attemptSpendFusionInput()), false, "Restarted Fusion inputs must again be locked");
+
   const fusionRecovery = await desktop.evaluate(() => window.__doroniumFactoryTest.removeFusionMachineForRecoveryTest());
   assert.equal(fusionRecovery.status.job, null, "A missing Fusion machine must safely cancel the job");
   assert.equal(fusionRecovery.status.activeReservations, 0, "Recovery must release all 15 reservations");
