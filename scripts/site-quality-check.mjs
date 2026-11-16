@@ -136,6 +136,38 @@ for (const file of htmlFiles) {
   }
 }
 
+
+/* Core product pages must stay connected to the shared Dori UI layer.
+   Full-screen game runtimes with intentionally independent art direction are excluded. */
+const sharedUiPages = [
+  "index.html",
+  "dori-life.html",
+  "dori-throw.html",
+  "dori-full-throttle.html",
+  "gamepage.html",
+  "dori-bank.html",
+  "doldolstock.html",
+  "readingrockeynews.html",
+  "dori-pass.html",
+  "settings.html",
+  "Randombox.html",
+  "dori-issues.html",
+  "dori-feedback.html",
+  "dori-ai.html",
+  "dori-world/index.html"
+];
+for (const page of sharedUiPages) {
+  const absolute = path.resolve(ROOT, page);
+  if (!fs.existsSync(absolute)) {
+    errors.push("Shared UI page is missing: " + page);
+    continue;
+  }
+  const html = fs.readFileSync(absolute, "utf8");
+  if (!/(?:doldol-theme\\.css|dori-foundation\\.css|doldol-theme\\.js)/i.test(html)) {
+    errors.push(page + ": missing the shared Dori UI foundation or transition engine");
+  }
+}
+
 for (const file of jsFiles) {
   const result = spawnSync(process.execPath, ["--check", file], { encoding: "utf8", cwd: ROOT });
   if (result.status !== 0) {
