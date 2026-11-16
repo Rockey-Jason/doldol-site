@@ -628,6 +628,9 @@ textarea {
     font-weight:
         400;
 
+    cursor:
+        pointer;
+
     line-height:
         1.9;
 
@@ -3325,6 +3328,7 @@ function 신문스와이프설정() {
     let 시작위치 = null;
     let 휠누적값 = 0;
     let 휠타이머 = null;
+    let 클릭무시만료 = 0;
     const 무시할대상 = "button, a, input, textarea, select, [contenteditable='true']";
 
     // 터치/펜뿐 아니라 PC 마우스 왼쪽 버튼 드래그도 처리합니다.
@@ -3357,6 +3361,7 @@ function 신문스와이프설정() {
         if (Math.abs(이동X) < 기준거리) return;
         if (Math.abs(이동X) <= Math.abs(이동Y) * 1.25) return;
 
+        클릭무시만료 = Date.now() + 500;
         신문페이지이동(이동X < 0 ? 1 : -1);
     }, { passive: true });
 
@@ -3383,6 +3388,24 @@ function 신문스와이프설정() {
             신문페이지이동(이동량 > 0 ? 1 : -1);
         }, 140);
     }, { passive: false });
+
+    // 본문 왼쪽을 클릭하면 이전 페이지, 오른쪽을 클릭하면 다음 페이지로 이동합니다.
+    카드.addEventListener("click", event => {
+        if (신문페이지목록.length <= 1) return;
+        if (Date.now() < 클릭무시만료) return;
+
+        const 대상 = event.target instanceof Element ? event.target : event.target?.parentElement;
+        if (!대상?.closest("#내용")) return;
+        if (대상.closest(무시할대상)) return;
+        if (window.getSelection?.()?.toString()) return;
+
+        const 본문영역 = $("내용");
+        const 영역 = 본문영역?.getBoundingClientRect();
+        if (!영역 || 영역.width <= 0) return;
+
+        const 클릭비율 = (event.clientX - 영역.left) / 영역.width;
+        신문페이지이동(클릭비율 < 0.5 ? -1 : 1);
+    });
 }
 
 
