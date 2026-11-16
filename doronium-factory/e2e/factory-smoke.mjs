@@ -271,6 +271,16 @@ try {
   assert.equal(reservationGuards.construction.buildingsAfter, reservationGuards.construction.buildingsBefore, "A rejected construction must not place a free building");
   assert.deepEqual(reservationGuards.coalGenerator, { fuelTimer: 0, status: "NO_INPUT", power: 0, stock: 1, available: 0, runtimeValid: true }, "A coal generator must not receive free fuel from a reserved coal stack");
 
+  const syntheticIsolation = await desktop.evaluate(() => window.__doroniumFactoryTest.syntheticReservationIsolationTest());
+  assert.equal(syntheticIsolation.aggregate.synthetic, true, "Legacy aggregate metadata should reflect the reserved synthetic stack in this test");
+  assert.equal(syntheticIsolation.errorCode, null, "A reactor must not reject non-synthetic inputs because an unrelated synthetic stack is reserved");
+  assert.equal(syntheticIsolation.activeMeta.synthetic, false, "The reactor must consume only the available non-synthetic Dori Meat");
+  assert.equal(syntheticIsolation.activeMeta.quality, 96, "Reactor input quality must come from the available non-synthetic stack");
+  assert.equal(syntheticIsolation.total, 10, "The reserved synthetic stack must remain in total inventory");
+  assert.equal(syntheticIsolation.available, 0, "All remaining Dori Meat should be reserved after the valid batch is consumed");
+  assert.deepEqual(syntheticIsolation.reservedStack, [true], "The separately reserved synthetic stack must remain untouched");
+  assert.equal(syntheticIsolation.runtimeValid, true, "Synthetic reservation isolation must preserve runtime invariants");
+
   const provenance = await desktop.evaluate(() => window.__doroniumFactoryTest.reservationMetadataTest());
   assert.ok(Math.abs(provenance.aggregateMeta.quality - 84.5) < 0.001, "The compatibility inventory metadata should reflect both high-grade reserved and lower-grade free stacks");
   assert.equal(provenance.suppliedMeta.quality, 70, "Machine input quality must come from the actual free stacks consumed, not the aggregate inventory average");
