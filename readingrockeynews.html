@@ -564,6 +564,9 @@ textarea {
     touch-action:
         pan-y pinch-zoom;
 
+    cursor:
+        grab;
+
     margin-top:
         18px;
 
@@ -592,6 +595,10 @@ textarea {
     animation:
         본문등장 .75s ease .08s both;
 
+}
+
+.본문카드.신문드래그중 {
+    cursor:grabbing;
 }
 
 
@@ -3316,10 +3323,13 @@ function 신문스와이프설정() {
 
     카드.dataset.newsSwipeBound = "true";
     let 시작위치 = null;
+    let 휠누적값 = 0;
+    let 휠타이머 = null;
     const 무시할대상 = "button, a, input, textarea, select, [contenteditable='true']";
 
+    // 터치/펜뿐 아니라 PC 마우스 왼쪽 버튼 드래그도 처리합니다.
     카드.addEventListener("pointerdown", event => {
-        if (!event.isPrimary || event.pointerType === "mouse" || event.button !== 0) return;
+        if (!event.isPrimary || event.button !== 0) return;
         if (신문페이지목록.length <= 1) return;
 
         const 대상 = event.target instanceof Element ? event.target : event.target?.parentElement;
@@ -3330,6 +3340,8 @@ function 신문스와이프설정() {
             x: event.clientX,
             y: event.clientY
         };
+
+        if (event.pointerType === "mouse") 카드.classList.add("신문드래그중");
     }, { passive: true });
 
     window.addEventListener("pointerup", event => {
@@ -3337,9 +3349,11 @@ function 신문스와이프설정() {
 
         const 이동X = event.clientX - 시작위치.x;
         const 이동Y = event.clientY - 시작위치.y;
+        const 마우스드래그 = event.pointerType === "mouse";
         시작위치 = null;
+        카드.classList.remove("신문드래그중");
 
-        const 기준거리 = Math.max(55, Math.min(95, 카드.clientWidth * 0.12));
+        const 기준거리 = 마우스드래그 ? 45 : Math.max(55, Math.min(95, 카드.clientWidth * 0.12));
         if (Math.abs(이동X) < 기준거리) return;
         if (Math.abs(이동X) <= Math.abs(이동Y) * 1.25) return;
 
@@ -3348,7 +3362,27 @@ function 신문스와이프설정() {
 
     window.addEventListener("pointercancel", () => {
         시작위치 = null;
+        카드.classList.remove("신문드래그중");
     }, { passive: true });
+
+    // 트랙패드에서 좌우로 쓸어 넘기는 가로 휠 제스처도 한 번의 페이지 이동으로 묶습니다.
+    카드.addEventListener("wheel", event => {
+        if (신문페이지목록.length <= 1) return;
+        if (Math.abs(event.deltaX) <= Math.abs(event.deltaY) * 1.25) return;
+
+        event.preventDefault();
+        휠누적값 += event.deltaX;
+
+        window.clearTimeout(휠타이머);
+        휠타이머 = window.setTimeout(() => {
+            const 이동량 = 휠누적값;
+            휠누적값 = 0;
+            휠타이머 = null;
+
+            if (Math.abs(이동량) < 55) return;
+            신문페이지이동(이동량 > 0 ? 1 : -1);
+        }, 140);
+    }, { passive: false });
 }
 
 
