@@ -26,6 +26,20 @@ jobs:
       - name: Parse game JavaScript
         run: |
           node --check doronium-factory/factory.js
+          node --check doronium-factory/fluid-network.js
+          node --check doronium-factory/conveyor-network.js
+          node --check doronium-factory/conveyor-network.test.mjs
+          node --check doronium-factory/fluid-network.test.mjs
+          node --check doronium-factory/power-network.js
+          node --check doronium-factory/power-network.test.mjs
+          node --check doronium-factory/cloud-save-cas.js
+          node --check doronium-factory/cloud-save-cas.test.mjs
+          node --check doronium-factory/deterministic-runtime.js
+          node --check doronium-factory/deterministic-runtime.test.mjs
+          node --check doronium-factory/item-custody.js
+          node --check doronium-factory/item-custody.test.mjs
+          node --check doronium-factory/doronium-catalog.js
+          node --check doronium-factory/doronium-catalog.test.mjs
           node --check doronium-factory/simulation-core.js
           node --check doronium-factory/simulation-core.test.mjs
           node --check doronium-factory/game-data-validation.js
@@ -38,7 +52,7 @@ jobs:
           node --check doronium-factory/skill-runtime.test.mjs
           node --check doronium-factory/save-store.js
           node --check doronium-factory/save-store.test.mjs
-          node --test doronium-factory/simulation-core.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs doronium-factory/failure-runtime.test.mjs doronium-factory/skill-runtime.test.mjs doronium-factory/save-store.test.mjs
+          node --test doronium-factory/conveyor-network.test.mjs doronium-factory/fluid-network.test.mjs doronium-factory/power-network.test.mjs doronium-factory/cloud-save-cas.test.mjs doronium-factory/deterministic-runtime.test.mjs doronium-factory/item-custody.test.mjs doronium-factory/doronium-catalog.test.mjs doronium-factory/simulation-core.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs doronium-factory/failure-runtime.test.mjs doronium-factory/skill-runtime.test.mjs doronium-factory/save-store.test.mjs
           node --check doronium-factory/world3d.js
           node --check doronium-factory/terrain-system.js
           node --check doronium-factory/e2e/factory-smoke.mjs
@@ -47,6 +61,13 @@ jobs:
           test -s doronium-factory/index.html
           test -s doronium-factory/factory.css
           test -s doronium-factory/factory.js
+          test -s doronium-factory/cloud-save-cas.js
+          test -s doronium-factory/power-network.js
+          test -s doronium-factory/fluid-network.js
+          test -s doronium-factory/conveyor-network.js
+          test -s doronium-factory/deterministic-runtime.js
+          test -s doronium-factory/item-custody.js
+          test -s doronium-factory/doronium-catalog.js
           test -s doronium-factory/simulation-core.js
           test -s doronium-factory/simulation-core.test.mjs
           test -s doronium-factory/game-data-validation.js
