@@ -650,6 +650,26 @@ textarea {
 /* =====================================================
    신문 본문 상단 진행 표시
 ===================================================== */
+.신문상단정보{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:7px 14px;
+    width:100%;
+    margin:0 0 10px;
+}
+.신문페이지번호{
+    color:#f4e3b2;
+    font-size:13px;
+    white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+}
+.신문페이지안내{
+    color:#9eadd2;
+    font-size:12px;
+    text-align:right;
+}
 .신문상단진행{
     flex:0 0 auto;
     width:100%;
@@ -671,6 +691,9 @@ textarea {
 #내용.신문페이지등장{animation:신문페이지등장 .28s cubic-bezier(.22,1,.36,1) both}
 @keyframes 신문페이지등장{from{opacity:.35;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:700px){
+    .신문상단정보{gap:6px 10px;margin-bottom:9px}
+    .신문페이지번호{font-size:12px}
+    .신문페이지안내{font-size:11px}
     .신문상단진행{height:4px;margin-bottom:22px}
 }
 @media(prefers-reduced-motion:reduce){#신문상단진행바{transition:none}#내용.신문페이지등장{animation:none}}
@@ -2359,6 +2382,10 @@ textarea {
 
         <section class="본문카드">
 
+            <div class="신문상단정보">
+                <span id="신문페이지번호" class="신문페이지번호" aria-live="polite">1 / 1 페이지</span>
+                <span class="신문페이지안내">다음 페이지: 왼쪽으로 밀기 또는 오른쪽 클릭</span>
+            </div>
             <div id="신문상단진행" class="신문상단진행" role="progressbar" aria-label="신문 본문 읽기 진행률" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100">
                 <span id="신문상단진행바"></span>
             </div>
@@ -3288,6 +3315,7 @@ function 신문페이지렌더링(부드럽게이동 = false) {
     const 본문 = $("내용");
     const 진행 = $("신문상단진행");
     const 진행바 = $("신문상단진행바");
+    const 페이지번호표시 = $("신문페이지번호");
     if (!본문 || !진행 || !진행바 || !신문페이지목록.length) return;
 
     신문스와이프설정();
@@ -3295,6 +3323,8 @@ function 신문페이지렌더링(부드럽게이동 = false) {
     현재신문페이지 = Math.max(0, Math.min(현재신문페이지, 신문페이지목록.length - 1));
     const 페이지 = 신문페이지목록[현재신문페이지];
     const 전체페이지수 = 신문페이지목록.length;
+
+    if (페이지번호표시) 페이지번호표시.textContent = (현재신문페이지 + 1) + " / " + 전체페이지수 + " 페이지";
 
     본문.innerHTML = 페이지.html;
     본문.classList.remove("신문페이지등장");
