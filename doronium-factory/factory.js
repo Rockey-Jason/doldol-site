@@ -913,6 +913,7 @@ if(E2E_MODE){
    supplyMachine(machine);
    $("sell-resource").value="doronium_blue";$("sell-amount").value="100";
    const moneyBefore=S.money,soldBefore=S.stats.sold;sellItems();
+   const moneyAfterSale=S.money,soldAfterSale=S.stats.sold;
    const survivalBefore=structuredClone(S.survival);consumeFood();drinkWater();
    S.player.layer="surface";S.activeTool="axe";
    const tree={type:"dori",amount:1,cooldown:0,seed:123};S.nodes[surfaceKey(72,52)]=tree;
@@ -926,7 +927,7 @@ if(E2E_MODE){
    const reservedMaterialBuild=constructionPosition?placeBuilding("beltAdaptive",constructionPosition.x,constructionPosition.y):false;
    const construction={attempted:!!constructionPosition,placed:reservedMaterialBuild,moneyBefore:moneyBeforeBuild,moneyAfter:S.money,buildingsBefore,buildingsAfter:S.buildings.length};
    const reservationResults={
-    machineInput:{...machine.input},moneyBefore,moneyAfter:S.money,soldBefore,soldAfter:S.stats.sold,
+    machineInput:{...machine.input},moneyBefore,moneyAfter:moneyAfterSale,soldBefore,soldAfter:soldAfterSale,
     survivalBefore,survivalAfter:structuredClone(S.survival),
     tree:{cooldown:tree.cooldown,meat:itemCount("doriMeat")},
     farm:{status:farm.status,progress:farm.progress,meat:itemCount("doriMeat")},
