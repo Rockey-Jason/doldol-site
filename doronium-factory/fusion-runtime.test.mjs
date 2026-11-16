@@ -107,7 +107,7 @@ test("Fusion custody mismatch fails closed and preserves all 1500 reserved input
  s.ownershipLedger=ledger;s.ownershipLedgerValidation=validateOwnershipState(ledger);
  let result;for(let i=0;i<2600;i++)result=tickInfinityFusion(s,{deltaSeconds:.1,powerRatio:1});
  assert.equal(result.status,"ERROR");assert.equal(s.fusionJob.errorCode,"FUSION_CUSTODY_COMMIT_FAILED");
- assert.equal(stackTotals(s)[CANONICAL_INFINITY_DORONUM_ID],0);assert.equal(CANONICAL_DORONUM_IDS.reduce((n,id)=>n+stackTotals(s)[id],0),1500);
+ assert.equal(stackTotals(s)[CANONICAL_INFINITY_DORONUM_ID]||0,0);assert.equal(CANONICAL_DORONUM_IDS.reduce((n,id)=>n+stackTotals(s)[id],0),1500);
  assert.equal(Object.values(s.runtime.reservations).filter(item=>item.status==="reserved").length,15);
  assert.equal(s.ownershipLedger.consumed.length,0);assert.equal(s.fusionDone,false);
 });
