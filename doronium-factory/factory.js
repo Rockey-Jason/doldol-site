@@ -5,6 +5,7 @@ import { validateGameData } from "./game-data-validation.js?v=3";
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
 import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, awardSkillPoints, unlockSkill, skillNodeStatus, calculateSkillBonuses, validateSkillTree, validateSkillState } from "./skill-runtime.js?v=1";
 import { createSaveEnvelope, decodeSave, readBestSave, restoreSaveCandidate, validateSaveEnvelope, writeSaveEnvelope } from "./save-store.js?v=1";
+import { reserveFusionInputs, validateFusionReservations, releaseFusionInputs, commitFusionInputs } from "./fusion-runtime.js?v=1";
 let createClient = null;
 
 /* DORONIUM FACTORY — INFINITE INDUSTRY
@@ -461,12 +462,60 @@ function harvestNode(x,y,node){if(S.player.layer!=="surface"){toast("지하 광�
 const map={wood:"wood",water:"water"};const id=map[node.type];if(!id)return;const amount=Math.min(node.amount,node.type==="wood"||node.type==="stone"?3:node.type==="water"?5:node.type==="diamond"?1:2);node.amount-=amount;if(node.amount<=0)markVisibilityDirty();const q=80+Math.floor((node.seed%1900)/100);addItem(id,amount,{quality:q,purity:node.type==="water"?100:85,synthetic:false});S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;log(RESOURCE[id].name+" 채집 · "+fmt(amount)+"개");toast(RESOURCE[id].name+" +"+fmt(amount));playTone(420,.07,"triangle");questCheck();renderAll();drawWorld()}
 function collectOutput(b){if(!b.output){toast("회수할 출력물이 없습니다.","warn");return}addItem(b.output.id,b.output.qty,b.output.meta,false);toast(RESOURCE[b.output.id].name+" "+fmt(b.output.qty)+"개 회수");log("출력 회수 · "+RESOURCE[b.output.id].name);clearCompletionBuffer(b);b.status="IDLE";markDirty();renderAll()}
 function supplyMachine(b){const r=recipeFor(b);if(!r){toast("이 시설은 수동 투입을 지원하지 않습니다.");return}let moved=0;for(const[id,n]of Object.entries(r.inputs)){const need=Math.max(0,n-(b.input?.[id]||0));const amount=Math.min(need,itemCount(id));if(amount>0){const m=S.meta[id]||{quality:90,purity:90,synthetic:false};takeItem(id,amount);addInput(b,id,amount,m);moved+=amount}}if(moved){toast("원료 "+moved+"개 투입 완료");markDirty()}else toast("투입 가능한 원료가 없습니다.","warn");renderMachineDetails();renderInventory()}
-function removeBuilding(b){markSceneDirty();const d=buildingDef(b.type);const refund=Math.floor(d.cost*.55);S.money+=refund;for(const[id,n]of Object.entries(d.materials||{})){addItem(id,Math.floor(n*.5),{},false)}S.buildings=S.buildings.filter(x=>x.uid!==b.uid);if(b.type==="relay"){const i=S.sites.relay.findIndex(p=>p.x===b.x&&p.y===b.y);if(i>=0)S.relaySites[i]=false}if(b.type==="core")S.corePlaced=false;selectedBuilding=null;log(d.name+" 해체 · "+refund+" D 환급");toast("시설 해체 · "+refund+" D 환급");markDirty();renderAll()}
+function removeBuilding(b){if(b.type==="fusion"&&S.fusionJob){toast("인피니티 퓨전 진행 중에는 퓨전 설비를 해체할 수 없습니다.","warn");return false}markSceneDirty();const d=buildingDef(b.type);const refund=Math.floor(d.cost*.55);S.money+=refund;for(const[id,n]of Object.entries(d.materials||{})){addItem(id,Math.floor(n*.5),{},false)}S.buildings=S.buildings.filter(x=>x.uid!==b.uid);if(b.type==="relay"){const i=S.sites.relay.findIndex(p=>p.x===b.x&&p.y===b.y);if(i>=0)S.relaySites[i]=false}if(b.type==="core")S.corePlaced=false;selectedBuilding=null;log(d.name+" 해체 · "+refund+" D 환급");toast("시설 해체 · "+refund+" D 환급");markDirty();renderAll()}
 function chooseVariant(b){const choices=VARIANTS.filter(id=>id!=="doronium_normal");const body='<p>이 변환 연구로에서 제조할 결정 계열을 선택하세요. 레시피마다 원료와 처리 시간이 다릅니다.</p><select id="variant-select" class="modal-select">'+choices.map(id=>'<option value="'+id+'" '+(b.variant===id?"selected":"")+'>'+RESOURCE[id].name+'</option>').join("")+'</select>';showModal("결정 변환 레시피",body,[{label:"취소",cls:"secondary"},{label:"설정",cls:"primary",action:()=>{b.variant=$("variant-select").value;markDirty();renderMachineDetails();closeModal();toast("레시피 변경 완료")}}])}
 function startResearch(id){const r=RESEARCH.find(x=>x.id===id);if(!r||S.research.includes(id))return;if(!hasBuilding(S,"lab")){toast("먼저 기술 연구소를 건설하세요.","warn");return}if(r.requires&&!r.requires.every(v=>S.research.includes(v))){toast("선행 연구가 완료되지 않았습니다.","warn");return}if(S.activeResearch){toast("다른 연구가 이미 진행 중입니다.","warn");return}if(S.money<r.cost||!hasItems(r.need)){toast("연구 자원 또는 자금이 부족합니다.","warn");return}S.money-=r.cost;takeItems(r.need);S.activeResearch=id;S.researchProgress=0;log("연구 시작 · "+r.name);toast(r.name+" 연구를 시작합니다.");markDirty();renderResearch();renderHud()}
 function tickResearch(dt,ratio){if(!S.activeResearch)return;const r=RESEARCH.find(x=>x.id===S.activeResearch);if(!r){S.activeResearch=null;return}const labs=S.buildings.filter(b=>b.type==="lab").length;if(!labs)return;S.researchProgress+=dt*Math.max(.0,ratio)*Math.min(2,1+(labs-1)*.35)*(S.research.includes("automation")?1.15:1);if(S.researchProgress>=r.time){S.research.push(r.id);awardResearchTierSkillPoints();S.activeResearch=null;S.researchProgress=0;log("연구 완료 · "+r.name,"good");toast("기술 연구 완료 · "+r.name);$("orbit-dialogue").textContent="“"+r.name+" 연구 데이터가 연구소에 등록되었습니다.”";playTone(820,.22,"triangle");markDirty();renderResearch();renderBuildList();renderMissions();questCheck()}}
-function updateFusion(dt){if(!S.fusionJob)return;const b=S.buildings.find(x=>x.type==="fusion");if(!b){S.fusionJob=null;return}const stage=FUSION_STAGES[S.fusionJob.stage];if(!stage){S.fusionJob=null;return}const p=currentPower();b.temp+=(stage.temp-b.temp)*Math.min(1,dt*.045);b.pressure+=(stage.pressure-b.pressure)*Math.min(1,dt*.06);const tempOK=Math.abs(b.temp-stage.temp)<=Math.max(50,stage.temp*.1);const pressureOK=Math.abs(b.pressure-stage.pressure)<=Math.max(25,stage.pressure*.1);if(p.ratio>=.8&&p.gen>=stage.power&&tempOK&&pressureOK){S.fusionJob.progress+=dt*(p.ratio>=1?1:p.ratio);b.status="RUNNING"}else b.status=p.ratio<.8||p.gen<stage.power?"PAUSED_POWER":"CALIBRATING";if(S.fusionJob.progress>=stage.time){log("퓨전 단계 완료 · "+stage.name,"good");S.fusionJob.stage++;S.fusionJob.progress=0;if(S.fusionJob.stage>=FUSION_STAGES.length){S.fusionJob=null;S.fusionDone=true;addItem("infinity",1,{quality:100,purity:100,synthetic:false});log("인피니티 도로늄 결정화 성공 · 정확히 1개 출력","good");toast("인피니티 도로늄 제작 성공!", "");$("orbit-dialogue").textContent="“Infinity Doronum secured. Three stabilization relays are still required.”";showModal("INFINITY DORONUM 생성 완료","<p>7단계 결정화 공정이 완료되었습니다. 인피니티 도로늄 1개가 창고에 등록되었습니다.</p><p>이제 지정된 행성 에너지 노드 3곳에 릴레이를 설치하고 중앙 코어를 완성하세요.</p>",[{label:"계속 진행",cls:"primary",action:closeModal}]);}else toast("퓨전 "+(S.fusionJob.stage+1)+"/7 단계로 이동합니다.");markDirty();renderMissions()}}
-function startFusion(){if(S.fusionJob){toast("이미 퓨전이 진행 중입니다.");return}if(!S.buildings.some(b=>b.type==="fusion")){toast("인피니티 퓨전 설비가 필요합니다.","warn");return}if(!S.buildings.some(b=>b.type==="cooling")){toast("초전도 냉각탑을 먼저 건설하세요.","warn");return}const p=currentPower();if(p.gen<40||p.ratio<.8){toast("퓨전에 필요한 전력 40kW 이상을 확보하세요.","warn");return}const invalid=VARIANTS.filter(id=>itemCount(id)<100||quality(S,id)<90||purity(S,id)<90||synthetic(S,id));if(invalid.length){toast("재료 검증 실패 · "+invalid.map(id=>RESOURCE[id].name).slice(0,2).join(", ")+" 외 "+invalid.length+"종 부족","warn");return}showModal("인피니티 퓨전 시작","<p>15종 도로늄 각 100개, 총 1,500개가 공정에 예약됩니다.</p><p>각 재료의 품질과 순도는 90 이상이며 비합성 원료여야 합니다. 7단계 이상적 가동 시간은 260초입니다. 시작 후 입력 재료는 공정에 귀속됩니다.</p>",[{label:"취소",cls:"secondary"},{label:"퓨전 시작",cls:"gold",action:()=>{for(const id of VARIANTS)takeItem(id,100);S.fusionJob={stage:0,progress:0,startedAt:S.seconds};const b=S.buildings.find(x=>x.type==="fusion");if(b){b.temp=25;b.pressure=0}log("인피니티 퓨전 시작 · 재료 1,500개 예약");toast("INFINITY FUSION STARTED");closeModal();markDirty();renderFactory()}}])}
+function abortFusionJob(reason){const job=S.fusionJob;if(!job)return;let released=0;if(job.inputCustody==="reserved"){released=releaseFusionInputs(S,job.reservationIDs||[]);syncLegacyInventory(S)}S.fusionJob=null;const detail=released?reason+" · 예약 원료 1,500개를 창고로 반환했습니다.":reason;log("퓨전 중단 · "+detail,"warn");toast(detail,"warn");markDirty();renderFactory()}
+function updateFusion(dt){
+ if(!S.fusionJob)return;
+ const job=S.fusionJob,b=S.buildings.find(x=>x.type==="fusion");
+ if(!b){abortFusionJob("퓨전 설비를 찾을 수 없어 공정이 중단되었습니다.");return}
+ if(job.inputCustody==="reserved"&&!validateFusionReservations(S,VARIANTS,job.reservationIDs)){
+  abortFusionJob("퓨전 입력 예약 검증에 실패했습니다. 원료를 안전하게 반환했습니다.");return
+ }
+ const stage=FUSION_STAGES[job.stage];
+ if(!stage){abortFusionJob("퓨전 단계 데이터가 올바르지 않아 공정을 중단했습니다.");return}
+ const p=currentPower();b.temp+=(stage.temp-b.temp)*Math.min(1,dt*.045);b.pressure+=(stage.pressure-b.pressure)*Math.min(1,dt*.06);
+ const tempOK=Math.abs(b.temp-stage.temp)<=Math.max(50,stage.temp*.1),pressureOK=Math.abs(b.pressure-stage.pressure)<=Math.max(25,stage.pressure*.1);
+ if(p.ratio>=.8&&p.gen>=stage.power&&tempOK&&pressureOK){job.progress+=dt*(p.ratio>=1?1:p.ratio);b.status="RUNNING"}
+ else b.status=p.ratio<.8||p.gen<stage.power?"PAUSED_POWER":"CALIBRATING";
+ if(job.progress>=stage.time){
+  log("퓨전 단계 완료 · "+stage.name,"good");job.stage++;job.progress=0;
+  if(job.stage>=FUSION_STAGES.length){
+   if(job.inputCustody==="reserved"){
+    const committed=commitFusionInputs(S,VARIANTS,job.reservationIDs);
+    if(!committed.ok){abortFusionJob("퓨전 원료 확정에 실패했습니다. 출력 결정을 생성하지 않았습니다.");return}
+    syncLegacyInventory(S);
+   }
+   S.fusionJob=null;S.fusionDone=true;addItem("infinity",1,{quality:100,purity:100,synthetic:false});
+   log("인피니티 도로늄 결정화 성공 · 정확히 1개 출력","good");toast("인피니티 도로늄 제작 성공!");
+   $("orbit-dialogue").textContent="“Infinity Doronum secured. Three stabilization relays are still required.”";
+   showModal("INFINITY DORONUM 생성 완료","<p>7단계 결정화 공정이 완료되었습니다. 인피니티 도로늄 1개가 창고에 등록되었습니다.</p><p>이제 지정된 행성 에너지 노드 3곳에 릴레이를 설치하고 중앙 코어를 완성하세요.</p>",[{label:"계속 진행",cls:"primary",action:closeModal}]);
+  }else toast("퓨전 "+(job.stage+1)+"/7 단계로 이동합니다.");
+  markDirty();renderMissions();
+ }
+}
+function startFusion(){
+ if(S.fusionJob){toast("이미 퓨전이 진행 중입니다.");return}
+ if(!S.buildings.some(b=>b.type==="fusion")){toast("인피니티 퓨전 설비가 필요합니다.","warn");return}
+ if(!S.buildings.some(b=>b.type==="cooling")){toast("초전도 냉각탑을 먼저 건설하세요.","warn");return}
+ const p=currentPower();
+ if(p.gen<40||p.ratio<.8){toast("퓨전에 필요한 전력 40kW 이상을 확보하세요.","warn");return}
+ const invalid=VARIANTS.filter(id=>availableItemCount(S,id)<100||quality(S,id)<90||purity(S,id)<90||synthetic(S,id));
+ if(invalid.length){toast("재료 검증 실패 · "+invalid.map(id=>RESOURCE[id].name).slice(0,2).join(", ")+" 외 "+invalid.length+"종 부족","warn");return}
+ showModal("인피니티 퓨전 시작","<p>현재 게임의 15개 결정 계열에서 각 100개, 총 1,500개를 공정에 예약합니다.</p><p>각 입력 스택은 품질 90 이상·순도 90 이상·비합성인지 다시 검사합니다. 예약 중에는 판매·투입·다른 제작에 사용할 수 없으며, 공정이 완료될 때까지 창고 수량으로 보존됩니다.</p><p>설비 제거 또는 예약 오류가 발생하면 예약 원료를 창고로 돌려보냅니다. 7단계의 이상적 가동 시간은 260초입니다.</p>",[{label:"취소",cls:"secondary"},{label:"퓨전 시작",cls:"gold",action:()=>{
+  const reserved=reserveFusionInputs(S,VARIANTS);
+  if(!reserved.ok){
+   const message=reserved.reason==="INPUT_QUALITY_OR_PROVENANCE_REJECTED"?"실제 투입 스택의 품질·순도·합성 여부 검증에 실패했습니다.":"15종 원료를 각 100개씩 확보하거나 예약하는 데 실패했습니다.";
+   toast(message,"warn");closeModal();return;
+  }
+  S.fusionJob={stage:0,progress:0,startedAt:S.seconds,inputCustody:"reserved",reservationIDs:reserved.reservationIDs};
+  syncLegacyInventory(S);
+  const b=S.buildings.find(x=>x.type==="fusion");if(b){b.temp=25;b.pressure=0}
+  log("인피니티 퓨전 시작 · 1,500개 입력 원료 예약 및 잠금");toast("INFINITY FUSION STARTED");closeModal();markDirty();renderFactory();renderInventory();
+ }}])
+}
 function installCore(b){if(!S.fusionDone||itemCount("infinity")<1){toast("인피니티 도로늄 1개가 필요합니다.","warn");return}if(!S.research.includes("planet")){toast("행성 안정화 프로토콜 연구를 완료하세요.","warn");return}if(!S.relaySites.every(Boolean)){toast("행성 안정화 릴레이 3개가 모두 필요합니다.","warn");return}if(!takeItem("infinity",1))return;S.coreInstalled=true;b.status="INSTALLED";log("인피니티 도로늄을 중앙 코어에 설치");toast("중앙 안정화 코어 설치 완료");showModal("행성 안정화 준비 완료","<p>3개 릴레이와 중앙 코어가 연결되었습니다. ORBIT의 최종 동기화 프로토콜을 실행할 수 있습니다.</p>",[{label:"계속",cls:"secondary"},{label:"행성 안정화 실행",cls:"gold",action:()=>{closeModal();finishPlanetary()}}]);markDirty();renderAll()}
 function finishPlanetary(){if(!S.coreInstalled||!S.relaySites.every(Boolean)){toast("안정화 필수 조건을 충족하지 못했습니다.","warn");return}S.victory=true;S.questIndex=QUESTS.length;log("PLANETARY STABILIZATION COMPLETE","good");$("orbit-dialogue").textContent="“Energy network synchronization complete. Planetary instability: decreasing. Factory status: OPERATIONAL.”";markDirty();renderAll();showModal("PLANETARY STABILIZATION COMPLETE","<div class='ending-visual'>💠</div><h3>돌돌행성의 에너지 네트워크가 안정화되었습니다.</h3><p>공장 전체에 푸른 에너지 흐름이 연결되었습니다. 폐허에서 시작한 작은 산업 기지가 행성을 지키는 거대한 산업 네트워크로 성장했습니다.</p><p><b>DORONIUM FACTORY · INFINITE INDUSTRY</b><br>FINAL STATUS: OPERATIONAL</p>",[{label:"엔딩 보기",cls:"gold",action:closeModal}]);playTone(920,.5,"sine")}
 
