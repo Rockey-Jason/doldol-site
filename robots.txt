@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://rockey-jason.github.io/doldol-site/sitemap.xml
