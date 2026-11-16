@@ -68,7 +68,8 @@ function reservedByStack(rt,excludeReservationID=null){
   const totals=new Map();
   for(const reservation of Object.values(rt.reservations||{})){
     if(reservation.status!=="reserved"||reservation.reservationID===excludeReservationID)continue;
-    for(const allocation of reservation.allocations||[])totals.set(allocation.stackID,(totals.get(allocation.stackID)||0)+allocation.quantity);
+    const allocations=Array.isArray(reservation.allocations)?reservation.allocations:[];
+    for(const allocation of allocations)totals.set(allocation.stackID,(totals.get(allocation.stackID)||0)+allocation.quantity);
   }
   return totals;
 }
@@ -168,7 +169,18 @@ export function validateRuntimeState(state){
     if(!stack||quantity>stack.quantity)errors.push("reservation-overflow:"+stackID);
   }
   for(const reservation of Object.values(rt.reservations)){
-    if(reservation.status==="reserved"&&(!reservation.ownerID||!reservation.allocations?.length))errors.push("invalid-reservation:"+reservation.reservationID);
+    if(reservation.status!=="reserved")continue;
+    const allocations=Array.isArray(reservation.allocations)?reservation.allocations:[];
+    if(!reservation.ownerID||allocations.length===0)errors.push("invalid-reservation:"+reservation.reservationID);
+    const declared=Number(reservation.quantity);
+    const allocated=allocations.reduce((sum,allocation)=>sum+(Number(allocation?.quantity)||0),0);
+    if(!Number.isSafeInteger(declared)||declared<=0||allocated!==declared)errors.push("reservation-quantity-mismatch:"+reservation.reservationID);
+    for(const allocation of allocations){
+      const stack=stackByID.get(allocation?.stackID);
+      if(!stack||stack.itemID!==reservation.itemID||!Number.isSafeInteger(Number(allocation.quantity))||Number(allocation.quantity)<=0){
+        errors.push("invalid-reservation-allocation:"+reservation.reservationID);
+      }
+    }
   }
   const maxID=Math.max(0,...[...ids].map(id=>Number(id.replace(/^IS-/,""))||0));
   if(rt.nextStackId<=maxID)errors.push("stack-id-counter-not-advanced");
