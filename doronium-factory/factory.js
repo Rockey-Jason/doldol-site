@@ -944,6 +944,28 @@ if(E2E_MODE){
    const coalGenerator={fuelTimer:S.buildings[0].fuelTimer,status:S.buildings[0].status,power:currentPower().gen,stock:itemCount("coal"),available:availableItemCount(S,"coal"),runtimeValid:validateRuntimeState(S).valid};
    return {construction,coalGenerator,...reservationResults};
   },
+  reservationMetadataTest(){
+   S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
+   addItem("doronium_normal",3,{quality:99,purity:99,synthetic:false},false);
+   const held=reserveItemStacks(S,"doronium_normal",3,"high-grade-locked-stack");
+   if(!held)throw new Error("Unable to reserve high-grade metadata test stack");
+   addItem("doronium_normal",3,{quality:70,purity:75,synthetic:false},false);
+   addItem("quartz",2,{quality:90,purity:90,synthetic:false},false);
+   addItem("water",8,{quality:90,purity:100,synthetic:false},false);
+   syncLegacyInventory(S);
+   const aggregateMeta={...S.meta.doronium_normal};
+   const machine={uid:"test-metadata-machine",type:"variantLab",variant:"doronium_blue",input:{},inputMeta:{}};
+   supplyMachine(machine);
+   return {
+    aggregateMeta,
+    suppliedMeta:{...machine.inputMeta.doronium_normal},
+    reservedStack: S.runtime.reservations[held]?.allocations?.map(a=>({...a,stack:S.runtime.itemStacks.find(s=>s.runtimeID===a.stackID)?{...S.runtime.itemStacks.find(s=>s.runtimeID===a.stackID)}:null})),
+    stock:itemCount("doronium_normal"),
+    available:availableItemCount(S,"doronium_normal"),
+    machineInput:{...machine.input},
+    runtimeValid:validateRuntimeState(S).valid
+   };
+  },
   removeFusionMachineForRecoveryTest(){
    S.buildings=S.buildings.filter(b=>b.type!=="fusion");markSceneDirty();updateFusion(STEP);return {status:window.__doroniumFactoryTest.fusionStatus(),toast:document.querySelector("#toast-stack")?.textContent||""};
   },
