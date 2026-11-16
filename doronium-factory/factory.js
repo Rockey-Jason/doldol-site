@@ -544,7 +544,27 @@ function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;
  if(b.type==="doriFarm"){if(ratio<.8){b.status="PAUSED_POWER";return}const target=findNearbyDoriNode(b.x,b.y),node=target?.node;if(!node){b.status="NO_INPUT";return}if(node.cooldown>0){b.status="GROWING";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=60){if(availableItemCount(S,"water")<2){b.status="NO_INPUT";b.progress=59;return}if(!takeItem("water",2)){b.status="NO_INPUT";return}startNodeCooldown(target.x,target.y,node,60);b.progress=0;createOutput(b,"doriMeat",1,{quality:S.research.includes("bio")?95:92,purity:90,synthetic:false})}return}
  if(d.kind==="machine"||d.kind==="reactor"||d.kind==="variant"){tickMachine(b,dt,ratio);return}
 }
-function recipeHasSyntheticInput(b,r){for(const[id,n]of Object.entries(r.inputs)){let remaining=n;const buffered=Math.min(remaining,b.input?.[id]||0);if(buffered&&b.inputMeta?.[id]?.synthetic)return true;remaining-=buffered;if(remaining&&S.meta[id]?.synthetic)return true}return false}
+function recipeHasSyntheticInput(b,r){
+ const reservedByStack=new Map();
+ for(const reservation of Object.values(ensureItemStacks(S).reservations||{})){
+  if(reservation.status!=="reserved")continue;
+  for(const allocation of reservation.allocations||[])reservedByStack.set(allocation.stackID,(reservedByStack.get(allocation.stackID)||0)+allocation.quantity);
+ }
+ for(const[id,n]of Object.entries(r.inputs)){
+  let remaining=Math.max(0,Number(n)||0);
+  const buffered=Math.min(remaining,Math.max(0,Number(b.input?.[id])||0));
+  if(buffered>0&&b.inputMeta?.[id]?.synthetic)return true;
+  remaining-=buffered;
+  for(const stack of S.runtime.itemStacks){
+   if(stack.itemID!==id||remaining<=0)continue;
+   const free=Math.max(0,stack.quantity-(reservedByStack.get(stack.runtimeID)||0));
+   const consumed=Math.min(free,remaining);
+   if(consumed>0&&stack.synthetic)return true;
+   remaining-=consumed;
+  }
+ }
+ return false;
+}
 function tickMachine(b,dt,ratio){
  const r=recipeFor(b);if(!r){b.status="ERROR";b.errorCode="NO_RECIPE";return}
  if(b.output){b.status="PAUSED_OUTPUT";return}
@@ -944,6 +964,24 @@ if(E2E_MODE){
    S.paused=false;S.victory=false;tick(STEP);
    const coalGenerator={fuelTimer:S.buildings[0].fuelTimer,status:S.buildings[0].status,power:currentPower().gen,stock:itemCount("coal"),available:availableItemCount(S,"coal"),runtimeValid:validateRuntimeState(S).valid};
    return {construction,coalGenerator,...reservationResults};
+  },
+  syntheticReservationIsolationTest(){
+   S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
+   addItem("doriMeat",10,{quality:98,purity:98,synthetic:true},false);
+   const locked=reserveItemStacks(S,"doriMeat",10,"other-synthetic-process");
+   if(!locked)throw new Error("Unable to reserve synthetic Dori Meat for isolation test");
+   addItem("doriMeat",10,{quality:96,purity:95,synthetic:false},false);
+   syncLegacyInventory(S);
+   const aggregate={...S.meta.doriMeat};
+   const b={uid:"test-reactor-isolation",type:"reactor",x:10,y:10,dir:1,progress:0,condition:100,input:{},inputMeta:{},output:null,activeMeta:null,temp:25,pressure:0,status:"IDLE"};
+   tickMachine(b,STEP,1);
+   return {
+    aggregate,status:b.status,errorCode:b.errorCode||null,
+    activeMeta:b.activeMeta?{...b.activeMeta}:null,
+    total:itemCount("doriMeat"),available:availableItemCount(S,"doriMeat"),
+    reservedStack:S.runtime.reservations[locked]?.allocations?.map(a=>S.runtime.itemStacks.find(stack=>stack.runtimeID===a.stackID)?.synthetic),
+    runtimeValid:validateRuntimeState(S).valid
+   };
   },
   reservationMetadataTest(){
    S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
