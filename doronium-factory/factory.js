@@ -891,7 +891,9 @@ if(E2E_MODE){
    addItem("water",8,{quality:96,purity:100,synthetic:false},false);
    addItem("doriMeat",2,{quality:96,purity:95,synthetic:false},false);
    addItem("doronium_blue",100,{quality:96,purity:95,synthetic:false},false);
-   const held=reserveItemBatch(S,{doronium_normal:3,quartz:2,water:8,doriMeat:2,doronium_blue:100},"reservation-guard-e2e");
+   addItem("wood",2,{quality:96,purity:95,synthetic:false},false);
+   addItem("ironPlate",1,{quality:96,purity:95,synthetic:false},false);
+   const held=reserveItemBatch(S,{doronium_normal:3,quartz:2,water:8,doriMeat:2,doronium_blue:100,wood:2,ironPlate:1},"reservation-guard-e2e");
    if(!held)throw new Error("Unable to prepare reservation-guard scenario");
    syncLegacyInventory(S);renderInventory();
    const machine={uid:"test-variant-machine",type:"variantLab",variant:"doronium_blue",input:{},inputMeta:{}};
@@ -904,7 +906,22 @@ if(E2E_MODE){
    harvestNode(72,52,tree);
    const farm={uid:"test-dori-farm",type:"doriFarm",x:72,y:52,progress:59,condition:100,status:"IDLE"};
    tickBuilding(farm,1,{ratio:1});
+   S.money=10000;S.research.push("logistics");
+   let constructionPosition=null;
+   for(let y=20;y<WORLD_H-2&&!constructionPosition;y++)for(let x=20;x<WORLD_W-2;x++)if(!tileNode(x,y)&&!buildingAt(x,y)){constructionPosition={x,y};break}
+   const moneyBeforeBuild=S.money,buildingsBefore=S.buildings.length;
+   const reservedMaterialBuild=constructionPosition?placeBuilding("beltAdaptive",constructionPosition.x,constructionPosition.y):false;
+   const construction={attempted:!!constructionPosition,placed:reservedMaterialBuild,moneyBefore:moneyBeforeBuild,moneyAfter:S.money,buildingsBefore,buildingsAfter:S.buildings.length};
+   S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
+   addItem("coal",1,{quality:96,purity:95,synthetic:false},false);
+   const coalReservation=reserveItemStacks(S,"coal",1,"reservation-guard-e2e");
+   if(!coalReservation)throw new Error("Unable to reserve coal generator test input");
+   syncLegacyInventory(S);
+   S.buildings=[{uid:"test-reserved-coalgen",type:"coalgen",x:12,y:12,dir:1,progress:0,condition:100,fuelTimer:0,status:"IDLE"}];
+   S.paused=false;S.victory=false;tick(STEP);
+   const coalGenerator={fuelTimer:S.buildings[0].fuelTimer,status:S.buildings[0].status,power:currentPower().gen,stock:itemCount("coal"),available:availableItemCount(S,"coal"),runtimeValid:validateRuntimeState(S).valid};
    return {
+    construction,coalGenerator,
     machineInput:{...machine.input},
     moneyBefore,moneyAfter:S.money,soldBefore,soldAfter:S.stats.sold,
     survivalBefore,survivalAfter:structuredClone(S.survival),
