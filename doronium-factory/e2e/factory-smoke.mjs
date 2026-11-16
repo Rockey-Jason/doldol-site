@@ -255,6 +255,17 @@ try {
   assert.equal(fusionRecovery.status.valid, true, "Recovered Fusion state must pass runtime validation");
   assert.ok(Object.values(fusionRecovery.status.available).every(value => value === 100), "Recovery must return all 1,500 reserved inputs unchanged");
 
+  const reservationGuards = await desktop.evaluate(() => window.__doroniumFactoryTest.reservationGuardTest());
+  assert.deepEqual(reservationGuards.machineInput, {}, "Machine supply must not copy reserved ingredients into its input buffer");
+  assert.equal(reservationGuards.moneyAfter, reservationGuards.moneyBefore, "Selling locked inventory must not mint currency");
+  assert.equal(reservationGuards.soldAfter, reservationGuards.soldBefore, "A rejected sale must not increase the sales ledger");
+  assert.deepEqual(reservationGuards.survivalAfter, reservationGuards.survivalBefore, "Reserved food and water must not grant survival effects");
+  assert.deepEqual(reservationGuards.tree, { cooldown: 0, meat: 2 }, "A Dori tree must not yield fruit or start its cooldown without unreserved water");
+  assert.deepEqual(reservationGuards.farm, { status: "NO_INPUT", progress: 59, meat: 2 }, "An automated Dori farm must pause without unreserved water");
+  assert.deepEqual(reservationGuards.stock, { water: 8, doriMeat: 2, blue: 100 }, "All reserved inventory totals must remain intact");
+  assert.deepEqual(reservationGuards.available, { water: 0, doriMeat: 0, blue: 0 }, "All test inputs must remain reserved");
+  assert.equal(reservationGuards.runtimeValid, true, "All reservation-guard checks must preserve valid runtime state");
+
   await desktop.screenshot({ path: path.join(artifactDir, "doronium-desktop.png"), fullPage: true });
   // Free the desktop WebGL context before creating the mobile WebGL context.
   await desktop.close();
