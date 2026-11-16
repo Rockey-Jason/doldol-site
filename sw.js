@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v65-premium-ui-20261116";
+const CACHE_NAME = "doldol-site-pwa-v66-premium-ui-20261116";
 const SITE_SCOPE = new URL(self.registration.scope);
 const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
@@ -17,7 +17,7 @@ const APP_SHELL = [
   scopedUrl("rockey-study-rewards.html"),
   scopedUrl("rockeysite-icon-3.png"),
   scopedUrl("manifest.json"),
-  scopedUrl("css/dori-foundation.css?v=20261116-premium-ui-1")
+  scopedUrl("css/dori-foundation.css?v=20261116-premium-ui-2")
 ];
 
 self.addEventListener("install", (event) => {
@@ -59,7 +59,7 @@ self.addEventListener("fetch", (event) => {
     if (hasCloudSync && hasFoundation) return response;
 
     const base = scope.pathname.endsWith("/") ? scope.pathname : scope.pathname + "/";
-    const foundationLink = hasFoundation ? "" : '<link rel="stylesheet" href="' + base + 'css/dori-foundation.css?v=20261116-premium-ui-1">';
+    const foundationLink = hasFoundation ? "" : '<link rel="stylesheet" href="' + base + 'css/dori-foundation.css?v=20261116-premium-ui-2">';
     const syncBootstrap = hasCloudSync ? "" : '<script src="' + base + 'js/supabase.min.js?v=2.117.2"></script>' +
       '<script src="' + base + 'js/dori-cloud-sync.js?v=20261101-4"></script>';
     const bootstrap = foundationLink + syncBootstrap;
