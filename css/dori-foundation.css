@@ -199,3 +199,18 @@ input:focus-visible,select:focus-visible,textarea:focus-visible{
 @media(prefers-reduced-motion:reduce){
   :where(button,a,[role="button"],input,select,textarea){transition:none!important}
 }
+
+
+/* Consistent, restrained hover feedback for common site cards. */
+:where(.card,.panel,.glass-card,.feature-card,.stat-card,.dashboard-card,.news-card,.mission-card,.bank-card,.stock-card,.shop-card,.menu-card,.section-card,.tool-card,.game-card){
+  transition:
+    border-color .3s ease,
+    box-shadow .34s ease,
+    filter .28s ease,
+    background-color .3s ease;
+}
+@media(hover:hover){
+  :where(.card,.panel,.glass-card,.feature-card,.stat-card,.dashboard-card,.news-card,.mission-card,.bank-card,.stock-card,.shop-card,.menu-card,.section-card,.tool-card,.game-card):hover{
+    filter:brightness(1.035);
+  }
+}
