@@ -114,6 +114,17 @@ test("reserved quantities are excluded from spendable inventory",()=>{
   assert.equal(availableItemCount(state,"ironOre"),12);
 });
 
+test("runtime validation rejects reservation quantity and allocation mismatches",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:9};
+  addItemStack(state,"ironOre",10);
+  const held=reserveItemStacks(state,"ironOre",7,"fusion-input");
+  assert.ok(held);
+  state.runtime.reservations[held].quantity=6;
+  const audit=validateRuntimeState(state);
+  assert.equal(audit.valid,false);
+  assert.ok(audit.errors.includes("reservation-quantity-mismatch:"+held));
+});
+
 test("reservation audit history is bounded during long sessions",()=>{
   const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:8};
   addItemStack(state,"coal",1);
