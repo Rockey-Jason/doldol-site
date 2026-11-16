@@ -884,6 +884,37 @@ if(E2E_MODE){
    return {job:S.fusionJob?structuredClone(S.fusionJob):null,stock:Object.fromEntries(VARIANTS.map(id=>[id,itemCount(id)])),available:Object.fromEntries(VARIANTS.map(id=>[id,availableItemCount(S,id)])),activeReservations:Object.keys(S.runtime.reservations||{}).length,valid:validateRuntimeState(S).valid};
   },
   attemptSpendFusionInput(){return takeItem(VARIANTS[0],1)},
+  reservationGuardTest(){
+   S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
+   addItem("doronium_normal",3,{quality:96,purity:95,synthetic:false},false);
+   addItem("quartz",2,{quality:96,purity:95,synthetic:false},false);
+   addItem("water",8,{quality:96,purity:100,synthetic:false},false);
+   addItem("doriMeat",2,{quality:96,purity:95,synthetic:false},false);
+   addItem("doronium_blue",100,{quality:96,purity:95,synthetic:false},false);
+   const held=reserveItemBatch(S,{doronium_normal:3,quartz:2,water:8,doriMeat:2,doronium_blue:100},"reservation-guard-e2e");
+   if(!held)throw new Error("Unable to prepare reservation-guard scenario");
+   syncLegacyInventory(S);renderInventory();
+   const machine={uid:"test-variant-machine",type:"variantLab",variant:"doronium_blue",input:{},inputMeta:{}};
+   supplyMachine(machine);
+   $("sell-resource").value="doronium_blue";$("sell-amount").value="100";
+   const moneyBefore=S.money,soldBefore=S.stats.sold;sellItems();
+   const survivalBefore=structuredClone(S.survival);consumeFood();drinkWater();
+   S.player.layer="surface";S.activeTool="axe";
+   const tree={type:"dori",amount:1,cooldown:0,seed:123};S.nodes[surfaceKey(72,52)]=tree;
+   harvestNode(72,52,tree);
+   const farm={uid:"test-dori-farm",type:"doriFarm",x:72,y:52,progress:59,condition:100,status:"IDLE"};
+   tickBuilding(farm,1,{ratio:1});
+   return {
+    machineInput:{...machine.input},
+    moneyBefore,moneyAfter:S.money,soldBefore,soldAfter:S.stats.sold,
+    survivalBefore,survivalAfter:structuredClone(S.survival),
+    tree:{cooldown:tree.cooldown,meat:itemCount("doriMeat")},
+    farm:{status:farm.status,progress:farm.progress,meat:itemCount("doriMeat")},
+    stock:{water:itemCount("water"),doriMeat:itemCount("doriMeat"),blue:itemCount("doronium_blue")},
+    available:{water:availableItemCount(S,"water"),doriMeat:availableItemCount(S,"doriMeat"),blue:availableItemCount(S,"doronium_blue")},
+    runtimeValid:validateRuntimeState(S).valid
+   };
+  },
   removeFusionMachineForRecoveryTest(){
    S.buildings=S.buildings.filter(b=>b.type!=="fusion");markSceneDirty();updateFusion(STEP);return {status:window.__doroniumFactoryTest.fusionStatus(),toast:document.querySelector("#toast-stack")?.textContent||""};
   },
