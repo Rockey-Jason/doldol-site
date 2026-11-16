@@ -1,4 +1,4 @@
-@import url("./dori-foundation.css?v=20261116-premium-ui-1");
+@import url("./dori-foundation.css?v=20261116-premium-ui-2");
 /* DORI SITE SHARED DESIGN SYSTEM — UX refresh */
 :root{color-scheme:dark;--d-bg:#000033;--d-bg2:#060e2b;--d-text:#f7f9ff;--d-muted:#aab7d0;--d-blue:#91b2ff;--d-cyan:#75dce8;--d-purple:#9b91d6;--d-gold:#f0d28f;--d-line:rgba(195,211,245,.16);--d-ease:cubic-bezier(.2,.8,.2,1);--d-ease-out:cubic-bezier(.16,1,.3,1);--d-shadow:0 24px 72px rgba(0,0,0,.34)}
 html{min-height:100%;background:var(--d-bg);scroll-behavior:smooth;scrollbar-gutter:stable}
