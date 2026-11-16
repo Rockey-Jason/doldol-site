@@ -1,6 +1,7 @@
 # Doronium Factory — Implementation Log
 
-- 작업일: 2026-11-03
+- 작업일: 2026-11-03 (기본 구현)
+- 최근 반복 점검: 2026-11-16
 - Repository: `Rockey-Jason/doldol-site`
 - Target: GitHub Pages / Three.js browser game
 - Baseline: `도로늄 공장을 만드는 법.md` v4.5.0
@@ -50,6 +51,25 @@ The corresponding commit/Actions/Pages run IDs and their results must be filled 
   - ROCKEY Pages deployment run [41589409592](https://github.com/Rockey-Jason/doldol-site/actions/runs/41589409592) — **success**.
 - This is CI automation evidence. The virtual one-hour simulation is not a real wall-clock 60-minute device soak; mobile verification is browser emulation, not physical Android/iOS hardware.
 - The overall v4.5.0 spec status remains **Partial/Conflict**, as listed in `SPEC_GAP_MATRIX.md`. Passing these checks does not imply that fluid networks, power topology, full shipping contracts, live failure profiles, every skill effect, all story/music assets, or the conflicting canonical world/power scales are complete.
+
+
+## 2026-11-16 — iterative audit / implementation cycles
+
+1. **Infinity Fusion custody** — added per-stack reservations for the existing 15 variants (100 each), quality/purity/synthetic eligibility checks, atomic 1,500-item commit after all seven stages, and release on abort, missing equipment, or invalid reservations.
+2. **Player recovery flow** — added stage progress and manual "퓨전 중단 · 원료 반환" action; verified cancellation, restart, and machine-loss recovery.
+3. **Reservation bypass audit** — made inventory sales, machine supply, eating/drinking, Dori tree harvest, automated Dori farms, construction materials, foundation materials, research costs, Infinity core installation and coal-generator fuel honor available (unreserved) quantities. Successful spend is now required before currency, building, production or survival effects are granted.
+4. **Per-stack provenance** — manual machine supply now transfers metadata from the exact stacks consumed, not the legacy aggregate inventory metadata.
+5. **Regression coverage** — added Node tests for reservation accounting and browser tests for Fusion custody/recovery, blocked sales and machine supply, survival/harvest/farm, construction, coal fuel, and quality/purity provenance.
+
+### Verification for this pass
+
+- Code head tested: 6eeafc918065b87a0f7007254f05a6c4a0501573.
+- GitHub Actions run [#1125](https://github.com/Rockey-Jason/doldol-site/actions/runs/43893004656) — **both jobs succeeded**.
+- Node/static validation — **47/47 unit tests passed**, JavaScript syntax checks and required runtime-contract checks passed.
+- Playwright browser regression — **passed** with desktop WebGL and mobile-emulation WebGL; virtual 1-hour test executed exactly **36,000 fixed 0.1-second ticks**, produced 296 iron plates, and preserved ore-equivalent 50,000 and coal-equivalent 30,000 ledger balances.
+- Browser regression also passed Fusion cancel/restart/machine-loss recovery, locked-resource sale/supply/consumption/construction/fuel guards, and consumed-stack quality/purity provenance checks.
+- Mobile-emulation viewport 390×844 showed the touch pad and verified engineer movement. This remains emulation rather than a physical Android/iOS test.
+- This run does not represent a wall-clock 60-minute device soak. The overall v4.5.0 project remains Partial/Conflict as documented below.
 
 ## Known remaining scope
 

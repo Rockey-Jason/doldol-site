@@ -1,6 +1,6 @@
 # Doronium Factory — Project Audit
 
-- Audit date: 2026-11-03
+- Audit date: 2026-11-16
 - Repository: https://github.com/Rockey-Jason/doldol-site
 - Live target: https://rockey-jason.github.io/doldol-site/doronium-factory/
 - Target specification: `도로늄 공장을 만드는 법.md`, v4.5.0.
@@ -14,21 +14,21 @@
 | Runtime | `factory.js`, ES module | Partial |
 | Renderer | `world3d.js`, Three.js 0.180.0 WebGL, compatibility fallback | Partial |
 | Terrain | `terrain-system.js`, 192×160 tile world, 8 biomes, 5 mine levels | Conflict with canonical 2048m×2048m coordinate world |
-| Items | `simulation-core.js`, ItemStack, reservation, split/merge and validation | Partial |
+| Items | `simulation-core.js`, ItemStack, per-stack reservation, split/merge, metadata-preserving consumption and validation | Partial |
 | Data validation | `game-data-validation.js` | Implemented for present static registries; not the complete spec registry |
 | Production | `production-runtime.js` | Partial |
 | Failure | `failure-runtime.js` | Partial; primitives and deterministic RNG exist, but no live machine profiles/outcomes are active |
 | Skill | `skill-runtime.js` | Partial; 20-node graph/runtime and some live modifiers |
 | Save | `save-store.js` | New checksum/backup/recovery layer; pending CI/runtime verification |
 | Cloud | Supabase `dori_cloud_storage`, existing per-account key | Partial; schema compatibility checked in code, external session not exercised here |
-| Tests | Node tests and Playwright WebGL regression | Pending latest CI run; virtual soak is not wall-clock soak |
+| Tests | Node tests and Playwright WebGL regression | CI run #1125 succeeded: 47/47 Node tests, desktop/mobile-emulation WebGL, reservation regression and virtual soak; virtual soak is not wall-clock soak |
 
 ## Confirmed code facts
 
 - Fixed simulation step constant: 0.1 seconds.
 - Static Stage order contains 18 entries. Several stages are trace-only/no-op handlers; machine environment, quality, wear and progress are not yet separated into all 18 independent authoritative passes.
 - Runtime schema v4 stores ItemStack records, reservation data, failure PRNG state and bounded failure event journal.
-- ItemStack split/merge uses a 5000-item stack ceiling. Recipe consumption uses reservations to avoid double spending.
+- ItemStack split/merge uses a 5000-item stack ceiling. Reservation quantity/allocation invariants are validated. Manual machine supply now records quality, purity and synthetic state from the exact consumed stacks rather than the aggregate inventory summary.
 - Machine processing includes power ratio gating, temperature/pressure ramp and safety bands, condition wear and one-result completion buffer.
 - Failure hazard calculation uses reference duration and exposure time. Actual grade outcomes are deliberately not applied without validated profiles.
 - Main static data defines 15 legacy Doronium variants, 18 research records, 23 building definitions, 10 main campaign quests and seven Infinity stages. The 15 legacy variant IDs do **not** match the exact B9 canonical Infinity manifest; see `SPEC_GAP_MATRIX.md`.
@@ -45,9 +45,19 @@ See `SPEC_GAP_MATRIX.md`. Highest-risk open items:
 3. Power uses aggregate generator/consumer totals, not isolated NetworkID topology and battery/transmission graph.
 4. Conveyor logic is one-dimensional adjacency transfer, without full sorter/splitter/merger/loop policy and global ownership ledger.
 5. Machine failure profiles/outcomes are not connected to live production.
-6. Infinity stage power target units conflict with current power economy, and start consumes the inputs immediately rather than keeping a resumable 1500-item reservation.
+6. Infinity stage power target units conflict with current power economy. The current legacy 15×100 input set is now transactionally reserved, locked, committed only on success, and returned on cancellation or machine loss; canonical ID migration and end-to-end reload/resume validation remain open.
 7. Shipping contracts, packaging stages, Lore Archive and chapter music asset set are incomplete.
 8. Engineer skills are partially wired; a node being purchasable does not imply every described bonus is active.
+
+
+## 2026-11-16 re-audit — changes verified
+
+- Infinity Fusion no longer deducts its 1,500 inputs at the start. It reserves each of the 15 existing variants at 100 per variant, validates every allocated stack's quality, purity and synthetic flag, and commits the full reservation only after all seven stages finish.
+- The Fusion detail panel displays stage progress and offers **퓨전 중단 · 원료 반환** for new reserved jobs. Cancelling, losing the machine, or failing reservation validation releases the held inputs. A player can restart the process after cancellation.
+- Reservation-aware spending now protects manual machine supply, direct sale, food/water consumption, Dori tree harvest, automated Dori farms, construction, foundation placement, research, core installation, and coal-generator fuel.
+- takeItemDetailed carries metadata from the actually consumed stacks into manually supplied machine buffers; a reserved high-grade stack can no longer contaminate the metadata of a different free stack.
+- E2E regression coverage verifies reserved materials cannot be sold, supplied, eaten, harvested, used for construction, or burned as fuel. It also verifies exact per-stack quality/purity transfer.
+- Latest verified code commit: 6eeafc918065b87a0f7007254f05a6c4a0501573. Validation run [#1125](https://github.com/Rockey-Jason/doldol-site/actions/runs/43893004656) passed both jobs.
 
 ## Verification boundaries
 
