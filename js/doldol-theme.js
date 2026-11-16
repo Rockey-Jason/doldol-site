@@ -12,7 +12,7 @@
   if (!document.querySelector('link[href*="doldol-theme.css"],link[href*="dori-foundation.css"]')) {
     const foundation = document.createElement("link");
     foundation.rel = "stylesheet";
-    foundation.href = siteAssetUrl("css/dori-foundation.css?v=20261115-unified-ui-1");
+    foundation.href = siteAssetUrl("css/dori-foundation.css?v=20261116-premium-ui-1");
     foundation.dataset.doriFoundation = "true";
     (document.head || document.documentElement).appendChild(foundation);
   }
