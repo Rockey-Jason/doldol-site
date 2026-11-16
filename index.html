@@ -2063,6 +2063,31 @@ body.로그인상태 #회원가입 {
   "inLanguage": "ko-KR"
 }
 </script>
+
+<style id="dori-search-discovery-style">
+.dori-search-discovery{
+  display:grid;grid-template-columns:minmax(0,.75fr) minmax(0,1.5fr);
+  gap:24px;align-items:center;margin:28px 0 4px;padding:22px 24px;
+  border:1px solid rgba(151,174,255,.16);border-radius:22px;
+  background:linear-gradient(135deg,rgba(31,42,91,.52),rgba(12,17,43,.7));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 35px rgba(0,0,0,.12);
+}
+.dori-search-discovery-heading>span{color:#9fafff;font:700 9px Arial,sans-serif;letter-spacing:.2em}
+.dori-search-discovery-heading h2{margin:7px 0 5px;color:#f6f7ff;font-size:18px;font-weight:400;letter-spacing:-.02em}
+.dori-search-discovery-heading p{margin:0;color:#9ca8c7;font-size:11px;line-height:1.65}
+.dori-search-discovery-links{display:flex;flex-wrap:wrap;gap:8px}
+.dori-search-discovery-links a{
+  display:inline-flex;align-items:center;min-height:34px;padding:8px 11px;
+  border:1px solid rgba(157,175,255,.15);border-radius:10px;
+  color:#dce5ff;background:rgba(255,255,255,.035);
+  font-size:11px;text-decoration:none;
+  transition:transform .2s ease,border-color .2s ease,background .2s ease;
+}
+.dori-search-discovery-links a:hover{transform:translateY(-2px);border-color:rgba(166,185,255,.4);background:rgba(116,134,255,.1)}
+@media(max-width:700px){.dori-search-discovery{grid-template-columns:1fr;gap:14px;margin-top:22px;padding:17px;border-radius:18px}.dori-search-discovery-heading h2{font-size:16px}.dori-search-discovery-links{gap:7px}.dori-search-discovery-links a{min-height:33px;padding:7px 9px;font-size:10px}}
+@media(prefers-reduced-motion:reduce){.dori-search-discovery-links a{transition:none}}
+</style>
+
 </head>
 
 
@@ -2304,6 +2329,25 @@ body.로그인상태 #회원가입 {
 </article>
 
   </div>
+
+  <nav class="dori-search-discovery" aria-label="돌이사이트 주요 서비스 바로가기">
+    <div class="dori-search-discovery-heading">
+      <span>EXPLORE DORI</span>
+      <h2>돌이사이트 주요 서비스</h2>
+      <p>원하는 돌이 콘텐츠와 서비스를 바로 찾아보세요.</p>
+    </div>
+    <div class="dori-search-discovery-links">
+      <a href="./doldolstock.html">돌돌증권</a>
+      <a href="./dori-bank.html">돌이은행</a>
+      <a href="./dori-life.html">Dori Life</a>
+      <a href="./rockey-study.html">로키 스터디</a>
+      <a href="./doronium-museum.html">도로늄 박물관</a>
+      <a href="./doronium-factory/">도로늄 공장</a>
+      <a href="./dori-world/">돌이 월드</a>
+      <a href="./dori-world/kingdom.html">인피니트 킹덤</a>
+      <a href="./dori-feedback.html">의견 건의함</a>
+    </div>
+  </nav>
 
     <!-- =====================================================
      돌이 AI
