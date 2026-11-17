@@ -2512,7 +2512,7 @@ if(E2E_MODE){
     {uid:"SOAK-TANK",type:"mineWaterTank",layer:"mine",mineLevel:1,x:8,y:12,status:"IDLE",capacityL:8000,waterStoredL:0},
     {uid:"SOAK-RAIL-A",type:"mineRailStation",layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5),status:"IDLE"},
     {uid:"SOAK-RAIL-B",type:"mineRailStation",layer:"mine",mineLevel:1,x:35,y:mineMainDriftZ(35),status:"IDLE"},
-    {uid:"SOAK-MINER",type:"minerIron",layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5)-1,status:"PAUSED_OUTPUT",output:{id:"ITEM_IRON_ORE",qty:2,meta:{quality:90,purity:88,synthetic:false}}}
+    {uid:"SOAK-MINER",type:"minerIron",layer:"mine",mineLevel:1,x:4,y:mineMainDriftZ(4)-1,status:"PAUSED_OUTPUT",output:{id:"ITEM_IRON_ORE",qty:2,meta:{quality:90,purity:88,synthetic:false}}}
    ];
    const railStart=setMineRailEnabled(S,1,true),startWater=S.mineEnvironment[1].waterDepth;
    let transferred=0,delivered=0,loadEvents=0;
