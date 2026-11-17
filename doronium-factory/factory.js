@@ -2505,7 +2505,7 @@ if(E2E_MODE){
     {uid:"RAIL-STATION-A",type:"mineRailStation",layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5),status:"IDLE"},
     {uid:"RAIL-STATION-B",type:"mineRailStation",layer:"mine",mineLevel:1,x:15,y:mineMainDriftZ(15),status:"IDLE"},
     {uid:"RAIL-STATION-C",type:"mineRailStation",layer:"mine",mineLevel:1,x:25,y:mineMainDriftZ(25),status:"IDLE"},
-    {uid:"RAIL-MINER",type:"minerIron",layer:"mine",mineLevel:1,x:14,y:mineMainDriftZ(14),status:"PAUSED_OUTPUT",output:{id:mineral,qty:2,meta}}
+    {uid:"RAIL-MINER",type:"minerIron",layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5)-1,status:"PAUSED_OUTPUT",output:{id:mineral,qty:2,meta}}
    ];
    ensureMineInfrastructure(S);
    const start=setMineRailEnabled(S,1,true),before=itemCount("ironOre");let delivered=0,loaded=0;
