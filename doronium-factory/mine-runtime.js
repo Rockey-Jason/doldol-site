@@ -32,24 +32,31 @@ export function mineGeologyAt(level,x,z){
 export function mineOreProfile(type){
   return ORE_PROFILES[String(type)]||{style:"mineral-pocket",color:0x9aa9ad,roughness:.82,metalness:.12,cluster:"angular"};
 }
+const DEFAULT_MINE_ENVIRONMENT=Object.freeze({
+  waterDepth:.025,humidity:0,gasLevel:0,ventilationActive:true,
+  pumpActive:false,supportIntegrity:100,cartAvailable:true,
+  warning:"SAFE",risk:0,incident:false,lastUpdate:0
+});
 export function createMineEnvironment(levels=5){
   const state={};
-  for(let level=1;level<=clamp(integer(levels,5),1,5);level++)state[level]={
-    waterDepth:.025,humidity:clamp(38+level*5,0,100),gasLevel:5+level*1.5,
-    ventilationActive:true,pumpActive:false,supportIntegrity:100,
-    cartAvailable:true,warning:"SAFE",risk:0,incident:false,lastUpdate:0
-  };
+  for(let level=1;level<=clamp(integer(levels,5),1,5);level++){
+    state[level]={...DEFAULT_MINE_ENVIRONMENT,humidity:clamp(38+level*5,0,100),gasLevel:5+level*1.5};
+  }
   return state;
 }
 export function ensureMineEnvironment(state){
   if(!state||typeof state!=="object")throw new TypeError("mine-state-required");
-  const defaults=createMineEnvironment();
-  const saved=state.mineEnvironment&&typeof state.mineEnvironment==="object"?state.mineEnvironment:{};
-  state.mineEnvironment={...defaults,...saved};
+  if(!state.mineEnvironment||typeof state.mineEnvironment!=="object"||Array.isArray(state.mineEnvironment))state.mineEnvironment={};
+  const environments=state.mineEnvironment;
   for(let level=1;level<=5;level++){
-    const current=saved[level]&&typeof saved[level]==="object"?saved[level]:{};
-    state.mineEnvironment[level]={...defaults[level],...current};
-    const env=state.mineEnvironment[level];
+    let env=environments[level];
+    if(!env||typeof env!=="object"||Array.isArray(env)){
+      env={...DEFAULT_MINE_ENVIRONMENT,humidity:clamp(38+level*5,0,100),gasLevel:5+level*1.5};
+      environments[level]=env;
+    }else{
+      const defaults={...DEFAULT_MINE_ENVIRONMENT,humidity:clamp(38+level*5,0,100),gasLevel:5+level*1.5};
+      for(const [key,value] of Object.entries(defaults))if(!(key in env))env[key]=value;
+    }
     env.waterDepth=clamp(Number(env.waterDepth)||0,0,1);
     env.humidity=clamp(Number(env.humidity)||0,0,100);
     env.gasLevel=clamp(Number(env.gasLevel)||0,0,100);
@@ -59,7 +66,7 @@ export function ensureMineEnvironment(state){
     env.cartAvailable=env.cartAvailable!==false;
     env.lastUpdate=Math.max(0,Number(env.lastUpdate)||0);
   }
-  return state.mineEnvironment;
+  return environments;
 }
 export function mineSafetyAssessment(environment){
   const env=environment&&typeof environment==="object"?environment:{};
