@@ -508,7 +508,13 @@ export function createWorld3D(canvas, getState) {
       if(isCrystal(node.type)){
         const g=new THREE.Group();g.position.set(worldX,depositY,worldZ);
         g.userData={cell:{x:node.x,z:node.z},targetKind:{kind:"resource",type:node.type,mine:true,level,depthY:node.depthY}};
-        mineRoot.add(g);makeCrystal(g,node.type,0,4,0,3.2);
+        mineRoot.add(g);
+        const crystal=makeCrystal(g,node.type,0,4,0,3.2);
+        mineVisualMap.set(node.level+":"+node.x+":"+node.z,{
+          amount:Math.max(0,Number(node.amount)||0),
+          max:Math.max(1,Number(node.max)||Number(node.amount)||1),
+          crystal,baseScale:crystal.scale.clone(),instances:[]
+        });
         continue;
       }
       const mesh=oreBatches.get(node.type);if(!mesh)continue;
@@ -576,7 +582,11 @@ export function createWorld3D(canvas, getState) {
       const node=state.mineDeposits?.[key],amount=Math.max(0,Number(node?.amount)||0);
       if(Math.abs(amount-entry.amount)<.001)continue;
       entry.amount=amount;
-      const factor=.28+.72*Math.sqrt(clamp(amount/entry.max,0,1));
+      const factor=amount>0?.28+.72*Math.sqrt(clamp(amount/entry.max,0,1)):0;
+      if(entry.crystal){
+        entry.crystal.visible=amount>0;
+        entry.crystal.scale.copy(entry.baseScale).multiplyScalar(factor);
+      }
       for(const ref of entry.instances){
         dummyForMineVisual.position.set(ref.x,ref.y,ref.z);
         dummyForMineVisual.rotation.set(ref.rx,ref.ry,ref.rz);
