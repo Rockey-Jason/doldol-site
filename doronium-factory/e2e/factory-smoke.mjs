@@ -468,6 +468,7 @@ try {
   assert.equal(await desktop.locator("#mine-evacuate-button").isVisible(), true, "A critical mine condition must reveal the emergency return control");
   await desktop.locator("#mine-evacuate-button").click();
   assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot())).player.layer, "surface", "Emergency evacuation must safely return the engineer to the surface");
+  await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningTest());
 
   const miningBefore = await desktop.evaluate(() => ({ stone: window.__doroniumFactoryTest.snapshot().inventory.stone || 0 }));
   await desktop.locator("#action-button").click();
