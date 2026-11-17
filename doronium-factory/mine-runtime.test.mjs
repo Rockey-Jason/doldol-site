@@ -42,12 +42,12 @@ test("ventilation reduces gas while an inactive fan allows it to accumulate",()=
   assert.ok(env.gasLevel>ventilated);
   assert.equal(env.ventilationActive,false);
 });
-test("drain pump reduces water ingress relative to an inactive pump",()=>{
+test("the pump switch alone does not drain water without a connected pipe network",()=>{
   const a={player:{layer:"mine",mineLevel:2},mineEnvironment:createMineEnvironment()};
   const b={player:{layer:"mine",mineLevel:2},mineEnvironment:createMineEnvironment()};
   toggleMineEquipment(ensureMineEnvironment(a)[2],"pump");
   for(let i=0;i<1200;i++){tickMineEnvironment(a,.3);tickMineEnvironment(b,.3)}
-  assert.ok(a.mineEnvironment[2].waterDepth<b.mineEnvironment[2].waterDepth);
+  assert.equal(a.mineEnvironment[2].waterDepth,b.mineEnvironment[2].waterDepth);
 });
 test("support repair restores condition and recalculates an incident",()=>{
   const env=createMineEnvironment()[4];
