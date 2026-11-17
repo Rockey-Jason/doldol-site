@@ -2496,9 +2496,10 @@ if(E2E_MODE){
    const route=mineRoutePath(1,{x:3,z:12},{x:10,z:12},S.mineInfrastructure?.closures||{});
    markSceneDirty();renderAll();
    const closureBlocks=world3d.inspect().mineClosureBlocks;
+   const localSafety=mineCellIsSafe(S,1,section.x,section.z);
    const repair=repairMineSupport(S,1,section.x,section.z,50);
    markSceneDirty();renderAll();
-   return {closed,closureEvents:closure.events.map(event=>event.type),closureBlocks,repair:repair.after,reopened:!mineCellIsClosed(S,1,section.x,section.z),routeAvoided:route?!route.some(cell=>cell.x===section.x&&cell.z===section.z):false,summary:supportSectionsSummary(S,1)};
+   return {closed,localSafety,closureEvents:closure.events.map(event=>event.type),closureBlocks,repair:repair.after,reopened:!mineCellIsClosed(S,1,section.x,section.z),routeAvoided:route?!route.some(cell=>cell.x===section.x&&cell.z===section.z):false,summary:supportSectionsSummary(S,1)};
   },
   mineVirtualSoakTest(){
    S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5)};
