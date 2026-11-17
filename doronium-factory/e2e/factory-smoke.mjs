@@ -698,7 +698,21 @@ try {
     return { x: s.player.x, y: s.player.y };
   });
   assert.ok(moved.x !== 72 || moved.y !== 52, "Touch movement control must move the engineer");
+  await mobile.evaluate(() => window.__doroniumFactoryTest.setupMineSystemsTest());
+  assert.equal(await mobile.locator("#mine-ops-card").isVisible(), true, "Mine operations HUD must fit and remain visible in mobile mode");
+  const mineHudBounds = await mobile.locator("#mine-ops-card").boundingBox();
+  assert.ok(mineHudBounds && mineHudBounds.x >= 0 && mineHudBounds.x + mineHudBounds.width <= 390, "Mobile mine controls must stay inside the viewport");
+  await mobile.locator("#mine-vent-button").tap();
+  assert.equal((await mobile.evaluate(() => window.__doroniumFactoryTest.mineSystems())).environment[1].ventilationActive, false, "Mobile touch must operate underground ventilation");
+  await mobile.locator("#mine-map-toggle").tap();
+  assert.equal(await mobile.locator("#mine-map-wrap").evaluate(el => el.classList.contains("visible")), true, "The underground layer map must open on mobile");
+  await mobile.waitForTimeout(650);
+  const mobileMinePerformance = await mobile.evaluate(() => window.__doroniumFactoryTest.inspectPerformance());
+  assert.ok(mobileMinePerformance.drawCalls < 180, "Mobile underground rendering must remain within the draw-call budget");
+  assert.ok(mobileMinePerformance.triangles < 180000, "Mobile underground rendering must remain within the triangle budget");
+  console.log("DORONIUM_MOBILE_MINE_PERFORMANCE", JSON.stringify(mobileMinePerformance));
   await mobile.screenshot({ path: path.join(artifactDir, "doronium-mobile-emulation.png"), fullPage: true });
+  await mobile.screenshot({ path: path.join(artifactDir, "doronium-mobile-mine.png"), fullPage: true });
 
   assert.deepEqual(failures, [], "No uncaught browser JavaScript errors are allowed");
   console.log(JSON.stringify({
