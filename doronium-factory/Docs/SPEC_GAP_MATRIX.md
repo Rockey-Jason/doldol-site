@@ -394,3 +394,8 @@ No main merge, deployment, production database change, or live-user save/economy
 **Verification boundary:** code checkpoint `c74f47049a504054f67d6e1880c5aaecc78e08a4`; docs checkpoint `06b1cbb8467cc1e8e0f00f943a756391d909d1f7`. Current GitHub workflow lookup returned no run and no combined status checks. Node/Playwright and physical device performance are **PENDING / UNVERIFIED**. The deterministic figures are a replay of the generation algorithm, not a completed CI test. Do not mark mining or performance acceptance as COMPLETE.
 
 **Next priority loop:** (1) execute mine-system and Playwright regressions; (2) fix the first real failure; (3) inspect captured underground screenshots and verify scale/materials/lighting; (4) profile draw calls, frame time and memory on desktop and mobile; (5) add save fixtures for depleted legacy seams; (6) only then add next mine systems such as ventilation, water management, support wear/collapse, mine carts and underground navigation if they fit the current resource/ownership model.
+
+
+### CI coverage follow-up
+
+- The mine-specific test file is now included in the validation workflow's syntax check, Node test execution, and required-file assertions. The workflow wiring is committed; execution is still **PENDING / UNVERIFIED** because the current PR head has no returned workflow run or combined status.
