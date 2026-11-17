@@ -444,3 +444,10 @@ PR #8 remains the separate Godot implementation and was not integrated. PR #9 ov
 - **Code checkpoint:** `dfad15f538e929fd71b13191b65f975080e708b5`.
 - **Local Node verification:** executed `node --test mine-system.test.mjs mine-runtime.test.mjs` using the current PR #11 source files. Verified Git blob hashes before running: `mine-runtime.js` `da4d1ffc4676cf5d559a712ab811c27819e3e75d`, `mine-runtime.test.mjs` `6454048c09c3157db309db4c55db3c359a061f3a`, `terrain-system.js` `186eb060c3efb907316ee70760f48540c817c6b0`, and `mine-system.test.mjs` `8a75610f2a1599a17565e989e9d9992cac8f8f22`. Result: **12 passed, 0 failed, 0 cancelled, 0 skipped**.
 - **Still pending:** the full browser Playwright suite and GitHub Actions result; the workflow-run and combined-status lookup on the latest PR head still must be checked. Desktop/mobile emulation performance budget assertions are committed but have not yet been executed. Physical device tests and 60-minute wall-clock soak remain **UNVERIFIED**.
+
+
+### Mine lighting audit and map wayfinding refinement
+
+- Updated underground light diagnostics to include the two lift lamps and every mine-generator point light, not only gallery work lights. This makes the reported mine light count representative of the static underground scene.
+- The layer map now marks the surface-return lift (E) and the down-lift (D), and emphasizes the engineer position; the legend wraps on narrow screens.
+- **Code checkpoint:** `b1e0a1c72b040c3796856ad73b48f4f72a640209` (HTML/CSS entry checkpoint; renderer light accounting commit `2727beb586e19ee056bd589db49f6c6eb35be046`). Mine helper unit tests remain **12/12 passed** on exact PR source blob copies. Full browser regression and hardware profiling remain pending/unverified.
