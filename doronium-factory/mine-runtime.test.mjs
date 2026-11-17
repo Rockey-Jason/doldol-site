@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {
   MINE_ROCK_PROFILES, createMineEnvironment, ensureMineEnvironment,
   mineGeologyAt, mineOreProfile, mineSafetyAssessment, tickMineEnvironment,
-  toggleMineEquipment, reinforceMineSupports, mineEnvironmentSummary
+  toggleMineEquipment, reinforceMineSupports, mineEnvironmentSummary, tickActiveMineEnvironments
 } from "./mine-runtime.js";
 
 test("geology changes by depth and position while remaining deterministic",()=>{
@@ -56,10 +56,23 @@ test("support repair restores condition and recalculates an incident",()=>{
   assert.equal(env.incident,false);
   assert.equal(mineEnvironmentSummary(env).support,100);
 });
-test("mine systems stay inactive on the surface and stop mining after a safety limit is exceeded",()=>{
-  const surface={player:{layer:"surface",mineLevel:1},mineEnvironment:createMineEnvironment()};
+test("mine systems stay inactive on the surface without mine facilities",()=>{
+  const surface={player:{layer:"surface",mineLevel:1},buildings:[],mineEnvironment:createMineEnvironment()};
   assert.equal(tickMineEnvironment(surface,.3).active,false);
-  const underground={player:{layer:"mine",mineLevel:1},mineEnvironment:createMineEnvironment()};
+  assert.equal(tickActiveMineEnvironments(surface,.3).active,false);
+});
+test("remote active mine facilities continue environmental simulation off-screen",()=>{
+  const state={player:{layer:"surface",mineLevel:1},buildings:[{layer:"mine",mineLevel:3,x:18,y:12}],mineEnvironment:createMineEnvironment()};
+  const before=state.mineEnvironment[3].lastUpdate;
+  const tick=tickActiveMineEnvironments(state,1);
+  assert.equal(tick.active,true);
+  assert.equal(tick.results.length,1);
+  assert.equal(tick.results[0].level,3);
+  assert.ok(state.mineEnvironment[3].lastUpdate>before);
+  assert.equal(state.mineEnvironment[1].lastUpdate,0);
+});
+test("mine systems stop mining after a safety limit is exceeded",()=>{
+  const underground={player:{layer:"mine",mineLevel:1},buildings:[],mineEnvironment:createMineEnvironment()};
   const env=ensureMineEnvironment(underground)[1];
   env.gasLevel=100;env.waterDepth=.98;env.supportIntegrity=0;
   const tick=tickMineEnvironment(underground,.3);
