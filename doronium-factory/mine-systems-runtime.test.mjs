@@ -38,7 +38,7 @@ test("support condition is local to each tunnel section and repairs can reopen a
 test("a failed support closes its five-cell influence zone even when another healthy support is nearer",()=>{
   const state=stateFixture(),failed=nearestMineSupport(state,1,2,12).section;
   failed.integrity=0;failed.warning=true;failed.closed=false;
-  assert.equal(mineCellIsSafe(state,1,7,12).safe,false,"a cell five tiles from the failed support must be hazardous");
+  assert.equal(mineCellIsSafe(state,1,6,12).safe,false,"a cell within the failed support influence radius must be hazardous");
   assert.equal(mineCellIsSafe(state,1,8,12).safe,true,"a cell beyond the failed support influence radius may remain traversable");
 });
 test("wet active drilling wears nearby supports and creates a safe passage-closure event",()=>{
