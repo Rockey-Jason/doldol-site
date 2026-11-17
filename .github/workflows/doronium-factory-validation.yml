@@ -66,8 +66,10 @@ jobs:
           node --check doronium-factory/world3d.js
           node --check doronium-factory/terrain-system.js
           node --check doronium-factory/mine-system.test.mjs
+          node --check doronium-factory/mine-runtime.js
+          node --check doronium-factory/mine-runtime.test.mjs
           node --check doronium-factory/e2e/factory-smoke.mjs
-          node --test doronium-factory/mine-system.test.mjs
+          node --test doronium-factory/mine-system.test.mjs doronium-factory/mine-runtime.test.mjs
       - name: Check required game files and runtime contracts
         run: |
           test -s doronium-factory/index.html
@@ -111,12 +113,18 @@ jobs:
           test -s doronium-factory/world3d.js
           test -s doronium-factory/terrain-system.js
           test -s doronium-factory/mine-system.test.mjs
+          test -s doronium-factory/mine-runtime.js
+          test -s doronium-factory/mine-runtime.test.mjs
           grep -q 'WORLD_W = 192' doronium-factory/terrain-system.js
           grep -q 'WORLD_H = 160' doronium-factory/terrain-system.js
           grep -q 'function terrainHeightAt' doronium-factory/terrain-system.js
           grep -q 'function makeMineDeposits' doronium-factory/terrain-system.js
           grep -q 'beltAdaptive' doronium-factory/factory.js
           grep -q 'function harvestMineDeposit' doronium-factory/factory.js
+          grep -q 'tickActiveMineEnvironments' doronium-factory/factory.js
+          grep -q 'PAUSED_SAFETY' doronium-factory/factory.js
+          grep -q 'mineGeologyAt' doronium-factory/world3d.js
+          grep -q 'mine-map-canvas' doronium-factory/index.html
           grep -q 'function enterMine' doronium-factory/factory.js
           grep -q 'function notifyNewMission' doronium-factory/factory.js
           grep -q 'story-start-button' doronium-factory/index.html
