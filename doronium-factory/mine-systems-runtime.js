@@ -176,6 +176,16 @@ export function mineDrainageSummary(state,level){
   return {pumpCount:networks.reduce((n,x)=>n+x.pumps.length,0),tankCount:networks.reduce((n,x)=>n+x.tanks.length,0),pipeCount:networks.reduce((n,x)=>n+x.pipes.length,0),connectedNetworks:networks.filter(x=>x.connected).length,connectedPumps:networks.filter(x=>x.connected).reduce((n,x)=>n+x.pumps.length,0),storedLitres:networks.reduce((n,x)=>n+x.storedLitres,0),capacityLitres:networks.reduce((n,x)=>n+x.capacityLitres,0)};
 }
 
+function mineRailPathClosures(state,level,systems){
+  const closures={...(systems?.closures||{})};
+  for(const building of state.buildings||[]){
+    if(building?.layer!=="mine"||integer(building.mineLevel,1)!==integer(level,1)||building.type==="mineRailStation"||building.type==="mineDrainPipe")continue;
+    const width=Math.max(1,integer(building.footprint?.width,1)),height=Math.max(1,integer(building.footprint?.height,1));
+    for(let dz=0;dz<height;dz++)for(let dx=0;dx<width;dx++)closures[keyOf(level,integer(building.x)+dx,integer(building.y)+dz)]=true;
+  }
+  for(const station of mineRailStations(state,level))delete closures[keyOf(level,integer(station.x),integer(station.y))];
+  return closures;
+}
 export function mineRailStations(state,level){
   return (state.buildings||[]).filter(b=>b?.type==="mineRailStation"&&b.layer==="mine"&&integer(b.mineLevel,1)===integer(level,1))
     .slice().sort((a,b)=>integer(a.x)-integer(b.x)||integer(a.y)-integer(b.y));
@@ -186,7 +196,7 @@ export function setMineRailEnabled(state,level,enabled){
   if(enabled){
     if(stations.length<2)return {ok:false,reason:"TWO_STATIONS_REQUIRED",stationCount:stations.length};
     const first=stations[0],second=stations[1];
-    const firstPath=mineRoutePath(level,{x:first.x,z:first.y},{x:second.x,z:second.y},systems.closures);
+    const firstPath=mineRoutePath(level,{x:first.x,z:first.y},{x:second.x,z:second.y},mineRailPathClosures(state,level,systems));
     if(!firstPath||firstPath.length<2)return {ok:false,reason:"NO_CONNECTED_TRACK",stationCount:stations.length};
     route.path=firstPath;
   }else{
@@ -246,7 +256,7 @@ export function tickMineRailRoutes(state,dt){
     const remainingPath=Array.isArray(route.path)?route.path.slice(Math.max(0,Math.floor(route.travelled))):[];
     const blockedAhead=remainingPath.some(cell=>systems.closures[keyOf(level,cell.x,cell.z)]===true);
     if(blockedAhead){
-      route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},systems.closures)||[];
+      route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},mineRailPathClosures(state,level,systems))||[];
       route.travelled=0;
       events.push({type:"RAIL_REROUTE",level,from:current.uid,to:next.uid});
     }
