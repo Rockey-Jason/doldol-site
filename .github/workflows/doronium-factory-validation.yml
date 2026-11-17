@@ -65,7 +65,9 @@ jobs:
           node --test doronium-factory/construction-runtime.test.mjs doronium-factory/fluid-runtime.test.mjs doronium-factory/contract-runtime.test.mjs doronium-factory/logistics-runtime.test.mjs doronium-factory/cloud-save-runtime.test.mjs doronium-factory/canonical-data.test.mjs doronium-factory/fusion-runtime.test.mjs doronium-factory/ownership-runtime.test.mjs doronium-factory/network-runtime.test.mjs doronium-factory/simulation-core.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs doronium-factory/failure-runtime.test.mjs doronium-factory/skill-runtime.test.mjs doronium-factory/save-store.test.mjs doronium-factory/warehouse-runtime.test.mjs
           node --check doronium-factory/world3d.js
           node --check doronium-factory/terrain-system.js
+          node --check doronium-factory/mine-system.test.mjs
           node --check doronium-factory/e2e/factory-smoke.mjs
+          node --test doronium-factory/mine-system.test.mjs
       - name: Check required game files and runtime contracts
         run: |
           test -s doronium-factory/index.html
@@ -108,6 +110,7 @@ jobs:
           test -s doronium-factory/planetary-stabilization.test.mjs
           test -s doronium-factory/world3d.js
           test -s doronium-factory/terrain-system.js
+          test -s doronium-factory/mine-system.test.mjs
           grep -q 'WORLD_W = 192' doronium-factory/terrain-system.js
           grep -q 'WORLD_H = 160' doronium-factory/terrain-system.js
           grep -q 'function terrainHeightAt' doronium-factory/terrain-system.js
