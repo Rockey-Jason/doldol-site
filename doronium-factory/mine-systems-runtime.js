@@ -84,7 +84,9 @@ export function ensureMineInfrastructure(state){
 
 export function mineSupportKey(level,x,z){return keyOf(level,x,z)}
 export function mineSupportSections(state,level){
-  const systems=ensureMineInfrastructure(state);
+  const existing=state?.mineInfrastructure;
+  const systems=existing&&typeof existing==="object"&&existing.supports&&typeof existing.supports==="object"
+    ? existing : ensureMineInfrastructure(state);
   return Object.values(systems.supports).filter(section=>Number(section.level)===integer(level));
 }
 export function nearestMineSupport(state,level,x,z){
@@ -97,14 +99,21 @@ export function nearestMineSupport(state,level,x,z){
   return best?{section:best,distance:bestDistance}:null;
 }
 export function mineCellIsClosed(state,level,x,z){
-  const systems=ensureMineInfrastructure(state),key=keyOf(level,integer(x),integer(z));
-  return systems.closures[key]===true||systems.supports[key]?.closed===true;
+  const key=keyOf(level,integer(x),integer(z)),systems=state?.mineInfrastructure;
+  if(!systems||typeof systems!=="object")return false;
+  const section=systems.supports?.[key];
+  return systems.closures?.[key]===true||section?.closed===true||num(section?.integrity,100)<=8;
 }
 export function mineCellIsSafe(state,level,x,z){
+  const key=keyOf(level,integer(x),integer(z)),systems=state?.mineInfrastructure;
+  const local=systems?.supports?.[key];
+  if(systems?.closures?.[key]===true||local?.closed===true||num(local?.integrity,100)<=8){
+    return {safe:false,integrity:num(local?.integrity,0),section:local||null,closed:true,message:"통로 지지대 붕괴 · 우회 경로를 이용하세요."};
+  }
   const nearest=nearestMineSupport(state,level,x,z);
-  if(!nearest||nearest.distance>5)return {safe:true,integrity:100,section:null,message:"지지대 영향 구간 밖"};
+  if(!nearest||nearest.distance>5)return {safe:true,integrity:100,section:null,closed:false,message:"지지대 영향 구간 밖"};
   const section=nearest.section,closed=section.closed===true||section.integrity<=8;
-  return {safe:!closed&&section.integrity>12,integrity:section.integrity,section,closed,message:closed?"통로 지지대 붕괴 · 우회 경로를 이용하세요.":section.integrity<35?"지지대 위험 · 보강이 필요합니다.":section.integrity<65?"지지대 약화 · 점검이 필요합니다.":"지지대 상태 정상"};
+  return {safe:!closed&&section.integrity>12,integrity:section.integrity,section,closed,message:closed?"통로 지지대 붕괴 · 우회 경로를 이용하세요.":section.integrity<=12?"통로 안전 한계 초과 · 이동을 중지하세요.":section.integrity<35?"지지대 위험 · 보강이 필요합니다.":section.integrity<65?"지지대 약화 · 점검이 필요합니다.":"지지대 상태 정상"};
 }
 export function repairMineSupport(state,level,x,z,amount=35){
   const nearest=nearestMineSupport(state,level,x,z);
@@ -189,16 +198,21 @@ export function mineDrainageSummary(state,level){
 
 function mineRailPathClosures(state,level,systems){
   const closures={...(systems?.closures||{})};
+  for(const [key,section] of Object.entries(systems?.supports||{})){
+    if(Number(section?.level)!==integer(level,1))continue;
+    if(section.closed===true||num(section.integrity,100)<=12)closures[key]=true;
+  }
   for(const building of state.buildings||[]){
     if(building?.layer!=="mine"||integer(building.mineLevel,1)!==integer(level,1)||building.type==="mineRailStation"||building.type==="mineDrainPipe")continue;
     const width=Math.max(1,integer(building.footprint?.width,1)),height=Math.max(1,integer(building.footprint?.height,1));
     for(let dz=0;dz<height;dz++)for(let dx=0;dx<width;dx++)closures[keyOf(level,integer(building.x)+dx,integer(building.y)+dz)]=true;
   }
   for(const station of mineRailStations(state,level)){
-    const key=keyOf(level,integer(station.x),integer(station.y));
-    // A station may be a route endpoint, but it must never erase a safety
-    // closure created by a failed support section underneath it.
-    if(systems?.supports?.[key]?.closed!==true)delete closures[key];
+    const key=keyOf(level,integer(station.x),integer(station.y)),support=systems?.supports?.[key];
+    // A station is a route endpoint only while its local support remains safe.
+    // A failed section must not be silently reopened by station placement.
+    if(!support)continue;
+    if(support.closed!==true&&num(support.integrity,100)>12)delete closures[key];
   }
   return closures;
 }
