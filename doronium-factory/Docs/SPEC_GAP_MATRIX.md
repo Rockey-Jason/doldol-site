@@ -423,3 +423,10 @@ No main merge, deployment, production database change, or live-user save/economy
 - **Code checkpoint:** `dfad15f538e929fd71b13191b65f975080e708b5`; the full-render path now refreshes the mine operations HUD.
 - **Node unit tests:** current PR source blob hashes were matched to the local test copies before execution. `node --test mine-system.test.mjs mine-runtime.test.mjs` → **12 passed / 0 failed / 0 cancelled / 0 skipped**.
 - **Browser suite / GitHub Actions:** still **PENDING / UNVERIFIED**. No current workflow run or combined status was returned. Physical PC/Android/iOS performance and a 60-minute wall-clock soak are also **UNVERIFIED**. No acceptance row is promoted to COMPLETE.
+
+
+### Mine map and rendering audit follow-up
+
+- The current-level map now marks the return lift (E) and descent lift (D), highlights the player position, and wraps its legend on mobile widths. The reported mine-light count now includes lift and underground-generator point lights.
+- Current mine helper/unit source tests: **12 passed / 0 failed / 0 skipped / 0 cancelled** (local Node 22 execution against the exact current Git blob copies). This does not verify full browser rendering.
+- **Current code checkpoint:** `b1e0a1c72b040c3796856ad73b48f4f72a640209`. Full Playwright browser regression, CI status, physical hardware FPS/heap and 60-minute soak remain **PENDING / UNVERIFIED**.
