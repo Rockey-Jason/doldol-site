@@ -1991,6 +1991,7 @@ function wireControls(){
   const typing=target instanceof HTMLInputElement||target instanceof HTMLSelectElement||target instanceof HTMLTextAreaElement||target?.isContentEditable;
   if(typing)return;
   const k=e.key.toLowerCase();
+  if(target?.closest?.("button,a,[role=button]")&&(k===" "||k==="enter"))return;
   const modalOpen=$("modal-overlay").classList.contains("show");
   if(modalOpen){if(k==="escape"){closeModal();e.preventDefault()}return}
   const oneShot=["v","m","4","5","f","e","x","escape","b","o","i","t","j","q","r","c","h","p","=","+","-","_","[","]"];
