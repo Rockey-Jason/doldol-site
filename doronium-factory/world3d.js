@@ -395,6 +395,7 @@ export function createWorld3D(canvas, getState) {
   let playerModel=null,playerRing=null;
   function surfaceY(state,x,z){const key=x+","+z,v=state.flattened?.[key];return v&&typeof v==="object"&&Number.isFinite(v.height)?v.height:terrainHeightAt(x,z);}
   function buildMine(state){
+    mineVisualMap.clear();
     const level=clamp(Number(state.player?.mineLevel)||1,1,5),floorY=mineFloorY(level);
     const cells=[];
     for(let z=0;z<MINE_H;z++)for(let x=0;x<MINE_W;x++)if(mineTunnelAt(x,z))cells.push({x,z});
@@ -536,7 +537,6 @@ export function createWorld3D(canvas, getState) {
       if(!mesh||!mesh.count)continue;
       mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();
     }
-    mineVisualMap.clear();
     for(const node of ordinary){
       const key=node.level+":"+node.x+":"+node.z;
       mineVisualMap.set(key,{amount:Math.max(0,Number(node.amount)||0),max:Math.max(1,Number(node.max)||Number(node.amount)||1),instances:oreRefsByKey.get(key)||[]});
@@ -582,7 +582,7 @@ export function createWorld3D(canvas, getState) {
       const node=state.mineDeposits?.[key],amount=Math.max(0,Number(node?.amount)||0);
       if(Math.abs(amount-entry.amount)<.001)continue;
       entry.amount=amount;
-      const factor=amount>0?.28+.72*Math.sqrt(clamp(amount/entry.max,0,1)):0;
+      const factor=amount > 0 ? .28+.72*Math.sqrt(clamp(amount/entry.max,0,1)) : 0;
       if(entry.crystal){
         entry.crystal.visible=amount>0;
         entry.crystal.scale.copy(entry.baseScale).multiplyScalar(factor);
@@ -930,7 +930,7 @@ export function createWorld3D(canvas, getState) {
     if(showHover){const h=surfaceY(state,hover.x,hover.y);hoverRoot.position.set(hover.x*32,h+2.2,hover.y*32);const color=state.canBuildPreview?0x6de4bb:0xf2a46e;hoverFillMaterial.color.setHex(color);hoverEdgeMaterial.color.setHex(color);}
     if(inMine){activeViewMode=state.player?.viewMode==="third"?"third":"first";updateGameCamera(state);if(playerModel)playerModel.visible=activeViewMode!=="first";firstPersonRig.visible=activeViewMode==="first";}
     else if(activeViewMode==="map"){if(playerModel)playerModel.visible=true;firstPersonRig.visible=false;}else updateGameCamera(state);
-    const t=performance.now()*.001;if(shadowsEnabled&&renderer.shadowMap.enabled)sun.intensity=2.25+Math.sin(t*.08)*.18;
+    const t=performance.now()*.001;sun.intensity=inMine?.08:2.25+Math.sin(t*.08)*.18;
     if(!inMine&&!state.paused)machineRoot.children.forEach(g=>{
       const a=g.userData||{},b=a.stateRef;if(!b)return;syncBeltItemVisual(a,b);syncOutputVisual(g,a,b);const running=b.status==="RUNNING";
       if(a.fan&&running){if(a.type==="wind")a.fan.rotation.z=t*2.8;else a.fan.rotation.y=t*2.5;}
