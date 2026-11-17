@@ -436,3 +436,11 @@ PR #8 remains the separate Godot implementation and was not integrated. PR #9 ov
 - **Verification status:** source changes and regression assertions are committed, but the latest GitHub workflow-run and combined-status queries returned no runs/checks. Node/Playwright test execution therefore remains **PENDING / UNVERIFIED**. Browser heap/resource metrics will be emitted by CI when the browser suite runs; no actual output has yet been observed. Physical PC/Android/iOS tests and a 60-minute elapsed wall-clock soak remain **UNVERIFIED**.
 - **Remaining gaps:** full mine-cart track routing and automatic ore delivery, more advanced pump/pipe networks, localized support wear and non-graphic passage-closure events, visual review of screenshots on real hardware, and measured device-specific FPS/heap targets remain open. The current safety model stops work and offers evacuation; it does not simulate player injury or a physical cave-in animation.
 - **Scope boundary:** PR #11 development branch only. No main merge, Pages/Render deployment, production database/schema/RLS/function mutation, live-user save/economy change or reward/balance change was performed. Natural Doronium veins remain prohibited.
+
+
+### Mine unit verification and HUD refresh follow-up
+
+- Added a full-render HUD refresh so loading or restoring a save directly into a mine, test fixture setup, and other full UI refreshes also reveal the underground operations card immediately.
+- **Code checkpoint:** `dfad15f538e929fd71b13191b65f975080e708b5`.
+- **Local Node verification:** executed `node --test mine-system.test.mjs mine-runtime.test.mjs` using the current PR #11 source files. Verified Git blob hashes before running: `mine-runtime.js` `da4d1ffc4676cf5d559a712ab811c27819e3e75d`, `mine-runtime.test.mjs` `6454048c09c3157db309db4c55db3c359a061f3a`, `terrain-system.js` `186eb060c3efb907316ee70760f48540c817c6b0`, and `mine-system.test.mjs` `8a75610f2a1599a17565e989e9d9992cac8f8f22`. Result: **12 passed, 0 failed, 0 cancelled, 0 skipped**.
+- **Still pending:** the full browser Playwright suite and GitHub Actions result; the workflow-run and combined-status lookup on the latest PR head still must be checked. Desktop/mobile emulation performance budget assertions are committed but have not yet been executed. Physical device tests and 60-minute wall-clock soak remain **UNVERIFIED**.
