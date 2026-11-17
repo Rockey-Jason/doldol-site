@@ -2494,9 +2494,48 @@ if(E2E_MODE){
    section.integrity=7;section.warning=true;
    const closure=tickMineSupportSections(S,.1),closed=mineCellIsClosed(S,1,section.x,section.z);
    const route=mineRoutePath(1,{x:3,z:12},{x:10,z:12},S.mineInfrastructure?.closures||{});
+   markSceneDirty();renderAll();
+   const closureBlocks=world3d.inspect().mineClosureBlocks;
    const repair=repairMineSupport(S,1,section.x,section.z,50);
    markSceneDirty();renderAll();
-   return {closed,closureEvents:closure.events.map(event=>event.type),repair:repair.after,routeAvoided:route?!route.some(cell=>cell.x===section.x&&cell.z===section.z):false,summary:supportSectionsSummary(S,1)};
+   return {closed,closureEvents:closure.events.map(event=>event.type),closureBlocks,repair:repair.after,reopened:!mineCellIsClosed(S,1,section.x,section.z),routeAvoided:route?!route.some(cell=>cell.x===section.x&&cell.z===section.z):false,summary:supportSectionsSummary(S,1)};
+  },
+  mineVirtualSoakTest(){
+   S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5)};
+   S.runtime=createRuntimeState();ensureItemStacks(S);ensureMineInfrastructure(S);
+   S.mineEnvironment[1].waterDepth=.45;S.mineEnvironment[1].humidity=68;S.mineEnvironment[1].gasLevel=18;
+   S.mineEnvironment[1].pumpActive=true;S.mineEnvironment[1].ventilationActive=true;
+   S.buildings=[
+    {uid:"SOAK-PUMP",type:"mineDrainPump",layer:"mine",mineLevel:1,x:5,y:12,status:"RUNNING",rateLps:24},
+    {uid:"SOAK-PIPE-A",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:6,y:12,status:"IDLE"},
+    {uid:"SOAK-PIPE-B",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:7,y:12,status:"IDLE"},
+    {uid:"SOAK-TANK",type:"mineWaterTank",layer:"mine",mineLevel:1,x:8,y:12,status:"IDLE",capacityL:8000,waterStoredL:0},
+    {uid:"SOAK-RAIL-A",type:"mineRailStation",layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5),status:"IDLE"},
+    {uid:"SOAK-RAIL-B",type:"mineRailStation",layer:"mine",mineLevel:1,x:35,y:mineMainDriftZ(35),status:"IDLE"},
+    {uid:"SOAK-MINER",type:"minerIron",layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5)-1,status:"PAUSED_OUTPUT",output:{id:"ITEM_IRON_ORE",qty:2,meta:{quality:90,purity:88,synthetic:false}}}
+   ];
+   const railStart=setMineRailEnabled(S,1,true),startWater=S.mineEnvironment[1].waterDepth;
+   let transferred=0,delivered=0,loadEvents=0;
+   const steps=36000,dt=.1;
+   for(let i=0;i<steps;i++){
+    S.seconds+=dt;
+    tickActiveMineEnvironments(S,dt);
+    tickMineSupportSections(S,dt);
+    const drainage=tickMineDrainage(S,dt);
+    transferred+=drainage.results.reduce((sum,item)=>sum+item.litres,0);
+    const rail=tickMineRailRoutes(S,dt);
+    loadEvents+=rail.events.filter(event=>event.type==="RAIL_LOAD").length;
+    for(const cargo of rail.deliveries){
+     const owner=S.buildings.find(building=>String(building.uid)===String(cargo.buildingUID));
+     if(owner&&collectOutput(owner,{silent:true,fromRail:true}))delivered+=cargo.quantity;
+    }
+   }
+   const environment=mineEnvironmentSummary(S.mineEnvironment[1]);
+   const drainage=mineDrainageSummary(S,1),rail=mineRailSummary(S,1),supports=supportSectionsSummary(S,1);
+   const tank=S.buildings.find(building=>building.uid==="SOAK-TANK");
+   const valuesValid=Number.isFinite(environment.waterPercent)&&environment.waterPercent>=0&&environment.waterPercent<=100&&tank.waterStoredL>=0&&tank.waterStoredL<=tank.capacityL&&supports.minimum>=0&&supports.minimum<=100;
+   markSceneDirty();renderAll();
+   return {simulatedSeconds:steps*dt,railStart,loadEvents,delivered,transferred,startWater,waterAfter:S.mineEnvironment[1].waterDepth,tankLitres:tank.waterStoredL,environment,drainage,rail,supports,valuesValid,ok:valuesValid&&railStart.ok&&loadEvents>0&&delivered===2&&transferred>0};
   },
   mineRailTransportTest(){
    S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:5,y:12};S.runtime=createRuntimeState();ensureItemStacks(S);
