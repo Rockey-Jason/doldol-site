@@ -2665,11 +2665,11 @@ if(E2E_MODE){
   setupSurvivalTest(){S=freshState();S.player={...S.player,x:72,y:52,layer:"surface",viewMode:"first",yaw:0,pitch:-.12};S.survival={health:100,hunger:50,thirst:50};S.inventory.doriMeat=2;S.inventory.water=3;S.runtime=createRuntimeState();ensureItemStacks(S);playerMotion={x:72,z:52,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};renderAll();return structuredClone(S)},
   survivalTick(seconds,deplete=false){if(deplete){S.survival.hunger=0;S.survival.thirst=0}updateSurvival(Math.max(0,Number(seconds)||0));return structuredClone(S.survival)},
   mineDirectMovementSafetyTest(){
-   S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:8,y:12,viewMode:"first"};
+   S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:7,y:12,viewMode:"first"};
    ensureMineInfrastructure(S);
    const failed=nearestMineSupport(S,1,2,12).section;
    failed.integrity=0;failed.warning=true;failed.closed=false;
-   playerMotion={...playerMotion,x:8.2,z:12,y:0,velocityY:0,grounded:true,yaw:0,pitch:0,path:[],moving:false,facing:0};
+   playerMotion={...playerMotion,x:7.2,z:12,y:0,velocityY:0,grounded:true,yaw:0,pitch:0,path:[],moving:false,facing:0};
    const before={x:playerMotion.x,z:playerMotion.z};
    adventureKeys.add("a");updatePlayerMotion(.3);adventureKeys.delete("a");
    const blocked={x:playerMotion.x,z:playerMotion.z};
