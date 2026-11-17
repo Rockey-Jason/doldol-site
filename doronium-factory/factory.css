@@ -375,3 +375,26 @@ html,body{width:100%;height:100%;min-height:100%;overflow:hidden;overscroll-beha
  .mine-map-status{font-size:7px}
  .mine-route-go{min-height:27px;font-size:7px}
 }
+
+
+/* In-game device profiling panel for real PC/mobile mine sessions. */
+.mine-control-grid .mine-perf-action{grid-column:1/-1;border-color:#4e8991;color:#baf2ea;background:linear-gradient(145deg,#153b43,#102b38)}
+.mine-perf-panel{display:grid;gap:7px;padding:8px;border:1px solid #3b6776;border-radius:9px;background:linear-gradient(145deg,#081a28,#0b2432)}
+.mine-perf-panel[hidden]{display:none}
+.mine-perf-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mine-perf-heading strong{font-size:8px;color:#b9e9e5}
+.mine-perf-heading span{font-size:6px;color:#82a8b6;letter-spacing:.6px}
+.mine-perf-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.mine-perf-grid>div{min-width:0;padding:6px;border:1px solid #294958;border-radius:7px;background:#071722}
+.mine-perf-grid small{display:block;color:#80a4b2;font-size:6px}
+.mine-perf-grid b{display:block;margin-top:3px;color:#e1f3f2;font-size:9px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.mine-perf-grid .mine-perf-wide{grid-column:1/-1}
+.mine-perf-panel>p{margin:0;color:#7f9baa;font-size:6px;line-height:1.5}
+@media(max-width:760px){
+ .mine-control-grid .mine-perf-action{font-size:7px}
+ .mine-perf-panel{padding:6px;gap:5px}
+ .mine-perf-grid{gap:4px}
+ .mine-perf-grid>div{padding:5px}
+ .mine-perf-grid small,.mine-perf-panel>p{font-size:6px}
+ .mine-perf-grid b{font-size:8px}
+}
