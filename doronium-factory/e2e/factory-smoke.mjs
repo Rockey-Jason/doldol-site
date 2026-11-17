@@ -395,8 +395,34 @@ try {
   assert.ok(mineVisual.mineTunnelCells >= 450, "The underground scene must contain connected crosscuts and chambers");
   assert.ok(mineVisual.mineSupportBraces > 0, "The mine must render diagonal timber support braces");
   assert.ok(mineVisual.mineRockDetails > 0, "The mine must render natural rock formations");
+  assert.ok(mineVisual.mineGeologyTypes >= 3, "The mine must render multiple host-rock strata");
+  assert.ok(mineVisual.mineVentilationDucts > 0, "The mine must render ventilation duct infrastructure");
+  assert.equal(mineVisual.mineCartCount, 1, "The mine must render an interactive rail cart");
   assert.ok(mineVisual.mineOreDrawCalls <= 10, "Mine ore types must remain batched to limit draw calls");
   assert.ok(mineVisual.mineLightCount <= 12, "Mine work lights must remain capped for performance");
+
+  const mineOps = await desktop.evaluate(() => window.__doroniumFactoryTest.setupMineSystemsTest());
+  assert.equal(mineOps.environment[1].ventilationActive, true, "Legacy and new mine levels must begin with working ventilation");
+  await desktop.locator("#mine-vent-button").click();
+  assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.mineSystems())).environment[1].ventilationActive, false, "The mine ventilation control must toggle the fan state");
+  await desktop.locator("#mine-pump-button").click();
+  assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.mineSystems())).environment[1].pumpActive, true, "The drainage control must activate the pump");
+  await desktop.evaluate(() => window.__doroniumFactoryTest.configureMineEnvironmentForTest({ supportIntegrity: 60, waterDepth: 0, gasLevel: 0 }));
+  const supportInventoryBefore = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot().inventory);
+  await desktop.locator("#mine-support-button").click();
+  const supportAfter = await desktop.evaluate(() => ({ mine: window.__doroniumFactoryTest.mineSystems(), inventory: window.__doroniumFactoryTest.snapshot().inventory }));
+  assert.ok(supportAfter.mine.environment[1].supportIntegrity > 90, "Support reinforcement must restore structural integrity");
+  assert.equal(supportAfter.inventory.wood, supportInventoryBefore.wood - 2, "Support reinforcement must consume exactly two owned wood");
+  assert.equal(supportAfter.inventory.stone, supportInventoryBefore.stone - 2, "Support reinforcement must consume exactly two owned stone");
+  await desktop.locator("#mine-map-toggle").click();
+  assert.equal(await desktop.locator("#mine-map-wrap").evaluate(el => el.classList.contains("visible")), true, "The mine map button must reveal the current-level map");
+  await desktop.keyboard.press("m");
+  assert.equal(await desktop.locator("#mine-map-wrap").evaluate(el => el.classList.contains("visible")), false, "M must close the mine map");
+  await desktop.locator("#mine-cart-button").click();
+  assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot())).player.onMineCart, true, "The engineer must mount the station cart");
+  await desktop.keyboard.press("k");
+  assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot())).player.onMineCart, false, "K must dismount the mine cart");
+
   const miningBefore = await desktop.evaluate(() => ({ stone: window.__doroniumFactoryTest.snapshot().inventory.stone || 0 }));
   await desktop.locator("#action-button").click();
   const miningAfter = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot());
@@ -553,6 +579,17 @@ try {
   const repairResult = await desktop.evaluate(() => window.__doroniumFactoryTest.runDrillRepairTest());
   assert.equal(repairResult.ok, true, "A worn drill must consume repair materials and return to service");
   assert.equal(repairResult.drillDurability, 1000, "Repair must restore drill durability");
+  const safetyInterlock = await desktop.evaluate(() => window.__doroniumFactoryTest.mineSafetyInterlockTest());
+  assert.equal(safetyInterlock.blocked, true, "An unsafe support condition must stop an automated mine drill before it extracts ore");
+  assert.equal(safetyInterlock.blockedStatus, "PAUSED_SAFETY", "The mine drill must expose a safety-interlock status");
+  assert.equal(safetyInterlock.depositWhileBlocked, safetyInterlock.depositBefore, "A stopped mine drill must not consume the source deposit");
+  assert.equal(safetyInterlock.recoveredOutput?.id, "ITEM_IRON_ORE", "Restoring a safe mine condition must allow automated drilling to resume");
+  assert.ok(safetyInterlock.scene.mineDrillCount >= 1, "The underground renderer must include a dedicated animated drill rig");
+  await desktop.waitForTimeout(650);
+  const minePerformance = await desktop.evaluate(() => window.__doroniumFactoryTest.inspectPerformance());
+  assert.ok(minePerformance.drawCalls < 180, "The underground scene must remain below the draw-call budget");
+  assert.ok(minePerformance.triangles < 180000, "The underground scene must remain below the triangle budget");
+  console.log("DORONIUM_MINE_PERFORMANCE", JSON.stringify(minePerformance));
 
   const advancedMiningSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.setupAdvancedMiningTest());
   assert.equal(advancedMiningSetup.generator, true, "The mine generator must be placeable beside advanced mineral deposits");
