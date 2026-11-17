@@ -2488,6 +2488,18 @@ if(E2E_MODE){
    markSceneDirty();renderAll();
    return {before,connected,disconnected,summary:mineDrainageSummary(S,1),ok:connected.network&&connected.stored===30&&connected.waterAfter<before&&!disconnected};
   },
+  mineDrainageUITest(){
+   S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:5,y:12};
+   S.mineEnvironment[1].pumpActive=false;
+   S.buildings=[
+    {uid:"DRAIN-UI-PUMP",type:"mineDrainPump",layer:"mine",mineLevel:1,x:5,y:12,status:"IDLE",rateLps:24},
+    {uid:"DRAIN-UI-PIPE-A",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:6,y:12,status:"IDLE"},
+    {uid:"DRAIN-UI-PIPE-B",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:7,y:12,status:"IDLE"},
+    {uid:"DRAIN-UI-TANK",type:"mineWaterTank",layer:"mine",mineLevel:1,x:8,y:12,status:"IDLE",capacityL:12000,waterStoredL:0}
+   ];
+   ensureMineInfrastructure(S);markSceneDirty();renderAll();
+   return {pumpActive:S.mineEnvironment[1].pumpActive,network:mineDrainageNetworks(S,1)[0]?.connected===true,summary:mineDrainageSummary(S,1)};
+  },
   mineSupportSectionsTest(){
    S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:3,y:12};
    const section=nearestMineSupport(S,1,3,12).section;
