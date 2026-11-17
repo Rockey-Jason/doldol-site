@@ -361,6 +361,23 @@ try {
   const depleted = await desktop.evaluate(() => window.__doroniumFactoryTest.survivalTick(5, true));
   assert.ok(depleted.health < 100, "Hunger and thirst depletion must damage health");
 
+  // Desktop keyboard-first regression: Q/R survival actions and tab navigation.
+  await desktop.evaluate(() => window.__doroniumFactoryTest.setupSurvivalTest());
+  await desktop.keyboard.press("q");
+  const keyboardFed = await desktop.evaluate(() => ({ survival: window.__doroniumFactoryTest.survival(), inventory: window.__doroniumFactoryTest.snapshot().inventory }));
+  assert.equal(keyboardFed.survival.hunger, 88, "Q must consume one food item and restore hunger");
+  assert.equal(keyboardFed.inventory.ITEM_DORI_MEAT, 1, "Q must consume exactly one canonical Dori Meat item");
+  await desktop.keyboard.press("r");
+  const keyboardHydrated = await desktop.evaluate(() => ({ survival: window.__doroniumFactoryTest.survival(), inventory: window.__doroniumFactoryTest.snapshot().inventory }));
+  assert.equal(keyboardHydrated.survival.thirst, 92, "R must consume one water and restore thirst");
+  assert.equal(keyboardHydrated.inventory.water, 2, "R must consume exactly one water");
+  await desktop.keyboard.press("b");
+  assert.equal(await desktop.locator("#control-column").evaluate(el => el.classList.contains("panel-open")), true, "B must open the build panel");
+  await desktop.keyboard.press("i");
+  assert.equal(await desktop.locator("#panel-inventory").evaluate(el => el.classList.contains("active")), true, "I must switch directly to the inventory panel");
+  await desktop.keyboard.press("Escape");
+  assert.equal(await desktop.locator("#control-column").evaluate(el => el.classList.contains("panel-open")), false, "Escape must close the desktop side panel");
+
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningTest());
   const miningBefore = await desktop.evaluate(() => ({ stone: window.__doroniumFactoryTest.snapshot().inventory.stone || 0 }));
   await desktop.locator("#action-button").click();
@@ -368,6 +385,12 @@ try {
   assert.equal(miningAfter.inventory.stone, miningBefore.stone + 2, "Clicking the desktop Use button must mine the aimed stone vein");
   assert.equal(miningAfter.mineDeposits["1:8:12"].amount, 10, "A successful mouse Use action must reduce the vein by two");
   assert.equal(miningAfter.player.layer, "mine", "The Use button must preserve the underground layer");
+  await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningTest());
+  const keyboardMiningBefore = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot().inventory.stone || 0);
+  await desktop.keyboard.press("e");
+  const keyboardMiningAfter = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot());
+  assert.equal(keyboardMiningAfter.inventory.stone, keyboardMiningBefore + 2, "E must mine the aimed underground stone deposit");
+  assert.equal(keyboardMiningAfter.mineDeposits["1:8:12"].amount, 10, "E must reduce the same underground deposit by two");
   const toolGuard = await desktop.evaluate(() => window.__doroniumFactoryTest.toolGuard());
   assert.equal(toolGuard.tool, "axe", "The tool guard must register the equipped axe");
   assert.equal(toolGuard.after, toolGuard.before, "An axe must not mine stone");
