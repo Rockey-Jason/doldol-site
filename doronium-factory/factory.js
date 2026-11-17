@@ -2,7 +2,7 @@ import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_C
 import { createRuntimeState, ensureItemStacks, addItemStack, allocateEntityID, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, reserveQualifiedItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, TICK_STAGE_ORDER, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState, enqueueSimulationEvent, processSimulationEvents, consumeFixedStepBudget } from "./simulation-core.js?v=7";
 import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, mineMainDriftZ, makeMineDeposits, auditMineDeposits } from "./terrain-system.js?v=6";
 import { createMineEnvironment, ensureMineEnvironment, mineSafetyAssessment, tickActiveMineEnvironments, toggleMineEquipment, reinforceMineSupports, mineEnvironmentSummary } from "./mine-runtime.js?v=3";
-import { ensureMineInfrastructure, mineSupportSections, nearestMineSupport, mineCellIsClosed, mineCellIsSafe, repairMineSupport, mineDrainageNetworks, tickMineDrainage, mineDrainageSummary, mineRailStations, setMineRailEnabled, mineRailSummary, tickMineRailRoutes, mineRoutePath, tickMineSupportSections, supportSectionsSummary } from "./mine-systems-runtime.js?v=1";
+import { ensureMineInfrastructure, mineSupportSections, nearestMineSupport, mineCellIsClosed, mineCellIsSafe, repairMineSupport, mineDrainageNetworks, tickMineDrainage, mineDrainageSummary, mineRailStations, mineRailTrackAt, setMineRailEnabled, mineRailSummary, tickMineRailRoutes, mineRoutePath, tickMineSupportSections, supportSectionsSummary } from "./mine-systems-runtime.js?v=1";
 import { validateGameData } from "./game-data-validation.js?v=3";
 import { CANONICAL_DORONUM_IDS, CANONICAL_INFINITY_DORONUM_ID, INFINITY_REQUIREMENTS, CANONICAL_DORONUM_CATALOG, validateCanonicalDoronumCatalog, auditCanonicalDoronumIntegration, applyDoronumMigration, canonicalItemID } from "./canonical-data.js?v=4";
 import { FAILURE_PROFILES } from "./failure-profiles.js?v=2";
@@ -1036,7 +1036,7 @@ function placeMineBuilding(type,x,y){
  if(!def||!supported){toast("광산 전용 채굴·배수·광차 설비만 설치할 수 있습니다.","warn");return false}
  const level=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS),px=Math.floor(Number(x)||0),py=Math.floor(Number(y)||0);
  if(px<0||py<0||px>=MINE_W||py>=MINE_H||!mineTunnelAt(px,py)){toast("광산 터널 안에 설치해야 합니다.","warn");return false}
- if(type==="mineRailStation"&&Math.abs(py-mineMainDriftZ(px))>1){toast("광차 정거장은 주 운반 갱도의 레일 구간에 설치해야 합니다.","warn");return false}
+ if(type==="mineRailStation"&&!mineRailTrackAt(px,py)){toast("광차 정거장은 실제 레일이 놓인 주 운반 갱도나 보조 운반 갱도에 설치해야 합니다.","warn");return false}
  if(type==="mineRailStation"&&mineCellIsClosed(S,level,px,py)){toast("폐쇄된 통로에는 정거장을 설치할 수 없습니다.","warn");return false}
  if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}
  const key=mineDepositKey(level,px,py),deposit=S.mineDeposits?.[key];
@@ -2502,10 +2502,10 @@ if(E2E_MODE){
    S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:5,y:12};S.runtime=createRuntimeState();ensureItemStacks(S);
    const mineral="ITEM_IRON_ORE",meta={quality:92,purity:90,synthetic:false};
    S.buildings=[
-    {uid:"RAIL-STATION-A",type:"mineRailStation",layer:"mine",mineLevel:1,x:5,y:12,status:"IDLE"},
-    {uid:"RAIL-STATION-B",type:"mineRailStation",layer:"mine",mineLevel:1,x:15,y:12,status:"IDLE"},
-    {uid:"RAIL-STATION-C",type:"mineRailStation",layer:"mine",mineLevel:1,x:25,y:12,status:"IDLE"},
-    {uid:"RAIL-MINER",type:"minerIron",layer:"mine",mineLevel:1,x:14,y:12,status:"PAUSED_OUTPUT",output:{id:mineral,qty:2,meta}}
+    {uid:"RAIL-STATION-A",type:"mineRailStation",layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5),status:"IDLE"},
+    {uid:"RAIL-STATION-B",type:"mineRailStation",layer:"mine",mineLevel:1,x:15,y:mineMainDriftZ(15),status:"IDLE"},
+    {uid:"RAIL-STATION-C",type:"mineRailStation",layer:"mine",mineLevel:1,x:25,y:mineMainDriftZ(25),status:"IDLE"},
+    {uid:"RAIL-MINER",type:"minerIron",layer:"mine",mineLevel:1,x:14,y:mineMainDriftZ(14),status:"PAUSED_OUTPUT",output:{id:mineral,qty:2,meta}}
    ];
    ensureMineInfrastructure(S);
    const start=setMineRailEnabled(S,1,true),before=itemCount("ironOre");let delivered=0,loaded=0;
