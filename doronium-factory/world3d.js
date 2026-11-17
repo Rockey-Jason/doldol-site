@@ -506,9 +506,9 @@ export function createWorld3D(canvas, getState) {
       }
 
       // Each timber frame has its own persistent condition and warning color.
-      if(p.z===centerZ&&p.x%6===2){
-        const supportKey=level+":"+p.x+":"+p.z,support=state.mineInfrastructure?.supports?.[supportKey];
-        const integrity=clamp(Number(support?.integrity??environment.supportIntegrity??100),0,100);
+      const supportKey=level+":"+p.x+":"+p.z,support=state.mineInfrastructure?.supports?.[supportKey];
+      if(support&&(p.z===centerZ||p.z===18)&&p.x%6===2){
+        const integrity=clamp(Number(support.integrity??100),0,100);
         const sectionTint=integrity<35?0xb65d52:integrity<65?0xb38a4e:0x65412e;
         for(const side of [-1,1]){
           const postIndex=put(timberPosts,x,floorY+13,z+side*12.4,2.3,26,2.3,.02,0,side*.02,sectionTint);
