@@ -1135,9 +1135,22 @@ function setViewMode(mode){
  if($("world-help"))$("world-help").innerHTML=next==="map"?"<b>조작</b><span>WASD 이동</span><span>드래그 화면 이동 · 우클릭 회전</span><span>휠 확대/축소</span>":"<b>생존 조작</b><span>WASD 이동 · Shift 달리기 · Space 점프</span><span>우클릭 드래그/Shift+드래그 시점 회전 · 화면 버튼 클릭으로 먹기/마시기/사용</span><span>V 1인칭/3인칭 · M 전략 지도</span>";
  renderHud();drawWorld();markDirty();
 }
+function canTraverseMineCell(x,z){
+ const level=Number(S.player.mineLevel)||1;
+ if(!mineTunnelAt(x,z)||mineCellIsClosed(S,level,x,z))return false;
+ const safety=mineCellIsSafe(S,level,x,z);
+ if(safety.safe)return true;
+ const section=safety.section;
+ if(!section)return false;
+ // An engineer already inside a newly unsafe support influence zone may
+ // move outward, but cannot move deeper into the hazard.
+ const currentDistance=Math.abs(Math.floor(playerMotion.x+.5)-section.x)+Math.abs(Math.floor(playerMotion.z+.5)-section.z);
+ const nextDistance=Math.abs(x-section.x)+Math.abs(z-section.z);
+ return nextDistance>currentDistance;
+}
 function isAdventureCellFree(x,z){
  const cx=Math.floor(x+.5),cz=Math.floor(z+.5);
- if(S.player.layer==="mine")return cx>=0&&cz>=0&&cx<MINE_W&&cz<MINE_H&&mineTunnelAt(cx,cz);
+ if(S.player.layer==="mine")return cx>=0&&cz>=0&&cx<MINE_W&&cz<MINE_H&&canTraverseMineCell(cx,cz);
  if(cx<0||cz<0||cx>=WORLD_W||cz>=WORLD_H)return false;
  if(cx===Math.floor(playerMotion.x+.5)&&cz===Math.floor(playerMotion.z+.5))return true;
  const node=tileNode(cx,cz);return !buildingAt(cx,cz)&&(!node||node.amount<=0);
@@ -1348,6 +1361,16 @@ function toggleMineRailRoute(){
 }
 function mineNavigationClosures(level){
  const closures={...(S.mineInfrastructure?.closures||{})};
+ // Local support hazards close a five-cell tunnel influence zone for route
+ // planning, matching the safety rule used by direct movement and mining.
+ for(const section of Object.values(S.mineInfrastructure?.supports||{})){
+  if(Number(section?.level)!==Number(level)||(!section.closed&&Number(section.integrity)>12))continue;
+  for(let dx=-5;dx<=5;dx++)for(let dz=-5;dz<=5;dz++){
+   if(Math.abs(dx)+Math.abs(dz)>5)continue;
+   const x=Number(section.x)+dx,z=Number(section.z)+dz;
+   if(mineTunnelAt(x,z))closures[level+":"+x+":"+z]=true;
+  }
+ }
  for(const building of S.buildings||[]){
   if(building.layer!=="mine"||Number(building.mineLevel||1)!==Number(level))continue;
   // Drain pipes are low-profile floor conduits; stations are intended route endpoints.
@@ -1360,7 +1383,7 @@ function mineNavigationClosures(level){
 function nearestWalkableMineRouteGoal(level,node){
  const candidates=[{x:node.x,z:node.z},...[[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dz])=>({x:node.x+dx,z:node.z+dz}))];
  const closures=mineNavigationClosures(level);
- return candidates.find(cell=>mineTunnelAt(cell.x,cell.z)&&closures[level+":"+cell.x+":"+cell.z]!==true)||null;
+ return candidates.find(cell=>mineTunnelAt(cell.x,cell.z)&&closures[level+":"+cell.x+":"+cell.z]!==true&&mineCellIsSafe(S,level,cell.x,cell.z).safe)||null;
 }
 function selectMineMapDeposit(event){
  if(S.player.layer!=="mine")return;
@@ -1389,10 +1412,11 @@ function followMineMapGuide(){
 function drawMineMap(){
  const canvas=$("mine-map-canvas");if(!canvas||S.player.layer!=="mine")return;
  const ctx=canvas.getContext("2d");if(!ctx)return;
- const w=canvas.width,h=canvas.height,cw=w/MINE_W,ch=h/MINE_H;
+ const w=canvas.width,h=canvas.height,cw=w/MINE_W,ch=h/MINE_H,level=S.player.mineLevel;
+ const closures=mineNavigationClosures(level),supports=mineSupportSections(S,level);
  ctx.fillStyle="#07131d";ctx.fillRect(0,0,w,h);
  for(let z=0;z<MINE_H;z++)for(let x=0;x<MINE_W;x++){
-  const open=mineTunnelAt(x,z),closed=mineCellIsClosed(S,S.player.mineLevel,x,z);
+  const open=mineTunnelAt(x,z),closed=closures[level+":"+x+":"+z]===true;
   ctx.fillStyle=closed?"#8d4549":open?"#87919a":"#26323c";
   ctx.fillRect(x*cw,z*ch,Math.ceil(cw),Math.ceil(ch));
   if(!open)continue;
@@ -1401,12 +1425,12 @@ function drawMineMap(){
  }
  // Draw a route to the selected mineral vein, recalculating around every closed support section.
  // Amber rings identify locally weakened supports; closed passages remain red.
- for(const section of mineSupportSections(S,S.player.mineLevel)){
+ for(const section of supports){
   if(section.closed||(!section.warning&&section.integrity>55))continue;
   ctx.strokeStyle="#e4b45c";ctx.lineWidth=1.5;
   ctx.strokeRect(section.x*cw+1,section.z*ch+1,Math.max(2,cw-2),Math.max(2,ch-2));
  }
- const guidedRoute=mineMapGuide&&mineMapGuide.level===S.player.mineLevel?mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},{x:mineMapGuide.goalX??mineMapGuide.x,z:mineMapGuide.goalZ??mineMapGuide.z},mineNavigationClosures(S.player.mineLevel)):null;
+ const guidedRoute=mineMapGuide&&mineMapGuide.level===level?mineRoutePath(level,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},{x:mineMapGuide.goalX??mineMapGuide.x,z:mineMapGuide.goalZ??mineMapGuide.z},closures):null;
  if(guidedRoute?.length>1){
   ctx.strokeStyle="#f3ca74";ctx.lineWidth=2.5;ctx.lineJoin="round";ctx.beginPath();
   guidedRoute.forEach((p,i)=>{const px=(p.x+.5)*cw,pz=(p.z+.5)*ch;if(i===0)ctx.moveTo(px,pz);else ctx.lineTo(px,pz)});ctx.stroke();
