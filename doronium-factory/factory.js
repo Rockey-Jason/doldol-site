@@ -1296,6 +1296,7 @@ function reinforceMineSafety(){
  const env=currentMineEnvironment();if(!env){toast("광산 안에서만 사용할 수 있습니다.","warn");return}
  const nearest=nearestMineSupport(S,S.player.mineLevel,playerMotion.x,playerMotion.z);
  if(!nearest||nearest.distance>5){toast("가까운 목재 지지대 옆에서 보강할 수 있습니다.","warn");return}
+ if(nearest.section.integrity>=99&&env.supportIntegrity>=99){toast("현재 위치의 지지대는 이미 정상 상태입니다.");return}
  if(!hasItems({wood:2,stone:2})){toast("지지대 보강에는 목재 2개와 석재 2개가 필요합니다.","warn");return}
  takeItems({wood:2,stone:2});
  const local=repairMineSupport(S,S.player.mineLevel,playerMotion.x,playerMotion.z,48);
@@ -2488,6 +2489,18 @@ if(E2E_MODE){
    markSceneDirty();renderAll();
    return {before,connected,disconnected,summary:mineDrainageSummary(S,1),ok:connected.network&&connected.stored===30&&connected.waterAfter<before&&!disconnected};
   },
+  configureMineSupportForTest(integrity){
+   const nearest=nearestMineSupport(S,S.player.mineLevel,playerMotion.x,playerMotion.z);
+   if(!nearest)throw new Error("MINE_SUPPORT_FIXTURE_MISSING");
+   nearest.section.integrity=clamp(Number(integrity)||0,0,100);
+   nearest.section.warning=nearest.section.integrity<=55;
+   nearest.section.closed=nearest.section.integrity<=8;
+   if(nearest.section.closed)S.mineInfrastructure.closures[mineSupportKey(S.player.mineLevel,nearest.section.x,nearest.section.z)]=true;
+   else delete S.mineInfrastructure.closures[mineSupportKey(S.player.mineLevel,nearest.section.x,nearest.section.z)];
+   markSceneDirty();updateMineHud();drawWorld();
+   return structuredClone(nearest.section);
+  },
+  mineSupportSectionSnapshot(){const nearest=nearestMineSupport(S,S.player.mineLevel,playerMotion.x,playerMotion.z);return nearest?structuredClone(nearest.section):null},
   mineDrainageUITest(){
    S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:5,y:12};
    S.mineEnvironment[1].pumpActive=false;
