@@ -75,14 +75,15 @@ export function mineSafetyAssessment(environment){
   if(support<=65)factors.push("지지대 내구도 저하");
   return {risk:Number(risk.toFixed(1)),status,stopMining,factors,message:stopMining?"안전 한계 초과 · 채굴을 중지하고 출구로 이동하세요.":status==="CAUTION"?"환경 경고 · 환기·배수·지지대를 점검하세요.":"광산 환경 정상"};
 }
-export function tickMineEnvironment(state,dt){
-  const environments=ensureMineEnvironment(state);
-  if(state.player?.layer!=="mine")return {active:false,changed:false,level:0,assessment:null};
-  const level=clamp(integer(state.player.mineLevel,1),1,5),env=environments[level];
+function advanceMineEnvironmentLevel(state,level,dt){
+  const environments=ensureMineEnvironment(state),env=environments[level];
   const step=clamp(Number(dt)||0,0,1);
   if(step<=0)return {active:true,changed:false,level,environment:env,assessment:mineSafetyAssessment(env)};
   const before=[env.waterDepth,env.humidity,env.gasLevel,env.supportIntegrity,env.warning,env.incident];
-  const profile=mineGeologyAt(level,integer(state.player.x),integer(state.player.y));
+  const worker=(state.buildings||[]).find(building=>building.layer==="mine"&&Number(building.mineLevel||1)===level);
+  const x=state.player?.layer==="mine"&&Number(state.player?.mineLevel)===level?state.player.x:worker?.x??20;
+  const z=state.player?.layer==="mine"&&Number(state.player?.mineLevel)===level?state.player.y:worker?.y??12;
+  const profile=mineGeologyAt(level,integer(x),integer(z));
   const seepage=(.000075+(level-1)*.000012)*(.8+profile.moisture*.4);
   env.waterDepth=clamp(env.waterDepth+(seepage-((env.pumpActive ? .00024 : 0)))*step,0,1);
   const ventilationTarget=env.ventilationActive?100:28;
@@ -96,6 +97,22 @@ export function tickMineEnvironment(state,dt){
   const after=[env.waterDepth,env.humidity,env.gasLevel,env.supportIntegrity,env.warning,env.incident];
   const changed=after.some((value,index)=>typeof value==="number"?Math.abs(value-before[index])>=.002:value!==before[index]);
   return {active:true,changed,level,environment:env,assessment,enteredWarning:before[4]!==env.warning,enteredIncident:before[5]!==true&&env.incident};
+}
+export function tickMineEnvironment(state,dt){
+  ensureMineEnvironment(state);
+  if(state.player?.layer!=="mine")return {active:false,changed:false,level:0,assessment:null};
+  const level=clamp(integer(state.player.mineLevel,1),1,5);
+  return advanceMineEnvironmentLevel(state,level,dt);
+}
+export function tickActiveMineEnvironments(state,dt){
+  ensureMineEnvironment(state);
+  const levels=new Set((state.buildings||[])
+    .filter(building=>building.layer==="mine")
+    .map(building=>clamp(integer(building.mineLevel,1),1,5)));
+  if(state.player?.layer==="mine")levels.add(clamp(integer(state.player.mineLevel,1),1,5));
+  const results=[];
+  for(const level of levels)results.push(advanceMineEnvironmentLevel(state,level,dt));
+  return {active:results.length>0,changed:results.some(result=>result.changed),results};
 }
 export function toggleMineEquipment(environment,equipment){
   if(!environment||typeof environment!=="object")throw new TypeError("mine-environment-required");
