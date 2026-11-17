@@ -261,7 +261,7 @@ export function tickMineSupportSections(state,dt){
     const drills=(state.buildings||[]).filter(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&String(b.type).startsWith("miner")&&b.status==="RUNNING");
     for(const section of mineSupportSections(state,level)){
       if(section.closed)continue;
-      const drillLoad=drills.some(b=>Math.abs(num(b.x)-section.x)+Math.abs(num(b.y)-section.z)<=5)?.0024:0;
+      const drillLoad=drills.some(b=>Math.abs(num(b.x)-section.x)+Math.abs(num(b.y)-section.z)<=5) ? .0024 : 0;
       const wearRate=.00018+wetness*.0013+(humidity/100)*.00016+drillLoad;
       const before=section.integrity;
       section.integrity=clamp(before-wearRate*step,0,100);
