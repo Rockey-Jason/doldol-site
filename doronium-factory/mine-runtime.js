@@ -54,8 +54,9 @@ export function ensureMineEnvironment(state){
       env={...DEFAULT_MINE_ENVIRONMENT,humidity:clamp(38+level*5,0,100),gasLevel:5+level*1.5};
       environments[level]=env;
     }else{
-      const defaults={...DEFAULT_MINE_ENVIRONMENT,humidity:clamp(38+level*5,0,100),gasLevel:5+level*1.5};
-      for(const [key,value] of Object.entries(defaults))if(!(key in env))env[key]=value;
+      for(const [key,value] of Object.entries(DEFAULT_MINE_ENVIRONMENT))if(!(key in env))env[key]=value;
+      if(!("humidity" in env))env.humidity=clamp(38+level*5,0,100);
+      if(!("gasLevel" in env))env.gasLevel=5+level*1.5;
     }
     env.waterDepth=clamp(Number(env.waterDepth)||0,0,1);
     env.humidity=clamp(Number(env.humidity)||0,0,100);
