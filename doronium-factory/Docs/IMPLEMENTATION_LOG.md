@@ -415,3 +415,9 @@ PR #8 remains the separate Godot implementation and was not integrated. PR #9 ov
 - **Regression coverage added:** mine-system test now verifies complete orthogonal connectivity, at least 100 coal seams / 18,000 coal units overall, and at least 18 seams / 3,500 units on every level. Playwright verifies mine stats, timber braces, rock details, ore draw-call and light caps, plus no mine rebuild on surface-only refresh.
 - **Verification status:** formal Node and Playwright tests are **PENDING / UNVERIFIED**. The GitHub workflow-run lookup and combined commit status for the latest PR head returned no runs/checks; do not describe the committed assertions as passed. The deterministic counts above are source-algorithm replay only. Real desktop/mobile hardware performance, sustained frame-time and 60-minute wall-clock soak remain **UNVERIFIED**.
 - **Scope boundary:** only PR #11 development branch changed. No main merge, Pages/Render deployment, production database/schema/RLS/function mutation, live-user save/economy change or reward/balance change was performed. Natural Doronium veins remain prohibited.
+
+
+### Mine regression workflow wiring follow-up
+
+- Added `node --check doronium-factory/mine-system.test.mjs`, `node --test doronium-factory/mine-system.test.mjs`, and a required-file assertion to `.github/workflows/doronium-factory-validation.yml`. The mine test previously existed but was not included in the validation workflow's test command.
+- **Workflow checkpoint:** `fc54186d7a2e8a0a34fddf8ec8529f93e88c9ba5` (PR #11 head). GitHub workflow-run and combined-status lookups still return no runs/checks, so the suite remains **PENDING / UNVERIFIED**.
