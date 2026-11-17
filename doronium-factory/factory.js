@@ -2664,6 +2664,34 @@ if(E2E_MODE){
   drinkWater:()=>{drinkWater();return structuredClone(S.survival)},
   setupSurvivalTest(){S=freshState();S.player={...S.player,x:72,y:52,layer:"surface",viewMode:"first",yaw:0,pitch:-.12};S.survival={health:100,hunger:50,thirst:50};S.inventory.doriMeat=2;S.inventory.water=3;S.runtime=createRuntimeState();ensureItemStacks(S);playerMotion={x:72,z:52,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};renderAll();return structuredClone(S)},
   survivalTick(seconds,deplete=false){if(deplete){S.survival.hunger=0;S.survival.thirst=0}updateSurvival(Math.max(0,Number(seconds)||0));return structuredClone(S.survival)},
+  mineDirectMovementSafetyTest(){
+   S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:8,y:12,viewMode:"first"};
+   ensureMineInfrastructure(S);
+   const failed=nearestMineSupport(S,1,2,12).section;
+   failed.integrity=0;failed.warning=true;failed.closed=false;
+   playerMotion={...playerMotion,x:8.2,z:12,y:0,velocityY:0,grounded:true,yaw:0,pitch:0,path:[],moving:false,facing:0};
+   const before={x:playerMotion.x,z:playerMotion.z};
+   adventureKeys.add("a");updatePlayerMotion(.3);adventureKeys.delete("a");
+   const blocked={x:playerMotion.x,z:playerMotion.z};
+   adventureKeys.add("d");updatePlayerMotion(.3);adventureKeys.delete("d");
+   const escaped={x:playerMotion.x,z:playerMotion.z};
+   markSceneDirty();renderAll();
+   return {blocked:Math.abs(blocked.x-before.x)<.001&&Math.abs(blocked.z-before.z)<.001,canEscape:escaped.x>blocked.x,failedSection:{x:failed.x,z:failed.z,integrity:failed.integrity},before,blocked,escaped};
+  },
+  mineDrainagePowerGateTest(){
+   S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:5,y:12};
+   S.mineEnvironment[1].pumpActive=true;S.mineEnvironment[1].waterDepth=.35;
+   const pump={uid:"POWER-GATED-DRAIN-PUMP",type:"mineDrainPump",layer:"mine",mineLevel:1,x:5,y:12,status:"IDLE",rateLps:24};
+   const pipe={uid:"POWER-GATED-DRAIN-PIPE",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:6,y:12,status:"IDLE"};
+   const tank={uid:"POWER-GATED-DRAIN-TANK",type:"mineWaterTank",layer:"mine",mineLevel:1,x:7,y:12,status:"IDLE",capacityL:1200,waterStoredL:0};
+   S.buildings=[pump,pipe,tank];ensureMineInfrastructure(S);
+   tickBuilding(pump,STEP,{allocations:{[String(pump.uid)]:{ratio:.79}}});
+   const lowPowerStatus=pump.status,waterBefore=S.mineEnvironment[1].waterDepth;
+   const blockedTransfer=tickMineDrainage(S,1);
+   tickBuilding(pump,STEP,{allocations:{[String(pump.uid)]:{ratio:.8}}});
+   const sufficientPowerStatus=pump.status,transferred=tickMineDrainage(S,1);
+   return {lowPowerStatus,sufficientPowerStatus,waterBefore,waterAfter:S.mineEnvironment[1].waterDepth,tankLitres:tank.waterStoredL,blockedTransfer:blockedTransfer.results.length,transferred:transferred.results.reduce((sum,item)=>sum+item.litres,0),ok:lowPowerStatus==="PAUSED_POWER"&&sufficientPowerStatus==="RUNNING"&&blockedTransfer.results.length===0&&tank.waterStoredL>0};
+  },
   manualMineSafetyTest(){
    this.setupMiningTest();
    const deposit=S.mineDeposits["1:8:12"],env=ensureMineEnvironment(S)[1],before=deposit.amount,stoneBefore=itemCount("stone");
