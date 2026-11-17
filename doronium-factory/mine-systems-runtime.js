@@ -189,7 +189,7 @@ function mineRailPathClosures(state,level,systems){
 export function mineRailTrackAt(x,z){
   const gx=integer(x,-1),gz=integer(z,-1);
   if(!mineTunnelAt(gx,gz))return false;
-  return gz===mineMainDriftZ(gx)||gz===18||([16,27].includes(gx)&&gz>=10&&gz<=20);
+  return Math.abs(gz-mineMainDriftZ(gx))<=1||Math.abs(gz-18)<=1||([16,27].some(column=>Math.abs(gx-column)<=1)&&gz>=10&&gz<=20);
 }
 export function mineRailStations(state,level){
   return (state.buildings||[]).filter(b=>b?.type==="mineRailStation"&&b.layer==="mine"&&integer(b.mineLevel,1)===integer(level,1))
