@@ -185,7 +185,12 @@ function mineRailPathClosures(state,level,systems){
     const width=Math.max(1,integer(building.footprint?.width,1)),height=Math.max(1,integer(building.footprint?.height,1));
     for(let dz=0;dz<height;dz++)for(let dx=0;dx<width;dx++)closures[keyOf(level,integer(building.x)+dx,integer(building.y)+dz)]=true;
   }
-  for(const station of mineRailStations(state,level))delete closures[keyOf(level,integer(station.x),integer(station.y))];
+  for(const station of mineRailStations(state,level)){
+    const key=keyOf(level,integer(station.x),integer(station.y));
+    // A station may be a route endpoint, but it must never erase a safety
+    // closure created by a failed support section underneath it.
+    if(systems?.supports?.[key]?.closed!==true)delete closures[key];
+  }
   return closures;
 }
 export function mineRailTrackAt(x,z){
