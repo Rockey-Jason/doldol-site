@@ -430,3 +430,20 @@ No main merge, deployment, production database change, or live-user save/economy
 - The current-level map now marks the return lift (E) and descent lift (D), highlights the player position, and wraps its legend on mobile widths. The reported mine-light count now includes lift and underground-generator point lights.
 - Current mine helper/unit source tests: **12 passed / 0 failed / 0 skipped / 0 cancelled** (local Node 22 execution against the exact current Git blob copies). This does not verify full browser rendering.
 - **Current code checkpoint:** `b1e0a1c72b040c3796856ad73b48f4f72a640209`. Full Playwright browser regression, CI status, physical hardware FPS/heap and 60-minute soak remain **PENDING / UNVERIFIED**.
+
+
+## 2026-11-18 — connected mine systems and remaining acceptance evidence
+
+| Area | Implemented in branch | Acceptance still outstanding |
+|---|---|---|
+| Geological strata and ore veins | Six deterministic host-rock profiles; mineral-specific multi-segment veins; coal rendered as stratified seams; batched geometry. | Run renderer tests and inspect captured screenshots for scale/material fidelity on actual displays. |
+| Groundwater and drainage | Four-way connected pump/pipe/tank networks; powered pump state; real water transfer and tank capacity; old fake-drain tick removed. | Execute drainage integration tests and observe tank/water behavior in browser; optional tank emptying/industrial reuse is not included in this pass. |
+| Passage support and safety | 11 persisted support sections per level across both drifts; wear, warnings, closures, local mining/autominer interlocks, repair/reopen. | Execute support regression and inspect barrier/route visuals in Playwright and real devices. |
+| Mine drills and rail haulage | Added station structures, track-only automatic multi-station route, cargo reservation and canonical inventory settlement, cancellation/save reconciliation and rerouting. | Execute route/ownership tests and validate long-duration route stability with browser logs. |
+| Local events and cave-in risk | Per-section warning/closure events; actual passage barrier rather than injury animation; mining and movement respect closure. | Verify event timing and safe detours in live browser play; localized support coverage is at defined timber-frame sections. |
+| Mineral route guidance | Click a deposit to calculate a safe approach route; route avoids occupied facilities and closures; map includes supports, lifts, ore and player. | Execute navigation regression and check usability on mobile touch screens. |
+| Performance | Instanced geometry, grouped updates, renderer metrics, desktop/mobile-emulation budgets, 10-second elapsed samples, one-hour virtual mine simulation, opt-in real 60-minute test. | Actual Playwright run, hardware-specific FPS/heap captures, physical Android/iOS/PC sessions and wall-clock 60-minute test. |
+
+**Code checkpoint before docs:** `a8a5067c3175d98fad22218394cffce8902363f2`. **Current PR #11 state at inspection:** open, draft, unmerged; branch compared with main as diverged (535 commits ahead, 892 behind). Re-check latest PR head before any future action.
+
+**Test state:** unit and E2E tests are committed and wired into the validation workflow, but latest run/status queries returned no records. Treat all automated assertions as **PENDING / UNVERIFIED**, not passed. Physical hardware and real-time soak likewise remain **UNVERIFIED**. No acceptance row is marked COMPLETE.
