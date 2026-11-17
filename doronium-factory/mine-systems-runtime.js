@@ -198,9 +198,16 @@ export function mineDrainageSummary(state,level){
 
 function mineRailPathClosures(state,level,systems){
   const closures={...(systems?.closures||{})};
-  for(const [key,section] of Object.entries(systems?.supports||{})){
+  for(const section of Object.values(systems?.supports||{})){
     if(Number(section?.level)!==integer(level,1))continue;
-    if(section.closed===true||num(section.integrity,100)<=12)closures[key]=true;
+    if(section.closed!==true&&num(section.integrity,100)>12)continue;
+    // A failed timber frame makes its local five-cell influence zone
+    // inaccessible, not just the one tile occupied by the frame.
+    for(let dx=-5;dx<=5;dx++)for(let dz=-5;dz<=5;dz++){
+      if(Math.abs(dx)+Math.abs(dz)>5)continue;
+      const x=integer(section.x)+dx,z=integer(section.z)+dz;
+      if(mineTunnelAt(x,z))closures[keyOf(level,x,z)]=true;
+    }
   }
   for(const building of state.buildings||[]){
     if(building?.layer!=="mine"||integer(building.mineLevel,1)!==integer(level,1)||building.type==="mineRailStation"||building.type==="mineDrainPipe")continue;
