@@ -50,9 +50,14 @@ export function ensureMineInfrastructure(state){
       route.direction=integer(route.direction,1)<0?-1:1;
       route.travelled=Math.max(0,num(route.travelled));
       route.stopRemaining=Math.max(0,num(route.stopRemaining));
-      route.cargo=Array.isArray(route.cargo)?route.cargo:[];
+      route.cargo=Array.isArray(route.cargo)?route.cargo.filter(item=>item&&item.buildingUID!==undefined&&item.itemID&&num(item.quantity)>0):[];
       route.delivered=Math.max(0,integer(route.delivered));
       route.loaded=Math.max(0,integer(route.loaded));
+    }
+    const currentRoute=infrastructure.railRoutes[level];
+    for(const cargo of currentRoute.cargo){
+      const owner=(state.buildings||[]).find(building=>String(building.uid)===String(cargo.buildingUID));
+      if(owner?.output?.id===cargo.itemID&&num(owner.output.qty)===num(cargo.quantity))owner.mineRailReserved=true;
     }
   }
   infrastructure.lastUpdated=Math.max(0,num(infrastructure.lastUpdated));
@@ -173,6 +178,15 @@ export function mineRailStations(state,level){
 export function setMineRailEnabled(state,level,enabled){
   const systems=ensureMineInfrastructure(state),stations=mineRailStations(state,level),route=systems.railRoutes[integer(level,1)];
   if(enabled&&stations.length<2)return {ok:false,reason:"TWO_STATIONS_REQUIRED",stationCount:stations.length};
+  if(!enabled){
+    // Cancelling a route releases every reserved machine output back to its
+    // original machine buffer; no item ownership or quantity is moved here.
+    for(const cargo of route.cargo){
+      const owner=(state.buildings||[]).find(building=>String(building.uid)===String(cargo.buildingUID));
+      if(owner)owner.mineRailReserved=false;
+    }
+    route.cargo=[];
+  }
   route.enabled=enabled===true;route.stationIndex=clamp(route.stationIndex,0,Math.max(0,stations.length-1));
   route.direction=1;route.travelled=0;route.stopRemaining=route.enabled?1.5:0;
   if(stations.length)route.position={x:num(stations[route.stationIndex].x),y:num(stations[route.stationIndex].y)};
