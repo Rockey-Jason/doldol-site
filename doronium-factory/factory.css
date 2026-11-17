@@ -293,3 +293,10 @@ html,body{width:100%;height:100%;min-height:100%;overflow:hidden;overscroll-beha
 .backup-row small{display:block;overflow-wrap:anywhere;color:#7f99ab;font-size:7px;margin-top:3px}
 .backup-row .action-button{flex:none;padding:6px 9px;font-size:8px}
 .backup-empty{padding:9px;text-align:center;border:1px dashed #2b4354;border-radius:7px;color:#7892a4;font-size:8px}
+
+
+/* Desktop keyboard-first control legend */
+.world-help kbd{display:inline-grid;place-items:center;min-width:20px;padding:2px 5px;margin:0 1px;border:1px solid #45647b;border-bottom-width:2px;border-radius:5px;background:linear-gradient(180deg,#18364c,#0b2031);color:#d9f5fa;font:600 9px/1.25 Inter,'Noto Sans KR',sans-serif;box-shadow:0 2px 8px #0003}
+.world-help{gap:6px 12px;max-width:min(680px,calc(100% - 24px));padding:10px 12px;border:1px solid #3b6278;border-radius:10px;background:linear-gradient(135deg,#071b2bea,#0d2a3bea);box-shadow:0 12px 35px #0005;backdrop-filter:blur(12px)}
+.world-help b{color:#8fe7e2;font-size:10px;letter-spacing:.3px}
+@media(min-width:761px){.world-help{display:flex;flex-wrap:wrap;align-items:center}.world-help span{white-space:nowrap}}
