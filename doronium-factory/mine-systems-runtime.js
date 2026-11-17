@@ -54,7 +54,16 @@ export function ensureMineInfrastructure(state){
       route.direction=integer(route.direction,1)<0?-1:1;
       route.travelled=Math.max(0,num(route.travelled));
       route.stopRemaining=Math.max(0,num(route.stopRemaining));
-      route.path=Array.isArray(route.path)?route.path.filter(cell=>mineTunnelAt(integer(cell?.x,-1),integer(cell?.z??cell?.y,-1))):[];
+      const savedPath=Array.isArray(route.path)?route.path:[];
+      const validPath=savedPath.length>=2&&savedPath.every((cell,index)=>{
+        const x=integer(cell?.x,-1),z=integer(cell?.z??cell?.y,-1);
+        if(!mineRailTrackAt(x,z))return false;
+        if(index===0)return true;
+        const previous=savedPath[index-1],dx=Math.abs(x-integer(previous?.x,-99)),dz=Math.abs(z-integer(previous?.z??previous?.y,-99));
+        return dx<=1&&dz<=1&&dx+dz>0;
+      });
+      route.path=validPath?savedPath:[];
+      if(!validPath)route.travelled=0;
       route.cargo=Array.isArray(route.cargo)?route.cargo.filter(item=>item&&item.buildingUID!==undefined&&item.itemID&&num(item.quantity)>0):[];
       route.delivered=Math.max(0,integer(route.delivered));
       route.loaded=Math.max(0,integer(route.loaded));
@@ -268,7 +277,13 @@ export function tickMineRailRoutes(state,dt){
     const next=stations[nextIndex];
     const currentCell={x:Math.round(num(route.position.x,current.x)),z:Math.round(num(route.position.y,current.y))};
     const routeClosures=mineRailPathClosures(state,level,systems);
-    const blockedAhead=Array.isArray(route.path)&&route.path.some(cell=>routeClosures[keyOf(level,cell.x,cell.z)]===true);
+    const pathInvalid=!Array.isArray(route.path)||route.path.length<2||route.path.some((cell,index)=>{
+      if(!mineRailTrackAt(cell.x,cell.z)||routeClosures[keyOf(level,cell.x,cell.z)]===true)return true;
+      if(index===0)return false;
+      const previous=route.path[index-1],dx=Math.abs(cell.x-previous.x),dz=Math.abs(cell.z-previous.z);
+      return dx>1||dz>1||dx+dz===0;
+    });
+    const blockedAhead=pathInvalid;
     if(blockedAhead){
       route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},routeClosures,true)||[];
       route.travelled=0;
