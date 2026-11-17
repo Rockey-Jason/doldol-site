@@ -111,9 +111,9 @@ test("route guidance avoids closed support cells and rejects unreachable deposit
   infra.closures["1:10:12"]=true;
   assert.equal(mineRoutePath(1,{x:3,z:12},{x:10,z:12},infra.closures),null);
 });
-test("automatic mine rail routes stay on rendered track cells and detour around a blocked sleeper section",()=>{
+test("automatic mine rail routes stay on rendered track cells and detour through the secondary drift",()=>{
   const state=stateFixture();
-  const start={x:5,z:mineMainDriftZ(5)},end={x:15,z:mineMainDriftZ(15)};
+  const start={x:10,z:mineMainDriftZ(10)},end={x:32,z:mineMainDriftZ(32)};
   state.buildings=[
     {uid:"track-a",type:"mineRailStation",layer:"mine",mineLevel:1,x:start.x,y:start.z},
     {uid:"track-b",type:"mineRailStation",layer:"mine",mineLevel:1,x:end.x,y:end.z}
@@ -122,14 +122,16 @@ test("automatic mine rail routes stay on rendered track cells and detour around 
   const original=state.mineInfrastructure.railRoutes[1].path;
   assert.ok(original.length>1);
   assert.ok(original.every(cell=>mineRailTrackAt(cell.x,cell.z)),"every cart path cell must have rendered rails");
-  const blocked=original[Math.floor(original.length/2)];
+  const blocked=original.find(cell=>cell.x>=20&&cell.x<=24&&cell.z!==18);
+  assert.ok(blocked,"the initial route must cross the main drift segment between cross-cut connections");
   state.mineInfrastructure.closures["1:"+blocked.x+":"+blocked.z]=true;
   for(let i=0;i<5;i++)tickMineRailRoutes(state,.5);
-  const refreshed=state.mineInfrastructure.railRoutes[1].path;
-  if(refreshed.length){
-    assert.equal(refreshed.some(cell=>cell.x===blocked.x&&cell.z===blocked.z),false);
-    assert.ok(refreshed.every(cell=>mineRailTrackAt(cell.x,cell.z)));
-  }
+  const route=state.mineInfrastructure.railRoutes[1],refreshed=route.path;
+  assert.equal(route.enabled,true,"the route should remain active because the secondary drift provides a detour");
+  assert.ok(refreshed.length>1,"the cart should calculate a replacement route");
+  assert.equal(refreshed.some(cell=>cell.x===blocked.x&&cell.z===blocked.z),false,"the replacement route must avoid the closed sleeper");
+  assert.ok(refreshed.every(cell=>mineRailTrackAt(cell.x,cell.z)),"the detour must remain on rendered rail cells");
+  assert.ok(refreshed.some(cell=>cell.z===18),"the replacement route must use the secondary haulage drift");
 });
 test("saved rail manifests restore their source reservation and cancellation releases it without consuming output",()=>{
   const state=stateFixture(),output={id:"ironOre",qty:2,meta:{quality:90,purity:88,synthetic:false}};
