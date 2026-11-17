@@ -133,6 +133,18 @@ test("automatic mine rail routes stay on rendered track cells and detour through
   assert.ok(refreshed.every(cell=>mineRailTrackAt(cell.x,cell.z)),"the detour must remain on rendered rail cells");
   assert.ok(refreshed.some(cell=>cell.z===18),"the replacement route must use the secondary haulage drift");
 });
+test("a rail station cannot reopen a track cell closed by the support frame beneath it",()=>{
+  const state=stateFixture(),section=nearestMineSupport(state,1,5,12).section;
+  state.buildings=[
+    {uid:"closed-station",type:"mineRailStation",layer:"mine",mineLevel:1,x:section.x,y:section.z},
+    {uid:"safe-station",type:"mineRailStation",layer:"mine",mineLevel:1,x:32,y:mineMainDriftZ(32)}
+  ];
+  section.integrity=0;section.warning=true;section.closed=true;
+  ensureMineInfrastructure(state).closures["1:"+section.x+":"+section.z]=true;
+  const result=setMineRailEnabled(state,1,true);
+  assert.equal(result.ok,false,"a support-closed station endpoint must not enable automatic rail traffic");
+  assert.equal(mineRailTrackAt(section.x,section.z),true,"the rail may exist physically but the closed safety gate must override it");
+});
 test("saved rail manifests restore their source reservation and cancellation releases it without consuming output",()=>{
   const state=stateFixture(),output={id:"ironOre",qty:2,meta:{quality:90,purity:88,synthetic:false}};
   state.buildings=[
