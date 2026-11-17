@@ -455,3 +455,20 @@ No main merge, deployment, production database change, or live-user save/economy
 - **Test execution:** latest GitHub Actions lookup returned no workflow runs or combined statuses. Node/Playwright assertions are **PENDING / UNVERIFIED**.
 - **Hardware acceptance:** real PC/mobile FPS and memory sampling plus the elapsed 60-minute soak are **UNVERIFIED**.
 - **Repository safety:** PR #11 remains draft/open/unmerged. Branch/main comparison is diverged (540 ahead / 892 behind). No deployment or main merge.
+
+
+### 2026-11-18 — final mine feature and measurement coverage update
+
+| Priority | Requested improvement | Implementation checkpoint | Verification / remaining boundary |
+|---:|---|---|---|
+| 1 | More complex strata and veins | Deterministic rock profiles by level and coordinate, mineral-specific material/geometry, five-segment vein decorations and batched rendering. | Node/E2E assertions committed; execution result not returned by GitHub Actions. Visual review on physical devices pending. |
+| 2 | Connected drainage / pump network | Adjacent pump-pipe-tank components, real stored-litre transfer, powered-pump interlock at 0.8 allocation ratio, tank capacity and network status. | Unit/E2E coverage includes disconnected network, exact transfer, and low-/sufficient-power cases. CI result pending. |
+| 3 | Passage-specific support durability | Per-section support integrity, local five-cell hazard influence, warning/closure events, local repair and safe passage reopening. | Direct movement, A* routing, manual mining and automatic rail routes use the local safety check. Unit/E2E assertions committed; CI result pending. |
+| 4 | Multi-station automatic mine carts | Rail path between multiple stations on rendered tracks, secondary drift detours, source-output reservation, delivery via canonical inventory settlement and cancellation recovery. | Cargo ownership, route detours, support closure avoidance and no-duplication tests committed; CI result pending. |
+| 5 | Location-specific risk / passage closure | Per-level environment plus local support hazards; non-graphic barrier event; automatic/manual extraction lockout; emergency surface return. | Browser regression includes blocked WASD entry and safe escape from the hazard zone. CI result pending. |
+| 6 | Mineral route guidance | Clickable layer map, nearest safe walkable target, displayed route, route-follow action, separate visual hazard map and lift markers. | E2E checks selected deposit, route length and movement path; CI result pending. |
+| 7 | Real device / long-duration performance | In-game metrics panel reports FPS, frame time, draw calls, triangles, geometry/texture counts and JS heap where supported. Browser suite now records 60-second desktop and mobile-emulation samples, plus the one-hour virtual simulation. | **Physical PC/Android/iOS** and an actual **60-minute elapsed** soak have not been performed. Emulated 60-second tests and resource/heap assertions are committed but not executed/observed yet. |
+
+**Code checkpoint:** `6b441d2cc08ef843eb8632c2587095d3f43b1f62`. **Documentation checkpoint:** implementation log `798a90d5a1a5931ca6422c393a33e7d00f02a1ef`.
+
+**Acceptance state:** feature code and test coverage are in the PR branch, but no area is marked COMPLETE until GitHub Actions returns successful Node and Playwright results and device-specific performance is reviewed. Current workflow-run and combined-status queries returned no entries; treat all automated assertions as **PENDING / UNVERIFIED**. PR #11 remains draft/open/unmerged. No main merge or deployment.
