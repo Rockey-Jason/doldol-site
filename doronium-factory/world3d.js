@@ -1,5 +1,5 @@
 /* DORONIUM FACTORY — topographic 3D world, underground mine and industrial renderer */
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, mineMainDriftZ, biomeGroundColor } from "./terrain-system.js?v=4";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, mineMainDriftZ, biomeGroundColor } from "./terrain-system.js?v=5";
 let THREE = null;
 try { THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"); }
 catch (error) { console.warn("Three.js CDN unavailable; using the compatibility renderer.", error); }
@@ -377,6 +377,8 @@ export function createWorld3D(canvas, getState) {
     const hits=raycaster.intersectObjects(roots,true);
     for(const hit of hits){
       if(hit.distance>maxDistance)continue;
+      const mineTarget=hit.object.userData?.mineTargets?.[hit.instanceId];
+      if(mineTarget)return {...mineTarget.targetKind,...mineTarget.cell,distance:hit.distance};
       if(hit.object===nodeHitMesh){
         const target=nodeHitMesh.userData.targets?.[hit.instanceId];
         if(target)return {...target.targetKind,...target.cell,distance:hit.distance};
@@ -905,6 +907,10 @@ export function createWorld3D(canvas, getState) {
     renderCount++;
     activeViewMode=state.player?.viewMode==="map"?"map":state.player?.viewMode==="third"?"third":"first";
     const inMine=state.player?.layer==="mine";stateLayerForPicking=inMine?"mine":"surface";
+    scene.fog=inMine?mineFog:surfaceFog;
+    ambient.intensity=inMine?.58:1.65;
+    fill.intensity=inMine?.22:.8;
+    if(inMine)syncMineDepositVisuals(state);
     if(state.visibilityRevision!==lastVisibilityRevision){addSeenNodeModels(state);lastVisibilityRevision=state.visibilityRevision;}
     const selectedMachine=state.selectedBuilding?(state.buildings||[]).find(b=>b.uid===state.selectedBuilding&&(inMine?b.layer==="mine"&&Number(b.mineLevel||1)===Number(state.player?.mineLevel||1):b.layer!=="mine")):null;
     selectionRoot.visible=!!selectedMachine;
@@ -965,5 +971,5 @@ export function createWorld3D(canvas, getState) {
   function center(x,y){target.set(x*32,terrainHeightAt(x,y),y*32);cameraUpdate();}
   function orbit(dx,dy){yaw-=dx*0.004;pitch=clamp(pitch+dy*0.003,0.42,1.25);cameraUpdate();}
   resize();cameraUpdate();
-  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?"third":"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},adaptPerformanceFrame,inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),adaptiveBeltTilts:machineRoot.children.filter(g=>g.userData?.type==="beltAdaptive").map(g=>g.userData.adaptiveSlope),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,terrainChunkCount:terrainChunks.length,renderCount,rebuildCount,pixelRatio:renderer.getPixelRatio(),basePixelRatio,shadowEnabled:renderer.shadowMap.enabled,qualityTier:compactDevice?"mobile":lowEndDevice?"low":shadowsEnabled?"high":"balanced",undergroundResourceNodes:mineRoot.children.filter(g=>g.userData?.targetKind?.kind==="resource").length,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0),worldDropCount:dropRoot.children.length};},inspectPerformance(){return {fps:Math.round(measuredFps),averageFrameMs:Number(measuredFrameMs.toFixed(2)),pixelRatio:Number(currentPixelRatio.toFixed(2)),basePixelRatio:Number(basePixelRatio.toFixed(2)),shadowEnabled:renderer.shadowMap.enabled,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,terrainChunks:terrainChunks.length,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0),renderCount,rebuildCount};},get zoom(){return zoom;}};
+  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?"third":"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},adaptPerformanceFrame,inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),adaptiveBeltTilts:machineRoot.children.filter(g=>g.userData?.type==="beltAdaptive").map(g=>g.userData.adaptiveSlope),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,terrainChunkCount:terrainChunks.length,renderCount,rebuildCount,pixelRatio:renderer.getPixelRatio(),basePixelRatio,shadowEnabled:renderer.shadowMap.enabled,qualityTier:compactDevice?"mobile":lowEndDevice?"low":shadowsEnabled?"high":"balanced",undergroundResourceNodes:mineStatsSnapshot.depositNodes,mineTunnelCells:mineStatsSnapshot.tunnelCells,mineWallInstances:mineStatsSnapshot.wallInstances,mineRoofInstances:mineStatsSnapshot.roofInstances,mineRockDetails:mineStatsSnapshot.rockDetails,mineSupportFrames:mineStatsSnapshot.supportFrames,mineRailSegments:mineStatsSnapshot.railSegments,mineCableSegments:mineStatsSnapshot.cableSegments,mineOreDrawCalls:mineStatsSnapshot.oreDrawCalls,mineOreInstances:mineStatsSnapshot.oreInstances,mineLightCount:mineStatsSnapshot.lightCount,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0),worldDropCount:dropRoot.children.length};},inspectPerformance(){return {fps:Math.round(measuredFps),averageFrameMs:Number(measuredFrameMs.toFixed(2)),pixelRatio:Number(currentPixelRatio.toFixed(2)),basePixelRatio:Number(basePixelRatio.toFixed(2)),shadowEnabled:renderer.shadowMap.enabled,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,terrainChunks:terrainChunks.length,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0),renderCount,rebuildCount};},get zoom(){return zoom;}};
 }
