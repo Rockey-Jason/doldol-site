@@ -712,6 +712,10 @@ export function createWorld3D(canvas, getState) {
         makeBox(g,0,6,0,20,10,20,dark);makeCyl(g,0,15,0,5,9,metal,12);
         const impeller=new THREE.Group();impeller.position.set(0,20,0);g.add(impeller);
         for(let i=0;i<4;i++){const blade=makeBox(impeller,0,0,5,1.5,1.5,10,accent,false);blade.rotation.y=i*Math.PI/2}
+        for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
+          const neighbor=(state.buildings||[]).some(other=>other!==b&&other.layer==="mine"&&Number(other.mineLevel||1)===level&&Number(other.x)===Number(b.x)+dx&&Number(other.y)===Number(b.y)+dz&&["mineDrainPipe","mineDrainPump","mineWaterTank"].includes(other.type));
+          if(neighbor)makeBox(g,dx*8,6,dz*8,dx?18:2.6,2.6,dz?18:2.6,metal);
+        }
         minePumpVisuals.push({rotor:impeller,building:b});
       }else if(b.type==="mineWaterTank"){
         makeCyl(g,0,12,0,8.5,24,metal,16);makeCyl(g,0,25,0,9.2,2,accent,16);
