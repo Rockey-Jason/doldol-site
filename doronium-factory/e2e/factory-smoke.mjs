@@ -414,6 +414,14 @@ try {
   assert.equal(supportRegression.localSafety.safe, false, "Mining beside a closed local support must be blocked");
   assert.equal(supportRegression.reopened, true, "Repairing the support must reopen its route");
   assert.ok(supportRegression.routeAvoided, "Navigation must detour around the closed support section");
+  const directMovementSafety = await desktop.evaluate(() => window.__doroniumFactoryTest.mineDirectMovementSafetyTest());
+  assert.equal(directMovementSafety.blocked, true, "WASD movement must not enter a weakened passage support zone");
+  assert.equal(directMovementSafety.canEscape, true, "An engineer already near a newly unsafe support must still be able to move away from it");
+  const drainagePowerGate = await desktop.evaluate(() => window.__doroniumFactoryTest.mineDrainagePowerGateTest());
+  assert.equal(drainagePowerGate.lowPowerStatus, "PAUSED_POWER", "An underpowered drainage pump must pause below the 0.8 allocation threshold");
+  assert.equal(drainagePowerGate.sufficientPowerStatus, "RUNNING", "The pump must start at the minimum supported power allocation");
+  assert.equal(drainagePowerGate.blockedTransfer, 0, "A power-paused pump must not move any mine water");
+  assert.ok(drainagePowerGate.transferred > 0, "A powered pump on a connected network must transfer actual water");
   const railRegression = await desktop.evaluate(() => window.__doroniumFactoryTest.mineRailTransportTest());
   assert.equal(railRegression.start.ok, true, "The automatic rail route must enable between two connected stations");
   assert.ok(railRegression.loaded >= 1, "The mine cart must load a miner's reserved output at a station");
@@ -643,10 +651,16 @@ try {
   assert.ok(minePerformance.geometries < 500, "The underground scene must keep geometry resource counts bounded");
   assert.ok(minePerformance.textures < 50, "The underground scene must keep texture resource counts bounded");
   console.log("DORONIUM_MINE_PERFORMANCE", JSON.stringify(minePerformance));
-  await desktop.waitForTimeout(10000);
+  const desktopMineBaseline = minePerformance;
+  await desktop.waitForTimeout(60000);
   const desktopMineWallClock = await desktop.evaluate(() => window.__doroniumFactoryTest.inspectPerformance());
-  assert.ok(Number.isFinite(desktopMineWallClock.averageFrameMs) && desktopMineWallClock.averageFrameMs >= 0, "Desktop mine rendering must report a valid frame-time sample after ten elapsed seconds");
-  console.log("DORONIUM_DESKTOP_MINE_WALLCLOCK_10S", JSON.stringify(desktopMineWallClock));
+  assert.ok(Number.isFinite(desktopMineWallClock.averageFrameMs) && desktopMineWallClock.averageFrameMs > 0, "Desktop mine rendering must report a live frame-time sample after a 60-second elapsed run");
+  assert.ok(desktopMineWallClock.drawCalls < 180 && desktopMineWallClock.triangles < 180000, "Desktop mine rendering budgets must remain stable through the elapsed run");
+  assert.ok(desktopMineWallClock.geometries < 500 && desktopMineWallClock.textures < 50, "Desktop mine renderer resources must remain bounded through the elapsed run");
+  if (desktopMineBaseline.heapBytes !== null && desktopMineWallClock.heapBytes !== null) {
+    assert.ok(desktopMineWallClock.heapBytes - desktopMineBaseline.heapBytes < 32 * 1024 * 1024, "Desktop mine JS heap growth must stay below 32 MiB during the 60-second sample");
+  }
+  console.log("DORONIUM_DESKTOP_MINE_WALLCLOCK_60S", JSON.stringify(desktopMineWallClock));
 
   const advancedMiningSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.setupAdvancedMiningTest());
   assert.equal(advancedMiningSetup.generator, true, "The mine generator must be placeable beside advanced mineral deposits");
@@ -777,10 +791,16 @@ try {
   assert.ok(mobileMinePerformance.geometries < 500, "Mobile mine geometry resources must stay bounded");
   assert.ok(mobileMinePerformance.textures < 50, "Mobile mine texture resources must stay bounded");
   console.log("DORONIUM_MOBILE_MINE_PERFORMANCE", JSON.stringify(mobileMinePerformance));
-  await mobile.waitForTimeout(10000);
+  const mobileMineBaseline = mobileMinePerformance;
+  await mobile.waitForTimeout(60000);
   const mobileMineWallClock = await mobile.evaluate(() => window.__doroniumFactoryTest.inspectPerformance());
-  assert.ok(Number.isFinite(mobileMineWallClock.averageFrameMs) && mobileMineWallClock.averageFrameMs >= 0, "Mobile-emulation mine rendering must report a valid frame-time sample after ten elapsed seconds");
-  console.log("DORONIUM_MOBILE_MINE_WALLCLOCK_10S", JSON.stringify(mobileMineWallClock));
+  assert.ok(Number.isFinite(mobileMineWallClock.averageFrameMs) && mobileMineWallClock.averageFrameMs > 0, "Mobile-emulation mine rendering must report a live frame-time sample after a 60-second elapsed run");
+  assert.ok(mobileMineWallClock.drawCalls < 180 && mobileMineWallClock.triangles < 180000, "Mobile mine rendering budgets must remain stable through the elapsed run");
+  assert.ok(mobileMineWallClock.geometries < 500 && mobileMineWallClock.textures < 50, "Mobile mine renderer resources must remain bounded through the elapsed run");
+  if (mobileMineBaseline.heapBytes !== null && mobileMineWallClock.heapBytes !== null) {
+    assert.ok(mobileMineWallClock.heapBytes - mobileMineBaseline.heapBytes < 32 * 1024 * 1024, "Mobile-emulation mine JS heap growth must stay below 32 MiB during the 60-second sample");
+  }
+  console.log("DORONIUM_MOBILE_MINE_WALLCLOCK_60S", JSON.stringify(mobileMineWallClock));
   await mobile.screenshot({ path: path.join(artifactDir, "doronium-mobile-emulation.png"), fullPage: true });
   await mobile.screenshot({ path: path.join(artifactDir, "doronium-mobile-mine.png"), fullPage: true });
 
