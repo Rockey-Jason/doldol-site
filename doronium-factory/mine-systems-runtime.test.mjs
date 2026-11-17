@@ -82,7 +82,7 @@ test("rail route requires two stations and returns output only after the cart re
     {uid:"s1",type:"mineRailStation",layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5)},
     {uid:"s2",type:"mineRailStation",layer:"mine",mineLevel:1,x:15,y:mineMainDriftZ(15)},
     {uid:"s3",type:"mineRailStation",layer:"mine",mineLevel:1,x:25,y:mineMainDriftZ(25)},
-    {uid:"miner",type:"minerIron",layer:"mine",mineLevel:1,x:14,y:mineMainDriftZ(14),status:"PAUSED_OUTPUT",output:{id:"ironOre",qty:2,meta:{quality:91,purity:90,synthetic:false}}}
+    {uid:"miner",type:"minerIron",layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5)-1,status:"PAUSED_OUTPUT",output:{id:"ironOre",qty:2,meta:{quality:91,purity:90,synthetic:false}}}
   ];
   assert.deepEqual(mineRailStations(state,1).map(x=>x.uid),["s1","s2","s3"]);
   assert.equal(setMineRailEnabled(state,1,true).ok,true);
