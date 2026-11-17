@@ -12,11 +12,11 @@ const distance=(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
 const DIRECTIONS=[[1,0],[-1,0],[0,1],[0,-1]];
 const DRAIN_TYPES=new Set(["mineDrainPipe","mineDrainPump","mineWaterTank"]);
 const SUPPORT_X=[2,8,14,20,26,32];
-function supportCellsForLevel(){
-  const cells=SUPPORT_X.map(x=>({x,z:mineMainDriftZ(x)}));
-  for(const x of [8,14,20,26,32])cells.push({x,z:18});
-  return cells;
-}
+const SUPPORT_CELLS=Object.freeze([
+  ...SUPPORT_X.map(x=>Object.freeze({x,z:mineMainDriftZ(x)})),
+  ...[8,14,20,26,32].map(x=>Object.freeze({x,z:18}))
+]);
+function supportCellsForLevel(){return SUPPORT_CELLS}
 
 export function ensureMineInfrastructure(state){
   if(!state||typeof state!=="object")throw new TypeError("mine-state-required");
