@@ -86,6 +86,9 @@ test("rail route requires two stations and returns output only after the cart re
   ];
   assert.deepEqual(mineRailStations(state,1).map(x=>x.uid),["s1","s2","s3"]);
   assert.equal(setMineRailEnabled(state,1,true).ok,true);
+  const railPath=state.mineInfrastructure.railRoutes[1].path;
+  assert.ok(railPath.every(cell=>mineRailTrackAt(cell.x,cell.z)),"automatic cart paths must stay on exact rendered rail cells");
+  assert.ok(railPath.some((cell,index)=>index>0&&Math.abs(cell.x-railPath[index-1].x)===1&&Math.abs(cell.z-railPath[index-1].z)===1),"curved main-line rail transitions must use diagonal track joints");
   let delivered=[];
   for(let i=0;i<80;i++){
     const tick=tickMineRailRoutes(state,.5);
