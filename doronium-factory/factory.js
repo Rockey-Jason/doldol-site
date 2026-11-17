@@ -1103,7 +1103,20 @@ function placeBuilding(type,x,y){
  if(type==="core")S.corePlaced=true;
  selectedBuilding=built.uid;selectedBuild=null;log(d.name+" 건설 완료");toast(d.name+" 설치 완료");playTone(580,.1,"triangle");markDirty();renderAll();questCheck();return true
 }
-function isWalkable(x,y){if(x<0||y<0||x>=(S.player.layer==="mine"?MINE_W:WORLD_W)||y>=(S.player.layer==="mine"?MINE_H:WORLD_H)||buildingOccupiesCell(x,y))return false;if(S.player.layer==="mine")return mineTunnelAt(x,y)&&!mineCellIsClosed(S,S.player.mineLevel,x,y);const node=tileNode(x,y);return !node||node.amount<=0}
+function isWalkable(x,y){
+ const mine=S.player.layer==="mine";
+ if(x<0||y<0||x>=(mine?MINE_W:WORLD_W)||y>=(mine?MINE_H:WORLD_H))return false;
+ if(mine){
+  if(!mineTunnelAt(x,y)||mineCellIsClosed(S,S.player.mineLevel,x,y))return false;
+  const blocking=(S.buildings||[]).some(building=>{
+   if(building.layer!=="mine"||Number(building.mineLevel||1)!==Number(S.player.mineLevel||1)||["mineDrainPipe","mineRailStation"].includes(building.type))return false;
+   return buildingFootprintCells(building).some(cell=>cell.x===x&&cell.y===y);
+  });
+  return !blocking;
+ }
+ if(buildingOccupiesCell(x,y))return false;
+ const node=tileNode(x,y);return !node||node.amount<=0;
+}
 function findPlayerPath(startX,startY,goalX,goalY){if(goalX===startX&&goalY===startY)return [];if(!isWalkable(goalX,goalY))return null;const start=startX+","+startY,goal=goalX+","+goalY,queue=[{x:startX,y:startY}],came=new Map([[start,null]]);let found=false;for(let head=0;head<queue.length&&head<1200;head++){const p=queue[head];for(const d of DIRS){const x=p.x+d.x,y=p.y+d.y,key=x+","+y;if(came.has(key)||!isWalkable(x,y))continue;came.set(key,p.x+","+p.y);if(key===goal){found=true;break}queue.push({x,y})}if(found)break}if(!found)return null;const path=[];let key=goal;while(key!==start){const [x,y]=key.split(",").map(Number);path.push({x,y});key=came.get(key)}return path.reverse()}
 function movePlayerTo(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y};const path=findPlayerPath(origin.x,origin.y,x,y);if(path===null){toast("이동 경로가 막혀 있습니다.","warn");return false}playerMotion.path=playerMotion.path.concat(path);playerMotion.onArrive=onArrive;if(!playerMotion.path.length){playerMotion.moving=false;const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
 function approachTile(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y},options=[];for(const d of DIRS){const nx=x+d.x,ny=y+d.y;if(!isWalkable(nx,ny))continue;const path=findPlayerPath(origin.x,origin.y,nx,ny);if(path!==null)options.push({path,nx,ny})}options.sort((a,b)=>a.path.length-b.path.length);if(!options.length){toast("대상 주변으로 접근할 경로가 없습니다.","warn");return false}const best=options[0];playerMotion.path=playerMotion.path.concat(best.path);playerMotion.onArrive=onArrive;if(!best.path.length){const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
