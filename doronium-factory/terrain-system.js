@@ -66,12 +66,23 @@ export function terrainHeightAt(x,z){
 export function mineFloorY(level){return -42*clamp(Number(level)||1,1,MINE_LEVELS);}
 export function mineDepositKey(level,x,z){return level+":"+x+":"+z;}
 
+export function mineMainDriftZ(x){
+  return 12+Math.round(Math.sin(x*.24)*1.05+Math.sin(x*.57)*.42);
+}
+
 export function mineTunnelAt(x,z){
-  return (x>=2&&x<=37&&z>=10&&z<=14) ||
-    (x>=8&&x<=13&&z>=5&&z<=18) ||
-    (x>=19&&x<=24&&z>=6&&z<=18) ||
-    (x>=29&&x<=36&&z>=4&&z<=20) ||
-    (x>=3&&x<=6&&z>=8&&z<=16);
+  if(!Number.isInteger(x)||!Number.isInteger(z)||x<2||x>37||z<3||z>21)return false;
+  const main=Math.abs(z-mineMainDriftZ(x))<=1;
+  const vertical=(cx,minZ,maxZ)=>z>=minZ&&z<=maxZ&&Math.abs(x-(cx+Math.round(Math.sin(z*.31+cx)*.65)))<=1;
+  const horizontal=(cz,minX,maxX)=>x>=minX&&x<=maxX&&Math.abs(z-(cz+Math.round(Math.sin(x*.29+cz)*.55)))<=1;
+  const chamber=(cx,cz,rx,rz)=>((x-cx)*(x-cx))/(rx*rx)+((z-cz)*(z-cz))/(rz*rz)<=1;
+  return main||
+    vertical(5,8,16)||vertical(10,5,18)||vertical(22,5,18)||vertical(32,4,20)||
+    horizontal(7,8,13)||horizontal(15,10,14)||horizontal(8,20,25)||
+    horizontal(15,20,25)||horizontal(8,28,36)||horizontal(18,29,36)||
+    horizontal(17,22,26)||
+    chamber(11,8,2.5,2.2)||chamber(22,9,2.4,2.3)||
+    chamber(32,17,2.6,2.5)||chamber(5,14,2.0,2.2);
 }
 
 export function biomeGroundColor(biome){
@@ -94,8 +105,53 @@ export function makeMineDeposits(){
     [5,29,17,"ITEM_HEAT_CRYSTAL",16,-196],[5,35,8,"ITEM_MAGNETITE",30,-208],
     [4,34,18,"titaniumOre",18,-162],[5,5,16,"chromiteOre",20,-200]
   ];
-  return Object.fromEntries(rows.map(([level,x,z,type,amount,depthY],i)=>{
+  const deposits=Object.fromEntries(rows.map(([level,x,z,type,amount,depthY],i)=>{
     const key=mineDepositKey(level,x,z);
     return [key,{level,x,z,type,amount,max:amount,cooldown:0,depthY,seed:((level*73856093)^(x*19349663)^(z*83492791)^(i*2654435761))>>>0}];
   }));
+
+  // Coal now occurs as broad, mineable seams along every haulage level rather
+  // than as five isolated, low-yield nodes. A save migration below merges only
+  // missing keys, so old mined-out deposits remain depleted.
+  let seamIndex=0;
+  for(let level=1;level<=MINE_LEVELS;level++){
+    for(let x=5;x<=35;x+=4){
+      const centerZ=mineMainDriftZ(x);
+      const candidates=[
+        [x,centerZ],[x,centerZ-1],[x,centerZ+1],
+        [x-1,centerZ],[x+1,centerZ],
+        [x,centerZ-2],[x,centerZ+2]
+      ];
+      const spot=candidates.find(([cx,cz])=>mineTunnelAt(cx,cz)&&!deposits[mineDepositKey(level,cx,cz)]);
+      if(!spot)continue;
+      const [cx,cz]=spot;
+      const seed=((level*73856093)^(cx*19349663)^(cz*83492791)^(seamIndex*2654435761))>>>0;
+      const amount=96+(seed%73);
+      const depthY=mineFloorY(level)+8+(seed%9);
+      const key=mineDepositKey(level,cx,cz);
+      deposits[key]={level,x:cx,z:cz,type:"coal",amount,max:amount,cooldown:0,depthY,seed,generation:"coal-seam-v2"};
+      seamIndex++;
+    }
+  }
+  return deposits;
+}
+
+export function auditMineDeposits(deposits={}){
+  const byLevel=Object.fromEntries(Array.from({length:MINE_LEVELS},(_,i)=>[i+1,{nodes:0,coalNodes:0,coalUnits:0,allUnits:0}]));
+  for(const node of Object.values(deposits||{})){
+    const level=Number(node?.level);
+    if(!byLevel[level]||!mineTunnelAt(Number(node.x),Number(node.z)))continue;
+    const amount=Math.max(0,Math.floor(Number(node.amount)||0));
+    const stats=byLevel[level];stats.nodes++;stats.allUnits+=amount;
+    if(node.type==="coal"){stats.coalNodes++;stats.coalUnits+=amount;}
+  }
+  const levels=Object.values(byLevel);
+  return {
+    levels:MINE_LEVELS,
+    depositNodes:levels.reduce((n,s)=>n+s.nodes,0),
+    coalNodes:levels.reduce((n,s)=>n+s.coalNodes,0),
+    coalUnits:levels.reduce((n,s)=>n+s.coalUnits,0),
+    unreachableNodes:Object.values(deposits||{}).filter(node=>!mineTunnelAt(Number(node?.x),Number(node?.z))).length,
+    byLevel
+  };
 }
