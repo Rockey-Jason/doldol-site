@@ -717,10 +717,14 @@ export function createWorld3D(canvas, getState) {
       }else if(b.type==="powerCable"){
         makeCyl(g,0,1.6,0,2.2,3.2,accent,8);makeBox(g,0,3,0,10,1.8,10,metal);
       }else if(b.type==="mineDrainPipe"){
-        makeCyl(g,0,5,0,2.2,8,metal,10);
+        makeBox(g,0,5,0,4.2,2.6,4.2,metal);
         for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
           const neighbor=(state.buildings||[]).some(other=>other!==b&&other.layer==="mine"&&Number(other.mineLevel||1)===level&&Number(other.x)===Number(b.x)+dx&&Number(other.y)===Number(b.y)+dz&&["mineDrainPipe","mineDrainPump","mineWaterTank"].includes(other.type));
-          if(neighbor)makeBox(g,dx*8,5,dz*8,dx?18:2.6,2.6,dz?18:2.6,metal);
+          if(neighbor){
+            const segment=makeCyl(g,dx*4,5,dz*4,1.2,9,metal,10);
+            if(dx)segment.rotation.z=Math.PI/2;
+            else segment.rotation.x=Math.PI/2;
+          }
         }
       }else if(b.type==="mineDrainPump"){
         makeBox(g,0,6,0,20,10,20,dark);makeCyl(g,0,15,0,5,9,metal,12);
