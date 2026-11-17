@@ -399,3 +399,20 @@ No main merge, deployment, production database change, or live-user save/economy
 ### CI coverage follow-up
 
 - The mine-specific test file is now included in the validation workflow's syntax check, Node test execution, and required-file assertions. The workflow wiring is committed; execution is still **PENDING / UNVERIFIED** because the current PR head has no returned workflow run or combined status.
+
+
+## 2026-11-17 — integrated mine systems checkpoint
+
+| Priority | Area | Status | Implemented | Still required |
+|---:|---|---|---|---|
+| 1 | Stratigraphy and ore-specific deposits | PARTIAL | Six deterministic host-rock profiles; depth/location-based strata tinting; unique coal, quartz, diamond, copper, iron and gold geometry/material response. | More complex geological layering, vein meshes and screenshot review on real devices. |
+| 2 | Groundwater, drainage and humidity | PARTIAL | Per-level groundwater ingress, water-pool visuals, pump toggle, humidity model and in-place legacy-save normalization. Remote active mine levels continue ticking. | Pump/pipe placement and connected water networks; more detailed water-routing. |
+| 3 | Ventilation, lighting and safety | PARTIAL | Ducts, rotating fans, bounded work lights, gas/air model, warning levels, evacuation gate and emergency return control. | Additional environmental sensors and per-gallery ventilation zoning. |
+| 4 | Drills, mine carts and hauling | PARTIAL | Animated underground drill rigs; safety-aware automatic miners; interactive player-mounted rail cart and speed boost. | Multi-station track routing, automatic ore-cart freight and station scheduling. |
+| 5 | Support integrity and cave-in risk | PARTIAL | Per-level support wear, amber/red support state, reinforcement using owned materials, manual/automatic mining interlocks and safe evacuation. | Localized support condition per tunnel section and safe passage-closure event behavior. No injury/cave-in animation is implemented. |
+| 6 | Layer map and navigation | PARTIAL | Current-level map shows tunnels, deposits and engineer location; HUD exposes depth, coordinates and environmental data; keyboard and touch controls. | Route guidance to target veins/lifts and richer map annotations. |
+| 7 | Desktop/mobile performance evidence | PARTIAL | Instanced/batched mine visuals; lazy mine build; grouped GPU updates; renderer FPS/frame-time/draw-call/triangle/resource/optional-heap diagnostics; Playwright budget assertions for desktop and mobile emulation. | Actual CI output, physical device profiling, long-duration memory/frame-time soak and measured hardware targets. |
+
+**Code checkpoint:** `41b073af547afbd86bbb36e63ed371d084f1930e`. **Documentation checkpoint:** implementation log `836b9184c3330e52b6bf27736abb13d63deeda2f`.
+
+**Verification status:** GitHub Actions run lookup and combined status for the latest code checkpoint returned no runs/checks. Committed unit/browser assertions remain **PENDING / UNVERIFIED**. Source-level deterministic coal/tunnel calculations are not a substitute for running Node or Playwright. Physical PC/Android/iOS and 60-minute wall-clock soak remain **UNVERIFIED**. No checklist row is promoted to COMPLETE.
