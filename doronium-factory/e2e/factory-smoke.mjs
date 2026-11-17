@@ -378,7 +378,21 @@ try {
   await desktop.keyboard.press("Escape");
   assert.equal(await desktop.locator("#control-column").evaluate(el => el.classList.contains("panel-open")), false, "Escape must close the desktop side panel");
 
+  const mineAudit = await desktop.evaluate(() => window.__doroniumFactoryTest.mineAudit());
+  assert.ok(mineAudit.coalNodes >= 100, "The generated mine must expose at least 100 coal seams across five levels");
+  assert.ok(mineAudit.coalUnits >= 18000, "The generated mine must contain at least 18,000 coal units");
+  assert.equal(mineAudit.unreachableNodes, 0, "Every mine deposit must remain reachable in the tunnel network");
+  for (let level = 1; level <= 5; level++) {
+    assert.ok(mineAudit.byLevel[level].coalNodes >= 18, "Each depth must have at least 18 coal seams");
+    assert.ok(mineAudit.byLevel[level].coalUnits >= 3500, "Each depth must have at least 3,500 coal units");
+  }
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningTest());
+  const mineVisual = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D());
+  assert.ok(mineVisual.mineTunnelCells >= 450, "The underground scene must contain connected crosscuts and chambers");
+  assert.ok(mineVisual.mineSupportBraces > 0, "The mine must render diagonal timber support braces");
+  assert.ok(mineVisual.mineRockDetails > 0, "The mine must render natural rock formations");
+  assert.ok(mineVisual.mineOreDrawCalls <= 10, "Mine ore types must remain batched to limit draw calls");
+  assert.ok(mineVisual.mineLightCount <= 12, "Mine work lights must remain capped for performance");
   const miningBefore = await desktop.evaluate(() => ({ stone: window.__doroniumFactoryTest.snapshot().inventory.stone || 0 }));
   await desktop.locator("#action-button").click();
   const miningAfter = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot());
