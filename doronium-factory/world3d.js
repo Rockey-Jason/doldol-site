@@ -615,7 +615,7 @@ export function createWorld3D(canvas, getState) {
       makeBox(g,0,4,0,19,8,19,mats.dark);makeCyl(g,0,14,0,5,20,mats.trim,10);
       const ring=new THREE.Mesh(new THREE.TorusGeometry(10,.65,8,36),new THREE.MeshBasicMaterial({color:kind==="mineExit"?0x7ed9c3:0xf0c76c}));
       ring.rotation.x=Math.PI/2;ring.position.y=24;g.add(ring);
-      const light=new THREE.PointLight(kind==="mineExit"?0x6ed6c1:0xf2bd65,1.15,76,2);light.position.y=23;g.add(light);
+      const light=new THREE.PointLight(kind==="mineExit"?0x6ed6c1:0xf2bd65,1.15,76,2);light.position.y=23;g.add(light);lightCount++;
     };
     addLift(3,"mineExit");addLift(36,"mineDescend");
     for(const b of state.buildings||[]){
@@ -636,12 +636,14 @@ export function createWorld3D(canvas, getState) {
       }else if(b.type==="mineGen"){
         makeBox(g,0,8,0,22,16,18,dark);makeBox(g,0,18,0,15,4,12,metal);
         makeCyl(g,0,23,0,3,8,accent,10);
-        const lamp=new THREE.PointLight(0xf2bd65,.25,32,2);lamp.position.set(0,26,0);g.add(lamp);
+        const lamp=new THREE.PointLight(0xf2bd65,.25,32,2);lamp.position.set(0,26,0);g.add(lamp);lightCount++;
       }else if(b.type==="powerCable"){
         makeCyl(g,0,1.6,0,2.2,3.2,accent,8);makeBox(g,0,3,0,10,1.8,10,metal);
       }
       g.userData={cell:{x:b.x,z:b.y},targetKind:{kind:"building",type:b.type,uid:b.uid}};
     }
+    // Count every live underground PointLight, including both lifts and mine generators.
+    mineStatsSnapshot.lightCount=lightCount;
   }
   function syncMineEnvironmentVisuals(state){
     const level=clamp(Number(state.player?.mineLevel)||1,1,5),env=state.mineEnvironment?.[level]||{};
