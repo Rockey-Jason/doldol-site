@@ -2389,6 +2389,13 @@ if(E2E_MODE){
   drinkWater:()=>{drinkWater();return structuredClone(S.survival)},
   setupSurvivalTest(){S=freshState();S.player={...S.player,x:72,y:52,layer:"surface",viewMode:"first",yaw:0,pitch:-.12};S.survival={health:100,hunger:50,thirst:50};S.inventory.doriMeat=2;S.inventory.water=3;S.runtime=createRuntimeState();ensureItemStacks(S);playerMotion={x:72,z:52,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};renderAll();return structuredClone(S)},
   survivalTick(seconds,deplete=false){if(deplete){S.survival.hunger=0;S.survival.thirst=0}updateSurvival(Math.max(0,Number(seconds)||0));return structuredClone(S.survival)},
+  manualMineSafetyTest(){
+   this.setupMiningTest();
+   const deposit=S.mineDeposits["1:8:12"],env=ensureMineEnvironment(S)[1],before=deposit.amount,stoneBefore=itemCount("stone");
+   Object.assign(env,{supportIntegrity:0,waterDepth:0,gasLevel:0});
+   harvestMineDeposit(deposit);
+   return {blocked:deposit.amount===before&&itemCount("stone")===stoneBefore,depositBefore:before,depositAfter:deposit.amount,stoneBefore,stoneAfter:itemCount("stone"),assessment:mineSafetyAssessment(env)};
+  },
   setupMiningTest(){
    S=freshState();S.player={...S.player,x:8,y:14,viewMode:"first",layer:"mine",mineLevel:1,yaw:0,pitch:.06};S.survival={health:100,hunger:100,thirst:100};
    const deposit=S.mineDeposits["1:8:12"];deposit.amount=12;S.activeTool="pickaxe";
