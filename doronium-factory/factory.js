@@ -1387,6 +1387,12 @@ function drawMineMap(){
   if(deposit&&deposit.amount>0){ctx.fillStyle=deposit.type==="coal"?"#252b33":deposit.type==="ironOre"?"#a5b1bd":deposit.type==="copperOre"?"#d48b5d":deposit.type==="diamond"?"#84e6f3":"#d7bb79";ctx.fillRect(x*cw+1,z*ch+1,Math.max(2,cw-2),Math.max(2,ch-2))}
  }
  // Draw a route to the selected mineral vein, recalculating around every closed support section.
+ // Amber rings identify locally weakened supports; closed passages remain red.
+ for(const section of mineSupportSections(S,S.player.mineLevel)){
+  if(section.closed||(!section.warning&&section.integrity>55))continue;
+  ctx.strokeStyle="#e4b45c";ctx.lineWidth=1.5;
+  ctx.strokeRect(section.x*cw+1,section.z*ch+1,Math.max(2,cw-2),Math.max(2,ch-2));
+ }
  const guidedRoute=mineMapGuide&&mineMapGuide.level===S.player.mineLevel?mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},{x:mineMapGuide.goalX??mineMapGuide.x,z:mineMapGuide.goalZ??mineMapGuide.z},mineNavigationClosures(S.player.mineLevel)):null;
  if(guidedRoute?.length>1){
   ctx.strokeStyle="#f3ca74";ctx.lineWidth=2.5;ctx.lineJoin="round";ctx.beginPath();
