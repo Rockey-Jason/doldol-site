@@ -189,7 +189,9 @@ function mineRailPathClosures(state,level,systems){
 export function mineRailTrackAt(x,z){
   const gx=integer(x,-1),gz=integer(z,-1);
   if(!mineTunnelAt(gx,gz))return false;
-  return Math.abs(gz-mineMainDriftZ(gx))<=1||Math.abs(gz-18)<=1||([16,27].some(column=>Math.abs(gx-column)<=1)&&gz>=10&&gz<=20);
+  // Exact rail centerlines: the winding main drift, secondary haulage drift,
+  // and the two rendered cross-cut connectors.
+  return gz===mineMainDriftZ(gx)||gz===18||((gx===16||gx===27)&&gz>=10&&gz<=20);
 }
 export function mineRailStations(state,level){
   return (state.buildings||[]).filter(b=>b?.type==="mineRailStation"&&b.layer==="mine"&&integer(b.mineLevel,1)===integer(level,1))
@@ -258,15 +260,14 @@ export function tickMineRailRoutes(state,dt){
     if(nextIndex<0||nextIndex>=stations.length){route.direction*=-1;route.stopRemaining=1.5;route.path=[];continue}
     const next=stations[nextIndex];
     const currentCell={x:Math.round(num(route.position.x,current.x)),z:Math.round(num(route.position.y,current.y))};
-    const remainingPath=Array.isArray(route.path)?route.path.slice(Math.max(0,Math.floor(route.travelled))):[];
-    const blockedAhead=remainingPath.some(cell=>systems.closures[keyOf(level,cell.x,cell.z)]===true);
+    const blockedAhead=Array.isArray(route.path)&&route.path.some(cell=>systems.closures[keyOf(level,cell.x,cell.z)]===true);
     if(blockedAhead){
       route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},mineRailPathClosures(state,level,systems),true)||[];
       route.travelled=0;
       events.push({type:"RAIL_REROUTE",level,from:current.uid,to:next.uid});
     }
     if(!Array.isArray(route.path)||route.path.length<2){
-      route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},systems.closures)||[];
+      route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},mineRailPathClosures(state,level,systems),true)||[];
       route.travelled=0;
       if(route.path.length<2){
         route.enabled=false;
@@ -277,11 +278,20 @@ export function tickMineRailRoutes(state,dt){
     }
     const speed=2.6*step;
     route.travelled+=speed;
-    const maxDistance=route.path.length-1,fraction=clamp(route.travelled,0,maxDistance);
-    const segmentIndex=Math.min(maxDistance-1,Math.floor(fraction)),segmentFraction=fraction-segmentIndex;
+    const segmentLengths=[];
+    let totalDistance=0;
+    for(let i=0;i<route.path.length-1;i++){
+      const dx=route.path[i+1].x-route.path[i].x,dz=route.path[i+1].z-route.path[i].z;
+      const length=Math.hypot(dx,dz);segmentLengths.push(length);totalDistance+=length;
+    }
+    let remaining=clamp(route.travelled,0,totalDistance),segmentIndex=0;
+    while(segmentIndex<segmentLengths.length-1&&remaining>segmentLengths[segmentIndex]){
+      remaining-=segmentLengths[segmentIndex];segmentIndex++;
+    }
     const a=route.path[segmentIndex],b=route.path[segmentIndex+1];
+    const segmentFraction=segmentLengths[segmentIndex]>0?clamp(remaining/segmentLengths[segmentIndex],0,1):0;
     route.position={x:num(a.x)+(num(b.x)-num(a.x))*segmentFraction,y:num(a.z)+(num(b.z)-num(a.z))*segmentFraction};
-    if(fraction>=maxDistance){
+    if(route.travelled>=totalDistance){
       route.stationIndex=nextIndex;route.travelled=0;route.path=[];
       route.position={x:num(next.x),y:num(next.y)};route.stopRemaining=1.5;
     }
@@ -294,15 +304,22 @@ export function mineRoutePath(level,start,goal,closures={},trackOnly=false){
   if(!mineTunnelAt(sx,sz)||!mineTunnelAt(gx,gz))return null;
   if(trackOnly&&(!mineRailTrackAt(sx,sz)||!mineRailTrackAt(gx,gz)))return null;
   const closed=(x,z)=>closures[keyOf(level,x,z)]===true;
-  if(closed(gx,gz))return null;
+  if(closed(sx,sz)||closed(gx,gz))return null;
   const startKey=cellKey(sx,sz),goalKey=cellKey(gx,gz);
   if(startKey===goalKey)return [{x:sx,z:sz}];
+  const directions=trackOnly
+    ? [...DIRECTIONS,[1,1],[-1,1],[1,-1],[-1,-1]]
+    : DIRECTIONS;
   const queue=[{x:sx,z:sz}],came=new Map([[startKey,null]]);let found=false;
-  for(let head=0;head<queue.length&&head< MINE_W*MINE_H;head++){
+  for(let head=0;head<queue.length&&head<MINE_W*MINE_H;head++){
     const cell=queue[head];
-    for(const [dx,dz] of DIRECTIONS){
+    for(const [dx,dz] of directions){
       const x=cell.x+dx,z=cell.z+dz,key=cellKey(x,z);
       if(came.has(key)||!mineTunnelAt(x,z)||closed(x,z)||(trackOnly&&!mineRailTrackAt(x,z)))continue;
+      if(trackOnly&&dx!==0&&dz!==0&&(
+        closed(cell.x+dx,cell.z)||closed(cell.x,cell.z+dz)||
+        !mineTunnelAt(cell.x+dx,cell.z)||!mineTunnelAt(cell.x,cell.z+dz)
+      ))continue;
       came.set(key,cellKey(cell.x,cell.z));
       if(key===goalKey){found=true;break}
       queue.push({x,z});
