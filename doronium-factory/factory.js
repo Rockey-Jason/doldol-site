@@ -311,7 +311,7 @@ let activeCooldownKeys=new Set(),cooldownNodeSource=null;
 let buildingIndex=new Map(),buildingIndexSource=null,buildingIndexRevision=-1,buildingIndexLength=-1;
 let playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Number(S.player.yaw)||0,pitch:Number(S.player.pitch??-.12),path:[],moving:false,facing:0,onArrive:null};
 const adventureKeys=new Set();
-let mineHeld=false,mineCooldown=0,lookPointer=null,survivalHudClock=0,adventureTarget=null,mineEnvPersistClock=0,mineMapClock=0,mineMapVisible=false,mineMapLastKey="";
+let mineHeld=false,mineCooldown=0,lookPointer=null,survivalHudClock=0,adventureTarget=null,mineEnvPersistClock=0,mineMapClock=0,mineMapVisible=false,mineMapLastKey="",mineMapGuide=null;
 const canvas=$("world-canvas"),world3d=createWorld3D(canvas,()=>S);
 const toast=(message,type="")=>{const el=document.createElement("div");el.className="toast "+type;el.textContent=message;$("toast-stack").append(el);setTimeout(()=>el.remove(),2800)};
 function log(message,type="info"){S.logs.unshift({message,type,time:S.seconds});S.logs=S.logs.slice(0,18);if(!E2E_MODE)renderEvents();dirty=true}
@@ -1288,11 +1288,14 @@ function toggleMineControls(kind){
 }
 function reinforceMineSafety(){
  const env=currentMineEnvironment();if(!env){toast("광산 안에서만 사용할 수 있습니다.","warn");return}
+ const nearest=nearestMineSupport(S,S.player.mineLevel,playerMotion.x,playerMotion.z);
+ if(!nearest||nearest.distance>5){toast("가까운 목재 지지대 옆에서 보강할 수 있습니다.","warn");return}
  if(!hasItems({wood:2,stone:2})){toast("지지대 보강에는 목재 2개와 석재 2개가 필요합니다.","warn");return}
  takeItems({wood:2,stone:2});
- const result=reinforceMineSupports(env,32);
- log("광산 지지대 보강 · 내구도 +"+Math.round(result.restored)+"%");
- toast("지지대 보강 완료 · 내구도 "+Math.round(result.after)+"%");
+ const local=repairMineSupport(S,S.player.mineLevel,playerMotion.x,playerMotion.z,48);
+ const overall=reinforceMineSupports(env,18);
+ log("광산 "+S.player.mineLevel+"층 지지대 보강 · "+local.section.x+","+local.section.z+" · "+Math.round(local.after)+"%");
+ toast("지지대 보강 완료 · 해당 구간 "+Math.round(local.after)+"% · 층 평균 "+Math.round(overall.after)+"%");
  markDirty();renderInventory();updateMineHud();drawWorld();
 }
 function toggleMineCart(){
@@ -1314,6 +1317,36 @@ function toggleMineMap(){
  $("mine-map-wrap")?.classList.toggle("visible",mineMapVisible);
  if(mineMapVisible){mineMapLastKey="";drawMineMap()}
  updateMineHud();
+}
+function toggleMineRailRoute(){
+ if(S.player.layer!=="mine"){toast("광산 안에서 자동 광차를 설정할 수 있습니다.","warn");return}
+ const summary=mineRailSummary(S,S.player.mineLevel),result=setMineRailEnabled(S,S.player.mineLevel,!summary.enabled);
+ if(!result.ok){toast("자동 운송을 시작하려면 같은 층에 광차 정거장을 2개 이상 건설하세요.","warn");return}
+ log("광산 "+S.player.mineLevel+"층 자동 광차 "+(result.enabled?"운송 시작":"운송 정지"));
+ toast(result.enabled?"자동 광차 운송을 시작했습니다.":"자동 광차 운송을 정지했습니다.");
+ markDirty();updateMineHud();drawWorld();
+}
+function selectMineMapDeposit(event){
+ if(S.player.layer!=="mine")return;
+ const canvas=$("mine-map-canvas"),rect=canvas?.getBoundingClientRect();if(!rect||!rect.width||!rect.height)return;
+ const x=clamp(Math.floor((event.clientX-rect.left)/rect.width*MINE_W),0,MINE_W-1);
+ const z=clamp(Math.floor((event.clientY-rect.top)/rect.height*MINE_H),0,MINE_H-1);
+ const candidates=Object.values(S.mineDeposits||{}).filter(node=>node.level===S.player.mineLevel&&node.amount>0)
+  .map(node=>({node,d:Math.abs(node.x-x)+Math.abs(node.z-z)})).sort((a,b)=>a.d-b.d);
+ const found=candidates[0];if(!found||found.d>3){mineMapGuide=null;toast("선택한 위치 근처에 남아 있는 광맥이 없습니다.","warn");drawMineMap();updateMineHud();return}
+ const route=mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},{x:found.node.x,z:found.node.z},S.mineInfrastructure?.closures||{});
+ if(!route){mineMapGuide=null;toast("지지대 폐쇄 구간 때문에 광맥까지의 경로가 없습니다.","warn");drawMineMap();updateMineHud();return}
+ mineMapGuide={level:S.player.mineLevel,x:found.node.x,z:found.node.z,type:found.node.type,path:route};
+ $("mine-map-status").textContent=(RESOURCE[found.node.type]?.name||found.node.type)+" · "+found.node.amount+"개 · "+route.length+"칸 경로";
+ $("mine-route-go")?.removeAttribute("disabled");
+ drawMineMap();updateMineHud();
+}
+function followMineMapGuide(){
+ if(!mineMapGuide||mineMapGuide.level!==S.player.mineLevel){toast("먼저 지도에서 이동할 광맥을 선택하세요.","warn");return}
+ const route=mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},{x:mineMapGuide.x,z:mineMapGuide.z},S.mineInfrastructure?.closures||{});
+ if(!route?.length){toast("광맥까지 이동할 수 있는 안전 경로가 없습니다.","warn");return}
+ const destination=route[route.length-1];
+ if(movePlayerTo(destination.x,destination.z))toast("선택한 광맥까지 이동 경로를 시작합니다.");
 }
 function drawMineMap(){
  const canvas=$("mine-map-canvas");if(!canvas||S.player.layer!=="mine")return;
@@ -1398,7 +1431,7 @@ function showCrystalPreview(id){if(!RESOURCE[id]||(!id.startsWith("doronium_")&&
 function selectTile(x,y){if(S.player.layer==="mine")return;const key=surfaceKey(x,y);if(selectedLandTool==="flatten"){const n=tileNode(x,y);if(n&&["water","wood","mineEntrance","relaySite","coreSite","dori"].includes(n.type)){toast("이 지형은 평탄화할 수 없습니다.","warn");return}if(buildingAt(x,y)){toast("시설이 있는 타일은 먼저 해체해야 합니다.","warn");return}const area=[];for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const ax=x+dx,ay=y+dz,n=tileNode(ax,ay);if(ax<0||ay<0||ax>=WORLD_W||ay>=WORLD_H||buildingAt(ax,ay)||(n&&["water","wood","mineEntrance","dori","relaySite","coreSite"].includes(n.type)))continue;area.push({x:ax,y:ay})}const targetHeight=Math.round(area.reduce((v,p)=>v+terrainHeightAt(p.x,p.y),0)/Math.max(1,area.length)/3)*3;for(const p of area)S.flattened[surfaceKey(p.x,p.y)]={height:targetHeight};markSceneDirty();log("지표 평탄화 · "+key+" · "+area.length+"타일");markDirty();drawWorld();toast("지형 평탄화 완료 · 기초 타일을 설치하세요.");return}if(selectedLandTool==="foundation"){if(!S.flattened[key]){toast("기초 타일은 평탄화된 지형에만 설치할 수 있습니다.","warn");return}if(S.foundation[key]){toast("이미 기초 타일이 설치되어 있습니다.");return}if(!hasItems({wood:2,stone:2})){toast("기초 타일에는 목재 2개와 석재 2개가 필요합니다.","warn");return}takeItems({wood:2,stone:2});S.foundation[key]=true;markSceneDirty();log("기초 타일 설치 · "+key);markDirty();drawWorld();toast("산업용 기초 타일 설치 완료");return}const b=buildingAt(x,y);if(b){selectedBuild=null;selectedBuilding=b.uid;changePanel("factory");renderBuildList();renderMachineDetails();approachTile(x,y);drawWorld();return}if(selectedBuild||activeBlueprintID){if(placeBuilding(selectedBuild,x,y))approachTile(x,y);return}const node=tileNode(x,y);if(node){approachTile(x,y,()=>{const current=tileNode(x,y);if(current)harvestNode(x,y,current)});return}selectedBuilding=null;renderMachineDetails();movePlayerTo(x,y)}
 function harvestNode(x,y,node){if(S.player.layer!=="surface"){toast("지하 광물은 광산 채굴 도구로 채취하세요.");return}if(node.amount<=0){toast("이 자원은 고갈되었습니다.","warn");return}if(["wood","dori"].includes(node.type)&&S.activeTool!=="axe"){toast("도끼를 장착해야 나무를 벌목할 수 있습니다.","warn");return}if(node.type==="dori"){if(node.cooldown>0){toast("돌이 고기 나무가 열매를 다시 키우고 있습니다. "+Math.ceil(node.cooldown)+"초 남음","warn");return}if(itemCount("water")<2){toast("돌이 고기 수확에는 물 2L가 필요합니다.","warn");return}takeItem("water",2);startNodeCooldown(x,y,node,60);addItem("doriMeat",1,{quality:90,purity:90,synthetic:false});S.stats.gathered.ITEM_DORI_MEAT=(S.stats.gathered.ITEM_DORI_MEAT||0)+1;log("돌이 고기 열매 수확 · 비합성 원료");toast("돌이 고기 +1 · 순도 90");playTone(760,.12,"sine");questCheck();renderAll();drawWorld();return}
 const map={wood:"wood",water:"water"};const id=map[node.type];if(!id)return;const amount=Math.min(node.amount,node.type==="wood"||node.type==="stone"?3:node.type==="water"?5:node.type==="diamond"?1:2);node.amount-=amount;if(node.amount<=0)markVisibilityDirty();const q=80+Math.floor((node.seed%1900)/100);addItem(id,amount,{quality:q,purity:node.type==="water"?100:85,synthetic:false});S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;log(RESOURCE[id].name+" 채집 · "+fmt(amount)+"개");toast(RESOURCE[id].name+" +"+fmt(amount));playTone(420,.07,"triangle");questCheck();renderAll();drawWorld()}
-function collectOutput(b){if(!b.output){toast("회수할 출력물이 없습니다.","warn");return}addItem(b.output.id,b.output.qty,b.output.meta,false);toast(RESOURCE[b.output.id].name+" "+fmt(b.output.qty)+"개 회수");log("출력 회수 · "+RESOURCE[b.output.id].name);clearCompletionBuffer(b);b.status="IDLE";markDirty();renderAll()}
+function collectOutput(b,{silent=false,fromRail=false}={}){if(!b.output){if(!silent)toast("회수할 출력물이 없습니다.","warn");return false}if(b.mineRailReserved&&!fromRail){toast("광차 운송 중인 출력물입니다. 광차 정거장에 도착할 때까지 기다려 주세요.","warn");return false}const itemID=b.output.id,quantity=b.output.qty;addItem(itemID,quantity,b.output.meta,false);clearCompletionBuffer(b);b.mineRailReserved=false;b.status="IDLE";markDirty();if(!silent){toast(RESOURCE[itemID].name+" "+fmt(quantity)+"개 회수");log("출력 회수 · "+RESOURCE[itemID].name);renderAll()}return true}
 function supplyMachine(b){const r=recipeFor(b);if(!r){toast("이 시설은 수동 투입을 지원하지 않습니다.");return}let moved=0;for(const[rawID,n]of Object.entries(r.inputs)){const id=canonicalItemID(rawID),need=Math.max(0,n-(b.input?.[id]||0)),amount=Math.min(need,itemCount(id));if(amount>0&&moveInventoryToMachine(b,id,amount))moved+=amount}if(moved){toast("원료 "+moved+"개 투입 완료");markDirty()}else toast("투입 가능한 원료가 없습니다.","warn");renderMachineDetails();renderInventory()}
 function drainFluidToTank(source){
  const amount=Math.max(0,Number(source?.fluidAmountL)||0),type=source?.fluidType;
@@ -2115,7 +2148,7 @@ function wireControls(){
   if(target?.closest?.("button,a,[role=button]")&&(k===" "||k==="enter"))return;
   const modalOpen=$("modal-overlay").classList.contains("show");
   if(modalOpen){if(k==="escape"){closeModal();e.preventDefault()}return}
-  const oneShot=["v","m","n","g","u","k","4","5","f","e","x","escape","b","o","i","t","j","q","r","c","h","p","=","+","-","_","[","]"];
+  const oneShot=["v","m","n","g","u","k","l","4","5","f","e","x","escape","b","o","i","t","j","q","r","c","h","p","=","+","-","_","[","]"];
   if(e.repeat&&oneShot.includes(k))return;
   if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"," ","shift","e","q","r","=","+","-","_"].includes(k))e.preventDefault();
   if(k==="v"){setViewMode(S.player.viewMode==="first"?"third":"first");return}
@@ -2124,6 +2157,7 @@ function wireControls(){
   if(k==="g"&&S.player.layer==="mine"){toggleMineControls("pump");return}
   if(k==="u"&&S.player.layer==="mine"){reinforceMineSafety();return}
   if(k==="k"&&S.player.layer==="mine"){toggleMineCart();return}
+  if(k==="l"&&S.player.layer==="mine"){toggleMineRailRoute();return}
   if(k==="4"){selectTool("pickaxe");return}if(k==="5"){selectTool("axe");return}
   if(k==="f"){toggleFullscreen();return}
   if(k==="e"&&adventureMode()){adventureKeys.add("e");performAdventureAction();return}
@@ -2171,6 +2205,9 @@ function wireControls(){
  $("mine-pump-button")?.addEventListener("click",()=>toggleMineControls("pump"));
  $("mine-support-button")?.addEventListener("click",reinforceMineSafety);
  $("mine-cart-button")?.addEventListener("click",toggleMineCart);
+ $("mine-rail-button")?.addEventListener("click",toggleMineRailRoute);
+ $("mine-map-canvas")?.addEventListener("click",selectMineMapDeposit);
+ $("mine-route-go")?.addEventListener("click",followMineMapGuide);
  $("mine-evacuate-button")?.addEventListener("click",()=>{if(mineSafetyAssessment(currentMineEnvironment()||{}).stopMining)exitMine()});
  $("jump-button").addEventListener("pointerdown",e=>{e.preventDefault();adventureKeys.add(" ")});
  $("jump-button").addEventListener("pointerup",()=>adventureKeys.delete(" "));
