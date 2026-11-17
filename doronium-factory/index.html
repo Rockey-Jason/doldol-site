@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./factory.css?v=8">
+<link rel="stylesheet" href="./factory.css?v=9">
 </head>
 <body>
 <div id="game-root">
@@ -63,7 +63,7 @@
             <button type="button" id="jump-button" title="점프">↟ <span>점프</span></button>
           </div>
           <div class="move-pad" aria-label="캐릭터 이동"><button type="button" data-move="0,-1" aria-label="앞으로">▲</button><div><button type="button" data-move="-1,0" aria-label="왼쪽">◀</button><button type="button" data-move="0,1" aria-label="뒤로">▼</button><button type="button" data-move="1,0" aria-label="오른쪽">▶</button></div></div>
-        </div><div class="world-help" id="world-help"><b>조작</b><span>WASD 이동</span><span>좌클릭 드래그 이동 · 우클릭/Shift 회전</span><span>휠 확대/축소</span><span>타일 클릭 채집·선택·건설</span></div>
+        </div><div class="world-help" id="world-help"><b>키보드 조작 · H 도움말</b><span><kbd>WASD</kbd> / <kbd>↑↓←→</kbd> 이동 · <kbd>E</kbd> 상호작용/채집 · <kbd>Space</kbd> 점프</span><span><kbd>Q</kbd> 먹기 · <kbd>R</kbd> 마시기 · <kbd>4</kbd>/<kbd>5</kbd> 곡괭이/도끼</span><span><kbd>B</kbd> 건설 · <kbd>O</kbd> 운영 · <kbd>I</kbd> 창고 · <kbd>T</kbd> 연구 · <kbd>J</kbd> 임무</span><span><kbd>V</kbd> 시점 · <kbd>M</kbd> 지도 · <kbd>X</kbd> 시설 회전 · <kbd>Esc</kbd> 취소</span><span><kbd>+</kbd>/<kbd>-</kbd> 확대/축소 · <kbd>C</kbd> 플레이어 중심 · <kbd>F</kbd> 전체 화면 · <kbd>P</kbd> 일시정지 · <kbd>[/]</kbd> 속도</span><span>마우스: 드래그 이동 · 우클릭/Shift 회전 · 휠 확대/축소</span></div>
         <div class="map-controls"><button id="map-toggle" class="map-control">지도</button><button id="help-toggle" class="map-control">조작 도움말</button></div>
       </div>
       <div class="world-footer"><div class="selected-build-status"><span class="status-square" id="build-mode-dot"></span><span id="build-mode-text">선택 모드 · 시설을 선택하거나 자원을 채집하세요</span></div><div class="world-footer-right"><span id="active-machines">가동 기계 0</span><span class="footer-divider"></span><span id="world-population">엔지니어 1</span></div></div>
@@ -103,5 +103,5 @@
   </div>
 </div>
 <div class="toast-stack" id="toast-stack"></div><div class="modal-overlay" id="modal-overlay"><div class="modal-card" id="modal-card"></div></div>
-<script type="module" src="./factory.js?v=48"></script>
+<script type="module" src="./factory.js?v=49"></script>
 </body></html>
