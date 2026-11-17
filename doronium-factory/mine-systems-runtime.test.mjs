@@ -17,8 +17,9 @@ function stateFixture(){
 test("legacy saves receive local support sections and rail state without losing buildings",()=>{
   const state={player:{layer:"surface"},buildings:[{uid:"legacy",type:"minerIron",layer:"mine",mineLevel:2}],mineEnvironment:createMineEnvironment()};
   const infra=ensureMineInfrastructure(state);
-  assert.equal(mineSupportSections(state,2).length,6);
-  assert.equal(mineSupportSections(state,1).length,6);
+  assert.equal(mineSupportSections(state,2).length,11);
+  assert.equal(mineSupportSections(state,1).length,11);
+  assert.ok(mineSupportSections(state,1).some(section=>section.z===18),"the secondary haulage drift must have independent support records");
   assert.equal(infra.railRoutes[3].enabled,false);
   assert.equal(state.buildings[0].uid,"legacy");
 });
