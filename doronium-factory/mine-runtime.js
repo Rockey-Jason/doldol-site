@@ -92,7 +92,9 @@ function advanceMineEnvironmentLevel(state,level,dt){
   const z=state.player?.layer==="mine"&&Number(state.player?.mineLevel)===level?state.player.y:worker?.y??12;
   const profile=mineGeologyAt(level,integer(x),integer(z));
   const seepage=(.000075+(level-1)*.000012)*(.8+profile.moisture*.4);
-  env.waterDepth=clamp(env.waterDepth+(seepage-((env.pumpActive ? .00024 : 0)))*step,0,1);
+  // Water is removed only by the connected mine-drainage network. The
+  // panel switch merely arms installed pumps; it is not an imaginary pump.
+  env.waterDepth=clamp(env.waterDepth+seepage*step,0,1);
   const ventilationTarget=env.ventilationActive?100:28;
   env.humidity=clamp(env.humidity+(38+level*5+env.waterDepth*38-((ventilationTarget-28)*.12)-env.humidity)*Math.min(1,step*.035),18,98);
   env.gasLevel=clamp(env.gasLevel+(env.ventilationActive?-.035:.018)*step,0,100);
