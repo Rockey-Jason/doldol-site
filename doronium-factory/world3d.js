@@ -294,8 +294,8 @@ export function createWorld3D(canvas, getState) {
     const color=palette[type]||0x9aa9ad;
     const coal=type==="coal";
     const material=new THREE.MeshStandardMaterial({
-      color,metalness:coal?.34:.48,roughness:coal?.34:.3,
-      emissive:coal?0x080b10:color,emissiveIntensity:coal?.08:.12,flatShading:true
+      color,metalness:coal?.035:.48,roughness:coal?.94:.3,
+      emissive:coal?0x020304:color,emissiveIntensity:coal?.025:.12,flatShading:true
     });
     mineOreMaterialCache.set(type,material);sharedMaterials.add(material);return material;
   };
@@ -423,6 +423,7 @@ export function createWorld3D(canvas, getState) {
     const rockDetails=makeBatch(mineRockGeometry,mineRockMaterial,cells.length*3);
     const timberPosts=makeBatch(boxGeo,mineTimberMaterial,24);
     const timberHeaders=makeBatch(boxGeo,mineTimberMaterial,12);
+    const timberBraces=makeBatch(boxGeo,mineTimberMaterial,24);
     const railLines=makeBatch(boxGeo,mineRailMaterial,cells.length*2);
     const railSleepers=makeBatch(boxGeo,mineSleeperMaterial,cells.length);
     const cableRuns=makeBatch(boxGeo,mineCableMaterial,cells.length);
@@ -470,7 +471,10 @@ export function createWorld3D(canvas, getState) {
 
       // Timber sets are spaced along the winding main haulage drift.
       if(p.z===centerZ&&p.x%6===2){
-        for(const side of [-1,1])put(timberPosts,x,floorY+13,z+side*12.4,2.3,26,2.3,.02,0,side*.02);
+        for(const side of [-1,1]){
+          put(timberPosts,x,floorY+13,z+side*12.4,2.3,26,2.3,.02,0,side*.02);
+          put(timberBraces,x,floorY+19,z+side*7.6,2.0,17,2.0,side*.43,0,0);
+        }
         put(timberHeaders,x,floorY+26,z,2.5,2.5,26.5);
         supportFrames++;
       }
@@ -533,7 +537,7 @@ export function createWorld3D(canvas, getState) {
       }
       oreRefsByKey.set(node.level+":"+node.x+":"+node.z,refs);
     }
-    for(const mesh of [floors,roofs,walls,rockDetails,timberPosts,timberHeaders,railLines,railSleepers,cableRuns,lampFixtures,oreBases,...oreBatches.values()]){
+    for(const mesh of [floors,roofs,walls,rockDetails,timberPosts,timberHeaders,timberBraces,railLines,railSleepers,cableRuns,lampFixtures,oreBases,...oreBatches.values()]){
       if(!mesh||!mesh.count)continue;
       mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();
     }
@@ -543,7 +547,7 @@ export function createWorld3D(canvas, getState) {
     }
     mineStatsSnapshot={
       tunnelCells:cells.length,wallInstances,roofInstances:roofs?.count||0,rockDetails:rockDetailCount,
-      supportFrames,railSegments,cableSegments,oreDrawCalls:[...oreBatches.values()].filter(mesh=>mesh.count>0).length+(oreBases?.count?1:0),
+      supportFrames,supportBraces:timberBraces?.count||0,railSegments,cableSegments,oreDrawCalls:[...oreBatches.values()].filter(mesh=>mesh.count>0).length+(oreBases?.count?1:0),
       oreInstances,depositNodes:deposits.length,lightCount
     };
 
@@ -578,6 +582,7 @@ export function createWorld3D(canvas, getState) {
     }
   }
   function syncMineDepositVisuals(state){
+    const changedMeshes=new Set();
     for(const [key,entry] of mineVisualMap){
       const node=state.mineDeposits?.[key],amount=Math.max(0,Number(node?.amount)||0);
       if(Math.abs(amount-entry.amount)<.001)continue;
@@ -592,9 +597,11 @@ export function createWorld3D(canvas, getState) {
         dummyForMineVisual.rotation.set(ref.rx,ref.ry,ref.rz);
         dummyForMineVisual.scale.set(ref.sx*factor,ref.sy*factor,ref.sz*factor);
         dummyForMineVisual.updateMatrix();ref.mesh.setMatrixAt(ref.index,dummyForMineVisual.matrix);
-        ref.mesh.instanceMatrix.needsUpdate=true;ref.mesh.computeBoundingSphere();
+        changedMeshes.add(ref.mesh);
       }
     }
+    // Upload and recalculate bounds once per material batch, not once per rock.
+    for(const mesh of changedMeshes){mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();}
   }
   const nodeMatrixDummy=new THREE.Object3D();
   const dummyForMineVisual=new THREE.Object3D();
@@ -699,7 +706,10 @@ export function createWorld3D(canvas, getState) {
     playerRing=new THREE.Mesh(new THREE.TorusGeometry(7,.35,8,40),new THREE.MeshBasicMaterial({color:0xf2d28a,transparent:true,opacity:.7}));playerRing.rotation.x=Math.PI/2;markerRoot.add(playerRing);
 
 
-    buildMine(state);
+    // Underground geometry is static while on the surface. Avoid rebuilding
+    // hundreds of mine instances on unrelated surface UI/building updates.
+    if(state.player?.layer==="mine")buildMine(state);
+    else mineVisualMap.clear();
   }
   function addBuilding(b,state){
     const g=new THREE.Group();
