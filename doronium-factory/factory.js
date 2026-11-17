@@ -1107,7 +1107,7 @@ function isWalkable(x,y){
  const mine=S.player.layer==="mine";
  if(x<0||y<0||x>=(mine?MINE_W:WORLD_W)||y>=(mine?MINE_H:WORLD_H))return false;
  if(mine){
-  if(!mineTunnelAt(x,y)||mineCellIsClosed(S,S.player.mineLevel,x,y))return false;
+  if(!canTraverseMineCell(x,y))return false;
   const blocking=(S.buildings||[]).some(building=>{
    if(building.layer!=="mine"||Number(building.mineLevel||1)!==Number(S.player.mineLevel||1)||["mineDrainPipe","mineRailStation"].includes(building.type))return false;
    return buildingFootprintCells(building).some(cell=>cell.x===x&&cell.y===y);
