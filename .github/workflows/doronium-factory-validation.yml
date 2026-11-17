@@ -68,8 +68,10 @@ jobs:
           node --check doronium-factory/mine-system.test.mjs
           node --check doronium-factory/mine-runtime.js
           node --check doronium-factory/mine-runtime.test.mjs
+          node --check doronium-factory/mine-systems-runtime.js
+          node --check doronium-factory/mine-systems-runtime.test.mjs
           node --check doronium-factory/e2e/factory-smoke.mjs
-          node --test doronium-factory/mine-system.test.mjs doronium-factory/mine-runtime.test.mjs
+          node --test doronium-factory/mine-system.test.mjs doronium-factory/mine-runtime.test.mjs doronium-factory/mine-systems-runtime.test.mjs
       - name: Check required game files and runtime contracts
         run: |
           test -s doronium-factory/index.html
@@ -115,6 +117,8 @@ jobs:
           test -s doronium-factory/mine-system.test.mjs
           test -s doronium-factory/mine-runtime.js
           test -s doronium-factory/mine-runtime.test.mjs
+          test -s doronium-factory/mine-systems-runtime.js
+          test -s doronium-factory/mine-systems-runtime.test.mjs
           grep -q 'WORLD_W = 192' doronium-factory/terrain-system.js
           grep -q 'WORLD_H = 160' doronium-factory/terrain-system.js
           grep -q 'function terrainHeightAt' doronium-factory/terrain-system.js
@@ -124,6 +128,13 @@ jobs:
           grep -q 'tickActiveMineEnvironments' doronium-factory/factory.js
           grep -q 'PAUSED_SAFETY' doronium-factory/factory.js
           grep -q 'mineGeologyAt' doronium-factory/world3d.js
+          grep -q 'mineVeinSegments' doronium-factory/world3d.js
+          grep -q 'mineDrainageNetworks' doronium-factory/factory.js
+          grep -q 'tickMineSupportSections' doronium-factory/factory.js
+          grep -q 'tickMineRailRoutes' doronium-factory/factory.js
+          grep -q 'mineVirtualSoakTest' doronium-factory/factory.js
+          grep -q 'mine-route-go' doronium-factory/index.html
+          grep -q 'mine-rail-button' doronium-factory/index.html
           grep -q 'mine-map-canvas' doronium-factory/index.html
           grep -q 'function enterMine' doronium-factory/factory.js
           grep -q 'function notifyNewMission' doronium-factory/factory.js
