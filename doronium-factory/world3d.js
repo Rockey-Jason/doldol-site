@@ -214,7 +214,8 @@ export function createWorld3D(canvas, getState) {
   const mineRoot = new THREE.Group(); scene.add(mineRoot);
   const mineVisualMap = new Map();
   let mineBuildCount=0,mineCartVisual=null,mineWaterPoolMesh=null;
-  const mineVentFans=[],mineDrillVisuals=[];
+  const mineVentFans=[],mineDrillVisuals=[],mineSupportVisuals=[];
+  let mineSupportTint=null,mineWaterAppearance=null;
   let mineStatsSnapshot = {tunnelCells:0,wallInstances:0,roofInstances:0,rockDetails:0,geologyTypes:0,supportFrames:0,supportBraces:0,railSegments:0,ventilationDucts:0,mineCartCount:0,oreDrawCalls:0,oreInstances:0,depositNodes:0,lightCount:0};
   const hoverRoot = new THREE.Group(); scene.add(hoverRoot);
   const hoverFillMaterial = new THREE.MeshBasicMaterial({color:0x6de4bb,transparent:true,opacity:.2,depthWrite:false,side:THREE.DoubleSide});
@@ -409,7 +410,7 @@ export function createWorld3D(canvas, getState) {
   function surfaceY(state,x,z){const key=x+","+z,v=state.flattened?.[key];return v&&typeof v==="object"&&Number.isFinite(v.height)?v.height:terrainHeightAt(x,z);}
   function buildMine(state){
     mineBuildCount++;
-    mineVisualMap.clear();mineCartVisual=null;mineWaterPoolMesh=null;mineVentFans.length=0;mineDrillVisuals.length=0;
+    mineVisualMap.clear();mineCartVisual=null;mineWaterPoolMesh=null;mineVentFans.length=0;mineDrillVisuals.length=0;mineSupportVisuals.length=0;mineSupportTint=null;mineWaterAppearance=null;
     const level=clamp(Number(state.player?.mineLevel)||1,1,5),floorY=mineFloorY(level);
     const environment=state.mineEnvironment?.[level]||{waterDepth:.025,humidity:45,gasLevel:5,supportIntegrity:100,ventilationActive:true,pumpActive:false};
     const supportTint=Number(environment.supportIntegrity)<35?0xb65d52:Number(environment.supportIntegrity)<65?0xb38a4e:0x65412e;
@@ -441,13 +442,14 @@ export function createWorld3D(canvas, getState) {
     const timberPosts=makeBatch(boxGeo,mineTimberMaterial,24);
     const timberHeaders=makeBatch(boxGeo,mineTimberMaterial,12);
     const timberBraces=makeBatch(boxGeo,mineTimberMaterial,24);
+    mineSupportVisuals.push(timberPosts,timberHeaders,timberBraces);mineSupportTint=supportTint;
     const railLines=makeBatch(boxGeo,mineRailMaterial,cells.length*2);
     const railSleepers=makeBatch(boxGeo,mineSleeperMaterial,cells.length);
     const cableRuns=makeBatch(boxGeo,mineCableMaterial,cells.length);
     const lampFixtures=makeBatch(boxGeo,mineLampMaterial,8);
     const ventilationDucts=makeBatch(boxGeo,mineCableMaterial,Math.ceil(cells.length/3));
     const waterPools=makeBatch(mineWaterGeometry,mineWaterMaterial,8);
-    mineWaterPoolMesh=waterPools;
+    mineWaterPoolMesh=waterPools;mineWaterAppearance=null;
     const oreBases=makeBatch(boxGeo,mineRockMaterial,deposits.length);
     const oreBatches=new Map(),oreTargetsByType=new Map();
     let wallInstances=0,rockDetailCount=0,supportFrames=0,railSegments=0,cableSegments=0,lightCount=0,oreInstances=0;
@@ -642,8 +644,23 @@ export function createWorld3D(canvas, getState) {
   function syncMineEnvironmentVisuals(state){
     const level=clamp(Number(state.player?.mineLevel)||1,1,5),env=state.mineEnvironment?.[level]||{};
     if(mineWaterPoolMesh?.material){
-      mineWaterPoolMesh.material.opacity=clamp(.08+(Number(env.waterDepth)||0)*.48,.08,.56);
-      mineWaterPoolMesh.material.color.setHex((Number(env.waterDepth)||0)>.65?0x43889b:0x3d9eb5);
+      const depth=clamp(Number(env.waterDepth)||0,0,1);
+      const appearance=(depth>.65?"deep":"shallow")+":"+Math.round(depth*100);
+      if(appearance!==mineWaterAppearance){
+        mineWaterPoolMesh.material.opacity=clamp(.08+depth*.48,.08,.56);
+        mineWaterPoolMesh.material.color.setHex(depth>.65?0x43889b:0x3d9eb5);
+        mineWaterAppearance=appearance;
+      }
+    }
+    const tint=Number(env.supportIntegrity)<35?0xb65d52:Number(env.supportIntegrity)<65?0xb38a4e:0x65412e;
+    if(tint!==mineSupportTint){
+      const color=new THREE.Color(tint);
+      for(const mesh of mineSupportVisuals){
+        if(!mesh?.count||!mesh.setColorAt)continue;
+        for(let i=0;i<mesh.count;i++)mesh.setColorAt(i,color);
+        if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+      }
+      mineSupportTint=tint;
     }
   }
   function syncMineDepositVisuals(state){
@@ -748,7 +765,7 @@ export function createWorld3D(canvas, getState) {
   }
   function rebuild(state){
     clear(worldRoot);clear(machineRoot);clear(nodeRoot);clear(markerRoot);clear(dropRoot);clear(mineRoot);
-    mineCartVisual=null;mineWaterPoolMesh=null;mineVentFans.length=0;mineDrillVisuals.length=0;terrainChunks.length=0;nodeGroupsByKey.clear();nodeBatches=null;nodeHitMesh=null;nodeBatchMeshes.length=0;nodeBatchedKeys.clear();selectionRoot.visible=false;
+    mineCartVisual=null;mineWaterPoolMesh=null;mineVentFans.length=0;mineDrillVisuals.length=0;mineSupportVisuals.length=0;mineSupportTint=null;mineWaterAppearance=null;terrainChunks.length=0;nodeGroupsByKey.clear();nodeBatches=null;nodeHitMesh=null;nodeBatchMeshes.length=0;nodeBatchedKeys.clear();selectionRoot.visible=false;
     const dummy=new THREE.Object3D(),color=new THREE.Color(),bottom=-52,chunkSize=32;
     for(let z0=0;z0<WORLD_H;z0+=chunkSize)for(let x0=0;x0<WORLD_W;x0+=chunkSize){
       const chunkWidth=Math.min(chunkSize,WORLD_W-x0),chunkHeight=Math.min(chunkSize,WORLD_H-z0);
@@ -1012,7 +1029,7 @@ export function createWorld3D(canvas, getState) {
       for(const rotor of mineVentFans)rotor.rotation.z=env.ventilationActive===false?0:t*2.6;
       for(const drill of mineDrillVisuals){
         const running=drill.building?.status==="RUNNING";
-        drill.group.rotation.z=running?t*5.4:0;
+        drill.group.rotation.y=running?t*5.4:0;
         for(let i=0;i<drill.bitRings.length;i++)drill.bitRings[i].rotation.y=running?t*(2.2+i*.3):0;
       }
       if(mineCartVisual){
