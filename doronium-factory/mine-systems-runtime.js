@@ -43,13 +43,14 @@ export function ensureMineInfrastructure(state){
   }
   for(let level=1;level<=LEVELS;level++){
     const route=infrastructure.railRoutes[level];
-    if(!route||typeof route!=="object")infrastructure.railRoutes[level]={enabled:false,stationIndex:0,direction:1,travelled:0,stopRemaining:0,position:null,cargo:[],delivered:0,loaded:0};
+    if(!route||typeof route!=="object")infrastructure.railRoutes[level]={enabled:false,stationIndex:0,direction:1,travelled:0,stopRemaining:0,position:null,path:[],cargo:[],delivered:0,loaded:0};
     else{
       route.enabled=route.enabled===true;
       route.stationIndex=Math.max(0,integer(route.stationIndex));
       route.direction=integer(route.direction,1)<0?-1:1;
       route.travelled=Math.max(0,num(route.travelled));
       route.stopRemaining=Math.max(0,num(route.stopRemaining));
+      route.path=Array.isArray(route.path)?route.path.filter(cell=>mineTunnelAt(integer(cell?.x,-1),integer(cell?.z??cell?.y,-1))):[];
       route.cargo=Array.isArray(route.cargo)?route.cargo.filter(item=>item&&item.buildingUID!==undefined&&item.itemID&&num(item.quantity)>0):[];
       route.delivered=Math.max(0,integer(route.delivered));
       route.loaded=Math.max(0,integer(route.loaded));
@@ -178,14 +179,20 @@ export function mineRailStations(state,level){
 export function setMineRailEnabled(state,level,enabled){
   const systems=ensureMineInfrastructure(state),stations=mineRailStations(state,level),route=systems.railRoutes[integer(level,1)];
   if(enabled&&stations.length<2)return {ok:false,reason:"TWO_STATIONS_REQUIRED",stationCount:stations.length};
-  if(!enabled){
-    // Cancelling a route releases every reserved machine output back to its
-    // original machine buffer; no item ownership or quantity is moved here.
+  if(enabled){
+    if(stations.length<2)return {ok:false,reason:"TWO_STATIONS_REQUIRED",stationCount:stations.length};
+    const first=stations[0],second=stations[1];
+    const firstPath=mineRoutePath(level,{x:first.x,z:first.y},{x:second.x,z:second.y},systems.closures);
+    if(!firstPath||firstPath.length<2)return {ok:false,reason:"NO_CONNECTED_TRACK",stationCount:stations.length};
+    route.path=firstPath;
+  }else{
+    // Cancelling a route releases each reserved output to its original machine
+    // without moving or duplicating inventory ownership.
     for(const cargo of route.cargo){
       const owner=(state.buildings||[]).find(building=>String(building.uid)===String(cargo.buildingUID));
       if(owner)owner.mineRailReserved=false;
     }
-    route.cargo=[];
+    route.cargo=[];route.path=[];
   }
   route.enabled=enabled===true;route.stationIndex=clamp(route.stationIndex,0,Math.max(0,stations.length-1));
   route.direction=1;route.travelled=0;route.stopRemaining=route.enabled?1.5:0;
@@ -229,16 +236,30 @@ export function tickMineRailRoutes(state,dt){
       continue;
     }
     const nextIndex=route.stationIndex+route.direction;
-    if(nextIndex<0||nextIndex>=stations.length){route.direction*=-1;route.stopRemaining=1.5;continue}
-    const next=stations[nextIndex],dx=num(next.x)-num(current.x),dy=num(next.y)-num(current.y);
-    const length=Math.max(1,Math.abs(dx)+Math.abs(dy)),speed=2.6*step;
+    if(nextIndex<0||nextIndex>=stations.length){route.direction*=-1;route.stopRemaining=1.5;route.path=[];continue}
+    const next=stations[nextIndex];
+    if(!Array.isArray(route.path)||route.path.length<2){
+      route.path=mineRoutePath(level,{x:current.x,z:current.y},{x:next.x,z:next.y},systems.closures)||[];
+      route.travelled=0;
+      if(route.path.length<2){
+        route.enabled=false;
+        events.push({type:"RAIL_BLOCKED",level,from:current.uid,to:next.uid});
+        for(const cargo of route.cargo){const owner=(state.buildings||[]).find(building=>String(building.uid)===String(cargo.buildingUID));if(owner)owner.mineRailReserved=false}
+        route.cargo=[];continue;
+      }
+    }
+    const speed=2.6*step;
     route.travelled+=speed;
-    const fraction=clamp(route.travelled/length,0,1);
-    route.position={x:num(current.x)+dx*fraction,y:num(current.y)+dy*fraction};
-    if(fraction>=1){
-      route.stationIndex=nextIndex;route.travelled=0;route.position={x:num(next.x),y:num(next.y)};route.stopRemaining=1.5;
+    const maxDistance=route.path.length-1,fraction=clamp(route.travelled,0,maxDistance);
+    const segmentIndex=Math.min(maxDistance-1,Math.floor(fraction)),segmentFraction=fraction-segmentIndex;
+    const a=route.path[segmentIndex],b=route.path[segmentIndex+1];
+    route.position={x:num(a.x)+(num(b.x)-num(a.x))*segmentFraction,y:num(a.z)+(num(b.z)-num(a.z))*segmentFraction};
+    if(fraction>=maxDistance){
+      route.stationIndex=nextIndex;route.travelled=0;route.path=[];
+      route.position={x:num(next.x),y:num(next.y)};route.stopRemaining=1.5;
     }
   }
+  systems.lastUpdated=num(state.seconds);
   return {changed:deliveries.length>0||events.length>0,deliveries,events};
 }
 export function mineRoutePath(level,start,goal,closures={}){
