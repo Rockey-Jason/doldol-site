@@ -139,6 +139,21 @@ test("automatic mine rail routes stay on rendered track cells and detour through
   assert.ok(refreshed.every(cell=>mineRailTrackAt(cell.x,cell.z)),"the detour must remain on rendered rail cells");
   assert.ok(refreshed.some(cell=>cell.z===18),"the replacement route must use the secondary haulage drift");
 });
+test("a failed support forces mine rail service to detour through the secondary haulage drift",()=>{
+  const state=stateFixture(),failed=nearestMineSupport(state,1,20,mineMainDriftZ(20)).section;
+  const start={x:5,z:mineMainDriftZ(5)},end={x:35,z:mineMainDriftZ(35)};
+  state.buildings=[
+    {uid:"support-route-a",type:"mineRailStation",layer:"mine",mineLevel:1,x:start.x,y:start.z},
+    {uid:"support-route-b",type:"mineRailStation",layer:"mine",mineLevel:1,x:end.x,y:end.z}
+  ];
+  failed.integrity=0;failed.warning=true;failed.closed=true;
+  ensureMineInfrastructure(state).closures["1:"+failed.x+":"+failed.z]=true;
+  const result=setMineRailEnabled(state,1,true),route=state.mineInfrastructure.railRoutes[1].path;
+  assert.equal(result.ok,true,"the secondary route must preserve service between healthy stations");
+  assert.ok(route.every(cell=>mineRailTrackAt(cell.x,cell.z)),"all detour cells must have real rails");
+  assert.ok(route.some(cell=>cell.z===18),"the cart must route through the secondary haulage drift");
+  assert.equal(route.some(cell=>Math.abs(cell.x-failed.x)+Math.abs(cell.z-failed.z)<=5),false,"the cart must avoid the failed support influence zone");
+});
 test("a rail station cannot reopen a track cell closed by the support frame beneath it",()=>{
   const state=stateFixture(),section=nearestMineSupport(state,1,5,12).section;
   state.buildings=[
