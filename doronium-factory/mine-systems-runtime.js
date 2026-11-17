@@ -105,15 +105,28 @@ export function mineCellIsClosed(state,level,x,z){
   return systems.closures?.[key]===true||section?.closed===true||num(section?.integrity,100)<=8;
 }
 export function mineCellIsSafe(state,level,x,z){
-  const key=keyOf(level,integer(x),integer(z)),systems=state?.mineInfrastructure;
+  const ix=integer(x),iz=integer(z),key=keyOf(level,ix,iz),systems=state?.mineInfrastructure;
   const local=systems?.supports?.[key];
   if(systems?.closures?.[key]===true||local?.closed===true||num(local?.integrity,100)<=8){
     return {safe:false,integrity:num(local?.integrity,0),section:local||null,closed:true,message:"통로 지지대 붕괴 · 우회 경로를 이용하세요."};
   }
-  const nearest=nearestMineSupport(state,level,x,z);
+  // Any failed section inside its support influence zone makes this cell
+  // unsafe, even when a healthier support happens to be slightly nearer.
+  const sections=systems?.supports;
+  let hazard=null,hazardDistance=Infinity;
+  if(sections&&typeof sections==="object"){
+    for(const section of Object.values(sections)){
+      if(Number(section?.level)!==integer(level,1))continue;
+      if(section.closed!==true&&num(section.integrity,100)>12)continue;
+      const d=Math.abs(num(section.x)-ix)+Math.abs(num(section.z)-iz);
+      if(d<=5&&d<hazardDistance){hazard=section;hazardDistance=d}
+    }
+  }
+  if(hazard)return {safe:false,integrity:num(hazard.integrity,0),section:hazard,closed:hazard.closed===true||num(hazard.integrity,100)<=8,distance:hazardDistance,message:"인근 지지대 안전 한계 초과 · 우회 경로를 이용하세요."};
+  const nearest=nearestMineSupport(state,level,ix,iz);
   if(!nearest||nearest.distance>5)return {safe:true,integrity:100,section:null,closed:false,message:"지지대 영향 구간 밖"};
-  const section=nearest.section,closed=section.closed===true||section.integrity<=8;
-  return {safe:!closed&&section.integrity>12,integrity:section.integrity,section,closed,message:closed?"통로 지지대 붕괴 · 우회 경로를 이용하세요.":section.integrity<=12?"통로 안전 한계 초과 · 이동을 중지하세요.":section.integrity<35?"지지대 위험 · 보강이 필요합니다.":section.integrity<65?"지지대 약화 · 점검이 필요합니다.":"지지대 상태 정상"};
+  const section=nearest.section;
+  return {safe:true,integrity:section.integrity,section,closed:false,message:section.integrity<35?"지지대 위험 · 보강이 필요합니다.":section.integrity<65?"지지대 약화 · 점검이 필요합니다.":"지지대 상태 정상"};
 }
 export function repairMineSupport(state,level,x,z,amount=35){
   const nearest=nearestMineSupport(state,level,x,z);
