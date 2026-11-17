@@ -466,3 +466,12 @@ PR #8 remains the separate Godot implementation and was not integrated. PR #9 ov
 - **Compatibility:** the new `mineInfrastructure` object is lazily created during save hydration; legacy support and route records receive defaults without replacing existing mine deposits or output ownership. No Supabase schema/RLS/functions, production save data, economy balance, or reward logic was changed.
 - **Verification status:** the GitHub Actions workflow is configured for both push and pull-request events and includes syntax checks, mine unit tests, required-file checks and the Playwright browser job. The latest connector lookups returned no workflow runs and no commit statuses, and the browser suite has not been executed in this environment. Therefore all new tests remain **PENDING / UNVERIFIED**; no pass count is claimed. The optional true 60-minute browser soak and physical PC/Android/iOS profiling also remain **UNVERIFIED**.
 - **Acceptance status:** feature code is integrated, but the overall mine improvement list remains **PARTIAL** until CI, browser screenshots, 60-minute wall-clock soak and real-device FPS/memory measurements have been observed. Do not mark release-ready, merge or deploy from this checkpoint.
+
+
+### Final branch check for 2026-11-18 mine systems pass
+
+- **Code/entrypoint checkpoint:** `da7d66f475eac6f30aaa23dd51cc114cf0852ed6`. Mine renderer/runtime cache versions were advanced to avoid stale module loads.
+- **Branch / PR:** PR #11 remains open and draft; not merged. Latest comparison reports 540 commits ahead and 892 behind `main` (diverged). Main was not changed.
+- **CI:** latest workflow-run and combined-status queries for the branch head returned empty arrays. No Node or Playwright results are confirmed; all new assertions remain **PENDING / UNVERIFIED**.
+- **Not measured:** the optional 60-minute real-time browser soak was not run; no physical desktop, Android, or iOS session was performed. Desktop/mobile browser-emulation performance collection exists in the E2E suite but has not produced measured output yet.
+- **Release boundary:** no deployment, production database/schema/RLS/function change, live save/economy mutation, or reward/balance adjustment was made.
