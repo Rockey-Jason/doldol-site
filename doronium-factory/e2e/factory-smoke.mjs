@@ -589,6 +589,8 @@ try {
   const minePerformance = await desktop.evaluate(() => window.__doroniumFactoryTest.inspectPerformance());
   assert.ok(minePerformance.drawCalls < 180, "The underground scene must remain below the draw-call budget");
   assert.ok(minePerformance.triangles < 180000, "The underground scene must remain below the triangle budget");
+  assert.ok(minePerformance.geometries < 500, "The underground scene must keep geometry resource counts bounded");
+  assert.ok(minePerformance.textures < 50, "The underground scene must keep texture resource counts bounded");
   console.log("DORONIUM_MINE_PERFORMANCE", JSON.stringify(minePerformance));
 
   const advancedMiningSetup = await desktop.evaluate(() => window.__doroniumFactoryTest.setupAdvancedMiningTest());
@@ -710,6 +712,8 @@ try {
   const mobileMinePerformance = await mobile.evaluate(() => window.__doroniumFactoryTest.inspectPerformance());
   assert.ok(mobileMinePerformance.drawCalls < 180, "Mobile underground rendering must remain within the draw-call budget");
   assert.ok(mobileMinePerformance.triangles < 180000, "Mobile underground rendering must remain within the triangle budget");
+  assert.ok(mobileMinePerformance.geometries < 500, "Mobile mine geometry resources must stay bounded");
+  assert.ok(mobileMinePerformance.textures < 50, "Mobile mine texture resources must stay bounded");
   console.log("DORONIUM_MOBILE_MINE_PERFORMANCE", JSON.stringify(mobileMinePerformance));
   await mobile.screenshot({ path: path.join(artifactDir, "doronium-mobile-emulation.png"), fullPage: true });
   await mobile.screenshot({ path: path.join(artifactDir, "doronium-mobile-mine.png"), fullPage: true });
