@@ -363,6 +363,10 @@ try {
 
   // Desktop keyboard-first regression: Q/R survival actions and tab navigation.
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupSurvivalTest());
+  const mineBuildsBeforeSurfaceRefresh = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D().mineBuildCount);
+  await desktop.evaluate(() => window.__doroniumFactoryTest.setupSurvivalTest());
+  const mineBuildsAfterSurfaceRefresh = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D().mineBuildCount);
+  assert.equal(mineBuildsAfterSurfaceRefresh, mineBuildsBeforeSurfaceRefresh, "Surface-only state refreshes must not rebuild underground geometry");
   await desktop.keyboard.press("q");
   const keyboardFed = await desktop.evaluate(() => ({ survival: window.__doroniumFactoryTest.survival(), inventory: window.__doroniumFactoryTest.snapshot().inventory }));
   assert.equal(keyboardFed.survival.hunger, 88, "Q must consume one food item and restore hunger");
