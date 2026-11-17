@@ -2520,7 +2520,7 @@ if(E2E_MODE){
     tickBelts(.8);const afterBeltToBelt=rebuildOwnershipLedger(S),beltToBelt=!!belt2.item&&!belt1.item&&belt2.item.custodyStackID===stackID;
     tickBelts(.8);const afterBeltToWarehouse=rebuildOwnershipLedger(S);
     const stored=storage.warehouseStock?.find(item=>item.stackID===stackID)||null,warehouseOwnerBefore=S.ownershipLedger.custody.find(entry=>entry.stackID===stackID)||null;
-    const warehouseQuantityBeforeWithdraw=stored?.quantity||0,warehouseTransfers=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="TRANSFER"&&String(tx.request?.stackID||"")===stackID);
+    const warehouseQuantityBeforeWithdraw=stored?.quantity||0,warehouseStockCountBeforeWithdraw=storage.warehouseStock?.length||0,warehouseTransfers=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="TRANSFER"&&String(tx.request?.stackID||"")===stackID);
     const removalBlocked=removeBuilding(storage)===false&&S.buildings.includes(storage);
     selectedBuilding=storage.uid;renderMachineDetails();
     const warehouseWithdrawButtonCount=document.querySelectorAll("#machine-details [data-warehouse-stack]").length;
@@ -2531,7 +2531,7 @@ if(E2E_MODE){
     return {
      outputCreated,stackID,beforeValid:before.valid,machineToBelt,afterMachineToBeltValid:afterMachineToBelt.valid,
      beltToBelt,afterBeltToBeltValid:afterBeltToBelt.valid,afterBeltToWarehouseValid:afterBeltToWarehouse.valid,
-     warehouseQuantityBeforeWithdraw,warehouseStockCountBeforeWithdraw:storage.warehouseStock?.length||0,
+     warehouseQuantityBeforeWithdraw,warehouseStockCountBeforeWithdraw,
      warehouseOwnerBeforeWithdraw:warehouseOwnerBefore?{type:warehouseOwnerBefore.ownerType,id:warehouseOwnerBefore.ownerID}:null,
      warehouseTransferCount:warehouseTransfers.length,removalBlocked,warehouseWithdrawButtonCount,withdrawalClicked,
      warehouseWithdrawalCompleted:!!inventoryStack&&!storage.warehouseStock?.some(item=>item.stackID===stackID),
