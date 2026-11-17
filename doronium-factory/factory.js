@@ -1365,8 +1365,8 @@ function toggleMineRailRoute(){
  markDirty();updateMineHud();drawWorld();
 }
 function mineSupportClosureMap(level){
- const closures={...(S.mineInfrastructure?.closures||{})};
- for(const section of Object.values(S.mineInfrastructure?.supports||{})){
+ const infra=ensureMineInfrastructure(S),closures={...infra.closures};
+ for(const section of Object.values(infra.supports||{})){
   if(Number(section?.level)!==Number(level)||(!section.closed&&Number(section.integrity)>12))continue;
   for(let dx=-5;dx<=5;dx++)for(let dz=-5;dz<=5;dz++){
    if(Math.abs(dx)+Math.abs(dz)>5)continue;
