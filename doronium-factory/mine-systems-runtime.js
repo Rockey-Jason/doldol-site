@@ -56,10 +56,14 @@ export function ensureMineInfrastructure(state){
       route.loaded=Math.max(0,integer(route.loaded));
     }
     const currentRoute=infrastructure.railRoutes[level];
+    const validCargo=[];
     for(const cargo of currentRoute.cargo){
       const owner=(state.buildings||[]).find(building=>String(building.uid)===String(cargo.buildingUID));
-      if(owner?.output?.id===cargo.itemID&&num(owner.output.qty)===num(cargo.quantity))owner.mineRailReserved=true;
+      if(owner?.output?.id===cargo.itemID&&num(owner.output.qty)===num(cargo.quantity)){
+        owner.mineRailReserved=true;validCargo.push(cargo);
+      }else if(owner)owner.mineRailReserved=false;
     }
+    currentRoute.cargo=validCargo;
   }
   infrastructure.lastUpdated=Math.max(0,num(infrastructure.lastUpdated));
   return infrastructure;
@@ -238,8 +242,16 @@ export function tickMineRailRoutes(state,dt){
     const nextIndex=route.stationIndex+route.direction;
     if(nextIndex<0||nextIndex>=stations.length){route.direction*=-1;route.stopRemaining=1.5;route.path=[];continue}
     const next=stations[nextIndex];
+    const currentCell={x:Math.round(num(route.position.x,current.x)),z:Math.round(num(route.position.y,current.y))};
+    const remainingPath=Array.isArray(route.path)?route.path.slice(Math.max(0,Math.floor(route.travelled))):[];
+    const blockedAhead=remainingPath.some(cell=>systems.closures[keyOf(level,cell.x,cell.z)]===true);
+    if(blockedAhead){
+      route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},systems.closures)||[];
+      route.travelled=0;
+      events.push({type:"RAIL_REROUTE",level,from:current.uid,to:next.uid});
+    }
     if(!Array.isArray(route.path)||route.path.length<2){
-      route.path=mineRoutePath(level,{x:current.x,z:current.y},{x:next.x,z:next.y},systems.closures)||[];
+      route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},systems.closures)||[];
       route.travelled=0;
       if(route.path.length<2){
         route.enabled=false;
