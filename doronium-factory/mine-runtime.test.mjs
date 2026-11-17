@@ -48,7 +48,7 @@ test("drain pump reduces water ingress relative to an inactive pump",()=>{
 });
 test("support repair restores condition and recalculates an incident",()=>{
   const env=createMineEnvironment()[4];
-  env.supportIntegrity=0;env.waterDepth=.98;env.gasLevel=100;
+  env.supportIntegrity=0;env.waterDepth=0;env.gasLevel=0;
   const risk=mineSafetyAssessment(env);
   assert.equal(risk.status,"EVACUATE");
   const repair=reinforceMineSupports(env,100);
