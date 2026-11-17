@@ -575,16 +575,18 @@ export function createWorld3D(canvas, getState) {
         continue;
       }
       const mesh=oreBatches.get(node.type);if(!mesh)continue;
-      const offsets=[[-4,-2,-3],[3,1,4],[-2,3,5],[5,-1,-4]];
+      const coalSeam=node.type==="coal";
+      const offsets=coalSeam?[[-9,-1,-4],[-3,0,2],[4,1,-2],[10,0,5]]:[[-4,-2,-3],[3,1,4],[-2,3,5],[5,-1,-4]];
       const refs=[];
       for(let i=0;i<offsets.length;i++){
         const [ox,oy,oz]=offsets[i],seed=hash(node.x,node.z,i+level);
         const scale=2.3+(seed%13)*.12;
-        const index=put(mesh,worldX+ox,depositY+oy,worldZ+oz,scale,scale*(.8+(i%2)*.28),scale*.92,.12*(i+1),.24*(seed%7),.08*(i%3));
+        const sx=coalSeam?scale*1.35:scale,sy=coalSeam?scale*.38:scale*(.8+(i%2)*.28),sz=coalSeam?scale*.94:scale*.92;
+        const index=put(mesh,worldX+ox,depositY+oy,worldZ+oz,sx,sy,sz,.12*(i+1),.24*(seed%7),.08*(i%3));
         if(index<0)continue;
         const target={cell:{x:node.x,z:node.z},targetKind:{kind:"resource",type:node.type,mine:true,level,depthY:node.depthY}};
         mesh.userData.mineTargets[index]=target;
-        refs.push({mesh,index,x:worldX+ox,y:depositY+oy,z:worldZ+oz,sx:scale,sy:scale*(.8+(i%2)*.28),sz:scale*.92,rx:.12*(i+1),ry:.24*(seed%7),rz:.08*(i%3)});
+        refs.push({mesh,index,x:worldX+ox,y:depositY+oy,z:worldZ+oz,sx,sy,sz,rx:.12*(i+1),ry:.24*(seed%7),rz:.08*(i%3)});
         oreInstances++;
       }
       oreRefsByKey.set(node.level+":"+node.x+":"+node.z,refs);
