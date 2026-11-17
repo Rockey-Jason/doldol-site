@@ -227,3 +227,30 @@ html,body{width:100%;height:100%;min-height:100%;overflow:hidden;overscroll-beha
 }
 
 .skill-tree-panel{margin-top:22px;padding-top:17px;border-top:1px solid #29465a}.skill-tree-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}.skill-tree-heading h3{margin:3px 0 4px;font-size:13px;color:#e4f6fb}.skill-tree-heading p{margin:0;color:#819cad;font-size:8px;line-height:1.5}.skill-tree-count{display:grid;gap:4px;text-align:right;white-space:nowrap}.skill-tree-count strong{color:#8de6d6;font-size:9px}.skill-tree-count small{color:#7997aa;font-size:8px}.skill-tree{display:grid;gap:12px}.skill-group{padding:10px;border:1px solid #294458;border-radius:12px;background:#081b29}.skill-group>header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}.skill-group>header strong{font-size:10px;color:#bfe9f0}.skill-group>header small{font-size:8px;color:#6f91a7}.skill-group-nodes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.skill-node{min-width:0;padding:9px;border:1px solid #294154;border-radius:9px;background:#0d2130}.skill-node.available{border-color:#3b8791;background:#10313d}.skill-node.unlocked{border-color:#367a68;background:#0e2d2b}.skill-node.locked{opacity:.78}.skill-node-top{display:flex;align-items:center;gap:5px;flex-wrap:wrap}.skill-node-top span{font-size:7px;color:#73bdca}.skill-node-top b{font-size:8px;color:#d8edf1;flex:1}.skill-node-top em{font-size:7px;color:#8fa8b8;font-style:normal}.skill-node p{min-height:27px;margin:6px 0;color:#9db3c0;font-size:8px;line-height:1.45}.skill-node>small{display:block;min-height:22px;color:#83d9c9;font-size:7px;line-height:1.4}.skill-node .action-button{width:100%;margin-top:7px;padding:7px 5px;font-size:8px}.skill-node .action-button:disabled{opacity:.48;cursor:not-allowed}@media(max-width:520px){.skill-group-nodes{grid-template-columns:1fr}.skill-tree-heading{flex-wrap:wrap}.skill-tree-count{text-align:left}}
+
+/* Research clarity and direct facility management dialogs */
+.research-requirements{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+.research-resource{display:flex;flex-direction:column;gap:2px;min-width:112px;padding:6px 8px;border:1px solid #31516a;border-radius:7px;background:#102638}
+.research-resource b{font-size:8px;color:#d8eaf4}
+.research-resource small{font-size:7px;color:#88a7ba}
+.research-resource.missing{border-color:#9a5b58;background:#321f28}
+.research-resource.missing b,.research-resource.missing small{color:#ffc0b9}
+.research-resource.ready{border-color:#326c60}
+.research-countdown{display:block;margin-top:6px;color:#8ff0d4;font-size:10px;font-variant-numeric:tabular-nums;letter-spacing:.3px}
+.building-modal-hero{display:flex;align-items:center;gap:11px;padding:12px;border:1px solid #31556b;border-radius:11px;background:linear-gradient(130deg,#15374b,#102437)}
+.building-modal-hero .build-icon{width:44px;height:44px;font-size:22px}
+.building-modal-hero b{display:block;color:#e7f5fc;font-size:12px}
+.building-modal-hero small{display:block;margin-top:4px;color:#8eabba;font-size:8px}
+.building-modal-stat{display:flex;justify-content:space-between;gap:12px;padding:9px 2px;border-bottom:1px solid #2b4355;font-size:9px}
+.building-modal-stat span{color:#8ca9bc}
+.building-modal-stat b{color:#d9edf5;text-align:right}
+.modal-card:has(.building-modal-hero){width:min(560px,100%)}
+.modal-card:has(.building-modal-hero) .modal-body{font-size:10px}
+.modal-card:has(.building-modal-hero) .modal-foot{justify-content:flex-start;flex-wrap:wrap}
+@media(max-width:560px){
+ .modal-overlay{padding:10px}
+ .modal-card{padding:15px;border-radius:14px;max-height:90dvh}
+ .research-node{align-items:flex-start;flex-wrap:wrap}
+ .research-node .action-button{margin-left:43px}
+ .research-resource{min-width:calc(50% - 5px);flex:1}
+}
