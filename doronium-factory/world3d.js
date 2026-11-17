@@ -214,7 +214,7 @@ export function createWorld3D(canvas, getState) {
   const mineRoot = new THREE.Group(); scene.add(mineRoot);
   const mineVisualMap = new Map();
   let mineBuildCount=0,mineCartVisual=null,mineWaterPoolMesh=null;
-  const mineVentFans=[];
+  const mineVentFans=[],mineDrillVisuals=[];
   let mineStatsSnapshot = {tunnelCells:0,wallInstances:0,roofInstances:0,rockDetails:0,geologyTypes:0,supportFrames:0,supportBraces:0,railSegments:0,ventilationDucts:0,mineCartCount:0,oreDrawCalls:0,oreInstances:0,depositNodes:0,lightCount:0};
   const hoverRoot = new THREE.Group(); scene.add(hoverRoot);
   const hoverFillMaterial = new THREE.MeshBasicMaterial({color:0x6de4bb,transparent:true,opacity:.2,depthWrite:false,side:THREE.DoubleSide});
@@ -409,7 +409,7 @@ export function createWorld3D(canvas, getState) {
   function surfaceY(state,x,z){const key=x+","+z,v=state.flattened?.[key];return v&&typeof v==="object"&&Number.isFinite(v.height)?v.height:terrainHeightAt(x,z);}
   function buildMine(state){
     mineBuildCount++;
-    mineVisualMap.clear();mineCartVisual=null;mineWaterPoolMesh=null;mineVentFans.length=0;
+    mineVisualMap.clear();mineCartVisual=null;mineWaterPoolMesh=null;mineVentFans.length=0;mineDrillVisuals.length=0;
     const level=clamp(Number(state.player?.mineLevel)||1,1,5),floorY=mineFloorY(level);
     const environment=state.mineEnvironment?.[level]||{waterDepth:.025,humidity:45,gasLevel:5,supportIntegrity:100,ventilationActive:true,pumpActive:false};
     const supportTint=Number(environment.supportIntegrity)<35?0xb65d52:Number(environment.supportIntegrity)<65?0xb38a4e:0x65412e;
@@ -522,7 +522,10 @@ export function createWorld3D(canvas, getState) {
       makeBox(fan,0,0,0,8,5,3,mineCableMaterial,false);
       makeCyl(fan,0,0,2.5,2,1,mineRailMaterial,10);
       const rotor=new THREE.Group();fan.add(rotor);
-      for(let i=0;i<4;i++){const blade=makeBox(rotor,0,0,6,1.2,1.2,8,mineLampMaterial,false);blade.rotation.z=i*Math.PI/2}
+      for(let i=0;i<4;i++){
+        const bladeRoot=new THREE.Group();bladeRoot.rotation.z=i*Math.PI/2;rotor.add(bladeRoot);
+        makeBox(bladeRoot,0,5.5,0,1.4,10,1.2,mineLampMaterial,false);
+      }
       mineVentFans.push(rotor);
     }
 
@@ -620,7 +623,11 @@ export function createWorld3D(canvas, getState) {
         makeBox(g,0,5,0,19,10,19,dark);
         makeCyl(g,0,14,0,5,10,metal,10);
         makeCyl(g,0,23,0,2.8,12,accent,8);
-        const drill=new THREE.Mesh(new THREE.ConeGeometry(4,16,8),metal);drill.position.set(0,34,0);g.add(drill);
+        const drill=new THREE.Group();drill.position.set(0,22,9);drill.rotation.x=Math.PI/2;g.add(drill);
+        makeCyl(drill,0,0,0,2.1,20,metal,10);
+        const bit=new THREE.Mesh(new THREE.ConeGeometry(5.1,12,8),accent);bit.position.y=14;bit.rotation.x=Math.PI;drill.add(bit);
+        const bitRings=[];for(let i=0;i<3;i++){const ring=new THREE.Mesh(new THREE.TorusGeometry(3.1-i*.45,.65,6,12),mineRailMaterial);ring.position.y=5+i*4;drill.add(ring);bitRings.push(ring)}
+        mineDrillVisuals.push({group:drill,building:b,bitRings});
         for(const sx of [-10,10]){makeBox(g,sx,2,0,3,3,24,accent);makeCyl(g,sx,1,0,4,2,dark,8)}
       }else if(b.type==="mineGen"){
         makeBox(g,0,8,0,22,16,18,dark);makeBox(g,0,18,0,15,4,12,metal);
@@ -741,7 +748,7 @@ export function createWorld3D(canvas, getState) {
   }
   function rebuild(state){
     clear(worldRoot);clear(machineRoot);clear(nodeRoot);clear(markerRoot);clear(dropRoot);clear(mineRoot);
-    mineCartVisual=null;mineWaterPoolMesh=null;mineVentFans.length=0;terrainChunks.length=0;nodeGroupsByKey.clear();nodeBatches=null;nodeHitMesh=null;nodeBatchMeshes.length=0;nodeBatchedKeys.clear();selectionRoot.visible=false;
+    mineCartVisual=null;mineWaterPoolMesh=null;mineVentFans.length=0;mineDrillVisuals.length=0;terrainChunks.length=0;nodeGroupsByKey.clear();nodeBatches=null;nodeHitMesh=null;nodeBatchMeshes.length=0;nodeBatchedKeys.clear();selectionRoot.visible=false;
     const dummy=new THREE.Object3D(),color=new THREE.Color(),bottom=-52,chunkSize=32;
     for(let z0=0;z0<WORLD_H;z0+=chunkSize)for(let x0=0;x0<WORLD_W;x0+=chunkSize){
       const chunkWidth=Math.min(chunkSize,WORLD_W-x0),chunkHeight=Math.min(chunkSize,WORLD_H-z0);
@@ -1003,6 +1010,11 @@ export function createWorld3D(canvas, getState) {
     if(inMine){
       const env=state.mineEnvironment?.[Number(state.player?.mineLevel)||1]||{};
       for(const rotor of mineVentFans)rotor.rotation.z=env.ventilationActive===false?0:t*2.6;
+      for(const drill of mineDrillVisuals){
+        const running=drill.building?.status==="RUNNING";
+        drill.group.rotation.z=running?t*5.4:0;
+        for(let i=0;i<drill.bitRings.length;i++)drill.bitRings[i].rotation.y=running?t*(2.2+i*.3):0;
+      }
       if(mineCartVisual){
         const motion=state.playerMotion||{x:state.player.x,z:state.player.y,yaw:0};
         const station=mineCartVisual.userData.station;
@@ -1062,5 +1074,5 @@ export function createWorld3D(canvas, getState) {
   function center(x,y){target.set(x*32,terrainHeightAt(x,y),y*32);cameraUpdate();}
   function orbit(dx,dy){yaw-=dx*0.004;pitch=clamp(pitch+dy*0.003,0.42,1.25);cameraUpdate();}
   resize();cameraUpdate();
-  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?"third":"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},adaptPerformanceFrame,inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),adaptiveBeltTilts:machineRoot.children.filter(g=>g.userData?.type==="beltAdaptive").map(g=>g.userData.adaptiveSlope),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,mineBuildCount,terrainChunkCount:terrainChunks.length,renderCount,rebuildCount,pixelRatio:renderer.getPixelRatio(),basePixelRatio,shadowEnabled:renderer.shadowMap.enabled,qualityTier:compactDevice?"mobile":lowEndDevice?"low":shadowsEnabled?"high":"balanced",undergroundResourceNodes:mineStatsSnapshot.depositNodes,mineTunnelCells:mineStatsSnapshot.tunnelCells,mineWallInstances:mineStatsSnapshot.wallInstances,mineRoofInstances:mineStatsSnapshot.roofInstances,mineRockDetails:mineStatsSnapshot.rockDetails,mineGeologyTypes:mineStatsSnapshot.geologyTypes||0,mineSupportFrames:mineStatsSnapshot.supportFrames,mineSupportBraces:mineStatsSnapshot.supportBraces||0,mineRailSegments:mineStatsSnapshot.railSegments,mineVentilationDucts:mineStatsSnapshot.ventilationDucts||0,mineCartCount:mineStatsSnapshot.mineCartCount||0,mineCableSegments:mineStatsSnapshot.cableSegments,mineOreDrawCalls:mineStatsSnapshot.oreDrawCalls,mineOreInstances:mineStatsSnapshot.oreInstances,mineLightCount:mineStatsSnapshot.lightCount,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0),worldDropCount:dropRoot.children.length};},inspectPerformance(){return {fps:Math.round(measuredFps),averageFrameMs:Number(measuredFrameMs.toFixed(2)),pixelRatio:Number(currentPixelRatio.toFixed(2)),basePixelRatio:Number(basePixelRatio.toFixed(2)),shadowEnabled:renderer.shadowMap.enabled,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,terrainChunks:terrainChunks.length,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0),renderCount,rebuildCount};},get zoom(){return zoom;}};
+  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?"third":"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},adaptPerformanceFrame,inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),adaptiveBeltTilts:machineRoot.children.filter(g=>g.userData?.type==="beltAdaptive").map(g=>g.userData.adaptiveSlope),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,mineBuildCount,terrainChunkCount:terrainChunks.length,renderCount,rebuildCount,pixelRatio:renderer.getPixelRatio(),basePixelRatio,shadowEnabled:renderer.shadowMap.enabled,qualityTier:compactDevice?"mobile":lowEndDevice?"low":shadowsEnabled?"high":"balanced",undergroundResourceNodes:mineStatsSnapshot.depositNodes,mineTunnelCells:mineStatsSnapshot.tunnelCells,mineWallInstances:mineStatsSnapshot.wallInstances,mineRoofInstances:mineStatsSnapshot.roofInstances,mineRockDetails:mineStatsSnapshot.rockDetails,mineGeologyTypes:mineStatsSnapshot.geologyTypes||0,mineSupportFrames:mineStatsSnapshot.supportFrames,mineSupportBraces:mineStatsSnapshot.supportBraces||0,mineRailSegments:mineStatsSnapshot.railSegments,mineVentilationDucts:mineStatsSnapshot.ventilationDucts||0,mineCartCount:mineStatsSnapshot.mineCartCount||0,mineDrillCount:mineDrillVisuals.length,mineActiveDrills:mineDrillVisuals.filter(item=>item.building?.status==="RUNNING").length,mineCableSegments:mineStatsSnapshot.cableSegments,mineOreDrawCalls:mineStatsSnapshot.oreDrawCalls,mineOreInstances:mineStatsSnapshot.oreInstances,mineLightCount:mineStatsSnapshot.lightCount,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0),worldDropCount:dropRoot.children.length};},inspectPerformance(){return {fps:Math.round(measuredFps),averageFrameMs:Number(measuredFrameMs.toFixed(2)),pixelRatio:Number(currentPixelRatio.toFixed(2)),basePixelRatio:Number(basePixelRatio.toFixed(2)),shadowEnabled:renderer.shadowMap.enabled,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,terrainChunks:terrainChunks.length,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0),renderCount,rebuildCount};},get zoom(){return zoom;}};
 }
