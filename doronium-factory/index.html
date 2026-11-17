@@ -49,6 +49,31 @@
             <div class="survival-row hunger"><span>🍖 허기</span><div class="survival-track"><i id="hunger-fill"></i></div><b id="hunger-value">100</b></div>
             <div class="survival-row thirst"><span>💧 갈증</span><div class="survival-track"><i id="thirst-fill"></i></div><b id="thirst-value">100</b></div>
           </div>
+          <section class="mine-ops-card" id="mine-ops-card" aria-live="polite">
+            <div class="mine-ops-heading"><div><small>UNDERGROUND OPERATIONS</small><strong>광산 안전 · 환경</strong></div><span id="mine-safety-status" data-status="SAFE">안전 정상</span></div>
+            <div class="mine-depth-row"><b id="mine-depth-value">1층 · 42m</b><span id="mine-coordinate-value">X 5 · Z 12</span></div>
+            <div class="mine-risk-row"><span>환경 위험도</span><b id="mine-risk-value">안전</b></div>
+            <div class="mine-risk-track"><i id="mine-risk-fill"></i></div>
+            <div class="mine-env-grid">
+              <div><small>지하수</small><b id="mine-water-value">3%</b><div class="mine-mini-track"><i id="mine-water-fill"></i></div></div>
+              <div><small>습도</small><b id="mine-humidity-value">43%</b></div>
+              <div><small>가스 지표</small><b id="mine-gas-value">7%</b></div>
+              <div><small>지지대</small><b id="mine-support-value">100%</b><div class="mine-mini-track"><i id="mine-support-fill"></i></div></div>
+            </div>
+            <p id="mine-safety-copy">광산 환경 정상</p>
+            <div class="mine-control-grid">
+              <button type="button" id="mine-vent-button">환기 가동</button>
+              <button type="button" id="mine-pump-button">배수 정지</button>
+              <button type="button" id="mine-support-button">지지대 보강 · U</button>
+              <button type="button" id="mine-cart-button">광차 탑승 · K</button>
+              <button type="button" id="mine-map-toggle" class="mine-map-action">층별 지도 · M</button>
+            </div>
+          </section>
+          <div class="mine-map-wrap" id="mine-map-wrap">
+            <div class="mine-map-heading"><strong>광산 탐색 지도</strong><span id="mine-map-level">CURRENT LEVEL</span></div>
+            <canvas id="mine-map-canvas" width="400" height="240" aria-label="현재 광산 층의 통로와 광물 위치 지도"></canvas>
+            <div class="mine-map-legend"><span><i class="player-dot"></i>현재 위치</span><span><i class="coal-dot"></i>석탄</span><span><i class="ore-dot"></i>기타 광물</span></div>
+          </div>
           <div class="view-switcher" role="group" aria-label="카메라 시점">
             <button type="button" id="view-first" data-view-mode="first">1인칭</button>
             <button type="button" id="view-third" data-view-mode="third">3인칭</button>
@@ -103,5 +128,5 @@
   </div>
 </div>
 <div class="toast-stack" id="toast-stack"></div><div class="modal-overlay" id="modal-overlay"><div class="modal-card" id="modal-card"></div></div>
-<script type="module" src="./factory.js?v=49"></script>
+<script type="module" src="./factory.js?v=50"></script>
 </body></html>
