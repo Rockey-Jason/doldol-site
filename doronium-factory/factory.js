@@ -1354,6 +1354,7 @@ function updateMineHud(){
  const water=$("mine-water-fill");if(water)water.style.width=summary.waterPercent+"%";
  const assessment=$("mine-safety-copy");if(assessment)assessment.textContent=summary.message;
  const cart=$("mine-cart-button");if(cart)cart.disabled=!summary.cartAvailable;
+ const evacuate=$("mine-evacuate-button");if(evacuate){evacuate.hidden=!summary.stopMining;evacuate.disabled=!summary.stopMining}
  mineMapClock+=.15;
  const mapKey=[S.player.mineLevel,S.player.x,S.player.y,Object.keys(S.mineDeposits||{}).length,Math.floor(mineMapClock)].join(":");
  if(mineMapVisible&&(mineMapClock>=.6||mapKey!==mineMapLastKey)){mineMapClock=0;mineMapLastKey=mapKey;drawMineMap()}
@@ -2158,6 +2159,7 @@ function wireControls(){
  $("mine-pump-button")?.addEventListener("click",()=>toggleMineControls("pump"));
  $("mine-support-button")?.addEventListener("click",reinforceMineSafety);
  $("mine-cart-button")?.addEventListener("click",toggleMineCart);
+ $("mine-evacuate-button")?.addEventListener("click",()=>{if(mineSafetyAssessment(currentMineEnvironment()||{}).stopMining)exitMine()});
  $("jump-button").addEventListener("pointerdown",e=>{e.preventDefault();adventureKeys.add(" ")});
  $("jump-button").addEventListener("pointerup",()=>adventureKeys.delete(" "));
  $("jump-button").addEventListener("pointercancel",()=>adventureKeys.delete(" "));
