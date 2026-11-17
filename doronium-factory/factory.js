@@ -17,6 +17,7 @@ import { evaluatePlanetaryStabilization } from "./planetary-stabilization.js?v=1
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=3";
 import { createOwnershipState, addCustody, transferCustody, consumeCustody, completeProductionCustody, validateOwnershipState, resetCustodySnapshot } from "./ownership-runtime.js?v=6";
+import { storeWarehouseStack as storeWarehouseCustody, withdrawWarehouseStack as withdrawWarehouseCustody } from "./warehouse-runtime.js?v=1";
 let createClient = null;
 
 /* DORONIUM FACTORY — INFINITE INDUSTRY
@@ -571,7 +572,7 @@ function renderInventory(){
 }
 function updateMarketEstimate(){const id=$("sell-resource").value,n=Math.max(0,Math.floor(Number($("sell-amount").value)||0));$("market-estimate").textContent="판매 예상액 "+fmt(n*(RESOURCE[id]?.price||0))+" D"}
 function renderFactory(){const p=currentPower();const built=S.buildings.length;const batteries=S.buildings.filter(b=>b.type==="battery");const batteryEnergy=batteries.reduce((n,b)=>n+Math.max(0,Number(b.energyKJ)||0),0);const batteryCapacity=batteries.reduce((n,b)=>n+Math.max(0,Number(buildingDef(b.type)?.capacityKJ)||0),0);const lines=[["⚡","전력 생산",fmt(p.gen)+" kW"],["ϟ","전력 소비",fmt(p.used)+" kW"],["🔗","전력 네트워크",S.powerTopologyEnabled?String(p.networkCount||0)+"개":"기존 공유망"],["🔋","배터리 저장",fmt(batteryEnergy)+" / "+fmt(batteryCapacity)+" kJ"],["🏭","설비 수",built+" 개"],["💎","도로늄 생산",fmt(S.stats.produced.ITEM_DORONUM_NORMAL||0)+" 개"]];$("operation-cards").innerHTML=lines.map(x=>'<div class="operation-card"><small>'+x[0]+" "+x[1]+'</small><strong>'+x[2]+'</strong><em>실시간 운영 지표</em></div>').join("");renderMachineDetails();renderEvents()}
-function renderMachineDetails(){const el=$("machine-details");const b=S.buildings.find(x=>x.uid===selectedBuilding);if(!b){el.innerHTML='<div class="inspector-empty"><span>⌖</span><strong>월드에서 기계를 선택하세요</strong><p>기계의 레시피, 방향, 입출력 버퍼와 상태를 확인할 수 있습니다.</p></div>';return}const d=buildingDef(b.type),recipe=RECIPES[d.recipe]||(b.type==="variantLab"?VARIANT_RECIPES[b.variant||"ITEM_DORONUM_BLUE"]:null);const input=Object.entries(b.input||{}).map(([id,n])=>RESOURCE[id].icon+fmt(n)).join(" · ")||"없음";const output=b.output?RESOURCE[b.output.id]?.icon+" "+fmt(b.output.qty)+" "+(RESOURCE[b.output.id]?.name||b.output.id):"없음";const status=b.status==="RUNNING"?"가동 중":b.status==="BROWNOUT_RUNNING"?"저전력 가동":b.status==="PAUSED_POWER"?"전력 부족":b.status==="PAUSED_OUTPUT"?"출력 대기":b.status==="WAITING_INPUT"?"원료 대기":b.status==="MAINTENANCE"?"정비 중":b.status==="BROKEN"?"고장":b.status==="COOLING"?"온도·압력 안정화":b.status==="NO_INPUT"?"원료 부족":b.status==="DEPLETED"?"광맥 고갈":b.status==="ERROR"?"오류":"대기";el.innerHTML='<div class="inspector-title"><span class="build-icon">'+d.icon+'</span><div><strong>'+d.name+'</strong><small>'+status+' · 방향 '+DIRS[b.dir||1].name+' · 내구도 '+Math.round(b.condition||100)+'%</small></div></div><div class="machine-kpi"><div><small>생산 공정</small><b>'+(recipe?.name||({miner:"자원 채굴",pump:"물 공급",doriFarm:"돌이 고기 수확",power:"전력 공급",fusion:"인피니티 퓨전"})[d.kind]||"산업 설비")+'</b></div><div><small>공정 진행률</small><b>'+Math.round((b.progress||0)/(recipe?.time||10)*100)+'%</b></div></div><div class="machine-buffer"><span>투입 버퍼</span><b>'+input+'</b></div><div class="machine-buffer"><span>출력 버퍼</span><b>'+output+'</b></div>'+(b.layer==="mine"&&d.kind==="miner"?'<div class="machine-buffer"><span>광산 층 · 광맥 잔량</span><b>'+(Number(b.mineLevel)||1)+'층 · '+Math.max(0,Number(S.mineDeposits?.[b.targetDepositKey]?.amount)||0)+'개</b></div><div class="machine-buffer"><span>드릴 내구도</span><b>'+Math.max(0,Math.round(Number(b.drillDurability)||0))+' / 1000</b></div>':"")+(b.type==="mineGen"?'<div class="machine-buffer"><span>지하 발전기 연료</span><b>'+Math.ceil(Math.max(0,Number(b.fuelTimer)||0))+'초 · '+((d.gen||12)*100)+'kW</b></div>':"")+(d.kind==="variant"||b.type==="variantLab"?'<div class="machine-buffer"><span>결정 레시피</span><b>'+RESOURCE[b.variant||"ITEM_DORONUM_BLUE"].name+'</b></div>':"")+'<div class="machine-controls"><button class="action-button" id="machine-collect" '+(!b.output?"disabled":"")+'>출력 회수</button><button class="action-button secondary" id="machine-supply">창고에서 투입</button><button class="action-button secondary" id="machine-rotate">방향 회전</button><button class="action-button danger" id="machine-remove">해체</button>'+(b.type==="fluidValve"?'<button class="action-button" id="machine-valve">'+(b.valveOpen===false?"밸브 열기":"밸브 닫기")+"</button>":"")+(Number(b.fluidAmountL)>1e-9?'<button class="action-button" id="machine-fluid-drain">유체를 연결 탱크로 배출</button>':"")+(b.failureRepair?'<button class="action-button gold-button" id="machine-repair">정비 시작 · '+fmt(b.failureRepair.repairSeconds)+'초</button>':"")+(b.type==="variantLab"?'<button class="action-button secondary" id="machine-recipe">레시피 변경</button>':"")+(b.type==="fusion"?'<button class="action-button secondary" id="machine-fusion-diagnostics">사전 진단 3종 실행</button><button class="action-button gold-button" id="machine-fusion">퓨전 시작</button>'+(S.fusionJob&&!S.fusionJob.legacyConsumedInput&&Array.isArray(S.fusionJob.reservationIDs)&&S.fusionJob.reservationIDs.length?'<button class="action-button danger" id="machine-fusion-cancel">퓨전 취소 · 원료 반환</button>':""):"")+(b.type==="core"?'<button class="action-button gold-button" id="machine-core">인피니티 설치</button>':"")+'</div>';if(b.type==="fusion"){const diagnostic=document.createElement("div");diagnostic.className="machine-buffer";const checks=S.fusionDiagnostics||{};diagnostic.textContent="사전 진단 · 전력 "+(checks.powerStability?.passed?"통과":"미실행/실패")+" · 압력 센서 "+(checks.pressureSensorCalibration?.passed?"통과":"미실행/실패")+" · 비상 냉각 "+(checks.emergencyCooling?.passed?"통과":"미실행/실패");el.append(diagnostic)}if(["fluidPipe","fluidValve","fluidTank","fluidPump"].includes(b.type)){const fluidPanel=document.createElement("div");fluidPanel.className="machine-buffer";const network=b.fluidNetworkID||"연결 대기";const amount=Math.max(0,Number(b.fluidAmountL)||0);const unit=b.type==="fluidTank"?2000:b.type==="fluidPump"?120:100;fluidPanel.textContent="유체 네트워크 · "+network+" / "+(b.fluidType||"비어 있음")+" · "+amount.toFixed(1)+" / "+unit+" L · "+Math.round(Number(b.fluidPressureKPa)||0)+" kPa";el.append(fluidPanel);if(b.fluidContaminants?.length){const warning=document.createElement("div");warning.className="machine-buffer";warning.textContent="오염 물질 · "+b.fluidContaminants.join(", ");el.append(warning)}}$("machine-collect").onclick=()=>collectOutput(b);$("machine-supply").onclick=()=>supplyMachine(b);$("machine-rotate").onclick=()=>{b.dir=((b.dir||1)+1)%4;markDirty();renderMachineDetails();drawWorld()};$("machine-remove").onclick=()=>removeBuilding(b);if($("machine-repair"))$("machine-repair").onclick=()=>repairMachine(b);if($("machine-valve"))$("machine-valve").onclick=()=>{b.valveOpen=b.valveOpen===false;markDirty();renderMachineDetails();toast(b.valveOpen?"유체 밸브를 열었습니다.":"유체 밸브를 닫았습니다.")};if($("machine-fluid-drain"))$("machine-fluid-drain").onclick=()=>drainFluidToTank(b);if($("machine-recipe"))$("machine-recipe").onclick=()=>chooseVariant(b);if($("machine-fusion-diagnostics"))$("machine-fusion-diagnostics").onclick=runFusionDiagnostics;if($("machine-fusion"))$("machine-fusion").onclick=startFusion;if($("machine-fusion-cancel"))$("machine-fusion-cancel").onclick=cancelFusion;if($("machine-core"))$("machine-core").onclick=()=>installCore(b)}
+function renderMachineDetails(){const el=$("machine-details");const b=S.buildings.find(x=>x.uid===selectedBuilding);if(!b){el.innerHTML='<div class="inspector-empty"><span>⌖</span><strong>월드에서 기계를 선택하세요</strong><p>기계의 레시피, 방향, 입출력 버퍼와 상태를 확인할 수 있습니다.</p></div>';return}const d=buildingDef(b.type),recipe=RECIPES[d.recipe]||(b.type==="variantLab"?VARIANT_RECIPES[b.variant||"ITEM_DORONUM_BLUE"]:null);const input=Object.entries(b.input||{}).map(([id,n])=>RESOURCE[id].icon+fmt(n)).join(" · ")||"없음";const output=b.output?RESOURCE[b.output.id]?.icon+" "+fmt(b.output.qty)+" "+(RESOURCE[b.output.id]?.name||b.output.id):"없음";const status=b.status==="RUNNING"?"가동 중":b.status==="BROWNOUT_RUNNING"?"저전력 가동":b.status==="PAUSED_POWER"?"전력 부족":b.status==="PAUSED_OUTPUT"?"출력 대기":b.status==="WAITING_INPUT"?"원료 대기":b.status==="MAINTENANCE"?"정비 중":b.status==="BROKEN"?"고장":b.status==="COOLING"?"온도·압력 안정화":b.status==="NO_INPUT"?"원료 부족":b.status==="DEPLETED"?"광맥 고갈":b.status==="ERROR"?"오류":"대기";el.innerHTML='<div class="inspector-title"><span class="build-icon">'+d.icon+'</span><div><strong>'+d.name+'</strong><small>'+status+' · 방향 '+DIRS[b.dir||1].name+' · 내구도 '+Math.round(b.condition||100)+'%</small></div></div><div class="machine-kpi"><div><small>생산 공정</small><b>'+(recipe?.name||({miner:"자원 채굴",pump:"물 공급",doriFarm:"돌이 고기 수확",power:"전력 공급",fusion:"인피니티 퓨전"})[d.kind]||"산업 설비")+'</b></div><div><small>공정 진행률</small><b>'+Math.round((b.progress||0)/(recipe?.time||10)*100)+'%</b></div></div><div class="machine-buffer"><span>투입 버퍼</span><b>'+input+'</b></div><div class="machine-buffer"><span>출력 버퍼</span><b>'+output+'</b></div>'+renderWarehouseStockPanel(b)+(b.layer==="mine"&&d.kind==="miner"?'<div class="machine-buffer"><span>광산 층 · 광맥 잔량</span><b>'+(Number(b.mineLevel)||1)+'층 · '+Math.max(0,Number(S.mineDeposits?.[b.targetDepositKey]?.amount)||0)+'개</b></div><div class="machine-buffer"><span>드릴 내구도</span><b>'+Math.max(0,Math.round(Number(b.drillDurability)||0))+' / 1000</b></div>':"")+(b.type==="mineGen"?'<div class="machine-buffer"><span>지하 발전기 연료</span><b>'+Math.ceil(Math.max(0,Number(b.fuelTimer)||0))+'초 · '+((d.gen||12)*100)+'kW</b></div>':"")+(d.kind==="variant"||b.type==="variantLab"?'<div class="machine-buffer"><span>결정 레시피</span><b>'+RESOURCE[b.variant||"ITEM_DORONUM_BLUE"].name+'</b></div>':"")+'<div class="machine-controls"><button class="action-button" id="machine-collect" '+(!b.output?"disabled":"")+'>출력 회수</button><button class="action-button secondary" id="machine-supply">창고에서 투입</button><button class="action-button secondary" id="machine-rotate">방향 회전</button><button class="action-button danger" id="machine-remove">해체</button>'+(b.type==="fluidValve"?'<button class="action-button" id="machine-valve">'+(b.valveOpen===false?"밸브 열기":"밸브 닫기")+"</button>":"")+(Number(b.fluidAmountL)>1e-9?'<button class="action-button" id="machine-fluid-drain">유체를 연결 탱크로 배출</button>':"")+(b.failureRepair?'<button class="action-button gold-button" id="machine-repair">정비 시작 · '+fmt(b.failureRepair.repairSeconds)+'초</button>':"")+(b.type==="variantLab"?'<button class="action-button secondary" id="machine-recipe">레시피 변경</button>':"")+(b.type==="fusion"?'<button class="action-button secondary" id="machine-fusion-diagnostics">사전 진단 3종 실행</button><button class="action-button gold-button" id="machine-fusion">퓨전 시작</button>'+(S.fusionJob&&!S.fusionJob.legacyConsumedInput&&Array.isArray(S.fusionJob.reservationIDs)&&S.fusionJob.reservationIDs.length?'<button class="action-button danger" id="machine-fusion-cancel">퓨전 취소 · 원료 반환</button>':""):"")+(b.type==="core"?'<button class="action-button gold-button" id="machine-core">인피니티 설치</button>':"")+'</div>';el.querySelectorAll("[data-warehouse-stack]").forEach(button=>{button.onclick=()=>withdrawStoredWarehouseStack(b,button.dataset.warehouseStack)});if(b.type==="fusion"){const diagnostic=document.createElement("div");diagnostic.className="machine-buffer";const checks=S.fusionDiagnostics||{};diagnostic.textContent="사전 진단 · 전력 "+(checks.powerStability?.passed?"통과":"미실행/실패")+" · 압력 센서 "+(checks.pressureSensorCalibration?.passed?"통과":"미실행/실패")+" · 비상 냉각 "+(checks.emergencyCooling?.passed?"통과":"미실행/실패");el.append(diagnostic)}if(["fluidPipe","fluidValve","fluidTank","fluidPump"].includes(b.type)){const fluidPanel=document.createElement("div");fluidPanel.className="machine-buffer";const network=b.fluidNetworkID||"연결 대기";const amount=Math.max(0,Number(b.fluidAmountL)||0);const unit=b.type==="fluidTank"?2000:b.type==="fluidPump"?120:100;fluidPanel.textContent="유체 네트워크 · "+network+" / "+(b.fluidType||"비어 있음")+" · "+amount.toFixed(1)+" / "+unit+" L · "+Math.round(Number(b.fluidPressureKPa)||0)+" kPa";el.append(fluidPanel);if(b.fluidContaminants?.length){const warning=document.createElement("div");warning.className="machine-buffer";warning.textContent="오염 물질 · "+b.fluidContaminants.join(", ");el.append(warning)}}$("machine-collect").onclick=()=>collectOutput(b);$("machine-supply").onclick=()=>supplyMachine(b);$("machine-rotate").onclick=()=>{b.dir=((b.dir||1)+1)%4;markDirty();renderMachineDetails();drawWorld()};$("machine-remove").onclick=()=>removeBuilding(b);if($("machine-repair"))$("machine-repair").onclick=()=>repairMachine(b);if($("machine-valve"))$("machine-valve").onclick=()=>{b.valveOpen=b.valveOpen===false;markDirty();renderMachineDetails();toast(b.valveOpen?"유체 밸브를 열었습니다.":"유체 밸브를 닫았습니다.")};if($("machine-fluid-drain"))$("machine-fluid-drain").onclick=()=>drainFluidToTank(b);if($("machine-recipe"))$("machine-recipe").onclick=()=>chooseVariant(b);if($("machine-fusion-diagnostics"))$("machine-fusion-diagnostics").onclick=runFusionDiagnostics;if($("machine-fusion"))$("machine-fusion").onclick=startFusion;if($("machine-fusion-cancel"))$("machine-fusion-cancel").onclick=cancelFusion;if($("machine-core"))$("machine-core").onclick=()=>installCore(b)}
 function renderEvents(){const logs=S.logs||[];$("event-feed").innerHTML=logs.slice(0,7).map(e=>'<div class="event-row"><i></i><span>'+e.message+'</span><time>'+String(Math.floor(e.time%86400/3600)).padStart(2,"0")+":"+String(Math.floor(e.time%3600/60)).padStart(2,"0")+'</time></div>').join("")||'<div class="inspector-empty">아직 생산 기록이 없습니다.</div>'}
 
 function claimSkillPoint(claimID){
@@ -731,6 +732,11 @@ function rebuildOwnershipLedger(state=S){
    const stackID=String(building.item.custodyStackID||("CONVEYOR:"+uid));
    addCustody(ledger,{stackID,itemID:building.item.id,quantity:Math.floor(building.item.qty),ownerType:"CONVEYOR",ownerID:uid,metadata:building.item.meta||{}});
   }
+  for(let i=0;i<(building.warehouseStock||[]).length;i++){
+   const stock=building.warehouseStock[i],itemID=canonicalItemID(stock?.itemID||stock?.id),quantity=Math.max(0,Math.floor(Number(stock?.quantity)||0));
+   if(!stock?.stackID||!itemID||!Number.isSafeInteger(quantity)||quantity<=0)throw new Error("invalid-warehouse-stock:"+uid+":"+i);
+   addCustody(ledger,{stackID:String(stock.stackID),itemID,quantity,ownerType:"WAREHOUSE",ownerID:uid,metadata:stock.meta||{}});
+  }
  }
  for(const shipment of state.contractRuntime?.shipments||[]){
   if(shipment.custodyVersion===1&&shipment.cargoSettled===true)continue;
@@ -779,12 +785,13 @@ function restoreCargoMutation(source,target,sourceField,snapshot){
  source[sourceField]=snapshot.sourceItem;
  source.status=snapshot.sourceStatus;source.logisticsStatus=snapshot.sourceLogisticsStatus;
  source.custodyTransferSequence=snapshot.sourceSequence;
- if(target){target.item=snapshot.targetItem;target.moveTimer=snapshot.targetMoveTimer;target.logisticsStatus=snapshot.targetLogisticsStatus}
+ if(target){target.item=snapshot.targetItem;target.moveTimer=snapshot.targetMoveTimer;target.logisticsStatus=snapshot.targetLogisticsStatus;if(snapshot.targetWarehouseStock===undefined)delete target.warehouseStock;else target.warehouseStock=snapshot.targetWarehouseStock}
 }
 function transferBuildingCargo(source,target,sourceField,fromType,toType,toID){
  const item=source?.[sourceField],quantity=Math.floor(Number(item?.qty)||0);
  if(!item||!Number.isSafeInteger(quantity)||quantity<=0||!source?.uid)return false;
  if(toType==="CONVEYOR"&&(!target||target.item))return false;
+ if(toType==="WAREHOUSE"&&(!target||!["storage","warehouse"].includes(target.type)))return false;
  const beforeAudit=rebuildOwnershipLedger(S);
  if(!beforeAudit.valid)return false;
  const stackID=buildingCargoStackID(source,sourceField),uid=String(source.uid);
@@ -794,7 +801,8 @@ function transferBuildingCargo(source,target,sourceField,fromType,toType,toID){
   ownershipLedger:structuredClone(S.ownershipLedger),validation:structuredClone(S.ownershipLedgerValidation),
   sourceItem:structuredClone(item),sourceStatus:source.status,sourceLogisticsStatus:source.logisticsStatus,
   sourceSequence:source.custodyTransferSequence,targetItem:target?structuredClone(target.item):null,
-  targetMoveTimer:target?.moveTimer,targetLogisticsStatus:target?.logisticsStatus
+  targetMoveTimer:target?.moveTimer,targetLogisticsStatus:target?.logisticsStatus,
+  targetWarehouseStock:target?.warehouseStock===undefined?undefined:structuredClone(target.warehouseStock)
  };
  const tx=nextCargoTransactionID(source,"LOGISTICS");
  const moved=transferCustody(S.ownershipLedger,{transactionID:tx.transactionID,stackID,quantity,toType,toID:String(toID||""),expectedFromType:fromType,expectedFromID:uid});
@@ -808,6 +816,9 @@ function transferBuildingCargo(source,target,sourceField,fromType,toType,toID){
    quality:clamp(metadata.quality??90,0,100),purity:clamp(metadata.purity??90,0,100),
    synthetic:metadata.synthetic===true,packaging:metadata.packaging||null,createdTick:Math.max(0,Number(S.tick)||0)});
   syncLegacyInventory(S);
+ }else if(toType==="WAREHOUSE"){
+  const stored=storeWarehouseCustody({ledger:S.ownershipLedger,warehouse:target,stackID,itemID:canonicalItemID(item.id),quantity,metadata:item.meta||{},transactionID:tx.transactionID,expectedFromType:fromType,expectedFromID:uid,storedTick:S.tick});
+  if(!stored){restoreCargoMutation(source,target,sourceField,snapshot);return false}
  }else{
   restoreCargoMutation(source,target,sourceField,snapshot);return false;
  }
@@ -820,6 +831,32 @@ function transferBuildingCargo(source,target,sourceField,fromType,toType,toID){
  if(!afterAudit.valid){restoreCargoMutation(source,target,sourceField,snapshot);return false}
  markDirty();
  return {ok:true,stackID,quantity,itemID:canonicalItemID(item.id),transactionID:tx.transactionID};
+}
+function withdrawStoredWarehouseStack(b,stackID){
+ if(!b||!["storage","warehouse"].includes(b.type)||!Array.isArray(b.warehouseStock))return false;
+ const id=String(stackID||""),entry=b.warehouseStock.find(item=>String(item?.stackID||"")===id);
+ if(!entry||!id||(S.runtime?.itemStacks||[]).some(stack=>String(stack.runtimeID)===id))return false;
+ const before=rebuildOwnershipLedger(S);if(!before.valid)return false;
+ const snapshot={runtime:structuredClone(S.runtime),inventory:structuredClone(S.inventory||{}),meta:structuredClone(S.meta||{}),ownershipLedger:structuredClone(S.ownershipLedger),validation:S.ownershipLedgerValidation===undefined?undefined:structuredClone(S.ownershipLedgerValidation),warehouseStock:structuredClone(b.warehouseStock),sequence:b.custodyTransferSequence,dirty};
+ const restore=()=>{S.runtime=snapshot.runtime;S.inventory=snapshot.inventory;S.meta=snapshot.meta;S.ownershipLedger=snapshot.ownershipLedger;if(snapshot.validation===undefined)delete S.ownershipLedgerValidation;else S.ownershipLedgerValidation=snapshot.validation;b.warehouseStock=snapshot.warehouseStock;b.custodyTransferSequence=snapshot.sequence;dirty=snapshot.dirty};
+ const tx=nextCargoTransactionID(b,"WAREHOUSE_WITHDRAW");
+ const withdrawn=withdrawWarehouseCustody({ledger:S.ownershipLedger,warehouse:b,stackID:id,transactionID:tx.transactionID,toID:"player"});
+ if(!withdrawn){b.custodyTransferSequence=snapshot.sequence;return false}
+ try{
+  ensureItemStacks(S);
+  S.runtime.itemStacks.push({runtimeID:withdrawn.stackID,itemID:canonicalItemID(withdrawn.itemID),quantity:withdrawn.quantity,quality:clamp(withdrawn.metadata.quality??90,0,100),purity:clamp(withdrawn.metadata.purity??90,0,100),synthetic:withdrawn.metadata.synthetic===true,packaging:withdrawn.metadata.packaging||null,createdTick:Math.max(0,Number(S.tick)||0)});
+  syncLegacyInventory(S);
+  const after=rebuildOwnershipLedger(S);if(!after.valid)throw new Error("WAREHOUSE_WITHDRAW_AUDIT_FAILED");
+ }catch{restore();return false}
+ markDirty();toast((RESOURCE[withdrawn.itemID]?.name||withdrawn.itemID)+" "+fmt(withdrawn.quantity)+"개를 창고에서 회수했습니다.");
+ renderInventory();renderMachineDetails();return true;
+}
+function renderWarehouseStockPanel(b){
+ if(!["storage","warehouse"].includes(b?.type))return "";
+ const stock=Array.isArray(b.warehouseStock)?b.warehouseStock:[],total=stock.reduce((sum,item)=>sum+Math.max(0,Number(item?.quantity)||0),0);
+ const heading='<div class="machine-buffer"><span>창고 재고</span><b>'+fmt(total)+'개 · '+stock.length+' 스택</b></div>';
+ const rows=stock.map(item=>{const id=canonicalItemID(item.itemID||item.id),resource=RESOURCE[id],meta=item.meta||{},label=(resource?.icon||"◈")+" "+(resource?.name||id)+" · Q "+Math.round(Number(meta.quality)||90)+" / P "+Math.round(Number(meta.purity)||90);return '<div class="machine-buffer warehouse-stock-row"><span>'+escapeHTML(label)+'</span><b>'+fmt(item.quantity)+'개</b><button class="action-button secondary" type="button" data-warehouse-stack="'+escapeHTML(String(item.stackID||""))+'">회수</button></div>'}).join("");
+ return heading+(rows||'<div class="inspector-empty">저장된 자원이 없습니다.</div>');
 }
 function transferBuildingCargoToMachine(source,target,sourceField,fromType){
  const item=source?.[sourceField],quantity=Math.floor(Number(item?.qty)||0);
@@ -1269,7 +1306,7 @@ function drainFluidToTank(source){
  source.fluidAmountL=amount-moved;if(source.fluidAmountL<=1e-9){source.fluidAmountL=0;source.fluidType=null;source.fluidContaminants=[]}
  markDirty();renderMachineDetails();toast(moved.toFixed(1)+"L를 연결된 탱크로 배출했습니다.");return true;
 }
-function removeBuilding(b){const d=buildingDef(b.type);if(!d)return false;const activeFusion=b.type==="fusion"&&["RESERVED","RUNNING","PAUSED_POWER","WAITING_POWER","CALIBRATING","ERROR"].includes(S.fusionJob?.status);const hasBufferedFluid=Number(b.fluidAmountL)>1e-9;const hasCargo=!!b.item;if(activeFusion||hasBufferedFluid||hasCargo||b.output||Object.values(b.input||{}).some(q=>Number(q)>0)||b.failureRepair||Number(b.progress)>0){toast(activeFusion?"진행 중인 Infinity Fusion 작업이 있어 설비를 철거할 수 없습니다.":hasBufferedFluid?"유체를 먼저 배출해야 설비를 철거할 수 있습니다.":hasCargo?"컨베이어 화물을 먼저 회수해야 합니다.":"출력·입력 버퍼가 비었고 작업이 정지된 상태에서만 철거할 수 있습니다.","warn");return false}markSceneDirty();const refund=Math.floor(d.cost*.55);S.money+=refund;for(const[id,n]of Object.entries(d.materials||{})){addItem(id,Math.floor(n*.5),{},false)}S.buildings=S.buildings.filter(x=>x.uid!==b.uid);if(b.type==="relay"){const i=S.sites.relay.findIndex(p=>p.x===b.x&&p.y===b.y);if(i>=0)S.relaySites[i]=false}if(b.type==="core")S.corePlaced=false;if(b.type==="powerCable")S.powerTopologyEnabled=S.buildings.some(x=>x.type==="powerCable");selectedBuilding=null;log(d.name+" 해체 · "+refund+" D 환급");toast("시설 해체 · "+refund+" D 환급");markDirty();renderAll()}
+function removeBuilding(b){const d=buildingDef(b.type);if(!d)return false;const hasWarehouseStock=Array.isArray(b.warehouseStock)&&b.warehouseStock.some(item=>Number(item?.quantity)>0);const activeFusion=b.type==="fusion"&&["RESERVED","RUNNING","PAUSED_POWER","WAITING_POWER","CALIBRATING","ERROR"].includes(S.fusionJob?.status);const hasBufferedFluid=Number(b.fluidAmountL)>1e-9;const hasCargo=!!b.item;if(activeFusion||hasBufferedFluid||hasCargo||hasWarehouseStock||b.output||Object.values(b.input||{}).some(q=>Number(q)>0)||b.failureRepair||Number(b.progress)>0){toast(activeFusion?"진행 중인 Infinity Fusion 작업이 있어 설비를 철거할 수 없습니다.":hasBufferedFluid?"유체를 먼저 배출해야 설비를 철거할 수 있습니다.":hasCargo?"컨베이어 화물을 먼저 회수해야 합니다.":hasWarehouseStock?"창고 재고를 먼저 회수해야 철거할 수 있습니다.":"출력·입력 버퍼가 비었고 작업이 정지된 상태에서만 철거할 수 있습니다.","warn");return false}markSceneDirty();const refund=Math.floor(d.cost*.55);S.money+=refund;for(const[id,n]of Object.entries(d.materials||{})){addItem(id,Math.floor(n*.5),{},false)}S.buildings=S.buildings.filter(x=>x.uid!==b.uid);if(b.type==="relay"){const i=S.sites.relay.findIndex(p=>p.x===b.x&&p.y===b.y);if(i>=0)S.relaySites[i]=false}if(b.type==="core")S.corePlaced=false;if(b.type==="powerCable")S.powerTopologyEnabled=S.buildings.some(x=>x.type==="powerCable");selectedBuilding=null;log(d.name+" 해체 · "+refund+" D 환급");toast("시설 해체 · "+refund+" D 환급");markDirty();renderAll()}
 function chooseVariant(b){const choices=[...VARIANTS.filter(id=>id!=="ITEM_DORONUM_NORMAL"&&!!VARIANT_RECIPES[id]),"PURIFY_RUSTED_DORONUM"];const body='<p>결정 생산 또는 부식 도로늄 정제를 선택하세요. 정제는 품질·순도 조건을 충족한 인피니티 원료를 만들기 위한 별도 공정입니다.</p><select id="variant-select" class="modal-select">'+choices.map(id=>'<option value="'+id+'" '+(b.variant===id?"selected":"")+'>'+(id==="PURIFY_RUSTED_DORONUM"?"부식 도로늄 정제":RESOURCE[id].name)+'</option>').join("")+'</select>';showModal("결정 변환 레시피",body,[{label:"취소",cls:"secondary"},{label:"설정",cls:"primary",action:()=>{b.variant=$("variant-select").value;markDirty();renderMachineDetails();closeModal();toast("레시피 변경 완료")}}])}
 function startResearch(id){const r=RESEARCH.find(x=>x.id===id);if(!r||S.research.includes(id))return;if(!hasBuilding(S,"lab")){toast("먼저 기술 연구소를 건설하세요.","warn");return}if(r.requires&&!r.requires.every(v=>S.research.includes(v))){toast("선행 연구가 완료되지 않았습니다.","warn");return}if(S.activeResearch){toast("다른 연구가 이미 진행 중입니다.","warn");return}if(S.money<r.cost||!hasItems(r.need)){toast("연구 자원 또는 자금이 부족합니다.","warn");return}S.money-=r.cost;takeItems(r.need);S.activeResearch=id;S.researchProgress=0;log("연구 시작 · "+r.name);toast(r.name+" 연구를 시작합니다.");markDirty();renderResearch();renderHud()}
 function tickResearch(dt,ratio){if(!S.activeResearch)return;const r=RESEARCH.find(x=>x.id===S.activeResearch);if(!r){S.activeResearch=null;return}const labs=S.buildings.filter(b=>b.type==="lab").length;if(!labs)return;S.researchProgress+=dt*Math.max(.0,ratio)*Math.min(2,1+(labs-1)*.35)*(S.research.includes("automation")?1.15:1);if(S.researchProgress>=r.time){S.research.push(r.id);awardResearchTierSkillPoints();S.activeResearch=null;S.researchProgress=0;log("연구 완료 · "+r.name,"good");toast("기술 연구 완료 · "+r.name);$("orbit-dialogue").textContent="“"+r.name+" 연구 데이터가 연구소에 등록되었습니다.”";playTone(820,.22,"triangle");markDirty();renderResearch();renderBuildList();renderMissions();questCheck()}}
@@ -1619,7 +1656,7 @@ function tickBelts(dt){
    continue;
   }
   if(target.type==="storage"||target.type==="warehouse"){
-   const moved=transferBuildingCargo(b,null,"item","CONVEYOR","PLAYER_INVENTORY","player");
+   const moved=transferBuildingCargo(b,target,"item","CONVEYOR","WAREHOUSE",String(target.uid));
    if(moved)log("물류 센터 회수 · "+(RESOURCE[moved.itemID]?.name||moved.itemID));
    else b.logisticsStatus="CUSTODY_BLOCKED";
   }else if(target.type==="market"){
@@ -1634,7 +1671,7 @@ function tickBelts(dt){
    const moved=transferBuildingCargo(b,target,"output","MACHINE_OUTPUT","CONVEYOR",String(target.uid));
    if(!moved)b.logisticsStatus="CUSTODY_BLOCKED";
   }else if(target.type==="storage"||target.type==="warehouse"){
-   const moved=transferBuildingCargo(b,null,"output","MACHINE_OUTPUT","PLAYER_INVENTORY","player");
+   const moved=transferBuildingCargo(b,target,"output","MACHINE_OUTPUT","WAREHOUSE",String(target.uid));
    if(moved)log("창고 자동 적재 · 생산품 회수");else b.logisticsStatus="CUSTODY_BLOCKED";
   }else if(target.type==="market"){
    const sale=consumeBuildingCargoForSale(b,"output","MACHINE_OUTPUT");
@@ -2468,7 +2505,7 @@ if(E2E_MODE){
    }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
   },
   runLiveConveyorCustodyTest(){
-   const oldState=S,oldMotion=playerMotion;
+   const oldState=S,oldMotion=playerMotion,oldSelectedBuilding=selectedBuilding;
    try{
     S=freshState();S.runtime=createRuntimeState();S.inventory={};S.meta={};ensureItemStacks(S);
     const machine={uid:"LIVE-LOGISTICS-MACHINE",type:"smelter",x:0,y:0,dir:1,output:null,activeInputQuantities:[],activeMeta:null,productionSequence:1,condition:100,status:"IDLE"};
@@ -2476,32 +2513,37 @@ if(E2E_MODE){
     const belt1={uid:"LIVE-LOGISTICS-BELT-1",type:"belt",x:1,y:0,dir:1,item:null,moveTimer:0};
     const storage={uid:"LIVE-LOGISTICS-STORAGE",type:"storage",x:3,y:0,dir:1,status:"IDLE"};
     S.buildings=[machine,belt2,belt1,storage];
-    const outputCreated=createOutput(machine,"ironPlate",2,{quality:96,purity:97,synthetic:false});
-    const stackID=machine.output?.custodyStackID||null;
+    const outputCreated=createOutput(machine,"ironPlate",2,{quality:96,purity:97,synthetic:false}),stackID=machine.output?.custodyStackID||null;
     const before=rebuildOwnershipLedger(S);
-    tickBelts(.1);
-    const afterMachineToBelt=rebuildOwnershipLedger(S);
-    const machineToBelt=!!belt1.item&&!machine.output&&belt1.item.custodyStackID===stackID;
-    tickBelts(.8);
-    const afterBeltToBelt=rebuildOwnershipLedger(S);
-    const beltToBelt=!!belt2.item&&!belt1.item&&belt2.item.custodyStackID===stackID;
-    tickBelts(.8);
-    const afterBeltToInventory=rebuildOwnershipLedger(S);
-    const transfers=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="TRANSFER"&&String(tx.request?.stackID||"")===stackID);
-    const finalOwner=S.ownershipLedger.custody.find(entry=>entry.stackID===stackID)||null;
-    const inventoryStack=S.runtime.itemStacks.find(stack=>stack.runtimeID===stackID)||null;
+    tickBelts(.1);const afterMachineToBelt=rebuildOwnershipLedger(S),machineToBelt=!!belt1.item&&!machine.output&&belt1.item.custodyStackID===stackID;
+    tickBelts(.8);const afterBeltToBelt=rebuildOwnershipLedger(S),beltToBelt=!!belt2.item&&!belt1.item&&belt2.item.custodyStackID===stackID;
+    tickBelts(.8);const afterBeltToWarehouse=rebuildOwnershipLedger(S);
+    const stored=storage.warehouseStock?.find(item=>item.stackID===stackID)||null,warehouseOwnerBefore=S.ownershipLedger.custody.find(entry=>entry.stackID===stackID)||null;
+    const warehouseQuantityBeforeWithdraw=stored?.quantity||0,warehouseTransfers=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="TRANSFER"&&String(tx.request?.stackID||"")===stackID);
+    const removalBlocked=removeBuilding(storage)===false&&S.buildings.includes(storage);
+    selectedBuilding=storage.uid;renderMachineDetails();
+    const warehouseWithdrawButtonCount=document.querySelectorAll("#machine-details [data-warehouse-stack]").length;
+    const withdrawButton=document.querySelector('#machine-details [data-warehouse-stack="'+stackID+'"]'),withdrawalClicked=!!withdrawButton;
+    if(withdrawButton)withdrawButton.click();
+    const afterWarehouseWithdraw=rebuildOwnershipLedger(S),transfers=Object.values(S.ownershipLedger.transactions).filter(tx=>tx.request?.type==="TRANSFER"&&String(tx.request?.stackID||"")===stackID);
+    const finalOwner=S.ownershipLedger.custody.find(entry=>entry.stackID===stackID)||null,inventoryStack=S.runtime.itemStacks.find(stack=>stack.runtimeID===stackID)||null;
     return {
      outputCreated,stackID,beforeValid:before.valid,machineToBelt,afterMachineToBeltValid:afterMachineToBelt.valid,
-     beltToBelt,afterBeltToBeltValid:afterBeltToBelt.valid,afterBeltToInventoryValid:afterBeltToInventory.valid,
-     transferCount:transfers.length,transferPath:transfers.map(tx=>({from:tx.result.from.type+":"+tx.result.from.id,to:tx.result.to.type+":"+tx.result.to.id,stackID:tx.result.stackID})),
+     beltToBelt,afterBeltToBeltValid:afterBeltToBelt.valid,afterBeltToWarehouseValid:afterBeltToWarehouse.valid,
+     warehouseQuantityBeforeWithdraw,warehouseStockCountBeforeWithdraw:storage.warehouseStock?.length||0,
+     warehouseOwnerBeforeWithdraw:warehouseOwnerBefore?{type:warehouseOwnerBefore.ownerType,id:warehouseOwnerBefore.ownerID}:null,
+     warehouseTransferCount:warehouseTransfers.length,removalBlocked,warehouseWithdrawButtonCount,withdrawalClicked,
+     warehouseWithdrawalCompleted:!!inventoryStack&&!storage.warehouseStock?.some(item=>item.stackID===stackID),
+     afterWarehouseWithdrawValid:afterWarehouseWithdraw.valid,transferCount:transfers.length,
+     transferPath:transfers.map(tx=>({from:tx.result.from.type+":"+tx.result.from.id,to:tx.result.to.type+":"+tx.result.to.id,stackID:tx.result.stackID})),
      machineOutputRemaining:!!machine.output,beltOneRemaining:!!belt1.item,beltTwoRemaining:!!belt2.item,
      inventoryQuantity:availableItemCount(S,"ironPlate"),inventoryStackID:inventoryStack?.runtimeID||null,
      finalOwner:finalOwner?{type:finalOwner.ownerType,id:finalOwner.ownerID}:null,
-     finalItemTotal:afterBeltToInventory.itemTotals?.ironPlate||0,
+     finalItemTotal:afterWarehouseWithdraw.itemTotals?.ironPlate||0,
      remainingConveyorCustody:S.ownershipLedger.custody.filter(entry=>entry.ownerType==="CONVEYOR").length,
-     finalAuditValid:afterBeltToInventory.valid,consumedCount:S.ownershipLedger.consumed.length
+     finalAuditValid:afterWarehouseWithdraw.valid,consumedCount:S.ownershipLedger.consumed.length
     };
-   }finally{S=oldState;playerMotion=oldMotion;renderAll()}
+   }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
   },
 
   runLiveConveyorToMachineCustodyTest(){

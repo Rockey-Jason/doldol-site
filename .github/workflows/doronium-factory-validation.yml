@@ -28,6 +28,7 @@ jobs:
           node --check doronium-factory/factory.js
           node --check doronium-factory/canonical-data.js
           node --check doronium-factory/ownership-runtime.js
+          node --check doronium-factory/warehouse-runtime.js
           node --check doronium-factory/network-runtime.js
           node --check doronium-factory/contract-runtime.js
           node --check doronium-factory/cloud-save-runtime.js
@@ -35,6 +36,7 @@ jobs:
           node --check doronium-factory/simulation-core.js
           node --check doronium-factory/canonical-data.test.mjs
           node --check doronium-factory/ownership-runtime.test.mjs
+          node --check doronium-factory/warehouse-runtime.test.mjs
           node --check doronium-factory/network-runtime.test.mjs
           node --check doronium-factory/contract-runtime.test.mjs
           node --check doronium-factory/cloud-save-runtime.test.mjs
@@ -60,7 +62,7 @@ jobs:
           node --test doronium-factory/planetary-stabilization.test.mjs
           node --check doronium-factory/planetary-stabilization.js
           node --check doronium-factory/planetary-stabilization.test.mjs
-          node --test doronium-factory/construction-runtime.test.mjs doronium-factory/fluid-runtime.test.mjs doronium-factory/contract-runtime.test.mjs doronium-factory/logistics-runtime.test.mjs doronium-factory/cloud-save-runtime.test.mjs doronium-factory/canonical-data.test.mjs doronium-factory/fusion-runtime.test.mjs doronium-factory/ownership-runtime.test.mjs doronium-factory/network-runtime.test.mjs doronium-factory/simulation-core.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs doronium-factory/failure-runtime.test.mjs doronium-factory/skill-runtime.test.mjs doronium-factory/save-store.test.mjs
+          node --test doronium-factory/construction-runtime.test.mjs doronium-factory/fluid-runtime.test.mjs doronium-factory/contract-runtime.test.mjs doronium-factory/logistics-runtime.test.mjs doronium-factory/cloud-save-runtime.test.mjs doronium-factory/canonical-data.test.mjs doronium-factory/fusion-runtime.test.mjs doronium-factory/ownership-runtime.test.mjs doronium-factory/network-runtime.test.mjs doronium-factory/simulation-core.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs doronium-factory/failure-runtime.test.mjs doronium-factory/skill-runtime.test.mjs doronium-factory/save-store.test.mjs doronium-factory/warehouse-runtime.test.mjs
           node --check doronium-factory/world3d.js
           node --check doronium-factory/terrain-system.js
           node --check doronium-factory/e2e/factory-smoke.mjs
@@ -73,6 +75,8 @@ jobs:
           test -s doronium-factory/canonical-data.test.mjs
           test -s doronium-factory/ownership-runtime.js
           test -s doronium-factory/ownership-runtime.test.mjs
+          test -s doronium-factory/warehouse-runtime.js
+          test -s doronium-factory/warehouse-runtime.test.mjs
           test -s doronium-factory/network-runtime.js
           test -s doronium-factory/network-runtime.test.mjs
           test -s doronium-factory/fusion-runtime.js
@@ -129,6 +133,8 @@ jobs:
           grep -q 'SAVE_BACKUP_COUNT=3' doronium-factory/save-store.js
           grep -q 'calculateOutputQuality' doronium-factory/simulation-core.js
           grep -q 'function tickBelts' doronium-factory/factory.js
+          grep -q 'function withdrawStoredWarehouseStack' doronium-factory/factory.js
+          grep -q 'ownerType:"WAREHOUSE"' doronium-factory/factory.js
           grep -q 'function transferBuildingCargoToMachine' doronium-factory/factory.js
           grep -q 'function startFusion' doronium-factory/factory.js
           grep -q 'function recipeHasSyntheticInput' doronium-factory/factory.js
