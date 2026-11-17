@@ -416,3 +416,10 @@ No main merge, deployment, production database change, or live-user save/economy
 **Code checkpoint:** `41b073af547afbd86bbb36e63ed371d084f1930e`. **Documentation checkpoint:** implementation log `836b9184c3330e52b6bf27736abb13d63deeda2f`.
 
 **Verification status:** GitHub Actions run lookup and combined status for the latest code checkpoint returned no runs/checks. Committed unit/browser assertions remain **PENDING / UNVERIFIED**. Source-level deterministic coal/tunnel calculations are not a substitute for running Node or Playwright. Physical PC/Android/iOS and 60-minute wall-clock soak remain **UNVERIFIED**. No checklist row is promoted to COMPLETE.
+
+
+### Mine unit verification follow-up
+
+- **Code checkpoint:** `dfad15f538e929fd71b13191b65f975080e708b5`; the full-render path now refreshes the mine operations HUD.
+- **Node unit tests:** current PR source blob hashes were matched to the local test copies before execution. `node --test mine-system.test.mjs mine-runtime.test.mjs` → **12 passed / 0 failed / 0 cancelled / 0 skipped**.
+- **Browser suite / GitHub Actions:** still **PENDING / UNVERIFIED**. No current workflow run or combined status was returned. Physical PC/Android/iOS performance and a 60-minute wall-clock soak are also **UNVERIFIED**. No acceptance row is promoted to COMPLETE.
