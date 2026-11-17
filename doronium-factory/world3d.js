@@ -541,6 +541,20 @@ export function createWorld3D(canvas, getState) {
       }
     }
 
+    // Join every one-cell bend in the curved main rail with two diagonal
+    // connectors so the rendered route matches the rail-path graph exactly.
+    for(let x=4;x<36;x++){
+      const fromZ=mineMainDriftZ(x),toZ=mineMainDriftZ(x+1),delta=toZ-fromZ;
+      if(!delta)continue;
+      const normalLength=Math.hypot(1,delta),midX=x*32+16,midZ=(fromZ+toZ)*16;
+      for(const side of [-1,1]){
+        const offsetX=side*(-delta/normalLength)*4.5;
+        const offsetZ=side*(1/normalLength)*4.5;
+        put(railLines,midX+offsetX,floorY+1.15,midZ+offsetZ,32*normalLength+.5,1.2,1.15,0,-Math.atan2(delta,1),0);
+      }
+      railSegments+=2;
+    }
+
     // Draw mineral-specific deterministic vein streaks as one instanced batch.
     for(const {node,segments} of veinSpecs){
       const profile=mineOreProfile(node.type),color=profile.color,worldX=node.x*32,worldZ=node.z*32;
