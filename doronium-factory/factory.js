@@ -1,6 +1,6 @@
 import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES, CANONICAL_DORONUM_CRYSTAL_MODELS } from "./world3d.js?v=25";
 import { createRuntimeState, ensureItemStacks, addItemStack, allocateEntityID, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, reserveQualifiedItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, TICK_STAGE_ORDER, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState, enqueueSimulationEvent, processSimulationEvents, consumeFixedStepBudget } from "./simulation-core.js?v=7";
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits, auditMineDeposits } from "./terrain-system.js?v=6";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, mineMainDriftZ, makeMineDeposits, auditMineDeposits } from "./terrain-system.js?v=6";
 import { createMineEnvironment, ensureMineEnvironment, mineSafetyAssessment, tickActiveMineEnvironments, toggleMineEquipment, reinforceMineSupports, mineEnvironmentSummary } from "./mine-runtime.js?v=3";
 import { ensureMineInfrastructure, mineSupportSections, nearestMineSupport, mineCellIsClosed, mineCellIsSafe, repairMineSupport, mineDrainageNetworks, tickMineDrainage, mineDrainageSummary, mineRailStations, setMineRailEnabled, mineRailSummary, tickMineRailRoutes, mineRoutePath, tickMineSupportSections, supportSectionsSummary } from "./mine-systems-runtime.js?v=1";
 import { validateGameData } from "./game-data-validation.js?v=3";
@@ -1036,6 +1036,8 @@ function placeMineBuilding(type,x,y){
  if(!def||!supported){toast("광산 전용 채굴·배수·광차 설비만 설치할 수 있습니다.","warn");return false}
  const level=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS),px=Math.floor(Number(x)||0),py=Math.floor(Number(y)||0);
  if(px<0||py<0||px>=MINE_W||py>=MINE_H||!mineTunnelAt(px,py)){toast("광산 터널 안에 설치해야 합니다.","warn");return false}
+ if(type==="mineRailStation"&&Math.abs(py-mineMainDriftZ(px))>1){toast("광차 정거장은 주 운반 갱도의 레일 구간에 설치해야 합니다.","warn");return false}
+ if(type==="mineRailStation"&&mineCellIsClosed(S,level,px,py)){toast("폐쇄된 통로에는 정거장을 설치할 수 없습니다.","warn");return false}
  if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}
  const key=mineDepositKey(level,px,py),deposit=S.mineDeposits?.[key];
  if(isMiner&&(!deposit||deposit.amount<=0||(def.resource==="advanced"?!["ITEM_COLD_CRYSTAL_RAW","ITEM_HEAT_CRYSTAL","ITEM_MAGNETITE","titaniumOre","chromiteOre"].includes(deposit.type):deposit.type!==def.resource))){toast("선택한 채굴기와 일치하는 광맥이 이 위치에 없습니다.","warn");return false}
@@ -1280,6 +1282,10 @@ function currentMineEnvironment(){
 }
 function toggleMineControls(kind){
  const env=currentMineEnvironment();if(!env){toast("광산 안에서만 사용할 수 있습니다.","warn");return}
+ if(kind==="pump"){
+  const drainage=mineDrainageSummary(S,S.player.mineLevel);
+  if(drainage.connectedNetworks===0){toast("배수 펌프·배수관·집수 탱크를 연결한 뒤 배수 스위치를 켜세요.","warn");return}
+ }
  const active=toggleMineEquipment(env,kind);
  const label=kind==="ventilation"?"환기 팬":"배수 펌프";
  log(label+(active?" 가동":" 정지"));
@@ -1326,6 +1332,22 @@ function toggleMineRailRoute(){
  toast(result.enabled?"자동 광차 운송을 시작했습니다.":"자동 광차 운송을 정지했습니다.");
  markDirty();updateMineHud();drawWorld();
 }
+function mineNavigationClosures(level){
+ const closures={...(S.mineInfrastructure?.closures||{})};
+ for(const building of S.buildings||[]){
+  if(building.layer!=="mine"||Number(building.mineLevel||1)!==Number(level))continue;
+  // Drain pipes are low-profile floor conduits; stations are intended route endpoints.
+  if(["mineDrainPipe","mineRailStation"].includes(building.type))continue;
+  const width=Math.max(1,Math.floor(Number(building.footprint?.width)||1)),height=Math.max(1,Math.floor(Number(building.footprint?.height)||1));
+  for(let dz=0;dz<height;dz++)for(let dx=0;dx<width;dx++)closures[level+":"+(Number(building.x)+dx)+":"+(Number(building.y)+dz)]=true;
+ }
+ return closures;
+}
+function nearestWalkableMineRouteGoal(level,node){
+ const candidates=[{x:node.x,z:node.z},...[[1,0],[-1,0],[0,1],[0,-1]].map(([dx,dz])=>({x:node.x+dx,z:node.z+dz}))];
+ const closures=mineNavigationClosures(level);
+ return candidates.find(cell=>mineTunnelAt(cell.x,cell.z)&&closures[level+":"+cell.x+":"+cell.z]!==true)||null;
+}
 function selectMineMapDeposit(event){
  if(S.player.layer!=="mine")return;
  const canvas=$("mine-map-canvas"),rect=canvas?.getBoundingClientRect();if(!rect||!rect.width||!rect.height)return;
@@ -1334,16 +1356,18 @@ function selectMineMapDeposit(event){
  const candidates=Object.values(S.mineDeposits||{}).filter(node=>node.level===S.player.mineLevel&&node.amount>0)
   .map(node=>({node,d:Math.abs(node.x-x)+Math.abs(node.z-z)})).sort((a,b)=>a.d-b.d);
  const found=candidates[0];if(!found||found.d>3){mineMapGuide=null;toast("선택한 위치 근처에 남아 있는 광맥이 없습니다.","warn");drawMineMap();updateMineHud();return}
- const route=mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},{x:found.node.x,z:found.node.z},S.mineInfrastructure?.closures||{});
- if(!route){mineMapGuide=null;toast("지지대 폐쇄 구간 때문에 광맥까지의 경로가 없습니다.","warn");drawMineMap();updateMineHud();return}
- mineMapGuide={level:S.player.mineLevel,x:found.node.x,z:found.node.z,type:found.node.type,path:route};
+ const goal=nearestWalkableMineRouteGoal(S.player.mineLevel,found.node);
+ const route=goal?mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},goal,mineNavigationClosures(S.player.mineLevel)):null;
+ if(!route){mineMapGuide=null;toast("광맥까지 안전하게 이동할 수 있는 경로가 없습니다.","warn");drawMineMap();updateMineHud();return}
+ mineMapGuide={level:S.player.mineLevel,x:found.node.x,z:found.node.z,goalX:goal.x,goalZ:goal.z,type:found.node.type,path:route};
  $("mine-map-status").textContent=(RESOURCE[found.node.type]?.name||found.node.type)+" · "+found.node.amount+"개 · "+route.length+"칸 경로";
  $("mine-route-go")?.removeAttribute("disabled");
  drawMineMap();updateMineHud();
 }
 function followMineMapGuide(){
  if(!mineMapGuide||mineMapGuide.level!==S.player.mineLevel){toast("먼저 지도에서 이동할 광맥을 선택하세요.","warn");return}
- const route=mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},{x:mineMapGuide.x,z:mineMapGuide.z},S.mineInfrastructure?.closures||{});
+ const goal={x:mineMapGuide.goalX??mineMapGuide.x,z:mineMapGuide.goalZ??mineMapGuide.z};
+ const route=mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},goal,mineNavigationClosures(S.player.mineLevel));
  if(!route?.length){toast("광맥까지 이동할 수 있는 안전 경로가 없습니다.","warn");return}
  const destination=route[route.length-1];
  if(movePlayerTo(destination.x,destination.z))toast("선택한 광맥까지 이동 경로를 시작합니다.");
@@ -1362,7 +1386,7 @@ function drawMineMap(){
   if(deposit&&deposit.amount>0){ctx.fillStyle=deposit.type==="coal"?"#252b33":deposit.type==="ironOre"?"#a5b1bd":deposit.type==="copperOre"?"#d48b5d":deposit.type==="diamond"?"#84e6f3":"#d7bb79";ctx.fillRect(x*cw+1,z*ch+1,Math.max(2,cw-2),Math.max(2,ch-2))}
  }
  // Draw a route to the selected mineral vein, recalculating around every closed support section.
- const guidedRoute=mineMapGuide&&mineMapGuide.level===S.player.mineLevel?mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},{x:mineMapGuide.x,z:mineMapGuide.z},S.mineInfrastructure?.closures||{}):null;
+ const guidedRoute=mineMapGuide&&mineMapGuide.level===S.player.mineLevel?mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},{x:mineMapGuide.goalX??mineMapGuide.x,z:mineMapGuide.goalZ??mineMapGuide.z},mineNavigationClosures(S.player.mineLevel)):null;
  if(guidedRoute?.length>1){
   ctx.strokeStyle="#f3ca74";ctx.lineWidth=2.5;ctx.lineJoin="round";ctx.beginPath();
   guidedRoute.forEach((p,i)=>{const px=(p.x+.5)*cw,pz=(p.z+.5)*ch;if(i===0)ctx.moveTo(px,pz);else ctx.lineTo(px,pz)});ctx.stroke();
@@ -1381,7 +1405,7 @@ function drawMineMap(){
 }
 function guidedMineRouteLength(){
  if(!mineMapGuide||mineMapGuide.level!==S.player.mineLevel)return 0;
- return mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},{x:mineMapGuide.x,z:mineMapGuide.z},S.mineInfrastructure?.closures||{})?.length||0;
+ return mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},{x:mineMapGuide.goalX??mineMapGuide.x,z:mineMapGuide.goalZ??mineMapGuide.z},mineNavigationClosures(S.player.mineLevel))?.length||0;
 }
 function updateMineHud(){
  const active=S.player?.layer==="mine",card=$("mine-ops-card"),wrap=$("mine-map-wrap");
