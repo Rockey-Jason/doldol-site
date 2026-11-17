@@ -437,11 +437,12 @@ try {
   assert.equal(drainageUI.pumpActive, false, "The pump must be off before the operator enables it");
   await desktop.locator("#mine-pump-button").click();
   assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.mineSystems())).environment[1].pumpActive, true, "The drainage control must activate a connected pump");
-  await desktop.evaluate(() => window.__doroniumFactoryTest.configureMineEnvironmentForTest({ supportIntegrity: 60, waterDepth: 0, gasLevel: 0 }));
+  await desktop.evaluate(() => window.__doroniumFactoryTest.configureMineEnvironmentForTest({ supportIntegrity: 100, waterDepth: 0, gasLevel: 0 }));
+  await desktop.evaluate(() => window.__doroniumFactoryTest.configureMineSupportForTest(60));
   const supportInventoryBefore = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot().inventory);
   await desktop.locator("#mine-support-button").click();
-  const supportAfter = await desktop.evaluate(() => ({ mine: window.__doroniumFactoryTest.mineSystems(), inventory: window.__doroniumFactoryTest.snapshot().inventory }));
-  assert.ok(supportAfter.mine.environment[1].supportIntegrity > 70, "Support reinforcement must restore mine-wide environmental integrity");
+  const supportAfter = await desktop.evaluate(() => ({ mine: window.__doroniumFactoryTest.mineSystems(), local: window.__doroniumFactoryTest.mineSupportSectionSnapshot(), inventory: window.__doroniumFactoryTest.snapshot().inventory }));
+  assert.ok(supportAfter.local.integrity > 90, "Support reinforcement must restore the exact local passage section");
   assert.equal(supportAfter.inventory.wood, supportInventoryBefore.wood - 2, "Support reinforcement must consume exactly two owned wood");
   assert.equal(supportAfter.inventory.stone, supportInventoryBefore.stone - 2, "Support reinforcement must consume exactly two owned stone");
   await desktop.locator("#mine-map-toggle").click();
