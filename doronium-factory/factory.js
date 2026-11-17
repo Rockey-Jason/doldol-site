@@ -2351,6 +2351,20 @@ if(E2E_MODE){
   setupMineSystemsTest(){S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:5,y:12,onMineCart:false};playerMotion={...playerMotion,x:5,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false};markSceneDirty();renderAll();return this.mineSystems()},
   toggleMineSystemForTest(kind){const env=currentMineEnvironment();return toggleMineEquipment(env,kind)},
   reinforceMineSystemForTest(amount){return reinforceMineSupports(currentMineEnvironment(),amount)},
+  configureMineEnvironmentForTest(values){const env=currentMineEnvironment();if(!env)throw new Error("MINE_LAYER_REQUIRED");Object.assign(env,values||{});updateMineHud();drawWorld();return structuredClone(env)},
+  mineSafetyInterlockTest(){
+   this.setupMiningAutomationTest();
+   const miner=S.buildings.find(building=>building.type==="minerIron"),deposit=S.mineDeposits[mineDepositKey(1,12,15)];
+   if(!miner||!deposit)throw new Error("MINE_DRILL_FIXTURE_MISSING");
+   const env=ensureMineEnvironment(S)[1],before=deposit.amount;
+   Object.assign(env,{supportIntegrity:0,waterDepth:0,gasLevel:0});
+   tick(STEP);
+   const blocked={status:miner.status,depositAmount:deposit.amount};
+   Object.assign(env,{supportIntegrity:100,waterDepth:0,gasLevel:0,ventilationActive:true});
+   for(let i=0;i<100&&!miner.output;i++)tick(STEP);
+   renderAll();
+   return {blocked:blocked.status==="PAUSED_SAFETY"&&blocked.depositAmount===before,blockedStatus:blocked.status,depositBefore:before,depositWhileBlocked:blocked.depositAmount,recoveredOutput:miner.output?structuredClone(miner.output):null,finalDeposit:deposit.amount,drillDurability:miner.drillDurability,scene:world3d.inspect(),performance:world3d.inspectPerformance?.()||null};
+  },
   legacyMineMigrationTest(){
    const saved=structuredClone(S),legacy=structuredClone(S);
    for(const[key,node]of Object.entries(legacy.mineDeposits||{}))if(node?.generation==="coal-seam-v2")delete legacy.mineDeposits[key];
