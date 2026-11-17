@@ -918,8 +918,8 @@ export function createWorld3D(canvas, getState) {
     activeViewMode=state.player?.viewMode==="map"?"map":state.player?.viewMode==="third"?"third":"first";
     const inMine=state.player?.layer==="mine";stateLayerForPicking=inMine?"mine":"surface";
     scene.fog=inMine?mineFog:surfaceFog;
-    ambient.intensity=inMine?.58:1.65;
-    fill.intensity=inMine?.22:.8;
+    ambient.intensity=inMine ? .58 : 1.65;
+    fill.intensity=inMine ? .22 : .8;
     if(inMine)syncMineDepositVisuals(state);
     if(state.visibilityRevision!==lastVisibilityRevision){addSeenNodeModels(state);lastVisibilityRevision=state.visibilityRevision;}
     const selectedMachine=state.selectedBuilding?(state.buildings||[]).find(b=>b.uid===state.selectedBuilding&&(inMine?b.layer==="mine"&&Number(b.mineLevel||1)===Number(state.player?.mineLevel||1):b.layer!=="mine")):null;
@@ -930,7 +930,7 @@ export function createWorld3D(canvas, getState) {
     if(showHover){const h=surfaceY(state,hover.x,hover.y);hoverRoot.position.set(hover.x*32,h+2.2,hover.y*32);const color=state.canBuildPreview?0x6de4bb:0xf2a46e;hoverFillMaterial.color.setHex(color);hoverEdgeMaterial.color.setHex(color);}
     if(inMine){activeViewMode=state.player?.viewMode==="third"?"third":"first";updateGameCamera(state);if(playerModel)playerModel.visible=activeViewMode!=="first";firstPersonRig.visible=activeViewMode==="first";}
     else if(activeViewMode==="map"){if(playerModel)playerModel.visible=true;firstPersonRig.visible=false;}else updateGameCamera(state);
-    const t=performance.now()*.001;sun.intensity=inMine?.08:2.25+Math.sin(t*.08)*.18;
+    const t=performance.now()*.001;sun.intensity=inMine ? .08 : 2.25+Math.sin(t*.08)*.18;
     if(!inMine&&!state.paused)machineRoot.children.forEach(g=>{
       const a=g.userData||{},b=a.stateRef;if(!b)return;syncBeltItemVisual(a,b);syncOutputVisual(g,a,b);const running=b.status==="RUNNING";
       if(a.fan&&running){if(a.type==="wind")a.fan.rotation.z=t*2.8;else a.fan.rotation.y=t*2.5;}
