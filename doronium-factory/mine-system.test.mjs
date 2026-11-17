@@ -19,6 +19,15 @@ test("mine keeps five reachable levels, legacy shafts and connected drift access
     Array.from({ length: MINE_W }, (_, x) => mineTunnelAt(x, z) ? 1 : 0).reduce((a, b) => a + b, 0)
   ).reduce((a, b) => a + b, 0);
   assert.ok(openCells > 100 && openCells < MINE_W * MINE_H * 0.7, "mine needs connected passages with solid rock left around them");
+  const pending=[[3,12]],visited=new Set(["3:12"]);
+  while(pending.length){
+    const [x,z]=pending.shift();
+    for(const [nx,nz] of [[x-1,z],[x+1,z],[x,z-1],[x,z+1]]){
+      const key=nx+":"+nz;
+      if(!visited.has(key)&&mineTunnelAt(nx,nz)){visited.add(key);pending.push([nx,nz]);}
+    }
+  }
+  assert.equal(visited.size,openCells,"all galleries, cross-cuts and chambers must connect to the main entrance");
 });
 
 test("coal is distributed across every depth as substantial mineable seams", () => {
@@ -26,11 +35,11 @@ test("coal is distributed across every depth as substantial mineable seams", () 
   const stats = auditMineDeposits(deposits);
   assert.equal(stats.levels, 5);
   assert.equal(stats.unreachableNodes, 0, "every generated mineral deposit must sit inside a walkable drift");
-  assert.ok(stats.coalNodes >= 38, `expected at least 38 coal seam faces, got ${stats.coalNodes}`);
-  assert.ok(stats.coalUnits >= 4000, `expected at least 4,000 coal units, got ${stats.coalUnits}`);
+  assert.ok(stats.coalNodes >= 100, `expected at least 100 distributed coal seams, got ${stats.coalNodes}`);
+  assert.ok(stats.coalUnits >= 18000, `expected at least 18,000 mineable coal units, got ${stats.coalUnits}`);
   for (let level = 1; level <= MINE_LEVELS; level++) {
-    assert.ok(stats.byLevel[level].coalNodes >= 7, `level ${level} needs multiple coal seams`);
-    assert.ok(stats.byLevel[level].coalUnits >= 650, `level ${level} needs a useful coal reserve`);
+    assert.ok(stats.byLevel[level].coalNodes >= 18, `level ${level} needs at least 18 coal seams`);
+    assert.ok(stats.byLevel[level].coalUnits >= 3500, `level ${level} needs at least 3,500 coal units`);
   }
 });
 
