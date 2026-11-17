@@ -271,6 +271,14 @@ try {
   assert.equal(reservationGuards.construction.buildingsAfter, reservationGuards.construction.buildingsBefore, "A rejected construction must not place a free building");
   assert.deepEqual(reservationGuards.coalGenerator, { fuelTimer: 0, status: "NO_INPUT", power: 0, stock: 1, available: 0, runtimeValid: true }, "A coal generator must not receive free fuel from a reserved coal stack");
 
+  const researchUi = await desktop.evaluate(() => window.__doroniumFactoryTest.researchAndFacilityPopupTest());
+  assert.equal(researchUi.countdown, "남은 시간 17초", "Research cards must show the exact remaining seconds");
+  assert.equal(researchUi.popupCountdown, "남은 시간 17초", "Selecting a research lab must open a management popup with the live countdown");
+  assert.equal(researchUi.popupVisible, true, "Selecting a facility must open its management popup");
+  assert.equal(researchUi.requirementsIncludeNames, true, "Research requirements must show exact Korean resource names");
+  assert.equal(researchUi.shortageVisible, true, "Research UI must identify the exact missing quantity for unavailable resources");
+  assert.match(researchUi.popupText, /연구 관리 열기/, "The research-lab popup must provide direct access to research management");
+
   const syntheticIsolation = await desktop.evaluate(() => window.__doroniumFactoryTest.syntheticReservationIsolationTest());
   assert.equal(syntheticIsolation.aggregate.synthetic, true, "Legacy aggregate metadata should reflect the reserved synthetic stack in this test");
   assert.equal(syntheticIsolation.errorCode, null, "A reactor must not reject non-synthetic inputs because an unrelated synthetic stack is reserved");
