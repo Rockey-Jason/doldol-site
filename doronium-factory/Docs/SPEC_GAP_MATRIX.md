@@ -447,3 +447,11 @@ No main merge, deployment, production database change, or live-user save/economy
 **Code checkpoint before docs:** `a8a5067c3175d98fad22218394cffce8902363f2`. **Current PR #11 state at inspection:** open, draft, unmerged; branch compared with main as diverged (535 commits ahead, 892 behind). Re-check latest PR head before any future action.
 
 **Test state:** unit and E2E tests are committed and wired into the validation workflow, but latest run/status queries returned no records. Treat all automated assertions as **PENDING / UNVERIFIED**, not passed. Physical hardware and real-time soak likewise remain **UNVERIFIED**. No acceptance row is marked COMPLETE.
+
+
+### Final status snapshot — 2026-11-18
+
+- **Feature implementation:** all seven requested mine areas have code paths and regression assertions in the PR branch; this is an implementation checkpoint, not a verified release.
+- **Test execution:** latest GitHub Actions lookup returned no workflow runs or combined statuses. Node/Playwright assertions are **PENDING / UNVERIFIED**.
+- **Hardware acceptance:** real PC/mobile FPS and memory sampling plus the elapsed 60-minute soak are **UNVERIFIED**.
+- **Repository safety:** PR #11 remains draft/open/unmerged. Branch/main comparison is diverged (540 ahead / 892 behind). No deployment or main merge.
