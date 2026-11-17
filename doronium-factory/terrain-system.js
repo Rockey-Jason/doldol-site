@@ -76,7 +76,15 @@ export function mineTunnelAt(x,z){
   const vertical=(cx,minZ,maxZ)=>z>=minZ&&z<=maxZ&&Math.abs(x-(cx+Math.round(Math.sin(z*.31+cx)*.65)))<=1;
   const horizontal=(cz,minX,maxX)=>x>=minX&&x<=maxX&&Math.abs(z-(cz+Math.round(Math.sin(x*.29+cz)*.55)))<=1;
   const chamber=(cx,cz,rx,rz)=>((x-cx)*(x-cx))/(rx*rx)+((z-cz)*(z-cz))/(rz*rz)<=1;
-  return main||
+  // Keep the original v1 excavation volume traversable for loaded saves and
+  // player-built mine infrastructure; new branches add more natural routes.
+  const legacyRoom=
+    (x>=2&&x<=37&&z>=10&&z<=14)||
+    (x>=8&&x<=13&&z>=5&&z<=18)||
+    (x>=19&&x<=24&&z>=6&&z<=18)||
+    (x>=29&&x<=36&&z>=4&&z<=20)||
+    (x>=3&&x<=6&&z>=8&&z<=16);
+  return main||legacyRoom||
     vertical(5,8,16)||vertical(10,5,18)||vertical(22,5,18)||vertical(32,4,20)||
     horizontal(7,8,13)||horizontal(15,10,14)||horizontal(8,20,25)||
     horizontal(15,20,25)||horizontal(8,28,36)||horizontal(18,29,36)||
