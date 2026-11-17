@@ -422,6 +422,10 @@ try {
   assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot())).player.onMineCart, true, "The engineer must mount the station cart");
   await desktop.keyboard.press("k");
   assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot())).player.onMineCart, false, "K must dismount the mine cart");
+  await desktop.evaluate(() => window.__doroniumFactoryTest.configureMineEnvironmentForTest({ supportIntegrity: 0, waterDepth: 0, gasLevel: 0 }));
+  assert.equal(await desktop.locator("#mine-evacuate-button").isVisible(), true, "A critical mine condition must reveal the emergency return control");
+  await desktop.locator("#mine-evacuate-button").click();
+  assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot())).player.layer, "surface", "Emergency evacuation must safely return the engineer to the surface");
 
   const miningBefore = await desktop.evaluate(() => ({ stone: window.__doroniumFactoryTest.snapshot().inventory.stone || 0 }));
   await desktop.locator("#action-button").click();
