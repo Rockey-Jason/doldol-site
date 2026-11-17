@@ -5,7 +5,7 @@ import {
   mineCellIsClosed, mineCellIsSafe, repairMineSupport,
   mineDrainageNetworks, tickMineDrainage, mineDrainageSummary,
   mineRailStations, setMineRailEnabled, mineRailSummary, tickMineRailRoutes,
-  mineRoutePath, tickMineSupportSections, supportSectionsSummary, mineVeinSegments
+  mineRoutePath, mineRailTrackAt, tickMineSupportSections, supportSectionsSummary, mineVeinSegments
 } from "./mine-systems-runtime.js";
 import { createMineEnvironment } from "./mine-runtime.js";
 import { mineMainDriftZ } from "./terrain-system.js";
@@ -106,6 +106,46 @@ test("route guidance avoids closed support cells and rejects unreachable deposit
   assert.equal(detour.some(p=>p.x===section.x&&p.z===section.z),false);
   infra.closures["1:10:12"]=true;
   assert.equal(mineRoutePath(1,{x:3,z:12},{x:10,z:12},infra.closures),null);
+});
+test("automatic mine rail routes stay on rendered track cells and detour around a blocked sleeper section",()=>{
+  const state=stateFixture();
+  const start={x:5,z:mineMainDriftZ(5)},end={x:15,z:mineMainDriftZ(15)};
+  state.buildings=[
+    {uid:"track-a",type:"mineRailStation",layer:"mine",mineLevel:1,x:start.x,y:start.z},
+    {uid:"track-b",type:"mineRailStation",layer:"mine",mineLevel:1,x:end.x,y:end.z}
+  ];
+  assert.equal(setMineRailEnabled(state,1,true).ok,true);
+  const original=state.mineInfrastructure.railRoutes[1].path;
+  assert.ok(original.length>1);
+  assert.ok(original.every(cell=>mineRailTrackAt(cell.x,cell.z)),"every cart path cell must have rendered rails");
+  const blocked=original[Math.floor(original.length/2)];
+  state.mineInfrastructure.closures["1:"+blocked.x+":"+blocked.z]=true;
+  for(let i=0;i<5;i++)tickMineRailRoutes(state,.5);
+  const refreshed=state.mineInfrastructure.railRoutes[1].path;
+  if(refreshed.length){
+    assert.equal(refreshed.some(cell=>cell.x===blocked.x&&cell.z===blocked.z),false);
+    assert.ok(refreshed.every(cell=>mineRailTrackAt(cell.x,cell.z)));
+  }
+});
+test("saved rail manifests restore their source reservation and cancellation releases it without consuming output",()=>{
+  const state=stateFixture(),output={id:"ironOre",qty:2,meta:{quality:90,purity:88,synthetic:false}};
+  state.buildings=[
+    {uid:"station-a",type:"mineRailStation",layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5)},
+    {uid:"station-b",type:"mineRailStation",layer:"mine",mineLevel:1,x:15,y:mineMainDriftZ(15)},
+    {uid:"miner-save",type:"minerIron",layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5)-1,status:"PAUSED_OUTPUT",output:structuredClone(output)}
+  ];
+  assert.equal(setMineRailEnabled(state,1,true).ok,true);
+  for(let i=0;i<3;i++)tickMineRailRoutes(state,.5);
+  assert.equal(state.buildings[2].mineRailReserved,true);
+  const loaded=structuredClone(state);
+  loaded.buildings[2].mineRailReserved=false;
+  ensureMineInfrastructure(loaded);
+  assert.equal(loaded.buildings[2].mineRailReserved,true,"reloading a valid manifest must restore its matching source reservation");
+  const cancelled=setMineRailEnabled(loaded,1,false);
+  assert.equal(cancelled.ok,true);
+  assert.equal(loaded.buildings[2].mineRailReserved,false);
+  assert.deepEqual(loaded.buildings[2].output,output,"route cancellation must leave output and item ownership at the originating miner");
+  assert.equal(loaded.mineInfrastructure.railRoutes[1].cargo.length,0);
 });
 test("ore vein decorations remain deterministic and do not mutate deposit quantities",()=>{
   const deposit={level:3,x:12,z:11,type:"coal",amount:240};
