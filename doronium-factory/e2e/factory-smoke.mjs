@@ -439,6 +439,10 @@ try {
   const keyboardMiningAfter = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot());
   assert.equal(keyboardMiningAfter.inventory.stone, keyboardMiningBefore + 2, "E must mine the aimed underground stone deposit");
   assert.equal(keyboardMiningAfter.mineDeposits["1:8:12"].amount, 10, "E must reduce the same underground deposit by two");
+  const manualMineSafety = await desktop.evaluate(() => window.__doroniumFactoryTest.manualMineSafetyTest());
+  assert.equal(manualMineSafety.blocked, true, "Manual pickaxe mining must stop when the mine safety interlock is active");
+  assert.equal(manualMineSafety.depositAfter, manualMineSafety.depositBefore, "Unsafe manual mining must preserve the deposit");
+  assert.equal(manualMineSafety.stoneAfter, manualMineSafety.stoneBefore, "Unsafe manual mining must not award ore");
   const toolGuard = await desktop.evaluate(() => window.__doroniumFactoryTest.toolGuard());
   assert.equal(toolGuard.tool, "axe", "The tool guard must register the equipped axe");
   assert.equal(toolGuard.after, toolGuard.before, "An axe must not mine stone");
