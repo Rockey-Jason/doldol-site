@@ -2008,7 +2008,7 @@ function wireControls(){
   if(k==="p"){S.paused=!S.paused;renderHud();markDirty();toast(S.paused?"시뮬레이션 일시정지":"시뮬레이션 재개");return}
   if(k==="="||k==="+"){setZoom(camera.zoom+.1);return}
   if(k==="-"||k==="_"){setZoom(camera.zoom-.1);return}
-  if(k==="["){S.simSpeed=S.simSpeed===3?2:S.simSpeed===2?1:1;renderHud();markDirty();return}
+  if(k==="["){S.simSpeed=S.simSpeed===1?3:S.simSpeed===3?2:1;renderHud();markDirty();return}
   if(k==="]"){S.simSpeed=S.simSpeed===1?2:S.simSpeed===2?3:1;renderHud();markDirty();return}
   if(k==="x"){if(selectedBuilding){const b=S.buildings.find(x=>x.uid===selectedBuilding);if(b){b.dir=(b.dir+1)%4;renderMachineDetails();drawWorld();markDirty()}}else toast("시설을 선택한 뒤 X 키로 방향을 회전하세요.");return}
   if(k==="escape"){if(document.pointerLockElement===card)document.exitPointerLock();if(controlPanelOpen){closeControlPanel();return}selectedBuild=null;selectedLandTool=null;drawWorld();return}
