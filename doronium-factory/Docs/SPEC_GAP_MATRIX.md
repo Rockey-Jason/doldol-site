@@ -368,3 +368,14 @@ No main merge, deployment, production database change, or live-user save/economy
 - PC and mobile browser emulation passed, but physical Android/iOS/PC testing, two-device save recovery and a 60-minute elapsed wall-clock soak remain **UNVERIFIED**. No main merge, deployment, production DB change, real-user save change or balance/reward mutation was performed.
 
 **Overall: NOT COMPLETE / NOT RELEASE-READY.** All 12 roadmap stages remain PARTIAL or UNVERIFIED; no 20-item acceptance criterion is promoted to COMPLETE.
+
+
+## 2026-11-17 — desktop keyboard usability overlay
+
+| Area | Status | Evidence / remaining verification |
+|---|---|---|
+| PC keyboard-first movement and interaction | PARTIAL | WASD/arrow movement, E interaction/mining, Space jump, Q/R survival actions and 4/5 tool selection are wired in the live key handler. Playwright assertions were added; current run has not been observed to completion. |
+| PC keyboard navigation and view controls | PARTIAL | B/O/I/T/J panels, V/M view, X rotation, +/- zoom, C recenter, F fullscreen, P pause, [/] speed, H help and Escape cancel/close are wired. |
+| Desktop keyboard help and mobile compatibility | PARTIAL | In-world key legend and keycap styles added; mobile touch HUD remains intact. Physical PC and Android/iOS testing are still UNVERIFIED. |
+
+**Verification boundary:** code checkpoint `20c7f4619c9b40f33cb66d3a0ba2e8ec3cf826f6`; CI lookup returned no workflow runs and no combined status checks. The new Playwright assertions are committed but remain **PENDING / UNVERIFIED**. Do not mark PC acceptance checklist #1 COMPLETE based on shortcut implementation alone.
