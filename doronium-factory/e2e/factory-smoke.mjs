@@ -438,6 +438,14 @@ try {
 
   const mineOps = await desktop.evaluate(() => window.__doroniumFactoryTest.setupMineSystemsTest());
   assert.equal(mineOps.environment[1].ventilationActive, true, "Legacy and new mine levels must begin with working ventilation");
+  await desktop.locator("#mine-perf-toggle").click();
+  assert.equal(await desktop.locator("#mine-perf-panel").isVisible(), true, "The real-device performance panel must open on desktop");
+  await desktop.waitForTimeout(700);
+  assert.notEqual((await desktop.locator("#mine-perf-fps").textContent()).trim(), "— FPS", "Desktop performance panel must expose an FPS sample");
+  assert.notEqual((await desktop.locator("#mine-perf-frame").textContent()).trim(), "— ms", "Desktop performance panel must expose a frame-time sample");
+  assert.notEqual((await desktop.locator("#mine-perf-draws").textContent()).trim(), "—", "Desktop performance panel must expose draw-call counts");
+  await desktop.locator("#mine-perf-toggle").click();
+  assert.equal(await desktop.locator("#mine-perf-panel").isVisible(), false, "The desktop performance panel must be closable");
   await desktop.locator("#mine-vent-button").click();
   assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.mineSystems())).environment[1].ventilationActive, false, "The mine ventilation control must toggle the fan state");
   const drainageUI = await desktop.evaluate(() => window.__doroniumFactoryTest.mineDrainageUITest());
@@ -778,6 +786,12 @@ try {
   assert.ok(moved.x !== 72 || moved.y !== 52, "Touch movement control must move the engineer");
   await mobile.evaluate(() => window.__doroniumFactoryTest.setupMineSystemsTest());
   assert.equal(await mobile.locator("#mine-ops-card").isVisible(), true, "Mine operations HUD must fit and remain visible in mobile mode");
+  await mobile.locator("#mine-perf-toggle").tap();
+  assert.equal(await mobile.locator("#mine-perf-panel").isVisible(), true, "The live performance panel must open on mobile touch");
+  await mobile.waitForTimeout(700);
+  assert.notEqual((await mobile.locator("#mine-perf-fps").textContent()).trim(), "— FPS", "Mobile performance panel must expose an FPS sample");
+  const perfPanelBounds = await mobile.locator("#mine-perf-panel").boundingBox();
+  assert.ok(perfPanelBounds && perfPanelBounds.x >= 0 && perfPanelBounds.x + perfPanelBounds.width <= 390, "Mobile performance metrics must remain inside the viewport");
   const mineHudBounds = await mobile.locator("#mine-ops-card").boundingBox();
   assert.ok(mineHudBounds && mineHudBounds.x >= 0 && mineHudBounds.x + mineHudBounds.width <= 390, "Mobile mine controls must stay inside the viewport");
   await mobile.locator("#mine-vent-button").tap();
