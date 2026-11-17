@@ -1,5 +1,5 @@
 /* DORONIUM FACTORY — topographic 3D world, underground mine and industrial renderer */
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=3";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, mineMainDriftZ, biomeGroundColor } from "./terrain-system.js?v=4";
 let THREE = null;
 try { THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"); }
 catch (error) { console.warn("Three.js CDN unavailable; using the compatibility renderer.", error); }
@@ -164,6 +164,8 @@ export function createWorld3D(canvas, getState) {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x071522);
   scene.fog = new THREE.FogExp2(0x071522, 0.00092);
+  const surfaceFog = scene.fog;
+  const mineFog = new THREE.FogExp2(0x0b141b, 0.00175);
   const compactDevice = window.matchMedia("(max-width: 760px)").matches || /Android|iPhone|iPad/i.test(navigator.userAgent);
   const memoryGB = Number(navigator.deviceMemory) || 4;
   const cpuCores = Number(navigator.hardwareConcurrency) || 4;
@@ -209,6 +211,8 @@ export function createWorld3D(canvas, getState) {
   const selectionRing = new THREE.Mesh(new THREE.TorusGeometry(15,.65,8,48),new THREE.MeshBasicMaterial({color:0x70e7e9}));
   selectionRing.rotation.x=Math.PI/2;selectionRoot.add(selectionRing);selectionRoot.visible=false;
   const mineRoot = new THREE.Group(); scene.add(mineRoot);
+  const mineVisualMap = new Map();
+  let mineStatsSnapshot = {tunnelCells:0,wallInstances:0,roofInstances:0,rockDetails:0,supportFrames:0,railSegments:0,oreDrawCalls:0,oreInstances:0,depositNodes:0,lightCount:0};
   const hoverRoot = new THREE.Group(); scene.add(hoverRoot);
   const hoverFillMaterial = new THREE.MeshBasicMaterial({color:0x6de4bb,transparent:true,opacity:.2,depthWrite:false,side:THREE.DoubleSide});
   const hoverEdgeMaterial = new THREE.LineBasicMaterial({color:0x6de4bb,transparent:true,opacity:.9});
@@ -252,7 +256,54 @@ export function createWorld3D(canvas, getState) {
   makeBox(firstPersonRig,.52,-.20,-.74,.10,.38,.13,mats.trim);
 
   const sharedMaterials=new Set(Object.values(mats));
+  const sharedMineTextureCanvas=document.createElement("canvas");
+  sharedMineTextureCanvas.width=128;sharedMineTextureCanvas.height=128;
+  const mineTextureContext=sharedMineTextureCanvas.getContext("2d");
+  mineTextureContext.fillStyle="#687076";mineTextureContext.fillRect(0,0,128,128);
+  let mineTextureSeed=0x41d0a39b;
+  const mineTextureRandom=()=>{mineTextureSeed=(Math.imul(mineTextureSeed,1664525)+1013904223)>>>0;return mineTextureSeed/4294967296;};
+  for(let i=0;i<1900;i++){
+    const shade=mineTextureRandom()>.5?1:-1,alpha=.05+mineTextureRandom()*.2;
+    mineTextureContext.fillStyle=shade>0?"rgba(224,232,232,"+alpha+")":"rgba(12,20,26,"+alpha+")";
+    const x=mineTextureRandom()*128,y=mineTextureRandom()*128,size=.4+mineTextureRandom()*2.8;
+    mineTextureContext.fillRect(x,y,size,size*(.6+mineTextureRandom()*1.4));
+  }
+  for(let i=0;i<9;i++){
+    const y=mineTextureRandom()*128;
+    mineTextureContext.strokeStyle="rgba(20,30,34,"+(.12+mineTextureRandom()*.2)+")";
+    mineTextureContext.lineWidth=.7+mineTextureRandom()*1.5;
+    mineTextureContext.beginPath();mineTextureContext.moveTo(0,y);
+    mineTextureContext.bezierCurveTo(38,y-9,82,y+11,128,y-4);mineTextureContext.stroke();
+  }
+  const mineRockTexture=new THREE.CanvasTexture(sharedMineTextureCanvas);
+  mineRockTexture.colorSpace=THREE.SRGBColorSpace;
+  mineRockTexture.wrapS=THREE.RepeatWrapping;mineRockTexture.wrapT=THREE.RepeatWrapping;
+  const mineRockMaterial=new THREE.MeshStandardMaterial({color:0x9aa2a4,map:mineRockTexture,roughness:.98,metalness:.025,flatShading:true});
+  const mineFloorMaterial=new THREE.MeshStandardMaterial({color:0x687174,map:mineRockTexture,roughness:.96,metalness:.08});
+  const mineTimberMaterial=mat(0x65412e,.04,.93);
+  const mineRailMaterial=mat(0x89999d,.78,.32);
+  const mineSleeperMaterial=mat(0x433a31,.06,.96);
+  const mineCableMaterial=mat(0x253c46,.48,.52);
+  const mineLampMaterial=mat(0xf0c76c,.2,.24,0x9a5a13);
+  const mineLampGlowMaterial=new THREE.MeshBasicMaterial({color:0xffd88a});
+  const mineRockGeometry=new THREE.IcosahedronGeometry(1,0);
+  sharedGeometry.add(mineRockGeometry);
+  const mineOreMaterialCache=new Map();
+  const mineOreMaterial=(type)=>{
+    if(mineOreMaterialCache.has(type))return mineOreMaterialCache.get(type);
+    const color=palette[type]||0x9aa9ad;
+    const coal=type==="coal";
+    const material=new THREE.MeshStandardMaterial({
+      color,metalness:coal?.34:.48,roughness:coal?.34:.3,
+      emissive:coal?0x080b10:color,emissiveIntensity:coal?.08:.12,flatShading:true
+    });
+    mineOreMaterialCache.set(type,material);sharedMaterials.add(material);return material;
+  };
   sharedMaterials.add(terrainTileMaterial);
+  sharedMaterials.add(mineRockMaterial);sharedMaterials.add(mineFloorMaterial);
+  sharedMaterials.add(mineTimberMaterial);sharedMaterials.add(mineRailMaterial);
+  sharedMaterials.add(mineSleeperMaterial);sharedMaterials.add(mineCableMaterial);
+  sharedMaterials.add(mineLampMaterial);sharedMaterials.add(mineLampGlowMaterial);
   const waterMaterial=new THREE.MeshStandardMaterial({color:0x0b6382,transparent:true,opacity:.68,roughness:.2,metalness:.15});
   const waterBlockGeometry=new THREE.BoxGeometry(29,1.2,29);
   const rippleGeometry=new THREE.BoxGeometry(8,.18,1.2);
