@@ -89,7 +89,11 @@ export function mineTunnelAt(x,z){
     horizontal(7,8,13)||horizontal(15,10,14)||horizontal(8,20,25)||
     horizontal(15,20,25)||horizontal(8,28,36)||horizontal(18,29,36)||
     horizontal(17,22,26)||
-    chamber(11,8,2.5,2.2)||chamber(22,9,2.4,2.3)||
+    // A second haulage drift, cross-cuts and larger working chambers create
+    // a connected mine network instead of one long, uniform corridor.
+    horizontal(18,5,35)||vertical(16,10,20)||vertical(27,10,20)||
+    chamber(11,8,2.5,2.2)||chamber(16,8,3.5,3.0)||
+    chamber(22,9,2.4,2.3)||chamber(27,8,3.2,2.8)||
     chamber(32,17,2.6,2.5)||chamber(5,14,2.0,2.2);
 }
 
@@ -139,6 +143,32 @@ export function makeMineDeposits(){
       const key=mineDepositKey(level,cx,cz);
       deposits[key]={level,x:cx,z:cz,type:"coal",amount,max:amount,cooldown:0,depthY,seed,generation:"coal-seam-v2"};
       seamIndex++;
+    }
+  }
+
+  // v3 widens coal availability with additional sidewall seams in the new
+  // cross-cuts and chambers. New keys are additive: saved depleted v1/v2
+  // deposits are never replenished or overwritten during save migration.
+  let deepSeamIndex=0;
+  for(let level=1;level<=MINE_LEVELS;level++){
+    for(let x=4;x<=37;x+=3){
+      const centerZ=mineMainDriftZ(x);
+      const candidates=[
+        [x,centerZ-1],[x,centerZ+1],[x-1,centerZ],[x+1,centerZ],
+        [x,centerZ-2],[x,centerZ+2],[x-1,centerZ-1],[x+1,centerZ+1],
+        [x-1,centerZ+1],[x+1,centerZ-1],[x-2,centerZ],[x+2,centerZ]
+      ];
+      const spot=candidates.find(([cx,cz])=>
+        mineTunnelAt(cx,cz)&&!deposits[mineDepositKey(level,cx,cz)]
+      );
+      if(!spot)continue;
+      const [cx,cz]=spot;
+      const seed=((level*2654435761)^(cx*2246822519)^(cz*3266489917)^(deepSeamIndex*668265263))>>>0;
+      const amount=180+(seed%121);
+      const depthY=mineFloorY(level)+9+(seed%11);
+      const key=mineDepositKey(level,cx,cz);
+      deposits[key]={level,x:cx,z:cz,type:"coal",amount,max:amount,cooldown:0,depthY,seed,generation:"coal-seam-v3"};
+      deepSeamIndex++;
     }
   }
   return deposits;
