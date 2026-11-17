@@ -1101,7 +1101,7 @@ function placeBuilding(type,x,y){
  if(type==="core")S.corePlaced=true;
  selectedBuilding=built.uid;selectedBuild=null;log(d.name+" 건설 완료");toast(d.name+" 설치 완료");playTone(580,.1,"triangle");markDirty();renderAll();questCheck();return true
 }
-function isWalkable(x,y){if(x<0||y<0||x>=WORLD_W||y>=WORLD_H||buildingOccupiesCell(x,y))return false;if(S.player.layer==="mine")return mineTunnelAt(x,y);const node=tileNode(x,y);return !node||node.amount<=0}
+function isWalkable(x,y){if(x<0||y<0||x>=(S.player.layer==="mine"?MINE_W:WORLD_W)||y>=(S.player.layer==="mine"?MINE_H:WORLD_H)||buildingOccupiesCell(x,y))return false;if(S.player.layer==="mine")return mineTunnelAt(x,y)&&!mineCellIsClosed(S,S.player.mineLevel,x,y);const node=tileNode(x,y);return !node||node.amount<=0}
 function findPlayerPath(startX,startY,goalX,goalY){if(goalX===startX&&goalY===startY)return [];if(!isWalkable(goalX,goalY))return null;const start=startX+","+startY,goal=goalX+","+goalY,queue=[{x:startX,y:startY}],came=new Map([[start,null]]);let found=false;for(let head=0;head<queue.length&&head<1200;head++){const p=queue[head];for(const d of DIRS){const x=p.x+d.x,y=p.y+d.y,key=x+","+y;if(came.has(key)||!isWalkable(x,y))continue;came.set(key,p.x+","+p.y);if(key===goal){found=true;break}queue.push({x,y})}if(found)break}if(!found)return null;const path=[];let key=goal;while(key!==start){const [x,y]=key.split(",").map(Number);path.push({x,y});key=came.get(key)}return path.reverse()}
 function movePlayerTo(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y};const path=findPlayerPath(origin.x,origin.y,x,y);if(path===null){toast("이동 경로가 막혀 있습니다.","warn");return false}playerMotion.path=playerMotion.path.concat(path);playerMotion.onArrive=onArrive;if(!playerMotion.path.length){playerMotion.moving=false;const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
 function approachTile(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y},options=[];for(const d of DIRS){const nx=x+d.x,ny=y+d.y;if(!isWalkable(nx,ny))continue;const path=findPlayerPath(origin.x,origin.y,nx,ny);if(path!==null)options.push({path,nx,ny})}options.sort((a,b)=>a.path.length-b.path.length);if(!options.length){toast("대상 주변으로 접근할 경로가 없습니다.","warn");return false}const best=options[0];playerMotion.path=playerMotion.path.concat(best.path);playerMotion.onArrive=onArrive;if(!best.path.length){const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
@@ -1173,7 +1173,7 @@ function updateAdventureHud(){
 function enterMine(){if(S.player.layer==="mine")return;S.player.onMineCart=false;S.player.surfacePosition={x:S.player.x,y:S.player.y,yaw:playerMotion.yaw,pitch:playerMotion.pitch,viewMode:S.player.viewMode};S.player.layer="mine";S.player.mineLevel=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS);S.player.viewMode="first";playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false,yaw:0,pitch:-.06};S.player.x=3;S.player.y=12;world3d.setViewMode("first");closeControlPanel();toast("광산 진입 · 심도 "+Math.abs(mineFloorY(S.player.mineLevel))+"m");log("지하 광산 진입 · "+S.player.mineLevel+"층");markDirty();updateAdventureHud();drawWorld()}
 function exitMine(){if(S.player.layer!=="mine")return;S.player.onMineCart=false;mineMapVisible=false;$("mine-map-wrap")?.classList.remove("visible");const pos=S.player.surfacePosition||{x:72,y:52,yaw:0,pitch:-.12,viewMode:"first"};S.player.layer="surface";S.player.surfacePosition=null;S.player.x=pos.x;S.player.y=pos.y;S.player.viewMode=pos.viewMode||"first";playerMotion={...playerMotion,x:pos.x,z:pos.y,y:0,velocityY:0,grounded:true,path:[],moving:false,yaw:pos.yaw||0,pitch:pos.pitch??-.12};world3d.setViewMode(S.player.viewMode);toast("지상으로 귀환했습니다.");markDirty();renderAll()}
 function descendMine(){S.player.onMineCart=false;if(S.player.mineLevel>=MINE_LEVELS){toast("현재 도달 가능한 최심부입니다.","warn");return}S.player.mineLevel++;if(S.player.mineLevel>=3)claimSkillPoint("EXPLORATION_MINE_DEPTH_3");if(S.player.mineLevel>=5)claimSkillPoint("EXPLORATION_MINE_DEPTH_5");S.player.x=3;S.player.y=12;playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false};toast("광산 "+S.player.mineLevel+"층 · Y "+mineFloorY(S.player.mineLevel)+"m");log("광산 심층 진입 · "+S.player.mineLevel+"층 · Y="+mineFloorY(S.player.mineLevel)+"m");markDirty();drawWorld()}
-function harvestMineDeposit(node){if(S.player.layer!=="mine"||S.activeTool!=="pickaxe"){toast("곡괭이를 장착해야 광물을 채굴할 수 있습니다.","warn");return}const mineEnv=ensureMineEnvironment(S)[S.player.mineLevel],mineSafety=mineSafetyAssessment(mineEnv);if(mineSafety.stopMining){toast(mineSafety.message,"warn");return}if(node.amount<=0){toast("광맥이 고갈되었습니다.","warn");return}const amount=Math.min(node.amount,node.type.startsWith("doronium_")?1:node.type==="diamond"?1:2),id=node.type;node.amount-=amount;if(node.amount<=0)markSceneDirty();if(RESOURCE[id]){const qualityValue=clamp(82+Math.floor((node.seed%1700)/100)+Math.max(0,node.level-2),80,99);addItem(id,amount,{quality:qualityValue,purity:Math.min(99,86+node.level*2),synthetic:false});S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;log(RESOURCE[id].name+" 채굴 · "+amount+"개 · Y="+node.depthY+"m");toast(RESOURCE[id].name+" +"+amount+" · Y="+node.depthY+"m");playTone(480+node.level*50,.08,"triangle");questCheck();renderInventory();renderHud();markDirty();drawWorld()}}
+function harvestMineDeposit(node){if(S.player.layer!=="mine"||S.activeTool!=="pickaxe"){toast("곡괭이를 장착해야 광물을 채굴할 수 있습니다.","warn");return}const mineEnv=ensureMineEnvironment(S)[S.player.mineLevel],mineSafety=mineSafetyAssessment(mineEnv),sectionSafety=mineCellIsSafe(S,S.player.mineLevel,node.x,node.z);if(mineSafety.stopMining||!sectionSafety.safe){toast(mineSafety.stopMining?mineSafety.message:sectionSafety.message,"warn");return}if(node.amount<=0){toast("광맥이 고갈되었습니다.","warn");return}const amount=Math.min(node.amount,node.type.startsWith("doronium_")?1:node.type==="diamond"?1:2),id=node.type;node.amount-=amount;if(node.amount<=0)markSceneDirty();if(RESOURCE[id]){const qualityValue=clamp(82+Math.floor((node.seed%1700)/100)+Math.max(0,node.level-2),80,99);addItem(id,amount,{quality:qualityValue,purity:Math.min(99,86+node.level*2),synthetic:false});S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;log(RESOURCE[id].name+" 채굴 · "+amount+"개 · Y="+node.depthY+"m");toast(RESOURCE[id].name+" +"+amount+" · Y="+node.depthY+"m");playTone(480+node.level*50,.08,"triangle");questCheck();renderInventory();renderHud();markDirty();drawWorld()}}
 function selectTool(tool){if(!["axe","pickaxe"].includes(tool)||!S.tools?.[tool])return;S.activeTool=tool;document.querySelectorAll("[data-tool]").forEach(b=>b.classList.toggle("active",b.dataset.tool===tool));const label=$("equipped-tool-label");if(label)label.textContent=tool==="axe"?"도끼 장착":"곡괭이 장착";toast(label?.textContent||"도구 변경")}
 function pickupNearbyWorldDrop(){
  if(!adventureMode()||S.paused)return false;
@@ -1354,12 +1354,19 @@ function drawMineMap(){
  const w=canvas.width,h=canvas.height,cw=w/MINE_W,ch=h/MINE_H;
  ctx.fillStyle="#07131d";ctx.fillRect(0,0,w,h);
  for(let z=0;z<MINE_H;z++)for(let x=0;x<MINE_W;x++){
-  const open=mineTunnelAt(x,z);
-  ctx.fillStyle=open?"#87919a":"#26323c";
+  const open=mineTunnelAt(x,z),closed=mineCellIsClosed(S,S.player.mineLevel,x,z);
+  ctx.fillStyle=closed?"#8d4549":open?"#87919a":"#26323c";
   ctx.fillRect(x*cw,z*ch,Math.ceil(cw),Math.ceil(ch));
   if(!open)continue;
   const deposit=S.mineDeposits?.[mineDepositKey(S.player.mineLevel,x,z)];
   if(deposit&&deposit.amount>0){ctx.fillStyle=deposit.type==="coal"?"#252b33":deposit.type==="ironOre"?"#a5b1bd":deposit.type==="copperOre"?"#d48b5d":deposit.type==="diamond"?"#84e6f3":"#d7bb79";ctx.fillRect(x*cw+1,z*ch+1,Math.max(2,cw-2),Math.max(2,ch-2))}
+ }
+ // Draw a route to the selected mineral vein, recalculating around every closed support section.
+ const guidedRoute=mineMapGuide&&mineMapGuide.level===S.player.mineLevel?mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},{x:mineMapGuide.x,z:mineMapGuide.z},S.mineInfrastructure?.closures||{}):null;
+ if(guidedRoute?.length>1){
+  ctx.strokeStyle="#f3ca74";ctx.lineWidth=2.5;ctx.lineJoin="round";ctx.beginPath();
+  guidedRoute.forEach((p,i)=>{const px=(p.x+.5)*cw,pz=(p.z+.5)*ch;if(i===0)ctx.moveTo(px,pz);else ctx.lineTo(px,pz)});ctx.stroke();
+  const goal=guidedRoute[guidedRoute.length-1];ctx.strokeStyle="#fff0c4";ctx.lineWidth=1.5;ctx.strokeRect(goal.x*cw+1,goal.z*ch+1,cw-2,ch-2);
  }
  // Lift symbols: the surface-return shaft and the descent shaft remain visible on every level.
  for(const [x,z,label,color] of [[3,12,"E","#77d9c3"],[36,12,"D","#f1c36b"]]){
@@ -1371,6 +1378,10 @@ function drawMineMap(){
  ctx.strokeStyle="#fff0c4";ctx.lineWidth=1.5;ctx.beginPath();ctx.arc((playerX+.5)*cw,(playerZ+.5)*ch,Math.max(4,cw*.52),0,Math.PI*2);ctx.stroke();
  ctx.fillStyle="#f5d78a";ctx.beginPath();ctx.arc((playerX+.5)*cw,(playerZ+.5)*ch,Math.max(2,cw*.3),0,Math.PI*2);ctx.fill();
  ctx.strokeStyle="#f5d78a";ctx.lineWidth=1.2;ctx.strokeRect(2,2,w-4,h-4);
+}
+function guidedMineRouteLength(){
+ if(!mineMapGuide||mineMapGuide.level!==S.player.mineLevel)return 0;
+ return mineRoutePath(S.player.mineLevel,{x:Math.floor(playerMotion.x),z:Math.floor(playerMotion.z)},{x:mineMapGuide.x,z:mineMapGuide.z},S.mineInfrastructure?.closures||{})?.length||0;
 }
 function updateMineHud(){
  const active=S.player?.layer==="mine",card=$("mine-ops-card"),wrap=$("mine-map-wrap");
@@ -1399,6 +1410,15 @@ function updateMineHud(){
  const water=$("mine-water-fill");if(water)water.style.width=summary.waterPercent+"%";
  const assessment=$("mine-safety-copy");if(assessment)assessment.textContent=summary.message;
  const cart=$("mine-cart-button");if(cart)cart.disabled=!summary.cartAvailable;
+ const drainage=mineDrainageSummary(S,S.player.mineLevel),rail=mineRailSummary(S,S.player.mineLevel),supports=supportSectionsSummary(S,S.player.mineLevel);
+ const drainStatus=$("mine-drain-status");if(drainStatus)drainStatus.textContent=drainage.connectedNetworks+"개 연결망 · 펌프 "+drainage.connectedPumps+"개 · 탱크 "+drainage.tankCount+"개 · "+Math.round(drainage.storedLitres)+" / "+Math.round(drainage.capacityLitres)+"L";
+ const railStatus=$("mine-rail-status");if(railStatus)railStatus.textContent=rail.stationCount+"개 역 · 화물 "+rail.cargoCount+"개 · "+(rail.enabled?"운행 중":"정지");
+ const railButton=$("mine-rail-button");if(railButton){railButton.textContent=rail.enabled?"자동 광차 정지 · L":"자동 광차 시작 · L";railButton.disabled=!rail.canRun&&!rail.enabled}
+ const supportSummary=$("mine-support-summary");if(supportSummary)supportSummary.textContent="구간 지지대 · 정상 "+supports.healthy+" · 주의 "+supports.warning+" · 폐쇄 "+supports.closed;
+ const localSupport=nearestMineSupport(S,S.player.mineLevel,playerMotion.x,playerMotion.z);
+ const localValue=$("mine-support-value");if(localValue)localValue.textContent=localSupport?Math.round(localSupport.section.integrity)+"%":"—";
+ const guide=$("mine-map-status");if(guide){guide.textContent=mineMapGuide?((RESOURCE[mineMapGuide.type]?.name||mineMapGuide.type)+" · "+(guidedMineRouteLength()||"경로 재탐색")):"광맥을 눌러 안전 경로 선택"}
+ const routeGo=$("mine-route-go");if(routeGo)routeGo.disabled=!mineMapGuide||mineMapGuide.level!==S.player.mineLevel;
  const evacuate=$("mine-evacuate-button");if(evacuate){evacuate.hidden=!summary.stopMining;evacuate.disabled=!summary.stopMining}
  mineMapClock+=.15;
  const mapKey=[S.player.mineLevel,S.player.x,S.player.y,Object.keys(S.mineDeposits||{}).length,Math.floor(mineMapClock)].join(":");
@@ -1681,6 +1701,13 @@ function tickBuilding(b,dt,power,context=null){const d=buildingDef(b.type);if(!d
   if(b.maintenanceTimer>0){b.maintenanceTimer=Math.max(0,b.maintenanceTimer-dt);b.status="MAINTENANCE";if(b.maintenanceTimer<=0&&completeMachineRepair(b)){if(b.layer==="mine"&&d.kind==="miner")b.drillDurability=1000;if(b.type==="BUILDING_FIRST_FACTORY_LEGACY_BATCH_LINE")b.legacyLineRepaired=true;log("기계 정비 완료 · "+d.name,"good");markDirty()}return}
   b.status=b.failureRepair.broken?"BROKEN":"MAINTENANCE";return;
  }
+ if(b.type==="mineDrainPump"){
+  const ratio=power.allocations?.[String(b.uid)]?.ratio??0,env=ensureMineEnvironment(S)[clamp(Number(b.mineLevel)||1,1,MINE_LEVELS)];
+  if(b.failureRepair){b.status="BROKEN";return}
+  if(!env.pumpActive){b.status="PAUSED_SWITCH";return}
+  if(ratio<.8){b.status="PAUSED_POWER";return}
+  b.status="RUNNING";return;
+ }
  if(b.type==="coalgen"||b.type==="mineGen"){if(tickSupportFailure(b,dt,1))return;if(b.fuelTimer<=0){if(takeItem("coal",1)){b.fuelTimer=24;log((b.type==="mineGen"?"광산 지열 발전기":"화력 발전소")+" 석탄 투입")}else b.status="NO_INPUT"}else{b.fuelTimer=Math.max(0,b.fuelTimer-dt);b.status="RUNNING"}return}
  if(["fluidPipe","fluidValve","fluidTank","fluidPump","solar","wind","storage","warehouse","market","battery","transformer","powerCable","relay","core","lab"].includes(b.type)||isBeltType(b.type)){const ratio=power.allocations?.[String(b.uid)]?.ratio??1;if(tickSupportFailure(b,dt,ratio))return;return;}
  if(b.type==="cooling"){const ratio=power.allocations?.[String(b.uid)]?.ratio??0;if(ratio<.8){b.status="PAUSED_POWER";return}if(tickSupportFailure(b,dt,ratio))return;b.status="RUNNING";return;}
@@ -1689,8 +1716,8 @@ function tickBuilding(b,dt,power,context=null){const d=buildingDef(b.type);if(!d
  if(b.type==="minerIron"||b.type==="minerCopper"||b.type==="minerCoal"||d.kind==="miner"){
   if(b.layer!=="mine"){b.status="ERROR";b.errorCode="MINER_REQUIRES_MINE_LAYER";return}
   const mineEnvironment=ensureMineEnvironment(S)[clamp(Number(b.mineLevel)||1,1,MINE_LEVELS)];
-  const mineAssessment=mineSafetyAssessment(mineEnvironment);
-  if(mineAssessment.stopMining){b.status="PAUSED_SAFETY";b.errorCode="MINE_SAFETY_INTERLOCK";return}
+  const mineAssessment=mineSafetyAssessment(mineEnvironment),sectionSafety=mineCellIsSafe(S,b.mineLevel,b.x,b.y);
+  if(mineAssessment.stopMining||!sectionSafety.safe){b.status="PAUSED_SAFETY";b.errorCode="MINE_SAFETY_INTERLOCK";return}
   if(b.errorCode==="MINE_SAFETY_INTERLOCK")delete b.errorCode;
   if(ratio<.8){b.status="PAUSED_POWER";return}
   if(tickSupportFailure(b,dt,ratio))return;
@@ -2000,7 +2027,25 @@ function tick(dt){
    S.seconds+=dt;S.tick++;if(!E2E_MODE)updateSurvival(dt);ensureCooldownIndex();
    for(const key of activeCooldownKeys){const node=S.nodes?.[key];if(!node||!(node.cooldown>0)){activeCooldownKeys.delete(key);continue}node.cooldown=Math.max(0,node.cooldown-dt);if(node.cooldown<=0)activeCooldownKeys.delete(key)}
    const mineStep=tickActiveMineEnvironments(S,dt);
-   if(mineStep.active){
+   const supportStep=tickMineSupportSections(S,dt);
+   const drainageStep=tickMineDrainage(S,dt);
+   const railStep=tickMineRailRoutes(S,dt);
+   for(const cargo of railStep.deliveries){
+    const building=S.buildings.find(item=>String(item.uid)===String(cargo.buildingUID));
+    if(building?.mineRailReserved&&building.output?.id===cargo.itemID&&Number(building.output.qty)===Number(cargo.quantity)){
+     collectOutput(building,{silent:true,fromRail:true});
+     log("자동 광차 화물 인도 · "+(RESOURCE[cargo.itemID]?.name||cargo.itemID)+" "+cargo.quantity+"개");
+    }else if(building)building.mineRailReserved=false;
+   }
+   for(const event of supportStep.events){
+    log(event.type==="PASSAGE_CLOSED"?"광산 "+event.level+"층 통로 폐쇄 · 지지대 붕괴 감지 · 우회로 필요":"광산 "+event.level+"층 지지대 약화 경고 · ("+event.x+","+event.z+")","warn");
+    if(S.player.layer==="mine"&&Number(S.player.mineLevel)===event.level){
+     toast(event.type==="PASSAGE_CLOSED"?"통로가 폐쇄되었습니다. 지도에서 우회 경로를 확인하세요.":"지지대가 약해졌습니다. 보강이 필요합니다.","warn");
+     markSceneDirty();updateMineHud();drawWorld();
+    }
+   }
+   if(railStep.events.length||drainageStep.changed){markDirty();updateMineHud();if(S.player.layer==="mine")drawWorld()}
+   if(mineStep.active||supportStep.changed||drainageStep.changed||railStep.changed){
     mineEnvPersistClock+=dt;
     for(const result of mineStep.results){
      if(result.enteredWarning){log("광산 "+result.level+"층 환경 경고 · "+result.assessment.message,"warn");if(S.player.layer==="mine"&&Number(S.player.mineLevel)===result.level)toast(result.assessment.message,"warn");if(S.player.layer==="mine")updateMineHud()}
