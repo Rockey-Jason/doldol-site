@@ -186,6 +186,11 @@ function mineRailPathClosures(state,level,systems){
   for(const station of mineRailStations(state,level))delete closures[keyOf(level,integer(station.x),integer(station.y))];
   return closures;
 }
+export function mineRailTrackAt(x,z){
+  const gx=integer(x,-1),gz=integer(z,-1);
+  if(!mineTunnelAt(gx,gz))return false;
+  return gz===mineMainDriftZ(gx)||gz===18||([16,27].includes(gx)&&gz>=10&&gz<=20);
+}
 export function mineRailStations(state,level){
   return (state.buildings||[]).filter(b=>b?.type==="mineRailStation"&&b.layer==="mine"&&integer(b.mineLevel,1)===integer(level,1))
     .slice().sort((a,b)=>integer(a.x)-integer(b.x)||integer(a.y)-integer(b.y));
@@ -196,7 +201,7 @@ export function setMineRailEnabled(state,level,enabled){
   if(enabled){
     if(stations.length<2)return {ok:false,reason:"TWO_STATIONS_REQUIRED",stationCount:stations.length};
     const first=stations[0],second=stations[1];
-    const firstPath=mineRoutePath(level,{x:first.x,z:first.y},{x:second.x,z:second.y},mineRailPathClosures(state,level,systems));
+    const firstPath=mineRoutePath(level,{x:first.x,z:first.y},{x:second.x,z:second.y},mineRailPathClosures(state,level,systems),true);
     if(!firstPath||firstPath.length<2)return {ok:false,reason:"NO_CONNECTED_TRACK",stationCount:stations.length};
     route.path=firstPath;
   }else{
@@ -256,7 +261,7 @@ export function tickMineRailRoutes(state,dt){
     const remainingPath=Array.isArray(route.path)?route.path.slice(Math.max(0,Math.floor(route.travelled))):[];
     const blockedAhead=remainingPath.some(cell=>systems.closures[keyOf(level,cell.x,cell.z)]===true);
     if(blockedAhead){
-      route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},mineRailPathClosures(state,level,systems))||[];
+      route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},mineRailPathClosures(state,level,systems),true)||[];
       route.travelled=0;
       events.push({type:"RAIL_REROUTE",level,from:current.uid,to:next.uid});
     }
@@ -284,9 +289,10 @@ export function tickMineRailRoutes(state,dt){
   systems.lastUpdated=num(state.seconds);
   return {changed:deliveries.length>0||events.length>0,deliveries,events};
 }
-export function mineRoutePath(level,start,goal,closures={}){
+export function mineRoutePath(level,start,goal,closures={},trackOnly=false){
   const sx=integer(start?.x,-1),sz=integer(start?.z??start?.y,-1),gx=integer(goal?.x,-1),gz=integer(goal?.z??goal?.y,-1);
   if(!mineTunnelAt(sx,sz)||!mineTunnelAt(gx,gz))return null;
+  if(trackOnly&&(!mineRailTrackAt(sx,sz)||!mineRailTrackAt(gx,gz)))return null;
   const closed=(x,z)=>closures[keyOf(level,x,z)]===true;
   if(closed(gx,gz))return null;
   const startKey=cellKey(sx,sz),goalKey=cellKey(gx,gz);
@@ -296,7 +302,7 @@ export function mineRoutePath(level,start,goal,closures={}){
     const cell=queue[head];
     for(const [dx,dz] of DIRECTIONS){
       const x=cell.x+dx,z=cell.z+dz,key=cellKey(x,z);
-      if(came.has(key)||!mineTunnelAt(x,z)||closed(x,z))continue;
+      if(came.has(key)||!mineTunnelAt(x,z)||closed(x,z)||(trackOnly&&!mineRailTrackAt(x,z)))continue;
       came.set(key,cellKey(cell.x,cell.z));
       if(key===goalKey){found=true;break}
       queue.push({x,z});
