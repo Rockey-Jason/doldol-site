@@ -1,7 +1,7 @@
 /* DORONIUM FACTORY — topographic 3D world, underground mine and industrial renderer */
 import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, mineMainDriftZ, biomeGroundColor } from "./terrain-system.js?v=6";
 import { mineGeologyAt, mineOreProfile } from "./mine-runtime.js?v=4";
-import { mineVeinSegments } from "./mine-systems-runtime.js?v=2";
+import { mineVeinSegments } from "./mine-systems-runtime.js?v=3";
 let THREE = null;
 try { THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"); }
 catch (error) { console.warn("Three.js CDN unavailable; using the compatibility renderer.", error); }
