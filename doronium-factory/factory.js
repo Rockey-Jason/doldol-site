@@ -17,7 +17,7 @@ import { evaluatePlanetaryStabilization } from "./planetary-stabilization.js?v=1
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=3";
 import { createOwnershipState, addCustody, transferCustody, consumeCustody, completeProductionCustody, validateOwnershipState, resetCustodySnapshot } from "./ownership-runtime.js?v=6";
-import { storeWarehouseStack as storeWarehouseCustody, withdrawWarehouseStack as withdrawWarehouseCustody } from "./warehouse-runtime.js?v=1";
+import { storeWarehouseStack as storeWarehouseCustody, withdrawWarehouseStack as withdrawWarehouseCustody } from "./warehouse-runtime.js?v=2";
 let createClient = null;
 
 /* DORONIUM FACTORY — INFINITE INDUSTRY
@@ -2846,6 +2846,9 @@ if(E2E_MODE){
     const inProcess=Array.isArray(b.activeInputQuantities)?b.activeInputQuantities:Array.isArray(b.activeMeta?.consumedInputs)?b.activeMeta.consumedInputs:[];
     for(const input of inProcess){
      if(input?.itemID&&Object.hasOwn(result,ledgerKey(input.itemID))){const key=ledgerKey(input.itemID);result[key]+=Math.max(0,Math.floor(Number(input.quantity)||0))}
+    }
+    for(const stock of b.warehouseStock||[]){
+     if(stock?.itemID&&Object.hasOwn(result,ledgerKey(stock.itemID))){const key=ledgerKey(stock.itemID);result[key]+=Math.max(0,Math.floor(Number(stock.quantity)||0))}
     }
    }
    for(const item of S.completionBuffer||[])if(item?.itemID&&Object.hasOwn(result,ledgerKey(item.itemID)))result[ledgerKey(item.itemID)]+=Math.max(0,Math.floor(Number(item.quantity)||0));

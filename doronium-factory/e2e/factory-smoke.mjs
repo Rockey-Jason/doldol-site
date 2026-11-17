@@ -577,6 +577,7 @@ try {
       seconds: result.state.seconds,
       produced: result.state.stats.produced.ironPlate || 0,
       inventory: result.state.inventory.ironPlate || 0,
+      warehouse: result.state.buildings.filter(b => ["storage","warehouse"].includes(b.type)).flatMap(b => b.warehouseStock || []).filter(item => item.itemID === "ironPlate").reduce((sum,item) => sum + Math.max(0,Number(item.quantity)||0),0),
       beltOccupied: result.state.buildings.some(b => b.type === "belt" && !!b.item),
       ledger: window.__doroniumFactoryTest.ledger()
     };
@@ -584,7 +585,7 @@ try {
   assert.equal(soak.ticks, 36000, "A virtual hour must execute exactly 36,000 fixed 0.1-second ticks");
   assert.ok(soak.seconds >= 8 * 3600 + 3600 - 0.001, "Simulation clock must advance by one virtual hour");
   assert.ok(soak.produced > 0, "Smelter must produce during the one-hour soak");
-  assert.ok(soak.inventory > 0, "Conveyor must route finished plates into storage");
+  assert.ok(soak.warehouse > 0, "Conveyor must route finished plates into independent warehouse stock");
   assert.equal(soak.ledger.oreBalance, 50000, "Ore + in-process and finished-plate equivalent must be conserved");
   assert.equal(soak.ledger.coalBalance, 30000, "Coal + in-process and finished-plate equivalent must be conserved");
   await desktop.screenshot({ path: path.join(artifactDir, "doronium-desktop.png"), fullPage: true });
