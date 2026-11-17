@@ -994,6 +994,29 @@ if(E2E_MODE){
    const coalGenerator={fuelTimer:S.buildings[0].fuelTimer,status:S.buildings[0].status,power:currentPower().gen,stock:itemCount("coal"),available:availableItemCount(S,"coal"),runtimeValid:validateRuntimeState(S).valid};
    return {construction,coalGenerator,...reservationResults};
   },
+  researchAndFacilityPopupTest(){
+   const previous=structuredClone(S);
+   try{
+    S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
+    S.money=10000;S.buildings=[{uid:"test-research-lab",type:"lab",dir:1,condition:100,status:"IDLE",progress:0,input:{},inputMeta:{}}];
+    addItem("wood",2,{quality:90,purity:90,synthetic:false},false);
+    addItem("stone",5,{quality:90,purity:90,synthetic:false},false);
+    S.activeResearch="survey";S.researchProgress=13;
+    renderResearch();
+    const researchText=$("research-tree").innerText;
+    openBuildingManagement(S.buildings[0]);
+    const popupText=$("modal-card").innerText;
+    const result={
+     researchText,popupText,
+     countdown: $("research-countdown")?.textContent||"",
+     popupCountdown:$("building-research-countdown")?.textContent||"",
+     popupVisible:$("modal-overlay").classList.contains("show"),
+     requirementsIncludeNames:researchText.includes("목재")&&researchText.includes("석재"),
+     shortageVisible:researchText.includes("3개 부족")
+    };
+    closeModal();return result;
+   }finally{S=previous;closeModal();renderAll()}
+  },
   syntheticReservationIsolationTest(){
    S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
    addItem("doriMeat",10,{quality:98,purity:98,synthetic:true},false);
