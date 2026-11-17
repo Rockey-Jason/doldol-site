@@ -2472,6 +2472,55 @@ if(E2E_MODE){
   toggleMineSystemForTest(kind){const env=currentMineEnvironment();return toggleMineEquipment(env,kind)},
   reinforceMineSystemForTest(amount){return reinforceMineSupports(currentMineEnvironment(),amount)},
   configureMineEnvironmentForTest(values){const env=currentMineEnvironment();if(!env)throw new Error("MINE_LAYER_REQUIRED");Object.assign(env,values||{});updateMineHud();drawWorld();return structuredClone(env)},
+  mineDrainageNetworkTest(){
+   S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:5,y:12};S.mineEnvironment[1].waterDepth=.5;S.mineEnvironment[1].pumpActive=true;
+   S.buildings=[
+    {uid:"DRAIN-PUMP-1",type:"mineDrainPump",layer:"mine",mineLevel:1,x:5,y:12,status:"RUNNING",rateLps:30},
+    {uid:"DRAIN-PIPE-1",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:6,y:12,status:"IDLE"},
+    {uid:"DRAIN-PIPE-2",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:7,y:12,status:"IDLE"},
+    {uid:"DRAIN-TANK-1",type:"mineWaterTank",layer:"mine",mineLevel:1,x:8,y:12,status:"IDLE",capacityL:1000,waterStoredL:0}
+   ];
+   ensureMineInfrastructure(S);
+   const before=S.mineEnvironment[1].waterDepth,network=mineDrainageNetworks(S,1)[0],tickResult=tickMineDrainage(S,1);
+   const connected={network:network.connected,stored:S.buildings[3].waterStoredL,waterAfter:S.mineEnvironment[1].waterDepth,transferred:tickResult.results.reduce((n,item)=>n+item.litres,0)};
+   S.buildings.splice(2,1);
+   const disconnected=mineDrainageNetworks(S,1).some(item=>item.connected);
+   markSceneDirty();renderAll();
+   return {before,connected,disconnected,summary:mineDrainageSummary(S,1),ok:connected.network&&connected.stored===30&&connected.waterAfter<before&&!disconnected};
+  },
+  mineSupportSectionsTest(){
+   S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:3,y:12};
+   const section=nearestMineSupport(S,1,3,12).section;
+   section.integrity=7;section.warning=true;
+   const closure=tickMineSupportSections(S,.1),closed=mineCellIsClosed(S,1,section.x,section.z);
+   const route=mineRoutePath(1,{x:3,z:12},{x:10,z:12},S.mineInfrastructure?.closures||{});
+   const repair=repairMineSupport(S,1,section.x,section.z,50);
+   markSceneDirty();renderAll();
+   return {closed,closureEvents:closure.events.map(event=>event.type),repair:repair.after,routeAvoided:route?!route.some(cell=>cell.x===section.x&&cell.z===section.z):false,summary:supportSectionsSummary(S,1)};
+  },
+  mineRailTransportTest(){
+   S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:5,y:12};S.runtime=createRuntimeState();ensureItemStacks(S);
+   const mineral="ITEM_IRON_ORE",meta={quality:92,purity:90,synthetic:false};
+   S.buildings=[
+    {uid:"RAIL-STATION-A",type:"mineRailStation",layer:"mine",mineLevel:1,x:5,y:12,status:"IDLE"},
+    {uid:"RAIL-STATION-B",type:"mineRailStation",layer:"mine",mineLevel:1,x:15,y:12,status:"IDLE"},
+    {uid:"RAIL-STATION-C",type:"mineRailStation",layer:"mine",mineLevel:1,x:25,y:12,status:"IDLE"},
+    {uid:"RAIL-MINER",type:"minerIron",layer:"mine",mineLevel:1,x:14,y:12,status:"PAUSED_OUTPUT",output:{id:mineral,qty:2,meta}}
+   ];
+   ensureMineInfrastructure(S);
+   const start=setMineRailEnabled(S,1,true),before=itemCount("ironOre");let delivered=0,loaded=0;
+   for(let i=0;i<300;i++){
+    const result=tickMineRailRoutes(S,.5);loaded+=result.events.filter(event=>event.type==="RAIL_LOAD").length;
+    for(const cargo of result.deliveries){
+     const owner=S.buildings.find(building=>String(building.uid)===String(cargo.buildingUID));
+     if(owner?.output&&owner.mineRailReserved&&collectOutput(owner,{silent:true,fromRail:true}))delivered+=cargo.quantity;
+    }
+    S.seconds+=.5;
+   }
+   const after=itemCount("ironOre"),summary=mineRailSummary(S,1);
+   markSceneDirty();renderAll();
+   return {start,loaded,delivered,before,after,summary,reserved:S.buildings[3].mineRailReserved,output:S.buildings[3].output,ok:start.ok&&loaded>=1&&delivered===2&&after===before+2&&!S.buildings[3].mineRailReserved&&!S.buildings[3].output};
+  },
   mineSafetyInterlockTest(){
    this.setupMiningAutomationTest();
    const miner=S.buildings.find(building=>building.type==="minerIron"),deposit=S.mineDeposits[mineDepositKey(1,12,15)];
