@@ -12,6 +12,11 @@ const distance=(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
 const DIRECTIONS=[[1,0],[-1,0],[0,1],[0,-1]];
 const DRAIN_TYPES=new Set(["mineDrainPipe","mineDrainPump","mineWaterTank"]);
 const SUPPORT_X=[2,8,14,20,26,32];
+function supportCellsForLevel(){
+  const cells=SUPPORT_X.map(x=>({x,z:mineMainDriftZ(x)}));
+  for(const x of [8,14,20,26,32])cells.push({x,z:18});
+  return cells;
+}
 
 export function ensureMineInfrastructure(state){
   if(!state||typeof state!=="object")throw new TypeError("mine-state-required");
@@ -26,9 +31,8 @@ export function ensureMineInfrastructure(state){
   if(!infrastructure.railRoutes||typeof infrastructure.railRoutes!=="object")infrastructure.railRoutes={};
   infrastructure.version=1;
   for(let level=1;level<=LEVELS;level++){
-    for(const x of SUPPORT_X){
-      const z=mineMainDriftZ(x),key=keyOf(level,x,z);
-      const saved=infrastructure.supports[key];
+    for(const {x,z} of supportCellsForLevel(level)){
+      const key=keyOf(level,x,z),saved=infrastructure.supports[key];
       if(!saved||typeof saved!=="object"){
         infrastructure.supports[key]={level,x,z,integrity:100,warning:false,closed:false,lastWear:0,lastRepair:0};
       }else{
