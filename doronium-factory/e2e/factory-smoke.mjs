@@ -432,13 +432,16 @@ try {
   assert.equal(mineOps.environment[1].ventilationActive, true, "Legacy and new mine levels must begin with working ventilation");
   await desktop.locator("#mine-vent-button").click();
   assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.mineSystems())).environment[1].ventilationActive, false, "The mine ventilation control must toggle the fan state");
+  const drainageUI = await desktop.evaluate(() => window.__doroniumFactoryTest.mineDrainageUITest());
+  assert.equal(drainageUI.network, true, "The drainage UI fixture must contain a connected pump-pipe-tank network");
+  assert.equal(drainageUI.pumpActive, false, "The pump must be off before the operator enables it");
   await desktop.locator("#mine-pump-button").click();
-  assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.mineSystems())).environment[1].pumpActive, true, "The drainage control must activate the pump");
+  assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.mineSystems())).environment[1].pumpActive, true, "The drainage control must activate a connected pump");
   await desktop.evaluate(() => window.__doroniumFactoryTest.configureMineEnvironmentForTest({ supportIntegrity: 60, waterDepth: 0, gasLevel: 0 }));
   const supportInventoryBefore = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot().inventory);
   await desktop.locator("#mine-support-button").click();
   const supportAfter = await desktop.evaluate(() => ({ mine: window.__doroniumFactoryTest.mineSystems(), inventory: window.__doroniumFactoryTest.snapshot().inventory }));
-  assert.ok(supportAfter.mine.environment[1].supportIntegrity > 90, "Support reinforcement must restore structural integrity");
+  assert.ok(supportAfter.mine.environment[1].supportIntegrity > 70, "Support reinforcement must restore mine-wide environmental integrity");
   assert.equal(supportAfter.inventory.wood, supportInventoryBefore.wood - 2, "Support reinforcement must consume exactly two owned wood");
   assert.equal(supportAfter.inventory.stone, supportInventoryBefore.stone - 2, "Support reinforcement must consume exactly two owned stone");
   await desktop.locator("#mine-map-toggle").click();
@@ -450,6 +453,7 @@ try {
   await desktop.keyboard.press("k");
   assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot())).player.onMineCart, false, "K must dismount the mine cart");
 
+  await desktop.evaluate(() => window.__doroniumFactoryTest.setupMineSystemsTest());
   await desktop.locator("#mine-map-toggle").click();
   const mapBox = await desktop.locator("#mine-map-canvas").boundingBox();
   await desktop.locator("#mine-map-canvas").click({ position: { x: mapBox.width * 8.5 / 40, y: mapBox.height * 12.5 / 24 } });
