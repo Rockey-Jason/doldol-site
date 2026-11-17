@@ -84,7 +84,7 @@ export function tickMineEnvironment(state,dt){
   const before=[env.waterDepth,env.humidity,env.gasLevel,env.supportIntegrity,env.warning,env.incident];
   const profile=mineGeologyAt(level,integer(state.player.x),integer(state.player.y));
   const seepage=(.000075+(level-1)*.000012)*(.8+profile.moisture*.4);
-  env.waterDepth=clamp(env.waterDepth+(seepage-(env.pumpActive?.00024:0))*step,0,1);
+  env.waterDepth=clamp(env.waterDepth+(seepage-((env.pumpActive ? .00024 : 0)))*step,0,1);
   const ventilationTarget=env.ventilationActive?100:28;
   env.humidity=clamp(env.humidity+(38+level*5+env.waterDepth*38-((ventilationTarget-28)*.12)-env.humidity)*Math.min(1,step*.035),18,98);
   env.gasLevel=clamp(env.gasLevel+(env.ventilationActive?-.035:.018)*step,0,100);
