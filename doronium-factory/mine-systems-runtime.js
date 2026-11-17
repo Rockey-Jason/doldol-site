@@ -88,10 +88,8 @@ export function nearestMineSupport(state,level,x,z){
   return best?{section:best,distance:bestDistance}:null;
 }
 export function mineCellIsClosed(state,level,x,z){
-  const systems=ensureMineInfrastructure(state),cell=cellKey(integer(x),integer(z));
-  const closure=systems.closures[keyOf(level,integer(x),integer(z))];
-  if(closure===true)return true;
-  return Object.values(systems.supports).some(section=>section.closed&&Number(section.level)===integer(level)&&integer(section.x)===integer(x)&&integer(section.z)===integer(z));
+  const systems=ensureMineInfrastructure(state),key=keyOf(level,integer(x),integer(z));
+  return systems.closures[key]===true||systems.supports[key]?.closed===true;
 }
 export function mineCellIsSafe(state,level,x,z){
   const nearest=nearestMineSupport(state,level,x,z);
@@ -264,14 +262,15 @@ export function tickMineRailRoutes(state,dt){
     if(nextIndex<0||nextIndex>=stations.length){route.direction*=-1;route.stopRemaining=1.5;route.path=[];continue}
     const next=stations[nextIndex];
     const currentCell={x:Math.round(num(route.position.x,current.x)),z:Math.round(num(route.position.y,current.y))};
-    const blockedAhead=Array.isArray(route.path)&&route.path.some(cell=>systems.closures[keyOf(level,cell.x,cell.z)]===true);
+    const routeClosures=mineRailPathClosures(state,level,systems);
+    const blockedAhead=Array.isArray(route.path)&&route.path.some(cell=>routeClosures[keyOf(level,cell.x,cell.z)]===true);
     if(blockedAhead){
-      route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},mineRailPathClosures(state,level,systems),true)||[];
+      route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},routeClosures,true)||[];
       route.travelled=0;
       events.push({type:"RAIL_REROUTE",level,from:current.uid,to:next.uid});
     }
     if(!Array.isArray(route.path)||route.path.length<2){
-      route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},mineRailPathClosures(state,level,systems),true)||[];
+      route.path=mineRoutePath(level,currentCell,{x:next.x,z:next.y},routeClosures,true)||[];
       route.travelled=0;
       if(route.path.length<2){
         route.enabled=false;
