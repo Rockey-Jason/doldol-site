@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Noto+Sans+KR:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./factory.css?v=12">
+<link rel="stylesheet" href="./factory.css?v=13">
 </head>
 <body>
 <div id="game-root">
@@ -61,11 +61,17 @@
               <div><small>지지대</small><b id="mine-support-value">100%</b><div class="mine-mini-track"><i id="mine-support-fill"></i></div></div>
             </div>
             <p id="mine-safety-copy">광산 환경 정상</p>
+            <div class="mine-infra-status">
+              <div><small>배수 네트워크</small><b id="mine-drain-status">연결망 없음 · 배수관/펌프/탱크 필요</b></div>
+              <div><small>자동 광차 운송</small><b id="mine-rail-status">정거장 0개 · 운행 정지</b></div>
+              <div><small>통로별 지지대</small><b id="mine-support-summary">구간별 상태 확인 중</b></div>
+            </div>
             <div class="mine-control-grid">
               <button type="button" id="mine-vent-button">환기 가동</button>
               <button type="button" id="mine-pump-button">배수 정지</button>
               <button type="button" id="mine-support-button">지지대 보강 · U</button>
-              <button type="button" id="mine-cart-button">광차 탑승 · K</button>
+              <button type="button" id="mine-cart-button">개인 광차 · K</button>
+              <button type="button" id="mine-rail-button">자동 광차 시작 · L</button>
               <button type="button" id="mine-map-toggle" class="mine-map-action">층별 지도 · M</button>
               <button type="button" id="mine-evacuate-button" class="mine-evacuate" hidden>긴급 귀환 · 지상 출구</button>
             </div>
@@ -73,7 +79,9 @@
           <div class="mine-map-wrap" id="mine-map-wrap">
             <div class="mine-map-heading"><strong>광산 탐색 지도</strong><span id="mine-map-level">CURRENT LEVEL</span></div>
             <canvas id="mine-map-canvas" width="400" height="240" aria-label="현재 광산 층의 통로와 광물 위치 지도"></canvas>
-            <div class="mine-map-legend"><span><i class="player-dot"></i>현재 위치</span><span><i class="coal-dot"></i>석탄</span><span><i class="ore-dot"></i>기타 광물</span><span><i class="lift-dot"></i>승강기 E/D</span></div>
+            <div class="mine-map-legend"><span><i class="player-dot"></i>현재 위치</span><span><i class="coal-dot"></i>석탄</span><span><i class="ore-dot"></i>기타 광물</span><span><i class="lift-dot"></i>승강기 E/D</span><span><i class="closure-dot"></i>통로 폐쇄</span></div>
+            <p class="mine-map-status" id="mine-map-status">광맥을 눌러 안전 경로를 선택하세요.</p>
+            <button type="button" id="mine-route-go" class="mine-route-go" disabled>선택 광맥까지 이동</button>
           </div>
           <div class="view-switcher" role="group" aria-label="카메라 시점">
             <button type="button" id="view-first" data-view-mode="first">1인칭</button>
@@ -129,5 +137,5 @@
   </div>
 </div>
 <div class="toast-stack" id="toast-stack"></div><div class="modal-overlay" id="modal-overlay"><div class="modal-card" id="modal-card"></div></div>
-<script type="module" src="./factory.js?v=54"></script>
+<script type="module" src="./factory.js?v=55"></script>
 </body></html>
