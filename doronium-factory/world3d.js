@@ -721,7 +721,7 @@ export function createWorld3D(canvas, getState) {
         for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
           const neighbor=(state.buildings||[]).some(other=>other!==b&&other.layer==="mine"&&Number(other.mineLevel||1)===level&&Number(other.x)===Number(b.x)+dx&&Number(other.y)===Number(b.y)+dz&&["mineDrainPipe","mineDrainPump","mineWaterTank"].includes(other.type));
           if(neighbor){
-            const segment=makeCyl(g,dx*4,5,dz*4,1.2,9,metal,10);
+            const segment=makeCyl(g,dx*8,5,dz*8,1.2,18,metal,10);
             if(dx)segment.rotation.z=Math.PI/2;
             else segment.rotation.x=Math.PI/2;
           }
