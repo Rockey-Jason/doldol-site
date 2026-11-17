@@ -311,7 +311,7 @@ let activeCooldownKeys=new Set(),cooldownNodeSource=null;
 let buildingIndex=new Map(),buildingIndexSource=null,buildingIndexRevision=-1,buildingIndexLength=-1;
 let playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Number(S.player.yaw)||0,pitch:Number(S.player.pitch??-.12),path:[],moving:false,facing:0,onArrive:null};
 const adventureKeys=new Set();
-let mineHeld=false,mineCooldown=0,lookPointer=null,survivalHudClock=0,adventureTarget=null,mineEnvPersistClock=0,mineMapClock=0,mineMapVisible=false,mineMapLastKey="",mineMapGuide=null;
+let mineHeld=false,mineCooldown=0,lookPointer=null,survivalHudClock=0,adventureTarget=null,mineEnvPersistClock=0,mineMapClock=0,mineMapVisible=false,mineMapLastKey="",mineMapGuide=null,minePerfVisible=false;
 const canvas=$("world-canvas"),world3d=createWorld3D(canvas,()=>S);
 const toast=(message,type="")=>{const el=document.createElement("div");el.className="toast "+type;el.textContent=message;$("toast-stack").append(el);setTimeout(()=>el.remove(),2800)};
 function log(message,type="info"){S.logs.unshift({message,type,time:S.seconds});S.logs=S.logs.slice(0,18);if(!E2E_MODE)renderEvents();dirty=true}
@@ -1199,7 +1199,7 @@ function updateAdventureHud(){
  updateMineHud();
 }
 function enterMine(){if(S.player.layer==="mine")return;S.player.onMineCart=false;S.player.surfacePosition={x:S.player.x,y:S.player.y,yaw:playerMotion.yaw,pitch:playerMotion.pitch,viewMode:S.player.viewMode};S.player.layer="mine";S.player.mineLevel=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS);S.player.viewMode="first";playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false,yaw:0,pitch:-.06};S.player.x=3;S.player.y=12;world3d.setViewMode("first");closeControlPanel();toast("광산 진입 · 심도 "+Math.abs(mineFloorY(S.player.mineLevel))+"m");log("지하 광산 진입 · "+S.player.mineLevel+"층");markDirty();updateAdventureHud();drawWorld()}
-function exitMine(){if(S.player.layer!=="mine")return;S.player.onMineCart=false;mineMapVisible=false;$("mine-map-wrap")?.classList.remove("visible");const pos=S.player.surfacePosition||{x:72,y:52,yaw:0,pitch:-.12,viewMode:"first"};S.player.layer="surface";S.player.surfacePosition=null;S.player.x=pos.x;S.player.y=pos.y;S.player.viewMode=pos.viewMode||"first";playerMotion={...playerMotion,x:pos.x,z:pos.y,y:0,velocityY:0,grounded:true,path:[],moving:false,yaw:pos.yaw||0,pitch:pos.pitch??-.12};world3d.setViewMode(S.player.viewMode);toast("지상으로 귀환했습니다.");markDirty();renderAll()}
+function exitMine(){if(S.player.layer!=="mine")return;S.player.onMineCart=false;mineMapVisible=false;minePerfVisible=false;$("mine-map-wrap")?.classList.remove("visible");const pos=S.player.surfacePosition||{x:72,y:52,yaw:0,pitch:-.12,viewMode:"first"};S.player.layer="surface";S.player.surfacePosition=null;S.player.x=pos.x;S.player.y=pos.y;S.player.viewMode=pos.viewMode||"first";playerMotion={...playerMotion,x:pos.x,z:pos.y,y:0,velocityY:0,grounded:true,path:[],moving:false,yaw:pos.yaw||0,pitch:pos.pitch??-.12};world3d.setViewMode(S.player.viewMode);toast("지상으로 귀환했습니다.");markDirty();renderAll()}
 function descendMine(){S.player.onMineCart=false;if(S.player.mineLevel>=MINE_LEVELS){toast("현재 도달 가능한 최심부입니다.","warn");return}S.player.mineLevel++;if(S.player.mineLevel>=3)claimSkillPoint("EXPLORATION_MINE_DEPTH_3");if(S.player.mineLevel>=5)claimSkillPoint("EXPLORATION_MINE_DEPTH_5");S.player.x=3;S.player.y=12;playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false};toast("광산 "+S.player.mineLevel+"층 · Y "+mineFloorY(S.player.mineLevel)+"m");log("광산 심층 진입 · "+S.player.mineLevel+"층 · Y="+mineFloorY(S.player.mineLevel)+"m");markDirty();drawWorld()}
 function harvestMineDeposit(node){if(S.player.layer!=="mine"||S.activeTool!=="pickaxe"){toast("곡괭이를 장착해야 광물을 채굴할 수 있습니다.","warn");return}const mineEnv=ensureMineEnvironment(S)[S.player.mineLevel],mineSafety=mineSafetyAssessment(mineEnv),sectionSafety=mineCellIsSafe(S,S.player.mineLevel,node.x,node.z);if(mineSafety.stopMining||!sectionSafety.safe){toast(mineSafety.stopMining?mineSafety.message:sectionSafety.message,"warn");return}if(node.amount<=0){toast("광맥이 고갈되었습니다.","warn");return}const amount=Math.min(node.amount,node.type.startsWith("doronium_")?1:node.type==="diamond"?1:2),id=node.type;node.amount-=amount;if(node.amount<=0)markSceneDirty();if(RESOURCE[id]){const qualityValue=clamp(82+Math.floor((node.seed%1700)/100)+Math.max(0,node.level-2),80,99);addItem(id,amount,{quality:qualityValue,purity:Math.min(99,86+node.level*2),synthetic:false});S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;log(RESOURCE[id].name+" 채굴 · "+amount+"개 · Y="+node.depthY+"m");toast(RESOURCE[id].name+" +"+amount+" · Y="+node.depthY+"m");playTone(480+node.level*50,.08,"triangle");questCheck();renderInventory();renderHud();markDirty();drawWorld()}}
 function selectTool(tool){if(!["axe","pickaxe"].includes(tool)||!S.tools?.[tool])return;S.activeTool=tool;document.querySelectorAll("[data-tool]").forEach(b=>b.classList.toggle("active",b.dataset.tool===tool));const label=$("equipped-tool-label");if(label)label.textContent=tool==="axe"?"도끼 장착":"곡괭이 장착";toast(label?.textContent||"도구 변경")}
@@ -1351,6 +1351,11 @@ function toggleMineMap(){
  if(mineMapVisible){mineMapLastKey="";drawMineMap()}
  updateMineHud();
 }
+function toggleMinePerf(){
+ if(S.player.layer!=="mine"){toast("광산 안에서만 성능 계측 패널을 열 수 있습니다.","warn");return}
+ minePerfVisible=!minePerfVisible;
+ updateMineHud();
+}
 function toggleMineRailRoute(){
  if(S.player.layer!=="mine"){toast("광산 안에서 자동 광차를 설정할 수 있습니다.","warn");return}
  const summary=mineRailSummary(S,S.player.mineLevel),result=setMineRailEnabled(S,S.player.mineLevel,!summary.enabled);
@@ -1490,6 +1495,24 @@ function updateMineHud(){
  const guide=$("mine-map-status");if(guide){guide.textContent=mineMapGuide?((RESOURCE[mineMapGuide.type]?.name||mineMapGuide.type)+" · "+(guidedMineRouteLength()||"경로 재탐색")):"광맥을 눌러 안전 경로 선택"}
  const routeGo=$("mine-route-go");if(routeGo)routeGo.disabled=!mineMapGuide||mineMapGuide.level!==S.player.mineLevel;
  const evacuate=$("mine-evacuate-button");if(evacuate){evacuate.hidden=!summary.stopMining;evacuate.disabled=!summary.stopMining}
+ const perfPanel=$("mine-perf-panel"),perfButton=$("mine-perf-toggle");
+ if(perfPanel)perfPanel.hidden=!minePerfVisible;
+ if(perfButton)perfButton.textContent=minePerfVisible?"성능 계측 닫기":"실시간 성능 측정";
+ if(minePerfVisible){
+  const perf=world3d.inspectPerformance?.();
+  const device=$("mine-perf-device");
+  if(device)device.textContent=(/Android|iPhone|iPad/i.test(navigator.userAgent)||window.innerWidth<=760)?"MOBILE / CURRENT DEVICE":"DESKTOP / CURRENT DEVICE";
+  const fields={
+   "mine-perf-fps":perf?Math.round(Number(perf.fps)||0)+" FPS":"—",
+   "mine-perf-frame":perf?Math.max(0,Number(perf.averageFrameMs)||0).toFixed(2)+" ms":"—",
+   "mine-perf-draws":perf?Number(perf.drawCalls||0).toLocaleString("en-US"):"—",
+   "mine-perf-triangles":perf?Number(perf.triangles||0).toLocaleString("en-US"):"—",
+   "mine-perf-geometries":perf?String(Number(perf.geometries)||0):"—",
+   "mine-perf-textures":perf?String(Number(perf.textures)||0):"—",
+   "mine-perf-heap":perf&&perf.heapBytes!==null&&Number.isFinite(Number(perf.heapBytes))?(Number(perf.heapBytes)/1048576).toFixed(1)+" MB":"브라우저에서 측정 미지원"
+  };
+  for(const[id,value]of Object.entries(fields)){const el=$(id);if(el)el.textContent=value}
+ }
  mineMapClock+=.15;
  const mapKey=[S.player.mineLevel,S.player.x,S.player.y,Object.keys(S.mineDeposits||{}).length,Math.floor(mineMapClock)].join(":");
  if(mineMapVisible&&(mineMapClock>=.6||mapKey!==mineMapLastKey)){mineMapClock=0;mineMapLastKey=mapKey;drawMineMap()}
@@ -2316,6 +2339,7 @@ function wireControls(){
  bindAdventureButton("drink-button",drinkWater);
  bindAdventureButton("action-button",()=>{adventureKeys.add("e");try{performAdventureAction()}finally{adventureKeys.delete("e")}});
  $("mine-map-toggle")?.addEventListener("click",toggleMineMap);
+ $("mine-perf-toggle")?.addEventListener("click",toggleMinePerf);
  $("mine-vent-button")?.addEventListener("click",()=>toggleMineControls("ventilation"));
  $("mine-pump-button")?.addEventListener("click",()=>toggleMineControls("pump"));
  $("mine-support-button")?.addEventListener("click",reinforceMineSafety);
