@@ -379,3 +379,18 @@ No main merge, deployment, production database change, or live-user save/economy
 | Desktop keyboard help and mobile compatibility | PARTIAL | In-world key legend and keycap styles added; mobile touch HUD remains intact. Physical PC and Android/iOS testing are still UNVERIFIED. |
 
 **Verification boundary:** code checkpoint `20c7f4619c9b40f33cb66d3a0ba2e8ec3cf826f6`; CI lookup returned no workflow runs and no combined status checks. The new Playwright assertions are committed but remain **PENDING / UNVERIFIED**. Do not mark PC acceptance checklist #1 COMPLETE based on shortcut implementation alone.
+
+
+## 2026-11-17 — mine realism / coal / performance pass
+
+| Area | Status | Evidence / remaining verification |
+|---|---|---|
+| Five-level mine layout and legacy access | PARTIAL | Added connected secondary haulage drift, cross-cuts and larger chambers; preserves legacy tunnel coordinates. Deterministic source replay found 504 walkable cells, all orthogonally reachable from entrance (3,12). Formal Node BFS test is committed but not run yet. |
+| Coal distribution and reserve | PARTIAL | Added coal-seam-v3 additive deposits: deterministic source replay predicts 104 reachable coal deposits / 20,177 units total; each level has 20–22 deposits / 3,937–4,190 units. Existing save keys and depleted amounts are preserved by additive keys and saved-state precedence. Formal generation tests are committed but not run yet. |
+| Mine visual realism | PARTIAL | Rough/matte coal, additional diagonal timber braces, existing rock texture/rubble/ceiling detail, rail and work lights. More geological variety, cave water/ventilation, equipment props and actual visual review remain. |
+| Mine rendering performance | PARTIAL | Underground scene is no longer rebuilt during surface-only scene refreshes; ore instance buffer/bounds work is batched once per material type. Mine geometry remains instanced and lights capped. Need CI draw-call/frame-time evidence and physical device profiling. |
+| Mine regression / save compatibility | PARTIAL | Added tests for connected tunnels, per-level coal minima, reachability, brace/rock metrics, draw-call/light caps and lazy mine construction. Existing save migration is additive; explicit old-save fixture testing still required. |
+
+**Verification boundary:** code checkpoint `c74f47049a504054f67d6e1880c5aaecc78e08a4`; docs checkpoint `06b1cbb8467cc1e8e0f00f943a756391d909d1f7`. Current GitHub workflow lookup returned no run and no combined status checks. Node/Playwright and physical device performance are **PENDING / UNVERIFIED**. The deterministic figures are a replay of the generation algorithm, not a completed CI test. Do not mark mining or performance acceptance as COMPLETE.
+
+**Next priority loop:** (1) execute mine-system and Playwright regressions; (2) fix the first real failure; (3) inspect captured underground screenshots and verify scale/materials/lighting; (4) profile draw calls, frame time and memory on desktop and mobile; (5) add save fixtures for depleted legacy seams; (6) only then add next mine systems such as ventilation, water management, support wear/collapse, mine carts and underground navigation if they fit the current resource/ownership model.
