@@ -1,6 +1,6 @@
-import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES, CANONICAL_DORONUM_CRYSTAL_MODELS } from "./world3d.js?v=21";
+import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES, CANONICAL_DORONUM_CRYSTAL_MODELS } from "./world3d.js?v=22";
 import { createRuntimeState, ensureItemStacks, addItemStack, allocateEntityID, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, reserveQualifiedItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, TICK_STAGE_ORDER, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState, enqueueSimulationEvent, processSimulationEvents, consumeFixedStepBudget } from "./simulation-core.js?v=7";
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits, auditMineDeposits } from "./terrain-system.js?v=5";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits, auditMineDeposits } from "./terrain-system.js?v=6";
 import { createMineEnvironment, ensureMineEnvironment, tickMineEnvironment, mineSafetyAssessment, toggleMineEquipment, reinforceMineSupports, mineEnvironmentSummary } from "./mine-runtime.js?v=1";
 import { validateGameData } from "./game-data-validation.js?v=3";
 import { CANONICAL_DORONUM_IDS, CANONICAL_INFINITY_DORONUM_ID, INFINITY_REQUIREMENTS, CANONICAL_DORONUM_CATALOG, validateCanonicalDoronumCatalog, auditCanonicalDoronumIntegration, applyDoronumMigration, canonicalItemID } from "./canonical-data.js?v=4";
@@ -1336,6 +1336,8 @@ function updateMineHud(){
  const values={
   "mine-depth-value":S.player.mineLevel+"층 · "+Math.abs(mineFloorY(S.player.mineLevel))+"m",
   "mine-coordinate-value":"X "+S.player.x+" · Z "+S.player.y,
+  "mine-risk-value":summary.risk+"/100",
+  "mine-map-level":"LEVEL "+String(S.player.mineLevel).padStart(2,"0")+" · "+Math.abs(mineFloorY(S.player.mineLevel))+"M",
   "mine-water-value":summary.waterPercent+"%",
   "mine-humidity-value":summary.humidity+"%",
   "mine-gas-value":summary.gas+"%",
@@ -1346,6 +1348,8 @@ function updateMineHud(){
  };
  for(const [id,value] of Object.entries(values)){const el=$(id);if(el)el.textContent=value}
  const risk=$("mine-risk-fill");if(risk)risk.style.width=summary.risk+"%";
+ const riskValue=$("mine-risk-value");if(riskValue)riskValue.textContent=summary.risk+"/100";
+ const mapLevel=$("mine-map-level");if(mapLevel)mapLevel.textContent="LEVEL "+String(S.player.mineLevel).padStart(2,"0")+" · "+Math.abs(mineFloorY(S.player.mineLevel))+"M";
  const support=$("mine-support-fill");if(support)support.style.width=summary.support+"%";
  const water=$("mine-water-fill");if(water)water.style.width=summary.waterPercent+"%";
  const assessment=$("mine-safety-copy");if(assessment)assessment.textContent=summary.message;
