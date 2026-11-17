@@ -11,7 +11,7 @@ const cellKey=(x,z)=>String(x)+":"+String(z);
 const distance=(a,b)=>Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
 const DIRECTIONS=[[1,0],[-1,0],[0,1],[0,-1]];
 const DRAIN_TYPES=new Set(["mineDrainPipe","mineDrainPump","mineWaterTank"]);
-const SUPPORT_X=[5,11,17,23,29,35];
+const SUPPORT_X=[2,8,14,20,26,32];
 
 export function ensureMineInfrastructure(state){
   if(!state||typeof state!=="object")throw new TypeError("mine-state-required");
