@@ -390,3 +390,15 @@ PR #8 remains the separate Godot implementation and was not integrated. PR #9 ov
 - **Main:** `dea761fcf51643e4550dc6a1948cee01b79e1ac2`. **PR #11:** open/draft/unmerged, mergeable false; 380 ahead / 887 behind main from merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`. PR #8 remains separate Godot; PR #9/#10 overlaps were reviewed but not wholesale integrated.
 - This was a virtual one-hour simulation, not a 60-minute elapsed wall-clock soak. Mobile viewport emulation is not physical Android/iOS testing. Physical devices, two-device cloud recovery and actual wall-clock soak remain **UNVERIFIED**.
 - No main merge, deployment, production DB/schema/RLS/function mutation, real-user save change or coin/balance/reward mutation was performed.
+
+
+## 2026-11-17 — desktop keyboard-first usability
+
+- **Code checkpoint:** `20c7f4619c9b40f33cb66d3a0ba2e8ec3cf826f6` (desktop keyboard controls, HUD legend and E2E assertions).
+- Expanded desktop shortcuts: WASD/arrow movement, E interaction/mining, Space jump, Q eat, R drink, B/O/I/T/J panel navigation, V/M camera/map, 4/5 tool selection, X building rotation, +/- zoom, C recenter, F fullscreen, P pause, [/] simulation speed and H help. Escape now closes an open modal or panel and cancels placement; repeated one-shot keydown events are ignored. Text-entry fields retain normal typing and focused buttons retain native Space/Enter activation.
+- Resolved the existing F shortcut collision: O opens factory overview; F remains fullscreen.
+- Added a persistent in-world keyboard legend and desktop-focused keycap styling. Mobile touch controls remain available.
+- Extended Playwright browser regression to cover Q/R inventory and survival effects, B/I panel navigation, Escape close, and E underground mining. These assertions are committed but are **not yet verified**.
+- **CI status:** the GitHub commit-workflow lookup for the current code checkpoint returned no workflow runs, and the combined commit status returned no checks. Do not treat this as a pass; Node/Playwright validation remains **PENDING / UNVERIFIED** until a real CI run reports terminal success.
+- **Remaining:** run the full factory validation workflow and fix any first failing assertion; manually verify desktop keyboard usability in a physical desktop browser. Physical PC and mobile device testing remains separate from browser emulation.
+- No main merge, deployment, production DB/schema/RLS/function mutation, real-user save change or balance/reward mutation was performed.
