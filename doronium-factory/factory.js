@@ -805,7 +805,9 @@ function transferBuildingCargo(source,target,sourceField,fromType,toType,toID){
   targetWarehouseStock:target?.warehouseStock===undefined?undefined:structuredClone(target.warehouseStock)
  };
  const tx=nextCargoTransactionID(source,"LOGISTICS");
- const moved=transferCustody(S.ownershipLedger,{transactionID:tx.transactionID,stackID,quantity,toType,toID:String(toID||""),expectedFromType:fromType,expectedFromID:uid});
+ const moved=toType==="WAREHOUSE"
+  ?storeWarehouseCustody({ledger:S.ownershipLedger,warehouse:target,stackID,itemID:canonicalItemID(item.id),quantity,metadata:item.meta||{},transactionID:tx.transactionID,expectedFromType:fromType,expectedFromID:uid,storedTick:S.tick})
+  :transferCustody(S.ownershipLedger,{transactionID:tx.transactionID,stackID,quantity,toType,toID:String(toID||""),expectedFromType:fromType,expectedFromID:uid});
  if(!moved){source.custodyTransferSequence=snapshot.sourceSequence;return false}
  if(toType==="CONVEYOR"){
   target.item={...item,custodyStackID:stackID};target.moveTimer=.45;target.logisticsStatus="MOVING";
@@ -817,8 +819,7 @@ function transferBuildingCargo(source,target,sourceField,fromType,toType,toID){
    synthetic:metadata.synthetic===true,packaging:metadata.packaging||null,createdTick:Math.max(0,Number(S.tick)||0)});
   syncLegacyInventory(S);
  }else if(toType==="WAREHOUSE"){
-  const stored=storeWarehouseCustody({ledger:S.ownershipLedger,warehouse:target,stackID,itemID:canonicalItemID(item.id),quantity,metadata:item.meta||{},transactionID:tx.transactionID,expectedFromType:fromType,expectedFromID:uid,storedTick:S.tick});
-  if(!stored){restoreCargoMutation(source,target,sourceField,snapshot);return false}
+  // The warehouse custody transaction and persisted stock projection were committed above.
  }else{
   restoreCargoMutation(source,target,sourceField,snapshot);return false;
  }
