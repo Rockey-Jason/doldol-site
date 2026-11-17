@@ -1437,7 +1437,7 @@ function updateMineHud(){
  const cart=$("mine-cart-button");if(cart)cart.disabled=!summary.cartAvailable;
  const drainage=mineDrainageSummary(S,S.player.mineLevel),rail=mineRailSummary(S,S.player.mineLevel),supports=supportSectionsSummary(S,S.player.mineLevel);
  const drainStatus=$("mine-drain-status");if(drainStatus)drainStatus.textContent=drainage.connectedNetworks+"개 연결망 · 펌프 "+drainage.connectedPumps+"개 · 탱크 "+drainage.tankCount+"개 · "+Math.round(drainage.storedLitres)+" / "+Math.round(drainage.capacityLitres)+"L";
- const railStatus=$("mine-rail-status");if(railStatus)railStatus.textContent=rail.stationCount+"개 역 · 화물 "+rail.cargoCount+"개 · "+(rail.enabled?"운행 중":"정지");
+ const railStatus=$("mine-rail-status");if(railStatus)railStatus.textContent=rail.stationCount+"개 역 · 적재 "+rail.cargoCount+"개 · 배송 "+rail.delivered+"건 · "+(rail.enabled?"운행 중":"정지");
  const railButton=$("mine-rail-button");if(railButton){railButton.textContent=rail.enabled?"자동 광차 정지 · L":"자동 광차 시작 · L";railButton.disabled=!rail.canRun&&!rail.enabled}
  const supportSummary=$("mine-support-summary");if(supportSummary)supportSummary.textContent="구간 지지대 · 정상 "+supports.healthy+" · 주의 "+supports.warning+" · 폐쇄 "+supports.closed;
  const localSupport=nearestMineSupport(S,S.player.mineLevel,playerMotion.x,playerMotion.z);
