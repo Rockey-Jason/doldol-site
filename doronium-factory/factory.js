@@ -1323,8 +1323,15 @@ function drawMineMap(){
   const deposit=S.mineDeposits?.[mineDepositKey(S.player.mineLevel,x,z)];
   if(deposit&&deposit.amount>0){ctx.fillStyle=deposit.type==="coal"?"#252b33":deposit.type==="ironOre"?"#a5b1bd":deposit.type==="copperOre"?"#d48b5d":deposit.type==="diamond"?"#84e6f3":"#d7bb79";ctx.fillRect(x*cw+1,z*ch+1,Math.max(2,cw-2),Math.max(2,ch-2))}
  }
+ // Lift symbols: the surface-return shaft and the descent shaft remain visible on every level.
+ for(const [x,z,label,color] of [[3,12,"E","#77d9c3"],[36,12,"D","#f1c36b"]]){
+  const px=(x+.5)*cw,pz=(z+.5)*ch;
+  ctx.fillStyle=color;ctx.fillRect(px-4,pz-4,8,8);
+  ctx.fillStyle="#07131d";ctx.font="bold 7px sans-serif";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(label,px,pz+.2);
+ }
  const playerX=clamp(playerMotion.x,0,MINE_W-1),playerZ=clamp(playerMotion.z,0,MINE_H-1);
- ctx.fillStyle="#f5d78a";ctx.beginPath();ctx.arc((playerX+.5)*cw,(playerZ+.5)*ch,Math.max(3,cw*.38),0,Math.PI*2);ctx.fill();
+ ctx.strokeStyle="#fff0c4";ctx.lineWidth=1.5;ctx.beginPath();ctx.arc((playerX+.5)*cw,(playerZ+.5)*ch,Math.max(4,cw*.52),0,Math.PI*2);ctx.stroke();
+ ctx.fillStyle="#f5d78a";ctx.beginPath();ctx.arc((playerX+.5)*cw,(playerZ+.5)*ch,Math.max(2,cw*.3),0,Math.PI*2);ctx.fill();
  ctx.strokeStyle="#f5d78a";ctx.lineWidth=1.2;ctx.strokeRect(2,2,w-4,h-4);
 }
 function updateMineHud(){
