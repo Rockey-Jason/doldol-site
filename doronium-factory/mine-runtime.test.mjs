@@ -27,6 +27,9 @@ test("legacy saves gain five environment records without losing existing setting
   assert.equal(env[3].pumpActive,true);
   assert.equal(env[3].supportIntegrity,72);
   assert.equal(env[1].supportIntegrity,100);
+  const retainedLevel=env[3];
+  ensureMineEnvironment(state);
+  assert.equal(state.mineEnvironment[3],retainedLevel,"normalizing a save must preserve live environment references instead of cloning each tick");
 });
 test("ventilation reduces gas while an inactive fan allows it to accumulate",()=>{
   const state={player:{layer:"mine",mineLevel:1},mineEnvironment:createMineEnvironment()};
