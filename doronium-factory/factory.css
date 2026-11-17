@@ -300,3 +300,55 @@ html,body{width:100%;height:100%;min-height:100%;overflow:hidden;overscroll-beha
 .world-help{gap:6px 12px;max-width:min(680px,calc(100% - 24px));padding:10px 12px;border:1px solid #3b6278;border-radius:10px;background:linear-gradient(135deg,#071b2bea,#0d2a3bea);box-shadow:0 12px 35px #0005;backdrop-filter:blur(12px)}
 .world-help b{color:#8fe7e2;font-size:10px;letter-spacing:.3px}
 @media(min-width:761px){.world-help{display:flex;flex-wrap:wrap;align-items:center}.world-help span{white-space:nowrap}}
+
+
+/* Mine operations: stratigraphy, safe-air/water controls and compact layer map */
+.mine-ops-card{display:none;position:absolute;z-index:8;top:62px;right:13px;width:min(278px,48vw);padding:11px;border:1px solid #647f91a8;border-radius:14px;background:linear-gradient(150deg,#081a29ed,#0b2434ed);box-shadow:0 12px 34px #0008;backdrop-filter:blur(14px);color:#dbeaf0;pointer-events:auto;gap:8px}
+.mine-ops-card.active{display:grid;animation:minehud-in .2s ease-out}
+@keyframes minehud-in{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:none}}
+.mine-ops-heading,.mine-depth-row,.mine-risk-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.mine-ops-heading small{display:block;color:#7ea7b8;font-size:7px;letter-spacing:1.4px}
+.mine-ops-heading strong{display:block;margin-top:3px;font-size:11px}
+.mine-ops-heading>span{padding:5px 7px;border:1px solid #3d8c70;border-radius:7px;background:#10382e;color:#8cf0bf;font-size:8px;font-weight:800;white-space:nowrap}
+.mine-ops-heading>span[data-status="CAUTION"]{border-color:#96713d;background:#382d1a;color:#f2ca78}
+.mine-ops-heading>span[data-status="EVACUATE"]{border-color:#a54b4b;background:#401f25;color:#ffaaa0}
+.mine-depth-row{padding:7px 8px;border-radius:8px;background:#172d3a}
+.mine-depth-row b{color:#f1d59a;font-size:10px}.mine-depth-row span{color:#9bb3c1;font-size:8px}
+.mine-risk-row span,.mine-risk-row b{font-size:8px}.mine-risk-row b{color:#9fe0ca}
+.mine-risk-track,.mine-mini-track{height:5px;overflow:hidden;border-radius:9px;background:#07121d;border:1px solid #45607355}
+.mine-risk-track i,.mine-mini-track i{display:block;height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#58c99d,#eac26c,#dc6d68);transition:width .25s ease}
+.mine-env-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.mine-env-grid>div{padding:6px 7px;border:1px solid #324c5d;border-radius:8px;background:#0a1c2a}
+.mine-env-grid small{display:block;color:#8fa9b8;font-size:7px}
+.mine-env-grid b{display:block;margin-top:3px;color:#e8f2f3;font-size:10px;font-variant-numeric:tabular-nums}
+.mine-env-grid .mine-mini-track{margin-top:5px}
+.mine-ops-card>p{margin:0;color:#a9c3cf;font-size:8px;line-height:1.45}
+.mine-control-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.mine-control-grid button{min-height:29px;padding:5px 7px;border:1px solid #446174;border-radius:7px;background:linear-gradient(145deg,#18374a,#102738);color:#d8e9ed;font-size:8px;font-weight:700}
+.mine-control-grid button:hover{border-color:#76c7c7;background:#1a4852}
+.mine-control-grid button:disabled{opacity:.4;cursor:not-allowed}
+.mine-control-grid .mine-map-action{grid-column:1/-1;border-color:#8b7446;color:#f0d69d}
+.mine-map-wrap{display:none;position:absolute;z-index:8;left:13px;bottom:76px;width:min(230px,42vw);padding:9px;border:1px solid #597487;border-radius:12px;background:#071a29eF;box-shadow:0 10px 28px #0008;backdrop-filter:blur(12px);pointer-events:auto}
+.mine-map-wrap.visible{display:block;animation:minehud-in .18s ease-out}
+.mine-map-heading{display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px}
+.mine-map-heading strong{font-size:9px;color:#e7f1f3}.mine-map-heading span{font-size:6px;letter-spacing:1px;color:#84a9b9}
+#mine-map-canvas{display:block;width:100%;height:auto;aspect-ratio:5/3;border:1px solid #344e60;border-radius:6px;image-rendering:pixelated}
+.mine-map-legend{display:flex;justify-content:space-between;gap:6px;margin-top:6px;color:#99b2c1;font-size:7px}
+.mine-map-legend span{display:flex;align-items:center;gap:4px}
+.mine-map-legend i{width:7px;height:7px;display:inline-block;border-radius:50%}
+.mine-map-legend .player-dot{background:#f5d78a}.mine-map-legend .coal-dot{background:#252b33;border:1px solid #8d9aa2}.mine-map-legend .ore-dot{background:#86d5e3}
+@media(max-width:760px){
+ .mine-ops-card{top:52px;right:7px;width:min(205px,52vw);padding:8px;gap:6px}
+ .mine-ops-heading strong{font-size:9px}.mine-ops-heading small{font-size:6px}
+ .mine-ops-heading>span{padding:4px 5px;font-size:7px}
+ .mine-depth-row{padding:5px 6px}.mine-depth-row b{font-size:9px}.mine-depth-row span{font-size:7px}
+ .mine-env-grid{gap:5px}.mine-env-grid>div{padding:5px}
+ .mine-control-grid{gap:4px}.mine-control-grid button{min-height:27px;padding:4px 5px;font-size:7px}
+ .mine-ops-card>p{font-size:7px}
+ .mine-map-wrap{left:7px;bottom:82px;width:min(190px,47vw);padding:7px}
+ .mine-map-heading strong{font-size:8px}.mine-map-legend{font-size:6px}
+}
+@media(max-width:390px){
+ .mine-ops-card{width:188px;max-height:calc(100% - 160px);overflow:auto}
+ .mine-map-wrap{width:165px;bottom:84px}
+}
