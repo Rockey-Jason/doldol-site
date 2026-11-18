@@ -472,3 +472,61 @@ No main merge, deployment, production database change, or live-user save/economy
 **Code checkpoint:** `6b441d2cc08ef843eb8632c2587095d3f43b1f62`. **Documentation checkpoint:** implementation log `798a90d5a1a5931ca6422c393a33e7d00f02a1ef`.
 
 **Acceptance state:** feature code and test coverage are in the PR branch, but no area is marked COMPLETE until GitHub Actions returns successful Node and Playwright results and device-specific performance is reviewed. Current workflow-run and combined-status queries returned no entries; treat all automated assertions as **PENDING / UNVERIFIED**. PR #11 remains draft/open/unmerged. No main merge or deployment.
+
+
+
+## 2026-11-18 — updated 12-stage and 20-item evidence after mine regression repairs
+
+**Code checkpoint:** fb00c3a661c93c256265869a3c7834623d239885 on PR #11. The rail detour now has a west cross-cut, and empty support snapshots backfill their 55 persisted local sections. The live facility catalog is 52 unique IDs, including all four mine infrastructure facilities.
+
+### 12-stage master roadmap
+
+| Stage | Status | Current evidence / remaining acceptance gate |
+|---:|---|---|
+| 1. Audit, data, dependencies and save foundation | PARTIAL | Existing save migrations and runtime audits exist; all owner domains and two-device recovery are not authoritative end-to-end. |
+| 2. World and terrain | PARTIAL | Current world is still 192×160 tiles, not 2,048m×2,048m; unit migration, streaming and unload behavior remain. Natural Doronium veins remain prohibited. |
+| 3. Player, exploration, survival and mining | PARTIAL | 3D first-/third-person, touch controls, survival and mine tools exist; complete campaign/death/recovery and physical-device regression remain. |
+| 4. Flattening and construction | PARTIAL | Footprint checks, foundations, escrow and rollback helpers exist; all ports, blueprints, dismantle and crash recovery are incomplete. |
+| 5. Items and logistics | PARTIAL / CRITICAL | Several inventory, active-job, machine-output and conveyor transitions are journaled; not every owner domain is driven by one authoritative transaction boundary. |
+| 6. Power | PARTIAL | Network allocation and batteries exist; stable network IDs, calibrated transmission loss, complete device integration and diagnostics remain. |
+| 7. Fluids | PARTIAL | Connected water drainage and generic six-fluid helpers exist; OIL, PETROLEUM, MOLTEN_METAL, LAVA and CHEMICAL are not fully live through extraction, recipes and conservation. |
+| 8. Machine states, failure and maintenance | PARTIAL | Shared states and several live failure profiles/repair paths exist; every machine/profile and failure recovery is not covered. |
+| 9. Production, research and skills | PARTIAL | Production and 20 skill nodes exist; all skill effects are not live, and the current research catalog has 19 entries versus the master target of 18. |
+| 10. Canonical Doronium and Infinity | PARTIAL / CRITICAL | Fifteen canonical IDs/models and seven-stage fusion logic exist; manifest is not the sole recipe/model source and full save/restart/interlock recovery remains. |
+| 11. Shipping, contracts and economy | PARTIAL | Sample contracts, packaging and shipment custody exist; full contract catalog, route-derived risk and server-authoritative settlement remain. |
+| 12. Save, security, performance and release | PARTIAL / UNVERIFIED | Local/cloud save and owner-scoped CAS/RLS exist; two-device conflict, physical devices, memory soak, 60-minute wall-clock test and release regression remain. |
+
+### 20 acceptance checklist
+
+| # | Acceptance item | Status | Evidence / blocker |
+|---:|---|---|---|
+| 1 | PC full playthrough | PARTIAL | Desktop WebGL smoke coverage exists; complete campaign to ending is not verified. |
+| 2 | Mobile full playthrough | UNVERIFIED | Mobile viewport/touch emulation exists; no physical Android/iOS playthrough. |
+| 3 | First-/third-person switching | PARTIAL | View modes exist; full campaign/input regression remains. |
+| 4 | 2,048m×2,048m world | NOT IMPLEMENTED | Current world remains 192×160 tiles. |
+| 5 | Flattening and foundations | PARTIAL | Core placement rules exist; all footprints, ports, rollback and dismantle cases remain. |
+| 6 | Underground mining | PARTIAL | Mine geology, local supports, drainage and automated miners exist; current browser rerun has not yet reached the mining output assertion. |
+| 7 | Fifteen canonical inputs | PARTIAL | Fifteen IDs/models validate, but not all live recipes/research/UI/buildings use one canonical manifest. |
+| 8 | No item duplication or loss | PARTIAL / CRITICAL | Several transfers are journaled; conveyors-to-machines, drops, independent warehouse, shipments, demolition, Fusion and recovery are not globally authoritative. |
+| 9 | Conveyors and automatic mining | PARTIAL | Automatic mining and mine rail detouring are implemented; complete logistics asset catalog, deadlock recovery and all custody transitions remain. |
+| 10 | Power and batteries | PARTIAL | kW/kJ allocation and battery runtime exist; transmission loss and full network diagnostics remain. |
+| 11 | Six fluids, pressure and temperature | PARTIAL | Water drainage is live; five other fluid paths and full conservation remain. |
+| 12 | Machine states, failure and maintenance | PARTIAL | Shared states and several profiles exist; all machines and failure paths are not verified. |
+| 13 | Research 18 / skills 20 | PARTIAL | Twenty skill nodes exist; only some effects are live and research count remains 19 versus target 18. |
+| 14 | Seven-stage Fusion | PARTIAL | Seven-stage runtime exists; complete interlocks and restart recovery remain. |
+| 15 | Exactly one Infinity output | PARTIAL | Exactly-one settlement paths are tested in earlier checkpoints; current authoritative custody/reload recovery is incomplete. |
+| 16 | Cloud save and recovery | PARTIAL | Owner-scoped CAS and local recovery exist; two-device conflicts and process-restart gameplay recovery remain. |
+| 17 | Server authority and security | PARTIAL | RLS/CAS protections exist; gameplay reward/economy authority and full abuse review remain. |
+| 18 | 60-minute wall-clock test | UNVERIFIED | No real elapsed 60-minute soak has been run. |
+| 19 | Physical PC/mobile performance | UNVERIFIED | In-game diagnostics and browser emulation exist; physical device measurements have not been collected. |
+| 20 | Start-to-ending full regression | PARTIAL / UNVERIFIED | Browser smoke covers many systems but is not a complete campaign-to-ending acceptance run. |
+
+**CI checkpoint:** static validation on run [44216745235](https://github.com/Rockey-Jason/doldol-site/actions/runs/44216745235) is SUCCESS (7 + 145 + 26 tests = 178 passed). Browser regression was still IN_PROGRESS at the time of this matrix update; it must not be counted as a pass. All 12 stages remain PARTIAL or UNVERIFIED; no checklist item is promoted to COMPLETE.
+
+### Branch integration review
+
+- main is 00dc4c9d1f3b908a4f9ef7eb17c8da996ac0f79f; its latest commit changes only doronium-factory/factory.js to improve the lab popup and research countdown. PR #11 has a structurally different, much larger factory.js and does not contain the same openBuildingManagement implementation, so the main patch was not blindly cherry-picked; an adapted research-UI port remains for a later isolated regression pass.
+- PR #11 is open/draft/unmerged, 571 commits ahead and 892 behind main from merge base 26e88058b6d416d79459fee107aff4a5beb3d7e3; mergeable is false. Do not rebase/merge wholesale.
+- PR #9 and #10 each overlap PR #11 in five files (factory.js, simulation-core.js, simulation-core.test.mjs, plus workflow/E2E for #9 and index.html/world3d.js for #10). They are divergent and remain unmerged; no wholesale cherry-pick.
+- PR #8 is a separate Godot branch with no changed-file overlap; it is not merged into the selected Three.js/WebGL architecture.
+- No main merge, deployment, production DB/schema/RLS/function mutation or live-user save/economy change was performed.
