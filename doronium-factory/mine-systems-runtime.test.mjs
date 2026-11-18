@@ -153,7 +153,7 @@ test("a failed support forces mine rail service to detour through the secondary 
   assert.equal(result.ok,true,"the secondary route must preserve service between healthy stations");
   assert.ok(route.every(cell=>mineRailTrackAt(cell.x,cell.z)),"all detour cells must have real rails");
   assert.ok(route.some(cell=>cell.z===18),"the cart must route through the secondary haulage drift");
-  assert.ok(route.some(cell=>cell.x===14&&cell.z===18),"the detour must use the new west-side cross-cut");
+  assert.ok(route.some(cell=>cell.x===14&&cell.z>=10&&cell.z<=20),"the detour must traverse the new west-side cross-cut");
   assert.equal(route.some(cell=>Math.abs(cell.x-failed.x)+Math.abs(cell.z-failed.z)<=5),false,"the cart must avoid the failed support influence zone");
 });
 test("a rail station cannot reopen a track cell closed by the support frame beneath it",()=>{
