@@ -148,10 +148,12 @@ test("a failed support forces mine rail service to detour through the secondary 
   ];
   failed.integrity=0;failed.warning=true;failed.closed=true;
   ensureMineInfrastructure(state).closures["1:"+failed.x+":"+failed.z]=true;
+  assert.equal(mineRailTrackAt(14,18),true,"the west-side cross-cut must be a real rendered rail connector");
   const result=setMineRailEnabled(state,1,true),route=state.mineInfrastructure.railRoutes[1].path;
   assert.equal(result.ok,true,"the secondary route must preserve service between healthy stations");
   assert.ok(route.every(cell=>mineRailTrackAt(cell.x,cell.z)),"all detour cells must have real rails");
   assert.ok(route.some(cell=>cell.z===18),"the cart must route through the secondary haulage drift");
+  assert.ok(route.some(cell=>cell.x===14&&cell.z===18),"the detour must use the new west-side cross-cut");
   assert.equal(route.some(cell=>Math.abs(cell.x-failed.x)+Math.abs(cell.z-failed.z)<=5),false,"the cart must avoid the failed support influence zone");
 });
 test("a rail station cannot reopen a track cell closed by the support frame beneath it",()=>{

@@ -1,7 +1,7 @@
 /* DORONIUM FACTORY — topographic 3D world, underground mine and industrial renderer */
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, mineMainDriftZ, biomeGroundColor } from "./terrain-system.js?v=6";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, mineMainDriftZ, biomeGroundColor } from "./terrain-system.js?v=7";
 import { mineGeologyAt, mineOreProfile } from "./mine-runtime.js?v=4";
-import { mineVeinSegments } from "./mine-systems-runtime.js?v=8";
+import { mineVeinSegments } from "./mine-systems-runtime.js?v=9";
 let THREE = null;
 try { THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"); }
 catch (error) { console.warn("Three.js CDN unavailable; using the compatibility renderer.", error); }
@@ -525,7 +525,7 @@ export function createWorld3D(canvas, getState) {
         railSegments+=2;
         if(p.x%2===0)put(railSleepers,x,floorY+.25,z,2.2,.9,12.4);
       }
-      if((p.x===16||p.x===27)&&p.z>=10&&p.z<=20){
+      if((p.x===14||p.x===16||p.x===27)&&p.z>=10&&p.z<=20){
         for(const side of [-1,1])put(railLines,x+side*4.5,floorY+1.15,z,1.15,1.2,32.1,0,Math.PI/2,0);
         railSegments+=2;
         if(p.z%2===0)put(railSleepers,x,floorY+.25,z,12.4,.9,2.2,0,Math.PI/2,0);

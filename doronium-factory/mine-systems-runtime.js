@@ -1,6 +1,6 @@
 /* DORONIUM FACTORY — connected mine infrastructure, local support safety,
    multi-station rail haulage and route finding. Pure deterministic runtime. */
-import { MINE_W, MINE_H, mineMainDriftZ, mineTunnelAt } from "./terrain-system.js?v=6";
+import { MINE_W, MINE_H, mineMainDriftZ, mineTunnelAt } from "./terrain-system.js?v=7";
 
 const LEVELS=5;
 const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
@@ -240,8 +240,8 @@ export function mineRailTrackAt(x,z){
   const gx=integer(x,-1),gz=integer(z,-1);
   if(!mineTunnelAt(gx,gz))return false;
   // Exact rail centerlines: the winding main drift, secondary haulage drift,
-  // and the two rendered cross-cut connectors.
-  return gz===mineMainDriftZ(gx)||gz===18||((gx===16||gx===27)&&gz>=10&&gz<=20);
+  // and the three rendered cross-cut connectors.
+  return gz===mineMainDriftZ(gx)||gz===18||((gx===14||gx===16||gx===27)&&gz>=10&&gz<=20);
 }
 export function mineRailStations(state,level){
   return (state.buildings||[]).filter(b=>b?.type==="mineRailStation"&&b.layer==="mine"&&integer(b.mineLevel,1)===integer(level,1))

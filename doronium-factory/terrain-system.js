@@ -91,7 +91,7 @@ export function mineTunnelAt(x,z){
     horizontal(17,22,26)||
     // A second haulage drift, cross-cuts and larger working chambers create
     // a connected mine network instead of one long, uniform corridor.
-    horizontal(18,5,35)||vertical(16,10,20)||vertical(27,10,20)||
+    horizontal(18,5,35)||vertical(14,10,20)||vertical(16,10,20)||vertical(27,10,20)||
     chamber(11,8,2.5,2.2)||chamber(16,8,3.5,3.0)||
     chamber(22,9,2.4,2.3)||chamber(27,8,3.2,2.8)||
     chamber(32,17,2.6,2.5)||chamber(5,14,2.0,2.2);
