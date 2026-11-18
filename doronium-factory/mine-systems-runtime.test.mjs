@@ -23,6 +23,14 @@ test("legacy saves receive local support sections and rail state without losing 
   assert.equal(infra.railRoutes[3].enabled,false);
   assert.equal(state.buildings[0].uid,"legacy");
 });
+test("support lookup backfills an empty infrastructure snapshot before finding the nearest section",()=>{
+  const state=stateFixture();
+  state.mineInfrastructure={version:1,supports:{},closures:{},events:[],railRoutes:{}};
+  const nearest=nearestMineSupport(state,1,3,12);
+  assert.ok(nearest,"an empty persisted support map must not make the mine appear support-free");
+  assert.equal(mineSupportSections(state,1).length,11);
+  assert.equal(Object.keys(state.mineInfrastructure.supports).length,55);
+});
 test("support condition is local to each tunnel section and repairs can reopen a closed route",()=>{
   const state=stateFixture(),section=nearestMineSupport(state,1,5,12).section;
   section.integrity=4;section.warning=true;section.closed=true;

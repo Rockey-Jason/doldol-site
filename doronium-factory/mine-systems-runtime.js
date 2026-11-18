@@ -84,10 +84,17 @@ export function ensureMineInfrastructure(state){
 
 export function mineSupportKey(level,x,z){return keyOf(level,x,z)}
 export function mineSupportSections(state,level){
-  const existing=state?.mineInfrastructure;
-  const systems=existing&&typeof existing==="object"&&existing.supports&&typeof existing.supports==="object"
+  const targetLevel=clamp(integer(level,1),1,LEVELS),existing=state?.mineInfrastructure;
+  let systems=existing&&typeof existing==="object"&&existing.supports&&typeof existing.supports==="object"
     ? existing : ensureMineInfrastructure(state);
-  return Object.values(systems.supports).filter(section=>Number(section.level)===integer(level));
+  const missingSupport=SUPPORT_CELLS.some(({x,z})=>{
+    const section=systems.supports[keyOf(targetLevel,x,z)];
+    return !section||typeof section!=="object"||!Number.isFinite(Number(section.integrity));
+  });
+  if(missingSupport)systems=ensureMineInfrastructure(state);
+  // Keep this hot lookup bounded to the eleven sections on the requested
+  // level; do not scan/normalize all 55 sections on every safety query.
+  return SUPPORT_CELLS.map(({x,z})=>systems.supports[keyOf(targetLevel,x,z)]).filter(Boolean);
 }
 export function nearestMineSupport(state,level,x,z){
   const sections=mineSupportSections(state,level);
