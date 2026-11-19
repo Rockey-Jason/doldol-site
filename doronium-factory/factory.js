@@ -2604,7 +2604,9 @@ if(E2E_MODE){
     {uid:"SOAK-PUMP",type:"mineDrainPump",layer:"mine",mineLevel:1,x:5,y:12,status:"RUNNING",rateLps:24},
     {uid:"SOAK-PIPE-A",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:6,y:12,status:"IDLE"},
     {uid:"SOAK-PIPE-B",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:7,y:12,status:"IDLE"},
-    {uid:"SOAK-TANK",type:"mineWaterTank",layer:"mine",mineLevel:1,x:8,y:12,status:"IDLE",capacityL:8000,waterStoredL:0},
+    {uid:"SOAK-PIPE-C",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:8,y:12,status:"IDLE"},
+    {uid:"SOAK-PIPE-D",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:9,y:12,status:"IDLE"},
+    {uid:"SOAK-TANK",type:"mineWaterTank",layer:"mine",mineLevel:1,x:9,y:11,status:"IDLE",capacityL:8000,waterStoredL:0},
     {uid:"SOAK-RAIL-A",type:"mineRailStation",layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5),status:"IDLE"},
     {uid:"SOAK-RAIL-B",type:"mineRailStation",layer:"mine",mineLevel:1,x:35,y:mineMainDriftZ(35),status:"IDLE"},
     {uid:"SOAK-MINER",type:"minerIron",layer:"mine",mineLevel:1,x:4,y:mineMainDriftZ(4)-1,status:"PAUSED_OUTPUT",output:{id:"ITEM_IRON_ORE",qty:2,meta:{quality:90,purity:88,synthetic:false}}}

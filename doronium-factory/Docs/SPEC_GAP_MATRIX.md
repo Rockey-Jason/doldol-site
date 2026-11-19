@@ -549,3 +549,9 @@ No main merge, deployment, production database change, or live-user save/economy
 - The direct-movement safety contract test passed because execution advanced beyond its assertion at line 419. The browser run did not reach automatic mining (line 642), so automatic drill output remains UNVERIFIED.
 - A diagnostic-only fixture update now exposes five independent virtual-soak checks and includes the full snapshot in the Playwright assertion message. The next CI run must identify and then fix the failing runtime/fixture invariant; no soak pass is claimed.
 - All 12 roadmap stages remain PARTIAL or UNVERIFIED; physical PC/mobile, real 60-minute soak, and full campaign ending remain UNVERIFIED.
+
+## 2026-11-19 combined mine-network regression correction
+
+- The virtual mine soak failure was traced to a test fixture placing a solid water tank at `(8,12)`, an orthogonal clearance cell required by the diagonal rail centerline transition `(8,13)→(9,12)`. The rail path's collision rejection was correct.
+- The fixture now moves the tank to `(9,11)` and extends the low-profile pipe chain through `(8,12)` and `(9,12)`. A new unit test checks both continuous pump/pipe/tank connectivity and a valid two-station rail route in the same mine.
+- New CI pending. The previous browser run verified the direct-movement safety assertion but did not pass the virtual soak; automatic miner output and later browser scenarios remain unverified until the new run reaches them.

@@ -78,6 +78,29 @@ test("water only drains through a continuous pump-pipe-tank network",()=>{
   assert.ok(state.mineEnvironment[1].waterDepth<.5);
   assert.equal(mineDrainageSummary(state,1).connectedNetworks,1);
 });
+test("connected drainage pipes can cross a rail centerline while the tank stays outside rail clearance",()=>{
+  const state=stateFixture();
+  state.mineEnvironment[1].pumpActive=true;
+  state.mineEnvironment[1].waterDepth=.45;
+  state.buildings=[
+    {uid:"pump",type:"mineDrainPump",layer:"mine",mineLevel:1,x:5,y:12,status:"RUNNING",rateLps:24},
+    {uid:"pipe-a",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:6,y:12},
+    {uid:"pipe-b",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:7,y:12},
+    {uid:"pipe-c",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:8,y:12},
+    {uid:"pipe-d",type:"mineDrainPipe",layer:"mine",mineLevel:1,x:9,y:12},
+    {uid:"tank",type:"mineWaterTank",layer:"mine",mineLevel:1,x:9,y:11,capacityL:8000,waterStoredL:0},
+    {uid:"station-a",type:"mineRailStation",layer:"mine",mineLevel:1,x:5,y:mineMainDriftZ(5)},
+    {uid:"station-b",type:"mineRailStation",layer:"mine",mineLevel:1,x:35,y:mineMainDriftZ(35)}
+  ];
+  assert.equal(mineDrainageNetworks(state,1)[0].connected,true);
+  const rail=setMineRailEnabled(state,1,true);
+  assert.equal(rail.ok,true,JSON.stringify(rail));
+  assert.equal(mineRailSummary(state,1).enabled,true);
+  const water=tickMineDrainage(state,.1);
+  assert.equal(water.results.length,1);
+  assert.equal(water.results[0].litres,2.4);
+});
+
 test("disconnected pipe gaps prevent pumping and no water storage is invented",()=>{
   const state=stateFixture();
   state.mineEnvironment[1].pumpActive=true;state.mineEnvironment[1].waterDepth=.4;
