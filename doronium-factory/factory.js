@@ -2732,9 +2732,17 @@ if(E2E_MODE){
    return {blocked:deposit.amount===before&&itemCount("stone")===stoneBefore,depositBefore:before,depositAfter:deposit.amount,stoneBefore,stoneAfter:itemCount("stone"),assessment:mineSafetyAssessment(env)};
   },
   setupMiningTest(){
-   S=freshState();S.player={...S.player,x:8,y:14,viewMode:"first",layer:"mine",mineLevel:1,yaw:0,pitch:-.35};S.survival={health:100,hunger:100,thirst:100};
+   S=freshState();S.player={...S.player,x:8,y:14,viewMode:"first",layer:"mine",mineLevel:1,yaw:0,pitch:0};S.survival={health:100,hunger:100,thirst:100};
    const deposit=S.mineDeposits["1:8:12"];deposit.amount=12;S.activeTool="pickaxe";
-   playerMotion={x:8,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.35,path:[],moving:false,facing:0,onArrive:null};
+   playerMotion={x:8,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:0,path:[],moving:false,facing:0,onArrive:null};
+   // Aim at the center of a real rendered stone instance (the second
+   // non-coal vein instance), not an arbitrary pitch that can point past it.
+   const eye={x:playerMotion.x*32,y:mineFloorY(S.player.mineLevel)+22+(Number(playerMotion.y)||0),z:playerMotion.z*32};
+   const target={x:deposit.x*32+3,y:Number(deposit.depthY)+1,z:deposit.z*32+4};
+   const dx=target.x-eye.x,dy=target.y-eye.y,dz=target.z-eye.z;
+   playerMotion.yaw=Math.atan2(-dx,-dz);
+   playerMotion.pitch=Math.atan2(dy,Math.hypot(dx,dz));
+   S.player.yaw=playerMotion.yaw;S.player.pitch=playerMotion.pitch;
    selectedBuild=null;selectedBuilding=null;world3d.center(8,14);renderAll();return structuredClone(S)
   },
   inspectMineTargetForTest(){return world3d.pickTarget(190)},
