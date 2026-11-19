@@ -572,3 +572,8 @@ No main merge, deployment, production database change, or live-user save/economy
 - Run [44440742347](https://github.com/Rockey-Jason/doldol-site/actions/runs/44440742347): static checks all SUCCESS (7/7 validation groups, 145 core tests, 27 mine tests). Combined drainage/rail virtual-hour soak passed with exact two-ore delivery and 8,000L storage.
 - Browser test then found that `updateMineHud()` overwrote the map selection status, leaving `석재 · 4` instead of an explicit mineral/remaining-count/route-length label. It now preserves `광물명 · 잔량개 · 거리칸 경로` and Playwright checks that full format. Factory cache version v71.
 - New CI pending; automatic miner output and subsequent browser checks remain unverified.
+
+## 2026-11-19 manual mine aim regression
+
+- Run [44441201729](https://github.com/Rockey-Jason/doldol-site/actions/runs/44441201729): static checks passed 7/7, core 145/145, mine 27/27. Browser passed the virtual-hour mine soak and map guidance, then manual mining failed because the test fixture pitch was positive (looking up) while the ore was below the eye line.
+- Test setup now uses downward pitch `-0.35` and asserts the exact raycast target before clicking Use. Factory cache version v72. New browser CI pending; automatic mining remains unverified.

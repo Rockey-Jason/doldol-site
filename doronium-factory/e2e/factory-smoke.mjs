@@ -489,6 +489,8 @@ try {
   assert.equal((await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot())).player.layer, "surface", "Emergency evacuation must safely return the engineer to the surface");
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningTest());
 
+  const aimedMineTarget = await desktop.evaluate(() => window.__doroniumFactoryTest.inspectMineTargetForTest());
+  assert.deepEqual(aimedMineTarget && { kind: aimedMineTarget.kind, mine: aimedMineTarget.mine, type: aimedMineTarget.type, level: aimedMineTarget.level, x: aimedMineTarget.x, z: aimedMineTarget.z }, { kind: "resource", mine: true, type: "stone", level: 1, x: 8, z: 12 }, "The first-person reticle must actually aim at the level-one stone deposit before using the pickaxe");
   const miningBefore = await desktop.evaluate(() => ({ stone: window.__doroniumFactoryTest.snapshot().inventory.stone || 0 }));
   await desktop.locator("#action-button").click();
   const miningAfter = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot());

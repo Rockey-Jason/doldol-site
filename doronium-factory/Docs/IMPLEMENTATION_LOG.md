@@ -559,3 +559,12 @@ PR #8 remains the separate Godot implementation and was not integrated. PR #9 ov
 - **Runtime UI correction:** `updateMineHud()` now re-reads the selected deposit amount and current safe route length, and consistently displays `<광물명> · <잔량>개 · <거리>칸 경로` (or `경로 재탐색` when the route must be rebuilt). This prevents the periodic HUD refresh from erasing map guidance.
 - **Regression strengthening:** Playwright now asserts the full mineral/amount/route format. The factory entry cache version advances from v70 to v71.
 - **Validation:** next CI pending. Automatic miner output still has not been reached by the browser run and remains UNVERIFIED.
+
+## 2026-11-19 — aim the manual mining regression at the ore vein
+
+- **Checkpoint:** 340791a1058e0e6de669c5b37447cbed03fd6fa5.
+- **CI run:** [44441201729](https://github.com/Rockey-Jason/doldol-site/actions/runs/44441201729) passed static validation (7/7 groups, 145/145 core tests, 27/27 mine tests). Browser regression passed the virtual mine soak, support-key helper, and the full mineral/amount/route map-status assertion.
+- **Next browser failure:** the manual mining fixture placed the engineer at `(8,14)` facing the level-one stone deposit `(8,12)`, but set first-person pitch to `+0.06` radians. In this camera convention positive pitch looks upward; the ore is at the mine floor below the eye line. The Use button therefore had no aimed mine target and correctly did not add stone.
+- **Fixture correction:** set both persisted player pitch and live motion pitch to `-0.35` radians so the reticle points down toward the ore. Added `inspectMineTargetForTest()` and a pre-action E2E assertion for the exact target `{kind:resource,mine:true,type:stone,level:1,x:8,z:12}` before verifying the Use-button harvest and two-unit inventory increase.
+- **Cache version:** factory entry advanced from v71 to v72.
+- **Validation:** new CI pending. Automatic miner output is still after the manual mining scenario and remains UNVERIFIED until the browser run reaches it.

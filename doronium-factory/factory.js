@@ -2732,11 +2732,12 @@ if(E2E_MODE){
    return {blocked:deposit.amount===before&&itemCount("stone")===stoneBefore,depositBefore:before,depositAfter:deposit.amount,stoneBefore,stoneAfter:itemCount("stone"),assessment:mineSafetyAssessment(env)};
   },
   setupMiningTest(){
-   S=freshState();S.player={...S.player,x:8,y:14,viewMode:"first",layer:"mine",mineLevel:1,yaw:0,pitch:.06};S.survival={health:100,hunger:100,thirst:100};
+   S=freshState();S.player={...S.player,x:8,y:14,viewMode:"first",layer:"mine",mineLevel:1,yaw:0,pitch:-.35};S.survival={health:100,hunger:100,thirst:100};
    const deposit=S.mineDeposits["1:8:12"];deposit.amount=12;S.activeTool="pickaxe";
-   playerMotion={x:8,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:.06,path:[],moving:false,facing:0,onArrive:null};
+   playerMotion={x:8,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.35,path:[],moving:false,facing:0,onArrive:null};
    selectedBuild=null;selectedBuilding=null;world3d.center(8,14);renderAll();return structuredClone(S)
   },
+  inspectMineTargetForTest(){return world3d.pickTarget(190)},
   mineTarget(){const before=itemCount("stone"),target=world3d.pickTarget(190);performAdventureAction();return {target,before,after:itemCount("stone"),node:S.mineDeposits["1:8:12"]?.amount}},
   selectTool:(tool)=>selectTool(tool),
   toolGuard(){this.setupMiningTest();selectTool("axe");const before=itemCount("stone");harvestMineDeposit(S.mineDeposits["1:8:12"]);return {before,after:itemCount("stone"),tool:S.activeTool}},
