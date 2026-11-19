@@ -550,3 +550,12 @@ PR #8 remains the separate Godot implementation and was not integrated. PR #9 ov
 - **Next browser failure:** `configureMineSupportForTest()` raised `ReferenceError: mineSupportKey is not defined` at `factory.js:2568`. The helper is exported by `mine-systems-runtime.js`, but the factory module omitted it from its import list.
 - **Correction:** imported the existing `mineSupportKey` helper into `factory.js` and bumped the entry script's factory cache version from v69 to v70. The support test hook can now add/remove closure records through the same canonical key helper used by the mine runtime.
 - **Validation:** the next static and Playwright run is pending. The browser run has not yet reached automatic miner output, so that regression remains UNVERIFIED.
+
+## 2026-11-19 — preserve mine-map route details in HUD refresh
+
+- **Checkpoint:** dcf836ff83a9552225c64544b9895bc3e21c6aaf.
+- **CI run:** [44440742347](https://github.com/Rockey-Jason/doldol-site/actions/runs/44440742347) passed static validation (7/7 validation groups, 145/145 core tests, 27/27 mine tests). The 3,600-second virtual mine soak also passed all invariants: two-station route, one load, exactly two ore delivered, 8,000L transferred, bounded water and 11 healthy supports.
+- **Next browser failure:** after the `mineSupportKey` import fix, the layer-map E2E reached selection and enabled the route button, but `updateMineHud()` overwrote the richer selection message. Actual text was `석재 · 4`, losing the remaining-amount label and explicit `칸 경로` suffix that `selectMineMapDeposit()` had just rendered.
+- **Runtime UI correction:** `updateMineHud()` now re-reads the selected deposit amount and current safe route length, and consistently displays `<광물명> · <잔량>개 · <거리>칸 경로` (or `경로 재탐색` when the route must be rebuilt). This prevents the periodic HUD refresh from erasing map guidance.
+- **Regression strengthening:** Playwright now asserts the full mineral/amount/route format. The factory entry cache version advances from v70 to v71.
+- **Validation:** next CI pending. Automatic miner output still has not been reached by the browser run and remains UNVERIFIED.

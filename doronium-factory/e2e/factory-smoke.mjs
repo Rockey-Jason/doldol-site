@@ -478,7 +478,7 @@ try {
   const mapBox = await desktop.locator("#mine-map-canvas").boundingBox();
   await desktop.locator("#mine-map-canvas").click({ position: { x: mapBox.width * 8.5 / 40, y: mapBox.height * 12.5 / 24 } });
   assert.equal(await desktop.locator("#mine-route-go").isEnabled(), true, "Selecting a visible deposit on the layer map must create a valid guided route");
-  assert.match(await desktop.locator("#mine-map-status").textContent(), /경로/, "The layer map must display the mineral name and route length");
+  assert.match(await desktop.locator("#mine-map-status").textContent(), /\S+ · \d+개 · \d+칸 경로/, "The layer map must display the mineral name, remaining amount, and explicit route length");
   await desktop.locator("#mine-route-go").click();
   assert.ok((await desktop.evaluate(() => window.__doroniumFactoryTest.motion())).path > 0, "Following a mine map route must issue a real walkable movement path");
   await desktop.locator("#mine-map-toggle").click();

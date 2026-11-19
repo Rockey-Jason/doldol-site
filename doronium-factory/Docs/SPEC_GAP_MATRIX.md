@@ -566,3 +566,9 @@ No main merge, deployment, production database change, or live-user save/economy
 - Run [44440379242](https://github.com/Rockey-Jason/doldol-site/actions/runs/44440379242): static validation SUCCESS (145 core + 27 mine tests). The virtual mine soak passed all five checks with 3,600 simulated seconds, 8,000L drainage, one loaded rail cargo and exactly two ore delivered.
 - Browser regression next failed because `configureMineSupportForTest` referenced `mineSupportKey` without importing the helper exported by `mine-systems-runtime.js`. The import is added and factory cache version is advanced to v70.
 - Automatic miner output has not yet been reached. New browser CI pending; do not mark the mining checklist complete.
+
+## 2026-11-19 mine map guidance regression
+
+- Run [44440742347](https://github.com/Rockey-Jason/doldol-site/actions/runs/44440742347): static checks all SUCCESS (7/7 validation groups, 145 core tests, 27 mine tests). Combined drainage/rail virtual-hour soak passed with exact two-ore delivery and 8,000L storage.
+- Browser test then found that `updateMineHud()` overwrote the map selection status, leaving `석재 · 4` instead of an explicit mineral/remaining-count/route-length label. It now preserves `광물명 · 잔량개 · 거리칸 경로` and Playwright checks that full format. Factory cache version v71.
+- New CI pending; automatic miner output and subsequent browser checks remain unverified.

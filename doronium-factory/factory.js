@@ -1492,7 +1492,7 @@ function updateMineHud(){
  const supportSummary=$("mine-support-summary");if(supportSummary)supportSummary.textContent="구간 지지대 · 정상 "+supports.healthy+" · 주의 "+supports.warning+" · 폐쇄 "+supports.closed;
  const localSupport=nearestMineSupport(S,S.player.mineLevel,playerMotion.x,playerMotion.z);
  const localValue=$("mine-support-value");if(localValue)localValue.textContent=localSupport?Math.round(localSupport.section.integrity)+"%":"—";
- const guide=$("mine-map-status");if(guide){guide.textContent=mineMapGuide?((RESOURCE[mineMapGuide.type]?.name||mineMapGuide.type)+" · "+(guidedMineRouteLength()||"경로 재탐색")):"광맥을 눌러 안전 경로 선택"}
+ const guide=$("mine-map-status");if(guide){if(mineMapGuide&&mineMapGuide.level===S.player.mineLevel){const deposit=S.mineDeposits?.[mineDepositKey(mineMapGuide.level,mineMapGuide.x,mineMapGuide.z)],length=guidedMineRouteLength();guide.textContent=(RESOURCE[mineMapGuide.type]?.name||mineMapGuide.type)+" · "+Math.max(0,Number(deposit?.amount)||0)+"개 · "+(length?length+"칸 경로":"경로 재탐색")}else guide.textContent="광맥을 눌러 안전 경로를 선택하세요."}
  const routeGo=$("mine-route-go");if(routeGo)routeGo.disabled=!mineMapGuide||mineMapGuide.level!==S.player.mineLevel;
  const evacuate=$("mine-evacuate-button");if(evacuate){evacuate.hidden=!summary.stopMining;evacuate.disabled=!summary.stopMining}
  const perfPanel=$("mine-perf-panel"),perfButton=$("mine-perf-toggle");
