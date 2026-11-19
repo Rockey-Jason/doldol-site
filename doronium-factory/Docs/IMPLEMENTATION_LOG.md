@@ -515,3 +515,14 @@ PR #8 remains the separate Godot implementation and was not integrated. PR #9 ov
 - **Validation status:** static suite on the starting checkpoint passed 178/178. Corrected Playwright browser regression and all checks on the new commit are pending CI; no new pass is claimed until GitHub reports completed/success.
 - **Remaining critical work:** item custody is not authoritative across all live owner domains; world drops and independent warehouse custody are not globally integrated. Six-fluid production/consumption, canonical catalog unification, full live Fusion interlocks/recovery, 2,048m world migration, full skills/contracts and campaign E2E remain PARTIAL. Physical PC/mobile, two-device cloud conflict and real 60-minute wall-clock soak remain UNVERIFIED.
 - **Repository boundary:** no main merge, deployment, production DB/schema/RLS/function mutation, live save/economy/reward change, or natural Doronium vein creation.
+
+
+## 2026-11-19 — virtual mine soak failure isolation
+
+- **Code checkpoint:** 32e70d5775e0c176999932a1fa70161d2ec882c9.
+- **CI run:** [44439331344](https://github.com/Rockey-Jason/doldol-site/actions/runs/44439331344) completed with static validation SUCCESS and browser-regression FAILURE at `factory-smoke.mjs:437`, where `mineVirtualSoakTest().ok` returned false.
+- **Regression progress:** the prior direct-movement assertion at line 419 passed in this run, so the boolean/position test-hook correction is verified by the browser reaching the later virtual-soak assertion. The run failed before the automatic-miner E2E at line 642; that check is still unverified.
+- **Diagnostic code change:** the virtual-soak fixture now returns named checks for water transfer, rail start, cargo load, exact delivery quantity, and numeric bounds. The Playwright failure message includes the complete measured fixture snapshot, so the next run identifies the failing invariant rather than only reporting `ok=false`.
+- **Validation:** run 44439331344 static validation passed; browser regression failed at the virtual-hour aggregate invariant. The new diagnostic rerun is pending; no virtual soak pass is claimed.
+- **Next root-cause target:** use the per-check output to repair the actual drainage/rail/support fixture or runtime invariant, then rerun browser regression until it reaches automatic mining, safety recovery, desktop/mobile 60-second emulation and full campaign checks.
+- **Repository boundary:** no main merge, deployment, production DB/schema/RLS/function mutation, live save/economy/reward change, or natural Doronium vein creation.

@@ -2630,7 +2630,9 @@ if(E2E_MODE){
    const tank=S.buildings.find(building=>building.uid==="SOAK-TANK");
    const valuesValid=Number.isFinite(environment.waterPercent)&&environment.waterPercent>=0&&environment.waterPercent<=100&&tank.waterStoredL>=0&&tank.waterStoredL<=tank.capacityL&&supports.minimum>=0&&supports.minimum<=100;
    markSceneDirty();renderAll();
-   return {simulatedSeconds:steps*dt,railStart,loadEvents,delivered,transferred,startWater,waterAfter:S.mineEnvironment[1].waterDepth,tankLitres:tank.waterStoredL,environment,drainage,rail,supports,valuesValid,ok:valuesValid&&railStart.ok&&loadEvents>0&&delivered===2&&transferred>0};
+   const okChecks={valuesValid,railStarted:railStart.ok,loadedCargo:loadEvents>0,deliveredExactlyTwo:delivered===2,waterTransferred:transferred>0};
+   const ok=Object.values(okChecks).every(Boolean);
+   return {simulatedSeconds:steps*dt,railStart,loadEvents,delivered,transferred,startWater,waterAfter:S.mineEnvironment[1].waterDepth,tankLitres:tank.waterStoredL,environment,drainage,rail,supports,valuesValid,okChecks,ok};
   },
   mineRailTransportTest(){
    S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:5,y:12};S.runtime=createRuntimeState();ensureItemStacks(S);

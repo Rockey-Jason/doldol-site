@@ -541,3 +541,11 @@ No main merge, deployment, production database change, or live-user save/economy
 - **Master status:** all 12 stages remain PARTIAL or UNVERIFIED. Checklist items 2, 18 and 19 remain UNVERIFIED for physical/mobile/full elapsed testing; item 4 remains NOT IMPLEMENTED at the 2,048m×2,048m target. Item 8 remains PARTIAL/CRITICAL because not every owner domain is authoritative. Other feature items remain PARTIAL until complete end-to-end and save/reload evidence exists.
 - **Next highest-risk code task:** connect ownership transactions to live reservations, consumption, completion buffers, conveyor/storage, world drops, shipping, Fusion, demolition and recovery with rollback/idempotency and end-to-end conservation tests. Do not label ownership COMPLETE from helper-only tests.
 - **Safety boundary:** Three.js/WebGL retained; no natural Doronium veins; no main merge, deployment, production data mutation, or account/economy mutation.
+
+
+## 2026-11-19 browser regression follow-up
+
+- Commit `32e70d5775e0c176999932a1fa70161d2ec882c9` passed static validation in [CI run 44439331344](https://github.com/Rockey-Jason/doldol-site/actions/runs/44439331344); browser-regression failed at the aggregate virtual mine-hour invariant (`factory-smoke.mjs:437`).
+- The direct-movement safety contract test passed because execution advanced beyond its assertion at line 419. The browser run did not reach automatic mining (line 642), so automatic drill output remains UNVERIFIED.
+- A diagnostic-only fixture update now exposes five independent virtual-soak checks and includes the full snapshot in the Playwright assertion message. The next CI run must identify and then fix the failing runtime/fixture invariant; no soak pass is claimed.
+- All 12 roadmap stages remain PARTIAL or UNVERIFIED; physical PC/mobile, real 60-minute soak, and full campaign ending remain UNVERIFIED.

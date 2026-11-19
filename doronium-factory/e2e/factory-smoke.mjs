@@ -434,7 +434,7 @@ try {
   assert.equal(railRegression.output, null, "Delivered machine output must clear its original buffer");
   const mineVirtualSoak = await desktop.evaluate(() => window.__doroniumFactoryTest.mineVirtualSoakTest());
   assert.equal(mineVirtualSoak.simulatedSeconds, 3600, "The mine infrastructure soak must simulate one complete hour");
-  assert.equal(mineVirtualSoak.ok, true, "Mine drainage, rail cargo, support and environment must remain consistent throughout the virtual hour");
+  assert.equal(mineVirtualSoak.ok, true, "Mine virtual-hour invariant failed: "+JSON.stringify(mineVirtualSoak));
   assert.equal(mineVirtualSoak.valuesValid, true, "Mine water, tank and support values must remain within valid bounds");
   assert.ok(mineVirtualSoak.transferred > 0 && mineVirtualSoak.delivered === 2, "The virtual hour must demonstrate actual water and ore transport");
   console.log("DORONIUM_MINE_VIRTUAL_SOAK", JSON.stringify(mineVirtualSoak));
