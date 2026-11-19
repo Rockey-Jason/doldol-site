@@ -2702,7 +2702,9 @@ if(E2E_MODE){
    adventureKeys.add("d");updatePlayerMotion(.3);adventureKeys.delete("d");
    const escaped={x:playerMotion.x,z:playerMotion.z};
    markSceneDirty();renderAll();
-   return {blocked:Math.abs(blocked.x-before.x)<.001&&Math.abs(blocked.z-before.z)<.001,canEscape:escaped.x>blocked.x,failedSection:{x:failed.x,z:failed.z,integrity:failed.integrity},before,blocked,escaped};
+   const blockedInPlace=Math.abs(blocked.x-before.x)<.001&&Math.abs(blocked.z-before.z)<.001;
+   const canEscape=escaped.x>blocked.x;
+   return {blocked:blockedInPlace,blockedPosition:blocked,canEscape,failedSection:{x:failed.x,z:failed.z,integrity:failed.integrity},before,escaped};
   },
   mineDrainagePowerGateTest(){
    S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:5,y:12};

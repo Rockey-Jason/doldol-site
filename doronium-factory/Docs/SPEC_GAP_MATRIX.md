@@ -530,3 +530,14 @@ No main merge, deployment, production database change, or live-user save/economy
 - PR #9 and #10 each overlap PR #11 in five files (factory.js, simulation-core.js, simulation-core.test.mjs, plus workflow/E2E for #9 and index.html/world3d.js for #10). They are divergent and remain unmerged; no wholesale cherry-pick.
 - PR #8 is a separate Godot branch with no changed-file overlap; it is not merged into the selected Three.js/WebGL architecture.
 - No main merge, deployment, production DB/schema/RLS/function mutation or live-user save/economy change was performed.
+
+
+## 2026-11-19 latest verification checkpoint
+
+- **Starting branch SHA:** c727f6aff1cc636dcd6fbe85f027bce19f432a76. PR #11 remains open/draft/unmerged and diverged from latest main; the merge base is stale. No wholesale PR #9/#10 integration and no Godot PR #8 integration were performed.
+- **Previous CI:** [run 44217180680](https://github.com/Rockey-Jason/doldol-site/actions/runs/44217180680) static validation passed (7/7 validation groups; 145/145 core tests; 26/26 mine tests; 178 total), but browser-regression failed at the direct-movement assertion because the E2E-only hook exposed a coordinate object as `blocked` instead of a boolean.
+- **Correction made:** the hook now returns an explicit boolean plus `blockedPosition`; Playwright additionally verifies that the blocked move preserves the exact player position and that an escape move increases distance from the weakened support. This is a test-contract correction, not a claim that the full mine system is complete.
+- **New CI:** pending for the corrected commit. Keep direct-movement safety PARTIAL until browser-regression succeeds; a cancelled, pending, or unrun job is not a pass.
+- **Master status:** all 12 stages remain PARTIAL or UNVERIFIED. Checklist items 2, 18 and 19 remain UNVERIFIED for physical/mobile/full elapsed testing; item 4 remains NOT IMPLEMENTED at the 2,048m×2,048m target. Item 8 remains PARTIAL/CRITICAL because not every owner domain is authoritative. Other feature items remain PARTIAL until complete end-to-end and save/reload evidence exists.
+- **Next highest-risk code task:** connect ownership transactions to live reservations, consumption, completion buffers, conveyor/storage, world drops, shipping, Fusion, demolition and recovery with rollback/idempotency and end-to-end conservation tests. Do not label ownership COMPLETE from helper-only tests.
+- **Safety boundary:** Three.js/WebGL retained; no natural Doronium veins; no main merge, deployment, production data mutation, or account/economy mutation.

@@ -417,7 +417,9 @@ try {
   assert.ok(supportRegression.routeAvoided, "Navigation must detour around the closed support section");
   const directMovementSafety = await desktop.evaluate(() => window.__doroniumFactoryTest.mineDirectMovementSafetyTest());
   assert.equal(directMovementSafety.blocked, true, "WASD movement must not enter a weakened passage support zone");
+  assert.deepEqual(directMovementSafety.blockedPosition, directMovementSafety.before, "Blocked movement must preserve the player position exactly");
   assert.equal(directMovementSafety.canEscape, true, "An engineer already near a newly unsafe support must still be able to move away from it");
+  assert.ok(directMovementSafety.escaped.x > directMovementSafety.blockedPosition.x, "Escape input must move the player away from the weakened support");
   const drainagePowerGate = await desktop.evaluate(() => window.__doroniumFactoryTest.mineDrainagePowerGateTest());
   assert.equal(drainagePowerGate.lowPowerStatus, "PAUSED_POWER", "An underpowered drainage pump must pause below the 0.8 allocation threshold");
   assert.equal(drainagePowerGate.sufficientPowerStatus, "RUNNING", "The pump must start at the minimum supported power allocation");
