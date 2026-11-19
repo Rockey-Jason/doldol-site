@@ -560,3 +560,9 @@ No main merge, deployment, production database change, or live-user save/economy
 
 - Run [44440274166](https://github.com/Rockey-Jason/doldol-site/actions/runs/44440274166) reached the new combined drainage/rail test and passed network connection, route start, and water-transfer existence. It failed only because exact `=== 2.4` compared against `2.4000000000000004`.
 - Unit assertion now uses a 1e-9 tolerance; no production quantity rounding or conservation behavior was changed. New CI pending; browser virtual soak has not yet been rerun on the corrected assertion.
+
+## 2026-11-19 support helper regression
+
+- Run [44440379242](https://github.com/Rockey-Jason/doldol-site/actions/runs/44440379242): static validation SUCCESS (145 core + 27 mine tests). The virtual mine soak passed all five checks with 3,600 simulated seconds, 8,000L drainage, one loaded rail cargo and exactly two ore delivered.
+- Browser regression next failed because `configureMineSupportForTest` referenced `mineSupportKey` without importing the helper exported by `mine-systems-runtime.js`. The import is added and factory cache version is advanced to v70.
+- Automatic miner output has not yet been reached. New browser CI pending; do not mark the mining checklist complete.

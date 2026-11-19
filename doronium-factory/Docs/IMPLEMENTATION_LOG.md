@@ -542,3 +542,11 @@ PR #8 remains the separate Godot implementation and was not integrated. PR #9 ov
 - **CI run:** [44440274166](https://github.com/Rockey-Jason/doldol-site/actions/runs/44440274166) stopped in static/unit validation. The new combined drainage/rail regression passed network connectivity, route enablement and transfer-count checks; its final strict equality assertion compared `2.4000000000000004` with `2.4` and failed due normal IEEE-754 representation.
 - **Correction:** replaced exact floating-point equality with a 1e-9 tolerance around the expected 2.4L transfer. Production fluid accounting was not changed because the measured value is correct within numerical precision.
 - **Validation:** new static and browser CI pending. The combined fixture's rail path is now verified by the unit test up to the final numeric assertion; browser virtual soak still awaits a completed run.
+
+## 2026-11-19 — support-test helper import fix
+
+- **Checkpoint:** 3cff30b5851ebbfa43db21960d7046f73a227bd5.
+- **CI run:** [44440379242](https://github.com/Rockey-Jason/doldol-site/actions/runs/44440379242) passed static validation (145/145 core tests and 27/27 mine tests). Browser regression passed the complete 3,600-second virtual mine soak: rail route started, one cargo load delivered exactly two ore, 8,000L transferred, tank stayed at capacity, water remained bounded, all 11 supports stayed healthy, and every named invariant was true.
+- **Next browser failure:** `configureMineSupportForTest()` raised `ReferenceError: mineSupportKey is not defined` at `factory.js:2568`. The helper is exported by `mine-systems-runtime.js`, but the factory module omitted it from its import list.
+- **Correction:** imported the existing `mineSupportKey` helper into `factory.js` and bumped the entry script's factory cache version from v69 to v70. The support test hook can now add/remove closure records through the same canonical key helper used by the mine runtime.
+- **Validation:** the next static and Playwright run is pending. The browser run has not yet reached automatic miner output, so that regression remains UNVERIFIED.
