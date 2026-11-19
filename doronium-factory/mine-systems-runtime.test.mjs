@@ -98,7 +98,7 @@ test("connected drainage pipes can cross a rail centerline while the tank stays 
   assert.equal(mineRailSummary(state,1).enabled,true);
   const water=tickMineDrainage(state,.1);
   assert.equal(water.results.length,1);
-  assert.equal(water.results[0].litres,2.4);
+  assert.ok(Math.abs(water.results[0].litres-2.4)<1e-9,"floating-point transfer must remain within the expected 2.4L tick");
 });
 
 test("disconnected pipe gaps prevent pumping and no water storage is invented",()=>{

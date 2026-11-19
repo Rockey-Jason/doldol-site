@@ -535,3 +535,10 @@ PR #8 remains the separate Godot implementation and was not integrated. PR #9 ov
 - **Regression coverage:** added a pure runtime test that proves the connected pump/pipe/tank network transfers water while two mine rail stations remain route-connected through the same drift. The virtual soak keeps independent checks for water transfer, rail start, cargo loading, exact delivery and numeric bounds.
 - **Validation:** new unit and browser CI are pending for this commit. Do not count the superseded diagnostic run as a pass; the previous static validation passed, but the virtual soak did not.
 - **No gameplay collision rule was relaxed.** No save, player inventory, ownership, production data, account, or live balance was changed. Three.js/WebGL and the no-natural-Doronium-vein rule remain intact.
+
+## 2026-11-19 — floating-point-safe drainage assertion
+
+- **Checkpoint:** 75b544ecbe285fffafe6b63e688b673d0f1d13f5.
+- **CI run:** [44440274166](https://github.com/Rockey-Jason/doldol-site/actions/runs/44440274166) stopped in static/unit validation. The new combined drainage/rail regression passed network connectivity, route enablement and transfer-count checks; its final strict equality assertion compared `2.4000000000000004` with `2.4` and failed due normal IEEE-754 representation.
+- **Correction:** replaced exact floating-point equality with a 1e-9 tolerance around the expected 2.4L transfer. Production fluid accounting was not changed because the measured value is correct within numerical precision.
+- **Validation:** new static and browser CI pending. The combined fixture's rail path is now verified by the unit test up to the final numeric assertion; browser virtual soak still awaits a completed run.

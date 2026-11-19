@@ -555,3 +555,8 @@ No main merge, deployment, production database change, or live-user save/economy
 - The virtual mine soak failure was traced to a test fixture placing a solid water tank at `(8,12)`, an orthogonal clearance cell required by the diagonal rail centerline transition `(8,13)→(9,12)`. The rail path's collision rejection was correct.
 - The fixture now moves the tank to `(9,11)` and extends the low-profile pipe chain through `(8,12)` and `(9,12)`. A new unit test checks both continuous pump/pipe/tank connectivity and a valid two-station rail route in the same mine.
 - New CI pending. The previous browser run verified the direct-movement safety assertion but did not pass the virtual soak; automatic miner output and later browser scenarios remain unverified until the new run reaches them.
+
+## 2026-11-19 floating-point assertion follow-up
+
+- Run [44440274166](https://github.com/Rockey-Jason/doldol-site/actions/runs/44440274166) reached the new combined drainage/rail test and passed network connection, route start, and water-transfer existence. It failed only because exact `=== 2.4` compared against `2.4000000000000004`.
+- Unit assertion now uses a 1e-9 tolerance; no production quantity rounding or conservation behavior was changed. New CI pending; browser virtual soak has not yet been rerun on the corrected assertion.
