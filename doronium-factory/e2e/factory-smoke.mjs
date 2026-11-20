@@ -184,6 +184,21 @@ try {
   assert.equal(conveyorToMachine.exceptionRejected, true, "A destination-buffer exception must reject the transfer instead of escaping the simulation tick");
   assert.equal(conveyorToMachine.exceptionRollback, true, "A destination-buffer exception must roll back source cargo, ledger journal and sequence");
   assert.equal(conveyorToMachine.throwAfterValid, true, "Exception rollback must leave a valid ownership snapshot");
+  const dismantleCustody = await desktop.evaluate(() => window.__doroniumFactoryTest.runDismantleCustodyGuardTest());
+  for (const [name, result] of Object.entries({
+    active: dismantleCustody.active,
+    legacy: dismantleCustody.legacy,
+    completion: dismantleCustody.completion,
+    reservation: dismantleCustody.reservation
+  })) {
+    assert.equal(result.beforeValid, true, name + " dismantle fixture must begin with valid custody");
+    assert.equal(result.blocked, true, name + " machine-owned work must block dismantling");
+    assert.equal(result.buildingRetained, true, name + " blocked dismantling must retain the building");
+    assert.equal(result.preserved, true, name + " blocked dismantling must preserve inventory, money, custody and journal");
+    assert.equal(result.afterValid, true, name + " blocked dismantling must leave a valid custody snapshot");
+  }
+  assert.equal(dismantleCustody.idleBuildingRemoved, true, "An idle empty machine must remain dismantlable");
+  assert.equal(dismantleCustody.idleAuditValid, true, "A normal empty-machine dismantle must leave a valid custody snapshot");
   const liveShipmentCustody = await desktop.evaluate(() => window.__doroniumFactoryTest.runLiveShipmentCustodyTest());
   assert.equal(liveShipmentCustody.firstPackagingConsumedQuantity, 18, "The first five-stage package must consume exactly 18 material units through custody");
   assert.equal(liveShipmentCustody.firstPackagingConsumptionTransactionCount, 7, "Each package-material reservation must create one committed consumption transaction");

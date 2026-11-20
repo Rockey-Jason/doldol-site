@@ -139,3 +139,26 @@ export function validateOwnershipState(input){
 export function resetCustodySnapshot(state){
  const s=ensureState(state);s.custody=[];return s;
 }
+
+
+/* True when dismantling would orphan an active or pending machine-owned item. */
+export function hasPendingBuildingCustody(state,building){
+ if(!state||typeof state!== "object"||!building||typeof building!== "object")return false;
+ const uid=String(building.uid||"").trim();if(!uid)return false;
+ const hasPositiveQuantity=items=>Array.isArray(items)&&items.some(item=>Number(item?.quantity)>0);
+ const activeInputs=hasPositiveQuantity(building.activeInputQuantities)||hasPositiveQuantity(building.activeMeta?.consumedInputs);
+ const activeRecipe=!!(building.activeRecipeSnapshot||building.activeRecipe);
+ const activeLedger=(state.ownershipLedger?.custody||[]).some(record=>record?.ownerType==="ACTIVE_JOB"&&String(record.ownerID||"")===uid&&Number(record.quantity)>0);
+ const activeReservation=Object.values(state.runtime?.reservations||{}).some(reservation=>{
+  if(reservation?.status!=="reserved")return false;
+  const owner=String(reservation.ownerID||"");
+  return owner===uid||owner==="recipe:"+uid||owner.startsWith("recipe:"+uid+":");
+ });
+ const pendingCompletion=(state.completionBuffer||[]).some(item=>{
+  const completionID=String(item?.completionID||"");
+  const references=[item?.buildingUID,item?.machineUID,item?.sourceBuildingUID,item?.ownerID];
+  return references.some(value=>String(value||"")===uid)||
+   completionID===uid||completionID.startsWith(uid+":")||completionID.endsWith(":"+uid)||completionID.includes(":"+uid+":");
+ });
+ return activeInputs||activeRecipe||activeLedger||activeReservation||pendingCompletion;
+}

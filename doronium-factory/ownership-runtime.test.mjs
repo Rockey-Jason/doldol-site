@@ -1,5 +1,5 @@
 import test from "node:test";import assert from "node:assert/strict";
-import {createOwnershipState,addCustody,splitCustody,transferCustody,consumeCustody,completeProductionCustody,validateOwnershipState,resetCustodySnapshot} from "./ownership-runtime.js";
+import {createOwnershipState,addCustody,splitCustody,transferCustody,consumeCustody,completeProductionCustody,validateOwnershipState,resetCustodySnapshot,hasPendingBuildingCustody} from "./ownership-runtime.js";
 test("one stack has one custody owner and transfers idempotently",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S1",itemID:"iron",quantity:5,ownerType:"PLAYER_INVENTORY",ownerID:"p1"});const a=transferCustody(s,{transactionID:"T1",stackID:"S1",quantity:5,toType:"MACHINE_INPUT",toID:"M1",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"p1"});assert.equal(a.to.id,"M1");assert.equal(transferCustody(s,{transactionID:"T1",stackID:"S1",quantity:5,toType:"MACHINE_INPUT",toID:"M1",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"p1"}).duplicate,true);assert.equal(s.custody.length,1);assert.equal(validateOwnershipState(s).valid,true)});
 test("invalid owner and duplicate stack are rejected",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S1",itemID:"ore",quantity:1,ownerType:"WORLD_DROP",ownerID:"x"});assert.throws(()=>addCustody(s,{stackID:"S1",itemID:"ore",quantity:1,ownerType:"WORLD_DROP",ownerID:"y"}));assert.equal(transferCustody(s,{transactionID:"T2",stackID:"S1",quantity:2,toType:"WAREHOUSE",toID:"w"}),null)});
 test("consumption has an idempotent ledger entry",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S",itemID:"ore",quantity:2,ownerType:"MACHINE_INPUT",ownerID:"M"});assert.equal(consumeCustody(s,{transactionID:"C",stackID:"S",quantity:2,expectedOwnerType:"MACHINE_INPUT",expectedOwnerID:"M"}).quantity,2);assert.equal(consumeCustody(s,{transactionID:"C",stackID:"S",quantity:2,expectedOwnerType:"MACHINE_INPUT",expectedOwnerID:"M"}).duplicate,true);assert.equal(s.consumed.length,1)});
@@ -113,4 +113,33 @@ test("conveyor custody preserves one stable stack identity across two belts and 
  assert.equal(s.custody[0].quantity,2);
  assert.deepEqual(validateOwnershipState(s).itemTotals,{ironPlate:2});
  assert.equal(validateOwnershipState(s).valid,true);
+});
+
+
+test("active production inputs block dismantling even when progress is zero",()=>{
+ const state={runtime:{reservations:{}},completionBuffer:[],ownershipLedger:createOwnershipState()};
+ const building={uid:"SMELTER-A",activeInputQuantities:[{itemID:"ironOre",quantity:2}],activeRecipe:"Iron Smelting",activeRecipeSnapshot:{name:"Iron Smelting"},progress:0,status:"PAUSED_POWER"};
+ assert.equal(hasPendingBuildingCustody(state,building),true);
+});
+
+test("legacy activeMeta inputs and active-job ledger custody remain protected",()=>{
+ const state={runtime:{reservations:{}},completionBuffer:[],ownershipLedger:createOwnershipState()};
+ const building={uid:"SMELTER-LEGACY",activeMeta:{consumedInputs:[{itemID:"ironOre",quantity:3}]},progress:0,status:"PAUSED_POWER"};
+ assert.equal(hasPendingBuildingCustody(state,building),true);
+ addCustody(state.ownershipLedger,{stackID:"ACTIVE-LEDGER-STACK",itemID:"ironOre",quantity:1,ownerType:"ACTIVE_JOB",ownerID:"SMELTER-LEDGER"});
+ assert.equal(hasPendingBuildingCustody(state,{uid:"SMELTER-LEDGER"}),true);
+});
+
+test("machine-owned reservations and linked completion buffers block dismantling",()=>{
+ const state={runtime:{reservations:{R1:{status:"reserved",ownerID:"recipe:SMELTER-B",allocations:[]}}},completionBuffer:[],ownershipLedger:createOwnershipState()};
+ assert.equal(hasPendingBuildingCustody(state,{uid:"SMELTER-B"}),true);
+ state.runtime.reservations={};
+ state.completionBuffer=[{completionID:"COMPLETION:SMELTER-B:2",itemID:"ironPlate",quantity:1}];
+ assert.equal(hasPendingBuildingCustody(state,{uid:"SMELTER-B"}),true);
+});
+
+test("unrelated reservations and completion buffers do not block an idle building",()=>{
+ const state={runtime:{reservations:{R1:{status:"reserved",ownerID:"recipe:OTHER",allocations:[]}}},completionBuffer:[{completionID:"COMPLETION:OTHER:1",itemID:"ironPlate",quantity:1}],ownershipLedger:createOwnershipState()};
+ assert.equal(hasPendingBuildingCustody(state,{uid:"SMELTER-IDLE",input:{},progress:0}),false);
+ assert.equal(hasPendingBuildingCustody(state,null),false);
 });

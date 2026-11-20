@@ -18,7 +18,7 @@ import { startInfinityFusion, tickInfinityFusion, cancelInfinityFusion, recoverI
 import { evaluatePlanetaryStabilization } from "./planetary-stabilization.js?v=1";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=3";
-import { createOwnershipState, addCustody, transferCustody, consumeCustody, completeProductionCustody, validateOwnershipState, resetCustodySnapshot } from "./ownership-runtime.js?v=6";
+import { createOwnershipState, addCustody, transferCustody, consumeCustody, completeProductionCustody, validateOwnershipState, resetCustodySnapshot, hasPendingBuildingCustody } from "./ownership-runtime.js?v=7";
 import { storeWarehouseStack as storeWarehouseCustody, withdrawWarehouseStack as withdrawWarehouseCustody } from "./warehouse-runtime.js?v=2";
 let createClient = null;
 
@@ -1558,7 +1558,35 @@ function drainFluidToTank(source){
  source.fluidAmountL=amount-moved;if(source.fluidAmountL<=1e-9){source.fluidAmountL=0;source.fluidType=null;source.fluidContaminants=[]}
  markDirty();renderMachineDetails();toast(moved.toFixed(1)+"L를 연결된 탱크로 배출했습니다.");return true;
 }
-function removeBuilding(b){const d=buildingDef(b.type);if(!d)return false;if(b.type==="mineRailStation"&&b.layer==="mine"&&mineRailSummary(S,b.mineLevel).enabled){setMineRailEnabled(S,b.mineLevel,false);log("정거장 철거 전 자동 광차 정지 · 미회수 화물은 원래 채굴기에 반환");}const hasWarehouseStock=Array.isArray(b.warehouseStock)&&b.warehouseStock.some(item=>Number(item?.quantity)>0);const activeFusion=b.type==="fusion"&&["RESERVED","RUNNING","PAUSED_POWER","WAITING_POWER","CALIBRATING","ERROR"].includes(S.fusionJob?.status);const hasBufferedFluid=Number(b.fluidAmountL)>1e-9;const hasCargo=!!b.item;if(activeFusion||hasBufferedFluid||hasCargo||hasWarehouseStock||b.output||Object.values(b.input||{}).some(q=>Number(q)>0)||b.failureRepair||Number(b.progress)>0){toast(activeFusion?"진행 중인 Infinity Fusion 작업이 있어 설비를 철거할 수 없습니다.":hasBufferedFluid?"유체를 먼저 배출해야 설비를 철거할 수 있습니다.":hasCargo?"컨베이어 화물을 먼저 회수해야 합니다.":hasWarehouseStock?"창고 재고를 먼저 회수해야 철거할 수 있습니다.":"출력·입력 버퍼가 비었고 작업이 정지된 상태에서만 철거할 수 있습니다.","warn");return false}markSceneDirty();const refund=Math.floor(d.cost*.55);S.money+=refund;for(const[id,n]of Object.entries(d.materials||{})){addItem(id,Math.floor(n*.5),{},false)}S.buildings=S.buildings.filter(x=>x.uid!==b.uid);if(b.type==="relay"){const i=S.sites.relay.findIndex(p=>p.x===b.x&&p.y===b.y);if(i>=0)S.relaySites[i]=false}if(b.type==="core")S.corePlaced=false;if(b.type==="powerCable")S.powerTopologyEnabled=S.buildings.some(x=>x.type==="powerCable");selectedBuilding=null;log(d.name+" 해체 · "+refund+" D 환급");toast("시설 해체 · "+refund+" D 환급");markDirty();renderAll()}
+function removeBuilding(b){
+ const d=buildingDef(b.type);if(!d)return false;
+ const activeCustody=hasPendingBuildingCustody(S,b);
+ const hasWarehouseStock=Array.isArray(b.warehouseStock)&&b.warehouseStock.some(item=>Number(item?.quantity)>0);
+ const activeFusion=b.type==="fusion"&&["RESERVED","RUNNING","PAUSED_POWER","WAITING_POWER","CALIBRATING","ERROR"].includes(S.fusionJob?.status);
+ const hasBufferedFluid=Number(b.fluidAmountL)>1e-9,hasCargo=!!b.item;
+ const hasInput=Object.values(b.input||{}).some(q=>Number(q)>0);
+ if(activeFusion||activeCustody||hasBufferedFluid||hasCargo||hasWarehouseStock||b.output||hasInput||b.failureRepair||Number(b.progress)>0){
+  const reason=activeFusion?"진행 중인 Infinity Fusion 작업이 있어 설비를 철거할 수 없습니다.":
+   activeCustody?"진행 중인 생산 원료·예약 또는 완료 대기 자산이 있어 설비를 철거할 수 없습니다. 작업을 완료하거나 원료를 먼저 회수하세요.":
+   hasBufferedFluid?"유체를 먼저 배출해야 설비를 철거할 수 있습니다.":
+   hasCargo?"컨베이어 화물을 먼저 회수해야 합니다.":
+   hasWarehouseStock?"창고 재고를 먼저 회수해야 철거할 수 있습니다.":
+   "출력·입력 버퍼가 비었고 작업이 정지된 상태에서만 철거할 수 있습니다.";
+  toast(reason,"warn");return false;
+ }
+ // Do not stop a live rail route until every dismantle guard has passed.
+ if(b.type==="mineRailStation"&&b.layer==="mine"&&mineRailSummary(S,b.mineLevel).enabled){
+  setMineRailEnabled(S,b.mineLevel,false);
+  log("정거장 철거 전 자동 광차 정지 · 미회수 화물은 원래 채굴기에 반환");
+ }
+ markSceneDirty();const refund=Math.floor(d.cost*.55);S.money+=refund;
+ for(const[id,n]of Object.entries(d.materials||{}))addItem(id,Math.floor(n*.5),{},false);
+ S.buildings=S.buildings.filter(x=>x.uid!==b.uid);
+ if(b.type==="relay"){const i=S.sites.relay.findIndex(p=>p.x===b.x&&p.y===b.y);if(i>=0)S.relaySites[i]=false}
+ if(b.type==="core")S.corePlaced=false;
+ if(b.type==="powerCable")S.powerTopologyEnabled=S.buildings.some(x=>x.type==="powerCable");
+ selectedBuilding=null;log(d.name+" 해체 · "+refund+" D 환급");toast("시설 해체 · "+refund+" D 환급");markDirty();renderAll();
+}
 function chooseVariant(b){const choices=[...VARIANTS.filter(id=>id!=="ITEM_DORONUM_NORMAL"&&!!VARIANT_RECIPES[id]),"PURIFY_RUSTED_DORONUM"];const body='<p>결정 생산 또는 부식 도로늄 정제를 선택하세요. 정제는 품질·순도 조건을 충족한 인피니티 원료를 만들기 위한 별도 공정입니다.</p><select id="variant-select" class="modal-select">'+choices.map(id=>'<option value="'+id+'" '+(b.variant===id?"selected":"")+'>'+(id==="PURIFY_RUSTED_DORONUM"?"부식 도로늄 정제":RESOURCE[id].name)+'</option>').join("")+'</select>';showModal("결정 변환 레시피",body,[{label:"취소",cls:"secondary"},{label:"설정",cls:"primary",action:()=>{b.variant=$("variant-select").value;markDirty();renderMachineDetails();closeModal();toast("레시피 변경 완료")}}])}
 function startResearch(id){const r=RESEARCH.find(x=>x.id===id);if(!r||S.research.includes(id))return;if(!hasBuilding(S,"lab")){toast("먼저 기술 연구소를 건설하세요.","warn");return}if(r.requires&&!r.requires.every(v=>S.research.includes(v))){toast("선행 연구가 완료되지 않았습니다.","warn");return}if(S.activeResearch){toast("다른 연구가 이미 진행 중입니다.","warn");return}if(S.money<r.cost||!hasItems(r.need)){toast("연구 자원 또는 자금이 부족합니다.","warn");return}S.money-=r.cost;takeItems(r.need);S.activeResearch=id;S.researchProgress=0;log("연구 시작 · "+r.name);toast(r.name+" 연구를 시작합니다.");markDirty();renderResearch();renderHud()}
 function tickResearch(dt,ratio){if(!S.activeResearch)return;const r=RESEARCH.find(x=>x.id===S.activeResearch);if(!r){S.activeResearch=null;return}const labs=S.buildings.filter(b=>b.type==="lab").length;if(!labs)return;S.researchProgress+=dt*Math.max(.0,ratio)*Math.min(2,1+(labs-1)*.35)*(S.research.includes("automation")?1.15:1);if(S.researchProgress>=r.time){S.research.push(r.id);awardResearchTierSkillPoints();S.activeResearch=null;S.researchProgress=0;log("연구 완료 · "+r.name,"good");toast("기술 연구 완료 · "+r.name);$("orbit-dialogue").textContent="“"+r.name+" 연구 데이터가 연구소에 등록되었습니다.”";playTone(820,.22,"triangle");markDirty();renderResearch();renderBuildList();renderMissions();questCheck()}}
@@ -2937,6 +2965,31 @@ if(E2E_MODE){
      inventoryAfterConsumption,blocked,blockedBefore,blockedAfter,blockedReservations:Object.keys(S.runtime.reservations||{}).length,
      blockedByInvalidCustody:S.ownershipLedgerValidation?.valid===false,finalValidationValid:consumptionValidation.valid
     };
+   }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
+  },
+  runDismantleCustodyGuardTest(){
+   const oldState=S,oldMotion=playerMotion,oldSelectedBuilding=selectedBuilding;
+   const signature=ledger=>JSON.stringify((ledger?.custody||[]).map(record=>[record.stackID,record.itemID,record.quantity,record.ownerType,record.ownerID]).sort((a,b)=>String(a[0]).localeCompare(String(b[0]))));
+   const inspectBlocked=(uid,extra={},configure=null)=>{
+    S=freshState();S.runtime=createRuntimeState();S.inventory={};S.meta={};ensureItemStacks(S);S.completionBuffer=[];
+    const building={uid,type:"smelter",x:4,y:4,dir:1,progress:0,condition:100,status:"PAUSED_POWER",input:{},inputMeta:{},output:null,...extra};
+    S.buildings=[building];if(configure)configure(building);
+    const before=rebuildOwnershipLedger(S),beforeMoney=Number(S.money)||0,beforeStacks=JSON.stringify(S.runtime.itemStacks),beforeCustody=signature(S.ownershipLedger),beforeTransactions=Object.keys(S.ownershipLedger.transactions||{}).length;
+    const result=removeBuilding(building),after=rebuildOwnershipLedger(S);
+    const preserved=JSON.stringify(S.runtime.itemStacks)===beforeStacks&&(Number(S.money)||0)===beforeMoney&&signature(S.ownershipLedger)===beforeCustody&&Object.keys(S.ownershipLedger.transactions||{}).length===beforeTransactions;
+    return {beforeValid:before.valid,blocked:result===false&&S.buildings.includes(building),buildingRetained:S.buildings.includes(building),preserved,afterValid:after.valid};
+   };
+   try{
+    const activeInputs=[{itemID:"ITEM_IRON_ORE",quantity:2,quality:96,purity:97,synthetic:false}];
+    const active=inspectBlocked("DISMANTLE-ACTIVE",{activeInputQuantities:activeInputs,activeMeta:{quality:96,purity:97,synthetic:false,consumedInputs:activeInputs},activeRecipe:"Iron Smelting",activeRecipeSnapshot:{name:"Iron Smelting"}});
+    const legacy=inspectBlocked("DISMANTLE-LEGACY",{activeMeta:{quality:95,purity:96,synthetic:false,consumedInputs:[{itemID:"ITEM_IRON_ORE",quantity:3,quality:95,purity:96,synthetic:false}]}});
+    const completion=inspectBlocked("DISMANTLE-COMPLETION",{},()=>{S.completionBuffer=[{completionID:"COMPLETION:DISMANTLE-COMPLETION:1",buildingUID:"DISMANTLE-COMPLETION",itemID:"ITEM_IRON_ORE",quantity:1}]});
+    const reservation=inspectBlocked("DISMANTLE-RESERVATION",{},()=>{addItemStack(S,"ironOre",1,{quality:95,purity:96,synthetic:false});reserveItemStacks(S,"ironOre",1,"recipe:DISMANTLE-RESERVATION")});
+    S=freshState();S.runtime=createRuntimeState();S.inventory={};S.meta={};ensureItemStacks(S);S.completionBuffer=[];
+    const idle={uid:"DISMANTLE-IDLE",type:"smelter",x:4,y:4,dir:1,progress:0,condition:100,status:"IDLE",input:{},inputMeta:{},output:null};
+    S.buildings=[idle];const idleAuditBefore=rebuildOwnershipLedger(S);removeBuilding(idle);const idleAuditAfter=rebuildOwnershipLedger(S);
+    const idleBuildingRemoved=!S.buildings.includes(idle);
+    return {active,legacy,completion,reservation,idleBuildingRemoved,idleAuditValid:idleAuditBefore.valid&&idleAuditAfter.valid};
    }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
   },
   runLiveShipmentCustodyTest(){
