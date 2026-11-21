@@ -98,7 +98,7 @@ for(const cx of [-17.2,17.2]){
   addTacticalCover(cx-innerSide*1.2,-.05,3.1,3.35,4.19,3.91);
   addTacticalCover(cx+innerSide*3.75,-.05,.65,3.35,4.19,3.91);
   addTacticalCover(cx+innerSide*2.5,-.9,.675,.45,4.19,3.91);
-  addTacticalCover(cx+innerSide*2.5,-3.5,1.1,.725,4.19,3.91);
+  addTacticalCover(cx+innerSide*2.5,-3.5,1.1,.725,4.14,3.86);
 
   // Outer guardrail stays continuous. The inner guardrail opens to the skybridge.
   addTacticalCover(cx- innerSide*4.18,-.05,.14,3.35,5.08,4.08);
@@ -118,6 +118,7 @@ for(const cx of [-17.2,17.2]){
   addTacticalCover(cx+2.5,-1.5,1.675,4.575,5.99,5.71);
   addTacticalCover(cx,-4.0375,.825,2.0375,5.99,5.71);
   addTacticalCover(cx,2.2875,.825,.7875,5.99,5.71);
+  addTacticalCover(cx,-1.75,.8,.45,5.99,5.71);
   addTacticalCover(cx-innerSide*.82,-.25,.06,1.75,6.64,5.92);
   addTacticalCover(cx+innerSide*.82,-.25,.06,1.75,6.64,5.92);
 
