@@ -101,49 +101,72 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     add(root,wall,1.65,2.05,-2.05,1.5,4.1,.32,true);
     add(root,wall,0,3.62,-2.05,1.2,.95,.32,true);
 
-    // A furnished office occupies one side of the lower level.
-    makeFurniture(root,-2.75,.0,1.65,'desk');
-    makeFurniture(root,-2.8,0,2.95,'chair');
-    makeFurniture(root,-3.2,0,-2.35,'cabinet');
-    add(root,dark,-2.75,1.45,1.65,1.9,.08,1.05);
-    add(root,trim,-2.75,2.14,1.65,1.9,.055,1.05);
+    // Mirror the usable layout so each building's inner side faces the skybridge.
+    const innerSide=front>0?1:-1;
+    const officeSide=-innerSide;
+
+    // Keep the office furniture on the outer side and clear the full stair approach.
+    makeFurniture(root,officeSide*2.75,.0,1.65,'desk');
+    makeFurniture(root,officeSide*2.8,0,2.95,'chair');
+    makeFurniture(root,officeSide*3.2,0,-2.35,'cabinet');
+    add(root,dark,officeSide*2.75,1.45,1.65,1.9,.08,1.05);
+    add(root,trim,officeSide*2.75,2.14,1.65,1.9,.055,1.05);
     for(let i=0;i<3;i++){
-      add(root,wall,-3.7+i*.72,1.25,-.1,.045,2.35,.045);
+      add(root,wall,officeSide*(3.7-i*.72),1.25,-.1,.045,2.35,.045);
     }
-    // Storage room: tall racks, stacked supply cases and a service bench.
-    makeFurniture(root,2.85,0,1.25,'rack');
-    makeFurniture(root,2.85,0,-1.15,'rack');
-    makeFurniture(root,2.85,0,-3.0,'cabinet');
+    // Storage racks now sit outside the stair flight and its landing.
+    makeFurniture(root,innerSide*2.2,0,3.5,'rack');
+    makeFurniture(root,innerSide*2.2,0,-3.5,'rack');
     makeFurniture(root,.25,0,-3.0,'desk');
     makeFurniture(root,-1.15,0,3.0,'crate');
 
-    // Upper gallery, stair flight and protected firing positions.
-    add(root,floor,-.9,4.05,1.45,6.8,.28,6.7,true);
-    add(root,floor,4.05,4.05,1.45,.7,.28,6.7,true);
-    add(root,wall,-4.18,4.58,1.45,.28,1.0,6.7,true);
-    add(root,wall,4.18,4.58,1.45,.28,1.0,6.7,true);
-    add(root,wall,0,4.58,-1.75,8.2,1.0,.28,true);
+    // Upper gallery: a broad outer-side floor, a bridge-side access gallery,
+    // a cross-walk over the lower stair flight, and a generous top landing.
+    const stairX=innerSide*2.5;
+    add(root,floor,-innerSide*1.2,4.05,1.45,6.2,.28,6.7,true);
+    add(root,floor,innerSide*3.75,4.05,1.45,1.3,.28,6.7,true);
+    add(root,floor,stairX,4.05,.6,1.35,.28,.9,true);
+    add(root,floor,stairX,4.05,-2.0,2.2,.28,1.45,true);
+
+    // Preserve the outer guardrail. Open the inner wall directly onto the skybridge.
+    const outerSide=-innerSide;
+    add(root,wall,outerSide*4.18,4.58,1.45,.28,1.0,6.7,true);
+    add(root,wall,innerSide*4.18,4.58,-1.45,.28,1.0,.9,true);
+    add(root,wall,innerSide*4.18,4.58,2.9,.28,1.0,3.8,true);
+
+    // The stair-aligned doorway replaces the old continuous wall across the gallery.
+    const galleryDoorCenter=stairX;
+    add(root,wall,(galleryDoorCenter-4.95)/2,4.58,-1.75,galleryDoorCenter+3.25,1.0,.28,true);
+    add(root,wall,(galleryDoorCenter+4.95)/2,4.58,-1.75,3.25-galleryDoorCenter,1.0,.28,true);
+
     const steps=13,run=4.85,rise=3.9;
     for(let i=0;i<steps;i++){
       const y=(i+1)*rise/steps,z=2.35-(i+.5)*run/steps;
-      add(root,i%2?trim:floor,3.05,y/2,z,1.05,y,.42,true);
+      add(root,i%2?trim:floor,stairX,y/2,z,1.05,y,.42,true);
     }
-    add(root,trim,3.62,2.05,-.1,.08,4.1,.08);
-    add(root,trim,2.48,2.05,-.1,.08,4.1,.08);
-    makeFurniture(root,-2.7,4.2,2.65,'crate');
-    makeFurniture(root,2.55,4.2,-.8,'cabinet');
+    add(root,trim,innerSide*3.07,2.05,-.1,.08,4.1,.08);
+    add(root,trim,innerSide*1.93,2.05,-.1,.08,4.1,.08);
+    makeFurniture(root,officeSide*2.7,4.2,2.65,'crate');
+    makeFurniture(root,officeSide*2.55,4.2,-.8,'cabinet');
 
     // Roof access stairs rise from the gallery to an exposed rooftop combat deck.
     for(let i=0;i<8;i++){
       const y=4.28+i*.19,z=2.75-i*.43;
       add(root,i%2?trim:floor,0,y,z,1.18,.20,.48,true);
     }
-    add(root,floor,0,5.85,0,8.35,.28,9.15,true);
+    // Split the roof deck around the stairwell so the final steps are not sealed under the slab.
+    add(root,floor,-2.5,5.85,0,3.35,.28,9.15,true);
+    add(root,floor,2.5,5.85,0,3.35,.28,9.15,true);
+    add(root,floor,0,5.85,-2.5375,1.65,.28,4.075,true);
+    add(root,floor,0,5.85,3.7875,1.65,.28,1.575,true);
     for(const side of [-1,1]){
       add(root,wall,side*4.02,6.28,0,.22,.72,8.9,true);
       add(root,wall,0,6.28,side*4.43,8.1,.72,.22,true);
       add(root,trim,side*4.02,6.66,0,.28,.07,8.9);
       add(root,trim,0,6.66,side*4.43,8.1,.07,.28);
+      // Guardrails protect the roof opening while keeping the 1.65 m stair lane clear.
+      add(root,wall,side*.82,6.28,1.25,.12,.72,3.5,true);
+      add(root,trim,side*.82,6.66,1.25,.16,.07,3.5);
     }
     add(root,dark,-2.65,6.10,-1.2,1.3,.48,1.0,true);
     add(root,glow,-2.65,6.37,-1.2,1.1,.035,.8);
@@ -183,8 +206,14 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     // A reachable service sublevel; the two building basements meet the link tunnel.
     add(root,floor,0,-2.78,0,8.2,.28,8.9,true);
     for(const side of [-1,1]){
-      add(root,wall,side*4.12,-1.45,-2.85,.22,2.65,3.1,true);
-      add(root,wall,side*4.12,-1.45,2.85,.22,2.65,3.1,true);
+      if(side===innerSide){
+        // An open portal joins the basement service room to the underpass.
+        add(root,wall,side*4.12,-1.45,-3.7,.22,2.65,4.5,true);
+        add(root,wall,side*4.12,-1.45,3.7,.22,2.65,4.5,true);
+      }else{
+        add(root,wall,side*4.12,-1.45,-2.85,.22,2.65,3.1,true);
+        add(root,wall,side*4.12,-1.45,2.85,.22,2.65,3.1,true);
+      }
       add(root,wall,side*4.12,-.18,0,.22,.35,1.7,true);
     }
     add(root,wall,0,-1.45,-4.38,8.2,2.65,.22,true);
