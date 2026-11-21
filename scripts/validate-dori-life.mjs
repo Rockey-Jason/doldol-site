@@ -144,11 +144,19 @@ assert.ok(html.includes("var roamPhase=second%300;"), "Roaming route segments mu
 assert.ok(html.includes("var step=Math.floor(roamPhase/15)%stops.length;"), "Walk destinations must change at the route segment boundary.");
 assert.ok(html.includes("var lastMinuteKey = '';"), "Minute-based UI updates need a persistent KST minute key.");
 assert.ok(html.includes("if(minuteKey!==lastMinuteKey){"), "Timeline/history updates must not depend on hitting second zero exactly.");
+assert.ok(html.includes("function startRoutineTimer(){"), "The one-second routine timer must have an explicit lifecycle.");
+assert.ok(html.includes("function stopRoutineTimer(){"), "The routine timer must be stoppable while the page is hidden.");
+assert.ok(html.includes("if(document.hidden){stopRoutineTimer();return;}"), "A hidden Dori Life tab must stop its DOM update timer.");
+assert.ok(!html.includes("  update();\n  window.setInterval(update,1000);"), "The clock must not leave an unconditional one-second timer running in the background.");
 assert.ok(!html.includes("if(second===0){renderTimeline(now);renderActivityHistory(now);}"), "The drift-prone exact-second refresh must be removed.");
 assert.ok(html.includes("var defById=Object.create(null);"), "The mesh rig must cache joint definitions for fast vertex transforms.");
 assert.ok(html.includes("var w=v.weights[i],d=defById[w.id],b=bone[w.id];"), "Per-frame skinning must use constant-time joint lookups.");
 assert.ok(!html.includes("defs.find(function(bd){return bd.id===w.id;})"), "The render loop must not linearly scan the skeleton for every vertex weight.");
-assert.ok(html.includes("if(document.hidden){requestAnimationFrame(loop);return;}"), "The character renderer must pause expensive drawing while the tab is hidden.");
+assert.ok(html.includes("function scheduleLoop(){"), "The character renderer must expose a single gated frame scheduler.");
+assert.ok(html.includes("if(rigFrame||!ready||failed||document.hidden)return;"), "Hidden tabs must not schedule another character animation frame.");
+assert.ok(html.includes("if(rigFrame)cancelAnimationFrame(rigFrame);"), "An already scheduled mesh frame must be cancelled when the tab becomes hidden.");
+assert.ok(html.includes("document.addEventListener('visibilitychange',onRigVisibilityChange);"), "The mesh renderer must suspend and resume with document visibility.");
+assert.ok(html.includes("if(!document.hidden){lastFrame=0;scheduleLoop();}"), "A visible or restored page must restart the mesh from a fresh frame.");
 
 // The skinning/render loop must keep executable statements outside line comments.
 // A literal "\\n" inserted after // would comment out the animation call and pts assignment;

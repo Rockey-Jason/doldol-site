@@ -228,29 +228,6 @@ body::before {
     animation: pulseRing 3s ease-in-out infinite;
 }
 
-.profile-image-wrapper.has-profile-frame::before {
-    content: "";
-    position: absolute;
-    inset: -16px;
-    z-index: 2;
-    border-radius: 50%;
-    background-image: var(--profile-frame-art, none);
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    filter: drop-shadow(0 0 9px var(--profile-frame-color, rgba(143,126,255,.4)));
-    pointer-events: none;
-}
-.profile-image-wrapper.has-profile-frame::after {
-    inset: -13px;
-    border-color: var(--profile-frame-color, rgba(143,126,255,.55));
-    box-shadow: 0 0 18px var(--profile-frame-color, rgba(143,126,255,.35));
-}
-.profile-image-wrapper.has-profile-frame #돌이사진 {
-    border-color: #fff !important;
-    box-shadow: 0 0 0 2px rgba(5,5,28,.9);
-}
-
 
 #돌이사진 {
     position: relative !important;

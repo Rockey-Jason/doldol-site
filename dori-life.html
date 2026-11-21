@@ -2405,7 +2405,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var W=361,H=397;
     var COLS=36,ROWS=40;
     var vertices=[],triangles=[];
-    var ready=false,failed=false,lastFrame=0,lastPose='',poseStarted=0;
+    var ready=false,failed=false,lastFrame=0,lastPose='',poseStarted=0,rigFrame=0;
     var fpsInterval=1000/30;
     var motionNames=['root','body','spine','chest','neck','neckBase','neckMid','neckUpper','poll','head','headTilt','muzzleTip','jawHinge','earL','earR','tail','jaw','eyeL','eyeR','frontFarUpper','frontFarLower','frontNearUpper','frontNearLower','hindFarUpper','hindFarLower','hindNearUpper','hindNearLower'];
     var defs=[
@@ -3122,12 +3122,29 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       }
       ctx.restore();
     }
+    function scheduleLoop(){
+      if(rigFrame||!ready||failed||document.hidden)return;
+      rigFrame=requestAnimationFrame(loop);
+    }
+    function onRigVisibilityChange(){
+      if(document.hidden){
+        if(rigFrame)cancelAnimationFrame(rigFrame);
+        rigFrame=0;
+        return;
+      }
+      // Draw a fresh frame immediately after returning to the visible tab.
+      lastFrame=0;
+      scheduleLoop();
+    }
+    document.addEventListener('visibilitychange',onRigVisibilityChange);
+    window.addEventListener('pageshow',function(){
+      if(!document.hidden){lastFrame=0;scheduleLoop();}
+    });
     function loop(now){
-      if(!ready||failed)return;
-      // Do not spend CPU drawing a hidden tab; the next visible frame resumes from live state.
-      if(document.hidden){requestAnimationFrame(loop);return;}
+      rigFrame=0;
+      if(!ready||failed||document.hidden)return;
       if(now-lastFrame>=fpsInterval){lastFrame=now;try{poseMotion(now);}catch(err){failed=true;console.error('Dori mesh rendering failed',err);if(fallback){fallback.hidden=false;canvas.hidden=true;}}}
-      requestAnimationFrame(loop);
+      scheduleLoop();
     }
     function showImage(url){
       texture.onload=function(){
@@ -3135,7 +3152,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
           makeVertices();resetBones();prepareSourcePixels();
           ready=true;failed=false;canvas.hidden=false;lastFrame=0;
           if(fallback){fallback.src=url;fallback.hidden=true;}
-          requestAnimationFrame(loop);
+          scheduleLoop();
         }catch(err){
           failed=true;ready=false;canvas.hidden=true;
           console.error('Dori mesh initialization failed',err);
@@ -3205,11 +3222,26 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       renderActivityHistory(now);
     }
   }
+  var routineTimer=0;
+  function startRoutineTimer(){
+    if(!routineTimer&&!document.hidden)routineTimer=window.setInterval(update,1000);
+  }
+  function stopRoutineTimer(){
+    if(routineTimer){window.clearInterval(routineTimer);routineTimer=0;}
+  }
   update();
-  window.setInterval(update,1000);
-  document.addEventListener('visibilitychange',function(){if(!document.hidden)update();});
-  window.addEventListener('pageshow',update);
-  window.addEventListener('focus',update);
+  startRoutineTimer();
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden){stopRoutineTimer();return;}
+    update();
+    startRoutineTimer();
+  });
+  window.addEventListener('pageshow',function(){
+    if(document.hidden)return;
+    update();
+    startRoutineTimer();
+  });
+  window.addEventListener('focus',function(){if(!document.hidden)update();});
 })();
 </script>
 

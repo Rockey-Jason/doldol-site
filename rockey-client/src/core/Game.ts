@@ -1411,8 +1411,14 @@ export async function createGame(
     previous = performance.now();
   };
   const onVisibilityChange = () => {
-    if (document.hidden) resetAllInput();
+    if (document.hidden) {
+      resetAllInput();
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
+      return;
+    }
     previous = performance.now();
+    if (!raf && !disposed) raf = requestAnimationFrame(frame);
   };
   const onWindowBlur = () => resetAllInput();
   document.addEventListener('visibilitychange', onVisibilityChange);
@@ -1544,10 +1550,10 @@ export async function createGame(
   }
 
   function frame(now: number) {
+    raf = 0;
     if (disposed) return;
     if (document.hidden) {
       previous = now;
-      raf = requestAnimationFrame(frame);
       return;
     }
     const dt = Math.min((now - previous) / 1000, 0.05);

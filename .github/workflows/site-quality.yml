@@ -32,6 +32,9 @@ jobs:
       - name: Validate Dori Life animation choreography
         run: node scripts/validate-dori-life.mjs
 
+      - name: Validate shared profile frames and hidden-tab lifecycles
+        run: node scripts/validate-runtime-polish.mjs
+
       - name: Install ROCKEY client dependencies
         working-directory: rockey-client
         run: npm install
