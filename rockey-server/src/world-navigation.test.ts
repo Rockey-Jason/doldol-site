@@ -64,8 +64,9 @@ test('basement doors on both buildings open to the service underpass',()=>{
   for(const map of Object.values(MAPS)){
     for(const centerX of [-17.2,17.2]){
       const innerSide=centerX<0?1:-1;
-      const doorX=centerX+innerSide*4.12;
-      assert.equal(isBlockedByCover(map.cover,doorX,-1.72,-1.5),false,
+      const wallX=centerX+innerSide*4.12;
+      const doorX=centerX+innerSide*3.9;
+      assert.equal(isBlockedByCover(map.cover,wallX,-1.72,-1.5),false,
         map.id+' blocks the basement underpass doorway');
       assert.equal(tacticalFloorHeightAt(doorX,-1.5,-1.72),-2.64,
         map.id+' basement doorway has no walkable floor');
