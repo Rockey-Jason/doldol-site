@@ -37,6 +37,10 @@ test('both mirrored second-floor stairways reach a landing and the gallery on ev
         map.id+' blocks the stair-aligned upper doorway');
       assert.equal(tacticalFloorHeightAt(centerX+innerSide*3.55,-1.5,5.11),4.19,
         map.id+' bridge-side upper gallery has no walkable floor');
+      assert.equal(tacticalFloorHeightAt(centerX+innerSide*2.5,-.9,5.11),4.19,
+        map.id+' upper cross-walk does not connect the stairwell to the gallery');
+      assert.equal(isBlockedByCover(map.cover,centerX+innerSide*2.5,5.11,-.9),false,
+        map.id+' blocks the upper cross-walk');
       assert.equal(isBlockedByCover(map.cover,centerX+innerSide*3.55,5.11,-1.5),false,
         map.id+' blocks the upper bridge entrance');
     }
