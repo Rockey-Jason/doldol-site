@@ -579,3 +579,20 @@ PR #8 remains the separate Godot implementation and was not integrated. PR #9 ov
 - **CI:** [run 44653672826](https://github.com/Rockey-Jason/doldol-site/actions/runs/44653672826) SUCCESS — 7/7 validation groups; 183 Node tests passed (7 + 149 + 27); Playwright browser-regression PASS.
 - **Additional verified mine/browser evidence:** 3,600 simulated seconds, 8,000L connected drainage, one rail load delivering exactly two ore, 11 healthy supports, manual/basic/advanced mining and drill repair. Desktop and mobile-emulation WebGL each completed a 60-second elapsed sample. Software-renderer samples were 13 FPS desktop and 17 FPS mobile emulation; optimize further and validate on physical hardware.
 - **Not claimed:** this is not a 60-minute wall-clock soak, physical PC/mobile validation, full salvage/refund transaction, global ownership completion, main merge or deployment. The 2,048m×2,048m world, all six fluid paths, universal canonical recipe/model source, full Fusion interlocks/restart recovery and full campaign remain open.
+
+
+## 2026-11-21 — reservation, quarantine and dismantle replay integrity
+
+- **Development code HEAD:** `89dd448fd27dfd480f00818d03012ab4f29731ac` (PR #11; not merged).
+- **Related code commits:**
+  - `581e89434402628d5955d8c7a9f22a86bd71ed32` — preflight all active item reservations before consumption.
+  - `e5bfb54ebc4613dc2b819b88dd45df77b28cce18` — preserve the original building type when replaying a dismantle transaction after the building has already been removed.
+  - `89dd448fd27dfd480f00818d03012ab4f29731ac` — fail closed for corrupt reservation data and exclude quarantined stacks from direct consumption.
+- **Reservation audit:** validates positive safe-integer allocation quantities, exact reservation/allocation totals, unique stack allocations within each reservation, aggregate reserved totals across all active reservations, item/stack matching, quarantine state, stack limits and duplicate commit IDs. The same audit is used by save validation and reservation commit preflight. No inventory mutation occurs when the preflight fails.
+- **Fail-closed availability:** malformed active reservations mark their referenced stacks as fully reserved, so negative or inconsistent reservation data cannot make held stock appear spendable.
+- **Quarantine guard:** `removeItemStacks` now excludes quarantined legacy stock in both availability calculation and mutation. The stock remains visible to recovery totals but cannot be consumed through this path.
+- **Dismantle replay:** exact replay now uses the committed request's original building type when the building has already been removed, so an idempotent retry returns the prior result instead of a false payload conflict.
+- **Cache:** factory module query versions advanced for the changed simulation and ownership runtimes.
+- **Static/Node CI:** run [44853572940](https://github.com/Rockey-Jason/doldol-site/actions/runs/44853572940) — 7/7 validation groups, 161/161 core runtime tests and 27/27 mine tests passed (195 total test cases). The Playwright browser-regression job was still running at this log checkpoint and is deliberately not counted as a pass.
+- **Limitations:** the browser result is pending; no physical PC/Android/iOS run or 60-minute wall-clock soak was performed. The global ownership ledger remains a rebuilt projection rather than a universal authoritative source, and the master v4.5 roadmap remains partial.
+- **Safety boundary:** no main merge, production deployment, production DB/RLS/function change, live user save/economy/reward mutation or natural Doronium vein creation.

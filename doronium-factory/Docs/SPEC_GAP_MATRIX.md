@@ -588,3 +588,12 @@ No main merge, deployment, production database change, or live-user save/economy
 - **Time distinction:** the CI ran a 3,600-second virtual simulation and 60-second elapsed samples per viewport. `DORONIUM_MINE_60M` was not enabled; a real 60-minute wall-clock soak remains UNVERIFIED. Physical PC/Android/iOS tests also remain UNVERIFIED.
 - **Remaining construction/ownership gate:** the new guard prevents active assets from being orphaned, but idle-building salvage/refund is not yet a journaled atomic transaction; global ownership is still a rebuilt snapshot, not a universal source of truth.
 - **Repository boundary:** main remains untouched; no deployment, production DB/RLS/function change, user save/economy/reward mutation, or natural Doronium vein creation occurred.
+
+
+## 2026-11-21 reservation integrity hardening — PARTIAL
+
+- Item reservation commit now performs a full read-only preflight across all active reservations before mutating any stack. Invalid quantity types, negative/fractional quantities, allocation-total mismatch, duplicate stack allocation, aggregate overbooking, item/stack mismatch, quarantined stack references and duplicate request IDs are rejected without consuming stock.
+- Spendability calculations fail closed when reservation records are malformed; affected stacks are treated as fully reserved until the record is repaired. Direct item removal now excludes quarantined legacy stacks.
+- Exact dismantle transaction replay is stable after the building projection has been removed; the original transaction type is reused for payload comparison.
+- **CI evidence:** [run 44853572940](https://github.com/Rockey-Jason/doldol-site/actions/runs/44853572940) has static validation 7/7, core tests 161/161 and mine tests 27/27 passing. Playwright browser regression was still in progress at this checkpoint; do not infer success from the static job.
+- **Still open:** authoritative cross-domain ownership, world-drop/warehouse/shipment/fusion end-to-end conservation, six live fluid families, 2,048m world migration, full machine failure coverage, complete canonical recipe source, Fusion restart/interlock recovery, complete contracts, physical-device validation and real 60-minute soak.
