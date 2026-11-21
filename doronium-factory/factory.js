@@ -18,7 +18,7 @@ import { startInfinityFusion, tickInfinityFusion, cancelInfinityFusion, recoverI
 import { evaluatePlanetaryStabilization } from "./planetary-stabilization.js?v=1";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=3";
-import { createOwnershipState, addCustody, transferCustody, consumeCustody, completeProductionCustody, validateOwnershipState, resetCustodySnapshot, hasPendingBuildingCustody } from "./ownership-runtime.js?v=7";
+import { createOwnershipState, addCustody, transferCustody, consumeCustody, completeProductionCustody, validateOwnershipState, resetCustodySnapshot, hasPendingBuildingCustody, commitBuildingDismantle } from "./ownership-runtime.js?v=7";
 import { storeWarehouseStack as storeWarehouseCustody, withdrawWarehouseStack as withdrawWarehouseCustody } from "./warehouse-runtime.js?v=2";
 let createClient = null;
 
@@ -1560,6 +1560,8 @@ function drainFluidToTank(source){
 }
 function removeBuilding(b){
  const d=buildingDef(b.type);if(!d)return false;
+ const preAudit=rebuildOwnershipLedger(S);
+ if(!preAudit.valid){toast("소유권 원장 검증에 실패하여 설비를 철거하지 않았습니다.","warn");return false}
  const activeCustody=hasPendingBuildingCustody(S,b);
  const hasWarehouseStock=Array.isArray(b.warehouseStock)&&b.warehouseStock.some(item=>Number(item?.quantity)>0);
  const activeFusion=b.type==="fusion"&&["RESERVED","RUNNING","PAUSED_POWER","WAITING_POWER","CALIBRATING","ERROR"].includes(S.fusionJob?.status);
@@ -1574,18 +1576,35 @@ function removeBuilding(b){
    "출력·입력 버퍼가 비었고 작업이 정지된 상태에서만 철거할 수 있습니다.";
   toast(reason,"warn");return false;
  }
- // Do not stop a live rail route until every dismantle guard has passed.
- if(b.type==="mineRailStation"&&b.layer==="mine"&&mineRailSummary(S,b.mineLevel).enabled){
-  setMineRailEnabled(S,b.mineLevel,false);
-  log("정거장 철거 전 자동 광차 정지 · 미회수 화물은 원래 채굴기에 반환");
+ const uid=String(b.uid||"").trim(),refund=Math.floor(Number(d.cost)*.55);
+ if(!uid||!Number.isSafeInteger(refund)||refund<0){toast("설비 해체 정산 정보가 올바르지 않습니다.","warn");return false}
+ const salvage=Object.entries(d.materials||{}).map(([id,quantity])=>({itemID:canonicalItemID(id),quantity:Math.floor(Number(quantity)*.5)})).filter(item=>item.quantity>0);
+ if(salvage.some(item=>!RESOURCE[item.itemID]||!Number.isSafeInteger(item.quantity))){toast("회수 자재 목록을 검증하지 못해 설비를 철거하지 않았습니다.","warn");return false}
+ const railActive=b.type==="mineRailStation"&&b.layer==="mine"&&mineRailSummary(S,b.mineLevel).enabled;
+ const snapshotKeys=["money","runtime","inventory","meta","quarantinedInventory","quarantinedMeta","buildings","relaySites","corePlaced","powerTopologyEnabled","ownershipLedger","ownershipLedgerValidation","mineInfrastructure"];
+ const snapshot=Object.fromEntries(snapshotKeys.map(key=>[key,S[key]===undefined?undefined:structuredClone(S[key])]));
+ const rollback=()=>{for(const key of snapshotKeys){if(snapshot[key]===undefined)delete S[key];else S[key]=snapshot[key]}};
+ const transaction=commitBuildingDismantle(S,{transactionID:"BUILDING_DISMANTLE:"+uid,buildingUID:uid,refund,salvage},()=>{
+  if(railActive&&!setMineRailEnabled(S,b.mineLevel,false).ok)return false;
+  const balance=Number(S.money)||0;if(!Number.isFinite(balance)||balance<0)return false;
+  S.money=balance+refund;if(!Number.isSafeInteger(S.money))return false;
+  for(const item of salvage)if(!addItemStack(S,item.itemID,item.quantity,{quality:90,purity:90,synthetic:false}))return false;
+  syncLegacyInventory(S);
+  S.buildings=(S.buildings||[]).filter(item=>String(item.uid)!==uid);
+  if(b.type==="relay"){const i=(S.sites?.relay||[]).findIndex(p=>p.x===b.x&&p.y===b.y);if(i>=0&&Array.isArray(S.relaySites))S.relaySites[i]=false}
+  if(b.type==="core")S.corePlaced=false;
+  if(b.type==="powerCable")S.powerTopologyEnabled=S.buildings.some(item=>item.type==="powerCable");
+  return !S.buildings.some(item=>String(item.uid)===uid);
+ },rollback);
+ if(!transaction){toast("설비 해체 정산을 완료하지 못했습니다. 자금·자재·설비는 원래 상태로 유지했습니다.","warn");return false}
+ if(transaction.duplicate){
+  if((S.buildings||[]).some(item=>String(item.uid)===uid)){toast("이미 처리된 해체 거래가 감지되어 중복 환급을 차단했습니다.","warn");return false}
+  selectedBuilding=null;renderAll();return true;
  }
- markSceneDirty();const refund=Math.floor(d.cost*.55);S.money+=refund;
- for(const[id,n]of Object.entries(d.materials||{}))addItem(id,Math.floor(n*.5),{},false);
- S.buildings=S.buildings.filter(x=>x.uid!==b.uid);
- if(b.type==="relay"){const i=S.sites.relay.findIndex(p=>p.x===b.x&&p.y===b.y);if(i>=0)S.relaySites[i]=false}
- if(b.type==="core")S.corePlaced=false;
- if(b.type==="powerCable")S.powerTopologyEnabled=S.buildings.some(x=>x.type==="powerCable");
- selectedBuilding=null;log(d.name+" 해체 · "+refund+" D 환급");toast("시설 해체 · "+refund+" D 환급");markDirty();renderAll();
+ const audit=rebuildOwnershipLedger(S);
+ if(!audit.valid){rollback();toast("해체 후 소유권 검증에 실패하여 모든 변경을 되돌렸습니다.","warn");return false}
+ if(railActive)log("정거장 철거 전 자동 광차 정지 · 미회수 화물은 원래 채굴기에 반환");
+ markSceneDirty();selectedBuilding=null;log(d.name+" 해체 · "+refund+" D 환급");toast("시설 해체 · "+refund+" D 환급");markDirty();renderAll();return true;
 }
 function chooseVariant(b){const choices=[...VARIANTS.filter(id=>id!=="ITEM_DORONUM_NORMAL"&&!!VARIANT_RECIPES[id]),"PURIFY_RUSTED_DORONUM"];const body='<p>결정 생산 또는 부식 도로늄 정제를 선택하세요. 정제는 품질·순도 조건을 충족한 인피니티 원료를 만들기 위한 별도 공정입니다.</p><select id="variant-select" class="modal-select">'+choices.map(id=>'<option value="'+id+'" '+(b.variant===id?"selected":"")+'>'+(id==="PURIFY_RUSTED_DORONUM"?"부식 도로늄 정제":RESOURCE[id].name)+'</option>').join("")+'</select>';showModal("결정 변환 레시피",body,[{label:"취소",cls:"secondary"},{label:"설정",cls:"primary",action:()=>{b.variant=$("variant-select").value;markDirty();renderMachineDetails();closeModal();toast("레시피 변경 완료")}}])}
 function startResearch(id){const r=RESEARCH.find(x=>x.id===id);if(!r||S.research.includes(id))return;if(!hasBuilding(S,"lab")){toast("먼저 기술 연구소를 건설하세요.","warn");return}if(r.requires&&!r.requires.every(v=>S.research.includes(v))){toast("선행 연구가 완료되지 않았습니다.","warn");return}if(S.activeResearch){toast("다른 연구가 이미 진행 중입니다.","warn");return}if(S.money<r.cost||!hasItems(r.need)){toast("연구 자원 또는 자금이 부족합니다.","warn");return}S.money-=r.cost;takeItems(r.need);S.activeResearch=id;S.researchProgress=0;log("연구 시작 · "+r.name);toast(r.name+" 연구를 시작합니다.");markDirty();renderResearch();renderHud()}
@@ -2990,6 +3009,26 @@ if(E2E_MODE){
     S.buildings=[idle];const idleAuditBefore=rebuildOwnershipLedger(S);removeBuilding(idle);const idleAuditAfter=rebuildOwnershipLedger(S);
     const idleBuildingRemoved=!S.buildings.includes(idle);
     return {active,legacy,completion,reservation,idleBuildingRemoved,idleAuditValid:idleAuditBefore.valid&&idleAuditAfter.valid};
+   }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
+  },
+
+  runDismantleTransactionTest(){
+   const oldState=S,oldMotion=playerMotion,oldSelectedBuilding=selectedBuilding;
+   try{
+    S=freshState();S.runtime=createRuntimeState();S.inventory={};S.meta={};ensureItemStacks(S);S.completionBuffer=[];
+    const definition=buildingDef("smelter");
+    if(!definition)throw new Error("missing-smelter-definition");
+    const building={uid:"DISMANTLE-TRANSACTION-E2E",type:"smelter",x:4,y:4,dir:1,progress:0,condition:100,status:"IDLE",input:{},inputMeta:{},output:null};
+    S.buildings=[building];const beforeMoney=Number(S.money)||0,expectedRefund=Math.floor(definition.cost*.55),expectedSalvage={};
+    for(const[id,quantity]of Object.entries(definition.materials||{})){const itemID=canonicalItemID(id),amount=Math.floor(Number(quantity)*.5);if(amount>0)expectedSalvage[itemID]=(expectedSalvage[itemID]||0)+amount}
+    const removed=removeBuilding(building),afterMoney=Number(S.money)||0,afterInventory={...(S.inventory||{})};
+    const audit=rebuildOwnershipLedger(S),transactionID="BUILDING_DISMANTLE:"+building.uid,journal=S.ownershipLedger?.transactions?.[transactionID];
+    const replayBefore=JSON.stringify({money:S.money,inventory:S.inventory,buildings:S.buildings,transactions:S.ownershipLedger?.transactions});
+    let replayApplyCalls=0;
+    const replay=commitBuildingDismantle(S,{transactionID,buildingUID:building.uid,refund:expectedRefund,salvage:Object.entries(expectedSalvage).map(([itemID,quantity])=>({itemID,quantity}))},()=>{replayApplyCalls++;return true},()=>{});
+    const conflict=commitBuildingDismantle(S,{transactionID,buildingUID:building.uid,refund:expectedRefund+1,salvage:Object.entries(expectedSalvage).map(([itemID,quantity])=>({itemID,quantity}))},()=>{replayApplyCalls++;return true},()=>{});
+    const replayAfter=JSON.stringify({money:S.money,inventory:S.inventory,buildings:S.buildings,transactions:S.ownershipLedger?.transactions});
+    return {removed:removed===true&&!S.buildings.includes(building),refundApplied:afterMoney===beforeMoney+expectedRefund,salvageApplied:Object.entries(expectedSalvage).every(([id,quantity])=>Number(afterInventory[id])===quantity),journaled:journal?.status==="COMMITTED"&&journal.request?.type==="BUILDING_DISMANTLE",auditValid:audit.valid,idempotentReplay:replay?.duplicate===true,conflictingReplayRejected:conflict===null,replayApplyCalls,replayPreserved:replayBefore===replayAfter};
    }finally{S=oldState;playerMotion=oldMotion;selectedBuilding=oldSelectedBuilding;renderAll()}
   },
   runLiveShipmentCustodyTest(){
