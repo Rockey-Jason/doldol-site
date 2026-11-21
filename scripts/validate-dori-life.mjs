@@ -138,8 +138,8 @@ assert.ok(html.includes("function kstSecondsOfDay(now){var p=parts(now);return N
 assert.ok(html.includes("var seconds=kstSecondsOfDay(now);"), "Ambient routines must use Korean Standard Time.");
 assert.ok(!html.includes("var hour=now.getHours();"), "Ambient routines must not fall back to the visitor device's local timezone.");
 assert.ok(html.includes("var second=kstSecondsOfDay(now);"), "Roaming destinations must use the same KST time source.");
-assert.ok(html.includes("if(phase<60){"), "The daytime home patrol must last a full minute.");
-assert.ok(html.includes("var walkStep=Math.floor(phase/15)%4;"), "The home patrol must use four deliberate 15-second route segments.");
+assert.ok(html.includes("if(phase<90){"), "The daytime home patrol must last ninety seconds.");
+assert.ok(html.includes("var walkStep=Math.floor(phase/15)%6;"), "The home patrol must use six deliberate 15-second route segments.");
 assert.ok(html.includes("var roamPhase=second%300;"), "Roaming route segments must align with the five-minute daily routine.");
 assert.ok(html.includes("var step=Math.floor(roamPhase/15)%stops.length;"), "Walk destinations must change at the route segment boundary.");
 assert.ok(html.includes("var lastMinuteKey = '';"), "Minute-based UI updates need a persistent KST minute key.");
@@ -167,6 +167,17 @@ assert.ok(renderBlockStart >= 0 && renderBlockEnd > renderBlockStart, "Could not
 const renderBlock = html.slice(renderBlockStart, renderBlockEnd);
 assert.ok(renderBlock.includes("action.\\n") === false, "The mesh render block must not contain escaped pseudo-newlines.");
 assert.ok(renderBlock.includes(`action.\n      applyLifeLegMotion(pose,t,isDoriMoving,isDoriTurning);\n      var pts=vertices.map(transformPoint);`), "Leg motion and vertex transforms must be executable statements on separate source lines.");
+
+
+assert.ok(html.includes("var OBSERVED_LOG_KEY='doriLifeObservedLogV1';"), "The real-observation archive must have a versioned local storage key.");
+assert.ok(html.includes("function recordObservedAction(state,evt,now)"), "The page must record displayed behavior transitions.");
+assert.ok(html.includes("recordObservedAction(state,evt,now||new Date());"), "The observer must attach to the rendered room state.");
+assert.ok(html.includes("function closeObservedAction(endAt,shouldRender)"), "Observed intervals must be closed and persisted.");
+assert.ok(html.includes("document.addEventListener('visibilitychange',function(){\n    if(document.hidden)closeObservedAction(Date.now());"), "Hidden-tab time must not be counted as observed activity.");
+assert.ok(html.includes("window.addEventListener('pagehide',function(){closeObservedAction(Date.now());});"), "The final visible interval must be saved when leaving the page.");
+assert.ok(html.includes("var walkStep=Math.floor(phase/15)%6;"), "Daytime roaming must use six separate scene segments.");
+assert.ok(html.includes("{x:440,y:438,s:.87},{x:555,y:444,s:.89}"), "The route must begin near the sofa and table rather than the centre only.");
+assert.ok(html.includes("{x:910,y:438,s:.87},{x:1035,y:444,s:.84}"), "The route must extend to the far side of the room.");
 
 // Test the actual timezone helper against UTC instants, independent of the test machine's timezone.
 const clockStart = html.indexOf("function parts(now)");
@@ -198,15 +209,15 @@ function poseAt(second) {
 for (let second = 0; second < 300; second++) {
   const pose = poseAt(second);
   let valid = false;
-  if (second < 60) valid = pose === "walk" || pose === "explore";
-  else if (second < 82) valid = pose === "sniff";
-  else if (second < 112) valid = pose === "play";
-  else if (second < 134) valid = pose === "water";
-  else if (second < 158) valid = pose === "groom" || pose === "scratch";
-  else if (second < 200) valid = ["flop", "sleep", "cuddle", "doze"].includes(pose);
-  else if (second < 224) valid = pose === "wake" || pose === "stretch";
-  else if (second < 254) valid = ["curious", "listen", "lookUp"].includes(pose);
-  else if (second < 284) valid = ["sit", "beg", "wait"].includes(pose);
+  if (second < 90) valid = pose === "walk" || pose === "explore";
+  else if (second < 108) valid = pose === "sniff";
+  else if (second < 133) valid = pose === "play";
+  else if (second < 153) valid = pose === "water";
+  else if (second < 173) valid = pose === "groom" || pose === "scratch";
+  else if (second < 207) valid = ["flop", "sleep", "cuddle", "doze"].includes(pose);
+  else if (second < 227) valid = pose === "wake" || pose === "stretch";
+  else if (second < 252) valid = ["curious", "listen", "lookUp"].includes(pose);
+  else if (second < 280) valid = ["sit", "beg", "wait"].includes(pose);
   else valid = pose === "happy";
   assert.ok(valid, "Unexpected or missing routine pose at " + second + " seconds: " + pose);
 }
