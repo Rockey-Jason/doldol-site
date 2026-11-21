@@ -32,7 +32,9 @@ export const MAPS: Record<string,RockeyMap> = {
     palette:'magenta',background:0xd5b8dc,fog:0xe2cde8,floor:0x806d8d,grid:0xa65fc1,light:0xe46aff,
     cover:[
       {x:0,z:-10,hx:5,hz:1.2,top:3.5},{x:0,z:10,hx:5,hz:1.2,top:3.5},
-      {x:-12,z:0,hx:1.4,hz:5,top:4},{x:12,z:0,hx:1.4,hz:5,top:4},
+      // Keep the central building doors clear; the side pylons frame rather than seal the entrances.
+      {x:-12,z:-6.5,hx:1.4,hz:1.5,top:4},{x:-12,z:4,hx:1.4,hz:1,top:4},
+      {x:12,z:-6.5,hx:1.4,hz:1.5,top:4},{x:12,z:4,hx:1.4,hz:1,top:4},
       {x:-7,z:-5,hx:1.7,hz:1.7,top:2.4},{x:7,z:5,hx:1.7,hz:1.7,top:2.4}
     ]
   },
