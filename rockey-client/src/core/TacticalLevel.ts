@@ -126,7 +126,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     add(root,floor,-innerSide*1.2,4.05,1.45,6.2,.28,6.7,true);
     add(root,floor,innerSide*3.75,4.05,1.45,1.3,.28,6.7,true);
     add(root,floor,stairX,4.05,.6,1.35,.28,.9,true);
-    add(root,floor,stairX,4.05,-2.0,2.2,.28,1.45,true);
+    add(root,floor,stairX,4.0,-2.0,2.2,.28,1.45,true);
 
     // Preserve the outer guardrail. Open the inner wall directly onto the skybridge.
     const outerSide=-innerSide;
@@ -155,6 +155,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
       add(root,i%2?trim:floor,0,y,z,1.18,.20,.48,true);
     }
     // Split the roof deck around the stairwell so the final steps are not sealed under the slab.
+    add(root,floor,0,5.85,-.25,1.6,.28,.9,true);
     add(root,floor,-2.5,5.85,0,3.35,.28,9.15,true);
     add(root,floor,2.5,5.85,0,3.35,.28,9.15,true);
     add(root,floor,0,5.85,-2.5375,1.65,.28,4.075,true);
