@@ -169,6 +169,8 @@ assert.ok(factoryFrame.includes("worldFrameHandle=0;") && factoryFrame.includes(
 // Bring the factory typography onto the shared Dori font instead of downloading two extra font families.
 assert.ok(factoryCss.includes('font-family:"HancomMalrangmalrang",sans-serif'),
   "The factory must use the shared Dori font family.");
+assert.ok(factoryCss.includes('#game-root,#game-root *{font-family:"HancomMalrangmalrang",sans-serif!important;font-weight:400!important}'),
+  "All factory text must use the shared regular-weight font only.");
 assert.ok(factoryCss.includes('font-weight:400;font-display:swap'),
   "The factory must load the regular Hancom font asset.");
 assert.ok(!factoryIndex.includes("fonts.googleapis.com/css2?family=Inter"),
