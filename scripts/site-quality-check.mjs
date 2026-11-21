@@ -170,6 +170,22 @@ for (const page of sharedUiPages) {
   }
 }
 
+/* Account switches must rehydrate the main page from the new session.
+   This protects profile, coin balance, achievements, frames, and admin visibility
+   from retaining data loaded for the previous account. */
+const mainIndex = fs.readFileSync(path.resolve(ROOT, "index.html"), "utf8");
+const accountSwitchChecks = [
+  ["initial auth session tracking", 'if (event === "INITIAL_SESSION")'],
+  ["signed-in account identity comparison", "if (마지막인증사용자ID !== 새사용자ID)"],
+  ["fresh account rehydration", "window.location.reload();"],
+  ["logout clears remembered account", "마지막인증사용자ID = null;"]
+];
+for (const [label, token] of accountSwitchChecks) {
+  if (!mainIndex.includes(token)) {
+    errors.push("index.html: missing account-switch safety invariant: " + label);
+  }
+}
+
 for (const file of jsFiles) {
   const result = spawnSync(process.execPath, ["--check", file], { encoding: "utf8", cwd: ROOT });
   if (result.status !== 0) {
