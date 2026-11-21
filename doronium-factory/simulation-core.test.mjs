@@ -251,3 +251,92 @@ test("event IDs and event queue state are validated",()=>{
  state.runtime.nextEventSequence=1;
  assert.ok(validateRuntimeState(state).errors.includes("event-sequence-counter-not-advanced"));
 });
+
+
+test("reservation commit rejects malformed negative or fractional allocations without consuming stock",()=>{
+  for(const invalidQuantity of [-2,1.5]){
+    const state={runtime:createRuntimeState(),inventory:{},tick:1};
+    addItemStack(state,"ironOre",8);
+    const id=reserveItemStacks(state,"ironOre",3,"invalid-allocation");
+    const reservation=state.runtime.reservations[id];
+    reservation.allocations[0].quantity=invalidQuantity;
+    const beforeStacks=structuredClone(state.runtime.itemStacks);
+    const beforeReservation=structuredClone(reservation);
+    assert.equal(commitItemReservations(state,[id]),null);
+    assert.deepEqual(state.runtime.itemStacks,beforeStacks);
+    assert.deepEqual(state.runtime.reservations[id],beforeReservation);
+    assert.ok(validateRuntimeState(state).errors.some(error=>error.includes("invalid-reservation-allocation")));
+  }
+});
+
+test("reservation commit rejects allocation totals that differ from the reserved quantity",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},tick:1};
+  addItemStack(state,"ironOre",8);
+  const id=reserveItemStacks(state,"ironOre",3,"mismatched-allocation");
+  state.runtime.reservations[id].allocations[0].quantity=2;
+  const before=structuredClone(state.runtime);
+  assert.equal(commitItemReservations(state,[id]),null);
+  assert.deepEqual(state.runtime.itemStacks,before.itemStacks);
+  assert.deepEqual(state.runtime.reservations,before.reservations);
+  assert.ok(validateRuntimeState(state).errors.includes("reservation-quantity-mismatch:"+id));
+});
+
+test("reservation commit rejects aggregate overbooking across active reservations before mutation",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},tick:1};
+  addItemStack(state,"ironOre",10);
+  const first=reserveItemStacks(state,"ironOre",6,"first-job");
+  const second=reserveItemStacks(state,"ironOre",4,"second-job");
+  state.runtime.reservations[second].quantity=5;
+  state.runtime.reservations[second].allocations[0].quantity=5;
+  const beforeStacks=structuredClone(state.runtime.itemStacks);
+  const beforeReservations=structuredClone(state.runtime.reservations);
+  assert.equal(commitItemReservations(state,[first]),null);
+  assert.deepEqual(state.runtime.itemStacks,beforeStacks);
+  assert.deepEqual(state.runtime.reservations,beforeReservations);
+  assert.ok(validateRuntimeState(state).errors.includes("reservation-overflow:"+state.runtime.itemStacks[0].runtimeID));
+});
+
+test("reservation commit rejects duplicate stack allocations and quarantined stock",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},tick:1};
+  addItemStack(state,"ironOre",8);
+  const duplicate=reserveItemStacks(state,"ironOre",4,"duplicate-allocation");
+  const stackID=state.runtime.reservations[duplicate].allocations[0].stackID;
+  state.runtime.reservations[duplicate].allocations=[{stackID,quantity:2},{stackID,quantity:2}];
+  const duplicateBefore=structuredClone(state.runtime.itemStacks);
+  assert.equal(commitItemReservations(state,[duplicate]),null);
+  assert.deepEqual(state.runtime.itemStacks,duplicateBefore);
+  assert.ok(validateRuntimeState(state).errors.some(error=>error.startsWith("duplicate-reservation-allocation:")));
+  assert.equal(releaseItemReservation(state,duplicate),true);
+
+  const quarantined=reserveItemStacks(state,"ironOre",2,"quarantine-test");
+  const stack=state.runtime.itemStacks.find(item=>item.runtimeID===stackID);
+  stack.quarantined=true;
+  stack.quarantineReason="manual-review";
+  const before=structuredClone(state.runtime.itemStacks);
+  assert.equal(commitItemReservations(state,[quarantined]),null);
+  assert.deepEqual(state.runtime.itemStacks,before);
+  assert.equal(state.runtime.reservations[quarantined].status,"reserved");
+});
+
+test("reservation commit safely handles multiple jobs sharing one stack and commits only selected jobs",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},tick:1};
+  addItemStack(state,"ironOre",10);
+  const first=reserveItemStacks(state,"ironOre",4,"first-job");
+  const second=reserveItemStacks(state,"ironOre",3,"second-job");
+  assert.equal(commitItemReservations(state,[first]).reduce((n,item)=>n+item.quantity,0),4);
+  assert.equal(state.runtime.itemStacks[0].quantity,6);
+  assert.equal(state.runtime.reservations[second].status,"reserved");
+  assert.equal(validateRuntimeState(state).valid,true);
+  assert.equal(commitItemReservations(state,[second]).reduce((n,item)=>n+item.quantity,0),3);
+  assert.equal(state.runtime.itemStacks[0].quantity,3);
+  assert.equal(validateRuntimeState(state).valid,true);
+});
+
+test("reservation commit rejects duplicate transaction IDs instead of silently deduplicating",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},tick:1};
+  addItemStack(state,"ironOre",5);
+  const id=reserveItemStacks(state,"ironOre",2,"duplicate-request");
+  const before=structuredClone(state.runtime);
+  assert.equal(commitItemReservations(state,[id,id]),null);
+  assert.deepEqual(state.runtime,before);
+});

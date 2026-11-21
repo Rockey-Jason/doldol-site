@@ -155,6 +155,52 @@ function reservedByStack(rt,excludeReservationID=null){
   }
   return totals;
 }
+function auditActiveReservations(rt,stackByID){
+  const errors=[],reservedTotals=new Map();
+  for(const [reservationID,reservation] of Object.entries(rt.reservations||{})){
+    if(reservation?.status!=="reserved")continue;
+    const id=String(reservationID);
+    if(!reservation||typeof reservation!=="object"||Array.isArray(reservation)){
+      errors.push("invalid-reservation:"+id);continue;
+    }
+    if(!reservation.ownerID||(reservation.reservationID!=null&&String(reservation.reservationID)!==id))errors.push("invalid-reservation:"+id);
+    const itemID=canonicalItemID(reservation.itemID);
+    if(!itemID||!Number.isSafeInteger(reservation.quantity)||reservation.quantity<=0)errors.push("invalid-reservation-quantity:"+id);
+    if(!Array.isArray(reservation.allocations)||!reservation.allocations.length){
+      errors.push("invalid-reservation:"+id);continue;
+    }
+    let allocated=0;
+    const localStackIDs=new Set();
+    for(const allocation of reservation.allocations){
+      const stackID=typeof allocation?.stackID==="string"?allocation.stackID.trim():"";
+      const quantity=allocation?.quantity;
+      if(!stackID||!Number.isSafeInteger(quantity)||quantity<=0){
+        errors.push("invalid-reservation-allocation:"+id);continue;
+      }
+      if(localStackIDs.has(stackID)){
+        errors.push("duplicate-reservation-allocation:"+id+":"+stackID);continue;
+      }
+      localStackIDs.add(stackID);
+      const stack=stackByID.get(stackID);
+      if(!stack||stack.itemID!==itemID||stack.quarantined||!Number.isSafeInteger(stack.quantity)||stack.quantity<=0||stack.quantity>ITEM_STACK_LIMIT){
+        errors.push("invalid-reservation-stack:"+id+":"+stackID);continue;
+      }
+      const nextAllocated=allocated+quantity;
+      const nextReserved=(reservedTotals.get(stackID)||0)+quantity;
+      if(!Number.isSafeInteger(nextAllocated)||!Number.isSafeInteger(nextReserved)){
+        errors.push("reservation-quantity-overflow:"+id);continue;
+      }
+      allocated=nextAllocated;
+      reservedTotals.set(stackID,nextReserved);
+    }
+    if(Number.isSafeInteger(reservation.quantity)&&allocated!==reservation.quantity)errors.push("reservation-quantity-mismatch:"+id);
+  }
+  for(const [stackID,quantity] of reservedTotals){
+    const stack=stackByID.get(stackID);
+    if(!stack||quantity>stack.quantity)errors.push("reservation-overflow:"+stackID);
+  }
+  return {valid:errors.length===0,errors,reservedTotals};
+}
 export function reserveItemStacks(state,itemID,quantity,ownerID="inventory-transaction"){
   const rt=ensureItemStacks(state),qty=Math.floor(Number(quantity)||0);itemID=canonicalItemID(itemID);
   if(!itemID||qty<=0)return null;
@@ -212,13 +258,15 @@ export function releaseItemReservation(state,reservationID){
   reservation.status="released";reservation.releasedTick=Math.max(0,Number(state.tick)||0);rt.reservationHistory.push({reservationID,ownerID:reservation.ownerID,status:"released",tick:reservation.releasedTick});delete rt.reservations[reservationID];if(rt.reservationHistory.length>256)rt.reservationHistory.splice(0,rt.reservationHistory.length-256);return true;
 }
 export function commitItemReservations(state,reservationIDs){
-  const rt=ensureItemStacks(state),ids=[...new Set(reservationIDs||[])],reservations=ids.map(id=>rt.reservations[id]);
-  if(!ids.length||reservations.some(r=>!r||r.status!=="reserved"))return null;
-  const byID=new Map(rt.itemStacks.map(stack=>[stack.runtimeID,stack]));
-  for(const reservation of reservations)for(const allocation of reservation.allocations||[]){
-    const stack=byID.get(allocation.stackID);
-    if(!stack||stack.itemID!==reservation.itemID||stack.quantity<allocation.quantity)return null;
-  }
+  if(!Array.isArray(reservationIDs)||!reservationIDs.length)return null;
+  const ids=reservationIDs.map(id=>typeof id==="string"?id:"");
+  if(ids.some(id=>!id)||new Set(ids).size!==ids.length)return null;
+  const rt=ensureItemStacks(state),byID=new Map(rt.itemStacks.map(stack=>[stack.runtimeID,stack]));
+  if(byID.size!==rt.itemStacks.length)return null;
+  const audit=auditActiveReservations(rt,byID);
+  if(!audit.valid)return null;
+  const reservations=ids.map(id=>rt.reservations[id]);
+  if(reservations.some(reservation=>!reservation||reservation.status!=="reserved"))return null;
   const removed=[];
   for(const reservation of reservations){
     for(const allocation of reservation.allocations){
@@ -226,7 +274,10 @@ export function commitItemReservations(state,reservationIDs){
       removed.push({...stack,quantity:allocation.quantity});
       stack.quantity-=allocation.quantity;
     }
-    reservation.status="committed";reservation.committedTick=Math.max(0,Number(state.tick)||0);rt.reservationHistory.push({reservationID:reservation.reservationID,ownerID:reservation.ownerID,status:"committed",tick:reservation.committedTick});delete rt.reservations[reservation.reservationID];
+    reservation.status="committed";
+    reservation.committedTick=Math.max(0,Number(state.tick)||0);
+    rt.reservationHistory.push({reservationID:reservation.reservationID,ownerID:reservation.ownerID,status:"committed",tick:reservation.committedTick});
+    delete rt.reservations[reservation.reservationID];
   }
   rt.itemStacks=rt.itemStacks.filter(stack=>stack.quantity>0);
   if(rt.reservationHistory.length>256)rt.reservationHistory.splice(0,rt.reservationHistory.length-256);
@@ -272,14 +323,8 @@ export function validateRuntimeState(state){
     ids.add(stack.runtimeID);stackByID.set(stack.runtimeID,stack);
     if(!stack.itemID||!Number.isInteger(stack.quantity)||stack.quantity<=0||stack.quantity>ITEM_STACK_LIMIT)errors.push("invalid-stack:"+stack.runtimeID);if(stack.quarantined&&(!stack.quarantineReason||!stack.sourceItemID))errors.push("invalid-quarantined-stack:"+stack.runtimeID);
   }
-  const reserved=reservedByStack(rt);
-  for(const [stackID,quantity] of reserved){
-    const stack=stackByID.get(stackID);
-    if(!stack||quantity>stack.quantity)errors.push("reservation-overflow:"+stackID);
-  }
-  for(const reservation of Object.values(rt.reservations)){
-    if(reservation.status==="reserved"&&(!reservation.ownerID||!reservation.allocations?.length))errors.push("invalid-reservation:"+reservation.reservationID);
-  }
+  const reservationAudit=auditActiveReservations(rt,stackByID);
+  errors.push(...reservationAudit.errors);
   const maxID=Math.max(0,...[...ids].map(id=>Number(id.replace(/^IS-/,""))||0));
   if(rt.nextStackId<=maxID)errors.push("stack-id-counter-not-advanced");
   if(!Number.isSafeInteger(rt.nextEntityID)||rt.nextEntityID<1)errors.push("invalid-entity-id-counter");
