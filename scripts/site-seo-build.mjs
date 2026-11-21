@@ -171,7 +171,18 @@ function validatePublicPage(html, relative, canonical) {
   if (!canonicalTag || readAttribute(canonicalTag, "href") !== canonical) {
     fail(relative + ": canonical URL does not match sitemap");
   }
-  if (!html.includes('"@type":"WebPage"')) fail(relative + ": WebPage structured data is missing");
+  let hasWebPageSchema = false;
+  const schemaScripts = html.matchAll(/<script\\b[^>]*type\\s*=\\s*["']application\\/ld\\+json["'][^>]*>([\\s\\S]*?)<\\/script\\s*>/gi);
+  for (const match of schemaScripts) {
+    try {
+      const schema = JSON.parse(match[1]);
+      const types = Array.isArray(schema?.["@type"]) ? schema["@type"] : [schema?.["@type"]];
+      if (types.includes("WebPage")) hasWebPageSchema = true;
+    } catch {
+      // Ignore unrelated JSON-LD blocks that are not valid WebPage data.
+    }
+  }
+  if (!hasWebPageSchema) fail(relative + ": WebPage structured data is missing");
 }
 
 function validatePrivatePage(html, relative) {
