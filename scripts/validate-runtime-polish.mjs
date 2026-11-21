@@ -103,6 +103,14 @@ assert.equal(api.applyDoriProfileFrame(null, null, 1).kind, "default");
 // Both pages must use the same single geometry source.
 assert.ok(home.includes("css/dori-profile-frame.css?v=20261114-frame-geometry-1"),
   "The main page must load the shared profile frame stylesheet.");
+assert.ok(!home.includes("#돌이프로필프레임[data-frame]{"),
+  "The main page must not keep a duplicate custom-frame renderer.");
+assert.ok(!home.includes("#돌이프로필고정틀.profile-frame-equipped > #돌이사진{"),
+  "The main page must not keep a duplicate equipped-frame border rule.");
+assert.ok(!settings.includes(".profile-image-wrapper.has-profile-frame::before {"),
+  "Settings must not keep a second profile artwork renderer.");
+assert.ok(!settings.includes(".profile-image-wrapper.has-profile-frame #돌이사진 {"),
+  "Settings must not keep a duplicate equipped-photo border rule.");
 assert.ok(settings.includes("css/dori-profile-frame.css?v=20261114-frame-geometry-1"),
   "Settings must load the same shared profile frame stylesheet.");
 assert.ok(frameCss.includes("inset:-12.5%"), "The shared art overlay must use the calibrated frame size.");
