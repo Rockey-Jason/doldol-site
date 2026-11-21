@@ -199,6 +199,17 @@ try {
   }
   assert.equal(dismantleCustody.idleBuildingRemoved, true, "An idle empty machine must remain dismantlable");
   assert.equal(dismantleCustody.idleAuditValid, true, "A normal empty-machine dismantle must leave a valid custody snapshot");
+  const dismantleTransaction = await desktop.evaluate(() => window.__doroniumFactoryTest.runDismantleTransactionTest());
+  assert.equal(dismantleTransaction.removed, true, "A valid idle-building dismantle must remove the building");
+  assert.equal(dismantleTransaction.refundApplied, true, "The configured dismantle refund must be applied exactly once");
+  assert.equal(dismantleTransaction.salvageApplied, true, "All eligible salvage materials must return to canonical inventory stacks");
+  assert.equal(dismantleTransaction.journaled, true, "The dismantle refund and salvage must be recorded in the ownership transaction journal");
+  assert.equal(dismantleTransaction.auditValid, true, "The post-dismantle custody snapshot must remain valid");
+  assert.equal(dismantleTransaction.idempotentReplay, true, "Replaying the same dismantle transaction must be recognized");
+  assert.equal(dismantleTransaction.conflictingReplayRejected, true, "A changed refund payload must be rejected for the same transaction ID");
+  assert.equal(dismantleTransaction.replayApplyCalls, 0, "A replay or conflicting replay must never reapply the refund");
+  assert.equal(dismantleTransaction.replayPreserved, true, "Replay attempts must preserve money, inventory, buildings and journal");
+
   const liveShipmentCustody = await desktop.evaluate(() => window.__doroniumFactoryTest.runLiveShipmentCustodyTest());
   assert.equal(liveShipmentCustody.firstPackagingConsumedQuantity, 18, "The first five-stage package must consume exactly 18 material units through custody");
   assert.equal(liveShipmentCustody.firstPackagingConsumptionTransactionCount, 7, "Each package-material reservation must create one committed consumption transaction");
