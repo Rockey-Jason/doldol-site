@@ -162,3 +162,38 @@ export function hasPendingBuildingCustody(state,building){
  });
  return activeInputs||activeRecipe||activeLedger||activeReservation||pendingCompletion;
 }
+
+/* Journal a building dismantle and its refund/salvage as one idempotent operation.
+   The caller supplies a synchronous apply + rollback pair for its live projections. */
+export function commitBuildingDismantle(state,{transactionID,buildingUID,refund,salvage=[]}={},apply,rollback){
+ if(!plainObject(state)||!validID(transactionID)||!validID(buildingUID)||typeof apply!=="function"||typeof rollback!=="function")return null;
+ const ledger=ensureState(state.ownershipLedger||(state.ownershipLedger=createOwnershipState()));
+ const tx=String(transactionID),uid=String(buildingUID),amount=Number(refund);
+ if(!Number.isSafeInteger(amount)||amount<0||!Array.isArray(salvage))return null;
+ const totals=new Map();
+ for(const entry of salvage){
+  const itemID=String(entry?.itemID||"").trim(),quantity=Number(entry?.quantity);
+  if(!validID(itemID)||!Number.isSafeInteger(quantity)||quantity<0)return null;
+  if(quantity<=0)continue;
+  const total=(totals.get(itemID)||0)+quantity;
+  if(!Number.isSafeInteger(total))return null;
+  totals.set(itemID,total);
+ }
+ const normalizedSalvage=[...totals.entries()].map(([itemID,quantity])=>({itemID,quantity})).sort((a,b)=>a.itemID.localeCompare(b.itemID));
+ const building=(state.buildings||[]).find(item=>String(item?.uid||"")===uid);
+ const request={type:"BUILDING_DISMANTLE",buildingUID:uid,buildingType:String(building?.type||""),refund:amount,salvage:normalizedSalvage};
+ const replay=transactionReplay(ledger,tx,request);
+ if(replay)return replay.conflict?null:replay;
+ if(!building||hasPendingBuildingCustody(state,building))return null;
+ const snapshot=clone(ledger);
+ try{
+  if(apply({building,refund:amount,salvage:clone(normalizedSalvage)})!==true)throw new Error("dismantle-apply-rejected");
+  if(state.ownershipLedger!==ledger)throw new Error("dismantle-ledger-reference-changed");
+  return saveTransaction(ledger,tx,request,{transactionID:tx,buildingUID:uid,buildingType:request.buildingType,refund:amount,salvage:normalizedSalvage});
+ }catch{
+  try{rollback()}catch{}
+  restoreOwnershipState(ledger,snapshot);
+  state.ownershipLedger=ledger;
+  return null;
+ }
+}
