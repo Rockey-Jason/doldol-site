@@ -198,7 +198,7 @@ function freshState(){
  const state={runtime:createRuntimeState(),version:1,worldVersion:4,seed:827142,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},money:1100,inventory:{wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
  ensureItemStacks(state);return state;
 }
-let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, frameRenderAccumulator=0, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
+let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, frameRenderAccumulator=0, worldFrameHandle=0, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
 let activeCooldownKeys=new Set(),cooldownNodeSource=null;
 let buildingIndex=new Map(),buildingIndexSource=null,buildingIndexRevision=-1,buildingIndexLength=-1;
 let playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Number(S.player.yaw)||0,pitch:Number(S.player.pitch??-.12),path:[],moving:false,facing:0,onArrive:null};
@@ -817,8 +817,27 @@ async function loadCloudForUser(session){if(!cloudClient||!session?.user?.id)ret
 async function initCloud(){try{const mod=await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/+esm");createClient=mod.createClient;cloudClient=createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"sb-scttowfhygcpdirrekqm-auth-token"}});const {data,error}=await cloudClient.auth.getSession();if(error)throw error;authSession=data.session;if(authSession){activeLocalKey=LOCAL_KEY+"_"+authSession.user.id;saveBlockedForFutureSchema=false;const accountLocal=loadLocal();if(!accountLocal)S=freshState();const found=await loadCloudForUser(authSession);if(!found){renderAll();await saveGame(true)}}else setCloud("","로그인 필요");cloudClient.auth.onAuthStateChange((event,session)=>{queueMicrotask(async()=>{const previous=authSession?.user?.id;authSession=session;if(session?.user?.id&&session.user.id!==previous){activeLocalKey=LOCAL_KEY+"_"+session.user.id;saveBlockedForFutureSchema=false;const accountLocal=loadLocal();if(!accountLocal)S=freshState();dirty=false;const found=await loadCloudForUser(session);if(!found){renderAll();await saveGame(true)}}else if(!session){activeLocalKey=LOCAL_KEY;saveBlockedForFutureSchema=false;const guestLocal=loadLocal();if(!guestLocal)S=freshState();renderAll();setCloud("","로그인 필요");saveLocal()}else if(event==="TOKEN_REFRESHED"){setCloud("online","클라우드 연결됨")}})});return true}catch(e){console.warn("Supabase client unavailable; using local save",e);cloudClient=null;authSession=null;setCloud("error","로컬 저장");return false}}
 async function saveGame(force=false){if(!force&&!dirty)return;if(cloudBusy){saveLocal();return}const savedAt=saveLocal();if(!savedAt)return;dirty=false;setSaveMessage("이 기기 저장 완료");if(!cloudClient||!authSession?.user?.id){setCloud("","로그인 필요");return}cloudBusy=true;setCloud("syncing","클라우드 저장");try{const envelope=createSaveEnvelope(requestSaveSnapshot(S),savedAt);const {error}=await cloudClient.from("dori_cloud_storage").upsert({user_id:authSession.user.id,storage_key:CLOUD_KEY,storage_value:envelope,is_deleted:false,updated_at:savedAt},{onConflict:"user_id,storage_key"});if(error)throw error;cloudUpdatedAt=savedAt;setCloud("online","모든 기기 동기화");setSaveMessage("계정 클라우드 저장 완료")}catch(e){console.error("Cloud save failed",e);setCloud("error","로컬 저장됨");setSaveMessage("클라우드 오류 · 로컬 보존");toast("클라우드 저장에 실패했습니다. 이 기기 저장은 보존했습니다.","warn")}finally{cloudBusy=false}}
 async function pollCloud(){if(!cloudClient||!authSession?.user?.id||cloudBusy)return;try{const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at").eq("storage_key",CLOUD_KEY).eq("is_deleted",false).maybeSingle();if(error)throw error;if(!data)return;const remote=data.updated_at||data.storage_value?.savedAt;if(!remote||remote===cloudUpdatedAt)return;if(dirty){setCloud("syncing","다른 기기 변경 감지");toast("다른 기기의 저장 데이터가 있습니다. 저장 후 새로고침하면 최신 진행도를 불러옵니다.","warn");return}const envelope=data.storage_value;if(envelope?.state){const validation=validateSaveEnvelope(envelope);if(validation.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;setCloud("error","최신 버전 필요");setSaveMessage("더 최신 클라우드 저장 데이터가 있어 저장을 잠갔습니다.");toast("최신 버전의 클라우드 저장 데이터가 있어 저장을 잠갔습니다.","warn");return}if(validation.valid){hydrateState(envelope.state);S.lastSavedAt=remote;cloudUpdatedAt=remote;writeSaveEnvelope(localStorage,activeLocalKey,S,remote);renderAll();setViewMode(S.player.viewMode);setCloud("online","다른 기기와 동기화");toast("다른 기기의 공장 진행도를 동기화했습니다.")}}}catch(e){console.warn("Cloud polling error",e)}}
+function scheduleWorldFrame(){
+ if(worldFrameHandle||document.hidden)return;
+ worldFrameHandle=requestAnimationFrame(animationFrame);
+}
+function onFactoryVisibilityChange(){
+ if(document.hidden){
+  if(worldFrameHandle)cancelAnimationFrame(worldFrameHandle);
+  worldFrameHandle=0;
+  frameRenderAccumulator=0;
+  if(!E2E_MODE){saveLocal();setSaveMessage("이 기기 저장 완료");}
+  return;
+ }
+ lastFrame=performance.now();
+ frameRenderAccumulator=0;
+ if(!E2E_MODE)pollCloud();
+ scheduleWorldFrame();
+}
+document.addEventListener("visibilitychange",onFactoryVisibilityChange);
 function animationFrame(time){
- if(document.hidden){lastFrame=time;frameRenderAccumulator=0;requestAnimationFrame(animationFrame);return}
+ worldFrameHandle=0;
+ if(document.hidden)return;
  const frameMs=Math.min(80,Math.max(0,time-lastFrame));lastFrame=time;drawTime=time;
  world3d.adaptPerformanceFrame?.(frameMs);
  const elapsed=frameMs/1000;
@@ -826,9 +845,9 @@ function animationFrame(time){
  if(!S.paused&&!S.victory){accumulator+=elapsed*S.simSpeed;while(accumulator>=STEP){tick(STEP);accumulator-=STEP}}
  frameRenderAccumulator=Math.min(50,frameRenderAccumulator+frameMs);
  if(frameRenderAccumulator>=1000/60){frameRenderAccumulator-=1000/60;drawWorld()}
- requestAnimationFrame(animationFrame);
+ scheduleWorldFrame();
 }
-function boot(){const localTime=loadLocal();playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Number(S.player.yaw)||0,pitch:Number(S.player.pitch??-.12),path:[],moving:false,facing:0,onArrive:null};camera.x=S.player.x;camera.y=S.player.y;revealAround();wireControls();renderAll();setViewMode(S.player.viewMode);if(!E2E_MODE){initCloud();setInterval(()=>saveGame(false),12000);setInterval(()=>pollCloud(),25000);window.addEventListener("beforeunload",()=>{try{saveLocal()}catch{}});document.addEventListener("visibilitychange",()=>{if(document.hidden){saveLocal();setSaveMessage("이 기기 저장 완료")}else{lastFrame=performance.now();pollCloud()}})}else setCloud("online","테스트 모드");lastFrame=performance.now();requestAnimationFrame(animationFrame);if(!E2E_MODE){if(!S.campaign.introSeen)showStoryIntro();else if(getQuest())setTimeout(()=>notifyNewMission(getQuest()),350);if(!localTime)log("공장 복구 프로토콜 시작 · ORBIT 온라인 대기")}}
+function boot(){const localTime=loadLocal();playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Number(S.player.yaw)||0,pitch:Number(S.player.pitch??-.12),path:[],moving:false,facing:0,onArrive:null};camera.x=S.player.x;camera.y=S.player.y;revealAround();wireControls();renderAll();setViewMode(S.player.viewMode);if(!E2E_MODE){initCloud();setInterval(()=>saveGame(false),12000);setInterval(()=>pollCloud(),25000);window.addEventListener("beforeunload",()=>{try{saveLocal()}catch{}});}else setCloud("online","테스트 모드");lastFrame=performance.now();scheduleWorldFrame();if(!E2E_MODE){if(!S.campaign.introSeen)showStoryIntro();else if(getQuest())setTimeout(()=>notifyNewMission(getQuest()),350);if(!localTime)log("공장 복구 프로토콜 시작 · ORBIT 온라인 대기")}}
 
 boot();
 if(E2E_MODE){
