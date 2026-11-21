@@ -179,6 +179,13 @@ assert.ok(html.includes("var walkStep=Math.floor(phase/15)%6;"), "Daytime roamin
 assert.ok(html.includes("{x:440,y:438,s:.87},{x:555,y:444,s:.89}"), "The route must begin near the sofa and table rather than the centre only.");
 assert.ok(html.includes("{x:910,y:438,s:.87},{x:1035,y:444,s:.84}"), "The route must extend to the far side of the room.");
 
+
+assert.ok(html.includes('id="observedDailyChart"'), "The actual-observation archive must have a separate seven-day chart.");
+assert.ok(html.includes("var dailyTotals=Object.create(null);"), "Observed durations must be grouped into independent date buckets.");
+assert.ok(html.includes("rowDate=row.date||dayKey(new Date(row.startedAt))"), "Observed history must normalize each record to the KST date.");
+assert.ok(html.includes("dailyBuckets.some(function(bucket){return bucket.ms>0;})"), "The actual-observation graph must have a clear empty state.");
+assert.ok(html.includes("observation-daily-card{grid-column:1/-1}"), "The observation trend chart must span the full responsive panel.");
+
 // Test the actual timezone helper against UTC instants, independent of the test machine's timezone.
 const clockStart = html.indexOf("function parts(now)");
 const clockEnd = html.indexOf("\n  function hash", clockStart);
