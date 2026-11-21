@@ -31,7 +31,9 @@ export const MAPS: Record<string,RockeyMap> = {
     palette:'magenta',background:0xd5b8dc,fog:0xe2cde8,floor:0x806d8d,grid:0xa65fc1,light:0xe46aff,
     cover:[
       {x:0,z:-10,hx:5,hz:1.2,top:3.5},{x:0,z:10,hx:5,hz:1.2,top:3.5},
-      {x:-12,z:0,hx:1.4,hz:5,top:4},{x:12,z:0,hx:1.4,hz:5,top:4},
+      // Keep the central building doors clear; the side pylons frame rather than seal the entrances.
+      {x:-12,z:-6.5,hx:1.4,hz:1.5,top:4},{x:-12,z:4,hx:1.4,hz:1,top:4},
+      {x:12,z:-6.5,hx:1.4,hz:1.5,top:4},{x:12,z:4,hx:1.4,hz:1,top:4},
       {x:-7,z:-5,hx:1.7,hz:1.7,top:2.4},{x:7,z:5,hx:1.7,hz:1.7,top:2.4}
     ]
   },
@@ -73,13 +75,15 @@ const addTacticalCover=(x:number,z:number,hx:number,hz:number,top=4.25,bottom=0)
   TACTICAL_BUILDING_COVER.push({x,z,hx,hz,top,bottom});
 };
 for(const cx of [-17.2,17.2]){
-  const innerSide=cx<0?cx+4.21:cx-4.21;
-  const outerSide=cx<0?cx-4.21:cx+4.21;
-  // Outer building shell and the two side entrances into the main rooms.
+  const innerSide=cx<0?1:-1;
+  const outerSide=-innerSide;
+  const innerDoorX=cx+innerSide*4.21;
+  const outerDoorX=cx+outerSide*4.21;
+  // Ground-floor exterior shell, with the inner entrance kept open.
   addTacticalCover(cx,-6.11,4.4,.19);
-  addTacticalCover(outerSide,-1.5,.19,4.8);
-  addTacticalCover(innerSide,-4.85,.19,1.45);
-  addTacticalCover(innerSide,1.85,.19,1.45);
+  addTacticalCover(outerDoorX,-1.5,.19,4.8);
+  addTacticalCover(innerDoorX,-4.85,.19,1.45);
+  addTacticalCover(innerDoorX,1.85,.19,1.45);
   addTacticalCover(cx-2.95,2.91,1.45,.19);
   addTacticalCover(cx+2.95,2.91,1.45,.19);
   // Office/storage cross-partition with a clear central doorway and lintel.
@@ -88,18 +92,53 @@ for(const cx of [-17.2,17.2]){
   addTacticalCover(cx-1.65,-3.55,.75,.16,3.15);
   addTacticalCover(cx+1.65,-3.55,.75,.16,3.15);
   addTacticalCover(cx,-3.55,.60,.16,4.1,3.15);
-  // Elevated gallery platform, side walls and roof parapets.
-  addTacticalCover(cx-.9,-.05,3.4,3.35,4.19,3.91);
-  addTacticalCover(cx+4.05,-.05,.35,3.35,4.19,3.91);
-  addTacticalCover(cx-4.18,-.05,.14,3.35,5.08,4.08);
-  addTacticalCover(cx+4.18,-.05,.14,3.35,5.08,4.08);
-  addTacticalCover(cx,-3.25,4.1,.14,5.08,4.08);
-  addTacticalCover(cx,-1.5,4.175,4.575,5.99,5.71);
-  addTacticalCover(cx-4.02,-1.5,.11,4.45,6.64,5.92);
-  addTacticalCover(cx+4.02,-1.5,.11,4.45,6.64,5.92);
-  addTacticalCover(cx,-5.93,4.05,.11,6.64,5.92);
-  addTacticalCover(cx,2.93,4.05,.11,6.64,5.92);
+
+  // Second floor: outer gallery and inner bridge gallery, with a clear
+  // stairwell landing and an overhead cross-walk between the two sides.
+  addTacticalCover(cx-innerSide*1.2,-.05,3.1,3.35,4.19,3.91);
+  addTacticalCover(cx+innerSide*3.75,-.05,.65,3.35,4.19,3.91);
+  addTacticalCover(cx+innerSide*2.5,-.9,.675,.45,4.19,3.91);
+  addTacticalCover(cx+innerSide*2.5,-3.5,1.1,.725,4.19,3.91);
+
+  // Outer guardrail stays continuous. The inner guardrail opens to the skybridge.
+  addTacticalCover(cx- innerSide*4.18,-.05,.14,3.35,5.08,4.08);
+  addTacticalCover(cx+innerSide*4.18,-2.95,.14,.45,5.08,4.08);
+  addTacticalCover(cx+innerSide*4.18,1.4,.14,1.9,5.08,4.08);
+
+  // The wall across the gallery has a doorway aligned with the stair landing.
+  const stairDoorX=cx+innerSide*2.5;
+  const leftWallEnd=stairDoorX-.85;
+  const rightWallStart=stairDoorX+.85;
+  const wallMin=cx-4.1,wallMax=cx+4.1;
+  addTacticalCover((wallMin+leftWallEnd)/2,-3.25,(leftWallEnd-wallMin)/2,.14,5.08,4.08);
+  addTacticalCover((rightWallStart+wallMax)/2,-3.25,(wallMax-rightWallStart)/2,.14,5.08,4.08);
+
+  // Roof deck segments leave a real stairwell opening. Guardrails follow its sides.
+  addTacticalCover(cx-2.5,-1.5,1.675,4.575,5.99,5.71);
+  addTacticalCover(cx+2.5,-1.5,1.675,4.575,5.99,5.71);
+  addTacticalCover(cx,-4.0375,.825,2.0375,5.99,5.71);
+  addTacticalCover(cx,2.2875,.825,.7875,5.99,5.71);
+  addTacticalCover(cx-innerSide*.82,-.25,.06,1.75,6.64,5.92);
+  addTacticalCover(cx+innerSide*.82,-.25,.06,1.75,6.64,5.92);
+
+  // Basement side walls are opened toward the central underpass; the inner
+  // room walls retain the existing side passages into both service alcoves.
+  addTacticalCover(cx-outerSide*4.12,-1.5,.11,5.95,-.125,-2.775);
+  addTacticalCover(cx+innerSide*4.12,-5.2,.11,2.25,-.125,-2.775);
+  addTacticalCover(cx+innerSide*4.12,2.2,.11,2.25,-.125,-2.775);
+  addTacticalCover(cx-4.12,-1.5,.11,.85,.17,-.53);
+  addTacticalCover(cx+4.12,-1.5,.11,.85,.17,-.53);
+  addTacticalCover(cx,-5.88,4.1,.11,-.125,-2.775);
+  addTacticalCover(cx,2.88,4.1,.11,-.125,-2.775);
+  for(const side of [-1,1]){
+    addTacticalCover(cx+side*2.8,-4.25,.09,1.5,-.1,-2.6);
+    addTacticalCover(cx+side*2.8,1.25,.09,1.5,-.1,-2.6);
+  }
 }
+// Basement underpass side walls.
+addTacticalCover(0,-.16,12.8,.09,-.145,-2.695);
+addTacticalCover(0,-2.84,12.8,.09,-.145,-2.695);
+
 // Bridge floor, glass-panel side walls and ceiling use vertical bounds so
 // ground-floor combat is not accidentally blocked by elevated structure.
 addTacticalCover(0,-1.5,12.8,1.25,4.19,3.91);
