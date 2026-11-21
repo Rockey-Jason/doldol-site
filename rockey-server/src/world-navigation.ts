@@ -9,7 +9,8 @@ export function tacticalFloorHeightAt(x:number,z:number,currentY:number):number 
     const absX=Math.abs(localX),absZ=Math.abs(localZ);
 
     // Roof access stairwell and the exposed roof deck.
-    if(currentY>4.05&&absX<.72&&localZ>=-.55&&localZ<=3.05){
+    if(currentY>5.2&&absX<.8&&localZ>=-.7&&localZ<=-.26)return 5.99;
+    if(currentY>4.05&&absX<.72&&localZ>=-.26&&localZ<=3.05){
       return 4.38+((2.75-localZ)/3.01)*1.33;
     }
     if(currentY>5.85&&absX<4.0&&absZ<4.45)return 5.99;
@@ -21,7 +22,7 @@ export function tacticalFloorHeightAt(x:number,z:number,currentY:number):number 
       if(localX>=3.44&&localX<=3.70)return 4.19;
     }
     if(currentY>3.95&&localX>=1.85&&localX<=3.15&&localZ>=.15&&localZ<=1.05)return 4.19;
-    if(currentY>3.95&&localX>=1.7&&localX<=3.3&&localZ>=-2.4&&localZ<=-1.6)return 4.19;
+    if(currentY>4.7&&localX>=1.7&&localX<=3.3&&localZ>=-2.75&&localZ<=-1.6)return 4.14;
 
     // Main second-floor stair flight.
     if(currentY>.78&&currentY<5.2&&localX>=1.85&&localX<=3.15&&localZ>=-2.55&&localZ<=2.4){
