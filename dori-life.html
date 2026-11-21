@@ -3222,11 +3222,26 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       renderActivityHistory(now);
     }
   }
+  var routineTimer=0;
+  function startRoutineTimer(){
+    if(!routineTimer&&!document.hidden)routineTimer=window.setInterval(update,1000);
+  }
+  function stopRoutineTimer(){
+    if(routineTimer){window.clearInterval(routineTimer);routineTimer=0;}
+  }
   update();
-  window.setInterval(update,1000);
-  document.addEventListener('visibilitychange',function(){if(!document.hidden)update();});
-  window.addEventListener('pageshow',update);
-  window.addEventListener('focus',update);
+  startRoutineTimer();
+  document.addEventListener('visibilitychange',function(){
+    if(document.hidden){stopRoutineTimer();return;}
+    update();
+    startRoutineTimer();
+  });
+  window.addEventListener('pageshow',function(){
+    if(document.hidden)return;
+    update();
+    startRoutineTimer();
+  });
+  window.addEventListener('focus',function(){if(!document.hidden)update();});
 })();
 </script>
 
