@@ -5167,7 +5167,9 @@ supabase.auth.onAuthStateChange(
         ) {
 
             const 새사용자ID = session.user.id;
-            if (마지막인증사용자ID !== 새사용자ID) {
+            // INITIAL_SESSION / startup session read가 완료되기 전에 들어온 첫 SIGNED_IN은
+            // 계정 전환이 아니라 최초 복원일 수 있으므로 새로고침하지 않습니다.
+            if (마지막인증사용자ID && 마지막인증사용자ID !== 새사용자ID) {
                 // 계정이 바뀌면 프로필·권한·잔액·업적을 새 세션으로 다시 불러옵니다.
                 마지막인증사용자ID = 새사용자ID;
                 window.location.reload();
