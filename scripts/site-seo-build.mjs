@@ -172,7 +172,7 @@ function validatePublicPage(html, relative, canonical) {
     fail(relative + ": canonical URL does not match sitemap");
   }
   let hasWebPageSchema = false;
-  const schemaScripts = html.matchAll(/<script\\b[^>]*type\\s*=\\s*["']application\\/ld\\+json["'][^>]*>([\\s\\S]*?)<\\/script\\s*>/gi);
+  const schemaScripts = html.matchAll(/<script\b[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script\s*>/gi);
   for (const match of schemaScripts) {
     try {
       const schema = JSON.parse(match[1]);
