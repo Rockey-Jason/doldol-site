@@ -29,6 +29,9 @@ jobs:
       - name: Check site files, inline scripts, local assets and JSON
         run: node scripts/site-quality-check.mjs
 
+      - name: Validate SEO metadata and sitemap
+        run: node scripts/site-seo-build.mjs --check
+
       - name: Validate Dori Life animation choreography
         run: node scripts/validate-dori-life.mjs
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v66-premium-ui-20261116";
+const CACHE_NAME = "doldol-site-pwa-v67-site-quality-seo-ai-20261121";
 const SITE_SCOPE = new URL(self.registration.scope);
 const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
