@@ -167,6 +167,8 @@ test("quarantined legacy stacks remain visible in totals but cannot be reserved 
  assert.equal(stackTotals(s).doronium_void,5);
  assert.equal(availableItemCount(s,"doronium_void"),0);
  assert.equal(reserveItemStacks(s,"doronium_void",1),null);
+ assert.equal(removeItemStacks(s,"doronium_void",1),null);
+ assert.equal(s.runtime.itemStacks[0].quantity,5);
  assert.equal(validateRuntimeState(s).valid,true);
 });
 
@@ -339,4 +341,17 @@ test("reservation commit rejects duplicate transaction IDs instead of silently d
   const before=structuredClone(state.runtime);
   assert.equal(commitItemReservations(state,[id,id]),null);
   assert.deepEqual(state.runtime,before);
+});
+
+
+test("corrupt reservations fail closed for availability and inventory consumption",()=>{
+ const state={runtime:createRuntimeState(),inventory:{},tick:1};
+ addItemStack(state,"ironOre",8);
+ const id=reserveItemStacks(state,"ironOre",3,"corrupt-reservation");
+ state.runtime.reservations[id].allocations[0].quantity=-3;
+ assert.equal(availableItemCount(state,"ironOre"),0);
+ assert.equal(removeItemStacks(state,"ironOre",1),null);
+ assert.equal(commitItemReservations(state,[id]),null);
+ assert.equal(state.runtime.itemStacks[0].quantity,8);
+ assert.equal(state.runtime.reservations[id].status,"reserved");
 });

@@ -148,12 +148,21 @@ export function addItemStack(state,itemID,quantity,meta={}){
   return firstID;
 }
 function reservedByStack(rt,excludeReservationID=null){
-  const totals=new Map();
-  for(const reservation of Object.values(rt.reservations||{})){
-    if(reservation.status!=="reserved"||reservation.reservationID===excludeReservationID)continue;
-    for(const allocation of reservation.allocations||[])totals.set(allocation.stackID,(totals.get(allocation.stackID)||0)+allocation.quantity);
+  const totals=new Map(),stacks=Array.isArray(rt.itemStacks)?rt.itemStacks:[];
+  const stackByID=new Map(stacks.map(stack=>[stack.runtimeID,stack]));
+  const activeReservations=Object.fromEntries(Object.entries(rt.reservations||{}).filter(([id])=>id!==excludeReservationID));
+  const audit=auditActiveReservations({reservations:activeReservations},stackByID);
+  if(stackByID.size!==stacks.length||!audit.valid){
+    for(const reservation of Object.values(activeReservations)){
+      if(reservation?.status!=="reserved")continue;
+      for(const allocation of Array.isArray(reservation.allocations)?reservation.allocations:[]){
+        const stackID=typeof allocation?.stackID==="string"?allocation.stackID.trim():"";
+        if(stackID)totals.set(stackID,Infinity);
+      }
+    }
+    return totals;
   }
-  return totals;
+  return new Map(audit.reservedTotals);
 }
 function auditActiveReservations(rt,stackByID){
   const errors=[],reservedTotals=new Map();
@@ -304,11 +313,11 @@ export function removeItemStacks(state,itemID,quantity){
   const rt=ensureItemStacks(state);itemID=canonicalItemID(itemID);let remaining=Math.floor(Number(quantity)||0);
   if(remaining<=0)return [];
   const reserved=reservedByStack(rt);
-  const available=rt.itemStacks.filter(s=>s.itemID===itemID).reduce((n,s)=>n+Math.max(0,s.quantity-(reserved.get(s.runtimeID)||0)),0);
+  const available=rt.itemStacks.filter(s=>s.itemID===itemID&&!s.quarantined).reduce((n,s)=>n+Math.max(0,s.quantity-(reserved.get(s.runtimeID)||0)),0);
   if(available<remaining)return null;
   const removed=[];
   for(const stack of rt.itemStacks){
-    if(stack.itemID!==itemID||remaining<=0)continue;
+    if(stack.itemID!==itemID||stack.quarantined||remaining<=0)continue;
     const free=Math.max(0,stack.quantity-(reserved.get(stack.runtimeID)||0));
     const take=Math.min(free,remaining);
     if(take>0){removed.push({...stack,quantity:take});stack.quantity-=take;remaining-=take}
