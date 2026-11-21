@@ -1031,7 +1031,7 @@ if(E2E_MODE){
      popupCountdown:$("building-research-countdown")?.textContent||"",
      popupVisible:$("modal-overlay").classList.contains("show"),
      requirementsIncludeNames:researchText.includes("목재")&&researchText.includes("석재"),
-     shortageVisible:researchText.includes("3개 부족")
+     shortageVisible:researchText.includes("부족 3개")
     };
     closeModal();return result;
    }finally{S=previous;closeModal();renderAll()}

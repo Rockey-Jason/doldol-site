@@ -190,6 +190,9 @@ try {
   const machineInteraction = await desktop.evaluate(() => window.__doroniumFactoryTest.interactAt(2, 2));
   assert.equal(machineInteraction.selectedBuilding, "test-smelter", "Clicking a facility must select the correct machine");
   assert.ok(machineInteraction.path > 0, "Engineer must path toward an adjacent interaction tile instead of teleporting into the machine");
+  // interactAt opens the selected facility details modal; dismiss it before opening another panel.
+  await desktop.locator("#modal-x").click();
+  await desktop.waitForFunction(() => !document.querySelector("#modal-overlay")?.classList.contains("show"));
   await openPanel(desktop, "build");
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupSoak());
   const nightPower = await desktop.evaluate(() => window.__doroniumFactoryTest.setClock(0));
