@@ -2771,6 +2771,9 @@ const 칭호저장버튼 =
 
 let 현재사용자 = null;
 
+// Track which authenticated account the rendered page is hydrated for.
+let 마지막인증사용자ID = null;
+
 let 현재유저정보 = null;
 
 let 업적목록 = [];
@@ -5032,6 +5035,8 @@ async function 시작() {
     const session =
         data?.session;
 
+    마지막인증사용자ID = session?.user?.id ?? null;
+
 
     // =================================================
     // 로그아웃 상태
@@ -5153,14 +5158,27 @@ supabase.auth.onAuthStateChange(
         // 로그인 상태 UI는 모든 인증 이벤트에서 갱신
         로그인상태UI(session);
 
+        // 시작 시 전달되는 세션을 기준 계정으로 기록합니다.
+        if (event === "INITIAL_SESSION") {
+            마지막인증사용자ID = session?.user?.id ?? null;
+            return;
+        }
+
         // 로그인
         if (
             event === "SIGNED_IN" &&
             session
         ) {
 
-            현재사용자 =
-                session.user;
+            const 새사용자ID = session.user.id;
+            if (마지막인증사용자ID !== 새사용자ID) {
+                // 계정이 바뀌면 프로필·권한·잔액·업적을 새 세션으로 다시 불러옵니다.
+                마지막인증사용자ID = 새사용자ID;
+                window.location.reload();
+                return;
+            }
+
+            현재사용자 = session.user;
 
             if (사진) {
                 사진.style.display = "block";
@@ -5176,13 +5194,19 @@ supabase.auth.onAuthStateChange(
         ) {
 
             if (관리자사이트버튼) 관리자사이트버튼.style.display = "none";
+            if (관리자체스닷컴버튼) 관리자체스닷컴버튼.style.display = "none";
+            if (관리자마플버튼) 관리자마플버튼.style.display = "none";
             if (챗지피티바로가기버튼) 챗지피티바로가기버튼.style.display = "none";
+            마지막인증사용자ID = null;
             현재사용자 = null;
             현재유저정보 = null;
             획득업적 = {};
 
             if (사진) {
                 사진.style.display = "none";
+            }
+            if (사진틀) {
+                사진틀.style.display = "none";
             }
 
             if (메뉴) {
