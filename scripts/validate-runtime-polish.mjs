@@ -143,7 +143,7 @@ assert.ok(frameHandler.includes("raf = 0;") && frameHandler.includes("if (docume
   "ROCKEY's hidden frame callback must return without scheduling another frame.");
 
 // Doronium Factory: pause the world render/simulation frame loop while hidden.
-assert.ok(factory.includes("function scheduleWorldFrame(){\\n if(worldFrameHandle||document.hidden)return;"),
+assert.ok(factory.includes("function scheduleWorldFrame(){\n if(worldFrameHandle||document.hidden)return;"),
   "The factory must gate its render loop behind visibility.");
 assert.ok(factory.includes("if(worldFrameHandle)cancelAnimationFrame(worldFrameHandle);"),
   "The factory must cancel its pending frame when hidden.");
