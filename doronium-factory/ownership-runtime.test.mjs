@@ -1,5 +1,5 @@
 import test from "node:test";import assert from "node:assert/strict";
-import {createOwnershipState,addCustody,splitCustody,transferCustody,consumeCustody,completeProductionCustody,validateOwnershipState,resetCustodySnapshot,hasPendingBuildingCustody} from "./ownership-runtime.js";
+import {createOwnershipState,addCustody,splitCustody,transferCustody,consumeCustody,completeProductionCustody,validateOwnershipState,resetCustodySnapshot,hasPendingBuildingCustody,commitBuildingDismantle} from "./ownership-runtime.js";
 test("one stack has one custody owner and transfers idempotently",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S1",itemID:"iron",quantity:5,ownerType:"PLAYER_INVENTORY",ownerID:"p1"});const a=transferCustody(s,{transactionID:"T1",stackID:"S1",quantity:5,toType:"MACHINE_INPUT",toID:"M1",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"p1"});assert.equal(a.to.id,"M1");assert.equal(transferCustody(s,{transactionID:"T1",stackID:"S1",quantity:5,toType:"MACHINE_INPUT",toID:"M1",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"p1"}).duplicate,true);assert.equal(s.custody.length,1);assert.equal(validateOwnershipState(s).valid,true)});
 test("invalid owner and duplicate stack are rejected",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S1",itemID:"ore",quantity:1,ownerType:"WORLD_DROP",ownerID:"x"});assert.throws(()=>addCustody(s,{stackID:"S1",itemID:"ore",quantity:1,ownerType:"WORLD_DROP",ownerID:"y"}));assert.equal(transferCustody(s,{transactionID:"T2",stackID:"S1",quantity:2,toType:"WAREHOUSE",toID:"w"}),null)});
 test("consumption has an idempotent ledger entry",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S",itemID:"ore",quantity:2,ownerType:"MACHINE_INPUT",ownerID:"M"});assert.equal(consumeCustody(s,{transactionID:"C",stackID:"S",quantity:2,expectedOwnerType:"MACHINE_INPUT",expectedOwnerID:"M"}).quantity,2);assert.equal(consumeCustody(s,{transactionID:"C",stackID:"S",quantity:2,expectedOwnerType:"MACHINE_INPUT",expectedOwnerID:"M"}).duplicate,true);assert.equal(s.consumed.length,1)});
@@ -142,4 +142,62 @@ test("unrelated reservations and completion buffers do not block an idle buildin
  const state={runtime:{reservations:{R1:{status:"reserved",ownerID:"recipe:OTHER",allocations:[]}}},completionBuffer:[{completionID:"COMPLETION:OTHER:1",itemID:"ironPlate",quantity:1}],ownershipLedger:createOwnershipState()};
  assert.equal(hasPendingBuildingCustody(state,{uid:"SMELTER-IDLE",input:{},progress:0}),false);
  assert.equal(hasPendingBuildingCustody(state,null),false);
+});
+
+test("building dismantle journals refund and salvage exactly once across exact replay",()=>{
+ const building={uid:"BUILDING-DISMANTLE-1",type:"smelter"};
+ const state={ownershipLedger:createOwnershipState(),buildings:[building],runtime:{reservations:{}},completionBuffer:[],money:100,inventory:{wood:0}};
+ const request={transactionID:"DISMANTLE:BUILDING-DISMANTLE-1",buildingUID:building.uid,refund:55,salvage:[{itemID:"wood",quantity:2}]};
+ let applyCalls=0,rollbackCalls=0;
+ const apply=()=>{applyCalls++;state.money+=55;state.inventory.wood+=2;state.buildings=[];return true};
+ const rollback=()=>{rollbackCalls++;state.money=100;state.inventory.wood=0;state.buildings=[building]};
+ const first=commitBuildingDismantle(state,request,apply,rollback);
+ assert.equal(first.refund,55);assert.deepEqual(first.salvage,[{itemID:"wood",quantity:2}]);
+ assert.equal(state.money,155);assert.equal(state.inventory.wood,2);assert.equal(state.buildings.length,0);
+ const replay=commitBuildingDismantle(state,request,()=>{applyCalls++;return true},()=>{rollbackCalls++});
+ assert.equal(replay.duplicate,true);assert.equal(applyCalls,1);assert.equal(rollbackCalls,0);
+ assert.equal(state.money,155);assert.equal(state.inventory.wood,2);assert.equal(validateOwnershipState(state.ownershipLedger).valid,true);
+});
+
+test("building dismantle rejects a reused transaction key with a changed refund or salvage payload",()=>{
+ const building={uid:"BUILDING-DISMANTLE-2",type:"smelter"};
+ const state={ownershipLedger:createOwnershipState(),buildings:[building],runtime:{reservations:{}},completionBuffer:[],money:100};
+ const request={transactionID:"DISMANTLE:BUILDING-DISMANTLE-2",buildingUID:building.uid,refund:55,salvage:[{itemID:"wood",quantity:2}]};
+ let calls=0;
+ assert.ok(commitBuildingDismantle(state,request,()=>{calls++;state.buildings=[];return true},()=>{}));
+ const conflict=commitBuildingDismantle(state,{...request,refund:56},()=>{calls++;return true},()=>{});
+ assert.equal(conflict,null);assert.equal(calls,1);assert.equal(state.money,100);assert.equal(state.buildings.length,0);
+ assert.equal(validateOwnershipState(state.ownershipLedger).valid,true);
+});
+
+test("failed dismantle projection invokes rollback and leaves no committed journal",()=>{
+ const building={uid:"BUILDING-DISMANTLE-3",type:"smelter"};
+ const state={ownershipLedger:createOwnershipState(),buildings:[building],runtime:{reservations:{}},completionBuffer:[],money:100,inventory:{wood:0}};
+ let rollbackCalls=0;
+ const result=commitBuildingDismantle(state,{transactionID:"DISMANTLE:BUILDING-DISMANTLE-3",buildingUID:building.uid,refund:55,salvage:[{itemID:"wood",quantity:2}]},()=>{
+  state.money=155;state.inventory.wood=2;state.buildings=[];return false;
+ },()=>{
+  rollbackCalls++;state.money=100;state.inventory.wood=0;state.buildings=[building];
+ });
+ assert.equal(result,null);assert.equal(rollbackCalls,1);
+ assert.equal(state.money,100);assert.equal(state.inventory.wood,0);assert.equal(state.buildings[0],building);
+ assert.equal(Object.keys(state.ownershipLedger.transactions).length,0);
+ assert.equal(validateOwnershipState(state.ownershipLedger).valid,true);
+});
+
+test("building dismantle refuses active production custody before applying a refund",()=>{
+ const building={uid:"BUILDING-DISMANTLE-4",type:"smelter",activeInputQuantities:[{itemID:"ironOre",quantity:1}]};
+ const state={ownershipLedger:createOwnershipState(),buildings:[building],runtime:{reservations:{}},completionBuffer:[],money:100};
+ let calls=0;
+ const result=commitBuildingDismantle(state,{transactionID:"DISMANTLE:BUILDING-DISMANTLE-4",buildingUID:building.uid,refund:55,salvage:[]},()=>{calls++;return true},()=>{});
+ assert.equal(result,null);assert.equal(calls,0);assert.equal(state.money,100);assert.equal(state.buildings[0],building);
+ assert.equal(Object.keys(state.ownershipLedger.transactions).length,0);
+});
+
+test("building dismantle normalizes salvage totals before recording its idempotency payload",()=>{
+ const building={uid:"BUILDING-DISMANTLE-5",type:"smelter"};
+ const state={ownershipLedger:createOwnershipState(),buildings:[building],runtime:{reservations:{}},completionBuffer:[]};
+ const result=commitBuildingDismantle(state,{transactionID:"DISMANTLE:BUILDING-DISMANTLE-5",buildingUID:building.uid,refund:0,salvage:[{itemID:"wood",quantity:1},{itemID:"stone",quantity:2},{itemID:"wood",quantity:3}]},()=>{state.buildings=[];return true},()=>{});
+ assert.deepEqual(result.salvage,[{itemID:"stone",quantity:2},{itemID:"wood",quantity:4}]);
+ assert.equal(validateOwnershipState(state.ownershipLedger).valid,true);
 });
