@@ -9,6 +9,9 @@ const home = fs.readFileSync("index.html", "utf8");
 const settings = fs.readFileSync("settings.html", "utf8");
 const doriLife = fs.readFileSync("dori-life.html", "utf8");
 const rockeyGame = fs.readFileSync("rockey-client/src/core/Game.ts", "utf8");
+const factory = fs.readFileSync("doronium-factory/factory.js", "utf8");
+const factoryCss = fs.readFileSync("doronium-factory/factory.css", "utf8");
+const factoryIndex = fs.readFileSync("doronium-factory/index.html", "utf8");
 
 // Execute the real shared frame module with small DOM-compatible test doubles.
 const executableFrameSource = frameSource.replace(/\bexport\s+(?=function\s)/g, "");
@@ -139,4 +142,31 @@ assert.ok(frameHandler.includes("raf = 0;") && frameHandler.includes("if (docume
   frameHandler.includes("previous = now;\n      return;"),
   "ROCKEY's hidden frame callback must return without scheduling another frame.");
 
-console.log("Shared profile frame + hidden-tab lifecycle checks passed.");
+// Doronium Factory: pause the world render/simulation frame loop while hidden.
+assert.ok(factory.includes("function scheduleWorldFrame(){\\n if(worldFrameHandle||document.hidden)return;"),
+  "The factory must gate its render loop behind visibility.");
+assert.ok(factory.includes("if(worldFrameHandle)cancelAnimationFrame(worldFrameHandle);"),
+  "The factory must cancel its pending frame when hidden.");
+assert.ok(factory.includes('document.addEventListener("visibilitychange",onFactoryVisibilityChange);'),
+  "The factory must resume from a single visibility lifecycle handler.");
+const factoryFrameStart = factory.indexOf("function animationFrame(time){");
+const factoryFrameEnd = factory.indexOf("function boot(){", factoryFrameStart);
+assert.ok(factoryFrameStart >= 0 && factoryFrameEnd > factoryFrameStart,
+  "Could not isolate the factory animation loop.");
+const factoryFrame = factory.slice(factoryFrameStart, factoryFrameEnd);
+assert.ok(factoryFrame.includes("worldFrameHandle=0;") && factoryFrame.includes("if(document.hidden)return;") &&
+  factoryFrame.includes("scheduleWorldFrame();"),
+  "The factory frame callback must stop while hidden and use the single scheduler.");
+
+// Bring the factory typography onto the shared Dori font instead of downloading two extra font families.
+assert.ok(factoryCss.includes('font-family:"HancomMalrangmalrang",sans-serif'),
+  "The factory must use the shared Dori font family.");
+assert.ok(factoryCss.includes('font-weight:400;font-display:swap'),
+  "The factory must load the regular Hancom font asset.");
+assert.ok(!factoryIndex.includes("fonts.googleapis.com/css2?family=Inter"),
+  "The factory must not download its separate Inter/Noto font families.");
+assert.ok(factoryIndex.includes('rel="preconnect" href="https://cdn.jsdelivr.net"'),
+  "The factory must warm the shared font CDN connection.");
+
+console.log("Factory hidden-tab lifecycle + shared typography checks passed.");
+
