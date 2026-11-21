@@ -319,6 +319,12 @@ try {
   const mobileBackend = await boot(mobile);
   assert.equal(mobileBackend, "webgl", "Mobile-emulation browser must initialize WebGL");
   assert.equal(await mobile.locator(".move-pad").isVisible(), true, "Touch movement pad must be visible on a phone-sized viewport");
+  const mobileFrame = await mobile.locator("#world-frame").evaluate(el => {
+    const rect = el.getBoundingClientRect();
+    return { top: rect.top, height: rect.height, viewportHeight: window.innerHeight };
+  });
+  assert.ok(mobileFrame.top <= 1 && mobileFrame.height >= mobileFrame.viewportHeight - 1,
+    "Mobile game world must fill the viewport without a clipped 530px height cap");
   const moveChoice = await mobile.evaluate(() => {
     const api = window.__doroniumFactoryTest;
     const s = api.snapshot();
