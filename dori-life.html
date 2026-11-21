@@ -1981,7 +1981,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     }
     if(pose==='trot'||pose==='gallop'||pose==='chase'){
       var trotStops=[{x:575,y:432,s:.88},{x:735,y:426,s:.90},{x:835,y:432,s:.87},{x:675,y:426,s:.91}];
-      var ti=Math.floor(kstSecondsOfDay(now)/10)%trotStops.length;var ts=trotStops[ti];
+      var ti=Math.floor(second/10)%trotStops.length;var ts=trotStops[ti];
       return {x:ts.x,y:ts.y,s:ts.s,key:'trot-'+ti};
     }
     if(pose==='walk'||pose==='explore'){
@@ -1990,13 +1990,13 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         {x:670,y:437,s:.91},{x:785,y:444,s:.89},
         {x:910,y:438,s:.87},{x:1035,y:444,s:.84}
       ];
-      var roamPhase=kstSecondsOfDay(now)%300;
+      var roamPhase=second%300;
       var step=Math.floor(roamPhase/15)%stops.length;var stop=stops[step];
       return {x:stop.x,y:stop.y,s:stop.s,key:pose+'-'+step};
     }
     if(pose==='circle'){
       var circleStops=[{x:620,y:432,s:.88},{x:680,y:426,s:.89},{x:740,y:432,s:.88},{x:680,y:438,s:.87}];
-      var ci=Math.floor(kstSecondsOfDay(now)/9)%circleStops.length;var cs=circleStops[ci];
+      var ci=Math.floor(second/9)%circleStops.length;var cs=circleStops[ci];
       return {x:cs.x,y:cs.y,s:cs.s,key:'circle-'+ci};
     }
     if(pose==='happy')return {x:680,y:432,s:.92,key:'happy-center'};
