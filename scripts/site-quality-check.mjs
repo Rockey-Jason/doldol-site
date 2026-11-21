@@ -176,13 +176,29 @@ for (const page of sharedUiPages) {
 const mainIndex = fs.readFileSync(path.resolve(ROOT, "index.html"), "utf8");
 const accountSwitchChecks = [
   ["initial auth session tracking", 'if (event === "INITIAL_SESSION")'],
-  ["signed-in account identity comparison", "if (마지막인증사용자ID !== 새사용자ID)"],
+  ["signed-in account identity comparison", "if (마지막인증사용자ID && 마지막인증사용자ID !== 새사용자ID)"],
   ["fresh account rehydration", "window.location.reload();"],
   ["logout clears remembered account", "마지막인증사용자ID = null;"]
 ];
 for (const [label, token] of accountSwitchChecks) {
   if (!mainIndex.includes(token)) {
     errors.push("index.html: missing account-switch safety invariant: " + label);
+  }
+}
+
+// Regression: a first SIGNED_IN can race INITIAL_SESSION while startup is still
+// awaiting the first data fetch. It establishes the baseline; it is not a switch.
+const shouldReloadForAccountSwitch = (currentUserId, nextUserId) =>
+  Boolean(currentUserId) && currentUserId !== nextUserId;
+for (const [currentUserId, nextUserId, expected] of [
+  [null, "first-user", false],
+  ["", "first-user", false],
+  ["same-user", "same-user", false],
+  ["old-user", "new-user", true]
+]) {
+  if (shouldReloadForAccountSwitch(currentUserId, nextUserId) !== expected) {
+    errors.push("index.html: auth bootstrap reload guard failed for " +
+      String(currentUserId) + " -> " + String(nextUserId));
   }
 }
 
