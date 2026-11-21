@@ -181,7 +181,9 @@ export function commitBuildingDismantle(state,{transactionID,buildingUID,refund,
  }
  const normalizedSalvage=[...totals.entries()].map(([itemID,quantity])=>({itemID,quantity})).sort((a,b)=>a.itemID.localeCompare(b.itemID));
  const building=(state.buildings||[]).find(item=>String(item?.uid||"")===uid);
- const request={type:"BUILDING_DISMANTLE",buildingUID:uid,buildingType:String(building?.type||""),refund:amount,salvage:normalizedSalvage};
+ const prior=ledger.transactions[tx];
+ const buildingType=building?.type??prior?.request?.buildingType??"";
+ const request={type:"BUILDING_DISMANTLE",buildingUID:uid,buildingType:String(buildingType),refund:amount,salvage:normalizedSalvage};
  const replay=transactionReplay(ledger,tx,request);
  if(replay)return replay.conflict?null:replay;
  if(!building||hasPendingBuildingCustody(state,building))return null;
