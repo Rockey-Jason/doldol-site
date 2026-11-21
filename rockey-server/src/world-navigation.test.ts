@@ -64,6 +64,26 @@ test('both roof stairwells have an opening through the roof deck',()=>{
   }
 });
 
+test('basement stairs descend into the service level and the tunnel remains walkable',()=>{
+  for(const map of Object.values(MAPS)){
+    for(const centerX of [-17.2,17.2]){
+      let bodyY=.92;
+      let previousFloor=0;
+      for(let localZ=2.25;localZ>=-2.25;localZ-=.075){
+        const floor=tacticalFloorHeightAt(centerX,localZ-1.5,bodyY);
+        assert.ok(floor<=previousFloor+.02,map.id+' basement stair floor unexpectedly rises while descending');
+        assert.equal(isBlockedByCover(map.cover,centerX,bodyY,localZ-1.5),false,
+          map.id+' blocks the basement stair flight at local Z '+localZ.toFixed(2));
+        previousFloor=floor;
+        bodyY=floor+.92;
+      }
+      assert.ok(previousFloor<=-2.4,map.id+' basement stairs did not reach the service level');
+      assert.equal(tacticalFloorHeightAt(0,-1.5,-1.72),-2.64,
+        map.id+' central underpass has no walkable floor');
+    }
+  }
+});
+
 test('basement doors on both buildings open to the service underpass',()=>{
   for(const map of Object.values(MAPS)){
     for(const centerX of [-17.2,17.2]){
