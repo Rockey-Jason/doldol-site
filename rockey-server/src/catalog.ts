@@ -123,7 +123,7 @@ for(const cx of [-17.2,17.2]){
 
   // Basement side walls are opened toward the central underpass; the inner
   // room walls retain the existing side passages into both service alcoves.
-  addTacticalCover(cx-outerSide*4.12,-1.5,.11,5.95,-.125,-2.775);
+  addTacticalCover(cx+outerSide*4.12,-1.5,.11,5.95,-.125,-2.775);
   addTacticalCover(cx+innerSide*4.12,-5.2,.11,2.25,-.125,-2.775);
   addTacticalCover(cx+innerSide*4.12,2.2,.11,2.25,-.125,-2.775);
   addTacticalCover(cx-4.12,-1.5,.11,.85,.17,-.53);
