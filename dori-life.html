@@ -956,6 +956,16 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 .observation-bar-track{height:7px;overflow:hidden;border-radius:99px;background:rgba(255,255,255,.07)}
 .observation-bar-track i{display:block;height:100%;min-width:0;border-radius:99px;transition:width .55s ease}
 .observation-bar-value{text-align:right;color:#aebbc2;font-variant-numeric:tabular-nums}
+
+.observation-daily-card{grid-column:1/-1}
+.observation-daily-bars{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));align-items:end;gap:10px;min-height:156px;padding:10px 4px 2px}
+.observation-daily-column{display:flex;min-width:0;height:100%;flex-direction:column;align-items:center;justify-content:flex-end;gap:7px}
+.observation-daily-column strong{color:#aab7c1;font-size:10px;font-weight:400}
+.observation-daily-track{display:flex;align-items:flex-end;justify-content:center;width:min(100%,42px);height:104px;overflow:hidden;border:1px solid rgba(255,255,255,.055);border-radius:10px;background:rgba(255,255,255,.045)}
+.observation-daily-track i{display:block;width:100%;border-radius:8px 8px 3px 3px;background:linear-gradient(180deg,#e7c894,#8cabc3);transition:height .55s cubic-bezier(.2,.7,.2,1)}
+.observation-daily-column small{color:#c4b28f;font-size:9px;font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap}
+@media(max-width:600px){.observation-daily-bars{gap:5px}.observation-daily-track{width:min(100%,30px);height:90px}.observation-daily-column strong{font-size:9px}.observation-daily-column small{font-size:8px}}
+
 .observation-entries{display:grid;gap:8px}
 .observation-entry{display:grid;grid-template-columns:48px 28px minmax(0,1fr) auto;align-items:center;gap:9px;padding:9px 10px;border:1px solid rgba(255,255,255,.055);border-radius:12px;background:rgba(255,255,255,.025)}
 .observation-entry-time{color:#9eabb4;font-size:10px;font-variant-numeric:tabular-nums}
@@ -1463,6 +1473,12 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       <div class="observation-card">
         <div class="observation-card-head"><strong>최근 관찰된 장면</strong><span id="observedEntryCount">최근 기록 0개</span></div>
         <div class="observation-entries" id="observedActivityEntries"><div class="observation-empty">돌이의 행동을 관찰하면 이곳에 실제 기록이 쌓여요.</div></div>
+      </div>
+      <div class="observation-card observation-daily-card">
+        <div class="observation-card-head"><strong>최근 7일 실제 관찰 시간</strong><span>REAL OBSERVATION · KST</span></div>
+        <div class="observation-daily-bars" id="observedDailyChart" role="img" aria-label="최근 7일 동안 실제로 관찰된 돌이의 행동 시간">
+          <div class="observation-empty">실제 관찰 기록이 쌓이면 날짜별 그래프가 표시돼요.</div>
+        </div>
       </div>
     </div>
     <p class="observation-footnote" id="observedStorageNote">기록은 현재 브라우저에 저장돼요. 페이지가 닫혀 있거나 백그라운드에 있는 동안의 행동은 관찰 기록에 포함되지 않으며, 다른 기기와 자동 동기화되지는 않아요.</p>
@@ -3367,6 +3383,30 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     currentEl.textContent=observedActive?observedActive.title:'관찰 대기';
     if(currentDurationEl)currentDurationEl.textContent=observedActive?'현재 행동 '+observedDurationLabel(currentDuration):'페이지가 활성화되면 기록해요';
     if(entryCountEl)entryCountEl.textContent='최근 기록 '+rows.length.toLocaleString('ko-KR')+'개';
+    var dailyChart=document.getElementById('observedDailyChart');
+    if(dailyChart){
+      var todayParts=parts(new Date(nowMs));
+      var todayStamp=Date.UTC(Number(todayParts.year),Number(todayParts.month)-1,Number(todayParts.day),12);
+      var dailyBuckets=[];
+      for(var dayOffset=6;dayOffset>=0;dayOffset--){
+        var bucketDate=new Date(todayStamp-dayOffset*86400000);
+        var bucketKey=dayKey(bucketDate);
+        dailyBuckets.push({key:bucketKey,label:bucketKey.slice(5).replace('-','.'),ms:0});
+      }
+      var dailyTotals=Object.create(null);
+      dailyBuckets.forEach(function(bucket){dailyTotals[bucket.key]=bucket;});
+      rows.forEach(function(row){
+        var rowDate=row.date||dayKey(new Date(row.startedAt));
+        if(dailyTotals[rowDate])dailyTotals[rowDate].ms+=Number(row.durationMs)||0;
+      });
+      var maxDailyMs=Math.max(1,...dailyBuckets.map(function(bucket){return bucket.ms;}));
+      dailyChart.innerHTML=dailyBuckets.some(function(bucket){return bucket.ms>0;})?
+        dailyBuckets.map(function(bucket){
+          var height=bucket.ms?Math.max(2,bucket.ms/maxDailyMs*100):0;
+          return '<div class="observation-daily-column"><strong>'+bucket.label+'</strong><div class="observation-daily-track"><i style="height:'+height.toFixed(1)+'%"></i></div><small>'+(bucket.ms?observedDurationLabel(bucket.ms):'—')+'</small></div>';
+        }).join(''):
+        '<div class="observation-empty">최근 7일 동안의 실제 기록이 아직 없어요. 돌이 라이프를 열어 두면 관찰 시간이 날짜별로 쌓여요.</div>';
+    }
     var maxMs=Math.max(1,...HISTORY_CATEGORIES.map(function(item){return totals[item.id]||0;}));
     barsEl.innerHTML=HISTORY_CATEGORIES.map(function(item){
       var ms=totals[item.id]||0;
