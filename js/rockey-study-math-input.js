@@ -323,6 +323,11 @@
         i += number[0].length;
         continue;
       }
+      if (/^pi(?=[A-Za-z_])/.test(source.slice(i))) {
+        tokens.push({type:"identifier",value:"pi"});
+        i += 2;
+        continue;
+      }
       if (/[A-Za-z_]/.test(ch) || /[α-ωΑ-Ω]/.test(ch)) {
         var word = source.slice(i).match(/^[A-Za-z_][A-Za-z_0-9]*/);
         if (word) {
