@@ -539,7 +539,7 @@ export class GameRoom {
         const nearGate=(gate:{x:number;y:number;z:number;yaw:number})=>Math.hypot(p.x-gate.x,p.z-gate.z)<=1.12&&Math.abs((p.y-.92)-gate.y)<=1.55;
         const entry=nearGate(p.gateA)?p.gateA:nearGate(p.gateB)?p.gateB:null;
         if(entry){
-          const destination=entry===p.gateA?p.gateB:p.gateA;
+          const destination=(entry===p.gateA?p.gateB:p.gateA)!;
           const normalX=Math.sin(destination.yaw),normalZ=Math.cos(destination.yaw);
           const candidates=[1.85,-1.85,2.65].map(offset=>({x:destination.x+normalX*offset,z:destination.z+normalZ*offset}));
           for(const candidate of candidates){

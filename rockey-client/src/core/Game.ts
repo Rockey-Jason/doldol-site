@@ -684,7 +684,7 @@ export async function createGame(
   let mode = 'practice';
   let currentWeaponCode = 'R16';
   let currentItemCode:RockeyItemCode='GRENADE';
-  let itemInventory:Record<RockeyItemCode,number>={GRENADE:2,SMOKE:1,FLASH:1,PILLS:2,ENERGY:1};
+  let itemInventory:Record<RockeyItemCode,number>=Object.fromEntries(Object.values(ITEMS).map(item=>[item.code,item.startingCount])) as Record<RockeyItemCode,number>;
   let energyUntil=0;
   let practiceGateA:RockeyPortalPoint|null=null;
   let practiceGateB:RockeyPortalPoint|null=null;
@@ -2108,6 +2108,14 @@ export async function createGame(
         const flicker=age<210?(Math.sin(age*.105)+Math.sin(age*.037)>.12?1:.045):1-progress;
         effect.group.traverse(object=>{
           if(object instanceof THREE.PointLight)object.intensity=Math.max(0,8*flicker*(1-progress));
+        });
+      }
+      if(effect.kind==='PORTAL_FLASH'){
+        const progress=THREE.MathUtils.clamp(age/Math.max(1,effect.endsAt-effect.startedAt),0,1);
+        effect.group.scale.setScalar(.45+progress*1.6);
+        effect.group.traverse(object=>{
+          if(object instanceof THREE.Mesh){const material=object.material as THREE.Material&{opacity?:number};if(typeof material.opacity==='number')material.opacity=Math.max(0,.92*(1-progress));}
+          if(object instanceof THREE.PointLight)object.intensity=Math.max(0,5*(1-progress));
         });
       }
       if(remaining<=0){scene.remove(effect.group);disposeObjectResources(effect.group);timedItemEffects.splice(i,1);}

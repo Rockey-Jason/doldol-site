@@ -131,7 +131,9 @@ test('reload cancellation leaves the original magazine and reserve untouched',()
 });
 
 test('all tactical items have valid inventory definitions',()=>{
-  assert.deepEqual(Object.keys(ITEMS).sort(),['ENERGY','FLASH','GRENADE','PILLS','SMOKE']);
+  assert.deepEqual(Object.keys(ITEMS).sort(),['ENERGY','ENERGY_CUBE','FLASH','GRENADE','PILLS','ROCKEY_GATE','SMOKE']);
+  assert.equal(ITEMS.ROCKEY_GATE.startingCount,2);
+  assert.equal(ITEMS.ENERGY_CUBE.startingCount,2);
   for(const item of Object.values(ITEMS)){
     assert.ok(item.startingCount>=0&&item.startingCount<=10,item.code);
     assert.ok(item.name.length>0,item.code);
