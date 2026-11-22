@@ -15,7 +15,7 @@ export function isEnemyInsideEnergyCube(
   playerZ: number,
   fieldX: number,
   fieldZ: number,
-  radius = ENERGY_CUBE_RULES.radius,
+  radius: number = ENERGY_CUBE_RULES.radius,
 ): boolean {
   return playerTeam !== fieldTeam && Math.hypot(playerX - fieldX, playerZ - fieldZ) <= radius;
 }
