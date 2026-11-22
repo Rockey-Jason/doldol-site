@@ -60,10 +60,10 @@ export async function createGame(
   const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 760;
   const hardwareCores=navigator.hardwareConcurrency||4;
   const deviceMemoryGb=(navigator as Navigator&{deviceMemory?:number}).deviceMemory??null;
-  const deviceTier:'low'|'balanced'|'high'=isMobile
+  let deviceTier:'low'|'balanced'|'high'=isMobile
     ?(hardwareCores<=4||(deviceMemoryGb!==null&&deviceMemoryGb<=4)?'low':'balanced')
     :(hardwareCores>=8&&(deviceMemoryGb===null||deviceMemoryGb>=8)?'high':hardwareCores>=6?'balanced':'low');
-  const deviceProfile={class:isMobile?'mobile':'desktop',tier:deviceTier,hardwareCores,deviceMemoryGb,
+  const deviceProfile={class:isMobile?'mobile':'desktop',tier:deviceTier,hardwareCores,deviceMemoryGb,gpuRenderer:'',
     screenWidth:window.screen.width,screenHeight:window.screen.height,devicePixelRatio:window.devicePixelRatio||1};
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(map.background);
@@ -71,18 +71,27 @@ export async function createGame(
 
   const camera = new THREE.PerspectiveCamera(78, 1, 0.08, 180);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,deviceTier==='low'?(isMobile?1:1.25):isMobile?1.25:1.8));
+  const gl=renderer.getContext();
+  const gpuRenderer=String(gl.getParameter(gl.RENDERER)||'').toLowerCase();
+  const softwareRenderer=/swiftshader|llvmpipe|softpipe|software rasterizer|basic render driver/.test(gpuRenderer);
+  if(softwareRenderer||renderer.capabilities.maxTextureSize<=2048)deviceTier='low';
+  deviceProfile.tier=deviceTier;deviceProfile.gpuRenderer=gpuRenderer.slice(0,120);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,isMobile?1.1:deviceTier==='low'?1.0:deviceTier==='balanced'?1.4:1.8));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   // OVERHAUL 04: benchmark-aware post-processing and quality scaling.
   renderer.toneMappingExposure = 1.08;
-  const composer=new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene,camera));
-  const bloomPass=new UnrealBloomPass(new THREE.Vector2(1,1),deviceTier==='low' ? .06 : isMobile ? .08 : .34,.42,.84);
-  composer.addPass(bloomPass);
+  // Skip bloom render targets entirely on low-tier devices to save GPU memory and bandwidth.
+  const composer:EffectComposer|null=deviceTier!=='low'?new EffectComposer(renderer):null;
+  composer?.addPass(new RenderPass(scene,camera));
+  const bloomPass:UnrealBloomPass|null=composer?new UnrealBloomPass(new THREE.Vector2(1,1),isMobile?.08:.34,.42,.84):null;
+  if(composer&&bloomPass)composer.addPass(bloomPass);
+  let bloomEnabled=!!composer;
+  let qualityPreference:'low'|'balanced'|'high'=deviceTier==='low'?'low':deviceTier==='balanced'?'balanced':'high';
+  let stablePerformanceWindows=0;
   // Pre-filtered environment probe adds stable reflections to metal, glass and armour.
   let reflectionEnvironment:THREE.Texture|null=null;
-  if(!isMobile){
+  if(!isMobile&&deviceTier==='high'){
     const pmrem=new THREE.PMREMGenerator(renderer);
     const room=new RoomEnvironment();
     reflectionEnvironment=pmrem.fromScene(room,.04).texture;
@@ -118,7 +127,9 @@ export async function createGame(
   const world = new RAPIER.World({ x: 0, y: -18, z: 0 });
   world.timestep = 1 / 60;
   const raycastMeshes:THREE.Object3D[]=[];
+  // Ground-only raycasts avoid testing hundreds of walls, props and glass panels for foot IK.
   const groundMaterial=new THREE.MeshStandardMaterial({color:map.floor,metalness:.18,roughness:.78});
+  const groundRaycastMeshes:THREE.Object3D[]=[];
   const groundPatches=[
     {x:0,z:-18.15,w:60,d:23.7},
     {x:0,z:16.65,w:60,d:26.7},
@@ -134,7 +145,7 @@ export async function createGame(
   ];
   for(const patch of groundPatches){
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(patch.w,1,patch.d),groundMaterial);
-    mesh.position.set(patch.x,-.5,patch.z);mesh.receiveShadow=true;scene.add(mesh);raycastMeshes.push(mesh);
+    mesh.position.set(patch.x,-.5,patch.z);mesh.receiveShadow=true;scene.add(mesh);raycastMeshes.push(mesh);groundRaycastMeshes.push(mesh);
     world.createCollider(RAPIER.ColliderDesc.cuboid(patch.w/2,.5,patch.d/2).setTranslation(patch.x,-.5,patch.z));
   }
   const grid = new THREE.GridHelper(60, 60, map.grid, map.grid);
@@ -225,7 +236,7 @@ export async function createGame(
     const halfAngle=rotationX/2;
     const rotation={x:Math.sin(halfAngle),y:0,z:0,w:Math.cos(halfAngle)};
     world.createCollider(RAPIER.ColliderDesc.cuboid(hx,hy,hz).setTranslation(x,y,z).setRotation(rotation));
-  },mesh=>raycastMeshes.push(mesh));
+  },mesh=>raycastMeshes.push(mesh),mesh=>groundRaycastMeshes.push(mesh));
 
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(0, 0.92, 20));
   const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.52, 0.34).setFriction(0), body);
@@ -572,7 +583,7 @@ export async function createGame(
   type PhysicalDebris={mesh:THREE.Mesh;body:any;age:number;life:number};
   const physicalDebris:PhysicalDebris[]=[];
   const physicalDebrisGeometry=new THREE.BoxGeometry(1,1,1);
-  const fxParticleLimit=isMobile?76:150;
+  const fxParticleLimit=isMobile?76:deviceTier==='low'?100:deviceTier==='balanced'?125:150;
   const fxParticleGeometry=new THREE.IcosahedronGeometry(.055,0);
   const shellGeometry=new THREE.CylinderGeometry(.022,.022,.115,8);
   const smokeVolumeGeometry=new THREE.SphereGeometry(1,16,12);
@@ -619,7 +630,7 @@ export async function createGame(
     footRayOrigin.set(x,footY+1.0,z);
     raycaster.set(footRayOrigin,downDirection);
     raycaster.near=0;raycaster.far=2.35;
-    const hits=raycaster.intersectObjects(raycastMeshes,false);
+    const hits=raycaster.intersectObjects(groundRaycastMeshes,false);
     const hit=hits.find(value=>value.point.y<=footY+.28&&value.point.y>=footY-.72);
     return hit?.point.y??null;
   };
@@ -627,7 +638,7 @@ export async function createGame(
   const sampleGroundSurface=(x:number,z:number,footY:number):{height:number;normalX:number;normalY:number;normalZ:number}|null=>{
     footRayOrigin.set(x,footY+1.0,z);
     raycaster.set(footRayOrigin,downDirection);raycaster.near=0;raycaster.far=2.35;
-    const hit=raycaster.intersectObjects(raycastMeshes,false).find(value=>value.point.y<=footY+.28&&value.point.y>=footY-.72&&!!value.face);
+    const hit=raycaster.intersectObjects(groundRaycastMeshes,false).find(value=>value.point.y<=footY+.28&&value.point.y>=footY-.72&&!!value.face);
     if(!hit?.face)return null;
     const normal=hit.face.normal.clone().applyMatrix3(normalMatrix.getNormalMatrix(hit.object.matrixWorld)).normalize();
     return {height:hit.point.y,normalX:normal.x,normalY:normal.y,normalZ:normal.z};
@@ -665,6 +676,8 @@ export async function createGame(
   let killcamReturnMode = '1v1';
   let killcamComplete: (() => void) | null = null;
   let mobileFireTimer = 0;
+  let mouseFireTimer = 0;
+  let mouseFireHeld = false;
   let audioContext: AudioContext | null = null;
   let noiseBuffer: AudioBuffer | null = null;
   let gunKick = 0;
@@ -731,7 +744,9 @@ export async function createGame(
   let smoothedFrameMs=16.7;
   const sessionStartedAt=performance.now();
   let lastStabilityReportAt=sessionStartedAt;
-  const frameTimeSamples:number[]=[];
+  const frameTimeSamples=new Float32Array(180);
+  let frameTimeSampleCount=0;
+  let frameTimeSampleCursor=0;
   const heapSamples:Array<{t:number;mb:number}>=[];
   type SoakSample={elapsedMs:number;fps:number;frameMs:number;heapMb:number|null;geometries:number;textures:number;drawCalls:number};
   let soakTest:{startedAt:number;durationMs:number;samples:SoakSample[]}|null=null;
@@ -777,9 +792,11 @@ export async function createGame(
     if(Number.isFinite(value))networkRttMs=value;
   };
   window.addEventListener('rockey:network',onNetworkRtt);
-  let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,deviceTier==='low'?(isMobile?1:1.25):isMobile?1.25:1.8);
-  const minPixelRatio=deviceTier==='low'?(isMobile ? .62 : .72):isMobile ? .78 : 1.0;
-  const maxPixelRatio=Math.min(window.devicePixelRatio||1,deviceTier==='low'?(isMobile?1:1.25):isMobile?1.25:1.8);
+  const maxPixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.1:deviceTier==='low'?1.0:deviceTier==='balanced'?1.4:1.8);
+  let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.0:deviceTier==='low'?.92:deviceTier==='balanced'?1.25:1.8);
+  renderer.setPixelRatio(adaptivePixelRatio);
+  composer?.setPixelRatio(adaptivePixelRatio);
+  const minPixelRatio=isMobile?.68:deviceTier==='low'?.52:deviceTier==='balanced'?.68:.86;
   const appliedDestructionIds=new Set<string>();
   const remoteDebris=new Map<string,THREE.Mesh>();
   const remoteDebrisGeometry=new THREE.BoxGeometry(1,1,1);
@@ -975,7 +992,7 @@ export async function createGame(
   function spawnPhysicalDebris(position:THREE.Vector3,count:number,impulse:number,seed='debris'){
     let randomState=Array.from(seed).reduce((value,char)=>(Math.imul(value^char.charCodeAt(0),16777619)>>>0),2166136261);
     const random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296;};
-    const limit=isMobile?54:120;
+    const limit=isMobile?30:deviceTier==='low'?30:deviceTier==='balanced'?64:120;
     while(physicalDebris.length+count>limit){
       const oldest=physicalDebris.shift();
       if(oldest){scene.remove(oldest.mesh);world.removeRigidBody(oldest.body);(oldest.mesh.material as THREE.Material).dispose();if(oldest.mesh.geometry!==physicalDebrisGeometry)oldest.mesh.geometry.dispose();}
@@ -1003,12 +1020,18 @@ export async function createGame(
     }
   }
   function smokeDensityAlongRay(start:THREE.Vector3,end:THREE.Vector3){
-    const segment=end.clone().sub(start),lengthSq=Math.max(.0001,segment.lengthSq());let density=0;
+    // Scalar math avoids allocating several temporary vectors for every remote player.
+    const dx=end.x-start.x,dy=end.y-start.y,dz=end.z-start.z;
+    const lengthSq=Math.max(.0001,dx*dx+dy*dy+dz*dz);
+    let density=0;
     for(const cloud of smokeClouds){
-      const t=THREE.MathUtils.clamp(cloud.mesh.position.clone().sub(start).dot(segment)/lengthSq,0,1);
-      const closest=start.clone().addScaledVector(segment,t);
-      const radius=Math.max(cloud.mesh.scale.x,cloud.mesh.scale.z)*.72;
-      const falloff=1-cloud.mesh.position.distanceTo(closest)/Math.max(.1,radius);
+      const cx=cloud.mesh.position.x-start.x,cy=cloud.mesh.position.y-start.y,cz=cloud.mesh.position.z-start.z;
+      const t=THREE.MathUtils.clamp((cx*dx+cy*dy+cz*dz)/lengthSq,0,1);
+      const ox=start.x+dx*t-cloud.mesh.position.x;
+      const oy=start.y+dy*t-cloud.mesh.position.y;
+      const oz=start.z+dz*t-cloud.mesh.position.z;
+      const radius=Math.max(.1,Math.max(cloud.mesh.scale.x,cloud.mesh.scale.z)*.72);
+      const falloff=1-Math.sqrt(ox*ox+oy*oy+oz*oz)/radius;
       const remaining=1-THREE.MathUtils.clamp(cloud.age/cloud.life,0,1);
       if(falloff>0)density+=falloff*remaining*.48;
     }
@@ -1058,7 +1081,12 @@ export async function createGame(
   function spawnGlassShards(position:THREE.Vector3,count:number,impulse:number,seed='glass'){
     let randomState=Array.from(seed).reduce((value,char)=>(Math.imul(value^char.charCodeAt(0),16777619)>>>0),2166136261);
     const random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296;};
-    const total=isMobile?Math.min(5,count):Math.min(12,count);
+    const total=isMobile?Math.min(5,count):Math.min(deviceTier==='low'?6:12,count);
+    const debrisLimit=isMobile?30:deviceTier==='low'?30:deviceTier==='balanced'?64:120;
+    while(physicalDebris.length+total>debrisLimit){
+      const oldest=physicalDebris.shift();
+      if(oldest){scene.remove(oldest.mesh);world.removeRigidBody(oldest.body);(oldest.mesh.material as THREE.Material).dispose();if(oldest.mesh.geometry!==physicalDebrisGeometry)oldest.mesh.geometry.dispose();}
+    }
     for(let i=0;i<total;i++){
       const size=.09+random()*.19;
       const material=new THREE.MeshPhysicalMaterial({color:0xb9e7f6,roughness:.08,metalness:.04,transparent:true,opacity:.72,transmission:.28,thickness:.08});
@@ -1248,6 +1276,31 @@ export async function createGame(
     mobileFireTimer = 0;
   }
 
+  function stopMouseFire() {
+    mouseFireHeld=false;
+    if(mouseFireTimer)window.clearTimeout(mouseFireTimer);
+    mouseFireTimer=0;
+  }
+
+  function scheduleMouseFire() {
+    if(!mouseFireHeld||disposed)return;
+    const now=performance.now();
+    const delay=!active?100:now<reloadAt?reloadAt-now:ammo<=0?100:lastShot+currentWeapon.fireInterval-now;
+    mouseFireTimer=window.setTimeout(()=>{
+      mouseFireTimer=0;
+      if(!mouseFireHeld)return;
+      fire();
+      scheduleMouseFire();
+    },Math.max(8,Math.min(120,delay)));
+  }
+
+  function startMouseFire() {
+    if(mouseFireHeld)return;
+    mouseFireHeld=true;
+    fire();
+    scheduleMouseFire();
+  }
+
   function fire() {
     const now = performance.now();
     if (!active || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
@@ -1352,11 +1405,12 @@ export async function createGame(
     pitch = THREE.MathUtils.clamp(pitch - dy * 0.002 * sensitivity, -1.3, 1.3);
   }
   function pointerMove(event: MouseEvent) {
+    if(mouseFireHeld&&(event.buttons&1)===0)stopMouseFire();
     if (document.pointerLockElement === canvas) look(event.movementX, event.movementY);
   }
   function pointerDown(event: PointerEvent) {
     if (event.pointerType === 'mouse' && event.button === 2) { event.preventDefault(); setPrecisionAiming(true); }
-    if (event.pointerType === 'mouse' && event.button === 0) fire();
+    if (event.pointerType === 'mouse' && event.button === 0) startMouseFire();
     if (event.pointerType === 'touch') {
       lookPointerId = event.pointerId;
       canvas.setPointerCapture(event.pointerId);
@@ -1374,7 +1428,8 @@ export async function createGame(
     element.ly = event.clientY;
   }
   function pointerLookEnd(event: PointerEvent) {
-    if (event.pointerType === 'mouse' && event.button === 2) setPrecisionAiming(false);
+    if(event.pointerType==='mouse'&&(event.button===0||event.type==='pointercancel'))stopMouseFire();
+    if (event.pointerType === 'mouse' && (event.button === 2||event.type==='pointercancel')) setPrecisionAiming(false);
     if (event.pointerId !== lookPointerId) return;
     lookPointerId = null;
     const element = canvas as HTMLCanvasElement & { lx?: number; ly?: number };
@@ -1387,7 +1442,7 @@ export async function createGame(
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h, false);
-    composer.setSize(w,h);
+    composer?.setSize(w,h);
   }
   function clickCanvas() {
     if (window.matchMedia('(pointer:fine)').matches && !document.pointerLockElement) {
@@ -1399,8 +1454,14 @@ export async function createGame(
   window.addEventListener('keydown', keyDown);
   window.addEventListener('keyup', keyUp);
   window.addEventListener('mousemove', pointerMove);
-  window.addEventListener('pointerup', event => { if(event.pointerType==='mouse'&&event.button===2)setPrecisionAiming(false); });
-  window.addEventListener('blur', () => setPrecisionAiming(false));
+  const handleWindowPointerEnd=(event:PointerEvent)=>{
+    if(event.pointerType!=='mouse')return;
+    if(event.button===0||event.type==='pointercancel')stopMouseFire();
+    if(event.button===2||event.type==='pointercancel')setPrecisionAiming(false);
+  };
+  window.addEventListener('pointerup',handleWindowPointerEnd);
+  window.addEventListener('pointercancel',handleWindowPointerEnd);
+  window.addEventListener('blur', () => {setPrecisionAiming(false);stopMouseFire();});
   document.addEventListener('contextmenu', event => { if(event.target===canvas)event.preventDefault(); });
   canvas.addEventListener('click', clickCanvas);
   canvas.addEventListener('pointerdown', pointerDown);
@@ -1416,6 +1477,8 @@ export async function createGame(
     touch.forward = 0; touch.right = 0; touch.jump = false;
     resetPad();
     stopMobileFire();
+    stopMouseFire();
+    setPrecisionAiming(false);
     previous = performance.now();
   };
   const onVisibilityChange = () => {
@@ -1568,7 +1631,9 @@ export async function createGame(
     previous = now;
     perfFrames++;
     const frameMs=Math.min(100,dt*1000);
-    frameTimeSamples.push(frameMs);if(frameTimeSamples.length>1800)frameTimeSamples.shift();
+    frameTimeSamples[frameTimeSampleCursor]=frameMs;
+    frameTimeSampleCursor=(frameTimeSampleCursor+1)%frameTimeSamples.length;
+    frameTimeSampleCount=Math.min(frameTimeSampleCount+1,frameTimeSamples.length);
     smoothedFrameMs=smoothedFrameMs*.92+frameMs*.08;
     if(now-perfWindowStart>=2500){
       const fps=perfFrames*1000/(now-perfWindowStart);
@@ -1582,7 +1647,7 @@ export async function createGame(
       }
       const measuredFps=Math.round(fps);
       const measuredFrame=Math.round(smoothedFrameMs*10)/10;
-      const sortedFrames=[...frameTimeSamples].sort((a,b)=>a-b);
+      const sortedFrames=Array.from(frameTimeSamples.subarray(0,frameTimeSampleCount)).sort((a,b)=>a-b);
       const p99Frame=sortedFrames[Math.min(sortedFrames.length-1,Math.ceil(sortedFrames.length*.99)-1)]||measuredFrame;
       const onePercentLow=Math.round(1000/Math.max(1,p99Frame));
       if(onePercentLow<target*.55&&adaptivePixelRatio>minPixelRatio){adaptivePixelRatio=Math.max(minPixelRatio,adaptivePixelRatio-.08);renderer.setPixelRatio(adaptivePixelRatio);resize();}
@@ -1595,11 +1660,19 @@ export async function createGame(
       const deviceMemory=(navigator as Navigator&{deviceMemory?:number}).deviceMemory??null;
       const stressed=measuredFps<target-5||onePercentLow<target*.55||measuredFrame>21||memoryPressure;
       if(stressed){
-        bloomPass.strength=Math.max(isMobile ? .035 : .08,bloomPass.strength-.035);
-        if(measuredFps<target-8||measuredFrame>25)renderer.shadowMap.enabled=false;
-      }else if(measuredFps>target+12&&!memoryPressure){
-        bloomPass.strength=Math.min(isMobile ? .10 : .38,bloomPass.strength+.015);
-        if(!isMobile)renderer.shadowMap.enabled=true;
+        stablePerformanceWindows=0;
+        bloomEnabled=false;
+        if(bloomPass)bloomPass.strength=Math.max(isMobile ? .035 : .08,bloomPass.strength-.035);
+        if(measuredFps<target-6||measuredFrame>23)renderer.shadowMap.enabled=false;
+      }else if(measuredFps>target+5&&!memoryPressure){
+        stablePerformanceWindows++;
+        if(bloomPass)bloomPass.strength=Math.min(isMobile ? .10 : .38,bloomPass.strength+.015);
+        if(stablePerformanceWindows>=2&&qualityPreference!=='low'&&deviceTier!=='low'){
+          bloomEnabled=!!composer;
+          if(!isMobile)renderer.shadowMap.enabled=true;
+        }
+      }else{
+        stablePerformanceWindows=0;
       }
       performanceBadge.textContent='FPS '+measuredFps+' · 1% LOW '+onePercentLow+' · '+measuredFrame+'ms · DPR '+adaptivePixelRatio.toFixed(2)+(memoryMb===null?'':' · HEAP '+memoryMb+'MB')+' · GEO '+renderer.info.memory.geometries+' · RTT '+(networkRttMs===null?'--':Math.round(networkRttMs)+'ms')+' · JIT '+Math.round(snapshotJitterMs)+'ms';
       performanceBadge.style.color=stressed?'#ffb4a8':'#d9edff';
@@ -1610,7 +1683,7 @@ export async function createGame(
         geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,
         drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,
         activeDebris:physicalDebris.length,activeSmoke:smokeClouds.length,activeParticles:fxParticles.length,
-        bloomStrength:Math.round(bloomPass.strength*100)/100
+        bloomStrength:Math.round((bloomPass?.strength??0)*100)/100
       }}));
       if(now-lastStabilityReportAt>=60000){
         window.dispatchEvent(new CustomEvent('rockey:stability',{detail:{
@@ -1979,8 +2052,9 @@ export async function createGame(
         y: old.y + corrected.y,
         z: old.z + corrected.z
       });
-      world.step();
-      updatePhysicalDebris(dt);
+      // The kinematic player controller needs no full world simulation step;
+      // advance Rapier only while destructible dynamic debris is actually alive.
+      if(physicalDebris.length>0){world.step();updatePhysicalDebris(dt);}
     for(const mesh of remoteDebris.values()){
       const targetPosition=mesh.userData.serverTargetPosition as THREE.Vector3|undefined;
       const targetQuaternion=mesh.userData.serverTargetQuaternion as THREE.Quaternion|undefined;
@@ -2038,7 +2112,7 @@ export async function createGame(
         lastInput = now;
       }
     }
-    composer.render(dt);
+    if(bloomEnabled&&composer)composer.render(dt);else renderer.render(scene,camera);
     raf = requestAnimationFrame(frame);
   }
   raf = requestAnimationFrame(frame);
@@ -2163,12 +2237,14 @@ export async function createGame(
       const complete=killcamComplete;killcamComplete=null;complete?.();
     },
     setQuality(level: 'low'|'balanced'|'high') {
+      qualityPreference=level;
       const ratio=level==='low'?.82:level==='balanced'?1.12:1.55;
-      adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8,ratio);
-      renderer.setPixelRatio(adaptivePixelRatio);composer.setPixelRatio(adaptivePixelRatio);resize();
-      renderer.shadowMap.enabled=level!=='low'&&!isMobile;
+      adaptivePixelRatio=Math.min(window.devicePixelRatio||1,maxPixelRatio,ratio);
+      renderer.setPixelRatio(adaptivePixelRatio);composer?.setPixelRatio(adaptivePixelRatio);resize();
+      renderer.shadowMap.enabled=level!=='low'&&deviceTier!=='low'&&!isMobile;
       renderer.shadowMap.needsUpdate=true;
-      bloomPass.strength=isMobile?.07:level==='low'?.12:level==='balanced'?.28:.42;
+      bloomEnabled=level!=='low'&&deviceTier!=='low'&&!!composer;
+      if(bloomPass)bloomPass.strength=isMobile?.07:level==='low'?.12:level==='balanced'?.28:.42;
     },
     setSensitivity(value: number) {
       sensitivity=THREE.MathUtils.clamp(value,0.4,2.2);
@@ -2190,6 +2266,8 @@ export async function createGame(
       window.removeEventListener('keydown', keyDown);
       window.removeEventListener('keyup', keyUp);
       window.removeEventListener('mousemove', pointerMove);
+      window.removeEventListener('pointerup',handleWindowPointerEnd);
+      window.removeEventListener('pointercancel',handleWindowPointerEnd);
       window.visualViewport?.removeEventListener('resize', resize);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('blur', onWindowBlur);
@@ -2203,7 +2281,8 @@ export async function createGame(
       world.removeCharacterController(controller);
       world.free();
       stopMobileFire();
-      composer.dispose();
+      stopMouseFire();
+      composer?.dispose();
       renderer.dispose();
       reflectionEnvironment?.dispose();
       performanceBadge.remove();

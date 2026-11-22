@@ -192,6 +192,8 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
   const targetWorldScratch=new THREE.Vector3();
   const hipLocalScratch=new THREE.Vector3();
   const targetLocalScratch=new THREE.Vector3();
+  type FootGroundSample={height:number;normalX:number;normalY:number;normalZ:number};
+  const footGroundCache:Array<{sample:FootGroundSample|null;x:number;z:number;sampledAt:number}>=legs.map(()=>({sample:null,x:NaN,z:NaN,sampledAt:0}));
   let movementBlend=0,sprintBlend=0,aimBlend=0,airBlend=0;
   const animate=(movement:number,time:number,action=0,recoil=0,vertical=0,dead=false,sprint=0,grounded=true,aim=0)=>{
     movementBlend=THREE.MathUtils.damp(movementBlend,THREE.MathUtils.clamp(movement,0,1),12,1/60);
@@ -244,14 +246,25 @@ export function createCombatantRig(baseColor:number,accentColor:number):Combatan
     root.rotation.z=deathBlend*.95;
     root.position.y=-deathBlend*.25+landing*.035;
   };
-  const updateFootIK=(sampleGround:(x:number,z:number,footY:number)=>{height:number;normalX:number;normalY:number;normalZ:number}|null,grounded=true)=>{
-    if(!grounded){legs.forEach((leg,index)=>{leg.foot.position.y=footRestY[index];leg.foot.rotation.z=0;});return;}
+  const updateFootIK=(sampleGround:(x:number,z:number,footY:number)=>FootGroundSample|null,grounded=true)=>{
+    if(!grounded){
+      legs.forEach((leg,index)=>{leg.foot.position.y=footRestY[index];leg.foot.rotation.z=0;footGroundCache[index].sample=null;});
+      return;
+    }
+    // Reset both feet and update the skeleton once. Two short ground-only raycasts
+    // per ~45 ms are enough for planted-foot placement and avoid per-frame scene scans.
+    for(let index=0;index<legs.length;index++)legs[index].foot.position.y=footRestY[index];
     group.updateMatrixWorld(true);
+    const now=performance.now();
     legs.forEach((leg,index)=>{
-      leg.foot.position.y=footRestY[index];
-      group.updateMatrixWorld(true);
       leg.foot.getWorldPosition(footWorldScratch);
-      const ground=sampleGround(footWorldScratch.x,footWorldScratch.z,footWorldScratch.y);
+      const cache=footGroundCache[index];
+      const moved=Math.hypot(footWorldScratch.x-cache.x,footWorldScratch.z-cache.z)>.18;
+      if(!cache.sample||now-cache.sampledAt>=45||moved){
+        cache.sample=sampleGround(footWorldScratch.x,footWorldScratch.z,footWorldScratch.y);
+        cache.x=footWorldScratch.x;cache.z=footWorldScratch.z;cache.sampledAt=now;
+      }
+      const ground=cache.sample;
       if(ground===null||!Number.isFinite(ground.height))return;
       const weight=THREE.MathUtils.clamp(Number(leg.foot.userData.ikWeight??1),0,1);
       if(weight<.02)return;
