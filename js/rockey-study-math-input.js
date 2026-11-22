@@ -492,6 +492,13 @@
   function variableNames(node, result) {
     result = result || new Set();
     if (!node) return result;
+    // Parsed statements wrap their expression tree in ast or equation sides.
+    if (node.kind === "expression") return variableNames(node.ast,result);
+    if (node.kind === "equation") {
+      variableNames(node.left,result);
+      variableNames(node.right,result);
+      return result;
+    }
     if (node.type === "variable") result.add(node.name);
     if (node.value && typeof node.value === "object") variableNames(node.value,result);
     if (node.left) variableNames(node.left,result);
