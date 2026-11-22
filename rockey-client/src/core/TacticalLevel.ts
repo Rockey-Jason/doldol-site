@@ -109,8 +109,16 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
       add(root,wall,-w/2+t/2,h/2,3.35,t,h,2.9,true);
     }
     add(root,wall,0,h/2,-d/2+t/2,w,h,t,true);
-    add(root,wall,-2.95,h/2,d/2-t/2,2.9,h,t,true);
-    add(root,wall,2.95,h/2,d/2-t/2,2.9,h,t,true);
+    // Align the ground-floor entrance with the stair centerline instead of leaving
+    // the doorway centered on the room while the stairs sit against one side.
+    const innerSide=front>0?1:-1;
+    const stairX=innerSide*3.05;
+    const entranceHalfWidth=1.3;
+    const entranceLeft=stairX-entranceHalfWidth;
+    const entranceRight=stairX+entranceHalfWidth;
+    const entranceWallMin=-w/2,entranceWallMax=w/2;
+    add(root,wall,(entranceWallMin+entranceLeft)/2,h/2,d/2-t/2,entranceLeft-entranceWallMin,h,t,true);
+    add(root,wall,(entranceRight+entranceWallMax)/2,h/2,d/2-t/2,entranceWallMax-entranceRight,h,t,true);
     add(root,wall,-1.95,2.05,-.55,.32,4.1,.32,true);
     add(root,wall,1.95,2.05,-.55,.32,4.1,.32,true);
     // A broad doorway replaces the old full-width partition.
@@ -119,7 +127,6 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     add(root,wall,0,3.62,-2.05,1.2,.95,.32,true);
 
     // Mirror the usable layout so each building's inner side faces the skybridge.
-    const innerSide=front>0?1:-1;
     const officeSide=-innerSide;
 
     // Keep the office furniture on the outer side and clear the full stair approach.
@@ -132,13 +139,13 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
       add(root,wall,officeSide*(3.7-i*.72),1.25,-.1,.045,2.35,.045);
     }
     // Storage racks now sit outside the stair flight and its landing.
-    makeFurniture(root,innerSide*2.2,0,3.5,'rack');
+    // Keep the entrance-to-stair approach free of rack colliders.
+    makeFurniture(root,officeSide*2.2,0,3.5,'rack');
     makeFurniture(root,innerSide*2.2,0,-3.5,'rack');
     makeFurniture(root,.25,0,-3.0,'desk');
     makeFurniture(root,-1.15,0,3.0,'crate');
 
     // Upper gallery floors leave a full-width vertical shaft above the stair flight.
-    const stairX=innerSide*3.05;
     add(root,floor,-innerSide*.9,4.05,1.45,6.8,.28,6.7,true);
     // Keep the bridge gallery beyond the capsule's full horizontal clearance envelope.
     add(root,floor,innerSide*4.05,4.05,1.45,1.2,.28,6.7,true);
@@ -155,16 +162,19 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
 
     // The stair-aligned doorway replaces the old continuous wall across the gallery.
     const galleryDoorCenter=stairX;
-    const wallMin=-w/2,wallMax=w/2,doorHalfWidth=1.55;
+    const wallMin=-w/2,wallMax=w/2,doorHalfWidth=1.3;
     const galleryDoorLeft=galleryDoorCenter-doorHalfWidth;
     const galleryDoorRight=galleryDoorCenter+doorHalfWidth;
     add(root,wall,(wallMin+galleryDoorLeft)/2,4.58,-1.75,galleryDoorLeft-wallMin,1.0,.28,true);
     add(root,wall,(galleryDoorRight+wallMax)/2,4.58,-1.75,wallMax-galleryDoorRight,1.0,.28,true);
 
-    const steps=13,run=4.2,rise=4.19;
-    // The final step now meets the second-floor doorway; the 44.9° ramp stays
-    // below the controller's 45° maximum slope and clears the ceiling above.
-    addRamp(root,floor,stairX,rise/2,.25,2.1,run,rise);
+    const steps=13,run=4.2,rise=4.07;
+    // The ramp's upper and lower walking surfaces meet the actual floor tops:
+    // ground floor y=0.12 and gallery floor y=4.19. This removes the small
+    // lips at both ends while keeping the slope below the controller's 45° limit.
+    const rampAngle=Math.atan2(rise,run);
+    const rampCenterY=(.12+4.19)/2-.07*Math.cos(rampAngle);
+    addRamp(root,floor,stairX,rampCenterY,.25,2.1,run,rise);
     for(let i=0;i<steps;i++){
       const y=(i+1)*rise/steps,z=2.35-(i+.5)*run/steps;
       add(root,i%2?trim:floor,stairX,y/2,z,1.05,y,.42,false);
