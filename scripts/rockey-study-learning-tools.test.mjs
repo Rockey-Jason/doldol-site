@@ -11,6 +11,8 @@ const gameSource = fs.readFileSync(new URL("../js/rockey-study-formula-game.js",
 assert.match(gameSource, /data-action="practice-current"/, "lesson cards should provide a direct practice action");
 assert.doesNotMatch(gameSource, /data-action="master"/, "mastery must not be granted by a manual completion button");
 assert.match(gameSource, /session\.wasCorrect&&session\.type==="practice"\)record\.mastered=true;/, "a correct direct practice answer should grant mastery");
+assert.match(gameSource, /else if\(!session\.wasCorrect\)\{\s*record\.review=true;/, "incorrect formula answers should automatically enter the review queue");
+assert.match(gameSource, /record\.mastered=true;\s*record\.review=false;/, "a correct focused practice answer should clear the review flag");
 
 const course = [
   { id: "pythagoras", grade: 7, topic: "도형", title: "피타고라스 정리", question: "직각삼각형의 빗변", formula: "a^2+b^2=c^2", explain: "세 변의 관계", example: "3^2+4^2=5^2" },
