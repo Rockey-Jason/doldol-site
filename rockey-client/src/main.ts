@@ -176,7 +176,8 @@ async function confirmStageLoadout(){
   }catch(error){console.error('Stage loadout start failed',error);status('장비를 적용하지 못했습니다. 다시 시도해 주세요.');}
 }
 function applyQuality(){
-  const quality=(localStorage.getItem('rockey.quality')||'balanced') as 'low'|'balanced'|'high';
+  const savedQuality=localStorage.getItem('rockey.quality');
+  const quality=(savedQuality==='low'||savedQuality==='balanced'||savedQuality==='high'?savedQuality:'auto') as 'auto'|'low'|'balanced'|'high';
   game?.setQuality(quality);
   const sensitivity=Number(localStorage.getItem('rockey.sensitivity')||'1');
   game?.setSensitivity(Number.isFinite(sensitivity)?sensitivity:1);
