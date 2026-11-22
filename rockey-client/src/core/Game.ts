@@ -2130,9 +2130,11 @@ export async function createGame(
         y: old.y + corrected.y,
         z: old.z + corrected.z
       });
-      // The kinematic player controller needs no full world simulation step;
-      // advance Rapier only while destructible dynamic debris is actually alive.
-      if(physicalDebris.length>0){world.step();updatePhysicalDebris(dt);}
+      // Rapier must step every active frame to apply the player's
+      // kinematicPositionBased next translation. Skipping this when there is
+      // no debris freezes both walking and jumping.
+      world.step();
+      if(physicalDebris.length>0)updatePhysicalDebris(dt);
     for(const mesh of remoteDebris.values()){
       const targetPosition=mesh.userData.serverTargetPosition as THREE.Vector3|undefined;
       const targetQuaternion=mesh.userData.serverTargetQuaternion as THREE.Quaternion|undefined;
