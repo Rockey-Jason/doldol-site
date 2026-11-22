@@ -270,7 +270,8 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
   // Elevated enclosed skybridge connects both second-floor entry portals.
   const bridge=new THREE.Group();bridge.position.set(0,0,-1.5);scene.add(bridge);
   add(bridge,floor,0,4.05,0,25.6,.28,2.5,true);
-  add(bridge,wall,0,6.15,0,25.6,.2,2.5,true);
+  // Extra headroom prevents the standing capsule and controller skin from snagging the roof.
+  add(bridge,wall,0,6.35,0,25.6,.2,2.5,true);
   for(const side of [-1,1]){
     add(bridge,trim,0,4.92,side*1.24,25.6,1.48,.12,true);
     for(let x=-11.75;x<=11.76;x+=2.15){
@@ -304,7 +305,9 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
       add(underpass,glow,x,-.34,side*1.20,.42,.045,.035);
     }
   }
-  add(underpass,wall,0,-.10,0,25.6,.18,2.6,true);
+  // Roof slab is also the arena floor above the tunnel. Its underside is
+  // at -0.28 m, leaving 2.36 m clear above the service floor for the 1.72 m capsule.
+  add(underpass,wall,0,-.14,0,25.6,.28,2.6,true);
   const underpassLamp=new THREE.PointLight(map.light,isMobile?7:13,26,2);
   underpassLamp.position.set(0,-.45,0);underpass.add(underpassLamp);
 

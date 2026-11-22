@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {MAPS} from './catalog.js';
-import {isBlockedByCover,tacticalFloorHeightAt} from './world-navigation.js';
+import {isBlockedByCover,tacticalFloorHeightAt,ROCKEY_PLAYER_COLLISION,ROCKEY_UNDERPASS,ROCKEY_SKYBRIDGE} from './world-navigation.js';
 
 test('every map keeps both ground-floor building entrances open',()=>{
   for(const map of Object.values(MAPS)){
@@ -129,4 +129,24 @@ test('player capsule dimensions fit every real entrance and stair transition',()
         map.id+' basement portal does not meet the service-floor height');
     }
   }
+});
+
+
+test('underpass roof no longer intersects the full standing player capsule',()=>{
+  const actualClearance=ROCKEY_UNDERPASS.ceilingBottom-ROCKEY_UNDERPASS.floorTop;
+  assert.ok(Math.abs(actualClearance-ROCKEY_UNDERPASS.clearHeight)<1e-9);
+  assert.ok(actualClearance>ROCKEY_PLAYER_COLLISION.standingHeight+ROCKEY_PLAYER_COLLISION.skin,
+    'underpass ceiling must leave room for the full capsule and controller skin');
+  assert.equal(ROCKEY_UNDERPASS.ceilingBottom,-.28,
+    'underpass roof underside must align with the split arena-floor footprint');
+});
+
+
+test('skybridge ceiling clears the capsule including the avatar foot offset',()=>{
+  const actualClearance=ROCKEY_SKYBRIDGE.ceilingBottom-ROCKEY_SKYBRIDGE.floorTop;
+  assert.ok(Math.abs(actualClearance-ROCKEY_SKYBRIDGE.clearHeight)<1e-9);
+  const footOffset=.92-ROCKEY_PLAYER_COLLISION.halfHeight;
+  const required=ROCKEY_PLAYER_COLLISION.standingHeight+footOffset+ROCKEY_PLAYER_COLLISION.skin;
+  assert.ok(actualClearance>required,
+    'skybridge ceiling must clear the standing capsule, its floor offset and controller skin');
 });

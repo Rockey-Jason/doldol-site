@@ -123,7 +123,10 @@ export async function createGame(
     {x:0,z:-18.15,w:60,d:23.7},
     {x:0,z:16.65,w:60,d:26.7},
     {x:-25.8,z:-1.5,w:8.4,d:9.6},
-    {x:0,z:-1.5,w:25.6,d:9.6},
+    // Keep the central underpass footprint open. Its own reinforced roof slab
+    // provides the arena surface while preserving the full player-capsule headroom below.
+    {x:0,z:-5.2,w:25.6,d:2.2},
+    {x:0,z:2.2,w:25.6,d:2.2},
     {x:25.8,z:-1.5,w:8.4,d:9.6}
   ];
   for(const patch of groundPatches){
