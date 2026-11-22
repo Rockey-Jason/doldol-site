@@ -4,6 +4,7 @@ import { ITEMS, MAPS, WEAPONS, type RockeyItemCode, type RockeyWeapon } from './
 import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, transferReloadAmmo } from './combat.js';
 import { createAuthoritativeDebris, stepAuthoritativeDebris, type DebrisBodyState } from './world-physics.js';
 import { isBlockedByCover, tacticalFloorHeightAt } from './world-navigation.js';
+import { createRobotRoster, updateRobotAI, type RobotState } from './robot-ai.js';
 
 export type Mode = '1v1' | '2v2' | '3v3' | 'ranked' | 'ffa';
 export type PlayerClient = {
@@ -42,7 +43,7 @@ interface PlayerState {
   ammo: number; reserve: number; reloadUntil: number; reloadToken:number; reloadTimer:NodeJS.Timeout|null;
   weaponAmmo: Record<string,{ammo:number;reserve:number}>;
   alive: boolean; connected: boolean; disconnectedAt: number | null;
-  suspiciousInputs: number; weaponKills: Record<string, number>;
+  suspiciousInputs: number; weaponKills: Record<string, number>; isRobot?:false;
 }
 
 function send(client: PlayerClient, message: Record<string, unknown>) {
@@ -60,6 +61,7 @@ export class GameRoom {
   readonly mapId: string;
   private persistedMatchId: string | null = null;
   private players: PlayerState[];
+  private robots: RobotState[];
   private smokeVolumes:Array<{x:number;y:number;z:number;radius:number;expiresAt:number}>=[];
   private worldDestruction:Array<{id:string;x:number;y:number;z:number;radius:number}>=[];
   private nextDestructionId=1;
@@ -82,6 +84,7 @@ export class GameRoom {
     this.id = id;
     this.mode = mode;
     this.mapId = MAPS[mapId] ? mapId : 'training_facility';
+    this.robots = createRobotRoster(MAPS[this.mapId].cover);
     this.onFinished = onFinished;
 
     const teamSize = mode === 'ffa' ? 1 : Math.max(1,members.length/2);
@@ -156,7 +159,7 @@ export class GameRoom {
         spawn:{x:p.spawnX,y:0.92,z:p.spawnZ,yaw:p.spawnYaw},
         mapId:this.mapId,mapName:MAPS[this.mapId].name,
         weaponCode:p.weaponCode,secondaryWeapon:p.secondaryWeapon,itemCode:p.itemCode,itemCount:p.itemCount,itemInventory:p.itemInventory,
-        ammo:p.ammo,reserve:p.reserve,weapon
+        ammo:p.ammo,reserve:p.reserve,weapon,robots:this.robotSnapshots()
       });
     }
     this.broadcast({type:'round.update',team0:0,team1:0,round:1});
@@ -178,6 +181,13 @@ export class GameRoom {
     return this.players.map(p=>({
       id:p.client.player.id,name:p.client.player.name,team:p.team,
       x:p.x,y:p.y,z:p.z,yaw:p.yaw,health:p.health,alive:p.alive,connected:p.connected,aim:p.aim
+    }));
+  }
+
+  private robotSnapshots(){
+    return this.robots.map(robot=>({
+      id:robot.id,name:robot.name,type:robot.type,x:robot.x,y:robot.y,z:robot.z,
+      yaw:robot.yaw,health:robot.health,maxHealth:robot.maxHealth,alive:robot.alive,state:robot.state
     }));
   }
 
@@ -209,7 +219,7 @@ export class GameRoom {
       type:'match.spectating',roomId:this.id,matchId:this.persistedMatchId,
       mode:this.mode,mapId:this.mapId,mapName:MAPS[this.mapId].name
     });
-    send(client,{type:'snapshot',serverTime:Date.now(),players:this.snapshots()});
+    send(client,{type:'snapshot',serverTime:Date.now(),players:this.snapshots(),robots:this.robotSnapshots()});
     send(client,{type:'world.state',revision:this.nextDestructionId-1,destruction:this.worldDestruction,debris:this.worldDebris});
     send(client,{type:'round.update',team0:this.score[0],team1:this.score[1],round:this.round});
   }
@@ -357,6 +367,32 @@ export class GameRoom {
     if(!this.finished){setTimeout(()=>{if(this.finished||target.connected)return;target.alive=false;},0);setTimeout(()=>{if(this.finished||!target.connected)return;target.health=100;target.alive=true;target.x=target.spawnX;target.z=target.spawnZ;target.y=.92;target.verticalVelocity=0;},1800);}
     else setTimeout(()=>{if(!this.finished)return;target.health=100;target.alive=true;},1800);
   }
+  private applyRobotDamage(shooter:PlayerState,robot:RobotState,damage:number,weaponCode:string,headshot:boolean,now:number){
+    if(!robot.alive||damage<=0)return;
+    robot.health=Math.max(0,robot.health-damage);
+    send(shooter.client,{type:'hit',damage,headshot,target:robot.name,targetId:robot.id,weaponCode});
+    if(robot.health<=0){
+      robot.alive=false;robot.state='DESTROYED';robot.lastFireAt=now;
+      this.broadcast({type:'robot.destroyed',robotId:robot.id});
+      setTimeout(()=>{
+        if(this.finished)return;
+        robot.health=robot.maxHealth;robot.alive=true;robot.connected=true;robot.state='PATROL';robot.lastFireAt=Date.now();
+        this.broadcast({type:'robots.update',robots:this.robotSnapshots()});
+      },8500);
+    }
+  }
+
+  private eliminatePlayerByRobot(target:PlayerState,robot:RobotState){
+    if(!target.alive||target.health>0)return;
+    target.alive=false;target.deaths++;
+    send(target.client,{type:'eliminated',by:robot.name,killerId:robot.id,killcamFrames:[]});
+    setTimeout(()=>{
+      if(this.finished||!target.connected)return;
+      target.health=100;target.alive=true;target.x=target.spawnX;target.z=target.spawnZ;target.y=.92;target.verticalVelocity=0;
+      send(target.client,{type:'damage',health:100,damage:0,from:'RESPAWN'});
+    },1800);
+  }
+
   private applyDamage(shooter:PlayerState,target:PlayerState,damage:number,weaponCode:string,headshot:boolean,now:number){
     if(!target.alive||damage<=0)return;target.health=Math.max(0,target.health-damage);target.damage+=damage;if(headshot)shooter.headshots++;
     send(shooter.client,{type:'hit',damage,headshot,target:target.client.player.name,targetId:target.client.player.id,weaponCode});
@@ -437,15 +473,16 @@ export class GameRoom {
     ];
     const activeSmoke=this.smokeVolumes.filter(cloud=>cloud.expiresAt>now);
     this.smokeVolumes=activeSmoke;
-    const trace=traceWeaponShot(shooter,this.players,this.mode,[...MAPS[this.mapId].cover,...arenaWalls],weapon,activeSmoke);
-    const target=trace.target as PlayerState|null;
+    const combatants:Array<PlayerState|RobotState>=[...this.players,...this.robots];
+    const trace=traceWeaponShot<PlayerState|RobotState>(shooter,combatants,this.mode,[...MAPS[this.mapId].cover,...arenaWalls],weapon,activeSmoke);
+    const target=trace.target;
     const best=trace.distance;
     const headshot=trace.headshot;
     if(weapon.category!=='MELEE')this.broadcast({
       type:'weapon.shot',shotId:client.player.id+':'+String(message.sequence??now),
       shooterId:client.player.id,x:shooter.x,y:shooter.y+0.55,z:shooter.z,
       yaw:shooter.yaw,pitch:shooter.pitch,weaponCode:weapon.code,
-      hit:!!target,targetId:target?.client.player.id??null,headshot,distance:target?best:null
+      hit:!!target,targetId:target?(target.isRobot?target.id:(target as PlayerState).client.player.id):null,headshot,distance:target?best:null
     });
     // Server-authoritative recoil: apply after the shot ray is evaluated, then sync the new aim to the shooter.
     const recoil=calculateWeaponRecoil(weapon);
@@ -454,7 +491,8 @@ export class GameRoom {
     send(shooter.client,{type:'weapon.recoil',pitch:shooter.pitch,yaw:shooter.yaw});
     if(!target)return;
     const damage=calculateWeaponDamage(weapon,headshot,best);
-    this.applyDamage(shooter,target,damage,weapon.code,headshot,now);
+    if(target.isRobot)this.applyRobotDamage(shooter,target as RobotState,damage,weapon.code,headshot,now);
+    else this.applyDamage(shooter,target as PlayerState,damage,weapon.code,headshot,now);
   }
 
   private captureReplayFrame(now:number) {
@@ -502,8 +540,23 @@ export class GameRoom {
         p.y=Math.min(8,nextY);
       }
     }
+    const visiblePlayers=this.players
+      .filter(player=>player.alive&&player.connected)
+      .map(player=>({id:player.client.player.id,x:player.x,y:player.y,z:player.z,alive:player.alive,connected:player.connected}));
+    const robotAttacks=updateRobotAI(this.robots,visiblePlayers,cover,delta,now);
+    for(const attack of robotAttacks){
+      const target=this.players.find(player=>player.client.player.id===attack.target.id);
+      if(!target||!target.alive||!target.connected)continue;
+      this.broadcast({
+        type:'robot.shot',robotId:attack.robot.id,x:attack.robot.x,y:attack.robot.y+1.28,z:attack.robot.z,
+        yaw:attack.robot.yaw,pitch:attack.robot.pitch,distance:Math.hypot(target.x-attack.robot.x,target.z-attack.robot.z)
+      });
+      target.health=Math.max(0,target.health-attack.damage);
+      send(target.client,{type:'damage',health:target.health,damage:attack.damage,from:attack.robot.name,sourceType:'robot'});
+      if(target.health<=0)this.eliminatePlayerByRobot(target,attack.robot);
+    }
     this.captureReplayFrame(now);
-    this.broadcast({type:'snapshot',serverTime:now,players:this.snapshots()});
+    this.broadcast({type:'snapshot',serverTime:now,players:this.snapshots(),robots:this.robotSnapshots()});
     if(this.mode==='ffa' && now-this.startedAt>5*60*1000) {
       const winner=[...this.players].sort((a,b)=>b.kills-a.kills)[0];
       void this.finish(winner?.client.player.id||null);

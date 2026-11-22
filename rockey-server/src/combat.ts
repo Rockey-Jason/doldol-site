@@ -19,7 +19,7 @@ export function calculateWeaponDamage(weapon:RockeyWeapon,headshot:boolean,dista
 
 export type Combatant = {
   id?:string; team:number; x:number; y:number; z:number;
-  yaw:number; pitch:number; alive:boolean; connected:boolean;
+  yaw:number; pitch:number; alive:boolean; connected:boolean; isRobot?:boolean;
 };
 export type CoverBox = {x:number;z:number;hx:number;hz:number;top?:number;bottom?:number};
 export type SmokeVolume = {x:number;y:number;z:number;radius:number;expiresAt:number};
@@ -58,7 +58,7 @@ export function traceWeaponShot<T extends Combatant>(
   let target:T|null=null,best=weapon.range,headshot=false;
   for(const candidate of candidates){
     if(candidate===shooter||!candidate.alive||!candidate.connected)continue;
-    if(mode!=='ffa'&&candidate.team===shooter.team)continue;
+    if(mode!=='ffa'&&candidate.isRobot!==true&&candidate.team===shooter.team)continue;
     const tx=candidate.x-ox,ty=candidate.y+.65-oy,tz=candidate.z-oz;
     const along=tx*dx+ty*dy+tz*dz;
     if(along<=0||along>=best)continue;

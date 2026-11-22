@@ -1,5 +1,8 @@
 import type { RockeyCover } from './catalog.js';
 
+// Rapier player capsule: radius .34 m, half-height .52 m and a .02 m skin.
+export const ROCKEY_PLAYER_COLLISION={capsuleRadius:.34,halfHeight:.86,standingHeight:1.72,skin:.02,clearanceRadius:.38} as const;
+
 /** Shared server-side walkable-surface model for both mirrored tactical buildings. */
 export function tacticalFloorHeightAt(x:number,z:number,currentY:number):number {
   for(const centerX of [-17.2,17.2]){
@@ -11,7 +14,7 @@ export function tacticalFloorHeightAt(x:number,z:number,currentY:number):number 
     // Roof access stairwell and the exposed roof deck.
     if(currentY>5.2&&absX<.8&&localZ>=-.7&&localZ<=-.26)return 5.99;
     if(currentY>4.05&&absX<.72&&localZ>=-.26&&localZ<=3.05){
-      return 4.38+((2.75-localZ)/3.01)*1.33;
+      return 4.19+((2.75-localZ)/3.01)*1.52;
     }
     if(currentY>5.85&&absX<4.0&&absZ<4.45)return 5.99;
 
@@ -26,12 +29,12 @@ export function tacticalFloorHeightAt(x:number,z:number,currentY:number):number 
 
     // Main second-floor stair flight.
     if(currentY>.78&&currentY<5.2&&localX>=2.45&&localX<=3.65&&localZ>=-2.55&&localZ<=2.4){
-      return Math.max(0,Math.min(3.9,((2.35-localZ)/4.85)*3.9));
+      return Math.max(0,Math.min(4.19,((2.35-localZ)/4.85)*4.19));
     }
 
     // Basement stairwell descends into the service room.
     if(currentY>-2.3&&currentY<1.8&&absX<.78&&localZ>=-2.3&&localZ<=2.3){
-      return -((2.25-localZ)/4.5)*2.45;
+      return -((2.25-localZ)/4.5)*2.64;
     }
     if(currentY<-.35&&absX<4.05&&absZ<4.3)return -2.64;
 
@@ -55,8 +58,8 @@ export function isBlockedByCover(
   x:number,
   y:number,
   z:number,
-  radius=.38,
-  halfHeight=.86
+  radius:number=ROCKEY_PLAYER_COLLISION.clearanceRadius,
+  halfHeight:number=ROCKEY_PLAYER_COLLISION.halfHeight
 ):boolean {
   return cover.some(b=>{
     const overlapsHorizontal=
