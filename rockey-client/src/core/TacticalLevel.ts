@@ -122,17 +122,17 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
 
     // Upper gallery: a broad outer-side floor, a bridge-side access gallery,
     // a cross-walk over the lower stair flight, and a generous top landing.
-    const stairX=innerSide*2.5;
-    add(root,floor,-innerSide*1.2,4.05,1.45,6.2,.28,6.7,true);
-    add(root,floor,innerSide*3.75,4.05,1.45,1.3,.28,6.7,true);
+    const stairX=innerSide*3.05;
+    add(root,floor,-innerSide*.9,4.05,1.45,6.8,.28,6.7,true);
+    add(root,floor,innerSide*4.05,4.05,1.45,1.3,.28,6.7,true);
     add(root,floor,stairX,4.05,.6,1.35,.28,.9,true);
     add(root,floor,stairX,4.0,-2.0,2.2,.28,1.45,true);
 
     // Preserve the outer guardrail. Open the inner wall directly onto the skybridge.
     const outerSide=-innerSide;
     add(root,wall,outerSide*4.18,4.58,1.45,.28,1.0,6.7,true);
-    add(root,wall,innerSide*4.18,4.58,-1.45,.28,1.0,.9,true);
-    add(root,wall,innerSide*4.18,4.58,2.9,.28,1.0,3.8,true);
+    add(root,wall,innerSide*4.55,4.58,-1.45,.28,1.0,.9,true);
+    add(root,wall,innerSide*4.55,4.58,2.9,.28,1.0,3.8,true);
 
     // The stair-aligned doorway replaces the old continuous wall across the gallery.
     const galleryDoorCenter=stairX;
@@ -144,8 +144,8 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
       const y=(i+1)*rise/steps,z=2.35-(i+.5)*run/steps;
       add(root,i%2?trim:floor,stairX,y/2,z,1.05,y,.42,true);
     }
-    add(root,trim,innerSide*3.07,2.05,-.1,.08,4.1,.08);
-    add(root,trim,innerSide*1.93,2.05,-.1,.08,4.1,.08);
+    add(root,trim,innerSide*3.62,2.05,-.1,.08,4.1,.08);
+    add(root,trim,innerSide*2.48,2.05,-.1,.08,4.1,.08);
     makeFurniture(root,officeSide*2.7,4.2,2.65,'crate');
     makeFurniture(root,officeSide*2.55,4.2,-.8,'cabinet');
 
