@@ -221,8 +221,10 @@
     [{label:"7",value:"7"},{label:"8",value:"8"},{label:"9",value:"9"},{label:"(",value:"("},{label:")",value:")"},{label:"⌫",value:"backspace",kind:"utility"}],
     [{label:"4",value:"4"},{label:"5",value:"5"},{label:"6",value:"6"},{label:"+",value:"+",kind:"operator"},{label:"−",value:"-",kind:"operator"},{label:"AC",value:"clear",kind:"utility"}],
     [{label:"1",value:"1"},{label:"2",value:"2"},{label:"3",value:"3"},{label:"×",value:"*",kind:"operator"},{label:"÷",value:"/",kind:"operator"},{label:"^",value:"^",kind:"operator"}],
-    [{label:"0",value:"0"},{label:".",value:"."},{label:"x",value:"x"},{label:"y",value:"y"},{label:"a",value:"a"},{label:"b",value:"b"}],
-    [{label:"c",value:"c"},{label:"n",value:"n"},{label:"√",value:"sqrt(",kind:"operator"},{label:"π",value:"pi",kind:"operator"},{label:"±",value:"±",kind:"operator"},{label:"!",value:"!",kind:"operator"}]
+    [{label:"0",value:"0"},{label:".",value:"."},{label:"=",value:"=",kind:"operator"},{label:";",value:";",kind:"operator"},{label:"_",value:"_",kind:"operator"},{label:"!",value:"!",kind:"operator"}],
+    [{label:"x",value:"x"},{label:"y",value:"y"},{label:"a",value:"a"},{label:"b",value:"b"},{label:"c",value:"c"},{label:"n",value:"n"}],
+    [{label:"m",value:"m"},{label:"p",value:"p"},{label:"q",value:"q"},{label:"r",value:"r"},{label:"h",value:"h"},{label:"t",value:"t"}],
+    [{label:"√",value:"sqrt(",kind:"operator"},{label:"π",value:"pi",kind:"operator"},{label:"±",value:"±",kind:"operator"}]
   ];
 
   function renderKeypad() {
