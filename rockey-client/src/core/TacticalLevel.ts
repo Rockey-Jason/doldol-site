@@ -304,7 +304,9 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
       add(underpass,glow,x,-.34,side*1.20,.42,.045,.035);
     }
   }
-  add(underpass,wall,0,-.10,0,25.6,.18,2.6,true);
+  // Roof slab is also the arena floor above the tunnel. Its underside is
+  // at -0.28 m, leaving 2.36 m clear above the service floor for the 1.72 m capsule.
+  add(underpass,wall,0,-.14,0,25.6,.28,2.6,true);
   const underpassLamp=new THREE.PointLight(map.light,isMobile?7:13,26,2);
   underpassLamp.position.set(0,-.45,0);underpass.add(underpassLamp);
 
