@@ -50,7 +50,10 @@
       GRADE_NAMES[card.grade], shortGrade(card.grade),
       "초중고 " + card.grade
     ].join(" "));
-    return fields + " " + fields.replace(/\s+/g, "");
+    var compactFields = fields.replace(/\s+/g, "");
+    // Korean readers often omit spaces and short particles such as "의"
+    // when searching; index both forms without changing the displayed text.
+    return fields + " " + compactFields + " " + compactFields.replace(/의/g, "");
   }
 
   function statusRank(record) {
