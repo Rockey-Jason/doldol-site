@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {MAPS} from './catalog.js';
-import {isBlockedByCover,tacticalFloorHeightAt} from './world-navigation.js';
+import {isBlockedByCover,tacticalFloorHeightAt,ROKEY_PLAYER_COLLISION,ROCKEY_UNDERPASS} from './world-navigation.js';
 
 test('every map keeps both ground-floor building entrances open',()=>{
   for(const map of Object.values(MAPS)){
@@ -129,4 +129,14 @@ test('player capsule dimensions fit every real entrance and stair transition',()
         map.id+' basement portal does not meet the service-floor height');
     }
   }
+});
+
+
+test('underpass roof no longer intersects the full standing player capsule',()=>{
+  const actualClearance=ROCKEY_UNDERPASS.ceilingBottom-ROCKEY_UNDERPASS.floorTop;
+  assert.equal(actualClearance,ROCKEY_UNDERPASS.clearHeight);
+  assert.ok(actualClearance>ROKEY_PLAYER_COLLISION.standingHeight+ROKEY_PLAYER_COLLISION.skin,
+    'underpass ceiling must leave room for the full capsule and controller skin');
+  assert.equal(ROCKEY_UNDERPASS.ceilingBottom,-.28,
+    'underpass roof underside must align with the split arena-floor footprint');
 });
