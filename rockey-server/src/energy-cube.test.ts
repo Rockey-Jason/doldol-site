@@ -2,8 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ENERGY_CUBE_RULES, isEnemyInsideEnergyCube } from './energy-cube.js';
 
-test('energy cube lasts five seconds and uses a bounded damage pulse', () => {
-  assert.equal(ENERGY_CUBE_RULES.durationMs, 5_000);
+test('energy cube lasts ten seconds and uses a bounded damage pulse', () => {
+  assert.equal(ENERGY_CUBE_RULES.durationMs, 10_000);
   assert.equal(ENERGY_CUBE_RULES.damageIntervalMs, 500);
   assert.equal(ENERGY_CUBE_RULES.damage, 4);
   assert.equal(ENERGY_CUBE_RULES.radius, 4.6);
