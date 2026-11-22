@@ -158,7 +158,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     add(root,wall,(wallMin+galleryDoorLeft)/2,4.58,-1.75,galleryDoorLeft-wallMin,1.0,.28,true);
     add(root,wall,(galleryDoorRight+wallMax)/2,4.58,-1.75,wallMax-galleryDoorRight,1.0,.28,true);
 
-    const steps=13,run=4.85,rise=3.9;
+    const steps=13,run=4.85,rise=4.19;
     addRamp(root,floor,stairX,rise/2,-.075,2.1,run,rise);
     for(let i=0;i<steps;i++){
       const y=(i+1)*rise/steps,z=2.35-(i+.5)*run/steps;
@@ -241,9 +241,9 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     }
     add(root,wall,0,-1.45,-4.38,8.2,2.65,.22,true);
     add(root,wall,0,-1.45,4.38,8.2,2.65,.22,true);
-    addRamp(root,floor,0,-1.225,0,2.9,4.5,-2.45);
+    addRamp(root,floor,0,-1.32,0,2.9,4.5,-2.64);
     for(let i=0;i<13;i++){
-      const stepHeight=2.45/13;
+      const stepHeight=2.64/13;
       const stepY=-(i+.5)*stepHeight;
       const stepZ=2.25-(i+.5)*4.5/13;
       add(root,i%2?trim:floor,0,stepY,stepZ,1.45,stepHeight,.42,false);
