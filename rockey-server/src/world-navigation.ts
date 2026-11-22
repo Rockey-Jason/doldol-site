@@ -22,15 +22,14 @@ export function tacticalFloorHeightAt(x:number,z:number,currentY:number):number 
     // and the stair-aligned landing.
     if(currentY>3.95&&localZ>=-1.95&&localZ<=4.85){
       if(localX>=-3.65&&localX<=2.12)return 4.19;
-      if(localX>=3.74&&localX<=4.07)return 4.19;
+      if(localX>=3.45&&localX<=4.65)return 4.19;
     }
-    // Open stairwell: do not report the old overhead cross-walk as a floor.
-    // The widened landing starts after the ramp nose at world Z -1.7.
-    if(currentY>4.7&&localX>=1.95&&localX<=4.15&&localZ>=-2.4&&localZ<=-1.0)return 4.19;
+    // Upper landing begins exactly at the final stair nose.
+    if(currentY>4.7&&localX>=1.95&&localX<=4.15&&localZ>=-1.85&&localZ<=-.85)return 4.19;
 
-    // Main second-floor stair flight.
-    if(currentY>.78&&currentY<5.2&&localX>=2.45&&localX<=3.65&&localZ>=-2.55&&localZ<=2.4){
-      return Math.max(0,Math.min(4.19,((2.35-localZ)/4.85)*4.19));
+    // Main second-floor stair flight ends directly at the gallery doorway.
+    if(currentY>.78&&currentY<5.2&&localX>=2.45&&localX<=3.65&&localZ>=-1.9&&localZ<=2.4){
+      return Math.max(0,Math.min(4.19,((2.35-localZ)/4.2)*4.19);
     }
 
     // Basement stairwell descends into the service room.
