@@ -32,6 +32,16 @@ assert.deepEqual(
   "multi-word search should match words across the card fields"
 );
 assert.deepEqual(
+  Array.from(tools.searchCards(course, progress, "삼각형넓이", "all", null, 10).results, item => item.id),
+  ["triangle-area"],
+  "compact Korean searches should work even when the user omits spaces"
+);
+assert.deepEqual(
+  Array.from(tools.searchCards(course, progress, "중1 피타고라스", "all", null, 10).results, item => item.id),
+  ["pythagoras"],
+  "short grade labels should be searchable"
+);
+assert.deepEqual(
   Array.from(tools.searchCards(course, progress, "log(x)", "all", null, 10).results, item => item.id),
   ["log-rule"],
   "search should include formula expressions"
