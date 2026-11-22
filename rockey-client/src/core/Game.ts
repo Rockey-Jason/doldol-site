@@ -2260,12 +2260,17 @@ export async function createGame(
       }
       vertical -= 18 * dt;
 
+      const requestedVertical=vertical*dt;
       controller.computeColliderMovement(collider, {
         x: direction.x * speed * dt,
-        y: vertical * dt,
+        y: requestedVertical,
         z: direction.z * speed * dt
       });
       const corrected = controller.computedMovement();
+      // Rapier already clamps the capsule against ceilings. Clear the upward
+      // jump velocity as soon as that clamp is observed, so gravity releases
+      // the player on the following frame instead of pinning them overhead.
+      if(vertical>0&&corrected.y<requestedVertical-1e-4)vertical=0;
       const old = body.translation();
       body.setNextKinematicTranslation({
         x: old.x + corrected.x,
