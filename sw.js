@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v72-study-tools-final-20261123";
+const CACHE_NAME = "doldol-site-pwa-v73-study-review-20261123";
 const SITE_SCOPE = new URL(self.registration.scope);
 const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
@@ -9,7 +9,7 @@ const APP_SHELL = [
   scopedUrl("js/rockey-study-formula.js?v=20261122-1"),
   scopedUrl("js/rockey-study-math-input.js?v=20261122-2"),
   scopedUrl("js/rockey-study-learning-tools.js?v=20261123-2"),
-  scopedUrl("js/rockey-study-formula-game.js?v=20261123-2"),
+  scopedUrl("js/rockey-study-formula-game.js?v=20261123-3"),
   scopedUrl("rockey-study-periodic.html"),
   scopedUrl("rockeynews.html"),
   scopedUrl("dori-life.html"),
