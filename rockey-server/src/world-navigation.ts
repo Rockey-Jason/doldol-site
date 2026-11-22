@@ -92,8 +92,8 @@ export function resolveCeilingCollision(
   y:number,
   z:number,
   nextY:number,
-  radius:number=ROKEY_PLAYER_COLLISION.clearanceRadius,
-  halfHeight:number=ROKEY_PLAYER_COLLISION.halfHeight
+  radius:number=ROCKEY_PLAYER_COLLISION.clearanceRadius,
+  halfHeight:number=ROCKEY_PLAYER_COLLISION.halfHeight
 ):{y:number;ceilingHit:boolean} {
   if(nextY<y)return {y:nextY,ceilingHit:false};
   let resolvedY=nextY;
