@@ -764,15 +764,19 @@ try {
       ticks: result.ticks,
       seconds: result.state.seconds,
       produced: result.state.stats.produced.ironPlate || 0,
+      producedStats: { ...(result.state.stats.produced || {}) },
       inventory: result.state.inventory.ironPlate || 0,
       warehouse: result.state.buildings.filter(b => ["storage","warehouse"].includes(b.type)).flatMap(b => b.warehouseStock || []).filter(item => item.itemID === "ironPlate").reduce((sum,item) => sum + Math.max(0,Number(item.quantity)||0),0),
       beltOccupied: result.state.buildings.some(b => b.type === "belt" && !!b.item),
+      smelter: (() => { const b = result.state.buildings.find(item => item.uid === "test-smelter"); return b ? { status:b.status, errorCode:b.errorCode||null, progress:b.progress, temp:b.temp, pressure:b.pressure, condition:b.condition, failureRepair:b.failureRepair||null, activeRecipe:b.activeRecipe||null, activeInputs:b.activeInputQuantities||[], activeMeta:b.activeMeta||null, output:b.output||null, productionSequence:b.productionSequence||0 } : null })(),
+      power: window.__doroniumFactoryTest.power(),
       ledger: window.__doroniumFactoryTest.ledger()
     };
   });
+  console.log("DORONIUM_SMELTER_SOAK", JSON.stringify({produced:soak.produced,producedStats:soak.producedStats,inventory:soak.inventory,warehouse:soak.warehouse,beltOccupied:soak.beltOccupied,smelter:soak.smelter,power:soak.power,ledger:soak.ledger}));
   assert.equal(soak.ticks, 36000, "A virtual hour must execute exactly 36,000 fixed 0.1-second ticks");
   assert.ok(soak.seconds >= 8 * 3600 + 3600 - 0.001, "Simulation clock must advance by one virtual hour");
-  assert.ok(soak.produced > 0, "Smelter must produce during the one-hour soak");
+  assert.ok(soak.produced > 0, "Smelter must produce during the one-hour soak; diagnostics=" + JSON.stringify({producedStats:soak.producedStats,smelter:soak.smelter,power:soak.power,ledger:soak.ledger}));
   assert.ok(soak.warehouse > 0, "Conveyor must route finished plates into independent warehouse stock");
   assert.equal(soak.ledger.oreBalance, 50000, "Ore + in-process and finished-plate equivalent must be conserved");
   assert.equal(soak.ledger.coalBalance, 30000, "Coal + in-process and finished-plate equivalent must be conserved");
