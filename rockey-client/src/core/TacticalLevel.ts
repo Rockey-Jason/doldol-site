@@ -135,13 +135,14 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     makeFurniture(root,.25,0,-3.0,'desk');
     makeFurniture(root,-1.15,0,3.0,'crate');
 
-    // Upper gallery: a broad outer-side floor, a bridge-side access gallery,
-    // a cross-walk over the lower stair flight, and a generous top landing.
+    // Upper gallery floors stop outside the full stairwell headroom envelope.
+    // The previous cross-walk slabs sat directly above the rising stair capsule
+    // and physically sealed the last half of the climb.
     const stairX=innerSide*3.05;
     add(root,floor,-innerSide*.9,4.05,1.45,6.8,.28,6.7,true);
-    add(root,floor,innerSide*4.05,4.05,1.45,1.3,.28,6.7,true);
-    add(root,floor,stairX,4.05,.6,1.35,.28,.9,true);
-    add(root,floor,stairX,4.0,-2.0,2.2,.28,1.45,true);
+    add(root,floor,innerSide*4.05,4.05,1.45,1.6,.28,6.7,true);
+    // A single landing begins beyond the stair nose; it does not overhang the ramp.
+    add(root,floor,stairX,4.05,-2.8,2.2,.28,2.2,true);
 
     // Preserve the outer guardrail. Open the inner wall directly onto the skybridge.
     const outerSide=-innerSide;
