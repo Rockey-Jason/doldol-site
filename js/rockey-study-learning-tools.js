@@ -37,12 +37,20 @@
     return status === "mastered" ? "마스터" : status === "learning" ? "학습 중" : "새 공식";
   }
 
+  function shortGrade(grade) {
+    if (grade <= 6) return "초" + grade;
+    if (grade <= 9) return "중" + (grade - 6);
+    return "고" + (grade - 9);
+  }
+
   function fieldsFor(card) {
-    return normalize([
+    var fields = normalize([
       card.title, card.topic, card.question, card.formula,
       card.explain, card.example, card.memory,
-      GRADE_NAMES[card.grade], "초중고 " + card.grade
+      GRADE_NAMES[card.grade], shortGrade(card.grade),
+      "초중고 " + card.grade
     ].join(" "));
+    return fields + " " + fields.replace(/\s+/g, "");
   }
 
   function statusRank(record) {
