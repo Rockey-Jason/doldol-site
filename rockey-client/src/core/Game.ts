@@ -71,7 +71,7 @@ export async function createGame(
 
   const camera = new THREE.PerspectiveCamera(78, 1, 0.08, 180);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,deviceTier==='low'?(isMobile?1:1.25):isMobile?1.25:1.8));
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,isMobile?1.1:deviceTier==='low'?1.0:deviceTier==='balanced'?1.4:1.8));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   // OVERHAUL 04: benchmark-aware post-processing and quality scaling.
@@ -80,9 +80,12 @@ export async function createGame(
   composer.addPass(new RenderPass(scene,camera));
   const bloomPass=new UnrealBloomPass(new THREE.Vector2(1,1),deviceTier==='low' ? .06 : isMobile ? .08 : .34,.42,.84);
   composer.addPass(bloomPass);
+  let bloomEnabled=!isMobile&&deviceTier!=='low';
+  let qualityPreference:'low'|'balanced'|'high'=deviceTier==='low'?'low':deviceTier==='balanced'?'balanced':'high';
+  let stablePerformanceWindows=0;
   // Pre-filtered environment probe adds stable reflections to metal, glass and armour.
   let reflectionEnvironment:THREE.Texture|null=null;
-  if(!isMobile){
+  if(!isMobile&&deviceTier==='high'){
     const pmrem=new THREE.PMREMGenerator(renderer);
     const room=new RoomEnvironment();
     reflectionEnvironment=pmrem.fromScene(room,.04).texture;
@@ -118,7 +121,9 @@ export async function createGame(
   const world = new RAPIER.World({ x: 0, y: -18, z: 0 });
   world.timestep = 1 / 60;
   const raycastMeshes:THREE.Object3D[]=[];
+  // Ground-only raycasts avoid testing hundreds of walls, props and glass panels for foot IK.
   const groundMaterial=new THREE.MeshStandardMaterial({color:map.floor,metalness:.18,roughness:.78});
+  const groundRaycastMeshes:THREE.Object3D[]=[];
   const groundPatches=[
     {x:0,z:-18.15,w:60,d:23.7},
     {x:0,z:16.65,w:60,d:26.7},
@@ -134,7 +139,7 @@ export async function createGame(
   ];
   for(const patch of groundPatches){
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(patch.w,1,patch.d),groundMaterial);
-    mesh.position.set(patch.x,-.5,patch.z);mesh.receiveShadow=true;scene.add(mesh);raycastMeshes.push(mesh);
+    mesh.position.set(patch.x,-.5,patch.z);mesh.receiveShadow=true;scene.add(mesh);raycastMeshes.push(mesh);groundRaycastMeshes.push(mesh);
     world.createCollider(RAPIER.ColliderDesc.cuboid(patch.w/2,.5,patch.d/2).setTranslation(patch.x,-.5,patch.z));
   }
   const grid = new THREE.GridHelper(60, 60, map.grid, map.grid);
@@ -225,7 +230,7 @@ export async function createGame(
     const halfAngle=rotationX/2;
     const rotation={x:Math.sin(halfAngle),y:0,z:0,w:Math.cos(halfAngle)};
     world.createCollider(RAPIER.ColliderDesc.cuboid(hx,hy,hz).setTranslation(x,y,z).setRotation(rotation));
-  },mesh=>raycastMeshes.push(mesh));
+  },mesh=>raycastMeshes.push(mesh),mesh=>groundRaycastMeshes.push(mesh));
 
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(0, 0.92, 20));
   const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.52, 0.34).setFriction(0), body);
@@ -619,7 +624,7 @@ export async function createGame(
     footRayOrigin.set(x,footY+1.0,z);
     raycaster.set(footRayOrigin,downDirection);
     raycaster.near=0;raycaster.far=2.35;
-    const hits=raycaster.intersectObjects(raycastMeshes,false);
+    const hits=raycaster.intersectObjects(groundRaycastMeshes,false);
     const hit=hits.find(value=>value.point.y<=footY+.28&&value.point.y>=footY-.72);
     return hit?.point.y??null;
   };
@@ -627,7 +632,7 @@ export async function createGame(
   const sampleGroundSurface=(x:number,z:number,footY:number):{height:number;normalX:number;normalY:number;normalZ:number}|null=>{
     footRayOrigin.set(x,footY+1.0,z);
     raycaster.set(footRayOrigin,downDirection);raycaster.near=0;raycaster.far=2.35;
-    const hit=raycaster.intersectObjects(raycastMeshes,false).find(value=>value.point.y<=footY+.28&&value.point.y>=footY-.72&&!!value.face);
+    const hit=raycaster.intersectObjects(groundRaycastMeshes,false).find(value=>value.point.y<=footY+.28&&value.point.y>=footY-.72&&!!value.face);
     if(!hit?.face)return null;
     const normal=hit.face.normal.clone().applyMatrix3(normalMatrix.getNormalMatrix(hit.object.matrixWorld)).normalize();
     return {height:hit.point.y,normalX:normal.x,normalY:normal.y,normalZ:normal.z};
@@ -665,6 +670,8 @@ export async function createGame(
   let killcamReturnMode = '1v1';
   let killcamComplete: (() => void) | null = null;
   let mobileFireTimer = 0;
+  let mouseFireTimer = 0;
+  let mouseFireHeld = false;
   let audioContext: AudioContext | null = null;
   let noiseBuffer: AudioBuffer | null = null;
   let gunKick = 0;
@@ -731,7 +738,9 @@ export async function createGame(
   let smoothedFrameMs=16.7;
   const sessionStartedAt=performance.now();
   let lastStabilityReportAt=sessionStartedAt;
-  const frameTimeSamples:number[]=[];
+  const frameTimeSamples=new Float32Array(180);
+  let frameTimeSampleCount=0;
+  let frameTimeSampleCursor=0;
   const heapSamples:Array<{t:number;mb:number}>=[];
   type SoakSample={elapsedMs:number;fps:number;frameMs:number;heapMb:number|null;geometries:number;textures:number;drawCalls:number};
   let soakTest:{startedAt:number;durationMs:number;samples:SoakSample[]}|null=null;
@@ -777,9 +786,9 @@ export async function createGame(
     if(Number.isFinite(value))networkRttMs=value;
   };
   window.addEventListener('rockey:network',onNetworkRtt);
-  let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,deviceTier==='low'?(isMobile?1:1.25):isMobile?1.25:1.8);
-  const minPixelRatio=deviceTier==='low'?(isMobile ? .62 : .72):isMobile ? .78 : 1.0;
-  const maxPixelRatio=Math.min(window.devicePixelRatio||1,deviceTier==='low'?(isMobile?1:1.25):isMobile?1.25:1.8);
+  const maxPixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.1:deviceTier==='low'?1.0:deviceTier==='balanced'?1.4:1.8);
+  let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.0:deviceTier==='low'?.92:deviceTier==='balanced'?1.25:1.8);
+  const minPixelRatio=isMobile?.68:deviceTier==='low'?.52:deviceTier==='balanced'?.68:.86;
   const appliedDestructionIds=new Set<string>();
   const remoteDebris=new Map<string,THREE.Mesh>();
   const remoteDebrisGeometry=new THREE.BoxGeometry(1,1,1);
@@ -1248,6 +1257,21 @@ export async function createGame(
     mobileFireTimer = 0;
   }
 
+  function stopMouseFire() {
+    mouseFireHeld=false;
+    if(mouseFireTimer)window.clearInterval(mouseFireTimer);
+    mouseFireTimer=0;
+  }
+
+  function startMouseFire() {
+    if(mouseFireHeld)return;
+    mouseFireHeld=true;
+    fire();
+    // Let fireInterval enforce the weapon's exact cadence; this timer only polls
+    // at a modest rate so holding the button does not create a busy loop.
+    mouseFireTimer=window.setInterval(fire,Math.max(24,Math.min(80,currentWeapon.fireInterval)));
+  }
+
   function fire() {
     const now = performance.now();
     if (!active || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
@@ -1356,7 +1380,7 @@ export async function createGame(
   }
   function pointerDown(event: PointerEvent) {
     if (event.pointerType === 'mouse' && event.button === 2) { event.preventDefault(); setPrecisionAiming(true); }
-    if (event.pointerType === 'mouse' && event.button === 0) fire();
+    if (event.pointerType === 'mouse' && event.button === 0) { event.preventDefault(); startMouseFire(); }
     if (event.pointerType === 'touch') {
       lookPointerId = event.pointerId;
       canvas.setPointerCapture(event.pointerId);
@@ -1374,6 +1398,7 @@ export async function createGame(
     element.ly = event.clientY;
   }
   function pointerLookEnd(event: PointerEvent) {
+    if(event.pointerType==='mouse'&&event.button===0)stopMouseFire();
     if (event.pointerType === 'mouse' && event.button === 2) setPrecisionAiming(false);
     if (event.pointerId !== lookPointerId) return;
     lookPointerId = null;
@@ -1399,8 +1424,14 @@ export async function createGame(
   window.addEventListener('keydown', keyDown);
   window.addEventListener('keyup', keyUp);
   window.addEventListener('mousemove', pointerMove);
-  window.addEventListener('pointerup', event => { if(event.pointerType==='mouse'&&event.button===2)setPrecisionAiming(false); });
-  window.addEventListener('blur', () => setPrecisionAiming(false));
+  const handleWindowPointerEnd=(event:PointerEvent)=>{
+    if(event.pointerType!=='mouse')return;
+    if(event.button===0)stopMouseFire();
+    if(event.button===2)setPrecisionAiming(false);
+  };
+  window.addEventListener('pointerup',handleWindowPointerEnd);
+  window.addEventListener('pointercancel',handleWindowPointerEnd);
+  window.addEventListener('blur', () => {setPrecisionAiming(false);stopMouseFire();});
   document.addEventListener('contextmenu', event => { if(event.target===canvas)event.preventDefault(); });
   canvas.addEventListener('click', clickCanvas);
   canvas.addEventListener('pointerdown', pointerDown);
@@ -1416,6 +1447,8 @@ export async function createGame(
     touch.forward = 0; touch.right = 0; touch.jump = false;
     resetPad();
     stopMobileFire();
+    stopMouseFire();
+    setPrecisionAiming(false);
     previous = performance.now();
   };
   const onVisibilityChange = () => {
@@ -1568,7 +1601,9 @@ export async function createGame(
     previous = now;
     perfFrames++;
     const frameMs=Math.min(100,dt*1000);
-    frameTimeSamples.push(frameMs);if(frameTimeSamples.length>1800)frameTimeSamples.shift();
+    frameTimeSamples[frameTimeSampleCursor]=frameMs;
+    frameTimeSampleCursor=(frameTimeSampleCursor+1)%frameTimeSamples.length;
+    frameTimeSampleCount=Math.min(frameTimeSampleCount+1,frameTimeSamples.length);
     smoothedFrameMs=smoothedFrameMs*.92+frameMs*.08;
     if(now-perfWindowStart>=2500){
       const fps=perfFrames*1000/(now-perfWindowStart);
@@ -1582,7 +1617,7 @@ export async function createGame(
       }
       const measuredFps=Math.round(fps);
       const measuredFrame=Math.round(smoothedFrameMs*10)/10;
-      const sortedFrames=[...frameTimeSamples].sort((a,b)=>a-b);
+      const sortedFrames=Array.from(frameTimeSamples.subarray(0,frameTimeSampleCount)).sort((a,b)=>a-b);
       const p99Frame=sortedFrames[Math.min(sortedFrames.length-1,Math.ceil(sortedFrames.length*.99)-1)]||measuredFrame;
       const onePercentLow=Math.round(1000/Math.max(1,p99Frame));
       if(onePercentLow<target*.55&&adaptivePixelRatio>minPixelRatio){adaptivePixelRatio=Math.max(minPixelRatio,adaptivePixelRatio-.08);renderer.setPixelRatio(adaptivePixelRatio);resize();}
@@ -1595,11 +1630,19 @@ export async function createGame(
       const deviceMemory=(navigator as Navigator&{deviceMemory?:number}).deviceMemory??null;
       const stressed=measuredFps<target-5||onePercentLow<target*.55||measuredFrame>21||memoryPressure;
       if(stressed){
+        stablePerformanceWindows=0;
+        bloomEnabled=false;
         bloomPass.strength=Math.max(isMobile ? .035 : .08,bloomPass.strength-.035);
-        if(measuredFps<target-8||measuredFrame>25)renderer.shadowMap.enabled=false;
-      }else if(measuredFps>target+12&&!memoryPressure){
+        if(measuredFps<target-6||measuredFrame>23)renderer.shadowMap.enabled=false;
+      }else if(measuredFps>target+5&&!memoryPressure){
+        stablePerformanceWindows++;
         bloomPass.strength=Math.min(isMobile ? .10 : .38,bloomPass.strength+.015);
-        if(!isMobile)renderer.shadowMap.enabled=true;
+        if(stablePerformanceWindows>=2&&qualityPreference!=='low'&&deviceTier!=='low'&&!isMobile){
+          bloomEnabled=true;
+          renderer.shadowMap.enabled=true;
+        }
+      }else{
+        stablePerformanceWindows=0;
       }
       performanceBadge.textContent='FPS '+measuredFps+' · 1% LOW '+onePercentLow+' · '+measuredFrame+'ms · DPR '+adaptivePixelRatio.toFixed(2)+(memoryMb===null?'':' · HEAP '+memoryMb+'MB')+' · GEO '+renderer.info.memory.geometries+' · RTT '+(networkRttMs===null?'--':Math.round(networkRttMs)+'ms')+' · JIT '+Math.round(snapshotJitterMs)+'ms';
       performanceBadge.style.color=stressed?'#ffb4a8':'#d9edff';
@@ -1979,8 +2022,9 @@ export async function createGame(
         y: old.y + corrected.y,
         z: old.z + corrected.z
       });
-      world.step();
-      updatePhysicalDebris(dt);
+      // The kinematic player controller needs no full world simulation step;
+      // advance Rapier only while destructible dynamic debris is actually alive.
+      if(physicalDebris.length>0){world.step();updatePhysicalDebris(dt);}
     for(const mesh of remoteDebris.values()){
       const targetPosition=mesh.userData.serverTargetPosition as THREE.Vector3|undefined;
       const targetQuaternion=mesh.userData.serverTargetQuaternion as THREE.Quaternion|undefined;
@@ -2038,7 +2082,7 @@ export async function createGame(
         lastInput = now;
       }
     }
-    composer.render(dt);
+    if(bloomEnabled)composer.render(dt);else renderer.render(scene,camera);
     raf = requestAnimationFrame(frame);
   }
   raf = requestAnimationFrame(frame);
@@ -2163,11 +2207,13 @@ export async function createGame(
       const complete=killcamComplete;killcamComplete=null;complete?.();
     },
     setQuality(level: 'low'|'balanced'|'high') {
+      qualityPreference=level;
       const ratio=level==='low'?.82:level==='balanced'?1.12:1.55;
-      adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.25:1.8,ratio);
+      adaptivePixelRatio=Math.min(window.devicePixelRatio||1,maxPixelRatio,ratio);
       renderer.setPixelRatio(adaptivePixelRatio);composer.setPixelRatio(adaptivePixelRatio);resize();
-      renderer.shadowMap.enabled=level!=='low'&&!isMobile;
+      renderer.shadowMap.enabled=level!=='low'&&deviceTier!=='low'&&!isMobile;
       renderer.shadowMap.needsUpdate=true;
+      bloomEnabled=level!=='low'&&deviceTier!=='low'&&!isMobile;
       bloomPass.strength=isMobile?.07:level==='low'?.12:level==='balanced'?.28:.42;
     },
     setSensitivity(value: number) {
@@ -2190,6 +2236,8 @@ export async function createGame(
       window.removeEventListener('keydown', keyDown);
       window.removeEventListener('keyup', keyUp);
       window.removeEventListener('mousemove', pointerMove);
+      window.removeEventListener('pointerup',handleWindowPointerEnd);
+      window.removeEventListener('pointercancel',handleWindowPointerEnd);
       window.visualViewport?.removeEventListener('resize', resize);
       document.removeEventListener('visibilitychange', onVisibilityChange);
       window.removeEventListener('blur', onWindowBlur);
@@ -2203,6 +2251,7 @@ export async function createGame(
       world.removeCharacterController(controller);
       world.free();
       stopMobileFire();
+      stopMouseFire();
       composer.dispose();
       renderer.dispose();
       reflectionEnvironment?.dispose();
