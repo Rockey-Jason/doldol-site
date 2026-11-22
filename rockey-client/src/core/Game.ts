@@ -100,6 +100,7 @@ export async function createGame(
   let bloomEnabled=!!composer;
   let qualityPreference:'auto'|'low'|'balanced'|'high'='auto';
   let stablePerformanceWindows=0;
+  let stressPerformanceWindows=0;
   // Pre-filtered environment probe adds stable reflections to metal, glass and armour.
   let reflectionEnvironment:THREE.Texture|null=null;
   if(!isMobile&&deviceTier==='high'){
@@ -1677,6 +1678,16 @@ export async function createGame(
       previous = now;
       return;
     }
+    const cpuFrameStartedAt=performance.now();
+    if(pendingGpuQuery&&gpuTimerExtension){
+      const available=gl.getQueryParameter(pendingGpuQuery,gl.QUERY_RESULT_AVAILABLE) as boolean;
+      if(available){
+        const disjoint=gl.getParameter(gpuTimerExtension.GPU_DISJOINT_EXT) as boolean;
+        const result=Number(gl.getQueryParameter(pendingGpuQuery,gl.QUERY_RESULT));
+        if(!disjoint&&Number.isFinite(result)&&result>0){gpuFrameMs=result/1_000_000;gpuFrameSampleAt=now;}
+        gl.deleteQuery(pendingGpuQuery);pendingGpuQuery=null;
+      }
+    }
     const dt = Math.min((now - previous) / 1000, 0.05);
     previous = now;
     perfFrames++;
@@ -1688,18 +1699,14 @@ export async function createGame(
     if(now-perfWindowStart>=2500){
       const fps=perfFrames*1000/(now-perfWindowStart);
       const target=deviceTier==='low'?(isMobile?40:45):deviceTier==='balanced'?(isMobile?48:55):60;
-      if(fps<target-5&&adaptivePixelRatio>minPixelRatio){
-        adaptivePixelRatio=Math.max(minPixelRatio,adaptivePixelRatio-.1);
-        renderer.setPixelRatio(adaptivePixelRatio);resize();
-      }else if(fps>target+12&&adaptivePixelRatio<maxPixelRatio){
-        adaptivePixelRatio=Math.min(maxPixelRatio,adaptivePixelRatio+.05);
-        renderer.setPixelRatio(adaptivePixelRatio);resize();
-      }
       const measuredFps=Math.round(fps);
       const measuredFrame=Math.round(smoothedFrameMs*10)/10;
       const sortedFrames=Array.from(frameTimeSamples.subarray(0,frameTimeSampleCount)).sort((a,b)=>a-b);
       const p99Frame=sortedFrames[Math.min(sortedFrames.length-1,Math.ceil(sortedFrames.length*.99)-1)]||measuredFrame;
       const onePercentLow=Math.round(1000/Math.max(1,p99Frame));
+      const sortedCpuFrames=Array.from(cpuFrameSamples.subarray(0,cpuFrameSampleCount)).sort((a,b)=>a-b);
+      const cpuP95=sortedCpuFrames[Math.min(sortedCpuFrames.length-1,Math.ceil(sortedCpuFrames.length*.95)-1)]||0;
+      const freshGpuFrameMs=gpuFrameMs!==null&&now-gpuFrameSampleAt<5000?gpuFrameMs:null;
       if(onePercentLow<target*.55&&adaptivePixelRatio>minPixelRatio){adaptivePixelRatio=Math.max(minPixelRatio,adaptivePixelRatio-.08);renderer.setPixelRatio(adaptivePixelRatio);resize();}
       const memory=(performance as Performance&{memory?:{usedJSHeapSize:number;jsHeapSizeLimit:number}}).memory;
       const memoryMb=memory?Math.round(memory.usedJSHeapSize/1048576):null;
@@ -1708,26 +1715,39 @@ export async function createGame(
       const memoryLimitMb=memory?Math.round(memory.jsHeapSizeLimit/1048576):null;
       const memoryPressure=!!memory&&memory.jsHeapSizeLimit>0&&(memory.usedJSHeapSize/memory.jsHeapSizeLimit>.82||(heapDeltaMb!==null&&heapDeltaMb>96));
       const deviceMemory=(navigator as Navigator&{deviceMemory?:number}).deviceMemory??null;
-      const stressed=measuredFps<target-5||onePercentLow<target*.55||measuredFrame>21||memoryPressure;
+      const gpuBound=freshGpuFrameMs!==null
+        ?freshGpuFrameMs>Math.max(12,cpuP95*1.15)
+        :cpuP95<8&&onePercentLow<target*.78;
+      const cpuBound=cpuP95>13.5;
+      adaptiveBottleneck=gpuBound&&cpuBound?'mixed':gpuBound?'gpu':cpuBound?'cpu':'mixed';
+      const stressed=measuredFps<target-4||onePercentLow<target*.72||cpuP95>15||(
+        freshGpuFrameMs!==null&&freshGpuFrameMs>18
+      )||memoryPressure;
+      const severelyStressed=measuredFps<target-12||p99Frame>36||cpuP95>24||(
+        freshGpuFrameMs!==null&&freshGpuFrameMs>28
+      )||memoryPressure;
       if(stressed){
+        stressPerformanceWindows++;
         stablePerformanceWindows=0;
-        bloomEnabled=false;
-        if(bloomPass)bloomPass.strength=Math.max(isMobile ? .035 : .08,bloomPass.strength-.035);
-        if(measuredFps<target-6||measuredFrame>23)renderer.shadowMap.enabled=false;
-      }else if(measuredFps>target+5&&!memoryPressure){
-        stablePerformanceWindows++;
-        if(bloomPass)bloomPass.strength=Math.min(isMobile ? .10 : .38,bloomPass.strength+.015);
-        if(stablePerformanceWindows>=2&&qualityPreference!=='low'&&deviceTier!=='low'){
-          bloomEnabled=!!composer;
-          if(!isMobile)renderer.shadowMap.enabled=true;
+        if(qualityPreference==='auto'&&adaptiveLevel<4&&now-lastAdaptiveChangeAt>3200&&(severelyStressed||stressPerformanceWindows>=2)){
+          adaptiveLevel=Math.min(4,adaptiveLevel+1);
+          lastAdaptiveChangeAt=now;
+          applyAdaptiveProfile();
         }
       }else{
-        stablePerformanceWindows=0;
+        stressPerformanceWindows=0;
+        stablePerformanceWindows++;
+        if(qualityPreference==='auto'&&adaptiveLevel>0&&stablePerformanceWindows>=5&&now-lastAdaptiveChangeAt>12000){
+          adaptiveLevel=Math.max(0,adaptiveLevel-1);
+          lastAdaptiveChangeAt=now;
+          applyAdaptiveProfile();
+        }
       }
-      performanceBadge.textContent='FPS '+measuredFps+' · 1% LOW '+onePercentLow+' · '+measuredFrame+'ms · DPR '+adaptivePixelRatio.toFixed(2)+(memoryMb===null?'':' · HEAP '+memoryMb+'MB')+' · GEO '+renderer.info.memory.geometries+' · RTT '+(networkRttMs===null?'--':Math.round(networkRttMs)+'ms')+' · JIT '+Math.round(snapshotJitterMs)+'ms';
+      performanceBadge.textContent=(qualityPreference==='auto'?'AUTO ':'MANUAL ')+deviceTier.toUpperCase()+' · L'+adaptiveLevel+' · FPS '+measuredFps+' · 1% '+onePercentLow+' · CPU '+cpuP95.toFixed(1)+'ms · GPU '+(freshGpuFrameMs===null?'--':freshGpuFrameMs.toFixed(1))+'ms · DPR '+adaptivePixelRatio.toFixed(2)+(memoryMb===null?'':' · HEAP '+memoryMb+'MB')+' · RTT '+(networkRttMs===null?'--':Math.round(networkRttMs)+'ms');
       performanceBadge.style.color=stressed?'#ffb4a8':'#d9edff';
       window.dispatchEvent(new CustomEvent('rockey:performance',{detail:{
-        fps:measuredFps,onePercentLow,frameMs:measuredFrame,pixelRatio:Math.round(adaptivePixelRatio*100)/100,
+        fps:measuredFps,onePercentLow,frameMs:measuredFrame,cpuFrameMs:Math.round(cpuP95*10)/10,gpuFrameMs:freshGpuFrameMs===null?null:Math.round(freshGpuFrameMs*10)/10,
+        pixelRatio:Math.round(adaptivePixelRatio*100)/100,adaptiveLevel,adaptiveBottleneck,qualityPreference,
         device:isMobile?'mobile':'desktop',deviceTier,deviceProfile,memoryMb,memoryLimitMb,heapDeltaMb,deviceMemoryGb:deviceMemory,
         snapshotJitterMs:Math.round(snapshotJitterMs*10)/10,estimatedSnapshotLoss,rttMs:networkRttMs===null?null:Math.round(networkRttMs),
         geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,
@@ -2162,7 +2182,15 @@ export async function createGame(
         lastInput = now;
       }
     }
+    const shouldTimeGpu=!!gpuTimerExtension&&!pendingGpuQuery&&perfFrames%24===0;
+    const gpuQuery=shouldTimeGpu?gl.createQuery():null;
+    if(gpuQuery&&gpuTimerExtension)gl.beginQuery(gpuTimerExtension.TIME_ELAPSED_EXT,gpuQuery);
     if(bloomEnabled&&composer)composer.render(dt);else renderer.render(scene,camera);
+    if(gpuQuery&&gpuTimerExtension){gl.endQuery(gpuTimerExtension.TIME_ELAPSED_EXT);pendingGpuQuery=gpuQuery;}
+    const cpuFrameMs=performance.now()-cpuFrameStartedAt;
+    cpuFrameSamples[cpuFrameSampleCursor]=cpuFrameMs;
+    cpuFrameSampleCursor=(cpuFrameSampleCursor+1)%cpuFrameSamples.length;
+    cpuFrameSampleCount=Math.min(cpuFrameSampleCount+1,cpuFrameSamples.length);
     raf = requestAnimationFrame(frame);
   }
   raf = requestAnimationFrame(frame);
