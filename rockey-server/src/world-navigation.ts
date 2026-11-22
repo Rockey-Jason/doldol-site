@@ -11,7 +11,7 @@ export function tacticalFloorHeightAt(x:number,z:number,currentY:number):number 
     // Roof access stairwell and the exposed roof deck.
     if(currentY>5.2&&absX<.8&&localZ>=-.7&&localZ<=-.26)return 5.99;
     if(currentY>4.05&&absX<.72&&localZ>=-.26&&localZ<=3.05){
-      return 4.38+((2.75-localZ)/3.01)*1.33;
+      return 4.19+((2.75-localZ)/3.01)*1.52;
     }
     if(currentY>5.85&&absX<4.0&&absZ<4.45)return 5.99;
 
