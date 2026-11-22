@@ -1,5 +1,8 @@
 import type { RockeyCover } from './catalog.js';
 
+// Rapier player capsule: radius .34 m, half-height .52 m and a .02 m skin.
+export const ROCKEY_PLAYER_COLLISION={capsuleRadius:.34,halfHeight:.86,standingHeight:1.72,skin:.02,clearanceRadius:.38} as const;
+
 /** Shared server-side walkable-surface model for both mirrored tactical buildings. */
 export function tacticalFloorHeightAt(x:number,z:number,currentY:number):number {
   for(const centerX of [-17.2,17.2]){
@@ -55,8 +58,8 @@ export function isBlockedByCover(
   x:number,
   y:number,
   z:number,
-  radius=.38,
-  halfHeight=.86
+  radius=ROCKEY_PLAYER_COLLISION.clearanceRadius,
+  halfHeight=ROCKEY_PLAYER_COLLISION.halfHeight
 ):boolean {
   return cover.some(b=>{
     const overlapsHorizontal=
