@@ -239,6 +239,17 @@ if (tests.length) {
   if (result.status !== 0) errors.push("Doronium Factory unit tests failed\n" + (result.stdout || "") + (result.stderr || ""));
 }
 
+const formulaInputTest = path.resolve(ROOT, "scripts/rockey-study-math-input.test.mjs");
+if (fs.existsSync(formulaInputTest)) {
+  const result = spawnSync(process.execPath, ["--test", formulaInputTest], { encoding: "utf8", cwd: ROOT });
+  stats.tests += 1;
+  if (result.status !== 0) {
+    errors.push("Rockey Study calculator-input tests failed\n" + (result.stdout || "") + (result.stderr || ""));
+  } else {
+    console.log("Rockey Study calculator-input regression tests passed.");
+  }
+}
+
 console.log("DORI SITE QUALITY CHECK");
 console.log(JSON.stringify(stats, null, 2));
 for (const warning of warnings) console.warn("WARN " + warning);
