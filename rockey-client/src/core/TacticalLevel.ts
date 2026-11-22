@@ -270,7 +270,8 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
   // Elevated enclosed skybridge connects both second-floor entry portals.
   const bridge=new THREE.Group();bridge.position.set(0,0,-1.5);scene.add(bridge);
   add(bridge,floor,0,4.05,0,25.6,.28,2.5,true);
-  add(bridge,wall,0,6.15,0,25.6,.2,2.5,true);
+  // Extra headroom prevents the standing capsule and controller skin from snagging the roof.
+  add(bridge,wall,0,6.35,0,25.6,.2,2.5,true);
   for(const side of [-1,1]){
     add(bridge,trim,0,4.92,side*1.24,25.6,1.48,.12,true);
     for(let x=-11.75;x<=11.76;x+=2.15){
