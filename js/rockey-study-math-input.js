@@ -39,8 +39,8 @@
     "p5-fraction-add":"a/b+c/d=(a*d+b*c)/(b*d)",
     "p5-fraction-mul":"(a/b)*(c/d)=(a*c)/(b*d)",
     "p5-decimal-mul":"m+n",
-    "p5-triangle-area":"b*h/2",
-    "p5-parallelogram":"b*h",
+    "p5-triangle-area":"a*h/2",
+    "p5-parallelogram":"a*h",
     "p6-percent":"100*r",
     "p6-proportion":"a*d=b*c",
     "p6-circle-circ":["2*pi*r","pi*d"],
@@ -232,7 +232,7 @@
     F("h2-double-angle-cos",11,"삼각함수","코사인 두 배각 공식","cos(2x)를 나타내는 공식 한 가지는?","cos²x−sin²x","코사인 두 배각은 제곱의 차로 나타낼 수 있어.","cos(2x)=cos²x−sin²x","코사인 제곱 빼기 사인 제곱!","cos(x)^2-sin(x)^2"),
     F("h2-arithmetic-sum",11,"수열","등차수열의 합","첫째항 a1, 공차 d인 등차수열의 첫 n항의 합은?","n(2a1+(n−1)d)/2","첫째항과 끝항의 평균에 항의 개수를 곱한 식이야.","2,5,8의 합=15","항의 개수 곱하기 첫째·끝째 평균!","n*(2*a1+(n-1)*d)/2"),
     F("h2-geometric-sum",11,"수열","등비수열의 합","첫째항 a, 공비 r(r≠1)인 등비수열의 첫 n항의 합은?","a(r^n−1)/(r−1)","각 항을 같은 비율로 곱해 더한 합이야.","2+4+8+16=30","공비의 거듭제곱 이용!","a*(r^n-1)/(r-1)"),
-    F("h2-binomial",11,"수열","이항정리의 기본형","(a+b)^n의 전개에 쓰이는 일반항은?","nCr a^(n−r)b^r","각 항의 계수는 조합 nCr로 정해져.","(a+b)^2=a²+2ab+b²","조합 계수와 거듭제곱!","nCr*a^(n-r)*b^r"),
+    F("h2-binomial",11,"수열","이항정리의 일반항","(a+b)^n의 전개에서 r번째 항의 조합 계수를 팩토리얼로 나타내면?","nCr × a^(n−r)b^r","각 항의 계수는 n!/(r!(n−r)!)로 정해져.","(a+b)^2=a²+2ab+b²","조합 계수와 거듭제곱!","n!/(r!*(n-r)!)*a^(n-r)*b^r"),
 
     F("h3-limit-sum",12,"미적분","함수의 극한의 합","극한의 합 법칙을 입력해.","lim(f+g)=lim f+lim g","각 극한이 존재하면 합의 극한은 극한의 합과 같아.","lim(x+2)=lim x+lim 2","합의 극한은 극한의 합!","L(f+g)=L(f)+L(g)"),
     F("h3-limit-product",12,"미적분","함수의 극한의 곱","극한의 곱 법칙을 입력해.","lim(fg)=(lim f)(lim g)","각 극한이 존재하면 곱의 극한은 극한의 곱과 같아.","lim(x·x)=lim x·lim x","곱의 극한은 극한의 곱!","L(f*g)=L(f)*L(g)"),
@@ -271,8 +271,12 @@
     "m1-integer-mul":"서로 다른 부호의 두 정수 곱의 부호를 입력해. (+1은 양수, −1은 음수)",
     "m1-order-ops":"3×(4+2)에서 가장 먼저 계산하는 괄호 안의 값을 입력해.",
     "p1-compare":"9는 6보다 크다는 관계를 식으로 입력해.",
+    "m2-system":"연립방정식 x+y=7, x−y=1의 해를 x, y 순서대로 입력해.",
+    "m3-circle-central":"같은 호에 대한 원주각이 a일 때 중심각을 식으로 입력해.",
+    "m3-circle-inscribed":"같은 호에 대한 중심각이 a일 때 원주각을 식으로 입력해.",
     "h3-product-rule":"두 함수의 도함수를 각각 u, v라 할 때 곱의 미분식을 입력해.",
     "h3-conditional":"P(A∩B)=p_ab, P(B)=p_b일 때 조건부확률을 입력해.",
+    "h3-expectation":"두 값 x_1, x_2와 해당 확률 p_1, p_2를 가지는 확률변수의 기댓값을 입력해.",
     "h3-vector":"a=(a_x,a_y), b=(b_x,b_y)일 때 두 벡터의 내적을 좌표로 입력해."
   };
   course.forEach(function (card) {
