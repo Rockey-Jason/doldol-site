@@ -108,6 +108,12 @@
     var suggestion=TOOLS.recommendCard(COURSE,progress.cards,state.grade);
     if(!suggestion.card){
       state.searchFilter="mastered";state.searchLimit=8;
+      var searchInput=$("formulaSearchInput");
+      if(searchInput)searchInput.value="";
+      document.querySelectorAll("[data-search-filter]").forEach(function(item){
+        var active=item.dataset.searchFilter==="mastered";
+        item.classList.toggle("active",active);item.setAttribute("aria-pressed",active?"true":"false");
+      });
       renderSearchResults("",true);
       $("formulaSearchResults").scrollIntoView({behavior:"smooth",block:"nearest"});
       showToast("모든 공식을 마스터했어! 원하는 공식을 골라 다시 연습해 봐.");
@@ -296,7 +302,8 @@
     [{label:"0",value:"0"},{label:".",value:"."},{label:"=",value:"=",kind:"operator"},{label:";",value:";",kind:"operator"},{label:"_",value:"_",kind:"operator"},{label:"!",value:"!",kind:"operator"}],
     [{label:"x",value:"x"},{label:"y",value:"y"},{label:"a",value:"a"},{label:"b",value:"b"},{label:"c",value:"c"},{label:"n",value:"n"}],
     [{label:"m",value:"m"},{label:"p",value:"p"},{label:"q",value:"q"},{label:"r",value:"r"},{label:"h",value:"h"},{label:"t",value:"t"}],
-    [{label:"√",value:"sqrt(",kind:"operator"},{label:"π",value:"pi",kind:"operator"},{label:"±",value:"±",kind:"operator"}]
+    [{label:"√",value:"sqrt(",kind:"operator"},{label:"π",value:"pi",kind:"operator"},{label:"±",value:"±",kind:"operator"}],
+    [{label:"sin",value:"sin(",kind:"operator"},{label:"cos",value:"cos(",kind:"operator"},{label:"tan",value:"tan(",kind:"operator"},{label:"log",value:"log(",kind:"operator"},{label:"ln",value:"ln(",kind:"operator"},{label:"abs",value:"abs(",kind:"operator"}]
   ];
 
   function renderKeypad() {
@@ -492,6 +499,8 @@
 
   function renderAll() {
     renderGradeGroups();renderTopics();renderMain();renderStats();
+    var searchInput=$("formulaSearchInput");
+    if(searchInput)renderSearchResults(searchInput.value,state.searchFilter!=="all"||!!String(searchInput.value||"").trim());
   }
 
   function chooseGrade(grade) {
@@ -596,6 +605,8 @@
       else if(session.wasCorrect&&record.attempts>0&&record.correct/record.attempts>=.8)record.mastered=true;
     }
     saveProgress();renderMain();renderStats();
+    var activeSearch=$("formulaSearchInput");
+    if(activeSearch)renderSearchResults(activeSearch.value,state.searchFilter!=="all"||!!String(activeSearch.value||"").trim());
   }
 
   function init() {
@@ -659,7 +670,6 @@
         :"로그인 전에는 이 브라우저에 저장돼. 로그인하면 계정 클라우드 동기화가 이어져.";
     });
     renderAll();
-    renderSearchResults("",false);
     if(window.doriCloudSync&&window.doriCloudSync.userId)$("saveStatus").textContent="계정 클라우드 동기화가 연결되어 있어.";
   }
 
