@@ -24,8 +24,9 @@ export function tacticalFloorHeightAt(x:number,z:number,currentY:number):number 
       if(localX>=-3.65&&localX<=2.12)return 4.19;
       if(localX>=3.74&&localX<=4.07)return 4.19;
     }
-    if(currentY>3.95&&localX>=2.75&&localX<=3.35&&localZ>=.15&&localZ<=1.05)return 4.19;
-    if(currentY>4.7&&localX>=2.3&&localX<=3.8&&localZ>=-2.4&&localZ<=-1.6)return 4.14;
+    // Open stairwell: do not report the old overhead cross-walk as a floor.
+    // The widened landing starts after the ramp nose at world Z -1.7.
+    if(currentY>4.7&&localX>=1.95&&localX<=4.15&&localZ>=-2.4&&localZ<=-.2)return 4.19;
 
     // Main second-floor stair flight.
     if(currentY>.78&&currentY<5.2&&localX>=2.45&&localX<=3.65&&localZ>=-2.55&&localZ<=2.4){
