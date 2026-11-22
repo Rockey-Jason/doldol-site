@@ -142,8 +142,9 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     add(root,floor,-innerSide*.9,4.05,1.45,6.8,.28,6.7,true);
     // Keep the bridge gallery beyond the capsule's full horizontal clearance envelope.
     add(root,floor,innerSide*4.05,4.05,1.45,1.2,.28,6.7,true);
-    // The landing meets the final stair nose and the gallery doorway without covering the ramp.
-    add(root,floor,stairX,4.05,-1.35,2.2,.28,1.0,true);
+    // A broad landing overlaps the ramp nose and keeps a continuous collision-safe path
+    // through the second-floor doorway, including the character controller's 0.34 m radius.
+    add(root,floor,stairX,4.05,-1.55,3.2,.28,1.4,true);
 
     // Preserve the outer guardrail. Open the inner wall directly onto the skybridge.
     const outerSide=-innerSide;
@@ -154,7 +155,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
 
     // The stair-aligned doorway replaces the old continuous wall across the gallery.
     const galleryDoorCenter=stairX;
-    const wallMin=-w/2,wallMax=w/2,doorHalfWidth=1.05;
+    const wallMin=-w/2,wallMax=w/2,doorHalfWidth=1.55;
     const galleryDoorLeft=galleryDoorCenter-doorHalfWidth;
     const galleryDoorRight=galleryDoorCenter+doorHalfWidth;
     add(root,wall,(wallMin+galleryDoorLeft)/2,4.58,-1.75,galleryDoorLeft-wallMin,1.0,.28,true);
