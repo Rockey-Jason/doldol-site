@@ -116,9 +116,9 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     const entranceHalfWidth=1.3;
     const entranceLeft=stairX-entranceHalfWidth;
     const entranceRight=stairX+entranceHalfWidth;
-    const wallMin=-w/2,wallMax=w/2;
-    add(root,wall,(wallMin+entranceLeft)/2,h/2,d/2-t/2,entranceLeft-wallMin,h,t,true);
-    add(root,wall,(entranceRight+wallMax)/2,h/2,d/2-t/2,wallMax-entranceRight,h,t,true);
+    const entranceWallMin=-w/2,entranceWallMax=w/2;
+    add(root,wall,(entranceWallMin+entranceLeft)/2,h/2,d/2-t/2,entranceLeft-entranceWallMin,h,t,true);
+    add(root,wall,(entranceRight+entranceWallMax)/2,h/2,d/2-t/2,entranceWallMax-entranceRight,h,t,true);
     add(root,wall,-1.95,2.05,-.55,.32,4.1,.32,true);
     add(root,wall,1.95,2.05,-.55,.32,4.1,.32,true);
     // A broad doorway replaces the old full-width partition.
