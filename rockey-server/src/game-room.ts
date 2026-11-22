@@ -4,6 +4,7 @@ import { ITEMS, MAPS, WEAPONS, type RockeyItemCode, type RockeyWeapon } from './
 import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, transferReloadAmmo } from './combat.js';
 import { createAuthoritativeDebris, stepAuthoritativeDebris, type DebrisBodyState } from './world-physics.js';
 import { isBlockedByCover, tacticalFloorHeightAt } from './world-navigation.js';
+import { ENERGY_CUBE_RULES, isEnemyInsideEnergyCube } from './energy-cube.js';
 
 export type Mode = '1v1' | '2v2' | '3v3' | 'ranked' | 'ffa';
 export type PlayerClient = {
@@ -38,7 +39,7 @@ interface PlayerState {
   health: number; kills: number; deaths: number; headshots: number; damage: number;
   sequence: number; lastFire: number; lastInput: number;
   weaponCode: string; secondaryWeapon: string;
-  itemCode:RockeyItemCode;itemCount:number;itemInventory:Record<RockeyItemCode,number>;lastItemUse:number;energyUntil:number;
+  itemCode:RockeyItemCode;itemCount:number;itemInventory:Record<RockeyItemCode,number>;lastItemUse:number;energyUntil:number;energyCubeVisionActive:boolean;
   gateA:{x:number;y:number;z:number;yaw:number}|null;gateB:{x:number;y:number;z:number;yaw:number}|null;gateExpiresAt:number;lastGateTeleportAt:number;
   ammo: number; reserve: number; reloadUntil: number; reloadToken:number; reloadTimer:NodeJS.Timeout|null;
   weaponAmmo: Record<string,{ammo:number;reserve:number}>;
@@ -62,7 +63,7 @@ export class GameRoom {
   private persistedMatchId: string | null = null;
   private players: PlayerState[];
   private smokeVolumes:Array<{x:number;y:number;z:number;radius:number;expiresAt:number}>=[];
-  private energyFields:Array<{id:string;team:number;x:number;y:number;z:number;radius:number;expiresAt:number}>=[];
+  private energyFields:Array<{id:string;ownerId:string;team:number;x:number;y:number;z:number;radius:number;expiresAt:number;nextDamageAt:number}>=[];
   private worldDestruction:Array<{id:string;x:number;y:number;z:number;radius:number}>=[];
   private nextDestructionId=1;
   private worldDebris:DebrisBodyState[]=[];
@@ -106,7 +107,7 @@ export class GameRoom {
         health:100,kills:0,deaths:0,headshots:0,damage:0,
         sequence:-1,lastFire:0,lastInput:Date.now(),
         weaponCode,secondaryWeapon,ammo:weapon.magazine,reserve:weapon.reserve,
-        itemCode,itemCount:itemInventory[itemCode],itemInventory,lastItemUse:0,energyUntil:0,
+        itemCode,itemCount:itemInventory[itemCode],itemInventory,lastItemUse:0,energyUntil:0,energyCubeVisionActive:false,
         gateA:null,gateB:null,gateExpiresAt:0,lastGateTeleportAt:0,
         weaponAmmo:{
           [weaponCode]:{ammo:weapon.magazine,reserve:weapon.reserve},
@@ -353,7 +354,7 @@ export class GameRoom {
         p.weaponAmmo[p.secondaryWeapon]={ammo:WEAPONS[p.secondaryWeapon].magazine,reserve:WEAPONS[p.secondaryWeapon].reserve};
         p.ammo=p.weaponAmmo[p.weaponCode].ammo;p.reserve=p.weaponAmmo[p.weaponCode].reserve;
         p.itemInventory=Object.fromEntries(Object.values(ITEMS).map(item=>[item.code,item.startingCount])) as Record<RockeyItemCode,number>;
-        p.itemCount=p.itemInventory[p.itemCode];p.energyUntil=0;p.gateA=null;p.gateB=null;p.gateExpiresAt=0;p.lastGateTeleportAt=0;
+        p.itemCount=p.itemInventory[p.itemCode];p.energyUntil=0;p.energyCubeVisionActive=false;p.gateA=null;p.gateB=null;p.gateExpiresAt=0;p.lastGateTeleportAt=0;
         if(p.connected){send(p.client,{type:'ammo.update',ammo:p.ammo,reserve:p.reserve,weaponCode:p.weaponCode});send(p.client,{type:'item.update',itemCode:p.itemCode,count:p.itemCount,inventory:p.itemInventory,health:p.health});}
       });}
     }
@@ -362,11 +363,9 @@ export class GameRoom {
   }
   private applyDamage(shooter:PlayerState,target:PlayerState,damage:number,weaponCode:string,headshot:boolean,now:number){
     if(!target.alive||damage<=0)return;
-    const protectedByField=this.energyFields.some(field=>field.team===target.team&&field.expiresAt>now&&Math.hypot(target.x-field.x,target.z-field.z)<=field.radius);
-    const finalDamage=protectedByField?Math.max(1,Math.ceil(damage*.7)):damage;
-    target.health=Math.max(0,target.health-finalDamage);target.damage+=finalDamage;if(headshot)shooter.headshots++;
-    send(shooter.client,{type:'hit',damage:finalDamage,headshot,target:target.client.player.name,targetId:target.client.player.id,weaponCode});
-    send(target.client,{type:'damage',health:target.health,damage:finalDamage,headshot,from:shooter.client.player.name,shielded:protectedByField});
+    target.health=Math.max(0,target.health-damage);target.damage+=damage;if(headshot)shooter.headshots++;
+    send(shooter.client,{type:'hit',damage,headshot,target:target.client.player.name,targetId:target.client.player.id,weaponCode});
+    send(target.client,{type:'damage',health:target.health,damage,headshot,from:shooter.client.player.name});
     if(target.health<=0)this.eliminatePlayer(shooter,target,weaponCode,now);
   }
   handleSelectItem(client:PlayerClient,message:Record<string,unknown>){
@@ -432,10 +431,11 @@ export class GameRoom {
         this.broadcast({type:'item.effect',effect:'SMOKE',x,y,z,radius:4.5,durationMs});
       }else if(itemCode==='ENERGY_CUBE'){
         const fieldY=this.floorHeightAt(x,z,p.y),durationMs=5000;
-        const field={id:this.id+':field:'+Date.now()+':'+client.player.id,team:p.team,x,y:fieldY,z,radius:4.6,expiresAt:Date.now()+durationMs};
+        const fieldNow=Date.now();
+        const field={id:this.id+':field:'+fieldNow+':'+client.player.id,ownerId:client.player.id,team:p.team,x,y:fieldY,z,radius:ENERGY_CUBE_RULES.radius,expiresAt:fieldNow+ENERGY_CUBE_RULES.durationMs,nextDamageAt:fieldNow+ENERGY_CUBE_RULES.firstDamageDelayMs};
         this.energyFields.push(field);
         if(this.energyFields.length>32)this.energyFields.splice(0,this.energyFields.length-32);
-        this.broadcast({type:'item.effect',effect:'ENERGY_CUBE_FIELD',x,y:fieldY,z,radius:field.radius,durationMs,team:p.team,eventId:field.id});
+        this.broadcast({type:'item.effect',effect:'ENERGY_CUBE_FIELD',x,y:fieldY,z,radius:field.radius,durationMs:ENERGY_CUBE_RULES.durationMs,team:p.team,eventId:field.id});
       }else{
         for(const target of this.players){if(!target.alive||!target.connected||target.team===p.team)continue;const distance=Math.hypot(target.x-x,target.z-z,(target.y+.5)-y);if(distance<10)send(target.client,{type:'item.effect',effect:'FLASH',durationMs:Math.round(1400*(1-distance/12))});}
         this.broadcast({type:'item.effect',effect:'FLASH_BURST',x,y,z,radius:4,durationMs:360});
@@ -502,6 +502,17 @@ export class GameRoom {
     const now=Date.now(),delta=0.05;
     this.smokeVolumes=this.smokeVolumes.filter(cloud=>cloud.expiresAt>now);
     this.energyFields=this.energyFields.filter(field=>field.expiresAt>now);
+    for(const field of this.energyFields){
+      if(now<field.nextDamageAt)continue;
+      field.nextDamageAt=now+ENERGY_CUBE_RULES.damageIntervalMs;
+      const owner=this.players.find(player=>player.client.player.id===field.ownerId);
+      if(!owner)continue;
+      for(const target of this.players){
+        if(!target.alive||!target.connected)continue;
+        if(isEnemyInsideEnergyCube(target.team,field.team,target.x,target.z,field.x,field.z,field.radius))
+          this.applyDamage(owner,target,ENERGY_CUBE_RULES.damage,'ENERGY_CUBE',false,now);
+      }
+    }
     if(this.worldDebris.length){
       stepAuthoritativeDebris(this.worldDebris,delta,MAPS[this.mapId].cover,(x,z,y)=>this.floorHeightAt(x,z,y));
       this.worldDebris=this.worldDebris.filter(piece=>Math.abs(piece.x)<34&&Math.abs(piece.z)<34&&piece.y>-4);
@@ -512,10 +523,14 @@ export class GameRoom {
     }
     const cover=MAPS[this.mapId].cover;
     for(const p of this.players) {
+      const insideEnemyEnergyField=p.alive&&p.connected&&this.energyFields.some(field=>isEnemyInsideEnergyCube(p.team,field.team,p.x,p.z,field.x,field.z,field.radius));
+      if(insideEnemyEnergyField!==p.energyCubeVisionActive){
+        p.energyCubeVisionActive=insideEnemyEnergyField;
+        send(p.client,{type:'energy-cube.vision',active:insideEnemyEnergyField});
+      }
       if(!p.alive || !p.connected) continue;
       if(now-p.lastInput>1200) {p.forward=0;p.right=0;p.aim=false;}
-      const insideEnergyField=this.energyFields.some(field=>field.team===p.team&&Math.hypot(p.x-field.x,p.z-field.z)<=field.radius);
-      const speed=(p.sprint?7:5.4)*(now<p.energyUntil?2:1)*(insideEnergyField?1.25:1)*(p.aim?0.5:1);
+      const speed=(p.sprint?7:5.4)*(now<p.energyUntil?2:1)*(insideEnemyEnergyField?ENERGY_CUBE_RULES.slowMultiplier:1)*(p.aim?0.5:1);
       const fx=-Math.sin(p.yaw),fz=-Math.cos(p.yaw);
       const rx=Math.cos(p.yaw),rz=-Math.sin(p.yaw);
       let dx=(fx*p.forward+rx*p.right)*speed*delta;

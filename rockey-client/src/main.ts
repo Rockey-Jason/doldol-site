@@ -457,6 +457,9 @@ socket.onMessage((message:GameMessage)=>{
     case 'damage':
       game?.setHealth(Number(message.health));
       break;
+    case 'energy-cube.vision':
+      game?.setEnergyCubeVision(Boolean(message.active));
+      break;
     case 'ammo.update':
       // Delayed packets from the weapon just switched away must not overwrite the active weapon HUD.
       if(!message.weaponCode || String(message.weaponCode)===activeWeapon){

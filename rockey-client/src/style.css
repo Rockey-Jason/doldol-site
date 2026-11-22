@@ -737,3 +737,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{
   .mode-card:before{display:none}
   .hud-bottom,.match-info,.camera-btn,.exit-btn,.weapon-switch-btn{animation:none}
 }
+
+#energyCubeVisionOverlay{position:fixed;z-index:1;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;pointer-events:none;opacity:0;overflow:hidden;transition:opacity .16s ease;color:#c7f5ff;text-align:center;font-size:clamp(12px,2vw,18px);font-weight:700;letter-spacing:4px;text-shadow:0 0 12px #13baff,0 0 28px #0879ff}
+#energyCubeVisionOverlay.active{opacity:1}
+#energyCubeVisionOverlay:before{content:"";position:absolute;inset:-20%;background:repeating-linear-gradient(0deg,rgba(40,194,255,.13) 0 1px,transparent 1px 4px),repeating-linear-gradient(90deg,transparent 0 17px,rgba(38,161,255,.1) 18px,transparent 20px);mix-blend-mode:screen;animation:energyCubeScan .18s steps(2,end) infinite}
+#energyCubeVisionOverlay:after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 12%,rgba(0,139,255,.13) 28%,transparent 44%,rgba(68,218,255,.12) 61%,transparent 76%),radial-gradient(ellipse,transparent 35%,rgba(0,53,120,.34) 100%);animation:energyCubeGlitch .72s steps(2,end) infinite}
+#energyCubeVisionOverlay span,#energyCubeVisionOverlay i{position:relative;z-index:1}
+#energyCubeVisionOverlay i{font-size:10px;font-style:normal;letter-spacing:3px;color:#69dfff;opacity:.8}
+@keyframes energyCubeScan{0%{transform:translate3d(-1%,0,0);opacity:.7}50%{transform:translate3d(1%,1%,0);opacity:1}100%{transform:translate3d(0,-1%,0);opacity:.8}}
+@keyframes energyCubeGlitch{0%,100%{transform:translateX(0);clip-path:inset(0)}23%{transform:translateX(1.2%);clip-path:inset(18% 0 63%)}51%{transform:translateX(-.8%);clip-path:inset(58% 0 19%)}77%{transform:translateX(.4%);clip-path:inset(39% 0 42%)}}
+@media(prefers-reduced-motion:reduce){#energyCubeVisionOverlay:before,#energyCubeVisionOverlay:after{animation:none}}
