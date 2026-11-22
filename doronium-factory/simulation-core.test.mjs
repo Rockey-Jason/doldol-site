@@ -355,3 +355,40 @@ test("corrupt reservations fail closed for availability and inventory consumptio
  assert.equal(state.runtime.itemStacks[0].quantity,8);
  assert.equal(state.runtime.reservations[id].status,"reserved");
 });
+
+
+test("large legacy inventory aggregates remain reservable and auditable",()=>{
+  const state={runtime:createRuntimeState(),inventory:{ironOre:50000,coal:30000},meta:{},tick:1};
+  ensureItemStacks(state);
+  assert.equal(state.runtime.itemStacks.length,2);
+  assert.ok(state.runtime.itemStacks.every(stack=>stack.legacyAggregate===true));
+  assert.equal(stackTotals(state).ITEM_IRON_ORE,50000);
+  assert.equal(stackTotals(state).coal,30000);
+
+  const reservations=reserveItemBatch(state,{ironOre:2,coal:1},"recipe:test-smelter");
+  assert.ok(reservations);
+  assert.equal(validateRuntimeState(state).valid,true);
+  const removed=commitItemReservations(state,reservations);
+  assert.equal(removed.reduce((sum,stack)=>sum+stack.quantity,0),3);
+  assert.equal(availableItemCount(state,"ironOre"),49998);
+  assert.equal(availableItemCount(state,"coal"),29999);
+  assert.equal(validateRuntimeState(state).valid,true);
+});
+
+test("oversized legacy runtime stacks retain their IDs and active reservations",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},tick:2};
+  state.runtime.legacyInventoryMigrated=true;
+  state.runtime.itemStacks=[{runtimeID:"IS-41",itemID:"ITEM_IRON_ORE",quantity:50000,quality:91,purity:93,synthetic:false}];
+  state.runtime.nextStackId=42;
+  ensureItemStacks(state);
+  assert.equal(state.runtime.itemStacks.length,1);
+  assert.equal(state.runtime.itemStacks[0].runtimeID,"IS-41");
+  assert.equal(state.runtime.itemStacks[0].legacyAggregate,true);
+  const reservation=reserveItemStacks(state,"ironOre",6000,"legacy-active-job");
+  assert.ok(reservation);
+  assert.equal(validateRuntimeState(state).valid,true);
+  const removed=commitItemReservations(state,[reservation]);
+  assert.equal(removed.reduce((sum,stack)=>sum+stack.quantity,0),6000);
+  assert.equal(availableItemCount(state,"ironOre"),44000);
+  assert.equal(validateRuntimeState(state).valid,true);
+});

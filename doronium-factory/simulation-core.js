@@ -28,9 +28,14 @@ export function createRuntimeState(){
 }
 function normalizeStack(stack){
   const originalItemID=String(stack.itemID),normalizedItemID=canonicalItemID(originalItemID);
-  return {runtimeID:String(stack.runtimeID),itemID:normalizedItemID,quantity:Math.max(0,Math.floor(Number(stack.quantity)||0)),
+  const quantity=Math.max(0,Math.floor(Number(stack.quantity)||0));
+  // Older saves migrated an aggregate inventory count into one stable stack.
+  // Keep that stack ID (and any reservations that reference it) intact; new
+  // stacks created by addItemStack remain capped at ITEM_STACK_LIMIT.
+  const legacyAggregate=stack.legacyAggregate===true||quantity>ITEM_STACK_LIMIT;
+  return {runtimeID:String(stack.runtimeID),itemID:normalizedItemID,quantity,
     quality:clamp(stack.quality??90,0,100),purity:clamp(stack.purity??90,0,100),
-    synthetic:!!stack.synthetic,packaging:stack.packaging||null,createdTick:Math.max(0,Number(stack.createdTick)||0),quarantined:stack.quarantined===true,quarantineReason:stack.quarantineReason||null,sourceItemID:stack.sourceItemID||(normalizedItemID!==originalItemID?originalItemID:null),migrationVersion:Math.max(0,Math.floor(Number(stack.migrationVersion)||0))};
+    synthetic:!!stack.synthetic,packaging:stack.packaging||null,createdTick:Math.max(0,Number(stack.createdTick)||0),quarantined:stack.quarantined===true,quarantineReason:stack.quarantineReason||null,sourceItemID:stack.sourceItemID||(normalizedItemID!==originalItemID?originalItemID:null),migrationVersion:Math.max(0,Math.floor(Number(stack.migrationVersion)||0)),legacyAggregate};
 }
 export function ensureItemStacks(state){
   if(!state.runtime||typeof state.runtime!=="object")state.runtime=createRuntimeState();
@@ -70,7 +75,7 @@ export function ensureItemStacks(state){
     for(const [itemID,entry] of grouped){
       const total=rt.itemStacks.filter(s=>s.itemID===itemID).reduce((n,s)=>n+s.quantity,0),missing=Math.max(0,entry.quantity-total);
       if(missing){rt.itemStacks.push({runtimeID:"IS-"+rt.nextStackId++,itemID,quantity:missing,
-        quality:entry.quantity?entry.qualityWeight/entry.quantity:90,purity:entry.quantity?entry.purityWeight/entry.quantity:90,synthetic:entry.synthetic,packaging:null,createdTick:state.tick||0,sourceItemID:entry.sourceAliases.size===1&&canonicalItemID([...entry.sourceAliases][0])!==[...entry.sourceAliases][0]?[...entry.sourceAliases][0]:null})}
+        quality:entry.quantity?entry.qualityWeight/entry.quantity:90,purity:entry.quantity?entry.purityWeight/entry.quantity:90,synthetic:entry.synthetic,packaging:null,createdTick:state.tick||0,legacyAggregate:missing>ITEM_STACK_LIMIT,sourceItemID:entry.sourceAliases.size===1&&canonicalItemID([...entry.sourceAliases][0])!==[...entry.sourceAliases][0]?[...entry.sourceAliases][0]:null})}
     }
     rt.legacyInventoryMigrated=true;
   }
@@ -191,7 +196,7 @@ function auditActiveReservations(rt,stackByID){
       }
       localStackIDs.add(stackID);
       const stack=stackByID.get(stackID);
-      if(!stack||stack.itemID!==itemID||stack.quarantined||!Number.isSafeInteger(stack.quantity)||stack.quantity<=0||stack.quantity>ITEM_STACK_LIMIT){
+      if(!stack||stack.itemID!==itemID||stack.quarantined||!Number.isSafeInteger(stack.quantity)||stack.quantity<=0||(stack.quantity>ITEM_STACK_LIMIT&&!stack.legacyAggregate)){
         errors.push("invalid-reservation-stack:"+id+":"+stackID);continue;
       }
       const nextAllocated=allocated+quantity;
@@ -330,7 +335,7 @@ export function validateRuntimeState(state){
   for(const stack of rt.itemStacks){
     if(ids.has(stack.runtimeID))errors.push("duplicate-stack-id:"+stack.runtimeID);
     ids.add(stack.runtimeID);stackByID.set(stack.runtimeID,stack);
-    if(!stack.itemID||!Number.isInteger(stack.quantity)||stack.quantity<=0||stack.quantity>ITEM_STACK_LIMIT)errors.push("invalid-stack:"+stack.runtimeID);if(stack.quarantined&&(!stack.quarantineReason||!stack.sourceItemID))errors.push("invalid-quarantined-stack:"+stack.runtimeID);
+    if(!stack.itemID||!Number.isSafeInteger(stack.quantity)||stack.quantity<=0||(stack.quantity>ITEM_STACK_LIMIT&&!stack.legacyAggregate))errors.push("invalid-stack:"+stack.runtimeID);if(stack.quarantined&&(!stack.quarantineReason||!stack.sourceItemID))errors.push("invalid-quarantined-stack:"+stack.runtimeID);
   }
   const reservationAudit=auditActiveReservations(rt,stackByID);
   errors.push(...reservationAudit.errors);
