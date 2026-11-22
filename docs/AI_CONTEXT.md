@@ -34,7 +34,15 @@
 
 게임이나 별도 대형 화면의 존재는 저장소 구조를 이해하기 위한 정보입니다. 사이트 전반 유지보수 요청에서 해당 화면의 게임 로직을 새로 만들거나 변경하라는 뜻은 아닙니다.
 
-| 학습 도구 | rockey-study.html, rockey-study-formula.html | 12개 학년의 수학 공식 200개, 계산기형 문자·거듭제곱·제곱근 직접 입력 퀴즈, 구구단 배틀, 보스 챌린지 |
+| 학습 도구 | rockey-study.html, rockey-study-formula.html | 12개 학년의 수학 공식 200개, 전체 공식 검색과 학습 상태 필터, 복습 우선 추천, 개념 공개 후 직접 입력 연습으로 검증하는 마스터 진행, 계산기형 문자·거듭제곱·제곱근 입력, 구구단 배틀, 보스 챌린지 |
+
+
+### 수학 공식 퀘스트
+
+- `js/rockey-study-formula.js`와 `js/rockey-study-math-input.js`가 200개 수학 카드 및 수식 직접 입력 검사기를 제공합니다.
+- `js/rockey-study-learning-tools.js`는 전체 학년 공식 검색, 학습 상태 필터, 복습 우선 추천을 담당하며 브라우저의 로컬 학습 진행 데이터만 읽습니다.
+- `js/rockey-study-formula-game.js`에서 개념 학습과 문제 풀이를 연결합니다. 마스터 상태는 공식 문제를 실제로 맞혔을 때만 반영하고, 수동으로 완료 처리하는 동작은 두지 않습니다.
+- `scripts/rockey-study-math-input.test.mjs`와 `scripts/rockey-study-learning-tools.test.mjs`를 품질 검사에서 함께 실행합니다.
 
 ## 3. 런타임과 코드 구성
 
