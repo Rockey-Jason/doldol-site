@@ -94,8 +94,10 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     const root=new THREE.Group();root.position.set(cx,0,cz);scene.add(root);
     const w=8.8,d=9.6,h=4.25,t=.38;
     // The central stairwell opening connects ground level to the service sublevel.
-    add(root,floor,-2.55,-.02,0,3.7,.28,d,true);
-    add(root,floor,2.55,-.02,0,3.7,.28,d,true);
+    // Keep a 3.2 m clear shaft through the ground slab for the wide basement ramp.
+    // The previous 1.4 m gap was narrower than the 2.9 m ramp and trapped the player.
+    add(root,floor,-3.0,-.02,0,2.8,.28,d,true);
+    add(root,floor,3.0,-.02,0,2.8,.28,d,true);
     add(root,floor,0,-.02,-3.25,1.4,.28,2.1,true);
     add(root,floor,0,-.02,3.25,1.4,.28,2.1,true);
     // First-floor walling leaves the entrance and internal cross-passage open.
@@ -144,10 +146,17 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     makeFurniture(root,.25,0,-3.0,'desk');
     makeFurniture(root,-1.15,0,3.0,'crate');
 
-    // Upper gallery floors leave a full-width vertical shaft above the stair flight.
-    add(root,floor,-innerSide*.9,4.05,1.45,6.8,.28,6.7,true);
-    // Keep the bridge gallery beyond the capsule's full horizontal clearance envelope.
-    add(root,floor,innerSide*4.05,4.05,1.45,1.2,.28,6.7,true);
+    // Cut the gallery slab around the complete inclined stair footprint, not just
+    // a narrow center slot. The previous x-slabs overlapped the ramp by up to 0.5 m,
+    // creating an invisible ceiling/floor collision before the second-floor landing.
+    const galleryFloorMin=-w/2,galleryFloorMax=w/2;
+    const stairClearHalfWidth=1.3;
+    const stairClearLeft=stairX-stairClearHalfWidth;
+    const stairClearRight=stairX+stairClearHalfWidth;
+    const galleryLeftWidth=stairClearLeft-galleryFloorMin;
+    const galleryRightWidth=galleryFloorMax-stairClearRight;
+    if(galleryLeftWidth>.2)add(root,floor,(galleryFloorMin+stairClearLeft)/2,4.05,1.45,galleryLeftWidth,.28,6.7,true);
+    if(galleryRightWidth>.2)add(root,floor,(stairClearRight+galleryFloorMax)/2,4.05,1.45,galleryRightWidth,.28,6.7,true);
     // A broad landing overlaps the ramp nose and keeps a continuous collision-safe path
     // through the second-floor doorway, including the character controller's 0.34 m radius.
     add(root,floor,stairX,4.05,-1.55,3.2,.28,1.4,true);
@@ -183,7 +192,11 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     makeFurniture(root,officeSide*2.55,4.2,-.8,'cabinet');
 
     // Roof access stairs rise from the gallery to an exposed rooftop combat deck.
-    addRamp(root,floor,0,4.95,1.245,1.4,3.01,1.52);
+    // Roof landing is 1.80 m above the gallery. Match both ends exactly so
+    // the ramp does not finish below the rooftop slab and leave a climbable lip.
+    const roofRise=1.8,roofRun=3.01,roofAngle=Math.atan2(roofRise,roofRun);
+    const roofRampCenterY=(4.19+5.99)/2-.07*Math.cos(roofAngle);
+    addRamp(root,floor,0,roofRampCenterY,1.245,1.4,roofRun,roofRise);
     for(let i=0;i<8;i++){
       const y=4.28+i*.19,z=2.75-i*.43;
       add(root,i%2?trim:floor,0,y,z,1.18,.20,.48,false);
@@ -254,10 +267,14 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     }
     add(root,wall,0,-1.45,-4.38,8.2,2.65,.22,true);
     add(root,wall,0,-1.45,4.38,8.2,2.65,.22,true);
-    addRamp(root,floor,0,-1.32,0,2.9,4.5,-2.64);
+    // Match the basement ramp from the basement floor top (-2.64 m)
+    // to the ground-floor top (0.12 m), including the full 2.9 m opening.
+    const basementRise=-2.76,basementAngle=Math.atan2(basementRise,4.5);
+    const basementCenterY=(-2.64+.12)/2-.07*Math.cos(basementAngle);
+    addRamp(root,floor,0,basementCenterY,0,2.9,4.5,basementRise);
     for(let i=0;i<13;i++){
-      const stepHeight=2.64/13;
-      const stepY=-(i+.5)*stepHeight;
+      const stepHeight=2.76/13;
+      const stepY=.12-(i+.5)*stepHeight;
       const stepZ=2.25-(i+.5)*4.5/13;
       add(root,i%2?trim:floor,0,stepY,stepZ,1.45,stepHeight,.42,false);
     }
