@@ -64,6 +64,7 @@ sw.js caches the app shell and handles navigation responses. It may inject share
 | Page / route | Public purpose |
 |---|---|
 | / | Home and entry point |
+| /rockey-study-formula.html | Mathematics formula learning and quiz game for grades 1–12 |
 | Randombox.html | Existing random-box item view |
 | daily-missions.html | Existing daily mission page |
 | doldolcoin.html | Existing coin information |
