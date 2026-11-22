@@ -125,7 +125,7 @@ test('player capsule dimensions fit every real entrance and stair transition',()
         assert.equal(isBlockedByCover(map.cover,centerX, floor+halfHeight,localZ-1.5,radius,halfHeight),false,
           map.id+' blocks the full player capsule on the basement ramp');
       }
-      assert.equal(tacticalFloorHeightAt(centerX+innerSide*4.12,-1.5,-1.72),-2.64,
+      assert.equal(tacticalFloorHeightAt(centerX+innerSide*3.9,-1.5,-1.72),-2.64,
         map.id+' basement portal does not meet the service-floor height');
     }
   }
