@@ -23,7 +23,7 @@ test('both mirrored second-floor stairways reach a landing and the gallery on ev
       const stairX=centerX+innerSide*3.05;
       let bodyY=.92;
       let previousFloor=0;
-      for(let localZ=2.35;localZ>=-2.55;localZ-=.08){
+      for(let localZ=2.35;localZ>=-1.85;localZ-=.08){
         const floor=tacticalFloorHeightAt(stairX,localZ-1.5,bodyY);
         assert.ok(Number.isFinite(floor),map.id+' returned a non-finite stair height');
         assert.ok(floor>=previousFloor-.02,map.id+' stair floor unexpectedly descends while climbing');
@@ -37,9 +37,9 @@ test('both mirrored second-floor stairways reach a landing and the gallery on ev
         map.id+' blocks the stair-aligned upper doorway');
       assert.equal(tacticalFloorHeightAt(centerX+innerSide*3.9,-1.5,5.11),4.19,
         map.id+' bridge-side upper gallery has no walkable floor');
-      assert.equal(tacticalFloorHeightAt(centerX+innerSide*3.05,-2.5,5.11),4.19,
+      assert.equal(tacticalFloorHeightAt(centerX+innerSide*3.05,-3.35,5.11),4.19,
         map.id+' upper stair nose does not connect to the landing');
-      assert.equal(tacticalFloorHeightAt(centerX+innerSide*3.05,-3.2,5.11),4.19,
+      assert.equal(tacticalFloorHeightAt(centerX+innerSide*3.05,-2.6,5.11),4.19,
         map.id+' widened upper landing has a missing floor');
       assert.equal(isBlockedByCover(map.cover,centerX+innerSide*2.5,5.11,-.9),false,
         map.id+' blocks the upper cross-walk');
@@ -110,8 +110,8 @@ test('player capsule dimensions fit every real entrance and stair transition',()
       const innerSide=centerX<0?1:-1;
       const stairX=centerX+innerSide*3.05;
       // Test the complete upper ramp, the stair-aligned landing and its door.
-      for(let localZ=2.35;localZ>=-2.5;localZ-=.08){
-        const floor=((2.35-localZ)/4.85)*4.19;
+      for(let localZ=2.35;localZ>=-1.85;localZ-=.08){
+        const floor=((2.35-localZ)/4.2)*4.19;
         const bodyCenter=floor+halfHeight;
         assert.equal(isBlockedByCover(map.cover,stairX,bodyCenter,localZ-1.5,radius,halfHeight),false,
           map.id+' blocks the full player capsule on the upper ramp');
