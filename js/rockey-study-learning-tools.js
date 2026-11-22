@@ -25,8 +25,8 @@
   }
 
   function statusOf(record) {
-    if (record.mastered) return "mastered";
     if (record.review) return "review";
+    if (record.mastered) return "mastered";
     if (record.seen || Number(record.attempts) > 0) return "learning";
     return "unseen";
   }
