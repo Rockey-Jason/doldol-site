@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import type { RockeyMap } from '../catalog';
 
-type ColliderAdder=(x:number,y:number,z:number,hx:number,hy:number,hz:number)=>void;
+type ColliderAdder=(x:number,y:number,z:number,hx:number,hy:number,hz:number,rotationX?:number)=>void;
 type RaycastAdder=(mesh:THREE.Object3D)=>void;
 type Breakable={root:THREE.Object3D;position:THREE.Vector3;radius:number;shards:number;kind:'glass'|'light'|'prop';broken:boolean};
 
@@ -31,6 +31,21 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     return mesh;
   };
   const point=(root:THREE.Object3D,x:number,y:number,z:number)=>new THREE.Vector3(root.position.x+x,root.position.y+y,root.position.z+z);
+
+  // One continuous, walkable collider sits below the decorative stair treads.
+  // The player capsule is 0.68 m wide and 1.72 m tall, so each ramp is kept
+  // wider than 1.3 m and within the character controller's 45-degree slope.
+  const addRamp=(root:THREE.Group,mat:THREE.Material,x:number,y:number,z:number,width:number,run:number,rise:number)=>{
+    const angle=Math.atan2(rise,run);
+    const length=Math.hypot(run,rise);
+    const mesh=new THREE.Mesh(new THREE.BoxGeometry(width,.14,length),mat);
+    mesh.position.set(x,y,z);mesh.rotation.x=angle;
+    mesh.castShadow=!isMobile;mesh.receiveShadow=!isMobile;root.add(mesh);
+    addRaycast?.(mesh);
+    root.updateWorldMatrix(true,false);
+    const worldPoint=root.localToWorld(new THREE.Vector3(x,y,z));
+    addCollider(worldPoint.x,worldPoint.y,worldPoint.z,width/2,.07,length/2,angle);
+  };
   const makeFurniture=(root:THREE.Group,x:number,y:number,z:number,kind:'desk'|'rack'|'cabinet'|'chair'|'crate')=>{
     const prop=new THREE.Group();prop.position.set(x,y,z);root.add(prop);
     if(kind==='desk'){
@@ -131,18 +146,23 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     // Preserve the outer guardrail. Open the inner wall directly onto the skybridge.
     const outerSide=-innerSide;
     add(root,wall,outerSide*4.18,4.58,1.45,.28,1.0,6.7,true);
-    add(root,wall,innerSide*4.55,4.58,-1.45,.28,1.0,.9,true);
-    add(root,wall,innerSide*4.55,4.58,2.9,.28,1.0,3.8,true);
+    // Keep the bridge-side portal at least 1.8 m clear for the full player capsule.
+    add(root,wall,innerSide*4.55,4.58,-2.95,.28,1.0,.9,true);
+    add(root,wall,innerSide*4.55,4.58,1.4,.28,1.0,3.8,true);
 
     // The stair-aligned doorway replaces the old continuous wall across the gallery.
     const galleryDoorCenter=stairX;
-    add(root,wall,(galleryDoorCenter-4.95)/2,4.58,-1.75,galleryDoorCenter+3.25,1.0,.28,true);
-    add(root,wall,(galleryDoorCenter+4.95)/2,4.58,-1.75,3.25-galleryDoorCenter,1.0,.28,true);
+    const wallMin=-w/2,wallMax=w/2,doorHalfWidth=1.05;
+    const galleryDoorLeft=galleryDoorCenter-doorHalfWidth;
+    const galleryDoorRight=galleryDoorCenter+doorHalfWidth;
+    add(root,wall,(wallMin+galleryDoorLeft)/2,4.58,-1.75,galleryDoorLeft-wallMin,1.0,.28,true);
+    add(root,wall,(galleryDoorRight+wallMax)/2,4.58,-1.75,wallMax-galleryDoorRight,1.0,.28,true);
 
     const steps=13,run=4.85,rise=3.9;
+    addRamp(root,floor,stairX,rise/2,-.075,2.1,run,rise);
     for(let i=0;i<steps;i++){
       const y=(i+1)*rise/steps,z=2.35-(i+.5)*run/steps;
-      add(root,i%2?trim:floor,stairX,y/2,z,1.05,y,.42,true);
+      add(root,i%2?trim:floor,stairX,y/2,z,1.05,y,.42,false);
     }
     add(root,trim,innerSide*3.62,2.05,-.1,.08,4.1,.08);
     add(root,trim,innerSide*2.48,2.05,-.1,.08,4.1,.08);
@@ -150,9 +170,10 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     makeFurniture(root,officeSide*2.55,4.2,-.8,'cabinet');
 
     // Roof access stairs rise from the gallery to an exposed rooftop combat deck.
+    addRamp(root,floor,0,4.95,1.245,1.4,3.01,1.52);
     for(let i=0;i<8;i++){
       const y=4.28+i*.19,z=2.75-i*.43;
-      add(root,i%2?trim:floor,0,y,z,1.18,.20,.48,true);
+      add(root,i%2?trim:floor,0,y,z,1.18,.20,.48,false);
     }
     // Split the roof deck around the stairwell so the final steps are not sealed under the slab.
     add(root,floor,0,5.85,-.25,1.6,.28,.9,true);
@@ -209,8 +230,9 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     for(const side of [-1,1]){
       if(side===innerSide){
         // An open portal joins the basement service room to the underpass.
-        add(root,wall,side*4.12,-1.45,-3.7,.22,2.65,4.5,true);
-        add(root,wall,side*4.12,-1.45,3.7,.22,2.65,4.5,true);
+        // Side-wall sections end before the 2.9 m underpass doorway.
+        add(root,wall,side*4.12,-1.45,-3.7,.22,2.65,2.25,true);
+        add(root,wall,side*4.12,-1.45,3.7,.22,2.65,2.25,true);
       }else{
         add(root,wall,side*4.12,-1.45,-2.85,.22,2.65,3.1,true);
         add(root,wall,side*4.12,-1.45,2.85,.22,2.65,3.1,true);
@@ -219,11 +241,12 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     }
     add(root,wall,0,-1.45,-4.38,8.2,2.65,.22,true);
     add(root,wall,0,-1.45,4.38,8.2,2.65,.22,true);
+    addRamp(root,floor,0,-1.225,0,2.9,4.5,-2.45);
     for(let i=0;i<13;i++){
       const stepHeight=2.45/13;
       const stepY=-(i+.5)*stepHeight;
       const stepZ=2.25-(i+.5)*4.5/13;
-      add(root,i%2?trim:floor,0,stepY,stepZ,1.45,stepHeight,.42,true);
+      add(root,i%2?trim:floor,0,stepY,stepZ,1.45,stepHeight,.42,false);
     }
     add(root,wall,-2.8,-1.35,-2.75,.18,2.5,3.0,true);
     add(root,wall,2.8,-1.35,-2.75,.18,2.5,3.0,true);
