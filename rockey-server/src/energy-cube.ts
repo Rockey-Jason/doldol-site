@@ -1,3 +1,4 @@
+// Server-authoritative tuning shared by match simulation and rule tests.
 export const ENERGY_CUBE_RULES = {
   radius: 4.6,
   durationMs: 5_000,
