@@ -53,7 +53,7 @@ export const MAPS: Record<string,RockeyMap> = {
     description:'우주 정거장 적재 구역. 수직 구조와 중앙 통로를 활용하라.',difficulty:'HARD',
     palette:'cyan',background:0xa5d8df,fog:0xc5e8eb,floor:0x668f99,grid:0x42a7b2,light:0x45e6f4,
     cover:[
-      {x:-10,z:0,hx:2.4,hz:7,top:4.5},{x:10,z:0,hx:2.4,hz:7,top:4.5},
+      {x:-10,z:0,hx:1.9,hz:7,top:4.5},{x:10,z:0,hx:1.9,hz:7,top:4.5},
       {x:0,z:-12,hx:7,hz:1.2,top:3},{x:0,z:12,hx:7,hz:1.2,top:3},
       {x:0,z:0,hx:2,hz:2,top:2.8}
     ]
