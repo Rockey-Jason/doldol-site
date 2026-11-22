@@ -94,7 +94,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     const root=new THREE.Group();root.position.set(cx,0,cz);scene.add(root);
     const w=8.8,d=9.6,h=4.25,t=.38;
     // The central stairwell opening connects ground level to the service sublevel.
-    // Keep a 3.2 m clear shaft through the ground slab for the wide basement ramp.
+    // Keep a 3.8 m clear shaft through the ground slab for the wide basement ramp.
     // The previous 1.4 m gap was narrower than the 2.9 m ramp and trapped the player.
     add(root,floor,-2.5,-.02,0,2.5,.28,d,true);
     add(root,floor,2.5,-.02,0,2.5,.28,d,true);
@@ -212,7 +212,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
       add(root,wall,0,6.28,side*4.43,8.1,.72,.22,true);
       add(root,trim,side*4.02,6.66,0,.28,.07,8.9);
       add(root,trim,0,6.66,side*4.43,8.1,.07,.28);
-      // Guardrails protect the roof opening while keeping the 1.65 m stair lane clear.
+      // Guardrails protect the roof opening while keeping a 2.5 m stair lane clear.
       add(root,wall,side*1.2,6.28,1.25,.12,.72,3.5,true);
       add(root,trim,side*1.2,6.66,1.25,.16,.07,3.5);
     }
