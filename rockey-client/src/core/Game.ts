@@ -1278,17 +1278,27 @@ export async function createGame(
 
   function stopMouseFire() {
     mouseFireHeld=false;
-    if(mouseFireTimer)window.clearInterval(mouseFireTimer);
+    if(mouseFireTimer)window.clearTimeout(mouseFireTimer);
     mouseFireTimer=0;
+  }
+
+  function scheduleMouseFire() {
+    if(!mouseFireHeld||disposed)return;
+    const now=performance.now();
+    const delay=!active?100:now<reloadAt?reloadAt-now:ammo<=0?100:lastShot+currentWeapon.fireInterval-now;
+    mouseFireTimer=window.setTimeout(()=>{
+      mouseFireTimer=0;
+      if(!mouseFireHeld)return;
+      fire();
+      scheduleMouseFire();
+    },Math.max(8,Math.min(120,delay)));
   }
 
   function startMouseFire() {
     if(mouseFireHeld)return;
     mouseFireHeld=true;
     fire();
-    // Let fireInterval enforce the weapon's exact cadence; this timer only polls
-    // at a modest rate so holding the button does not create a busy loop.
-    mouseFireTimer=window.setInterval(fire,Math.max(24,Math.min(80,currentWeapon.fireInterval)));
+    scheduleMouseFire();
   }
 
   function fire() {
@@ -1418,8 +1428,8 @@ export async function createGame(
     element.ly = event.clientY;
   }
   function pointerLookEnd(event: PointerEvent) {
-    if(event.pointerType==='mouse'&&event.button===0)stopMouseFire();
-    if (event.pointerType === 'mouse' && event.button === 2) setPrecisionAiming(false);
+    if(event.pointerType==='mouse'&&(event.button===0||event.type==='pointercancel'))stopMouseFire();
+    if (event.pointerType === 'mouse' && (event.button === 2||event.type==='pointercancel')) setPrecisionAiming(false);
     if (event.pointerId !== lookPointerId) return;
     lookPointerId = null;
     const element = canvas as HTMLCanvasElement & { lx?: number; ly?: number };
@@ -1446,8 +1456,8 @@ export async function createGame(
   window.addEventListener('mousemove', pointerMove);
   const handleWindowPointerEnd=(event:PointerEvent)=>{
     if(event.pointerType!=='mouse')return;
-    if(event.button===0)stopMouseFire();
-    if(event.button===2)setPrecisionAiming(false);
+    if(event.button===0||event.type==='pointercancel')stopMouseFire();
+    if(event.button===2||event.type==='pointercancel')setPrecisionAiming(false);
   };
   window.addEventListener('pointerup',handleWindowPointerEnd);
   window.addEventListener('pointercancel',handleWindowPointerEnd);
