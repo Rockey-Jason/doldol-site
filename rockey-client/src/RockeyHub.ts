@@ -16,7 +16,7 @@ export class RockeyHub {
   private root:HTMLElement;
   private send:Sender;
   private onReplay:(frames:ReplayFrame[],mapId:string)=>void;
-  private onQuality:(level:'low'|'balanced'|'high')=>void;
+  private onQuality:(level:'auto'|'low'|'balanced'|'high')=>void;
   private onSensitivity:(value:number)=>void;
   private tab='friends';
   private friends:Friend[]=[];
@@ -38,15 +38,16 @@ export class RockeyHub {
   private searchQuery='';
   private incomingInvite:{from:{id:string;name:string};code:string;mode:string;mapId:string}|null=null;
   private notice='';
-  private quality:'low'|'balanced'|'high'='balanced';
+  private quality:'auto'|'low'|'balanced'|'high'='auto';
   private sensitivity=1;
 
-  constructor(root:HTMLElement,send:Sender,onReplay:(frames:ReplayFrame[],mapId:string)=>void,onQuality:(level:'low'|'balanced'|'high')=>void,onSensitivity:(value:number)=>void){
+  constructor(root:HTMLElement,send:Sender,onReplay:(frames:ReplayFrame[],mapId:string)=>void,onQuality:(level:'auto'|'low'|'balanced'|'high')=>void,onSensitivity:(value:number)=>void){
     this.root=root;this.send=send;this.onReplay=onReplay;this.onQuality=onQuality;this.onSensitivity=onSensitivity;
     this.mapId=localStorage.getItem('rockey.mapId')||'training_facility';
     try{const saved=JSON.parse(localStorage.getItem('rockey.stageLoadouts.v1')||'{}');if(saved&&typeof saved==='object')this.stageLoadouts=saved;}catch{this.stageLoadouts={};}
     this.restoreStageLoadout();
-    this.quality=(localStorage.getItem('rockey.quality') as any)||'balanced';
+    const savedQuality=localStorage.getItem('rockey.quality');
+    this.quality=savedQuality==='low'||savedQuality==='balanced'||savedQuality==='high'?savedQuality:'auto';
     const saved=Number(localStorage.getItem('rockey.sensitivity')||'1');
     this.sensitivity=Number.isFinite(saved)?Math.max(.4,Math.min(2.2,saved)):1;
     this.root.addEventListener('click',e=>this.handleClick(e));
@@ -116,7 +117,9 @@ export class RockeyHub {
     if(t.id==='hubItem'&&t.value in ITEMS)this.itemCode=t.value as RockeyItemCode;
     if(t.id==='hubMap'){this.persistStageLoadout();this.mapId=t.value;localStorage.setItem('rockey.mapId',this.mapId);this.restoreStageLoadout();this.render();}
     if(t.id==='hubQuality'){
-      this.quality=t.value as any;localStorage.setItem('rockey.quality',this.quality);this.onQuality(this.quality);
+      if(t.value==='auto'||t.value==='low'||t.value==='balanced'||t.value==='high'){
+        this.quality=t.value;localStorage.setItem('rockey.quality',this.quality);this.onQuality(this.quality);
+      }
     }
     if(t.id==='hubSensitivity'){
       this.sensitivity=Number(t.value);localStorage.setItem('rockey.sensitivity',String(this.sensitivity));
@@ -234,7 +237,7 @@ export class RockeyHub {
       '<button class="hub-primary wide" data-action="loadout-save">장비 저장</button></section>'+
       '<section class="hub-section"><div class="hub-section-head"><div><h3>WEAPON ARMORY <small>'+this.weapons.length+'/11</small></h3><p>총기별 피해량과 특성을 비교하고, 돌이 근접 무기도 장착할 수 있습니다.</p></div></div><div class="hub-weapon-list">'+(cards||'<div class="hub-empty">무기 데이터를 불러오는 중입니다.</div>')+'</div></section>'+
       '<section class="hub-section"><div class="hub-section-head"><div><h3>GRAPHICS & CONTROLS</h3><p>모바일 기기에서는 낮은 그래픽 설정을 권장합니다.</p></div></div><div class="hub-settings">'+
-      '<label>GRAPHICS QUALITY<select id="hubQuality"><option value="low" '+(this.quality==='low'?'selected':'')+'>LOW · 성능 우선</option><option value="balanced" '+(this.quality==='balanced'?'selected':'')+'>BALANCED · 균형</option><option value="high" '+(this.quality==='high'?'selected':'')+'>HIGH · 화질 우선</option></select></label>'+
+      '<label>GRAPHICS QUALITY<select id="hubQuality"><option value="auto" '+(this.quality==='auto'?'selected':'')+'>AUTO · 기기별 실시간 최적화</option><option value="low" '+(this.quality==='low'?'selected':'')+'>LOW · 성능 우선</option><option value="balanced" '+(this.quality==='balanced'?'selected':'')+'>BALANCED · 균형</option><option value="high" '+(this.quality==='high'?'selected':'')+'>HIGH · 화질 우선</option></select></label>'+
       '<label>MOUSE / TOUCH SENSITIVITY <span id="sensitivityValue">'+this.sensitivity.toFixed(1)+'×</span><input id="hubSensitivity" type="range" min="0.4" max="2.2" step="0.1" value="'+this.sensitivity+'"></label></div></section>';
   }
   private renderReplays(){
