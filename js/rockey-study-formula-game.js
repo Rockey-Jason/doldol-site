@@ -5,6 +5,7 @@
 
   var COURSE = Array.isArray(window.ROCKEY_FORMULA_COURSE) ? window.ROCKEY_FORMULA_COURSE : [];
   var MATH = window.ROCKEY_MATH_INPUT;
+  var TOOLS = window.ROCKEY_STUDY_TOOLS;
   var STORAGE_KEY = "rockeyStudy.formulaQuest.progress.v1";
   var GRADE_NAMES = {
     1:"초등학교 1학년",2:"초등학교 2학년",3:"초등학교 3학년",4:"초등학교 4학년",5:"초등학교 5학년",6:"초등학교 6학년",
@@ -12,7 +13,7 @@
     10:"고등학교 1학년",11:"고등학교 2학년",12:"고등학교 3학년"
   };
   var $ = function (id) { return document.getElementById(id); };
-  var state = {grade:null,topic:"전체",mode:"learn",index:0,revealed:false,session:null};
+  var state = {grade:null,topic:"전체",mode:"learn",index:0,revealed:false,session:null,searchFilter:"all",searchLimit:8};
   var toastTimer = 0;
   var progress = loadProgress();
 
@@ -72,6 +73,50 @@
     if (grade<=9) return "중"+(grade-6);
     return "고"+(grade-9);
   }
+
+  function openCardById(id) {
+    var card=COURSE.find(function(item){return item.id===id;});
+    if(!card)return false;
+    state.grade=card.grade;state.topic=card.topic;state.mode="learn";state.session=null;state.revealed=false;
+    var deck=currentDeck();
+    state.index=Math.max(0,deck.findIndex(function(item){return item.id===id;}));
+    renderAll();
+    $("lessonContent").scrollIntoView({behavior:"smooth",block:"nearest"});
+    return true;
+  }
+
+  function startCardPractice(card) {
+    if(!card||card.answer===undefined||card.answer===null||card.quiz===false){
+      showToast("이 공식은 직접 입력형 연습을 준비 중이야.");
+      return;
+    }
+    state.grade=card.grade;state.topic=card.topic;state.mode="quiz";
+    state.session={
+      type:"practice",questions:[{kind:"formula",card:card,prompt:card.question,answer:card.answer,options:null}],
+      index:0,score:0,correct:0,streak:0,bestStreak:0,answered:false,saved:false,
+      input:"",inputError:"",wrongAttempts:0,lastGain:0,returnCardId:card.id
+    };
+    renderAll();
+    $("lessonContent").scrollIntoView({behavior:"smooth",block:"nearest"});
+  }
+
+  function quickStartRecommended() {
+    if(!TOOLS||typeof TOOLS.recommendCard!=="function"){
+      showToast("추천 학습 도구를 불러오지 못했어. 페이지를 새로고침해 줘.");
+      return;
+    }
+    var suggestion=TOOLS.recommendCard(COURSE,progress.cards,state.grade);
+    if(!suggestion.card){
+      state.searchFilter="mastered";state.searchLimit=8;
+      renderSearchResults("",true);
+      $("formulaSearchResults").scrollIntoView({behavior:"smooth",block:"nearest"});
+      showToast("모든 공식을 마스터했어! 원하는 공식을 골라 다시 연습해 봐.");
+      return;
+    }
+    openCardById(suggestion.card.id);
+    showToast("오늘의 추천: "+suggestion.card.title);
+  }
+
   function deckForGrade(grade) { return COURSE.filter(function(card){return card.grade===grade;}); }
 
   function currentDeck() {
@@ -130,6 +175,33 @@
     }).join("");
   }
 
+  function renderSearchResults(query,forceShow) {
+    var node=$("formulaSearchResults");
+    if(!node||!TOOLS||typeof TOOLS.searchCards!=="function")return;
+    var text=String(query||"").trim();
+    if(!forceShow&&!text&&state.searchFilter==="all"){
+      node.hidden=true;node.innerHTML="";return;
+    }
+    var result=TOOLS.searchCards(COURSE,progress.cards,text,state.searchFilter,state.grade,state.searchLimit);
+    var cards=result.results;
+    var rows=cards.map(function(card){
+      var record=cardProgress(card);
+      var status=TOOLS.statusLabel(record);
+      var statusClass=record.review?"review":record.mastered?"mastered":record.seen?"learning":"unseen";
+      return '<article class="formula-result-card">'+
+        '<div class="formula-result-meta"><span>'+esc(gradeShort(card.grade))+' · '+esc(card.topic)+'</span><span class="formula-status '+statusClass+'">'+esc(status)+'</span></div>'+
+        '<h4>'+esc(card.title)+'</h4><p>'+esc(card.question)+'</p>'+
+        '<div class="formula-result-actions"><button type="button" data-action="open-search-card" data-card-id="'+esc(card.id)+'">개념 열기</button><button type="button" class="practice" data-action="practice-search-card" data-card-id="'+esc(card.id)+'">바로 풀기</button></div>'+
+      '</article>';
+    }).join("");
+    var more=result.total>cards.length
+      ? '<button type="button" class="search-show-more" data-action="show-all-search-results">검색 결과 '+result.total+'개 모두 보기</button>'
+      : "";
+    node.hidden=false;
+    node.innerHTML='<div class="search-results-head"><strong>검색 결과 '+result.total+'개</strong><span>'+(text?'전체 12개 학년에서 검색했어.':'선택한 학습 상태의 공식이야.')+'</span></div>'+
+      (rows?'<div class="formula-result-grid">'+rows+'</div>':'<div class="search-no-results">조건에 맞는 공식이 없어. 검색어를 바꾸거나 다른 필터를 선택해 봐.</div>')+more;
+  }
+
   function renderModeTabs() {
     document.querySelectorAll("[data-mode]").forEach(function(button){
       var active=button.dataset.mode===state.mode;
@@ -164,7 +236,7 @@
       ? '<div class="explain-grid"><section class="explain-box"><h4>◈ 원리 이해하기</h4><p>'+esc(card.explain)+'</p></section><section class="explain-box example"><h4>✦ 예제로 확인하기</h4><p>'+esc(card.example)+'</p></section></div><div class="memory-tip"><b>✧</b><span><strong>돌이의 암기 팁</strong><br>'+esc(card.memory)+'</span></div>'
       : '<div class="explain-box"><h4>먼저 생각해 보기</h4><p>공식을 바로 보지 말고, 문제를 읽은 다음 기억나는 식을 마음속으로 만들어 봐. 준비되면 공식 공개하기를 눌러 확인해!</p></div>';
     $("lessonContent").innerHTML=
-      '<div class="lesson-meta"><span>'+esc(gradeShort(card.grade))+' · '+esc(card.topic)+'</span><span class="lesson-pill">공식 '+(state.index+1)+' / '+deck.length+'</span></div>'+
+      '<div class="lesson-meta"><span>'+esc(gradeShort(card.grade))+' · '+esc(card.topic)+'</span><span class="lesson-pill">공식 '+(state.index+1)+' / '+deck.length+' · '+(cardState.review?'복습 필요':cardState.mastered?'마스터':cardState.seen?'학습 중':'새 공식')+'</span></div>'+
       '<h3 class="lesson-title">'+esc(card.title)+'</h3><p class="lesson-question">'+esc(card.question)+'</p>'+
       '<div class="formula-box">'+formula+'</div>'+detail+
       '<div class="lesson-actions"><div class="action-group">'+
@@ -172,7 +244,7 @@
         '<button class="action-button" type="button" data-action="next">다음 공식 →</button>'+
       '</div><div class="action-group">'+
         '<button class="action-button'+(cardState.review?" gold":"")+'" type="button" data-action="review">'+(cardState.review?"★ 복습 목록에 있음":"☆ 복습 표시")+'</button>'+
-        '<button class="action-button good" type="button" data-action="master"'+(cardState.mastered?" disabled":"")+'>'+(cardState.mastered?"✓ 마스터 완료":"✓ 외웠어! +50 XP")+'</button>'+
+        '<button class="action-button good" type="button" data-action="practice-current">'+(cardState.mastered?"✓ 마스터 공식 다시 풀기":"✎ 직접 풀고 마스터하기")+'</button>'+
       '</div></div>';
   }
 
@@ -244,8 +316,8 @@
     if(!session){startSession(state.mode);return;}
     if(session.index>=session.questions.length){finishSession();renderFinish();return;}
     var q=session.questions[session.index];
-    var title=session.type==="multiply"?"구구단 배틀":session.type==="boss"?"수학 보스 챌린지":"공식 암기 퀘스트";
-    var kicker=session.type==="multiply"?"TIMES TABLE ARENA":session.type==="boss"?"FINAL FORMULA BOSS":"MATH FORMULA INPUT";
+    var title=session.type==="multiply"?"구구단 배틀":session.type==="boss"?"수학 보스 챌린지":session.type==="practice"?"공식 마스터 연습":"공식 암기 퀘스트";
+    var kicker=session.type==="multiply"?"TIMES TABLE ARENA":session.type==="boss"?"FINAL FORMULA BOSS":session.type==="practice"?"ONE FORMULA PRACTICE":"MATH FORMULA INPUT";
     var correctAnswer=q.card?q.card.formula:q.answer;
     var progressPercent=Math.round((session.index+(session.answered?1:0))/session.questions.length*100);
     var subLabel=q.card?esc(q.card.topic)+" · "+esc(q.card.title):"2단부터 9단까지";
@@ -339,7 +411,7 @@
   function renderFinish() {
     var session=state.session;
     var percent=Math.round(session.correct/session.questions.length*100);
-    var title=session.type==="multiply"?"구구단 배틀 완료!":session.type==="boss"?"보스 챌린지 클리어!":"암기 퀘스트 완료!";
+    var title=session.type==="multiply"?"구구단 배틀 완료!":session.type==="boss"?"보스 챌린지 클리어!":session.type==="practice"?"공식 연습 완료!":"암기 퀘스트 완료!";
     var message=percent>=90?"정말 정확해! 공식들이 머릿속에 단단히 자리 잡고 있어!":percent>=70?"멋진 결과야! 헷갈린 공식만 다시 확인하면 더 강해질 거야.":"좋은 도전이었어. 틀린 문제를 공식 도감에서 다시 확인하고 도전해 보자!";
     $("lessonContent").innerHTML=
       '<div class="finish-card"><div class="finish-icon">✦</div><h3>'+title+'</h3><p>'+message+'</p>'+
@@ -391,11 +463,19 @@
     }
 
     var recent=progress.activity.slice(0,4);
+    var recommendation=TOOLS&&TOOLS.recommendCard?TOOLS.recommendCard(COURSE,progress.cards,state.grade):null;
+    if($("recommendedTitle")&&$("recommendedReason")){
+      $("recommendedTitle").textContent=recommendation&&recommendation.card
+        ?gradeShort(recommendation.card.grade)+" · "+recommendation.card.topic+" · "+recommendation.card.title
+        :"모든 공식 마스터 완료!";
+      $("recommendedReason").textContent=recommendation?recommendation.reason:"추천 학습을 불러오지 못했어.";
+    }
+
     $("activityList").innerHTML=recent.length?recent.map(function(item){
       var date="최근";
       try{date=new Intl.DateTimeFormat("ko-KR",{month:"numeric",day:"numeric"}).format(new Date(item.time));}catch(_){}
-      var label=item.mode==="multiply"?"구구단 배틀":item.mode==="boss"?"보스 챌린지":"암기 퀘스트";
-      var icon=item.mode==="multiply"?"×":item.mode==="boss"?"✦":"∑";
+      var label=item.mode==="multiply"?"구구단 배틀":item.mode==="boss"?"보스 챌린지":item.mode==="practice"?"공식 연습":"암기 퀘스트";
+      var icon=item.mode==="multiply"?"×":item.mode==="boss"?"✦":item.mode==="practice"?"✓":"∑";
       return '<div class="activity-item"><span class="activity-icon">'+icon+'</span><div class="activity-copy"><strong>'+label+' · '+esc(gradeShort(Number(item.grade)||1))+'</strong><small>'+date+' · '+item.correct+'/'+item.total+' 정답</small></div><span class="activity-score">+'+Number(item.score||0)+' XP</span></div>';
     }).join(""):'<div class="activity-empty">첫 퀘스트를 완료하면<br>여기에 기록이 쌓여!</div>';
 
@@ -441,16 +521,10 @@
       state.index=action==="previous"?Math.max(0,state.index-1):Math.min(deck.length-1,state.index+1);
       state.revealed=false;renderMain();renderStats();return;
     }
-    if(action==="master"){
-      var deckNow=currentDeck(),card=deckNow[state.index];
-      if(!card)return;
-      var info=cardProgress(card);
-      if(!info.mastered){
-        info.mastered=true;info.seen=true;
-        progress.stats.points=Number(progress.stats.points||0)+50;
-        saveProgress();showToast("공식 마스터! +50 수학 XP ✨");
-      }
-      renderAll();return;
+    if(action==="practice-current"){
+      var cardToPractice=currentDeck()[state.index];
+      if(cardToPractice)startCardPractice(cardToPractice);
+      return;
     }
     if(action==="review"){
       var current=currentDeck()[state.index];if(!current)return;
@@ -471,8 +545,16 @@
       else{renderMain();renderStats();}
       return;
     }
-    if(action==="restart"){startSession(state.mode);return;}
+    if(action==="restart"){
+      var previousSession=state.session;
+      if(previousSession&&previousSession.type==="practice"&&previousSession.questions[0]&&previousSession.questions[0].card){
+        startCardPractice(previousSession.questions[0].card);
+      }else startSession(state.mode);
+      return;
+    }
     if(action==="back-learn"){
+      var returnId=state.session&&state.session.returnCardId;
+      if(returnId){openCardById(returnId);return;}
       state.mode="learn";state.session=null;state.index=0;state.revealed=false;renderAll();return;
     }
   }
@@ -510,7 +592,8 @@
       var record=cardProgress(question.card);
       record.seen=true;record.attempts=Number(record.attempts||0)+1;
       if(session.wasCorrect)record.correct=Number(record.correct||0)+1;
-      if(session.wasCorrect&&record.attempts>0&&record.correct/record.attempts>=.8)record.mastered=true;
+      if(session.wasCorrect&&session.type==="practice")record.mastered=true;
+      else if(session.wasCorrect&&record.attempts>0&&record.correct/record.attempts>=.8)record.mastered=true;
     }
     saveProgress();renderMain();renderStats();
   }
@@ -522,6 +605,11 @@
     }
     $("gradeGroups").addEventListener("click",function(event){
       var button=event.target.closest("[data-grade]");if(button)chooseGrade(Number(button.dataset.grade));
+    });
+    var searchInput=$("formulaSearchInput");
+    if(searchInput)searchInput.addEventListener("input",function(){
+      state.searchLimit=8;
+      renderSearchResults(searchInput.value,false);
     });
     $("topicBar").addEventListener("click",function(event){
       var button=event.target.closest("[data-topic]");if(!button)return;
@@ -535,10 +623,32 @@
     });
     document.body.addEventListener("click",function(event){
       var button=event.target.closest("[data-action]");if(!button)return;
-      if(button.dataset.action==="jump-grades")$("gradeGroups").scrollIntoView({behavior:"smooth",block:"center"});
-      else if(button.dataset.action==="quick-start"){
-        if(state.grade)setMode("quiz");
-        else{showToast("학년을 선택하면 맞춤 학습을 추천해 줄게!");$("gradeGroups").scrollIntoView({behavior:"smooth",block:"center"});}
+      var action=button.dataset.action;
+      if(action==="jump-grades")$("gradeGroups").scrollIntoView({behavior:"smooth",block:"center"});
+      else if(action==="quick-start")quickStartRecommended();
+      else if(action==="open-search-card")openCardById(button.dataset.cardId);
+      else if(action==="practice-search-card"){
+        var card=COURSE.find(function(item){return item.id===button.dataset.cardId;});
+        if(card)startCardPractice(card);
+      }else if(action==="search-filter"){
+        state.searchFilter=button.dataset.filter||"all";state.searchLimit=8;
+        document.querySelectorAll("[data-search-filter]").forEach(function(item){
+          var active=item.dataset.searchFilter===state.searchFilter;
+          item.classList.toggle("active",active);item.setAttribute("aria-pressed",active?"true":"false");
+        });
+        renderSearchResults($("formulaSearchInput")?$("formulaSearchInput").value:"",true);
+      }else if(action==="show-all-search-results"){
+        state.searchLimit=9999;
+        renderSearchResults($("formulaSearchInput")?$("formulaSearchInput").value:"",true);
+      }else if(action==="clear-search"){
+        var searchInput=$("formulaSearchInput");
+        if(searchInput){searchInput.value="";searchInput.focus();}
+        state.searchFilter="all";state.searchLimit=8;
+        document.querySelectorAll("[data-search-filter]").forEach(function(item){
+          var active=item.dataset.searchFilter==="all";
+          item.classList.toggle("active",active);item.setAttribute("aria-pressed",active?"true":"false");
+        });
+        renderSearchResults("",false);
       }
     });
     window.addEventListener("dori:cloud-sync-ready",function(event){
@@ -549,6 +659,7 @@
         :"로그인 전에는 이 브라우저에 저장돼. 로그인하면 계정 클라우드 동기화가 이어져.";
     });
     renderAll();
+    renderSearchResults("",false);
     if(window.doriCloudSync&&window.doriCloudSync.userId)$("saveStatus").textContent="계정 클라우드 동기화가 연결되어 있어.";
   }
 
