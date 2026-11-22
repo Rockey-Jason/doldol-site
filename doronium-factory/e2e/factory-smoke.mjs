@@ -763,6 +763,7 @@ try {
     const result = window.__doroniumFactoryTest.runSeconds(3600);
     return {
       ticks: result.ticks,
+      state: { runtime: result.state.runtime, inventory: result.state.inventory, meta: result.state.meta, tick: result.state.tick },
       seconds: result.state.seconds,
       produced: result.state.stats.produced.ironPlate || 0,
       producedStats: { ...(result.state.stats.produced || {}) },
