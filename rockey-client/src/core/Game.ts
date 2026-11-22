@@ -999,8 +999,9 @@ export async function createGame(
     fxParticles.push({object,material,velocity:velocity.clone(),age:0,life,gravity:kind==='smoke'?-0.12:kind==='ember'?-1.8:-4.8,drag:kind==='smoke'?.18:kind==='ember'?.8:1.7,spin:new THREE.Vector3((Math.random()-.5)*5,(Math.random()-.5)*5,(Math.random()-.5)*5),baseScale:object.scale.clone(),kind});
   }
   function spawnVolumetricSmoke(position:THREE.Vector3,velocity:THREE.Vector3,color:number,size:number,life:number,puffs=2){
-    const count=isMobile?Math.min(2,puffs):puffs;
-    while(smokeClouds.length+count>(isMobile?16:34)){
+    const count=Math.max(1,Math.ceil((isMobile?Math.min(2,puffs):puffs)*dynamicFxScale));
+    const smokeLimit=Math.max(6,Math.floor((isMobile?16:34)*dynamicFxScale));
+    while(smokeClouds.length+count>smokeLimit){
       const oldest=smokeClouds.shift();
       if(oldest){scene.remove(oldest.mesh);oldest.material.dispose();}
     }
@@ -1021,7 +1022,7 @@ export async function createGame(
     }
   }
   function spawnDebrisFx(position:THREE.Vector3,count:number,impulse:number){
-    const limit=isMobile?20:46;
+    const limit=Math.max(10,Math.floor((isMobile?20:46)*dynamicFxScale));
     while(debrisVisuals.length+count>limit){
       const oldest=debrisVisuals.shift();
       if(oldest){scene.remove(oldest.mesh);(oldest.mesh.material as THREE.Material).dispose();}
@@ -1043,7 +1044,7 @@ export async function createGame(
   function spawnPhysicalDebris(position:THREE.Vector3,count:number,impulse:number,seed='debris'){
     let randomState=Array.from(seed).reduce((value,char)=>(Math.imul(value^char.charCodeAt(0),16777619)>>>0),2166136261);
     const random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296;};
-    const limit=isMobile?30:deviceTier==='low'?30:deviceTier==='balanced'?64:120;
+    const limit=Math.max(16,Math.floor((isMobile?30:deviceTier==='low'?30:deviceTier==='balanced'?64:120)*dynamicFxScale));
     while(physicalDebris.length+count>limit){
       const oldest=physicalDebris.shift();
       if(oldest){scene.remove(oldest.mesh);world.removeRigidBody(oldest.body);(oldest.mesh.material as THREE.Material).dispose();if(oldest.mesh.geometry!==physicalDebrisGeometry)oldest.mesh.geometry.dispose();}
@@ -1089,7 +1090,7 @@ export async function createGame(
     return THREE.MathUtils.clamp(density,0,1);
   }
   function spawnImpactFx(position:THREE.Vector3,direction:THREE.Vector3,color:number){
-    const count=isMobile?3:6;
+    const count=Math.max(1,Math.floor((isMobile?3:6)*dynamicFxScale));
     for(let i=0;i<count;i++){
       const velocity=direction.clone().multiplyScalar(.7+Math.random()*1.4).add(new THREE.Vector3((Math.random()-.5)*2,Math.random()*1.8,(Math.random()-.5)*2));
       emitFxParticle(position,velocity,'spark',.22+Math.random()*.2,.035+Math.random()*.025,color);
@@ -1107,7 +1108,7 @@ export async function createGame(
     muzzleFx.position.copy(muzzleFlash.position);
     muzzleFx.scale.setScalar(code==='LONGSHOT'||code==='THUNDER'?1.28:1);
     muzzleFx.visible=true;muzzleFlash.visible=true;
-    const sparks=isMobile?2:4;
+    const sparks=Math.max(1,Math.floor((isMobile?2:4)*dynamicFxScale));
     for(let i=0;i<sparks;i++){
       const velocity=direction.clone().multiplyScalar(2+Math.random()*2).add(new THREE.Vector3((Math.random()-.5)*2,(Math.random()-.5)*2,(Math.random()-.5)*1.5));
       emitFxParticle(origin,velocity,'spark',.12+Math.random()*.12,.028+Math.random()*.025,color);
@@ -1132,8 +1133,8 @@ export async function createGame(
   function spawnGlassShards(position:THREE.Vector3,count:number,impulse:number,seed='glass'){
     let randomState=Array.from(seed).reduce((value,char)=>(Math.imul(value^char.charCodeAt(0),16777619)>>>0),2166136261);
     const random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296;};
-    const total=isMobile?Math.min(5,count):Math.min(deviceTier==='low'?6:12,count);
-    const debrisLimit=isMobile?30:deviceTier==='low'?30:deviceTier==='balanced'?64:120;
+    const total=Math.max(1,Math.floor((isMobile?Math.min(5,count):Math.min(deviceTier==='low'?6:12,count))*dynamicFxScale));
+    const debrisLimit=Math.max(16,Math.floor((isMobile?30:deviceTier==='low'?30:deviceTier==='balanced'?64:120)*dynamicFxScale));
     while(physicalDebris.length+total>debrisLimit){
       const oldest=physicalDebris.shift();
       if(oldest){scene.remove(oldest.mesh);world.removeRigidBody(oldest.body);(oldest.mesh.material as THREE.Material).dispose();if(oldest.mesh.geometry!==physicalDebrisGeometry)oldest.mesh.geometry.dispose();}
@@ -1293,7 +1294,7 @@ export async function createGame(
     const position=new THREE.Vector3(x,y,z);
     if(effect==='GRENADE'){spawnExplosionFx(position,radius,durationMs,eventId);return;}
     if(effect==='SMOKE'){
-      const count=isMobile?7:14,life=Math.max(3.6,Math.min(8.2,durationMs/1000*.95));
+      const count=Math.max(2,Math.floor((isMobile?7:14)*dynamicFxScale)),life=Math.max(3.6,Math.min(8.2,durationMs/1000*.95));
       for(let i=0;i<count;i++){
         const angle=Math.random()*Math.PI*2,spread=Math.random()*radius*.58;
         const velocity=new THREE.Vector3(Math.cos(angle)*(.1+Math.random()*.24),.24+Math.random()*.42,Math.sin(angle)*(.1+Math.random()*.24));
@@ -2004,7 +2005,7 @@ export async function createGame(
       const oldX=mesh.position.x,oldY=mesh.position.y,oldZ=mesh.position.z;
       const samples=data.samples as Array<{t:number;x:number;y:number;z:number;yaw:number}>|undefined;
       if(samples&&samples.length){
-        const renderAt=performance.now()-105;
+        const renderAt=now-105;
         while(samples.length>2&&samples[1].t<renderAt)samples.shift();
         const a=samples[0],b=samples[1]||a;
         const span=Math.max(1,b.t-a.t);
@@ -2019,7 +2020,7 @@ export async function createGame(
             const vx=THREE.MathUtils.clamp((b.x-a.x)/seconds,-9,9);
             const vy=THREE.MathUtils.clamp((b.y-a.y)/seconds,-8,8);
             const vz=THREE.MathUtils.clamp((b.z-a.z)/seconds,-9,9);
-            mesh.position.add(new THREE.Vector3(vx,vy,vz).multiplyScalar(extrapolateMs/1000));
+            mesh.position.add(remoteVelocityScratch.set(vx,vy,vz).multiplyScalar(extrapolateMs/1000));
           }
         }
         const yawDelta=THREE.MathUtils.euclideanModulo(b.yaw-a.yaw+Math.PI,Math.PI*2)-Math.PI;
@@ -2032,10 +2033,17 @@ export async function createGame(
       const remoteMotion=Math.min(1,Math.hypot(mesh.position.x-oldX,mesh.position.z-oldZ)/Math.max(.001,dt)/4.2);
       const remoteVertical=(mesh.position.y-oldY)/Math.max(.001,dt);
       const animatePose=mesh.userData.animatePose;
-      if(typeof animatePose==='function')animatePose(remoteMotion,time,0,0,remoteVertical,data.dead===true,remoteMotion>.72,Math.abs(remoteVertical)<.65,data.aim===true?1:0);
+      if(typeof animatePose==='function'&&now-Number(data.lastPoseAt||0)>=remotePoseIntervalMs){
+        animatePose(remoteMotion,time,0,0,remoteVertical,data.dead===true,remoteMotion>.72,Math.abs(remoteVertical)<.65,data.aim===true?1:0);
+        data.lastPoseAt=now;
+      }
       const remoteFootIK=mesh.userData.updateFootIK;
-      if(typeof remoteFootIK==='function'&&now-Number(data.lastFootIKAt||0)>80){remoteFootIK(sampleGroundHeight,Math.abs(remoteVertical)<.65);data.lastFootIKAt=now;}
-      const smokeBlock=smokeDensityAlongRay(camera.position,mesh.position.clone().add(new THREE.Vector3(0,1.02,0)));
+      const nearCamera=mesh.position.distanceToSquared(camera.position)<38*38;
+      if(nearCamera&&typeof remoteFootIK==='function'&&now-Number(data.lastFootIKAt||0)>=remoteFootIkIntervalMs){
+        remoteFootIK(sampleGroundHeight,Math.abs(remoteVertical)<.65);data.lastFootIKAt=now;
+      }
+      remoteSmokeEndScratch.copy(mesh.position);remoteSmokeEndScratch.y+=1.02;
+      const smokeBlock=smokeDensityAlongRay(camera.position,remoteSmokeEndScratch);
       const deathExpired=data.dead===true&&now-Number(data.deadAt||now)>1350;
       mesh.visible=data.baseVisible===true&&!deathExpired&&smokeBlock<.72;
       if((!samples||samples.length<2)&&typeof data.targetYaw==='number'){
@@ -2148,7 +2156,10 @@ export async function createGame(
       avatar.position.set(p.x, p.y - .92, p.z);
       avatar.rotation.y = yaw;
       avatarRig.animate(movementAmount,time,reloadWave,fireWave,vertical,hp<=0,keys.has('ShiftLeft')||keys.has('ShiftRight')?1:0,controller.computedGrounded(),aimBlend);
-      avatarRig.updateFootIK(sampleGroundSurface,controller.computedGrounded());
+      if(now-lastLocalFootIKAt>=localFootIkIntervalMs){
+        avatarRig.updateFootIK(sampleGroundSurface,controller.computedGrounded());
+        lastLocalFootIKAt=now;
+      }
       const gaitBob=Math.sin(time*(keys.has('ShiftLeft')||keys.has('ShiftRight')?13.2:10.2))*movementAmount*(precisionAiming?.008:.022);
       const eye = p.clone().add(new THREE.Vector3(0, 0.58+gaitBob-landingKick, 0));
       if (cameraMode === 'first') {
@@ -2314,16 +2325,14 @@ export async function createGame(
       replayFrames=null;replayFocusId='';mode=killcamReturnMode;active=false;
       const complete=killcamComplete;killcamComplete=null;complete?.();
     },
-    setQuality(level: 'low'|'balanced'|'high') {
+    setQuality(level: 'auto'|'low'|'balanced'|'high') {
       qualityPreference=level;
-      const ratio=level==='low'?.82:level==='balanced'?1.12:1.55;
-      adaptivePixelRatio=Math.min(window.devicePixelRatio||1,maxPixelRatio,ratio);
-      renderer.setPixelRatio(adaptivePixelRatio);composer?.setPixelRatio(adaptivePixelRatio);resize();
-      renderer.shadowMap.enabled=level!=='low'&&deviceTier!=='low'&&!isMobile;
-      renderer.shadowMap.needsUpdate=true;
-      bloomEnabled=level!=='low'&&deviceTier!=='low'&&!!composer;
-      if(bloomPass)bloomPass.strength=isMobile?.07:level==='low'?.12:level==='balanced'?.28:.42;
-    },
+      adaptiveLevel=level==='auto'?(deviceTier==='low'?2:0):level==='low'?3:0;
+      adaptiveBottleneck='mixed';stressPerformanceWindows=0;stablePerformanceWindows=0;
+      lastAdaptiveChangeAt=performance.now();
+      applyAdaptiveProfile();
+      if(bloomPass)bloomPass.strength=isMobile?.07:level==='low'?.12:level==='balanced'?.28:level==='high'?.42:.34;
+    }
     setSensitivity(value: number) {
       sensitivity=THREE.MathUtils.clamp(value,0.4,2.2);
     },
@@ -2361,6 +2370,7 @@ export async function createGame(
       stopMobileFire();
       stopMouseFire();
       composer?.dispose();
+      if(pendingGpuQuery){gl.deleteQuery(pendingGpuQuery);pendingGpuQuery=null;}
       renderer.dispose();
       reflectionEnvironment?.dispose();
       performanceBadge.remove();
