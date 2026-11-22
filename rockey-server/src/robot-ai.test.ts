@@ -59,7 +59,7 @@ test('scout robots patrol and choose a clear movement step around cover',()=>{
   updateRobotAI([scout],[],[],.05,1000);
   assert.notDeepEqual({x:scout.x,z:scout.z},before,'scout should patrol even without a visible target');
 
-  const wall=[{x:0,z:.18,hx:2,hz:.08,top:4.2}];
+  const wall=[{x:0,z:.8,hx:2,hz:.08,top:4.2}];
   const blockedScout=robot('SCOUT',0,0,Math.PI);
   blockedScout.patrolPoints=[{x:0,z:3}];
   updateRobotAI([blockedScout],[],wall,.05,1000);
