@@ -154,7 +154,8 @@ const sharedUiPages = [
   "dori-issues.html",
   "dori-feedback.html",
   "dori-ai.html",
-  "dori-world/index.html"
+  "dori-world/index.html",
+  "rockey-study-formula.html"
 ];
 for (const page of sharedUiPages) {
   const absolute = path.resolve(ROOT, page);
