@@ -250,6 +250,17 @@ if (fs.existsSync(formulaInputTest)) {
   }
 }
 
+const learningToolsTest = path.resolve(ROOT, "scripts/rockey-study-learning-tools.test.mjs");
+if (fs.existsSync(learningToolsTest)) {
+  const result = spawnSync(process.execPath, ["--test", learningToolsTest], { encoding: "utf8", cwd: ROOT });
+  stats.tests += 1;
+  if (result.status !== 0) {
+    errors.push("Rockey Study learning-tools tests failed\n" + (result.stdout || "") + (result.stderr || ""));
+  } else {
+    console.log("Rockey Study search and recommendation tests passed.");
+  }
+}
+
 console.log("DORI SITE QUALITY CHECK");
 console.log(JSON.stringify(stats, null, 2));
 for (const warning of warnings) console.warn("WARN " + warning);
