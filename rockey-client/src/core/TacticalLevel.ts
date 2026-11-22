@@ -113,7 +113,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     // the doorway centered on the room while the stairs sit against one side.
     const innerSide=front>0?1:-1;
     const stairX=innerSide*3.05;
-    const entranceHalfWidth=1.45;
+    const entranceHalfWidth=1.3;
     const entranceLeft=stairX-entranceHalfWidth;
     const entranceRight=stairX+entranceHalfWidth;
     const wallMin=-w/2,wallMax=w/2;
@@ -162,7 +162,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
 
     // The stair-aligned doorway replaces the old continuous wall across the gallery.
     const galleryDoorCenter=stairX;
-    const wallMin=-w/2,wallMax=w/2,doorHalfWidth=1.55;
+    const wallMin=-w/2,wallMax=w/2,doorHalfWidth=1.3;
     const galleryDoorLeft=galleryDoorCenter-doorHalfWidth;
     const galleryDoorRight=galleryDoorCenter+doorHalfWidth;
     add(root,wall,(wallMin+galleryDoorLeft)/2,4.58,-1.75,galleryDoorLeft-wallMin,1.0,.28,true);
