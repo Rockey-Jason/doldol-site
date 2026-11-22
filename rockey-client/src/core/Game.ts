@@ -215,8 +215,10 @@ export async function createGame(
   addRockeyEnvironment(scene,map,isMobile,(x,y,z,hx,hy,hz)=>{
     world.createCollider(RAPIER.ColliderDesc.cuboid(hx,hy,hz).setTranslation(x,y,z));
   });
-  const tacticalLevel=addTacticalLevel(scene,map,isMobile,(x,y,z,hx,hy,hz)=>{
-    world.createCollider(RAPIER.ColliderDesc.cuboid(hx,hy,hz).setTranslation(x,y,z));
+  const tacticalLevel=addTacticalLevel(scene,map,isMobile,(x,y,z,hx,hy,hz,rotationX=0)=>{
+    const halfAngle=rotationX/2;
+    const rotation={x:Math.sin(halfAngle),y:0,z:0,w:Math.cos(halfAngle)};
+    world.createCollider(RAPIER.ColliderDesc.cuboid(hx,hy,hz).setTranslation(x,y,z).setRotation(rotation));
   },mesh=>raycastMeshes.push(mesh));
 
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(0, 0.92, 20));
