@@ -76,11 +76,12 @@ export async function createGame(
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   // OVERHAUL 04: benchmark-aware post-processing and quality scaling.
   renderer.toneMappingExposure = 1.08;
-  const composer=new EffectComposer(renderer);
-  composer.addPass(new RenderPass(scene,camera));
-  const bloomPass=new UnrealBloomPass(new THREE.Vector2(1,1),deviceTier==='low' ? .06 : isMobile ? .08 : .34,.42,.84);
-  composer.addPass(bloomPass);
-  let bloomEnabled=!isMobile&&deviceTier!=='low';
+  // Skip bloom render targets entirely on low-tier devices to save GPU memory and bandwidth.
+  const composer:EffectComposer|null=deviceTier!=='low'?new EffectComposer(renderer):null;
+  composer?.addPass(new RenderPass(scene,camera));
+  const bloomPass:UnrealBloomPass|null=composer?new UnrealBloomPass(new THREE.Vector2(1,1),isMobile?.08:.34,.42,.84):null;
+  if(composer&&bloomPass)composer.addPass(bloomPass);
+  let bloomEnabled=!!composer;
   let qualityPreference:'low'|'balanced'|'high'=deviceTier==='low'?'low':deviceTier==='balanced'?'balanced':'high';
   let stablePerformanceWindows=0;
   // Pre-filtered environment probe adds stable reflections to metal, glass and armour.
@@ -577,7 +578,7 @@ export async function createGame(
   type PhysicalDebris={mesh:THREE.Mesh;body:any;age:number;life:number};
   const physicalDebris:PhysicalDebris[]=[];
   const physicalDebrisGeometry=new THREE.BoxGeometry(1,1,1);
-  const fxParticleLimit=isMobile?76:150;
+  const fxParticleLimit=isMobile?76:deviceTier==='low'?100:deviceTier==='balanced'?125:150;
   const fxParticleGeometry=new THREE.IcosahedronGeometry(.055,0);
   const shellGeometry=new THREE.CylinderGeometry(.022,.022,.115,8);
   const smokeVolumeGeometry=new THREE.SphereGeometry(1,16,12);
@@ -788,6 +789,8 @@ export async function createGame(
   window.addEventListener('rockey:network',onNetworkRtt);
   const maxPixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.1:deviceTier==='low'?1.0:deviceTier==='balanced'?1.4:1.8);
   let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.0:deviceTier==='low'?.92:deviceTier==='balanced'?1.25:1.8);
+  renderer.setPixelRatio(adaptivePixelRatio);
+  composer?.setPixelRatio(adaptivePixelRatio);
   const minPixelRatio=isMobile?.68:deviceTier==='low'?.52:deviceTier==='balanced'?.68:.86;
   const appliedDestructionIds=new Set<string>();
   const remoteDebris=new Map<string,THREE.Mesh>();
@@ -984,7 +987,7 @@ export async function createGame(
   function spawnPhysicalDebris(position:THREE.Vector3,count:number,impulse:number,seed='debris'){
     let randomState=Array.from(seed).reduce((value,char)=>(Math.imul(value^char.charCodeAt(0),16777619)>>>0),2166136261);
     const random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296;};
-    const limit=isMobile?54:120;
+    const limit=isMobile?30:deviceTier==='low'?30:deviceTier==='balanced'?64:120;
     while(physicalDebris.length+count>limit){
       const oldest=physicalDebris.shift();
       if(oldest){scene.remove(oldest.mesh);world.removeRigidBody(oldest.body);(oldest.mesh.material as THREE.Material).dispose();if(oldest.mesh.geometry!==physicalDebrisGeometry)oldest.mesh.geometry.dispose();}
@@ -1012,12 +1015,18 @@ export async function createGame(
     }
   }
   function smokeDensityAlongRay(start:THREE.Vector3,end:THREE.Vector3){
-    const segment=end.clone().sub(start),lengthSq=Math.max(.0001,segment.lengthSq());let density=0;
+    // Scalar math avoids allocating several temporary vectors for every remote player.
+    const dx=end.x-start.x,dy=end.y-start.y,dz=end.z-start.z;
+    const lengthSq=Math.max(.0001,dx*dx+dy*dy+dz*dz);
+    let density=0;
     for(const cloud of smokeClouds){
-      const t=THREE.MathUtils.clamp(cloud.mesh.position.clone().sub(start).dot(segment)/lengthSq,0,1);
-      const closest=start.clone().addScaledVector(segment,t);
-      const radius=Math.max(cloud.mesh.scale.x,cloud.mesh.scale.z)*.72;
-      const falloff=1-cloud.mesh.position.distanceTo(closest)/Math.max(.1,radius);
+      const cx=cloud.mesh.position.x-start.x,cy=cloud.mesh.position.y-start.y,cz=cloud.mesh.position.z-start.z;
+      const t=THREE.MathUtils.clamp((cx*dx+cy*dy+cz*dz)/lengthSq,0,1);
+      const ox=start.x+dx*t-cloud.mesh.position.x;
+      const oy=start.y+dy*t-cloud.mesh.position.y;
+      const oz=start.z+dz*t-cloud.mesh.position.z;
+      const radius=Math.max(.1,Math.max(cloud.mesh.scale.x,cloud.mesh.scale.z)*.72);
+      const falloff=1-Math.sqrt(ox*ox+oy*oy+oz*oz)/radius;
       const remaining=1-THREE.MathUtils.clamp(cloud.age/cloud.life,0,1);
       if(falloff>0)density+=falloff*remaining*.48;
     }
@@ -1067,7 +1076,12 @@ export async function createGame(
   function spawnGlassShards(position:THREE.Vector3,count:number,impulse:number,seed='glass'){
     let randomState=Array.from(seed).reduce((value,char)=>(Math.imul(value^char.charCodeAt(0),16777619)>>>0),2166136261);
     const random=()=>{randomState=(Math.imul(randomState,1664525)+1013904223)>>>0;return randomState/4294967296;};
-    const total=isMobile?Math.min(5,count):Math.min(12,count);
+    const total=isMobile?Math.min(5,count):Math.min(deviceTier==='low'?6:12,count);
+    const debrisLimit=isMobile?30:deviceTier==='low'?30:deviceTier==='balanced'?64:120;
+    while(physicalDebris.length+total>debrisLimit){
+      const oldest=physicalDebris.shift();
+      if(oldest){scene.remove(oldest.mesh);world.removeRigidBody(oldest.body);(oldest.mesh.material as THREE.Material).dispose();if(oldest.mesh.geometry!==physicalDebrisGeometry)oldest.mesh.geometry.dispose();}
+    }
     for(let i=0;i<total;i++){
       const size=.09+random()*.19;
       const material=new THREE.MeshPhysicalMaterial({color:0xb9e7f6,roughness:.08,metalness:.04,transparent:true,opacity:.72,transmission:.28,thickness:.08});
@@ -1376,11 +1390,12 @@ export async function createGame(
     pitch = THREE.MathUtils.clamp(pitch - dy * 0.002 * sensitivity, -1.3, 1.3);
   }
   function pointerMove(event: MouseEvent) {
+    if(mouseFireHeld&&(event.buttons&1)===0)stopMouseFire();
     if (document.pointerLockElement === canvas) look(event.movementX, event.movementY);
   }
   function pointerDown(event: PointerEvent) {
     if (event.pointerType === 'mouse' && event.button === 2) { event.preventDefault(); setPrecisionAiming(true); }
-    if (event.pointerType === 'mouse' && event.button === 0) { event.preventDefault(); startMouseFire(); }
+    if (event.pointerType === 'mouse' && event.button === 0) startMouseFire();
     if (event.pointerType === 'touch') {
       lookPointerId = event.pointerId;
       canvas.setPointerCapture(event.pointerId);
@@ -1412,7 +1427,7 @@ export async function createGame(
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h, false);
-    composer.setSize(w,h);
+    composer?.setSize(w,h);
   }
   function clickCanvas() {
     if (window.matchMedia('(pointer:fine)').matches && !document.pointerLockElement) {
@@ -1632,14 +1647,14 @@ export async function createGame(
       if(stressed){
         stablePerformanceWindows=0;
         bloomEnabled=false;
-        bloomPass.strength=Math.max(isMobile ? .035 : .08,bloomPass.strength-.035);
+        if(bloomPass)bloomPass.strength=Math.max(isMobile ? .035 : .08,bloomPass.strength-.035);
         if(measuredFps<target-6||measuredFrame>23)renderer.shadowMap.enabled=false;
       }else if(measuredFps>target+5&&!memoryPressure){
         stablePerformanceWindows++;
-        bloomPass.strength=Math.min(isMobile ? .10 : .38,bloomPass.strength+.015);
-        if(stablePerformanceWindows>=2&&qualityPreference!=='low'&&deviceTier!=='low'&&!isMobile){
-          bloomEnabled=true;
-          renderer.shadowMap.enabled=true;
+        if(bloomPass)bloomPass.strength=Math.min(isMobile ? .10 : .38,bloomPass.strength+.015);
+        if(stablePerformanceWindows>=2&&qualityPreference!=='low'&&deviceTier!=='low'){
+          bloomEnabled=!!composer;
+          if(!isMobile)renderer.shadowMap.enabled=true;
         }
       }else{
         stablePerformanceWindows=0;
@@ -2082,7 +2097,7 @@ export async function createGame(
         lastInput = now;
       }
     }
-    if(bloomEnabled)composer.render(dt);else renderer.render(scene,camera);
+    if(bloomEnabled&&composer)composer.render(dt);else renderer.render(scene,camera);
     raf = requestAnimationFrame(frame);
   }
   raf = requestAnimationFrame(frame);
@@ -2210,11 +2225,11 @@ export async function createGame(
       qualityPreference=level;
       const ratio=level==='low'?.82:level==='balanced'?1.12:1.55;
       adaptivePixelRatio=Math.min(window.devicePixelRatio||1,maxPixelRatio,ratio);
-      renderer.setPixelRatio(adaptivePixelRatio);composer.setPixelRatio(adaptivePixelRatio);resize();
+      renderer.setPixelRatio(adaptivePixelRatio);composer?.setPixelRatio(adaptivePixelRatio);resize();
       renderer.shadowMap.enabled=level!=='low'&&deviceTier!=='low'&&!isMobile;
       renderer.shadowMap.needsUpdate=true;
-      bloomEnabled=level!=='low'&&deviceTier!=='low'&&!isMobile;
-      bloomPass.strength=isMobile?.07:level==='low'?.12:level==='balanced'?.28:.42;
+      bloomEnabled=level!=='low'&&deviceTier!=='low'&&!!composer;
+      if(bloomPass)bloomPass.strength=isMobile?.07:level==='low'?.12:level==='balanced'?.28:.42;
     },
     setSensitivity(value: number) {
       sensitivity=THREE.MathUtils.clamp(value,0.4,2.2);
@@ -2252,7 +2267,7 @@ export async function createGame(
       world.free();
       stopMobileFire();
       stopMouseFire();
-      composer.dispose();
+      composer?.dispose();
       renderer.dispose();
       reflectionEnvironment?.dispose();
       performanceBadge.remove();
