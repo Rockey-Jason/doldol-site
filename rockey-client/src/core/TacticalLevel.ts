@@ -273,7 +273,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
   const bridge=new THREE.Group();bridge.position.set(0,0,-1.5);scene.add(bridge);
   add(bridge,floor,0,4.05,0,25.6,.28,2.5,true);
   // Extra headroom prevents the standing capsule and controller skin from snagging the roof.
-  add(bridge,wall,0,6.35,0,25.6,.2,2.5,true);
+  add(bridge,wall,0,7.05,0,25.6,.2,2.5,true);
   for(const side of [-1,1]){
     add(bridge,trim,0,4.92,side*1.24,25.6,1.48,.12,true);
     for(let x=-11.75;x<=11.76;x+=2.15){
@@ -291,7 +291,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     for(const x of [-8,0,8])add(bridge,dark,x,2.0,side*.98,.16,4.0,.16,true);
   }
   for(let x=-10;x<=10;x+=4){
-    const fixture=new THREE.Group();fixture.position.set(x,5.98,0);bridge.add(fixture);
+    const fixture=new THREE.Group();fixture.position.set(x,6.68,0);bridge.add(fixture);
     add(fixture,dark,0,0,0,.68,.13,.36);
     add(fixture,glow,0,-.09,0,.54,.035,.25);
     const light=new THREE.PointLight(map.light,isMobile?2.5:5,6,2);light.position.set(0,-.18,0);fixture.add(light);
