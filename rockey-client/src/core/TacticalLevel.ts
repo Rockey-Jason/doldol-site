@@ -215,7 +215,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
         add(root,wall,side*4.12,-1.45,-2.85,.22,2.65,3.1,true);
         add(root,wall,side*4.12,-1.45,2.85,.22,2.65,3.1,true);
       }
-      add(root,wall,side*4.12,-.18,0,.22,.35,1.7,true);
+      // No low sill collider here: the side portal must stay clear at player capsule height.
     }
     add(root,wall,0,-1.45,-4.38,8.2,2.65,.22,true);
     add(root,wall,0,-1.45,4.38,8.2,2.65,.22,true);
