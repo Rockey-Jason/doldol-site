@@ -29,7 +29,7 @@ export function tacticalFloorHeightAt(x:number,z:number,currentY:number):number 
 
     // Main second-floor stair flight ends directly at the gallery doorway.
     if(currentY>.78&&currentY<5.2&&localX>=2.45&&localX<=3.65&&localZ>=-1.9&&localZ<=2.4){
-      return Math.max(0,Math.min(4.19,((2.35-localZ)/4.2)*4.19);
+      return Math.max(0,Math.min(4.19,((2.35-localZ)/4.2)*4.19));
     }
 
     // Basement stairwell descends into the service room.
