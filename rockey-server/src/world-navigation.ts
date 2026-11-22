@@ -74,3 +74,7 @@ export function isBlockedByCover(
     return true;
   });
 }
+
+
+// Measured vertical clearance of the physical underpass tunnel.
+export const ROCKEY_UNDERPASS={floorTop:-2.64,ceilingBottom:-.28,clearHeight:2.36} as const;
