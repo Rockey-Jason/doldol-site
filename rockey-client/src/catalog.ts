@@ -99,5 +99,5 @@ export const ITEMS:Record<RockeyItemCode,RockeyItem>={
  PILLS:{code:'PILLS',name:'회복 알약',category:'SUPPORT',description:'체력을 35 회복합니다.',startingCount:2},
  ENERGY:{code:'ENERGY',name:'에너지 드링크',category:'SUPPORT',description:'8초 동안 이동 속도가 25% 증가합니다.',startingCount:1},
  ROCKEY_GATE:{code:'ROCKEY_GATE',name:'로키 게이트',category:'SUPPORT',description:'푸른 포탈과 주황 포탈을 연결해 즉시 이동합니다. 두 번 사용해 포탈을 배치하세요.',startingCount:2},
- ENERGY_CUBE:{code:'ENERGY_CUBE',name:'로키 에너지 큐브',category:'THROWABLE',description:'던진 위치에 5초 동안 아군 보호 및 이동 지원 필드를 생성합니다.',startingCount:2}
+ ENERGY_CUBE:{code:'ENERGY_CUBE',name:'로키 에너지 큐브',category:'THROWABLE',description:'던진 위치에 5초 공격 필드를 생성해 적의 이동을 늦추고 주기적으로 피해를 주며 시야를 교란합니다.',startingCount:2}
 };
