@@ -2,7 +2,7 @@ import './style.css';
 import { createClient } from '@supabase/supabase-js';
 import { SUPABASE_ANON_KEY, SUPABASE_URL, ROCKEY_WS_URL } from './config';
 import { GameSocket, type GameMessage } from './network/GameSocket';
-import type { GameInstance, RemotePlayer, RemoteRobot, ReplayFrame } from './core/Game';
+import type { GameInstance, RemotePlayer, ReplayFrame } from './core/Game';
 import { RockeyHub } from './RockeyHub';
 import { ITEMS, MAPS, WEAPON_LIST, type RockeyItemCode } from './catalog';
 
@@ -432,7 +432,6 @@ socket.onMessage((message:GameMessage)=>{
       break;
     case 'snapshot':{
       const players=(message.players||[]) as RemotePlayer[];
-      const robots=(message.robots||[]) as RemoteRobot[];
       const local=players.find(p=>p.id===userId);
       if(local)latestLocalSnapshot=local;
       if(isKillcam)break;
@@ -442,7 +441,6 @@ socket.onMessage((message:GameMessage)=>{
       }else{
         game?.setRemotePlayers(players,Number(message.serverTime)||Date.now());
       }
-      game?.setRobots(robots);
       break;
     }
     case 'world.state':
@@ -505,12 +503,6 @@ socket.onMessage((message:GameMessage)=>{
     }
     case 'weapon.shot':
       if(String(message.shooterId||'')!==userId)game?.showShot(Number(message.x),Number(message.y),Number(message.z),Number(message.yaw),Number(message.pitch),String(message.weaponCode||'R16'),message.distance!==null&&message.distance!==undefined&&Number.isFinite(Number(message.distance))?Number(message.distance):undefined);
-      break;
-    case 'robot.shot':
-      game?.showShot(Number(message.x),Number(message.y),Number(message.z),Number(message.yaw),Number(message.pitch),'ROBOT',Number(message.distance)||70);
-      break;
-    case 'robots.update':
-      game?.setRobots((message.robots||[]) as RemoteRobot[]);
       break;
     case 'elimination':
       toast('ELIMINATION');
