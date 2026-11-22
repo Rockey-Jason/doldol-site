@@ -79,3 +79,37 @@ export function isBlockedByCover(
 // Measured vertical clearance of the physical underpass tunnel.
 export const ROCKEY_UNDERPASS={floorTop:-2.64,ceilingBottom:-.28,clearHeight:2.36} as const;
 export const ROCKEY_SKYBRIDGE={floorTop:4.19,ceilingBottom:6.95,clearHeight:2.76} as const;
+
+
+/**
+ * Stops an upward-moving player capsule at the underside of an overhead
+ * surface. Also resolves a small pre-existing penetration by placing the
+ * capsule just below that surface, so it cannot drift along inside a ceiling.
+ */
+export function resolveCeilingCollision(
+  cover:readonly RockeyCover[],
+  x:number,
+  y:number,
+  z:number,
+  nextY:number,
+  radius:number=ROKEY_PLAYER_COLLISION.clearanceRadius,
+  halfHeight:number=ROKEY_PLAYER_COLLISION.halfHeight
+):{y:number;ceilingHit:boolean} {
+  if(nextY<y)return {y:nextY,ceilingHit:false};
+  let resolvedY=nextY;
+  for(const b of cover){
+    const bottom=b.bottom;
+    if(bottom===undefined)continue;
+    const overlapsHorizontal=
+      x+radius>b.x-b.hx&&x-radius<b.x+b.hx&&
+      z+radius>b.z-b.hz&&z-radius<b.z+b.hz;
+    if(!overlapsHorizontal)continue;
+    const capsuleTopLimit=bottom-halfHeight;
+    // The center remains below the slab's underside; if the capsule top
+    // reaches it, clamp immediately even if an earlier tick left it embedded.
+    if(y<bottom+halfHeight&&nextY>capsuleTopLimit){
+      resolvedY=Math.min(resolvedY,capsuleTopLimit);
+    }
+  }
+  return {y:resolvedY,ceilingHit:resolvedY<nextY-1e-5};
+}
