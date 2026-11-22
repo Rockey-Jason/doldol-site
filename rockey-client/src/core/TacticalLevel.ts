@@ -147,8 +147,8 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     const outerSide=-innerSide;
     add(root,wall,outerSide*4.18,4.58,1.45,.28,1.0,6.7,true);
     // Keep the bridge-side portal at least 1.8 m clear for the full player capsule.
-    add(root,wall,innerSide*4.55,4.58,-2.95,.28,1.0,.9,true);
-    add(root,wall,innerSide*4.55,4.58,1.4,.28,1.0,3.8,true);
+    add(root,wall,innerSide*4.55,4.58,-1.45,.28,1.0,.9,true);
+    add(root,wall,innerSide*4.55,4.58,2.9,.28,1.0,3.8,true);
 
     // The stair-aligned doorway replaces the old continuous wall across the gallery.
     const galleryDoorCenter=stairX;
