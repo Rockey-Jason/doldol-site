@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#07142b">
-<meta name="description" content="초등학교 1학년부터 고등학교 3학년까지 수학 핵심 공식과 구구단을 돌이 캐릭터와 함께 배우고, 암기 퀘스트와 보스 챌린지로 연습해 보세요.">
+<meta name="description" content="초등학교 1학년부터 고등학교 3학년까지 수학 핵심 공식 200개를 직접 수식으로 입력하고, 숫자·문자·제곱·루트 계산기로 연습하는 수학 공식 게임입니다.">
 <title>수학 공식 퀘스트 · ROCKEY STUDY</title>
 <link rel="icon" href="./rockeysite-icon-3.png" type="image/png">
 <link rel="stylesheet" href="./css/dori-foundation.css?v=20261116-premium-ui-2">
@@ -53,6 +53,29 @@ h1{margin:15px 0 13px;font-size:clamp(36px,5.7vw,66px);line-height:1.13;letter-s
 @media(max-width:720px){.hero{grid-template-columns:1fr;padding:24px;min-height:0}.hero-art{grid-row:1;min-height:175px}.dori-mascot{width:144px;max-height:170px}.hero-orbit{width:176px}.mascot-label{right:4%;bottom:-2px}.hero-copy{grid-row:2}.workspace{grid-template-columns:1fr}.side-stack{grid-template-columns:repeat(2,minmax(0,1fr))}.side-card.activity-card{grid-column:1/-1}.grade-groups{grid-template-columns:1fr}.grade-group{padding:14px}.grade-buttons{grid-template-columns:repeat(6,minmax(0,1fr))}.main-card-head{align-items:flex-start;flex-direction:column}.mode-tabs{max-width:none;justify-content:flex-start}.mode-tab{font-size:11px;padding:0 10px}}
 @media(max-width:480px){.site-shell{padding:14px}.topbar{align-items:flex-start;flex-direction:column}.nav{width:100%}.nav a{flex:1;justify-content:center;padding:0 9px}.brand-mark{width:39px;height:39px}.hero{border-radius:22px;padding:20px}.hero-art{min-height:154px}.dori-mascot{width:128px}.hero-orbit{width:155px}.hero-copy p{font-size:12px}.hero-mini-stats{gap:11px}.hero-mini-stats strong{font-size:16px}.section-head{align-items:flex-start;flex-direction:column}.grade-buttons{grid-template-columns:repeat(3,minmax(0,1fr))}.workspace{margin-top:19px}.main-card,.side-card{border-radius:18px}.main-card-head{padding:15px}.mode-tabs{display:grid;width:100%;grid-template-columns:repeat(2,minmax(0,1fr))}.mode-tab{width:100%}.topic-bar{padding:11px 13px}.lesson-content{padding:15px;min-height:0}.explain-grid{grid-template-columns:1fr}.option-grid{grid-template-columns:1fr}.option-button{min-height:55px}.session-head{align-items:flex-start;flex-direction:column}.session-progress{width:100%}.side-stack{grid-template-columns:1fr}.side-card.activity-card{grid-column:auto}.lesson-actions{align-items:stretch;flex-direction:column}.action-group{width:100%}.action-button{flex:1}.footer-note{font-size:9px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+.math-entry-panel{margin-top:15px;padding:15px;border:1px solid rgba(129,190,232,.28);border-radius:18px;background:linear-gradient(145deg,rgba(12,35,61,.92),rgba(5,18,35,.92));box-shadow:inset 0 1px rgba(255,255,255,.045),0 14px 32px rgba(0,0,0,.16)}
+.math-entry-label{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:9px;color:#b7cbe7;font-size:11px}
+.math-entry-label span:last-child{color:#83d7e4;font-size:9px;letter-spacing:.12em}
+.math-entry-input-wrap{display:flex;gap:8px;align-items:stretch}
+.math-entry-input{display:block;min-width:0;width:100%;height:54px;padding:0 15px;border:1px solid rgba(145,190,238,.36);border-radius:12px;outline:none;background:rgba(3,13,28,.82);color:#f7e5bf;font-family:HancomMalrangmalrang,system-ui,sans-serif;font-size:clamp(17px,2.6vw,22px);font-weight:400;letter-spacing:.02em;box-shadow:inset 0 2px 10px rgba(0,0,0,.25);transition:border-color .2s,box-shadow .2s}
+.math-entry-input:focus{border-color:#72dce7;box-shadow:0 0 0 3px rgba(110,228,239,.1),inset 0 2px 10px rgba(0,0,0,.25)}
+.math-entry-input:disabled{opacity:.68}
+.math-submit{flex:0 0 auto;min-width:105px;border:1px solid rgba(129,223,228,.65);border-radius:12px;background:linear-gradient(110deg,#c8e3ff,#83dfe5);color:#09172b;font-size:12px}
+.math-submit:disabled{opacity:.5;cursor:not-allowed}
+.math-entry-hint{margin:8px 1px 12px;color:#8198b8;font-size:10px;line-height:1.7}
+.math-keypad{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+.math-key{min-width:0;min-height:42px;padding:4px;border:1px solid rgba(159,191,231,.16);border-radius:10px;background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.025));color:#d5e3f6;font-size:13px;transition:transform .16s,border-color .16s,background .16s}
+.math-key:hover{transform:translateY(-1px);border-color:rgba(119,217,235,.48);background:rgba(91,197,216,.1)}
+.math-key.operator{color:#b7e9f1;border-color:rgba(115,215,230,.23)}
+.math-key.utility{color:#ffdfa5;border-color:rgba(255,219,150,.25)}
+.math-input-error{margin-top:10px;padding:10px 12px;border:1px solid rgba(245,168,195,.3);border-radius:11px;background:rgba(245,168,195,.07);color:#f3c6d5;font-size:11px;line-height:1.6}
+.math-input-error[hidden]{display:none}
+.math-answer-display{margin-top:10px;padding:10px 12px;border:1px solid rgba(255,223,157,.28);border-radius:11px;background:rgba(255,223,157,.055);color:#f1dfb7;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.math-answer-display strong{color:#ffe4aa;font-weight:400}
+.curriculum-note a{color:#a9dfe9;text-decoration:underline;text-underline-offset:3px}
+@media(max-width:480px){.math-entry-panel{padding:12px}.math-entry-input-wrap{flex-direction:column}.math-submit{min-height:44px;width:100%}.math-keypad{grid-template-columns:repeat(5,minmax(0,1fr));gap:6px}.math-key{min-height:40px;font-size:12px}}
+
 </style>
 </head>
 <body>
@@ -75,7 +98,7 @@ h1{margin:15px 0 13px;font-size:clamp(36px,5.7vw,66px);line-height:1.13;letter-s
   <div class="hero-copy">
     <div class="kicker">ROCKEY STUDY · MATHEMATICS ACADEMY</div>
     <h1 id="pageTitle">공식이 쌓일수록<br><span>수학이 쉬워져.</span></h1>
-    <p>초등학교 1학년부터 고등학교 3학년까지, 꼭 알아야 할 수학의 약속과 공식을 단계별로 배워 봐. 돌이와 함께 공식을 이해하고, 암기 퀘스트와 구구단 배틀, 보스 챌린지로 내 것으로 만들자!</p>
+    <p>초등학교 1학년부터 고등학교 3학년까지, 핵심 수학 공식을 단계별로 이해하고, 계산기처럼 직접 식을 입력해 정답을 확인해 봐. 숫자, 문자, 사칙연산, 괄호, 제곱, 제곱근을 쓸 수 있어. 암기 퀘스트와 구구단 배틀, 보스 챌린지로 내 것으로 만들자!</p>
     <div class="hero-actions">
       <button class="hero-button primary" type="button" data-action="jump-grades">학년 선택하기 <span aria-hidden="true">↓</span></button>
       <button class="hero-button" type="button" data-action="quick-start">오늘의 추천 학습 <span aria-hidden="true">✦</span></button>
@@ -99,7 +122,7 @@ h1{margin:15px 0 13px;font-size:clamp(36px,5.7vw,66px);line-height:1.13;letter-s
     <span class="section-label">12 GRADES · ONE JOURNEY</span>
   </div>
   <div class="grade-groups" id="gradeGroups" aria-label="학년 선택"></div>
-  <p class="curriculum-note">학년별 핵심 개념을 연결한 학습 지도야. 학교·교과서·선택 과목에 따라 실제 단원 순서와 배우는 시기는 다를 수 있어.</p>
+  <p class="curriculum-note">학년별 핵심 개념과 공식 200개를 수록했어. 2022 개정 교육과정의 공통 내용에 더해 고등학교 선택·심화 과목의 대표 공식도 포함했어. 학교·교과서·선택 과목에 따라 실제 단원 순서와 배우는 시기는 다를 수 있어.</p>
 </section>
 
 <section class="workspace" aria-label="수학 학습 게임">
@@ -154,7 +177,8 @@ h1{margin:15px 0 13px;font-size:clamp(36px,5.7vw,66px);line-height:1.13;letter-s
 <script src="./js/dori-cloud-sync.js?v=20261101-4"></script>
 <script src="./js/doldol-theme.js"></script>
 <script src="./js/rockey-study-formula.js?v=20261122-1"></script>
-<script src="./js/rockey-study-formula-game.js?v=20261122-1"></script>
+<script src="./js/rockey-study-math-input.js?v=20261122-2"></script>
+<script src="./js/rockey-study-formula-game.js?v=20261122-2"></script>
 <script src="./js/dori-convenience.js?v=20261111-3"></script>
 </body>
 </html>
