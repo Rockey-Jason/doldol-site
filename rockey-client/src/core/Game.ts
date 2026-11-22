@@ -123,9 +123,12 @@ export async function createGame(
     {x:0,z:-18.15,w:60,d:23.7},
     {x:0,z:16.65,w:60,d:26.7},
     {x:-25.8,z:-1.5,w:8.4,d:9.6},
-    // Keep the central underpass footprint open. Its own reinforced roof slab
-    // provides the arena surface while preserving the full player-capsule headroom below.
+    // Ground strips join the arena surface to the underpass roof slab.
+    // Without these two strips, 1.3 m gaps remained on both ends of the tunnel roof
+    // and the player could fall through the arena floor into the void.
+    {x:0,z:-3.45,w:25.6,d:1.3},
     {x:0,z:-5.2,w:25.6,d:2.2},
+    {x:0,z:.45,w:25.6,d:1.3},
     {x:0,z:2.2,w:25.6,d:2.2},
     {x:25.8,z:-1.5,w:8.4,d:9.6}
   ];
