@@ -20,7 +20,7 @@ test('both mirrored second-floor stairways reach a landing and the gallery on ev
   for(const map of Object.values(MAPS)){
     for(const centerX of [-17.2,17.2]){
       const innerSide=centerX<0?1:-1;
-      const stairX=centerX+innerSide*2.5;
+      const stairX=centerX+innerSide*3.05;
       let bodyY=.92;
       let previousFloor=0;
       for(let localZ=2.35;localZ>=-2.55;localZ-=.08){
@@ -35,13 +35,13 @@ test('both mirrored second-floor stairways reach a landing and the gallery on ev
       assert.ok(previousFloor>=3.8,map.id+' stair flight did not reach second-floor height');
       assert.equal(isBlockedByCover(map.cover,stairX,5.11,-3.25),false,
         map.id+' blocks the stair-aligned upper doorway');
-      assert.equal(tacticalFloorHeightAt(centerX+innerSide*3.55,-1.5,5.11),4.19,
+      assert.equal(tacticalFloorHeightAt(centerX+innerSide*3.9,-1.5,5.11),4.19,
         map.id+' bridge-side upper gallery has no walkable floor');
-      assert.equal(tacticalFloorHeightAt(centerX+innerSide*2.5,-.9,5.11),4.19,
+      assert.equal(tacticalFloorHeightAt(centerX+innerSide*3.05,-.9,5.11),4.19,
         map.id+' upper cross-walk does not connect the stairwell to the gallery');
       assert.equal(isBlockedByCover(map.cover,centerX+innerSide*2.5,5.11,-.9),false,
         map.id+' blocks the upper cross-walk');
-      assert.equal(isBlockedByCover(map.cover,centerX+innerSide*3.55,5.11,-1.5),false,
+      assert.equal(isBlockedByCover(map.cover,centerX+innerSide*3.9,5.11,-1.5),false,
         map.id+' blocks the upper bridge entrance');
     }
   }
