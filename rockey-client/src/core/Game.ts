@@ -2156,9 +2156,9 @@ export async function createGame(
       avatar.position.set(p.x, p.y - .92, p.z);
       avatar.rotation.y = yaw;
       avatarRig.animate(movementAmount,time,reloadWave,fireWave,vertical,hp<=0,keys.has('ShiftLeft')||keys.has('ShiftRight')?1:0,controller.computedGrounded(),aimBlend);
-      if(now-lastLocalFootIKAt>=localFootIkIntervalMs){
+      if(now-lastLocalFootIkAt>=localFootIkIntervalMs){
         avatarRig.updateFootIK(sampleGroundSurface,controller.computedGrounded());
-        lastLocalFootIKAt=now;
+        lastLocalFootIkAt=now;
       }
       const gaitBob=Math.sin(time*(keys.has('ShiftLeft')||keys.has('ShiftRight')?13.2:10.2))*movementAmount*(precisionAiming?.008:.022);
       const eye = p.clone().add(new THREE.Vector3(0, 0.58+gaitBob-landingKick, 0));
