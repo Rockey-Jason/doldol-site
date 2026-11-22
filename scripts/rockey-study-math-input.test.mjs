@@ -47,6 +47,18 @@ test("course has a unique formula catalog spanning all 12 grades", () => {
     "every active quiz card needs a typed answer");
 });
 
+test("all direct-entry formula answers in the 200-card catalog are parseable", () => {
+  const eligible = course.filter(card => card.quiz !== false && card.answer !== undefined);
+  assert.equal(eligible.length, 200, "all 200 formula cards should have direct-entry answers");
+  for (const card of eligible) {
+    const answers = Array.isArray(card.answer) ? card.answer : [card.answer];
+    for (const answer of answers) {
+      const result = math.check(answer, card.answer);
+      assert.equal(result.correct, true, card.id + " should accept its own answer: " + (result.error || ""));
+    }
+  }
+});
+
 test("implicit multiplication and like-term arithmetic are equivalent", () => {
   expectCorrect("2x+3x", "5*x", "implicit multiplication");
   expectCorrect("2(x+1)", "2*x+2", "parenthesized multiplication");
