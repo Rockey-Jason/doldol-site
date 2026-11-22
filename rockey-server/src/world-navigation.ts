@@ -18,14 +18,14 @@ export function tacticalFloorHeightAt(x:number,z:number,currentY:number):number 
     // Upper gallery surfaces: outer room, inner bridge gallery, cross-walk,
     // and the stair-aligned landing.
     if(currentY>3.95&&localZ>=-1.95&&localZ<=4.85){
-      if(localX>=-3.65&&localX<=1.52)return 4.19;
-      if(localX>=3.44&&localX<=3.70)return 4.19;
+      if(localX>=-3.65&&localX<=2.12)return 4.19;
+      if(localX>=3.74&&localX<=4.07)return 4.19;
     }
-    if(currentY>3.95&&localX>=1.85&&localX<=3.15&&localZ>=.15&&localZ<=1.05)return 4.19;
-    if(currentY>4.7&&localX>=1.7&&localX<=3.3&&localZ>=-2.75&&localZ<=-1.6)return 4.14;
+    if(currentY>3.95&&localX>=2.75&&localX<=3.35&&localZ>=.15&&localZ<=1.05)return 4.19;
+    if(currentY>4.7&&localX>=2.3&&localX<=3.8&&localZ>=-2.4&&localZ<=-1.6)return 4.14;
 
     // Main second-floor stair flight.
-    if(currentY>.78&&currentY<5.2&&localX>=1.85&&localX<=3.15&&localZ>=-2.55&&localZ<=2.4){
+    if(currentY>.78&&currentY<5.2&&localX>=2.45&&localX<=3.65&&localZ>=-2.55&&localZ<=2.4){
       return Math.max(0,Math.min(3.9,((2.35-localZ)/4.85)*3.9));
     }
 
