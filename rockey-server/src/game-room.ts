@@ -43,7 +43,7 @@ interface PlayerState {
   ammo: number; reserve: number; reloadUntil: number; reloadToken:number; reloadTimer:NodeJS.Timeout|null;
   weaponAmmo: Record<string,{ammo:number;reserve:number}>;
   alive: boolean; connected: boolean; disconnectedAt: number | null;
-  suspiciousInputs: number; weaponKills: Record<string, number>;
+  suspiciousInputs: number; weaponKills: Record<string, number>; isRobot?:false;
 }
 
 function send(client: PlayerClient, message: Record<string, unknown>) {
@@ -372,7 +372,7 @@ export class GameRoom {
     robot.health=Math.max(0,robot.health-damage);
     send(shooter.client,{type:'hit',damage,headshot,target:robot.name,targetId:robot.id,weaponCode});
     if(robot.health<=0){
-      robot.alive=false;robot.state='DESTROYED';
+      robot.alive=false;robot.state='DESTROYED';robot.lastFireAt=now;
       this.broadcast({type:'robot.destroyed',robotId:robot.id});
       setTimeout(()=>{
         if(this.finished)return;
