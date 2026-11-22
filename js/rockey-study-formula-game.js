@@ -601,8 +601,14 @@
       var record=cardProgress(question.card);
       record.seen=true;record.attempts=Number(record.attempts||0)+1;
       if(session.wasCorrect)record.correct=Number(record.correct||0)+1;
-      if(session.wasCorrect&&session.type==="practice")record.mastered=true;
-      else if(session.wasCorrect&&record.attempts>0&&record.correct/record.attempts>=.8)record.mastered=true;
+      if(session.wasCorrect&&session.type==="practice"){
+        record.mastered=true;
+        record.review=false;
+      }else if(!session.wasCorrect){
+        record.review=true;
+      }else if(record.attempts>0&&record.correct/record.attempts>=.8){
+        record.mastered=true;
+      }
     }
     saveProgress();renderMain();renderStats();
     var activeSearch=$("formulaSearchInput");
