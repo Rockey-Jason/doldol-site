@@ -1,4 +1,5 @@
 import { chromium } from "playwright";
+import { availableItemCount, reserveItemBatch, validateRuntimeState } from "../simulation-core.js";
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
@@ -773,10 +774,22 @@ try {
       ledger: window.__doroniumFactoryTest.ledger()
     };
   });
-  console.log("DORONIUM_SMELTER_SOAK", JSON.stringify({produced:soak.produced,producedStats:soak.producedStats,inventory:soak.inventory,warehouse:soak.warehouse,beltOccupied:soak.beltOccupied,smelter:soak.smelter,power:soak.power,ledger:soak.ledger}));
+  const postSoakProbe=structuredClone(soak.state);
+  const postSoakReservation=reserveItemBatch(postSoakProbe,{ironOre:2,coal:1},"post-soak-restart-probe");
+  soak.runtimeAudit=validateRuntimeState(soak.state);
+  soak.available={ironOre:availableItemCount(soak.state,"ironOre"),coal:availableItemCount(soak.state,"coal")};
+  soak.activeReservations=Object.entries(soak.state.runtime?.reservations||{}).filter(([,value])=>value?.status==="reserved").map(([id,value])=>({id,ownerID:value.ownerID,itemID:value.itemID,quantity:value.quantity,allocations:value.allocations}));
+  soak.runtimeStacks=(soak.state.runtime?.itemStacks||[]).map(stack=>({runtimeID:stack.runtimeID,itemID:stack.itemID,quantity:stack.quantity,legacyAggregate:stack.legacyAggregate===true,quarantined:stack.quarantined===true,sourceItemID:stack.sourceItemID||null}));
+  soak.postSoakReservationProbe=Array.isArray(postSoakReservation);
+  soak.postSoakProbeErrors=validateRuntimeState(postSoakProbe).errors;
+  const soakDiagnostics={produced:soak.produced,producedStats:soak.producedStats,smelter:soak.smelter,power:soak.power,ledger:soak.ledger,available:soak.available,runtimeAudit:soak.runtimeAudit,activeReservations:soak.activeReservations,runtimeStacks:soak.runtimeStacks,postSoakReservationProbe:soak.postSoakReservationProbe,postSoakProbeErrors:soak.postSoakProbeErrors};
+  console.log("DORONIUM_SMELTER_SOAK", JSON.stringify(soakDiagnostics));
   assert.equal(soak.ticks, 36000, "A virtual hour must execute exactly 36,000 fixed 0.1-second ticks");
   assert.ok(soak.seconds >= 8 * 3600 + 3600 - 0.001, "Simulation clock must advance by one virtual hour");
-  assert.ok(soak.produced > 0, "Smelter must produce during the one-hour soak; diagnostics=" + JSON.stringify({producedStats:soak.producedStats,smelter:soak.smelter,power:soak.power,ledger:soak.ledger}));
+  assert.equal(soak.runtimeAudit.valid,true,"Runtime reservations and stacks must remain valid after the virtual soak; diagnostics="+JSON.stringify(soakDiagnostics));
+  assert.ok(soak.available.ironOre>=2&&soak.available.coal>=1,"The remaining legacy aggregate stock must stay spendable after the first recipe; diagnostics="+JSON.stringify(soakDiagnostics));
+  assert.equal(soak.postSoakReservationProbe,true,"A second recipe reservation must succeed after the first production completion; diagnostics="+JSON.stringify(soakDiagnostics));
+  assert.ok(soak.produced>=2,"The smelter must resume production after a completed batch during the one-hour soak; diagnostics="+JSON.stringify(soakDiagnostics));
   assert.ok(soak.warehouse > 0, "Conveyor must route finished plates into independent warehouse stock");
   assert.equal(soak.ledger.oreBalance, 50000, "Ore + in-process and finished-plate equivalent must be conserved");
   assert.equal(soak.ledger.coalBalance, 30000, "Coal + in-process and finished-plate equivalent must be conserved");
