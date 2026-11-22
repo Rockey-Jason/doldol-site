@@ -13,6 +13,11 @@ export interface RemotePlayer {
   id: string; name: string; x: number; y: number; z: number;
   yaw: number; health: number; team: number; alive?: boolean; connected?: boolean; aim?:boolean;
 }
+
+export interface RemoteRobot {
+  id:string;name:string;type:'SENTRY'|'GUARDIAN'|'SCOUT';
+  x:number;y:number;z:number;yaw:number;health:number;maxHealth:number;alive:boolean;state:string;
+}
 export interface WorldDebrisSnapshot {id:string;x:number;y:number;z:number;rx:number;ry:number;rz:number;size:number;sleeping:boolean;}
 export interface ReplayFrame {
   t: number;
@@ -21,6 +26,7 @@ export interface ReplayFrame {
 export interface GameInstance {
   activate(mode: string, team?: number, spawn?: { x: number; y: number; z: number; yaw: number }, weaponCode?: string, secondaryWeapon?: string, itemCode?: string, itemCount?: number, itemInventory?:Record<string,number>): void;
   setRemotePlayers(players: RemotePlayer[], serverTime?: number): void;
+  setRobots(robots:RemoteRobot[]):void;
   reconcileLocalPlayer(player: RemotePlayer): void;
   setScore(a: number, b: number, round: number): void;
   setHealth(value: number): void;
@@ -551,6 +557,7 @@ export async function createGame(
     return rig.group;
   }
   const remotes = new Map<string, THREE.Group>();
+  const robotRemotes = new Map<string,THREE.Group>();
   const practiceTargets: THREE.Group[] = [];
   const projectiles: Array<{mesh:THREE.Mesh;trail:THREE.Line;direction:THREE.Vector3;travelled:number;maxDistance:number;age:number;impactPoint:THREE.Vector3|null;impactColor:number}> = [];
   const damagePopups: THREE.Sprite[] = [];
@@ -574,7 +581,7 @@ export async function createGame(
   const smokeVolumeVertexShader=`varying vec3 vLocalPosition;varying vec3 vLocalNormal;void main(){vLocalPosition=position;vLocalNormal=normal;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`;
   const smokeVolumeFragmentShader=`uniform vec3 uColor;uniform float uTime;uniform float uOpacity;varying vec3 vLocalPosition;varying vec3 vLocalNormal;void main(){float n1=sin(vLocalPosition.x*7.1+uTime*.8)*sin(vLocalPosition.y*8.3-uTime*.6)*sin(vLocalPosition.z*6.7+uTime*.45);float n2=sin(vLocalPosition.x*15.3-uTime*.4)*sin(vLocalPosition.y*13.1+uTime*.5)*sin(vLocalPosition.z*12.7-uTime*.7);float radius=length(vLocalPosition);float edge=1.0-smoothstep(.56,.99,radius+(n1*.09+n2*.035));float wisps=smoothstep(-.78,.48,n1*.72+n2*.28);float alpha=edge*(.24+wisps*.52)*uOpacity;if(alpha<.012)discard;float light=.68+.32*max(dot(normalize(vLocalNormal),normalize(vec3(-.35,.82,.44))),0.0);gl_FragColor=vec4(uColor*light,alpha);}`;
 
-  const projectileColors:Record<string,number>={R16:0x4aa8ff,R9:0xffd166,VIPER:0x54e6b0,THUNDER:0xff8a45,LONGSHOT:0xa8d8ff,HELIX:0xb18aff,BASTION:0xffc45f,NOVA:0xff748e,ARC:0x57efff,PULSE:0xbe8cff,DORI:0xc98a4c};
+  const projectileColors:Record<string,number>={R16:0x4aa8ff,R9:0xffd166,VIPER:0x54e6b0,THUNDER:0xff8a45,LONGSHOT:0xa8d8ff,HELIX:0xb18aff,BASTION:0xffc45f,NOVA:0xff748e,ARC:0x57efff,PULSE:0xbe8cff,DORI:0xc98a4c,ROBOT:0xff526e};
 
   function createPracticeTargets() {
     const bodyMaterial = new THREE.MeshStandardMaterial({
@@ -1154,7 +1161,9 @@ export async function createGame(
     scene.add(sprite);damagePopups.push(sprite);
   }
   function showDamageOnTarget(targetId:string,targetName:string,damage:number,headshot:boolean) {
-    const target=remotes.get(targetId)||[...remotes.values()].find(mesh=>mesh.userData.playerName===targetName);
+    const target=remotes.get(targetId)||robotRemotes.get(targetId)
+      ||[...remotes.values()].find(mesh=>mesh.userData.playerName===targetName)
+      ||[...robotRemotes.values()].find(mesh=>mesh.userData.playerName===targetName);
     if(target)showDamageAt(target.position.clone(),damage,headshot);
   }
   function showShot(x:number,y:number,z:number,shotYaw:number,shotPitch:number,weaponCode:string,targetDistance?:number) {
@@ -1496,6 +1505,76 @@ export async function createGame(
     });
     geometries.forEach(geometry => geometry.dispose());
     materials.forEach(material => material.dispose());
+  }
+
+  function createRobotVisual(robot:RemoteRobot):THREE.Group{
+    const root=new THREE.Group();root.name='rockey-robot-'+robot.type.toLowerCase();
+    const armorColor=robot.type==='GUARDIAN'?0x77614c:robot.type==='SCOUT'?0x326d82:0x6a394d;
+    const armor=new THREE.MeshStandardMaterial({color:armorColor,metalness:.78,roughness:.28});
+    const dark=new THREE.MeshStandardMaterial({color:0x101b29,metalness:.62,roughness:.4});
+    const joint=new THREE.MeshStandardMaterial({color:0x9aaabb,metalness:.9,roughness:.24});
+    const glowColor=robot.type==='SCOUT'?0x5ce8ff:0xff536d;
+    const glowMat=new THREE.MeshStandardMaterial({color:glowColor,emissive:glowColor,emissiveIntensity:1.6,metalness:.3,roughness:.2});
+    const addPart=(geometry:THREE.BufferGeometry,material:THREE.Material,x:number,y:number,z:number)=>{
+      const part=new THREE.Mesh(geometry,material);part.position.set(x,y,z);part.castShadow=true;part.receiveShadow=true;root.add(part);return part;
+    };
+    addPart(new THREE.BoxGeometry(.68,.72,.48),armor,0,1.12,0);
+    addPart(new THREE.BoxGeometry(.56,.19,.12),dark,0,1.28,-.29);
+    const core=addPart(new THREE.SphereGeometry(.18,18,14),glowMat,0,1.13,-.3);
+    const coreRing=addPart(new THREE.TorusGeometry(.29,.035,8,24),joint,0,1.13,-.31);
+    coreRing.rotation.x=Math.PI/2;
+    const head=new THREE.Group();head.position.set(0,1.78,0);root.add(head);
+    const skull=new THREE.Mesh(new THREE.BoxGeometry(.48,.34,.42),armor);skull.castShadow=true;head.add(skull);
+    const visor=new THREE.Mesh(new THREE.BoxGeometry(.34,.095,.035),glowMat);visor.position.set(0,.015,-.225);head.add(visor);
+    for(const side of [-1,1]){
+      const ear=new THREE.Mesh(new THREE.BoxGeometry(.11,.2,.18),dark);ear.position.set(side*.28,.02,0);head.add(ear);
+    }
+    const leftArm=new THREE.Group(),rightArm=new THREE.Group();
+    for(const [side,pivot] of [[-1,leftArm],[1,rightArm]] as const){
+      pivot.position.set(side*.43,1.42,0);root.add(pivot);
+      const upper=new THREE.Mesh(new THREE.CylinderGeometry(.09,.12,.38,10),joint);upper.position.y=-.2;pivot.add(upper);
+      const fore=new THREE.Mesh(new THREE.BoxGeometry(.19,.32,.2),armor);fore.position.set(0,-.48,-.03);pivot.add(fore);
+      const hand=new THREE.Mesh(new THREE.SphereGeometry(.11,12,10),dark);hand.position.set(0,-.68,-.05);pivot.add(hand);
+    }
+    const leftLeg=new THREE.Group(),rightLeg=new THREE.Group();
+    for(const [side,pivot] of [[-1,leftLeg],[1,rightLeg]] as const){
+      pivot.position.set(side*.19,.83,0);root.add(pivot);
+      const thigh=new THREE.Mesh(new THREE.BoxGeometry(.22,.38,.25),armor);thigh.position.y=-.2;pivot.add(thigh);
+      const shin=new THREE.Mesh(new THREE.CylinderGeometry(.075,.09,.32,10),joint);shin.position.y=-.5;pivot.add(shin);
+      const foot=new THREE.Mesh(new THREE.BoxGeometry(.25,.13,.38),dark);foot.position.set(0,-.69,-.08);pivot.add(foot);
+    }
+    const healthBar=new THREE.Group();healthBar.position.set(0,2.55,0);root.add(healthBar);
+    const barBack=new THREE.Mesh(new THREE.BoxGeometry(1.04,.105,.045),dark);healthBar.add(barBack);
+    const healthFill=new THREE.Mesh(new THREE.BoxGeometry(.96,.065,.06),glowMat);healthFill.position.set(0,0,-.032);healthBar.add(healthFill);
+    const scale=robot.type==='GUARDIAN'?1.22:robot.type==='SCOUT'?.88:1;
+    root.scale.setScalar(scale);
+    root.userData={
+      targetX:robot.x,targetY:robot.y-.92,targetZ:robot.z,targetYaw:robot.yaw,
+      robotName:robot.name,robotType:robot.type,health:robot.health,maxHealth:robot.maxHealth,
+      state:robot.state,healthFill,healthBar,leftLeg,rightLeg,leftArm,rightArm,head,core,alive:robot.alive
+    };
+    return root;
+  }
+
+  function setRobots(robots:RemoteRobot[]){
+    const list=Array.isArray(robots)?robots:[];
+    const ids=new Set(list.map(robot=>robot.id));
+    for(const [id,mesh] of robotRemotes){
+      if(!ids.has(id)){scene.remove(mesh);disposeObjectResources(mesh);robotRemotes.delete(id);}
+    }
+    for(const robot of list){
+      if(!robot||typeof robot.id!=='string')continue;
+      let mesh=robotRemotes.get(robot.id);
+      if(!mesh){mesh=createRobotVisual(robot);scene.add(mesh);robotRemotes.set(robot.id,mesh);}
+      const data=mesh.userData;
+      data.targetX=robot.x;data.targetY=robot.y-.92;data.targetZ=robot.z;data.targetYaw=robot.yaw;
+      data.robotName=robot.name;data.robotType=robot.type;data.state=robot.state;
+      data.health=robot.health;data.maxHealth=robot.maxHealth;data.alive=robot.alive;
+      const ratio=THREE.MathUtils.clamp(robot.health/Math.max(1,robot.maxHealth),0,1);
+      const fill=data.healthFill as THREE.Mesh;
+      fill.scale.x=Math.max(.001,ratio);fill.position.x=-(1-ratio)*.48;
+      mesh.visible=robot.alive===true;
+    }
   }
 
   function setRemotePlayers(players: RemotePlayer[],serverTime=Date.now()) {
@@ -1849,6 +1928,26 @@ export async function createGame(
       }
       if(remaining<=0){scene.remove(effect.group);disposeObjectResources(effect.group);timedItemEffects.splice(i,1);}
     }
+    for(const mesh of robotRemotes.values()){
+      const data=mesh.userData,oldX=mesh.position.x,oldZ=mesh.position.z;
+      mesh.position.x=THREE.MathUtils.lerp(mesh.position.x,Number(data.targetX),Math.min(1,dt*12));
+      mesh.position.y=THREE.MathUtils.lerp(mesh.position.y,Number(data.targetY),Math.min(1,dt*12));
+      mesh.position.z=THREE.MathUtils.lerp(mesh.position.z,Number(data.targetZ),Math.min(1,dt*12));
+      const yawDelta=THREE.MathUtils.euclideanModulo(Number(data.targetYaw)-mesh.rotation.y+Math.PI,Math.PI*2)-Math.PI;
+      mesh.rotation.y+=yawDelta*Math.min(1,dt*9);
+      const speed=Math.min(1,Math.hypot(mesh.position.x-oldX,mesh.position.z-oldZ)/Math.max(.001,dt)/1.4);
+      const gait=Math.sin(time*8.5)*speed*.48;
+      (data.leftLeg as THREE.Group).rotation.x=gait;
+      (data.rightLeg as THREE.Group).rotation.x=-gait;
+      (data.leftArm as THREE.Group).rotation.x=-gait*.55;
+      (data.rightArm as THREE.Group).rotation.x=gait*.55;
+      (data.head as THREE.Group).rotation.y=Math.sin(time*1.8)*.045;
+      (data.core as THREE.Mesh).rotation.y+=dt*1.7;
+      const healthBar=data.healthBar as THREE.Group;
+      const inverseParent=new THREE.Quaternion();mesh.getWorldQuaternion(inverseParent).invert();
+      healthBar.quaternion.copy(inverseParent.multiply(camera.quaternion));
+      mesh.visible=data.alive===true;
+    }
     for(const mesh of remotes.values()){
       const data=mesh.userData;
       if(typeof data.targetX!=='number')continue;
@@ -2081,6 +2180,7 @@ export async function createGame(
       updateHud(hp, ammo, reserve, currentWeapon.name);
     },
     setRemotePlayers,
+    setRobots,
     reconcileLocalPlayer(serverPlayer: RemotePlayer) {
       if (mode === 'practice' || !active) return;
       const current = body.translation();
