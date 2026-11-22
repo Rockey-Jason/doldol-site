@@ -84,8 +84,6 @@
     selected.sort(function (a, b) {
       var ar = recordFor(progressCards, a);
       var br = recordFor(progressCards, b);
-      var aText = fieldsFor(a);
-      var bText = fieldsFor(b);
       var phrase = normalize(query);
       var aExact = phrase && normalize(a.title).indexOf(phrase) === 0 ? -1 : 0;
       var bExact = phrase && normalize(b.title).indexOf(phrase) === 0 ? -1 : 0;
