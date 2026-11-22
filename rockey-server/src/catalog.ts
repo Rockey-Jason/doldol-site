@@ -127,8 +127,7 @@ for(const cx of [-17.2,17.2]){
   addTacticalCover(cx+outerSide*4.12,-1.5,.11,5.95,-.125,-2.775);
   addTacticalCover(cx+innerSide*4.12,-5.2,.11,2.25,-.125,-2.775);
   addTacticalCover(cx+innerSide*4.12,2.2,.11,2.25,-.125,-2.775);
-  addTacticalCover(cx-4.12,-1.5,.11,.85,.17,-.53);
-  addTacticalCover(cx+4.12,-1.5,.11,.85,.17,-.53);
+  // The old low sill volumes overlapped the player capsule and sealed both side portals.
   addTacticalCover(cx,-5.88,4.1,.11,-.125,-2.775);
   addTacticalCover(cx,2.88,4.1,.11,-.125,-2.775);
   for(const side of [-1,1]){
