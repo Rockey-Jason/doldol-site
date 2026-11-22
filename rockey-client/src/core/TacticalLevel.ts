@@ -135,14 +135,13 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     makeFurniture(root,.25,0,-3.0,'desk');
     makeFurniture(root,-1.15,0,3.0,'crate');
 
-    // Upper gallery floors stop outside the full stairwell headroom envelope.
-    // The previous cross-walk slabs sat directly above the rising stair capsule
-    // and physically sealed the last half of the climb.
+    // Upper gallery floors leave a full-width vertical shaft above the stair flight.
     const stairX=innerSide*3.05;
     add(root,floor,-innerSide*.9,4.05,1.45,6.8,.28,6.7,true);
-    add(root,floor,innerSide*4.05,4.05,1.45,1.6,.28,6.7,true);
-    // A single landing begins beyond the stair nose; it does not overhang the ramp.
-    add(root,floor,stairX,4.05,-2.8,2.2,.28,2.2,true);
+    // Keep the bridge gallery beyond the capsule's full horizontal clearance envelope.
+    add(root,floor,innerSide*4.05,4.05,1.45,1.2,.28,6.7,true);
+    // The landing meets the final stair nose and the gallery doorway without covering the ramp.
+    add(root,floor,stairX,4.05,-1.35,2.2,.28,1.0,true);
 
     // Preserve the outer guardrail. Open the inner wall directly onto the skybridge.
     const outerSide=-innerSide;
@@ -159,8 +158,10 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     add(root,wall,(wallMin+galleryDoorLeft)/2,4.58,-1.75,galleryDoorLeft-wallMin,1.0,.28,true);
     add(root,wall,(galleryDoorRight+wallMax)/2,4.58,-1.75,wallMax-galleryDoorRight,1.0,.28,true);
 
-    const steps=13,run=4.85,rise=4.19;
-    addRamp(root,floor,stairX,rise/2,-.075,2.1,run,rise);
+    const steps=13,run=4.2,rise=4.19;
+    // The final step now meets the second-floor doorway; the 44.9° ramp stays
+    // below the controller's 45° maximum slope and clears the ceiling above.
+    addRamp(root,floor,stairX,rise/2,.25,2.1,run,rise);
     for(let i=0;i<steps;i++){
       const y=(i+1)*rise/steps,z=2.35-(i+.5)*run/steps;
       add(root,i%2?trim:floor,stairX,y/2,z,1.05,y,.42,false);
