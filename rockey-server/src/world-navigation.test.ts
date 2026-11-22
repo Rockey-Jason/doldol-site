@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {MAPS} from './catalog.js';
+import {resolveCeilingCollision} from './world-navigation.js';
 import {isBlockedByCover,tacticalFloorHeightAt,ROCKEY_PLAYER_COLLISION,ROCKEY_UNDERPASS,ROCKEY_SKYBRIDGE} from './world-navigation.js';
 
 test('every map keeps both ground-floor building entrances open',()=>{
@@ -151,4 +152,38 @@ test('skybridge ceiling clears the capsule including the avatar foot offset',()=
   const required=ROCKEY_PLAYER_COLLISION.standingHeight+footOffset+ROCKEY_PLAYER_COLLISION.skin;
   assert.ok(actualClearance>required,
     'skybridge ceiling must clear the standing capsule, its floor offset and controller skin');
+});
+
+
+const testCeiling={x:0,z:0,hx:2,hz:2,bottom:6.95,top:7.15};
+
+test('upward movement stops at the underside of a ceiling',()=>{
+  const result=resolveCeilingCollision([testCeiling],0,5.9,0,6.3);
+  assert.equal(result.ceilingHit,true);
+  assert.ok(Math.abs(result.y-(6.95-.86))<1e-6);
+});
+
+test('a player slightly embedded in a ceiling is returned below its underside',()=>{
+  const result=resolveCeilingCollision([testCeiling],0,6.12,0,6.2);
+  assert.equal(result.ceilingHit,true);
+  assert.ok(Math.abs(result.y-(6.95-.86))<1e-6);
+});
+
+test('downward movement after ceiling contact remains unobstructed',()=>{
+  const result=resolveCeilingCollision([testCeiling],0,6.09,0,5.9);
+  assert.equal(result.ceilingHit,false);
+  assert.equal(result.y,5.9);
+});
+
+test('a ceiling does not affect a player outside its horizontal footprint',()=>{
+  const result=resolveCeilingCollision([testCeiling],3,5.9,0,6.3);
+  assert.equal(result.ceilingHit,false);
+  assert.equal(result.y,6.3);
+});
+
+test('ordinary wall volumes do not stop a jump as overhead ceilings',()=>{
+  const wall={x:0,z:0,hx:2,hz:2,top:4};
+  const result=resolveCeilingCollision([wall],0,.92,0,1.8);
+  assert.equal(result.ceilingHit,false);
+  assert.equal(result.y,1.8);
 });
