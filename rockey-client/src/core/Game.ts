@@ -39,7 +39,7 @@ export interface GameInstance {
   playReplay(frames: ReplayFrame[]): void;
   playKillcam(frames: ReplayFrame[], killerId: string, onComplete: () => void): void;
   cancelKillcam(): void;
-  setQuality(level: 'low'|'balanced'|'high'): void;
+  setQuality(level: 'auto'|'low'|'balanced'|'high'): void;
   setSensitivity(value: number): void;
   toggleCamera(): void;
   dispose(): void;
