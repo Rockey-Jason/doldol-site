@@ -9,7 +9,7 @@ type Breakable={root:THREE.Object3D;position:THREE.Vector3;radius:number;shards:
  * Walkable tactical complex with a ground-floor office, storage rooms, upper
  * galleries, rooftop access and a connected sublevel service corridor.
  */
-export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolean,addCollider:ColliderAdder,addRaycast?:RaycastAdder){
+export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolean,addCollider:ColliderAdder,addRaycast?:RaycastAdder,addGroundRaycast?:RaycastAdder){
   const wall=new THREE.MeshStandardMaterial({color:map.palette==='amber'?0x786044:0x34495c,roughness:.88});
   const floor=new THREE.MeshStandardMaterial({color:0x283747,roughness:.82,metalness:.16});
   const trim=new THREE.MeshStandardMaterial({color:0x71889a,roughness:.38,metalness:.82});
@@ -27,6 +27,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     const mesh=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),mat);
     mesh.position.set(x,y,z);mesh.castShadow=!isMobile;mesh.receiveShadow=!isMobile;parent.add(mesh);
     if(collide){parent.updateWorldMatrix(true,false);const worldPoint=parent.localToWorld(new THREE.Vector3(x,y,z));addCollider(worldPoint.x,worldPoint.y,worldPoint.z,sx/2,sy/2,sz/2);}
+    if(mat===floor)addGroundRaycast?.(mesh);
     if(collide||mat===wall||mat===glass)addRaycast?.(mesh);
     return mesh;
   };
@@ -42,6 +43,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     mesh.position.set(x,y,z);mesh.rotation.x=angle;
     mesh.castShadow=!isMobile;mesh.receiveShadow=!isMobile;root.add(mesh);
     addRaycast?.(mesh);
+    addGroundRaycast?.(mesh);
     root.updateWorldMatrix(true,false);
     const worldPoint=root.localToWorld(new THREE.Vector3(x,y,z));
     addCollider(worldPoint.x,worldPoint.y,worldPoint.z,width/2,.07,length/2,angle);
