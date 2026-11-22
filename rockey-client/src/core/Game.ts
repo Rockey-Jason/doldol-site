@@ -1673,7 +1673,7 @@ export async function createGame(
         geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,
         drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,
         activeDebris:physicalDebris.length,activeSmoke:smokeClouds.length,activeParticles:fxParticles.length,
-        bloomStrength:Math.round(bloomPass.strength*100)/100
+        bloomStrength:Math.round((bloomPass?.strength??0)*100)/100
       }}));
       if(now-lastStabilityReportAt>=60000){
         window.dispatchEvent(new CustomEvent('rockey:stability',{detail:{
