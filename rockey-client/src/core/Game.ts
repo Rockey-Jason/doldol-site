@@ -60,10 +60,10 @@ export async function createGame(
   const isMobile = window.matchMedia('(pointer: coarse)').matches || window.innerWidth < 760;
   const hardwareCores=navigator.hardwareConcurrency||4;
   const deviceMemoryGb=(navigator as Navigator&{deviceMemory?:number}).deviceMemory??null;
-  const deviceTier:'low'|'balanced'|'high'=isMobile
+  let deviceTier:'low'|'balanced'|'high'=isMobile
     ?(hardwareCores<=4||(deviceMemoryGb!==null&&deviceMemoryGb<=4)?'low':'balanced')
     :(hardwareCores>=8&&(deviceMemoryGb===null||deviceMemoryGb>=8)?'high':hardwareCores>=6?'balanced':'low');
-  const deviceProfile={class:isMobile?'mobile':'desktop',tier:deviceTier,hardwareCores,deviceMemoryGb,
+  const deviceProfile={class:isMobile?'mobile':'desktop',tier:deviceTier,hardwareCores,deviceMemoryGb,gpuRenderer:'',
     screenWidth:window.screen.width,screenHeight:window.screen.height,devicePixelRatio:window.devicePixelRatio||1};
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(map.background);
@@ -71,6 +71,11 @@ export async function createGame(
 
   const camera = new THREE.PerspectiveCamera(78, 1, 0.08, 180);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
+  const gl=renderer.getContext();
+  const gpuRenderer=String(gl.getParameter(gl.RENDERER)||'').toLowerCase();
+  const softwareRenderer=/swiftshader|llvmpipe|softpipe|software rasterizer|basic render driver/.test(gpuRenderer);
+  if(softwareRenderer||renderer.capabilities.maxTextureSize<=2048)deviceTier='low';
+  deviceProfile.tier=deviceTier;deviceProfile.gpuRenderer=gpuRenderer.slice(0,120);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,isMobile?1.1:deviceTier==='low'?1.0:deviceTier==='balanced'?1.4:1.8));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
