@@ -1,7 +1,9 @@
 import type { WebSocket } from 'ws';
 import { admin, type VerifiedPlayer } from './auth.js';
-import { MAPS, WEAPONS, type RockeyWeapon } from './catalog.js';
-import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot } from './combat.js';
+import { ITEMS, MAPS, WEAPONS, type RockeyItemCode, type RockeyWeapon } from './catalog.js';
+import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, transferReloadAmmo } from './combat.js';
+import { createAuthoritativeDebris, stepAuthoritativeDebris, type DebrisBodyState } from './world-physics.js';
+import { isBlockedByCover, tacticalFloorHeightAt } from './world-navigation.js';
 
 export type Mode = '1v1' | '2v2' | '3v3' | 'ranked' | 'ffa';
 export type PlayerClient = {
@@ -11,13 +13,16 @@ export type PlayerClient = {
   spectatorRoomId?: string;
   primaryWeapon: string;
   secondaryWeapon: string;
+  selectedPrimaryWeapon?: string;
+  selectedSecondaryWeapon?: string;
+  selectedItemCode?: RockeyItemCode;
   selectedMapId?: string;
 };
 
 type PlayerSnapshot = {
   id: string; name: string; team: number;
   x: number; y: number; z: number; yaw: number;
-  health: number; alive: boolean; connected: boolean;
+  health: number; alive: boolean; connected: boolean; aim:boolean;
 };
 
 type ReplayFrame = { t: number; players: PlayerSnapshot[] };
@@ -33,7 +38,8 @@ interface PlayerState {
   health: number; kills: number; deaths: number; headshots: number; damage: number;
   sequence: number; lastFire: number; lastInput: number;
   weaponCode: string; secondaryWeapon: string;
-  ammo: number; reserve: number; reloadUntil: number;
+  itemCode:RockeyItemCode;itemCount:number;itemInventory:Record<RockeyItemCode,number>;lastItemUse:number;energyUntil:number;
+  ammo: number; reserve: number; reloadUntil: number; reloadToken:number; reloadTimer:NodeJS.Timeout|null;
   weaponAmmo: Record<string,{ammo:number;reserve:number}>;
   alive: boolean; connected: boolean; disconnectedAt: number | null;
   suspiciousInputs: number; weaponKills: Record<string, number>;
@@ -54,6 +60,11 @@ export class GameRoom {
   readonly mapId: string;
   private persistedMatchId: string | null = null;
   private players: PlayerState[];
+  private smokeVolumes:Array<{x:number;y:number;z:number;radius:number;expiresAt:number}>=[];
+  private worldDestruction:Array<{id:string;x:number;y:number;z:number;radius:number}>=[];
+  private nextDestructionId=1;
+  private worldDebris:DebrisBodyState[]=[];
+  private lastDebrisBroadcastAt=0;
   private spectators = new Set<PlayerClient>();
   private score = [0,0];
   private startedAt = Date.now();
@@ -81,9 +92,11 @@ export class GameRoom {
       const spawnX = mode === 'ffa' ? Math.cos(angle)*21 : team === 0 ? -21 : 21;
       const spawnZ = mode === 'ffa' ? Math.sin(angle)*21 : team === 0 ? 13-lane*4 : -13+lane*4;
       const spawnYaw = mode === 'ffa' ? angle+Math.PI : team === 0 ? 0 : Math.PI;
-      const weaponCode = WEAPONS[client.primaryWeapon] ? client.primaryWeapon : 'R16';
-      const weapon = WEAPONS[weaponCode];
-      const secondaryWeapon = WEAPONS[client.secondaryWeapon] ? client.secondaryWeapon : 'R9';
+      const chosenPrimary=client.selectedPrimaryWeapon||client.primaryWeapon,chosenSecondary=client.selectedSecondaryWeapon||client.secondaryWeapon;
+      const weaponCode=WEAPONS[chosenPrimary]?chosenPrimary:'R16',weapon=WEAPONS[weaponCode];
+      const secondaryWeapon=WEAPONS[chosenSecondary]?chosenSecondary:'R9';
+      const itemCode=(client.selectedItemCode&&ITEMS[client.selectedItemCode]?client.selectedItemCode:'GRENADE') as RockeyItemCode;
+      const itemInventory=Object.fromEntries(Object.values(ITEMS).map(item=>[item.code,item.startingCount])) as Record<RockeyItemCode,number>;
       const secondaryDefinition = WEAPONS[secondaryWeapon];
       return {
         client,team,x:spawnX,y:0.92,z:spawnZ,spawnX,spawnZ,spawnYaw,
@@ -91,14 +104,19 @@ export class GameRoom {
         health:100,kills:0,deaths:0,headshots:0,damage:0,
         sequence:-1,lastFire:0,lastInput:Date.now(),
         weaponCode,secondaryWeapon,ammo:weapon.magazine,reserve:weapon.reserve,
+        itemCode,itemCount:itemInventory[itemCode],itemInventory,lastItemUse:0,energyUntil:0,
         weaponAmmo:{
           [weaponCode]:{ammo:weapon.magazine,reserve:weapon.reserve},
           [secondaryWeapon]:{ammo:secondaryDefinition.magazine,reserve:secondaryDefinition.reserve}
         },
-        reloadUntil:0,alive:true,connected:true,disconnectedAt:null,
+        reloadUntil:0,reloadToken:0,reloadTimer:null,alive:true,connected:true,disconnectedAt:null,
         suspiciousInputs:0,weaponKills:{}
       };
     });
+  }
+
+  private floorHeightAt(x:number,z:number,currentY:number):number {
+    return tacticalFloorHeightAt(x,z,currentY);
   }
 
   private get weaponForActivePlayer() {
@@ -137,7 +155,7 @@ export class GameRoom {
         playerId:p.client.player.id,playerName:p.client.player.name,team:p.team,
         spawn:{x:p.spawnX,y:0.92,z:p.spawnZ,yaw:p.spawnYaw},
         mapId:this.mapId,mapName:MAPS[this.mapId].name,
-        weaponCode:p.weaponCode,secondaryWeapon:p.secondaryWeapon,
+        weaponCode:p.weaponCode,secondaryWeapon:p.secondaryWeapon,itemCode:p.itemCode,itemCount:p.itemCount,itemInventory:p.itemInventory,
         ammo:p.ammo,reserve:p.reserve,weapon
       });
     }
@@ -159,7 +177,7 @@ export class GameRoom {
   private snapshots(): PlayerSnapshot[] {
     return this.players.map(p=>({
       id:p.client.player.id,name:p.client.player.name,team:p.team,
-      x:p.x,y:p.y,z:p.z,yaw:p.yaw,health:p.health,alive:p.alive,connected:p.connected
+      x:p.x,y:p.y,z:p.z,yaw:p.yaw,health:p.health,alive:p.alive,connected:p.connected,aim:p.aim
     }));
   }
 
@@ -191,7 +209,8 @@ export class GameRoom {
       type:'match.spectating',roomId:this.id,matchId:this.persistedMatchId,
       mode:this.mode,mapId:this.mapId,mapName:MAPS[this.mapId].name
     });
-    send(client,{type:'snapshot',players:this.snapshots()});
+    send(client,{type:'snapshot',serverTime:Date.now(),players:this.snapshots()});
+    send(client,{type:'world.state',revision:this.nextDestructionId-1,destruction:this.worldDestruction,debris:this.worldDebris});
     send(client,{type:'round.update',team0:this.score[0],team1:this.score[1],round:this.round});
   }
 
@@ -218,12 +237,12 @@ export class GameRoom {
       playerId:client.player.id,team:p.team,
       spawn:{x:p.x,y:p.y,z:p.z,yaw:p.yaw},
       mapId:this.mapId,mapName:MAPS[this.mapId].name,
-      weaponCode:p.weaponCode,secondaryWeapon:p.secondaryWeapon,
+      weaponCode:p.weaponCode,secondaryWeapon:p.secondaryWeapon,itemCode:p.itemCode,itemCount:p.itemCount,itemInventory:p.itemInventory,
       ammo:p.ammo,reserve:p.reserve,health:p.health,weapon,
-      score:this.score,round:this.round
+      worldDestruction:this.worldDestruction,worldDebris:this.worldDebris,score:this.score,round:this.round
     });
     this.broadcast({type:'player.reconnected',playerId:client.player.id,name:client.player.name});
-    send(client,{type:'snapshot',players:this.snapshots()});
+    send(client,{type:'snapshot',serverTime:Date.now(),players:this.snapshots()});
     return true;
   }
 
@@ -285,10 +304,12 @@ export class GameRoom {
       p.reserve<=0 || Date.now()<p.reloadUntil) return;
     const weapon=WEAPONS[p.weaponCode];
     p.reloadUntil=Date.now()+weapon.reloadMs;
-    setTimeout(()=>{
-      if(this.finished || !p.connected) return;
-      const amount=Math.min(weapon.magazine-p.ammo,p.reserve);
-      p.ammo+=amount;p.reserve-=amount;p.reloadUntil=0;
+    const token=++p.reloadToken;
+    if(p.reloadTimer)clearTimeout(p.reloadTimer);
+    p.reloadTimer=setTimeout(()=>{
+      if(this.finished||p.reloadToken!==token||p.weaponCode!==weapon.code)return;
+      const transfer=transferReloadAmmo(p.ammo,p.reserve,weapon.magazine);
+      p.ammo=transfer.ammo;p.reserve=transfer.reserve;p.reloadUntil=0;p.reloadTimer=null;
       p.weaponAmmo[p.weaponCode]={ammo:p.ammo,reserve:p.reserve};
       if(p.connected)send(p.client,{type:'ammo.update',ammo:p.ammo,reserve:p.reserve,weaponCode:p.weaponCode});
     },weapon.reloadMs);
@@ -296,9 +317,14 @@ export class GameRoom {
 
   handleSwitchWeapon(client:PlayerClient) {
     const p=this.players.find(item=>item.client===client);
-    if(!p || this.finished || Date.now()<p.reloadUntil) return;
+    if(!p || this.finished) return;
+    // Weapon switching is a valid reload-cancel action. Incomplete reloads
+    // do not transfer ammunition; the old magazine remains unchanged.
+    if(p.reloadTimer){clearTimeout(p.reloadTimer);p.reloadTimer=null;}
+    p.reloadToken++;p.reloadUntil=0;
     p.weaponAmmo[p.weaponCode]={ammo:p.ammo,reserve:p.reserve};
-    const next=p.weaponCode===p.client.primaryWeapon?p.secondaryWeapon:p.client.primaryWeapon;
+    const primary=p.client.selectedPrimaryWeapon||p.client.primaryWeapon;
+    const next=p.weaponCode===primary?p.secondaryWeapon:primary;
     if(!WEAPONS[next]) return;
     p.weaponCode=next;
     const weapon=WEAPONS[next];
@@ -307,6 +333,83 @@ export class GameRoom {
     p.reserve=stored.reserve;
     p.lastFire=0;
     send(p.client,{type:'weapon.update',weaponCode:next,weapon,ammo:p.ammo,reserve:p.reserve});
+  }
+
+  private eliminatePlayer(shooter:PlayerState,target:PlayerState,weaponCode:string,now:number){
+    if(!target.alive||target.health>0)return;target.alive=false;target.deaths++;shooter.kills++;shooter.weaponKills[weaponCode]=(shooter.weaponKills[weaponCode]||0)+1;
+    const clipStart=now-this.startedAt-3500,killcamFrames=this.replayFrames.filter(frame=>frame.t>=clipStart);killcamFrames.push({t:now-this.startedAt,players:this.snapshots()});
+    send(target.client,{type:'eliminated',by:shooter.client.player.name,killerId:shooter.client.player.id,killcamFrames});
+    send(shooter.client,{type:'elimination',target:target.client.player.name,kills:shooter.kills});
+    if(this.mode==='ffa'){if(shooter.kills>=20)void this.finish(shooter.client.player.id);}
+    else{
+      this.score[shooter.team]++;this.broadcast({type:'round.update',team0:this.score[0],team1:this.score[1],round:this.round});
+      if(this.score[shooter.team]>=5)void this.finish(shooter.client.player.id);
+      else{this.round++;this.players.forEach(p=>{
+        p.health=100;p.alive=true;p.x=p.spawnX;p.y=.92;p.z=p.spawnZ;p.verticalVelocity=0;
+        p.weaponAmmo[p.weaponCode]={ammo:WEAPONS[p.weaponCode].magazine,reserve:WEAPONS[p.weaponCode].reserve};
+        p.weaponAmmo[p.secondaryWeapon]={ammo:WEAPONS[p.secondaryWeapon].magazine,reserve:WEAPONS[p.secondaryWeapon].reserve};
+        p.ammo=p.weaponAmmo[p.weaponCode].ammo;p.reserve=p.weaponAmmo[p.weaponCode].reserve;
+        p.itemInventory=Object.fromEntries(Object.values(ITEMS).map(item=>[item.code,item.startingCount])) as Record<RockeyItemCode,number>;
+        p.itemCount=p.itemInventory[p.itemCode];p.energyUntil=0;
+        if(p.connected){send(p.client,{type:'ammo.update',ammo:p.ammo,reserve:p.reserve,weaponCode:p.weaponCode});send(p.client,{type:'item.update',itemCode:p.itemCode,count:p.itemCount,inventory:p.itemInventory,health:p.health});}
+      });}
+    }
+    if(!this.finished){setTimeout(()=>{if(this.finished||target.connected)return;target.alive=false;},0);setTimeout(()=>{if(this.finished||!target.connected)return;target.health=100;target.alive=true;target.x=target.spawnX;target.z=target.spawnZ;target.y=.92;target.verticalVelocity=0;},1800);}
+    else setTimeout(()=>{if(!this.finished)return;target.health=100;target.alive=true;},1800);
+  }
+  private applyDamage(shooter:PlayerState,target:PlayerState,damage:number,weaponCode:string,headshot:boolean,now:number){
+    if(!target.alive||damage<=0)return;target.health=Math.max(0,target.health-damage);target.damage+=damage;if(headshot)shooter.headshots++;
+    send(shooter.client,{type:'hit',damage,headshot,target:target.client.player.name,targetId:target.client.player.id,weaponCode});
+    send(target.client,{type:'damage',health:target.health,damage,headshot,from:shooter.client.player.name});
+    if(target.health<=0)this.eliminatePlayer(shooter,target,weaponCode,now);
+  }
+  handleSelectItem(client:PlayerClient,message:Record<string,unknown>){
+    const p=this.players.find(v=>v.client===client);if(!p||!p.alive||!p.connected||this.finished)return;
+    const code=String(message.itemCode||'');
+    if(!(code in ITEMS))return send(client,{type:'item.error',message:'존재하지 않는 아이템입니다.'});
+    const selected=code as RockeyItemCode;
+    if((p.itemInventory[selected]||0)<=0)return send(client,{type:'item.error',message:'해당 아이템을 모두 사용했습니다.'});
+    p.itemCode=selected;p.itemCount=p.itemInventory[selected];
+    send(client,{type:'item.update',itemCode:p.itemCode,count:p.itemCount,inventory:p.itemInventory,health:p.health});
+  }
+
+  handleUseItem(client:PlayerClient,message:Record<string,unknown>){
+    const p=this.players.find(v=>v.client===client),now=Date.now();if(!p||!p.alive||!p.connected||this.finished)return;
+    if(message.itemCode!==p.itemCode){p.suspiciousInputs++;return;}
+    if((p.itemInventory[p.itemCode]||0)<=0||now-p.lastItemUse<850)return;
+    if(p.itemCode==='PILLS'&&p.health>=100){send(client,{type:'item.update',itemCode:p.itemCode,count:p.itemCount,inventory:p.itemInventory,health:p.health});return;}
+    p.lastItemUse=now;p.itemInventory[p.itemCode]=Math.max(0,p.itemInventory[p.itemCode]-1);p.itemCount=p.itemInventory[p.itemCode];
+    const selectedItemCode=p.itemCode;
+    if(selectedItemCode==='PILLS'){p.health=Math.min(100,p.health+35);send(client,{type:'item.update',itemCode:selectedItemCode,count:p.itemCount,inventory:p.itemInventory,health:p.health,effect:'HEAL'});return;}
+    if(selectedItemCode==='ENERGY'){p.energyUntil=now+8000;send(client,{type:'item.update',itemCode:selectedItemCode,count:p.itemCount,inventory:p.itemInventory,health:p.health,effect:'ENERGY'});return;}
+    const itemCode=selectedItemCode,fuseMs=itemCode==='GRENADE'?1050:itemCode==='SMOKE'?850:650;
+    const dx=-Math.sin(p.yaw)*Math.cos(p.pitch),dy=Math.sin(p.pitch),dz=-Math.cos(p.yaw)*Math.cos(p.pitch);
+    const x=Math.max(-26,Math.min(26,p.x+dx*7.2)),z=Math.max(-26,Math.min(26,p.z+dz*7.2)),y=Math.max(.75,p.y+.55+dy*3.2);
+    send(client,{type:'item.update',itemCode,count:p.itemCount,inventory:p.itemInventory,health:p.health});
+    this.broadcast({type:'item.throw',ownerId:client.player.id,itemCode,x:p.x,y:p.y+.55,z:p.z,yaw:p.yaw,pitch:p.pitch,fuseMs});
+    setTimeout(()=>{
+      if(this.finished)return;
+      if(itemCode==='GRENADE'){
+        const destruction={id:this.id+':'+this.nextDestructionId++,x,y,z,radius:6};
+        this.worldDestruction.push(destruction);
+        if(this.worldDestruction.length>240)this.worldDestruction.shift();
+        this.worldDebris.push(...createAuthoritativeDebris(destruction.id,x,y,z,6,12));
+        if(this.worldDebris.length>160)this.worldDebris.splice(0,this.worldDebris.length-160);
+        this.broadcast({type:'world.state',revision:this.nextDestructionId-1,destruction:this.worldDestruction,debris:this.worldDebris});
+        this.broadcast({type:'item.effect',effect:'GRENADE',x,y,z,radius:6,durationMs:520,eventId:destruction.id});
+        for(const target of this.players.filter(v=>v.alive&&v.connected&&v.team!==p.team)){
+          const distance=Math.hypot(target.x-x,target.z-z,(target.y+.5)-y);if(distance<7)this.applyDamage(p,target,Math.max(1,Math.round(82*(1-distance/7))),'GRENADE',false,Date.now());
+        }
+      }else if(itemCode==='SMOKE'){
+        const durationMs=8000;
+        this.smokeVolumes.push({x,y,z,radius:4.5,expiresAt:Date.now()+durationMs});
+        this.broadcast({type:'item.effect',effect:'SMOKE',x,y,z,radius:4.5,durationMs});
+      }
+      else{
+        for(const target of this.players){if(!target.alive||!target.connected||target.team===p.team)continue;const distance=Math.hypot(target.x-x,target.z-z,(target.y+.5)-y);if(distance<10)send(target.client,{type:'item.effect',effect:'FLASH',durationMs:Math.round(1400*(1-distance/12))});}
+        this.broadcast({type:'item.effect',effect:'FLASH_BURST',x,y,z,radius:4,durationMs:360});
+      }
+    },fuseMs);
   }
 
   handleFire(client:PlayerClient,message:Record<string,unknown>) {
@@ -328,73 +431,30 @@ export class GameRoom {
       shooter.weaponAmmo[shooter.weaponCode]={ammo:shooter.ammo,reserve:shooter.reserve};
       send(client,{type:'ammo.update',ammo:shooter.ammo,reserve:shooter.reserve,weaponCode:shooter.weaponCode});
     }
-    if(weapon.category!=='MELEE')this.broadcast({type:'weapon.shot',shooterId:client.player.id,x:shooter.x,y:shooter.y+0.55,z:shooter.z,yaw:shooter.yaw,pitch:shooter.pitch,weaponCode:weapon.code});
     const arenaWalls=[
       {x:0,z:-29.4,hx:30,hz:0.6,top:4.4},{x:0,z:29.4,hx:30,hz:0.6,top:4.4},
       {x:-29.4,z:0,hx:0.6,hz:30,top:4.4},{x:29.4,z:0,hx:0.6,hz:30,top:4.4}
     ];
-    const trace=traceWeaponShot(shooter,this.players,this.mode,[...MAPS[this.mapId].cover,...arenaWalls],weapon);
+    const activeSmoke=this.smokeVolumes.filter(cloud=>cloud.expiresAt>now);
+    this.smokeVolumes=activeSmoke;
+    const trace=traceWeaponShot(shooter,this.players,this.mode,[...MAPS[this.mapId].cover,...arenaWalls],weapon,activeSmoke);
     const target=trace.target as PlayerState|null;
     const best=trace.distance;
     const headshot=trace.headshot;
+    if(weapon.category!=='MELEE')this.broadcast({
+      type:'weapon.shot',shotId:client.player.id+':'+String(message.sequence??now),
+      shooterId:client.player.id,x:shooter.x,y:shooter.y+0.55,z:shooter.z,
+      yaw:shooter.yaw,pitch:shooter.pitch,weaponCode:weapon.code,
+      hit:!!target,targetId:target?.client.player.id??null,headshot,distance:target?best:null
+    });
     // Server-authoritative recoil: apply after the shot ray is evaluated, then sync the new aim to the shooter.
     const recoil=calculateWeaponRecoil(weapon);
     shooter.pitch=Math.max(-1.3,Math.min(1.3,shooter.pitch+recoil));
     shooter.yaw+=(Math.random()-0.5)*recoil*0.18;
     send(shooter.client,{type:'weapon.recoil',pitch:shooter.pitch,yaw:shooter.yaw});
-    if(!target) return;
+    if(!target)return;
     const damage=calculateWeaponDamage(weapon,headshot,best);
-    target.health=Math.max(0,target.health-damage);
-    target.damage+=damage;
-    if(headshot) shooter.headshots++;
-    send(shooter.client,{type:'hit',damage,headshot,target:target.client.player.name,targetId:target.client.player.id,weaponCode:weapon.code});
-    send(target.client,{type:'damage',health:target.health,damage,headshot,from:shooter.client.player.name});
-
-    if(target.health<=0) {
-      target.alive=false;
-      target.deaths++;
-      shooter.kills++;
-      shooter.weaponKills[weapon.code]=(shooter.weaponKills[weapon.code]||0)+1;
-      const clipStart=now-this.startedAt-3500;
-      const killcamFrames=this.replayFrames.filter(frame=>frame.t>=clipStart);
-      killcamFrames.push({t:now-this.startedAt,players:this.snapshots()});
-      send(target.client,{type:'eliminated',by:shooter.client.player.name,killerId:shooter.client.player.id,killcamFrames});
-      send(shooter.client,{type:'elimination',target:target.client.player.name,kills:shooter.kills});
-      if(this.mode==='ffa') {
-        if(shooter.kills>=20) void this.finish(shooter.client.player.id);
-      } else {
-        this.score[shooter.team]++;
-        this.broadcast({type:'round.update',team0:this.score[0],team1:this.score[1],round:this.round});
-        if(this.score[shooter.team]>=5) {
-          void this.finish(shooter.client.player.id);
-        } else {
-          this.round++;
-          this.players.forEach(p=>{
-            p.health=100;p.alive=true;p.x=p.spawnX;p.y=0.92;p.z=p.spawnZ;p.verticalVelocity=0;
-            p.weaponAmmo[p.weaponCode]={ammo:WEAPONS[p.weaponCode].magazine,reserve:WEAPONS[p.weaponCode].reserve};
-            p.weaponAmmo[p.secondaryWeapon]={ammo:WEAPONS[p.secondaryWeapon].magazine,reserve:WEAPONS[p.secondaryWeapon].reserve};
-            p.ammo=p.weaponAmmo[p.weaponCode].ammo;p.reserve=p.weaponAmmo[p.weaponCode].reserve;
-            if(p.connected)send(p.client,{type:'ammo.update',ammo:p.ammo,reserve:p.reserve,weaponCode:p.weaponCode});
-          });
-        }
-      }
-      if(!this.finished) {
-        setTimeout(()=>{
-          if(this.finished || target!.connected) return;
-          target!.alive=false;
-        },0);
-        setTimeout(()=>{
-          if(this.finished || !target!.connected) return;
-          target!.health=100;target!.alive=true;target!.x=target!.spawnX;target!.z=target!.spawnZ;
-          target!.y=0.92;target!.verticalVelocity=0;
-        },1800);
-      } else {
-        setTimeout(()=>{
-          if(this.finished) return;
-          target!.health=100;target!.alive=true;
-        },1800);
-      }
-    }
+    this.applyDamage(shooter,target,damage,weapon.code,headshot,now);
   }
 
   private captureReplayFrame(now:number) {
@@ -409,11 +469,20 @@ export class GameRoom {
   private tick() {
     if(this.finished) return;
     const now=Date.now(),delta=0.05;
+    this.smokeVolumes=this.smokeVolumes.filter(cloud=>cloud.expiresAt>now);
+    if(this.worldDebris.length){
+      stepAuthoritativeDebris(this.worldDebris,delta,MAPS[this.mapId].cover,(x,z,y)=>this.floorHeightAt(x,z,y));
+      this.worldDebris=this.worldDebris.filter(piece=>Math.abs(piece.x)<34&&Math.abs(piece.z)<34&&piece.y>-4);
+      if(now-this.lastDebrisBroadcastAt>=100){
+        this.lastDebrisBroadcastAt=now;
+        this.broadcast({type:'world.debris',serverTime:now,bodies:this.worldDebris});
+      }
+    }
     const cover=MAPS[this.mapId].cover;
     for(const p of this.players) {
       if(!p.alive || !p.connected) continue;
       if(now-p.lastInput>1200) {p.forward=0;p.right=0;p.aim=false;}
-      const speed=(p.sprint?7:5.4)*(p.aim?0.5:1);
+      const speed=(p.sprint?7:5.4)*(now<p.energyUntil?2:1)*(p.aim?0.5:1);
       const fx=-Math.sin(p.yaw),fz=-Math.cos(p.yaw);
       const rx=Math.cos(p.yaw),rz=-Math.sin(p.yaw);
       let dx=(fx*p.forward+rx*p.right)*speed*delta;
@@ -424,13 +493,14 @@ export class GameRoom {
       const nz=Math.max(-27.5,Math.min(27.5,p.z+dz));
       p.verticalVelocity-=18*delta;
       const nextY=p.y+p.verticalVelocity*delta;
-      if(nextY<=0.92){p.y=0.92;p.verticalVelocity=0;} else p.y=Math.min(8,nextY);
-      const blocked=cover.some(b=>
-        p.y-0.86<b.top && p.y+0.86>0 &&
-        nx+0.38>b.x-b.hx && nx-0.38<b.x+b.hx &&
-        nz+0.38>b.z-b.hz && nz-0.38<b.z+b.hz
-      );
+      const blocked=isBlockedByCover(cover,nx,p.y,nz);
       if(!blocked){p.x=nx;p.z=nz;}
+      const floorCenter=this.floorHeightAt(p.x,p.z,p.y)+.92;
+      if(nextY<=floorCenter&&p.y>=floorCenter-.95){
+        p.y=floorCenter;p.verticalVelocity=0;
+      }else{
+        p.y=Math.min(8,nextY);
+      }
     }
     this.captureReplayFrame(now);
     this.broadcast({type:'snapshot',serverTime:now,players:this.snapshots()});
