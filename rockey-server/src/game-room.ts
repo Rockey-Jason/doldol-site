@@ -3,7 +3,7 @@ import { admin, type VerifiedPlayer } from './auth.js';
 import { ITEMS, MAPS, WEAPONS, type RockeyItemCode, type RockeyWeapon } from './catalog.js';
 import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, transferReloadAmmo } from './combat.js';
 import { createAuthoritativeDebris, stepAuthoritativeDebris, type DebrisBodyState } from './world-physics.js';
-import { isBlockedByCover, tacticalFloorHeightAt } from './world-navigation.js';
+import { isBlockedByCover, resolveCeilingCollision, tacticalFloorHeightAt } from './world-navigation.js';
 import { ENERGY_CUBE_RULES, isEnemyInsideEnergyCube } from './energy-cube.js';
 
 export type Mode = '1v1' | '2v2' | '3v3' | 'ranked' | 'ffa';
@@ -543,8 +543,14 @@ export class GameRoom {
       const nextY=p.y+p.verticalVelocity*delta;
       const blocked=isBlockedByCover(cover,nx,p.y,nz);
       if(!blocked){p.x=nx;p.z=nz;}
+      const ceiling=resolveCeilingCollision(cover,p.x,p.y,p.z,nextY);
       const floorCenter=this.floorHeightAt(p.x,p.z,p.y)+.92;
-      if(nextY<=floorCenter&&p.y>=floorCenter-.95){
+      if(ceiling.ceilingHit){
+        // A ceiling strike ends the jump immediately. Gravity takes over on
+        // the next tick, rather than carrying the player sideways while stuck.
+        p.y=ceiling.y;
+        p.verticalVelocity=0;
+      }else if(nextY<=floorCenter&&p.y>=floorCenter-.95){
         p.y=floorCenter;p.verticalVelocity=0;
       }else{
         p.y=Math.min(8,nextY);
