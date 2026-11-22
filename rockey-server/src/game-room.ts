@@ -39,6 +39,7 @@ interface PlayerState {
   sequence: number; lastFire: number; lastInput: number;
   weaponCode: string; secondaryWeapon: string;
   itemCode:RockeyItemCode;itemCount:number;itemInventory:Record<RockeyItemCode,number>;lastItemUse:number;energyUntil:number;
+  gateA:{x:number;y:number;z:number;yaw:number}|null;gateB:{x:number;y:number;z:number;yaw:number}|null;gateExpiresAt:number;lastGateTeleportAt:number;
   ammo: number; reserve: number; reloadUntil: number; reloadToken:number; reloadTimer:NodeJS.Timeout|null;
   weaponAmmo: Record<string,{ammo:number;reserve:number}>;
   alive: boolean; connected: boolean; disconnectedAt: number | null;
@@ -61,6 +62,7 @@ export class GameRoom {
   private persistedMatchId: string | null = null;
   private players: PlayerState[];
   private smokeVolumes:Array<{x:number;y:number;z:number;radius:number;expiresAt:number}>=[];
+  private energyFields:Array<{id:string;team:number;x:number;y:number;z:number;radius:number;expiresAt:number}>=[];
   private worldDestruction:Array<{id:string;x:number;y:number;z:number;radius:number}>=[];
   private nextDestructionId=1;
   private worldDebris:DebrisBodyState[]=[];
@@ -105,6 +107,7 @@ export class GameRoom {
         sequence:-1,lastFire:0,lastInput:Date.now(),
         weaponCode,secondaryWeapon,ammo:weapon.magazine,reserve:weapon.reserve,
         itemCode,itemCount:itemInventory[itemCode],itemInventory,lastItemUse:0,energyUntil:0,
+        gateA:null,gateB:null,gateExpiresAt:0,lastGateTeleportAt:0,
         weaponAmmo:{
           [weaponCode]:{ammo:weapon.magazine,reserve:weapon.reserve},
           [secondaryWeapon]:{ammo:secondaryDefinition.magazine,reserve:secondaryDefinition.reserve}
@@ -350,7 +353,7 @@ export class GameRoom {
         p.weaponAmmo[p.secondaryWeapon]={ammo:WEAPONS[p.secondaryWeapon].magazine,reserve:WEAPONS[p.secondaryWeapon].reserve};
         p.ammo=p.weaponAmmo[p.weaponCode].ammo;p.reserve=p.weaponAmmo[p.weaponCode].reserve;
         p.itemInventory=Object.fromEntries(Object.values(ITEMS).map(item=>[item.code,item.startingCount])) as Record<RockeyItemCode,number>;
-        p.itemCount=p.itemInventory[p.itemCode];p.energyUntil=0;
+        p.itemCount=p.itemInventory[p.itemCode];p.energyUntil=0;p.gateA=null;p.gateB=null;p.gateExpiresAt=0;p.lastGateTeleportAt=0;
         if(p.connected){send(p.client,{type:'ammo.update',ammo:p.ammo,reserve:p.reserve,weaponCode:p.weaponCode});send(p.client,{type:'item.update',itemCode:p.itemCode,count:p.itemCount,inventory:p.itemInventory,health:p.health});}
       });}
     }
@@ -358,9 +361,12 @@ export class GameRoom {
     else setTimeout(()=>{if(!this.finished)return;target.health=100;target.alive=true;},1800);
   }
   private applyDamage(shooter:PlayerState,target:PlayerState,damage:number,weaponCode:string,headshot:boolean,now:number){
-    if(!target.alive||damage<=0)return;target.health=Math.max(0,target.health-damage);target.damage+=damage;if(headshot)shooter.headshots++;
-    send(shooter.client,{type:'hit',damage,headshot,target:target.client.player.name,targetId:target.client.player.id,weaponCode});
-    send(target.client,{type:'damage',health:target.health,damage,headshot,from:shooter.client.player.name});
+    if(!target.alive||damage<=0)return;
+    const protectedByField=this.energyFields.some(field=>field.team===target.team&&field.expiresAt>now&&Math.hypot(target.x-field.x,target.z-field.z)<=field.radius);
+    const finalDamage=protectedByField?Math.max(1,Math.ceil(damage*.7)):damage;
+    target.health=Math.max(0,target.health-finalDamage);target.damage+=finalDamage;if(headshot)shooter.headshots++;
+    send(shooter.client,{type:'hit',damage:finalDamage,headshot,target:target.client.player.name,targetId:target.client.player.id,weaponCode});
+    send(target.client,{type:'damage',health:target.health,damage:finalDamage,headshot,from:shooter.client.player.name,shielded:protectedByField});
     if(target.health<=0)this.eliminatePlayer(shooter,target,weaponCode,now);
   }
   handleSelectItem(client:PlayerClient,message:Record<string,unknown>){
@@ -378,11 +384,31 @@ export class GameRoom {
     if(message.itemCode!==p.itemCode){p.suspiciousInputs++;return;}
     if((p.itemInventory[p.itemCode]||0)<=0||now-p.lastItemUse<850)return;
     if(p.itemCode==='PILLS'&&p.health>=100){send(client,{type:'item.update',itemCode:p.itemCode,count:p.itemCount,inventory:p.itemInventory,health:p.health});return;}
+    let gatePlacement:{x:number;y:number;z:number;yaw:number}|null=null;
+    if(p.itemCode==='ROCKEY_GATE'){
+      const dx=-Math.sin(p.yaw),dz=-Math.cos(p.yaw),cover=MAPS[this.mapId].cover;
+      for(const distance of [9,7,5,3.5]){
+        const x=Math.max(-25,Math.min(25,p.x+dx*distance)),z=Math.max(-25,Math.min(25,p.z+dz*distance));
+        const floor=this.floorHeightAt(x,z,p.y);
+        if(!isBlockedByCover(cover,x,floor+.92,z)){gatePlacement={x,y:floor,z,yaw:p.yaw};break;}
+      }
+      if(!gatePlacement)return send(client,{type:'item.error',message:'포탈을 설치할 공간이 없습니다. 열린 바닥을 조준해 주세요.'});
+    }
     p.lastItemUse=now;p.itemInventory[p.itemCode]=Math.max(0,p.itemInventory[p.itemCode]-1);p.itemCount=p.itemInventory[p.itemCode];
     const selectedItemCode=p.itemCode;
     if(selectedItemCode==='PILLS'){p.health=Math.min(100,p.health+35);send(client,{type:'item.update',itemCode:selectedItemCode,count:p.itemCount,inventory:p.itemInventory,health:p.health,effect:'HEAL'});return;}
     if(selectedItemCode==='ENERGY'){p.energyUntil=now+8000;send(client,{type:'item.update',itemCode:selectedItemCode,count:p.itemCount,inventory:p.itemInventory,health:p.health,effect:'ENERGY'});return;}
-    const itemCode=selectedItemCode,fuseMs=itemCode==='GRENADE'?1050:itemCode==='SMOKE'?850:650;
+    if(selectedItemCode==='ROCKEY_GATE'&&gatePlacement){
+      send(client,{type:'item.update',itemCode:selectedItemCode,count:p.itemCount,inventory:p.itemInventory,health:p.health});
+      const isFirst=!p.gateA||now>=p.gateExpiresAt;
+      if(isFirst){p.gateA=gatePlacement;p.gateB=null;p.gateExpiresAt=now+30000;}
+      else{p.gateB=gatePlacement;p.gateExpiresAt=now+30000;}
+      const color=isFirst?'blue':'orange';
+      this.broadcast({type:'item.effect',effect:'ROCKEY_GATE_PLACE',playerId:client.player.id,x:gatePlacement.x,y:gatePlacement.y,z:gatePlacement.z,yaw:gatePlacement.yaw,color,durationMs:30000,from:{x:p.x,y:p.y,z:p.z}});
+      if(!isFirst&&p.gateA&&p.gateB)this.broadcast({type:'item.effect',effect:'ROCKEY_GATE_LINK',playerId:client.player.id,x:p.gateB.x,y:p.gateB.y,z:p.gateB.z,from:{x:p.gateA.x,y:p.gateA.y,z:p.gateA.z},durationMs:650});
+      return;
+    }
+    const itemCode=selectedItemCode,fuseMs=itemCode==='GRENADE'?1050:itemCode==='SMOKE'?850:itemCode==='ENERGY_CUBE'?900:650;
     const dx=-Math.sin(p.yaw)*Math.cos(p.pitch),dy=Math.sin(p.pitch),dz=-Math.cos(p.yaw)*Math.cos(p.pitch);
     const x=Math.max(-26,Math.min(26,p.x+dx*7.2)),z=Math.max(-26,Math.min(26,p.z+dz*7.2)),y=Math.max(.75,p.y+.55+dy*3.2);
     send(client,{type:'item.update',itemCode,count:p.itemCount,inventory:p.itemInventory,health:p.health});
@@ -404,8 +430,13 @@ export class GameRoom {
         const durationMs=8000;
         this.smokeVolumes.push({x,y,z,radius:4.5,expiresAt:Date.now()+durationMs});
         this.broadcast({type:'item.effect',effect:'SMOKE',x,y,z,radius:4.5,durationMs});
-      }
-      else{
+      }else if(itemCode==='ENERGY_CUBE'){
+        const fieldY=this.floorHeightAt(x,z,p.y),durationMs=5000;
+        const field={id:this.id+':field:'+Date.now()+':'+client.player.id,team:p.team,x,y:fieldY,z,radius:4.6,expiresAt:Date.now()+durationMs};
+        this.energyFields.push(field);
+        if(this.energyFields.length>32)this.energyFields.splice(0,this.energyFields.length-32);
+        this.broadcast({type:'item.effect',effect:'ENERGY_CUBE_FIELD',x,y:fieldY,z,radius:field.radius,durationMs,team:p.team,eventId:field.id});
+      }else{
         for(const target of this.players){if(!target.alive||!target.connected||target.team===p.team)continue;const distance=Math.hypot(target.x-x,target.z-z,(target.y+.5)-y);if(distance<10)send(target.client,{type:'item.effect',effect:'FLASH',durationMs:Math.round(1400*(1-distance/12))});}
         this.broadcast({type:'item.effect',effect:'FLASH_BURST',x,y,z,radius:4,durationMs:360});
       }
@@ -470,6 +501,7 @@ export class GameRoom {
     if(this.finished) return;
     const now=Date.now(),delta=0.05;
     this.smokeVolumes=this.smokeVolumes.filter(cloud=>cloud.expiresAt>now);
+    this.energyFields=this.energyFields.filter(field=>field.expiresAt>now);
     if(this.worldDebris.length){
       stepAuthoritativeDebris(this.worldDebris,delta,MAPS[this.mapId].cover,(x,z,y)=>this.floorHeightAt(x,z,y));
       this.worldDebris=this.worldDebris.filter(piece=>Math.abs(piece.x)<34&&Math.abs(piece.z)<34&&piece.y>-4);
@@ -482,7 +514,8 @@ export class GameRoom {
     for(const p of this.players) {
       if(!p.alive || !p.connected) continue;
       if(now-p.lastInput>1200) {p.forward=0;p.right=0;p.aim=false;}
-      const speed=(p.sprint?7:5.4)*(now<p.energyUntil?2:1)*(p.aim?0.5:1);
+      const insideEnergyField=this.energyFields.some(field=>field.team===p.team&&Math.hypot(p.x-field.x,p.z-field.z)<=field.radius);
+      const speed=(p.sprint?7:5.4)*(now<p.energyUntil?2:1)*(insideEnergyField?1.25:1)*(p.aim?0.5:1);
       const fx=-Math.sin(p.yaw),fz=-Math.cos(p.yaw);
       const rx=Math.cos(p.yaw),rz=-Math.sin(p.yaw);
       let dx=(fx*p.forward+rx*p.right)*speed*delta;
@@ -500,6 +533,23 @@ export class GameRoom {
         p.y=floorCenter;p.verticalVelocity=0;
       }else{
         p.y=Math.min(8,nextY);
+      }
+      if(p.gateA&&now>=p.gateExpiresAt){p.gateA=null;p.gateB=null;p.gateExpiresAt=0;}
+      if(p.gateA&&p.gateB&&now-p.lastGateTeleportAt>850){
+        const nearGate=(gate:{x:number;y:number;z:number;yaw:number})=>Math.hypot(p.x-gate.x,p.z-gate.z)<=1.12&&Math.abs((p.y-.92)-gate.y)<=1.55;
+        const entry=nearGate(p.gateA)?p.gateA:nearGate(p.gateB)?p.gateB:null;
+        if(entry){
+          const destination=entry===p.gateA?p.gateB:p.gateA;
+          const normalX=Math.sin(destination.yaw),normalZ=Math.cos(destination.yaw);
+          const candidates=[1.85,-1.85,2.65].map(offset=>({x:destination.x+normalX*offset,z:destination.z+normalZ*offset}));
+          for(const candidate of candidates){
+            const floor=this.floorHeightAt(candidate.x,candidate.z,p.y),centerY=floor+.92;
+            if(isBlockedByCover(cover,candidate.x,centerY,candidate.z))continue;
+            const from={x:p.x,y:p.y,z:p.z};p.x=candidate.x;p.z=candidate.z;p.y=centerY;p.yaw=destination.yaw;p.pitch=0;p.verticalVelocity=0;p.lastGateTeleportAt=now;
+            this.broadcast({type:'player.teleport',playerId:p.client.player.id,from,to:{x:p.x,y:p.y,z:p.z},yaw:p.yaw});
+            break;
+          }
+        }
       }
     }
     this.captureReplayFrame(now);
@@ -553,6 +603,7 @@ export class GameRoom {
       }))
     };
 
+    this.energyFields.length=0;
     if(this.persistedMatchId) {
       const playerWrite=await admin.from('rockey_match_players').upsert(
         this.players.map(p=>({

@@ -8,6 +8,7 @@ import { addRockeyEnvironment } from './EnvironmentDressing';
 import { addTacticalLevel } from './TacticalLevel';
 import { createCombatantRig } from './CombatantRig';
 import { createFirstPersonHands } from './FirstPersonHands';
+import { createEnergyCubeModel, createRockeyEnergyFieldModel, createRockeyGateLaserModel, createRockeyPortalModel, type RockeyPortalPoint } from './RockeyItems';
 
 export interface RemotePlayer {
   id: string; name: string; x: number; y: number; z: number;
@@ -30,7 +31,9 @@ export interface GameInstance {
   selectItem(itemCode:string):void;
   useItem():void;
   showThrownItem(itemCode:string,x:number,y:number,z:number,yaw:number,pitch:number,fuseMs:number):void;
-  showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number,eventId?:string):void;
+  showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number,eventId?:string,yaw?:number,from?:{x:number;y:number;z:number}):void;
+  showTeleportEffect(from:{x:number;y:number;z:number},to:{x:number;y:number;z:number}):void;
+  teleportLocal(to:{x:number;y:number;z:number},yaw:number):void;
   applyWorldDestruction(events:Array<{id:string;x:number;y:number;z:number;radius:number}>):void;
   applyWorldDebris(bodies:WorldDebrisSnapshot[]):void;
   applyRecoil(pitch: number, yaw: number): void;
@@ -586,7 +589,11 @@ export async function createGame(
   const practiceTargets: THREE.Group[] = [];
   const projectiles: Array<{mesh:THREE.Mesh;trail:THREE.Line;direction:THREE.Vector3;travelled:number;maxDistance:number;age:number;impactPoint:THREE.Vector3|null;impactColor:number}> = [];
   const damagePopups: THREE.Sprite[] = [];
-  const thrownItemVisuals:Array<{mesh:THREE.Mesh;velocity:THREE.Vector3;age:number;fuseMs:number}> = [];
+  const thrownItemVisuals:Array<{mesh:THREE.Object3D;velocity:THREE.Vector3;age:number;fuseMs:number}> = [];
+  const portalVisuals:Array<{group:THREE.Group;startedAt:number;endsAt:number}> = [];
+  const gateLaserVisuals:Array<{group:THREE.Group;startedAt:number;endsAt:number}> = [];
+  const energyFieldVisuals:Array<{group:THREE.Group;startedAt:number;endsAt:number}> = [];
+  const localEnergyFields:Array<{x:number;z:number;radius:number;endsAt:number}> = [];
   const timedItemEffects:Array<{group:THREE.Group;startedAt:number;endsAt:number;kind:string}> = [];
   type FxParticle={object:THREE.Object3D;material:THREE.SpriteMaterial|THREE.MeshBasicMaterial;velocity:THREE.Vector3;age:number;life:number;gravity:number;drag:number;spin:THREE.Vector3;baseScale:THREE.Vector3;kind:'smoke'|'spark'|'ember'};
   const fxParticles:FxParticle[]=[];
@@ -679,6 +686,11 @@ export async function createGame(
   let currentItemCode:RockeyItemCode='GRENADE';
   let itemInventory:Record<RockeyItemCode,number>={GRENADE:2,SMOKE:1,FLASH:1,PILLS:2,ENERGY:1};
   let energyUntil=0;
+  let practiceGateA:RockeyPortalPoint|null=null;
+  let practiceGateB:RockeyPortalPoint|null=null;
+  let practiceGateExpiresAt=0;
+  let lastPracticeGateTeleportAt=0;
+  let lastServerGateTeleportAt=0;
   let primaryWeaponCode = 'R16';
   let secondaryWeaponCode = 'R9';
   let currentWeapon: RockeyWeapon = WEAPONS.R16;
@@ -1280,12 +1292,32 @@ export async function createGame(
   function consumeSelectedItem(){itemInventory[currentItemCode]=Math.max(0,currentItemCount()-1);updateItemHud();emitItemState();}
   function showThrownItem(itemCode:string,x:number,y:number,z:number,throwYaw:number,throwPitch:number,fuseMs:number){
     const color=itemCode==='GRENADE'?0xe5a94d:itemCode==='SMOKE'?0xb5c3cf:0x8cecff;
-    const mesh=new THREE.Mesh(new THREE.SphereGeometry(.13,12,10),new THREE.MeshStandardMaterial({color,metalness:.35,roughness:.32,emissive:color,emissiveIntensity:.25}));
-    mesh.position.set(x,y,z);mesh.castShadow=true;scene.add(mesh);const cp=Math.cos(throwPitch);
+    const mesh:THREE.Object3D=itemCode==='ENERGY_CUBE'
+      ?createEnergyCubeModel()
+      :new THREE.Mesh(new THREE.SphereGeometry(.13,12,10),new THREE.MeshStandardMaterial({color,metalness:.35,roughness:.32,emissive:color,emissiveIntensity:.25}));
+    mesh.position.set(x,y,z);if(mesh instanceof THREE.Mesh)mesh.castShadow=true;scene.add(mesh);const cp=Math.cos(throwPitch);
     const direction=new THREE.Vector3(-Math.sin(throwYaw)*cp,Math.sin(throwPitch),-Math.cos(throwYaw)*cp).normalize();
     thrownItemVisuals.push({mesh,velocity:direction.multiplyScalar(8.5).add(new THREE.Vector3(0,3.2,0)),age:0,fuseMs});
   }
-  function showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number,eventId?:string){
+  function showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number,eventId?:string,yaw=0,from?:{x:number;y:number;z:number}){
+    if(effect==='ROCKEY_GATE_PLACE'){
+      const color=eventId==='orange'?'orange':'blue';
+      const group=createRockeyPortalModel({x,y,z,yaw},color);
+      scene.add(group);const now=performance.now();portalVisuals.push({group,startedAt:now,endsAt:now+Math.max(1000,durationMs)});
+      if(from){
+        const laser=createRockeyGateLaserModel(new THREE.Vector3(from.x,from.y+.38,from.z),new THREE.Vector3(x,y+1.28,z),color);
+        scene.add(laser);gateLaserVisuals.push({group:laser,startedAt:now,endsAt:now+560});
+      }
+      return;
+    }
+    if(effect==='ROCKEY_GATE_LINK'&&from){
+      const laser=createRockeyGateLaserModel(new THREE.Vector3(from.x,from.y+1.28,from.z),new THREE.Vector3(x,y+1.28,z),'blue');
+      scene.add(laser);const now=performance.now();gateLaserVisuals.push({group:laser,startedAt:now,endsAt:now+Math.max(500,durationMs)});return;
+    }
+    if(effect==='ENERGY_CUBE_FIELD'){
+      const group=createRockeyEnergyFieldModel(x,y,z,radius||4.6);
+      scene.add(group);const now=performance.now();energyFieldVisuals.push({group,startedAt:now,endsAt:now+Math.max(300,durationMs)});return;
+    }
     if(effect==='FLASH'){
       const overlay=document.getElementById('flashOverlay');
       if(overlay){overlay.classList.add('active');window.setTimeout(()=>overlay.classList.remove('active'),Math.max(220,durationMs));}
@@ -1303,11 +1335,64 @@ export async function createGame(
       }
     }
   }
+  function showTeleportEffect(from:{x:number;y:number;z:number},to:{x:number;y:number;z:number}){
+    const now=performance.now();
+    for(const point of [from,to]){
+      const group=new THREE.Group();group.position.set(point.x,point.y-.72,point.z);
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(.72,.055,8,36),new THREE.MeshBasicMaterial({color:0x5acfff,transparent:true,opacity:.92,toneMapped:false}));
+      ring.rotation.x=Math.PI/2;group.add(ring);group.add(new THREE.PointLight(0x38baff,5,5,2));
+      scene.add(group);timedItemEffects.push({group,startedAt:now,endsAt:now+460,kind:'PORTAL_FLASH'});
+      for(let i=0;i<(isMobile?4:7);i++){
+        const angle=i*Math.PI*2/(isMobile?4:7);
+        emitFxParticle(new THREE.Vector3(point.x,point.y-.15,point.z),new THREE.Vector3(Math.cos(angle)*2,.5+Math.random()*1.2,Math.sin(angle)*2),'spark',.25,.035,0x8feaff);
+      }
+    }
+  }
+  function teleportLocal(to:{x:number;y:number;z:number},nextYaw:number){
+    if(mode==='practice'||active){
+      body.setTranslation({x:to.x,y:to.y,z:to.z},true);yaw=nextYaw;pitch=0;vertical=0;lastServerGateTeleportAt=performance.now();
+    }
+  }
+  function clearRockeyVisuals(){
+    for(const entry of [...portalVisuals,...energyFieldVisuals,...gateLaserVisuals]){scene.remove(entry.group);disposeObjectResources(entry.group);}
+    portalVisuals.length=0;energyFieldVisuals.length=0;gateLaserVisuals.length=0;localEnergyFields.length=0;
+    practiceGateA=null;practiceGateB=null;practiceGateExpiresAt=0;lastPracticeGateTeleportAt=0;
+  }
   function useItem(){
     if(!active)return;if(currentItemCount()<=0){notify('선택한 아이템을 모두 사용했습니다.');return;}
     if(mode!=='practice'){send({type:'item.use',itemCode:currentItemCode});return;}
     if(currentItemCode==='PILLS'){if(hp>=100){notify('체력이 이미 가득 찼습니다.');return;}hp=Math.min(100,hp+35);consumeSelectedItem();updateHud(hp,ammo,reserve,currentWeapon.name);notify('체력 +35');return;}
     if(currentItemCode==='ENERGY'){energyUntil=performance.now()+8000;consumeSelectedItem();notify('이동 속도 100% 증가 · 8초');return;}
+    if(currentItemCode==='ROCKEY_GATE'){
+      camera.updateMatrixWorld(true);
+      const origin=camera.getWorldPosition(new THREE.Vector3()),direction=camera.getWorldDirection(new THREE.Vector3());
+      const player=position();
+      const tx=THREE.MathUtils.clamp(player.x+direction.x*8,-25,25),tz=THREE.MathUtils.clamp(player.z+direction.z*8,-25,25);
+      const floorY=sampleGroundHeight(tx,tz,player.y-.92)??0;
+      const gate:RockeyPortalPoint={x:tx,y:floorY,z:tz,yaw};
+      const now=performance.now();
+      if(!practiceGateA||now>=practiceGateExpiresAt){
+        practiceGateA=gate;practiceGateB=null;practiceGateExpiresAt=now+30000;
+        showItemEffect('ROCKEY_GATE_PLACE',gate.x,gate.y,gate.z,1,30000,'blue',gate.yaw,{x:origin.x,y:origin.y,z:origin.z});
+        notify('푸른 포탈 생성 · 두 번째 사용으로 주황 포탈을 연결하세요.');
+      }else{
+        practiceGateB=gate;practiceGateExpiresAt=now+30000;
+        showItemEffect('ROCKEY_GATE_PLACE',gate.x,gate.y,gate.z,1,30000,'orange',gate.yaw,{x:origin.x,y:origin.y,z:origin.z});
+        showItemEffect('ROCKEY_GATE_LINK',gate.x,gate.y,gate.z,1,650,undefined,0,{x:practiceGateA.x,y:practiceGateA.y,z:practiceGateA.z});
+        notify('로키 게이트 연결 완료 · 포탈을 통과해 즉시 이동하세요.');
+      }
+      consumeSelectedItem();return;
+    }
+    if(currentItemCode==='ENERGY_CUBE'){
+      camera.updateMatrixWorld(true);
+      const origin=camera.getWorldPosition(new THREE.Vector3()),direction=camera.getWorldDirection(new THREE.Vector3());
+      const player=position(),tx=THREE.MathUtils.clamp(player.x+direction.x*7.2,-25,25),tz=THREE.MathUtils.clamp(player.z+direction.z*7.2,-25,25);
+      const floorY=sampleGroundHeight(tx,tz,player.y-.92)??0;
+      showThrownItem('ENERGY_CUBE',origin.x,origin.y,origin.z,yaw,pitch,900);
+      consumeSelectedItem();
+      window.setTimeout(()=>{if(disposed)return;showItemEffect('ENERGY_CUBE_FIELD',tx,floorY,tz,4.6,5000);localEnergyFields.push({x:tx,z:tz,radius:4.6,endsAt:performance.now()+5000});},900);
+      notify('로키 에너지 큐브 투척 · 5초 보호 필드');return;
+    }
     camera.updateMatrixWorld(true);const origin=camera.getWorldPosition(new THREE.Vector3()),direction=camera.getWorldDirection(new THREE.Vector3());
     const impact=origin.clone().addScaledVector(direction,7.2);impact.y=Math.max(.75,impact.y);
     const usedCode=currentItemCode,fuseMs=usedCode==='GRENADE'?1050:usedCode==='SMOKE'?850:650;
@@ -1976,7 +2061,35 @@ export async function createGame(
       (popup.material as THREE.SpriteMaterial).opacity=Math.max(0,1-age/.9);
       if(age>=.9){scene.remove(popup);const material=popup.material as THREE.SpriteMaterial;material.map?.dispose();material.dispose();damagePopups.splice(i,1);}
     }
-    for(let i=thrownItemVisuals.length-1;i>=0;i--){const item=thrownItemVisuals[i];item.age+=dt;item.velocity.y-=9.8*dt;item.mesh.position.addScaledVector(item.velocity,dt);if(item.age>=item.fuseMs/1000){scene.remove(item.mesh);disposeObjectResources(item.mesh);thrownItemVisuals.splice(i,1);}}
+    for(let i=thrownItemVisuals.length-1;i>=0;i--){const item=thrownItemVisuals[i];item.age+=dt;item.velocity.y-=9.8*dt;item.mesh.position.addScaledVector(item.velocity,dt);item.mesh.rotation.x+=dt*2.4;item.mesh.rotation.y+=dt*3.1;item.mesh.rotation.z+=dt*1.8;if(item.age>=item.fuseMs/1000){scene.remove(item.mesh);disposeObjectResources(item.mesh);thrownItemVisuals.splice(i,1);}}
+    for(let i=portalVisuals.length-1;i>=0;i--){
+      const entry=portalVisuals[i],age=(now-entry.startedAt)/1000,remaining=entry.endsAt-now;
+      const intro=THREE.MathUtils.clamp(age/.32,0,1),outro=THREE.MathUtils.clamp(remaining/650,0,1);
+      entry.group.scale.setScalar((.16+intro*.84)*(.72+Math.sin(time*3.4)*.025)*outro);
+      const ud=entry.group.userData; if(ud.vortex)ud.vortex.rotation.z+=dt*1.15;if(ud.innerVortex)ud.innerVortex.rotation.z-=dt*1.9;
+      if(ud.innerRing)ud.innerRing.rotation.z+=dt*.48;
+      if(Array.isArray(ud.crystals))ud.crystals.forEach((crystal:THREE.Mesh,index:number)=>{crystal.rotation.y+=dt*(1.4+index*.08);crystal.position.z=.07+Math.sin(time*2.2+index)*.035;});
+      if(remaining<=0){scene.remove(entry.group);disposeObjectResources(entry.group);portalVisuals.splice(i,1);}
+    }
+    for(let i=energyFieldVisuals.length-1;i>=0;i--){
+      const entry=energyFieldVisuals[i],elapsed=(now-entry.startedAt)/1000,remaining=entry.endsAt-now;
+      const ud=entry.group.userData;
+      if(ud.outer)ud.outer.rotation.z+=dt*.34;if(ud.middle)ud.middle.rotation.z-=dt*.52;if(ud.inner)ud.inner.rotation.z+=dt*.8;
+      if(Array.isArray(ud.crystals))ud.crystals.forEach((crystal:THREE.Mesh,index:number)=>{crystal.rotation.y+=dt*1.2;crystal.position.y=.2+Math.sin(time*2.7+index)*.035;});
+      const fade=THREE.MathUtils.clamp(remaining/650,0,1),pulse=.96+Math.sin(elapsed*7)*.035;
+      entry.group.scale.setScalar(pulse);if(ud.disk)(ud.disk.material as THREE.MeshBasicMaterial).opacity=.13*fade;
+      for(const part of [ud.outer,ud.middle,ud.inner])if(part)(part.material as THREE.MeshBasicMaterial).opacity=fade*(part===ud.outer?.92:part===ud.middle?.75:.65);
+      if(remaining<=0){scene.remove(entry.group);disposeObjectResources(entry.group);energyFieldVisuals.splice(i,1);}
+    }
+    for(let i=gateLaserVisuals.length-1;i>=0;i--){
+      const entry=gateLaserVisuals[i],remaining=entry.endsAt-now,fade=THREE.MathUtils.clamp(remaining/220,0,1);
+      const beam=entry.group.userData.beam as THREE.Mesh|undefined;
+      if(beam)(beam.material as THREE.MeshBasicMaterial).opacity=.48+Math.sin(time*28)*.22;
+      entry.group.scale.setScalar(.9+Math.sin(time*12)*.04);entry.group.traverse(object=>{if(object instanceof THREE.PointLight)object.intensity=3*fade;});
+      if(remaining<=0){scene.remove(entry.group);disposeObjectResources(entry.group);gateLaserVisuals.splice(i,1);}
+    }
+    for(let i=localEnergyFields.length-1;i>=0;i--)if(localEnergyFields[i].endsAt<=now)localEnergyFields.splice(i,1);
+    if(practiceGateExpiresAt&&now>=practiceGateExpiresAt){practiceGateA=null;practiceGateB=null;practiceGateExpiresAt=0;}
     for(let i=timedItemEffects.length-1;i>=0;i--){
       const effect=timedItemEffects[i],age=now-effect.startedAt,remaining=effect.endsAt-now;
       if(effect.kind==='GRENADE'){
@@ -2105,7 +2218,8 @@ export async function createGame(
       const movementTarget=Math.min(1,direction.length());
       movementAmount+=(movementTarget-movementAmount)*(1-Math.exp(-12*dt));
       const baseSpeed=keys.has('ShiftLeft')||keys.has('ShiftRight')?7.1:5.4;
-      const speed=baseSpeed*(now<energyUntil?2:1)*(precisionAiming?0.5:1);
+      const insideLocalField=mode==='practice'&&localEnergyFields.some(field=>now<field.endsAt&&Math.hypot(body.translation().x-field.x,body.translation().z-field.z)<=field.radius);
+      const speed=baseSpeed*(now<energyUntil?2:1)*(insideLocalField?1.25:1)*(precisionAiming?0.5:1);
       const groundedBefore=controller.computedGrounded();
       if(groundedBefore&&!wasGrounded&&vertical< -2)landingKick=.13;
       wasGrounded=groundedBefore;
@@ -2142,7 +2256,17 @@ export async function createGame(
       if(targetQuaternion)mesh.quaternion.slerp(targetQuaternion,1-Math.exp(-18*dt));
     }
 
-      const p = position();
+      let p = position();
+      if(mode==='practice'&&practiceGateA&&practiceGateB&&now-practiceGateExpiresAt<0&&now-lastPracticeGateTeleportAt>850){
+        const tryGate=(entry:RockeyPortalPoint,destination:RockeyPortalPoint)=>{
+          if(Math.hypot(p.x-entry.x,p.z-entry.z)>1.12||Math.abs((p.y-.92)-entry.y)>1.55)return false;
+          const nx=destination.x+Math.sin(destination.yaw)*1.85,nz=destination.z+Math.cos(destination.yaw)*1.85;
+          const floor=sampleGroundHeight(nx,nz,p.y-.92)??destination.y;
+          body.setTranslation({x:nx,y:floor+.92,z:nz},true);yaw=destination.yaw;vertical=0;lastPracticeGateTeleportAt=now;
+          showTeleportEffect({x:p.x,y:p.y,z:p.z},{x:nx,y:floor+.92,z:nz});p=position();return true;
+        };
+        if(!tryGate(practiceGateA,practiceGateB))tryGate(practiceGateB,practiceGateA);
+      }
       if(movementCheck&&now-movementCheck.lastSampleAt>=100&&movementCheck.samples.length<3600){
         const footY=p.y-.92;
         const floorY=sampleGroundHeight(p.x,p.z,footY);
@@ -2222,10 +2346,10 @@ export async function createGame(
       secondaryWeaponCode = WEAPONS[secondaryWeapon] ? secondaryWeapon : 'R9';
       currentWeapon = WEAPONS[currentWeaponCode];
       const safeItemCode=(itemCode in ITEMS?itemCode:'GRENADE') as RockeyItemCode;
-      itemInventory={GRENADE:ITEMS.GRENADE.startingCount,SMOKE:ITEMS.SMOKE.startingCount,FLASH:ITEMS.FLASH.startingCount,PILLS:ITEMS.PILLS.startingCount,ENERGY:ITEMS.ENERGY.startingCount};
+      itemInventory=Object.fromEntries(Object.values(ITEMS).map(item=>[item.code,item.startingCount])) as Record<RockeyItemCode,number>;
       if(nextItemInventory)for(const item of Object.values(ITEMS)){const count=Number(nextItemInventory[item.code]);if(Number.isFinite(count))itemInventory[item.code]=Math.max(0,Math.min(10,Math.floor(count)));}
       currentItemCode=safeItemCode;if(nextItemCount!==undefined)itemInventory[safeItemCode]=Math.max(0,Math.min(10,Math.floor(nextItemCount)));
-      updateItemHud();emitItemState();energyUntil=0;
+      updateItemHud();emitItemState();energyUntil=0;clearRockeyVisuals();lastServerGateTeleportAt=0;
       rebuildGun(currentWeaponCode);
       switchAnimationStart=performance.now();
       reloadAnimationStart=0;
@@ -2297,7 +2421,8 @@ export async function createGame(
       setWeaponLocal(code,nextAmmo,nextReserve);
     },
     setItem(code:string,count:number,effect?:string,inventory?:Record<string,number>){if(inventory)setItemInventory(code,inventory);else setItemLocal(code,count);if(effect==='ENERGY')energyUntil=performance.now()+8000;},
-    selectItem,useItem,showThrownItem,showItemEffect,
+    selectItem,useItem,showThrownItem,showItemEffect,showTeleportEffect,
+    teleportLocal(to:{x:number;y:number;z:number},nextYaw:number){body.setTranslation({x:to.x,y:to.y,z:to.z},true);yaw=nextYaw;pitch=0;vertical=0;lastServerGateTeleportAt=performance.now();},
     applyWorldDestruction(events:Array<{id:string;x:number;y:number;z:number;radius:number}>){for(const event of events){if(!event||typeof event.id!=='string')continue;applyDestruction(new THREE.Vector3(event.x,event.y,event.z),event.radius,event.id);}},
     showDamageOnTarget,
     showShot,

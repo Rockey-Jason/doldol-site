@@ -484,8 +484,14 @@ socket.onMessage((message:GameMessage)=>{
       game?.showThrownItem(String(message.itemCode||'GRENADE'),Number(message.x),Number(message.y),Number(message.z),Number(message.yaw),Number(message.pitch),Number(message.fuseMs||900));
       break;
     case 'item.effect':
-      game?.showItemEffect(String(message.effect||''),Number(message.x||0),Number(message.y||0),Number(message.z||0),Number(message.radius||4),Number(message.durationMs||500),typeof message.eventId==='string'?message.eventId:undefined);
+      game?.showItemEffect(String(message.effect||''),Number(message.x||0),Number(message.y||0),Number(message.z||0),Number(message.radius||4),Number(message.durationMs||500),typeof message.color==='string'?message.color:typeof message.eventId==='string'?message.eventId:undefined,Number(message.yaw||0),message.from&&typeof message.from==='object'?{x:Number((message.from as any).x),y:Number((message.from as any).y),z:Number((message.from as any).z)}:undefined);
       break;
+    case 'player.teleport':{
+      const from=message.from&&typeof message.from==='object'?message.from as {x:number;y:number;z:number}:null;
+      const to=message.to&&typeof message.to==='object'?message.to as {x:number;y:number;z:number}:null;
+      if(from&&to){game?.showTeleportEffect(from,to);if(String(message.playerId||'')===userId)game?.teleportLocal(to,Number(message.yaw||0));}
+      break;
+    }
     case 'weapon.update':
       activeWeapon=String(message.weaponCode||activeWeapon);
       game?.setWeapon(activeWeapon,Number(message.ammo),Number(message.reserve));
