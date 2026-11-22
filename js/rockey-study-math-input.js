@@ -264,11 +264,16 @@
   var answerOverrides = {
     "m1-integer-mul":"-1",
     "m1-order-ops":"6",
-    "h1-inverse-function":"x"
+    "h1-inverse-function":"x",
+    "h1-line-point-slope":"y-y_1=m*(x-x_1)"
   };
   var questionOverrides = {
     "m1-integer-mul":"서로 다른 부호의 두 정수 곱의 부호를 입력해. (+1은 양수, −1은 음수)",
-    "m1-order-ops":"3×(4+2)에서 가장 먼저 계산하는 괄호 안의 값을 입력해."
+    "m1-order-ops":"3×(4+2)에서 가장 먼저 계산하는 괄호 안의 값을 입력해.",
+    "p1-compare":"9는 6보다 크다는 관계를 식으로 입력해.",
+    "h3-product-rule":"두 함수의 도함수를 각각 u, v라 할 때 곱의 미분식을 입력해.",
+    "h3-conditional":"P(A∩B)=p_ab, P(B)=p_b일 때 조건부확률을 입력해.",
+    "h3-vector":"a=(a_x,a_y), b=(b_x,b_y)일 때 두 벡터의 내적을 좌표로 입력해."
   };
   course.forEach(function (card) {
     if (nonQuizIds.has(card.id)) card.quiz = false;
