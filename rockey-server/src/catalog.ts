@@ -96,9 +96,9 @@ for(const cx of [-17.2,17.2]){
   // Second floor: outer gallery and inner bridge gallery, with a clear
   // stairwell landing and an overhead cross-walk between the two sides.
   addTacticalCover(cx-innerSide*.9,-.05,3.4,3.35,4.19,3.91);
-  addTacticalCover(cx+innerSide*4.05,-.05,.65,3.35,4.19,3.91);
-  addTacticalCover(cx+innerSide*3.05,-.9,.675,.45,4.19,3.91);
-  addTacticalCover(cx+innerSide*3.05,-3.5,1.1,.725,4.14,3.86);
+  addTacticalCover(cx+innerSide*4.05,-.05,.6,3.35,4.19,3.91);
+  // Landing meets the shortened stair nose without covering the ramp.
+  addTacticalCover(cx+innerSide*3.05,-2.85,1.1,.5,4.19,3.91);
 
   // Outer guardrail stays continuous. The inner guardrail opens to the skybridge.
   addTacticalCover(cx- innerSide*4.18,-.05,.14,3.35,5.08,4.08);
