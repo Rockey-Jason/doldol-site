@@ -58,8 +58,8 @@ export function isBlockedByCover(
   x:number,
   y:number,
   z:number,
-  radius=ROCKEY_PLAYER_COLLISION.clearanceRadius,
-  halfHeight=ROCKEY_PLAYER_COLLISION.halfHeight
+  radius:number=ROCKEY_PLAYER_COLLISION.clearanceRadius,
+  halfHeight:number=ROCKEY_PLAYER_COLLISION.halfHeight
 ):boolean {
   return cover.some(b=>{
     const overlapsHorizontal=
