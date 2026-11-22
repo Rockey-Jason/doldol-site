@@ -2332,7 +2332,7 @@ export async function createGame(
       lastAdaptiveChangeAt=performance.now();
       applyAdaptiveProfile();
       if(bloomPass)bloomPass.strength=isMobile?.07:level==='low'?.12:level==='balanced'?.28:level==='high'?.42:.34;
-    }
+    },
     setSensitivity(value: number) {
       sensitivity=THREE.MathUtils.clamp(value,0.4,2.2);
     },
