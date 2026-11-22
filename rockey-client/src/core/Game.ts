@@ -32,6 +32,7 @@ export interface GameInstance {
   useItem():void;
   showThrownItem(itemCode:string,x:number,y:number,z:number,yaw:number,pitch:number,fuseMs:number):void;
   showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number,eventId?:string,yaw?:number,from?:{x:number;y:number;z:number}):void;
+  setEnergyCubeVision(active:boolean):void;
   showTeleportEffect(from:{x:number;y:number;z:number},to:{x:number;y:number;z:number}):void;
   teleportLocal(to:{x:number;y:number;z:number},yaw:number):void;
   applyWorldDestruction(events:Array<{id:string;x:number;y:number;z:number;radius:number}>):void;
@@ -593,7 +594,7 @@ export async function createGame(
   const portalVisuals:Array<{group:THREE.Group;startedAt:number;endsAt:number}> = [];
   const gateLaserVisuals:Array<{group:THREE.Group;startedAt:number;endsAt:number}> = [];
   const energyFieldVisuals:Array<{group:THREE.Group;startedAt:number;endsAt:number}> = [];
-  const localEnergyFields:Array<{x:number;z:number;radius:number;endsAt:number}> = [];
+  const localEnergyFields:Array<{x:number;z:number;radius:number;endsAt:number;nextDamageAt:number}> = [];
   const timedItemEffects:Array<{group:THREE.Group;startedAt:number;endsAt:number;kind:string}> = [];
   type FxParticle={object:THREE.Object3D;material:THREE.SpriteMaterial|THREE.MeshBasicMaterial;velocity:THREE.Vector3;age:number;life:number;gravity:number;drag:number;spin:THREE.Vector3;baseScale:THREE.Vector3;kind:'smoke'|'spark'|'ember'};
   const fxParticles:FxParticle[]=[];
@@ -1335,6 +1336,15 @@ export async function createGame(
       }
     }
   }
+  function setEnergyCubeVision(active:boolean){
+    let overlay=document.getElementById('energyCubeVisionOverlay');
+    if(active&&!overlay){
+      overlay=document.createElement('div');overlay.id='energyCubeVisionOverlay';overlay.setAttribute('aria-hidden','true');
+      overlay.innerHTML='<span>ENERGY INTERFERENCE</span><i>ENEMY FIELD DETECTED</i>';
+      document.body.appendChild(overlay);
+    }
+    overlay?.classList.toggle('active',active);
+  }
   function showTeleportEffect(from:{x:number;y:number;z:number},to:{x:number;y:number;z:number}){
     const now=performance.now();
     for(const point of [from,to]){
@@ -1355,7 +1365,7 @@ export async function createGame(
   }
   function clearRockeyVisuals(){
     for(const entry of [...portalVisuals,...energyFieldVisuals,...gateLaserVisuals]){scene.remove(entry.group);disposeObjectResources(entry.group);}
-    portalVisuals.length=0;energyFieldVisuals.length=0;gateLaserVisuals.length=0;localEnergyFields.length=0;
+    portalVisuals.length=0;energyFieldVisuals.length=0;gateLaserVisuals.length=0;localEnergyFields.length=0;setEnergyCubeVision(false);
     practiceGateA=null;practiceGateB=null;practiceGateExpiresAt=0;lastPracticeGateTeleportAt=0;
   }
   function useItem(){
@@ -1390,8 +1400,8 @@ export async function createGame(
       const floorY=sampleGroundHeight(tx,tz,player.y-.92)??0;
       showThrownItem('ENERGY_CUBE',origin.x,origin.y,origin.z,yaw,pitch,900);
       consumeSelectedItem();
-      window.setTimeout(()=>{if(disposed)return;showItemEffect('ENERGY_CUBE_FIELD',tx,floorY,tz,4.6,5000);localEnergyFields.push({x:tx,z:tz,radius:4.6,endsAt:performance.now()+5000});},900);
-      notify('로키 에너지 큐브 투척 · 5초 보호 필드');return;
+      window.setTimeout(()=>{if(disposed)return;const activatedAt=performance.now();showItemEffect('ENERGY_CUBE_FIELD',tx,floorY,tz,4.6,5000);localEnergyFields.push({x:tx,z:tz,radius:4.6,endsAt:activatedAt+5000,nextDamageAt:activatedAt+250});},900);
+      notify('로키 에너지 큐브 투척 · 5초 공격 필드');return;
     }
     camera.updateMatrixWorld(true);const origin=camera.getWorldPosition(new THREE.Vector3()),direction=camera.getWorldDirection(new THREE.Vector3());
     const impact=origin.clone().addScaledVector(direction,7.2);impact.y=Math.max(.75,impact.y);
@@ -2088,7 +2098,18 @@ export async function createGame(
       entry.group.scale.setScalar(.9+Math.sin(time*12)*.04);entry.group.traverse(object=>{if(object instanceof THREE.PointLight)object.intensity=3*fade;});
       if(remaining<=0){scene.remove(entry.group);disposeObjectResources(entry.group);gateLaserVisuals.splice(i,1);}
     }
-    for(let i=localEnergyFields.length-1;i>=0;i--)if(localEnergyFields[i].endsAt<=now)localEnergyFields.splice(i,1);
+    for(let i=localEnergyFields.length-1;i>=0;i--){
+      const field=localEnergyFields[i];
+      if(now>=field.nextDamageAt&&now<field.endsAt){
+        field.nextDamageAt=now+500;
+        for(const target of practiceTargets){
+          if(!target.visible||Math.hypot(target.position.x-field.x,target.position.z-field.z)>field.radius)continue;
+          const damage=4;target.userData.hp=Math.max(0,Number(target.userData.hp||100)-damage);showDamageAt(target.position.clone(),damage,false);
+          if(target.userData.hp<=0){target.visible=false;window.setTimeout(()=>{if(!disposed){target.userData.hp=100;target.visible=true;}},1800);}
+        }
+      }
+      if(field.endsAt<=now)localEnergyFields.splice(i,1);
+    }
     if(practiceGateExpiresAt&&now>=practiceGateExpiresAt){practiceGateA=null;practiceGateB=null;practiceGateExpiresAt=0;}
     for(let i=timedItemEffects.length-1;i>=0;i--){
       const effect=timedItemEffects[i],age=now-effect.startedAt,remaining=effect.endsAt-now;
@@ -2226,8 +2247,7 @@ export async function createGame(
       const movementTarget=Math.min(1,direction.length());
       movementAmount+=(movementTarget-movementAmount)*(1-Math.exp(-12*dt));
       const baseSpeed=keys.has('ShiftLeft')||keys.has('ShiftRight')?7.1:5.4;
-      const insideLocalField=mode==='practice'&&localEnergyFields.some(field=>now<field.endsAt&&Math.hypot(body.translation().x-field.x,body.translation().z-field.z)<=field.radius);
-      const speed=baseSpeed*(now<energyUntil?2:1)*(insideLocalField?1.25:1)*(precisionAiming?0.5:1);
+      const speed=baseSpeed*(now<energyUntil?2:1)*(precisionAiming?0.5:1);
       const groundedBefore=controller.computedGrounded();
       if(groundedBefore&&!wasGrounded&&vertical< -2)landingKick=.13;
       wasGrounded=groundedBefore;
@@ -2429,7 +2449,7 @@ export async function createGame(
       setWeaponLocal(code,nextAmmo,nextReserve);
     },
     setItem(code:string,count:number,effect?:string,inventory?:Record<string,number>){if(inventory)setItemInventory(code,inventory);else setItemLocal(code,count);if(effect==='ENERGY')energyUntil=performance.now()+8000;},
-    selectItem,useItem,showThrownItem,showItemEffect,showTeleportEffect,
+    selectItem,useItem,showThrownItem,showItemEffect,setEnergyCubeVision,showTeleportEffect,
     teleportLocal(to:{x:number;y:number;z:number},nextYaw:number){body.setTranslation({x:to.x,y:to.y,z:to.z},true);yaw=nextYaw;pitch=0;vertical=0;lastServerGateTeleportAt=performance.now();},
     applyWorldDestruction(events:Array<{id:string;x:number;y:number;z:number;radius:number}>){for(const event of events){if(!event||typeof event.id!=='string')continue;applyDestruction(new THREE.Vector3(event.x,event.y,event.z),event.radius,event.id);}},
     showDamageOnTarget,
