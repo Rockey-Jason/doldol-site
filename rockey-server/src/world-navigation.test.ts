@@ -134,7 +134,7 @@ test('player capsule dimensions fit every real entrance and stair transition',()
 
 test('underpass roof no longer intersects the full standing player capsule',()=>{
   const actualClearance=ROCKEY_UNDERPASS.ceilingBottom-ROCKEY_UNDERPASS.floorTop;
-  assert.equal(actualClearance,ROCKEY_UNDERPASS.clearHeight);
+  assert.ok(Math.abs(actualClearance-ROCKEY_UNDERPASS.clearHeight)<1e-9);
   assert.ok(actualClearance>ROCKEY_PLAYER_COLLISION.standingHeight+ROCKEY_PLAYER_COLLISION.skin,
     'underpass ceiling must leave room for the full capsule and controller skin');
   assert.equal(ROCKEY_UNDERPASS.ceilingBottom,-.28,
