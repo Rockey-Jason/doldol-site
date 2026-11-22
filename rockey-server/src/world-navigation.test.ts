@@ -97,3 +97,36 @@ test('basement doors on both buildings open to the service underpass',()=>{
     }
   }
 });
+
+
+test('player capsule dimensions fit every real entrance and stair transition',()=>{
+  const radius=.34+.02+.02;
+  const halfHeight=.86;
+  assert.ok(radius*2<1.05*2,'gallery doorway must exceed capsule diameter');
+  for(const map of Object.values(MAPS)){
+    for(const centerX of [-17.2,17.2]){
+      const innerSide=centerX<0?1:-1;
+      const stairX=centerX+innerSide*3.05;
+      // Test the complete upper ramp, the stair-aligned landing and its door.
+      for(let localZ=2.35;localZ>=-2.5;localZ-=.08){
+        const floor=((2.35-localZ)/4.85)*4.19;
+        const bodyCenter=floor+halfHeight;
+        assert.equal(isBlockedByCover(map.cover,stairX,bodyCenter,localZ-1.5,radius,halfHeight),false,
+          map.id+' blocks the full player capsule on the upper ramp');
+      }
+      assert.equal(isBlockedByCover(map.cover,stairX,4.14+halfHeight,-3.5,radius,halfHeight),false,
+        map.id+' blocks the full capsule in the upper landing');
+      assert.equal(isBlockedByCover(map.cover,centerX+innerSide*4.55,5.11,-1.5,radius,halfHeight),false,
+        map.id+' blocks the bridge portal at capsule height');
+
+      // The basement ramp ends flush with the service-floor elevation.
+      for(let localZ=2.25;localZ>=-2.25;localZ-=.075){
+        const floor=-((2.25-localZ)/4.5)*2.64;
+        assert.equal(isBlockedByCover(map.cover,centerX, floor+halfHeight,localZ-1.5,radius,halfHeight),false,
+          map.id+' blocks the full player capsule on the basement ramp');
+      }
+      assert.equal(tacticalFloorHeightAt(centerX+innerSide*4.12,-1.5,-1.72),-2.64,
+        map.id+' basement portal does not meet the service-floor height');
+    }
+  }
+});
