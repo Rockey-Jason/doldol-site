@@ -64,18 +64,29 @@ export async function createGame(
     ?(hardwareCores<=4||(deviceMemoryGb!==null&&deviceMemoryGb<=4)?'low':'balanced')
     :(hardwareCores>=8&&(deviceMemoryGb===null||deviceMemoryGb>=8)?'high':hardwareCores>=6?'balanced':'low');
   const deviceProfile={class:isMobile?'mobile':'desktop',tier:deviceTier,hardwareCores,deviceMemoryGb,gpuRenderer:'',
-    screenWidth:window.screen.width,screenHeight:window.screen.height,devicePixelRatio:window.devicePixelRatio||1};
+    screenWidth:window.screen.width,screenHeight:window.screen.height,devicePixelRatio:window.devicePixelRatio||1,
+    maxTextureSize:0,maxSamples:0,webgl2:true};
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(map.background);
   scene.fog = new THREE.Fog(map.fog, 54, 158);
 
   const camera = new THREE.PerspectiveCamera(78, 1, 0.08, 180);
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, powerPreference: 'high-performance' });
-  const gl=renderer.getContext();
-  const gpuRenderer=String(gl.getParameter(gl.RENDERER)||'').toLowerCase();
-  const softwareRenderer=/swiftshader|llvmpipe|softpipe|software rasterizer|basic render driver/.test(gpuRenderer);
-  if(softwareRenderer||renderer.capabilities.maxTextureSize<=2048)deviceTier='low';
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile&&deviceTier==='high', powerPreference: 'high-performance' });
+  const gl=renderer.getContext() as WebGL2RenderingContext;
+  const debugRendererInfo=gl.getExtension('WEBGL_debug_renderer_info') as {UNMASKED_RENDERER_WEBGL:number}|null;
+  const gpuRenderer=String(debugRendererInfo?gl.getParameter(debugRendererInfo.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)||'').toLowerCase();
+  const softwareRenderer=/swiftshader|llvmpipe|softpipe|software rasterizer|basic render driver|microsoft basic render/.test(gpuRenderer);
+  const olderIntegratedGpu=/intel\(r\) hd graphics|intel hd graphics|mali-4|adreno 3[0-9]{2}|powervr|vivante/.test(gpuRenderer);
+  const modernIntegratedGpu=/intel\(r\) iris|iris xe|radeon graphics|apple m[1-9]|adreno 6[0-9]{2}|adreno 7[0-9]{2}|adreno 8[0-9]{2}/.test(gpuRenderer);
+  if(softwareRenderer||olderIntegratedGpu||renderer.capabilities.maxTextureSize<=2048||(deviceMemoryGb!==null&&deviceMemoryGb<=2))deviceTier='low';
+  else if(modernIntegratedGpu&&deviceTier==='high')deviceTier='balanced';
   deviceProfile.tier=deviceTier;deviceProfile.gpuRenderer=gpuRenderer.slice(0,120);
+  deviceProfile.maxTextureSize=renderer.capabilities.maxTextureSize;
+  deviceProfile.maxSamples=gl.getParameter(gl.MAX_SAMPLES)||0;
+  deviceProfile.webgl2=renderer.capabilities.isWebGL2;
+  const gpuTimerExtension=renderer.capabilities.isWebGL2
+    ?gl.getExtension('EXT_disjoint_timer_query_webgl2') as {TIME_ELAPSED_EXT:number;GPU_DISJOINT_EXT:number}|null
+    :null;
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1,isMobile?1.1:deviceTier==='low'?1.0:deviceTier==='balanced'?1.4:1.8));
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -87,7 +98,7 @@ export async function createGame(
   const bloomPass:UnrealBloomPass|null=composer?new UnrealBloomPass(new THREE.Vector2(1,1),isMobile?.08:.34,.42,.84):null;
   if(composer&&bloomPass)composer.addPass(bloomPass);
   let bloomEnabled=!!composer;
-  let qualityPreference:'low'|'balanced'|'high'=deviceTier==='low'?'low':deviceTier==='balanced'?'balanced':'high';
+  let qualityPreference:'auto'|'low'|'balanced'|'high'='auto';
   let stablePerformanceWindows=0;
   // Pre-filtered environment probe adds stable reflections to metal, glass and armour.
   let reflectionEnvironment:THREE.Texture|null=null;
@@ -568,6 +579,9 @@ export async function createGame(
     return rig.group;
   }
   const remotes = new Map<string, THREE.Group>();
+  const remoteVelocityScratch=new THREE.Vector3();
+  const remoteSmokeEndScratch=new THREE.Vector3();
+  const playerPositionScratch=new THREE.Vector3();
   const practiceTargets: THREE.Group[] = [];
   const projectiles: Array<{mesh:THREE.Mesh;trail:THREE.Line;direction:THREE.Vector3;travelled:number;maxDistance:number;age:number;impactPoint:THREE.Vector3|null;impactColor:number}> = [];
   const damagePopups: THREE.Sprite[] = [];
@@ -583,7 +597,7 @@ export async function createGame(
   type PhysicalDebris={mesh:THREE.Mesh;body:any;age:number;life:number};
   const physicalDebris:PhysicalDebris[]=[];
   const physicalDebrisGeometry=new THREE.BoxGeometry(1,1,1);
-  const fxParticleLimit=isMobile?76:deviceTier==='low'?100:deviceTier==='balanced'?125:150;
+  let fxParticleLimit=isMobile?76:deviceTier==='low'?100:deviceTier==='balanced'?125:150;
   const fxParticleGeometry=new THREE.IcosahedronGeometry(.055,0);
   const shellGeometry=new THREE.CylinderGeometry(.022,.022,.115,8);
   const smokeVolumeGeometry=new THREE.SphereGeometry(1,16,12);
@@ -793,10 +807,46 @@ export async function createGame(
   };
   window.addEventListener('rockey:network',onNetworkRtt);
   const maxPixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.1:deviceTier==='low'?1.0:deviceTier==='balanced'?1.4:1.8);
-  let adaptivePixelRatio=Math.min(window.devicePixelRatio||1,isMobile?1.0:deviceTier==='low'?.92:deviceTier==='balanced'?1.25:1.8);
+  const basePixelRatio=Math.min(window.devicePixelRatio||1,maxPixelRatio,isMobile?1.0:deviceTier==='low'?.92:deviceTier==='balanced'?1.25:1.8);
+  let adaptivePixelRatio=basePixelRatio;
   renderer.setPixelRatio(adaptivePixelRatio);
   composer?.setPixelRatio(adaptivePixelRatio);
-  const minPixelRatio=isMobile?.68:deviceTier==='low'?.52:deviceTier==='balanced'?.68:.86;
+  const minPixelRatio=isMobile?.62:deviceTier==='low'?.48:deviceTier==='balanced'?.62:.78;
+  let adaptiveLevel=deviceTier==='low'?2:0;
+  let adaptiveBottleneck:'gpu'|'cpu'|'mixed'='mixed';
+  let dynamicFxScale=1;
+  let localFootIkIntervalMs=38;
+  let remotePoseIntervalMs=16;
+  let remoteFootIkIntervalMs=90;
+  let lastLocalFootIkAt=0;
+  let lastAdaptiveChangeAt=performance.now();
+  let gpuFrameMs:number|null=null;
+  let gpuFrameSampleAt=0;
+  let pendingGpuQuery:WebGLQuery|null=null;
+  let cpuFrameSamples=new Float32Array(120);
+  let cpuFrameSampleCount=0;
+  let cpuFrameSampleCursor=0;
+  const applyAdaptiveProfile=()=>{
+    const gpuScale=[1,.88,.76,.64,.54][adaptiveLevel]??.54;
+    const cpuScale=[1,.98,.95,.90,.84][adaptiveLevel]??.84;
+    const mixedScale=[1,.93,.84,.74,.62][adaptiveLevel]??.62;
+    const bottleneckScale=adaptiveBottleneck==='gpu'?gpuScale:adaptiveBottleneck==='cpu'?cpuScale:mixedScale;
+    const preferenceScale=qualityPreference==='low'?.84:qualityPreference==='high'?1.12:1;
+    const nextRatio=THREE.MathUtils.clamp(basePixelRatio*preferenceScale*bottleneckScale,minPixelRatio,maxPixelRatio);
+    if(Math.abs(nextRatio-adaptivePixelRatio)>.015){
+      adaptivePixelRatio=nextRatio;renderer.setPixelRatio(adaptivePixelRatio);composer?.setPixelRatio(adaptivePixelRatio);resize();
+    }
+    bloomEnabled=!!composer&&qualityPreference!=='low'&&adaptiveLevel<2;
+    renderer.shadowMap.enabled=!isMobile&&deviceTier!=='low'&&qualityPreference!=='low'&&adaptiveLevel<2;
+    renderer.shadowMap.needsUpdate=true;
+    const cpuScaleFx=[1,.95,.78,.60,.42][adaptiveLevel]??.42;
+    dynamicFxScale=adaptiveBottleneck==='cpu'||adaptiveBottleneck==='mixed'?cpuScaleFx:Math.max(.62,1-adaptiveLevel*.08);
+    fxParticleLimit=Math.max(28,Math.floor((isMobile?76:deviceTier==='low'?100:deviceTier==='balanced'?125:150)*dynamicFxScale));
+    localFootIkIntervalMs=[38,48,62,78,96][adaptiveLevel]??96;
+    remotePoseIntervalMs=[16,24,34,50,68][adaptiveLevel]??68;
+    remoteFootIkIntervalMs=[90,115,150,210,280][adaptiveLevel]??280;
+  };
+  applyAdaptiveProfile();
   const appliedDestructionIds=new Set<string>();
   const remoteDebris=new Map<string,THREE.Mesh>();
   const remoteDebrisGeometry=new THREE.BoxGeometry(1,1,1);
@@ -828,7 +878,7 @@ export async function createGame(
 
   const position = () => {
     const p = body.translation();
-    return new THREE.Vector3(p.x, p.y, p.z);
+    return playerPositionScratch.set(p.x,p.y,p.z);
   };
   const setCamera = (next: 'first' | 'third') => {
     cameraMode = next;
