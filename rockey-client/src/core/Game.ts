@@ -273,6 +273,11 @@ export async function createGame(
   const avatarRig=createCombatantRig(0x183b65,0x4aa8ff);
   const avatar=avatarRig.group;
   scene.add(avatar);
+  const ghostAura=new THREE.Mesh(
+    new THREE.TorusGeometry(.72,.038,8,36),
+    new THREE.MeshBasicMaterial({color:0x75e7ff,transparent:true,opacity:.72,depthWrite:false,toneMapped:false})
+  );
+  ghostAura.rotation.x=Math.PI/2;ghostAura.position.y=.12;ghostAura.visible=false;avatar.add(ghostAura);
 
   const gun = new THREE.Group();
   // Declared before the first rebuildGun call because the rebuild routine resets these references.
@@ -766,17 +771,53 @@ export async function createGame(
   let ammo = 30;
   let reserve = 90;
   const localWeaponAmmo: Record<string,{ammo:number;reserve:number}> = {};
+  type PlayerGhostMaterialState={material:THREE.Material;transparent:boolean;opacity:number;depthWrite:boolean;color:THREE.Color|null;emissive:THREE.Color|null;emissiveIntensity:number|null};
+  const playerGhostMaterials:PlayerGhostMaterialState[]=[];
+  const seenPlayerMaterials=new Set<THREE.Material>();
+  avatar.traverse(object=>{
+    if(!(object instanceof THREE.Mesh))return;
+    const attached=Array.isArray(object.material)?object.material:[object.material];
+    for(const material of attached){
+      if(seenPlayerMaterials.has(material))continue;
+      seenPlayerMaterials.add(material);
+      const visual=material as THREE.Material&{color?:THREE.Color;emissive?:THREE.Color;emissiveIntensity?:number};
+      playerGhostMaterials.push({material,transparent:material.transparent,opacity:material.opacity,depthWrite:material.depthWrite,
+        color:visual.color?.clone()??null,emissive:visual.emissive?.clone()??null,
+        emissiveIntensity:typeof visual.emissiveIntensity==='number'?visual.emissiveIntensity:null});
+    }
+  });
+  const setPlayerGhostAppearance=(enabled:boolean)=>{
+    const spectralColor=new THREE.Color(0x75e7ff);
+    for(const state of playerGhostMaterials){
+      const visual=state.material as THREE.Material&{color?:THREE.Color;emissive?:THREE.Color;emissiveIntensity?:number};
+      state.material.transparent=enabled?true:state.transparent;
+      state.material.opacity=enabled?Math.min(state.opacity,.34):state.opacity;
+      state.material.depthWrite=enabled?false:state.depthWrite;
+      if(visual.color&&state.color){if(enabled)visual.color.copy(state.color).lerp(spectralColor,.48);else visual.color.copy(state.color);}
+      if(visual.emissive&&state.emissive){if(enabled)visual.emissive.copy(state.emissive).lerp(spectralColor,.72);else visual.emissive.copy(state.emissive);}
+      if(typeof visual.emissiveIntensity==='number'&&state.emissiveIntensity!==null)
+        visual.emissiveIntensity=enabled?Math.max(state.emissiveIntensity,.72):state.emissiveIntensity;
+      state.material.needsUpdate=true;
+    }
+    ghostAura.visible=enabled;
+    gun.visible=!enabled;
+  };
+  let practiceGhostActive=false;
   let practiceRespawnAt=0;
   const practiceRobots=createPracticeRobots(
     scene,map.light,isMobile,raycastMeshes,sampleGroundHeight,
     (damage,source)=>{
-      if(mode!=='practice'||!active||hp<=0)return;
+      if(mode!=='practice'||!active||hp<=0||practiceGhostActive)return;
       hp=Math.max(0,hp-Math.max(1,damage));
       avatarRig.triggerHit();
       updateHud(hp,ammo,reserve,currentWeapon.name);
       if(hp<=0){
-        practiceRespawnAt=performance.now()+2200;
-        notify('SYSTEM DOWN · 2.2초 후 재투입');
+        practiceGhostActive=true;
+        practiceRespawnAt=performance.now()+5000;
+        collider.setSensor(true);
+        vertical=0;setPlayerGhostAppearance(true);
+        stopMouseFire();stopMobileFire();setPrecisionAiming(false);
+        notify('GHOST MODE · 5초 후 부활');
       }
     },
     (point,damage,headshot)=>showDamageAt(point,damage,headshot),
@@ -1278,7 +1319,7 @@ export async function createGame(
     scene.add(sprite);damagePopups.push(sprite);
   }
   function interactMap(){
-    if(!active||mode!=='practice')return;
+    if(!active||mode!=='practice'||practiceGhostActive||hp<=0)return;
     const now=performance.now();
     camera.updateMatrixWorld(true);
     const origin=camera.getWorldPosition(new THREE.Vector3());
@@ -1447,7 +1488,7 @@ export async function createGame(
     practiceGateA=null;practiceGateB=null;practiceGateExpiresAt=0;lastPracticeGateTeleportAt=0;
   }
   function useItem(){
-    if(!active)return;if(currentItemCount()<=0){notify('선택한 아이템을 모두 사용했습니다.');return;}
+    if(!active||practiceGhostActive||hp<=0)return;if(currentItemCount()<=0){notify('선택한 아이템을 모두 사용했습니다.');return;}
     if(mode!=='practice'){send({type:'item.use',itemCode:currentItemCode});return;}
     if(currentItemCode==='PILLS'){if(hp>=100){notify('체력이 이미 가득 찼습니다.');return;}hp=Math.min(100,hp+35);consumeSelectedItem();updateHud(hp,ammo,reserve,currentWeapon.name);notify('체력 +35');return;}
     if(currentItemCode==='ENERGY'){energyUntil=performance.now()+8000;consumeSelectedItem();notify('이동 속도 100% 증가 · 8초');return;}
@@ -1529,7 +1570,7 @@ export async function createGame(
 
   function fire() {
     const now = performance.now();
-    if (!active || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
+    if (!active || (mode==='practice'&&(practiceGhostActive||hp<=0)) || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
     lastShot = now;
     fireAnimationStart = now;
     const melee=currentWeapon.category==='MELEE';
@@ -1587,7 +1628,7 @@ export async function createGame(
   }
 
   function reload() {
-    if (!active || currentWeapon.category==='MELEE' || ammo >= currentWeapon.magazine || reserve <= 0 || performance.now() < reloadAt) return;
+    if (!active || (mode==='practice'&&(practiceGhostActive||hp<=0)) || currentWeapon.category==='MELEE' || ammo >= currentWeapon.magazine || reserve <= 0 || performance.now() < reloadAt) return;
     const reloadWeaponCode=currentWeaponCode;
     const reloadWeapon=currentWeapon;
     const token=++reloadToken;
@@ -2326,46 +2367,64 @@ export async function createGame(
         (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) -
         (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0) + touch.right;
 
-      const fwd = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
+      const fwd = practiceGhostActive
+        ?new THREE.Vector3(-Math.sin(yaw)*Math.cos(pitch),Math.sin(pitch),-Math.cos(yaw)*Math.cos(pitch))
+        :new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
       const side = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
       const direction = fwd.multiplyScalar(forward).add(side.multiplyScalar(right));
       if (direction.lengthSq() > 1) direction.normalize();
       const movementTarget=Math.min(1,direction.length());
       movementAmount+=(movementTarget-movementAmount)*(1-Math.exp(-12*dt));
-      const baseSpeed=keys.has('ShiftLeft')||keys.has('ShiftRight')?7.1:5.4;
+      const sprinting=keys.has('ShiftLeft')||keys.has('ShiftRight');
+      const baseSpeed=sprinting?7.1:5.4;
       const speed=baseSpeed*(now<energyUntil?2:1)*(precisionAiming?0.5:1);
-      const groundedBefore=controller.computedGrounded();
-      if(groundedBefore&&!wasGrounded&&vertical< -2)landingKick=.13;
-      wasGrounded=groundedBefore;
-      landingKick*=Math.exp(-13*dt);
-      if (groundedBefore && vertical < 0) vertical = -1;
-      if (touch.jump && groundedBefore) {
-        vertical = 7.2;
-        touch.jump = false;
-        jumpPending = true;
-      }
-      vertical -= 18 * dt;
-
-      const requestedVertical=vertical*dt;
-      controller.computeColliderMovement(collider, {
-        x: direction.x * speed * dt,
-        y: requestedVertical,
-        z: direction.z * speed * dt
-      });
-      const corrected = controller.computedMovement();
-      // Rapier already clamps the capsule against ceilings. Clear the upward
-      // jump velocity as soon as that clamp is observed, so gravity releases
-      // the player on the following frame instead of pinning them overhead.
-      if(vertical>0&&corrected.y<requestedVertical-1e-4)vertical=0;
       const old = body.translation();
-      body.setNextKinematicTranslation({
-        x: old.x + corrected.x,
-        y: old.y + corrected.y,
-        z: old.z + corrected.z
-      });
-      // Rapier must step every active frame to apply the player's
-      // kinematicPositionBased next translation. Skipping this when there is
-      // no debris freezes both walking and jumping.
+      if(practiceGhostActive){
+        // The player is a ghost for five seconds: skip character-controller
+        // collision resolution and move the sensor capsule directly in 3D.
+        const verticalInput=(keys.has('Space')||touch.jump?1:0)-
+          (keys.has('ControlLeft')||keys.has('ControlRight')||keys.has('KeyC')?1:0);
+        const flightDirection=direction.clone().add(new THREE.Vector3(0,verticalInput,0));
+        if(flightDirection.lengthSq()>1)flightDirection.normalize();
+        const flightSpeed=(sprinting?11:8)*(now<energyUntil?1.5:1);
+        body.setTranslation({
+          x:THREE.MathUtils.clamp(old.x+flightDirection.x*flightSpeed*dt,-55,55),
+          y:THREE.MathUtils.clamp(old.y+flightDirection.y*flightSpeed*dt,-8,42),
+          z:THREE.MathUtils.clamp(old.z+flightDirection.z*flightSpeed*dt,-55,55)
+        },true);
+        vertical=flightDirection.y*flightSpeed;
+        jumpPending=false;
+        landingKick*=Math.exp(-13*dt);
+      }else{
+        const groundedBefore=controller.computedGrounded();
+        if(groundedBefore&&!wasGrounded&&vertical< -2)landingKick=.13;
+        wasGrounded=groundedBefore;
+        landingKick*=Math.exp(-13*dt);
+        if (groundedBefore && vertical < 0) vertical = -1;
+        if (touch.jump && groundedBefore) {
+          vertical = 7.2;
+          touch.jump = false;
+          jumpPending = true;
+        }
+        vertical -= 18 * dt;
+        const requestedVertical=vertical*dt;
+        controller.computeColliderMovement(collider, {
+          x: direction.x * speed * dt,
+          y: requestedVertical,
+          z: direction.z * speed * dt
+        });
+        const corrected = controller.computedMovement();
+        // Rapier already clamps the capsule against ceilings. Clear the upward
+        // jump velocity as soon as that clamp is observed, so gravity releases
+        // the player on the following frame instead of pinning them overhead.
+        if(vertical>0&&corrected.y<requestedVertical-1e-4)vertical=0;
+        body.setNextKinematicTranslation({
+          x: old.x + corrected.x,
+          y: old.y + corrected.y,
+          z: old.z + corrected.z
+        });
+      }
+      // Rapier steps every active frame for normal movement and moving debris.
       world.step();
       if(physicalDebris.length>0)updatePhysicalDebris(dt);
     for(const mesh of remoteDebris.values()){
@@ -2376,13 +2435,15 @@ export async function createGame(
     }
 
       let p = position();
-      if(mode==='practice'&&hp<=0&&practiceRespawnAt>0&&now>=practiceRespawnAt){
+      if(mode==='practice'&&practiceGhostActive&&practiceRespawnAt>0&&now>=practiceRespawnAt){
         const spawn={x:0,y:.92,z:20};
-        body.setTranslation(spawn,true);p=position();vertical=0;hp=100;practiceRespawnAt=0;
+        body.setTranslation(spawn,true);collider.setSensor(false);
+        p=position();vertical=0;hp=100;practiceRespawnAt=0;practiceGhostActive=false;
+        movementAmount=0;setPlayerGhostAppearance(false);
         updateHud(hp,ammo,reserve,currentWeapon.name);
         notify('REDEPLOYED · 체력 회복');
       }
-      practiceRobots.update(now,dt,p,mode==='practice'&&hp>0);
+      practiceRobots.update(now,dt,p,mode==='practice');
       if(mode==='practice'&&practiceGateA&&practiceGateB&&now-practiceGateExpiresAt<0&&now-lastPracticeGateTeleportAt>850){
         const tryGate=(entry:RockeyPortalPoint,destination:RockeyPortalPoint)=>{
           if(Math.hypot(p.x-entry.x,p.z-entry.z)>1.12||Math.abs((p.y-.92)-entry.y)>1.55)return false;
@@ -2407,8 +2468,10 @@ export async function createGame(
       }
       avatar.position.set(p.x, p.y - .92, p.z);
       avatar.rotation.y = yaw;
-      avatarRig.animate(movementAmount,time,reloadWave,fireWave,vertical,hp<=0,keys.has('ShiftLeft')||keys.has('ShiftRight')?1:0,controller.computedGrounded(),aimBlend);
-      if(now-lastLocalFootIkAt>=localFootIkIntervalMs){
+      avatarRig.animate(movementAmount,time,reloadWave,fireWave,vertical,hp<=0&&!practiceGhostActive,sprinting?1:0,
+        !practiceGhostActive&&controller.computedGrounded(),aimBlend);
+      ghostAura.rotation.z=time*.85;ghostAura.scale.setScalar(.92+Math.sin(time*3.4)*.08);
+      if(!practiceGhostActive&&now-lastLocalFootIkAt>=localFootIkIntervalMs){
         avatarRig.updateFootIK(sampleGroundSurface,controller.computedGrounded());
         lastLocalFootIkAt=now;
       }
@@ -2488,7 +2551,7 @@ export async function createGame(
       hp = 100; ammo = currentWeapon.magazine; reserve = currentWeapon.reserve; vertical = 0;
       for(const code of Object.keys(localWeaponAmmo))delete localWeaponAmmo[code];
       localWeaponAmmo[currentWeaponCode]={ammo,reserve};
-      practiceRespawnAt=0;
+      practiceRespawnAt=0;practiceGhostActive=false;collider.setSensor(false);setPlayerGhostAppearance(false);
       practiceRobots.reset(mode==='practice');
       if (mode === 'practice') {
         for (const target of practiceTargets) {
