@@ -88,13 +88,11 @@ async function refresh(openOnResult=false){
 }
 async function connect(){
  try{
+  // Prefer the page's established Supabase client to avoid competing auth refresh loops.
+  for(let i=0;i<30&&!window.doriSupabase?.auth;i++)await new Promise(r=>setTimeout(r,100));
   if(window.doriSupabase?.auth)client=window.doriSupabase;
   else if(window.supabase?.createClient){client=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"sb-scttowfhygcpdirrekqm-auth-token"}});window.doriSupabase=client;}
-  else{
-   for(let i=0;i<100&&!window.doriSupabase?.auth&&!window.supabase?.createClient;i++)await new Promise(r=>setTimeout(r,100));
-   if(window.doriSupabase?.auth)client=window.doriSupabase;
-   else if(window.supabase?.createClient){client=window.supabase.createClient(URL,KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:"sb-scttowfhygcpdirrekqm-auth-token"}});window.doriSupabase=client;}
-  }
+
   if(!client)return;
   const {data:{session},error}=await client.auth.getSession();if(error)throw error;
   if(session?.user?.id)activate(session.user.id);
