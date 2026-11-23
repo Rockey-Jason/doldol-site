@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {MAPS} from './catalog.js';
-import {resolveCeilingCollision} from './world-navigation.js';
+import {resolveCeilingCollision,resolveHorizontalMovement} from './world-navigation.js';
 import {isBlockedByCover,tacticalFloorHeightAt,ROCKEY_PLAYER_COLLISION,ROCKEY_UNDERPASS,ROCKEY_SKYBRIDGE} from './world-navigation.js';
 
 test('every map keeps both ground-floor building entrances open',()=>{
@@ -186,4 +186,33 @@ test('ordinary wall volumes do not stop a jump as overhead ceilings',()=>{
   const result=resolveCeilingCollision([wall],0,.92,0,1.8);
   assert.equal(result.ceilingHit,false);
   assert.equal(result.y,1.8);
+});
+
+
+test('horizontal collision uses the rising destination height, not the previous frame height',()=>{
+  const wall={x:1,z:0,hx:.2,hz:1,bottom:5.6,top:7};
+  assert.equal(isBlockedByCover([wall],.7,4.7,.7),false,
+    'the player capsule is still below the wall at the previous height');
+  assert.equal(isBlockedByCover([wall],.7,5.0,.7),true,
+    'the rising capsule overlaps the wall at its destination height');
+  const moved=resolveHorizontalMovement([wall],0,0,.7,.7,5.0);
+  assert.ok(moved.x<.5,'movement into the wall should be stopped');
+  assert.ok(moved.z>.5,'the unobstructed axis should slide along the wall');
+  assert.equal(isBlockedByCover([wall],moved.x,5.0,moved.z),false,
+    'the resolved player position must not remain embedded');
+});
+
+test('axis-separated movement can gradually release an existing wall overlap',()=>{
+  const wall={x:1,z:0,hx:.2,hz:1,bottom:5.6,top:7};
+  assert.equal(isBlockedByCover([wall],.7,5.0,0),true);
+  const moved=resolveHorizontalMovement([wall],.7,0,.5,0,5.0);
+  assert.ok(moved.x<.7,'movement away from the wall should reduce penetration');
+  assert.ok(moved.x<=.5+1e-6);
+});
+
+test('thick vertical wall sections are not misclassified as overhead ceilings',()=>{
+  const wall={x:0,z:0,hx:2,hz:2,bottom:4.08,top:5.08};
+  const result=resolveCeilingCollision([wall],0,3.5,0,4.5);
+  assert.equal(result.ceilingHit,false);
+  assert.equal(result.y,4.5);
 });
