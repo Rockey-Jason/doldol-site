@@ -1673,9 +1673,9 @@ export async function createGame(
     keys.delete(event.code);
     if (event.code === 'Space') touch.jump = false;
   }
-  function look(dx: number, dy: number) {
-    yaw -= dx * 0.0022 * sensitivity;
-    pitch = THREE.MathUtils.clamp(pitch - dy * 0.002 * sensitivity, -1.3, 1.3);
+  function look(dx: number, dy: number, rotationScale=1) {
+    yaw -= dx * 0.0022 * sensitivity * rotationScale;
+    pitch = THREE.MathUtils.clamp(pitch - dy * 0.002 * sensitivity * rotationScale, -1.3, 1.3);
   }
   function pointerMove(event: MouseEvent) {
     if(mouseFireHeld&&(event.buttons&1)===0)stopMouseFire();
@@ -1696,7 +1696,8 @@ export async function createGame(
     if (event.pointerType !== 'touch' || event.pointerId !== lookPointerId) return;
     const element = canvas as HTMLCanvasElement & { lx?: number; ly?: number };
     if (element.lx === undefined || element.ly === undefined) return;
-    look(event.clientX - element.lx, event.clientY - element.ly);
+    // Touch swipes need a larger response than desktop mouse movement on phone screens.
+    look(event.clientX - element.lx, event.clientY - element.ly, 1.8);
     element.lx = event.clientX;
     element.ly = event.clientY;
   }
