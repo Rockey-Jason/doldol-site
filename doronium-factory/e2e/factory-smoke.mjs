@@ -268,7 +268,8 @@ try {
   assert.equal(outputCustody.replay, false, "Collecting an already-cleared output must not duplicate the inventory stack");
   assert.equal(outputCustody.outputsCleared, true, "Successful output collection must clear both machine output buffers");
   assert.equal(outputCustody.ironOre, 3, "Legacy output collection must transfer the exact iron-ore quantity");
-  assert.equal(outputCustody.copperOre, 2, "Canonical output collection must transfer the exact copper quantity");
+  assert.equal(outputCustody.copperOre, 2, "Explicit-custody output collection must transfer the exact copper quantity");
+  assert.equal(outputCustody.canonicalStack.itemID, "copperOre", "Collected output must retain the live copper resource ID");
   assert.equal(outputCustody.legacyStack.runtimeID, "MACHINE_OUTPUT:COLLECT-LEGACY", "Legacy collection must preserve its fallback machine-output Stack ID");
   assert.equal(outputCustody.canonicalStack.runtimeID, "MACHINE_OUTPUT:COLLECT-CANONICAL:4", "Canonical collection must preserve the explicit machine-output Stack ID");
   assert.equal(outputCustody.legacyStack.quality, 96, "Legacy output quality must survive collection");
