@@ -149,8 +149,12 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     // Cut the gallery slab around the complete inclined stair footprint, not just
     // a narrow center slot. The previous x-slabs overlapped the ramp by up to 0.5 m,
     // creating an invisible ceiling/floor collision before the second-floor landing.
-    const galleryFloorMin=-w/2,galleryFloorMax=w/2;
-    const stairClearHalfWidth=1.3;
+    // Keep a 2.8 m stairwell opening for the 1.9 m ramp plus the full
+    // player capsule. Extend the inner-side gallery slab into the bridge so
+    // the landing has a continuous floor on both mirrored buildings.
+    const galleryFloorMin=innerSide>0?-w/2:-5.65;
+    const galleryFloorMax=innerSide>0?5.65:w/2;
+    const stairClearHalfWidth=1.4;
     const stairClearLeft=stairX-stairClearHalfWidth;
     const stairClearRight=stairX+stairClearHalfWidth;
     const galleryLeftWidth=stairClearLeft-galleryFloorMin;
@@ -191,34 +195,32 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     makeFurniture(root,officeSide*2.7,4.2,2.65,'crate');
     makeFurniture(root,officeSide*2.55,4.2,-.8,'cabinet');
 
-    // Roof access stairs rise from the gallery to an exposed rooftop combat deck.
-    // Roof landing is 1.80 m above the gallery. Match both ends exactly so
-    // the ramp does not finish below the rooftop slab and leave a climbable lip.
-    const roofRise=1.8,roofRun=3.01,roofAngle=Math.atan2(roofRise,roofRun);
-    const roofRampCenterY=(4.19+5.99)/2-.07*Math.cos(roofAngle);
+    const roofRise=2.8,roofRun=3.01,roofDeckTop=6.99,roofDeckCenter=6.85;
+    const roofAngle=Math.atan2(roofRise,roofRun);
+    const roofRampCenterY=(4.19+roofDeckTop)/2-.07*Math.cos(roofAngle);
     addRamp(root,floor,0,roofRampCenterY,1.245,1.4,roofRun,roofRise);
-    for(let i=0;i<8;i++){
-      const y=4.28+i*.19,z=2.75-i*.43;
+    for(let i=0;i<10;i++){
+      const y=4.19+(i+.5)*(roofRise/10),z=2.75-(i+.5)*(roofRun/10);
       add(root,i%2?trim:floor,0,y,z,1.18,.20,.48,false);
     }
-    // Split the roof deck around the stairwell so the final steps are not sealed under the slab.
-    add(root,floor,0,5.85,-.25,2.2,.28,1.1,true);
-    add(root,floor,-2.85,5.85,0,2.65,.28,9.15,true);
-    add(root,floor,2.85,5.85,0,2.65,.28,9.15,true);
-    add(root,floor,0,5.85,-2.5375,1.65,.28,4.075,true);
-    add(root,floor,0,5.85,3.7875,1.65,.28,1.575,true);
+    // The roof deck is raised and split around the complete roof stair path.
+    add(root,floor,0,roofDeckCenter,-.25,2.2,.28,1.1,true);
+    add(root,floor,-2.675,roofDeckCenter,0,2.75,.28,9.15,true);
+    add(root,floor,2.675,roofDeckCenter,0,2.75,.28,9.15,true);
+    add(root,floor,0,roofDeckCenter,-2.6875,2.6,.28,3.775,true);
+    add(root,floor,0,roofDeckCenter,3.6625,2.6,.28,1.825,true);
     for(const side of [-1,1]){
-      add(root,wall,side*4.02,6.28,0,.22,.72,8.9,true);
-      add(root,wall,0,6.28,side*4.43,8.1,.72,.22,true);
-      add(root,trim,side*4.02,6.66,0,.28,.07,8.9);
-      add(root,trim,0,6.66,side*4.43,8.1,.07,.28);
-      // Guardrails protect the roof opening while keeping a 2.5 m stair lane clear.
-      add(root,wall,side*1.2,6.28,1.25,.12,.72,3.5,true);
-      add(root,trim,side*1.2,6.66,1.25,.16,.07,3.5);
+      add(root,wall,side*4.02,7.28,0,.22,.72,8.9,true);
+      add(root,wall,0,7.28,side*4.43,8.1,.72,.22,true);
+      add(root,trim,side*4.02,7.66,0,.28,.07,8.9);
+      add(root,trim,0,7.66,side*4.43,8.1,.07,.28);
+      // Keep a wide, unobstructed corridor over the roof stair ramp.
+      add(root,wall,side*1.35,7.28,1.25,.12,.72,3.5,true);
+      add(root,trim,side*1.35,7.66,1.25,.16,.07,3.5);
     }
-    add(root,dark,-2.65,6.10,-1.2,1.3,.48,1.0,true);
-    add(root,glow,-2.65,6.37,-1.2,1.1,.035,.8);
-    for(let i=0;i<4;i++)add(root,trim,1.6+i*.5,5.99,2.65,.26,.16,.5,true);
+    add(root,dark,-2.65,7.10,-1.2,1.3,.48,1.0,true);
+    add(root,glow,-2.65,7.37,-1.2,1.1,.035,.8);
+    for(let i=0;i<4;i++)add(root,trim,1.6+i*.5,6.99,2.65,.26,.16,.5,true);
 
     // Reinforced glass is registered as a destructible object, not merely a decal.
     for(const side of [-1,1]){
