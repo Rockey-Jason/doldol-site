@@ -1,4 +1,4 @@
-import { transferCustody } from "./ownership-runtime.js?v=6";
+import { transferCustody } from "./ownership-runtime.js?v=10";
 const clone = value => typeof structuredClone === "function" ? structuredClone(value) : JSON.parse(JSON.stringify(value));
 function restoreObject(target, snapshot) { for (const key of Object.keys(target)) delete target[key]; Object.assign(target, clone(snapshot)); }
 function restoreStock(warehouse, existed, stock) { if (!existed) delete warehouse.warehouseStock; else warehouse.warehouseStock = clone(stock); }
