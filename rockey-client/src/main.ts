@@ -159,7 +159,7 @@ async function confirmStageLoadout(){
     if(action.kind==='practice'){
       requestLandscape();await ensureGame(loadout.mapId||'training_facility');currentMode='practice';isSpectating=false;activeWeapon=loadout.primaryWeapon;
       itemInventory=createItemInventory();selectedItemCode=loadout.itemCode;
-      game?.activate('practice',0,undefined,loadout.primaryWeapon,loadout.secondaryWeapon,loadout.itemCode,undefined,itemInventory);showGame();toast('TRAINING FACILITY · LOADOUT READY');
+      game?.activate('practice',0,undefined,loadout.primaryWeapon,loadout.secondaryWeapon,loadout.itemCode,undefined,itemInventory);showGame();toast('연습 모드 시작 · F 상호작용 · E 아이템 사용');
     }else if(action.kind==='queue'){
       if(!socket.connected)return status('실시간 대전에는 게임 서버 연결이 필요합니다.');
       currentMode=action.mode;send({type:'queue.join',...loadout,mode:action.mode});status('상대를 찾고 있습니다: '+action.mode.toUpperCase()+' · '+loadout.mapId.toUpperCase());
