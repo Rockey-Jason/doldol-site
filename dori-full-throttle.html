@@ -1513,5 +1513,6 @@ document.addEventListener("visibilitychange",()=>{if(document.hidden&&mode==="pl
 showStageSelect();refreshLoadoutUI();refreshUI();requestAnimationFrame(loop);syncAccountSave();if(supabaseClient?.auth){supabaseClient.auth.onAuthStateChange((event,session)=>{if(event==="SIGNED_IN"&&session?.user?.id&&session.user.id!==cloudUserId){Promise.resolve().then(()=>syncAccountSave())}else if(event==="SIGNED_OUT"){if(cloudWriteTimer){clearTimeout(cloudWriteTimer);cloudWriteTimer=null;persistCloudSave()}cloudUserId=null;cloudSyncReady=true;setCloudMessage("로그인하면 PC·휴대폰에서 진행 상황과 아이템을 공유할 수 있어.")}})}window.addEventListener("pagehide",()=>{if(cloudWriteTimer){clearTimeout(cloudWriteTimer);cloudWriteTimer=null;persistCloudSave()}},{capture:true});document.addEventListener("visibilitychange",()=>{if(!document.hidden&&cloudUserId)Promise.resolve().then(()=>syncAccountSave())});
 })();
 </script>
+<script src="js/dori-text-scale.js?v=20261123-text-scale-1"></script>
 </body>
 </html>
