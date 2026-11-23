@@ -1308,7 +1308,8 @@ export async function createGame(
       result='탄약 +10 · 예비 탄약 +36 · 체력 +16';
     }else if(selected.kind==='terminal'){
       energyUntil=now+8500;
-      result='전술 스캔 활성화 · 이동 속도 증가 8.5초';
+      const detected=practiceRobots.scan(now+6500);
+      result='전술 스캔 · 로봇 '+detected+'대 탐지 · 이동 속도 증가 8.5초';
     }else if(selected.kind==='power'){
       energyUntil=now+6500;
       hp=Math.min(100,hp+20);
