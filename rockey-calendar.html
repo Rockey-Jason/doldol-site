@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07152b">
+<meta name="description" content="로키 공유 캘린더 - 돌이사이트 사용자들과 일정을 함께 계획하고 실시간으로 공유하세요.">
+<link rel="canonical" href="https://rockey-jason.github.io/doldol-site/rockey-calendar.html">
+<link rel="icon" href="rockeysite-icon-3.png" type="image/png">
+<title>로키 공유 캘린더 | 돌이사이트</title>
+<link rel="stylesheet" href="css/doldol-theme.css?v=20261112-site-background-1">
+<style>
+@font-face{font-family:HancomMalrangmalrang;src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2406-1@1.0/HancomMalangMalang-Regular.woff2') format('woff2');font-weight:400;font-display:swap}
+:root{color-scheme:dark;--line:rgba(154,184,216,.15);--muted:#91a7c1;--gold:#e5c879;--blue:#7dbce9}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:HancomMalrangmalrang,sans-serif!important;color:#edf5ff;background:radial-gradient(circle at 8% 0,rgba(38,91,145,.2),transparent 34rem),linear-gradient(145deg,#07162b,#040b18 76%)}
+button,input,textarea,select{font:inherit}button{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.shell{width:min(1440px,100%);margin:auto;padding:24px clamp(12px,3vw,36px) 70px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding-bottom:19px;border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px}.mark{display:grid;place-items:center;width:43px;height:43px;border:1px solid rgba(229,200,121,.38);border-radius:14px;background:linear-gradient(145deg,#243b5a,#0a1b30);color:var(--gold);font:700 17px Arial}.brand-name{font-size:16px}.brand-sub{margin-top:3px;color:#8da5c0;font:9px Arial;letter-spacing:.18em}
+.top-actions{display:flex;gap:8px;flex-wrap:wrap}.top-link,.ghost,.primary{display:inline-flex;align-items:center;justify-content:center;min-height:39px;padding:8px 13px;border:1px solid var(--line);border-radius:11px;color:#d6e7f8;background:rgba(16,37,61,.72);text-decoration:none;font-size:11px}
+.top-link:hover,.ghost:hover{border-color:rgba(147,196,235,.42);background:rgba(27,61,94,.8)}
+.hero{position:relative;overflow:hidden;margin:23px 0 17px;padding:clamp(20px,3vw,30px);border:1px solid rgba(130,184,225,.18);border-radius:23px;background:radial-gradient(circle at 100% 0,rgba(77,151,205,.17),transparent 42%),linear-gradient(125deg,rgba(19,47,76,.9),rgba(7,20,38,.94));box-shadow:0 20px 65px rgba(0,0,0,.16)}
+.eyebrow{color:#a8d4f3;font:700 9px Arial;letter-spacing:.2em}.hero h1{margin:10px 0 7px;font-size:clamp(27px,4vw,39px);font-weight:400;letter-spacing:-.04em}.hero p{margin:0;color:#a9bfd5;font-size:12px;line-height:1.8}
+.hero-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.stat{padding:7px 10px;border:1px solid rgba(142,185,221,.17);border-radius:999px;background:rgba(4,15,29,.3);color:#c2d9ed;font-size:10px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:16px;align-items:start}
+.panel{border:1px solid var(--line);border-radius:19px;background:linear-gradient(150deg,rgba(12,29,49,.97),rgba(6,16,30,.98));box-shadow:0 18px 60px rgba(0,0,0,.18);overflow:hidden}
+.calendar-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:17px 18px;border-bottom:1px solid var(--line)}
+.month-label{display:flex;align-items:baseline;gap:9px}.month-label strong{font-size:22px;font-weight:400;letter-spacing:-.03em}.month-label span{color:#829bb5;font-size:10px}
+.controls{display:flex;gap:6px;align-items:center}.icon-btn{width:36px;height:36px;border:1px solid var(--line);border-radius:10px;color:#d5e7f7;background:rgba(21,43,66,.75);font-size:15px}.today-btn{height:36px;padding:0 11px;border:1px solid rgba(229,200,121,.3);border-radius:10px;color:#ecd99f;background:rgba(132,101,39,.13);font-size:10px}
+.calendar{padding:12px 14px 16px}.weekdays,.days{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}.weekdays div{padding:9px 2px;color:#8199b3;text-align:center;font-size:10px}.weekdays div:first-child{color:#e6a4a8}.weekdays div:last-child{color:#91b8e5}
+.day{position:relative;min-width:0;min-height:clamp(76px,9vw,112px);padding:7px 5px;border-top:1px solid rgba(145,177,207,.1);border-right:1px solid rgba(145,177,207,.07);background:transparent;text-align:left;transition:background .18s}.day:nth-child(7n){border-right:0}.day:hover{background:rgba(91,148,194,.09)}.day.outside{opacity:.35}.day.today .date-num{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#d7bd78;color:#142238}.day.selected{background:rgba(89,151,204,.13);box-shadow:inset 0 0 0 1px rgba(117,184,231,.3)}
+.date-num{display:inline-grid;place-items:center;min-width:25px;height:25px;color:#d9e7f4;font-size:11px}.day:nth-child(7n+1) .date-num{color:#e7a3a8}.day:nth-child(7n) .date-num{color:#9fc7ee}.day.today .date-num{color:#142238}
+.event-chip{display:block;width:100%;margin-top:4px;padding:4px 5px;border:0;border-left:2px solid #75b7e7;border-radius:4px;color:#d9efff;background:rgba(63,122,169,.24);font-size:9px;line-height:1.35;text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.event-chip.gold{border-color:#e2c16e;background:rgba(146,111,42,.2);color:#f0d99c}.event-chip.purple{border-color:#b5a0f1;background:rgba(111,82,161,.2)}.event-chip.green{border-color:#81d2ac;background:rgba(46,118,84,.2)}.event-chip.rose{border-color:#e89bb0;background:rgba(140,67,88,.2)}.event-chip.cyan{border-color:#73d6df;background:rgba(47,120,130,.2)}.more-events{display:block;margin-top:4px;color:#829bb4;font-size:9px}
+.side{display:grid;gap:14px}.side-card{padding:16px}.side-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.side-title{font-size:13px;color:#edf5ff}.side-sub{margin-top:4px;color:#8098b2;font-size:9px}.add-btn{min-height:36px;padding:8px 12px;border:1px solid rgba(229,200,121,.35);border-radius:10px;color:#f0dca3;background:linear-gradient(120deg,rgba(132,101,39,.28),rgba(74,58,28,.2));font-size:10px}
+.selected-date{margin-bottom:12px;color:#a8c0d8;font-size:10px}.event-row{display:flex;gap:10px;padding:11px 0;border-top:1px solid rgba(145,177,207,.1);cursor:pointer}.event-row:hover .event-title{color:#f1d994}.event-dot{width:7px;height:7px;flex:0 0 7px;margin-top:5px;border-radius:50%;background:#75b7e7}.event-copy{min-width:0}.event-title{color:#dbe9f6;font-size:11px;overflow-wrap:anywhere}.event-time{margin-top:4px;color:#829bb5;font-size:9px}.empty{padding:22px 10px;color:#7890aa;text-align:center;font-size:10px;line-height:1.8}
+.live{display:inline-flex;align-items:center;gap:6px;color:#9ce0bf;font-size:9px}.live:before{content:"";width:6px;height:6px;border-radius:50%;background:#6dd6a3;box-shadow:0 0 9px rgba(109,214,163,.6)}
+.notice{display:none;margin:12px 16px 0;padding:10px 12px;border:1px solid rgba(117,184,231,.2);border-radius:10px;color:#c7e7fb;background:rgba(27,89,127,.15);font-size:10px;line-height:1.6}.notice.show{display:block}.notice.error{border-color:rgba(255,135,151,.25);color:#ffc4cb;background:rgba(104,34,48,.2)}
+.modal{width:min(540px,calc(100% - 24px));max-height:min(88vh,800px);padding:0;overflow:auto;border:1px solid rgba(139,184,220,.27);border-radius:20px;color:#edf5ff;background:linear-gradient(150deg,#122b47,#071629 80%);box-shadow:0 30px 100px rgba(0,0,0,.65)}.modal::backdrop{background:rgba(1,5,14,.78);backdrop-filter:blur(7px)}.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;border-bottom:1px solid var(--line)}.modal-head h2{margin:0;font-size:17px;font-weight:400}.close{width:32px;height:32px;border:1px solid var(--line);border-radius:9px;color:#c7d9ea;background:rgba(255,255,255,.04)}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:18px 20px 20px}.field{display:flex;flex-direction:column;gap:7px;min-width:0}.field.full{grid-column:1/-1}.field label{color:#bcd0e2;font-size:10px}.control{width:100%;min-width:0;min-height:42px;padding:10px 11px;border:1px solid rgba(147,180,213,.2);border-radius:10px;outline:none;color:#edf6ff;background:#08192d;font:inherit;font-size:11px}.control:focus{border-color:rgba(117,190,241,.65);box-shadow:0 0 0 3px rgba(81,155,208,.1)}textarea.control{min-height:90px;resize:vertical;line-height:1.65}.checkline{display:flex;align-items:center;gap:8px;color:#bcd0e2;font-size:10px}.checkline input{accent-color:#d9bd76}
+.form-actions{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px}.action-left,.action-right{display:flex;gap:7px}.primary{border-color:rgba(229,200,121,.42);color:#f5e5b7;background:linear-gradient(125deg,#715b2b,#3c3423)}.danger{border:1px solid rgba(237,133,145,.24);border-radius:10px;padding:8px 12px;color:#f0b7bd;background:rgba(111,40,53,.18);font-size:10px}.primary:disabled{opacity:.5;cursor:wait}
+.footer{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:14px 3px 0;color:#7088a2;font-size:9px;line-height:1.7}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.day{min-height:90px}}
+@media(max-width:560px){.shell{padding:13px 10px 55px}.top{align-items:flex-start}.brand-name{font-size:13px}.top-link{font-size:10px;padding:7px 9px}.hero{margin:16px 0 12px;padding:18px 15px;border-radius:17px}.hero h1{font-size:27px}.layout{gap:11px}.calendar-head{padding:13px 11px}.month-label strong{font-size:19px}.calendar{padding:8px 5px 12px}.weekdays div{font-size:9px}.day{min-height:clamp(62px,14vw,84px);padding:4px 2px}.date-num{min-width:22px;height:22px;font-size:10px}.day.today .date-num{width:22px;height:22px}.event-chip{font-size:8px;padding:3px 3px}.more-events{font-size:8px}.side{grid-template-columns:1fr}.form{grid-template-columns:1fr;padding:15px}.field.full{grid-column:auto}.form-actions{grid-column:auto;flex-direction:column;align-items:stretch}.action-left,.action-right{width:100%}.action-left>* ,.action-right>*{flex:1}.modal-head{padding:15px}.top-actions{gap:5px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header class="top"><div class="brand"><div class="mark">R</div><div><div class="brand-name">로키 공유 캘린더</div><div class="brand-sub">ROCKEY · SHARED CALENDAR</div></div></div><div class="top-actions"><a class="top-link" href="./index.html">← 돌이사이트</a><a class="top-link" href="./login.html" id="loginLink">로그인</a></div></header>
+<section class="hero"><div class="eyebrow">ONE CALENDAR · EVERYONE CONNECTED</div><h1>함께 계획하고,<br>함께 기억하다.</h1><p>로키의 모든 사용자가 하나의 달력에서 일정을 공유해요. 일정은 서버에 안전하게 저장되고, 다른 사용자의 변경 사항도 실시간으로 반영됩니다.</p><div class="hero-stats"><span class="stat">✦ 실시간 공유</span><span class="stat">⌖ 한국 표준시</span><span class="stat">♧ 사용자별 권한</span><span class="stat" id="authState">계정 확인 중</span></div></section>
+<div class="layout">
+<section class="panel"><div class="calendar-head"><div class="month-label"><strong id="monthTitle">불러오는 중</strong><span id="yearLabel"></span></div><div class="controls"><button class="icon-btn" id="prevMonth" aria-label="이전 달">‹</button><button class="icon-btn" id="nextMonth" aria-label="다음 달">›</button><button class="today-btn" id="todayBtn">오늘</button></div></div><div class="notice" id="notice" role="status" aria-live="polite"></div><div class="calendar"><div class="weekdays"><div>일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div></div><div class="days" id="daysGrid"><div class="empty">캘린더를 준비하고 있어요.</div></div></div></section>
+<aside class="side">
+<section class="panel side-card"><div class="side-head"><div><div class="side-title">선택한 날짜</div><div class="side-sub" id="selectedLabel">날짜를 선택해 주세요.</div></div><button class="add-btn" id="addSelected">＋ 일정 추가</button></div><div id="selectedEvents"><div class="empty">선택한 날짜의 일정이 여기에 표시됩니다.</div></div></section>
+<section class="panel side-card"><div class="side-head"><div><div class="side-title">다가오는 일정</div><div class="side-sub">오늘 이후 예정된 일정</div></div><span class="live" id="liveStatus">연결 대기</span></div><div id="upcomingEvents"><div class="empty">일정을 불러오는 중이에요.</div></div></section>
+</aside>
+</div>
+<footer class="footer"><span>ROCKEY SHARED CALENDAR</span><span>일정 작성자는 본인 일정만 수정·삭제할 수 있으며 관리자는 전체 일정을 관리할 수 있습니다.</span></footer>
+</div>
+<dialog class="modal" id="eventDialog"><div class="modal-head"><h2 id="dialogTitle">새 일정 등록</h2><button class="close" id="closeDialog" type="button" aria-label="닫기">×</button></div><form class="form" id="eventForm">
+<div class="field full"><label for="eventTitle">일정 제목</label><input class="control" id="eventTitle" maxlength="120" required placeholder="예: 로키 정기 회의"></div>
+<div class="field"><label for="eventStart">시작</label><input class="control" id="eventStart" type="datetime-local" required></div>
+<div class="field"><label for="eventEnd">종료</label><input class="control" id="eventEnd" type="datetime-local" required></div>
+<div class="field"><label for="eventCategory">분류</label><select class="control" id="eventCategory"><option value="general">일반</option><option value="meeting">회의</option><option value="study">공부</option><option value="game">게임</option><option value="event">행사</option><option value="deadline">마감</option><option value="birthday">생일</option></select></div>
+<div class="field"><label for="eventColor">표시 색상</label><select class="control" id="eventColor"><option value="blue">블루</option><option value="gold">골드</option><option value="purple">퍼플</option><option value="green">그린</option><option value="rose">로즈</option><option value="cyan">시안</option></select></div>
+<div class="field full"><label for="eventLocation">장소 (선택)</label><input class="control" id="eventLocation" maxlength="180" placeholder="온라인 / 장소 입력"></div>
+<div class="field full"><label for="eventDescription">설명 (선택)</label><textarea class="control" id="eventDescription" maxlength="3000" placeholder="일정에 대한 자세한 내용을 입력하세요."></textarea></div>
+<label class="checkline field full"><span><input type="checkbox" id="allDay"> 종일 일정</span></label>
+<div class="form-actions"><div class="action-left"><button class="danger" id="deleteEvent" type="button" hidden>일정 삭제</button></div><div class="action-right"><button class="ghost" id="cancelDialog" type="button">취소</button><button class="primary" id="saveEvent" type="submit">저장하기</button></div></div>
+</form></dialog>
+<script src="js/supabase.min.js?v=2.117.2"></script>
+<script src="js/rockey-shared-calendar.js?v=20261123-1"></script>
+</body></html>
