@@ -281,7 +281,7 @@ function renderAgenda(){
   const dot=document.createElement("span");dot.className="agenda-color";dot.style.background=userColor(userId);
   const name=document.createElement("span");name.textContent=memberName(userId)+(userId===state.user.id?" (나)":"");
   head.append(dot,name);group.append(head);
-  items.forEach(o=>{const b=document.createElement("button");b.type="button";b.className="agenda-event";const time=document.createElement("span");time.className="agenda-time";time.textContent=o.all_day?"종일":formatTime(o.occurrenceStart)+"–"+formatTime(o.occurrenceEnd);const copy=document.createElement("span");copy.className="agenda-copy";const title=document.createElement("strong");title.textContent=o.title;const notes=document.createElement("small");notes.textContent=(CATEGORY[o.category]||"일반")+(o.notes?" · "+o.notes.slice(0,95):"");copy.append(title,notes);b.append(time,copy);b.addEventListener("click",()=>openDayView(state.selected));group.append(b);});
+  items.forEach(o=>{const b=document.createElement("button");b.type="button";b.className="agenda-event";const time=document.createElement("span");time.className="agenda-time";time.textContent=o.all_day?"종일":formatTime(o.occurrenceStart)+"–"+formatTime(o.occurrenceEnd);const copy=document.createElement("span");copy.className="agenda-copy";const title=document.createElement("strong");title.textContent=o.title;const notes=document.createElement("small");notes.textContent=(CATEGORY[o.category]||"일반")+(o.notes?" · "+o.notes.slice(0,95):"");copy.append(title,notes);b.append(time,copy);b.addEventListener("click",()=>openDetail(o));group.append(b);});
   host.append(group);
  });
 }
