@@ -31,6 +31,7 @@ export interface GameInstance {
   setItem(itemCode:string,count:number,effect?:string,inventory?:Record<string,number>):void;
   selectItem(itemCode:string):void;
   useItem():void;
+  interact():void;
   showThrownItem(itemCode:string,x:number,y:number,z:number,yaw:number,pitch:number,fuseMs:number):void;
   showItemEffect(effect:string,x:number,y:number,z:number,radius:number,durationMs:number,eventId?:string,yaw?:number,from?:{x:number;y:number;z:number}):void;
   setEnergyCubeVision(active:boolean):void;
@@ -2548,7 +2549,7 @@ export async function createGame(
       setWeaponLocal(code,nextAmmo,nextReserve);
     },
     setItem(code:string,count:number,effect?:string,inventory?:Record<string,number>){if(inventory)setItemInventory(code,inventory);else setItemLocal(code,count);if(effect==='ENERGY')energyUntil=performance.now()+8000;},
-    selectItem,useItem,showThrownItem,showItemEffect,setEnergyCubeVision,showTeleportEffect,
+    selectItem,useItem,interact:interactMap,showThrownItem,showItemEffect,setEnergyCubeVision,showTeleportEffect,
     teleportLocal(to:{x:number;y:number;z:number},nextYaw:number){body.setTranslation({x:to.x,y:to.y,z:to.z},true);yaw=nextYaw;pitch=0;vertical=0;lastServerGateTeleportAt=performance.now();},
     applyWorldDestruction(events:Array<{id:string;x:number;y:number;z:number;radius:number}>){for(const event of events){if(!event||typeof event.id!=='string')continue;applyDestruction(new THREE.Vector3(event.x,event.y,event.z),event.radius,event.id);}},
     showDamageOnTarget,
