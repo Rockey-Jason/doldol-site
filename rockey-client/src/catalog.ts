@@ -1,5 +1,5 @@
 export interface RockeyCover {
-  x: number; z: number; hx: number; hz: number; top: number;
+  x: number; z: number; hx: number; hz: number; top: number; bottom?: number;
 }
 export interface RockeyMap {
   id: string;
