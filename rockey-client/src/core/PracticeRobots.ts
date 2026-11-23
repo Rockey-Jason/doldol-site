@@ -255,7 +255,8 @@ export function createPracticeRobots(
     bot.health=Math.max(0,bot.health-damage);bot.hitUntil=now+180;showHealth(bot);
     damageNotice(position,damage,headshot);
     if(bot.health<=0){
-      bot.alive=false;bot.root.visible=false;bot.respawnAt=now+6500;
+      bot.alive=false;bot.root.visible=false;bot.detectionRing.visible=false;bot.attackRing.visible=false;
+      bot.respawnAt=now+6500;
       notify('ROBOT DESTROYED · '+bot.spec.name);
     }
   };
