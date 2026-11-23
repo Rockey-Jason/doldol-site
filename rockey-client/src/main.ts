@@ -350,6 +350,7 @@ $('mobileItem')?.addEventListener('pointerdown',event=>{event.preventDefault();o
 $('mobileUse')?.addEventListener('pointerdown',event=>{event.preventDefault();game?.useItem();});
 $('itemSelectBtn')?.addEventListener('click',openItemSelector);
 $('itemUseBtn')?.addEventListener('click',()=>game?.useItem());
+  $('mobileInteract')?.addEventListener('pointerdown',event=>{event.preventDefault();game?.interact();});
 $('itemSelectClose')?.addEventListener('click',closeItemSelector);
 $('itemOptionList')?.addEventListener('click',event=>{
   const target=event.target;if(!(target instanceof Element))return;
