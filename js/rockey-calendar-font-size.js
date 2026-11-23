@@ -7,7 +7,7 @@
 
   const STORAGE_KEY = "rockey-calendar-font-scale-v1";
   const MIN = 80;
-  const MAX = 140;
+  const MAX = 160;
   const clamp = value => {
     const number = Number(value);
     return Number.isFinite(number) ? Math.max(MIN, Math.min(MAX, Math.round(number))) : 100;
@@ -68,6 +68,12 @@
     }
   });
   reset.addEventListener("click", () => apply(100));
+  panel.addEventListener("click", event => {
+    const preset = event.target.closest("[data-calendar-font-value]");
+    const step = event.target.closest("[data-calendar-font-step]");
+    if (preset) apply(Number(preset.dataset.calendarFontValue));
+    else if (step) apply(value + Number(step.dataset.calendarFontStep));
+  });
 
   document.addEventListener("pointerdown", event => {
     if (panel.hidden) return;
