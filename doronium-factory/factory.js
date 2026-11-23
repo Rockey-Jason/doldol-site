@@ -1880,7 +1880,20 @@ function tickBuilding(b,dt,power,context=null){const d=buildingDef(b.type);if(!d
   if(!deposit||(d.resource==="advanced"?!["ITEM_COLD_CRYSTAL_RAW","ITEM_HEAT_CRYSTAL","ITEM_MAGNETITE","titaniumOre","chromiteOre"].includes(deposit.type):deposit.type!==d.resource)||deposit.amount<=0){b.status="DEPLETED";return}
   if(Number(b.drillDurability??1000)<=0){if(!b.failureRepair)b.failureRepair={grade:"major",repairSeconds:30,repairCondition:100,repairMaterials:{ironPlate:2},residue:{type:"drill_bit",amount:1},broken:true};b.status="BROKEN";return}
   b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";
-  if(b.progress+1e-9>=8){b.progress=0;deposit.amount=Math.max(0,deposit.amount-1);b.drillDurability=Math.max(0,Number(b.drillDurability??1000)-1);const id=d.resource==="advanced"?canonicalItemID(deposit.type):canonicalItemID(d.resource);if(!RESOURCE[id]){b.status="ERROR";b.errorCode="UNKNOWN_MINE_DEPOSIT_RESOURCE:"+String(deposit.type);return}createOutput(b,id,1,{quality:clamp(84+Math.floor((deposit.seed%1200)/100)+Math.max(0,deposit.level-2),80,99),purity:Math.min(99,86+deposit.level*2),synthetic:false});b.lastDepositYieldTick=Number(S.tick)||0;if((deposit.max-deposit.amount)%5===0){addItem("stone",1,{quality:82,purity:85,synthetic:false});b.byproductsProduced=(Number(b.byproductsProduced)||0)+1}if(deposit.amount<=0)b.status="DEPLETED"}
+  if(b.progress+1e-9>=8){
+   const id=d.resource==="advanced"?canonicalItemID(deposit.type):canonicalItemID(d.resource);
+   if(!RESOURCE[id]){b.progress=8;b.status="ERROR";b.errorCode="UNKNOWN_MINE_DEPOSIT_RESOURCE:"+String(deposit.type);return}
+   const outputMeta={quality:clamp(84+Math.floor((deposit.seed%1200)/100)+Math.max(0,deposit.level-2),80,99),purity:Math.min(99,86+deposit.level*2),synthetic:false};
+   // Commit the owned output first. A failed custody/ledger commit must never
+   // consume the source deposit or wear the drill.
+   if(!createOutput(b,id,1,outputMeta)){b.progress=8;if(b.status!=="ERROR")b.status="PAUSED_OUTPUT";return}
+   b.progress=0;
+   deposit.amount=Math.max(0,deposit.amount-1);
+   b.drillDurability=Math.max(0,Number(b.drillDurability??1000)-1);
+   b.lastDepositYieldTick=Number(S.tick)||0;
+   if((deposit.max-deposit.amount)%5===0){addItem("stone",1,{quality:82,purity:85,synthetic:false});b.byproductsProduced=(Number(b.byproductsProduced)||0)+1}
+   if(deposit.amount<=0&&!b.output)b.status="DEPLETED";
+  }
   return;
  }
  if(b.type==="pump"){if(tickSupportFailure(b,dt,ratio))return;if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=5){b.progress=0;node.amount=Math.max(0,node.amount-3);createOutput(b,"water",3,{quality:100,purity:100,synthetic:false})}return}
@@ -3372,9 +3385,10 @@ if(E2E_MODE){
    return {generator,miner,deposit:structuredClone(deposit),placed:S.buildings.map(b=>b.type)};
   },
   runAdvancedMiningTest(){
-   for(let i=0;i<81;i++)tick(STEP);
-   const miner=S.buildings.find(b=>b.type==="minerAdvanced"),deposit=S.mineDeposits[miner?.targetDepositKey];
-   return {output:miner?.output?structuredClone(miner.output):null,depositAmount:deposit?.amount,drillDurability:miner?.drillDurability,power:currentPower().allocations?.[String(miner?.uid)]||null};
+   const miner=S.buildings.find(b=>b.type==="minerAdvanced");let ticks=0;
+   for(;ticks<120&&!miner?.output;ticks++)tick(STEP);
+   const deposit=S.mineDeposits[miner?.targetDepositKey],generator=S.buildings.find(b=>b.type==="mineGen");
+   return {ticks,output:miner?.output?structuredClone(miner.output):null,depositAmount:deposit?.amount,drillDurability:miner?.drillDurability,progress:miner?.progress,status:miner?.status,errorCode:miner?.errorCode||null,failureRepair:miner?.failureRepair?structuredClone(miner.failureRepair):null,power:currentPower().allocations?.[String(miner?.uid)]||null,generatorFuel:generator?.fuelTimer||0};
   },
   runRawMaterialProductionTest(){
    const cases=[
@@ -3401,9 +3415,27 @@ if(E2E_MODE){
    return results;
   },
   runMiningAutomationTest(){
-   for(let i=0;i<81;i++)tick(STEP);
-   const miner=S.buildings.find(b=>b.type==="minerIron"),deposit=S.mineDeposits[mineDepositKey(1,12,15)];
-   return {output:miner?.output?structuredClone(miner.output):null,depositAmount:deposit?.amount,drillDurability:miner?.drillDurability,power:currentPower().allocations?.[String(miner?.uid)]||null,generatorFuel:S.buildings.find(b=>b.type==="mineGen")?.fuelTimer||0};
+   const miner=S.buildings.find(b=>b.type==="minerIron");let ticks=0;
+   for(;ticks<120&&!miner?.output;ticks++)tick(STEP);
+   const deposit=S.mineDeposits[mineDepositKey(1,12,15)],generator=S.buildings.find(b=>b.type==="mineGen");
+   return {ticks,output:miner?.output?structuredClone(miner.output):null,depositAmount:deposit?.amount,drillDurability:miner?.drillDurability,progress:miner?.progress,status:miner?.status,errorCode:miner?.errorCode||null,failureRepair:miner?.failureRepair?structuredClone(miner.failureRepair):null,lastFailureEventID:miner?.lastFailureEventID||null,failureExposureSec:miner?.failureExposureSec||0,power:currentPower().allocations?.[String(miner?.uid)]||null,generatorFuel:generator?.fuelTimer||0,generatorStatus:generator?.status||null,ownershipValidation:structuredClone(S.ownershipLedgerValidation||null),ownershipErrors:S.runtime?.ownershipIntegrityErrors||[]};
+  },
+  runMiningOutputRollbackTest(){
+   this.setupMiningAutomationTest();
+   const miner=S.buildings.find(b=>b.type==="minerIron"),generator=S.buildings.find(b=>b.type==="mineGen"),deposit=S.mineDeposits[mineDepositKey(1,12,15)];
+   if(!miner||!generator||!deposit)throw new Error("MINE_OUTPUT_ROLLBACK_FIXTURE_MISSING");
+   const depositBefore=deposit.amount,drillBefore=miner.drillDurability;
+   generator.fuelTimer=24;miner.progress=7.9;
+   const sourceStack=S.runtime.itemStacks[0];if(!sourceStack)throw new Error("MINE_OUTPUT_ROLLBACK_STACK_MISSING");
+   S.runtime.itemStacks.push(structuredClone(sourceStack));
+   const invalidAudit=rebuildOwnershipLedger(S);
+   tick(STEP);
+   const blocked={output:!!miner.output,depositAmount:deposit.amount,drillDurability:miner.drillDurability,progress:miner.progress,status:miner.status,errorCode:miner.errorCode||null};
+   S.runtime.itemStacks.pop();
+   const restoredAudit=rebuildOwnershipLedger(S);
+   tick(STEP);
+   const recovered={output:miner.output?structuredClone(miner.output):null,depositAmount:deposit.amount,drillDurability:miner.drillDurability,progress:miner.progress,status:miner.status};
+   return {depositBefore,drillBefore,invalidAudit,blocked,restoredAudit,recovered,finalAudit:rebuildOwnershipLedger(S)};
   },
   runDrillRepairTest(){
    const miner=S.buildings.find(b=>b.type==="minerIron");if(!miner)return {ok:false,reason:"MINER_MISSING"};
