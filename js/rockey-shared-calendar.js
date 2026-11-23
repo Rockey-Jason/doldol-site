@@ -2,9 +2,9 @@
 "use strict";
 const SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbGciOiJIUzI1NiIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
-const TABLES={rooms:"rockey_calendar_rooms",members:"rockey_calendar_members",events:"rockey_calendar_events",comments:"rockey_calendar_event_comments"};
+const TABLES={rooms:"rockey_calendar_rooms",members:"rockey_calendar_members",events:"rockey_calendar_events",comments:"rockey_calendar_event_comments",dayComments:"rockey_calendar_day_comments",dayMentions:"rockey_calendar_day_comment_mentions",dayReads:"rockey_calendar_day_comment_reads"};
 const $=id=>document.getElementById(id);
-const state={sb:null,user:null,rooms:[],room:null,members:[],events:[],memberMap:new Map(),selected:new Date(),month:new Date(new Date().getFullYear(),new Date().getMonth(),1),view:"month",channel:null,editing:null,detail:null,detailOccurrence:null,occurrences:[],selectedRoomUsers:[],searchTimers:{},searchTokens:{},loading:false};
+const state={sb:null,user:null,rooms:[],room:null,members:[],events:[],memberMap:new Map(),selected:new Date(),month:new Date(new Date().getFullYear(),new Date().getMonth(),1),view:"month",channel:null,editing:null,detail:null,detailOccurrence:null,activeDay:null,dayComments:[],dayReads:[],pendingMentions:[],occurrences:[],selectedRoomUsers:[],searchTimers:{},searchTokens:{},loading:false};
 const WEEKDAYS=["일","월","화","수","목","금","토"];
 const CATEGORY={general:"일반",meeting:"회의",study:"공부",game:"게임",event:"행사",deadline:"마감",birthday:"생일",memo:"메모"};
 const FREQUENCY={none:"일반 일정",daily:"매일",weekly:"매주",monthly:"매달",yearly:"매년",interval_days:"X일마다"};
@@ -180,9 +180,9 @@ function renderMonth(range){
   const num=document.createElement("span");num.className="day-number";num.textContent=d.getDate();cell.append(num);
   const dayEvents=state.occurrences.filter(o=>o.occurrenceDate===key);
   const list=document.createElement("div");list.className="day-events";
-  dayEvents.slice(0,3).forEach(o=>{const chip=document.createElement("span");chip.className="event-chip";chip.style.setProperty("--event-color",safeColor(o.creatorColor));const time=document.createElement("span");time.className="chip-time";time.textContent=o.all_day?"종일":formatTime(o.occurrenceStart);const title=document.createElement("span");title.className="chip-title";title.textContent=o.title;chip.append(time,title);chip.title=o.creatorName+" · "+o.title;chip.addEventListener("click",ev=>{ev.stopPropagation();openDetail(o);});list.append(chip);});
+  dayEvents.slice(0,3).forEach(o=>{const chip=document.createElement("span");chip.className="event-chip";chip.style.setProperty("--event-color",safeColor(o.creatorColor));const time=document.createElement("span");time.className="chip-time";time.textContent=o.all_day?"종일":formatTime(o.occurrenceStart);const title=document.createElement("span");title.className="chip-title";title.textContent=o.title;chip.append(time,title);chip.title=o.creatorName+" · "+o.title;chip.addEventListener("click",ev=>{ev.stopPropagation();openDayView(d);});list.append(chip);});
   if(dayEvents.length>3){const more=document.createElement("span");more.className="more-events";more.textContent="+"+(dayEvents.length-3)+"개 더";list.append(more);}
-  cell.append(list);cell.addEventListener("click",()=>{state.selected=d;renderMonth(range);renderAgenda();});grid.append(cell);
+  cell.append(list);cell.addEventListener("click",()=>openDayView(d));grid.append(cell);
  }
  host.append(grid);
 }
@@ -192,7 +192,7 @@ function renderTimeGrid(range){
  const wrap=document.createElement("div");wrap.className="time-grid-wrap";
  const grid=document.createElement("div");grid.className="time-grid";grid.style.setProperty("--day-count",days.length);
  const blank=document.createElement("div");blank.className="time-head";grid.append(blank);
- days.forEach(d=>{const h=document.createElement("div");h.className="time-head time-head-cell"+(dateKey(d)===dateKey(state.selected)?" selected":"");const strong=document.createElement("strong");strong.textContent=WEEKDAYS[d.getDay()]+" "+d.getDate();const small=document.createElement("small");small.textContent=formatDate(d,{month:"numeric",day:"numeric"});h.append(strong,small);grid.append(h);});
+ days.forEach(d=>{const h=document.createElement("div");h.className="time-head time-head-cell"+(dateKey(d)===dateKey(state.selected)?" selected":"");const strong=document.createElement("strong");strong.textContent=WEEKDAYS[d.getDay()]+" "+d.getDate();const small=document.createElement("small");small.textContent=formatDate(d,{month:"numeric",day:"numeric"});h.append(strong,small);h.style.cursor="pointer";h.addEventListener("click",()=>openDayView(d));grid.append(h);});
  for(let hour=0;hour<24;hour++){
   const gutter=document.createElement("div");gutter.className="time-gutter";gutter.style.paddingTop="7px";gutter.textContent=pad(hour)+":00";grid.append(gutter);
   days.forEach(d=>{
@@ -200,7 +200,7 @@ function renderTimeGrid(range){
    cell.addEventListener("click",ev=>{if(ev.target===cell){state.selected=d;openNewAtHour(d,hour);}});
    state.occurrences.filter(o=>o.occurrenceDate===key&&o.occurrenceStart.getHours()===hour).forEach(o=>{
     const b=document.createElement("button");b.type="button";b.className="time-event";b.style.setProperty("--event-color",safeColor(o.creatorColor));b.textContent=o.title;
-    const sm=document.createElement("small");sm.textContent=(o.all_day?"종일":formatTime(o.occurrenceStart)+"–"+formatTime(o.occurrenceEnd))+" · "+o.creatorName;b.append(sm);b.addEventListener("click",ev=>{ev.stopPropagation();openDetail(o);});cell.append(b);
+    const sm=document.createElement("small");sm.textContent=(o.all_day?"종일":formatTime(o.occurrenceStart)+"–"+formatTime(o.occurrenceEnd))+" · "+o.creatorName;b.append(sm);b.addEventListener("click",ev=>{ev.stopPropagation();openDayView(new Date(o.occurrenceDate+"T12:00:00"));});cell.append(b);
    });
    grid.append(cell);
   });
@@ -219,7 +219,7 @@ function renderAgenda(){
   const dot=document.createElement("span");dot.className="agenda-color";dot.style.background=userColor(userId);
   const name=document.createElement("span");name.textContent=memberName(userId)+(userId===state.user.id?" (나)":"");
   head.append(dot,name);group.append(head);
-  items.forEach(o=>{const b=document.createElement("button");b.type="button";b.className="agenda-event";const time=document.createElement("span");time.className="agenda-time";time.textContent=o.all_day?"종일":formatTime(o.occurrenceStart)+"–"+formatTime(o.occurrenceEnd);const copy=document.createElement("span");copy.className="agenda-copy";const title=document.createElement("strong");title.textContent=o.title;const notes=document.createElement("small");notes.textContent=(CATEGORY[o.category]||"일반")+(o.notes?" · "+o.notes.slice(0,95):"");copy.append(title,notes);b.append(time,copy);b.addEventListener("click",()=>openDetail(o));group.append(b);});
+  items.forEach(o=>{const b=document.createElement("button");b.type="button";b.className="agenda-event";const time=document.createElement("span");time.className="agenda-time";time.textContent=o.all_day?"종일":formatTime(o.occurrenceStart)+"–"+formatTime(o.occurrenceEnd);const copy=document.createElement("span");copy.className="agenda-copy";const title=document.createElement("strong");title.textContent=o.title;const notes=document.createElement("small");notes.textContent=(CATEGORY[o.category]||"일반")+(o.notes?" · "+o.notes.slice(0,95):"");copy.append(title,notes);b.append(time,copy);b.addEventListener("click",()=>openDayView(state.selected));group.append(b);});
   host.append(group);
  });
 }
@@ -350,31 +350,165 @@ async function openDetail(occurrence){
  state.detail=occurrence;state.detailOccurrence=occurrence;$("detailTitle").textContent=occurrence.title;$("detailMeta").replaceChildren();
  addDetailTag(formatDate(occurrence.occurrenceStart,{year:"numeric",month:"long",day:"numeric",weekday:"long"}));
  addDetailTag(occurrence.all_day?"종일":formatTime(occurrence.occurrenceStart)+" – "+formatTime(occurrence.occurrenceEnd));
- addDetailTag(CATEGORY[occurrence.category]||"일반");addDetailTag(occurrence.creatorName);if(occurrence.recurrence_frequency!=="none")addDetailTag(recurrenceDescription(occurrence));
+ addDetailTag(CATEGORY[occurrence.category]||"일반");addDetailTag(occurrence.creatorName);
+ if(occurrence.recurrence_frequency!=="none")addDetailTag(recurrenceDescription(occurrence));
  $("detailNotes").textContent=occurrence.notes||"등록된 메모가 없습니다.";
- $("editEventButton").hidden=!userCanManage(occurrence);await loadComments();$("detailDialog").showModal();
+ $("editEventButton").hidden=!userCanManage(occurrence);$("detailDialog").showModal();
 }
-async function loadComments(){
- const e=state.detailOccurrence;if(!e)return;
- const host=$("commentList");host.innerHTML='<div class="empty-state">댓글을 불러오는 중이에요.</div>';
- try{
-  const {data,error}=await state.sb.from(TABLES.comments).select("id,event_id,occurrence_date,user_id,body,created_at").eq("event_id",e.id).eq("occurrence_date",e.occurrenceDate).order("created_at",{ascending:true});
-  if(error)throw error;host.replaceChildren();$("commentCount").textContent=(data||[]).length+"개";
-  if(!data?.length){const empty=document.createElement("div");empty.className="empty-state";empty.textContent="아직 댓글이 없어요. 첫 댓글을 남겨 보세요.";host.append(empty);return;}
-  data.forEach(c=>{
-   const row=document.createElement("div");row.className="comment-item";row.style.setProperty("--comment-color",userColor(c.user_id));
-   const avatar=document.createElement("span");avatar.className="comment-avatar";avatar.textContent=memberName(c.user_id).slice(0,1);
-   const main=document.createElement("div");main.className="comment-main";const top=document.createElement("div");top.className="comment-top";const name=document.createElement("strong");name.textContent=memberName(c.user_id)+(c.user_id===state.user.id?" (나)":"");const time=document.createElement("time");time.textContent=formatDate(new Date(c.created_at),{month:"numeric",day:"numeric"})+" "+formatTime(new Date(c.created_at));top.append(name,time);
-   const body=document.createElement("div");body.className="comment-text";body.textContent=c.body;main.append(top,body);row.append(avatar,main);host.append(row);
+function openDayView(date){
+ const selected=new Date(date.getFullYear(),date.getMonth(),date.getDate(),12,0,0);
+ state.selected=selected;state.month=new Date(selected.getFullYear(),selected.getMonth(),1);state.activeDay=dateKey(selected);
+ render();
+ $("dayViewDate").textContent=formatDate(selected,{year:"numeric",month:"long",day:"numeric",weekday:"long"});
+ $("dayCommentForm").reset();state.pendingMentions=[];renderPendingMentions();$("tagSuggestions").hidden=true;
+ renderDaySchedules();
+ $("dayViewDialog").showModal();
+ void loadDayComments();
+}
+function renderDaySchedules(){
+ const host=$("dayScheduleGroups");host.replaceChildren();
+ const day=state.selected,until=new Date(dayStart(day));until.setDate(until.getDate()+1);
+ const rows=occurrencesBetween(dayStart(day),until);
+ $("dayScheduleCount").textContent=rows.length+"개";
+ state.members.forEach(member=>{
+  const items=rows.filter(o=>o.creator_id===member.member_user_id);
+  const group=document.createElement("section");group.className="day-schedule-group";
+  const head=document.createElement("div");head.className="day-schedule-owner";
+  const dot=document.createElement("span");dot.className="agenda-color";dot.style.background=safeColor(member.member_color);
+  const name=document.createElement("span");name.textContent=member.display_name+(member.member_user_id===state.user.id?" (나)":"");
+  head.append(dot,name);group.append(head);
+  if(!items.length){
+   const empty=document.createElement("div");empty.className="empty-state";empty.textContent="이 날짜에 등록한 일정이 없습니다.";group.append(empty);
+  }
+  items.forEach(o=>{
+   const card=document.createElement("article");card.className="day-schedule-card";
+   const time=document.createElement("div");time.className="day-schedule-time";
+   time.textContent=o.all_day?"종일":formatTime(o.occurrenceStart)+" – "+formatTime(o.occurrenceEnd);
+   const copy=document.createElement("div");copy.className="day-schedule-copy";
+   const title=document.createElement("strong");title.textContent=o.title;
+   const notes=document.createElement("p");notes.textContent=o.notes||"별도 메모가 없습니다.";
+   const tags=document.createElement("div");tags.className="day-schedule-tags";
+   [CATEGORY[o.category]||"일반",o.recurrence_frequency!=="none"?recurrenceDescription(o):"반복 없음"].forEach(value=>{const tag=document.createElement("span");tag.textContent=value;tags.append(tag);});
+   copy.append(title,notes,tags);card.append(time,copy);
+   if(userCanManage(o)){
+    const edit=document.createElement("button");edit.type="button";edit.className="day-schedule-edit";edit.textContent="수정";
+    edit.addEventListener("click",()=>{$("dayViewDialog").close();const base=state.events.find(e=>e.id===o.id)||o;openEventEditor(base);});
+    card.append(edit);
+   }
+   group.append(card);
   });
- }catch(err){console.error(err);host.innerHTML='<div class="empty-state">댓글을 불러오지 못했어요.</div>';}
+  host.append(group);
+ });
 }
-async function postComment(ev){
- ev.preventDefault();const e=state.detailOccurrence,body=$("commentBody").value.trim();if(!e||!body)return;
- const btn=$("commentForm").querySelector("button");btn.disabled=true;
- try{const {error}=await state.sb.from(TABLES.comments).insert({event_id:e.id,occurrence_date:e.occurrenceDate,user_id:state.user.id,body});if(error)throw error;$("commentBody").value="";await loadComments();}
- catch(err){notice("댓글을 등록하지 못했어요. "+(err.message||""),true);}
- finally{btn.disabled=false;}
+async function loadDayComments(){
+ if(!state.room||!state.activeDay||!state.user)return;
+ const host=$("dayCommentList");host.innerHTML='<div class="empty-state">하루 공유 댓글을 불러오는 중이에요.</div>';
+ try{
+  const {data:comments,error}=await state.sb.from(TABLES.dayComments)
+   .select("id,room_id,comment_date,author_id,body,created_at")
+   .eq("room_id",state.room.id).eq("comment_date",state.activeDay).order("created_at",{ascending:true});
+  if(error)throw error;
+  state.dayComments=comments||[];
+  if(state.dayComments.length){
+   const ownReads=state.dayComments.filter(comment=>comment.author_id!==state.user.id)
+    .map(comment=>({comment_id:comment.id,room_id:state.room.id,reader_id:state.user.id}));
+   if(ownReads.length){
+    const readResult=await state.sb.from(TABLES.dayReads).upsert(ownReads,{onConflict:"comment_id,reader_id",ignoreDuplicates:true});
+    if(readResult.error)console.warn("[ROCKEY Calendar] 읽음 기록 저장 실패:",readResult.error.message);
+   }
+   const ids=state.dayComments.map(comment=>comment.id);
+   const {data:reads,error:readError}=await state.sb.from(TABLES.dayReads)
+    .select("comment_id,reader_id,read_at").eq("room_id",state.room.id).in("comment_id",ids);
+   if(readError)throw readError;
+   state.dayReads=reads||[];
+  }else state.dayReads=[];
+  renderDayComments();
+ }catch(error){
+  console.error("[ROCKEY Calendar] 하루 댓글 조회 실패:",error);
+  host.innerHTML='<div class="empty-state">공유 댓글을 불러오지 못했어요. 연결을 확인해 주세요.</div>';
+ }
+}
+function renderDayComments(){
+ const host=$("dayCommentList");host.replaceChildren();
+ const comments=state.dayComments||[];$("dayCommentCount").textContent=comments.length+"개";
+ if(!comments.length){const empty=document.createElement("div");empty.className="empty-state";empty.textContent="이 날짜의 첫 댓글을 남겨 보세요. 이 댓글창은 모든 참여자가 함께 사용합니다.";host.append(empty);return;}
+ comments.forEach(comment=>{
+  const row=document.createElement("article");row.className="day-comment-item";row.style.setProperty("--comment-color",userColor(comment.author_id));
+  const head=document.createElement("div");head.className="day-comment-head";
+  const avatar=document.createElement("span");avatar.className="day-comment-avatar";avatar.textContent=memberName(comment.author_id).slice(0,1);
+  const author=document.createElement("strong");author.className="day-comment-author";author.textContent=memberName(comment.author_id)+(comment.author_id===state.user.id?" (나)":"");
+  const time=document.createElement("time");time.className="day-comment-time";time.textContent=formatDate(new Date(comment.created_at),{month:"numeric",day:"numeric"})+" "+formatTime(new Date(comment.created_at));
+  head.append(avatar,author,time);
+  const body=document.createElement("div");body.className="day-comment-body";body.textContent=comment.body;
+  const receipts=state.dayReads.filter(read=>read.comment_id===comment.id);
+  const readerNames=receipts.map(read=>memberName(read.reader_id));
+  const eligibleReaders=Math.max(0,state.members.length-(comment.author_id===state.user.id?1:1));
+  const readLine=document.createElement("div");readLine.className="day-comment-readers";
+  const summary=document.createElement("strong");summary.textContent="읽음 "+receipts.length+"/"+eligibleReaders+"명";
+  const names=document.createElement("span");names.textContent=readerNames.length?" · "+readerNames.join(", "):" · 아직 읽은 사람이 없습니다.";
+  readLine.append(summary,names);
+  row.append(head,body,readLine);host.append(row);
+ });
+}
+function renderPendingMentions(){
+ const host=$("pendingMentions");host.replaceChildren();
+ state.pendingMentions.forEach(user=>{
+  const pill=document.createElement("span");pill.className="mention-pill";
+  const label=document.createElement("span");label.textContent="@"+user.display_name;
+  const remove=document.createElement("button");remove.type="button";remove.textContent="×";remove.setAttribute("aria-label",user.display_name+" 태그 제거");
+  remove.addEventListener("click",()=>{
+   const textarea=$("dayCommentBody");const token="@"+user.display_name;
+   const index=textarea.value.indexOf(token);if(index>=0)textarea.setRangeText("",index,index+token.length,"end");
+   state.pendingMentions=state.pendingMentions.filter(item=>item.member_user_id!==user.member_user_id);renderPendingMentions();updateTagSuggestions();
+  });
+  pill.append(label,remove);host.append(pill);
+ });
+}
+function updateTagSuggestions(){
+ const textarea=$("dayCommentBody"),host=$("tagSuggestions"),caret=textarea.selectionStart||0,before=textarea.value.slice(0,caret);
+ const match=before.match(/(^|\\s)@([^\\s@]*)$/u);
+ if(!match){host.hidden=true;host.replaceChildren();return;}
+ const query=match[2].toLocaleLowerCase("ko-KR");
+ const matches=state.members.filter(member=>member.member_user_id!==state.user.id&&
+  member.display_name.toLocaleLowerCase("ko-KR").includes(query)&&
+  !state.pendingMentions.some(selected=>selected.member_user_id===member.member_user_id)).slice(0,8);
+ host.replaceChildren();
+ if(!matches.length){host.hidden=true;return;}
+ matches.forEach(member=>{
+  const button=document.createElement("button");button.type="button";button.className="tag-option";
+  const avatar=document.createElement("span");avatar.className="member-avatar";avatar.style.setProperty("--member-color",safeColor(member.member_color));avatar.textContent=member.display_name.slice(0,1);
+  const label=document.createElement("span");label.textContent="@"+member.display_name;
+  button.append(avatar,label);
+  button.addEventListener("mousedown",event=>event.preventDefault());
+  button.addEventListener("click",()=>insertMention(member));
+  host.append(button);
+ });
+ host.hidden=false;
+}
+function insertMention(member){
+ const textarea=$("dayCommentBody"),caret=textarea.selectionStart||0,before=textarea.value.slice(0,caret),at=before.lastIndexOf("@");
+ if(at<0)return;
+ textarea.setRangeText("@"+member.display_name+" ",at,caret,"end");
+ if(!state.pendingMentions.some(item=>item.member_user_id===member.member_user_id))state.pendingMentions.push(member);
+ renderPendingMentions();updateTagSuggestions();textarea.focus();
+}
+async function postDayComment(event){
+ event.preventDefault();const body=$("dayCommentBody").value.trim();
+ if(!body||!state.room||!state.activeDay)return;
+ const mentioned=state.pendingMentions.filter(member=>body.includes("@"+member.display_name)).map(member=>member.member_user_id);
+ const button=$("postDayComment");button.disabled=true;
+ try{
+  const {error}=await state.sb.rpc("rockey_calendar_post_day_comment",{
+   p_room_id:state.room.id,p_comment_date:state.activeDay,p_body:body,p_mentioned_user_ids:mentioned
+  });
+  if(error)throw error;
+  $("dayCommentBody").value="";state.pendingMentions=[];renderPendingMentions();$("tagSuggestions").hidden=true;
+  await loadDayComments();
+ }catch(error){
+  console.error("[ROCKEY Calendar] 댓글 작성 실패:",error);
+  const message=document.createElement("div");message.className="empty-state";message.style.color="#ffb7bd";message.textContent="댓글을 등록하지 못했어요. "+(error.message||"다시 시도해 주세요.");
+  $("dayCommentList").prepend(message);
+ }finally{button.disabled=false;}
 }
 async function loadRoomData(){
  if(!state.room)return;
@@ -405,13 +539,13 @@ function wire(){
  $("inviteUserSearch").addEventListener("input",()=>scheduleSearch("inviteUserSearch","inviteSearchResults","invite"));
  $("roomInviteButton").addEventListener("click",openInviteDialog);$("lockedInviteButton").addEventListener("click",openInviteDialog);
  $("addEventButton").addEventListener("click",()=>openEventEditor());$("eventForm").addEventListener("submit",saveEvent);$("deleteEventButton").addEventListener("click",deleteEvent);
- $("commentForm").addEventListener("submit",postComment);$("editEventButton").addEventListener("click",()=>{const e=state.detailOccurrence;$("detailDialog").close();openEventEditor(e);});
+ $("dayCommentForm").addEventListener("submit",postDayComment);$("dayCommentBody").addEventListener("input",updateTagSuggestions);$("dayCommentBody").addEventListener("click",updateTagSuggestions);$("dayCommentBody").addEventListener("keyup",updateTagSuggestions);$("editEventButton").addEventListener("click",()=>{const e=state.detailOccurrence;$("detailDialog").close();openEventEditor(e);});
  $("recurrenceFrequency").addEventListener("change",setRecurrenceUI);
  $("prevPeriod").addEventListener("click",()=>changePeriod(-1));$("nextPeriod").addEventListener("click",()=>changePeriod(1));
  $("goToday").addEventListener("click",()=>{state.selected=new Date();state.month=new Date(state.selected.getFullYear(),state.selected.getMonth(),1);render();});
  document.querySelectorAll(".view-btn").forEach(b=>b.addEventListener("click",()=>setView(b.dataset.view)));
  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>$(b.dataset.close).close()));
- ["roomDialog","inviteDialog","eventDialog","detailDialog"].forEach(id=>$(id).addEventListener("click",e=>{if(e.target===$(id))$(id).close();}));
+ ["roomDialog","inviteDialog","eventDialog","detailDialog","dayViewDialog"].forEach(id=>$(id).addEventListener("click",e=>{if(e.target===$(id))$(id).close();}));
  $("allDay").addEventListener("change",()=>{if($("allDay").checked){const s=$("eventStart").value.slice(0,10),e=$("eventEnd").value.slice(0,10);$("eventStart").value=s+"T00:00";$("eventEnd").value=e+"T23:59";}});
 }
 async function init(){
