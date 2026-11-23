@@ -57,6 +57,7 @@ export function robotCanAttack(distance:number,attackRange:number,detected:boole
 
 export interface PracticeRobotSystem {
   update(now:number,dt:number,player:THREE.Vector3,enabled:boolean):void;
+  aliveCount():number;
   hitMeshes():THREE.Object3D[];
   scan(until:number):number;
   damageObject(object:THREE.Object3D,damage:number,now:number):boolean;
@@ -262,7 +263,7 @@ export function createPracticeRobots(
     damageNotice(position,damage,headshot);
     if(bot.health<=0){
       // Robots disappear normally after destruction and return to their fixed spawn after five seconds.
-      bot.alive=false;bot.root.visible=false;bot.respawnAt=now+5000;
+      bot.alive=false;bot.root.visible=false;bot.respawnAt=Number.POSITIVE_INFINITY;
       bot.detectionRing.visible=false;bot.attackRing.visible=false;bot.patrolRing.visible=false;
       bot.scanMarker.visible=false;
       notify('ROBOT DESTROYED · '+bot.spec.name+' · 5s');
@@ -279,18 +280,6 @@ export function createPracticeRobots(
         if(!bot.alive){
           bot.root.visible=false;bot.scanMarker.visible=false;
           bot.patrolRing.visible=false;bot.detectionRing.visible=false;bot.attackRing.visible=false;
-          if(now>=bot.respawnAt){
-            const ground=sampleGround(bot.homeX,bot.homeZ,0)??0;
-            bot.health=bot.spec.hp;bot.alive=true;bot.root.visible=true;
-            bot.root.position.set(bot.homeX,ground,bot.homeZ);bot.root.rotation.set(0,0,0);
-            bot.patrolRing.position.set(bot.homeX,ground+.045,bot.homeZ);
-            bot.patrolRing.visible=bot.spec.role!=='dummy';
-            bot.detectionRing.position.set(bot.homeX,ground+.065,bot.homeZ);
-            bot.attackRing.position.set(bot.homeX,ground+.071,bot.homeZ);
-            bot.detectionRing.visible=bot.spec.role!=='dummy';bot.attackRing.visible=bot.spec.role!=='dummy';
-            bot.moveX=0;bot.moveZ=0;bot.nextAttackAt=now+1000;bot.nextThinkAt=0;
-            showHealth(bot);notify('ROBOT RESPAWNED · '+bot.spec.name);
-          }
           continue;
         }
         bot.root.visible=true;
@@ -437,6 +426,7 @@ export function createPracticeRobots(
         if(progress>=1){scene.remove(blast.mesh);(blast.mesh.material as THREE.Material).dispose();blasts.splice(i,1);}
       }
     },
+    aliveCount(){return bots.reduce((count,bot)=>count+(bot.alive?1:0),0);},
     hitMeshes(){return bots.filter(bot=>bot.alive&&bot.root.visible).map(bot=>bot.root);},
     scan(until){scannedUntil=Math.max(scannedUntil,until);return bots.filter(bot=>bot.alive&&bot.spec.role!=='dummy').length;},
     damageObject(object,damage,now){
