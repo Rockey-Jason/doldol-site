@@ -14,7 +14,7 @@ type Bot = {
   id:string;spec:RobotSpec;root:THREE.Group;head:THREE.Mesh;
   healthFill:THREE.Mesh;health:number;alive:boolean;respawnAt:number;
   nextAttackAt:number;nextThinkAt:number;moveX:number;moveZ:number;
-  patrolAngle:number;hitUntil:number;limbs:THREE.Group[];
+  patrolAngle:number;hitUntil:number;limbs:THREE.Group[];scanMarker:THREE.Mesh;
 };
 
 type Bolt = {mesh:THREE.Mesh;velocity:THREE.Vector3;age:number;damage:number;source:string};
@@ -32,6 +32,7 @@ const SPECS:RobotSpec[]=[
 export interface PracticeRobotSystem {
   update(now:number,dt:number,player:THREE.Vector3,enabled:boolean):void;
   hitMeshes():THREE.Object3D[];
+  scan(until:number):number;
   damageObject(object:THREE.Object3D,damage:number,now:number):boolean;
   damageInRadius(position:THREE.Vector3,radius:number,damage:number,now:number):number;
   reset(enabled:boolean):void;
@@ -60,9 +61,9 @@ export function createPracticeRobots(
   const grenadeGeometry=new THREE.DodecahedronGeometry(.17,0);
   const blastGeometry=new THREE.SphereGeometry(1,18,12);
   const positions:[[number,number],[number,number],[number,number],[number,number],[number,number]]=[
-    [-14,12],[-6,6],[0,-7],[14,12],[6,6]
+    [-14,14],[-6,-15],[0,-20],[14,14],[6,-15]
   ];
-  let active=false;
+  let active=false,scannedUntil=0;
 
   const material=(color:number,metalness=.58,roughness=.34,emissive=0)=>new THREE.MeshStandardMaterial({
     color,metalness,roughness,emissive,emissiveIntensity:emissive?1.15:0
@@ -133,6 +134,8 @@ export function createPracticeRobots(
       makeBox(leg,kit.dark,0,-.58,-.09,.36,.16,.48);
       leg.userData.side=side;limbs.push(leg);
     }
+    const scanMarker=new THREE.Mesh(new THREE.TorusGeometry(.72,.045,8,24),kit.glow);
+    scanMarker.position.set(0,2.98,0);scanMarker.rotation.x=Math.PI/2;scanMarker.visible=false;root.add(scanMarker);
     const healthBase=makeBox(root,kit.dark,0,2.55,0,.95,.105,.09);
     healthBase.position.z=-.02;
     const healthFill=makeBox(root,kit.glow,-.01,2.56,-.065,.88,.052,.035);
@@ -144,7 +147,7 @@ export function createPracticeRobots(
     });
     scene.add(root);
     return {id,spec,root,head,healthFill,health:spec.hp,alive:true,respawnAt:0,nextAttackAt:performance.now()+800+index*320,nextThinkAt:0,
-      moveX:0,moveZ:0,patrolAngle:index*1.3,hitUntil:0,limbs};
+      moveX:0,moveZ:0,patrolAngle:index*1.3,hitUntil:0,limbs,scanMarker};
   };
 
   for(let i=0;i<SPECS.length;i++)bots.push(createBot(i));
@@ -218,6 +221,7 @@ export function createPracticeRobots(
       const step=Math.min(.08,Math.max(.001,dt));
       for(const bot of bots){
         if(!bot.alive){
+          bot.scanMarker.visible=false;
           if(now>=bot.respawnAt){
             bot.health=bot.spec.hp;bot.alive=true;bot.root.visible=true;
             const index=bots.indexOf(bot),spawn=positions[index];
@@ -228,6 +232,7 @@ export function createPracticeRobots(
           }
           continue;
         }
+        bot.scanMarker.visible=now<scannedUntil;
         const dx=player.x-bot.root.position.x,dz=player.z-bot.root.position.z;
         const distance=Math.hypot(dx,dz);
         const visible=distance<bot.spec.range&&clearLine(bot,player);
@@ -337,6 +342,7 @@ export function createPracticeRobots(
       }
     },
     hitMeshes(){return bots.filter(bot=>bot.alive&&bot.root.visible).map(bot=>bot.root);},
+    scan(until){scannedUntil=Math.max(scannedUntil,until);return bots.filter(bot=>bot.alive).length;},
     damageObject(object,damage,now){
       let current:THREE.Object3D|null=object,botId:string|undefined,headshot=false;
       while(current){
@@ -362,11 +368,11 @@ export function createPracticeRobots(
     },
     reset(enabled){
       active=enabled;
-      const now=performance.now();
+      const now=performance.now();scannedUntil=0;
       bots.forEach((bot,index)=>{
         const spawn=positions[index],floor=sampleGround(spawn[0],spawn[1],0)??0;
         bot.health=bot.spec.hp;bot.alive=true;bot.respawnAt=0;bot.nextAttackAt=now+1200+index*280;bot.nextThinkAt=0;
-        bot.root.position.set(spawn[0],floor,spawn[1]);bot.root.rotation.set(0,0,0);bot.root.visible=enabled;showHealth(bot);
+        bot.root.position.set(spawn[0],floor,spawn[1]);bot.root.rotation.set(0,0,0);bot.root.visible=enabled;bot.scanMarker.visible=false;showHealth(bot);
       });
       for(const bolt of bolts)scene.remove(bolt.mesh);bolts.length=0;
       for(const grenade of grenades){scene.remove(grenade.mesh);(grenade.mesh.material as THREE.Material).dispose();}grenades.length=0;
