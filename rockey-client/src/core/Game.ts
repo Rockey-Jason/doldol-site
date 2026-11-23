@@ -7,6 +7,7 @@ import { ITEMS, MAPS, WEAPONS, type RockeyItemCode, type RockeyWeapon } from '..
 import { addRockeyEnvironment } from './EnvironmentDressing';
 import { addTacticalLevel } from './TacticalLevel';
 import { createCombatantRig } from './CombatantRig';
+import { createPracticeRobots } from './PracticeRobots';
 import { createFirstPersonHands } from './FirstPersonHands';
 import { createEnergyCubeModel, createRockeyEnergyFieldModel, createRockeyGateLaserModel, createRockeyPortalModel, type RockeyPortalPoint } from './RockeyItems';
 
@@ -251,14 +252,15 @@ export async function createGame(
 
   // Full arena dressing is separate from the combat cover and keeps all new
   // static props out of the hitscan raycast list.
-  addRockeyEnvironment(scene,map,isMobile,(x,y,z,hx,hy,hz)=>{
+  const environmentInteractions=addRockeyEnvironment(scene,map,isMobile,(x,y,z,hx,hy,hz)=>{
     world.createCollider(RAPIER.ColliderDesc.cuboid(hx,hy,hz).setTranslation(x,y,z));
-  });
+  },mesh=>raycastMeshes.push(mesh));
   const tacticalLevel=addTacticalLevel(scene,map,isMobile,(x,y,z,hx,hy,hz,rotationX=0)=>{
     const halfAngle=rotationX/2;
     const rotation={x:Math.sin(halfAngle),y:0,z:0,w:Math.cos(halfAngle)};
     world.createCollider(RAPIER.ColliderDesc.cuboid(hx,hy,hz).setTranslation(x,y,z).setRotation(rotation));
   },mesh=>raycastMeshes.push(mesh),mesh=>groundRaycastMeshes.push(mesh));
+  const mapInteractions=[...environmentInteractions,...tacticalLevel.interactions];
 
   const body = world.createRigidBody(RAPIER.RigidBodyDesc.kinematicPositionBased().setTranslation(0, 0.92, 20));
   const collider = world.createCollider(RAPIER.ColliderDesc.capsule(0.52, 0.34).setFriction(0), body);
@@ -763,6 +765,22 @@ export async function createGame(
   let ammo = 30;
   let reserve = 90;
   const localWeaponAmmo: Record<string,{ammo:number;reserve:number}> = {};
+  let practiceRespawnAt=0;
+  const practiceRobots=createPracticeRobots(
+    scene,map.light,isMobile,raycastMeshes,sampleGroundHeight,
+    (damage,source)=>{
+      if(mode!=='practice'||!active||hp<=0)return;
+      hp=Math.max(0,hp-Math.max(1,damage));
+      avatarRig.triggerHit();
+      updateHud(hp,ammo,reserve,currentWeapon.name);
+      if(hp<=0){
+        practiceRespawnAt=performance.now()+2200;
+        notify('SYSTEM DOWN · 2.2초 후 재투입');
+      }
+    },
+    (point,damage,headshot)=>showDamageAt(point,damage,headshot),
+    notify
+  );
   let seq = 0;
   let lastInput = 0;
   let jumpPending = false;
@@ -1258,6 +1276,58 @@ export async function createGame(
     sprite.userData.startedAt=performance.now();sprite.userData.baseY=sprite.position.y;
     scene.add(sprite);damagePopups.push(sprite);
   }
+  function interactMap(){
+    if(!active||mode!=='practice')return;
+    const now=performance.now();
+    camera.updateMatrixWorld(true);
+    const origin=camera.getWorldPosition(new THREE.Vector3());
+    const direction=camera.getWorldDirection(new THREE.Vector3());
+    let selected:typeof mapInteractions[number]|null=null;
+    let selectedDistance=4.1;
+    for(const feature of mapInteractions){
+      if(!feature.root.visible||now<feature.nextUseAt)continue;
+      const delta=feature.position.clone().sub(origin);
+      const distance=delta.length();
+      if(distance>selectedDistance||distance<.01)continue;
+      if(direction.dot(delta.multiplyScalar(1/distance))<.18)continue;
+      selected=feature;selectedDistance=distance;
+    }
+    if(!selected){
+      const cooling=mapInteractions.find(feature=>feature.root.visible&&feature.nextUseAt>now&&feature.position.distanceTo(origin)<3.5);
+      notify(cooling?'설비가 재충전 중입니다.':'상호작용할 대상이 없습니다. 가까이 다가가 바라보세요.');
+      return;
+    }
+    selected.uses++;
+    selected.nextUseAt=now+(selected.kind==='rest'?12000:20000);
+    selected.root.userData.lastInteractionAt=now;
+    let result='';
+    if(selected.kind==='supply'){
+      ammo=Math.min(currentWeapon.magazine,ammo+10);
+      reserve=Math.min(240,reserve+36);
+      hp=Math.min(100,hp+16);
+      result='탄약 +10 · 예비 탄약 +36 · 체력 +16';
+    }else if(selected.kind==='terminal'){
+      energyUntil=now+8500;
+      result='전술 스캔 활성화 · 이동 속도 증가 8.5초';
+    }else if(selected.kind==='power'){
+      energyUntil=now+6500;
+      hp=Math.min(100,hp+20);
+      result='전력 셀 연결 · 체력 +20 · 이동 속도 증가 6.5초';
+    }else if(selected.kind==='rest'){
+      hp=Math.min(100,hp+36);
+      result='정비 완료 · 체력 +36';
+    }else{
+      hp=Math.min(100,hp+22);
+      reserve=Math.min(240,reserve+18);
+      result='정비 완료 · 체력 +22 · 예비 탄약 +18';
+    }
+    updateHud(hp,ammo,reserve,currentWeapon.name);
+    notify('F · '+selected.label+' — '+result);
+    window.dispatchEvent(new CustomEvent('rockey:map-interaction',{detail:{
+      id:selected.id,label:selected.label,kind:selected.kind,uses:selected.uses,at:Date.now()
+    }}));
+  }
+
   function showDamageOnTarget(targetId:string,targetName:string,damage:number,headshot:boolean) {
     const target=remotes.get(targetId)||[...remotes.values()].find(mesh=>mesh.userData.playerName===targetName);
     if(target)showDamageAt(target.position.clone(),damage,headshot);
@@ -1415,6 +1485,7 @@ export async function createGame(
     showThrownItem(usedCode,origin.x,origin.y,origin.z,yaw,pitch,fuseMs);consumeSelectedItem();
     window.setTimeout(()=>{
       if(disposed)return;showItemEffect(usedCode,impact.x,impact.y,impact.z,usedCode==='GRENADE'?6:4.5,usedCode==='SMOKE'?8000:usedCode==='FLASH'?700:480);
+      if(usedCode==='GRENADE')practiceRobots.damageInRadius(impact,6,78,performance.now());
       if(usedCode==='GRENADE')for(const target of practiceTargets){
         if(!target.visible)continue;const distance=target.position.distanceTo(impact);if(distance>6)continue;
         const damage=Math.max(1,Math.round(78*(1-distance/6)));showDamageAt(target.position.clone(),damage,false);
@@ -1475,26 +1546,31 @@ export async function createGame(
 
     if (mode === 'practice') {
       const shotRay = new THREE.Raycaster(origin, direction, 0, currentWeapon.range);
-      const candidates = practiceTargets.filter(target => target.visible).flatMap(target => target.children);
-      const targetHit = shotRay.intersectObjects(candidates, true)[0];
-      const wallHit = shotRay.intersectObjects(raycastMeshes, false)[0];
-      const hit = targetHit && (!wallHit || targetHit.distance < wallHit.distance - .015) ? targetHit : null;
-      if (hit) {
-        const target = hit.object.parent as THREE.Group;
-        const headshot=hit.object===target.children[1];
-        const practiceDamage = Math.round(currentWeapon.damage * (headshot?1.3:1) * (currentWeapon.pellets || 1));
-        showDamageAt(target.position.clone(),practiceDamage,headshot);
-        target.userData.hp = Math.max(0, Number(target.userData.hp || 100) - practiceDamage);
-        if (target.userData.hp <= 0) {
-          target.visible = false;
-          notify('TARGET ELIMINATED');
-          window.setTimeout(() => {
-            if(disposed)return;
-            target.userData.hp = 100;
-            target.visible = true;
-          }, 2200);
-        } else {
-          // Damage is shown beside the struck target in-world, not in a top-center toast.
+      const candidates:THREE.Object3D[]=[
+        ...practiceTargets.filter(target=>target.visible),
+        ...practiceRobots.hitMeshes()
+      ];
+      const targetHit=shotRay.intersectObjects(candidates,true)[0];
+      const wallHit=shotRay.intersectObjects(raycastMeshes,false)[0];
+      const hit=targetHit&&(!wallHit||targetHit.distance<wallHit.distance-.015)?targetHit:null;
+      if(hit){
+        const robotHit=practiceRobots.damageObject(
+          hit.object,currentWeapon.damage*(currentWeapon.pellets||1),now
+        );
+        if(!robotHit){
+          const target=hit.object.parent as THREE.Group;
+          const headshot=hit.object===target.children[1];
+          const practiceDamage=Math.round(currentWeapon.damage*(headshot?1.3:1)*(currentWeapon.pellets||1));
+          showDamageAt(target.position.clone(),practiceDamage,headshot);
+          target.userData.hp=Math.max(0,Number(target.userData.hp||100)-practiceDamage);
+          if(target.userData.hp<=0){
+            target.visible=false;
+            notify('TARGET ELIMINATED');
+            window.setTimeout(()=>{
+              if(disposed)return;
+              target.userData.hp=100;target.visible=true;
+            },2200);
+          }
         }
       }
     } else {
@@ -1536,6 +1612,7 @@ export async function createGame(
     if (event.code === 'Space') event.preventDefault();
     keys.add(event.code);
     if (event.code === 'KeyV') toggleCamera();
+    if (event.code === 'KeyF') { event.preventDefault(); interactMap(); }
     if (event.code === 'KeyR') reload();
     // G opens the item picker in main.ts; item use is a separate action.
     if (event.code === 'KeyQ') {
@@ -2108,6 +2185,7 @@ export async function createGame(
       const field=localEnergyFields[i];
       if(now>=field.nextDamageAt&&now<field.endsAt){
         field.nextDamageAt=now+500;
+        practiceRobots.damageInRadius(new THREE.Vector3(field.x,0,field.z),field.radius,4,now);
         for(const target of practiceTargets){
           if(!target.visible||Math.hypot(target.position.x-field.x,target.position.z-field.z)>field.radius)continue;
           const damage=4;target.userData.hp=Math.max(0,Number(target.userData.hp||100)-damage);showDamageAt(target.position.clone(),damage,false);
@@ -2296,6 +2374,13 @@ export async function createGame(
     }
 
       let p = position();
+      if(mode==='practice'&&hp<=0&&practiceRespawnAt>0&&now>=practiceRespawnAt){
+        const spawn={x:0,y:.92,z:20};
+        body.setTranslation(spawn,true);p=position();vertical=0;hp=100;practiceRespawnAt=0;
+        updateHud(hp,ammo,reserve,currentWeapon.name);
+        notify('REDEPLOYED · 체력 회복');
+      }
+      practiceRobots.update(now,dt,p,mode==='practice'&&hp>0);
       if(mode==='practice'&&practiceGateA&&practiceGateB&&now-practiceGateExpiresAt<0&&now-lastPracticeGateTeleportAt>850){
         const tryGate=(entry:RockeyPortalPoint,destination:RockeyPortalPoint)=>{
           if(Math.hypot(p.x-entry.x,p.z-entry.z)>1.12||Math.abs((p.y-.92)-entry.y)>1.55)return false;
@@ -2375,7 +2460,7 @@ export async function createGame(
     activate(nextMode: string, team = 0, serverSpawn?: { x: number; y: number; z: number; yaw: number }, weaponCode = 'R16', secondaryWeapon = 'R9', itemCode = 'GRENADE', nextItemCount?: number, nextItemInventory?:Record<string,number>) {
       mode = nextMode;
       active = nextMode !== 'spectator' && nextMode !== 'replay';
-      tacticalLevel.resetDestruction();appliedDestructionIds.clear();
+      tacticalLevel.resetDestruction();tacticalLevel.resetInteractions();appliedDestructionIds.clear();
       replayFrames = null;
       replayFocusId = '';
       killcamComplete = null;
@@ -2401,6 +2486,8 @@ export async function createGame(
       hp = 100; ammo = currentWeapon.magazine; reserve = currentWeapon.reserve; vertical = 0;
       for(const code of Object.keys(localWeaponAmmo))delete localWeaponAmmo[code];
       localWeaponAmmo[currentWeaponCode]={ammo,reserve};
+      practiceRespawnAt=0;
+      practiceRobots.reset(mode==='practice');
       if (mode === 'practice') {
         for (const target of practiceTargets) {
           target.userData.hp = 100;
@@ -2531,6 +2618,7 @@ export async function createGame(
       canvas.removeEventListener('pointerup', pointerLookEnd);
       canvas.removeEventListener('pointercancel', pointerLookEnd);
       canvas.removeEventListener('lostpointercapture', pointerLookEnd);
+      practiceRobots.dispose();
       world.removeCharacterController(controller);
       world.free();
       stopMobileFire();
