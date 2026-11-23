@@ -3,7 +3,7 @@ import { admin, type VerifiedPlayer } from './auth.js';
 import { ITEMS, MAPS, WEAPONS, type RockeyItemCode, type RockeyWeapon } from './catalog.js';
 import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, transferReloadAmmo } from './combat.js';
 import { createAuthoritativeDebris, stepAuthoritativeDebris, type DebrisBodyState } from './world-physics.js';
-import { isBlockedByCover, resolveCeilingCollision, tacticalFloorHeightAt } from './world-navigation.js';
+import { resolveCeilingCollision, resolveHorizontalMovement, tacticalFloorHeightAt } from './world-navigation.js';
 import { ENERGY_CUBE_RULES, isEnemyInsideEnergyCube } from './energy-cube.js';
 
 export type Mode = '1v1' | '2v2' | '3v3' | 'ranked' | 'ffa';
@@ -541,13 +541,29 @@ export class GameRoom {
       const nz=Math.max(-27.5,Math.min(27.5,p.z+dz));
       p.verticalVelocity-=18*delta;
       const nextY=p.y+p.verticalVelocity*delta;
-      const blocked=isBlockedByCover(cover,nx,p.y,nz);
-      if(!blocked){p.x=nx;p.z=nz;}
+
+      // Resolve vertical contact at the attempted destination first. The old
+      // code checked walls at p.y (the previous frame's height), so a rising
+      // capsule could pass into a wall's vertical band before the next tick.
+      const ceilingAtTarget=resolveCeilingCollision(cover,nx,p.y,nz,nextY);
+      const targetFloor=this.floorHeightAt(nx,nz,p.y)+.92;
+      let collisionY=ceilingAtTarget.y;
+      if(!ceilingAtTarget.ceilingHit&&nextY<=targetFloor&&p.y>=targetFloor-.95){
+        collisionY=targetFloor;
+      }
+
+      // Sweep the horizontal move at the resolved height. Sub-stepping and
+      // independent X/Z checks stop corner penetration while preserving wall
+      // sliding; reducing an existing overlap is still permitted.
+      const horizontal=resolveHorizontalMovement(cover,p.x,p.z,nx,nz,collisionY);
+      p.x=horizontal.x;
+      p.z=horizontal.z;
+
+      // Re-evaluate the ceiling at the accepted horizontal position because
+      // wall sliding may have moved the player outside the overhead slab.
       const ceiling=resolveCeilingCollision(cover,p.x,p.y,p.z,nextY);
       const floorCenter=this.floorHeightAt(p.x,p.z,p.y)+.92;
       if(ceiling.ceilingHit){
-        // A ceiling strike ends the jump immediately. Gravity takes over on
-        // the next tick, rather than carrying the player sideways while stuck.
         p.y=ceiling.y;
         p.verticalVelocity=0;
       }else if(nextY<=floorCenter&&p.y>=floorCenter-.95){
