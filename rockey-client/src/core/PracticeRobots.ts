@@ -55,12 +55,12 @@ export function createPracticeRobots(
   const raycaster=new THREE.Raycaster();
   const scratch=new THREE.Vector3();
   const targetScratch=new THREE.Vector3();
-  const up=new THREE.Vector3(0,1,0);
+  void mapLight;
   const boltGeometry=new THREE.SphereGeometry(.105,10,8);
   const grenadeGeometry=new THREE.DodecahedronGeometry(.17,0);
   const blastGeometry=new THREE.SphereGeometry(1,18,12);
   const positions:[[number,number],[number,number],[number,number],[number,number],[number,number]]=[
-    [-13,-8],[-7,-15],[0,-18],[8,-14],[14,-7]
+    [-14,12],[-6,6],[0,-7],[14,12],[6,6]
   ];
   let active=false;
 
@@ -270,9 +270,9 @@ export function createPracticeRobots(
             else canMove=false;
           }
           if(!canMove){
-            bot.moveX=-bot.moveZ;bot.moveZ=bot.moveX*.0+bot.moveZ;
-            const alternativeX=bot.root.position.x+bot.moveX*moveDistance*1.15;
-            const alternativeZ=bot.root.position.z+bot.moveZ*moveDistance*1.15;
+            const side=bot.patrolAngle%2<1?1:-1;
+            const alternativeX=bot.root.position.x-bot.moveZ*side*moveDistance*1.35;
+            const alternativeZ=bot.root.position.z+bot.moveX*side*moveDistance*1.35;
             if(Math.abs(alternativeX)<27&&Math.abs(alternativeZ)<27){
               const altFloor=sampleGround(alternativeX,alternativeZ,bot.root.position.y);
               if(altFloor!==null&&Math.abs(altFloor-bot.root.position.y)<.75)bot.root.position.set(alternativeX,altFloor,alternativeZ);
@@ -283,8 +283,7 @@ export function createPracticeRobots(
         const newDx=player.x-bot.root.position.x,newDz=player.z-bot.root.position.z,newDistance=Math.hypot(newDx,newDz);
         const inSight=newDistance<bot.spec.range&&clearLine(bot,player);
         if(now>=bot.nextAttackAt&&inSight){
-          const index=bots.indexOf(bot);
-          if(bot.spec.role==='melee'&&newDistance<bot.spec.range){
+            if(bot.spec.role==='melee'&&newDistance<bot.spec.range){
             bot.nextAttackAt=now+bot.spec.cooldown;bot.hitUntil=now+250;
             damagePlayer(bot.spec.damage,bot.spec.name);
           }else if(bot.spec.role==='tank'&&newDistance<bot.spec.range){
@@ -301,9 +300,8 @@ export function createPracticeRobots(
           child.rotation.x=Math.sin(now*.009+(Number(child.userData.side)||0)*Math.PI)*motion*.45;
         }});
         const torso=bot.root.children.find(child=>child instanceof THREE.Group&&child.position.y===1.12);
-        if(torso)torso.rotation.z=Math.sin(now*.002+index)*.018+(now<bot.hitUntil?Math.sin(now*.08)*.08:0);
+        if(torso){torso.rotation.z=Math.sin(now*.002+bots.indexOf(bot))*.018+(now<bot.hitUntil?Math.sin(now*.08)*.08:0);torso.position.y=1.12+Math.sin(now*.003+bots.indexOf(bot))*.025;}
         bot.head.rotation.y=Math.sin(now*.0014+bots.indexOf(bot))*.12;
-        bot.root.position.y+=Math.sin(now*.003+bots.indexOf(bot))*0.0008;
       }
       for(let i=bolts.length-1;i>=0;i--){
         const bolt=bolts[i];bolt.age+=step;bolt.mesh.position.addScaledVector(bolt.velocity,step);
