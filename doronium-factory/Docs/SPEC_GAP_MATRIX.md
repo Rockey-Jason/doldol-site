@@ -626,3 +626,19 @@ The 12-stage and 20-item matrix above remains the acceptance baseline. This chec
 All other master statuses are unchanged: world scale remains NOT IMPLEMENTED; physical mobile/full-playthrough and real 60-minute soak remain UNVERIFIED; ownership, fluids, canonical integration, failure/skills, contracts and full campaign remain PARTIAL. No stage or checklist item is promoted to COMPLETE.
 
 PR #11 remains draft/open/unmerged, 613 ahead / 1,000 behind main from stale merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`; main HEAD is `c2f00b4e32db529df6ad85b2c9649ed2ef7bf656`. PR #9/#10 were not wholesale merged; PR #8's Godot implementation was not merged. No deployment or production data mutation occurred.
+
+
+## 2026-11-23 — fail-closed ownership source preconditions
+
+This checkpoint hardens the mutation boundary without claiming that the snapshot ledger is yet the universal source of truth.
+
+| Master item | Current status | New verified evidence | Remaining acceptance blocker |
+|---|---|---|---|
+| Stage 5 — Items, ownership and logistics | PARTIAL / CRITICAL | `transferCustody` requires an explicit valid source owner type and ID and checks an exact match; `consumeCustody` validates owner domain/ID before mutation. Factory and warehouse live call sites were audited. Missing/invalid/mismatched-owner unit tests preserve the full state. Node + Playwright CI passed in [run 45103173113](https://github.com/Rockey-Jason/doldol-site/actions/runs/45103173113). | Snapshot reconstruction is still not a universal authoritative ledger. Global cross-domain conservation, partial parcel movement, full dismantle salvage/refund journaling and cloud/process-restart recovery remain open. |
+| Checklist 8 — No item duplication or loss | PARTIAL / CRITICAL | Exact source-owner preconditions now apply to every live custody transfer/consume API call; all 201 Node tests and browser regression passed at the verified code checkpoint. | Full cross-domain conservation and crash/reconnect recovery are not proven; do not mark COMPLETE. |
+
+**Verified code SHA:** `76d07cf45715756a27d7a9fb720a59fe4afeac95`. Static validation: 7/7; Node suites: 7 + 167 + 27 = 201 passed; Playwright browser-regression: PASS. The mine soak is 3,600 simulated seconds, and desktop/mobile-emulation mine samples each run for 60 elapsed seconds; neither is a physical-device test or a 60-minute wall-clock soak.
+
+All other master statuses remain unchanged. The 2,048m×2,048m world is still NOT IMPLEMENTED; five non-water fluid paths, universal canonical recipe/model sourcing, complete skill/failure/contract coverage and full Fusion restart/interlock acceptance remain PARTIAL; physical PC/Android/iOS validation, two-device cloud conflict/recovery and the real 60-minute wall-clock soak remain UNVERIFIED. **No roadmap stage or final checklist item is COMPLETE.**
+
+PR #11 remains draft/open/unmerged, 616 ahead / 1,000 behind main from stale merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`; main HEAD is `c2f00b4e32db529df6ad85b2c9649ed2ef7bf656`. PR #9/#10 were not wholesale merged; PR #8's Godot implementation was not merged. No main merge, deployment or production data mutation occurred.
