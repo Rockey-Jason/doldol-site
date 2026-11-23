@@ -55,27 +55,29 @@ export function splitCustody(state,{transactionID,stackID,quantity,newStackID}){
 }
 export function transferCustody(state,{transactionID,stackID,quantity,toType,toID,expectedFromType,expectedFromID}){
  const s=ensureState(state),tx=String(transactionID||"");
- if(!validID(tx)||!validID(stackID)||!validID(toID))return null;
- const request={type:"TRANSFER",stackID:String(stackID),quantity,toType,toID:String(toID),expectedFromType:expectedFromType||null,expectedFromID:expectedFromID==null?null:String(expectedFromID)};
+ if(!validID(tx)||!validID(stackID)||!validID(toID)||
+    !OWNER_TYPES.includes(toType)||!OWNER_TYPES.includes(expectedFromType)||
+    !validID(expectedFromID)||!Number.isSafeInteger(quantity)||quantity<=0)return null;
+ // Every live transfer must prove the exact source owner. Optional source
+ // checks made it possible for an omitted precondition to move any known stack.
+ const request={type:"TRANSFER",stackID:String(stackID),quantity,toType,toID:String(toID),expectedFromType,expectedFromID:String(expectedFromID)};
  const replay=transactionReplay(s,tx,request);
  if(replay)return replay.conflict?null:replay;
- if(!OWNER_TYPES.includes(toType)||!Number.isSafeInteger(quantity)||quantity<=0)return null;
  const source=s.custody.find(x=>x.stackID===String(stackID));
- if(!source||source.quantity!==quantity)return null;
- if(expectedFromType&&source.ownerType!==expectedFromType)return null;
- if(expectedFromID&&source.ownerID!==String(expectedFromID))return null;
+ if(!source||source.quantity!==quantity||source.ownerType!==expectedFromType||source.ownerID!==String(expectedFromID))return null;
  const result={stackID:String(stackID),quantity,itemID:source.itemID,from:{type:source.ownerType,id:source.ownerID},to:{type:toType,id:String(toID)}};
  source.ownerType=toType;source.ownerID=String(toID);source.ledgerID="OWN-"+s.nextLedgerID++;
  return saveTransaction(s,tx,request,result);
 }
 export function consumeCustody(state,{transactionID,stackID,quantity,expectedOwnerType,expectedOwnerID,reason}){
  const s=ensureState(state),tx=String(transactionID||"");
- if(!validID(tx)||!validID(stackID)||!validID(expectedOwnerID))return null;
+ if(!validID(tx)||!validID(stackID)||!OWNER_TYPES.includes(expectedOwnerType)||
+    !validID(expectedOwnerID)||!Number.isSafeInteger(quantity)||quantity<=0)return null;
  const request={type:"CONSUME",stackID:String(stackID),quantity,expectedOwnerType,expectedOwnerID:String(expectedOwnerID),reason:String(reason||"consumed")};
  const replay=transactionReplay(s,tx,request);
  if(replay)return replay.conflict?null:replay;
  const source=s.custody.find(x=>x.stackID===String(stackID));
- if(!source||!Number.isSafeInteger(quantity)||quantity<=0||source.quantity!==quantity||source.ownerType!==expectedOwnerType||source.ownerID!==String(expectedOwnerID))return null;
+ if(!source||source.quantity!==quantity||source.ownerType!==expectedOwnerType||source.ownerID!==String(expectedOwnerID))return null;
  const result={stackID:String(stackID),itemID:source.itemID,quantity,reason:request.reason,owner:{type:source.ownerType,id:source.ownerID}};
  s.custody=s.custody.filter(x=>x!==source);
  s.consumed.push({...result,transactionID:tx});

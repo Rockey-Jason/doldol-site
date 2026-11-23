@@ -18,7 +18,7 @@ import { startInfinityFusion, tickInfinityFusion, cancelInfinityFusion, recoverI
 import { evaluatePlanetaryStabilization } from "./planetary-stabilization.js?v=1";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=3";
-import { createOwnershipState, addCustody, transferCustody, consumeCustody, completeProductionCustody, validateOwnershipState, resetCustodySnapshot, hasPendingBuildingCustody, commitBuildingDismantle, activeInputCustodyStackID } from "./ownership-runtime.js?v=9";
+import { createOwnershipState, addCustody, transferCustody, consumeCustody, completeProductionCustody, validateOwnershipState, resetCustodySnapshot, hasPendingBuildingCustody, commitBuildingDismantle, activeInputCustodyStackID } from "./ownership-runtime.js?v=10";
 import { storeWarehouseStack as storeWarehouseCustody, withdrawWarehouseStack as withdrawWarehouseCustody } from "./warehouse-runtime.js?v=2";
 let createClient = null;
 

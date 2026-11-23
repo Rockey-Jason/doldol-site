@@ -1,13 +1,41 @@
 import test from "node:test";import assert from "node:assert/strict";
 import {createOwnershipState,addCustody,splitCustody,transferCustody,consumeCustody,completeProductionCustody,validateOwnershipState,resetCustodySnapshot,hasPendingBuildingCustody,commitBuildingDismantle,activeInputCustodyStackID} from "./ownership-runtime.js";
 test("one stack has one custody owner and transfers idempotently",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S1",itemID:"iron",quantity:5,ownerType:"PLAYER_INVENTORY",ownerID:"p1"});const a=transferCustody(s,{transactionID:"T1",stackID:"S1",quantity:5,toType:"MACHINE_INPUT",toID:"M1",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"p1"});assert.equal(a.to.id,"M1");assert.equal(transferCustody(s,{transactionID:"T1",stackID:"S1",quantity:5,toType:"MACHINE_INPUT",toID:"M1",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"p1"}).duplicate,true);assert.equal(s.custody.length,1);assert.equal(validateOwnershipState(s).valid,true)});
-test("invalid owner and duplicate stack are rejected",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S1",itemID:"ore",quantity:1,ownerType:"WORLD_DROP",ownerID:"x"});assert.throws(()=>addCustody(s,{stackID:"S1",itemID:"ore",quantity:1,ownerType:"WORLD_DROP",ownerID:"y"}));assert.equal(transferCustody(s,{transactionID:"T2",stackID:"S1",quantity:2,toType:"WAREHOUSE",toID:"w"}),null)});
+test("invalid owner and duplicate stack are rejected",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S1",itemID:"ore",quantity:1,ownerType:"WORLD_DROP",ownerID:"x"});assert.throws(()=>addCustody(s,{stackID:"S1",itemID:"ore",quantity:1,ownerType:"WORLD_DROP",ownerID:"y"}));assert.equal(transferCustody(s,{transactionID:"T2",stackID:"S1",quantity:2,toType:"WAREHOUSE",toID:"w",expectedFromType:"WORLD_DROP",expectedFromID:"x"}),null)});
 test("consumption has an idempotent ledger entry",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S",itemID:"ore",quantity:2,ownerType:"MACHINE_INPUT",ownerID:"M"});assert.equal(consumeCustody(s,{transactionID:"C",stackID:"S",quantity:2,expectedOwnerType:"MACHINE_INPUT",expectedOwnerID:"M"}).quantity,2);assert.equal(consumeCustody(s,{transactionID:"C",stackID:"S",quantity:2,expectedOwnerType:"MACHINE_INPUT",expectedOwnerID:"M"}).duplicate,true);assert.equal(s.consumed.length,1)});
+test("transfers fail closed unless the exact source owner is supplied",()=>{
+ const s=createOwnershipState();
+ addCustody(s,{stackID:"SOURCE-GUARD",itemID:"ironOre",quantity:4,ownerType:"PLAYER_INVENTORY",ownerID:"player"});
+ const before=structuredClone(s);
+ assert.equal(transferCustody(s,{transactionID:"SOURCE-GUARD-MISSING",stackID:"SOURCE-GUARD",quantity:4,toType:"WAREHOUSE",toID:"W1"}),null);
+ assert.deepEqual(s,before);
+ assert.equal(transferCustody(s,{transactionID:"SOURCE-GUARD-WRONG",stackID:"SOURCE-GUARD",quantity:4,toType:"WAREHOUSE",toID:"W1",expectedFromType:"WAREHOUSE",expectedFromID:"W1"}),null);
+ assert.deepEqual(s,before);
+ const moved=transferCustody(s,{transactionID:"SOURCE-GUARD-VALID",stackID:"SOURCE-GUARD",quantity:4,toType:"WAREHOUSE",toID:"W1",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"player"});
+ assert.equal(moved.to.type,"WAREHOUSE");
+ assert.equal(validateOwnershipState(s).valid,true);
+});
+
+test("consumption rejects missing or invalid expected owners without changing custody",()=>{
+ const s=createOwnershipState();
+ addCustody(s,{stackID:"CONSUME-GUARD",itemID:"coal",quantity:3,ownerType:"MACHINE_INPUT",ownerID:"M1"});
+ const before=structuredClone(s);
+ assert.equal(consumeCustody(s,{transactionID:"CONSUME-GUARD-MISSING",stackID:"CONSUME-GUARD",quantity:3,expectedOwnerID:"M1"}),null);
+ assert.deepEqual(s,before);
+ assert.equal(consumeCustody(s,{transactionID:"CONSUME-GUARD-INVALID",stackID:"CONSUME-GUARD",quantity:3,expectedOwnerType:"UNKNOWN_OWNER",expectedOwnerID:"M1"}),null);
+ assert.deepEqual(s,before);
+ assert.equal(consumeCustody(s,{transactionID:"CONSUME-GUARD-WRONG",stackID:"CONSUME-GUARD",quantity:3,expectedOwnerType:"WAREHOUSE",expectedOwnerID:"W1"}),null);
+ assert.deepEqual(s,before);
+ const consumed=consumeCustody(s,{transactionID:"CONSUME-GUARD-VALID",stackID:"CONSUME-GUARD",quantity:3,expectedOwnerType:"MACHINE_INPUT",expectedOwnerID:"M1",reason:"test"});
+ assert.equal(consumed.quantity,3);
+ assert.equal(validateOwnershipState(s).valid,true);
+});
+
 
 test("partial transfer requires an explicit split and preserves exact total quantity",()=>{
  const s=createOwnershipState();
  addCustody(s,{stackID:"STACK-A",itemID:"iron",quantity:10,ownerType:"PLAYER_INVENTORY",ownerID:"player"});
- assert.equal(transferCustody(s,{transactionID:"PART-1",stackID:"STACK-A",quantity:4,toType:"MACHINE_INPUT",toID:"M1"}),null);
+ assert.equal(transferCustody(s,{transactionID:"PART-1",stackID:"STACK-A",quantity:4,toType:"MACHINE_INPUT",toID:"M1",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"player"}),null);
  const split=splitCustody(s,{transactionID:"SPLIT-1",stackID:"STACK-A",quantity:4,newStackID:"STACK-A-PART"});
  assert.equal(split.quantity,4);
  assert.equal(splitCustody(s,{transactionID:"SPLIT-1",stackID:"STACK-A",quantity:4,newStackID:"STACK-A-PART"}).duplicate,true);
@@ -20,8 +48,8 @@ test("partial transfer requires an explicit split and preserves exact total quan
 test("reusing an idempotency key with a different transaction body is rejected",()=>{
  const s=createOwnershipState();
  addCustody(s,{stackID:"STACK-X",itemID:"coal",quantity:3,ownerType:"PLAYER_INVENTORY",ownerID:"player"});
- assert.ok(transferCustody(s,{transactionID:"TX-REUSE",stackID:"STACK-X",quantity:3,toType:"WAREHOUSE",toID:"W1"}));
- assert.equal(transferCustody(s,{transactionID:"TX-REUSE",stackID:"STACK-X",quantity:3,toType:"MACHINE_INPUT",toID:"M2"}),null);
+ assert.ok(transferCustody(s,{transactionID:"TX-REUSE",stackID:"STACK-X",quantity:3,toType:"WAREHOUSE",toID:"W1",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"player"}));
+ assert.equal(transferCustody(s,{transactionID:"TX-REUSE",stackID:"STACK-X",quantity:3,toType:"MACHINE_INPUT",toID:"M2",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"player"}),null);
  assert.equal(s.custody[0].ownerType,"WAREHOUSE");
  assert.equal(s.custody[0].ownerID,"W1");
  assert.equal(validateOwnershipState(s).valid,true);
