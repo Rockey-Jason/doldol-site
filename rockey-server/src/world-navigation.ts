@@ -11,21 +11,20 @@ export function tacticalFloorHeightAt(x:number,z:number,currentY:number):number 
     const localX=(x-centerX)*innerSide,localZ=z+1.5;
     const absX=Math.abs(localX),absZ=Math.abs(localZ);
 
-    // Roof access stairwell and the exposed roof deck.
-    if(currentY>5.2&&absX<.8&&localZ>=-.7&&localZ<=-.26)return 5.99;
+    // Raised roof access stairwell and the exposed rooftop deck.
+    if(currentY>6.2&&absX<.8&&localZ>=-.7&&localZ<=-.26)return 6.99;
     if(currentY>4.05&&absX<.72&&localZ>=-.26&&localZ<=3.05){
-      return 4.19+((2.75-localZ)/3.01)*1.52;
+      return 4.19+((2.75-localZ)/3.01)*2.8;
     }
-    if(currentY>5.85&&absX<4.0&&absZ<4.45)return 5.99;
+    if(currentY>6.85&&absX<4.0&&absZ<4.45)return 6.99;
 
-    // Upper gallery surfaces: outer room, inner bridge gallery, cross-walk,
-    // and the stair-aligned landing.
-    if(currentY>3.95&&localZ>=-1.95&&localZ<=4.85){
+    // Upper gallery surfaces: outer room, inner bridge-side platform and landing.
+    if(currentY>3.95&&localZ>=-2.25&&localZ<=4.85){
       if(localX>=-3.65&&localX<=2.12)return 4.19;
-      if(localX>=3.45&&localX<=4.65)return 4.19;
+      if(localX>=4.45&&localX<=5.65)return 4.19;
     }
-    // Upper landing begins exactly at the final stair nose.
-    if(currentY>4.7&&localX>=1.95&&localX<=4.15&&localZ>=-1.85&&localZ<=-.85)return 4.19;
+    // The full landing footprint connects the main ramp to the bridge gallery.
+    if(currentY>4.7&&localX>=1.45&&localX<=4.65&&localZ>=-2.25&&localZ<=-.85)return 4.19;
 
     // Main second-floor stair flight ends directly at the gallery doorway.
     if(currentY>.78&&currentY<5.2&&localX>=2.45&&localX<=3.65&&localZ>=-1.9&&localZ<=2.4){
