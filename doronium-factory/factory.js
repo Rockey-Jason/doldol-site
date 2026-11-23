@@ -366,28 +366,30 @@ function restoreOwnedMutation(snapshot,validationOverride=null){
 function commitOwnedItemReservations(reservationIDs,{mode="consume",destinationType=null,destinationID=null,reason="inventory-consume"}={}){
  const ids=[...new Set((reservationIDs||[]).map(String))];if(!ids.length)return null;
  const snapshot={runtime:structuredClone(S.runtime),ownershipLedger:structuredClone(S.ownershipLedger||createOwnershipState()),inventory:structuredClone(S.inventory||{}),validation:S.ownershipLedgerValidation===undefined?undefined:structuredClone(S.ownershipLedgerValidation)};
+ const fail=(code,details={},auditResult=null)=>{restoreOwnedMutation(snapshot,auditResult);if(E2E_MODE){S.runtime??={};S.runtime.lastOwnedReservationCommitFailure={code,...details}}return null};
  const audit=rebuildOwnershipLedger(S);
- if(!audit.valid){restoreOwnedMutation(snapshot,audit);return null}
+ if(!audit.valid)return fail("PRE_TRANSFER_AUDIT",{errors:audit.errors},audit);
  const reservations=ids.map(id=>S.runtime.reservations?.[id]);
- if(reservations.some(r=>!r||r.status!=="reserved")){restoreOwnedMutation(snapshot);return null}
+ if(reservations.some(r=>!r||r.status!=="reserved"))return fail("RESERVATION_NOT_ACTIVE",{reservationIDs:ids});
  let operationIndex=0;
  for(const reservation of reservations)for(const allocation of reservation.allocations||[]){
   const quantity=Math.max(0,Math.floor(Number(allocation.quantity)||0));
-  if(!quantity){restoreOwnedMutation(snapshot);return null}
+  if(!quantity)return fail("INVALID_ALLOCATION",{reservationID:reservation.reservationID,stackID:allocation.stackID,quantity:allocation.quantity});
   const stackID=String(allocation.stackID)+"@"+String(reservation.reservationID);
   const transactionID="OWN:"+String(reservation.reservationID)+":"+String(operationIndex++);
   const operation=mode==="transfer"
    ?transferCustody(S.ownershipLedger,{transactionID,stackID,quantity,toType:destinationType,toID:String(destinationID||""),expectedFromType:"ACTIVE_JOB",expectedFromID:String(reservation.ownerID||"")})
    :consumeCustody(S.ownershipLedger,{transactionID,stackID,quantity,expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:String(reservation.ownerID||""),reason});
-  if(!operation){restoreOwnedMutation(snapshot);return null}
+  if(!operation)return fail("CUSTODY_TRANSFER_REJECTED",{transactionID,stackID,quantity,mode,destinationType,destinationID,ownerID:reservation.ownerID});
  }
  const removed=commitItemReservations(S,ids);
- if(!removed){restoreOwnedMutation(snapshot);return null}
+ if(!removed)return fail("RUNTIME_RESERVATION_COMMIT_REJECTED",{reservationIDs:ids});
  syncLegacyInventory(S);
  if(mode!=="transfer"){
   const post=rebuildOwnershipLedger(S);
-  if(!post.valid){restoreOwnedMutation(snapshot,post);return null}
+  if(!post.valid)return fail("POST_TRANSFER_AUDIT",{errors:post.errors},post);
  }
+ if(E2E_MODE&&S.runtime)delete S.runtime.lastOwnedReservationCommitFailure;
  return removed;
 }
 function takeItem(id,qty){
@@ -640,7 +642,10 @@ function canConsumeRecipe(b,r){
  return itemsReady&&fluidsReady;
 }
 function consumeRecipe(b,r){
- if(!canConsumeRecipe(b,r))return null;
+ if(!canConsumeRecipe(b,r)){
+  if(E2E_MODE){const requirements=Object.fromEntries(Object.entries(r.inputs||{}).map(([rawID,quantity])=>{const id=canonicalItemID(rawID);return [id,{required:quantity,available:(b.input?.[id]||0)+availableItemCount(S,rawID)}]}));b.lastProductionStartFailure={code:"INPUT_CHECK_FAILED",requirements,fluidInputs:r.fluidInputs||{},fluidType:b.fluidType||null,fluidAmountL:Number(b.fluidAmountL)||0}}
+  return null;
+ }
  const uid=String(b.uid||b.type||"unknown"),jobSequence=Math.max(0,Math.floor(Number(b.productionSequence)||0))+1;
  const snapshot={runtime:structuredClone(S.runtime),ownershipLedger:structuredClone(S.ownershipLedger||createOwnershipState()),inventory:structuredClone(S.inventory||{}),validation:S.ownershipLedgerValidation===undefined?undefined:structuredClone(S.ownershipLedgerValidation),input:structuredClone(b.input||{}),inputMeta:structuredClone(b.inputMeta||{}),activeInputQuantities:structuredClone(b.activeInputQuantities||[]),productionSequence:b.productionSequence,fluidAmountL:b.fluidAmountL,fluidType:b.fluidType};
  const rollback=()=>{
@@ -651,18 +656,19 @@ function consumeRecipe(b,r){
   if(snapshot.fluidAmountL===undefined)delete b.fluidAmountL;else b.fluidAmountL=snapshot.fluidAmountL;
   if(snapshot.fluidType===undefined)delete b.fluidType;else b.fluidType=snapshot.fluidType;
  };
+ const fail=(code,details={})=>{rollback();if(E2E_MODE)b.lastProductionStartFailure={code,...details};return null};
  for(const[type,liters]of Object.entries(r.fluidInputs||{})){
   const fluidNode={amountL:Math.max(0,Number(b.fluidAmountL)||0),fluidType:b.fluidType||null},consumed=consumeFluid(fluidNode,liters,type);
-  if(!consumed.ok){rollback();return null}
+  if(!consumed.ok)return fail("FLUID_CONSUME_FAILED",{fluidType:type,required:liters,available:fluidNode.amountL})
   b.fluidAmountL=fluidNode.amountL;b.fluidType=fluidNode.fluidType||null;
  }
- const auditBefore=rebuildOwnershipLedger(S);if(!auditBefore.valid){rollback();return null}
+ const auditBefore=rebuildOwnershipLedger(S);if(!auditBefore.valid)return fail("OWNERSHIP_AUDIT_BEFORE",{errors:auditBefore.errors})
  const inventoryNeed={},bufferInputs=[];
  for(const[rawID,n]of Object.entries(r.inputs||{})){
   const id=canonicalItemID(rawID),buffered=Math.min(n,b.input?.[id]||0),remaining=n-buffered;
   if(buffered>0){
    const moved=transferCustody(S.ownershipLedger,{transactionID:"PRODUCTION_START:"+uid+":"+jobSequence+":"+id,stackID:"MACHINE_INPUT:"+uid+":"+id,quantity:buffered,toType:"ACTIVE_JOB",toID:uid,expectedFromType:"MACHINE_INPUT",expectedFromID:uid});
-   if(!moved){rollback();return null}
+   if(!moved)return fail("MACHINE_INPUT_CUSTODY_TRANSFER_FAILED",{stackID:"MACHINE_INPUT:"+uid+":"+id,quantity:buffered})
    const meta=b.inputMeta?.[id]||{quality:90,purity:90,synthetic:false};
    bufferInputs.push({itemID:id,quantity:buffered,quality:Number(meta.quality)||90,purity:Number(meta.purity)||90,synthetic:meta.synthetic===true});
    b.input[id]-=buffered;if(b.input[id]<=0){delete b.input[id];delete b.inputMeta[id]}
@@ -671,16 +677,17 @@ function consumeRecipe(b,r){
  }
  b.activeInputQuantities=bufferInputs.map(input=>({...input}));
  const reservations=Object.keys(inventoryNeed).length?reserveItemBatch(S,inventoryNeed,"recipe:"+uid):[];
- if(!reservations){rollback();return null}
+ if(!reservations)return fail("ITEM_RESERVATION_FAILED",{requirements:inventoryNeed})
  const committed=reservations.length?commitOwnedItemReservations(reservations,{mode:"transfer",destinationType:"ACTIVE_JOB",destinationID:uid,reason:"production-input"}):[];
- if(!committed){for(const reservationID of reservations)releaseItemReservation(S,reservationID);rollback();return null}
+ if(!committed){const commitFailure=structuredClone(S.runtime?.lastOwnedReservationCommitFailure||null);for(const reservationID of reservations)releaseItemReservation(S,reservationID);return fail("ITEM_RESERVATION_COMMIT_FAILED",{reservationIDs:reservations,commitFailure})}
  let qsum=0,psum=0,weight=0,hasSynthetic=false;const consumedInputs=[];
  const absorb=(m,itemID)=>{qsum+=Number(m.quality||90)*m.quantity;psum+=Number(m.purity||90)*m.quantity;weight+=m.quantity;hasSynthetic=hasSynthetic||m.synthetic===true;consumedInputs.push({itemID:String(itemID),quantity:m.quantity,quality:Number(m.quality)||90,purity:Number(m.purity)||90,synthetic:m.synthetic===true})};
  for(const input of bufferInputs)absorb(input,input.itemID);
  for(const stack of committed)absorb(stack,stack.itemID);
  b.activeInputQuantities=consumedInputs.map(input=>({...input}));b.productionSequence=jobSequence;
  syncLegacyInventory(S);
- const auditAfter=rebuildOwnershipLedger(S);if(!auditAfter.valid){rollback();return null}
+ const auditAfter=rebuildOwnershipLedger(S);if(!auditAfter.valid)return fail("OWNERSHIP_AUDIT_AFTER",{errors:auditAfter.errors})
+ if(E2E_MODE){delete b.lastProductionStartFailure;if(S.runtime)delete S.runtime.lastOwnedReservationCommitFailure}
  return {quality:weight?qsum/weight:90,purity:weight?psum/weight:90,synthetic:hasSynthetic,consumedInputs};
 }
 function rebuildOwnershipLedger(state=S){
