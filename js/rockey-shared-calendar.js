@@ -211,7 +211,7 @@ function renderDateColorToolbar(){
   ? state.dateColorSelection.size+"개 날짜를 선택했어요. 원하는 날짜 칸을 눌러 추가하거나 해제하세요."
   : state.dateColorValue
    ? "색상을 선택했어요. '색상 정하기 시작'을 누른 다음 날짜를 골라 주세요."
-   : "먼저 날짜 칸에 표시할 색상을 선택해 주세요.";
+   : "먼저 날짜 색상을 고른 뒤 선택을 시작하세요. 저장하면 이 캘린더 참여자 모두에게 보여요.";
  $("dateColorSwatches").querySelectorAll("[data-date-color]").forEach(button=>{
   const selected=button.dataset.dateColor===String(state.dateColorValue||"");
   button.setAttribute("aria-pressed",String(selected));
