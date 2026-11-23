@@ -35,6 +35,9 @@
     range.setAttribute("aria-valuetext", value + "%");
     number.value = String(value);
     valueLabel.textContent = value + "%";
+    panel.querySelectorAll("[data-calendar-font-value]").forEach(button => {
+      button.setAttribute("aria-pressed", String(Number(button.dataset.calendarFontValue) === value));
+    });
     document.documentElement.dataset.rockeyCalendarFontScale = String(value);
   }
 
