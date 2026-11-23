@@ -716,5 +716,6 @@ window.addEventListener("pagehide",()=>{state.lastActiveAt=Date.now();localStora
 window.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden")save();});
 try{await load();}catch(startupError){console.error("Rockey Clicker startup recovery:",startupError);state=fresh();try{render();renderTab();}catch(renderError){console.error("Rockey Clicker render recovery:",renderError);$("upgradeContent").innerHTML='<div class="empty">초기 화면을 복구하지 못했습니다. 페이지를 새로고침해 주세요.</div>';}$("saveText").textContent="복구 모드 · 로컬 저장";}resizeParticleCanvas();window.addEventListener("resize",resizeParticleCanvas);scheduleGolden();
 </script>
+<script src="js/dori-text-scale.js?v=20261123-text-scale-1"></script>
 </body>
 </html>
