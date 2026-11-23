@@ -247,7 +247,7 @@ export function createPracticeRobots(
   const system:PracticeRobotSystem={
     update(now,dt,player,enabled){
       active=enabled;
-      if(!enabled){for(const bot of bots)bot.root.visible=false;return;}
+      if(!enabled){for(const bot of bots){bot.root.visible=false;bot.patrolRing.visible=false;}return;}
       playerState={x:player.x,y:player.y,z:player.z};
       const step=Math.min(.08,Math.max(.001,dt));
       for(const bot of bots){
@@ -267,7 +267,7 @@ export function createPracticeRobots(
         bot.scanMarker.visible=now<scannedUntil;
         const dx=player.x-bot.root.position.x,dz=player.z-bot.root.position.z;
         const distance=Math.hypot(dx,dz);
-        const hasLineOfSight=clearLine(bot,player);
+        const hasLineOfSight=distance<=bot.spec.detectionRange&&clearLine(bot,player);
         const detected=robotCanDetect(distance,bot.spec.detectionRange,hasLineOfSight);
         if(now>=bot.nextThinkAt){
           bot.nextThinkAt=now+(isMobile?115:80);
@@ -341,7 +341,7 @@ export function createPracticeRobots(
           if(Math.hypot(faceX,faceZ)>.001)bot.root.rotation.y=Math.atan2(-faceX,-faceZ);
         }
         const newDx=player.x-bot.root.position.x,newDz=player.z-bot.root.position.z,newDistance=Math.hypot(newDx,newDz);
-        const attackLineOfSight=clearLine(bot,player);
+        const attackLineOfSight=detected&&clearLine(bot,player);
         const attackReady=robotCanAttack(newDistance,bot.spec.attackRange,detected,attackLineOfSight);
         if(now>=bot.nextAttackAt&&attackReady){
           if(bot.spec.role==='melee'){
@@ -429,7 +429,7 @@ export function createPracticeRobots(
         bot.health=bot.spec.hp;bot.alive=true;bot.respawnAt=0;bot.nextAttackAt=now+1200+index*280;bot.nextThinkAt=0;
         bot.moveX=0;bot.moveZ=0;bot.patrolAngle=index*1.3;
         bot.root.position.set(bot.homeX,floor,bot.homeZ);bot.root.rotation.set(0,0,0);
-        bot.patrolRing.position.y=floor+.045;bot.root.visible=enabled;bot.scanMarker.visible=false;showHealth(bot);
+        bot.patrolRing.position.y=floor+.045;bot.patrolRing.visible=enabled;bot.root.visible=enabled;bot.scanMarker.visible=false;showHealth(bot);
       });
       for(const bolt of bolts)scene.remove(bolt.mesh);bolts.length=0;
       for(const grenade of grenades){scene.remove(grenade.mesh);(grenade.mesh.material as THREE.Material).dispose();}grenades.length=0;
