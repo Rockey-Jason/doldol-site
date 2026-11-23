@@ -21,7 +21,7 @@ export function tacticalFloorHeightAt(x:number,z:number,currentY:number):number 
     // Upper gallery surfaces: outer room, inner bridge-side platform and landing.
     if(currentY>3.95&&localZ>=-2.25&&localZ<=4.85){
       if(localX>=-3.65&&localX<=2.12)return 4.19;
-      if(localX>=4.45&&localX<=5.65)return 4.19;
+      if(localX>=3.75&&localX<=5.65)return 4.19;
     }
     // The full landing footprint connects the main ramp to the bridge gallery.
     if(currentY>4.7&&localX>=1.45&&localX<=4.65&&localZ>=-2.25&&localZ<=-.85)return 4.19;
