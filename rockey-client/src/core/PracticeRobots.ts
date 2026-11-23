@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 
-export type PracticeRobotRole = 'melee' | 'ranged' | 'thrower' | 'scout' | 'tank';
+export type PracticeRobotRole = 'dummy' | 'melee' | 'ranged' | 'thrower' | 'scout' | 'tank';
 type GroundSampler = (x:number,z:number,footY:number)=>number|null;
 type DamagePlayer = (damage:number,source:string)=>void;
 type DamageNotice = (position:THREE.Vector3,damage:number,headshot:boolean)=>void;
@@ -11,6 +11,7 @@ type RobotSpec = {
   cooldown:number;damage:number;preferred:number;body:number;glow:number;
 };
 
+type GhostMaterialState = {material:THREE.Material;transparent:boolean;opacity:number;depthWrite:boolean};
 type Bot = {
   id:string;spec:RobotSpec;root:THREE.Group;head:THREE.Mesh;
   healthFill:THREE.Mesh;health:number;alive:boolean;respawnAt:number;
@@ -18,6 +19,7 @@ type Bot = {
   homeX:number;homeZ:number;patrolRadius:number;patrolDirection:number;patrolRing:THREE.Mesh;
   detectionRing:THREE.Mesh;attackRing:THREE.Mesh;
   patrolAngle:number;hitUntil:number;limbs:THREE.Group[];scanMarker:THREE.Mesh;
+  ghostStartedAt:number;ghostOrigin:THREE.Vector3;ghostPhase:number;ghostMaterials:GhostMaterialState[];
 };
 
 type Bolt = {mesh:THREE.Mesh;velocity:THREE.Vector3;age:number;damage:number;source:string};
@@ -25,6 +27,9 @@ type Grenade = {mesh:THREE.Mesh;velocity:THREE.Vector3;age:number;source:string;
 type Blast = {mesh:THREE.Mesh;age:number;life:number};
 
 const SPECS:RobotSpec[]=[
+  // Stationary, non-attacking practice units stand near the player's spawn.
+  {role:'dummy',name:'TRAINING DUMMY A',hp:180,speed:0,detectionRange:0,attackRange:0,patrolRadius:.85,patrolSpeed:0,cooldown:999999,damage:0,preferred:0,body:0x34485f,glow:0x73d7ff},
+  {role:'dummy',name:'TRAINING DUMMY B',hp:180,speed:0,detectionRange:0,attackRange:0,patrolRadius:.85,patrolSpeed:0,cooldown:999999,damage:0,preferred:0,body:0x34485f,glow:0x73d7ff},
   {role:'melee',name:'BREACHER',hp:155,speed:3.65,detectionRange:16,attackRange:1.85,patrolRadius:6.5,patrolSpeed:.72,cooldown:1180,damage:15,preferred:1.25,body:0x34485f,glow:0xff536e},
   {role:'ranged',name:'SENTINEL',hp:115,speed:2.15,detectionRange:23,attackRange:18,patrolRadius:7,patrolSpeed:.52,cooldown:1540,damage:11,preferred:13,body:0x344d68,glow:0x5acbff},
   {role:'thrower',name:'BOMBER',hp:135,speed:2.45,detectionRange:20,attackRange:15.5,patrolRadius:6.8,patrolSpeed:.58,cooldown:4200,damage:28,preferred:10,body:0x5d4935,glow:0xffb84d},
@@ -83,8 +88,10 @@ export function createPracticeRobots(
   const boltGeometry=new THREE.SphereGeometry(.105,10,8);
   const grenadeGeometry=new THREE.DodecahedronGeometry(.17,0);
   const blastGeometry=new THREE.SphereGeometry(1,18,12);
-  const positions:[[number,number],[number,number],[number,number],[number,number],[number,number]]=[
-    [-14,14],[-6,-15],[0,-20],[14,14],[6,-15]
+  // Player spawn is at (0, 20). Passive targets are placed just ahead of it;
+  // combat robots are staged farther downrange behind the targets.
+  const positions:Array<[number,number]>=[
+    [-3.2,14],[3.2,14],[-12,-7],[-6,-15],[0,-21],[12,-15],[7,-7]
   ];
   let active=false,scannedUntil=0;
 
@@ -107,7 +114,7 @@ export function createPracticeRobots(
   }));
 
   const createBot=(index:number):Bot=>{
-    const kit=specs[index],spec=kit.spec,id='practice-bot-'+spec.role;
+    const kit=specs[index],spec=kit.spec,id='practice-bot-'+spec.role+'-'+index;
     const homeX=positions[index][0],homeZ=positions[index][1],patrolRadius=spec.patrolRadius;
     const root=new THREE.Group();root.name='rockey-practice-robot-'+spec.role;
     root.userData.robotId=id;root.position.set(homeX,sampleGround(homeX,homeZ,0)??0,homeZ);
@@ -117,7 +124,7 @@ export function createPracticeRobots(
     );
     patrolRing.rotation.x=-Math.PI/2;
     patrolRing.position.set(homeX,root.position.y+.045,homeZ);
-    patrolRing.renderOrder=2;scene.add(patrolRing);
+    patrolRing.renderOrder=2;patrolRing.visible=spec.role!=='dummy';scene.add(patrolRing);
     // These two lightweight floor outlines follow the robot, but stay outside
     // its hit-test hierarchy so they never enlarge the robot's damage hitbox.
     const makeRangeRing=(range:number,color:number,opacity:number,renderOrder:number)=>{
@@ -133,6 +140,7 @@ export function createPracticeRobots(
     };
     const detectionRing=makeRangeRing(spec.detectionRange,0x77cfff,.095,3);
     const attackRing=makeRangeRing(spec.attackRange,0xffc27c,.145,4);
+    if(spec.role==='dummy'){detectionRing.visible=false;attackRing.visible=false;}
     const base=makeJoint(root,kit.dark,0,.16,0,.48);base.scale.set(1.35,.23,1.05);
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.55,.035,7,24),kit.glow);
     ring.rotation.x=Math.PI/2;ring.position.y=.13;root.add(ring);
@@ -188,16 +196,32 @@ export function createPracticeRobots(
     healthFill.position.x=0;
     const labelCore=makeBox(root,kit.glow,0,2.34,0,.42,.045,.045);
     labelCore.visible=spec.role==='tank';
+    const ghostMaterials:GhostMaterialState[]=[];
+    const seenMaterials=new Set<THREE.Material>();
     root.traverse(object=>{
-      if(object instanceof THREE.Mesh){object.userData.robotId=id;object.userData.hitZone=object.userData.robotHead?'head':'body';}
+      if(object instanceof THREE.Mesh){
+        object.userData.robotId=id;object.userData.hitZone=object.userData.robotHead?'head':'body';
+        const list=Array.isArray(object.material)?object.material:[object.material];
+        for(const mat of list){if(!seenMaterials.has(mat)){seenMaterials.add(mat);ghostMaterials.push({material:mat,transparent:mat.transparent,opacity:mat.opacity,depthWrite:mat.depthWrite});}}
+      }
     });
     scene.add(root);
     return {id,spec,root,head,healthFill,health:spec.hp,alive:true,respawnAt:0,nextAttackAt:performance.now()+800+index*320,nextThinkAt:0,
       moveX:0,moveZ:0,homeX,homeZ,patrolRadius,patrolDirection:index%2===0?1:-1,patrolRing,
-      detectionRing,attackRing,patrolAngle:index*1.3,hitUntil:0,limbs,scanMarker};
+      detectionRing,attackRing,patrolAngle:index*1.3,hitUntil:0,limbs,scanMarker,
+      ghostStartedAt:0,ghostOrigin:new THREE.Vector3(homeX,root.position.y,homeZ),ghostPhase:index*1.71,ghostMaterials};
   };
 
   for(let i=0;i<SPECS.length;i++)bots.push(createBot(i));
+
+  const setGhostMode=(bot:Bot,enabled:boolean)=>{
+    for(const state of bot.ghostMaterials){
+      state.material.transparent=enabled?true:state.transparent;
+      state.material.opacity=enabled?Math.min(state.opacity,.24):state.opacity;
+      state.material.depthWrite=enabled?false:state.depthWrite;
+      state.material.needsUpdate=true;
+    }
+  };
 
   const isBlocked=(origin:THREE.Vector3,direction:THREE.Vector3,distance:number)=>{
     raycaster.set(origin,direction);raycaster.near=.15;raycaster.far=Math.max(.2,distance-.55);
@@ -255,9 +279,13 @@ export function createPracticeRobots(
     bot.health=Math.max(0,bot.health-damage);bot.hitUntil=now+180;showHealth(bot);
     damageNotice(position,damage,headshot);
     if(bot.health<=0){
-      bot.alive=false;bot.root.visible=false;bot.detectionRing.visible=false;bot.attackRing.visible=false;
-      bot.respawnAt=now+6500;
-      notify('ROBOT DESTROYED · '+bot.spec.name);
+      // Keep the defeated robot visible as a non-solid spectral unit for five seconds.
+      // It is removed from hit meshes and combat immediately, but flies freely through the arena.
+      bot.alive=false;bot.root.visible=true;bot.ghostStartedAt=now;
+      bot.ghostOrigin.copy(bot.root.position);bot.respawnAt=now+5000;
+      bot.detectionRing.visible=false;bot.attackRing.visible=false;bot.patrolRing.visible=false;
+      bot.scanMarker.visible=false;setGhostMode(bot,true);
+      notify('ROBOT DOWN · '+bot.spec.name+' · 5s');
     }
   };
 
@@ -270,19 +298,40 @@ export function createPracticeRobots(
       for(const bot of bots){
         if(!bot.alive){
           bot.scanMarker.visible=false;
+          bot.patrolRing.visible=false;bot.detectionRing.visible=false;bot.attackRing.visible=false;
+          const ghostAge=Math.max(0,(now-bot.ghostStartedAt)/1000);
           if(now>=bot.respawnAt){
-            bot.health=bot.spec.hp;bot.alive=true;bot.root.visible=true;
-            const index=bots.indexOf(bot),spawn=positions[index];
-            const ground=sampleGround(spawn[0],spawn[1],0)??0;
-            bot.root.position.set(bot.homeX,ground,bot.homeZ);
-            bot.patrolRing.position.y=ground+.045;
-            bot.detectionRing.visible=true;bot.attackRing.visible=true;showHealth(bot);
-            bot.nextAttackAt=now+1000;bot.nextThinkAt=0;
-            notify('ROBOT REINFORCEMENTS · '+bot.spec.name);
+            const ground=sampleGround(bot.homeX,bot.homeZ,0)??0;
+            bot.health=bot.spec.hp;bot.alive=true;bot.root.visible=true;setGhostMode(bot,false);
+            bot.root.position.set(bot.homeX,ground,bot.homeZ);bot.root.rotation.set(0,0,0);
+            bot.patrolRing.position.set(bot.homeX,ground+.045,bot.homeZ);
+            bot.patrolRing.visible=bot.spec.role!=='dummy';
+            bot.detectionRing.position.set(bot.homeX,ground+.065,bot.homeZ);
+            bot.attackRing.position.set(bot.homeX,ground+.071,bot.homeZ);
+            bot.detectionRing.visible=bot.spec.role!=='dummy';bot.attackRing.visible=bot.spec.role!=='dummy';
+            bot.moveX=0;bot.moveZ=0;bot.nextAttackAt=now+1000;bot.nextThinkAt=0;
+            showHealth(bot);notify('ROBOT RESPAWNED · '+bot.spec.name);
+          }else{
+            const phase=bot.ghostPhase+ghostAge*1.9;
+            const radius=1.1+ghostAge*.68;
+            const driftX=Math.sin(phase*.47)*.85;
+            const driftZ=Math.cos(phase*.39)*.85;
+            const x=THREE.MathUtils.clamp(bot.ghostOrigin.x+Math.cos(phase)*radius+driftX*ghostAge,-28.2,28.2);
+            const z=THREE.MathUtils.clamp(bot.ghostOrigin.z+Math.sin(phase)*radius+driftZ*ghostAge,-28.2,28.2);
+            const y=Math.max(.8,bot.ghostOrigin.y+1.15+ghostAge*.62+Math.sin(phase*1.7)*.62);
+            bot.root.position.set(x,y,z);
+            bot.root.rotation.set(Math.sin(phase*.8)*.2,phase,Math.cos(phase*.7)*.16);
+            for(const limb of bot.limbs)limb.rotation.x=Math.sin(phase*2.2+(Number(limb.userData.side)||0)*Math.PI)*.52;
           }
           continue;
         }
         bot.scanMarker.visible=now<scannedUntil;
+        if(bot.spec.role==='dummy'){
+          const torso=bot.root.children.find(child=>child instanceof THREE.Group&&child.userData.isTorso===true);
+          if(torso){torso.position.y=1.12+Math.sin(now*.002+bots.indexOf(bot))*.018;torso.rotation.z=Math.sin(now*.0016+bots.indexOf(bot))*.012;}
+          bot.head.rotation.y=Math.sin(now*.0011+bots.indexOf(bot))*.045;
+          continue;
+        }
         const dx=player.x-bot.root.position.x,dz=player.z-bot.root.position.z;
         const distance=Math.hypot(dx,dz);
         const hasLineOfSight=distance<=bot.spec.detectionRange&&clearLine(bot,player);
@@ -420,7 +469,7 @@ export function createPracticeRobots(
       }
     },
     hitMeshes(){return bots.filter(bot=>bot.alive&&bot.root.visible).map(bot=>bot.root);},
-    scan(until){scannedUntil=Math.max(scannedUntil,until);return bots.filter(bot=>bot.alive).length;},
+    scan(until){scannedUntil=Math.max(scannedUntil,until);return bots.filter(bot=>bot.alive&&bot.spec.role!=='dummy').length;},
     damageObject(object,damage,now){
       let current:THREE.Object3D|null=object,botId:string|undefined,headshot=false;
       while(current){
@@ -449,13 +498,13 @@ export function createPracticeRobots(
       const now=performance.now();scannedUntil=0;
       bots.forEach((bot,index)=>{
         const floor=sampleGround(bot.homeX,bot.homeZ,0)??0;
-        bot.health=bot.spec.hp;bot.alive=true;bot.respawnAt=0;bot.nextAttackAt=now+1200+index*280;bot.nextThinkAt=0;
+        bot.health=bot.spec.hp;bot.alive=true;bot.respawnAt=0;bot.ghostStartedAt=0;setGhostMode(bot,false);bot.nextAttackAt=now+1200+index*280;bot.nextThinkAt=0;
         bot.moveX=0;bot.moveZ=0;bot.patrolAngle=index*1.3;
         bot.root.position.set(bot.homeX,floor,bot.homeZ);bot.root.rotation.set(0,0,0);
-        bot.patrolRing.position.y=floor+.045;bot.patrolRing.visible=enabled;bot.root.visible=enabled;
+        bot.patrolRing.position.set(bot.homeX,floor+.045,bot.homeZ);bot.patrolRing.visible=enabled&&bot.spec.role!=='dummy';bot.root.visible=enabled;
         bot.detectionRing.position.set(bot.homeX,floor+.065,bot.homeZ);
         bot.attackRing.position.set(bot.homeX,floor+.071,bot.homeZ);
-        bot.detectionRing.visible=enabled;bot.attackRing.visible=enabled;
+        bot.detectionRing.visible=enabled&&bot.spec.role!=='dummy';bot.attackRing.visible=enabled&&bot.spec.role!=='dummy';
         bot.scanMarker.visible=false;showHealth(bot);
       });
       for(const bolt of bolts)scene.remove(bolt.mesh);bolts.length=0;
