@@ -16,6 +16,7 @@ type Bot = {
   healthFill:THREE.Mesh;health:number;alive:boolean;respawnAt:number;
   nextAttackAt:number;nextThinkAt:number;moveX:number;moveZ:number;
   homeX:number;homeZ:number;patrolRadius:number;patrolDirection:number;patrolRing:THREE.Mesh;
+  detectionRing:THREE.Mesh;attackRing:THREE.Mesh;
   patrolAngle:number;hitUntil:number;limbs:THREE.Group[];scanMarker:THREE.Mesh;
 };
 
@@ -112,11 +113,26 @@ export function createPracticeRobots(
     root.userData.robotId=id;root.position.set(homeX,sampleGround(homeX,homeZ,0)??0,homeZ);
     const patrolRing=new THREE.Mesh(
       new THREE.RingGeometry(patrolRadius-.055,patrolRadius+.055,isMobile?40:64),
-      new THREE.MeshBasicMaterial({color:spec.glow,transparent:true,opacity:.27,depthWrite:false,side:THREE.DoubleSide})
+      new THREE.MeshBasicMaterial({color:spec.glow,transparent:true,opacity:.16,depthWrite:false,side:THREE.DoubleSide})
     );
     patrolRing.rotation.x=-Math.PI/2;
     patrolRing.position.set(homeX,root.position.y+.045,homeZ);
     patrolRing.renderOrder=2;scene.add(patrolRing);
+    // These two lightweight floor outlines follow the robot, but stay outside
+    // its hit-test hierarchy so they never enlarge the robot's damage hitbox.
+    const makeRangeRing=(range:number,color:number,opacity:number,renderOrder:number)=>{
+      const ring=new THREE.Mesh(
+        new THREE.RingGeometry(Math.max(.08,range-.035),range+.035,isMobile?40:64),
+        new THREE.MeshBasicMaterial({color,transparent:true,opacity,depthWrite:false,side:THREE.DoubleSide,
+          polygonOffset:true,polygonOffsetFactor:-1})
+      );
+      ring.rotation.x=-Math.PI/2;
+      ring.position.set(root.position.x,root.position.y+.065,root.position.z);
+      ring.renderOrder=renderOrder;ring.visible=false;scene.add(ring);
+      return ring;
+    };
+    const detectionRing=makeRangeRing(spec.detectionRange,0x77cfff,.095,3);
+    const attackRing=makeRangeRing(spec.attackRange,0xffc27c,.145,4);
     const base=makeJoint(root,kit.dark,0,.16,0,.48);base.scale.set(1.35,.23,1.05);
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.55,.035,7,24),kit.glow);
     ring.rotation.x=Math.PI/2;ring.position.y=.13;root.add(ring);
@@ -178,7 +194,7 @@ export function createPracticeRobots(
     scene.add(root);
     return {id,spec,root,head,healthFill,health:spec.hp,alive:true,respawnAt:0,nextAttackAt:performance.now()+800+index*320,nextThinkAt:0,
       moveX:0,moveZ:0,homeX,homeZ,patrolRadius,patrolDirection:index%2===0?1:-1,patrolRing,
-      patrolAngle:index*1.3,hitUntil:0,limbs,scanMarker};
+      detectionRing,attackRing,patrolAngle:index*1.3,hitUntil:0,limbs,scanMarker};
   };
 
   for(let i=0;i<SPECS.length;i++)bots.push(createBot(i));
@@ -247,7 +263,7 @@ export function createPracticeRobots(
   const system:PracticeRobotSystem={
     update(now,dt,player,enabled){
       active=enabled;
-      if(!enabled){for(const bot of bots){bot.root.visible=false;bot.patrolRing.visible=false;}return;}
+      if(!enabled){for(const bot of bots){bot.root.visible=false;bot.patrolRing.visible=false;bot.detectionRing.visible=false;bot.attackRing.visible=false;}return;}
       playerState={x:player.x,y:player.y,z:player.z};
       const step=Math.min(.08,Math.max(.001,dt));
       for(const bot of bots){
@@ -258,7 +274,8 @@ export function createPracticeRobots(
             const index=bots.indexOf(bot),spawn=positions[index];
             const ground=sampleGround(spawn[0],spawn[1],0)??0;
             bot.root.position.set(bot.homeX,ground,bot.homeZ);
-            bot.patrolRing.position.y=ground+.045;showHealth(bot);
+            bot.patrolRing.position.y=ground+.045;
+            bot.detectionRing.visible=true;bot.attackRing.visible=true;showHealth(bot);
             bot.nextAttackAt=now+1000;bot.nextThinkAt=0;
             notify('ROBOT REINFORCEMENTS · '+bot.spec.name);
           }
@@ -356,6 +373,11 @@ export function createPracticeRobots(
             spawnBolt(bot,player,now);
           }
         }
+        // Keep the visualized recognition and attack radii centered on the
+        // robot's live ground position after movement and terrain sampling.
+        const rangeY=bot.root.position.y+.065;
+        bot.detectionRing.position.set(bot.root.position.x,rangeY,bot.root.position.z);
+        bot.attackRing.position.set(bot.root.position.x,rangeY+.006,bot.root.position.z);
         const motion=Math.min(1,Math.hypot(bot.moveX,bot.moveZ));
         bot.root.children.forEach(child=>{if(child instanceof THREE.Group&&child.position.y===.58){
           child.rotation.x=Math.sin(now*.009+(Number(child.userData.side)||0)*Math.PI)*motion*.45;
@@ -429,7 +451,11 @@ export function createPracticeRobots(
         bot.health=bot.spec.hp;bot.alive=true;bot.respawnAt=0;bot.nextAttackAt=now+1200+index*280;bot.nextThinkAt=0;
         bot.moveX=0;bot.moveZ=0;bot.patrolAngle=index*1.3;
         bot.root.position.set(bot.homeX,floor,bot.homeZ);bot.root.rotation.set(0,0,0);
-        bot.patrolRing.position.y=floor+.045;bot.patrolRing.visible=enabled;bot.root.visible=enabled;bot.scanMarker.visible=false;showHealth(bot);
+        bot.patrolRing.position.y=floor+.045;bot.patrolRing.visible=enabled;bot.root.visible=enabled;
+        bot.detectionRing.position.set(bot.homeX,floor+.065,bot.homeZ);
+        bot.attackRing.position.set(bot.homeX,floor+.071,bot.homeZ);
+        bot.detectionRing.visible=enabled;bot.attackRing.visible=enabled;
+        bot.scanMarker.visible=false;showHealth(bot);
       });
       for(const bolt of bolts)scene.remove(bolt.mesh);bolts.length=0;
       for(const grenade of grenades){scene.remove(grenade.mesh);(grenade.mesh.material as THREE.Material).dispose();}grenades.length=0;
@@ -439,7 +465,13 @@ export function createPracticeRobots(
       for(const bolt of bolts)scene.remove(bolt.mesh);bolts.length=0;
       for(const grenade of grenades){scene.remove(grenade.mesh);(grenade.mesh.material as THREE.Material).dispose();}grenades.length=0;
       for(const blast of blasts){scene.remove(blast.mesh);(blast.mesh.material as THREE.Material).dispose();}blasts.length=0;
-      for(const bot of bots){scene.remove(bot.root);scene.remove(bot.patrolRing);bot.patrolRing.geometry.dispose();(bot.patrolRing.material as THREE.Material).dispose();}
+      for(const bot of bots){
+        scene.remove(bot.root);scene.remove(bot.patrolRing);
+        bot.patrolRing.geometry.dispose();(bot.patrolRing.material as THREE.Material).dispose();
+        for(const rangeRing of [bot.detectionRing,bot.attackRing]){
+          scene.remove(rangeRing);rangeRing.geometry.dispose();(rangeRing.material as THREE.Material).dispose();
+        }
+      }
       specs.forEach(kit=>[kit.body,kit.dark,kit.metal,kit.glow,kit.glass].forEach(mat=>mat.dispose()));
     }
   };
