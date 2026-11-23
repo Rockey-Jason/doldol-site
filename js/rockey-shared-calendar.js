@@ -2,9 +2,9 @@
 "use strict";
 const SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
 const SUPABASE_KEY="sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
-const TABLES={rooms:"rockey_calendar_rooms",members:"rockey_calendar_members",events:"rockey_calendar_events",dayComments:"rockey_calendar_day_comments",dayMentions:"rockey_calendar_day_comment_mentions",dayReads:"rockey_calendar_day_comment_reads"};
+const TABLES={rooms:"rockey_calendar_rooms",members:"rockey_calendar_members",events:"rockey_calendar_events",dayColors:"rockey_calendar_day_colors",dayComments:"rockey_calendar_day_comments",dayMentions:"rockey_calendar_day_comment_mentions",dayReads:"rockey_calendar_day_comment_reads"};
 const $=id=>document.getElementById(id);
-const state={sb:null,user:null,rooms:[],room:null,members:[],events:[],memberMap:new Map(),selected:new Date(),month:new Date(new Date().getFullYear(),new Date().getMonth(),1),view:"month",channel:null,editing:null,detail:null,detailOccurrence:null,activeDay:null,dayComments:[],dayReads:[],pendingMentions:[],occurrences:[],selectedRoomUsers:[],searchTimers:{},searchTokens:{},loading:false};
+const state={sb:null,user:null,rooms:[],room:null,members:[],events:[],dayColors:new Map(),memberMap:new Map(),selected:new Date(),month:new Date(new Date().getFullYear(),new Date().getMonth(),1),channel:null,editing:null,detail:null,detailOccurrence:null,activeDay:null,dayComments:[],dayReads:[],pendingMentions:[],occurrences:[],selectedRoomUsers:[],searchTimers:{},searchTokens:{},loading:false,dateColorPanelOpen:false,dateColorSelectionActive:false,dateColorSelection:new Set(),dateColorValue:null,dateColorSaving:false};
 const WEEKDAYS=["일","월","화","수","목","금","토"];
 const CATEGORY={general:"일반",meeting:"회의",study:"공부",game:"게임",event:"행사",deadline:"마감",birthday:"생일",memo:"메모"};
 const FREQUENCY={none:"일반 일정",daily:"매일",weekly:"매주",monthly:"매달",yearly:"매년",interval_days:"X일마다"};
@@ -14,6 +14,9 @@ const dayStart=d=>new Date(d.getFullYear(),d.getMonth(),d.getDate());
 const dateDiff=(a,b)=>Math.round((Date.UTC(a.getFullYear(),a.getMonth(),a.getDate())-Date.UTC(b.getFullYear(),b.getMonth(),b.getDate()))/86400000);
 const escapeHtml=v=>String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const safeColor=v=>/^#[0-9a-f]{6}$/i.test(String(v||""))?v:"#76B7E8";
+const DATE_COLOR_VALUES=["#5B8DEF","#62B98A","#E5BE62","#DD8295","#A18AE0","#52B8C8","#E49A60","#8296AA"];
+const isDateColor=v=>DATE_COLOR_VALUES.includes(String(v||"").toUpperCase());
+function hexToRgba(hex,alpha){const value=String(hex||"").replace("#","");if(!/^[0-9a-f]{6}$/i.test(value))return "rgba(255,255,255,.08)";const n=parseInt(value,16);return "rgba("+((n>>16)&255)+","+((n>>8)&255)+","+(n&255)+","+alpha+")";}
 function formatDate(d,options){return new Intl.DateTimeFormat("ko-KR",{timeZone:"Asia/Seoul",...options}).format(d);}
 function formatTime(d){return new Intl.DateTimeFormat("ko-KR",{timeZone:"Asia/Seoul",hour:"2-digit",minute:"2-digit",hour12:false}).format(d);}
 function localInputValue(d){return dateKey(d)+"T"+pad(d.getHours())+":"+pad(d.getMinutes());}
@@ -56,18 +59,20 @@ function renderRoomList(){
 }
 async function openRoom(roomId){
  const room=state.rooms.find(r=>r.id===roomId);if(!room)return;
- state.room=room;state.events=[];state.members=[];state.memberMap.clear();state.selected=new Date();state.month=new Date(state.selected.getFullYear(),state.selected.getMonth(),1);
+ state.room=room;state.events=[];state.members=[];state.dayColors.clear();state.memberMap.clear();state.dateColorSelection.clear();state.dateColorSelectionActive=false;state.dateColorPanelOpen=false;state.selected=new Date();state.month=new Date(state.selected.getFullYear(),state.selected.getMonth(),1);
  clearNotice();renderRoomList();$("workspace").hidden=false;$("emptyState").hidden=true;
  $("activeRoomName").textContent=room.name;$("activeRoomDescription").textContent=room.description||"초대된 참여자와 일정을 공유합니다.";
  try{
-  const [membersResult,eventsResult]=await Promise.all([
+  const [membersResult,eventsResult,colorsResult]=await Promise.all([
    state.sb.rpc("rockey_calendar_room_members",{p_room_id:room.id}),
-   state.sb.from(TABLES.events).select("*").eq("room_id",room.id).order("starts_at",{ascending:true})
+   state.sb.from(TABLES.events).select("*").eq("room_id",room.id).order("starts_at",{ascending:true}),
+   state.sb.from(TABLES.dayColors).select("calendar_date,color").eq("room_id",room.id)
   ]);
-  if(membersResult.error)throw membersResult.error;if(eventsResult.error)throw eventsResult.error;
+  if(membersResult.error)throw membersResult.error;if(eventsResult.error)throw eventsResult.error;if(colorsResult.error)throw colorsResult.error;
   state.members=membersResult.data||[];state.members.forEach(m=>state.memberMap.set(m.member_user_id,m));
   state.roomRole=state.members.find(m=>m.member_user_id===state.user.id)?.role||"member";
   state.events=eventsResult.data||[];
+  state.dayColors=new Map((colorsResult.data||[]).filter(row=>isDateColor(row.color)).map(row=>[row.calendar_date,row.color.toUpperCase()]));
   renderRoomHeader();render();
   subscribeRoom(room.id);
  }catch(e){console.error("[ROCKEY Calendar]",e);notice("캘린더 데이터를 불러오지 못했어요. "+(e.message||"잠시 후 다시 시도해 주세요."),true);}
@@ -95,16 +100,9 @@ function renderMembers(){
  });
 }
 function currentRange(){
- if(state.view==="month"){
-  const first=new Date(state.month.getFullYear(),state.month.getMonth(),1);
-  const from=new Date(first);from.setDate(first.getDate()-first.getDay());
-  const to=new Date(from);to.setDate(to.getDate()+42);return {from,to};
- }
- if(state.view==="week"){
-  const from=dayStart(state.selected);from.setDate(from.getDate()-from.getDay());
-  const to=new Date(from);to.setDate(to.getDate()+7);return {from,to};
- }
- const from=dayStart(state.selected),to=new Date(from);to.setDate(to.getDate()+1);return {from,to};
+ const first=new Date(state.month.getFullYear(),state.month.getMonth(),1);
+ const from=new Date(first);from.setDate(first.getDate()-first.getDay());
+ const to=new Date(from);to.setDate(to.getDate()+42);return {from,to};
 }
 function occursOn(e,day,baseStart,baseDay){
  const freq=e.recurrence_frequency||"none",diff=dateDiff(day,baseDay);
@@ -155,59 +153,120 @@ function occurrenceKey(o){return o.id+"::"+o.occurrenceDate;}
 function render(){
  if(!state.room)return;
  const range=currentRange();state.occurrences=occurrencesBetween(range.from,range.to);
- if(state.members.length>=2){
-  if(state.view==="month")renderMonth(range);else renderTimeGrid(range);
- }
- renderAgenda();renderPeriodTitle();
- document.querySelectorAll(".view-btn").forEach(b=>b.classList.toggle("active",b.dataset.view===state.view));
+ if(state.members.length>=2)renderMonth(range);
+ renderAgenda();renderPeriodTitle();renderDateColorToolbar();
 }
 function renderPeriodTitle(){
- if(state.view==="month"){$("periodTitle").textContent=new Intl.DateTimeFormat("ko-KR",{month:"long"}).format(state.month);$("periodCaption").textContent=state.month.getFullYear()+"년 · 월간 보기";}
- else if(state.view==="week"){
-  const range=currentRange(),end=new Date(range.to);end.setDate(end.getDate()-1);
-  $("periodTitle").textContent=formatDate(range.from,{month:"numeric",day:"numeric"})+" – "+formatDate(end,{month:"numeric",day:"numeric"});
-  $("periodCaption").textContent=state.selected.getFullYear()+"년 · 주간 보기";
- }else{$("periodTitle").textContent=formatDate(state.selected,{month:"long",day:"numeric",weekday:"long"});$("periodCaption").textContent=state.selected.getFullYear()+"년 · 일간 보기";}
+ $("periodTitle").textContent=new Intl.DateTimeFormat("ko-KR",{month:"long"}).format(state.month);
+ $("periodCaption").textContent=state.month.getFullYear()+"년 · 월간 보기";
 }
 function renderMonth(range){
  const host=$("calendarSurface");host.replaceChildren();
- const weekdays=document.createElement("div");weekdays.className="weekday-row";WEEKDAYS.forEach(day=>{const s=document.createElement("span");s.textContent=day;weekdays.append(s);});host.append(weekdays);
+ const weekdays=document.createElement("div");weekdays.className="weekday-row";WEEKDAYS.forEach(day=>{const item=document.createElement("span");item.textContent=day;weekdays.append(item);});host.append(weekdays);
  const grid=document.createElement("div");grid.className="month-grid";const today=dateKey(new Date());
  for(let i=0;i<42;i++){
   const d=new Date(range.from);d.setDate(d.getDate()+i);const key=dateKey(d);
-  const cell=document.createElement("button");cell.type="button";cell.className="month-day"+(d.getMonth()!==state.month.getMonth()?" outside":"")+(key===today?" today":"")+(key===dateKey(state.selected)?" selected":"");
+  const cell=document.createElement("button");cell.type="button";
+  cell.className="month-day"+(d.getMonth()!==state.month.getMonth()?" outside":"")+(key===today?" today":"")+(key===dateKey(state.selected)?" selected":"");
   cell.setAttribute("aria-label",formatDate(d,{year:"numeric",month:"long",day:"numeric"}));
+  const color=state.dayColors.get(key);
+  if(color&&isDateColor(color)){
+   cell.classList.add("has-date-color");
+   cell.style.setProperty("--date-tint",hexToRgba(color,.19));
+   cell.style.setProperty("--date-color-line",hexToRgba(color,.68));
+   cell.style.setProperty("--date-color-mark",color);
+  }
+  if(state.dateColorSelectionActive){
+   cell.classList.add("date-color-pick");
+   if(state.dateColorSelection.has(key))cell.classList.add("date-color-picked");
+  }
   const num=document.createElement("span");num.className="day-number";num.textContent=d.getDate();cell.append(num);
   const dayEvents=state.occurrences.filter(o=>o.occurrenceDate===key);
   const list=document.createElement("div");list.className="day-events";
-  dayEvents.slice(0,3).forEach(o=>{const chip=document.createElement("span");chip.className="event-chip";chip.style.setProperty("--event-color",safeColor(o.creatorColor));const time=document.createElement("span");time.className="chip-time";time.textContent=o.all_day?"종일":formatTime(o.occurrenceStart);const title=document.createElement("span");title.className="chip-title";title.textContent=o.title;chip.append(time,title);chip.title=o.creatorName+" · "+o.title;chip.addEventListener("click",ev=>{ev.stopPropagation();openDayView(d);});list.append(chip);});
+  dayEvents.slice(0,3).forEach(o=>{
+   const chip=document.createElement("span");chip.className="event-chip";chip.style.setProperty("--event-color",safeColor(o.creatorColor));
+   const title=document.createElement("span");title.className="chip-title";title.textContent=o.title;
+   chip.append(title);chip.title=o.title;list.append(chip);
+  });
   if(dayEvents.length>3){const more=document.createElement("span");more.className="more-events";more.textContent="+"+(dayEvents.length-3)+"개 더";list.append(more);}
-  cell.append(list);cell.addEventListener("click",()=>openDayView(d));grid.append(cell);
+  cell.append(list);
+  cell.addEventListener("click",()=>{
+   if(state.dateColorSelectionActive){toggleDateColorDate(key);return;}
+   openDayView(d);
+  });
+  grid.append(cell);
  }
  host.append(grid);
 }
-function renderTimeGrid(range){
- const host=$("calendarSurface");host.replaceChildren();const days=[];
- for(let d=new Date(range.from);d<range.to;d.setDate(d.getDate()+1))days.push(new Date(d));
- const wrap=document.createElement("div");wrap.className="time-grid-wrap";
- const grid=document.createElement("div");grid.className="time-grid";grid.style.setProperty("--day-count",days.length);
- const blank=document.createElement("div");blank.className="time-head";grid.append(blank);
- days.forEach(d=>{const h=document.createElement("div");h.className="time-head time-head-cell"+(dateKey(d)===dateKey(state.selected)?" selected":"");const strong=document.createElement("strong");strong.textContent=WEEKDAYS[d.getDay()]+" "+d.getDate();const small=document.createElement("small");small.textContent=formatDate(d,{month:"numeric",day:"numeric"});h.append(strong,small);h.style.cursor="pointer";h.addEventListener("click",()=>openDayView(d));grid.append(h);});
- for(let hour=0;hour<24;hour++){
-  const gutter=document.createElement("div");gutter.className="time-gutter";gutter.style.paddingTop="7px";gutter.textContent=pad(hour)+":00";grid.append(gutter);
-  days.forEach(d=>{
-   const cell=document.createElement("div");cell.className="time-cell";const key=dateKey(d);
-   cell.addEventListener("click",ev=>{if(ev.target===cell){state.selected=d;openNewAtHour(d,hour);}});
-   state.occurrences.filter(o=>o.occurrenceDate===key&&o.occurrenceStart.getHours()===hour).forEach(o=>{
-    const b=document.createElement("button");b.type="button";b.className="time-event";b.style.setProperty("--event-color",safeColor(o.creatorColor));b.textContent=o.title;
-    const sm=document.createElement("small");sm.textContent=(o.all_day?"종일":formatTime(o.occurrenceStart)+"–"+formatTime(o.occurrenceEnd))+" · "+o.creatorName;b.append(sm);b.addEventListener("click",ev=>{ev.stopPropagation();openDayView(new Date(o.occurrenceDate+"T12:00:00"));});cell.append(b);
-   });
-   grid.append(cell);
-  });
- }
- wrap.append(grid);host.append(wrap);
+function toggleDateColorDate(key){
+ if(!state.dateColorSelectionActive)return;
+ if(state.dateColorSelection.has(key))state.dateColorSelection.delete(key);
+ else state.dateColorSelection.add(key);
+ render();
 }
-function renderAgenda(){
+function renderDateColorToolbar(){
+ const toolbar=$("dateColorToolbar");if(!toolbar)return;
+ toolbar.hidden=!state.dateColorPanelOpen;
+ $("dateColorSelectionStatus").textContent=state.dateColorSelectionActive
+  ? state.dateColorSelection.size+"개 날짜를 선택했어요. 원하는 날짜 칸을 눌러 추가하거나 해제하세요."
+  : state.dateColorValue
+   ? "색상을 선택했어요. '색상 정하기 시작'을 누른 다음 날짜를 골라 주세요."
+   : "먼저 날짜 칸에 표시할 색상을 선택해 주세요.";
+ $("dateColorSwatches").querySelectorAll("[data-date-color]").forEach(button=>{
+  const selected=button.dataset.dateColor===String(state.dateColorValue||"");
+  button.setAttribute("aria-pressed",String(selected));
+ });
+ $("startDateColorSelection").hidden=state.dateColorSelectionActive;
+ $("startDateColorSelection").disabled=!state.dateColorValue||state.dateColorSaving;
+ $("finishDateColorSelection").hidden=!state.dateColorSelectionActive;
+ $("finishDateColorSelection").disabled=!state.dateColorSelection.size||state.dateColorSaving;
+ $("cancelDateColorSelection").hidden=!state.dateColorSelectionActive;
+ $("openDateColorPanel").textContent=state.dateColorSelectionActive?"날짜 선택 중":"날짜 색상 표시";
+ $("openDateColorPanel").setAttribute("aria-expanded",String(state.dateColorPanelOpen));
+}
+function toggleDateColorPanel(){
+ if(state.dateColorSelectionActive){state.dateColorPanelOpen=true;return;}
+ state.dateColorPanelOpen=!state.dateColorPanelOpen;renderDateColorToolbar();
+}
+function chooseDateColor(value){
+ if(value!=="clear"&&!isDateColor(value))return;
+ state.dateColorValue=value;renderDateColorToolbar();
+}
+function beginDateColorSelection(){
+ if(!state.dateColorValue)return;
+ state.dateColorSelection.clear();state.dateColorSelectionActive=true;state.dateColorPanelOpen=true;
+ renderDateColorToolbar();render();
+}
+function cancelDateColorSelection(){
+ state.dateColorSelection.clear();state.dateColorSelectionActive=false;state.dateColorSaving=false;
+ renderDateColorToolbar();render();
+}
+async function finishDateColorSelection(){
+ if(!state.room||!state.user||!state.dateColorSelectionActive||!state.dateColorSelection.size||state.dateColorSaving)return;
+ const dates=Array.from(state.dateColorSelection).sort();const chosen=state.dateColorValue;
+ state.dateColorSaving=true;renderDateColorToolbar();
+ try{
+  if(chosen==="clear"){
+   const {error}=await state.sb.from(TABLES.dayColors).delete().eq("room_id",state.room.id).in("calendar_date",dates);
+   if(error)throw error;
+   dates.forEach(key=>state.dayColors.delete(key));
+  }else{
+   const rows=dates.map(calendar_date=>({room_id:state.room.id,calendar_date,color:chosen,updated_by:state.user.id}));
+   const {error}=await state.sb.from(TABLES.dayColors).upsert(rows,{onConflict:"room_id,calendar_date"});
+   if(error)throw error;
+   dates.forEach(key=>state.dayColors.set(key,chosen));
+  }
+  state.dateColorSelection.clear();state.dateColorSelectionActive=false;
+  notice(chosen==="clear"?dates.length+"개 날짜의 색상 표시를 지웠어요.":dates.length+"개 날짜의 색상을 참여자들과 공유했어요.");
+  render();
+ }catch(error){
+  console.error("[ROCKEY Calendar] 날짜 색상 저장 실패:",error);
+  notice("날짜 색상을 저장하지 못했어요. "+(error.message||"잠시 후 다시 시도해 주세요."),true);
+ }finally{
+  state.dateColorSaving=false;renderDateColorToolbar();
+ }
+}
+function renderAgenda(){function renderAgenda(){
  const host=$("agendaList");host.replaceChildren();
  const dayKey=dateKey(state.selected);$("selectedDateLabel").textContent=formatDate(state.selected,{year:"numeric",month:"long",day:"numeric",weekday:"long"});
  const rows=state.occurrences.filter(o=>o.occurrenceDate===dayKey);
@@ -508,12 +567,14 @@ async function postDayComment(event){
 }
 async function loadRoomData(){
  if(!state.room)return;
- const [mr,er]=await Promise.all([
+ const [mr,er,cr]=await Promise.all([
   state.sb.rpc("rockey_calendar_room_members",{p_room_id:state.room.id}),
-  state.sb.from(TABLES.events).select("*").eq("room_id",state.room.id).order("starts_at",{ascending:true})
+  state.sb.from(TABLES.events).select("*").eq("room_id",state.room.id).order("starts_at",{ascending:true}),
+  state.sb.from(TABLES.dayColors).select("calendar_date,color").eq("room_id",state.room.id)
  ]);
- if(mr.error)throw mr.error;if(er.error)throw er.error;
+ if(mr.error)throw mr.error;if(er.error)throw er.error;if(cr.error)throw cr.error;
  state.members=mr.data||[];state.memberMap=new Map(state.members.map(m=>[m.member_user_id,m]));state.roomRole=state.members.find(m=>m.member_user_id===state.user.id)?.role||"member";state.events=er.data||[];
+ state.dayColors=new Map((cr.data||[]).filter(row=>isDateColor(row.color)).map(row=>[row.calendar_date,row.color.toUpperCase()]));
  renderRoomHeader();render();
 }
 function subscribeRoom(roomId){
@@ -521,6 +582,12 @@ function subscribeRoom(roomId){
  state.channel=state.sb.channel("rockey-calendar-room-"+roomId)
   .on("postgres_changes",{event:"*",schema:"public",table:TABLES.events,filter:"room_id=eq."+roomId},()=>{loadRoomData().catch(console.error);})
   .on("postgres_changes",{event:"*",schema:"public",table:TABLES.members,filter:"room_id=eq."+roomId},()=>{loadRoomData().catch(console.error);})
+  .on("postgres_changes",{event:"*",schema:"public",table:TABLES.dayColors,filter:"room_id=eq."+roomId},payload=>{
+   const row=payload.new||payload.old;if(!row?.calendar_date)return;
+   if(payload.eventType==="DELETE")state.dayColors.delete(row.calendar_date);
+   else if(isDateColor(row.color))state.dayColors.set(row.calendar_date,row.color.toUpperCase());
+   render();
+  })
   .on("postgres_changes",{event:"*",schema:"public",table:TABLES.dayComments,filter:"room_id=eq."+roomId},()=>{if($("dayViewDialog").open)loadDayComments();})
   .on("postgres_changes",{event:"*",schema:"public",table:TABLES.dayReads,filter:"room_id=eq."+roomId},()=>{if($("dayViewDialog").open)loadDayComments();})
   .subscribe(status=>{$("liveState").textContent=status==="SUBSCRIBED"?"실시간 연결":"연결 중";});
@@ -540,7 +607,11 @@ function wire(){
  $("recurrenceFrequency").addEventListener("change",setRecurrenceUI);
  $("prevPeriod").addEventListener("click",()=>changePeriod(-1));$("nextPeriod").addEventListener("click",()=>changePeriod(1));
  $("goToday").addEventListener("click",()=>{state.selected=new Date();state.month=new Date(state.selected.getFullYear(),state.selected.getMonth(),1);render();});
- document.querySelectorAll(".view-btn").forEach(b=>b.addEventListener("click",()=>setView(b.dataset.view)));
+ $("openDateColorPanel").addEventListener("click",toggleDateColorPanel);
+ $("dateColorSwatches").addEventListener("click",event=>{const button=event.target.closest("[data-date-color]");if(button)chooseDateColor(button.dataset.dateColor);});
+ $("startDateColorSelection").addEventListener("click",beginDateColorSelection);
+ $("finishDateColorSelection").addEventListener("click",finishDateColorSelection);
+ $("cancelDateColorSelection").addEventListener("click",cancelDateColorSelection);
  document.querySelectorAll("[data-close]").forEach(b=>b.addEventListener("click",()=>$(b.dataset.close).close()));
  ["roomDialog","inviteDialog","eventDialog","detailDialog","dayViewDialog"].forEach(id=>$(id).addEventListener("click",e=>{if(e.target===$(id))$(id).close();}));
  $("allDay").addEventListener("change",()=>{if($("allDay").checked){const s=$("eventStart").value.slice(0,10),e=$("eventEnd").value.slice(0,10);$("eventStart").value=s+"T00:00";$("eventEnd").value=e+"T23:59";}});
