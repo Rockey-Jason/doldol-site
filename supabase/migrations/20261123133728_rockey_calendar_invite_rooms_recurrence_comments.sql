@@ -214,4 +214,4 @@ begin
   end if;
  end loop;
 end; $pub$;
-revoke all on public.rockey_shared_calendar_events from public,anon,authenticated;
+do $legacy$ begin if to_regclass('public.rockey_shared_calendar_events') is not null then execute 'revoke all on public.rockey_shared_calendar_events from public,anon,authenticated'; end if; end; $legacy$;
