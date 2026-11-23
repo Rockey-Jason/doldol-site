@@ -804,20 +804,53 @@ export async function createGame(
   };
   let practiceGhostActive=false;
   let practiceRespawnAt=0;
+  let practiceRoundWins=0;
+  let practiceRoundTransitionAt=0;
+  let practiceRoundResult:''|'win'|'loss'|'complete'='';
+  const practiceRoundOverlay=document.createElement('div');
+  Object.assign(practiceRoundOverlay.style,{
+    position:'fixed',inset:'0',zIndex:'10000',display:'none',alignItems:'center',justifyContent:'center',
+    background:'rgba(2,8,22,.62)',backdropFilter:'blur(8px)',pointerEvents:'none',
+    fontFamily:'HancomMalangmalang, sans-serif',textAlign:'center',padding:'24px'
+  });
+  const practiceRoundCard=document.createElement('div');
+  Object.assign(practiceRoundCard.style,{
+    minWidth:'min(340px, 86vw)',padding:'30px 38px',border:'1px solid rgba(110,190,255,.55)',
+    borderRadius:'22px',background:'linear-gradient(145deg,rgba(12,35,65,.97),rgba(3,12,30,.98))',
+    boxShadow:'0 18px 70px rgba(0,0,0,.5),0 0 36px rgba(48,150,255,.18)',color:'#f2f8ff'
+  });
+  practiceRoundOverlay.appendChild(practiceRoundCard);
+  document.body.appendChild(practiceRoundOverlay);
+  const showPracticeRoundResult=(kind:'win'|'loss'|'complete',detail:string)=>{
+    practiceRoundResult=kind;
+    practiceRoundCard.innerHTML='';
+    const heading=document.createElement('div');
+    heading.textContent=kind==='win'?'ROUND CLEAR':kind==='loss'?'ROUND FAILED':'ROCKEY VICTORY';
+    Object.assign(heading.style,{fontSize:'clamp(30px,6vw,48px)',fontWeight:'800',letterSpacing:'2px',color:kind==='loss'?'#ff8290':'#83dcff'});
+    const caption=document.createElement('div');caption.textContent=detail;
+    Object.assign(caption.style,{fontSize:'17px',marginTop:'12px',color:'#d9eaff'});
+    practiceRoundCard.append(heading,caption);
+    practiceRoundOverlay.style.display='flex';
+  };
+  const hidePracticeRoundResult=()=>{practiceRoundOverlay.style.display='none';practiceRoundResult='';};
+  const resetPracticeRoundPlayer=()=>{
+    const spawn={x:0,y:.92,z:20};
+    body.setTranslation(spawn,true);collider.setSensor(false);
+    vertical=0;hp=100;practiceGhostActive=false;practiceRespawnAt=0;
+    movementAmount=0;setPlayerGhostAppearance(false);
+    updateHud(hp,ammo,reserve,currentWeapon.name);
+  };
   const practiceRobots=createPracticeRobots(
     scene,map.light,isMobile,raycastMeshes,sampleGroundHeight,
     (damage,source)=>{
-      if(mode!=='practice'||!active||hp<=0||practiceGhostActive)return;
+      if(mode!=='practice'||!active||hp<=0||practiceRoundResult)return;
       hp=Math.max(0,hp-Math.max(1,damage));
       avatarRig.triggerHit();
       updateHud(hp,ammo,reserve,currentWeapon.name);
       if(hp<=0){
-        practiceGhostActive=true;
-        practiceRespawnAt=performance.now()+5000;
-        collider.setSensor(true);
-        vertical=0;setPlayerGhostAppearance(true);
         stopMouseFire();stopMobileFire();setPrecisionAiming(false);
-        notify('GHOST MODE · 5초 후 부활');
+        practiceRoundTransitionAt=performance.now()+2400;
+        showPracticeRoundResult('loss','플레이어가 쓰러졌습니다 · 라운드 '+(practiceRoundWins+1)+' 재도전');
       }
     },
     (point,damage,headshot)=>showDamageAt(point,damage,headshot),
@@ -2436,15 +2469,28 @@ export async function createGame(
     }
 
       let p = position();
-      if(mode==='practice'&&practiceGhostActive&&practiceRespawnAt>0&&now>=practiceRespawnAt){
-        const spawn={x:0,y:.92,z:20};
-        body.setTranslation(spawn,true);collider.setSensor(false);
-        p=position();vertical=0;hp=100;practiceRespawnAt=0;practiceGhostActive=false;
-        movementAmount=0;setPlayerGhostAppearance(false);
-        updateHud(hp,ammo,reserve,currentWeapon.name);
-        notify('REDEPLOYED · 체력 회복');
+      if(mode==='practice'&&practiceRoundResult&&practiceRoundTransitionAt>0&&now>=practiceRoundTransitionAt){
+        practiceRoundTransitionAt=0;
+        if(practiceRoundResult==='complete'){
+          // Keep the four-round victory screen visible until the player leaves the practice match.
+        }else{
+          hidePracticeRoundResult();
+          resetPracticeRoundPlayer();
+          practiceRobots.reset(true);
+          p=position();
+        }
       }
-      practiceRobots.update(now,dt,p,mode==='practice');
+      practiceRobots.update(now,dt,p,mode==='practice'&&!practiceRoundResult);
+      if(mode==='practice'&&active&&!practiceRoundResult&&practiceRobots.aliveCount()===0){
+        practiceRoundWins++;
+        practiceRoundTransitionAt=now+2400;
+        if(practiceRoundWins>=4){
+          practiceRoundTransitionAt=0;
+          showPracticeRoundResult('complete','총 4라운드 승리 · 훈련장 챌린지 완료');
+        }else{
+          showPracticeRoundResult('win','라운드 '+practiceRoundWins+' 승리 · 다음 라운드 준비 중');
+        }
+      }
       if(mode==='practice'&&practiceGateA&&practiceGateB&&now-practiceGateExpiresAt<0&&now-lastPracticeGateTeleportAt>850){
         const tryGate=(entry:RockeyPortalPoint,destination:RockeyPortalPoint)=>{
           if(Math.hypot(p.x-entry.x,p.z-entry.z)>1.12||Math.abs((p.y-.92)-entry.y)>1.55)return false;
@@ -2552,7 +2598,8 @@ export async function createGame(
       hp = 100; ammo = currentWeapon.magazine; reserve = currentWeapon.reserve; vertical = 0;
       for(const code of Object.keys(localWeaponAmmo))delete localWeaponAmmo[code];
       localWeaponAmmo[currentWeaponCode]={ammo,reserve};
-      practiceRespawnAt=0;practiceGhostActive=false;collider.setSensor(false);setPlayerGhostAppearance(false);
+      practiceRespawnAt=0;practiceGhostActive=false;practiceRoundWins=0;practiceRoundTransitionAt=0;
+      hidePracticeRoundResult();collider.setSensor(false);setPlayerGhostAppearance(false);
       practiceRobots.reset(mode==='practice');
       if (mode === 'practice') {
         for (const target of practiceTargets) {
@@ -2685,6 +2732,7 @@ export async function createGame(
       canvas.removeEventListener('pointercancel', pointerLookEnd);
       canvas.removeEventListener('lostpointercapture', pointerLookEnd);
       practiceRobots.dispose();
+      practiceRoundOverlay.remove();
       world.removeCharacterController(controller);
       world.free();
       stopMobileFire();
