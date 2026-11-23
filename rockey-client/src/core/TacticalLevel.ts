@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { RockeyMap } from '../catalog';
+import type { MapInteraction, MapInteractionKind } from './MapInteractions';
 
 type ColliderAdder=(x:number,y:number,z:number,hx:number,hy:number,hz:number,rotationX?:number)=>void;
 type RaycastAdder=(mesh:THREE.Object3D)=>void;
@@ -19,6 +20,10 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
   const fabric=new THREE.MeshStandardMaterial({color:0x4b5a69,roughness:.95});
   const paper=new THREE.MeshStandardMaterial({color:0xc7c4b7,roughness:.96});
   const breakable:Breakable[]=[];
+  const interactions:MapInteraction[]=[];
+  const addInteraction=(id:string,label:string,kind:MapInteractionKind,root:THREE.Object3D,position:THREE.Vector3)=>{
+    interactions.push({id,label,kind,root,position:position.clone(),uses:0,nextUseAt:0});
+  };
   const register=(root:THREE.Object3D,position:THREE.Vector3,radius:number,shards=6,kind:'glass'|'light'|'prop'='prop')=>{
     root.traverse(object=>{if(object instanceof THREE.PointLight)object.userData.baseIntensity=object.intensity;});
     breakable.push({root,position:position.clone(),radius,shards,kind,broken:false});
@@ -86,6 +91,9 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
       add(prop,glow,0,.40,-.375,.36,.055,.018);
       add(prop,trim,-.23,.58,-.38,.08,.08,.02);
     }
+    const featureKind:MapInteractionKind=kind==='desk'?'terminal':kind==='chair'?'rest':'supply';
+    const featureLabel=kind==='desk'?'전술 단말기':kind==='chair'?'정비 의자':kind==='rack'?'보급 선반':kind==='cabinet'?'장비 보관함':'보급 상자';
+    addInteraction('building:'+cx+':'+kind+':'+x+':'+y+':'+z,featureLabel,featureKind,prop,point(root,x,y+.72,z));
     register(prop,point(root,x,y+.65,z),kind==='desk'?1.2:kind==='rack'?1.35:.95,kind==='rack'?10:6);
     return prop;
   };
@@ -292,6 +300,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     add(exteriorBeacon,dark,0,0,0,.16,1.2,.16);
     add(exteriorBeacon,glow,0,.2,-.10,.08,.24,.035);
     register(exteriorBeacon,point(root,front*4.15,2,0),.8,4);
+    addInteraction('beacon:'+cx,'외부 전력 비콘','power',exteriorBeacon,point(root,front*4.15,2,0));
     return root;
   };
 
@@ -341,6 +350,14 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
   add(underpass,wall,0,-.14,0,25.6,.28,2.6,true);
   const underpassLamp=new THREE.PointLight(map.light,isMobile?7:13,26,2);
   underpassLamp.position.set(0,-.45,0);underpass.add(underpassLamp);
+  const servicePanel=new THREE.Group();servicePanel.position.set(0,-2.62,1.02);underpass.add(servicePanel);
+  add(servicePanel,dark,0,.72,0,.72,1.38,.18,true);
+  add(servicePanel,trim,0,.72,-.11,.58,1.20,.035);
+  add(servicePanel,glow,0,1.13,-.14,.32,.16,.025);
+  add(servicePanel,trim,-.18,.54,-.145,.07,.12,.025);
+  add(servicePanel,trim,.18,.54,-.145,.07,.12,.025);
+  register(servicePanel,new THREE.Vector3(0,-1.9,-.48),1.05,7,'prop');
+  addInteraction('underpass:power-panel','지하 전력 제어반','maintenance',servicePanel,new THREE.Vector3(0,-1.9,-.48));
 
   const destroyNear=(position:THREE.Vector3,radius:number,spawn:(p:THREE.Vector3,count:number,impulse:number,kind:'glass'|'light'|'prop')=>void)=>{
     let destroyed=0;
@@ -361,5 +378,6 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
       });
     }
   };
-  return {destroyNear,resetDestruction};
+  const resetInteractions=()=>{for(const feature of interactions){feature.uses=0;feature.nextUseAt=0;feature.root.userData.interacted=false;}};
+  return {destroyNear,resetDestruction,interactions,resetInteractions};
 }
