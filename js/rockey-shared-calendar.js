@@ -1,7 +1,7 @@
 (() => {
 "use strict";
 const SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbGciOiJIUzI1NiIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+const SUPABASE_KEY="sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
 const TABLES={rooms:"rockey_calendar_rooms",members:"rockey_calendar_members",events:"rockey_calendar_events",dayComments:"rockey_calendar_day_comments",dayMentions:"rockey_calendar_day_comment_mentions",dayReads:"rockey_calendar_day_comment_reads"};
 const $=id=>document.getElementById(id);
 const state={sb:null,user:null,rooms:[],room:null,members:[],events:[],memberMap:new Map(),selected:new Date(),month:new Date(new Date().getFullYear(),new Date().getMonth(),1),view:"month",channel:null,editing:null,detail:null,detailOccurrence:null,activeDay:null,dayComments:[],dayReads:[],pendingMentions:[],occurrences:[],selectedRoomUsers:[],searchTimers:{},searchTokens:{},loading:false};
@@ -462,7 +462,7 @@ function renderPendingMentions(){
 }
 function updateTagSuggestions(){
  const textarea=$("dayCommentBody"),host=$("tagSuggestions"),caret=textarea.selectionStart||0,before=textarea.value.slice(0,caret);
- const match=before.match(/(^|\\s)@([^\\s@]*)$/u);
+ const match=before.match(/(^|\s)@([^\s@]*)$/u);
  if(!match){host.hidden=true;host.replaceChildren();return;}
  const query=match[2].toLocaleLowerCase("ko-KR");
  const matches=state.members.filter(member=>member.member_user_id!==state.user.id&&
