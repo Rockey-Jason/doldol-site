@@ -44,12 +44,12 @@
     const root = document.getElementById("site-preferences");
     if (!root) return;
     const range = root.querySelector('[data-site-pref-font-scale]');
-    const output = root.querySelector("#site-pref-font-value");
+    const number = root.querySelector("[data-site-pref-font-number]");
     if (range) {
       range.value = String(prefs.fontScale);
       range.setAttribute("aria-valuetext",prefs.fontScale + "%");
     }
-    if (output) output.textContent = prefs.fontScale + "%";
+    if (number) number.value = String(prefs.fontScale);
     root.querySelectorAll("[data-site-pref-toggle]").forEach(button => {
       const key = button.dataset.sitePrefToggle;
       const enabled = !!prefs[key];
@@ -86,7 +86,14 @@
   });
 
   document.addEventListener("change",event => {
-    if (!event.target.closest('#site-preferences [data-site-pref-font-scale]')) return;
+    const range = event.target.closest('#site-preferences [data-site-pref-font-scale]');
+    const number = event.target.closest('#site-preferences [data-site-pref-font-number]');
+    if (!range && !number) return;
+    if (number) {
+      prefs.fontScale = clampFontScale(number.value);
+      apply();
+      render();
+    }
     persist("글자 크기 " + prefs.fontScale + "%를 저장했습니다. 모든 돌이사이트 페이지에 적용됩니다.");
   });
 
