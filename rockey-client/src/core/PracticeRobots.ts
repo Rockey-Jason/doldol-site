@@ -178,7 +178,7 @@ export function createPracticeRobots(
   };
   const spawnGrenade=(bot:Bot,player:THREE.Vector3,now:number)=>{
     const origin=bot.root.position.clone().add(new THREE.Vector3(0,1.45,0));
-    const mesh=new THREE.Mesh(grenadeGeometry,material(bot.spec.glow,.55,.28,bot.spec.glow));
+    const mesh=new THREE.Mesh(grenadeGeometry,specs[bots.indexOf(bot)].glow);
     mesh.position.copy(origin);scene.add(mesh);
     const target=player.clone().add(new THREE.Vector3(0,.1,0));
     const travel=target.sub(origin),horizontal=Math.hypot(travel.x,travel.z);
@@ -187,14 +187,14 @@ export function createPracticeRobots(
     grenades.push({mesh,velocity,age:0,source:bot.spec.name,damage:bot.spec.damage,radius:4.4});
     bot.nextAttackAt=now+bot.spec.cooldown;
   };
-  const spawnBlast=(position:THREE.Vector3,radius:number,now:number)=>{
+  const spawnBlast=(position:THREE.Vector3,radius:number,now:number,baseDamage=24)=>{
     const mat=new THREE.MeshBasicMaterial({color:0xffa64d,transparent:true,opacity:.7,depthWrite:false});
     const mesh=new THREE.Mesh(blastGeometry,mat);mesh.position.copy(position);mesh.scale.setScalar(.35);scene.add(mesh);
     blasts.push({mesh,age:0,life:.52});
     const distance=position.distanceTo(new THREE.Vector3(playerState.x,position.y,playerState.z));
     if(distance<radius){
       const attenuation=1-distance/radius;
-      damagePlayer(Math.max(4,Math.round(24*attenuation)),'BLAST');
+      damagePlayer(Math.max(4,Math.round(baseDamage*attenuation)),'BLAST');
     }
   };
   let playerState={x:0,y:.92,z:20};
@@ -306,6 +306,14 @@ export function createPracticeRobots(
       }
       for(let i=bolts.length-1;i>=0;i--){
         const bolt=bolts[i];bolt.age+=step;bolt.mesh.position.addScaledVector(bolt.velocity,step);
+        const segment=bolt.velocity.clone().multiplyScalar(step);
+        const segmentLength=segment.length();
+        if(segmentLength>0){
+          raycaster.set(bolt.mesh.position.clone().sub(segment),segment.normalize());
+          raycaster.near=.04;raycaster.far=segmentLength;
+          const wallHit=raycaster.intersectObjects(blockers,false)[0];
+          if(wallHit){scene.remove(bolt.mesh);bolts.splice(i,1);continue;}
+        }
         if(bolt.mesh.position.distanceTo(player.clone().add(new THREE.Vector3(0,.35,0)))<.55){
           damagePlayer(bolt.damage,bolt.source);scene.remove(bolt.mesh);bolts.splice(i,1);continue;
         }
@@ -318,7 +326,7 @@ export function createPracticeRobots(
         const near=grenade.mesh.position.distanceTo(player)<.75;
         if(grenade.age>1.35||near){
           const blast=grenade.mesh.position.clone();scene.remove(grenade.mesh);
-          spawnBlast(blast,grenade.radius,now);grenades.splice(i,1);
+          spawnBlast(blast,grenade.radius,now,grenade.damage);grenades.splice(i,1);
         }
       }
       for(let i=blasts.length-1;i>=0;i--){
