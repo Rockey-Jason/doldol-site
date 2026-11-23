@@ -438,7 +438,7 @@ function renderDayComments(){
   const body=document.createElement("div");body.className="day-comment-body";body.textContent=comment.body;
   const receipts=state.dayReads.filter(read=>read.comment_id===comment.id);
   const readerNames=receipts.map(read=>memberName(read.reader_id));
-  const eligibleReaders=Math.max(0,state.members.length-(comment.author_id===state.user.id?1:1));
+  const eligibleReaders=Math.max(0,state.members.length-1);
   const readLine=document.createElement("div");readLine.className="day-comment-readers";
   const summary=document.createElement("strong");summary.textContent="읽음 "+receipts.length+"/"+eligibleReaders+"명";
   const names=document.createElement("span");names.textContent=readerNames.length?" · "+readerNames.join(", "):" · 아직 읽은 사람이 없습니다.";
