@@ -7,6 +7,7 @@
   window.__DORI_TEXT_SCALE_READY__ = true;
 
   const STORAGE_KEY = "dori-convenience-preferences-v1";
+  const CALENDAR_STORAGE_KEY = "rockey-calendar-font-scale-v1";
   const MIN_SCALE = 80;
   const MAX_SCALE = 140;
   const LEGACY = { small: 90, normal: 100, large: 115, largest: 130 };
@@ -31,6 +32,17 @@
       return 100;
     }
   }
+
+  const isRockeyCalendarPage = document.documentElement.hasAttribute("data-rockey-calendar-page");
+  function readCalendarScale() {
+    if (!isRockeyCalendarPage) return 100;
+    try {
+      return clampScale(localStorage.getItem(CALENDAR_STORAGE_KEY) || 100);
+    } catch (_) {
+      return 100;
+    }
+  }
+  let calendarScale = readCalendarScale();
 
   function restoreOriginalFontSizes() {
     for (const [element, original] of snapshots) {
@@ -84,7 +96,7 @@
       });
     });
 
-    const multiplier = currentScale / 100;
+    const multiplier = (currentScale / 100) * (isRockeyCalendarPage ? calendarScale / 100 : 1);
     measurements.forEach(({ element, size, originalValue, originalPriority }) => {
       snapshots.set(element, { value: originalValue, priority: originalPriority });
       element.style.setProperty("font-size", (size * multiplier).toFixed(3) + "px", "important");
@@ -106,6 +118,12 @@
   }
 
   window.applyDoriTextScale = apply;
+  window.applyRockeyCalendarTextScale = rawScale => {
+    if (!isRockeyCalendarPage) return;
+    calendarScale = clampScale(rawScale);
+    document.documentElement.dataset.rockeyCalendarFontScale = String(calendarScale);
+    apply(currentScale);
+  };
   apply(readScale());
 
   if (document.body) {
