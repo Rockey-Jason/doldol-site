@@ -13,7 +13,7 @@ type RobotSpec = {
 
 type Bot = {
   id:string;spec:RobotSpec;root:THREE.Group;head:THREE.Mesh;
-  healthFill:THREE.Mesh;health:number;alive:boolean;respawnAt:number;
+  healthFill:THREE.Mesh;health:number;alive:boolean;
   nextAttackAt:number;nextThinkAt:number;moveX:number;moveZ:number;
   homeX:number;homeZ:number;patrolRadius:number;patrolDirection:number;patrolRing:THREE.Mesh;
   detectionRing:THREE.Mesh;attackRing:THREE.Mesh;
@@ -56,7 +56,7 @@ export function robotCanAttack(distance:number,attackRange:number,detected:boole
 }
 
 export interface PracticeRobotSystem {
-  update(now:number,dt:number,player:THREE.Vector3,enabled:boolean):void;
+  update(now:number,dt:number,player:THREE.Vector3,enabled:boolean,paused?:boolean):void;
   aliveCount():number;
   hitMeshes():THREE.Object3D[];
   scan(until:number):number;
@@ -199,7 +199,7 @@ export function createPracticeRobots(
       if(object instanceof THREE.Mesh){object.userData.robotId=id;object.userData.hitZone=object.userData.robotHead?'head':'body';}
     });
     scene.add(root);
-    return {id,spec,root,head,healthFill,health:spec.hp,alive:true,respawnAt:0,nextAttackAt:performance.now()+800+index*320,nextThinkAt:0,
+    return {id,spec,root,head,healthFill,health:spec.hp,alive:true,nextAttackAt:performance.now()+800+index*320,nextThinkAt:0,
       moveX:0,moveZ:0,homeX,homeZ,patrolRadius,patrolDirection:index%2===0?1:-1,patrolRing,
       detectionRing,attackRing,patrolAngle:index*1.3,hitUntil:0,limbs,scanMarker};
   };
@@ -262,18 +262,20 @@ export function createPracticeRobots(
     bot.health=Math.max(0,bot.health-damage);bot.hitUntil=now+180;showHealth(bot);
     damageNotice(position,damage,headshot);
     if(bot.health<=0){
-      // Robots disappear normally after destruction and return to their fixed spawn after five seconds.
-      bot.alive=false;bot.root.visible=false;bot.respawnAt=Number.POSITIVE_INFINITY;
+      // A destroyed robot stays eliminated for the remainder of the current round.
+      bot.alive=false;bot.root.visible=false;
       bot.detectionRing.visible=false;bot.attackRing.visible=false;bot.patrolRing.visible=false;
       bot.scanMarker.visible=false;
-      notify('ROBOT DESTROYED · '+bot.spec.name+' · 5s');
+      notify('ROBOT DESTROYED · '+bot.spec.name);
     }
   };
 
   const system:PracticeRobotSystem={
-    update(now,dt,player,enabled){
+    update(now,dt,player,enabled,paused=false){
       active=enabled;
       if(!enabled){for(const bot of bots){bot.root.visible=false;bot.patrolRing.visible=false;bot.detectionRing.visible=false;bot.attackRing.visible=false;}return;}
+      // Preserve robot visibility but pause AI, projectiles, and damage while a result is shown.
+      if(paused)return;
       playerState={x:player.x,y:player.y,z:player.z};
       const step=Math.min(.08,Math.max(.001,dt));
       for(const bot of bots){
@@ -457,7 +459,7 @@ export function createPracticeRobots(
       const now=performance.now();scannedUntil=0;
       bots.forEach((bot,index)=>{
         const floor=sampleGround(bot.homeX,bot.homeZ,0)??0;
-        bot.health=bot.spec.hp;bot.alive=true;bot.respawnAt=0;bot.nextAttackAt=now+1200+index*280;bot.nextThinkAt=0;
+        bot.health=bot.spec.hp;bot.alive=true;bot.nextAttackAt=now+1200+index*280;bot.nextThinkAt=0;
         bot.moveX=0;bot.moveZ=0;bot.patrolAngle=index*1.3;
         bot.root.position.set(bot.homeX,floor,bot.homeZ);bot.root.rotation.set(0,0,0);
         bot.patrolRing.position.set(bot.homeX,floor+.045,bot.homeZ);bot.patrolRing.visible=enabled&&bot.spec.role!=='dummy';bot.root.visible=enabled;
