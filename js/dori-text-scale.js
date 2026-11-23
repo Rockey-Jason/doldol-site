@@ -67,12 +67,8 @@
     return hasVisibleTextNode(element);
   }
 
-  function apply(rawScale) {
-    currentScale = clampScale(rawScale);
-    const html = document.documentElement;
-    html.dataset.doriFontScale = String(currentScale);
+  function applyNow() {
     restoreOriginalFontSizes();
-
     if (currentScale === 100 || !document.body) return;
 
     const measurements = [];
@@ -95,12 +91,18 @@
     });
   }
 
-  function scheduleRefresh() {
+  function apply(rawScale) {
+    currentScale = clampScale(rawScale);
+    document.documentElement.dataset.doriFontScale = String(currentScale);
     if (refreshFrame) return;
     refreshFrame = window.requestAnimationFrame(() => {
       refreshFrame = 0;
-      apply(currentScale);
+      applyNow();
     });
+  }
+
+  function scheduleRefresh() {
+    apply(currentScale);
   }
 
   window.applyDoriTextScale = apply;
