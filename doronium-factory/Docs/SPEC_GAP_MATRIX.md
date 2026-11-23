@@ -610,3 +610,19 @@ No main merge, deployment, production database change, or live-user save/economy
 
 
 - Harness correction for repeated-production diagnostics: the first follow-up run 449742 failed with a test-side `Cannot read properties of undefined (reading 'runtime')` because the browser result did not include the state projection. The E2E now returns the minimal runtime snapshot; the rerun is pending. This is not a game-runtime failure and is not counted as a pass.
+
+
+## 2026-11-23 — latest master-matrix delta: power transmission loss
+
+The 12-stage and 20-item matrix above remains the acceptance baseline. This checkpoint updates only the power-grid evidence:
+
+| Master item | Current status | New verified evidence | Remaining acceptance blocker |
+|---|---|---|---|
+| Stage 6 — Power grid | PARTIAL | Per-cable edge losses now compound along the least-loss live source route; consumer allocations report loss fraction; network source draw/lost kW are explicit; battery charging uses loss-adjusted surplus. Node + Playwright coverage passed in [run 45100044642](https://github.com/Rockey-Jason/doldol-site/actions/runs/45100044642). | Source-specific multi-source dispatch, empirically calibrated resistance/condition curves, full diagnostics/visualizer, every generator/relay device and physical validation. |
+| Checklist 10 — Power and batteries | PARTIAL | The live cable-connected generator/cable/smelter browser fixture reports non-zero transmission loss; battery charge and stored kJ are checked against actual source draw. | Full grid acceptance, complete priority/diagnostic behavior, all storage/generator combinations and physical-device evidence. |
+
+**Verified code SHA:** `74c790527faf5dfb5f67254dbb01c18913c33acc`. Static validation: 7/7 groups; 165 core + 27 mine Node tests passed. Playwright browser-regression: PASS. The same run's virtual mine soak is 3,600 simulated seconds, not 60 minutes of wall-clock time. The repeated-production soak is also virtual.
+
+All other master statuses are unchanged: world scale remains NOT IMPLEMENTED; physical mobile/full-playthrough and real 60-minute soak remain UNVERIFIED; ownership, fluids, canonical integration, failure/skills, contracts and full campaign remain PARTIAL. No stage or checklist item is promoted to COMPLETE.
+
+PR #11 remains draft/open/unmerged, 613 ahead / 1,000 behind main from stale merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`; main HEAD is `c2f00b4e32db529df6ad85b2c9649ed2ef7bf656`. PR #9/#10 were not wholesale merged; PR #8's Godot implementation was not merged. No deployment or production data mutation occurred.
