@@ -93,12 +93,12 @@ for(const cx of [-17.2,17.2]){
   addTacticalCover(cx+1.65,-3.55,.75,.16,3.15);
   addTacticalCover(cx,-3.55,.60,.16,4.1,3.15);
 
-  // Second floor: outer gallery and inner bridge gallery, with a clear
-  // stairwell landing and an overhead cross-walk between the two sides.
-  addTacticalCover(cx-innerSide*.9,-.05,3.4,3.35,4.19,3.91);
-  addTacticalCover(cx+innerSide*4.05,-.05,.6,3.35,4.19,3.91);
-  // Landing meets the shortened stair nose without covering the ramp.
-  addTacticalCover(cx+innerSide*3.05,-2.85,1.1,.5,4.19,3.91);
+  // Second floor: match the physical 2.8 m-wide stairwell opening and the
+  // continuous inner-side platform that joins the building to the skybridge.
+  addTacticalCover(cx-innerSide*1.375,-.05,3.025,3.35,4.19,3.91);
+  addTacticalCover(cx+innerSide*5.05,-.05,.6,3.35,4.19,3.91);
+  // Full landing dimensions match the client mesh and overlap the ramp/bridge.
+  addTacticalCover(cx+innerSide*3.05,-3.05,1.6,.7,4.19,3.91);
 
   // Outer guardrail stays continuous. The inner guardrail opens to the skybridge.
   addTacticalCover(cx- innerSide*4.18,-.05,.14,3.35,5.08,4.08);
@@ -113,14 +113,15 @@ for(const cx of [-17.2,17.2]){
   addTacticalCover((wallMin+leftWallEnd)/2,-3.25,(leftWallEnd-wallMin)/2,.14,5.08,4.08);
   addTacticalCover((rightWallStart+wallMax)/2,-3.25,(wallMax-rightWallStart)/2,.14,5.08,4.08);
 
-  // Roof deck segments leave a real stairwell opening. Guardrails follow its sides.
-  addTacticalCover(cx-2.5,-1.5,1.675,4.575,5.99,5.71);
-  addTacticalCover(cx+2.5,-1.5,1.675,4.575,5.99,5.71);
-  addTacticalCover(cx,-4.0375,.825,2.0375,5.99,5.71);
-  addTacticalCover(cx,2.2875,.825,.7875,5.99,5.71);
-  addTacticalCover(cx,-1.75,.8,.45,5.99,5.71);
-  addTacticalCover(cx-innerSide*.82,-.25,.06,1.75,6.64,5.92);
-  addTacticalCover(cx+innerSide*.82,-.25,.06,1.75,6.64,5.92);
+  // Raised roof deck: underside at 6.71 m leaves 2.52 m above the
+  // second-floor surface. Split the deck around the complete roof-stair path.
+  addTacticalCover(cx-2.675,-1.5,1.375,4.575,6.99,6.71);
+  addTacticalCover(cx+2.675,-1.5,1.375,4.575,6.99,6.71);
+  addTacticalCover(cx,-4.1875,1.3,1.8875,6.99,6.71);
+  addTacticalCover(cx,2.1625,1.3,.9125,6.99,6.71);
+  addTacticalCover(cx,-1.75,1.1,.55,6.99,6.71);
+  addTacticalCover(cx-innerSide*1.35,-.25,.12,1.75,8.0,6.56);
+  addTacticalCover(cx+innerSide*1.35,-.25,.12,1.75,8.0,6.56);
 
   // Basement side walls are opened toward the central underpass; the inner
   // room walls retain the existing side passages into both service alcoves.
