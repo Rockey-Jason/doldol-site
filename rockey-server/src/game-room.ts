@@ -3,7 +3,7 @@ import { admin, type VerifiedPlayer } from './auth.js';
 import { ITEMS, MAPS, WEAPONS, type RockeyItemCode, type RockeyWeapon } from './catalog.js';
 import { canFireWeapon, calculateWeaponDamage, calculateWeaponRecoil, traceWeaponShot, transferReloadAmmo } from './combat.js';
 import { createAuthoritativeDebris, stepAuthoritativeDebris, type DebrisBodyState } from './world-physics.js';
-import { resolveCeilingCollision, resolveHorizontalMovement, tacticalFloorHeightAt } from './world-navigation.js';
+import { isBlockedByCover, resolveCeilingCollision, resolveHorizontalMovement, tacticalFloorHeightAt } from './world-navigation.js';
 import { ENERGY_CUBE_RULES, isEnemyInsideEnergyCube } from './energy-cube.js';
 
 export type Mode = '1v1' | '2v2' | '3v3' | 'ranked' | 'ffa';
