@@ -184,9 +184,12 @@ function renderMonth(range){
   const dayEvents=state.occurrences.filter(o=>o.occurrenceDate===key);
   const list=document.createElement("div");list.className="day-events";
   dayEvents.slice(0,3).forEach(o=>{
-   const chip=document.createElement("span");chip.className="event-chip";chip.style.setProperty("--event-color",safeColor(o.creatorColor));
+   const chip=document.createElement("button");chip.type="button";chip.className="event-chip";chip.style.setProperty("--event-color",safeColor(o.creatorColor));
    const title=document.createElement("span");title.className="chip-title";title.textContent=o.title;
-   chip.append(title);chip.title=o.title;list.append(chip);
+   chip.append(title);chip.title=o.title+" · 눌러서 상세 보기";
+   chip.setAttribute("aria-label",o.title+" 일정 상세 보기");
+   chip.addEventListener("click",event=>{event.stopPropagation();openDetail(o);});
+   list.append(chip);
   });
   if(dayEvents.length>3){const more=document.createElement("span");more.className="more-events";more.textContent="+"+(dayEvents.length-3)+"개 더";list.append(more);}
   cell.append(list);
@@ -341,7 +344,14 @@ function openNewAtHour(day,hour){if(state.members.length<2)return;state.selected
 function openEventEditor(event=null,atDate=null){
  if(state.members.length<2){notice("두 명 이상이 참여해야 일정을 등록할 수 있어요.",true);return;}
  state.editing=event||null;$("eventForm").reset();$("eventDialogTitle").textContent=event?"일정 수정":"새 일정 추가";
- const start=event?new Date(event.starts_at):(atDate||new Date(state.selected.getFullYear(),state.selected.getMonth(),state.selected.getDate(),9,0));
+ const now=new Date();
+ const defaultStart=new Date(state.selected.getFullYear(),state.selected.getMonth(),state.selected.getDate(),9,0);
+ if(dateKey(state.selected)===dateKey(now)){
+  defaultStart.setHours(now.getHours(),Math.ceil(now.getMinutes()/15)*15,0,0);
+  if(defaultStart.getMinutes()===60)defaultStart.setHours(defaultStart.getHours()+1,0,0,0);
+  if(defaultStart.getHours()>=23)defaultStart.setHours(9,0,0,0);
+ }
+ const start=event?new Date(event.starts_at):(atDate||defaultStart);
  const end=event?new Date(event.ends_at):new Date(start.getTime()+60*60*1000);
  $("eventStart").value=localInputValue(start);$("eventEnd").value=localInputValue(end);
  $("eventTitle").value=event?.title||"";$("eventNotes").value=event?.notes||"";$("eventCategory").value=event?.category||"general";$("allDay").checked=!!event?.all_day;
@@ -601,7 +611,7 @@ function wire(){
  $("roomForm").addEventListener("submit",createRoom);$("roomUserSearch").addEventListener("input",()=>scheduleSearch("roomUserSearch","roomSearchResults","create"));
  $("inviteUserSearch").addEventListener("input",()=>scheduleSearch("inviteUserSearch","inviteSearchResults","invite"));
  $("roomInviteButton").addEventListener("click",openInviteDialog);$("lockedInviteButton").addEventListener("click",openInviteDialog);
- $("addEventButton").addEventListener("click",()=>openEventEditor());$("eventForm").addEventListener("submit",saveEvent);$("deleteEventButton").addEventListener("click",deleteEvent);
+ $("addEventButton").addEventListener("click",()=>openEventEditor());$("addEventFromDayButton").addEventListener("click",()=>{$("dayViewDialog").close();openEventEditor();});$("eventForm").addEventListener("submit",saveEvent);$("deleteEventButton").addEventListener("click",deleteEvent);
  $("dayCommentForm").addEventListener("submit",postDayComment);$("dayCommentBody").addEventListener("input",updateTagSuggestions);$("dayCommentBody").addEventListener("click",updateTagSuggestions);$("dayCommentBody").addEventListener("keyup",updateTagSuggestions);$("editEventButton").addEventListener("click",()=>{const e=state.detailOccurrence;$("detailDialog").close();openEventEditor(e);});
  $("recurrenceFrequency").addEventListener("change",setRecurrenceUI);
  $("prevPeriod").addEventListener("click",()=>changePeriod(-1));$("nextPeriod").addEventListener("click",()=>changePeriod(1));
