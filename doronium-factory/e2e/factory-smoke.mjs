@@ -782,14 +782,14 @@ try {
     const result = window.__doroniumFactoryTest.runSeconds(3600);
     return {
       ticks: result.ticks,
-      state: { runtime: result.state.runtime, inventory: result.state.inventory, meta: result.state.meta, tick: result.state.tick },
+      state: { runtime: result.state.runtime, inventory: result.state.inventory, meta: result.state.meta, tick: result.state.tick, ownershipLedgerValidation: result.state.ownershipLedgerValidation||null },
       seconds: result.state.seconds,
       produced: result.state.stats.produced.ironPlate || 0,
       producedStats: { ...(result.state.stats.produced || {}) },
       inventory: result.state.inventory.ironPlate || 0,
       warehouse: result.state.buildings.filter(b => ["storage","warehouse"].includes(b.type)).flatMap(b => b.warehouseStock || []).filter(item => item.itemID === "ironPlate").reduce((sum,item) => sum + Math.max(0,Number(item.quantity)||0),0),
       beltOccupied: result.state.buildings.some(b => b.type === "belt" && !!b.item),
-      smelter: (() => { const b = result.state.buildings.find(item => item.uid === "test-smelter"); return b ? { status:b.status, errorCode:b.errorCode||null, progress:b.progress, temp:b.temp, pressure:b.pressure, condition:b.condition, failureRepair:b.failureRepair||null, activeRecipe:b.activeRecipe||null, activeInputs:b.activeInputQuantities||[], activeMeta:b.activeMeta||null, output:b.output||null, productionSequence:b.productionSequence||0 } : null })(),
+      smelter: (() => { const b = result.state.buildings.find(item => item.uid === "test-smelter"); return b ? { status:b.status, errorCode:b.errorCode||null, progress:b.progress, temp:b.temp, pressure:b.pressure, condition:b.condition, failureRepair:b.failureRepair||null, activeRecipe:b.activeRecipe||null, activeInputs:b.activeInputQuantities||[], activeMeta:b.activeMeta||null, output:b.output||null, productionSequence:b.productionSequence||0,lastProductionStartFailure:b.lastProductionStartFailure||null,activeFailureReason:b.activeFailureReason||null,lastFailureEventID:b.lastFailureEventID||null,failureExposureSec:b.failureExposureSec||0 } : null })(),
       power: window.__doroniumFactoryTest.power(),
       ledger: window.__doroniumFactoryTest.ledger()
     };
@@ -802,7 +802,7 @@ try {
   soak.runtimeStacks=(soak.state.runtime?.itemStacks||[]).map(stack=>({runtimeID:stack.runtimeID,itemID:stack.itemID,quantity:stack.quantity,legacyAggregate:stack.legacyAggregate===true,quarantined:stack.quarantined===true,sourceItemID:stack.sourceItemID||null}));
   soak.postSoakReservationProbe=Array.isArray(postSoakReservation);
   soak.postSoakProbeErrors=validateRuntimeState(postSoakProbe).errors;
-  const soakDiagnostics={produced:soak.produced,producedStats:soak.producedStats,smelter:soak.smelter,power:soak.power,ledger:soak.ledger,available:soak.available,runtimeAudit:soak.runtimeAudit,activeReservations:soak.activeReservations,runtimeStacks:soak.runtimeStacks,postSoakReservationProbe:soak.postSoakReservationProbe,postSoakProbeErrors:soak.postSoakProbeErrors};
+  const soakDiagnostics={produced:soak.produced,producedStats:soak.producedStats,smelter:soak.smelter,power:soak.power,ledger:soak.ledger,available:soak.available,runtimeAudit:soak.runtimeAudit,activeReservations:soak.activeReservations,runtimeStacks:soak.runtimeStacks,postSoakReservationProbe:soak.postSoakReservationProbe,postSoakProbeErrors:soak.postSoakProbeErrors,ownershipValidation:soak.state.ownershipLedgerValidation||null,commitFailure:soak.state.runtime?.lastOwnedReservationCommitFailure||null,failureEvents:(soak.state.runtime?.failureEvents||[]).map(event=>({failureEventID:event.failureEventID,machineID:event.machineID,grade:event.grade,createdTick:event.createdTick}))};
   console.log("DORONIUM_SMELTER_SOAK", JSON.stringify(soakDiagnostics));
   assert.equal(soak.ticks, 36000, "A virtual hour must execute exactly 36,000 fixed 0.1-second ticks");
   assert.ok(soak.seconds >= 8 * 3600 + 3600 - 0.001, "Simulation clock must advance by one virtual hour");
