@@ -46,6 +46,12 @@ try {
   capture(desktop, "desktop");
   const backend = await boot(desktop);
   assert.equal(backend, "webgl", "Desktop must create the real WebGL renderer (not the fallback)");
+  const powerTransmissionLoss = await desktop.evaluate(() => window.__doroniumFactoryTest.powerTransmissionLossTest());
+  assert.equal(powerTransmissionLoss.valid, true, "The live cable-connected grid must calculate non-zero transmission loss");
+  assert.equal(powerTransmissionLoss.cableCount, 3, "The power-loss fixture must use three consecutive cable segments");
+  assert.ok(powerTransmissionLoss.allocation.transmissionLoss > 0, "The consumer allocation must include the compounded cable-path loss");
+  assert.ok(powerTransmissionLoss.network.transmissionLossKW > 0, "The network must account for actual kW lost during transmission");
+  assert.ok(powerTransmissionLoss.network.inputKW > powerTransmissionLoss.network.allocatedKW, "Source draw must exceed delivered load by the modeled cable loss");
   const perfBefore = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D());
   assert.equal(perfBefore.terrainChunkCount, 30, "The optimized 192×160 world must use 30 larger independently cullable terrain chunks");
   await desktop.waitForTimeout(600);

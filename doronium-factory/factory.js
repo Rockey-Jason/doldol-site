@@ -7,7 +7,7 @@ import { validateGameData } from "./game-data-validation.js?v=3";
 import { CANONICAL_DORONUM_IDS, CANONICAL_INFINITY_DORONUM_ID, INFINITY_REQUIREMENTS, CANONICAL_DORONUM_CATALOG, validateCanonicalDoronumCatalog, auditCanonicalDoronumIntegration, applyDoronumMigration, canonicalItemID } from "./canonical-data.js?v=4";
 import { FAILURE_PROFILES } from "./failure-profiles.js?v=2";
 import { buildLogisticsGraph, selectLogisticsTarget, analyzeLogisticsPressure } from "./logistics-runtime.js?v=1";
-import { solvePowerNetworks } from "./network-runtime.js?v=2";
+import { solvePowerNetworks } from "./network-runtime.js?v=3";
 import { tickFluidNetwork, consumeFluid, FLUID_TYPES } from "./fluid-runtime.js?v=1";
 import { calculateFailureRisks, calculateFailureHazard, rollMachineFailure, advanceFailureExposure, applyMachineFailure, completeMachineRepair } from "./failure-runtime.js?v=2";
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
@@ -454,13 +454,13 @@ function currentPower(){
   const explicit=topologyEnabledFor({layer:a.layer||"surface",mineLevel:a.mineLevel||0});
   if(explicit){
    const distance=Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
-   if(distance===1&&(a.type==="powerCable"||b.type==="powerCable"))edges.push({id:"P:"+a.uid+":"+b.uid,from:String(a.uid),to:String(b.uid)});
+   if(distance===1&&(a.type==="powerCable"||b.type==="powerCable")){const cables=[a,b].filter(x=>x.type==="powerCable"),condition=cables.reduce((sum,cable)=>sum+clamp(Number(cable.condition??100),0,100),0)/cables.length,lossRate=.0015+.004*(1-condition/100);edges.push({id:"P:"+a.uid+":"+b.uid,from:String(a.uid),to:String(b.uid),lossRate})}
   }else edges.push({id:"LEGACY:"+a.uid+":"+b.uid,from:String(a.uid),to:String(b.uid)});
  }
  const networks=solvePowerNetworks({nodes,edges,deltaSeconds:STEP}),allocations={},batteryChanges=[];
  for(const network of networks){for(const item of network.allocations)allocations[item.id]=item;for(const change of network.batteryChanges||[])batteryChanges.push(change)}
- const gen=networks.reduce((n,x)=>n+x.generationKW,0),used=networks.reduce((n,x)=>n+x.allocations.reduce((a,v)=>a+v.demandKW,0),0),delivered=networks.reduce((n,x)=>n+x.allocatedKW,0),storageDischargeKW=networks.reduce((n,x)=>n+x.storageDischargeKW,0);
- return {gen,used,delivered,ratio:used===0?1:Math.min(1,delivered/used),raw:gen+storageDischargeKW-used,allocations,networks,batteryChanges,topologyEnabled:!!S.powerTopologyEnabled,networkCount:networks.length};
+ const gen=networks.reduce((n,x)=>n+x.generationKW,0),used=networks.reduce((n,x)=>n+x.allocations.reduce((a,v)=>a+v.demandKW,0),0),delivered=networks.reduce((n,x)=>n+x.allocatedKW,0),storageDischargeKW=networks.reduce((n,x)=>n+x.storageDischargeKW,0),transmissionLossKW=networks.reduce((n,x)=>n+x.transmissionLossKW,0);
+ return {gen,used,delivered,transmissionLossKW,ratio:used===0?1:Math.min(1,delivered/used),raw:gen+storageDischargeKW-used,allocations,networks,batteryChanges,topologyEnabled:!!S.powerTopologyEnabled,networkCount:networks.length};
 }
 function settlePowerStorage(power){
  for(const change of power?.batteryChanges||[]){const battery=S.buildings.find(b=>String(b.uid)===String(change.id));if(battery?.type==="battery")battery.energyKJ=Math.max(0,Number(change.afterKJ)||0)}
@@ -3476,6 +3476,21 @@ if(E2E_MODE){
    buildingMaterialsValid:BUILDINGS.every(b=>Object.keys(b.materials||{}).every(id=>!!RESOURCE[id]))
   }),
   power:()=>currentPower(),
+  powerTransmissionLossTest(){
+   const previous=S;
+   try{
+    S=freshState();S.powerTopologyEnabled=true;S.powerTopologyLayers={surface:true,mine:{}};
+    S.buildings=[
+     {uid:"POWER-LOSS-GEN",type:"coalgen",x:1,y:1,layer:"surface",fuelTimer:24,condition:100},
+     {uid:"POWER-LOSS-CABLE-1",type:"powerCable",x:2,y:1,layer:"surface",condition:100},
+     {uid:"POWER-LOSS-CABLE-2",type:"powerCable",x:3,y:1,layer:"surface",condition:100},
+     {uid:"POWER-LOSS-CABLE-3",type:"powerCable",x:4,y:1,layer:"surface",condition:100},
+     {uid:"POWER-LOSS-SMELTER",type:"smelter",x:5,y:1,layer:"surface",condition:100}
+    ];
+    const result=currentPower(),allocation=result.allocations["POWER-LOSS-SMELTER"],network=result.networks.find(item=>item.nodeIDs.includes("POWER-LOSS-SMELTER"));
+    return {valid:!!allocation&&!!network&&allocation.transmissionLoss>0&&network.transmissionLossKW>0,cableCount:3,allocation:allocation?structuredClone(allocation):null,network:network?structuredClone(network):null};
+   }finally{S=previous}
+  },
   inspect3D:()=>world3d.inspect(),
   inspectPerformance:()=>world3d.inspectPerformance?.()||null,
   loadBeltVisual(id="ironOre",qty=8){

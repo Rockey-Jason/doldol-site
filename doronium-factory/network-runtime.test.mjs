@@ -58,3 +58,14 @@ test("400kW battery charger stores exactly 40kJ during one 0.1-second tick",()=>
  assert.equal(applied.length,1);
  assert.equal(nodes.find(item=>item.id==="P-BATTERY").energyKJ,40);
 });
+
+
+test("cable-path transmission losses compound and reduce delivered power before machine allocation",()=>{
+ const nodes=[{id:"GEN",type:"GENERATOR",generationKW:8.1},{id:"CABLE-1",type:"CABLE"},{id:"CABLE-2",type:"CABLE"},{id:"LOAD",type:"CONSUMER",demandKW:8,priority:10}];
+ const edges=[{id:"G-C1",from:"GEN",to:"CABLE-1",lossRate:.01},{id:"C1-C2",from:"CABLE-1",to:"CABLE-2",lossRate:.01},{id:"C2-L",from:"CABLE-2",to:"LOAD",lossRate:.01}];
+ const network=solvePowerNetworks({nodes,edges})[0],allocation=network.allocations[0],expectedLoss=1-Math.pow(.99,3);
+ assert.ok(Math.abs(allocation.transmissionLoss-expectedLoss)<1e-12);
+ assert.ok(allocation.deliveredKW<8);assert.equal(allocation.status,"BROWNOUT_RUNNING");
+ assert.ok(network.inputKW>network.allocatedKW);assert.ok(network.transmissionLossKW>0);
+ assert.ok(Math.abs(network.transmissionLossKW-(network.inputKW-network.allocatedKW))<1e-12);
+});
