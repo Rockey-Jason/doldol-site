@@ -18,7 +18,7 @@ import { startInfinityFusion, tickInfinityFusion, cancelInfinityFusion, recoverI
 import { evaluatePlanetaryStabilization } from "./planetary-stabilization.js?v=1";
 import { beginConstruction, beginBlueprintConstruction, commitConstruction, cancelConstruction, footprintCells, validateConstructionFootprint, createBlueprint, duplicateBlueprint, rotateBlueprint, validateBlueprintPlacement } from "./construction-runtime.js?v=1";
 import { createContractState, PACKAGING_STAGES, startContractShipment, advancePackagingStage, dispatchContractShipment, advanceShipments, claimContractReward, cancelContractShipment } from "./contract-runtime.js?v=3";
-import { createOwnershipState, addCustody, transferCustody, consumeCustody, completeProductionCustody, validateOwnershipState, resetCustodySnapshot, hasPendingBuildingCustody, commitBuildingDismantle } from "./ownership-runtime.js?v=8";
+import { createOwnershipState, addCustody, transferCustody, consumeCustody, completeProductionCustody, validateOwnershipState, resetCustodySnapshot, hasPendingBuildingCustody, commitBuildingDismantle, activeInputCustodyStackID } from "./ownership-runtime.js?v=9";
 import { storeWarehouseStack as storeWarehouseCustody, withdrawWarehouseStack as withdrawWarehouseCustody } from "./warehouse-runtime.js?v=2";
 let createClient = null;
 
@@ -735,7 +735,7 @@ function rebuildOwnershipLedger(state=S){
   const activeInputs=Array.isArray(building.activeInputQuantities)?building.activeInputQuantities:Array.isArray(building.activeMeta?.consumedInputs)?building.activeMeta.consumedInputs:[];
   for(let i=0;i<activeInputs.length;i++){
    const input=activeInputs[i],itemID=canonicalItemID(input.itemID),qty=Math.max(0,Math.floor(Number(input.quantity)||0));if(!itemID||!qty)continue;
-   addCustody(ledger,{stackID:"ACTIVE_INPUT:"+uid+":"+i+":"+itemID,itemID,quantity:qty,ownerType:"ACTIVE_JOB",ownerID:uid,metadata:{quality:input.quality,purity:input.purity,synthetic:input.synthetic}});
+   addCustody(ledger,{stackID:activeInputCustodyStackID(uid,building.productionSequence,i,itemID),itemID,quantity:qty,ownerType:"ACTIVE_JOB",ownerID:uid,metadata:{quality:input.quality,purity:input.purity,synthetic:input.synthetic}});
   }
   if(building.output&&Number(building.output.qty)>0){
    const stackID=String(building.output.custodyStackID||("MACHINE_OUTPUT:"+uid));
@@ -963,7 +963,7 @@ function createOutput(b,id,qty,meta){
  const activeInputs=Array.isArray(b.activeInputQuantities)?b.activeInputQuantities:Array.isArray(b.activeMeta?.consumedInputs)?b.activeMeta.consumedInputs:[];
  const ledgerBefore=structuredClone(S.ownershipLedger),validationBefore=structuredClone(S.ownershipLedgerValidation);
  if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}
- const completed=completeProductionCustody(S.ownershipLedger,{transactionID:"PRODUCTION_COMPLETE:"+uid+":"+sequence+":"+outputSequence,inputs:activeInputs.map((input,index)=>({stackID:"ACTIVE_INPUT:"+uid+":"+index+":"+canonicalItemID(input.itemID),quantity:Math.max(0,Math.floor(Number(input.quantity)||0)),expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:uid})),output:{stackID:outputStackID,itemID:id,quantity:qty,ownerType:"MACHINE_OUTPUT",ownerID:uid,metadata:meta||{}}});
+ const completed=completeProductionCustody(S.ownershipLedger,{transactionID:"PRODUCTION_COMPLETE:"+uid+":"+sequence+":"+outputSequence,inputs:activeInputs.map((input,index)=>({stackID:activeInputCustodyStackID(uid,sequence,index,canonicalItemID(input.itemID)),quantity:Math.max(0,Math.floor(Number(input.quantity)||0)),expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:uid})),output:{stackID:outputStackID,itemID:id,quantity:qty,ownerType:"MACHINE_OUTPUT",ownerID:uid,metadata:meta||{}}});
  if(!completed){clearCompletionBuffer(b);S.ownershipLedger=ledgerBefore;S.ownershipLedgerValidation=validationBefore;b.status="ERROR";b.errorCode="ITEM_OWNERSHIP_INTEGRITY";return false}
  b.output.custodyStackID=outputStackID;b.custodyOutputSequence=outputSequence;
  const previousActiveInputs=structuredClone(b.activeInputQuantities||[]);b.activeInputQuantities=[];
