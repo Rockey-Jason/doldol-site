@@ -78,8 +78,8 @@
     if (!range) return;
     prefs.fontScale = clampFontScale(range.value);
     apply();
-    const output = document.getElementById("site-pref-font-value");
-    if (output) output.textContent = prefs.fontScale + "%";
+    const number = document.getElementById("site-pref-font-number");
+    if (number) number.value = String(prefs.fontScale);
     range.setAttribute("aria-valuetext",prefs.fontScale + "%");
     const status = document.getElementById("site-pref-status");
     if (status) status.textContent = "글자 크기 " + prefs.fontScale + "% 미리보기 중 · 놓으면 자동 저장됩니다.";
