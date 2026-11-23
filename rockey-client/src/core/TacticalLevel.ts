@@ -93,7 +93,7 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     }
     const featureKind:MapInteractionKind=kind==='desk'?'terminal':kind==='chair'?'rest':'supply';
     const featureLabel=kind==='desk'?'전술 단말기':kind==='chair'?'정비 의자':kind==='rack'?'보급 선반':kind==='cabinet'?'장비 보관함':'보급 상자';
-    addInteraction('building:'+cx+':'+kind+':'+x+':'+y+':'+z,featureLabel,featureKind,prop,point(root,x,y+.72,z));
+    addInteraction('building:'+root.position.x+':'+kind+':'+x+':'+y+':'+z,featureLabel,featureKind,prop,point(root,x,y+.72,z));
     register(prop,point(root,x,y+.65,z),kind==='desk'?1.2:kind==='rack'?1.35:.95,kind==='rack'?10:6);
     return prop;
   };
