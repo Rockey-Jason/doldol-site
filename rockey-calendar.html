@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" data-rockey-calendar-page>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -50,6 +50,23 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 @media(max-width:780px){.workspace{grid-template-columns:1fr}.side-stack{grid-template-columns:1fr 1fr}.hero-note{display:none}}
 @media(max-width:560px){.shell{padding:12px 9px 50px}.top{align-items:flex-start}.brand-name{font-size:13px}.top-link{font-size:9px;padding:7px 9px}.hero{margin:14px 0 11px;padding:17px 14px;border-radius:16px}.hero h1{font-size:26px}.room-section{padding:11px}.room-card{min-width:170px}.room-head{padding:12px;align-items:flex-start}.room-title h2{font-size:14px}.room-actions{flex-direction:column;align-items:stretch}.gold-button{min-height:32px;font-size:9px}.calendar-head{padding:11px 9px;flex-wrap:wrap}.month-label strong{font-size:18px}.calendar-controls{gap:3px}.icon-btn{width:29px;height:29px}.today-btn{height:29px;padding:0 7px}.calendar-body{padding:6px 4px}.month-day{min-height:clamp(68px,15vw,92px);padding:4px 2px}.day-number{width:21px;height:21px;font-size:9px}.event-chip{gap:2px;padding:3px 3px;font-size:7px;border-left-width:2px}.side-stack{grid-template-columns:1fr}.form{grid-template-columns:1fr;padding:13px}.field.full,.recurrence-box,.form-actions{grid-column:auto}.form-actions{flex-direction:column;align-items:stretch}.form-actions>*{width:100%}.modal-head{padding:13px}.comment-compose{flex-direction:column}.comment-compose .primary{align-self:flex-end}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+</style>
+<style id="rockey-calendar-font-size-styles">
+.calendar-font-panel{display:grid;grid-template-columns:minmax(160px,1fr) auto;align-items:center;gap:10px 18px;padding:12px 15px;border-bottom:1px solid rgba(145,179,211,.13);background:linear-gradient(110deg,rgba(18,43,67,.78),rgba(7,22,39,.86))}
+.calendar-font-panel[hidden]{display:none!important}
+.calendar-font-panel-copy{display:grid;gap:4px;min-width:0}
+.calendar-font-panel-copy strong{color:#eaf3fb;font-size:11px;font-weight:400}
+.calendar-font-panel-copy span{color:#91a9c1;font-size:9px;line-height:1.5}
+.calendar-font-panel-current{display:flex;align-items:center;gap:9px;color:#9fb6ce;font-size:9px}
+.calendar-font-panel-current output{min-width:48px;color:#f0dfa9;font-size:14px;text-align:right;font-variant-numeric:tabular-nums}
+.calendar-font-range{grid-column:1/-1;width:100%;height:22px;margin:0;accent-color:#e5c879;cursor:pointer}
+.calendar-font-panel-bottom{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.calendar-font-limits{display:flex;justify-content:space-between;gap:15px;color:#7892ad;font-size:8px}
+.calendar-font-number-wrap{display:flex;align-items:center;gap:6px;color:#9fb6ce;font-size:9px}
+.calendar-font-number-wrap input{width:66px;height:30px;padding:4px 7px;border:1px solid rgba(145,179,211,.2);border-radius:8px;color:#f0f6ff;background:rgba(3,13,25,.75);font:inherit;font-size:11px;text-align:center;font-variant-numeric:tabular-nums}
+.calendar-font-number-wrap input:focus{outline:2px solid rgba(152,207,255,.7);outline-offset:2px}
+.calendar-font-reset{height:30px;padding:4px 9px;border:1px solid rgba(229,200,121,.25);border-radius:8px;color:#e7d49b;background:rgba(132,101,39,.1);font:inherit;font-size:9px}
+@media(max-width:560px){.calendar-font-panel{grid-template-columns:1fr;gap:8px;padding:11px 10px}.calendar-font-panel-current{justify-content:space-between}.calendar-font-range,.calendar-font-panel-bottom{grid-column:1}.calendar-font-panel-bottom{align-items:flex-end}.calendar-font-limits{flex:1}}
 </style>
 <style id="rockey-calendar-date-color-styles">
 .date-color-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 14px;border-bottom:1px solid rgba(145,179,211,.13);background:linear-gradient(110deg,rgba(20,45,70,.72),rgba(9,24,42,.78))}
@@ -124,7 +141,13 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 <section id="workspace" hidden>
 <header class="surface room-head"><div class="room-title"><div class="room-card-mark">▦</div><div><h2 id="activeRoomName">캘린더</h2><div class="room-subtitle" id="activeRoomDescription"></div><div class="member-mini" id="memberMini"></div></div></div><div class="room-actions"><button class="ghost" id="roomInviteButton" hidden>사용자 초대</button><button class="gold-button" id="addEventButton">＋ 일정 추가</button></div></header>
 <div class="workspace">
-<section class="surface calendar-panel"><div class="calendar-head"><div class="month-label"><strong id="periodTitle">불러오는 중</strong><span id="periodCaption"></span></div><div class="calendar-controls"><button class="today-btn date-color-open" id="openDateColorPanel" type="button" aria-expanded="false">날짜 색상 표시</button><button class="icon-btn" id="prevPeriod" type="button" aria-label="이전 달">‹</button><button class="icon-btn" id="nextPeriod" type="button" aria-label="다음 달">›</button><button class="today-btn" id="goToday" type="button">오늘</button></div></div>
+<section class="surface calendar-panel"><div class="calendar-head"><div class="month-label"><strong id="periodTitle">불러오는 중</strong><span id="periodCaption"></span></div><div class="calendar-controls"><button class="today-btn calendar-font-toggle" id="toggleCalendarFontPanel" type="button" aria-expanded="false" aria-controls="calendarFontPanel">글씨 크기</button><button class="today-btn date-color-open" id="openDateColorPanel" type="button" aria-expanded="false">날짜 색상 표시</button><button class="icon-btn" id="prevPeriod" type="button" aria-label="이전 달">‹</button><button class="icon-btn" id="nextPeriod" type="button" aria-label="다음 달">›</button><button class="today-btn" id="goToday" type="button">오늘</button></div></div>
+<div class="calendar-font-panel" id="calendarFontPanel" hidden aria-label="로키 공유 캘린더 전용 글씨 크기 설정">
+ <div class="calendar-font-panel-copy"><strong>캘린더 글씨 크기</strong><span>이 설정은 로키 공유 캘린더에만 적용돼요.</span></div>
+ <div class="calendar-font-panel-current"><label for="calendarFontRange">현재 크기</label><output id="calendarFontValue" for="calendarFontRange">100%</output></div>
+ <input class="calendar-font-range" id="calendarFontRange" type="range" min="80" max="140" step="1" value="100" aria-label="캘린더 글씨 크기" aria-valuetext="100%">
+ <div class="calendar-font-panel-bottom"><div class="calendar-font-limits"><span>80%</span><span>140%</span></div><div class="calendar-font-number-wrap"><label class="sr-only" for="calendarFontNumber">글씨 크기 직접 입력</label><input id="calendarFontNumber" type="number" min="80" max="140" step="1" value="100" inputmode="numeric" aria-label="글씨 크기 퍼센트"><span>%</span><button type="button" class="calendar-font-reset" id="resetCalendarFont">기본값</button></div></div>
+</div>
 <div class="date-color-toolbar" id="dateColorToolbar" hidden aria-label="날짜별 색상 설정">
  <div class="date-color-toolbar-copy"><strong>날짜별 색상</strong><span id="dateColorSelectionStatus">먼저 날짜 칸에 표시할 색상을 선택해 주세요.</span></div>
  <div class="date-color-swatches" id="dateColorSwatches" role="group" aria-label="날짜 배경 색상">
@@ -197,4 +220,5 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 <script src="js/rockey-calendar-invites.js?v=20261123-2"></script>
 <script src="js/rockey-calendar-mention-alerts.js?v=20261123-3"></script>
 <script src="js/dori-text-scale.js?v=20261123-text-scale-1"></script>
+<script src="js/rockey-calendar-font-size.js?v=20261124-1"></script>
 </body></html>
