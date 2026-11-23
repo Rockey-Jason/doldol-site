@@ -166,7 +166,7 @@ function renderMonth(range){
  const grid=document.createElement("div");grid.className="month-grid";const today=dateKey(new Date());
  for(let i=0;i<42;i++){
   const d=new Date(range.from);d.setDate(d.getDate()+i);const key=dateKey(d);
-  const cell=document.createElement("button");cell.type="button";
+  const cell=document.createElement("div");cell.tabIndex=0;cell.setAttribute("role","button");
   cell.className="month-day"+(d.getMonth()!==state.month.getMonth()?" outside":"")+(key===today?" today":"")+(key===dateKey(state.selected)?" selected":"");
   cell.setAttribute("aria-label",formatDate(d,{year:"numeric",month:"long",day:"numeric"}));
   const color=state.dayColors.get(key);
@@ -194,6 +194,12 @@ function renderMonth(range){
   if(dayEvents.length>3){const more=document.createElement("span");more.className="more-events";more.textContent="+"+(dayEvents.length-3)+"개 더";list.append(more);}
   cell.append(list);
   cell.addEventListener("click",()=>{
+   if(state.dateColorSelectionActive){toggleDateColorDate(key);return;}
+   openDayView(d);
+  });
+  cell.addEventListener("keydown",event=>{
+   if(event.target!==cell||(event.key!=="Enter"&&event.key!==" "))return;
+   event.preventDefault();
    if(state.dateColorSelectionActive){toggleDateColorDate(key);return;}
    openDayView(d);
   });
