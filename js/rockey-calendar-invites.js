@@ -3,7 +3,7 @@
 if(window.__ROCKEY_CALENDAR_INVITES__)return;
 window.__ROCKEY_CALENDAR_INVITES__=true;
 const URL="https://scttowfhygcpdirrekqm.supabase.co";
-const KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbGciOiJIUzI1NiIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+const KEY="sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
 let client=null,userId=null,channel=null,poll=null,root=null,invites=[],busy=false,dismissed=false;
 const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n;};
 function styles(){
