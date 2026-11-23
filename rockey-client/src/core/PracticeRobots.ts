@@ -6,7 +6,8 @@ type DamagePlayer = (damage:number,source:string)=>void;
 type DamageNotice = (position:THREE.Vector3,damage:number,headshot:boolean)=>void;
 
 type RobotSpec = {
-  role:PracticeRobotRole;name:string;hp:number;speed:number;range:number;
+  role:PracticeRobotRole;name:string;hp:number;speed:number;
+  detectionRange:number;attackRange:number;patrolRadius:number;patrolSpeed:number;
   cooldown:number;damage:number;preferred:number;body:number;glow:number;
 };
 
@@ -14,6 +15,7 @@ type Bot = {
   id:string;spec:RobotSpec;root:THREE.Group;head:THREE.Mesh;
   healthFill:THREE.Mesh;health:number;alive:boolean;respawnAt:number;
   nextAttackAt:number;nextThinkAt:number;moveX:number;moveZ:number;
+  homeX:number;homeZ:number;patrolRadius:number;patrolDirection:number;patrolRing:THREE.Mesh;
   patrolAngle:number;hitUntil:number;limbs:THREE.Group[];scanMarker:THREE.Mesh;
 };
 
@@ -22,12 +24,32 @@ type Grenade = {mesh:THREE.Mesh;velocity:THREE.Vector3;age:number;source:string;
 type Blast = {mesh:THREE.Mesh;age:number;life:number};
 
 const SPECS:RobotSpec[]=[
-  {role:'melee',name:'BREACHER',hp:155,speed:3.65,range:1.85,cooldown:1180,damage:15,preferred:1.25,body:0x34485f,glow:0xff536e},
-  {role:'ranged',name:'SENTINEL',hp:115,speed:2.15,range:25,cooldown:1540,damage:11,preferred:13,body:0x344d68,glow:0x5acbff},
-  {role:'thrower',name:'BOMBER',hp:135,speed:2.45,range:17,cooldown:4200,damage:28,preferred:10,body:0x5d4935,glow:0xffb84d},
-  {role:'scout',name:'STRIDER',hp:100,speed:3.35,range:14,cooldown:1920,damage:8,preferred:7,body:0x354b4e,glow:0x6af0c3},
-  {role:'tank',name:'BULWARK',hp:440,speed:1.38,range:2.75,cooldown:2680,damage:25,preferred:2,body:0x4a3b55,glow:0xc08cff}
+  {role:'melee',name:'BREACHER',hp:155,speed:3.65,detectionRange:16,attackRange:1.85,patrolRadius:6.5,patrolSpeed:.72,cooldown:1180,damage:15,preferred:1.25,body:0x34485f,glow:0xff536e},
+  {role:'ranged',name:'SENTINEL',hp:115,speed:2.15,detectionRange:23,attackRange:18,patrolRadius:7,patrolSpeed:.52,cooldown:1540,damage:11,preferred:13,body:0x344d68,glow:0x5acbff},
+  {role:'thrower',name:'BOMBER',hp:135,speed:2.45,detectionRange:20,attackRange:15.5,patrolRadius:6.8,patrolSpeed:.58,cooldown:4200,damage:28,preferred:10,body:0x5d4935,glow:0xffb84d},
+  {role:'scout',name:'STRIDER',hp:100,speed:3.35,detectionRange:18,attackRange:12.5,patrolRadius:7.5,patrolSpeed:.95,cooldown:1920,damage:8,preferred:7,body:0x354b4e,glow:0x6af0c3},
+  {role:'tank',name:'BULWARK',hp:440,speed:1.38,detectionRange:13,attackRange:2.75,patrolRadius:6,patrolSpeed:.38,cooldown:2680,damage:25,preferred:2,body:0x4a3b55,glow:0xc08cff}
 ];
+
+
+/** Clamp an attempted world position to a robot's fixed patrol circle. */
+export function clampRobotPositionToPatrol(
+  centerX:number,centerZ:number,radius:number,x:number,z:number,margin=.16
+):{x:number;z:number}{
+  const limit=Math.max(.25,radius-margin);
+  const dx=x-centerX,dz=z-centerZ,distance=Math.hypot(dx,dz);
+  if(distance<=limit||distance<1e-6)return {x,z};
+  const scale=limit/distance;
+  return {x:centerX+dx*scale,z:centerZ+dz*scale};
+}
+
+/** Recognition and attack checks are deliberately independent. */
+export function robotCanDetect(distance:number,detectionRange:number,lineOfSight:boolean):boolean{
+  return lineOfSight&&distance<=detectionRange;
+}
+export function robotCanAttack(distance:number,attackRange:number,detected:boolean,lineOfSight:boolean):boolean{
+  return detected&&lineOfSight&&distance<=attackRange;
+}
 
 export interface PracticeRobotSystem {
   update(now:number,dt:number,player:THREE.Vector3,enabled:boolean):void;
@@ -85,8 +107,16 @@ export function createPracticeRobots(
 
   const createBot=(index:number):Bot=>{
     const kit=specs[index],spec=kit.spec,id='practice-bot-'+spec.role;
+    const homeX=positions[index][0],homeZ=positions[index][1],patrolRadius=spec.patrolRadius;
     const root=new THREE.Group();root.name='rockey-practice-robot-'+spec.role;
-    root.userData.robotId=id;root.position.set(positions[index][0],0,positions[index][1]);
+    root.userData.robotId=id;root.position.set(homeX,sampleGround(homeX,homeZ,0)??0,homeZ);
+    const patrolRing=new THREE.Mesh(
+      new THREE.RingGeometry(patrolRadius-.055,patrolRadius+.055,isMobile?40:64),
+      new THREE.MeshBasicMaterial({color:spec.glow,transparent:true,opacity:.27,depthWrite:false,side:THREE.DoubleSide})
+    );
+    patrolRing.rotation.x=-Math.PI/2;
+    patrolRing.position.set(homeX,root.position.y+.045,homeZ);
+    patrolRing.renderOrder=2;scene.add(patrolRing);
     const base=makeJoint(root,kit.dark,0,.16,0,.48);base.scale.set(1.35,.23,1.05);
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.55,.035,7,24),kit.glow);
     ring.rotation.x=Math.PI/2;ring.position.y=.13;root.add(ring);
@@ -147,7 +177,8 @@ export function createPracticeRobots(
     });
     scene.add(root);
     return {id,spec,root,head,healthFill,health:spec.hp,alive:true,respawnAt:0,nextAttackAt:performance.now()+800+index*320,nextThinkAt:0,
-      moveX:0,moveZ:0,patrolAngle:index*1.3,hitUntil:0,limbs,scanMarker};
+      moveX:0,moveZ:0,homeX,homeZ,patrolRadius,patrolDirection:index%2===0?1:-1,patrolRing,
+      patrolAngle:index*1.3,hitUntil:0,limbs,scanMarker};
   };
 
   for(let i=0;i<SPECS.length;i++)bots.push(createBot(i));
@@ -226,7 +257,8 @@ export function createPracticeRobots(
             bot.health=bot.spec.hp;bot.alive=true;bot.root.visible=true;
             const index=bots.indexOf(bot),spawn=positions[index];
             const ground=sampleGround(spawn[0],spawn[1],0)??0;
-            bot.root.position.set(spawn[0],ground,spawn[1]);showHealth(bot);
+            bot.root.position.set(bot.homeX,ground,bot.homeZ);
+            bot.patrolRing.position.y=ground+.045;showHealth(bot);
             bot.nextAttackAt=now+1000;bot.nextThinkAt=0;
             notify('ROBOT REINFORCEMENTS · '+bot.spec.name);
           }
@@ -235,35 +267,52 @@ export function createPracticeRobots(
         bot.scanMarker.visible=now<scannedUntil;
         const dx=player.x-bot.root.position.x,dz=player.z-bot.root.position.z;
         const distance=Math.hypot(dx,dz);
-        const visible=distance<bot.spec.range&&clearLine(bot,player);
+        const hasLineOfSight=clearLine(bot,player);
+        const detected=robotCanDetect(distance,bot.spec.detectionRange,hasLineOfSight);
         if(now>=bot.nextThinkAt){
           bot.nextThinkAt=now+(isMobile?115:80);
           const nx=distance>.001?dx/distance:0,nz=distance>.001?dz/distance:1;
-          let move=0;
-          if(bot.spec.role==='ranged'||bot.spec.role==='thrower'){
-            move=distance>bot.spec.preferred+2?1:distance<bot.spec.preferred-2?-.75:0;
-            if(bot.spec.role==='ranged'&&distance<bot.spec.range&&visible)move*=.5;
+          if(!detected){
+            // Patrol around a fixed home point. The radial correction keeps
+            // each bot circling inside its own visible boundary instead of
+            // following a player it has not recognized.
+            const rx=bot.root.position.x-bot.homeX,rz=bot.root.position.z-bot.homeZ;
+            const radialDistance=Math.hypot(rx,rz);
+            const ux=radialDistance>.001?rx/radialDistance:Math.cos(bot.patrolAngle);
+            const uz=radialDistance>.001?rz/radialDistance:Math.sin(bot.patrolAngle);
+            bot.patrolAngle+=step*bot.spec.patrolSpeed*bot.patrolDirection;
+            const tangentX=-uz*bot.patrolDirection,tangentZ=ux*bot.patrolDirection;
+            const desiredRadius=bot.patrolRadius*.62;
+            const radialCorrection=THREE.MathUtils.clamp((desiredRadius-radialDistance)*.38,-.45,.45);
+            bot.moveX=tangentX+ux*radialCorrection;
+            bot.moveZ=tangentZ+uz*radialCorrection;
+          }else if(bot.spec.role==='ranged'||bot.spec.role==='thrower'){
+            const spacing=bot.spec.preferred;
+            const move=distance>spacing+1.5?1:distance<spacing-1.5?-.72:0;
+            const strafe=bot.spec.role==='ranged'?.16:.08;
+            bot.moveX=nx*move-nz*strafe*bot.patrolDirection;
+            bot.moveZ=nz*move+nx*strafe*bot.patrolDirection;
           }else if(bot.spec.role==='scout'){
+            const approach=distance>bot.spec.attackRange*.82?.8:.12;
+            bot.moveX=nx*approach-nz*.62*bot.patrolDirection;
+            bot.moveZ=nz*approach+nx*.62*bot.patrolDirection;
             bot.patrolAngle+=step*1.7;
-            move=distance>5?1:.28;
-            bot.moveX=-nz*Math.cos(bot.patrolAngle)+nx*Math.sin(bot.patrolAngle)*.35;
-            bot.moveZ=nx*Math.cos(bot.patrolAngle)+nz*Math.sin(bot.patrolAngle)*.35;
-          }else move=distance>bot.spec.preferred?.95:distance<bot.spec.preferred*.68?-.35:0;
-          if(bot.spec.role!=='scout'){
-            bot.moveX=nx*move;bot.moveZ=nz*move;
-            if(distance>bot.spec.range*.82){
-              const side=bot.patrolAngle%2<1?1:-1;
-              bot.moveX+=-nz*.22*side;bot.moveZ+=nx*.22*side;
-              bot.patrolAngle+=.37;
-            }
+          }else{
+            const approach=distance>bot.spec.preferred?.95:distance<bot.spec.preferred*.68?-.35:0;
+            bot.moveX=nx*approach;bot.moveZ=nz*approach;
           }
           const length=Math.hypot(bot.moveX,bot.moveZ);
           if(length>1){bot.moveX/=length;bot.moveZ/=length;}
         }
+
         const moveDistance=bot.spec.speed*step;
         if(Math.hypot(bot.moveX,bot.moveZ)>.02){
-          const nextX=THREE.MathUtils.clamp(bot.root.position.x+bot.moveX*moveDistance,-27,27);
-          const nextZ=THREE.MathUtils.clamp(bot.root.position.z+bot.moveZ*moveDistance,-27,27);
+          const clamped=clampRobotPositionToPatrol(
+            bot.homeX,bot.homeZ,bot.patrolRadius,
+            bot.root.position.x+bot.moveX*moveDistance,
+            bot.root.position.z+bot.moveZ*moveDistance
+          );
+          const nextX=clamped.x,nextZ=clamped.z;
           const eye=bot.root.position.clone().add(new THREE.Vector3(0,1.05,0));
           const desired=new THREE.Vector3(nextX,eye.y,nextZ);
           const direction=desired.sub(eye),length=direction.length();
@@ -274,28 +323,34 @@ export function createPracticeRobots(
             else canMove=false;
           }
           if(!canMove){
-            const side=bot.patrolAngle%2<1?1:-1;
+            const side=bot.patrolDirection;
             const oldMoveX=bot.moveX,oldMoveZ=bot.moveZ;
             bot.moveX=-oldMoveZ*side;bot.moveZ=oldMoveX*side;
-            const alternativeX=bot.root.position.x+bot.moveX*moveDistance*1.35;
-            const alternativeZ=bot.root.position.z+bot.moveZ*moveDistance*1.35;
-            if(Math.abs(alternativeX)<27&&Math.abs(alternativeZ)<27){
-              const altFloor=sampleGround(alternativeX,alternativeZ,bot.root.position.y);
-              if(altFloor!==null&&Math.abs(altFloor-bot.root.position.y)<.75)bot.root.position.set(alternativeX,altFloor,alternativeZ);
+            const alternative=clampRobotPositionToPatrol(
+              bot.homeX,bot.homeZ,bot.patrolRadius,
+              bot.root.position.x+bot.moveX*moveDistance*1.15,
+              bot.root.position.z+bot.moveZ*moveDistance*1.15
+            );
+            const altX=alternative.x,altZ=alternative.z;
+            if(Math.hypot(altX-bot.root.position.x,altZ-bot.root.position.z)>.015){
+              const altFloor=sampleGround(altX,altZ,bot.root.position.y);
+              if(altFloor!==null&&Math.abs(altFloor-bot.root.position.y)<.75)bot.root.position.set(altX,altFloor,altZ);
             }
           }
-          bot.root.rotation.y=Math.atan2(-bot.moveX,-bot.moveZ);
+          const faceX=detected?dx:bot.moveX,faceZ=detected?dz:bot.moveZ;
+          if(Math.hypot(faceX,faceZ)>.001)bot.root.rotation.y=Math.atan2(-faceX,-faceZ);
         }
         const newDx=player.x-bot.root.position.x,newDz=player.z-bot.root.position.z,newDistance=Math.hypot(newDx,newDz);
-        const inSight=newDistance<bot.spec.range&&clearLine(bot,player);
-        if(now>=bot.nextAttackAt&&inSight){
-            if(bot.spec.role==='melee'&&newDistance<bot.spec.range){
+        const attackLineOfSight=clearLine(bot,player);
+        const attackReady=robotCanAttack(newDistance,bot.spec.attackRange,detected,attackLineOfSight);
+        if(now>=bot.nextAttackAt&&attackReady){
+          if(bot.spec.role==='melee'){
             bot.nextAttackAt=now+bot.spec.cooldown;bot.hitUntil=now+250;
             damagePlayer(bot.spec.damage,bot.spec.name);
-          }else if(bot.spec.role==='tank'&&newDistance<bot.spec.range){
+          }else if(bot.spec.role==='tank'){
             bot.nextAttackAt=now+bot.spec.cooldown;bot.hitUntil=now+360;
-            if(newDistance<3.6)damagePlayer(bot.spec.damage,bot.spec.name);
-          }else if(bot.spec.role==='thrower'&&newDistance>4.8&&newDistance<bot.spec.range){
+            damagePlayer(bot.spec.damage,bot.spec.name);
+          }else if(bot.spec.role==='thrower'&&newDistance>4.8){
             spawnGrenade(bot,player,now);
           }else if((bot.spec.role==='ranged'||bot.spec.role==='scout')&&newDistance>2.6){
             spawnBolt(bot,player,now);
@@ -370,9 +425,11 @@ export function createPracticeRobots(
       active=enabled;
       const now=performance.now();scannedUntil=0;
       bots.forEach((bot,index)=>{
-        const spawn=positions[index],floor=sampleGround(spawn[0],spawn[1],0)??0;
+        const floor=sampleGround(bot.homeX,bot.homeZ,0)??0;
         bot.health=bot.spec.hp;bot.alive=true;bot.respawnAt=0;bot.nextAttackAt=now+1200+index*280;bot.nextThinkAt=0;
-        bot.root.position.set(spawn[0],floor,spawn[1]);bot.root.rotation.set(0,0,0);bot.root.visible=enabled;bot.scanMarker.visible=false;showHealth(bot);
+        bot.moveX=0;bot.moveZ=0;bot.patrolAngle=index*1.3;
+        bot.root.position.set(bot.homeX,floor,bot.homeZ);bot.root.rotation.set(0,0,0);
+        bot.patrolRing.position.y=floor+.045;bot.root.visible=enabled;bot.scanMarker.visible=false;showHealth(bot);
       });
       for(const bolt of bolts)scene.remove(bolt.mesh);bolts.length=0;
       for(const grenade of grenades){scene.remove(grenade.mesh);(grenade.mesh.material as THREE.Material).dispose();}grenades.length=0;
@@ -382,7 +439,7 @@ export function createPracticeRobots(
       for(const bolt of bolts)scene.remove(bolt.mesh);bolts.length=0;
       for(const grenade of grenades){scene.remove(grenade.mesh);(grenade.mesh.material as THREE.Material).dispose();}grenades.length=0;
       for(const blast of blasts){scene.remove(blast.mesh);(blast.mesh.material as THREE.Material).dispose();}blasts.length=0;
-      for(const bot of bots){scene.remove(bot.root);}
+      for(const bot of bots){scene.remove(bot.root);scene.remove(bot.patrolRing);bot.patrolRing.geometry.dispose();(bot.patrolRing.material as THREE.Material).dispose();}
       specs.forEach(kit=>[kit.body,kit.dark,kit.metal,kit.glow,kit.glass].forEach(mat=>mat.dispose()));
     }
   };
