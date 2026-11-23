@@ -57,7 +57,7 @@ test('both roof stairwells have an opening through the roof deck',()=>{
       let floor=4.19;
       for(let localZ=2.75;localZ>=-.55;localZ-=.08){
         floor=tacticalFloorHeightAt(centerX,localZ-1.5,bodyY);
-        assert.ok(floor>=4.19&&floor<=5.99,map.id+' roof stair height outside expected bounds');
+        assert.ok(floor>=4.19&&floor<=6.99,map.id+' roof stair height outside expected bounds');
         assert.equal(isBlockedByCover(map.cover,centerX,bodyY,localZ-1.5),false,
           map.id+' roof stairwell is sealed at local Z '+localZ.toFixed(2));
         bodyY=floor+.92;
@@ -250,7 +250,7 @@ test('raised roof provides more than full standing-capsule clearance over the se
 test('rooftop ramp height matches the raised roof deck across the complete climb',()=>{
   for(let localZ=2.75;localZ>=-.26;localZ-=.05){
     const expected=4.19+((2.75-localZ)/3.01)*2.8;
-    const actual=tacticalFloorHeightAt(0,localZ-1.5,expected+.92);
+    const actual=tacticalFloorHeightAt(-17.2,localZ-1.5,expected+.92);
     assert.ok(Math.abs(actual-expected)<.06,
       'roof stair floor mismatch at local Z '+localZ.toFixed(2));
   }
