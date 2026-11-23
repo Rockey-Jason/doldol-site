@@ -246,7 +246,7 @@ function scheduleSearch(inputId,resultsId,mode){
    const {data,error}=await state.sb.rpc("rockey_calendar_search_users",{p_query:query});if(error)throw error;
    if(state.searchTokens[key]!==token)return;
    const host=$(resultsId);host.replaceChildren();
-   const found=(data||[]).filter(u=>!state.selectedRoomUsers.some(x=>x.found_user_id===u.found_user_id));
+   const found=(data||[]).filter(u=>mode!=="create"||!state.selectedRoomUsers.some(x=>x.found_user_id===u.found_user_id));
    if(!found.length){const p=document.createElement("div");p.className="field-hint";p.textContent="검색 결과가 없거나 이미 선택한 사용자입니다.";host.append(p);return;}
    found.forEach(user=>{
     const b=document.createElement("button");b.type="button";b.className="search-result";
