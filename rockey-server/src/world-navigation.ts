@@ -132,8 +132,8 @@ export function resolveHorizontalMovement(
   toX:number,
   toZ:number,
   centerY:number,
-  radius:number=ROKEY_PLAYER_COLLISION.clearanceRadius,
-  halfHeight:number=ROKEY_PLAYER_COLLISION.halfHeight
+  radius:number=ROCKEY_PLAYER_COLLISION.clearanceRadius,
+  halfHeight:number=ROCKEY_PLAYER_COLLISION.halfHeight
 ):{x:number;z:number} {
   let x=fromX,z=fromZ;
   const deltaX=toX-fromX,deltaZ=toZ-fromZ;
