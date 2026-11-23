@@ -1,5 +1,5 @@
 import test from "node:test";import assert from "node:assert/strict";
-import {createOwnershipState,addCustody,splitCustody,transferCustody,consumeCustody,completeProductionCustody,validateOwnershipState,resetCustodySnapshot,hasPendingBuildingCustody,commitBuildingDismantle} from "./ownership-runtime.js";
+import {createOwnershipState,addCustody,splitCustody,transferCustody,consumeCustody,completeProductionCustody,validateOwnershipState,resetCustodySnapshot,hasPendingBuildingCustody,commitBuildingDismantle,activeInputCustodyStackID} from "./ownership-runtime.js";
 test("one stack has one custody owner and transfers idempotently",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S1",itemID:"iron",quantity:5,ownerType:"PLAYER_INVENTORY",ownerID:"p1"});const a=transferCustody(s,{transactionID:"T1",stackID:"S1",quantity:5,toType:"MACHINE_INPUT",toID:"M1",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"p1"});assert.equal(a.to.id,"M1");assert.equal(transferCustody(s,{transactionID:"T1",stackID:"S1",quantity:5,toType:"MACHINE_INPUT",toID:"M1",expectedFromType:"PLAYER_INVENTORY",expectedFromID:"p1"}).duplicate,true);assert.equal(s.custody.length,1);assert.equal(validateOwnershipState(s).valid,true)});
 test("invalid owner and duplicate stack are rejected",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S1",itemID:"ore",quantity:1,ownerType:"WORLD_DROP",ownerID:"x"});assert.throws(()=>addCustody(s,{stackID:"S1",itemID:"ore",quantity:1,ownerType:"WORLD_DROP",ownerID:"y"}));assert.equal(transferCustody(s,{transactionID:"T2",stackID:"S1",quantity:2,toType:"WAREHOUSE",toID:"w"}),null)});
 test("consumption has an idempotent ledger entry",()=>{const s=createOwnershipState();addCustody(s,{stackID:"S",itemID:"ore",quantity:2,ownerType:"MACHINE_INPUT",ownerID:"M"});assert.equal(consumeCustody(s,{transactionID:"C",stackID:"S",quantity:2,expectedOwnerType:"MACHINE_INPUT",expectedOwnerID:"M"}).quantity,2);assert.equal(consumeCustody(s,{transactionID:"C",stackID:"S",quantity:2,expectedOwnerType:"MACHINE_INPUT",expectedOwnerID:"M"}).duplicate,true);assert.equal(s.consumed.length,1)});
@@ -81,6 +81,27 @@ test("production completion atomically consumes active-job inputs and creates on
  assert.equal(completeProductionCustody(s,request).duplicate,true);
  assert.equal(s.custody.length,1);assert.equal(s.consumed.length,2);
  assert.equal(completeProductionCustody(s,{...request,output:{...request.output,quantity:2}}),null);
+ assert.equal(validateOwnershipState(s).valid,true);
+});
+
+test("repeated production cycles use distinct active-input custody IDs",()=>{
+ const s=createOwnershipState(),owner="SMELTER-REPEAT";
+ const firstInput=activeInputCustodyStackID(owner,1,0,"ironOre");
+ assert.equal(firstInput,activeInputCustodyStackID(owner,1,0,"ironOre"));
+ addCustody(s,{stackID:firstInput,itemID:"ironOre",quantity:2,ownerType:"ACTIVE_JOB",ownerID:owner});
+ const first=completeProductionCustody(s,{transactionID:"PROD:SMELTER-REPEAT:1",inputs:[
+  {stackID:firstInput,quantity:2,expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:owner}
+ ],output:{stackID:"MACHINE_OUTPUT:SMELTER-REPEAT:1",itemID:"ironPlate",quantity:1,ownerType:"MACHINE_OUTPUT",ownerID:owner}});
+ assert.ok(first);
+ const secondInput=activeInputCustodyStackID(owner,2,0,"ironOre");
+ assert.notEqual(secondInput,firstInput);
+ addCustody(s,{stackID:secondInput,itemID:"ironOre",quantity:2,ownerType:"ACTIVE_JOB",ownerID:owner});
+ const second=completeProductionCustody(s,{transactionID:"PROD:SMELTER-REPEAT:2",inputs:[
+  {stackID:secondInput,quantity:2,expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:owner}
+ ],output:{stackID:"MACHINE_OUTPUT:SMELTER-REPEAT:2",itemID:"ironPlate",quantity:1,ownerType:"MACHINE_OUTPUT",ownerID:owner}});
+ assert.ok(second);
+ assert.equal(s.consumed.length,2);
+ assert.notEqual(s.consumed[0].stackID,s.consumed[1].stackID);
  assert.equal(validateOwnershipState(s).valid,true);
 });
 
