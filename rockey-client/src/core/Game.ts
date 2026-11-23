@@ -199,7 +199,13 @@ export async function createGame(
   };
 
   for (const b of map.cover) {
-    box(b.x, b.top / 2, b.z, b.hx, b.top / 2, b.hz);
+    // Respect both vertical bounds. Treating every bounded floor/wall as a
+    // ground-to-top solid box filled the stairwell with invisible colliders.
+    const bottom=b.bottom??0;
+    const top=b.top;
+    const height=top-bottom;
+    if(height<=0.001)continue;
+    box(b.x,(top+bottom)/2,b.z,b.hx,height/2,b.hz);
     const led = new THREE.Mesh(new THREE.BoxGeometry(b.hx * 1.7, 0.055, 0.08), glow);
     led.position.set(b.x, b.top + 0.08, b.z + b.hz + 0.025);
     scene.add(led);
