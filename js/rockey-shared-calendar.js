@@ -410,12 +410,8 @@ async function loadDayComments(){
   if(error)throw error;
   state.dayComments=comments||[];
   if(state.dayComments.length){
-   const ownReads=state.dayComments.filter(comment=>comment.author_id!==state.user.id)
-    .map(comment=>({comment_id:comment.id,room_id:state.room.id,reader_id:state.user.id}));
-   if(ownReads.length){
-    const readResult=await state.sb.from(TABLES.dayReads).upsert(ownReads,{onConflict:"comment_id,reader_id",ignoreDuplicates:true});
-    if(readResult.error)console.warn("[ROCKEY Calendar] 읽음 기록 저장 실패:",readResult.error.message);
-   }
+   const readResult=await state.sb.rpc("rockey_calendar_mark_day_comments_read",{p_room_id:state.room.id,p_comment_date:state.activeDay});
+   if(readResult.error)console.warn("[ROCKEY Calendar] 읽음 기록 저장 실패:",readResult.error.message);
    const ids=state.dayComments.map(comment=>comment.id);
    const {data:reads,error:readError}=await state.sb.from(TABLES.dayReads)
     .select("comment_id,reader_id,read_at").eq("room_id",state.room.id).in("comment_id",ids);
