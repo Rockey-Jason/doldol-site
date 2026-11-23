@@ -52,7 +52,50 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 @media(max-width:560px){.shell{padding:12px 9px 50px}.top{align-items:flex-start}.brand-name{font-size:13px}.top-link{font-size:9px;padding:7px 9px}.hero{margin:14px 0 11px;padding:17px 14px;border-radius:16px}.hero h1{font-size:26px}.room-section{padding:11px}.room-card{min-width:170px}.room-head{padding:12px;align-items:flex-start}.room-title h2{font-size:14px}.room-actions{flex-direction:column;align-items:stretch}.gold-button{min-height:32px;font-size:9px}.calendar-head{padding:11px 9px;flex-wrap:wrap}.month-label strong{font-size:18px}.calendar-controls{gap:3px}.icon-btn{width:29px;height:29px}.today-btn{height:29px;padding:0 7px}.view-btn{min-width:31px;padding:0 5px;font-size:8px}.calendar-body{padding:6px 4px}.month-day{min-height:clamp(68px,15vw,92px);padding:4px 2px}.day-number{width:21px;height:21px;font-size:9px}.event-chip{gap:2px;padding:3px 3px;font-size:7px;border-left-width:2px}.event-chip .chip-time{font-size:6px}.side-stack{grid-template-columns:1fr}.form{grid-template-columns:1fr;padding:13px}.field.full,.recurrence-box,.form-actions{grid-column:auto}.form-actions{flex-direction:column;align-items:stretch}.form-actions>*{width:100%}.modal-head{padding:13px}.comment-compose{flex-direction:column}.comment-compose .primary{align-self:flex-end}.time-grid-wrap{min-height:390px;max-height:65vh}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 </style>
-</head>
+<style id="rockey-calendar-day-thread-styles">
+.day-modal{width:min(900px,calc(100% - 22px));max-height:min(92vh,920px)}
+.day-view-body{display:grid;gap:14px;padding:16px 18px 18px}
+.day-schedules,.day-thread{padding:13px;border:1px solid rgba(145,179,211,.13);border-radius:13px;background:rgba(3,14,27,.28)}
+.day-section-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px;color:#e7f0f8;font-size:11px}
+.day-section-heading strong{font-size:11px;font-weight:400}
+.day-section-heading>span{color:#91a8bf;font-size:9px;white-space:nowrap}
+.day-section-heading small{display:block;margin-top:4px;color:#8299b2;font-size:8px;line-height:1.55;font-weight:400}
+.day-schedule-group{margin-top:10px;border:1px solid rgba(145,179,211,.1);border-radius:11px;overflow:hidden;background:rgba(5,18,32,.35)}
+.day-schedule-owner{display:flex;align-items:center;gap:8px;padding:9px 10px;border-bottom:1px solid rgba(145,179,211,.09);color:#cfdeeb;font-size:10px}
+.day-schedule-owner .agenda-color{width:9px;height:9px;flex:0 0 9px;border-radius:50%}
+.day-schedule-card{display:flex;align-items:flex-start;gap:12px;padding:10px;border-bottom:1px solid rgba(145,179,211,.07)}
+.day-schedule-card:last-child{border-bottom:0}
+.day-schedule-time{width:94px;flex:0 0 94px;color:#93abc2;font-size:9px;line-height:1.6}
+.day-schedule-copy{min-width:0;flex:1}
+.day-schedule-copy strong{display:block;color:#ecf3f9;font-size:10px;font-weight:400;overflow-wrap:anywhere}
+.day-schedule-copy p{margin:5px 0 0;color:#a7bbce;font-size:9px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.day-schedule-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.day-schedule-tags span{padding:3px 6px;border:1px solid rgba(145,179,211,.12);border-radius:99px;color:#91a8bf;font-size:7px}
+.day-schedule-edit{flex:0 0 auto;min-height:29px;padding:5px 9px;border:1px solid rgba(145,179,211,.17);border-radius:8px;color:#c8dced;background:rgba(255,255,255,.035);font-size:8px}
+.day-comment-item{padding:10px 0;border-bottom:1px solid rgba(145,177,207,.09)}
+.day-comment-item:last-child{border-bottom:0}
+.day-comment-head{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.day-comment-avatar{display:grid;place-items:center;width:25px;height:25px;flex:0 0 25px;border-radius:8px;color:#102236;background:var(--comment-color);font-size:8px}
+.day-comment-author{color:#dbe8f5;font-size:9px}
+.day-comment-time{color:#7891a9;font-size:8px}
+.day-comment-body{margin:7px 0 0 32px;color:#c3d2df;font-size:10px;line-height:1.75;white-space:pre-wrap;overflow-wrap:anywhere}
+.day-comment-readers{display:flex;align-items:flex-start;gap:6px;margin:7px 0 0 32px;color:#7f9bb4;font-size:8px;line-height:1.55}
+.day-comment-readers strong{color:#9ab9d2;font-weight:400}
+.day-comment-form{display:grid;gap:8px;margin-top:13px;padding-top:12px;border-top:1px solid rgba(145,177,207,.1)}
+.day-comment-form textarea{min-height:66px;resize:vertical}
+.day-comment-compose{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.day-comment-compose .primary{min-width:92px}
+.tag-suggestions{display:grid;gap:4px;max-height:160px;overflow:auto;padding:5px;border:1px solid rgba(129,184,229,.2);border-radius:10px;background:#0a1d33}
+.tag-suggestions[hidden]{display:none}
+.tag-option{display:flex;align-items:center;gap:8px;width:100%;padding:7px;border:0;border-radius:7px;color:#d8e7f3;background:transparent;text-align:left;font-size:9px}
+.tag-option:hover{background:rgba(103,164,210,.13)}
+.tag-option .member-avatar{width:23px;height:23px;flex-basis:23px}
+.mention-pill{display:inline-flex;align-items:center;gap:4px;padding:5px 8px;border:1px solid rgba(121,185,231,.22);border-radius:99px;color:#b9dcf7;background:rgba(57,119,164,.12);font-size:8px}
+.day-view-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;color:#7890a9;font-size:8px}
+@media(max-width:560px){.day-view-body{padding:11px}.day-schedules,.day-thread{padding:10px}.day-schedule-card{gap:8px;padding:8px}.day-schedule-time{width:68px;flex-basis:68px;font-size:8px}.day-schedule-edit{padding:5px 7px}.day-comment-body,.day-comment-readers{margin-left:0}.day-comment-compose{align-items:stretch}.day-comment-compose .primary{margin-left:auto}}
+@media(prefers-reduced-motion:reduce){.day-modal{animation:none}}
+</style>
+\n</head>
 <body>
 <div class="shell">
 <header class="top"><div class="brand"><div class="mark">R</div><div><div class="brand-name">로키 공유 캘린더</div><div class="brand-sub">ROCKEY · PRIVATE SHARED CALENDAR</div></div></div><div class="top-actions"><a class="top-link" href="./index.html">← 돌이사이트</a><a class="top-link" href="./login.html" id="loginLink" hidden>로그인</a></div></header>
@@ -67,7 +110,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 <div class="lock-panel" id="memberLock" hidden><div class="lock-symbol">♧</div><h3>두 명 이상이 참여하면 캘린더가 열려요.</h3><p>초대받은 사람이 참여를 수락하면 이 방의 일정과 메모를 함께 사용할 수 있습니다. 방 소유자는 초대를 더 보낼 수 있어요.</p><button class="gold-button" id="lockedInviteButton">사용자 초대하기</button></div>
 </section>
 <aside class="side-stack">
-<section class="surface side-panel"><div class="side-heading"><div><div class="side-title">선택한 날짜의 일정</div><div class="side-sub" id="selectedDateLabel">날짜를 선택하세요.</div></div><span class="live-state" id="liveState">실시간 연결</span></div><div id="agendaList"><div class="empty-state">날짜를 선택하면 사용자별로 일정이 나뉘어 보여요.</div></div></section>
+<section class="surface side-panel"><div class="side-heading"><div><div class="side-title">그날의 일정</div><div class="side-sub" id="selectedDateLabel">날짜를 누르면 하루 전체를 확인할 수 있어요.</div></div><span class="live-state" id="liveState">실시간 연결</span></div><div id="agendaList"><div class="empty-state">날짜를 선택하면 사용자별로 일정이 나뉘어 보여요.</div></div></section>
 <section class="surface side-panel"><div class="side-heading"><div><div class="side-title">캘린더 참여자</div><div class="side-sub">참여자마다 고유한 일정 색상이 있어요.</div></div><span class="member-label" id="memberCount">0명</span></div><div id="memberList"><div class="empty-state">참여자를 불러오고 있어요.</div></div></section>
 </aside>
 </div>
@@ -95,9 +138,22 @@ button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,
 </div>
 <div class="form-actions"><button class="danger" id="deleteEventButton" type="button" hidden>일정 삭제</button><div style="display:flex;gap:7px;margin-left:auto"><button class="ghost" type="button" data-close="eventDialog">취소</button><button class="primary" type="submit" id="saveEventButton">저장하기</button></div></div></form></dialog>
 
-<dialog class="modal" id="detailDialog"><div class="modal-head"><h2>일정 상세 및 댓글</h2><button class="close" type="button" data-close="detailDialog">×</button></div><div class="detail-body"><h3 id="detailTitle" style="margin:0;font-size:17px;font-weight:400"></h3><div class="detail-meta" id="detailMeta"></div><div class="detail-notes" id="detailNotes"></div><div class="comments"><div class="comments-head"><span>함께 나누는 댓글</span><span id="commentCount">0개</span></div><div id="commentList"><div class="empty-state">댓글을 불러오고 있어요.</div></div><form class="comment-compose" id="commentForm"><textarea class="control" id="commentBody" maxlength="1000" required placeholder="이 일정에 댓글을 남겨 보세요."></textarea><button class="primary" type="submit">댓글 등록</button></form></div><div class="form-actions" style="margin-top:16px"><button class="ghost" type="button" data-close="detailDialog">닫기</button><button class="primary" id="editEventButton" type="button" hidden>일정 수정</button></div></div></dialog>
+<dialog class="modal day-modal" id="dayViewDialog" aria-labelledby="dayViewTitle">
+<div class="modal-head"><div><h2 id="dayViewTitle">그날의 일정</h2><div class="field-hint" id="dayViewDate">날짜를 선택하세요.</div></div><button class="close" type="button" data-close="dayViewDialog" aria-label="닫기">×</button></div>
+<div class="day-view-body">
+<section class="day-schedules"><div class="day-section-heading"><strong>참여자별 일정</strong><span id="dayScheduleCount">0개</span></div><div id="dayScheduleGroups"><div class="empty-state">일정을 불러오고 있어요.</div></div></section>
+<section class="day-thread"><div class="day-section-heading"><div><strong>하루 공유 댓글</strong><small>이 캘린더의 모든 참여자가 이 날짜에 하나의 댓글창을 함께 사용합니다.</small></div><span id="dayCommentCount">0개</span></div>
+<div id="dayCommentList"><div class="empty-state">댓글을 불러오고 있어요.</div></div>
+<form id="dayCommentForm" class="day-comment-form">
+<div class="tag-suggestions" id="tagSuggestions" hidden></div>
+<textarea class="control" id="dayCommentBody" maxlength="2000" required placeholder="이 날짜에 관한 내용을 남겨 보세요. @를 입력해 참여자를 태그할 수 있어요."></textarea>
+<div class="day-comment-compose"><div class="selected-users" id="pendingMentions"></div><button class="primary" type="submit" id="postDayComment">댓글 등록</button></div>
+</form></section>
+<div class="day-view-footer"><span>댓글별 읽음 목록은 참여자에게 공개됩니다.</span><button class="ghost" type="button" data-close="dayViewDialog">닫기</button></div>
+</div></dialog>
+<dialog class="modal" id="detailDialog"><div class="modal-head"><h2>일정 상세</h2><button class="close" type="button" data-close="detailDialog">×</button></div><div class="detail-body"><h3 id="detailTitle" style="margin:0;font-size:17px;font-weight:400"></h3><div class="detail-meta" id="detailMeta"></div><div class="detail-notes" id="detailNotes"></div><div class="form-actions" style="margin-top:16px"><button class="ghost" type="button" data-close="detailDialog">닫기</button><button class="primary" id="editEventButton" type="button" hidden>일정 수정</button></div></div></dialog>
 
 <script src="js/supabase.min.js?v=2.117.2"></script>
-<script src="js/rockey-shared-calendar.js?v=20261123-2"></script>
+<script src="js/rockey-shared-calendar.js?v=20261123-3"></script>
 <script src="js/rockey-calendar-invites.js?v=20261123-1"></script>
-</body></html>
+<script src="js/rockey-calendar-mention-alerts.js?v=20261123-1"></script>\n</body></html>
