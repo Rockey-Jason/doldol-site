@@ -806,39 +806,99 @@ export async function createGame(
   let practiceRespawnAt=0;
   let practiceRoundWins=0;
   let practiceRoundTransitionAt=0;
+  let practiceRoundGeneration=0;
   let practiceRoundResult:''|'win'|'loss'|'complete'='';
   const practiceRoundOverlay=document.createElement('div');
+  practiceRoundOverlay.setAttribute('role','alertdialog');
+  practiceRoundOverlay.setAttribute('aria-modal','true');
+  practiceRoundOverlay.setAttribute('aria-live','assertive');
+  practiceRoundOverlay.setAttribute('aria-hidden','true');
   Object.assign(practiceRoundOverlay.style,{
     position:'fixed',inset:'0',zIndex:'10000',display:'none',alignItems:'center',justifyContent:'center',
-    background:'rgba(2,8,22,.62)',backdropFilter:'blur(8px)',pointerEvents:'none',
-    fontFamily:'HancomMalangmalang, sans-serif',textAlign:'center',padding:'24px'
+    background:'rgba(2,8,22,.72)',backdropFilter:'blur(10px)',pointerEvents:'auto',
+    boxSizing:'border-box',overflow:'auto',fontFamily:'HancomMalrangmalrang, sans-serif',
+    textAlign:'center',padding:'20px'
   });
   const practiceRoundCard=document.createElement('div');
   Object.assign(practiceRoundCard.style,{
-    minWidth:'min(340px, 86vw)',padding:'30px 38px',border:'1px solid rgba(110,190,255,.55)',
-    borderRadius:'22px',background:'linear-gradient(145deg,rgba(12,35,65,.97),rgba(3,12,30,.98))',
-    boxShadow:'0 18px 70px rgba(0,0,0,.5),0 0 36px rgba(48,150,255,.18)',color:'#f2f8ff'
+    width:'min(440px, calc(100vw - 40px))',boxSizing:'border-box',padding:'30px clamp(22px,5vw,40px)',
+    border:'1px solid rgba(110,190,255,.55)',borderRadius:'24px',
+    background:'linear-gradient(145deg,rgba(12,35,65,.98),rgba(3,12,30,.99))',
+    boxShadow:'0 22px 76px rgba(0,0,0,.55),0 0 42px rgba(48,150,255,.2)',color:'#f2f8ff'
   });
   practiceRoundOverlay.appendChild(practiceRoundCard);
   document.body.appendChild(practiceRoundOverlay);
   const showPracticeRoundResult=(kind:'win'|'loss'|'complete',detail:string)=>{
     practiceRoundResult=kind;
-    practiceRoundCard.innerHTML='';
+    practiceRoundCard.replaceChildren();
+    const eyebrow=document.createElement('div');
+    eyebrow.textContent='ROCKEY  /  TRAINING CHALLENGE';
+    Object.assign(eyebrow.style,{fontSize:'11px',letterSpacing:'2.2px',color:'#86bde7',opacity:'.9'});
     const heading=document.createElement('div');
     heading.textContent=kind==='win'?'ROUND CLEAR':kind==='loss'?'ROUND FAILED':'ROCKEY VICTORY';
-    Object.assign(heading.style,{fontSize:'clamp(30px,6vw,48px)',fontWeight:'800',letterSpacing:'2px',color:kind==='loss'?'#ff8290':'#83dcff'});
-    const caption=document.createElement('div');caption.textContent=detail;
-    Object.assign(caption.style,{fontSize:'17px',marginTop:'12px',color:'#d9eaff'});
-    practiceRoundCard.append(heading,caption);
+    Object.assign(heading.style,{fontSize:'clamp(30px,7vw,46px)',fontWeight:'400',letterSpacing:'1.8px',
+      lineHeight:'1.12',marginTop:'15px',color:kind==='loss'?'#ff8290':'#83dcff'});
+    const progressLabel=document.createElement('div');
+    progressLabel.textContent=practiceRoundWins+' / 4 ROUNDS WON';
+    Object.assign(progressLabel.style,{fontSize:'12px',letterSpacing:'1.6px',marginTop:'24px',color:'#b8d8f2'});
+    const progressTrack=document.createElement('div');
+    Object.assign(progressTrack.style,{display:'flex',gap:'7px',marginTop:'10px'});
+    for(let index=0;index<4;index++){
+      const segment=document.createElement('div');
+      Object.assign(segment.style,{flex:'1',height:'7px',borderRadius:'99px',
+        background:index<practiceRoundWins?'linear-gradient(90deg,#4ebcff,#8ce7ff)':'rgba(151,187,220,.2)',
+        boxShadow:index<practiceRoundWins?'0 0 12px rgba(86,197,255,.34)':'none'});
+      progressTrack.appendChild(segment);
+    }
+    const caption=document.createElement('div');
+    caption.textContent=detail;
+    Object.assign(caption.style,{fontSize:'15px',lineHeight:'1.6',marginTop:'18px',color:'#d9eaff'});
+    practiceRoundCard.append(eyebrow,heading,progressLabel,progressTrack,caption);
     practiceRoundOverlay.style.display='flex';
+    practiceRoundOverlay.setAttribute('aria-hidden','false');
   };
-  const hidePracticeRoundResult=()=>{practiceRoundOverlay.style.display='none';practiceRoundResult='';};
+  const hidePracticeRoundResult=()=>{
+    practiceRoundOverlay.style.display='none';
+    practiceRoundOverlay.setAttribute('aria-hidden','true');
+    practiceRoundResult='';
+  };
   const resetPracticeRoundPlayer=()=>{
     const spawn={x:0,y:.92,z:20};
+    stopMouseFire();stopMobileFire();setPrecisionAiming(false);
+    keys.clear();touch.forward=0;touch.right=0;touch.jump=false;
     body.setTranslation(spawn,true);collider.setSensor(false);
-    vertical=0;hp=100;practiceGhostActive=false;practiceRespawnAt=0;
-    movementAmount=0;setPlayerGhostAppearance(false);
+    yaw=0;pitch=0;vertical=0;hp=100;
+    ammo=currentWeapon.magazine;reserve=currentWeapon.reserve;
+    localWeaponAmmo[currentWeaponCode]={ammo,reserve};
+    reloadAt=0;reloadToken++;reloadAnimationStart=0;reloadAnimationDuration=0;
+    movementAmount=0;jumpPending=false;gunKick=0;
+    practiceGhostActive=false;practiceRespawnAt=0;
+    setPlayerGhostAppearance(false);
+    camera.fov=normalFov;camera.updateProjectionMatrix();
+    energyUntil=0;
     updateHud(hp,ammo,reserve,currentWeapon.name);
+  };
+  const finishPracticeRound=(result:'win'|'loss')=>{
+    if(mode!=='practice'||!active||practiceRoundResult)return;
+    practiceRoundGeneration++;
+    clearRockeyVisuals();
+    keys.clear();touch.forward=0;touch.right=0;touch.jump=false;
+    stopMouseFire();stopMobileFire();setPrecisionAiming(false);
+    reloadAt=0;reloadToken++;reloadAnimationStart=0;reloadAnimationDuration=0;
+    vertical=0;movementAmount=0;jumpPending=false;
+    if(result==='win'){
+      practiceRoundWins++;
+      if(practiceRoundWins>=4){
+        practiceRoundTransitionAt=0;
+        showPracticeRoundResult('complete','4개 라운드를 모두 승리했습니다. 훈련장 챌린지 완료!');
+      }else{
+        practiceRoundTransitionAt=performance.now()+2400;
+        showPracticeRoundResult('win','라운드 '+practiceRoundWins+' 승리 · 다음 라운드를 준비합니다.');
+      }
+    }else{
+      practiceRoundTransitionAt=performance.now()+2400;
+      showPracticeRoundResult('loss','라운드 '+(practiceRoundWins+1)+' 패배 · 같은 라운드부터 다시 시작합니다.');
+    }
   };
   const practiceRobots=createPracticeRobots(
     scene,map.light,isMobile,raycastMeshes,sampleGroundHeight,
@@ -847,11 +907,7 @@ export async function createGame(
       hp=Math.max(0,hp-Math.max(1,damage));
       avatarRig.triggerHit();
       updateHud(hp,ammo,reserve,currentWeapon.name);
-      if(hp<=0){
-        stopMouseFire();stopMobileFire();setPrecisionAiming(false);
-        practiceRoundTransitionAt=performance.now()+2400;
-        showPracticeRoundResult('loss','플레이어가 쓰러졌습니다 · 라운드 '+(practiceRoundWins+1)+' 재도전');
-      }
+      if(hp<=0)finishPracticeRound('loss');
     },
     (point,damage,headshot)=>showDamageAt(point,damage,headshot),
     notify
@@ -1352,7 +1408,7 @@ export async function createGame(
     scene.add(sprite);damagePopups.push(sprite);
   }
   function interactMap(){
-    if(!active||mode!=='practice'||practiceGhostActive||hp<=0)return;
+    if(!active||mode!=='practice'||practiceRoundResult||practiceGhostActive||hp<=0)return;
     const now=performance.now();
     camera.updateMatrixWorld(true);
     const origin=camera.getWorldPosition(new THREE.Vector3());
@@ -1435,7 +1491,7 @@ export async function createGame(
     updateItemHud();emitItemState();
   }
   function selectItem(code:string){
-    if(!(code in ITEMS))return;
+    if((mode==='practice'&&practiceRoundResult)||!(code in ITEMS))return;
     const selected=code as RockeyItemCode;
     if((itemInventory[selected]||0)<=0){notify('해당 아이템이 모두 소진되었습니다.');return;}
     currentItemCode=selected;updateItemHud();emitItemState();
@@ -1521,7 +1577,9 @@ export async function createGame(
     practiceGateA=null;practiceGateB=null;practiceGateExpiresAt=0;lastPracticeGateTeleportAt=0;
   }
   function useItem(){
-    if(!active||practiceGhostActive||hp<=0)return;if(currentItemCount()<=0){notify('선택한 아이템을 모두 사용했습니다.');return;}
+    if(!active||practiceRoundResult||practiceGhostActive||hp<=0)return;
+    const roundGeneration=practiceRoundGeneration;
+    if(currentItemCount()<=0){notify('선택한 아이템을 모두 사용했습니다.');return;}
     if(mode!=='practice'){send({type:'item.use',itemCode:currentItemCode});return;}
     if(currentItemCode==='PILLS'){if(hp>=100){notify('체력이 이미 가득 찼습니다.');return;}hp=Math.min(100,hp+35);consumeSelectedItem();updateHud(hp,ammo,reserve,currentWeapon.name);notify('체력 +35');return;}
     if(currentItemCode==='ENERGY'){energyUntil=performance.now()+8000;consumeSelectedItem();notify('이동 속도 100% 증가 · 8초');return;}
@@ -1552,7 +1610,7 @@ export async function createGame(
       const floorY=sampleGroundHeight(tx,tz,player.y-.92)??0;
       showThrownItem('ENERGY_CUBE',origin.x,origin.y,origin.z,yaw,pitch,900);
       consumeSelectedItem();
-      window.setTimeout(()=>{if(disposed)return;const activatedAt=performance.now();showItemEffect('ENERGY_CUBE_FIELD',tx,floorY,tz,4.6,5000);localEnergyFields.push({x:tx,z:tz,radius:4.6,endsAt:activatedAt+5000,nextDamageAt:activatedAt+250});},900);
+      window.setTimeout(()=>{if(disposed||practiceRoundResult||roundGeneration!==practiceRoundGeneration)return;const activatedAt=performance.now();showItemEffect('ENERGY_CUBE_FIELD',tx,floorY,tz,4.6,5000);localEnergyFields.push({x:tx,z:tz,radius:4.6,endsAt:activatedAt+5000,nextDamageAt:activatedAt+250});},900);
       notify('로키 에너지 큐브 투척 · 5초 공격 필드');return;
     }
     camera.updateMatrixWorld(true);const origin=camera.getWorldPosition(new THREE.Vector3()),direction=camera.getWorldDirection(new THREE.Vector3());
@@ -1560,7 +1618,7 @@ export async function createGame(
     const usedCode=currentItemCode,fuseMs=usedCode==='GRENADE'?1050:usedCode==='SMOKE'?850:650;
     showThrownItem(usedCode,origin.x,origin.y,origin.z,yaw,pitch,fuseMs);consumeSelectedItem();
     window.setTimeout(()=>{
-      if(disposed)return;showItemEffect(usedCode,impact.x,impact.y,impact.z,usedCode==='GRENADE'?6:4.5,usedCode==='SMOKE'?8000:usedCode==='FLASH'?700:480);
+      if(disposed||practiceRoundResult||roundGeneration!==practiceRoundGeneration)return;showItemEffect(usedCode,impact.x,impact.y,impact.z,usedCode==='GRENADE'?6:4.5,usedCode==='SMOKE'?8000:usedCode==='FLASH'?700:480);
       if(usedCode==='GRENADE')practiceRobots.damageInRadius(impact,6,78,performance.now());
       if(usedCode==='GRENADE')for(const target of practiceTargets){
         if(!target.visible)continue;const distance=target.position.distanceTo(impact);if(distance>6)continue;
@@ -1603,7 +1661,7 @@ export async function createGame(
 
   function fire() {
     const now = performance.now();
-    if (!active || (mode==='practice'&&(practiceGhostActive||hp<=0)) || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
+    if (!active || (mode==='practice'&&(practiceRoundResult||practiceGhostActive||hp<=0)) || now - lastShot < currentWeapon.fireInterval || ammo <= 0 || now < reloadAt) return;
     lastShot = now;
     fireAnimationStart = now;
     const melee=currentWeapon.category==='MELEE';
@@ -1661,7 +1719,7 @@ export async function createGame(
   }
 
   function reload() {
-    if (!active || (mode==='practice'&&(practiceGhostActive||hp<=0)) || currentWeapon.category==='MELEE' || ammo >= currentWeapon.magazine || reserve <= 0 || performance.now() < reloadAt) return;
+    if (!active || (mode==='practice'&&(practiceRoundResult||practiceGhostActive||hp<=0)) || currentWeapon.category==='MELEE' || ammo >= currentWeapon.magazine || reserve <= 0 || performance.now() < reloadAt) return;
     const reloadWeaponCode=currentWeaponCode;
     const reloadWeapon=currentWeapon;
     const token=++reloadToken;
@@ -1686,6 +1744,7 @@ export async function createGame(
 
   function keyDown(event: KeyboardEvent) {
     if (event.code === 'Space') event.preventDefault();
+    if(mode==='practice'&&practiceRoundResult)return;
     keys.add(event.code);
     if (event.code === 'KeyV') toggleCamera();
     if (event.code === 'KeyF') { event.preventDefault(); interactMap(); }
@@ -1707,6 +1766,7 @@ export async function createGame(
     if (event.code === 'Space') touch.jump = false;
   }
   function look(dx: number, dy: number, rotationScale=1) {
+    if(mode==='practice'&&practiceRoundResult)return;
     yaw -= dx * 0.0022 * sensitivity * rotationScale;
     pitch = THREE.MathUtils.clamp(pitch - dy * 0.002 * sensitivity * rotationScale, -1.3, 1.3);
   }
@@ -2394,10 +2454,11 @@ export async function createGame(
     }
 
     if (active) {
-      const forward =
+      const roundLocked=mode==='practice'&&!!practiceRoundResult;
+      const forward = roundLocked?0:
         (keys.has('KeyW') || keys.has('ArrowUp') ? 1 : 0) -
         (keys.has('KeyS') || keys.has('ArrowDown') ? 1 : 0) + touch.forward;
-      const right =
+      const right = roundLocked?0:
         (keys.has('KeyD') || keys.has('ArrowRight') ? 1 : 0) -
         (keys.has('KeyA') || keys.has('ArrowLeft') ? 1 : 0) + touch.right;
 
@@ -2408,12 +2469,15 @@ export async function createGame(
       const direction = fwd.multiplyScalar(forward).add(side.multiplyScalar(right));
       if (direction.lengthSq() > 1) direction.normalize();
       const movementTarget=Math.min(1,direction.length());
-      movementAmount+=(movementTarget-movementAmount)*(1-Math.exp(-12*dt));
-      const sprinting=keys.has('ShiftLeft')||keys.has('ShiftRight');
+      movementAmount=roundLocked?0:movementAmount+(movementTarget-movementAmount)*(1-Math.exp(-12*dt));
+      const sprinting=!roundLocked&&(keys.has('ShiftLeft')||keys.has('ShiftRight'));
       const baseSpeed=sprinting?7.1:5.4;
       const speed=baseSpeed*(now<energyUntil?2:1)*(precisionAiming?0.5:1);
       const old = body.translation();
-      if(practiceGhostActive){
+      if(roundLocked){
+        vertical=0;jumpPending=false;touch.jump=false;
+        body.setNextKinematicTranslation(old);
+      }else if(practiceGhostActive){
         // The player is a ghost for five seconds: skip character-controller
         // collision resolution and move the sensor capsule directly in 3D.
         const verticalInput=(keys.has('Space')||touch.jump?1:0)-
@@ -2469,29 +2533,19 @@ export async function createGame(
     }
 
       let p = position();
-      if(mode==='practice'&&practiceRoundResult&&practiceRoundTransitionAt>0&&now>=practiceRoundTransitionAt){
+      if(mode==='practice'&&practiceRoundResult&&practiceRoundResult!=='complete'&&practiceRoundTransitionAt>0&&now>=practiceRoundTransitionAt){
         practiceRoundTransitionAt=0;
-        if(practiceRoundResult==='complete'){
-          // Keep the four-round victory screen visible until the player leaves the practice match.
-        }else{
-          hidePracticeRoundResult();
-          resetPracticeRoundPlayer();
-          practiceRobots.reset(true);
-          p=position();
-        }
+        hidePracticeRoundResult();
+        clearRockeyVisuals();
+        resetPracticeRoundPlayer();
+        practiceRobots.reset(true);
+        p=position();
       }
-      practiceRobots.update(now,dt,p,mode==='practice'&&!practiceRoundResult);
+      practiceRobots.update(now,dt,p,mode==='practice',!!practiceRoundResult);
       if(mode==='practice'&&active&&!practiceRoundResult&&practiceRobots.aliveCount()===0){
-        practiceRoundWins++;
-        practiceRoundTransitionAt=now+2400;
-        if(practiceRoundWins>=4){
-          practiceRoundTransitionAt=0;
-          showPracticeRoundResult('complete','총 4라운드 승리 · 훈련장 챌린지 완료');
-        }else{
-          showPracticeRoundResult('win','라운드 '+practiceRoundWins+' 승리 · 다음 라운드 준비 중');
-        }
+        finishPracticeRound('win');
       }
-      if(mode==='practice'&&practiceGateA&&practiceGateB&&now-practiceGateExpiresAt<0&&now-lastPracticeGateTeleportAt>850){
+      if(mode==='practice'&&!practiceRoundResult&&practiceGateA&&practiceGateB&&now-practiceGateExpiresAt<0&&now-lastPracticeGateTeleportAt>850){
         const tryGate=(entry:RockeyPortalPoint,destination:RockeyPortalPoint)=>{
           if(Math.hypot(p.x-entry.x,p.z-entry.z)>1.12||Math.abs((p.y-.92)-entry.y)>1.55)return false;
           const nx=destination.x+Math.sin(destination.yaw)*1.85,nz=destination.z+Math.cos(destination.yaw)*1.85;
@@ -2598,7 +2652,7 @@ export async function createGame(
       hp = 100; ammo = currentWeapon.magazine; reserve = currentWeapon.reserve; vertical = 0;
       for(const code of Object.keys(localWeaponAmmo))delete localWeaponAmmo[code];
       localWeaponAmmo[currentWeaponCode]={ammo,reserve};
-      practiceRespawnAt=0;practiceGhostActive=false;practiceRoundWins=0;practiceRoundTransitionAt=0;
+      practiceRespawnAt=0;practiceGhostActive=false;practiceRoundWins=0;practiceRoundTransitionAt=0;practiceRoundGeneration++;
       hidePracticeRoundResult();collider.setSensor(false);setPlayerGhostAppearance(false);
       practiceRobots.reset(mode==='practice');
       if (mode === 'practice') {
@@ -2642,10 +2696,12 @@ export async function createGame(
       if (label) label.textContent = 'ROUND ' + round;
     },
     setHealth(value: number) {
+      if(mode==='practice'&&practiceRoundResult)return;
       const nextHealth=Math.max(0,Math.min(100,value));
       if(nextHealth<hp)avatarRig.triggerHit();
       hp=nextHealth;
       updateHud(hp, ammo, reserve, currentWeapon.name);
+      if(mode==='practice'&&active&&hp<=0)finishPracticeRound('loss');
     },
     setAmmo(nextAmmo: number, nextReserve: number) {
       ammo = Math.max(0, Math.min(currentWeapon.magazine, nextAmmo));
@@ -2661,7 +2717,7 @@ export async function createGame(
     },
     setItem(code:string,count:number,effect?:string,inventory?:Record<string,number>){if(inventory)setItemInventory(code,inventory);else setItemLocal(code,count);if(effect==='ENERGY')energyUntil=performance.now()+8000;},
     selectItem,useItem,interact:interactMap,showThrownItem,showItemEffect,setEnergyCubeVision,showTeleportEffect,
-    teleportLocal(to:{x:number;y:number;z:number},nextYaw:number){body.setTranslation({x:to.x,y:to.y,z:to.z},true);yaw=nextYaw;pitch=0;vertical=0;lastServerGateTeleportAt=performance.now();},
+    teleportLocal(to:{x:number;y:number;z:number},nextYaw:number){if(mode==='practice'&&practiceRoundResult)return;body.setTranslation({x:to.x,y:to.y,z:to.z},true);yaw=nextYaw;pitch=0;vertical=0;lastServerGateTeleportAt=performance.now();},
     applyWorldDestruction(events:Array<{id:string;x:number;y:number;z:number;radius:number}>){for(const event of events){if(!event||typeof event.id!=='string')continue;applyDestruction(new THREE.Vector3(event.x,event.y,event.z),event.radius,event.id);}},
     showDamageOnTarget,
     showShot,
