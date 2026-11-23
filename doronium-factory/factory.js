@@ -3516,7 +3516,7 @@ if(E2E_MODE){
   collectOutputCustodyTest(){
    S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
    const legacy={uid:"COLLECT-LEGACY",type:"minerIron",x:1,y:1,output:{id:"ITEM_IRON_ORE",qty:3,meta:{quality:96,purity:97,synthetic:false}}};
-   const canonical={uid:"COLLECT-CANONICAL",type:"minerCopper",x:2,y:1,output:{id:"ITEM_COPPER_ORE",qty:2,meta:{quality:94,purity:95,synthetic:true},custodyStackID:"MACHINE_OUTPUT:COLLECT-CANONICAL:4"}};
+   const canonical={uid:"COLLECT-CANONICAL",type:"minerCopper",x:2,y:1,output:{id:"copperOre",qty:2,meta:{quality:94,purity:95,synthetic:true},custodyStackID:"MACHINE_OUTPUT:COLLECT-CANONICAL:4"}};
    S.buildings=[legacy,canonical];S.paused=false;
    const before=rebuildOwnershipLedger(S);
    const legacyCollected=collectOutput(legacy,{silent:true});
