@@ -810,7 +810,7 @@ function transferBuildingCargo(source,target,sourceField,fromType,toType,toID){
   targetMoveTimer:target?.moveTimer,targetLogisticsStatus:target?.logisticsStatus,
   targetWarehouseStock:target?.warehouseStock===undefined?undefined:structuredClone(target.warehouseStock)
  };
- const tx=nextCargoTransactionID(source,"LOGISTICS");
+ const tx=nextCargoTransactionID(source,toType==="PLAYER_INVENTORY"?"OUTPUT_COLLECT":"LOGISTICS");
  const moved=toType==="WAREHOUSE"
   ?storeWarehouseCustody({ledger:S.ownershipLedger,warehouse:target,stackID,itemID:canonicalItemID(item.id),quantity,metadata:item.meta||{},transactionID:tx.transactionID,expectedFromType:fromType,expectedFromID:uid,storedTick:S.tick})
   :transferCustody(S.ownershipLedger,{transactionID:tx.transactionID,stackID,quantity,toType,toID:String(toID||""),expectedFromType:fromType,expectedFromID:uid});
@@ -1544,7 +1544,15 @@ function showCrystalPreview(id){if(!RESOURCE[id]||(!id.startsWith("doronium_")&&
 function selectTile(x,y){if(S.player.layer==="mine")return;const key=surfaceKey(x,y);if(selectedLandTool==="flatten"){const n=tileNode(x,y);if(n&&["water","wood","mineEntrance","relaySite","coreSite","dori"].includes(n.type)){toast("이 지형은 평탄화할 수 없습니다.","warn");return}if(buildingAt(x,y)){toast("시설이 있는 타일은 먼저 해체해야 합니다.","warn");return}const area=[];for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const ax=x+dx,ay=y+dz,n=tileNode(ax,ay);if(ax<0||ay<0||ax>=WORLD_W||ay>=WORLD_H||buildingAt(ax,ay)||(n&&["water","wood","mineEntrance","dori","relaySite","coreSite"].includes(n.type)))continue;area.push({x:ax,y:ay})}const targetHeight=Math.round(area.reduce((v,p)=>v+terrainHeightAt(p.x,p.y),0)/Math.max(1,area.length)/3)*3;for(const p of area)S.flattened[surfaceKey(p.x,p.y)]={height:targetHeight};markSceneDirty();log("지표 평탄화 · "+key+" · "+area.length+"타일");markDirty();drawWorld();toast("지형 평탄화 완료 · 기초 타일을 설치하세요.");return}if(selectedLandTool==="foundation"){if(!S.flattened[key]){toast("기초 타일은 평탄화된 지형에만 설치할 수 있습니다.","warn");return}if(S.foundation[key]){toast("이미 기초 타일이 설치되어 있습니다.");return}if(!hasItems({wood:2,stone:2})){toast("기초 타일에는 목재 2개와 석재 2개가 필요합니다.","warn");return}takeItems({wood:2,stone:2});S.foundation[key]=true;markSceneDirty();log("기초 타일 설치 · "+key);markDirty();drawWorld();toast("산업용 기초 타일 설치 완료");return}const b=buildingAt(x,y);if(b){selectedBuild=null;selectedBuilding=b.uid;changePanel("factory");renderBuildList();renderMachineDetails();approachTile(x,y);drawWorld();return}if(selectedBuild||activeBlueprintID){if(placeBuilding(selectedBuild,x,y))approachTile(x,y);return}const node=tileNode(x,y);if(node){approachTile(x,y,()=>{const current=tileNode(x,y);if(current)harvestNode(x,y,current)});return}selectedBuilding=null;renderMachineDetails();movePlayerTo(x,y)}
 function harvestNode(x,y,node){if(S.player.layer!=="surface"){toast("지하 광물은 광산 채굴 도구로 채취하세요.");return}if(node.amount<=0){toast("이 자원은 고갈되었습니다.","warn");return}if(["wood","dori"].includes(node.type)&&S.activeTool!=="axe"){toast("도끼를 장착해야 나무를 벌목할 수 있습니다.","warn");return}if(node.type==="dori"){if(node.cooldown>0){toast("돌이 고기 나무가 열매를 다시 키우고 있습니다. "+Math.ceil(node.cooldown)+"초 남음","warn");return}if(itemCount("water")<2){toast("돌이 고기 수확에는 물 2L가 필요합니다.","warn");return}takeItem("water",2);startNodeCooldown(x,y,node,60);addItem("doriMeat",1,{quality:90,purity:90,synthetic:false});S.stats.gathered.ITEM_DORI_MEAT=(S.stats.gathered.ITEM_DORI_MEAT||0)+1;log("돌이 고기 열매 수확 · 비합성 원료");toast("돌이 고기 +1 · 순도 90");playTone(760,.12,"sine");questCheck();renderAll();drawWorld();return}
 const map={wood:"wood",water:"water"};const id=map[node.type];if(!id)return;const amount=Math.min(node.amount,node.type==="wood"||node.type==="stone"?3:node.type==="water"?5:node.type==="diamond"?1:2);node.amount-=amount;if(node.amount<=0)markVisibilityDirty();const q=80+Math.floor((node.seed%1900)/100);addItem(id,amount,{quality:q,purity:node.type==="water"?100:85,synthetic:false});S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;log(RESOURCE[id].name+" 채집 · "+fmt(amount)+"개");toast(RESOURCE[id].name+" +"+fmt(amount));playTone(420,.07,"triangle");questCheck();renderAll();drawWorld()}
-function collectOutput(b,{silent=false,fromRail=false}={}){if(!b.output){if(!silent)toast("회수할 출력물이 없습니다.","warn");return false}if(b.mineRailReserved&&!fromRail){toast("광차 운송 중인 출력물입니다. 광차 정거장에 도착할 때까지 기다려 주세요.","warn");return false}const itemID=b.output.id,quantity=b.output.qty;addItem(itemID,quantity,b.output.meta,false);clearCompletionBuffer(b);b.mineRailReserved=false;b.status="IDLE";markDirty();if(!silent){toast(RESOURCE[itemID].name+" "+fmt(quantity)+"개 회수");log("출력 회수 · "+RESOURCE[itemID].name);renderAll()}return true}
+function collectOutput(b,{silent=false,fromRail=false}={}){
+ if(!b?.output){if(!silent)toast("회수할 출력물이 없습니다.","warn");return false}
+ if(b.mineRailReserved&&!fromRail){toast("광차 운송 중인 출력물입니다. 광차 정거장에 도착할 때까지 기다려 주세요.","warn");return false}
+ const moved=transferBuildingCargo(b,null,"output","MACHINE_OUTPUT","PLAYER_INVENTORY","player");
+ if(!moved){if(!silent)toast("출력물 소유권 이전에 실패했습니다. 원료와 출력물은 그대로 보존했습니다.","warn");return false}
+ b.mineRailReserved=false;b.status="IDLE";
+ if(!silent){const name=RESOURCE[moved.itemID]?.name||moved.itemID;toast(name+" "+fmt(moved.quantity)+"개 회수");log("출력 회수 · "+name);renderAll()}
+ return true;
+}
 function supplyMachine(b){const r=recipeFor(b);if(!r){toast("이 시설은 수동 투입을 지원하지 않습니다.");return}let moved=0;for(const[rawID,n]of Object.entries(r.inputs)){const id=canonicalItemID(rawID),need=Math.max(0,n-(b.input?.[id]||0)),amount=Math.min(need,itemCount(id));if(amount>0&&moveInventoryToMachine(b,id,amount))moved+=amount}if(moved){toast("원료 "+moved+"개 투입 완료");markDirty()}else toast("투입 가능한 원료가 없습니다.","warn");renderMachineDetails();renderInventory()}
 function drainFluidToTank(source){
  const amount=Math.max(0,Number(source?.fluidAmountL)||0),type=source?.fluidType;
@@ -3504,6 +3512,23 @@ if(E2E_MODE){
    const audit=rebuildOwnershipLedger(S),stack=S.runtime.itemStacks.find(item=>item.runtimeID==="IS-WORLD-DROP-E2E-1");
    const owner=S.ownershipLedger?.custody?.find(record=>record.stackID==="IS-WORLD-DROP-E2E-1");
    return {audit,dropCount:(S.worldDrops||[]).length,inventory:S.inventory?.ITEM_IRON_ORE||0,stack:stack?structuredClone(stack):null,owner:owner?structuredClone(owner):null,visualCount:world3d.inspect().worldDropCount,pickupTransactions:Object.keys(S.ownershipLedger?.transactions||{}).filter(id=>id.startsWith("WORLD_DROP_PICKUP:")).length};
+  },
+  collectOutputCustodyTest(){
+   S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
+   const legacy={uid:"COLLECT-LEGACY",type:"minerIron",x:1,y:1,output:{id:"ITEM_IRON_ORE",qty:3,meta:{quality:96,purity:97,synthetic:false}}};
+   const canonical={uid:"COLLECT-CANONICAL",type:"minerCopper",x:2,y:1,output:{id:"ITEM_COPPER_ORE",qty:2,meta:{quality:94,purity:95,synthetic:true},custodyStackID:"MACHINE_OUTPUT:COLLECT-CANONICAL:4"}};
+   S.buildings=[legacy,canonical];S.paused=false;
+   const before=rebuildOwnershipLedger(S);
+   const legacyCollected=collectOutput(legacy,{silent:true});
+   const canonicalCollected=collectOutput(canonical,{silent:true});
+   const replay=collectOutput(legacy,{silent:true});
+   const audit=rebuildOwnershipLedger(S);
+   const legacyStack=S.runtime.itemStacks.find(stack=>stack.runtimeID==="MACHINE_OUTPUT:COLLECT-LEGACY");
+   const canonicalStack=S.runtime.itemStacks.find(stack=>stack.runtimeID==="MACHINE_OUTPUT:COLLECT-CANONICAL:4");
+   const legacyOwner=S.ownershipLedger.custody.find(record=>record.stackID==="MACHINE_OUTPUT:COLLECT-LEGACY");
+   const canonicalOwner=S.ownershipLedger.custody.find(record=>record.stackID==="MACHINE_OUTPUT:COLLECT-CANONICAL:4");
+   const transactions=Object.keys(S.ownershipLedger.transactions||{}).filter(id=>id.startsWith("OUTPUT_COLLECT:"));
+   return {before,legacyCollected,canonicalCollected,replay,outputsCleared:!legacy.output&&!canonical.output,ironOre:itemCount("ironOre"),copperOre:itemCount("copperOre"),legacyStack:legacyStack?structuredClone(legacyStack):null,canonicalStack:canonicalStack?structuredClone(canonicalStack):null,legacyOwner:legacyOwner?structuredClone(legacyOwner):null,canonicalOwner:canonicalOwner?structuredClone(canonicalOwner):null,audit,transactionCount:transactions.length,consumedCount:S.ownershipLedger.consumed.length};
   },
   cleanDoriMeatGuard(){
    S=freshState();S.inventory={doriMeat:10};S.meta={doriMeat:{quality:95,purity:95,synthetic:false}};S.runtime=createRuntimeState();ensureItemStacks(S);
