@@ -207,42 +207,57 @@ export function addRockeyEnvironment(
     if(!isMobile && (i===1||i===2))buildCrate(x+(i===1?-.6:.6),z+(i===1?.55:-.55),.72,true);
   });
 
-  // Themed silhouettes add identity without changing the gameplay geometry.
+  // Themed structures are gameplay geometry as well as visual dressing:
+  // each has a physical collider, a hitscan surface and an actual interaction.
   if(map.palette==='amber'){
-    // Weathered relay masts and fractured canyon slabs.
     for(const [x,z,rot] of [[-20,0,.12],[20,0,-.12],[-4,-24,.3],[4,24,-.3]] as const){
+      const relay=new THREE.Group();relay.position.set(x,0,z);scene.add(relay);
       const shard=new THREE.Mesh(new THREE.DodecahedronGeometry(1,0),concreteLight);
-      shard.position.set(x,.72,z);shard.scale.set(.75,1.35,.45);shard.rotation.set(.12,rot,.2);shard.castShadow=!isMobile;scene.add(shard);
-      addBox(scene,dark,x,1.55,z,.18,.1,.18);
-      addBox(scene,accent,x,1.68,z,.12,.08,.12);
+      shard.position.set(0,.72,0);shard.scale.set(.75,1.35,.45);shard.rotation.set(.12,rot,.2);shard.castShadow=!isMobile;relay.add(shard);
+      addBox(relay,dark,0,1.55,0,.18,.1,.18);
+      addBox(relay,accent,0,1.68,0,.12,.08,.12);
+      addCollider?.(x,.78,z,.58,.78,.42);addRaycast?.(shard);
+      interactions.push({id:'relay-shard:'+x+':'+z,label:'도로늄 공명 비콘',kind:'power',position:new THREE.Vector3(x,1.05,z),root:relay,uses:0,nextUseAt:0});
     }
   }else if(map.palette==='ice'){
     for(const [x,z] of [[-22,-4],[22,4],[-20,18],[20,-18]] as const){
+      const crystalRoot=new THREE.Group();crystalRoot.position.set(x,0,z);scene.add(crystalRoot);
       const crystal=new THREE.Mesh(new THREE.OctahedronGeometry(.9,0),new THREE.MeshPhysicalMaterial({color:0x9cecff,roughness:.13,metalness:.2,transparent:true,opacity:.78}));
-      crystal.position.set(x,.72,z);crystal.scale.set(.55,1.35,.52);crystal.rotation.z=.16;crystal.castShadow=!isMobile;scene.add(crystal);
-      addBox(scene,glass,x,.17,z,.95,.14,.8);
+      crystal.position.set(0,.72,0);crystal.scale.set(.55,1.35,.52);crystal.rotation.z=.16;crystal.castShadow=!isMobile;crystalRoot.add(crystal);
+      addBox(crystalRoot,glass,0,.17,0,.95,.14,.8);
+      addCollider?.(x,.78,z,.38,.78,.38);addRaycast?.(crystal);
+      interactions.push({id:'ice-crystal:'+x+':'+z,label:'빙결 에너지 수정',kind:'maintenance',position:new THREE.Vector3(x,1.05,z),root:crystalRoot,uses:0,nextUseAt:0});
     }
   }else if(map.palette==='cyan'){
     for(const [x,z] of [[-21,-12],[21,12],[-21,12],[21,-12]] as const){
-      addBox(scene,dark,x,.92,z,1.55,1.84,1.45);
-      addBox(scene,metal,x,.92,z-.74,1.35,1.58,.055);
-      for(let band=0;band<3;band++)addBox(scene,accent,x-.55+band*.55,.92,z-.79,.035,1.2,.025);
-      addBox(scene,hazard,x,.2,z-.8,.54,.12,.04);
+      const terminal=new THREE.Group();terminal.position.set(x,0,z);scene.add(terminal);
+      const body=addBox(terminal,dark,0,.92,0,1.55,1.84,1.45);
+      addBox(terminal,metal,0,.92,-.74,1.35,1.58,.055);
+      for(let band=0;band<3;band++)addBox(terminal,accent,-.55+band*.55,.92,-.79,.035,1.2,.025);
+      addBox(terminal,hazard,0,.2,-.8,.54,.12,.04);
+      addCollider?.(x,.92,z,.8,.93,.76);addRaycast?.(body);
+      interactions.push({id:'cyan-terminal:'+x+':'+z,label:'산업 제어 단말기',kind:'terminal',position:new THREE.Vector3(x,.98,z-.92),root:terminal,uses:0,nextUseAt:0});
     }
   }else if(map.palette==='magenta'){
     for(const [x,z] of [[-22,-13],[22,13],[-22,13],[22,-13]] as const){
-      addBox(scene,dark,x,2.1,z,1.5,4.2,.45);
-      addBox(scene,accent,x,3.35,z-.245,1.2,.12,.045);
-      addBox(scene,glass,x,2.15,z-.25,1.16,1.9,.04);
-      addBox(scene,hazard,x,1.05,z-.29,.72,.06,.025);
+      const neonPillar=new THREE.Group();neonPillar.position.set(x,0,z);scene.add(neonPillar);
+      const body=addBox(neonPillar,dark,0,2.1,0,1.5,4.2,.45);
+      addBox(neonPillar,accent,0,3.35,-.245,1.2,.12,.045);
+      addBox(neonPillar,glass,0,2.15,-.25,1.16,1.9,.04);
+      addBox(neonPillar,hazard,0,1.05,-.29,.72,.06,.025);
+      addCollider?.(x,2.1,z,.78,2.1,.25);addRaycast?.(body);
+      interactions.push({id:'neon-pillar:'+x+':'+z,label:'네온 전력 기둥',kind:'power',position:new THREE.Vector3(x,1.2,z-.65),root:neonPillar,uses:0,nextUseAt:0});
     }
   }else{
     // Training facility gets low observation kiosks and lane markers.
     for(const [x,z] of [[-21,-14],[21,14],[-21,14],[21,-14]] as const){
-      addBox(scene,concrete,x,.8,z,1.8,1.6,1.35);
-      addBox(scene,dark,x,1.25,z-.7,1.5,.48,.045);
-      addBox(scene,accent,x,1.25,z-.74,.88,.045,.02);
-      addBox(scene,hazard,x,.15,z-.72,.72,.1,.045);
+      const kiosk=new THREE.Group();kiosk.position.set(x,0,z);scene.add(kiosk);
+      const body=addBox(kiosk,concrete,0,.8,0,1.8,1.6,1.35);
+      addBox(kiosk,dark,0,1.25,-.7,1.5,.48,.045);
+      const screen=addBox(kiosk,accent,0,1.25,-.74,.88,.045,.02);
+      addBox(kiosk,hazard,0,.15,-.72,.72,.1,.045);
+      addCollider?.(x,.8,z,.94,.82,.70);addRaycast?.(body);addRaycast?.(screen);
+      interactions.push({id:'training-kiosk:'+x+':'+z,label:'훈련 데이터 단말기',kind:'terminal',position:new THREE.Vector3(x,1.3,z-.95),root:kiosk,uses:0,nextUseAt:0});
     }
   }
 
