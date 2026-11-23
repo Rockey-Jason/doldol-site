@@ -240,10 +240,10 @@ test('the complete first-to-second-floor ramp is open for the full player capsul
 
 test('raised roof provides more than full standing-capsule clearance over the second floor',()=>{
   const roof=MAPS.training_facility.cover.find(b=>b.bottom===6.71&&b.top===6.99);
-  assert.ok(roof,'the raised roof deck collider must be present');
+  assert.ok(roof&&roof.bottom!==undefined,'the raised roof deck collider must be present');
   const secondFloorTop=4.19;
   const capsuleTop=secondFloorTop+.92+ROCKEY_PLAYER_COLLISION.halfHeight;
-  assert.ok(roof.bottom-capsuleTop>.5,
+  assert.ok((roof?.bottom??0)-capsuleTop>.5,
     'the player must have comfortable headroom below the raised roof deck');
 });
 
