@@ -111,15 +111,14 @@
   if (document.body) {
     const observer = new MutationObserver(records => {
       if (records.some(record =>
-        (record.type === "childList" && (record.addedNodes.length || record.removedNodes.length)) ||
-        (record.type === "attributes" && (record.attributeName === "class" || record.attributeName === "hidden"))
+        record.type === "characterData" ||
+        (record.type === "childList" && (record.addedNodes.length || record.removedNodes.length))
       )) scheduleRefresh();
     });
     observer.observe(document.body, {
       subtree: true,
       childList: true,
-      attributes: true,
-      attributeFilter: ["class", "hidden"]
+      characterData: true
     });
   }
 
