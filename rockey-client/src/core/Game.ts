@@ -868,6 +868,10 @@ export async function createGame(
     keys.clear();touch.forward=0;touch.right=0;touch.jump=false;
     body.setTranslation(spawn,true);collider.setSensor(false);
     yaw=0;pitch=0;vertical=0;hp=100;
+    for(const weaponCode of new Set([primaryWeaponCode,secondaryWeaponCode])){
+      const weapon=WEAPONS[weaponCode];
+      if(weapon)localWeaponAmmo[weaponCode]={ammo:weapon.magazine,reserve:weapon.reserve};
+    }
     ammo=currentWeapon.magazine;reserve=currentWeapon.reserve;
     localWeaponAmmo[currentWeaponCode]={ammo,reserve};
     reloadAt=0;reloadToken++;reloadAnimationStart=0;reloadAnimationDuration=0;
@@ -1567,6 +1571,7 @@ export async function createGame(
     }
   }
   function teleportLocal(to:{x:number;y:number;z:number},nextYaw:number){
+    if(mode==='practice'&&practiceRoundResult)return;
     if(mode==='practice'||active){
       body.setTranslation({x:to.x,y:to.y,z:to.z},true);yaw=nextYaw;pitch=0;vertical=0;lastServerGateTeleportAt=performance.now();
     }
@@ -1574,6 +1579,10 @@ export async function createGame(
   function clearRockeyVisuals(){
     for(const entry of [...portalVisuals,...energyFieldVisuals,...gateLaserVisuals]){scene.remove(entry.group);disposeObjectResources(entry.group);}
     portalVisuals.length=0;energyFieldVisuals.length=0;gateLaserVisuals.length=0;localEnergyFields.length=0;setEnergyCubeVision(false);
+    for(const item of thrownItemVisuals){scene.remove(item.mesh);disposeObjectResources(item.mesh);}
+    thrownItemVisuals.length=0;
+    for(const effect of timedItemEffects){scene.remove(effect.group);disposeObjectResources(effect.group);}
+    timedItemEffects.length=0;
     practiceGateA=null;practiceGateB=null;practiceGateExpiresAt=0;lastPracticeGateTeleportAt=0;
   }
   function useItem(){
