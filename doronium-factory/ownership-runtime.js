@@ -24,6 +24,14 @@ function saveTransaction(state,transactionID,request,result){
  return clone(result);
 }
 export function createOwnershipState(){return {version:2,nextLedgerID:1,custody:[],transactions:{},consumed:[]};}
+
+/* Active input custody IDs must be unique across repeated production cycles. */
+export function activeInputCustodyStackID(buildingUID,productionSequence,inputIndex,itemID){
+ const uid=String(buildingUID||"").trim(),sequence=Math.max(1,Math.floor(Number(productionSequence)||1));
+ const index=Math.max(0,Math.floor(Number(inputIndex)||0)),id=String(itemID||"").trim();
+ if(!validID(uid)||!validID(id))return "";
+ return "ACTIVE_INPUT:"+uid+":"+sequence+":"+index+":"+id;
+}
 export function addCustody(state,{stackID,itemID,quantity,ownerType,ownerID,metadata={}}){
  const s=ensureState(state);
  if(!OWNER_TYPES.includes(ownerType)||!validID(stackID)||!validID(itemID)||!validID(ownerID)||!Number.isSafeInteger(quantity)||quantity<=0||!plainObject(metadata))throw new Error("invalid-custody");
