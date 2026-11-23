@@ -3,7 +3,7 @@
 if(window.__ROCKEY_CALENDAR_MENTION_ALERTS__)return;
 window.__ROCKEY_CALENDAR_MENTION_ALERTS__=true;
 const SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
-const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbGciOiJIUzI1NiIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
+const SUPABASE_KEY="sb_publishable_-ZvJjR5oRhWxGge0l-l86g_Nv0ttZLF";
 let client=null,userId=null,channel=null,poll=null,root=null,current=null,refreshing=false;
 const dismissed=new Set();
 const $=id=>root?.querySelector("#"+id);
