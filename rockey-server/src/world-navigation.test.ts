@@ -216,3 +216,42 @@ test('thick vertical wall sections are not misclassified as overhead ceilings',(
   assert.equal(result.ceilingHit,false);
   assert.equal(result.y,4.5);
 });
+
+
+test('the complete first-to-second-floor ramp is open for the full player capsule',()=>{
+  for(const map of Object.values(MAPS)){
+    for(const centerX of [-17.2,17.2]){
+      const innerSide=centerX<0?1:-1;
+      const stairX=centerX+innerSide*3.05;
+      for(let localZ=2.35;localZ>=-1.85;localZ-=.04){
+        const globalZ=localZ-1.5;
+        const floor=((2.35-localZ)/4.2)*4.19;
+        const bodyCenter=floor+.92;
+        assert.equal(isBlockedByCover(map.cover,stairX,bodyCenter,globalZ,.38,.86),false,
+          map.id+' blocks the full capsule on the second-floor stair at '+localZ.toFixed(2));
+      }
+      assert.equal(tacticalFloorHeightAt(stairX,-3.05,5.11),4.19,
+        map.id+' landing does not connect to the second-floor ramp');
+      assert.equal(tacticalFloorHeightAt(centerX+innerSide*4.55,-1.5,5.11),4.19,
+        map.id+' inner gallery does not connect to the skybridge');
+    }
+  }
+});
+
+test('raised roof provides more than full standing-capsule clearance over the second floor',()=>{
+  const roof=MAPS.training_facility.cover.find(b=>b.bottom===6.71&&b.top===6.99);
+  assert.ok(roof,'the raised roof deck collider must be present');
+  const secondFloorTop=4.19;
+  const capsuleTop=secondFloorTop+.92+ROCKEY_PLAYER_COLLISION.halfHeight;
+  assert.ok(roof.bottom-capsuleTop>.5,
+    'the player must have comfortable headroom below the raised roof deck');
+});
+
+test('rooftop ramp height matches the raised roof deck across the complete climb',()=>{
+  for(let localZ=2.75;localZ>=-.26;localZ-=.05){
+    const expected=4.19+((2.75-localZ)/3.01)*2.8;
+    const actual=tacticalFloorHeightAt(0,localZ-1.5,expected+.92);
+    assert.ok(Math.abs(actual-expected)<.06,
+      'roof stair floor mismatch at local Z '+localZ.toFixed(2));
+  }
+});
