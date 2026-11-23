@@ -266,7 +266,7 @@ async function finishDateColorSelection(){
   state.dateColorSaving=false;renderDateColorToolbar();
  }
 }
-function renderAgenda(){function renderAgenda(){
+function renderAgenda(){
  const host=$("agendaList");host.replaceChildren();
  const dayKey=dateKey(state.selected);$("selectedDateLabel").textContent=formatDate(state.selected,{year:"numeric",month:"long",day:"numeric",weekday:"long"});
  const rows=state.occurrences.filter(o=>o.occurrenceDate===dayKey);
