@@ -96,7 +96,7 @@ for(const cx of [-17.2,17.2]){
   // Second floor: match the physical 2.8 m-wide stairwell opening and the
   // continuous inner-side platform that joins the building to the skybridge.
   addTacticalCover(cx-innerSide*1.375,-.05,3.025,3.35,4.19,3.91);
-  addTacticalCover(cx+innerSide*5.05,-.05,.6,3.35,4.19,3.91);
+  addTacticalCover(cx+innerSide*4.7,-.05,.95,3.35,4.19,3.91);
   // Full landing dimensions match the client mesh and overlap the ramp/bridge.
   addTacticalCover(cx+innerSide*3.05,-3.05,1.6,.7,4.19,3.91);
 
