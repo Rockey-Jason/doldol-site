@@ -2201,6 +2201,18 @@ body::after{
 .site-preferences-copy strong{color:#f3f6ff;font-size:14px;font-weight:500}
 .site-preferences-copy span{color:rgba(229,236,255,.58);font-size:11px;line-height:1.6}
 .site-pref-options{display:flex;gap:6px;flex-wrap:wrap}
+.site-preferences-font-item{grid-column:1/-1;min-height:unset}
+.site-pref-font-control{display:grid;gap:9px;width:min(100%,560px)}
+.site-pref-font-current{display:flex;align-items:center;justify-content:space-between;gap:12px;color:#cbd8f2;font-size:11px}
+.site-pref-font-number{display:flex;align-items:center;gap:6px;color:#aee8ff}
+.site-pref-font-number input{width:78px;min-height:35px;padding:6px 9px;border:1px solid rgba(105,201,255,.3);border-radius:9px;outline:none;color:#f5fbff;background:rgba(3,12,31,.72);font:inherit;font-size:13px;text-align:center;font-variant-numeric:tabular-nums}
+.site-pref-font-number input:focus{border-color:rgba(105,201,255,.72);box-shadow:0 0 0 3px rgba(105,201,255,.1)}
+.site-pref-font-range{display:block;width:100%;height:25px;margin:0;accent-color:#7bcfff;cursor:pointer}
+.site-pref-font-limits{display:flex;align-items:center;justify-content:space-between;gap:10px;color:rgba(214,226,255,.52);font-size:9px}
+.site-pref-font-preview{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:54px;padding:10px 13px;border:1px solid rgba(105,201,255,.18);border-radius:12px;background:linear-gradient(120deg,rgba(54,109,164,.13),rgba(35,43,91,.16))}
+.site-pref-font-preview>span{color:#f4f7ff;font-size:16px;line-height:1.4}
+.site-pref-font-preview small{color:#8caed0;font-size:9px;white-space:nowrap}
+@media(max-width:650px){.site-preferences-font-item{grid-column:auto}.site-pref-font-control{width:100%}}
 .site-pref-options button,.site-pref-toggle,.site-preferences-footer button{min-height:36px;padding:8px 12px;border:1px solid rgba(153,180,255,.2);border-radius:10px;color:#cbd8f2;background:rgba(255,255,255,.045);font-family:inherit;font-size:11px;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
 .site-pref-options button[aria-pressed="true"],.site-pref-toggle[aria-pressed="true"]{border-color:rgba(105,201,255,.58);color:#f5fbff;background:linear-gradient(135deg,rgba(47,126,176,.35),rgba(83,93,183,.22));box-shadow:inset 0 0 0 1px rgba(105,201,255,.08)}
 .site-pref-options button:hover,.site-pref-toggle:hover,.site-preferences-footer button:hover{transform:translateY(-1px);border-color:rgba(142,205,255,.48)}
@@ -2521,13 +2533,16 @@ body::after{
         <span class="site-preferences-device">이 기기에 저장</span>
     </div>
     <div class="site-preferences-grid">
-        <div class="site-preferences-item">
-            <div class="site-preferences-copy"><strong>글자 크기</strong><span>사이트 본문과 메뉴의 기본 글자 크기를 조절합니다.</span></div>
-            <div class="site-pref-options" role="group" aria-label="글자 크기">
-                <button type="button" data-site-pref="font" data-value="small" aria-pressed="false">작게</button>
-                <button type="button" data-site-pref="font" data-value="normal" aria-pressed="true">보통</button>
-                <button type="button" data-site-pref="font" data-value="large" aria-pressed="false">크게</button>
-                <button type="button" data-site-pref="font" data-value="largest" aria-pressed="false">아주 크게</button>
+        <div class="site-preferences-item site-preferences-font-item">
+            <div class="site-preferences-copy"><strong>글자 크기</strong><span>80%부터 140%까지 원하는 크기로 세밀하게 조절합니다. 아이콘과 카드 배치는 그대로 유지하고 텍스트만 확대·축소합니다.</span></div>
+            <div class="site-pref-font-control">
+                <div class="site-pref-font-current">
+                    <label for="site-pref-font-range">현재 글자 크기</label>
+                    <div class="site-pref-font-number"><input id="site-pref-font-number" type="number" min="80" max="140" step="1" value="100" inputmode="numeric" data-site-pref-font-number aria-label="글자 크기 퍼센트"><span>%</span></div>
+                </div>
+                <input id="site-pref-font-range" class="site-pref-font-range" type="range" min="80" max="140" step="1" value="100" data-site-pref-font-scale aria-label="글자 크기 조절" aria-valuetext="100%">
+                <div class="site-pref-font-limits"><span>80% · 작게</span><span>140% · 크게</span></div>
+                <div class="site-pref-font-preview"><span>가나다 123 · DORI</span><small>실시간 미리보기</small></div>
             </div>
         </div>
         <div class="site-preferences-item">
