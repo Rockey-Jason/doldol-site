@@ -90,7 +90,7 @@ export function createPracticeRobots(
     const ring=new THREE.Mesh(new THREE.TorusGeometry(.55,.035,7,24),kit.glow);
     ring.rotation.x=Math.PI/2;ring.position.y=.13;root.add(ring);
     const pelvis=makeBox(root,kit.dark,0,.72,0,.64,.36,.44);
-    const torso=new THREE.Group();torso.position.set(0,1.12,0);root.add(torso);
+    const torso=new THREE.Group();torso.position.set(0,1.12,0);torso.userData.isTorso=true;root.add(torso);
     const chest=makeBox(torso,kit.body,0,.2,0,.96,.84,.58);
     makeBox(torso,kit.metal,0,.2,-.305,.62,.5,.045);
     const core=makeJoint(torso,kit.glow,0,.2,-.34,.16);core.scale.set(1,.9,.48);
@@ -104,8 +104,7 @@ export function createPracticeRobots(
         const blade=makeBox(arm,kit.glow,side*.18,-.55,-.02,.08,.44,.09);
         blade.rotation.z=side*-.28;
       }
-      arm.userData.side=side;arm.userData.shoulder=shoulder;
-      (root.userData.arms||(root.userData.arms=[])).push(arm);
+      arm.userData.side=side;
     }
     const headGroup=new THREE.Group();headGroup.position.set(0,.78,0);torso.add(headGroup);
     const head=makeBox(headGroup,kit.metal,0,0,0,.58,.46,.48);
@@ -271,8 +270,10 @@ export function createPracticeRobots(
           }
           if(!canMove){
             const side=bot.patrolAngle%2<1?1:-1;
-            const alternativeX=bot.root.position.x-bot.moveZ*side*moveDistance*1.35;
-            const alternativeZ=bot.root.position.z+bot.moveX*side*moveDistance*1.35;
+            const oldMoveX=bot.moveX,oldMoveZ=bot.moveZ;
+            bot.moveX=-oldMoveZ*side;bot.moveZ=oldMoveX*side;
+            const alternativeX=bot.root.position.x+bot.moveX*moveDistance*1.35;
+            const alternativeZ=bot.root.position.z+bot.moveZ*moveDistance*1.35;
             if(Math.abs(alternativeX)<27&&Math.abs(alternativeZ)<27){
               const altFloor=sampleGround(alternativeX,alternativeZ,bot.root.position.y);
               if(altFloor!==null&&Math.abs(altFloor-bot.root.position.y)<.75)bot.root.position.set(alternativeX,altFloor,alternativeZ);
@@ -299,7 +300,7 @@ export function createPracticeRobots(
         bot.root.children.forEach(child=>{if(child instanceof THREE.Group&&child.position.y===.58){
           child.rotation.x=Math.sin(now*.009+(Number(child.userData.side)||0)*Math.PI)*motion*.45;
         }});
-        const torso=bot.root.children.find(child=>child instanceof THREE.Group&&child.position.y===1.12);
+        const torso=bot.root.children.find(child=>child instanceof THREE.Group&&child.userData.isTorso===true);
         if(torso){torso.rotation.z=Math.sin(now*.002+bots.indexOf(bot))*.018+(now<bot.hitUntil?Math.sin(now*.08)*.08:0);torso.position.y=1.12+Math.sin(now*.003+bots.indexOf(bot))*.025;}
         bot.head.rotation.y=Math.sin(now*.0014+bots.indexOf(bot))*.12;
       }
