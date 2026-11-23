@@ -225,7 +225,7 @@ function renderDateColorToolbar(){
  $("openDateColorPanel").setAttribute("aria-expanded",String(state.dateColorPanelOpen));
 }
 function toggleDateColorPanel(){
- if(state.dateColorSelectionActive){state.dateColorPanelOpen=true;return;}
+ if(state.dateColorSelectionActive){state.dateColorPanelOpen=true;renderDateColorToolbar();return;}
  state.dateColorPanelOpen=!state.dateColorPanelOpen;renderDateColorToolbar();
 }
 function chooseDateColor(value){
