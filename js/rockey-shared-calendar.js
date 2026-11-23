@@ -2,7 +2,7 @@
 "use strict";
 const SUPABASE_URL="https://scttowfhygcpdirrekqm.supabase.co";
 const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbGciOiJIUzI1NiIsInJlZiI6InNjdHRvd2ZoeWdjcGRpcnJla3FtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxOTg0MjYsImV4cCI6MjA5NTc3NDQyNn0.XwdQhJ4Ku_C61yXz0k65AztMF9Rfe7Qzn3Av7iWRBqY";
-const TABLES={rooms:"rockey_calendar_rooms",members:"rockey_calendar_members",events:"rockey_calendar_events",comments:"rockey_calendar_event_comments",dayComments:"rockey_calendar_day_comments",dayMentions:"rockey_calendar_day_comment_mentions",dayReads:"rockey_calendar_day_comment_reads"};
+const TABLES={rooms:"rockey_calendar_rooms",members:"rockey_calendar_members",events:"rockey_calendar_events",dayComments:"rockey_calendar_day_comments",dayMentions:"rockey_calendar_day_comment_mentions",dayReads:"rockey_calendar_day_comment_reads"};
 const $=id=>document.getElementById(id);
 const state={sb:null,user:null,rooms:[],room:null,members:[],events:[],memberMap:new Map(),selected:new Date(),month:new Date(new Date().getFullYear(),new Date().getMonth(),1),view:"month",channel:null,editing:null,detail:null,detailOccurrence:null,activeDay:null,dayComments:[],dayReads:[],pendingMentions:[],occurrences:[],selectedRoomUsers:[],searchTimers:{},searchTokens:{},loading:false};
 const WEEKDAYS=["일","월","화","수","목","금","토"];
@@ -525,7 +525,8 @@ function subscribeRoom(roomId){
  state.channel=state.sb.channel("rockey-calendar-room-"+roomId)
   .on("postgres_changes",{event:"*",schema:"public",table:TABLES.events,filter:"room_id=eq."+roomId},()=>{loadRoomData().catch(console.error);})
   .on("postgres_changes",{event:"*",schema:"public",table:TABLES.members,filter:"room_id=eq."+roomId},()=>{loadRoomData().catch(console.error);})
-  .on("postgres_changes",{event:"*",schema:"public",table:TABLES.comments},()=>{if($("detailDialog").open)loadComments();})
+  .on("postgres_changes",{event:"*",schema:"public",table:TABLES.dayComments,filter:"room_id=eq."+roomId},()=>{if($("dayViewDialog").open)loadDayComments();})
+  .on("postgres_changes",{event:"*",schema:"public",table:TABLES.dayReads,filter:"room_id=eq."+roomId},()=>{if($("dayViewDialog").open)loadDayComments();})
   .subscribe(status=>{$("liveState").textContent=status==="SUBSCRIBED"?"실시간 연결":"연결 중";});
 }
 function fillRecurrenceSelectors(){
