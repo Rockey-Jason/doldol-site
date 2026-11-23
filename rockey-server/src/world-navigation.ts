@@ -100,6 +100,10 @@ export function resolveCeilingCollision(
   for(const b of cover){
     const bottom=b.bottom;
     if(bottom===undefined)continue;
+    const thickness=b.top-bottom;
+    // Only thin horizontal slabs are ceilings. Tall bounded wall sections
+    // must remain side walls and must not clamp a jump from below.
+    if(thickness<0||thickness>.36)continue;
     const overlapsHorizontal=
       x+radius>b.x-b.hx&&x-radius<b.x+b.hx&&
       z+radius>b.z-b.hz&&z-radius<b.z+b.hz;
@@ -112,4 +116,69 @@ export function resolveCeilingCollision(
     }
   }
   return {y:resolvedY,ceilingHit:resolvedY<nextY-1e-5};
+}
+
+
+/**
+ * Swept, axis-separated horizontal movement at the player's resolved Y.
+ * This prevents diagonal movement from entering a wall on the same frame
+ * that a jump rises into its vertical collision band, and permits sliding
+ * along a wall or gradually escaping a previously embedded position.
+ */
+export function resolveHorizontalMovement(
+  cover:readonly RockeyCover[],
+  fromX:number,
+  fromZ:number,
+  toX:number,
+  toZ:number,
+  centerY:number,
+  radius:number=ROKEY_PLAYER_COLLISION.clearanceRadius,
+  halfHeight:number=ROKEY_PLAYER_COLLISION.halfHeight
+):{x:number;z:number} {
+  let x=fromX,z=fromZ;
+  const deltaX=toX-fromX,deltaZ=toZ-fromZ;
+  const steps=Math.max(1,Math.ceil(Math.max(Math.abs(deltaX),Math.abs(deltaZ))/.12));
+  const stepX=deltaX/steps,stepZ=deltaZ/steps;
+
+  const penetrationAt=(px:number,pz:number)=>{
+    let total=0;
+    for(const b of cover){
+      const bottom=b.bottom??0;
+      if(centerY-halfHeight>=b.top||centerY+halfHeight<=bottom)continue;
+      const thickness=b.top-bottom;
+      if(b.bottom!==undefined&&thickness>=0&&thickness<=.36)continue;
+      const overlapX=Math.min(px+radius-(b.x-b.hx),(b.x+b.hx)-(px-radius));
+      const overlapZ=Math.min(pz+radius-(b.z-b.hz),(b.z+b.hz)-(pz-radius));
+      if(overlapX>0&&overlapZ>0)total+=Math.min(overlapX,overlapZ);
+    }
+    return total;
+  };
+
+  const canMoveTo=(nextX:number,nextZ:number)=>{
+    if(!isBlockedByCover(cover,nextX,centerY,nextZ,radius,halfHeight))return true;
+    const before=penetrationAt(x,z);
+    const after=penetrationAt(nextX,nextZ);
+    // If already overlapping due to a previous prediction/server mismatch,
+    // allow only movements that measurably reduce the overlap.
+    return before>1e-5&&after<before-1e-5;
+  };
+
+  for(let i=0;i<steps;i++){
+    const combinedX=x+stepX,combinedZ=z+stepZ;
+    if(canMoveTo(combinedX,combinedZ)){
+      x=combinedX;z=combinedZ;
+      continue;
+    }
+
+    // Try the larger component first, then the other component from the
+    // updated position. The free component can continue along the wall.
+    if(Math.abs(stepX)>=Math.abs(stepZ)){
+      if(canMoveTo(x+stepX,z))x+=stepX;
+      if(canMoveTo(x,z+stepZ))z+=stepZ;
+    }else{
+      if(canMoveTo(x,z+stepZ))z+=stepZ;
+      if(canMoveTo(x+stepX,z))x+=stepX;
+    }
+  }
+  return {x,z};
 }
