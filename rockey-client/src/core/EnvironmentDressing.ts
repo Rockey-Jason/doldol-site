@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { RockeyMap } from '../catalog';
+import type { MapInteraction } from './MapInteractions';
 
 type ColliderAdder = (x:number,y:number,z:number,hx:number,hy:number,hz:number) => void;
 
@@ -12,8 +13,9 @@ export function addRockeyEnvironment(
   scene: THREE.Scene,
   map: RockeyMap,
   isMobile: boolean,
-  addCollider?: ColliderAdder
-): void {
+  addCollider?: ColliderAdder,
+  addRaycast?: (mesh:THREE.Object3D)=>void
+): MapInteraction[] {
   const accentColor = map.palette === 'amber' ? 0xffb85c :
     map.palette === 'magenta' ? 0xff72d8 :
     map.palette === 'ice' ? 0x9cecff :
@@ -26,6 +28,7 @@ export function addRockeyEnvironment(
   const hazard = new THREE.MeshStandardMaterial({ color:map.palette==='amber'?0xe5ad54:0xd3e5ee, roughness:.62, metalness:.22 });
   const accent = new THREE.MeshStandardMaterial({ color:accentColor, emissive:accentColor, emissiveIntensity:1.2, roughness:.26, metalness:.35 });
   const glass = new THREE.MeshPhysicalMaterial({ color:map.palette==='magenta'?0x5e315e:0x173c55, emissive:accentColor, emissiveIntensity:.18, roughness:.16, metalness:.28, transparent:true, opacity:.72 });
+  const interactions:MapInteraction[]=[];
   const randState = (map.id.split('').reduce((n,c)=>((n*33)^c.charCodeAt(0))>>>0,2166136261) || 1);
   let seed = randState;
   const random = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
@@ -121,13 +124,17 @@ export function addRockeyEnvironment(
   for(let i=0;i<lampPositions.length;i++){
     if(isMobile && i>=4)continue;
     const [x,z]=lampPositions[i];
-    addCylinder(scene,dark,x,2.7,z,.16,5.35);
-    addCylinder(scene,metal,x,4.95,z,.22,.18);
-    addBox(scene,dark,x,5.28,z,.82,.28,.62);
-    addBox(scene,accent,x,5.11,z,.66,.065,.4);
-    addBox(scene,metal,x,5.44,z,.9,.07,.68);
-    addBox(scene,hazard,x-.32,5.27,z-.335,.09,.22,.035);
-    addBox(scene,hazard,x+.32,5.27,z-.335,.09,.22,.035);
+    const pylon=new THREE.Group();pylon.position.set(x,0,z);scene.add(pylon);
+    const shaft=addCylinder(pylon,dark,0,2.7,0,.16,5.35);
+    addCylinder(pylon,metal,0,4.95,0,.22,.18);
+    const housing=addBox(pylon,dark,0,5.28,0,.82,.28,.62);
+    addBox(pylon,accent,0,5.11,0,.66,.065,.4);
+    addBox(pylon,metal,0,5.44,0,.9,.07,.68);
+    addBox(pylon,hazard,-.32,5.27,-.335,.09,.22,.035);
+    addBox(pylon,hazard,.32,5.27,-.335,.09,.22,.035);
+    addRaycast?.(housing);addRaycast?.(shaft);
+    addCollider?.(x,2.68,z,.2,2.68,.2);
+    interactions.push({id:'arena-pylon:'+x+':'+z,label:'전력 폴',kind:'power',position:new THREE.Vector3(x,1.05,z),root:pylon,uses:0,nextUseAt:0});
   }
 
   // Floor maintenance detail: recessed drains, service plates, expansion seams,
@@ -145,10 +152,13 @@ export function addRockeyEnvironment(
     scene.add(group);
   }
   for(const [x,z] of [[-19,-15],[19,15],[-21,17],[21,-17],[-4,22],[4,-22]] as const){
-    addBox(scene,floorMetal,x,.028,z,1.35,.035,.86);
-    addBox(scene,dark,x,.052,z,.98,.012,.55);
-    for(let i=0;i<7;i++)addBox(scene,metal,x-.42+i*.14,.068,z,.035,.018,.48);
-    for(const side of [-1,1])addCylinder(scene,hazard,x+side*.56,.07,z,.032,.018,0,0,0,8);
+    const panel=new THREE.Group();panel.position.set(x,0,z);scene.add(panel);
+    const plate=addBox(panel,floorMetal,0,.028,0,1.35,.035,.86);
+    addBox(panel,dark,0,.052,0,.98,.012,.55);
+    for(let i=0;i<7;i++)addBox(panel,metal,-.42+i*.14,.068,0,.035,.018,.48);
+    for(const side of [-1,1])addCylinder(panel,hazard,side*.56,.07,0,.032,.018,0,0,0,8);
+    addRaycast?.(plate);
+    interactions.push({id:'floor-maintenance:'+x+':'+z,label:'바닥 정비 패널',kind:'maintenance',position:new THREE.Vector3(x,.28,z),root:panel,uses:0,nextUseAt:0});
   }
   // Jagged cracks are thin line geometry on the floor and never enter raycasts.
   const crackCount=isMobile?5:11;
@@ -171,8 +181,9 @@ export function addRockeyEnvironment(
   const buildCrate=(x:number,z:number,scale=1,stack=false)=>{
     const group=new THREE.Group();group.position.set(x,0,z);
     const w=1.42*scale,h=.94*scale,d=1.12*scale;
-    addBox(group,crateBody,0,h/2,0,w,h,d);
-    addBox(group,crateTop,0,h+.035,0,w*1.03,.08,d*1.03);
+    const crateCore=addBox(group,crateBody,0,h/2,0,w,h,d);
+    const crateLid=addBox(group,crateTop,0,h+.035,0,w*1.03,.08,d*1.03);
+    if(!stack){addRaycast?.(crateCore);addRaycast?.(crateLid);}
     addBox(group,dark,0,h*.54,-d/2-.018,w*.72,.42*scale,.045);
     for(let side of [-1,1]){
       addBox(group,metal,side*(w/2-.075),h/2,-d/2-.045,.11,h*.93,.09);
@@ -185,7 +196,10 @@ export function addRockeyEnvironment(
     addBox(group,dark,0,h*.66,-d/2-.105,.12*scale,.025*scale,.018);
     for(let bolt=0;bolt<(isMobile?2:4);bolt++)addCylinder(group,metal,(bolt%2?1:-1)*(w/2-.16),bolt<2?.13*scale:h-.13*scale,-d/2-.07,.028*scale,.025*scale,Math.PI/2,0,0,8);
     scene.add(group);
-    if(!stack)addCollider?.(x,h/2,z,w/2+.04,h/2+.02,d/2+.04);
+    if(!stack){
+      addCollider?.(x,h/2,z,w/2+.04,h/2+.02,d/2+.04);
+      interactions.push({id:'arena-crate:'+x+':'+z,label:'전장 보급 상자',kind:'supply',position:new THREE.Vector3(x,h*.72,z),root:group,uses:0,nextUseAt:0});
+    }
     return group;
   };
   cratePositions.forEach(([x,z],i)=>{
@@ -255,4 +269,5 @@ export function addRockeyEnvironment(
 
   // Keep the glass, trim and service lights visually distinct per map.
   // All created objects are static and are disposed by Game.dispose scene traversal.
+  return interactions;
 }
