@@ -91,14 +91,14 @@ test("repeated production cycles use distinct active-input custody IDs",()=>{
  addCustody(s,{stackID:firstInput,itemID:"ironOre",quantity:2,ownerType:"ACTIVE_JOB",ownerID:owner});
  const first=completeProductionCustody(s,{transactionID:"PROD:SMELTER-REPEAT:1",inputs:[
   {stackID:firstInput,quantity:2,expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:owner}
- ],output:{stackID:"MACHINE_OUTPUT:SMELTER-REPEAT:1",itemID:"ironPlate",quantity:1,ownerType:"MACHINE_OUTPUT",ownerID:owner}});
+ ],output:{stackID:"MACHINE_OUTPUT:SMELTER-REPEAT:1",itemID:"ironPlate",quantity:1,ownerType:"MACHINE_OUTPUT",ownerID:owner,metadata:{}}});
  assert.ok(first);
  const secondInput=activeInputCustodyStackID(owner,2,0,"ironOre");
  assert.notEqual(secondInput,firstInput);
  addCustody(s,{stackID:secondInput,itemID:"ironOre",quantity:2,ownerType:"ACTIVE_JOB",ownerID:owner});
  const second=completeProductionCustody(s,{transactionID:"PROD:SMELTER-REPEAT:2",inputs:[
   {stackID:secondInput,quantity:2,expectedOwnerType:"ACTIVE_JOB",expectedOwnerID:owner}
- ],output:{stackID:"MACHINE_OUTPUT:SMELTER-REPEAT:2",itemID:"ironPlate",quantity:1,ownerType:"MACHINE_OUTPUT",ownerID:owner}});
+ ],output:{stackID:"MACHINE_OUTPUT:SMELTER-REPEAT:2",itemID:"ironPlate",quantity:1,ownerType:"MACHINE_OUTPUT",ownerID:owner,metadata:{}}});
  assert.ok(second);
  assert.equal(s.consumed.length,2);
  assert.notEqual(s.consumed[0].stackID,s.consumed[1].stackID);
