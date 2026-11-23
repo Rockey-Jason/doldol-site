@@ -81,7 +81,8 @@
 
   function applyNow() {
     restoreOriginalFontSizes();
-    if (currentScale === 100 || !document.body) return;
+    const multiplier = (currentScale / 100) * (isRockeyCalendarPage ? calendarScale / 100 : 1);
+    if (Math.abs(multiplier - 1) < 0.0001 || !document.body) return;
 
     const measurements = [];
     document.body.querySelectorAll("*").forEach(element => {
@@ -96,7 +97,6 @@
       });
     });
 
-    const multiplier = (currentScale / 100) * (isRockeyCalendarPage ? calendarScale / 100 : 1);
     measurements.forEach(({ element, size, originalValue, originalPriority }) => {
       snapshots.set(element, { value: originalValue, priority: originalPriority });
       element.style.setProperty("font-size", (size * multiplier).toFixed(3) + "px", "important");
