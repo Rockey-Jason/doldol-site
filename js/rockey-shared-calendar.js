@@ -282,11 +282,10 @@ function renderAgenda(){function renderAgenda(){
   host.append(group);
  });
 }
-function setView(view){state.view=view;render();}
 function changePeriod(delta){
- if(state.view==="month")state.month=new Date(state.month.getFullYear(),state.month.getMonth()+delta,1),state.selected=new Date(state.month.getFullYear(),state.month.getMonth(),Math.min(state.selected.getDate(),new Date(state.month.getFullYear(),state.month.getMonth()+1,0).getDate()));
- else if(state.view==="week")state.selected.setDate(state.selected.getDate()+delta*7),state.month=new Date(state.selected.getFullYear(),state.selected.getMonth(),1);
- else state.selected.setDate(state.selected.getDate()+delta),state.month=new Date(state.selected.getFullYear(),state.selected.getMonth(),1);
+ state.month=new Date(state.month.getFullYear(),state.month.getMonth()+delta,1);
+ const lastDay=new Date(state.month.getFullYear(),state.month.getMonth()+1,0).getDate();
+ state.selected=new Date(state.month.getFullYear(),state.month.getMonth(),Math.min(state.selected.getDate(),lastDay));
  render();
 }
 function openCreateRoom(){
