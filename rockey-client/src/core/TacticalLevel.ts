@@ -149,14 +149,13 @@ export function addTacticalLevel(scene:THREE.Scene,map:RockeyMap,isMobile:boolea
     // Cut the gallery slab around the complete inclined stair footprint, not just
     // a narrow center slot. The previous x-slabs overlapped the ramp by up to 0.5 m,
     // creating an invisible ceiling/floor collision before the second-floor landing.
-    // Keep a 2.8 m stairwell opening for the 1.9 m ramp plus the full
-    // player capsule. Extend the inner-side gallery slab into the bridge so
-    // the landing has a continuous floor on both mirrored buildings.
+    // Leave a 2.1 m clear lane around the stair centerline, with extra
+    // room on the outside edge. The inner-side gallery starts beyond the
+    // player's .38 m collision radius and continues into the skybridge.
     const galleryFloorMin=innerSide>0?-w/2:-5.65;
     const galleryFloorMax=innerSide>0?5.65:w/2;
-    const stairClearHalfWidth=1.4;
-    const stairClearLeft=stairX-stairClearHalfWidth;
-    const stairClearRight=stairX+stairClearHalfWidth;
+    const stairClearLeft=innerSide>0?stairX-1.4:stairX-.7;
+    const stairClearRight=innerSide>0?stairX+.7:stairX+1.4;
     const galleryLeftWidth=stairClearLeft-galleryFloorMin;
     const galleryRightWidth=galleryFloorMax-stairClearRight;
     if(galleryLeftWidth>.2)add(root,floor,(galleryFloorMin+stairClearLeft)/2,4.05,1.45,galleryLeftWidth,.28,6.7,true);
