@@ -49,3 +49,22 @@ test("fluid network IDs remain stable when unrelated networks are added or input
  assert.equal(initial,"FLUID-PUMP-ALPHA");
  assert.equal(expanded,initial);
 });
+
+
+test("overpressure ruptures the designated weak node and isolates every connected edge for the rest of the tick",()=>{
+ const pump=node("A-PUMP","PUMP",80,{pressureKPa:500,pumpHeadKPa:180,maxPressureKPa:350});
+ const pipe=node("B-PIPE","PIPE",5,{pressureKPa:200,maxPressureKPa:350});
+ const tank=node("C-TANK","TANK",0,{pressureKPa:0,maxPressureKPa:600});
+ const result=tickFluidNetwork({nodes:[pump,pipe,tank],edges:[
+  {id:"01-PUMP-PIPE",from:"A-PUMP",to:"B-PIPE",oneWay:false,maxFlowLps:20,conductanceLpsPerKPa:50,maxPressureKPa:350,breakOnOverpressure:true,failureNodeID:"B-PIPE"},
+  {id:"02-PIPE-TANK",from:"B-PIPE",to:"C-TANK",oneWay:false,maxFlowLps:20,conductanceLpsPerKPa:50,maxPressureKPa:350,breakOnOverpressure:true,failureNodeID:"B-PIPE"}
+ ],deltaSeconds:.1});
+ assert.equal(result.faults.length,1);
+ assert.equal(result.faults[0].reason,"OVERPRESSURE");
+ assert.equal(result.faults[0].nodeID,"B-PIPE");
+ assert.deepEqual(result.isolatedNodeIDs,["B-PIPE"]);
+ assert.equal(result.flows.length,0);
+ assert.equal(pipe.amountL,5);
+ assert.equal(tank.amountL,0);
+ assert.equal(result.massBalance.valid,true);
+});

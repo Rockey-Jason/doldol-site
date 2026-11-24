@@ -644,6 +644,16 @@ try {
   assert.equal(fluidDrain.ok, true, "Buffered fluid must transfer to a compatible tank without loss before demolition");
   assert.equal(fluidDrain.before, fluidDrain.after, "Fluid drain must conserve total liters");
 
+  const fluidRupture = await desktop.evaluate(() => window.__doroniumFactoryTest.runFluidOverpressureRuptureTest());
+  assert.equal(fluidRupture.fault?.reason, "OVERPRESSURE", "The live fluid tick must identify a pipe overpressure fault");
+  assert.equal(fluidRupture.fault?.nodeID, "B-RUPTURE-PIPE", "The weakest connected pipe must be selected for rupture");
+  assert.equal(fluidRupture.pipeBroken, true, "An overpressure fault must persist as a critical repairable pipe failure");
+  assert.equal(fluidRupture.pipeStatus, "BROKEN", "The ruptured pipe must enter the existing broken-machine lifecycle");
+  assert.equal(fluidRupture.tankLiters, 0, "A ruptured pipe must isolate downstream fluid in the same tick");
+  assert.equal(fluidRupture.flowsToTank, false, "No fluid may pass through a ruptured pipe during the same tick");
+  assert.deepEqual(fluidRupture.isolatedNodeIDs, ["B-RUPTURE-PIPE"], "The faulted node must remain isolated for the full solver tick");
+  assert.equal(fluidRupture.massBalance.valid, true, "Rupture isolation must not duplicate or silently lose fluid");
+
   const failedFusionDiagnostics = await desktop.evaluate(() => window.__doroniumFactoryTest.runFusionDiagnosticsTest(false));
   assert.equal(failedFusionDiagnostics.passed, false, "Fusion must not pass diagnostics without an independently powered cooling and fusion network");
   assert.equal(failedFusionDiagnostics.diagnostics.allPassed, false, "A failed diagnostic must remain persisted as a failed gate");

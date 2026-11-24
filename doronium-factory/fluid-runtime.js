@@ -36,9 +36,11 @@ export function totalFluidLiters(nodes){
  const totals={};for(const n of nodes||[]){const type=n.fluidType;if(type)totals[type]=(totals[type]||0)+Math.max(0,finite(n.amountL))}return totals;
 }
 export function tickFluidNetwork({nodes=[],edges=[],deltaSeconds=.1,ambientTemperatureC=20}={}){
- const dt=Math.max(0,finite(deltaSeconds)),graph=buildFluidNetworks(nodes,edges),before=totalFluidLiters(nodes),flows=[],leaks=[],faults=[];
+ const dt=Math.max(0,finite(deltaSeconds)),graph=buildFluidNetworks(nodes,edges),before=totalFluidLiters(nodes),flows=[],leaks=[],faults=[],isolatedNodeIDs=new Set();
  for(const edge of graph.edges){
   let source=graph.byID.get(String(edge.from)),target=graph.byID.get(String(edge.to));if(!source||!target)continue;
+  const sourceID=idOf(source),targetID=idOf(target);
+  if(isolatedNodeIDs.has(sourceID)||isolatedNodeIDs.has(targetID))continue;
   const reverse=()=>{const previous=source;source=target;target=previous};
   const effectivePressure=node=>Math.max(0,finite(node.pressureKPa))+(node.type==="PUMP"?Math.max(0,finite(node.pumpHeadKPa)):0);
   if(edge.open===false)continue;
@@ -63,8 +65,9 @@ export function tickFluidNetwork({nodes=[],edges=[],deltaSeconds=.1,ambientTempe
   if(pressureDelta<=0)continue;
   const ratedPressure=Math.max(0,finite(edge.maxPressureKPa,finite(source.maxPressureKPa,Infinity)));
   if(sourcePressure+pumpHead+gravityHead>ratedPressure){
-   faults.push({edgeID:edge.id,reason:"OVERPRESSURE",pressureKPa:sourcePressure+pumpHead+gravityHead,ratedPressureKPa:ratedPressure});
-   if(edge.breakOnOverpressure){edge.open=false;edge.broken=true;continue}
+   const nodeID=String(edge.failureNodeID||idOf(source));
+   faults.push({edgeID:edge.id,reason:"OVERPRESSURE",pressureKPa:sourcePressure+pumpHead+gravityHead,ratedPressureKPa:ratedPressure,nodeID});
+   if(edge.breakOnOverpressure){edge.open=false;edge.broken=true;if(nodeID)isolatedNodeIDs.add(nodeID);continue}
   }
   const conductance=Math.max(0,finite(edge.conductanceLpsPerKPa,finite(edge.maxFlowLps,0)/(Math.max(1,finite(edge.referencePressureKPa,100)))));
   const pressureFlow=conductance*pressureDelta,maxFlow=Math.max(0,finite(edge.maxFlowLps,Infinity));
@@ -94,7 +97,7 @@ export function tickFluidNetwork({nodes=[],edges=[],deltaSeconds=.1,ambientTempe
   if(contaminants.length)node.contaminants=[...new Set(contaminants.map(String))].sort();
  }
  const after=totalFluidLiters(nodes),massBefore=Object.values(before).reduce((a,b)=>a+b,0),massAfter=Object.values(after).reduce((a,b)=>a+b,0),lost=leaks.reduce((n,x)=>n+x.lostL,0);
- return {networks:graph.networks,networkByID:Object.fromEntries(graph.networkByID),flows,leaks,faults,before,after,massBalance:{beforeL:massBefore,afterL:massAfter,lostL:lost,deltaL:massBefore-massAfter-lost,valid:Math.abs(massBefore-massAfter-lost)<=1e-8}};
+ return {networks:graph.networks,networkByID:Object.fromEntries(graph.networkByID),flows,leaks,faults,isolatedNodeIDs:[...isolatedNodeIDs].sort(),before,after,massBalance:{beforeL:massBefore,afterL:massAfter,lostL:lost,deltaL:massBefore-massAfter-lost,valid:Math.abs(massBefore-massAfter-lost)<=1e-8}};
 }
 export function consumeFluid(node,requestedLiters,expectedFluidType){
  const request=Math.max(0,finite(requestedLiters)),field=node&&Object.hasOwn(node,"amountL")?"amountL":"fluidAmountL",amount=Math.max(0,finite(node?.[field]));

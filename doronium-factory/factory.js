@@ -8,7 +8,7 @@ import { CANONICAL_DORONUM_IDS, CANONICAL_INFINITY_DORONUM_ID, INFINITY_REQUIREM
 import { FAILURE_PROFILES } from "./failure-profiles.js?v=2";
 import { buildLogisticsGraph, selectLogisticsTarget, analyzeLogisticsPressure } from "./logistics-runtime.js?v=1";
 import { solvePowerNetworks } from "./network-runtime.js?v=3";
-import { tickFluidNetwork, consumeFluid, FLUID_TYPES } from "./fluid-runtime.js?v=1";
+import { tickFluidNetwork, consumeFluid, FLUID_TYPES } from "./fluid-runtime.js?v=2";
 import { calculateFailureRisks, calculateFailureHazard, rollMachineFailure, advanceFailureExposure, applyMachineFailure, completeMachineRepair } from "./failure-runtime.js?v=2";
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
 import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, awardSkillPoints, unlockSkill, skillNodeStatus, calculateSkillBonuses, validateSkillTree, validateSkillState } from "./skill-runtime.js?v=1";
@@ -2040,11 +2040,22 @@ function tickFluidSystems(dt,power){
    const target=positions.get(surfaceKey(b.x+dx,b.y+dy));if(!target||String(target.uid)<=String(b.uid))continue;
    const t=nodesByID.get(String(target.uid));if(!t)continue;
    const closed=b.failureRepair||target.failureRepair||b.type==="fluidValve"&&b.valveOpen===false||target.type==="fluidValve"&&target.valveOpen===false;
-   edges.push({id:"F:"+b.uid+":"+target.uid,from:String(b.uid),to:String(target.uid),oneWay:false,open:!closed,maxFlowLps:20,conductanceLpsPerKPa:50,referencePressureKPa:100,maxPressureKPa:Math.min(a.maxPressureKPa,t.maxPressureKPa),breakOnOverpressure:false});
+   const vulnerable=[a,t].filter(node=>node.type==="PIPE"||node.type==="VALVE").sort((left,right)=>Number(left.maxPressureKPa)-Number(right.maxPressureKPa)||String(left.id).localeCompare(String(right.id)))[0]||(Number(a.maxPressureKPa)<=Number(t.maxPressureKPa)?a:t);
+   edges.push({id:"F:"+b.uid+":"+target.uid,from:String(b.uid),to:String(target.uid),oneWay:false,open:!closed,maxFlowLps:20,conductanceLpsPerKPa:50,referencePressureKPa:100,maxPressureKPa:Math.min(a.maxPressureKPa,t.maxPressureKPa),failureNodeID:String(vulnerable.id),breakOnOverpressure:true});
   }
  }
  const result=tickFluidNetwork({nodes,edges,deltaSeconds:dt,ambientTemperatureC:20});
  S.lastFluidBalance=result.massBalance;
+ for(const fault of result.faults||[]){
+  if(fault.reason!=="OVERPRESSURE"||!fault.nodeID)continue;
+  const failed=S.buildings.find(building=>String(building.uid)===String(fault.nodeID));
+  const profile=FAILURE_PROFILES[failed?.type],outcome=profile?.outcomes?.critical;
+  if(!failed||failed.failureRepair||!outcome)continue;
+  const failureEventID="FLUID-OVERPRESSURE:"+String(S.tick||0)+":"+String(failed.uid);
+  if(applyMachineFailure(failed,{failureEventID,machineID:String(failed.uid),grade:"critical",createdTick:Math.max(0,Math.floor(Number(S.tick)||0)),outcome:{...outcome,repairMaterials:{...(outcome.repairMaterials||{})},residue:outcome.residue?{...outcome.residue}:null}})){
+   log("유체 배관 과압 파손 · "+(buildingDef(failed.type)?.name||failed.type),"warn");markDirty();
+  }
+ }
  for(const node of nodes){const building=S.buildings.find(b=>String(b.uid)===node.id);if(!building)continue;building.fluidAmountL=Math.max(0,node.amountL);building.fluidType=node.fluidType||null;building.fluidPressureKPa=Math.max(0,node.pressureKPa||0);building.fluidTemperatureC=Number(node.temperatureC)||20;building.fluidContaminants=node.contaminants||[];building.fluidNetworkID=result.networkByID[node.id]||null;}
  return result;
 }
@@ -2610,6 +2621,18 @@ if(E2E_MODE){
   revealAround();markSceneDirty();renderAll();
  }
  window.__doroniumFactoryTest={
+  runFluidOverpressureRuptureTest(){
+   const oldState=S,oldMotion=playerMotion;
+   try{
+    S=freshState();S.buildings=[
+     {uid:"A-RUPTURE-PUMP",type:"fluidPump",x:20,y:20,condition:100,fluidAmountL:80,fluidType:"WATER",fluidPressureKPa:500,fluidTemperatureC:20},
+     {uid:"B-RUPTURE-PIPE",type:"fluidPipe",x:21,y:20,condition:100,fluidAmountL:5,fluidType:"WATER",fluidPressureKPa:200,fluidTemperatureC:20},
+     {uid:"C-RUPTURE-TANK",type:"fluidTank",x:22,y:20,condition:100,fluidAmountL:0,fluidType:null,fluidPressureKPa:0,fluidTemperatureC:20}
+    ];
+    const result=tickFluidSystems(.1,{allocations:{}}),pipe=S.buildings.find(building=>building.uid==="B-RUPTURE-PIPE"),tank=S.buildings.find(building=>building.uid==="C-RUPTURE-TANK");
+    return {fault:result.faults.find(item=>item.reason==="OVERPRESSURE")||null,pipeBroken:pipe?.failureRepair?.broken===true,pipeStatus:pipe?.status||null,tankLiters:tank?.fluidAmountL??null,flowsToTank:result.flows.some(flow=>flow.to==="C-RUPTURE-TANK"),isolatedNodeIDs:result.isolatedNodeIDs,massBalance:result.massBalance};
+   }finally{S=oldState;playerMotion=oldMotion;renderAll()}
+  },
   snapshot:()=>structuredClone(S),
   mineAudit:()=>auditMineDeposits(S.mineDeposits),
   mineSystems:()=>({environment:structuredClone(ensureMineEnvironment(S)),summary:mineEnvironmentSummary(currentMineEnvironment()||{}),assessment:mineSafetyAssessment(currentMineEnvironment()||{})}),
