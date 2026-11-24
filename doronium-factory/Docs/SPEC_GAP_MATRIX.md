@@ -642,3 +642,17 @@ This checkpoint hardens the mutation boundary without claiming that the snapshot
 All other master statuses remain unchanged. The 2,048m×2,048m world is still NOT IMPLEMENTED; five non-water fluid paths, universal canonical recipe/model sourcing, complete skill/failure/contract coverage and full Fusion restart/interlock acceptance remain PARTIAL; physical PC/Android/iOS validation, two-device cloud conflict/recovery and the real 60-minute wall-clock soak remain UNVERIFIED. **No roadmap stage or final checklist item is COMPLETE.**
 
 PR #11 remains draft/open/unmerged, 616 ahead / 1,000 behind main from stale merge base `26e88058b6d416d79459fee107aff4a5beb3d7e3`; main HEAD is `c2f00b4e32db529df6ad85b2c9649ed2ef7bf656`. PR #9/#10 were not wholesale merged; PR #8's Godot implementation was not merged. No main merge, deployment or production data mutation occurred.
+
+
+## 2026-11-24 — fluid overpressure rupture acceptance delta
+
+| Master item | Status | New code/test evidence | Remaining acceptance blocker |
+|---|---|---|---|
+| Stage 7 — six-fluid network | PARTIAL | Live overpressure now selects a weak pipe/valve, records a persistent critical repair state via the existing failure system, and isolates the node for the remainder of the same solver tick. Unit regression verifies the downstream tank receives no fluid and total liters remain conserved. Playwright live-factory regression was pending at the code checkpoint. | Five non-water fluids remain disconnected from full source → pump → pipe/valve/tank → recipe/consumer flows; persistent save/reload repair recovery, calibrated pressure/temperature/flow and broad fluid failure profiles still need acceptance tests. |
+| Checklist 11 — fluids, pressure and temperature | PARTIAL | Static validation and Node CI for code SHA `8e4717a44e9c3a69f5d298114a551fc07fc451ee` passed (7 validation groups; 204 Node tests). CI [45342264817](https://github.com/Rockey-Jason/doldol-site/actions/runs/45342264817): WebGL Playwright regression was still running when this checkpoint was recorded; do not treat it as passed. | All six live fluid families, full pressure/temperature failure handling, save/restart recovery and physical acceptance remain incomplete. |
+
+The solver now returns `isolatedNodeIDs`; the factory assigns the weakest adjacent pipe/valve as `failureNodeID`, triggers that building's critical failure profile and persists the result in `failureRepair`. The existing repair interface/state machine owns recovery. This does not make the complete six-fluid roadmap COMPLETE.
+
+**Other acceptance items unchanged:** world scale remains 192×160 tiles rather than 2,048m×2,048m; item custody is not yet a universal authoritative ledger; canonical manifest is not yet the sole live recipe/model/research source; Fusion interlocks/restart, all 20 skill effects, full contract catalog and new-save-to-ending regression remain partial. Physical device tests, two-device cloud recovery and the real 60-minute wall-clock soak remain UNVERIFIED. No checklist item or roadmap stage is promoted to COMPLETE.
+
+PR #11 remains draft/open/unmerged. Main merge, production deployment and production data changes remain prohibited until safe file-level reconciliation and every acceptance gate are complete.
