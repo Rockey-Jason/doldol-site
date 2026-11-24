@@ -36,6 +36,7 @@ export function addCustody(state,{stackID,itemID,quantity,ownerType,ownerID,meta
  const s=ensureState(state);
  if(!OWNER_TYPES.includes(ownerType)||!validID(stackID)||!validID(itemID)||!validID(ownerID)||!Number.isSafeInteger(quantity)||quantity<=0||!plainObject(metadata))throw new Error("invalid-custody");
  if(s.custody.some(x=>x.stackID===String(stackID)))throw new Error("stack-already-owned");
+ if(s.consumed.some(entry=>entry?.stackID===String(stackID)))throw new Error("stack-id-already-consumed");
  const record={ledgerID:"OWN-"+s.nextLedgerID++,stackID:String(stackID),itemID:String(itemID),quantity,ownerType,ownerID:String(ownerID),metadata:clone(metadata)};
  s.custody.push(record);return clone(record);
 }
@@ -133,10 +134,12 @@ export function validateOwnershipState(input){
   if(txIDs.has(id))errors.push("duplicate-transaction:"+id);txIDs.add(id);
   if(tx?.status!=="COMMITTED"||!plainObject(tx.request)||!plainObject(tx.result))errors.push("invalid-transaction:"+id);
  }
- const consumedTransactions=new Set();
+ const consumedTransactions=new Set(),consumedStackIDs=new Set();
  for(const entry of state.consumed){
   if(!validID(entry?.transactionID)||consumedTransactions.has(entry.transactionID))errors.push("duplicate-consumption-transaction:"+entry?.transactionID);
   consumedTransactions.add(entry?.transactionID);
+  if(!validID(entry?.stackID)||consumedStackIDs.has(entry.stackID))errors.push("duplicate-consumed-stack:"+entry?.stackID);
+  consumedStackIDs.add(entry?.stackID);
   if(!validID(entry?.stackID)||!validID(entry?.itemID)||!Number.isSafeInteger(entry?.quantity)||entry.quantity<=0||!validID(entry?.reason))errors.push("invalid-consumption:"+entry?.transactionID);
   if(state.custody.some(x=>x.stackID===entry.stackID))errors.push("consumed-stack-still-owned:"+entry.stackID);
   const tx=state.transactions[entry.transactionID];

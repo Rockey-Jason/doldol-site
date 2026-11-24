@@ -250,3 +250,28 @@ test("building dismantle normalizes salvage totals before recording its idempote
  assert.deepEqual(result.salvage,[{itemID:"stone",quantity:2},{itemID:"wood",quantity:4}]);
  assert.equal(validateOwnershipState(state.ownershipLedger).valid,true);
 });
+
+
+test("a consumed stack ID cannot be resurrected or consumed a second time",()=>{
+ const s=createOwnershipState();
+ addCustody(s,{stackID:"RETIRED-STACK",itemID:"ironOre",quantity:2,ownerType:"PLAYER_INVENTORY",ownerID:"player-1"});
+ const first=consumeCustody(s,{transactionID:"RETIRE-1",stackID:"RETIRED-STACK",quantity:2,expectedOwnerType:"PLAYER_INVENTORY",expectedOwnerID:"player-1",reason:"test-retirement"});
+ assert.equal(first.quantity,2);
+ const afterFirstConsumption=structuredClone(s);
+ assert.throws(()=>addCustody(s,{stackID:"RETIRED-STACK",itemID:"ironOre",quantity:2,ownerType:"WORLD_DROP",ownerID:"drop-1"}),/stack-id-already-consumed/);
+ assert.deepEqual(s,afterFirstConsumption);
+ assert.equal(consumeCustody(s,{transactionID:"RETIRE-2",stackID:"RETIRED-STACK",quantity:2,expectedOwnerType:"WORLD_DROP",expectedOwnerID:"drop-1"}),null);
+ assert.deepEqual(s,afterFirstConsumption);
+ assert.equal(validateOwnershipState(s).valid,true);
+});
+
+test("ownership validation detects duplicate historical consumption of one stack ID",()=>{
+ const s=createOwnershipState();
+ addCustody(s,{stackID:"DUPLICATE-RETIREMENT",itemID:"coal",quantity:1,ownerType:"MACHINE_INPUT",ownerID:"M1"});
+ consumeCustody(s,{transactionID:"DUPLICATE-RETIREMENT-1",stackID:"DUPLICATE-RETIREMENT",quantity:1,expectedOwnerType:"MACHINE_INPUT",expectedOwnerID:"M1"});
+ s.consumed.push({...structuredClone(s.consumed[0]),transactionID:"DUPLICATE-RETIREMENT-2"});
+ s.transactions["DUPLICATE-RETIREMENT-2"]={status:"COMMITTED",request:{type:"CONSUME"},result:{stackID:"DUPLICATE-RETIREMENT",itemID:"coal",quantity:1,reason:"corrupt-replay"}};
+ const audit=validateOwnershipState(s);
+ assert.equal(audit.valid,false);
+ assert.ok(audit.errors.includes("duplicate-consumed-stack:DUPLICATE-RETIREMENT"));
+});
