@@ -186,9 +186,9 @@ function renderMonth(range){
   dayEvents.slice(0,3).forEach(o=>{
    const chip=document.createElement("button");chip.type="button";chip.className="event-chip";chip.style.setProperty("--event-color",safeColor(o.creatorColor));
    const title=document.createElement("span");title.className="chip-title";title.textContent=o.title;
-   chip.append(title);chip.title=o.title+" · 눌러서 상세 보기";
-   chip.setAttribute("aria-label",o.title+" 일정 상세 보기");
-   chip.addEventListener("click",event=>{event.stopPropagation();openDetail(o);});
+   chip.append(title);chip.title=o.title+" · 눌러서 그날의 전체 일정 보기";
+   chip.setAttribute("aria-label",formatDate(d,{year:"numeric",month:"long",day:"numeric"})+"의 전체 일정 보기: "+o.title);
+   chip.addEventListener("click",event=>{event.stopPropagation();openDayView(d);});
    list.append(chip);
   });
   if(dayEvents.length>3){const more=document.createElement("span");more.className="more-events";more.textContent="+"+(dayEvents.length-3)+"개 더";list.append(more);}
