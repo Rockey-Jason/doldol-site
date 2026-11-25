@@ -102,7 +102,7 @@ export function biomeGroundColor(biome){
     highlands:0x687477,frost:0x81939a,crystal:0x3f6670,volcanic:0x5b4540})[biome]||0x3d674d;
 }
 
-export function makeMineDeposits(){
+export function makeMineDeposits(instanceSeed=0){
   const rows=[
     [1,8,12,"stone",48,-18],[1,10,7,"copperOre",30,-26],[1,12,15,"ironOre",28,-34],
     [1,19,12,"stone",52,-20],[1,22,8,"copperOre",32,-29],[1,31,12,"ironOre",34,-36],
