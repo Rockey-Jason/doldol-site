@@ -497,6 +497,10 @@ try {
   assert.equal(mineInstanceIsolation.instanceCount,2,"The test should persist exactly two independent mine instances");
   console.log("DORONIUM_MINE_INSTANCE_ISOLATION",JSON.stringify(mineInstanceIsolation));
 
+  const mineSystemsIsolation = await desktop.evaluate(() => window.__doroniumFactoryTest.mineInstanceSystemsIsolationTest());
+  assert.equal(mineSystemsIsolation.ok,true,"Mine stations, power and blockers must be isolated by entrance: "+JSON.stringify(mineSystemsIsolation));
+  console.log("DORONIUM_MINE_SYSTEM_ISOLATION",JSON.stringify(mineSystemsIsolation));
+
   const mineOps = await desktop.evaluate(() => window.__doroniumFactoryTest.setupMineSystemsTest());
   assert.equal(mineOps.environment[1].ventilationActive, true, "Legacy and new mine levels must begin with working ventilation");
   await desktop.locator("#mine-perf-toggle").click();
