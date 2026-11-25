@@ -214,6 +214,23 @@ function makeWorld(){
   else if(biome==="wetland"&&roll>.982)put(x,z,"water",350+Math.floor(rng()*450));
   else if(biome==="meadow"&&roll>.9987)put(x,z,"wood",60);
  }
+ // Seeded biome resources for the named gathering regions. Existing story trees and
+ // the original world seed stay in place so old routes and saves remain valid.
+ const scatter=(x0,x1,z0,z1,type,chance,amount)=>{
+  for(let z=z0;z<=z1;z++)for(let x=x0;x<=x1;x++){
+   const key=x+","+z;
+   if(!nodes[key]&&rng()>1-chance)put(x,z,type,amount+Math.floor(rng()*Math.max(1,amount*.35)));
+  }
+ };
+ scatter(47,79,43,65,"birchTree",.12,90);
+ scatter(55,70,38,54,"rubberTree",.045,75);
+ scatter(87,104,47,66,"barkTree",.105,100);
+ scatter(3,30,4,21,"frozenTree",.12,90);
+ scatter(48,76,13,35,"fireTree",.10,85);
+ scatter(35,82,48,72,"grassPatch",.075,60);
+ scatter(49,75,20,33,"heatCrystalNode",.022,30);
+ scatter(7,29,5,17,"coldCrystalNode",.025,30);
+ scatter(168,182,72,87,"oil",.05,180);
  const entrances=[{x:72,y:42},{x:30,y:64},{x:108,y:56},{x:160,y:91},{x:48,y:142}];
  for(const p of entrances)nodes[p.x+","+p.y]={type:"mineEntrance",amount:1,max:1,cooldown:0,seed:0};
  const sites={relay:[{x:9,y:84},{x:118,y:12},{x:113,y:86}],core:{x:66,y:54}};
@@ -299,7 +316,19 @@ function unlockOk(b){return !b.unlock||S.research.includes(b.unlock)}
 function buildingDef(id){return BUILDINGS.find(b=>b.id===id)}
 function buildingAt(x,y){ensureBuildingIndex();return buildingIndex.get(surfaceKey(x,y))||null}
 function tileNode(x,y){return S.nodes[x+","+y]||null}
-function currentPower(){const daylight=((S.seconds%86400)/86400);const sun=daylight>.25&&daylight<.78?1:.22;const weather=weatherNow();let gen=0,used=0;for(const b of S.buildings){const def=buildingDef(b.type);if(!def)continue;if(b.type==="solar")gen+=def.gen*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1);else if(b.type==="wind")gen+=def.gen*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05);else if(b.type==="coalgen")gen+=b.fuelTimer>0?18:0;else used+=(b.type==="fusion"?(S.fusionJob?FUSION_STAGES[S.fusionJob.stage]?.power||40:4):(def.power||0))}return {gen,used,ratio:used===0?1:Math.min(1,gen/used),raw:gen-used}}
+function currentPower(){
+ const daylight=(S.seconds%86400)/86400,sun=daylight>.25&&daylight<.78?1:.22,weather=weatherNow();
+ let gen=0,used=0;
+ for(const b of S.buildings){
+  const def=buildingDef(b.type);if(!def)continue;
+  const generation=def.generation||({solar:"solar",wind:"wind",coalgen:"coal"}[b.type]);
+  if(generation==="solar")gen+=(def.gen||8)*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1);
+  else if(generation==="wind")gen+=(def.gen||8)*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05);
+  else if(generation==="coal"||generation==="doronium")gen+=b.fuelTimer>0?(def.gen||0):0;
+  else used+=(b.type==="fusion"?(S.fusionJob?FUSION_STAGES[S.fusionJob.stage]?.power||40:4):(def.power||0));
+ }
+ return {gen,used,ratio:used===0?1:Math.min(1,gen/used),raw:gen-used};
+}
 function weatherNow(){const day=Math.floor(S.seconds/86400);return ["Clear","Clear","Rain","Clear","Storm","Clear","Snow"][day%7]}
 function revealAround(){if(S.player.layer==="mine")return;let changed=false;const radius=11*calculateSkillBonuses(S.skills).scannerRangeMultiplier,limit=radius*radius;for(let y=-Math.ceil(radius);y<=Math.ceil(radius);y++)for(let x=-Math.ceil(radius);x<=Math.ceil(radius);x++){if(x*x+y*y>limit)continue;const xx=S.player.x+x,yy=S.player.y+y;if(xx>=0&&yy>=0&&xx<WORLD_W&&yy<WORLD_H){const key=xx+","+yy;if(!S.seen[key]){S.seen[key]=true;changed=true}}}if(biomeAt(S.player.x,S.player.y)==="crystal")claimSkillPoint("EXPLORATION_CRYSTAL_CAVERN");if(changed)markVisibilityDirty()}
 function getQuest(){return S.questIndex>=QUESTS.length?null:QUESTS[S.questIndex]}
