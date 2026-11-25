@@ -159,7 +159,7 @@ const machineRows = [
 for (const [id,name,icon] of machineRows) {
   if (!itemMap[id]) itemMap[id]={name,icon,kind:"machine",price:0,description:name+" 설비 아이템"};
 }
-const CATALOG_MACHINES = machineRows.map(([itemId,name,icon,station,recipeStation,power]) => ({
+export const CATALOG_MACHINES = machineRows.map(([itemId,name,icon,station,recipeStation,power]) => ({
   id:"catalog_"+itemId.replace(/^machine_/,""),
   name,icon,cat:station==="power"?"power":station==="storage"||station==="conveyor"||station==="maglevConveyor"||station==="sorter"||station==="merger"||station==="distributor"||station==="elevator"||station==="shipping"?"logistics":"process",
   cost:0,materials:{},desc:name+" · 제작 도감에서 제작한 설비 아이템을 설치해 사용합니다.",
