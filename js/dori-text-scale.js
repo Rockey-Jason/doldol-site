@@ -1,5 +1,7 @@
 /* DORI SITE-WIDE TEXT SCALE
  * Scales readable DOM text only. Layout boxes, icons, SVG, canvas and media stay untouched.
+ * Recovery-safe: if a page/game changes an inline font-size while our scale is applied,
+ * adopt that new authored value as the baseline instead of scaling the previous result again.
  */
 (() => {
   "use strict";
@@ -25,52 +27,46 @@
   function readScale() {
     try {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-      if (stored && Object.prototype.hasOwnProperty.call(stored, "fontScale")) {
-        return clampScale(stored.fontScale);
-      }
+      if (stored && Object.prototype.hasOwnProperty.call(stored, "fontScale")) return clampScale(stored.fontScale);
       return clampScale(LEGACY[stored?.font] ?? 100);
-    } catch (_) {
-      return 100;
-    }
+    } catch (_) { return 100; }
   }
 
   const isRockeyCalendarPage = document.documentElement.hasAttribute("data-rockey-calendar-page");
   function readCalendarScale() {
     if (!isRockeyCalendarPage) return 100;
-    try {
-      return clampScale(localStorage.getItem(CALENDAR_STORAGE_KEY) || 100);
-    } catch (_) {
-      return 100;
-    }
+    try { return clampScale(localStorage.getItem(CALENDAR_STORAGE_KEY) || 100); }
+    catch (_) { return 100; }
   }
   let calendarScale = readCalendarScale();
 
   function restoreOneFontSize(element, original) {
     if (!element || !original) return;
-
-    // 다른 게임 코드가 인라인 글자 크기를 직접 바꿨다면 그 변경을 보존합니다.
     const currentValue = element.style.getPropertyValue("font-size");
     const currentPriority = element.style.getPropertyPriority("font-size");
-    if (currentValue !== original.appliedValue || currentPriority !== "important") return;
 
-    if (original.value) {
-      element.style.setProperty("font-size", original.value, original.priority);
-    } else {
-      element.style.removeProperty("font-size");
+    // If our exact !important value is still present, restore the captured baseline.
+    if (currentValue === original.appliedValue && currentPriority === "important") {
+      if (original.value) element.style.setProperty("font-size", original.value, original.priority);
+      else element.style.removeProperty("font-size");
+      return;
     }
+
+    // A game or component wrote a new inline size after scaling. Preserve that
+    // authored value as the new baseline; never treat the previous scaled size
+    // as a fresh base and multiply it again.
+    original.value = currentValue;
+    original.priority = currentPriority;
   }
 
   function restoreOriginalFontSizes() {
-    for (const [element, original] of snapshots) {
-      restoreOneFontSize(element, original);
-    }
+    for (const [element, original] of snapshots) restoreOneFontSize(element, original);
     snapshots.clear();
   }
 
   function forgetRemovedSubtree(node) {
     if (!(node instanceof HTMLElement)) return;
-    const elements = [node, ...node.querySelectorAll("*")];
-    for (const element of elements) {
+    for (const element of [node, ...node.querySelectorAll("*")]) {
       const original = snapshots.get(element);
       if (!original) continue;
       restoreOneFontSize(element, original);
@@ -78,16 +74,8 @@
     }
   }
 
-  function containsScalableText(node) {
-    if (!(node instanceof HTMLElement)) return false;
-    if (isTextTarget(node)) return true;
-    return Array.from(node.querySelectorAll("*")).some(isTextTarget);
-  }
-
   function hasVisibleTextNode(element) {
-    return Array.from(element.childNodes).some(node =>
-      node.nodeType === Node.TEXT_NODE && /\S/u.test(node.nodeValue || "")
-    );
+    return Array.from(element.childNodes).some(node => node.nodeType === Node.TEXT_NODE && /\S/u.test(node.nodeValue || ""));
   }
 
   function isTextTarget(element) {
@@ -95,10 +83,8 @@
     const tag = element.tagName;
     if (/^(SCRIPT|STYLE|NOSCRIPT|SVG|CANVAS|VIDEO|AUDIO|IFRAME|OBJECT|EMBED|MATH|META|LINK|HEAD|TITLE|OPTION)$/u.test(tag)) return false;
     if (element.closest("svg,canvas,video,audio,iframe,math,[aria-hidden='true'],[data-dori-font-scale-ignore]")) return false;
-
     const className = typeof element.className === "string" ? element.className : "";
     if (/(^|[\s_-])(icon|icons|material-icons|material-symbols|emoji|glyph|logo-mark)([\s_-]|$)/iu.test(className)) return false;
-
     if (tag === "TEXTAREA" || tag === "SELECT") return true;
     if (tag === "INPUT") {
       const type = (element.getAttribute("type") || "text").toLowerCase();
@@ -125,24 +111,17 @@
       });
     });
 
-    measurements.forEach(({ element, size, originalValue, originalPriority }) => {
+    for (const { element, size, originalValue, originalPriority } of measurements) {
       const appliedValue = (size * multiplier).toFixed(3) + "px";
-      snapshots.set(element, {
-        value: originalValue,
-        priority: originalPriority,
-        appliedValue
-      });
+      snapshots.set(element, { value: originalValue, priority: originalPriority, appliedValue });
       element.style.setProperty("font-size", appliedValue, "important");
-    });
+    }
   }
 
   function apply(rawScale) {
     currentScale = clampScale(rawScale);
     document.documentElement.dataset.doriFontScale = String(currentScale);
-    if (refreshTimer) {
-      window.clearTimeout(refreshTimer);
-      refreshTimer = 0;
-    }
+    if (refreshTimer) { window.clearTimeout(refreshTimer); refreshTimer = 0; }
     if (refreshFrame) return;
     refreshFrame = window.requestAnimationFrame(() => {
       refreshFrame = 0;
@@ -150,7 +129,6 @@
     });
   }
 
-  // 여러 요소가 한 번에 렌더링될 때 전체 재계산을 한 번으로 묶습니다.
   function scheduleRefresh() {
     if (refreshTimer) window.clearTimeout(refreshTimer);
     refreshTimer = window.setTimeout(() => {
@@ -171,30 +149,20 @@
   if (document.body) {
     const observer = new MutationObserver(records => {
       let hasNewTextElements = false;
-
       for (const record of records) {
         if (record.type !== "childList") continue;
-
-        // 제거된 게임 UI는 저장된 인라인 스타일만 복구하고 기록에서 해제합니다.
-        // 같은 요소가 DOM 안에서 이동 중이면 전체 갱신에서 처리하도록 남겨 둡니다.
         record.removedNodes.forEach(node => {
-          if (node instanceof HTMLElement && !node.isConnected) {
-            forgetRemovedSubtree(node);
-          }
+          if (node instanceof HTMLElement && !node.isConnected) forgetRemovedSubtree(node);
         });
-
-        // textContent/타이머 숫자처럼 텍스트 노드만 바뀐 경우에는 글꼴을 다시 계산할 필요가 없습니다.
-        if (Array.from(record.addedNodes).some(containsScalableText)) {
-          hasNewTextElements = true;
-        }
+        if (Array.from(record.addedNodes).some(node => {
+          if (!(node instanceof HTMLElement)) return false;
+          if (isTextTarget(node)) return true;
+          return Array.from(node.querySelectorAll("*")).some(isTextTarget);
+        })) hasNewTextElements = true;
       }
-
       if (hasNewTextElements) scheduleRefresh();
     });
-    observer.observe(document.body, {
-      subtree: true,
-      childList: true
-    });
+    observer.observe(document.body, { subtree: true, childList: true });
   }
 
   window.addEventListener("resize", scheduleRefresh, { passive: true });
