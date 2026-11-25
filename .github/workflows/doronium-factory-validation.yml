@@ -78,6 +78,9 @@ jobs:
           grep -q 'function enterMine' doronium-factory/factory.js
           grep -q 'function notifyNewMission' doronium-factory/factory.js
           grep -q 'function renderCatalog' doronium-factory/factory.js
+          grep -q 'function renderFactory' doronium-factory/factory.js
+          grep -q 'function renderMachineDetails' doronium-factory/factory.js
+          grep -q 'function chooseCatalogRecipe' doronium-factory/factory.js
           grep -q 'CATALOG_RECIPES' doronium-factory/factory.js
           grep -q 'export function regionAt' doronium-factory/terrain-system.js
           grep -q 'id="panel-catalog"' doronium-factory/index.html
