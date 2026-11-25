@@ -240,7 +240,7 @@ function synthetic(s,id){return s.meta?.[id]?.synthetic??false}
 function seedRand(seed){let x=seed>>>0;return()=>{x+=0x6D2B79F5;let t=x;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
 function makeWorld(){
  const rng=seedRand(827142),nodes={};
- const put=(x,y,type,amount=80)=>{nodes[x+","+y]={type,amount,max:amount,cooldown:0,seed:Math.floor(rng()*1e9)}};
+ const put=(x,y,type,amount=80)=>{const node={type,amount,max:amount,cooldown:0,seed:Math.floor(rng()*1e9)};nodes[x+","+y]=node;return node};
  for(let x=42;x<=54;x++)for(let y=44;y<=56;y++)if(rng()>.42)put(x,y,"wood",90);
  for(let x=58;x<=69;x++)for(let y=47;y<=60;y++)if(rng()>.55)put(x,y,"wood",90);
  for(let x=25;x<=36;x++)for(let y=20;y<=30;y++)if(rng()>.52)put(x,y,"wood",90);
