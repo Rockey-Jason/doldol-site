@@ -7,6 +7,7 @@ const itemRows = [
   ["rubberWood","고무나무","🌳","raw",30],["barkWood","짖음의 나무","🌲","raw",42],
   ["frozenWood","냉동 나무","🌲","raw",48],["fireWood","화염 나무","🌲","raw",48],
   ["rubberSap","고무 수액","🟠","material",36],["doriFur","돌이 털","🧶","special",80],
+  ["treeNutrition","나무 영양제","🌱","special",32],["treeGrowthAccelerator","나무 성장 촉진제","🌿","special",120],["treePermanentGrowthCatalyst","나무 영구 성장 촉진제","🌳","special",800],
   ["doriMeat","돌이 고기(하급)","🍖","special",100],["enchantedDoriMeat","돌이 털 인챈트 고기","✨","special",250],
   ["sand","모래","🏖️","raw",4],["glass","유리","🔹","material",18],
   ["moltenGlass","녹은 유리","🫧","material",24],["moltenReinforcedGlass","녹은 강화 유리","🫧","material",44],
@@ -150,7 +151,9 @@ const machineRows = [
   ["machine_quality_checker","품질 검사기","🔍","quality","quality_checker",2],
   ["machine_auto_quality_checker","자동 품질 검사기","🔍","quality","auto_quality_checker",5],
   ["machine_doronium_compressor","도로늄 압축기","🔷","doroniumCompressor","doronium_compressor",26],
-  ["machine_doronium_fusion","도로늄 융합기","♾️","doroniumFusion","doronium_fusion",40]
+  ["machine_doronium_fusion","도로늄 융합기","♾️","doroniumFusion","doronium_fusion",40],
+  ["machine_resource_copier","자원 복사기","🧬","resourceCopier","resource_copier",10],
+  ["machine_item_copier","아이템 복사기","🧬","itemCopier","item_copier",14]
 ];
 for (const [id,name,icon] of machineRows) {
   if (!itemMap[id]) itemMap[id]={name,icon,kind:"machine",price:0,description:name+" 설비 아이템"};
@@ -287,6 +290,10 @@ addRecipe("transformer","변압기 조립","auto_crafting",{copper:15,iron:10,st
 addRecipe("receiver","수신기 조립","crafting",{copperWire:8,ironPlate:5,basicCircuit:2,ironScrew:10},"receiver",1,12,null,null);
 addRecipe("transmitter","송신기 조립","crafting",{copperWire:8,ironPlate:5,basicCircuit:2,ironScrew:10},"transmitter",1,12,null,null);
 
+addRecipe("tree_nutrition","나무 영양제 혼합","crafting",{grass:10,dirt:5,waterBottle:3,plantFiber:5},"treeNutrition",1,10,null,null);
+addRecipe("tree_growth_accelerator","나무 성장 촉진제 합성","crafting",{treeNutrition:3,grass:15,plantFiber:10,clay:5,copper:2},"treeGrowthAccelerator",1,18,null,null);
+addRecipe("tree_permanent_growth","나무 영구 성장 촉진제 합성","auto_crafting",{treeGrowthAccelerator:5,barkWood:10,plantFiber:20,advancedCircuit:3,controlModule:2,coldCrystal:2,heatCrystal:2},"treePermanentGrowthCatalyst",1,55,null,null);
+
 /* Doronium origin story and the requested progression chain */
 addRecipe("dori_hair_enchantment","돌이 털 인챈트","crafting",{doriMeat:1,doriFur:1},"enchantedDoriMeat",1,8,null,null);
 addRecipe("doronium_10_to_1","돌이 고기 10:1 압축","compressor",{enchantedDoriMeat:10},"doronium_normal",1,24,1000,180,{requiresNonSynthetic:true});
@@ -324,6 +331,8 @@ const machineRecipes = [
   ["machine_auto_miner","자동 채굴기 제작","auto_crafting",{steelPlate:50,titaniumPlate:20,steelGear:15,bearing:10,piston:8,motor:8,midCircuit:8,sensor:8,controlModule:3,insulatedWire:25,largeBattery:1},115],
   ["machine_auto_furnace","자동 용광로 제작","auto_crafting",{steelPlate:60,titaniumPlate:20,steelGear:15,bearing:10,motor:6,advancedCircuit:6,sensor:8,controlModule:3,insulatedWire:25,largeBattery:2},120],
   ["machine_auto_electric_furnace","자동 전기로 제작","auto_crafting",{titaniumPlate:70,steelPlate:30,titanium:20,steelGear:15,bearing:12,motor:8,advancedCircuit:8,sensor:10,controlModule:4,insulatedWire:30,largeBattery:3,transformer:2},145],
+  ["machine_resource_copier","자원 복사기 제작","auto_crafting",{steelPlate:20,titaniumPlate:10,advancedCircuit:5,sensor:5,controlModule:3,diamond:5,largeBattery:2},92],
+  ["machine_item_copier","아이템 복사기 제작","auto_crafting",{titaniumPlate:25,steelGear:10,advancedCircuit:10,controlModule:5,sensor:10,diamond:10,largeBattery:5,doronium_normal:5},120],
   ["machine_packager_1","1차 포장기 제작","crafting",{steelPlate:20,gear:6,motor:2,sensor:2,basicCircuit:2},36],
   ["machine_packager_2","2차 포장기 제작","auto_crafting",{steelPlate:30,steelGear:8,motor:3,midCircuit:3,sensor:4,insulatedWire:8},52],
   ["machine_packager_3","3차 포장기 제작","auto_crafting",{titaniumPlate:25,steelPlate:20,controlModule:2,sensor:8,advancedCircuit:4,insulatedWire:14},75],
