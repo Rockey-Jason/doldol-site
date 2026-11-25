@@ -525,7 +525,8 @@ export function createWorld3D(canvas, getState) {
           3.2+(seed%3),1.5,2.8,.1,.3*(seed%5),.12,geology.color);
         rockDetailCount++;
       }
-\n      // Each timber frame has its own persistent condition and warning color.
+
+      // Each timber frame has its own persistent condition and warning color.
       const supportKey=level+":"+p.x+":"+p.z,support=state.mineInfrastructure?.supports?.[supportKey];
       if(support&&(p.z===centerZ||p.z===18)&&p.x%6===2){
         const integrity=clamp(Number(support.integrity??100),0,100);
