@@ -506,6 +506,10 @@ try {
   assert.equal(mineEntranceIdentity.ok,true,"Entering the same physical entrance from different surface tiles must reopen the same mine instance: "+JSON.stringify(mineEntranceIdentity));
   console.log("DORONIUM_MINE_ENTRANCE_IDENTITY",JSON.stringify(mineEntranceIdentity));
 
+  const mineDismantleRollback = await desktop.evaluate(() => window.__doroniumFactoryTest.mineDismantleRollbackIsolationTest());
+  assert.equal(mineDismantleRollback.ok,true,"A failed rail-station dismantle must restore the active mine route and its saved instance reference: "+JSON.stringify(mineDismantleRollback));
+  console.log("DORONIUM_MINE_DISMANTLE_ROLLBACK",JSON.stringify(mineDismantleRollback));
+
   const mineWorldDropIsolation = await desktop.evaluate(() => window.__doroniumFactoryTest.mineWorldDropIsolationTest());
   assert.equal(mineWorldDropIsolation.ok,true,"World drops must render and transfer only inside their originating mine instance: "+JSON.stringify(mineWorldDropIsolation));
   console.log("DORONIUM_MINE_WORLD_DROP_ISOLATION",JSON.stringify(mineWorldDropIsolation));
