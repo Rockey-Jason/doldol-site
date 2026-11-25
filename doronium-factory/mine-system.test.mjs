@@ -53,3 +53,16 @@ test("mine deposit generation is deterministic and never creates natural Doroniu
     assert.notEqual(node.type, "ITEM_DORONUM_NORMAL", "canonical natural Doronium veins remain prohibited");
   }
 });
+
+ 
+test("seeded mine instances add reachable stone and ore pockets without natural Doronium",()=>{
+  const a=makeMineDeposits(12345),b=makeMineDeposits(12345),c=makeMineDeposits(54321);
+  assert.deepEqual(a,b,"same mine seed must generate deterministic geology");
+  const pockets=Object.values(a).filter(node=>node.generation==="mineral-pocket-v4");
+  assert.ok(pockets.length>=20,"side galleries should contain abundant mineable stone and ore");
+  assert.ok(pockets.some(node=>node.type==="stone"),"stone deposits should fill otherwise sparse galleries");
+  assert.ok(pockets.some(node=>["copperOre","ironOre","quartz","goldOre","diamond"].includes(node.type)),"additional mineral pockets should vary by depth");
+  assert.equal(pockets.every(node=>mineTunnelAt(node.x,node.z)),true,"all added pockets must be reachable in existing tunnels");
+  assert.notDeepEqual(a,c,"different mine seeds should create distinct pocket distributions");
+  assert.equal(pockets.some(node=>String(node.type).toLowerCase().includes("doronium")),false,"natural Doronium remains forbidden");
+});
