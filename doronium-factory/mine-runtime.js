@@ -88,7 +88,7 @@ function advanceMineEnvironmentLevel(state,level,dt){
   const step=clamp(Number(dt)||0,0,1);
   if(step<=0)return {active:true,changed:false,level,environment:env,assessment:mineSafetyAssessment(env)};
   const before=[env.waterDepth,env.humidity,env.gasLevel,env.supportIntegrity,env.warning,env.incident];
-  const worker=(state.buildings||[]).find(building=>building.layer==="mine"&&Number(building.mineLevel||1)===level);
+  const worker=(state.buildings||[]).find(building=>building.layer==="mine"&&Number(building.mineLevel||1)===level&&String(building.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy"));
   const x=state.player?.layer==="mine"&&Number(state.player?.mineLevel)===level?state.player.x:worker?.x??20;
   const z=state.player?.layer==="mine"&&Number(state.player?.mineLevel)===level?state.player.y:worker?.y??12;
   const profile=mineGeologyAt(level,integer(x),integer(z));
@@ -117,7 +117,7 @@ export function tickMineEnvironment(state,dt){
 export function tickActiveMineEnvironments(state,dt){
   ensureMineEnvironment(state);
   const levels=new Set((state.buildings||[])
-    .filter(building=>building.layer==="mine")
+    .filter(building=>building.layer==="mine"&&String(building.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy"))
     .map(building=>clamp(integer(building.mineLevel,1),1,5)));
   if(state.player?.layer==="mine")levels.add(clamp(integer(state.player.mineLevel,1),1,5));
   const results=[];
