@@ -807,7 +807,7 @@ function startResearch(id){const r=RESEARCH.find(x=>x.id===id);if(!r||S.research
 function tickResearch(dt,ratio){if(!S.activeResearch)return;const r=RESEARCH.find(x=>x.id===S.activeResearch);if(!r){S.activeResearch=null;return}const labs=S.buildings.filter(b=>b.type==="lab").length;if(!labs){updateResearchCountdownDisplays();return}S.researchProgress+=dt*Math.max(0,ratio)*Math.min(2,1+(labs-1)*.35)*(S.research.includes("automation")?1.15:1);if(S.researchProgress>=r.time){S.research.push(r.id);awardResearchTierSkillPoints();S.activeResearch=null;S.researchProgress=0;log("연구 완료 · "+r.name,"good");toast("기술 연구 완료 · "+r.name);$("orbit-dialogue").textContent="“"+r.name+" 연구 데이터가 연구소에 등록되었습니다.”";playTone(820,.22,"triangle");markDirty();renderResearch();renderBuildList();renderMissions();questCheck()}else updateResearchCountdownDisplays()}
 function abortFusionJob(reason){const job=S.fusionJob;if(!job)return;let released=0;if(job.inputCustody==="reserved"){released=releaseFusionInputs(S,job.reservationIDs||[]);syncLegacyInventory(S)}S.fusionJob=null;const detail=released?reason+" · 예약 원료 1,500개를 창고로 반환했습니다.":reason;log("퓨전 중단 · "+detail,"warn");toast(detail,"warn");markDirty();renderFactory();renderInventory()}
 function updateFusion(dt){
- if(!S.fusionJob)return;
+ if(S.factoryAutomationPaused||!S.fusionJob)return;
  const job=S.fusionJob,b=S.buildings.find(x=>x.type==="fusion");
  if(!b){abortFusionJob("퓨전 설비를 찾을 수 없어 공정이 중단되었습니다.");return}
  if(job.inputCustody==="reserved"&&!validateFusionReservations(S,VARIANTS,job.reservationIDs)){
