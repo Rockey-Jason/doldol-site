@@ -399,6 +399,50 @@ function renderBuildInspector(){
  $("place-mode").onclick=()=>{if(!canAfford(b)||!unlockOk(b)){toast("연구 또는 자원이 부족합니다.","warn");return}selectedBuild=b.id;renderBuildList();toast("월드에서 설치할 위치를 클릭하세요.")};
  $("cancel-build").onclick=()=>{selectedBuild=null;renderBuildList();drawWorld()};
 }
+function renderFactory(){
+ const p=currentPower(),built=S.buildings.length;
+ const lines=[["⚡","전력 생산",fmt(p.gen)+" kW"],["ϟ","전력 소비",fmt(p.used)+" kW"],["🏭","설비 수",built+" 개"],["💎","도로늄 생산",fmt(S.stats.produced.doronium_normal||0)+" 개"]];
+ $("operation-cards").innerHTML=lines.map(x=>'<div class="operation-card"><small>'+x[0]+" "+x[1]+'</small><strong>'+x[2]+'</strong><em>실시간 운영 지표</em></div>').join("");
+ renderMachineDetails();renderEvents();
+}
+function renderMachineDetails(){
+ const el=$("machine-details"),b=S.buildings.find(x=>x.uid===selectedBuilding);
+ if(!b){el.innerHTML='<div class="inspector-empty"><span>⌖</span><strong>월드에서 기계를 선택하세요</strong><p>기계를 선택하면 레시피, 온도·압력 조건, 입출력 버퍼와 상태를 확인할 수 있습니다.</p></div>';return}
+ const d=buildingDef(b.type),recipe=recipeFor(b);
+ const input=Object.entries(b.input||{}).map(([id,n])=>(RESOURCE[id]?.icon||"◆")+" "+fmt(n)+" "+(RESOURCE[id]?.name||id)).join(" · ")||"없음";
+ const output=b.output?(RESOURCE[b.output.id]?.icon||"◆")+" "+fmt(b.output.qty)+" "+(RESOURCE[b.output.id]?.name||b.output.id):"없음";
+ const status=b.status==="RUNNING"?"가동 중":b.status==="BROWNOUT_RUNNING"?"저전력 가동":b.status==="PAUSED_POWER"?"전력 부족":b.status==="PAUSED_OUTPUT"?"출력 대기":b.status==="WAITING_INPUT"||b.status==="NO_INPUT"?"원료 부족":b.status==="BROKEN"?"고장":b.status==="COOLING"?"온도·압력 조정 중":b.status==="ERROR"?"공정 오류":b.status==="DEPLETED"?"매장량 고갈":b.status==="GROWING"?"자원 성장 중":"대기";
+ const compatible=d?.catalogStation?Object.values(CATALOG_RECIPES).filter(r=>recipeSupportsStation(r,d.catalogStation)):[];
+ const recipeSelect=compatible.length?'<div class="catalog-machine-recipe"><label for="machine-recipe-select">설비 레시피 선택</label><select id="machine-recipe-select">'+compatible.map(r=>'<option value="'+r.id+'" '+((b.recipeId||d.defaultRecipe||"")===r.id?"selected":"")+'>'+r.name+'</option>').join("")+'</select><small>'+compatible.length+'개 공정 지원 · 생산 중이거나 출력이 남아 있으면 변경할 수 없습니다.</small></div>':"";
+ const processWindow=recipe?.safeTemperatureMin!==undefined?"허용 범위 "+recipe.safeTemperatureMin+"–"+recipe.safeTemperatureMax+"°C · "+recipe.safePressureMin+"–"+recipe.safePressureMax+" MPa":"";
+ const recipeDetail=recipe?'<div class="machine-buffer"><span>현재 레시피</span><b>'+recipe.name+'</b></div><div class="machine-buffer"><span>필요 원료</span><b>'+Object.entries(recipe.inputs||{}).map(([id,n])=>(RESOURCE[id]?.name||id)+" × "+n).join(" · ")+'</b></div><div class="machine-buffer"><span>생산 결과</span><b>'+(RESOURCE[recipe.output]?.name||recipe.output)+" × "+(recipe.qty||1)+'</b></div><div class="machine-buffer"><span>공정 목표</span><b>'+(recipe.temp===null||recipe.temp===undefined?"수동 혼합":Math.round(recipe.temp)+"°C · "+(recipe.pressure??0)+" MPa")+' · '+recipe.time+'초</b></div>'+(processWindow?'<div class="machine-buffer"><span>허용 공정 범위</span><b>'+processWindow+'</b></div>':"")+'<div class="machine-buffer"><span>자동 제어</span><b>기계가 목표 온도·압력으로 자동 조정</b></div>':"";
+ const fusionInfo=b.type==="fusion"&&S.fusionJob?'<div class="machine-buffer"><span>퓨전 진행</span><b>'+(Math.min(7,S.fusionJob.stage+1))+'/7 단계 · '+(S.fusionJob.inputCustody==="reserved"?"원료 1,500개 예약":"기존 저장 공정")+'</b></div>':"";
+ el.innerHTML='<div class="inspector-title"><span class="build-icon">'+(d?.icon||"⚙️")+'</span><div><strong>'+(d?.name||b.type)+'</strong><small>'+status+' · 방향 '+DIRS[b.dir||1].name+' · 내구도 '+Math.round(b.condition||100)+'%</small></div></div><div class="machine-kpi"><div><small>생산 공정</small><b>'+(recipe?.name||({miner:"자원 채굴",pump:"물 공급",doriFarm:"돌이 고기 수확",power:"전력 공급",fusion:"인피니티 퓨전"})[d?.kind]||"산업 설비")+'</b></div><div><small>공정 진행률</small><b>'+Math.round((b.progress||0)/(recipe?.time||10)*100)+'%</b></div></div>'+recipeSelect+recipeDetail+'<div class="machine-buffer"><span>투입 버퍼</span><b>'+input+'</b></div><div class="machine-buffer"><span>출력 버퍼</span><b>'+output+'</b></div>'+fusionInfo+(d?.kind==="variant"||b.type==="variantLab"?'<div class="machine-buffer"><span>결정 레시피</span><b>'+(RESOURCE[b.variant||"doronium_blue"]?.name||b.variant)+'</b></div>':"")+'<div class="machine-controls"><button class="action-button" id="machine-collect" '+(!b.output?"disabled":"")+'>출력 회수</button><button class="action-button secondary" id="machine-supply">창고에서 투입</button><button class="action-button secondary" id="machine-rotate">방향 회전</button><button class="action-button danger" id="machine-remove">해체</button>'+(b.type==="variantLab"?'<button class="action-button secondary" id="machine-recipe">결정 레시피 변경</button>':"")+(b.type==="fusion"&&!S.fusionJob?'<button class="action-button gold-button" id="machine-fusion">퓨전 시작</button>':"")+(b.type==="fusion"&&S.fusionJob?.inputCustody==="reserved"?'<button class="action-button secondary" id="machine-fusion-cancel">퓨전 중단 · 원료 반환</button>':"")+(b.type==="core"?'<button class="action-button gold-button" id="machine-core">인피니티 설치</button>':"")+'</div>';
+ $("machine-collect").onclick=()=>collectOutput(b);
+ $("machine-supply").onclick=()=>supplyMachine(b);
+ $("machine-rotate").onclick=()=>{b.dir=((b.dir||1)+1)%4;markDirty();renderMachineDetails();drawWorld()};
+ $("machine-remove").onclick=()=>removeBuilding(b);
+ if($("machine-recipe"))$("machine-recipe").onclick=()=>chooseVariant(b);
+ if($("machine-fusion"))$("machine-fusion").onclick=startFusion;
+ if($("machine-fusion-cancel"))$("machine-fusion-cancel").onclick=()=>abortFusionJob("사용자가 퓨전을 중단했습니다.");
+ if($("machine-core"))$("machine-core").onclick=()=>installCore(b);
+ const recipeControl=$("machine-recipe-select");
+ if(recipeControl)recipeControl.onchange=()=>{
+  const next=CATALOG_RECIPES[recipeControl.value];
+  if(!recipeSupportsStation(next,d.catalogStation))return;
+  if(b.activeMeta||b.output){toast("진행 중인 공정을 마치고 출력물을 회수한 뒤 변경하세요.","warn");recipeControl.value=b.recipeId||d.defaultRecipe||"";return}
+  b.recipeId=next.id;b.progress=0;b.status="IDLE";b.errorCode=null;markDirty();renderMachineDetails();renderCatalog();toast("레시피 변경 · "+next.name);
+ };
+}
+function chooseCatalogRecipe(id){
+ const recipe=CATALOG_RECIPES[id];if(!recipe)return;
+ const candidates=S.buildings.filter(b=>recipeSupportsStation(recipe,buildingDef(b.type)?.catalogStation));
+ if(!candidates.length){toast("먼저 이 공정을 지원하는 기계를 설치하세요.","warn");return}
+ const machine=candidates.find(b=>!b.activeMeta&&!b.output)||candidates[0];
+ if(machine.activeMeta||machine.output){toast("선택한 공정 기계가 가동 중이거나 출력 대기 중입니다.","warn");return}
+ machine.recipeId=recipe.id;machine.progress=0;machine.status="IDLE";machine.errorCode=null;selectedBuilding=machine.uid;
+ changePanel("factory");renderMachineDetails();markDirty();toast("공정 지정 완료 · "+recipe.name);
+}
 function renderCatalog(){
  const grid=$("catalog-grid");if(!grid)return;
  const query=String($("catalog-search")?.value||"").trim().toLowerCase();
@@ -514,6 +558,7 @@ function renderMissions(){const chapters=["ACT I · THE RUINS","ACT II · HIDDEN
 
 function addInput(b,id,qty,meta={quality:90,purity:90,synthetic:false}){b.input??={};b.inputMeta??={};b.input[id]=(b.input[id]||0)+qty;const old=b.inputMeta[id]||{quality:90,purity:90,synthetic:false},before=b.input[id]-qty,total=b.input[id];b.inputMeta[id]={quality:(old.quality*before+meta.quality*qty)/total,purity:(old.purity*before+meta.purity*qty)/total,synthetic:old.synthetic||!!meta.synthetic};markDirty()}
 function recipeFor(b){const d=buildingDef(b.type);if(b.recipeId&&CATALOG_RECIPES[b.recipeId])return CATALOG_RECIPES[b.recipeId];if(d?.defaultRecipe&&CATALOG_RECIPES[d.defaultRecipe])return CATALOG_RECIPES[d.defaultRecipe];if(d?.recipe)return RECIPES[d.recipe];if(b.type==="variantLab")return VARIANT_RECIPES[b.variant||"doronium_blue"];return null}
+function recipeSupportsStation(recipe,station){return !!recipe&&(recipe.station===station||Array.isArray(recipe.stations)&&recipe.stations.includes(station))}
 function canConsumeRecipe(b,r){return Object.entries(r.inputs).every(([id,n])=>(b.input?.[id]||0)+availableItemCount(S,id)>=n)}
 function consumeRecipe(b,r){if(!canConsumeRecipe(b,r))return null;const inventoryNeed={};for(const[id,n]of Object.entries(r.inputs)){const buffered=Math.min(n,b.input?.[id]||0),remaining=n-buffered;if(remaining>0)inventoryNeed[id]=remaining}const reservations=reserveItemBatch(S,inventoryNeed,"recipe:"+String(b.uid||b.type));if(!reservations)return null;const committed=reservations.length?commitItemReservations(S,reservations):[];if(!committed){for(const id of reservations)releaseItemReservation(S,id);return null}let qsum=0,psum=0,weight=0,hasSynthetic=false;const absorb=m=>{qsum+=m.quality*m.quantity;psum+=m.purity*m.quantity;weight+=m.quantity;hasSynthetic=hasSynthetic||m.synthetic};for(const[id,n]of Object.entries(r.inputs)){const fromBuffer=Math.min(n,b.input?.[id]||0);if(fromBuffer>0){const m=b.inputMeta?.[id]||{quality:90,purity:90,synthetic:false};absorb({...m,quantity:fromBuffer});b.input[id]-=fromBuffer;if(b.input[id]<=0){delete b.input[id];delete b.inputMeta[id]}}}for(const stack of committed)absorb(stack);syncLegacyInventory(S);return {quality:weight?qsum/weight:90,purity:weight?psum/weight:90,synthetic:hasSynthetic}}
 function createOutput(b,id,qty,meta){if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(RESOURCE[id].name+" 생산 · "+fmt(qty)+"개");markDirty();return true}
