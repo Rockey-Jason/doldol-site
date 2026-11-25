@@ -491,6 +491,12 @@ try {
   assert.ok(mineVirtualSoak.transferred > 0 && mineVirtualSoak.delivered === 2, "The virtual hour must demonstrate actual water and ore transport");
   console.log("DORONIUM_MINE_VIRTUAL_SOAK", JSON.stringify(mineVirtualSoak));
 
+  const mineInstanceIsolation = await desktop.evaluate(() => window.__doroniumFactoryTest.mineInstanceIsolationTest());
+  assert.equal(mineInstanceIsolation.ok, true, "Separate mine entrances must retain independent deposits and environment: "+JSON.stringify(mineInstanceIsolation));
+  assert.notEqual(mineInstanceIsolation.firstID,mineInstanceIsolation.secondID,"Entrance coordinates must identify separate mine instances");
+  assert.equal(mineInstanceIsolation.instanceCount,2,"The test should persist exactly two independent mine instances");
+  console.log("DORONIUM_MINE_INSTANCE_ISOLATION",JSON.stringify(mineInstanceIsolation));
+
   const mineOps = await desktop.evaluate(() => window.__doroniumFactoryTest.setupMineSystemsTest());
   assert.equal(mineOps.environment[1].ventilationActive, true, "Legacy and new mine levels must begin with working ventilation");
   await desktop.locator("#mine-perf-toggle").click();
