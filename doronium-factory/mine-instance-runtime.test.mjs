@@ -46,3 +46,31 @@ test("legacy state migrates only once and malformed instance map is normalized",
  const other=ensureMineInstance(state,"mine:2:2",defaults);
  assert.equal(other.mineDeposits["1:1:1"].amount,50);
 });
+
+
+test("mine power topology settings are isolated and restored per entrance",()=>{
+ const state={
+  player:{layer:"surface"},
+  mineDeposits:{"1:8:12":{amount:0}},
+  mineEnvironment:{1:{waterDepth:.4}},
+  mineInfrastructure:{supports:{},closures:{},events:[],railRoutes:{}},
+  powerTopologyLayers:{surface:true,mine:{1:true,2:false}}
+ };
+ const first=activateMineInstance(state,"mine:10:10",defaults);
+ assert.deepEqual(first.powerTopology,{1:true,2:false});
+ state.player.layer="mine";
+ state.powerTopologyLayers.mine[1]=false;
+ saveActiveMineInstance(state);
+ state.player.layer="surface";
+ const second=activateMineInstance(state,"mine:20:20",defaults);
+ assert.deepEqual(state.powerTopologyLayers.mine,{});
+ state.player.layer="mine";
+ state.powerTopologyLayers.mine[1]=true;
+ saveActiveMineInstance(state);
+ state.player.layer="surface";
+ activateMineInstance(state,"mine:10:10",defaults);
+ assert.deepEqual(state.powerTopologyLayers.mine,{1:false,2:false});
+ activateMineInstance(state,"mine:20:20",defaults);
+ assert.deepEqual(state.powerTopologyLayers.mine,{1:true});
+ assert.equal(state.powerTopologyLayers.surface,true,"surface topology remains shared and unchanged");
+});
