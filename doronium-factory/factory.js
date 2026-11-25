@@ -334,7 +334,7 @@ function revealAround(){if(S.player.layer==="mine")return;let changed=false;cons
 function getQuest(){return S.questIndex>=QUESTS.length?null:QUESTS[S.questIndex]}
 function questCheck(){const q=getQuest();if(!q||S.victory)return;const ok=q.check(S);if(ok){S.money+=q.reward;S.questIndex=Math.min(QUESTS.length,S.questIndex+1);const oldChapter=Math.max(0,Number(S.chapter)||0);S.chapter=Math.max(oldChapter,q.chapter);for(let chapter=oldChapter+1;chapter<=Math.min(4,S.chapter);chapter++)claimSkillPoint("STORY_CHAPTER_"+chapter);log("임무 완료: "+q.title,"good");toast("임무 완료 · "+q.title+"  +"+fmt(q.reward)+" D");$("orbit-dialogue").textContent=q.orbit;playTone(720,.18,"triangle");markDirty();$("active-mission-hud")?.classList.remove("mission-hud-visible");renderMissions();renderHud();renderQuickObjectives();setTimeout(()=>notifyNewMission(getQuest()),650)}}
 function changePanel(name){activePanel=name;document.querySelectorAll(".main-tab").forEach(b=>b.classList.toggle("active",b.dataset.panel===name));document.querySelectorAll(".panel-view").forEach(p=>p.classList.toggle("active",p.id==="panel-"+name));if(name==="inventory")renderInventory();if(name==="catalog")renderCatalog();if(name==="research")renderResearch();if(name==="mission")renderMissions();if(name==="factory")renderFactory()}
-function renderHud(){const p=currentPower();$("hud-money").textContent=short(S.money)+" D";$("hud-doronium").textContent=short(VARIANTS.reduce((a,id)=>a+itemCount(id),0));$("hud-power").textContent=(p.used?Math.round(p.ratio*100):Math.round(p.gen))+"%";$("hud-tier").textContent="TIER "+Math.min(7,Math.floor(S.research.length/2));$("build-count").textContent=S.buildings.length+" / "+BUILDING_LIMIT;$("active-machines").textContent="가동 기계 "+S.buildings.filter(b=>b.status==="RUNNING").length;$("world-population").textContent="엔지니어 1";$("system-state").textContent=p.used>p.gen?"전력 부족":S.victory?"행성 안정화 완료":"시스템 정상";$("sim-speed").textContent="시뮬레이션 "+S.simSpeed+"×";$("pause-sim").textContent=S.paused?"▶ 재개":"Ⅱ 일시정지";$("speed-sim").textContent="속도 "+S.simSpeed+"×";const day=Math.floor(S.seconds/86400)+1,sec=S.seconds%86400,h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);$("world-clock-text").textContent="DAY "+String(day).padStart(2,"0")+" · "+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");$("day-icon").textContent=h>=6&&h<18?"☀":"☾";$("weather-label").textContent=({Clear:"맑음",Rain:"비",Storm:"폭풍",Snow:"눈",Heat:"폭염"})[weatherNow()]||"맑음";$("world-coordinate").textContent="SECTOR "+String(Math.floor(S.player.x/16)+1).padStart(2,"0")+" / X: "+(S.player.x*32-2048)+"m · Z: "+(S.player.y*32-1536)+"m";const biome=biomeAt(S.player.x,S.player.y);const biomeName=({forest:"고대 숲",meadow:"초원",wetland:"습지",desert:"붉은 사막",highlands:"고산 지대",frost:"빙설 산맥",crystal:"수정 협곡",volcanic:"화산 지대"})[biome]||"탐사 구역";$("region-title").innerHTML=biomeName+' <span>SECTOR '+String(Math.floor(S.player.x/16)+1).padStart(2,"0")+"-"+String(Math.floor(S.player.y/16)+1).padStart(2,"0")+"</span>";
+function renderHud(){const p=currentPower();$("hud-money").textContent=short(S.money)+" D";$("hud-doronium").textContent=short(VARIANTS.reduce((a,id)=>a+itemCount(id),0));$("hud-power").textContent=(p.used?Math.round(p.ratio*100):Math.round(p.gen))+"%";$("hud-tier").textContent="TIER "+Math.min(7,Math.floor(S.research.length/2));$("build-count").textContent=S.buildings.length+" / "+BUILDING_LIMIT;$("active-machines").textContent="가동 기계 "+S.buildings.filter(b=>b.status==="RUNNING").length;$("world-population").textContent="엔지니어 1";$("system-state").textContent=p.used>p.gen?"전력 부족":S.victory?"행성 안정화 완료":"시스템 정상";$("sim-speed").textContent="시뮬레이션 "+S.simSpeed+"×";$("pause-sim").textContent=S.paused?"▶ 재개":"Ⅱ 일시정지";$("speed-sim").textContent="속도 "+S.simSpeed+"×";const day=Math.floor(S.seconds/86400)+1,sec=S.seconds%86400,h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);$("world-clock-text").textContent="DAY "+String(day).padStart(2,"0")+" · "+String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");$("day-icon").textContent=h>=6&&h<18?"☀":"☾";$("weather-label").textContent=({Clear:"맑음",Rain:"비",Storm:"폭풍",Snow:"눈",Heat:"폭염"})[weatherNow()]||"맑음";$("world-coordinate").textContent="SECTOR "+String(Math.floor(S.player.x/16)+1).padStart(2,"0")+" / X: "+(S.player.x*32-2048)+"m · Z: "+(S.player.y*32-1536)+"m";const biome=regionAt(S.player.x,S.player.y);const biomeName=({doriForest:"돌이의 숲",denseForest:"울창한 숲",doroniumForest:"도로늄 숲",lava:"용암 지대",cold:"냉각 지대",oilField:"석유 지대",forest:"고대 숲",meadow:"초원",wetland:"습지",desert:"붉은 사막",highlands:"고산 지대",frost:"빙설 산맥",crystal:"수정 협곡",volcanic:"화산 지대"})[biome]||"탐사 구역";$("region-title").innerHTML=biomeName+' <span>SECTOR '+String(Math.floor(S.player.x/16)+1).padStart(2,"0")+"-"+String(Math.floor(S.player.y/16)+1).padStart(2,"0")+"</span>";
  const v=S.survival||{health:100,hunger:100,thirst:100};
  for(const [key,value] of [["health",v.health],["hunger",v.hunger],["thirst",v.thirst]]){
   const fill=$(key+"-fill"),label=$(key+"-value");if(fill)fill.style.width=clamp(value,0,100)+"%";if(label)label.textContent=Math.ceil(value);
@@ -552,9 +552,25 @@ function respawnEngineer(){
 }
 function updateSurvival(dt){
  const v=S.survival;if(!v)return;
- v.hunger=Math.max(0,v.hunger-dt*.026);v.thirst=Math.max(0,v.thirst-dt*.04);
+ v.hunger=Math.max(0,v.hunger-dt*.026);
+ v.thirst=Math.max(0,v.thirst-dt*.04);
  if(v.hunger<=0||v.thirst<=0)v.health=Math.max(0,v.health-dt*(v.thirst<=0?1.05:.65));
  else if(v.hunger>70&&v.thirst>70)v.health=Math.min(100,v.health+dt*.12);
+ const region=S.player.layer==="surface"?regionAt(S.player.x,S.player.y):"mine";
+ const heat=region==="lava",cold=region==="cold",radiation=region==="doroniumForest";
+ v.heatExposure=Math.max(0,(v.heatExposure||0)+(heat?dt:-dt*1.7));
+ v.coldExposure=Math.max(0,(v.coldExposure||0)+(cold?dt:-dt*1.6));
+ v.doroniumExposure=Math.max(0,(v.doroniumExposure||0)+(radiation?dt:-dt*1.4));
+ if(v.heatExposure>28)v.health=Math.max(0,v.health-dt*.22);
+ if(v.coldExposure>36)v.health=Math.max(0,v.health-dt*.16);
+ if(v.doroniumExposure>48)v.health=Math.max(0,v.health-dt*.13);
+ if(!E2E_MODE){
+  const alerts=[];
+  if(heat)alerts.push("용암 지대 · 내열 장비 없이 오래 머물면 화상 위험");
+  if(cold)alerts.push("냉각 지대 · 방한 장비 없이 오래 머물면 빙결 위험");
+  if(radiation)alerts.push("도로늄 숲 · 피폭이 누적되고 있습니다");
+  const alert=$("world-alerts");if(alert)alert.textContent=alerts.join("  /  ");
+ }
  if(v.health<=0)respawnEngineer();
 }
 function showCrystalPreview(id){if(!RESOURCE[id]||(!id.startsWith("doronium_")&&id!=="infinity"))return;if(crystalViewer){crystalViewer.dispose();crystalViewer=null}const title=RESOURCE[id].name,body='<div class="crystal-preview-wrap"><canvas id="crystal-preview-canvas" class="crystal-preview-canvas" aria-label="'+title+' 3D 결정 모델"></canvas><div class="crystal-preview-info"><strong>'+title+'</strong><p>보유량 '+fmt(itemCount(id))+'개 · 품질 '+Math.round(quality(S,id))+' · 순도 '+Math.round(purity(S,id))+'</p><small>결정 계열마다 서로 다른 3D 형상·재질·발광 특성을 적용했습니다.</small></div></div>';showModal("도로늄 3D 결정 도감",body,[{label:"닫기",cls:"primary"}]);crystalViewer=createCrystalViewer($("crystal-preview-canvas"),id)}
