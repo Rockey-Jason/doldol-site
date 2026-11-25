@@ -30,6 +30,7 @@ export function ensureMineInstance(state,id,createDefault){
         mineInfrastructure:state.mineInfrastructure
       });
       state.mineInstanceMigrationComplete=true;
+      for(const building of state.buildings||[])if(building?.layer==="mine"&&!building.mineInstanceID)building.mineInstanceID=key;
     }else{
       const defaults=typeof createDefault==="function"?createDefault():{};
       instance=createMineInstanceState(defaults);
