@@ -66,3 +66,13 @@ test("seeded mine instances add reachable stone and ore pockets without natural 
   assert.notDeepEqual(a,c,"different mine seeds should create distinct pocket distributions");
   assert.equal(pockets.some(node=>String(node.type).toLowerCase().includes("doronium")),false,"natural Doronium remains forbidden");
 });
+
+test("different mine entrance seeds produce distinct deterministic mineral compositions",()=>{
+  const a=makeMineDeposits(622328141),b=makeMineDeposits(501392366),repeat=makeMineDeposits(622328141);
+  const signature=deposits=>Object.entries(deposits)
+    .filter(([,node])=>node.generation==="mineral-pocket-v4")
+    .map(([key,node])=>[key,node.type,node.amount,node.seed,node.depthY].join(":"))
+    .sort().join("|");
+  assert.equal(signature(a),signature(repeat),"a mine entrance seed must be deterministic");
+  assert.notEqual(signature(a),signature(b),"different entrance seeds must change mineral geology, not just saved quantities");
+});
