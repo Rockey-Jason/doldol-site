@@ -1,6 +1,7 @@
 import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=19";
+import { CATALOG_ITEMS, CATALOG_RECIPES, CATALOG_MACHINES, validateCatalog } from "./catalog.js?v=1";
 import { createRuntimeState, ensureItemStacks, addItemStack, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=5";
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=3";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, regionAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=4";
 import { validateGameData } from "./game-data-validation.js?v=3";
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
 import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, awardSkillPoints, unlockSkill, skillNodeStatus, calculateSkillBonuses, validateSkillTree, validateSkillState } from "./skill-runtime.js?v=1";
@@ -136,6 +137,33 @@ const FUSION_STAGES=[
 {name:"결정 핵 형성",temp:4500,pressure:15000,power:34,time:50},
 {name:"인피니티 결정화",temp:5000,pressure:20000,power:40,time:60}
 ];
+/* Expand the live runtime while retaining every legacy save identifier. */
+Object.assign(RESOURCE,CATALOG_ITEMS);
+Object.assign(RECIPES,CATALOG_RECIPES);
+const skippedCatalogMachineItems=new Set(["machine_wiremill","machine_storage","machine_conveyor","machine_doronium_fusion"]);
+for(const machine of CATALOG_MACHINES){
+ if(skippedCatalogMachineItems.has(machine.itemId))continue;
+ const definition={...machine};
+ if(machine.itemId==="machine_transformer")definition.kind="utility";
+ if(machine.itemId==="machine_auto_miner")definition.kind="utility";
+ if(machine.itemId==="machine_solar_panel"){definition.kind="power";definition.generation="solar";definition.gen=10}
+ if(machine.itemId==="machine_wind_turbine"){definition.kind="power";definition.generation="wind";definition.gen=13}
+ if(machine.itemId==="machine_thermal_generator"){definition.kind="power";definition.generation="coal";definition.gen=28}
+ if(machine.itemId==="machine_doronium_generator"){definition.kind="power";definition.generation="doronium";definition.gen=48}
+ definition.defaultRecipe=Object.values(CATALOG_RECIPES).find(recipe=>recipe.station===definition.catalogStation)?.id||null;
+ BUILDINGS.push(definition);
+}
+for(const definition of BUILDINGS){
+ if(definition.id==="assembler")definition.catalogStation="crafting";
+ if(definition.id==="smelter")definition.catalogStation="furnace";
+ if(definition.id==="wiremill"){definition.catalogStation="wiremill";definition.catalogItemId="machine_wiremill"}
+ if(definition.id==="storage")definition.catalogItemId="machine_storage";
+ if(definition.id==="belt")definition.catalogItemId="machine_conveyor";
+}
+const catalogFusion=BUILDINGS.find(definition=>definition.id==="fusion");
+if(catalogFusion){catalogFusion.catalogItemId="machine_doronium_fusion"}
+const CATALOG_VALIDATION=validateCatalog();
+if(!CATALOG_VALIDATION.valid)console.error("Doronium catalogue validation failed",CATALOG_VALIDATION.errors);
 const DATA_VALIDATION=validateGameData({resources:RESOURCE,recipes:RECIPES,variantRecipes:VARIANT_RECIPES,buildings:BUILDINGS,research:RESEARCH});
 if(!DATA_VALIDATION.valid)console.error("Doronium Factory data validation failed",DATA_VALIDATION.errors);
 const QUESTS=[
