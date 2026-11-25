@@ -5,7 +5,7 @@ import {
   mineCellIsClosed, mineCellIsSafe, repairMineSupport,
   mineDrainageNetworks, tickMineDrainage, mineDrainageSummary,
   mineRailStations, setMineRailEnabled, mineRailSummary, tickMineRailRoutes,
-  mineRoutePath, mineRailTrackAt, tickMineSupportSections, supportSectionsSummary, mineVeinSegments
+  mineRoutePath, mineRailTrackAt, tickMineSupportSections, supportSectionsSummary, mineVeinSegments, mineRailPathClosures
 } from "./mine-systems-runtime.js";
 import { createMineEnvironment } from "./mine-runtime.js";
 import { mineMainDriftZ } from "./terrain-system.js";
@@ -226,4 +226,29 @@ test("ore vein decorations remain deterministic and do not mutate deposit quanti
   assert.equal(a.length,5);
   assert.ok(a.every(segment=>segment.length>=8&&segment.width>0));
   assert.equal(deposit.amount,240);
+});
+
+
+test("mine rail stations and route obstacles are scoped to the active entrance",()=>{
+ const state=stateFixture();
+ const A="mine:A",B="mine:B";
+ state.mineInstanceID=A;state.player.mineInstanceID=A;
+ state.buildings=[
+  {uid:"A-STA",type:"mineRailStation",layer:"mine",mineInstanceID:A,mineLevel:1,x:5,y:mineMainDriftZ(5)},
+  {uid:"A-STB",type:"mineRailStation",layer:"mine",mineInstanceID:A,mineLevel:1,x:15,y:mineMainDriftZ(15)},
+  {uid:"B-STA",type:"mineRailStation",layer:"mine",mineInstanceID:B,mineLevel:1,x:20,y:mineMainDriftZ(20)},
+  {uid:"B-STB",type:"mineRailStation",layer:"mine",mineInstanceID:B,mineLevel:1,x:30,y:mineMainDriftZ(30)},
+  {uid:"B-BLOCK",type:"mineGen",layer:"mine",mineInstanceID:B,mineLevel:1,x:10,y:mineMainDriftZ(10)}
+ ];
+ assert.deepEqual(mineRailStations(state,1).map(b=>b.uid),["A-STA","A-STB"]);
+ const closuresA=mineRailPathClosures(state,1,ensureMineInfrastructure(state));
+ assert.equal(closuresA["1:10:"+mineMainDriftZ(10)],undefined,"another mine's generator must not block this mine's rail route");
+ assert.equal(setMineRailEnabled(state,1,true).ok,true);
+ const Aroute=state.mineInfrastructure.railRoutes[1];
+ assert.ok(Aroute.path.length>1);
+ state.mineInstanceID=B;state.player.mineInstanceID=B;
+ assert.deepEqual(mineRailStations(state,1).map(b=>b.uid),["B-STA","B-STB"]);
+ const closuresB=mineRailPathClosures(state,1,ensureMineInfrastructure(state));
+ assert.equal(closuresB["1:10:"+mineMainDriftZ(10)],true,"the active mine's generator must block its own passage");
+ assert.equal(setMineRailEnabled(state,1,true).ok,true);
 });
