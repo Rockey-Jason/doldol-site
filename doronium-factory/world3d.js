@@ -1,5 +1,5 @@
 /* DORONIUM FACTORY — topographic 3D world, underground mine and industrial renderer */
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=4";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=5";
 let THREE = null;
 try { THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"); }
 catch (error) { console.warn("Three.js CDN unavailable; using the compatibility renderer.", error); }
@@ -459,7 +459,7 @@ export function createWorld3D(canvas, getState) {
           makeBox(tail,-4,0,0,7,3,3,tan);
           const collar=mat(node.hostile?0x9e604b:0x4b8e9b,.42,.26);
           makeBox(g,5,18,0,3,4,15,collar);
-          g.userData.wildDori={tail,baseX:worldX,baseZ:worldZ,phase:Number(node.roamSeed)||0,hostile:!!node.hostile};
+          g.userData.wildDori={tail,baseX:worldX,baseY:y,baseZ:worldZ,phase:Number(node.roamSeed)||0,hostile:!!node.hostile};
         }else if(node.type==="relaySite"||node.type==="coreSite"){
           makeCyl(g,0,2,0,9,4,mats.dark,8);makeCyl(g,0,12,0,2,18,mats.trim,8);makeSphere(g,0,24,0,node.type==="coreSite"?5:3,mats.crystal);
         }
@@ -727,7 +727,7 @@ export function createWorld3D(canvas, getState) {
       g.position.z=d.baseZ+Math.cos(angle*.83)*distance*.76;
       g.rotation.y=Math.cos(angle)>.1?Math.PI/2:Math.cos(angle)<-.1?-Math.PI/2:0;
       d.tail.rotation.z=Math.sin(t*7+d.phase)*.42;
-      g.position.y+=Math.sin(t*2.8+d.phase)*.08;
+      g.position.y=d.baseY+Math.sin(t*2.8+d.phase)*.08;
     });
     if(playerModel){const m=state.playerMotion||{x:state.player.x,z:state.player.y,moving:false};const base=state.player?.layer==="mine"?mineFloorY(state.player.mineLevel):surfaceY(state,Math.floor(m.x+.5),Math.floor(m.z+.5));playerModel.position.set(m.x*32,base+1+(Number(m.y)||0)+Math.sin(t*3)*(m.moving ? .13 : .025),m.z*32);if(playerRing){playerRing.position.set(m.x*32,base+2+(Number(m.y)||0),m.z*32);playerRing.visible=state.player?.layer!=="mine";}playerModel.rotation.y=m.yaw??m.facing??0;const swing=m.moving ? Math.sin(t*9)*.48 : Math.sin(t*1.5)*.035;(playerModel.userData.legs||[]).forEach((leg,i)=>leg.rotation.x=swing*(i%2?-1:1));(playerModel.userData.arms||[]).forEach((arm,i)=>arm.rotation.x=m.moving?Math.sin(t*9+i*Math.PI)*.38:0);}
     renderer.render(scene,camera);
