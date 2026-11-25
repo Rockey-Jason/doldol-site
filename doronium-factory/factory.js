@@ -2640,6 +2640,20 @@ if(E2E_MODE){
   snapshot:()=>structuredClone(S),
   mineAudit:()=>auditMineDeposits(S.mineDeposits),
   mineSystems:()=>({environment:structuredClone(ensureMineEnvironment(S)),summary:mineEnvironmentSummary(currentMineEnvironment()||{}),assessment:mineSafetyAssessment(currentMineEnvironment()||{})}),
+  mineInstanceIsolationTest(){
+   const saved=structuredClone(S),savedMotion=structuredClone(playerMotion);
+   try{
+    S=freshState();S.player={...S.player,layer:"surface",x:12,y:20,mineLevel:1};playerMotion={...playerMotion,x:12,z:20,y:0,velocityY:0,grounded:true,path:[],moving:false};
+    enterMine();const firstID=S.mineInstanceID,firstDeposit=S.mineDeposits["1:8:12"];if(!firstDeposit)throw new Error("MINE_INSTANCE_DEPOSIT_FIXTURE_MISSING");
+    firstDeposit.amount=0;S.mineEnvironment[1].waterDepth=.77;exitMine();
+    S.player.x=15;S.player.y=20;playerMotion.x=15;playerMotion.z=20;enterMine();
+    const secondID=S.mineInstanceID,secondDeposit=S.mineDeposits["1:8:12"],secondInitial=secondDeposit?.amount,secondWater=S.mineEnvironment[1].waterDepth;
+    exitMine();S.player.x=12;S.player.y=20;playerMotion.x=12;playerMotion.z=20;enterMine();
+    const firstAgain=S.mineDeposits["1:8:12"]?.amount,firstWaterAgain=S.mineEnvironment[1].waterDepth;
+    return {firstID,secondID,firstDepleted:firstAgain===0,firstWaterPreserved:Math.abs(firstWaterAgain-.77)<1e-9,secondDepositIndependent:secondInitial>0&&secondInitial!==firstAgain,secondWaterIndependent:secondWater!==.77,instanceCount:Object.keys(S.mineInstances||{}).length,ok:firstID!==secondID&&firstAgain===0&&Math.abs(firstWaterAgain-.77)<1e-9&&secondInitial>0&&secondWater!==.77};
+   }finally{S=saved;playerMotion=savedMotion;renderAll()}
+  },
+
   setupMineSystemsTest(){S=freshState();S.player={...S.player,layer:"mine",mineLevel:1,x:5,y:12,onMineCart:false};playerMotion={...playerMotion,x:5,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false};markSceneDirty();renderAll();return this.mineSystems()},
   toggleMineSystemForTest(kind){const env=currentMineEnvironment();return toggleMineEquipment(env,kind)},
   reinforceMineSystemForTest(amount){return reinforceMineSupports(currentMineEnvironment(),amount)},
