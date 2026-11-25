@@ -33,6 +33,7 @@ export function ensureMineInstance(state,id,createDefault){
       });
       state.mineInstanceMigrationComplete=true;
       for(const building of state.buildings||[])if(building?.layer==="mine"&&!building.mineInstanceID)building.mineInstanceID=key;
+      for(const drop of state.worldDrops||[])if(drop?.layer==="mine"&&!drop.mineInstanceID)drop.mineInstanceID=key;
     }else{
       const defaults=typeof createDefault==="function"?createDefault():{};
       instance=createMineInstanceState(defaults);
