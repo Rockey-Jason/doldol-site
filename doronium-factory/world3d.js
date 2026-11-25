@@ -717,7 +717,7 @@ export function createWorld3D(canvas, getState) {
     };
     addLift(3,"mineExit");addLift(36,"mineDescend");
     for(const b of state.buildings||[]){
-      if(b.layer!=="mine"||Number(b.mineLevel||1)!==level)continue;
+      if(b.layer!=="mine"||Number(b.mineLevel||1)!==level||String(b.mineInstanceID||"mine:legacy")!==String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy"))continue;
       const g=new THREE.Group(),x=b.x*32,z=b.y*32;
       g.position.set(x,floorY+1,z);g.rotation.y=-(b.dir||0)*Math.PI/2;mineRoot.add(g);
       const dark=mat(0x172b37,.65,.45),metal=mat(0x647c88,.7,.34),accent=mat(0xd69e58,.48,.28);
