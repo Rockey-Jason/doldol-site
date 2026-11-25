@@ -2827,6 +2827,7 @@ if(E2E_MODE){
    hydrateState(saved);renderAll();setViewMode(S.player.viewMode);
    return {...result,ok:result.preservedDepleted&&result.addedSeams>=38};
   },
+  mineVisualSnapshot:()=>world3d.inspect(),
   backend:world3d.backend,
   motion:()=>({x:playerMotion.x,z:playerMotion.z,path:playerMotion.path.length,moving:playerMotion.moving}),
   viewMode:()=>S.player.viewMode,
