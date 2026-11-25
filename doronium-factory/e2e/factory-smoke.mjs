@@ -503,6 +503,21 @@ try {
 
   const mineOps = await desktop.evaluate(() => window.__doroniumFactoryTest.setupMineSystemsTest());
   assert.equal(mineOps.environment[1].ventilationActive, true, "Legacy and new mine levels must begin with working ventilation");
+  const mineGeologyVisuals = await desktop.evaluate(() => window.__doroniumFactoryTest.scene());
+  assert.ok(mineGeologyVisuals.mineRockDetails > 0,"The mine must render natural rock relief and rubble");
+  assert.ok(mineGeologyVisuals.mineStrataBands > 0,"The mine must render layered rock faces");
+  assert.ok(mineGeologyVisuals.mineSigns >= 2,"The mine must render depth/level signboards");
+  assert.ok(mineGeologyVisuals.mineDustParticles > 0,"The mine must render subtle underground dust");
+  console.log("DORONIUM_MINE_GEOLOGY_VISUALS",JSON.stringify({
+    rocks:mineGeologyVisuals.mineRockDetails,
+    strata:mineGeologyVisuals.mineStrataBands,
+    signs:mineGeologyVisuals.mineSigns,
+    dust:mineGeologyVisuals.mineDustParticles,
+    rails:mineGeologyVisuals.mineRailSegments,
+    lights:mineGeologyVisuals.mineLightCount
+  }));
+
+
   await desktop.locator("#mine-perf-toggle").click();
   assert.equal(await desktop.locator("#mine-perf-panel").isVisible(), true, "The real-device performance panel must open on desktop");
   await desktop.waitForTimeout(700);
