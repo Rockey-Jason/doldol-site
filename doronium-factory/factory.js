@@ -721,23 +721,26 @@ function harvestNode(x,y,node){
   toast("돌이 고기 +1 · 돌이 털 +1");
   playTone(760,.12,"sine");questCheck();renderAll();drawWorld();return;
  }
- const yieldTable={
-  wood:[["wood",3]],birchTree:[["birchWood",2]],
-  rubberTree:[["rubberWood",2],["rubberSap",1]],
-  barkTree:[["barkWood",2]],frozenTree:[["frozenWood",2]],
-  fireTree:[["fireWood",2]],grassPatch:[["grass",3]],
-  heatCrystalNode:[["heatCrystal",1]],coldCrystalNode:[["coldCrystal",1]],
-  water:[["water",5]],stone:[["stone",2]]
+ const gatherSpec={
+  wood:{drops:[["wood",3]],depletion:3},
+  birchTree:{drops:[["birchWood",2]],depletion:1},
+  rubberTree:{drops:[["rubberWood",2],["rubberSap",1]],depletion:1},
+  barkTree:{drops:[["barkWood",2]],depletion:1},
+  frozenTree:{drops:[["frozenWood",2]],depletion:1},
+  fireTree:{drops:[["fireWood",2]],depletion:1},
+  grassPatch:{drops:[["grass",3]],depletion:1},
+  heatCrystalNode:{drops:[["heatCrystal",1]],depletion:1},
+  coldCrystalNode:{drops:[["coldCrystal",1]],depletion:1},
+  water:{drops:[["water",5]],depletion:5},
+  stone:{drops:[["stone",2]],depletion:2}
  };
- const drops=yieldTable[node.type];
- if(!drops){toast("이 자원은 현재 방식으로 채집할 수 없습니다. 원유는 시추기를 사용하세요.","warn");return}
- const gatherAmount=drops.reduce((sum,[,qty])=>sum+qty,0);
- const depletion=Math.min(node.amount,Math.max(1,node.type==="water"?3:node.type==="stone"?2:1));
+ const spec=gatherSpec[node.type];
+ if(!spec){toast("이 자원은 현재 방식으로 채집할 수 없습니다. 원유는 시추기를 사용하세요.","warn");return}
+ const drops=spec.drops,depletion=Math.min(node.amount,spec.depletion);
  node.amount-=depletion;if(node.amount<=0)markVisibilityDirty();
  for(const[id,qty]of drops){
-  const amount=node.type==="water"?Math.min(qty,depletion):Math.min(qty,Math.max(1,Math.ceil(depletion*qty/gatherAmount)));
-  addItem(id,amount,{quality:node.type==="water"?100:86,purity:node.type==="water"?100:88,synthetic:false});
-  S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;
+  addItem(id,qty,{quality:node.type==="water"?100:86,purity:node.type==="water"?100:88,synthetic:false});
+  S.stats.gathered[id]=(S.stats.gathered[id]||0)+qty;
  }
  const message=drops.map(([id,qty])=>RESOURCE[id].name+" +"+qty).join(" · ");
  log(message+" 채집");toast(message);playTone(420,.07,"triangle");questCheck();renderAll();drawWorld();
