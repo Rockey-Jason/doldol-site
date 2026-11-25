@@ -2643,6 +2643,17 @@ if(E2E_MODE){
   snapshot:()=>structuredClone(S),
   mineAudit:()=>auditMineDeposits(S.mineDeposits),
   mineSystems:()=>({environment:structuredClone(ensureMineEnvironment(S)),summary:mineEnvironmentSummary(currentMineEnvironment()||{}),assessment:mineSafetyAssessment(currentMineEnvironment()||{})}),
+  mineEntranceIdentityTest(){
+   const saved=structuredClone(S),savedMotion=structuredClone(playerMotion),old={selectedBuilding,selectedBuild,activeBlueprintID};
+   try{
+    S=freshState();S.player={...S.player,layer:"surface",x:70,y:39,mineLevel:1};playerMotion={...playerMotion,x:70,z:39,y:0,velocityY:0,grounded:true,path:[],moving:false};
+    enterMine(72,42);const firstID=S.mineInstanceID;S.mineDeposits["1:8:12"].amount=0;exitMine();
+    S.player.x=75;S.player.y=46;playerMotion.x=75;playerMotion.z=46;enterMine(72,42);
+    const secondID=S.mineInstanceID,depleted=S.mineDeposits["1:8:12"]?.amount===0;
+    return {firstID,secondID,depleted,entrance:S.player.mineEntrancePosition,ok:firstID==="mine:72:42"&&secondID===firstID&&depleted};
+   }finally{S=saved;playerMotion=savedMotion;selectedBuilding=old.selectedBuilding;selectedBuild=old.selectedBuild;activeBlueprintID=old.activeBlueprintID;renderAll()}
+  },
+
   mineLegacySaveMigrationTest(){
    const saved=structuredClone(S),savedMotion=structuredClone(playerMotion),old={selectedBuilding,selectedBuild,activeBlueprintID};
    try{
