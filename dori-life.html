@@ -965,6 +965,12 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 .observation-live i{width:7px;height:7px;border-radius:50%;background:#8fd2aa;box-shadow:0 0 12px rgba(143,210,170,.55);animation:livePulse 2s ease-in-out infinite}
 .observation-range{margin:15px 0 0;align-items:center}
 .observation-range-summary{margin-left:auto;color:#9dabb5;font-size:10px;font-variant-numeric:tabular-nums}
+.observation-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:11px 0 2px;padding:10px 12px;border:1px solid rgba(255,255,255,.07);border-radius:13px;background:rgba(7,17,27,.25)}
+#observedCloudStatus{color:#a9b7c0;font-size:10px;line-height:1.6}
+.observation-tool-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.observation-tool-button{padding:7px 10px;border:1px solid rgba(226,198,146,.2);border-radius:9px;background:rgba(226,198,146,.07);color:#ead8b6;font:inherit;font-size:10px;cursor:pointer;transition:background .2s,border-color .2s}
+.observation-tool-button:hover:not(:disabled){background:rgba(226,198,146,.14);border-color:rgba(226,198,146,.38)}
+.observation-tool-button:disabled{opacity:.45;cursor:not-allowed}
 .observation-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:16px 0}
 .observation-stat{min-width:0;padding:14px 15px;border:1px solid rgba(255,255,255,.075);border-radius:15px;background:rgba(255,255,255,.035)}
 .observation-stat span{display:block;color:#aab7c1;font-size:10px;letter-spacing:.05em}
@@ -1002,7 +1008,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 .observation-empty{padding:22px 10px;color:#91a1aa;text-align:center;font-size:11px;line-height:1.8}
 .observation-footnote{margin:13px 2px 0;color:#8796a0;font-size:10px;line-height:1.75}
 @media(max-width:850px){.observation-content{grid-template-columns:1fr}}
-@media(max-width:600px){.live-observation{padding:17px;border-radius:19px}.live-observation-head{display:block}.observation-live{display:inline-flex;margin-top:13px}.observation-range{gap:6px}.observation-range-summary{width:100%;margin:3px 0 0}.observation-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.observation-stat{padding:12px}.observation-location-bars{grid-template-columns:1fr;gap:10px}.observation-entry{grid-template-columns:43px 26px minmax(0,1fr) auto;gap:7px;padding:8px}.observation-entry-time{font-size:9px}.observation-entry-copy strong{font-size:10px}}
+@media(max-width:600px){.live-observation{padding:17px;border-radius:19px}.live-observation-head{display:block}.observation-live{display:inline-flex;margin-top:13px}.observation-range{gap:6px}.observation-range-summary{width:100%;margin:3px 0 0}.observation-tools{align-items:flex-start}.observation-tool-actions{width:100%}.observation-tool-button{flex:1}.observation-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.observation-stat{padding:12px}.observation-location-bars{grid-template-columns:1fr;gap:10px}.observation-entry{grid-template-columns:43px 26px minmax(0,1fr) auto;gap:7px;padding:8px}.observation-entry-time{font-size:9px}.observation-entry-copy strong{font-size:10px}}
 
 </style>
 <meta name="description" content="Dori Life에서 돌이의 하루를 실시간으로 지켜보세요. 집 안의 일상과 여러 활동, 시간의 흐름을 담은 돌이사이트 생활 콘텐츠입니다.">
@@ -1518,6 +1524,15 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       <button type="button" data-observed-range="90" aria-pressed="false">최근 90일</button>
       <button type="button" data-observed-range="180" aria-pressed="false">최근 180일</button>
       <span class="observation-range-summary" id="observedRangeSummary">최근 30일</span>
+    </div>
+    <div class="observation-tools">
+      <span id="observedCloudStatus" role="status" aria-live="polite">계정 동기화 연결을 확인하고 있어요.</span>
+      <div class="observation-tool-actions">
+        <button type="button" id="observedSyncButton" class="observation-tool-button" disabled>지금 동기화</button>
+        <button type="button" id="observedExportButton" class="observation-tool-button">기록 백업</button>
+        <button type="button" id="observedImportButton" class="observation-tool-button">백업 가져오기</button>
+        <input id="observedImportFile" type="file" accept="application/json,.json" hidden>
+      </div>
     </div>
     <div class="observation-stats" aria-live="polite">
       <article class="observation-stat"><span>실제 관찰 시간</span><strong id="observedTotalTime">0분</strong><small>이 브라우저에서 관찰한 시간</small></article>
@@ -3443,7 +3458,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   // Real observation log: unlike the date-generated archive above, these entries are
   // created only while this page is visible and an action is actually rendered.
   var OBSERVED_LOG_KEY='doriLifeObservedLogV1';
-  var OBSERVED_LOG_LIMIT=1200;
+  var OBSERVED_LOG_LIMIT=3000;
   var observedStorageAvailable=true;
   var observedLog=[];
   var observedActive=null;
@@ -3489,6 +3504,33 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var category=HISTORY_CATEGORIES.find(function(item){return item.id===id;});
     return category?category.label:'기타';
   }
+  function normalizeImportedObservation(row,cutoff){
+    if(!row||typeof row!=='object')return null;
+    var startedAt=Number(row.startedAt),endedAt=Number(row.endedAt);
+    if(!Number.isFinite(startedAt)||!Number.isFinite(endedAt)||endedAt<=startedAt)return null;
+    if(endedAt<cutoff||endedAt-startedAt>86400000)return null;
+    var categories=['rest','move','play','react','care','social'];
+    var category=categories.indexOf(row.category)>=0?row.category:'react';
+    function textField(value,fallback,max){
+      return typeof value==='string'?value.slice(0,max):fallback;
+    }
+    return {
+      id:textField(row.id,'import-'+startedAt+'-'+endedAt,120),
+      startedAt:startedAt,endedAt:endedAt,durationMs:Math.round(endedAt-startedAt),
+      date:dayKey(new Date(startedAt)),time:timeFormatter.format(new Date(startedAt)),
+      endTime:timeFormatter.format(new Date(endedAt)),
+      title:textField(row.title,'돌이의 일상',100),
+      desc:textField(row.desc,'',360),
+      icon:textField(row.icon,'🐾',8),
+      tag:textField(row.tag,'일상',48),
+      kind:textField(row.kind,'imported',64),
+      pose:textField(row.pose,'idle',48),
+      category:category,
+      location:textField(row.location,'장소 정보 없음',48),
+      interaction:textField(row.interaction,'home',40),
+      endLocation:textField(row.endLocation,'',48)
+    };
+  }
   function closeObservedAction(endAt,shouldRender){
     if(!observedActive)return;
     var duration=Math.max(0,endAt-observedActive.startedAt);
@@ -3514,7 +3556,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var labels={
       bed:'잠자리',food:'밥그릇',water:'물그릇',toy:'장난감 공간',rug:'카펫',
       friend:'식빵이 곁',window:'창가',plant:'화분 주변',robot:'로봇 주변',
-      sofa:'소파 옆',bone:'탐색 구역',home:'거실'
+      sofa:'소파 옆',bone:'탐색 구역',door:'현관 앞',home:'거실'
     };
     if(interaction==='roam'){
       var x=doriActor&&doriActor._doriPosition?Number(doriActor._doriPosition.x):660;
@@ -3693,8 +3735,8 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 
     if(noteEl){
       noteEl.textContent=observedStorageAvailable?
-        '실제 관찰 기록은 이 브라우저에 최대 180일간 저장돼요. 페이지가 닫혀 있거나 백그라운드에 있는 동안의 시간은 관찰로 계산하지 않으며, 다른 기기와 자동 동기화되지 않아요. 선택 기간의 통계는 실제 저장된 관찰 구간만 합산해요.':
-        '브라우저 저장 공간에 접근할 수 없어 현재 탭에서 관찰한 기록만 표시돼요. 페이지를 닫으면 이 기록이 사라질 수 있어요.';
+        '실제 관찰 기록은 최대 180일 동안 보관돼요. 로그인 상태에서는 돌이사이트 계정 동기화가 같은 계정의 다른 기기로도 기록을 전달해요. 로그아웃 상태에서는 이 브라우저에 저장되며, JSON 백업으로 따로 보관할 수 있어요.':
+        '브라우저 저장 공간에 접근할 수 없어 현재 탭에서 관찰한 기록만 표시돼요. 기록 백업을 이용해 별도 보관해 주세요.';
     }
     document.querySelectorAll('[data-observed-range]').forEach(function(button){
       var active=button.getAttribute('data-observed-range')===String(observedRange);
@@ -3708,6 +3750,106 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       observedRange=button.getAttribute('data-observed-range')||'30';
       renderObservedActivity(new Date());
     });
+  });
+  var observedCloudStatusEl=document.getElementById('observedCloudStatus');
+  function renderObservationCloudStatus(){
+    var syncButton=document.getElementById('observedSyncButton');
+    if(!observedCloudStatusEl||!syncButton)return;
+    var cloud=window.doriCloudSync;
+    if(!cloud||!cloud.ready){
+      observedCloudStatusEl.textContent='계정 동기화 연결을 확인하고 있어요.';
+      syncButton.disabled=true;
+      return;
+    }
+    if(cloud.userId){
+      observedCloudStatusEl.textContent='로그인 계정 · 같은 계정의 기기와 자동 동기화';
+      syncButton.disabled=false;
+    }else{
+      observedCloudStatusEl.textContent='로그인 전 · 현재 브라우저에 저장 중';
+      syncButton.disabled=true;
+    }
+  }
+  document.addEventListener('dori:cloud-sync-ready',renderObservationCloudStatus);
+  renderObservationCloudStatus();
+  var observedSyncButton=document.getElementById('observedSyncButton');
+  if(observedSyncButton)observedSyncButton.addEventListener('click',async function(){
+    var cloud=window.doriCloudSync;
+    if(!cloud||!cloud.ready||!cloud.userId){renderObservationCloudStatus();return;}
+    observedSyncButton.disabled=true;
+    observedCloudStatusEl.textContent='계정 동기화를 요청하고 있어요.';
+    try{
+      await cloud.sync();
+      observedCloudStatusEl.textContent='계정 동기화 요청을 보냈어요. 연결 상태를 확인해 주세요.';
+    }catch(error){
+      observedCloudStatusEl.textContent='동기화를 요청하지 못했어요. 네트워크 연결을 확인해 주세요.';
+    }finally{
+      renderObservationCloudStatus();
+    }
+  });
+  var observedExportButton=document.getElementById('observedExportButton');
+  if(observedExportButton)observedExportButton.addEventListener('click',function(){
+    try{
+      var backup={schema:'dori-life-observations',version:1,exportedAt:new Date().toISOString(),records:observedLog};
+      var blob=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+      var url=URL.createObjectURL(blob);
+      var link=document.createElement('a');
+      link.href=url;
+      link.download='dori-life-observations-'+dayKey(new Date())+'.json';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(function(){URL.revokeObjectURL(url);},1200);
+      if(observedCloudStatusEl)observedCloudStatusEl.textContent='관찰 기록 백업 파일을 만들었어요.';
+    }catch(error){
+      if(observedCloudStatusEl)observedCloudStatusEl.textContent='백업 파일을 만들지 못했어요.';
+    }
+  });
+  var observedImportButton=document.getElementById('observedImportButton');
+  var observedImportFile=document.getElementById('observedImportFile');
+  if(observedImportButton&&observedImportFile)observedImportButton.addEventListener('click',function(){observedImportFile.click();});
+  if(observedImportFile)observedImportFile.addEventListener('change',function(){
+    var file=observedImportFile.files&&observedImportFile.files[0];
+    if(!file)return;
+    if(file.size>5*1024*1024){
+      observedCloudStatusEl.textContent='백업 파일은 5MB 이하만 가져올 수 있어요.';
+      observedImportFile.value='';
+      return;
+    }
+    var reader=new FileReader();
+    reader.onload=function(){
+      try{
+        var parsed=JSON.parse(String(reader.result||''));
+        if(!parsed||parsed.schema!=='dori-life-observations'||parsed.version!==1||!Array.isArray(parsed.records)||parsed.records.length>10000){
+          throw new Error('Unsupported Dori Life backup format');
+        }
+        var cutoff=Date.now()-180*86400000;
+        var merged=new Map();
+        observedLog.forEach(function(row){if(row&&row.id)merged.set(String(row.id),row);});
+        var imported=0,rejected=0;
+        parsed.records.forEach(function(row){
+          var normalized=normalizeImportedObservation(row,cutoff);
+          if(!normalized){rejected++;return;}
+          var existing=merged.get(normalized.id);
+          if(!existing||normalized.endedAt>Number(existing.endedAt)){
+            merged.set(normalized.id,normalized);
+            imported++;
+          }
+        });
+        observedLog=Array.from(merged.values()).sort(function(a,b){return Number(b.startedAt)-Number(a.startedAt);}).slice(0,OBSERVED_LOG_LIMIT);
+        saveObservedLog();
+        renderObservedActivity(new Date());
+        observedCloudStatusEl.textContent='백업 병합 완료 · '+imported+'개 추가 · '+rejected+'개 제외';
+      }catch(error){
+        observedCloudStatusEl.textContent='백업 파일을 읽지 못했어요. Dori Life에서 만든 JSON인지 확인해 주세요.';
+      }finally{
+        observedImportFile.value='';
+      }
+    };
+    reader.onerror=function(){
+      observedCloudStatusEl.textContent='파일을 읽지 못했어요.';
+      observedImportFile.value='';
+    };
+    reader.readAsText(file);
   });
   window.addEventListener('storage',function(event){
     if(event.key!==OBSERVED_LOG_KEY)return;
