@@ -458,7 +458,7 @@ function renderCatalog(){
  }else if(mode==="recipes"){
   const rows=Object.entries(CATALOG_RECIPES).filter(([id,r])=>{
    const text=(id+" "+r.name+" "+r.station+" "+Object.keys(r.inputs||{}).join(" ")+" "+r.output).toLowerCase();
-   return (!query||text.includes(query))&&(category==="all"||category==="packaged"&&r.output.startsWith("pack")||category==="doronium"&&r.output.includes("doronium"));
+   const outputKind=RESOURCE[r.output]?.kind||"";return (!query||text.includes(query))&&(category==="all"||category==="packaged"&&r.output.startsWith("pack")||category==="doronium"&&(r.output.includes("doronium")||r.output==="infinity")||category===outputKind);
   });
   count=rows.length;
   cards=rows.map(([id,r])=>'<button type="button" class="catalog-card catalog-recipe-card" data-catalog-recipe="'+id+'"><span class="catalog-item-icon">⚗️</span><div class="catalog-card-copy"><strong>'+r.name+'</strong><small>'+r.station+' · '+r.time+'초</small><small>투입 '+Object.entries(r.inputs||{}).map(([item,n])=>(RESOURCE[item]?.name||item)+" × "+n).join(" · ")+'</small><small>출력 '+(RESOURCE[r.output]?.name||r.output)+' × '+(r.qty||1)+'</small></div><span class="catalog-card-arrow">설비에 지정 →</span></button>');
