@@ -62,7 +62,13 @@ for (const line of lines) {
   }
 }
 
-assert.equal(bankKeys.length, 75, "Unexpected event-bank size; review the test's parser.");
+assert.equal(bankKeys.length, 76, "Unexpected event-bank size; review the test's parser.");
+assert.ok(bankKeys.includes("visitor"), "The event bank must include a friendly visitor event.");
+assert.ok(html.includes('id="doriVisitor"'), "A visitor must have a separate room character.");
+assert.ok(html.includes("function updateVisitorArrival(evt,state)"), "Visitor choreography must include approach, greeting, interaction and departure.");
+assert.ok(html.includes("function updateFriendArrival(evt,state,now)"), "The bread-cat companion must move independently during visits.");
+assert.ok(html.includes("room.dataset.visitor=stage;"), "Visitor phases must be explicit for animation styling.");
+assert.ok(html.includes("room.dataset.friend=pose==='friendPlay'"), "The companion must react to friendship choreography.");
 const missingProfiles = bankKeys.filter((key) => !profiles.has(key));
 assert.deepEqual(missingProfiles, [], "Events without choreography profiles: " + missingProfiles.join(", "));
 
@@ -108,7 +114,9 @@ assert.ok(html.includes("var desiredFacing=isDori&&Math.abs(dx)>7?(dx>0?'right':
 assert.ok(html.includes("function turnFrame(ts)"));
 assert.ok(html.includes("set('frontNearPaw',-.16,1,1,0,-12-5*lickPhase)"), "Grooming must lift the front paw.");
 assert.ok(html.includes("set('hindNearPaw',.18*Math.sin(t*17),1,1,0,-2-7*scratchBeat)"), "Scratching must animate the hind paw.");
-assert.ok(html.includes("var phase=seconds%300;"), "The daily routine must include visible action blocks.");
+assert.ok(html.includes("function buildRoutineCycle(now,base){"), "The behavior director must build seeded routine cycles.");
+assert.ok(html.includes("var cycleIndex=Math.floor(seconds/300);"), "Routine choices must be aligned to five-minute KST blocks.");
+assert.ok(html.includes("DORI-LIFE-ROUTINE-"), "Routine behavior must be deterministic by KST day and cycle.");
 assert.ok(html.includes("var actionBeat=Math.sin(t*5.6)"), "The high-visibility action pass must be present.");
 assert.ok(html.includes("motion-test=1"), "The pose demonstration mode must be available.");
 assert.ok(html.includes("['breakfast','식사','eat']"), "The motion test must drive the eating pose explicitly.");
@@ -138,8 +146,9 @@ assert.ok(html.includes("function kstSecondsOfDay(now){var p=parts(now);return N
 assert.ok(html.includes("var seconds=kstSecondsOfDay(now);"), "Ambient routines must use Korean Standard Time.");
 assert.ok(!html.includes("var hour=now.getHours();"), "Ambient routines must not fall back to the visitor device's local timezone.");
 assert.ok(html.includes("var second=kstSecondsOfDay(now);"), "Roaming destinations must use the same KST time source.");
-assert.ok(html.includes("if(phase<90){"), "The daytime home patrol must last ninety seconds.");
-assert.ok(html.includes("var walkStep=Math.floor(phase/15)%6;"), "The home patrol must use six deliberate 15-second route segments.");
+assert.ok(html.includes("function clampDoriTarget(target){"), "Dori's movement target must stay within the walkable room bounds.");
+assert.ok(html.includes("function keepActorSpacing(target,other,minDistance){"), "Dori must maintain spacing from companions and visitors.");
+assert.ok(html.includes("if(friendIsHere)target=keepActorSpacing(target,friendBread,104);"), "The companion must participate in collision spacing.");
 assert.ok(html.includes("var roamPhase=second%300;"), "Roaming route segments must align with the five-minute daily routine.");
 assert.ok(html.includes("var step=Math.floor(roamPhase/15)%stops.length;"), "Walk destinations must change at the route segment boundary.");
 assert.ok(html.includes("var lastMinuteKey = '';"), "Minute-based UI updates need a persistent KST minute key.");
@@ -157,6 +166,10 @@ assert.ok(html.includes("if(rigFrame||!ready||failed||document.hidden)return;"),
 assert.ok(html.includes("if(rigFrame)cancelAnimationFrame(rigFrame);"), "An already scheduled mesh frame must be cancelled when the tab becomes hidden.");
 assert.ok(html.includes("document.addEventListener('visibilitychange',onRigVisibilityChange);"), "The mesh renderer must suspend and resume with document visibility.");
 assert.ok(html.includes("if(!document.hidden){lastFrame=0;scheduleLoop();}"), "A visible or restored page must restart the mesh from a fresh frame.");
+assert.ok(html.includes("var lowPowerDevice=saveData||hardwareThreads<=4||(deviceMemory>0&&deviceMemory<=4);"), "The renderer must adapt to low-power devices.");
+assert.ok(html.includes("var COLS=lowPowerDevice?28:36,ROWS=lowPowerDevice?32:40;"), "Low-power devices must use a lighter mesh.");
+assert.ok(html.includes("if(!prefersReducedMotion)scheduleLoop();"), "The renderer must stop continuous motion for reduced-motion users.");
+assert.ok(html.includes("if(prefersReducedMotion){"), "Movement tweens must respect reduced-motion preferences.");
 
 // The skinning/render loop must keep executable statements outside line comments.
 // A literal "\\n" inserted after // would comment out the animation call and pts assignment;
@@ -171,11 +184,20 @@ assert.ok(renderBlock.includes(`action.\n      applyLifeLegMotion(pose,t,isDoriM
 
 assert.ok(html.includes("var OBSERVED_LOG_KEY='doriLifeObservedLogV1';"), "The real-observation archive must have a versioned local storage key.");
 assert.ok(html.includes("function recordObservedAction(state,evt,now)"), "The page must record displayed behavior transitions.");
+assert.ok(html.includes("var OBSERVED_LOG_LIMIT=3000;"), "The local observer must retain a longer rolling history.");
+assert.ok(html.includes('id="observedSyncButton"'), "Observation history must expose account sync status.");
+assert.ok(html.includes('id="observedExportButton"'), "Observation history must support JSON backups.");
+assert.ok(html.includes('id="observedImportButton"'), "Observation history must support JSON restore.");
+assert.ok(html.includes("document.addEventListener('dori:cloud-sync-ready',renderObservationCloudStatus);"), "The observer must integrate with the shared Dori account sync.");
+assert.ok(html.includes("schema:'dori-life-observations',version:1"), "Backups must use a versioned data schema.");
+assert.ok(html.includes("function normalizeImportedObservation(row,cutoff){"), "Imported records must be normalized before merging.");
+assert.ok(html.includes("parsed.records.length>10000"), "Imports must reject unreasonable record counts.");
+assert.ok(html.includes("file.size>5*1024*1024"), "Imports must enforce a file-size limit.");
+assert.ok(html.includes("door:'현관 앞'"), "Visitor behavior must have an accurate observation location.");
 assert.ok(html.includes("recordObservedAction(state,evt,now||new Date());"), "The observer must attach to the rendered room state.");
 assert.ok(html.includes("function closeObservedAction(endAt,shouldRender)"), "Observed intervals must be closed and persisted.");
 assert.ok(html.includes("document.addEventListener('visibilitychange',function(){\n    if(document.hidden)closeObservedAction(Date.now());"), "Hidden-tab time must not be counted as observed activity.");
 assert.ok(html.includes("window.addEventListener('pagehide',function(){closeObservedAction(Date.now());});"), "The final visible interval must be saved when leaving the page.");
-assert.ok(html.includes("var walkStep=Math.floor(phase/15)%6;"), "Daytime roaming must use six separate scene segments.");
 assert.ok(html.includes("{x:440,y:438,s:.87},{x:555,y:444,s:.89}"), "The route must begin near the sofa and table rather than the centre only.");
 assert.ok(html.includes("{x:910,y:438,s:.87},{x:1035,y:444,s:.84}"), "The route must extend to the far side of the room.");
 
@@ -210,31 +232,118 @@ const morningKst = vm.runInNewContext("kstSecondsOfDay(new Date('2026-11-15T00:3
 assert.equal(midnightKst, 0, "15:00 UTC must be midnight in Korea.");
 assert.equal(morningKst, 9 * 3600 + 30 * 60, "00:30 UTC must be 09:30 in Korea.");
 
-// Execute the real ambient routine across every second of its five-minute cycle.
-// This catches accidental shadowing where a longer walk window removes later actions.
-const routineStart = html.indexOf("function ambientRoutine(now,base){");
+// Execute the real seeded behavior director. Each cycle must be deterministic,
+ // contiguous, fully occupied, and allowed to differ from adjacent dates/cycles.
+const routineStart = html.indexOf("function buildRoutineCycle(now,base){");
 const routineEnd = html.indexOf("\n  function eventTimestampToday", routineStart);
-assert.ok(routineStart >= 0 && routineEnd > routineStart, "Could not isolate the ambient routine.");
-const ambientFactory = new Function("kstSecondsOfDay", html.slice(routineStart, routineEnd) + "\nreturn ambientRoutine;");
-const ambientRoutine = ambientFactory((now) => now.kstSeconds);
-const baseRoutine = { title: "base", desc: "base", pose: "idle", tag: "base", icon: "🐾" };
-function poseAt(second) {
-  return ambientRoutine({ kstSeconds: 9 * 3600 + second }, baseRoutine).pose;
+assert.ok(routineStart >= 0 && routineEnd > routineStart, "Could not isolate the seeded routine director.");
+const clockStart = html.indexOf("function parts(now)");
+const clockEnd = html.indexOf("\n  function formatMinute", clockStart);
+assert.ok(clockStart >= 0 && clockEnd > clockStart, "Could not isolate the KST and deterministic seed helpers.");
+const routineContext = {
+  partFormatter: new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23"
+  }),
+  dateFormatter: new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit"
+  })
+};
+vm.runInNewContext(html.slice(clockStart, clockEnd), routineContext);
+const routineFactory = new Function(
+  "kstSecondsOfDay", "dayKey", "hash", "rng",
+  html.slice(routineStart, routineEnd) + "\nreturn {buildRoutineCycle,ambientRoutine};"
+);
+const routineApi = routineFactory(
+  routineContext.kstSecondsOfDay,
+  routineContext.dayKey,
+  (value) => {
+    let h = 2166136261;
+    for (let i = 0; i < value.length; i++) { h ^= value.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  },
+  (seed) => {
+    let state = seed >>> 0;
+    return function() {
+      state += 0x6D2B79F5;
+      let t = state;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+);
+const baseRoutine = {title:"base",desc:"base",pose:"idle",tag:"base",icon:"🐾"};
+const samples = [
+  new Date("2026-11-25T00:00:00.000Z"),
+  new Date("2026-11-25T00:05:00.000Z"),
+  new Date("2026-11-25T00:10:00.000Z"),
+  new Date("2026-11-26T00:00:00.000Z"),
+  new Date("2026-11-25T15:00:00.000Z")
+];
+const routineSignatures = new Set();
+for (const now of samples) {
+  const first = routineApi.buildRoutineCycle(now, baseRoutine);
+  const repeated = routineApi.buildRoutineCycle(now, baseRoutine);
+  assert.deepEqual(JSON.parse(JSON.stringify(first)), JSON.parse(JSON.stringify(repeated)),
+    "The same KST cycle must generate the same action plan.");
+  assert.equal(first[0].start, 0, "Each routine must begin at the start of the five-minute block.");
+  assert.equal(first[first.length - 1].end, 300, "Each routine must fill the complete five-minute block.");
+  for (let i = 0; i < first.length; i++) {
+    assert.ok(first[i].duration > 0, "Every routine action must have a positive duration.");
+    if (i) assert.equal(first[i].start, first[i - 1].end, "Routine actions must be contiguous without gaps or overlaps.");
+    assert.ok(first[i].state && supportedPoses.has(first[i].state.pose),
+      "Every routine action must use a supported animated pose.");
+  }
+  for (let second = 0; second < 300; second++) {
+    const state = routineApi.ambientRoutine(new Date(now.getTime() + second * 1000), baseRoutine);
+    assert.ok(state && supportedPoses.has(state.pose), "Every second must have a supported visible action.");
+  }
+  routineSignatures.add(first.map((item) => item.state.pose + ":" + item.state.title).join("|"));
 }
-for (let second = 0; second < 300; second++) {
-  const pose = poseAt(second);
-  let valid = false;
-  if (second < 90) valid = pose === "walk" || pose === "explore";
-  else if (second < 108) valid = pose === "sniff";
-  else if (second < 133) valid = pose === "play";
-  else if (second < 153) valid = pose === "water";
-  else if (second < 173) valid = pose === "groom" || pose === "scratch";
-  else if (second < 207) valid = ["flop", "sleep", "cuddle", "doze"].includes(pose);
-  else if (second < 227) valid = pose === "wake" || pose === "stretch";
-  else if (second < 252) valid = ["curious", "listen", "lookUp"].includes(pose);
-  else if (second < 280) valid = ["sit", "beg", "wait"].includes(pose);
-  else valid = pose === "happy";
-  assert.ok(valid, "Unexpected or missing routine pose at " + second + " seconds: " + pose);
-}
+assert.ok(routineSignatures.size >= 4, "Routine choices must vary across days and five-minute cycles.");
+
+// Test the real room-bound helpers for clipping and companion separation.
+const routeStart = html.indexOf("function clampDoriTarget(target){");
+const routeEnd = html.indexOf("\n  function updateDoriMovement", routeStart);
+assert.ok(routeStart >= 0 && routeEnd > routeStart, "Could not isolate room-bound helpers.");
+const routeApi = new Function(html.slice(routeStart, routeEnd) + "\nreturn {clampDoriTarget,keepActorSpacing};")();
+assert.deepEqual(
+  JSON.parse(JSON.stringify(routeApi.clampDoriTarget({x:-100,y:900,s:3,key:"outside"}))),
+  {x:330,y:462,s:.94,key:"outside"}
+);
+const separated = routeApi.keepActorSpacing(
+  {x:500,y:432,s:.9,key:"target"},
+  {_doriPosition:{x:500,y:432,s:.88},style:{opacity:"1"},getAttribute:()=> "0"},
+  104
+);
+assert.ok(Math.hypot(separated.x - 500, separated.y - 432) >= 103.9,
+  "Dori must maintain minimum spacing from an active companion.");
+
+// Validate backup import normalization against malformed, future and oversized intervals.
+const normalizeStart = html.indexOf("function normalizeImportedObservation(row,cutoff){");
+const normalizeEnd = html.indexOf("\n  function closeObservedAction", normalizeStart);
+assert.ok(normalizeStart >= 0 && normalizeEnd > normalizeStart, "Could not isolate backup import validation.");
+const normalizeContext = {
+  dayKey: () => "2026-11-25",
+  timeFormatter: {format: () => "09:00"}
+};
+const normalizeImportedObservation = new Function(
+  "dayKey","timeFormatter",
+  html.slice(normalizeStart,normalizeEnd)+"\nreturn normalizeImportedObservation;"
+)(normalizeContext.dayKey,normalizeContext.timeFormatter);
+const cutoff = Date.now() - 180 * 86400000;
+const validBackup = normalizeImportedObservation({
+  id:"safe-id",startedAt:cutoff+1000,endedAt:cutoff+61000,title:"A".repeat(200),
+  category:"unknown",location:"<img src=x>",icon:"🐾"
+},cutoff);
+assert.ok(validBackup && validBackup.title.length === 100, "Imported titles must be length-limited.");
+assert.equal(validBackup.category,"react", "Imported categories must be restricted to known values.");
+assert.equal(normalizeImportedObservation({startedAt:10,endedAt:5},cutoff),null,
+  "Negative or inverted intervals must be rejected.");
+assert.equal(normalizeImportedObservation({startedAt:10,endedAt:10+86400001},cutoff),null,
+  "Intervals longer than one day must be rejected.");
+assert.equal(normalizeImportedObservation({startedAt:cutoff-86400000,endedAt:cutoff-86000000},cutoff),null,
+  "Expired backup records must be rejected.");
 
 console.log("DORI LIFE QA passed: " + bankKeys.length + " events, " + profiles.size + " choreography profiles, inline JavaScript parsed, all action poses supported.");console.log("DORI LIFE QA passed: " + bankKeys.length + " events, " + profiles.size + " choreography profiles, inline JavaScript parsed, all action poses supported.");
