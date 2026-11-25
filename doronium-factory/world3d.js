@@ -411,7 +411,7 @@ export function createWorld3D(canvas, getState) {
         for(let i=0;i<3;i++)nodeInstance(nodeBatches.ripples,worldX+(i-1)*7,y+1.8,worldZ+(i%2?4:-4),1,1,1);
       }else{
         const g=new THREE.Group();g.position.set(worldX,y,worldZ);
-        g.userData={cell:{x,z},targetKind:node.type==="mineEntrance"?{kind:"mineEntrance"}:{kind:"resource",type:node.type}};
+        g.userData={cell:{x,z},targetKind:node.type==="mineEntrance"?{kind:"mineEntrance"}:node.type==="wildDori"?{kind:"wildDori",x,z}:{kind:"resource",type:node.type},wildDori:null};
         nodeRoot.add(g);nodeGroupsByKey.set(key,g);
         if(node.type==="mineEntrance"){
           const stone=mat(0x53616a,.18,.9),glow=mat(0x3c9eaa,.3,.35,0x124f59);
@@ -442,6 +442,24 @@ export function createWorld3D(canvas, getState) {
           makeBox(g,0,13,0,3,22,3,mat(0x65727a,.5,.6));
           makeBox(g,0,25,0,17,2,3,rim);
           if(highEndDevice){const glow=new THREE.PointLight(0x557a9c,.25,38,2);glow.position.y=8;g.add(glow);}
+        }else if(node.type==="wildDori"){
+          const tan=mat(0xb98250,.83,.18),lightTan=mat(0xd7b07a,.86,.14),white=mat(0xf5efe5,.8,.12),dark=mat(0x31251d,.35,.32),nose=mat(0x1d1715,.2,.48);
+          makeBox(g,0,14,0,24,13,15,tan);
+          makeSphere(g,10,23,0,10.5,tan);
+          makeSphere(g,16,18,0,6,white);
+          makeBox(g,8,15,0,12,5,9,white);
+          makeSphere(g,20,18,0,1.8,nose);
+          makeSphere(g,13,25,5.2,1.45,dark);makeSphere(g,13,25,-5.2,1.45,dark);
+          makeBox(g,5,32,5,5,10,4,lightTan);makeBox(g,5,32,-5,5,10,4,lightTan);
+          makeBox(g,-2,12,6,5,12,5,white);makeBox(g,-2,12,-6,5,12,5,white);
+          makeBox(g,11,12,6,5,12,5,tan);makeBox(g,11,12,-6,5,12,5,tan);
+          makeBox(g,-4,4,6,5,4,5,white);makeBox(g,-4,4,-6,5,4,5,white);
+          makeBox(g,9,4,6,5,4,5,white);makeBox(g,9,4,-6,5,4,5,white);
+          const tail=new THREE.Group();tail.position.set(-12,19,0);g.add(tail);
+          makeBox(tail,-4,0,0,7,3,3,tan);
+          const collar=mat(node.hostile?0x9e604b:0x4b8e9b,.42,.26);
+          makeBox(g,5,18,0,3,4,15,collar);
+          g.userData.wildDori={tail,baseX:worldX,baseZ:worldZ,phase:Number(node.roamSeed)||0,hostile:!!node.hostile};
         }else if(node.type==="relaySite"||node.type==="coreSite"){
           makeCyl(g,0,2,0,9,4,mats.dark,8);makeCyl(g,0,12,0,2,18,mats.trim,8);makeSphere(g,0,24,0,node.type==="coreSite"?5:3,mats.crystal);
         }
@@ -700,6 +718,16 @@ export function createWorld3D(canvas, getState) {
       if(a.outputMesh){const v=a.outputMesh.userData.baseScale||new THREE.Vector3(1,1,1);a.outputMesh.position.y=24+(running?Math.sin(t*2.1)*1.1:0);a.outputMesh.rotation.y=running?t*.65:0;a.outputMesh.scale.set(v.x,v.y,v.z);}
       if(a.glow)a.glow.material.opacity=running ? .66+Math.sin(t*4)*.18 : .18;
       if(a.itemGroup&&b.item){const p=clamp((b.moveTimer||0)/.75,0,1),n=a.itemGroup.children.length,cols=Math.min(6,n),rows=Math.ceil(n/cols);for(let i=0;i<n;i++){const m=a.itemGroup.children[i];m.position.x=((i%cols)-(cols-1)/2)*3.0;m.position.z=-((Math.floor(i/cols)-(rows-1)/2)*3.0)-(p-.5)*18;m.position.y=8.6+Math.sin(t*5+i)*.18;m.rotation.y=t*1.5+i*.45;m.rotation.x=Math.sin(t*2+i)*.1;}}
+    });
+    if(!inMine&&!state.paused)nodeGroupsByKey.forEach(g=>{
+      const d=g.userData?.wildDori;if(!d)return;
+      const t=performance.now()*.001,angle=t*.52+d.phase;
+      const distance=d.hostile?11:34;
+      g.position.x=d.baseX+Math.sin(angle)*distance;
+      g.position.z=d.baseZ+Math.cos(angle*.83)*distance*.76;
+      g.rotation.y=Math.cos(angle)>.1?Math.PI/2:Math.cos(angle)<-.1?-Math.PI/2:0;
+      d.tail.rotation.z=Math.sin(t*7+d.phase)*.42;
+      g.position.y+=Math.sin(t*2.8+d.phase)*.08;
     });
     if(playerModel){const m=state.playerMotion||{x:state.player.x,z:state.player.y,moving:false};const base=state.player?.layer==="mine"?mineFloorY(state.player.mineLevel):surfaceY(state,Math.floor(m.x+.5),Math.floor(m.z+.5));playerModel.position.set(m.x*32,base+1+(Number(m.y)||0)+Math.sin(t*3)*(m.moving ? .13 : .025),m.z*32);if(playerRing){playerRing.position.set(m.x*32,base+2+(Number(m.y)||0),m.z*32);playerRing.visible=state.player?.layer!=="mine";}playerModel.rotation.y=m.yaw??m.facing??0;const swing=m.moving ? Math.sin(t*9)*.48 : Math.sin(t*1.5)*.035;(playerModel.userData.legs||[]).forEach((leg,i)=>leg.rotation.x=swing*(i%2?-1:1));(playerModel.userData.arms||[]).forEach((arm,i)=>arm.rotation.x=m.moving?Math.sin(t*9+i*Math.PI)*.38:0);}
     renderer.render(scene,camera);
