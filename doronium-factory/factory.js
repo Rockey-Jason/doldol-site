@@ -189,7 +189,7 @@ function notifyNewMission(q){if(!q||E2E_MODE)return;const el=$("mission-alert");
 let storySceneIndex=0;
 const DORONIUM_PROLOGUE=[
  {icon:"🐅",eyebrow:"A TALE FROM THE OLD FOREST",title:"아주 먼 옛날, 호랑이가 나타나던 시절",text:"아주 먼 옛날, 호랑이들이 밤마다 마을을 찾아와 물건들을 어지럽히곤 했습니다. 사람들은 밤이 올 때마다 걱정했어요.",speaker:"옛날이야기",line:"“오늘 밤에도 호랑이들이 올까?” 마을 사람들은 서로를 걱정하며 작은 불빛 아래 모였습니다."},
- {icon:"🐕",eyebrow:"THE LITTLE COMPANION",title:"사람들에게는 돌이가 있었어요",text:"사람들은 돌이와 함께 숲을 탐험하고 사냥을 했습니다. 돌이는 작은 발로 씩씩하게 달려가며 모두를 도왔어요.",speaker:"사람들",line:"“자자… 돌이, 물어와!”  “멍멍! 멍머멍머!”"},
+ {icon:"🐕",eyebrow:"THE LITTLE COMPANION",title:"돌이는 사람들과 함께 사냥했어요",text:"사람들이 소를 가리키며 부탁하자 돌이는 힘차게 짖으며 달려갔습니다. 소는 깜짝 놀라 잠시 주저앉았고, 돌이는 사람들을 도와 소를 데려왔어요.",speaker:"사람들",line:"“자자… 돌이, 물어와!”  “멍멍! 멍머멍머!”  “잘했어!”  “왕왕!”"},
  {icon:"🌲",eyebrow:"A BARK IN THE FOREST",title:"돌이의 짖음이 숲에 울려 퍼졌어요",text:"돌이의 힘찬 짖음에 놀란 동물들은 멀찍이 물러났고, 사람들은 돌이와 함께 숲을 살펴볼 수 있었습니다.",speaker:"마을 사람들",line:"“잘했어, 돌이!”  돌이는 꼬리를 흔들며 더 깊은 숲을 향해 달려갔습니다."},
  {icon:"🌳",eyebrow:"THE UNUSUAL TREE",title:"어느 날, 이상한 나무를 발견했습니다",text:"돌이가 유난히 신나게 짖는 곳에는 처음 보는 나무가 한 그루 자라고 있었습니다. 놀랍게도 나뭇가지에는 고기가 열리고 있었어요.",speaker:"사람들",line:"“어? 저 나무에 고기가 열려 있잖아!”  돌이가 찾아낸 것은 끝없이 열매를 맺는 신비한 나무였습니다."},
  {icon:"📜",eyebrow:"THE OLD SIGN",title:"나무 옆 표지판에는 비밀이 적혀 있었어요",text:"표지판에는 이 나무의 고기에 돌이의 털을 섞으면 특별한 인챈트가 생기고, 그것을 10:1 비율로 압축하면 아주 단단한 물질을 만들 수 있다고 적혀 있었습니다.",speaker:"표지판",line:"‘돌이 고기에 돌이 털을 섞어 인챈트 고기를 만든다. 인챈트 고기 10개를 압축하면 도로늄 1개가 탄생한다.’"},
