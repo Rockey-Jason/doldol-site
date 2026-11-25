@@ -148,14 +148,15 @@ export function repairMineSupport(state,level,x,z,amount=35){
 function activeMineLevels(state){
   const levels=new Set();
   if(state.player?.layer==="mine")levels.add(clamp(integer(state.player.mineLevel,1),1,LEVELS));
-  for(const b of state.buildings||[])if(b?.layer==="mine")levels.add(clamp(integer(b.mineLevel,1),1,LEVELS));
-  for(const b of state.buildings||[])if(b?.layer==="mine"&&DRAIN_TYPES.has(b.type))levels.add(clamp(integer(b.mineLevel,1),1,LEVELS));
+  for(const b of state.buildings||[])if(b?.layer==="mine"&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy"))levels.add(clamp(integer(b.mineLevel,1),1,LEVELS));
+  for(const b of state.buildings||[])if(b?.layer==="mine"&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&DRAIN_TYPES.has(b.type))levels.add(clamp(integer(b.mineLevel,1),1,LEVELS));
   for(let level=1;level<=LEVELS;level++)if((state.buildings||[]).some(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&b.type==="mineRailStation"))levels.add(level);
   return levels;
 }
 
-function connectedDrainComponents(buildings,level){
-  const nodes=(buildings||[]).filter(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&DRAIN_TYPES.has(b.type));
+function connectedDrainComponents(state,level){
+  const buildings=state.buildings||[];
+  const nodes=buildings.filter(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&DRAIN_TYPES.has(b.type));
   const byCell=new Map(nodes.map(node=>[cellKey(integer(node.x),integer(node.y)),node]));
   const visited=new Set(),components=[];
   for(const node of nodes){
@@ -174,7 +175,7 @@ function connectedDrainComponents(buildings,level){
   return components;
 }
 export function mineDrainageNetworks(state,level){
-  const components=connectedDrainComponents(state.buildings,integer(level,1));
+  const components=connectedDrainComponents(state,integer(level,1));
   return components.map(component=>{
     const pumps=component.nodes.filter(b=>b.type==="mineDrainPump");
     const tanks=component.nodes.filter(b=>b.type==="mineWaterTank");
