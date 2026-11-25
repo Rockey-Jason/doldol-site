@@ -862,9 +862,80 @@ function tickMachine(b,dt,ratio){
  const meta={quality:qualityOut,purity:purityOut,synthetic:b.activeMeta.synthetic};
  if(createOutput(b,id,r.qty||1,meta)){b.progress=0;b.activeMeta=null;b.activeRecipe=null}
 }
-function tickBelts(dt){for(const b of S.buildings){if(!isBeltType(b.type))continue;if(!b.item)continue;b.moveTimer=(b.moveTimer||0)+dt;if(b.moveTimer<.75)continue;b.moveTimer=0;const dir=DIRS[b.dir||1],nx=b.x+dir.x,ny=b.y+dir.y,target=buildingAt(nx,ny);if(target){if(target.type==="storage"||target.type==="warehouse"){addItem(b.item.id,b.item.qty,b.item.meta,false);log("물류 센터 회수 · "+RESOURCE[b.item.id].name);b.item=null;markDirty()}else if(target.type==="market"){const amount=b.item.qty,earned=Math.floor(amount*RESOURCE[b.item.id].price*.8);S.money+=earned;S.stats.sold+=amount;b.item=null;log("자동 거래 · "+fmt(earned)+" D");markDirty()}else if(["machine","reactor","variantLab"].includes(buildingDef(target.type)?.kind)||["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.item.id,b.item.qty,b.item.meta);b.item=null;target.status="WAITING_INPUT"}continue}
- const next=S.buildings.find(x=>x.x===nx&&x.y===ny&&isBeltType(x.type));if(next&&!next.item){next.item=b.item;b.item=null;next.moveTimer=.45;markDirty()}}
- for(const b of S.buildings){if(!b.output)continue;const dir=DIRS[b.dir||1],nx=b.x+dir.x,ny=b.y+dir.y,target=buildingAt(nx,ny);if(!target)continue;if(isBeltType(target.type)&&!target.item){target.item={...b.output};target.moveTimer=.45;clearCompletionBuffer(b);b.status="IDLE";markDirty()}else if(target.type==="storage"||target.type==="warehouse"){addItem(b.output.id,b.output.qty,b.output.meta,false);clearCompletionBuffer(b);b.status="IDLE";log("창고 자동 적재 · 생산품 회수");markDirty()}else if(target.type==="market"){const earned=Math.floor(b.output.qty*RESOURCE[b.output.id].price*.8);S.money+=earned;S.stats.sold+=b.output.qty;log("산업 거래소 자동 판매 · "+fmt(earned)+" D");clearCompletionBuffer(b);b.status="IDLE";markDirty()}else if(["machine","reactor","variantLab"].includes(target.type)){addInput(target,b.output.id,b.output.qty,b.output.meta);clearCompletionBuffer(b);b.status="IDLE";markDirty()}}}
+function logisticsDirection(b,item){
+ if(b.type==="catalog_sorter"&&b.filterItemId&&item.id!==b.filterItemId)return ((b.dir||1)+1)%4;
+ if(b.type==="catalog_distributor"){
+  const choices=[0,1,2,3].map(offset=>((b.dir||1)+((b.distributionCursor||0)+offset))%4);
+  const route=choices.find(dir=>{
+   const vector=DIRS[dir],next=buildingAt(b.x+vector.x,b.y+vector.y);
+   return !!next&&(isBeltType(next.type)||["storage","warehouse","market","catalog_shipping_center","catalog_quality_checker","catalog_auto_quality_checker"].includes(next.type)||["machine","reactor","variantLab"].includes(buildingDef(next.type)?.kind));
+  });
+  if(route!==undefined){b.distributionCursor=((choices.indexOf(route)+1)%4);return route}
+ }
+ return Number.isInteger(b.outputDir)?b.outputDir:(b.dir||1);
+}
+function acceptFactoryLogisticsItem(target,item){
+ const type=target.type,copy={id:item.id,qty:item.qty,meta:{...(item.meta||{})}};
+ if(type==="storage"||type==="warehouse"){
+  addItem(copy.id,copy.qty,copy.meta,false);log("물류 센터 회수 · "+(RESOURCE[copy.id]?.name||copy.id));return true;
+ }
+ if(type==="market"){
+  const earned=Math.floor(copy.qty*(RESOURCE[copy.id]?.price||0)*.8);
+  S.money+=earned;S.stats.sold+=copy.qty;log("산업 거래소 자동 거래 · "+fmt(earned)+" D");return true;
+ }
+ if(type==="catalog_shipping_center"){
+  const earned=Math.floor(copy.qty*(RESOURCE[copy.id]?.price||0)*.95);
+  S.money+=earned;S.stats.sold+=copy.qty;target.shipped=(target.shipped||0)+copy.qty;target.lastShipment=copy.id;
+  target.status="SHIPPED";log("출하 센터 정산 · "+(RESOURCE[copy.id]?.name||copy.id)+" × "+fmt(copy.qty)+" · "+fmt(earned)+" D");return true;
+ }
+ if(type==="catalog_quality_checker"||type==="catalog_auto_quality_checker"){
+  if(target.output)return false;
+  const quality=Number(copy.meta.quality??90),purity=Number(copy.meta.purity??90);
+  const threshold=type==="catalog_auto_quality_checker"?92:80;
+  if(quality>=threshold&&purity>=threshold){
+   target.output=copy;target.outputDir=target.dir??1;target.status="QUALITY_PASS";target.passed=(target.passed||0)+copy.qty;
+   log("품질 검사 통과 · "+(RESOURCE[copy.id]?.name||copy.id)+" · 품질 "+Math.round(quality)+" / 순도 "+Math.round(purity));
+  }else{
+   target.rejected=(target.rejected||0)+copy.qty;target.status="QUALITY_REJECTED";
+   addItem(copy.id,copy.qty,copy.meta,false);
+   log("품질 검사 반려 · 창고 반환 · "+(RESOURCE[copy.id]?.name||copy.id)+" · 품질 "+Math.round(quality)+" / 순도 "+Math.round(purity),"warn");
+  }
+  return true;
+ }
+ const routed=["catalog_sorter","catalog_merger","catalog_distributor","catalog_magnetic_inserter","catalog_item_elevator","catalog_water_elevator","catalog_maglev_elevator"];
+ if(routed.includes(type)){
+  if(target.output)return false;
+  target.output=copy;
+  target.outputDir=logisticsDirection(target,copy);
+  target.status=type==="catalog_sorter"?"SORTING":type==="catalog_distributor"?"DISTRIBUTING":type==="catalog_merger"?"MERGING":type.includes("elevator")?"ELEVATING":"INSERTING";
+  return true;
+ }
+ const kind=buildingDef(type)?.kind;
+ if(["machine","reactor","variantLab"].includes(kind)||["machine","reactor","variantLab"].includes(type)){
+  addInput(target,copy.id,copy.qty,copy.meta);target.status="WAITING_INPUT";return true;
+ }
+ return false;
+}
+function tickBelts(dt){
+ for(const b of S.buildings){
+  if(!isBeltType(b.type)||!b.item)continue;
+  b.moveTimer=(b.moveTimer||0)+dt;if(b.moveTimer<.75)continue;b.moveTimer=0;
+  const dir=DIRS[b.dir||1],nx=b.x+dir.x,ny=b.y+dir.y,target=buildingAt(nx,ny);
+  if(target){if(acceptFactoryLogisticsItem(target,b.item)){b.item=null;markDirty()}continue}
+  const next=S.buildings.find(x=>x.x===nx&&x.y===ny&&isBeltType(x.type));
+  if(next&&!next.item){next.item=b.item;b.item=null;next.moveTimer=.45;markDirty()}
+ }
+ for(const b of S.buildings){
+  if(!b.output)continue;
+  const direction=Number.isInteger(b.outputDir)?b.outputDir:(b.dir||1),dir=DIRS[direction],nx=b.x+dir.x,ny=b.y+dir.y,target=buildingAt(nx,ny);
+  if(!target)continue;
+  if(isBeltType(target.type)&&!target.item){
+   target.item={...b.output};target.moveTimer=.45;clearCompletionBuffer(b);b.status="IDLE";b.outputDir=null;markDirty();
+  }else if(acceptFactoryLogisticsItem(target,b.output)){
+   clearCompletionBuffer(b);if(b.status!=="QUALITY_PASS"&&b.status!=="QUALITY_REJECTED")b.status="IDLE";b.outputDir=null;markDirty();
+  }
+ }
+}
 function tick(dt){
  if(S.paused||S.victory)return;
  const context={state:S,dt,power:null};
