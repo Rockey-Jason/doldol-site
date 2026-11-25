@@ -981,7 +981,8 @@ const BUILDING_FOOTPRINTS=Object.freeze({
 function getBuildingFootprint(type){return BUILDING_FOOTPRINTS[type]||{width:1,height:1}}
 function buildingFootprintCells(b){const f=b.footprint||getBuildingFootprint(b.type);return footprintCells({x:b.x,y:b.y,width:f.width,height:f.height,rotation:b.footprintRotation??0})}
 function buildingOccupiesCell(x,y){
- for(const b of S.buildings){if((S.player.layer==="mine")!==(b.layer==="mine"))continue;if(S.player.layer==="mine"&&Number(b.mineLevel||1)!==Number(S.player.mineLevel||1))continue;const cells=buildingFootprintCells(b);if(cells.some(p=>p.x===x&&p.y===y))return true}
+ const activeMineID=String(S.player?.mineInstanceID||S.mineInstanceID||"mine:legacy");
+ for(const b of S.buildings){if((S.player.layer==="mine")!==(b.layer==="mine"))continue;if(S.player.layer==="mine"&&(Number(b.mineLevel||1)!==Number(S.player.mineLevel||1)||String(b.mineInstanceID||"mine:legacy")!==activeMineID))continue;const cells=buildingFootprintCells(b);if(cells.some(p=>p.x===x&&p.y===y))return true}
  return false;
 }
 function escapeHTML(value){return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]))}
@@ -1117,8 +1118,9 @@ function isWalkable(x,y){
  if(x<0||y<0||x>=(mine?MINE_W:WORLD_W)||y>=(mine?MINE_H:WORLD_H))return false;
  if(mine){
   if(!canTraverseMineCell(x,y))return false;
+  const activeMineID=String(S.player?.mineInstanceID||S.mineInstanceID||"mine:legacy");
   const blocking=(S.buildings||[]).some(building=>{
-   if(building.layer!=="mine"||Number(building.mineLevel||1)!==Number(S.player.mineLevel||1)||["mineDrainPipe","mineRailStation"].includes(building.type))return false;
+   if(building.layer!=="mine"||Number(building.mineLevel||1)!==Number(S.player.mineLevel||1)||String(building.mineInstanceID||"mine:legacy")!==activeMineID||["mineDrainPipe","mineRailStation"].includes(building.type))return false;
    return buildingFootprintCells(building).some(cell=>cell.x===x&&cell.y===y);
   });
   return !blocking;
@@ -2656,13 +2658,13 @@ if(E2E_MODE){
      {uid:"B-BLOCK",type:"mineGen",layer:"mine",mineInstanceID:B,mineLevel:1,x:10,y:mineMainDriftZ(10),fuelTimer:30,status:"RUNNING"}
     ];
     S.powerTopologyLayers.mine[1]=true;const powerA=currentPower().gen,stationsA=mineRailStations(S,1).map(b=>b.uid),closuresA=mineNavigationClosures(1);
-    const blockerKey="1:10:"+mineMainDriftZ(10),blockerIgnoredInA=closuresA[blockerKey]!==true;
+    const blockerKey="1:10:"+mineMainDriftZ(10),blockerIgnoredInA=closuresA[blockerKey]!==true,walkableA=isWalkable(10,mineMainDriftZ(10)),occupiedA=buildingOccupiesCell(10,mineMainDriftZ(10));
     saveActiveMineInstance(S);S.player.layer="surface";
     activateMineInstance(S,B,()=>createMineInstanceDefaults(B));S.player.layer="mine";
     const powerB=currentPower().gen,stationsB=mineRailStations(S,1).map(b=>b.uid),closuresB=mineNavigationClosures(1);
-    const blockerAppliedInB=closuresB[blockerKey]===true;
+    const blockerAppliedInB=closuresB[blockerKey]===true,walkableB=isWalkable(10,mineMainDriftZ(10)),occupiedB=buildingOccupiesCell(10,mineMainDriftZ(10));
     const topologyA=S.mineInstances[A].powerTopology[1]===true,topologyB=S.powerTopologyLayers.mine[1]===true;
-    return {powerA,powerB,stationsA,stationsB,blockerIgnoredInA,blockerAppliedInB,topologyA,topologyB,ok:powerA===1200&&powerB===1200&&stationsA.length===2&&stationsA.every(id=>id.startsWith("A-"))&&stationsB.length===2&&stationsB.every(id=>id.startsWith("B-"))&&blockerIgnoredInA&&blockerAppliedInB&&topologyA&&!topologyB};
+    return {powerA,powerB,stationsA,stationsB,blockerIgnoredInA,blockerAppliedInB,walkableA,walkableB,occupiedA,occupiedB,topologyA,topologyB,ok:powerA===1200&&powerB===1200&&stationsA.length===2&&stationsA.every(id=>id.startsWith("A-"))&&stationsB.length===2&&stationsB.every(id=>id.startsWith("B-"))&&blockerIgnoredInA&&blockerAppliedInB&&walkableA&&!walkableB&&!occupiedA&&occupiedB&&topologyA&&!topologyB};
    }finally{S=saved;playerMotion=savedMotion;renderAll()}
   },
 
