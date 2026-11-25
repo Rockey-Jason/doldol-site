@@ -2138,7 +2138,10 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     if((inlineOpacity!==''&&inlineOpacity!=null&&Number(inlineOpacity)<=0)||((inlineOpacity==null||inlineOpacity==='')&&attrOpacity==='0'))return target;
     var p=other._doriPosition,dx=target.x-p.x,dy=target.y-p.y,distance=Math.hypot(dx,dy);
     if(distance>=minDistance)return target;
-    if(distance<.001){dx=1;dy=0;distance=1;}
+    if(distance<.001){
+      var separatedX=target.x+minDistance<=1070?target.x+minDistance:target.x-minDistance;
+      return Object.assign({},target,{x:Math.max(330,Math.min(1070,separatedX))});
+    }
     var push=(minDistance-distance)/distance;
     return Object.assign({},target,{x:Math.max(330,Math.min(1070,target.x+dx*push)),y:Math.max(414,Math.min(462,target.y+dy*push))});
   }
