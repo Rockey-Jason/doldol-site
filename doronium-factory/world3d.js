@@ -441,7 +441,7 @@ export function createWorld3D(canvas, getState) {
     const floors=makeBatch(boxGeo,mineFloorMaterial,cells.length,true);
     const roofs=makeBatch(boxGeo,mineRockMaterial,cells.length,true);
     const walls=makeBatch(boxGeo,mineRockMaterial,wallCapacity,true);
-    const rockDetails=makeBatch(mineRockGeometry,mineRockMaterial,cells.length*3);
+    const rockDetails=makeBatch(mineRockGeometry,mineRockMaterial,cells.length*8);
     const timberPosts=makeBatch(boxGeo,mineTimberMaterial,24);
     const timberHeaders=makeBatch(boxGeo,mineTimberMaterial,12);
     const timberBraces=makeBatch(boxGeo,mineTimberMaterial,24);
@@ -505,7 +505,27 @@ export function createWorld3D(canvas, getState) {
         rockDetailCount++;
       }
 
-      // Each timber frame has its own persistent condition and warning color.
+      // Extra wall-side rubble, exposed strata and ceiling stalactites make
+      // the excavated galleries feel embedded in solid geology. Keep the
+      // center lane clear for walking, carts and machinery.
+      if((seed%2)===0){
+        const side=(seed&4)?-1:1;
+        put(rockDetails,x+side*(12+(seed%3)),floorY+3+(seed%8),z+((seed>>>7)%19)-9,
+          2.8+(seed%4),2.2+(seed%5),2.4,.18*(seed%4),.14*(seed%6),.12,geology.color);
+        rockDetailCount++;
+      }
+      if((seed%3)===1){
+        put(rockDetails,x+((seed>>>6)%15)-7,floorY+29,z+((seed>>>10)%15)-7,
+          2.4+(seed%3),4.2+(seed%4),2.5,.08,.22*(seed%5),.06,geology.color);
+        rockDetailCount++;
+      }
+      if((seed%7)===3){
+        const side=(seed&8)?-1:1;
+        put(rockDetails,x+side*(10+(seed%5)),floorY+1.2,z+((seed>>>9)%13)-6,
+          3.2+(seed%3),1.5,2.8,.1,.3*(seed%5),.12,geology.color);
+        rockDetailCount++;
+      }
+\n      // Each timber frame has its own persistent condition and warning color.
       const supportKey=level+":"+p.x+":"+p.z,support=state.mineInfrastructure?.supports?.[supportKey];
       if(support&&(p.z===centerZ||p.z===18)&&p.x%6===2){
         const integrity=clamp(Number(support.integrity??100),0,100);
