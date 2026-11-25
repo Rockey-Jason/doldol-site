@@ -66,7 +66,7 @@ try {
   assert.equal(audit.skillGroupCount, 5, "The skill tree must contain five specialization groups");
   assert.equal(audit.skillTreeValidation.valid, true, "All skill prerequisites and tiers must validate");
   assert.equal(audit.skillStateValidation.valid, true, "Skill points and unlocked nodes must validate");
-  assert.equal(audit.buildingCount, 23, "23 facility definitions, including the adaptive conveyor, must be present");
+  assert.equal(audit.buildingCount, 69, "Legacy facilities and all 46 additional catalogue machine definitions must be registered");
   assert.equal(audit.worldWidth, 192, "The world must be expanded to 192 tiles wide");
   assert.ok(audit.outerResourceCount > 20, "The expanded continent must contain natural resource patches");
   assert.equal(audit.worldHeight, 160, "The world must be expanded to 160 tiles high");
@@ -93,6 +93,17 @@ try {
   });
   assert.ok(preview.visible && preview.width > 0 && preview.height > 0, "3D crystal preview must render to a visible canvas");
   await desktop.locator("#modal-x").click();
+  await openPanel(desktop, "catalog");
+  await desktop.locator("#catalog-search").fill("도로늄");
+  assert.ok(await desktop.locator(".catalog-card").count() > 0, "The encyclopedia must search Doronium items");
+  await desktop.locator("#catalog-search").fill("");
+  await desktop.locator("#catalog-mode").selectOption("recipes");
+  assert.ok(await desktop.locator(".catalog-recipe-card").count() >= 150, "The encyclopedia must list the full production and packaging recipe catalogue");
+  await desktop.locator("#catalog-mode").selectOption("machines");
+  assert.ok(await desktop.locator(".catalog-machine-card").count() >= 45, "The encyclopedia must list the new industrial machine designs");
+  await desktop.locator("#catalog-category").selectOption("power");
+  assert.ok(await desktop.locator(".catalog-machine-card").count() >= 3, "Power facilities must be filterable by category");
+  await desktop.locator("#catalog-category").selectOption("all");
   await openPanel(desktop, "research");
   assert.equal(await desktop.locator("[data-skill]").count(), 20, "All twenty specialization nodes must be visible");
   await desktop.locator('[data-skill="FIELD_SURVEYOR"]').click();
