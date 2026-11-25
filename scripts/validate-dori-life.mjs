@@ -237,9 +237,9 @@ assert.equal(morningKst, 9 * 3600 + 30 * 60, "00:30 UTC must be 09:30 in Korea."
 const routineStart = html.indexOf("function buildRoutineCycle(now,base){");
 const routineEnd = html.indexOf("\n  function eventTimestampToday", routineStart);
 assert.ok(routineStart >= 0 && routineEnd > routineStart, "Could not isolate the seeded routine director.");
-const clockStart = html.indexOf("function parts(now)");
-const clockEnd = html.indexOf("\n  function formatMinute", clockStart);
-assert.ok(clockStart >= 0 && clockEnd > clockStart, "Could not isolate the KST and deterministic seed helpers.");
+const routineClockStart = html.indexOf("function parts(now)");
+const routineClockEnd = html.indexOf("\n  function formatMinute", routineClockStart);
+assert.ok(routineClockStart >= 0 && routineClockEnd > routineClockStart, "Could not isolate the KST and deterministic seed helpers.");
 const routineContext = {
   partFormatter: new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit",
@@ -249,7 +249,7 @@ const routineContext = {
     timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit"
   })
 };
-vm.runInNewContext(html.slice(clockStart, clockEnd), routineContext);
+vm.runInNewContext(html.slice(routineClockStart, routineClockEnd), routineContext);
 const routineFactory = new Function(
   "kstSecondsOfDay", "dayKey", "hash", "rng",
   html.slice(routineStart, routineEnd) + "\nreturn {buildRoutineCycle,ambientRoutine};"
