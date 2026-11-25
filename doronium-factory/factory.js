@@ -184,8 +184,51 @@ function surfaceKey(x,y){return x+","+y}
 function surfaceElevation(x,y){const v=S.flattened?.[surfaceKey(Math.floor(x+.5),Math.floor(y+.5))];return v&&Number.isFinite(v.height)?v.height:terrainHeightAt(x,y)}
 function hasFoundation(x,y){const k=surfaceKey(x,y);return !!S.flattened?.[k]&&!!S.foundation?.[k]}
 function notifyNewMission(q){if(!q||E2E_MODE)return;const el=$("mission-alert");if(!el)return;el.innerHTML='<div class="mission-alert-kicker">ORBIT · MISSION CONTROL</div><strong>신규 임무 등록</strong><span>'+q.title+'</span>';el.classList.remove("mission-alert-out","mission-alert-in");void el.offsetWidth;el.classList.add("mission-alert-in");setTimeout(()=>{el.classList.remove("mission-alert-in");el.classList.add("mission-alert-out")},1700);setTimeout(()=>el.classList.remove("mission-alert-out"),2450);setTimeout(()=>{const hud=$("active-mission-hud");if(hud){hud.innerHTML='<small>ACTIVE DIRECTIVE · '+String(S.questIndex+1).padStart(2,"0")+'</small><strong>'+q.title+'</strong><span>'+q.desc+'</span>';hud.classList.remove("mission-hud-visible");void hud.offsetWidth;hud.classList.add("mission-hud-visible")}},1850)}
-function showStoryIntro(){const el=$("story-intro");if(el)el.hidden=false}
-function startCampaign(){const el=$("story-intro");if(el)el.hidden=true;S.campaign??={};S.campaign.introSeen=true;markDirty();toggleFullscreen();playTone(520,.2,"sine");setTimeout(()=>notifyNewMission(getQuest()),380);toast("ORBIT 연결 완료 · 복구 프로토콜 시작")}
+let storySceneIndex=0;
+const DORONIUM_PROLOGUE=[
+ {icon:"🐅",eyebrow:"A TALE FROM THE OLD FOREST",title:"아주 먼 옛날, 호랑이가 나타나던 시절",text:"아주 먼 옛날, 호랑이들이 밤마다 마을을 찾아와 물건들을 어지럽히곤 했습니다. 사람들은 밤이 올 때마다 걱정했어요.",speaker:"옛날이야기",line:"“오늘 밤에도 호랑이들이 올까?” 마을 사람들은 서로를 걱정하며 작은 불빛 아래 모였습니다."},
+ {icon:"🐕",eyebrow:"THE LITTLE COMPANION",title:"사람들에게는 돌이가 있었어요",text:"사람들은 돌이와 함께 숲을 탐험하고 사냥을 했습니다. 돌이는 작은 발로 씩씩하게 달려가며 모두를 도왔어요.",speaker:"사람들",line:"“자자… 돌이, 물어와!”  “멍멍! 멍머멍머!”"},
+ {icon:"🌲",eyebrow:"A BARK IN THE FOREST",title:"돌이의 짖음이 숲에 울려 퍼졌어요",text:"돌이의 힘찬 짖음에 놀란 동물들은 멀찍이 물러났고, 사람들은 돌이와 함께 숲을 살펴볼 수 있었습니다.",speaker:"마을 사람들",line:"“잘했어, 돌이!”  돌이는 꼬리를 흔들며 더 깊은 숲을 향해 달려갔습니다."},
+ {icon:"🌳",eyebrow:"THE UNUSUAL TREE",title:"어느 날, 이상한 나무를 발견했습니다",text:"돌이가 유난히 신나게 짖는 곳에는 처음 보는 나무가 한 그루 자라고 있었습니다. 놀랍게도 나뭇가지에는 고기가 열리고 있었어요.",speaker:"사람들",line:"“어? 저 나무에 고기가 열려 있잖아!”  돌이가 찾아낸 것은 끝없이 열매를 맺는 신비한 나무였습니다."},
+ {icon:"📜",eyebrow:"THE OLD SIGN",title:"나무 옆 표지판에는 비밀이 적혀 있었어요",text:"표지판에는 이 나무의 고기에 돌이의 털을 섞으면 특별한 인챈트가 생기고, 그것을 10:1 비율로 압축하면 아주 단단한 물질을 만들 수 있다고 적혀 있었습니다.",speaker:"표지판",line:"‘돌이 고기에 돌이 털을 섞어 인챈트 고기를 만든다. 인챈트 고기 10개를 압축하면 도로늄 1개가 탄생한다.’"},
+ {icon:"✨",eyebrow:"THE FIRST EXPERIMENT",title:"사람들은 표지판의 방법을 따라 했습니다",text:"사람들은 재료를 모으고 압축 장치를 만들었습니다. 온도와 압력을 조절해 조심스럽게 실험하자, 표지판에 적힌 일이 실제로 일어났습니다.",speaker:"연구 기록",line:"돌이 털 인챈트 고기 10개 → 정밀 압축 → 도로늄 1개. 믿기 어려울 만큼 단단한 물질이 만들어졌습니다."},
+ {icon:"🔷",eyebrow:"THE BIRTH OF DORONIUM",title:"새로운 물질은 도로늄이라 불렸습니다",text:"사람들은 돌이가 찾아낸 고기를 ‘돌이 고기’, 그것을 압축해 만든 물질을 ‘도로늄’이라고 불렀습니다. 도로늄을 사고파는 산업이 생겼지만 생산에는 시간과 비용이 많이 들었습니다.",speaker:"산업 연대기",line:"도로늄을 만들고 판매한 사람들은 부자가 되었습니다. 하지만 거대한 생산 시설을 갖춘 사람은 아직 많지 않았습니다."},
+ {icon:"🏭",eyebrow:"YOUR INDUSTRIAL JOURNEY",title:"이제 당신의 도로늄 공장을 세울 차례입니다",text:"당신도 거대한 도로늄 공장을 세우기로 결심했습니다. 숲과 광산을 탐험하고, 자원을 가공하고, 전력과 물류를 연결해 최고의 공장을 만들어 보세요.",speaker:"공장 설립 선언",line:"당신의 첫 목표는 간단합니다. 자원을 모으고, 생산 라인을 만들고, 도로늄을 만들어 부자가 되는 것. 이제 모험을 시작하세요!"}
+];
+function renderPrologueScene(){
+ const scene=DORONIUM_PROLOGUE[storySceneIndex];if(!scene)return;
+ $("story-scene-icon").textContent=scene.icon;
+ $("story-scene-eyebrow").textContent=scene.eyebrow;
+ $("story-scene-count").textContent="PROLOGUE · "+String(storySceneIndex+1).padStart(2,"0")+" / "+String(DORONIUM_PROLOGUE.length).padStart(2,"0");
+ $("story-scene-title").textContent=scene.title;
+ $("story-scene-text").textContent=scene.text;
+ $("story-transmission-title").textContent=scene.speaker;
+ $("story-transmission-text").textContent=scene.line;
+ $("story-progress-fill").style.width=((storySceneIndex+1)/DORONIUM_PROLOGUE.length*100)+"%";
+ $("story-next-button").textContent=storySceneIndex===DORONIUM_PROLOGUE.length-1?"공장 시작 →":"다음 장면 →";
+}
+function showStoryIntro(){
+ const el=$("story-intro");if(el)el.hidden=false;
+ storySceneIndex=0;renderPrologueScene();
+ $("story-start-button").hidden=false;$("story-next-button").hidden=true;$("story-skip-button").hidden=true;
+}
+function startCampaign(){
+ storySceneIndex=0;renderPrologueScene();
+ $("story-start-button").hidden=true;$("story-next-button").hidden=false;$("story-skip-button").hidden=false;
+ playTone(560,.16,"sine");
+}
+function advancePrologue(){
+ storySceneIndex++;
+ if(storySceneIndex>=DORONIUM_PROLOGUE.length){finishCampaignIntro();return}
+ renderPrologueScene();
+}
+function finishCampaignIntro(){
+ const el=$("story-intro");if(el)el.hidden=true;
+ S.campaign??={};S.campaign.introSeen=true;S.campaign.prologueVersion=2;
+ markDirty();toggleFullscreen();playTone(720,.22,"sine");
+ setTimeout(()=>notifyNewMission(getQuest()),380);
+ toast("돌이의 발견 기록 완료 · 도로늄 공장 여정 시작");
+}
 function toggleControlPanel(name=activePanel){const wasOpen=controlPanelOpen,previous=activePanel;if(name)changePanel(name);controlPanelOpen=!(wasOpen&&previous===name);$("control-column")?.classList.toggle("panel-open",controlPanelOpen);$("game-menu-toggle")?.classList.toggle("active",controlPanelOpen);if(controlPanelOpen&&document.pointerLockElement===canvas)document.exitPointerLock()}
 function closeControlPanel(){controlPanelOpen=false;$("control-column")?.classList.remove("panel-open");$("game-menu-toggle")?.classList.remove("active")}
 async function toggleFullscreen(){try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen?.();else await document.exitFullscreen?.()}catch{toast("브라우저에서 전체 화면 전환을 허용하지 않았습니다.","warn")}}
@@ -949,6 +992,8 @@ function wireControls(){
  document.querySelectorAll("[data-land-tool]").forEach(b=>b.addEventListener("click",()=>{selectedLandTool=b.dataset.landTool==="none"?null:b.dataset.landTool;selectedBuild=null;closeControlPanel();toast(selectedLandTool==="flatten"?"평탄화할 타일을 선택하세요.":selectedLandTool==="foundation"?"기초 타일을 설치할 평탄화 지형을 선택하세요.":"지형 도구 해제");drawWorld()}));
  $("game-menu-toggle")?.addEventListener("click",()=>toggleControlPanel("build"));
  $("story-start-button")?.addEventListener("click",startCampaign);
+ $("story-next-button")?.addEventListener("click",advancePrologue);
+ $("story-skip-button")?.addEventListener("click",finishCampaignIntro);
  $("panel-close")?.addEventListener("click",closeControlPanel);
  $("fullscreen-button")?.addEventListener("click",toggleFullscreen);
  const bindAdventureButton=(id,action)=>{
