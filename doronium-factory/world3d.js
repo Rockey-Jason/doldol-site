@@ -423,8 +423,7 @@ export function createWorld3D(canvas, getState) {
           const crownColor=node.type==="birchTree"?0x7cae86:node.type==="rubberTree"?0x326a4c:node.type==="barkTree"?0x355b3d:node.type==="frozenTree"?0xb4d9e4:0x9b4d2e;
           const trunk=mat(trunkColor,.82,.15),crown=mat(crownColor,.55,.2,node.type==="fireTree"?0x45200c:0x000000);
           makeBox(g,0,11,0,5,22,5,trunk);
-          makeSphere(g,0,32,0,node.type==="barkTree"?16:13,crown);
-          makeSphere(g,-7,27,5,8,crown);makeSphere(g,7,28,-4,8,crown);
+          makeSphere(g,0,30,0,node.type==="barkTree"?16:13,crown);
           if(node.type==="fireTree"&&highEndDevice){const glow=new THREE.PointLight(0xff7138,.22,48,2);glow.position.y=30;g.add(glow);}
           if(node.type==="frozenTree"&&highEndDevice){const glow=new THREE.PointLight(0x76d7f5,.18,42,2);glow.position.y=30;g.add(glow);}
         }else if(node.type==="heatCrystalNode"||node.type==="coldCrystalNode"){
@@ -435,7 +434,7 @@ export function createWorld3D(canvas, getState) {
           if(highEndDevice){const glow=new THREE.PointLight(color,.52,50,2);glow.position.y=18;g.add(glow);}
         }else if(node.type==="grassPatch"){
           const grass=mat(0x4d9b62,.9,.1);
-          for(let i=0;i<5;i++)makeBox(g,(i-2)*3,5+(i%2)*2,(i%3-1)*3,1.5,10+(i%2)*4,1.5,grass);
+          makeSphere(g,0,5,0,5,grass);
         }else if(node.type==="oil"){
           const pool=mat(0x101b26,.12,.92),rim=mat(0x5a6d78,.4,.7);
           makeCyl(g,0,1,0,11,2,pool,16);makeCyl(g,0,2,0,12,1,rim,16);
