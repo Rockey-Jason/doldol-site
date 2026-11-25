@@ -501,6 +501,10 @@ try {
   assert.equal(mineSystemsIsolation.ok,true,"Mine stations, power and blockers must be isolated by entrance: "+JSON.stringify(mineSystemsIsolation));
   console.log("DORONIUM_MINE_SYSTEM_ISOLATION",JSON.stringify(mineSystemsIsolation));
 
+  const mineContextSelection = await desktop.evaluate(() => window.__doroniumFactoryTest.mineContextSelectionTest());
+  assert.equal(mineContextSelection.ok,true,"Old machine selections and build blueprints must not leak across mine entrances/depths: "+JSON.stringify(mineContextSelection));
+  console.log("DORONIUM_MINE_CONTEXT_SELECTION",JSON.stringify(mineContextSelection));
+
   const mineOps = await desktop.evaluate(() => window.__doroniumFactoryTest.setupMineSystemsTest());
   assert.equal(mineOps.environment[1].ventilationActive, true, "Legacy and new mine levels must begin with working ventilation");
   const mineGeologyVisuals = await desktop.evaluate(() => window.__doroniumFactoryTest.mineVisualSnapshot());
