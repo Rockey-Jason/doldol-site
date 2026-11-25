@@ -2654,6 +2654,25 @@ if(E2E_MODE){
    }finally{S=saved;playerMotion=savedMotion;selectedBuilding=old.selectedBuilding;selectedBuild=old.selectedBuild;activeBlueprintID=old.activeBlueprintID;renderAll()}
   },
 
+  mineWorldDropIsolationTest(){
+   const saved=structuredClone(S),savedMotion=structuredClone(playerMotion),old={selectedBuilding,selectedBuild,activeBlueprintID};
+   try{
+    S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
+    const A="mine:drop:A",B="mine:drop:B";
+    activateMineInstance(S,A,()=>createMineInstanceDefaults(A));
+    S.player={...S.player,layer:"mine",mineLevel:1,mineInstanceID:A,viewMode:"first",x:5,y:12};
+    S.mineInstanceID=A;S.worldDrops=[
+     {dropID:"DROP-MINE-A",custodyStackID:"STACK-MINE-A",itemID:"ITEM_IRON_ORE",quantity:1,quality:95,purity:96,synthetic:false,x:5,y:12,layer:"mine",mineLevel:1,mineInstanceID:A},
+     {dropID:"DROP-MINE-B",custodyStackID:"STACK-MINE-B",itemID:"ITEM_COPPER_ORE",quantity:1,quality:94,purity:95,synthetic:false,x:5,y:12,layer:"mine",mineLevel:1,mineInstanceID:B}
+    ];
+    playerMotion={...playerMotion,x:5,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false};
+    const before=rebuildOwnershipLedger(S),beforeVisual=(drawWorld(),world3d.inspect().worldDropCount);
+    const pickup=pickupNearbyWorldDrop(),remaining=S.worldDrops.map(drop=>drop.dropID),after=rebuildOwnershipLedger(S),afterVisual=world3d.inspect().worldDropCount;
+    const picked=S.runtime.itemStacks.some(stack=>stack.runtimeID==="STACK-MINE-A"&&stack.itemID==="ITEM_IRON_ORE"&&stack.quantity===1);
+    return {beforeValid:before.valid,pickup,remaining,picked,afterValid:after.valid,beforeVisual,afterVisual,ok:before.valid&&pickup===true&&picked&&remaining.length===1&&remaining[0]==="DROP-MINE-B"&&after.valid&&beforeVisual===1&&afterVisual===0};
+   }finally{S=saved;playerMotion=savedMotion;selectedBuilding=old.selectedBuilding;selectedBuild=old.selectedBuild;activeBlueprintID=old.activeBlueprintID;renderAll()}
+  },
+
   mineLegacySaveMigrationTest(){
    const saved=structuredClone(S),savedMotion=structuredClone(playerMotion),old={selectedBuilding,selectedBuild,activeBlueprintID};
    try{
