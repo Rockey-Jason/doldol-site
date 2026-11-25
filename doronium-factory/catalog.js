@@ -156,11 +156,11 @@ for (const [id,name,icon] of machineRows) {
   if (!itemMap[id]) itemMap[id]={name,icon,kind:"machine",price:0,description:name+" 설비 아이템"};
 }
 const CATALOG_MACHINES = machineRows.map(([itemId,name,icon,station,recipeStation,power]) => ({
-  id:"catalog_"+station,
+  id:"catalog_"+itemId.replace(/^machine_/,""),
   name,icon,cat:station==="power"?"power":station==="storage"||station==="conveyor"||station==="maglevConveyor"||station==="sorter"||station==="merger"||station==="distributor"||station==="elevator"||station==="shipping"?"logistics":"process",
   cost:0,materials:{},desc:name+" · 제작 도감에서 제작한 설비 아이템을 설치해 사용합니다.",
   kind:station==="power"?"power":station==="doriHarvester"?"doriFarm":station==="storage"?"storage":station==="conveyor"||station==="maglevConveyor"?"belt":"machine",
-  power,station,itemId,catalogItemId:itemId,catalogStation:station
+  power,station,itemId,catalogItemId:itemId,catalogStation:recipeStation
 }));
 
 const R=[];
@@ -320,7 +320,7 @@ const machineRecipes = [
   ["machine_oil_drill","원유 시추기 제작","auto_crafting",{steelPlate:35,steel:25,steelGear:12,piston:6,motor:4,midCircuit:3,sensor:4,steelWire:15},90],
   ["machine_rolling_mill","압연기 제작","auto_crafting",{steelPlate:30,steelGear:10,bearing:8,motor:4,piston:4,midCircuit:3,insulatedWire:10},82],
   ["machine_refinery","정제기 제작","auto_crafting",{steelPlate:40,titaniumPlate:15,steelGear:10,bearing:8,motor:5,midCircuit:5,sensor:5,controlModule:1,insulatedWire:15},95],
-  ["machine_auto_crafter","자동 제작기 제작","auto_crafting",{steelPlate:45,steelGear:12,bearing:8,piston:6,motor:6,midCircuit:6,sensor:5,controlModule:2,insulatedWire:20},100],
+  ["machine_auto_crafter","자동 제작기 제작","crafting",{steelPlate:45,steelGear:12,bearing:8,piston:6,motor:6,midCircuit:6,sensor:5,controlModule:2,insulatedWire:20},100],
   ["machine_auto_miner","자동 채굴기 제작","auto_crafting",{steelPlate:50,titaniumPlate:20,steelGear:15,bearing:10,piston:8,motor:8,midCircuit:8,sensor:8,controlModule:3,insulatedWire:25,largeBattery:1},115],
   ["machine_auto_furnace","자동 용광로 제작","auto_crafting",{steelPlate:60,titaniumPlate:20,steelGear:15,bearing:10,motor:6,advancedCircuit:6,sensor:8,controlModule:3,insulatedWire:25,largeBattery:2},120],
   ["machine_auto_electric_furnace","자동 전기로 제작","auto_crafting",{titaniumPlate:70,steelPlate:30,titanium:20,steelGear:15,bearing:12,motor:8,advancedCircuit:8,sensor:10,controlModule:4,insulatedWire:30,largeBattery:3,transformer:2},145],
