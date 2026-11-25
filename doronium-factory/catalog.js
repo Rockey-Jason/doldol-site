@@ -423,6 +423,17 @@ for (const [id,name,tier] of packageTargets) {
   addRecipe("package3_"+id,"3차 포장 · "+name,"packager_3",{[p2]:1,...t3},p3,1,16,null,null);
 }
 
+/* Re-melting paths: finished metal may return to the same molten stage. */
+addRecipe("molten_iron_from_iron","철 재용융","furnace",{iron:1},"moltenIron",1,12,1538,100,{temperatureTolerance:120,pressureTolerance:100});
+addRecipe("molten_copper_from_copper","구리 재용융","furnace",{copper:1},"moltenCopper",1,10,1085,50);
+addRecipe("molten_nickel_from_nickel","니켈 재용융","electric_furnace",{nickel:1},"moltenNickel",1,13,1455,100);
+addRecipe("molten_lead_from_lead","납 재용융","furnace",{lead:1},"moltenLead",1,9,327,10);
+addRecipe("molten_chromium_from_chromium","크롬 재용융","electric_furnace",{chromium:1},"moltenChromium",1,16,1907,300);
+addRecipe("molten_gold_from_gold","금 재용융","furnace",{gold:1},"moltenGold",1,10,1064,50);
+addRecipe("molten_titanium_from_titanium","티타늄 재용융","electric_furnace",{titanium:1},"moltenTitanium",1,16,1850,800);
+addRecipe("molten_diamond_from_diamond","다이아몬드 재용융","doronium_electric_furnace",{diamond:1},"moltenDiamond",1,32,4200,12000);
+addRecipe("stainless_remelt","스테인리스강 재용융","electric_furnace",{stainlessSteel:1},"moltenStainlessSteel",1,18,1550,300);
+addRecipe("reinforced_iron_remelt","강화된 철 재용융","furnace",{reinforcedIron:1},"moltenReinforcedIron",1,14,1550,100);
 /* Explicit user-spec process windows. The optimum remains the target value;
    the safe min/max values determine whether a batch may progress. */
 const recipeBands = {
@@ -431,14 +442,21 @@ const recipeBands = {
   titanium_compression:[1700,2200,200,1500],
   carbon_compression:[1500,2500,1000,2500],
   molten_iron:[1450,1700,0,500],
+  molten_iron_from_iron:[1450,1700,0,500],
   molten_gold:[950,1200,0,300],
+  molten_gold_from_gold:[950,1200,0,300],
   molten_diamond:[3500,5000,8000,15000],
+  molten_diamond_from_diamond:[3500,5000,8000,15000],
   molten_neodymium:[1800,2800,300,1800],
   neodymium_magnet_melt:[1100,1500,500,2000],
   molten_copper:[1000,1300,0,300],
+  molten_copper_from_copper:[1000,1300,0,300],
   molten_nickel:[1400,1700,0,500],
+  molten_nickel_from_nickel:[1400,1700,0,500],
   molten_lead:[300,500,0,200],
+  molten_lead_from_lead:[300,500,0,200],
   molten_chromium:[1800,2100,100,700],
+  molten_chromium_from_chromium:[1800,2100,100,700],
   rubber_from_sap:[150,350,0,50],
   rubber_from_oil:[150,350,0,50]
 };
@@ -450,6 +468,16 @@ for(const [id,band] of Object.entries(recipeBands)){
   }
 }
 const multiStationRecipes = {
+  molten_iron_from_iron:["furnace","electric_furnace","doronium_electric_furnace"],
+  molten_copper_from_copper:["furnace","electric_furnace","doronium_electric_furnace"],
+  molten_nickel_from_nickel:["electric_furnace","doronium_electric_furnace"],
+  molten_lead_from_lead:["furnace","electric_furnace","doronium_electric_furnace"],
+  molten_chromium_from_chromium:["electric_furnace","doronium_electric_furnace"],
+  molten_gold_from_gold:["furnace","electric_furnace","doronium_electric_furnace"],
+  molten_titanium_from_titanium:["electric_furnace","doronium_electric_furnace"],
+  molten_diamond_from_diamond:["doronium_electric_furnace"],
+  stainless_remelt:["furnace","electric_furnace","doronium_electric_furnace"],
+  reinforced_iron_remelt:["furnace","electric_furnace","doronium_electric_furnace"],
   molten_glass:["furnace","electric_furnace","doronium_electric_furnace"],
   molten_reinforced_glass:["furnace","electric_furnace","doronium_electric_furnace"],
   molten_iron:["furnace","electric_furnace","doronium_electric_furnace"],
