@@ -30,7 +30,7 @@ const itemRows = [
   ["neodymium","네오디움","🟣","rare",170],["moltenNeodymium","녹은 네오디움","🔥","rare",185],
   ["aluminumOre","알루미늄 광석","🪨","raw",28],["moltenAluminum","녹은 알루미늄","🔥","material",34],["aluminum","알루미늄","🔩","material",42],["aluminumPlate","알루미늄판","▰","part",58],
   ["magnetite","자철석","🧲","raw",34],["moltenMagnetite","녹은 자철석","🔥","material",42],
-  ["moltenMagnet","녹은 자석","🧲","material",65],["magnet","자석","🧲","part",80],
+  ["moltenMagnet","녹은 자석","🧲","material",65],["magnet","자석","🧲","part",80],["moltenNeodymiumMagnet","녹은 네오디움 자석","🔥","rare",230],["neodymiumMagnet","네오디움 자석","🧲","rare",320],
   ["moltenStainlessSteel","녹은 스테인리스강","🔥","material",100],["stainlessSteel","스테인리스강","🩶","material",125],
   ["moltenReinforcedIron","녹은 강화된 철","🔥","material",44],["reinforcedIron","강화된 철","⚙️","material",56],
   ["moltenSteel","녹은 강철","🔥","material",48],["steel","강철","🔩","material",75],
@@ -208,6 +208,8 @@ addRecipe("neodymium_cooling","네오디움 냉각","rapid_cooler",{moltenNeodym
 addRecipe("magnetite_melt","자철석 용융","electric_furnace",{magnetite:5,iron:2},"moltenMagnet",1,18,1250,250);
 addRecipe("magnet_melt","자석 재용융","electric_furnace",{magnet:1},"moltenMagnet",1,12,1200,200);
 addRecipe("magnet_cooling","자석 냉각","rapid_cooler",{moltenMagnet:1},"magnet",1,9,80,0);
+addRecipe("neodymium_magnet_melt","네오디움 자석 합금 용융","doronium_electric_furnace",{neodymium:3,moltenMagnet:1},"moltenNeodymiumMagnet",1,34,1250,1200);
+addRecipe("neodymium_magnet_cooling","네오디움 자석 급속 냉각","rapid_cooler",{moltenNeodymiumMagnet:1},"neodymiumMagnet",1,12,90,0);
 addRecipe("stainless_melt","스테인리스강 합금","electric_furnace",{iron:5,chromium:2,nickel:1},"moltenStainlessSteel",1,26,1550,300);
 addRecipe("stainless_cooling","스테인리스강 냉각","rapid_cooler",{moltenStainlessSteel:1},"stainlessSteel",1,10,90,0);
 addRecipe("reinforced_iron_melt","강화된 철 합금","furnace",{iron:5,carbon:1},"moltenReinforcedIron",1,18,1550,100);
@@ -376,7 +378,7 @@ const machineRecipes = [
   ["machine_quality_checker","품질 검사기 제작","crafting",{ironPlate:10,glass:5,sensor:5,led:3,midCircuit:3},32],
   ["machine_auto_quality_checker","자동 품질 검사기 제작","auto_crafting",{steelPlate:20,titaniumPlate:10,sensor:10,led:5,advancedCircuit:5,controlModule:3,motor:2},60],
   ["machine_doronium_compressor","도로늄 압축기 제작","auto_crafting",{doronium_normal:30,titaniumPlate:25,steelPlate:30,machine_high_pressure_compressor:2,machine_ultra_compressor:1,advancedCircuit:15,controlModule:8,largeBattery:5,transformer:3,diamond:15},145],
-  ["machine_doronium_fusion","도로늄 융합기 제작","auto_crafting",{doronium_normal:10,machine_doronium_compressor:1,machine_doronium_furnace:2,machine_ultra_compressor:3,titaniumPlate:40,advancedCircuit:20,controlModule:15,largeBattery:10,transformer:5,diamond:30,obsidian:30,gold:20,doronium_thermal_crystal:10,doronium_cold_crystal:10,doronium_ultra:5},240]
+  ["machine_doronium_fusion","도로늄 융합기 제작","auto_crafting",{machine_doronium_compressor:1,machine_doronium_furnace:2,machine_ultra_compressor:3,titaniumPlate:40,advancedCircuit:20,controlModule:15,largeBattery:10,transformer:5,diamond:30,obsidian:30,gold:20,doronium_thermal_crystal:10,doronium_cold_crystal:10,doronium_ultra:5},240]
 ];
 for (const [id,name,station,inputs,time] of machineRecipes) {
   const output=id;
@@ -399,7 +401,7 @@ for (const [id,name,tier] of packageTargets) {
   const p1="pack1_"+id,p2="pack2_"+id,p3="pack3_"+id;
   const t1=tier==="low"||tier==="normal"?{rubber:4}:
     tier==="mid"||tier==="high"?{barkWood:5}:
-    tier==="top"?{barkWood:2,plantFiber:4,nylonCord:2,basicCircuit:1}:
+    (tier==="top"||tier==="special"||tier==="limited")?{barkWood:2,plantFiber:4,nylonCord:2,basicCircuit:1}:
     {barkWood:3,carbon:2,advancedCircuit:1,controlModule:1,insulatedWire:2};
   const t2=tier==="low"||tier==="normal"?{wood:10,iron:2}:
     tier==="mid"||tier==="high"?{barkWood:13}:
@@ -419,6 +421,56 @@ for (const [id,name,tier] of packageTargets) {
   addRecipe("package1_"+id,"1차 포장 · "+name,"packager_1",{[id]:1,...t1},p1,1,8,null,null);
   addRecipe("package2_"+id,"2차 포장 · "+name,"packager_2",{[p1]:1,...t2},p2,1,12,null,null);
   addRecipe("package3_"+id,"3차 포장 · "+name,"packager_3",{[p2]:1,...t3},p3,1,16,null,null);
+}
+
+/* Explicit user-spec process windows. The optimum remains the target value;
+   the safe min/max values determine whether a batch may progress. */
+const recipeBands = {
+  sandstone_compression:[20,300,100,300],
+  steel_compression:[1300,1800,100,1200],
+  titanium_compression:[1700,2200,200,1500],
+  carbon_compression:[1500,2500,1000,2500],
+  molten_iron:[1450,1700,0,500],
+  molten_gold:[950,1200,0,300],
+  molten_diamond:[3500,5000,8000,15000],
+  molten_neodymium:[1800,2800,300,1800],
+  neodymium_magnet_melt:[1100,1500,500,2000],
+  molten_copper:[1000,1300,0,300],
+  molten_nickel:[1400,1700,0,500],
+  molten_lead:[300,500,0,200],
+  molten_chromium:[1800,2100,100,700],
+  rubber_from_sap:[150,350,0,50],
+  rubber_from_oil:[150,350,0,50]
+};
+for(const [id,band] of Object.entries(recipeBands)){
+  const recipe=R.find(([recipeId])=>recipeId===id)?.[1];
+  if(recipe){
+    recipe.safeTemperatureMin=band[0];recipe.safeTemperatureMax=band[1];
+    recipe.safePressureMin=band[2];recipe.safePressureMax=band[3];
+  }
+}
+const multiStationRecipes = {
+  molten_glass:["furnace","electric_furnace","doronium_electric_furnace"],
+  molten_reinforced_glass:["furnace","electric_furnace","doronium_electric_furnace"],
+  molten_iron:["furnace","electric_furnace","doronium_electric_furnace"],
+  molten_copper:["furnace","electric_furnace","doronium_electric_furnace"],
+  molten_lead:["furnace","electric_furnace","doronium_electric_furnace"],
+  molten_gold:["furnace","electric_furnace","doronium_electric_furnace"],
+  molten_nickel:["electric_furnace","doronium_electric_furnace"],
+  molten_chromium:["electric_furnace","doronium_electric_furnace"],
+  molten_titanium:["electric_furnace","doronium_electric_furnace"],
+  molten_steel:["furnace","electric_furnace","doronium_electric_furnace"],
+  stainless_melt:["furnace","electric_furnace","doronium_electric_furnace"],
+  reinforced_iron_melt:["furnace","electric_furnace","doronium_electric_furnace"],
+  rubber_from_sap:["furnace","electric_furnace","doronium_electric_furnace"],
+  rubber_from_oil:["furnace","electric_furnace","doronium_electric_furnace"],
+  nylon:["electric_furnace","doronium_electric_furnace"],
+  magnet_melt:["electric_furnace","doronium_electric_furnace"],
+  neodymium_magnet_melt:["doronium_electric_furnace"]
+};
+for(const [id,stations] of Object.entries(multiStationRecipes)){
+  const recipe=R.find(([recipeId])=>recipeId===id)?.[1];
+  if(recipe)recipe.stations=stations;
 }
 
 export const CATALOG_ITEMS = itemMap;
