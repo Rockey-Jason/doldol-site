@@ -28,6 +28,7 @@ const itemRows = [
   ["diamondOre","다이아몬드 광석","💎","rare",90],["diamond","다이아몬드","💎","rare",180],
   ["moltenDiamond","녹은 다이아몬드","💠","rare",210],["neodymiumOre","네오디움 광석","🟣","rare",75],
   ["neodymium","네오디움","🟣","rare",170],["moltenNeodymium","녹은 네오디움","🔥","rare",185],
+  ["aluminumOre","알루미늄 광석","🪨","raw",28],["moltenAluminum","녹은 알루미늄","🔥","material",34],["aluminum","알루미늄","🔩","material",42],["aluminumPlate","알루미늄판","▰","part",58],
   ["magnetite","자철석","🧲","raw",34],["moltenMagnetite","녹은 자철석","🔥","material",42],
   ["moltenMagnet","녹은 자석","🧲","material",65],["magnet","자석","🧲","part",80],
   ["moltenStainlessSteel","녹은 스테인리스강","🔥","material",100],["stainlessSteel","스테인리스강","🩶","material",125],
@@ -53,7 +54,7 @@ const itemRows = [
   ["obsidianSword","흑요석 검","🗡️","equipment",260],["doroniumSword","도로늄 검","🔷","equipment",800],
   ["woodPickaxe","나무 곡괭이","⛏️","tool",24],["ironPickaxe","철 곡괭이","⛏️","tool",90],
   ["steelPickaxe","강철 곡괭이","⛏️","tool",150],["doroniumPickaxe","도로늄 곡괭이","🔷","tool",950],
-  ["woodAxe","나무 도끼","🪓","tool",24],["ironAxe","철 도끼","🪓","tool",90],
+  ["woodAxe","나무 도끼","🪓","tool",24],["woodShovel","나무 삽","🪏","tool",20],["ironShovel","철 삽","🪏","tool",75],["steelShovel","강철 삽","🪏","tool",135],["doroniumShovel","도로늄 삽","🪏","tool",900],["ironAxe","철 도끼","🪓","tool",90],
   ["steelAxe","강철 도끼","🪓","tool",150],["doroniumAxe","도로늄 도끼","🔷","tool",950],
   ["oldAxe","낡은 도끼","🪓","tool",1],["bow","활","🏹","equipment",28],
   ["woodArrow","나무 화살","➶","ammo",4],["ironArrow","철 화살","➶","ammo",12],
@@ -193,6 +194,9 @@ addRecipe("molten_lead","납 용융","furnace",{leadOre:1},"moltenLead",1,10,327
 addRecipe("lead_cooling","납 냉각","rapid_cooler",{moltenLead:1},"lead",1,7,80,0);
 addRecipe("molten_chromium","크롬 용융","electric_furnace",{chromiumOre:1},"moltenChromium",1,20,1907,300);
 addRecipe("chromium_cooling","크롬 냉각","rapid_cooler",{moltenChromium:1},"chromium",1,9,80,0);
+addRecipe("molten_aluminum","알루미늄 용융","electric_furnace",{aluminumOre:1},"moltenAluminum",1,10,700,25,{temperatureTolerance:80,pressureTolerance:25});
+addRecipe("aluminum_cooling","알루미늄 냉각","rapid_cooler",{moltenAluminum:1},"aluminum",1,7,80,0);
+addRecipe("aluminum_plate","알루미늄판 압연","rolling_mill",{aluminum:1},"aluminumPlate",1,7,260,30);
 addRecipe("molten_gold","금 용융","furnace",{goldOre:1},"moltenGold",1,12,1064,50);
 addRecipe("gold_cooling","금 냉각","rapid_cooler",{moltenGold:1},"gold",1,7,80,0);
 addRecipe("molten_titanium","티타늄 광석 용융","electric_furnace",{titaniumOre:1},"moltenTitanium",1,20,1850,800);
@@ -245,6 +249,10 @@ addRecipe("iron_pickaxe","철 곡괭이","crafting",{iron:3,wood:2},"ironPickaxe
 addRecipe("steel_pickaxe","강철 곡괭이","crafting",{steel:3,wood:2},"steelPickaxe",1,11,null,null);
 addRecipe("doronium_pickaxe","도로늄 곡괭이","crafting",{doronium_normal:3,wood:2},"doroniumPickaxe",1,18,null,null);
 addRecipe("wood_axe","나무 도끼","crafting",{wood:3,plantCord:2},"woodAxe",1,7,null,null);
+addRecipe("wood_shovel","나무 삽","crafting",{wood:2,ironScrew:1},"woodShovel",1,5,null,null);
+addRecipe("iron_shovel","철 삽","crafting",{iron:3,wood:2,ironScrew:2},"ironShovel",1,8,null,null);
+addRecipe("steel_shovel","강철 삽","crafting",{steel:3,wood:2,steelScrew:2},"steelShovel",1,10,null,null);
+addRecipe("doronium_shovel","도로늄 삽","crafting",{doronium_normal:3,wood:2,steelScrew:2},"doroniumShovel",1,16,null,null);
 addRecipe("iron_axe","철 도끼","crafting",{iron:3,wood:2},"ironAxe",1,9,null,null);
 addRecipe("steel_axe","강철 도끼","crafting",{steel:3,wood:2},"steelAxe",1,11,null,null);
 addRecipe("doronium_axe","도로늄 도끼","crafting",{doronium_normal:3,wood:2},"doroniumAxe",1,18,null,null);
@@ -296,7 +304,8 @@ addRecipe("tree_permanent_growth","나무 영구 성장 촉진제 합성","auto_
 
 /* Doronium origin story and the requested progression chain */
 addRecipe("dori_hair_enchantment","돌이 털 인챈트","crafting",{doriMeat:1,doriFur:1},"enchantedDoriMeat",1,8,null,null);
-addRecipe("doronium_10_to_1","돌이 고기 10:1 압축","compressor",{enchantedDoriMeat:10},"doronium_normal",1,24,1000,180,{requiresNonSynthetic:true});
+addRecipe("basic_doronium","돌이 고기 압축","compressor",{doriMeat:1},"doronium_normal",1,18,1000,180,{requiresNonSynthetic:true});
+addRecipe("doronium_10_to_1","돌이 털 인챈트 고기 10:1 압축","doronium_compressor",{enchantedDoriMeat:10},"doronium_normal",1,24,1000,180,{requiresNonSynthetic:true});
 addRecipe("yellow_doronium","황다도로늄 합성","ultra_compressor",{gold:1,diamond:1,doriMeat:3},"doronium_yellow",1,36,2000,1800,{requiresNonSynthetic:true});
 addRecipe("ultra_doronium","울트라 도로늄 합성","ultra_compressor",{obsidian:5,diamond:9,coldCrystal:1,heatCrystal:1,doriMeat:10},"doronium_ultra",1,55,4200,12000,{requiresNonSynthetic:true});
 addRecipe("blue_doronium","블루 도로늄 초저온 결정화","rapid_cooler",{doronium_normal:1,coldCrystal:1},"doronium_blue",1,16,-120,0);
@@ -339,6 +348,7 @@ const machineRecipes = [
   ["machine_storage","저장 창고 제작","crafting",{wood:20,ironPlate:10,ironScrew:20},30],
   ["machine_conveyor","컨테이너 벨트 제작","crafting",{ironPlate:15,ironScrew:20,gear:4,motor:1},24],
   ["machine_maglev_conveyor","자기부상 컨테이너 벨트 제작","auto_crafting",{steelPlate:25,neodymium:6,steelGear:6,motor:2,midCircuit:2,insulatedWire:8},55],
+  ["machine_maglev_conveyor","자기부상 컨테이너 벨트 제작","auto_crafting",{steelPlate:25,neodymium:6,steelGear:6,motor:2,midCircuit:2,insulatedWire:8},55],
   ["machine_rapid_cooler","급속 냉각기 제작","auto_crafting",{titaniumPlate:30,steelPlate:20,coldCrystal:10,motor:4,bearing:6,midCircuit:4,sensor:4,insulatedWire:15,largeBattery:1},90],
   ["machine_dori_harvester","자동 도로늄 수확기 제작","auto_crafting",{steelPlate:40,titaniumPlate:30,steelGear:12,piston:6,motor:6,advancedCircuit:5,sensor:8,controlModule:3,insulatedWire:20,largeBattery:2},105],
   ["machine_carbon_extractor","탄소 추출기 제작","auto_crafting",{steelPlate:30,steelGear:8,piston:4,motor:4,midCircuit:4,sensor:3,insulatedWire:12},72],
@@ -365,7 +375,7 @@ const machineRecipes = [
   ["machine_shipping_center","출하 센터 제작","auto_crafting",{steelPlate:20,ironPlate:15,gear:10,motor:3,sensor:5,midCircuit:5,controlModule:2},62],
   ["machine_quality_checker","품질 검사기 제작","crafting",{ironPlate:10,glass:5,sensor:5,led:3,midCircuit:3},32],
   ["machine_auto_quality_checker","자동 품질 검사기 제작","auto_crafting",{steelPlate:20,titaniumPlate:10,sensor:10,led:5,advancedCircuit:5,controlModule:3,motor:2},60],
-  ["machine_doronium_compressor","도로늄 압축기 제작","auto_crafting",{doronium_normal:30,titaniumPlate:25,steelPlate:30,advancedCircuit:15,controlModule:8,largeBattery:5,transformer:3,diamond:15},145],
+  ["machine_doronium_compressor","도로늄 압축기 제작","auto_crafting",{doronium_normal:30,titaniumPlate:25,steelPlate:30,machine_high_pressure_compressor:2,machine_ultra_compressor:1,advancedCircuit:15,controlModule:8,largeBattery:5,transformer:3,diamond:15},145],
   ["machine_doronium_fusion","도로늄 융합기 제작","auto_crafting",{doronium_normal:10,machine_doronium_compressor:1,machine_doronium_furnace:2,machine_ultra_compressor:3,titaniumPlate:40,advancedCircuit:20,controlModule:15,largeBattery:10,transformer:5,diamond:30,obsidian:30,gold:20,doronium_thermal_crystal:10,doronium_cold_crystal:10,doronium_ultra:5},240]
 ];
 for (const [id,name,station,inputs,time] of machineRecipes) {
