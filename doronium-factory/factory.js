@@ -849,6 +849,20 @@ function wireControls(){
  $("build-list").addEventListener("click",e=>{const b=e.target.closest("[data-build]");if(!b)return;selectedBuild=selectedBuild===b.dataset.build?null:b.dataset.build;selectedBuilding=null;renderBuildList();drawWorld();if(selectedBuild)toast(buildingDef(selectedBuild).name+" 선택 · 월드에서 위치를 클릭")});
  $("sell-button").onclick=sellItems;$("sell-resource").onchange=updateMarketEstimate;$("sell-amount").oninput=updateMarketEstimate;
  $("panel-inventory").addEventListener("click",e=>{const card=e.target.closest("[data-crystal]");if(card)showCrystalPreview(card.dataset.crystal)});
+ $("catalog-search")?.addEventListener("input",renderCatalog);
+ $("catalog-mode")?.addEventListener("change",renderCatalog);
+ $("catalog-category")?.addEventListener("change",renderCatalog);
+ $("panel-catalog")?.addEventListener("click",e=>{
+  const recipe=e.target.closest("[data-catalog-recipe]");
+  if(recipe){chooseCatalogRecipe(recipe.dataset.catalogRecipe);return}
+  const machine=e.target.closest("[data-machine-build]");
+  if(machine){
+   const id=machine.dataset.machineBuild;
+   if(!buildingDef(id)){toast("이 설비는 아직 건설 목록에 연결되지 않았습니다.","warn");return}
+   selectedBuild=id;selectedBuilding=null;changePanel("build");renderBuildList();drawWorld();toast(buildingDef(id).name+" 선택 · 설치할 부지를 지정하세요.");
+  }
+ });
+
 
 
  $("zoom-in").onclick=()=>setZoom(camera.zoom+.1);$("zoom-out").onclick=()=>setZoom(camera.zoom-.1);$("center-view").onclick=centerCamera;
