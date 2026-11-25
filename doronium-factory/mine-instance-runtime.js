@@ -4,12 +4,13 @@ const coordinate=value=>Number.isFinite(Number(value))?Math.floor(Number(value))
 export function mineInstanceIDForEntrance(x,y){
   return "mine:"+coordinate(x)+":"+coordinate(y);
 }
-export function createMineInstanceState({mineDeposits,mineEnvironment,mineInfrastructure}={}){
+export function createMineInstanceState({mineDeposits,mineEnvironment,mineInfrastructure,powerTopology}={}){
   return {
     version:1,
     mineDeposits:isObject(mineDeposits)?mineDeposits:{},
     mineEnvironment:isObject(mineEnvironment)?mineEnvironment:{},
-    mineInfrastructure:isObject(mineInfrastructure)?mineInfrastructure:{version:1,supports:{},closures:{},events:[],railRoutes:{},lastUpdated:0}
+    mineInfrastructure:isObject(mineInfrastructure)?mineInfrastructure:{version:1,supports:{},closures:{},events:[],railRoutes:{},lastUpdated:0},
+    powerTopology:isObject(powerTopology)?{...powerTopology}:{}
   };
 }
 export function ensureMineInstance(state,id,createDefault){
@@ -27,7 +28,8 @@ export function ensureMineInstance(state,id,createDefault){
       instance=createMineInstanceState({
         mineDeposits:state.mineDeposits,
         mineEnvironment:state.mineEnvironment,
-        mineInfrastructure:state.mineInfrastructure
+        mineInfrastructure:state.mineInfrastructure,
+        powerTopology:state.powerTopologyLayers?.mine
       });
       state.mineInstanceMigrationComplete=true;
       for(const building of state.buildings||[])if(building?.layer==="mine"&&!building.mineInstanceID)building.mineInstanceID=key;
@@ -50,6 +52,7 @@ export function saveActiveMineInstance(state){
   instance.mineDeposits=state.mineDeposits;
   instance.mineEnvironment=state.mineEnvironment;
   instance.mineInfrastructure=state.mineInfrastructure;
+  instance.powerTopology={...(state.powerTopologyLayers?.mine||instance.powerTopology||{})};
   return instance;
 }
 export function activateMineInstance(state,id,createDefault){
@@ -62,5 +65,7 @@ export function activateMineInstance(state,id,createDefault){
   state.mineDeposits=instance.mineDeposits;
   state.mineEnvironment=instance.mineEnvironment;
   state.mineInfrastructure=instance.mineInfrastructure;
+  if(!isObject(state.powerTopologyLayers))state.powerTopologyLayers={surface:false,mine:{}};
+  state.powerTopologyLayers.mine=instance.powerTopology;
   return instance;
 }
