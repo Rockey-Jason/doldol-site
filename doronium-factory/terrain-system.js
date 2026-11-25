@@ -100,7 +100,7 @@ export function makeMineDeposits(){
     [5,8,12,"goldOre",18,-186],[5,12,7,"diamond",8,-192],[5,22,15,"quartz",8,-198],
     [5,25,8,"coal",6,-204],[5,31,12,"diamond",3,-202],[5,34,17,"goldOre",6,-188],
     [1,5,12,"leadOre",22,-22],[1,15,12,"magnetite",18,-30],
-    [2,8,16,"nickelOre",26,-72],[2,31,12,"leadOre",28,-68],
+    [2,8,16,"nickelOre",26,-72],[2,17,12,"aluminumOre",18,-76],[2,31,12,"leadOre",28,-68],
     [3,12,12,"chromiumOre",20,-110],[3,30,12,"nickelOre",25,-118],
     [4,8,12,"titaniumOre",13,-146],[4,30,12,"magnetite",20,-160],
     [5,15,12,"neodymiumOre",9,-194],[5,34,12,"diamondOre",5,-208]
