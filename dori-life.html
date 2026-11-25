@@ -934,27 +934,46 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 @keyframes doriLeafSway{0%,100%{transform:rotate(-1deg)}50%{transform:rotate(2deg)}}
 @keyframes doriRobotRoll{0%,100%{transform:translateX(0)}50%{transform:translateX(5px)}}
 
-/* Companion and visitor choreography. Separate actors keep their own motion state. */
-.dori-visitor{pointer-events:none;transition:opacity .45s ease}
+/* Four named cat visitors. Each coat stays consistent while the actor moves independently. */
+.dori-visitor{pointer-events:none;transition:opacity .45s ease;--visitor-coat:#f1f3f2;--visitor-patch:#fff;--visitor-mark:#ccd7df;--visitor-eye:#8ab6d2;--visitor-outline:#59636b}
+#doriVisitor .visitor-fur{fill:var(--visitor-coat)}
+#doriVisitor .visitor-patch{fill:var(--visitor-patch)}
+#doriVisitor .visitor-mark{fill:var(--visitor-mark)}
+#doriVisitor .visitor-ear-inner{fill:var(--visitor-mark);opacity:.76}
+#doriVisitor .visitor-eye{fill:var(--visitor-eye)}
+#doriVisitor .visitor-fur-line{stroke:var(--visitor-coat);stroke:var(--visitor-coat);filter:drop-shadow(0 1px 0 var(--visitor-outline))}
+#doriVisitor .visitor-paw-line{stroke:var(--visitor-outline)}
+#doriVisitor .visitor-pattern{opacity:0}
+.scene[data-visitor-cat="winter"] #doriVisitor{--visitor-coat:#f0f3f4;--visitor-patch:#fff;--visitor-mark:#c6d5df;--visitor-eye:#83b7d6;--visitor-outline:#82939d}
+.scene[data-visitor-cat="morae"] #doriVisitor{--visitor-coat:#d9b47f;--visitor-patch:#f3dfbe;--visitor-mark:#b98750;--visitor-eye:#8e704e;--visitor-outline:#826342}
+.scene[data-visitor-cat="bokdori"] #doriVisitor{--visitor-coat:#936f59;--visitor-patch:#f2e4d2;--visitor-mark:#684c3d;--visitor-eye:#9cae72;--visitor-outline:#584336}
+.scene[data-visitor-cat="smart"] #doriVisitor{--visitor-coat:#87939d;--visitor-patch:#dbe1e5;--visitor-mark:#586773;--visitor-eye:#7eafa5;--visitor-outline:#4d5b66}
+.scene[data-visitor-cat="winter"] #doriVisitor .winter-pattern,
+.scene[data-visitor-cat="morae"] #doriVisitor .morae-pattern,
+.scene[data-visitor-cat="bokdori"] #doriVisitor .bokdori-pattern,
+.scene[data-visitor-cat="smart"] #doriVisitor .smart-pattern{opacity:.95}
 #doriVisitorBody{transform-box:fill-box;transform-origin:50% 100%}
-#visitorWaveArm{transform-box:fill-box;transform-origin:90% 22%}
-#friendBreadBody{transform-box:fill-box;transform-origin:50% 92%}
-.scene[data-friend="wander"] #friendBreadBody{animation:doriFriendBounce 2.9s ease-in-out infinite}
-.scene[data-friend="greet"] .friend-hearts{animation:friendAffectionFloat 2.2s ease-in-out infinite}
-.scene[data-friend="follow"] #friendBreadBody{animation:doriFriendBounce 1.05s ease-in-out infinite}
-.scene[data-friend="depart"] #friendBreadBody{animation:none}
-.scene[data-visitor="approach"] #doriVisitorBody{animation:visitorArrivalStep .72s ease-in-out infinite}
-.scene[data-visitor="greet"] #visitorWaveArm{animation:visitorWave .58s ease-in-out infinite alternate}
-.scene[data-visitor="greet"] #doriVisitorTag{animation:visitorTagPop .9s ease-in-out infinite alternate}
-.scene[data-visitor="chat"] #doriVisitorBody{animation:visitorChat 2.4s ease-in-out infinite}
-.scene[data-visitor="sit"] #doriVisitorBody{animation:visitorSit 2.8s ease-in-out infinite}
-.scene[data-visitor="depart"] #visitorWaveArm{animation:visitorWave .7s ease-in-out 2 alternate}
-@keyframes visitorArrivalStep{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
-@keyframes visitorWave{0%{transform:rotate(-2deg)}100%{transform:rotate(-25deg)}}
-@keyframes visitorTagPop{0%{opacity:.72;transform:translateY(1px)}100%{opacity:1;transform:translateY(-2px)}}
-@keyframes visitorChat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-1px) rotate(1deg)}}
-@keyframes visitorSit{0%,100%{transform:translateY(1px) scale(1,.99)}50%{transform:translateY(2px) scale(1.01,.98)}}
-@media(prefers-reduced-motion:reduce){.dori-visitor,#doriVisitorBody,#visitorWaveArm,#friendBreadBody,.friend-hearts{animation:none!important;transition:none!important}}
+#visitorHead{transform-box:fill-box;transform-origin:35% 90%}
+#visitorWavePaw{transform-box:fill-box;transform-origin:45% 90%}
+#visitorTail{transform-box:fill-box;transform-origin:100% 85%;animation:visitorTailSway 2.4s ease-in-out infinite}
+#visitorLegLeft,#visitorLegRight{transform-box:fill-box;transform-origin:50% 10%}
+.scene[data-visitor="approach"] #doriVisitorBody{animation:visitorCatWalkBody .72s ease-in-out infinite}
+.scene[data-visitor="approach"] #visitorTail{animation:visitorTailSway .9s ease-in-out infinite}
+.scene[data-visitor="approach"] #visitorWavePaw{animation:visitorCatStep .72s ease-in-out infinite}
+.scene[data-visitor="greet"] #visitorWavePaw,
+.scene[data-visitor="depart"] #visitorWavePaw{animation:visitorCatWave .55s ease-in-out infinite alternate}
+.scene[data-visitor="greet"] #visitorHead{animation:visitorCatHeadTilt 1.8s ease-in-out infinite}
+.scene[data-visitor="chat"] #doriVisitorBody{animation:visitorCatChat 2.5s ease-in-out infinite}
+.scene[data-visitor="sit"] #doriVisitorBody{animation:visitorCatSit 2.8s ease-in-out infinite}
+.scene[data-visitor="depart"] #visitorTail{animation:visitorTailSway 1.1s ease-in-out infinite}
+@keyframes visitorCatWalkBody{0%,100%{transform:translateY(0)}50%{transform:translateY(-2.4px)}}
+@keyframes visitorCatStep{0%,100%{transform:rotate(0)}50%{transform:rotate(-19deg)}}
+@keyframes visitorCatWave{0%{transform:rotate(-3deg)}100%{transform:rotate(-38deg)}}
+@keyframes visitorCatHeadTilt{0%,100%{transform:rotate(0)}50%{transform:rotate(3deg)}}
+@keyframes visitorCatChat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-1.5px) rotate(1.4deg)}}
+@keyframes visitorCatSit{0%,100%{transform:translateY(1px) scale(1,.99)}50%{transform:translateY(2px) scale(1.01,.98)}}
+@keyframes visitorTailSway{0%,100%{transform:rotate(-7deg)}50%{transform:rotate(12deg)}}
+@media(prefers-reduced-motion:reduce){.dori-visitor,#doriVisitorBody,#visitorHead,#visitorWavePaw,#visitorTail{animation:none!important;transition:none!important}} 
 
 /* Live observation archive: records only behavior states actually rendered in this browser. */
 .live-observation{margin-top:16px;padding:clamp(18px,2.6vw,30px);border:1px solid rgba(226,205,169,.17);border-radius:24px;background:linear-gradient(145deg,rgba(37,53,67,.92),rgba(20,31,43,.94));box-shadow:0 24px 70px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.045)}
@@ -1328,34 +1347,44 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
             <g class="friend-hearts" fill="#e99eaa"><path d="M47 -69 C32 -83 20 -64 47 -45 C74 -64 62 -83 47 -69Z"/><path d="M70 -42 C61 -51 53 -39 70 -27 C87 -39 79 -51 70 -42Z"/></g>
           </g>
 
-          <!-- A friendly, unnamed visitor who can enter, greet Dori, spend time in the room and leave. -->
-          <g id="doriVisitor" class="dori-visitor" transform="translate(-140 520) scale(.82)" opacity="0" aria-hidden="true">
-            <ellipse cx="0" cy="76" rx="44" ry="8" fill="#463529" opacity=".16"/>
+          <!-- Winter, Morae, Bokdori and Smart: visiting cats with individual coats and names. -->
+          <g id="doriVisitor" class="dori-visitor" transform="translate(-150 520) scale(.82)" opacity="0" aria-hidden="true">
+            <ellipse cx="-2" cy="8" rx="51" ry="8" fill="#463529" opacity=".17"/>
+            <path id="visitorTail" class="visitor-fur-line" d="M-43 -37 Q-78 -50 -78 -76 Q-77 -91 -64 -91" fill="none" stroke-width="11" stroke-linecap="round"/>
             <g id="doriVisitorBody">
-              <path d="M-27 3 Q-31 18 -28 43 L-22 62 H-7 L-5 38 H7 L10 62 H26 L29 42 Q31 16 24 2 Q0 -8 -27 3Z" fill="#6c8796" stroke="#405766" stroke-width="4" stroke-linejoin="round"/>
-              <path d="M-17 55 L-21 73 H-7 L-2 56 M12 56 L16 73 H30 L24 55" fill="#d8c5a9" stroke="#76614c" stroke-width="3" stroke-linejoin="round"/>
-              <path d="M-22 6 Q-41 16 -42 36 L-32 42 L-17 21 M20 8 Q39 17 40 36 L31 42 L16 21" fill="#6c8796" stroke="#405766" stroke-width="4" stroke-linejoin="round"/>
-              <g id="visitorWaveArm" transform="translate(-37 34)">
-                <path d="M0 0 Q-15 -12 -13 -29" fill="none" stroke="#6c8796" stroke-width="12" stroke-linecap="round"/>
-                <path d="M-13 -29 Q-19 -40 -11 -48" fill="none" stroke="#e8c7a8" stroke-width="10" stroke-linecap="round"/>
+              <path class="visitor-fur" d="M-49 -48 Q-32 -69 1 -62 Q30 -62 48 -42 L45 -13 Q28 3 -10 0 L-44 -12Z" stroke="var(--visitor-outline)" stroke-width="3.8" stroke-linejoin="round"/>
+              <path class="visitor-patch" d="M-17 -10 Q-3 -29 13 -25 Q27 -20 31 -4 Q11 5 -10 -1Z"/>
+              <path class="visitor-fur" d="M-34 -18 Q-42 -4 -39 5 L-25 6 L-20 -14Z" stroke="var(--visitor-outline)" stroke-width="3" stroke-linejoin="round"/>
+              <path class="visitor-fur" d="M-13 -12 Q-19 0 -14 8 L1 8 L2 -13Z" stroke="var(--visitor-outline)" stroke-width="3" stroke-linejoin="round"/>
+              <path class="visitor-fur" d="M25 -14 Q18 -1 23 7 L38 7 L39 -20Z" stroke="var(--visitor-outline)" stroke-width="3" stroke-linejoin="round"/>
+              <path class="visitor-paw-line" d="M-39 5 H-24 M-15 8 H2 M22 7 H39" fill="none" stroke-width="2.5" stroke-linecap="round"/>
+              <g id="visitorWavePaw" transform="translate(27 -26)">
+                <path d="M0 0 Q7 -9 10 -19" fill="none" stroke="var(--visitor-outline)" stroke-width="10" stroke-linecap="round"/>
+                <path class="visitor-fur" d="M4 -19 Q5 -31 14 -32 Q24 -29 21 -17 Q16 -9 8 -13Z" stroke="var(--visitor-outline)" stroke-width="2.5"/>
+                <path class="visitor-toes" d="M9 -27 l-1 -4 M15 -28 l1 -4 M20 -24 l3 -3" stroke="var(--visitor-outline)" stroke-width="1.8" stroke-linecap="round" fill="none"/>
               </g>
-              <path d="M-24 -20 Q-25 -53 0 -59 Q29 -55 25 -20 L19 1 Q0 12 -19 1Z" fill="#e8c7a8" stroke="#8e6c58" stroke-width="3"/>
-              <path d="M-27 -24 Q-30 -56 -4 -67 Q22 -72 31 -38 L22 -31 Q14 -46 -1 -45 Q-15 -45 -22 -27Z" fill="#4a403d"/>
-              <path d="M-14 -20 Q-9 -24 -5 -20 M7 -20 Q12 -24 16 -20" fill="none" stroke="#5b463d" stroke-width="2.5" stroke-linecap="round"/>
-              <circle cx="-9" cy="-19" r="2.1" fill="#3c302d"/><circle cx="11" cy="-19" r="2.1" fill="#3c302d"/>
-              <path d="M-4 -7 Q0 -3 5 -7" fill="none" stroke="#9f6b5d" stroke-width="2.5" stroke-linecap="round"/>
-              <path d="M-20 14 Q0 22 20 14" fill="none" stroke="#d6b99a" stroke-width="2.5" opacity=".7"/>
-              <g transform="translate(28 31)">
-                <path d="M-10 -3 H14 L12 22 H-8Z" fill="#c99d6f" stroke="#896948" stroke-width="2"/>
-                <path d="M-10 -3 L2 5 L14 -3 M2 5 V21" fill="none" stroke="#f3dfbf" stroke-width="2"/>
+              <g id="visitorHead" transform="translate(31 -58)">
+                <path class="visitor-fur" d="M-22 -12 L-24 -38 Q-22 -43 -17 -38 L-5 -27 Q5 -31 14 -26 L27 -40 Q33 -43 34 -35 L31 -8 Q30 15 7 21 Q-16 19 -22 -2Z" stroke="var(--visitor-outline)" stroke-width="3.8" stroke-linejoin="round"/>
+                <path class="visitor-ear-inner" d="M-19 -35 L-8 -27 L-17 -23Z M18 -28 L29 -37 L27 -23Z"/>
+                <path class="visitor-patch" d="M-10 4 Q-3 -3 7 2 Q15 0 21 7 Q14 19 3 18 Q-8 17 -10 4Z"/>
+                <path class="visitor-mark winter-pattern" d="M1 -23 l0 -8 M-4 -19 l9 -9 M-4 -28 l9 9" fill="none" stroke="var(--visitor-mark)" stroke-width="2.2" stroke-linecap="round"/>
+                <path class="visitor-mark morae-pattern" d="M-3 -25 Q0 -21 3 -25 M7 -27 Q10 -23 13 -27 M17 -25 Q20 -21 23 -25" fill="none" stroke="var(--visitor-mark)" stroke-width="2.5" stroke-linecap="round"/>
+                <path class="visitor-mark bokdori-pattern" d="M-5 -23 Q2 -31 10 -24 L13 -19 Q5 -17 -1 -19Z"/>
+                <path class="visitor-mark smart-pattern" d="M-16 -16 Q-10 -22 -4 -18 M15 -18 Q22 -22 27 -15" fill="none" stroke="var(--visitor-mark)" stroke-width="2.4" stroke-linecap="round"/>
+                <ellipse class="visitor-eye" cx="-8" cy="-5" rx="2.8" ry="3.7"/>
+                <ellipse class="visitor-eye" cx="15" cy="-5" rx="2.8" ry="3.7"/>
+                <path d="M1 3 Q5 0 9 3 Q7 9 5 9 Q2 8 1 3Z" fill="#8e6270"/>
+                <path d="M5 9 Q1 14 -5 11 M5 9 Q10 14 16 10" fill="none" stroke="var(--visitor-outline)" stroke-width="2" stroke-linecap="round"/>
+                <path d="M-14 3 L-31 0 M-14 8 L-31 11 M19 3 L35 0 M19 8 L35 11" fill="none" stroke="var(--visitor-outline)" stroke-width="1.7" stroke-linecap="round"/>
+                <circle cx="-15" cy="5" r="4" fill="#e9a6a0" opacity=".38"/>
+                <circle cx="20" cy="5" r="4" fill="#e9a6a0" opacity=".38"/>
               </g>
             </g>
-            <g id="doriVisitorTag" transform="translate(-28 -88)">
-              <rect x="-3" y="-17" width="62" height="23" rx="11" fill="#fffdf7" stroke="#526a78" stroke-width="2"/>
-              <text x="28" y="-1" text-anchor="middle" font-size="12" fill="#405766">손님</text>
+            <g id="doriVisitorTag" transform="translate(-27 -112)">
+              <rect x="-5" y="-18" width="66" height="25" rx="12" fill="#fffdf7" stroke="#526a78" stroke-width="2"/>
+              <text id="visitorNameTag" x="28" y="0" text-anchor="middle" font-size="13" fill="#405766">윈터</text>
             </g>
           </g>
-
           <!-- Event-only animated details -->
           <g class="ufo-fx" transform="translate(940 145)">
             <ellipse cx="0" cy="0" rx="51" ry="15" fill="#9ee9e9" opacity=".84"/>
@@ -1710,6 +1739,32 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   BANK.sleep = {title:'돌이가 새근새근 잠들었어요',desc:'포근한 침대에서 오늘의 피로를 풀며 달콤한 꿈을 꾸고 있어요.',icon:'🌙',pose:'sleep',tag:'수면'};
   BANK.dream = {title:'돌이의 달콤한 꿈나라',desc:'작은 발을 꼼지락거리며 아주 행복한 꿈을 꾸는 중이에요.',icon:'💭',pose:'sleep',tag:'수면'};
   var SPECIALS = ['ufo','thief','rainbow','snow','meteor','delivery','visitor','bread','robot','friendly-ghost','parade','bubble','firefly','party','butterfly','mail','socks','moon','sunbeam'];
+  // Visitors are always cats. Their names rotate deterministically so all four are represented.
+  var VISITOR_CATS = [
+    {id:'winter',name:'윈터'},
+    {id:'morae',name:'모래'},
+    {id:'bokdori',name:'복돌이'},
+    {id:'smart',name:'스마트'}
+  ];
+  function visitorNameForDay(key,index){
+    var slot=((ordinal(key)+(index||0))%VISITOR_CATS.length+VISITOR_CATS.length)%VISITOR_CATS.length;
+    return VISITOR_CATS[slot].name;
+  }
+  function visitorProfileForEvent(evt){
+    var name=evt&&evt.visitorName;
+    return VISITOR_CATS.find(function(cat){return cat.name===name;})||VISITOR_CATS[0];
+  }
+  function eventContentFor(evt){
+    var base=BANK[evt&&evt.kind]||BANK.sleep;
+    if(!evt||evt.kind!=='visitor')return base;
+    var cat=visitorProfileForEvent(evt);
+    return Object.assign({},base,{
+      title:cat.name+'가 놀러 왔어요',
+      desc:cat.name+'가 거실에 놀러 온 고양이 친구예요. 돌이와 코끝 인사를 나누고 함께 놀다가 편안히 돌아가요.',
+      icon:'🐱',
+      tag:'고양이 손님 · '+cat.name
+    });
+  }
 
   function parts(now){var out={};partFormatter.formatToParts(now).forEach(function(p){if(p.type!=='literal')out[p.type]=p.value;});return out;}
   function dayKey(now){return dateFormatter.format(now);}
@@ -1840,7 +1895,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       used[kind]=true;
       var start=Math.floor(group.from+random()*(group.to-group.from-20));
       var duration=15+Math.floor(random()*13);
-      return {id:key+'-'+index+'-'+kind,kind:kind,start:start,end:Math.min(1439,start+duration),duration:duration};
+      return {id:key+'-'+index+'-'+kind,kind:kind,start:start,end:Math.min(1439,start+duration),duration:duration,visitorName:kind==='visitor'?visitorNameForDay(key,index):''};
     }).filter(Boolean);
     var day=ordinal(key);
     var specialIndex=((day*7)%SPECIALS.length+SPECIALS.length)%SPECIALS.length;
@@ -1854,7 +1909,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     }
     if(specialKind){
       var specialStart=450+Math.floor(random()*850);
-      events.push({id:key+'-special-'+specialKind,kind:specialKind,start:specialStart,end:Math.min(1439,specialStart+22),duration:22,special:true});
+      events.push({id:key+'-special-'+specialKind,kind:specialKind,start:specialStart,end:Math.min(1439,specialStart+22),duration:22,special:true,visitorName:specialKind==='visitor'?visitorNameForDay(key,4):''});
     }
     events.sort(function(a,b){return a.start-b.start;});
     // Resolve overlaps so every timeline event gets its own visible turn.
@@ -2004,7 +2059,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   var friendIsHere = false;
   if(doriActor){doriActor._doriPosition={x:660,y:432,s:.90};doriActor._facing='left';doriActor._isMoving=false;doriActor._isTurning=false;doriActor._motionCadence=5.2;}
   if(friendBread){friendBread._doriPosition={x:1240,y:520,s:.88};friendBread.style.opacity='0';friendBread._friendStartedAt=0;friendBread._friendTargetKey='';}
-  if(visitorActor){visitorActor._doriPosition={x:-140,y:520,s:.82};visitorActor.style.opacity='0';visitorActor._visitorEventId='';visitorActor._visitorLeaving=false;visitorActor._visitorTargetKey='';}
+  if(visitorActor){visitorActor._doriPosition={x:-150,y:520,s:.82};visitorActor.style.opacity='0';visitorActor._visitorEventId='';visitorActor._visitorLeaving=false;visitorActor._visitorTargetKey='';}
 
   function tweenSvgPosition(el,target,duration,done){
     if(!el)return;
@@ -2188,19 +2243,25 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   }
   function updateVisitorArrival(evt,state){
     if(!visitorActor)return;
+    var nameTag=document.getElementById('visitorNameTag');
     if(evt&&evt.kind==='visitor'){
+      var profile=visitorProfileForEvent(evt);
+      room.dataset.visitorCat=profile.id;
+      if(nameTag)nameTag.textContent=profile.name;
       if(visitorActor._visitorEventId!==evt.id){
         visitorActor._visitorEventId=evt.id;visitorActor._visitorLeaving=false;
         visitorActor._visitorTargetKey=evt.id+'-approach';
-        visitorActor._doriPosition={x:-140,y:520,s:.82};visitorActor.setAttribute('transform','translate(-140 520) scale(.82)');
-        visitorActor.style.opacity='1';tweenSvgPosition(visitorActor,{x:215,y:520,s:.82},7800);
+        visitorActor._doriPosition={x:-150,y:520,s:.82};
+        visitorActor.setAttribute('transform','translate(-150 520) scale(.82)');
+        visitorActor.style.opacity='1';
+        tweenSvgPosition(visitorActor,{x:215,y:520,s:.82},8200);
       }
       var stage=state&&state.eventStage==='approach'?'approach':(state&&state.pose==='greet'?'greet':(state&&state.pose==='sit'?'sit':'chat'));
       room.dataset.visitor=stage;
       var targetKey=evt.id+'-'+stage;
       if(stage!=='approach'&&visitorActor._visitorTargetKey!==targetKey){
         visitorActor._visitorTargetKey=targetKey;
-        tweenSvgPosition(visitorActor,stage==='sit'?{x:245,y:520,s:.82}:{x:225,y:520,s:.82},2100);
+        tweenSvgPosition(visitorActor,stage==='sit'?{x:245,y:520,s:.82}:{x:225,y:520,s:.82},2200);
       }
       return;
     }
@@ -2208,10 +2269,11 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     if(visitorActor._visitorEventId&&!visitorActor._visitorLeaving){
       visitorActor._visitorLeaving=true;
       var leavingId=visitorActor._visitorEventId;visitorActor._visitorTargetKey=leavingId+'-depart';
-      tweenSvgPosition(visitorActor,{x:-150,y:520,s:.82},6900,function(){
+      tweenSvgPosition(visitorActor,{x:-160,y:520,s:.82},7200,function(){
         if(visitorActor._visitorEventId===leavingId){
           visitorActor.style.opacity='0';visitorActor._visitorEventId='';visitorActor._visitorLeaving=false;
-          visitorActor._visitorTargetKey='';room.dataset.visitor='none';
+          visitorActor._visitorTargetKey='';room.dataset.visitor='none';room.dataset.visitorCat='';
+          if(nameTag)nameTag.textContent='손님';
         }
       });
     }
@@ -2237,7 +2299,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   }
   function setRoom(evt,routine,phase,now){
     var kind=evt?evt.kind:'none';
-    var base=evt?(BANK[evt.kind]||BANK.sleep):routine;
+    var base=evt?eventContentFor(evt):routine;
     var state=eventChoreographyState(evt,now||new Date(),base);
     room.dataset.phase=phase;
     room.dataset.event=state.fx||kind;
@@ -2267,7 +2329,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var p=parts(now);var minute=Number(p.hour)*60+Number(p.minute);
     timeline.innerHTML='';
     dayEvents.forEach(function(evt){
-      var data=BANK[evt.kind]||BANK.sleep;var row=document.createElement('div');
+      var data=eventContentFor(evt);var row=document.createElement('div');
       row.className='event-row'+(minute>=evt.start&&minute<evt.end?' active':minute>=evt.end?' past':'');
       var status=minute>=evt.end?'완료':minute>=evt.start?'진행 중':'예정';
       row.innerHTML='<span class="event-time">'+formatMinute(evt.start)+'</span><span class="event-icon">'+data.icon+'</span><span class="event-copy"><strong></strong><span></span></span><span class="event-status">'+status+'</span>';
@@ -2283,7 +2345,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       nextCountdown.textContent='다음 일정은 한국 시간 자정 이후 새롭게 시작돼요.';
       return;
     }
-    var d=BANK[upcoming.kind]||BANK.sleep;
+    var d=eventContentFor(upcoming);
     nextEvent.innerHTML='<div class="event-row"><span class="event-time">'+formatMinute(upcoming.start)+'</span><span class="event-icon">'+d.icon+'</span><span class="event-copy"><strong></strong><span></span></span></div>';
     nextEvent.querySelector('strong').textContent=d.title;
     nextEvent.querySelector('.event-copy span').textContent=d.desc;
@@ -2354,7 +2416,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       var events=buildEvents(key);
       events.forEach(function(event){
         if(event.start>limit)return;
-        var data=BANK[event.kind]||BANK.sleep;
+        var data=eventContentFor(event);
         rows.push({
           id:event.id,date:key,time:formatMinute(event.start),timestamp:dayStartUtc+event.start*60000,
           kind:event.kind,title:data.title||event.kind,desc:data.desc||'',icon:data.icon||'🐾',
