@@ -1602,9 +1602,17 @@ function removeBuilding(b){
  const salvage=Object.entries(d.materials||{}).map(([id,quantity])=>({itemID:canonicalItemID(id),quantity:Math.floor(Number(quantity)*.5)})).filter(item=>item.quantity>0);
  if(salvage.some(item=>!RESOURCE[item.itemID]||!Number.isSafeInteger(item.quantity))){toast("회수 자재 목록을 검증하지 못해 설비를 철거하지 않았습니다.","warn");return false}
  const railActive=b.type==="mineRailStation"&&b.layer==="mine"&&mineRailSummary(S,b.mineLevel).enabled;
- const snapshotKeys=["money","runtime","inventory","meta","quarantinedInventory","quarantinedMeta","buildings","relaySites","corePlaced","powerTopologyEnabled","ownershipLedger","ownershipLedgerValidation","mineInfrastructure"];
+ const snapshotKeys=["money","runtime","inventory","meta","quarantinedInventory","quarantinedMeta","buildings","relaySites","corePlaced","powerTopologyEnabled","powerTopologyLayers","mineInstanceID","mineInstances","mineDeposits","mineEnvironment","ownershipLedger","ownershipLedgerValidation","mineInfrastructure"];
  const snapshot=Object.fromEntries(snapshotKeys.map(key=>[key,S[key]===undefined?undefined:structuredClone(S[key])]));
- const rollback=()=>{for(const key of snapshotKeys){if(snapshot[key]===undefined)delete S[key];else S[key]=snapshot[key]}};
+ const rollback=()=>{
+  for(const key of snapshotKeys){if(snapshot[key]===undefined)delete S[key];else S[key]=snapshot[key]}
+  const activeMineID=String(S.player?.mineInstanceID||S.mineInstanceID||"mine:legacy"),activeMine=S.mineInstances?.[activeMineID];
+  if(activeMine){
+   S.mineInstanceID=activeMineID;if(S.player)S.player.mineInstanceID=activeMineID;
+   S.mineDeposits=activeMine.mineDeposits;S.mineEnvironment=activeMine.mineEnvironment;S.mineInfrastructure=activeMine.mineInfrastructure;
+   S.powerTopologyLayers??={surface:false,mine:{}};S.powerTopologyLayers.mine=activeMine.powerTopology||{};
+  }
+ };
  const transaction=commitBuildingDismantle(S,{transactionID:"BUILDING_DISMANTLE:"+uid,buildingUID:uid,refund,salvage},()=>{
   if(railActive&&!setMineRailEnabled(S,b.mineLevel,false).ok)return false;
   const balance=Number(S.money)||0;if(!Number.isFinite(balance)||balance<0)return false;
