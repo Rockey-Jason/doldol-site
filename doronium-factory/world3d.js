@@ -697,10 +697,10 @@ export function createWorld3D(canvas, getState) {
       geologyTypes:new Set(cells.map(p=>mineGeologyAt(level,p.x,p.z).id)).size,
       supportFrames,supportBraces:timberBraces?.count||0,railSegments,ventilationDucts:ventilationDucts?.count||0,
       mineCartCount:mineCartVisual?1:0,mineAutoCartCount:mineAutoCartVisual?1:0,cableSegments,
-      drainPipes:(state.buildings||[]).filter(b=>b.layer==="mine"&&Number(b.mineLevel||1)===level&&b.type==="mineDrainPipe").length,
-      drainPumps:(state.buildings||[]).filter(b=>b.layer==="mine"&&Number(b.mineLevel||1)===level&&b.type==="mineDrainPump").length,
-      waterTanks:(state.buildings||[]).filter(b=>b.layer==="mine"&&Number(b.mineLevel||1)===level&&b.type==="mineWaterTank").length,
-      railStations:(state.buildings||[]).filter(b=>b.layer==="mine"&&Number(b.mineLevel||1)===level&&b.type==="mineRailStation").length,
+      drainPipes:(state.buildings||[]).filter(b=>b.layer==="mine"&&Number(b.mineLevel||1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&b.type==="mineDrainPipe").length,
+      drainPumps:(state.buildings||[]).filter(b=>b.layer==="mine"&&Number(b.mineLevel||1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&b.type==="mineDrainPump").length,
+      waterTanks:(state.buildings||[]).filter(b=>b.layer==="mine"&&Number(b.mineLevel||1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&b.type==="mineWaterTank").length,
+      railStations:(state.buildings||[]).filter(b=>b.layer==="mine"&&Number(b.mineLevel||1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&b.type==="mineRailStation").length,
       veinSegments:veinInstanceCount,closureBlocks:closureBlockCount,
       oreDrawCalls:[...oreBatches.values()].filter(mesh=>mesh.count>0).length+(oreBases?.count?1:0)+(veinStrata?.count?1:0),
       oreInstances,depositNodes:deposits.length,lightCount
@@ -739,7 +739,7 @@ export function createWorld3D(canvas, getState) {
       }else if(b.type==="mineDrainPipe"){
         makeBox(g,0,5,0,4.2,2.6,4.2,metal);
         for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
-          const neighbor=(state.buildings||[]).some(other=>other!==b&&other.layer==="mine"&&Number(other.mineLevel||1)===level&&Number(other.x)===Number(b.x)+dx&&Number(other.y)===Number(b.y)+dz&&["mineDrainPipe","mineDrainPump","mineWaterTank"].includes(other.type));
+          const neighbor=(state.buildings||[]).some(other=>other!==b&&other.layer==="mine"&&Number(other.mineLevel||1)===level&&String(other.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&Number(other.x)===Number(b.x)+dx&&Number(other.y)===Number(b.y)+dz&&["mineDrainPipe","mineDrainPump","mineWaterTank"].includes(other.type));
           if(neighbor){
             const segment=makeCyl(g,dx*8,5,dz*8,1.2,18,metal,10);
             if(dx)segment.rotation.z=Math.PI/2;
@@ -751,7 +751,7 @@ export function createWorld3D(canvas, getState) {
         const impeller=new THREE.Group();impeller.position.set(0,20,0);g.add(impeller);
         for(let i=0;i<4;i++){const blade=makeBox(impeller,0,0,5,1.5,1.5,10,accent,false);blade.rotation.y=i*Math.PI/2}
         for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
-          const neighbor=(state.buildings||[]).some(other=>other!==b&&other.layer==="mine"&&Number(other.mineLevel||1)===level&&Number(other.x)===Number(b.x)+dx&&Number(other.y)===Number(b.y)+dz&&["mineDrainPipe","mineDrainPump","mineWaterTank"].includes(other.type));
+          const neighbor=(state.buildings||[]).some(other=>other!==b&&other.layer==="mine"&&Number(other.mineLevel||1)===level&&String(other.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&Number(other.x)===Number(b.x)+dx&&Number(other.y)===Number(b.y)+dz&&["mineDrainPipe","mineDrainPump","mineWaterTank"].includes(other.type));
           if(neighbor)makeBox(g,dx*8,6,dz*8,dx?18:2.6,2.6,dz?18:2.6,metal);
         }
         minePumpVisuals.push({rotor:impeller,building:b});
@@ -759,7 +759,7 @@ export function createWorld3D(canvas, getState) {
         makeCyl(g,0,12,0,8.5,24,metal,16);makeCyl(g,0,25,0,9.2,2,accent,16);
         makeBox(g,0,2,0,20,3,20,dark);
         for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
-          const neighbor=(state.buildings||[]).some(other=>other!==b&&other.layer==="mine"&&Number(other.mineLevel||1)===level&&Number(other.x)===Number(b.x)+dx&&Number(other.y)===Number(b.y)+dz&&["mineDrainPipe","mineDrainPump"].includes(other.type));
+          const neighbor=(state.buildings||[]).some(other=>other!==b&&other.layer==="mine"&&Number(other.mineLevel||1)===level&&String(other.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&Number(other.x)===Number(b.x)+dx&&Number(other.y)===Number(b.y)+dz&&["mineDrainPipe","mineDrainPump"].includes(other.type));
           if(neighbor)makeBox(g,dx*8,5,dz*8,dx?18:2.6,2.6,dz?18:2.6,metal);
         }
       }else if(b.type==="mineRailStation"){
@@ -1149,7 +1149,7 @@ export function createWorld3D(canvas, getState) {
     fill.intensity=inMine ? .22 : .8;
     if(inMine){syncMineDepositVisuals(state);syncMineEnvironmentVisuals(state)}
     if(state.visibilityRevision!==lastVisibilityRevision){addSeenNodeModels(state);lastVisibilityRevision=state.visibilityRevision;}
-    const selectedMachine=state.selectedBuilding?(state.buildings||[]).find(b=>b.uid===state.selectedBuilding&&(inMine?b.layer==="mine"&&Number(b.mineLevel||1)===Number(state.player?.mineLevel||1):b.layer!=="mine")):null;
+    const selectedMachine=state.selectedBuilding?(state.buildings||[]).find(b=>b.uid===state.selectedBuilding&&(inMine?b.layer==="mine"&&Number(b.mineLevel||1)===Number(state.player?.mineLevel||1)&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy"):b.layer!=="mine")):null;
     selectionRoot.visible=!!selectedMachine;
     if(selectedMachine)selectionRoot.position.set(selectedMachine.x*32,(inMine?mineFloorY(state.player.mineLevel):surfaceY(state,selectedMachine.x,selectedMachine.y))+3,selectedMachine.y*32);
     worldRoot.visible=!inMine;machineRoot.visible=!inMine;nodeRoot.visible=!inMine;mineRoot.visible=inMine;markerRoot.visible=true;dropRoot.visible=true;
