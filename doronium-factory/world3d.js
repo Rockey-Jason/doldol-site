@@ -444,6 +444,7 @@ export function createWorld3D(canvas, getState) {
     mineSignTexture.needsUpdate=true;
     const cells=[];
     for(let z=0;z<MINE_H;z++)for(let x=0;x<MINE_W;x++)if(mineTunnelAt(x,z))cells.push({x,z});
+    const signSeed=(level*0x45d9f3b)>>>0;
     const deposits=Object.values(state.mineDeposits||{}).filter(node=>node.level===level&&node.amount>0);
     const wallCapacity=cells.reduce((sum,p)=>sum+
       (!mineTunnelAt(p.x-1,p.z)?1:0)+(!mineTunnelAt(p.x+1,p.z)?1:0)+
