@@ -1135,7 +1135,7 @@ export function createWorld3D(canvas, getState) {
   let trackedNodes=null,trackedMineDeposits=null,trackedFlattened=null,trackedFoundation=null,stateIdentityRevision=0,lastVisibilityRevision=null;
   function signature(s){
     if(s.nodes!==trackedNodes||s.mineDeposits!==trackedMineDeposits||s.flattened!==trackedFlattened||s.foundation!==trackedFoundation){trackedNodes=s.nodes;trackedMineDeposits=s.mineDeposits;trackedFlattened=s.flattened;trackedFoundation=s.foundation;stateIdentityRevision++;}
-    const machines=(s.buildings||[]).map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.variant,b.layer||"surface",b.mineLevel||0].join(":")).join("|");
+    const machines=(s.buildings||[]).map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.variant,b.layer||"surface",b.mineLevel||0,b.mineInstanceID||""].join(":")).join("|");
     const drops=(s.worldDrops||[]).map(d=>[d.dropID||d.id,d.custodyStackID||d.stackID,d.quantity,d.x,d.y,d.layer||"surface",d.mineLevel||0].join(":")).join("|");
     const mineClosures=Object.keys(s.mineInfrastructure?.closures||{}).filter(key=>s.mineInfrastructure.closures[key]===true).sort().join(",");
     return [s.sceneRevision||0,stateIdentityRevision,s.worldVersion,s.player?.layer,s.player?.mineLevel,machines,drops,mineClosures].join(";");
