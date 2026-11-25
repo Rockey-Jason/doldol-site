@@ -1,5 +1,5 @@
 /* DORONIUM FACTORY — topographic 3D world, underground mine and industrial renderer */
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=3";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=4";
 let THREE = null;
 try { THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"); }
 catch (error) { console.warn("Three.js CDN unavailable; using the compatibility renderer.", error); }
@@ -418,6 +418,30 @@ export function createWorld3D(canvas, getState) {
           makeBox(g,-13,13,0,5,29,6,stone);makeBox(g,13,13,0,5,29,6,stone);makeBox(g,0,27,0,31,6,7,stone);
           makeBox(g,0,8,-1,19,19,1.5,mat(0x02070c,.02,.98));makeBox(g,0,30,0,25,1.1,8,glow,false);
           if(highEndDevice){const lamp=new THREE.PointLight(0x56d8da,1.1,88,2);lamp.position.set(0,20,-8);g.add(lamp);}
+        }else if(["birchTree","rubberTree","barkTree","frozenTree","fireTree"].includes(node.type)){
+          const trunkColor=node.type==="birchTree"?0xd5d8cc:node.type==="frozenTree"?0x8295a3:node.type==="fireTree"?0x59352b:0x654633;
+          const crownColor=node.type==="birchTree"?0x7cae86:node.type==="rubberTree"?0x326a4c:node.type==="barkTree"?0x355b3d:node.type==="frozenTree"?0xb4d9e4:0x9b4d2e;
+          const trunk=mat(trunkColor,.82,.15),crown=mat(crownColor,.55,.2,node.type==="fireTree"?0x45200c:0x000000);
+          makeBox(g,0,11,0,5,22,5,trunk);
+          makeSphere(g,0,32,0,node.type==="barkTree"?16:13,crown);
+          makeSphere(g,-7,27,5,8,crown);makeSphere(g,7,28,-4,8,crown);
+          if(node.type==="fireTree"&&highEndDevice){const glow=new THREE.PointLight(0xff7138,.22,48,2);glow.position.y=30;g.add(glow);}
+          if(node.type==="frozenTree"&&highEndDevice){const glow=new THREE.PointLight(0x76d7f5,.18,42,2);glow.position.y=30;g.add(glow);}
+        }else if(node.type==="heatCrystalNode"||node.type==="coldCrystalNode"){
+          const hot=node.type==="heatCrystalNode",color=hot?0xf0a04c:0x77d8f1;
+          const crystal=mat(color,.18,.26,color);
+          makeCyl(g,0,2,0,7,2,6,mats.dark,6);
+          makeBox(g,-4,10,0,4,17,4,crystal);makeBox(g,4,8,1,4,13,4,crystal);
+          if(highEndDevice){const glow=new THREE.PointLight(color,.52,50,2);glow.position.y=18;g.add(glow);}
+        }else if(node.type==="grassPatch"){
+          const grass=mat(0x4d9b62,.9,.1);
+          for(let i=0;i<5;i++)makeBox(g,(i-2)*3,5+(i%2)*2,(i%3-1)*3,1.5,10+(i%2)*4,1.5,grass);
+        }else if(node.type==="oil"){
+          const pool=mat(0x101b26,.12,.92),rim=mat(0x5a6d78,.4,.7);
+          makeCyl(g,0,1,0,11,2,16,pool,16);makeCyl(g,0,2,0,12,1,18,rim,16);
+          makeBox(g,0,13,0,3,22,3,mat(0x65727a,.5,.6));
+          makeBox(g,0,25,0,17,2,3,rim);
+          if(highEndDevice){const glow=new THREE.PointLight(0x557a9c,.25,38,2);glow.position.y=8;g.add(glow);}
         }else if(node.type==="relaySite"||node.type==="coreSite"){
           makeCyl(g,0,2,0,9,4,mats.dark,8);makeCyl(g,0,12,0,2,18,mats.trim,8);makeSphere(g,0,24,0,node.type==="coreSite"?5:3,mats.crystal);
         }
