@@ -125,16 +125,17 @@
 <div class="story-intro" id="story-intro" hidden>
   <div class="story-intro-backdrop"></div>
   <div class="story-intro-content">
-    <div class="story-intro-kicker">ROCKEY INDUSTRIES · ARCHIVE 01</div>
-    <div class="story-intro-emblem">◈</div>
-    <div class="story-intro-eyebrow">THE LAST INDUSTRIAL FRONTIER</div>
-    <h1>도로늄 행성의 마지막 불빛</h1>
-    <p class="story-line">한때 도로늄의 무한한 에너지로 번영했던 행성.</p>
-    <p class="story-line">그러나 중앙 반응로의 붕괴 이후 지표는 갈라졌고, 대륙을 잇던 공장망은 멈췄다.</p>
-    <p class="story-line">깊은 지하에는 아직 정체를 알 수 없는 광맥이 잠들어 있다.</p>
-    <div class="story-transmission"><span>ORBIT / 복구 AI</span><p>“엔지니어, 응답이 감지되었습니다. 당신이 마지막 복구 프로토콜입니다. 공장을 다시 가동하고, 지하의 도로늄을 찾아 행성의 심장을 복원하십시오.”</p></div>
-    <button type="button" id="story-start-button">복구 프로토콜 시작 <span>→</span></button>
-    <small>WASD 이동 · 좌클릭 채집/상호작용 · B 건설 · I 창고 · J 임무 · F 전체 화면</small>
+    <div class="story-intro-kicker">DORONIUM ARCHIVE · THE ORIGIN</div>
+    <div class="story-intro-emblem" id="story-scene-icon">🐅</div>
+    <div class="story-intro-eyebrow" id="story-scene-eyebrow">A TALE FROM THE OLD FOREST</div>
+    <div class="story-scene-count" id="story-scene-count">PROLOGUE · 01 / 08</div>
+    <h1 id="story-scene-title">아주 먼 옛날, 호랑이가 나타나던 시절</h1>
+    <p class="story-scene-text" id="story-scene-text">밤마다 마을을 찾아오는 호랑이들 때문에 사람들은 걱정이 많았습니다.</p>
+    <div class="story-transmission"><span id="story-transmission-title">돌이의 이야기</span><p id="story-transmission-text">그때 사람들에게는 용감한 친구 돌이가 있었어요.</p></div>
+    <div class="story-progress-track"><i id="story-progress-fill"></i></div>
+    <button type="button" id="story-start-button">이야기 시작 <span>→</span></button>
+    <div class="story-scene-actions"><button type="button" id="story-next-button" hidden>다음 장면 <span>→</span></button><button type="button" id="story-skip-button" hidden>이야기 건너뛰기</button></div>
+    <small>장면을 넘기며 돌이와 도로늄의 탄생 이야기를 감상하세요.</small>
   </div>
 </div>
 <div class="toast-stack" id="toast-stack"></div><div class="modal-overlay" id="modal-overlay"><div class="modal-card" id="modal-card"></div></div>
