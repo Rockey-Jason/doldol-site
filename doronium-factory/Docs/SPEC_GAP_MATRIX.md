@@ -656,3 +656,14 @@ The solver now returns `isolatedNodeIDs`; the factory assigns the weakest adjace
 **Other acceptance items unchanged:** world scale remains 192×160 tiles rather than 2,048m×2,048m; item custody is not yet a universal authoritative ledger; canonical manifest is not yet the sole live recipe/model/research source; Fusion interlocks/restart, all 20 skill effects, full contract catalog and new-save-to-ending regression remain partial. Physical device tests, two-device cloud recovery and the real 60-minute wall-clock soak remain UNVERIFIED. No checklist item or roadmap stage is promoted to COMPLETE.
 
 PR #11 remains draft/open/unmerged. Main merge, production deployment and production data changes remain prohibited until safe file-level reconciliation and every acceptance gate are complete.
+
+
+## 2026-11-25 mine-instance/geology checkpoint
+
+| Requirement | Status | Evidence / limitation |
+|---|---|---|
+| Independent mine entrance state | PARTIAL — implementation added | `mine-instance-runtime.js` stores deposits, environment and mine infrastructure by entrance coordinate; legacy state and mine buildings migrate into first instance. Playwright isolation scenario added, terminal browser result pending at checkpoint. |
+| Mine machine and power isolation | PARTIAL — code updated | Mine building index, placement occupancy, power edges and visual filtering now include `mineInstanceID`. Dormant mine machinery pauses; background ticking of all instances is not yet implemented. |
+| Mine geology density | PARTIAL — code updated | Seeded stone/mineral pockets and additional batched rock details added. Reachability/determinism tests added; browser acceptance pending. |
+| Preserve existing mine saves | PARTIAL — migration tests added | First entered mine inherits legacy depletion/environment/infrastructure and mine machinery; later entrances get independent defaults. Save/reload E2E still needed. |
+| All 12 roadmap stages / 20 final checks | NOT COMPLETE | World scale, authoritative ownership, all six fluids, canonical manifest, full Fusion recovery, all skills/contracts, physical devices and real 60-minute soak remain open or unverified. |
