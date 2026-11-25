@@ -150,12 +150,12 @@ function activeMineLevels(state){
   if(state.player?.layer==="mine")levels.add(clamp(integer(state.player.mineLevel,1),1,LEVELS));
   for(const b of state.buildings||[])if(b?.layer==="mine")levels.add(clamp(integer(b.mineLevel,1),1,LEVELS));
   for(const b of state.buildings||[])if(b?.layer==="mine"&&DRAIN_TYPES.has(b.type))levels.add(clamp(integer(b.mineLevel,1),1,LEVELS));
-  for(let level=1;level<=LEVELS;level++)if((state.buildings||[]).some(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&b.type==="mineRailStation"))levels.add(level);
+  for(let level=1;level<=LEVELS;level++)if((state.buildings||[]).some(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&b.type==="mineRailStation"))levels.add(level);
   return levels;
 }
 
 function connectedDrainComponents(buildings,level){
-  const nodes=(buildings||[]).filter(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&DRAIN_TYPES.has(b.type));
+  const nodes=(buildings||[]).filter(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&DRAIN_TYPES.has(b.type));
   const byCell=new Map(nodes.map(node=>[cellKey(integer(node.x),integer(node.y)),node]));
   const visited=new Set(),components=[];
   for(const node of nodes){
@@ -298,7 +298,7 @@ export function tickMineRailRoutes(state,dt){
           for(const cargo of route.cargo)deliveries.push({level,buildingUID:cargo.buildingUID,itemID:cargo.itemID,quantity:cargo.quantity,meta:cargo.meta});
           route.delivered+=route.cargo.length;events.push({type:"RAIL_UNLOAD",level,count:route.cargo.length});route.cargo=[];
         }else{
-          const available=(state.buildings||[]).filter(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&b.output&&!b.mineRailReserved&&!b.failureRepair);
+          const available=(state.buildings||[]).filter(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&b.output&&!b.mineRailReserved&&!b.failureRepair);
           for(const miner of available){
             if(route.cargo.length>=12)break;
             const near=Math.abs(num(miner.x)-num(current.x))+Math.abs(num(miner.y)-num(current.y));
@@ -402,7 +402,7 @@ export function tickMineSupportSections(state,dt){
   for(const level of activeMineLevels(state)){
     const env=state.mineEnvironment?.[level]||{};
     const wetness=clamp(num(env.waterDepth),0,1),humidity=clamp(num(env.humidity),0,100);
-    const drills=(state.buildings||[]).filter(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&String(b.type).startsWith("miner")&&b.status==="RUNNING");
+    const drills=(state.buildings||[]).filter(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&String(b.type).startsWith("miner")&&b.status==="RUNNING");
     for(const section of mineSupportSections(state,level)){
       if(section.closed)continue;
       const drillLoad=drills.some(b=>Math.abs(num(b.x)-section.x)+Math.abs(num(b.y)-section.z)<=5) ? .0024 : 0;
