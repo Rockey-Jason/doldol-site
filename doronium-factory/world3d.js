@@ -1176,7 +1176,7 @@ export function createWorld3D(canvas, getState) {
     const layer=drop.layer==="mine"?"mine":"surface";
     if(layer!==(state.player?.layer==="mine"?"mine":"surface"))return;
     const mineLevel=clamp(Number(drop.mineLevel)||1,1,5);
-    if(layer==="mine"&&mineLevel!==Number(state.player?.mineLevel||1))return;
+    if(layer==="mine"&&(mineLevel!==Number(state.player?.mineLevel||1)||String(drop.mineInstanceID||"mine:legacy")!==String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")))return;
     const x=clamp(Number(drop.x)||0,0,WORLD_W-1),z=clamp(Number(drop.y)||0,0,WORLD_H-1);
     const floor=layer==="mine"?mineFloorY(mineLevel):surfaceY(state,x,z);
     const g=new THREE.Group();g.position.set(x*32,floor+1,z*32);
@@ -1195,7 +1195,7 @@ export function createWorld3D(canvas, getState) {
   function signature(s){
     if(s.nodes!==trackedNodes||s.mineDeposits!==trackedMineDeposits||s.flattened!==trackedFlattened||s.foundation!==trackedFoundation){trackedNodes=s.nodes;trackedMineDeposits=s.mineDeposits;trackedFlattened=s.flattened;trackedFoundation=s.foundation;stateIdentityRevision++;}
     const machines=(s.buildings||[]).map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.variant,b.layer||"surface",b.mineLevel||0,b.mineInstanceID||""].join(":")).join("|");
-    const drops=(s.worldDrops||[]).map(d=>[d.dropID||d.id,d.custodyStackID||d.stackID,d.quantity,d.x,d.y,d.layer||"surface",d.mineLevel||0].join(":")).join("|");
+    const drops=(s.worldDrops||[]).map(d=>[d.dropID||d.id,d.custodyStackID||d.stackID,d.quantity,d.x,d.y,d.layer||"surface",d.mineLevel||0,d.mineInstanceID||""].join(":")).join("|");
     const mineClosures=Object.keys(s.mineInfrastructure?.closures||{}).filter(key=>s.mineInfrastructure.closures[key]===true).sort().join(",");
     return [s.sceneRevision||0,stateIdentityRevision,s.worldVersion,s.player?.layer,s.player?.mineLevel,machines,drops,mineClosures].join(";");
   }
