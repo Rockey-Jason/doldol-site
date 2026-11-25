@@ -506,6 +506,10 @@ try {
   assert.equal(mineEntranceIdentity.ok,true,"Entering the same physical entrance from different surface tiles must reopen the same mine instance: "+JSON.stringify(mineEntranceIdentity));
   console.log("DORONIUM_MINE_ENTRANCE_IDENTITY",JSON.stringify(mineEntranceIdentity));
 
+  const mineWorldDropIsolation = await desktop.evaluate(() => window.__doroniumFactoryTest.mineWorldDropIsolationTest());
+  assert.equal(mineWorldDropIsolation.ok,true,"World drops must render and transfer only inside their originating mine instance: "+JSON.stringify(mineWorldDropIsolation));
+  console.log("DORONIUM_MINE_WORLD_DROP_ISOLATION",JSON.stringify(mineWorldDropIsolation));
+
   const mineLegacyMigration = await desktop.evaluate(() => window.__doroniumFactoryTest.mineLegacySaveMigrationTest());
   assert.equal(mineLegacyMigration.ok,true,"Loading an old save inside a mine must preserve its entrance identity, depleted veins and machinery: "+JSON.stringify(mineLegacyMigration));
   console.log("DORONIUM_MINE_LEGACY_MIGRATION",JSON.stringify(mineLegacyMigration));
