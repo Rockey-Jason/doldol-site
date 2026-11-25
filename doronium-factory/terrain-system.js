@@ -171,6 +171,28 @@ export function makeMineDeposits(instanceSeed=0){
       deepSeamIndex++;
     }
   }
+  // v4 seeded stone and mineral pockets fill side galleries with harvestable
+  // geology. Each entrance uses its own seed; natural Doronium is never added.
+  const seedBase=(Number(instanceSeed)||0)>>>0;
+  let pocketIndex=0;
+  for(let level=1;level<=MINE_LEVELS;level++){
+    for(let x=4;x<=36;x+=2){
+      const center=mineMainDriftZ(x);
+      const h=((Math.imul(x+level*17+seedBase,73856093)^Math.imul(level*31+seedBase,19349663)^Math.imul(pocketIndex+seedBase,83492791))>>>0);
+      const offsets=[-3,3,-2,2,4,-4],z=center+offsets[(h>>>5)%offsets.length];
+      const key=mineDepositKey(level,x,z);
+      if(!mineTunnelAt(x,z)||deposits[key]){pocketIndex++;continue}
+      let type="stone",roll=h%100;
+      if(level>=2&&roll>78)type="copperOre";
+      if(level>=2&&roll>62&&roll<=78)type="ironOre";
+      if(level>=3&&roll>50&&roll<=62)type="quartz";
+      if(level>=3&&roll>94)type="goldOre";
+      if(level>=4&&roll>98)type="diamond";
+      const amount=type==="stone"?22+(h%39):type==="diamond"?2+(h%3):8+(h%19);
+      deposits[key]={level,x,z,type,amount,max:amount,cooldown:0,depthY:mineFloorY(level)+7+(h%18),seed:h,generation:"mineral-pocket-v4"};
+      pocketIndex++;
+    }
+  }
   return deposits;
 }
 
