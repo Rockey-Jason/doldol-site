@@ -1225,7 +1225,7 @@ function pickupNearbyWorldDrop(){
  for(let i=0;i<(S.worldDrops||[]).length;i++){
   const drop=S.worldDrops[i];
   if((drop?.layer||"surface")!==layer)continue;
-  if(layer==="mine"&&Number(drop.mineLevel||1)!==Number(S.player.mineLevel||1))continue;
+  if(layer==="mine"&&(Number(drop.mineLevel||1)!==Number(S.player.mineLevel||1)||String(drop.mineInstanceID||"mine:legacy")!==String(S.player?.mineInstanceID||S.mineInstanceID||"mine:legacy")))continue;
   const x=Number(drop?.x),z=Number(drop?.y);
   if(!Number.isFinite(x)||!Number.isFinite(z))continue;
   const distance=Math.hypot(x-px,z-pz);
