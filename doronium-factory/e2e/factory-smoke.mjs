@@ -501,6 +501,10 @@ try {
   assert.equal(mineSystemsIsolation.ok,true,"Mine stations, power and blockers must be isolated by entrance: "+JSON.stringify(mineSystemsIsolation));
   console.log("DORONIUM_MINE_SYSTEM_ISOLATION",JSON.stringify(mineSystemsIsolation));
 
+  const mineEntranceIdentity = await desktop.evaluate(() => window.__doroniumFactoryTest.mineEntranceIdentityTest());
+  assert.equal(mineEntranceIdentity.ok,true,"Entering the same physical entrance from different surface tiles must reopen the same mine instance: "+JSON.stringify(mineEntranceIdentity));
+  console.log("DORONIUM_MINE_ENTRANCE_IDENTITY",JSON.stringify(mineEntranceIdentity));
+
   const mineLegacyMigration = await desktop.evaluate(() => window.__doroniumFactoryTest.mineLegacySaveMigrationTest());
   assert.equal(mineLegacyMigration.ok,true,"Loading an old save inside a mine must preserve its entrance identity, depleted veins and machinery: "+JSON.stringify(mineLegacyMigration));
   console.log("DORONIUM_MINE_LEGACY_MIGRATION",JSON.stringify(mineLegacyMigration));
