@@ -2662,6 +2662,25 @@ if(E2E_MODE){
    }finally{S=saved;playerMotion=savedMotion;selectedBuilding=old.selectedBuilding;selectedBuild=old.selectedBuild;activeBlueprintID=old.activeBlueprintID;renderAll()}
   },
 
+  mineDismantleRollbackIsolationTest(){
+   const saved=structuredClone(S),savedMotion=structuredClone(playerMotion),old={selectedBuilding,selectedBuild,activeBlueprintID};
+   try{
+    S=freshState();S.player={...S.player,layer:"surface",mineLevel:1};S.buildings=[];
+    const A="mine:rollback:A";activateMineInstance(S,A,()=>createMineInstanceDefaults(A));S.player.layer="mine";
+    S.buildings=[
+     {uid:"ROLLBACK-RAIL-A",type:"mineRailStation",layer:"mine",mineInstanceID:A,mineLevel:1,x:5,y:mineMainDriftZ(5),dir:1,condition:100,status:"IDLE",input:{},inputMeta:{},output:null,progress:0},
+     {uid:"ROLLBACK-RAIL-B",type:"mineRailStation",layer:"mine",mineInstanceID:A,mineLevel:1,x:35,y:mineMainDriftZ(35),dir:1,condition:100,status:"IDLE",input:{},inputMeta:{},output:null,progress:0}
+    ];
+    ensureMineInfrastructure(S);const routeStart=setMineRailEnabled(S,1,true);
+    S.money=Number.MAX_SAFE_INTEGER;
+    const before=S.mineInfrastructure.railRoutes[1]?.enabled===true,station=S.buildings[0],removed=removeBuilding(station);
+    const afterActive=S.mineInfrastructure.railRoutes[1]?.enabled===true;
+    const stored=S.mineInstances[A],afterStored=stored?.mineInfrastructure?.railRoutes?.[1]?.enabled===true;
+    const shared=S.mineInfrastructure===stored?.mineInfrastructure,stillPlaced=S.buildings.some(b=>b.uid===station.uid);
+    return {routeStart,before,removed,afterActive,afterStored,shared,stillPlaced,ok:routeStart.ok&&before&&removed===false&&afterActive&&afterStored&&shared&&stillPlaced};
+   }finally{S=saved;playerMotion=savedMotion;selectedBuilding=old.selectedBuilding;selectedBuild=old.selectedBuild;activeBlueprintID=old.activeBlueprintID;renderAll()}
+  },
+
   mineWorldDropIsolationTest(){
    const saved=structuredClone(S),savedMotion=structuredClone(playerMotion),old={selectedBuilding,selectedBuild,activeBlueprintID};
    try{
