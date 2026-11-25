@@ -16,6 +16,8 @@ const SUPPORT_CELLS=Object.freeze([
   ...SUPPORT_X.map(x=>Object.freeze({x,z:mineMainDriftZ(x)})),
   ...[8,14,20,26,32].map(x=>Object.freeze({x,z:18}))
 ]);
+function activeMineInstanceID(state){return String(state?.player?.mineInstanceID||state?.mineInstanceID||"mine:legacy")}
+function isActiveMineBuilding(state,building){return building?.layer==="mine"&&String(building.mineInstanceID||"mine:legacy")===activeMineInstanceID(state)}
 function supportCellsForLevel(){return SUPPORT_CELLS}
 
 export function ensureMineInfrastructure(state){
@@ -71,7 +73,7 @@ export function ensureMineInfrastructure(state){
     const currentRoute=infrastructure.railRoutes[level];
     const validCargo=[];
     for(const cargo of currentRoute.cargo){
-      const owner=(state.buildings||[]).find(building=>String(building.uid)===String(cargo.buildingUID));
+      const owner=(state.buildings||[]).find(building=>String(building.uid)===String(cargo.buildingUID)&&isActiveMineBuilding(state,building));
       if(owner?.output?.id===cargo.itemID&&num(owner.output.qty)===num(cargo.quantity)){
         owner.mineRailReserved=true;validCargo.push(cargo);
       }else if(owner)owner.mineRailReserved=false;
@@ -148,15 +150,15 @@ export function repairMineSupport(state,level,x,z,amount=35){
 function activeMineLevels(state){
   const levels=new Set();
   if(state.player?.layer==="mine")levels.add(clamp(integer(state.player.mineLevel,1),1,LEVELS));
-  for(const b of state.buildings||[])if(b?.layer==="mine"&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy"))levels.add(clamp(integer(b.mineLevel,1),1,LEVELS));
-  for(const b of state.buildings||[])if(b?.layer==="mine"&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&DRAIN_TYPES.has(b.type))levels.add(clamp(integer(b.mineLevel,1),1,LEVELS));
-  for(let level=1;level<=LEVELS;level++)if((state.buildings||[]).some(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&b.type==="mineRailStation"))levels.add(level);
+  for(const b of state.buildings||[])if(isActiveMineBuilding(state,b))levels.add(clamp(integer(b.mineLevel,1),1,LEVELS));
+  for(const b of state.buildings||[])if(isActiveMineBuilding(state,b)&&DRAIN_TYPES.has(b.type))levels.add(clamp(integer(b.mineLevel,1),1,LEVELS));
+  for(let level=1;level<=LEVELS;level++)if((state.buildings||[]).some(b=>isActiveMineBuilding(state,b)&&integer(b.mineLevel,1)===level&&b.type==="mineRailStation"))levels.add(level);
   return levels;
 }
 
 function connectedDrainComponents(state,level){
   const buildings=state.buildings||[];
-  const nodes=buildings.filter(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&DRAIN_TYPES.has(b.type));
+  const nodes=buildings.filter(b=>isActiveMineBuilding(state,b)&&integer(b.mineLevel,1)===level&&DRAIN_TYPES.has(b.type));
   const byCell=new Map(nodes.map(node=>[cellKey(integer(node.x),integer(node.y)),node]));
   const visited=new Set(),components=[];
   for(const node of nodes){
@@ -217,7 +219,7 @@ export function mineDrainageSummary(state,level){
   return {pumpCount:networks.reduce((n,x)=>n+x.pumps.length,0),tankCount:networks.reduce((n,x)=>n+x.tanks.length,0),pipeCount:networks.reduce((n,x)=>n+x.pipes.length,0),connectedNetworks:networks.filter(x=>x.connected).length,connectedPumps:networks.filter(x=>x.connected).reduce((n,x)=>n+x.pumps.length,0),storedLitres:networks.reduce((n,x)=>n+x.storedLitres,0),capacityLitres:networks.reduce((n,x)=>n+x.capacityLitres,0)};
 }
 
-function mineRailPathClosures(state,level,systems){
+export function mineRailPathClosures(state,level,systems){
   const closures={...(systems?.closures||{})};
   for(const section of Object.values(systems?.supports||{})){
     if(Number(section?.level)!==integer(level,1))continue;
@@ -231,7 +233,7 @@ function mineRailPathClosures(state,level,systems){
     }
   }
   for(const building of state.buildings||[]){
-    if(building?.layer!=="mine"||integer(building.mineLevel,1)!==integer(level,1)||building.type==="mineRailStation"||building.type==="mineDrainPipe")continue;
+    if(!isActiveMineBuilding(state,building)||integer(building.mineLevel,1)!==integer(level,1)||building.type==="mineRailStation"||building.type==="mineDrainPipe")continue;
     const width=Math.max(1,integer(building.footprint?.width,1)),height=Math.max(1,integer(building.footprint?.height,1));
     for(let dz=0;dz<height;dz++)for(let dx=0;dx<width;dx++)closures[keyOf(level,integer(building.x)+dx,integer(building.y)+dz)]=true;
   }
@@ -252,7 +254,7 @@ export function mineRailTrackAt(x,z){
   return gz===mineMainDriftZ(gx)||gz===18||((gx===14||gx===16||gx===27)&&gz>=10&&gz<=20);
 }
 export function mineRailStations(state,level){
-  return (state.buildings||[]).filter(b=>b?.type==="mineRailStation"&&b.layer==="mine"&&integer(b.mineLevel,1)===integer(level,1))
+  return (state.buildings||[]).filter(b=>b?.type==="mineRailStation"&&isActiveMineBuilding(state,b)&&integer(b.mineLevel,1)===integer(level,1))
     .slice().sort((a,b)=>integer(a.x)-integer(b.x)||integer(a.y)-integer(b.y));
 }
 export function setMineRailEnabled(state,level,enabled){
@@ -268,7 +270,7 @@ export function setMineRailEnabled(state,level,enabled){
     // Cancelling a route releases each reserved output to its original machine
     // without moving or duplicating inventory ownership.
     for(const cargo of route.cargo){
-      const owner=(state.buildings||[]).find(building=>String(building.uid)===String(cargo.buildingUID));
+      const owner=(state.buildings||[]).find(building=>String(building.uid)===String(cargo.buildingUID)&&isActiveMineBuilding(state,building));
       if(owner)owner.mineRailReserved=false;
     }
     route.cargo=[];route.path=[];
@@ -299,7 +301,7 @@ export function tickMineRailRoutes(state,dt){
           for(const cargo of route.cargo)deliveries.push({level,buildingUID:cargo.buildingUID,itemID:cargo.itemID,quantity:cargo.quantity,meta:cargo.meta});
           route.delivered+=route.cargo.length;events.push({type:"RAIL_UNLOAD",level,count:route.cargo.length});route.cargo=[];
         }else{
-          const available=(state.buildings||[]).filter(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&b.output&&!b.mineRailReserved&&!b.failureRepair);
+          const available=(state.buildings||[]).filter(b=>isActiveMineBuilding(state,b)&&integer(b.mineLevel,1)===level&&b.output&&!b.mineRailReserved&&!b.failureRepair);
           for(const miner of available){
             if(route.cargo.length>=12)break;
             const near=Math.abs(num(miner.x)-num(current.x))+Math.abs(num(miner.y)-num(current.y));
@@ -337,7 +339,7 @@ export function tickMineRailRoutes(state,dt){
       if(route.path.length<2){
         route.enabled=false;
         events.push({type:"RAIL_BLOCKED",level,from:current.uid,to:next.uid});
-        for(const cargo of route.cargo){const owner=(state.buildings||[]).find(building=>String(building.uid)===String(cargo.buildingUID));if(owner)owner.mineRailReserved=false}
+        for(const cargo of route.cargo){const owner=(state.buildings||[]).find(building=>String(building.uid)===String(cargo.buildingUID)&&isActiveMineBuilding(state,building));if(owner)owner.mineRailReserved=false}
         route.cargo=[];continue;
       }
     }
@@ -403,7 +405,7 @@ export function tickMineSupportSections(state,dt){
   for(const level of activeMineLevels(state)){
     const env=state.mineEnvironment?.[level]||{};
     const wetness=clamp(num(env.waterDepth),0,1),humidity=clamp(num(env.humidity),0,100);
-    const drills=(state.buildings||[]).filter(b=>b?.layer==="mine"&&integer(b.mineLevel,1)===level&&String(b.mineInstanceID||"mine:legacy")===String(state.player?.mineInstanceID||state.mineInstanceID||"mine:legacy")&&String(b.type).startsWith("miner")&&b.status==="RUNNING");
+    const drills=(state.buildings||[]).filter(b=>isActiveMineBuilding(state,b)&&integer(b.mineLevel,1)===level&&String(b.type).startsWith("miner")&&b.status==="RUNNING");
     for(const section of mineSupportSections(state,level)){
       if(section.closed)continue;
       const drillLoad=drills.some(b=>Math.abs(num(b.x)-section.x)+Math.abs(num(b.y)-section.z)<=5) ? .0024 : 0;
