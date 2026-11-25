@@ -493,6 +493,7 @@ try {
 
   const mineInstanceIsolation = await desktop.evaluate(() => window.__doroniumFactoryTest.mineInstanceIsolationTest());
   assert.equal(mineInstanceIsolation.ok, true, "Separate mine entrances must retain independent deposits and environment: "+JSON.stringify(mineInstanceIsolation));
+  assert.equal(mineInstanceIsolation.distinctGeology,true,"Different entrances must generate different seeded side-gallery mineral distributions: "+JSON.stringify(mineInstanceIsolation));
   assert.notEqual(mineInstanceIsolation.firstID,mineInstanceIsolation.secondID,"Entrance coordinates must identify separate mine instances");
   assert.equal(mineInstanceIsolation.instanceCount,2,"The test should persist exactly two independent mine instances");
   console.log("DORONIUM_MINE_INSTANCE_ISOLATION",JSON.stringify(mineInstanceIsolation));
