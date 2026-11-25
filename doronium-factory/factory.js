@@ -276,6 +276,20 @@ function makeWorld(){
  scatter(49,75,20,33,"heatCrystalNode",.022,30);
  scatter(7,29,5,17,"coldCrystalNode",.025,30);
  scatter(168,182,72,87,"oil",.05,180);
+ const spawnWildDori=(cx,cz,hostile)=>{
+  for(let r=0;r<=5;r++){
+   let placed=false;
+   for(let dz=-r;dz<=r&&!placed;dz++)for(let dx=-r;dx<=r&&!placed;dx++){
+    const x=cx+dx,z=cz+dz,key=x+","+z;
+    if(regionAt(x,z)!==(hostile?"doriForest":"doroniumForest")||nodes[key])continue;
+    const node=put(x,z,"wildDori",1);node.hostile=!!hostile;node.roamSeed=rng();node.attackCooldown=0;placed=true;
+   }
+   if(placed)return;
+  }
+ };
+ spawnWildDori(38,35,true);spawnWildDori(42,40,true);
+ spawnWildDori(91,54,false);spawnWildDori(96,60,false);
+
  const entrances=[{x:72,y:42},{x:30,y:64},{x:108,y:56},{x:160,y:91},{x:48,y:142}];
  for(const p of entrances)nodes[p.x+","+p.y]={type:"mineEntrance",amount:1,max:1,cooldown:0,seed:0};
  const sites={relay:[{x:9,y:84},{x:118,y:12},{x:113,y:86}],core:{x:66,y:54}};
@@ -708,6 +722,22 @@ function updateSurvival(dt){
   if(radiation)alerts.push("도로늄 숲 · 피폭이 누적되고 있습니다");
   const alert=$("world-alerts");if(alert)alert.textContent=alerts.join("  /  ");
  }
+ if(S.player.layer==="surface"){
+  let nearbyDori=null,nearest=5.5;
+  for(const [key,node] of Object.entries(S.nodes||{})){
+   if(node.type!=="wildDori"||!node.hostile)continue;
+   const [x,z]=key.split(",").map(Number),distance=Math.hypot(S.player.x-x,S.player.y-z);
+   if(distance<nearest){nearest=distance;nearbyDori=node}
+  }
+  if(nearbyDori){
+   v.doriAttackTimer=(v.doriAttackTimer||0)+dt;
+   if(v.doriAttackTimer>=3.5){
+    v.doriAttackTimer=0;v.health=Math.max(0,v.health-2.5);
+    if(!E2E_MODE)toast("멍멍! 돌이가 달려와 장난스럽게 들이받았습니다. 거리를 벌려 보세요.","warn");
+    log("돌이 숲 조우 · 잠시 물러나 안전거리를 확보하세요.");
+   }
+  }else v.doriAttackTimer=0;
+ }else v.doriAttackTimer=0;
  if(v.health<=0)respawnEngineer();
 }
 function showCrystalPreview(id){if(!RESOURCE[id]||(!id.startsWith("doronium_")&&id!=="infinity"))return;if(crystalViewer){crystalViewer.dispose();crystalViewer=null}const title=RESOURCE[id].name,body='<div class="crystal-preview-wrap"><canvas id="crystal-preview-canvas" class="crystal-preview-canvas" aria-label="'+title+' 3D 결정 모델"></canvas><div class="crystal-preview-info"><strong>'+title+'</strong><p>보유량 '+fmt(itemCount(id))+'개 · 품질 '+Math.round(quality(S,id))+' · 순도 '+Math.round(purity(S,id))+'</p><small>결정 계열마다 서로 다른 3D 형상·재질·발광 특성을 적용했습니다.</small></div></div>';showModal("도로늄 3D 결정 도감",body,[{label:"닫기",cls:"primary"}]);crystalViewer=createCrystalViewer($("crystal-preview-canvas"),id)}
