@@ -180,11 +180,19 @@ assert.ok(html.includes("{x:440,y:438,s:.87},{x:555,y:444,s:.89}"), "The route m
 assert.ok(html.includes("{x:910,y:438,s:.87},{x:1035,y:444,s:.84}"), "The route must extend to the far side of the room.");
 
 
-assert.ok(html.includes('id="observedDailyChart"'), "The actual-observation archive must have a separate seven-day chart.");
+assert.ok(html.includes('id="observedDailyChart"'), "The actual-observation archive must have a period-based chart.");
+assert.ok(html.includes('id="observedLocationBars"'), "The actual-observation archive must include location duration analysis.");
+assert.ok(html.includes('data-observed-range="180"'), "Actual observation history must support a 180-day range.");
+assert.ok(html.includes("function observedLocationFor(state)"), "Actual observations must capture the rendered room location.");
+assert.ok(html.includes("location:location,interaction:interaction"), "Each new observation must retain location and interaction metadata.");
+assert.ok(html.includes("endLocation:observedLocationFor(null)"), "Closed observation intervals must retain their end location.");
+assert.ok(html.includes("function addObservedDurationByKstDay(dailyTotals,row)"), "Observed intervals must be split across KST calendar days.");
 assert.ok(html.includes("var dailyTotals=Object.create(null);"), "Observed durations must be grouped into independent date buckets.");
-assert.ok(html.includes("rowDate=row.date||dayKey(new Date(row.startedAt))"), "Observed history must normalize each record to the KST date.");
+assert.ok(html.includes("var nextMidnight=Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day)+1)-9*60*60*1000;"), "Daily observed duration boundaries must use KST midnight.");
 assert.ok(html.includes("dailyBuckets.some(function(bucket){return bucket.ms>0;})"), "The actual-observation graph must have a clear empty state.");
-assert.ok(html.includes("observation-daily-card{grid-column:1/-1}"), "The observation trend chart must span the full responsive panel.");
+assert.ok(html.includes(".observation-location-card,.observation-daily-card{grid-column:1/-1}"), "The observation charts must span the responsive panel.");
+assert.ok(html.includes("예정 장면 변화 그래프"), "The generated schedule archive must identify its content as planned scenes.");
+assert.ok(html.includes("실제 페이지 접속 시간이나 애니메이션 재생 여부를 저장한 기록이 아니며"), "The generated schedule archive must not be presented as actual observation.");
 
 // Test the actual timezone helper against UTC instants, independent of the test machine's timezone.
 const clockStart = html.indexOf("function parts(now)");
