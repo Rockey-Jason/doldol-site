@@ -503,7 +503,7 @@ try {
 
   const mineOps = await desktop.evaluate(() => window.__doroniumFactoryTest.setupMineSystemsTest());
   assert.equal(mineOps.environment[1].ventilationActive, true, "Legacy and new mine levels must begin with working ventilation");
-  const mineGeologyVisuals = await desktop.evaluate(() => window.__doroniumFactoryTest.scene());
+  const mineGeologyVisuals = await desktop.evaluate(() => window.__doroniumFactoryTest.mineVisualSnapshot());
   assert.ok(mineGeologyVisuals.mineRockDetails > 0,"The mine must render natural rock relief and rubble");
   assert.ok(mineGeologyVisuals.mineStrataBands > 0,"The mine must render layered rock faces");
   assert.ok(mineGeologyVisuals.mineSigns >= 2,"The mine must render depth/level signboards");
