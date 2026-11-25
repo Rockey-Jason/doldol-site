@@ -941,7 +941,9 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 .live-observation-head p{max-width:650px;margin:8px 0 0;color:#b8c2c8;font-size:12px;line-height:1.8}
 .observation-live{display:flex;align-items:center;gap:8px;flex:0 0 auto;padding:8px 11px;border:1px solid rgba(131,198,171,.24);border-radius:999px;background:rgba(89,151,126,.09);color:#bde4cf;font-size:10px;letter-spacing:.12em}
 .observation-live i{width:7px;height:7px;border-radius:50%;background:#8fd2aa;box-shadow:0 0 12px rgba(143,210,170,.55);animation:livePulse 2s ease-in-out infinite}
-.observation-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}
+.observation-range{margin:15px 0 0;align-items:center}
+.observation-range-summary{margin-left:auto;color:#9dabb5;font-size:10px;font-variant-numeric:tabular-nums}
+.observation-stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:16px 0}
 .observation-stat{min-width:0;padding:14px 15px;border:1px solid rgba(255,255,255,.075);border-radius:15px;background:rgba(255,255,255,.035)}
 .observation-stat span{display:block;color:#aab7c1;font-size:10px;letter-spacing:.05em}
 .observation-stat strong{display:block;overflow:hidden;margin-top:7px;color:#f4e5c8;font-size:clamp(17px,2.2vw,23px);font-weight:400;text-overflow:ellipsis;white-space:nowrap}
@@ -957,7 +959,8 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 .observation-bar-track i{display:block;height:100%;min-width:0;border-radius:99px;transition:width .55s ease}
 .observation-bar-value{text-align:right;color:#aebbc2;font-variant-numeric:tabular-nums}
 
-.observation-daily-card{grid-column:1/-1}
+.observation-location-card,.observation-daily-card{grid-column:1/-1}
+.observation-location-bars{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px}
 .observation-daily-bars{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));align-items:end;gap:10px;min-height:156px;padding:10px 4px 2px}
 .observation-daily-column{display:flex;min-width:0;height:100%;flex-direction:column;align-items:center;justify-content:flex-end;gap:7px}
 .observation-daily-column strong{color:#aab7c1;font-size:10px;font-weight:400}
@@ -977,7 +980,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 .observation-empty{padding:22px 10px;color:#91a1aa;text-align:center;font-size:11px;line-height:1.8}
 .observation-footnote{margin:13px 2px 0;color:#8796a0;font-size:10px;line-height:1.75}
 @media(max-width:850px){.observation-content{grid-template-columns:1fr}}
-@media(max-width:600px){.live-observation{padding:17px;border-radius:19px}.live-observation-head{display:block}.observation-live{display:inline-flex;margin-top:13px}.observation-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.observation-stat{padding:12px}.observation-entry{grid-template-columns:43px 26px minmax(0,1fr) auto;gap:7px;padding:8px}.observation-entry-time{font-size:9px}.observation-entry-copy strong{font-size:10px}}
+@media(max-width:600px){.live-observation{padding:17px;border-radius:19px}.live-observation-head{display:block}.observation-live{display:inline-flex;margin-top:13px}.observation-range{gap:6px}.observation-range-summary{width:100%;margin:3px 0 0}.observation-stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.observation-stat{padding:12px}.observation-location-bars{grid-template-columns:1fr;gap:10px}.observation-entry{grid-template-columns:43px 26px minmax(0,1fr) auto;gap:7px;padding:8px}.observation-entry-time{font-size:9px}.observation-entry-copy strong{font-size:10px}}
 
 </style>
 <meta name="description" content="Dori Life에서 돌이의 하루를 실시간으로 지켜보세요. 집 안의 일상과 여러 활동, 시간의 흐름을 담은 돌이사이트 생활 콘텐츠입니다.">
@@ -1376,10 +1379,10 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   <section class="panel activity-archive" id="doriActivityArchive" aria-labelledby="activityArchiveTitle">
     <div class="activity-archive-head">
       <div>
-        <div class="history-eyebrow">DORI LIFE / BEHAVIOR INTELLIGENCE</div>
-        <h2 id="activityArchiveTitle">돌이의 생활 분석 아카이브</h2>
-        <p>돌이의 하루를 장면, 행동 유형, 날짜별 활동 밀도로 살펴보는 개인 생활 리포트예요.</p>
-        <div class="history-header-meta"><span>기록 시작 · 2026.01.01</span><span id="historyRangeSummary">최근 30일 분석 중</span></div>
+        <div class="history-eyebrow">DORI LIFE / DAILY SCENE SCHEDULE</div>
+        <h2 id="activityArchiveTitle">돌이의 생활 장면 아카이브</h2>
+        <p>날짜별 규칙으로 구성된 시뮬레이션 장면과 이벤트 일정을 살펴보는 공간이에요. 실제로 관찰된 행동 기록은 아래 별도 리포트에서 확인해요.</p>
+        <div class="history-header-meta"><span>장면 일정 기준 · 2026.01.01</span><span id="historyRangeSummary">최근 30일 분석 중</span></div>
       </div>
       <div class="history-live-mark"><span></span><b>ARCHIVE</b><small>한국 표준시</small></div>
     </div>
@@ -1392,17 +1395,17 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     </div>
 
     <div class="history-stats" aria-live="polite">
-      <article class="history-stat" data-stat="total"><span>누적 장면 수</span><strong id="historyTotal">—</strong><small>선택한 기간</small></article>
-      <article class="history-stat" data-stat="days"><span>활동한 날짜</span><strong id="historyDays">—</strong><small>하루에 하나 이상</small></article>
+      <article class="history-stat" data-stat="total"><span>예정된 장면 수</span><strong id="historyTotal">—</strong><small>선택한 기간</small></article>
+      <article class="history-stat" data-stat="days"><span>장면이 있는 날짜</span><strong id="historyDays">—</strong><small>하루에 하나 이상</small></article>
       <article class="history-stat" data-stat="average"><span>하루 평균 장면</span><strong id="historyAverage">—</strong><small>기간 내 일평균</small></article>
-      <article class="history-stat" data-stat="top"><span>가장 자주 한 행동</span><strong id="historyTopAction">—</strong><small id="historyTopCount">최다 기록</small></article>
-      <article class="history-stat" data-stat="friend"><span>친구와 함께한 장면</span><strong id="historyFriendCount">—</strong><small>식빵이와 교감</small></article>
-      <article class="history-stat" data-stat="duration"><span>장면 예정 시간</span><strong id="historyDuration">—</strong><small>일정에 등록된 시간 합계</small></article>
+      <article class="history-stat" data-stat="top"><span>가장 자주 예정된 장면</span><strong id="historyTopAction">—</strong><small id="historyTopCount">최다 일정</small></article>
+      <article class="history-stat" data-stat="friend"><span>친구 이벤트 장면</span><strong id="historyFriendCount">—</strong><small>식빵이와 교감 일정</small></article>
+      <article class="history-stat" data-stat="duration"><span>예정 시간 합계</span><strong id="historyDuration">—</strong><small>일정에 등록된 시간 합계</small></article>
     </div>
 
     <div class="history-chart-card">
       <div class="history-chart-head">
-        <div><strong>활동 변화 그래프</strong><span id="historyChartCaption">최근 30일 · 날짜별 장면 수</span></div>
+        <div><strong>예정 장면 변화 그래프</strong><span id="historyChartCaption">최근 30일 · 날짜별 장면 수</span></div>
         <div class="history-chart-metrics"><span id="historyCompare">이전 기간과 비교 중</span><strong class="history-chart-total" id="historyChartTotal">—</strong></div>
       </div>
       <div id="historyChart" class="history-chart" role="img" aria-label="기간별 돌이의 활동 장면 수 그래프">
@@ -1413,21 +1416,21 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
 
 
     <div class="history-heatmap-card">
-      <div class="history-subhead"><div><strong>돌이의 활동 캘린더</strong><span>하루에 얼마나 다양한 장면이 있었는지 확인해요</span></div><span class="heatmap-current" id="historyHeatmapCaption">최근 30일</span></div>
+      <div class="history-subhead"><div><strong>돌이의 장면 일정 캘린더</strong><span>하루에 몇 가지 장면이 예정되어 있는지 확인해요</span></div><span class="heatmap-current" id="historyHeatmapCaption">최근 30일</span></div>
       <div id="historyHeatmap" class="history-heatmap" aria-label="날짜별 돌이 활동 히트맵">
         <div class="history-loading">날짜별 활동을 모으고 있어요.</div>
       </div>
       <div class="heatmap-legend"><span>적음</span><i class="heat-level-0"></i><i class="heat-level-1"></i><i class="heat-level-2"></i><i class="heat-level-3"></i><i class="heat-level-4"></i><span>많음</span><small>날짜를 선택하면 해당 일자의 상세 내역을 볼 수 있어요.</small></div>
     </div>
     <div class="history-category-card">
-      <div class="history-subhead"><div><strong>행동 유형별 분포</strong><span>선택한 기간의 행동 구성을 한눈에 확인해요</span></div><span class="category-total" id="historyCategoryTotal">—</span></div>
+      <div class="history-subhead"><div><strong>장면 유형별 구성</strong><span>선택한 기간에 예정된 장면 구성을 확인해요</span></div><span class="category-total" id="historyCategoryTotal">—</span></div>
       <div class="history-category-layout"><div class="history-donut-wrap"><div id="historyDonut" class="history-donut"></div><span>ACTIVITY MIX</span></div><div id="historyCategories" class="history-categories"></div></div>
     </div>
 
     <div class="history-records-card">
       <div class="history-records-head">
-        <div><strong>상세 활동 내역</strong><span id="historyRecordCount">—</span></div>
-        <label class="history-filter-label" for="historyCategoryFilter">행동 유형
+        <div><strong>날짜별 장면 일정</strong><span id="historyRecordCount">—</span></div>
+        <label class="history-filter-label" for="historyCategoryFilter">장면 유형
           <select id="historyCategoryFilter">
             <option value="all">전체 보기</option>
             <option value="rest">휴식</option>
@@ -1446,7 +1449,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       <button type="button" id="historyMore" class="history-more" hidden>이전 기록 더 보기</button>
     </div>
 
-    <p class="history-disclaimer">기록 범위: 2026년 1월 1일부터 현재까지. 기존에는 과거 장면을 개별 저장하지 않았기 때문에 날짜별 고정 일정 생성 규칙으로 재구성한 기록이에요. 실제 페이지 접속 시간이나 애니메이션 재생 여부를 녹화한 기록은 아니며, 현재 날짜는 시작 시간이 지난 장면만 집계해요.</p>
+    <p class="history-disclaimer">이 아카이브는 2026년 1월 1일부터 날짜별 생성 규칙으로 구성한 시뮬레이션 장면 일정이에요. 실제 페이지 접속 시간이나 애니메이션 재생 여부를 저장한 기록이 아니며, 실제 관찰 시간·행동 기록과 통계를 혼합하지 않아요. 오늘은 시작 시간이 지난 장면만 집계해요.</p>
   </section>
 
 
@@ -1455,15 +1458,23 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       <div>
         <div class="history-eyebrow">DORI LIFE / LIVE OBSERVATION</div>
         <h2 id="liveObservationTitle">실제 관찰 기록</h2>
-        <p>돌이 라이프 화면이 실제로 열려 있을 때 표시된 행동 전환과 관찰 시간을 기록해요. 날짜별로 만들어 둔 일정 아카이브와는 별개의 기록이에요.</p>
+        <p>화면에 실제로 표시된 행동의 시작·종료 시각, 머문 장소와 관찰 시간을 기록해요. 이 기록은 이 브라우저에 저장되며, 날짜별 생성 일정과는 별도로 분석해요.</p>
       </div>
       <div class="observation-live"><i></i><span>LOCAL OBSERVER</span></div>
+    </div>
+    <div class="history-range observation-range" role="group" aria-label="실제 관찰 기록 기간 선택">
+      <button type="button" data-observed-range="7" aria-pressed="false">최근 7일</button>
+      <button type="button" data-observed-range="30" aria-pressed="true">최근 30일</button>
+      <button type="button" data-observed-range="90" aria-pressed="false">최근 90일</button>
+      <button type="button" data-observed-range="180" aria-pressed="false">최근 180일</button>
+      <span class="observation-range-summary" id="observedRangeSummary">최근 30일</span>
     </div>
     <div class="observation-stats" aria-live="polite">
       <article class="observation-stat"><span>실제 관찰 시간</span><strong id="observedTotalTime">0분</strong><small>이 브라우저에서 관찰한 시간</small></article>
       <article class="observation-stat"><span>기록된 행동 전환</span><strong id="observedSegmentCount">0개</strong><small>화면에 표시된 행동 상태</small></article>
       <article class="observation-stat"><span>가장 오래 관찰한 유형</span><strong id="observedTopCategory">—</strong><small id="observedTopDuration">아직 기록이 없어요</small></article>
       <article class="observation-stat"><span>현재 돌이의 행동</span><strong id="observedCurrentAction">관찰 준비 중</strong><small id="observedCurrentDuration">LIVE 화면 상태</small></article>
+      <article class="observation-stat"><span>가장 오래 머문 장소</span><strong id="observedTopLocation">—</strong><small id="observedTopLocationDuration">아직 기록이 없어요</small></article>
     </div>
     <div class="observation-content">
       <div class="observation-card">
@@ -1474,14 +1485,18 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
         <div class="observation-card-head"><strong>최근 관찰된 장면</strong><span id="observedEntryCount">최근 기록 0개</span></div>
         <div class="observation-entries" id="observedActivityEntries"><div class="observation-empty">돌이의 행동을 관찰하면 이곳에 실제 기록이 쌓여요.</div></div>
       </div>
+      <div class="observation-card observation-location-card">
+        <div class="observation-card-head"><strong>장소별 실제 관찰 시간</strong><span>OBSERVED LOCATIONS</span></div>
+        <div class="observation-bars" id="observedLocationBars"><div class="observation-empty">실제 관찰 기록이 쌓이면 장소별 체류 시간이 표시돼요.</div></div>
+      </div>
       <div class="observation-card observation-daily-card">
-        <div class="observation-card-head"><strong>최근 7일 실제 관찰 시간</strong><span>REAL OBSERVATION · KST</span></div>
-        <div class="observation-daily-bars" id="observedDailyChart" role="img" aria-label="최근 7일 동안 실제로 관찰된 돌이의 행동 시간">
-          <div class="observation-empty">실제 관찰 기록이 쌓이면 날짜별 그래프가 표시돼요.</div>
+        <div class="observation-card-head"><strong>기간별 실제 관찰 시간</strong><span id="observedDailyCaption">최근 30일 · 날짜별</span></div>
+        <div class="observation-daily-bars" id="observedDailyChart" role="img" aria-label="선택한 기간 동안 실제로 관찰된 돌이의 행동 시간">
+          <div class="observation-empty">실제 관찰 기록이 쌓이면 기간별 그래프가 표시돼요.</div>
         </div>
       </div>
     </div>
-    <p class="observation-footnote" id="observedStorageNote">기록은 현재 브라우저에 저장돼요. 페이지가 닫혀 있거나 백그라운드에 있는 동안의 행동은 관찰 기록에 포함되지 않으며, 다른 기기와 자동 동기화되지는 않아요.</p>
+    <p class="observation-footnote" id="observedStorageNote">실제 관찰 기록은 현재 브라우저에 저장돼요. 페이지가 닫혀 있거나 백그라운드에 있는 동안의 행동은 관찰 기록에 포함되지 않으며, 다른 기기와 자동 동기화되지는 않아요.</p>
   </section>
 
   <section class="newyear">
@@ -3281,6 +3296,7 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
   var observedActive=null;
   var observedSignature='';
   var observedLastRender=0;
+  var observedRange='30';
   function loadObservedLog(){
     try{
       var raw=window.localStorage.getItem(OBSERVED_LOG_KEY);
@@ -3306,7 +3322,9 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     }
   }
   function observedDurationLabel(ms){
-    var minutes=Math.max(0,Math.floor(ms/60000));
+    var safeMs=Math.max(0,Number(ms)||0);
+    if(safeMs===0)return '0분';
+    var minutes=Math.floor(safeMs/60000);
     if(minutes<1)return '1분 미만';
     var hours=Math.floor(minutes/60);
     var rest=minutes%60;
@@ -3325,7 +3343,9 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       var row=Object.assign({},observedActive,{
         endedAt:endAt,durationMs:Math.round(duration),
         date:dayKey(new Date(observedActive.startedAt)),
-        time:timeFormatter.format(new Date(observedActive.startedAt))
+        time:timeFormatter.format(new Date(observedActive.startedAt)),
+        endTime:timeFormatter.format(new Date(endAt)),
+        endLocation:observedLocationFor(null)
       });
       observedLog.unshift(row);
       var cutoff=endAt-180*86400000;
@@ -3336,6 +3356,24 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     observedSignature='';
     if(shouldRender!==false)renderObservedActivity(new Date(endAt));
   }
+  function observedLocationFor(state){
+    var interaction=(room&&room.dataset.interaction)||(state&&state.interaction)||(room&&room.dataset.action)||'home';
+    var labels={
+      bed:'잠자리',food:'밥그릇',water:'물그릇',toy:'장난감 공간',rug:'카펫',
+      friend:'식빵이 곁',window:'창가',plant:'화분 주변',robot:'로봇 주변',
+      sofa:'소파 옆',bone:'탐색 구역',home:'거실'
+    };
+    if(interaction==='roam'){
+      var x=doriActor&&doriActor._doriPosition?Number(doriActor._doriPosition.x):660;
+      if(x<500)return '소파 앞';
+      if(x<615)return '테이블 주변';
+      if(x<745)return '카펫';
+      if(x<865)return '장난감 주변';
+      if(x<985)return '물그릇 주변';
+      return '창가';
+    }
+    return labels[interaction]||'거실';
+  }
   function recordObservedAction(state,evt,now){
     if(document.hidden){
       closeObservedAction(now.getTime(),false);
@@ -3343,7 +3381,9 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     }
     var stamp=now.getTime();
     var actionKind=evt?evt.kind:(state.pose||'idle');
-    var signature=[evt?evt.id:'routine',actionKind,state.pose||'',state.title||'',state.actionIndex==null?'':state.actionIndex].join('|');
+    var location=observedLocationFor(state);
+    var interaction=(room&&room.dataset.interaction)||(state.interaction)||'home';
+    var signature=[evt?evt.id:'routine',actionKind,state.pose||'',state.title||'',state.actionIndex==null?'':state.actionIndex,location].join('|');
     if(signature===observedSignature)return;
     closeObservedAction(stamp,false);
     observedSignature=signature;
@@ -3352,9 +3392,26 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
       id:String(stamp)+'-'+Math.random().toString(36).slice(2,8),
       startedAt:stamp,title:state.title||'돌이의 일상',desc:state.desc||'',
       icon:state.icon||'🐾',tag:state.tag||'일상',kind:actionKind,
-      pose:state.pose||'idle',category:category
+      pose:state.pose||'idle',category:category,
+      location:location,interaction:interaction,
+      time:timeFormatter.format(now)
     };
     renderObservedActivity(now);
+  }
+  function addObservedDurationByKstDay(dailyTotals,row){
+    var cursor=Number(row.startedAt);
+    var endAt=Number(row.endedAt);
+    var guard=0;
+    while(Number.isFinite(cursor)&&Number.isFinite(endAt)&&cursor<endAt&&guard<181){
+      var p=parts(new Date(cursor));
+      var nextMidnight=Date.UTC(Number(p.year),Number(p.month)-1,Number(p.day)+1)-9*60*60*1000;
+      if(!Number.isFinite(nextMidnight)||nextMidnight<=cursor)break;
+      var segmentEnd=Math.min(endAt,nextMidnight);
+      var key=dayKey(new Date(cursor));
+      dailyTotals[key]=(dailyTotals[key]||0)+(segmentEnd-cursor);
+      cursor=segmentEnd;
+      guard++;
+    }
   }
   function renderObservedActivity(now){
     var totalEl=document.getElementById('observedTotalTime');
@@ -3366,71 +3423,139 @@ h1{margin:0;font-size:clamp(35px,6vw,66px);font-weight:400;letter-spacing:-.045e
     var barsEl=document.getElementById('observedActivityBars');
     var entriesEl=document.getElementById('observedActivityEntries');
     var entryCountEl=document.getElementById('observedEntryCount');
+    var locationTopEl=document.getElementById('observedTopLocation');
+    var locationTopDurationEl=document.getElementById('observedTopLocationDuration');
+    var locationBarsEl=document.getElementById('observedLocationBars');
     var noteEl=document.getElementById('observedStorageNote');
     if(!totalEl||!countEl||!topEl||!currentEl||!barsEl||!entriesEl)return;
+
     var nowMs=now?now.getTime():Date.now();
+    var currentDate=parts(new Date(nowMs));
+    var rangeDays=Math.max(1,Math.min(180,Number(observedRange)||30));
+    var todayMidnightKst=Date.UTC(Number(currentDate.year),Number(currentDate.month)-1,Number(currentDate.day))-9*60*60*1000;
+    var rangeStartAt=todayMidnightKst-(rangeDays-1)*86400000;
+    var rangeStartNoon=rangeStartAt+12*60*60*1000;
     var rows=observedLog.slice();
     var currentDuration=observedActive?Math.max(0,nowMs-observedActive.startedAt):0;
     if(observedActive)rows.unshift(Object.assign({},observedActive,{endedAt:nowMs,durationMs:currentDuration,live:true}));
+
+    // Clip intervals to the selected range before calculating any total. This also
+    // keeps a long observation that crosses the range boundary from being over-counted.
+    rows=rows.map(function(row){
+      var startAt=Number(row.startedAt),endAt=Number(row.endedAt);
+      if(!Number.isFinite(startAt)||!Number.isFinite(endAt))return null;
+      var clippedStart=Math.max(startAt,rangeStartAt);
+      var clippedEnd=Math.min(endAt,nowMs);
+      if(clippedEnd<=clippedStart)return null;
+      return Object.assign({},row,{
+        startedAt:clippedStart,endedAt:clippedEnd,
+        durationMs:Math.round(clippedEnd-clippedStart),
+        time:clippedStart>startAt?timeFormatter.format(new Date(clippedStart)):(row.time||timeFormatter.format(new Date(startAt)))
+      });
+    }).filter(Boolean);
+
     var totalMs=rows.reduce(function(sum,row){return sum+(Number(row.durationMs)||0);},0);
     var totals={rest:0,move:0,play:0,react:0,care:0,social:0};
-    rows.forEach(function(row){if(totals[row.category]!=null)totals[row.category]+=Number(row.durationMs)||0;});
+    var locationTotals=Object.create(null);
+    rows.forEach(function(row){
+      if(totals[row.category]!=null)totals[row.category]+=Number(row.durationMs)||0;
+      var location=row.location||'장소 정보 없음';
+      locationTotals[location]=(locationTotals[location]||0)+(Number(row.durationMs)||0);
+    });
     var topCategory=HISTORY_CATEGORIES.map(function(item){return {id:item.id,ms:totals[item.id]||0};}).sort(function(a,b){return b.ms-a.ms;})[0];
+    var topLocation=Object.keys(locationTotals).map(function(name){return {name:name,ms:locationTotals[name]};}).sort(function(a,b){return b.ms-a.ms;})[0];
+
     totalEl.textContent=observedDurationLabel(totalMs);
-    countEl.textContent=observedLog.length.toLocaleString('ko-KR')+(observedActive?'개+진행 중':'개');
+    countEl.textContent=rows.length.toLocaleString('ko-KR')+(observedActive?'개 구간 포함':'개 구간');
     topEl.textContent=topCategory&&topCategory.ms?observedCategoryLabel(topCategory.id):'—';
     if(topDurationEl)topDurationEl.textContent=topCategory&&topCategory.ms?observedDurationLabel(topCategory.ms)+' 누적':'아직 기록이 없어요';
+    if(locationTopEl)locationTopEl.textContent=topLocation?topLocation.name:'—';
+    if(locationTopDurationEl)locationTopDurationEl.textContent=topLocation?observedDurationLabel(topLocation.ms)+' 누적':'아직 기록이 없어요';
     currentEl.textContent=observedActive?observedActive.title:'관찰 대기';
     if(currentDurationEl)currentDurationEl.textContent=observedActive?'현재 행동 '+observedDurationLabel(currentDuration):'페이지가 활성화되면 기록해요';
-    if(entryCountEl)entryCountEl.textContent='최근 기록 '+rows.length.toLocaleString('ko-KR')+'개';
-    var dailyChart=document.getElementById('observedDailyChart');
-    if(dailyChart){
-      var todayParts=parts(new Date(nowMs));
-      var todayStamp=Date.UTC(Number(todayParts.year),Number(todayParts.month)-1,Number(todayParts.day),12);
-      var dailyBuckets=[];
-      for(var dayOffset=6;dayOffset>=0;dayOffset--){
-        var bucketDate=new Date(todayStamp-dayOffset*86400000);
-        var bucketKey=dayKey(bucketDate);
-        dailyBuckets.push({key:bucketKey,label:bucketKey.slice(5).replace('-','.'),ms:0});
-      }
-      var dailyTotals=Object.create(null);
-      dailyBuckets.forEach(function(bucket){dailyTotals[bucket.key]=bucket;});
-      rows.forEach(function(row){
-        var rowDate=row.date||dayKey(new Date(row.startedAt));
-        if(dailyTotals[rowDate])dailyTotals[rowDate].ms+=Number(row.durationMs)||0;
-      });
-      var maxDailyMs=Math.max(1,...dailyBuckets.map(function(bucket){return bucket.ms;}));
-      dailyChart.innerHTML=dailyBuckets.some(function(bucket){return bucket.ms>0;})?
-        dailyBuckets.map(function(bucket){
-          var height=bucket.ms?Math.max(2,bucket.ms/maxDailyMs*100):0;
-          return '<div class="observation-daily-column"><strong>'+bucket.label+'</strong><div class="observation-daily-track"><i style="height:'+height.toFixed(1)+'%"></i></div><small>'+(bucket.ms?observedDurationLabel(bucket.ms):'—')+'</small></div>';
-        }).join(''):
-        '<div class="observation-empty">최근 7일 동안의 실제 기록이 아직 없어요. 돌이 라이프를 열어 두면 관찰 시간이 날짜별로 쌓여요.</div>';
-    }
+    if(entryCountEl)entryCountEl.textContent='선택 기간 '+rows.length.toLocaleString('ko-KR')+'개 구간';
+
+    var rangeSummary=document.getElementById('observedRangeSummary');
+    var dailyCaption=document.getElementById('observedDailyCaption');
+    if(rangeSummary)rangeSummary.textContent='최근 '+rangeDays+'일';
+    if(dailyCaption)dailyCaption.textContent='최근 '+rangeDays+'일 · '+(rangeDays<=7?'날짜별':(rangeDays<=30?'2일 단위':'7일 단위'));
+
     var maxMs=Math.max(1,...HISTORY_CATEGORIES.map(function(item){return totals[item.id]||0;}));
     barsEl.innerHTML=HISTORY_CATEGORIES.map(function(item){
       var ms=totals[item.id]||0;
       var width=ms?Math.max(2,ms/maxMs*100):0;
       return '<div class="observation-bar-row"><span>'+item.label+'</span><div class="observation-bar-track"><i style="width:'+width.toFixed(1)+'%;background:'+item.color+'"></i></div><span class="observation-bar-value">'+(ms?observedDurationLabel(ms):'—')+'</span></div>';
     }).join('');
-    var recent=rows.slice(0,8);
+
+    if(locationBarsEl){
+      var topLocations=Object.keys(locationTotals).map(function(name){return {name:name,ms:locationTotals[name]};}).sort(function(a,b){return b.ms-a.ms;}).slice(0,8);
+      var maxLocationMs=Math.max(1,...topLocations.map(function(item){return item.ms;}));
+      locationBarsEl.innerHTML=topLocations.length?topLocations.map(function(item){
+        var width=Math.max(2,item.ms/maxLocationMs*100);
+        return '<div class="observation-bar-row"><span>'+historyEscape(item.name)+'</span><div class="observation-bar-track"><i style="width:'+width.toFixed(1)+'%;background:linear-gradient(90deg,#d7b77e,#8cabc3)"></i></div><span class="observation-bar-value">'+observedDurationLabel(item.ms)+'</span></div>';
+      }).join(''):'<div class="observation-empty">선택한 기간의 실제 장소 기록이 아직 없어요.</div>';
+    }
+
+    var dailyTotals=Object.create(null);
+    rows.forEach(function(row){addObservedDurationByKstDay(dailyTotals,row);});
+    var bucketSize=rangeDays<=7?1:(rangeDays<=30?2:7);
+    var dailyBuckets=[];
+    for(var dayOffset=0;dayOffset<rangeDays;dayOffset+=bucketSize){
+      var lastOffset=Math.min(rangeDays,dayOffset+bucketSize)-1;
+      var bucketMs=0;
+      for(var dayIndex=dayOffset;dayIndex<=lastOffset;dayIndex++){
+        var bucketDate=new Date(rangeStartNoon+dayIndex*86400000);
+        bucketMs+=dailyTotals[dayKey(bucketDate)]||0;
+      }
+      var fromKey=dayKey(new Date(rangeStartNoon+dayOffset*86400000));
+      var toKey=dayKey(new Date(rangeStartNoon+lastOffset*86400000));
+      dailyBuckets.push({key:fromKey,label:fromKey.slice(5).replace('-','.'),ms:bucketMs,from:fromKey,to:toKey});
+    }
+    var dailyChart=document.getElementById('observedDailyChart');
+    if(dailyChart){
+      var maxDailyMs=Math.max(1,...dailyBuckets.map(function(bucket){return bucket.ms;}));
+      dailyChart.style.gridTemplateColumns='repeat('+dailyBuckets.length+',minmax(0,1fr))';
+      dailyChart.style.gap=rangeDays<=30?'8px':'4px';
+      dailyChart.innerHTML=dailyBuckets.some(function(bucket){return bucket.ms>0;})?
+        dailyBuckets.map(function(bucket){
+          var height=bucket.ms?Math.max(2,bucket.ms/maxDailyMs*100):0;
+          var title=bucket.from===bucket.to?bucket.from:(bucket.from+' ~ '+bucket.to);
+          return '<div class="observation-daily-column" title="'+title+' · '+observedDurationLabel(bucket.ms)+'"><strong>'+bucket.label+'</strong><div class="observation-daily-track"><i style="height:'+height.toFixed(1)+'%"></i></div><small>'+(bucket.ms?observedDurationLabel(bucket.ms):'—')+'</small></div>';
+        }).join(''):
+        '<div class="observation-empty">선택한 기간에는 아직 실제 관찰 시간이 없어요. 돌이 라이프 화면이 열려 있을 때 관찰 시간이 쌓여요.</div>';
+    }
+
+    var recent=rows.slice(0,12);
     if(!recent.length){
-      entriesEl.innerHTML='<div class="observation-empty">돌이의 행동을 관찰하면 이곳에 실제 기록이 쌓여요.</div>';
+      entriesEl.innerHTML='<div class="observation-empty">선택한 기간의 실제 행동 기록이 아직 없어요.</div>';
     }else{
       entriesEl.innerHTML=recent.map(function(row){
-        var time=row.live?'지금':(row.time||timeFormatter.format(new Date(row.startedAt)));
+        var time=row.live?'진행 중':(row.time||timeFormatter.format(new Date(row.startedAt)));
         var duration=observedDurationLabel(row.durationMs||0);
-        var status=row.live?'관찰 중':'';
-        return '<article class="observation-entry"><span class="observation-entry-time">'+historyEscape(time)+'</span><span class="observation-entry-icon">'+historyEscape(row.icon)+'</span><span class="observation-entry-copy"><strong>'+historyEscape(row.title)+'</strong><small>'+historyEscape(observedCategoryLabel(row.category))+' · '+historyEscape(row.tag)+(status?' · '+status:'')+'</small></span><span class="observation-entry-duration">'+duration+'</span></article>';
+        var status=row.live?' · 관찰 중':'';
+        var location=row.location||'장소 정보 없음';
+        return '<article class="observation-entry"><span class="observation-entry-time">'+historyEscape(time)+'</span><span class="observation-entry-icon">'+historyEscape(row.icon)+'</span><span class="observation-entry-copy"><strong>'+historyEscape(row.title)+'</strong><small>'+historyEscape(observedCategoryLabel(row.category))+' · '+historyEscape(location)+' · '+historyEscape(row.tag)+(status?status:'')+'</small></span><span class="observation-entry-duration">'+duration+'</span></article>';
       }).join('');
     }
+
     if(noteEl){
       noteEl.textContent=observedStorageAvailable?
-        '실제 관찰 기록은 현재 브라우저에 저장돼요. 페이지가 닫혀 있거나 백그라운드에 있는 동안의 행동은 기록하지 않으며, 다른 기기와 자동 동기화되지는 않아요.':
+        '실제 관찰 기록은 이 브라우저에 최대 180일간 저장돼요. 페이지가 닫혀 있거나 백그라운드에 있는 동안의 시간은 관찰로 계산하지 않으며, 다른 기기와 자동 동기화되지 않아요. 선택 기간의 통계는 실제 저장된 관찰 구간만 합산해요.':
         '브라우저 저장 공간에 접근할 수 없어 현재 탭에서 관찰한 기록만 표시돼요. 페이지를 닫으면 이 기록이 사라질 수 있어요.';
     }
+    document.querySelectorAll('[data-observed-range]').forEach(function(button){
+      var active=button.getAttribute('data-observed-range')===String(observedRange);
+      button.classList.toggle('active',active);
+      button.setAttribute('aria-pressed',active?'true':'false');
+    });
     observedLastRender=nowMs;
   }
+  document.querySelectorAll('[data-observed-range]').forEach(function(button){
+    button.addEventListener('click',function(){
+      observedRange=button.getAttribute('data-observed-range')||'30';
+      renderObservedActivity(new Date());
+    });
+  });
   window.addEventListener('storage',function(event){
     if(event.key!==OBSERVED_LOG_KEY)return;
     observedLog=loadObservedLog();
