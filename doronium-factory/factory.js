@@ -806,6 +806,24 @@ function finishPlanetary(){if(!S.coreInstalled||!S.relaySites.every(Boolean)){to
 
 function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;
  if(b.type==="coalgen"){if(b.fuelTimer<=0){if(takeItem("coal",1)){b.fuelTimer=24;log("화력 발전소 석탄 투입")}else b.status="NO_INPUT"}else{b.fuelTimer=Math.max(0,b.fuelTimer-dt);b.status="RUNNING"}return}if(d.generation==="coal"||d.generation==="doronium"){if(b.fuelTimer<=0){const fuel=d.generation==="coal"?"coal":"doronium_normal";if(takeItem(fuel,1)){b.fuelTimer=d.generation==="coal"?28:45;log(d.name+" 연료 투입 · "+RESOURCE[fuel].name)}else b.status="NO_INPUT"}else{b.fuelTimer=Math.max(0,b.fuelTimer-dt);b.status="RUNNING"}return}
+ if(b.type==="catalog_resource_copier"||b.type==="catalog_item_copier"){
+  const ratio=power.ratio,copyID=b.copyItemId,item=RESOURCE[copyID];
+  if(b.output){b.status="PAUSED_OUTPUT";return}
+  if(!item){b.status="CONFIG_REQUIRED";return}
+  if(b.type==="catalog_resource_copier"&&!["raw","material","rare","special","doronium","final"].includes(item.kind)){b.status="INVALID_COPY_TARGET";return}
+  if(availableItemCount(S,copyID)<1){b.status="NO_INPUT";return}
+  if(ratio<.8){b.status="PAUSED_POWER";return}
+  b.progress=(b.progress||0)+dt*(ratio>=1?1:ratio);b.status="RUNNING";
+  const duration=b.type==="catalog_resource_copier"?30:45;
+  if(b.progress>=duration){
+   const sourceQuality=quality(S,copyID),sourcePurity=purity(S,copyID);
+   if(createOutput(b,copyID,1,{quality:Math.max(55,sourceQuality-5),purity:Math.max(50,sourcePurity-3),synthetic:true})){
+    b.progress=0;b.copyCount=(b.copyCount||0)+1;
+    log((d.name||"복사기")+" 생산 · "+item.name+" · 합성 복제품");
+   }
+  }
+  return;
+ }
  if(d.kind==="power"||d.kind==="utility"||b.type==="solar"||b.type==="wind"||b.type==="cooling"||b.type==="storage"||b.type==="warehouse"||b.type==="market"||isBeltType(b.type)||b.type==="relay"||b.type==="core"||b.type==="lab")return;
  const ratio=power.ratio;
  if(b.output){b.status="PAUSED_OUTPUT";return}
