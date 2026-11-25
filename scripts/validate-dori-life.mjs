@@ -82,24 +82,24 @@ assert.ok(html.includes('id="visitorWavePaw"'), "A cat visitor must greet with a
 assert.ok(html.includes('id="visitorTail"'), "The visitor cat must have an independently animated tail.");
 assert.ok(!html.includes('id="visitorWaveArm"'), "The old human visitor arm must be removed.");
 const visitorNameStart = html.indexOf("function visitorNameForDay(key,index){");
-const visitorNameEnd = html.indexOf("\\n  function visitorProfileForEvent", visitorNameStart);
+const visitorNameEnd = html.indexOf("function visitorProfileForEvent", visitorNameStart);
 assert.ok(visitorNameStart >= 0 && visitorNameEnd > visitorNameStart, "Could not isolate the visitor rotation helper.");
 const visitorNames = ["윈터","모래","복돌이","스마트"];
 const visitorNameSelector = new Function(
   "VISITOR_CATS","ordinal",
-  html.slice(visitorNameStart,visitorNameEnd) + "\\nreturn visitorNameForDay;"
+  html.slice(visitorNameStart,visitorNameEnd) + String.fromCharCode(10) + "return visitorNameForDay;"
 )(
   visitorNames.map((name,index)=>({id:["winter","morae","bokdori","smart"][index],name})),
-  () => 2
+  () => 0
 );
 assert.deepEqual([0,1,2,3].map(index=>visitorNameSelector("2026-11-25",index)),visitorNames,
   "Four consecutive visitor slots must rotate through all four cat names.");
 const visitorPresentationStart = html.indexOf("function visitorProfileForEvent(evt){");
-const visitorPresentationEnd = html.indexOf("\\n  function parts(now)", visitorPresentationStart);
+const visitorPresentationEnd = html.indexOf("function parts(now)", visitorPresentationStart);
 assert.ok(visitorPresentationStart >= 0 && visitorPresentationEnd > visitorPresentationStart, "Could not isolate visitor presentation helpers.");
 const visitorPresentationApi = new Function(
   "VISITOR_CATS","BANK",
-  html.slice(visitorPresentationStart,visitorPresentationEnd) + "\\nreturn {visitorProfileForEvent,eventContentFor};"
+  html.slice(visitorPresentationStart,visitorPresentationEnd) + String.fromCharCode(10) + "return {visitorProfileForEvent,eventContentFor};"
 )(
   visitorNames.map((name,index)=>({id:["winter","morae","bokdori","smart"][index],name})),
   {visitor:{title:"손님",desc:"고양이가 왔어요",icon:"🐱",tag:"손님"}}
