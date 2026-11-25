@@ -2641,6 +2641,32 @@ if(E2E_MODE){
   snapshot:()=>structuredClone(S),
   mineAudit:()=>auditMineDeposits(S.mineDeposits),
   mineSystems:()=>({environment:structuredClone(ensureMineEnvironment(S)),summary:mineEnvironmentSummary(currentMineEnvironment()||{}),assessment:mineSafetyAssessment(currentMineEnvironment()||{})}),
+  mineInstanceSystemsIsolationTest(){
+   const saved=structuredClone(S),savedMotion=structuredClone(playerMotion);
+   try{
+    S=freshState();const A="mine:test:A",B="mine:test:B";
+    S.player={...S.player,layer:"surface",mineLevel:1};S.buildings=[];
+    activateMineInstance(S,A,()=>createMineInstanceDefaults(A));S.player.layer="mine";
+    S.buildings=[
+     {uid:"A-STA",type:"mineRailStation",layer:"mine",mineInstanceID:A,mineLevel:1,x:5,y:mineMainDriftZ(5)},
+     {uid:"A-STB",type:"mineRailStation",layer:"mine",mineInstanceID:A,mineLevel:1,x:15,y:mineMainDriftZ(15)},
+     {uid:"A-GEN",type:"mineGen",layer:"mine",mineInstanceID:A,mineLevel:1,x:8,y:mineMainDriftZ(8),fuelTimer:30,status:"RUNNING"},
+     {uid:"B-STA",type:"mineRailStation",layer:"mine",mineInstanceID:B,mineLevel:1,x:20,y:mineMainDriftZ(20)},
+     {uid:"B-STB",type:"mineRailStation",layer:"mine",mineInstanceID:B,mineLevel:1,x:30,y:mineMainDriftZ(30)},
+     {uid:"B-BLOCK",type:"mineGen",layer:"mine",mineInstanceID:B,mineLevel:1,x:10,y:mineMainDriftZ(10),fuelTimer:30,status:"RUNNING"},
+     {uid:"B-GEN",type:"mineGen",layer:"mine",mineInstanceID:B,mineLevel:1,x:22,y:mineMainDriftZ(22),fuelTimer:30,status:"RUNNING"}
+    ];
+    S.powerTopologyLayers.mine[1]=true;const powerA=currentPower().gen,stationsA=mineRailStations(S,1).map(b=>b.uid),closuresA=mineNavigationClosures(1);
+    const blockerKey="1:10:"+mineMainDriftZ(10),blockerIgnoredInA=closuresA[blockerKey]!==true;
+    saveActiveMineInstance(S);S.player.layer="surface";
+    activateMineInstance(S,B,()=>createMineInstanceDefaults(B));S.player.layer="mine";
+    const powerB=currentPower().gen,stationsB=mineRailStations(S,1).map(b=>b.uid),closuresB=mineNavigationClosures(1);
+    const blockerAppliedInB=closuresB[blockerKey]===true;
+    const topologyA=S.mineInstances[A].powerTopology[1]===true,topologyB=S.powerTopologyLayers.mine[1]===true;
+    return {powerA,powerB,stationsA,stationsB,blockerIgnoredInA,blockerAppliedInB,topologyA,topologyB,ok:powerA===1200&&powerB===1200&&stationsA.length===2&&stationsA.every(id=>id.startsWith("A-"))&&stationsB.length===2&&stationsB.every(id=>id.startsWith("B-"))&&blockerIgnoredInA&&blockerAppliedInB&&topologyA&&!topologyB};
+   }finally{S=saved;playerMotion=savedMotion;renderAll()}
+  },
+
   mineInstanceIsolationTest(){
    const saved=structuredClone(S),savedMotion=structuredClone(playerMotion);
    try{
