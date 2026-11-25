@@ -718,7 +718,7 @@ function updateSurvival(dt){
  else if(v.hunger>70&&v.thirst>70)v.health=Math.min(100,v.health+dt*.12);
  const region=S.player.layer==="surface"?regionAt(S.player.x,S.player.y):"mine";
  const heat=region==="lava",cold=region==="cold",radiation=region==="doroniumForest";
- const climatePowered=currentPower().ratio>=.8;
+ const climatePowered=S.player.layer==="surface"&&currentPower().ratio>=.8;
  const nearClimate=type=>climatePowered&&S.buildings.some(b=>b.type===type&&Math.hypot(b.x-S.player.x,b.y-S.player.y)<=7);
  const hasCooling=nearClimate("catalog_air_conditioner"),hasHeating=nearClimate("catalog_heater"),hasVentilation=nearClimate("catalog_fan");
  const heatRate=hasCooling?.38:hasVentilation?.82:1;
