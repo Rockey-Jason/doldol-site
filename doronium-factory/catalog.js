@@ -159,7 +159,7 @@ const CATALOG_MACHINES = machineRows.map(([itemId,name,icon,station,recipeStatio
   id:"catalog_"+itemId.replace(/^machine_/,""),
   name,icon,cat:station==="power"?"power":station==="storage"||station==="conveyor"||station==="maglevConveyor"||station==="sorter"||station==="merger"||station==="distributor"||station==="elevator"||station==="shipping"?"logistics":"process",
   cost:0,materials:{},desc:name+" · 제작 도감에서 제작한 설비 아이템을 설치해 사용합니다.",
-  kind:station==="power"?"power":station==="doriHarvester"?"doriFarm":station==="storage"?"storage":station==="conveyor"||station==="maglevConveyor"?"belt":"machine",
+  kind:station==="power"?"power":station==="doriHarvester"?"doriFarm":station==="storage"?"storage":station==="conveyor"||station==="maglevConveyor"?"belt":["bridge","climate","control","elevator","sorter","merger","distributor","shipping","quality","magneticInserter"].includes(station)?"utility":"machine",
   power,station,itemId,catalogItemId:itemId,catalogStation:recipeStation
 }));
 
@@ -324,6 +324,9 @@ const machineRecipes = [
   ["machine_auto_miner","자동 채굴기 제작","auto_crafting",{steelPlate:50,titaniumPlate:20,steelGear:15,bearing:10,piston:8,motor:8,midCircuit:8,sensor:8,controlModule:3,insulatedWire:25,largeBattery:1},115],
   ["machine_auto_furnace","자동 용광로 제작","auto_crafting",{steelPlate:60,titaniumPlate:20,steelGear:15,bearing:10,motor:6,advancedCircuit:6,sensor:8,controlModule:3,insulatedWire:25,largeBattery:2},120],
   ["machine_auto_electric_furnace","자동 전기로 제작","auto_crafting",{titaniumPlate:70,steelPlate:30,titanium:20,steelGear:15,bearing:12,motor:8,advancedCircuit:8,sensor:10,controlModule:4,insulatedWire:30,largeBattery:3,transformer:2},145],
+  ["machine_packager_1","1차 포장기 제작","crafting",{steelPlate:20,gear:6,motor:2,sensor:2,basicCircuit:2},36],
+  ["machine_packager_2","2차 포장기 제작","auto_crafting",{steelPlate:30,steelGear:8,motor:3,midCircuit:3,sensor:4,insulatedWire:8},52],
+  ["machine_packager_3","3차 포장기 제작","auto_crafting",{titaniumPlate:25,steelPlate:20,controlModule:2,sensor:8,advancedCircuit:4,insulatedWire:14},75],
   ["machine_storage","저장 창고 제작","crafting",{wood:20,ironPlate:10,ironScrew:20},30],
   ["machine_conveyor","컨테이너 벨트 제작","crafting",{ironPlate:15,ironScrew:20,gear:4,motor:1},24],
   ["machine_maglev_conveyor","자기부상 컨테이너 벨트 제작","auto_crafting",{steelPlate:25,neodymium:6,steelGear:6,motor:2,midCircuit:2,insulatedWire:8},55],
