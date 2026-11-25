@@ -11,10 +11,11 @@ test("entrance coordinates produce stable, distinct mine identities",()=>{
 });
 
 test("first instance safely inherits legacy mine state; next instance gets isolated state",()=>{
- const state={player:{layer:"surface"},mineDeposits:{"1:8:12":{amount:0}},mineEnvironment:{1:{waterDepth:.6}},mineInfrastructure:{supports:{legacy:true},closures:{},events:[],railRoutes:{}},buildings:[{layer:"mine",mineLevel:1,uid:"legacy-miner"}]};
+ const state={player:{layer:"surface"},mineDeposits:{"1:8:12":{amount:0}},mineEnvironment:{1:{waterDepth:.6}},mineInfrastructure:{supports:{legacy:true},closures:{},events:[],railRoutes:{}},buildings:[{layer:"mine",mineLevel:1,uid:"legacy-miner"}],worldDrops:[{dropID:"legacy-mine-drop",layer:"mine",mineLevel:1}]};
  const first=activateMineInstance(state,"mine:10:20",defaults);
  assert.equal(first.mineDeposits["1:8:12"].amount,0,"depleted legacy deposit must remain depleted");
  assert.equal(state.buildings[0].mineInstanceID,"mine:10:20","legacy mine machinery must migrate with the legacy mine state");
+ assert.equal(state.worldDrops[0].mineInstanceID,"mine:10:20","legacy mine drops must migrate with the legacy mine state");
  first.mineEnvironment[1].waterDepth=.72;
  const second=activateMineInstance(state,"mine:30:40",defaults);
  assert.equal(second.mineDeposits["1:1:1"].amount,50);
