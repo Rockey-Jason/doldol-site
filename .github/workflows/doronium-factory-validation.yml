@@ -26,6 +26,8 @@ jobs:
       - name: Parse game JavaScript
         run: |
           node --check doronium-factory/factory.js
+          node --check doronium-factory/catalog.js
+          node --check doronium-factory/catalog.test.mjs
           node --check doronium-factory/simulation-core.js
           node --check doronium-factory/simulation-core.test.mjs
           node --check doronium-factory/fusion-runtime.js
@@ -40,7 +42,7 @@ jobs:
           node --check doronium-factory/skill-runtime.test.mjs
           node --check doronium-factory/save-store.js
           node --check doronium-factory/save-store.test.mjs
-          node --test doronium-factory/simulation-core.test.mjs doronium-factory/fusion-runtime.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs doronium-factory/failure-runtime.test.mjs doronium-factory/skill-runtime.test.mjs doronium-factory/save-store.test.mjs
+          node --test doronium-factory/catalog.test.mjs doronium-factory/simulation-core.test.mjs doronium-factory/fusion-runtime.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs doronium-factory/failure-runtime.test.mjs doronium-factory/skill-runtime.test.mjs doronium-factory/save-store.test.mjs
           node --check doronium-factory/world3d.js
           node --check doronium-factory/terrain-system.js
           node --check doronium-factory/e2e/factory-smoke.mjs
@@ -49,6 +51,8 @@ jobs:
           test -s doronium-factory/index.html
           test -s doronium-factory/factory.css
           test -s doronium-factory/factory.js
+          test -s doronium-factory/catalog.js
+          test -s doronium-factory/catalog.test.mjs
           test -s doronium-factory/simulation-core.js
           test -s doronium-factory/simulation-core.test.mjs
           test -s doronium-factory/fusion-runtime.js
@@ -73,6 +77,11 @@ jobs:
           grep -q 'function harvestMineDeposit' doronium-factory/factory.js
           grep -q 'function enterMine' doronium-factory/factory.js
           grep -q 'function notifyNewMission' doronium-factory/factory.js
+          grep -q 'function renderCatalog' doronium-factory/factory.js
+          grep -q 'CATALOG_RECIPES' doronium-factory/factory.js
+          grep -q 'export function regionAt' doronium-factory/terrain-system.js
+          grep -q 'id="panel-catalog"' doronium-factory/index.html
+          grep -q 'id="story-scene-title"' doronium-factory/index.html
           grep -q 'story-start-button' doronium-factory/index.html
           grep -q 'id="mission-alert"' doronium-factory/index.html
           grep -q 'data-land-tool="flatten"' doronium-factory/index.html
