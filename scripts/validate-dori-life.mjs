@@ -66,6 +66,50 @@ assert.equal(bankKeys.length, 76, "Unexpected event-bank size; review the test's
 assert.ok(bankKeys.includes("visitor"), "The event bank must include a friendly visitor event.");
 assert.ok(html.includes('id="doriVisitor"'), "A visitor must have a separate room character.");
 assert.ok(html.includes("function updateVisitorArrival(evt,state)"), "Visitor choreography must include approach, greeting, interaction and departure.");
+assert.ok(html.includes('id="visitorNameTag"'), "The visitor name must be visible above the visiting cat.");
+assert.ok(html.includes("var VISITOR_CATS = ["), "The visitor roster must include the four named cats.");
+for (const name of ["윈터","모래","복돌이","스마트"]) {
+  assert.ok(html.includes("name:'" + name + "'"), "The visitor roster must include " + name + ".");
+}
+for (const catId of ["winter","morae","bokdori","smart"]) {
+  assert.ok(html.includes('data-visitor-cat="' + catId + '"'), "Each visitor needs an individual coat palette: " + catId + ".");
+}
+assert.ok(html.includes("function visitorNameForDay(key,index)"), "Visitor selection must rotate deterministically by day.");
+assert.ok(html.includes("visitorName:kind==='visitor'?visitorNameForDay(key,index):''"), "Scheduled visitors must store their selected cat identity.");
+assert.ok(html.includes("function eventContentFor(evt)"), "Visitor names must be used in the live scene, schedule and archive.");
+assert.ok(html.includes("room.dataset.visitorCat=profile.id;"), "The selected cat coat must be applied to the actual visitor.");
+assert.ok(html.includes('id="visitorWavePaw"'), "A cat visitor must greet with a raised paw.");
+assert.ok(html.includes('id="visitorTail"'), "The visitor cat must have an independently animated tail.");
+assert.ok(!html.includes('id="visitorWaveArm"'), "The old human visitor arm must be removed.");
+const visitorNameStart = html.indexOf("function visitorNameForDay(key,index){");
+const visitorNameEnd = html.indexOf("function visitorProfileForEvent", visitorNameStart);
+assert.ok(visitorNameStart >= 0 && visitorNameEnd > visitorNameStart, "Could not isolate the visitor rotation helper.");
+const visitorNames = ["윈터","모래","복돌이","스마트"];
+const visitorNameSelector = new Function(
+  "VISITOR_CATS","ordinal",
+  html.slice(visitorNameStart,visitorNameEnd) + String.fromCharCode(10) + "return visitorNameForDay;"
+)(
+  visitorNames.map((name,index)=>({id:["winter","morae","bokdori","smart"][index],name})),
+  () => 0
+);
+assert.deepEqual([0,1,2,3].map(index=>visitorNameSelector("2026-11-25",index)),visitorNames,
+  "Four consecutive visitor slots must rotate through all four cat names.");
+const visitorPresentationStart = html.indexOf("function visitorProfileForEvent(evt){");
+const visitorPresentationEnd = html.indexOf("function parts(now)", visitorPresentationStart);
+assert.ok(visitorPresentationStart >= 0 && visitorPresentationEnd > visitorPresentationStart, "Could not isolate visitor presentation helpers.");
+const visitorPresentationApi = new Function(
+  "VISITOR_CATS","BANK",
+  html.slice(visitorPresentationStart,visitorPresentationEnd) + String.fromCharCode(10) + "return {visitorProfileForEvent,eventContentFor};"
+)(
+  visitorNames.map((name,index)=>({id:["winter","morae","bokdori","smart"][index],name})),
+  {visitor:{title:"손님",desc:"고양이가 왔어요",icon:"🐱",tag:"손님"}}
+);
+for (const name of visitorNames) {
+  const data=visitorPresentationApi.eventContentFor({kind:"visitor",visitorName:name});
+  assert.equal(data.title,name+"가 놀러 왔어요","Timeline and live visitor titles must show the selected cat.");
+  assert.ok(data.desc.includes(name),"Visitor descriptions must keep the selected cat identity.");
+}
+
 assert.ok(html.includes("function updateFriendArrival(evt,state,now)"), "The bread-cat companion must move independently during visits.");
 assert.ok(html.includes("room.dataset.visitor=stage;"), "Visitor phases must be explicit for animation styling.");
 assert.ok(html.includes("room.dataset.friend=pose==='friendPlay'"), "The companion must react to friendship choreography.");
