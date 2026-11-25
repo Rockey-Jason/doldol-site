@@ -430,7 +430,7 @@ export function createWorld3D(canvas, getState) {
         }else if(node.type==="heatCrystalNode"||node.type==="coldCrystalNode"){
           const hot=node.type==="heatCrystalNode",color=hot?0xf0a04c:0x77d8f1;
           const crystal=mat(color,.18,.26,color);
-          makeCyl(g,0,2,0,7,2,6,mats.dark,6);
+          makeCyl(g,0,2,0,7,2,mats.dark,6);
           makeBox(g,-4,10,0,4,17,4,crystal);makeBox(g,4,8,1,4,13,4,crystal);
           if(highEndDevice){const glow=new THREE.PointLight(color,.52,50,2);glow.position.y=18;g.add(glow);}
         }else if(node.type==="grassPatch"){
@@ -438,7 +438,7 @@ export function createWorld3D(canvas, getState) {
           for(let i=0;i<5;i++)makeBox(g,(i-2)*3,5+(i%2)*2,(i%3-1)*3,1.5,10+(i%2)*4,1.5,grass);
         }else if(node.type==="oil"){
           const pool=mat(0x101b26,.12,.92),rim=mat(0x5a6d78,.4,.7);
-          makeCyl(g,0,1,0,11,2,16,pool,16);makeCyl(g,0,2,0,12,1,18,rim,16);
+          makeCyl(g,0,1,0,11,2,pool,16);makeCyl(g,0,2,0,12,1,rim,16);
           makeBox(g,0,13,0,3,22,3,mat(0x65727a,.5,.6));
           makeBox(g,0,25,0,17,2,3,rim);
           if(highEndDevice){const glow=new THREE.PointLight(0x557a9c,.25,38,2);glow.position.y=8;g.add(glow);}
