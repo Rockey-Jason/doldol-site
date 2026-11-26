@@ -362,6 +362,9 @@ try {
   const mouseLookPage = await mouseContext.newPage();
   capture(mouseLookPage, "desktop-pointer-lock");
   await boot(mouseLookPage);
+  await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.setViewMode("first"));
+  assert.equal(await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.viewMode()), "first",
+    "The mouse-look regression must run in first-person mode");
   await mouseLookPage.locator("#world-canvas").click({ position: { x: 720, y: 450 } });
   await mouseLookPage.waitForFunction(
     () => document.pointerLockElement === document.querySelector("#world-canvas"),
