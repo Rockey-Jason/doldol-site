@@ -370,14 +370,14 @@ try {
     () => document.pointerLockElement === document.querySelector("#world-canvas"),
     { timeout: 8000 }
   );
-  const lockedYawBefore = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.snapshot().player.yaw);
+  const lockedYawBefore = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.motion().yaw);
   await mouseLookPage.mouse.move(780, 480);
   await mouseLookPage.waitForFunction(
-    before => Math.abs(window.__doroniumFactoryTest.snapshot().player.yaw - before) > 0.001,
+    before => Math.abs(window.__doroniumFactoryTest.motion().yaw - before) > 0.001,
     lockedYawBefore,
     { timeout: 5000 }
   );
-  const lockedYawAfter = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.snapshot().player.yaw);
+  const lockedYawAfter = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.motion().yaw);
   assert.notEqual(lockedYawAfter, lockedYawBefore, "Pointer-locked mouse movement must rotate the player camera");
   await mouseLookPage.keyboard.press("Escape");
   assert.equal(await mouseLookPage.evaluate(() => document.pointerLockElement), null, "Escape must release desktop pointer lock");
