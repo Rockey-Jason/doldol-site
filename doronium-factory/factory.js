@@ -236,7 +236,7 @@ function toggleControlPanel(name=activePanel){const wasOpen=controlPanelOpen,pre
 function closeControlPanel(){controlPanelOpen=false;$("control-column")?.classList.remove("panel-open");$("game-menu-toggle")?.classList.remove("active");$("game-menu-toggle")?.focus({preventScroll:true})}
 let fullscreenRequestPending=false;
 function isCoarsePointer(){return window.matchMedia?.("(pointer:coarse)").matches||("ontouchstart" in window&&navigator.maxTouchPoints>0);}
-function requestDesktopImmersion(){if(E2E_MODE||isCoarsePointer()||document.fullscreenElement||fullscreenRequestPending)return;const request=document.documentElement.requestFullscreen?.();if(!request||typeof request.then!=="function")return;fullscreenRequestPending=true;request.catch(()=>{}).finally(()=>{fullscreenRequestPending=false;});}
+function requestDesktopImmersion(){if(E2E_MODE||isCoarsePointer()||document.fullscreenElement||fullscreenRequestPending)return;try{const request=document.documentElement.requestFullscreen?.();if(!request||typeof request.then!=="function")return;fullscreenRequestPending=true;request.catch(()=>{}).finally(()=>{fullscreenRequestPending=false;});}catch{fullscreenRequestPending=false;}}
 async function toggleFullscreen(){try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen?.();if(isCoarsePointer())try{await screen.orientation?.lock?.("landscape")}catch{}}else{if(document.pointerLockElement===canvas)document.exitPointerLock();await document.exitFullscreen?.()}}catch{toast("브라우저에서 전체 화면 전환을 허용하지 않았습니다.","warn")}}
 function quality(s,id){return s.meta?.[id]?.quality??(s.inventory?.[id]>0?90:0)}
 function purity(s,id){return s.meta?.[id]?.purity??(s.inventory?.[id]>0?90:0)}
@@ -1334,7 +1334,7 @@ function wireControls(){
    if(scope&&e.target===document.body){e.preventDefault();scope.querySelector("button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled)")?.focus();return}
   }
   if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"," ","shift"].includes(k))e.preventDefault();
-  if(!scope)requestDesktopImmersion();
+  if(!scope&&["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(k))requestDesktopImmersion();
   if(k==="v"){setViewMode(S.player.viewMode==="first"?"third":"first");return}
   if(k==="m"){if(S.player.layer==="mine"){toast("광산 내부에서는 지도를 열 수 없습니다.");return}setViewMode(S.player.viewMode==="map"?"first":"map");return}
   if(k==="4"){selectTool("pickaxe");return}if(k==="5"){selectTool("axe");return}
