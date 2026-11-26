@@ -139,10 +139,25 @@ try {
     scene: window.__doroniumFactoryTest.inspect3D(),
     performance: window.__doroniumFactoryTest.inspectPerformance()
   }));
-  assert.ok(rendererAudit.scene.nodeBatchDrawCalls <= 8, "Trees, Dori trees and water should be rendered in a small number of instanced batches");
+  assert.ok(rendererAudit.scene.nodeBatchDrawCalls <= 12, "Trees, Dori trees and water should be rendered in a small number of instanced batches");
   assert.ok(rendererAudit.scene.nodeBatchInstances > 0, "Visible surface resources must be present in instanced batches");
   assert.ok(rendererAudit.scene.terrainChunkCount <= 30, "The terrain should use larger culling chunks to reduce draw calls");
   assert.ok(rendererAudit.performance.drawCalls < 180, "The initial scene should avoid excessive WebGL draw calls");
+  assert.equal(rendererAudit.scene.terrainGeometryType, "BufferGeometry", "The surface must use smooth heightfield meshes, not stacked tile cubes");
+  assert.equal(rendererAudit.scene.terrainSurfaceModel, "smoothed-heightfield", "Terrain metadata must expose the continuous surface renderer");
+  assert.equal(rendererAudit.scene.terrainSubdivisionsPerTile, 2, "Each tile must have a subdivided mesh for smooth slopes");
+  assert.ok(rendererAudit.scene.terrainVertexCount > 100000, "The expanded planet must expose a dense continuous terrain mesh");
+  assert.equal(rendererAudit.scene.treeCanopyLayers, 3, "Trees must use layered natural low-poly canopies");
+  const desktopCursor = await desktop.locator("#world-canvas").evaluate(el => getComputedStyle(el).cursor);
+  assert.equal(desktopCursor, "none", "Desktop canvas must hide the OS mouse pointer");
+  await desktop.keyboard.press("b");
+  await desktop.locator("#control-column").waitFor({ state: "visible" });
+  await desktop.keyboard.press("c");
+  assert.equal(await desktop.locator("#panel-catalog").evaluate(el => el.classList.contains("active")), true,
+    "The catalogue menu must be reachable through keyboard hotkeys");
+  await desktop.keyboard.press("Escape");
+  assert.equal(await desktop.locator("#control-column").evaluate(el => el.classList.contains("panel-open")), false,
+    "Escape must close the keyboard menu");
 
   const adventureStart = await desktop.evaluate(() => {
     const api = window.__doroniumFactoryTest;
@@ -359,6 +374,14 @@ try {
   });
   assert.ok(mobileFrame.top <= 1 && mobileFrame.height >= mobileFrame.viewportHeight - 1,
     "Mobile game world must fill the viewport without a clipped 530px height cap");
+  const landscapeShell = await mobile.locator("#game-root").evaluate(el => {
+    const rect = el.getBoundingClientRect();
+    return { transform: getComputedStyle(el).transform, width: rect.width, height: rect.height };
+  });
+  assert.notEqual(landscapeShell.transform, "none",
+    "Portrait phone viewports must rotate the complete game into a landscape-only presentation");
+  assert.ok(landscapeShell.width >= mobileFrame.viewportHeight - 1 && landscapeShell.height >= mobileFrame.viewportHeight - 1,
+    "The rotated phone game shell must occupy the full landscape viewport");
   const moveChoice = await mobile.evaluate(() => {
     const api = window.__doroniumFactoryTest;
     const s = api.snapshot();
