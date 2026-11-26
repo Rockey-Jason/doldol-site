@@ -1631,14 +1631,14 @@ if(E2E_MODE){
    return {construction,coalGenerator,...reservationResults};
   },
   researchAndFacilityPopupTest(){
-   const previous=structuredClone(S);
+   const previous=structuredClone(S),previousPanel=activePanel,previousSelectedBuilding=selectedBuilding;
    try{
     S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
     S.money=10000;S.buildings=[{uid:"test-research-lab",type:"lab",dir:1,condition:100,status:"IDLE",progress:0,input:{},inputMeta:{}}];
     addItem("wood",2,{quality:90,purity:90,synthetic:false},false);
     addItem("stone",5,{quality:90,purity:90,synthetic:false},false);
     S.activeResearch="survey";S.researchProgress=13;
-    renderResearch();
+    changePanel("research");renderResearch();
     const researchText=$("research-tree").innerText;
     openBuildingManagement(S.buildings[0]);
     const popupText=$("modal-card").innerText;
@@ -1651,7 +1651,7 @@ if(E2E_MODE){
      shortageVisible:researchText.includes("부족 3개")
     };
     closeModal();return result;
-   }finally{S=previous;closeModal();renderAll()}
+   }finally{S=previous;selectedBuilding=previousSelectedBuilding;closeModal();changePanel(previousPanel);renderAll()}
   },
   syntheticReservationIsolationTest(){
    S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
