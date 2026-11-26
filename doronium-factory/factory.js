@@ -299,7 +299,7 @@ function makeWorld(){
 }
 function freshState(){
  const world=makeWorld();
- const state={runtime:createRuntimeState(),version:1,worldVersion:5,seed:827142,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},factoryAutomationPaused:false,mineElevatorBuffers:{},money:1100,inventory:{oldAxe:1,wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
+ const state={runtime:createRuntimeState(),version:1,worldVersion:5,seed:827142,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},factoryAutomationPaused:false,mineElevatorBuffers:{},treeGrowthKeys:[],money:1100,inventory:{oldAxe:1,wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
  ensureItemStacks(state);return state;
 }
 let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, frameRenderAccumulator=0, worldFrameHandle=0, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
@@ -826,20 +826,27 @@ function useTreeGrowthItem(itemId){
  node.amount=Math.min(max,(node.amount||0)+rule.restore);
  if(rule.boost)node.growthBoostUntil=Math.max(Number(node.growthBoostUntil)||0,S.seconds+rule.boost);
  if(rule.permanent){node.permanentGrowth=true;node.growthProgress=Math.max(0,Number(node.growthProgress)||0)}
+ if(rule.boost||rule.permanent){S.treeGrowthKeys??=[];if(!S.treeGrowthKeys.includes(target.key))S.treeGrowthKeys.push(target.key)}
  markVisibilityDirty();markDirty();
  log(rule.label+" 사용 · "+(RESOURCE[node.type]?.name||({wood:"소나무",birchTree:"자작나무",rubberTree:"고무나무",barkTree:"짖음의 나무",frozenTree:"냉동 나무",fireTree:"화염 나무"})[node.type])+" 성장 지원");
  toast(rule.label+" 사용 완료 · 나무 자원 "+rule.restore+" 회복"+(rule.permanent?" · 영구 성장 활성화":""));
  renderInventory();drawWorld();
 }
 function updateTreeGrowth(dt){
+ const keys=S.treeGrowthKeys??=[],treeTypes=new Set(["wood","birchTree","rubberTree","barkTree","frozenTree","fireTree"]);
  let changed=false;
- for(const node of Object.values(S.nodes||{})){
-  if(!["wood","birchTree","rubberTree","barkTree","frozenTree","fireTree"].includes(node.type))continue;
-  if(!(node.permanentGrowth||Number(node.growthBoostUntil)>S.seconds)||node.amount>=node.max)continue;
+ for(let i=keys.length-1;i>=0;i--){
+  const key=keys[i],node=S.nodes?.[key];
+  if(!node||!treeTypes.has(node.type)||(!node.permanentGrowth&&Number(node.growthBoostUntil)<=S.seconds)){keys.splice(i,1);continue}
+  if(node.amount>=node.max)continue;
   const rate=node.permanentGrowth?0.22:0.12;
   node.growthProgress=(Number(node.growthProgress)||0)+dt*rate;
   const whole=Math.floor(node.growthProgress);
-  if(whole>0){const before=node.amount;node.amount=Math.min(node.max,node.amount+whole);node.growthProgress-=node.amount-before;if(before<=0&&node.amount>0)changed=true}
+  if(whole>0){
+   const before=node.amount;node.amount=Math.min(node.max,node.amount+whole);
+   node.growthProgress-=node.amount-before;
+   if(before<=0&&node.amount>0)changed=true;
+  }
  }
  if(changed)markVisibilityDirty();
 }
@@ -1158,7 +1165,7 @@ function tick(dt){
  if(S.paused||S.victory)return;
  const context={state:S,dt,power:null};
  runCanonicalTick(context,{
-  STATE_READ(){S.seconds+=dt;S.tick++;if(!E2E_MODE)updateSurvival(dt);if(S.tick%10===0)updateTreeGrowth(1);ensureCooldownIndex();for(const key of activeCooldownKeys){const node=S.nodes?.[key];if(!node||!(node.cooldown>0)){activeCooldownKeys.delete(key);continue}node.cooldown=Math.max(0,node.cooldown-dt);if(node.cooldown<=0)activeCooldownKeys.delete(key)}},
+  STATE_READ(){S.seconds+=dt;S.tick++;if(!E2E_MODE)updateSurvival(dt);if(S.tick%100===0)updateTreeGrowth(10);ensureCooldownIndex();for(const key of activeCooldownKeys){const node=S.nodes?.[key];if(!node||!(node.cooldown>0)){activeCooldownKeys.delete(key);continue}node.cooldown=Math.max(0,node.cooldown-dt);if(node.cooldown<=0)activeCooldownKeys.delete(key)}},
   PRODUCTION_STATE(){for(const b of S.buildings){if(b.type==="coalgen"&&b.fuelTimer<=0&&availableItemCount(S,"coal")>0&&takeItem("coal",1)){b.fuelTimer=24;b.status="RUNNING"}}},
   POWER_RESOLVE(){context.power=currentPower()},
   PRODUCTION_PROGRESS(){for(const b of S.buildings)tickBuilding(b,dt,context.power||currentPower())},
@@ -1351,7 +1358,7 @@ function wireControls(){
 function renderQuickObjectives(){const q=getQuest();if($("active-mission-hud")){$("active-mission-hud").innerHTML=q?'<small>ACTIVE DIRECTIVE · '+String(S.questIndex+1).padStart(2,"0")+'</small><strong>'+q.title+'</strong><span>'+q.desc+'</span>':'<small>CAMPAIGN COMPLETE</small><strong>행성 안정화 완료</strong><span>메인 스토리가 완료되었습니다.</span>'}if(!q){$("quick-objectives").innerHTML='<div class="objective-mini"><small>CAMPAIGN COMPLETE</small><strong>행성 안정화 완료</strong><div class="mini-progress"><i style="width:100%"></i></div></div>';return}const p=Math.min(q.max,q.progress(S));$("quick-objectives").innerHTML='<div class="objective-mini"><small>ACTIVE OBJECTIVE</small><strong>'+q.title+'</strong><div class="mini-progress"><i style="width:'+Math.round(p/q.max*100)+'%"></i></div></div><div class="objective-mini"><small>ORBIT DIRECTIVE</small><strong>'+q.desc+'</strong><div class="mini-progress"><i style="width:'+Math.round(p/q.max*100)+'%"></i></div></div><div class="objective-mini"><small>COMPLETION REWARD</small><strong>'+fmt(q.reward)+' D · 자금 보상</strong><div class="mini-progress"><i style="width:'+Math.round(p/q.max*100)+'%"></i></div></div>'}
 function renderAll(){renderHud();renderBuildList();renderFactory();renderInventory();if(activePanel==="catalog")renderCatalog();renderResearch();renderMissions();renderQuickObjectives();drawWorld()}
 function hydrateState(input){markSceneDirty();const base=freshState(),incoming=input&&typeof input==="object"?input:{},migrate=Number(incoming.worldVersion||0)<3,expandSurface=Number(incoming.worldVersion||0)<5;
- S={...base,...incoming,worldVersion:5,player:{...base.player,...incoming.player},inventory:{...base.inventory,...incoming.inventory},meta:{...incoming.meta},tools:{...base.tools,...incoming.tools},activeTool:incoming.activeTool||"pickaxe",campaign:{...base.campaign,...incoming.campaign},flattened:{...incoming.flattened},foundation:{...incoming.foundation},mineDeposits:incoming.mineDeposits&&Object.keys(incoming.mineDeposits).length?incoming.mineDeposits:base.mineDeposits,buildings:Array.isArray(incoming.buildings)?incoming.buildings:[],nodes:migrate?base.nodes:(expandSurface?{...base.nodes,...(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:{})}:(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:base.nodes)),sites:base.sites,mineElevatorBuffers:incoming.mineElevatorBuffers&&typeof incoming.mineElevatorBuffers==="object"?incoming.mineElevatorBuffers:{},seen:incoming.seen||{},research:Array.isArray(incoming.research)?incoming.research:[],stats:{...base.stats,...incoming.stats,gathered:{...base.stats.gathered,...incoming.stats?.gathered},built:{...base.stats.built,...incoming.stats?.built},produced:{...base.stats.produced,...incoming.stats?.produced}},settings:{...base.settings,...incoming.settings},survival:{...base.survival,...incoming.survival},relaySites:Array.isArray(incoming.relaySites)?incoming.relaySites:[false,false,false],skills:normalizeSkillState(incoming.skills)};
+ S={...base,...incoming,worldVersion:5,player:{...base.player,...incoming.player},inventory:{...base.inventory,...incoming.inventory},meta:{...incoming.meta},tools:{...base.tools,...incoming.tools},activeTool:incoming.activeTool||"pickaxe",campaign:{...base.campaign,...incoming.campaign},flattened:{...incoming.flattened},foundation:{...incoming.foundation},mineDeposits:incoming.mineDeposits&&Object.keys(incoming.mineDeposits).length?incoming.mineDeposits:base.mineDeposits,buildings:Array.isArray(incoming.buildings)?incoming.buildings:[],nodes:migrate?base.nodes:(expandSurface?{...base.nodes,...(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:{})}:(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:base.nodes)),sites:base.sites,mineElevatorBuffers:incoming.mineElevatorBuffers&&typeof incoming.mineElevatorBuffers==="object"?incoming.mineElevatorBuffers:{},treeGrowthKeys:Array.isArray(incoming.treeGrowthKeys)?incoming.treeGrowthKeys.filter(key=>typeof key==="string"):(incoming.nodes&&typeof incoming.nodes==="object"?Object.entries(incoming.nodes).filter(([,node])=>node&&(["wood","birchTree","rubberTree","barkTree","frozenTree","fireTree"].includes(node.type))&&(node.permanentGrowth||Number(node.growthBoostUntil)>Number(incoming.seconds||0))).map(([key])=>key):[]),seen:incoming.seen||{},research:Array.isArray(incoming.research)?incoming.research:[],stats:{...base.stats,...incoming.stats,gathered:{...base.stats.gathered,...incoming.stats?.gathered},built:{...base.stats.built,...incoming.stats?.built},produced:{...base.stats.produced,...incoming.stats?.produced}},settings:{...base.settings,...incoming.settings},survival:{...base.survival,...incoming.survival},relaySites:Array.isArray(incoming.relaySites)?incoming.relaySites:[false,false,false],skills:normalizeSkillState(incoming.skills)};
  if(!incoming.runtime)S.runtime=createRuntimeState();
  ensureItemStacks(S);reconcileSkillMilestones();
  if(migrate){const ox=38,oz=32;S.player.x=clamp(Number(incoming.player?.x??18)+ox,0,WORLD_W-1);S.player.y=clamp(Number(incoming.player?.y??14)+oz,0,WORLD_H-1);S.player.layer="surface";S.player.mineLevel=1;S.player.surfacePosition=null;for(const b of S.buildings){b.x=clamp((Number(b.x)||0)+ox,0,WORLD_W-1);b.y=clamp((Number(b.y)||0)+oz,0,WORLD_H-1);const k=surfaceKey(b.x,b.y);delete S.nodes[k];S.flattened[k]={height:terrainHeightAt(b.x,b.y)};S.foundation[k]=true}S.player.x=clamp(S.player.x,1,WORLD_W-2);S.player.y=clamp(S.player.y,1,WORLD_H-2)}
