@@ -1431,7 +1431,7 @@ if(E2E_MODE){
 
   move:(dx,dy)=>movePlayer(dx,dy),
   audit:()=>({
-   dataValidation:DATA_VALIDATION,runtimeValidation:validateRuntimeState(S),skillTreeValidation:validateSkillTree(),skillStateValidation:validateSkillState(S.skills),skillNodeCount:SKILL_NODES.length,skillGroupCount:SKILL_GROUPS.length,resourceCount:Object.keys(RESOURCE).length,
+   dataValidation:DATA_VALIDATION,catalogValidation:CATALOG_VALIDATION,catalogItemCount:Object.keys(CATALOG_ITEMS).length,catalogRecipeCount:Object.keys(CATALOG_RECIPES).length,catalogMachineCount:CATALOG_MACHINES.length,runtimeValidation:validateRuntimeState(S),skillTreeValidation:validateSkillTree(),skillStateValidation:validateSkillState(S.skills),skillNodeCount:SKILL_NODES.length,skillGroupCount:SKILL_GROUPS.length,resourceCount:Object.keys(RESOURCE).length,
    variantCount:VARIANTS.length,
    uniqueVariants:new Set(VARIANTS).size,
    uniqueCrystalModels:DORONIUM_CRYSTAL_MODELS.filter(id=>id!=="infinity").length,
