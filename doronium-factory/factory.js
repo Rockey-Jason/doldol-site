@@ -1369,7 +1369,8 @@ function wireControls(){
  $("story-next-button")?.addEventListener("click",advancePrologue);
  $("story-skip-button")?.addEventListener("click",finishCampaignIntro);
  $("panel-close")?.addEventListener("click",closeControlPanel);
- $("fullscreen-button")?.addEventListener("click",toggleFullscreen);\n if(isCoarsePointer()){$("fullscreen-button")?.setAttribute("title","전체 화면 · 가로 화면 (F)");}
+ $("fullscreen-button")?.addEventListener("click",toggleFullscreen);
+ if(isCoarsePointer()){$("fullscreen-button")?.setAttribute("title","전체 화면 · 가로 화면 (F)");}
  const bindAdventureButton=(id,action)=>{
   const button=$(id);if(!button)return;
   button.addEventListener("click",event=>{
