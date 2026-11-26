@@ -447,13 +447,16 @@ function currentPower(){
  const edges=[];
  const topologyEnabledFor=(node)=>{
   const layer=node.layer||"surface";
+  // Defense in depth: a mine's topology belongs to its entrance instance.
+  // A stale or mixed node must not read another mine's level flag.
+  if(layer==="mine"&&String(node.mineInstanceID||"mine:legacy")!==activeMineID)return false;
   if(!S.powerTopologyLayers||typeof S.powerTopologyLayers!=="object")return !!S.powerTopologyEnabled;
   return layer==="mine"?!!S.powerTopologyLayers.mine?.[Number(node.mineLevel)||1]:!!S.powerTopologyLayers.surface;
  };
  for(let i=0;i<powerBuildings.length;i++)for(let j=i+1;j<powerBuildings.length;j++){
   const a=powerBuildings[i],b=powerBuildings[j],sameLayer=(a.layer||"surface")===(b.layer||"surface"),sameMineLevel=(a.layer!=="mine"||(Number(a.mineLevel||1)===Number(b.mineLevel||1)&&String(a.mineInstanceID||"mine:legacy")===String(b.mineInstanceID||"mine:legacy")));
   if(!sameLayer||!sameMineLevel)continue;
-  const explicit=topologyEnabledFor({layer:a.layer||"surface",mineLevel:a.mineLevel||0});
+  const explicit=topologyEnabledFor({layer:a.layer||"surface",mineLevel:a.mineLevel||0,mineInstanceID:a.mineInstanceID||""});
   if(explicit){
    const distance=Math.abs(a.x-b.x)+Math.abs(a.y-b.y);
    if(distance===1&&(a.type==="powerCable"||b.type==="powerCable")){const cables=[a,b].filter(x=>x.type==="powerCable"),condition=cables.reduce((sum,cable)=>sum+clamp(Number(cable.condition??100),0,100),0)/cables.length,lossRate=.0015+.004*(1-condition/100);edges.push({id:"P:"+a.uid+":"+b.uid,from:String(a.uid),to:String(b.uid),lossRate})}
@@ -2743,7 +2746,9 @@ if(E2E_MODE){
      {uid:"A-GEN",type:"mineGen",layer:"mine",mineInstanceID:A,mineLevel:1,x:8,y:mineMainDriftZ(8),fuelTimer:30,status:"RUNNING"},
      {uid:"B-STA",type:"mineRailStation",layer:"mine",mineInstanceID:B,mineLevel:1,x:20,y:mineMainDriftZ(20)},
      {uid:"B-STB",type:"mineRailStation",layer:"mine",mineInstanceID:B,mineLevel:1,x:30,y:mineMainDriftZ(30)},
-     {uid:"B-BLOCK",type:"mineGen",layer:"mine",mineInstanceID:B,mineLevel:1,x:10,y:mineMainDriftZ(10),fuelTimer:30,status:"RUNNING"}
+     // B has no active generator: A's 1,200kW source must never leak through
+      // a shared legacy mine-level topology flag.
+      {uid:"B-BLOCK",type:"mineGen",layer:"mine",mineInstanceID:B,mineLevel:1,x:10,y:mineMainDriftZ(10),fuelTimer:0,status:"IDLE"}
     ];
     S.powerTopologyLayers.mine[1]=true;const powerA=currentPower().gen,stationsA=mineRailStations(S,1).map(b=>b.uid),closuresA=mineNavigationClosures(1);
     const blockerKey="1:10:"+mineMainDriftZ(10),blockerIgnoredInA=closuresA[blockerKey]!==true,walkableA=isWalkable(10,mineMainDriftZ(10)),occupiedA=buildingOccupiesCell(10,mineMainDriftZ(10));
@@ -2752,7 +2757,7 @@ if(E2E_MODE){
     const powerB=currentPower().gen,stationsB=mineRailStations(S,1).map(b=>b.uid),closuresB=mineNavigationClosures(1);
     const blockerAppliedInB=closuresB[blockerKey]===true,walkableB=isWalkable(10,mineMainDriftZ(10)),occupiedB=buildingOccupiesCell(10,mineMainDriftZ(10));
     const topologyA=S.mineInstances[A].powerTopology[1]===true,topologyB=S.powerTopologyLayers.mine[1]===true;
-    return {powerA,powerB,stationsA,stationsB,blockerIgnoredInA,blockerAppliedInB,walkableA,walkableB,occupiedA,occupiedB,topologyA,topologyB,ok:powerA===1200&&powerB===1200&&stationsA.length===2&&stationsA.every(id=>id.startsWith("A-"))&&stationsB.length===2&&stationsB.every(id=>id.startsWith("B-"))&&blockerIgnoredInA&&blockerAppliedInB&&walkableA&&!walkableB&&!occupiedA&&occupiedB&&topologyA&&!topologyB};
+    return {powerA,powerB,stationsA,stationsB,blockerIgnoredInA,blockerAppliedInB,walkableA,walkableB,occupiedA,occupiedB,topologyA,topologyB,ok:powerA===1200&&powerB===0&&stationsA.length===2&&stationsA.every(id=>id.startsWith("A-"))&&stationsB.length===2&&stationsB.every(id=>id.startsWith("B-"))&&blockerIgnoredInA&&blockerAppliedInB&&walkableA&&!walkableB&&!occupiedA&&occupiedB&&topologyA&&!topologyB};
    }finally{S=saved;playerMotion=savedMotion;renderAll()}
   },
 
