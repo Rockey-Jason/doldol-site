@@ -312,7 +312,7 @@ try {
   assert.equal(researchUi.countdown, "남은 시간 17초", "Research cards must show the exact remaining seconds");
   assert.equal(researchUi.popupCountdown, "남은 시간 17초", "Selecting a research lab must open a management popup with the live countdown");
   assert.equal(researchUi.popupVisible, true, "Selecting a facility must open its management popup");
-  assert.equal(researchUi.requirementsIncludeNames, true, "Research requirements must show exact Korean resource names");
+  assert.equal(researchUi.requirementsIncludeNames, true, "Research requirements must show exact Korean resource names: " + JSON.stringify(researchUi.researchText));
   assert.equal(researchUi.shortageVisible, true, "Research UI must identify the exact missing quantity for unavailable resources");
   assert.match(researchUi.popupText, /연구 관리 열기/, "The research-lab popup must provide direct access to research management");
 
