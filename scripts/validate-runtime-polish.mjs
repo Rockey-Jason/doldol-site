@@ -175,7 +175,7 @@ assert.ok(factoryCss.includes('font-weight:400;font-display:swap'),
   "The factory must load the regular Hancom font asset.");
 assert.ok(!factoryIndex.includes("fonts.googleapis.com/css2?family=Inter"),
   "The factory must not download its separate Inter/Noto font families.");
-assert.ok(factoryIndex.includes('href="./factory.css?v=13"'),
+assert.ok(factoryIndex.includes('href="./factory.css?v=14"'),
   "The updated factory stylesheet must use a fresh cache version.");
 assert.ok(factoryIndex.includes('src="./factory.js?v=64"'),
   "The updated factory controller must use a fresh cache version.");
