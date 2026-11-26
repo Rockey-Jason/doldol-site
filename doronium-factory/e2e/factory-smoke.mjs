@@ -376,12 +376,12 @@ try {
     "Mobile game world must fill the viewport without a clipped 530px height cap");
   const landscapeShell = await mobile.locator("#game-root").evaluate(el => {
     const rect = el.getBoundingClientRect();
-    return { transform: getComputedStyle(el).transform, width: rect.width, height: rect.height };
+    return { transform: getComputedStyle(el).transform, width: el.offsetWidth, height: el.offsetHeight, rectWidth: rect.width, rectHeight: rect.height };
   });
   assert.notEqual(landscapeShell.transform, "none",
     "Portrait phone viewports must rotate the complete game into a landscape-only presentation");
-  assert.ok(landscapeShell.width >= mobileFrame.viewportHeight - 1 && landscapeShell.height >= mobileFrame.viewportHeight - 1,
-    "The rotated phone game shell must occupy the full landscape viewport");
+  assert.ok(landscapeShell.width >= mobileFrame.viewportHeight - 1 && landscapeShell.height >= mobileFrame.width - 1,
+    "The rotated phone game shell must be laid out in landscape dimensions and cover the portrait viewport after rotation");
   const moveChoice = await mobile.evaluate(() => {
     const api = window.__doroniumFactoryTest;
     const s = api.snapshot();
