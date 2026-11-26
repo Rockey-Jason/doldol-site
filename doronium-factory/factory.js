@@ -1456,6 +1456,18 @@ if(E2E_MODE){
    recipeInputsValid:Object.values(RECIPES).every(r=>Object.keys(r.inputs).every(id=>!!RESOURCE[id])),
    buildingMaterialsValid:BUILDINGS.every(b=>Object.keys(b.materials||{}).every(id=>!!RESOURCE[id]))
   }),
+  saveMigrationTest(){
+   const previous=structuredClone(S);
+   try{
+    S=freshState();
+    const original=structuredClone(S),newOre=Object.entries(original.mineDeposits).find(([,node])=>node.type==="aluminumOre");
+    const preserved=original.mineDeposits["1:8:12"];
+    if(!newOre||!preserved)throw new Error("The test map must include a new aluminum vein and a legacy ore vein");
+    const oldDeposits={...original.mineDeposits};delete oldDeposits[newOre[0]];oldDeposits["1:8:12"]={...preserved,amount:7};
+    hydrateState({...original,worldVersion:4,mineDeposits:oldDeposits});
+    return {newOreKey:newOre[0],newOrePresent:!!S.mineDeposits[newOre[0]],newOreType:S.mineDeposits[newOre[0]]?.type,legacyAmount:S.mineDeposits["1:8:12"]?.amount,worldVersion:S.worldVersion,saveValid:validateRuntimeState(S).valid};
+   }finally{S=previous;markSceneDirty();renderAll()}
+  },
   expandedSystemsTest(){
    const previous=structuredClone(S);
    try{
