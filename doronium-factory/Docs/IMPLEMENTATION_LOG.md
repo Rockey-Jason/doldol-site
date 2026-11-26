@@ -660,3 +660,14 @@ PR #8 remains the separate Godot implementation and was not integrated. PR #9 ov
 - **Remaining mine gaps:** all mine runtime transfers/drops are not yet universally instance-scoped; background simulation for inactive mine instances is paused; expanded visual density and new mine instance behavior still require completed Playwright regression and save/reload E2E.
 - **Master status:** stages 2, 3, 5 and 8 remain PARTIAL. World remains 192×160 tiles rather than 2,048m×2,048m; universal ownership, six-fluid integration, canonical catalog authority, complete Fusion interlocks/restart recovery, all skills/contracts and full campaign acceptance remain incomplete. Physical devices, two-device cloud recovery and a real 60-minute wall-clock soak remain UNVERIFIED.
 - **Boundary:** PR #11 remains draft/open/unmerged. No main merge, deployment, production DB/schema/RLS/function change or live-user save/economy/reward mutation was performed.
+
+
+## 2026-11-26 — explicit mine-instance power-topology guard
+
+- **Code commit:** `f0ff3f430f07dd9feef660e56bd04840eb9cb13c` (PR #11 development branch only).
+- **Root risk:** the power-grid topology selector read the active mine's per-level topology flag without independently validating the node's mine-instance ID. The current power collector already filters inactive mines, but the topology helper itself relied on that upstream invariant; mixed/stale nodes could incorrectly consult another entrance's level flag if introduced by a future caller or refactor.
+- **Implementation:** the topology selector now fails closed for a mine node whose `mineInstanceID` differs from the active entrance. Its caller supplies the node's instance ID explicitly. This is defense-in-depth and preserves existing surface/active-mine behavior.
+- **Regression:** strengthened the existing live factory mine-isolation scenario so entrance A has a running 1,200kW generator while entrance B has none. B must report exactly 0kW; this prevents A's source from masking a mine-scoped topology leak. The same scenario continues to check station lists, route obstacle/collision scope, and per-instance topology persistence.
+- **Validation:** code was committed to the development branch. GitHub Actions triggered by this commit must reach terminal success before the test is considered passed; no local Playwright execution is available in this automation environment. Do not mark the regression green based only on commit creation.
+- **Remaining critical work:** run/inspect the new CI; authoritative item custody across every live domain; five non-water fluids; canonical recipe/model source; Fusion interlock and process/cloud recovery; world scale migration; full skills/contracts/failure coverage; real PC/mobile, two-device and 60-minute wall-clock tests.
+- **Boundary:** no main merge, Pages/Render deployment, production database/schema/RLS/function edit, user save/economy mutation, or natural Doronium vein creation.
