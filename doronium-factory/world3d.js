@@ -206,7 +206,7 @@ export function createWorld3D(canvas, getState) {
   const cylGeo = new THREE.CylinderGeometry(0.5,0.5,1,12);
   const sphereGeo = new THREE.SphereGeometry(1,14,10);
   const coneGeo = new THREE.ConeGeometry(0.5,1,8);
-  const treeLeafGeometry=new THREE.IcosahedronGeometry(1,1);
+  const treeLeafGeometry=new THREE.SphereGeometry(1,18,12);
   const makeBox=(parent,x,y,z,sx,sy,sz,material,cast=true)=>{const m=new THREE.Mesh(boxGeo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=cast;m.receiveShadow=true;parent.add(m);return m};
   const cylinderGeometryCache = new Map([[12,cylGeo]]);
   const makeCyl=(parent,x,y,z,r,h,material,segments=12)=>{
@@ -320,7 +320,7 @@ export function createWorld3D(canvas, getState) {
   let playerModel=null,playerRing=null;
   function surfaceY(state,x,z){const key=Math.floor(x+.5)+","+Math.floor(z+.5),v=state.flattened?.[key];return v&&typeof v==="object"&&Number.isFinite(v.height)?v.height:terrainHeightAt(x,z);}
   function buildTerrainChunk(state,x0,z0,chunkWidth,chunkHeight){
-    const subdivisions=2,segmentsX=chunkWidth*subdivisions,segmentsZ=chunkHeight*subdivisions;
+    const subdivisions=compactDevice?2:lowEndDevice?3:4,segmentsX=chunkWidth*subdivisions,segmentsZ=chunkHeight*subdivisions;
     const row=segmentsX+1,count=row*(segmentsZ+1);
     const positions=new Float32Array(count*3),colors=new Float32Array(count*3),indices=[];
     const color=new THREE.Color(),rockColor=new THREE.Color(0x788079),waterColor=new THREE.Color(0x315e67);
@@ -351,7 +351,7 @@ export function createWorld3D(canvas, getState) {
     geometry.setAttribute("position",new THREE.BufferAttribute(positions,3));
     geometry.setAttribute("color",new THREE.BufferAttribute(colors,3));
     geometry.setIndex(indices);geometry.computeVertexNormals();geometry.computeBoundingSphere();
-    geometry.userData={surfaceModel:"smoothed-heightfield",subdivisionsPerTile:subdivisions};
+    geometry.userData={surfaceModel:"smoothed-heightfield",subdivisionsPerTile:subdivisions,terrainQuality:compactDevice?"mobile-balanced":lowEndDevice?"balanced":"high-detail"};
     const mesh=new THREE.Mesh(geometry,terrainTileMaterial);
     mesh.userData={chunkX:x0,chunkZ:z0,chunkWidth,chunkHeight,surfaceModel:"smoothed-heightfield"};
     mesh.receiveShadow=true;mesh.castShadow=false;
