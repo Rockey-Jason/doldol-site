@@ -1449,6 +1449,42 @@ if(E2E_MODE){
    recipeInputsValid:Object.values(RECIPES).every(r=>Object.keys(r.inputs).every(id=>!!RESOURCE[id])),
    buildingMaterialsValid:BUILDINGS.every(b=>Object.keys(b.materials||{}).every(id=>!!RESOURCE[id]))
   }),
+  expandedSystemsTest(){
+   const previous=structuredClone(S);
+   try{
+    S=freshState();S.money=100000;S.runtime=createRuntimeState();ensureItemStacks(S);
+    S.nodes["10,10"]={type:"water",amount:40,max:40,cooldown:0,seed:1};S.seen["10,10"]=true;
+    addItem("machine_wood_bridge",1,{quality:100,purity:100,synthetic:false},false);markSceneDirty();
+    const bridgePlaced=placeBuilding("catalog_wood_bridge",10,10),bridgeWalkable=isWalkable(10,10);
+    S=freshState();S.player={...S.player,x:10,y:10,layer:"surface"};S.nodes["10,10"]={type:"wood",amount:0,max:90,cooldown:0,seed:2};S.runtime=createRuntimeState();ensureItemStacks(S);
+    addItem("treeNutrition",1,{quality:90,purity:90,synthetic:false},false);useTreeGrowthItem("treeNutrition");
+    const treeNutrition={amount:S.nodes["10,10"].amount,remaining:itemCount("treeNutrition")};
+    addItem("treeGrowthAccelerator",1,{quality:90,purity:90,synthetic:false},false);S.nodes["10,10"].amount=0;useTreeGrowthItem("treeGrowthAccelerator");
+    const accelerated={amount:S.nodes["10,10"].amount,boostUntil:S.nodes["10,10"].growthBoostUntil||0};
+    addItem("treePermanentGrowthCatalyst",1,{quality:90,purity:90,synthetic:false},false);S.nodes["10,10"].amount=0;useTreeGrowthItem("treePermanentGrowthCatalyst");
+    const permanent={enabled:!!S.nodes["10,10"].permanentGrowth,amount:S.nodes["10,10"].amount};
+    S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
+    const elevator={uid:"test-elevator",type:"catalog_item_elevator",x:5,y:5,dir:1,liftLevel:3,liftDirection:"down",input:{},output:null,status:"IDLE"};
+    S.buildings=[elevator];selectedBuilding=elevator.uid;storeInMineElevator(3,"ironOre",4,{quality:92,purity:90,synthetic:false});
+    renderMachineDetails();$("machine-lift-level").value="3";$("machine-lift-item").value="ironOre";$("machine-lift-quantity").value="2";
+    const beforeOre=itemCount("ironOre");transferElevatorBuffer(elevator,"unload");
+    const elevatorResult={before:beforeOre,after:itemCount("ironOre"),remaining:elevatorBufferSummary(3).find(x=>x.id==="ironOre")?.quantity||0};
+    const fluidOnly=acceptFactoryLogisticsItem({type:"catalog_water_elevator",liftLevel:2,liftDirection:"down"},{id:"ironOre",qty:1,meta:{}});
+    S=freshState();S.buildings=[
+      {uid:"test-solar",type:"catalog_solar_panel",x:10,y:10,fuelTimer:0},
+      {uid:"test-transformer",type:"catalog_transformer",x:20,y:10},
+      {uid:"test-near-machine",type:"smelter",x:30,y:10,condition:100},
+      {uid:"test-far-machine",type:"smelter",x:90,y:90,condition:100}
+    ];
+    const grid=currentPower();
+    return {
+     bridge:{placed:bridgePlaced,walkable:bridgeWalkable},
+     treeNutrition,accelerated,permanent,
+     elevator:elevatorResult,waterElevatorRejectsSolid:fluidOnly===false,
+     transformer:{count:grid.network.transformers,connected:grid.network.connectedConsumers,disconnected:grid.network.disconnectedConsumers,near:powerRatioForBuilding(S.buildings[2],grid),far:powerRatioForBuilding(S.buildings[3],grid)}
+    };
+   }finally{S=previous;selectedBuilding=null;markSceneDirty();renderAll()}
+  },
   power:()=>currentPower(),
   inspect3D:()=>world3d.inspect(),
   inspectPerformance:()=>world3d.inspectPerformance?.()||null,
