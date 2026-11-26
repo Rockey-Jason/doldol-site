@@ -310,3 +310,12 @@ html,body{width:100%;height:100%;min-height:100%;overflow:hidden;overscroll-beha
 @media(prefers-reduced-motion:reduce){
  .catalog-card,.story-progress-track i{transition:none}
 }
+
+/* Inventory item actions, vertical logistics elevator, and local power network */
+.inventory-use-button{height:25px;align-self:center;padding:0 9px;border:1px solid #4d8f8c;border-radius:7px;background:linear-gradient(135deg,#164b4b,#123644);color:#bff4e8;font-size:8px;font-weight:800;white-space:nowrap}
+.inventory-use-button:hover{border-color:#8ddacb;background:#1b5b59}
+.inventory-item{grid-template-columns:28px minmax(0,1fr) auto auto;gap:8px}
+.lift-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.catalog-machine-recipe input[type=number]{width:100%;height:32px;padding:0 9px;border:1px solid #29485e;border-radius:8px;background:#0c2030;color:#dcebf3;font-size:10px}
+.catalog-machine-recipe select:focus,.catalog-machine-recipe input:focus{outline:none;border-color:#5da9ae;box-shadow:0 0 0 2px #58c5c11c}
+@media(max-width:420px){.inventory-item{grid-template-columns:25px minmax(0,1fr) auto;gap:6px}.inventory-use-button{grid-column:2;justify-self:start}.lift-actions{grid-template-columns:1fr}}
