@@ -370,7 +370,7 @@ try {
   assert.equal(await mobile.locator(".move-pad").isVisible(), true, "Touch movement pad must be visible on a phone-sized viewport");
   const mobileFrame = await mobile.locator("#world-frame").evaluate(el => {
     const rect = el.getBoundingClientRect();
-    return { top: rect.top, height: rect.height, viewportHeight: window.innerHeight };
+    return { top: rect.top, height: rect.height, viewportHeight: window.innerHeight, viewportWidth: window.innerWidth };
   });
   assert.ok(mobileFrame.top <= 1 && mobileFrame.height >= mobileFrame.viewportHeight - 1,
     "Mobile game world must fill the viewport without a clipped 530px height cap");
@@ -380,7 +380,7 @@ try {
   });
   assert.notEqual(landscapeShell.transform, "none",
     "Portrait phone viewports must rotate the complete game into a landscape-only presentation");
-  assert.ok(landscapeShell.width >= mobileFrame.viewportHeight - 1 && landscapeShell.height >= mobileFrame.width - 1,
+  assert.ok(landscapeShell.width >= mobileFrame.viewportHeight - 1 && landscapeShell.height >= mobileFrame.viewportWidth - 1,
     "The rotated phone game shell must be laid out in landscape dimensions and cover the portrait viewport after rotation");
   const moveChoice = await mobile.evaluate(() => {
     const api = window.__doroniumFactoryTest;
