@@ -177,7 +177,7 @@ assert.ok(!factoryIndex.includes("fonts.googleapis.com/css2?family=Inter"),
   "The factory must not download its separate Inter/Noto font families.");
 assert.ok(factoryIndex.includes('href="./factory.css?v=11"'),
   "The updated factory stylesheet must use a fresh cache version.");
-assert.ok(factoryIndex.includes('src="./factory.js?v=57"'),
+assert.ok(factoryIndex.includes('src="./factory.js?v=58"'),
   "The updated factory controller must use a fresh cache version.");
 assert.ok(factoryIndex.includes('rel="preconnect" href="https://cdn.jsdelivr.net"'),
   "The factory must warm the shared font CDN connection.");
