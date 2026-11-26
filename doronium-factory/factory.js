@@ -1428,11 +1428,27 @@ if(E2E_MODE){
   constructionRules(){
    S=freshState();S.player={...S.player,viewMode:"map"};S.money=1000000;S.inventory={wood:200,stone:200,ironPlate:200,ironOre:100,coal:100,water:50};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.research.push("logistics");
    const standardWithoutFoundation=placeBuilding("belt",75,50);
-   const adaptiveWithoutFoundation=placeBuilding("beltAdaptive",76,50);
-   S.flattened["77,50"]={height:terrainHeightAt(77,50)};S.foundation["77,50"]=true;
-   const standardWithFoundation=placeBuilding("belt",77,50);
+   const findEmptyTile=(exclude=null,requireSlope=false)=>{
+    for(let y=3;y<WORLD_H-3;y++)for(let x=3;x<WORLD_W-3;x++){
+     if(exclude&&x===exclude.x&&y===exclude.y)continue;
+     if(tileNode(x,y)||buildingAt(x,y)||hasFoundation(x,y))continue;
+     const riseX=terrainHeightAt(x+1,y)-terrainHeightAt(x-1,y),riseZ=terrainHeightAt(x,y+1)-terrainHeightAt(x,y-1);
+     if(requireSlope&&Math.max(Math.abs(riseX),Math.abs(riseZ))<1)continue;
+     return {x,y};
+    }
+    return null;
+   };
+   const adaptivePosition=findEmptyTile(null,true);
+   const adaptiveWithoutFoundation=adaptivePosition?placeBuilding("beltAdaptive",adaptivePosition.x,adaptivePosition.y):false;
+   const standardPosition=findEmptyTile(adaptivePosition,false);
+   let standardWithFoundation=false;
+   if(standardPosition){
+    const key=surfaceKey(standardPosition.x,standardPosition.y);
+    S.flattened[key]={height:terrainHeightAt(standardPosition.x,standardPosition.y)};S.foundation[key]=true;
+    standardWithFoundation=placeBuilding("belt",standardPosition.x,standardPosition.y);
+   }
    drawWorld();
-   return {standardWithoutFoundation,adaptiveWithoutFoundation,standardWithFoundation,placed:S.buildings.map(b=>b.type),adaptiveBeltTilts:world3d.inspect().adaptiveBeltTilts}
+   return {standardWithoutFoundation,adaptiveWithoutFoundation,standardWithFoundation,adaptivePosition,standardPosition,placed:S.buildings.map(b=>b.type),adaptiveBeltTilts:world3d.inspect().adaptiveBeltTilts}
   },
 
 
