@@ -371,14 +371,16 @@ try {
     { timeout: 8000 }
   );
   const lockedYawBefore = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.motion().yaw);
-  await mouseLookPage.mouse.move(780, 480);
-  await mouseLookPage.waitForFunction(
-    before => Math.abs(window.__doroniumFactoryTest.motion().yaw - before) > 0.001,
-    lockedYawBefore,
-    { timeout: 5000 }
-  );
+  const lockedPitchBefore = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.motion().pitch);
+  // Chromium headless does not always emit native relative mouse deltas after pointer lock.
+  // Dispatch the same browser MouseEvent payload produced by a physical locked-pointer move.
+  await mouseLookPage.evaluate(() => document.dispatchEvent(new MouseEvent("mousemove", {
+    bubbles: true, movementX: 64, movementY: 24
+  })));
   const lockedYawAfter = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.motion().yaw);
+  const lockedPitchAfter = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.motion().pitch);
   assert.notEqual(lockedYawAfter, lockedYawBefore, "Pointer-locked mouse movement must rotate the player camera");
+  assert.notEqual(lockedPitchAfter, lockedPitchBefore, "Pointer-locked vertical mouse movement must tilt the camera");
   await mouseLookPage.keyboard.press("Escape");
   assert.equal(await mouseLookPage.evaluate(() => document.pointerLockElement), null, "Escape must release desktop pointer lock");
   await mouseContext.close();
