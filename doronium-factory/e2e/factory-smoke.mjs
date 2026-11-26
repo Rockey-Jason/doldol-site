@@ -146,6 +146,8 @@ try {
   assert.equal(rendererAudit.scene.terrainGeometryType, "BufferGeometry", "The surface must use smooth heightfield meshes, not stacked tile cubes");
   assert.equal(rendererAudit.scene.terrainSurfaceModel, "smoothed-heightfield", "Terrain metadata must expose the continuous surface renderer");
   assert.equal(rendererAudit.scene.terrainSubdivisionsPerTile, 2, "Each tile must have a subdivided mesh for smooth slopes");
+  assert.ok(Math.abs(rendererAudit.scene.terrainSampleHeight - Math.round(rendererAudit.scene.terrainSampleHeight / 3) * 3) > 0.01,
+    "The renderer must use smooth non-quantized terrain heights instead of cached stepped height values");
   assert.ok(rendererAudit.scene.terrainVertexCount > 100000, "The expanded planet must expose a dense continuous terrain mesh");
   assert.equal(rendererAudit.scene.treeCanopyLayers, 3, "Trees must use layered natural low-poly canopies");
   const desktopCursor = await desktop.locator("#world-canvas").evaluate(el => getComputedStyle(el).cursor);
