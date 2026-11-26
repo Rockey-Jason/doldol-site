@@ -403,6 +403,22 @@ try {
   });
   assert.ok(mobileFrame.top <= 1 && mobileFrame.height >= mobileFrame.viewportHeight - 1,
     "Mobile game world must fill the viewport without a clipped 530px height cap");
+  assert.equal(await mobile.locator("#mobile-hud-toggle").isVisible(), true,
+    "The compact status toggle must be available on touch devices");
+  for (const selector of [".top-resource-strip", ".world-clock", ".world-coordinate", ".survival-card", ".view-switcher", ".target-label"]) {
+    assert.equal(await mobile.locator(selector).isVisible(), false,
+      "Secondary mobile HUD panel must start hidden: " + selector);
+  }
+  await mobile.locator("#mobile-hud-toggle").click();
+  assert.equal(await mobile.locator("#game-root").evaluate(el => el.classList.contains("mobile-hud-expanded")), true,
+    "The status toggle must expand the mobile HUD");
+  for (const selector of [".top-resource-strip", ".world-clock", ".world-coordinate", ".survival-card", ".view-switcher"]) {
+    assert.equal(await mobile.locator(selector).isVisible(), true,
+      "The expanded status HUD must restore its information panel: " + selector);
+  }
+  await mobile.locator("#mobile-hud-toggle").click();
+  assert.equal(await mobile.locator("#game-root").evaluate(el => el.classList.contains("mobile-hud-expanded")), false,
+    "The status toggle must collapse the mobile HUD again");
   const landscapeShell = await mobile.locator("#game-root").evaluate(el => {
     const rect = el.getBoundingClientRect();
     return { transform: getComputedStyle(el).transform, width: el.offsetWidth, height: el.offsetHeight, rectWidth: rect.width, rectHeight: rect.height };

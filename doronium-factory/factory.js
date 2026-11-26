@@ -1369,6 +1369,16 @@ function wireControls(){
  $("story-next-button")?.addEventListener("click",advancePrologue);
  $("story-skip-button")?.addEventListener("click",finishCampaignIntro);
  $("panel-close")?.addEventListener("click",closeControlPanel);
+ $("mobile-hud-toggle")?.addEventListener("click",()=>{
+  const root=$("game-root"),button=$("mobile-hud-toggle");
+  if(!root||!button)return;
+  const expanded=root.classList.toggle("mobile-hud-expanded");
+  button.classList.toggle("active",expanded);
+  button.setAttribute("aria-pressed",String(expanded));
+  const label=expanded?"상태 정보 숨기기":"상태 정보 표시";
+  button.setAttribute("aria-label",label);button.title=label;
+  const text=button.querySelector("span");if(text)text.textContent=expanded?"닫기":"정보";
+ });
  $("fullscreen-button")?.addEventListener("click",toggleFullscreen);
  if(isCoarsePointer()){$("fullscreen-button")?.setAttribute("title","전체 화면 · 가로 화면 (F)");}
  const bindAdventureButton=(id,action)=>{

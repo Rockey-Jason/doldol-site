@@ -384,3 +384,71 @@ html,body{width:100%;height:100%;min-height:100%;overflow:hidden;overscroll-beha
  #world-canvas{touch-action:none}
  .move-pad,.adventure-actions{touch-action:none}
 }
+
+
+/* Mobile HUD decluttering: secondary information stays available on demand. */
+.mobile-hud-toggle{display:none}
+@media(pointer:coarse){
+  #game-root .top-resource-strip,
+  #game-root .world-clock,
+  #game-root .world-coordinate,
+  #game-root .adventure-hud .survival-card,
+  #game-root .adventure-hud .view-switcher,
+  #game-root .adventure-hud .target-label{
+    display:none!important;
+  }
+  .mobile-hud-toggle{display:flex!important}
+  #game-root.mobile-hud-expanded .top-resource-strip{
+    display:flex!important;
+    position:absolute;
+    z-index:15;
+    top:max(7px,env(safe-area-inset-top));
+    left:max(7px,env(safe-area-inset-left));
+    right:auto;
+    max-width:calc(100vw - 150px);
+    gap:6px;
+    padding:5px 7px;
+    border-radius:9px;
+  }
+  #game-root.mobile-hud-expanded .top-resource-strip .top-stat{
+    display:flex!important;
+    min-width:48px;
+  }
+  #game-root.mobile-hud-expanded .top-resource-strip .top-stat:nth-child(n+3){
+    display:none!important;
+  }
+  #game-root.mobile-hud-expanded .world-frame .world-clock{
+    display:flex!important;
+    top:auto!important;
+    right:8px!important;
+    bottom:54px!important;
+  }
+  #game-root.mobile-hud-expanded .world-frame .world-coordinate{
+    display:block!important;
+    top:auto!important;
+    left:8px!important;
+    bottom:54px!important;
+  }
+  #game-root.mobile-hud-expanded .world-frame .adventure-hud .survival-card{
+    display:grid!important;
+    left:8px!important;
+    top:49px!important;
+    width:148px;
+  }
+  #game-root.mobile-hud-expanded .world-frame .adventure-hud .view-switcher{
+    display:flex!important;
+    top:49px!important;
+    right:8px!important;
+    left:auto!important;
+    transform:none!important;
+  }
+  #game-root.mobile-hud-expanded .world-frame .adventure-hud .target-label{
+    display:block!important;
+  }
+  .mobile-hud-toggle[aria-pressed="true"]{
+    border-color:#78d8d4;
+    background:linear-gradient(145deg,#164653,#0b2738);
+    color:#efffff;
+    box-shadow:0 0 0 1px #74dce433,0 6px 24px #0005;
+  }
+}
