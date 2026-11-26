@@ -198,7 +198,9 @@ export function createWorld3D(canvas, getState) {
     steel:mat(0x405a6d,0.72,0.34), dark:mat(0x142838,0.48,0.48), trim:mat(0x8ba6ae,0.62,0.32),
     cyan:mat(0x2b9cae,0.35,0.25,0x0b6170), gold:mat(0xd3ad62,0.55,0.3,0x55370b),
     glass: new THREE.MeshPhysicalMaterial({color:0x62c7df,metalness:0.18,roughness:0.12,transparent:true,opacity:0.76,transmission:0.12}),
-    green:mat(0x2d8d65,0.18,0.65), woodLeaves:mat(0x28754e,0.04,0.92), woodTrunk:mat(0x65412e,0.03,0.92), doriTrunk:mat(0x9b7044,0.08,0.85), crystal: new THREE.MeshPhysicalMaterial({color:0x66d8ee,metalness:0.25,roughness:0.12,transmission:0.28,transparent:true,opacity:0.92,emissive:0x063c5b,emissiveIntensity:0.8})
+    green:new THREE.MeshStandardMaterial({color:0x2d8d65,metalness:.04,roughness:.94,flatShading:true}),
+    woodLeaves:new THREE.MeshStandardMaterial({color:0x28754e,metalness:.02,roughness:.96,flatShading:true}),
+    woodTrunk:mat(0x65412e,0.03,0.92), doriTrunk:mat(0x9b7044,0.08,0.85), crystal: new THREE.MeshPhysicalMaterial({color:0x66d8ee,metalness:0.25,roughness:0.12,transmission:0.28,transparent:true,opacity:0.92,emissive:0x063c5b,emissiveIntensity:0.8})
   };
   const boxGeo = new THREE.BoxGeometry(1,1,1);
   const cylGeo = new THREE.CylinderGeometry(0.5,0.5,1,12);
@@ -212,7 +214,8 @@ export function createWorld3D(canvas, getState) {
     const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(r*2,h,r*2);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
   };
   const makeSphere=(parent,x,y,z,r,material)=>{const m=new THREE.Mesh(sphereGeo,material);m.position.set(x,y,z);m.scale.set(r,r,r);m.castShadow=true;parent.add(m);return m};
-  const sharedGeometry=new Set([boxGeo,cylGeo,sphereGeo,coneGeo]);
+  const makePolySphere=(parent,x,y,z,r,material,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(treeLeafGeometry,material);m.position.set(x,y,z);m.scale.set(r*sx,r*sy,r*sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m};
+  const sharedGeometry=new Set([boxGeo,cylGeo,sphereGeo,coneGeo,treeLeafGeometry]);
   // Smooth vertex-coloured heightfield; no stacked tile cubes.
   const terrainTileMaterial=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.97,vertexColors:true,flatShading:false});
   const firstPersonRig=new THREE.Group();gameCamera.add(firstPersonRig);
@@ -231,9 +234,10 @@ export function createWorld3D(canvas, getState) {
   const nodeHitGeometry=new THREE.BoxGeometry(1,1,1);
   const nodeHitMaterial=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,colorWrite:false,depthWrite:false,side:THREE.DoubleSide});
   const treeTrunkGeometry=new THREE.CylinderGeometry(1.5,3.2,30,8,2);
-  const woodCrownLowerGeometry=new THREE.ConeGeometry(1,2,8,2);
-  const woodCrownMidGeometry=new THREE.ConeGeometry(1,2,8,2);
-  const woodCrownTopGeometry=new THREE.ConeGeometry(1,2,8,2);
+  const treeLeafGeometry=new THREE.IcosahedronGeometry(1,1);
+  const woodCrownLowerGeometry=treeLeafGeometry;
+  const woodCrownMidGeometry=treeLeafGeometry;
+  const woodCrownTopGeometry=treeLeafGeometry;
   const doriCrystalGeometry=crystalGeometry("doronium_normal");
   sharedMaterials.add(waterMaterial);sharedMaterials.add(rippleMaterial);sharedMaterials.add(nodeHitMaterial);
   sharedGeometry.add(waterBlockGeometry,rippleGeometry,nodeHitGeometry,treeTrunkGeometry,woodCrownLowerGeometry,woodCrownMidGeometry,woodCrownTopGeometry,doriCrystalGeometry);
@@ -417,7 +421,7 @@ export function createWorld3D(canvas, getState) {
       woodCrownMid:add(woodCrownMidGeometry,mat(0x286b48,.04,.94),totals.wood),
       woodCrownTop:add(woodCrownTopGeometry,mat(0x398452,.04,.94),totals.wood),
       doriTrunk:add(treeTrunkGeometry,mats.doriTrunk,totals.dori),
-      doriCrown:add(sphereGeo,mats.green,totals.dori*2),
+      doriCrown:add(treeLeafGeometry,mats.green,totals.dori*2),
       doriCrystal:add(doriCrystalGeometry,mats.crystal,totals.dori),
       water:add(waterBlockGeometry,waterMaterial,totals.water),
       ripples:add(rippleGeometry,rippleMaterial,totals.water*3)
@@ -464,11 +468,11 @@ export function createWorld3D(canvas, getState) {
         }else if(["birchTree","rubberTree","barkTree","frozenTree","fireTree"].includes(node.type)){
           const trunkColor=node.type==="birchTree"?0xd5d8cc:node.type==="frozenTree"?0x8295a3:node.type==="fireTree"?0x59352b:0x654633;
           const crownColor=node.type==="birchTree"?0x7cae86:node.type==="rubberTree"?0x326a4c:node.type==="barkTree"?0x355b3d:node.type==="frozenTree"?0xb4d9e4:0x9b4d2e;
-          const trunk=mat(trunkColor,.82,.15),crown=mat(crownColor,.55,.2,node.type==="fireTree"?0x45200c:0x000000);
+          const trunk=mat(trunkColor,.18,.9),crown=new THREE.MeshStandardMaterial({color:crownColor,metalness:.02,roughness:.96,flatShading:true,emissive:node.type==="fireTree"?0x45200c:0x000000,emissiveIntensity:.22});
           makeCyl(g,0,15,0,2.8,30,trunk,8);
-          makeSphere(g,-5,27,0,node.type==="barkTree"?11:9,crown);
-          makeSphere(g,5,31,1,node.type==="barkTree"?13:10,crown);
-          makeSphere(g,0,39,-4,node.type==="barkTree"?10:8,crown);
+          makePolySphere(g,-5,27,0,node.type==="barkTree"?11:9,crown,1.05,1.05,.95);
+          makePolySphere(g,5,31,1,node.type==="barkTree"?13:10,crown,.95,1.1,1.05);
+          makePolySphere(g,0,39,-4,node.type==="barkTree"?10:8,crown,1,1.08,1);
           if(node.type==="fireTree"&&highEndDevice){const glow=new THREE.PointLight(0xff7138,.22,48,2);glow.position.y=30;g.add(glow);}
           if(node.type==="frozenTree"&&highEndDevice){const glow=new THREE.PointLight(0x76d7f5,.18,42,2);glow.position.y=30;g.add(glow);}
         }else if(node.type==="heatCrystalNode"||node.type==="coldCrystalNode"){
