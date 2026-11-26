@@ -55,6 +55,10 @@ try {
 
   const audit = await desktop.evaluate(() => window.__doroniumFactoryTest.audit());
   assert.equal(audit.dataValidation.valid, true, "All game data references and research dependencies must validate");
+  assert.equal(audit.catalogValidation.valid, true, "Every catalogue recipe must resolve all input and output items");
+  assert.ok(audit.catalogItemCount >= 250, "The full item, equipment, machine and packaging catalogue must be registered");
+  assert.ok(audit.catalogRecipeCount >= 200, "The full production, construction and packaging recipes must be registered");
+  assert.equal(audit.catalogMachineCount, 46, "All additional installable machine definitions must be registered");
   assert.equal(audit.runtimeValidation.valid, true, "Initial item stacks and reservations must validate");
   assert.equal(audit.variantCount, 15, "15 canonical Doronium variants must be present");
   assert.equal(audit.uniqueVariants, 15, "Variant IDs must be unique");
@@ -104,6 +108,18 @@ try {
   await desktop.locator("#catalog-category").selectOption("power");
   assert.ok(await desktop.locator(".catalog-machine-card").count() >= 3, "Power facilities must be filterable by category");
   await desktop.locator("#catalog-category").selectOption("all");
+  const expandedSystems = await desktop.evaluate(() => window.__doroniumFactoryTest.expandedSystemsTest());
+  assert.equal(expandedSystems.bridge.placed, true, "A bridge machine item must install on a river tile");
+  assert.equal(expandedSystems.bridge.walkable, true, "A placed bridge must become a walkable path across water");
+  assert.ok(expandedSystems.treeNutrition.amount > 0, "Tree nutrition must restore depleted tree resources");
+  assert.ok(expandedSystems.accelerated.boostUntil > 0, "Tree growth accelerator must create a timed growth effect");
+  assert.equal(expandedSystems.permanent.enabled, true, "Permanent tree catalyst must enable passive tree regrowth");
+  assert.equal(expandedSystems.elevator.after - expandedSystems.elevator.before, 2, "An elevator must transfer buffered mine items back into the warehouse");
+  assert.equal(expandedSystems.elevator.remaining, 2, "The elevator must preserve the untransferred floor buffer");
+  assert.equal(expandedSystems.waterElevatorRejectsSolid, true, "Water elevators must reject solid items");
+  assert.equal(expandedSystems.transformer.count, 1, "A transformer must register in the factory grid");
+  assert.ok(expandedSystems.transformer.near > 0, "A nearby machine must receive power through a connected transformer");
+  assert.equal(expandedSystems.transformer.far, 0, "A remote machine outside the grid must be disconnected");
   await openPanel(desktop, "research");
   assert.equal(await desktop.locator("[data-skill]").count(), 20, "All twenty specialization nodes must be visible");
   await desktop.locator('[data-skill="FIELD_SURVEYOR"]').click();
