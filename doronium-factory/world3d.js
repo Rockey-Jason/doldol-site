@@ -206,6 +206,7 @@ export function createWorld3D(canvas, getState) {
   const cylGeo = new THREE.CylinderGeometry(0.5,0.5,1,12);
   const sphereGeo = new THREE.SphereGeometry(1,14,10);
   const coneGeo = new THREE.ConeGeometry(0.5,1,8);
+  const treeLeafGeometry=new THREE.IcosahedronGeometry(1,1);
   const makeBox=(parent,x,y,z,sx,sy,sz,material,cast=true)=>{const m=new THREE.Mesh(boxGeo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=cast;m.receiveShadow=true;parent.add(m);return m};
   const cylinderGeometryCache = new Map([[12,cylGeo]]);
   const makeCyl=(parent,x,y,z,r,h,material,segments=12)=>{
@@ -234,7 +235,6 @@ export function createWorld3D(canvas, getState) {
   const nodeHitGeometry=new THREE.BoxGeometry(1,1,1);
   const nodeHitMaterial=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,colorWrite:false,depthWrite:false,side:THREE.DoubleSide});
   const treeTrunkGeometry=new THREE.CylinderGeometry(1.5,3.2,30,8,2);
-  const treeLeafGeometry=new THREE.IcosahedronGeometry(1,1);
   const woodCrownLowerGeometry=treeLeafGeometry;
   const woodCrownMidGeometry=treeLeafGeometry;
   const woodCrownTopGeometry=treeLeafGeometry;
