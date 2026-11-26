@@ -1,5 +1,5 @@
 /* DORONIUM FACTORY — topographic 3D world, underground mine and industrial renderer */
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=5";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=6";
 let THREE = null;
 try { THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"); }
 catch (error) { console.warn("Three.js CDN unavailable; using the compatibility renderer.", error); }
@@ -198,12 +198,15 @@ export function createWorld3D(canvas, getState) {
     steel:mat(0x405a6d,0.72,0.34), dark:mat(0x142838,0.48,0.48), trim:mat(0x8ba6ae,0.62,0.32),
     cyan:mat(0x2b9cae,0.35,0.25,0x0b6170), gold:mat(0xd3ad62,0.55,0.3,0x55370b),
     glass: new THREE.MeshPhysicalMaterial({color:0x62c7df,metalness:0.18,roughness:0.12,transparent:true,opacity:0.76,transmission:0.12}),
-    green:mat(0x2d8d65,0.18,0.65), woodLeaves:mat(0x28754e,0.04,0.92), woodTrunk:mat(0x65412e,0.03,0.92), doriTrunk:mat(0x9b7044,0.08,0.85), crystal: new THREE.MeshPhysicalMaterial({color:0x66d8ee,metalness:0.25,roughness:0.12,transmission:0.28,transparent:true,opacity:0.92,emissive:0x063c5b,emissiveIntensity:0.8})
+    green:new THREE.MeshStandardMaterial({color:0x2d8d65,metalness:.04,roughness:.94,flatShading:true}),
+    woodLeaves:new THREE.MeshStandardMaterial({color:0x28754e,metalness:.02,roughness:.96,flatShading:true}),
+    woodTrunk:mat(0x65412e,0.03,0.92), doriTrunk:mat(0x9b7044,0.08,0.85), crystal: new THREE.MeshPhysicalMaterial({color:0x66d8ee,metalness:0.25,roughness:0.12,transmission:0.28,transparent:true,opacity:0.92,emissive:0x063c5b,emissiveIntensity:0.8})
   };
   const boxGeo = new THREE.BoxGeometry(1,1,1);
   const cylGeo = new THREE.CylinderGeometry(0.5,0.5,1,12);
   const sphereGeo = new THREE.SphereGeometry(1,14,10);
   const coneGeo = new THREE.ConeGeometry(0.5,1,8);
+  const treeLeafGeometry=new THREE.IcosahedronGeometry(1,1);
   const makeBox=(parent,x,y,z,sx,sy,sz,material,cast=true)=>{const m=new THREE.Mesh(boxGeo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=cast;m.receiveShadow=true;parent.add(m);return m};
   const cylinderGeometryCache = new Map([[12,cylGeo]]);
   const makeCyl=(parent,x,y,z,r,h,material,segments=12)=>{
@@ -212,10 +215,10 @@ export function createWorld3D(canvas, getState) {
     const m=new THREE.Mesh(geo,material);m.position.set(x,y,z);m.scale.set(r*2,h,r*2);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m;
   };
   const makeSphere=(parent,x,y,z,r,material)=>{const m=new THREE.Mesh(sphereGeo,material);m.position.set(x,y,z);m.scale.set(r,r,r);m.castShadow=true;parent.add(m);return m};
-  const sharedGeometry=new Set([boxGeo,cylGeo,sphereGeo,coneGeo]);
-  const terrainTileGeometry=new THREE.BoxGeometry(31.7,1,31.7);
-  const terrainTileMaterial=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.94});
-  sharedGeometry.add(terrainTileGeometry);
+  const makePolySphere=(parent,x,y,z,r,material,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(treeLeafGeometry,material);m.position.set(x,y,z);m.scale.set(r*sx,r*sy,r*sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m};
+  const sharedGeometry=new Set([boxGeo,cylGeo,sphereGeo,coneGeo,treeLeafGeometry]);
+  // Smooth vertex-coloured heightfield; no stacked tile cubes.
+  const terrainTileMaterial=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.97,vertexColors:true,flatShading:false});
   const firstPersonRig=new THREE.Group();gameCamera.add(firstPersonRig);
   makeBox(firstPersonRig,-.52,-.58,-1.05,.25,.34,.82,mat(0x315d76,.18,.72));
   makeBox(firstPersonRig,.52,-.58,-1.05,.25,.34,.82,mat(0x315d76,.18,.72));
@@ -226,15 +229,18 @@ export function createWorld3D(canvas, getState) {
   const sharedMaterials=new Set(Object.values(mats));
   sharedMaterials.add(terrainTileMaterial);
   const waterMaterial=new THREE.MeshStandardMaterial({color:0x0b6382,transparent:true,opacity:.68,roughness:.2,metalness:.15});
-  const waterBlockGeometry=new THREE.BoxGeometry(29,1.2,29);
-  const rippleGeometry=new THREE.BoxGeometry(8,.18,1.2);
+  const waterBlockGeometry=new THREE.PlaneGeometry(31.5,31.5);waterBlockGeometry.rotateX(-Math.PI/2);
+  const rippleGeometry=new THREE.PlaneGeometry(8,1.2);rippleGeometry.rotateX(-Math.PI/2);
   const rippleMaterial=new THREE.MeshBasicMaterial({color:0x6bd8e6,transparent:true,opacity:.48});
   const nodeHitGeometry=new THREE.BoxGeometry(1,1,1);
   const nodeHitMaterial=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0,colorWrite:false,depthWrite:false,side:THREE.DoubleSide});
-  const treeTrunkGeometry=new THREE.CylinderGeometry(3,3,24,8);
+  const treeTrunkGeometry=new THREE.CylinderGeometry(1.5,3.2,30,8,2);
+  const woodCrownLowerGeometry=treeLeafGeometry;
+  const woodCrownMidGeometry=treeLeafGeometry;
+  const woodCrownTopGeometry=treeLeafGeometry;
   const doriCrystalGeometry=crystalGeometry("doronium_normal");
   sharedMaterials.add(waterMaterial);sharedMaterials.add(rippleMaterial);sharedMaterials.add(nodeHitMaterial);
-  sharedGeometry.add(waterBlockGeometry,rippleGeometry,nodeHitGeometry,treeTrunkGeometry,doriCrystalGeometry);
+  sharedGeometry.add(waterBlockGeometry,rippleGeometry,nodeHitGeometry,treeTrunkGeometry,woodCrownLowerGeometry,woodCrownMidGeometry,woodCrownTopGeometry,doriCrystalGeometry);
   function disposeObject(root){root.traverse(child=>{if(child.geometry&&!sharedGeometry.has(child.geometry))child.geometry.dispose();if(child.material){const list=Array.isArray(child.material)?child.material:[child.material];for(const material of list)if(!sharedMaterials.has(material))material.dispose();}});}
   function clear(group){for(const o of [...group.children]){group.remove(o);disposeObject(o);}}
   function syncBeltItemVisual(anim,b){
@@ -312,7 +318,45 @@ export function createWorld3D(canvas, getState) {
   }
   function resize(){const r=canvas.getBoundingClientRect();width=Math.max(1,r.width);height=Math.max(1,r.height);renderer.setSize(width,height,false);gameCamera.aspect=width/height;gameCamera.updateProjectionMatrix();cameraUpdate();}
   let playerModel=null,playerRing=null;
-  function surfaceY(state,x,z){const key=x+","+z,v=state.flattened?.[key];return v&&typeof v==="object"&&Number.isFinite(v.height)?v.height:terrainHeightAt(x,z);}
+  function surfaceY(state,x,z){const key=Math.floor(x+.5)+","+Math.floor(z+.5),v=state.flattened?.[key];return v&&typeof v==="object"&&Number.isFinite(v.height)?v.height:terrainHeightAt(x,z);}
+  function buildTerrainChunk(state,x0,z0,chunkWidth,chunkHeight){
+    const subdivisions=2,segmentsX=chunkWidth*subdivisions,segmentsZ=chunkHeight*subdivisions;
+    const row=segmentsX+1,count=row*(segmentsZ+1);
+    const positions=new Float32Array(count*3),colors=new Float32Array(count*3),indices=[];
+    const color=new THREE.Color(),rockColor=new THREE.Color(0x788079),waterColor=new THREE.Color(0x315e67);
+    for(let iz=0;iz<=segmentsZ;iz++){
+      const z=z0-.5+iz/subdivisions;
+      for(let ix=0;ix<=segmentsX;ix++){
+        const x=x0-.5+ix/subdivisions,index=iz*row+ix;
+        const y=surfaceY(state,x,z);
+        positions[index*3]=x*32;positions[index*3+1]=y;positions[index*3+2]=z*32;
+        const cellKey=Math.floor(x+.5)+","+Math.floor(z+.5),node=state.nodes?.[cellKey];
+        color.setHex(biomeGroundColor(biomeAt(Math.round(x),Math.round(z))));
+        if(node?.type==="water")color.lerp(waterColor,.78);
+        else{
+          const dx=terrainHeightAt(x+.3,z)-terrainHeightAt(x-.3,z);
+          const dz=terrainHeightAt(x,z+.3)-terrainHeightAt(x,z-.3);
+          const steepness=Math.hypot(dx,dz);
+          if(steepness>8)color.lerp(rockColor,clamp((steepness-8)/26,0,.58));
+          color.multiplyScalar(clamp(.96+Math.sin(x*1.63+z*.71)*.035+Math.cos(z*1.17-x*.49)*.025,.86,1.06));
+        }
+        colors[index*3]=color.r;colors[index*3+1]=color.g;colors[index*3+2]=color.b;
+      }
+    }
+    for(let iz=0;iz<segmentsZ;iz++)for(let ix=0;ix<segmentsX;ix++){
+      const a=iz*row+ix,b=a+1,d=a+row,e=d+1;
+      indices.push(a,d,b,b,d,e);
+    }
+    const geometry=new THREE.BufferGeometry();
+    geometry.setAttribute("position",new THREE.BufferAttribute(positions,3));
+    geometry.setAttribute("color",new THREE.BufferAttribute(colors,3));
+    geometry.setIndex(indices);geometry.computeVertexNormals();geometry.computeBoundingSphere();
+    geometry.userData={surfaceModel:"smoothed-heightfield",subdivisionsPerTile:subdivisions};
+    const mesh=new THREE.Mesh(geometry,terrainTileMaterial);
+    mesh.userData={chunkX:x0,chunkZ:z0,chunkWidth,chunkHeight,surfaceModel:"smoothed-heightfield"};
+    mesh.receiveShadow=true;mesh.castShadow=false;
+    return mesh;
+  }
   function buildMine(state){
     const level=clamp(Number(state.player?.mineLevel)||1,1,5),floorY=mineFloorY(level);
     const rock=mat(0x34414a,.12,.95),rail=mat(0x8b9aa0,.72,.42),lampMat=mat(0xf0c76c,.22,.24,0x9a5a13);
@@ -373,9 +417,11 @@ export function createWorld3D(canvas, getState) {
     };
     nodeBatches={
       woodTrunk:add(treeTrunkGeometry,mats.woodTrunk,totals.wood),
-      woodCrown:add(sphereGeo,mats.woodLeaves,totals.wood*2),
+      woodCrown:add(woodCrownLowerGeometry,mats.woodLeaves,totals.wood),
+      woodCrownMid:add(woodCrownMidGeometry,mat(0x286b48,.04,.94),totals.wood),
+      woodCrownTop:add(woodCrownTopGeometry,mat(0x398452,.04,.94),totals.wood),
       doriTrunk:add(treeTrunkGeometry,mats.doriTrunk,totals.dori),
-      doriCrown:add(sphereGeo,mats.green,totals.dori*2),
+      doriCrown:add(treeLeafGeometry,mats.green,totals.dori*2),
       doriCrystal:add(doriCrystalGeometry,mats.crystal,totals.dori),
       water:add(waterBlockGeometry,waterMaterial,totals.water),
       ripples:add(rippleGeometry,rippleMaterial,totals.water*3)
@@ -398,9 +444,10 @@ export function createWorld3D(canvas, getState) {
       if(existing||nodeBatchedKeys.has(key))continue;
       const [x,z]=key.split(",").map(Number),worldX=x*32,worldZ=z*32,y=surfaceY(state,x,z);
       if(node.type==="wood"){
-        nodeInstance(nodeBatches.woodTrunk,worldX,y+12,worldZ,1,1,1);
-        nodeInstance(nodeBatches.woodCrown,worldX,y+31,worldZ,14,12.88,14);
-        nodeInstance(nodeBatches.woodCrown,worldX+7,y+28,worldZ,7.6,6.4,7.6);
+        nodeInstance(nodeBatches.woodTrunk,worldX,y+15,worldZ,1,1,1);
+        nodeInstance(nodeBatches.woodCrown,worldX,y+30,worldZ,15,14.5,15);
+        nodeInstance(nodeBatches.woodCrownMid,worldX+1.2,y+42,worldZ-.8,11.8,12.5,11.8);
+        nodeInstance(nodeBatches.woodCrownTop,worldX-.6,y+53,worldZ+.7,8.2,10,8.2);
       }else if(node.type==="dori"){
         nodeInstance(nodeBatches.doriTrunk,worldX,y+12,worldZ,1,1,1);
         nodeInstance(nodeBatches.doriCrown,worldX,y+31,worldZ,13,11.96,13);
@@ -421,9 +468,11 @@ export function createWorld3D(canvas, getState) {
         }else if(["birchTree","rubberTree","barkTree","frozenTree","fireTree"].includes(node.type)){
           const trunkColor=node.type==="birchTree"?0xd5d8cc:node.type==="frozenTree"?0x8295a3:node.type==="fireTree"?0x59352b:0x654633;
           const crownColor=node.type==="birchTree"?0x7cae86:node.type==="rubberTree"?0x326a4c:node.type==="barkTree"?0x355b3d:node.type==="frozenTree"?0xb4d9e4:0x9b4d2e;
-          const trunk=mat(trunkColor,.82,.15),crown=mat(crownColor,.55,.2,node.type==="fireTree"?0x45200c:0x000000);
-          makeBox(g,0,11,0,5,22,5,trunk);
-          makeSphere(g,0,30,0,node.type==="barkTree"?16:13,crown);
+          const trunk=mat(trunkColor,.18,.9),crown=new THREE.MeshStandardMaterial({color:crownColor,metalness:.02,roughness:.96,flatShading:true,emissive:node.type==="fireTree"?0x45200c:0x000000,emissiveIntensity:.22});
+          makeCyl(g,0,15,0,2.8,30,trunk,8);
+          makePolySphere(g,-5,27,0,node.type==="barkTree"?11:9,crown,1.05,1.05,.95);
+          makePolySphere(g,5,31,1,node.type==="barkTree"?13:10,crown,.95,1.1,1.05);
+          makePolySphere(g,0,39,-4,node.type==="barkTree"?10:8,crown,1,1.08,1);
           if(node.type==="fireTree"&&highEndDevice){const glow=new THREE.PointLight(0xff7138,.22,48,2);glow.position.y=30;g.add(glow);}
           if(node.type==="frozenTree"&&highEndDevice){const glow=new THREE.PointLight(0x76d7f5,.18,42,2);glow.position.y=30;g.add(glow);}
         }else if(node.type==="heatCrystalNode"||node.type==="coldCrystalNode"){
@@ -473,19 +522,13 @@ export function createWorld3D(canvas, getState) {
   }
   function rebuild(state){
     clear(worldRoot);clear(machineRoot);clear(nodeRoot);clear(markerRoot);clear(mineRoot);terrainChunks.length=0;nodeGroupsByKey.clear();nodeBatches=null;nodeHitMesh=null;nodeBatchMeshes.length=0;nodeBatchedKeys.clear();selectionRoot.visible=false;
-    const dummy=new THREE.Object3D(),color=new THREE.Color(),bottom=-52,chunkSize=32;
+    const chunkSize=32;
+    const bed=new THREE.Mesh(new THREE.BoxGeometry(WORLD_W*32,180,WORLD_H*32),mat(0x26352f,.02,.99));
+    bed.position.set((WORLD_W-1)*16,-138,(WORLD_H-1)*16);bed.receiveShadow=true;worldRoot.add(bed);
     for(let z0=0;z0<WORLD_H;z0+=chunkSize)for(let x0=0;x0<WORLD_W;x0+=chunkSize){
       const chunkWidth=Math.min(chunkSize,WORLD_W-x0),chunkHeight=Math.min(chunkSize,WORLD_H-z0);
-      const tiles=new THREE.InstancedMesh(terrainTileGeometry,terrainTileMaterial,chunkWidth*chunkHeight);
-      tiles.userData={chunkX:x0,chunkZ:z0,chunkWidth,chunkHeight};tiles.receiveShadow=true;
-      let n=0;
-      for(let z=z0;z<z0+chunkHeight;z++)for(let x=x0;x<x0+chunkWidth;x++){
-        const key=x+","+z,node=state.nodes?.[key],h=surfaceY(state,x,z);
-        dummy.position.set(x*32,(h+bottom)/2,z*32);dummy.scale.set(1,Math.max(1,h-bottom),1);dummy.updateMatrix();tiles.setMatrixAt(n,dummy.matrix);
-        color.setHex(node?.type==="water"?palette.water:biomeGroundColor(biomeAt(x,z)));tiles.setColorAt(n,color);n++;
-      }
-      tiles.instanceMatrix.needsUpdate=true;if(tiles.instanceColor)tiles.instanceColor.needsUpdate=true;
-      tiles.computeBoundingSphere();worldRoot.add(tiles);terrainChunks.push(tiles);
+      const terrain=buildTerrainChunk(state,x0,z0,chunkWidth,chunkHeight);
+      worldRoot.add(terrain);terrainChunks.push(terrain);
     }
     addSeenNodeModels(state);lastVisibilityRevision=state.visibilityRevision;
     for(const key of Object.keys(state.foundation||{})){if(!state.foundation[key])continue;const [x,z]=key.split(",").map(Number);const h=surfaceY(state,x,z);makeBox(worldRoot,x*32,h+1.2,z*32,29,2.2,29,mat(0x65727a,.62,.55),false);}
@@ -756,11 +799,11 @@ export function createWorld3D(canvas, getState) {
       renderer.setPixelRatio(currentPixelRatio);resize();fastFrames=0;slowFrames=0;
     }
   }
-  function pickTile(clientX,clientY){if(stateLayerForPicking==="mine")return null;const r=canvas.getBoundingClientRect();pointer.x=((clientX-r.left)/r.width)*2-1;pointer.y=-((clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hit=terrainChunks.length?raycaster.intersectObjects(terrainChunks,false)[0]:null;if(hit?.instanceId===undefined||hit.instanceId===null)return null;const chunk=hit.object.userData,index=hit.instanceId,x=chunk.chunkX+(index%chunk.chunkWidth),z=chunk.chunkZ+Math.floor(index/chunk.chunkWidth);return x>=0&&z>=0&&x<WORLD_W&&z<WORLD_H?{x,y:z,z}:null;}
+  function pickTile(clientX,clientY){if(stateLayerForPicking==="mine")return null;const r=canvas.getBoundingClientRect();pointer.x=((clientX-r.left)/r.width)*2-1;pointer.y=-((clientY-r.top)/r.height)*2+1;raycaster.setFromCamera(pointer,camera);const hit=terrainChunks.length?raycaster.intersectObjects(terrainChunks,false)[0]:null;if(!hit?.point)return null;const x=Math.floor(hit.point.x/32+.5),z=Math.floor(hit.point.z/32+.5);return x>=0&&z>=0&&x<WORLD_W&&z<WORLD_H?{x,y:z,z}:null;}
   function pan(dx,dy){const scale=1/zoom;target.x=clamp(target.x-dx*1.6*scale,0,(WORLD_W-1)*32);target.z=clamp(target.z-dy*1.6*scale,0,(WORLD_H-1)*32);cameraUpdate();}
   function setZoom(value){zoom=clamp(value,.55,1.8);if(activeViewMode==="map"){cameraUpdate()}else{gameCamera.fov=clamp(74-(zoom-1)*38,52,88);gameCamera.updateProjectionMatrix();}}
   function center(x,y){target.set(x*32,terrainHeightAt(x,y),y*32);cameraUpdate();}
   function orbit(dx,dy){yaw-=dx*0.004;pitch=clamp(pitch+dy*0.003,0.42,1.25);cameraUpdate();}
   resize();cameraUpdate();
-  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?"third":"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},adaptPerformanceFrame,inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),adaptiveBeltTilts:machineRoot.children.filter(g=>g.userData?.type==="beltAdaptive").map(g=>g.userData.adaptiveSlope),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,terrainChunkCount:terrainChunks.length,renderCount,rebuildCount,pixelRatio:renderer.getPixelRatio(),basePixelRatio,shadowEnabled:renderer.shadowMap.enabled,qualityTier:compactDevice?"mobile":lowEndDevice?"low":shadowsEnabled?"high":"balanced",undergroundResourceNodes:mineRoot.children.filter(g=>g.userData?.targetKind?.kind==="resource").length,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0)};},inspectPerformance(){return {fps:Math.round(measuredFps),averageFrameMs:Number(measuredFrameMs.toFixed(2)),pixelRatio:Number(currentPixelRatio.toFixed(2)),basePixelRatio:Number(basePixelRatio.toFixed(2)),shadowEnabled:renderer.shadowMap.enabled,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,terrainChunks:terrainChunks.length,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0),renderCount,rebuildCount};},get zoom(){return zoom;}};
+  return {backend:"webgl",render,pickTile,pickTarget,pan,orbit,setZoom,center,setViewMode(mode){activeViewMode=mode==="map"||mode==="third"?"third":"first";gameCamera.fov=74;gameCamera.updateProjectionMatrix();},adaptPerformanceFrame,inspect(){const belts=machineRoot.children.filter(g=>g.userData?.itemGroup);return {machineCount:machineRoot.children.length,beltCount:belts.length,beltItemMeshes:belts.reduce((n,g)=>n+g.userData.itemGroup.children.length,0),beltItemPositions:belts.flatMap(g=>g.userData.itemGroup.children.map(m=>m.position.z)),adaptiveBeltTilts:machineRoot.children.filter(g=>g.userData?.type==="beltAdaptive").map(g=>g.userData.adaptiveSlope),viewMode:activeViewMode,playerVisible:!!playerModel?.visible,firstPersonHandsVisible:!!firstPersonRig.visible,worldWidth:WORLD_W,worldHeight:WORLD_H,mineLevels:5,terrainChunkCount:terrainChunks.length,terrainGeometryType:terrainChunks[0]?.geometry?.type||"",terrainSurfaceModel:terrainChunks[0]?.geometry?.userData?.surfaceModel||"",terrainVertexCount:terrainChunks.reduce((n,m)=>n+(m.geometry?.attributes?.position?.count||0),0),terrainIndexCount:terrainChunks.reduce((n,m)=>n+(m.geometry?.index?.count||0),0),terrainSubdivisionsPerTile:terrainChunks[0]?.geometry?.userData?.subdivisionsPerTile||0,terrainSampleHeight:terrainHeightAt(32.173,52.417),treeCanopyLayers:nodeBatches?.woodCrownTop?3:0,renderCount,rebuildCount,pixelRatio:renderer.getPixelRatio(),basePixelRatio,shadowEnabled:renderer.shadowMap.enabled,qualityTier:compactDevice?"mobile":lowEndDevice?"low":shadowsEnabled?"high":"balanced",undergroundResourceNodes:mineRoot.children.filter(g=>g.userData?.targetKind?.kind==="resource").length,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0)};},inspectPerformance(){return {fps:Math.round(measuredFps),averageFrameMs:Number(measuredFrameMs.toFixed(2)),pixelRatio:Number(currentPixelRatio.toFixed(2)),basePixelRatio:Number(basePixelRatio.toFixed(2)),shadowEnabled:renderer.shadowMap.enabled,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,terrainChunks:terrainChunks.length,nodeBatchDrawCalls:nodeBatchMeshes.filter(m=>m.count>0).length,nodeBatchInstances:nodeBatchMeshes.reduce((n,m)=>n+m.count,0),renderCount,rebuildCount};},get zoom(){return zoom;}};
 }

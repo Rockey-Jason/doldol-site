@@ -71,7 +71,12 @@ export function terrainHeightAt(x,z){
     +(westForest+eastForest)*3
     +(westCrystal+eastCrystal)*14
     +volcano(62,24)+volcano(139,116);
-  return Math.round((wave+relief+landforms)/3)*3;
+  // Keep the heightfield continuous. Quantized 3m steps made the entire planet
+  // read like stacked cubes even when viewed through a perspective camera.
+  const fineRelief = Math.sin(x*.235+Math.sin(z*.071)*1.8)*1.35
+    + Math.cos(z*.265-x*.083)*.95
+    + Math.sin((x-z)*.19)*.55;
+  return Number((wave+relief+landforms+fineRelief).toFixed(2));
 }
 
 export function mineFloorY(level){return -42*clamp(Number(level)||1,1,MINE_LEVELS);}

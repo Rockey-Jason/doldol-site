@@ -139,10 +139,27 @@ try {
     scene: window.__doroniumFactoryTest.inspect3D(),
     performance: window.__doroniumFactoryTest.inspectPerformance()
   }));
-  assert.ok(rendererAudit.scene.nodeBatchDrawCalls <= 8, "Trees, Dori trees and water should be rendered in a small number of instanced batches");
+  assert.ok(rendererAudit.scene.nodeBatchDrawCalls <= 12, "Trees, Dori trees and water should be rendered in a small number of instanced batches");
   assert.ok(rendererAudit.scene.nodeBatchInstances > 0, "Visible surface resources must be present in instanced batches");
   assert.ok(rendererAudit.scene.terrainChunkCount <= 30, "The terrain should use larger culling chunks to reduce draw calls");
   assert.ok(rendererAudit.performance.drawCalls < 180, "The initial scene should avoid excessive WebGL draw calls");
+  assert.equal(rendererAudit.scene.terrainGeometryType, "BufferGeometry", "The surface must use smooth heightfield meshes, not stacked tile cubes");
+  assert.equal(rendererAudit.scene.terrainSurfaceModel, "smoothed-heightfield", "Terrain metadata must expose the continuous surface renderer");
+  assert.equal(rendererAudit.scene.terrainSubdivisionsPerTile, 2, "Each tile must have a subdivided mesh for smooth slopes");
+  assert.ok(Math.abs(rendererAudit.scene.terrainSampleHeight - Math.round(rendererAudit.scene.terrainSampleHeight / 3) * 3) > 0.01,
+    "The renderer must use smooth non-quantized terrain heights instead of cached stepped height values");
+  assert.ok(rendererAudit.scene.terrainVertexCount > 100000, "The expanded planet must expose a dense continuous terrain mesh");
+  assert.equal(rendererAudit.scene.treeCanopyLayers, 3, "Trees must use layered natural low-poly canopies");
+  const desktopCursor = await desktop.locator("#world-canvas").evaluate(el => getComputedStyle(el).cursor);
+  assert.equal(desktopCursor, "none", "Desktop canvas must hide the OS mouse pointer");
+  await desktop.keyboard.press("b");
+  await desktop.locator("#control-column").waitFor({ state: "visible" });
+  await desktop.keyboard.press("c");
+  assert.equal(await desktop.locator("#panel-catalog").evaluate(el => el.classList.contains("active")), true,
+    "The catalogue menu must be reachable through keyboard hotkeys");
+  await desktop.keyboard.press("Escape");
+  assert.equal(await desktop.locator("#control-column").evaluate(el => el.classList.contains("panel-open")), false,
+    "Escape must close the keyboard menu");
 
   const adventureStart = await desktop.evaluate(() => {
     const api = window.__doroniumFactoryTest;
@@ -338,8 +355,35 @@ try {
   assert.equal(provenance.runtimeValid, true, "Provenance-preserving supply must maintain valid runtime state");
 
   await desktop.screenshot({ path: path.join(artifactDir, "doronium-desktop.png"), fullPage: true });
-  // Free the desktop WebGL context before creating the mobile WebGL context.
+  // Free the desktop WebGL context before testing actual pointer lock and mobile WebGL.
   await desktop.close();
+
+  const mouseContext = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+  const mouseLookPage = await mouseContext.newPage();
+  capture(mouseLookPage, "desktop-pointer-lock");
+  await boot(mouseLookPage);
+  await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.setViewMode("first"));
+  assert.equal(await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.viewMode()), "first",
+    "The mouse-look regression must run in first-person mode");
+  await mouseLookPage.locator("#world-canvas").click({ position: { x: 720, y: 450 } });
+  await mouseLookPage.waitForFunction(
+    () => document.pointerLockElement === document.querySelector("#world-canvas"),
+    { timeout: 8000 }
+  );
+  const lockedYawBefore = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.motion().yaw);
+  const lockedPitchBefore = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.motion().pitch);
+  // Chromium headless does not always emit native relative mouse deltas after pointer lock.
+  // Dispatch the same browser MouseEvent payload produced by a physical locked-pointer move.
+  await mouseLookPage.evaluate(() => document.dispatchEvent(new MouseEvent("mousemove", {
+    bubbles: true, movementX: 64, movementY: 24
+  })));
+  const lockedYawAfter = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.motion().yaw);
+  const lockedPitchAfter = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.motion().pitch);
+  assert.notEqual(lockedYawAfter, lockedYawBefore, "Pointer-locked mouse movement must rotate the player camera");
+  assert.notEqual(lockedPitchAfter, lockedPitchBefore, "Pointer-locked vertical mouse movement must tilt the camera");
+  await mouseLookPage.keyboard.press("Escape");
+  assert.equal(await mouseLookPage.evaluate(() => document.pointerLockElement), null, "Escape must release desktop pointer lock");
+  await mouseContext.close();
 
   const mobileContext = await browser.newContext({
     viewport: { width: 390, height: 844 },
@@ -355,10 +399,18 @@ try {
   assert.equal(await mobile.locator(".move-pad").isVisible(), true, "Touch movement pad must be visible on a phone-sized viewport");
   const mobileFrame = await mobile.locator("#world-frame").evaluate(el => {
     const rect = el.getBoundingClientRect();
-    return { top: rect.top, height: rect.height, viewportHeight: window.innerHeight };
+    return { top: rect.top, height: rect.height, viewportHeight: window.innerHeight, viewportWidth: window.innerWidth };
   });
   assert.ok(mobileFrame.top <= 1 && mobileFrame.height >= mobileFrame.viewportHeight - 1,
     "Mobile game world must fill the viewport without a clipped 530px height cap");
+  const landscapeShell = await mobile.locator("#game-root").evaluate(el => {
+    const rect = el.getBoundingClientRect();
+    return { transform: getComputedStyle(el).transform, width: el.offsetWidth, height: el.offsetHeight, rectWidth: rect.width, rectHeight: rect.height };
+  });
+  assert.notEqual(landscapeShell.transform, "none",
+    "Portrait phone viewports must rotate the complete game into a landscape-only presentation");
+  assert.ok(landscapeShell.width >= mobileFrame.viewportHeight - 1 && landscapeShell.height >= mobileFrame.viewportWidth - 1,
+    "The rotated phone game shell must be laid out in landscape dimensions and cover the portrait viewport after rotation");
   const moveChoice = await mobile.evaluate(() => {
     const api = window.__doroniumFactoryTest;
     const s = api.snapshot();

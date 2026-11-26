@@ -7,7 +7,7 @@
 <meta name="description" content="돌이사이트 도로늄 공장에서 3D 산업 월드를 탐험하고 자원을 모아 기지를 건설하세요. 생산 자동화와 도로늄 연구를 경험할 수 있습니다.">
 <title>도로늄 공장 | 3D 산업 건설 시뮬레이션 - 돌이사이트</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="./factory.css?v=11">
+<link rel="stylesheet" href="./factory.css?v=12">
 
 <!-- Search engine metadata -->
 <meta name="robots" content="index,follow,max-image-preview:large">
@@ -53,7 +53,7 @@
   </header>
   <main class="app-layout" id="app-layout">
     <section class="world-column">
-      <div class="world-toolbar"><div class="world-title-group"><div class="live-indicator"><i></i> 3D WORLD · SIMULATION LIVE</div><h1 id="region-title">FACTORY VALLEY <span>초기 산업 구역</span></h1><p id="world-subtitle">폐허 위에 첫 번째 산업 기지를 세우세요.</p></div><div class="world-tools"><button class="tool-btn" id="zoom-out" title="축소">－</button><span class="zoom-value" id="zoom-value">100%</span><button class="tool-btn" id="zoom-in" title="확대">＋</button><button class="tool-btn" id="center-view" title="플레이어 위치로 이동">◎</button><button class="tool-btn overview-btn" id="overview-toggle">공장 개요 <span>F</span></button></div></div>
+      <div class="world-toolbar"><div class="world-title-group"><div class="live-indicator"><i></i> 3D WORLD · SIMULATION LIVE</div><h1 id="region-title">FACTORY VALLEY <span>초기 산업 구역</span></h1><p id="world-subtitle">폐허 위에 첫 번째 산업 기지를 세우세요.</p></div><div class="world-tools"><button class="tool-btn" id="zoom-out" title="축소">－</button><span class="zoom-value" id="zoom-value">100%</span><button class="tool-btn" id="zoom-in" title="확대">＋</button><button class="tool-btn" id="center-view" title="플레이어 위치로 이동">◎</button><button class="tool-btn overview-btn" id="overview-toggle" title="공장 운영 메뉴 (O)">공장 개요 <span>O</span></button></div></div>
       <div class="world-frame" id="world-frame">
         <div class="game-toolbar">
           <button id="game-menu-toggle" class="game-tool-button" title="건설·창고·연구 메뉴 (B)">☰ <span>메뉴</span></button>
@@ -68,7 +68,7 @@
         </div>
         <div id="active-mission-hud" class="active-mission-hud"></div>
         <div id="mission-alert" class="mission-alert" aria-live="polite"></div>
-        <canvas id="world-canvas" aria-label="실시간 3D 공장 월드"></canvas><div class="world-vignette"></div>
+        <canvas id="world-canvas" tabindex="0" aria-label="실시간 3D 공장 월드"></canvas><div class="world-vignette"></div>
         <div class="world-coordinate" id="world-coordinate">SECTOR 01 / X: 0 · Y: 0</div><div class="world-clock"><span id="day-icon">☀</span><span id="world-clock-text">DAY 01 · 08:00</span><b id="weather-label">맑음</b></div>
         <div class="world-alerts" id="world-alerts"></div>
         <div class="adventure-hud" id="adventure-hud">
@@ -139,6 +139,6 @@
   </div>
 </div>
 <div class="toast-stack" id="toast-stack"></div><div class="modal-overlay" id="modal-overlay"><div class="modal-card" id="modal-card"></div></div>
-<script type="module" src="./factory.js?v=60"></script>
+<script type="module" src="./factory.js?v=62"></script>
 <script src="../js/dori-text-scale.js?v=20261125-text-scale-2"></script>
 </body></html>
