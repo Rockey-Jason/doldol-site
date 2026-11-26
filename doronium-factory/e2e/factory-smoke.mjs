@@ -353,8 +353,30 @@ try {
   assert.equal(provenance.runtimeValid, true, "Provenance-preserving supply must maintain valid runtime state");
 
   await desktop.screenshot({ path: path.join(artifactDir, "doronium-desktop.png"), fullPage: true });
-  // Free the desktop WebGL context before creating the mobile WebGL context.
+  // Free the desktop WebGL context before testing actual pointer lock and mobile WebGL.
   await desktop.close();
+
+  const mouseContext = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
+  const mouseLookPage = await mouseContext.newPage();
+  capture(mouseLookPage, "desktop-pointer-lock");
+  await boot(mouseLookPage);
+  await mouseLookPage.locator("#world-canvas").click({ position: { x: 720, y: 450 } });
+  await mouseLookPage.waitForFunction(
+    () => document.pointerLockElement === document.querySelector("#world-canvas"),
+    { timeout: 8000 }
+  );
+  const lockedYawBefore = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.snapshot().player.yaw);
+  await mouseLookPage.mouse.move(780, 480);
+  await mouseLookPage.waitForFunction(
+    before => Math.abs(window.__doroniumFactoryTest.snapshot().player.yaw - before) > 0.001,
+    lockedYawBefore,
+    { timeout: 5000 }
+  );
+  const lockedYawAfter = await mouseLookPage.evaluate(() => window.__doroniumFactoryTest.snapshot().player.yaw);
+  assert.notEqual(lockedYawAfter, lockedYawBefore, "Pointer-locked mouse movement must rotate the player camera");
+  await mouseLookPage.keyboard.press("Escape");
+  assert.equal(await mouseLookPage.evaluate(() => document.pointerLockElement), null, "Escape must release desktop pointer lock");
+  await mouseContext.close();
 
   const mobileContext = await browser.newContext({
     viewport: { width: 390, height: 844 },
