@@ -319,3 +319,58 @@ html,body{width:100%;height:100%;min-height:100%;overflow:hidden;overscroll-beha
 .catalog-machine-recipe input[type=number]{width:100%;height:32px;padding:0 9px;border:1px solid #29485e;border-radius:8px;background:#0c2030;color:#dcebf3;font-size:10px}
 .catalog-machine-recipe select:focus,.catalog-machine-recipe input:focus{outline:none;border-color:#5da9ae;box-shadow:0 0 0 2px #58c5c11c}
 @media(max-width:420px){.inventory-item{grid-template-columns:25px minmax(0,1fr) auto;gap:6px}.inventory-use-button{grid-column:2;justify-self:start}.lift-actions{grid-template-columns:1fr}}
+
+
+/* Desktop: mouse look is captured and the pointer stays hidden. Menus are keyboard-first. */
+@media (hover:hover) and (pointer:fine){
+  html,body,#game-root,#game-root *{cursor:none!important}
+  #world-canvas{cursor:none!important}
+  #game-root button:focus-visible,
+  #game-root a:focus-visible,
+  #game-root input:focus-visible,
+  #game-root select:focus-visible,
+  #game-root textarea:focus-visible,
+  .modal-overlay button:focus-visible,
+  .story-intro button:focus-visible{
+    outline:2px solid #8ee4dd!important;
+    outline-offset:3px!important;
+    box-shadow:0 0 0 4px #39b8b333,0 0 18px #57d6d655!important;
+  }
+  #world-canvas.pointer-locked{cursor:none!important}
+}
+
+/* Phone portrait mode is a landscape-only game: rotate the entire game surface,
+   not just the canvas, so the existing touch HUD and movement pad remain aligned. */
+@media (pointer:coarse) and (orientation:portrait){
+  #game-root{
+    position:fixed!important;
+    inset:auto!important;
+    top:0!important;
+    left:100vw!important;
+    width:100dvh!important;
+    height:100dvw!important;
+    min-height:0!important;
+    max-width:none!important;
+    padding:0!important;
+    margin:0!important;
+    transform:rotate(90deg)!important;
+    transform-origin:top left!important;
+    overflow:hidden!important;
+  }
+  .world-frame,.world-frame.adventure-active{
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    min-height:0!important;
+    max-height:none!important;
+  }
+  #world-canvas{touch-action:none}
+  .move-pad{display:flex!important}
+}
+
+/* Keep the phone HUD comfortable after the viewport has been rotated to landscape. */
+@media (pointer:coarse) and (orientation:landscape){
+  #game-root{width:100vw!important;height:100dvh!important}
+  .world-frame,.world-frame.adventure-active{height:100%!important;min-height:0!important;max-height:none!important}
+  .move-pad{display:flex!important}
+}
