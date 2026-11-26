@@ -1631,13 +1631,14 @@ if(E2E_MODE){
    return {construction,coalGenerator,...reservationResults};
   },
   researchAndFacilityPopupTest(){
-   const previous=structuredClone(S),previousPanel=activePanel,previousSelectedBuilding=selectedBuilding;
+   const previous=structuredClone(S),previousPanel=activePanel,previousSelectedBuilding=selectedBuilding,previousPanelOpen=controlPanelOpen;
    try{
     S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
     S.money=10000;S.buildings=[{uid:"test-research-lab",type:"lab",dir:1,condition:100,status:"IDLE",progress:0,input:{},inputMeta:{}}];
     addItem("wood",2,{quality:90,purity:90,synthetic:false},false);
     addItem("stone",5,{quality:90,purity:90,synthetic:false},false);
     S.activeResearch="survey";S.researchProgress=13;
+    controlPanelOpen=true;$("control-column")?.classList.add("panel-open");$("game-menu-toggle")?.classList.add("active");
     changePanel("research");renderResearch();
     const researchText=$("research-tree").innerText;
     openBuildingManagement(S.buildings[0]);
@@ -1651,7 +1652,7 @@ if(E2E_MODE){
      shortageVisible:researchText.includes("부족 3개")
     };
     closeModal();return result;
-   }finally{S=previous;selectedBuilding=previousSelectedBuilding;closeModal();changePanel(previousPanel);renderAll()}
+   }finally{S=previous;selectedBuilding=previousSelectedBuilding;closeModal();controlPanelOpen=previousPanelOpen;$("control-column")?.classList.toggle("panel-open",previousPanelOpen);$("game-menu-toggle")?.classList.toggle("active",previousPanelOpen);changePanel(previousPanel);renderAll()}
   },
   syntheticReservationIsolationTest(){
    S=freshState();S.inventory={};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);
