@@ -145,7 +145,7 @@ try {
   assert.ok(rendererAudit.performance.drawCalls < 180, "The initial scene should avoid excessive WebGL draw calls");
   assert.equal(rendererAudit.scene.terrainGeometryType, "BufferGeometry", "The surface must use smooth heightfield meshes, not stacked tile cubes");
   assert.equal(rendererAudit.scene.terrainSurfaceModel, "smoothed-heightfield", "Terrain metadata must expose the continuous surface renderer");
-  assert.equal(rendererAudit.scene.terrainSubdivisionsPerTile, 2, "Each tile must have a subdivided mesh for smooth slopes");
+  assert.ok(rendererAudit.scene.terrainSubdivisionsPerTile >= 2 && rendererAudit.scene.terrainSubdivisionsPerTile <= 4, "Terrain subdivision must adapt to device performance while retaining smooth slopes");
   assert.ok(Math.abs(rendererAudit.scene.terrainSampleHeight - Math.round(rendererAudit.scene.terrainSampleHeight / 3) * 3) > 0.01,
     "The renderer must use smooth non-quantized terrain heights instead of cached stepped height values");
   assert.ok(rendererAudit.scene.terrainVertexCount > 100000, "The expanded planet must expose a dense continuous terrain mesh");

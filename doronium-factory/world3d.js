@@ -1,5 +1,5 @@
 /* DORONIUM FACTORY — topographic 3D world, underground mine and industrial renderer */
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=6";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=7";
 let THREE = null;
 try { THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"); }
 catch (error) { console.warn("Three.js CDN unavailable; using the compatibility renderer.", error); }
@@ -206,7 +206,8 @@ export function createWorld3D(canvas, getState) {
   const cylGeo = new THREE.CylinderGeometry(0.5,0.5,1,12);
   const sphereGeo = new THREE.SphereGeometry(1,14,10);
   const coneGeo = new THREE.ConeGeometry(0.5,1,8);
-  const treeLeafGeometry=new THREE.IcosahedronGeometry(1,1);
+  const treeLeafGeometry=new THREE.SphereGeometry(1,20,14);
+  const treeBranchGeometry=new THREE.CylinderGeometry(.42,.78,1,8);
   const makeBox=(parent,x,y,z,sx,sy,sz,material,cast=true)=>{const m=new THREE.Mesh(boxGeo,material);m.position.set(x,y,z);m.scale.set(sx,sy,sz);m.castShadow=cast;m.receiveShadow=true;parent.add(m);return m};
   const cylinderGeometryCache = new Map([[12,cylGeo]]);
   const makeCyl=(parent,x,y,z,r,h,material,segments=12)=>{
@@ -216,7 +217,7 @@ export function createWorld3D(canvas, getState) {
   };
   const makeSphere=(parent,x,y,z,r,material)=>{const m=new THREE.Mesh(sphereGeo,material);m.position.set(x,y,z);m.scale.set(r,r,r);m.castShadow=true;parent.add(m);return m};
   const makePolySphere=(parent,x,y,z,r,material,sx=1,sy=1,sz=1)=>{const m=new THREE.Mesh(treeLeafGeometry,material);m.position.set(x,y,z);m.scale.set(r*sx,r*sy,r*sz);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m};
-  const sharedGeometry=new Set([boxGeo,cylGeo,sphereGeo,coneGeo,treeLeafGeometry]);
+  const sharedGeometry=new Set([boxGeo,cylGeo,sphereGeo,coneGeo,treeLeafGeometry,treeBranchGeometry]);
   // Smooth vertex-coloured heightfield; no stacked tile cubes.
   const terrainTileMaterial=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.97,vertexColors:true,flatShading:false});
   const firstPersonRig=new THREE.Group();gameCamera.add(firstPersonRig);
@@ -320,7 +321,7 @@ export function createWorld3D(canvas, getState) {
   let playerModel=null,playerRing=null;
   function surfaceY(state,x,z){const key=Math.floor(x+.5)+","+Math.floor(z+.5),v=state.flattened?.[key];return v&&typeof v==="object"&&Number.isFinite(v.height)?v.height:terrainHeightAt(x,z);}
   function buildTerrainChunk(state,x0,z0,chunkWidth,chunkHeight){
-    const subdivisions=2,segmentsX=chunkWidth*subdivisions,segmentsZ=chunkHeight*subdivisions;
+    const subdivisions=compactDevice?2:lowEndDevice?3:4,segmentsX=chunkWidth*subdivisions,segmentsZ=chunkHeight*subdivisions;
     const row=segmentsX+1,count=row*(segmentsZ+1);
     const positions=new Float32Array(count*3),colors=new Float32Array(count*3),indices=[];
     const color=new THREE.Color(),rockColor=new THREE.Color(0x788079),waterColor=new THREE.Color(0x315e67);
@@ -351,7 +352,7 @@ export function createWorld3D(canvas, getState) {
     geometry.setAttribute("position",new THREE.BufferAttribute(positions,3));
     geometry.setAttribute("color",new THREE.BufferAttribute(colors,3));
     geometry.setIndex(indices);geometry.computeVertexNormals();geometry.computeBoundingSphere();
-    geometry.userData={surfaceModel:"smoothed-heightfield",subdivisionsPerTile:subdivisions};
+    geometry.userData={surfaceModel:"smoothed-heightfield",subdivisionsPerTile:subdivisions,terrainQuality:compactDevice?"mobile-balanced":lowEndDevice?"balanced":"high-detail"};
     const mesh=new THREE.Mesh(geometry,terrainTileMaterial);
     mesh.userData={chunkX:x0,chunkZ:z0,chunkWidth,chunkHeight,surfaceModel:"smoothed-heightfield"};
     mesh.receiveShadow=true;mesh.castShadow=false;
@@ -398,10 +399,10 @@ export function createWorld3D(canvas, getState) {
     addLift(3,"mineExit");addLift(36,"mineDescend");
   }
   const nodeMatrixDummy=new THREE.Object3D();
-  function nodeInstance(mesh,x,y,z,sx,sy,sz,rotationY=0){
+  function nodeInstance(mesh,x,y,z,sx,sy,sz,rotationY=0,rotationX=0,rotationZ=0){
     if(!mesh)return -1;
     const index=mesh.count;
-    nodeMatrixDummy.position.set(x,y,z);nodeMatrixDummy.rotation.set(0,rotationY,0);nodeMatrixDummy.scale.set(sx,sy,sz);
+    nodeMatrixDummy.position.set(x,y,z);nodeMatrixDummy.rotation.set(rotationX,rotationY,rotationZ);nodeMatrixDummy.scale.set(sx,sy,sz);
     nodeMatrixDummy.updateMatrix();mesh.setMatrixAt(index,nodeMatrixDummy.matrix);mesh.count=index+1;
     return index;
   }
@@ -417,6 +418,7 @@ export function createWorld3D(canvas, getState) {
     };
     nodeBatches={
       woodTrunk:add(treeTrunkGeometry,mats.woodTrunk,totals.wood),
+      woodBranches:add(treeBranchGeometry,mats.woodTrunk,totals.wood*4),
       woodCrown:add(woodCrownLowerGeometry,mats.woodLeaves,totals.wood),
       woodCrownMid:add(woodCrownMidGeometry,mat(0x286b48,.04,.94),totals.wood),
       woodCrownTop:add(woodCrownTopGeometry,mat(0x398452,.04,.94),totals.wood),
@@ -445,6 +447,10 @@ export function createWorld3D(canvas, getState) {
       const [x,z]=key.split(",").map(Number),worldX=x*32,worldZ=z*32,y=surfaceY(state,x,z);
       if(node.type==="wood"){
         nodeInstance(nodeBatches.woodTrunk,worldX,y+15,worldZ,1,1,1);
+        nodeInstance(nodeBatches.woodBranches,worldX-5,y+17,worldZ,1.1,17,1.1,0,0,-.58);
+        nodeInstance(nodeBatches.woodBranches,worldX+5,y+19,worldZ+1,1.1,16,1.1,0,0,.55);
+        nodeInstance(nodeBatches.woodBranches,worldX,y+24,worldZ-5,1.05,15,1.05,0,.55,0);
+        nodeInstance(nodeBatches.woodBranches,worldX+1,y+25,worldZ+5,1.05,14,1.05,0,-.55,0);
         nodeInstance(nodeBatches.woodCrown,worldX,y+30,worldZ,15,14.5,15);
         nodeInstance(nodeBatches.woodCrownMid,worldX+1.2,y+42,worldZ-.8,11.8,12.5,11.8);
         nodeInstance(nodeBatches.woodCrownTop,worldX-.6,y+53,worldZ+.7,8.2,10,8.2);

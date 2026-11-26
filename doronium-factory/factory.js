@@ -1,7 +1,7 @@
-import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=24";
+import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=25";
 import { CATALOG_ITEMS, CATALOG_RECIPES, CATALOG_MACHINES, validateCatalog } from "./catalog.js?v=2";
 import { createRuntimeState, ensureItemStacks, addItemStack, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=5";
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, regionAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=6";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, regionAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=7";
 import { validateGameData } from "./game-data-validation.js?v=3";
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
 import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, awardSkillPoints, unlockSkill, skillNodeStatus, calculateSkillBonuses, validateSkillTree, validateSkillState } from "./skill-runtime.js?v=1";
@@ -237,7 +237,7 @@ function closeControlPanel(){controlPanelOpen=false;$("control-column")?.classLi
 let fullscreenRequestPending=false;
 function isCoarsePointer(){return window.matchMedia?.("(pointer:coarse)").matches||("ontouchstart" in window&&navigator.maxTouchPoints>0);}
 function requestDesktopImmersion(){if(E2E_MODE||isCoarsePointer()||document.fullscreenElement||fullscreenRequestPending)return;try{const request=document.documentElement.requestFullscreen?.();if(!request||typeof request.then!=="function")return;fullscreenRequestPending=true;request.catch(()=>{}).finally(()=>{fullscreenRequestPending=false;});}catch{fullscreenRequestPending=false;}}
-async function toggleFullscreen(){try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen?.();if(isCoarsePointer())try{await screen.orientation?.lock?.("landscape")}catch{}}else{if(document.pointerLockElement===canvas)document.exitPointerLock();await document.exitFullscreen?.()}}catch{toast("브라우저에서 전체 화면 전환을 허용하지 않았습니다.","warn")}}
+async function toggleFullscreen(){try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen?.();if(isCoarsePointer()){try{await screen.orientation?.lock?.("landscape")}catch{}}else{try{await canvas.requestPointerLock?.()}catch{}}}else{if(document.pointerLockElement===canvas)document.exitPointerLock();await document.exitFullscreen?.();if(isCoarsePointer())try{screen.orientation?.unlock?.()}catch{}}}catch{toast("브라우저에서 전체 화면 전환을 허용하지 않았습니다. F 키 또는 전체 화면 버튼으로 다시 시도하세요.","warn")}}
 function quality(s,id){return s.meta?.[id]?.quality??(s.inventory?.[id]>0?90:0)}
 function purity(s,id){return s.meta?.[id]?.purity??(s.inventory?.[id]>0?90:0)}
 function synthetic(s,id){return s.meta?.[id]?.synthetic??false}
@@ -1314,7 +1314,7 @@ function wireControls(){
    playerMotion.pitch=clamp(playerMotion.pitch-e.movementY*.0025,-1.25,1.12);
   }else world3d.orbit(e.movementX,e.movementY);
  });
- document.addEventListener("pointerlockchange",()=>{card.classList.toggle("pointer-locked",document.pointerLockElement===card)});
+ document.addEventListener("pointerlockchange",()=>{const locked=document.pointerLockElement===card;card.classList.toggle("pointer-locked",locked);document.documentElement.classList.toggle("factory-pointer-locked",locked)});
  document.addEventListener("pointerlockerror",()=>toast("마우스 잠금이 지원되지 않습니다. 드래그로 시점을 조작하세요.","warn"));
  window.addEventListener("keydown",e=>{
   const k=e.key.toLowerCase();
@@ -1370,6 +1370,7 @@ function wireControls(){
  $("story-skip-button")?.addEventListener("click",finishCampaignIntro);
  $("panel-close")?.addEventListener("click",closeControlPanel);
  $("fullscreen-button")?.addEventListener("click",toggleFullscreen);
+ if(isCoarsePointer()){$("fullscreen-button")?.setAttribute("title","전체 화면 · 가로 화면 (F)");}
  const bindAdventureButton=(id,action)=>{
   const button=$(id);if(!button)return;
   button.addEventListener("click",event=>{

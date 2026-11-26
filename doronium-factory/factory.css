@@ -374,3 +374,13 @@ html,body{width:100%;height:100%;min-height:100%;overflow:hidden;overscroll-beha
   .world-frame,.world-frame.adventure-active{height:100%!important;min-height:0!important;max-height:none!important}
   .move-pad{display:flex!important}
 }
+
+/* Desktop: pointer lock hides the cursor globally; all in-game controls remain keyboard focusable. */
+.factory-pointer-locked,.factory-pointer-locked *{cursor:none!important}
+.factory-pointer-locked #world-canvas{cursor:none!important}
+#game-root button:focus-visible,#game-root a:focus-visible,#game-root input:focus-visible,#game-root select:focus-visible,.modal-card button:focus-visible,.story-intro button:focus-visible{outline:2px solid #7be7e3!important;outline-offset:3px;box-shadow:0 0 0 4px #071521aa,0 0 18px #55d9d488}
+/* The existing portrait transform rotates the entire HUD into landscape dimensions. */
+@media (orientation:landscape) and (pointer:coarse){
+ #world-canvas{touch-action:none}
+ .move-pad,.adventure-actions{touch-action:none}
+}

@@ -76,7 +76,13 @@ export function terrainHeightAt(x,z){
   const fineRelief = Math.sin(x*.235+Math.sin(z*.071)*1.8)*1.35
     + Math.cos(z*.265-x*.083)*.95
     + Math.sin((x-z)*.19)*.55;
-  return Number((wave+relief+landforms+fineRelief).toFixed(2));
+  // Broad rolling foothills and finer erosion-like ridges break up the grid
+  // while keeping the generated heightfield continuous and traversable.
+  const foothills=(Math.sin(x*.052+z*.031)*Math.cos(z*.047-x*.022)
+    +Math.sin((x+z)*.083)*.42)*5.2;
+  const ridgeNoise=(Math.sin(x*.19+Math.cos(z*.11)*1.4)
+    +Math.cos(z*.21+Math.sin(x*.08)*1.2))*.85;
+  return Number((wave+relief+landforms+fineRelief+foothills+ridgeNoise).toFixed(2));
 }
 
 export function mineFloorY(level){return -42*clamp(Number(level)||1,1,MINE_LEVELS);}
