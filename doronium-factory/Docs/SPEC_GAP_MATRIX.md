@@ -667,3 +667,13 @@ PR #11 remains draft/open/unmerged. Main merge, production deployment and produc
 | Mine geology density | PARTIAL — code updated | Seeded stone/mineral pockets and additional batched rock details added. Reachability/determinism tests added; browser acceptance pending. |
 | Preserve existing mine saves | PARTIAL — migration tests added | First entered mine inherits legacy depletion/environment/infrastructure and mine machinery; later entrances get independent defaults. Save/reload E2E still needed. |
 | All 12 roadmap stages / 20 final checks | NOT COMPLETE | World scale, authoritative ownership, all six fluids, canonical manifest, full Fusion recovery, all skills/contracts, physical devices and real 60-minute soak remain open or unverified. |
+
+
+## 2026-11-26 — mine power-topology isolation regression
+
+| Requirement | Status | Code/test delta | Acceptance blocker |
+|---|---|---|---|
+| Mine power grid must be entrance-scoped | PARTIAL | `currentPower` topology selection now independently rejects a mine node whose instance ID differs from the active entrance. The live factory isolation fixture now gives mine A the only running generator (1,200kW) and requires mine B to read 0kW. | New commit CI must reach terminal success; full per-instance save/reload and physical mine operation remain unverified. |
+| Mine rail stations and route obstacles | PARTIAL | Existing active-instance filtering remains in place and is exercised by the strengthened combined isolation scenario. | Full mine logistics, inactive-instance background behavior and physical device validation remain incomplete. |
+
+Code commit: `f0ff3f430f07dd9feef660e56bd04840eb9cb13c`; documentation commit: `9d1257e7bf810cd03da864f8efa91f1535290cf8`. This is a defense-in-depth regression, not a completed roadmap stage. All 12 stages and 20 final acceptance items remain PARTIAL/UNVERIFIED until their full criteria pass. No main merge, deployment or production-data change occurred.
