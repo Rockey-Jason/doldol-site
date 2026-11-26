@@ -58,7 +58,8 @@ try {
   assert.equal(audit.catalogValidation.valid, true, "Every catalogue recipe must resolve all input and output items");
   assert.ok(audit.catalogItemCount >= 250, "The full item, equipment, machine and packaging catalogue must be registered");
   assert.ok(audit.catalogRecipeCount >= 200, "The full production, construction and packaging recipes must be registered");
-  assert.equal(audit.catalogMachineCount, 46, "All additional installable machine definitions must be registered");
+  assert.equal(audit.catalogMachineCount, 50, "All 50 machine designs must be registered in the encyclopedia");
+  assert.equal(audit.buildingCount, 69, "46 new installable machine definitions plus legacy facilities must be registered");
   assert.equal(audit.runtimeValidation.valid, true, "Initial item stacks and reservations must validate");
   assert.equal(audit.variantCount, 15, "15 canonical Doronium variants must be present");
   assert.equal(audit.uniqueVariants, 15, "Variant IDs must be unique");
