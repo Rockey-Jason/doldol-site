@@ -55,6 +55,11 @@ try {
 
   const audit = await desktop.evaluate(() => window.__doroniumFactoryTest.audit());
   assert.equal(audit.dataValidation.valid, true, "All game data references and research dependencies must validate");
+  assert.equal(audit.catalogValidation.valid, true, "Every catalogue recipe must resolve all input and output items");
+  assert.ok(audit.catalogItemCount >= 250, "The full item, equipment, machine and packaging catalogue must be registered");
+  assert.ok(audit.catalogRecipeCount >= 200, "The full production, construction and packaging recipes must be registered");
+  assert.equal(audit.catalogMachineCount, 50, "All 50 machine designs must be registered in the encyclopedia");
+  assert.equal(audit.buildingCount, 69, "46 new installable machine definitions plus legacy facilities must be registered");
   assert.equal(audit.runtimeValidation.valid, true, "Initial item stacks and reservations must validate");
   assert.equal(audit.variantCount, 15, "15 canonical Doronium variants must be present");
   assert.equal(audit.uniqueVariants, 15, "Variant IDs must be unique");
@@ -66,7 +71,7 @@ try {
   assert.equal(audit.skillGroupCount, 5, "The skill tree must contain five specialization groups");
   assert.equal(audit.skillTreeValidation.valid, true, "All skill prerequisites and tiers must validate");
   assert.equal(audit.skillStateValidation.valid, true, "Skill points and unlocked nodes must validate");
-  assert.equal(audit.buildingCount, 23, "23 facility definitions, including the adaptive conveyor, must be present");
+  assert.equal(audit.buildingCount, 69, "Legacy facilities and all 46 additional catalogue machine definitions must be registered");
   assert.equal(audit.worldWidth, 192, "The world must be expanded to 192 tiles wide");
   assert.ok(audit.outerResourceCount > 20, "The expanded continent must contain natural resource patches");
   assert.equal(audit.worldHeight, 160, "The world must be expanded to 160 tiles high");
@@ -93,6 +98,35 @@ try {
   });
   assert.ok(preview.visible && preview.width > 0 && preview.height > 0, "3D crystal preview must render to a visible canvas");
   await desktop.locator("#modal-x").click();
+  await openPanel(desktop, "catalog");
+  await desktop.locator("#catalog-search").fill("도로늄");
+  assert.ok(await desktop.locator(".catalog-card").count() > 0, "The encyclopedia must search Doronium items");
+  await desktop.locator("#catalog-search").fill("");
+  await desktop.locator("#catalog-mode").selectOption("recipes");
+  assert.ok(await desktop.locator(".catalog-recipe-card").count() >= 150, "The encyclopedia must list the full production and packaging recipe catalogue");
+  await desktop.locator("#catalog-mode").selectOption("machines");
+  assert.ok(await desktop.locator(".catalog-machine-card").count() >= 45, "The encyclopedia must list the new industrial machine designs");
+  await desktop.locator("#catalog-category").selectOption("power");
+  assert.ok(await desktop.locator(".catalog-machine-card").count() >= 3, "Power facilities must be filterable by category");
+  await desktop.locator("#catalog-category").selectOption("all");
+  const migration = await desktop.evaluate(() => window.__doroniumFactoryTest.saveMigrationTest());
+  assert.equal(migration.newOrePresent, true, "Legacy mine saves must receive new resource veins");
+  assert.equal(migration.newOreType, "aluminumOre", "New mineral deposits must keep their canonical type");
+  assert.equal(migration.legacyAmount, 7, "Existing mine deposit quantities must be preserved during migration");
+  assert.equal(migration.worldVersion, 5, "Legacy saves must upgrade to the latest world schema");
+  assert.equal(migration.saveValid, true, "Migrated world state must pass the save runtime validator");
+  const expandedSystems = await desktop.evaluate(() => window.__doroniumFactoryTest.expandedSystemsTest());
+  assert.equal(expandedSystems.bridge.placed, true, "A bridge machine item must install on a river tile");
+  assert.equal(expandedSystems.bridge.walkable, true, "A placed bridge must become a walkable path across water");
+  assert.ok(expandedSystems.treeNutrition.amount > 0, "Tree nutrition must restore depleted tree resources");
+  assert.ok(expandedSystems.accelerated.boostUntil > 0, "Tree growth accelerator must create a timed growth effect");
+  assert.equal(expandedSystems.permanent.enabled, true, "Permanent tree catalyst must enable passive tree regrowth");
+  assert.equal(expandedSystems.elevator.after - expandedSystems.elevator.before, 2, "An elevator must transfer buffered mine items back into the warehouse");
+  assert.equal(expandedSystems.elevator.remaining, 2, "The elevator must preserve the untransferred floor buffer");
+  assert.equal(expandedSystems.waterElevatorRejectsSolid, true, "Water elevators must reject solid items");
+  assert.equal(expandedSystems.transformer.count, 1, "A transformer must register in the factory grid");
+  assert.ok(expandedSystems.transformer.near > 0, "A nearby machine must receive power through a connected transformer");
+  assert.equal(expandedSystems.transformer.far, 0, "A remote machine outside the grid must be disconnected");
   await openPanel(desktop, "research");
   assert.equal(await desktop.locator("[data-skill]").count(), 20, "All twenty specialization nodes must be visible");
   await desktop.locator('[data-skill="FIELD_SURVEYOR"]').click();
@@ -278,7 +312,7 @@ try {
   assert.equal(researchUi.countdown, "남은 시간 17초", "Research cards must show the exact remaining seconds");
   assert.equal(researchUi.popupCountdown, "남은 시간 17초", "Selecting a research lab must open a management popup with the live countdown");
   assert.equal(researchUi.popupVisible, true, "Selecting a facility must open its management popup");
-  assert.equal(researchUi.requirementsIncludeNames, true, "Research requirements must show exact Korean resource names");
+  assert.equal(researchUi.requirementsIncludeNames, true, "Research requirements must show exact Korean resource names: " + JSON.stringify(researchUi.researchText));
   assert.equal(researchUi.shortageVisible, true, "Research UI must identify the exact missing quantity for unavailable resources");
   assert.match(researchUi.popupText, /연구 관리 열기/, "The research-lab popup must provide direct access to research management");
 

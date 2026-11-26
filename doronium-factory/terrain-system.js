@@ -33,6 +33,17 @@ export function biomeAt(x,z){
   return "meadow";
 }
 
+/* Named resource regions are overlays on the original biome map. */
+export function regionAt(x,z){
+  if(x>=166&&x<=184&&z>=68&&z<=91)return "oilField";
+  if(x>=31&&x<=47&&z>=28&&z<=46)return "doriForest";
+  if(x>=84&&x<=105&&z>=44&&z<=68)return "doroniumForest";
+  if(x>=44&&x<=80&&z>=6&&z<=39)return "lava";
+  if(x>=2&&x<=33&&z>=2&&z<=23)return "cold";
+  if(x>=39&&x<=83&&z>=40&&z<=68)return "denseForest";
+  return biomeAt(x,z);
+}
+
 export function terrainHeightAt(x,z){
   const wave=Math.sin(x*.105+z*.036)*5.5+Math.cos(z*.12-x*.025)*4.5+Math.sin((x+z)*.047)*5;
   const westCenter=91+Math.sin(z*.09)*7;
@@ -87,7 +98,12 @@ export function makeMineDeposits(){
     [3,8,12,"quartz",35,-102],[3,20,8,"goldOre",20,-108],[3,22,15,"coal",42,-116],[3,32,12,"goldOre",25,-112],
     [4,12,12,"diamond",8,-144],[4,22,8,"goldOre",32,-150],[4,32,12,"diamond",10,-158],
     [5,8,12,"goldOre",18,-186],[5,12,7,"diamond",8,-192],[5,22,15,"quartz",8,-198],
-    [5,25,8,"coal",6,-204],[5,31,12,"diamond",3,-202],[5,34,17,"goldOre",6,-188]
+    [5,25,8,"coal",6,-204],[5,31,12,"diamond",3,-202],[5,34,17,"goldOre",6,-188],
+    [1,5,12,"leadOre",22,-22],[1,15,12,"magnetite",18,-30],
+    [2,8,16,"nickelOre",26,-72],[2,17,12,"aluminumOre",18,-76],[2,31,12,"leadOre",28,-68],
+    [3,12,12,"chromiumOre",20,-110],[3,30,12,"nickelOre",25,-118],
+    [4,8,12,"titaniumOre",13,-146],[4,30,12,"magnetite",20,-160],
+    [5,15,12,"neodymiumOre",9,-194],[5,34,12,"diamondOre",5,-208]
   ];
   return Object.fromEntries(rows.map(([level,x,z,type,amount,depthY],i)=>{
     const key=mineDepositKey(level,x,z);

@@ -7,7 +7,7 @@
 <meta name="description" content="돌이사이트 도로늄 공장에서 3D 산업 월드를 탐험하고 자원을 모아 기지를 건설하세요. 생산 자동화와 도로늄 연구를 경험할 수 있습니다.">
 <title>도로늄 공장 | 3D 산업 건설 시뮬레이션 - 돌이사이트</title>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="./factory.css?v=9">
+<link rel="stylesheet" href="./factory.css?v=11">
 
 <!-- Search engine metadata -->
 <meta name="robots" content="index,follow,max-image-preview:large">
@@ -99,7 +99,7 @@
     </section>
     <aside class="control-column" id="control-column">
       <div class="panel-popover-head"><div><small>ROCKEY INDUSTRIES</small><strong>게임 시스템</strong></div><button type="button" id="panel-close" aria-label="메뉴 닫기">×</button></div>
-      <nav class="main-tabs" id="main-tabs"><button class="main-tab active" data-panel="build"><span>▦</span>건설</button><button class="main-tab" data-panel="factory"><span>◫</span>운영</button><button class="main-tab" data-panel="inventory"><span>▤</span>창고</button><button class="main-tab" data-panel="research"><span>⌬</span>연구</button><button class="main-tab" data-panel="mission"><span>✧</span>임무</button></nav>
+      <nav class="main-tabs" id="main-tabs"><button class="main-tab active" data-panel="build"><span>▦</span>건설</button><button class="main-tab" data-panel="factory"><span>◫</span>운영</button><button class="main-tab" data-panel="inventory"><span>▤</span>창고</button><button class="main-tab" data-panel="catalog"><span>⌘</span>도감·제작</button><button class="main-tab" data-panel="research"><span>⌬</span>연구</button><button class="main-tab" data-panel="mission"><span>✧</span>임무</button></nav>
       <section class="panel-view active" id="panel-build"><div class="panel-heading"><div><div class="section-kicker">CONSTRUCTION NETWORK</div><h2>시설 건설</h2><p>공장 부지에 생산 설비를 배치하세요.</p></div><span class="panel-count" id="build-count">0 / 40</span></div><div class="land-tools">
         <div class="land-tools-title">지형 준비</div>
         <button type="button" data-land-tool="flatten">▱ 땅 평탄화</button>
@@ -109,6 +109,13 @@
       <div class="build-category" id="build-category"><button class="category-chip active" data-cat="all">전체</button><button class="category-chip" data-cat="resource">자원</button><button class="category-chip" data-cat="power">전력</button><button class="category-chip" data-cat="process">가공</button><button class="category-chip" data-cat="logistics">물류</button><button class="category-chip" data-cat="advanced">첨단</button></div><div class="build-list" id="build-list"></div><div class="build-inspector" id="build-inspector"><div class="inspector-empty"><span>⌖</span><strong>건설 설비를 선택하세요</strong><p>시설을 선택하면 비용과 기능을 확인할 수 있습니다.</p></div></div></section>
       <section class="panel-view" id="panel-factory"><div class="panel-heading"><div><div class="section-kicker">INDUSTRIAL CONTROL</div><h2>공장 운영</h2><p>전력·생산·물류 흐름을 관리합니다.</p></div><span class="live-pill"><i></i> LIVE</span></div><div class="operation-cards" id="operation-cards"></div><div class="subheading"><h3>선택 시설 상세</h3><button class="text-btn" id="clear-selection">선택 해제</button></div><div id="machine-details" class="machine-details"><div class="inspector-empty"><span>⌖</span><strong>월드에서 기계를 선택하세요</strong><p>기계의 레시피, 방향, 입출력 버퍼와 상태를 확인할 수 있습니다.</p></div></div><div class="subheading"><h3>최근 생산 기록</h3><span class="muted-small">LAST EVENTS</span></div><div class="event-feed" id="event-feed"></div></section>
       <section class="panel-view" id="panel-inventory"><div class="panel-heading"><div><div class="section-kicker">WAREHOUSE & MARKET</div><h2>자원 창고</h2><p>보유 자원과 제품을 확인하고 판매합니다.</p></div><span class="panel-count" id="inventory-slots">0 종류</span></div><div class="inventory-summary" id="inventory-summary"></div><div class="inventory-grid" id="inventory-grid"></div><div class="crystal-codex"><div class="subheading"><h3>도로늄 결정 도감</h3><span class="muted-small">15 VARIANTS</span></div><p class="codex-help">결정 하나를 선택하면 고유한 3D 형상과 재질을 회전하며 관찰할 수 있습니다.</p><div class="crystal-codex-grid" id="crystal-codex"></div></div><div class="market-panel"><div class="subheading"><h3>산업 거래소</h3><span class="market-live">MARKET OPEN</span></div><p>완성품을 판매해 공장 확장 자금을 확보하세요. 도로늄은 고급 산업 계약에서 더 높은 가치를 인정받습니다.</p><div class="sell-row"><select id="sell-resource" aria-label="판매할 자원"></select><input id="sell-amount" type="number" min="1" value="1" aria-label="판매 수량"><button class="action-button gold-button" id="sell-button">판매</button></div><div class="market-estimate" id="market-estimate">판매 예상액 0 D</div></div></section>
+      <section class="panel-view catalog-panel" id="panel-catalog">
+        <div class="panel-heading"><div><div class="section-kicker">MASTER INDUSTRIAL ENCYCLOPEDIA</div><h2>아이템 · 레시피 도감</h2><p>모든 자원, 설비, 제조 공정과 포장 단계를 한곳에서 확인하세요.</p></div><span class="panel-count" id="catalog-count">0 항목</span></div>
+        <div class="catalog-toolbar"><input id="catalog-search" type="search" placeholder="아이템·기계·레시피 검색" aria-label="도감 검색"><select id="catalog-mode" aria-label="도감 보기"><option value="items">아이템</option><option value="recipes">제작 레시피</option><option value="machines">기계·설비</option></select><select id="catalog-category" aria-label="분류"><option value="all">전체 분류</option><option value="raw">원자재</option><option value="material">가공 재료</option><option value="part">부품</option><option value="machine">기계 아이템</option><option value="doronium">도로늄</option><option value="packaged">포장품</option><option value="armor">방어구</option><option value="equipment">장비</option><option value="power">전력 설비</option><option value="logistics">물류 설비</option><option value="process">가공 설비</option></select></div>
+        <div class="catalog-summary" id="catalog-summary"></div>
+        <div class="catalog-grid" id="catalog-grid"></div>
+        <div class="catalog-hint">레시피를 선택하면 해당 공정 스테이션에 설치된 기계에서 지정할 수 있습니다. 설비 제작은 창고 자원과 재료를 실제로 소모합니다.</div>
+      </section>
       <section class="panel-view" id="panel-research"><div class="panel-heading"><div><div class="section-kicker">TECHNOLOGY & DEVELOPMENT</div><h2>연구 센터</h2><p>기술을 연구해 새로운 산업 시대를 여세요.</p></div><span class="panel-count" id="research-progress-label">0 / 18</span></div><div class="research-progress"><div class="progress-label"><span>기술 완성도</span><b id="research-percent">0%</b></div><div class="progress-track"><i id="research-progress-bar"></i></div></div><div class="research-tree" id="research-tree"></div><section class="skill-tree-panel"><div class="skill-tree-heading"><div><div class="section-kicker">ENGINEER SPECIALIZATION</div><h3>엔지니어 스킬 트리</h3><p>스토리·연구·탐험 마일스톤으로 최대 15포인트를 획득합니다.</p></div><div class="skill-tree-count"><strong id="skill-point-count">1 / 15 포인트</strong><small id="skill-tree-progress">0 / 20 습득</small></div></div><div id="skill-tree" class="skill-tree"></div></section></section>
       <section class="panel-view" id="panel-mission"><div class="panel-heading"><div><div class="section-kicker">ORBIT MISSION CONTROL</div><h2>임무 · 스토리</h2><p>행성의 비밀을 밝히고 산업을 복구하세요.</p></div><span class="orbit-status">ORBIT <b id="orbit-level">01</b></span></div><div class="orbit-message"><div class="orbit-avatar">O</div><div><strong>ORBIT / 공장 관리 AI</strong><p id="orbit-dialogue">“Factory status: UNKNOWN. 복구 엔지니어, 시스템을 초기화합니다.”</p></div></div><div class="story-chapters" id="story-chapters"></div><div class="mission-list" id="mission-list"></div></section>
     </aside>
@@ -118,19 +125,20 @@
 <div class="story-intro" id="story-intro" hidden>
   <div class="story-intro-backdrop"></div>
   <div class="story-intro-content">
-    <div class="story-intro-kicker">ROCKEY INDUSTRIES · ARCHIVE 01</div>
-    <div class="story-intro-emblem">◈</div>
-    <div class="story-intro-eyebrow">THE LAST INDUSTRIAL FRONTIER</div>
-    <h1>도로늄 행성의 마지막 불빛</h1>
-    <p class="story-line">한때 도로늄의 무한한 에너지로 번영했던 행성.</p>
-    <p class="story-line">그러나 중앙 반응로의 붕괴 이후 지표는 갈라졌고, 대륙을 잇던 공장망은 멈췄다.</p>
-    <p class="story-line">깊은 지하에는 아직 정체를 알 수 없는 광맥이 잠들어 있다.</p>
-    <div class="story-transmission"><span>ORBIT / 복구 AI</span><p>“엔지니어, 응답이 감지되었습니다. 당신이 마지막 복구 프로토콜입니다. 공장을 다시 가동하고, 지하의 도로늄을 찾아 행성의 심장을 복원하십시오.”</p></div>
-    <button type="button" id="story-start-button">복구 프로토콜 시작 <span>→</span></button>
-    <small>WASD 이동 · 좌클릭 채집/상호작용 · B 건설 · I 창고 · J 임무 · F 전체 화면</small>
+    <div class="story-intro-kicker">DORONIUM ARCHIVE · THE ORIGIN</div>
+    <div class="story-intro-emblem" id="story-scene-icon">🐅</div>
+    <div class="story-intro-eyebrow" id="story-scene-eyebrow">A TALE FROM THE OLD FOREST</div>
+    <div class="story-scene-count" id="story-scene-count">PROLOGUE · 01 / 08</div>
+    <h1 id="story-scene-title">아주 먼 옛날, 호랑이가 나타나던 시절</h1>
+    <p class="story-scene-text" id="story-scene-text">밤마다 마을을 찾아오는 호랑이들 때문에 사람들은 걱정이 많았습니다.</p>
+    <div class="story-transmission"><span id="story-transmission-title">돌이의 이야기</span><p id="story-transmission-text">그때 사람들에게는 용감한 친구 돌이가 있었어요.</p></div>
+    <div class="story-progress-track"><i id="story-progress-fill"></i></div>
+    <button type="button" id="story-start-button">이야기 시작 <span>→</span></button>
+    <div class="story-scene-actions"><button type="button" id="story-next-button" hidden>다음 장면 <span>→</span></button><button type="button" id="story-skip-button" hidden>이야기 건너뛰기</button></div>
+    <small>장면을 넘기며 돌이와 도로늄의 탄생 이야기를 감상하세요.</small>
   </div>
 </div>
 <div class="toast-stack" id="toast-stack"></div><div class="modal-overlay" id="modal-overlay"><div class="modal-card" id="modal-card"></div></div>
-<script type="module" src="./factory.js?v=44"></script>
+<script type="module" src="./factory.js?v=60"></script>
 <script src="../js/dori-text-scale.js?v=20261125-text-scale-2"></script>
 </body></html>
