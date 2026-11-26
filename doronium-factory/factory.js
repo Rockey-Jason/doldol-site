@@ -1334,7 +1334,7 @@ function wireControls(){
    if(scope&&e.target===document.body){e.preventDefault();scope.querySelector("button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled)")?.focus();return}
   }
   if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"," ","shift"].includes(k))e.preventDefault();
-  if(!scope&&["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(k))requestDesktopImmersion();
+  if(!scope&&k!=="f")requestDesktopImmersion();
   if(k==="v"){setViewMode(S.player.viewMode==="first"?"third":"first");return}
   if(k==="m"){if(S.player.layer==="mine"){toast("광산 내부에서는 지도를 열 수 없습니다.");return}setViewMode(S.player.viewMode==="map"?"first":"map");return}
   if(k==="4"){selectTool("pickaxe");return}if(k==="5"){selectTool("axe");return}
