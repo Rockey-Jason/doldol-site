@@ -377,16 +377,50 @@ function buildingAt(x,y){ensureBuildingIndex();return buildingIndex.get(surfaceK
 function tileNode(x,y){return S.nodes[x+","+y]||null}
 function currentPower(){
  const daylight=(S.seconds%86400)/86400,sun=daylight>.25&&daylight<.78?1:.22,weather=weatherNow();
- let gen=0,used=0;
+ let gen=0,totalUsed=0;const sources=[],transformers=[],loads=[];
  for(const b of S.buildings){
-  const def=buildingDef(b.type);if(!def)continue;
-  const generation=def.generation||({solar:"solar",wind:"wind",coalgen:"coal"}[b.type]);
-  if(generation==="solar")gen+=(def.gen||8)*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1);
-  else if(generation==="wind")gen+=(def.gen||8)*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05);
-  else if(generation==="coal"||generation==="doronium")gen+=b.fuelTimer>0?(def.gen||0):0;
-  else used+=(b.type==="fusion"?(S.fusionJob?FUSION_STAGES[S.fusionJob.stage]?.power||40:4):(def.power||0));
+  const d=buildingDef(b.type);if(!d)continue;
+  const generation=d.generation||({solar:"solar",wind:"wind",coalgen:"coal"}[b.type]);
+  if(generation==="solar"){const amount=(d.gen||8)*sun*(weather==="Storm"?.45:weather==="Rain"?.72:1);gen+=amount;sources.push(b)}
+  else if(generation==="wind"){const amount=(d.gen||8)*(weather==="Storm"?1.4:weather==="Clear"?.9:1.05);gen+=amount;sources.push(b)}
+  else if(generation==="coal"||generation==="doronium"){const amount=b.fuelTimer>0?(d.gen||0):0;gen+=amount;if(amount>0)sources.push(b)}
+  else{
+   const load=b.type==="fusion"?(S.fusionJob?FUSION_STAGES[S.fusionJob.stage]?.power||40:4):Math.max(0,Number(d.power)||0);
+   if(load>0){totalUsed+=load;loads.push({building:b,load})}
+  }
+  if(b.type==="catalog_transformer")transformers.push(b);
  }
- return {gen,used,ratio:used===0?1:Math.min(1,gen/used),raw:gen-used};
+ const distance=(a,b)=>Math.hypot((a.x||0)-(b.x||0),(a.y||0)-(b.y||0));
+ const connectedTransformers=new Set(),networkRange=14,sourceRange=9;
+ let expanded=true;
+ while(expanded){
+  expanded=false;
+  for(const transformer of transformers){
+   if(connectedTransformers.has(transformer))continue;
+   const connectedToSource=sources.some(source=>distance(source,transformer)<=networkRange);
+   const connectedToTransformer=[...connectedTransformers].some(other=>distance(other,transformer)<=networkRange);
+   if(connectedToSource||connectedToTransformer){connectedTransformers.add(transformer);expanded=true}
+  }
+ }
+ const networkActive=transformers.length>0;
+ const isConnected=building=>{
+  if(!networkActive)return true;
+  if(sources.some(source=>distance(source,building)<=sourceRange))return true;
+  return [...connectedTransformers].some(transformer=>distance(transformer,building)<=networkRange);
+ };
+ let connectedUsed=0,unconnectedUsed=0,connectedCount=0;
+ const localRatios={};
+ for(const {building,load} of loads){
+  if(isConnected(building)){connectedUsed+=load;connectedCount++;localRatios[building.uid]=1}
+  else{unconnectedUsed+=load;localRatios[building.uid]=0}
+ }
+ const ratio=connectedUsed===0?1:Math.min(1,gen/connectedUsed);
+ for(const entry of loads)if(localRatios[entry.building.uid]>0)localRatios[entry.building.uid]=ratio;
+ return {gen,used:connectedUsed,totalUsed,unconnectedUsed,ratio,raw:gen-totalUsed,localRatios,network:{active:networkActive,transformers:transformers.length,connectedTransformers:connectedTransformers.size,connectedConsumers:connectedCount,disconnectedConsumers:loads.length-connectedCount,range:networkRange}};
+}
+function powerRatioForBuilding(building,power){
+ const snapshot=power||currentPower();
+ return building&&snapshot.localRatios&&Object.prototype.hasOwnProperty.call(snapshot.localRatios,building.uid)?snapshot.localRatios[building.uid]:snapshot.ratio;
 }
 function weatherNow(){const day=Math.floor(S.seconds/86400);return ["Clear","Clear","Rain","Clear","Storm","Clear","Snow"][day%7]}
 function revealAround(){if(S.player.layer==="mine")return;let changed=false;const radius=11*calculateSkillBonuses(S.skills).scannerRangeMultiplier,limit=radius*radius;for(let y=-Math.ceil(radius);y<=Math.ceil(radius);y++)for(let x=-Math.ceil(radius);x<=Math.ceil(radius);x++){if(x*x+y*y>limit)continue;const xx=S.player.x+x,yy=S.player.y+y;if(xx>=0&&yy>=0&&xx<WORLD_W&&yy<WORLD_H){const key=xx+","+yy;if(!S.seen[key]){S.seen[key]=true;changed=true}}}if(biomeAt(S.player.x,S.player.y)==="crystal")claimSkillPoint("EXPLORATION_CRYSTAL_CAVERN");if(changed)markVisibilityDirty()}
@@ -456,7 +490,7 @@ function renderMachineDetails(){
  if($("machine-fusion-cancel"))$("machine-fusion-cancel").onclick=()=>abortFusionJob("사용자가 퓨전을 중단했습니다.");
  if($("machine-core"))$("machine-core").onclick=()=>installCore(b);
  if($("machine-automation"))$("machine-automation").onclick=()=>{
-  if(currentPower().ratio<.8){toast("통제 컴퓨터 전력이 부족합니다. 전력 공급을 80% 이상 확보하세요.","warn");return}
+  if(powerRatioForBuilding(b,currentPower())<.8){toast("통제 컴퓨터가 전력망에 연결되지 않았거나 전력이 부족합니다. 발전기 또는 변압기 연결을 확인하세요.","warn");return}
   S.factoryAutomationPaused=!S.factoryAutomationPaused;
   log(S.factoryAutomationPaused?"통제 컴퓨터 · 전체 생산 설비 일시 정지":"통제 컴퓨터 · 전체 생산 설비 재개");
   markDirty();renderMachineDetails();renderFactory();toast(S.factoryAutomationPaused?"전체 생산을 일시 정지했습니다.":"전체 생산을 재개했습니다.");
@@ -734,8 +768,8 @@ function updateSurvival(dt){
  else if(v.hunger>70&&v.thirst>70)v.health=Math.min(100,v.health+dt*.12);
  const region=S.player.layer==="surface"?regionAt(S.player.x,S.player.y):"mine";
  const heat=region==="lava",cold=region==="cold",radiation=region==="doroniumForest";
- const climatePowered=S.player.layer==="surface"&&currentPower().ratio>=.8;
- const nearClimate=type=>climatePowered&&S.buildings.some(b=>b.type===type&&Math.hypot(b.x-S.player.x,b.y-S.player.y)<=7);
+ const grid=currentPower();
+ const nearClimate=type=>S.player.layer==="surface"&&S.buildings.some(b=>b.type===type&&powerRatioForBuilding(b,grid)>=.8&&Math.hypot(b.x-S.player.x,b.y-S.player.y)<=7);
  const hasCooling=nearClimate("catalog_air_conditioner"),hasHeating=nearClimate("catalog_heater"),hasVentilation=nearClimate("catalog_fan");
  const heatRate=hasCooling?.38:hasVentilation?.82:1;
  const coldRate=hasHeating?.38:hasVentilation?.84:1;
@@ -867,9 +901,9 @@ function updateFusion(dt){
  }
  const stage=FUSION_STAGES[job.stage];
  if(!stage){abortFusionJob("퓨전 단계 데이터가 올바르지 않아 공정을 중단했습니다.");return}
- const p=currentPower();b.temp+=(stage.temp-b.temp)*Math.min(1,dt*.045);b.pressure+=(stage.pressure-b.pressure)*Math.min(1,dt*.06);
+ const p=currentPower(),fusionPowerRatio=powerRatioForBuilding(b,p);b.temp+=(stage.temp-b.temp)*Math.min(1,dt*.045);b.pressure+=(stage.pressure-b.pressure)*Math.min(1,dt*.06);
  const tempOK=Math.abs(b.temp-stage.temp)<=Math.max(50,stage.temp*.1),pressureOK=Math.abs(b.pressure-stage.pressure)<=Math.max(25,stage.pressure*.1);
- if(p.ratio>=.8&&p.gen>=stage.power&&tempOK&&pressureOK){job.progress+=dt*(p.ratio>=1?1:p.ratio);b.status="RUNNING"}
+ if(fusionPowerRatio>=.8&&p.gen>=stage.power&&tempOK&&pressureOK){job.progress+=dt*(fusionPowerRatio>=1?1:fusionPowerRatio);b.status="RUNNING"}
  else b.status=p.ratio<.8||p.gen<stage.power?"PAUSED_POWER":"CALIBRATING";
  if(job.progress>=stage.time){
   log("퓨전 단계 완료 · "+stage.name,"good");job.stage++;job.progress=0;
@@ -910,8 +944,8 @@ function startFusion(){
 function installCore(b){if(!S.fusionDone||availableItemCount(S,"infinity")<1){toast("사용 가능한 인피니티 도로늄 1개가 필요합니다.","warn");return}if(!S.research.includes("planet")){toast("행성 안정화 프로토콜 연구를 완료하세요.","warn");return}if(!S.relaySites.every(Boolean)){toast("행성 안정화 릴레이 3개가 모두 필요합니다.","warn");return}if(!takeItem("infinity",1))return;S.coreInstalled=true;b.status="INSTALLED";log("인피니티 도로늄을 중앙 코어에 설치");toast("중앙 안정화 코어 설치 완료");showModal("행성 안정화 준비 완료","<p>3개 릴레이와 중앙 코어가 연결되었습니다. ORBIT의 최종 동기화 프로토콜을 실행할 수 있습니다.</p>",[{label:"계속",cls:"secondary"},{label:"행성 안정화 실행",cls:"gold",action:()=>{closeModal();finishPlanetary()}}]);markDirty();renderAll()}
 function finishPlanetary(){if(!S.coreInstalled||!S.relaySites.every(Boolean)){toast("안정화 필수 조건을 충족하지 못했습니다.","warn");return}S.victory=true;S.questIndex=QUESTS.length;log("PLANETARY STABILIZATION COMPLETE","good");$("orbit-dialogue").textContent="“Energy network synchronization complete. Planetary instability: decreasing. Factory status: OPERATIONAL.”";markDirty();renderAll();showModal("PLANETARY STABILIZATION COMPLETE","<div class='ending-visual'>💠</div><h3>돌돌행성의 에너지 네트워크가 안정화되었습니다.</h3><p>공장 전체에 푸른 에너지 흐름이 연결되었습니다. 폐허에서 시작한 작은 산업 기지가 행성을 지키는 거대한 산업 네트워크로 성장했습니다.</p><p><b>DORONIUM FACTORY · INFINITE INDUSTRY</b><br>FINAL STATUS: OPERATIONAL</p>",[{label:"엔딩 보기",cls:"gold",action:closeModal}]);playTone(920,.5,"sine")}
 
-function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;
- if(b.type==="catalog_control_computer"){b.status=power.ratio>=.8?"RUNNING":"PAUSED_POWER";return}
+function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;const localRatio=powerRatioForBuilding(b,power);
+ if(b.type==="catalog_control_computer"){b.status=localRatio>=.8?"RUNNING":"PAUSED_POWER";return}
  if(["catalog_air_conditioner","catalog_fan","catalog_heater"].includes(b.type)){b.status=power.ratio>=.8?"RUNNING":"PAUSED_POWER";return}
  const automationControlled=d.kind==="machine"||d.kind==="reactor"||d.kind==="variant"||["catalog_resource_copier","catalog_item_copier","catalog_auto_miner","catalog_oil_drill","catalog_dori_harvester","doriFarm"].includes(b.type);
  if(S.factoryAutomationPaused&&automationControlled){b.status="PAUSED_CONTROL";return}
@@ -935,7 +969,7 @@ function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;
   return;
  }
  if(d.kind==="power"||d.kind==="utility"||b.type==="solar"||b.type==="wind"||b.type==="cooling"||b.type==="storage"||b.type==="warehouse"||b.type==="market"||isBeltType(b.type)||b.type==="relay"||b.type==="core"||b.type==="lab")return;
- const ratio=power.ratio;
+ const ratio=localRatio;
  if(b.output){b.status="PAUSED_OUTPUT";return}
  if(b.type==="minerIron"||b.type==="minerCopper"||b.type==="minerCoal"||d.kind==="miner"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=8){b.progress=0;node.amount=Math.max(0,node.amount-1);const id=d.resource;createOutput(b,id,1,{quality:86+(node.seed%12),purity:88,synthetic:false});}return}
  if(b.type==="pump"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=5){b.progress=0;node.amount=Math.max(0,node.amount-3);createOutput(b,"water",3,{quality:100,purity:100,synthetic:false})}return}
