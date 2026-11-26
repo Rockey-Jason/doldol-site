@@ -1,7 +1,7 @@
-import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=22";
+import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=23";
 import { CATALOG_ITEMS, CATALOG_RECIPES, CATALOG_MACHINES, validateCatalog } from "./catalog.js?v=2";
 import { createRuntimeState, ensureItemStacks, addItemStack, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=5";
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, regionAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=5";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, regionAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=6";
 import { validateGameData } from "./game-data-validation.js?v=3";
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
 import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, awardSkillPoints, unlockSkill, skillNodeStatus, calculateSkillBonuses, validateSkillTree, validateSkillState } from "./skill-runtime.js?v=1";
@@ -231,9 +231,13 @@ function finishCampaignIntro(){
  setTimeout(()=>notifyNewMission(getQuest()),380);
  toast("돌이의 발견 기록 완료 · 도로늄 공장 여정 시작");
 }
-function toggleControlPanel(name=activePanel){const wasOpen=controlPanelOpen,previous=activePanel;if(name)changePanel(name);controlPanelOpen=!(wasOpen&&previous===name);$("control-column")?.classList.toggle("panel-open",controlPanelOpen);$("game-menu-toggle")?.classList.toggle("active",controlPanelOpen);if(controlPanelOpen&&document.pointerLockElement===canvas)document.exitPointerLock()}
-function closeControlPanel(){controlPanelOpen=false;$("control-column")?.classList.remove("panel-open");$("game-menu-toggle")?.classList.remove("active")}
-async function toggleFullscreen(){try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen?.();else await document.exitFullscreen?.()}catch{toast("브라우저에서 전체 화면 전환을 허용하지 않았습니다.","warn")}}
+function focusActivePanelTab(){const tab=document.querySelector('.main-tab[data-panel="'+activePanel+'"]');if(tab)requestAnimationFrame(()=>tab.focus({preventScroll:true}));}
+function toggleControlPanel(name=activePanel){const wasOpen=controlPanelOpen,previous=activePanel;if(name)changePanel(name);controlPanelOpen=!(wasOpen&&previous===name);$("control-column")?.classList.toggle("panel-open",controlPanelOpen);$("game-menu-toggle")?.classList.toggle("active",controlPanelOpen);if(controlPanelOpen){if(document.pointerLockElement===canvas)document.exitPointerLock();focusActivePanelTab()}else $("game-menu-toggle")?.focus({preventScroll:true});}
+function closeControlPanel(){controlPanelOpen=false;$("control-column")?.classList.remove("panel-open");$("game-menu-toggle")?.classList.remove("active");$("game-menu-toggle")?.focus({preventScroll:true})}
+let fullscreenRequestPending=false;
+function isCoarsePointer(){return window.matchMedia?.("(pointer:coarse)").matches||("ontouchstart" in window&&navigator.maxTouchPoints>0);}
+function requestDesktopImmersion(){if(E2E_MODE||isCoarsePointer()||document.fullscreenElement||fullscreenRequestPending)return;const request=document.documentElement.requestFullscreen?.();if(!request||typeof request.then!=="function")return;fullscreenRequestPending=true;request.catch(()=>{}).finally(()=>{fullscreenRequestPending=false;});}
+async function toggleFullscreen(){try{if(!document.fullscreenElement){await document.documentElement.requestFullscreen?.();if(isCoarsePointer())try{await screen.orientation?.lock?.("landscape")}catch{}}else{if(document.pointerLockElement===canvas)document.exitPointerLock();await document.exitFullscreen?.()}}catch{toast("브라우저에서 전체 화면 전환을 허용하지 않았습니다.","warn")}}
 function quality(s,id){return s.meta?.[id]?.quality??(s.inventory?.[id]>0?90:0)}
 function purity(s,id){return s.meta?.[id]?.purity??(s.inventory?.[id]>0?90:0)}
 function synthetic(s,id){return s.meta?.[id]?.synthetic??false}
@@ -660,7 +664,7 @@ function setViewMode(mode){
  $("app-layout").classList.toggle("adventure-active",next!=="map");
  $("world-frame").classList.toggle("adventure-active",next!=="map");
  if($("adventure-crosshair"))$("adventure-crosshair").hidden=next==="map";
- if($("world-help"))$("world-help").innerHTML=next==="map"?"<b>조작</b><span>WASD 이동</span><span>드래그 화면 이동 · 우클릭 회전</span><span>휠 확대/축소</span>":"<b>생존 조작</b><span>WASD 이동 · Shift 달리기 · Space 점프</span><span>우클릭 드래그/Shift+드래그 시점 회전 · 화면 버튼 클릭으로 먹기/마시기/사용</span><span>V 1인칭/3인칭 · M 전략 지도</span>";
+ if($("world-help"))$("world-help").innerHTML=next==="map"?"<b>키보드 조작</b><span>WASD 이동 · +/- 확대/축소</span><span>마우스 이동으로 시점 회전 · Esc 메뉴 닫기</span><span>B 건설 · O 운영 · I 창고 · C 도감 · T 연구 · J 임무</span>":"<b>생존 조작</b><span>WASD 이동 · Shift 달리기 · Space 점프 · E 사용</span><span>마우스를 움직여 시점 회전 · 좌클릭 채집/사용</span><span>V 1인칭/3인칭 · M 전략 지도 · B/O/I/C/T/J 메뉴</span>";
  renderHud();drawWorld();markDirty();
 }
 function isAdventureCellFree(x,z){
@@ -1202,6 +1206,26 @@ function closeModal(){if(crystalViewer){crystalViewer.dispose();crystalViewer=nu
 function settingsModal(){const body='<div class="setting-row"><div><strong>효과음</strong><small>건설·채집·연구 알림 소리</small></div><button class="toggle '+(S.settings.sound?"on":"")+'" id="setting-sound"><i></i></button></div><div class="setting-row"><div><strong>모션 감소</strong><small>반짝임과 화면 효과를 줄입니다.</small></div><button class="toggle '+(S.settings.reducedMotion?"on":"")+'" id="setting-motion"><i></i></button></div><p>저장 방식: 로그인 상태에서는 돌이사이트 계정의 개인 클라우드에 저장됩니다. 로그아웃 상태에서는 이 브라우저에만 저장됩니다. 오프라인 생산은 진행되지 않습니다.</p><p id="account-line">계정 연결 상태 확인 중…</p>';showModal("게임 설정",body,[{label:"닫기",cls:"primary"}]);$("setting-sound").onclick=()=>{S.settings.sound=!S.settings.sound;settingsModal();markDirty()};$("setting-motion").onclick=()=>{S.settings.reducedMotion=!S.settings.reducedMotion;settingsModal();markDirty()};$("account-line").textContent=authSession?"돌이사이트 계정 클라우드 연결됨":"로그인이 필요합니다. 돌이사이트에서 로그인 후 다시 접속하세요."}
 function sellItems(){const id=$("sell-resource").value,qty=Math.floor(Number($("sell-amount").value)||0);if(!id||qty<1||availableItemCount(S,id)<qty){toast(itemCount(id)>=qty?"판매 가능한 물량이 다른 공정에 예약되어 있습니다.":"판매 수량이 부족합니다.","warn");return}if(!takeItem(id,qty)){toast("판매 원료 차감에 실패했습니다. 자금은 지급되지 않았습니다.","warn");return}const earned=Math.floor(qty*RESOURCE[id].price);S.money+=earned;S.stats.sold+=qty;log(RESOURCE[id].name+" "+fmt(qty)+"개 판매 · "+fmt(earned)+" D");toast("판매 완료 · +"+fmt(earned)+" D");playTone(680,.1,"triangle");markDirty();renderAll()}
 function setTabFromKey(key){const map={b:"build",o:"factory",i:"inventory",c:"catalog",t:"research",j:"mission"};if(map[key])toggleControlPanel(map[key])}
+function keyboardFocusScope(){
+ if($("modal-overlay")?.classList.contains("show"))return $("modal-card");
+ if($("story-intro")&&!$("story-intro").hidden)return $("story-intro").querySelector(".story-intro-content");
+ if(controlPanelOpen)return $("control-column");
+ return null;
+}
+function moveKeyboardFocus(direction){
+ const scope=keyboardFocusScope();if(!scope)return;
+ const items=[...scope.querySelectorAll('button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled),textarea:not(:disabled),[tabindex]:not([tabindex="-1"])')]
+  .filter(el=>el.getClientRects().length&&!el.hidden&&el.getAttribute("aria-hidden")!=="true");
+ if(!items.length)return;
+ const active=document.activeElement,current=items.includes(active)?active:null;
+ if(!current){items[0].focus();return}
+ const a=current.getBoundingClientRect(),ax=a.left+a.width/2,ay=a.top+a.height/2;
+ const vectors={arrowup:[0,-1],arrowdown:[0,1],arrowleft:[-1,0],arrowright:[1,0]},[dx,dy]=vectors[direction];
+ let best=null,bestScore=Infinity;
+ for(const item of items){if(item===current)continue;const r=item.getBoundingClientRect(),x=r.left+r.width/2-ax,y=r.top+r.height/2-ay,primary=x*dx+y*dy;if(primary<=2)continue;const secondary=Math.abs(x*dy-y*dx);const score=primary+secondary*1.65;if(score<bestScore){best=item;bestScore=score}}
+ if(!best){const index=items.indexOf(current);best=items[(index+(direction==="arrowup"||direction==="arrowleft"?items.length-1:1))%items.length]}
+ best.focus({preventScroll:false});
+}
 function movePlayer(dx,dy){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y};const x=clamp(origin.x+dx,0,WORLD_W-1),y=clamp(origin.y+dy,0,WORLD_H-1);if(!isWalkable(x,y)){toast("시설 또는 지형에 막혀 있습니다.","warn");return}movePlayerTo(x,y)}
 function wireControls(){
  $("main-tabs").addEventListener("click",e=>{const b=e.target.closest("[data-panel]");if(b)changePanel(b.dataset.panel)});
@@ -1243,8 +1267,14 @@ function wireControls(){
   if(adventureMode()){
    if(e.pointerType==="touch"){
     if(e.clientX>card.getBoundingClientRect().left+card.getBoundingClientRect().width*.38)lookPointer={id:e.pointerId,x:e.clientX,y:e.clientY};
-   }else if(e.button===2||e.shiftKey){lookPointer={id:e.pointerId,x:e.clientX,y:e.clientY}}
-   else if(e.button===0){mineHeld=true;mineCooldown=0;performAdventureAction()}
+   }else{
+    requestDesktopImmersion();
+    if(e.button===2||e.shiftKey){lookPointer={id:e.pointerId,x:e.clientX,y:e.clientY}}
+    else if(e.button===0){
+     try{if(document.pointerLockElement!==card)card.requestPointerLock?.()?.catch?.(()=>{})}catch{}
+     mineHeld=true;mineCooldown=0;performAdventureAction()
+    }
+   }
    return;
   }
   pointer={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,moved:0,rotate:e.button===2||e.shiftKey};
@@ -1278,24 +1308,40 @@ function wireControls(){
  card.addEventListener("pointercancel",e=>{activePointers.delete(e.pointerId);if(pointer?.id===e.pointerId)pointer=null;if(lookPointer?.id===e.pointerId)lookPointer=null;mineHeld=false});
  card.addEventListener("wheel",e=>{e.preventDefault();if(adventureMode())setZoom(camera.zoom+(e.deltaY<0?.06:-.06));else setZoom(camera.zoom+(e.deltaY<0?.06:-.06))},{passive:false});
  document.addEventListener("mousemove",e=>{
-  if(!adventureMode()||document.pointerLockElement!==card)return;
-  playerMotion.yaw-=e.movementX*.0025;playerMotion.pitch=clamp(playerMotion.pitch-e.movementY*.0025,-1.25,1.12);
+  if(document.pointerLockElement!==card||controlPanelOpen)return;
+  if(adventureMode()){
+   playerMotion.yaw-=e.movementX*.0028;
+   playerMotion.pitch=clamp(playerMotion.pitch-e.movementY*.0025,-1.25,1.12);
+  }else world3d.orbit(e.movementX,e.movementY);
  });
  document.addEventListener("pointerlockchange",()=>{card.classList.toggle("pointer-locked",document.pointerLockElement===card)});
  document.addEventListener("pointerlockerror",()=>toast("마우스 잠금이 지원되지 않습니다. 드래그로 시점을 조작하세요.","warn"));
  window.addEventListener("keydown",e=>{
-  if(e.target instanceof HTMLInputElement||e.target instanceof HTMLSelectElement||e.target instanceof HTMLTextAreaElement||$("modal-overlay").classList.contains("show"))return;
   const k=e.key.toLowerCase();
+  const editing=e.target instanceof HTMLInputElement||e.target instanceof HTMLSelectElement||e.target instanceof HTMLTextAreaElement;
+  if(k==="escape"){
+   e.preventDefault();
+   if(document.pointerLockElement===card)document.exitPointerLock();
+   if($("modal-overlay").classList.contains("show")){closeModal();return}
+   if(controlPanelOpen){closeControlPanel();return}
+   if($("story-intro")&&!$("story-intro").hidden){$("story-skip-button")?.focus();return}
+   selectedBuild=null;selectedLandTool=null;drawWorld();return;
+  }
+  if(editing)return;
+  const scope=keyboardFocusScope();
+  if(scope&&["arrowup","arrowdown","arrowleft","arrowright"].includes(k)){e.preventDefault();moveKeyboardFocus(k);return}
+  if(k==="enter"||k===" "){
+   if(scope&&e.target===document.body){e.preventDefault();scope.querySelector("button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled)")?.focus();return}
+  }
   if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"," ","shift"].includes(k))e.preventDefault();
+  if(!scope)requestDesktopImmersion();
   if(k==="v"){setViewMode(S.player.viewMode==="first"?"third":"first");return}
   if(k==="m"){if(S.player.layer==="mine"){toast("광산 내부에서는 지도를 열 수 없습니다.");return}setViewMode(S.player.viewMode==="map"?"first":"map");return}
-  
   if(k==="4"){selectTool("pickaxe");return}if(k==="5"){selectTool("axe");return}
   if(k==="f"){toggleFullscreen();return}
   if(k==="e"&&adventureMode()){adventureKeys.add("e");performAdventureAction();return}
   if(k==="x"){if(selectedBuilding){const b=S.buildings.find(x=>x.uid===selectedBuilding);if(b){b.dir=(b.dir+1)%4;renderMachineDetails();drawWorld();markDirty()}}else toast("시설을 선택한 뒤 X 키로 방향을 회전하세요.");return}
-  if(k==="escape"){if(document.pointerLockElement===card)document.exitPointerLock();if(controlPanelOpen){closeControlPanel();return}selectedBuild=null;selectedLandTool=null;drawWorld();return}
-  if(k==="b"||k==="o"||k==="i"||k==="t"||k==="j")setTabFromKey(k);
+  if(k==="b"||k==="o"||k==="i"||k==="c"||k==="t"||k==="j"){setTabFromKey(k);return}
   if(k===" "&&adventureMode())adventureKeys.add(" ");
   else if(adventureMode()&&["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright","shift"].includes(k))adventureKeys.add(k);
   else if(!adventureMode()&&(k==="w"||k==="arrowup"))movePlayer(0,-1);
@@ -1305,6 +1351,16 @@ function wireControls(){
   if(k===" "&&!adventureMode()){S.paused=!S.paused;renderHud()}
  });
  window.addEventListener("keyup",e=>{const k=e.key.toLowerCase();adventureKeys.delete(k);if(k===" ")adventureKeys.delete(" ")});
+ document.addEventListener("fullscreenchange",()=>{document.documentElement.classList.toggle("factory-fullscreen",!!document.fullscreenElement);drawWorld()});
+ // A mouse click must never operate desktop menus. Keyboard-generated clicks (detail === 0)
+ // and all coarse-pointer touch interactions remain available.
+ document.addEventListener("click",e=>{
+  if(E2E_MODE||isCoarsePointer()||e.detail===0)return;
+  const control=e.target.closest?.("#game-root button,#game-root a[href],#game-root input,#game-root select,#game-root textarea,.modal-overlay button,.story-intro button");
+  if(!control)return;
+  e.preventDefault();e.stopImmediatePropagation();
+  toast("PC 메뉴는 키보드로 조작할 수 있습니다.","warn");
+ },true);
  document.querySelectorAll("[data-view-mode]").forEach(b=>b.addEventListener("click",()=>setViewMode(b.dataset.viewMode)));
  document.querySelectorAll("[data-tool]").forEach(b=>b.addEventListener("click",()=>selectTool(b.dataset.tool)));
  document.querySelectorAll("[data-land-tool]").forEach(b=>b.addEventListener("click",()=>{selectedLandTool=b.dataset.landTool==="none"?null:b.dataset.landTool;selectedBuild=null;closeControlPanel();toast(selectedLandTool==="flatten"?"평탄화할 타일을 선택하세요.":selectedLandTool==="foundation"?"기초 타일을 설치할 평탄화 지형을 선택하세요.":"지형 도구 해제");drawWorld()}));
