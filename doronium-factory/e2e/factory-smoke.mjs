@@ -109,6 +109,12 @@ try {
   await desktop.locator("#catalog-category").selectOption("power");
   assert.ok(await desktop.locator(".catalog-machine-card").count() >= 3, "Power facilities must be filterable by category");
   await desktop.locator("#catalog-category").selectOption("all");
+  const migration = await desktop.evaluate(() => window.__doroniumFactoryTest.saveMigrationTest());
+  assert.equal(migration.newOrePresent, true, "Legacy mine saves must receive new resource veins");
+  assert.equal(migration.newOreType, "aluminumOre", "New mineral deposits must keep their canonical type");
+  assert.equal(migration.legacyAmount, 7, "Existing mine deposit quantities must be preserved during migration");
+  assert.equal(migration.worldVersion, 5, "Legacy saves must upgrade to the latest world schema");
+  assert.equal(migration.saveValid, true, "Migrated world state must pass the save runtime validator");
   const expandedSystems = await desktop.evaluate(() => window.__doroniumFactoryTest.expandedSystemsTest());
   assert.equal(expandedSystems.bridge.placed, true, "A bridge machine item must install on a river tile");
   assert.equal(expandedSystems.bridge.walkable, true, "A placed bridge must become a walkable path across water");
