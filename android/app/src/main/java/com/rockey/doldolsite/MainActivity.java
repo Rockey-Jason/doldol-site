@@ -7,10 +7,8 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.View;
 import android.view.Window;
 import android.webkit.CookieManager;
-import android.webkit.SafeBrowsingResponse;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
@@ -21,7 +19,6 @@ import android.webkit.WebViewClient;
 import android.webkit.WebResourceResponse;
 import android.webkit.SslErrorHandler;
 import android.net.http.SslError;
-import android.provider.MediaStore;
 import android.widget.FrameLayout;
 import android.webkit.DownloadListener;
 
@@ -57,7 +54,9 @@ public class MainActivity extends Activity {
         settings.setSupportMultipleWindows(false);
         settings.setMediaPlaybackRequiresUserGesture(true);
         settings.setMixedContentMode(WebSettings.MIXED_CONTENT_NEVER_ALLOW);
-        settings.setSafeBrowsingEnabled(true);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            settings.setSafeBrowsingEnabled(true);
+        }
         settings.setAllowFileAccess(false);
         settings.setAllowContentAccess(true);
         settings.setUserAgentString(settings.getUserAgentString() + " DoldolAndroidApp/1.0");
