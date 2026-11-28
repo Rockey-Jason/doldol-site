@@ -1,5 +1,5 @@
 /* DORONIUM FACTORY — topographic 3D world, underground mine and industrial renderer */
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, PRIMARY_MINE_ID, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=8";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, PRIMARY_MINE_ID, MINE_ENTRANCES, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=8";
 let THREE = null;
 try { THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"); }
 catch (error) { console.warn("Three.js CDN unavailable; using the compatibility renderer.", error); }
@@ -468,10 +468,19 @@ export function createWorld3D(canvas, getState) {
         g.userData={cell:{x,z},targetKind:node.type==="mineEntrance"?{kind:"mineEntrance",mineId:node.mineId||"mine_"+x+"_"+z,mineName:node.mineName||"지하 광산"}:node.type==="wildDori"?{kind:"wildDori",x,z}:{kind:"resource",type:node.type},wildDori:null};
         nodeRoot.add(g);nodeGroupsByKey.set(key,g);
         if(node.type==="mineEntrance"){
-          const stone=mat(0x53616a,.18,.9),glow=mat(0x3c9eaa,.3,.35,0x124f59);
+          const geology=MINE_ENTRANCES.find(entry=>entry.id===node.mineId)?.geology||"granite";
+          const entrancePalette={
+            granite:{stone:0x53616a,glow:0x3c9eaa,light:0x56d8da},
+            iron:{stone:0x62584d,glow:0x9b8567,light:0xe1ae72},
+            crystal:{stone:0x3c6270,glow:0x57d7e8,light:0x65eaff},
+            basalt:{stone:0x41414c,glow:0x9c7563,light:0xd08d6b},
+            copper:{stone:0x765341,glow:0xc18b5d,light:0xffbd80}
+          };
+          const palette=entrancePalette[geology]||entrancePalette.granite;
+          const stone=mat(palette.stone,.18,.9),glow=mat(palette.glow,.3,.35,palette.glow);
           makeBox(g,-13,13,0,5,29,6,stone);makeBox(g,13,13,0,5,29,6,stone);makeBox(g,0,27,0,31,6,7,stone);
           makeBox(g,0,8,-1,19,19,1.5,mat(0x02070c,.02,.98));makeBox(g,0,30,0,25,1.1,8,glow,false);
-          if(highEndDevice){const lamp=new THREE.PointLight(0x56d8da,1.1,88,2);lamp.position.set(0,20,-8);g.add(lamp);}
+          if(highEndDevice){const lamp=new THREE.PointLight(palette.light,1.1,88,2);lamp.position.set(0,20,-8);g.add(lamp);}
         }else if(["birchTree","rubberTree","barkTree","frozenTree","fireTree"].includes(node.type)){
           const trunkColor=node.type==="birchTree"?0xd5d8cc:node.type==="frozenTree"?0x8295a3:node.type==="fireTree"?0x59352b:0x654633;
           const crownColor=node.type==="birchTree"?0x7cae86:node.type==="rubberTree"?0x326a4c:node.type==="barkTree"?0x355b3d:node.type==="frozenTree"?0xb4d9e4:0x9b4d2e;
