@@ -14,7 +14,7 @@
 | 0 프로젝트 감사 | Partial | `Docs/PROJECT_AUDIT.md`, 본 문서, `SAVE_COMPATIBILITY_REPORT.md` | 기존 파일·저장 키·월드·CI를 조사했고 Unity/웹 차이를 기록 | 실제 Android/iOS 기기, 장시간 실제 실행, 전체 사용자 세이브 표본은 확인하지 못함 |
 | 1 Core Runtime / 데이터 | Partial | `simulation-core.js`, `game-data-validation.js`, `failure-runtime.js` | 0.1초 고정 간격, 18개 Stage trace, stack ID/예약/검증, 전체 활성 예약 원장의 stack별 합계 검증 및 초과 차감 fail-closed, 연구 그래프 검증, 저장 가능한 RNG/실패 이벤트 구조 | 모든 Stage의 별도 권위 처리기, 도메인 이벤트/RewardClaimID 전역 적용, Stack 소유권·provenance 완전 구현 미완 |
 | 2 플레이어·카메라·입력 | Partial | `factory.js`, `world3d.js`, `e2e/factory-smoke.mjs` | 1·3인칭/전략 시점, 프레임 기반 이동, 실제 Playwright W/Space 이동·점프·착지, blur/hidden 입력 초기화, 키보드/터치 HUD, 생존·채집 상호작용 | 실제 장치 입력/카메라 충돌·안전 복구 지점·게임패드 전체 검증 미완 |
-| 3 월드·자원·채굴 | Conflict | `terrain-system.js`, `world3d.js`, `factory.js` | 두 대륙 192×160 타일, 8 바이옴, 높낮이 지형, 5층 지하 광산, Seed 기반 생성, 현재 정적 광산 데이터에 자연 도로늄 광맥 없음 | 사양의 2048m×2048m와 현재 타일 월드 실제 범위/좌표 체계가 다름. 기존 세이브/건물 무손실 월드 스케일 변환 정책 필요 |
+| 3 월드·자원·채굴 | Conflict | `terrain-system.js`, `mine-system.js`, `world3d.js`, `factory.js` | 두 대륙 192×160 타일, 8 바이옴, 높낮이 지형. 입구 5곳은 각각 독립 `mineId`·seed·5층 터널/분기/광맥/잔량/현재 심도를 가지며, 진입·상하층 승강기·충돌·채굴·자동 채굴기·저장/복원은 활성 광산만 사용. Node 61/61 및 CI #1762 데스크톱/모바일 WebGL 회귀 통과. 자연 도로늄 광맥 없음 | 2048m×2048m와 현재 192×160 타일 월드의 범위/좌표 체계는 여전히 다름. 무손실 월드 스케일 migration과 실물 기기 검증 필요. 전체 v4.5.0 Gate는 Conflict 유지 |
 | 4 인벤토리·아이템·제작 트랜잭션 | Partial | simulation-core.js, factory.js, fusion-runtime.js | ItemStack 단위 수량/품질/순도/synthetic, split/merge, 5000 상한, per-stack reservation, 수량/할당 정합성 검증, 원자적 배치 소비. 퓨전 예약 재료는 판매·제작·생존·수확·건설·연료 사용에서 잠기며, 수동 기계 투입은 실제 소비된 스택의 품질/순도/synthetic 메타데이터를 보존 | owner-domain, NeverSplit/NeverMerge 정책, 컨베이어/창고/배송의 모든 소유권 이전 원자성, 메타데이터 추적의 모든 자동 물류 경로 적용 미완 |
 | 5 기계·생산 | Partial | `production-runtime.js`, `factory.js`, `failure-runtime.js` | 전력 gate, ramp 온도/압력, 안전범위, wear, completion buffer 1개, 결정론적 hazard 계산기 | 실제 MachineData 기반 FailureProfile·등급별 결과가 미등록이므로 게임 내 고장 롤/자원 손실/잔류물 적용은 비활성. 정비 레시피/재개 경계 미완 |
 | 6 전력·물류·유체·저장 | Partial | `factory.js`, `simulation-core.js` | 단순 전력 총량, 벨트 인접 이동, 창고·시장·기계 출력 전달, 로컬 저장 백업 | NetworkID·배터리/변압기 그래프, Sorter/Splitter/Merger/루프 교착, 별도 Fluid graph·탱크·밸브·예약·오염 미구현 |
@@ -35,6 +35,14 @@
 - Added a real local save → page reload → restore regression for currency, player position, survival health, inventory and runtime validation.
 - Desktop and mobile-emulation WebGL passed. Virtual-hour simulation ran 36,000 fixed ticks, produced 296 iron plates, and conserved ore/coal equivalent balances at 50,000/30,000. Mobile viewport 390×844 verified touch movement.
 - The gate remains **Partial** overall: mobile is emulated, not physical hardware; no wall-clock hour soak or signed-in cloud session was tested. The wider v4.5.0 gaps below remain unchanged.
+
+## 2026-11-28 Phase 2 verification update
+
+- **Mine isolation gate implemented and verified:** five entrance IDs, deterministic independent five-floor tunnel/deposit registries, per-mine remembered depth, exact entrance-to-instance routing, mine-scoped harvesting/automatic mining, active-mine rendering/targeting, upper/lower lifts, and underground collision isolation from surface buildings.
+- Legacy `mineDeposits` saves migrate to one entrance selected from their saved surface location; old depletion is preserved, missing default mineral rows are restored, and the other four mines receive independent generated maps. Modern partial mine saves merge with deterministic defaults.
+- Save writes now validate mine entrance identity/uniqueness, current depth, tunnel bounds and connectivity, and ore ownership/coordinates/quantities.
+- CI run [#1762](https://github.com/Rockey-Jason/doldol-site/actions/runs/46132509848) succeeded: **61/61 Node tests**, plus desktop WebGL and mobile-emulation WebGL Playwright regression including actual mine aiming/mining, switching two entrances, independent depth, ascend/descend, save/reload, HUD and the existing 36,000-tick factory soak. The virtual soak produced 296 iron plates and conserved ore/coal ledger equivalents at 50,000/30,000.
+- The wider Phase 2/world gate remains **Conflict** only because the canonical 2048m×2048m coordinate world is still not migrated from the existing 192×160 surface map. This change intentionally preserves existing world/building/save coordinates rather than risking an unversioned rescale. Physical device and real wall-clock long-soak tests remain separate gates.
 
 ## 중요 사양 충돌과 안전 결정
 
