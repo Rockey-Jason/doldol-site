@@ -100,6 +100,7 @@
     } catch (_) {}
     try {
       native.set.call(localStorage, key, serialized);
+      try { native.remove.call(window.sessionStorage, key); } catch (_) {}
       volatileBackups.delete(uid);
       return true;
     } catch (_) {}
@@ -260,8 +261,8 @@
 
     if (previous && previous !== uid) {
       const oldMeta = readMeta(previous);
-      if (!preservePendingBackup(previous, oldMeta) && oldMeta.dirty.length) {
-        showStatus("이전 계정의 미동기화 변경을 임시 보관하지 못했어요", "error");
+      if (!preservePendingBackup(previous, oldMeta) && (oldMeta.dirty.length || pending.size)) {
+        showStatus("저장 공간이 부족해 변경 사항은 현재 탭에만 임시 보관돼요. 탭을 닫지 말아 주세요.", "error");
       }
       const oldKeys = new Set([...oldMeta.managed, ...oldMeta.dirty]);
       applyingRemote = true;
