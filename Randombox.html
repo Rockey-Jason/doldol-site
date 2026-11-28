@@ -466,6 +466,20 @@ button {
     letter-spacing: -0.7px;
 }
 
+ .확률요약 {
+    position: relative;
+    z-index: 1;
+    margin: -10px 0 14px;
+    padding: 10px 12px;
+    border: 1px solid rgba(255, 227, 138, 0.16);
+    border-radius: 11px;
+    color: rgba(255,255,255,0.72);
+    background: rgba(255, 227, 138, 0.045);
+    font-size: 13px;
+    line-height: 1.5;
+}
+.확률요약 strong { color: var(--gold); }
+
 .확률목록 {
     position: relative;
     z-index: 1;
@@ -1156,9 +1170,9 @@ button {
 
 
     <h2 class="패널제목">
-        🎲 보상 확률
+        🎲 보상 확률표
     </h2>
-
+    <div id="확률요약" class="확률요약">서버 보상 확률을 불러오는 중...</div>
 
     <div
         class="확률목록"
@@ -1303,7 +1317,6 @@ let 보상목록 = [];
 let 인벤토리 = {};
 let 기록 = [];
 let 뽑는중 = false;
-let 구매확인중 = false;
 
 /* =====================================================
    DOM
@@ -1314,6 +1327,7 @@ const 뽑기버튼 = document.getElementById("뽑기버튼");
 const 랜덤박스 = document.getElementById("랜덤박스");
 const 결과 = document.getElementById("결과");
 const 확률목록 = document.getElementById("확률목록");
+const 확률요약 = document.getElementById("확률요약");
 const 아이템그리드 = document.getElementById("아이템그리드");
 const 기록목록 = document.getElementById("기록목록");
 const 확률보기 = document.getElementById("확률보기");
@@ -1629,6 +1643,9 @@ async function 보상목록불러오기() {
             (합계, 보상) => 합계 + 보상.확률,
             0
         );
+        if (확률요약) {
+            확률요약.innerHTML = `총 <strong>${보상목록.length}종</strong> · 전체 확률 합계 <strong>${전체확률.toFixed(4)}%</strong> · 1회 <strong>1,000 돌돌코인</strong>`;
+        }
 
         console.log("🎲 불러온 보상 수:", 보상목록.length);
         console.log("🎲 전체 확률:", 전체확률.toFixed(4) + "%");
@@ -1856,7 +1873,7 @@ function 오류메시지추출(error) {
 ===================================================== */
 
 async function 뽑기() {
-    if (뽑는중 || 구매확인중) return;
+    if (뽑는중) return;
 
     if (!현재사용자) {
         alert("로그인 후 이용해주세요.");
@@ -1872,28 +1889,7 @@ async function 뽑기() {
         return;
     }
 
-    구매확인중 = true;
-    let 구매확정 = false;
-    try {
-        if (!window.DoriPurchaseConfirm?.ask) {
-            throw new Error("구매 확인 기능을 불러오지 못했습니다.");
-        }
-        구매확정 = await window.DoriPurchaseConfirm.ask({
-            itemName: "돌이 랜덤 박스 1회 열기",
-            amount: 뽑기가격,
-            currency: "돌돌코인",
-            currentBalance: 사용자정보.doldolcoin,
-            detail: "랜덤 보상 1개를 획득합니다. 결과는 무작위이며 구매 후 되돌릴 수 없습니다."
-        });
-    } catch (confirmError) {
-        console.error("랜덤 박스 구매 확인 오류:", confirmError);
-        alert("구매 확인창을 열지 못했습니다. 다시 시도해 주세요.");
-        return;
-    } finally {
-        구매확인중 = false;
-    }
-    if (!구매확정) return;
-
+    // 랜덤 박스는 구매 확인 모달 없이 즉시 서버 RPC로 처리합니다.
     뽑는중 = true;
     뽑기버튼.disabled = true;
     뽑기버튼.textContent = "🎁 상자를 여는 중...";
@@ -2080,11 +2076,12 @@ async function 시작() {
 
     결과.textContent = "데이터를 불러오는 중입니다...";
 
-    const 로그인됨 = await 로그인확인();
-    if (!로그인됨) return;
-
+    // 확률표는 비로그인 사용자에게도 공개합니다.
     const 보상불러오기성공 = await 보상목록불러오기();
     if (!보상불러오기성공) return;
+
+    const 로그인됨 = await 로그인확인();
+    if (!로그인됨) return;
 
     const 사용자불러오기성공 = await 사용자정보불러오기();
     if (!사용자불러오기성공) return;
