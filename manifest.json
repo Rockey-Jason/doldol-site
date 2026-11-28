@@ -9,12 +9,18 @@
   "scope": "./",
   "display": "standalone",
   "display_override": [
-    "window-controls-overlay",
-    "standalone"
+    "standalone",
+    "window-controls-overlay"
   ],
-  "orientation": "portrait-primary",
   "background_color": "#000033",
   "theme_color": "#000033",
+  "prefer_related_applications": false,
+  "categories": [
+    "education",
+    "entertainment",
+    "games",
+    "utilities"
+  ],
   "icons": [
     {
       "src": "./rockeysite-icon-3.png?v=20261009-icon3",
