@@ -416,6 +416,14 @@ export function createWorld3D(canvas, getState) {
         targetKind:{kind:"resource",type:node.type,mine:true,mineId:mineID,level,depthY:node.depthY}
       };
       mineRoot.add(g);
+      // Reliable central aim proxy: the visible ore shards intentionally sit
+      // around the deposit core, so a thin invisible collider keeps the player
+      // from aiming through gaps between decorative crystals.
+      const aimProxy=new THREE.Mesh(
+        new THREE.BoxGeometry(18,16,18),
+        new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,side:THREE.DoubleSide})
+      );
+      aimProxy.position.y=5;aimProxy.userData.mineHitProxy=true;g.add(aimProxy);
       makeBox(g,0,-2,0,13,8,13,mat(0x1a2932,.08,.98));
       if(String(node.type).startsWith("doronium_"))makeCrystal(g,node.type,0,5,0,3.1);
       else{
