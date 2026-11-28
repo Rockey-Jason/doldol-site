@@ -1691,13 +1691,50 @@ if(E2E_MODE){
    const previous=structuredClone(S);
    try{
     S=freshState();
-    const original=structuredClone(S),newOre=Object.entries(original.mineDeposits).find(([,node])=>node.type==="aluminumOre");
-    const preserved=original.mineDeposits["1:8:12"];
-    if(!newOre||!preserved)throw new Error("The test map must include a new aluminum vein and a legacy ore vein");
-    const oldDeposits={...original.mineDeposits};delete oldDeposits[newOre[0]];oldDeposits["1:8:12"]={...preserved,amount:7};
-    hydrateState({...original,worldVersion:4,mineDeposits:oldDeposits});
-    return {newOreKey:newOre[0],newOrePresent:!!S.mineDeposits[newOre[0]],newOreType:S.mineDeposits[newOre[0]]?.type,legacyAmount:S.mineDeposits["1:8:12"]?.amount,worldVersion:S.worldVersion,saveValid:validateRuntimeState(S).valid};
+    const primary=S.mineInstances[PRIMARY_MINE_ID],newOre=Object.entries(primary.deposits).find(([,node])=>node.type==="aluminumOre");
+    const preserved=primary.deposits["1:8:12"];
+    if(!newOre||!preserved)throw new Error("The primary mine must include a generated aluminum vein and a legacy ore vein");
+    const oldDeposits={...primary.deposits};delete oldDeposits[newOre[0]];oldDeposits["1:8:12"]={...preserved,amount:7};
+    const legacyBuffers={"3":{ironOre:{quantity:4,quality:92,purity:90,synthetic:false}}};
+    const legacy={...structuredClone(S),worldVersion:5,mineInstances:undefined,mineDeposits:oldDeposits,mineElevatorBuffers:legacyBuffers};
+    hydrateState(legacy);
+    const restored=S.mineInstances[PRIMARY_MINE_ID];
+    return {newOreKey:newOre[0],newOrePresent:!!restored.deposits[newOre[0]],newOreType:restored.deposits[newOre[0]]?.type,legacyAmount:restored.deposits["1:8:12"]?.amount,legacyElevatorAmount:restored.elevatorBuffers["3"]?.ironOre?.quantity||0,mineCount:Object.keys(S.mineInstances).length,worldVersion:S.worldVersion,saveValid:validateRuntimeState(S).valid};
    }finally{S=previous;markSceneDirty();renderAll()}
+  },
+  mineIsolationTest(){
+   const previous=structuredClone(S),previousMotion=structuredClone(playerMotion);
+   try{
+    S=freshState();
+    const ids=MINE_ENTRANCES.map(entry=>entry.id),mineA=S.mineInstances[ids[0]],mineB=S.mineInstances[ids[1]];
+    const depositA=Object.values(mineA.deposits)[0],depositB=Object.values(mineB.deposits)[0];
+    if(!depositA||!depositB)throw new Error("Each mine must generate at least one deposit");
+    const depositABefore=depositA.amount,depositBBefore=depositB.amount;
+    depositA.amount=Math.max(0,depositA.amount-1);
+    storeInMineElevator(2,"ironOre",3,{quality:92,purity:90,synthetic:false},ids[0]);
+    storeInMineElevator(2,"ironOre",5,{quality:88,purity:95,synthetic:false},ids[1]);
+    mineA.currentLevel=3;mineA.player={x:8,z:12,yaw:.3,pitch:-.1,level:3};
+    mineB.currentLevel=1;mineB.player={x:3,z:12,yaw:0,pitch:-.06,level:1};
+    enterMine(ids[0]);
+    const activeA={mineId:currentMineId(),level:S.player.mineLevel,x:playerMotion.x,z:playerMotion.z};
+    const sceneA=world3d.inspect();
+    exitMine();
+    enterMine(ids[1]);
+    const activeB={mineId:currentMineId(),level:S.player.mineLevel,x:playerMotion.x,z:playerMotion.z};
+    const sceneB=world3d.inspect();
+    const result={
+      ids,
+      independentObjects:mineA!==mineB&&mineA.deposits!==mineB.deposits&&mineA.elevatorBuffers!==mineB.elevatorBuffers,
+      depositAChanged:depositA.amount===Math.max(0,depositABefore-1),
+      depositBUnchanged:depositB.amount===depositBBefore,
+      elevatorA:mineA.elevatorBuffers["2"]?.ironOre?.quantity||0,
+      elevatorB:mineB.elevatorBuffers["2"]?.ironOre?.quantity||0,
+      activeA,activeB,
+      sceneA:{id:sceneA.activeMineId,geology:sceneA.activeMineGeology,tunnels:sceneA.activeMineTunnelCells},
+      sceneB:{id:sceneB.activeMineId,geology:sceneB.activeMineGeology,tunnels:sceneB.activeMineTunnelCells}
+    };
+    return result;
+   }finally{S=previous;playerMotion=previousMotion;markSceneDirty();renderAll();setViewMode(S.player.viewMode)}
   },
   expandedSystemsTest(){
    const previous=structuredClone(S);
