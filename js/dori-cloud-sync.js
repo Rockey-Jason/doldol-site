@@ -30,6 +30,7 @@
   let statusNode = null;
   let meta = { dirty: [], managed: [], initialized: false };
   const pending = new Map();
+  const volatileBackups = new Map();
 
   const eligible = key => {
     const k = String(key || "");
@@ -51,33 +52,61 @@
   // Keep unsynced edits isolated per account while the visible localStorage cache
   // is switched to another account. sessionStorage survives same-tab navigation
   // without exposing one account's pending values to another account.
-  const readPendingBackup = uid => {
-    if (!uid) return new Map();
+  const parsePendingBackup = raw => {
+    if (!raw) return null;
     try {
-      const raw = native.get.call(window.sessionStorage, PENDING_BACKUP_PREFIX + uid);
-      const parsed = raw ? JSON.parse(raw) : null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
       const entries = new Map();
-      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
-        for (const [key, value] of Object.entries(parsed)) {
-          if (!eligible(key) || !value || typeof value !== "object" ||
-              typeof value.deleted !== "boolean" ||
-              (!value.deleted && typeof value.value !== "string")) continue;
-          entries.set(key, { value: value.deleted ? null : value.value, deleted: value.deleted });
-        }
+      for (const [key, value] of Object.entries(parsed)) {
+        if (!eligible(key) || !value || typeof value !== "object" ||
+            typeof value.deleted !== "boolean" ||
+            (!value.deleted && typeof value.value !== "string")) continue;
+        entries.set(key, { value: value.deleted ? null : value.value, deleted: value.deleted });
       }
       return entries;
-    } catch (_) { return new Map(); }
+    } catch (_) { return null; }
+  };
+  const readPendingBackup = uid => {
+    if (!uid) return new Map();
+    const volatile = volatileBackups.get(uid);
+    if (volatile) return new Map(volatile);
+    const key = PENDING_BACKUP_PREFIX + uid;
+    try {
+      const sessionCopy = parsePendingBackup(native.get.call(window.sessionStorage, key));
+      if (sessionCopy) return sessionCopy;
+    } catch (_) {}
+    try {
+      const localCopy = parsePendingBackup(native.get.call(localStorage, key));
+      if (localCopy) return localCopy;
+    } catch (_) {}
+    return new Map();
   };
   const writePendingBackup = (uid, entries) => {
     if (!uid) return false;
-    try {
-      const storage = window.sessionStorage;
-      if (!storage) return false;
-      const key = PENDING_BACKUP_PREFIX + uid;
-      if (!entries.size) native.remove.call(storage, key);
-      else native.set.call(storage, key, JSON.stringify(Object.fromEntries(entries)));
+    const key = PENDING_BACKUP_PREFIX + uid;
+    if (!entries.size) {
+      volatileBackups.delete(uid);
+      try { native.remove.call(window.sessionStorage, key); } catch (_) {}
+      try { native.remove.call(localStorage, key); } catch (_) {}
       return true;
-    } catch (_) { return false; }
+    }
+    const serialized = JSON.stringify(Object.fromEntries(entries));
+    try {
+      native.set.call(window.sessionStorage, key, serialized);
+      try { native.remove.call(localStorage, key); } catch (_) {}
+      volatileBackups.delete(uid);
+      return true;
+    } catch (_) {}
+    try {
+      native.set.call(localStorage, key, serialized);
+      volatileBackups.delete(uid);
+      return true;
+    } catch (_) {}
+    // Keep the edit in memory as a final same-tab fallback. The caller reports
+    // that the backup is not durable so the user is not misled.
+    volatileBackups.set(uid, new Map(entries));
+    return false;
   };
   const preservePendingBackup = (uid, oldMeta) => {
     if (!uid) return true;
@@ -355,20 +384,29 @@
           auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
       window.doriSupabase = client;
+      let authEventVersion = 0;
+      client.auth.onAuthStateChange((event, sessionNow) => {
+        const eventVersion = ++authEventVersion;
+        queueMicrotask(() => {
+          if (eventVersion !== authEventVersion) return;
+          void switchAccount(sessionNow?.user?.id || null);
+        });
+      });
+      const versionBeforeSession = authEventVersion;
       const { data: { session }, error } = await client.auth.getSession();
       if (error) throw error;
-      client.auth.onAuthStateChange((event, sessionNow) => {
-        queueMicrotask(() => { void switchAccount(sessionNow?.user?.id || null); });
-      });
-      let verifiedUserId = null;
-      if (session?.user?.id) {
-        // Verify the cached session against Auth before using its user ID for cloud partitioning.
-        const { data: { user }, error: userError } = await client.auth.getUser();
-        if (userError) throw userError;
-        verifiedUserId = user?.id || null;
+      if (authEventVersion === versionBeforeSession) {
+        let verifiedUserId = null;
+        if (session?.user?.id) {
+          // Verify the cached session against Auth before using its user ID for cloud partitioning.
+          const versionBeforeUserCheck = authEventVersion;
+          const { data: { user }, error: userError } = await client.auth.getUser();
+          if (userError) throw userError;
+          if (authEventVersion === versionBeforeUserCheck) verifiedUserId = user?.id || null;
+        }
+        // Skip a stale initial snapshot if an auth event arrived while verification was pending.
+        if (authEventVersion === versionBeforeSession) await switchAccount(verifiedUserId);
       }
-      // Also clear stale account-scoped cache state when this tab starts signed out.
-      await switchAccount(verifiedUserId);
       window.addEventListener("focus", () => { if (currentUserId) void syncNow(); });
       window.addEventListener("online", () => { if (currentUserId) void syncNow(); });
       document.addEventListener("visibilitychange", () => {
