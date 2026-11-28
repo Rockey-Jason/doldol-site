@@ -174,7 +174,9 @@ try {
   const afterKeyboardMove = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
   assert.ok(afterKeyboardMove.z < beforeKeyboardMove.z,
     "A real browser WASD keydown/keyup pair must move the engineer, not only the test helper");
-  await desktop.keyboard.down(" ");
+  await desktop.keyboard.down("Space");
+  assert.ok((await desktop.evaluate(() => window.__doroniumFactoryTest.heldKeys())).includes(" "),
+    "The physical Space key must be normalized into the jump action state");
   await desktop.waitForTimeout(100);
   const airborne = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
   assert.ok(airborne.y > 0 && !airborne.grounded,
