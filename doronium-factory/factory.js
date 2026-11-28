@@ -1663,11 +1663,11 @@ if(E2E_MODE){
   survivalTick(seconds,deplete=false){if(deplete){S.survival.hunger=0;S.survival.thirst=0}updateSurvival(Math.max(0,Number(seconds)||0));return structuredClone(S.survival)},
   setupMiningTest(){
     S=freshState();const mineID=mineIdFromEntrance(MINE_ENTRANCES[0].x,MINE_ENTRANCES[0].z),layer=getMineLevel(S.mines,mineID,1);
-    S.player={...S.player,x:8,y:14,viewMode:"first",layer:"mine",mineId:mineID,mineLevel:1,yaw:0,pitch:.06};S.survival={health:100,hunger:100,thirst:100};
+    S.player={...S.player,x:8,y:14,viewMode:"first",layer:"mine",mineId:mineID,mineLevel:1,yaw:0,pitch:-.06};S.survival={health:100,hunger:100,thirst:100};
     layer.tunnels["8,12"]=true;layer.tunnels["8,13"]=true;layer.tunnels["8,14"]=true;layer.centerline[8]=12;
     layer.deposits["8,12"]={mineId:mineID,level:1,x:8,z:12,type:"stone",amount:12,max:12,cooldown:0,depthY:mineFloorY(1)+12,seed:127};
     S.activeTool="pickaxe";S.mines[mineID].currentLevel=1;
-    playerMotion={x:8,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:.06,path:[],moving:false,facing:0,onArrive:null};
+    playerMotion={x:8,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.06,path:[],moving:false,facing:0,onArrive:null};
     selectedBuild=null;selectedBuilding=null;world3d.center(8,14);renderAll();return structuredClone(S)
   },
   inspectMineAim(){return world3d.pickTarget(190)},
