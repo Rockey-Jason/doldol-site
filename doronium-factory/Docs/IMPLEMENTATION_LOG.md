@@ -91,6 +91,26 @@ The corresponding commit/Actions/Pages run IDs and their results must be filled 
 - This does not certify physical Android/iOS hardware, a wall-clock 60-minute soak, or an authenticated external Supabase session.
 - The separate site-wide quality gate failed at `scripts/validate-runtime-polish.mjs:32` (versioned homepage cache declaration); this root app-shell issue is outside this game-only patch. PR #50 remains unmerged, and no Pages deployment was performed.
 
+## 2026-11-28 — Phase 2 independent mine worlds and underground traversal
+
+1. **Mine registry** — replaced the single shared underground deposit map with five stable mine IDs based on the five surface entrances. Each mine is generated deterministically from the world seed and owns its current level, five level records, tunnel cells, centerline, branches, ore deposits, remaining quantities and metadata.
+2. **Distinct cave layouts** — each mine uses a separate deterministic sub-seed and ore specialty, with connected entrance/depth lifts and individually validated deposits. Existing 40×24 mine coordinates and the 192×160 surface grid remain unchanged.
+3. **Instance-bound traversal** — the selected entrance's mine ID travels through the 3D target; enter/exit, depth transitions, ascending/descending lifts, underground path/collision checks, rendering, target selection and harvesting use only the active mine and level.
+4. **World and resource isolation** — surface buildings no longer block underground tunnel cells. Automatic miners bind to a single saved mine instance/level rather than scanning a global deposit list. Ore aim proxies improve selection without changing visible ore art. The underground HUD reports mine name, floor and Y elevation.
+5. **Save migration and integrity** — saves use worldVersion 6 while retaining existing local/cloud storage keys. Legacy shared deposits migrate into one mine chosen from the saved entrance/surface position; depleted amounts persist and missing legacy mineral definitions are backfilled. Other mines are generated independently. Modern partial mine saves are merged with deterministic defaults. Mine IDs, entrances, floor records, tunnel bounds/connectivity and deposit ownership/quantities are validated before local/cloud writes.
+6. **Regression tests** — added `mine-system.test.mjs` for deterministic generation, distinct maps, tunnel connectivity, ore ownership, mine-to-mine isolation, independent depth, legacy/modern save migration and bad coordinates. Playwright now checks active mine targeting, mining, two-entrance switching, depth persistence, ascent/descent, surface-building collision isolation, underground HUD, save/reload, plus existing desktop/mobile WebGL and factory regression coverage.
+
+### Verification for Phase 2
+
+- PR: [#51](https://github.com/Rockey-Jason/doldol-site/pull/51)
+- Verified commit: `e540f042570b5f7d844f8ea62f406d4c78d8c231`.
+- Doronium Factory validation [#1762](https://github.com/Rockey-Jason/doldol-site/actions/runs/46132509848): **success**.
+- Static/syntax checks and Node tests: **61/61 passed**.
+- Playwright desktop WebGL and mobile-emulation WebGL browser regression: **PASS**, including mine entrance routing, independent ore depletion, remembered floor, ascending/descending, collision layer isolation, crosshair aim proxy, underground HUD and persistence after reload.
+- Existing factory soak remained green: 36,000 fixed 0.1-second ticks; 296 iron plates produced; ore-equivalent balance 50,000 and coal-equivalent balance 30,000 preserved. Browser screenshots uploaded as artifact **15257603322**.
+- No save key, Supabase table/key, 192×160 surface dimensions or 40×24 mine frame was changed. PR #51 is open and stacked on PR #50; no merge to `main` or Pages deployment was performed.
+- Scope limitation: the canonical 2048m×2048m scale conflict remains; rescaling old world coordinates and buildings requires a separate explicit migration. Mobile CI is emulation, not a physical Android/iOS test; no signed-in Supabase session or wall-clock 60-minute device soak was exercised.
+
 ## Known remaining scope
 
 See `SPEC_GAP_MATRIX.md`. Overall v4.5.0 Gate remains Partial/Conflict while FluidNetwork, contract shipping, full FailureProfiles/outcomes, power topology, blueprints, all skill effect integrations, Lore/story audio, canonical Infinity power units and real-hardware soak checks remain incomplete.

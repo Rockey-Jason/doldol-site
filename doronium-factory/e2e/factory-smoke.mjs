@@ -61,6 +61,8 @@ try {
   assert.equal(audit.catalogMachineCount, 50, "All 50 machine designs must be registered in the encyclopedia");
   assert.equal(audit.buildingCount, 69, "46 new installable machine definitions plus legacy facilities must be registered");
   assert.equal(audit.runtimeValidation.valid, true, "Initial item stacks and reservations must validate");
+  assert.equal(audit.mineValidation.valid, true, "Every independent mine tunnel and deposit registry must validate");
+  assert.equal(audit.mineCount, 5, "The five surface entrances must each have an independent mine instance");
   assert.equal(audit.variantCount, 15, "15 canonical Doronium variants must be present");
   assert.equal(audit.uniqueVariants, 15, "Variant IDs must be unique");
   assert.equal(audit.uniqueCrystalModels, 15, "All 15 variants must have 3D models");
@@ -110,11 +112,14 @@ try {
   assert.ok(await desktop.locator(".catalog-machine-card").count() >= 3, "Power facilities must be filterable by category");
   await desktop.locator("#catalog-category").selectOption("all");
   const migration = await desktop.evaluate(() => window.__doroniumFactoryTest.saveMigrationTest());
-  assert.equal(migration.newOrePresent, true, "Legacy mine saves must receive new resource veins");
+  assert.equal(migration.worldVersion, 6, "Legacy saves must upgrade to the independent-mine world schema");
+  assert.equal(migration.legacyAmount, 7, "The original depleted legacy vein must preserve its remaining amount");
+  assert.equal(migration.newOrePresent, true, "The migrated mine must backfill missing legacy mineral definitions");
   assert.equal(migration.newOreType, "aluminumOre", "New mineral deposits must keep their canonical type");
-  assert.equal(migration.legacyAmount, 7, "Existing mine deposit quantities must be preserved during migration");
-  assert.equal(migration.worldVersion, 5, "Legacy saves must upgrade to the latest world schema");
+  assert.equal(migration.otherMineCount, 4, "A legacy mine save must initialize the other four mine instances");
+  assert.equal(migration.otherMineIndependent, true, "New mine deposits must not share the legacy mine's deposit map");
   assert.equal(migration.saveValid, true, "Migrated world state must pass the save runtime validator");
+  assert.equal(migration.mineValid, true, "Migrated independent mine state must pass mine topology and deposit validation");
   const expandedSystems = await desktop.evaluate(() => window.__doroniumFactoryTest.expandedSystemsTest());
   assert.equal(expandedSystems.bridge.placed, true, "A bridge machine item must install on a river tile");
   assert.equal(expandedSystems.bridge.walkable, true, "A placed bridge must become a walkable path across water");
@@ -228,12 +233,38 @@ try {
   assert.ok(depleted.health < 100, "Hunger and thirst depletion must damage health");
 
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningTest());
+  const mineHud = await desktop.locator("#world-coordinate").textContent();
+  assert.match(mineHud, /중앙 본광산 · 1층 · Y/,
+    "Underground HUD must show the selected mine name, level and depth");
   const miningBefore = await desktop.evaluate(() => ({ stone: window.__doroniumFactoryTest.snapshot().inventory.stone || 0 }));
+  const mineAim = await desktop.evaluate(() => window.__doroniumFactoryTest.inspectMineAim());
+  assert.ok(mineAim?.scene?.undergroundResourceNodes > 0,
+    "Underground ore meshes must be present in the active scene: " + JSON.stringify(mineAim));
+  assert.ok(mineAim?.target?.mine && mineAim.target.mineId === mineAim.player.mineId,
+    "The first-person crosshair must resolve the active mine's ore deposit: " + JSON.stringify(mineAim));
   await desktop.locator("#action-button").click();
   const miningAfter = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot());
   assert.equal(miningAfter.inventory.stone, miningBefore.stone + 2, "Clicking the desktop Use button must mine the aimed stone vein");
-  assert.equal(miningAfter.mineDeposits["1:8:12"].amount, 10, "A successful mouse Use action must reduce the vein by two");
+  const primaryMine = miningAfter.mines[miningAfter.player.mineId];
+  assert.equal(primaryMine.levels["1"].deposits["8,12"].amount, 10, "A successful mouse Use action must reduce only the active mine's vein by two");
   assert.equal(miningAfter.player.layer, "mine", "The Use button must preserve the underground layer");
+  const mineIsolation = await desktop.evaluate(() => window.__doroniumFactoryTest.mineIsolationTest());
+  assert.equal(mineIsolation.harvested, true, "A deposit in the selected mine must be harvestable");
+  assert.equal(mineIsolation.afterA, mineIsolation.beforeA - 2, "The selected mine's own ore deposit must decrease");
+  assert.equal(mineIsolation.afterB, mineIsolation.beforeB, "Mining one entrance must leave another mine's ore unchanged");
+  assert.equal(mineIsolation.enteredA, mineIsolation.idA, "The first entrance must select its own independent mine");
+  assert.equal(mineIsolation.enteredB, mineIsolation.idB, "The second entrance must select a different mine instance");
+  assert.equal(mineIsolation.levelOnA, 3, "Entering the first mine must restore its own remembered depth");
+  assert.equal(mineIsolation.levelOnB, 1, "Entering a different mine must start at that mine's remembered depth");
+  assert.equal(mineIsolation.mineALevel, 3, "Descending in the second mine must not change the first mine's saved depth");
+  assert.equal(mineIsolation.mineBLevel, 2, "Descending must update only the active mine's depth");
+  assert.equal(mineIsolation.mineBDepthAfterAscent, 1, "The upper lift must move the player back one level and remember the new depth");
+  assert.equal(mineIsolation.surfaceBuildingBlocked, true, "The fixture must place a surface building over the same tile coordinates");
+  assert.equal(mineIsolation.mineCellWalkable, true, "Surface buildings must not block an underground tunnel cell");
+  assert.equal(mineIsolation.minePathAvailable, true, "Underground pathfinding must ignore the surface building grid");
+  assert.equal(mineIsolation.tunnelMapsDistinct, true, "Separate mine entrances must not share their tunnel topology");
+  assert.equal(mineIsolation.depositMapsDistinct, true, "Separate mine entrances must not share their deposit maps");
+  assert.equal(mineIsolation.valid, true, "All mine instances must remain structurally valid after independent mining");
   const toolGuard = await desktop.evaluate(() => window.__doroniumFactoryTest.toolGuard());
   assert.equal(toolGuard.tool, "axe", "The tool guard must register the equipped axe");
   assert.equal(toolGuard.after, toolGuard.before, "An axe must not mine stone");
@@ -402,7 +433,14 @@ try {
   assert.equal(restoredSave.player.y, saveProbe.y, "Player Y position must survive a full page reload");
   assert.equal(restoredSave.survival.health, saveProbe.health, "Survival state must survive a full page reload");
   assert.equal(restoredSave.inventory.ironOre, saveProbe.ironOre, "Inventory quantities must survive a full page reload");
+  assert.equal(restoredSave.player.mineId, saveProbe.mineID, "The selected mine identity must survive a full page reload");
+  assert.equal(restoredSave.player.mineLevel, saveProbe.mineLevel, "The selected mine depth must survive a full page reload");
+  assert.equal(restoredSave.mines[saveProbe.mineID].currentLevel, saveProbe.mineLevel, "The mine's independent depth progress must survive a full page reload");
+  assert.equal(restoredSave.mines[saveProbe.mineID].levels["3"].deposits[saveProbe.depositKey].amount, saveProbe.depositAmount,
+    "A depleted ore vein must survive a full page reload without affecting other mines");
   const restoredRuntime = await savePage.evaluate(() => window.__doroniumFactoryTest.audit().runtimeValidation);
+  const restoredMineAudit = await savePage.evaluate(() => window.__doroniumFactoryTest.audit().mineValidation);
+  assert.equal(restoredMineAudit.valid, true, "Reloaded mine topology and deposit state must validate");
   assert.equal(restoredRuntime.valid, true, "Restored item stacks and reservations must pass runtime validation");
   await saveContext.close();
 
