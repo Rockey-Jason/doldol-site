@@ -1751,7 +1751,7 @@ if(E2E_MODE){
     addItem("treePermanentGrowthCatalyst",1,{quality:90,purity:90,synthetic:false},false);S.nodes["10,10"].amount=0;useTreeGrowthItem("treePermanentGrowthCatalyst");
     const permanent={enabled:!!S.nodes["10,10"].permanentGrowth,amount:S.nodes["10,10"].amount};
     S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
-    const elevator={uid:"test-elevator",type:"catalog_item_elevator",x:5,y:5,dir:1,liftLevel:3,liftDirection:"down",input:{},output:null,status:"IDLE"};
+    const elevator={uid:"test-elevator",type:"catalog_item_elevator",x:5,y:5,dir:1,mineId:PRIMARY_MINE_ID,liftLevel:3,liftDirection:"down",input:{},output:null,status:"IDLE"};
     S.buildings=[elevator];selectedBuilding=elevator.uid;storeInMineElevator(3,"ironOre",4,{quality:92,purity:90,synthetic:false});
     renderMachineDetails();$("machine-lift-level").value="3";$("machine-lift-item").value="ironOre";$("machine-lift-quantity").value="2";
     const beforeOre=itemCount("ironOre");transferElevatorBuffer(elevator,"unload");
