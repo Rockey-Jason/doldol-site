@@ -91,6 +91,26 @@ The corresponding commit/Actions/Pages run IDs and their results must be filled 
 - This does not certify physical Android/iOS hardware, a wall-clock 60-minute soak, or an authenticated external Supabase session.
 - The separate site-wide quality gate failed at `scripts/validate-runtime-polish.mjs:32` (versioned homepage cache declaration); this root app-shell issue is outside this game-only patch. PR #50 remains unmerged, and no Pages deployment was performed.
 
+## 2026-11-28 — Phase 2: independent mine worlds
+
+1. **Mine identity and deterministic geology** — introduced five stable mine IDs at the five surface entrances. Each mine has its own geology, seed, current level, underground player position/orientation, tunnel layout, ore records and elevator buffers. The primary mine keeps its original tunnel footprint and ore coordinates; the old gold seam at `5:25:8` was joined to the traversable gallery.
+2. **Independent world rendering** — the Three.js renderer reads only the selected mine instance and rebuilds on mine ID/state changes. Each mine has distinct tunnel geometry and ore positions; geology palettes differ underground and at the surface entrances.
+3. **Player and mining behavior** — entry selects the actual entrance's mine ID; exit saves that mine's depth/player position; descending and mining mutate the active mine only. Collision/path checks use the active mine's tunnel. Target data carries mine ID to prevent cross-instance harvesting.
+4. **Automation and logistics** — auto-miners and item/water/maglev elevators are bound to a mine ID, expose mine selection, and store/retrieve only that mine's deposits or per-floor buffers.
+5. **Save migration** — bumped worldVersion to 6. Version-5 global mine deposits and elevator buffers migrate to the primary mine without discarding existing ore/items. Legacy elevators/auto-miners without a mine ID remain linked to the primary mine. New per-mine player/depth/deposit/buffer records survive save migration and reload.
+6. **Regression coverage** — added `terrain-system.test.mjs`: unique entrance mapping, five different deterministic tunnel plans, reachable ore nodes, instance isolation, seed reproducibility, version-5 migration and multi-mine round-trip. Playwright now switches between two mines and checks geology/tunnel signatures, player positions/depth, deposit quantities and elevator inventories.
+
+### Verification for Phase 2
+
+- Source branch: `phase2/independent-mines-world-20261128`.
+- Tested commit: `f13e3c7ea763d40b615f18fa8d3acdde7143c0b9`.
+- Doronium Factory validation run [#1803](https://github.com/Rockey-Jason/doldol-site/actions/runs/46134168654): **both jobs succeeded**.
+- Static/syntax and Node tests: **62/62 passed**.
+- Playwright: desktop WebGL and mobile-emulation WebGL passed, including five-mine isolation, primary-mine legacy save migration, entrance switching, distinct 3D tunnel/geology render, mine-specific level/player progress, ore extraction and elevator storage.
+- Existing factory regression retained a virtual hour of 36,000 fixed 0.1-second ticks, produced 296 iron plates and preserved ore-equivalent 50,000 and coal-equivalent 30,000 balances. Mobile viewport 390×844 kept the touch pad and verified movement.
+- Browser screenshots uploaded as artifact **15259266353**.
+- Mobile is emulated, not a physical Android/iOS test. No signed-in Supabase session, low-end physical hardware test, or wall-clock 60-minute soak was performed. The 2048m×2048m canonical world remains a separately gated coordinate/save migration; this pass preserves the existing 192×160 world.
+
 ## Known remaining scope
 
 See `SPEC_GAP_MATRIX.md`. Overall v4.5.0 Gate remains Partial/Conflict while FluidNetwork, contract shipping, full FailureProfiles/outcomes, power topology, blueprints, all skill effect integrations, Lore/story audio, canonical Infinity power units and real-hardware soak checks remain incomplete.
