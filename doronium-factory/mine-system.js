@@ -294,19 +294,35 @@ export function migrateMineRegistry({
 }
 
 export function validateMineRegistry(registry){
-  const errors=[],ids=Object.keys(registry||{});
+  const errors=[],ids=Object.keys(registry||{}),entrances=new Set();
   if(!ids.length)errors.push("mine-registry-empty");
   for(const id of ids){
     const mine=registry[id];
-    if(!mine||mine.id!==id||!mine.entrance)errors.push("mine-invalid:"+id);
+    if(!mine||mine.id!==id||!mine.entrance){errors.push("mine-invalid:"+id);continue;}
+    const entranceX=Number(mine.entrance.x),entranceZ=Number(mine.entrance.z);
+    if(!Number.isInteger(entranceX)||!Number.isInteger(entranceZ)||
+      mineIdFromEntrance(entranceX,entranceZ)!==id)errors.push("mine-entrance-id-mismatch:"+id);
+    const entranceKey=cellKey(entranceX,entranceZ);
+    if(entrances.has(entranceKey))errors.push("mine-entrance-duplicate:"+id);
+    entrances.add(entranceKey);
+    if(!Number.isInteger(mine.currentLevel)||mine.currentLevel<1||mine.currentLevel>MINE_LEVELS){
+      errors.push("mine-current-level-invalid:"+id);
+    }
     for(let level=1;level<=MINE_LEVELS;level++){
-      const layer=mine?.levels?.[String(level)];
+      const layer=mine.levels?.[String(level)];
       if(!layer){errors.push("mine-level-missing:"+id+":"+level);continue;}
+      if(layer.level!==level||Number(layer.floorY)!==mineFloorY(level))errors.push("mine-level-metadata-invalid:"+id+":"+level);
       if(!mineTunnelAt(layer,3,12))errors.push("mine-entry-not-walkable:"+id+":"+level);
       if(!mineTunnelAt(layer,36,12))errors.push("mine-descend-not-walkable:"+id+":"+level);
       const keys=Object.keys(layer.tunnels||{});
       if(!keys.length)errors.push("mine-tunnels-empty:"+id+":"+level);
-      const start=cellKey(3,12),visited=new Set([start]),queue=[[3,12]];
+      for(const key of keys){
+        const match=/^(\d+),(\d+)$/.exec(key),x=match?Number(match[1]):NaN,z=match?Number(match[2]):NaN;
+        if(!match||x<0||z<0||x>=MINE_W||z>=MINE_H||layer.tunnels[key]!==true){
+          errors.push("mine-tunnel-cell-invalid:"+id+":"+level+":"+key);
+        }
+      }
+      const startKey=cellKey(3,12),visited=new Set([startKey]),queue=[[3,12]];
       for(let head=0;head<queue.length;head++){
         const [x,z]=queue[head];
         for(const [dx,dz] of [[1,0],[-1,0],[0,1],[0,-1]]){
@@ -316,11 +332,13 @@ export function validateMineRegistry(registry){
       }
       if(!visited.has(cellKey(36,12)))errors.push("mine-level-disconnected:"+id+":"+level);
       for(const [key,deposit] of Object.entries(layer.deposits||{})){
-        const [x,z]=key.split(",").map(Number);
-        if(!Number.isInteger(x)||!Number.isInteger(z)||deposit.x!==x||deposit.z!==z||
-          deposit.level!==level||deposit.mineId!==id||!mineTunnelAt(layer,x,z)||
-          !Number.isFinite(Number(deposit.amount))||Number(deposit.amount)<0||
-          !Number.isFinite(Number(deposit.max))||Number(deposit.max)<Number(deposit.amount)){
+        const match=/^(\d+),(\d+)$/.exec(key),x=match?Number(match[1]):NaN,z=match?Number(match[2]):NaN;
+        if(!match||!deposit||!Number.isInteger(x)||!Number.isInteger(z)||
+          deposit.mineId!==id||deposit.level!==level||deposit.x!==x||deposit.z!==z||
+          !mineTunnelAt(layer,x,z)||!deposit.type||
+          !Number.isSafeInteger(Number(deposit.amount))||Number(deposit.amount)<0||
+          !Number.isSafeInteger(Number(deposit.max))||Number(deposit.max)<Number(deposit.amount)||
+          !Number.isFinite(Number(deposit.depthY))||!Number.isSafeInteger(Number(deposit.seed))){
           errors.push("mine-deposit-invalid:"+id+":"+level+":"+key);
         }
       }
