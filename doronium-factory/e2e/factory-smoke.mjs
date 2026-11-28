@@ -112,12 +112,10 @@ try {
   assert.ok(await desktop.locator(".catalog-machine-card").count() >= 3, "Power facilities must be filterable by category");
   await desktop.locator("#catalog-category").selectOption("all");
   const migration = await desktop.evaluate(() => window.__doroniumFactoryTest.saveMigrationTest());
-  assert.equal(migration.newOrePresent, true, "Legacy mine saves must receive new resource veins");
-  assert.equal(migration.newOreType, "aluminumOre", "New mineral deposits must keep their canonical type");
-  assert.equal(migration.legacyAmount, 7, "Existing mine deposit quantities must be preserved during migration");
   assert.equal(migration.worldVersion, 6, "Legacy saves must upgrade to the independent-mine world schema");
   assert.equal(migration.legacyAmount, 7, "The original depleted legacy vein must preserve its remaining amount");
-  assert.equal(migration.newOrePresent, true, "The migrated mine must preserve all registered legacy mineral types");
+  assert.equal(migration.newOrePresent, true, "The migrated mine must backfill missing legacy mineral definitions");
+  assert.equal(migration.newOreType, "aluminumOre", "New mineral deposits must keep their canonical type");
   assert.equal(migration.otherMineCount, 4, "A legacy mine save must initialize the other four mine instances");
   assert.equal(migration.otherMineIndependent, true, "New mine deposits must not share the legacy mine's deposit map");
   assert.equal(migration.saveValid, true, "Migrated world state must pass the save runtime validator");
