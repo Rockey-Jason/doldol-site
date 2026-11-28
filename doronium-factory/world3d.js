@@ -1,5 +1,6 @@
 /* DORONIUM FACTORY — topographic 3D world, underground mine and industrial renderer */
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=7";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, biomeGroundColor } from "./terrain-system.js?v=7";
+import { getMine, getMineLevel, mineTunnelAt } from "./mine-system.js?v=1";
 let THREE = null;
 try { THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"); }
 catch (error) { console.warn("Three.js CDN unavailable; using the compatibility renderer.", error); }
@@ -359,44 +360,99 @@ export function createWorld3D(canvas, getState) {
     return mesh;
   }
   function buildMine(state){
-    const level=clamp(Number(state.player?.mineLevel)||1,1,5),floorY=mineFloorY(level);
-    const rock=mat(0x34414a,.12,.95),rail=mat(0x8b9aa0,.72,.42),lampMat=mat(0xf0c76c,.22,.24,0x9a5a13);
-    const cells=[];for(let z=0;z<MINE_H;z++)for(let x=0;x<MINE_W;x++)if(mineTunnelAt(x,z))cells.push({x,z});
+    const mineID=state.player?.mineId||"";
+    const mine=getMine(state.mines,mineID);
+    const level=clamp(Number(state.player?.mineLevel)||1,1,5);
+    const layer=getMineLevel(state.mines,mineID,level);
+    const floorY=mineFloorY(level);
+    if(!mine||!layer){
+      console.warn("Mine instance or level is missing",mineID,level);
+      return;
+    }
+    const rock=mat(0x34414a,.12,.95),rail=mat(0x8b9aa0,.72,.42);
+    const supportWood=mat(0x604a34,.1,.94),supportMetal=mat(0x73838b,.66,.5);
+    const cells=Object.keys(layer.tunnels||{}).filter(key=>layer.tunnels[key]===true).map(key=>{
+      const [x,z]=key.split(",").map(Number);return {x,z};
+    }).sort((a,b)=>a.z-b.z||a.x-b.x);
     const floorGeo=new THREE.BoxGeometry(31.7,3,31.7),floorMat=mat(0x444c50,.1,.92);
-    const floors=new THREE.InstancedMesh(floorGeo,floorMat,cells.length),dummy=new THREE.Object3D();
-    cells.forEach((p,i)=>{dummy.position.set(p.x*32,floorY-1.5,p.z*32);dummy.updateMatrix();floors.setMatrixAt(i,dummy.matrix);});
-    floors.receiveShadow=true;mineRoot.add(floors);
+    const floors=new THREE.InstancedMesh(floorGeo,floorMat,cells.length),ceilings=new THREE.InstancedMesh(floorGeo,rock,cells.length);
+    const dummy=new THREE.Object3D();
+    cells.forEach((p,i)=>{
+      dummy.position.set(p.x*32,floorY-1.5,p.z*32);dummy.updateMatrix();floors.setMatrixAt(i,dummy.matrix);
+      dummy.position.set(p.x*32,floorY+29.5,p.z*32);dummy.updateMatrix();ceilings.setMatrixAt(i,dummy.matrix);
+    });
+    floors.receiveShadow=true;ceilings.receiveShadow=true;mineRoot.add(floors,ceilings);
+
+    const wallHeight=29,wallThickness=3;
     for(const p of cells){
       const x=p.x*32,z=p.z*32;
-      if(!mineTunnelAt(p.x-1,p.z))makeBox(mineRoot,x-16,floorY+13,z,3,29,32,rock);
-      if(!mineTunnelAt(p.x+1,p.z))makeBox(mineRoot,x+16,floorY+13,z,3,29,32,rock);
-      if(!mineTunnelAt(p.x,p.z-1))makeBox(mineRoot,x,floorY+13,z-16,32,29,3,rock);
-      if(!mineTunnelAt(p.x,p.z+1))makeBox(mineRoot,x,floorY+13,z+16,32,29,3,rock);
-      if((p.x===8||p.x===14||p.x===20||p.x===26||p.x===32)&&p.z===12){
-        for(const sx of [-13,13])makeBox(mineRoot,x+sx,floorY+13,z,2.8,26,3.4,rail);
-        makeBox(mineRoot,x,floorY+26,z,29,3,3.4,rail);
-      }
-      if(highEndDevice&&p.x%6===0&&p.z===12){makeCyl(mineRoot,x+11,floorY+24,z,1.1,2,lampMat,8);const light=new THREE.PointLight(0xf2bd65,.55,112,2);light.position.set(x,floorY+23,z);mineRoot.add(light);}
+      if(!mineTunnelAt(layer,p.x-1,p.z))makeBox(mineRoot,x-16,floorY+13,z,wallThickness,wallHeight,32,rock);
+      if(!mineTunnelAt(layer,p.x+1,p.z))makeBox(mineRoot,x+16,floorY+13,z,wallThickness,wallHeight,32,rock);
+      if(!mineTunnelAt(layer,p.x,p.z-1))makeBox(mineRoot,x,floorY+13,z-16,32,wallHeight,wallThickness,rock);
+      if(!mineTunnelAt(layer,p.x,p.z+1))makeBox(mineRoot,x,floorY+13,z+16,32,wallHeight,wallThickness,rock);
     }
-    for(const node of Object.values(state.mineDeposits||{})){
-      if(node.level!==level||node.amount<=0)continue;
+
+    // Timber/metal support arches follow each generated main tunnel instead of
+    // assuming every mine shares the same horizontal corridor.
+    const centers=Array.isArray(layer.centerline)?layer.centerline:[];
+    for(let x=6;x<=34;x+=4){
+      const z=Number(centers[x]);
+      if(!Number.isFinite(z)||!mineTunnelAt(layer,x,z))continue;
+      const worldX=x*32,worldZ=z*32;
+      for(const side of [-1,1]){
+        makeBox(mineRoot,worldX,floorY+9,worldZ+side*13,2.4,18,2.4,supportWood);
+        makeBox(mineRoot,worldX,floorY+18,worldZ+side*13,3.4,1.8,3.4,supportMetal);
+      }
+      makeBox(mineRoot,worldX,floorY+19,worldZ,3.2,2.2,29,supportWood);
+      makeBox(mineRoot,worldX,floorY+20.2,worldZ,3.5,.6,29,supportMetal);
+    }
+
+    for(const node of Object.values(layer.deposits||{})){
+      if(node.amount<=0)continue;
       const g=new THREE.Group();g.position.set(node.x*32,node.depthY,node.z*32);
-      g.userData={cell:{x:node.x,z:node.z},targetKind:{kind:"resource",type:node.type,mine:true,level,depthY:node.depthY}};mineRoot.add(g);
+      g.userData={
+        cell:{x:node.x,z:node.z},
+        targetKind:{kind:"resource",type:node.type,mine:true,mineId:mineID,level,depthY:node.depthY}
+      };
+      mineRoot.add(g);
       makeBox(g,0,-2,0,13,8,13,mat(0x1a2932,.08,.98));
       if(String(node.type).startsWith("doronium_"))makeCrystal(g,node.type,0,5,0,3.1);
       else{
         const color=palette[node.type]||0x81919d,ore=mat(color,.5,.3,color);
-        for(let i=0;i<4;i++){const m=new THREE.Mesh(i%2?new THREE.OctahedronGeometry(2.7,0):new THREE.IcosahedronGeometry(2.8,0),ore);m.position.set((i%2?1:-1)*(3+i%3),4+(i%3)*1.8,(i<2?-1:1)*(2+i));m.rotation.set(i*.3,i*.6,i*.2);m.castShadow=true;g.add(m);}
+        for(let i=0;i<4;i++){
+          const m=new THREE.Mesh(i%2?new THREE.OctahedronGeometry(2.7,0):new THREE.IcosahedronGeometry(2.8,0),ore);
+          m.position.set((i%2?1:-1)*(3+i%3),4+(i%3)*1.8,(i<2?-1:1)*(2+i));
+          m.rotation.set(i*.3,i*.6,i*.2);m.castShadow=true;g.add(m);
+        }
       }
-      if(highEndDevice){const glow=new THREE.PointLight(String(node.type).startsWith("doronium_")?0x55dcec:0x8ca8b5,.35,34,2);glow.position.y=8;g.add(glow);}
+      if(highEndDevice){
+        const glow=new THREE.PointLight(String(node.type).startsWith("doronium_")?0x55dcec:0x8ca8b5,.35,34,2);
+        glow.position.y=8;g.add(glow);
+      }
     }
+
     const addLift=(x,kind)=>{
-      const g=new THREE.Group();g.position.set(x*32,floorY,12*32);g.userData={cell:{x,z:12},targetKind:{kind}};mineRoot.add(g);
+      const z=12,g=new THREE.Group();
+      g.position.set(x*32,floorY,z*32);
+      g.userData={cell:{x,z},targetKind:{kind,mineId:mineID,level}};
+      mineRoot.add(g);
       makeBox(g,0,4,0,19,8,19,mats.dark);makeCyl(g,0,14,0,5,20,mats.trim,10);
-      const ring=new THREE.Mesh(new THREE.TorusGeometry(10,.65,8,36),new THREE.MeshBasicMaterial({color:kind==="mineExit"?0x7ed9c3:0xf0c76c}));ring.rotation.x=Math.PI/2;ring.position.y=24;g.add(ring);
-      const light=new THREE.PointLight(kind==="mineExit"?0x6ed6c1:0xf2bd65,1.15,76,2);light.position.y=23;g.add(light);
+      const ring=new THREE.Mesh(new THREE.TorusGeometry(10,.65,8,36),new THREE.MeshBasicMaterial({color:kind==="mineExit"?0x7ed9c3:0xf0c76c}));
+      ring.rotation.x=Math.PI/2;ring.position.y=24;g.add(ring);
+      const light=new THREE.PointLight(kind==="mineExit"?0x6ed6c1:0xf2bd65,1.15,76,2);
+      light.position.y=23;g.add(light);
     };
     addLift(3,"mineExit");addLift(36,"mineDescend");
+
+    // Low-cost tunnel lamps are positioned from the generated centerline.
+    if(highEndDevice){
+      for(let x=7;x<=33;x+=7){
+        const z=Number(centers[x]);if(!Number.isFinite(z)||!mineTunnelAt(layer,x,z))continue;
+        const lamp=new THREE.PointLight(0xe8bd75,.42,88,2);
+        lamp.position.set(x*32,floorY+23,z*32);mineRoot.add(lamp);
+        makeCyl(mineRoot,x*32,floorY+26,z*32,1.4,2.2,rail,8);
+      }
+    }
   }
   const nodeMatrixDummy=new THREE.Object3D();
   function nodeInstance(mesh,x,y,z,sx,sy,sz,rotationY=0,rotationX=0,rotationZ=0){
@@ -730,11 +786,11 @@ export function createWorld3D(canvas, getState) {
     for(const x of [-5.5,5.5]){const a=makeBox(g,x,12,0,2.6,8,3,mats.trim);a.rotation.z=x<0?-.2:.2;arms.push(a);}
     g.userData={legs,arms};
   }
-  let trackedNodes=null,trackedMineDeposits=null,trackedFlattened=null,trackedFoundation=null,stateIdentityRevision=0,lastVisibilityRevision=null;
+  let trackedNodes=null,trackedMines=null,trackedFlattened=null,trackedFoundation=null,stateIdentityRevision=0,lastVisibilityRevision=null;
   function signature(s){
-    if(s.nodes!==trackedNodes||s.mineDeposits!==trackedMineDeposits||s.flattened!==trackedFlattened||s.foundation!==trackedFoundation){trackedNodes=s.nodes;trackedMineDeposits=s.mineDeposits;trackedFlattened=s.flattened;trackedFoundation=s.foundation;stateIdentityRevision++;}
+    if(s.nodes!==trackedNodes||s.mines!==trackedMines||s.flattened!==trackedFlattened||s.foundation!==trackedFoundation){trackedNodes=s.nodes;trackedMines=s.mines;trackedFlattened=s.flattened;trackedFoundation=s.foundation;stateIdentityRevision++;}
     const machines=(s.buildings||[]).map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.variant].join(":")).join("|");
-    return [s.sceneRevision||0,stateIdentityRevision,s.worldVersion,s.player?.layer,s.player?.mineLevel,machines].join(";");
+    return [s.sceneRevision||0,stateIdentityRevision,s.worldVersion,s.player?.layer,s.player?.mineId,s.player?.mineLevel,machines].join(";");
   }
   function render(state){
     if(!state)return;resizeIfNeeded();const sig=signature(state);if(sig!==lastSignature){rebuild(state);lastSignature=sig;rebuildCount++;}
