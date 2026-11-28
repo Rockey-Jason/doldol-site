@@ -601,7 +601,10 @@ export function createWorld3D(canvas, getState) {
     playerRing=new THREE.Mesh(new THREE.TorusGeometry(7,.35,8,40),new THREE.MeshBasicMaterial({color:0xf2d28a,transparent:true,opacity:.7}));playerRing.rotation.x=Math.PI/2;markerRoot.add(playerRing);
 
 
-    buildMine(state);
+    // Keep underground meshes out of the surface scene. The active mine is
+    // constructed only after the player enters it; the scene signature already
+    // includes layer, mineId and mineLevel so transitions rebuild deterministically.
+    if(state.player?.layer==="mine")buildMine(state);
   }
   function addBuilding(b,state){
     const g=new THREE.Group();
