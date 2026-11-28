@@ -10,7 +10,7 @@
     const style = document.createElement("style");
     style.id = "dori-pwa-install-styles";
     style.textContent = `
-      #doriPwaInstallButton{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;margin:0 7px 0 0;padding:8px 12px;border:1px solid rgba(229,200,121,.38);border-radius:10px;background:linear-gradient(145deg,rgba(229,200,121,.16),rgba(125,96,42,.12));color:#f1dda2;font:400 12px inherit;cursor:pointer;white-space:nowrap;transition:background .2s,border-color .2s,transform .2s}
+      #doriPwaInstallButton{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:36px;margin:0 7px 0 0;padding:8px 12px;border:1px solid rgba(229,200,121,.38);border-radius:10px;background:linear-gradient(145deg,rgba(229,200,121,.16),rgba(125,96,42,.12));color:#f1dda2;font:400 12px sans-serif;cursor:pointer;white-space:nowrap;transition:background .2s,border-color .2s,transform .2s}
       #doriPwaInstallButton:hover{border-color:rgba(242,217,155,.72);background:rgba(125,96,42,.25);transform:translateY(-1px)}
       #doriPwaInstallButton:focus-visible,#doriPwaInstallClose:focus-visible{outline:2px solid #f1dda2;outline-offset:3px}
       #doriPwaInstallGuide{position:fixed;z-index:10020;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(1,5,17,.76);backdrop-filter:blur(9px)}
