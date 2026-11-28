@@ -671,3 +671,12 @@ PR #8 remains the separate Godot implementation and was not integrated. PR #9 ov
 - **Validation:** code was committed to the development branch. GitHub Actions triggered by this commit must reach terminal success before the test is considered passed; no local Playwright execution is available in this automation environment. Do not mark the regression green based only on commit creation.
 - **Remaining critical work:** run/inspect the new CI; authoritative item custody across every live domain; five non-water fluids; canonical recipe/model source; Fusion interlock and process/cloud recovery; world scale migration; full skills/contracts/failure coverage; real PC/mobile, two-device and 60-minute wall-clock tests.
 - **Boundary:** no main merge, Pages/Render deployment, production database/schema/RLS/function edit, user save/economy mutation, or natural Doronium vein creation.
+
+
+## 2026-11-28 — mining extraction threshold boundary hardening
+
+- Code commit: `a67163dfa1b7d25f94c49110fa8177bd68f64a92`.
+- The live automated miner now accepts completion at `8 - 1e-7` seconds of accumulated progress rather than requiring a strict 8.0 comparison with only a 1e-9 additive epsilon. This is a narrow floating-point tolerance; it does not shorten the nominal 8-second cycle in meaningful gameplay time.
+- The ownership rollback E2E fixture now begins at `7.99999995` seconds so the next fixed tick crosses the completion boundary while forcing an invalid custody audit. It must retain the source deposit, drill durability and completed progress; after custody repair, the same extraction must retry and commit once.
+- Latest confirmed prior browser regression: [run 45342264817](https://github.com/Rockey-Jason/doldol-site/actions/runs/45342264817) — `browser-regression` SUCCESS and `validate-web-game` SUCCESS, including automatic mining output, rollback and recovery assertions. This run preceded commit `a67163d`; the new commit's CI is pending and is not counted as passed.
+- Remaining: wait for CI on `a67163d`; then continue authoritative ownership integration, non-water live fluids, Fusion interlocks/restart recovery, and world-scale migration. No main merge, deployment, or production data change.
