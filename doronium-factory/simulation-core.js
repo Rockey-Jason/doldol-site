@@ -138,8 +138,9 @@ export function commitItemReservations(state,reservationIDs){
   for(const reservation of selectedReservations){
     for(const allocation of reservation.allocations){
       const stack=byID.get(allocation.stackID);
-      removed.push({...stack,quantity:allocation.quantity});
-      stack.quantity-=allocation.quantity;
+      const quantity=Number(allocation.quantity);
+      removed.push({...stack,quantity});
+      stack.quantity-=quantity;
     }
     reservation.status="committed";
     reservation.committedTick=Math.max(0,Number(state.tick)||0);
