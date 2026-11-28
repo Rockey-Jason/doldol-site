@@ -1670,7 +1670,7 @@ if(E2E_MODE){
     playerMotion={x:8,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.06,path:[],moving:false,facing:0,onArrive:null};
     selectedBuild=null;selectedBuilding=null;world3d.center(8,14);renderAll();return structuredClone(S)
   },
-  inspectMineAim(){return world3d.pickTarget(190)},
+  inspectMineAim(){return {target:world3d.pickTarget(190),scene:world3d.inspect(),player:{...S.player},motion:{...playerMotion}}},
   mineTarget(){const id=S.player.mineId,before=itemCount("stone"),target=world3d.pickTarget(190);performAdventureAction();return {target,before,after:itemCount("stone"),node:mineDepositAt(id,1,8,12)?.amount}},
   selectTool:(tool)=>selectTool(tool),
   toolGuard(){this.setupMiningTest();selectTool("axe");const before=itemCount("stone"),node=mineDepositAt(S.player.mineId,1,8,12);harvestMineDeposit({mineId:S.player.mineId,level:1,x:8,z:12});return {before,after:itemCount("stone"),node:node.amount,tool:S.activeTool}},
