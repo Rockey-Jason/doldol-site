@@ -1,6 +1,6 @@
 # DORONUM FACTORY — v4.5.0 사양 차이 및 완료 게이트
 
-- 점검일: 2026-11-16
+- 점검일: 2026-11-28
 - 기준: 저장소의 `도로늄 공장을 만드는 법.md` v4.5.0
 - 대상: 기존 GitHub Pages / Three.js 브라우저 게임
 - 적용 결정: 기존 웹 게임 유지(A안). Unity 전용 구현물은 웹 런타임 모듈, Canvas/DOM UI, Playwright 검증으로 대응한다.
@@ -12,8 +12,8 @@
 | Phase | 상태 | 저장소 근거 | 현재 동작 | 남은 Gate / 주의 |
 |---|---|---|---|---|
 | 0 프로젝트 감사 | Partial | `Docs/PROJECT_AUDIT.md`, 본 문서, `SAVE_COMPATIBILITY_REPORT.md` | 기존 파일·저장 키·월드·CI를 조사했고 Unity/웹 차이를 기록 | 실제 Android/iOS 기기, 장시간 실제 실행, 전체 사용자 세이브 표본은 확인하지 못함 |
-| 1 Core Runtime / 데이터 | Partial | `simulation-core.js`, `game-data-validation.js`, `failure-runtime.js` | 0.1초 상수, 18개 Stage trace, stack ID/예약/검증, 연구 그래프 검증, 저장 가능한 RNG/실패 이벤트 구조 | 모든 Stage의 별도 권위 처리기, 도메인 이벤트/RewardClaimID 전역 적용, Stack 소유권·provenance 완전 구현 미완 |
-| 2 플레이어·카메라·입력 | Partial | `factory.js`, `world3d.js`, `e2e/factory-smoke.mjs` | 1·3인칭/전략 시점, 프레임 기반 이동, 키보드/터치 HUD, 생존·채집 상호작용 | 실제 장치 입력/카메라 충돌·안전 복구 지점·게임패드 전체 검증 미완 |
+| 1 Core Runtime / 데이터 | Partial | `simulation-core.js`, `game-data-validation.js`, `failure-runtime.js` | 0.1초 고정 간격, 18개 Stage trace, stack ID/예약/검증, 전체 활성 예약 원장의 stack별 합계 검증 및 초과 차감 fail-closed, 연구 그래프 검증, 저장 가능한 RNG/실패 이벤트 구조 | 모든 Stage의 별도 권위 처리기, 도메인 이벤트/RewardClaimID 전역 적용, Stack 소유권·provenance 완전 구현 미완 |
+| 2 플레이어·카메라·입력 | Partial | `factory.js`, `world3d.js`, `e2e/factory-smoke.mjs` | 1·3인칭/전략 시점, 프레임 기반 이동, 실제 Playwright W/Space 이동·점프·착지, blur/hidden 입력 초기화, 키보드/터치 HUD, 생존·채집 상호작용 | 실제 장치 입력/카메라 충돌·안전 복구 지점·게임패드 전체 검증 미완 |
 | 3 월드·자원·채굴 | Conflict | `terrain-system.js`, `world3d.js`, `factory.js` | 두 대륙 192×160 타일, 8 바이옴, 높낮이 지형, 5층 지하 광산, Seed 기반 생성, 현재 정적 광산 데이터에 자연 도로늄 광맥 없음 | 사양의 2048m×2048m와 현재 타일 월드 실제 범위/좌표 체계가 다름. 기존 세이브/건물 무손실 월드 스케일 변환 정책 필요 |
 | 4 인벤토리·아이템·제작 트랜잭션 | Partial | simulation-core.js, factory.js, fusion-runtime.js | ItemStack 단위 수량/품질/순도/synthetic, split/merge, 5000 상한, per-stack reservation, 수량/할당 정합성 검증, 원자적 배치 소비. 퓨전 예약 재료는 판매·제작·생존·수확·건설·연료 사용에서 잠기며, 수동 기계 투입은 실제 소비된 스택의 품질/순도/synthetic 메타데이터를 보존 | owner-domain, NeverSplit/NeverMerge 정책, 컨베이어/창고/배송의 모든 소유권 이전 원자성, 메타데이터 추적의 모든 자동 물류 경로 적용 미완 |
 | 5 기계·생산 | Partial | `production-runtime.js`, `factory.js`, `failure-runtime.js` | 전력 gate, ramp 온도/압력, 안전범위, wear, completion buffer 1개, 결정론적 hazard 계산기 | 실제 MachineData 기반 FailureProfile·등급별 결과가 미등록이므로 게임 내 고장 롤/자원 손실/잔류물 적용은 비활성. 정비 레시피/재개 경계 미완 |
@@ -26,6 +26,15 @@
 | 12 Infinity Fusion / 엔딩 | Conflict | factory.js, fusion-runtime.js, simulation-core.js, e2e/factory-smoke.mjs | 기존 15개 변형에서 각 100개씩 per-stack 예약(총 1,500개), 각 Stack의 품질/순도 90 이상·비합성 확인, 공정 중 다른 사용 경로 잠금, 7단계 260초 진행, 성공 시 1,500개 일괄 확정 소비 후 출력 1개. 플레이어 취소·설비 유실·예약 오류 시 원료 반환, 재시작 가능, 창고 총량/사용 가능/예약량 구분 | B9의 정확한 15개 canonical ID와 기존 변형 ID가 불일치. Stage power는 canonical 0.5–5.0MW와 불일치. FailureProfile input outcome, CompletionBuffer, 저장 후 재접속 이어하기 E2E와 canonical manifest checksum은 미완 |
 | 13 UI·아트·애니메이션·오디오·접근성 | Partial | `index.html`, `factory.css`, `world3d.js`, `factory.js` | Three.js 환경/기계/결정, 모바일 HUD, 모션 감소 설정, 이벤트 Tone | 40개 챕터별 음악 자산/믹싱, 전체 UI 키보드 포커스·스크린리더, 실제 고장/성공 애니메이션과 효과음 트리거 미완 |
 | 14 성능·안정성·출시 | Partial | .github/workflows/doronium-factory-validation.yml, e2e/factory-smoke.mjs | Node 정적 검사/47개 단위 테스트, Playwright 데스크톱·모바일 에뮬레이션 WebGL, 가상 1시간(36,000 fixed tick) 회귀, 생산 ledger 보존, Fusion 취소/복구와 예약 우회(판매·생산·생존·수확·건설·연료) 및 per-stack metadata 회귀 검증. 검증 run #1125 성공 | 가상 1시간은 벽시계 60분 soak가 아님. 실제 Android/iOS·저사양 PC·장시간 메모리 누수 테스트 미완 |
+
+## 2026-11-28 Phase 1 verification update
+
+- Doronium Factory validation run [#1695](https://github.com/Rockey-Jason/doldol-site/actions/runs/46128713179) passed both jobs: static/Node **54/54**, plus the complete Playwright browser regression.
+- Added fail-closed validation of the complete active ItemStack reservation ledger before reservation commits; overlapping/corrupt allocations cannot overdraw a stack.
+- Added focus-loss and hidden-tab input cleanup; the browser test verifies actual W and Space input, takeoff and landing.
+- Added a real local save → page reload → restore regression for currency, player position, survival health, inventory and runtime validation.
+- Desktop and mobile-emulation WebGL passed. Virtual-hour simulation ran 36,000 fixed ticks, produced 296 iron plates, and conserved ore/coal equivalent balances at 50,000/30,000. Mobile viewport 390×844 verified touch movement.
+- The gate remains **Partial** overall: mobile is emulated, not physical hardware; no wall-clock hour soak or signed-in cloud session was tested. The wider v4.5.0 gaps below remain unchanged.
 
 ## 중요 사양 충돌과 안전 결정
 
