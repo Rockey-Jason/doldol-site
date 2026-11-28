@@ -8,10 +8,11 @@ const html = read("index.html");
 const css = read("css/home.css");
 const worker = read("sw.js");
 
+const navOpen = html.match(/<nav class="dori-search-discovery"[^>]*>/);
 const navMatch = html.match(/<nav class="dori-search-discovery"[^>]*>([\s\S]*?)<\/nav>/);
-assert.ok(navMatch, "Homepage service discovery navigation must exist.");
+assert.ok(navOpen && navMatch, "Homepage service discovery navigation must exist.");
+assert.match(navOpen[0], /aria-labelledby="dori-discovery-title"/, "Navigation must have an accessible name.");
 const nav = navMatch[1];
-assert.match(nav, /aria-labelledby="dori-discovery-title"/, "Navigation must have an accessible name.");
 assert.match(nav, /<h2 id="dori-discovery-title">/, "Navigation must have a visible section heading.");
 
 const groups = [...nav.matchAll(/<section class="dori-search-discovery-group"[^>]*>([\s\S]*?)<\/section>/g)];
