@@ -221,7 +221,7 @@
         if(deleteError) throw deleteError;
         const unsubscribed=await subscription.unsubscribe();
         if(!unsubscribed) throw new Error('브라우저에서 푸시 구독을 해제하지 못했습니다. 다시 시도해 주세요.');
-        toast('돌이 은행 푸시 알림을 껐습니다.');
+        toast('돌이사이트 푸시 알림을 껐습니다.');
         return;
       }
 
@@ -242,13 +242,14 @@
         await subscription.unsubscribe();
         throw error||new Error('푸시 알림 설정을 저장하지 못했습니다.');
       }
-      toast('푸시 알림이 켜졌어요. 이제 송금을 받으면 알림을 보내 드릴게요.');
+      toast('돌이사이트 푸시 알림이 켜졌어요. 중요한 소식이 생기면 알려드릴게요.');
     } catch(error) {
       console.error('돌이 은행 푸시 설정 오류:',error);
       toast(friendlyError(error),true);
     } finally {
       button.classList.remove('is-loading');
       await refreshPushButtonState();
+      window.dispatchEvent(new Event("dori:push-subscription-changed"));
     }
   }
   async function loadAll() {
