@@ -113,7 +113,8 @@
     }
 
     const allHomeLinks = Array.from(document.querySelectorAll("a[href]"))
-      .filter((link) => isMainSiteDestination(link.getAttribute("href")));
+      .filter((link) => !link.hasAttribute("data-no-normalize-home") &&
+        isMainSiteDestination(link.getAttribute("href")));
     let primary = allHomeLinks.find((link) => link.dataset.doriMainHomeNormalized === "true") || allHomeLinks[0] || null;
 
     // If the page has no homepage link, reuse the existing header back button to
