@@ -53,7 +53,7 @@ js/dori-cloud-sync.js is a central integration point. Changes to authentication 
 
 The homepage's large first-party visual layer lives in `css/home.css` and is loaded from `index.html` as a versioned stylesheet. `sw.js` includes the same URL in its app-shell cache. Keep the cache URL and cache-name version synchronized when changing this file.
 
-Cloud sync treats Supabase as the source of truth and browser `localStorage` as an account-scoped cache. `localStorage.clear()` must not clear Supabase auth or cloud-sync metadata. During an account switch, pending edits are isolated by account in a same-tab `sessionStorage` backup and a generation guard prevents stale asynchronous responses from hydrating the newly active account. The backup is temporary, not a durable offline queue.
+Cloud sync treats Supabase as the source of truth and browser `localStorage` as an account-scoped cache. `localStorage.clear()` must not clear Supabase auth or cloud-sync metadata. During an account switch, pending edits are isolated by account in `sessionStorage`, with a dedicated `localStorage` key and an in-memory same-tab fallback if browser storage is unavailable. An account-generation guard and auth-event version guard prevent stale asynchronous responses or initial session verification from hydrating the newly active account. A memory-only fallback is lost when the page is closed; this is not a durable offline queue.
 
 ### Profile frames and notifications
 
