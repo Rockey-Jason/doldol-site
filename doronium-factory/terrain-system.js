@@ -148,7 +148,10 @@ export function mineTunnelAt(x,z,mineId=PRIMARY_MINE_ID){
       (cx>=8&&cx<=13&&cz>=5&&cz<=18) ||
       (cx>=19&&cx<=24&&cz>=6&&cz<=18) ||
       (cx>=29&&cx<=36&&cz>=4&&cz<=20) ||
-      (cx>=3&&cx<=6&&cz>=8&&cz<=16);
+      (cx>=3&&cx<=6&&cz>=8&&cz<=16) ||
+      // The legacy level-five west gallery used to place its gold seam one
+      // cell beyond the old tunnel wall. Connect that seam to the main shaft.
+      (cx===25&&cz===8);
   }
   const profile=tunnelProfile(mineId);
   if(cx>=2&&cx<=37&&cz>=10&&cz<=14)return true;
@@ -239,6 +242,8 @@ export function migrateMineInstances({
       base.name=typeof existing.name==="string"&&existing.name?existing.name:base.name;
       base.geology=typeof existing.geology==="string"&&existing.geology?existing.geology:base.geology;
       base.seed=Number.isSafeInteger(existing.seed)?existing.seed:base.seed;
+      base.currentLevel=clamp(Number(existing.currentLevel)||1,1,MINE_LEVELS);
+      base.player=existing.player&&typeof existing.player==="object"?{...base.player,...existing.player,level:base.currentLevel}:{...base.player,level:base.currentLevel};
       base.deposits=mergeMineDeposits(base.deposits,existing.deposits);
       base.elevatorBuffers=existing.elevatorBuffers&&typeof existing.elevatorBuffers==="object"&&!Array.isArray(existing.elevatorBuffers)?{...existing.elevatorBuffers}:{};
     }
