@@ -155,7 +155,7 @@ export function createMineRegistry(worldSeed=827142,entrances=MINE_ENTRANCES){
     const seed=hashString(seedBase+":"+id);
     const mine={
       id,name:String(entrance.name||("광산 "+(index+1))),
-      entrance:{x,z},seed,
+      entrance:{x,z},seed,currentLevel:1,
       levels:{}
     };
     for(let level=1;level<=MINE_LEVELS;level++){
@@ -209,6 +209,7 @@ function normalizeStoredMine(baseMine,storedMine,id){
     ...cloneJSON(storedMine),
     id,
     entrance:cloneJSON(storedMine.entrance||baseMine.entrance),
+    currentLevel:clamp(Math.floor(Number(storedMine.currentLevel)||Number(baseMine.currentLevel)||1),1,MINE_LEVELS),
     levels:{}
   };
   for(let level=1;level<=MINE_LEVELS;level++){
