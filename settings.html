@@ -1596,9 +1596,12 @@ body::after{
 }
 
 .site-brand{
+    position:relative;
+    z-index:5;
     width:max-content;
     max-width:100%;
     display:inline-flex;
+    cursor:pointer;
     align-items:center;
     gap:12px;
     color:#fff;
@@ -2316,8 +2319,10 @@ body::after{
     <div class="hero-inner">
         <a
             class="site-brand"
-            href="./"
+            href="https://rockey-jason.github.io/doldol-site/"
+            data-dori-main-home="true"
             aria-label="돌이사이트 메인으로 이동"
+            title="돌이사이트 메인으로 이동"
         >
             <span class="brand-mark">D</span>
             <span class="brand-text">돌이사이트</span>
