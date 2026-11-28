@@ -167,6 +167,12 @@ try {
     return api.move3D("w", 0.3);
   });
   assert.ok(adventureStart.z < 52, "First-person WASD movement must move the engineer through the expanded 3D world");
+  await desktop.evaluate(() => window.__doroniumFactoryTest.holdKeyForTest("w"));
+  assert.deepEqual(await desktop.evaluate(() => window.__doroniumFactoryTest.heldKeys()), ["w"],
+    "The input regression fixture must establish a held movement key");
+  await desktop.evaluate(() => window.dispatchEvent(new Event("blur")));
+  assert.deepEqual(await desktop.evaluate(() => window.__doroniumFactoryTest.heldKeys()), [],
+    "Losing browser focus must clear held movement and action keys");
   assert.equal(await desktop.evaluate(() => window.__doroniumFactoryTest.viewMode()), "first");
   const firstPersonVisual = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D());
   assert.equal(firstPersonVisual.playerVisible, false, "The third-person avatar must be hidden in first-person");
