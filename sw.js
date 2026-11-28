@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v78-native-app-20261128";
+const CACHE_NAME = "doldol-site-pwa-v79-global-push-20261128";
 const SITE_SCOPE = new URL(self.registration.scope);
 const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
@@ -24,6 +24,7 @@ const APP_SHELL = [
   scopedUrl("manifest.json"),
   scopedUrl("offline.html"),
   scopedUrl("js/pwa-install.js?v=20261128-pwa-install-2"),
+  scopedUrl("js/dori-notification-center.js?v=20261128-global-push-1"),
   scopedUrl("css/dori-foundation.css?v=20261116-premium-ui-2"),
   scopedUrl("css/home.css?v=20261128-home-css-2")
 ];
@@ -80,13 +81,15 @@ self.addEventListener("fetch", (event) => {
       let html = await response.clone().text();
       const hasCloudSync = html.includes("dori-cloud-sync.js");
       const hasFoundation = html.includes("dori-foundation.css");
-      if (hasCloudSync && hasFoundation) return response;
+      const hasNotificationCenter = html.includes("dori-notification-center.js");
+      if (hasCloudSync && hasFoundation && hasNotificationCenter) return response;
 
       const base = scope.pathname.endsWith("/") ? scope.pathname : scope.pathname + "/";
       const foundationLink = hasFoundation ? "" : '<link rel="stylesheet" href="' + base + 'css/dori-foundation.css?v=20261116-premium-ui-2">';
       const syncBootstrap = hasCloudSync ? "" : '<script src="' + base + 'js/supabase.min.js?v=2.117.2"><\/script>' +
         '<script src="' + base + 'js/dori-cloud-sync.js?v=20261101-4"><\/script>';
-      const bootstrap = foundationLink + syncBootstrap;
+      const notificationBootstrap = hasNotificationCenter ? "" : '<script src="' + base + 'js/dori-notification-center.js?v=20261128-global-push-1"><\\/script>';
+      const bootstrap = foundationLink + syncBootstrap + notificationBootstrap;
       if (html.includes("</head>")) html = html.replace("</head>", bootstrap + "</head>");
       else html = bootstrap + html;
 
@@ -121,7 +124,7 @@ self.addEventListener("push", (event) => {
   }
   const data = payload && payload.data && typeof payload.data === "object" ? payload.data : {};
   const options = {
-    body: typeof payload.body === "string" ? payload.body : "돌이 은행에 새 거래가 도착했어요.",
+    body: typeof payload.body === "string" ? payload.body : "돌이사이트에 새로운 소식이 도착했어요.",
     icon: (() => { const raw = typeof payload.icon === "string" ? payload.icon : "rockeysite-icon-3.png"; const url = new URL(raw, SITE_SCOPE); if (SITE_SCOPE.pathname === "/" && url.origin === SITE_SCOPE.origin && url.pathname.startsWith("/doldol-site/")) url.pathname = url.pathname.slice("/doldol-site".length); return url.href; })(),
     badge: (() => { const raw = typeof payload.badge === "string" ? payload.badge : "rockeysite-icon-3.png"; const url = new URL(raw, SITE_SCOPE); if (SITE_SCOPE.pathname === "/" && url.origin === SITE_SCOPE.origin && url.pathname.startsWith("/doldol-site/")) url.pathname = url.pathname.slice("/doldol-site".length); return url.href; })(),
     tag: typeof payload.tag === "string" ? payload.tag : "doldol-site-notification",
@@ -141,9 +144,9 @@ self.addEventListener("notificationclick", (event) => {
     const scope = new URL(self.registration.scope);
     let target;
     try {
-      target = new URL(event.notification?.data?.url || `${scope.origin}${scope.pathname}dori-bank.html#transactions`, self.location.origin);
+      target = new URL(event.notification?.data?.url || `${scope.origin}${scope.pathname}`, self.location.origin);
     } catch (_) {
-      target = new URL(`${scope.origin}${scope.pathname}dori-bank.html#transactions`);
+      target = new URL(`${scope.origin}${scope.pathname}`);
     }
     if (target.origin !== self.location.origin || !target.pathname.startsWith(scope.pathname)) {
       target = new URL(`${scope.origin}${scope.pathname}dori-bank.html#transactions`);
