@@ -12,6 +12,25 @@ const rockeyGame = fs.readFileSync("rockey-client/src/core/Game.ts", "utf8");
 const factory = fs.readFileSync("doronium-factory/factory.js", "utf8");
 const factoryCss = fs.readFileSync("doronium-factory/factory.css", "utf8");
 const factoryIndex = fs.readFileSync("doronium-factory/index.html", "utf8");
+const homeCss = fs.readFileSync("css/home.css", "utf8");
+const serviceWorker = fs.readFileSync("sw.js", "utf8");
+
+// Homepage delivery: the main visual layer must be cacheable and card images deferred.
+assert.ok(home.includes('href="css/home.css?v=20261128-home-css-1"'),
+  "The homepage must load its extracted, versioned stylesheet.");
+assert.ok(homeCss.length > 90000, "The extracted homepage stylesheet must retain the complete main visual layer.");
+const inlineStyleSizes = [...home.matchAll(/<style\\b[^>]*>([\\s\\S]*?)<\\/style\\s*>/gi)].map(match => match[1].length);
+assert.ok(inlineStyleSizes.every(size => size < 20000),
+  "The homepage must not reintroduce the large blocking inline stylesheet.");
+const homeImages = [...home.matchAll(/<img\\b[^>]*>/gi)].map(match => match[0]);
+const cardImages = homeImages.filter(tag => !/\\bid="돌이사진"/.test(tag));
+assert.ok(cardImages.length >= 6 && cardImages.every(tag => /\\bloading="lazy"/.test(tag) && /\\bdecoding="async"/.test(tag)),
+  "Homepage content images must use lazy loading and asynchronous decoding.");
+assert.ok(homeImages.some(tag => /\\bid="돌이사진"/.test(tag) && /\\bloading="eager"/.test(tag)),
+  "The account avatar must remain eager-loaded.");
+assert.ok(serviceWorker.includes('const CACHE_NAME = "doldol-site-pwa-v74-home-css-20261128";') &&
+  serviceWorker.includes('scopedUrl("css/home.css?v=20261128-home-css-1")'),
+  "The new homepage stylesheet must be cached by the current app-shell version.");
 
 // Execute the real shared frame module with small DOM-compatible test doubles.
 const executableFrameSource = frameSource.replace(/\bexport\s+(?=function\s)/g, "");
