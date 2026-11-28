@@ -677,3 +677,12 @@ PR #11 remains draft/open/unmerged. Main merge, production deployment and produc
 | Mine rail stations and route obstacles | PARTIAL | Existing active-instance filtering remains in place and is exercised by the strengthened combined isolation scenario. | Full mine logistics, inactive-instance background behavior and physical device validation remain incomplete. |
 
 Code commit: `f0ff3f430f07dd9feef660e56bd04840eb9cb13c`; documentation commit: `9d1257e7bf810cd03da864f8efa91f1535290cf8`. This is a defense-in-depth regression, not a completed roadmap stage. All 12 stages and 20 final acceptance items remain PARTIAL/UNVERIFIED until their full criteria pass. No main merge, deployment or production-data change occurred.
+
+
+## 2026-11-28 — mining threshold regression update
+
+| Gate | Status | Evidence / next action |
+|---|---|---|
+| Automated miner 8-second completion boundary | PARTIAL — hardening committed, latest CI pending | Code `a67163dfa1b7d25f94c49110fa8177bd68f64a92` uses a 1e-7-second comparison tolerance. The custody rollback fixture starts at 7.99999995 seconds to exercise the boundary and ensure failed ownership commit retains deposit/drill/progress for retry. |
+| Latest pre-change browser regression | COMPLETE for that commit only | [CI run 45342264817](https://github.com/Rockey-Jason/doldol-site/actions/runs/45342264817): browser-regression and validate-web-game succeeded. This is prior evidence, not validation of the new commit. |
+| New code commit CI | UNVERIFIED / pending | Check the workflow triggered by `a67163d` and subsequent documentation commits. Do not mark this gate complete until browser regression succeeds. |
