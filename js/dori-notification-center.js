@@ -247,7 +247,9 @@
         if (subscription) {
           pushButton.textContent = "알림 끄기";
           pushButton.dataset.enabled = "true";
-          pushStatus.textContent = "중요 알림을 이 기기로 받고 있어요. 언제든 끌 수 있어요.";
+          pushStatus.textContent = Notification.permission === "denied"
+            ? "브라우저에서 알림 권한을 차단했어요. 아래 버튼으로 구독을 해제할 수도 있어요."
+            : "중요 알림을 이 기기로 받고 있어요. 언제든 끌 수 있어요.";
         } else if (Notification.permission === "denied") {
           pushButton.textContent = "권한 확인";
           pushButton.dataset.enabled = "false";
@@ -273,8 +275,7 @@
         if (!(("serviceWorker" in navigator) && ("PushManager" in window) && ("Notification" in window))) {
           throw new Error("현재 브라우저는 푸시 알림을 지원하지 않습니다.");
         }
-        if (Notification.permission !== "granted") {
-          if (Notification.permission === "denied") throw new Error("브라우저 설정에서 돌이사이트의 알림 권한을 허용한 뒤 다시 시도해 주세요.");
+        if (Notification.permission !== "granted" && Notification.permission !== "denied") {
           const permission = await Notification.requestPermission();
           if (permission !== "granted") throw new Error("알림 권한이 허용되지 않았습니다. 브라우저 알림 설정을 확인해 주세요.");
         }
@@ -287,6 +288,9 @@
           if (!removed) throw new Error("브라우저 푸시 구독을 해제하지 못했습니다. 다시 시도해 주세요.");
           showPushMessage("돌이사이트 푸시 알림을 껐어요.");
         } else {
+          if (Notification.permission !== "granted") {
+            throw new Error("브라우저 설정에서 돌이사이트의 알림 권한을 허용한 뒤 다시 시도해 주세요.");
+          }
           subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: pushBase64UrlToBytes("BPU3bUhYuN_Qih2Hd-8KRoi-aQV6Pjy1Y9-570zUS-5cbIG15jZbMPAgttpAnjqv-4Apa25j74axPTq9T--hIkc")
@@ -311,6 +315,7 @@
         showPushMessage(String(error?.message || error || "푸시 알림 설정에 실패했어요."));
       } finally {
         await refreshPushState();
+        window.dispatchEvent(new Event("dori:push-subscription-changed"));
       }
     }
     pushButton?.addEventListener("click", () => { void togglePushNotifications(); });
