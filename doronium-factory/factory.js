@@ -733,7 +733,7 @@ function updatePlayerMotion(dt){
 }
 function updateAdventureHud(){
  const target=world3d.pickTarget(190);adventureTarget=target;
- const label=$("target-label");if(label){label.textContent=target?(target.mine?(RESOURCE[target.type]?.name||target.type)+" · "+target.depthY+"m":target.kind==="mineEntrance"?(target.mineName||"지하 광산 입구"):target.kind==="mineExit"?"지상 출구":target.kind==="mineDescend"?"다음 광산 층":target.kind==="resource"?(RESOURCE[target.type]?.name||target.type):buildingDef(target.type)?.name||"산업 시설"):"주변 탐색 중";label.classList.toggle("target-found",!!target)}
+ const label=$("target-label");if(label){label.textContent=target?(target.mine?(RESOURCE[target.type]?.name||target.type)+" · "+target.depthY+"m":target.kind==="mineEntrance"?(target.mineName||"지하 광산 입구"):target.kind==="mineExit"?"지상 출구":target.kind==="mineAscend"?"상층 광산 승강기":target.kind==="mineDescend"?"하층 광산 승강기":target.kind==="resource"?(RESOURCE[target.type]?.name||target.type):buildingDef(target.type)?.name||"산업 시설"):"주변 탐색 중";label.classList.toggle("target-found",!!target)}
  const mode=S.player.viewMode;$("view-first")?.classList.toggle("active",mode==="first");$("view-third")?.classList.toggle("active",mode==="third");$("view-map")?.classList.toggle("active",mode==="map");
 }
 function enterMine(target=null){
@@ -772,6 +772,15 @@ function descendMine(){
  log((mine?.name||"광산")+" 심층 진입 · "+S.player.mineLevel+"층 · Y="+mineFloorY(S.player.mineLevel)+"m");
  markDirty();drawWorld();
 }
+function ascendMine(){
+ if(S.player.layer!=="mine")return;
+ if(S.player.mineLevel<=1){exitMine();return}
+ S.player.mineLevel--;const mine=activeMine();if(mine)mine.currentLevel=S.player.mineLevel;
+ S.player.x=3;S.player.y=12;playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false};
+ toast((mine?.name||"광산")+" · 상층 "+S.player.mineLevel+"층 · Y "+mineFloorY(S.player.mineLevel)+"m");
+ log((mine?.name||"광산")+" 상층 이동 · "+S.player.mineLevel+"층");
+ markDirty();drawWorld();
+}
 function harvestMineDeposit(target){
  if(S.player.layer!=="mine"||S.activeTool!=="pickaxe"){toast("곡괭이를 장착해야 광물을 채굴할 수 있습니다.","warn");return false}
  const mineID=target?.mineId||S.player.mineId,level=Number(target?.level)||S.player.mineLevel;
@@ -795,6 +804,7 @@ function performAdventureAction(){
  const target=world3d.pickTarget(190);
  if(target?.kind==="mineEntrance"){enterMine(target);return}
  if(target?.kind==="mineExit"){exitMine();return}
+ if(target?.kind==="mineAscend"){ascendMine();return}
  if(target?.kind==="mineDescend"){descendMine();return}
  if(target?.kind==="wildDori"){const node=S.nodes?.[target.x+","+target.z];toast(node?.hostile?"멍멍! 돌이가 이 숲을 지키고 있어요. 안전거리를 두고 이동해 보세요.":"돌이가 숲길을 산책하고 있어요. 꼬리를 흔들며 인사합니다.");return}
  if(target?.kind==="resource"){
@@ -1686,8 +1696,9 @@ if(E2E_MODE){
       S.player.x=mineB.entrance.x;S.player.y=mineB.entrance.z;
       enterMine({kind:"mineEntrance",mineId:idB,x:mineB.entrance.x,z:mineB.entrance.z});
       const enteredB=S.player.mineId,levelOnB=S.player.mineLevel;
-      descendMine();
-      return {idA,idB,enteredA,enteredB,levelOnA,levelOnB,harvested,beforeA,afterA,beforeB,afterB,mineALevel:mineA.currentLevel,mineBLevel:mineB.currentLevel,surfaceBuildingBlocked,mineCellWalkable,minePathAvailable,tunnelMapsDistinct:JSON.stringify(levelA.tunnels)!==JSON.stringify(levelB.tunnels),depositMapsDistinct:levelA.deposits!==levelB.deposits,valid:validateMineRegistry(S.mines).valid};
+      descendMine();const mineBDepthAfterDescent=mineB.currentLevel;
+      ascendMine();const mineBDepthAfterAscent=mineB.currentLevel;
+      return {idA,idB,enteredA,enteredB,levelOnA,levelOnB,harvested,beforeA,afterA,beforeB,afterB,mineALevel:mineA.currentLevel,mineBLevel:mineBDepthAfterDescent,mineBDepthAfterAscent,surfaceBuildingBlocked,mineCellWalkable,minePathAvailable,tunnelMapsDistinct:JSON.stringify(levelA.tunnels)!==JSON.stringify(levelB.tunnels),depositMapsDistinct:levelA.deposits!==levelB.deposits,valid:validateMineRegistry(S.mines).valid};
     }finally{S=previous;playerMotion=previousMotion;markSceneDirty();renderAll()}
   },
   constructionRules(){
