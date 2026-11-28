@@ -668,7 +668,7 @@ function placeBuilding(type,x,y){const d=buildingDef(type);if(!d)return false;if
 function activeMine(){return getMine(S.mines,S.player.mineId)||getMine(S.mines,resolvePlayerMineID(S.player,S.mines))}
 function activeMineLevel(){return getMineLevel(S.mines,S.player.mineId,S.player.mineLevel)}
 function mineDepositAt(mineID,level,x,z){return getMineLevel(S.mines,mineID,level)?.deposits?.[mineCellKey(x,z)]||null}
-function isWalkable(x,y){if(x<0||y<0||x>=WORLD_W||y>=WORLD_H)return false;const building=buildingAt(x,y);if(building&&!isBridgeBuilding(building))return false;if(S.player.layer==="mine")return mineTunnelAt(activeMineLevel(),x,y);const node=tileNode(x,y);return !node||node.amount<=0||isBridgeBuilding(building)}
+function isWalkable(x,y){if(S.player.layer==="mine")return mineTunnelAt(activeMineLevel(),x,y);if(x<0||y<0||x>=WORLD_W||y>=WORLD_H)return false;const building=buildingAt(x,y);if(building&&!isBridgeBuilding(building))return false;const node=tileNode(x,y);return !node||node.amount<=0||isBridgeBuilding(building)}
 function findPlayerPath(startX,startY,goalX,goalY){if(goalX===startX&&goalY===startY)return [];if(!isWalkable(goalX,goalY))return null;const start=startX+","+startY,goal=goalX+","+goalY,queue=[{x:startX,y:startY}],came=new Map([[start,null]]);let found=false;for(let head=0;head<queue.length&&head<1200;head++){const p=queue[head];for(const d of DIRS){const x=p.x+d.x,y=p.y+d.y,key=x+","+y;if(came.has(key)||!isWalkable(x,y))continue;came.set(key,p.x+","+p.y);if(key===goal){found=true;break}queue.push({x,y})}if(found)break}if(!found)return null;const path=[];let key=goal;while(key!==start){const [x,y]=key.split(",").map(Number);path.push({x,y});key=came.get(key)}return path.reverse()}
 function movePlayerTo(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y};const path=findPlayerPath(origin.x,origin.y,x,y);if(path===null){toast("이동 경로가 막혀 있습니다.","warn");return false}playerMotion.path=playerMotion.path.concat(path);playerMotion.onArrive=onArrive;if(!playerMotion.path.length){playerMotion.moving=false;const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
 function approachTile(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y},options=[];for(const d of DIRS){const nx=x+d.x,ny=y+d.y;if(!isWalkable(nx,ny))continue;const path=findPlayerPath(origin.x,origin.y,nx,ny);if(path!==null)options.push({path,nx,ny})}options.sort((a,b)=>a.path.length-b.path.length);if(!options.length){toast("대상 주변으로 접근할 경로가 없습니다.","warn");return false}const best=options[0];playerMotion.path=playerMotion.path.concat(best.path);playerMotion.onArrive=onArrive;if(!best.path.length){const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
@@ -1673,6 +1673,9 @@ if(E2E_MODE){
       const depositA=levelA.deposits[keyA],depositB=levelB.deposits[keyB];
       depositA.type="stone";depositA.amount=Math.max(5,depositA.amount);depositA.max=depositA.amount;
       const beforeA=depositA.amount,beforeB=depositB.amount,[ax,az]=keyA.split(",").map(Number);
+      for(let x=3;x<=10;x++)levelA.tunnels[x+",12"]=true;
+      S.buildings.push({uid:"surface-overlap-test",type:"smelter",x:10,y:12});
+      const surfaceBuildingBlocked=!!buildingAt(10,12),mineCellWalkable=isWalkable(10,12),minePathAvailable=findPlayerPath(3,12,10,12)!==null;
       mineA.currentLevel=3;
       S.player={...S.player,x:mineA.entrance.x,y:mineA.entrance.z,layer:"surface",viewMode:"first"};
       enterMine({kind:"mineEntrance",mineId:idA,x:mineA.entrance.x,z:mineA.entrance.z});
@@ -1684,7 +1687,7 @@ if(E2E_MODE){
       enterMine({kind:"mineEntrance",mineId:idB,x:mineB.entrance.x,z:mineB.entrance.z});
       const enteredB=S.player.mineId,levelOnB=S.player.mineLevel;
       descendMine();
-      return {idA,idB,enteredA,enteredB,levelOnA,levelOnB,harvested,beforeA,afterA,beforeB,afterB,mineALevel:mineA.currentLevel,mineBLevel:mineB.currentLevel,tunnelMapsDistinct:JSON.stringify(levelA.tunnels)!==JSON.stringify(levelB.tunnels),depositMapsDistinct:levelA.deposits!==levelB.deposits,valid:validateMineRegistry(S.mines).valid};
+      return {idA,idB,enteredA,enteredB,levelOnA,levelOnB,harvested,beforeA,afterA,beforeB,afterB,mineALevel:mineA.currentLevel,mineBLevel:mineB.currentLevel,surfaceBuildingBlocked,mineCellWalkable,minePathAvailable,tunnelMapsDistinct:JSON.stringify(levelA.tunnels)!==JSON.stringify(levelB.tunnels),depositMapsDistinct:levelA.deposits!==levelB.deposits,valid:validateMineRegistry(S.mines).valid};
     }finally{S=previous;playerMotion=previousMotion;markSceneDirty();renderAll()}
   },
   constructionRules(){
