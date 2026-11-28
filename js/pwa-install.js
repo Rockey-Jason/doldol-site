@@ -4,6 +4,7 @@
   const isStandalone = () =>
     window.matchMedia("(display-mode: standalone)").matches ||
     window.navigator.standalone === true;
+  const isNativeAndroidApp = () => /DoldolAndroidApp\\//i.test(navigator.userAgent || "");
 
   function addStyles() {
     if (document.getElementById("dori-pwa-install-styles")) return;
@@ -27,7 +28,7 @@
   }
 
   function init() {
-    if (isStandalone()) return;
+    // The native Android package already provides its own app installation.\n    if (isStandalone() || isNativeAndroidApp()) return;
     const auth = document.querySelector(".인증영역");
     if (!auth || document.getElementById("doriPwaInstallButton")) return;
     addStyles();
