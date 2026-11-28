@@ -61,10 +61,12 @@ async function waitFor(predicate, label) {
   throw new Error("Timed out waiting for " + label);
 }
 
-function createSyncHarness() {
+function createSyncHarness({ deferGetUser = false } = {}) {
   const localStorage = new MemoryStorage();
   const sessionStorage = new MemoryStorage();
   const firstFetch = deferred();
+  const getUserGate = deferred();
+  let getUserStarted = false;
   let fetchCount = 0;
   let authListener = null;
   const uploads = [];
@@ -75,6 +77,8 @@ function createSyncHarness() {
         return { data: { session: { user: { id: "user-a" } } }, error: null };
       },
       async getUser() {
+        getUserStarted = true;
+        if (deferGetUser) return getUserGate.promise;
         return { data: { user: { id: "user-a" } }, error: null };
       },
       onAuthStateChange(callback) {
@@ -149,6 +153,8 @@ function createSyncHarness() {
     sessionStorage,
     uploads,
     firstFetch,
+    getUserGate,
+    get getUserStarted() { return getUserStarted; },
     get authListener() { return authListener; },
     get fetchCount() { return fetchCount; },
     window
@@ -219,4 +225,24 @@ test("account switches isolate pending edits and ignore stale sync responses", a
   harness.localStorage.clear();
   assert.equal(harness.localStorage.getItem("sb-project-auth-token"), "AUTH-SESSION-MUST-SURVIVE");
   assert.equal(harness.localStorage.getItem(OWNER_KEY), "user-a");
+});
+
+
+test("an auth state change during initial session verification wins over the stale snapshot", async () => {
+  const harness = createSyncHarness({ deferGetUser: true });
+  await waitFor(() => typeof harness.authListener === "function" && harness.getUserStarted,
+    "the initial auth-user verification");
+
+  harness.authListener("SIGNED_OUT", null);
+  harness.getUserGate.resolve({ data: { user: { id: "user-a" } }, error: null });
+
+  await waitFor(() => harness.window.doriCloudSync?.ready === true,
+    "the initial cloud-sync bootstrap to finish");
+  await waitFor(() => harness.localStorage.getItem(OWNER_KEY) === null,
+    "the signed-out account cache to be cleared");
+
+  assert.equal(harness.fetchCount, 0,
+    "a stale getUser result must not start synchronization for the signed-out account");
+  assert.equal(harness.localStorage.getItem("dori-progress"), null,
+    "the previous account's app cache must remain cleared");
 });
