@@ -1053,7 +1053,16 @@ function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;const
  if(b.output){b.status="PAUSED_OUTPUT";return}
  if(b.type==="minerIron"||b.type==="minerCopper"||b.type==="minerCoal"||d.kind==="miner"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=8){b.progress=0;node.amount=Math.max(0,node.amount-1);const id=d.resource;createOutput(b,id,1,{quality:86+(node.seed%12),purity:88,synthetic:false});}return}
  if(b.type==="pump"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=5){b.progress=0;node.amount=Math.max(0,node.amount-3);createOutput(b,"water",3,{quality:100,purity:100,synthetic:false})}return}
- if(b.type==="catalog_oil_drill"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.type!=="oil"||node.amount<=0){b.status="NO_INPUT";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=12){b.progress=0;node.amount=Math.max(0,node.amount-1);createOutput(b,"crudeOil",1,{quality:90,purity:88,synthetic:false})}return}if(b.type==="catalog_auto_miner"){if(ratio<.8){b.status="PAUSED_POWER";return}const deposits=Object.values(S.mineDeposits||{}).filter(node=>node.amount>0).sort((a,b)=>a.level-b.level||b.amount-a.amount);const deposit=deposits[0];if(!deposit){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=18){b.progress=0;deposit.amount=Math.max(0,deposit.amount-1);createOutput(b,deposit.type,1,{quality:84+Math.min(14,deposit.level*2),purity:90,synthetic:false});log("자동 채굴 · "+RESOURCE[deposit.type].name+" · 광산 "+deposit.level+"층")}return}if(b.type==="doriFarm"||b.type==="catalog_dori_harvester"){if(ratio<.8){b.status="PAUSED_POWER";return}const target=findNearbyDoriNode(b.x,b.y),node=target?.node;if(!node){b.status="NO_INPUT";return}if(node.cooldown>0){b.status="GROWING";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=60){if(availableItemCount(S,"water")<2){b.status="NO_INPUT";b.progress=59;return}if(!takeItem("water",2)){b.status="NO_INPUT";return}startNodeCooldown(target.x,target.y,node,60);b.progress=0;if(createOutput(b,"doriMeat",1,{quality:S.research.includes("bio")?95:92,purity:90,synthetic:false}))addItem("doriFur",1,{quality:92,purity:96,synthetic:false})}return}
+ if(b.type==="catalog_oil_drill"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.type!=="oil"||node.amount<=0){b.status="NO_INPUT";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=12){b.progress=0;node.amount=Math.max(0,node.amount-1);createOutput(b,"crudeOil",1,{quality:90,purity:88,synthetic:false})}return}if(b.type==="catalog_auto_miner"){
+   if(ratio<.8){b.status="PAUSED_POWER";return}
+   b.mineId=S.mines?.[b.mineId]?b.mineId:resolvePlayerMineID({surfacePosition:{x:b.x,y:b.y}},S.mines);
+   b.mineLevel=clamp(Number(b.mineLevel)||1,1,MINE_LEVELS);
+   const deposits=Object.values(getMineLevel(S.mines,b.mineId,b.mineLevel)?.deposits||{}).filter(node=>node.amount>0).sort((a,b)=>b.amount-a.amount);
+   const deposit=deposits[0];if(!deposit){b.status="DEPLETED";return}
+   b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";
+   if(b.progress>=18){b.progress=0;deposit.amount=Math.max(0,deposit.amount-1);createOutput(b,deposit.type,1,{quality:84+Math.min(14,deposit.level*2),purity:90,synthetic:false});log("자동 채굴 · "+RESOURCE[deposit.type].name+" · "+getMine(S.mines,b.mineId)?.name+" "+deposit.level+"층")}
+   return
+  }if(b.type==="doriFarm"||b.type==="catalog_dori_harvester"){if(ratio<.8){b.status="PAUSED_POWER";return}const target=findNearbyDoriNode(b.x,b.y),node=target?.node;if(!node){b.status="NO_INPUT";return}if(node.cooldown>0){b.status="GROWING";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=60){if(availableItemCount(S,"water")<2){b.status="NO_INPUT";b.progress=59;return}if(!takeItem("water",2)){b.status="NO_INPUT";return}startNodeCooldown(target.x,target.y,node,60);b.progress=0;if(createOutput(b,"doriMeat",1,{quality:S.research.includes("bio")?95:92,purity:90,synthetic:false}))addItem("doriFur",1,{quality:92,purity:96,synthetic:false})}return}
  if(d.kind==="machine"||d.kind==="reactor"||d.kind==="variant"){tickMachine(b,dt,ratio);return}
 }
 function recipeHasSyntheticInput(b,r){
@@ -1618,9 +1627,13 @@ if(E2E_MODE){
   holdKeyForTest:key=>adventureKeys.add(String(key).toLowerCase()),
   prepareSaveReloadTest(){
     S.money=123456;S.player.x=81;S.player.y=67;S.survival.health=84;
+    const mineID=Object.keys(S.mines)[1],mine=getMine(S.mines,mineID),layer=getMineLevel(S.mines,mineID,3);
+    const depositKey=Object.keys(layer.deposits)[0],deposit=layer.deposits[depositKey];
+    deposit.amount=Math.max(0,deposit.amount-3);mine.currentLevel=3;
+    S.player.mineId=mineID;S.player.mineLevel=3;S.player.surfacePosition={x:81,y:67,mineId};
     playerMotion.x=81;playerMotion.z=67;
     const savedAt=saveLocal();
-    return {saved:!!savedAt,money:S.money,x:S.player.x,y:S.player.y,health:S.survival.health,ironOre:itemCount("ironOre")};
+    return {saved:!!savedAt,money:S.money,x:S.player.x,y:S.player.y,health:S.survival.health,ironOre:itemCount("ironOre"),mineID,mineLevel:mine.currentLevel,depositKey,depositAmount:deposit.amount};
   },
   viewMode:()=>S.player.viewMode,
   setViewMode:(mode)=>setViewMode(mode),
@@ -1639,14 +1652,34 @@ if(E2E_MODE){
   setupSurvivalTest(){S=freshState();S.player={...S.player,x:72,y:52,layer:"surface",viewMode:"first",yaw:0,pitch:-.12};S.survival={health:100,hunger:50,thirst:50};S.inventory.doriMeat=2;S.inventory.water=3;S.runtime=createRuntimeState();ensureItemStacks(S);playerMotion={x:72,z:52,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};renderAll();return structuredClone(S)},
   survivalTick(seconds,deplete=false){if(deplete){S.survival.hunger=0;S.survival.thirst=0}updateSurvival(Math.max(0,Number(seconds)||0));return structuredClone(S.survival)},
   setupMiningTest(){
-   S=freshState();S.player={...S.player,x:8,y:14,viewMode:"first",layer:"mine",mineLevel:1,yaw:0,pitch:.06};S.survival={health:100,hunger:100,thirst:100};
-   const deposit=S.mineDeposits["1:8:12"];deposit.amount=12;S.activeTool="pickaxe";
-   playerMotion={x:8,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:.06,path:[],moving:false,facing:0,onArrive:null};
-   selectedBuild=null;selectedBuilding=null;world3d.center(8,14);renderAll();return structuredClone(S)
+    S=freshState();const mineID=mineIdFromEntrance(MINE_ENTRANCES[0].x,MINE_ENTRANCES[0].z),layer=getMineLevel(S.mines,mineID,1);
+    S.player={...S.player,x:8,y:14,viewMode:"first",layer:"mine",mineId,mineLevel:1,yaw:0,pitch:.06};S.survival={health:100,hunger:100,thirst:100};
+    layer.tunnels["8,12"]=true;layer.tunnels["8,13"]=true;layer.tunnels["8,14"]=true;layer.centerline[8]=12;
+    layer.deposits["8,12"]={mineId,level:1,x:8,z:12,type:"stone",amount:12,max:12,cooldown:0,depthY:mineFloorY(1)+12,seed:127};
+    S.activeTool="pickaxe";S.mines[mineID].currentLevel=1;
+    playerMotion={x:8,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:.06,path:[],moving:false,facing:0,onArrive:null};
+    selectedBuild=null;selectedBuilding=null;world3d.center(8,14);renderAll();return structuredClone(S)
   },
-  mineTarget(){const before=itemCount("stone"),target=world3d.pickTarget(190);performAdventureAction();return {target,before,after:itemCount("stone"),node:S.mineDeposits["1:8:12"]?.amount}},
+  mineTarget(){const id=S.player.mineId,before=itemCount("stone"),target=world3d.pickTarget(190);performAdventureAction();return {target,before,after:itemCount("stone"),node:mineDepositAt(id,1,8,12)?.amount}},
   selectTool:(tool)=>selectTool(tool),
-  toolGuard(){this.setupMiningTest();selectTool("axe");const before=itemCount("stone");harvestMineDeposit(S.mineDeposits["1:8:12"]);return {before,after:itemCount("stone"),tool:S.activeTool}},
+  toolGuard(){this.setupMiningTest();selectTool("axe");const before=itemCount("stone"),node=mineDepositAt(S.player.mineId,1,8,12);harvestMineDeposit({mineId:S.player.mineId,level:1,x:8,z:12});return {before,after:itemCount("stone"),node:node.amount,tool:S.activeTool}},
+  mineIsolationTest(){
+    const previous=structuredClone(S),previousMotion=structuredClone(playerMotion);
+    try{
+      S=freshState();
+      const [mineA,mineB]=Object.values(S.mines),idA=mineA.id,idB=mineB.id;
+      const levelA=getMineLevel(S.mines,idA,1),levelB=getMineLevel(S.mines,idB,1);
+      const keyA=Object.keys(levelA.deposits)[0],keyB=Object.keys(levelB.deposits)[0];
+      const depositA=levelA.deposits[keyA],depositB=levelB.deposits[keyB];
+      const beforeA=depositA.amount,beforeB=depositB.amount;
+      const [ax,az]=keyA.split(",").map(Number);
+      S.player={...S.player,x:3,y:12,layer:"mine",mineId:idA,mineLevel:1,viewMode:"first"};
+      const harvested=harvestMineDeposit({mineId:idA,level:1,x:ax,z:az});
+      const afterA=depositA.amount,afterB=depositB.amount;
+      mineA.currentLevel=4;
+      return {idA,idB,harvested,beforeA,afterA,beforeB,afterB,mineALevel:mineA.currentLevel,mineBLevel:mineB.currentLevel,tunnelMapsDistinct:JSON.stringify(levelA.tunnels)!==JSON.stringify(levelB.tunnels),depositMapsDistinct:levelA.deposits!==levelB.deposits,valid:validateMineRegistry(S.mines).valid};
+    }finally{S=previous;playerMotion=previousMotion;markSceneDirty();renderAll()}
+  },
   constructionRules(){
    S=freshState();S.player={...S.player,viewMode:"map"};S.money=1000000;S.inventory={wood:200,stone:200,ironPlate:200,ironOre:100,coal:100,water:50};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.research.push("logistics");
    const standardWithoutFoundation=placeBuilding("belt",75,50);
@@ -1676,7 +1709,7 @@ if(E2E_MODE){
 
   move:(dx,dy)=>movePlayer(dx,dy),
   audit:()=>({
-   dataValidation:DATA_VALIDATION,catalogValidation:CATALOG_VALIDATION,catalogItemCount:Object.keys(CATALOG_ITEMS).length,catalogRecipeCount:Object.keys(CATALOG_RECIPES).length,catalogMachineCount:CATALOG_MACHINES.length,runtimeValidation:validateRuntimeState(S),skillTreeValidation:validateSkillTree(),skillStateValidation:validateSkillState(S.skills),skillNodeCount:SKILL_NODES.length,skillGroupCount:SKILL_GROUPS.length,resourceCount:Object.keys(RESOURCE).length,
+   dataValidation:DATA_VALIDATION,catalogValidation:CATALOG_VALIDATION,catalogItemCount:Object.keys(CATALOG_ITEMS).length,catalogRecipeCount:Object.keys(CATALOG_RECIPES).length,catalogMachineCount:CATALOG_MACHINES.length,runtimeValidation:validateRuntimeState(S),mineValidation:validateMineRegistry(S.mines),mineCount:Object.keys(S.mines||{}).length,skillTreeValidation:validateSkillTree(),skillStateValidation:validateSkillState(S.skills),skillNodeCount:SKILL_NODES.length,skillGroupCount:SKILL_GROUPS.length,resourceCount:Object.keys(RESOURCE).length,
    variantCount:VARIANTS.length,
    uniqueVariants:new Set(VARIANTS).size,
    uniqueCrystalModels:DORONIUM_CRYSTAL_MODELS.filter(id=>id!=="infinity").length,
@@ -1695,16 +1728,18 @@ if(E2E_MODE){
    buildingMaterialsValid:BUILDINGS.every(b=>Object.keys(b.materials||{}).every(id=>!!RESOURCE[id]))
   }),
   saveMigrationTest(){
-   const previous=structuredClone(S);
-   try{
-    S=freshState();
-    const original=structuredClone(S),newOre=Object.entries(original.mineDeposits).find(([,node])=>node.type==="aluminumOre");
-    const preserved=original.mineDeposits["1:8:12"];
-    if(!newOre||!preserved)throw new Error("The test map must include a new aluminum vein and a legacy ore vein");
-    const oldDeposits={...original.mineDeposits};delete oldDeposits[newOre[0]];oldDeposits["1:8:12"]={...preserved,amount:7};
-    hydrateState({...original,worldVersion:4,mineDeposits:oldDeposits});
-    return {newOreKey:newOre[0],newOrePresent:!!S.mineDeposits[newOre[0]],newOreType:S.mineDeposits[newOre[0]]?.type,legacyAmount:S.mineDeposits["1:8:12"]?.amount,worldVersion:S.worldVersion,saveValid:validateRuntimeState(S).valid};
-   }finally{S=previous;markSceneDirty();renderAll()}
+    const previous=structuredClone(S);
+    try{
+      const original=freshState(),legacyDeposits=makeMineDeposits();
+      const legacyKey=Object.keys(legacyDeposits).find(key=>legacyDeposits[key].type==="aluminumOre");
+      legacyDeposits["1:8:12"]={...legacyDeposits["1:8:12"],amount:7};
+      const targetID=mineIdFromEntrance(30,64),surfacePosition={x:30,y:64};
+      hydrateState({...original,worldVersion:4,mines:undefined,mineDeposits:legacyDeposits,player:{...original.player,surfacePosition}});
+      const restoredLevel=getMineLevel(S.mines,targetID,1),restored=restoredLevel.deposits["8,12"],newOreCoordinates=legacyKey.split(":").map(Number);
+      const newOre=getMineLevel(S.mines,targetID,newOreCoordinates[0]).deposits[newOreCoordinates[1]+","+newOreCoordinates[2]];
+      const others=Object.values(S.mines).filter(mine=>mine.id!==targetID);
+      return {newOrePresent:!!newOre,newOreType:newOre?.type,legacyAmount:restored?.amount,worldVersion:S.worldVersion,targetID,otherMineCount:others.length,otherMineIndependent:others.every(mine=>mine.levels["1"].deposits!==restoredLevel.deposits),saveValid:validateRuntimeState(S).valid,mineValid:validateMineRegistry(S.mines).valid};
+    }finally{S=previous;markSceneDirty();renderAll()}
   },
   expandedSystemsTest(){
    const previous=structuredClone(S);
