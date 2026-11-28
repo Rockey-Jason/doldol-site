@@ -22,6 +22,7 @@ const APP_SHELL = [
   scopedUrl("rockey-study-rewards.html"),
   scopedUrl("rockeysite-icon-3.png"),
   scopedUrl("manifest.json"),
+  scopedUrl("js/pwa-install.js?v=20261128-pwa-install-1"),
   scopedUrl("css/dori-foundation.css?v=20261116-premium-ui-2"),
   scopedUrl("css/home.css?v=20261128-home-css-2")
 ];
@@ -53,11 +54,21 @@ self.addEventListener("activate", (event) => {
 // Inject the account sync bootstrap into every site page controlled by this worker.
 self.addEventListener("fetch", (event) => {
   const request = event.request;
-  if (request.method !== "GET" || request.mode !== "navigate") return;
+  if (request.method !== "GET") return;
 
   const scope = new URL(self.registration.scope);
   const target = new URL(request.url);
   if (target.origin !== scope.origin || !target.pathname.startsWith(scope.pathname)) return;
+
+  // Reuse pre-cached app-shell resources when offline; do not cache API responses.
+  if (request.mode !== "navigate") {
+    event.respondWith((async () => {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+      return fetch(request);
+    })());
+    return;
+  }
 
   event.respondWith((async () => {
     try {
