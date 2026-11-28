@@ -71,6 +71,26 @@ The corresponding commit/Actions/Pages run IDs and their results must be filled 
 - Mobile-emulation viewport 390×844 showed the touch pad and verified engineer movement. This remains emulation rather than a physical Android/iOS test.
 - This run does not represent a wall-clock 60-minute device soak. The overall v4.5.0 project remains Partial/Conflict as documented below.
 
+## 2026-11-28 — Phase 1 foundation stabilization
+
+1. **Inventory transaction safety** — changed `commitItemReservations()` to validate the complete active reservation ledger and aggregate allocations per ItemStack before any inventory mutation. Added valid multi-reservation and corrupted-overlap regression tests.
+2. **Input lifecycle safety** — movement/jump keys and continuous mining are released on browser blur and hidden-tab transitions; Space uses the physical `code` as well as key normalization.
+3. **Actual browser controls** — Playwright now presses W and Space on a clear surface fixture, verifies movement, jump takeoff/landing, and confirms blur resets held keys. The fixture avoids conflating forest-tile collision with missing keyboard input.
+4. **Save restoration** — Playwright writes a validated local save, reloads the game, and checks money, player coordinates, survival health, inventory and runtime validation after restoration.
+5. **Cache versions** — bumped the game entry to `factory.js?v=66` and simulation core to `simulation-core.js?v=6`. Existing save keys/schema and cloud identifiers were preserved.
+
+### Verification for Phase 1
+
+- PR: [#50](https://github.com/Rockey-Jason/doldol-site/pull/50)
+- Code commit exercised by successful CI: `d67399553c48d56f08028e8b7a1a916bb3cf0c40`.
+- Doronium Factory validation run [#1695](https://github.com/Rockey-Jason/doldol-site/actions/runs/46128713179): **success**.
+- Static/syntax checks and Node suite: **54/54 passed**.
+- Playwright: desktop WebGL and mobile-emulation WebGL passed; real W/Space input, landing, blur cleanup, local save/reload, mine/factory interaction, power gate, reservation safety, Fusion recovery, and UI regression all passed.
+- Virtual one-hour soak: **36,000** fixed 0.1-second ticks; **296 iron plates** produced; ore-equivalent balance **50,000** and coal-equivalent balance **30,000** preserved.
+- Mobile emulation at 390×844 verified the touch movement pad, compact HUD behavior and movement. Browser screenshots uploaded as artifact **15257006896**.
+- This does not certify physical Android/iOS hardware, a wall-clock 60-minute soak, or an authenticated external Supabase session.
+- The separate site-wide quality gate failed at `scripts/validate-runtime-polish.mjs:32` (versioned homepage cache declaration); this root app-shell issue is outside this game-only patch. PR #50 remains unmerged, and no Pages deployment was performed.
+
 ## Known remaining scope
 
 See `SPEC_GAP_MATRIX.md`. Overall v4.5.0 Gate remains Partial/Conflict while FluidNetwork, contract shipping, full FailureProfiles/outcomes, power topology, blueprints, all skill effect integrations, Lore/story audio, canonical Infinity power units and real-hardware soak checks remain incomplete.
