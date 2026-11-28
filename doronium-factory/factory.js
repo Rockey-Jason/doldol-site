@@ -1640,7 +1640,7 @@ if(E2E_MODE){
     const mineID=Object.keys(S.mines)[1],mine=getMine(S.mines,mineID),layer=getMineLevel(S.mines,mineID,3);
     const depositKey=Object.keys(layer.deposits)[0],deposit=layer.deposits[depositKey];
     deposit.amount=Math.max(0,deposit.amount-3);mine.currentLevel=3;
-    S.player.mineId=mineID;S.player.mineLevel=3;S.player.surfacePosition={x:81,y:67,mineId};
+    S.player.mineId=mineID;S.player.mineLevel=3;S.player.surfacePosition={x:81,y:67,mineId:mineID};
     playerMotion.x=81;playerMotion.z=67;
     const savedAt=saveLocal();
     return {saved:!!savedAt,money:S.money,x:S.player.x,y:S.player.y,health:S.survival.health,ironOre:itemCount("ironOre"),mineID,mineLevel:mine.currentLevel,depositKey,depositAmount:deposit.amount};
