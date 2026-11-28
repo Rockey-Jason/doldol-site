@@ -1730,8 +1730,8 @@ if(E2E_MODE){
       elevatorA:mineA.elevatorBuffers["2"]?.ironOre?.quantity||0,
       elevatorB:mineB.elevatorBuffers["2"]?.ironOre?.quantity||0,
       activeA,activeB,
-      sceneA:{id:sceneA.activeMineId,geology:sceneA.activeMineGeology,tunnels:sceneA.activeMineTunnelCells},
-      sceneB:{id:sceneB.activeMineId,geology:sceneB.activeMineGeology,tunnels:sceneB.activeMineTunnelCells}
+      sceneA:{id:sceneA.activeMineId,geology:sceneA.activeMineGeology,tunnels:sceneA.activeMineTunnelSignature,tunnelCells:sceneA.activeMineTunnelCells},
+      sceneB:{id:sceneB.activeMineId,geology:sceneB.activeMineGeology,tunnels:sceneB.activeMineTunnelSignature,tunnelCells:sceneB.activeMineTunnelCells}
     };
     return result;
    }finally{S=previous;playerMotion=previousMotion;markSceneDirty();renderAll();setViewMode(S.player.viewMode)}
