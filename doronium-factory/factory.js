@@ -1318,7 +1318,7 @@ function wireControls(){
  document.addEventListener("pointerlockchange",()=>{const locked=document.pointerLockElement===card;card.classList.toggle("pointer-locked",locked);document.documentElement.classList.toggle("factory-pointer-locked",locked)});
  document.addEventListener("pointerlockerror",()=>toast("마우스 잠금이 지원되지 않습니다. 드래그로 시점을 조작하세요.","warn"));
  window.addEventListener("keydown",e=>{
-  const k=e.key.toLowerCase();
+  const k=e.key.toLowerCase(),isJumpKey=e.code==="Space"||k===" ";
   const editing=e.target instanceof HTMLInputElement||e.target instanceof HTMLSelectElement||e.target instanceof HTMLTextAreaElement;
   if(k==="escape"){
    e.preventDefault();
@@ -1331,10 +1331,10 @@ function wireControls(){
   if(editing)return;
   const scope=keyboardFocusScope();
   if(scope&&["arrowup","arrowdown","arrowleft","arrowright"].includes(k)){e.preventDefault();moveKeyboardFocus(k);return}
-  if(k==="enter"||k===" "){
+  if(k==="enter"||isJumpKey){
    if(scope&&e.target===document.body){e.preventDefault();scope.querySelector("button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled)")?.focus();return}
   }
-  if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"," ","shift"].includes(k))e.preventDefault();
+  if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright","shift"].includes(k)||isJumpKey)e.preventDefault();
   if(!scope&&k!=="f")requestDesktopImmersion();
   if(k==="v"){setViewMode(S.player.viewMode==="first"?"third":"first");return}
   if(k==="m"){if(S.player.layer==="mine"){toast("광산 내부에서는 지도를 열 수 없습니다.");return}setViewMode(S.player.viewMode==="map"?"first":"map");return}
@@ -1343,15 +1343,15 @@ function wireControls(){
   if(k==="e"&&adventureMode()){adventureKeys.add("e");performAdventureAction();return}
   if(k==="x"){if(selectedBuilding){const b=S.buildings.find(x=>x.uid===selectedBuilding);if(b){b.dir=(b.dir+1)%4;renderMachineDetails();drawWorld();markDirty()}}else toast("시설을 선택한 뒤 X 키로 방향을 회전하세요.");return}
   if(k==="b"||k==="o"||k==="i"||k==="c"||k==="t"||k==="j"){setTabFromKey(k);return}
-  if(k===" "&&adventureMode())adventureKeys.add(" ");
+  if(isJumpKey&&adventureMode())adventureKeys.add(" ");
   else if(adventureMode()&&["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright","shift"].includes(k))adventureKeys.add(k);
   else if(!adventureMode()&&(k==="w"||k==="arrowup"))movePlayer(0,-1);
   else if(!adventureMode()&&(k==="s"||k==="arrowdown"))movePlayer(0,1);
   else if(!adventureMode()&&(k==="a"||k==="arrowleft"))movePlayer(-1,0);
   else if(!adventureMode()&&(k==="d"||k==="arrowright"))movePlayer(1,0);
-  if(k===" "&&!adventureMode()){S.paused=!S.paused;renderHud()}
+  if(isJumpKey&&!adventureMode()){S.paused=!S.paused;renderHud()}
  });
- window.addEventListener("keyup",e=>{const k=e.key.toLowerCase();adventureKeys.delete(k);if(k===" ")adventureKeys.delete(" ")});
+ window.addEventListener("keyup",e=>{const k=e.key.toLowerCase();adventureKeys.delete(k);if(e.code==="Space"||k===" ")adventureKeys.delete(" ")});
   // Browsers may not deliver keyup after focus changes. Never leave movement,
   // jump, or continuous mining held when the game loses focus.
   window.addEventListener("blur",clearAdventureInput);
