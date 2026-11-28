@@ -29,6 +29,9 @@ jobs:
       - name: Check site files, inline scripts, local assets and JSON
         run: node scripts/site-quality-check.mjs
 
+      - name: Validate homepage navigation, accessibility and cache integrity
+        run: node scripts/validate-home-experience.mjs
+
       - name: Validate SEO metadata and sitemap
         run: node scripts/site-seo-build.mjs --check
 

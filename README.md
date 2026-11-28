@@ -1,56 +1,76 @@
 # 돌이사이트 (Doldol Site)
 
-돌이사이트는 돌이 세계의 뉴스, 가상 경제, 생활 콘텐츠, 학습 콘텐츠와 여러 기존 서비스를 하나의 웹 공간에서 제공하는 정적 웹사이트입니다.
+돌이사이트는 돌이 세계의 생활 콘텐츠, 금융·산업 화면, 게임, 학습 도구, 뉴스와 커뮤니티를 하나의 웹 공간으로 연결하는 한국어 중심 플랫폼입니다.
 
-- **저장소:** [Rockey-Jason/doldol-site](https://github.com/Rockey-Jason/doldol-site)
 - **운영 주소:** https://rockey-jason.github.io/doldol-site/
-- **기본 브랜치:** main
+- **GitHub 저장소:** https://github.com/Rockey-Jason/doldol-site
+- **기본 브랜치:** `main`
 - **호스팅:** GitHub Pages
-- **주요 데이터 연동:** Supabase
+- **주요 데이터 계층:** Supabase
+- **기본 언어:** 한국어 (`ko-KR`)
 
-## 먼저 읽을 문서
+## 서비스 영역
 
-1. AGENTS.md — AI 개발 도구가 지켜야 하는 작업 규칙
-2. docs/AI_CONTEXT.md — 제품 범위, 화면, 데이터 및 런타임에 대한 AI용 통합 문맥
-3. docs/SITE_ARCHITECTURE.md — 디렉터리와 페이지별 역할
-4. docs/SEO_AND_DISCOVERY.md — 검색 엔진과 배포 시 SEO 처리
+| 영역 | 대표 화면 | 목적 |
+|---|---|---|
+| 돌이 세계와 생활 | Dori Life, 돌이 월드, 도로늄 박물관 | 돌이 세계관과 생활형 콘텐츠 탐색 |
+| 금융과 경제 | 돌이은행, 돌돌증권, 돌돌코인 | 계정 기반 가상 경제 콘텐츠 |
+| 게임과 산업 | 돌이게임, ROCKEY, 도로늄 공장 | 기존 게임과 산업 시뮬레이션 |
+| 학습과 일정 | 로키 스터디, 로키 공유 캘린더 | 학습 도구와 일정 관리 |
+| 뉴스와 소통 | 돌이신문, 사용자 의견함 | 소식 확인과 개선 의견 전달 |
+| AI와 연구 | 돌이 AI, DORI AI 연구소 | 사이트 내 AI 관련 화면 |
 
-## 주요 구조
+## 프로젝트 구조
 
-| 경로 | 역할 |
+| 경로 | 책임 |
 |---|---|
-| index.html | 사이트 홈, 기본 탐색 및 로그인 상태에 따른 홈 UI |
-| *.html, dori-world/, doronium-factory/, rockey/ | 각 기존 페이지 및 별도 화면 |
-| css/ | 공통 디자인 토대와 기능별 스타일 |
-| js/ | 계정 동기화, 공통 UI, 알림, 업적, 경제 및 설정 모듈 |
-| assets/ | 돌이 이미지, 아이템, 프레임 및 생활 이미지 |
-| supabase/ | DB 마이그레이션과 Edge Functions |
-| scripts/ | 품질 검사와 페이지 검증 스크립트 |
-| .github/workflows/ | 품질 검사와 GitHub Pages 배포 자동화 |
+| `index.html` | 홈페이지와 주요 서비스 탐색 |
+| `*.html`, `dori-world/`, `doronium-factory/` | 기존 서비스 화면 |
+| `css/dori-foundation.css` | 공통 글꼴, 색상 토큰, 포커스, 모션, 반응형 기반 |
+| `css/doldol-theme.css`, `js/doldol-theme.js` | 사이트 공통 테마와 페이지 전환 |
+| `css/home.css` | 홈페이지 전용 레이아웃과 카드 스타일 |
+| `js/dori-cloud-sync.js` | Supabase 계정 데이터와 브라우저 캐시 동기화 |
+| `js/dori-notification-center.js` | 공유 알림 UI |
+| `assets/` | 이미지와 서비스 자산 |
+| `supabase/migrations/` | 데이터베이스 변경 이력 |
+| `supabase/functions/` | 서버 측 Edge Functions |
+| `scripts/` | 정적 품질 검사와 기능 회귀 검사 |
+| `.github/workflows/` | CI, 빌드, GitHub Pages 배포 |
+
+## 개발 원칙
+
+- 기본값은 새로운 서비스를 더하는 것보다 **기존 기능의 안정성·접근성·일관성·성능 개선**입니다.
+- 운영 URL, 사용자 식별자, 재화 잔액, 보상, 업적, 권한과 DB 계약은 현재 구현을 확인하지 않고 변경하지 않습니다.
+- 계정 권한과 경제 관련 변경은 브라우저 UI만으로 보호하지 않습니다. 서버 검증과 RLS 정책을 함께 확인합니다.
+- 서비스 워커 캐시 대상 리소스의 URL을 바꾸면 `sw.js`의 캐시 키도 함께 갱신합니다.
+- 모든 화면은 PC·모바일, 키보드 포커스, 긴 문구, 로딩·오류·빈 상태를 고려합니다.
+- 모션은 `prefers-reduced-motion` 설정을 존중합니다.
+- 비밀 키와 사용자 개인정보를 공개 저장소, 브라우저 코드, 테스트 출력에 넣지 않습니다.
 
 ## 품질 검사
 
-Node.js 22 환경에서 다음 명령을 실행합니다.
+Node.js 22 환경에서 저장소 루트에서 실행합니다.
 
 ~~~bash
 node scripts/site-quality-check.mjs
+node scripts/validate-home-experience.mjs
 node scripts/validate-dori-life.mjs
 node scripts/validate-runtime-polish.mjs
 node scripts/site-seo-build.mjs --check
 ~~~
 
-ROCKEY 전용 클라이언트와 서버의 별도 검사 명령은 각 하위 디렉터리의 package.json을 기준으로 합니다. 루트 package.json은 전체 사이트 프런트엔드 빌드 도구가 아니라 저장소 내 자동화 작업의 의존성을 정의합니다.
+ROCKEY 클라이언트와 서버에는 각각 별도 빌드·테스트가 있습니다. 정확한 명령은 `rockey-client/package.json` 및 `rockey-server/package.json`을 기준으로 합니다.
 
-## 배포
+## 배포 흐름
 
-main에 반영된 변경은 .github/workflows/deploy-rockey-pages.yml의 GitHub Actions 흐름으로 검사·조립된 뒤 GitHub Pages에 배포됩니다. 게시 직전에 scripts/site-seo-build.mjs가 사이트맵에 등록된 공개 페이지의 검색 메타데이터를 정규화합니다.
+1. 변경 사항은 별도 브랜치에서 작업합니다.
+2. Pull Request에서 품질 검사를 확인합니다.
+3. 승인·병합된 `main` 변경은 `.github/workflows/deploy-rockey-pages.yml`의 빌드와 SEO 검사를 거쳐 GitHub Pages에 배포됩니다.
+4. GitHub Actions 성공과 실제 운영 화면 확인은 서로 다른 검증입니다. 중요한 변경은 배포 기록과 운영 URL을 따로 확인합니다.
 
-실제 배포 성공 여부는 GitHub Actions 실행 결과와 운영 URL을 확인한 후에만 성공으로 판단합니다.
+## 먼저 읽을 문서
 
-## 변경 원칙
-
-- 기본값은 **새 기능 추가가 아닌 기존 기능의 안정화와 완성도 개선**입니다.
-- 기존 URL, 사용자 데이터, Supabase 계약, 권한 판정 및 저장 형식을 임의로 변경하지 않습니다.
-- 화면 하나를 수정할 때 공통 디자인과 PC·모바일 레이아웃을 함께 확인합니다.
-- 서비스 워커의 캐시 대상이나 정적 리소스를 변경하면 캐시 버전과 오프라인 동작을 검토합니다.
-- 비밀 키·토큰·사용자 개인정보를 소스 코드, 로그, 문서에 기록하지 않습니다.
+- `AGENTS.md`: AI 및 자동화 개발 도구 작업 규칙
+- `docs/AI_CONTEXT.md`: 제품 범위, 계정·데이터·공통 모듈 개요
+- `docs/SITE_ARCHITECTURE.md`: 저장소 구조와 페이지 관계
+- `docs/SEO_AND_DISCOVERY.md`: 사이트맵, 검색 메타데이터, 색인 지침
