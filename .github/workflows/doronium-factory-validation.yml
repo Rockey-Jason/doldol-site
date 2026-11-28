@@ -42,9 +42,10 @@ jobs:
           node --check doronium-factory/skill-runtime.test.mjs
           node --check doronium-factory/save-store.js
           node --check doronium-factory/save-store.test.mjs
-          node --test doronium-factory/catalog.test.mjs doronium-factory/simulation-core.test.mjs doronium-factory/fusion-runtime.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs doronium-factory/failure-runtime.test.mjs doronium-factory/skill-runtime.test.mjs doronium-factory/save-store.test.mjs
+          node --test doronium-factory/catalog.test.mjs doronium-factory/simulation-core.test.mjs doronium-factory/fusion-runtime.test.mjs doronium-factory/game-data-validation.test.mjs doronium-factory/production-runtime.test.mjs doronium-factory/failure-runtime.test.mjs doronium-factory/skill-runtime.test.mjs doronium-factory/save-store.test.mjs doronium-factory/terrain-system.test.mjs
           node --check doronium-factory/world3d.js
           node --check doronium-factory/terrain-system.js
+          node --check doronium-factory/terrain-system.test.mjs
           node --check doronium-factory/e2e/factory-smoke.mjs
       - name: Check required game files and runtime contracts
         run: |
@@ -69,10 +70,18 @@ jobs:
           test -s doronium-factory/save-store.test.mjs
           test -s doronium-factory/world3d.js
           test -s doronium-factory/terrain-system.js
+          test -s doronium-factory/terrain-system.test.mjs
           grep -q 'WORLD_W = 192' doronium-factory/terrain-system.js
           grep -q 'WORLD_H = 160' doronium-factory/terrain-system.js
           grep -q 'function terrainHeightAt' doronium-factory/terrain-system.js
           grep -q 'function makeMineDeposits' doronium-factory/terrain-system.js
+          grep -q 'MINE_ENTRANCES' doronium-factory/terrain-system.js
+          grep -q 'export function createMineInstances' doronium-factory/terrain-system.js
+          grep -q 'export function migrateMineInstances' doronium-factory/terrain-system.js
+          grep -q 'mineInstances:world.mineInstances' doronium-factory/factory.js
+          grep -q 'function getMineDeposits' doronium-factory/factory.js
+          grep -q 'function persistActiveMinePlayer' doronium-factory/factory.js
+          grep -q 'activeMineTunnelSignature' doronium-factory/world3d.js
           grep -q 'beltAdaptive' doronium-factory/factory.js
           grep -q 'function harvestMineDeposit' doronium-factory/factory.js
           grep -q 'function enterMine' doronium-factory/factory.js
