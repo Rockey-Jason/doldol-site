@@ -170,7 +170,7 @@ export function biomeGroundColor(biome){
 function baseDepositObject(mineId,worldSeed){
   return Object.fromEntries(BASE_MINE_ROWS.map(([level,x,z,type,amount,depthY],i)=>{
     const key=mineDepositKey(level,x,z);
-    return [key,{level,x,z,type,amount,max:amount,cooldown:0,depthY,seed:hash32(worldSeed+"|"+mineId+"|"+key+"|"+i)}];
+    return [key,{level,x,z,type,amount,max:amount,cooldown:0,depthY,seed:mineId===PRIMARY_MINE_ID?(((level*73856093)^(x*19349663)^(z*83492791)^(i*2654435761))>>>0):hash32(worldSeed+"|"+mineId+"|"+key+"|"+i)}];
   }));
 }
 export function makeMineDeposits(mineId=PRIMARY_MINE_ID,worldSeed=827142){
@@ -203,7 +203,8 @@ export function createMineInstances(worldSeed=827142){
   for(const entry of MINE_ENTRANCES){
     mines[entry.id]={
       id:entry.id,name:entry.name,geology:entry.geology,entrance:{x:entry.x,y:entry.y},
-      seed:hash32(Number(worldSeed)+"|"+entry.id),
+      seed:hash32(Number(worldSeed)+"|"+entry.id),currentLevel:1,
+      player:{x:3,z:12,yaw:0,pitch:-.06,level:1},
       deposits:makeMineDeposits(entry.id,worldSeed),
       elevatorBuffers:{}
     };
