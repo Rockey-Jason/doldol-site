@@ -451,7 +451,7 @@ button {
 
 .메인 > .패널:nth-child(2) {
     padding: 30px;
-    height: 535px;
+    height: auto;
     min-height: 535px;
     display: flex;
     flex-direction: column;
@@ -489,7 +489,8 @@ button {
 }
 
 #확률목록 {
-    max-height: 380px;
+    max-height: 420px;
+    min-height: 180px;
     overflow-y: auto;
     overflow-x: hidden;
     padding: 3px 8px 6px 2px;
@@ -531,7 +532,7 @@ button {
     flex-shrink: 0;
 }
 
-.확률항목 {
+ .확률항목 {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -569,10 +570,34 @@ button {
     white-space: nowrap;
 }
 
+.확률정보 {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex: 0 0 112px;
+    min-width: 90px;
+}
 .확률 {
     flex-shrink: 0;
     color: var(--gold);
-    font-size: 15px;
+    font-size: 14px;
+    font-variant-numeric: tabular-nums;
+}
+.확률막대배경 {
+    display: block;
+    width: 100%;
+    height: 4px;
+    overflow: hidden;
+    border-radius: 99px;
+    background: rgba(255,255,255,0.09);
+}
+.확률막대 {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #7185ff, #ffe38a);
+    box-shadow: 0 0 10px rgba(130,145,255,0.3);
 }
 
 .인벤토리 {
@@ -787,6 +812,13 @@ button {
     font-size: 26px;
 }
 
+#모달확률목록 {
+    max-height: min(58vh, 520px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 2px 8px 6px 2px;
+}
+#모달확률목록 .확률항목 { flex-shrink: 0; }
 #모달닫기 {
     width: 100%;
     margin-top: 22px;
@@ -1683,23 +1715,49 @@ function 확률목록표시() {
     확률목록.innerHTML = "";
     모달확률목록.innerHTML = "";
 
-    보상목록.forEach(보상 => {
+    const 정렬된보상 = [...보상목록].sort((a, b) => b.확률 - a.확률);
+    const 최대확률 = Math.max(...정렬된보상.map(item => item.확률), 0);
+
+    const 항목생성 = 보상 => {
         const 항목 = document.createElement("div");
         항목.className = "확률항목";
 
-        항목.innerHTML = `
-            <div class="아이템이름">
-                <span>${HTML문자열(보상.아이콘)}</span>
-                <span>${HTML문자열(보상.이름)}</span>
-            </div>
-            <span class="확률">
-                ${보상.확률.toFixed(4)}%
-            </span>
+        const 이름영역 = document.createElement("div");
+        이름영역.className = "아이템이름";
+        이름영역.innerHTML = `
+            <span>${HTML문자열(보상.아이콘)}</span>
+            <span title="${HTML문자열(보상.이름)}">${HTML문자열(보상.이름)}</span>
         `;
 
-        확률목록.appendChild(항목.cloneNode(true));
-        모달확률목록.appendChild(항목);
+        const 확률영역 = document.createElement("div");
+        확률영역.className = "확률정보";
+        const 확률값 = document.createElement("strong");
+        확률값.className = "확률";
+        확률값.textContent = 보상.확률.toFixed(4) + "%";
+
+        const 막대배경 = document.createElement("span");
+        막대배경.className = "확률막대배경";
+        const 막대 = document.createElement("span");
+        막대.className = "확률막대";
+        막대.style.width = 최대확률 > 0
+            ? Math.max(0, Math.min(100, 보상.확률 / 최대확률 * 100)) + "%"
+            : "0%";
+        막대배경.appendChild(막대);
+
+        확률영역.append(확률값, 막대배경);
+        항목.append(이름영역, 확률영역);
+        return 항목;
+    };
+
+    정렬된보상.forEach(보상 => {
+        확률목록.appendChild(항목생성(보상));
+        모달확률목록.appendChild(항목생성(보상));
     });
+
+    if (정렬된보상.length === 0) {
+        확률목록.textContent = "현재 공개된 보상 정보가 없습니다.";
+        모달확률목록.textContent = "현재 공개된 보상 정보가 없습니다.";
+    }
 }
 
 /* =====================================================
@@ -2076,12 +2134,12 @@ async function 시작() {
 
     결과.textContent = "데이터를 불러오는 중입니다...";
 
-    // 확률표는 비로그인 사용자에게도 공개합니다.
-    const 보상불러오기성공 = await 보상목록불러오기();
-    if (!보상불러오기성공) return;
-
+    // 보상 테이블 조회 정책에 맞춰 로그인 확인 후 서버 보상 목록을 불러옵니다.
     const 로그인됨 = await 로그인확인();
     if (!로그인됨) return;
+
+    const 보상불러오기성공 = await 보상목록불러오기();
+    if (!보상불러오기성공) return;
 
     const 사용자불러오기성공 = await 사용자정보불러오기();
     if (!사용자불러오기성공) return;
