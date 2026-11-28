@@ -652,7 +652,7 @@ function consumeRecipe(b,r){if(!canConsumeRecipe(b,r))return null;const inventor
 function createOutput(b,id,qty,meta){if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(RESOURCE[id].name+" 생산 · "+fmt(qty)+"개");markDirty();return true}
 function isBridgeType(type){return ["catalog_wood_bridge","catalog_iron_bridge","catalog_concrete_bridge"].includes(type)}
 function isBridgeBuilding(building){return !!building&&isBridgeType(building.type)}
-function placeBuilding(type,x,y){const d=buildingDef(type);if(!d)return false;if(S.player.layer==="mine"){toast("지하 광산에서는 공장 시설을 설치할 수 없습니다.","warn");return false}if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}if(buildingAt(x,y)){toast("이미 시설이 설치된 타일입니다.","warn");return false}if(type!=="beltAdaptive"&&!["relay","core","pump"].includes(type)&&!isBridgeType(type)&&!hasFoundation(x,y)){toast("기계와 물류 시설은 먼저 땅을 평탄화하고 기초 타일을 설치해야 합니다.","warn");return false}const node=tileNode(x,y);if(isBridgeType(type)&&node?.type!=="water"){toast("다리는 강이나 수로의 물 타일 위에 설치해야 합니다.","warn");return false}if(type==="pump"&&node?.type!=="water"){toast("정수 펌프는 수원지 위에 설치해야 합니다.","warn");return false}if(type==="catalog_oil_drill"&&node?.type!=="oil"){toast("원유 시추기는 석유 지대의 유정 위에 설치해야 합니다.","warn");return false}if(["minerIron","minerCopper","minerCoal"].includes(type)){toast("광물은 지하 광산에서 곡괭이로 직접 채굴하세요.","warn");return false}if((type==="doriFarm"||type==="catalog_dori_harvester")&&node?.type==="dori"){toast("재배기는 나무 바로 옆의 평탄한 부지에 설치하세요.","warn");return false}if((type==="doriFarm"||type==="catalog_dori_harvester")&&!findNearbyDoriNode(x,y)){toast("돌이 나무 재배기는 돌이 고기 나무 주변에 설치해야 합니다.","warn");return false}if(type==="relay"&&node?.type!=="relaySite"){toast("행성 에너지 릴레이 설치 지점을 찾아야 합니다.","warn");return false}if(type==="core"&&node?.type!=="coreSite"){toast("중앙 안정화 코어는 지정된 코어 부지에 설치해야 합니다.","warn");return false}if(node&&["water","wood","dori","birchTree","rubberTree","barkTree","frozenTree","fireTree","grassPatch","heatCrystalNode","coldCrystalNode","oil","mineEntrance","relaySite","coreSite"].includes(node.type)&&!["pump","doriFarm","catalog_dori_harvester","catalog_oil_drill","relay","core","catalog_wood_bridge","catalog_iron_bridge","catalog_concrete_bridge"].includes(type)&&!(type==="beltAdaptive"&&node.type==="grassPatch")){toast("이 타일에는 해당 시설을 설치할 수 없습니다.","warn");return false}if(!unlockOk(d)){toast("필요한 기술 연구를 먼저 완료하세요.","warn");return false}if(!canAfford(d)){toast("건설 자원이 부족합니다.","warn");return false}const hasCatalogItem=!!d.catalogItemId&&availableItemCount(S,d.catalogItemId)>0;if(hasCatalogItem){if(!takeItem(d.catalogItemId,1)){toast("설비 아이템을 차감하지 못했습니다. 건설을 취소했습니다.","warn");return false}}else if(!takeItems(d.materials)){toast("건설 재료 또는 설비 아이템이 부족합니다. 자금은 사용하지 않았습니다.","warn");return false}S.money-=buildingMoneyCost(d);const b={uid:"B"+(++S.tick)+"-"+Math.floor(Math.random()*99999),type,x,y,dir:1,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:1,status:"IDLE",autoFeed:true,variant:"doronium_blue",recipeId:d.defaultRecipe||null,temp:25,pressure:0,fuelTimer:0,moveTimer:0};S.buildings.push(b);markSceneDirty();S.stats.built[type]=(S.stats.built[type]||0)+1;if(type==="relay"){const index=S.sites.relay.findIndex(p=>p.x===x&&p.y===y);if(index>=0)S.relaySites[index]=true}if(type==="core")S.corePlaced=true;selectedBuilding=b.uid;selectedBuild=null;log(d.name+" 건설 완료");toast(d.name+" 설치 완료");playTone(580,.1,"triangle");markDirty();renderAll();questCheck();return true}
+function placeBuilding(type,x,y){const d=buildingDef(type);if(!d)return false;if(S.player.layer==="mine"){toast("지하 광산에서는 공장 시설을 설치할 수 없습니다.","warn");return false}if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}if(buildingAt(x,y)){toast("이미 시설이 설치된 타일입니다.","warn");return false}if(type!=="beltAdaptive"&&!["relay","core","pump"].includes(type)&&!isBridgeType(type)&&!hasFoundation(x,y)){toast("기계와 물류 시설은 먼저 땅을 평탄화하고 기초 타일을 설치해야 합니다.","warn");return false}const node=tileNode(x,y);if(isBridgeType(type)&&node?.type!=="water"){toast("다리는 강이나 수로의 물 타일 위에 설치해야 합니다.","warn");return false}if(type==="pump"&&node?.type!=="water"){toast("정수 펌프는 수원지 위에 설치해야 합니다.","warn");return false}if(type==="catalog_oil_drill"&&node?.type!=="oil"){toast("원유 시추기는 석유 지대의 유정 위에 설치해야 합니다.","warn");return false}if(["minerIron","minerCopper","minerCoal"].includes(type)){toast("광물은 지하 광산에서 곡괭이로 직접 채굴하세요.","warn");return false}if((type==="doriFarm"||type==="catalog_dori_harvester")&&node?.type==="dori"){toast("재배기는 나무 바로 옆의 평탄한 부지에 설치하세요.","warn");return false}if((type==="doriFarm"||type==="catalog_dori_harvester")&&!findNearbyDoriNode(x,y)){toast("돌이 나무 재배기는 돌이 고기 나무 주변에 설치해야 합니다.","warn");return false}if(type==="relay"&&node?.type!=="relaySite"){toast("행성 에너지 릴레이 설치 지점을 찾아야 합니다.","warn");return false}if(type==="core"&&node?.type!=="coreSite"){toast("중앙 안정화 코어는 지정된 코어 부지에 설치해야 합니다.","warn");return false}if(node&&["water","wood","dori","birchTree","rubberTree","barkTree","frozenTree","fireTree","grassPatch","heatCrystalNode","coldCrystalNode","oil","mineEntrance","relaySite","coreSite"].includes(node.type)&&!["pump","doriFarm","catalog_dori_harvester","catalog_oil_drill","relay","core","catalog_wood_bridge","catalog_iron_bridge","catalog_concrete_bridge"].includes(type)&&!(type==="beltAdaptive"&&node.type==="grassPatch")){toast("이 타일에는 해당 시설을 설치할 수 없습니다.","warn");return false}if(!unlockOk(d)){toast("필요한 기술 연구를 먼저 완료하세요.","warn");return false}if(!canAfford(d)){toast("건설 자원이 부족합니다.","warn");return false}const hasCatalogItem=!!d.catalogItemId&&availableItemCount(S,d.catalogItemId)>0;if(hasCatalogItem){if(!takeItem(d.catalogItemId,1)){toast("설비 아이템을 차감하지 못했습니다. 건설을 취소했습니다.","warn");return false}}else if(!takeItems(d.materials)){toast("건설 재료 또는 설비 아이템이 부족합니다. 자금은 사용하지 않았습니다.","warn");return false}S.money-=buildingMoneyCost(d);const b={uid:"B"+(++S.tick)+"-"+Math.floor(Math.random()*99999),type,x,y,dir:1,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:1,status:"IDLE",autoFeed:true,variant:"doronium_blue",recipeId:d.defaultRecipe||null,temp:25,pressure:0,fuelTimer:0,moveTimer:0};if(["catalog_auto_miner","catalog_item_elevator","catalog_water_elevator","catalog_maglev_elevator"].includes(type))b.mineId=nearestMineInstanceId(x,y);S.buildings.push(b);markSceneDirty();S.stats.built[type]=(S.stats.built[type]||0)+1;if(type==="relay"){const index=S.sites.relay.findIndex(p=>p.x===x&&p.y===y);if(index>=0)S.relaySites[index]=true}if(type==="core")S.corePlaced=true;selectedBuilding=b.uid;selectedBuild=null;log(d.name+" 건설 완료");toast(d.name+" 설치 완료");playTone(580,.1,"triangle");markDirty();renderAll();questCheck();return true}
 function isWalkable(x,y){if(x<0||y<0||x>=WORLD_W||y>=WORLD_H)return false;const building=buildingAt(x,y);if(building&&!isBridgeBuilding(building))return false;if(S.player.layer==="mine")return mineTunnelAt(x,y,currentMineId());const node=tileNode(x,y);return !node||node.amount<=0||isBridgeBuilding(building)}
 function findPlayerPath(startX,startY,goalX,goalY){if(goalX===startX&&goalY===startY)return [];if(!isWalkable(goalX,goalY))return null;const start=startX+","+startY,goal=goalX+","+goalY,queue=[{x:startX,y:startY}],came=new Map([[start,null]]);let found=false;for(let head=0;head<queue.length&&head<1200;head++){const p=queue[head];for(const d of DIRS){const x=p.x+d.x,y=p.y+d.y,key=x+","+y;if(came.has(key)||!isWalkable(x,y))continue;came.set(key,p.x+","+p.y);if(key===goal){found=true;break}queue.push({x,y})}if(found)break}if(!found)return null;const path=[];let key=goal;while(key!==start){const [x,y]=key.split(",").map(Number);path.push({x,y});key=came.get(key)}return path.reverse()}
 function movePlayerTo(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y};const path=findPlayerPath(origin.x,origin.y,x,y);if(path===null){toast("이동 경로가 막혀 있습니다.","warn");return false}playerMotion.path=playerMotion.path.concat(path);playerMotion.onArrive=onArrive;if(!playerMotion.path.length){playerMotion.moving=false;const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
@@ -1099,44 +1099,44 @@ function logisticsDirection(b,item){
  }
  return Number.isInteger(b.outputDir)?b.outputDir:(b.dir||1);
 }
-function ensureMineElevatorBuffer(level){
- S.mineElevatorBuffers??={};
- const key=String(clamp(Number(level)||1,1,MINE_LEVELS));
- S.mineElevatorBuffers[key]??={};
- return S.mineElevatorBuffers[key];
+function ensureMineElevatorBuffer(level,mineId=PRIMARY_MINE_ID){
+ const mine=getMineInstance(mineId);if(!mine)return {};
+ mine.elevatorBuffers??={};const key=String(clamp(Number(level)||1,1,MINE_LEVELS));
+ mine.elevatorBuffers[key]??={};return mine.elevatorBuffers[key];
 }
-function elevatorBufferSummary(level){
- const buffer=ensureMineElevatorBuffer(level);
+function elevatorBufferSummary(level,mineId=PRIMARY_MINE_ID){
+ const buffer=ensureMineElevatorBuffer(level,mineId);
  return Object.entries(buffer).filter(([,stack])=>Number(stack?.quantity)>0).map(([id,stack])=>({id,quantity:Number(stack.quantity)||0,quality:Number(stack.quality)||90,purity:Number(stack.purity)||90,synthetic:!!stack.synthetic}));
 }
-function storeInMineElevator(level,id,quantity,meta={}){
- const buffer=ensureMineElevatorBuffer(level),existing=buffer[id]||{quantity:0,quality:90,purity:90,synthetic:false};
+function storeInMineElevator(level,id,quantity,meta={},mineId=PRIMARY_MINE_ID){
+ const buffer=ensureMineElevatorBuffer(level,mineId),existing=buffer[id]||{quantity:0,quality:90,purity:90,synthetic:false};
  const oldQuantity=Math.max(0,Number(existing.quantity)||0),incoming=Math.max(0,Number(quantity)||0),total=oldQuantity+incoming;
  if(total<=0)return false;
  buffer[id]={quantity:total,quality:(oldQuantity*existing.quality+incoming*(Number(meta.quality)||90))/total,purity:(oldQuantity*existing.purity+incoming*(Number(meta.purity)||90))/total,synthetic:!!existing.synthetic||!!meta.synthetic};
  markDirty();return true;
 }
 function transferElevatorBuffer(building,action){
+ const mineId=linkedMineId(building),mine=mineName(mineId);
  const level=clamp(Number($("machine-lift-level")?.value||building.liftLevel||1),1,MINE_LEVELS);
  const id=$("machine-lift-item")?.value||"";
  const qty=Math.max(1,Math.floor(Number($("machine-lift-quantity")?.value)||1));
- const buffer=ensureMineElevatorBuffer(level);
+ const buffer=ensureMineElevatorBuffer(level,mineId);
  if(action==="load"){
   if(!id||availableItemCount(S,id)<qty){toast("창고에 이 아이템의 사용 가능한 수량이 부족합니다.","warn");return}
-  const meta=takeItemDetailed(id,qty,"mine-elevator:"+level);
+  const meta=takeItemDetailed(id,qty,"mine-elevator:"+mineId+":"+level);
   if(!meta){toast("아이템 이동 예약에 실패했습니다.","warn");return}
-  storeInMineElevator(level,id,qty,meta);
-  log("아이템 엘리베이터 · 광산 "+level+"층으로 "+(RESOURCE[id]?.name||id)+" × "+qty+" 이송");
-  toast("광산 "+level+"층 물류 버퍼에 "+(RESOURCE[id]?.name||id)+" "+qty+"개 적재");
+  storeInMineElevator(level,id,qty,meta,mineId);
+  log("아이템 엘리베이터 · "+mine+" "+level+"층으로 "+(RESOURCE[id]?.name||id)+" × "+qty+" 이송");
+  toast(mine+" "+level+"층 물류 버퍼에 "+(RESOURCE[id]?.name||id)+" "+qty+"개 적재");
  }else{
   const stack=buffer[id],have=Math.max(0,Number(stack?.quantity)||0),amount=Math.min(qty,have);
-  if(!amount){toast("선택한 광산 층에 가져올 아이템이 없습니다.","warn");return}
+  if(!amount){toast("선택한 광산의 층에 가져올 아이템이 없습니다.","warn");return}
   addItem(id,amount,{quality:stack.quality,purity:stack.purity,synthetic:stack.synthetic},false);
   stack.quantity-=amount;if(stack.quantity<=0)delete buffer[id];
-  log("아이템 엘리베이터 · 광산 "+level+"층에서 "+(RESOURCE[id]?.name||id)+" × "+amount+" 회수");
-  toast("광산 "+level+"층에서 "+(RESOURCE[id]?.name||id)+" "+amount+"개 회수");
+  log("아이템 엘리베이터 · "+mine+" "+level+"층에서 "+(RESOURCE[id]?.name||id)+" × "+amount+" 회수");
+  toast(mine+" "+level+"층에서 "+(RESOURCE[id]?.name||id)+" "+amount+"개 회수");
  }
- building.liftLevel=level;markDirty();renderMachineDetails();renderInventory();
+ building.mineId=mineId;building.liftLevel=level;markDirty();renderMachineDetails();renderInventory();
 }
 function acceptFactoryLogisticsItem(target,item){
  const type=target.type,copy={id:item.id,qty:item.qty,meta:{...(item.meta||{})}};
@@ -1176,7 +1176,7 @@ function acceptFactoryLogisticsItem(target,item){
    target.liftedUp=(target.liftedUp||0)+copy.qty;
    log("수직 엘리베이터 · 창고 방향 "+(RESOURCE[copy.id]?.name||copy.id)+" × "+copy.qty);
   }else{
-   storeInMineElevator(level,copy.id,copy.qty,copy.meta);
+   storeInMineElevator(level,copy.id,copy.qty,copy.meta,linkedMineId(target));
    target.liftedDown=(target.liftedDown||0)+copy.qty;
    log("수직 엘리베이터 · 광산 "+level+"층 "+(RESOURCE[copy.id]?.name||copy.id)+" × "+copy.qty);
   }
