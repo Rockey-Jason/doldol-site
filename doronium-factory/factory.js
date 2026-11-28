@@ -1685,11 +1685,12 @@ if(E2E_MODE){
       const beforeA=depositA.amount,beforeB=depositB.amount,[ax,az]=keyA.split(",").map(Number);
       for(let x=3;x<=10;x++)levelA.tunnels[x+",12"]=true;
       S.buildings.push({uid:"surface-overlap-test",type:"smelter",x:10,y:12});
-      const surfaceBuildingBlocked=!!buildingAt(10,12),mineCellWalkable=isWalkable(10,12),minePathAvailable=findPlayerPath(3,12,10,12)!==null;
+      const surfaceBuildingBlocked=!!buildingAt(10,12);
       mineA.currentLevel=3;
       S.player={...S.player,x:mineA.entrance.x,y:mineA.entrance.z,layer:"surface",viewMode:"first"};
       enterMine({kind:"mineEntrance",mineId:idA,x:mineA.entrance.x,z:mineA.entrance.z});
       const enteredA=S.player.mineId,levelOnA=S.player.mineLevel;
+      const mineCellWalkable=isWalkable(10,12),minePathAvailable=findPlayerPath(3,12,10,12)!==null;
       const harvested=harvestMineDeposit({mineId:idA,level:3,x:ax,z:az});
       const afterA=depositA.amount,afterB=depositB.amount;
       exitMine();
