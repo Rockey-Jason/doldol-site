@@ -1490,7 +1490,15 @@ if(E2E_MODE){
   },
   viewMode:()=>S.player.viewMode,
   setViewMode:(mode)=>setViewMode(mode),
-  move3D(key,seconds=.3){adventureKeys.add(key);updatePlayerMotion(seconds);adventureKeys.delete(key);return {x:playerMotion.x,z:playerMotion.z,viewMode:S.player.viewMode}},
+  setupMovementTest(){
+    S=freshState();S.player={...S.player,x:72,y:52,layer:"surface",mineLevel:1,viewMode:"first",yaw:0,pitch:-.12};S.paused=false;
+    // The fixture starts on an intentionally clear patch, so collision checks
+    // do not confuse a blocked forest tile with a failed keyboard event.
+    for(let y=46;y<=58;y++)for(let x=66;x<=78;x++)delete S.nodes[x+","+y];
+    playerMotion={x:72,z:52,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};
+    selectedBuild=null;selectedBuilding=null;selectedLandTool=null;clearAdventureInput();world3d.center(72,52);setViewMode("first");renderAll();
+    return {x:playerMotion.x,z:playerMotion.z,viewMode:S.player.viewMode,paused:S.paused};
+  },
   survival:()=>structuredClone(S.survival),
   consumeFood:()=>{consumeFood();return structuredClone(S.survival)},
   drinkWater:()=>{drinkWater();return structuredClone(S.survival)},
