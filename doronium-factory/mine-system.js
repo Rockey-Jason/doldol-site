@@ -1,7 +1,8 @@
 /* DORONIUM FACTORY — deterministic, independent mine instances. */
 import {
   MINE_W, MINE_H, MINE_LEVELS, mineFloorY,
-  mineTunnelAt as legacyMineTunnelAt
+  mineTunnelAt as legacyMineTunnelAt,
+  makeMineDeposits as makeLegacyMineDeposits
 } from "./terrain-system.js";
 
 export const MINE_ENTRANCES = Object.freeze([
@@ -241,7 +242,7 @@ export function migrateMineRegistry({
   mergeLegacyDefaults=false
 }={}){
   const registry=cloneJSON(generatedMines||createMineRegistry());
-  if(incomingMines&&typeof incomingMines==="object"&&!Array.isArray(incomingMines)){
+  if(incomingMines&&typeof incomingMines==="object"&&!Array.isArray(incomingMines)&&Object.keys(incomingMines).length){
     for(const [id,stored] of Object.entries(incomingMines)){
       if(registry[id])registry[id]=normalizeStoredMine(registry[id],stored,id);
       else if(stored&&typeof stored==="object"&&stored.entrance&&stored.levels){
@@ -255,12 +256,20 @@ export function migrateMineRegistry({
   const targetID=resolvePlayerMineID(player,registry);
   const target=registry[targetID];
   if(!target)return registry;
+  const legacyDefaults=mergeLegacyDefaults?makeLegacyMineDeposits():{};
   for(let level=1;level<=MINE_LEVELS;level++){
     const levelState=target.levels[String(level)];
-    if(!mergeLegacyDefaults)levelState.deposits={};
+    levelState.deposits={};
     levelState.tunnels={};
     for(let z=0;z<MINE_H;z++)for(let x=0;x<MINE_W;x++){
       if(legacyMineTunnelAt(x,z))levelState.tunnels[cellKey(x,z)]=true;
+    }
+    if(mergeLegacyDefaults){
+      for(const node of Object.values(legacyDefaults)){
+        if(node.level!==level)continue;
+        const key=cellKey(node.x,node.z);
+        levelState.deposits[key]={...cloneJSON(node),mineId:targetID};
+      }
     }
   }
   for(const [legacyKey,legacyNode] of Object.entries(legacyDeposits)){
