@@ -99,6 +99,10 @@
     cleanupEmptyWrapper(parent);
   };
   const normalizeMainSiteButtons = (root = document) => {
+    // Some pages own a carefully layered brand link inside a custom hero. Keep that
+    // original anchor in place; otherwise the shared routine can relocate it and
+    // then delete it as a duplicate, leaving an inert-looking replacement behind.
+    if (document.querySelector("[data-dori-skip-main-home-normalization]")) return;
     if (isSiteHomePage()) {
       const logo = document.getElementById("사이트로고");
       const logoLink = logo && logo.closest("a[href]");
@@ -113,8 +117,7 @@
     }
 
     const allHomeLinks = Array.from(document.querySelectorAll("a[href]"))
-      .filter((link) => !link.hasAttribute("data-no-normalize-home") &&
-        isMainSiteDestination(link.getAttribute("href")));
+      .filter((link) => isMainSiteDestination(link.getAttribute("href")));
     let primary = allHomeLinks.find((link) => link.dataset.doriMainHomeNormalized === "true") || allHomeLinks[0] || null;
 
     // If the page has no homepage link, reuse the existing header back button to
