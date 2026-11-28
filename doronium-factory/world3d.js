@@ -443,7 +443,7 @@ export function createWorld3D(canvas, getState) {
       const light=new THREE.PointLight(kind==="mineExit"?0x6ed6c1:0xf2bd65,1.15,76,2);
       light.position.y=23;g.add(light);
     };
-    addLift(3,"mineExit");addLift(36,"mineDescend");
+    addLift(3,level>1?"mineAscend":"mineExit");addLift(36,"mineDescend");
 
     // Low-cost tunnel lamps are positioned from the generated centerline.
     if(highEndDevice){
