@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v76-install-offline-resilience-20261128";
+const CACHE_NAME = "doldol-site-pwa-v77-offline-shell-20261128";
 const SITE_SCOPE = new URL(self.registration.scope);
 const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
@@ -22,6 +22,7 @@ const APP_SHELL = [
   scopedUrl("rockey-study-rewards.html"),
   scopedUrl("rockeysite-icon-3.png"),
   scopedUrl("manifest.json"),
+  scopedUrl("offline.html"),
   scopedUrl("js/pwa-install.js?v=20261128-pwa-install-1"),
   scopedUrl("css/dori-foundation.css?v=20261116-premium-ui-2"),
   scopedUrl("css/home.css?v=20261128-home-css-2")
@@ -98,10 +99,12 @@ self.addEventListener("fetch", (event) => {
       // Keep the installed app launchable when the network is unavailable.
       const cachedPage = await caches.match(request);
       if (cachedPage) return cachedPage;
+      const offlinePage = await caches.match(scopedUrl("offline.html"));
+      if (offlinePage) return offlinePage;
       const cachedHome = await caches.match(scopedUrl("index.html"));
       if (cachedHome) return cachedHome;
       return new Response(
-        '<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>오프라인</title><body style="margin:0;background:#000033;color:#eef3ff;font-family:sans-serif;display:grid;min-height:100vh;place-items:center;text-align:center"><main><h1>현재 오프라인 상태예요</h1><p>인터넷 연결을 확인한 뒤 다시 시도해 주세요.</p></main></body></html>',
+        '<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>오프라인 | 돌이사이트</title><body style="margin:0;background:#000033;color:#eef3ff;font-family:sans-serif;display:grid;min-height:100vh;place-items:center;text-align:center"><main><h1>현재 오프라인 상태예요</h1><p>인터넷 연결을 확인한 뒤 다시 시도해 주세요.</p></main></body></html>',
         { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } }
       );
     }
