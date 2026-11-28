@@ -1482,6 +1482,12 @@ if(E2E_MODE){
   motion:()=>({x:playerMotion.x,z:playerMotion.z,path:playerMotion.path.length,moving:playerMotion.moving,yaw:playerMotion.yaw,pitch:playerMotion.pitch}),
   heldKeys:()=>[...adventureKeys],
   holdKeyForTest:key=>adventureKeys.add(String(key).toLowerCase()),
+  prepareSaveReloadTest(){
+    S.money=123456;S.player.x=81;S.player.y=67;S.survival.health=84;
+    playerMotion.x=81;playerMotion.z=67;
+    const savedAt=saveLocal();
+    return {saved:!!savedAt,money:S.money,x:S.player.x,y:S.player.y,health:S.survival.health,ironOre:itemCount("ironOre")};
+  },
   viewMode:()=>S.player.viewMode,
   setViewMode:(mode)=>setViewMode(mode),
   move3D(key,seconds=.3){adventureKeys.add(key);updatePlayerMotion(seconds);adventureKeys.delete(key);return {x:playerMotion.x,z:playerMotion.z,viewMode:S.player.viewMode}},
