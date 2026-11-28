@@ -1514,7 +1514,7 @@ function hydrateState(input){
  const buildings=Array.isArray(incoming.buildings)?incoming.buildings.map(building=>{
   if(!building||typeof building!=="object")return building;
   const linked=["catalog_auto_miner","catalog_item_elevator","catalog_water_elevator","catalog_maglev_elevator"].includes(building.type);
-  return linked?{...building,mineId:mineInstances[building.mineId]?building.mineId:nearestMineInstanceId(building.x,building.y)}:building;
+  return linked?{...building,mineId:mineInstances[building.mineId]?building.mineId:PRIMARY_MINE_ID}:building;
  }):[];
  const sourceNodes=migrate?base.nodes:(expandSurface?{...base.nodes,...(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:{})}:(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:base.nodes));
  const nodes=sourceNodes;
