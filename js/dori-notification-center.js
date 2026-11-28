@@ -107,13 +107,14 @@
       ".dn-panel{display:flex;flex-direction:column;width:min(570px,calc(100vw - 28px));height:min(760px,calc(100dvh - 132px));min-height:350px;overflow:hidden;border:1px solid rgba(154,180,255,.28);border-radius:27px;color:#f5f7ff;background:radial-gradient(ellipse at 90% -5%,rgba(89,120,255,.2),transparent 34%),linear-gradient(155deg,rgba(15,22,57,.99),rgba(5,8,26,.995));box-shadow:0 30px 95px rgba(0,0,0,.56),inset 0 1px rgba(255,255,255,.07);transform:translateY(18px) scale(.985);transition:transform .38s cubic-bezier(.22,1,.36,1)}.dn-overlay.open .dn-panel{transform:translateY(0) scale(1)}"+
       ".dn-head{display:flex;align-items:center;gap:12px;padding:22px 22px 17px;border-bottom:1px solid rgba(160,180,235,.12)}.dn-mark{display:grid;place-items:center;flex:0 0 44px;width:44px;height:44px;border:1px solid rgba(143,178,255,.28);border-radius:15px;color:#dbe8ff;background:linear-gradient(145deg,rgba(108,144,255,.22),rgba(61,85,161,.08));font-size:22px}.dn-heading{flex:1;min-width:0}.dn-eyebrow{color:#98b6ff;font-size:10px;letter-spacing:.14em}.dn-title{margin:4px 0 0;color:#fff;font-size:22px;font-weight:400;letter-spacing:-.035em}.dn-subtitle{margin:4px 0 0;color:#9ba9cc;font-size:12px;line-height:1.5}.dn-close{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border:1px solid rgba(160,180,235,.17);border-radius:13px;background:rgba(255,255,255,.045);color:#d8e1ff;font-size:24px;cursor:pointer;transition:background .2s,transform .2s}.dn-close:hover{background:rgba(143,171,255,.14);transform:rotate(90deg)}"+
       ".dn-summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 22px;color:#aab7d6;font-size:12px}.dn-unread-number{margin-left:8px;color:#cfe2ff;font-size:14px;font-variant-numeric:tabular-nums}.dn-all-read{border:0;padding:7px 0;background:transparent;color:#aac4ff;font:inherit;font-size:12px;cursor:pointer}.dn-all-read:hover{color:#fff}.dn-all-read:disabled{opacity:.45;cursor:default}"+
+      "\n      ".dn-push-setting{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 22px 16px;padding:13px 14px;border:1px solid rgba(135,170,255,.18);border-radius:15px;background:linear-gradient(115deg,rgba(86,119,218,.12),rgba(255,255,255,.025))}.dn-push-copy{display:flex;flex-direction:column;gap:4px;min-width:0}.dn-push-copy strong{color:#e9f0ff;font-size:12px;font-weight:400}.dn-push-copy small{color:#99a9ce;font-size:10px;line-height:1.5}.dn-push-toggle{flex:0 0 auto;min-height:35px;padding:8px 12px;border:1px solid rgba(139,174,255,.38);border-radius:11px;background:rgba(91,126,235,.14);color:#dce8ff;font:inherit;font-size:11px;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}.dn-push-toggle:hover{border-color:rgba(165,197,255,.7);background:rgba(91,126,235,.25);transform:translateY(-1px)}.dn-push-toggle:disabled{opacity:.55;cursor:wait;transform:none}.dn-push-toggle[data-enabled=true]{border-color:rgba(116,216,183,.35);background:rgba(55,163,128,.12);color:#a8f0d5}"+
       ".dn-filters{display:flex;gap:7px;padding:0 22px 16px;overflow-x:auto;scrollbar-width:thin}.dn-filter{flex:0 0 auto;border:1px solid rgba(148,170,225,.16);border-radius:99px;padding:8px 12px;background:rgba(255,255,255,.035);color:#aebadb;font:inherit;font-size:12px;cursor:pointer;transition:all .2s}.dn-filter.active{border-color:rgba(142,178,255,.48);background:linear-gradient(135deg,rgba(104,139,255,.23),rgba(64,95,190,.12));color:#edf4ff}"+
       ".dn-list{flex:1;min-height:0;overflow:auto;padding:0 14px 12px;overscroll-behavior:contain;scrollbar-color:rgba(143,164,220,.3) transparent;scrollbar-width:thin}.dn-item{position:relative;display:grid;grid-template-columns:42px minmax(0,1fr) 8px;align-items:start;gap:12px;width:100%;margin:0;padding:15px 12px;border:0;border-top:1px solid rgba(152,174,229,.1);border-radius:13px;background:transparent;color:inherit;text-align:left;cursor:pointer;transition:background .2s,transform .2s}.dn-item:hover{background:rgba(116,146,235,.09);transform:translateX(2px)}.dn-item.unread{background:linear-gradient(95deg,rgba(87,125,255,.095),transparent 88%)}"+
       ".dn-item-icon{display:grid;place-items:center;width:42px;height:42px;border:1px solid rgba(147,175,243,.18);border-radius:14px;background:linear-gradient(145deg,rgba(100,134,235,.15),rgba(70,88,152,.045));color:#c9dcff;font-size:20px}.dn-item[data-category=bank] .dn-item-icon{color:#ffe2a0;border-color:rgba(241,195,101,.18);background:rgba(214,165,64,.08)}.dn-item[data-category=stock] .dn-item-icon{color:#a9f0d7;border-color:rgba(89,220,176,.18);background:rgba(62,196,153,.07)}"+
       ".dn-item-copy{min-width:0}.dn-item-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.dn-item-title{color:#f3f6ff;font-size:14px;font-weight:400;line-height:1.45;overflow-wrap:anywhere}.dn-item-category{color:#92a9d9;font-size:10px}.dn-item-body{display:block;margin-top:5px;color:#aeb9d5;font-size:12px;line-height:1.65;overflow-wrap:anywhere;white-space:pre-wrap}.dn-item-time{display:block;margin-top:8px;color:#7685aa;font-size:10px;font-variant-numeric:tabular-nums}.dn-unread-dot{width:7px;height:7px;margin-top:6px;border-radius:50%;background:#80aaff;box-shadow:0 0 12px rgba(105,159,255,.65)}.dn-item:not(.unread) .dn-unread-dot{visibility:hidden}"+
       ".dn-state{display:grid;place-items:center;min-height:190px;padding:22px;text-align:center;color:#96a6cb;font-size:13px;line-height:1.8}.dn-state-symbol{display:grid;place-items:center;width:54px;height:54px;margin:0 auto 13px;border:1px solid rgba(147,175,243,.19);border-radius:18px;background:rgba(104,136,222,.09);color:#bdd4ff;font-size:24px}.dn-footer{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 20px 18px;border-top:1px solid rgba(152,174,229,.12);color:#7f91b9;font-size:10px}.dn-more{border:1px solid rgba(141,173,255,.25);border-radius:11px;padding:9px 13px;background:rgba(99,132,245,.09);color:#cad9ff;font:inherit;font-size:11px;cursor:pointer}.dn-more:disabled{opacity:.4;cursor:default}.dn-more[hidden]{display:none}"+
       ".dn-toast{position:fixed;right:max(18px,env(safe-area-inset-right));bottom:94px;z-index:2147482501;max-width:min(340px,calc(100vw - 36px));padding:13px 17px;border:1px solid rgba(150,183,255,.35);border-radius:15px;background:linear-gradient(145deg,rgba(20,31,78,.98),rgba(5,10,32,.98));box-shadow:0 12px 35px rgba(0,0,0,.35);color:#edf4ff;font-size:12px;opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;cursor:pointer}.dn-toast.show{opacity:1;transform:translateY(0)}.dn-toast[hidden]{display:none}"+
-      "@media(max-width:600px){.dn-overlay{padding:12px 10px 88px;align-items:flex-end}.dn-panel{width:100%;height:min(78dvh,720px);min-height:330px;border-radius:24px}.dn-head{padding:18px 17px 14px}.dn-summary{padding:11px 18px}.dn-filters{padding:0 17px 12px}.dn-list{padding:0 9px 9px}.dn-item{gap:10px;padding:13px 9px}.dn-footer{padding:11px 16px 15px}.dn-bell{width:54px;height:54px;border-radius:19px}}@media(prefers-reduced-motion:reduce){.dn-bell,.dn-overlay,.dn-panel,.dn-item,.dn-close,.dn-toast{transition:none!important}.dn-bell:hover,.dn-item:hover{transform:none}}";
+      "@media(max-width:600px){.dn-overlay{padding:12px 10px 88px;align-items:flex-end}.dn-panel{width:100%;height:min(82dvh,760px);min-height:330px;border-radius:24px}.dn-head{padding:18px 17px 14px}.dn-summary{padding:11px 18px}.dn-push-setting{margin:0 17px 13px;padding:11px;gap:9px}.dn-push-copy small{font-size:9px}.dn-push-toggle{font-size:10px;padding:8px 9px}.dn-filters{padding:0 17px 12px}.dn-list{padding:0 9px 9px}.dn-item{gap:10px;padding:13px 9px}.dn-footer{padding:11px 16px 15px}.dn-bell{width:54px;height:54px;border-radius:19px}}@media(prefers-reduced-motion:reduce){.dn-bell,.dn-overlay,.dn-panel,.dn-item,.dn-close,.dn-toast{transition:none!important}.dn-bell:hover,.dn-item:hover{transform:none}}";
     document.head.appendChild(s);
   }
 
@@ -187,6 +188,7 @@
       '<div class="dn-overlay" hidden><section class="dn-panel" role="dialog" aria-modal="true" aria-labelledby="dn-title">' +
       '<header class="dn-head"><div class="dn-mark" aria-hidden="true">✦</div><div class="dn-heading"><div class="dn-eyebrow">DORI SITE · NOTIFICATION CENTER</div><h2 class="dn-title" id="dn-title">알림 센터</h2><p class="dn-subtitle">중요한 소식과 활동 기록을 한곳에서 확인하세요.</p></div><button type="button" class="dn-close" aria-label="알림 센터 닫기">×</button></header>' +
       '<div class="dn-summary"><div>읽지 않은 알림<strong class="dn-unread-number">0</strong></div><button type="button" class="dn-all-read">모두 읽음 처리</button></div>' +
+      '<section class="dn-push-setting" aria-label="푸시 알림 설정"><div class="dn-push-copy"><strong>중요한 소식 푸시 알림</strong><small class="dn-push-status">출석·미션·업적·은행·증권·공유 캘린더 알림을 받아보세요.</small></div><button type="button" class="dn-push-toggle">푸시 알림 켜기</button></section>' +
       '<nav class="dn-filters" aria-label="알림 종류"></nav><div class="dn-list" tabindex="0" aria-live="polite"></div>' +
       '<footer class="dn-footer"><span>알림은 계정에 안전하게 저장돼요.</span><button type="button" class="dn-more" hidden>이전 알림 더 보기 ↓</button></footer></section></div>' +
       '<button type="button" class="dn-toast" hidden>새 알림이 도착했어요. 알림 센터에서 확인하기 ↗</button>';
@@ -194,6 +196,8 @@
     const bell = root.querySelector(".dn-bell"), overlay = root.querySelector(".dn-overlay");
     const list = root.querySelector(".dn-list"), toast = root.querySelector(".dn-toast");
     const moreButton = root.querySelector(".dn-more"), allRead = root.querySelector(".dn-all-read");
+    const pushButton = root.querySelector(".dn-push-toggle");
+    const pushStatus = root.querySelector(".dn-push-status");
     const nav = root.querySelector(".dn-filters");
     Object.keys(categories).forEach(key => {
       const button = document.createElement("button");
@@ -202,6 +206,118 @@
       button.setAttribute("aria-pressed", String(key === "all"));
       nav.appendChild(button);
     });
+    function pushAppBase() {
+      const manifest = document.querySelector('link[rel~="manifest"]');
+      const manifestUrl = manifest ? new URL(manifest.href, window.location.href) : new URL("./manifest.json", window.location.href);
+      if (manifestUrl.origin !== window.location.origin) throw new Error("돌이사이트 앱 주소를 확인할 수 없습니다.");
+      return new URL("./", manifestUrl);
+    }
+    function pushBase64UrlToBytes(value) {
+      const padded = String(value).replace(/-/g, "+").replace(/_/g, "/") + "=".repeat((4 - String(value).length % 4) % 4);
+      const raw = atob(padded);
+      return Uint8Array.from(raw, character => character.charCodeAt(0));
+    }
+    function showPushMessage(message) {
+      toast.textContent = message;
+      toast.hidden = false;
+      requestAnimationFrame(() => toast.classList.add("show"));
+      window.setTimeout(() => {
+        toast.classList.remove("show");
+        window.setTimeout(() => { toast.hidden = true; }, 260);
+      }, 4200);
+    }
+    async function getPushRegistration() {
+      const base = pushAppBase();
+      let registration = await navigator.serviceWorker.getRegistration(base.href);
+      if (!registration) registration = await navigator.serviceWorker.register(new URL("sw.js", base).href, { scope: base.pathname });
+      await navigator.serviceWorker.ready;
+      return await navigator.serviceWorker.getRegistration(base.href) || registration;
+    }
+    async function refreshPushState() {
+      if (!pushButton || !pushStatus) return;
+      if (!(("serviceWorker" in navigator) && ("PushManager" in window) && ("Notification" in window))) {
+        pushButton.textContent = "푸시 미지원";
+        pushButton.disabled = true;
+        pushStatus.textContent = "현재 브라우저에서는 푸시 알림을 사용할 수 없어요.";
+        return;
+      }
+      try {
+        const registration = await navigator.serviceWorker.getRegistration(pushAppBase().href);
+        const subscription = registration ? await registration.pushManager.getSubscription() : null;
+        if (subscription) {
+          pushButton.textContent = "알림 끄기";
+          pushButton.dataset.enabled = "true";
+          pushStatus.textContent = "중요 알림을 이 기기로 받고 있어요. 언제든 끌 수 있어요.";
+        } else if (Notification.permission === "denied") {
+          pushButton.textContent = "권한 확인";
+          pushButton.dataset.enabled = "false";
+          pushStatus.textContent = "브라우저 사이트 설정에서 돌이사이트 알림 권한을 허용해 주세요.";
+        } else {
+          pushButton.textContent = "푸시 알림 켜기";
+          pushButton.dataset.enabled = "false";
+          pushStatus.textContent = "출석·미션·업적·은행·증권·공유 캘린더의 중요한 소식을 알려드려요.";
+        }
+        pushButton.disabled = false;
+      } catch (error) {
+        console.warn("[Dori Notifications] 푸시 설정 확인 실패:", error);
+        pushButton.textContent = "알림 설정";
+        pushButton.disabled = false;
+        pushStatus.textContent = "푸시 알림 상태를 확인하지 못했어요. 다시 시도해 주세요.";
+      }
+    }
+    async function togglePushNotifications() {
+      if (!pushButton) return;
+      pushButton.disabled = true;
+      pushButton.textContent = "설정 중…";
+      try {
+        if (!(("serviceWorker" in navigator) && ("PushManager" in window) && ("Notification" in window))) {
+          throw new Error("현재 브라우저는 푸시 알림을 지원하지 않습니다.");
+        }
+        if (Notification.permission !== "granted") {
+          if (Notification.permission === "denied") throw new Error("브라우저 설정에서 돌이사이트의 알림 권한을 허용한 뒤 다시 시도해 주세요.");
+          const permission = await Notification.requestPermission();
+          if (permission !== "granted") throw new Error("알림 권한이 허용되지 않았습니다. 브라우저 알림 설정을 확인해 주세요.");
+        }
+        const registration = await getPushRegistration();
+        let subscription = await registration.pushManager.getSubscription();
+        if (subscription) {
+          const { error } = await client.rpc("dori_bank_delete_push_subscription", { p_endpoint: subscription.endpoint });
+          if (error) throw error;
+          const removed = await subscription.unsubscribe();
+          if (!removed) throw new Error("브라우저 푸시 구독을 해제하지 못했습니다. 다시 시도해 주세요.");
+          showPushMessage("돌이사이트 푸시 알림을 껐어요.");
+        } else {
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: pushBase64UrlToBytes("BPU3bUhYuN_Qih2Hd-8KRoi-aQV6Pjy1Y9-570zUS-5cbIG15jZbMPAgttpAnjqv-4Apa25j74axPTq9T--hIkc")
+          });
+          const saved = subscription.toJSON();
+          const keys = saved.keys || {};
+          if (!saved.endpoint || !keys.p256dh || !keys.auth) {
+            await subscription.unsubscribe();
+            throw new Error("브라우저 푸시 구독 정보를 가져오지 못했습니다.");
+          }
+          const { data, error } = await client.rpc("dori_bank_save_push_subscription", {
+            p_endpoint: saved.endpoint, p_p256dh: keys.p256dh, p_auth: keys.auth
+          });
+          if (error || !data?.ok) {
+            await subscription.unsubscribe();
+            throw error || new Error("푸시 알림 설정을 저장하지 못했습니다.");
+          }
+          showPushMessage("돌이사이트 푸시 알림을 켰어요. 중요한 소식이 생기면 알려드릴게요.");
+        }
+      } catch (error) {
+        console.error("[Dori Notifications] 푸시 설정 오류:", error);
+        showPushMessage(String(error?.message || error || "푸시 알림 설정에 실패했어요."));
+      } finally {
+        await refreshPushState();
+      }
+    }
+    pushButton?.addEventListener("click", () => { void togglePushNotifications(); });
+    const onPushSubscriptionChanged = () => { void refreshPushState(); };
+    window.addEventListener("dori:push-subscription-changed", onPushSubscriptionChanged);
+    activeCleanups.push(() => window.removeEventListener("dori:push-subscription-changed", onPushSubscriptionChanged));
+    void refreshPushState();
     function open() {
       if (loadMoreTimer) clearTimeout(loadMoreTimer);
       overlay.hidden = false;
