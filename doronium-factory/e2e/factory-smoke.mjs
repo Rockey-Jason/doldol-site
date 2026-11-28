@@ -233,6 +233,9 @@ try {
   assert.ok(depleted.health < 100, "Hunger and thirst depletion must damage health");
 
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningTest());
+  const mineHud = await desktop.locator("#world-coordinate").textContent();
+  assert.match(mineHud, /중앙 본광산 · 1층 · Y/,
+    "Underground HUD must show the selected mine name, level and depth");
   const miningBefore = await desktop.evaluate(() => ({ stone: window.__doroniumFactoryTest.snapshot().inventory.stone || 0 }));
   const mineAim = await desktop.evaluate(() => window.__doroniumFactoryTest.inspectMineAim());
   assert.ok(mineAim?.scene?.undergroundResourceNodes > 0,
