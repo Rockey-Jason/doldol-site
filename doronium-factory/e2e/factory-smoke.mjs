@@ -252,6 +252,9 @@ try {
   assert.equal(mineIsolation.levelOnB, 1, "Entering a different mine must start at that mine's remembered depth");
   assert.equal(mineIsolation.mineALevel, 3, "Descending in the second mine must not change the first mine's saved depth");
   assert.equal(mineIsolation.mineBLevel, 2, "Descending must update only the active mine's depth");
+  assert.equal(mineIsolation.surfaceBuildingBlocked, true, "The fixture must place a surface building over the same tile coordinates");
+  assert.equal(mineIsolation.mineCellWalkable, true, "Surface buildings must not block an underground tunnel cell");
+  assert.equal(mineIsolation.minePathAvailable, true, "Underground pathfinding must ignore the surface building grid");
   assert.equal(mineIsolation.tunnelMapsDistinct, true, "Separate mine entrances must not share their tunnel topology");
   assert.equal(mineIsolation.depositMapsDistinct, true, "Separate mine entrances must not share their deposit maps");
   assert.equal(mineIsolation.valid, true, "All mine instances must remain structurally valid after independent mining");
