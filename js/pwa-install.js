@@ -28,7 +28,8 @@
   }
 
   function init() {
-    // The native Android package already provides its own app installation.\n    if (isStandalone() || isNativeAndroidApp()) return;
+    // The native Android package already provides its own app installation.
+    if (isStandalone() || isNativeAndroidApp()) return;
     const auth = document.querySelector(".인증영역");
     if (!auth || document.getElementById("doriPwaInstallButton")) return;
     addStyles();
