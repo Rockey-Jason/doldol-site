@@ -381,6 +381,7 @@ export function createWorld3D(canvas, getState) {
       dummy.position.set(p.x*32,floorY-1.5,p.z*32);dummy.updateMatrix();floors.setMatrixAt(i,dummy.matrix);
       dummy.position.set(p.x*32,floorY+29.5,p.z*32);dummy.updateMatrix();ceilings.setMatrixAt(i,dummy.matrix);
     });
+    floors.instanceMatrix.needsUpdate=true;ceilings.instanceMatrix.needsUpdate=true;
     floors.receiveShadow=true;ceilings.receiveShadow=true;mineRoot.add(floors,ceilings);
 
     const wallHeight=29,wallThickness=3;
