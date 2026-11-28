@@ -88,7 +88,7 @@ self.addEventListener("fetch", (event) => {
       const foundationLink = hasFoundation ? "" : '<link rel="stylesheet" href="' + base + 'css/dori-foundation.css?v=20261116-premium-ui-2">';
       const syncBootstrap = hasCloudSync ? "" : '<script src="' + base + 'js/supabase.min.js?v=2.117.2"><\/script>' +
         '<script src="' + base + 'js/dori-cloud-sync.js?v=20261101-4"><\/script>';
-      const notificationBootstrap = hasNotificationCenter ? "" : '<script src="' + base + 'js/dori-notification-center.js?v=20261128-global-push-1"><\\/script>';
+      const notificationBootstrap = hasNotificationCenter ? "" : '<script src="' + base + 'js/dori-notification-center.js?v=20261128-global-push-1"><\/script>';
       const bootstrap = foundationLink + syncBootstrap + notificationBootstrap;
       if (html.includes("</head>")) html = html.replace("</head>", bootstrap + "</head>");
       else html = bootstrap + html;
