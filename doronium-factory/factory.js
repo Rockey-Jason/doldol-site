@@ -1739,6 +1739,7 @@ if(E2E_MODE){
     try{
       const original=freshState(),legacyDeposits=makeMineDeposits();
       const legacyKey=Object.keys(legacyDeposits).find(key=>legacyDeposits[key].type==="aluminumOre");
+      delete legacyDeposits[legacyKey];
       legacyDeposits["1:8:12"]={...legacyDeposits["1:8:12"],amount:7};
       const targetID=mineIdFromEntrance(30,64),surfacePosition={x:30,y:64};
       hydrateState({...original,worldVersion:4,mines:undefined,mineDeposits:legacyDeposits,player:{...original.player,surfacePosition}});
