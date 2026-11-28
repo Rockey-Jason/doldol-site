@@ -1479,7 +1479,7 @@ if(E2E_MODE){
  window.__doroniumFactoryTest={
   snapshot:()=>structuredClone(S),
   backend:world3d.backend,
-  motion:()=>({x:playerMotion.x,z:playerMotion.z,path:playerMotion.path.length,moving:playerMotion.moving,yaw:playerMotion.yaw,pitch:playerMotion.pitch}),
+  motion:()=>({x:playerMotion.x,z:playerMotion.z,y:playerMotion.y,velocityY:playerMotion.velocityY,grounded:playerMotion.grounded,path:playerMotion.path.length,moving:playerMotion.moving,yaw:playerMotion.yaw,pitch:playerMotion.pitch}),
   heldKeys:()=>[...adventureKeys],
   holdKeyForTest:key=>adventureKeys.add(String(key).toLowerCase()),
   prepareSaveReloadTest(){
