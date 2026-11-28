@@ -51,6 +51,10 @@ css/doldol-theme.css and js/doldol-theme.js provide the established site-wide ap
 
 js/dori-cloud-sync.js is a central integration point. Changes to authentication listeners, initial session restoration, account switching or profile hydration must be reviewed against index.html and other pages that load the shared bootstrap.
 
+The homepage's large first-party visual layer lives in `css/home.css` and is loaded from `index.html` as a versioned stylesheet. `sw.js` includes the same URL in its app-shell cache. Keep the cache URL and cache-name version synchronized when changing this file.
+
+Cloud sync treats Supabase as the source of truth and browser `localStorage` as an account-scoped cache. `localStorage.clear()` must not clear Supabase auth or cloud-sync metadata. During an account switch, pending edits are isolated by account in a same-tab `sessionStorage` backup and a generation guard prevents stale asynchronous responses from hydrating the newly active account. The backup is temporary, not a durable offline queue.
+
 ### Profile frames and notifications
 
 Profile-frame rendering is centralized in js/dori-profile-frame.js and css/dori-profile-frame.css. Notification behavior is shared through js/dori-notification-center.js. Avoid reintroducing page-specific copies of these renderers.
