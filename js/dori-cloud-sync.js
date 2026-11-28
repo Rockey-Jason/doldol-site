@@ -253,12 +253,17 @@
     pending.clear();
     meta = readMeta(uid);
     const backup = readPendingBackup(uid);
-    for (const [key, value] of backup) {
-      if (!eligible(key)) continue;
-      pending.set(key, value);
-      if (!meta.dirty.includes(key)) meta.dirty.push(key);
-      if (!meta.managed.includes(key)) meta.managed.push(key);
-    }
+    applyingRemote = true;
+    try {
+      for (const [key, value] of backup) {
+        if (!eligible(key)) continue;
+        pending.set(key, value);
+        if (value.deleted) native.remove.call(localStorage, key);
+        else native.set.call(localStorage, key, value.value);
+        if (!meta.dirty.includes(key)) meta.dirty.push(key);
+        if (!meta.managed.includes(key)) meta.managed.push(key);
+      }
+    } finally { applyingRemote = false; }
     if (backup.size) writeMeta();
     try { native.set.call(localStorage, OWNER_KEY, uid); } catch (_) {}
     await syncNow(true);
