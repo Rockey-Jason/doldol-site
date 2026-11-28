@@ -4,7 +4,7 @@
   const isStandalone = () =>
     window.matchMedia("(display-mode: standalone)").matches ||
     window.navigator.standalone === true;
-  const isNativeAndroidApp = () => /DoldolAndroidApp\\//i.test(navigator.userAgent || "");
+  const isNativeAndroidApp = () => (navigator.userAgent || "").indexOf("DoldolAndroidApp/") !== -1;
 
   function addStyles() {
     if (document.getElementById("dori-pwa-install-styles")) return;
