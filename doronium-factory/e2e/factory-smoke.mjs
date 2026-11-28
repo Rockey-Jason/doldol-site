@@ -252,7 +252,7 @@ try {
   await desktop.locator("#action-button").click();
   const miningAfter = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot());
   assert.equal(miningAfter.inventory.stone, miningBefore.stone + 2, "Clicking the desktop Use button must mine the aimed stone vein");
-  assert.equal(miningAfter.mineDeposits["1:8:12"].amount, 10, "A successful mouse Use action must reduce the vein by two");
+  assert.equal(miningAfter.mineInstances["mine_72_42"].deposits["1:8:12"].amount, 10, "A successful mouse Use action must reduce the vein by two");
   assert.equal(miningAfter.player.layer, "mine", "The Use button must preserve the underground layer");
   const toolGuard = await desktop.evaluate(() => window.__doroniumFactoryTest.toolGuard());
   assert.equal(toolGuard.tool, "axe", "The tool guard must register the equipped axe");
