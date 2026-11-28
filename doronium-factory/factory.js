@@ -312,6 +312,7 @@ let buildingIndex=new Map(),buildingIndexSource=null,buildingIndexRevision=-1,bu
 let playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Number(S.player.yaw)||0,pitch:Number(S.player.pitch??-.12),path:[],moving:false,facing:0,onArrive:null};
 const adventureKeys=new Set();
 let mineHeld=false,mineCooldown=0,lookPointer=null,survivalHudClock=0,adventureTarget=null;
+function clearAdventureInput(){adventureKeys.clear();mineHeld=false;}
 const canvas=$("world-canvas"),world3d=createWorld3D(canvas,()=>S);
 const toast=(message,type="")=>{const el=document.createElement("div");el.className="toast "+type;el.textContent=message;$("toast-stack").append(el);setTimeout(()=>el.remove(),2800)};
 function log(message,type="info"){S.logs.unshift({message,type,time:S.seconds});S.logs=S.logs.slice(0,18);if(!E2E_MODE)renderEvents();dirty=true}
@@ -1351,6 +1352,9 @@ function wireControls(){
   if(k===" "&&!adventureMode()){S.paused=!S.paused;renderHud()}
  });
  window.addEventListener("keyup",e=>{const k=e.key.toLowerCase();adventureKeys.delete(k);if(k===" ")adventureKeys.delete(" ")});
+  // Browsers may not deliver keyup after focus changes. Never leave movement,
+  // jump, or continuous mining held when the game loses focus.
+  window.addEventListener("blur",clearAdventureInput);
  document.addEventListener("fullscreenchange",()=>{document.documentElement.classList.toggle("factory-fullscreen",!!document.fullscreenElement);drawWorld()});
  // A mouse click must never operate desktop menus. Keyboard-generated clicks (detail === 0)
  // and all coarse-pointer touch interactions remain available.
@@ -1443,6 +1447,7 @@ function scheduleWorldFrame(){
 }
 function onFactoryVisibilityChange(){
  if(document.hidden){
+  clearAdventureInput();
   if(worldFrameHandle)cancelAnimationFrame(worldFrameHandle);
   worldFrameHandle=0;
   frameRenderAccumulator=0;
@@ -1475,6 +1480,8 @@ if(E2E_MODE){
   snapshot:()=>structuredClone(S),
   backend:world3d.backend,
   motion:()=>({x:playerMotion.x,z:playerMotion.z,path:playerMotion.path.length,moving:playerMotion.moving,yaw:playerMotion.yaw,pitch:playerMotion.pitch}),
+  heldKeys:()=>[...adventureKeys],
+  holdKeyForTest:key=>adventureKeys.add(String(key).toLowerCase()),
   viewMode:()=>S.player.viewMode,
   setViewMode:(mode)=>setViewMode(mode),
   move3D(key,seconds=.3){adventureKeys.add(key);updatePlayerMotion(seconds);adventureKeys.delete(key);return {x:playerMotion.x,z:playerMotion.z,viewMode:S.player.viewMode}},
