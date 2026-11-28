@@ -718,13 +718,59 @@ function updatePlayerMotion(dt){
 }
 function updateAdventureHud(){
  const target=world3d.pickTarget(190);adventureTarget=target;
- const label=$("target-label");if(label){label.textContent=target?(target.mine?(RESOURCE[target.type]?.name||target.type)+" · "+target.depthY+"m":target.kind==="mineEntrance"?"지하 광산 입구":target.kind==="mineExit"?"지상 출구":target.kind==="mineDescend"?"더 깊은 광맥으로":target.kind==="resource"?(RESOURCE[target.type]?.name||target.type):buildingDef(target.type)?.name||"산업 시설"):"주변 탐색 중";label.classList.toggle("target-found",!!target)}
+ const label=$("target-label");if(label){const entryMine=target?.mineId?mineName(target.mineId):"";label.textContent=target?(target.mine?(RESOURCE[target.type]?.name||target.type)+" · "+target.depthY+"m":target.kind==="mineEntrance"?entryMine+" · 광산 입구":target.kind==="mineExit"?mineName(currentMineId())+" · 지상 출구":target.kind==="mineDescend"?mineName(currentMineId())+" · 더 깊은 광맥":target.kind==="resource"?(RESOURCE[target.type]?.name||target.type):buildingDef(target.type)?.name||"산업 시설"):"주변 탐색 중";label.classList.toggle("target-found",!!target)}
  const mode=S.player.viewMode;$("view-first")?.classList.toggle("active",mode==="first");$("view-third")?.classList.toggle("active",mode==="third");$("view-map")?.classList.toggle("active",mode==="map");
 }
-function enterMine(){if(S.player.layer==="mine")return;S.player.surfacePosition={x:S.player.x,y:S.player.y,yaw:playerMotion.yaw,pitch:playerMotion.pitch,viewMode:S.player.viewMode};S.player.layer="mine";S.player.mineLevel=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS);S.player.viewMode="first";playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false,yaw:0,pitch:-.06};S.player.x=3;S.player.y=12;world3d.setViewMode("first");closeControlPanel();toast("광산 진입 · 심도 "+Math.abs(mineFloorY(S.player.mineLevel))+"m");log("지하 광산 진입 · "+S.player.mineLevel+"층");markDirty();updateAdventureHud();drawWorld()}
-function exitMine(){if(S.player.layer!=="mine")return;const pos=S.player.surfacePosition||{x:72,y:52,yaw:0,pitch:-.12,viewMode:"first"};S.player.layer="surface";S.player.surfacePosition=null;S.player.x=pos.x;S.player.y=pos.y;S.player.viewMode=pos.viewMode||"first";playerMotion={...playerMotion,x:pos.x,z:pos.y,y:0,velocityY:0,grounded:true,path:[],moving:false,yaw:pos.yaw||0,pitch:pos.pitch??-.12};world3d.setViewMode(S.player.viewMode);toast("지상으로 귀환했습니다.");markDirty();renderAll()}
-function descendMine(){if(S.player.mineLevel>=MINE_LEVELS){toast("현재 도달 가능한 최심부입니다.","warn");return}S.player.mineLevel++;if(S.player.mineLevel>=3)claimSkillPoint("EXPLORATION_MINE_DEPTH_3");if(S.player.mineLevel>=5)claimSkillPoint("EXPLORATION_MINE_DEPTH_5");S.player.x=3;S.player.y=12;playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false};toast("광산 "+S.player.mineLevel+"층 · Y "+mineFloorY(S.player.mineLevel)+"m");log("광산 심층 진입 · "+S.player.mineLevel+"층 · Y="+mineFloorY(S.player.mineLevel)+"m");markDirty();drawWorld()}
-function harvestMineDeposit(node){if(S.player.layer!=="mine"||S.activeTool!=="pickaxe"){toast("곡괭이를 장착해야 광물을 채굴할 수 있습니다.","warn");return}if(node.amount<=0){toast("광맥이 고갈되었습니다.","warn");return}const amount=Math.min(node.amount,node.type.startsWith("doronium_")?1:node.type==="diamond"?1:2),id=node.type;node.amount-=amount;if(node.amount<=0)markSceneDirty();if(RESOURCE[id]){const qualityValue=clamp(82+Math.floor((node.seed%1700)/100)+Math.max(0,node.level-2),80,99);addItem(id,amount,{quality:qualityValue,purity:Math.min(99,86+node.level*2),synthetic:false});S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;log(RESOURCE[id].name+" 채굴 · "+amount+"개 · Y="+node.depthY+"m");toast(RESOURCE[id].name+" +"+amount+" · Y="+node.depthY+"m");playTone(480+node.level*50,.08,"triangle");questCheck();renderInventory();renderHud();markDirty();drawWorld()}}
+function persistActiveMinePlayer(){
+ const mine=getMineInstance();if(!mine||S.player.layer!=="mine")return;
+ mine.currentLevel=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS);
+ mine.player={x:playerMotion.x,z:playerMotion.z,yaw:playerMotion.yaw,pitch:playerMotion.pitch,level:mine.currentLevel};
+}
+function enterMine(mineId=PRIMARY_MINE_ID){
+ if(S.player.layer==="mine")return;
+ const id=S.mineInstances?.[mineId]?mineId:PRIMARY_MINE_ID,mine=getMineInstance(id);
+ S.player.surfacePosition={x:S.player.x,y:S.player.y,yaw:playerMotion.yaw,pitch:playerMotion.pitch,viewMode:S.player.viewMode};
+ S.player.mineId=id;S.player.layer="mine";S.player.mineLevel=clamp(Number(mine?.currentLevel)||1,1,MINE_LEVELS);S.player.viewMode="first";
+ const saved=mine?.player||{x:3,z:12,yaw:0,pitch:-.06};
+ playerMotion={...playerMotion,x:clamp(Number(saved.x??3),.35,MINE_W-.35),z:clamp(Number(saved.z??12),.35,MINE_H-.35),y:0,velocityY:0,grounded:true,path:[],moving:false,yaw:Number(saved.yaw)||0,pitch:clamp(Number(saved.pitch??-.06),-1.25,1.25)};
+ S.player.x=clamp(Math.floor(playerMotion.x+.5),0,MINE_W-1);S.player.y=clamp(Math.floor(playerMotion.z+.5),0,MINE_H-1);
+ world3d.setViewMode("first");closeControlPanel();markSceneDirty();
+ toast(mineName(id)+" 진입 · "+S.player.mineLevel+"층 · 심도 "+Math.abs(mineFloorY(S.player.mineLevel))+"m");
+ log(mineName(id)+" 진입 · "+S.player.mineLevel+"층");markDirty();updateAdventureHud();drawWorld();
+}
+function exitMine(){
+ if(S.player.layer!=="mine")return;
+ persistActiveMinePlayer();
+ const pos=S.player.surfacePosition||{x:72,y:52,yaw:0,pitch:-.12,viewMode:"first"};
+ const exitedMine=mineName(currentMineId());
+ S.player.layer="surface";S.player.surfacePosition=null;S.player.x=pos.x;S.player.y=pos.y;S.player.viewMode=pos.viewMode||"first";
+ playerMotion={...playerMotion,x:pos.x,z:pos.y,y:0,velocityY:0,grounded:true,path:[],moving:false,yaw:pos.yaw||0,pitch:pos.pitch??-.12};
+ world3d.setViewMode(S.player.viewMode);markSceneDirty();toast(exitedMine+"에서 지상으로 귀환했습니다.");markDirty();renderAll();
+}
+function descendMine(){
+ if(S.player.mineLevel>=MINE_LEVELS){toast("현재 도달 가능한 최심부입니다.","warn");return}
+ S.player.mineLevel++;
+ if(S.player.mineLevel>=3)claimSkillPoint("EXPLORATION_MINE_DEPTH_3");
+ if(S.player.mineLevel>=5)claimSkillPoint("EXPLORATION_MINE_DEPTH_5");
+ playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false};S.player.x=3;S.player.y=12;
+ persistActiveMinePlayer();
+ toast(mineName(currentMineId())+" "+S.player.mineLevel+"층 · Y "+mineFloorY(S.player.mineLevel)+"m");
+ log(mineName(currentMineId())+" 심층 진입 · "+S.player.mineLevel+"층 · Y="+mineFloorY(S.player.mineLevel)+"m");markSceneDirty();markDirty();drawWorld();
+}
+function harvestMineDeposit(node,mineId=currentMineId()){
+ if(S.player.layer!=="mine"||S.activeTool!=="pickaxe"){toast("곡괭이를 장착해야 광물을 채굴할 수 있습니다.","warn");return}
+ if(mineId!==currentMineId()||!node||node.amount<=0){toast("이 광맥은 현재 광산에서 채굴할 수 없습니다.","warn");return}
+ const amount=Math.min(node.amount,node.type.startsWith("doronium_")?1:node.type==="diamond"?1:2),id=node.type;
+ node.amount-=amount;if(node.amount<=0)markSceneDirty();
+ if(RESOURCE[id]){
+  const qualityValue=clamp(82+Math.floor((node.seed%1700)/100)+Math.max(0,node.level-2),80,99);
+  addItem(id,amount,{quality:qualityValue,purity:Math.min(99,86+node.level*2),synthetic:false});
+  S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;
+  log(mineName(mineId)+" · "+RESOURCE[id].name+" 채굴 · "+amount+"개 · Y="+node.depthY+"m");
+  toast(RESOURCE[id].name+" +"+amount+" · "+node.depthY+"m");playTone(480+node.level*50,.08,"triangle");
+  questCheck();renderInventory();renderHud();markDirty();drawWorld();
+ }
+}
 function selectTool(tool){if(!["axe","pickaxe"].includes(tool)||!S.tools?.[tool])return;S.activeTool=tool;document.querySelectorAll("[data-tool]").forEach(b=>b.classList.toggle("active",b.dataset.tool===tool));const label=$("equipped-tool-label");if(label)label.textContent=tool==="axe"?"도끼 장착":"곡괭이 장착";toast(label?.textContent||"도구 변경")}
 function performAdventureAction(){
  if(!adventureMode()||S.paused)return;
