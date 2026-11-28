@@ -361,8 +361,30 @@ try {
   assert.equal(provenance.runtimeValid, true, "Provenance-preserving supply must maintain valid runtime state");
 
   await desktop.screenshot({ path: path.join(artifactDir, "doronium-desktop.png"), fullPage: true });
-  // Free the desktop WebGL context before testing actual pointer lock and mobile WebGL.
+  // Free the desktop WebGL context before testing persistence and other render contexts.
   await desktop.close();
+
+  const saveContext = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
+  const savePage = await saveContext.newPage();
+  capture(savePage, "save-reload");
+  await boot(savePage);
+  const saveProbe = await savePage.evaluate(() => window.__doroniumFactoryTest.prepareSaveReloadTest());
+  assert.equal(saveProbe.saved, true, "The game must successfully write a validated local save");
+  await savePage.reload({ waitUntil: "domcontentloaded" });
+  await savePage.waitForFunction(() => !!window.__doroniumFactoryTest, { timeout: 45000 });
+  await savePage.waitForFunction(() => {
+    const canvas = document.querySelector("#world-canvas");
+    return canvas && canvas.width > 0 && canvas.height > 0;
+  }, { timeout: 30000 });
+  const restoredSave = await savePage.evaluate(() => window.__doroniumFactoryTest.snapshot());
+  assert.equal(restoredSave.money, saveProbe.money, "Currency must survive a full page reload");
+  assert.equal(restoredSave.player.x, saveProbe.x, "Player X position must survive a full page reload");
+  assert.equal(restoredSave.player.y, saveProbe.y, "Player Y position must survive a full page reload");
+  assert.equal(restoredSave.survival.health, saveProbe.health, "Survival state must survive a full page reload");
+  assert.equal(restoredSave.inventory.ironOre, saveProbe.ironOre, "Inventory quantities must survive a full page reload");
+  const restoredRuntime = await savePage.evaluate(() => window.__doroniumFactoryTest.audit().runtimeValidation);
+  assert.equal(restoredRuntime.valid, true, "Restored item stacks and reservations must pass runtime validation");
+  await saveContext.close();
 
   const mouseContext = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
   const mouseLookPage = await mouseContext.newPage();
