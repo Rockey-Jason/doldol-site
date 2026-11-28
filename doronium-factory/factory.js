@@ -1672,13 +1672,19 @@ if(E2E_MODE){
       const keyA=Object.keys(levelA.deposits)[0],keyB=Object.keys(levelB.deposits)[0];
       const depositA=levelA.deposits[keyA],depositB=levelB.deposits[keyB];
       depositA.type="stone";depositA.amount=Math.max(5,depositA.amount);depositA.max=depositA.amount;
-      const beforeA=depositA.amount,beforeB=depositB.amount;
-      const [ax,az]=keyA.split(",").map(Number);
-      S.player={...S.player,x:3,y:12,layer:"mine",mineId:idA,mineLevel:1,viewMode:"first"};
+      const beforeA=depositA.amount,beforeB=depositB.amount,[ax,az]=keyA.split(",").map(Number);
+      mineA.currentLevel=3;
+      S.player={...S.player,x:mineA.entrance.x,y:mineA.entrance.z,layer:"surface",viewMode:"first"};
+      enterMine({kind:"mineEntrance",mineId:idA,x:mineA.entrance.x,z:mineA.entrance.z});
+      const enteredA=S.player.mineId,levelOnA=S.player.mineLevel;
       const harvested=harvestMineDeposit({mineId:idA,level:1,x:ax,z:az});
       const afterA=depositA.amount,afterB=depositB.amount;
-      mineA.currentLevel=4;
-      return {idA,idB,harvested,beforeA,afterA,beforeB,afterB,mineALevel:mineA.currentLevel,mineBLevel:mineB.currentLevel,tunnelMapsDistinct:JSON.stringify(levelA.tunnels)!==JSON.stringify(levelB.tunnels),depositMapsDistinct:levelA.deposits!==levelB.deposits,valid:validateMineRegistry(S.mines).valid};
+      exitMine();
+      S.player.x=mineB.entrance.x;S.player.y=mineB.entrance.z;
+      enterMine({kind:"mineEntrance",mineId:idB,x:mineB.entrance.x,z:mineB.entrance.z});
+      const enteredB=S.player.mineId,levelOnB=S.player.mineLevel;
+      descendMine();
+      return {idA,idB,enteredA,enteredB,levelOnA,levelOnB,harvested,beforeA,afterA,beforeB,afterB,mineALevel:mineA.currentLevel,mineBLevel:mineB.currentLevel,tunnelMapsDistinct:JSON.stringify(levelA.tunnels)!==JSON.stringify(levelB.tunnels),depositMapsDistinct:levelA.deposits!==levelB.deposits,valid:validateMineRegistry(S.mines).valid};
     }finally{S=previous;playerMotion=previousMotion;markSceneDirty();renderAll()}
   },
   constructionRules(){
