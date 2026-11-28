@@ -2,9 +2,11 @@
 <resources>
     <style name="Theme.DoldolSite" parent="android:style/Theme.Material.Light.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:colorAccent">#FFD84D</item>
-        <item name="android:statusBarColor">@color/doldol_navy</item>
-        <item name="android:navigationBarColor">@color/doldol_navy</item>
+        <item name="android:colorAccent">#E4C875</item>
+        <item name="android:statusBarColor">#000033</item>
+        <item name="android:navigationBarColor">#000010</item>
         <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">#000010</item>
+        <item name="android:windowActionModeOverlay">true</item>
     </style>
 </resources>
