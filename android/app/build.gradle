@@ -2,16 +2,9 @@ plugins {
     id 'com.android.application'
 }
 
-def releaseKeystore = file(System.getenv("DOLDOL_KEYSTORE_FILE") ?: "doldol-upload-keystore.jks")
-
 android {
     namespace 'com.rockey.doldolsite'
     compileSdk 36
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
-    }
 
     defaultConfig {
         applicationId 'com.rockey.doldolsite'
@@ -21,27 +14,17 @@ android {
         versionName '1.0.0'
     }
 
-    signingConfigs {
-        release {
-            if (releaseKeystore.exists()) {
-                storeFile releaseKeystore
-                storePassword System.getenv("DOLDOL_KEYSTORE_PASSWORD")
-                keyAlias System.getenv("DOLDOL_KEY_ALIAS")
-                keyPassword System.getenv("DOLDOL_KEY_PASSWORD")
-            }
-        }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     buildTypes {
+        debug {
+            // Debug APKs are signed automatically and can be installed directly.
+        }
         release {
-            if (releaseKeystore.exists()) {
-                signingConfig signingConfigs.release
-            }
             minifyEnabled false
         }
     }
-}
-
-dependencies {
-    implementation 'com.google.androidbrowserhelper:androidbrowserhelper:2.2.0'
 }
