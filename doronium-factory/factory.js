@@ -733,7 +733,7 @@ function updatePlayerMotion(dt){
 }
 function updateAdventureHud(){
  const target=world3d.pickTarget(190);adventureTarget=target;
- const label=$("target-label");if(label){label.textContent=target?(target.mine?(RESOURCE[target.type]?.name||target.type)+" · "+target.depthY+"m":target.kind==="mineEntrance"?"지하 광산 입구":target.kind==="mineExit"?"지상 출구":target.kind==="mineDescend"?"더 깊은 광맥으로":target.kind==="resource"?(RESOURCE[target.type]?.name||target.type):buildingDef(target.type)?.name||"산업 시설"):"주변 탐색 중";label.classList.toggle("target-found",!!target)}
+ const label=$("target-label");if(label){label.textContent=target?(target.mine?(RESOURCE[target.type]?.name||target.type)+" · "+target.depthY+"m":target.kind==="mineEntrance"?(target.mineName||"지하 광산 입구"):target.kind==="mineExit"?"지상 출구":target.kind==="mineDescend"?"다음 광산 층":target.kind==="resource"?(RESOURCE[target.type]?.name||target.type):buildingDef(target.type)?.name||"산업 시설"):"주변 탐색 중";label.classList.toggle("target-found",!!target)}
  const mode=S.player.viewMode;$("view-first")?.classList.toggle("active",mode==="first");$("view-third")?.classList.toggle("active",mode==="third");$("view-map")?.classList.toggle("active",mode==="map");
 }
 function enterMine(target=null){
@@ -1671,6 +1671,7 @@ if(E2E_MODE){
       const levelA=getMineLevel(S.mines,idA,1),levelB=getMineLevel(S.mines,idB,1);
       const keyA=Object.keys(levelA.deposits)[0],keyB=Object.keys(levelB.deposits)[0];
       const depositA=levelA.deposits[keyA],depositB=levelB.deposits[keyB];
+      depositA.type="stone";depositA.amount=Math.max(5,depositA.amount);depositA.max=depositA.amount;
       const beforeA=depositA.amount,beforeB=depositB.amount;
       const [ax,az]=keyA.split(",").map(Number);
       S.player={...S.player,x:3,y:12,layer:"mine",mineId:idA,mineLevel:1,viewMode:"first"};
