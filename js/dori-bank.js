@@ -107,6 +107,7 @@
     if($('pushNotificationsButton')) $('pushNotificationsButton').hidden=false;
     $('pushNotificationsButton')?.addEventListener('click',toggleBankPushNotifications);
     void refreshPushButtonState();
+    window.addEventListener("dori:push-subscription-changed",()=>{void refreshPushButtonState();});
     $('retryBankLoad')?.addEventListener('click',async()=>{
       const button=$('retryBankLoad');setBusy(button,true,'사용자 정보 다시 확인 중…');
       try {
@@ -199,11 +200,7 @@
       }
 
       // Ask permission directly from the click handler before awaiting registration APIs.
-      if(Notification.permission!=='granted') {
-        if(Notification.permission==='denied') {
-          toast('브라우저 설정에서 돌이사이트의 알림 권한을 허용한 뒤 다시 시도해 주세요.',true);
-          return;
-        }
+      if(Notification.permission!=='granted' && Notification.permission!=='denied') {
         const permission=await Notification.requestPermission();
         if(permission!=='granted') {
           toast('알림 권한이 허용되지 않았습니다. 브라우저 알림 설정을 확인해 주세요.',true);
@@ -225,6 +222,10 @@
         return;
       }
 
+      if(Notification.permission!=='granted') {
+        toast('브라우저 설정에서 돌이사이트의 알림 권한을 허용한 뒤 다시 시도해 주세요.',true);
+        return;
+      }
       subscription=await registration.pushManager.subscribe({
         userVisibleOnly:true,
         applicationServerKey:pushBase64UrlToBytes(DORI_PUSH_PUBLIC_KEY)
