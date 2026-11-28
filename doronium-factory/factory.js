@@ -1897,7 +1897,7 @@ function tickBuilding(b,dt,power,context=null){const d=buildingDef(b.type);if(!d
   if(!deposit||(d.resource==="advanced"?!["ITEM_COLD_CRYSTAL_RAW","ITEM_HEAT_CRYSTAL","ITEM_MAGNETITE","titaniumOre","chromiteOre"].includes(deposit.type):deposit.type!==d.resource)||deposit.amount<=0){b.status="DEPLETED";return}
   if(Number(b.drillDurability??1000)<=0){if(!b.failureRepair)b.failureRepair={grade:"major",repairSeconds:30,repairCondition:100,repairMaterials:{ironPlate:2},residue:{type:"drill_bit",amount:1},broken:true};b.status="BROKEN";return}
   b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";
-  if(b.progress+1e-9>=8){
+  if(b.progress>=8-1e-7){
    const id=d.resource==="advanced"?canonicalItemID(deposit.type):canonicalItemID(d.resource);
    if(!RESOURCE[id]){b.progress=8;b.status="ERROR";b.errorCode="UNKNOWN_MINE_DEPOSIT_RESOURCE:"+String(deposit.type);return}
    const outputMeta={quality:clamp(84+Math.floor((deposit.seed%1200)/100)+Math.max(0,deposit.level-2),80,99),purity:Math.min(99,86+deposit.level*2),synthetic:false};
@@ -3588,7 +3588,7 @@ if(E2E_MODE){
    const miner=S.buildings.find(b=>b.type==="minerIron"),generator=S.buildings.find(b=>b.type==="mineGen"),deposit=S.mineDeposits[mineDepositKey(1,12,15)];
    if(!miner||!generator||!deposit)throw new Error("MINE_OUTPUT_ROLLBACK_FIXTURE_MISSING");
    const depositBefore=deposit.amount,drillBefore=miner.drillDurability;
-   generator.fuelTimer=24;miner.progress=7.9;
+   generator.fuelTimer=24;miner.progress=7.99999995;
    const sourceStack=S.runtime.itemStacks[0];if(!sourceStack)throw new Error("MINE_OUTPUT_ROLLBACK_STACK_MISSING");
    S.runtime.itemStacks.push(structuredClone(sourceStack));
    const invalidAudit=rebuildOwnershipLedger(S);
