@@ -1,7 +1,7 @@
-import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=25";
+import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=27";
 import { CATALOG_ITEMS, CATALOG_RECIPES, CATALOG_MACHINES, validateCatalog } from "./catalog.js?v=2";
 import { createRuntimeState, ensureItemStacks, addItemStack, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=6";
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, regionAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=7";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, MINE_ENTRANCES, PRIMARY_MINE_ID, biomeAt, regionAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, nearestMineInstanceId, createMineInstances, migrateMineInstances } from "./terrain-system.js?v=9";
 import { validateGameData } from "./game-data-validation.js?v=3";
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
 import { SKILL_NODES, SKILL_GROUPS, createSkillState, normalizeSkillState, awardSkillPoints, unlockSkill, skillNodeStatus, calculateSkillBonuses, validateSkillTree, validateSkillState } from "./skill-runtime.js?v=1";
@@ -294,16 +294,15 @@ function makeWorld(){
  spawnWildDori(38,35,true);spawnWildDori(42,40,true);
  spawnWildDori(91,54,false);spawnWildDori(96,60,false);
 
- const entrances=[{x:72,y:42},{x:30,y:64},{x:108,y:56},{x:160,y:91},{x:48,y:142}];
- for(const p of entrances)nodes[p.x+","+p.y]={type:"mineEntrance",amount:1,max:1,cooldown:0,seed:0};
+ for(const entrance of MINE_ENTRANCES)nodes[entrance.x+","+entrance.y]={type:"mineEntrance",mineId:entrance.id,mineName:entrance.name,amount:1,max:1,cooldown:0,seed:0};
  const sites={relay:[{x:9,y:84},{x:118,y:12},{x:113,y:86}],core:{x:66,y:54}};
  for(const p of sites.relay)nodes[p.x+","+p.y]={type:"relaySite",amount:1,max:1,cooldown:0,seed:0};
  nodes[sites.core.x+","+sites.core.y]={type:"coreSite",amount:1,max:1,cooldown:0,seed:0};
- return {nodes,sites,mineDeposits:makeMineDeposits()};
+ return {nodes,sites,mineInstances:createMineInstances(827142)};
 }
 function freshState(){
  const world=makeWorld();
- const state={runtime:createRuntimeState(),version:1,worldVersion:5,seed:827142,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineDeposits:world.mineDeposits,flattened:{},foundation:{},campaign:{introSeen:false},factoryAutomationPaused:false,mineElevatorBuffers:{},treeGrowthKeys:[],money:1100,inventory:{oldAxe:1,wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
+ const state={runtime:createRuntimeState(),version:1,worldVersion:6,seed:827142,player:{x:72,y:52,viewMode:"first",yaw:0,pitch:-0.12,layer:"surface",mineLevel:1,mineId:PRIMARY_MINE_ID,surfacePosition:null},survival:{health:100,hunger:100,thirst:100},tools:{axe:true,pickaxe:true},activeTool:"pickaxe",mineInstances:world.mineInstances,flattened:{},foundation:{},campaign:{introSeen:false},factoryAutomationPaused:false,treeGrowthKeys:[],money:1100,inventory:{oldAxe:1,wood:85,stone:55,ironOre:24,copperOre:18,coal:24,water:32,quartz:2},meta:{},buildings:[],nodes:world.nodes,sites:world.sites,seen:{},research:[],activeResearch:null,researchProgress:0,questIndex:0,day:1,seconds:8*3600,tick:0,simSpeed:1,paused:false,logs:[],stats:{gathered:{},built:{},produced:{},sold:0,energyProduced:0},fusionJob:null,fusionDone:false,relaySites:[false,false,false],coreInstalled:false,victory:false,skills:createSkillState(),settings:{sound:true,reducedMotion:false},lastSavedAt:null};
  ensureItemStacks(state);return state;
 }
 let S=freshState(), dirty=false, sceneRevision=1, visibilityRevision=1, frameRenderAccumulator=0, worldFrameHandle=0, selectedBuild=null, selectedBuilding=null, selectedLandTool=null, activeCategory="all", activePanel="build", controlPanelOpen=false, camera={x:72,y:52,zoom:1}, hoverCell=null, canvasRect=null, dpr=1, cloudClient=null, authSession=null, cloudUpdatedAt=null, cloudBusy=false, saveTimer=null, pollTimer=null, lastFrame=0, accumulator=0, drawTime=0, soundCtx=null, crystalViewer=null;
@@ -313,6 +312,11 @@ let playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Nu
 const adventureKeys=new Set();
 let mineHeld=false,mineCooldown=0,lookPointer=null,survivalHudClock=0,adventureTarget=null;
 function clearAdventureInput(){adventureKeys.clear();mineHeld=false;}
+function currentMineId(){const id=S.player?.mineId;return S.mineInstances?.[id]?id:PRIMARY_MINE_ID;}
+function getMineInstance(mineId=currentMineId()){const id=S.mineInstances?.[mineId]?mineId:PRIMARY_MINE_ID;return S.mineInstances?.[id]||null;}
+function getMineDeposits(mineId=currentMineId()){return getMineInstance(mineId)?.deposits||{};}
+function mineName(mineId=currentMineId()){return getMineInstance(mineId)?.name||MINE_ENTRANCES.find(entry=>entry.id===mineId)?.name||"광산";}
+function linkedMineId(building){return S.mineInstances?.[building?.mineId]?building.mineId:nearestMineInstanceId(building?.x,building?.y);}
 const canvas=$("world-canvas"),world3d=createWorld3D(canvas,()=>S);
 const toast=(message,type="")=>{const el=document.createElement("div");el.className="toast "+type;el.textContent=message;$("toast-stack").append(el);setTimeout(()=>el.remove(),2800)};
 function log(message,type="info"){S.logs.unshift({message,type,time:S.seconds});S.logs=S.logs.slice(0,18);if(!E2E_MODE)renderEvents();dirty=true}
@@ -479,13 +483,16 @@ function renderMachineDetails(){
  const automationControl=b.type==="catalog_control_computer"?'<div class="machine-buffer"><span>공장 전체 자동화</span><b>'+(S.factoryAutomationPaused?"일시 정지 중":"가동 중")+'</b></div><button class="action-button '+(S.factoryAutomationPaused?"gold-button":"secondary")+'" id="machine-automation">'+(S.factoryAutomationPaused?"전체 생산 재개":"전체 생산 일시정지")+'</button>':"";
  const climateMarkup=["catalog_air_conditioner","catalog_fan","catalog_heater"].includes(b.type)?'<div class="machine-buffer"><span>환경 보호 범위</span><b>반경 7타일 · 전력 80% 이상에서 작동</b></div>':"";
  const isElevator=["catalog_item_elevator","catalog_water_elevator","catalog_maglev_elevator"].includes(b.type);
- const liftLevel=clamp(Number(b.liftLevel)||1,1,MINE_LEVELS),liftBuffer=elevatorBufferSummary(liftLevel);
+ const isMineLinked=["catalog_auto_miner","catalog_item_elevator","catalog_water_elevator","catalog_maglev_elevator"].includes(b.type);
+ const liftMineId=linkedMineId(b),liftMineName=mineName(liftMineId);
+ const liftLevel=clamp(Number(b.liftLevel)||1,1,MINE_LEVELS),liftBuffer=elevatorBufferSummary(liftLevel,liftMineId);
+ const mineLinkControl=isMineLinked?'<div class="catalog-machine-recipe"><label for="machine-mine-id">연결된 독립 광산</label><select id="machine-mine-id">'+MINE_ENTRANCES.map(entry=>'<option value="'+entry.id+'" '+(liftMineId===entry.id?"selected":"")+'>'+entry.name+'</option>').join("")+'</select><small>광맥·층별 플레이어 위치·엘리베이터 버퍼가 이 광산에만 저장됩니다.</small></div>':"";
  const liftItems=Object.entries(RESOURCE).filter(([id])=>b.type!=="catalog_water_elevator"||["water","waterBottle","waterBucket","lavaBucket","crudeOil","oil"].includes(id));
- const liftControl=isElevator?'<div class="catalog-machine-recipe"><label for="machine-lift-level">연결할 광산 층</label><select id="machine-lift-level">'+Array.from({length:MINE_LEVELS},(_,i)=>i+1).map(level=>'<option value="'+level+'" '+(liftLevel===level?"selected":"")+'>'+level+'층</option>').join("")+'</select><label for="machine-lift-direction">이송 방향</label><select id="machine-lift-direction"><option value="down" '+((b.liftDirection||"down")==="down"?"selected":"")+' >지상 창고 → 광산</option><option value="up" '+(b.liftDirection==="up"?"selected":"")+' >광산 → 지상 창고</option></select><label for="machine-lift-item">이송 아이템</label><select id="machine-lift-item">'+liftItems.map(([id,item])=>'<option value="'+id+'">'+item.name+' · 보유 '+fmt(availableItemCount(S,id))+'</option>').join("")+'</select><label for="machine-lift-quantity">이송 수량</label><input id="machine-lift-quantity" type="number" min="1" max="99999" value="1"><div class="machine-buffer"><span>'+liftLevel+'층 버퍼</span><b>'+fmt(liftBuffer.reduce((sum,x)=>sum+x.quantity,0))+'개 · '+liftBuffer.slice(0,4).map(x=>(RESOURCE[x.id]?.name||x.id)+" "+fmt(x.quantity)).join(" · ")+'</b></div><div class="lift-actions"><button class="action-button secondary" id="machine-lift-load">광산으로 적재</button><button class="action-button" id="machine-lift-unload">창고로 회수</button></div><small>벨트가 이 설비에 도달하면 설정한 방향과 층으로 자동 이송합니다. 물 엘리베이터는 액체 아이템만 처리합니다.</small></div>':"";
+ const liftControl=isElevator?'<div class="catalog-machine-recipe"><label for="machine-lift-level">연결할 광산 층 · '+liftMineName+'</label><select id="machine-lift-level">'+Array.from({length:MINE_LEVELS},(_,i)=>i+1).map(level=>'<option value="'+level+'" '+(liftLevel===level?"selected":"")+'>'+level+'층</option>').join("")+'</select><label for="machine-lift-direction">이송 방향</label><select id="machine-lift-direction"><option value="down" '+((b.liftDirection||"down")==="down"?"selected":"")+' >지상 창고 → 광산</option><option value="up" '+(b.liftDirection==="up"?"selected":"")+' >광산 → 지상 창고</option></select><label for="machine-lift-item">이송 아이템</label><select id="machine-lift-item">'+liftItems.map(([id,item])=>'<option value="'+id+'">'+item.name+' · 보유 '+fmt(availableItemCount(S,id))+'</option>').join("")+'</select><label for="machine-lift-quantity">이송 수량</label><input id="machine-lift-quantity" type="number" min="1" max="99999" value="1"><div class="machine-buffer"><span>'+liftLevel+'층 버퍼</span><b>'+fmt(liftBuffer.reduce((sum,x)=>sum+x.quantity,0))+'개 · '+liftBuffer.slice(0,4).map(x=>(RESOURCE[x.id]?.name||x.id)+" "+fmt(x.quantity)).join(" · ")+'</b></div><div class="lift-actions"><button class="action-button secondary" id="machine-lift-load">광산으로 적재</button><button class="action-button" id="machine-lift-unload">창고로 회수</button></div><small>벨트가 이 설비에 도달하면 설정한 방향과 층으로 자동 이송합니다. 물 엘리베이터는 액체 아이템만 처리합니다.</small></div>':"";
  const processWindow=recipe?.safeTemperatureMin!==undefined?"허용 범위 "+recipe.safeTemperatureMin+"–"+recipe.safeTemperatureMax+"°C · "+recipe.safePressureMin+"–"+recipe.safePressureMax+" MPa":"";
  const recipeDetail=recipe?'<div class="machine-buffer"><span>현재 레시피</span><b>'+recipe.name+'</b></div><div class="machine-buffer"><span>필요 원료</span><b>'+Object.entries(recipe.inputs||{}).map(([id,n])=>(RESOURCE[id]?.name||id)+" × "+n).join(" · ")+'</b></div><div class="machine-buffer"><span>생산 결과</span><b>'+(RESOURCE[recipe.output]?.name||recipe.output)+" × "+(recipe.qty||1)+'</b></div><div class="machine-buffer"><span>공정 목표</span><b>'+(recipe.temp===null||recipe.temp===undefined?"수동 혼합":Math.round(recipe.temp)+"°C · "+(recipe.pressure??0)+" MPa")+' · '+recipe.time+'초</b></div>'+(processWindow?'<div class="machine-buffer"><span>허용 공정 범위</span><b>'+processWindow+'</b></div>':"")+'<div class="machine-buffer"><span>자동 제어</span><b>기계가 목표 온도·압력으로 자동 조정</b></div>':"";
  const fusionInfo=b.type==="fusion"&&S.fusionJob?'<div class="machine-buffer"><span>퓨전 진행</span><b>'+(Math.min(7,S.fusionJob.stage+1))+'/7 단계 · '+(S.fusionJob.inputCustody==="reserved"?"원료 1,500개 예약":"기존 저장 공정")+'</b></div>':"";
- el.innerHTML='<div class="inspector-title"><span class="build-icon">'+(d?.icon||"⚙️")+'</span><div><strong>'+(d?.name||b.type)+'</strong><small>'+status+' · 방향 '+DIRS[b.dir||1].name+' · 내구도 '+Math.round(b.condition||100)+'%</small></div></div><div class="machine-kpi"><div><small>생산 공정</small><b>'+(recipe?.name||({miner:"자원 채굴",pump:"물 공급",doriFarm:"돌이 고기 수확",power:"전력 공급",fusion:"인피니티 퓨전"})[d?.kind]||"산업 설비")+'</b></div><div><small>공정 진행률</small><b>'+Math.round((b.progress||0)/(recipe?.time||10)*100)+'%</b></div></div>'+recipeSelect+copyControl+filterControl+logisticsInfo+automationControl+climateMarkup+liftControl+recipeDetail+'<div class="machine-buffer"><span>투입 버퍼</span><b>'+input+'</b></div><div class="machine-buffer"><span>출력 버퍼</span><b>'+output+'</b></div>'+fusionInfo+(d?.kind==="variant"||b.type==="variantLab"?'<div class="machine-buffer"><span>결정 레시피</span><b>'+(RESOURCE[b.variant||"doronium_blue"]?.name||b.variant)+'</b></div>':"")+'<div class="machine-controls"><button class="action-button" id="machine-collect" '+(!b.output?"disabled":"")+'>출력 회수</button><button class="action-button secondary" id="machine-supply">창고에서 투입</button><button class="action-button secondary" id="machine-rotate">방향 회전</button><button class="action-button danger" id="machine-remove">해체</button>'+(b.type==="variantLab"?'<button class="action-button secondary" id="machine-recipe">결정 레시피 변경</button>':"")+(b.type==="fusion"&&!S.fusionJob?'<button class="action-button gold-button" id="machine-fusion">퓨전 시작</button>':"")+(b.type==="fusion"&&S.fusionJob?.inputCustody==="reserved"?'<button class="action-button secondary" id="machine-fusion-cancel">퓨전 중단 · 원료 반환</button>':"")+(b.type==="core"?'<button class="action-button gold-button" id="machine-core">인피니티 설치</button>':"")+'</div>';
+ el.innerHTML='<div class="inspector-title"><span class="build-icon">'+(d?.icon||"⚙️")+'</span><div><strong>'+(d?.name||b.type)+'</strong><small>'+status+' · 방향 '+DIRS[b.dir||1].name+' · 내구도 '+Math.round(b.condition||100)+'%</small></div></div><div class="machine-kpi"><div><small>생산 공정</small><b>'+(recipe?.name||({miner:"자원 채굴",pump:"물 공급",doriFarm:"돌이 고기 수확",power:"전력 공급",fusion:"인피니티 퓨전"})[d?.kind]||"산업 설비")+'</b></div><div><small>공정 진행률</small><b>'+Math.round((b.progress||0)/(recipe?.time||10)*100)+'%</b></div></div>'+recipeSelect+copyControl+filterControl+logisticsInfo+automationControl+climateMarkup+mineLinkControl+liftControl+recipeDetail+'<div class="machine-buffer"><span>투입 버퍼</span><b>'+input+'</b></div><div class="machine-buffer"><span>출력 버퍼</span><b>'+output+'</b></div>'+fusionInfo+(d?.kind==="variant"||b.type==="variantLab"?'<div class="machine-buffer"><span>결정 레시피</span><b>'+(RESOURCE[b.variant||"doronium_blue"]?.name||b.variant)+'</b></div>':"")+'<div class="machine-controls"><button class="action-button" id="machine-collect" '+(!b.output?"disabled":"")+'>출력 회수</button><button class="action-button secondary" id="machine-supply">창고에서 투입</button><button class="action-button secondary" id="machine-rotate">방향 회전</button><button class="action-button danger" id="machine-remove">해체</button>'+(b.type==="variantLab"?'<button class="action-button secondary" id="machine-recipe">결정 레시피 변경</button>':"")+(b.type==="fusion"&&!S.fusionJob?'<button class="action-button gold-button" id="machine-fusion">퓨전 시작</button>':"")+(b.type==="fusion"&&S.fusionJob?.inputCustody==="reserved"?'<button class="action-button secondary" id="machine-fusion-cancel">퓨전 중단 · 원료 반환</button>':"")+(b.type==="core"?'<button class="action-button gold-button" id="machine-core">인피니티 설치</button>':"")+'</div>';
  $("machine-collect").onclick=()=>collectOutput(b);
  $("machine-supply").onclick=()=>supplyMachine(b);
  $("machine-rotate").onclick=()=>{b.dir=((b.dir||1)+1)%4;markDirty();renderMachineDetails();drawWorld()};
@@ -500,6 +507,8 @@ function renderMachineDetails(){
   log(S.factoryAutomationPaused?"통제 컴퓨터 · 전체 생산 설비 일시 정지":"통제 컴퓨터 · 전체 생산 설비 재개");
   markDirty();renderMachineDetails();renderFactory();toast(S.factoryAutomationPaused?"전체 생산을 일시 정지했습니다.":"전체 생산을 재개했습니다.");
  };
+ const mineIdControl=$("machine-mine-id");
+ if(mineIdControl)mineIdControl.onchange=()=>{if(S.mineInstances?.[mineIdControl.value]){b.mineId=mineIdControl.value;markDirty();renderMachineDetails();toast("연결 광산 변경 · "+mineName(b.mineId))}};
  const liftLevelControl=$("machine-lift-level");
  if(liftLevelControl)liftLevelControl.onchange=()=>{b.liftLevel=clamp(Number(liftLevelControl.value)||1,1,MINE_LEVELS);markDirty();renderMachineDetails()};
  const liftDirectionControl=$("machine-lift-direction");
@@ -648,8 +657,8 @@ function consumeRecipe(b,r){if(!canConsumeRecipe(b,r))return null;const inventor
 function createOutput(b,id,qty,meta){if(!commitCompletionBuffer(b,{id,qty,meta})){b.status="PAUSED_OUTPUT";return false}b.status="PAUSED_OUTPUT";S.stats.produced[id]=(S.stats.produced[id]||0)+qty;log(RESOURCE[id].name+" 생산 · "+fmt(qty)+"개");markDirty();return true}
 function isBridgeType(type){return ["catalog_wood_bridge","catalog_iron_bridge","catalog_concrete_bridge"].includes(type)}
 function isBridgeBuilding(building){return !!building&&isBridgeType(building.type)}
-function placeBuilding(type,x,y){const d=buildingDef(type);if(!d)return false;if(S.player.layer==="mine"){toast("지하 광산에서는 공장 시설을 설치할 수 없습니다.","warn");return false}if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}if(buildingAt(x,y)){toast("이미 시설이 설치된 타일입니다.","warn");return false}if(type!=="beltAdaptive"&&!["relay","core","pump"].includes(type)&&!isBridgeType(type)&&!hasFoundation(x,y)){toast("기계와 물류 시설은 먼저 땅을 평탄화하고 기초 타일을 설치해야 합니다.","warn");return false}const node=tileNode(x,y);if(isBridgeType(type)&&node?.type!=="water"){toast("다리는 강이나 수로의 물 타일 위에 설치해야 합니다.","warn");return false}if(type==="pump"&&node?.type!=="water"){toast("정수 펌프는 수원지 위에 설치해야 합니다.","warn");return false}if(type==="catalog_oil_drill"&&node?.type!=="oil"){toast("원유 시추기는 석유 지대의 유정 위에 설치해야 합니다.","warn");return false}if(["minerIron","minerCopper","minerCoal"].includes(type)){toast("광물은 지하 광산에서 곡괭이로 직접 채굴하세요.","warn");return false}if((type==="doriFarm"||type==="catalog_dori_harvester")&&node?.type==="dori"){toast("재배기는 나무 바로 옆의 평탄한 부지에 설치하세요.","warn");return false}if((type==="doriFarm"||type==="catalog_dori_harvester")&&!findNearbyDoriNode(x,y)){toast("돌이 나무 재배기는 돌이 고기 나무 주변에 설치해야 합니다.","warn");return false}if(type==="relay"&&node?.type!=="relaySite"){toast("행성 에너지 릴레이 설치 지점을 찾아야 합니다.","warn");return false}if(type==="core"&&node?.type!=="coreSite"){toast("중앙 안정화 코어는 지정된 코어 부지에 설치해야 합니다.","warn");return false}if(node&&["water","wood","dori","birchTree","rubberTree","barkTree","frozenTree","fireTree","grassPatch","heatCrystalNode","coldCrystalNode","oil","mineEntrance","relaySite","coreSite"].includes(node.type)&&!["pump","doriFarm","catalog_dori_harvester","catalog_oil_drill","relay","core","catalog_wood_bridge","catalog_iron_bridge","catalog_concrete_bridge"].includes(type)&&!(type==="beltAdaptive"&&node.type==="grassPatch")){toast("이 타일에는 해당 시설을 설치할 수 없습니다.","warn");return false}if(!unlockOk(d)){toast("필요한 기술 연구를 먼저 완료하세요.","warn");return false}if(!canAfford(d)){toast("건설 자원이 부족합니다.","warn");return false}const hasCatalogItem=!!d.catalogItemId&&availableItemCount(S,d.catalogItemId)>0;if(hasCatalogItem){if(!takeItem(d.catalogItemId,1)){toast("설비 아이템을 차감하지 못했습니다. 건설을 취소했습니다.","warn");return false}}else if(!takeItems(d.materials)){toast("건설 재료 또는 설비 아이템이 부족합니다. 자금은 사용하지 않았습니다.","warn");return false}S.money-=buildingMoneyCost(d);const b={uid:"B"+(++S.tick)+"-"+Math.floor(Math.random()*99999),type,x,y,dir:1,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:1,status:"IDLE",autoFeed:true,variant:"doronium_blue",recipeId:d.defaultRecipe||null,temp:25,pressure:0,fuelTimer:0,moveTimer:0};S.buildings.push(b);markSceneDirty();S.stats.built[type]=(S.stats.built[type]||0)+1;if(type==="relay"){const index=S.sites.relay.findIndex(p=>p.x===x&&p.y===y);if(index>=0)S.relaySites[index]=true}if(type==="core")S.corePlaced=true;selectedBuilding=b.uid;selectedBuild=null;log(d.name+" 건설 완료");toast(d.name+" 설치 완료");playTone(580,.1,"triangle");markDirty();renderAll();questCheck();return true}
-function isWalkable(x,y){if(x<0||y<0||x>=WORLD_W||y>=WORLD_H)return false;const building=buildingAt(x,y);if(building&&!isBridgeBuilding(building))return false;if(S.player.layer==="mine")return mineTunnelAt(x,y);const node=tileNode(x,y);return !node||node.amount<=0||isBridgeBuilding(building)}
+function placeBuilding(type,x,y){const d=buildingDef(type);if(!d)return false;if(S.player.layer==="mine"){toast("지하 광산에서는 공장 시설을 설치할 수 없습니다.","warn");return false}if(S.buildings.length>=BUILDING_LIMIT){toast("공장 시설 한도 "+BUILDING_LIMIT+"개에 도달했습니다.","warn");return false}if(buildingAt(x,y)){toast("이미 시설이 설치된 타일입니다.","warn");return false}if(type!=="beltAdaptive"&&!["relay","core","pump"].includes(type)&&!isBridgeType(type)&&!hasFoundation(x,y)){toast("기계와 물류 시설은 먼저 땅을 평탄화하고 기초 타일을 설치해야 합니다.","warn");return false}const node=tileNode(x,y);if(isBridgeType(type)&&node?.type!=="water"){toast("다리는 강이나 수로의 물 타일 위에 설치해야 합니다.","warn");return false}if(type==="pump"&&node?.type!=="water"){toast("정수 펌프는 수원지 위에 설치해야 합니다.","warn");return false}if(type==="catalog_oil_drill"&&node?.type!=="oil"){toast("원유 시추기는 석유 지대의 유정 위에 설치해야 합니다.","warn");return false}if(["minerIron","minerCopper","minerCoal"].includes(type)){toast("광물은 지하 광산에서 곡괭이로 직접 채굴하세요.","warn");return false}if((type==="doriFarm"||type==="catalog_dori_harvester")&&node?.type==="dori"){toast("재배기는 나무 바로 옆의 평탄한 부지에 설치하세요.","warn");return false}if((type==="doriFarm"||type==="catalog_dori_harvester")&&!findNearbyDoriNode(x,y)){toast("돌이 나무 재배기는 돌이 고기 나무 주변에 설치해야 합니다.","warn");return false}if(type==="relay"&&node?.type!=="relaySite"){toast("행성 에너지 릴레이 설치 지점을 찾아야 합니다.","warn");return false}if(type==="core"&&node?.type!=="coreSite"){toast("중앙 안정화 코어는 지정된 코어 부지에 설치해야 합니다.","warn");return false}if(node&&["water","wood","dori","birchTree","rubberTree","barkTree","frozenTree","fireTree","grassPatch","heatCrystalNode","coldCrystalNode","oil","mineEntrance","relaySite","coreSite"].includes(node.type)&&!["pump","doriFarm","catalog_dori_harvester","catalog_oil_drill","relay","core","catalog_wood_bridge","catalog_iron_bridge","catalog_concrete_bridge"].includes(type)&&!(type==="beltAdaptive"&&node.type==="grassPatch")){toast("이 타일에는 해당 시설을 설치할 수 없습니다.","warn");return false}if(!unlockOk(d)){toast("필요한 기술 연구를 먼저 완료하세요.","warn");return false}if(!canAfford(d)){toast("건설 자원이 부족합니다.","warn");return false}const hasCatalogItem=!!d.catalogItemId&&availableItemCount(S,d.catalogItemId)>0;if(hasCatalogItem){if(!takeItem(d.catalogItemId,1)){toast("설비 아이템을 차감하지 못했습니다. 건설을 취소했습니다.","warn");return false}}else if(!takeItems(d.materials)){toast("건설 재료 또는 설비 아이템이 부족합니다. 자금은 사용하지 않았습니다.","warn");return false}S.money-=buildingMoneyCost(d);const b={uid:"B"+(++S.tick)+"-"+Math.floor(Math.random()*99999),type,x,y,dir:1,progress:0,elapsed:0,condition:100,input:{},inputMeta:{},output:null,outputDir:1,status:"IDLE",autoFeed:true,variant:"doronium_blue",recipeId:d.defaultRecipe||null,temp:25,pressure:0,fuelTimer:0,moveTimer:0};if(["catalog_auto_miner","catalog_item_elevator","catalog_water_elevator","catalog_maglev_elevator"].includes(type))b.mineId=nearestMineInstanceId(x,y);S.buildings.push(b);markSceneDirty();S.stats.built[type]=(S.stats.built[type]||0)+1;if(type==="relay"){const index=S.sites.relay.findIndex(p=>p.x===x&&p.y===y);if(index>=0)S.relaySites[index]=true}if(type==="core")S.corePlaced=true;selectedBuilding=b.uid;selectedBuild=null;log(d.name+" 건설 완료");toast(d.name+" 설치 완료");playTone(580,.1,"triangle");markDirty();renderAll();questCheck();return true}
+function isWalkable(x,y){if(x<0||y<0||x>=WORLD_W||y>=WORLD_H)return false;const building=buildingAt(x,y);if(building&&!isBridgeBuilding(building))return false;if(S.player.layer==="mine")return mineTunnelAt(x,y,currentMineId());const node=tileNode(x,y);return !node||node.amount<=0||isBridgeBuilding(building)}
 function findPlayerPath(startX,startY,goalX,goalY){if(goalX===startX&&goalY===startY)return [];if(!isWalkable(goalX,goalY))return null;const start=startX+","+startY,goal=goalX+","+goalY,queue=[{x:startX,y:startY}],came=new Map([[start,null]]);let found=false;for(let head=0;head<queue.length&&head<1200;head++){const p=queue[head];for(const d of DIRS){const x=p.x+d.x,y=p.y+d.y,key=x+","+y;if(came.has(key)||!isWalkable(x,y))continue;came.set(key,p.x+","+p.y);if(key===goal){found=true;break}queue.push({x,y})}if(found)break}if(!found)return null;const path=[];let key=goal;while(key!==start){const [x,y]=key.split(",").map(Number);path.push({x,y});key=came.get(key)}return path.reverse()}
 function movePlayerTo(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y};const path=findPlayerPath(origin.x,origin.y,x,y);if(path===null){toast("이동 경로가 막혀 있습니다.","warn");return false}playerMotion.path=playerMotion.path.concat(path);playerMotion.onArrive=onArrive;if(!playerMotion.path.length){playerMotion.moving=false;const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
 function approachTile(x,y,onArrive=null){const origin=playerMotion.path.length?playerMotion.path[playerMotion.path.length-1]:{x:S.player.x,y:S.player.y},options=[];for(const d of DIRS){const nx=x+d.x,ny=y+d.y;if(!isWalkable(nx,ny))continue;const path=findPlayerPath(origin.x,origin.y,nx,ny);if(path!==null)options.push({path,nx,ny})}options.sort((a,b)=>a.path.length-b.path.length);if(!options.length){toast("대상 주변으로 접근할 경로가 없습니다.","warn");return false}const best=options[0];playerMotion.path=playerMotion.path.concat(best.path);playerMotion.onArrive=onArrive;if(!best.path.length){const fn=playerMotion.onArrive;playerMotion.onArrive=null;if(fn)fn()}return true}
@@ -670,7 +679,7 @@ function setViewMode(mode){
 }
 function isAdventureCellFree(x,z){
  const cx=Math.floor(x+.5),cz=Math.floor(z+.5);
- if(S.player.layer==="mine")return cx>=0&&cz>=0&&cx<MINE_W&&cz<MINE_H&&mineTunnelAt(cx,cz);
+ if(S.player.layer==="mine")return cx>=0&&cz>=0&&cx<MINE_W&&cz<MINE_H&&mineTunnelAt(cx,cz,currentMineId());
  if(cx<0||cz<0||cx>=WORLD_W||cz>=WORLD_H)return false;
  if(cx===Math.floor(playerMotion.x+.5)&&cz===Math.floor(playerMotion.z+.5))return true;
  const node=tileNode(cx,cz);return !buildingAt(cx,cz)&&(!node||node.amount<=0);
@@ -707,30 +716,76 @@ function updatePlayerMotion(dt){
  if(adventureKeys.has(" ")&&playerMotion.grounded){playerMotion.velocityY=34;playerMotion.grounded=false}
  if(!playerMotion.grounded){playerMotion.velocityY-=72*dt;playerMotion.y+=playerMotion.velocityY*dt;if(playerMotion.y<=0){playerMotion.y=0;playerMotion.velocityY=0;playerMotion.grounded=true}}
  const tileX=clamp(Math.floor(playerMotion.x+.5),0,(S.player.layer==="mine"?MINE_W:WORLD_W)-1),tileZ=clamp(Math.floor(playerMotion.z+.5),0,(S.player.layer==="mine"?MINE_H:WORLD_H)-1);
- if(tileX!==S.player.x||tileZ!==S.player.y){S.player.x=tileX;S.player.y=tileZ;if(S.player.layer==="surface")revealAround();markDirty()}
+ if(tileX!==S.player.x||tileZ!==S.player.y){S.player.x=tileX;S.player.y=tileZ;if(S.player.layer==="surface")revealAround();else persistActiveMinePlayer();markDirty()}
  S.player.yaw=playerMotion.yaw;S.player.pitch=playerMotion.pitch;
  if(mineHeld){mineCooldown-=dt;if(mineCooldown<=0){mineCooldown=.62/calculateSkillBonuses(S.skills).miningSpeedMultiplier;performAdventureAction()}}
  survivalHudClock+=dt;if(survivalHudClock>.15){survivalHudClock=0;updateAdventureHud()}
 }
 function updateAdventureHud(){
  const target=world3d.pickTarget(190);adventureTarget=target;
- const label=$("target-label");if(label){label.textContent=target?(target.mine?(RESOURCE[target.type]?.name||target.type)+" · "+target.depthY+"m":target.kind==="mineEntrance"?"지하 광산 입구":target.kind==="mineExit"?"지상 출구":target.kind==="mineDescend"?"더 깊은 광맥으로":target.kind==="resource"?(RESOURCE[target.type]?.name||target.type):buildingDef(target.type)?.name||"산업 시설"):"주변 탐색 중";label.classList.toggle("target-found",!!target)}
+ const label=$("target-label");if(label){const entryMine=target?.mineId?mineName(target.mineId):"";label.textContent=target?(target.mine?(RESOURCE[target.type]?.name||target.type)+" · "+target.depthY+"m":target.kind==="mineEntrance"?entryMine+" · 광산 입구":target.kind==="mineExit"?mineName(currentMineId())+" · 지상 출구":target.kind==="mineDescend"?mineName(currentMineId())+" · 더 깊은 광맥":target.kind==="resource"?(RESOURCE[target.type]?.name||target.type):buildingDef(target.type)?.name||"산업 시설"):"주변 탐색 중";label.classList.toggle("target-found",!!target)}
  const mode=S.player.viewMode;$("view-first")?.classList.toggle("active",mode==="first");$("view-third")?.classList.toggle("active",mode==="third");$("view-map")?.classList.toggle("active",mode==="map");
 }
-function enterMine(){if(S.player.layer==="mine")return;S.player.surfacePosition={x:S.player.x,y:S.player.y,yaw:playerMotion.yaw,pitch:playerMotion.pitch,viewMode:S.player.viewMode};S.player.layer="mine";S.player.mineLevel=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS);S.player.viewMode="first";playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false,yaw:0,pitch:-.06};S.player.x=3;S.player.y=12;world3d.setViewMode("first");closeControlPanel();toast("광산 진입 · 심도 "+Math.abs(mineFloorY(S.player.mineLevel))+"m");log("지하 광산 진입 · "+S.player.mineLevel+"층");markDirty();updateAdventureHud();drawWorld()}
-function exitMine(){if(S.player.layer!=="mine")return;const pos=S.player.surfacePosition||{x:72,y:52,yaw:0,pitch:-.12,viewMode:"first"};S.player.layer="surface";S.player.surfacePosition=null;S.player.x=pos.x;S.player.y=pos.y;S.player.viewMode=pos.viewMode||"first";playerMotion={...playerMotion,x:pos.x,z:pos.y,y:0,velocityY:0,grounded:true,path:[],moving:false,yaw:pos.yaw||0,pitch:pos.pitch??-.12};world3d.setViewMode(S.player.viewMode);toast("지상으로 귀환했습니다.");markDirty();renderAll()}
-function descendMine(){if(S.player.mineLevel>=MINE_LEVELS){toast("현재 도달 가능한 최심부입니다.","warn");return}S.player.mineLevel++;if(S.player.mineLevel>=3)claimSkillPoint("EXPLORATION_MINE_DEPTH_3");if(S.player.mineLevel>=5)claimSkillPoint("EXPLORATION_MINE_DEPTH_5");S.player.x=3;S.player.y=12;playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false};toast("광산 "+S.player.mineLevel+"층 · Y "+mineFloorY(S.player.mineLevel)+"m");log("광산 심층 진입 · "+S.player.mineLevel+"층 · Y="+mineFloorY(S.player.mineLevel)+"m");markDirty();drawWorld()}
-function harvestMineDeposit(node){if(S.player.layer!=="mine"||S.activeTool!=="pickaxe"){toast("곡괭이를 장착해야 광물을 채굴할 수 있습니다.","warn");return}if(node.amount<=0){toast("광맥이 고갈되었습니다.","warn");return}const amount=Math.min(node.amount,node.type.startsWith("doronium_")?1:node.type==="diamond"?1:2),id=node.type;node.amount-=amount;if(node.amount<=0)markSceneDirty();if(RESOURCE[id]){const qualityValue=clamp(82+Math.floor((node.seed%1700)/100)+Math.max(0,node.level-2),80,99);addItem(id,amount,{quality:qualityValue,purity:Math.min(99,86+node.level*2),synthetic:false});S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;log(RESOURCE[id].name+" 채굴 · "+amount+"개 · Y="+node.depthY+"m");toast(RESOURCE[id].name+" +"+amount+" · Y="+node.depthY+"m");playTone(480+node.level*50,.08,"triangle");questCheck();renderInventory();renderHud();markDirty();drawWorld()}}
+function persistActiveMinePlayer(){
+ const mine=getMineInstance();if(!mine||S.player.layer!=="mine")return;
+ mine.currentLevel=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS);
+ mine.player={x:playerMotion.x,z:playerMotion.z,yaw:playerMotion.yaw,pitch:playerMotion.pitch,level:mine.currentLevel};
+}
+function enterMine(mineId=PRIMARY_MINE_ID){
+ if(S.player.layer==="mine")return;
+ const id=S.mineInstances?.[mineId]?mineId:PRIMARY_MINE_ID,mine=getMineInstance(id);
+ S.player.surfacePosition={x:S.player.x,y:S.player.y,yaw:playerMotion.yaw,pitch:playerMotion.pitch,viewMode:S.player.viewMode};
+ S.player.mineId=id;S.player.layer="mine";S.player.mineLevel=clamp(Number(mine?.currentLevel)||1,1,MINE_LEVELS);S.player.viewMode="first";
+ const saved=mine?.player||{x:3,z:12,yaw:0,pitch:-.06};
+ playerMotion={...playerMotion,x:clamp(Number(saved.x??3),.35,MINE_W-.35),z:clamp(Number(saved.z??12),.35,MINE_H-.35),y:0,velocityY:0,grounded:true,path:[],moving:false,yaw:Number(saved.yaw)||0,pitch:clamp(Number(saved.pitch??-.06),-1.25,1.25)};
+ S.player.x=clamp(Math.floor(playerMotion.x+.5),0,MINE_W-1);S.player.y=clamp(Math.floor(playerMotion.z+.5),0,MINE_H-1);
+ world3d.setViewMode("first");closeControlPanel();markSceneDirty();
+ toast(mineName(id)+" 진입 · "+S.player.mineLevel+"층 · 심도 "+Math.abs(mineFloorY(S.player.mineLevel))+"m");
+ log(mineName(id)+" 진입 · "+S.player.mineLevel+"층");markDirty();updateAdventureHud();drawWorld();
+}
+function exitMine(){
+ if(S.player.layer!=="mine")return;
+ persistActiveMinePlayer();
+ const pos=S.player.surfacePosition||{x:72,y:52,yaw:0,pitch:-.12,viewMode:"first"};
+ const exitedMine=mineName(currentMineId());
+ S.player.layer="surface";S.player.surfacePosition=null;S.player.x=pos.x;S.player.y=pos.y;S.player.viewMode=pos.viewMode||"first";
+ playerMotion={...playerMotion,x:pos.x,z:pos.y,y:0,velocityY:0,grounded:true,path:[],moving:false,yaw:pos.yaw||0,pitch:pos.pitch??-.12};
+ world3d.setViewMode(S.player.viewMode);markSceneDirty();toast(exitedMine+"에서 지상으로 귀환했습니다.");markDirty();renderAll();
+}
+function descendMine(){
+ if(S.player.mineLevel>=MINE_LEVELS){toast("현재 도달 가능한 최심부입니다.","warn");return}
+ S.player.mineLevel++;
+ if(S.player.mineLevel>=3)claimSkillPoint("EXPLORATION_MINE_DEPTH_3");
+ if(S.player.mineLevel>=5)claimSkillPoint("EXPLORATION_MINE_DEPTH_5");
+ playerMotion={...playerMotion,x:3,z:12,y:0,velocityY:0,grounded:true,path:[],moving:false};S.player.x=3;S.player.y=12;
+ persistActiveMinePlayer();
+ toast(mineName(currentMineId())+" "+S.player.mineLevel+"층 · Y "+mineFloorY(S.player.mineLevel)+"m");
+ log(mineName(currentMineId())+" 심층 진입 · "+S.player.mineLevel+"층 · Y="+mineFloorY(S.player.mineLevel)+"m");markSceneDirty();markDirty();drawWorld();
+}
+function harvestMineDeposit(node,mineId=currentMineId()){
+ if(S.player.layer!=="mine"||S.activeTool!=="pickaxe"){toast("곡괭이를 장착해야 광물을 채굴할 수 있습니다.","warn");return}
+ if(mineId!==currentMineId()||!node||node.amount<=0){toast("이 광맥은 현재 광산에서 채굴할 수 없습니다.","warn");return}
+ const amount=Math.min(node.amount,node.type.startsWith("doronium_")?1:node.type==="diamond"?1:2),id=node.type;
+ node.amount-=amount;if(node.amount<=0)markSceneDirty();
+ if(RESOURCE[id]){
+  const qualityValue=clamp(82+Math.floor((node.seed%1700)/100)+Math.max(0,node.level-2),80,99);
+  addItem(id,amount,{quality:qualityValue,purity:Math.min(99,86+node.level*2),synthetic:false});
+  S.stats.gathered[id]=(S.stats.gathered[id]||0)+amount;
+  log(mineName(mineId)+" · "+RESOURCE[id].name+" 채굴 · "+amount+"개 · Y="+node.depthY+"m");
+  toast(RESOURCE[id].name+" +"+amount+" · "+node.depthY+"m");playTone(480+node.level*50,.08,"triangle");
+  questCheck();renderInventory();renderHud();markDirty();drawWorld();
+ }
+}
 function selectTool(tool){if(!["axe","pickaxe"].includes(tool)||!S.tools?.[tool])return;S.activeTool=tool;document.querySelectorAll("[data-tool]").forEach(b=>b.classList.toggle("active",b.dataset.tool===tool));const label=$("equipped-tool-label");if(label)label.textContent=tool==="axe"?"도끼 장착":"곡괭이 장착";toast(label?.textContent||"도구 변경")}
 function performAdventureAction(){
  if(!adventureMode()||S.paused)return;
  const target=world3d.pickTarget(190);
- if(target?.kind==="mineEntrance"){enterMine();return}
+ if(target?.kind==="mineEntrance"){enterMine(target.mineId||PRIMARY_MINE_ID);return}
  if(target?.kind==="mineExit"){exitMine();return}
  if(target?.kind==="mineDescend"){descendMine();return}
  if(target?.kind==="wildDori"){const node=S.nodes?.[target.x+","+target.z];toast(node?.hostile?"멍멍! 돌이가 이 숲을 지키고 있어요. 안전거리를 두고 이동해 보세요.":"돌이가 숲길을 산책하고 있어요. 꼬리를 흔들며 인사합니다.");return}
  if(target?.kind==="resource"){
-  if(target.mine){const deposit=S.mineDeposits?.[mineDepositKey(target.level,target.x,target.z)];if(deposit)harvestMineDeposit(deposit);return}
+  if(target.mine){const mineId=target.mineId||currentMineId(),deposit=mineId===currentMineId()?getMineDeposits(mineId)[mineDepositKey(target.level,target.x,target.z)]:null;if(deposit)harvestMineDeposit(deposit,mineId);return}
   const node=tileNode(target.x,target.z);if(!node)return;
   if(selectedLandTool){selectTile(target.x,target.z);return}
   if(selectedBuild){placeBuilding(selectedBuild,target.x,target.z);return}
@@ -985,7 +1040,7 @@ function tickBuilding(b,dt,power){const d=buildingDef(b.type);if(!d)return;const
  if(b.output){b.status="PAUSED_OUTPUT";return}
  if(b.type==="minerIron"||b.type==="minerCopper"||b.type==="minerCoal"||d.kind==="miner"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=8){b.progress=0;node.amount=Math.max(0,node.amount-1);const id=d.resource;createOutput(b,id,1,{quality:86+(node.seed%12),purity:88,synthetic:false});}return}
  if(b.type==="pump"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.amount<=0){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=5){b.progress=0;node.amount=Math.max(0,node.amount-3);createOutput(b,"water",3,{quality:100,purity:100,synthetic:false})}return}
- if(b.type==="catalog_oil_drill"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.type!=="oil"||node.amount<=0){b.status="NO_INPUT";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=12){b.progress=0;node.amount=Math.max(0,node.amount-1);createOutput(b,"crudeOil",1,{quality:90,purity:88,synthetic:false})}return}if(b.type==="catalog_auto_miner"){if(ratio<.8){b.status="PAUSED_POWER";return}const deposits=Object.values(S.mineDeposits||{}).filter(node=>node.amount>0).sort((a,b)=>a.level-b.level||b.amount-a.amount);const deposit=deposits[0];if(!deposit){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=18){b.progress=0;deposit.amount=Math.max(0,deposit.amount-1);createOutput(b,deposit.type,1,{quality:84+Math.min(14,deposit.level*2),purity:90,synthetic:false});log("자동 채굴 · "+RESOURCE[deposit.type].name+" · 광산 "+deposit.level+"층")}return}if(b.type==="doriFarm"||b.type==="catalog_dori_harvester"){if(ratio<.8){b.status="PAUSED_POWER";return}const target=findNearbyDoriNode(b.x,b.y),node=target?.node;if(!node){b.status="NO_INPUT";return}if(node.cooldown>0){b.status="GROWING";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=60){if(availableItemCount(S,"water")<2){b.status="NO_INPUT";b.progress=59;return}if(!takeItem("water",2)){b.status="NO_INPUT";return}startNodeCooldown(target.x,target.y,node,60);b.progress=0;if(createOutput(b,"doriMeat",1,{quality:S.research.includes("bio")?95:92,purity:90,synthetic:false}))addItem("doriFur",1,{quality:92,purity:96,synthetic:false})}return}
+ if(b.type==="catalog_oil_drill"){if(ratio<.8){b.status="PAUSED_POWER";return}const node=tileNode(b.x,b.y);if(!node||node.type!=="oil"||node.amount<=0){b.status="NO_INPUT";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=12){b.progress=0;node.amount=Math.max(0,node.amount-1);createOutput(b,"crudeOil",1,{quality:90,purity:88,synthetic:false})}return}if(b.type==="catalog_auto_miner"){if(ratio<.8){b.status="PAUSED_POWER";return}const mineId=linkedMineId(b),deposits=Object.values(getMineDeposits(mineId)).filter(node=>node.amount>0).sort((a,b)=>a.level-b.level||b.amount-a.amount);const deposit=deposits[0];if(!deposit){b.status="DEPLETED";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=18){b.progress=0;deposit.amount=Math.max(0,deposit.amount-1);createOutput(b,deposit.type,1,{quality:84+Math.min(14,deposit.level*2),purity:90,synthetic:false});log(mineName(mineId)+" 자동 채굴 · "+RESOURCE[deposit.type].name+" · "+deposit.level+"층")}return}if(b.type==="doriFarm"||b.type==="catalog_dori_harvester"){if(ratio<.8){b.status="PAUSED_POWER";return}const target=findNearbyDoriNode(b.x,b.y),node=target?.node;if(!node){b.status="NO_INPUT";return}if(node.cooldown>0){b.status="GROWING";return}b.progress+=dt*(ratio>=1?1:ratio);b.status="RUNNING";if(b.progress>=60){if(availableItemCount(S,"water")<2){b.status="NO_INPUT";b.progress=59;return}if(!takeItem("water",2)){b.status="NO_INPUT";return}startNodeCooldown(target.x,target.y,node,60);b.progress=0;if(createOutput(b,"doriMeat",1,{quality:S.research.includes("bio")?95:92,purity:90,synthetic:false}))addItem("doriFur",1,{quality:92,purity:96,synthetic:false})}return}
  if(d.kind==="machine"||d.kind==="reactor"||d.kind==="variant"){tickMachine(b,dt,ratio);return}
 }
 function recipeHasSyntheticInput(b,r){
@@ -1049,44 +1104,44 @@ function logisticsDirection(b,item){
  }
  return Number.isInteger(b.outputDir)?b.outputDir:(b.dir||1);
 }
-function ensureMineElevatorBuffer(level){
- S.mineElevatorBuffers??={};
- const key=String(clamp(Number(level)||1,1,MINE_LEVELS));
- S.mineElevatorBuffers[key]??={};
- return S.mineElevatorBuffers[key];
+function ensureMineElevatorBuffer(level,mineId=PRIMARY_MINE_ID){
+ const mine=getMineInstance(mineId);if(!mine)return {};
+ mine.elevatorBuffers??={};const key=String(clamp(Number(level)||1,1,MINE_LEVELS));
+ mine.elevatorBuffers[key]??={};return mine.elevatorBuffers[key];
 }
-function elevatorBufferSummary(level){
- const buffer=ensureMineElevatorBuffer(level);
+function elevatorBufferSummary(level,mineId=PRIMARY_MINE_ID){
+ const buffer=ensureMineElevatorBuffer(level,mineId);
  return Object.entries(buffer).filter(([,stack])=>Number(stack?.quantity)>0).map(([id,stack])=>({id,quantity:Number(stack.quantity)||0,quality:Number(stack.quality)||90,purity:Number(stack.purity)||90,synthetic:!!stack.synthetic}));
 }
-function storeInMineElevator(level,id,quantity,meta={}){
- const buffer=ensureMineElevatorBuffer(level),existing=buffer[id]||{quantity:0,quality:90,purity:90,synthetic:false};
+function storeInMineElevator(level,id,quantity,meta={},mineId=PRIMARY_MINE_ID){
+ const buffer=ensureMineElevatorBuffer(level,mineId),existing=buffer[id]||{quantity:0,quality:90,purity:90,synthetic:false};
  const oldQuantity=Math.max(0,Number(existing.quantity)||0),incoming=Math.max(0,Number(quantity)||0),total=oldQuantity+incoming;
  if(total<=0)return false;
  buffer[id]={quantity:total,quality:(oldQuantity*existing.quality+incoming*(Number(meta.quality)||90))/total,purity:(oldQuantity*existing.purity+incoming*(Number(meta.purity)||90))/total,synthetic:!!existing.synthetic||!!meta.synthetic};
  markDirty();return true;
 }
 function transferElevatorBuffer(building,action){
+ const mineId=linkedMineId(building),mine=mineName(mineId);
  const level=clamp(Number($("machine-lift-level")?.value||building.liftLevel||1),1,MINE_LEVELS);
  const id=$("machine-lift-item")?.value||"";
  const qty=Math.max(1,Math.floor(Number($("machine-lift-quantity")?.value)||1));
- const buffer=ensureMineElevatorBuffer(level);
+ const buffer=ensureMineElevatorBuffer(level,mineId);
  if(action==="load"){
   if(!id||availableItemCount(S,id)<qty){toast("창고에 이 아이템의 사용 가능한 수량이 부족합니다.","warn");return}
-  const meta=takeItemDetailed(id,qty,"mine-elevator:"+level);
+  const meta=takeItemDetailed(id,qty,"mine-elevator:"+mineId+":"+level);
   if(!meta){toast("아이템 이동 예약에 실패했습니다.","warn");return}
-  storeInMineElevator(level,id,qty,meta);
-  log("아이템 엘리베이터 · 광산 "+level+"층으로 "+(RESOURCE[id]?.name||id)+" × "+qty+" 이송");
-  toast("광산 "+level+"층 물류 버퍼에 "+(RESOURCE[id]?.name||id)+" "+qty+"개 적재");
+  storeInMineElevator(level,id,qty,meta,mineId);
+  log("아이템 엘리베이터 · "+mine+" "+level+"층으로 "+(RESOURCE[id]?.name||id)+" × "+qty+" 이송");
+  toast(mine+" "+level+"층 물류 버퍼에 "+(RESOURCE[id]?.name||id)+" "+qty+"개 적재");
  }else{
   const stack=buffer[id],have=Math.max(0,Number(stack?.quantity)||0),amount=Math.min(qty,have);
-  if(!amount){toast("선택한 광산 층에 가져올 아이템이 없습니다.","warn");return}
+  if(!amount){toast("선택한 광산의 층에 가져올 아이템이 없습니다.","warn");return}
   addItem(id,amount,{quality:stack.quality,purity:stack.purity,synthetic:stack.synthetic},false);
   stack.quantity-=amount;if(stack.quantity<=0)delete buffer[id];
-  log("아이템 엘리베이터 · 광산 "+level+"층에서 "+(RESOURCE[id]?.name||id)+" × "+amount+" 회수");
-  toast("광산 "+level+"층에서 "+(RESOURCE[id]?.name||id)+" "+amount+"개 회수");
+  log("아이템 엘리베이터 · "+mine+" "+level+"층에서 "+(RESOURCE[id]?.name||id)+" × "+amount+" 회수");
+  toast(mine+" "+level+"층에서 "+(RESOURCE[id]?.name||id)+" "+amount+"개 회수");
  }
- building.liftLevel=level;markDirty();renderMachineDetails();renderInventory();
+ building.mineId=mineId;building.liftLevel=level;markDirty();renderMachineDetails();renderInventory();
 }
 function acceptFactoryLogisticsItem(target,item){
  const type=target.type,copy={id:item.id,qty:item.qty,meta:{...(item.meta||{})}};
@@ -1126,7 +1181,7 @@ function acceptFactoryLogisticsItem(target,item){
    target.liftedUp=(target.liftedUp||0)+copy.qty;
    log("수직 엘리베이터 · 창고 방향 "+(RESOURCE[copy.id]?.name||copy.id)+" × "+copy.qty);
   }else{
-   storeInMineElevator(level,copy.id,copy.qty,copy.meta);
+   storeInMineElevator(level,copy.id,copy.qty,copy.meta,linkedMineId(target));
    target.liftedDown=(target.liftedDown||0)+copy.qty;
    log("수직 엘리베이터 · 광산 "+level+"층 "+(RESOURCE[copy.id]?.name||copy.id)+" × "+copy.qty);
   }
@@ -1428,13 +1483,85 @@ function wireControls(){
 
 function renderQuickObjectives(){const q=getQuest();if($("active-mission-hud")){$("active-mission-hud").innerHTML=q?'<small>ACTIVE DIRECTIVE · '+String(S.questIndex+1).padStart(2,"0")+'</small><strong>'+q.title+'</strong><span>'+q.desc+'</span>':'<small>CAMPAIGN COMPLETE</small><strong>행성 안정화 완료</strong><span>메인 스토리가 완료되었습니다.</span>'}if(!q){$("quick-objectives").innerHTML='<div class="objective-mini"><small>CAMPAIGN COMPLETE</small><strong>행성 안정화 완료</strong><div class="mini-progress"><i style="width:100%"></i></div></div>';return}const p=Math.min(q.max,q.progress(S));$("quick-objectives").innerHTML='<div class="objective-mini"><small>ACTIVE OBJECTIVE</small><strong>'+q.title+'</strong><div class="mini-progress"><i style="width:'+Math.round(p/q.max*100)+'%"></i></div></div><div class="objective-mini"><small>ORBIT DIRECTIVE</small><strong>'+q.desc+'</strong><div class="mini-progress"><i style="width:'+Math.round(p/q.max*100)+'%"></i></div></div><div class="objective-mini"><small>COMPLETION REWARD</small><strong>'+fmt(q.reward)+' D · 자금 보상</strong><div class="mini-progress"><i style="width:'+Math.round(p/q.max*100)+'%"></i></div></div>'}
 function renderAll(){renderHud();renderBuildList();renderFactory();renderInventory();if(activePanel==="catalog")renderCatalog();renderResearch();renderMissions();renderQuickObjectives();drawWorld()}
-function hydrateState(input){markSceneDirty();const base=freshState(),incoming=input&&typeof input==="object"?input:{},migrate=Number(incoming.worldVersion||0)<3,expandSurface=Number(incoming.worldVersion||0)<5;
- S={...base,...incoming,worldVersion:5,player:{...base.player,...incoming.player},inventory:{...base.inventory,...incoming.inventory},meta:{...incoming.meta},tools:{...base.tools,...incoming.tools},activeTool:incoming.activeTool||"pickaxe",campaign:{...base.campaign,...incoming.campaign},flattened:{...incoming.flattened},foundation:{...incoming.foundation},mineDeposits:expandSurface?{...base.mineDeposits,...(incoming.mineDeposits&&typeof incoming.mineDeposits==="object"?incoming.mineDeposits:{})}:(incoming.mineDeposits&&Object.keys(incoming.mineDeposits).length?incoming.mineDeposits:base.mineDeposits),buildings:Array.isArray(incoming.buildings)?incoming.buildings:[],nodes:migrate?base.nodes:(expandSurface?{...base.nodes,...(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:{})}:(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:base.nodes)),sites:base.sites,mineElevatorBuffers:incoming.mineElevatorBuffers&&typeof incoming.mineElevatorBuffers==="object"?incoming.mineElevatorBuffers:{},treeGrowthKeys:Array.isArray(incoming.treeGrowthKeys)?incoming.treeGrowthKeys.filter(key=>typeof key==="string"):(incoming.nodes&&typeof incoming.nodes==="object"?Object.entries(incoming.nodes).filter(([,node])=>node&&(["wood","birchTree","rubberTree","barkTree","frozenTree","fireTree"].includes(node.type))&&(node.permanentGrowth||Number(node.growthBoostUntil)>Number(incoming.seconds||0))).map(([key])=>key):[]),seen:incoming.seen||{},research:Array.isArray(incoming.research)?incoming.research:[],stats:{...base.stats,...incoming.stats,gathered:{...base.stats.gathered,...incoming.stats?.gathered},built:{...base.stats.built,...incoming.stats?.built},produced:{...base.stats.produced,...incoming.stats?.produced}},settings:{...base.settings,...incoming.settings},survival:{...base.survival,...incoming.survival},relaySites:Array.isArray(incoming.relaySites)?incoming.relaySites:[false,false,false],skills:normalizeSkillState(incoming.skills)};
+function hydrateState(input){
+ markSceneDirty();
+ const base=freshState(),incoming=input&&typeof input==="object"?input:{};
+ const migrate=Number(incoming.worldVersion||0)<3,expandSurface=Number(incoming.worldVersion||0)<5;
+ const incomingPlayer={...base.player,...incoming.player};
+ const mineInstances=migrateMineInstances({
+  worldSeed:Number(incoming.seed)||827142,
+  mineInstances:incoming.mineInstances,
+  legacyMineDeposits:incoming.mineDeposits,
+  legacyMineElevatorBuffers:incoming.mineElevatorBuffers
+ });
+ for(const entry of MINE_ENTRANCES){
+  const mine=mineInstances[entry.id];
+  mine.currentLevel=clamp(Number(mine.currentLevel??(entry.id===PRIMARY_MINE_ID?incomingPlayer.mineLevel:1))||1,1,MINE_LEVELS);
+  mine.player=mine.player&&typeof mine.player==="object"?{...mine.player}: {x:3,z:12,yaw:0,pitch:-.06,level:mine.currentLevel};
+  mine.player.x=clamp(Number(mine.player.x??3),.35,MINE_W-.35);
+  mine.player.z=clamp(Number(mine.player.z??12),.35,MINE_H-.35);
+  mine.player.level=mine.currentLevel;
+  mine.player.yaw=Number(mine.player.yaw)||0;
+  mine.player.pitch=clamp(Number(mine.player.pitch??-.06),-1.25,1.25);
+ }
+ const savedMineId=String(incomingPlayer.mineId||PRIMARY_MINE_ID);
+ incomingPlayer.mineId=mineInstances[savedMineId]?savedMineId:PRIMARY_MINE_ID;
+ if(incomingPlayer.layer==="mine"){
+  const activeMine=mineInstances[incomingPlayer.mineId];
+  activeMine.currentLevel=clamp(Number(incomingPlayer.mineLevel)||activeMine.currentLevel||1,1,MINE_LEVELS);
+  activeMine.player={x:clamp(Number(incomingPlayer.x??3),.35,MINE_W-.35),z:clamp(Number(incomingPlayer.y??12),.35,MINE_H-.35),yaw:Number(incomingPlayer.yaw)||0,pitch:clamp(Number(incomingPlayer.pitch??-.06),-1.25,1.25),level:activeMine.currentLevel};
+ }
+ const buildings=Array.isArray(incoming.buildings)?incoming.buildings.map(building=>{
+  if(!building||typeof building!=="object")return building;
+  const linked=["catalog_auto_miner","catalog_item_elevator","catalog_water_elevator","catalog_maglev_elevator"].includes(building.type);
+  return linked?{...building,mineId:mineInstances[building.mineId]?building.mineId:PRIMARY_MINE_ID}:building;
+ }):[];
+ const sourceNodes=migrate?base.nodes:(expandSurface?{...base.nodes,...(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:{})}:(incoming.nodes&&typeof incoming.nodes==="object"?incoming.nodes:base.nodes));
+ const nodes=sourceNodes;
+ for(const entry of MINE_ENTRANCES){
+  const node=nodes[entry.x+","+entry.y];
+  if(node?.type==="mineEntrance"){node.mineId=entry.id;node.mineName=entry.name;}
+ }
+ S={
+  ...base,...incoming,worldVersion:6,
+  player:{...base.player,...incomingPlayer},
+  mineInstances,
+  mineDeposits:undefined,mineElevatorBuffers:undefined,
+  inventory:{...base.inventory,...incoming.inventory},meta:{...incoming.meta},
+  tools:{...base.tools,...incoming.tools},activeTool:incoming.activeTool||"pickaxe",
+  campaign:{...base.campaign,...incoming.campaign},flattened:{...incoming.flattened},foundation:{...incoming.foundation},
+  buildings,nodes,sites:base.sites,
+  treeGrowthKeys:Array.isArray(incoming.treeGrowthKeys)?incoming.treeGrowthKeys.filter(key=>typeof key==="string"):(incoming.nodes&&typeof incoming.nodes==="object"?Object.entries(incoming.nodes).filter(([,node])=>node&&(["wood","birchTree","rubberTree","barkTree","frozenTree","fireTree"].includes(node.type))&&(node.permanentGrowth||Number(node.growthBoostUntil)>Number(incoming.seconds||0))).map(([key])=>key):[]),
+  seen:incoming.seen||{},research:Array.isArray(incoming.research)?incoming.research:[],
+  stats:{...base.stats,...incoming.stats,gathered:{...base.stats.gathered,...incoming.stats?.gathered},built:{...base.stats.built,...incoming.stats?.built},produced:{...base.stats.produced,...incoming.stats?.produced}},
+  settings:{...base.settings,...incoming.settings},survival:{...base.survival,...incoming.survival},
+  relaySites:Array.isArray(incoming.relaySites)?incoming.relaySites:[false,false,false],
+  skills:normalizeSkillState(incoming.skills)
+ };
  if(!incoming.runtime)S.runtime=createRuntimeState();
  ensureItemStacks(S);reconcileSkillMilestones();
- if(migrate){const ox=38,oz=32;S.player.x=clamp(Number(incoming.player?.x??18)+ox,0,WORLD_W-1);S.player.y=clamp(Number(incoming.player?.y??14)+oz,0,WORLD_H-1);S.player.layer="surface";S.player.mineLevel=1;S.player.surfacePosition=null;for(const b of S.buildings){b.x=clamp((Number(b.x)||0)+ox,0,WORLD_W-1);b.y=clamp((Number(b.y)||0)+oz,0,WORLD_H-1);const k=surfaceKey(b.x,b.y);delete S.nodes[k];S.flattened[k]={height:terrainHeightAt(b.x,b.y)};S.foundation[k]=true}S.player.x=clamp(S.player.x,1,WORLD_W-2);S.player.y=clamp(S.player.y,1,WORLD_H-2)}
- S.simSpeed=[1,2,3].includes(S.simSpeed)?S.simSpeed:1;S.player.x=clamp(Number(S.player.x??64),0,S.player.layer==="mine"?MINE_W-1:WORLD_W-1);S.player.y=clamp(Number(S.player.y??52),0,S.player.layer==="mine"?MINE_H-1:WORLD_H-1);S.paused=!!S.paused;S.tick=Number(S.tick)||0;S.seconds=Number(S.seconds)||8*3600;S.player.viewMode=["first","third","map"].includes(S.player.viewMode)?S.player.viewMode:"first";if(S.player.layer==="mine"&&S.player.viewMode==="map")S.player.viewMode="first";S.player.mineLevel=clamp(Number(S.player.mineLevel)||1,1,MINE_LEVELS);S.player.yaw=Number(S.player.yaw)||0;S.player.pitch=clamp(Number(S.player.pitch??-.12),-1.25,1.25);S.survival.health=clamp(Number(S.survival.health??100),0,100);S.survival.hunger=clamp(Number(S.survival.hunger??100),0,100);S.survival.thirst=clamp(Number(S.survival.thirst??100),0,100);playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:S.player.yaw,pitch:S.player.pitch,path:[],moving:false,facing:0,onArrive:null};rebuildCooldownIndex();}
-function loadLocal(){const candidate=readBestSave(localStorage,activeLocalKey);if(!candidate)return null;if(candidate.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;setSaveMessage("더 최신 버전의 저장 데이터입니다. 최신 게임 버전에서 열어 주세요.");if(!E2E_MODE)showModal("저장 데이터 버전 확인 필요","<p>이 저장 데이터는 현재 게임보다 새로운 버전에서 만들어졌습니다.</p><p>데이터를 덮어쓰지 않도록 저장을 잠갔습니다. 최신 게임 버전에서 다시 열어 주세요.</p>",[{label:"확인",cls:"primary"}]);return "future-schema-blocked"}if(!candidate.valid)return null;try{hydrateState(candidate.state);if(candidate.source!==activeLocalKey){restoreSaveCandidate(localStorage,activeLocalKey,candidate);if(!E2E_MODE)toast(candidate.source.includes("_backup_")?"이전 백업 저장 데이터에서 복구했습니다.":"임시 저장 데이터에서 복구했습니다.");}return candidate.savedAt||S.lastSavedAt||null}catch(error){console.warn("Local save candidate rejected",candidate.source,error);return null}}
+ if(migrate){
+  const ox=38,oz=32;
+  S.player.x=clamp(Number(incoming.player?.x??18)+ox,0,WORLD_W-1);
+  S.player.y=clamp(Number(incoming.player?.y??14)+oz,0,WORLD_H-1);
+  S.player.layer="surface";S.player.mineLevel=1;S.player.mineId=PRIMARY_MINE_ID;S.player.surfacePosition=null;
+  for(const building of S.buildings){building.x=clamp((Number(building.x)||0)+ox,0,WORLD_W-1);building.y=clamp((Number(building.y)||0)+oz,0,WORLD_H-1);const key=surfaceKey(building.x,building.y);delete S.nodes[key];S.flattened[key]={height:terrainHeightAt(building.x,building.y)};S.foundation[key]=true;}
+ }
+ S.simSpeed=[1,2,3].includes(S.simSpeed)?S.simSpeed:1;
+ S.player.x=clamp(Number(S.player.x??64),0,S.player.layer==="mine"?MINE_W-1:WORLD_W-1);
+ S.player.y=clamp(Number(S.player.y??52),0,S.player.layer==="mine"?MINE_H-1:WORLD_H-1);
+ S.paused=!!S.paused;S.tick=Number(S.tick)||0;S.seconds=Number(S.seconds)||8*3600;
+ S.player.viewMode=["first","third","map"].includes(S.player.viewMode)?S.player.viewMode:"first";
+ if(S.player.layer==="mine"&&S.player.viewMode==="map")S.player.viewMode="first";
+ S.player.mineId=S.mineInstances[S.player.mineId]?S.player.mineId:PRIMARY_MINE_ID;
+ S.player.mineLevel=clamp(Number(S.player.mineLevel)||S.mineInstances[S.player.mineId].currentLevel||1,1,MINE_LEVELS);
+ S.player.yaw=Number(S.player.yaw)||0;S.player.pitch=clamp(Number(S.player.pitch??-.12),-1.25,1.25);
+ S.survival.health=clamp(Number(S.survival.health??100),0,100);
+ S.survival.hunger=clamp(Number(S.survival.hunger??100),0,100);
+ S.survival.thirst=clamp(Number(S.survival.thirst??100),0,100);
+ playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:S.player.yaw,pitch:S.player.pitch,path:[],moving:false,facing:0,onArrive:null};
+ rebuildCooldownIndex();
+}function loadLocal(){const candidate=readBestSave(localStorage,activeLocalKey);if(!candidate)return null;if(candidate.reason==="UNSUPPORTED_FUTURE_SCHEMA"){saveBlockedForFutureSchema=true;setSaveMessage("더 최신 버전의 저장 데이터입니다. 최신 게임 버전에서 열어 주세요.");if(!E2E_MODE)showModal("저장 데이터 버전 확인 필요","<p>이 저장 데이터는 현재 게임보다 새로운 버전에서 만들어졌습니다.</p><p>데이터를 덮어쓰지 않도록 저장을 잠갔습니다. 최신 게임 버전에서 다시 열어 주세요.</p>",[{label:"확인",cls:"primary"}]);return "future-schema-blocked"}if(!candidate.valid)return null;try{hydrateState(candidate.state);if(candidate.source!==activeLocalKey){restoreSaveCandidate(localStorage,activeLocalKey,candidate);if(!E2E_MODE)toast(candidate.source.includes("_backup_")?"이전 백업 저장 데이터에서 복구했습니다.":"임시 저장 데이터에서 복구했습니다.");}return candidate.savedAt||S.lastSavedAt||null}catch(error){console.warn("Local save candidate rejected",candidate.source,error);return null}}
 function setSaveMessage(value){$("save-message").textContent=value}
 function saveLocal(){if(saveBlockedForFutureSchema){setSaveMessage("최신 버전에서 생성된 저장 데이터는 이 버전에서 덮어쓸 수 없습니다.");return null}const savedAt=nowISO();S.lastSavedAt=savedAt;try{const audit=validateRuntimeState(S);if(!audit.valid)throw new Error("저장 전 인벤토리 검증 실패: "+audit.errors.join(", "));const skills=validateSkillState(S.skills);if(!skills.valid)throw new Error("저장 전 스킬 검증 실패: "+skills.errors.join(", "));const snapshot=requestSaveSnapshot(S);S.runtime.saveSnapshotRequested=false;writeSaveEnvelope(localStorage,activeLocalKey,snapshot,savedAt);return savedAt}catch(e){setSaveMessage("저장 검증 또는 저장 공간 오류");console.error(e);return null}}
 async function loadCloudForUser(session){if(!cloudClient||!session?.user?.id)return false;setCloud("syncing","클라우드 확인");try{const {data,error}=await cloudClient.from("dori_cloud_storage").select("storage_value,updated_at").eq("storage_key",CLOUD_KEY).eq("is_deleted",false).maybeSingle();if(error)throw error;if(!data){cloudUpdatedAt=null;setCloud("online","계정 연결됨");return false}const envelope=data.storage_value||{};if(!envelope.state)throw new Error("저장 형식이 올바르지 않습니다.");const remoteValidation=validateSaveEnvelope(envelope);if(!remoteValidation.valid)throw new Error("클라우드 저장 데이터 검증 실패: "+remoteValidation.reason);const remoteTime=Date.parse(data.updated_at||envelope.savedAt||0),localTime=Date.parse(S.lastSavedAt||0);cloudUpdatedAt=data.updated_at||envelope.savedAt||null;if(remoteTime>localTime){hydrateState(envelope.state);S.lastSavedAt=cloudUpdatedAt;writeSaveEnvelope(localStorage,activeLocalKey,S,cloudUpdatedAt);renderAll();setViewMode(S.player.viewMode);toast("클라우드 저장 데이터를 불러왔습니다.");setCloud("online","클라우드 동기화")}else{setCloud("online","클라우드 연결됨");if(localTime>remoteTime)await saveGame(true)}return true}catch(e){if(String(e).includes("UNSUPPORTED_FUTURE_SCHEMA")){saveBlockedForFutureSchema=true;setCloud("error","최신 버전 필요");setSaveMessage("클라우드 저장 데이터가 더 최신 버전입니다. 덮어쓰기를 차단했습니다.");toast("최신 버전의 클라우드 저장 데이터가 있어 저장을 잠갔습니다.","warn");return true}console.error("Cloud load failed",e);setCloud("error","클라우드 오류");setSaveMessage("로컬 저장 사용 중");return false}}
@@ -1506,13 +1633,13 @@ if(E2E_MODE){
   survivalTick(seconds,deplete=false){if(deplete){S.survival.hunger=0;S.survival.thirst=0}updateSurvival(Math.max(0,Number(seconds)||0));return structuredClone(S.survival)},
   setupMiningTest(){
    S=freshState();S.player={...S.player,x:8,y:14,viewMode:"first",layer:"mine",mineLevel:1,yaw:0,pitch:.06};S.survival={health:100,hunger:100,thirst:100};
-   const deposit=S.mineDeposits["1:8:12"];deposit.amount=12;S.activeTool="pickaxe";
+   const deposit=getMineDeposits(PRIMARY_MINE_ID)["1:8:12"];deposit.amount=12;S.activeTool="pickaxe";
    playerMotion={x:8,z:14,y:0,velocityY:0,grounded:true,yaw:0,pitch:.06,path:[],moving:false,facing:0,onArrive:null};
    selectedBuild=null;selectedBuilding=null;world3d.center(8,14);renderAll();return structuredClone(S)
   },
-  mineTarget(){const before=itemCount("stone"),target=world3d.pickTarget(190);performAdventureAction();return {target,before,after:itemCount("stone"),node:S.mineDeposits["1:8:12"]?.amount}},
+  mineTarget(){const before=itemCount("stone"),target=world3d.pickTarget(190);performAdventureAction();return {target,before,after:itemCount("stone"),node:getMineDeposits(PRIMARY_MINE_ID)["1:8:12"]?.amount}},
   selectTool:(tool)=>selectTool(tool),
-  toolGuard(){this.setupMiningTest();selectTool("axe");const before=itemCount("stone");harvestMineDeposit(S.mineDeposits["1:8:12"]);return {before,after:itemCount("stone"),tool:S.activeTool}},
+  toolGuard(){this.setupMiningTest();selectTool("axe");const before=itemCount("stone");harvestMineDeposit(getMineDeposits(PRIMARY_MINE_ID)["1:8:12"],PRIMARY_MINE_ID);return {before,after:itemCount("stone"),tool:S.activeTool}},
   constructionRules(){
    S=freshState();S.player={...S.player,viewMode:"map"};S.money=1000000;S.inventory={wood:200,stone:200,ironPlate:200,ironOre:100,coal:100,water:50};S.meta={};S.runtime=createRuntimeState();ensureItemStacks(S);S.research.push("logistics");
    const standardWithoutFoundation=placeBuilding("belt",75,50);
@@ -1564,13 +1691,50 @@ if(E2E_MODE){
    const previous=structuredClone(S);
    try{
     S=freshState();
-    const original=structuredClone(S),newOre=Object.entries(original.mineDeposits).find(([,node])=>node.type==="aluminumOre");
-    const preserved=original.mineDeposits["1:8:12"];
-    if(!newOre||!preserved)throw new Error("The test map must include a new aluminum vein and a legacy ore vein");
-    const oldDeposits={...original.mineDeposits};delete oldDeposits[newOre[0]];oldDeposits["1:8:12"]={...preserved,amount:7};
-    hydrateState({...original,worldVersion:4,mineDeposits:oldDeposits});
-    return {newOreKey:newOre[0],newOrePresent:!!S.mineDeposits[newOre[0]],newOreType:S.mineDeposits[newOre[0]]?.type,legacyAmount:S.mineDeposits["1:8:12"]?.amount,worldVersion:S.worldVersion,saveValid:validateRuntimeState(S).valid};
+    const primary=S.mineInstances[PRIMARY_MINE_ID],newOre=Object.entries(primary.deposits).find(([,node])=>node.type==="aluminumOre");
+    const preserved=primary.deposits["1:8:12"];
+    if(!newOre||!preserved)throw new Error("The primary mine must include a generated aluminum vein and a legacy ore vein");
+    const oldDeposits={...primary.deposits};delete oldDeposits[newOre[0]];oldDeposits["1:8:12"]={...preserved,amount:7};
+    const legacyBuffers={"3":{ironOre:{quantity:4,quality:92,purity:90,synthetic:false}}};
+    const legacy={...structuredClone(S),worldVersion:5,mineInstances:undefined,mineDeposits:oldDeposits,mineElevatorBuffers:legacyBuffers};
+    hydrateState(legacy);
+    const restored=S.mineInstances[PRIMARY_MINE_ID];
+    return {newOreKey:newOre[0],newOrePresent:!!restored.deposits[newOre[0]],newOreType:restored.deposits[newOre[0]]?.type,legacyAmount:restored.deposits["1:8:12"]?.amount,legacyElevatorAmount:restored.elevatorBuffers["3"]?.ironOre?.quantity||0,mineCount:Object.keys(S.mineInstances).length,worldVersion:S.worldVersion,saveValid:validateRuntimeState(S).valid};
    }finally{S=previous;markSceneDirty();renderAll()}
+  },
+  mineIsolationTest(){
+   const previous=structuredClone(S),previousMotion=structuredClone(playerMotion);
+   try{
+    S=freshState();
+    const ids=MINE_ENTRANCES.map(entry=>entry.id),mineA=S.mineInstances[ids[0]],mineB=S.mineInstances[ids[1]];
+    const depositA=Object.values(mineA.deposits)[0],depositB=Object.values(mineB.deposits)[0];
+    if(!depositA||!depositB)throw new Error("Each mine must generate at least one deposit");
+    const depositABefore=depositA.amount,depositBBefore=depositB.amount;
+    depositA.amount=Math.max(0,depositA.amount-1);
+    storeInMineElevator(2,"ironOre",3,{quality:92,purity:90,synthetic:false},ids[0]);
+    storeInMineElevator(2,"ironOre",5,{quality:88,purity:95,synthetic:false},ids[1]);
+    mineA.currentLevel=3;mineA.player={x:8,z:12,yaw:.3,pitch:-.1,level:3};
+    mineB.currentLevel=1;mineB.player={x:3,z:12,yaw:0,pitch:-.06,level:1};
+    enterMine(ids[0]);
+    const activeA={mineId:currentMineId(),level:S.player.mineLevel,x:playerMotion.x,z:playerMotion.z};
+    const sceneA=world3d.inspect();
+    exitMine();
+    enterMine(ids[1]);
+    const activeB={mineId:currentMineId(),level:S.player.mineLevel,x:playerMotion.x,z:playerMotion.z};
+    const sceneB=world3d.inspect();
+    const result={
+      ids,
+      independentObjects:mineA!==mineB&&mineA.deposits!==mineB.deposits&&mineA.elevatorBuffers!==mineB.elevatorBuffers,
+      depositAChanged:depositA.amount===Math.max(0,depositABefore-1),
+      depositBUnchanged:depositB.amount===depositBBefore,
+      elevatorA:mineA.elevatorBuffers["2"]?.ironOre?.quantity||0,
+      elevatorB:mineB.elevatorBuffers["2"]?.ironOre?.quantity||0,
+      activeA,activeB,
+      sceneA:{id:sceneA.activeMineId,geology:sceneA.activeMineGeology,tunnels:sceneA.activeMineTunnelSignature,tunnelCells:sceneA.activeMineTunnelCells},
+      sceneB:{id:sceneB.activeMineId,geology:sceneB.activeMineGeology,tunnels:sceneB.activeMineTunnelSignature,tunnelCells:sceneB.activeMineTunnelCells}
+    };
+    return result;
+   }finally{S=previous;playerMotion=previousMotion;markSceneDirty();renderAll();setViewMode(S.player.viewMode)}
   },
   expandedSystemsTest(){
    const previous=structuredClone(S);
@@ -1587,7 +1751,7 @@ if(E2E_MODE){
     addItem("treePermanentGrowthCatalyst",1,{quality:90,purity:90,synthetic:false},false);S.nodes["10,10"].amount=0;useTreeGrowthItem("treePermanentGrowthCatalyst");
     const permanent={enabled:!!S.nodes["10,10"].permanentGrowth,amount:S.nodes["10,10"].amount};
     S=freshState();S.runtime=createRuntimeState();ensureItemStacks(S);
-    const elevator={uid:"test-elevator",type:"catalog_item_elevator",x:5,y:5,dir:1,liftLevel:3,liftDirection:"down",input:{},output:null,status:"IDLE"};
+    const elevator={uid:"test-elevator",type:"catalog_item_elevator",x:5,y:5,dir:1,mineId:PRIMARY_MINE_ID,liftLevel:3,liftDirection:"down",input:{},output:null,status:"IDLE"};
     S.buildings=[elevator];selectedBuilding=elevator.uid;storeInMineElevator(3,"ironOre",4,{quality:92,purity:90,synthetic:false});
     renderMachineDetails();$("machine-lift-level").value="3";$("machine-lift-item").value="ironOre";$("machine-lift-quantity").value="2";
     const beforeOre=itemCount("ironOre");transferElevatorBuffer(elevator,"unload");

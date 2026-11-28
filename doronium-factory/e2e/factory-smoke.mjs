@@ -112,9 +112,29 @@ try {
   const migration = await desktop.evaluate(() => window.__doroniumFactoryTest.saveMigrationTest());
   assert.equal(migration.newOrePresent, true, "Legacy mine saves must receive new resource veins");
   assert.equal(migration.newOreType, "aluminumOre", "New mineral deposits must keep their canonical type");
-  assert.equal(migration.legacyAmount, 7, "Existing mine deposit quantities must be preserved during migration");
-  assert.equal(migration.worldVersion, 5, "Legacy saves must upgrade to the latest world schema");
+  assert.equal(migration.legacyAmount, 7, "Existing primary-mine deposit quantities must be preserved during migration");
+  assert.equal(migration.legacyElevatorAmount, 4, "Legacy shared elevator stock must migrate into the primary mine without loss");
+  assert.equal(migration.mineCount, 5, "A legacy save must receive all five independent mine instances");
+  assert.equal(migration.worldVersion, 6, "Legacy saves must upgrade to the independent-mine world schema");
   assert.equal(migration.saveValid, true, "Migrated world state must pass the save runtime validator");
+
+  const mineIsolation = await desktop.evaluate(() => window.__doroniumFactoryTest.mineIsolationTest());
+  assert.equal(mineIsolation.ids.length, 5, "All five mine entrances must have distinct stable IDs");
+  assert.equal(mineIsolation.independentObjects, true, "Mine deposits, players and elevator buffers must be separate objects");
+  assert.equal(mineIsolation.depositAChanged, true, "Mining one mine must change that mine's deposit amount");
+  assert.equal(mineIsolation.depositBUnchanged, true, "Mining one mine must not change another mine's deposit amount");
+  assert.equal(mineIsolation.elevatorA, 3, "The first mine must retain its own elevator stock");
+  assert.equal(mineIsolation.elevatorB, 5, "The second mine must retain its different elevator stock");
+  assert.equal(mineIsolation.activeA.mineId, mineIsolation.ids[0], "The first entrance must load the first mine instance");
+  assert.equal(mineIsolation.activeA.level, 3, "The first mine must restore its own depth");
+  assert.equal(mineIsolation.activeA.x, 8, "The first mine must restore its own player X position");
+  assert.equal(mineIsolation.activeB.mineId, mineIsolation.ids[1], "The second entrance must load a different mine instance");
+  assert.equal(mineIsolation.activeB.level, 1, "The second mine must keep its independent depth");
+  assert.equal(mineIsolation.activeB.x, 3, "The second mine must load its own saved player position");
+  assert.notEqual(mineIsolation.sceneA.id, mineIsolation.sceneB.id, "The WebGL mine scene must rebuild when changing mine identity");
+  assert.notEqual(mineIsolation.sceneA.geology, mineIsolation.sceneB.geology, "Different mines must use their own geology presentation");
+  assert.notEqual(mineIsolation.sceneA.tunnels, mineIsolation.sceneB.tunnels, "Different mines must render their own tunnel layout");
+
   const expandedSystems = await desktop.evaluate(() => window.__doroniumFactoryTest.expandedSystemsTest());
   assert.equal(expandedSystems.bridge.placed, true, "A bridge machine item must install on a river tile");
   assert.equal(expandedSystems.bridge.walkable, true, "A placed bridge must become a walkable path across water");
@@ -232,7 +252,7 @@ try {
   await desktop.locator("#action-button").click();
   const miningAfter = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot());
   assert.equal(miningAfter.inventory.stone, miningBefore.stone + 2, "Clicking the desktop Use button must mine the aimed stone vein");
-  assert.equal(miningAfter.mineDeposits["1:8:12"].amount, 10, "A successful mouse Use action must reduce the vein by two");
+  assert.equal(miningAfter.mineInstances["mine_72_42"].deposits["1:8:12"].amount, 10, "A successful mouse Use action must reduce the vein by two");
   assert.equal(miningAfter.player.layer, "mine", "The Use button must preserve the underground layer");
   const toolGuard = await desktop.evaluate(() => window.__doroniumFactoryTest.toolGuard());
   assert.equal(toolGuard.tool, "axe", "The tool guard must register the equipped axe");
