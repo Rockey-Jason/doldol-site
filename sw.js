@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v73-study-review-20261123";
+const CACHE_NAME = "doldol-site-pwa-v74-home-css-20261128";
 const SITE_SCOPE = new URL(self.registration.scope);
 const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
@@ -22,7 +22,8 @@ const APP_SHELL = [
   scopedUrl("rockey-study-rewards.html"),
   scopedUrl("rockeysite-icon-3.png"),
   scopedUrl("manifest.json"),
-  scopedUrl("css/dori-foundation.css?v=20261116-premium-ui-2")
+  scopedUrl("css/dori-foundation.css?v=20261116-premium-ui-2"),
+  scopedUrl("css/home.css?v=20261128-home-css-1")
 ];
 
 self.addEventListener("install", (event) => {

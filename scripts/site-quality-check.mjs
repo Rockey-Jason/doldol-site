@@ -261,6 +261,17 @@ if (fs.existsSync(learningToolsTest)) {
   }
 }
 
+const cloudSyncTest = path.resolve(ROOT, "scripts/dori-cloud-sync.test.mjs");
+if (fs.existsSync(cloudSyncTest)) {
+  const result = spawnSync(process.execPath, ["--test", cloudSyncTest], { encoding: "utf8", cwd: ROOT });
+  stats.tests += 1;
+  if (result.status !== 0) {
+    errors.push("Dori Cloud Sync isolation tests failed\\n" + (result.stdout || "") + (result.stderr || ""));
+  } else {
+    console.log("Dori Cloud Sync account-isolation tests passed.");
+  }
+}
+
 console.log("DORI SITE QUALITY CHECK");
 console.log(JSON.stringify(stats, null, 2));
 for (const warning of warnings) console.warn("WARN " + warning);

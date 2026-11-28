@@ -53,11 +53,12 @@
 ### 공유 UI
 
 - css/dori-foundation.css: 글꼴, 기본 색상 토큰, 접근성 포커스, 공통 모션, 반응형 기본 규칙
+- css/home.css: 홈 화면 전용 스타일. index.html의 대형 인라인 스타일을 분리한 캐시 가능한 파일
 - css/doldol-theme.css: 사이트 공통 테마 및 공유 내비게이션 스타일
 - js/doldol-theme.js: 공유 테마·전환 동작
 - js/hancom-weight-normalizer.js: 한컴말랑말랑 글꼴이 적용된 요소의 굵기를 정규화
 - js/dori-profile-frame.js, css/dori-profile-frame.css: 프로필 프레임의 공유 렌더링 계층
-- js/dori-cloud-sync.js: 로그인 세션과 사용자 데이터의 클라우드 동기화
+- js/dori-cloud-sync.js: 로그인 세션과 사용자 데이터의 클라우드 동기화. 앱 localStorage 데이터만 계정별로 동기화하며 Supabase 인증 키와 동기화 메타데이터는 대상에서 제외합니다. localStorage.clear()는 앱 키만 정리합니다. 계정 전환 중 미동기화 변경은 sessionStorage에 임시 보관하고, 사용할 수 없으면 localStorage의 전용 비동기화 키, 마지막으로 현재 탭 메모리 백업을 사용합니다. 동기화 세대 토큰과 인증 이벤트 버전으로 이전 계정의 지연 응답이나 오래된 초기 세션 결과가 현재 계정 캐시에 반영되지 않도록 합니다. 메모리 백업만 가능한 경우 탭을 닫으면 보존되지 않으며, 이 구조는 영구 오프라인 큐가 아닙니다.
 - js/dori-notification-center.js: 공통 알림 UI
 - js/dori-sound.js: 기존 사이트 사운드 동작
 

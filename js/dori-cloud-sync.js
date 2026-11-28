@@ -11,6 +11,7 @@
   const TABLE = "dori_cloud_storage";
   const OWNER_KEY = "__dori_cloud_sync_owner_v1";
   const META_PREFIX = "__dori_cloud_sync_meta_v1:";
+  const PENDING_BACKUP_PREFIX = "__dori_cloud_sync_pending_v1:";
   const MAX_VALUE_BYTES = 4 * 1024 * 1024;
   const native = {
     get: Storage.prototype.getItem,
@@ -21,6 +22,7 @@
   };
   let client = null;
   let currentUserId = null;
+  let accountGeneration = 0;
   let applyingRemote = false;
   let syncing = false;
   let syncAgain = false;
@@ -28,6 +30,7 @@
   let statusNode = null;
   let meta = { dirty: [], managed: [], initialized: false };
   const pending = new Map();
+  const volatileBackups = new Map();
 
   const eligible = key => {
     const k = String(key || "");
@@ -45,6 +48,84 @@
         ? { dirty: Array.isArray(parsed.dirty) ? parsed.dirty : [], managed: Array.isArray(parsed.managed) ? parsed.managed : [], initialized: parsed.initialized === true }
         : { dirty: [], managed: [], initialized: false };
     } catch (_) { return { dirty: [], managed: [], initialized: false }; }
+  };
+  // Keep unsynced edits isolated per account while the visible localStorage cache
+  // is switched to another account. sessionStorage survives same-tab navigation
+  // without exposing one account's pending values to another account.
+  const parsePendingBackup = raw => {
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+      const entries = new Map();
+      for (const [key, value] of Object.entries(parsed)) {
+        if (!eligible(key) || !value || typeof value !== "object" ||
+            typeof value.deleted !== "boolean" ||
+            (!value.deleted && typeof value.value !== "string")) continue;
+        entries.set(key, { value: value.deleted ? null : value.value, deleted: value.deleted });
+      }
+      return entries;
+    } catch (_) { return null; }
+  };
+  const readPendingBackup = uid => {
+    if (!uid) return new Map();
+    const volatile = volatileBackups.get(uid);
+    if (volatile) return new Map(volatile);
+    const key = PENDING_BACKUP_PREFIX + uid;
+    try {
+      const sessionCopy = parsePendingBackup(native.get.call(window.sessionStorage, key));
+      if (sessionCopy) return sessionCopy;
+    } catch (_) {}
+    try {
+      const localCopy = parsePendingBackup(native.get.call(localStorage, key));
+      if (localCopy) return localCopy;
+    } catch (_) {}
+    return new Map();
+  };
+  const writePendingBackup = (uid, entries) => {
+    if (!uid) return false;
+    const key = PENDING_BACKUP_PREFIX + uid;
+    if (!entries.size) {
+      volatileBackups.delete(uid);
+      try { native.remove.call(window.sessionStorage, key); } catch (_) {}
+      try { native.remove.call(localStorage, key); } catch (_) {}
+      return true;
+    }
+    const serialized = JSON.stringify(Object.fromEntries(entries));
+    try {
+      native.set.call(window.sessionStorage, key, serialized);
+      try { native.remove.call(localStorage, key); } catch (_) {}
+      volatileBackups.delete(uid);
+      return true;
+    } catch (_) {}
+    try {
+      native.set.call(localStorage, key, serialized);
+      try { native.remove.call(window.sessionStorage, key); } catch (_) {}
+      volatileBackups.delete(uid);
+      return true;
+    } catch (_) {}
+    // Keep the edit in memory as a final same-tab fallback. The caller reports
+    // that the backup is not durable so the user is not misled.
+    volatileBackups.set(uid, new Map(entries));
+    return false;
+  };
+  const preservePendingBackup = (uid, oldMeta) => {
+    if (!uid) return true;
+    const backup = readPendingBackup(uid);
+    const dirtyKeys = new Set([...(oldMeta?.dirty || []), ...pending.keys()]);
+    for (const key of dirtyKeys) {
+      if (!eligible(key)) continue;
+      const staged = pending.get(key);
+      if (staged) {
+        backup.set(key, { value: staged.deleted ? null : String(staged.value), deleted: !!staged.deleted });
+      } else {
+        const value = native.get.call(localStorage, key);
+        backup.set(key, value === null
+          ? { value: null, deleted: true }
+          : { value, deleted: false });
+      }
+    }
+    return dirtyKeys.size ? writePendingBackup(uid, backup) : true;
   };
   const writeMeta = () => {
     if (!currentUserId) return;
@@ -96,10 +177,13 @@
     return native.remove.call(this, key);
   };
   Storage.prototype.clear = function() {
-    if (this === window.localStorage) {
-      for (const key of listLocalKeys()) markDirty(key, null, true);
+    if (this !== window.localStorage) return native.clear.call(this);
+    // Clear application data only. Supabase sessions and cloud-sync metadata
+    // are infrastructure state and must survive a page-level data reset.
+    for (const key of listLocalKeys()) {
+      markDirty(key, null, true);
+      native.remove.call(this, key);
     }
-    return native.clear.call(this);
   };
 
   const scheduleSync = () => {
@@ -128,25 +212,35 @@
     storage_value: entry.deleted ? null : entry.value,
     is_deleted: !!entry.deleted
   });
-  const uploadEntries = async (uid, entries) => {
+  const uploadEntries = async (uid, entries, generation) => {
     const items = [...entries.entries()];
+    const backup = readPendingBackup(uid);
     for (let i = 0; i < items.length; i += 100) {
-      const chunk = items.slice(i, i + 100).map(([key, value]) => toRow(uid, key, value));
+      const slice = items.slice(i, i + 100);
+      const chunk = slice.map(([key, value]) => toRow(uid, key, value));
       const { error } = await client.from(TABLE).upsert(chunk, { onConflict: "user_id,storage_key" });
       if (error) throw error;
-      for (const [key, value] of items.slice(i, i + 100)) {
+      // An account switch may happen while Supabase is processing the request.
+      // Never let a stale request mutate the next account's local state.
+      if (generation !== accountGeneration || currentUserId !== uid) return false;
+      for (const [key, value] of slice) {
         const latest = pending.get(key);
         const unchanged = !latest || (latest.deleted === value.deleted && latest.value === value.value);
         if (unchanged) {
           pending.delete(key);
           meta.dirty = meta.dirty.filter(item => item !== key);
+          const saved = backup.get(key);
+          if (saved && saved.deleted === value.deleted && saved.value === value.value) backup.delete(key);
         } else if (!meta.dirty.includes(key)) {
           meta.dirty.push(key);
         }
         if (!meta.managed.includes(key)) meta.managed.push(key);
       }
     }
+    if (generation !== accountGeneration || currentUserId !== uid) return false;
     writeMeta();
+    writePendingBackup(uid, backup);
+    return true;
   };
   const applyRemoteRow = row => {
     applyingRemote = true;
@@ -157,32 +251,50 @@
     } finally { applyingRemote = false; }
   };
   const switchAccount = async uid => {
-    if (uid === currentUserId) return;
-    const previous = currentUserId || native.get.call(localStorage, OWNER_KEY);
+    const cachedOwner = native.get.call(localStorage, OWNER_KEY);
+    if (uid === currentUserId && (uid || !cachedOwner)) return;
+
+    accountGeneration += 1;
+    clearTimeout(syncTimer);
+    syncTimer = null;
+    const previous = currentUserId || cachedOwner;
+
     if (previous && previous !== uid) {
       const oldMeta = readMeta(previous);
+      if (!preservePendingBackup(previous, oldMeta) && (oldMeta.dirty.length || pending.size)) {
+        showStatus("저장 공간이 부족해 변경 사항은 현재 탭에만 임시 보관돼요. 탭을 닫지 말아 주세요.", "error");
+      }
+      const oldKeys = new Set([...oldMeta.managed, ...oldMeta.dirty]);
       applyingRemote = true;
-      try { oldMeta.managed.forEach(key => { if (eligible(key)) native.remove.call(localStorage, key); }); }
+      try { oldKeys.forEach(key => { if (eligible(key)) native.remove.call(localStorage, key); }); }
       finally { applyingRemote = false; }
       pending.clear();
     }
+
     currentUserId = uid || null;
     if (!uid) {
-      if (previous) {
-        const oldMeta = readMeta(previous);
-        applyingRemote = true;
-        try { oldMeta.managed.forEach(key => { if (eligible(key)) native.remove.call(localStorage, key); }); }
-        finally { applyingRemote = false; }
-      }
       pending.clear();
       try { native.remove.call(localStorage, OWNER_KEY); } catch (_) {}
       meta = { dirty: [], managed: [], initialized: false };
       return;
     }
-    // Page startup code may normalize cached values before the server snapshot arrives.
-    // Treat those writes as cache initialization, not as newer user edits.
+
+    // Restore this user's unfinished edits before reconciling the remote snapshot.
     pending.clear();
     meta = readMeta(uid);
+    const backup = readPendingBackup(uid);
+    applyingRemote = true;
+    try {
+      for (const [key, value] of backup) {
+        if (!eligible(key)) continue;
+        pending.set(key, value);
+        if (value.deleted) native.remove.call(localStorage, key);
+        else native.set.call(localStorage, key, value.value);
+        if (!meta.dirty.includes(key)) meta.dirty.push(key);
+        if (!meta.managed.includes(key)) meta.managed.push(key);
+      }
+    } finally { applyingRemote = false; }
+    if (backup.size) writeMeta();
     try { native.set.call(localStorage, OWNER_KEY, uid); } catch (_) {}
     await syncNow(true);
   };
@@ -191,10 +303,13 @@
     if (!currentUserId || !client) return;
     if (syncing) { syncAgain = true; return; }
     syncing = true;
+    const uid = currentUserId;
+    const generation = accountGeneration;
+    const isCurrentAccount = () => generation === accountGeneration && currentUserId === uid;
     try {
       showStatus("계정 데이터 동기화 중…", "busy");
-      const uid = currentUserId;
       const remoteRows = await fetchAll(uid);
+      if (!isCurrentAccount()) return;
       const remoteMap = new Map(remoteRows.map(row => [row.storage_key, row]));
       const dirty = new Set(meta.dirty);
       const outgoing = new Map();
@@ -223,26 +338,37 @@
             if (value !== null && new Blob([value]).size <= MAX_VALUE_BYTES) outgoing.set(key, { value, deleted: false });
           }
         }
-        for (const key of dirty) {
-          if (!outgoing.has(key)) {
-            const value = pending.get(key);
-            outgoing.set(key, value || (native.get.call(localStorage, key) === null
-              ? { value: null, deleted: true }
-              : { value: native.get.call(localStorage, key), deleted: false }));
-          }
+      }
+
+      // Dirty entries must survive both empty first-sync snapshots and deletions.
+      for (const key of dirty) {
+        if (pending.has(key)) {
+          outgoing.set(key, pending.get(key));
+        } else if (!outgoing.has(key)) {
+          const value = native.get.call(localStorage, key);
+          outgoing.set(key, value === null
+            ? { value: null, deleted: true }
+            : { value, deleted: false });
         }
       }
+
       for (const [key, value] of outgoing) {
         if (!eligible(key) || (!value.deleted && value.value !== null && new Blob([value.value]).size > MAX_VALUE_BYTES)) outgoing.delete(key);
       }
-      if (outgoing.size) await uploadEntries(uid, outgoing);
+      if (outgoing.size) {
+        const uploaded = await uploadEntries(uid, outgoing, generation);
+        if (!uploaded || !isCurrentAccount()) return;
+      }
+      if (!isCurrentAccount()) return;
       meta.initialized = true;
       meta.managed = [...new Set([...meta.managed, ...remoteRows.map(row => row.storage_key), ...outgoing.keys()])];
       writeMeta();
       showStatus("모든 기기와 데이터 동기화 완료", "ok");
     } catch (error) {
-      console.warn("[Dori Cloud Sync]", error);
-      showStatus("클라우드 동기화 대기 중 · 연결을 확인해 주세요", "error");
+      if (isCurrentAccount()) {
+        console.warn("[Dori Cloud Sync]", error);
+        showStatus("클라우드 동기화 대기 중 · 연결을 확인해 주세요", "error");
+      }
     } finally {
       syncing = false;
       if (syncAgain) { syncAgain = false; scheduleSync(); }
@@ -259,16 +385,28 @@
           auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
         });
       window.doriSupabase = client;
+      let authEventVersion = 0;
+      client.auth.onAuthStateChange((event, sessionNow) => {
+        const eventVersion = ++authEventVersion;
+        queueMicrotask(() => {
+          if (eventVersion !== authEventVersion) return;
+          void switchAccount(sessionNow?.user?.id || null);
+        });
+      });
+      const versionBeforeSession = authEventVersion;
       const { data: { session }, error } = await client.auth.getSession();
       if (error) throw error;
-      client.auth.onAuthStateChange((event, sessionNow) => {
-        queueMicrotask(() => { void switchAccount(sessionNow?.user?.id || null); });
-      });
-      if (session?.user?.id) {
-        // Verify the cached session against Auth before using its user ID for cloud partitioning.
-        const { data: { user }, error: userError } = await client.auth.getUser();
-        if (userError) throw userError;
-        if (user?.id) await switchAccount(user.id);
+      if (authEventVersion === versionBeforeSession) {
+        let verifiedUserId = null;
+        if (session?.user?.id) {
+          // Verify the cached session against Auth before using its user ID for cloud partitioning.
+          const versionBeforeUserCheck = authEventVersion;
+          const { data: { user }, error: userError } = await client.auth.getUser();
+          if (userError) throw userError;
+          if (authEventVersion === versionBeforeUserCheck) verifiedUserId = user?.id || null;
+        }
+        // Skip a stale initial snapshot if an auth event arrived while verification was pending.
+        if (authEventVersion === versionBeforeSession) await switchAccount(verifiedUserId);
       }
       window.addEventListener("focus", () => { if (currentUserId) void syncNow(); });
       window.addEventListener("online", () => { if (currentUserId) void syncNow(); });
