@@ -1,5 +1,5 @@
 /* DORONIUM FACTORY — topographic 3D world, underground mine and industrial renderer */
-import { WORLD_W, WORLD_H, MINE_W, MINE_H, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=7";
+import { WORLD_W, WORLD_H, MINE_W, MINE_H, PRIMARY_MINE_ID, MINE_ENTRANCES, biomeAt, terrainHeightAt, mineFloorY, mineTunnelAt, biomeGroundColor } from "./terrain-system.js?v=8";
 let THREE = null;
 try { THREE = await import("https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"); }
 catch (error) { console.warn("Three.js CDN unavailable; using the compatibility renderer.", error); }
@@ -359,39 +359,40 @@ export function createWorld3D(canvas, getState) {
     return mesh;
   }
   function buildMine(state){
+    const mineId=state.player?.mineId||PRIMARY_MINE_ID,mine=state.mineInstances?.[mineId]||state.mineInstances?.[PRIMARY_MINE_ID];
     const level=clamp(Number(state.player?.mineLevel)||1,1,5),floorY=mineFloorY(level);
-    const rock=mat(0x34414a,.12,.95),rail=mat(0x8b9aa0,.72,.42),lampMat=mat(0xf0c76c,.22,.24,0x9a5a13);
-    const cells=[];for(let z=0;z<MINE_H;z++)for(let x=0;x<MINE_W;x++)if(mineTunnelAt(x,z))cells.push({x,z});
-    const floorGeo=new THREE.BoxGeometry(31.7,3,31.7),floorMat=mat(0x444c50,.1,.92);
+    const geology=mine?.geology||"granite";
+    const geologyColors={granite:0x34414a,iron:0x3a454a,crystal:0x304d58,basalt:0x302f35,copper:0x554039};
+    const rock=mat(geologyColors[geology]||geologyColors.granite,.12,.95),rail=mat(0x8b9aa0,.72,.42),lampMat=mat(0xf0c76c,.22,.24,0x9a5a13);
+    const tunnel=(x,z)=>mineTunnelAt(x,z,mineId);
+    const cells=[];for(let z=0;z<MINE_H;z++)for(let x=0;x<MINE_W;x++)if(tunnel(x,z))cells.push({x,z});
+    const floorGeo=new THREE.BoxGeometry(31.7,3,31.7),floorMat=mat(geology==="crystal"?0x354c52:0x444c50,.1,.92);
     const floors=new THREE.InstancedMesh(floorGeo,floorMat,cells.length),dummy=new THREE.Object3D();
     cells.forEach((p,i)=>{dummy.position.set(p.x*32,floorY-1.5,p.z*32);dummy.updateMatrix();floors.setMatrixAt(i,dummy.matrix);});
     floors.receiveShadow=true;mineRoot.add(floors);
     for(const p of cells){
       const x=p.x*32,z=p.z*32;
-      if(!mineTunnelAt(p.x-1,p.z))makeBox(mineRoot,x-16,floorY+13,z,3,29,32,rock);
-      if(!mineTunnelAt(p.x+1,p.z))makeBox(mineRoot,x+16,floorY+13,z,3,29,32,rock);
-      if(!mineTunnelAt(p.x,p.z-1))makeBox(mineRoot,x,floorY+13,z-16,32,29,3,rock);
-      if(!mineTunnelAt(p.x,p.z+1))makeBox(mineRoot,x,floorY+13,z+16,32,29,3,rock);
+      if(!tunnel(p.x-1,p.z))makeBox(mineRoot,x-16,floorY+13,z,3,29,32,rock);
+      if(!tunnel(p.x+1,p.z))makeBox(mineRoot,x+16,floorY+13,z,3,29,32,rock);
+      if(!tunnel(p.x,p.z-1))makeBox(mineRoot,x,floorY+13,z-16,32,29,3,rock);
+      if(!tunnel(p.x,p.z+1))makeBox(mineRoot,x,floorY+13,z+16,32,29,3,rock);
       if((p.x===8||p.x===14||p.x===20||p.x===26||p.x===32)&&p.z===12){
         for(const sx of [-13,13])makeBox(mineRoot,x+sx,floorY+13,z,2.8,26,3.4,rail);
         makeBox(mineRoot,x,floorY+26,z,29,3,3.4,rail);
       }
-      if(highEndDevice&&p.x%6===0&&p.z===12){makeCyl(mineRoot,x+11,floorY+24,z,1.1,2,lampMat,8);const light=new THREE.PointLight(0xf2bd65,.55,112,2);light.position.set(x,floorY+23,z);mineRoot.add(light);}
+      if(highEndDevice&&p.x%6===0&&p.z===12){makeCyl(mineRoot,x+11,floorY+24,z,1.1,2,lampMat,8);const light=new THREE.PointLight(geology==="crystal"?0x65d9ec:0xf2bd65,.55,112,2);light.position.set(x,floorY+23,z);mineRoot.add(light);}
     }
-    for(const node of Object.values(state.mineDeposits||{})){
+    for(const node of Object.values(mine?.deposits||{})){
       if(node.level!==level||node.amount<=0)continue;
       const g=new THREE.Group();g.position.set(node.x*32,node.depthY,node.z*32);
-      g.userData={cell:{x:node.x,z:node.z},targetKind:{kind:"resource",type:node.type,mine:true,level,depthY:node.depthY}};mineRoot.add(g);
+      g.userData={cell:{x:node.x,z:node.z},targetKind:{kind:"resource",type:node.type,mine:true,mineId,level,depthY:node.depthY}};mineRoot.add(g);
       makeBox(g,0,-2,0,13,8,13,mat(0x1a2932,.08,.98));
       if(String(node.type).startsWith("doronium_"))makeCrystal(g,node.type,0,5,0,3.1);
-      else{
-        const color=palette[node.type]||0x81919d,ore=mat(color,.5,.3,color);
-        for(let i=0;i<4;i++){const m=new THREE.Mesh(i%2?new THREE.OctahedronGeometry(2.7,0):new THREE.IcosahedronGeometry(2.8,0),ore);m.position.set((i%2?1:-1)*(3+i%3),4+(i%3)*1.8,(i<2?-1:1)*(2+i));m.rotation.set(i*.3,i*.6,i*.2);m.castShadow=true;g.add(m);}
-      }
-      if(highEndDevice){const glow=new THREE.PointLight(String(node.type).startsWith("doronium_")?0x55dcec:0x8ca8b5,.35,34,2);glow.position.y=8;g.add(glow);}
+      else{const color=palette[node.type]||0x81919d,ore=mat(color,.5,.3,color);for(let i=0;i<4;i++){const m=new THREE.Mesh(i%2?new THREE.OctahedronGeometry(2.7,0):new THREE.IcosahedronGeometry(2.8,0),ore);m.position.set((i%2?1:-1)*(3+i%3),4+(i%3)*1.8,(i<2?-1:1)*(2+i));m.rotation.set(i*.3,i*.6,i*.2);m.castShadow=true;g.add(m);}}
+      if(highEndDevice){const glow=new THREE.PointLight(String(node.type).startsWith("doronium_")?0x55dcec:geology==="crystal"?0x65d9ec:0x8ca8b5,.35,34,2);glow.position.y=8;g.add(glow);}
     }
     const addLift=(x,kind)=>{
-      const g=new THREE.Group();g.position.set(x*32,floorY,12*32);g.userData={cell:{x,z:12},targetKind:{kind}};mineRoot.add(g);
+      const g=new THREE.Group();g.position.set(x*32,floorY,12*32);g.userData={cell:{x,z:12},targetKind:{kind,mineId,mineName:mine?.name||"광산"}};mineRoot.add(g);
       makeBox(g,0,4,0,19,8,19,mats.dark);makeCyl(g,0,14,0,5,20,mats.trim,10);
       const ring=new THREE.Mesh(new THREE.TorusGeometry(10,.65,8,36),new THREE.MeshBasicMaterial({color:kind==="mineExit"?0x7ed9c3:0xf0c76c}));ring.rotation.x=Math.PI/2;ring.position.y=24;g.add(ring);
       const light=new THREE.PointLight(kind==="mineExit"?0x6ed6c1:0xf2bd65,1.15,76,2);light.position.y=23;g.add(light);
@@ -464,7 +465,7 @@ export function createWorld3D(canvas, getState) {
         for(let i=0;i<3;i++)nodeInstance(nodeBatches.ripples,worldX+(i-1)*7,y+1.8,worldZ+(i%2?4:-4),1,1,1);
       }else{
         const g=new THREE.Group();g.position.set(worldX,y,worldZ);
-        g.userData={cell:{x,z},targetKind:node.type==="mineEntrance"?{kind:"mineEntrance"}:node.type==="wildDori"?{kind:"wildDori",x,z}:{kind:"resource",type:node.type},wildDori:null};
+        g.userData={cell:{x,z},targetKind:node.type==="mineEntrance"?{kind:"mineEntrance",mineId:node.mineId||"mine_"+x+"_"+z,mineName:node.mineName||"지하 광산"}:node.type==="wildDori"?{kind:"wildDori",x,z}:{kind:"resource",type:node.type},wildDori:null};
         nodeRoot.add(g);nodeGroupsByKey.set(key,g);
         if(node.type==="mineEntrance"){
           const stone=mat(0x53616a,.18,.9),glow=mat(0x3c9eaa,.3,.35,0x124f59);
@@ -730,11 +731,11 @@ export function createWorld3D(canvas, getState) {
     for(const x of [-5.5,5.5]){const a=makeBox(g,x,12,0,2.6,8,3,mats.trim);a.rotation.z=x<0?-.2:.2;arms.push(a);}
     g.userData={legs,arms};
   }
-  let trackedNodes=null,trackedMineDeposits=null,trackedFlattened=null,trackedFoundation=null,stateIdentityRevision=0,lastVisibilityRevision=null;
+  let trackedNodes=null,trackedMineInstances=null,trackedFlattened=null,trackedFoundation=null,stateIdentityRevision=0,lastVisibilityRevision=null;
   function signature(s){
-    if(s.nodes!==trackedNodes||s.mineDeposits!==trackedMineDeposits||s.flattened!==trackedFlattened||s.foundation!==trackedFoundation){trackedNodes=s.nodes;trackedMineDeposits=s.mineDeposits;trackedFlattened=s.flattened;trackedFoundation=s.foundation;stateIdentityRevision++;}
-    const machines=(s.buildings||[]).map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.variant].join(":")).join("|");
-    return [s.sceneRevision||0,stateIdentityRevision,s.worldVersion,s.player?.layer,s.player?.mineLevel,machines].join(";");
+    if(s.nodes!==trackedNodes||s.mineInstances!==trackedMineInstances||s.flattened!==trackedFlattened||s.foundation!==trackedFoundation){trackedNodes=s.nodes;trackedMineInstances=s.mineInstances;trackedFlattened=s.flattened;trackedFoundation=s.foundation;stateIdentityRevision++;}
+    const machines=(s.buildings||[]).map(b=>[b.uid,b.type,b.x,b.y,b.dir,b.variant,b.mineId].join(":")).join("|");
+    return [s.sceneRevision||0,stateIdentityRevision,s.worldVersion,s.player?.layer,s.player?.mineId,s.player?.mineLevel,machines].join(";");
   }
   function render(state){
     if(!state)return;resizeIfNeeded();const sig=signature(state);if(sig!==lastSignature){rebuild(state);lastSignature=sig;rebuildCount++;}
