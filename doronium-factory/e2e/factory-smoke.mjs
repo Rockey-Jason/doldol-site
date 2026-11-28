@@ -161,28 +161,29 @@ try {
   assert.equal(await desktop.locator("#control-column").evaluate(el => el.classList.contains("panel-open")), false,
     "Escape must close the keyboard menu");
 
-  const adventureStart = await desktop.evaluate(() => {
-    const api = window.__doroniumFactoryTest;
-    api.setViewMode("first");
-    return api.move3D("w", 0.3);
-  });
-  assert.ok(adventureStart.z < 52, "First-person WASD movement must move the engineer through the expanded 3D world");
+  const movementStart = await desktop.evaluate(() => window.__doroniumFactoryTest.setupMovementTest());
+  assert.deepEqual(movementStart, {x:72,z:52,viewMode:"first",paused:false},
+    "The real-input test must begin on a clear, unpaused first-person surface");
   const beforeKeyboardMove = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
   await desktop.keyboard.down("w");
+  assert.ok((await desktop.evaluate(() => window.__doroniumFactoryTest.heldKeys())).includes("w"),
+    "A real browser W keydown must enter the movement input state");
   await desktop.waitForTimeout(350);
   await desktop.keyboard.up("w");
   const afterKeyboardMove = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
   assert.ok(afterKeyboardMove.z < beforeKeyboardMove.z,
-    "A real browser WASD keydown/keyup pair must move the engineer, not only the test helper");
+    "A real browser WASD keydown/keyup pair must move the engineer through a clear tile");
   await desktop.keyboard.down("Space");
   assert.ok((await desktop.evaluate(() => window.__doroniumFactoryTest.heldKeys())).includes(" "),
     "The physical Space key must be normalized into the jump action state");
-  await desktop.waitForTimeout(100);
+  await desktop.waitForFunction(() => window.__doroniumFactoryTest.motion().y > 0,
+    {timeout:3000});
   const airborne = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
   assert.ok(airborne.y > 0 && !airborne.grounded,
     "The Space key must initiate a real vertical jump");
-  await desktop.keyboard.up(" ");
-  await desktop.waitForTimeout(1100);
+  await desktop.keyboard.up("Space");
+  await desktop.waitForFunction(() => window.__doroniumFactoryTest.motion().grounded,
+    {timeout:3000});
   const landed = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
   assert.equal(landed.grounded, true, "The engineer must land after a normal jump");
   assert.equal(landed.y, 0, "The jump must settle back onto the ground plane");
