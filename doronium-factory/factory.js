@@ -1741,8 +1741,9 @@ if(E2E_MODE){
       const legacyKey=Object.keys(legacyDeposits).find(key=>legacyDeposits[key].type==="aluminumOre");
       delete legacyDeposits[legacyKey];
       legacyDeposits["1:8:12"]={...legacyDeposits["1:8:12"],amount:7};
-      const targetID=mineIdFromEntrance(30,64),surfacePosition={x:30,y:64};
-      hydrateState({...original,worldVersion:4,mines:undefined,mineDeposits:legacyDeposits,player:{...original.player,surfacePosition}});
+      const targetID=mineIdFromEntrance(30,64),surfacePosition={x:30,y:64},legacyPlayer={...original.player,surfacePosition};
+      delete legacyPlayer.mineId;
+      hydrateState({...original,worldVersion:4,mines:undefined,mineDeposits:legacyDeposits,player:legacyPlayer});
       const restoredLevel=getMineLevel(S.mines,targetID,1),restored=restoredLevel.deposits["8,12"],newOreCoordinates=legacyKey.split(":").map(Number);
       const newOre=getMineLevel(S.mines,targetID,newOreCoordinates[0]).deposits[newOreCoordinates[1]+","+newOreCoordinates[2]];
       const others=Object.values(S.mines).filter(mine=>mine.id!==targetID);
