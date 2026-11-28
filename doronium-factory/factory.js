@@ -1668,7 +1668,7 @@ if(E2E_MODE){
     try{
       S=freshState();
       const [mineA,mineB]=Object.values(S.mines),idA=mineA.id,idB=mineB.id;
-      const levelA=getMineLevel(S.mines,idA,1),levelB=getMineLevel(S.mines,idB,1);
+      const levelA=getMineLevel(S.mines,idA,3),levelB=getMineLevel(S.mines,idB,1);
       const keyA=Object.keys(levelA.deposits)[0],keyB=Object.keys(levelB.deposits)[0];
       const depositA=levelA.deposits[keyA],depositB=levelB.deposits[keyB];
       depositA.type="stone";depositA.amount=Math.max(5,depositA.amount);depositA.max=depositA.amount;
@@ -1677,7 +1677,7 @@ if(E2E_MODE){
       S.player={...S.player,x:mineA.entrance.x,y:mineA.entrance.z,layer:"surface",viewMode:"first"};
       enterMine({kind:"mineEntrance",mineId:idA,x:mineA.entrance.x,z:mineA.entrance.z});
       const enteredA=S.player.mineId,levelOnA=S.player.mineLevel;
-      const harvested=harvestMineDeposit({mineId:idA,level:1,x:ax,z:az});
+      const harvested=harvestMineDeposit({mineId:idA,level:3,x:ax,z:az});
       const afterA=depositA.amount,afterB=depositB.amount;
       exitMine();
       S.player.x=mineB.entrance.x;S.player.y=mineB.entrance.z;
