@@ -246,8 +246,12 @@ try {
   assert.equal(mineIsolation.harvested, true, "A deposit in the selected mine must be harvestable");
   assert.equal(mineIsolation.afterA, mineIsolation.beforeA - 2, "The selected mine's own ore deposit must decrease");
   assert.equal(mineIsolation.afterB, mineIsolation.beforeB, "Mining one entrance must leave another mine's ore unchanged");
-  assert.equal(mineIsolation.mineALevel, 4, "Each mine must remember its own deepest accessed floor");
-  assert.equal(mineIsolation.mineBLevel, 1, "Changing one mine's depth must not change another mine's depth");
+  assert.equal(mineIsolation.enteredA, mineIsolation.idA, "The first entrance must select its own independent mine");
+  assert.equal(mineIsolation.enteredB, mineIsolation.idB, "The second entrance must select a different mine instance");
+  assert.equal(mineIsolation.levelOnA, 3, "Entering the first mine must restore its own remembered depth");
+  assert.equal(mineIsolation.levelOnB, 1, "Entering a different mine must start at that mine's remembered depth");
+  assert.equal(mineIsolation.mineALevel, 3, "Descending in the second mine must not change the first mine's saved depth");
+  assert.equal(mineIsolation.mineBLevel, 2, "Descending must update only the active mine's depth");
   assert.equal(mineIsolation.tunnelMapsDistinct, true, "Separate mine entrances must not share their tunnel topology");
   assert.equal(mineIsolation.depositMapsDistinct, true, "Separate mine entrances must not share their deposit maps");
   assert.equal(mineIsolation.valid, true, "All mine instances must remain structurally valid after independent mining");
