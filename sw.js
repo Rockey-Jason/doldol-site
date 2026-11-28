@@ -149,7 +149,7 @@ self.addEventListener("notificationclick", (event) => {
       target = new URL(`${scope.origin}${scope.pathname}`);
     }
     if (target.origin !== self.location.origin || !target.pathname.startsWith(scope.pathname)) {
-      target = new URL(`${scope.origin}${scope.pathname}dori-bank.html#transactions`);
+      target = new URL(`${scope.origin}${scope.pathname}`);
     }
 
     const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
