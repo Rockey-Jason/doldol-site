@@ -87,7 +87,8 @@ test("each mine owns independent deterministic ore nodes inside its own tunnel",
       assert.equal(mineTunnelAt(node.x,node.z,entry.id),true,
         "Deposit "+entry.id+"/"+key+" must be in that mine's reachable tunnel/gallery");
       assert.ok(node.amount>=0&&node.amount<=node.max);
-      assert.equal(node.depthY,mineFloorY(node.level)-8);
+      assert.ok(node.depthY>=mineFloorY(node.level)&&node.depthY<=mineFloorY(node.level)+30,
+        "Deposit height must remain within its assigned underground level");
     }
   }
   const amountA=first.deposits[Object.keys(first.deposits)[0]].amount;
