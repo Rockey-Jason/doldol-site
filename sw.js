@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v77-offline-shell-20261128";
+const CACHE_NAME = "doldol-site-pwa-v78-native-app-20261128";
 const SITE_SCOPE = new URL(self.registration.scope);
 const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
@@ -23,7 +23,7 @@ const APP_SHELL = [
   scopedUrl("rockeysite-icon-3.png"),
   scopedUrl("manifest.json"),
   scopedUrl("offline.html"),
-  scopedUrl("js/pwa-install.js?v=20261128-pwa-install-1"),
+  scopedUrl("js/pwa-install.js?v=20261128-pwa-install-2"),
   scopedUrl("css/dori-foundation.css?v=20261116-premium-ui-2"),
   scopedUrl("css/home.css?v=20261128-home-css-2")
 ];
