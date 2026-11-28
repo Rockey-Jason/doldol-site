@@ -167,6 +167,23 @@ try {
     return api.move3D("w", 0.3);
   });
   assert.ok(adventureStart.z < 52, "First-person WASD movement must move the engineer through the expanded 3D world");
+  const beforeKeyboardMove = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
+  await desktop.keyboard.down("w");
+  await desktop.waitForTimeout(350);
+  await desktop.keyboard.up("w");
+  const afterKeyboardMove = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
+  assert.ok(afterKeyboardMove.z < beforeKeyboardMove.z,
+    "A real browser WASD keydown/keyup pair must move the engineer, not only the test helper");
+  await desktop.keyboard.down(" ");
+  await desktop.waitForTimeout(100);
+  const airborne = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
+  assert.ok(airborne.y > 0 && !airborne.grounded,
+    "The Space key must initiate a real vertical jump");
+  await desktop.keyboard.up(" ");
+  await desktop.waitForTimeout(1100);
+  const landed = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
+  assert.equal(landed.grounded, true, "The engineer must land after a normal jump");
+  assert.equal(landed.y, 0, "The jump must settle back onto the ground plane");
   await desktop.evaluate(() => window.__doroniumFactoryTest.holdKeyForTest("w"));
   assert.deepEqual(await desktop.evaluate(() => window.__doroniumFactoryTest.heldKeys()), ["w"],
     "The input regression fixture must establish a held movement key");
