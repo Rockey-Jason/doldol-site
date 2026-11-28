@@ -235,7 +235,9 @@ try {
   await desktop.evaluate(() => window.__doroniumFactoryTest.setupMiningTest());
   const miningBefore = await desktop.evaluate(() => ({ stone: window.__doroniumFactoryTest.snapshot().inventory.stone || 0 }));
   const mineAim = await desktop.evaluate(() => window.__doroniumFactoryTest.inspectMineAim());
-  assert.ok(mineAim?.mine && mineAim.mineId === (await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot().player.mineId)),
+  assert.ok(mineAim?.scene?.undergroundResourceNodes > 0,
+    "Underground ore meshes must be present in the active scene: " + JSON.stringify(mineAim));
+  assert.ok(mineAim?.target?.mine && mineAim.target.mineId === mineAim.player.mineId,
     "The first-person crosshair must resolve the active mine's ore deposit: " + JSON.stringify(mineAim));
   await desktop.locator("#action-button").click();
   const miningAfter = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot());
