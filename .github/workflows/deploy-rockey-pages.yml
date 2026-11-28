@@ -34,6 +34,10 @@ jobs:
         run: npm run build
       - name: Validate Dori Life animation data and inline JavaScript
         run: node scripts/validate-dori-life.mjs
+      - name: Validate shared runtime and visibility lifecycles
+        run: node scripts/validate-runtime-polish.mjs
+      - name: Validate SEO metadata and sitemap
+        run: node scripts/site-seo-build.mjs --check
       - name: Run repository-wide quality checks
         run: node scripts/site-quality-check.mjs
       - name: Commit built ROCKEY files for branch-based Pages fallback
