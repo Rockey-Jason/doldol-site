@@ -61,6 +61,8 @@ try {
   assert.equal(audit.catalogMachineCount, 50, "All 50 machine designs must be registered in the encyclopedia");
   assert.equal(audit.buildingCount, 69, "46 new installable machine definitions plus legacy facilities must be registered");
   assert.equal(audit.runtimeValidation.valid, true, "Initial item stacks and reservations must validate");
+  assert.equal(audit.mineValidation.valid, true, "Every independent mine tunnel and deposit registry must validate");
+  assert.equal(audit.mineCount, 5, "The five surface entrances must each have an independent mine instance");
   assert.equal(audit.variantCount, 15, "15 canonical Doronium variants must be present");
   assert.equal(audit.uniqueVariants, 15, "Variant IDs must be unique");
   assert.equal(audit.uniqueCrystalModels, 15, "All 15 variants must have 3D models");
@@ -113,8 +115,13 @@ try {
   assert.equal(migration.newOrePresent, true, "Legacy mine saves must receive new resource veins");
   assert.equal(migration.newOreType, "aluminumOre", "New mineral deposits must keep their canonical type");
   assert.equal(migration.legacyAmount, 7, "Existing mine deposit quantities must be preserved during migration");
-  assert.equal(migration.worldVersion, 5, "Legacy saves must upgrade to the latest world schema");
+  assert.equal(migration.worldVersion, 6, "Legacy saves must upgrade to the independent-mine world schema");
+  assert.equal(migration.legacyAmount, 7, "The original depleted legacy vein must preserve its remaining amount");
+  assert.equal(migration.newOrePresent, true, "The migrated mine must preserve all registered legacy mineral types");
+  assert.equal(migration.otherMineCount, 4, "A legacy mine save must initialize the other four mine instances");
+  assert.equal(migration.otherMineIndependent, true, "New mine deposits must not share the legacy mine's deposit map");
   assert.equal(migration.saveValid, true, "Migrated world state must pass the save runtime validator");
+  assert.equal(migration.mineValid, true, "Migrated independent mine state must pass mine topology and deposit validation");
   const expandedSystems = await desktop.evaluate(() => window.__doroniumFactoryTest.expandedSystemsTest());
   assert.equal(expandedSystems.bridge.placed, true, "A bridge machine item must install on a river tile");
   assert.equal(expandedSystems.bridge.walkable, true, "A placed bridge must become a walkable path across water");
@@ -232,8 +239,18 @@ try {
   await desktop.locator("#action-button").click();
   const miningAfter = await desktop.evaluate(() => window.__doroniumFactoryTest.snapshot());
   assert.equal(miningAfter.inventory.stone, miningBefore.stone + 2, "Clicking the desktop Use button must mine the aimed stone vein");
-  assert.equal(miningAfter.mineDeposits["1:8:12"].amount, 10, "A successful mouse Use action must reduce the vein by two");
+  const primaryMine = miningAfter.mines[miningAfter.player.mineId];
+  assert.equal(primaryMine.levels["1"].deposits["8,12"].amount, 10, "A successful mouse Use action must reduce only the active mine's vein by two");
   assert.equal(miningAfter.player.layer, "mine", "The Use button must preserve the underground layer");
+  const mineIsolation = await desktop.evaluate(() => window.__doroniumFactoryTest.mineIsolationTest());
+  assert.equal(mineIsolation.harvested, true, "A deposit in the selected mine must be harvestable");
+  assert.equal(mineIsolation.afterA, mineIsolation.beforeA - 2, "The selected mine's own ore deposit must decrease");
+  assert.equal(mineIsolation.afterB, mineIsolation.beforeB, "Mining one entrance must leave another mine's ore unchanged");
+  assert.equal(mineIsolation.mineALevel, 4, "Each mine must remember its own deepest accessed floor");
+  assert.equal(mineIsolation.mineBLevel, 1, "Changing one mine's depth must not change another mine's depth");
+  assert.equal(mineIsolation.tunnelMapsDistinct, true, "Separate mine entrances must not share their tunnel topology");
+  assert.equal(mineIsolation.depositMapsDistinct, true, "Separate mine entrances must not share their deposit maps");
+  assert.equal(mineIsolation.valid, true, "All mine instances must remain structurally valid after independent mining");
   const toolGuard = await desktop.evaluate(() => window.__doroniumFactoryTest.toolGuard());
   assert.equal(toolGuard.tool, "axe", "The tool guard must register the equipped axe");
   assert.equal(toolGuard.after, toolGuard.before, "An axe must not mine stone");
@@ -402,7 +419,14 @@ try {
   assert.equal(restoredSave.player.y, saveProbe.y, "Player Y position must survive a full page reload");
   assert.equal(restoredSave.survival.health, saveProbe.health, "Survival state must survive a full page reload");
   assert.equal(restoredSave.inventory.ironOre, saveProbe.ironOre, "Inventory quantities must survive a full page reload");
+  assert.equal(restoredSave.player.mineId, saveProbe.mineID, "The selected mine identity must survive a full page reload");
+  assert.equal(restoredSave.player.mineLevel, saveProbe.mineLevel, "The selected mine depth must survive a full page reload");
+  assert.equal(restoredSave.mines[saveProbe.mineID].currentLevel, saveProbe.mineLevel, "The mine's independent depth progress must survive a full page reload");
+  assert.equal(restoredSave.mines[saveProbe.mineID].levels["3"].deposits[saveProbe.depositKey].amount, saveProbe.depositAmount,
+    "A depleted ore vein must survive a full page reload without affecting other mines");
   const restoredRuntime = await savePage.evaluate(() => window.__doroniumFactoryTest.audit().runtimeValidation);
+  const restoredMineAudit = await savePage.evaluate(() => window.__doroniumFactoryTest.audit().mineValidation);
+  assert.equal(restoredMineAudit.valid, true, "Reloaded mine topology and deposit state must validate");
   assert.equal(restoredRuntime.valid, true, "Restored item stacks and reservations must pass runtime validation");
   await saveContext.close();
 
