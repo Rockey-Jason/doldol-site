@@ -28,5 +28,47 @@
       "type": "image/png",
       "purpose": "any"
     }
+  ],
+  "orientation": "any",
+  "shortcuts": [
+    {
+      "name": "Dori Life",
+      "short_name": "Dori Life",
+      "description": "돌이의 하루를 만나보세요.",
+      "url": "./dori-life.html",
+      "icons": [
+        {
+          "src": "./rockeysite-icon-3.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "돌이은행",
+      "short_name": "돌이은행",
+      "description": "돌이은행 열기",
+      "url": "./dori-bank.html",
+      "icons": [
+        {
+          "src": "./rockeysite-icon-3.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "로키 스터디",
+      "short_name": "로키 스터디",
+      "description": "학습 도구 열기",
+      "url": "./rockey-study.html",
+      "icons": [
+        {
+          "src": "./rockeysite-icon-3.png",
+          "sizes": "512x512",
+          "type": "image/png"
+        }
+      ]
+    }
   ]
 }
