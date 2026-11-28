@@ -161,12 +161,38 @@ try {
   assert.equal(await desktop.locator("#control-column").evaluate(el => el.classList.contains("panel-open")), false,
     "Escape must close the keyboard menu");
 
-  const adventureStart = await desktop.evaluate(() => {
-    const api = window.__doroniumFactoryTest;
-    api.setViewMode("first");
-    return api.move3D("w", 0.3);
-  });
-  assert.ok(adventureStart.z < 52, "First-person WASD movement must move the engineer through the expanded 3D world");
+  const movementStart = await desktop.evaluate(() => window.__doroniumFactoryTest.setupMovementTest());
+  assert.deepEqual(movementStart, {x:72,z:52,viewMode:"first",paused:false},
+    "The real-input test must begin on a clear, unpaused first-person surface");
+  const beforeKeyboardMove = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
+  await desktop.keyboard.down("w");
+  assert.ok((await desktop.evaluate(() => window.__doroniumFactoryTest.heldKeys())).includes("w"),
+    "A real browser W keydown must enter the movement input state");
+  await desktop.waitForTimeout(350);
+  await desktop.keyboard.up("w");
+  const afterKeyboardMove = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
+  assert.ok(afterKeyboardMove.z < beforeKeyboardMove.z,
+    "A real browser WASD keydown/keyup pair must move the engineer through a clear tile");
+  await desktop.keyboard.down("Space");
+  assert.ok((await desktop.evaluate(() => window.__doroniumFactoryTest.heldKeys())).includes(" "),
+    "The physical Space key must be normalized into the jump action state");
+  await desktop.waitForFunction(() => window.__doroniumFactoryTest.motion().y > 0,
+    {timeout:3000});
+  const airborne = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
+  assert.ok(airborne.y > 0 && !airborne.grounded,
+    "The Space key must initiate a real vertical jump");
+  await desktop.keyboard.up("Space");
+  await desktop.waitForFunction(() => window.__doroniumFactoryTest.motion().grounded,
+    {timeout:3000});
+  const landed = await desktop.evaluate(() => window.__doroniumFactoryTest.motion());
+  assert.equal(landed.grounded, true, "The engineer must land after a normal jump");
+  assert.equal(landed.y, 0, "The jump must settle back onto the ground plane");
+  await desktop.evaluate(() => window.__doroniumFactoryTest.holdKeyForTest("w"));
+  assert.deepEqual(await desktop.evaluate(() => window.__doroniumFactoryTest.heldKeys()), ["w"],
+    "The input regression fixture must establish a held movement key");
+  await desktop.evaluate(() => window.dispatchEvent(new Event("blur")));
+  assert.deepEqual(await desktop.evaluate(() => window.__doroniumFactoryTest.heldKeys()), [],
+    "Losing browser focus must clear held movement and action keys");
   assert.equal(await desktop.evaluate(() => window.__doroniumFactoryTest.viewMode()), "first");
   const firstPersonVisual = await desktop.evaluate(() => window.__doroniumFactoryTest.inspect3D());
   assert.equal(firstPersonVisual.playerVisible, false, "The third-person avatar must be hidden in first-person");
@@ -355,8 +381,30 @@ try {
   assert.equal(provenance.runtimeValid, true, "Provenance-preserving supply must maintain valid runtime state");
 
   await desktop.screenshot({ path: path.join(artifactDir, "doronium-desktop.png"), fullPage: true });
-  // Free the desktop WebGL context before testing actual pointer lock and mobile WebGL.
+  // Free the desktop WebGL context before testing persistence and other render contexts.
   await desktop.close();
+
+  const saveContext = await browser.newContext({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
+  const savePage = await saveContext.newPage();
+  capture(savePage, "save-reload");
+  await boot(savePage);
+  const saveProbe = await savePage.evaluate(() => window.__doroniumFactoryTest.prepareSaveReloadTest());
+  assert.equal(saveProbe.saved, true, "The game must successfully write a validated local save");
+  await savePage.reload({ waitUntil: "domcontentloaded" });
+  await savePage.waitForFunction(() => !!window.__doroniumFactoryTest, { timeout: 45000 });
+  await savePage.waitForFunction(() => {
+    const canvas = document.querySelector("#world-canvas");
+    return canvas && canvas.width > 0 && canvas.height > 0;
+  }, { timeout: 30000 });
+  const restoredSave = await savePage.evaluate(() => window.__doroniumFactoryTest.snapshot());
+  assert.equal(restoredSave.money, saveProbe.money, "Currency must survive a full page reload");
+  assert.equal(restoredSave.player.x, saveProbe.x, "Player X position must survive a full page reload");
+  assert.equal(restoredSave.player.y, saveProbe.y, "Player Y position must survive a full page reload");
+  assert.equal(restoredSave.survival.health, saveProbe.health, "Survival state must survive a full page reload");
+  assert.equal(restoredSave.inventory.ironOre, saveProbe.ironOre, "Inventory quantities must survive a full page reload");
+  const restoredRuntime = await savePage.evaluate(() => window.__doroniumFactoryTest.audit().runtimeValidation);
+  assert.equal(restoredRuntime.valid, true, "Restored item stacks and reservations must pass runtime validation");
+  await saveContext.close();
 
   const mouseContext = await browser.newContext({ viewport: { width: 1440, height: 900 }, deviceScaleFactor: 1 });
   const mouseLookPage = await mouseContext.newPage();

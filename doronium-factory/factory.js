@@ -1,6 +1,6 @@
 import { createWorld3D, createCrystalViewer, DORONIUM_CRYSTAL_MODELS, DORONIUM_CRYSTAL_MODEL_SHAPES } from "./world3d.js?v=25";
 import { CATALOG_ITEMS, CATALOG_RECIPES, CATALOG_MACHINES, validateCatalog } from "./catalog.js?v=2";
-import { createRuntimeState, ensureItemStacks, addItemStack, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=5";
+import { createRuntimeState, ensureItemStacks, addItemStack, syncLegacyInventory, availableItemCount, reserveItemStacks, reserveItemBatch, releaseItemReservation, commitItemReservations, removeItemStacks, runCanonicalTick, requestSaveSnapshot, calculateOutputQuality, calculateOutputPurity, accuracyQuality, validateRuntimeState } from "./simulation-core.js?v=6";
 import { WORLD_W, WORLD_H, MINE_W, MINE_H, MINE_LEVELS, biomeAt, regionAt, terrainHeightAt, mineFloorY, mineDepositKey, mineTunnelAt, makeMineDeposits } from "./terrain-system.js?v=7";
 import { validateGameData } from "./game-data-validation.js?v=3";
 import { resolveMachinePower, advanceMachineEnvironment, applyMachineWear, commitCompletionBuffer, clearCompletionBuffer } from "./production-runtime.js?v=5";
@@ -312,6 +312,7 @@ let buildingIndex=new Map(),buildingIndexSource=null,buildingIndexRevision=-1,bu
 let playerMotion={x:S.player.x,z:S.player.y,y:0,velocityY:0,grounded:true,yaw:Number(S.player.yaw)||0,pitch:Number(S.player.pitch??-.12),path:[],moving:false,facing:0,onArrive:null};
 const adventureKeys=new Set();
 let mineHeld=false,mineCooldown=0,lookPointer=null,survivalHudClock=0,adventureTarget=null;
+function clearAdventureInput(){adventureKeys.clear();mineHeld=false;}
 const canvas=$("world-canvas"),world3d=createWorld3D(canvas,()=>S);
 const toast=(message,type="")=>{const el=document.createElement("div");el.className="toast "+type;el.textContent=message;$("toast-stack").append(el);setTimeout(()=>el.remove(),2800)};
 function log(message,type="info"){S.logs.unshift({message,type,time:S.seconds});S.logs=S.logs.slice(0,18);if(!E2E_MODE)renderEvents();dirty=true}
@@ -1317,7 +1318,7 @@ function wireControls(){
  document.addEventListener("pointerlockchange",()=>{const locked=document.pointerLockElement===card;card.classList.toggle("pointer-locked",locked);document.documentElement.classList.toggle("factory-pointer-locked",locked)});
  document.addEventListener("pointerlockerror",()=>toast("마우스 잠금이 지원되지 않습니다. 드래그로 시점을 조작하세요.","warn"));
  window.addEventListener("keydown",e=>{
-  const k=e.key.toLowerCase();
+  const k=e.key.toLowerCase(),isJumpKey=e.code==="Space"||k===" ";
   const editing=e.target instanceof HTMLInputElement||e.target instanceof HTMLSelectElement||e.target instanceof HTMLTextAreaElement;
   if(k==="escape"){
    e.preventDefault();
@@ -1330,10 +1331,10 @@ function wireControls(){
   if(editing)return;
   const scope=keyboardFocusScope();
   if(scope&&["arrowup","arrowdown","arrowleft","arrowright"].includes(k)){e.preventDefault();moveKeyboardFocus(k);return}
-  if(k==="enter"||k===" "){
+  if(k==="enter"||isJumpKey){
    if(scope&&e.target===document.body){e.preventDefault();scope.querySelector("button:not(:disabled),a[href],input:not(:disabled),select:not(:disabled)")?.focus();return}
   }
-  if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"," ","shift"].includes(k))e.preventDefault();
+  if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright","shift"].includes(k)||isJumpKey)e.preventDefault();
   if(!scope&&k!=="f")requestDesktopImmersion();
   if(k==="v"){setViewMode(S.player.viewMode==="first"?"third":"first");return}
   if(k==="m"){if(S.player.layer==="mine"){toast("광산 내부에서는 지도를 열 수 없습니다.");return}setViewMode(S.player.viewMode==="map"?"first":"map");return}
@@ -1342,15 +1343,18 @@ function wireControls(){
   if(k==="e"&&adventureMode()){adventureKeys.add("e");performAdventureAction();return}
   if(k==="x"){if(selectedBuilding){const b=S.buildings.find(x=>x.uid===selectedBuilding);if(b){b.dir=(b.dir+1)%4;renderMachineDetails();drawWorld();markDirty()}}else toast("시설을 선택한 뒤 X 키로 방향을 회전하세요.");return}
   if(k==="b"||k==="o"||k==="i"||k==="c"||k==="t"||k==="j"){setTabFromKey(k);return}
-  if(k===" "&&adventureMode())adventureKeys.add(" ");
+  if(isJumpKey&&adventureMode())adventureKeys.add(" ");
   else if(adventureMode()&&["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright","shift"].includes(k))adventureKeys.add(k);
   else if(!adventureMode()&&(k==="w"||k==="arrowup"))movePlayer(0,-1);
   else if(!adventureMode()&&(k==="s"||k==="arrowdown"))movePlayer(0,1);
   else if(!adventureMode()&&(k==="a"||k==="arrowleft"))movePlayer(-1,0);
   else if(!adventureMode()&&(k==="d"||k==="arrowright"))movePlayer(1,0);
-  if(k===" "&&!adventureMode()){S.paused=!S.paused;renderHud()}
+  if(isJumpKey&&!adventureMode()){S.paused=!S.paused;renderHud()}
  });
- window.addEventListener("keyup",e=>{const k=e.key.toLowerCase();adventureKeys.delete(k);if(k===" ")adventureKeys.delete(" ")});
+ window.addEventListener("keyup",e=>{const k=e.key.toLowerCase();adventureKeys.delete(k);if(e.code==="Space"||k===" ")adventureKeys.delete(" ")});
+  // Browsers may not deliver keyup after focus changes. Never leave movement,
+  // jump, or continuous mining held when the game loses focus.
+  window.addEventListener("blur",clearAdventureInput);
  document.addEventListener("fullscreenchange",()=>{document.documentElement.classList.toggle("factory-fullscreen",!!document.fullscreenElement);drawWorld()});
  // A mouse click must never operate desktop menus. Keyboard-generated clicks (detail === 0)
  // and all coarse-pointer touch interactions remain available.
@@ -1443,6 +1447,7 @@ function scheduleWorldFrame(){
 }
 function onFactoryVisibilityChange(){
  if(document.hidden){
+  clearAdventureInput();
   if(worldFrameHandle)cancelAnimationFrame(worldFrameHandle);
   worldFrameHandle=0;
   frameRenderAccumulator=0;
@@ -1474,10 +1479,26 @@ if(E2E_MODE){
  window.__doroniumFactoryTest={
   snapshot:()=>structuredClone(S),
   backend:world3d.backend,
-  motion:()=>({x:playerMotion.x,z:playerMotion.z,path:playerMotion.path.length,moving:playerMotion.moving,yaw:playerMotion.yaw,pitch:playerMotion.pitch}),
+  motion:()=>({x:playerMotion.x,z:playerMotion.z,y:playerMotion.y,velocityY:playerMotion.velocityY,grounded:playerMotion.grounded,path:playerMotion.path.length,moving:playerMotion.moving,yaw:playerMotion.yaw,pitch:playerMotion.pitch}),
+  heldKeys:()=>[...adventureKeys],
+  holdKeyForTest:key=>adventureKeys.add(String(key).toLowerCase()),
+  prepareSaveReloadTest(){
+    S.money=123456;S.player.x=81;S.player.y=67;S.survival.health=84;
+    playerMotion.x=81;playerMotion.z=67;
+    const savedAt=saveLocal();
+    return {saved:!!savedAt,money:S.money,x:S.player.x,y:S.player.y,health:S.survival.health,ironOre:itemCount("ironOre")};
+  },
   viewMode:()=>S.player.viewMode,
   setViewMode:(mode)=>setViewMode(mode),
-  move3D(key,seconds=.3){adventureKeys.add(key);updatePlayerMotion(seconds);adventureKeys.delete(key);return {x:playerMotion.x,z:playerMotion.z,viewMode:S.player.viewMode}},
+  setupMovementTest(){
+    S=freshState();S.player={...S.player,x:72,y:52,layer:"surface",mineLevel:1,viewMode:"first",yaw:0,pitch:-.12};S.paused=false;
+    // The fixture starts on an intentionally clear patch, so collision checks
+    // do not confuse a blocked forest tile with a failed keyboard event.
+    for(let y=46;y<=58;y++)for(let x=66;x<=78;x++)delete S.nodes[x+","+y];
+    playerMotion={x:72,z:52,y:0,velocityY:0,grounded:true,yaw:0,pitch:-.12,path:[],moving:false,facing:0,onArrive:null};
+    selectedBuild=null;selectedBuilding=null;selectedLandTool=null;clearAdventureInput();world3d.center(72,52);setViewMode("first");renderAll();
+    return {x:playerMotion.x,z:playerMotion.z,viewMode:S.player.viewMode,paused:S.paused};
+  },
   survival:()=>structuredClone(S.survival),
   consumeFood:()=>{consumeFood();return structuredClone(S.survival)},
   drinkWater:()=>{drinkWater();return structuredClone(S.survival)},

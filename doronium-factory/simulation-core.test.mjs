@@ -138,6 +138,36 @@ test("reservation audit history is bounded during long sessions",()=>{
   assert.equal(Object.keys(state.runtime.reservations).length,0);
 });
 
+test("multiple valid reservations on one stack commit atomically without losing held stock",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:10};
+  addItemStack(state,"ironOre",10,{quality:93,purity:97});
+  const first=reserveItemStacks(state,"ironOre",4,"machine-a");
+  const second=reserveItemStacks(state,"ironOre",6,"machine-b");
+  assert.ok(first&&second);
+  const removed=commitItemReservations(state,[first,second]);
+  assert.equal(removed.reduce((sum,stack)=>sum+stack.quantity,0),10);
+  assert.equal(state.runtime.itemStacks.length,0);
+  assert.equal(validateRuntimeState(state).valid,true);
+});
+
+test("overlapping or corrupted reservations cannot overdraw a stack",()=>{
+  const state={runtime:createRuntimeState(),inventory:{},meta:{},tick:11};
+  addItemStack(state,"ironOre",10);
+  const first=reserveItemStacks(state,"ironOre",7,"machine-a");
+  assert.ok(first);
+  const stack=state.runtime.itemStacks[0];
+  const second="RS-CORRUPTED";
+  state.runtime.reservations[second]={
+    reservationID:second,ownerID:"machine-b",itemID:"ironOre",quantity:7,
+    allocations:[{stackID:stack.runtimeID,quantity:7}],status:"reserved",createdTick:11
+  };
+  assert.equal(commitItemReservations(state,[first,second]),null);
+  assert.equal(commitItemReservations(state,[first]),null);
+  assert.equal(stack.quantity,10);
+  assert.ok(state.runtime.reservations[first]);
+  assert.ok(state.runtime.reservations[second]);
+});
+
 test("runtime save validation checks deterministic failure journal counters and IDs",()=>{
  const state={runtime:createRuntimeState(),inventory:{}};
  assert.equal(validateRuntimeState(state).valid,true);

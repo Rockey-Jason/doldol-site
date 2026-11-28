@@ -1,6 +1,6 @@
 # Doronium Factory — Project Audit
 
-- Audit date: 2026-11-16
+- Audit date: 2026-11-28
 - Repository: https://github.com/Rockey-Jason/doldol-site
 - Live target: https://rockey-jason.github.io/doldol-site/doronium-factory/
 - Target specification: `도로늄 공장을 만드는 법.md`, v4.5.0.
@@ -58,6 +58,17 @@ See `SPEC_GAP_MATRIX.md`. Highest-risk open items:
 - takeItemDetailed carries metadata from the actually consumed stacks into manually supplied machine buffers; a reserved high-grade stack can no longer contaminate the metadata of a different free stack.
 - E2E regression coverage verifies reserved materials cannot be sold, supplied, eaten, harvested, used for construction, or burned as fuel. It also verifies exact per-stack quality/purity transfer.
 - Latest verified code commit: 6eeafc918065b87a0f7007254f05a6c4a0501573. Validation run [#1125](https://github.com/Rockey-Jason/doldol-site/actions/runs/43893004656) passed both jobs.
+
+## 2026-11-28 — Phase 1 foundation hardening
+
+- **Reservation ledger integrity:** `commitItemReservations()` now validates every active reservation and aggregates allocations per physical ItemStack before mutating inventory. Corrupted/overlapping reservations fail closed without partially consuming stock. Node regression cases cover both a valid 4+6 split reservation and an invalid 7+7 overlap against a stack of 10.
+- **Input lifecycle:** held movement/jump keys and continuous mining are cleared on browser-window blur and when the page becomes hidden. Physical Space is recognized through `KeyboardEvent.code === "Space"` as well as the normalized key value.
+- **Browser regression quality:** the Playwright test now drives actual W/Space key events on a clear fixture tile, checks movement, takeoff and landing, verifies held-key cleanup after blur, and writes a local save that must survive a full page reload with currency, player coordinates, survival health, inventory and runtime invariants intact.
+- **Cache coherency:** the factory entry cache is now `factory.js?v=66`; its simulation-core import is `simulation-core.js?v=6`. No save key, save schema, world dimension, Supabase key, or user save was changed.
+- **Verified commit under test:** `d67399553c48d56f08028e8b7a1a916bb3cf0c40`, PR [#50](https://github.com/Rockey-Jason/doldol-site/pull/50).
+- **Doromium Factory CI run #1695:** [run 46128713179](https://github.com/Rockey-Jason/doldol-site/actions/runs/46128713179) succeeded. Node/static job passed **54/54** tests. Playwright browser regression passed with desktop WebGL and mobile-emulation WebGL, actual keyboard movement/jump/landing, focus-loss input reset, save/reload restoration, factory/power/resource checks and a 36,000-tick virtual-hour soak. It produced 296 iron plates and preserved ore-equivalent 50,000 and coal-equivalent 30,000 ledger balances. Mobile emulation at 390×844 verified the touch pad and movement from (72,52) to (73,52). Desktop/mobile screenshots were uploaded as artifact 15257006896.
+- **Release boundary:** PR #50 remains a review branch; `main` and the live Pages game have not been changed by this pass. The separate site-wide quality gate still fails in `scripts/validate-runtime-polish.mjs:32` because the app shell lacks the versioned homepage-cache declaration; this check is outside the files changed by this game-only PR and is recorded rather than bypassed.
+- **Remaining limitations:** CI mobile is browser emulation, not physical Android/iOS; no real wall-clock 60-minute soak or authenticated Supabase session was exercised. The shared mine identity, canonical world-size/coordinate conflict, incomplete authoritative tick stages, graph-based power/fluid networks, and unconnected live failure profiles remain tracked in `SPEC_GAP_MATRIX.md` for their appropriate later phases.
 
 ## Verification boundaries
 

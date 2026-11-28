@@ -103,21 +103,49 @@ export function releaseItemReservation(state,reservationID){
   reservation.status="released";reservation.releasedTick=Math.max(0,Number(state.tick)||0);rt.reservationHistory.push({reservationID,ownerID:reservation.ownerID,status:"released",tick:reservation.releasedTick});delete rt.reservations[reservationID];if(rt.reservationHistory.length>256)rt.reservationHistory.splice(0,rt.reservationHistory.length-256);return true;
 }
 export function commitItemReservations(state,reservationIDs){
-  const rt=ensureItemStacks(state),ids=[...new Set(reservationIDs||[])],reservations=ids.map(id=>rt.reservations[id]);
-  if(!ids.length||reservations.some(r=>!r||r.status!=="reserved"))return null;
+  const rt=ensureItemStacks(state);
+  const ids=[...new Set((Array.isArray(reservationIDs)?reservationIDs:[]).map(id=>String(id)))];
+  if(!ids.length||ids.some(id=>!id))return null;
+  const selectedIDs=new Set(ids),selectedReservations=[];
   const byID=new Map(rt.itemStacks.map(stack=>[stack.runtimeID,stack]));
-  for(const reservation of reservations)for(const allocation of reservation.allocations||[]){
-    const stack=byID.get(allocation.stackID);
-    if(!stack||stack.itemID!==reservation.itemID||stack.quantity<allocation.quantity)return null;
+  const reservedByStackID=new Map();
+
+  // Validate the complete live reservation ledger before mutating any stack.
+  // This prevents damaged saves or overlapping allocations from spending the
+  // same physical quantity more than once, even when only one job is committed.
+  for(const [reservationID,reservation] of Object.entries(rt.reservations||{})){
+    if(reservation.status!=="reserved")continue;
+    if(String(reservation.reservationID)!==reservationID||!reservation.ownerID||
+      !reservation.itemID||!Array.isArray(reservation.allocations)||!reservation.allocations.length)return null;
+    let allocated=0;
+    for(const allocation of reservation.allocations){
+      const quantity=Number(allocation?.quantity);
+      const stack=byID.get(allocation?.stackID);
+      if(!stack||stack.itemID!==reservation.itemID||!Number.isSafeInteger(quantity)||quantity<=0)return null;
+      allocated+=quantity;
+      if(!Number.isSafeInteger(allocated))return null;
+      const reserved=(reservedByStackID.get(stack.runtimeID)||0)+quantity;
+      if(!Number.isSafeInteger(reserved)||reserved>stack.quantity)return null;
+      reservedByStackID.set(stack.runtimeID,reserved);
+    }
+    if(!Number.isSafeInteger(Number(reservation.quantity))||Number(reservation.quantity)<=0||
+      allocated!==Number(reservation.quantity))return null;
+    if(selectedIDs.has(reservationID))selectedReservations.push(reservation);
   }
+
+  if(selectedReservations.length!==ids.length)return null;
   const removed=[];
-  for(const reservation of reservations){
+  for(const reservation of selectedReservations){
     for(const allocation of reservation.allocations){
       const stack=byID.get(allocation.stackID);
-      removed.push({...stack,quantity:allocation.quantity});
-      stack.quantity-=allocation.quantity;
+      const quantity=Number(allocation.quantity);
+      removed.push({...stack,quantity});
+      stack.quantity-=quantity;
     }
-    reservation.status="committed";reservation.committedTick=Math.max(0,Number(state.tick)||0);rt.reservationHistory.push({reservationID:reservation.reservationID,ownerID:reservation.ownerID,status:"committed",tick:reservation.committedTick});delete rt.reservations[reservation.reservationID];
+    reservation.status="committed";
+    reservation.committedTick=Math.max(0,Number(state.tick)||0);
+    rt.reservationHistory.push({reservationID:reservation.reservationID,ownerID:reservation.ownerID,status:"committed",tick:reservation.committedTick});
+    delete rt.reservations[reservation.reservationID];
   }
   rt.itemStacks=rt.itemStacks.filter(stack=>stack.quantity>0);
   if(rt.reservationHistory.length>256)rt.reservationHistory.splice(0,rt.reservationHistory.length-256);
