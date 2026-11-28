@@ -1,4 +1,4 @@
-const CACHE_NAME = "doldol-site-pwa-v75-home-brand-navigation-20261128";
+const CACHE_NAME = "doldol-site-pwa-v76-install-offline-resilience-20261128";
 const SITE_SCOPE = new URL(self.registration.scope);
 const scopedUrl = (path) => new URL(path, SITE_SCOPE).href;
 const APP_SHELL = [
@@ -27,60 +27,73 @@ const APP_SHELL = [
 ];
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
-  );
-  self.skipWaiting();
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    // A missing optional shell asset must not prevent the whole app from installing.
+    await Promise.allSettled(APP_SHELL.map(async (url) => {
+      const response = await fetch(url, { cache: "reload" });
+      if (response.ok && response.type !== "opaque") {
+        await cache.put(url, response);
+      }
+    }));
+    await self.skipWaiting();
+  })());
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => key !== CACHE_NAME)
-          .map((key) => caches.delete(key))
-      )
-    )
-  );
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys
+      .filter((key) => key.startsWith("doldol-site-pwa-") && key !== CACHE_NAME)
+      .map((key) => caches.delete(key)));
+    await self.clients.claim();
+  })());
 });
 
 // Inject the account sync bootstrap into every site page controlled by this worker.
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   if (request.method !== "GET" || request.mode !== "navigate") return;
+
   const scope = new URL(self.registration.scope);
   const target = new URL(request.url);
   if (target.origin !== scope.origin || !target.pathname.startsWith(scope.pathname)) return;
 
   event.respondWith((async () => {
-    const response = await fetch(request);
-    const contentType = response.headers.get("content-type") || "";
-    if (!response.ok || !contentType.includes("text/html")) return response;
+    try {
+      const response = await fetch(request);
+      const contentType = response.headers.get("content-type") || "";
+      if (!response.ok || !contentType.includes("text/html")) return response;
 
-    let html = await response.clone().text();
-    const hasCloudSync = html.includes("dori-cloud-sync.js");
-    const hasFoundation = html.includes("dori-foundation.css");
-    if (hasCloudSync && hasFoundation) return response;
+      let html = await response.clone().text();
+      const hasCloudSync = html.includes("dori-cloud-sync.js");
+      const hasFoundation = html.includes("dori-foundation.css");
+      if (hasCloudSync && hasFoundation) return response;
 
-    const base = scope.pathname.endsWith("/") ? scope.pathname : scope.pathname + "/";
-    const foundationLink = hasFoundation ? "" : '<link rel="stylesheet" href="' + base + 'css/dori-foundation.css?v=20261116-premium-ui-2">';
-    const syncBootstrap = hasCloudSync ? "" : '<script src="' + base + 'js/supabase.min.js?v=2.117.2"></script>' +
-      '<script src="' + base + 'js/dori-cloud-sync.js?v=20261101-4"></script>';
-    const bootstrap = foundationLink + syncBootstrap;
-    if (html.includes("</head>")) html = html.replace("</head>", bootstrap + "</head>");
-    else html = bootstrap + html;
+      const base = scope.pathname.endsWith("/") ? scope.pathname : scope.pathname + "/";
+      const foundationLink = hasFoundation ? "" : '<link rel="stylesheet" href="' + base + 'css/dori-foundation.css?v=20261116-premium-ui-2">';
+      const syncBootstrap = hasCloudSync ? "" : '<script src="' + base + 'js/supabase.min.js?v=2.117.2"><\/script>' +
+        '<script src="' + base + 'js/dori-cloud-sync.js?v=20261101-4"><\/script>';
+      const bootstrap = foundationLink + syncBootstrap;
+      if (html.includes("</head>")) html = html.replace("</head>", bootstrap + "</head>");
+      else html = bootstrap + html;
 
-    const headers = new Headers(response.headers);
-    headers.delete("content-length");
-    headers.delete("content-encoding");
-    headers.set("cache-control", "no-store");
-    return new Response(html, {
-      status: response.status,
-      statusText: response.statusText,
-      headers
-    });
+      const headers = new Headers(response.headers);
+      headers.delete("content-length");
+      headers.delete("content-encoding");
+      headers.set("cache-control", "no-store");
+      return new Response(html, { status: response.status, statusText: response.statusText, headers });
+    } catch (error) {
+      // Keep the installed app launchable when the network is unavailable.
+      const cachedPage = await caches.match(request);
+      if (cachedPage) return cachedPage;
+      const cachedHome = await caches.match(scopedUrl("index.html"));
+      if (cachedHome) return cachedHome;
+      return new Response(
+        '<!doctype html><html lang="ko"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>오프라인</title><body style="margin:0;background:#000033;color:#eef3ff;font-family:sans-serif;display:grid;min-height:100vh;place-items:center;text-align:center"><main><h1>현재 오프라인 상태예요</h1><p>인터넷 연결을 확인한 뒤 다시 시도해 주세요.</p></main></body></html>',
+        { status: 503, headers: { "Content-Type": "text/html; charset=utf-8" } }
+      );
+    }
   })());
 });
 
